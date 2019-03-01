@@ -142,7 +142,7 @@ var wd = (function() {
 		WDstring.call(this, input);
 		Object.defineProperties(this, {_n: {writable: true, value: dateDefiner(input)}});
 	};
-	WDdate.prototype = Object.create(WDstring.prototype, {
+	WDdate.prototype = Object.create(WD.prototype, {
 		constructor: {value: WDdate},
 		day: {enumerable: true,
 			get: function() {return dateFromNumber(this._n).d;},
@@ -163,6 +163,7 @@ var wd = (function() {
 		weeks:     {enumerable: true, get: function() {return dateWeeks(this.year, this.days);}},
 		countdown: {enumerable: true, get: function() {return dateCountdown(this.year, this.month, this.day);}},
 		format:    {enumerable: true, value: function(string, locale) {return dateFormat(this._n, string, locale);}},
+		type:      {enumerable: true, value: "date"},
 		toString:  {value: function() {return dateFormat(this._n);}},
 		valueOf:   {value: function() {return this._n;}},
 	});
@@ -172,7 +173,7 @@ var wd = (function() {
 		WDstring.call(this, input);
 		Object.defineProperties(this, {_t: {writable: true, value: timeDefiner(input)}});
 	};
-	WDtime.prototype = Object.create(WDstring.prototype, {
+	WDtime.prototype = Object.create(WD.prototype, {
 		constructor: {value: WDtime},
 		hour: {enumerable: true,
 			get: function() {return timeGet(this._t, "h");},
@@ -189,6 +190,7 @@ var wd = (function() {
 		h24:      {enumerable: true, get: function() {return timeGet(this._t, "h24")}},
 		ampm:     {enumerable: true, get: function() {return timeGet(this._t, "ampm")}},
 		format:   {enumerable: true, value: function(string) {return timeFormat(this._t, string);}},
+		type:     {enumerable: true, value: "time"},
 		toString: {value: function() {return timeGet(this._t);}},
 		valueOf:  {value: function() {return this._t;}},
 	});
