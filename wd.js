@@ -1,16 +1,9 @@
-﻿/*
-/==============================\
-| Author:  Willian Donadelli    |
-| e-mail:  wdonadelli@gmail.com |
-| Version: 1.0.0 (21/02/2019)   |
-\==============================/
-*/
+﻿/* Willian Donadelli | <wdonadelli@gmail.com> | v1.0.2 */
+
 "use strict";
 var wd = (function() {
-/*===========================================================================*/
-	/*Propriedades*/
-	const VERSION = "1.0.0";
 
+/*===========================================================================*/
 	/*Parâmetros de configuração de data*/
 	const Y_0 = 1, Y_4 = 4, Y_100 = 100, Y_400 = 400, WEEK_REF = 1, Y_max = 9999;
 
@@ -63,8 +56,7 @@ var wd = (function() {
 		valueOf:  {value: function() {return this._input.valueOf();}},
 		toString: {value: function() {return this._input.toString();}},
 		toSource: {value: function() {return this._input;}},
-		type:     {enumerable: true, get: function() {return type(this._input, true);}},
-		version:  {enumerable: true, get: function() {return VERSION;}},
+		type:     {enumerable: true, get: function() {return type(this._input);}}
 	});
 /*---------------------------------------------------------------------------*/
 	function WDstring(input) {
@@ -73,7 +65,6 @@ var wd = (function() {
 	};
 	WDstring.prototype = Object.create(WD.prototype, {
 		constructor: {value: WDstring},
-		type:   {enumerable: true, value: "text"},
 		title:  {enumerable: true, get: function() {return stringTitle(this._input);}},
 		trim:   {enumerable: true, get: function() {return stringTrim(this._input);}},
 		tt:     {enumerable: true, get: function() {return stringTitle(this.trim);}},
@@ -102,7 +93,7 @@ var wd = (function() {
 	};
 	WDregexp.prototype = Object.create(WD.prototype, {
 		constructor: {value: WDregexp},
-		mask:        {enumerable: true, value: function(string) {return stringMask(string, this._input);}},
+		mask: {enumerable: true, value: function(string) {return stringMask(string, this._input);}},
 	});
 /*---------------------------------------------------------------------------*/
 	function WDboolean(input) {
@@ -111,7 +102,7 @@ var wd = (function() {
 	};
 	WDboolean.prototype = Object.create(WD.prototype, {
 		constructor: {value: WDboolean},
-		value:       {enumerable: true, get: function() {return input === true ? 1 : 0;}},
+		value: {enumerable: true, get: function() {return input === true ? 1 : 0;}},
 	});
 /*---------------------------------------------------------------------------*/
 	function WDnumber(input) {
@@ -120,57 +111,56 @@ var wd = (function() {
 	};
 	WDnumber.prototype = Object.create(WD.prototype, {
 		constructor: {value: WDnumber},
-		integer:     {enumerable: true, get: function() {return numberInteger(this._input);}},
-		fraction:    {enumerable: true, get: function() {return numberFraction(this._input);}},
-		isInteger:   {enumerable: true, get: function() {return numberIsInteger(this._input);}},
-		isFloat:     {enumerable: true, get: function() {return numberIsFloat(this._input);}},
-		isNatural:   {enumerable: true, get: function() {return numberIsNatural(this._input);}},
-		isNegative:  {enumerable: true, get: function() {return numberIsNegative(this._input);}},
-		isPositive:  {enumerable: true, get: function() {return numberIsPositive(this._input);}},
-		abs:         {enumerable: true, get: function() {return numberAbs(this._input);}},
-		inverse:     {enumerable: true, get: function() {return numberInverse(this._input);}},
-		roundUp:     {enumerable: true, get: function() {return numberRoundUp(this._input);}},
-		round:       {enumerable: true, value: function(n) {return numberRound(this._input, n);}},
-		scientific:  {enumerable: true, value: function(n) {return numberScientific(this._input, n);}},
-		locale:      {enumerable: true, value: function(cod) {return numberLocale(this._input, cod);}},
-		currency:    {enumerable: true, value: function(val, cod) {return numberCurrency(this._input, cod, val);}
+		integer:    {enumerable: true, get: function() {return numberInteger(this._input);}},
+		fraction:   {enumerable: true, get: function() {return numberFraction(this._input);}},
+		isInteger:  {enumerable: true, get: function() {return numberIsInteger(this._input);}},
+		isFloat:    {enumerable: true, get: function() {return numberIsFloat(this._input);}},
+		isNatural:  {enumerable: true, get: function() {return numberIsNatural(this._input);}},
+		isNegative: {enumerable: true, get: function() {return numberIsNegative(this._input);}},
+		isPositive: {enumerable: true, get: function() {return numberIsPositive(this._input);}},
+		abs:        {enumerable: true, get: function() {return numberAbs(this._input);}},
+		inverse:    {enumerable: true, get: function() {return numberInverse(this._input);}},
+		roundUp:    {enumerable: true, get: function() {return numberRoundUp(this._input);}},
+		round:      {enumerable: true, value: function(n) {return numberRound(this._input, n);}},
+		scientific: {enumerable: true, value: function(n) {return numberScientific(this._input, n);}},
+		locale:     {enumerable: true, value: function(cod) {return numberLocale(this._input, cod);}},
+		currency:   {enumerable: true, value: function(val, cod) {return numberCurrency(this._input, cod, val);}
 		},
 	});
 /*---------------------------------------------------------------------------*/
 	function WDdate(input) {
 		if (!(this instanceof WDdate)) {return new WDdate(input);}
-		WDstring.call(this, input);
-		Object.defineProperties(this, {_n: {writable: true, value: dateDefiner(input)}});
+		WD.call(this, input);
+		Object.defineProperties(this, {_d: {writable: true, value: dateDefiner(input)}});
 	};
 	WDdate.prototype = Object.create(WD.prototype, {
 		constructor: {value: WDdate},
 		day: {enumerable: true,
-			get: function() {return dateFromNumber(this._n).d;},
-			set: function(input) {this._n = dateSet(this._n, input, "d"); return;}
+			get: function() {return dateFromNumber(this._d).d;},
+			set: function(input) {this._d = dateSet(this._d, input, "d"); return;}
 		},
 		month: {enumerable: true,
-			get: function() {return dateFromNumber(this._n).m;},
-			set: function(input) {this._n = dateSet(this._n, input, "m"); return;}
+			get: function() {return dateFromNumber(this._d).m;},
+			set: function(input) {this._d = dateSet(this._d, input, "m"); return;}
 		},
 		year: {enumerable: true,
-			get: function() {return dateFromNumber(this._n).y;},
-			set: function(input) {this._n = dateSet(this._n, input, "y"); return;}
+			get: function() {return dateFromNumber(this._d).y;},
+			set: function(input) {this._d = dateSet(this._d, input, "y"); return;}
 		},
-		week:      {enumerable: true, get: function() {return dateWeek(this._n);}},
+		week:      {enumerable: true, get: function() {return dateWeek(this._d);}},
 		leap:      {enumerable: true, get: function() {return dateLeap(this.year);}},
 		days:      {enumerable: true, get: function() {return dateDayYear(this.year, this.month, this.day);}},
 		width:     {enumerable: true, get: function() {return dateLenghtMonth(this.year, this.month);}},
 		weeks:     {enumerable: true, get: function() {return dateWeeks(this.year, this.days);}},
 		countdown: {enumerable: true, get: function() {return dateCountdown(this.year, this.month, this.day);}},
-		format:    {enumerable: true, value: function(string, locale) {return dateFormat(this._n, string, locale);}},
-		type:      {enumerable: true, value: "date"},
-		toString:  {value: function() {return dateFormat(this._n);}},
-		valueOf:   {value: function() {return this._n;}},
+		format:    {enumerable: true, value: function(string, locale) {return dateFormat(this._d, string, locale);}},
+		toString:  {value: function() {return dateFormat(this._d);}},
+		valueOf:   {value: function() {return this._d;}},
 	});
 /*---------------------------------------------------------------------------*/
 	function WDtime(input) {
 		if (!(this instanceof WDtime)) {return new WDtime(input);}
-		WDstring.call(this, input);
+		WD.call(this, input);
 		Object.defineProperties(this, {_t: {writable: true, value: timeDefiner(input)}});
 	};
 	WDtime.prototype = Object.create(WD.prototype, {
@@ -190,20 +180,19 @@ var wd = (function() {
 		h24:      {enumerable: true, get: function() {return timeGet(this._t, "h24")}},
 		ampm:     {enumerable: true, get: function() {return timeGet(this._t, "ampm")}},
 		format:   {enumerable: true, value: function(string) {return timeFormat(this._t, string);}},
-		type:     {enumerable: true, value: "time"},
 		toString: {value: function() {return timeGet(this._t);}},
 		valueOf:  {value: function() {return this._t;}},
 	});
 /*---------------------------------------------------------------------------*/
 	function WDajax(input) {
 		if (!(this instanceof WDajax)) {return new WDajax(input);}
-		WDstring.call(this, input);
+		WD.call(this, input);
 	};
 	WDajax.prototype = Object.create(WDstring.prototype, {
 		constructor: {value: WDajax},
-		type: {enumerable: true, value: "path"},
 		post: {enumerable: true, value: function(execute, time) {ajaxSend(this._input, "POST", execute, time);}},
 		get:  {enumerable: true, value: function(execute, time) {ajaxSend(this._input, "GET", execute, time);}},
+		type: {enumerable: true, get: function() {return type(this._input, true);}}
 	});
 /*---------------------------------------------------------------------------*/
 	function WDhtml(input) {
@@ -538,20 +527,19 @@ var wd = (function() {
 	function wd(input) {
 		/*Retorna o construtor de acordo com o tipo de input*/
 		switch(type(input, true)) {
-			case "text":    return WDstring(input); break;
-			case "boolean": return WDboolean(input); break;
-			case "number":  return WDnumber(input); break;
-			case "%number": return WDnumber(stringNumber(input)); break;
-			case "array":   return WDarray(input); break;
-			case "regex":   return WDregexp(input); break;
-			case "date":    return WDdate(input); break;
-			case "time":    return WDtime(input); break;
-			case "path":    return WDajax(input); break;
-			case "html":    return WDhtml(input); break;
-			case "[html]":  return WDhtml(input); break;
-			case "doc":     return WDhtml(input); break;
-			case "win":     return WDhtml(input); break;
-			default:        return WD(input);
+			case "text":   return WDstring(input); break;
+			case "bool":   return WDboolean(input); break;
+			case "number": return WDnumber(numberDefiner(input)); break;
+			case "array":  return WDarray(input); break;
+			case "regex":  return WDregexp(input); break;
+			case "date":   return WDdate(input); break;
+			case "time":   return WDtime(input); break;
+			case "path":   return WDajax(input); break;
+			case "html":   return WDhtml(input); break;
+			case "[html]": return WDhtml(input); break;
+			case "doc":    return WDhtml(input); break;
+			case "win":    return WDhtml(input); break;
+			default:       return WD(input);
 		}
 		return null;
 	};
@@ -579,26 +567,26 @@ var wd = (function() {
 		return lang.length !== 0 ? lang : navigator.language || navigator.browserLanguage || "en-US";
 	};
 	
-	function type(input, checkPath) {
+	function type(input, ajax) {
 		/*Retorna o tipo de input*/
-		if (checkPath === undefined) {checkPath = false;}
-		var x = undefined;
+		if (ajax === undefined) {ajax = false;}
+		var x;
 		if (input === undefined) {
 			x = "?";
 		} else if (input === null) {
-			x = "null";
+			x = "0";
 		} else if (typeof input === "boolean" || input instanceof Boolean) {
-			x = "boolean";
+			x = "bool";
 		} else if (typeof input === "number" || input instanceof Number) {
 			x = "number";
-		} else if (timeDefiner(input) !== null) {
-			x = "time";
-		} else if (dateDefiner(input) !== null) {
-			x = "date";
 		} else if (typeof input === "string" || input instanceof String) {
-			if (stringNumber(input) !== null) {
-				x = "%number";
-			} else if (checkPath === true && ajaxFileExists(input)) {
+			if (numberDefiner(input) !== null) {
+				x = "number";
+			} else if (timeDefiner(input) !== null) {
+				x = "time";
+			} else if (dateDefiner(input) !== null) {
+				x = "date";
+			} else if (ajax === true && ajaxFileExists(input)) {
 				x = "path";
 			} else {
 				x = "text";
@@ -607,8 +595,8 @@ var wd = (function() {
 			x = "array";
 		} else if (input.constructor === RegExp || input instanceof RegExp) {
 			x = "regex";
-		} else if (typeof input === "function" || input instanceof Function) {
-			x = "function";
+		} else if (typeof input === "f()" || input instanceof Function) {
+			x = "f()";
 		} else if (input instanceof Date) {
 			x = "date";
 		} else if (input.constructor === Object) {
@@ -627,24 +615,13 @@ var wd = (function() {
 		} else if (input === window) {
 			x = "win";
 		} else {
-			try {x = input.constructor.name;} catch(e) {}
+			try {
+				x = input.constructor.name;
+			} catch(e) {
+				x = "unknown"
+			}
 		}
 		return x;
-	};
-
-	function stringNumber(input) {
-		/*Retorna o valor numérico da string, mas, se falso, retorna null*/
-		var number = null;
-		input = input.trim();
-		if (/^(\+|\-)?[0-9]+(\.[0-9]+)?$/.test(input)) {
-			number = Number(input.replace("+", ""));
-		} else if (/^(\+|\-)?[0-9]+(\.[0-9]+)?e(\+|\-)[0-9]+$/.test(input)) {
-			number = input.replace(/\+/gi, "").split("e");
-			number = Number(number[0])*10**Number(number[1]);
-		} else if (/^(\+|\-)Infinity$/.test(input)) {
-			number = input.replace("Infinity", "") === "-" ? -Infinity : Infinity;
-		}
-		return number;
 	};
 
 /*===========================================================================*/
@@ -753,19 +730,17 @@ var wd = (function() {
 
 	function arraySort(array) {
 		/*Retorna o array ordenado: números, tempo, data e outros*/
-		var aTime, aDate, aNumber, aNormal, aReturn, re, y, x, kind;
+		var aNumber, aTime, aDate, aNormal, aReturn, re, y, x, kind;
+		aNumber = [];
 		aTime   = [];
 		aDate   = [];
-		aNumber = [];
 		aNormal = [];
 		aReturn = [];
 		for (var i = 0; i < array.length; i++) {
 			x    = array[i];
 			kind = type(x);
 			if (kind === "number") {
-				aNumber.push({"x": x, "y": x});
-			} else if (kind === "text" && stringNumber(x) !== null) {
-				aNumber.push({"x": x, "y": stringNumber(x)});
+				aNumber.push({"x": x, "y": numberDefiner(x)});
 			} else if (kind === "date") {
 				aDate.push({"x": x, "y": dateDefiner(x)});
 			} else if (kind === "time") {
@@ -774,13 +749,13 @@ var wd = (function() {
 				aNormal.push(x);
 			}
 		}
-		aNormal.sort();
 		aNumber.sort(function(a,b) {return a.y-b.y;});
-		aDate.sort(function(a,b) {return a.y-b.y;});
 		aTime.sort(function(a,b) {return a.y-b.y;});
+		aDate.sort(function(a,b) {return a.y-b.y;});
+		aNormal.sort();
 		aNumber.forEach(function(v, i, a) {a[i] = v.x;});
-		aDate.forEach(function(v, i, a) {a[i] = v.x;});
 		aTime.forEach(function(v, i, a) {a[i] = v.x;});
+		aDate.forEach(function(v, i, a) {a[i] = v.x;});
 		aReturn = aReturn.concat(aNumber, aTime, aDate, aNormal);
 		return aReturn;
 	};
@@ -796,48 +771,77 @@ var wd = (function() {
 	};
 
 /*===========================================================================*/
+	function numberDefiner(input) {
+		/*checa se o valor de entrada é um número e retorna seu valor, caso contrário, retorna falso*/
+		var value;
+		if (typeof input === "number" || input instanceof Number) {
+			value = input;
+		} else {
+			input = String(input).trim();
+			if (/^(\+|\-)?[0-9]+(\.[0-9]+)?$/.test(input)) {
+				value = Number(input);
+			} else if (/^(\+|\-)?[0-9]+(\.[0-9]+)?e(\+|\-)?[0-9]+$/.test(input)) {
+				value = Number(input);
+			} else if (/^(\+|\-)Infinity$/.test(input)) {
+				value = Number(input);
+			} else {
+				value = null;
+			}
+		}
+		return value;
+	};
+
 	function numberInteger(input) {
 		/*Retorna o valor inteiro do número*/
+		input = numberDefiner(input);
 		return Number(String(input).replace(/\.[0-9]+/g, ""));
 	};
 
 	function numberFraction(input) {
 		/*Retorna a parte decimal do número*/
+		input = numberDefiner(input);
 		return input%1 === 0 ? 0 : Number(String(input).replace(/[0-9]+\./g, "0."));
 	};
 
 	function numberIsInteger(input) {
 		/*Verifica se o número é inteiro*/
+		input = numberDefiner(input);
 		return input%1 === 0 ? true : false;
 	};
 
 	function numberIsFloat(input) {
 		/*Verifica se o número é decimal*/
+		input = numberDefiner(input);
 		return input%1 !== 0 ? true : false;
 	};
 
 	function numberIsNatural(input) {
 		/*Verifica se o número é natural >= 0*/
+		input = numberDefiner(input);
 		return input%1 === 0 && input >= 0 ? true : false;
 	};
 
 	function numberIsNegative(input) {
 		/*Verifica se o número é maior que zero*/
+		input = numberDefiner(input);
 		return input < 0 ? true : false;
 	};
 
 	function numberIsPositive(input) {
 		/*Verifica se o número é menor que zero*/
+		input = numberDefiner(input);
 		return input > 0 ? true : false;
 	};
 
 	function numberAbs(input) {
 		/*Retorna o valor absoluto do número*/
+		input = numberDefiner(input);
 		return input < 0 ? -input : input;
 	};
 
 	function numberInverse(input) {
 		/*Retorna o inverso do número (1/x)*/
+		input = numberDefiner(input);
 		var x;
 		if (input === 0) {
 			x = Infinity;
@@ -851,11 +855,13 @@ var wd = (function() {
 
 	function numberRound(input, width) {
 		/*Arredonda o número*/
+		input = numberDefiner(input);
 		return Number(input.toFixed(width));
 	};
 
 	function numberRoundUp(input) {
 		/*Arredonda o número para cima*/
+		input = numberDefiner(input);
 		var x = input;
 		if (input === 0) {
 			x = input;
@@ -869,17 +875,20 @@ var wd = (function() {
 
 	function numberScientific(input, width) {
 		/*Transcreve a notação científica para html*/
+		input = numberDefiner(input);
 		return input.toExponential(width).replace(/e(.+)$/, " x 10<sup>$1</sup>").replace("+", "");
 	};
 
 	function numberLocale(input, locale) {
 		/*Retorna o número no formato local ou definido no html*/
+		input = numberDefiner(input);
 		if (locale === undefined) {locale = lang();}
 		return "toLocaleString" in Number ? input.toLocaleString(locale) : input.toString();
 	};
 
 	function numberCurrency(input, locale, currency) {
 		/*Retorna o número no formato monetário local ou defuinido no html*/
+		input = numberDefiner(input);
 		if (locale === undefined) {locale = lang();}
 		if (currency === undefined) {currency = "";}
 		var x;
@@ -988,17 +997,17 @@ var wd = (function() {
 			date = {y: input.getFullYear(), m: input.getMonth()+1, d: input.getDate()};
 		} else if (/^[0-9]{4}\-[0-9]{2}\-[0-9]{2}$/.test(input)) {/*YYYY-MM-DD*/
 			input = input.split("-");
-			date = {y: stringNumber(input[0]), m: stringNumber(input[1]), d: stringNumber(input[2])};
+			date = {y: numberDefiner(input[0]), m: numberDefiner(input[1]), d: numberDefiner(input[2])};
 		} else if (/^[0-9]{2}\/[0-9]{2}\/[0-9]{4}$/.test(input)) {/*MM/DD/YYYY*/
 			input = input.split("/");
-			date = {y: stringNumber(input[2]), m: stringNumber(input[0]), d: stringNumber(input[1])};
+			date = {y: numberDefiner(input[2]), m: numberDefiner(input[0]), d: numberDefiner(input[1])};
 		} else if (/^[0-9]{2}\.[0-9]{2}\.[0-9]{4}$/.test(input)) {/*DD.MM.YYYY*/
 			input = input.split(".");
-			date = {y: stringNumber(input[2]), m: stringNumber(input[1]), d: stringNumber(input[0])};
+			date = {y: numberDefiner(input[2]), m: numberDefiner(input[1]), d: numberDefiner(input[0])};
 		} else {
 			date = null;
 		}
-		if (date !== null && dateChecking(date.y, date.m, date.d)) {
+		if (date !== null && dateChecking(date.y, date.m, date.d) === true) {
 			date = dateToNumber(date.y, date.m, date.d);
 		} else {
 			date = null;
@@ -1008,6 +1017,7 @@ var wd = (function() {
 
 	function dateSet(value, input, id) {
 		/*Altera o valor da data a partir da definição de dia, mês ou ano*/
+		input = numberDefiner(input);
 		var date, test, output, y, m, d;
 		if (type(input) !== "number" || !numberIsInteger(input)) {
 			msg("Values must be an integer number.", "e");
@@ -1017,9 +1027,9 @@ var wd = (function() {
 			test = {y: date.y, m: date.m, d: date.d};
 			test[id] = input;
 			if (id !== "d" && test.d > dateLenghtMonth(test.y, test.m)) {
-				test.d =  dateLenghtMonth(test.y, test.m);
+				test.d = dateLenghtMonth(test.y, test.m);
 			}
-			if (dateChecking(test.y, test.m, test.d)) {
+			if (dateChecking(test.y, test.m, test.d) === true) {
 				output = dateToNumber(test.y, test.m, test.d);
 			} else if (id === "d") {
 				output = dateToNumber(date.y, date.m, 1) - 1 + input;
@@ -1128,7 +1138,7 @@ var wd = (function() {
 		) {
 			msg("Values must be an integer number.", "e");
 		} else {
-			t = 3600*h + 60*m + s;
+			t = 3600*numberDefiner(h) + 60*numberDefiner(m) + numberDefiner(s);
 			if (t < 0) {
 				msg("Lower limit for time has been extrapolated. Limit value set.", "w");
 				t = 0;
@@ -1241,7 +1251,7 @@ var wd = (function() {
 			var path, request;
 			request = ajaxGetRequest()
 			path    = ajaxPath(path);
-			if (type(time) === "number") {request.timeout = 1000*time;}
+			if (type(time) === "number") {request.timeout = 1000*numberDefiner(time);}
 			request.onreadystatechange = function(ev) {
 				if (this.readyState === 4) {
 					if (this.status === 200 || this.status === 304) {
@@ -1250,7 +1260,7 @@ var wd = (function() {
 						argument = ajaxResponse(this, true);
 					}
 					delAjaxModal();
-					if (type(execute) === "function") {execute.call(this, argument);}
+					if (type(execute) === "f()") {execute.call(this, argument);}
 				}
 				return;
 			};
@@ -1266,7 +1276,7 @@ var wd = (function() {
 			}
 		} catch(e) {
 			delAjaxModal();
-			if (type(execute) === "function") {execute.call(this, argument);}
+			if (type(execute) === "f()") {execute.call(this, argument);}
 		}
 		return;
 	};
@@ -1369,7 +1379,7 @@ var wd = (function() {
 	function htmlSetHandler(elem, event, method, act) {
 		/*Define função para adicionar eventos*/
 		event = (/^on/i).test(event) ? event.toLowerCase() : "on"+event.toLowerCase();
-		if (type(method) !== "function" && method !== null) {
+		if (type(method) !== "f()" && method !== null) {
 			msg("The "+event+" attribute must be a function or null value.", "e");
 			return;
 		}
@@ -1382,7 +1392,7 @@ var wd = (function() {
 			return;
 		}
 		var methods;
-		if (type(elem[event]) !== "function") {
+		if (type(elem[event]) !== "f()") {
 			methods = [];
 		} else if (elem[event].name === "wdEventHandler") {
 				methods = elem[event]("showMethods");
