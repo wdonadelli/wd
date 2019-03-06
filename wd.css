@@ -1,12 +1,7 @@
-﻿/*
-/==============================\
-| Author:  Willian Donadelli    |
-| e-mail:  wdonadelli@gmail.com |
-| Version: 1.0.0 (21/02/2019)   |
-\==============================/
-*/
+﻿/* Willian Donadelli | <wdonadelli@gmail.com> | v1.1.0 */
+
 *, *:before, *:after {box-sizing: border-box;}
-/*--- animações --- */
+/*--- animações ---*/
 @keyframes zoom-in {
 	from {transform: scale(0); opacity: 0;}
 	to   {transform: scale(1); opacity: 1;}
@@ -47,6 +42,13 @@ body {
 summary {
 	cursor: pointer;
 }
+a {
+	color: #4169E1;
+	text-decoration: none;
+}
+a:hover {
+	text-decoration: underline;
+}
 /*--- Forms ---*/
 .wd-input,
 .wd-button,
@@ -61,16 +63,13 @@ summary {
 .wd-input {
 	padding: 0.25em 0.5em;
 	border: thin solid #686868;
-	opacity: 0.8;
 }
 .wd-input:hover {
 	border-color: #4169E1;
-	opacity: 1;
 }
 .wd-input:focus {
 	border-color: #4169E1;
-	outline: thin solid #4169E1;
-	outline-offset: -2px; opacity: 1;
+	box-shadow: 0 0 0 1px #4169E1;
 } 
 .wd-input:disabled,
 .wd-input[disabled] {
@@ -80,13 +79,16 @@ summary {
 .wd-input[required],
 .wd-input:required {
 	border-color: #DC143C;
-	outline-color: #DC143C;
+}
+.wd-input[required]:focus,
+.wd-input:required:focus {
+	box-shadow: 0 0 0 1px #DC143C;
 }
 .wd-input:out-of-range,
 .wd-input:invalid {
 	border-color: #DC143C;
-	outline: thin solid #DC143C;
-	outline-offset: -2px;
+	box-shadow: 0 0 10px 1px #DC143C;
+
 }
 .wd-input[type=radio],
 .wd-input[type=checkbox] {
@@ -95,30 +97,35 @@ summary {
 	padding: auto;
 	border: 0;
 }
-.wd-input[type=radio]:focus,
-.wd-input[type=checkbox]:focus {
-	outline: thin dotted #245bff;
-	outline-offset: 0;
-}
 .wd-input[type=range],
-.wd-input[type=file] {
+.wd-input[type=file],
+.wd-input[type=range]:focus,
+.wd-input[type=file]:focus,
+.wd-input[type=range]:hover,
+.wd-input[type=file]:hover {
 	border: none !important;
+	box-shadow: none;
+	color: #000000;
+}
+.wd-input[type=range]:required,
+.wd-input[type=file][required] {
+	color: #DC143C;
 }
 .wd-button {
 	padding: 0.25em 2em;
 	cursor: pointer;
 	border: none;
-	text-decoration: none;
+	text-decoration: none !important;
 	text-align: center;
-	opacity: 0.8;
-	background-color: #E6E6FA;
+	background-color: #B0C4DE;
 	color: #000000;
 }
 .wd-button:hover,
 .wd-button:focus {
-	opacity: 1;
-	outline: thin solid;
-	outline-offset: -2px;
+	background-color: white !important;
+	color: black !important;
+	border-color: #000000;
+	box-shadow: inset 0 0 10px 0.2em #778899, inset 0 0 0 2px #000000;
 }
 .wd-button:disabled,
 .wd-button[disabled] {
@@ -239,10 +246,10 @@ summary {
 .wd-nav-V > a:hover,
 .wd-nav-V > a:focus,
 .wd-nav-V > a[data-wd-active] {
-	background-color: #404040 !important;
-	color: #FFFFFF !important;
-	border-color: #404040 !important;
-	text-decoration: underline;
+	background-color: white !important;
+	color: black !important;
+	border-color: #778899 !important;
+	box-shadow: inset 0 0 10px 0.2em #778899, inset 0 -2px #000000;
 }
 .wd-box > .wd-nav,
 .wd-box > .wd-nav-H,
@@ -260,8 +267,6 @@ summary {
 .wd-nav-V + .wd-foot {
 	margin-top: 0;
 }
-
-
 .wd-bar,
 .wd-bar-N,
 .wd-bar-S,
@@ -325,6 +330,9 @@ summary {
 }
 .wd-follow-S {
 	bottom: 0;
+}
+.wd-overflow {
+	overflow: auto;
 }
 /*--- table ---*/
 .wd-table {
@@ -740,7 +748,7 @@ summary {
 .wd-shadow-in-childs > *:hover,
 .wd-shadow-out,
 .wd-shadow-out-childs > * {
-	box-shadow: 0 2px 5px darkgray, 0 2px 10px 0 darkgray;
+	box-shadow: 0 0 3em 1em #778899, 3px 2px #000000;
 }
 .wd-shadow-in,
 .wd-shadow-in-childs > *,
@@ -761,15 +769,16 @@ summary {
 	opacity: 1 !important;
 }
 .wd-zebra > *:nth-child(even) {
-	background-color: #404040 !important;
-	color: #FFFFFF !important;
-	border-color: #404040 !important;
+	background-color: #778899 !important;
+	color: #FFF5EE !important;
+	border-color: #778899 !important;
 }
 .wd-upon:hover,
 .wd-upon-childs > *:hover {
-	background-color: #4169E1 !important;
-	color: #FFFFFF !important;
-	border-color: #4169E1 !important;
+	background-color: white !important;
+	color: black !important;
+	border-color: #778899 !important;
+	box-shadow: inset 0 0 10px 0.2em #778899, 2px 0 0 #778899, -2px 0 0 #778899;
 }
 /*--- text ---*/
 .wd-case,
@@ -1007,19 +1016,18 @@ summary {
 		visibility: visible;
 	}
 }
-
 /*--- colors ---*/
 .wd-bgcolor-black {
 	background-color: #000000;
-	color: #FFFFFF;
+	color: #F0F8FF;
 }
 .wd-bgcolor-silver {
 	background-color: #C0C0C0;
-	color: #000000;
+	color: #FFFAF0;
 }
 .wd-bgcolor-gray {
 	background-color: #808080;
-	color: #000000;
+	color: #F0F8FF;
 }
 .wd-bgcolor,
 .wd-bgcolor-white {
@@ -1028,55 +1036,55 @@ summary {
 }
 .wd-bgcolor-maroon {
 	background-color: #800000;
-	color: #FFFFFF;
+	color: #FFF8DC;
 }
 .wd-bgcolor-red {
 	background-color: #FF0000;
-	color: #FFFFFF;
+	color: #FFF8DC;
 }
 .wd-bgcolor-purple {
 	background-color: #800080;
-	color: #FFFFFF;
+	color: #ADD8E6;
 }
 .wd-bgcolor-fuchsia {
 	background-color: #FF00FF;
-	color: #FFFFFF;
+	color: #FFFAF0;
 }
 .wd-bgcolor-green {
 	background-color: #008000;
-	color: #000000;
+	color: #F5FFFA;
 }
 .wd-bgcolor-lime {
 	background-color: #00FF00;
-	color: #000000;
+	color: #4B0082;
 }
 .wd-bgcolor-olive {
 	background-color: #808000;
-	color: #000000;
+	color: #F0FFF0;
 }
 .wd-bgcolor-yellow {
 	background-color: #FFFF00;
-	color: #000000;
+	color: #1E90FF;
 }
 .wd-bgcolor-navy {
 	background-color: #000080;
-	color: #FFFFFF;
+	color: #1E90FF;
 }
 .wd-bgcolor-blue {
 	background-color: #0000FF;
-	color: #FFFFFF;
+	color: #F0F8FF;
 }
 .wd-bgcolor-teal {
 	background-color: #008080;
-	color: #FFFFFF;
+	color: #F5FFFA;
 }
 .wd-bgcolor-aqua {
 	background-color: #00FFFF;
-	color: #000000;
+	color: #0000CD;
 }
 .wd-bgcolor-orange {
 	background-color: #FFA500;
-	color: #000000;
+	color: #C71585;
 }
 .wd-color,
 .wd-color-black {
@@ -1084,12 +1092,14 @@ summary {
 }
 .wd-color-silver {
 	color: #C0C0C0;
+	text-shadow: 1px 1px 0 #778899;
 }
 .wd-color-gray {
 	color: #808080;
 }
 .wd-color-white {
 	color: #FFFFFF;
+	text-shadow: 2px 2px 2em #000000, -2px -2px 2em #000000;
 }
 .wd-color-maroon {
 	color: #800000;
@@ -1114,6 +1124,7 @@ summary {
 }
 .wd-color-yellow {
 	color: #FFFF00;
+	text-shadow: 1px 1px 0 #778899;
 }
 .wd-color-navy {
 	color: #000080;
@@ -1126,6 +1137,7 @@ summary {
 }
 .wd-color-aqua {
 	color: #00FFFF;
+	text-shadow: 1px 1px 0 #778899;
 }
 .wd-color-orange {
 	color: #FFA500;
@@ -1238,4 +1250,41 @@ summary {
 	content: "\2770";
 	margin-right: 0.5em;
 	text-decoration: none !important;
+}
+/*--- code ---*/
+.wd-code {
+	font-family: monospace;
+	white-space: pre;
+	font-size: 1em;
+	padding: 0 1em 1em 1em;
+	color: black;
+	background-color: #FFFAFA;
+	border: thin inset #000000;
+	overflow: auto;
+	font-style: normal;
+	font-weight: normal;
+}
+.wd-code q,
+.wd-code var {
+	color: #FF1493;
+	font-style: normal;
+	font-weight: normal;
+}
+.wd-code cite {
+	color: #6A5ACD;
+	font-style: italic;
+	font-weight: normal;
+}
+.wd-code code {
+	color: #006400;
+	font-style: normal;
+	font-weight: bold;
+}
+.wd-code sample {
+	color: #4B0082;
+	font-style: normal;
+	font-weight: normal;
+}
+.wd-code sample:before {
+	content: "\226B ";
 }
