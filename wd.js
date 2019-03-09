@@ -1,4 +1,4 @@
-﻿/* Willian Donadelli | <wdonadelli@gmail.com> | v1.1.0 */
+﻿/* Willian Donadelli | <wdonadelli@gmail.com> | v1.1.2 */
 
 "use strict";
 var wd = (function() {
@@ -353,8 +353,8 @@ var wd = (function() {
 		var attr, action, target;
 		attr = e.dataset.wdAction.split("&");
 		for (var i = 0; i < attr.length; i++) {
-			action = attr[i].split(":")[0];
-			target = attr[i].split(":")[1] === undefined ? e : $(attr[i].replace(action+":", ""));
+			action = attr[i].split(":")[0].trim();
+			target = attr[i].split(":")[1] === undefined ? e : $(attr[i].trim().replace(action+":", ""));
 			wd(target).action(action);
 		}
 		return;
@@ -1517,13 +1517,13 @@ var wd = (function() {
 			return false;
 		}
 		elem.innerHTML = "";
+		html = html.replace(/\}\}\=\"\"/gi, "}}");
 		for (var i in object) {
 			inner = html;
 			for (var c in object[i]) {
 				re = new RegExp("\\{\\{"+c+"\\}\\}", "g");
 				inner = inner.replace(re, object[i][c]);
 			};
-			inner = inner.replace(/\{\{.*?\}\}(=\".*?\")?/gi, "");
 			elem.innerHTML += inner;
 		};
 		loadingProcedures();
