@@ -1,4 +1,4 @@
-﻿/* Willian Donadelli | <wdonadelli@gmail.com> | v1.1.1 */
+﻿/* Willian Donadelli | <wdonadelli@gmail.com> | v1.1.2 */
 
 "use strict";
 var wd = (function() {
