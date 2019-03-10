@@ -1,0 +1,51 @@
+<p class="wd-indent"><q><i>WD JavaScript Tools</i></q> consists of a JavaScript object whose attributes and methods depend on the type and structure of the informed argument. As a rule, the methods do not change the input value.</p>
+
+<p class="wd-indent">Its syntax is as follows:</p>
+
+<div class="wd-code">wd(input);</div>
+
+<p class="wd-indent">The <code>input</code> value defines the attributes and methods of the object. The value of <code>input</code> is organized into ten categories. Click on the categories below to know more details about each possibility:</p>
+
+<dl class="wd-box" data-wd-repeat="manual/menu.js.home.json">
+	<dt><h3>{{title}}</h3></dt>
+	<dd><a href="#{{id}}" data-wd-action="open: #{{id}}">{{description}}</a></dd>
+</dl>
+
+<!--menu lateral-->
+<aside class="wd-modal" id="menu_js_home" data-wd-action="close: #menu_js_home">
+
+	<section class="wd-dialog-W wd-box wd-bgcolor-white wd-border-V" style="width: 20%">
+
+		<header class="wd-head wd-bgcolor-navy" style="position: relative">
+			<h3>Menu</h3>
+			<span class="wd-place-E wd-symbol-cancel" data-wd-action="close: #menu_js_home"></span>
+		</header>
+
+		<nav class="wd-nav-V" data-wd-repeat="manual/menu.js.home.json">
+			<a href="#{{id}}" data-wd-action="open: #{{id}} & close: #menu_js_home" title="{{description}}">{{title}}</a>
+		</nav>
+
+	</section>
+
+</aside>
+
+<!--Sub artigos-->
+<section data-wd-repeat="manual/menu.js.home.json">
+
+	<article id="{{id}}" class="wd-box wd-dialog-full wd-bgcolor-white">
+
+		<header class="wd-head wd-bgcolor-gray">
+			<h1>{{title}}</h1>
+		</header>
+
+		<nav class="wd-nav wd-bgcolor-navy wd-follow-N">
+			<a href="#home" data-wd-action="close: .wd-dialog-full">Home</a>
+			<a href="#menu_{{id}}" data-wd-action="open: #menu_{{id}}" class="wd-symbol-menu"></a>
+			<span class="wd-place-E wd-symbol-back" data-wd-action="close: #{{id}}"></span>
+		</nav>
+
+		<div {{action}}></div>
+		
+	</article>
+
+</section>

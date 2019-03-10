@@ -1,0 +1,23 @@
+[
+	{
+		"title": "Web Development",
+		"name": "WD JavaScript Tools",
+		"nick": "WD JS",
+		"id": "js_home",
+		"action": "data-wd-load=\"manual/js.home.html\""
+	},
+	{
+		"title": "Web Development",
+		"name": "WD Attributes Tools",
+		"nick": "WD DATA",
+		"id": "data_home",
+		"action": "data-wd-load=\"manual/data.home.html\""
+	},
+	{
+		"title": "Web Design",
+		"name": "WD Style Sheet",
+		"nick": "WD CSS",
+		"id": "css_home",
+		"action": "data-wd-load=\"manual/style.home.html\""
+	}
+]

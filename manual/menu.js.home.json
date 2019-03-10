@@ -1,0 +1,63 @@
+[
+	{
+		"title": "Array",
+		"description": "List of values.",
+		"id": "array_js_home",
+		"action": "data-wd-load=\"manual/array.js.home.html\""
+	},
+	{
+		"title": "Boolean",
+		"description": "Boolean values.",
+		"id": "bool_js_home",
+		"action": "data-wd-load=\"manual/bool.js.home.html\""
+	},
+	{
+		"title": "Date",
+		"description": "Values ​​that represent dates.",
+		"id": "date_js_home",
+		"action": "data-wd-load=\"manual/date.js.home.html\""
+	},
+	{
+		"title": "Generic", 
+		"description": "Values ​​not specified by other categories.",
+		"id": "generic_js_home",
+		"action": "data-wd-load=\"manual/generic.js.home.html\""
+	},
+	{
+		"title": "HTML",
+		"description": "Elements or list of HTML elements.",
+		"id": "html_js_home",
+		"action": "data-wd-load=\"manual/html.js.home.html\""
+	},
+	{
+		"title": "Number",
+		"description": "Values ​​that identify numbers.",
+		"id": "number_js_home",
+		"action": "data-wd-load=\"manual/number.js.home.html\""
+	},
+	{
+		"title": "Path",
+		"description": "Values ​​that represent an accessible file.",
+		"id": "path_js_home",
+		"action": "data-wd-load=\"manual/path.js.home.html\""
+	},
+	{
+		"title": "RegExp",
+		"description": "Values ​​that represent a regular expression.",
+		"id": "regex_js_home",
+		"action": "data-wd-load=\"manual/regex.js.home.html\""
+	},
+
+	{
+		"title": "Text",
+		"description": "Strings not specified by other categories.",
+		"id": "text_js_home",
+		"action": "data-wd-load=\"manual/text.js.home.html\""
+	},
+	{
+		"title": "Time",
+		"description": "Values ​​that represent time.",
+		"id": "time_js_home",
+		"action": "data-wd-load=\"manual/time.js.home.html\""
+	}
+]

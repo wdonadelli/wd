@@ -1,0 +1,39 @@
+
+<!--menu lateral-->
+<aside class="wd-modal" id="menu_array_js_home" data-wd-action="close: #menu_array_js_home">
+
+	<section class="wd-dialog-W wd-box wd-bgcolor-white wd-border-V" style="width: 20%">
+
+		<header class="wd-head wd-bgcolor-navy" style="position: relative">
+			<h3>Menu</h3>
+			<span class="wd-place-E wd-symbol-cancel" data-wd-action="close: #menu_array_js_home"></span>
+		</header>
+
+		<nav class="wd-nav-V" data-wd-repeat="manual/menu.array.js.home.json" data-wd-sort="1">
+			<a href="#{{id}}" data-wd-action="tab: #{{id}} & close: #menu_array_js_home" title="{{type title}}">{{title}}</a>
+		</nav>
+
+	</section>
+
+</aside>
+
+<!--Sub artigos-->
+<section data-wd-repeata="manual/home.js.json">
+
+	<article id="{{id}}" class="wd-box wd-dialog-full wd-bgcolor-white">
+
+		<header class="wd-head wd-bgcolor-silver">
+			<h1>{{name}}</h1>
+		</header>
+
+		<nav class="wd-nav wd-bgcolor-navy wd-follow-N">
+			<a href="#home" data-wd-action="close: .wd-dialog-full">Home</a>
+			<a href="#menu_{{id}}" data-wd-action="open: #menu_{{id}}" class="wd-symbol-menu"></a>
+			<span class="wd-place-E wd-symbol-back" data-wd-action="close: #{{id}}"></span>
+		</nav>
+
+		<div {{action}}="{{file}}"></div>
+		
+	</article>
+
+</section>
