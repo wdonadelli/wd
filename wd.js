@@ -292,8 +292,8 @@ var wd = (function() {
 	function data_wdSort(e) {
 		/*Ordena elementos filhos*/
 		if (!("wdSort" in e.dataset)) {return;}
-		var order = wd(e.dataset.wdSort).number;
-		wd(e).sort(order === null ? 1 : order).data({wdSort: null});
+		var order = wd(e.dataset.wdSort);
+		wd(e).sort(order.type !== "number" ? 1 : order.valueOf()).data({wdSort: null});
 		return;
 	};
 
@@ -302,7 +302,7 @@ var wd = (function() {
 		if (!("wdFilter" in e.dataset)) {return;}
 		var min, target, text;
 		text   = "value" in e ? e.value : e.textContent;
-		min    = (/^[0-9]+\:/).test(e.dataset.wdFilter) ? wd(e.dataset.wdFilter.split(":")[0]).number : 0;
+		min    = (/^[0-9]+\:/).test(e.dataset.wdFilter) ? wd(e.dataset.wdFilter.split(":")[0]).valueOf() : 0;
 		target = e.dataset.wdFilter.replace(/^[0-9]+\:/, "");
 		wd($(target)).filter(text, min);
 		return;
@@ -329,8 +329,8 @@ var wd = (function() {
 		if (!("wdPage" in e.dataset)) {return;}
 		var page, size, attr;
 		attr = e.dataset.wdPage.replace(/[^\-\.\:0-9]/g, "").split(":");
-		page = wd(attr[0]).number === null ? 0 : wd(attr[0]).number;
-		size = wd(attr[1]).number === null ? 0 : wd(attr[1]).number;
+		page = wd(attr[0]).type !== "number" ? 0 : wd(attr[0]).valueOf();
+		size = wd(attr[1]).type !== "number" ? 0 : wd(attr[1]).valueOf();
 		wd(e).page(page, size).data({wdPage: null});
 		return;
 	};
