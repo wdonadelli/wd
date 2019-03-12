@@ -1,23 +1,32 @@
 [
 	{
 		"title": "Web Development",
-		"name": "WD JavaScript Tools",
-		"nick": "WD JS",
-		"id": "js_home",
-		"action": "data-wd-load=\"manual/js.home.html\""
+		"description": "WD JavaScript Tools",
+		"id": "home_js",
+		"content": "data-wd-load=\"manual/js.html\"",
+		"menu": "data-wd-repeat=\"manual/menu.js.json\"",
+		"subid": "{{id1}}",
+		"subtitle": "{{title1}}",
+		"subdescription": "{{description1}}"
 	},
 	{
 		"title": "Web Development",
-		"name": "WD Attributes Tools",
-		"nick": "WD DATA",
-		"id": "data_home",
-		"action": "data-wd-load=\"manual/data.home.html\""
+		"description": "WD Attributes Tools",
+		"id": "home_data",
+		"content": "data-wd-load=\"manual/data.html\"",
+		"menu": "data-wd-repeat=\"manual/menu.data.json\"",
+		"subid": "{{id1}}",
+		"subtitle": "{{title1}}",
+		"subdescription": "{{description1}}"
 	},
 	{
 		"title": "Web Design",
-		"name": "WD Style Sheet",
-		"nick": "WD CSS",
-		"id": "css_home",
-		"action": "data-wd-load=\"manual/style.home.html\""
+		"description": "WD Style Sheet",
+		"id": "home_css",
+		"content": "data-wd-load=\"manual/css.html\"",
+		"menu": "data-wd-repeat=\"manual/menu.css.json\"",
+		"subid": "{{id1}}",
+		"subtitle": "{{title1}}",
+		"subdescription": "{{description1}}"
 	}
 ]

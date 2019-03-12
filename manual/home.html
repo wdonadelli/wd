@@ -1,10 +1,3 @@
-<header class="wd-head">
-	<h1>WD Manual</h1>
-</header>
-<nav class="wd-nav wd-bgcolor-navy wd-follow-N" data-wd-repeat="manual/menu.home.json">
-	<a href="#{{id}}" data-wd-action="open: #{{id}}" title="{{name}}">{{nick}}</a>
-</nav>
-
 <p class="wd-indent">This project consists of the distribution of two libraries for web application development.</p>
 
 <p class="wd-indent">The <q><i>Web Development</i></q> tool consists of a library written in JavaScript whose purpose is to provide various tools to give dynamism and agility to the application in development. This tool is divided into two segments, one based on the JavaScript code and another based on the attributes of the HTML elements.</p>
@@ -25,31 +18,10 @@
 <p class="wd-indent">For details, refer to the sections in the manual:</p>
 
 <dl class="wd-box" data-wd-repeat="manual/menu.home.json">
-	<dt><h3>{{title}} ({{nick}})</h3></dt>
-	<dd><a href="#{{id}}" data-wd-action="open: #{{id}}">{{name}}</a></dd>
+	<dt><h3>{{title}}</h3></dt>
+	<dd><a href="#{{id}}" data-wd-action="open: #{{id}}">{{description}}</a></dd>
 </dl>
 
 <footer class="wd-foot wd-align-E">
 	<i>Willian Donadelli</i> <a href="mailto:wdonadelli@gmail.com">&lt;wdonadelli@gmail.com&gt;</a>
 </footer>
-
-<!--Carregando os artigos principais-->
-<section data-wd-repeat="manual/menu.home.json">
-
-	<article id="{{id}}" class="wd-box wd-dialog-full wd-bgcolor-white">
-
-		<header class="wd-head wd-bgcolor-white">
-			<h1>{{name}}</h1>
-		</header>
-
-		<nav class="wd-nav wd-bgcolor-navy wd-follow-N">
-			<a href="#home" data-wd-action="close: .wd-dialog-full">Home</a>
-			<a href="#menu_{{id}}" data-wd-action="open: #menu_{{id}}" class="wd-symbol-menu"></a>
-			<span class="wd-place-E wd-symbol-back" data-wd-action="close: #{{id}}"></span>
-		</nav>
-		
-		<div {{action}}></div>
-		
-	</article>
-
-</section>
