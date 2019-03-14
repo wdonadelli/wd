@@ -1,0 +1,1068 @@
+﻿<!DOCTYPE html>
+<html lang="">
+	<head>
+		<title>WD Manual</title>
+		<meta charset="utf-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1"/>
+		<meta name="author" content="Willian Donadelli"/>
+		<meta name="keywords" content="Web Development,Web Design,HTML,CSS,JavaScript,Library,QuerySelector">
+		<script src="wd.js"></script>
+		<link rel="stylesheet" href="wd.css"/>
+	</head>
+<body class="wd-align-J" data-wd-desktop="wd-body-E">
+
+	<main id="home" class="wd-box">
+
+		<header class="wd-head">
+			<h1>WD Manual</h1>
+		</header>
+
+		<nav class="wd-nav wd-bgcolor-navy wd-follow-N" data-wd-desktop="wd-hide">
+			<span data-wd-action="open: #menu" class="wd-symbol-menu"></span>
+		</nav>
+		
+		<!--<section data-wd-load="manual/home.html" class="wd-box"></section>-->
+	</main>
+	
+	<aside data-wd-phone="wd-modal" data-wd-tablet="wd-modal" data-wd-desktop="wd-bar-W" id="menu" data-wd-action="close: #menu">
+
+		<section data-wd-phone="wd-dialog-W" data-wd-tablet="wd-dialog-W" class="wd-box wd-bgcolor-white wd-border-V" style="overflow: auto">
+
+			<header class="wd-head wd-bgcolor-navy">
+				<h3>Menu</h3>
+				<span data-wd-desktop="wd-hide" class="wd-place-E wd-symbol-cancel" data-wd-action="close: #menu"></span>
+			</header>
+
+			<nav class="wd-nav-V" data-wd-repeat="manual/menu.json">
+				<a href="#{{id}}" data-wd-action="tab: #{{id}} & close: #menu" title="{{description}}" class="{{style}}">{{title}}</a>
+			</nav>
+
+		</section>
+
+	</aside>
+
+	
+
+</body>
+</html>
+
+
+
+
+
+
+
+<!--
+<!--
+var manual = {
+	"Tools": {
+		"Version": "1.0.0",
+		"Call": "wd(input)",
+		"Description": "Returns different objects according to the value defined in the <code>input</code> argument. Different values ​​return different objects, each object has its own attributes and methods. As a rule, the methods do not change the input value.",
+		"Arguments": {
+			"input": "Value that defines the object to be returned."
+		},
+		"Structure": {
+			"Generic": {
+				"Primitive": ["Several"],
+				"Input": ["Unspecified values"],
+				"Description": "When reporting a non-specific argument, the function returns a generic object, with no specialized methods or attributes. The other objects inherit the attributes of this generic object.",
+				"Attributes": {
+					"type": {
+						"Description": "Returns the type of the argument entered. See section <code>input</code> of each object. If no specific value is found, either returns the constructor name or undefined value.",
+						"Return": [
+							"<q>?</q> - undefined value;",
+							"<q>null</q> - null value;",
+							"<q>time</q> - time representation;",
+							"<q>date</q> - date representation or Date object;",
+							"<q>path</q> - accessible file path;",
+							"<q>text</q> - generic string;",
+							"<q>boolean</q> - boolean value;",
+							"<q>number</q> - number value;",
+							"<q>array</q> - array value;",
+							"<q>regex</q> - regular expression;",
+							"<q>function</q> - funtion object;",
+							"<q>object</q> - object with constructor equal to <code>Object</code>;",
+							"<q>html</q> - HTMLElement;",
+							"<q>[html]</q> - NodeList, HTMLCollection, HTMLAllCollection or HTMLFormControlsCollection;",
+							"<q>doc</q> - document; and",
+							"<q>win</q> - window.",
+						]
+					},
+					"version": {
+						"Description": "Returns information about the current version."
+					},
+				},
+				"Methods": {
+							"toString": {
+								"Description": "Returns toString() method of <code>input</code>."
+							},
+							"valueOf": {
+								"Description": "Returns valueOf() method of <code>input</code>."
+							},
+							"toSource": {
+								"Description": "Returns <code>input</code>."
+							}
+					}
+			},
+			"text": {
+				"Primitive": ["String"],
+				"Input": ["Strings not specified."],
+				"Description": "String manipulation.",
+				"Attributes": {
+					"title": {
+						"Description": "Returns the value of the string with the first letter of each word in uppercase.",
+						"Example": "<b>var</b> x = <q>    hello     worlD    </q>;\nwd(x).title;\n&gt; <q>    Hello     WorlD    </q>"
+					},
+					"trim": {
+						"Description": "Returns the value of the string without unnecessary spaces.",
+						"Example": "<b>var</b> x = <q>    hello     world    </q>;\nwd(x).trim;\n&gt; <q>hello world</q>"
+					},
+					"tt": {
+						"Description": "Returns the value of the string using the <code>title</code> and <code>trim</code> methods.",
+						"Example": "<b>var</b> x = <q>    hello     world    </q>;\nwd(x).tt;\n&gt; <q>Hello World</q>"
+					}
+				},
+				"Methods": {
+					"mask": {
+						"Call": "mask(regex)",
+						"Description": "Returns the value of the string by applying mask from a regular expression. If it fails, it returns false.",
+						"Arguments": {
+							"regex": "Regular expression that defines the mask. String comparison characters must be inserted into groups (). Punctuation elements, which model the mask, should be left out of groups."
+						},
+						"Example": "<b>var</b> x = /^([0-9]{2})\\/([0-9]{4})$/;\nwd(<q>122010</q>).mask(x);\n&gt; <q>12/2010</q>"
+					}
+				}
+			},
+			"array": {
+				"Primitive": ["Array"],
+				"Input": ["Array."],
+				"Description": "Array manipulation.",
+				"Attributes": {
+					"sort": {
+						"Description": "Returns the ordered array in the following sequence: numbers, time, date and others.",
+						"Example": "<b>var</b> x = [<q>wd</q>, 100, 20, <q>9</q>];\nwd(x).sort;\n&gt; [<q>9</q>, 20, 100, <q>wd</q>]"
+					},
+					"unique": {
+						"Description": "Returns the array with no repeated values.",
+						"Example": "<b>var</b> x = [<q>wd</q>, 100, 100, 100, <q>wd</q>];\nwd(x).unique;\n&gt; [<q>wd</q>, 100]"
+					},
+					"organized": {
+						"Description": "Returns the ordered array with no repeated values.",
+						"Example": "<b>var</b> x = [<q>wd</q>, 100, 100, 100, <q>wd</q>];\nwd(x).organized;\n&gt; [100, <q>wd</q>]"
+					}
+				},
+				"Methods": {
+					"del": {
+						"Call": "del(item)",
+						"Description": "Returns the array without the item entered in the argument, regardless of quantity.",
+						"Arguments": {
+							"item": "Item to remove from array."
+						},
+						"Example": "<b>var</b> x = [<q>wd</q>, 100, 100, 100, <q>wd</q>];\nwd(x).del(100);\n&gt; [<q>wd</q>, <q>wd</q>]"
+					},
+					"add": {
+						"Call": "add(item)",
+						"Description": "Returns the array plus the reported item, if nonexistent.",
+						"Arguments": {
+							"item": "Item to add to array."
+						},
+						"Example": "<b>var</b> x = [<q>wd</q>, 100, 100, <q>wd</q>];\nwd(x).add(100);\n&gt; [<q>wd</q>, 100, 100, <q>wd</q>]\nwd(x).add(1);\n&gt; [<q>wd</q>, 100, 100, <q>wd</q>, 1]"
+					},
+					"toggle": {
+						"Call": "toggle(item)",
+						"Description": "Return the array with the item entered, if it does not exist, or without the item entered, if it already exists.",
+						"Arguments": {
+							"item": "Item to add or remove from array."
+						},
+						"Example": "<b>var</b> x = [<q>wd</q>, 100, 100, <q>wd</q>];\nwd(x).toggle(100);\n&gt; [<q>wd</q>, <q>wd</q>]\nwd(x).toggle(1);\n&gt; [<q>wd</q>, 100, 100, <q>wd</q>, 1]"
+					},
+					"amount": {
+						"Call": "amount(item)",
+						"Description": "Returns the number of times the entered item appears in the array.",
+						"Arguments": {
+							"item": "Item to be located."
+						},
+						"Example": "<b>var</b> x = [<q>wd</q>, 100, 100, <q>wd</q>];\nwd(x).amount(100);\n&gt; 2"
+					},
+					"replace": {
+						"Call": "replace(item, value)",
+						"Description": "Returns the array with the item replaced by the new value.",
+						"Arguments": {
+							"item": "Item to be replaced.",
+							"value": "Substitute value."
+						},
+						"Example": "<b>var</b> x = [<q>wd</q>, 100, 100, <q>wd</q>];\nwd(x).replace(100, 2);\n&gt; [<q>wd</q>, 2, 2, <q>wd</q>]"
+					}
+				}
+			},
+			"regex": {
+				"Primitive": ["RegExp"],
+				"Input": ["A Regular Expression"],
+				"Description": "Regular Expression manipulation.",
+				"Methods": {
+					"mask": {
+						"Call": "mask(string)",
+						"Description": "See the <code>mask</code> method on the text object.",
+						"Example": "<b>var</b> x = /^([0-9]{2})\\/([0-9]{4})$/;\nwd(x).mask(<q>122010</q>);\n&gt; <q>12/2010</q>"
+					}
+				}
+			},
+			"boolean": {
+				"Primitive": ["Boolean"],
+				"Input": ["true", "false"],
+				"Description": "Boolean manipulation",
+				"Attributes": {
+					"value": {
+						"Description": "Returns 1 (one), if the value of the input argument is true, or 0 (zero), if false.",
+						"Example": "wd(true).value;\n&gt; 1\nwd(false).value;\n&gt; 0"
+					}
+				}
+			},
+			"number": {
+				"Primitive": ["Number", "String"],
+				"Input": ["Number", "Number in text format"],
+				"Description": "Number manipulation. Numbers in text format will also be treated as numbers, so <q>5</q> and <q>+5</q> are treated as <code>5</code>; <q>1e2</q> and <q>+1e+2</q> are treated as <code>100</code>; <q>+Infinity</q> will be treated as <code>Infinity</code>, <q>-Infinity</q> as <code>-Infinity</code> and <q>Infinity</q> will not be treated as a number.",
+				"Attributes": {
+					"integer": {
+						"Description": "Returns the integer part of the number.",
+						"Example": "wd(13.91).integer;\n&gt; 13"
+					},
+					"fraction": {
+						"Description": "Returns the fractional part of the number.",
+						"Example": "wd(13.91).fraction;\n&gt; 0.91"
+					},
+					"isInteger": {
+						"Description": "Returns <i>true</i> if number is integer.",
+						"Example": "wd(13.91).isInteger;\n&gt; <i>false</i>"
+					},
+					"isFloat": {
+						"Description": "Returns <i>true</i> if it is a floating number.",
+						"Example": "wd(13.91).isFloat;\n&gt; <i>true</i>"
+					},
+					"isNatural": {
+						"Description": "Returns <i>true</i> if it is an integer greater than or equal to zero.",
+						"Example": "wd(13.91).isNatural;\n&gt; <i>false</i>"
+					},
+					"isNegative": {
+						"Description": "Returns <i>true</i> if it is a number less than zero.",
+						"Example": "wd(13.91).isNegative;\n&gt; <i>false</i>"
+					},
+					"isPositive": {
+						"Description": "Returns <i>true</i> if it is a number greater than zero.",
+						"Example": "wd(13.91).isPositive;\n&gt; <i>true</i>"
+					},
+					"abs": {
+						"Description": "Returns the absolute value of the number.",
+						"Example": "wd(13.91).abs;\n&gt; 13.91\nwd(-13.91).abs;\n&gt; 13.91"
+					},
+					"inverse": {
+						"Description": "Returns the inverse number value (1 / x).",
+						"Example": "wd(5).inverse;\n&gt; 0.2\nwd(0.2).inverse;\n&gt; 5\nwd(0).inverse;\n&gt; Infinity"
+					},
+					"roundUp": {
+						"Description": "Returns the numeric value rounded to the next integer.",
+						"Example": "wd(5.001).roundUp;\n&gt; 6"
+					}
+				},
+				"Methods": {
+					"locale": {
+						"Call": "locale(cod)",
+						"Description": "If the browser contemplates the corresponding method, it returns a string with local numeric formatting. Otherwise, it returns the number entered in string format.",
+						"Arguments": {
+							"cod": "(Optional) Consists of a string representing the location (e.g. <q>pt-BR</q>). If not set, the location will be the one entered in the <i>lang</i> attribute of the <code>html</code> tag, the provided browser value or <q>en-US</q>."
+						},
+						"Example": "wd(1000.23).locale(<q>pt-BR</q>);\n&gt; <q>1.000,23</q>"
+					},
+					"currency": {
+						"Call": "currency(val, cod)",
+						"Description": "If the browser contemplates the corresponding method, it will return a string with formatting of the reported currency. Otherwise, it returns the number entered in string format.",
+						"Arguments": {
+							"val": "Consists of a string representing the currency (e.g. <q>USD</q> to US Dollar). If not defined or non-existent, the entered text will be added in front of the return string that will be formatted according to the <code>locale</code> method.",
+							"cod": "(Optional) Consists of a string representing the location (e.g. <q>pt-BR</q>). If not set, the location will be the one entered in the <i>lang</i> attribute of the <code>html</code> tag, the provided browser value or <q>en-US</q>."
+						},
+						"Example": "wd(1000.23).currency(<q>USD</q>, <q>en-US</q>);\n&gt; <q>$1,000.23</q>\nwd(1000.23).currency(<q>$?</q>, <q>pt-BR</q>);\n&gt; <q>$?1.000,23</q>"
+					},
+					"round": {
+						"Call": "round(n)",
+						"Description": "Returns the numeric value rounded.",
+						"Arguments": {
+							"n": "(Optional) Indicates the number of decimal places to be considered in the rounding."
+						},
+						"Example": "wd(5.561).round();\n&gt; 6\nwd(5.561).round(1);\n&gt; 5.6"
+					},
+					"scientific": {
+						"Call": "scientific(n)",
+						"Description": "Returns a string, in html format, in scientific notation (e.g. 1.00 x 10<sup>2</sup>).",
+						"Arguments": {
+							"n": "(Optional) Indicates the number of decimal places to display in the notation."
+						},
+						"Example": "wd(9876).scientific()\n&gt; <q>9.876 x 10&lt;sup&gt;3&lt;/sup&gt;</q>\nwd(9876).scientific(1)\n&gt; <q>9.9 x 10&lt;sup&gt;3&lt;/sup&gt;</q>\nwd(-1/9876).scientific(2)\n&gt; <q>-1.01 x 10&lt;sup&gt;-4&lt;/sup&gt;</q>"
+					}
+				}
+			},
+			"date": {
+				"Primitive": ["String", "Date"],
+				"Input": ["<q>YYYY-MM-DD</q>", "<q>MM/DD/YYYY</q>", "<q>DD.MM.YYYY</q>", "<q>%today</q>", "Date object."],
+				"Arguments": {
+					"YYYY": "Four-digit year.",
+					"MM": "Month with two digits.",
+					"DD": "Day with two digits.",
+					"today": "Current date."
+				},
+				"Description": "Date manipulation, disregarding the effects inherent in clock time. The date record can be changed by methods and attributes, the original value is not changed. Inherits attributes of the text object (see String).",
+				"Example": "<b>var</b> x = wd(<q>2010-01-01</q>);\nx.day;\n&gt; 1\nx.day = 2;\nx.day;\n&gt; 2\n",
+				"Attributes": {
+					"week": {
+						"Description": "Gets the value of the day of the week: from 1 (Sunday) to 7 (Saturday)."
+					},
+					"day": {
+						"Description": "Gets/Sets the value of the day: (1-31). If you set a value beyond the limits, the date will be adapted."
+					},
+					"month": {
+						"Description": "Gets/Sets the value of the month: from 1 (January) to 12 (December). If you set a value beyond the limits, the date will be adapted."
+					},
+					"year": {
+						"Description": "Gets/Sets the value of year. The value must be an integer greater than or equal to zero."
+					},
+					"leap": {
+						"Description": "It informs if it is leap year (true/false)."
+					},
+					"days": {
+						"Description": "Gets the value of the day of the year (from 1)."
+					},
+					"width": {
+						"Description": "Gets the number of days in a month."
+					},
+					"weeks": {
+						"Description": "Gets the value of the week of the year (from 1)."
+					},
+					"countdown": {
+						"Description": "Gets the number of days remaining for the end of the year."
+					}
+				},
+				"Methods": {
+					"toString": {
+						"Call": "toString()",
+						"Description": "Returns the date in <q>YYYY-MM-DD</q> format."
+					},
+					"valueOf": {
+						"Call": "valueOf()",
+						"Description": "Returns the number of days elapsed since <time>0001-01-01</time> (day 1), based on the projection of the Gregorian calendar."
+					},
+					"format": {
+						"Call": "format(string, locale)",
+						"Description": "Sets date format return.",
+						"Arguments": {
+							"string": {
+								"Description": "(Optional) If not defined, will return the same object result with the toString method. The argument consists of a string where you can enter attributes of the object as format below.",
+								"Keys": [
+									"<q>%d</q> - numerical value of the day (one digit);",
+									"<q>%D</q> - numerical value of the day (two digits);",
+									"<q>@d</q> - day of year;",
+									"<q>%m</q> - numerical value of the month (one digit);",
+									"<q>%M</q> - numerical value of the month	 (two digits);",
+									"<q>@m</q> - number of days in month;",
+									"<q>#m</q> - short name of the month;",
+									"<q>#M</q> - long name of the month;",
+									"<q>%y</q> - numerical value of year;",
+									"<q>%Y</q> - numerical value of year (four-digit);",
+									"<q>%w</q> - numerical value of day of week;",
+									"<q>@w</q> - numerical value of week of year;",
+									"<q>#w</q> - short name of the day of week;",
+									"<q>#W</q> - long name of the day of week;",
+									"<q>%l</q> - days in the year; and",
+									"<q>%c</q> - days remaining for the end of the year.",
+								]
+							},
+							"locale": "(Optional) Consists of a string representing the location (e.g. <q>pt-BR</q>). If not set, the location will be the one entered in the <i>lang</i> attribute of the <code>html</code> tag, the provided browser value or <q>en-US</q>."
+						},
+						"Example": "<b>var</b> x = wd(<q>03/15/1983</q>);\n<b>var</b> f = <q>#W, #m/%Y</q>;\nx.format(f, <q>en-US</q>);\n&gt; <q>Tuesday, Mar/1983</q>"
+					}
+				}
+			},
+			"time": {
+				"Primitive": ["String"],
+				"Input": ["<q>H:MM</q>", "<q>H:MM:SS</q>", "<q>H12:MMam</q>", "<q>H12:MMpm</q>", "<q>H24hMM</q>", "<q>%now</q>"],
+				"Arguments": {
+					"H": "Hour",
+					"MM": "Minutes with two digits.",
+					"SS": "Seconds with two digits.",
+					"H12": "12h clock.",
+					"H24": "24h clock.",
+					"now": "Current time."
+				},
+				"Description": "Time manipulation, disregarding the effects inherent to the time zone. The time record can be changed by methods and attributes, the original value is not changed. Inherits attributes of the text object (see String).",
+				"Example": "<b>var</b> x = wd(<q>1:27</q>);\nx.hour;\n&gt; 1\nx.hour = 2;\nx.hour;\n&gt; 2\n",
+				"Attributes": {
+					"hour": {
+						"Description": "Gets/Sets the hour value from 0."
+					},
+					"minute": {
+						"Description": "Gets/Sets the minute value (0-59). If you set a value beyond the limits, the date will be adapted."
+					},
+					"second": {
+						"Description": "Gets/Sets the second value (0-59). If you set a value beyond the limits, the date will be adapted."
+					},
+					"h24": {
+						"Description": "Gets the hour value (24h clock)."
+					},
+					"ampm": {
+						"Description": "Gets the hour value (12h clock)."
+					}
+				},
+				"Methods": {
+					"toString": {
+						"Call": "toString()",
+						"Description": "Returns the time in <q>H:MM:SS</q> format."
+					},
+					"valueOf": {
+						"Call": "valueOf()",
+						"Description": "Returns the number of seconds elapsed since <time>0:00:00</time> (from 0)."
+					},
+					"format": {
+						"Call": "format(string)",
+						"Description": "Sets time format return.",
+						"Arguments": {
+							"string": {
+								"Description": "(Optional) If not defined, will return the same object result with the toString method. The argument consists of a string where you can enter attributes of the object as format below.",
+								"Keys": [
+									"<q>%h</q> - numerical value of the hour;",
+									"<q>%H</q> - numerical value of the hour (24h clock);",
+									"<q>#h</q> - time am/pm format;",
+									"<q>%m</q> - numerical value of the minutes;",
+									"<q>%M</q> - numerical value of the minutes (two digits);",
+									"<q>%s</q> - numerical value of the seconds; and",
+									"<q>%S</q> - numerical value of the seconds (two digits);"
+								]
+							}
+						},
+						"Example": "<b>var</b> x = wd(<q>25:05</q>);\n<b>var</b> f = <q>%H hour(s) and %m minute(s)</q>;\nx.format(f);\n&gt; <q>1 hour(s) and 5 minute(s)</q>"
+					}
+				}
+			},
+			"path": {
+				"Primitive": ["String"],
+				"Input": ["A file or path accessible on the server."],
+				"Description": "Performs and works with asynchronous requests.",
+				"Methods": {
+					"get": {
+						"Call": "get(execute, time)",
+						"Description": "Performs requests using the GET method and <q>application/x-www-form-urlencoded</q> <i>enctype</i>. Use the expression <q>@formName</q> after the <q>?</q> of the path so that the data of the elements of the specified form, by name attribute, are captured automatically, as if the form had been submitted. Only the data from the first form with the specified name will be obtained, do not use repeated names.",
+						"Arguments": {
+							"execute": {
+								"Description": "Function to be executed after request process. The function accepts an argument that returns an object containing four attributes:",
+								"Return": [
+									"<code>error</code> - Informs if an error occurred in the request;",
+									"<code>request</code> - Returns the request object;",
+									"<code>text</code> - Gets the result of the request in text format. Returns null in case of error;",
+									"<code>xml</code> - Gets the result of the request in xml format. Returns null in case of error; and",
+									"<code>json</code> - Gets the result of the request in json format. Returns null in case of error."								
+								]
+							},
+							"time": {
+								"Description": "(Optional) Waiting time for the request, in seconds."
+							}
+						}
+					},
+					"post": {
+						"Call": "post(execute, time)",
+						"Description": "Performs requests using the POST method.",
+						"Example": "<b>function</b> h(x) {\n  <b>if</b> (x.error) {\n    console.log(<q>Error</q>);\n  } else {\n    console.log(x.text);\n  }\n};\nwd(<q>file.txt?name=wd</q>).post(h, 3);\n<i style=\"color: #FF00FF;\">//example with @formName</i>\nwd(<q>http://localhost/travel.php?@travelForm</q>).post(h);"
+					}
+				}
+			},
+			"html": {
+				"Primitive": ["DOM", "BOM"],
+				"Input": [
+						"HTMLElement;",
+						"NodeList;",
+						"HTMLCollection;",
+						"HTMLAllCollection;",
+						"HTMLFormControlsCollection",
+						"document; and",
+						"window"
+				],
+				"Description": "DOM/BOM manipulation. The methods of the object return to itself, so it is possible to apply them in sequence. The attributes return a list and each item in the list contains the requested product for each element indicated in the input argument.",
+				"Example": "<b>var</b> x = document.querySelectorAll(<q>div</q>);\nx.length;\n&gt; 2\nwd(x).action(<q>open</q>).filter(<q>target</q>); //methods in sequence\nwd(x).get[0]; //attribute behavior\n&gt; &lt;<i>div#div1&gt</i>; //first item",
+				"Shortcut": {
+					"Description": "If you use the <code>querySelectorAll</code> method, you can use the object <code>wd$</code> instead of <code>wd</code>. The function argument must be a CSS selector.",
+					"Example": "wd$(<q>div</q>).action(<q>open</q>).filter(<q>target</q>); //all div elements"
+				},
+				"Methods": {
+					"execute": {
+						"Call": "execute(method)",
+						"Description": "The function entered in the argument will be executed in the same amount of existing elements, that is, if it is a list of nodes with n elements, the function will be performed n times.",
+						"Arguments": {
+							"method": "Function to be executed. The reported method accepts an argument representing the nth element."
+						},
+						"Example": "<b>var</b> x = document.body.children;\nx.length;\n&gt; 3\n<b>function</b> f(e) {e.textContent = <q>Item</q>;}\nwd(x).execute(f);\n//The three elements will have\n//the textual content equal to <q>Item</q>."
+					},
+					"handler": {
+						"Call": "handler(events, remove)",
+						"Description": "Sets event triggers to elements defined in input. It is a standalone method, it uses the corresponding attribute of the element to assign the methods to be executed when the event is triggered.",
+						"Arguments": {
+							"events": "The argument must be an object whose keys match the events and the values ​​correspond to the methods. If there is more than one method to be defined in the event, these must be listed in an array. The methods will be executed in the sequence that they are informed in the list or as they are added. The <i>null</i> value deletes all methods of the event. Keys can be uppercase or lowercase and may or may not contain the prefix <q>on</q>. You can not report repeated methods. If the event does not exist in the element, the method assignment is ignored.",
+							"remove": "(Optional) The default value is false. If true, instead of adding methods to events, they will be removed."
+						},
+						"Example": "//x, y and z are méthods\n<b>var</b> e = document.body;\nwd(e).handler({CLICK: x, onmouseover: [<i>null</i>, y,z]});"
+					},
+					"class": {
+						"Call": "class(list)",
+						"Description": "Manipulates the <i>class</i> attribute.",
+						"Arguments": {
+							"list": "It is an object that accepts three keys: <q>add</q>, <q>del</q> and <q>toggle</q>, executed in this order. The key values ​​are strings that represent the value to be added, removed, or alternate, respectively. If there are more than one attribute to set, the values ​​must be contained in an array. If the value is <i>null</i>, the class attribute is empty."
+						},
+						"Example": "<b>var</b> x = document.body;\n<b>var</b> l = {add: [<q>class1</q>, <q>class2</q>], del: <q>class3</q>};\nwd(x).class(l);"
+					},
+					"style": {
+						"Call": "style(list)",
+						"Description": "Manipulates the <i>style</i> attribute.",
+						"Arguments": {
+							"list": "It is an object whose keys and values ​​represent, respectively, CSS attributes and values. Keys can be in CSS or camelCase style. If the attribute does not exist, it will be ignored."
+						},
+						"Example": "<b>var</b> x = document.body;\n<b>var</b> l = {\n\tbackgroundColor: <q>red</q>,\n\t<q>z-index</q>: 2,\n\tcolor: <i>null</i>\n};\nwd(x).style(l);"
+					},
+					"data": {
+						"Call": "data(list)",
+						"Description": "Manipulates the <i>data</i> attribute.",
+						"Arguments": {
+							"list": "It is an object whose keys and values ​​respectively represent the names of attributes and values. Do not use the <q>data-</q> prefix in the attribute name. Compound attributes can be represented by dashes or camelCase. If the key value is <i>null</i>, the value of the attribute is removed from the element."
+						},
+						"Example": "<b>var</b> x = document.body;\n<b>var</b> d = {\n\torder: <q>asc</q>, //data-order\n\t<q>order-col</q>: <q>desc</q>, //data-order-col\n\torderRow: <i>null</i> //data-order-row\n};\nwd(x).data(d);"
+					},
+					"filter": {
+						"Call": "filter(text, min)",
+						"Description": "Displays only child elements that display the textual content entered in the argument.",
+						"Arguments": {
+							"text": "Text to be located.",
+							"min": "(Optional) Minimum number of characters for the method to be executed. The default value is zero."
+						},
+						"Example": "<b>var</b> x = document.body;\nwd(x).filter(<q>03/15/2010</q>);"
+					},
+					"sort": {
+						"Call": "sort(order, col)",
+						"Description": "Sorts the child elements in ascending or descending order.",
+						"Arguments": {
+							"order": "(Option) Number that indicates the order. If less than zero, decreasing, otherwise increasing. The default value is 1.",
+							"col": "(Optional) Number that indicates the column to use as a reference to define the order. If the child elements, which are to be sorted, also have children (columns), it is possible to define these elements as a parameter for sorting (eg <code>td</code> elements of a table). The default value is <i>null</i>."
+						},
+						"Example": "<b>var</b> x = document.querySelector(<q>tbody</q>);\nwd(x).sort(-1,2); //decreasing, 3<sup>rd</sup> column"
+					},
+					"page": {
+						"Call": "page(page, size)",
+						"Description": "Divide the child elements into defined quantity groups and display a given group, leaving the others inhibited.",
+						"Arguments": {
+							"page": "Integer that indicates the group to be displayed. Zero indicates the first group, 1 the second group, -1 the last group, -2 the penultimate group, and so on. If the reported value exceeds the number of groups, the threshold group is displayed, that is, the first or last group, as the case may be.",
+							"size": "Integer that indicates the size of each group. If the number is greater than zero and less than or equal to one, the size of the group will be defined by percentage."
+						},
+						"Example": "<b>var</b> x = document.querySelector(<q>tbody</q>);\nwd(x).page(-1,0.2);\n//group: last\n//width: 20% of the number of children"
+					},
+					"repeat": {
+						"Call": "repeat(obj)",
+						"Description": "Clones child elements from an array of objects using the object's keys as a parameter to define the characteristics of each cloned element. To initiate cloning, a child model element must be defined before executing the method. The number of clones will equal the number of items in the array. The characteristics of the clones must be within <code>{{key}}</code>, whose value will be captured from the reported object.",
+						"Arguments": {
+							"obj": "Array of objects. Each item in the array will be an object whose keys and values ​​will define the characteristics of the element."
+						},
+						"Example": "&lt;!--HTML--&gt;\n&lt;select&gt;\n\t&lt;option value=<q>{{val}}</q>&gt;{{name}}&lt;/option&gt;\n&lt;/select&gt;\n\n&lt;script&gt;\n<b>var</b> x = document.querySelector(<q>select</q>);\n<b>var</b> obj = [\n\t{val: 1, name: <q>one</q>},\n\t{val: 2, name: <q>two</q>},\n\t{val: 3, name: <q>three</q>}\n];\nwd(x).repeat(obj);\n&lt;/script&gt;\n\n--Web Page--\n&lt;select&gt;\n\t&lt;option value=<q>1</q>&gt;one&lt;/option&gt;\n\t&lt;option value=<q>2</q>&gt;two&lt;/option&gt;\n\t&lt;option value=<q>3</q>&gt;three&lt;/option&gt;\n&lt;/select&gt;"
+					},
+					"load": {
+						"Call": "load(html)",
+						"Description": "Loads the html content, in text format, inside the element similar to the <code>innerHTML</code> method.",
+						"Arguments": {
+							"html": "HTML content."
+						},
+						"Example": "<b>var</b> x = document.body;\nwd(x).load(<q>&lt;h1&gt;Title&lt;/h1&gt;</q>);"
+					},
+					"action": {
+						"Call": "action(act)",
+						"Description": "Defines actions for the element.",
+						"Arguments": {
+							"act": [
+								"<q>open</q> - For the <code>dialog</code> element, executes the <code>showModal()</code> method, if defined; for the <code>details</code> element, sets the <code>open</code> attribute to <i>true</i>, if set; otherwise, it sets the <code>data-wd-open</code> attribute to the element.",
+								"<q>close</q> - For the <code>dialog</code> element, executes the <code>close()</code> method, if defined; for the <code>details</code> element, sets the <code>open</code> attribute to <i>false</i>, if set; otherwise, it removes the <code>data-wd-open</code> attribute from element.",
+								"<q>toggle</q> - Toggles between <q>open</q> and <q>close</q>.",
+								"<q>tab</q> - Displays only the element informed, your brothers will be hidden.",
+								"<q>del</q> - Removes the element from DOM.",
+								"<q>show</q> - Shows the element.",
+								"<q>hide</q> - Hides the element. ",
+								"<q>check</q> - Check <code>input</code> elements of type <i>radio</i> or <i>checkbox</i>.",
+								"<q>uncheck</q> - Uncheck <code>input</code> elements of type <i>radio</i> or <i>checkbox</i>.",
+								"<q>togglecheck</q> - Toggles the check of the <code>input</code> elements of the type <i>radio</i> or <i>checkbox</i>.",
+								"<q>clean</q> - Clears the content of the element."
+							]
+						},
+						"Example": "<b>var</b> x = document.querySelector(<q>#div2</q>);\nwd(x).action(<q>tab</q>);"
+					},
+				},
+				"Attributes": {
+					"get": {
+						"Description": "Returns the elements as items in a list.",
+						"Example": "<b>var</b> x = document.querySelectorAll(<q>div</q>);\nwd(x).get[1]; //returns 2<sup>nd</sup> element\nwd(x).get[1].textContent = <q>Setted text</q>"
+					},
+					"styles": {
+						"Description": "Returns an array whose items are objects that bring information about each element. Objects have two attributes: the <code>default</code>, which gives information about the element's default styles, and the <code>computed</code>, which gives information about the computed styles of the element.",
+						"Example": "<b>var</b> x = document.querySelectorAll(<q>div</q>);\nwd(x).styles[1].computed.color;\n&gt; <q>rgb(255, 0, 0)</q>\nwd(x).styles[1].default.color;\n&gt; <q>rgb(0, 0, 0)</q>"
+					}
+				}
+			}
+		}
+	},
+	"Dataset": {
+		"Version": "1.0.0",
+		"Description": "It is a tool for building a web page through the use of attributes to be inserted into HTML elements. Attributes are defined from the prefix <code>data-</code> and relate to HTML tools.",
+		"Structure": {
+			"wdLoad": {
+				"Call": "data-wd-load=<q>method:path</q>",
+				"Description": "Loads the contents of an accessible path/file to the element that contains the attribute. See the <code>load</load> method of the HTML tool and the PATH tool's <code>post</code> and </code>get</code> methods.",
+				"Attributes": {
+					"method": {
+						"Description": "(Optional) <q>get</q> or <q>post</q> method. <q>get</q> is default value."
+					},
+					"path": {
+						"Description": "Accessible external file or path."
+					},
+				},
+				"Target": "Element content",
+				"Sensitivity": [
+					"When loading the document",
+					"After running the <code>load</code> and <code>repeat</code> methods of the HTML tool.",
+					"When setting value with the <code>data</code> method of the HTML tool."
+				],
+				"Example": "&lt;div data-wd-load=<q>post:sql.php?q=names</q>&gt;&lt;/div&gt;"
+			},
+			"wdRepeat": {
+				"Call": "data-wd-repeat=<q>method:path</q>",
+				"Description": "Clone child elements from an external file or path whose contents are in JSON format. See the <code>repeat</load> method of the HTML tool and the PATH tool's <code>post</code> and </code>get</code> methods.",
+				"Attributes": {
+					"method": {
+						"Description": "(Optional) <q>get</q> or <q>post</q> method. <q>get</q> is default value."
+					},
+					"path": {
+						"Description": "Accessible external JSON file or path."
+					},
+				},
+				"Target": "Child elements.",
+				"Sensitivity": [
+					"When loading the document",
+					"After running the <code>load</code> and <code>repeat</code> methods of the HTML tool.",
+					"When setting value with the <code>data</code> method of the HTML tool."
+				],
+				"Example": "&lt;ul data-wd-repeat=<q>post:list.json</q>&gt;\n   &lt;li&gt;{{id}} - {{name}}&lt;/li&gt;\n&lt;/ul&gt;"
+			},
+			"wdSort": {
+				"Call": "data-wd-sort=<q>order</q>",
+				"Description": "Sorts the child elements. See the <code>sort</code> method in HTML tools.",
+				"Target": "Child elements.",
+				"Sensitivity": [
+					"When loading the document",
+					"After running the <code>load</code> and <code>repeat</code> methods of the HTML tool.",
+					"When setting value with the <code>data</code> method of the HTML tool."
+				],
+				"Example": "&lt;ul data-wd-sort=<q>-1</q>&gt;\n\t&lt;li&gt;.."
+				
+			},
+			"wdFilter": {
+				"Call": "data-wd-filter=<q>min:CSS</q>",
+				"Description": "Displays only child elements, objects defined in the CSS selector, whose textual content (value/content) is contained in the element. See the <code>filter</code> method in HTML tools.",
+				"Attributes": {
+					"min": {
+						"Description": "(Optional) see <q>filter</q> method in HTML tools"
+					},
+					"CSS": {
+						"Description": "CSS selector."
+					},
+				},
+				"Target": "Element children defined by the CSS selector.",
+				"Sensitivity": [
+					"When loading the document",
+					"After running the <code>load</code> and <code>repeat</code> methods of the HTML tool.",
+					"When setting value with the <code>data</code> method of the HTML tool.",
+					"When you change the value of the form field from the keyboard."
+				],
+				"Example": "&lt;input type=<q>search</q> data-wd-filter=<q>#main, div &gt; ul</q>/&gt"
+			},
+			"wdMask": {
+				"Call": "data-wd-mask=<q>regex</q>",
+				"Description": "Applies a mask to the content of the element if the value matches the regular expression, alerting the value of the content. See the <code>mask</code> method in REGEX tools.",
+				"Target": "Element content",
+				"Sensitivity": [
+					"When loading the document",
+					"After running the <code>load</code> and <code>repeat</code> methods of the HTML tool.",
+					"When setting value with the <code>data</code> method of the HTML tool.",
+					"When you change the value of the form field from the keyboard."
+				],
+				"Example": "&lt;input type=<q>text</q> data-wd-mask=<q>/^([0-9]{2})\\/([0-9]{4})$/</q>/&gt\n&lt;span data-wd-mask=<q>/^([0-9]{2})\\/([0-9]{4})$/</q>&gt102010&lt;/span&gt;"
+			},
+			"wdPage": {
+				"Call": "data-wd-page=<q>page:size</q>",
+				"Description": "Splits the children of the element into groups and display only a certain group. See the <code>page</code> method in HTML tools.",
+				"Target": "Child elements.",
+				"Sensitivity": [
+					"When loading the document",
+					"After running the <code>load</code> and <code>repeat</code> methods of the HTML tool.",
+					"When setting value with the <code>data</code> method of the HTML tool."
+				],
+				"Example": "&lt;ul data-wd-page=<q>-1:10</q>&gt;\n\t&lt;li&gt;.."
+				
+			},
+		"wdAction": {
+				"Call": "data-wd-action=<q>action:CSS</q>",
+				"Description": "Performs the defined action on elements defined by the CSS selector. See the <code>action</code> method in HTML tools. To enter more than one action, separate them with the "&" sign.",
+				"Target": "Element children defined by the CSS selector.",
+				"Sensitivity": [
+					"When the element receives a click."
+				],
+				"Example": "&lt;input type=<q>button</q> data-wd-action=<q>open:details, #modal&tab:#tab1</q>/&gt"
+			},
+			"wdSortCol": {
+				"Call": "data-wd-sort-col=<q></q>",
+				"Description": "Sorts columns of tables (<code>table</code>). The attribute must be contained in the elements <code>td</code> or <code>th</code>, children of <code>tr</code>, child of <code>thead</code>. When you click on the elements that contain the attribute, the respective column will be sorted in ascending order (<code>tbody</code>). When you click on the element again, the sort order reverses. See the <code>sort</code> method in HTML tools.",
+				"Target": "<code>tbody</code> children",
+				"Sensitivity": [
+					"When the element receives a click."
+				],
+				"Example": "&lt;table&gt;\n &lt;thead&gt;\n  &lt;tr&gt;\n   &lt;th data-wd-sort-col=<q></q>&gt;Col 1&lt;/th&gt;\n   &lt;th data-wd-sort-col=<q></q>&gt;Col 2&lt;/th&gt;\n   &lt;th data-wd-sort-col=<q></q>&gt;Col 3&lt;/th&gt;\n  &lt;/tr&gt;\n &lt;/thead&gt;\n &lt;tbody&gt;\n  &lt;tr&gt;\n   &lt;td.."
+			},
+			"wdDesktop": {
+				"Call": "data-wd-desktop=<q>class1 class2..</q>",
+				"Description": "Changes the <code>class</code> attribute of the element depending on the size of the screen, works like a responsive design mode. If the screen size is greater than or equal to 768px, all classes indicated in the attribute will be added to the element's <code>class</code> attribute. Otherwise, all indicated classes will be removed from the <code>class</code> attribute of the element. See the <code>class</code> method in HTML tools.",
+				"Target": "The <code>class</code> attribute of element.",
+				"Sensitivity": [
+					"When loading the document",
+					"After running the <code>load</code> and <code>repeat</code> methods of the HTML tool.",
+					"When setting value with the <code>data</code> method of the HTML tool.",
+					"When to change the screen size."
+				],
+				"Example": "&lt;!--initial value--&gt;\n&lt;input type=<q>text</q> data-wd-desktop=<q>red big</q> class=<q>big border</q>/&gt\n&lt;!--&gt;=768px--&gt;\n&lt;input type=<q>text</q> data-wd-desktop=<q>red big</q> class=<q>big border red</q>/&gt\n&lt;!--&lt;768px--&gt;\n&lt;input type=<q>text</q> data-wd-desktop=<q>red big</q> class=<q>border</q>/&gt\n"
+			},
+			"wdTablet": {
+				"Call": "data-wd-tablet=<q>class1 class2..</q>",
+				"Description": "Works as wdDesktop, but with the screen between 600 to 767px, inclusive. Can be used in conjunction with wdDesktop."
+			},
+			"wdPhone": {
+				"Call": "data-wd-phone=<q>class1 class2..</q>",
+				"Description": "Works as wdDesktop and wdTablet, but with the screen less than 600px. Can be used in conjunction with wdDesktop and wdTablet."
+			}
+		}
+	},
+	"CSS": {
+		"Version": "1.0.0",
+		"Call": "wd-className",
+		"Description": "It is a tool for building a web page through the use of attributes to be inserted into HTML elements. Attributes are defined from the prefix <code>data-</code> and relate to HTML tools. Classes can contain suffixes that change their default behavior. Suffixes are added to the class by means of a hyphen. Below is the list of basic suffixes, whose main function is orientation.",
+		"Suffixes": [
+			"<q>-N</q>: North/Top",
+			"<q>-NE</q>: Northeast/Top Right Corner",
+			"<q>-E</q>: East/Right",
+			"<q>-SE</q>: Southeast/Bottom Right Corner",
+			"<q>-S</q>: South/Bottom",
+			"<q>-SW</q>: South-west/Bottom Left Corner",
+			"<q>-W</q>: West/Left",
+			"<q>-NW</q>: Northwest/Top Left Corner",
+			"<q>-V</q>: Vertical",
+			"<q>-H</q>: Horizontal",
+			"<q>-childs</q>: Applies to child elements"
+		],
+		"Structure": {
+			"Form": {
+				"input": {
+					"Target": "Form element",
+					"Call": "wd-input",
+					"Suffixes": [],
+					"Description": "Applies to data entry and option elements."
+				},
+				"button": {
+					"Target": "Form element",
+					"Call": "wd-button",
+					"Suffixes": [],
+					"Description": "Applies to buttons elements."
+				},
+				"label": {
+					"Target": "Form element",
+					"Call": "wd-label",
+					"Suffixes": [],
+					"Description": "Applies to labels elements."
+				}
+			},
+			"Container": {
+				"box": {
+					"Target": "Container element.",
+					"Call": "wd-box",
+					"Suffixes": [],
+					"Description": "Generic container."
+				},
+				"body": {
+					"Target": "Container element.",
+					"Call": "wd-body",
+					"Suffixes": ["-C", "-W", "-E"],
+					"Description": "Organizes the contents of the container from the side margins. Recommended tag: <code>body</code>."
+				},
+				"boxform": {
+					"Target": "Container element.",
+					"Call": "wd-boxform",
+					"Suffixes": ["-H", "-V (default)"],
+					"Description": "Arrange form elements (<code>wd-input</code>, <code>wd-button</code> and <code>wd-label</code>) horizontally or vertically. The input data types <code>radio</code> and <code>checkbox</code> organize better when inserted inside a <code>label</code>."
+				},
+				"head": {
+					"Target": "Container element.",
+					"Call": "wd-head",
+					"Suffixes": [],
+					"Description": "Define container as header. Recommended tag: <code>header</code>."
+				},
+				"foot": {
+					"Target": "Container element.",
+					"Call": "wd-foot",
+					"Suffixes": [],
+					"Description": "Define container as footer. Recommended tag: <code>footer</code>."
+				},
+				"nav": {
+					"Target": "Container element.",
+					"Call": "wd-nav",
+					"Suffixes": ["-V", "-H (default)"],
+					"Description": "Define container as navigator. The -V suffix defines the container as a vertical navigator. Recommended tag: <code>nav</code>."
+				},
+				"table": {
+					"Target": "Table element.",
+					"Call": "wd-table",
+					"Suffixes": [],
+					"Description": "Define container as table. Recommended tag: <code>table</code>."
+				},
+				"list": {
+					"Target": "List element.",
+					"Call": "wd-list",
+					"Suffixes": [],
+					"Description": "Define container as list. Recommended tag: <code>ul</code> and <code>ol</code>."
+				},
+				"bar": {
+					"Target": "Container element.",
+					"Call": "wd-bar",
+					"Suffixes": ["-N (default)", "-E", "-S", "-W"],
+					"Description": "Attaches the container to the sides of the screen. Directivity links (#link) need special care when using the <q>-N</q> suffix."
+				},
+				"follow": {
+					"Target": "Container element.",
+					"Call": "wd-follow",
+					"Suffixes": ["-N (default)", "-S"],
+					"Description": "Container that comes with the page. Suffixes define the container barrier. Directivity links (#link) need special care when using the <q>-N</q> suffix."
+				},
+				"row": {
+					"Target": "Container element.",
+					"Call": "wd-row",
+					"Description": "Defines a container to group other containers formatted as columns of predefined sizes."
+				},
+				"col": {
+					"Target": "Container element.",
+					"Call": "wd-col",
+					"Suffixes": ["-01", "-02", "-03", "-04", "-05", "-06", "-07", "-08", "-09", "-10", "-11", "-12"],
+					"Description": "Sets the size of the columns of the <code>wd-row</code> child containers. The row supports up to 12 columns and each suffix represents how many cells will be occupied by the child container. For example, the -02 suffix will be two-cell size out of a total of 12. There are fewer cells than the total, so the columns will fit to fill the entire row."
+				},
+				"dropbox": {
+					"Target": "Container element.",
+					"Call": "wd-dropbox",
+					"Suffixes": ["-click"],
+					"Description": "Defines container for dropdowns, whose display occurs in <code>onhover</code> events. The -click suffix has the same behavior, but its display occurs when the container receives the <code>data-wd-open</code> attribute."
+				},
+				"drop": {
+					"Target": "Container element.",
+					"Call": "wd-drop",
+					"Suffixes": ["-N", "-E", "-S (default)", "-W"],
+					"Description": "Sets the dropdown that will be displayed. Must be the child of <code>wd-dropbox</code>. Suffixes define the direction of the display."
+				},
+				"modal": {
+					"Target": "Container element.",
+					"Call": "wd-modal",
+					"Suffixes": [],
+					"Description": "Defines a modal window that will be displayed upon receipt of the <code>data-wd-open</code> attribute."
+				},
+				"dialog": {
+					"Target": "Container element.",
+					"Call": "wd-dialog",
+					"Suffixes": ["-small", "-big", "-full", "-N", "-E", "-S", "-W"],
+					"Description": "Defines a dialog box that will be displayed when you receive the <code>data-wd-open</code> attribute. If inserted inside a <q>modal</q> container, its display will occur along with the modal window display. Each suffix represents certain behavior for the dialog box."
+				},
+				"msg": {
+					"Target": "Container element.",
+					"Call": "wd-msg",
+					"Suffixes": ["-N (default)", "-S"],
+					"Description": "Defines a dialog mensagem box that will be displayed when you receive the <code>data-wd-open</code> attribute. If inserted inside a <q>modal</q> container, its display will occur along with the modal window display. Each suffix represents certain behavior for the dialog box."
+				},
+				"msgform": {
+					"Target": "Brother of an input element.",
+					"Call": "wd-msgform",
+					"Suffixes": ["-help (default)", "-warn"],
+					"Description": "Defines a dialog box that will be displayed when the data entry field gains focus (<q>help</q>) or when its value does not match (<q>warn</q>). The element containing this class must be placed immediately after the form element (brother), which must contain the class <code>wd-input</code>."
+				}
+			},
+			"Formatting": {
+				"padding": {
+					"Target": "Container element.",
+					"Call": "wd-padding",
+					"Suffixes": ["-V", "-H", "-childs", "-V-childs", "-H-childs"],
+					"Description": "Adds padding to the element. Suffixes allow you to add padding only in the vertical or horizontal position, and extend the effect to the child elements."
+				},
+				"margin": {
+					"Target": "Container element.",
+					"Call": "wd-margin",
+					"Suffixes": ["-V", "-H", "-childs", "-V-childs", "-H-childs"],
+					"Description": "Adds margin to the element. Suffixes allow you to add margin only in the vertical or horizontal position, and extend the effect to the child elements."
+				},
+				"border": {
+					"Target": "Container element.",
+					"Call": "wd-border",
+					"Suffixes": ["-V", "-H", "-childs", "-V-childs", "-H-childs"],
+					"Description": "Adds border to the element. Suffixes allow you to add border only in the vertical or horizontal position, and extend the effect to the child elements."
+				},
+				"rounded": {
+					"Target": "Container element.",
+					"Call": "wd-rounded",
+					"Suffixes": ["-N", "-E", "-S", "-W", "-childs", "-N-childs", "-E-childs", "-S-childs", "-W-childs"],
+					"Description": "Add rounded border to element. Suffixes allow you to add fill only in a certain position or extend the effect to the child elements."
+				},
+				"shadow": {
+					"Target": "Container element.",
+					"Call": "wd-shadow",
+					"Suffixes": ["-childs", "-in", "-out", "-in-childs", "-out-childs"],
+					"Description": "Add shade to the element. Suffixes allow you to add shade when entering or exiting with the mouse of the element as well as extending the effect to the child elements."
+				},
+				"opaque": {
+					"Target": "Container element.",
+					"Call": "wd-opaque",
+					"Suffixes": ["-childs", "-in", "-out", "-in-childs", "-out-childs"],
+					"Description": "Add opacity to the element. Suffixes allow you to add opacity when entering or exiting with the mouse of the element as well as extending the effect to the child elements."
+				},
+				"zebra": {
+					"Target": "Children element.",
+					"Call": "wd-zebra",
+					"Suffixes": [],
+					"Description": "Toggles highlighting of child elements."
+				},
+				"upon": {
+					"Target": "Container element.",
+					"Call": "wd-upon",
+					"Suffixes": ["-childs"],
+					"Description": "Highlight the element by resting the mouse over it."
+				}
+			},
+			"Text": {
+				"case": {
+					"Target": "Text content.",
+					"Call": "wd-case",
+					"Suffixes": ["-lower (default)", "-title", "-upper", "-lower-childs", "-title-childs", "-upper-childs"],
+					"Description": "Sets whether the font is lowercase, uppercase, or in title form (first letter uppercase)."
+				},
+				"align": {
+					"Target": "Text content.",
+					"Call": "wd-align",
+					"Suffixes": ["-J (justify, default)", "-N", "-E", "-S", "-W", "-C (center)", "-M (middle)", "-J-childs", "-N-childs", "-E-childs", "-S-childs", "-W-childs", "-C-childs", "-M-childs"],
+					"Description": "Sets the alignment, horizontal or vertical, of the textual content."
+				},
+				"size": {
+					"Target": "Text content.",
+					"Call": "wd-size",
+					"Suffixes": ["-rs (relatively small)", "-rl (relatively large)", "-s (small)", "-xs (extra small)", "-xxs (extra extra small)", "-l (large)", "-xl (extra large)", "-xxl (extra extra large)", "-rs-childs", "-rl-childs", "-s-childs", "-xs-childs", "-xxs-childs", "-l-childs", "-xl-childs", "-xxl-childs"],
+					"Description": "Sets the font size. The default value is medium, other values ​​are obtained by means of the suffixes."
+				}
+			},
+			"Position": {
+				"place": {
+					"Target": "Child container.",
+					"Call": "wd-place",
+					"Suffixes": ["-N", "-NE", "-E", "-SE", "-S", "-SW", "-W", "-NW", "-M (middle, default)"],
+					"Description": "Sets the placement of the child container relative to the parent container. The parent container can not have static placement."
+				},
+				"showplace": {
+					"Target": "Parent container.",
+					"Call": "wd-showplace",
+					"Suffixes": ["-in (default)", "-out"],
+					"Description": "Defines whether the child element that contains the <code>wd-place</code> class will be displayed when the mouse enters or exits its parent element."
+				},
+				"float": {
+					"Target": "Container element.",
+					"Call": "wd-float",
+					"Suffixes": ["-W (default)", "-E"],
+					"Description": "Define the float attribute."
+				},
+				"hide": {
+					"Target": "Element.",
+					"Call": "wd-hide",
+					"Suffixes": ["-screen (default)", "-print"],
+					"Description": "Sets whether or not to display the element when viewing or printing."
+				}
+			},
+			"Color": {
+				"color": {
+					"Target": "Text content.",
+					"Call": "wd-color",
+					"Suffixes": ["-black (default)", "-silver", "-gray", "-white", "-maroon", "-red", "-purple", "-fuchsia", "-green", "-lime", "-olive", "-yellow", "-navy", "-blue", "-teal", "-aqua", "-orange"],
+					"Description": "Sets the font color."
+				},
+				"bgcolor": {
+					"Target": "Container element.",
+					"Call": "wd-bgcolor",
+					"Suffixes": ["-black", "-silver", "-gray", "-white (default)", "-maroon", "-red", "-purple", "-fuchsia", "-green", "-lime", "-olive", "-yellow", "-navy", "-blue", "-teal", "-aqua", "-orange"],
+					"Description": "Sets the background color."
+				}
+			},
+			"Symbol": {
+				"symbol": {
+					"Target": "Content element.",
+					"Call": "wd-symbol",
+					"Suffixes": ["-add", "-remove", "-back", "-forward", "-cancel", "-ok", "-info", "-question", "-alert", "-error", "-help", "-menu", "-forbidden", "-reload", "-mail", "-config", "-open", "-star", "-phone", "-next", "-previous"],
+					"Description": "Add a symbol icon at the beginning of the element. The display of the symbol will depend on how the browser is configured to display html symbols. There is no default value, the suffix is ​​mandatory."
+				}
+			}
+		}
+	}
+}
+
+function setManual(parent, obj, level = 1) {
+	var h, p, ul, li, div;
+	for (var x in obj) {
+		div = document.createElement("div");
+		div.className = x;
+		h = document.createElement("h3");
+		h.innerHTML = x;
+		h.className = x+" level"+level;
+		div.appendChild(h);
+		if (Array.isArray(obj[x])) {
+			ul = document.createElement("ul");
+			for (var i = 0; i < obj[x].length; i++) {
+				li = document.createElement("li");
+				li.innerHTML = obj[x][i];
+				ul.appendChild(li);
+			}
+			div.appendChild(ul);
+		} else if (obj[x] instanceof Object) {
+			setManual(div, obj[x], level+1);
+		}
+		else {
+			p = document.createElement("p");
+			p.innerHTML = obj[x];
+			p.className = x;
+			div.appendChild(p);
+		}
+		parent.appendChild(div);
+	}
+	return;
+}
+	
+window.onload = function(ev) {
+		setManual(document.getElementById("manual"), manual);
+		return;
+};
+
+	</script>	
+	</head>
+<body>
+<div id="head">
+	<h1>WD</h1>
+	<p><q><b>w</b>eb <b>d</b>evelopment</q>, a javascript library, and <q><b>w</b>eb <b>d</b>esign</q>, a style sheet.</p>
+</div>
+<div id="manual"></div>
+</body>
+<div id="foot">
+Idealized by Willian Donadelli &lt;<u>wdonadelli@gmail.com</u>&gt;
+</div>
+
+</html>
+-->
