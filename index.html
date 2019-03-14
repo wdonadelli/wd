@@ -11,37 +11,38 @@
 	</head>
 <body class="wd-align-J" data-wd-desktop="wd-body-E">
 
-	<main id="home" class="wd-box">
+	<main class="wd-box">
 
 		<header class="wd-head">
 			<h1>WD Manual</h1>
 		</header>
 
 		<nav class="wd-nav wd-bgcolor-navy wd-follow-N" data-wd-desktop="wd-hide">
-			<span data-wd-action="open: #menu" class="wd-symbol-menu"></span>
+			<a href="#menu" data-wd-action="open: #menu" class="wd-symbol-menu"></a>
 		</nav>
 		
-		<!--<section data-wd-load="manual/home.html" class="wd-box"></section>-->
+		<div data-wd-repeat="manual/menu.json">
+			<section id="{{id}}" class="wd-box">
+				<header class="wd-head">
+					<h3>{{title}}</h3>
+				</header>
+				<article {{lcontent}}></article>
+			</section>
+		</div>
 	</main>
 	
-	<aside data-wd-phone="wd-modal" data-wd-tablet="wd-modal" data-wd-desktop="wd-bar-W" id="menu" data-wd-action="close: #menu">
+	<section id="menu" data-wd-phone="wd-dialog-full" data-wd-tablet="wd-dialog-full" data-wd-desktop="wd-bar-W" class="wd-box wd-bgcolor-white wd-border-V" style="overflow: auto">
 
-		<section data-wd-phone="wd-dialog-W" data-wd-tablet="wd-dialog-W" class="wd-box wd-bgcolor-white wd-border-V" style="overflow: auto">
+		<header class="wd-head wd-bgcolor-navy wd-follow-N">
+			<h3>Menu</h3>
+			<span data-wd-desktop="wd-hide" class="wd-place-E wd-symbol-cancel" data-wd-action="close: #menu"></span>
+		</header>
 
-			<header class="wd-head wd-bgcolor-navy">
-				<h3>Menu</h3>
-				<span data-wd-desktop="wd-hide" class="wd-place-E wd-symbol-cancel" data-wd-action="close: #menu"></span>
-			</header>
+		<nav class="wd-nav-V" data-wd-repeat="manual/menu.json">
+			<a href="#{{id}}" data-wd-action="tab: #{{id}}&close: #menu" title="{{description}}" class="{{style}}">{{title}}</a>
+		</nav>
 
-			<nav class="wd-nav-V" data-wd-repeat="manual/menu.json">
-				<a href="#{{id}}" data-wd-action="tab: #{{id}} & close: #menu" title="{{description}}" class="{{style}}">{{title}}</a>
-			</nav>
-
-		</section>
-
-	</aside>
-
-	
+	</section>
 
 </body>
 </html>
