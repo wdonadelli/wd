@@ -413,7 +413,7 @@ var wd = (function() {
 				del = (desktop+" "+tablet).split(" ");
 				break;
 		}
-		for (var i = 0; i < add.lenght; i++) {
+		for (var i = 0; i < add.length; i++) {
 			del = arrayDel(del, add[i]);
 		}
 		wd(e).class({add: add, del: del});
