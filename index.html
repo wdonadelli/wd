@@ -1,89 +1,109 @@
 ﻿<!DOCTYPE html>
 <html lang="">
 	<head>
-		<title>WD Manual</title>
+		<title>wd - javascript and style sheet library</title>
 		<meta charset="utf-8"/>
 		<meta name="viewport" content="width=device-width, initial-scale=1"/>
 		<meta name="author" content="Willian Donadelli"/>
-		<script src="https://wdonadelli.github.io/wd/wd.js"></script>
-		<link rel="stylesheet" href="https://wdonadelli.github.io/wd/wd.css"/>
 		<style>
-.eg {
+body {
+	margin: 0;
+}
+h3 {
+	font-size: medium;
+}
+q {
+	color: #008080;
+}
+#head {
+	text-align: right;
+	color: #FFFFFF;
+	background-color: #000000;
+	margin: 0;
+	padding: 0.5em;
+}
+#head > h1 {
+	font-size: xx-larger;
+}
+#head > p {
+	font-style: italic;
+}
+#foot {
+	text-align: right;
+	margin: 0;
+	padding: 1em; 
+	font-style: italic;
+}
+/*title*/
+#manual {
+	text-align: justify;
+	margin: 0.5em;
+}
+#manual > div > h3 {
+	font-size: xx-large;
+	text-align: center;
+	text-transform: uppercase;
+}
+/*chapter*/
+#manual h3.Structure {
+	font-size: x-large;
+	text-align: center;
+	text-decoration: underline;
+	text-transform: capitalize;
+}
+/*subchapter*/
+#manual div.Structure > div > h3 {
+	font-size: large;
+	text-align: left;
+	font-style: italic;
+	border-bottom: thin solid #000000;
+	text-transform: capitalize;
+}
+/*content*/
+div.Description > p,
+div.Target > p,
+div.Arguments > div > p {
+	font-style: italic;
+	text-indent: 3em;
+	
+}
+div.Version > p,
+div.Attributes > div,
+div.Methods > div,
+div.Arguments > div,
+div.CSS div.Structure > div > div > div {
+	margin-left: 1em;
+}
+div.Call > p {
 	font-family: monospace;
+	white-space: pre-line;
+	color: #0000FF;
+	margin-left: 1em;
+	font-size: large;
+}
+div.Example > p {
+	font-family: monospace;
+	white-space: pre-line;
 	padding: 1em 1em;
 	border: medium inset #000000;
 	background-color: #FFFAFA;
-	overflow: auto;
-	font-size: 1em;
 }
-	</style>
-	</head>
-<body data-wd-load="manual/home.html" class="wd-align-J">
-
-</body>
-
-
-
-
-
-
-
-
-<!--
-home
-	js
-		Generic
-			attributes
-			methods
-		Text
-			attributes
-			methods
-		Array
-			attributes
-			methods
-		regex
-			attributes
-			methods
-		Boolean
-			attributes
-			methods
-		number
-			attributes
-			methods
-		Date
-			attributes
-			methods
-		Time
-			attributes
-			methods
-		Path
-			attributes
-			methods
-		Html
-			attributes
-			methods
-	dataset
-		
-	css
-
-
-
-</body>
-</html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-<!--
+div.Example > p > q {
+	color: red;
+}
+div.Attributes > div > h3,
+div.Arguments > div > h3,
+div.Methods > div > h3,
+div.CSS div.Structure > div > div > h3 {
+	font-family: monospace;
+	white-space: pre-line;
+	color: #0000FF;
+	font-size: large;
+	font-weight: normal;
+	border-bottom: thin solid;
+}
+		</style>
+		<script>
 var manual = {
 	"Tools": {
 		"Version": "1.0.0",
@@ -1095,4 +1115,3 @@ Idealized by Willian Donadelli &lt;<u>wdonadelli@gmail.com</u>&gt;
 </div>
 
 </html>
--->
