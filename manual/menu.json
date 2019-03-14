@@ -1,0 +1,109 @@
+[
+	{
+		"title": "Home",
+		"description": "WD Home Page",
+		"id": "home",
+		"content": "data-wd-load=\"manual/home.html\"",
+		"style": "wd-case-upper wd-size-l"
+	},
+
+	{
+		"title": "WD JavaScript Tools",
+		"description": "WD JavaScript Tools",
+		"id": "js",
+		"content": "data-wd-load=\"manual/js.html\"",
+		"style": "wd-case-title"
+	},
+
+	{
+		"title": "Array",
+		"description": "List of values.",
+		"id": "js_array",
+		"content": "data-wd-load=\"manual/js.array.html\"",
+		"style": "wd-size-s wd-case-title"
+	},
+	{
+		"title": "Boolean",
+		"description": "Boolean values.",
+		"id": "js_bool",
+		"content": "data-wd-load=\"manual/js.bool.html\"",
+		"style": "wd-size-s wd-case-title"
+	},
+	{
+		"title": "Date",
+		"description": "Values ​​that represent dates.",
+		"id": "js_date",
+		"content": "data-wd-load=\"manual/js.date.html\"",
+		"style": "wd-size-s wd-case-title"
+	},
+	{
+		"title": "Generic", 
+		"description": "Values ​​not specified by other categories.",
+		"id": "js_generic",
+		"content": "data-wd-load=\"manual/js.generic.html\"",
+		"style": "wd-size-s wd-case-title"
+	},
+	{
+		"title": "HTML",
+		"description": "Elements or list of HTML elements.",
+		"id": "js_html",
+		"content": "data-wd-load=\"manual/js.html.html\"",
+		"style": "wd-size-s wd-case-title"
+	},
+	{
+		"title": "Number",
+		"description": "Values ​​that identify numbers.",
+		"id": "js_number",
+		"content": "data-wd-load=\"manual/js.number.html\"",
+		"style": "wd-size-s wd-case-title"
+	},
+	{
+		"title": "Path",
+		"description": "Values ​​that represent an accessible file.",
+		"id": "js_path",
+		"content": "data-wd-load=\"manual/js.path.html\"",
+		"style": "wd-size-s wd-case-title"
+	},
+	{
+		"title": "RegExp",
+		"description": "Values ​​that represent a regular expression.",
+		"id": "js_regex",
+		"content": "data-wd-load=\"manual/js.regex.html\"",
+		"style": "wd-size-s wd-case-title"
+	},
+
+	{
+		"title": "Text",
+		"description": "Strings not specified by other categories.",
+		"id": "js_text",
+		"content": "data-wd-load=\"manual/js.text.html\"",
+		"style": "wd-size-s wd-case-title"
+	},
+	{
+		"title": "Time",
+		"description": "Values ​​that represent time.",
+		"id": "js_time",
+		"content": "data-wd-load=\"manual/js.time.html\"",
+		"style": "wd-size-s wd-case-title"
+	},
+
+
+	
+	
+	
+	
+	{
+		"title": "WD Attributes Tools",
+		"description": "WD Attributes Tools",
+		"id": "data",
+		"content": "data-wd-load=\"manual/data.html\"",
+		"style": "wd-case-upper wd-size-l"
+	},
+	{
+		"title": "WD Style Sheet",
+		"description": "WD Style Sheet",
+		"id": "css",
+		"content": "data-wd-load=\"manual/css.html\"",
+		"style": "wd-case-upper wd-size-l"
+	}
+]
