@@ -1,4 +1,4 @@
-﻿/* Willian Donadelli | <wdonadelli@gmail.com> | v1.1.2 */
+﻿/* Willian Donadelli | <wdonadelli@gmail.com> | v1.1.3 */
 
 "use strict";
 var wd = (function() {
@@ -394,22 +394,29 @@ var wd = (function() {
 	function data_wdDevice(e) {
 		/*Define o estilo do elemento a partir do tamanho da tela*/
 		if (!("wdDesktop" in e.dataset) && !("wdTablet" in e.dataset) && !("wdPhone" in e.dataset)) {return;}
-		var device, desktop, tablet, phone;
+		var device, desktop, tablet, phone, add, del;
 		device  = deviceController;
 		desktop = "wdDesktop" in e.dataset ? e.dataset.wdDesktop : "";
 		tablet  = "wdTablet"  in e.dataset ? e.dataset.wdTablet : "";
 		phone   = "wdPhone"   in e.dataset ? e.dataset.wdPhone : "";
 		switch(device) {
 			case "desktop":
-				wd(e).class({add: desktop.split(" "), del: (tablet+" "+phone).split(" ")});
+				add = desktop.split(" ");
+				del = (tablet+" "+phone).split(" ");
 				break;
 			case "tablet":
-				wd(e).class({add: tablet.split(" "), del: (desktop+" "+phone).split(" ")});
+				add = tablet.split(" ");
+				del = (desktop+" "+phone).split(" ");
 				break;
 			case "phone":
-				wd(e).class({add: phone.split(" "), del: (desktop+" "+tablet).split(" ")});
+				add = phone.split(" ");
+				del = (desktop+" "+tablet).split(" ");
 				break;
 		}
+		for (var i = 0; i < add.lenght; i++) {
+			del = arrayDel(del, add[i]);
+		}
+		wd(e).class({add: add, del: del});
 		return;
 	};
 
@@ -1455,16 +1462,28 @@ var wd = (function() {
 			values = [];
 		} else if (type(list) === "object") {
 			if ("add" in list) {
-				if (type(list.add) !== "array") {list.add = [list.add];}
-				for (i = 0; i < list.add.length; i++) {values = arrayAdd(values, list.add[i]);}
+				if (type(list.add) !== "array") {
+					list.add = [list.add];
+				}
+				for (i = 0; i < list.add.length; i++) {
+					values = arrayAdd(values, list.add[i]);
+				}
 			}
 			if ("del" in list) {
-				if (type(list.del) !== "array") {list.del = [list.del];}
-				for (i = 0; i < list.del.length; i++) {values = arrayDel(values, list.del[i]);}
+				if (type(list.del) !== "array") {
+					list.del = [list.del];
+				}
+				for (i = 0; i < list.del.length; i++) {
+					values = arrayDel(values, list.del[i]);
+				}
 			}
 			if ("toggle" in list) {
-				if (type(list.toggle) !== "array") {list.toggle = [list.toggle];}
-				for (i = 0; i < list.toggle.length; i++) {values = arrayToggle(values, list.toggle[i]);}
+				if (type(list.toggle) !== "array") {
+					list.toggle = [list.toggle];
+				}
+				for (i = 0; i < list.toggle.length; i++) {
+					values = arrayToggle(values, list.toggle[i]);
+				}
 			}
 		}
 		elem.className = values.length === 0 ? "" : stringTrim(arrayOrganized(values).join(" "));
