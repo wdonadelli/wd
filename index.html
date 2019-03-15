@@ -26,7 +26,7 @@
 				<header class="wd-head">
 					<h3>{{title}}</h3>
 				</header>
-				<article {{lcontent}}></article>
+				<article {{content}}></article>
 			</section>
 		</div>
 	</main>
@@ -48,7 +48,8 @@
 </html>
 
 
-
+<!--
+wd("manual/menu.json").get((e)=> {for (var i = 0; i < e.json.length; i++) {console.log("touch "+e.json[i].content.split("/")[1].replace("'", ""))}})-->
 
 
 
