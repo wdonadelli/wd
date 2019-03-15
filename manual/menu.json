@@ -1,90 +1,180 @@
 [
-	{
+	{"x": "HOME===============================================================",
 		"title": "Home",
 		"description": "WD Home Page",
 		"id": "home",
 		"content": "data-wd-load='manual/home.html'",
-		"style": "wd-case-title wd-bgcolor-black"
+		"style": "wd-case-title wd-color-blue",
+		"click":  "data-wd-click=''"
 	},
 
-	{
+	{"x": "JS=================================================================",
 		"title": "WD JavaScript Tools",
 		"description": "WD JavaScript Tools",
 		"id": "js",
 		"content": "data-wd-load='manual/js.html'",
-		"style": "wd-case-upper wd-bgcolor-green"
+		"style": "wd-color-blue",
+		"click":  ""
 	},
 
-	{
+	{"x": "JS-ARRAY===========================================================",
 		"title": "Array",
 		"description": "List of values.",
 		"id": "js_array",
 		"content": "data-wd-load='manual/js.array.html'",
-		"style": "wd-case-title"
+		"style": "wd-case-title",
+		"click":  ""
+	},
+		{
+		"title": "Array.add",
+		"description": "Method",
+		"id": "js_array_add",
+		"content": "data-wd-load='manual/js.array.add.html'",
+		"style": "wd-size-s wd-indent",
+		"click":  ""
 	},
 	{
+		"title": "Array.amount",
+		"description": "Method",
+		"id": "js_array_amount",
+		"content": "data-wd-load='manual/js.array.amount.html'",
+		"style": "wd-size-s wd-indent",
+		"click":  ""
+	},
+	{
+		"title": "Array.del",
+		"description": "Method",
+		"id": "js_array_del",
+		"content": "data-wd-load='manual/js.array.del.html'",
+		"style": "wd-size-s wd-indent",
+		"click":  ""
+	},
+	{
+		"title": "Array.organized",
+		"description": "Attribute",
+		"id": "js_array_organized",
+		"content": "data-wd-load='manual/js.array.organized.html'",
+		"style": "wd-size-s wd-indent",
+		"click":  ""
+	},
+	{
+		"title": "Array.replace",
+		"description": "Method",
+		"id": "js_array_replace",
+		"content": "data-wd-load='manual/js.array.replace.html'",
+		"style": "wd-size-s wd-indent",
+		"click":  ""
+	},
+	{
+		"title": "Array.sort",
+		"description": "Attribute",
+		"id": "js_array_sort",
+		"content": "data-wd-load='manual/js.array.sort.html'",
+		"style": "wd-size-s wd-indent",
+		"click":  ""
+	},
+	{
+		"title": "Array.toggle",
+		"description": "Method",
+		"id": "js_array_toggle",
+		"content": "data-wd-load='manual/js.array.toggle.html'",
+		"style": "wd-size-s wd-indent",
+		"click":  ""
+	},
+	{
+		"title": "Array.unique",
+		"description": "Attribute",
+		"id": "js_array_unique",
+		"content": "data-wd-load='manual/js.array.unique.html'",
+		"style": "wd-size-s wd-indent",
+		"click":  ""
+	},
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	{"x": "JS-BOOLEAN=========================================================",
 		"title": "Boolean",
 		"description": "Boolean values.",
 		"id": "js_bool",
 		"content": "data-wd-load='manual/js.bool.html'",
-		"style": "wd-case-title"
+		"style": "wd-case-title",
+		"click":  ""
 	},
-	{
+	{"x": "JS-DATE============================================================",
 		"title": "Date",
 		"description": "Values ​​that represent dates.",
 		"id": "js_date",
 		"content": "data-wd-load='manual/js.date.html'",
-		"style": "wd-case-title"
+		"style": "wd-case-title",
+		"click":  ""
 	},
-	{
+	{"x": "JS-GENERIC=========================================================",
 		"title": "Generic", 
 		"description": "Values ​​not specified by other categories.",
 		"id": "js_generic",
 		"content": "data-wd-load='manual/js.generic.html'",
-		"style": "wd-case-title"
+		"style": "wd-case-title",
+		"click":  ""
 	},
-	{
+	{"x": "JS-HTML============================================================",
 		"title": "HTML",
 		"description": "Elements or list of HTML elements.",
 		"id": "js_html",
 		"content": "data-wd-load='manual/js.html.html'",
-		"style": "wd-case-title"
+		"style": "wd-case-title",
+		"click":  ""
 	},
-	{
+	{"x": "JS-NUMBER==========================================================",
 		"title": "Number",
 		"description": "Values ​​that identify numbers.",
 		"id": "js_number",
 		"content": "data-wd-load='manual/js.number.html'",
-		"style": "wd-case-title"
+		"style": "wd-case-title",
+		"click":  ""
 	},
-	{
+	{"x": "JS-PATH============================================================",
 		"title": "Path",
 		"description": "Values ​​that represent an accessible file.",
 		"id": "js_path",
 		"content": "data-wd-load='manual/js.path.html'",
-		"style": "wd-case-title"
+		"style": "wd-case-title",
+		"click":  ""
 	},
-	{
+	{"x": "JS-REGEXP==========================================================",
 		"title": "RegExp",
 		"description": "Values ​​that represent a regular expression.",
 		"id": "js_regex",
 		"content": "data-wd-load='manual/js.regex.html'",
-		"style": "wd-case-title"
+		"style": "wd-case-title",
+		"click":  ""
 	},
 
-	{
+	{"x": "JS-TEXT============================================================",
 		"title": "Text",
 		"description": "Strings not specified by other categories.",
 		"id": "js_text",
 		"content": "data-wd-load='manual/js.text.html'",
-		"style": "wd-case-title"
+		"style": "wd-case-title",
+		"click":  ""
 	},
-	{
+	{"x": "JS-TIME============================================================",
 		"title": "Time",
 		"description": "Values ​​that represent time.",
 		"id": "js_time",
 		"content": "data-wd-load='manual/js.time.html'",
-		"style": "wd-case-title"
+		"style": "wd-case-title",
+		"click":  ""
 	},
 
 
@@ -92,18 +182,20 @@
 	
 	
 	
-	{
+	{"x": "DATA===============================================================",
 		"title": "WD Attributes Tools",
 		"description": "WD Attributes Tools",
 		"id": "data",
 		"content": "data-wd-load='manual/data.html'",
-		"style": "wd-case-upper wd-bgcolor-green"
+		"style": "wd-color-blue",
+		"click":  ""
 	},
-	{
+	{"x": "CSS================================================================",
 		"title": "WD Style Sheet",
 		"description": "WD Style Sheet",
 		"id": "css",
 		"content": "data-wd-load='manual/css.html'",
-		"style": "wd-case-upper wd-bgcolor-green"
+		"style": "wd-color-blue",
+		"click":  ""
 	}
 ]
