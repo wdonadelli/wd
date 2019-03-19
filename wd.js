@@ -1,4 +1,4 @@
-﻿/* Willian Donadelli | <wdonadelli@gmail.com> | v1.1.3 */
+﻿/* Willian Donadelli | <wdonadelli@gmail.com> | v1.1.4 */
 
 "use strict";
 var wd = (function() {
@@ -692,6 +692,39 @@ var wd = (function() {
 		return input.trim().replace(/ +/g, " ");
 	};
 
+	function stringClear(input) {
+		/*Elimina os acentos de input*/
+		var clear = {
+			A: /[À-Æ]/g,
+			C: /[Ç]/g,
+			E: /[È-Ë]/g,
+			I: /[Ì-Ï]/g,
+			D: /[Ð]/g,
+			N: /[Ñ]/g,
+			O: /[Ò-ÖØ]/g,
+			U: /[Ù-Ü]/g,
+			Y: /[Ý]/g,
+			a: /[à-æ]/g,
+			c: /[ç]/g,
+			e: /[è-ë]/g,
+			i: /[ì-ï]/g,
+			d: /[ð]/g,
+			n: /[ñ]/g,
+			o: /[ò-öø]/g,
+			u: /[ù-ü]/g,
+			y: /[ýÿ]/g
+		};
+		input = String(input);
+		if ("normalize" in String) {
+			input = input.normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+		} else {
+			for (var i in clear) {
+				input = input.replace(clear[i], i);
+			}
+		}
+		return input;
+	};
+
 /*===========================================================================*/
 	function arrayDel(array, item) {
 		/*Retona array sem item*/
@@ -753,16 +786,17 @@ var wd = (function() {
 			} else if (kind === "time") {
 				aDate.push({"x": x, "y": timeDefiner(x)});
 			} else {
-				aNormal.push(x);
+				aNormal.push({"x": x, "y": stringClear(x)});
 			}
 		}
-		aNumber.sort(function(a,b) {return a.y-b.y;});
-		aTime.sort(function(a,b) {return a.y-b.y;});
-		aDate.sort(function(a,b) {return a.y-b.y;});
-		aNormal.sort();
+		aNumber.sort(function(a,b) {return a.y - b.y;});
+		aTime.sort(function(a,b) {return a.y - b.y;});
+		aDate.sort(function(a,b) {return a.y - b.y;});
+		aNormal.sort(function(a,b) {return a.y > b.y;});
 		aNumber.forEach(function(v, i, a) {a[i] = v.x;});
 		aTime.forEach(function(v, i, a) {a[i] = v.x;});
 		aDate.forEach(function(v, i, a) {a[i] = v.x;});
+		aNormal.forEach(function(v, i, a) {a[i] = v.x;});
 		aReturn = aReturn.concat(aNumber, aTime, aDate, aNormal);
 		return aReturn;
 	};
