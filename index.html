@@ -143,60 +143,6 @@ var manual = {
 					}
 				}
 			},
-			"array": {
-				"Primitive": ["Array"],
-				"Input": ["Array."],
-				"Description": "Array manipulation.",
-				"Attributes": {
-					"sort": {
-						"Description": "Returns the ordered array in the following sequence: numbers, time, date and others.",
-						"Example": "<b>var</b> x = [<q>wd</q>, 100, 20, <q>9</q>];\nwd(x).sort;\n&gt; [<q>9</q>, 20, 100, <q>wd</q>]"
-					},
-					"unique": {
-						"Description": "Returns the array with no repeated values.",
-						"Example": "<b>var</b> x = [<q>wd</q>, 100, 100, 100, <q>wd</q>];\nwd(x).unique;\n&gt; [<q>wd</q>, 100]"
-					},
-					"organized": {
-						"Description": "Returns the ordered array with no repeated values.",
-						"Example": "<b>var</b> x = [<q>wd</q>, 100, 100, 100, <q>wd</q>];\nwd(x).organized;\n&gt; [100, <q>wd</q>]"
-					}
-				},
-				"Methods": {
-					"del": {
-						"Call": "del(item)",
-						"Description": "Returns the array without the item entered in the argument, regardless of quantity.",
-						"Arguments": {
-							"item": "Item to remove from array."
-						},
-						"Example": "<b>var</b> x = [<q>wd</q>, 100, 100, 100, <q>wd</q>];\nwd(x).del(100);\n&gt; [<q>wd</q>, <q>wd</q>]"
-					},
-					"toggle": {
-						"Call": "toggle(item)",
-						"Description": "Return the array with the item entered, if it does not exist, or without the item entered, if it already exists.",
-						"Arguments": {
-							"item": "Item to add or remove from array."
-						},
-						"Example": "<b>var</b> x = [<q>wd</q>, 100, 100, <q>wd</q>];\nwd(x).toggle(100);\n&gt; [<q>wd</q>, <q>wd</q>]\nwd(x).toggle(1);\n&gt; [<q>wd</q>, 100, 100, <q>wd</q>, 1]"
-					},
-					"amount": {
-						"Call": "amount(item)",
-						"Description": "Returns the number of times the entered item appears in the array.",
-						"Arguments": {
-							"item": "Item to be located."
-						},
-						"Example": "<b>var</b> x = [<q>wd</q>, 100, 100, <q>wd</q>];\nwd(x).amount(100);\n&gt; 2"
-					},
-					"replace": {
-						"Call": "replace(item, value)",
-						"Description": "Returns the array with the item replaced by the new value.",
-						"Arguments": {
-							"item": "Item to be replaced.",
-							"value": "Substitute value."
-						},
-						"Example": "<b>var</b> x = [<q>wd</q>, 100, 100, <q>wd</q>];\nwd(x).replace(100, 2);\n&gt; [<q>wd</q>, 2, 2, <q>wd</q>]"
-					}
-				}
-			},
 			"regex": {
 				"Primitive": ["RegExp"],
 				"Input": ["A Regular Expression"],
@@ -209,17 +155,10 @@ var manual = {
 					}
 				}
 			},
-			"boolean": {
-				"Primitive": ["Boolean"],
-				"Input": ["true", "false"],
-				"Description": "Boolean manipulation",
-				"Attributes": {
-					"value": {
-						"Description": "Returns 1 (one), if the value of the input argument is true, or 0 (zero), if false.",
-						"Example": "wd(true).value;\n&gt; 1\nwd(false).value;\n&gt; 0"
-					}
-				}
-			},
+
+
+
+
 			"number": {
 				"Primitive": ["Number", "String"],
 				"Input": ["Number", "Number in text format"],

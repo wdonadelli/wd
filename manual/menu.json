@@ -25,7 +25,7 @@
 		"style": "wd-case-title",
 		"click":  ""
 	},
-		{
+	{
 		"title": "Array.add",
 		"description": "Method",
 		"id": "js_array_add",
@@ -90,19 +90,6 @@
 		"click":  ""
 	},
 	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	{"x": "JS-BOOLEAN=========================================================",
 		"title": "Boolean",
 		"description": "Boolean values.",
@@ -111,6 +98,27 @@
 		"style": "wd-case-title",
 		"click":  ""
 	},
+	{
+		"title": "Boolean.value",
+		"description": "Attribute",
+		"id": "js_bool_value",
+		"content": "data-wd-load='manual/js.bool.value.html'",
+		"style": "wd-size-s wd-indent",
+		"click":  ""
+	},
+
+
+
+
+
+
+
+
+
+
+
+
+
 	{"x": "JS-DATE============================================================",
 		"title": "Date",
 		"description": "Values ​​that represent dates.",

@@ -1,0 +1,14 @@
+<p class="wd-indent">This is a <u>method</u> that returns the array with the item entered, if it does not exist, or without the item entered, if it already exists. It is called as follows:</p>
+
+<pre class="wd-code">wd(input).toggle(item);</pre>
+
+<p class="wd-indent">The <code>item</code> argument is the value to add or remove from array.</p>
+
+<pre class="wd-code"><cite>//Example</cite>
+<code>var</code> x = [<q>wd</q>, <var>100</var>, <var>100</var>, <q>wd</q>];
+wd(x).toggle(<var>100</var>);
+<sample>[<q>wd</q>, <q>wd</q>]</sample>
+wd(x).toggle(<var>1</var>);
+<sample>[<q>wd</q>, <var>100</var>, <var>100</var>, <q>wd</q>, <var>1</var>]
+<cite>//Variable "x" is not changed</cite>
+</pre>
