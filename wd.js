@@ -1,11 +1,11 @@
-﻿/* Willian Donadelli | <wdonadelli@gmail.com> | v1.1.4 */
+﻿/* Willian Donadelli | <wdonadelli@gmail.com> | v1.2.0 */
 
 "use strict";
 var wd = (function() {
 
 /*===========================================================================*/
 	/*Parâmetros de configuração de data*/
-	const Y_0 = 1, Y_4 = 4, Y_100 = 100, Y_400 = 400, WEEK_REF = 1, Y_max = 9999;
+	var Y_0 = 1, Y_4 = 4, Y_100 = 100, Y_400 = 400, WEEK_REF = 1, Y_max = 9999;
 
 	/*Guarda o tamanho da tela*/
 	var deviceController = null;
@@ -18,6 +18,33 @@ var wd = (function() {
 		position: "fixed", top: 0, right: 0, bottom: 0, left: 0,
 		color: "white", backgroundColor: "black", opacity: "0.9", cursor: "progress"
 	});
+	
+	/*Checar a existências dos objetos padrões*/
+	function checkMainObjects() {	
+		var objects = [
+			"Boolean",
+			"Number",
+			"String",
+			"Array",
+			"RegExp",
+			"Function",
+			"Date",
+			"HTMLElement",
+			"NodeList",
+			"HTMLCollection",
+			"HTMLAllCollection",
+			"HTMLFormControlsCollection"
+		];
+		
+		for (var o = 0; o < objects.length; o++) {
+			if (!(objects[o] in window)) {
+				window[o] = new Object();
+			}
+		}
+		return;
+	};
+
+	checkMainObjects();
 
 	/*Controlador da janela modal (ajax)*/
 	var modalController = 0;
@@ -102,7 +129,7 @@ var wd = (function() {
 	};
 	WDboolean.prototype = Object.create(WD.prototype, {
 		constructor: {value: WDboolean},
-		value: {enumerable: true, get: function() {return input === true ? 1 : 0;}},
+		valueOf: {enumerable: true, value: function() {return input === true ? 1 : 0;}},
 	});
 /*---------------------------------------------------------------------------*/
 	function WDnumber(input) {
@@ -573,7 +600,7 @@ var wd = (function() {
 		var lang = document.body.parentElement.lang.replace(/\ +/g, "");
 		return lang.length !== 0 ? lang : navigator.language || navigator.browserLanguage || "en-US";
 	};
-	
+
 	function type(input, ajax) {
 		/*Retorna o tipo de input*/
 		if (ajax === undefined) {ajax = false;}
