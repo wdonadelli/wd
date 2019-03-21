@@ -107,18 +107,6 @@
 		"click":  ""
 	},
 
-
-
-
-
-
-
-
-
-
-
-
-
 	{"x": "JS-DATE============================================================",
 		"title": "Date",
 		"description": "Values ​​that represent dates.",
@@ -126,6 +114,102 @@
 		"content": "data-wd-load='manual/js.date.html'",
 		"style": "wd-case-title",
 		"click":  ""
+	},
+	{
+		"title": "Date.week",
+		"description": "Attribute",
+		"id": "js_date_week",
+		"content": "data-wd-load='manual/js.date.week.html'",
+		"style": "wd-size-s wd-indent",
+		"click": ""
+	},
+	{
+		"title": "Date.day",
+		"description": "Attribute",
+		"id": "js_date_day",
+		"content": "data-wd-load='manual/js.date.day.html'",
+		"style": "wd-size-s wd-indent",
+		"click": ""
+	},
+	{
+		"title": "Date.month",
+		"description": "Attribute",
+		"id": "js_date_month",
+		"content": "data-wd-load='manual/js.date.month.html'",
+		"style": "wd-size-s wd-indent",
+		"click": ""
+	},
+	{
+		"title": "Date.year",
+		"description": "Attribute",
+		"id": "js_date_year",
+		"content": "data-wd-load='manual/js.date.year.html'",
+		"style": "wd-size-s wd-indent",
+		"click": ""
+	},
+	{
+		"title": "Date.leap",
+		"description": "Attribute",
+		"id": "js_date_leap",
+		"content": "data-wd-load='manual/js.date.leap.html'",
+		"style": "wd-size-s wd-indent",
+		"click": ""
+	},
+	{
+		"title": "Date.days",
+		"description": "Attribute",
+		"id": "js_date_days",
+		"content": "data-wd-load='manual/js.date.days.html'",
+		"style": "wd-size-s wd-indent",
+		"click": ""
+	},
+	{
+		"title": "Date.width",
+		"description": "Attribute",
+		"id": "js_date_width",
+		"content": "data-wd-load='manual/js.date.width.html'",
+		"style": "wd-size-s wd-indent",
+		"click": ""
+	},
+	{
+		"title": "Date.weeks",
+		"description": "Attribute",
+		"id": "js_date_weeks",
+		"content": "data-wd-load='manual/js.date.weeks.html'",
+		"style": "wd-size-s wd-indent",
+		"click": ""
+	},
+	{
+		"title": "Date.countdown",
+		"description": "Attribute",
+		"id": "js_date_countdown",
+		"content": "data-wd-load='manual/js.date.countdown.html'",
+		"style": "wd-size-s wd-indent",
+		"click": ""
+	},
+	{
+		"title": "Date.toString",
+		"description": "Method",
+		"id": "js_date_toString",
+		"content": "data-wd-load='manual/js.date.toString.html'",
+		"style": "wd-size-s wd-indent",
+		"click": ""
+	},
+	{
+		"title": "Date.valueOf",
+		"description": "Method",
+		"id": "js_date_valueOf",
+		"content": "data-wd-load='manual/js.date.valueOf.html'",
+		"style": "wd-size-s wd-indent",
+		"click": ""
+	},
+	{
+		"title": "Date.format",
+		"description": "Method",
+		"id": "js_date_format",
+		"content": "data-wd-load='manual/js.date.format.html'",
+		"style": "wd-size-s wd-indent",
+		"click": ""
 	},
 
 	{"x": "JS-GENERIC=========================================================",
@@ -169,17 +253,6 @@
 		"click":  ""
 	},
 
-
-
-
-
-
-
-
-
-
-
-
 	{"x": "JS-HTML============================================================",
 		"title": "HTML",
 		"description": "Elements or list of HTML elements.",
@@ -188,6 +261,111 @@
 		"style": "wd-case-title",
 		"click":  ""
 	},
+	{
+		"title": "HTML.get",
+		"description": "Attribute",
+		"id": "js_html_get",
+		"content": "data-wd-load='manual/js.html.get.html'",
+		"style": "wd-size-s wd-indent",
+		"click": ""
+	},
+	{
+		"title": "HTML.styles",
+		"description": "Attribute",
+		"id": "js_html_styles",
+		"content": "data-wd-load='manual/js.html.styles.html'",
+		"style": "wd-size-s wd-indent",
+		"click": ""
+	},
+	{
+		"title": "HTML.execute",
+		"description": "Method",
+		"id": "js_html_execute",
+		"content": "data-wd-load='manual/js.html.execute.html'",
+		"style": "wd-size-s wd-indent",
+		"click": ""
+	},
+	{
+		"title": "HTML.handler",
+		"description": "Method",
+		"id": "js_html_handler",
+		"content": "data-wd-load='manual/js.html.handler.html'",
+		"style": "wd-size-s wd-indent",
+		"click": ""
+	},
+	{
+		"title": "HTML.class",
+		"description": "Method",
+		"id": "js_html_class",
+		"content": "data-wd-load='manual/js.html.class.html'",
+		"style": "wd-size-s wd-indent",
+		"click": ""
+	},
+	{
+		"title": "HTML.style",
+		"description": "Method",
+		"id": "js_html_style",
+		"content": "data-wd-load='manual/js.html.style.html'",
+		"style": "wd-size-s wd-indent",
+		"click": ""
+	},
+	{
+		"title": "HTML.data",
+		"description": "Method",
+		"id": "js_html_data",
+		"content": "data-wd-load='manual/js.html.data.html'",
+		"style": "wd-size-s wd-indent",
+		"click": ""
+	},
+	{
+		"title": "HTML.filter",
+		"description": "Method",
+		"id": "js_html_filter",
+		"content": "data-wd-load='manual/js.html.filter.html'",
+		"style": "wd-size-s wd-indent",
+		"click": ""
+	},
+	{
+		"title": "HTML.sort",
+		"description": "Method",
+		"id": "js_html_sort",
+		"content": "data-wd-load='manual/js.html.sort.html'",
+		"style": "wd-size-s wd-indent",
+		"click": ""
+	},
+	{
+		"title": "HTML.page",
+		"description": "Method",
+		"id": "js_html_page",
+		"content": "data-wd-load='manual/js.html.page.html'",
+		"style": "wd-size-s wd-indent",
+		"click": ""
+	},
+	{
+		"title": "HTML.repeat",
+		"description": "Method",
+		"id": "js_html_repeat",
+		"content": "data-wd-load='manual/js.html.repeat.html'",
+		"style": "wd-size-s wd-indent",
+		"click": ""
+	},
+	{
+		"title": "HTML.load",
+		"description": "Method",
+		"id": "js_html_load",
+		"content": "data-wd-load='manual/js.html.load.html'",
+		"style": "wd-size-s wd-indent",
+		"click": ""
+	},
+	{
+		"title": "HTML.action",
+		"description": "Method",
+		"id": "js_html_action",
+		"content": "data-wd-load='manual/js.html.action.html'",
+		"style": "wd-size-s wd-indent",
+		"click": ""
+	},
+
 	{"x": "JS-NUMBER==========================================================",
 		"title": "Number",
 		"description": "Values ​​that identify numbers.",
@@ -196,6 +374,119 @@
 		"style": "wd-case-title",
 		"click":  ""
 	},
+	{
+		"title": "Number.integer",
+		"description": "Attribute",
+		"id": "js_number_integer",
+		"content": "data-wd-load='manual/js.number.integer.html'",
+		"style": "wd-size-s wd-indent",
+		"click": ""
+	},
+	{
+		"title": "Number.fraction",
+		"description": "Attribute",
+		"id": "js_number_fraction",
+		"content": "data-wd-load='manual/js.number.fraction.html'",
+		"style": "wd-size-s wd-indent",
+		"click": ""
+	},
+	{
+		"title": "Number.isInteger",
+		"description": "Attribute",
+		"id": "js_number_isInteger",
+		"content": "data-wd-load='manual/js.number.isInteger.html'",
+		"style": "wd-size-s wd-indent",
+		"click": ""
+	},
+	{
+		"title": "Number.isFloat",
+		"description": "Attribute",
+		"id": "js_number_isFloat",
+		"content": "data-wd-load='manual/js.number.isFloat.html'",
+		"style": "wd-size-s wd-indent",
+		"click": ""
+	},
+	{
+		"title": "Number.isNatural",
+		"description": "Attribute",
+		"id": "js_number_isNatural",
+		"content": "data-wd-load='manual/js.number.isNatural.html'",
+		"style": "wd-size-s wd-indent",
+		"click": ""
+	},
+	{
+		"title": "Number.isNegative",
+		"description": "Attribute",
+		"id": "js_number_isNegative",
+		"content": "data-wd-load='manual/js.number.isNegative.html'",
+		"style": "wd-size-s wd-indent",
+		"click": ""
+	},
+	{
+		"title": "Number.isPositive",
+		"description": "Attribute",
+		"id": "js_number_isPositive",
+		"content": "data-wd-load='manual/js.number.isPositive.html'",
+		"style": "wd-size-s wd-indent",
+		"click": ""
+	},
+	{
+		"title": "Number.abs",
+		"description": "Attribute",
+		"id": "js_number_abs",
+		"content": "data-wd-load='manual/js.number.abs.html'",
+		"style": "wd-size-s wd-indent",
+		"click": ""
+	},
+	{
+		"title": "Number.inverse",
+		"description": "Attribute",
+		"id": "js_number_inverse",
+		"content": "data-wd-load='manual/js.number.inverse.html'",
+		"style": "wd-size-s wd-indent",
+		"click": ""
+	},
+	{
+		"title": "Number.roundUp",
+		"description": "Attribute",
+		"id": "js_number_roundUp",
+		"content": "data-wd-load='manual/js.number.roundUp.html'",
+		"style": "wd-size-s wd-indent",
+		"click": ""
+	},
+	{
+		"title": "Number.locale",
+		"description": "Method",
+		"id": "js_number_locale",
+		"content": "data-wd-load='manual/js.number.locale.html'",
+		"style": "wd-size-s wd-indent",
+		"click": ""
+	},
+	{
+		"title": "Number.currency",
+		"description": "Method",
+		"id": "js_number_currency",
+		"content": "data-wd-load='manual/js.number.currency.html'",
+		"style": "wd-size-s wd-indent",
+		"click": ""
+	},
+	{
+		"title": "Number.round",
+		"description": "Method",
+		"id": "js_number_round",
+		"content": "data-wd-load='manual/js.number.round.html'",
+		"style": "wd-size-s wd-indent",
+		"click": ""
+	},
+	{
+		"title": "Number.scientific",
+		"description": "Method",
+		"id": "js_number_scientific",
+		"content": "data-wd-load='manual/js.number.scientific.html'",
+		"style": "wd-size-s wd-indent",
+		"click": ""
+	},
+
 	{"x": "JS-PATH============================================================",
 		"title": "Path",
 		"description": "Values ​​that represent an accessible file.",
@@ -204,6 +495,23 @@
 		"style": "wd-case-title",
 		"click":  ""
 	},
+	{
+		"title": "Path.get",
+		"description": "Method",
+		"id": "js_path_get",
+		"content": "data-wd-load='manual/js.path.get.html'",
+		"style": "wd-size-s wd-indent",
+		"click": ""
+	},
+	{
+		"title": "Path.post",
+		"description": "Method",
+		"id": "js_path_post",
+		"content": "data-wd-load='manual/js.path.post.html'",
+		"style": "wd-size-s wd-indent",
+		"click": ""
+	},
+	
 	{"x": "JS-REGEXP==========================================================",
 		"title": "RegExp",
 		"description": "Values ​​that represent a regular expression.",
@@ -211,6 +519,14 @@
 		"content": "data-wd-load='manual/js.regex.html'",
 		"style": "wd-case-title",
 		"click":  ""
+	},
+	{
+		"title": "Regex.mask",
+		"description": "Method",
+		"id": "js_regex_mask",
+		"content": "data-wd-load='manual/js.regex.mask.html'",
+		"style": "wd-size-s wd-indent",
+		"click": ""
 	},
 
 	{"x": "JS-TEXT============================================================",
@@ -221,6 +537,39 @@
 		"style": "wd-case-title",
 		"click":  ""
 	},
+	{
+		"title": "Text.title",
+		"description": "Attribute",
+		"id": "js_text_title",
+		"content": "data-wd-load='manual/js.text.title.html'",
+		"style": "wd-size-s wd-indent",
+		"click": ""
+	},
+	{
+		"title": "Text.trim",
+		"description": "Attribute",
+		"id": "js_text_trim",
+		"content": "data-wd-load='manual/js.text.trim.html'",
+		"style": "wd-size-s wd-indent",
+		"click": ""
+	},
+	{
+		"title": "Text.tt",
+		"description": "Attribute",
+		"id": "js_text_tt",
+		"content": "data-wd-load='manual/js.text.tt.html'",
+		"style": "wd-size-s wd-indent",
+		"click": ""
+	},
+	{
+		"title": "Text.mask",
+		"description": "Method",
+		"id": "js_text_mask",
+		"content": "data-wd-load='manual/js.text.mask.html'",
+		"style": "wd-size-s wd-indent",
+		"click": ""
+	},
+
 	{"x": "JS-TIME============================================================",
 		"title": "Time",
 		"description": "Values ​​that represent time.",
@@ -228,6 +577,70 @@
 		"content": "data-wd-load='manual/js.time.html'",
 		"style": "wd-case-title",
 		"click":  ""
+	},
+	{
+		"title": "Time.hour",
+		"description": "Attribute",
+		"id": "js_time_hour",
+		"content": "data-wd-load='manual/js.time.hour.html'",
+		"style": "wd-size-s wd-indent",
+		"click": ""
+	},
+	{
+		"title": "Time.minute",
+		"description": "Attribute",
+		"id": "js_time_minute",
+		"content": "data-wd-load='manual/js.time.minute.html'",
+		"style": "wd-size-s wd-indent",
+		"click": ""
+	},
+	{
+		"title": "Time.second",
+		"description": "Attribute",
+		"id": "js_time_second",
+		"content": "data-wd-load='manual/js.time.second.html'",
+		"style": "wd-size-s wd-indent",
+		"click": ""
+	},
+	{
+		"title": "Time.h24",
+		"description": "Attribute",
+		"id": "js_time_h24",
+		"content": "data-wd-load='manual/js.time.h24.html'",
+		"style": "wd-size-s wd-indent",
+		"click": ""
+	},
+	{
+		"title": "Time.ampm",
+		"description": "Attribute",
+		"id": "js_time_ampm",
+		"content": "data-wd-load='manual/js.time.ampm.html'",
+		"style": "wd-size-s wd-indent",
+		"click": ""
+	},
+	{
+		"title": "Time.toString",
+		"description": "Method",
+		"id": "js_time_toString",
+		"content": "data-wd-load='manual/js.time.toString.html'",
+		"style": "wd-size-s wd-indent",
+		"click": ""
+	},
+	{
+		"title": "Time.valueOf",
+		"description": "Method",
+		"id": "js_time_valueOf",
+		"content": "data-wd-load='manual/js.time.valueOf.html'",
+		"style": "wd-size-s wd-indent",
+		"click": ""
+	},
+	{
+		"title": "Time.format",
+		"description": "Method",
+		"id": "js_time_format",
+		"content": "data-wd-load='manual/js.time.format.html'",
+		"style": "wd-size-s wd-indent",
+		"click": ""
 	},
 
 
