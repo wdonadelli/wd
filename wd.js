@@ -19,7 +19,7 @@ var wd = (function() {
 		color: "white", backgroundColor: "black", opacity: "0.9", cursor: "progress"
 	});
 	
-	/*Checar a existências dos objetos padrões*/
+	/*Checar a existências dos objetos nativos utilizados na bibiloteca*/
 	function checkMainObjects() {	
 		var objects = [
 			"Boolean",
