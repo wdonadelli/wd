@@ -99,10 +99,10 @@
 		"click":  ""
 	},
 	{
-		"title": "Boolean.value",
+		"title": "Boolean.valueOf",
 		"description": "Attribute",
-		"id": "js_bool_value",
-		"content": "data-wd-load='manual/js.bool.value.html'",
+		"id": "js_bool_valueOf",
+		"content": "data-wd-load='manual/js.bool.valueOf.html'",
 		"style": "wd-size-s wd-indent",
 		"click":  ""
 	},
