@@ -212,47 +212,6 @@
 		"click": ""
 	},
 
-	{"x": "JS-GENERIC=========================================================",
-		"title": "Generic", 
-		"description": "Values ​​not specified by other categories.",
-		"id": "js_generic",
-		"content": "data-wd-load='manual/js.generic.html'",
-		"style": "wd-case-title",
-		"click":  ""
-	},
-	{
-		"title": "WD.toSource",
-		"description": "Method",
-		"id": "js_generic_toSource",
-		"content": "data-wd-load='manual/js.generic.toSource.html'",
-		"style": "wd-size-s wd-indent",
-		"click":  ""
-	},
-	{
-		"title": "WD.toString",
-		"description": "Method",
-		"id": "js_generic_toString",
-		"content": "data-wd-load='manual/js.generic.toString.html'",
-		"style": "wd-size-s wd-indent",
-		"click":  ""
-	},
-	{
-		"title": "WD.type",
-		"description": "Attribute",
-		"id": "js_generic_type",
-		"content": "data-wd-load='manual/js.generic.type.html'",
-		"style": "wd-size-s wd-indent",
-		"click":  ""
-	},
-	{
-		"title": "WD.valueOf",
-		"description": "Method",
-		"id": "js_generic_valueOf",
-		"content": "data-wd-load='manual/js.generic.valueOf.html'",
-		"style": "wd-size-s wd-indent",
-		"click":  ""
-	},
-
 	{"x": "JS-HTML============================================================",
 		"title": "HTML",
 		"description": "Elements or list of HTML elements.",

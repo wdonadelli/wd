@@ -60,60 +60,13 @@ wd("manual/menu.json").get((e)=> {
 
 
 
+<!--
 
-<!--
-<!--
-var manual = {
-	"Tools": {
-		"Version": "1.0.0",
-		"Call": "wd(input)",
-		"Description": "Returns different objects according to the value defined in the <code>input</code> argument. Different values ​​return different objects, each object has its own attributes and methods. As a rule, the methods do not change the input value.",
-		"Arguments": {
-			"input": "Value that defines the object to be returned."
-		},
-		"Structure": {
-			"Generic": {
-				"Primitive": ["Several"],
-				"Input": ["Unspecified values"],
-				"Description": "When reporting a non-specific argument, the function returns a generic object, with no specialized methods or attributes. The other objects inherit the attributes of this generic object.",
-				"Attributes": {
-					"type": {
-						"Description": "Returns the type of the argument entered. See section <code>input</code> of each object. If no specific value is found, either returns the constructor name or undefined value.",
-						"Return": [
-							"<q>?</q> - undefined value;",
-							"<q>null</q> - null value;",
-							"<q>time</q> - time representation;",
-							"<q>date</q> - date representation or Date object;",
-							"<q>path</q> - accessible file path;",
-							"<q>text</q> - generic string;",
-							"<q>boolean</q> - boolean value;",
-							"<q>number</q> - number value;",
-							"<q>array</q> - array value;",
-							"<q>regex</q> - regular expression;",
-							"<q>function</q> - funtion object;",
-							"<q>object</q> - object with constructor equal to <code>Object</code>;",
-							"<q>html</q> - HTMLElement;",
-							"<q>[html]</q> - NodeList, HTMLCollection, HTMLAllCollection or HTMLFormControlsCollection;",
-							"<q>doc</q> - document; and",
-							"<q>win</q> - window.",
-						]
-					},
-					"version": {
-						"Description": "Returns information about the current version."
-					},
-				},
-				"Methods": {
-							"toString": {
-								"Description": "Returns toString() method of <code>input</code>."
-							},
-							"valueOf": {
-								"Description": "Returns valueOf() method of <code>input</code>."
-							},
-							"toSource": {
-								"Description": "Returns <code>input</code>."
-							}
-					}
-			},
+
+
+
+
+
 			"text": {
 				"Primitive": ["String"],
 				"Input": ["Strings not specified."],

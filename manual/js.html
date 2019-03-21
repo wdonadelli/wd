@@ -10,7 +10,6 @@
 	<li>Array</li>
 	<li>Boolean</li>
 	<li>Date</li>
-	<li>Generic</li>
 	<li>HTML</li>
 	<li>Number</li>
 	<li>Path</li>
@@ -18,8 +17,85 @@
 	<li>Text</li>
 </ul>
 
-
-
 <p class="wd-indent">See the menu for more details.</p>
 
+<p class="wd-indent">All methods and attributes returned by the <code>wd</code> object come from internal objects. With the exception of the object assigned to the "input" type <q>path</q>, whose inheritance comes from the object assigned to the <q>input</q> type <q>text</q>, other objects inherit their attributes and methods from a primitive object.</p>
 
+<p class="wd-indent">The primitive object has the following attributes:</p>
+
+<ul class="wd-list">
+	<li>type</li>
+</ul>
+
+<p class="wd-indent">The primitive object has the following methods:</p>
+
+<ul class="wd-list">
+	<li>valueOf</li>
+	<li>toString</li>
+	<li>toSource</li>
+</ul>
+
+<p class="wd-indent">Depending on the returned object, the attribute and methods listed above may have different behavior, whose characteristics will be presented individually.</p>
+
+<h3>type</h3>
+
+<p class="wd-indent">Returns the type of the value entered in the <code>input</code> argument.It is called as follows:</p>
+
+<pre class="wd-code">wd(input).type;</pre>
+
+<p class="wd-indent">The attribute may return the following values:</p>
+
+<dl class="wd-padding-childs">
+	<dt><q>?</q></dt>
+	<dd><i>undefined values</i></dd>
+	<dt><q>0</q></dt>
+	<dd><i>null values</i></dd>
+	<dt><q>bool</q></dt>
+	<dd><i>Boolean values</i></dd>
+	<dt><q>number</q></dt>
+	<dd><i>Numeric values</i></dd>
+	<dt><q>time</q></dt>
+	<dd><i>Time values</i></dd>
+	<dt><q>date</q></dt>
+	<dd><i>Date values</i></dd>
+	<dt><q>path</q></dt>
+	<dd><i>Accessible file path</i></dd>
+	<dt><q>text</q></dt>
+	<dd><i>Strings not specified</i></dd>
+	<dt><q>array</q></dt>
+	<dd><i>List values</i></dd>
+	<dt><q>regex</q></dt>
+	<dd><i>Regular expression</i></dd>
+	<dt><q>f()</q></dt>
+	<dd><i>Function object</i></dd>
+	<dt><q>object</q></dt>
+	<dd><i>Object values ({})</i></dd>
+	<dt><q>html</q></dt>
+	<dd><i>HTML element</i></dd>
+	<dt><q>[html]</q></dt>
+	<dd><i>List of HTML elements</i></dd>
+	<dt><q>doc</q></dt>
+	<dd><i>HTML Document</i></dd>
+	<dt><q>win</q></dt>
+	<dd><i>window object</i></dd>
+	<dt><q>unknown</q></dt>
+	<dd><i>Value returned when it is not possible to set the argument type, as above, or its constructor.</i></dd>
+</dl>
+
+<pre class="wd-code"><cite>//Example</cite>
+<code>var</code> x = document.querySelectorAll(<q>li</q>);
+wd(x).type;
+<sample><q>[html]</q></sample>
+</pre>
+
+<h3>valueOf</h3>
+
+<p class="wd-indent">Returns valueOf() method of <code>input</code>.</p>
+
+<h3>toString</h3>
+
+<p class="wd-indent">Returns toString() method of <code>input</code>.</p>
+
+<h3>toSource</h3>
+
+<p class="wd-indent">Returns <code>input</code>.</p>
