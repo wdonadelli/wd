@@ -637,12 +637,7 @@ var wd = (function() {
 			x = "object";
 		} else if (input instanceof HTMLElement) {
 			x = "html";
-		} else if (
-			input instanceof NodeList ||
-			input instanceof HTMLCollection ||
-			input instanceof HTMLAllCollection ||
-			input instanceof HTMLFormControlsCollection
-		) {
+		} else if (input instanceof NodeList || input instanceof HTMLCollection || input instanceof HTMLAllCollection || input instanceof HTMLFormControlsCollection) {
 			x = "[html]";
 		} else if (input === document) {
 			x = "doc";
