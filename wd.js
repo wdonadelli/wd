@@ -1,4 +1,4 @@
-﻿/* Willian Donadelli | <wdonadelli@gmail.com> | v1.2.1 */
+﻿/* Willian Donadelli | <wdonadelli@gmail.com> | v1.2.2 */
 
 "use strict";
 var wd = (function() {
@@ -38,7 +38,7 @@ var wd = (function() {
 		
 		for (var o = 0; o < objects.length; o++) {
 			if (!(objects[o] in window)) {
-				window[objects[o]] = new Object();
+				window[objects[o]] = function() {};
 			}
 		}
 		return;
