@@ -1,4 +1,4 @@
-﻿/* Willian Donadelli | <wdonadelli@gmail.com> | v1.2.2 */
+﻿/* Willian Donadelli | <wdonadelli@gmail.com> | v1.2.3 */
 
 "use strict";
 var wd = (function() {
@@ -95,7 +95,6 @@ var wd = (function() {
 		title:  {enumerable: true, get: function() {return stringTitle(this._input);}},
 		trim:   {enumerable: true, get: function() {return stringTrim(this._input);}},
 		tt:     {enumerable: true, get: function() {return stringTitle(this.trim);}},
-		mask:   {enumerable: true, value: function(regex) {return stringMask(this._input, regex);}},
 	});
 /*---------------------------------------------------------------------------*/
 	function WDarray(input) {
@@ -120,7 +119,7 @@ var wd = (function() {
 	};
 	WDregexp.prototype = Object.create(WD.prototype, {
 		constructor: {value: WDregexp},
-		mask: {enumerable: true, value: function(string) {return stringMask(string, this._input);}},
+		mask: {enumerable: true, value: function(string) {return regexpMask(string, this._input);}},
 	});
 /*---------------------------------------------------------------------------*/
 	function WDboolean(input) {
@@ -659,7 +658,7 @@ var wd = (function() {
 	};
 
 /*===========================================================================*/
-	function stringMask(input, regex) {
+	function regexpMask(input, regex) {
 		/*Se input casar com regex, retorna input com a máscara de regex, caso contrário, falso*/
 		input = String(input);
 		if (regex.test(input)) {return input;}
@@ -702,6 +701,7 @@ var wd = (function() {
 		return false;
 	};
 
+/*===========================================================================*/
 	function stringTitle(input) {
 		/*Retorna input com primeira letra de cada palavra em caixa alta*/
 		var value = "";
