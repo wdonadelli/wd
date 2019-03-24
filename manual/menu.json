@@ -520,14 +520,6 @@
 		"style": "wd-size-s wd-indent",
 		"click": ""
 	},
-	{
-		"title": "Text.mask",
-		"description": "Method",
-		"id": "js_text_mask",
-		"content": "data-wd-load='manual/js.text.mask.html'",
-		"style": "wd-size-s wd-indent",
-		"click": ""
-	},
 
 	{"x": "JS-TIME============================================================",
 		"title": "Time",
