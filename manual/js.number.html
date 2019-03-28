@@ -1,34 +1,43 @@
-<p class="wd-indent">This is an object for manipulating arrays. The supplied argument (primitive value) is <u>not changed</u> by methods or attributes. The following primitive values ​​define the object:</p>
+<p class="wd-indent">This is an object for number manipulation. The supplied argument (primitive value) is <u>not changed</u> by methods or attributes. The following primitive values ​​define the object:</p>
 
 <ul class="wd-list">
-	<li>JavaScript Array Object</li>
+	<li>Numbers</li>
+	<li>Numbers in string format.</li>
 </ul>
 
-<p class="wd-indent">When identifying the type of the primitive value, the object returns the string <q>array</q>.</p>
+<p class="wd-indent">Numbers in text format will also be treated as numbers, so <q>5</q> and <q>+5</q> are treated as <code>5</code>, <q>1e2</q> and <q>+1e+2</q> are treated as <code>100</code>, <q>+Infinity</q> will be treated as <code>Infinity</code>, <q>-Infinity</q> as <code>-Infinity</code> and <q>Infinity</q> will not be treated as a number.</p>
+
+<p class="wd-indent">When identifying the type of the primitive value, the object returns the string <q>number</q>.</p>
 
 <pre class="wd-code"><cite>//Example</cite>
-<code>var</code> input = [<var>1</var>, <q>wd</q>, <var>true</var>];
+<code>var</code> input = <q>5.45</q>;
 <code>var</code> object = wd(input);
 object.type;
-<sample><q>array</q></sample>
+<sample><q>number</q></sample>
 </pre>
 
 <p class="wd-indent">The object has the following attributes:</p>
 
 <ul class="wd-list">
-	<li>organized</li>
-	<li>sort</li>
-	<li>unique</li>
+	<li>integer</li>
+	<li>fraction</li>
+	<li>isInteger</li>
+	<li>isFloat</li>
+	<li>isNatural</li>
+	<li>isNegative</li>
+	<li>isPositive</li>
+	<li>abs</li>
+	<li>inverse</li>
+	<li>roundUp</li>
 </ul>
 
 <p class="wd-indent">The object has the following methods:</p>
 
 <ul class="wd-list">
-	<li>add</li>
-	<li>amount</li>
-	<li>del</li>
-	<li>replace</li>
-	<li>toggle</li>
+	<li>locale</li>
+	<li>currency</li>
+	<li>round</li>
+	<li>scientific</li>
 </ul>
 
 <p class="wd-indent">See the menu for more details.</p>

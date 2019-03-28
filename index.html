@@ -67,70 +67,9 @@ wd("manual/menu.json").get((e)=> {
 
 
 
-			"text": {
-				"Primitive": ["String"],
-				"Input": ["Strings not specified."],
-				"Description": "String manipulation.",
-				"Attributes": {
-					"title": {
-						"Description": "Returns the value of the string with the first letter of each word in uppercase.",
-						"Example": "<b>var</b> x = <q>    hello     worlD    </q>;\nwd(x).title;\n&gt; <q>    Hello     WorlD    </q>"
-					},
-					"trim": {
-						"Description": "Returns the value of the string without unnecessary spaces.",
-						"Example": "<b>var</b> x = <q>    hello     world    </q>;\nwd(x).trim;\n&gt; <q>hello world</q>"
-					},
-					"tt": {
-						"Description": "Returns the value of the string using the <code>title</code> and <code>trim</code> methods.",
-						"Example": "<b>var</b> x = <q>    hello     world    </q>;\nwd(x).tt;\n&gt; <q>Hello World</q>"
-					}
-				},
 
 
-
-
-
-
-
-			"number": {
-				"Primitive": ["Number", "String"],
-				"Input": ["Number", "Number in text format"],
-				"Description": "Number manipulation. Numbers in text format will also be treated as numbers, so <q>5</q> and <q>+5</q> are treated as <code>5</code>; <q>1e2</q> and <q>+1e+2</q> are treated as <code>100</code>; <q>+Infinity</q> will be treated as <code>Infinity</code>, <q>-Infinity</q> as <code>-Infinity</code> and <q>Infinity</q> will not be treated as a number.",
-				"Attributes": {
-					"integer": {
-						"Description": "Returns the integer part of the number.",
-						"Example": "wd(13.91).integer;\n&gt; 13"
-					},
-					"fraction": {
-						"Description": "Returns the fractional part of the number.",
-						"Example": "wd(13.91).fraction;\n&gt; 0.91"
-					},
-					"isInteger": {
-						"Description": "Returns <i>true</i> if number is integer.",
-						"Example": "wd(13.91).isInteger;\n&gt; <i>false</i>"
-					},
-					"isFloat": {
-						"Description": "Returns <i>true</i> if it is a floating number.",
-						"Example": "wd(13.91).isFloat;\n&gt; <i>true</i>"
-					},
-					"isNatural": {
-						"Description": "Returns <i>true</i> if it is an integer greater than or equal to zero.",
-						"Example": "wd(13.91).isNatural;\n&gt; <i>false</i>"
-					},
-					"isNegative": {
-						"Description": "Returns <i>true</i> if it is a number less than zero.",
-						"Example": "wd(13.91).isNegative;\n&gt; <i>false</i>"
-					},
-					"isPositive": {
-						"Description": "Returns <i>true</i> if it is a number greater than zero.",
-						"Example": "wd(13.91).isPositive;\n&gt; <i>true</i>"
-					},
-					"abs": {
-						"Description": "Returns the absolute value of the number.",
-						"Example": "wd(13.91).abs;\n&gt; 13.91\nwd(-13.91).abs;\n&gt; 13.91"
-					},
 					"inverse": {
-						"Description": "Returns the inverse number value (1 / x).",
 						"Example": "wd(5).inverse;\n&gt; 0.2\nwd(0.2).inverse;\n&gt; 5\nwd(0).inverse;\n&gt; Infinity"
 					},
 					"roundUp": {
