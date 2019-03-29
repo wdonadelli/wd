@@ -62,39 +62,7 @@ wd("manual/menu.json").get((e)=> {
 
 <!--
 
-
-
-
-
-
-
-
-					"inverse": {
-						"Example": "wd(5).inverse;\n&gt; 0.2\nwd(0.2).inverse;\n&gt; 5\nwd(0).inverse;\n&gt; Infinity"
-					},
-					"roundUp": {
-						"Description": "Returns the numeric value rounded to the next integer.",
-						"Example": "wd(5.001).roundUp;\n&gt; 6"
-					}
-				},
-				"Methods": {
-					"locale": {
-						"Call": "locale(cod)",
-						"Description": "If the browser contemplates the corresponding method, it returns a string with local numeric formatting. Otherwise, it returns the number entered in string format.",
-						"Arguments": {
-							"cod": "(Optional) Consists of a string representing the location (e.g. <q>pt-BR</q>). If not set, the location will be the one entered in the <i>lang</i> attribute of the <code>html</code> tag, the provided browser value or <q>en-US</q>."
-						},
-						"Example": "wd(1000.23).locale(<q>pt-BR</q>);\n&gt; <q>1.000,23</q>"
-					},
-					"currency": {
-						"Call": "currency(val, cod)",
-						"Description": "If the browser contemplates the corresponding method, it will return a string with formatting of the reported currency. Otherwise, it returns the number entered in string format.",
-						"Arguments": {
-							"val": "Consists of a string representing the currency (e.g. <q>USD</q> to US Dollar). If not defined or non-existent, the entered text will be added in front of the return string that will be formatted according to the <code>locale</code> method.",
-							"cod": "(Optional) Consists of a string representing the location (e.g. <q>pt-BR</q>). If not set, the location will be the one entered in the <i>lang</i> attribute of the <code>html</code> tag, the provided browser value or <q>en-US</q>."
-						},
-						"Example": "wd(1000.23).currency(<q>USD</q>, <q>en-US</q>);\n&gt; <q>$1,000.23</q>\nwd(1000.23).currency(<q>$?</q>, <q>pt-BR</q>);\n&gt; <q>$?1.000,23</q>"
-					},
+},
 					"round": {
 						"Call": "round(n)",
 						"Description": "Returns the numeric value rounded.",

@@ -1,14 +1,12 @@
-<p class="wd-indent">This is a <u>method</u> that returns the primitive value plus the item entered in the argument, if nonexistent. It is called as follows:</p>
+<p class="wd-indent">This is a <u>method</u> that returns a string with local numeric formatting, if the browser contemplates the corresponding method. Otherwise, it returns the number entered in string format. It is called as follows:</p>
 
-<pre class="wd-code">wd(input).add(item);</pre>
+<pre class="wd-code">wd(input).locale(cod);</pre>
 
-<p class="wd-indent">The <code>item</code> argument is the value to be added to the array.</p>
+<p class="wd-indent">The <code>cod</code> argument (optional) consists of a string representing the location (e.g. <q>pt-BR</q>). If not set, the location will be the one entered in the <i>lang</i> attribute of the <code>html</code> tag, the value provided by the browser or <q>en-US</q>.</p>
 
 <pre class="wd-code"><cite>//Example</cite>
-<code>var</code> x = [<q>wd</q>, <var>100</var>, <var>100</var>, <q>wd</q>];
-wd(x).add(<var>100</var>);
-<sample>[<q>wd</q>, <var>100</var>, <var>100</var>, <q>wd</q>]</sample>
-wd(x).add(<var>1</var>);
-<sample>[<q>wd</q>, <var>100</var>, <var>100</var>, <q>wd</q>, <var>1</var>]</sample>
-<cite>//Variable "x" is not changed</cite>
+wd(<var>1000.23</var>).locale(<q>pt-BR</q>);
+<sample><q>1.000,23</q></sample>
+wd(<var>1000.23</var>).locale(<q>en-US</q>);
+<sample><q>1,000.23</q></sample>
 </pre>
