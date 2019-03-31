@@ -931,7 +931,7 @@ var wd = (function() {
 		/*Arredonda o número para cima*/
 		input = numberDefiner(input);
 		var x = input;
-		if (input === 0 || numberIsInteger(input)) {
+		if (numberIsInteger(input)) {
 			x = input;
 		} else if (input > 0) {
 			x = numberInteger(input)+1;
