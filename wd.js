@@ -1,4 +1,4 @@
-﻿/* Willian Donadelli | <wdonadelli@gmail.com> | v1.3.0 */
+﻿/* Willian Donadelli | <wdonadelli@gmail.com> | v1.3.1 */
 
 "use strict";
 var wd = (function() {
@@ -931,7 +931,7 @@ var wd = (function() {
 		/*Arredonda o número para cima*/
 		input = numberDefiner(input);
 		var x = input;
-		if (input === 0) {
+		if (input === 0 || numberIsInteger(input)) {
 			x = input;
 		} else if (input > 0) {
 			x = numberInteger(input)+1;
