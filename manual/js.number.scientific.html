@@ -1,14 +1,14 @@
-<p class="wd-indent">This is a <u>method</u> that returns the primitive value plus the item entered in the argument, if nonexistent. It is called as follows:</p>
+<p class="wd-indent">This is a <u>method</u> that returns a string, in html format, in scientific notation (e.g. <var>1.00 x 10<sup>2</sup></var>). It is called as follows:</p>
 
-<pre class="wd-code">wd(input).add(item);</pre>
+<pre class="wd-code">wd(input).scientific(n);</pre>
 
-<p class="wd-indent">The <code>item</code> argument is the value to be added to the array.</p>
+<p class="wd-indent">The <code>n</code> argument indicates the number of decimal places to display in the notation.</p>
 
 <pre class="wd-code"><cite>//Example</cite>
-<code>var</code> x = [<q>wd</q>, <var>100</var>, <var>100</var>, <q>wd</q>];
-wd(x).add(<var>100</var>);
-<sample>[<q>wd</q>, <var>100</var>, <var>100</var>, <q>wd</q>]</sample>
-wd(x).add(<var>1</var>);
-<sample>[<q>wd</q>, <var>100</var>, <var>100</var>, <q>wd</q>, <var>1</var>]</sample>
-<cite>//Variable "x" is not changed</cite>
+wd(<var>9876</var>).scientific();
+<sample><q>9.876 x 10&lt;sup&gt;3&lt;/sup&gt;</q></sample>
+wd(<var>9876</var>).scientific(<var>1</var>);
+<sample><q>9.9 x 10&lt;sup&gt;3&lt;/sup&gt;</q></sample>
+wd(<var>-1</var>/<var>9876</var>).scientific(<var>2<var>);
+<sample><q>-1.01 x 10&lt;sup&gt;-4&lt;/sup&gt;</q></sample>
 </pre>

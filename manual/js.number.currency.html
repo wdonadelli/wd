@@ -2,7 +2,9 @@
 
 <pre class="wd-code">wd(input).currency(val, cod);</pre>
 
-<p class="wd-indent">The <code>item</code> argument consists of a string representing the currency (e.g. <q>USD</q> to US Dollar). If not defined or non-existent, the entered text will be added in front of the return string that will be formatted according to the <code>locale</code> method. The <code>cod</code> (optional) argument (optional) consists of a string representing the location (e.g. <q>pt-BR</q>). If not set, the location will be the one entered in the <i>lang</i> attribute of the <code>html</code> tag, the value provided by the browser or <q>en-US</q>.</p>
+<p class="wd-indent">The <code>item</code> argument consists of a string representing the currency (e.g. <q>USD</q> to US Dollar). If not defined or non-existent, the entered text will be added in front of the return string that will be formatted according to the <code>locale</code> method.</p>
+
+<p class="wd-indent">The <code>cod</code> argument (optional) consists of a string representing the location (e.g. <q>pt-BR</q>). If not set, the location will be the one entered in the <i>lang</i> attribute of the <code>html</code> tag, the value provided by the browser or <q>en-US</q>.</p>
 
 <pre class="wd-code"><cite>//Example</cite>
 wd(<var>1000.23</var>).currency(<q>USD</q>, <q>en-US</q>);
