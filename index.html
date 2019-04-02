@@ -153,19 +153,14 @@ wd("manual/menu.json").get((e)=> {
 					}
 				}
 			},
-			"time": {
-				"Primitive": ["String"],
-				"Input": ["<q>H:MM</q>", "<q>H:MM:SS</q>", "<q>H12:MMam</q>", "<q>H12:MMpm</q>", "<q>H24hMM</q>", "<q>%now</q>"],
-				"Arguments": {
-					"H": "Hour",
-					"MM": "Minutes with two digits.",
-					"SS": "Seconds with two digits.",
-					"H12": "12h clock.",
-					"H24": "24h clock.",
-					"now": "Current time."
-				},
-				"Description": "Time manipulation, disregarding the effects inherent to the time zone. The time record can be changed by methods and attributes, the original value is not changed. Inherits attributes of the text object (see String).",
-				"Example": "<b>var</b> x = wd(<q>1:27</q>);\nx.hour;\n&gt; 1\nx.hour = 2;\nx.hour;\n&gt; 2\n",
+
+
+
+
+
+
+
+				"Example": "",
 				"Attributes": {
 					"hour": {
 						"Description": "Gets/Sets the hour value from 0."
