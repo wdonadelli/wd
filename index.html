@@ -160,54 +160,6 @@ wd("manual/menu.json").get((e)=> {
 
 
 
-				"Example": "",
-				"Attributes": {
-					"hour": {
-						"Description": "Gets/Sets the hour value from 0."
-					},
-					"minute": {
-						"Description": "Gets/Sets the minute value (0-59). If you set a value beyond the limits, the date will be adapted."
-					},
-					"second": {
-						"Description": "Gets/Sets the second value (0-59). If you set a value beyond the limits, the date will be adapted."
-					},
-					"h24": {
-						"Description": "Gets the hour value (24h clock)."
-					},
-					"ampm": {
-						"Description": "Gets the hour value (12h clock)."
-					}
-				},
-				"Methods": {
-					"toString": {
-						"Call": "toString()",
-						"Description": "Returns the time in <q>H:MM:SS</q> format."
-					},
-					"valueOf": {
-						"Call": "valueOf()",
-						"Description": "Returns the number of seconds elapsed since <time>0:00:00</time> (from 0)."
-					},
-					"format": {
-						"Call": "format(string)",
-						"Description": "Sets time format return.",
-						"Arguments": {
-							"string": {
-								"Description": "(Optional) If not defined, will return the same object result with the toString method. The argument consists of a string where you can enter attributes of the object as format below.",
-								"Keys": [
-									"<q>%h</q> - numerical value of the hour;",
-									"<q>%H</q> - numerical value of the hour (24h clock);",
-									"<q>#h</q> - time am/pm format;",
-									"<q>%m</q> - numerical value of the minutes;",
-									"<q>%M</q> - numerical value of the minutes (two digits);",
-									"<q>%s</q> - numerical value of the seconds; and",
-									"<q>%S</q> - numerical value of the seconds (two digits);"
-								]
-							}
-						},
-						"Example": "<b>var</b> x = wd(<q>25:05</q>);\n<b>var</b> f = <q>%H hour(s) and %m minute(s)</q>;\nx.format(f);\n&gt; <q>1 hour(s) and 5 minute(s)</q>"
-					}
-				}
-			},
 			"path": {
 				"Primitive": ["String"],
 				"Input": ["A file or path accessible on the server."],

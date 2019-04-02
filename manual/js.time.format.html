@@ -1,14 +1,31 @@
-<p class="wd-indent">This is a <u>method</u> that returns the primitive value plus the item entered in the argument, if nonexistent. It is called as follows:</p>
+<p class="wd-indent">This is a <u>method</u> that sets time format return. It is called as follows:</p>
 
-<pre class="wd-code">wd(input).add(item);</pre>
+<pre class="wd-code">wd(input).format(string);</pre>
 
-<p class="wd-indent">The <code>item</code> argument is the value to be added to the array.</p>
+<p class="wd-indent">The <code>string</code> argument (optional), if not defined, will return the same object result with the toString method. The argument consists of a string where you can enter attributes of the object as format below:</p>
+
+<dl class="wd-padding wd-border wd-rounded wd-bgcolor-green">
+	<dt><q>%h</q>:</dt>
+	<dd>Numerical value of the hour.</dd>
+	<dt><q>%H</q>:</dt>
+	<dd>Numerical value of the hour (24h clock).</dd>
+	<dt><q>#h</q>:</dt>
+	<dd>Time am/pm format.</dd>
+	<dt><q>%m</q>:</dt>
+	<dd>Numerical value of the minutes.</dd>
+	<dt><q>%M</q>:</dt>
+	<dd>Numerical value of the minutes (two digits).</dd>
+	<dt><q>%s</q>:</dt>
+	<dd>Numerical value of the seconds.</dd>
+	<dt><q>%S</q>:</dt>
+	<dd>Numerical value of the seconds (two digits).</dd>
+</dl>
 
 <pre class="wd-code"><cite>//Example</cite>
-<code>var</code> x = [<q>wd</q>, <var>100</var>, <var>100</var>, <q>wd</q>];
-wd(x).add(<var>100</var>);
-<sample>[<q>wd</q>, <var>100</var>, <var>100</var>, <q>wd</q>]</sample>
-wd(x).add(<var>1</var>);
-<sample>[<q>wd</q>, <var>100</var>, <var>100</var>, <q>wd</q>, <var>1</var>]</sample>
-<cite>//Variable "x" is not changed</cite>
+<code>var</code> x = wd(<q>25:05</q>); <cite>//25 = 24h (00h) + 1h</cite>
+<code>var</code> f = <q>%H hour(s) and %m minute(s)</q>;
+x.format(f);
+<sample><q>1 hour(s) and 5 minute(s)</q></sample>
+x.format();
+<sample><q>25:05:00</q></sample>
 </pre>

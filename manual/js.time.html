@@ -1,11 +1,11 @@
-<p class="wd-indent">This is an object for time manipulation, disregarding the effects inherent to the time zone. The time record can be changed by methods and attributes, the original value is not changed. Inherits attributes of the text object. The supplied argument (primitive value) is <u>not changed</u> by methods or attributes. The following primitive values ​​define the object:</p>
+<p class="wd-indent">This is an object for time manipulation, disregarding the effects inherent to the time zone. The time record <u>can be changed</u> by methods and attributes, the original value is not changed. The following primitive values ​​define the object:</p>
 
 <ul class="wd-list">
 	<li><q>H:MM</q></li>
 	<li><q>H:MM:SS</q></li>
-	<li><q>H12:MMam</q></li>
-	<li><q>H12:MMpm</q></li>
-	<li><q>H24hMM</q></li>
+	<li><q>H12:MMam (case insensitive)</q></li>
+	<li><q>H12:MMpm (case insensitive)</q></li>
+	<li><q>H24hMM (case insensitive)</q></li>
 	<li><q>%now</q></li>
 </ul>
 
@@ -13,15 +13,15 @@
 
 <dl class="wd-padding wd-border wd-rounded wd-bgcolor-green">
 	<dt><q>H</q>:</dt>
-	<dd>Hour (integer number from 0).</dd>
+	<dd>Hour (integer from 0).</dd>
 	<dt><q>MM</q>:</dt>
-	<dd>Minutes with two digits (integer number from 00 to 59).</dd>
+	<dd>Minutes with two digits (integer from 00 to 59).</dd>
 	<dt><q>SS</q>:</dt>
-	<dd>Seconds with two digits (integer number from 00 to 59).</dd>
+	<dd>Seconds with two digits (integer from 00 to 59).</dd>
 	<dt><q>H12</q>:</dt>
-	<dd>12h clock (integer number from 00 to 12).</dd>
-	<dt><q>H24</q></dt>
-	<dd>24h clock (integer number from 00 to 23).</dd>
+	<dd>12h clock (integer from 1 to 12).</dd>
+	<dt><q>H24</q>:</dt>
+	<dd>24h clock with two digits (integer from 00 to 23).</dd>
 	<dt><q>%now</q>:</dt>
 	<dd>Current time.</dd>
 </dl>
@@ -55,7 +55,7 @@ x.type;
 
 <p class="wd-indent">The object has the following methods:</p>
 
-<ul class=<q>wd-list<q>>
+<ul class="wd-list">
 	<li>toString</li>
 	<li>valueOf</li>
 	<li>format</li>
