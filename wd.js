@@ -1,4 +1,4 @@
-﻿/* Willian Donadelli | <wdonadelli@gmail.com> | v1.3.1 */
+﻿/* Willian Donadelli | <wdonadelli@gmail.com> | v1.3.2 */
 
 "use strict";
 var wd = (function() {
@@ -1176,20 +1176,20 @@ var wd = (function() {
 		} else if (/^[0-9]+(\:[0-5][0-9]){1,2}$/.test(input)) {
 			input = input.split(":");
 			time  = 3600*Number(input[0]) + 60*Number(input[1]) + (input[2] === undefined ? 0 : Number(input[2]))
-		} else if (/^12:[0-5][0-9]am$/.test(input)) {
+		} else if ((/^12:[0-5][0-9]am$/i).test(input)) {
 			input = input.split(/[^0-9]/);
 			time  = 3600*0+60*Number(input[1]);
-		} else if (/^(0?[1-9]|1[0-1]):[0-5][0-9]am$/.test(input)) {
+		} else if ((/^(0?[1-9]|1[0-1]):[0-5][0-9]am$/i).test(input)) {
 			input = input.split(/[^0-9]/);
 			time  = 3600*Number(input[0])+60*Number(input[1]);
-		} else if (/^12:[0-5][0-9]pm$/.test(input)) {
+		} else if ((/^12:[0-5][0-9]pm$/i).test(input)) {
 			input = input.split(/[^0-9]/);
 			time  = 3600*12+60*Number(input[1]);
-		} else if (/^(0?[1-9]|1[0-1]):[0-5][0-9]pm$/.test(input)) {
+		} else if ((/^(0?[1-9]|1[0-1]):[0-5][0-9]pm$/i).test(input)) {
 			input = input.split(/[^0-9]/);
 			time  = 3600*(12+Number(input[0]))+60*Number(input[1]);
-		} else if (/^([01][0-9]|2[0-3])h[0-5][0-9]$/.test(input)) {
-			input = input.split("h");
+		} else if ((/^([01][0-9]|2[0-3])h[0-5][0-9]$/i).test(input)) {
+			input = input.toLowerCase().split("h");
 			time  = 3600*Number(input[0])+60*Number(input[1]);
 		} else {
 			time = null;
