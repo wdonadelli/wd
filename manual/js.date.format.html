@@ -1,14 +1,52 @@
-<p class="wd-indent">This is a <u>method</u> that returns the primitive value plus the item entered in the argument, if nonexistent. It is called as follows:</p>
+<p class="wd-indent">This is a <u>method</u> that sets date format return. It is called as follows:</p>
 
-<pre class="wd-code">wd(input).add(item);</pre>
+<pre class="wd-code">wd(input).format(string, locale);</pre>
 
-<p class="wd-indent">The <code>item</code> argument is the value to be added to the array.</p>
+<p class="wd-indent">The <code>string</code> argument (optional), if not defined, will return the same object result with the toString method. The argument consists of a string where you can enter attributes of the object as format below:</p>
+
+<dl class="wd-padding wd-border wd-rounded wd-bgcolor-green">
+	<dt><q>%d</q>:</dt>
+	<dd>numerical value of the day (one digit).</dd>
+	<dt><q>%D</q>:</dt>
+	<dd>numerical value of the day (two digits).</dd>
+	<dt><q>@d</q>:</dt>
+	<dd>day of year.</dd>
+	<dt><q>%m</q>:</dt>
+	<dd>numerical value of the month (one digit).</dd>
+	<dt><q>%M</q>:</dt>
+	<dd>numerical value of the month	 (two digits).</dd>
+	<dt><q>@m</q>:</dt>
+	<dd>number of days in month.</dd>
+	<dt><q>#m</q>:</dt>
+	<dd>short name of the month.</dd>
+	<dt><q>#M</q>:</dt>
+	<dd>long name of the month.</dd>
+	<dt><q>%y</q>:</dt>
+	<dd>numerical value of year.</dd>
+	<dt><q>%Y</q>:</dt>
+	<dd>numerical value of year (four-digit).</dd>
+	<dt><q>%w</q>:</dt>
+	<dd>numerical value of day of week.</dd>
+	<dt><q>@w</q>:</dt>
+	<dd>numerical value of week of year.</dd>
+	<dt><q>#w</q>:</dt>
+	<dd>short name of the day of week.</dd>
+	<dt><q>#W</q>:</dt>
+	<dd>long name of the day of week.</dd>
+	<dt><q>%l</q>:</dt>
+	<dd>days in the year.</dd>
+	<dt><q>%c</q>:</dt>
+	<dd>days remaining for the end of the year.</dd>
+</dl>
+
+<p class="wd-indent">The <code>locale</code> argument (optional) consists of a string representing the location (e.g. <q>pt-BR</q>). If not set, the location will be the one entered in the <i>lang</i> attribute of the <code>html</code> tag, the provided browser value or <q>en-US</q></p>
 
 <pre class="wd-code"><cite>//Example</cite>
-<code>var</code> x = [<q>wd</q>, <var>100</var>, <var>100</var>, <q>wd</q>];
-wd(x).add(<var>100</var>);
-<sample>[<q>wd</q>, <var>100</var>, <var>100</var>, <q>wd</q>]</sample>
-wd(x).add(<var>1</var>);
-<sample>[<q>wd</q>, <var>100</var>, <var>100</var>, <q>wd</q>, <var>1</var>]</sample>
-<cite>//Variable "x" is not changed</cite>
+<code>var</code> x = wd(<q>03/15/2010</q>);
+<code>var</code> f = <q>#W, %d, #M/%Y</q>;
+x.format(f, "pt-BR");
+<sample><q>Segunda-feira, 15, março/2010</q></sample>
+x.format(f, "en-US");
+<sample><q>Monday, 15, March/2010</q></sample>
+<cite>//Values ​​depend on the browser configuration.</cite>
 </pre>

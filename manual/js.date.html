@@ -1,34 +1,63 @@
-<p class="wd-indent">This is an object for manipulating arrays. The supplied argument (primitive value) is <u>not changed</u> by methods or attributes. The following primitive values ​​define the object:</p>
+<p class="wd-indent">This is an object for date manipulation, disregarding the effects inherent to the time zone. The time record <u>can be changed</u> by methods and attributes, the original value is not changed. The following primitive values ​​define the object:</p>
 
 <ul class="wd-list">
-	<li>JavaScript Array Object</li>
+	<li><q>YYYY-MM-DD</q></li>
+	<li><q>MM/DD/YYYY</q></li>
+	<li><q>DD.MM.YYYY</q></li>
+	<li>Date Object</li>
+	<li><q>%today</q></li>
 </ul>
 
-<p class="wd-indent">When identifying the type of the primitive value, the object returns the string <q>array</q>.</p>
+<p class="wd-indent">Where:</p>
+
+<dl class="wd-padding wd-border wd-rounded wd-bgcolor-green">
+	<dt><q>YYYY</q>:</dt>
+	<dd>Four-digit year (integer from 0001 to 9999).</dd>
+	<dt><q>MM</q>:</dt>
+	<dd>Month with two digits (integer from 01 to 12).</dd>
+	<dt><q>DD</q>:</dt>
+	<dd>Day with two digits (integer from 01 to 31).</dd>
+	<dt><q>%today</q>:</dt>
+	<dd>Current date.</dd>
+</dl>
+
+<p class="wd-indent">When identifying the type of the primitive value, the object returns the string <q>date</q>.</p>
 
 <pre class="wd-code"><cite>//Example</cite>
-<code>var</code> input = [<var>1</var>, <q>wd</q>, <var>true</var>];
-<code>var</code> object = wd(input);
-object.type;
-<sample><q>array</q></sample>
+<code>var</code> x = wd(<q>01/01/2010</q>);
+x.year;
+<sample><var>2010</var></sample>
+x.year = <var>2011</var>;
+x.year;
+<sample><var>2011</var></sample>
+x.toString();
+<sample><q>2011-01-01</q></sample>
+x.toSource();
+<sample><q>01/01/2010</q></sample>
+x.type;
+<sample><q>date</q></sample>
 </pre>
 
 <p class="wd-indent">The object has the following attributes:</p>
 
 <ul class="wd-list">
-	<li>organized</li>
-	<li>sort</li>
-	<li>unique</li>
+	<li>week</li>
+	<li>day</li>
+	<li>month</li>
+	<li>year</li>
+	<li>leap</li>
+	<li>days</li>
+	<li>width</li>
+	<li>weeks</li>
+	<li>countdown</li>
 </ul>
 
 <p class="wd-indent">The object has the following methods:</p>
 
 <ul class="wd-list">
-	<li>add</li>
-	<li>amount</li>
-	<li>del</li>
-	<li>replace</li>
-	<li>toggle</li>
+	<li>toString</li>
+	<li>valueOf</li>
+	<li>format</li>
 </ul>
 
 <p class="wd-indent">See the menu for more details.</p>
