@@ -109,23 +109,24 @@ wd("manual/menu.json").get((e)=> {
 					}
 				}
 			},
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 			"html": {
-				"Primitive": ["DOM", "BOM"],
-				"Input": [
-						"HTMLElement;",
-						"NodeList;",
-						"HTMLCollection;",
-						"HTMLAllCollection;",
-						"HTMLFormControlsCollection",
-						"document; and",
-						"window"
-				],
-				"Description": "DOM/BOM manipulation. The methods of the object return to itself, so it is possible to apply them in sequence. The attributes return a list and each item in the list contains the requested product for each element indicated in the input argument.",
-				"Example": "<b>var</b> x = document.querySelectorAll(<q>div</q>);\nx.length;\n&gt; 2\nwd(x).action(<q>open</q>).filter(<q>target</q>); //methods in sequence\nwd(x).get[0]; //attribute behavior\n&gt; &lt;<i>div#div1&gt</i>; //first item",
-				"Shortcut": {
-					"Description": "If you use the <code>querySelectorAll</code> method, you can use the object <code>wd$</code> instead of <code>wd</code>. The function argument must be a CSS selector.",
-					"Example": "wd$(<q>div</q>).action(<q>open</q>).filter(<q>target</q>); //all div elements"
-				},
 				"Methods": {
 					"execute": {
 						"Call": "execute(method)",

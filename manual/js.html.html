@@ -1,34 +1,61 @@
-<p class="wd-indent">This is an object for manipulating arrays. The supplied argument (primitive value) is <u>not changed</u> by methods or attributes. The following primitive values ​​define the object:</p>
+<p class="wd-indent">This is an object for manipulation of DOM/BOM. The supplied argument (primitive value) is <u>not changed</u> by methods or attributes. The following primitive values ​​define the object:</p>
 
 <ul class="wd-list">
-	<li>JavaScript Array Object</li>
+	<li>HTMLElement</li>
+	<li>NodeList</li>
+	<li>HTMLCollection</li>
+	<li>HTMLAllCollection</li>
+	<li>HTMLFormControlsCollection</li>
+	<li>document</li>
+	<li>window</li>
 </ul>
 
-<p class="wd-indent">When identifying the type of the primitive value, the object returns the string <q>array</q>.</p>
+<p class="wd-indent">When identifying the type of the primitive value, the object returns the string <q>html</q>, if a single element, or <q>[html]</q>, if a list of elements.</p>
+
+<p class="wd-indent">The methods of the object return to itself, so it is possible to apply them in sequence. The attributes return a list and each item in the list contains the requested product for each element indicated in the input argument.</p>
 
 <pre class="wd-code"><cite>//Example</cite>
-<code>var</code> input = [<var>1</var>, <q>wd</q>, <var>true</var>];
-<code>var</code> object = wd(input);
-object.type;
-<sample><q>array</q></sample>
+<code>var</code> x = document.querySelectorAll(<q>div</q>);
+<code>var</code> y = document.getElementById(<q>ID1</q>);
+wd(x).type;
+<sample><q>[html]</q></sample>
+wd(y).type;
+<sample><q>html</q></sample>
+<cite>//methods in sequence</cite>
+wd(x).action(<q>open</q>).filter(<q>target</q>);
+<cite>//first item of x</cite>
+wd(x).get[0];
+<sample>&lt;<i>div#div1</i>&gt;</sample>
+</pre>
+
+<p class="wd-indent">If you use the <code>querySelectorAll</code> method, you can use the object <code>wd$</code> instead of <code>wd</code>. The function argument must be a CSS selector.</p>
+
+<pre class="wd-code"><cite>//The same result is obtained:</cite>
+wd(document.querySelectorAll(<q>div</q>));
+wd$(<q>div</q>);
 </pre>
 
 <p class="wd-indent">The object has the following attributes:</p>
 
 <ul class="wd-list">
-	<li>organized</li>
-	<li>sort</li>
-	<li>unique</li>
+	<li>get</li>
+	<li>styles</li>
 </ul>
 
 <p class="wd-indent">The object has the following methods:</p>
 
 <ul class="wd-list">
-	<li>add</li>
-	<li>amount</li>
-	<li>del</li>
-	<li>replace</li>
-	<li>toggle</li>
+	<li>execute</li>
+	<li>handler</li>
+	<li>class</li>
+	<li>style</li>
+	<li>data</li>
+	<li>filter</li>
+	<li>sort</li>
+	<li>page</li>
+	<li>repeat</li>
+	<li>load</li>
+	<li>action</li>
 </ul>
 
 <p class="wd-indent">See the menu for more details.</p>
