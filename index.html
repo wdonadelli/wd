@@ -49,35 +49,6 @@
 
 
 <!--
-wd("manual/menu.json").get((e)=> {
-	var lista = [];
-	for (var i = 0; i < e.json.length; i++) {
-		lista.push("touch "+e.json[i].content.split("/")[1].replace("'", ""));
-	}
-	console.log(lista.join("; "));
-});
--->
-
-
-
-<!--
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 			"path": {
 				"Primitive": ["String"],
 				"Input": ["A file or path accessible on the server."],
@@ -127,15 +98,10 @@ wd("manual/menu.json").get((e)=> {
 
 
 			"html": {
-				"Methods": {
-					"execute": {
-						"Call": "execute(method)",
-						"Description": "The function entered in the argument will be executed in the same amount of existing elements, that is, if it is a list of nodes with n elements, the function will be performed n times.",
-						"Arguments": {
-							"method": "Function to be executed. The reported method accepts an argument representing the nth element."
-						},
-						"Example": "<b>var</b> x = document.body.children;\nx.length;\n&gt; 3\n<b>function</b> f(e) {e.textContent = <q>Item</q>;}\nwd(x).execute(f);\n//The three elements will have\n//the textual content equal to <q>Item</q>."
-					},
+
+
+
+
 					"handler": {
 						"Call": "handler(events, remove)",
 						"Description": "Sets event triggers to elements defined in input. It is a standalone method, it uses the corresponding attribute of the element to assign the methods to be executed when the event is triggered.",
@@ -233,19 +199,29 @@ wd("manual/menu.json").get((e)=> {
 						"Example": "<b>var</b> x = document.querySelector(<q>#div2</q>);\nwd(x).action(<q>tab</q>);"
 					},
 				},
-				"Attributes": {
-					"get": {
-						"Description": "Returns the elements as items in a list.",
-						"Example": "<b>var</b> x = document.querySelectorAll(<q>div</q>);\nwd(x).get[1]; //returns 2<sup>nd</sup> element\nwd(x).get[1].textContent = <q>Setted text</q>"
-					},
-					"styles": {
-						"Description": "Returns an array whose items are objects that bring information about each element. Objects have two attributes: the <code>default</code>, which gives information about the element's default styles, and the <code>computed</code>, which gives information about the computed styles of the element.",
-						"Example": "<b>var</b> x = document.querySelectorAll(<q>div</q>);\nwd(x).styles[1].computed.color;\n&gt; <q>rgb(255, 0, 0)</q>\nwd(x).styles[1].default.color;\n&gt; <q>rgb(0, 0, 0)</q>"
-					}
-				}
-			}
-		}
-	},
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	"Dataset": {
 		"Version": "1.0.0",
 		"Description": "It is a tool for building a web page through the use of attributes to be inserted into HTML elements. Attributes are defined from the prefix <code>data-</code> and relate to HTML tools.",

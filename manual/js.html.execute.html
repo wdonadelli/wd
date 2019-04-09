@@ -1,14 +1,30 @@
-<p class="wd-indent">This is a <u>method</u> that returns the primitive value plus the item entered in the argument, if nonexistent. It is called as follows:</p>
+<p class="wd-indent">This is a <u>method</u> that executes the function entered in the argument in the same amount of existing elements, that is, if it is a list of nodes with n elements, the function will be performed n times. It is the main method of the object. It is called as follows:</p>
 
-<pre class="wd-code">wd(input).add(item);</pre>
+<pre class="wd-code">wd(input).execute(method);</pre>
 
-<p class="wd-indent">The <code>item</code> argument is the value to be added to the array.</p>
+<p class="wd-indent">The <code>method</code> argument is the function to be executed. The reported method accepts an argument representing the nth element.</p>
+
+<p id="js_html_execute_example1">Example1</p>
+<p id="js_html_execute_example2">Example2</p>
 
 <pre class="wd-code"><cite>//Example</cite>
-<code>var</code> x = [<q>wd</q>, <var>100</var>, <var>100</var>, <q>wd</q>];
-wd(x).add(<var>100</var>);
-<sample>[<q>wd</q>, <var>100</var>, <var>100</var>, <q>wd</q>]</sample>
-wd(x).add(<var>1</var>);
-<sample>[<q>wd</q>, <var>100</var>, <var>100</var>, <q>wd</q>, <var>1</var>]</sample>
-<cite>//Variable "x" is not changed</cite>
+<code>function</code> m(x) {
+	x.style.color = <q>#FF0000</q>;
+	x.textContent = <q>Red Color</q>;
+};
+wd$(<q>#js_html_execute_example1, #js_html_execute_example2</q>).execute(m);
 </pre>
+
+<button type="button" class="wd-button" id="js_html_execute_example3">try</button>
+
+<script>
+function jsHtmlExecuteFunction1(x) {
+	x.style.color = "#FF0000";
+	x.textContent = "Red Color";
+}
+function jsHtmlExecuteFunction2() {
+	wd$("#js_html_execute_example1, #js_html_execute_example2").execute(jsHtmlExecuteFunction1);
+}
+
+wd$("#js_html_execute_example3").handler({click: jsHtmlExecuteFunction2});
+</script>

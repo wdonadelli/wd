@@ -10,7 +10,7 @@
 	<li>window</li>
 </ul>
 
-<p class="wd-indent">When identifying the type of the primitive value, the object returns the string <q>html</q>, if a single element, or <q>[html]</q>, if a list of elements.</p>
+<p class="wd-indent">When identifying the type of the primitive value, the object returns the string <q>html</q>, if a single element, <q>[html]</q>, if a list of elements, <q>doc</q>, if a <code>document</code> object, or <q>win</q>, if a <code>window</code> object.</p>
 
 <p class="wd-indent">The methods of the object return to itself, so it is possible to apply them in sequence. The attributes return a list and each item in the list contains the requested product for each element indicated in the input argument.</p>
 
@@ -28,11 +28,20 @@ wd(x).get[0];
 <sample>&lt;<i>div#div1</i>&gt;</sample>
 </pre>
 
-<p class="wd-indent">If you use the <code>querySelectorAll</code> method, you can use the object <code>wd$</code> instead of <code>wd</code>. The function argument must be a CSS selector.</p>
+<p class="wd-indent">If you use the <code>querySelectorAll</code> method, you can use the object <code>wd$</code> instead of <code>wd</code>. It is called as follows:</p>
+
+<pre class="wd-code">wd$(css, root);</pre>
+
+<p class="wd-indent">The <code>css</code> argument must be a CSS selector and the <code>root</code> argument (optional) must be a parent element,  its default value is <i>document</i>.</p>
+
+<p class="wd-indent">The function argument .</p>
 
 <pre class="wd-code"><cite>//The same result is obtained:</cite>
 wd(document.querySelectorAll(<q>div</q>));
 wd$(<q>div</q>);
+<cite>//or...</cite>
+document.getElementById(<q>data1</q>).querySelectorAll(<q>div</q>);
+wd$(<q>div</q>, document.getElementById(<q>data1</q>));
 </pre>
 
 <p class="wd-indent">The object has the following attributes:</p>

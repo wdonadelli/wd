@@ -1,14 +1,33 @@
-<p class="wd-indent">This is a <u>method</u> that returns the primitive value plus the item entered in the argument, if nonexistent. It is called as follows:</p>
+<p class="wd-indent">This is a <u>attribute</u> that returns the elements as items in a list. It is called as follows:</p>
 
-<pre class="wd-code">wd(input).add(item);</pre>
+<pre class="wd-code">wd(input).get;</pre>
 
-<p class="wd-indent">The <code>item</code> argument is the value to be added to the array.</p>
+<select id="js_html_get_example1" class="wd-input wd-boxform">
+	<option>Item 1</option>
+	<option>Item 2</option>
+	<option>Item 3</option>
+</select>
+
 
 <pre class="wd-code"><cite>//Example</cite>
-<code>var</code> x = [<q>wd</q>, <var>100</var>, <var>100</var>, <q>wd</q>];
-wd(x).add(<var>100</var>);
-<sample>[<q>wd</q>, <var>100</var>, <var>100</var>, <q>wd</q>]</sample>
-wd(x).add(<var>1</var>);
-<sample>[<q>wd</q>, <var>100</var>, <var>100</var>, <q>wd</q>, <var>1</var>]</sample>
-<cite>//Variable "x" is not changed</cite>
+document.getElementById(<q>js_html_get_example1</q>).outerHTML;
+<sample><q id="js_html_get_sample5"></q></sample>
+<code>var</code> x = wd$(<q>#js_html_get_example1 &gt; option</q>);
+x.get.length;
+<sample><var id="js_html_get_sample1"></var></sample>
+x.get[<var>0</var>].outerHTML;
+<sample><q id="js_html_get_sample2"></q></sample>
+x.get[<var>1</var>].outerHTML;
+<sample><q id="js_html_get_sample3"></q></sample>
+x.get[<var>2</var>].outerHTML;
+<sample><q id="js_html_get_sample4"></q></sample>
 </pre>
+
+<script>
+var x = wd$("#js_html_get_example1 > option");
+wd$("#js_html_get_sample1").get[0].textContent = x.get.length;
+wd$("#js_html_get_sample2").get[0].textContent = x.get[0].outerHTML;
+wd$("#js_html_get_sample3").get[0].textContent = x.get[1].outerHTML;
+wd$("#js_html_get_sample4").get[0].textContent = x.get[2].outerHTML;
+wd$("#js_html_get_sample5").get[0].textContent = document.getElementById("js_html_get_example1").outerHTML;;
+</script>
