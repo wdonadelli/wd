@@ -1,14 +1,30 @@
-<p class="wd-indent">This is a <u>method</u> that returns the primitive value plus the item entered in the argument, if nonexistent. It is called as follows:</p>
+<p class="wd-indent">This is a <u>method</u> that sets event triggers to elements defined in input. It is a standalone method, it uses the corresponding attribute of the element to assign the methods to be executed when the event is triggered. It is called as follows:</p>
 
-<pre class="wd-code">wd(input).add(item);</pre>
+<pre class="wd-code">wd(input).handler(events, remove);</pre>
 
-<p class="wd-indent">The <code>item</code> argument is the value to be added to the array.</p>
+<p class="wd-indent">The <code>item</code> argument must be an object whose keys match the events and the values ​​correspond to the methods. If there is more than one method to be defined in the event, these must be listed in an array. The methods will be executed in the sequence that they are informed in the list or as they are added. The <i>null</i> value deletes all methods of the event. Keys can be uppercase or lowercase and may or may not contain the prefix <q>on</q> (e.g <code>onclick</code>, <code>click</code> and <code>cLicK</code> work). You can not report repeated methods. If the event does not exist in the element, the method assignment is ignored.</p>
+
+<p class="wd-indent">The <code>remove</code> argument (optional) is a boolean value e his default value is false. If true, instead of adding methods to events, they will be removed.</p>
 
 <pre class="wd-code"><cite>//Example</cite>
-<code>var</code> x = [<q>wd</q>, <var>100</var>, <var>100</var>, <q>wd</q>];
-wd(x).add(<var>100</var>);
-<sample>[<q>wd</q>, <var>100</var>, <var>100</var>, <q>wd</q>]</sample>
-wd(x).add(<var>1</var>);
-<sample>[<q>wd</q>, <var>100</var>, <var>100</var>, <q>wd</q>, <var>1</var>]</sample>
-<cite>//Variable "x" is not changed</cite>
+<code>var</code> x = document.querySelectorAll(<q>a</q>);
+<cite>//adding events</cite>
+wd(x).handler({
+	onClick: method1,
+	mouseenter: [method2, method3],
+	ONMOUSELEAVE: method4
+});
+<cite>//removing methods from the event</cite>
+wd(x).handler({
+	onmouseenter: method3
+}, <var>true</var>);
+<cite>//removing all methods from the event</cite>
+wd(x).handler({
+	mouseenter: <var>null</var>,
+	MOUSELEAVE: <var>null</var>
+});
+<cite>//removing all methods from the event and adding new</cite>
+wd(x).handler({
+	onclick: [<var>null</var>, method4, method1]
+});
 </pre>

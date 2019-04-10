@@ -1,14 +1,28 @@
-<p class="wd-indent">This is a <u>method</u> that returns the primitive value plus the item entered in the argument, if nonexistent. It is called as follows:</p>
+<p class="wd-indent">This is a <u>method</u> that manipulates the <i>class</i> attribute. It is called as follows:</p>
 
-<pre class="wd-code">wd(input).add(item);</pre>
+<pre class="wd-code">wd(input).class(list);</pre>
 
-<p class="wd-indent">The <code>item</code> argument is the value to be added to the array.</p>
+<p class="wd-indent">The <code>list</code> argument is an object that accepts three keys: <q>add</q>, <q>del</q> and <q>toggle</q>, executed in this order. The key values ​​are strings that represent the value to be added, removed, or alternate, respectively. If there are more than one attribute to set, the values ​​must be contained in an array. If the value is <i>null</i>, the class attribute is empty..</p>
 
 <pre class="wd-code"><cite>//Example</cite>
-<code>var</code> x = [<q>wd</q>, <var>100</var>, <var>100</var>, <q>wd</q>];
-wd(x).add(<var>100</var>);
-<sample>[<q>wd</q>, <var>100</var>, <var>100</var>, <q>wd</q>]</sample>
-wd(x).add(<var>1</var>);
-<sample>[<q>wd</q>, <var>100</var>, <var>100</var>, <q>wd</q>, <var>1</var>]</sample>
-<cite>//Variable "x" is not changed</cite>
+<code>var</code> x = document.querySelectorAll(<q>a</q>);
+<cite>//Clearing the attribute</cite>
+wd(x).class(<var>null</var>);
+<cite>//Adding item to attribute</cite>
+wd(x).class({
+	add: <q>class1</q>
+});
+<cite>//Adding items to attribute</cite>
+wd(x).class({
+	add: [<q>class2</q>, <q>class3</q>, <q>class4</q>]
+});
+<cite>//Removing items from the attribute</cite>
+wd(x).class({
+	del: [<q>class3</q>, <q>class4</q>]
+});
+<cite>//Toggling attribute items</cite>
+wd(x).class({
+	toggle: [<q>class1</q>, <q>class5</q>]
+});
+<cite>//<q>class1</q> has been removed and <q>class5</q> added</cite>
 </pre>

@@ -102,31 +102,7 @@
 
 
 
-					"handler": {
-						"Call": "handler(events, remove)",
-						"Description": "Sets event triggers to elements defined in input. It is a standalone method, it uses the corresponding attribute of the element to assign the methods to be executed when the event is triggered.",
-						"Arguments": {
-							"events": "The argument must be an object whose keys match the events and the values ​​correspond to the methods. If there is more than one method to be defined in the event, these must be listed in an array. The methods will be executed in the sequence that they are informed in the list or as they are added. The <i>null</i> value deletes all methods of the event. Keys can be uppercase or lowercase and may or may not contain the prefix <q>on</q>. You can not report repeated methods. If the event does not exist in the element, the method assignment is ignored.",
-							"remove": "(Optional) The default value is false. If true, instead of adding methods to events, they will be removed."
-						},
-						"Example": "//x, y and z are méthods\n<b>var</b> e = document.body;\nwd(e).handler({CLICK: x, onmouseover: [<i>null</i>, y,z]});"
-					},
-					"class": {
-						"Call": "class(list)",
-						"Description": "Manipulates the <i>class</i> attribute.",
-						"Arguments": {
-							"list": "It is an object that accepts three keys: <q>add</q>, <q>del</q> and <q>toggle</q>, executed in this order. The key values ​​are strings that represent the value to be added, removed, or alternate, respectively. If there are more than one attribute to set, the values ​​must be contained in an array. If the value is <i>null</i>, the class attribute is empty."
-						},
-						"Example": "<b>var</b> x = document.body;\n<b>var</b> l = {add: [<q>class1</q>, <q>class2</q>], del: <q>class3</q>};\nwd(x).class(l);"
-					},
-					"style": {
-						"Call": "style(list)",
-						"Description": "Manipulates the <i>style</i> attribute.",
-						"Arguments": {
-							"list": "It is an object whose keys and values ​​represent, respectively, CSS attributes and values. Keys can be in CSS or camelCase style. If the attribute does not exist, it will be ignored."
-						},
-						"Example": "<b>var</b> x = document.body;\n<b>var</b> l = {\n\tbackgroundColor: <q>red</q>,\n\t<q>z-index</q>: 2,\n\tcolor: <i>null</i>\n};\nwd(x).style(l);"
-					},
+
 					"data": {
 						"Call": "data(list)",
 						"Description": "Manipulates the <i>data</i> attribute.",
