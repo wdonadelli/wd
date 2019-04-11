@@ -1,4 +1,4 @@
-<p class="wd-indent">This is a <u>method</u> that executes the function entered in the argument in the same amount of existing elements, that is, if it is a list of nodes with n elements, the function will be performed n times. It is the main method of the object. It is called as follows:</p>
+<p class="wd-indent">This is a <u>method</u> that executes the function entered in the argument in the same amount of existing elements, that is, if it is a list of nodes with n elements, the function will be performed n times. It is called as follows:</p>
 
 <pre class="wd-code">wd(input).execute(method);</pre>
 
@@ -12,11 +12,11 @@
 wd$(<q>#js_html_execute_example1, #js_html_execute_example2</q>).execute(m);
 </pre>
 
-<p id="js_html_execute_example1">Example1</p>
-<p id="js_html_execute_example2">Example2</p>
+<p id="js_html_execute_example1" title="id='js_html_execute_example1'">Example1</p>
+<p id="js_html_execute_example2" title="id='js_html_execute_example2'">Example2</p>
 
 
-<button type="button" class="wd-button" id="js_html_execute_example3">try</button>
+<button type="button" class="wd-button" id="js_html_execute_example3" title="Executes m()">try</button>
 
 <script>
 function jsHtmlExecuteFunction1(x) {
@@ -29,3 +29,5 @@ function jsHtmlExecuteFunction2() {
 
 wd$("#js_html_execute_example3").handler({click: jsHtmlExecuteFunction2});
 </script>
+
+<p class="wd-align-C wd-color-green wd-symbol-ok wd-padding wd-rounded wd-border">It is the main method of the object.</p>

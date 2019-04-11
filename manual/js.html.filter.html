@@ -1,14 +1,50 @@
-<p class="wd-indent">This is a <u>method</u> that returns the primitive value plus the item entered in the argument, if nonexistent. It is called as follows:</p>
+<p class="wd-indent">This is a <u>method</u> that displays only child elements that display the textual content entered in the argument. It is called as follows:</p>
 
-<pre class="wd-code">wd(input).add(item);</pre>
+<pre class="wd-code">wd(input).filter(text, min);</pre>
 
-<p class="wd-indent">The <code>item</code> argument is the value to be added to the array.</p>
+<p class="wd-indent">The <code>text</code> argument is the text to be located.</p>
+
+<p class="wd-indent">The <code>text</code> argument (optional) is the minimum number of characters for the method to be executed. The default value is zero.</p>
 
 <pre class="wd-code"><cite>//Example</cite>
-<code>var</code> x = [<q>wd</q>, <var>100</var>, <var>100</var>, <q>wd</q>];
-wd(x).add(<var>100</var>);
-<sample>[<q>wd</q>, <var>100</var>, <var>100</var>, <q>wd</q>]</sample>
-wd(x).add(<var>1</var>);
-<sample>[<q>wd</q>, <var>100</var>, <var>100</var>, <q>wd</q>, <var>1</var>]</sample>
-<cite>//Variable "x" is not changed</cite>
+<code>function</code> f() {
+	<code>var</code> text = document.getElementById(<q>js_html_filter_example1</q>).value;
+	<code>var</code> min  = document.getElementById(<q>js_html_filter_example2</q>).value;
+	wd$(<q>#js_html_filter_example3</q>).filter(text, min);
+};
 </pre>
+
+<form class="wd-boxform-H">
+	<input type="input" id="js_html_filter_example1" placeholder="text" class="wd-input" title="text"/>
+	<input type="number" id="js_html_filter_example2" placeholder="min" class="wd-input" min="0" step="1" value="0" title="min"/>
+	<button type="button" class="wd-button" id="js_html_filter_example5" title="Executes f()">Try</button>
+</form>
+
+<ol class="wd-list wd-border-V wd-border-H-childs" id="js_html_filter_example3">
+	<li>Guitar</li>
+	<li>Bass Guitar</li>
+	<li>Drum</li>
+	<li>keyboard</li>
+	<li>microphone</li>
+</ol>
+
+<details class="wd-margin">
+	<summary>Source code</summary>
+	<pre class="wd-code" id="js_html_filter_example4"></pre>
+</details>
+
+
+
+<script>
+function jsHtmlFilterFunction1() {
+	var text = document.getElementById("js_html_filter_example1").value;
+	var min  = document.getElementById("js_html_filter_example2").value;
+	wd$("#js_html_filter_example3").filter(text, min);
+	return;
+};
+
+wd$("#js_html_filter_example4").get[0].textContent = wd$("#js_html_filter_example3").get[0].outerHTML
+wd$("#js_html_filter_example5").handler({click: jsHtmlFilterFunction1});
+</script>
+
+

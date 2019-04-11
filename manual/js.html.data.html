@@ -1,14 +1,16 @@
-<p class="wd-indent">This is a <u>method</u> that returns the primitive value plus the item entered in the argument, if nonexistent. It is called as follows:</p>
+<p class="wd-indent">This is a <u>method</u> that manipulates the <i>data</i> attribute. It is called as follows:</p>
 
-<pre class="wd-code">wd(input).add(item);</pre>
+<pre class="wd-code">wd(input).data(list);</pre>
 
-<p class="wd-indent">The <code>item</code> argument is the value to be added to the array.</p>
+<p class="wd-indent">The <code>list</code> argument is an object whose keys and values ​​respectively represent the names of attributes and values. Do not use the <q>data-</q> prefix in the attribute name. Compound attributes can be represented by dashes or camelCase. If the key value is <i>null</i>, the value of the attribute is removed from the element.</p>
 
 <pre class="wd-code"><cite>//Example</cite>
-<code>var</code> x = [<q>wd</q>, <var>100</var>, <var>100</var>, <q>wd</q>];
-wd(x).add(<var>100</var>);
-<sample>[<q>wd</q>, <var>100</var>, <var>100</var>, <q>wd</q>]</sample>
-wd(x).add(<var>1</var>);
-<sample>[<q>wd</q>, <var>100</var>, <var>100</var>, <q>wd</q>, <var>1</var>]</sample>
-<cite>//Variable "x" is not changed</cite>
+<code>var</code> x = document.querySelectorAll(<q>a</q>);
+wd(x).style({
+	wdSort: 1,              <cite>//camelCase: data-wd-sort=<q>1</q></cite>
+	<q>wd-load</q>: <q>data.json</q>, <cite>//Dash: data-wd-load=<q>data.json</q></cite>
+	example: <var>null</var>           <cite>//removing attribute data-example</cite>
+});
 </pre>
+
+<p class="wd-align-C wd-color-green wd-symbol-ok wd-padding wd-rounded wd-border">This method is an important tool for defining the attributes present in <q>WD Attributes Tools</q>.</p>

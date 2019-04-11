@@ -103,23 +103,7 @@
 
 
 
-					"data": {
-						"Call": "data(list)",
-						"Description": "Manipulates the <i>data</i> attribute.",
-						"Arguments": {
-							"list": "It is an object whose keys and values ​​respectively represent the names of attributes and values. Do not use the <q>data-</q> prefix in the attribute name. Compound attributes can be represented by dashes or camelCase. If the key value is <i>null</i>, the value of the attribute is removed from the element."
-						},
-						"Example": "<b>var</b> x = document.body;\n<b>var</b> d = {\n\torder: <q>asc</q>, //data-order\n\t<q>order-col</q>: <q>desc</q>, //data-order-col\n\torderRow: <i>null</i> //data-order-row\n};\nwd(x).data(d);"
-					},
-					"filter": {
-						"Call": "filter(text, min)",
-						"Description": "Displays only child elements that display the textual content entered in the argument.",
-						"Arguments": {
-							"text": "Text to be located.",
-							"min": "(Optional) Minimum number of characters for the method to be executed. The default value is zero."
-						},
-						"Example": "<b>var</b> x = document.body;\nwd(x).filter(<q>03/15/2010</q>);"
-					},
+
 					"sort": {
 						"Call": "sort(order, col)",
 						"Description": "Sorts the child elements in ascending or descending order.",
