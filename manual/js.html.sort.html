@@ -1,14 +1,47 @@
-<p class="wd-indent">This is a <u>method</u> that returns the primitive value plus the item entered in the argument, if nonexistent. It is called as follows:</p>
+<p class="wd-indent">This is a <u>method</u> that sorts the child elements in ascending or descending order. It is called as follows:</p>
 
-<pre class="wd-code">wd(input).add(item);</pre>
+<pre class="wd-code">wd(input).sort(order, col);</pre>
 
-<p class="wd-indent">The <code>item</code> argument is the value to be added to the array.</p>
+<p class="wd-indent">The <code>order</code> argument (optional) is the number that indicates the order. If less than zero, decreasing, otherwise increasing. The default value is 1.</p>
+
+<p class="wd-indent">The <code>col</code> argument (optional) is the number that indicates the column to use as a reference to define the order. If the child elements, which are to be sorted, also have children (columns), it is possible to define these elements as a parameter for sorting (eg <code>td</code> elements of a table). The default value is <i>null</i>.</p>
 
 <pre class="wd-code"><cite>//Example</cite>
-<code>var</code> x = [<q>wd</q>, <var>100</var>, <var>100</var>, <q>wd</q>];
-wd(x).add(<var>100</var>);
-<sample>[<q>wd</q>, <var>100</var>, <var>100</var>, <q>wd</q>]</sample>
-wd(x).add(<var>1</var>);
-<sample>[<q>wd</q>, <var>100</var>, <var>100</var>, <q>wd</q>, <var>1</var>]</sample>
-<cite>//Variable "x" is not changed</cite>
+<code>function</code> f() {
+	<code>var</code> order = document.getElementById(<q>js_html_sort_example1</q>).value;
+	wd$(<q>#js_html_sort_example2</q>).sort(order);
+};
 </pre>
+
+<form class="wd-boxform-H">
+	<input type="number" id="js_html_sort_example1" placeholder="order" class="wd-input" min="-1" step="2" max="1" title="order"/>
+	<button type="button" class="wd-button" id="js_html_sort_example3" title="Executes f()">Try</button>
+</form>
+
+<ol class="wd-list wd-border-V wd-border-H-childs" id="js_html_sort_example2">
+	<li>Guitar</li>
+	<li>Bass Guitar</li>
+	<li>Drum</li>
+	<li>Keyboard</li>
+	<li>Microphone</li>
+</ol>
+
+<details class="wd-margin">
+	<summary>Source code</summary>
+	<pre class="wd-code" id="js_html_sort_example4"></pre>
+</details>
+
+
+
+<script>
+function jsHtmlSortFunction1() {
+	var order = document.getElementById("js_html_sort_example1").value;
+	wd$("#js_html_sort_example2").sort(order);
+	return;
+};
+
+wd$("#js_html_sort_example4").get[0].textContent = wd$("#js_html_sort_example2").get[0].outerHTML
+wd$("#js_html_sort_example3").handler({click: jsHtmlSortFunction1});
+</script>
+
+

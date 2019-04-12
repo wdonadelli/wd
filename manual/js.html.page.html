@@ -1,14 +1,70 @@
-<p class="wd-indent">This is a <u>method</u> that returns the primitive value plus the item entered in the argument, if nonexistent. It is called as follows:</p>
+<p class="wd-indent">This is a <u>method</u> that divides the child elements into defined quantity groups and display a given group, leaving the others inhibited. It is called as follows:</p>
 
-<pre class="wd-code">wd(input).add(item);</pre>
+<pre class="wd-code">wd(input).page(page, size);</pre>
 
-<p class="wd-indent">The <code>item</code> argument is the value to be added to the array.</p>
+<p class="wd-indent">The <code>page</code> argument is a Integer that indicates the group to be displayed. Zero indicates the first group, 1 the second group, -1 the last group, -2 the penultimate group, and so on. If the reported value exceeds the number of groups, the threshold group is displayed, that is, the first or last group, as the case may be..</p>
+
+<p class="wd-indent">The <code>size</code> argument is Integer that indicates the size of each group. If the number is greater than zero and less than or equal to one, the size of the group will be defined by percentage.</p>
 
 <pre class="wd-code"><cite>//Example</cite>
-<code>var</code> x = [<q>wd</q>, <var>100</var>, <var>100</var>, <q>wd</q>];
-wd(x).add(<var>100</var>);
-<sample>[<q>wd</q>, <var>100</var>, <var>100</var>, <q>wd</q>]</sample>
-wd(x).add(<var>1</var>);
-<sample>[<q>wd</q>, <var>100</var>, <var>100</var>, <q>wd</q>, <var>1</var>]</sample>
-<cite>//Variable "x" is not changed</cite>
+<code>function</code> f() {
+	<code>var</code> page = document.getElementById(<q>js_html_page_example1</q>).value;
+	<code>var</code> size = document.getElementById(<q>js_html_page_example2</q>).value;
+	wd$(<q>#js_html_page_example2</q>).page(page, size);
+};
 </pre>
+
+<form class="wd-boxform-H">
+	<input type="number" id="js_html_page_example1" placeholder="page" class="wd-input" step="1" title="page"/>
+	<input type="number" id="js_html_page_example2" placeholder="size" class="wd-input" step="1" title="size"/>
+	<button type="button" class="wd-button" id="js_html_page_example3" title="Executes f()">Try</button>
+</form>
+
+<ol class="wd-list wd-border-V wd-border-H-childs" id="js_html_page_example4">
+	<li>0 Guitar</li>
+	<li>0 Bass Guitar</li>
+	<li>0 Drum</li>
+	<li>0 Keyboard</li>
+	<li>0 Microphone</li>
+	<li>1 Guitar </li>
+	<li>1 Bass Guitar </li>
+	<li>1 Drum </li>
+	<li>1 Keyboard </li>
+	<li>1 Microphone </li>
+	<li>2 Guitar </li>
+	<li>2 Bass Guitar </li>
+	<li>2 Drum </li>
+	<li>2 Keyboard </li>
+	<li>2 Microphone </li>
+	<li>3 Guitar </li>
+	<li>3 Bass Guitar </li>
+	<li>3 Drum </li>
+	<li>3 Keyboard </li>
+	<li>3 Microphone </li>
+	<li>4 Guitar </li>
+	<li>4 Bass Guitar </li>
+	<li>4 Drum </li>
+	<li>4 Keyboard </li>
+	<li>4 Microphone </li>
+</ol>
+
+<details class="wd-margin">
+	<summary>Source code</summary>
+	<pre class="wd-code" id="js_html_page_example5"></pre>
+</details>
+
+
+
+<script>
+function jsHtmlPageoFunction1() {
+	var page = document.getElementById("js_html_page_example1").value;
+	var size = document.getElementById("js_html_page_example2").value;
+	wd$("#js_html_page_example4").page(page, size);
+	return;
+};
+
+wd$("#js_html_page_example5").get[0].textContent = wd$("#js_html_page_example4").get[0].outerHTML
+wd$("#js_html_page_example3").handler({click: jsHtmlPageoFunction1});
+</script>
+
+

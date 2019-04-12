@@ -97,28 +97,12 @@
 
 
 
-			"html": {
-
-
-
-
-
-
-					"sort": {
-						"Call": "sort(order, col)",
-						"Description": "Sorts the child elements in ascending or descending order.",
-						"Arguments": {
-							"order": "(Option) Number that indicates the order. If less than zero, decreasing, otherwise increasing. The default value is 1.",
-							"col": "(Optional) Number that indicates the column to use as a reference to define the order. If the child elements, which are to be sorted, also have children (columns), it is possible to define these elements as a parameter for sorting (eg <code>td</code> elements of a table). The default value is <i>null</i>."
-						},
-						"Example": "<b>var</b> x = document.querySelector(<q>tbody</q>);\nwd(x).sort(-1,2); //decreasing, 3<sup>rd</sup> column"
-					},
 					"page": {
-						"Call": "page(page, size)",
-						"Description": "Divide the child elements into defined quantity groups and display a given group, leaving the others inhibited.",
+						"Call": "",
+						"Description": "",
 						"Arguments": {
-							"page": "Integer that indicates the group to be displayed. Zero indicates the first group, 1 the second group, -1 the last group, -2 the penultimate group, and so on. If the reported value exceeds the number of groups, the threshold group is displayed, that is, the first or last group, as the case may be.",
-							"size": "Integer that indicates the size of each group. If the number is greater than zero and less than or equal to one, the size of the group will be defined by percentage."
+							"page": "",
+							"size": ""
 						},
 						"Example": "<b>var</b> x = document.querySelector(<q>tbody</q>);\nwd(x).page(-1,0.2);\n//group: last\n//width: 20% of the number of children"
 					},
