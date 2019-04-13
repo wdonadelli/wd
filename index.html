@@ -49,57 +49,7 @@
 
 
 <!--
-			"path": {
-				"Primitive": ["String"],
-				"Input": ["A file or path accessible on the server."],
-				"Description": "Performs and works with asynchronous requests.",
-				"Methods": {
-					"get": {
-						"Call": "get(execute, time)",
-						"Description": "Performs requests using the GET method and <q>application/x-www-form-urlencoded</q> <i>enctype</i>. Use the expression <q>@formName</q> after the <q>?</q> of the path so that the data of the elements of the specified form, by name attribute, are captured automatically, as if the form had been submitted. Only the data from the first form with the specified name will be obtained, do not use repeated names.",
-						"Arguments": {
-							"execute": {
-								"Description": "Function to be executed after request process. The function accepts an argument that returns an object containing four attributes:",
-								"Return": [
-									"<code>error</code> - Informs if an error occurred in the request;",
-									"<code>request</code> - Returns the request object;",
-									"<code>text</code> - Gets the result of the request in text format. Returns null in case of error;",
-									"<code>xml</code> - Gets the result of the request in xml format. Returns null in case of error; and",
-									"<code>json</code> - Gets the result of the request in json format. Returns null in case of error."								
-								]
-							},
-							"time": {
-								"Description": "(Optional) Waiting time for the request, in seconds."
-							}
-						}
-					},
-					"post": {
-						"Call": "post(execute, time)",
-						"Description": "Performs requests using the POST method.",
-						"Example": "<b>function</b> h(x) {\n  <b>if</b> (x.error) {\n    console.log(<q>Error</q>);\n  } else {\n    console.log(x.text);\n  }\n};\nwd(<q>file.txt?name=wd</q>).post(h, 3);\n<i style=\"color: #FF00FF;\">//example with @formName</i>\nwd(<q>http://localhost/travel.php?@travelForm</q>).post(h);"
-					}
-				}
-			},
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 	"Dataset": {
-		"Version": "1.0.0",
 		"Description": "It is a tool for building a web page through the use of attributes to be inserted into HTML elements. Attributes are defined from the prefix <code>data-</code> and relate to HTML tools.",
 		"Structure": {
 			"wdLoad": {

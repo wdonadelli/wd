@@ -607,6 +607,22 @@
 		"style": "wd-color-blue",
 		"click":  ""
 	},
+	{
+		"title": "dataWdLoad",
+		"description": "Attribute",
+		"id": "data_wd_load",
+		"content": "data-wd-load='manual/data.wdload.html'",
+		"style": "wd-size-s wd-indent",
+		"click":  ""
+	},
+	
+	
+	
+	
+	
+	
+	
+	
 	{"x": "CSS================================================================",
 		"title": "WD Style Sheet",
 		"description": "WD Style Sheet",

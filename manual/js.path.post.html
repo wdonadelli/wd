@@ -1,14 +1,5 @@
-<p class="wd-indent">This is a <u>method</u> that returns the primitive value plus the item entered in the argument, if nonexistent. It is called as follows:</p>
+<p class="wd-indent">This is a <u>method</u> that performs requests using the POST method and <q>application/x-www-form-urlencoded</q> <i>enctype</i>. It is called as follows:</p>
 
-<pre class="wd-code">wd(input).add(item);</pre>
+<pre class="wd-code">wd(input).post(execute, time);</pre>
 
-<p class="wd-indent">The <code>item</code> argument is the value to be added to the array.</p>
-
-<pre class="wd-code"><cite>//Example</cite>
-<code>var</code> x = [<q>wd</q>, <var>100</var>, <var>100</var>, <q>wd</q>];
-wd(x).add(<var>100</var>);
-<sample>[<q>wd</q>, <var>100</var>, <var>100</var>, <q>wd</q>]</sample>
-wd(x).add(<var>1</var>);
-<sample>[<q>wd</q>, <var>100</var>, <var>100</var>, <q>wd</q>, <var>1</var>]</sample>
-<cite>//Variable "x" is not changed</cite>
-</pre>
+<p class="wd-align-C wd-color-green wd-symbol-ok wd-padding wd-rounded wd-border">This method works in the same way as the <q>Path.get</q> method. See the respective section for more details.</p>
