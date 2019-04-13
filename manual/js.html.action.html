@@ -1,14 +1,106 @@
-<p class="wd-indent">This is a <u>method</u> that returns the primitive value plus the item entered in the argument, if nonexistent. It is called as follows:</p>
+<p class="wd-indent">This is a <u>method</u> that defines actions for the element. It is called as follows:</p>
 
-<pre class="wd-code">wd(input).add(item);</pre>
+<pre class="wd-code">wd(input).action(act);</pre>
 
-<p class="wd-indent">The <code>item</code> argument is the value to be added to the array.</p>
+<p class="wd-indent">The <code>act</code> argument is a string that represents the behavior to be applied to the element, as shown below:</p>
+
+<dl class="wd-padding wd-border wd-rounded wd-bgcolor-green">
+	<dt><q>open</q>:</dt>
+	<dd>For the <code>dialog</code> element, executes the <code>showModal()</code> method, if defined; for the <code>details</code> element, sets the <code>open</code> attribute to <i>true</i>, if set; otherwise, it sets the <code>data-wd-open</code> attribute to the element.</dd>
+	<dt><q>close</q>:</dt>
+	<dd>For the <code>dialog</code> element, executes the <code>close()</code> method, if defined; for the <code>details</code> element, sets the <code>open</code> attribute to <i>false</i>, if set; otherwise, it removes the <code>data-wd-open</code> attribute from element.</dd>
+	<dt><q>toggle</q>:</dt>
+	<dd>Toggles between <q>open</q> and <q>close</q>.</dd>
+	<dt><q>tab</q>:</dt>
+	<dd>Displays only the element informed, your brothers will be hidden.</dd>
+	<dt><q>del</q>:</dt>
+	<dd>Removes the element from DOM.</dd>
+	<dt><q>show</q>:</dt>
+	<dd>Shows the element.</dd>
+	<dt><q>hide</q>:</dt>
+	<dd>Hides the element.</dd>
+	<dt><q>check</q>:</dt>
+	<dd>Check <code>input</code> elements of type <i>radio</i> or <i>checkbox</i>.</dd>
+	<dt><q>uncheck</q>:</dt>
+	<dd>Uncheck <code>input</code> elements of type <i>radio</i> or <i>checkbox</i>.</dd>
+	<dt><q>togglecheck</q>:</dt>
+	<dd>Toggles the check of the <code>input</code> elements of the type <i>radio</i> or <i>checkbox</i>.</dd>
+	<dt><q>clean</q>:</dt>
+	<dd>Clears the content of the element.</dd>
+</dl>
 
 <pre class="wd-code"><cite>//Example</cite>
-<code>var</code> x = [<q>wd</q>, <var>100</var>, <var>100</var>, <q>wd</q>];
-wd(x).add(<var>100</var>);
-<sample>[<q>wd</q>, <var>100</var>, <var>100</var>, <q>wd</q>]</sample>
-wd(x).add(<var>1</var>);
-<sample>[<q>wd</q>, <var>100</var>, <var>100</var>, <q>wd</q>, <var>1</var>]</sample>
-<cite>//Variable "x" is not changed</cite>
+<code>var</code> x = document.getElementById(<q>js_html_action_example1 > input</q>);
+
+<code>function</code> show() {
+	wd$(x).action(<q>show</q>);
+};
+
+<code>function</code> hide() {
+	wd$(x).action(<q>hide</q>);
+};
+
+<code>function</code> check() {
+	wd$(x).action(<q>check</q>);
+};
+<code>function</code> uncheck() {
+	wd$(x).action(<q>uncheck</q>);
+};
+
+<code>function</code> togglecheck() {
+	wd$(x).action(<q>togglecheck</q>);
+};
 </pre>
+
+<form class="wd-boxform-H">
+	<button type="button" class="wd-button" id="js_html_action_example3" title="Executes show()">show()</button>
+	<button type="button" class="wd-button" id="js_html_action_example4" title="Executes hide()">hide()</button>
+	<button type="button" class="wd-button" id="js_html_action_example5" title="Executes check()">check()</button>
+	<button type="button" class="wd-button" id="js_html_action_example6" title="Executes uncheck()">uncheck()</button>
+	<button type="button" class="wd-button" id="js_html_action_example7" title="Executes togglecheck()">togglecheck()</button>
+</form>
+
+<form id="js_html_action_example1" class="wd-boxform-H wd-padding wd-border wd-rounded">
+	<input type="checkbox" class="wd-input"/>
+	<input type="checkbox" class="wd-input"/>
+	<input type="checkbox" class="wd-input"/>
+	<input type="checkbox" class="wd-input"/>
+</form>
+
+<details class="wd-margin">
+	<summary>Source code</summary>
+	<pre class="wd-code" id="js_html_action_example2"></pre>
+</details>
+
+<script>
+var x = "#js_html_action_example1 > input";
+
+function jsHtmlActionFunction1() {
+	wd$(x).action("show");
+	return;
+};
+function jsHtmlActionFunction2() {
+	wd$(x).action("hide");
+	return;
+};
+function jsHtmlActionFunction3() {
+	wd$(x).action("check");
+	return;
+};
+function jsHtmlActionFunction4() {
+	wd$(x).action("uncheck");
+	return;
+};
+function jsHtmlActionFunction5() {
+	wd$(x).action("togglecheck");
+	return;
+};
+
+wd$("#js_html_action_example2").get[0].textContent = wd$("#js_html_action_example1").get[0].outerHTML
+wd$("#js_html_action_example3").handler({click: jsHtmlActionFunction1});
+wd$("#js_html_action_example4").handler({click: jsHtmlActionFunction2});
+wd$("#js_html_action_example5").handler({click: jsHtmlActionFunction3});
+wd$("#js_html_action_example6").handler({click: jsHtmlActionFunction4});
+wd$("#js_html_action_example7").handler({click: jsHtmlActionFunction5});
+
+</script>
