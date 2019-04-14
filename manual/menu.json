@@ -615,7 +615,87 @@
 		"style": "wd-size-s wd-indent",
 		"click":  ""
 	},
-	
+	{
+		"title": "dataWdRepeat",
+		"description": "Attribute",
+		"id": "data_wd_repeat",
+		"content": "data-wd-load='manual/data.wdrepeat.html'",
+		"style": "wd-size-s wd-indent",
+		"click":  ""
+	},
+	{
+		"title": "dataWdSort",
+		"description": "Attribute",
+		"id": "data_wd_sort",
+		"content": "data-wd-load='manual/data.wdsort.html'",
+		"style": "wd-size-s wd-indent",
+		"click":  ""
+	},
+	{
+		"title": "dataWdFilter",
+		"description": "Attribute",
+		"id": "data_wd_filter",
+		"content": "data-wd-load='manual/data.wdfilter.html'",
+		"style": "wd-size-s wd-indent",
+		"click":  ""
+	},
+	{
+		"title": "dataWdMask",
+		"description": "Attribute",
+		"id": "data_wd_mask",
+		"content": "data-wd-load='manual/data.wdmask.html'",
+		"style": "wd-size-s wd-indent",
+		"click":  ""
+	},
+	{
+		"title": "dataWdPage",
+		"description": "Attribute",
+		"id": "data_wd_page",
+		"content": "data-wd-load='manual/data.wdpage.html'",
+		"style": "wd-size-s wd-indent",
+		"click":  ""
+	},
+	{
+		"title": "dataWdAction",
+		"description": "Attribute",
+		"id": "data_wd_action",
+		"content": "data-wd-load='manual/data.wdaction.html'",
+		"style": "wd-size-s wd-indent",
+		"click":  ""
+	},
+	{
+		"title": "dataWdSortCol",
+		"description": "Attribute",
+		"id": "data_wd_sortcol",
+		"content": "data-wd-load='manual/data.wdsortcol.html'",
+		"style": "wd-size-s wd-indent",
+		"click":  ""
+	},
+	{
+		"title": "dataWdDesktop",
+		"description": "Attribute",
+		"id": "data_wd_desktop",
+		"content": "data-wd-load='manual/data.wddesktop.html'",
+		"style": "wd-size-s wd-indent",
+		"click":  ""
+	},
+	{
+		"title": "dataWdTablet",
+		"description": "Attribute",
+		"id": "data_wd_tablet",
+		"content": "data-wd-load='manual/data.wdtablet.html'",
+		"style": "wd-size-s wd-indent",
+		"click":  ""
+	},
+
+	{
+		"title": "dataWdPhone",
+		"description": "Attribute",
+		"id": "data_wd_phone",
+		"content": "data-wd-load='manual/data.wdphone.html'",
+		"style": "wd-size-s wd-indent",
+		"click":  ""
+	},
 	
 	
 	

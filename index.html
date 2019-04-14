@@ -51,26 +51,9 @@
 <!--
 	"Dataset": {
 		"Description": "It is a tool for building a web page through the use of attributes to be inserted into HTML elements. Attributes are defined from the prefix <code>data-</code> and relate to HTML tools.",
-		"Structure": {
-			"wdLoad": {
-				"Call": "data-wd-load=<q>method:path</q>",
-				"Description": "Loads the contents of an accessible path/file to the element that contains the attribute. See the <code>load</load> method of the HTML tool and the PATH tool's <code>post</code> and </code>get</code> methods.",
-				"Attributes": {
-					"method": {
-						"Description": "(Optional) <q>get</q> or <q>post</q> method. <q>get</q> is default value."
-					},
-					"path": {
-						"Description": "Accessible external file or path."
-					},
-				},
-				"Target": "Element content",
-				"Sensitivity": [
-					"When loading the document",
-					"After running the <code>load</code> and <code>repeat</code> methods of the HTML tool.",
-					"When setting value with the <code>data</code> method of the HTML tool."
-				],
-				"Example": "&lt;div data-wd-load=<q>post:sql.php?q=names</q>&gt;&lt;/div&gt;"
-			},
+
+
+
 			"wdRepeat": {
 				"Call": "data-wd-repeat=<q>method:path</q>",
 				"Description": "Clone child elements from an external file or path whose contents are in JSON format. See the <code>repeat</load> method of the HTML tool and the PATH tool's <code>post</code> and </code>get</code> methods.",
