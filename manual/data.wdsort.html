@@ -1,17 +1,15 @@
-<p class="wd-indent">The purpose of the attribute is to load the contents of an accessible path or file into the element that contains it:</p>
+<p class="wd-indent">The purpose of the attribute is to sorts the child elements from parent element that contains the attribute:</p>
 
-<pre class="wd-code">data-wd-load=<q>method:path</q></pre>
+<pre class="wd-code">data-wd-sort=<q>order</q></pre>
 
-<p class="wd-indent">The <code>method<code> attribute is optional and the possible values ​​are <q>get</q> and <q>post</q>. The default value is <q>get</q>.</p>
+<p class="wd-indent">The <code>order<code> attribute has the same purpose as the same-named attribute of the <code>HTML.sort</code> object.</p>
 
-<p class="wd-indent">The <code>path</code> attribute is required and its value is the name of the accessible path or file to load.</p>
-
-<p class="wd-align-C wd-color-green wd-symbol-ok wd-padding wd-rounded wd-border">See the methods <code>HTML.load</code>, <code>Path.get</code> and <code>Path.post</code> to understand the source of its operation!</p>
+<p class="wd-align-C wd-color-green wd-symbol-ok wd-padding wd-rounded wd-border">See the methods <code>HTML.sort</code> to understand the source of its operation!</p>
 
 <h3>Target:</h3>
 
 <ul class="wd-list">
-	<li>Element content.</li>
+	<li>Child elements.</li>
 </ul>
 
 <h3>Sensitivity:</h3>
@@ -19,11 +17,16 @@
 <ul class="wd-list">
 	<li>When loading the document.</li>
 	<li>When defining the attribute on the element (<i>See the <code>HTML.data</code> method</i>).</li>
+	<li>After external data loading procedures (repeat/load).</li>
 </ul>
 
 <h3>Example:</h3>
 
-<pre class="wd-code">&lt;div data-wd-load=<q>post:sql.php?query=names</q>&gt;&lt;/div&gt;
-</pre>
+<ul class="wd-list" data-wd-repeat="get:manual/examples/sort.json" id="data_wdsort_example1">
+	<li>{{value}}</li>
+</ul>
 
-
+<ul class="wd-list wd-margin-H">
+	<li><a href="#data_wdsort_example1" onclick="wd$('#data_wdsort_example1').data({wdSort: 1});"><code>data-wd-sort="1"</code></a></li>
+	<li><a href="#data_wdsort_example1" onclick="wd$('#data_wdsort_example1').data({wdSort: -1});"><code>data-wd-sort="-1"</code></a></li>
+</ul>

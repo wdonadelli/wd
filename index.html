@@ -51,30 +51,7 @@
 
 
 <!--
-	"Dataset": {
-		"Description": "It is a tool for building a web page through the use of attributes to be inserted into HTML elements. Attributes are defined from the prefix <code>data-</code> and relate to HTML tools.",
-
-
-
-			"wdRepeat": {
-				"Call": "data-wd-repeat=<q>method:path</q>",
-				"Description": "Clone child elements from an external file or path whose contents are in JSON format. See the <code>repeat</load> method of the HTML tool and the PATH tool's <code>post</code> and </code>get</code> methods.",
-				"Attributes": {
-					"method": {
-						"Description": "(Optional) <q>get</q> or <q>post</q> method. <q>get</q> is default value."
-					},
-					"path": {
-						"Description": "Accessible external JSON file or path."
-					},
-				},
-				"Target": "Child elements.",
-				"Sensitivity": [
-					"When loading the document",
-					"After running the <code>load</code> and <code>repeat</code> methods of the HTML tool.",
-					"When setting value with the <code>data</code> method of the HTML tool."
-				],
-				"Example": "&lt;ul data-wd-repeat=<q>post:list.json</q>&gt;\n   &lt;li&gt;{{id}} - {{name}}&lt;/li&gt;\n&lt;/ul&gt;"
-			},
+	"Dataset"
 			"wdSort": {
 				"Call": "data-wd-sort=<q>order</q>",
 				"Description": "Sorts the child elements. See the <code>sort</code> method in HTML tools.",
