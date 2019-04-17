@@ -1,12 +1,10 @@
-<p class="wd-indent">The purpose of the attribute is to load the contents of an accessible path or file into the element that contains it:</p>
+<p class="wd-indent">The purpose of the attribute is applies a mask to the content of the element if the value matches the regular expression, alerting the value of the content:</p>
 
-<pre class="wd-code">data-wd-load=<q>method:path</q></pre>
+<pre class="wd-code">data-wd-mask=<q>regex</q></pre>
 
-<p class="wd-indent">The <code>method<code> attribute is optional and the possible values ​​are <q>get</q> and <q>post</q>. The default value is <q>get</q>.</p>
+<p class="wd-indent">The <code>regex<code> attribute is required and has the same purpose as the same-named attribute of the <code>Regex.mask</code> object.</p>
 
-<p class="wd-indent">The <code>path</code> attribute is required and its value is the name of the accessible path or file to load.</p>
-
-<p class="wd-align-C wd-color-green wd-symbol-ok wd-padding wd-rounded wd-border">See the methods <code>HTML.load</code>, <code>Path.get</code> and <code>Path.post</code> to understand the source of its operation!</p>
+<p class="wd-align-C wd-color-green wd-symbol-ok wd-padding wd-rounded wd-border">See the method <code>Regex.mask</code> to understand the source of its operation!</p>
 
 <h3>Target:</h3>
 
@@ -19,11 +17,26 @@
 <ul class="wd-list">
 	<li>When loading the document.</li>
 	<li>When defining the attribute on the element (<i>See the <code>HTML.data</code> method</i>).</li>
+	<li>After external data loading procedures (repeat/load).</li>
+	<li>When you change the value of the form field from the keyboard</li>
 </ul>
 
 <h3>Example:</h3>
 
-<pre class="wd-code">&lt;div data-wd-load=<q>post:sql.php?query=names</q>&gt;&lt;/div&gt;
-</pre>
+<h4>HTML Structure:</h4>
 
+<pre class="wd-code" id="data_wdmask_example2"></pre>
+
+<h4>Result:</h4>
+
+<form class="wd-boxform-V" id="data_wdmask_example1">
+	<input type="text" class="wd-input" data-wd-mask="([0-9]{4})\-([0-9]{2})\-([0-9]{2})" placeholder="Date: Enter only numbers."/>
+	<input type="text" class="wd-input" data-wd-mask="([01][0-9]|2[0-3])h([0-5][0-9])" placeholder="Time: Enter only numbers."/>
+</form>
+
+
+
+<script>
+wd$("#data_wdmask_example2").get[0].textContent = wd$("#data_wdmask_example1").get[0].outerHTML;
+</script>
 

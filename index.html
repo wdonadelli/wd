@@ -52,62 +52,8 @@
 
 <!--
 	"Dataset"
-			"wdSort": {
-				"Call": "data-wd-sort=<q>order</q>",
-				"Description": "Sorts the child elements. See the <code>sort</code> method in HTML tools.",
-				"Target": "Child elements.",
-				"Sensitivity": [
-					"When loading the document",
-					"After running the <code>load</code> and <code>repeat</code> methods of the HTML tool.",
-					"When setting value with the <code>data</code> method of the HTML tool."
-				],
-				"Example": "&lt;ul data-wd-sort=<q>-1</q>&gt;\n\t&lt;li&gt;.."
-				
-			},
-			"wdFilter": {
-				"Call": "data-wd-filter=<q>min:CSS</q>",
-				"Description": "Displays only child elements, objects defined in the CSS selector, whose textual content (value/content) is contained in the element. See the <code>filter</code> method in HTML tools.",
-				"Attributes": {
-					"min": {
-						"Description": "(Optional) see <q>filter</q> method in HTML tools"
-					},
-					"CSS": {
-						"Description": "CSS selector."
-					},
-				},
-				"Target": "Element children defined by the CSS selector.",
-				"Sensitivity": [
-					"When loading the document",
-					"After running the <code>load</code> and <code>repeat</code> methods of the HTML tool.",
-					"When setting value with the <code>data</code> method of the HTML tool.",
-					"When you change the value of the form field from the keyboard."
-				],
-				"Example": "&lt;input type=<q>search</q> data-wd-filter=<q>#main, div &gt; ul</q>/&gt"
-			},
-			"wdMask": {
-				"Call": "data-wd-mask=<q>regex</q>",
-				"Description": "Applies a mask to the content of the element if the value matches the regular expression, alerting the value of the content. See the <code>mask</code> method in REGEX tools.",
-				"Target": "Element content",
-				"Sensitivity": [
-					"When loading the document",
-					"After running the <code>load</code> and <code>repeat</code> methods of the HTML tool.",
-					"When setting value with the <code>data</code> method of the HTML tool.",
-					"When you change the value of the form field from the keyboard."
-				],
-				"Example": "&lt;input type=<q>text</q> data-wd-mask=<q>/^([0-9]{2})\\/([0-9]{4})$/</q>/&gt\n&lt;span data-wd-mask=<q>/^([0-9]{2})\\/([0-9]{4})$/</q>&gt102010&lt;/span&gt;"
-			},
-			"wdPage": {
-				"Call": "data-wd-page=<q>page:size</q>",
-				"Description": "Splits the children of the element into groups and display only a certain group. See the <code>page</code> method in HTML tools.",
-				"Target": "Child elements.",
-				"Sensitivity": [
-					"When loading the document",
-					"After running the <code>load</code> and <code>repeat</code> methods of the HTML tool.",
-					"When setting value with the <code>data</code> method of the HTML tool."
-				],
-				"Example": "&lt;ul data-wd-page=<q>-1:10</q>&gt;\n\t&lt;li&gt;.."
-				
-			},
+
+
 		"wdAction": {
 				"Call": "data-wd-action=<q>action:CSS</q>",
 				"Description": "Performs the defined action on elements defined by the CSS selector. See the <code>action</code> method in HTML tools. To enter more than one action, separate them with the "&" sign.",

@@ -1,17 +1,17 @@
-<p class="wd-indent">The purpose of the attribute is to load the contents of an accessible path or file into the element that contains it:</p>
+<p class="wd-indent">The purpose of the attribute is splits the children of the element into groups and display only a certain group:</p>
 
-<pre class="wd-code">data-wd-load=<q>method:path</q></pre>
+<pre class="wd-code">data-wd-page=<q>page:size</q></pre>
 
-<p class="wd-indent">The <code>method<code> attribute is optional and the possible values ​​are <q>get</q> and <q>post</q>. The default value is <q>get</q>.</p>
+<p class="wd-indent">The <code>page<code> attribute is required and has the same purpose as the same-named attribute of the <code>HTML.page</code> object.</p>
 
-<p class="wd-indent">The <code>path</code> attribute is required and its value is the name of the accessible path or file to load.</p>
+<p class="wd-indent">The <code>size<code> attribute is required and has the same purpose as the same-named attribute of the <code>HTML.page</code> object.</p>
 
-<p class="wd-align-C wd-color-green wd-symbol-ok wd-padding wd-rounded wd-border">See the methods <code>HTML.load</code>, <code>Path.get</code> and <code>Path.post</code> to understand the source of its operation!</p>
+<p class="wd-align-C wd-color-green wd-symbol-ok wd-padding wd-rounded wd-border">See the method <code>HTML.page</code> to understand the source of its operation!</p>
 
 <h3>Target:</h3>
 
 <ul class="wd-list">
-	<li>Element content.</li>
+	<li>Child elements.</li>
 </ul>
 
 <h3>Sensitivity:</h3>
@@ -19,11 +19,40 @@
 <ul class="wd-list">
 	<li>When loading the document.</li>
 	<li>When defining the attribute on the element (<i>See the <code>HTML.data</code> method</i>).</li>
+	<li>After external data loading procedures (repeat/load).</li>
 </ul>
 
 <h3>Example:</h3>
 
-<pre class="wd-code">&lt;div data-wd-load=<q>post:sql.php?query=names</q>&gt;&lt;/div&gt;
-</pre>
+<h4>Sets Attribute:</h4>
 
+<p>
+	<code>
+		data-wd-page=
+		<a href="#data_wdpage_example1" onclick="wd$('#data_wdpage_example1').data({wdPage: '0:0'});"><q>0:0</q></a> |
+		<a href="#data_wdpage_example1" onclick="wd$('#data_wdpage_example1').data({wdPage: '0:5'});"><q>0:5</q></a> |
+		<a href="#data_wdpage_example1" onclick="wd$('#data_wdpage_example1').data({wdPage: '1:5'});"><q>1:5</q></a> |
+		<a href="#data_wdpage_example1" onclick="wd$('#data_wdpage_example1').data({wdPage: '-1:5'});"><q>-1:5</q></a> |
+		<a href="#data_wdpage_example1" onclick="wd$('#data_wdpage_example1').data({wdPage: '-2:5'});"><q>-2:5</q></a>
+	</code>
+</p>
+
+<p>
+	<code>
+		data-wd-page=
+		<a href="#data_wdpage_example1" onclick="wd$('#data_wdpage_example1').data({wdPage: '0:4'});"><q>0:4</q></a> |
+		<a href="#data_wdpage_example1" onclick="wd$('#data_wdpage_example1').data({wdPage: '1:4'});"><q>1:4</q></a> |
+		<a href="#data_wdpage_example1" onclick="wd$('#data_wdpage_example1').data({wdPage: '2:4'});"><q>2:4</q></a> |
+		<a href="#data_wdpage_example1" onclick="wd$('#data_wdpage_example1').data({wdPage: '-1:4'});"><q>-1:4</q></a> |
+		<a href="#data_wdpage_example1" onclick="wd$('#data_wdpage_example1').data({wdPage: '-2:4'});"><q>-2:4</q></a> |
+		<a href="#data_wdpage_example1" onclick="wd$('#data_wdpage_example1').data({wdPage: '-3:4'});"><q>-3:4</q></a>
+	</code>
+</p>
+
+<h4>Result:</h4>
+
+<ol class="wd-list" data-wd-repeat="manual/examples/example.json" data-wd-page="0:0" id="data_wdpage_example1" data-wd-sort="1" >
+	<li>{{nominativo}}</li>
+	<li>{{genitivo}}</li>
+</ol>
 

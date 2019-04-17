@@ -24,14 +24,21 @@
 
 <h3>Example:</h3>
 
+<h4>Sets Attribute:</h4>
+
+<p>
+	<code>
+		data-wd-load=
+		<a href="#none" onclick="wd$('#data_wdload_example1').data({wdLoad: 'manual/examples/example.html'});"><q>example.html?id=3</q></a> |
+		<a href="#none" onclick="wd$('#data_wdload_example1').data({wdLoad: 'post:manual/examples/example.txt'});"><q>post:example.txt</q></a> |
+		<a href="#none" onclick="wd$('#data_wdload_example1').data({wdLoad: ''});"><q></q></a>
+	</code>
+</p>
+
+<h4>Result:</h4>
+
 <div id="data_wdload_example1" class="wd-border wd-rounded wd-box wd-padding wd-bgcolor-yellow"> </div>
-
-<ul class="wd-list wd-margin-H">
-	<li><a href="#data_wdload_example1" onclick="wd$('#data_wdload_example1').data({wdLoad: 'manual/examples/example.html'});"><code>data-wd-load="example.html?id=3"</code></a></li>
-	<li><a href="#data_wdload_example1" onclick="wd$('#data_wdload_example1').data({wdLoad: 'post:manual/examples/example.txt'});"><code>data-wd-load="post:example.txt"</code></a></li>
-	<li><a href="#data_wdload_example1" onclick="wd$('#data_wdload_example1').data({wdLoad: ''});"><code>data-wd-load=""</code></a></li>
-</ul>
-
+	
 <script>
 wd$("#data_wdload_example1").get[0].textContent = wd$("#data_wdload_example1").get[0].outerHTML;
 </script>

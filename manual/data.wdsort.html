@@ -4,7 +4,7 @@
 
 <p class="wd-indent">The <code>order<code> attribute has the same purpose as the same-named attribute of the <code>HTML.sort</code> object.</p>
 
-<p class="wd-align-C wd-color-green wd-symbol-ok wd-padding wd-rounded wd-border">See the methods <code>HTML.sort</code> to understand the source of its operation!</p>
+<p class="wd-align-C wd-color-green wd-symbol-ok wd-padding wd-rounded wd-border">See the method <code>HTML.sort</code> to understand the source of its operation!</p>
 
 <h3>Target:</h3>
 
@@ -20,13 +20,22 @@
 	<li>After external data loading procedures (repeat/load).</li>
 </ul>
 
-<h3>Example:</h3>
+<h3 id="data_wdsort_example2">Example:</h3>
+
+<h4>Sets Attribute:</h4>
+
+<p>
+	<code>
+		data-wd-sort=
+		<a href="#none" onclick="wd$('#data_wdsort_example1').data({wdSort: 1});"><q>1</q></a> |
+		<a href="#none" onclick="wd$('#data_wdsort_example1').data({wdSort: -1});"><q>-1</q></a>
+	</code>
+</p>
+
+<h4>Result:</h4>
 
 <ul class="wd-list" data-wd-repeat="get:manual/examples/sort.json" id="data_wdsort_example1">
 	<li>{{value}}</li>
 </ul>
 
-<ul class="wd-list wd-margin-H">
-	<li><a href="#data_wdsort_example1" onclick="wd$('#data_wdsort_example1').data({wdSort: 1});"><code>data-wd-sort="1"</code></a></li>
-	<li><a href="#data_wdsort_example1" onclick="wd$('#data_wdsort_example1').data({wdSort: -1});"><code>data-wd-sort="-1"</code></a></li>
-</ul>
+
