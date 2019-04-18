@@ -1,29 +1,46 @@
-<p class="wd-indent">The purpose of the attribute is to load the contents of an accessible path or file into the element that contains it:</p>
+<p class="wd-indent">The purpose of the attribute sorts columns of tables (<code>table</code>). The attribute must be contained in the elements <code>td</code> or <code>th</code>, children of <code>tr</code>, child of <code>thead</code>. When you click on the elements that contain the attribute, the respective column will be sorted in ascending order (<code>tbody</code>). When you click on the element again, the sort order reverses:</p>
 
-<pre class="wd-code">data-wd-load=<q>method:path</q></pre>
+<pre class="wd-code">data-wd-sort-col=<q></q></pre>
 
-<p class="wd-indent">The <code>method<code> attribute is optional and the possible values ​​are <q>get</q> and <q>post</q>. The default value is <q>get</q>.</p>
-
-<p class="wd-indent">The <code>path</code> attribute is required and its value is the name of the accessible path or file to load.</p>
-
-<p class="wd-align-C wd-color-green wd-symbol-ok wd-padding wd-rounded wd-border">See the methods <code>HTML.load</code>, <code>Path.get</code> and <code>Path.post</code> to understand the source of its operation!</p>
+<p class="wd-align-C wd-color-green wd-symbol-ok wd-padding wd-rounded wd-border">See the method <code>HTML.sort</code> to understand the source of its operation!</p>
 
 <h3>Target:</h3>
 
 <ul class="wd-list">
-	<li>Element content.</li>
+	<li><code>tbody</code> children.</li>
 </ul>
 
 <h3>Sensitivity:</h3>
 
 <ul class="wd-list">
-	<li>When loading the document.</li>
-	<li>When defining the attribute on the element (<i>See the <code>HTML.data</code> method</i>).</li>
+	<li>When the element receives a click.</li>
 </ul>
 
 <h3>Example:</h3>
 
-<pre class="wd-code">&lt;div data-wd-load=<q>post:sql.php?query=names</q>&gt;&lt;/div&gt;
-</pre>
+<h4>HTML Structure:</h4>
 
+<pre class="wd-code" id="data_wdsortcol_example2"></pre>
 
+<h4>Result:</h4>
+
+<div id="data_wdsortcol_example1">
+	<table class="wd-table">
+		<thead>
+			<tr class="wd-bgcolor-black">
+				<th data-wd-sort-col="">Value</th>
+				<th data-wd-sort-col="">Comment</th>
+			</tr>
+		</thead>
+		<tbody data-wd-repeat="manual/examples/sort.json">
+			<tr>
+				<td>{{value}}</td>
+				<td>{{name}}</td>
+			</tr>
+		</tbody>
+	</table>
+</div>
+
+<script>
+wd$("#data_wdsortcol_example2").get[0].textContent = wd$("#data_wdsortcol_example1").get[0].outerHTML;
+</script>

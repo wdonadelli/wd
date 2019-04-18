@@ -6,8 +6,15 @@
 
 <p class="wd-indent">The <code>min</code> argument (optional) is the minimum number of characters for the method to be executed. The default value is zero.</p>
 
-<pre class="wd-code"><cite>//Example</cite>
-<code>function</code> f() {
+<h3>Example</h3>
+
+<h4>HTML code</h4>
+
+<pre class="wd-code" id="js_html_filter_example4"></pre>
+
+<h4>JavaScript</h4>
+
+<pre class="wd-code"><code>function</code> f() {
 	<code>var</code> text = document.getElementById(<q>js_html_filter_example1</q>).value;
 	<code>var</code> min  = document.getElementById(<q>js_html_filter_example2</q>).value;
 	wd$(<q>#js_html_filter_example3</q>).filter(text, min);
@@ -17,8 +24,10 @@
 <form data-wd-desktop="wd-boxform-H" data-wd-tablet="wd-boxform-V" data-wd-phone="wd-boxform-V">
 	<input type="input" id="js_html_filter_example1" placeholder="text" class="wd-input" title="text"/>
 	<input type="number" id="js_html_filter_example2" placeholder="min" class="wd-input" min="0" step="1" title="min"/>
-	<button type="button" class="wd-button" id="js_html_filter_example5" title="Executes f()">Try</button>
+	<a href="#none" class="wd-button" id="js_html_filter_example5" title="Executes f()">Try</a>
 </form>
+
+<h4>Result</h4>
 
 <ol class="wd-list wd-border-V wd-border-H-childs" id="js_html_filter_example3">
 	<li>Guitar</li>
@@ -27,13 +36,6 @@
 	<li>Keyboard</li>
 	<li>Microphone</li>
 </ol>
-
-<details class="wd-margin">
-	<summary>Source code</summary>
-	<pre class="wd-code" id="js_html_filter_example4"></pre>
-</details>
-
-
 
 <script>
 function jsHtmlFilterFunction1() {

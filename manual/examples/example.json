@@ -3,5 +3,8 @@
 	{"nominativo": "rex", "genitivo": "regis"},
 	{"nominativo": "lex", "genitivo": "legis"},
 	{"nominativo": "pax", "genitivo": "pacis"},
-	{"nominativo": "lux", "genitivo": "lucis"}
+	{"nominativo": "lux", "genitivo": "lucis"},
+	{"nominativo": "regina", "genitivo": "reginae"},
+	{"nominativo": "deus", "genitivo": "dei"},
+	{"nominativo": "ager", "genitivo": "agri"}
 ]

@@ -4,12 +4,19 @@
 
 <pre class="wd-code">wd(input).styles;</pre>
 
+<h3>Example</h3>
+
+<h4>HTML element<h4>
+
 <p class="wd-color-red" style="text-decoration: underline" id="js_html_styles_example1">Example1</p>
 
-<pre class="wd-code"><cite>//Example</cite>
-document.getElementById(<q>js_html_styles_example1</q>).outerHTML;
-<sample><q id="js_html_styles_sample1"></q></sample>
-<code>var</code> x = wd$(<q>#js_html_styles_example1</q>);
+<h4>HTML code</h4>
+
+<pre class="wd-code" id="js_html_styles_sample1"></pre>
+
+<h4>JavaScript</h4>
+
+<pre class="wd-code"><code>var</code> x = wd$(<q>#js_html_styles_example1</q>);
 x.styles[<var>0</var>].default.color;
 <sample><q id="js_html_styles_sample2"></q></sample>
 x.styles[<var>0</var>].computed.color;

@@ -4,19 +4,30 @@
 
 <p class="wd-indent">The <code>method</code> argument is the function to be executed. The reported method accepts an argument representing the nth element.</p>
 
-<pre class="wd-code"><cite>//Example</cite>
-<code>function</code> m(x) {
+<p class="wd-align-C wd-color-green wd-symbol-ok wd-padding wd-rounded wd-border">It is the main method of the object.</p>
+
+<h3>Example</h3>
+
+<h4>HTML code</h4>
+<pre class="wd-code" id="js_html_execute_example5"></pre>
+
+<h4>JavaScript</h4>
+
+<pre class="wd-code"><code>function</code> m(x) {
 	x.style.color = <q>#FF0000</q>;
 	x.textContent = <q>Red Color</q>;
 };
 wd$(<q>#js_html_execute_example1, #js_html_execute_example2</q>).execute(m);
 </pre>
 
-<p id="js_html_execute_example1" title="id='js_html_execute_example1'">Example1</p>
-<p id="js_html_execute_example2" title="id='js_html_execute_example2'">Example2</p>
+<a href="#none" class="wd-button" id="js_html_execute_example3" title="Executes m()">try</a>
 
+<h4>Result</h4>
 
-<button type="button" class="wd-button" id="js_html_execute_example3" title="Executes m()">try</button>
+<div id="js_html_execute_example4">
+	<p id="js_html_execute_example1" >Example1</p>
+	<p id="js_html_execute_example2" >Example2</p>
+</div>
 
 <script>
 function jsHtmlExecuteFunction1(x) {
@@ -28,6 +39,6 @@ function jsHtmlExecuteFunction2() {
 }
 
 wd$("#js_html_execute_example3").handler({click: jsHtmlExecuteFunction2});
+wd$("#js_html_execute_example5").get[0].textContent = wd$("#js_html_execute_example4").get[0].outerHTML
 </script>
 
-<p class="wd-align-C wd-color-green wd-symbol-ok wd-padding wd-rounded wd-border">It is the main method of the object.</p>

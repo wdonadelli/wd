@@ -54,24 +54,7 @@
 	"Dataset"
 
 
-		"wdAction": {
-				"Call": "data-wd-action=<q>action:CSS</q>",
-				"Description": "Performs the defined action on elements defined by the CSS selector. See the <code>action</code> method in HTML tools. To enter more than one action, separate them with the "&" sign.",
-				"Target": "Element children defined by the CSS selector.",
-				"Sensitivity": [
-					"When the element receives a click."
-				],
-				"Example": "&lt;input type=<q>button</q> data-wd-action=<q>open:details, #modal&tab:#tab1</q>/&gt"
-			},
-			"wdSortCol": {
-				"Call": "data-wd-sort-col=<q></q>",
-				"Description": "Sorts columns of tables (<code>table</code>). The attribute must be contained in the elements <code>td</code> or <code>th</code>, children of <code>tr</code>, child of <code>thead</code>. When you click on the elements that contain the attribute, the respective column will be sorted in ascending order (<code>tbody</code>). When you click on the element again, the sort order reverses. See the <code>sort</code> method in HTML tools.",
-				"Target": "<code>tbody</code> children",
-				"Sensitivity": [
-					"When the element receives a click."
-				],
-				"Example": "&lt;table&gt;\n &lt;thead&gt;\n  &lt;tr&gt;\n   &lt;th data-wd-sort-col=<q></q>&gt;Col 1&lt;/th&gt;\n   &lt;th data-wd-sort-col=<q></q>&gt;Col 2&lt;/th&gt;\n   &lt;th data-wd-sort-col=<q></q>&gt;Col 3&lt;/th&gt;\n  &lt;/tr&gt;\n &lt;/thead&gt;\n &lt;tbody&gt;\n  &lt;tr&gt;\n   &lt;td.."
-			},
+		
 			"wdDesktop": {
 				"Call": "data-wd-desktop=<q>class1 class2..</q>",
 				"Description": "Changes the <code>class</code> attribute of the element depending on the size of the screen, works like a responsive design mode. If the screen size is greater than or equal to 768px, all classes indicated in the attribute will be added to the element's <code>class</code> attribute. Otherwise, all indicated classes will be removed from the <code>class</code> attribute of the element. See the <code>class</code> method in HTML tools.",
@@ -94,6 +77,15 @@
 			}
 		}
 	},
+
+
+
+
+
+
+
+
+
 	"CSS": {
 		"Version": "1.0.0",
 		"Call": "wd-className",

@@ -6,8 +6,15 @@
 
 <p class="wd-indent">The <code>size</code> argument is Integer that indicates the size of each group. If the number is greater than zero and less than or equal to one, the size of the group will be defined by percentage.</p>
 
-<pre class="wd-code"><cite>//Example</cite>
-<code>function</code> f() {
+<h3>Example</h3>
+
+<h4>HTML code</h4>
+
+<pre class="wd-code" id="js_html_page_example5"></pre>
+
+<h4>JavaScript</h4>
+
+<pre class="wd-code"><code>function</code> f() {
 	<code>var</code> page = document.getElementById(<q>js_html_page_example1</q>).value;
 	<code>var</code> size = document.getElementById(<q>js_html_page_example2</q>).value;
 	wd$(<q>#js_html_page_example2</q>).page(page, size);
@@ -17,8 +24,10 @@
 <form data-wd-desktop="wd-boxform-H" data-wd-tablet="wd-boxform-V" data-wd-phone="wd-boxform-V">
 	<input type="number" id="js_html_page_example1" placeholder="page" class="wd-input" step="1" title="page"/>
 	<input type="number" id="js_html_page_example2" placeholder="size" class="wd-input" step="1" title="size"/>
-	<button type="button" class="wd-button" id="js_html_page_example3" title="Executes f()">Try</button>
+	<a href="#none" class="wd-button" id="js_html_page_example3" title="Executes f()">Try</a>
 </form>
+
+<h4>Result</h4>
 
 <ol class="wd-list wd-border-V wd-border-H-childs" id="js_html_page_example4">
 	<li>0 Guitar</li>
@@ -48,10 +57,6 @@
 	<li>4 Microphone </li>
 </ol>
 
-<details class="wd-margin">
-	<summary>Source code</summary>
-	<pre class="wd-code" id="js_html_page_example5"></pre>
-</details>
 
 
 

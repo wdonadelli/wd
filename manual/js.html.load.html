@@ -4,34 +4,43 @@
 
 <p class="wd-indent">The <code>html</code> argument is the HTML content.</p>
 
-<pre class="wd-code"><cite>//Example</cite>
-<code>function</code> f() {
+<h3>Example</h3>
 
-	<code>var</code> html = <q>&lt;blockquote cite=<q>https://en.wikipedia.org/wiki/Uncertainty_principle</q>&gt;In quantum mechanics, the uncertainty principle (also known as &lt;b&gt;Heisenberg's uncertainty principle&lt;/b&gt;) is any of a variety of mathematical inequalities asserting a fundamental limit to the precision with which certain pairs of physical properties of a particle, known as complementary variables or canonically conjugate variables such as position &lt;var&gt;x&lt;/var&gt; and momentum &lt;var&gt;p&lt;/var&gt;, can be known.&lt;/blockquote&gt;&lt;article class=<q>wd-align-E</q>&gt;(&lt;a href=<q>https://en.wikipedia.org/wiki/Uncertainty_principle</q> target=<q>_blank</q>&gt;Wikipedia&lt;/a&gt;, &lt;time datetime=<q>2019-04-12 23:46</q>&gt;2019-04-12 23:46&lt;/time&gt;)&lt;/article&gt;</q>
+<h4>HTML code</h4>
+
+<pre class="wd-code" id="js_html_load_example2"></pre>
+
+<h4>JavaScript</h4>
+
+<pre class="wd-code"><code>function</code> f() {
+
+	<code>var</code> html = <q id="js_html_load_example4"></q>
 
 	wd$(<q>#js_html_load_example1</q>).load(html);
 };
 </pre>
 
 <form class="wd-boxform-H">
-	<button type="button" class="wd-button" id="js_html_load_example3" title="Executes f()">Try f()</button>
+	<a href="#none" class="wd-button" id="js_html_load_example3" title="Executes f()">Try f()</a>
 </form>
 
-<div id="js_html_load_example1" class="wd-border wd-bgcolor-yellow wd-padding"> </div>
+<h4>Result</h4>
 
-<details class="wd-margin">
-	<summary>Source code</summary>
-	<pre class="wd-code" id="js_html_load_example2"></pre>
-</details>
+<div id="js_html_load_example1" class="wd-padding wd-border wd-rounded"></div>
+
 
 
 
 <script>
+var html = "<blockquote cite=\"https://en.wikipedia.org/wiki/Uncertainty_principle\">In quantum mechanics, the uncertainty principle (also known as <b>Heisenberg's uncertainty principle</b>) is any of a variety of mathematical inequalities asserting a fundamental limit to the precision with which certain pairs of physical properties of a particle, known as complementary variables or canonically conjugate variables such as position <var>x</var> and momentum <var>p</var>, can be known.</blockquote><article class=\"wd-align-E\">(<a href=\"https://en.wikipedia.org/wiki/Uncertainty_principle\" target=\"_blank\">Wikipedia</a>, <time datetime=\"2019-04-12 23:46\">2019-04-12 23:46</time>)</article>";
+
+
 function jsHtmlLoadFunction1() {
-	wd$("#js_html_load_example1").load("<blockquote cite=\"https://en.wikipedia.org/wiki/Uncertainty_principle\">In quantum mechanics, the uncertainty principle (also known as <b>Heisenberg's uncertainty principle</b>) is any of a variety of mathematical inequalities asserting a fundamental limit to the precision with which certain pairs of physical properties of a particle, known as complementary variables or canonically conjugate variables such as position <var>x</var> and momentum <var>p</var>, can be known.</blockquote><article class=\"wd-align-E\">(<a href=\"https://en.wikipedia.org/wiki/Uncertainty_principle\" target=\"_blank\">Wikipedia</a>, <time datetime=\"2019-04-12 23:46\">2019-04-12 23:46</time>)</article>");
+	wd$("#js_html_load_example1").load(html);
 	return;
 };
 
+wd$("#js_html_load_example4").get[0].textContent = html;
 wd$("#js_html_load_example2").get[0].textContent = wd$("#js_html_load_example1").get[0].outerHTML;
 wd$("#js_html_load_example3").handler({click: jsHtmlLoadFunction1});
 </script>

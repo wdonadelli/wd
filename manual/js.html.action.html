@@ -29,8 +29,15 @@
 	<dd>Clears the content of the element.</dd>
 </dl>
 
-<pre class="wd-code"><cite>//Example</cite>
-<code>var</code> x = document.getElementById(<q>js_html_action_example1 > input</q>);
+<h3>Example</h3>
+
+<h4>HTML code</h4>
+
+<pre class="wd-code" id="js_html_action_example2"></pre>
+
+<h4>JavaScript</h4>
+
+<pre class="wd-code"><code>var</code> x = document.getElementById(<q>js_html_action_example1 > input</q>);
 
 <code>function</code> show() {
 	wd$(x).action(<q>show</q>);
@@ -53,12 +60,14 @@
 </pre>
 
 <form  data-wd-desktop="wd-boxform-H" data-wd-tablet="wd-boxform-V" data-wd-phone="wd-boxform-V">
-	<button type="button" class="wd-button" id="js_html_action_example3" title="Executes show()">show()</button>
-	<button type="button" class="wd-button" id="js_html_action_example4" title="Executes hide()">hide()</button>
-	<button type="button" class="wd-button" id="js_html_action_example5" title="Executes check()">check()</button>
-	<button type="button" class="wd-button" id="js_html_action_example6" title="Executes uncheck()">uncheck()</button>
-	<button type="button" class="wd-button" id="js_html_action_example7" title="Executes togglecheck()">togglecheck()</button>
+	<a href="#none" class="wd-button" id="js_html_action_example3" title="Executes show()">show()</a>
+	<a href="#none" class="wd-button" id="js_html_action_example4" title="Executes hide()">hide()</a>
+	<a href="#none" class="wd-button" id="js_html_action_example5" title="Executes check()">check()</a>
+	<a href="#none" class="wd-button" id="js_html_action_example6" title="Executes uncheck()">uncheck()</a>
+	<a href="#none" class="wd-button" id="js_html_action_example7" title="Executes togglecheck()">togglecheck()</a>
 </form>
+
+<h4>Result</h4>
 
 <form id="js_html_action_example1" class="wd-boxform-H wd-padding wd-border wd-rounded">
 	<input type="checkbox" class="wd-input"/>
@@ -67,10 +76,6 @@
 	<input type="checkbox" class="wd-input"/>
 </form>
 
-<details class="wd-margin">
-	<summary>Source code</summary>
-	<pre class="wd-code" id="js_html_action_example2"></pre>
-</details>
 
 <script>
 var x = "#js_html_action_example1 > input";
