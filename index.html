@@ -54,33 +54,6 @@
 	"Dataset"
 
 
-		
-			"wdDesktop": {
-				"Call": "data-wd-desktop=<q>class1 class2..</q>",
-				"Description": "Changes the <code>class</code> attribute of the element depending on the size of the screen, works like a responsive design mode. If the screen size is greater than or equal to 768px, all classes indicated in the attribute will be added to the element's <code>class</code> attribute. Otherwise, all indicated classes will be removed from the <code>class</code> attribute of the element. See the <code>class</code> method in HTML tools.",
-				"Target": "The <code>class</code> attribute of element.",
-				"Sensitivity": [
-					"When loading the document",
-					"After running the <code>load</code> and <code>repeat</code> methods of the HTML tool.",
-					"When setting value with the <code>data</code> method of the HTML tool.",
-					"When to change the screen size."
-				],
-				"Example": "&lt;!--initial value--&gt;\n&lt;input type=<q>text</q> data-wd-desktop=<q>red big</q> class=<q>big border</q>/&gt\n&lt;!--&gt;=768px--&gt;\n&lt;input type=<q>text</q> data-wd-desktop=<q>red big</q> class=<q>big border red</q>/&gt\n&lt;!--&lt;768px--&gt;\n&lt;input type=<q>text</q> data-wd-desktop=<q>red big</q> class=<q>border</q>/&gt\n"
-			},
-			"wdTablet": {
-				"Call": "data-wd-tablet=<q>class1 class2..</q>",
-				"Description": "Works as wdDesktop, but with the screen between 600 to 767px, inclusive. Can be used in conjunction with wdDesktop."
-			},
-			"wdPhone": {
-				"Call": "data-wd-phone=<q>class1 class2..</q>",
-				"Description": "Works as wdDesktop and wdTablet, but with the screen less than 600px. Can be used in conjunction with wdDesktop and wdTablet."
-			}
-		}
-	},
-
-
-
-
 
 
 

@@ -1,4 +1,4 @@
-<p class="wd-indent">The purpose of the attribute performs the action defined on elements identified by the CSS selector:</p>
+<p class="wd-indent">The purpose of the attribute is performs the action defined on elements identified by the CSS selector:</p>
 
 <pre class="wd-code">data-wd-action=<q>action:CSS</q></pre>
 
@@ -46,6 +46,33 @@
 		<a href="#none" class="wd-button" data-wd-action="togglecheck:#data_wdaction_example1 > input">togglecheck</a>
 	</form>
 </div>
+
+<br/>
+
+<article class="wd-box">
+	<h2 class="wd-align-C">dataWdClick</h2>
+
+	<p class="wd-indent">The purpose of the attribute is to click on the element that contains it. This attribute is indicated to define an automatic click to the end of the external loads. For example, if you want to open a dialog box at the end of loading the document:</p>
+
+	<pre class="wd-code">data-wd-click=<q></q></pre>
+
+	<h3>Target:</h3>
+
+	<ul class="wd-list">
+		<li>Element content.</li>
+	</ul>
+
+	<h3>Sensitivity:</h3>
+
+	<ul class="wd-list">
+		<li>When loading the document.</li>
+		<li>When defining the attribute on the element (<i>See the <code>HTML.data</code> method</i>).</li>
+		<li>After external data loading procedures (repeat/load).</li>
+	</ul>
+</article>
+
+
+
 
 <script>
 wd$("#data_wdaction_example2").get[0].textContent = wd$("#data_wdaction_example1").get[0].outerHTML;

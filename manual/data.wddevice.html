@@ -1,0 +1,94 @@
+<p class="wd-indent">The purpose of the attribute is to make the element containing it responsive by applying certain class values ​​to deoender of the screen size of the device:</p>
+
+<pre class="wd-code">data-wd-device=<q>desktop: className&mobile: className&tablet: className&phone: className</q></pre>
+
+<p class="wd-indent">Each screen size can receive a list of classes. The class list must be separated by whitespace while each screen size must be separated by the <q>&</q> character. It is not mandatory to enter all screen sizes in the attribute. Four screen size options are supported:</p>
+
+<dl class="wd-padding-childs">
+	<dt><q><b>desktop</b></q>:</dt>
+	<dd>For screen sizes starting at 768px.</dd>
+	<dd>In this case, all classes listed in the options below will be removed from the element's <q>class</q> attribute while the classes listed in this option will be added to the element's <q>class</q> attributes.</q>
+	<dt><q><b>mobile</b></q>:</dt>
+	<dd>For screen sizes smaller than 768px.</dd>
+	<dd>In this case, all classes listed in the above option will be removed from the element's <q>class</q> attribute while the classes listed in this option will be added to the <q>class</q> attribute of the element.</dd>
+	<dt><q><b>tablet</b></q>:</dt>
+	<dd>For screen sizes from 600 to 767px</dd>
+	<dd>In this case, all classes listed in the first and last options will be removed from the element's <q>class</q> attribute while the classes listed in this option will be added to the <q>class</q> attribute of the element.</dd>
+	<dt><q><b>phone</b></q>:</dt>
+	<dd>For screen sizes smaller than 600px.</dd>
+	<dd>In this case, all classes listed in the first and second-to-last options will be removed from the element's <q>class</q> attribute while the classes listed in this option will be added to the <q>class</q> attribute of the element.</dd>
+</dl>
+
+<p class="wd-align-C wd-color-green wd-symbol-ok wd-padding wd-rounded wd-border">See the method <code>HTML.class</code> to understand the source of its operation!</p>
+
+<p class="wd-align-C wd-color-red wd-symbol-error wd-padding wd-rounded wd-border">Beware of conflicts!</p>
+
+
+<h3>Target:</h3>
+
+<ul class="wd-list">
+	<li>Element content.</li>
+</ul>
+
+<h3>Sensitivity:</h3>
+
+<ul class="wd-list">
+	<li>When loading the document.</li>
+	<li>When defining the attribute on the element (<i>See the <code>HTML.data</code> method</i>).</li>
+	<li>After external data loading procedures (repeat/load).</li>
+	<li>When to change the screen size.</li>
+</ul>
+
+<h3>Note:</h3>
+
+<p class="wd-indent">The <code>data-wd-desktop</code>, <code>data-wd-tablet</code> and <code>data-wd-phone</code> attributes are obsolete.</p>
+
+<h3>Example:</h3>
+
+<h4>CSS code:</h4>
+
+<pre class="wd-code" id="data_wddevice_example2"></pre>
+
+<h4>HTML Structure:</h4>
+
+<pre class="wd-code" id="data_wddevice_example4"></pre>
+
+<h4>Result:</h4>
+
+<style id="data_wddevice_example1">
+.desktop {
+	color: #FFFFFF;
+	background-color: #0000FF;
+	width: 700px;
+	height: 400px;
+}
+.tablet {
+	color: #FFFFFF;
+	background-color: #00FF00;
+	width: 480px;
+	height: 320px;
+}
+.phone {
+	color: #FFFFFF;
+	background-color: #000000;
+	width: 320px;
+	height: 480px;
+}
+.hide {
+ 	display: none;
+}
+</style>
+
+<div id="data_wddevice_example3" data-wd-device="desktop: desktop&table: tablet&phone: phone" class="wd-border wd-rounded">
+	<h4 data-wd-device="mobile: hide" class="wd-align-C">Desktop</h4>
+	<h4 data-wd-device="desktop: hide" class="wd-align-C">Mobile</h4>
+	<h4 data-wd-device="desktop: hide&phone: hide" class="wd-align-C">Tablet</h4>
+	<h4 data-wd-device="desktop: hide&tablet: hide" class="wd-align-C">Phone</h4>
+</div>
+
+<p class="wd-indent">Change the screen size and see the result!</p>
+
+<script>
+wd$("#data_wddevice_example2").get[0].textContent = wd$("#data_wddevice_example1").get[0].textContent;
+wd$("#data_wddevice_example4").get[0].textContent = wd$("#data_wddevice_example3").get[0].outerHTML.replace(/\&amp\;/g, "&");
+</script>

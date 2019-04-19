@@ -4,23 +4,24 @@
 
 <p class="wd-indent">The <code>execute</code> argument is a function to be executed after request process. The function accepts an argument that returns an object containing four attributes:</p>
 
-<dl class="wd-padding wd-border wd-rounded wd-bgcolor-green">
-	<dt><code>error</code></dt>
+<dl class="wd-padding-childs">
+	<dt><code><b>error</b></code></dt>
 	<dd>Informs if an error occurred in the request (<i>true</i>/<i>false</i>).</dd>
-	<dt><code>request</code></dt>
+	<dt><code><b>request</b></code></dt>
 	<dd>Returns the request object.</dd>
-	<dt><code>text</code></dt>
+	<dt><code><b>text</b></code></dt>
 	<dd>Gets the result of the request in text format. Returns null in case of error.</dd>
-	<dt><code>xml</code></dt>
+	<dt><code><b>xml</b></code></dt>
 	<dd>Gets the result of the request in xml format. Returns null in case of error.</dd>
-	<dt><code>json</code></dt>
+	<dt><code><b>json</b></code></dt>
 	<dd>Gets the result of the request in json format. Returns null in case of error.</dd>
 </dl>
 
 <p class="wd-indent">The <code>time</code> argument (optional) is the value waiting time for the request, in seconds.</p>
 
-<pre class="wd-code"><cite>//Example
-//"file.php" is an accessible file on the server:</cite>
+<h3>Example</h3>
+
+<pre class="wd-code"><cite>//"file.php" is an accessible file on the server:</cite>
 <code>var</code> object = wd(<q>file.php?text=lux&number=12</q>);
 <code>function</code> y(x) {
 	console.log(x.error);

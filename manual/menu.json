@@ -672,27 +672,10 @@
 		"click":  ""
 	},
 	{
-		"title": "dataWdDesktop",
+		"title": "dataWdDevice",
 		"description": "Attribute",
-		"id": "data_wd_desktop",
-		"content": "data-wd-load='manual/data.wddesktop.html'",
-		"style": "wd-size-s wd-indent",
-		"click":  ""
-	},
-	{
-		"title": "dataWdTablet",
-		"description": "Attribute",
-		"id": "data_wd_tablet",
-		"content": "data-wd-load='manual/data.wdtablet.html'",
-		"style": "wd-size-s wd-indent",
-		"click":  ""
-	},
-
-	{
-		"title": "dataWdPhone",
-		"description": "Attribute",
-		"id": "data_wd_phone",
-		"content": "data-wd-load='manual/data.wdphone.html'",
+		"id": "data_wd_device",
+		"content": "data-wd-load='manual/data.wddevice.html'",
 		"style": "wd-size-s wd-indent",
 		"click":  ""
 	},

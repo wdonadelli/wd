@@ -4,8 +4,9 @@
 
 <p class="wd-indent">The <code>regex</code> argument is a regular expression that defines the mask. String comparison characters must be inserted into groups (). Punctuation elements, which model the mask, should be left out of groups.</p>
 
-<pre class="wd-code"><cite>//Example</cite>
-<code>var</code> x = <var>/^([0-9]{2})\/([0-9]{4})$/</var>;
+<h3>Example</h3>
+
+<pre class="wd-code"><code>var</code> x = <var>/^([0-9]{2})\/([0-9]{4})$/</var>;
 wd(x).mask(<q>122010</q>);
 <sample><q>12/2010</q></sample>
 wd(x).mask(<q>1220101</q>);

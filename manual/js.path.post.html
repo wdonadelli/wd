@@ -4,8 +4,9 @@
 
 <p class="wd-align-C wd-color-green wd-symbol-ok wd-padding wd-rounded wd-border">This method works in the same way as the <q>Path.get</q> method. See the respective section for more details.</p>
 
-<pre class="wd-code"><cite>//Example
-<code>function</code> load(file) {
+<h3>Example</h3>
+
+<pre class="wd-code"><code>function</code> load(file) {
 	wd(file).post(<code>function(x)</code> {
 		wd$(<q>#js_path_post_example2</q>).get[0].textContent = x.error;
 		wd$(<q>#js_path_post_example3</q>).get[0].textContent = x.request;
