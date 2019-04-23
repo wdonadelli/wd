@@ -31,17 +31,27 @@
 <pre class="wd-code"><cite>//Example</cite>
 <code>var</code> x = wd(<q>1:27</q>);
 x.hour;
-<sample><var>1</var></sample>
-x.hour = <var>2</var>;
+<sample><var id="js_time_example1"></var></sample>
+x.hour = <var>24</var>;
 x.hour;
-<sample><var>2</var></sample>
+<sample><var id="js_time_example2"></var></sample>
 x.toString();
-<sample><q>02:27:00</q></sample>
+<sample><q id="js_time_example3"></q></sample>
 x.toSource();
-<sample><q>1:27</q></sample>
+<sample><q id="js_time_example4"></q></sample>
 x.type;
-<sample><q>time</q></sample>
+<sample><q id="js_time_example5"></q></sample>
 </pre>
+
+<script>
+var x = wd("1:27");
+wd$("#js_time_example1").get[0].textContent = x.hour;
+x.hour = 24;
+wd$("#js_time_example2").get[0].textContent = x.hour;
+wd$("#js_time_example3").get[0].textContent = x.toString();
+wd$("#js_time_example4").get[0].textContent = x.toSource();
+wd$("#js_time_example5").get[0].textContent = x.type;
+</script>
 
 <p class="wd-indent">The object has the following attributes:</p>
 

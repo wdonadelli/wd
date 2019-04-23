@@ -1288,11 +1288,13 @@ h6 {font-size: 0.65em;}
 }
 .wd-code sample {
 	color: #4B0082;
+	background-color: #E6E6AA;
 	font-style: normal;
 	font-weight: normal;
+	padding: 2px 0;
 }
 .wd-code sample:before {
-	content: "\226B ";
+	content: "\226B  ";
 }
 *[data-wd-action] {
 	cursor: pointer;

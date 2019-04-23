@@ -206,7 +206,7 @@ var wd = (function() {
 		h24:      {enumerable: true, get: function() {return timeGet(this._t, "h24")}},
 		ampm:     {enumerable: true, get: function() {return timeGet(this._t, "ampm")}},
 		format:   {enumerable: true, value: function(string) {return timeFormat(this._t, string);}},
-		toString: {value: function() {return timeGet(this._t);}},
+		toString: {value: function() {return timeFormat(this._t);}},
 		valueOf:  {value: function() {return this._t;}},
 	});
 /*---------------------------------------------------------------------------*/
@@ -613,7 +613,9 @@ var wd = (function() {
 		} else if (typeof input === "number" || input instanceof Number) {
 			x = "number";
 		} else if (typeof input === "string" || input instanceof String) {
-			if (numberDefiner(input) !== null) {
+			if (input.trim() === "") {
+				x = "0";
+			} else if (numberDefiner(input) !== null) {
 				x = "number";
 			} else if (timeDefiner(input) !== null) {
 				x = "time";
@@ -813,7 +815,7 @@ var wd = (function() {
 			} else if (kind === "time") {
 				aDate.push({"x": x, "y": timeDefiner(x)});
 			} else {
-				aNormal.push({"x": x, "y": stringClear(x)});
+				aNormal.push({"x": x, "y": stringClear(x).toUpperCase()});
 			}
 		}
 		aNumber.sort(function(a,b) {return a.y - b.y;});
@@ -1130,6 +1132,7 @@ var wd = (function() {
 	function dateFormat(value, string, locale) {
 		/*Formata a data de acordo conforme especificado na string*/
 		if (locale === undefined) {locale = lang();}
+		if (string === undefined) {string = "%Y-%M-%D";}
 		var date, ref, names;
 		date   = dateFromNumber(value);
 		ref    = new Date(1970, date.m - 1, 15, 12, 0, 0, 0);
@@ -1158,10 +1161,8 @@ var wd = (function() {
 		} catch(e) {
 			msg("dateFormat: toLocaleString not defined.", "a");
 		}
-		if (type(string) === "?") {
-			string = ("0000"+date.y).slice(-4)+"-"+("00"+date.m).slice(-2)+"-"+("00"+date.d).slice(-2);
-		} else {
-			for (var i in names) {string = string.replace(new RegExp(i, "g"), names[i]);}
+		for (var i in names) {
+			string = string.replace(new RegExp(i, "g"), names[i]);
 		}
 		return string;
 	};
@@ -1233,6 +1234,8 @@ var wd = (function() {
 			output = time[id];
 		} else if (id === "h24") {
 			output = h24;
+		} else if (id === "H24") {
+			output = ("00"+h24).slice(-2);
 		} else if (id === "ampm") {
 			if (h24 === 0) {
 				output = "12:"+("00"+time.m).slice(-2)+"am";
@@ -1244,26 +1247,24 @@ var wd = (function() {
 				output = (h24-12)+":"+("00"+time.m).slice(-2)+"pm";
 			}
 		} else {
-			output = time.h+":"+("00"+time.m).slice(-2)+":"+("00"+time.s).slice(-2)
+			output = ("00"+h24).slice(-2)+":"+("00"+time.m).slice(-2)+":"+("00"+time.s).slice(-2)
 		}
 		return output;
 	};
 
 	function timeFormat(t, string) {
 		/*Formata o tempo de acordo com o especificado na string substituindo os valores dos objetos*/
+		if (string === undefined) {string = "#H:%M:%S";}
 		var time, names;
 		time = timeFromNumber(t);
+		
 		names = {
-			"%h": time.h, "%H": timeGet(t, "h24"), "#h": timeGet(t, "ampm"),
+			"%h": time.h, "%H": timeGet(t, "h24"), "#h": timeGet(t, "ampm"), "#H": timeGet(t, "H24"),
 			"%m": time.m, "%M": ("00"+time.m).slice(-2),
 			"%s": time.s, "%S": ("00"+time.s).slice(-2),
 		}
-		if (type(string) === "?") {
-			string = timeGet(t);
-		} else {
-			for (var i in names) {
-				string = string.replace(new RegExp(i, "g"), names[i]);
-			}
+		for (var i in names) {
+			string = string.replace(new RegExp(i, "g"), names[i]);
 		}
 		return string;
 	};
@@ -1614,18 +1615,13 @@ var wd = (function() {
 		/*Ordena os filhos do elemento com base em seu conteúdo textual*/
 		if (order === undefined) {order = 1;}
 		if (col === undefined) {col = null;}
-		var dom = [], text = [], sort = [], seq = [], index, childs;
+		var dom = [], text = [], sort = [], seq = [], index, childs, value;
 		childs = elem.children;
 		for (var i = 0; i < childs.length; i++) {
 			dom.push(childs[i]);
-			if (col === null) {
-				text.push(stringTrim(childs[i].textContent.toUpperCase()));
-				sort.push(stringTrim(childs[i].textContent.toUpperCase()));
-			}
-			else {
-				text.push(stringTrim(childs[i].children[col].textContent.toUpperCase()));
-				sort.push(stringTrim(childs[i].children[col].textContent.toUpperCase()));
-			}
+			value = col === null ? childs[i].textContent : childs[i].children[col].textContent;
+			text.push(stringTrim(value));
+			sort.push(stringTrim(value));
 		};
 		sort = arraySort(sort);
 		for (i = 0; i < sort.length; i++) {
@@ -1778,7 +1774,7 @@ var wd = (function() {
 
 
 function wd$(input, root) {
-	/**/
+	/*Atalho para o uso do método querySelectorAll em wdHtml*/
 	var query = null;
 	if (root === undefined || !("querySelectorAll" in root)) {
 		root = document;

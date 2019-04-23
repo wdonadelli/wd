@@ -5,8 +5,15 @@
 <pre class="wd-code"><cite>//Example</cite>
 <code>var</code> x = wd(<q>10:24am</q>);
 x.second;
-<sample><var>0</var></sample>
+<sample><var id="js_time_second_example1"></var></sample>
 x.second = <var>50</var>;
 x.second;
-<sample><var>50</var></sample>
+<sample><var id="js_time_second_example2"></var></sample>
 </pre>
+
+<script>
+var x = wd("10:24am");
+wd$("#js_time_second_example1").get[0].textContent = x.second;
+x.second = 50;
+wd$("#js_time_second_example2").get[0].textContent = x.second;
+</script>

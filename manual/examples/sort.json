@@ -16,7 +16,8 @@
 	{"value": -1, "name": "Number"},
 	{"value": "lux (light)", "name": "Text"},
 	{"value": "2010-12-01", "name": "Date"},
-	{"value": "regina (queen)", "name": "Text"},
+	{"value": "Regina (queen)", "name": "Text"},
 	{"value": "Infinity", "name": "Text"},
-	{"value": "+Infinity", "name": "Number"}
+	{"value": "+Infinity", "name": "Number"},
+	{"value": "-Infinity", "name": "Number"}
 ]

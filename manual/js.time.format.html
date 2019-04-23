@@ -11,6 +11,8 @@
 	<dd>Numerical value of the hour (24h clock).</dd>
 	<dt><q><b>#h</b></q>:</dt>
 	<dd>Time am/pm format.</dd>
+	<dt><q><b>#H</b></q>:</dt>
+	<dd>Numerical value of the hour (24h clock, two digits).</dd>
 	<dt><q><b>%m</b></q>:</dt>
 	<dd>Numerical value of the minutes.</dd>
 	<dt><q><b>%M</b></q>:</dt>
@@ -25,7 +27,14 @@
 <code>var</code> x = wd(<q>25:05</q>); <cite>//25 = 24h (00h) + 1h</cite>
 <code>var</code> f = <q>%H hour(s) and %m minute(s)</q>;
 x.format(f);
-<sample><q>1 hour(s) and 5 minute(s)</q></sample>
+<sample><q id="js_time_format_example1"></q></sample>
 x.format();
-<sample><q>25:05:00</q></sample>
+<sample><q id="js_time_format_example2"></q></sample>
 </pre>
+
+<script>
+var x = wd("25:05");
+var f = "%H hour(s) and %m minute(s)";
+wd$("#js_time_format_example1").get[0].textContent = x.format(f);
+wd$("#js_time_format_example2").get[0].textContent = x.format();
+</script>

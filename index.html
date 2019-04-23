@@ -8,6 +8,20 @@
 		<meta name="keywords" content="Web Development,Web Design,HTML,CSS,JavaScript,Library,QuerySelector">
 		<script src="wd.js"></script>
 		<link rel="stylesheet" href="wd.css"/>
+		<script>
+function printArray(array) {
+	var txt = "["
+	for (var i = 0; i < array.length; i++) {
+		if (typeof array[i] === "string") {
+			txt += "<q>"+array[i]+"</q>, ";
+		} else {
+			txt += "<var>"+array[i]+"</var>, ";
+		}
+	}
+	return txt.replace(/\,\ $/, "]");
+	//return "["+array.join(", ")+"]";
+};
+		</script>
 	</head>
 <body class="wd-align-J" data-wd-desktop="wd-body-E">
 
