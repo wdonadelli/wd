@@ -3,8 +3,14 @@
 <pre class="wd-code">wd(input).sort;</pre>
 
 <pre class="wd-code"><cite>//Example</cite>
-<code>var</code> x = [<q>wd</q>, <var>100</var>, <var>20</var>, <q>9</q>];
+<code>var</code> x = <span id="js_array_sort_example1"></span>;
 wd(x).sort;
-<sample>[<q>9</q>, <var>20</var>, <var>100</var>, <q>wd</q>]</sample>
+<sample id="js_array_sort_example2"></sample>
 <cite>//Variable "x" is not changed</cite>
 </pre>
+
+<script>
+var x = ["abc","CBA", "ABC", "cba", 1, "-2", "-Infinity", "Infinity", "+Infinity", "15.03.2010", "2010-03-14", "10h45", "09:00pm", true, false, null, undefined];
+wd$("#js_array_sort_example1").load(printArray(x));
+wd$("#js_array_sort_example2").load(printArray(wd(x).sort));
+</script>

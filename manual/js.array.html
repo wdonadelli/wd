@@ -7,11 +7,18 @@
 <p class="wd-indent">When identifying the type of the primitive value, the object returns the string <q>array</q>.</p>
 
 <pre class="wd-code"><cite>//Example</cite>
-<code>var</code> input = [<var>1</var>, <q>wd</q>, <var>true</var>];
+<code>var</code> input = <span id="js_array_example1"></span>[<var>1</var>, <q>wd</q>, <var>true</var>];
 <code>var</code> object = wd(input);
 object.type;
-<sample><q>array</q></sample>
+<sample><q id="js_array_example2"></q></sample>
 </pre>
+
+
+<script>
+var x = [1, "wd", true];
+wd$("#js_array_example1").load(printArray(x));
+wd$("#js_array_example2").load(wd(x).type);
+</script>
 
 <p class="wd-indent">The object has the following attributes:</p>
 

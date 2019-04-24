@@ -3,8 +3,14 @@
 <pre class="wd-code">wd(input).organized;</pre>
 
 <pre class="wd-code"><cite>//Example</cite>
-<code>var</code> x = [<q>wd</q>, <var>100</var>, <var>100</var>, <var>100</var>, <q>wd</q>];
+<code>var</code> x = <span id="js_array_organized_example1"></span>;
 wd(x).organized;
-<sample>[<var>100</var>, <q>wd</q>]</sample>
+<sample id="js_array_organized_example2"></sample>
 <cite>//Variable "x" is not changed</cite>
 </pre>
+
+<script>
+var x = ["wd", 100, "100", 100, "wd"];
+wd$("#js_array_organized_example1").load(printArray(x));
+wd$("#js_array_organized_example2").load(printArray(wd(x).organized));
+</script>
