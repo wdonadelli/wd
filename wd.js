@@ -20,7 +20,7 @@ var wd = (function() {
 	});
 	
 	/*Checar a existências dos objetos nativos utilizados na bibiloteca*/
-	function checkMainObjects() {	
+	(function () {	
 		var objects = [
 			"Boolean",
 			"Number",
@@ -42,9 +42,7 @@ var wd = (function() {
 			}
 		}
 		return;
-	};
-
-	checkMainObjects();
+	})();
 
 	/*Controlador da janela modal (ajax)*/
 	var modalController = 0;
@@ -75,9 +73,14 @@ var wd = (function() {
 	};
 /*===========================================================================*/
 	function WD(input) {
-		if (!(this instanceof WD)) {return new WD(input);}
-		Object.defineProperties(this, {_input: {value: input}});
+		if (!(this instanceof WD)) {
+			return new WD(input);
+		}
+		Object.defineProperties(this, {
+			_input: {value: input}
+		});
 	};
+
 	Object.defineProperties(WD.prototype, {
 		constructor: {value: WD},
 		valueOf:  {value: function() {return this._input.valueOf();}},
@@ -579,7 +582,11 @@ var wd = (function() {
 
 	function msg(text, type) {
 		/*Imprime mensagem no console*/
-		var types = {e: "error", w: "warn", i: "info"};
+		var types = {
+			e: "error",
+			w: "warn",
+			i: "info"
+		};
 		if (types[type] in console) {
 			console[types[type]](text);
 		} else {
@@ -590,15 +597,212 @@ var wd = (function() {
 
 	function $(selector, root) {
 		/*Retorna os elementos html identificados pelo seletor css no elemento root*/
-		if (root === undefined) {root = document;}
+		if (root === undefined) {
+			root = document;
+		}
 		return root.querySelectorAll(selector);
 	};
 
 	function lang() {
 		/*Retorna a linguagem do documento, a definida ou a do navegador*/
-		var lang = document.body.parentElement.lang.replace(/\ +/g, "");
-		return lang.length !== 0 ? lang : navigator.language || navigator.browserLanguage || "en-US";
+		var lang, attr;
+		attr = document.body.parentElement.attributes;
+		lang = "lang" in attr ? attr.lang.value.replace(/\ /g, "") : "";
+		if (lang === "") {
+			lang = navigator.language || navigator.browserLanguage || "en-US";
+		}
+		return lang;
 	};
+
+	function isString(value) {
+		/*Verifica se o valor é uma string genérica*/
+		return typeof value === "string" || value instanceof String ? true : false;
+	};
+	
+	function isNumber(value) {
+		/*Verifica se o valor é um número*/
+		if (typeof value === "number" || value instanceof Number) {
+			return true;
+		} else if (!isString(value)) {
+			return false;
+		} else if (/^(\+|\-)?[0-9]+(\.[0-9]+)?$/.test(value)) {
+			return true;
+		} else if ((/^(\+|\-)?[0-9]+(\.[0-9]+)?e(\+|\-)?[0-9]+$/i).test(value)) {
+			return true;
+		} else if (/^(\+|\-)Infinity$/.test(value)) {
+			return true;
+		}
+		return false;
+	};
+	
+	function isBoolean(value) {
+		/*Verifica se o valor é boleano*/
+		return typeof value === "boolean" || value instanceof Boolean ? true : false;
+	};
+
+	function isUndefined(value) {
+		/*Verifica se o valor é undefined*/
+		return value === undefined ? true : false;
+	};
+
+	function isNull(value) {
+		/*Verifica se o valor é nulo*/
+		return value === null || (isString(value) && value.trim() === "") ? true : false;
+	};
+
+	function isArray(value) {
+		/*Verifica se o valor é uma lista*/
+		return ("isArray" in Array && Array.isArray(value)) || value instanceof Array ? true : false;
+	};
+
+	function isRegExp(value) {
+		/*Verifica se o valor é uma expressão regular*/
+		return ("isArray" in Array && Array.isArray(value)) || value instanceof Array ? true : false;
+	};
+
+	function isFunction(value) {
+		/*Verifica se o valor é uma função*/
+		return typeof value === "function" || value instanceof Function ? true : false;
+	};
+
+	function isDOM(value) {
+		/*Verifica se o valor é um elemento(s) HTML*/
+		if (value instanceof HTMLElement) {
+			return true;
+		} else if (value instanceof NodeList) {
+			return true;
+		} else if (value instanceof HTMLCollection) {
+			return true;
+		} else if (value instanceof HTMLAllCollection) {
+			return true;
+		} else if (value instanceof HTMLFormControlsCollection) {
+			return true;
+		} else if (value === document) {
+			return true;
+		} else if (value === window) {
+			return true;
+		}
+		return false;
+	};
+
+	function isPath(value) {
+		/*Verifica se o valor é um caminho ou arquivo acessível*/
+		return isString(value) && ajaxFileExists(value) ? true : false;
+	};
+	
+	function isTime(value) {
+		/*Verifica se o valor é um tempo válido*/
+		if (!isString(value)) {
+			return false;
+		} else if (value === "%now") {
+			return true;
+		} else if (/^[0-9]+(\:[0-5][0-9]){1,2}$/.test(value)) {
+			return true;
+		} else if ((/^(0?[1-9]|1[0-2])\:[0-5][0-9]\ ?(am|pm)$/i).test(value)) {
+			return true;
+		} else if ((/^([01][0-9]|2[0-3])h[0-5][0-9]$/i).test(value)) {
+			return true;
+		}
+		return false;
+	};
+
+	function isDate(value) {
+		/*Verifica se o valor é uma data válida*/
+		var d, m, y, test;
+		if (value instanceof Date) {
+			return true;
+		} else if (!isString(value)) {
+			return false;
+		} else if (value === "%today") {
+			return true;
+		}
+		if (/^[0-9]{4}\-[0-9]{2}\-[0-9]{2}$/.test(value)) {/*YYYY-MM-DD*/
+			test = value.split("-");
+			d = Number(test[2]);
+			m = Number(test[1]);
+			y = Number(test[0]);
+		} else if (/^[0-9]{2}\/[0-9]{2}\/[0-9]{4}$/.test(value)) {/*MM/DD/YYYY*/
+			test = value.split("/");
+			d = Number(test[1]);
+			m = Number(test[0]);
+			y = Number(test[2]);
+		} else if (/^[0-9]{2}\.[0-9]{2}\.[0-9]{4}$/.test(value)) {/*DD.MM.YYYY*/
+			test = value.split(".");
+			d = Number(test[0]);
+			m = Number(test[1]);
+			y = Number(test[2]);
+		} else {
+			return false;
+		}
+		if (y > 9999 || y < 1) {
+			return false;
+		} else if (m > 12 || m < 1) {
+			return false;
+		} else if (d > 31 || d < 1) {
+			return false;
+		} else if (d > 30 && [2, 4, 6, 9, 11].indexOf(m) > 0) {
+			return false;
+		} else if (d > 29 && m == 2) {
+			return false;
+		} else if (d == 29 && m == 2 && !dateLeap(y)) {
+			return false;
+		} else {
+			return true;
+		}
+		return false;
+	};
+
+	function isText(value) {
+		/*Verifica se o valor é um texto*/
+		if (!isString(value)) {
+			return false;
+		} else if (!isNull(value) && !isPath(value) && !isDate(value) && !isTime(value)) {
+			return true;
+		}
+		return false;
+	};
+
+	function newType(value, ajax) {
+		var types = {
+			"undefined": isUndefined,
+			"null": isNull,
+			"boolean": isBoolean,
+			"number": isNumber,
+			"date": isDate,
+			"time": isTime,
+			"array": isArray,
+			"regexp": isRegExp,
+			"function": isFunction,
+			"dom": isDOM,
+			"path": isPath,
+			"text": isText
+		};
+		for (var i in types) {
+			if (types[i](value)) {
+				return i;
+			}
+		};
+		return "constructor" in value ? value.constructor.name.toLowerCase() : "unknown";
+	};
+	
+	
+	//FIXME
+	function copy(value, type) {
+	
+	};
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 
 	function type(input, ajax) {
 		/*Retorna o tipo de input*/
