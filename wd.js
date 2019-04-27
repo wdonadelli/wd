@@ -4,6 +4,453 @@
 
 var wd = (function() {
 
+/*=== ADJUSTMENT PROCEDURES ===*/
+
+	if (!("Object" in window)) {
+		window.Object = function() {};
+	}
+
+	if (!("defineProperty" in Object)) {
+		Object.defineProperty = function(source, key, obj) {
+			source[key] = obj.value;
+			return;
+		}
+	}
+
+	if (!("defineProperties" in Object)) {
+		Object.defineProperty = function(source, obj) {
+			for (var key in obj) {
+				Object.defineProperty(source, key, obj[key]);
+			}
+			return;
+		}
+	}
+
+/*=== NON-SPECIFIC FUNCTIONS ===*/
+
+	function log(msg, type) {
+		/*Imprime mensagem no console*/
+		var types = {e: "error", w: "warn", i: "info", l: "log"};
+		if (types[type] in console) {
+			console[types[type]](msg);
+		} else {
+			console.log(msg);
+		}
+		return;
+	};
+
+	function lang() {
+		/*Retorna a linguagem do documento, a definida ou a do navegador*/
+		var value, attr;
+		attr = document.body.parentElement.attributes;
+		value = "lang" in attr ? attr.lang.value.replace(/\ /g, "") : "";
+		if (value === "") {
+			value = navigator.language || navigator.browserLanguage || "en-US";
+		}
+		return value;
+	};
+
+	function isUndefined(value) {
+		/*Verifica se o valor é undefined*/
+		return value === undefined ? true : false;
+	};
+
+	function isNull(value) {
+		/*Verifica se o valor é nulo*/
+		return value === null ? true : false;
+	};
+
+	function isString(value) {
+		/*Verifica se o valor é uma string genérica*/
+		var x;
+		if (isNull(value) || isUndefined(value)) {
+			x = false;
+		} else if (typeof value === "string") {
+			x = true
+		} else if ("String" in window && value instanceof String) {
+			x = true;
+		} else if ("String" in window && value.constructor === String) {
+			x = true;
+		} else {
+			x = false;
+		}
+		return x;
+	};
+
+/*=== REGEXP ===*/
+
+	function isRegExp(value) {
+		/*Verifica se o valor é uma expressão regular*/
+		var x;
+		if (isNull(value) || isUndefined(value)) {
+			x = false;
+		} else if (typeof value === "regexp") {
+			x = true;
+		} else if ("RegExp" in window && value instanceof RegExp) {
+			x = true;
+		} else if ("RegExp" in window && value.constructor === RegExp) {
+			x = true;
+		} else {
+			x = false;
+		}
+		return x;
+	};
+
+/*...........................................................................*/
+	function WDregexp(input) {
+		if (!(this instanceof WDregexp)) {
+			return new WDregexp(input);
+		}
+		if (!isRegExp(input)) {
+			return new WD(input);
+		}
+		Object.defineProperty(this, "_value", {
+			value: input.valueOf()
+		});
+	};
+
+	Object.defineProperty(WDregexp.prototype, "constructor", {
+		value: WDregexp
+	});
+	
+	Object.defineProperty(WDregexp.prototype, "mask", {
+		enumerable: true,
+		value: function (input) {
+			/*Aplica áscara ao valor de entrada se casar com a re*/
+			var pattern, check, target, group, close;
+			var metaReference, metacharacter, expression;
+			input = String(input).toString();
+			if (this._value.test(input)) {
+				return input;
+			}
+			pattern = this.toString();
+			check   = "";
+			target  = "";
+			group   = 1;
+			close   = true;
+			metaReference = ["n", "d", "D", "w", "W", "s", "S", "t", "r", "n", "v", "f", "b", "B"];
+			metacharacter = ["\n", "\d", "\D", "\w", "\W", "\s", "\S", "\t", "\r", "\n", "\v", "\f", "\b", "\B"];
+			expression    = ["[", "]", "|", "^", "$", ".", "(", ")", "*", "+", "?", "{", "}"];
+			for (var i = 0; i < pattern.length; i++) {
+				if (pattern[i] === "\\") {
+					i++;
+					if (metaReference.indexOf(pattern[i]) < 0) {
+						target += pattern[i];
+					}	else {
+						target += metacharacter[metaReference.indexOf(pattern[i])];
+					}
+				} else if (pattern[i] === "(") {
+					check  += pattern[i];
+					target += "$"+group;
+					close   = false;
+					group++;
+				} else if (pattern[i] === ")") {
+					check += pattern[i];
+					close  = true;
+				} else if (close && expression.indexOf(pattern[i]) === -1) {
+					target += pattern[i];
+				} else {
+					check += pattern[i];
+				}
+			}
+			check = new RegExp(check);
+			if (check.test(input)) {
+				input = input.replace(check, target);
+				return input;
+			}
+			return false;
+		}
+	});
+		
+	Object.defineProperties(WDregexp.prototype, {
+		type: {
+			enumerable: true,
+			value: "regexp"
+		},
+		toString: {
+			value: function() {
+				return this._value.toString();
+			}
+		},
+		valueOf: {
+			value: function() {
+				return this._value.valueOf();
+			}
+		},
+		showMe: {
+			enumerable: true,
+			get: function() {
+				return showMe(this);
+			}
+		}
+	});
+
+/*=== NUMBER ===*/
+
+	function isNumber(value) {
+		/*Verifica se o valor é um número*/
+		var x;
+		if (isNull(value) || isUndefined(value)) {
+			x = false;
+		} else if (typeof value === "number") {
+			x = true;
+		} else if ("Number" in window && value instanceof Number) {
+			x = true;
+		} else if ("Number" in window && value.constructor === Number) {
+			x = true;
+		} else if (!isString(value)) {
+			return false;
+		} else if (/^(\+|\-)?[0-9]+(\.[0-9]+)?$/.test(value)) {
+			x = true;
+		} else if ((/^(\+|\-)?[0-9]+(\.[0-9]+)?e(\+|\-)?[0-9]+$/i).test(value)) {
+			x = true;
+		} else if (/^(\+|\-)Infinity$/.test(value)) {
+			x = true;
+		} else {
+			x = false;
+		}
+		return x;
+	};
+
+/*...........................................................................*/
+	function WDnumber(input) {
+		if (!(this instanceof WDnumber)) {
+			return new WDnumber(input);
+		}
+		if (!isNumber(input)) {
+			return new WD(input);
+		}
+		Object.defineProperty(this, "_value", {
+			value: isString(input) ? Number(input).valueOf() : input.valueOf()
+		});
+	};
+	
+	Object.defineProperty(WDnumber.prototype, "constructor", {
+		value: WDnumber
+	});
+
+	Object.defineProperty(WDnumber.prototype, "number", {
+		enumerable: true,
+		get: function() {
+			/*Retorna o tipo do número*/
+			var x;
+			if (this._value === Infinity || this._value === -Infinity) {
+				x = "rational";
+			} else if (this._value % 1 !== 0) {
+				x = "rational";
+			} else if (this._value % 1 === 0 && this._value <= 0) {
+				x = "integer";
+			} else if (this._value % 1 === 0 && this._value > 0) {
+				x = "natural";
+			} else {
+				x = "?";
+			}
+			return x
+		}
+	});
+
+	Object.defineProperty(WDnumber.prototype, "signal", {
+		enumerable: true,
+		get: function() {
+			/*Retorna se o número é positivo (1), negativo (-1) ou nulo (0)*/
+			var x;
+			if (this._value === 0) {
+				x = 0;
+			} else if (this._value > 0) {
+				x = 1;
+			} else if (this._value < 0) {
+				x = -1;
+			} else {
+				x = "?";
+			}
+			return x;
+		}
+	});
+
+	Object.defineProperty(WDnumber.prototype, "integer", {
+		enumerable: true,
+		get: function() {
+			/*Retorna o valor inteiro do número*/
+			var x;
+			if (this._value === Infinity || this._value === -Infinity) {
+				x = this._value;
+			} else {
+				x = this._value - (this._value % 1);
+			}
+			return x;
+		}
+	});
+
+	Object.defineProperty(WDnumber.prototype, "fraction", {
+		enumerable: true,
+		get: function() {
+			/*Retorna o valor inteiro do número*/
+			var x;
+			if (this._value === Infinity || this._value === -Infinity) {
+				x = this._value;
+			} else {
+				x = this._value % 1;
+			}
+			return x;
+		}
+	});
+
+	Object.defineProperty(WDnumber.prototype, "abs", {
+		enumerable: true,
+		get: function() {
+			/*Retorna o valor absoluto do número*/
+			return this._value < 0 ? -this._value : this._value;
+		}
+	});
+
+	Object.defineProperty(WDnumber.prototype, "inverse", {
+		enumerable: true,
+		get: function() {
+			/*Retorna o inverso do número (1/x)*/
+			var x;
+			if (this._value === 0) {
+				x = Infinity;
+			} else if (this._value === Infinity || this._value === -Infinity) {
+				x = 0;
+			} else {
+				x = 1/this._value;
+			}
+			return x;
+		}
+	});
+
+	Object.defineProperty(WDnumber.prototype, "up", {
+		enumerable: true,
+		get: function() {
+			/*Arredonda o número para cima*/
+			if (this.fraction === 0) {
+				x = this._value;
+			} else if (this._value > 0) {
+				x = this.integer+1;
+			} else {
+				x = this.integer-1;
+			}
+			return x;
+		}
+	});
+
+	Object.defineProperty(WDnumber.prototype, "round", {
+		enumerable: true,
+		value: function(width) {
+			/*Arredonda o número para determinado número de casas*/
+			var x;
+			try {
+			 	x = Number(this._value.toFixed(width)).valueOf();
+			} catch(e) {
+				log("The argument must be number greater than zero of small value.", "e");
+				x = this.toString();
+			}
+			return x;
+		}
+	});
+
+	Object.defineProperty(WDnumber.prototype, "scientific", {
+		enumerable: true,
+		value: function(width) {
+			/*Transcreve a notação científica para html*/
+			var x;
+			try {
+				x = this._value.toExponential(width);
+				x = x.replace(/e(.+)$/, " x 10<sup>$1</sup>").replace(/\+/g, "");
+			} catch(e) {
+				log("The argument must be number greater than zero of small value.", "e");
+				x = this.toString();
+			}
+			return x;
+		}
+	});
+
+	Object.defineProperty(WDnumber.prototype, "locale", {
+		enumerable: true,
+		value: function(locale) {
+			/*Retorna o número no formato local ou definido no html*/
+			var x;
+			if (locale === undefined) {
+				locale = lang();
+			}
+			x = "toLocaleString" in Number ? this._value.toLocaleString(locale) : this._value.toString();
+			return x;
+		}
+	});
+
+	Object.defineProperty(WDnumber.prototype, "currency", {
+		enumerable: true,
+		value: function(locale, currency) {
+			/*Retorna o número no formato monetário local ou defuinido no html*/
+			if (locale === undefined)   {
+				locale = lang();
+			}
+			if (currency === undefined) {
+				currency = "";
+			}
+			var x;
+			if ("toLocaleString" in Number) {
+				try {
+					x = input.toLocaleString(locale, {style: "currency", currency: currency});
+				} catch(e) {
+					x = currency+numberLocale(input, locale);
+				}
+			} else {
+				x = input.toString();
+			}
+			return x;
+		}
+	});
+
+	Object.defineProperties(WDnumber.prototype, {
+		type: {
+			enumerable: true,
+			value: "number"
+		},
+		toString: {
+			value: function() {
+				return this._value.toString();
+			}
+		},
+		valueOf: {
+			value: function() {
+				return this._value.valueOf();
+			}
+		},
+		showMe: {
+			enumerable: true,
+			get: function() {
+				return showMe(this);
+			}
+		}
+	});
+
+
+
+	//desse jeito não fica protegido (writable: false)
+	WDregexp.prototype.number = WDnumber.prototype.number;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /*===========================================================================*/
 	/*Parâmetros de configuração de data*/
 	var Y_0 = 1, Y_4 = 4, Y_100 = 100, Y_400 = 400, WEEK_REF = 1, Y_max = 9999;
@@ -117,46 +564,9 @@ var wd = (function() {
 		replace:   {enumerable: true, value: function(item, value) {return arrayReplace(this._value, item, value);}},
 	});
 /*---------------------------------------------------------------------------*/
-	function WDregexp(input) {
-		if (!(this instanceof WDregexp)) {return new WDregexp(input);}
-		WD.call(this, input);
-	};
-	WDregexp.prototype = Object.create(WD.prototype, {
-		constructor: {value: WDregexp},
-		mask: {enumerable: true, value: function(string) {return regexpMask(string, this._value);}},
-	});
-/*---------------------------------------------------------------------------*/
-	function WDboolean(input) {
-		if (!(this instanceof WDboolean)) {return new WDboolean(input);}
-		WD.call(this, input);
-	};
-	WDboolean.prototype = Object.create(WD.prototype, {
-		constructor: {value: WDboolean},
-		valueOf: {enumerable: true, value: function() {return input === true ? 1 : 0;}},
-	});
-/*---------------------------------------------------------------------------*/
-	function WDnumber(input) {
-		if (!(this instanceof WDnumber)) {return new WDnumber(input);}
-		WD.call(this, input);
-	};
-	WDnumber.prototype = Object.create(WD.prototype, {
-		constructor: {value: WDnumber},
-		integer:    {enumerable: true, get: function() {return numberInteger(this._value);}},
-		fraction:   {enumerable: true, get: function() {return numberFraction(this._value);}},
-		isInteger:  {enumerable: true, get: function() {return numberIsInteger(this._value);}},
-		isFloat:    {enumerable: true, get: function() {return numberIsFloat(this._value);}},
-		isNatural:  {enumerable: true, get: function() {return numberIsNatural(this._value);}},
-		isNegative: {enumerable: true, get: function() {return numberIsNegative(this._value);}},
-		isPositive: {enumerable: true, get: function() {return numberIsPositive(this._value);}},
-		abs:        {enumerable: true, get: function() {return numberAbs(this._value);}},
-		inverse:    {enumerable: true, get: function() {return numberInverse(this._value);}},
-		roundUp:    {enumerable: true, get: function() {return numberRoundUp(this._value);}},
-		round:      {enumerable: true, value: function(n) {return numberRound(this._value, n);}},
-		scientific: {enumerable: true, value: function(n) {return numberScientific(this._value, n);}},
-		locale:     {enumerable: true, value: function(cod) {return numberLocale(this._value, cod);}},
-		currency:   {enumerable: true, value: function(val, cod) {return numberCurrency(this._value, cod, val);}
-		},
-	});
+	
+
+	
 /*---------------------------------------------------------------------------*/
 	function WDdate(input) {
 		if (!(this instanceof WDdate)) {return new WDdate(input);}
@@ -280,11 +690,11 @@ var wd = (function() {
 		target = wd(e);
 		target.data({wdLoad: null});
 		if (ajax.type !== "path") {
-			msg("data-wd-load=\""+value+"\" - Attribute value is not an accessible file path.", "e")
+			log("data-wd-load=\""+value+"\" - Attribute value is not an accessible file path.", "e")
 		} else {
 			ajax[method](function(x) {
 				if (x.error) {
-					msg(file+": Error accessing file or timeout.", "e");
+					log(file+": Error accessing file or timeout.", "e");
 				} else {
 					target.load(x.text);
 				}
@@ -305,11 +715,11 @@ var wd = (function() {
 		target = wd(e);
 		target.data({wdRepeat: null});
 		if (ajax.type !== "path") {
-			msg("data-wd-repeat=\""+value+"\" - Attribute value is not an accessible file path.", "e");
+			log("data-wd-repeat=\""+value+"\" - Attribute value is not an accessible file path.", "e");
 		} else {
 			ajax[method](function(x) {
 				if (x.error || x.json === null) {
-					msg(file+": Error accessing file, timeout or it's not a json file.", "e");
+					log(file+": Error accessing file, timeout or it's not a json file.", "e");
 				} else {
 					target.repeat(x.json);
 				}
@@ -369,7 +779,7 @@ var wd = (function() {
 		/*Executa o método click() ao elemento após o load*/
 		if (!("wdClick" in e.dataset)) {return;}
 		if (!("click" in e)) {
-			msg("data-wd-click: Element does not have the click event.", "w");
+			log("data-wd-click: Element does not have the click event.", "w");
 		} else {
 			e.click();
 		}
@@ -581,20 +991,6 @@ var wd = (function() {
 		return null;
 	};
 
-	function msg(text, type) {
-		/*Imprime mensagem no console*/
-		var types = {
-			e: "error",
-			w: "warn",
-			i: "info"
-		};
-		if (types[type] in console) {
-			console[types[type]](text);
-		} else {
-			console.log(text);
-		}
-		return;
-	};
 
 	function $(selector, root) {
 		/*Retorna os elementos html identificados pelo seletor css no elemento root*/
@@ -604,62 +1000,23 @@ var wd = (function() {
 		return root.querySelectorAll(selector);
 	};
 
-	function lang() {
-		/*Retorna a linguagem do documento, a definida ou a do navegador*/
-		var lang, attr;
-		attr = document.body.parentElement.attributes;
-		lang = "lang" in attr ? attr.lang.value.replace(/\ /g, "") : "";
-		if (lang === "") {
-			lang = navigator.language || navigator.browserLanguage || "en-US";
-		}
-		return lang;
-	};
 
-	function isString(value) {
-		/*Verifica se o valor é uma string genérica*/
-		return typeof value === "string" || value instanceof String ? true : false;
-	};
+
 	
-	function isNumber(value) {
-		/*Verifica se o valor é um número*/
-		if (typeof value === "number" || value instanceof Number) {
-			return true;
-		} else if (!isString(value)) {
-			return false;
-		} else if (/^(\+|\-)?[0-9]+(\.[0-9]+)?$/.test(value)) {
-			return true;
-		} else if ((/^(\+|\-)?[0-9]+(\.[0-9]+)?e(\+|\-)?[0-9]+$/i).test(value)) {
-			return true;
-		} else if (/^(\+|\-)Infinity$/.test(value)) {
-			return true;
-		}
-		return false;
-	};
 	
 	function isBoolean(value) {
 		/*Verifica se o valor é boleano*/
 		return typeof value === "boolean" || value instanceof Boolean ? true : false;
 	};
 
-	function isUndefined(value) {
-		/*Verifica se o valor é undefined*/
-		return value === undefined ? true : false;
-	};
 
-	function isNull(value) {
-		/*Verifica se o valor é nulo*/
-		return value === null || (isString(value) && value.trim() === "") ? true : false;
-	};
 
 	function isArray(value) {
 		/*Verifica se o valor é uma lista*/
 		return ("isArray" in Array && Array.isArray(value)) || value instanceof Array ? true : false;
 	};
 
-	function isRegExp(value) {
-		/*Verifica se o valor é uma expressão regular*/
-		return ("isArray" in Array && Array.isArray(value)) || value instanceof Array ? true : false;
-	};
+
 
 	function isFunction(value) {
 		/*Verifica se o valor é uma função*/
@@ -865,48 +1222,6 @@ var wd = (function() {
 	};
 
 /*===========================================================================*/
-	function regexpMask(input, regex) {
-		/*Se input casar com regex, retorna input com a máscara de regex, caso contrário, falso*/
-		input = String(input);
-		if (regex.test(input)) {return input;}
-		var pattern, check, target, group, close, metaReference, metacharacter, expression;
-		pattern = regex.source;
-		check   = "";
-		target  = "";
-		group   = 1;
-		close   = true;
-		metaReference = ["n", "d", "D", "w", "W", "s", "S", "t", "r", "n", "v", "f", "b", "B"];
-		metacharacter = ["\n", "\d", "\D", "\w", "\W", "\s", "\S", "\t", "\r", "\n", "\v", "\f", "\b", "\B"];
-		expression    = ["[", "]", "|", "^", "$", ".", "(", ")", "*", "+", "?", "{", "}"];
-		for (var i = 0; i < pattern.length; i++) {
-			if (pattern[i] === "\\") {
-				i++;
-				if (metaReference.indexOf(pattern[i]) < 0) {
-					target += pattern[i];
-				}	else {
-					target += metacharacter[metaReference.indexOf(pattern[i])];
-				}
-			} else if (pattern[i] === "(") {
-				check  += pattern[i];
-				target += "$"+group;
-				close   = false;
-				group++;
-			} else if (pattern[i] === ")") {
-				check += pattern[i];
-				close  = true;
-			} else if (close && expression.indexOf(pattern[i]) === -1) {
-				target += pattern[i];
-			} else {
-				check += pattern[i];
-			}
-		}
-		check = new RegExp(check);
-		if (check.test(input)) {
-			input = input.replace(check, target);
-			return input;
-		}
-		return false;
-	};
 
 /*===========================================================================*/
 	function stringTitle(input) {
@@ -1046,138 +1361,6 @@ var wd = (function() {
 	};
 
 /*===========================================================================*/
-	function numberDefiner(input) {
-		/*checa se o valor de entrada é um número e retorna seu valor, caso contrário, retorna falso*/
-		var value;
-		if (typeof input === "number" || input instanceof Number) {
-			value = input;
-		} else {
-			input = String(input).trim();
-			if (/^(\+|\-)?[0-9]+(\.[0-9]+)?$/.test(input)) {
-				value = Number(input);
-			} else if (/^(\+|\-)?[0-9]+(\.[0-9]+)?e(\+|\-)?[0-9]+$/.test(input)) {
-				value = Number(input);
-			} else if (/^(\+|\-)Infinity$/.test(input)) {
-				value = Number(input);
-			} else {
-				value = null;
-			}
-		}
-		return value;
-	};
-
-	function numberInteger(input) {
-		/*Retorna o valor inteiro do número*/
-		input = numberDefiner(input);
-		return Number(String(input).replace(/\.[0-9]+/g, ""));
-	};
-
-	function numberFraction(input) {
-		/*Retorna a parte decimal do número*/
-		input = numberDefiner(input);
-		return input%1 === 0 ? 0 : Number(String(input).replace(/[0-9]+\./g, "0."));
-	};
-
-	function numberIsInteger(input) {
-		/*Verifica se o número é inteiro*/
-		input = numberDefiner(input);
-		return input%1 === 0 ? true : false;
-	};
-
-	function numberIsFloat(input) {
-		/*Verifica se o número é decimal*/
-		input = numberDefiner(input);
-		return input%1 !== 0 ? true : false;
-	};
-
-	function numberIsNatural(input) {
-		/*Verifica se o número é natural >= 0*/
-		input = numberDefiner(input);
-		return input%1 === 0 && input >= 0 ? true : false;
-	};
-
-	function numberIsNegative(input) {
-		/*Verifica se o número é maior que zero*/
-		input = numberDefiner(input);
-		return input < 0 ? true : false;
-	};
-
-	function numberIsPositive(input) {
-		/*Verifica se o número é menor que zero*/
-		input = numberDefiner(input);
-		return input > 0 ? true : false;
-	};
-
-	function numberAbs(input) {
-		/*Retorna o valor absoluto do número*/
-		input = numberDefiner(input);
-		return input < 0 ? -input : input;
-	};
-
-	function numberInverse(input) {
-		/*Retorna o inverso do número (1/x)*/
-		input = numberDefiner(input);
-		var x;
-		if (input === 0) {
-			x = Infinity;
-		} else if (input === Infinity || input === -Infinity) {
-			x = 0;
-		} else {
-			x = 1/input;
-		}
-		return x;
-	};
-
-	function numberRound(input, width) {
-		/*Arredonda o número*/
-		input = numberDefiner(input);
-		return Number(input.toFixed(width));
-	};
-
-	function numberRoundUp(input) {
-		/*Arredonda o número para cima*/
-		input = numberDefiner(input);
-		var x = input;
-		if (numberIsInteger(input)) {
-			x = input;
-		} else if (input > 0) {
-			x = numberInteger(input)+1;
-		} else {
-			x = numberInteger(input)-1;
-		}
-		return x;
-	};
-
-	function numberScientific(input, width) {
-		/*Transcreve a notação científica para html*/
-		input = numberDefiner(input);
-		return input.toExponential(width).replace(/e(.+)$/, " x 10<sup>$1</sup>").replace("+", "");
-	};
-
-	function numberLocale(input, locale) {
-		/*Retorna o número no formato local ou definido no html*/
-		input = numberDefiner(input);
-		if (locale === undefined) {locale = lang();}
-		return "toLocaleString" in Number ? input.toLocaleString(locale) : input.toString();
-	};
-
-	function numberCurrency(input, locale, currency) {
-		/*Retorna o número no formato monetário local ou defuinido no html*/
-		input = numberDefiner(input);
-		if (locale === undefined) {locale = lang();}
-		if (currency === undefined) {currency = "";}
-		var x;
-		if ("toLocaleString" in Number) {
-			try {
-				x = input.toLocaleString(locale, {style: "currency", currency: currency});
-			} catch(e) {
-				x = currency+numberLocale(input, locale);
-			}
-		} else {
-			x = input.toString();
-		}
-		return x;
-	};
 
 /*===========================================================================*/
 	function dateLeap(y) {
@@ -1295,7 +1478,7 @@ var wd = (function() {
 		input = numberDefiner(input);
 		var date, test, output, y, m, d;
 		if (type2(input) !== "number" || !numberIsInteger(input)) {
-			msg("Values must be an integer number.", "e");
+			log("Values must be an integer number.", "e");
 			output  = value;
 		} else {
 			date = dateFromNumber(value);
@@ -1323,11 +1506,11 @@ var wd = (function() {
 				output = dateToNumber(y, m, d);
 			}
 			if (output < 1) {
-				msg("Lower limit for date has been extrapolated. Limit value set.", "w");
+				log("Lower limit for date has been extrapolated. Limit value set.", "w");
 				output = 1;
 			}
 			else if (output > dateToNumber(Y_max, 12, 31)){
-				msg("Upper limit for date has been extrapolated. Limit value set.", "w");
+				log("Upper limit for date has been extrapolated. Limit value set.", "w");
 				output = dateToNumber(Y_max, 12, 31);
 			}
 		}
@@ -1364,7 +1547,7 @@ var wd = (function() {
 			names["#m"] = ref.toLocaleString(locale, {month: "short"});
 			names["#M"] = ref.toLocaleString(locale, {month: "long"});
 		} catch(e) {
-			msg("dateFormat: toLocaleString not defined.", "a");
+			log("dateFormat: toLocaleString not defined.", "a");
 		}
 		for (var i in names) {
 			string = string.replace(new RegExp(i, "g"), names[i]);
@@ -1410,11 +1593,11 @@ var wd = (function() {
 			type2(m) !== "number" || !numberIsInteger(m) ||
 			type2(s) !== "number" || !numberIsInteger(s)
 		) {
-			msg("Values must be an integer number.", "e");
+			log("Values must be an integer number.", "e");
 		} else {
 			t = 3600*numberDefiner(h) + 60*numberDefiner(m) + numberDefiner(s);
 			if (t < 0) {
-				msg("Lower limit for time has been extrapolated. Limit value set.", "w");
+				log("Lower limit for time has been extrapolated. Limit value set.", "w");
 				t = 0;
 			}
 		}
@@ -1480,7 +1663,7 @@ var wd = (function() {
 		try {return new XMLHttpRequest();} catch(e) {}
 		try {return new ActiveXObject("Msxml2.XMLHTTP");} catch(e) {}
 		try {return new ActiveXObject("Microsoft.XMLHTP");} catch(e) {}
-		msg("AJAX is not available in your browser.", "e");
+		log("AJAX is not available in your browser.", "e");
 		return null;	
 	};
 
@@ -1654,11 +1837,11 @@ var wd = (function() {
 		/*Define função para adicionar eventos*/
 		event = (/^on/i).test(event) ? event.toLowerCase() : "on"+event.toLowerCase();
 		if (type2(method) !== "f()" && method !== null) {
-			msg("The "+event+" attribute must be a function or null value.", "e");
+			log("The "+event+" attribute must be a function or null value.", "e");
 			return;
 		}
 		if (!(event in elem)) {
-			msg("The \""+event+"\" attribute was not found in "+elem.tagName+" element!", "w");
+			log("The \""+event+"\" attribute was not found in "+elem.tagName+" element!", "w");
 			return;
 		}
 		if (method === null) {
@@ -1714,7 +1897,7 @@ var wd = (function() {
 			} else if (css in elem.style) {
 				elem.style[css] = styles[i];
 			} else {
-				msg("htmlStyle: the \""+i+"\" attribute was not found in "+elem.tagName+" element!", "w");
+				log("htmlStyle: the \""+i+"\" attribute was not found in "+elem.tagName+" element!", "w");
 			}
 		}
 		return;
