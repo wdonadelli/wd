@@ -12,7 +12,13 @@ var wd = (function() {
 
 	if (!("defineProperty" in Object)) {
 		Object.defineProperty = function(source, key, obj) {
-			source[key] = obj.value;
+			if ("value" in obj) {
+				source[key] = obj.value;
+			} else if ("get" in obj) {
+				source[key] = obj.get;//FIXME ?????
+			} else if ("set" in obj) {
+				source[key] = obj.set;//FIXME ?????
+			}
 			return;
 		}
 	}
@@ -49,6 +55,43 @@ var wd = (function() {
 		}
 		return value;
 	};
+	
+	function request() {
+		/*Obtém objeto para requisições ajax*/
+		var x;
+		if ("XMLHttpRequest" in window) {
+			x = new XMLHttpRequest();
+		} else if ("ActiveXObject" in window) {
+			try {
+				x = new ActiveXObject("Msxml2.XMLHTTP");
+			} catch(e) {
+				x = new ActiveXObject("Microsoft.XMLHTP");
+			}
+		} else {
+			x = null;
+			log("AJAX is not available in your browser!", "e");
+		}
+		return x;
+	};
+	
+	function leap(y) {
+		/*Retorna verdadeiro se o y (ano) é bissexto e falso se não for*/
+		var x;
+		if (y === 0) {
+			x = false;
+		} else if (y%400 === 0) {
+			x = true;
+		} else if (y%100 === 0) {
+			x = false;
+		} else if (y%4 === 0) {
+			x = true;
+		} else {
+			x = false;
+		}
+		return x;
+	};
+
+/*=== WD OBJECT ===*/
 
 	function isUndefined(value) {
 		/*Verifica se o valor é undefined*/
@@ -77,8 +120,6 @@ var wd = (function() {
 		return x;
 	};
 
-/*=== REGEXP ===*/
-
 	function isRegExp(value) {
 		/*Verifica se o valor é uma expressão regular*/
 		var x;
@@ -96,11 +137,358 @@ var wd = (function() {
 		return x;
 	};
 
+	function isNumber(value) {
+		/*Verifica se o valor é um número*/
+		var x;
+		if (isNull(value) || isUndefined(value)) {
+			x = false;
+		} else if (typeof value === "number") {
+			x = true;
+		} else if ("Number" in window && value instanceof Number) {
+			x = true;
+		} else if ("Number" in window && value.constructor === Number) {
+			x = true;
+		} else if (!isString(value)) {
+			return false;
+		} else if (/^(\+|\-)?[0-9]+(\.[0-9]+)?$/.test(value)) {
+			x = true;
+		} else if ((/^(\+|\-)?[0-9]+(\.[0-9]+)?e(\+|\-)?[0-9]+$/i).test(value)) {
+			x = true;
+		} else if (/^(\+|\-)Infinity$/.test(value)) {
+			x = true;
+		} else {
+			x = false;
+		}
+		return x;
+	};
+
+	function isBoolean(value) {
+		/*Verifica se o valor é boleano*/
+		var x;
+		if (isNull(value) || isUndefined(value)) {
+			x = false;
+		} else if (typeof value === "boolean") {
+			x = true;
+		} else if ("Boolean" in window && value instanceof Boolean) {
+			x = true;
+		} else if ("Boolean" in window && value.constructor === Boolean) {
+			x = true;
+		} else {
+			x = false;
+		}
+		return x;
+	};
+
+	function isArray(value) {
+		/*Verifica se o valor é uma lista*/
+		var x;
+		if (isNull(value) || isUndefined(value)) {
+			x = false;
+		} else if ("Array" in window && "isArray" in Array && Array.isArray(value)) {
+			x = true;
+		} else if ("Array" in window && value instanceof Array) {
+			x = true;
+		} else if ("Array" in window && value.constructor === Array) {
+			x = true;
+		} else {
+			x = false;
+		}
+		return x;
+	};
+
+	function isFunction(value) {
+		/*Verifica se o valor é uma função*/
+		var x;
+		if (isNull(value) || isUndefined(value)) {
+			x = false;
+		} else if (typeof value === "function") {
+			x = true;
+		} else if ("Function" in window && value instanceof Function) {
+			x = true;
+		} else if ("Function" in window && value.constructor === Function) {
+			x = true;
+		} else {
+			x = false;
+		}
+		return x;
+	};
+
+	function isDOM(value) {
+		/*Verifica se o valor é um elemento(s) HTML*/
+		var x;
+		if (value === document || value === window) {
+			x = true;
+		} else if (isNull(value) || isUndefined(value)) {
+			x = false;
+		} else if ("HTMLElement" in window && value instanceof HTMLElement) {
+			x = true;
+		} else if ("HTMLElement" in window && value.constructor === HTMLElement) {
+			x = true;
+		} else if ("NodeList" in window && value instanceof NodeList) {
+			x = true;
+		} else if ("NodeList" in window && value.constructor === NodeList) {
+			x = true;
+		} else if ("HTMLCollection" in window && value instanceof HTMLCollection) {
+			x = true;
+		} else if ("HTMLCollection" in window && value.constructor === HTMLCollection) {
+			x = true;
+		} else if ("HTMLAllCollection" in window && value instanceof HTMLAllCollection) {
+			x = true;
+		} else if ("HTMLAllCollection" in window && value.constructor === HTMLAllCollection) {
+			x = true;
+		} else if ("HTMLFormControlsCollection" in window && value instanceof HTMLFormControlsCollection) {
+			x = true;
+		} else if ("HTMLFormControlsCollection" in window && value.constructor === HTMLFormControlsCollection) {
+			x = true;
+		} else {
+			x = false;
+		}
+		return x;
+	};
+
+	function isPath(value) {
+		/*Verifica se o valor é um caminho ou arquivo acessível*/
+		var x, xhttp, path;
+		xhttp = request();
+		if (!isString(value)) {
+			x = false;
+		} else if (value.trim() === "" || value.trim().split("?")[0] === "") {
+			x = false;
+		} else if (request !== null) {
+			path = value.trim().split("?")[0];
+			try {
+				xhttp.open("HEAD", path, false);
+				xhttp.send();
+				x = xhttp.status === 200 || xhttp.status === 304 ? true : false;
+			} catch(e) {
+				x = false;
+			}
+		} else {
+			x = false;
+		}
+		return x;
+	};
+	
+	function isTime(value) {
+		/*Verifica se o valor é um tempo válido*/
+		var x;
+		if (!isString(value)) {
+			x = false;
+		} else if (!isString(value)) {
+			x =  false;
+		} else if (value === "%now") {
+			x =  true;
+		} else if (/^[0-9]+(\:[0-5][0-9]){1,2}$/.test(value)) {
+			x =  true;
+		} else if ((/^(0?[1-9]|1[0-2])\:[0-5][0-9]\ ?(am|pm)$/i).test(value)) {
+			x =  true;
+		} else if ((/^(0?[0-9]|1[0-9]|2[0-3])h[0-5][0-9]$/i).test(value)) {
+			x =  true;
+		} else {
+			x =  false;
+		}
+		return x;
+	};
+
+	function isDate(value) {
+		/*Verifica se o valor é uma data válida*/
+		var x, d, m, y, array;
+		if (!isString(value)) {
+			x = false;
+		} else if ("Date" in window && value instanceof Date) {
+			x = true;
+		} else if ("Date" in window && value.constructor === Date) {
+			x = true;
+		} else if (value === "%today") {
+			x = true;
+		} else if (isString(value)) {
+			if (/^[0-9]{4}\-[0-9]{2}\-[0-9]{2}$/.test(value)) {/*YYYY-MM-DD*/
+				array = value.split("-");
+				d = Number(array[2]);
+				m = Number(array[1]);
+				y = Number(array[0]);
+			} else if (/^[0-9]{2}\/[0-9]{2}\/[0-9]{4}$/.test(value)) {/*MM/DD/YYYY*/
+				array = value.split("/");
+				d = Number(array[1]);
+				m = Number(array[0]);
+				y = Number(array[2]);
+			} else if (/^[0-9]{2}\.[0-9]{2}\.[0-9]{4}$/.test(value)) {/*DD.MM.YYYY*/
+				array = value.split(".");
+				d = Number(array[0]);
+				m = Number(array[1]);
+				y = Number(array[2]);
+			} else {
+				array = null;
+			}
+			if (array === null) {
+				x = false;
+			} else if (y > 9999 || y < 1) {
+				x = false;
+			} else if (m > 12 || m < 1) {
+				x = false;
+			} else if (d > 31 || d < 1) {
+				x = false;
+			} else if (d > 30 && [2, 4, 6, 9, 11].indexOf(m) > 0) {
+				x = false;
+			} else if (d > 29 && m == 2) {
+				x = false;
+			} else if (d == 29 && m == 2 && !leap(y)) {
+				x = false;
+			} else {
+				x = true;
+			}
+		} else {
+			x = false;
+		}
+		return x;
+	};
+
+	function isText(value) {
+		/*Verifica se o valor é um texto*/
+		var x;
+		if (!isString(value)) {
+			x = false;
+		} else if (isTime(value) || isDate(value)) {
+			x = false;
+		} else if (isNumber(value) || isPath(value)) {
+			x = false
+		} else {
+			x = true;
+		}
+		return x;
+	};
+
 /*...........................................................................*/
+
+	function WD(input) {
+	/*Objeto principal do ferramenta*/
+		if (!(this instanceof WD)) {
+			return new WD(input);
+		}
+		if (isRegExp(input)) {
+			return new WDregexp(input);
+		}
+		if (isNumber(input)) {
+			return new WDnumber(input);
+		}
+		if (isTime(input)) {
+			//return new WDtime(input);
+		}
+		if (isDate(input)) {
+			//return new WDdate(input);
+		}
+		if (isArray(input)) {
+			//return new WDarray(input);
+		}
+		if (isDOM(input)) {
+			//return new WDdom(input);
+		}
+		if (isPath(input)) {
+			//return new WDpath(input);
+		}
+		if (isText(input)) {
+			//return new WDtext(input);
+		}
+		
+		if (isNull(input)) {
+			input = null;
+		} else if (isUndefined(input)) {
+			input = undefined;
+		} else if (isBoolean(input)) {
+			input = input.valueOf();
+		}
+
+		Object.defineProperty(this, "_value", {
+			value: input
+		});
+	};
+	
+	Object.defineProperty(WD.prototype, "constructor", {
+		value: WD
+	});
+	
+	Object.defineProperty(WD.prototype, "type", {
+		enumerable: true,
+		get: function () {
+			var x, types;
+			types = {
+				"undefined": isUndefined,
+				"null": isNull,
+				"boolean": isBoolean,
+				"number": isNumber,
+				"date": isDate,
+				"time": isTime,
+				"array": isArray,
+				"regexp": isRegExp,
+				"function": isFunction,
+				"dom": isDOM,
+				"path": isPath,
+				"text": isText
+			};
+			x = null;
+			for (var i in types) {
+				if (types[i](this._value)) {
+					x = i;
+					break;
+				}
+			};
+			if (x === null && "constructor" in this._value) {
+				x = value.constructor.name.toLowerCase();
+			} else if (x === null) {
+				x = "unknown";
+			}
+			return x;
+		}
+	});
+
+	Object.defineProperty(WD.prototype, "keys", {
+		enumerable: true,
+		get: function () {
+			var x = []
+			for (var i in this) {
+				x.push(i);
+			}
+			return x;
+		}
+	});
+
+	Object.defineProperty(WD.prototype, "valueOf", {
+		value: function () {
+			var x;
+			if (isBoolean(this._value)) {
+				x = this._value.valueOf() === true ? 1 : 0;
+			} else if (isNull(this._value) || isUndefined(this._value)) {
+				x = -0;
+			} else {
+				x = this._value.valueOf();
+			}
+			return x;
+		}
+	});
+
+	Object.defineProperty(WD.prototype, "toString", {
+		value: function () {
+			var x;
+			if (isBoolean(this._value)) {
+				x = this._value.valueOf() === true ? "True" : "False";
+			} else if (isNull(this._value)) {
+				x = "Ø"
+			} else if (isUndefined(this._value)) {
+				x = "?";
+			} else {
+				x = this._value.toString();
+			}
+			return x;
+		}
+	});
+
+/*=== REGEXP ===*/
+
 	function WDregexp(input) {
 		if (!(this instanceof WDregexp)) {
 			return new WDregexp(input);
 		}
+
 		if (!isRegExp(input)) {
 			return new WD(input);
 		}
@@ -187,32 +575,6 @@ var wd = (function() {
 
 /*=== NUMBER ===*/
 
-	function isNumber(value) {
-		/*Verifica se o valor é um número*/
-		var x;
-		if (isNull(value) || isUndefined(value)) {
-			x = false;
-		} else if (typeof value === "number") {
-			x = true;
-		} else if ("Number" in window && value instanceof Number) {
-			x = true;
-		} else if ("Number" in window && value.constructor === Number) {
-			x = true;
-		} else if (!isString(value)) {
-			return false;
-		} else if (/^(\+|\-)?[0-9]+(\.[0-9]+)?$/.test(value)) {
-			x = true;
-		} else if ((/^(\+|\-)?[0-9]+(\.[0-9]+)?e(\+|\-)?[0-9]+$/i).test(value)) {
-			x = true;
-		} else if (/^(\+|\-)Infinity$/.test(value)) {
-			x = true;
-		} else {
-			x = false;
-		}
-		return x;
-	};
-
-/*...........................................................................*/
 	function WDnumber(input) {
 		if (!(this instanceof WDnumber)) {
 			return new WDnumber(input);
@@ -401,11 +763,19 @@ var wd = (function() {
 			return x;
 		}
 	});
+	
+	
+	//FIXME WD.prototype.type (getter) não tá copiando o caminho (arrumar a gambiarra do ie8 para capturar prorpiedades
+	console.log(WD.prototype);
 
 	Object.defineProperties(WDnumber.prototype, {
 		type: {
 			enumerable: true,
-			value: "number"
+			get: WD.prototype.type
+		},
+		keys: {
+			enumerable: true,
+			//value: WD.prototype.showMe
 		},
 		toString: {
 			value: function() {
@@ -415,12 +785,6 @@ var wd = (function() {
 		valueOf: {
 			value: function() {
 				return this._value.valueOf();
-			}
-		},
-		showMe: {
-			enumerable: true,
-			get: function() {
-				return showMe(this);
 			}
 		}
 	});
@@ -520,22 +884,7 @@ var wd = (function() {
 		return;
 	};
 /*===========================================================================*/
-	function WD(input) {
-		if (!(this instanceof WD)) {
-			return new WD(input);
-		}
-		Object.defineProperties(this, {
-			_value: {value: input}
-		});
-	};
 
-	Object.defineProperties(WD.prototype, {
-		constructor: {value: WD},
-		valueOf:  {value: function() {return this._value.valueOf();}},
-		toString: {value: function() {return this._value.toString();}},
-		toSource: {value: function() {return this._value;}},
-		type:     {enumerable: true, get: function() {return type(this._value);}}
-	});
 /*---------------------------------------------------------------------------*/
 	function WDtext(input) {
 		if (!(this instanceof WDtext)) {return new WDtext(input);}
@@ -588,7 +937,7 @@ var wd = (function() {
 			set: function(input) {this._d = dateSet(this._d, input, "y"); return;}
 		},
 		week:      {enumerable: true, get: function() {return dateWeek(this._d);}},
-		leap:      {enumerable: true, get: function() {return dateLeap(this.year);}},
+		leap:      {enumerable: true, get: function() {return leap(this.year);}},
 		days:      {enumerable: true, get: function() {return dateDayYear(this.year, this.month, this.day);}},
 		width:     {enumerable: true, get: function() {return dateLenghtMonth(this.year, this.month);}},
 		weeks:     {enumerable: true, get: function() {return dateWeeks(this.year, this.days);}},
@@ -1004,150 +1353,7 @@ var wd = (function() {
 
 	
 	
-	function isBoolean(value) {
-		/*Verifica se o valor é boleano*/
-		return typeof value === "boolean" || value instanceof Boolean ? true : false;
-	};
-
-
-
-	function isArray(value) {
-		/*Verifica se o valor é uma lista*/
-		return ("isArray" in Array && Array.isArray(value)) || value instanceof Array ? true : false;
-	};
-
-
-
-	function isFunction(value) {
-		/*Verifica se o valor é uma função*/
-		return typeof value === "function" || value instanceof Function ? true : false;
-	};
-
-	function isDOM(value) {
-		/*Verifica se o valor é um elemento(s) HTML*/
-		if (value instanceof HTMLElement) {
-			return true;
-		} else if (value instanceof NodeList) {
-			return true;
-		} else if (value instanceof HTMLCollection) {
-			return true;
-		} else if (value instanceof HTMLAllCollection) {
-			return true;
-		} else if (value instanceof HTMLFormControlsCollection) {
-			return true;
-		} else if (value === document) {
-			return true;
-		} else if (value === window) {
-			return true;
-		}
-		return false;
-	};
-
-	function isPath(value) {
-		/*Verifica se o valor é um caminho ou arquivo acessível*/
-		return isString(value) && ajaxFileExists(value) ? true : false;
-	};
 	
-	function isTime(value) {
-		/*Verifica se o valor é um tempo válido*/
-		if (!isString(value)) {
-			return false;
-		} else if (value === "%now") {
-			return true;
-		} else if (/^[0-9]+(\:[0-5][0-9]){1,2}$/.test(value)) {
-			return true;
-		} else if ((/^(0?[1-9]|1[0-2])\:[0-5][0-9]\ ?(am|pm)$/i).test(value)) {
-			return true;
-		} else if ((/^([01][0-9]|2[0-3])h[0-5][0-9]$/i).test(value)) {
-			return true;
-		}
-		return false;
-	};
-
-	function isDate(value) {
-		/*Verifica se o valor é uma data válida*/
-		var d, m, y, test;
-		if (value instanceof Date) {
-			return true;
-		} else if (!isString(value)) {
-			return false;
-		} else if (value === "%today") {
-			return true;
-		}
-		if (/^[0-9]{4}\-[0-9]{2}\-[0-9]{2}$/.test(value)) {/*YYYY-MM-DD*/
-			test = value.split("-");
-			d = Number(test[2]);
-			m = Number(test[1]);
-			y = Number(test[0]);
-		} else if (/^[0-9]{2}\/[0-9]{2}\/[0-9]{4}$/.test(value)) {/*MM/DD/YYYY*/
-			test = value.split("/");
-			d = Number(test[1]);
-			m = Number(test[0]);
-			y = Number(test[2]);
-		} else if (/^[0-9]{2}\.[0-9]{2}\.[0-9]{4}$/.test(value)) {/*DD.MM.YYYY*/
-			test = value.split(".");
-			d = Number(test[0]);
-			m = Number(test[1]);
-			y = Number(test[2]);
-		} else {
-			return false;
-		}
-		if (y > 9999 || y < 1) {
-			return false;
-		} else if (m > 12 || m < 1) {
-			return false;
-		} else if (d > 31 || d < 1) {
-			return false;
-		} else if (d > 30 && [2, 4, 6, 9, 11].indexOf(m) > 0) {
-			return false;
-		} else if (d > 29 && m == 2) {
-			return false;
-		} else if (d == 29 && m == 2 && !dateLeap(y)) {
-			return false;
-		} else {
-			return true;
-		}
-		return false;
-	};
-
-	function isText(value) {
-		/*Verifica se o valor é um texto*/
-		if (!isString(value)) {
-			return false;
-		} else if (!isNull(value) && !isPath(value) && !isDate(value) && !isTime(value)) {
-			return true;
-		}
-		return false;
-	};
-
-	function type(value, ajax) {
-		var types = {
-			"undefined": isUndefined,
-			"null": isNull,
-			"boolean": isBoolean,
-			"number": isNumber,
-			"date": isDate,
-			"time": isTime,
-			"array": isArray,
-			"regexp": isRegExp,
-			"function": isFunction,
-			"dom": isDOM,
-			"path": isPath,
-			"text": isText
-		};
-		for (var i in types) {
-			if (types[i](value)) {
-				return i;
-			}
-		};
-		return "constructor" in value ? value.constructor.name.toLowerCase() : "unknown";
-	};
-	
-	
-	//FIXME
-	function copy(value, type) {
-	
-	};
 	
 	
 	
@@ -1363,22 +1569,7 @@ var wd = (function() {
 /*===========================================================================*/
 
 /*===========================================================================*/
-	function dateLeap(y) {
-		/*Retorna verdadeiro se o y (ano) é bissexto e falso se não for*/
-		var x = false;
-		if (y === 0) {
-			x = false;
-		} else if (y%400 === 0) {
-			x = true;
-		} else if (y%100 === 0) {
-			x = false;
-		} else if (y%4 === 0) {
-			x = true;
-		} else {
-			x = false;
-		}
-		return x;
-	};
+	
 
 	function dateWeek(n) {
 		/*Retorna o dia da semana(1 - domingo, 7 - sábado)*/
@@ -1395,18 +1586,18 @@ var wd = (function() {
 
 	function dateDayYear(y, m, d) {
 		/*Retorna o da do ano*/
-		var n = dateLeap(y) ? 1 : 0;
+		var n = leap(y) ? 1 : 0;
 		return [0, 31, 59+n, 90+n, 120+n, 151+n, 181+n, 212+n, 243+n, 273+n, 304+n, 334+n][m-1]+d;
 	};
 	
 	function dateCountdown(y, m, d) {
 		/*Contagem regressiva para o fim do ano*/
-		return (dateLeap(y) ? 366 : 365) - dateDayYear(y, m, d);
+		return (leap(y) ? 366 : 365) - dateDayYear(y, m, d);
 	};
 
 	function dateLenghtMonth(y, m) {
 		/*Retorna a quantidade de dias do mês*/
-		var n = dateLeap(y) ? 1 : 0;
+		var n = leap(y) ? 1 : 0;
 		return [31, 28+n, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][m-1];
 	};
 	
@@ -1538,7 +1729,7 @@ var wd = (function() {
 			"%w": dateWeek(value), "@w": dateWeeks(date.y, dateDayYear(date.y, date.m, date.d)),
 			"#w": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][dateWeek(value) - 1],
 			"#W": ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][dateWeek(value) - 1],
-			"%l": dateLeap(date.y) ? 366 : 365, "%c": dateCountdown(date.y, date.m, date.d)
+			"%l": leap(date.y) ? 366 : 365, "%c": dateCountdown(date.y, date.m, date.d)
 		}
 		try {
 			ref.toLocaleString(locale);
@@ -1658,27 +1849,8 @@ var wd = (function() {
 	};
 
 /*===========================================================================*/
-	function ajaxGetRequest() {
-		/*Obtém objeto para requisições ajax*/
-		try {return new XMLHttpRequest();} catch(e) {}
-		try {return new ActiveXObject("Msxml2.XMLHTTP");} catch(e) {}
-		try {return new ActiveXObject("Microsoft.XMLHTP");} catch(e) {}
-		log("AJAX is not available in your browser.", "e");
-		return null;	
-	};
 
-	function ajaxFileExists(input) {
-		/*Verifica se input é um caminho ou arquivo acessível*/
-		var xhttp = ajaxGetRequest();
-		if (xhttp === null) {return false;}
-		try {
-			xhttp.open("HEAD", ajaxPath(input).action, false);
-			xhttp.send();
-			return xhttp.status === 200 || xhttp.status === 304 ? true : false;
-		} catch(e) {
-			return false;
-		}
-	};
+	
 
 	function ajaxResponse(response, error) {
 		/*Retorna objeto contendo os métodos com as informações da requisição*/
@@ -1706,7 +1878,7 @@ var wd = (function() {
 		var argument = {error: true, request: null, text: null, xml: null, json: null};
 		try {
 			var path, request;
-			request = ajaxGetRequest()
+			request = request()
 			path    = ajaxPath(path);
 			if (type2(time) === "number") {request.timeout = 1000*numberDefiner(time);}
 			request.onreadystatechange = function(ev) {
@@ -2157,7 +2329,8 @@ var wd = (function() {
 		return list;
 	};
 /*===========================================================================*/
-	return wd;
+	//return wd;
+	return WD
 }());
 
 
