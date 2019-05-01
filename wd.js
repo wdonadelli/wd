@@ -4,38 +4,10 @@
 
 var wd = (function() {
 
-/*=== ADJUSTMENT PROCEDURES ===*/
+/* === FUNÇÕES GENÉRICAS === */
 
-	if (!("Object" in window)) {
-		window.Object = function() {};
-	}
-
-	if (!("defineProperty" in Object)) {
-		Object.defineProperty = function(source, key, obj) {
-			if ("value" in obj) {
-				source[key] = obj.value;
-			} else if ("get" in obj) {
-				source[key] = obj.get;//FIXME ?????
-			} else if ("set" in obj) {
-				source[key] = obj.set;//FIXME ?????
-			}
-			return;
-		}
-	}
-
-	if (!("defineProperties" in Object)) {
-		Object.defineProperty = function(source, obj) {
-			for (var key in obj) {
-				Object.defineProperty(source, key, obj[key]);
-			}
-			return;
-		}
-	}
-
-/*=== NON-SPECIFIC FUNCTIONS ===*/
-
+	/*Imprime mensagem no console*/
 	function log(msg, type) {
-		/*Imprime mensagem no console*/
 		var types = {e: "error", w: "warn", i: "info", l: "log"};
 		if (types[type] in console) {
 			console[types[type]](msg);
@@ -45,8 +17,8 @@ var wd = (function() {
 		return;
 	};
 
+	/*Retorna a linguagem do documento, a definida ou a do navegador*/
 	function lang() {
-		/*Retorna a linguagem do documento, a definida ou a do navegador*/
 		var value, attr;
 		attr = document.body.parentElement.attributes;
 		value = "lang" in attr ? attr.lang.value.replace(/\ /g, "") : "";
@@ -56,8 +28,8 @@ var wd = (function() {
 		return value;
 	};
 	
+	/*Obtém objeto para requisições ajax*/
 	function request() {
-		/*Obtém objeto para requisições ajax*/
 		var x;
 		if ("XMLHttpRequest" in window) {
 			x = new XMLHttpRequest();
@@ -74,8 +46,9 @@ var wd = (function() {
 		return x;
 	};
 	
+	/*Retorna verdadeiro se o y (ano) é bissexto e falso se não for*/
 	function leap(y) {
-		/*Retorna verdadeiro se o y (ano) é bissexto e falso se não for*/
+
 		var x;
 		if (y === 0) {
 			x = false;
@@ -91,20 +64,20 @@ var wd = (function() {
 		return x;
 	};
 
-/*=== WD OBJECT ===*/
+/*=== WD ===*/
 
+	/*Verifica se o valor é undefined*/
 	function isUndefined(value) {
-		/*Verifica se o valor é undefined*/
 		return value === undefined ? true : false;
 	};
 
+	/*Verifica se o valor é nulo*/
 	function isNull(value) {
-		/*Verifica se o valor é nulo*/
 		return value === null ? true : false;
 	};
 
+	/*Verifica se o valor é uma string genérica*/
 	function isString(value) {
-		/*Verifica se o valor é uma string genérica*/
 		var x;
 		if (isNull(value) || isUndefined(value)) {
 			x = false;
@@ -120,8 +93,8 @@ var wd = (function() {
 		return x;
 	};
 
+	/*Verifica se o valor é uma expressão regular*/
 	function isRegExp(value) {
-		/*Verifica se o valor é uma expressão regular*/
 		var x;
 		if (isNull(value) || isUndefined(value)) {
 			x = false;
@@ -137,8 +110,8 @@ var wd = (function() {
 		return x;
 	};
 
+	/*Verifica se o valor é um número*/
 	function isNumber(value) {
-		/*Verifica se o valor é um número*/
 		var x;
 		if (isNull(value) || isUndefined(value)) {
 			x = false;
@@ -150,11 +123,11 @@ var wd = (function() {
 			x = true;
 		} else if (!isString(value)) {
 			return false;
-		} else if (/^(\+|\-)?[0-9]+(\.[0-9]+)?$/.test(value)) {
+		} else if (/^(\+|\-)?[0-9]+(\.[0-9]+)?$/.test(value.trim())) {
 			x = true;
-		} else if ((/^(\+|\-)?[0-9]+(\.[0-9]+)?e(\+|\-)?[0-9]+$/i).test(value)) {
+		} else if ((/^(\+|\-)?[0-9]+(\.[0-9]+)?e(\+|\-)?[0-9]+$/i).test(value.trim())) {
 			x = true;
-		} else if (/^(\+|\-)Infinity$/.test(value)) {
+		} else if (/^(\+|\-)Infinity$/.test(value.trim())) {
 			x = true;
 		} else {
 			x = false;
@@ -162,8 +135,8 @@ var wd = (function() {
 		return x;
 	};
 
+	/*Verifica se o valor é boleano*/
 	function isBoolean(value) {
-		/*Verifica se o valor é boleano*/
 		var x;
 		if (isNull(value) || isUndefined(value)) {
 			x = false;
@@ -179,8 +152,8 @@ var wd = (function() {
 		return x;
 	};
 
+	/*Verifica se o valor é uma lista*/
 	function isArray(value) {
-		/*Verifica se o valor é uma lista*/
 		var x;
 		if (isNull(value) || isUndefined(value)) {
 			x = false;
@@ -196,8 +169,8 @@ var wd = (function() {
 		return x;
 	};
 
+	/*Verifica se o valor é uma função*/
 	function isFunction(value) {
-		/*Verifica se o valor é uma função*/
 		var x;
 		if (isNull(value) || isUndefined(value)) {
 			x = false;
@@ -213,8 +186,8 @@ var wd = (function() {
 		return x;
 	};
 
+	/*Verifica se o valor é um elemento(s) HTML*/
 	function isDOM(value) {
-		/*Verifica se o valor é um elemento(s) HTML*/
 		var x;
 		if (value === document || value === window) {
 			x = true;
@@ -246,8 +219,8 @@ var wd = (function() {
 		return x;
 	};
 
+	/*Verifica se o valor é um caminho ou arquivo acessível*/
 	function isPath(value) {
-		/*Verifica se o valor é um caminho ou arquivo acessível*/
 		var x, xhttp, path;
 		xhttp = request();
 		if (!isString(value)) {
@@ -269,20 +242,18 @@ var wd = (function() {
 		return x;
 	};
 	
+	/*Verifica se o valor é um tempo válido*/
 	function isTime(value) {
-		/*Verifica se o valor é um tempo válido*/
 		var x;
 		if (!isString(value)) {
 			x = false;
-		} else if (!isString(value)) {
-			x =  false;
-		} else if (value === "%now") {
+		} else if (value.trim() === "%now") {
 			x =  true;
-		} else if (/^[0-9]+(\:[0-5][0-9]){1,2}$/.test(value)) {
+		} else if (/^[0-9]+(\:[0-5][0-9]){1,2}$/.test(value.trim())) {
 			x =  true;
-		} else if ((/^(0?[1-9]|1[0-2])\:[0-5][0-9]\ ?(am|pm)$/i).test(value)) {
+		} else if ((/^(0?[1-9]|1[0-2])\:[0-5][0-9]\ ?(am|pm)$/i).test(value.trim())) {
 			x =  true;
-		} else if ((/^(0?[0-9]|1[0-9]|2[0-3])h[0-5][0-9]$/i).test(value)) {
+		} else if ((/^(0?[0-9]|1[0-9]|2[0-3])h[0-5][0-9]$/i).test(value.trim())) {
 			x =  true;
 		} else {
 			x =  false;
@@ -290,30 +261,32 @@ var wd = (function() {
 		return x;
 	};
 
+	/*Verifica se o valor é uma data válida*/
 	function isDate(value) {
-		/*Verifica se o valor é uma data válida*/
 		var x, d, m, y, array;
-		if (!isString(value)) {
+		if (isNull(value) || isUndefined(value)) {
 			x = false;
 		} else if ("Date" in window && value instanceof Date) {
 			x = true;
 		} else if ("Date" in window && value.constructor === Date) {
 			x = true;
-		} else if (value === "%today") {
+		} else if (!isString(value)) {
+			x = false;
+		} else if (value.trim() === "%today") {
 			x = true;
 		} else if (isString(value)) {
-			if (/^[0-9]{4}\-[0-9]{2}\-[0-9]{2}$/.test(value)) {/*YYYY-MM-DD*/
-				array = value.split("-");
+			if (/^[0-9]{4}\-[0-9]{2}\-[0-9]{2}$/.test(value.trim())) {/*YYYY-MM-DD*/
+				array = value.trim().split("-");
 				d = Number(array[2]);
 				m = Number(array[1]);
 				y = Number(array[0]);
-			} else if (/^[0-9]{2}\/[0-9]{2}\/[0-9]{4}$/.test(value)) {/*MM/DD/YYYY*/
-				array = value.split("/");
+			} else if (/^[0-9]{2}\/[0-9]{2}\/[0-9]{4}$/.test(value.trim())) {/*MM/DD/YYYY*/
+				array = value.trim().split("/");
 				d = Number(array[1]);
 				m = Number(array[0]);
 				y = Number(array[2]);
-			} else if (/^[0-9]{2}\.[0-9]{2}\.[0-9]{4}$/.test(value)) {/*DD.MM.YYYY*/
-				array = value.split(".");
+			} else if (/^[0-9]{2}\.[0-9]{2}\.[0-9]{4}$/.test(value.trim())) {/*DD.MM.YYYY*/
+				array = value.trim().split(".");
 				d = Number(array[0]);
 				m = Number(array[1]);
 				y = Number(array[2]);
@@ -343,8 +316,8 @@ var wd = (function() {
 		return x;
 	};
 
+	/*Verifica se o valor é um texto*/
 	function isText(value) {
-		/*Verifica se o valor é um texto*/
 		var x;
 		if (!isString(value)) {
 			x = false;
@@ -361,7 +334,6 @@ var wd = (function() {
 /*...........................................................................*/
 
 	function WD(input) {
-	/*Objeto principal do ferramenta*/
 		if (!(this instanceof WD)) {
 			return new WD(input);
 		}
@@ -372,7 +344,7 @@ var wd = (function() {
 			return new WDnumber(input);
 		}
 		if (isTime(input)) {
-			//return new WDtime(input);
+			return new WDtime(input);
 		}
 		if (isDate(input)) {
 			//return new WDdate(input);
@@ -407,6 +379,7 @@ var wd = (function() {
 		value: WD
 	});
 	
+	/*Retorna o tipo do argumento informado*/
 	Object.defineProperty(WD.prototype, "type", {
 		enumerable: true,
 		get: function () {
@@ -441,6 +414,7 @@ var wd = (function() {
 		}
 	});
 
+	/*Exibe os métodos e atributos enumeráveis do objeto*/
 	Object.defineProperty(WD.prototype, "keys", {
 		enumerable: true,
 		get: function () {
@@ -452,6 +426,22 @@ var wd = (function() {
 		}
 	});
 
+
+	/*Verifica se o tipo do _value é uns dos informados no argumento*/
+	Object.defineProperty(WD.prototype, "allowed", {
+		value: function () {
+			var x = false;
+			for (var i = 0; i < arguments.length; i++) {
+				if (this.type == arguments[i]) {
+					x = true;
+					break;
+				}
+			}
+			return x;
+		}
+	});
+
+	/*retorna o método valueOf*/
 	Object.defineProperty(WD.prototype, "valueOf", {
 		value: function () {
 			var x;
@@ -466,6 +456,7 @@ var wd = (function() {
 		}
 	});
 
+	/*retorna o método toString*/
 	Object.defineProperty(WD.prototype, "toString", {
 		value: function () {
 			var x;
@@ -482,7 +473,7 @@ var wd = (function() {
 		}
 	});
 
-/*=== REGEXP ===*/
+/* === REGEXP === */
 
 	function WDregexp(input) {
 		if (!(this instanceof WDregexp)) {
@@ -497,14 +488,16 @@ var wd = (function() {
 		});
 	};
 
-	Object.defineProperty(WDregexp.prototype, "constructor", {
-		value: WDregexp
+	WDregexp.prototype = Object.create(WD.prototype, {
+		constructor: {
+			value: WDregexp
+		}
 	});
-	
+
+	/*Aplica máscara ao valor de entrada se casar com a re*/
 	Object.defineProperty(WDregexp.prototype, "mask", {
 		enumerable: true,
 		value: function (input) {
-			/*Aplica áscara ao valor de entrada se casar com a re*/
 			var pattern, check, target, group, close;
 			var metaReference, metacharacter, expression;
 			input = String(input).toString();
@@ -549,31 +542,17 @@ var wd = (function() {
 			return false;
 		}
 	});
-		
+
+	/*Retorna o método toString*/
 	Object.defineProperties(WDregexp.prototype, {
-		type: {
-			enumerable: true,
-			value: "regexp"
-		},
 		toString: {
 			value: function() {
-				return this._value.toString();
-			}
-		},
-		valueOf: {
-			value: function() {
-				return this._value.valueOf();
-			}
-		},
-		showMe: {
-			enumerable: true,
-			get: function() {
-				return showMe(this);
+				return this._value.source;
 			}
 		}
 	});
 
-/*=== NUMBER ===*/
+/* === NUMBER === */
 
 	function WDnumber(input) {
 		if (!(this instanceof WDnumber)) {
@@ -583,21 +562,23 @@ var wd = (function() {
 			return new WD(input);
 		}
 		Object.defineProperty(this, "_value", {
-			value: isString(input) ? Number(input).valueOf() : input.valueOf()
+			value: isString(input) ? Number(input.trim()).valueOf() : input.valueOf()
 		});
 	};
 	
-	Object.defineProperty(WDnumber.prototype, "constructor", {
-		value: WDnumber
+	WDnumber.prototype = Object.create(WD.prototype, {
+		constructor: {
+			value: WDnumber
+		}
 	});
 
+	/*Retorna o tipo do número*/
 	Object.defineProperty(WDnumber.prototype, "number", {
 		enumerable: true,
 		get: function() {
-			/*Retorna o tipo do número*/
 			var x;
 			if (this._value === Infinity || this._value === -Infinity) {
-				x = "rational";
+				x = "real";
 			} else if (this._value % 1 !== 0) {
 				x = "rational";
 			} else if (this._value % 1 === 0 && this._value <= 0) {
@@ -611,10 +592,10 @@ var wd = (function() {
 		}
 	});
 
+	/*Retorna se o número é positivo (1), negativo (-1) ou nulo (0)*/
 	Object.defineProperty(WDnumber.prototype, "signal", {
 		enumerable: true,
 		get: function() {
-			/*Retorna se o número é positivo (1), negativo (-1) ou nulo (0)*/
 			var x;
 			if (this._value === 0) {
 				x = 0;
@@ -629,10 +610,10 @@ var wd = (function() {
 		}
 	});
 
+	/*Retorna o valor inteiro do número*/
 	Object.defineProperty(WDnumber.prototype, "integer", {
 		enumerable: true,
 		get: function() {
-			/*Retorna o valor inteiro do número*/
 			var x;
 			if (this._value === Infinity || this._value === -Infinity) {
 				x = this._value;
@@ -643,32 +624,34 @@ var wd = (function() {
 		}
 	});
 
+	/*Retorna o valor inteiro do número*/
 	Object.defineProperty(WDnumber.prototype, "fraction", {
 		enumerable: true,
 		get: function() {
-			/*Retorna o valor inteiro do número*/
 			var x;
 			if (this._value === Infinity || this._value === -Infinity) {
 				x = this._value;
+			} else if (this._value % 1 !== 0) {
+				x = Number(this.toString().replace(/.*\./, "0.")).valueOf();
 			} else {
-				x = this._value % 1;
+				x = 0;
 			}
 			return x;
 		}
 	});
 
+	/*Retorna o valor absoluto do número*/
 	Object.defineProperty(WDnumber.prototype, "abs", {
 		enumerable: true,
 		get: function() {
-			/*Retorna o valor absoluto do número*/
 			return this._value < 0 ? -this._value : this._value;
 		}
 	});
 
+	/*Retorna o inverso do número (1/x)*/
 	Object.defineProperty(WDnumber.prototype, "inverse", {
 		enumerable: true,
 		get: function() {
-			/*Retorna o inverso do número (1/x)*/
 			var x;
 			if (this._value === 0) {
 				x = Infinity;
@@ -681,10 +664,10 @@ var wd = (function() {
 		}
 	});
 
+	/*Arredonda o número para cima*/
 	Object.defineProperty(WDnumber.prototype, "up", {
 		enumerable: true,
 		get: function() {
-			/*Arredonda o número para cima*/
 			if (this.fraction === 0) {
 				x = this._value;
 			} else if (this._value > 0) {
@@ -696,124 +679,290 @@ var wd = (function() {
 		}
 	});
 
+	/*Arredonda o valor informado para determinado número de casas*/
 	Object.defineProperty(WDnumber.prototype, "round", {
 		enumerable: true,
 		value: function(width) {
-			/*Arredonda o número para determinado número de casas*/
 			var x;
-			try {
-			 	x = Number(this._value.toFixed(width)).valueOf();
-			} catch(e) {
-				log("The argument must be number greater than zero of small value.", "e");
-				x = this.toString();
+			width = new WD(width);
+			if (width.number === "natural") {
+				try {
+				 	x = Number(this._value.toFixed(width.valueOf())).valueOf();
+				} catch(e) {
+					x = this.valueOf();
+					log(e.toString(), "w");
+				}
+			} else {
+				x = this.valueOf();
 			}
 			return x;
 		}
 	});
 
+	/*Transcreve a notação científica para html*/
 	Object.defineProperty(WDnumber.prototype, "scientific", {
 		enumerable: true,
 		value: function(width) {
-			/*Transcreve a notação científica para html*/
 			var x;
 			try {
 				x = this._value.toExponential(width);
-				x = x.replace(/e(.+)$/, " x 10<sup>$1</sup>").replace(/\+/g, "");
 			} catch(e) {
-				log("The argument must be number greater than zero of small value.", "e");
-				x = this.toString();
+				x = this._value.toExponential();
+				log(e.toString(), "w");
 			}
+			x = x.replace(/e(.+)$/, " &times; 10<sup>$1</sup>").replace(/\+/g, "");
 			return x;
 		}
 	});
 
+	/*Retorna o número no formato local ou definido no html*/
 	Object.defineProperty(WDnumber.prototype, "locale", {
 		enumerable: true,
 		value: function(locale) {
-			/*Retorna o número no formato local ou definido no html*/
 			var x;
 			if (locale === undefined) {
 				locale = lang();
 			}
-			x = "toLocaleString" in Number ? this._value.toLocaleString(locale) : this._value.toString();
+			try {
+				x = this._value.toLocaleString(locale);
+			} catch(e) {
+				x = this._value.toString();
+				log(e.toString(), "w");
+			}
 			return x;
 		}
 	});
 
+	/*Retorna o número no formato monetário local ou defuinido no html*/
 	Object.defineProperty(WDnumber.prototype, "currency", {
 		enumerable: true,
-		value: function(locale, currency) {
-			/*Retorna o número no formato monetário local ou defuinido no html*/
+		value: function(currency, locale) {
+			var x;
 			if (locale === undefined)   {
 				locale = lang();
 			}
 			if (currency === undefined) {
-				currency = "";
+				currency = "¤";
 			}
-			var x;
-			if ("toLocaleString" in Number) {
-				try {
-					x = input.toLocaleString(locale, {style: "currency", currency: currency});
-				} catch(e) {
-					x = currency+numberLocale(input, locale);
-				}
-			} else {
-				x = input.toString();
+			try {
+				x = this._value.toLocaleString(locale, {style: "currency", currency: currency});
+			} catch(e) {
+				x = currency+this.locale();
+				log(e.toString(), "w");
 			}
 			return x;
 		}
 	});
 	
-	
-	//FIXME WD.prototype.type (getter) não tá copiando o caminho (arrumar a gambiarra do ie8 para capturar prorpiedades
-	console.log(WD.prototype);
+	/*Fixa a quantidade de caracteres na parte inteira do número*/
+	Object.defineProperty(WDnumber.prototype, "fixed", {
+		enumerable: true,
+		value: function(int, frac, sign) {
+			if (new WD(sign).type !== "boolean") {
+				sign = true;
+			}
+			var s, x, y, z;
+			if (this.number === "real") {
+				z = this.toString();
+			} else {
+				s = sign ? (this.signal < 0 ? "-" : "+") : "";
+				x = String(this.integer).replace(/[^0-9]/, "").split("");
+				int  = new WD(int);
+				if (int.number === "natural") {
+					while(x.length < int.valueOf()) {
+						x.unshift(0);
+					}
+				}
+				y = new WD(this.round(frac)).fraction;
+				y = y === 0 ? [] : String(y).split(".")[1].split("");
+				frac = new WD(frac);
+				if (frac.number === "natural") {
+					while(y.length < frac.valueOf()) {
+						y.push(0);
+					}
+				}
+				x =  x.join("");
+				y =  y.length === 0 ? "" : "."+y.join("");
+				z = s+x+y
+			}
+			return z;			
+		}
+	});
 
-	Object.defineProperties(WDnumber.prototype, {
+/* === TIME === */
+
+	function WDtime(input) {
+		if (!(this instanceof WDtime)) {
+			return new WDtime(input);
+		}
+		if (!isTime(input)) {
+			return new WD(input);
+		}
+		var time, x;
+		input = input.replace(/\ /g, "").replace(/h/i, ":").toUpperCase();
+		if (x === "%now") {
+			x    = new Date();
+			time = [x.getHours(), x.getMinutes(), x.getSeconds()];
+		} else if ((/AM$/).test(input)) {
+			x     = input.replace("AM", "").split(":");
+			time  = [Number(x[0]).valueOf(), Number(x[1]).valueOf(), 0];
+		} else if ((/PM$/).test(input)) {
+			x     = input.replace("PM", "").split(":");
+			time  = [x[0] === "12" ? 0 : 12 + Number(x[0]).valueOf(), Number(x[1]).valueOf(), 0];
+		} else if (/^[0-9]+(\:[0-5][0-9]){1,2}$/.test(input)) {
+			x     = input.split(":");
+			time  = [Number(x[0]).valueOf(), Number(x[1]).valueOf(), x[2] === undefined ? 0 : Number(x[2]).valueOf()];
+		} else throw Error("An unexpected error occurred while setting time!");
+
+
+		Object.defineProperty(this, "_value", {
+			writable: true,
+			value: 3600*time[0]+60*time[1]+time[2]
+		});
+	};
+
+	WDtime.prototype = Object.create(WD.prototype, {
+		constructor: {
+			value: WDtime
+		},
 		type: {
 			enumerable: true,
-			get: WD.prototype.type
+			value: "time"
+		}
+	});
+
+	/*Define e obtem o valor da hora*/
+	Object.defineProperty(WDtime.prototype, "hour", {
+		enumerable: true,
+		get: function() {
+			var h = new WD(this._value/3600);
+			return h.integer;
 		},
-		keys: {
+		set: function(h) {
+			var time;
+			h = new WD(h);
+			if (h.number === "rational" || h.number === "real" || h.signal < 0) {
+				log("The value must be a positive integer.", "w");
+			} else {
+				this._value = 3600*h.valueOf() + 60*this.minute + this.second;
+			}
+			return h.valueOf();
+		}
+	});
+
+	/*Define e obtem o valor do minuto*/
+	Object.defineProperty(WDtime.prototype, "minute", {
+		enumerable: true,
+		get: function() {
+			var m = this._value - 3600*this.hour;
+			m = new WD(m/60);
+			return m.integer;
+		},
+		set: function(m) {
+			var time;
+			m = new WD(m);
+			if (m.number === "rational" || m.number === "real") {
+				log("The value must be an integer.", "w");
+			} else if (m.valueOf() > 59 || m.valueOf() < 0) {
+				time = 60*(m.valueOf() - this.minute);
+				if (this._value + time < 0) {
+					log("Lower limit for time has been extrapolated. Limit value set.", "w");
+					this._value = 0;
+				} else {
+					this._value += time;
+				}
+			} else {
+				this._value = 3600*this.hour + 60*m.valueOf() + this.second;
+			}
+			return m.valueOf();
+		}
+	});
+
+	/*Define e obtem o valor do segundo*/
+	Object.defineProperty(WDtime.prototype, "second", {
+		enumerable: true,
+		get: function() {
+			var s = this._value - 3600*this.hour - 60*this.minute;
+			return s;
+		},
+		set: function(s) {
+			var time;
+			s = new WD(s);
+			if (s.number === "rational" || s.number === "real") {
+				log("The value must be an integer.", "w");
+			} else if (s.valueOf() > 59 || s.valueOf() < 0) {
+				time = s.valueOf() - this.second;
+				if (this._value + time < 0) {
+					log("Lower limit for time has been extrapolated. Limit value set.", "w");
+					this._value = 0;
+				} else {
+					this._value += time;
+				}
+			} else {
+				this._value = 3600*this.hour + 60*this.minute + s.valueOf();
+			}
+			return s.valueOf();
+		}
+	});	
+
+
+	/*Retorna a hora no formato 24h e o tempo no formato ampm*/
+	Object.defineProperties(WDtime.prototype, {
+		h24: {
 			enumerable: true,
-			//value: WD.prototype.showMe
-		},
-		toString: {
-			value: function() {
-				return this._value.toString();
+			get: function() {
+				return this.hour%24;
 			}
 		},
-		valueOf: {
-			value: function() {
-				return this._value.valueOf();
+		ampm: {
+			enumerable: true,
+			get: function() {
+				var h, m, p;
+				p = this.h24 < 12 ? "AM" : "PM"; 
+				if (this.h24 === 0) {
+					h = 12;
+				} else if (this.h24 <= 12) {
+					h = this.h24;
+				} else {
+					h = this.h24 - 12;
+				}
+				m = new WD(this.minute).fixed(2, 0, false);
+				return h+":"+m+p;
 			}
 		}
 	});
 
+	/*Formata o tempo de acordo com o especificado na string*/
+	Object.defineProperty(WDtime.prototype, "format", {
+		enumerable: true,
+		value: function(string) {
+			var names;
+			string = new WD(string).toString();
+			names = {
+				"%h": this.hour, "%H": this.h24, "#h": this.ampm, "#H": new WD(this.h24).fixed(2, 0, false),
+				"%m": this.minute, "%M": new WD(this.minute).fixed(2, 0, false),
+				"%s": this.second, "%S": new WD(this.second).fixed(2, 0, false),
+			}
+			for (var i in names) {
+				string = string.replace(new RegExp(i, "g"), names[i]);
+			}
+			return string;
+		}
+	});
 
-
-	//desse jeito não fica protegido (writable: false)
-	WDregexp.prototype.number = WDnumber.prototype.number;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	/*Retorna o método toString e valueOf*/
+	Object.defineProperties(WDtime.prototype, {
+		toString: {
+			value: function() {
+				return this.format("#H:%M:%S");
+			}
+		},
+		valueOf: {
+			value: function() {
+				return this._value;
+			}
+		}
+	});
 
 /*===========================================================================*/
 	/*Parâmetros de configuração de data*/
@@ -947,31 +1096,7 @@ var wd = (function() {
 		valueOf:   {value: function() {return this._d;}},
 	});
 /*---------------------------------------------------------------------------*/
-	function WDtime(input) {
-		if (!(this instanceof WDtime)) {return new WDtime(input);}
-		WD.call(this, input);
-		Object.defineProperties(this, {_t: {writable: true, value: timeDefiner(input)}});
-	};
-	WDtime.prototype = Object.create(WD.prototype, {
-		constructor: {value: WDtime},
-		hour: {enumerable: true,
-			get: function() {return timeGet(this._t, "h");},
-			set: function(input) {this._t = timeToNumber(input, this.minute, this.second, this._t); return;}
-		},
-		minute: {enumerable: true,
-			get: function() {return timeGet(this._t, "m");},
-			set: function(input) {this._t = timeToNumber(this.hour, input, this.second, this._t); return;}
-		},
-		second: {enumerable: true,
-			get: function() {return timeGet(this._t, "s")},
-			set: function(input) {this._t = timeToNumber(this.hour, this.minute, input, this._t); return;}
-		},
-		h24:      {enumerable: true, get: function() {return timeGet(this._t, "h24")}},
-		ampm:     {enumerable: true, get: function() {return timeGet(this._t, "ampm")}},
-		format:   {enumerable: true, value: function(string) {return timeFormat(this._t, string);}},
-		toString: {value: function() {return timeFormat(this._t);}},
-		valueOf:  {value: function() {return this._t;}},
-	});
+
 /*---------------------------------------------------------------------------*/
 	function WDpath(input) {
 		if (!(this instanceof WDpath)) {return new WDpath(input);}
@@ -1747,106 +1872,6 @@ var wd = (function() {
 	};
 
 /*===========================================================================*/
-	function timeDefiner(input) {
-		/*Define o valor numérico do tempo se verdadeiro, ou retorna null se inválido*/
-		var time;
-		if (input === "%now") {
-			input = new Date();
-			time = 3600*input.getHours() + 60*input.getMinutes() + input.getSeconds();
-		} else if (/^[0-9]+(\:[0-5][0-9]){1,2}$/.test(input)) {
-			input = input.split(":");
-			time  = 3600*Number(input[0]) + 60*Number(input[1]) + (input[2] === undefined ? 0 : Number(input[2]))
-		} else if ((/^12:[0-5][0-9]am$/i).test(input)) {
-			input = input.split(/[^0-9]/);
-			time  = 3600*0+60*Number(input[1]);
-		} else if ((/^(0?[1-9]|1[0-1]):[0-5][0-9]am$/i).test(input)) {
-			input = input.split(/[^0-9]/);
-			time  = 3600*Number(input[0])+60*Number(input[1]);
-		} else if ((/^12:[0-5][0-9]pm$/i).test(input)) {
-			input = input.split(/[^0-9]/);
-			time  = 3600*12+60*Number(input[1]);
-		} else if ((/^(0?[1-9]|1[0-1]):[0-5][0-9]pm$/i).test(input)) {
-			input = input.split(/[^0-9]/);
-			time  = 3600*(12+Number(input[0]))+60*Number(input[1]);
-		} else if ((/^([01][0-9]|2[0-3])h[0-5][0-9]$/i).test(input)) {
-			input = input.toLowerCase().split("h");
-			time  = 3600*Number(input[0])+60*Number(input[1]);
-		} else {
-			time = null;
-		}
-		return time;
-	};
-	
-	function timeToNumber(h, m, s, t) {
-		/*Transforma tempo para segundos*/
-		if (
-			type2(h) !== "number" || !numberIsInteger(h) ||
-			type2(m) !== "number" || !numberIsInteger(m) ||
-			type2(s) !== "number" || !numberIsInteger(s)
-		) {
-			log("Values must be an integer number.", "e");
-		} else {
-			t = 3600*numberDefiner(h) + 60*numberDefiner(m) + numberDefiner(s);
-			if (t < 0) {
-				log("Lower limit for time has been extrapolated. Limit value set.", "w");
-				t = 0;
-			}
-		}
-		return t;
-	};
-
-	function timeFromNumber(t) {
-		/*Transforma segundos em tempo*/
-		var h, m, s;
-		h = numberInteger(t/3600);
-		m = numberInteger((t - (3600*h))/60)
-		s = t - 3600*h - 60*m;
-		return {h: h, m: m, s: s};
-	};
-
-	function timeGet(t, id) {
-		/*Retorna as propriedades do tempo*/
-		var time, h24, output;
-		time = timeFromNumber(t);
-		h24  = time.h%24;
-		if (id in time) {
-			output = time[id];
-		} else if (id === "h24") {
-			output = h24;
-		} else if (id === "H24") {
-			output = ("00"+h24).slice(-2);
-		} else if (id === "ampm") {
-			if (h24 === 0) {
-				output = "12:"+("00"+time.m).slice(-2)+"am";
-			} else if (h24 < 12) {
-				output = h24+":"+("00"+time.m).slice(-2)+"am";
-			} else if (h24 === 12) {
-				output = "12:"+("00"+time.m).slice(-2)+"pm";
-			} else {
-				output = (h24-12)+":"+("00"+time.m).slice(-2)+"pm";
-			}
-		} else {
-			output = ("00"+h24).slice(-2)+":"+("00"+time.m).slice(-2)+":"+("00"+time.s).slice(-2)
-		}
-		return output;
-	};
-
-	function timeFormat(t, string) {
-		/*Formata o tempo de acordo com o especificado na string substituindo os valores dos objetos*/
-		if (string === undefined) {string = "#H:%M:%S";}
-		var time, names;
-		time = timeFromNumber(t);
-		
-		names = {
-			"%h": time.h, "%H": timeGet(t, "h24"), "#h": timeGet(t, "ampm"), "#H": timeGet(t, "H24"),
-			"%m": time.m, "%M": ("00"+time.m).slice(-2),
-			"%s": time.s, "%S": ("00"+time.s).slice(-2),
-		}
-		for (var i in names) {
-			string = string.replace(new RegExp(i, "g"), names[i]);
-		}
-		return string;
-	};
 
 /*===========================================================================*/
 
