@@ -4,7 +4,7 @@
 
 var wd = (function() {
 
-/* === FUNÇÕES GENÉRICAS === */
+/* === FUNÇÕES GENÉRICAS =================================================== */
 
 	/*Imprime mensagem no console*/
 	function log(msg, type) {
@@ -45,8 +45,31 @@ var wd = (function() {
 		}
 		return x;
 	};
+
+	/*Verifica se o elemento está dentro do array ou retorna a primeira posição*/
+	function inArray(array, value, index) {
+		if (index !== true) {
+			index = false;
+		}
+		var x = false;
+		for (var i = 0; i < array.length; i++) {
+			if (array[i] === value) {
+				x = index ? i : true;
+				break;
+			}
+		}
+		return x;
+	};
 	
-/*=== WD ===*/
+	/*Retorna o valor sem espaços nas extremidades*/
+	function trim(value) {
+		var x;
+		x = String(value).replace(/^\ +/, "");
+		x = x.replace(/\ +$/, "");
+		return x;
+	};
+	
+/* === WD ================================================================== */
 
 	/*Retorna verdadeiro se o y (ano) é bissexto e falso se não for*/
 	function isLeap(y) {
@@ -122,11 +145,11 @@ var wd = (function() {
 			x = true;
 		} else if (!isString(value)) {
 			return false;
-		} else if (/^(\+|\-)?[0-9]+(\.[0-9]+)?$/.test(value.trim())) {
+		} else if (/^(\+|\-)?[0-9]+(\.[0-9]+)?$/.test(trim(value))) {
 			x = true;
-		} else if ((/^(\+|\-)?[0-9]+(\.[0-9]+)?e(\+|\-)?[0-9]+$/i).test(value.trim())) {
+		} else if ((/^(\+|\-)?[0-9]+(\.[0-9]+)?e(\+|\-)?[0-9]+$/i).test(trim(value))) {
 			x = true;
-		} else if (/^(\+|\-)Infinity$/.test(value.trim())) {
+		} else if (/^(\+|\-)Infinity$/.test(trim(value))) {
 			x = true;
 		} else {
 			x = false;
@@ -224,10 +247,10 @@ var wd = (function() {
 		xhttp = request();
 		if (!isString(value)) {
 			x = false;
-		} else if (value.trim() === "" || value.trim().split("?")[0] === "") {
+		} else if (trim(value) === "" || trim(value).split("?")[0] === "") {
 			x = false;
 		} else if (request !== null) {
-			path = value.trim().split("?")[0];
+			path = trim(value).split("?")[0];
 			try {
 				xhttp.open("HEAD", path, false);
 				xhttp.send();
@@ -246,13 +269,13 @@ var wd = (function() {
 		var x;
 		if (!isString(value)) {
 			x = false;
-		} else if (value.trim() === "%now") {
+		} else if (trim(value) === "%now") {
 			x =  true;
-		} else if (/^[0-9]+(\:[0-5][0-9]){1,2}$/.test(value.trim())) {
+		} else if (/^[0-9]+(\:[0-5][0-9]){1,2}$/.test(trim(value))) {
 			x =  true;
-		} else if ((/^(0?[1-9]|1[0-2])\:[0-5][0-9]\ ?(am|pm)$/i).test(value.trim())) {
+		} else if ((/^(0?[1-9]|1[0-2])\:[0-5][0-9]\ ?(am|pm)$/i).test(trim(value))) {
 			x =  true;
-		} else if ((/^(0?[0-9]|1[0-9]|2[0-3])h[0-5][0-9]$/i).test(value.trim())) {
+		} else if ((/^(0?[0-9]|1[0-9]|2[0-3])h[0-5][0-9]$/i).test(trim(value))) {
 			x =  true;
 		} else {
 			x =  false;
@@ -271,21 +294,22 @@ var wd = (function() {
 			x = true;
 		} else if (!isString(value)) {
 			x = false;
-		} else if (value.trim() === "%today") {
+		} else if (isString(value) && trim(value) === "%today") {
 			x = true;
 		} else if (isString(value)) {
-			if (/^[0-9]{4}\-[0-9]{2}\-[0-9]{2}$/.test(value.trim())) {/*YYYY-MM-DD*/
-				array = value.trim().split("-");
+			value = trim(value);
+			if (/^[0-9]{4}\-[0-9]{2}\-[0-9]{2}$/.test(value)) {/*YYYY-MM-DD*/
+				array = value.split("-");
 				d = Number(array[2]);
 				m = Number(array[1]);
 				y = Number(array[0]);
-			} else if (/^[0-9]{2}\/[0-9]{2}\/[0-9]{4}$/.test(value.trim())) {/*MM/DD/YYYY*/
-				array = value.trim().split("/");
+			} else if (/^[0-9]{2}\/[0-9]{2}\/[0-9]{4}$/.test(value)) {/*MM/DD/YYYY*/
+				array = value.split("/");
 				d = Number(array[1]);
 				m = Number(array[0]);
 				y = Number(array[2]);
-			} else if (/^[0-9]{2}\.[0-9]{2}\.[0-9]{4}$/.test(value.trim())) {/*DD.MM.YYYY*/
-				array = value.trim().split(".");
+			} else if (/^[0-9]{2}\.[0-9]{2}\.[0-9]{4}$/.test(value)) {/*DD.MM.YYYY*/
+				array = value.split(".");
 				d = Number(array[0]);
 				m = Number(array[1]);
 				y = Number(array[2]);
@@ -300,7 +324,7 @@ var wd = (function() {
 				x = false;
 			} else if (d > 31 || d < 1) {
 				x = false;
-			} else if (d > 30 && [2, 4, 6, 9, 11].indexOf(m) > 0) {
+			} else if (d > 30 && inArray([2, 4, 6, 9, 11], m)) {
 				x = false;
 			} else if (d > 29 && m == 2) {
 				x = false;
@@ -429,7 +453,6 @@ var wd = (function() {
 		}
 	});
 
-
 	/*Verifica se o tipo do _value é uns dos informados no argumento*/
 	Object.defineProperty(WD.prototype, "allowed", {
 		value: function () {
@@ -476,7 +499,7 @@ var wd = (function() {
 		}
 	});
 
-/* === REGEXP === */
+/* === REGEXP ============================================================== */
 
 	function WDregexp(input) {
 		if (!(this instanceof WDregexp)) {
@@ -518,10 +541,10 @@ var wd = (function() {
 			for (var i = 0; i < pattern.length; i++) {
 				if (pattern[i] === "\\") {
 					i++;
-					if (metaReference.indexOf(pattern[i]) < 0) {
+					if (inArray(metaReference, pattern[i])) {
 						target += pattern[i];
 					}	else {
-						target += metacharacter[metaReference.indexOf(pattern[i])];
+						target += metacharacter[inArray(metaReference, pattern[i], true)];
 					}
 				} else if (pattern[i] === "(") {
 					check  += pattern[i];
@@ -531,7 +554,7 @@ var wd = (function() {
 				} else if (pattern[i] === ")") {
 					check += pattern[i];
 					close  = true;
-				} else if (close && expression.indexOf(pattern[i]) === -1) {
+				} else if (close && !inArray(expression, pattern[i])) {
 					target += pattern[i];
 				} else {
 					check += pattern[i];
@@ -555,7 +578,7 @@ var wd = (function() {
 		}
 	});
 
-/* === NUMBER === */
+/* === NUMBER ============================================================== */
 
 	function WDnumber(input) {
 		if (!(this instanceof WDnumber)) {
@@ -565,7 +588,7 @@ var wd = (function() {
 			return new WD(input);
 		}
 		Object.defineProperty(this, "_value", {
-			value: isString(input) ? Number(input.trim()).valueOf() : input.valueOf()
+			value: isString(input) ? Number(trim(input)).valueOf() : input.valueOf()
 		});
 	};
 	
@@ -792,7 +815,7 @@ var wd = (function() {
 		}
 	});
 
-/* === TIME === */
+/* === TIME ================================================================ */
 
 	function WDtime(input) {
 		if (!(this instanceof WDtime)) {
@@ -938,9 +961,14 @@ var wd = (function() {
 			var names;
 			string = new WD(string).toString();
 			names = {
-				"%h": this.hour, "%H": this.h24, "#h": this.ampm, "#H": new WD(this.h24).fixed(2, 0, false),
-				"%m": this.minute, "%M": new WD(this.minute).fixed(2, 0, false),
-				"%s": this.second, "%S": new WD(this.second).fixed(2, 0, false),
+				"%h": this.hour,
+				"%H": this.h24,
+				"#h": this.ampm,
+				"#H": new WD(this.h24).fixed(2, 0, false),
+				"%m": this.minute,
+				"%M": new WD(this.minute).fixed(2, 0, false),
+				"%s": this.second,
+				"%S": new WD(this.second).fixed(2, 0, false)
 			}
 			for (var i in names) {
 				string = string.replace(new RegExp(i, "g"), names[i]);
@@ -963,7 +991,7 @@ var wd = (function() {
 		}
 	});
 
-/* === DATE === */
+/* === DATE ================================================================ */
 
 	/*Parâmetros de configuração de data*/
 	var Y_0 = 1, Y_4 = 4, Y_100 = 100, Y_400 = 400, WEEK_REF = 1, Y_max = 9999;
@@ -988,6 +1016,46 @@ var wd = (function() {
 		x = delta.integer + l4.integer - l100.integer + l400.integer + dateDayYear(y, m, d);
 		return x;
 	};
+	
+	/*Obtem o valor do mês ou semana na língua local*/
+	function dateLocale(locale, m, w) {
+		var ref;
+		if (!isString(locale)) {
+			locale = lang();
+		}
+		var options = [
+			{month: {short: "Jan", long: "January"},   week: {short: "Sun", long: "Sunday"}},
+			{month: {short: "Feb", long: "February"},  week: {short: "Mon", long: "Monday"}},
+			{month: {short: "Mar", long: "March"},     week: {short: "Tue", long: "Tuesday"}},
+			{month: {short: "Apr", long: "April"},     week: {short: "Wed", long: "Wednesday"}},
+			{month: {short: "May", long: "May"},       week: {short: "Thu", long: "Thursday"}},
+			{month: {short: "Jun", long: "June"},      week: {short: "Fri", long: "Friday"}},
+			{month: {short: "Jul", long: "July"},      week: {short: "Sat", long: "Saturday"}},
+			{month: {short: "Aug", long: "August"},    week: {short: "?", long: "?"}},
+			{month: {short: "Sep", long: "September"}, week: {short: "?", long: "?"}},
+			{month: {short: "Oct", long: "October"},   week: {short: "?", long: "?"}},
+			{month: {short: "Nov", long: "November"},  week: {short: "?", long: "?"}},
+			{month: {short: "Dec", long: "December"},  week: {short: "?", long: "?"}}
+		];
+		try {
+			ref = new Date(1970, m - 1, 15, 12, 0, 0, 0);
+			ref.setDate(15 + w - (ref.getDay()+1));
+			ref.toLocaleString(locale);
+			for (var i = 0; i < options.length; i++) {
+				options[i].month.short = ref.toLocaleString(locale, {month: "short"});
+				options[i].month.long  = ref.toLocaleString(locale, {month: "long"});
+				if (i < 7) {
+					options[i].week.short = ref.toLocaleString(locale, {weekday: "short"});
+					options[i].week.long  = ref.toLocaleString(locale, {weekday: "long"});
+				}
+			}
+		} catch(e) {
+			log(e.toString(), "a");
+		}
+		return options;
+	};
+
+/*...........................................................................*/
 
 	function WDdate(input) {
 		if (!(this instanceof WDdate)) {
@@ -999,19 +1067,22 @@ var wd = (function() {
 		var date, x;
 		if ("Date" in window && (input instanceof Date || input.constructor === Date)) {
 			date = [x.getFullYear(), x.getMonth()+1, x.getDate()];
-		} else if (input.trim() === "%today") {
-			x = new Date();
-			date = [x.getFullYear(), x.getMonth()+1, x.getDate()];
-		} else if (input.trim().split("-").length === 3) {
-			x = input.trim().split("-");
-			date = [x[0], x[1], x[2]];
-		} else if (input.trim().split("/").length === 3) {
-			x = input.trim().split("/");
-			date = [x[2], x[0], x[1]];
-		} else if (input.trim().split(".").length === 3) {
-			x = input.trim().split(".");
-			date = [x[2], x[1], x[0]];
-		} else throw Error("An unexpected error occurred while setting date!");
+		} else {
+			input = trim(input);
+			if (input === "%today") {
+				x = new Date();
+				date = [x.getFullYear(), x.getMonth()+1, x.getDate()];
+			} else if (input.split("-").length === 3) {
+				x = input.split("-");
+				date = [x[0], x[1], x[2]];
+			} else if (input.split("/").length === 3) {
+				x = input.split("/");
+				date = [x[2], x[0], x[1]];
+			} else if (input.split(".").length === 3) {
+				x = input.split(".");
+				date = [x[2], x[1], x[0]];
+			} else throw Error("An unexpected error occurred while setting date!");
+		}
 		for (var i = 0; i < date.length; i++) {
 			x = new WD(date[i]);
 			if (x.number !== "natural") throw Error("An unexpected error occurred while setting date!");
@@ -1035,9 +1106,8 @@ var wd = (function() {
 		enumerable: true,
 		get: function() {
 			var y;
-			y = new WD(this._value/365);
-			y = y.integer + Y_0;
-			while (dateToNumber(y, 1, 1) > this._value) {
+			y = new WD(this._value/365).integer + Y_0;
+			while (dateToNumber(y, 1, 1) > this.valueOf()) {
 				y--;
 			}
 			return y;
@@ -1047,10 +1117,10 @@ var wd = (function() {
 			if (y.number !== "natural") {
 				log("The value must be a positive integer.", "w");
 			} else {
-				if (x.valueOf() < 1) {
+				if (y.valueOf() < 1) {
 					log("Lower limit for date has been extrapolated. Limit value set.", "w");
 					y = 1;
-				} else if (x.valueOf() > 9999) {
+				} else if (y.valueOf() > 9999) {
 					log("Upper limit for date has been extrapolated. Limit value set.", "w");
 					y = 9999;
 				}
@@ -1065,7 +1135,7 @@ var wd = (function() {
 		enumerable: true,
 		get: function() {
 			var m = 1;
-			while (dateToNumber(this.year, m+1, 1) - 1 < this._value) {
+			while (dateToNumber(this.year, m+1, 1) - 1 < this.valueOf()) {
 				m++;
 			}
 			return m;
@@ -1091,12 +1161,21 @@ var wd = (function() {
 					y = this.year + z.integer;
 					m = m%12;
 				}
-				if ([4, 6, 9, 11].indexOf(m) >= 0 && d > 30) {
+				if (inArray([4, 6, 9, 11], m) && d > 30) {
 					d = 30;
 				} else if (m === 2 && d > 28) {
 					d = isLeap(y) ? 29 : 28;
 				}
-				this._value = dateToNumber(y, m, d);
+				if (y < 1) {
+					log("Lower limit for date has been extrapolated. Limit value set.", "w");
+					z = dateToNumber(1, 1, 1);
+				} else if (y > 9999) {
+					log("Upper limit for date has been extrapolated. Limit value set.", "w");
+					z = dateToNumber(9999, 12, 31);
+				} else {
+					z = dateToNumber(y, m, d);
+				}
+				this._value = z;
 			}
 			return;
 		}
@@ -1107,220 +1186,127 @@ var wd = (function() {
 		enumerable: true,
 		get: function() {
 			var d = 1;
-			while (dateToNumber(this.year, this.month, d) !== this._value) {
+			while (dateToNumber(this.year, this.month, d) !== this.valueOf()) {
 				d++;
 			}
 			return d;
 		},
-		/*set: function(x) {
-			var y = new WD(x);
-			if (y.number !== "natural") {
-				log("The value must be a positive integer.", "w");
+		set: function(x) {
+			var d, z;
+			d = new WD(x);
+			if (d.number !== "integer" && d.number !== "natural") {
+				log("The value must be an integer.", "w");
 			} else {
-				if (x.valueOf() < 1) {
-					log("Lower limit for date has been extrapolated. Limit value set.", "w");
-					y = 1;
-				} else if (x.valueOf() > 9999) {
-					log("Upper limit for date has been extrapolated. Limit value set.", "w");
-					y = 9999;
+				if (d.valueOf() > this.width) {
+					z = this.valueOf() + (d.valueOf() - this.width);
+				} else if (d.valueOf() < 1) {
+					z = this.valueOf() - (this.day - d.valueOf());
+				} else {
+					z = dateToNumber(this.year, this.month, d.valueOf());
 				}
-				this._value = dateToNumber(y, this.month, this.day);
+				if (z < 1) {
+					log("Lower limit for date has been extrapolated. Limit value set.", "w");
+					z = 1;
+				} else if (z > dateToNumber(9999, 12, 31)) {
+					log("Upper limit for date has been extrapolated. Limit value set.", "w");
+					z = dateToNumber(9999, 12, 31);
+				}
+				this._value = z;
 			}
 			return;
-		}*/
+		}
 	});
 
-
-
-
-
-
-
-	function dateWeek(n) {
-		/*Retorna o dia da semana(1 - domingo, 7 - sábado)*/
-		return (n + WEEK_REF)%7 === 0 ? 7 : (n + WEEK_REF)%7;
-	};
-
-	function dateWeeks(y, days) {
-		/*Retorna a semana do ano*/
-		var ref, weeks;
-		ref   = dateWeek(dateToNumber(y, 1, 1));
-		weeks = numberInteger(1 + (ref + days - 2)/7);
-		return weeks;
-	};
-
-	function dateDayYear(y, m, d) {
-		/*Retorna o da do ano*/
-		var n = isLeap(y) ? 1 : 0;
-		return [0, 31, 59+n, 90+n, 120+n, 151+n, 181+n, 212+n, 243+n, 273+n, 304+n, 334+n][m-1]+d;
-	};
-	
-	function dateCountdown(y, m, d) {
-		/*Contagem regressiva para o fim do ano*/
-		return (isLeap(y) ? 366 : 365) - dateDayYear(y, m, d);
-	};
-
-	function dateLenghtMonth(y, m) {
-		/*Retorna a quantidade de dias do mês*/
-		var n = isLeap(y) ? 1 : 0;
-		return [31, 28+n, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][m-1];
-	};
-	
-	function dateChecking(y, m, d) {
-		/*Checa se a data existe*/
-		var x;
-		if (y < Y_0 || y > Y_max) {
-			x = false;
-		} else if (m < 1 || m > 12) {
-			x = false;
-		} else if (d < 1 || d > dateLenghtMonth(y, m)) {
-			x = false;
-		} else {
-			x = true;
-		}
-		return x;
-	};
-
-	
-
-	function dateFromNumber(n) {
-
-		/*Transforma número em data*/
-		var y, m = 1, d = 1, x;
-		y = numberInteger(n/365) + Y_0;
-		while (dateToNumber(y,1,1) > n) {y--;}
-		while (dateToNumber(y, m+1, 1) - 1 < n) {m++;}
-		while (dateToNumber(y, m, d) !== n) {d++;}
-		return {y: y, m: m, d: d};
-	};
-
-
-	function dateSet(value, input, id) {
-		/*Altera o valor da data a partir da definição de dia, mês ou ano*/
-		input = numberDefiner(input);
-		var date, test, output, y, m, d;
-		if (type2(input) !== "number" || !numberIsInteger(input)) {
-			log("Values must be an integer number.", "e");
-			output  = value;
-		} else {
-			date = dateFromNumber(value);
-			test = {y: date.y, m: date.m, d: date.d};
-			test[id] = input;
-			if (id !== "d" && test.d > dateLenghtMonth(test.y, test.m)) {
-				test.d = dateLenghtMonth(test.y, test.m);
+	/*Pequenos métodos para data*/
+	Object.defineProperties(WDdate.prototype, {
+		leap: {
+			enumerable: true,
+			get: function() {
+				return isLeap(this.year);
 			}
-			if (dateChecking(test.y, test.m, test.d) === true) {
-				output = dateToNumber(test.y, test.m, test.d);
-			} else if (id === "d") {
-				output = dateToNumber(date.y, date.m, 1) - 1 + input;
-			} else if (id === "m") {
-				y = date.y + (input <= 0 ? numberInteger((input - 12)/12) : numberInteger((input - 1)/12));
-				m = input < 1 ? 12 - numberAbs(input)%12 : input%12	;
-				if (m === 0) {
-					m = 12;
+		},
+		week: {
+			enumerable: true,
+			get: function() {
+				return (this.valueOf() + WEEK_REF)%7 === 0 ? 7 : (this.valueOf() + WEEK_REF)%7;
+			}
+		},
+		days: {
+			enumerable: true,
+			get: function() {
+				var y, ref;
+				y   = new WD(this.year).fixed(4, 0, false);
+				ref = new WD(y+"-01-01").valueOf();
+				return this.valueOf() - ref + 1;
+			}		
+		},
+		weeks: {
+			enumerable: true,
+			get: function() {
+				var ref, weeks, y;
+				y     = new WD(this.year).fixed(4, 0, false);
+				ref   = new WD(y+"-01-01").week;
+				weeks = new WD(1 + (ref + this.days - 2)/7).integer;
+				return weeks;
+			}
+		},
+		width: {
+			enumerable: true,
+			get: function() {
+				var w;
+				if (inArray([1, 3, 5, 7, 8, 10, 12], this.month)) {
+					w = 31;
+				} else if (inArray([4, 6, 9, 11], this.month)) {
+					w = 30;
+				} else {
+					w = this.leap ? 29 : 28;
 				}
-				d = date.d > dateLenghtMonth(y, m) ? dateLenghtMonth(y, m) : date.d;
-				output = dateToNumber(y, m, d);
-			} else if (id === "y") {
-				m = date.m;
-				y = input;
-				d = date.d > dateLenghtMonth(y, m) ? dateLenghtMonth(y, m) : date.d;
-				output = dateToNumber(y, m, d);
+				return w;
 			}
-			if (output < 1) {
-				log("Lower limit for date has been extrapolated. Limit value set.", "w");
-				output = 1;
-			}
-			else if (output > dateToNumber(Y_max, 12, 31)){
-				log("Upper limit for date has been extrapolated. Limit value set.", "w");
-				output = dateToNumber(Y_max, 12, 31);
+		},
+		countdown: {
+			enumerable: true,
+			get: function() {
+				return (this.leap ? 366 : 365) - this.days;
 			}
 		}
-		return output;
-	};
-
-	function dateFormat(value, string, locale) {
-		/*Formata a data de acordo conforme especificado na string*/
-		if (locale === undefined) {locale = lang();}
-		if (string === undefined) {string = "%Y-%M-%D";}
-		var date, ref, names;
-		date   = dateFromNumber(value);
-		ref    = new Date(1970, date.m - 1, 15, 12, 0, 0, 0);
-		ref.setDate(15 + dateWeek(value) - (ref.getDay()+1));
-		names = {
-			"%d": date.d, "%D": ("00"+date.d).slice(-2), "@d": dateDayYear(date.y, date.m, date.d),
-			"%m": date.m, "%M": ("00"+date.m).slice(-2), "@m": dateLenghtMonth(date.y, date.m),
-			"#m": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][date.m - 1],
-			"#M": [
-				"January", "February", "March", "April",
-				"May", "June", "July", "August",
-				"September", "October", "November", "December"
-			][date.m - 1],
-			"%y": date.y, "%Y": ("0000"+date.y).slice(-4),
-			"%w": dateWeek(value), "@w": dateWeeks(date.y, dateDayYear(date.y, date.m, date.d)),
-			"#w": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][dateWeek(value) - 1],
-			"#W": ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][dateWeek(value) - 1],
-			"%l": isLeap(date.y) ? 366 : 365, "%c": dateCountdown(date.y, date.m, date.d)
-		}
-		try {
-			ref.toLocaleString(locale);
-			names["#w"] = ref.toLocaleString(locale, {weekday: "short"});
-			names["#W"] = ref.toLocaleString(locale, {weekday: "long"});
-			names["#m"] = ref.toLocaleString(locale, {month: "short"});
-			names["#M"] = ref.toLocaleString(locale, {month: "long"});
-		} catch(e) {
-			log("dateFormat: toLocaleString not defined.", "a");
-		}
-		for (var i in names) {
-			string = string.replace(new RegExp(i, "g"), names[i]);
-		}
-		return string;
-	};
-
-
-/*		
-		
-	};
-	WDdate.prototype = Object.create(WD.prototype, {
-		constructor: {value: WDdate},
-		day: {enumerable: true,
-			get: function() {return dateFromNumber(this._d).d;},
-			set: function(input) {this._d = dateSet(this._d, input, "d"); return;}
-		},
-		month: {enumerable: true,
-			get: function() {return dateFromNumber(this._d).m;},
-			set: function(input) {this._d = dateSet(this._d, input, "m"); return;}
-		},
-		year: {enumerable: true,
-			get: function() {return dateFromNumber(this._d).y;},
-			set: function(input) {this._d = dateSet(this._d, input, "y"); return;}
-		},
-		week:      {enumerable: true, get: function() {return dateWeek(this._d);}},
-
-		leap:      {enumerable: true, get: function() {return isLeap(this.year);}},
-		days:      {enumerable: true, get: function() {return dateDayYear(this.year, this.month, this.day);}},
-		width:     {enumerable: true, get: function() {return dateLenghtMonth(this.year, this.month);}},
-		weeks:     {enumerable: true, get: function() {return dateWeeks(this.year, this.days);}},
-		countdown: {enumerable: true, get: function() {return dateCountdown(this.year, this.month, this.day);}},
-		format:    {enumerable: true, value: function(string, locale) {return dateFormat(this._d, string, locale);}},
-		toString:  {value: function() {return dateFormat(this._d);}},
-		valueOf:   {value: function() {return this._d;}},
 	});
 
-*/
-
-
-
-
-
-
-
+	/*Formata a data de acordo com a string informada*/
+	Object.defineProperty(WDdate.prototype, "format", {
+		enumerable: true,
+		value: function(string, locale) {
+			var names = {
+				"%d": this.day,
+				"%D": new WD(this.day).fixed(2, 0, false),
+				"@d": this.days,
+				"%m": this.month,
+				"%M": new WD(this.month).fixed(2, 0, false),
+				"@m": this.width,
+				"#m": dateLocale(locale, this.month, this.week)[this.month-1].month.short,
+				"#M": dateLocale(locale, this.month, this.week)[this.month-1].month.long,
+				"%y": this.year,
+				"%Y": new WD(this.year).fixed(4, 0, false),
+				"%w": this.week,
+				"@w": this.weeks,
+				"#w": dateLocale(locale, this.month, this.week)[this.week-1].week.short,
+				"#W": dateLocale(locale, this.month, this.week)[this.week-1].week.long,
+				"%l": this.leap ? 366 : 365,
+				"%c": this.countdown
+			}
+			string = String(string).toString();
+			for (var i in names) {
+				string = string.replace(new RegExp(i, "g"), names[i]);
+			}
+			return string;
+		}
+	});
 
 	/*Retorna o método toString e valueOf*/
 	Object.defineProperties(WDdate.prototype, {
 		toString: {
 			value: function() {
-				//return this.format("#H:%M:%S");
+				return this.format("%Y-%M-%D");
 			}
 		},
 		valueOf: {
