@@ -4,7 +4,7 @@
 
 var wd = (function() {
 
-/* === FUNÇÕES GENÉRICAS =================================================== */
+/* === WD ================================================================== */
 
 	/*Imprime mensagem no console*/
 	function log(msg, type) {
@@ -28,23 +28,7 @@ var wd = (function() {
 		return value;
 	};
 	
-	/*Obtém objeto para requisições ajax*/
-	function request() {
-		var x;
-		if ("XMLHttpRequest" in window) {
-			x = new XMLHttpRequest();
-		} else if ("ActiveXObject" in window) {
-			try {
-				x = new ActiveXObject("Msxml2.XMLHTTP");
-			} catch(e) {
-				x = new ActiveXObject("Microsoft.XMLHTP");
-			}
-		} else {
-			x = null;
-			log("AJAX is not available in your browser!", "e");
-		}
-		return x;
-	};
+	
 
 	/*Verifica se o elemento está dentro do array ou retorna a primeira posição*/
 	function inArray(array, value, index) {
@@ -61,17 +45,7 @@ var wd = (function() {
 		return x;
 	};
 	
-	/*Retorna o valor sem espaços nas extremidades*/
-	function trim(value) {
-		var x;
-		x = String(value).replace(/^\ +/, "");
-		x = x.replace(/\ +$/, "");
-		return x;
-	};
-	
-/* === WD ================================================================== */
-
-	/*Retorna verdadeiro se o y (ano) é bissexto e falso se não for*/
+	/*Retorna verdadeiro se o ano for bissexto*/
 	function isLeap(y) {
 		var x;
 		if (y === 0) {
@@ -101,9 +75,7 @@ var wd = (function() {
 	/*Verifica se o valor é uma string genérica*/
 	function isString(value) {
 		var x;
-		if (isNull(value) || isUndefined(value)) {
-			x = false;
-		} else if (typeof value === "string") {
+		if (typeof value === "string") {
 			x = true
 		} else if ("String" in window && value instanceof String) {
 			x = true;
@@ -118,9 +90,7 @@ var wd = (function() {
 	/*Verifica se o valor é uma expressão regular*/
 	function isRegExp(value) {
 		var x;
-		if (isNull(value) || isUndefined(value)) {
-			x = false;
-		} else if (typeof value === "regexp") {
+		if (typeof value === "regexp") {
 			x = true;
 		} else if ("RegExp" in window && value instanceof RegExp) {
 			x = true;
@@ -135,21 +105,19 @@ var wd = (function() {
 	/*Verifica se o valor é um número*/
 	function isNumber(value) {
 		var x;
-		if (isNull(value) || isUndefined(value)) {
-			x = false;
-		} else if (typeof value === "number") {
+		if (typeof value === "number") {
 			x = true;
 		} else if ("Number" in window && value instanceof Number) {
 			x = true;
 		} else if ("Number" in window && value.constructor === Number) {
 			x = true;
 		} else if (!isString(value)) {
-			return false;
-		} else if (/^(\+|\-)?[0-9]+(\.[0-9]+)?$/.test(trim(value))) {
+			x = false;
+		} else if (/^(\+|\-)?[0-9]+(\.[0-9]+)?$/.test(value.trim())) {
 			x = true;
-		} else if ((/^(\+|\-)?[0-9]+(\.[0-9]+)?e(\+|\-)?[0-9]+$/i).test(trim(value))) {
+		} else if ((/^(\+|\-)?[0-9]+(\.[0-9]+)?e(\+|\-)?[0-9]+$/i).test(value.trim())) {
 			x = true;
-		} else if (/^(\+|\-)Infinity$/.test(trim(value))) {
+		} else if (/^(\+|\-)Infinity$/.test(value.trim())) {
 			x = true;
 		} else {
 			x = false;
@@ -160,9 +128,7 @@ var wd = (function() {
 	/*Verifica se o valor é boleano*/
 	function isBoolean(value) {
 		var x;
-		if (isNull(value) || isUndefined(value)) {
-			x = false;
-		} else if (typeof value === "boolean") {
+		if (typeof value === "boolean") {
 			x = true;
 		} else if ("Boolean" in window && value instanceof Boolean) {
 			x = true;
@@ -177,9 +143,7 @@ var wd = (function() {
 	/*Verifica se o valor é uma lista*/
 	function isArray(value) {
 		var x;
-		if (isNull(value) || isUndefined(value)) {
-			x = false;
-		} else if ("Array" in window && "isArray" in Array && Array.isArray(value)) {
+		if ("Array" in window && "isArray" in Array && Array.isArray(value)) {
 			x = true;
 		} else if ("Array" in window && value instanceof Array) {
 			x = true;
@@ -194,9 +158,7 @@ var wd = (function() {
 	/*Verifica se o valor é uma função*/
 	function isFunction(value) {
 		var x;
-		if (isNull(value) || isUndefined(value)) {
-			x = false;
-		} else if (typeof value === "function") {
+		if (typeof value === "function") {
 			x = true;
 		} else if ("Function" in window && value instanceof Function) {
 			x = true;
@@ -213,8 +175,6 @@ var wd = (function() {
 		var x;
 		if (value === document || value === window) {
 			x = true;
-		} else if (isNull(value) || isUndefined(value)) {
-			x = false;
 		} else if ("HTMLElement" in window && value instanceof HTMLElement) {
 			x = true;
 		} else if ("HTMLElement" in window && value.constructor === HTMLElement) {
@@ -241,41 +201,18 @@ var wd = (function() {
 		return x;
 	};
 
-	/*Verifica se o valor é um caminho ou arquivo acessível*/
-	function isPath(value) {
-		var x, xhttp, path;
-		xhttp = request();
-		if (!isString(value)) {
-			x = false;
-		} else if (trim(value) === "" || trim(value).split("?")[0] === "") {
-			x = false;
-		} else if (request !== null) {
-			path = trim(value).split("?")[0];
-			try {
-				xhttp.open("HEAD", path, false);
-				xhttp.send();
-				x = xhttp.status === 200 || xhttp.status === 304 ? true : false;
-			} catch(e) {
-				x = false;
-			}
-		} else {
-			x = false;
-		}
-		return x;
-	};
-	
 	/*Verifica se o valor é um tempo válido*/
 	function isTime(value) {
 		var x;
 		if (!isString(value)) {
 			x = false;
-		} else if (trim(value) === "%now") {
+		} else if (value.trim() === "%now") {
 			x =  true;
-		} else if (/^[0-9]+(\:[0-5][0-9]){1,2}$/.test(trim(value))) {
+		} else if (/^[0-9]+(\:[0-5][0-9]){1,2}$/.test(value.trim())) {
 			x =  true;
-		} else if ((/^(0?[1-9]|1[0-2])\:[0-5][0-9]\ ?(am|pm)$/i).test(trim(value))) {
+		} else if ((/^(0?[1-9]|1[0-2])\:[0-5][0-9]\ ?(am|pm)$/i).test(value.trim())) {
 			x =  true;
-		} else if ((/^(0?[0-9]|1[0-9]|2[0-3])h[0-5][0-9]$/i).test(trim(value))) {
+		} else if ((/^(0?[0-9]|1[0-9]|2[0-3])h[0-5][0-9]$/i).test(value.trim())) {
 			x =  true;
 		} else {
 			x =  false;
@@ -286,29 +223,26 @@ var wd = (function() {
 	/*Verifica se o valor é uma data válida*/
 	function isDate(value) {
 		var x, d, m, y, array;
-		if (isNull(value) || isUndefined(value)) {
-			x = false;
-		} else if ("Date" in window && value instanceof Date) {
+		if ("Date" in window && value instanceof Date) {
 			x = true;
 		} else if ("Date" in window && value.constructor === Date) {
 			x = true;
 		} else if (!isString(value)) {
 			x = false;
-		} else if (isString(value) && trim(value) === "%today") {
+		} else if (value.trim() === "%today") {
 			x = true;
-		} else if (isString(value)) {
-			value = trim(value);
-			if (/^[0-9]{4}\-[0-9]{2}\-[0-9]{2}$/.test(value)) {/*YYYY-MM-DD*/
+		} else {
+			if (/^[0-9]{4}\-[0-9]{2}\-[0-9]{2}$/.test(value.trim())) {/*YYYY-MM-DD*/
 				array = value.split("-");
 				d = Number(array[2]);
 				m = Number(array[1]);
 				y = Number(array[0]);
-			} else if (/^[0-9]{2}\/[0-9]{2}\/[0-9]{4}$/.test(value)) {/*MM/DD/YYYY*/
+			} else if (/^[0-9]{2}\/[0-9]{2}\/[0-9]{4}$/.test(value.trim())) {/*MM/DD/YYYY*/
 				array = value.split("/");
 				d = Number(array[1]);
 				m = Number(array[0]);
 				y = Number(array[2]);
-			} else if (/^[0-9]{2}\.[0-9]{2}\.[0-9]{4}$/.test(value)) {/*DD.MM.YYYY*/
+			} else if (/^[0-9]{2}\.[0-9]{2}\.[0-9]{4}$/.test(value.trim())) {/*DD.MM.YYYY*/
 				array = value.split(".");
 				d = Number(array[0]);
 				m = Number(array[1]);
@@ -333,8 +267,6 @@ var wd = (function() {
 			} else {
 				x = true;
 			}
-		} else {
-			x = false;
 		}
 		return x;
 	};
@@ -344,10 +276,10 @@ var wd = (function() {
 		var x;
 		if (!isString(value)) {
 			x = false;
-		} else if (isTime(value) || isDate(value)) {
+		} else if (value.trim() === "") {
 			x = false;
-		} else if (isNumber(value) || isPath(value)) {
-			x = false
+		} else if (isTime(value) || isDate(value) || isNumber(value)) {
+			x = false;
 		} else {
 			x = true;
 		}
@@ -360,37 +292,27 @@ var wd = (function() {
 		if (!(this instanceof WD)) {
 			return new WD(input);
 		}
-		if (isRegExp(input)) {
-			return new WDregexp(input);
-		}
-		if (isNumber(input)) {
-			return new WDnumber(input);
-		}
-		if (isTime(input)) {
-			return new WDtime(input);
-		}
-		if (isDate(input)) {
-			return new WDdate(input);
-		}
-		if (isArray(input)) {
-			//return new WDarray(input);
-		}
-		if (isDOM(input)) {
-			//return new WDdom(input);
-		}
-		if (isPath(input)) {
-			//return new WDpath(input);
-		}
-		if (isText(input)) {
-			//return new WDtext(input);
-		}
-		
-		if (isNull(input)) {
-			input = null;
-		} else if (isUndefined(input)) {
-			input = undefined;
-		} else if (isBoolean(input)) {
-			input = input.valueOf();
+
+		if (!isNull(input) && !isUndefined(input)) {
+			if (isBoolean(input)) {
+				input = input.valueOf();
+			} else if (isString(input) && input.trim() === "") {
+				input = null;
+			} else if (isRegExp(input)) {
+				return new WDregexp(input);
+			} else if (isTime(input)) {
+				return new WDtime(input);
+			} else if (isDate(input)) {
+				return new WDdate(input);
+			} else if (isArray(input)) {
+				//return new WDarray(input);
+			} else if (isDOM(input)) {
+				//return new WDdom(input);
+			} else if (isNumber(input)) {
+				return new WDnumber(input);
+			} else if (isText(input)) {
+				return new WDtext(input);
+			}
 		}
 
 		Object.defineProperty(this, "_value", {
@@ -418,7 +340,6 @@ var wd = (function() {
 				"regexp": isRegExp,
 				"function": isFunction,
 				"dom": isDOM,
-				"path": isPath,
 				"text": isText
 			};
 			x = null;
@@ -453,31 +374,28 @@ var wd = (function() {
 		}
 	});
 
-	/*Verifica se o tipo do _value é uns dos informados no argumento*/
-	Object.defineProperty(WD.prototype, "allowed", {
-		value: function () {
-			var x = false;
-			for (var i = 0; i < arguments.length; i++) {
-				if (this.type == arguments[i]) {
-					x = true;
-					break;
-				}
-			}
-			return x;
-		}
-	});
-
 	/*retorna o método valueOf*/
 	Object.defineProperty(WD.prototype, "valueOf", {
 		value: function () {
 			var x;
-			if (isBoolean(this._value)) {
-				x = this._value.valueOf() === true ? 1 : 0;
-			} else if (isNull(this._value) || isUndefined(this._value)) {
-				x = -0;
-			} else {
-				x = this._value.valueOf();
-			}
+			switch(this.type) {
+				case "null":
+					x = 0;
+					break;
+				case "undefined":
+					x = Infinity;
+					break;
+				case "boolean":
+					x = this._value.valueOf() === true ? 1 : 0;
+					break;
+				default:
+					try {
+						x = this._value.valueOf();
+					} catch(e) {
+						log(e, "w");
+						x = Number(this._value).valueOf();
+					}
+				}
 			return x;
 		}
 	});
@@ -486,18 +404,362 @@ var wd = (function() {
 	Object.defineProperty(WD.prototype, "toString", {
 		value: function () {
 			var x;
-			if (isBoolean(this._value)) {
-				x = this._value.valueOf() === true ? "True" : "False";
-			} else if (isNull(this._value)) {
-				x = "Ø"
-			} else if (isUndefined(this._value)) {
-				x = "?";
+			switch(this.type) {
+				case "null":
+					x = "Ø";
+					break;
+				case "undefined":
+					x = "?";
+					break;
+				case "boolean":
+					x = this._value.valueOf() === true ? "True" : "False";
+					break;
+				default:
+					try {
+						x = this._value.toString();
+					} catch(e) {
+						log(e, "w");
+						x = String(this._value).toString();
+					}
+				}
+			return x;
+		}
+	});
+
+/* === TEXT ================================================================ */
+
+	/*Obtém objeto para requisições ajax*/
+	function request() {
+		var x;
+		if ("XMLHttpRequest" in window) {
+			x = new XMLHttpRequest();
+		} else if ("ActiveXObject" in window) {
+			try {
+				x = new ActiveXObject("Msxml2.XMLHTTP");
+			} catch(e) {
+				x = new ActiveXObject("Microsoft.XMLHTP");
+			}
+		} else {
+			x = null;
+			log("XMLHttpRequest and  ActiveXObject are not available in your browser!", "e");
+		}
+		return x;
+	};
+
+	/*Controlador da janela modal (ajax)*/
+	var loadModal = {
+		modal: document.createElement("DIV"),
+		start: function() {
+			this.modal.textContent           = "Loading data, please wait!";
+			this.modal.style.display         = "block";
+			this.modal.style.width           = "100%";
+			this.modal.style.height          = "100%";
+			this.modal.style.position        = "fixed";
+			this.modal.style.top             = "0";
+			this.modal.style.right           = "0";
+			this.modal.style.bottom          = "0";
+			this.modal.style.left            = "0";
+			this.modal.style.color           = "white";
+			this.modal.style.backgroundColor = "black";
+			this.modal.style.opacity         = "0.9";
+			this.modal.style.zIndex          = "999999";
+			this.modal.style.cursor          = "progress";
+			return;
+		},
+		counter: 0,
+		add: function() {
+			this.counter++;
+			this.check();
+			return;
+		},
+		del: function() {
+			var target = this;
+			window.setTimeout(function () {
+				target.counter--;
+				target.check();
+				return;
+			}, 250);
+			return;
+		},
+		check: function() {
+			if (this.counter > 0) {
+				document.body.appendChild(this.modal);
+			} else if (this.counter === 0) {
+				this.modal.parentElement.removeChild(this.modal);
 			} else {
-				x = this._value.toString();
+				this.counter = 0;
+				this.modal.parentElement.removeChild(this.modal);
+			}
+			return;		
+		}
+	};
+	loadModal.start();
+
+	/*Função que verifica o sucesso da requisição ajax*/
+ 	function stateChange(ev, method) {
+ 		var arg, target;
+ 		target = this;
+ 		arg = {
+			error: true,
+			request: target,
+			text: null,
+			xml: null,
+			json: null
+		};
+		if (this.readyState === 4) {
+			if (this.status === 200 || this.status === 304) {
+				arg.error = false;
+				arg.text = target.responseText || null;
+				arg.xml  = target.responseXML || null;
+				try {
+					arg.json = JSON.parse(target.responseText) || eval("("+target.responseText+")");
+				} catch(e) {
+					arg.json = null;
+				}
+				loadModal.del();
+				method.call(this, arg);
+			}
+		}
+		return;
+	};
+
+/*...........................................................................*/
+
+function WDtext(input) {
+		if (!(this instanceof WDtext)) {
+			return new WDtext(input);
+		}
+		if (!isText(input)) {
+			return new WD(input);
+		}
+		Object.defineProperty(this, "_value", {
+			writable: true,
+			value: input
+		});
+	};
+	
+	WDtext.prototype = Object.create(WD.prototype, {
+		constructor: {
+			value: WDtext
+		}
+	});
+	
+	/*Deixa o texto só com a primeira letra de cada palavra em maiúsculo*/
+	Object.defineProperty(WDtext.prototype, "title", {
+		enumerable: true,
+		value: function(change) {
+			if (change !== true) {
+				change = false;
+			}
+			var input, value;
+			input = this.toString().toLowerCase().split("");
+			value = "";
+			
+			for (var i = 0; i < input.length; i++) {
+				if (input[i-1] === " " || i === 0) {
+					value += input[i].toUpperCase();
+				} else {
+					value += input[i];
+				}
+			}
+			if (change === true) {
+				this._value = value;
+				value =  this;
+			}
+			return value;
+		}
+	});
+
+	/*Elimina espaços desnecessários de input*/
+	Object.defineProperty(WDtext.prototype, "trim", {
+		enumerable: true,
+		value: function(change) {
+			if (change !== true) {
+				change = false;
+			}
+			var value;
+			value = this.toString().trim().replace(/\ +/g, " ");
+			if (change === true) {
+				this._value = value;
+				value =  this;
+			}
+			return value;	
+		}
+	});
+
+
+	/*Elimina os acentos de input*/
+	Object.defineProperty(WDtext.prototype, "clear", {
+		enumerable: true,
+		value: function(change) {
+			if (change !== true) {
+				change = false;
+			}
+			var value, clear;
+			var clear = {
+				A: /[À-Æ]/g,
+				C: /[Ç]/g,
+				E: /[È-Ë]/g,
+				I: /[Ì-Ï]/g,
+				D: /[Ð]/g,
+				N: /[Ñ]/g,
+				O: /[Ò-ÖØ]/g,
+				U: /[Ù-Ü]/g,
+				Y: /[Ý]/g,
+				a: /[à-æ]/g,
+				c: /[ç]/g,
+				e: /[è-ë]/g,
+				i: /[ì-ï]/g,
+				d: /[ð]/g,
+				n: /[ñ]/g,
+				o: /[ò-öø]/g,
+				u: /[ù-ü]/g,
+				y: /[ýÿ]/g
+			};
+			value = this.toString();
+			if ("normalize" in String) {
+				value = value.normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+			} else {
+				for (var i in clear) {
+					value = value.replace(clear[i], i);
+				}
+			}
+			if (change === true) {
+					this._value = value;
+					value =  this;
+				}
+			return value;
+		}
+	});
+
+	/*Verifica se o texto é uma caminho acessível*/
+	Object.defineProperty(WDtext.prototype, "path", {
+		enumerable: true,
+		get: function() {
+			var x, xhttp, path;
+			xhttp = request();
+			path  = this.toString().split("?")[0].replace(/^\'/, "");
+			if (xhttp === null || path.trim() === "") {
+				x = false;
+			} else {
+				try {
+					xhttp.open("HEAD", path, false);
+					xhttp.send();
+					x = xhttp.status === 200 || xhttp.status === 304 ? true : false;
+				} catch(e) {
+					x = false;
+				}
 			}
 			return x;
 		}
 	});
+
+	/*Obtêm o conteúdo do caminho e retorna o método de requisição*/
+	Object.defineProperty(WDtext.prototype, "request", {
+		enumerable: true,
+		value: function(method, time) {
+			if (this.path === false) {
+				log("\""+this.valueOf()+"\" is not an accessible path!", "w");
+				return null;
+			}
+			if (WD(method).type !== "function") {
+				log("The \"method\" argument is required.", "w");
+				return null;
+			}
+			var xhttp, path, serial, value, types;
+			xhttp  = request();
+			value  = this.toString().replace(/^\'/, "").split("?");
+			path   = value[0];
+			serial = getSerial(value[1]);
+			time   = WD(time);
+			if (time.number === "natural") {
+				xhttp.timeout =  1000*time.valueOf();
+			}
+			xhttp.onreadystatechange = function (ev) {
+				stateChange.call(this, ev, method);
+			}
+			types = {
+				get: function() {
+					loadModal.add();
+					try {
+						xhttp.open("GET", path+"?"+serial, true);
+						xhttp.send();
+						return true;
+					} catch(e) {
+						log(e, "w");
+						loadModal.del();
+						return false;
+					}
+				},
+				post: function () {
+					loadModal.add();
+					try {
+						xhttp.open("POST", path, true);
+						xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+						//xhttp.setRequestHeader("Content-type", "multipart/form-data");
+						xhttp.send(serial === "" ? null : serial);
+						return true;
+					} catch(e) {
+						log(e, "w");
+						loadModal.del();
+						return false;
+					}
+				}
+			}
+			return types;
+		}
+	});
+		
+
+
+
+
+
+	//FIXME
+	/*Obtem o valor do texto serializado*/
+	function getSerial(value) {
+		var x, serial, form, inputs;
+		if (value === "") {
+			x = "";
+		}
+		else if ((/^\@/).test(value)) {
+			//fazer essa bagunça depois de arrumar o WDdom
+		} else {
+			x = value;
+		}
+		return x;
+	};
+
+	//Jogar essa porra no dom ^^^^^^^^^^^^^^//
+	function ajaxGetSerialForm(fname) {
+		/*Obtem a serialização a partir do formulário informado*/
+		var form, serial, inputs, elem, name, tag, value, itype, atype, check;
+		form = document.getElementsByName(fname.replace("@", ""))[0];
+		serial = [];
+		if (form !== undefined && form.tagName.toUpperCase() === "FORM") {
+			inputs = form.elements;
+			for (var i = 0; i < inputs.length; i++) {
+				elem  = inputs[i];
+				name  = elem.name;
+				tag   = elem.tagName.toUpperCase();
+				value = elem.value;
+				itype = tag === "INPUT" ? elem.type.toUpperCase() : null;
+				atype = tag === "INPUT" ? elem.attributes.type.value.toUpperCase() : itype;
+				check = itype === "RADIO" || itype === "CHECKBOX" ? elem.checked : null;
+				if (name === undefined || name === null || stringTrim(name) === "") {
+					continue;
+				} else if ((itype === "RADIO" || itype === "CHECKBOX") && check === false) {
+					continue;
+				} else if (atype === "DATE" || itype === "DATE") {
+						value = type2(value) === "date" && value !== "%today" ? dateFormat(dateDefiner(value)) : value;
+				} else if (atype === "TIME" || itype === "TIME") {
+						value = type2(value) === "time" && value !== "%now" ? timeFormat(timeDefiner(value)) : value;
+				}
+				serial.push(name+"="+encodeURIComponent(value));
+			}
+		}
+		return serial.join("&");
+	};
 
 /* === REGEXP ============================================================== */
 
@@ -588,7 +850,7 @@ var wd = (function() {
 			return new WD(input);
 		}
 		Object.defineProperty(this, "_value", {
-			value: isString(input) ? Number(trim(input)).valueOf() : input.valueOf()
+			value: isString(input) ? Number(input.trim()).valueOf() : input.valueOf()
 		});
 	};
 	
@@ -603,13 +865,13 @@ var wd = (function() {
 		enumerable: true,
 		get: function() {
 			var x;
-			if (this._value === Infinity || this._value === -Infinity) {
+			if (this.valueOf() === Infinity || this.valueOf() === -Infinity) {
 				x = "real";
-			} else if (this._value % 1 !== 0) {
+			} else if (this.valueOf() % 1 !== 0) {
 				x = "rational";
-			} else if (this._value % 1 === 0 && this._value <= 0) {
+			} else if (this.valueOf() % 1 === 0 && this.valueOf() <= 0) {
 				x = "integer";
-			} else if (this._value % 1 === 0 && this._value > 0) {
+			} else if (this.valueOf() % 1 === 0 && this.valueOf() > 0) {
 				x = "natural";
 			} else {
 				x = "?";
@@ -623,11 +885,11 @@ var wd = (function() {
 		enumerable: true,
 		get: function() {
 			var x;
-			if (this._value === 0) {
+			if (this.valueOf() === 0) {
 				x = 0;
-			} else if (this._value > 0) {
+			} else if (this.valueOf() > 0) {
 				x = 1;
-			} else if (this._value < 0) {
+			} else if (this.valueOf() < 0) {
 				x = -1;
 			} else {
 				x = "?";
@@ -641,10 +903,10 @@ var wd = (function() {
 		enumerable: true,
 		get: function() {
 			var x;
-			if (this._value === Infinity || this._value === -Infinity) {
-				x = this._value;
+			if (this.valueOf() === Infinity || this.valueOf() === -Infinity) {
+				x = this.valueOf();
 			} else {
-				x = this._value - (this._value % 1);
+				x = this.valueOf() - (this.valueOf() % 1);
 			}
 			return x;
 		}
@@ -655,9 +917,9 @@ var wd = (function() {
 		enumerable: true,
 		get: function() {
 			var x;
-			if (this._value === Infinity || this._value === -Infinity) {
-				x = this._value;
-			} else if (this._value % 1 !== 0) {
+			if (this.valueOf() === Infinity || this.valueOf() === -Infinity) {
+				x = this.valueOf();
+			} else if (this.valueOf() % 1 !== 0) {
 				x = Number(this.toString().replace(/.*\./, "0.")).valueOf();
 			} else {
 				x = 0;
@@ -670,7 +932,7 @@ var wd = (function() {
 	Object.defineProperty(WDnumber.prototype, "abs", {
 		enumerable: true,
 		get: function() {
-			return this._value < 0 ? -this._value : this._value;
+			return this.valueOf() < 0 ? - this.valueOf() : this.valueOf();
 		}
 	});
 
@@ -679,12 +941,12 @@ var wd = (function() {
 		enumerable: true,
 		get: function() {
 			var x;
-			if (this._value === 0) {
+			if (this.valueOf() === 0) {
 				x = Infinity;
-			} else if (this._value === Infinity || this._value === -Infinity) {
+			} else if (this.valueOf() === Infinity || this.valueOf() === -Infinity) {
 				x = 0;
 			} else {
-				x = 1/this._value;
+				x = 1/this.valueOf();
 			}
 			return x;
 		}
@@ -695,8 +957,8 @@ var wd = (function() {
 		enumerable: true,
 		get: function() {
 			if (this.fraction === 0) {
-				x = this._value;
-			} else if (this._value > 0) {
+				x = this.valueOf();
+			} else if (this.valueOf() > 0) {
 				x = this.integer+1;
 			} else {
 				x = this.integer-1;
@@ -710,10 +972,10 @@ var wd = (function() {
 		enumerable: true,
 		value: function(width) {
 			var x;
-			width = new WD(width);
+			width = WD(width);
 			if (width.number === "natural") {
 				try {
-				 	x = Number(this._value.toFixed(width.valueOf())).valueOf();
+				 	x = Number(this.valueOf().toFixed(width.valueOf())).valueOf();
 				} catch(e) {
 					x = this.valueOf();
 					log(e.toString(), "w");
@@ -731,9 +993,9 @@ var wd = (function() {
 		value: function(width) {
 			var x;
 			try {
-				x = this._value.toExponential(width);
+				x = this.valueOf().toExponential(width);
 			} catch(e) {
-				x = this._value.toExponential();
+				x = this.valueOf().toExponential();
 				log(e.toString(), "w");
 			}
 			x = x.replace(/e(.+)$/, " &times; 10<sup>$1</sup>").replace(/\+/g, "");
@@ -750,9 +1012,9 @@ var wd = (function() {
 				locale = lang();
 			}
 			try {
-				x = this._value.toLocaleString(locale);
+				x = this.valueOf().toLocaleString(locale);
 			} catch(e) {
-				x = this._value.toString();
+				x = this.valueOf().toString();
 				log(e.toString(), "w");
 			}
 			return x;
@@ -771,7 +1033,7 @@ var wd = (function() {
 				currency = "¤";
 			}
 			try {
-				x = this._value.toLocaleString(locale, {style: "currency", currency: currency});
+				x = this.valueOf().toLocaleString(locale, {style: "currency", currency: currency});
 			} catch(e) {
 				x = currency+this.locale();
 				log(e.toString(), "w");
@@ -784,7 +1046,7 @@ var wd = (function() {
 	Object.defineProperty(WDnumber.prototype, "fixed", {
 		enumerable: true,
 		value: function(int, frac, sign) {
-			if (new WD(sign).type !== "boolean") {
+			if (WD(sign).type !== "boolean") {
 				sign = true;
 			}
 			var s, x, y, z;
@@ -793,15 +1055,15 @@ var wd = (function() {
 			} else {
 				s = sign ? (this.signal < 0 ? "-" : "+") : "";
 				x = String(this.integer).replace(/[^0-9]/, "").split("");
-				int  = new WD(int);
+				int  = WD(int);
 				if (int.number === "natural") {
 					while(x.length < int.valueOf()) {
 						x.unshift(0);
 					}
 				}
-				y = new WD(this.round(frac)).fraction;
+				y = WD(this.round(frac)).fraction;
 				y = y === 0 ? [] : String(y).split(".")[1].split("");
-				frac = new WD(frac);
+				frac = WD(frac);
 				if (frac.number === "natural") {
 					while(y.length < frac.valueOf()) {
 						y.push(0);
@@ -825,15 +1087,15 @@ var wd = (function() {
 			return new WD(input);
 		}
 		var time, x;
-		input = input.replace(/\ /g, "").replace(/h/i, ":").toUpperCase();
-		if (x === "%now") {
+		input = input.replace(/\ /g, "").replace(/h/i, ":").toLowerCase();
+		if (input === "%now") {
 			x    = new Date();
 			time = [x.getHours(), x.getMinutes(), x.getSeconds()];
-		} else if ((/AM$/).test(input)) {
-			x     = input.replace("AM", "").split(":");
+		} else if ((/am$/).test(input)) {
+			x     = input.replace("am", "").split(":");
 			time  = [Number(x[0]).valueOf(), Number(x[1]).valueOf(), 0];
-		} else if ((/PM$/).test(input)) {
-			x     = input.replace("PM", "").split(":");
+		} else if ((/pm$/).test(input)) {
+			x     = input.replace("pm", "").split(":");
 			time  = [x[0] === "12" ? 0 : 12 + Number(x[0]).valueOf(), Number(x[1]).valueOf(), 0];
 		} else if (/^[0-9]+(\:[0-5][0-9]){1,2}$/.test(input)) {
 			x     = input.split(":");
@@ -857,12 +1119,12 @@ var wd = (function() {
 	Object.defineProperty(WDtime.prototype, "hour", {
 		enumerable: true,
 		get: function() {
-			var h = new WD(this._value/3600);
+			var h = WD(this.valueOf()/3600);
 			return h.integer;
 		},
 		set: function(h) {
 			var time;
-			h = new WD(h);
+			h = WD(h);
 			if (h.number === "rational" || h.number === "real" || h.signal < 0) {
 				log("The value must be a positive integer.", "w");
 			} else {
@@ -876,18 +1138,18 @@ var wd = (function() {
 	Object.defineProperty(WDtime.prototype, "minute", {
 		enumerable: true,
 		get: function() {
-			var m = this._value - 3600*this.hour;
-			m = new WD(m/60);
+			var m = this.valueOf() - 3600*this.hour;
+			m = WD(m/60);
 			return m.integer;
 		},
 		set: function(m) {
 			var time;
-			m = new WD(m);
+			m = WD(m);
 			if (m.number === "rational" || m.number === "real") {
 				log("The value must be an integer.", "w");
 			} else if (m.valueOf() > 59 || m.valueOf() < 0) {
 				time = 60*(m.valueOf() - this.minute);
-				if (this._value + time < 0) {
+				if (this.valueOf() + time < 0) {
 					log("Lower limit for time has been extrapolated. Limit value set.", "w");
 					this._value = 0;
 				} else {
@@ -904,17 +1166,17 @@ var wd = (function() {
 	Object.defineProperty(WDtime.prototype, "second", {
 		enumerable: true,
 		get: function() {
-			var s = this._value - 3600*this.hour - 60*this.minute;
+			var s = this.valueOf() - 3600*this.hour - 60*this.minute;
 			return s;
 		},
 		set: function(s) {
 			var time;
-			s = new WD(s);
+			s = WD(s);
 			if (s.number === "rational" || s.number === "real") {
 				log("The value must be an integer.", "w");
 			} else if (s.valueOf() > 59 || s.valueOf() < 0) {
 				time = s.valueOf() - this.second;
-				if (this._value + time < 0) {
+				if (this.valueOf() + time < 0) {
 					log("Lower limit for time has been extrapolated. Limit value set.", "w");
 					this._value = 0;
 				} else {
@@ -948,7 +1210,7 @@ var wd = (function() {
 				} else {
 					h = this.h24 - 12;
 				}
-				m = new WD(this.minute).fixed(2, 0, false);
+				m = WD(this.minute).fixed(2, 0, false);
 				return h+":"+m+p;
 			}
 		}
@@ -959,16 +1221,16 @@ var wd = (function() {
 		enumerable: true,
 		value: function(string) {
 			var names;
-			string = new WD(string).toString();
+			string = String(string).toString();
 			names = {
 				"%h": this.hour,
 				"%H": this.h24,
 				"#h": this.ampm,
-				"#H": new WD(this.h24).fixed(2, 0, false),
+				"#H": WD(this.h24).fixed(2, 0, false),
 				"%m": this.minute,
-				"%M": new WD(this.minute).fixed(2, 0, false),
+				"%M": WD(this.minute).fixed(2, 0, false),
 				"%s": this.second,
-				"%S": new WD(this.second).fixed(2, 0, false)
+				"%S": WD(this.second).fixed(2, 0, false)
 			}
 			for (var i in names) {
 				string = string.replace(new RegExp(i, "g"), names[i]);
@@ -1068,7 +1330,7 @@ var wd = (function() {
 		if ("Date" in window && (input instanceof Date || input.constructor === Date)) {
 			date = [x.getFullYear(), x.getMonth()+1, x.getDate()];
 		} else {
-			input = trim(input);
+			input = input.trim();
 			if (input === "%today") {
 				x = new Date();
 				date = [x.getFullYear(), x.getMonth()+1, x.getDate()];
@@ -1084,7 +1346,7 @@ var wd = (function() {
 			} else throw Error("An unexpected error occurred while setting date!");
 		}
 		for (var i = 0; i < date.length; i++) {
-			x = new WD(date[i]);
+			x = WD(date[i]);
 			if (x.number !== "natural") throw Error("An unexpected error occurred while setting date!");
 			date[i] = x.valueOf();
 		}
@@ -1106,14 +1368,14 @@ var wd = (function() {
 		enumerable: true,
 		get: function() {
 			var y;
-			y = new WD(this._value/365).integer + Y_0;
+			y = WD(this.valueOf()/365).integer + Y_0;
 			while (dateToNumber(y, 1, 1) > this.valueOf()) {
 				y--;
 			}
 			return y;
 		},
 		set: function(x) {
-			var y = new WD(x);
+			var y = WD(x);
 			if (y.number !== "natural") {
 				log("The value must be a positive integer.", "w");
 			} else {
@@ -1143,7 +1405,7 @@ var wd = (function() {
 		set: function(x) {
 			var y, m, d, z;
 			y = this.year;
-			m = new WD(x);
+			m = WD(x);
 			d = this.day;
 			if (m.number !== "integer" && m.number !== "natural") {
 				log("The value must be an integer.", "w");
@@ -1153,11 +1415,11 @@ var wd = (function() {
 					y = this.year-1;
 					m = 12;
 				} else if (m < 0) {
-					z = new WD((m - 12)/12);
+					z = WD((m - 12)/12);
 					y = this.year + z.integer;
 					m = 12 + m%12;
 				} else if (m > 12) {
-					z = new WD((m - 1)/12);
+					z = WD((m - 1)/12);
 					y = this.year + z.integer;
 					m = m%12;
 				}
@@ -1193,7 +1455,7 @@ var wd = (function() {
 		},
 		set: function(x) {
 			var d, z;
-			d = new WD(x);
+			d = WD(x);
 			if (d.number !== "integer" && d.number !== "natural") {
 				log("The value must be an integer.", "w");
 			} else {
@@ -1235,8 +1497,8 @@ var wd = (function() {
 			enumerable: true,
 			get: function() {
 				var y, ref;
-				y   = new WD(this.year).fixed(4, 0, false);
-				ref = new WD(y+"-01-01").valueOf();
+				y   = WD(this.year).fixed(4, 0, false);
+				ref = WD(y+"-01-01").valueOf();
 				return this.valueOf() - ref + 1;
 			}		
 		},
@@ -1244,9 +1506,9 @@ var wd = (function() {
 			enumerable: true,
 			get: function() {
 				var ref, weeks, y;
-				y     = new WD(this.year).fixed(4, 0, false);
-				ref   = new WD(y+"-01-01").week;
-				weeks = new WD(1 + (ref + this.days - 2)/7).integer;
+				y     = WD(this.year).fixed(4, 0, false);
+				ref   = WD(y+"-01-01").week;
+				weeks = WD(1 + (ref + this.days - 2)/7).integer;
 				return weeks;
 			}
 		},
@@ -1278,15 +1540,15 @@ var wd = (function() {
 		value: function(string, locale) {
 			var names = {
 				"%d": this.day,
-				"%D": new WD(this.day).fixed(2, 0, false),
+				"%D": WD(this.day).fixed(2, 0, false),
 				"@d": this.days,
 				"%m": this.month,
-				"%M": new WD(this.month).fixed(2, 0, false),
+				"%M": WD(this.month).fixed(2, 0, false),
 				"@m": this.width,
 				"#m": dateLocale(locale, this.month, this.week)[this.month-1].month.short,
 				"#M": dateLocale(locale, this.month, this.week)[this.month-1].month.long,
 				"%y": this.year,
-				"%Y": new WD(this.year).fixed(4, 0, false),
+				"%Y": WD(this.year).fixed(4, 0, false),
 				"%w": this.week,
 				"@w": this.weeks,
 				"#w": dateLocale(locale, this.month, this.week)[this.week-1].week.short,
@@ -1316,88 +1578,6 @@ var wd = (function() {
 		}
 	});
 
-
-
-/*===========================================================================*/
-	
-
-	/*Guarda o tamanho da tela*/
-	var deviceController = null;
-
-	/*Janela modal para processamentos ajax*/
-	var MODAL = document.createElement("DIV");
-	MODAL.textContent = "Loading data, please wait!";
-	htmlStyle(MODAL, {
-		display: "block", width: "100%", height: "100%", zIndex: 999999,
-		position: "fixed", top: 0, right: 0, bottom: 0, left: 0,
-		color: "white", backgroundColor: "black", opacity: "0.9", cursor: "progress"
-	});
-	
-	/*Checar a existências dos objetos nativos utilizados na bibiloteca*/
-	(function () {	
-		var objects = [
-			"Boolean",
-			"Number",
-			"String",
-			"Array",
-			"RegExp",
-			"Function",
-			"Date",
-			"HTMLElement",
-			"NodeList",
-			"HTMLCollection",
-			"HTMLAllCollection",
-			"HTMLFormControlsCollection"
-		];
-		
-		for (var o = 0; o < objects.length; o++) {
-			if (!(objects[o] in window)) {
-				window[objects[o]] = function() {};
-			}
-		}
-		return;
-	})();
-
-	/*Controlador da janela modal (ajax)*/
-	var modalController = 0;
-
-	function addAjaxModal() {
-		modalController++;
-		checkAjaxModal();
-		return;
-	}
-
-	function delAjaxModal() {
-		window.setTimeout(function () {
-			modalController--;
-			checkAjaxModal();
-			return;
-		}, 250);;
-		return;
-	}
-	
-	function checkAjaxModal() {
-		if (modalController <= 0) {
-			modalController = 0;
-			htmlAction(MODAL, "del");
-		} else if (MODAL.parentElement !== document.body) {
-			document.body.appendChild(MODAL);
-		}
-		return;
-	};
-/*===========================================================================*/
-
-/*---------------------------------------------------------------------------*/
-	function WDtext(input) {
-		if (!(this instanceof WDtext)) {return new WDtext(input);}
-		WD.call(this, input);
-	};
-	WDtext.prototype = Object.create(WD.prototype, {
-		constructor: {value: WDtext},
-		title:  {enumerable: true, get: function() {return stringTitle(this._value);}},
-		trim:   {enumerable: true, get: function() {return stringTrim(this._value);}},
-		tt:     {enumerable: true, get: function() {return stringTitle(this.trim);}},
-	});
 /*---------------------------------------------------------------------------*/
 	function WDarray(input) {
 		if (!(this instanceof WDarray)) {return new WDarray(input);}
@@ -1414,26 +1594,9 @@ var wd = (function() {
 		amount:    {enumerable: true, value: function(item) {return arrayCount(this._value, item);}},
 		replace:   {enumerable: true, value: function(item, value) {return arrayReplace(this._value, item, value);}},
 	});
-/*---------------------------------------------------------------------------*/
-	
-
-	
-/*---------------------------------------------------------------------------*/
 
 /*---------------------------------------------------------------------------*/
 
-/*---------------------------------------------------------------------------*/
-	function WDpath(input) {
-		if (!(this instanceof WDpath)) {return new WDpath(input);}
-		WD.call(this, input);
-	};
-	WDpath.prototype = Object.create(WDtext.prototype, {
-		constructor: {value: WDpath},
-		post: {enumerable: true, value: function(execute, time) {ajaxSend(this._value, "POST", execute, time);}},
-		get:  {enumerable: true, value: function(execute, time) {ajaxSend(this._value, "GET", execute, time);}},
-		type: {enumerable: true, get: function() {return type2(this._value, true);}}
-	});
-/*---------------------------------------------------------------------------*/
 	function WDdom(input) {
 		if (!(this instanceof WDdom)) {return new WDdom(input);}
 		WD.call(this, input);
@@ -1476,6 +1639,35 @@ var wd = (function() {
 		get:    {enumerable: true, get: function() {return type2(this._value) !== "[html]" ? [this._value] : this._value;}},
 		styles: {enumerable: true, get: function() {return htmlGetStyles(type2(this._value) !== "[html]" ? [this._value] : this._value);}},
 	});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /*===========================================================================*/
 	function data_wdLoad(e) {
@@ -1629,9 +1821,12 @@ var wd = (function() {
 		}
 		return;
 	};
-		
+
+	/*Guarda o tamanho da tela*/
+	var deviceController = null;
+	
+	/*Define o estilo do elemento a partir do tamanho da tela*/
 	function data_wdDevice(e) {
-		/*Define o estilo do elemento a partir do tamanho da tela*/
 		if (!("wdDesktop" in e.dataset) && !("wdTablet" in e.dataset) && !("wdPhone" in e.dataset)) {return;}
 		var device, desktop, tablet, phone, add, del;
 		device  = deviceController;
@@ -1879,56 +2074,7 @@ var wd = (function() {
 
 /*===========================================================================*/
 
-/*===========================================================================*/
-	function stringTitle(input) {
-		/*Retorna input com primeira letra de cada palavra em caixa alta*/
-		var value = "";
-		for (var i = 0; i < input.length; i++) {
-			if (input[i-1] === " " || i === 0) {value += input[i].toUpperCase();
-			} else {
-				value += input[i];
-			}
-		}
-		return value;
-	};
 
-	function stringTrim(input) {
-		/*Elimina espaços desnecessários de input*/
-		return input.trim().replace(/ +/g, " ");
-	};
-
-	function stringClear(input) {
-		/*Elimina os acentos de input*/
-		var clear = {
-			A: /[À-Æ]/g,
-			C: /[Ç]/g,
-			E: /[È-Ë]/g,
-			I: /[Ì-Ï]/g,
-			D: /[Ð]/g,
-			N: /[Ñ]/g,
-			O: /[Ò-ÖØ]/g,
-			U: /[Ù-Ü]/g,
-			Y: /[Ý]/g,
-			a: /[à-æ]/g,
-			c: /[ç]/g,
-			e: /[è-ë]/g,
-			i: /[ì-ï]/g,
-			d: /[ð]/g,
-			n: /[ñ]/g,
-			o: /[ò-öø]/g,
-			u: /[ù-ü]/g,
-			y: /[ýÿ]/g
-		};
-		input = String(input);
-		if ("normalize" in String) {
-			input = input.normalize('NFD').replace(/[\u0300-\u036f]/g, "");
-		} else {
-			for (var i in clear) {
-				input = input.replace(clear[i], i);
-			}
-		}
-		return input;
-	};
 
 /*===========================================================================*/
 	function arrayDel(array, item) {
@@ -2016,125 +2162,6 @@ var wd = (function() {
 		return arraySort(arrayUnique(array));
 	};
 
-/*===========================================================================*/
-
-/*===========================================================================*/
-	
-
-
-/*===========================================================================*/
-
-/*===========================================================================*/
-
-	
-
-	function ajaxResponse(response, error) {
-		/*Retorna objeto contendo os métodos com as informações da requisição*/
-		var argument = {
-			error: error,
-			request: response,
-			get text() {return this.error ? null : this.request.responseText;},
-			get xml()  {return this.error ? null : this.request.responseXML;},
-			get json() {
-				if (this.error) {return null;}
-				try {
-					return JSON.parse(this.text);
-				} catch(e) {
-					try {return eval("("+this.text+")");} catch(e) {return null;}
-				}
-			}
-		};
-		Object.freeze(argument);
-		return argument;	
-	};
-
-	function ajaxSend(path, method, execute, time) {
-		/*Solicita e retorna requisição ajax*/
-		addAjaxModal();
-		var argument = {error: true, request: null, text: null, xml: null, json: null};
-		try {
-			var path, request;
-			request = request()
-			path    = ajaxPath(path);
-			if (type2(time) === "number") {request.timeout = 1000*numberDefiner(time);}
-			request.onreadystatechange = function(ev) {
-				if (this.readyState === 4) {
-					if (this.status === 200 || this.status === 304) {
-						argument = ajaxResponse(this, false);
-					} else {
-						argument = ajaxResponse(this, true);
-					}
-					delAjaxModal();
-					if (type2(execute) === "f()") {execute.call(this, argument);}
-				}
-				return;
-			};
-			if (method === "POST") {
-				request.open(method, path.action, true);
-				request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-				request.send(path.serial);
-				//request.setRequestHeader("Content-type", "multipart/form-data");
-				//request.send(path.file);
-			} else {
-				request.open(method, path.full, true);
-				request.send();
-			}
-		} catch(e) {
-			delAjaxModal();
-			if (type2(execute) === "f()") {execute.call(this, argument);}
-		}
-		return;
-	};
-
-	function ajaxPath(input) {
-		/*Retorna objeto contendo as informações sobre a URL separadas em action, serial e full*/
-		var action, serial, hash;
-		input  = input.split("?");
-		action = input[0];
-		if (input.length === 1) {
-			serial = "";
-		} else if (input[1][0] === "@") {
-			serial = ajaxGetSerialForm(input[1].split("#")[0]);
-		} else {
-			serial = input.join("?").replace(action+"?", "");
-		}
-		return {
-			action: action,
-			serial: serial === "" ? null : serial,
-			full: serial === "" ? action : action+"?"+serial,
-		};
-	};
-	
-	
-	function ajaxGetSerialForm(fname) {
-		/*Obtem a serialização a partir do formulário informado*/
-		var form, serial, inputs, elem, name, tag, value, itype, atype, check;
-		form = document.getElementsByName(fname.replace("@", ""))[0];
-		serial = [];
-		if (form !== undefined && form.tagName.toUpperCase() === "FORM") {
-			inputs = form.elements;
-			for (var i = 0; i < inputs.length; i++) {
-				elem  = inputs[i];
-				name  = elem.name;
-				tag   = elem.tagName.toUpperCase();
-				value = elem.value;
-				itype = tag === "INPUT" ? elem.type.toUpperCase() : null;
-				atype = tag === "INPUT" ? elem.attributes.type.value.toUpperCase() : itype;
-				check = itype === "RADIO" || itype === "CHECKBOX" ? elem.checked : null;
-				if (name === undefined || name === null || stringTrim(name) === "") {
-					continue;
-				} else if ((itype === "RADIO" || itype === "CHECKBOX") && check === false) {
-					continue;
-				} else if (atype === "DATE" || itype === "DATE") {
-						value = type2(value) === "date" && value !== "%today" ? dateFormat(dateDefiner(value)) : value;
-				} else if (atype === "TIME" || itype === "TIME") {
-						value = type2(value) === "time" && value !== "%now" ? timeFormat(timeDefiner(value)) : value;
-				}
-				serial.push(name+"="+encodeURIComponent(value));
-			}
-		}
-		return serial.join("&");
-	};
 /*===========================================================================*/
 	function htmlLoad(elem, text) {
 		/*Carrega página HTML requisitada no elemento informado*/
