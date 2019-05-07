@@ -113,11 +113,9 @@ var wd = (function() {
 			x = true;
 		} else if (!isString(value)) {
 			x = false;
-		} else if (/^(\+|\-)?[0-9]+(\.[0-9]+)?$/.test(value.trim())) {
-			x = true;
-		} else if ((/^(\+|\-)?[0-9]+(\.[0-9]+)?e(\+|\-)?[0-9]+$/i).test(value.trim())) {
-			x = true;
-		} else if (/^(\+|\-)Infinity$/.test(value.trim())) {
+		} else if (value.trim() === "Infinity") {
+			x = false;
+		} else if (value.trim() == Number(value.trim())) {
 			x = true;
 		} else {
 			x = false;
@@ -305,7 +303,7 @@ var wd = (function() {
 			} else if (isDate(input)) {
 				return new WDdate(input);
 			} else if (isArray(input)) {
-				//return new WDarray(input);
+				return new WDarray(input);
 			} else if (isDOM(input)) {
 				//return new WDdom(input);
 			} else if (isNumber(input)) {
@@ -850,7 +848,7 @@ function WDtext(input) {
 			return new WD(input);
 		}
 		Object.defineProperty(this, "_value", {
-			value: isString(input) ? Number(input.trim()).valueOf() : input.valueOf()
+			value: isString(input) ? Number(input).valueOf() : input.valueOf()
 		});
 	};
 	
@@ -956,6 +954,7 @@ function WDtext(input) {
 	Object.defineProperty(WDnumber.prototype, "up", {
 		enumerable: true,
 		get: function() {
+			var x;
 			if (this.fraction === 0) {
 				x = this.valueOf();
 			} else if (this.valueOf() > 0) {
@@ -973,7 +972,7 @@ function WDtext(input) {
 		value: function(width) {
 			var x;
 			width = WD(width);
-			if (width.number === "natural") {
+			if (width.number === "natural" || width.valueOf() === 0) {
 				try {
 				 	x = Number(this.valueOf().toFixed(width.valueOf())).valueOf();
 				} catch(e) {
@@ -1125,12 +1124,12 @@ function WDtext(input) {
 		set: function(h) {
 			var time;
 			h = WD(h);
-			if (h.number === "rational" || h.number === "real" || h.signal < 0) {
-				log("The value must be a positive integer.", "w");
-			} else {
+			if (h.valueOf() === 0 || h.number === "natural") {
 				this._value = 3600*h.valueOf() + 60*this.minute + this.second;
+			} else {
+				log("The value must be a positive integer.", "w");
 			}
-			return h.valueOf();
+			return this.valueOf();
 		}
 	});
 
@@ -1145,20 +1144,15 @@ function WDtext(input) {
 		set: function(m) {
 			var time;
 			m = WD(m);
-			if (m.number === "rational" || m.number === "real") {
+			if (m.number !== "natural" && m.number !== "integer") {
 				log("The value must be an integer.", "w");
 			} else if (m.valueOf() > 59 || m.valueOf() < 0) {
 				time = 60*(m.valueOf() - this.minute);
-				if (this.valueOf() + time < 0) {
-					log("Lower limit for time has been extrapolated. Limit value set.", "w");
-					this._value = 0;
-				} else {
-					this._value += time;
-				}
+				this._value += time;
 			} else {
 				this._value = 3600*this.hour + 60*m.valueOf() + this.second;
 			}
-			return m.valueOf();
+			return this.valueOf();
 		}
 	});
 
@@ -1172,20 +1166,15 @@ function WDtext(input) {
 		set: function(s) {
 			var time;
 			s = WD(s);
-			if (s.number === "rational" || s.number === "real") {
+			if (s.number !== "natural" && s.number !== "integer") {
 				log("The value must be an integer.", "w");
 			} else if (s.valueOf() > 59 || s.valueOf() < 0) {
 				time = s.valueOf() - this.second;
-				if (this.valueOf() + time < 0) {
-					log("Lower limit for time has been extrapolated. Limit value set.", "w");
-					this._value = 0;
-				} else {
-					this._value += time;
-				}
+				this._value += time;
 			} else {
 				this._value = 3600*this.hour + 60*this.minute + s.valueOf();
 			}
-			return s.valueOf();
+			return this.valueOf();
 		}
 	});	
 
@@ -1248,6 +1237,16 @@ function WDtext(input) {
 		},
 		valueOf: {
 			value: function() {
+				if (WD(this._value).type !== "number") {
+					log("Improper change of internal value has been adjusted to the minimum value.", "w");
+					this._value = 0;
+				} else if (this._value > 0 && WD(this._value).number !== "natural") {
+					log("Improper change of internal value has been adjusted to an approximate value.", "w");
+					this._value = WD(this._value).round(0);
+				} else if (this._value < 0) {
+					log("Lower limit for time has been extrapolated. Limit value set.", "w");
+					this._value = 0;
+				}
 				return this._value;
 			}
 		}
@@ -1256,7 +1255,14 @@ function WDtext(input) {
 /* === DATE ================================================================ */
 
 	/*Parâmetros de configuração de data*/
-	var Y_0 = 1, Y_4 = 4, Y_100 = 100, Y_400 = 400, WEEK_REF = 1, Y_max = 9999;
+	var Y_min    = 1;    /*ano inicial*/
+	var Y_max    = 9999; /*ano final*/
+	var Y_004    = 4;    /*primeiro ano divisível por 4*/
+	var Y_100    = 100   /*primeiro ano divisível por 100*/
+	var Y_400    = 400   /*primeiro ano divisível por 400*/
+	var WEEK_1st = 1;    /*dia da semana + 1 de DATE_min*/
+	var DATE_min = dateToNumber(Y_min, 1, 1);   /*data mínima*/
+	var DATE_max = dateToNumber(Y_max, 12, 31); /*data máxima*/
 
 	/*Retorna o dia do ano*/
 	function dateDayYear(y, m, d) {
@@ -1271,8 +1277,8 @@ function WDtext(input) {
 	/*Converte uma data para seu valor numérico*/
 	function dateToNumber(y, m, d) {
 		var l4, l100, l400, delta, x;
-		delta = WD(y === Y_0   ? 0 : 365*(y - Y_0));
-		l4    = WD(y  <  Y_4   ? 0 : (y - 1)/4);
+		delta = WD(y === Y_min ? 0 : 365*(y - Y_min));
+		l4    = WD(y  <  Y_004 ? 0 : (y - 1)/4);
 		l100  = WD(y  <  Y_100 ? 0 : (y - 1)/100);
 		l400  = WD(y  <  Y_400 ? 0 : (y - 1)/400);
 		x = delta.integer + l4.integer - l100.integer + l400.integer + dateDayYear(y, m, d);
@@ -1368,7 +1374,7 @@ function WDtext(input) {
 		enumerable: true,
 		get: function() {
 			var y;
-			y = WD(this.valueOf()/365).integer + Y_0;
+			y = WD(this.valueOf()/365).integer + Y_min;
 			while (dateToNumber(y, 1, 1) > this.valueOf()) {
 				y--;
 			}
@@ -1376,19 +1382,12 @@ function WDtext(input) {
 		},
 		set: function(x) {
 			var y = WD(x);
-			if (y.number !== "natural") {
-				log("The value must be a positive integer.", "w");
+			if (y.number !== "natural" || y.valueOf() > Y_max || y.valueOf() < Y_min) {
+				log("The value must be a positive integer between "+Y_min+" and "+Y_max+".", "w");
 			} else {
-				if (y.valueOf() < 1) {
-					log("Lower limit for date has been extrapolated. Limit value set.", "w");
-					y = 1;
-				} else if (y.valueOf() > 9999) {
-					log("Upper limit for date has been extrapolated. Limit value set.", "w");
-					y = 9999;
-				}
-				this._value = dateToNumber(y, this.month, this.day);
+				this._value = dateToNumber(y.valueOf(), this.month, this.day);
 			}
-			return;
+			return this.valueOf();
 		}
 	});
 
@@ -1403,7 +1402,7 @@ function WDtext(input) {
 			return m;
 		},
 		set: function(x) {
-			var y, m, d, z;
+			var y, m, d;
 			y = this.year;
 			m = WD(x);
 			d = this.day;
@@ -1415,12 +1414,10 @@ function WDtext(input) {
 					y = this.year-1;
 					m = 12;
 				} else if (m < 0) {
-					z = WD((m - 12)/12);
-					y = this.year + z.integer;
+					y = this.year + WD((m - 12)/12).integer;
 					m = 12 + m%12;
 				} else if (m > 12) {
-					z = WD((m - 1)/12);
-					y = this.year + z.integer;
+					y = this.year + WD((m - 1)/12).integer;
 					m = m%12;
 				}
 				if (inArray([4, 6, 9, 11], m) && d > 30) {
@@ -1428,18 +1425,9 @@ function WDtext(input) {
 				} else if (m === 2 && d > 28) {
 					d = isLeap(y) ? 29 : 28;
 				}
-				if (y < 1) {
-					log("Lower limit for date has been extrapolated. Limit value set.", "w");
-					z = dateToNumber(1, 1, 1);
-				} else if (y > 9999) {
-					log("Upper limit for date has been extrapolated. Limit value set.", "w");
-					z = dateToNumber(9999, 12, 31);
-				} else {
-					z = dateToNumber(y, m, d);
-				}
-				this._value = z;
+				this._value = dateToNumber(y, m, d);
 			}
-			return;
+			return this.valueOf();
 		}
 	});
 
@@ -1460,22 +1448,15 @@ function WDtext(input) {
 				log("The value must be an integer.", "w");
 			} else {
 				if (d.valueOf() > this.width) {
-					z = this.valueOf() + (d.valueOf() - this.width);
+					z = this.valueOf() + d.valueOf() - this.day;
 				} else if (d.valueOf() < 1) {
 					z = this.valueOf() - (this.day - d.valueOf());
 				} else {
-					z = dateToNumber(this.year, this.month, d.valueOf());
-				}
-				if (z < 1) {
-					log("Lower limit for date has been extrapolated. Limit value set.", "w");
-					z = 1;
-				} else if (z > dateToNumber(9999, 12, 31)) {
-					log("Upper limit for date has been extrapolated. Limit value set.", "w");
-					z = dateToNumber(9999, 12, 31);
+					z = this.valueOf() + (d.valueOf() - this.day);
 				}
 				this._value = z;
 			}
-			return;
+			return this.valueOf();
 		}
 	});
 
@@ -1490,7 +1471,7 @@ function WDtext(input) {
 		week: {
 			enumerable: true,
 			get: function() {
-				return (this.valueOf() + WEEK_REF)%7 === 0 ? 7 : (this.valueOf() + WEEK_REF)%7;
+				return (this.valueOf() + WEEK_1st)%7 === 0 ? 7 : (this.valueOf() + WEEK_1st)%7;
 			}
 		},
 		days: {
@@ -1538,6 +1519,13 @@ function WDtext(input) {
 	Object.defineProperty(WDdate.prototype, "format", {
 		enumerable: true,
 		value: function(string, locale) {
+			if (string === undefined) {
+				return this.toString();
+			}
+			if (locale === undefined)   {
+				locale = lang();
+			}
+		//FIXME: essa função está muito lenta, acho que é por causa da bagaça abaixo
 			var names = {
 				"%d": this.day,
 				"%D": WD(this.day).fixed(2, 0, false),
@@ -1564,6 +1552,38 @@ function WDtext(input) {
 		}
 	});
 
+
+/*
+	Object.defineProperties(WDdate.prototype, {
+		"%d": {value: function() {return this.day}},
+		"%D": {value: function() {return WD(this.day).fixed(2, 0, false)}},
+		"@d": {value: function() {return this.days}},
+		"%m": {value: function() {return this.month}},
+		"%M": {value: function() {return WD(this.month).fixed(2, 0, false)}},
+		"@m": {value: function() {return this.width}},
+		"#m": {value: function() {return dateLocale(locale, this.month, this.week)[this.month-1].month.short}},
+		"#M": {value: function() {return dateLocale(locale, this.month, this.week)[this.month-1].month.long}},
+		"%y": {value: function() {return this.year}},
+		"%Y": {value: function() {return WD(this.year).fixed(4, 0, false)}},
+		"%w": {value: function() {return this.week}},
+		"@w": {value: function() {return this.weeks}},
+		"#w": {value: function() {return dateLocale(locale, this.month, this.week)[this.week-1].week.short}},
+		"#W": {value: function() {return dateLocale(locale, this.month, this.week)[this.week-1].week.long}},
+		"%l": {value: function() {return this.leap ? 366 : 365}},
+		"%c": {value: function() {return this.countdown}}
+	});
+*/
+
+
+
+
+
+
+
+
+
+
+
 	/*Retorna o método toString e valueOf*/
 	Object.defineProperties(WDdate.prototype, {
 		toString: {
@@ -1573,15 +1593,54 @@ function WDtext(input) {
 		},
 		valueOf: {
 			value: function() {
+				if (WD(this._value).type !== "number") {
+					log("Improper change of internal value has been adjusted to the minimum value.", "w");
+					this._value = DATE_min;
+				} else if (this._value < DATE_min) {
+					log("Lower limit for date has been extrapolated. Limit value set.", "w");
+					this._value = DATE_min;
+				} else if (this._value > DATE_max) {
+					log("Upper limit for date has been extrapolated. Limit value set.", "w");
+					this._value = DATE_max;
+				} else if (WD(this._value).number !== "natural") {
+					log("Incorrect change of internal value was adjusted to approximate value.", "w");
+					this._value = WD(this._value).round(0);
+				}
 				return this._value;
 			}
 		}
 	});
 
-/*---------------------------------------------------------------------------*/
+/* === ARRAY =============================================================== */
+
 	function WDarray(input) {
-		if (!(this instanceof WDarray)) {return new WDarray(input);}
-		WD.call(this, input);
+		if (!(this instanceof WDarray)) {
+			return new WDarray(input);
+		}
+		if (!isArray(input)){
+			return new WD(input);
+		}
+		var x = [];
+		if ("slice" in input) {
+			x = input.slice();
+		} else {
+			for (var i = 0; i < input.length; i++) {
+				x.push(input[i]);
+			}
+		}
+		Object.defineProperty(this, "_value", {
+			value: x
+		});
+	};
+
+	WDarray.prototype = Object.create(WD.prototype, {
+		constructor: {
+			value: WDarray
+		}
+	});
+
+
+/*
 	};
 	WDarray.prototype = Object.create(WD.prototype, {
 		constructor: {value: WDarray},
@@ -1594,7 +1653,7 @@ function WDtext(input) {
 		amount:    {enumerable: true, value: function(item) {return arrayCount(this._value, item);}},
 		replace:   {enumerable: true, value: function(item, value) {return arrayReplace(this._value, item, value);}},
 	});
-
+*/
 /*---------------------------------------------------------------------------*/
 
 	function WDdom(input) {
