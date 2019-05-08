@@ -1078,6 +1078,40 @@ function WDtext(input) {
 
 /* === TIME ================================================================ */
 
+	/*Função auxiliar para o método format*/
+	function timeFormat(caracter) {
+		var x;
+		switch(caracter) {
+			case "%h":
+				x = this.hour;
+				break;
+			case "%H":
+				x = this.h24;
+				break;
+			case "#h":
+				x = this.ampm;
+				break;
+			case "#H":
+				x = WD(this.h24).fixed(2, 0, false);
+				break;
+			case "%m":
+				x = this.minute;
+				break;
+			case "%M":
+				x = WD(this.minute).fixed(2, 0, false);
+				break;
+			case "%s":
+				x = this.second;
+				break;
+			case "%S":
+				x = WD(this.second).fixed(2, 0, false);
+				break;
+		}
+		return x;
+	};
+
+/*...........................................................................*/
+
 	function WDtime(input) {
 		if (!(this instanceof WDtime)) {
 			return new WDtime(input);
@@ -1209,20 +1243,14 @@ function WDtext(input) {
 	Object.defineProperty(WDtime.prototype, "format", {
 		enumerable: true,
 		value: function(string) {
-			var names;
+			var re, names;
 			string = String(string).toString();
-			names = {
-				"%h": this.hour,
-				"%H": this.h24,
-				"#h": this.ampm,
-				"#H": WD(this.h24).fixed(2, 0, false),
-				"%m": this.minute,
-				"%M": WD(this.minute).fixed(2, 0, false),
-				"%s": this.second,
-				"%S": WD(this.second).fixed(2, 0, false)
-			}
-			for (var i in names) {
-				string = string.replace(new RegExp(i, "g"), names[i]);
+			names = ["%h", "%H", "#h", "#H", "%m", "%M", "%s", "%S"]
+			for (var i = 0; i < names.length; i++) {
+				if (string.indexOf(names[i]) >= 0) {
+					re = new RegExp(names[i], "g")
+					string = string.replace(re, timeFormat.call(this, names[i]));
+				}
 			}
 			return string;
 		}
@@ -1321,6 +1349,62 @@ function WDtext(input) {
 			log(e.toString(), "a");
 		}
 		return options;
+	};
+
+	/*Função auxiliar para o método format*/
+	function dateFormat(caracter, locale) {
+		var x;
+		switch(caracter) {
+			case "%d":
+ 				x = this.day;
+ 				break;
+			case "%D":
+ 				x = WD(this.day).fixed(2, 0, false);
+ 				break;
+			case "@d":
+ 				x = this.days;
+ 				break;
+			case "%m":
+ 				x = this.month;
+ 				break;
+			case "%M":
+ 				x = WD(this.month).fixed(2, 0, false);
+ 				break;
+			case "@m":
+ 				x = this.width;
+ 				break;
+			case "#m":
+ 				x = dateLocale(locale, this.month, this.week)[this.month-1].month.short;
+ 				break;
+			case "#M":
+ 				x = dateLocale(locale, this.month, this.week)[this.month-1].month.long;
+ 				break;
+			case "%y":
+ 				x = this.year;
+ 				break;
+			case "%Y":
+ 				x = WD(this.year).fixed(4, 0, false);
+ 				break;
+			case "%w":
+ 				x = this.week;
+ 				break;
+			case "@w":
+ 				x = this.weeks;
+ 				break;
+			case "#w":
+ 				x = dateLocale(locale, this.month, this.week)[this.week-1].week.short;
+ 				break;
+			case "#W":
+ 				x = dateLocale(locale, this.month, this.week)[this.week-1].week.long;
+ 				break;
+			case "%l":
+ 				x = this.leap ? 366 : 365;
+ 				break;
+			case "%c":
+ 				x = this.countdown;
+ 				break;
+		}
+		return x;
 	};
 
 /*...........................................................................*/
@@ -1464,7 +1548,7 @@ function WDtext(input) {
 	Object.defineProperties(WDdate.prototype, {
 		leap: {
 			enumerable: true,
-			get: function() {
+			get: function() {toString()
 				return isLeap(this.year);
 			}
 		},
@@ -1519,70 +1603,24 @@ function WDtext(input) {
 	Object.defineProperty(WDdate.prototype, "format", {
 		enumerable: true,
 		value: function(string, locale) {
+			var re, names;
 			if (string === undefined) {
 				return this.toString();
 			}
 			if (locale === undefined)   {
 				locale = lang();
 			}
-		//FIXME: essa função está muito lenta, acho que é por causa da bagaça abaixo
-			var names = {
-				"%d": this.day,
-				"%D": WD(this.day).fixed(2, 0, false),
-				"@d": this.days,
-				"%m": this.month,
-				"%M": WD(this.month).fixed(2, 0, false),
-				"@m": this.width,
-				"#m": dateLocale(locale, this.month, this.week)[this.month-1].month.short,
-				"#M": dateLocale(locale, this.month, this.week)[this.month-1].month.long,
-				"%y": this.year,
-				"%Y": WD(this.year).fixed(4, 0, false),
-				"%w": this.week,
-				"@w": this.weeks,
-				"#w": dateLocale(locale, this.month, this.week)[this.week-1].week.short,
-				"#W": dateLocale(locale, this.month, this.week)[this.week-1].week.long,
-				"%l": this.leap ? 366 : 365,
-				"%c": this.countdown
-			}
+			names = ["%d", "%D", "@d", "%m", "%M", "@m", "#m", "#M", "%y", "%Y", "%w", "@w", "#w", "#W", "%l", "%c"];
 			string = String(string).toString();
-			for (var i in names) {
-				string = string.replace(new RegExp(i, "g"), names[i]);
+			for (var i = 0; i < names.length; i++) {
+				if (string.indexOf(names[i]) >= 0) {
+					re = new RegExp(names[i], "g");
+					string = string.replace(re , dateFormat.call(this, names[i], locale));
+				}
 			}
 			return string;
 		}
 	});
-
-
-/*
-	Object.defineProperties(WDdate.prototype, {
-		"%d": {value: function() {return this.day}},
-		"%D": {value: function() {return WD(this.day).fixed(2, 0, false)}},
-		"@d": {value: function() {return this.days}},
-		"%m": {value: function() {return this.month}},
-		"%M": {value: function() {return WD(this.month).fixed(2, 0, false)}},
-		"@m": {value: function() {return this.width}},
-		"#m": {value: function() {return dateLocale(locale, this.month, this.week)[this.month-1].month.short}},
-		"#M": {value: function() {return dateLocale(locale, this.month, this.week)[this.month-1].month.long}},
-		"%y": {value: function() {return this.year}},
-		"%Y": {value: function() {return WD(this.year).fixed(4, 0, false)}},
-		"%w": {value: function() {return this.week}},
-		"@w": {value: function() {return this.weeks}},
-		"#w": {value: function() {return dateLocale(locale, this.month, this.week)[this.week-1].week.short}},
-		"#W": {value: function() {return dateLocale(locale, this.month, this.week)[this.week-1].week.long}},
-		"%l": {value: function() {return this.leap ? 366 : 365}},
-		"%c": {value: function() {return this.countdown}}
-	});
-*/
-
-
-
-
-
-
-
-
-
-
 
 	/*Retorna o método toString e valueOf*/
 	Object.defineProperties(WDdate.prototype, {
@@ -1638,6 +1676,162 @@ function WDtext(input) {
 			value: WDarray
 		}
 	});
+
+	/*Informar o comprimento do array*/
+		Object.defineProperty(WDarray.prototype, "width", {
+			enumerable: true,
+			get: function() {
+				return this.valueOf().length;
+			}
+		});
+
+	/*Informar se o argumento está contido no array*/
+	Object.defineProperty(WDarray.prototype, "inside", {
+		enumerable: true,
+		value: function(item, show) {
+			if (show !== true) {
+				show = false;
+			}
+			var x;
+			x = show === true ? [] : false;
+			for (var i = 0; i < this.width; i++) {
+				if (this.valueOf()[i] === item) {
+					if (show === true) {
+						x.push(i);
+					} else {
+						x = true;
+						break;
+					}
+				}
+			}
+			return x;
+		}
+	});
+
+	/*Remove todos os itens do array e o retorna*/
+	Object.defineProperty(WDarray.prototype, "del", {
+		enumerable: true,
+		value: function() {
+			for (var i = 0 ; i < arguments.length; i++) {
+				while (this.inside(arguments[i])) {
+					this.valueOf().splice(this.valueOf().indexOf(arguments[i]), 1);
+				}
+			}
+			return this.valueOf();
+		}
+	});
+
+	/*Adiciona itens ao array e o retorna*/
+	Object.defineProperty(WDarray.prototype, "add", {
+		enumerable: true,
+		value: function() {
+			for (var i = 0 ; i < arguments.length; i++) {
+					this.valueOf().push(arguments[i]);
+			}
+			return this.valueOf();
+		}
+	});
+
+	/*Adiciona itens se o item não existir e recíproca*/
+	Object.defineProperty(WDarray.prototype, "toggle", {
+		enumerable: true,
+		value: function() {
+			for (var i = 0 ; i < arguments.length; i++) {
+				if (this.inside(arguments[i])) {
+					this.del(arguments[i]);
+				} else {
+					this.add(arguments[i]);
+				}
+			}
+			return this.valueOf();
+		}
+	});
+
+	/*Retorna a quantidade de vezes que o item aparece em array*/
+	Object.defineProperty(WDarray.prototype, "count", {
+		enumerable: true,
+		value: function(item) {
+			return this.inside(item, true).length;
+		}
+	});
+	
+	/*Troca o valor antigo pelo novo valor em todas ocorrências*/
+	Object.defineProperty(WDarray.prototype, "replace", {
+		enumerable: true,
+		value: function(item, value) {
+			var index;
+			index = this.inside(item, true);
+			for (var i = 0 ; i < index.length; i++) {
+				this.valueOf()[index[i]] = value;
+			}
+			return this.valueOf();
+		}
+	});
+
+	Object.defineProperty(WDarray.prototype, "unique", {
+		enumerable: true,
+		value: function(sort) {
+			var array;
+			array = sort === true ? this.sort : this.valueOf();
+			array =  array.filter(function(v, i, a) {
+				return a.indexOf(v) == i;
+			});
+			return array;
+		}
+	});
+
+	
+
+	function arraySort(array) {
+		/*Retorna o array ordenado: números, tempo, data e outros*/
+		var aNumber, aTime, aDate, aNormal, aReturn, re, y, x, kind;
+		aNumber = [];
+		aTime   = [];
+		aDate   = [];
+		aNormal = [];
+		aReturn = [];
+		for (var i = 0; i < array.length; i++) {
+			x    = array[i];
+			kind = type2(x);
+			if (kind === "number") {
+				aNumber.push({"x": x, "y": numberDefiner(x)});
+			} else if (kind === "date") {
+				aDate.push({"x": x, "y": dateDefiner(x)});
+			} else if (kind === "time") {
+				aDate.push({"x": x, "y": timeDefiner(x)});
+			} else {
+				aNormal.push({"x": x, "y": stringClear(x).toUpperCase()});
+			}
+		}
+		aNumber.sort(function(a,b) {return a.y - b.y;});
+		aTime.sort(function(a,b) {return a.y - b.y;});
+		aDate.sort(function(a,b) {return a.y - b.y;});
+		aNormal.sort(function(a,b) {return a.y > b.y;});
+		aNumber.forEach(function(v, i, a) {a[i] = v.x;});
+		aTime.forEach(function(v, i, a) {a[i] = v.x;});
+		aDate.forEach(function(v, i, a) {a[i] = v.x;});
+		aNormal.forEach(function(v, i, a) {a[i] = v.x;});
+		aReturn = aReturn.concat(aNumber, aTime, aDate, aNormal);
+		return aReturn;
+	};
+
+	
+	//Acabar com essa porra
+	function arrayOrganized(array) {
+		/*Retorna array combinadocom arrayUnique e arraySort*/
+		return arraySort(arrayUnique(array));
+	};
+
+
+
+	function arrayAdd() {}
+
+
+
+
+
+
+
 
 
 /*
@@ -2023,6 +2217,13 @@ function WDtext(input) {
 		keyup: keyboardProcedures
 	});
 
+
+
+
+
+
+
+//FIXME acabar com essa merda
 /*===========================================================================*/
 	function wd(input) {
 		/*Retorna o construtor de acordo com o tipo de input*/
@@ -2043,34 +2244,6 @@ function WDtext(input) {
 		}
 		return null;
 	};
-
-
-	function $(selector, root) {
-		/*Retorna os elementos html identificados pelo seletor css no elemento root*/
-		if (root === undefined) {
-			root = document;
-		}
-		return root.querySelectorAll(selector);
-	};
-
-
-
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 
 	function type2(input, ajax) {
 		/*Retorna o tipo de input*/
@@ -2132,96 +2305,14 @@ function WDtext(input) {
 	};
 
 /*===========================================================================*/
-
-
-
-/*===========================================================================*/
-	function arrayDel(array, item) {
-		/*Retona array sem item*/
-		while (array.indexOf(item) >= 0) {
-			array.splice(array.indexOf(item), 1);
+	function $(selector, root) {
+		/*Retorna os elementos html identificados pelo seletor css no elemento root*/
+		if (root === undefined) {
+			root = document;
 		}
-		return array;
-	};
-	
-	function arrayAdd(array, item) {
-		/*Retona o array acrescido de item, se item ainda não estiver listado*/
-		if (array.indexOf(item) < 0) {array.push(item);}
-		return array;
+		return root.querySelectorAll(selector);
 	};
 
-	function arrayToggle(array, item) {
-		/*Retorna array acrescido ou diminuído de item a depender da existência de item em array*/
-		if (arrayCount(array, item) === 0) {
-			array = arrayAdd(array, item);
-		} else {
-			array = arrayDel(array, item);
-		}
-		return array;
-	};
-
-	function arrayCount(array, item) {
-		/*Retorna a quantidade de vezes que o item aparece em array*/
-		var count = 0;
-		for (var i = 0; i < array.length; i++) {
-			if (array[i] === item) {count++;}
-		}
-		return count;
-	};
-
-	function arrayReplace(array, item, value) {
-		/*Retorna array com substituição de item por value*/
-		if (item === value) {return array;}
-		while (array.indexOf(item) >= 0) {
-			array[array.indexOf(item)] = value;
-		}
-		return array;
-	};
-
-	function arraySort(array) {
-		/*Retorna o array ordenado: números, tempo, data e outros*/
-		var aNumber, aTime, aDate, aNormal, aReturn, re, y, x, kind;
-		aNumber = [];
-		aTime   = [];
-		aDate   = [];
-		aNormal = [];
-		aReturn = [];
-		for (var i = 0; i < array.length; i++) {
-			x    = array[i];
-			kind = type2(x);
-			if (kind === "number") {
-				aNumber.push({"x": x, "y": numberDefiner(x)});
-			} else if (kind === "date") {
-				aDate.push({"x": x, "y": dateDefiner(x)});
-			} else if (kind === "time") {
-				aDate.push({"x": x, "y": timeDefiner(x)});
-			} else {
-				aNormal.push({"x": x, "y": stringClear(x).toUpperCase()});
-			}
-		}
-		aNumber.sort(function(a,b) {return a.y - b.y;});
-		aTime.sort(function(a,b) {return a.y - b.y;});
-		aDate.sort(function(a,b) {return a.y - b.y;});
-		aNormal.sort(function(a,b) {return a.y > b.y;});
-		aNumber.forEach(function(v, i, a) {a[i] = v.x;});
-		aTime.forEach(function(v, i, a) {a[i] = v.x;});
-		aDate.forEach(function(v, i, a) {a[i] = v.x;});
-		aNormal.forEach(function(v, i, a) {a[i] = v.x;});
-		aReturn = aReturn.concat(aNumber, aTime, aDate, aNormal);
-		return aReturn;
-	};
-
-	function arrayUnique(array) {
-		/*Retorna array sem elementos duplicados*/
-		return array.filter(function(v, i, a) {return a.indexOf(v) == i;});
-	};
-
-	function arrayOrganized(array) {
-		/*Retorna array combinadocom arrayUnique e arraySort*/
-		return arraySort(arrayUnique(array));
-	};
-
-/*===========================================================================*/
 	function htmlLoad(elem, text) {
 		/*Carrega página HTML requisitada no elemento informado*/
 		var scripts, script;
