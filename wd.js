@@ -1772,7 +1772,7 @@ function WDtext(input) {
 		enumerable: true,
 		value: function(sort) {
 			var array;
-			array = sort === true ? this.sort : this.valueOf();
+			array = sort === true ? this.sort() : this.valueOf();
 			array =  array.filter(function(v, i, a) {
 				return a.indexOf(v) == i;
 			});
@@ -1780,74 +1780,99 @@ function WDtext(input) {
 		}
 	});
 
-	
-
-	function arraySort(array) {
-		/*Retorna o array ordenado: números, tempo, data e outros*/
-		var aNumber, aTime, aDate, aNormal, aReturn, re, y, x, kind;
-		aNumber = [];
-		aTime   = [];
-		aDate   = [];
-		aNormal = [];
-		aReturn = [];
-		for (var i = 0; i < array.length; i++) {
-			x    = array[i];
-			kind = type2(x);
-			if (kind === "number") {
-				aNumber.push({"x": x, "y": numberDefiner(x)});
-			} else if (kind === "date") {
-				aDate.push({"x": x, "y": dateDefiner(x)});
-			} else if (kind === "time") {
-				aDate.push({"x": x, "y": timeDefiner(x)});
-			} else {
-				aNormal.push({"x": x, "y": stringClear(x).toUpperCase()});
+	/*Retorna o array ordenado: nulo, números, tempo, data, text e outros*/
+	Object.defineProperty(WDarray.prototype, "sort", {
+		enumerable: true,
+		value: function(unique) {
+			var aNull, aNumber, aTime, aDate, aText, aOthers, aFinal;
+			var uNull, uNumber, uTime, uDate, uText, uOthers;
+			var real, made;
+			aNull   = []; uNull   = [];
+			aNumber = []; uNumber = [];
+			aTime   = []; uTime   = [];
+			aDate   = []; uDate   = [];
+			aText   = []; uText   = [];
+			aOthers = []; uOthers = [];
+			aFinal  = [];
+			for (var i = 0; i < this.valueOf().length; i++) {
+				real = this.valueOf()[i];
+				made = WD(real);
+				switch(made.type) {
+					case "null":
+						if (unique !== true) {
+							aNull.push(real);
+						} else if (uNull.indexOf(made.valueOf()) < 0) {
+							aNull.push(real);
+							uNull.push(made.valueOf());
+						}
+						break;
+					case "number":
+						if (unique !== true) {
+							aNumber.push({real: real, made: made.valueOf()});
+						} else if (uNumber.indexOf(made.valueOf()) < 0) {
+							aNumber.push({real: real, made: made.valueOf()});
+							uNumber.push(made.valueOf());
+						}
+						break;
+					case "time":
+						if (unique !== true) {
+							aTime.push({real: real, made: made.valueOf()});
+						} else if (uTime.indexOf(made.valueOf()) < 0) {
+							aTime.push({real: real, made: made.valueOf()});
+							uTime.push(made.valueOf());
+						}
+						break;
+					case "date":
+						if (unique !== true) {
+							aDate.push({real: real, made: made.valueOf()});
+						} else if (uDate.indexOf(made.valueOf()) < 0) {
+							aDate.push({real: real, made: made.valueOf()});
+							uDate.push(made.valueOf());
+						}
+						break;
+					case "text":
+						if (unique !== true) {
+							aText.push({real: real, made: made.toString().toUpperCase()});
+						} else if (uText.indexOf(made.valueOf()) < 0) {
+							aText.push({real: real, made: made.toString().toUpperCase()});
+							uText.push(made.toString().toUpperCase());
+						}
+						break;
+					default:
+						if (unique !== true) {
+							aOthers.push(real);
+						} else if (uOthers.indexOf(real) < 0) {
+							aOthers.push(real);
+							uOthers.push(real);
+						}
+				}
 			}
+			aNull.sort();
+			aNumber.sort(function(a,b) {
+				return a.made - b.made;
+			});
+			aTime.sort(function(a,b) {
+				return a.made - b.made;
+			});
+			aDate.sort(function(a,b) {
+				return a.made - b.made;
+			});
+			aText.sort(function(a,b) {
+				return a.made > b.made;
+			});
+			aOthers.sort();
+			aFinal = aFinal.concat(aNull);
+			made = [aNumber, aTime, aDate, aText];
+			for (i = 0; i < made.length; i++) {
+				for (var j = 0; j < made[i].length; j++) {
+					aFinal.push(made[i][j].real);
+				}		
+			}
+			aFinal = aFinal.concat(aOthers);
+			return aFinal;
 		}
-		aNumber.sort(function(a,b) {return a.y - b.y;});
-		aTime.sort(function(a,b) {return a.y - b.y;});
-		aDate.sort(function(a,b) {return a.y - b.y;});
-		aNormal.sort(function(a,b) {return a.y > b.y;});
-		aNumber.forEach(function(v, i, a) {a[i] = v.x;});
-		aTime.forEach(function(v, i, a) {a[i] = v.x;});
-		aDate.forEach(function(v, i, a) {a[i] = v.x;});
-		aNormal.forEach(function(v, i, a) {a[i] = v.x;});
-		aReturn = aReturn.concat(aNumber, aTime, aDate, aNormal);
-		return aReturn;
-	};
-
-	
-	//Acabar com essa porra
-	function arrayOrganized(array) {
-		/*Retorna array combinadocom arrayUnique e arraySort*/
-		return arraySort(arrayUnique(array));
-	};
-
-
-
-	function arrayAdd() {}
-
-
-
-
-
-
-
-
-
-/*
-	};
-	WDarray.prototype = Object.create(WD.prototype, {
-		constructor: {value: WDarray},
-		sort:      {enumerable: true, get: function() {return arraySort(this._value);}},
-		unique:    {enumerable: true, get: function() {return arrayUnique(this._value);}},
-		organized: {enumerable: true, get: function() {return arrayOrganized(this._value);}},
-		del:       {enumerable: true, value: function(item) {return arrayDel(this._value, item);}},
-		add:       {enumerable: true, value: function(item) {return arrayAdd(this._value, item);}},
-		toggle:    {enumerable: true, value: function(item) {return arrayToggle(this._value, item);}},
-		amount:    {enumerable: true, value: function(item) {return arrayCount(this._value, item);}},
-		replace:   {enumerable: true, value: function(item, value) {return arrayReplace(this._value, item, value);}},
 	});
-*/
+
 /*---------------------------------------------------------------------------*/
 
 	function WDdom(input) {
@@ -1923,6 +1948,10 @@ function WDtext(input) {
 
 
 /*===========================================================================*/
+	function arrayAdd() {}//fixme apagar essa merda
+
+
+
 	function data_wdLoad(e) {
 		/*Carrega html externo*/
 		if (!("wdLoad" in e.dataset)) {return;}
