@@ -28,23 +28,6 @@ var wd = (function() {
 		return value;
 	};
 	
-	
-
-	/*Verifica se o elemento está dentro do array ou retorna a primeira posição*/
-	function inArray(array, value, index) {
-		if (index !== true) {
-			index = false;
-		}
-		var x = false;
-		for (var i = 0; i < array.length; i++) {
-			if (array[i] === value) {
-				x = index ? i : true;
-				break;
-			}
-		}
-		return x;
-	};
-	
 	/*Retorna verdadeiro se o ano for bissexto*/
 	function isLeap(y) {
 		var x;
@@ -256,7 +239,7 @@ var wd = (function() {
 				x = false;
 			} else if (d > 31 || d < 1) {
 				x = false;
-			} else if (d > 30 && inArray([2, 4, 6, 9, 11], m)) {
+			} else if (d > 30 && [2, 4, 6, 9, 11].indexOf(m) >= 0) {
 				x = false;
 			} else if (d > 29 && m == 2) {
 				x = false;
@@ -305,7 +288,7 @@ var wd = (function() {
 			} else if (isArray(input)) {
 				return new WDarray(input);
 			} else if (isDOM(input)) {
-				//return new WDdom(input);
+				return new WDdom(input);
 			} else if (isNumber(input)) {
 				return new WDnumber(input);
 			} else if (isText(input)) {
@@ -532,7 +515,7 @@ function WDtext(input) {
 		}
 		Object.defineProperty(this, "_value", {
 			writable: true,
-			value: input
+			value: input.trim()
 		});
 	};
 	
@@ -801,10 +784,10 @@ function WDtext(input) {
 			for (var i = 0; i < pattern.length; i++) {
 				if (pattern[i] === "\\") {
 					i++;
-					if (inArray(metaReference, pattern[i])) {
+					if (WD(metaReference).inside(pattern[i])) {
 						target += pattern[i];
 					}	else {
-						target += metacharacter[inArray(metaReference, pattern[i], true)];
+						target += metacharacter[WD(metaReference).inside(pattern[i], true)[0]];
 					}
 				} else if (pattern[i] === "(") {
 					check  += pattern[i];
@@ -814,7 +797,7 @@ function WDtext(input) {
 				} else if (pattern[i] === ")") {
 					check += pattern[i];
 					close  = true;
-				} else if (close && !inArray(expression, pattern[i])) {
+				} else if (close && !WD(expression).inside(pattern[i])) {
 					target += pattern[i];
 				} else {
 					check += pattern[i];
@@ -1263,7 +1246,7 @@ function WDtext(input) {
 				return this.format("#H:%M:%S");
 			}
 		},
-		valueOf: {
+		valueOf: {//FIXME: se maior que 24h tirar o excedente e recíproca? 25h = 01h -01h = 23h (mudar _value)?????
 			value: function() {
 				if (WD(this._value).type !== "number") {
 					log("Improper change of internal value has been adjusted to the minimum value.", "w");
@@ -1418,6 +1401,7 @@ function WDtext(input) {
 		}
 		var date, x;
 		if ("Date" in window && (input instanceof Date || input.constructor === Date)) {
+			x = input;
 			date = [x.getFullYear(), x.getMonth()+1, x.getDate()];
 		} else {
 			input = input.trim();
@@ -1504,7 +1488,7 @@ function WDtext(input) {
 					y = this.year + WD((m - 1)/12).integer;
 					m = m%12;
 				}
-				if (inArray([4, 6, 9, 11], m) && d > 30) {
+				if (WD([4, 6, 9, 11]).inside(m) && d > 30) {
 					d = 30;
 				} else if (m === 2 && d > 28) {
 					d = isLeap(y) ? 29 : 28;
@@ -1581,9 +1565,9 @@ function WDtext(input) {
 			enumerable: true,
 			get: function() {
 				var w;
-				if (inArray([1, 3, 5, 7, 8, 10, 12], this.month)) {
+				if (WD([1, 3, 5, 7, 8, 10, 12]).inside(this.month)) {
 					w = 31;
-				} else if (inArray([4, 6, 9, 11], this.month)) {
+				} else if (WD([4, 6, 9, 11]).inside(this.month)) {
 					w = 30;
 				} else {
 					w = this.leap ? 29 : 28;
@@ -1678,12 +1662,12 @@ function WDtext(input) {
 	});
 
 	/*Informar o comprimento do array*/
-		Object.defineProperty(WDarray.prototype, "width", {
-			enumerable: true,
-			get: function() {
-				return this.valueOf().length;
-			}
-		});
+	Object.defineProperty(WDarray.prototype, "width", {
+		enumerable: true,
+		get: function() {
+			return this.valueOf().length;
+		}
+	});
 
 	/*Informar se o argumento está contido no array*/
 	Object.defineProperty(WDarray.prototype, "inside", {
@@ -1801,47 +1785,47 @@ function WDtext(input) {
 					case "null":
 						if (unique !== true) {
 							aNull.push(real);
-						} else if (uNull.indexOf(made.valueOf()) < 0) {
-							aNull.push(real);
+						} else if (!WD(uNull).inside(made.valueOf())) {
+							aNull.push(null);
 							uNull.push(made.valueOf());
 						}
 						break;
 					case "number":
 						if (unique !== true) {
 							aNumber.push({real: real, made: made.valueOf()});
-						} else if (uNumber.indexOf(made.valueOf()) < 0) {
-							aNumber.push({real: real, made: made.valueOf()});
+						} else if (!WD(uNumber).inside(made.valueOf())) {
+							aNumber.push({real: made.valueOf(), made: made.valueOf()});
 							uNumber.push(made.valueOf());
 						}
 						break;
 					case "time":
 						if (unique !== true) {
 							aTime.push({real: real, made: made.valueOf()});
-						} else if (uTime.indexOf(made.valueOf()) < 0) {
-							aTime.push({real: real, made: made.valueOf()});
+						} else if (!WD(uTime).inside(made.valueOf())) {
+							aTime.push({real: made.toString(), made: made.valueOf()});
 							uTime.push(made.valueOf());
 						}
 						break;
 					case "date":
 						if (unique !== true) {
 							aDate.push({real: real, made: made.valueOf()});
-						} else if (uDate.indexOf(made.valueOf()) < 0) {
-							aDate.push({real: real, made: made.valueOf()});
+						} else if (!WD(uDate).inside(made.valueOf())) {
+							aDate.push({real: made.toString(), made: made.valueOf()});
 							uDate.push(made.valueOf());
 						}
 						break;
 					case "text":
 						if (unique !== true) {
 							aText.push({real: real, made: made.toString().toUpperCase()});
-						} else if (uText.indexOf(made.valueOf()) < 0) {
-							aText.push({real: real, made: made.toString().toUpperCase()});
+						} else if (!WD(uText).inside(made.valueOf())) {
+							aText.push({real: made.toString(), made: made.toString().toUpperCase()});
 							uText.push(made.toString().toUpperCase());
 						}
 						break;
 					default:
 						if (unique !== true) {
 							aOthers.push(real);
-						} else if (uOthers.indexOf(real) < 0) {
+						} else if (!WD(uOthers).inside(real)) {
 							aOthers.push(real);
 							uOthers.push(real);
 						}
@@ -1873,12 +1857,491 @@ function WDtext(input) {
 		}
 	});
 
-/*---------------------------------------------------------------------------*/
+/* === DOM ================================================================= */
+
+
+	/*Transforma atributo com traço para camel case*/
+	function camelCase(input) {
+		var x = WD(input).toString();
+		if ((/\-/).test(x)) {
+			x = WD(x.replace(/\-/g, " ")).title(true).toString().split(" ");
+			x[0] = x[0].toLowerCase();
+			x = x.join("");
+		}
+		return x;
+	};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*...........................................................................*/
 
 	function WDdom(input) {
-		if (!(this instanceof WDdom)) {return new WDdom(input);}
-		WD.call(this, input);
+		if (!(this instanceof WDdom)) {
+			return new WDdom(input);
+		}
+		if (!isDOM(input)){log(8658675867);
+			return new WD(input);
+		}
+		Object.defineProperty(this, "_value", {
+			value: input
+		});
 	};
+	
+	WDdom.prototype = Object.create(WD.prototype, {
+		constructor: {
+			value: WDdom
+		}
+	});
+
+	/*Executa o método informado loopando todos elementos html (input)*/
+	Object.defineProperty(WDdom.prototype, "run", {
+		enumerable: true,
+		value: function(method) {
+			if (WD(method).type !== "function") {
+				log("The \"method\" argument is required.", "w");
+				return null;
+			}
+			var x;
+			for (var i = 0; i < this.valueOf().length; i++) {
+				x = this.valueOf()[i];
+				if (x !== window && x.nodeType != 1 && x.nodeType != 9) {
+					continue;
+				}
+				method(x);
+			}
+			return;
+		}
+	});
+
+	/*Carrega página HTML requisitada no elemento informado*/
+	Object.defineProperty(WDdom.prototype, "load", {
+		enumerable: true,
+		value: function(text) {
+			this.run(function(elem) {
+				var scripts, script;
+				elem.innerHTML = text;
+				scripts = elem.querySelectorAll("script");
+				for (var i = 0; i < scripts.length; i++) {
+					script = document.createElement("script");
+					if (scripts[i].src === "") {
+						script.textContent = scripts[i].textContent;
+					} else {
+						script.src = scripts[i].src;
+					}
+					elem.appendChild(script);
+					//htmlAction(script, "del"); //FIXME alterar para WD(script).action("del") e testar
+				}
+				//loadingProcedures(); //FIXME apagar comentário depois de tudo pronto e testar
+				return;
+			});
+			return;
+		}
+	});
+
+	/*Define o valor dos atributos data*/
+	Object.defineProperty(WDdom.prototype, "data", {
+		enumerable: true,
+		value: function(obj) {
+			this.run(function(elem) {
+				if (obj === undefined) {
+					obj = {};
+				}
+				var key;
+				for (var i in obj) {
+					key = camelCase(i);
+					if (obj[i] === null) {
+						delete elem.dataset[key];
+					} else {
+						elem.dataset[key] = WD(obj[i]).type === "regexp" ? WD(obj[i]).toString() : obj[i];
+						//settingProcedures(elem, key); //FIXME apagar comentário depois de tudo pronto e testar
+					}
+				}
+				return;
+			});
+			return;
+		}
+	});
+
+	/*Define o atributo style do elemento a partir da nomenclatura CSS*/
+	Object.defineProperty(WDdom.prototype, "style", {
+		enumerable: true,
+		value: function(styles) {
+			this.run(function(elem) {
+				if (styles === undefined) {
+					styles = {};
+				}
+				var key;
+				for (var i in styles) {
+					key = camelCase(i);
+					if (key in elem.style) {
+						elem.style[key] = styles[i];
+					} else {
+						log("The \""+i+"\" style was not found in "+elem.tagName+" element!", "w");
+					}
+				}
+				return;
+			});
+			return;
+		}
+	});
+
+
+
+
+
+	
+
+
+	function htmlSetHandler(elem, event, method, act) {
+		/*Define função para adicionar eventos*/
+		event = (/^on/i).test(event) ? event.toLowerCase() : "on"+event.toLowerCase();
+		if (type2(method) !== "f()" && method !== null) {
+			log("The "+event+" attribute must be a function or null value.", "e");
+			return;
+		}
+		if (!(event in elem)) {
+			log("The \""+event+"\" attribute was not found in "+elem.tagName+" element!", "w");
+			return;
+		}
+		if (method === null) {
+			elem[event] = null;
+			return;
+		}
+		var methods;
+		if (type2(elem[event]) !== "f()") {
+			methods = [];
+		} else if (elem[event].name === "wdEventHandler") {
+				methods = elem[event]("showMethods");
+		} else {
+			methods = [elem[event]];
+		}
+		if (act === "add") {
+			methods = arrayAdd(methods, method);
+		} else if (act === "del") {
+			methods = arrayDel(methods, method);
+		}
+		function wdEventHandler(ev) {
+			if (ev === "showMethods") {return methods;}
+			for (var i = 0; i < methods.length; i++) {methods[i].call(this, ev);}
+		}
+		elem[event] = wdEventHandler;
+		return;
+	};
+
+	function htmlHandler(elem, obj, remove) {
+		/*Determina ação para definir manipuladores de evento a partir de um objeto*/
+		if (obj === undefined) {obj = {};}
+		if (remove === undefined) {remove = false;}
+		var act, method, methods;
+		act = remove === true ? "del" : "add";
+		for (var event in obj) {
+			methods = type2(obj[event]) === "array" ? obj[event] : [obj[event]];
+			for (var j = 0; j < methods.length; j++) {
+				method = methods[j];
+				htmlSetHandler(elem, event, method, act);
+			}
+		}
+		return;
+	};
+
+	
+
+	function htmlClass(elem, list) {
+		/*Manipula os valores do atributo class*/
+		if (list === undefined) {list = {};}
+		var values, i;
+		values = arrayOrganized(stringTrim(elem.className).split(" "));
+		if (list === null) {
+			values = [];
+		} else if (type2(list) === "object") {
+			if ("add" in list) {
+				if (type2(list.add) !== "array") {
+					list.add = [list.add];
+				}
+				for (i = 0; i < list.add.length; i++) {
+					values = arrayAdd(values, list.add[i]);
+				}
+			}
+			if ("del" in list) {
+				if (type2(list.del) !== "array") {
+					list.del = [list.del];
+				}
+				for (i = 0; i < list.del.length; i++) {
+					values = arrayDel(values, list.del[i]);
+				}
+			}
+			if ("toggle" in list) {
+				if (type2(list.toggle) !== "array") {
+					list.toggle = [list.toggle];
+				}
+				for (i = 0; i < list.toggle.length; i++) {
+					values = arrayToggle(values, list.toggle[i]);
+				}
+			}
+		}
+		elem.className = values.length === 0 ? "" : stringTrim(arrayOrganized(values).join(" "));
+		return;
+	};
+	
+	
+
+	function htmlFilter(elem, string, min) {
+		/*Exibe somente os elementos filhos cujo conteúdo textual contenha o valor informado*/
+		if (string === undefined) {string = "";}
+		if (min === undefined) {min = 0;}
+		
+		
+		if (string.length < min) {return;}
+		var child, content;
+		string = string.toUpperCase();
+		child  = elem.children;
+		for (var i = 0; i < child.length; i++) {
+			content = child[i].textContent.toUpperCase();
+			if   (content.indexOf(string) === -1) {child[i].style.display = "none";}
+			else {child[i].style.display = null;}
+		};
+		return;
+	};
+
+	function htmlRepeat(elem, object) {
+		/*Constroi elementos html a partir de um array de objetos*/
+		var inner, re, html;
+		html = elem.innerHTML;
+		if (html.search(/\{\{.+\}\}/gi) >= 0) {
+			elem.dataset.wdRepeatModel = html;
+		} else if ("wdRepeatModel" in elem.dataset) {
+			html = elem.dataset.wdRepeatModel;
+		} else {
+			return false;
+		}
+		elem.innerHTML = "";
+		html = html.replace(/\}\}\=\"\"/gi, "}}");
+		for (var i in object) {
+			inner = html;
+			for (var c in object[i]) {
+				re = new RegExp("\\{\\{"+c+"\\}\\}", "g");
+				inner = inner.replace(re, object[i][c]);
+			};
+			elem.innerHTML += inner;
+		};
+		loadingProcedures();
+		return;
+	};
+
+	function htmlSort(elem, order, col) {
+		/*Ordena os filhos do elemento com base em seu conteúdo textual*/
+		if (order === undefined) {order = 1;}
+		if (col === undefined) {col = null;}
+		var dom = [], text = [], sort = [], seq = [], index, childs, value;
+		childs = elem.children;
+		for (var i = 0; i < childs.length; i++) {
+			dom.push(childs[i]);
+			value = col === null ? childs[i].textContent : childs[i].children[col].textContent;
+			text.push(stringTrim(value));
+			sort.push(stringTrim(value));
+		};
+		sort = arraySort(sort);
+		for (i = 0; i < sort.length; i++) {
+			index = text.indexOf(sort[i]);
+			seq.push(index);
+			text[index] = null;
+		};
+		if (order < 0) {seq.reverse();}
+		for (i = 0; i < seq.length; i++) {
+			elem.appendChild(dom[seq[i]]);
+		};
+		return;
+	};
+
+	function htmlPage(elem, page, size) {
+		/*Exibe somente os elementos filhos no intervalo numérico informado*/
+		if (page === undefined) {page = 0;}
+		if (size === undefined) {size = 1;}
+		var lines, width, pages = [], section = [];
+		page = numberRound(page, 0);
+		size = size === 0 ? 1 : numberAbs(size);
+		lines = elem.children;
+		width = (size <= 1 && size > 0) ? numberRound(size * lines.length, 0) : numberRound(size, 0);
+		for (var i = 0; i < lines.length; i++) {
+			section.push(lines[i]);
+			if (section.length%width === 0 || i+1 === lines.length) {
+				pages.push(section);
+				section = [];
+			}
+		}
+		if (page < 0) {page = (pages.length + page) < 0 ? 0 : pages.length + page;}
+		if (page+1 > pages.length) {page = pages.length-1;}
+		for (i = 0; i < pages.length; i++) {
+			for (var n = 0; n < pages[i].length; n++) {
+				if (i === page) {
+					pages[i][n].style.display = null;
+				} else {
+					pages[i][n].style.display = "none";
+				}
+			}
+		}
+		return pages.length;
+	};
+
+	function htmlAction(elem, act) {
+		/*Define ação para o objeto html*/
+		if (act === undefined) {act = "toggle";}
+		var tag = elem.tagName.toUpperCase();
+		switch(act) {
+			case "open":
+				if (tag === "DIALOG" && "showModal" in elem) {
+					elem.showModal();
+
+				} else if (tag === "DETAILS" && "open" in elem) {
+					elem.open = true;
+				} else {
+					elem.dataset.wdOpen = true;
+				}
+				break;
+			case "close":
+				if (tag === "DIALOG" && "close" in elem) {
+					elem.close();
+				} else if (tag === "DETAILS" && "open" in elem) {
+					elem.open = false;
+				}
+				delete elem.dataset.wdOpen;
+				break;
+			case "toggle":
+				if (elem.open === true || "wdOpen" in elem.dataset) {
+					htmlAction(elem, "close");
+				} else {
+					htmlAction(elem, "open");
+				}
+				break;
+			case "tab":
+				var childs = elem.parentElement.children;
+				for (var i = 0; i < childs.length; i++) {childs[i].style.display = "none";}
+				elem.style.display = null;
+				break;
+			case "del":
+				if (elem.remove !== undefined) {
+					elem.remove();
+				} else {
+					elem.parentElement.removeChild(elem);
+				}
+				break;
+			case "show":
+				if (elem.style.display === "none") {
+					elem.style.display = "wdHide" in elem.dataset ? elem.dataset.wdHide : null;
+				}
+				delete elem.dataset.wdHide;
+				break;
+			case "hide":
+				if (elem.style.display !== "none") {
+					elem.dataset.wdHide = elem.style.display;
+					elem.style.display = "none";
+				}
+				break;
+			case "check":
+				if (elem.tagName.toUpperCase() === "INPUT") {
+					if (elem.type.toUpperCase() === "CHECKBOX" || elem.type.toUpperCase() === "RADIO") {
+						elem.checked = true;
+					}
+				}
+				break;
+			case "uncheck":
+				if (elem.tagName.toUpperCase() === "INPUT") {
+					if (elem.type.toUpperCase() === "CHECKBOX" || elem.type.toUpperCase() === "RADIO") {
+						elem.checked = false;
+					}
+				}
+				break;
+			case "togglecheck":
+				if (elem.tagName.toUpperCase() === "INPUT") {
+					if (elem.type.toUpperCase() === "CHECKBOX" || elem.type.toUpperCase() === "RADIO") {
+						elem.checked = elem.checked === true ? false : true;
+					}
+				}
+				break;
+			case "clean":
+				if ("value" in elem) {
+					elem.value = "";
+				} else if ("textContent" in elem) {
+					elem.textContent = ""
+				} else if ("innerHTML" in elem) {
+					elem.innerHTML = "";
+				}
+				break;
+		}
+		return;
+	};
+
+
+	/*FIXME não funciona o getDefaultComputedStyle em outros navegadores*/
+	function htmlGetStyles(input) {
+		/*Retorna um array contendo os estilos (padrão ou computado) de todos os elementos de input*/
+		var list = [];
+		for (var i = 0; i < input.length; i++) {
+			try {
+				list.push({
+					default:  "getDefaultComputedStyle" in window ? window.getDefaultComputedStyle(input[i], null) : {},
+					computed: "getComputedStyle" in window ? window.getComputedStyle(input[i], null) : {}
+				});
+			} catch(e) {
+				list.push({default: {}, computed: {}});
+			}
+		}
+		return list;
+	};
+
+
+
+
+
+
+
+
+
+	/*Retorna o método toString, valueOf*/
+	Object.defineProperties(WDdom.prototype, {
+		e: {
+			enumerable: true,
+			get: function() {
+				return this.valueOf();
+			}
+		},
+		valueOf: {
+			value: function() {
+				var x;
+				if (this._value === document || this._value === window) {
+					x = [this._value];
+				} else if (this._value instanceof HTMLElement) {
+					x = [this._value];
+				} else {
+					x = this._value;
+				}
+				return x;
+			}
+		}
+	});
+
+
+
+
+
+
+
+
+
+
+
+/*	
 	WDdom.prototype = Object.create(WD.prototype, {
 		constructor: {value: WDdom},
 		execute: {enumerable: true, value: function(method) {
@@ -1918,7 +2381,7 @@ function WDtext(input) {
 		styles: {enumerable: true, get: function() {return htmlGetStyles(type2(this._value) !== "[html]" ? [this._value] : this._value);}},
 	});
 
-
+*/
 
 
 
@@ -1949,6 +2412,16 @@ function WDtext(input) {
 
 /*===========================================================================*/
 	function arrayAdd() {}//fixme apagar essa merda
+
+
+	function $(selector, root) {
+		/*Retorna os elementos html identificados pelo seletor css no elemento root*/
+		if (root === undefined) {
+			root = document;
+		}
+		return root.querySelectorAll(selector);
+	};
+
 
 
 
@@ -2236,6 +2709,7 @@ function WDtext(input) {
 	};
 
 	/*Definindo eventos*/
+	/*
 	wd(window).handler({
 		load: [loadingProcedures, hashProcedures],
 		resize: scalingProcedures,
@@ -2246,7 +2720,7 @@ function WDtext(input) {
 		keyup: keyboardProcedures
 	});
 
-
+	*/	
 
 
 
@@ -2333,385 +2807,16 @@ function WDtext(input) {
 		return x;
 	};
 
-/*===========================================================================*/
-	function $(selector, root) {
-		/*Retorna os elementos html identificados pelo seletor css no elemento root*/
-		if (root === undefined) {
-			root = document;
-		}
-		return root.querySelectorAll(selector);
-	};
 
-	function htmlLoad(elem, text) {
-		/*Carrega página HTML requisitada no elemento informado*/
-		var scripts, script;
-		elem.innerHTML = text;
-		scripts = elem.querySelectorAll("script");
-		for (var i = 0; i < scripts.length; i++) {
-			script = document.createElement("script");
-			if (scripts[i].src === "") {
-				script.textContent = scripts[i].textContent;
-			} else {
-				script.src = scripts[i].src;
-			}
-			elem.appendChild(script);
-			htmlAction(script, "del");
-		}
-		loadingProcedures();
-		return;
-	};
 
-	function htmlRun(input, method) {
-		/*Executa o método informado loopando todos elementos html (input)*/
-		if (["html", "doc", "win"].indexOf(type2(input)) >= 0) {input = [input];}
-		for (var i = 0; i < input.length; i++) {
-			if (input[i] !== window && input[i].nodeType != 1 && input[i].nodeType != 9) {continue;}
-			method(input[i]);
-		}
-		return;
-	};
 
-	function htmlCamelCase(input) {
-		/*Transforma atributo com traço para camel case*/
-		var camel = "";
-		input = stringTrim(input).toLowerCase();
-		for (var n in input) {
-			if (input[n] === "-") {
-				continue;
-			} else if (input[n-1] === "-") {
-				camel += input[n].toUpperCase();
-			} else {
-				camel += input[n];
-			}
-		}
-		return camel;
-	};
 
-	function htmlSetHandler(elem, event, method, act) {
-		/*Define função para adicionar eventos*/
-		event = (/^on/i).test(event) ? event.toLowerCase() : "on"+event.toLowerCase();
-		if (type2(method) !== "f()" && method !== null) {
-			log("The "+event+" attribute must be a function or null value.", "e");
-			return;
-		}
-		if (!(event in elem)) {
-			log("The \""+event+"\" attribute was not found in "+elem.tagName+" element!", "w");
-			return;
-		}
-		if (method === null) {
-			elem[event] = null;
-			return;
-		}
-		var methods;
-		if (type2(elem[event]) !== "f()") {
-			methods = [];
-		} else if (elem[event].name === "wdEventHandler") {
-				methods = elem[event]("showMethods");
-		} else {
-			methods = [elem[event]];
-		}
-		if (act === "add") {
-			methods = arrayAdd(methods, method);
-		} else if (act === "del") {
-			methods = arrayDel(methods, method);
-		}
-		function wdEventHandler(ev) {
-			if (ev === "showMethods") {return methods;}
-			for (var i = 0; i < methods.length; i++) {methods[i].call(this, ev);}
-		}
-		elem[event] = wdEventHandler;
-		return;
-	};
 
-	function htmlHandler(elem, obj, remove) {
-		/*Determina ação para definir manipuladores de evento a partir de um objeto*/
-		if (obj === undefined) {obj = {};}
-		if (remove === undefined) {remove = false;}
-		var act, method, methods;
-		act = remove === true ? "del" : "add";
-		for (var event in obj) {
-			methods = type2(obj[event]) === "array" ? obj[event] : [obj[event]];
-			for (var j = 0; j < methods.length; j++) {
-				method = methods[j];
-				htmlSetHandler(elem, event, method, act);
-			}
-		}
-		return;
-	};
 
-	function htmlStyle(elem, styles) {
-		/*Define o atributo style do elemento a partir da nomenclatura CSS*/
-		if (styles === undefined) {styles = {};}
-		var css, camel;
-		for (var i in styles) {
-			camel = stringTrim(i);
-			css   = htmlCamelCase(i);
-			if (camel in elem.style) {
-				elem.style[camel] = styles[i];
-			} else if (css in elem.style) {
-				elem.style[css] = styles[i];
-			} else {
-				log("htmlStyle: the \""+i+"\" attribute was not found in "+elem.tagName+" element!", "w");
-			}
-		}
-		return;
-	};
 
-	function htmlClass(elem, list) {
-		/*Manipula os valores do atributo class*/
-		if (list === undefined) {list = {};}
-		var values, i;
-		values = arrayOrganized(stringTrim(elem.className).split(" "));
-		if (list === null) {
-			values = [];
-		} else if (type2(list) === "object") {
-			if ("add" in list) {
-				if (type2(list.add) !== "array") {
-					list.add = [list.add];
-				}
-				for (i = 0; i < list.add.length; i++) {
-					values = arrayAdd(values, list.add[i]);
-				}
-			}
-			if ("del" in list) {
-				if (type2(list.del) !== "array") {
-					list.del = [list.del];
-				}
-				for (i = 0; i < list.del.length; i++) {
-					values = arrayDel(values, list.del[i]);
-				}
-			}
-			if ("toggle" in list) {
-				if (type2(list.toggle) !== "array") {
-					list.toggle = [list.toggle];
-				}
-				for (i = 0; i < list.toggle.length; i++) {
-					values = arrayToggle(values, list.toggle[i]);
-				}
-			}
-		}
-		elem.className = values.length === 0 ? "" : stringTrim(arrayOrganized(values).join(" "));
-		return;
-	};
-	
-	function htmlData(elem, obj) {
-		/*Define o valor dos atributos data*/
-		if (obj === undefined) {obj = {};}
-		var key;
-		for (var i in obj) {
-			key = /\-/.test(i) ? htmlCamelCase(i) : i;
-			if (obj[i] === null) {
-				delete elem.dataset[key];
-			} else {
-				elem.dataset[key] = type2(obj[i]) === "regex" ? obj[i].source : obj[i];
-				settingProcedures(elem, key);
-			}
-		}
-		return;
-	};
 
-	function htmlFilter(elem, string, min) {
-		/*Exibe somente os elementos filhos cujo conteúdo textual contenha o valor informado*/
-		if (string === undefined) {string = "";}
-		if (min === undefined) {min = 0;}
-		
-		
-		if (string.length < min) {return;}
-		var child, content;
-		string = string.toUpperCase();
-		child  = elem.children;
-		for (var i = 0; i < child.length; i++) {
-			content = child[i].textContent.toUpperCase();
-			if   (content.indexOf(string) === -1) {child[i].style.display = "none";}
-			else {child[i].style.display = null;}
-		};
-		return;
-	};
 
-	function htmlRepeat(elem, object) {
-		/*Constroi elementos html a partir de um array de objetos*/
-		var inner, re, html;
-		html = elem.innerHTML;
-		if (html.search(/\{\{.+\}\}/gi) >= 0) {
-			elem.dataset.wdRepeatModel = html;
-		} else if ("wdRepeatModel" in elem.dataset) {
-			html = elem.dataset.wdRepeatModel;
-		} else {
-			return false;
-		}
-		elem.innerHTML = "";
-		html = html.replace(/\}\}\=\"\"/gi, "}}");
-		for (var i in object) {
-			inner = html;
-			for (var c in object[i]) {
-				re = new RegExp("\\{\\{"+c+"\\}\\}", "g");
-				inner = inner.replace(re, object[i][c]);
-			};
-			elem.innerHTML += inner;
-		};
-		loadingProcedures();
-		return;
-	};
 
-	function htmlSort(elem, order, col) {
-		/*Ordena os filhos do elemento com base em seu conteúdo textual*/
-		if (order === undefined) {order = 1;}
-		if (col === undefined) {col = null;}
-		var dom = [], text = [], sort = [], seq = [], index, childs, value;
-		childs = elem.children;
-		for (var i = 0; i < childs.length; i++) {
-			dom.push(childs[i]);
-			value = col === null ? childs[i].textContent : childs[i].children[col].textContent;
-			text.push(stringTrim(value));
-			sort.push(stringTrim(value));
-		};
-		sort = arraySort(sort);
-		for (i = 0; i < sort.length; i++) {
-			index = text.indexOf(sort[i]);
-			seq.push(index);
-			text[index] = null;
-		};
-		if (order < 0) {seq.reverse();}
-		for (i = 0; i < seq.length; i++) {
-			elem.appendChild(dom[seq[i]]);
-		};
-		return;
-	};
-
-	function htmlPage(elem, page, size) {
-		/*Exibe somente os elementos filhos no intervalo numérico informado*/
-		if (page === undefined) {page = 0;}
-		if (size === undefined) {size = 1;}
-		var lines, width, pages = [], section = [];
-		page = numberRound(page, 0);
-		size = size === 0 ? 1 : numberAbs(size);
-		lines = elem.children;
-		width = (size <= 1 && size > 0) ? numberRound(size * lines.length, 0) : numberRound(size, 0);
-		for (var i = 0; i < lines.length; i++) {
-			section.push(lines[i]);
-			if (section.length%width === 0 || i+1 === lines.length) {
-				pages.push(section);
-				section = [];
-			}
-		}
-		if (page < 0) {page = (pages.length + page) < 0 ? 0 : pages.length + page;}
-		if (page+1 > pages.length) {page = pages.length-1;}
-		for (i = 0; i < pages.length; i++) {
-			for (var n = 0; n < pages[i].length; n++) {
-				if (i === page) {
-					pages[i][n].style.display = null;
-				} else {
-					pages[i][n].style.display = "none";
-				}
-			}
-		}
-		return pages.length;
-	};
-
-	function htmlAction(elem, act) {
-		/*Define ação para o objeto html*/
-		if (act === undefined) {act = "toggle";}
-		var tag = elem.tagName.toUpperCase();
-		switch(act) {
-			case "open":
-				if (tag === "DIALOG" && "showModal" in elem) {
-					elem.showModal();
-				} else if (tag === "DETAILS" && "open" in elem) {
-					elem.open = true;
-				} else {
-					elem.dataset.wdOpen = true;
-				}
-				break;
-			case "close":
-				if (tag === "DIALOG" && "close" in elem) {
-					elem.close();
-				} else if (tag === "DETAILS" && "open" in elem) {
-					elem.open = false;
-				}
-				delete elem.dataset.wdOpen;
-				break;
-			case "toggle":
-				if (elem.open === true || "wdOpen" in elem.dataset) {
-					htmlAction(elem, "close");
-				} else {
-					htmlAction(elem, "open");
-				}
-				break;
-			case "tab":
-				var childs = elem.parentElement.children;
-				for (var i = 0; i < childs.length; i++) {childs[i].style.display = "none";}
-				elem.style.display = null;
-				break;
-			case "del":
-				if (elem.remove !== undefined) {
-					elem.remove();
-				} else {
-					elem.parentElement.removeChild(elem);
-				}
-				break;
-			case "show":
-				if (elem.style.display === "none") {
-					elem.style.display = "wdHide" in elem.dataset ? elem.dataset.wdHide : null;
-				}
-				delete elem.dataset.wdHide;
-				break;
-			case "hide":
-				if (elem.style.display !== "none") {
-					elem.dataset.wdHide = elem.style.display;
-					elem.style.display = "none";
-				}
-				break;
-			case "check":
-				if (elem.tagName.toUpperCase() === "INPUT") {
-					if (elem.type.toUpperCase() === "CHECKBOX" || elem.type.toUpperCase() === "RADIO") {
-						elem.checked = true;
-					}
-				}
-				break;
-			case "uncheck":
-				if (elem.tagName.toUpperCase() === "INPUT") {
-					if (elem.type.toUpperCase() === "CHECKBOX" || elem.type.toUpperCase() === "RADIO") {
-						elem.checked = false;
-					}
-				}
-				break;
-			case "togglecheck":
-				if (elem.tagName.toUpperCase() === "INPUT") {
-					if (elem.type.toUpperCase() === "CHECKBOX" || elem.type.toUpperCase() === "RADIO") {
-						elem.checked = elem.checked === true ? false : true;
-					}
-				}
-				break;
-			case "clean":
-				if ("value" in elem) {
-					elem.value = "";
-				} else if ("textContent" in elem) {
-					elem.textContent = ""
-				} else if ("innerHTML" in elem) {
-					elem.innerHTML = "";
-				}
-				break;
-		}
-		return;
-	};
-
-	function htmlGetStyles(input) {
-		/*Retorna um array contendo os estilos (padrão ou computado) de todos os elementos de input*/
-		var list = [];
-		for (var i = 0; i < input.length; i++) {
-			try {
-				list.push({
-					default:  "getDefaultComputedStyle" in window ? window.getDefaultComputedStyle(input[i], null) : {},
-					computed: "getComputedStyle" in window ? window.getComputedStyle(input[i], null) : {}
-				});
-			} catch(e) {
-				list.push({default: {}, computed: {}});
-			}
-		}
-		return list;
-	};
-/*===========================================================================*/
-	//return wd;
 	return WD
 }());
 
