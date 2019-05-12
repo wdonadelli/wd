@@ -335,7 +335,7 @@ var wd = (function() {
 				};
 			}
 			if (x === null && "constructor" in this._value) {
-				x = value.constructor.name.toLowerCase();
+				x = this._value.constructor.name.toLowerCase();
 			} else if (x === null) {
 				x = "unknown";
 			}
@@ -1817,9 +1817,9 @@ function WDtext(input) {
 					case "text":
 						if (unique !== true) {
 							aText.push({real: real, made: made.toString().toUpperCase()});
-						} else if (!WD(uText).inside(made.valueOf())) {
+						} else if (!WD(uText).inside(made.toString())) {
 							aText.push({real: made.toString(), made: made.toString().toUpperCase()});
-							uText.push(made.toString().toUpperCase());
+							uText.push(made.toString());
 						}
 						break;
 					default:
@@ -1920,7 +1920,7 @@ function WDtext(input) {
 				}
 				method(x);
 			}
-			return;
+			return this;
 		}
 	});
 
@@ -1945,7 +1945,7 @@ function WDtext(input) {
 				//loadingProcedures(); //FIXME apagar comentário depois de tudo pronto e testar
 				return;
 			});
-			return;
+			return this;
 		}
 	});
 
@@ -1953,10 +1953,11 @@ function WDtext(input) {
 	Object.defineProperty(WDdom.prototype, "data", {
 		enumerable: true,
 		value: function(obj) {
+			if (WD(obj).type !== "object") {
+				log("data: Invalid argument!", "w");
+				return this;
+			}
 			this.run(function(elem) {
-				if (obj === undefined) {
-					obj = {};
-				}
 				var key;
 				for (var i in obj) {
 					key = camelCase(i);
@@ -1969,7 +1970,7 @@ function WDtext(input) {
 				}
 				return;
 			});
-			return;
+			return this;
 		}
 	});
 
@@ -1977,24 +1978,125 @@ function WDtext(input) {
 	Object.defineProperty(WDdom.prototype, "style", {
 		enumerable: true,
 		value: function(styles) {
+			if (WD(styles).type !== "object") {
+				log("style: Invalid argument!", "w");
+				return this;
+			}
 			this.run(function(elem) {
-				if (styles === undefined) {
-					styles = {};
-				}
 				var key;
 				for (var i in styles) {
 					key = camelCase(i);
 					if (key in elem.style) {
-						elem.style[key] = styles[i];
+						elem.style[key] = styles[io.i];
 					} else {
 						log("The \""+i+"\" style was not found in "+elem.tagName+" element!", "w");
 					}
 				}
 				return;
 			});
-			return;
+			return this;
 		}
 	});
+
+	/*Manipula os valores do atributo class*/
+	Object.defineProperty(WDdom.prototype, "class", {
+		enumerable: true,
+		value: function (list) {
+			if (!WD(["object", "null", "undefined"]).inside(WD(list).type)) {
+				log("class: Invalid argument!", "w");
+				return this;
+			}
+			this.run(function(elem) {
+				var css, cls, i;
+				css = WD(elem.className);
+				css = css.type === "null" ? [] : css.trim().split(" ");
+				if (list === null || list === undefined) {
+					css = [];
+				} else {
+					css = WD(css);
+					if (WD(list.add).type === "text") {
+						cls = WD(list.add).trim().split(" ");
+						for (i = 0; i < cls.length; i++) {
+							css.add(cls[i]);
+						}
+					}
+					if (WD(list.del).type === "text") {
+						cls = WD(list.del).trim().split(" ");
+						for (i = 0; i < cls.length; i++) {
+							css.del(cls[i]);
+						}
+					}
+					if (WD(list.toggle).type === "text") {
+						cls = WD(list.toggle).trim().split(" ");
+						for (i = 0; i < cls.length; i++) {
+							css.toggle(cls[i]);
+						}
+					}
+					css = css.valueOf();
+				}
+				elem.className = WD(css).sort(true).join(" ");
+				return;
+			});
+			return this;
+		}
+		
+	});
+	
+	/*Exibe somente os elementos filhos cujo conteúdo textual contenha o valor informado*/
+	Object.defineProperty(WDdom.prototype, "filter", {
+		enumerable: true,
+		value: function (text, show, min) {
+			if (show !== false) {
+				show = true;
+			}
+			if (WD(min).number !== "natural") {
+				min = 0;
+			}
+			if (WD(text) !== "text") {
+				text = String(text).toString();
+			}
+			text = text.toUpperCase();
+			this.run(function (elem) {
+				var child, content;
+				child  = elem.children;
+				for (var i = 0; i < child.length; i++) {
+					if (!("textContent" in child[i])) {
+						continue;
+					}
+					content = child[i].textContent.toUpperCase();
+					if (show === true) {
+						if (text.length < min || content.indexOf(text) >= 0 || text === "") {
+							WD(child[i]).class({del: "js-wd-no-display"});
+						} else {//FIXME adicionar a classe js-wd-no-display numa folha de estilo interna (onload) ou substituir por action(show) action(hide) [melhor essa última]
+							WD(child[i]).class({add: "js-wd-no-display"});
+						}
+					} else {
+						if (text.length >= min && content.indexOf(text) >= 0 && text !== "") {
+							WD(child[i]).class({del: "js-wd-no-display"});
+						} else {
+							WD(child[i]).class({add: "js-wd-no-display"});
+						}
+					}
+				};
+				return;
+			});
+			return this;
+		}
+	});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2057,63 +2159,10 @@ function WDtext(input) {
 
 	
 
-	function htmlClass(elem, list) {
-		/*Manipula os valores do atributo class*/
-		if (list === undefined) {list = {};}
-		var values, i;
-		values = arrayOrganized(stringTrim(elem.className).split(" "));
-		if (list === null) {
-			values = [];
-		} else if (type2(list) === "object") {
-			if ("add" in list) {
-				if (type2(list.add) !== "array") {
-					list.add = [list.add];
-				}
-				for (i = 0; i < list.add.length; i++) {
-					values = arrayAdd(values, list.add[i]);
-				}
-			}
-			if ("del" in list) {
-				if (type2(list.del) !== "array") {
-					list.del = [list.del];
-				}
-				for (i = 0; i < list.del.length; i++) {
-					values = arrayDel(values, list.del[i]);
-				}
-			}
-			if ("toggle" in list) {
-				if (type2(list.toggle) !== "array") {
-					list.toggle = [list.toggle];
-				}
-				for (i = 0; i < list.toggle.length; i++) {
-					values = arrayToggle(values, list.toggle[i]);
-				}
-			}
-		}
-		elem.className = values.length === 0 ? "" : stringTrim(arrayOrganized(values).join(" "));
-		return;
-	};
 	
 	
 
-	function htmlFilter(elem, string, min) {
-		/*Exibe somente os elementos filhos cujo conteúdo textual contenha o valor informado*/
-		if (string === undefined) {string = "";}
-		if (min === undefined) {min = 0;}
-		
-		
-		if (string.length < min) {return;}
-		var child, content;
-		string = string.toUpperCase();
-		child  = elem.children;
-		for (var i = 0; i < child.length; i++) {
-			content = child[i].textContent.toUpperCase();
-			if   (content.indexOf(string) === -1) {child[i].style.display = "none";}
-			else {child[i].style.display = null;}
-		};
-		return;
-	};
-
+	
 	function htmlRepeat(elem, object) {
 		/*Constroi elementos html a partir de um array de objetos*/
 		var inner, re, html;
