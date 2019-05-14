@@ -351,7 +351,7 @@ var wd = (function() {
 			for (var i in this) {
 				x.push(i);
 			}
-			return x;
+			return WD(x).sort();
 		}
 	});
 
@@ -1859,7 +1859,6 @@ function WDtext(input) {
 
 /* === DOM ================================================================= */
 
-
 	/*Transforma atributo com traço para camel case*/
 	function camelCase(input) {
 		var x = WD(input).toString();
@@ -1870,19 +1869,6 @@ function WDtext(input) {
 		}
 		return x;
 	};
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /*...........................................................................*/
 
@@ -1940,7 +1926,7 @@ function WDtext(input) {
 						script.src = scripts[i].src;
 					}
 					elem.appendChild(script);
-					//htmlAction(script, "del"); //FIXME alterar para WD(script).action("del") e testar
+					WD(script).action("del");
 				}
 				//loadingProcedures(); //FIXME apagar comentário depois de tudo pronto e testar
 				return;
@@ -2066,15 +2052,15 @@ function WDtext(input) {
 					content = child[i].textContent.toUpperCase();
 					if (show === true) {
 						if (text.length < min || content.indexOf(text) >= 0 || text === "") {
-							WD(child[i]).class({del: "js-wd-no-display"});
-						} else {//FIXME adicionar a classe js-wd-no-display numa folha de estilo interna (onload) ou substituir por action(show) action(hide) [melhor essa última]
-							WD(child[i]).class({add: "js-wd-no-display"});
+							WD(child[i]).action("show");
+						} else {
+							WD(child[i]).action("hide");
 						}
 					} else {
 						if (text.length >= min && content.indexOf(text) >= 0 && text !== "") {
-							WD(child[i]).class({del: "js-wd-no-display"});
+							WD(child[i]).action("show");
 						} else {
-							WD(child[i]).class({add: "js-wd-no-display"});
+							WD(child[i]).action("hide");
 						}
 					}
 				};
@@ -2084,8 +2070,89 @@ function WDtext(input) {
 		}
 	});
 
-
-
+	/*Define ação para o objeto html*/
+	Object.defineProperty(WDdom.prototype, "action", {
+		enumerable: true,
+		value: function (action) {
+			action = String(action).toString().toLowerCase();
+			this.run(function(elem) {
+				var tag = elem.tagName.toUpperCase();
+				switch(action) {
+					case "open":
+						if ("open" in elem) {
+							elem.open = true;
+						} else {
+							WD(elem).class({add: "wd-open"});
+						}
+						break;
+					case "close":
+						if ("open" in elem) {
+							elem.open = false;
+						} else {
+							WD(elem).class({del: "wd-open"});
+						}
+						break;
+					case "toggle-open":
+						if ("open" in elem) {
+							elem.open = elem.open !== true ? true : false;
+						} else {
+							WD(elem).class({toggle: "wd-open"});
+						}
+						break;
+					case "tab":
+						var bros = elem.parentElement.children;
+						WD(bros).action("hide");
+						WD(elem).action("show");
+						break;
+					case "del":
+						if (elem.remove !== undefined) {
+							elem.remove();
+							} else {
+							elem.parentElement.removeChild(elem);
+						}
+						break;
+					case "show":
+						WD(elem).class({del: "js-wd-no-display"});
+						break;
+					case "hide":
+						WD(elem).class({add: "js-wd-no-display"});
+						break;
+					case "check":
+						if ("checked" in elem) {
+							elem.checked = true;
+						} else {
+							WD(elem).class({add: "wd-cheked"});
+						}
+						break;
+					case "uncheck":
+						if ("checked" in elem) {
+							elem.checked = false;
+						} else {
+							WD(elem).class({del: "wd-cheked"});
+						}
+						break;
+					case "toggle-check":
+						if ("checked" in elem) {
+							elem.checked = elem.checked !== true ? true : false;
+						} else {
+							WD(elem).class({toggle: "wd-cheked"});
+						}
+						break;
+					case "clean":
+						if ("value" in elem) {
+							elem.value = "";
+						} else if ("textContent" in elem) {
+							elem.textContent = ""
+						} else if ("innerHTML" in elem) {
+							elem.innerHTML = "";
+						}
+						break;
+					}
+					return;
+				});
+			return this;
+		}
+	});
 
 
 
@@ -2243,93 +2310,6 @@ function WDtext(input) {
 		return pages.length;
 	};
 
-	function htmlAction(elem, act) {
-		/*Define ação para o objeto html*/
-		if (act === undefined) {act = "toggle";}
-		var tag = elem.tagName.toUpperCase();
-		switch(act) {
-			case "open":
-				if (tag === "DIALOG" && "showModal" in elem) {
-					elem.showModal();
-
-				} else if (tag === "DETAILS" && "open" in elem) {
-					elem.open = true;
-				} else {
-					elem.dataset.wdOpen = true;
-				}
-				break;
-			case "close":
-				if (tag === "DIALOG" && "close" in elem) {
-					elem.close();
-				} else if (tag === "DETAILS" && "open" in elem) {
-					elem.open = false;
-				}
-				delete elem.dataset.wdOpen;
-				break;
-			case "toggle":
-				if (elem.open === true || "wdOpen" in elem.dataset) {
-					htmlAction(elem, "close");
-				} else {
-					htmlAction(elem, "open");
-				}
-				break;
-			case "tab":
-				var childs = elem.parentElement.children;
-				for (var i = 0; i < childs.length; i++) {childs[i].style.display = "none";}
-				elem.style.display = null;
-				break;
-			case "del":
-				if (elem.remove !== undefined) {
-					elem.remove();
-				} else {
-					elem.parentElement.removeChild(elem);
-				}
-				break;
-			case "show":
-				if (elem.style.display === "none") {
-					elem.style.display = "wdHide" in elem.dataset ? elem.dataset.wdHide : null;
-				}
-				delete elem.dataset.wdHide;
-				break;
-			case "hide":
-				if (elem.style.display !== "none") {
-					elem.dataset.wdHide = elem.style.display;
-					elem.style.display = "none";
-				}
-				break;
-			case "check":
-				if (elem.tagName.toUpperCase() === "INPUT") {
-					if (elem.type.toUpperCase() === "CHECKBOX" || elem.type.toUpperCase() === "RADIO") {
-						elem.checked = true;
-					}
-				}
-				break;
-			case "uncheck":
-				if (elem.tagName.toUpperCase() === "INPUT") {
-					if (elem.type.toUpperCase() === "CHECKBOX" || elem.type.toUpperCase() === "RADIO") {
-						elem.checked = false;
-					}
-				}
-				break;
-			case "togglecheck":
-				if (elem.tagName.toUpperCase() === "INPUT") {
-					if (elem.type.toUpperCase() === "CHECKBOX" || elem.type.toUpperCase() === "RADIO") {
-						elem.checked = elem.checked === true ? false : true;
-					}
-				}
-				break;
-			case "clean":
-				if ("value" in elem) {
-					elem.value = "";
-				} else if ("textContent" in elem) {
-					elem.textContent = ""
-				} else if ("innerHTML" in elem) {
-					elem.innerHTML = "";
-				}
-				break;
-		}
-		return;
-	};
 
 
 	/*FIXME não funciona o getDefaultComputedStyle em outros navegadores*/
@@ -2351,22 +2331,10 @@ function WDtext(input) {
 
 
 
-
-
-
-
-
-
 	/*Retorna o método toString, valueOf*/
 	Object.defineProperties(WDdom.prototype, {
-		e: {
-			enumerable: true,
-			get: function() {
-				return this.valueOf();
-			}
-		},
 		valueOf: {
-			value: function() {
+			value: function(n) {
 				var x;
 				if (this._value === document || this._value === window) {
 					x = [this._value];
@@ -2375,20 +2343,13 @@ function WDtext(input) {
 				} else {
 					x = this._value;
 				}
+				if (WD(n).type === "number" && n < x.length && n >= 0) {
+					x = x[n];
+				}
 				return x;
 			}
 		}
 	});
-
-
-
-
-
-
-
-
-
-
 
 /*	
 	WDdom.prototype = Object.create(WD.prototype, {
