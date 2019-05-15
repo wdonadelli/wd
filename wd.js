@@ -1973,7 +1973,7 @@ function WDtext(input) {
 				for (var i in styles) {
 					key = camelCase(i);
 					if (key in elem.style) {
-						elem.style[key] = styles[io.i];
+						elem.style[key] = styles[i];
 					} else {
 						log("The \""+i+"\" style was not found in "+elem.tagName+" element!", "w");
 					}
@@ -2156,8 +2156,93 @@ function WDtext(input) {
 
 
 
+	/*Adiciona ou remove disparadores*/
+	Object.defineProperty(WDdom.prototype, "handler", {
+		enumerable: true,
+		value: function (events) {
+			if (WD(events).type !== "object") {
+				log("handler: Invalid argument!", "w");
+				return this;
+			}
+			this.run(function(elem) {
+				var action, event, methods, array, wdEventHandler;
+				for(var i in events) {
+					action  = (/^\-/).test(i) ? "del" : "add";
+					event   = i.replace(/[^a-zA-Z]/g, "").toLowerCase();
+					event   = (/^on/).test(event) ? event : "on"+event;
+					if (!(event in elem)) {
+						log("handler: invalid event: "+event+"!", "w");
+						continue;
+					}
+					if (WD(elem[event]).type !== "function") {
+						array = WD([]);
+					} else if (elem[event].name === "wdEventHandler") {
+						array = WD(elem[event]("getMethods"));
+					} else {
+						array = WD([elem[event]]);
+					}
+					methods = WD(events[i]).type === "array" ? events[i] : [events[i]];
+					for (var m = 0; m < methods.length; m++) {
+						if (WD(methods[m]).type !== "function" && methods[m] !== null ) {
+							log("handler: invalid value in "+event+" event!", "w");
+							continue;
+						}
+						if (methods[m] === null) {
+							array = WD([]);
+						} else if (action === "add") {
+							array.add(methods[m]);
+						} else {
+							array.del(methods[m]);
+						}
+					}
+					array = array.valueOf();
+					
+					
+					//FIXME daqui pra frente dá erro se adicionar mais de um evento e mais de uma função
+					/*
+					wdEventHandler = function(wdEvent) {
+						var wdMethods = array.slice();
+						if (wdEvent === "getMethods") {
+							return wdMethods;
+						}
+						for (var wdi = 0; wdi < wdMethods.length; wdi++) {
+							wdMethods[wdi].call(this, wdEvent);
+						}
+						return;
+					};
+					if (array.length > 0) {
+						elem[event] = wdEventHandler;
+					} else {
+						elem[event] = null;
+					}
+					*/
+					if (array.length > 0) {
+						elem[event] = function(wdEvent) {
+							var wdMethods = array.slice();
+							if (wdEvent === "getMethods") {
+								return wdMethods;
+							}log(wdMethods);
+							for (var wdi = 0; wdi < wdMethods.length; wdi++) {
+								wdMethods[wdi].call(this, wdEvent);
+							}
+							return;
+						};
+					} else {
+						elem[event] = null;
+					}
+					
+					
+					
+					
+				}
+				return;
+			});
+			return this;
+		}
+	});
 
-
+				
+				
 
 
 
