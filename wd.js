@@ -1869,6 +1869,21 @@ function WDtext(input) {
 		}
 		return x;
 	};
+	
+	/*Define a função para os disparadores*/
+	function getEventMethod(input) {
+		var wdEventHandler = function(ev) {
+			var methods = input;
+			if (ev === "getMethods") {
+				return methods;
+			}
+			for (var i = 0; i < methods.length; i++) {
+				methods[i].call(this, ev);
+			}
+			return;
+		};
+		return wdEventHandler;
+	};
 
 /*...........................................................................*/
 
@@ -2154,8 +2169,6 @@ function WDtext(input) {
 		}
 	});
 
-
-
 	/*Adiciona ou remove disparadores*/
 	Object.defineProperty(WDdom.prototype, "handler", {
 		enumerable: true,
@@ -2174,6 +2187,7 @@ function WDtext(input) {
 						log("handler: invalid event: "+event+"!", "w");
 						continue;
 					}
+					var array;
 					if (WD(elem[event]).type !== "function") {
 						array = WD([]);
 					} else if (elem[event].name === "wdEventHandler") {
@@ -2196,44 +2210,11 @@ function WDtext(input) {
 						}
 					}
 					array = array.valueOf();
-					
-					
-					//FIXME daqui pra frente dá erro se adicionar mais de um evento e mais de uma função
-					/*
-					wdEventHandler = function(wdEvent) {
-						var wdMethods = array.slice();
-						if (wdEvent === "getMethods") {
-							return wdMethods;
-						}
-						for (var wdi = 0; wdi < wdMethods.length; wdi++) {
-							wdMethods[wdi].call(this, wdEvent);
-						}
-						return;
-					};
 					if (array.length > 0) {
-						elem[event] = wdEventHandler;
+						elem[event] = getEventMethod(array);
 					} else {
 						elem[event] = null;
 					}
-					*/
-					if (array.length > 0) {
-						elem[event] = function(wdEvent) {
-							var wdMethods = array.slice();
-							if (wdEvent === "getMethods") {
-								return wdMethods;
-							}log(wdMethods);
-							for (var wdi = 0; wdi < wdMethods.length; wdi++) {
-								wdMethods[wdi].call(this, wdEvent);
-							}
-							return;
-						};
-					} else {
-						elem[event] = null;
-					}
-					
-					
-					
-					
 				}
 				return;
 			});
@@ -2241,11 +2222,34 @@ function WDtext(input) {
 		}
 	});
 
-				
-				
-
-
-
+	/*Constroi elementos html a partir de um array de objetos*/
+	Object.defineProperty(WDdom.prototype, "repeat", {
+		enumerable: true,
+		value: function (json) {
+			var inner, re, html;
+			html = elem.innerHTML;
+			if (html.search(/\{\{.+\}\}/gi) >= 0) {
+				elem.dataset.wdRepeatModel = html;
+			} else if ("wdRepeatModel" in elem.dataset) {
+				html = elem.dataset.wdRepeatModel;
+			} else {
+				return false;
+			}
+			elem.innerHTML = "";
+			html = html.replace(/\}\}\=\"\"/gi, "}}");
+			for (var i in object) {
+				inner = html;
+				for (var c in object[i]) {
+					re = new RegExp("\\{\\{"+c+"\\}\\}", "g");
+					inner = inner.replace(re, object[i][c]);
+				};
+				elem.innerHTML += inner;
+			};
+			//loadingProcedures(); //FIXME apagar comentário depois de tudo pronto e testar
+			return this;
+		}
+	});
+		
 
 
 
@@ -2256,58 +2260,6 @@ function WDtext(input) {
 
 	
 
-
-	function htmlSetHandler(elem, event, method, act) {
-		/*Define função para adicionar eventos*/
-		event = (/^on/i).test(event) ? event.toLowerCase() : "on"+event.toLowerCase();
-		if (type2(method) !== "f()" && method !== null) {
-			log("The "+event+" attribute must be a function or null value.", "e");
-			return;
-		}
-		if (!(event in elem)) {
-			log("The \""+event+"\" attribute was not found in "+elem.tagName+" element!", "w");
-			return;
-		}
-		if (method === null) {
-			elem[event] = null;
-			return;
-		}
-		var methods;
-		if (type2(elem[event]) !== "f()") {
-			methods = [];
-		} else if (elem[event].name === "wdEventHandler") {
-				methods = elem[event]("showMethods");
-		} else {
-			methods = [elem[event]];
-		}
-		if (act === "add") {
-			methods = arrayAdd(methods, method);
-		} else if (act === "del") {
-			methods = arrayDel(methods, method);
-		}
-		function wdEventHandler(ev) {
-			if (ev === "showMethods") {return methods;}
-			for (var i = 0; i < methods.length; i++) {methods[i].call(this, ev);}
-		}
-		elem[event] = wdEventHandler;
-		return;
-	};
-
-	function htmlHandler(elem, obj, remove) {
-		/*Determina ação para definir manipuladores de evento a partir de um objeto*/
-		if (obj === undefined) {obj = {};}
-		if (remove === undefined) {remove = false;}
-		var act, method, methods;
-		act = remove === true ? "del" : "add";
-		for (var event in obj) {
-			methods = type2(obj[event]) === "array" ? obj[event] : [obj[event]];
-			for (var j = 0; j < methods.length; j++) {
-				method = methods[j];
-				htmlSetHandler(elem, event, method, act);
-			}
-		}
-		return;
-	};
 
 	
 
