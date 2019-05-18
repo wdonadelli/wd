@@ -568,6 +568,40 @@ function WDtext(input) {
 		}
 	});
 
+	/*Localiza e altera o conteúdo do texto pelo valor informado*/
+	Object.defineProperty(WDtext.prototype, "replace", {
+		enumerable: true,
+		value: function(oldValue, newValue, change) {
+			if (change !== true) {
+				change = false;
+			}
+			var value, run;
+			if (WD(oldValue).type !== "regexp") {
+				oldValue = String(oldValue).toString();
+			}
+			if (newValue === null || newValue === undefined) {
+				newValue = "";
+			} else {
+				newValue = String(newValue).toString();
+			}
+			value = this.toString();
+			run   = true;
+			if (newValue !== oldValue) {
+				while (run) {
+						value = value.replace(oldValue, newValue);
+						run = WD(oldValue).type === "regexp" ? value.search(oldValue) : value.indexOf(oldValue);
+						run = run < 0 ? false : true;
+				}
+			} else {
+				log("replace: Substitution ignored, values ​​equal!", "w");
+			}
+			if (change === true) {
+				this._value = value;
+				value = this;
+			}
+			return value;	
+		}
+	});
 
 	/*Elimina os acentos de input*/
 	Object.defineProperty(WDtext.prototype, "clear", {
@@ -1891,7 +1925,7 @@ function WDtext(input) {
 		if (!(this instanceof WDdom)) {
 			return new WDdom(input);
 		}
-		if (!isDOM(input)){log(8658675867);
+		if (!isDOM(input)){
 			return new WD(input);
 		}
 		Object.defineProperty(this, "_value", {
@@ -1929,6 +1963,9 @@ function WDtext(input) {
 	Object.defineProperty(WDdom.prototype, "load", {
 		enumerable: true,
 		value: function(text) {
+			if (text === undefined || text === null) {
+				text =  "";
+			}
 			this.run(function(elem) {
 				var scripts, script;
 				elem.innerHTML = text;
@@ -2226,72 +2263,78 @@ function WDtext(input) {
 	Object.defineProperty(WDdom.prototype, "repeat", {
 		enumerable: true,
 		value: function (json) {
-			var inner, re, html;
-			html = elem.innerHTML;
-			if (html.search(/\{\{.+\}\}/gi) >= 0) {
-				elem.dataset.wdRepeatModel = html;
-			} else if ("wdRepeatModel" in elem.dataset) {
-				html = elem.dataset.wdRepeatModel;
-			} else {
-				return false;
+			if (WD(json).type !== "array") {
+				log("repeat: Invalid argument!", "w");
+				return this;
 			}
-			elem.innerHTML = "";
-			html = html.replace(/\}\}\=\"\"/gi, "}}");
-			for (var i in object) {
-				inner = html;
-				for (var c in object[i]) {
-					re = new RegExp("\\{\\{"+c+"\\}\\}", "g");
-					inner = inner.replace(re, object[i][c]);
-				};
-				elem.innerHTML += inner;
-			};
-			//loadingProcedures(); //FIXME apagar comentário depois de tudo pronto e testar
+			this.run(function(elem) {
+				var inner, re, html;
+				html = elem.innerHTML;
+				if (html.search(/\{\{.+\}\}/gi) >= 0) {
+					elem.dataset.wdRepeatModel = html;
+				} else if ("wdRepeatModel" in elem.dataset) {
+					html = elem.dataset.wdRepeatModel;
+				} else {//FIXME apago esse else para limpar o conteúdo no lugar de deixar {{}} exposto ao usuário?
+					return false;
+				}
+				elem.innerHTML = "";
+				html = WD(html).replace("}}=\"\"", "}}");
+				for (var i = 0; i < json.length; i++) {
+					inner = html;
+					if (WD(json[i]).type !== "object") {
+						log("repeat: Incorrect structure ignored!", "i");
+						continue;
+					}
+					for (var c in json[i]) {
+						inner = WD(inner).replace("{{"+c+"}}", json[i][c]);
+					}
+					elem.innerHTML += inner;
+				}
+				//loadingProcedures(); //FIXME apagar comentário depois de tudo pronto e testar
+				return;
+			});	
 			return this;
 		}
 	});
 		
-
-
-
-
-
-
-
-
-	
-
-
-	
-
-	
-	
-
-	
-	function htmlRepeat(elem, object) {
-		/*Constroi elementos html a partir de um array de objetos*/
-		var inner, re, html;
-		html = elem.innerHTML;
-		if (html.search(/\{\{.+\}\}/gi) >= 0) {
-			elem.dataset.wdRepeatModel = html;
-		} else if ("wdRepeatModel" in elem.dataset) {
-			html = elem.dataset.wdRepeatModel;
-		} else {
-			return false;
+	/*Exibe somente os elementos filhos no intervalo numérico informado*/
+	Object.defineProperty(WDdom.prototype, "page", {
+		enumerable: true,
+		value: function (page, size) {
+			page = WD(page).type !== "number" ? 0 : WD(page).integer;
+			size = WD(size).signal !== 1 ? 1 : size;
+			if (page === 0 && size === 1) {
+				log("page: default values ​​have been defined!", "i");
+			}
+			this.run(function(elem) {
+				var lines, amount, width, pages, start, end;
+				lines  = elem.children;
+				amount = lines.length;
+				width  = size <= 1 ? WD(size * amount).integer : WD(size).integer;
+				pages  = WD(amount / width).up;
+				if (page >= pages - 1 || page === -1) {/*page igual ou posterior a última página*/
+					start = (pages - 1) * width;
+					end   = amount - 1;
+				} else if (pages + page <= 0) {/*-page igual ou anterior a primeira página*/
+					start = 0;
+					end   = start + width - 1;
+				} else if (page < 0) {/*-page entre a primeira e última página*/
+					start = (pages + page) * width;
+					end   = start + width - 1;
+				} else {/*page entre a primeira e última página*/
+					start = page * width;
+					end   = start + width - 1;
+				}
+				WD(lines).action("hide");
+				for (var i = start; i <= end; i++) {
+					WD(lines[i]).action("show");
+				}
+				return;
+			});
+			return this;
 		}
-		elem.innerHTML = "";
-		html = html.replace(/\}\}\=\"\"/gi, "}}");
-		for (var i in object) {
-			inner = html;
-			for (var c in object[i]) {
-				re = new RegExp("\\{\\{"+c+"\\}\\}", "g");
-				inner = inner.replace(re, object[i][c]);
-			};
-			elem.innerHTML += inner;
-		};
-		loadingProcedures();
-		return;
-	};
-
+	});
+				
 	function htmlSort(elem, order, col) {
 		/*Ordena os filhos do elemento com base em seu conteúdo textual*/
 		if (order === undefined) {order = 1;}
@@ -2316,37 +2359,6 @@ function WDtext(input) {
 		};
 		return;
 	};
-
-	function htmlPage(elem, page, size) {
-		/*Exibe somente os elementos filhos no intervalo numérico informado*/
-		if (page === undefined) {page = 0;}
-		if (size === undefined) {size = 1;}
-		var lines, width, pages = [], section = [];
-		page = numberRound(page, 0);
-		size = size === 0 ? 1 : numberAbs(size);
-		lines = elem.children;
-		width = (size <= 1 && size > 0) ? numberRound(size * lines.length, 0) : numberRound(size, 0);
-		for (var i = 0; i < lines.length; i++) {
-			section.push(lines[i]);
-			if (section.length%width === 0 || i+1 === lines.length) {
-				pages.push(section);
-				section = [];
-			}
-		}
-		if (page < 0) {page = (pages.length + page) < 0 ? 0 : pages.length + page;}
-		if (page+1 > pages.length) {page = pages.length-1;}
-		for (i = 0; i < pages.length; i++) {
-			for (var n = 0; n < pages[i].length; n++) {
-				if (i === page) {
-					pages[i][n].style.display = null;
-				} else {
-					pages[i][n].style.display = "none";
-				}
-			}
-		}
-		return pages.length;
-	};
-
 
 
 	/*FIXME não funciona o getDefaultComputedStyle em outros navegadores*/
@@ -2373,17 +2385,33 @@ function WDtext(input) {
 		valueOf: {
 			value: function(n) {
 				var x;
+				n = WD(n);
 				if (this._value === document || this._value === window) {
 					x = [this._value];
 				} else if (this._value instanceof HTMLElement) {
 					x = [this._value];
 				} else {
-					x = this._value;
+					x = [];
+					for (var i = 0; i < this._value.length; i++) {
+						x.push(this._value[i]);
+					}
 				}
-				if (WD(n).type === "number" && n < x.length && n >= 0) {
-					x = x[n];
+				if (n.type === "number") {
+					x = x[n.valueOf()];
 				}
 				return x;
+			}
+		},
+		items: {
+			enumerable: true,
+			get: function() {
+				return this.valueOf().length;
+			}
+		},
+		item: {
+			enumerable: true,
+			get: function() {
+				return this.valueOf();
 			}
 		}
 	});
@@ -2458,6 +2486,19 @@ function WDtext(input) {
 
 
 /*===========================================================================*/
+	var style;
+	style = document.createElement("STYLE");
+	style.textContent = ".js-wd-no-display {display: none !important;}";
+	WD(window).handler({load: function() {
+		document.head.appendChild(style);
+		return;
+	}});
+		
+
+
+
+
+
 	function arrayAdd() {}//fixme apagar essa merda
 
 
