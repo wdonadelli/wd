@@ -344,7 +344,7 @@ var wd = (function() {
 	});
 
 	/*Exibe os métodos e atributos enumeráveis do objeto*/
-	Object.defineProperty(WD.prototype, "keys", {
+	Object.defineProperty(WD.prototype, "tools", {
 		enumerable: true,
 		get: function () {
 			var x = []
@@ -725,11 +725,6 @@ function WDtext(input) {
 		}
 	});
 		
-
-
-
-
-
 	//FIXME
 	/*Obtem o valor do texto serializado*/
 	function getSerial(value) {
@@ -745,36 +740,6 @@ function WDtext(input) {
 		return x;
 	};
 
-	//Jogar essa porra no dom ^^^^^^^^^^^^^^//
-	function ajaxGetSerialForm(fname) {
-		/*Obtem a serialização a partir do formulário informado*/
-		var form, serial, inputs, elem, name, tag, value, itype, atype, check;
-		form = document.getElementsByName(fname.replace("@", ""))[0];
-		serial = [];
-		if (form !== undefined && form.tagName.toUpperCase() === "FORM") {
-			inputs = form.elements;
-			for (var i = 0; i < inputs.length; i++) {
-				elem  = inputs[i];
-				name  = elem.name;
-				tag   = elem.tagName.toUpperCase();
-				value = elem.value;
-				itype = tag === "INPUT" ? elem.type.toUpperCase() : null;
-				atype = tag === "INPUT" ? elem.attributes.type.value.toUpperCase() : itype;
-				check = itype === "RADIO" || itype === "CHECKBOX" ? elem.checked : null;
-				if (name === undefined || name === null || stringTrim(name) === "") {
-					continue;
-				} else if ((itype === "RADIO" || itype === "CHECKBOX") && check === false) {
-					continue;
-				} else if (atype === "DATE" || itype === "DATE") {
-						value = type2(value) === "date" && value !== "%today" ? dateFormat(dateDefiner(value)) : value;
-				} else if (atype === "TIME" || itype === "TIME") {
-						value = type2(value) === "time" && value !== "%now" ? timeFormat(timeDefiner(value)) : value;
-				}
-				serial.push(name+"="+encodeURIComponent(value));
-			}
-		}
-		return serial.join("&");
-	};
 
 /* === REGEXP ============================================================== */
 
@@ -1696,7 +1661,7 @@ function WDtext(input) {
 	});
 
 	/*Informar o comprimento do array*/
-	Object.defineProperty(WDarray.prototype, "width", {
+	Object.defineProperty(WDarray.prototype, "items", {
 		enumerable: true,
 		get: function() {
 			return this.valueOf().length;
@@ -1890,6 +1855,28 @@ function WDtext(input) {
 			return aFinal;
 		}
 	});
+	
+	/*FIXME será que vale a pena?
+	Object.defineProperties(WDarray.prototype, {
+		toString: {
+			value: function(indent) {
+				var x, item;
+				x = [];
+				for (var i = 0; i < this.valueOf(); i++) {
+					item = this.valueOf()[i];
+					if (isString(item)) {
+						x.push("<q>"+item+"<q>");
+					} else if (isArray(item)) {
+						x.push(WD(item).toString());
+					} 
+					
+				
+				
+				}
+			}
+		}
+	});*/
+	
 
 /* === DOM ================================================================= */
 
@@ -2334,58 +2321,127 @@ function WDtext(input) {
 			return this;
 		}
 	});
-				
-	function htmlSort(elem, order, col) {
-		/*Ordena os filhos do elemento com base em seu conteúdo textual*/
-		if (order === undefined) {order = 1;}
-		if (col === undefined) {col = null;}
-		var dom = [], text = [], sort = [], seq = [], index, childs, value;
-		childs = elem.children;
-		for (var i = 0; i < childs.length; i++) {
-			dom.push(childs[i]);
-			value = col === null ? childs[i].textContent : childs[i].children[col].textContent;
-			text.push(stringTrim(value));
-			sort.push(stringTrim(value));
-		};
-		sort = arraySort(sort);
-		for (i = 0; i < sort.length; i++) {
-			index = text.indexOf(sort[i]);
-			seq.push(index);
-			text[index] = null;
-		};
-		if (order < 0) {seq.reverse();}
-		for (i = 0; i < seq.length; i++) {
-			elem.appendChild(dom[seq[i]]);
-		};
-		return;
-	};
 
+	/*Ordena os filhos do elemento com base em seu conteúdo textual*/
+	Object.defineProperty(WDdom.prototype, "sort", {
+		enumerable: true,
+		value: function (order, col) {
+			if (WD(order).type !== "number") {
+				order = 1;
+			}
+			if (WD(col).type !== "number") {
+				col = null;
+			}
+			this.run(function(elem) {
+				var dom, text, sort, index, target, value;
+				dom  = WD(elem.children).valueOf();
+				text = [];
+				sort = [];
+				for (var i = 0; i < dom.length; i++) {
+					target = WD(dom[i].children[col]).type === "dom" ? dom[i].children[col] : dom[i];
+					value  = target.textContent || target.innerText || target.innerHTML;
+					text.push(value.trim());
+					sort.push(value.trim());
+				}
+				sort = order < 0 ? WD(sort).sort().reverse() : WD(sort).sort();
+				for (var j = 0; j < sort.length; j++) {
+					index = text.indexOf(sort[j]);
+					text[index] = null;
+					elem.appendChild(dom[index]);
+				}
+				return;
+			});
+			return this;
+		}
+	});
 
-	/*FIXME não funciona o getDefaultComputedStyle em outros navegadores*/
-	function htmlGetStyles(input) {
-		/*Retorna um array contendo os estilos (padrão ou computado) de todos os elementos de input*/
-		var list = [];
-		for (var i = 0; i < input.length; i++) {
-			try {
-				list.push({
-					default:  "getDefaultComputedStyle" in window ? window.getDefaultComputedStyle(input[i], null) : {},
-					computed: "getComputedStyle" in window ? window.getComputedStyle(input[i], null) : {}
+	/*Obtêm o estilo aplicado aos elementos (lista)*/
+	Object.defineProperty(WDdom.prototype, "getStyle", {
+		enumerable: true,
+		value: function(css) {
+			var x, style;;
+			x = [];
+			if ("getComputedStyle" in window) {
+				this.run(function(elem) {
+					style = window.getComputedStyle(elem, null);
+					x.push(css in style ? style.getPropertyValue(css) : null);
+					return;
 				});
-			} catch(e) {
-				list.push({default: {}, computed: {}});
+			} else {
+				log("getStyle: Your browser does not have the necessary tool!", "w");
+			}
+			return x;
+		}
+	});
+	
+	/*Obtem a serialização de formulário*/
+	Object.defineProperty(WDdom.prototype, "form", {
+		enumerable: true,
+		get: function() {
+			var x, tag, name, type;
+			x = [];
+			this.run(function(elem) {
+				if("value" in elem) {
+					tag = elem.tagName.toLowerCase();
+				
+				
+				
+				}
+			
+			
+			
+				return;
+			});
+			return x;
+		}
+	});
+	
+	
+	
+
+
+	//FIXME Jogar essa porra no dom ^^^^^^^^^^^^^^//
+	function ajaxGetSerialForm(fname) {
+		/*Obtem a serialização a partir do formulário informado*/
+		var form, serial, inputs, elem, name, tag, value, itype, atype, check;
+		form = document.getElementsByName(fname.replace("@", ""))[0];
+		serial = [];
+		if (form !== undefined && form.tagName.toUpperCase() === "FORM") {
+			inputs = form.elements;
+			for (var i = 0; i < inputs.length; i++) {
+				elem  = inputs[i];
+				name  = elem.name;
+				tag   = elem.tagName.toUpperCase();
+				value = elem.value;
+				itype = tag === "INPUT" ? elem.type.toUpperCase() : null;
+				atype = tag === "INPUT" ? elem.attributes.type.value.toUpperCase() : itype;
+				check = itype === "RADIO" || itype === "CHECKBOX" ? elem.checked : null;
+				if (name === undefined || name === null || stringTrim(name) === "") {
+					continue;
+				} else if ((itype === "RADIO" || itype === "CHECKBOX") && check === false) {
+					continue;
+				} else if (atype === "DATE" || itype === "DATE") {
+						value = type2(value) === "date" && value !== "%today" ? dateFormat(dateDefiner(value)) : value;
+				} else if (atype === "TIME" || itype === "TIME") {
+						value = type2(value) === "time" && value !== "%now" ? timeFormat(timeDefiner(value)) : value;
+				}
+				serial.push(name+"="+encodeURIComponent(value));
 			}
 		}
-		return list;
+		return serial.join("&");
 	};
+
+
+
+
 
 
 
 	/*Retorna o método toString, valueOf*/
 	Object.defineProperties(WDdom.prototype, {
 		valueOf: {
-			value: function(n) {
+			value: function() {
 				var x;
-				n = WD(n);
 				if (this._value === document || this._value === window) {
 					x = [this._value];
 				} else if (this._value instanceof HTMLElement) {
@@ -2395,9 +2451,6 @@ function WDtext(input) {
 					for (var i = 0; i < this._value.length; i++) {
 						x.push(this._value[i]);
 					}
-				}
-				if (n.type === "number") {
-					x = x[n.valueOf()];
 				}
 				return x;
 			}
@@ -2415,75 +2468,6 @@ function WDtext(input) {
 			}
 		}
 	});
-
-/*	
-	WDdom.prototype = Object.create(WD.prototype, {
-		constructor: {value: WDdom},
-		execute: {enumerable: true, value: function(method) {
-			htmlRun(this._value, method); return;
-		}},
-		handler: {enumerable: true, value: function(events, remove) {
-			htmlRun(this._value, function(elem) {htmlHandler(elem, events, remove); return;}); return this;
-		}},
-		class: {enumerable: true, value: function(list) {
-			htmlRun(this._value, function(elem) {htmlClass(elem, list); return;}); return this;
-		}},
-		style: {enumerable: true, value: function(list) {
-			htmlRun(this._value, function(elem) {htmlStyle(elem, list); return;}); return this;
-		}},
-		data: {enumerable: true, value: function(list) {
-			htmlRun(this._value, function(elem) {htmlData(elem, list); return;}); return this;
-		}},
-		filter: {enumerable: true, value: function(text, min) {
-			htmlRun(this._value, function(elem) {htmlFilter(elem, text, min); return;}); return this;
-		}},
-		sort: {enumerable: true, value: function(order, col) {
-			htmlRun(this._value, function(elem) {htmlSort(elem, order, col); return;}); return this;
-		}},
-		page: {enumerable: true, value: function(page, size) {
-			htmlRun(this._value, function(elem) {htmlPage(elem, page, size); return;}); return this;
-		}},
-		repeat: {enumerable: true, value: function(obj) {
-			htmlRun(this._value, function(elem) {htmlRepeat(elem, obj); return;}); return this;
-		}},
-		load: {enumerable: true, value: function(html) {
-			htmlRun(this._value, function(elem) {htmlLoad(elem, html); return;}); return this;
-		}},
-		action: {enumerable: true, value: function(act) {
-			htmlRun(this._value, function(elem) {htmlAction(elem, act); return;}); return this;
-		}},
-		get:    {enumerable: true, get: function() {return type2(this._value) !== "[html]" ? [this._value] : this._value;}},
-		styles: {enumerable: true, get: function() {return htmlGetStyles(type2(this._value) !== "[html]" ? [this._value] : this._value);}},
-	});
-
-*/
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /*===========================================================================*/
 	var style;
