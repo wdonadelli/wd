@@ -20,7 +20,7 @@ var wd = (function() {
 	/*Retorna a linguagem do documento, a definida ou a do navegador*/
 	function lang() {
 		var value, attr;
-		attr = document.body.parentElement.attributes;
+		attr  = document.body.parentElement.attributes;
 		value = "lang" in attr ? attr.lang.value.replace(/\ /g, "") : "";
 		if (value === "") {
 			value = navigator.language || navigator.browserLanguage || "en-US";
@@ -1498,6 +1498,74 @@ function WDtext(input) {
 		}
 	});
 
+	/*Retorna o mês em formato textual*/
+	Object.defineProperties(WDdate.prototype, {
+		shortMonth: {
+			enumerable: true,
+			value: function(locale) {
+				if (WD(locale).type !== "text") {
+					locale = lang();
+				}
+				var x, main, ref;
+				main = [
+					"Jan", "Feb", "Mar", "Apr",
+					"May", "Jun", "Jul", "Aug",
+					"Sep", "Oct", "Nov", "Dec"
+				];
+				try {
+					ref = new Date(2010, this.month - 1, 1, 12, 0, 0, 0);
+					ref.toLocaleString(locale);
+					x = ref.toLocaleString(locale, {month: "short"});
+				} catch(e) {
+					log("shortMonth: Default behavior has been performed.!", "w");
+					x = main[this.month-1];
+				}
+				return x;
+			}
+		},
+		longMonth: {
+			enumerable: true,
+			value: function(locale) {
+				if (WD(locale).type !== "text") {
+					locale = lang();
+				}
+				var x, main, ref;
+				main = [
+					"January",   "February", "March",    "April",
+					"May",       "June",     "July",     "August",
+					"September", "October",  "November", "December"
+				];
+				try {
+					ref = new Date(2010, this.month - 1, 1, 12, 0, 0, 0);
+					x = ref.toLocaleString(locale, {month: "long"});
+				} catch(e) {
+					log("shortMonth: Default behavior has been performed.!", "w");
+					x = main[this.month-1];
+				}
+				return WD(x).title();
+			}
+		}
+		
+	});
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+
+
 	/*Obtêm e define o dia*/
 	Object.defineProperty(WDdate.prototype, "day", {
 		enumerable: true,
@@ -2378,64 +2446,37 @@ function WDtext(input) {
 	Object.defineProperty(WDdom.prototype, "form", {
 		enumerable: true,
 		get: function() {
-			var x, tag, name, type;
+			var x;
 			x = [];
 			this.run(function(elem) {
-				if("value" in elem) {
-					tag = elem.tagName.toLowerCase();
-				
-				
-				
+				var tag, type, font, name, value, check;
+				tag   = elem.tagName.toLowerCase();
+				type  = tag === "input" ? elem.type.toLowerCase() : null;
+				font  = tag === "input" ? elem.attributes.type.value.toLowerCase() : type;
+				name  = "name"  in elem ? elem.name  : null;
+				value = "value" in elem ? elem.value : null;
+				check = type === "radio" || type === "checkbox" ? elem.checked : null;
+				if ((type === "radio" || type === "checkbox") && check !== true) {
+					value = null;
+				} else if (type === "radio" || type === "checkbox" && check === true) {
+					value =  WD(value).type === "null" ? "True" : value;
+				} else if (type === "date" || font === "date") {
+					value = value !== "%today" && WD(value).type === "date" ? WD(value).toString() : value;
+				} else if (type === "time" || font === "time") {
+					value = value !== "%now" && WD(value).type === "time" ? WD(value).toString() : value;
+				} else if (type === "number" || font === "number") {
+					value = WD(value).type === "number" ? WD(value).valueOf() : value;
+				} else if (type === "range" || font === "range") {
+					value = WD(value).type === "number" ? WD(value).valueOf() : value;
 				}
-			
-			
-			
+				if (WD(value).type !== "null" && WD(name).type !== "null") {
+					x.push(name+"="+encodeURIComponent(value));
+				}
 				return;
 			});
-			return x;
+			return x.join("&");
 		}
 	});
-	
-	
-	
-
-
-	//FIXME Jogar essa porra no dom ^^^^^^^^^^^^^^//
-	function ajaxGetSerialForm(fname) {
-		/*Obtem a serialização a partir do formulário informado*/
-		var form, serial, inputs, elem, name, tag, value, itype, atype, check;
-		form = document.getElementsByName(fname.replace("@", ""))[0];
-		serial = [];
-		if (form !== undefined && form.tagName.toUpperCase() === "FORM") {
-			inputs = form.elements;
-			for (var i = 0; i < inputs.length; i++) {
-				elem  = inputs[i];
-				name  = elem.name;
-				tag   = elem.tagName.toUpperCase();
-				value = elem.value;
-				itype = tag === "INPUT" ? elem.type.toUpperCase() : null;
-				atype = tag === "INPUT" ? elem.attributes.type.value.toUpperCase() : itype;
-				check = itype === "RADIO" || itype === "CHECKBOX" ? elem.checked : null;
-				if (name === undefined || name === null || stringTrim(name) === "") {
-					continue;
-				} else if ((itype === "RADIO" || itype === "CHECKBOX") && check === false) {
-					continue;
-				} else if (atype === "DATE" || itype === "DATE") {
-						value = type2(value) === "date" && value !== "%today" ? dateFormat(dateDefiner(value)) : value;
-				} else if (atype === "TIME" || itype === "TIME") {
-						value = type2(value) === "time" && value !== "%now" ? timeFormat(timeDefiner(value)) : value;
-				}
-				serial.push(name+"="+encodeURIComponent(value));
-			}
-		}
-		return serial.join("&");
-	};
-
-
-
-
-
-
 
 	/*Retorna o método toString, valueOf*/
 	Object.defineProperties(WDdom.prototype, {
