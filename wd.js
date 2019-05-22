@@ -989,7 +989,7 @@ function WDtext(input) {
 		enumerable: true,
 		value: function(locale) {
 			var x;
-			if (locale === undefined) {
+			if (WD(locale).type !== "text") {
 				locale = lang();
 			}
 			try {
@@ -1007,7 +1007,7 @@ function WDtext(input) {
 		enumerable: true,
 		value: function(currency, locale) {
 			var x;
-			if (locale === undefined)   {
+			if (WD(locale).type !== "text")   {
 				locale = lang();
 			}
 			if (currency === undefined) {
@@ -1059,40 +1059,6 @@ function WDtext(input) {
 	});
 
 /* === TIME ================================================================ */
-
-	/*Função auxiliar para o método format*/
-	function timeFormat(caracter) {
-		var x;
-		switch(caracter) {
-			case "%h":
-				x = this.hour;
-				break;
-			case "%H":
-				x = this.h24;
-				break;
-			case "#h":
-				x = this.ampm;
-				break;
-			case "#H":
-				x = WD(this.h24).fixed(2, 0, false);
-				break;
-			case "%m":
-				x = this.minute;
-				break;
-			case "%M":
-				x = WD(this.minute).fixed(2, 0, false);
-				break;
-			case "%s":
-				x = this.second;
-				break;
-			case "%S":
-				x = WD(this.second).fixed(2, 0, false);
-				break;
-		}
-		return x;
-	};
-
-/*...........................................................................*/
 
 	function WDtime(input) {
 		if (!(this instanceof WDtime)) {
@@ -1225,16 +1191,27 @@ function WDtext(input) {
 	Object.defineProperty(WDtime.prototype, "format", {
 		enumerable: true,
 		value: function(string) {
-			var re, names;
-			string = String(string).toString();
-			names = ["%h", "%H", "#h", "#H", "%m", "%M", "%s", "%S"]
-			for (var i = 0; i < names.length; i++) {
-				if (string.indexOf(names[i]) >= 0) {
-					re = new RegExp(names[i], "g")
-					string = string.replace(re, timeFormat.call(this, names[i]));
+			if (WD(string).type !== "text") {
+				return this.toString();
+			}
+			var x, chars;
+			chars = {
+			"%h": this.hour,
+			"%H": this.h24,
+			"#h": this.ampm,
+			"#H": WD(this.h24).fixed(2, 0, false),
+			"%m": this.minute,
+			"%M": WD(this.minute).fixed(2, 0, false),
+			"%s": this.second,
+			"%S": WD(this.second).fixed(2, 0, false),
+			};
+			x = WD(string);
+			for (var i in chars) {
+				if (x.toString().indexOf(i) >= 0) {
+					x.replace(i, chars[i], true);
 				}
 			}
-			return string;
+			return x.toString();
 		}
 	});
 
@@ -1292,100 +1269,6 @@ function WDtext(input) {
 		l100  = WD(y  <  Y_100 ? 0 : (y - 1)/100);
 		l400  = WD(y  <  Y_400 ? 0 : (y - 1)/400);
 		x = delta.integer + l4.integer - l100.integer + l400.integer + dateDayYear(y, m, d);
-		return x;
-	};
-	
-	/*Obtem o valor do mês ou semana na língua local*/
-	function dateLocale(locale, m, w) {
-		var ref;
-		if (!isString(locale)) {
-			locale = lang();
-		}
-		var options = [
-			{month: {short: "Jan", long: "January"},   week: {short: "Sun", long: "Sunday"}},
-			{month: {short: "Feb", long: "February"},  week: {short: "Mon", long: "Monday"}},
-			{month: {short: "Mar", long: "March"},     week: {short: "Tue", long: "Tuesday"}},
-			{month: {short: "Apr", long: "April"},     week: {short: "Wed", long: "Wednesday"}},
-			{month: {short: "May", long: "May"},       week: {short: "Thu", long: "Thursday"}},
-			{month: {short: "Jun", long: "June"},      week: {short: "Fri", long: "Friday"}},
-			{month: {short: "Jul", long: "July"},      week: {short: "Sat", long: "Saturday"}},
-			{month: {short: "Aug", long: "August"},    week: {short: "?", long: "?"}},
-			{month: {short: "Sep", long: "September"}, week: {short: "?", long: "?"}},
-			{month: {short: "Oct", long: "October"},   week: {short: "?", long: "?"}},
-			{month: {short: "Nov", long: "November"},  week: {short: "?", long: "?"}},
-			{month: {short: "Dec", long: "December"},  week: {short: "?", long: "?"}}
-		];
-		try {
-			ref = new Date(1970, m - 1, 15, 12, 0, 0, 0);
-			ref.setDate(15 + w - (ref.getDay()+1));
-			ref.toLocaleString(locale);
-			for (var i = 0; i < options.length; i++) {
-				options[i].month.short = ref.toLocaleString(locale, {month: "short"});
-				options[i].month.long  = ref.toLocaleString(locale, {month: "long"});
-				if (i < 7) {
-					options[i].week.short = ref.toLocaleString(locale, {weekday: "short"});
-					options[i].week.long  = ref.toLocaleString(locale, {weekday: "long"});
-				}
-			}
-		} catch(e) {
-			log(e.toString(), "a");
-		}
-		return options;
-	};
-
-	/*Função auxiliar para o método format*/
-	function dateFormat(caracter, locale) {
-		var x;
-		switch(caracter) {
-			case "%d":
- 				x = this.day;
- 				break;
-			case "%D":
- 				x = WD(this.day).fixed(2, 0, false);
- 				break;
-			case "@d":
- 				x = this.days;
- 				break;
-			case "%m":
- 				x = this.month;
- 				break;
-			case "%M":
- 				x = WD(this.month).fixed(2, 0, false);
- 				break;
-			case "@m":
- 				x = this.width;
- 				break;
-			case "#m":
- 				x = dateLocale(locale, this.month, this.week)[this.month-1].month.short;
- 				break;
-			case "#M":
- 				x = dateLocale(locale, this.month, this.week)[this.month-1].month.long;
- 				break;
-			case "%y":
- 				x = this.year;
- 				break;
-			case "%Y":
- 				x = WD(this.year).fixed(4, 0, false);
- 				break;
-			case "%w":
- 				x = this.week;
- 				break;
-			case "@w":
- 				x = this.weeks;
- 				break;
-			case "#w":
- 				x = dateLocale(locale, this.month, this.week)[this.week-1].week.short;
- 				break;
-			case "#W":
- 				x = dateLocale(locale, this.month, this.week)[this.week-1].week.long;
- 				break;
-			case "%l":
- 				x = this.leap ? 366 : 365;
- 				break;
-			case "%c":
- 				x = this.countdown;
- 				break;
-		}
 		return x;
 	};
 
@@ -1514,13 +1397,12 @@ function WDtext(input) {
 				];
 				try {
 					ref = new Date(2010, this.month - 1, 1, 12, 0, 0, 0);
-					ref.toLocaleString(locale);
 					x = ref.toLocaleString(locale, {month: "short"});
 				} catch(e) {
-					log("shortMonth: Default behavior has been performed.!", "w");
+					log("shortMonth: Default behavior has been performed!", "w");
 					x = main[this.month-1];
 				}
-				return x;
+				return x.toLowerCase();
 			}
 		},
 		longMonth: {
@@ -1539,32 +1421,13 @@ function WDtext(input) {
 					ref = new Date(2010, this.month - 1, 1, 12, 0, 0, 0);
 					x = ref.toLocaleString(locale, {month: "long"});
 				} catch(e) {
-					log("shortMonth: Default behavior has been performed.!", "w");
+					log("longMonth: Default behavior has been performed!", "w");
 					x = main[this.month-1];
 				}
-				return WD(x).title();
+				return x.toLowerCase();
 			}
 		}
-		
 	});
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-
 
 	/*Obtêm e define o dia*/
 	Object.defineProperty(WDdate.prototype, "day", {
@@ -1650,26 +1513,84 @@ function WDtext(input) {
 		}
 	});
 
+	/*Retorna o dia da semana em formato textual*/
+	Object.defineProperties(WDdate.prototype, {
+		shortWeek: {
+			enumerable: true,
+			value: function(locale) {
+				if (WD(locale).type !== "text") {
+					locale = lang();
+				}
+				var x, main, ref;
+				main = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+				main = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+				try {
+					ref = new Date(1970, this.month - 1, 15, 12, 0, 0, 0);
+					ref.setDate(15 + this.week - (ref.getDay()+1));
+					ref.toLocaleString(locale);
+					x = ref.toLocaleString(locale, {weekday: "short"});
+				} catch(e) {
+					log("shortWeek: Default behavior has been performed!", "w");
+					x = main[this.week-1];
+				}
+				return x.toLowerCase();
+			}
+		},
+		longWeek: {
+			enumerable: true,
+			value: function(locale) {
+				if (WD(locale).type !== "text") {
+					locale = lang();
+				}
+				var x, main, ref;
+				main = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+				try {
+					ref = new Date(1970, this.month - 1, 15, 12, 0, 0, 0);
+					ref.setDate(15 + this.week - (ref.getDay()+1));
+					ref.toLocaleString(locale);
+					x = ref.toLocaleString(locale, {weekday: "long"});
+				} catch(e) {
+					log("shortWeek: Default behavior has been performed!", "w");
+					x = main[this.week-1];
+				}
+				return x.toLowerCase();
+			}
+		}
+	});
+
 	/*Formata a data de acordo com a string informada*/
 	Object.defineProperty(WDdate.prototype, "format", {
 		enumerable: true,
 		value: function(string, locale) {
-			var re, names;
-			if (string === undefined) {
+			if (WD(string).type !== "text") {
 				return this.toString();
 			}
-			if (locale === undefined)   {
-				locale = lang();
+			var x, chars;
+			chars = {
+				"%d": this.day,
+				"%D": WD(this.day).fixed(2, 0, false),
+				"@d": this.days,
+				"%m": this.month,
+				"%M": WD(this.month).fixed(2, 0, false),
+				"@m": this.width,
+				"#m": this.shortMonth(locale),
+				"#M": this.longMonth(locale),
+				"%y": this.year,
+				"%Y": WD(this.year).fixed(4, 0, false),
+				"%w": this.week,
+				"@w": this.weeks,
+				"#w": this.shortWeek(locale),
+				"#W": this.longWeek(locale),
+				"%l": this.leap ? 366 : 365,
+				"%c": this.countdown
 			}
-			names = ["%d", "%D", "@d", "%m", "%M", "@m", "#m", "#M", "%y", "%Y", "%w", "@w", "#w", "#W", "%l", "%c"];
-			string = String(string).toString();
-			for (var i = 0; i < names.length; i++) {
-				if (string.indexOf(names[i]) >= 0) {
-					re = new RegExp(names[i], "g");
-					string = string.replace(re , dateFormat.call(this, names[i], locale));
+			x = WD(string);
+			for (var i in chars) {
+				if (x.toString().indexOf(i) >= 0) {
+					x.replace(i, chars[i], true);
 				}
 			}
-			return string;
+			return x.toString();
 		}
 	});
 
@@ -1745,7 +1666,7 @@ function WDtext(input) {
 			}
 			var x;
 			x = show === true ? [] : false;
-			for (var i = 0; i < this.width; i++) {
+			for (var i = 0; i < this.items; i++) {
 				if (this.valueOf()[i] === item) {
 					if (show === true) {
 						x.push(i);
@@ -1765,7 +1686,7 @@ function WDtext(input) {
 		value: function() {
 			for (var i = 0 ; i < arguments.length; i++) {
 				while (this.inside(arguments[i])) {
-					this.valueOf().splice(this.valueOf().indexOf(arguments[i]), 1);
+					this._value.splice(this.valueOf().indexOf(arguments[i]), 1);
 				}
 			}
 			return this.valueOf();
@@ -1777,7 +1698,7 @@ function WDtext(input) {
 		enumerable: true,
 		value: function() {
 			for (var i = 0 ; i < arguments.length; i++) {
-					this.valueOf().push(arguments[i]);
+					this._value.push(arguments[i]);
 			}
 			return this.valueOf();
 		}
