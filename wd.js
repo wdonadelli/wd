@@ -27,7 +27,21 @@ var wd = (function() {
 		}
 		return value;
 	};
-	
+
+	/*Retorna os elementos html identificados pelo seletor css no elemento root*/	
+	function $(selector, root) {
+		var x;
+		if (root === undefined) {
+			root = document;
+		}
+		try {
+			x = root.querySelectorAll(selector);
+		} catch(e) {
+			x = null;
+		}
+		return x;
+	};
+
 	/*Retorna verdadeiro se o ano for bissexto*/
 	function isLeap(y) {
 		var x;
@@ -189,11 +203,11 @@ var wd = (function() {
 			x = false;
 		} else if (value.trim() === "%now") {
 			x =  true;
-		} else if (/^[0-9]+(\:[0-5][0-9]){1,2}$/.test(value.trim())) {
+		} else if (/^(0?[0-9]|1[0-9]|2[0-4])(\:[0-5][0-9]){1,2}$/.test(value.trim())) {
 			x =  true;
 		} else if ((/^(0?[1-9]|1[0-2])\:[0-5][0-9]\ ?(am|pm)$/i).test(value.trim())) {
 			x =  true;
-		} else if ((/^(0?[0-9]|1[0-9]|2[0-3])h[0-5][0-9]$/i).test(value.trim())) {
+		} else if ((/^(0?[0-9]|1[0-9]|2[0-4])h[0-5][0-9]$/i).test(value.trim())) {
 			x =  true;
 		} else {
 			x =  false;
@@ -394,6 +408,20 @@ var wd = (function() {
 					break;
 				case "boolean":
 					x = this._value.valueOf() === true ? "True" : "False";
+					break;
+				case "array":
+					try {
+						x = JSON.stringify(this._value);
+					} catch(e) {
+						x = this._value.toString();
+					}
+					break;
+				case "object":
+					try {
+						x = JSON.stringify(this._value);
+					} catch(e) {
+						x = this._value.toString();
+					}
 					break;
 				default:
 					try {
@@ -678,14 +706,19 @@ function WDtext(input) {
 				return null;
 			}
 			if (WD(method).type !== "function") {
-				log("The \"method\" argument is required.", "w");
+				log("request: The \"method\" argument is required.", "w");
 				return null;
 			}
-			var xhttp, path, serial, value, types;
+			var xhttp, value, path, serial, time, types;
 			xhttp  = request();
 			value  = this.toString().replace(/^\'/, "").split("?");
 			path   = value[0];
-			serial = getSerial(value[1]);
+			if ((/^\$\(.+\)$/).test(value[1])) {
+				serial = $(value[1].replace(/^\$\((.+)\)$/, "$1"));
+				serial = serial !== null ? WD(serial).form : "";
+			} else {
+				serial = value[1] === undefined ? "" : WD(value[1]).toString();
+			}log(serial);
 			time   = WD(time);
 			if (time.number === "natural") {
 				xhttp.timeout =  1000*time.valueOf();
@@ -724,22 +757,6 @@ function WDtext(input) {
 			return types;
 		}
 	});
-		
-	//FIXME
-	/*Obtem o valor do texto serializado*/
-	function getSerial(value) {
-		var x, serial, form, inputs;
-		if (value === "") {
-			x = "";
-		}
-		else if ((/^\@/).test(value)) {
-			//fazer essa bagunça depois de arrumar o WDdom
-		} else {
-			x = value;
-		}
-		return x;
-	};
-
 
 /* === REGEXP ============================================================== */
 
@@ -1078,11 +1095,10 @@ function WDtext(input) {
 		} else if ((/pm$/).test(input)) {
 			x     = input.replace("pm", "").split(":");
 			time  = [x[0] === "12" ? 0 : 12 + Number(x[0]).valueOf(), Number(x[1]).valueOf(), 0];
-		} else if (/^[0-9]+(\:[0-5][0-9]){1,2}$/.test(input)) {
+		} else if (/^(0?[0-9]|1[0-9]|2[0-4])(\:[0-5][0-9]){1,2}$/.test(input)) {
 			x     = input.split(":");
-			time  = [Number(x[0]).valueOf(), Number(x[1]).valueOf(), x[2] === undefined ? 0 : Number(x[2]).valueOf()];
+			time  = [Number(x[0]).valueOf()%24, Number(x[1]).valueOf(), x[2] === undefined ? 0 : Number(x[2]).valueOf()];
 		} else throw Error("An unexpected error occurred while setting time!");
-
 
 		Object.defineProperty(this, "_value", {
 			writable: true,
@@ -1104,14 +1120,18 @@ function WDtext(input) {
 			return h.integer;
 		},
 		set: function(h) {
-			var time;
+			var h24, h;
+			h24 = 24*60*60;
 			h = WD(h);
-			if (h.valueOf() === 0 || h.number === "natural") {
+			if (h.number === "rational") {
+				log("The value must be an integer.", "w");
+			} else if (h.valueOf() >= 0) {
 				this._value = 3600*h.valueOf() + 60*this.minute + this.second;
 			} else {
-				log("The value must be a positive integer.", "w");
+				this._value = 3600*h.valueOf() + 60*this.minute + this.second;
 			}
-			return this.valueOf();
+			this.valueOf();
+			return;
 		}
 	});
 
@@ -1126,7 +1146,7 @@ function WDtext(input) {
 		set: function(m) {
 			var time;
 			m = WD(m);
-			if (m.number !== "natural" && m.number !== "integer") {
+			if (m.number === "rational") {
 				log("The value must be an integer.", "w");
 			} else if (m.valueOf() > 59 || m.valueOf() < 0) {
 				time = 60*(m.valueOf() - this.minute);
@@ -1134,7 +1154,8 @@ function WDtext(input) {
 			} else {
 				this._value = 3600*this.hour + 60*m.valueOf() + this.second;
 			}
-			return this.valueOf();
+			this.valueOf();
+			return;
 		}
 	});
 
@@ -1148,7 +1169,7 @@ function WDtext(input) {
 		set: function(s) {
 			var time;
 			s = WD(s);
-			if (s.number !== "natural" && s.number !== "integer") {
+			if (s.number === "rational") {
 				log("The value must be an integer.", "w");
 			} else if (s.valueOf() > 59 || s.valueOf() < 0) {
 				time = s.valueOf() - this.second;
@@ -1156,34 +1177,28 @@ function WDtext(input) {
 			} else {
 				this._value = 3600*this.hour + 60*this.minute + s.valueOf();
 			}
-			return this.valueOf();
+			this.valueOf();
+			return;
 		}
 	});	
 
 
-	/*Retorna a hora no formato 24h e o tempo no formato ampm*/
-	Object.defineProperties(WDtime.prototype, {
-		h24: {
-			enumerable: true,
-			get: function() {
-				return this.hour%24;
+	/*Retorna a hora no formato ampm*/
+	Object.defineProperty(WDtime.prototype, "ampm", {
+		enumerable: true,
+		get: function() {
+			var h, m, p;
+			p = this.hour < 12 ? "AM" : "PM"; 
+			if (this.hour === 0) {
+				h = 12;
+			} else if (this.hour <= 12) {
+				h = this.hour;
+			} else {
+				h = this.hour - 12;
 			}
-		},
-		ampm: {
-			enumerable: true,
-			get: function() {
-				var h, m, p;
-				p = this.h24 < 12 ? "AM" : "PM"; 
-				if (this.h24 === 0) {
-					h = 12;
-				} else if (this.h24 <= 12) {
-					h = this.h24;
-				} else {
-					h = this.h24 - 12;
-				}
-				m = WD(this.minute).fixed(2, 0, false);
-				return h+":"+m+p;
-			}
+			h = WD(h).fixed(2, 0, false);
+			m = WD(this.minute).fixed(2, 0, false);
+			return h+":"+m+p;
 		}
 	});
 
@@ -1197,9 +1212,8 @@ function WDtext(input) {
 			var x, chars;
 			chars = {
 			"%h": this.hour,
-			"%H": this.h24,
+			"%H": WD(this.hour).fixed(2, 0, false),
 			"#h": this.ampm,
-			"#H": WD(this.h24).fixed(2, 0, false),
 			"%m": this.minute,
 			"%M": WD(this.minute).fixed(2, 0, false),
 			"%s": this.second,
@@ -1219,20 +1233,25 @@ function WDtext(input) {
 	Object.defineProperties(WDtime.prototype, {
 		toString: {
 			value: function() {
-				return this.format("#H:%M:%S");
+				return this.format("%H:%M:%S");
 			}
 		},
-		valueOf: {//FIXME: se maior que 24h tirar o excedente e recíproca? 25h = 01h -01h = 23h (mudar _value)?????
+		valueOf: {
 			value: function() {
+				var h24;
+				h24 = 24*60*60;
 				if (WD(this._value).type !== "number") {
 					log("Improper change of internal value has been adjusted to the minimum value.", "w");
 					this._value = 0;
-				} else if (this._value > 0 && WD(this._value).number !== "natural") {
-					log("Improper change of internal value has been adjusted to an approximate value.", "w");
+				}
+				if (WD(this._value).number === "rational") {
+					log("Considering that time was defined as a non-integer value, its value was approximated!", "w");
 					this._value = WD(this._value).round(0);
-				} else if (this._value < 0) {
-					log("Lower limit for time has been extrapolated. Limit value set.", "w");
-					this._value = 0;
+				}
+				if (this._value < 0) {
+					this._value = this._value % h24 + h24;
+				} else if (this._value >= h24) {
+					this._value = this._value % h24;
 				}
 				return this._value;
 			}
@@ -1844,28 +1863,6 @@ function WDtext(input) {
 			return aFinal;
 		}
 	});
-	
-	/*FIXME será que vale a pena?
-	Object.defineProperties(WDarray.prototype, {
-		toString: {
-			value: function(indent) {
-				var x, item;
-				x = [];
-				for (var i = 0; i < this.valueOf(); i++) {
-					item = this.valueOf()[i];
-					if (isString(item)) {
-						x.push("<q>"+item+"<q>");
-					} else if (isArray(item)) {
-						x.push(WD(item).toString());
-					} 
-					
-				
-				
-				}
-			}
-		}
-	});*/
-	
 
 /* === DOM ================================================================= */
 
@@ -2250,23 +2247,27 @@ function WDtext(input) {
 					elem.dataset.wdRepeatModel = html;
 				} else if ("wdRepeatModel" in elem.dataset) {
 					html = elem.dataset.wdRepeatModel;
-				} else {//FIXME apago esse else para limpar o conteúdo no lugar de deixar {{}} exposto ao usuário?
-					return false;
+				} else {
+					html = null;
 				}
-				elem.innerHTML = "";
-				html = WD(html).replace("}}=\"\"", "}}");
-				for (var i = 0; i < json.length; i++) {
-					inner = html;
-					if (WD(json[i]).type !== "object") {
-						log("repeat: Incorrect structure ignored!", "i");
-						continue;
+				if (html === null) {
+					elem.innerHTML = "<center><code>-- Error: Replication structure not found! --</code></center>";
+				} else {
+					elem.innerHTML = "";
+					html = WD(html).replace("}}=\"\"", "}}");
+					for (var i = 0; i < json.length; i++) {
+						inner = html;
+						if (WD(json[i]).type !== "object") {
+							log("repeat: Incorrect structure ignored!", "i");
+							continue;
+						}
+						for (var c in json[i]) {
+							inner = WD(inner).replace("{{"+c+"}}", json[i][c]);
+						}
+						elem.innerHTML += inner;
 					}
-					for (var c in json[i]) {
-						inner = WD(inner).replace("{{"+c+"}}", json[i][c]);
-					}
-					elem.innerHTML += inner;
+					//loadingProcedures(); //FIXME apagar comentário depois de tudo pronto e testar
 				}
-				//loadingProcedures(); //FIXME apagar comentário depois de tudo pronto e testar
 				return;
 			});	
 			return this;
@@ -2372,8 +2373,8 @@ function WDtext(input) {
 			this.run(function(elem) {
 				var tag, type, font, name, value, check;
 				tag   = elem.tagName.toLowerCase();
-				type  = tag === "input" ? elem.type.toLowerCase() : null;
-				font  = tag === "input" ? elem.attributes.type.value.toLowerCase() : type;
+				type  = tag === "input" ? elem.type.toLowerCase() : null; //typo considerado no objeto
+				font  = tag === "input" ? elem.attributes.type.value.toLowerCase() : type; //type informado no html
 				name  = "name"  in elem ? elem.name  : null;
 				value = "value" in elem ? elem.value : null;
 				check = type === "radio" || type === "checkbox" ? elem.checked : null;
@@ -2445,86 +2446,89 @@ function WDtext(input) {
 
 
 
-	function arrayAdd() {}//fixme apagar essa merda
 
 
-	function $(selector, root) {
-		/*Retorna os elementos html identificados pelo seletor css no elemento root*/
-		if (root === undefined) {
-			root = document;
-		}
-		return root.querySelectorAll(selector);
-	};
-
-
-
-
+	/*Carrega html externo*/
 	function data_wdLoad(e) {
-		/*Carrega html externo*/
-		if (!("wdLoad" in e.dataset)) {return;}
+		if (!("wdLoad" in e.dataset)) {
+			return;
+		}
 		var value, method, file, ajax, target;
 		value  = e.dataset.wdLoad;
 		method = (/^post\:/i).test(value) ? "post" : "get";
 		file   = value.replace(/^(post|get)\:/i, "");
-		ajax   = wd(file);
-		target = wd(e);
+		ajax   = WD(file);
+		target = WD(e);
 		target.data({wdLoad: null});
-		if (ajax.type !== "path") {
+		if (ajax.path !== true) {
 			log("data-wd-load=\""+value+"\" - Attribute value is not an accessible file path.", "e")
 		} else {
-			ajax[method](function(x) {
+			ajax.request(function(x) {
 				if (x.error) {
 					log(file+": Error accessing file or timeout.", "e");
 				} else {
 					target.load(x.text);
 				}
 				return;
-			});
+			})[method]();
 		}
 		return;
 	};
 
+	/*Constroe html a partir de um arquivo json*/
 	function data_wdRepeat(e) {
-		/*Constroe html a partir de um arquivo json*/
-		if (!("wdRepeat" in e.dataset)) {return;}
+		if (!("wdRepeat" in e.dataset)) {
+			return;
+		}
 		var value, method, file, ajax, target;
 		value  = e.dataset.wdRepeat;
 		method = (/^post\:/i).test(value) ? "post" : "get";
 		file   = value.replace(/^(post|get)\:/i, "");
-		ajax   = wd(file);
-		target = wd(e);
+		ajax   = WD(file);
+		target = WD(e);
 		target.data({wdRepeat: null});
-		if (ajax.type !== "path") {
+		if (ajax.path !== true) {
 			log("data-wd-repeat=\""+value+"\" - Attribute value is not an accessible file path.", "e");
 		} else {
-			ajax[method](function(x) {
+			ajax.request(function(x) {
 				if (x.error || x.json === null) {
 					log(file+": Error accessing file, timeout or it's not a json file.", "e");
 				} else {
 					target.repeat(x.json);
 				}
 				return;
-			});
+			})[method]();
 		}
 		return;
 	};
 
+	/*Ordena elementos filhos*/
 	function data_wdSort(e) {
-		/*Ordena elementos filhos*/
-		if (!("wdSort" in e.dataset)) {return;}
-		var order = wd(e.dataset.wdSort);
-		wd(e).sort(order.type !== "number" ? 1 : order.valueOf()).data({wdSort: null});
+		if (!("wdSort" in e.dataset)) {
+			return;
+		}
+		var order;
+		order = WD(e.dataset.wdSort);
+		WD(e).sort(order.type !== "number" ? 1 : order.valueOf()).data({wdSort: null});
 		return;
 	};
 
+	/*Filtra elementos filhos*/
 	function data_wdFilter(e) {
-		/*Filtra elementos filhos*/
-		if (!("wdFilter" in e.dataset)) {return;}
-		var min, target, text;
+		if (!("wdFilter" in e.dataset)) {
+			return;
+		}
+		var value, text, show, min, target;
+		value  = e.dataset.wdFilter.split(":");
 		text   = "value" in e ? e.value : e.textContent;
-		min    = (/^[0-9]+\:/).test(e.dataset.wdFilter) ? wd(e.dataset.wdFilter.split(":")[0]).valueOf() : 0;
-		target = e.dataset.wdFilter.replace(/^[0-9]+\:/, "");
-		wd($(target)).filter(text, min);
+		show   = (/^\!/).test(value[0]) ? false : true;
+		min    = (/^\!?[0-9]+/).test(value[0]) ? WD(value[0].replace("!", "")).valueOf() : 0;
+		target = value.length === 2 ? $(value[1]) : $(value[0]);
+		if (target === null) {
+			log("data-wd-filter=\""+value.join(":")+"\" - Undefined target.", "e");
+		} else {
+			WD(target).filter(text, show, min);
+		}
 		return;
 	};
 
