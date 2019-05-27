@@ -23,7 +23,7 @@ function printArray(array) {
 };
 		</script>
 	</head>
-<body class="wd-align-J" data-wd-desktop="wd-body-E">
+<body class="wd-align-J" data-wd-device="desktop: wd-body-E">
 
 	<main class="wd-box">
 
@@ -31,31 +31,29 @@ function printArray(array) {
 			<h1>WD Manual</h1>
 		</header>
 
-		<nav class="wd-nav wd-bgcolor-navy wd-follow-N" data-wd-desktop="wd-hide">
+		<nav class="wd-nav wd-bgcolor-navy wd-follow-N" data-wd-device="desktop: wd-hide">
 			<a href="#menu" data-wd-action="open: #menu" class="wd-symbol-menu"></a>
 		</nav>
 		
-		<div data-wd-repeat="manual/menu.json">
-			<section id="{{id}}" class="wd-box">
-				<header class="wd-head">
-					<h2 class="wd-align-C">{{title}}</h2>
-				</header>
-				<article {{content}}></article>
-			</section>
-		</div>
+		<section class="wd-box">
+			<header class="wd-head">
+				<h2 class="wd-align-C">?</h2>
+			</header>
+			<article id="content"></article>
+		</section>
 		
 		<footer class="wd-foot"></br></footer>
 	</main>
 	
-	<section id="menu" data-wd-phone="wd-dialog-full" data-wd-tablet="wd-dialog-full" data-wd-desktop="wd-bar-W" class="wd-box wd-bgcolor-white wd-border-V" style="overflow: auto">
+	<section id="menu" data-wd-device="phone: wd-dialog-full&tablet: wd-dialog-full&desktop: wd-bar-W" class="wd-box wd-bgcolor-white wd-border-V" style="overflow: auto">
 
 		<header class="wd-head wd-bgcolor-teal wd-follow-N">
 			<h3>Menu</h3>
-			<span data-wd-desktop="wd-hide" class="wd-place-E wd-symbol-cancel" data-wd-action="close: #menu"></span>
+			<span data-wd-device="desktop: wd-hide" class="wd-place-E wd-symbol-cancel" data-wd-action="close: #menu"></span>
 		</header>
 
 		<nav class="wd-nav-V" data-wd-repeat="manual/menu.json">
-			<a href="#" data-wd-action="tab: #{{id}}&close: #menu" title="{{description}}" class="{{style}}" {{click}}>{{title}}</a>
+			<a href="#" data-wd-data="wdLoad: #content" title="{{description}}" class="{{style}}" {{click}}>{{title}}</a>
 		</nav>
 
 	</section>
