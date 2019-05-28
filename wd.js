@@ -42,6 +42,36 @@ var wd = (function() {
 		return x;
 	};
 
+	/*Obtem o nome e o valor da expressão name{valor}*/
+	function getData(input) {
+		var x, open, name, value;
+		x     = {};
+		open  = 0;
+		name  = "";
+		value = "";
+		input = String(input).trim().split("");
+		for (var i = 0; i < input.length; i++) {
+			if (input[i] === "{" && open === 0) {
+				open++;
+			} else if (input[i] === "}" && open === 1) {
+				open--;
+				x[name.trim()] = value.trim();
+				name  = "";
+				value = "";
+			} else if (open > 0) {
+				if (input[i] === "{") {
+					open++;
+				} else if (input[i] === "}") {
+					open--;
+				}
+				value += input[i];
+			} else {
+				name += input[i];
+			}
+		}
+		return x;
+	};
+
 	/*Retorna verdadeiro se o ano for bissexto*/
 	function isLeap(y) {
 		var x;
@@ -318,7 +348,11 @@ var wd = (function() {
 	Object.defineProperty(WD.prototype, "constructor", {
 		value: WD
 	});
-	
+
+	Object.defineProperty(WD.prototype, "$", {
+		value: $
+	});
+
 	/*Retorna o tipo do argumento informado*/
 	Object.defineProperty(WD.prototype, "type", {
 		enumerable: true,
@@ -713,11 +747,14 @@ function WDtext(input) {
 			xhttp  = request();
 			value  = this.toString().replace(/^\'/, "").split("?");
 			path   = value[0];
-			if ((/^\$\(.+\)$/).test(value[1])) {
-				serial = $(value[1].replace(/^\$\((.+)\)$/, "$1"));
+			serial = value[1];
+			if (WD(serial).type !== "text")  {
+				serial = "";
+			} else if ((/^\$\{.+\}$/).test(WD(serial).toString())) {
+				serial = $(getData(serial)["$"]);
 				serial = serial !== null ? WD(serial).form : "";
 			} else {
-				serial = value[1] === undefined ? "" : WD(value[1]).toString();
+				serial = serial.toString();
 			}log(serial);
 			time   = WD(time);
 			if (time.number === "natural") {
@@ -1670,10 +1707,27 @@ function WDtext(input) {
 	});
 
 	/*Informar o comprimento do array*/
-	Object.defineProperty(WDarray.prototype, "items", {
-		enumerable: true,
-		get: function() {
-			return this.valueOf().length;
+	Object.defineProperties(WDarray.prototype, {
+		items: {
+			enumerable: true,
+			get: function() {
+				return this.valueOf().length;
+			}
+		},
+		item: {
+			enumerable: true,
+			value: function(i) {
+				var x;
+				i = WD(i);
+				if (i.type !== "number") {
+					x = this.valueOf();
+				} else if (i.valueOf() < 0) {
+					x = this.valueOf()[this.items - i.abs];
+				} else {
+					x = this.valueOf()[i.valueOf()];
+				}
+				return x;
+			}
 		}
 	});
 
@@ -2280,7 +2334,7 @@ function WDtext(input) {
 		enumerable: true,
 		value: function (page, size) {
 			page = WD(page).type !== "number" ? 0 : WD(page).integer;
-			size = WD(size).signal !== 1 ? 1 : size;
+			size = WD(size).type !== "number" || WD(size).abs === Infinity ? 1 : WD(size).abs;
 			if (page === 0 && size === 1) {
 				log("page: default values ​​have been defined!", "i");
 			}
@@ -2427,29 +2481,36 @@ function WDtext(input) {
 		},
 		item: {
 			enumerable: true,
-			get: function() {
-				return this.valueOf();
+			value: function(i) {
+				var x;
+				i = WD(i);
+				if (i.type !== "number") {
+					x = this.valueOf();
+				} else if (i.valueOf() < 0) {
+					x = this.valueOf()[this.items - i.abs];
+				} else {
+					x = this.valueOf()[i.valueOf()];
+				}
+				return x;
 			}
 		}
 	});
 
 /* === JS ATTRIBUTES ======================================================= */
 
-	/*Carrega html externo*/
+	/*Carrega html externo data-wd-load=post{file}|get{file}*/
 	function data_wdLoad(e) {
 		if (!("wdLoad" in e.dataset)) {
 			return;
 		}
 		var value, method, file, ajax, target;
-		value  = e.dataset.wdLoad;
-		method = (/^post\:/i).test(value) ? "post" : "get";
-		file   = value.replace(/^(post|get)\:/i, "");
+		value  = getData(e.dataset.wdLoad);
+		method = "post" in value ? "post" : "get";
+		file   = value[method];
 		ajax   = WD(file);
 		target = WD(e);
 		target.data({wdLoad: null});
-		if (ajax.path !== true) {
-			log("data-wd-load=\""+value+"\" - Attribute value is not an accessible file path.", "e")
-		} else {
+		if (ajax.path === true) {
 			ajax.request(function(x) {
 				if (x.error) {
 					log(file+": Error accessing file or timeout.", "e");
@@ -2462,21 +2523,19 @@ function WDtext(input) {
 		return;
 	};
 
-	/*Constroe html a partir de um arquivo json*/
+	/*Constroe html a partir de um arquivo json data-wd-repeat=post{file}|get{file}*/
 	function data_wdRepeat(e) {
 		if (!("wdRepeat" in e.dataset)) {
 			return;
 		}
 		var value, method, file, ajax, target;
-		value  = e.dataset.wdRepeat;
-		method = (/^post\:/i).test(value) ? "post" : "get";
-		file   = value.replace(/^(post|get)\:/i, "");
+		value  = getData(e.dataset.wdRepeat);
+		method = "post" in value ? "post" : "get";
+		file   = value[method];
 		ajax   = WD(file);
 		target = WD(e);
 		target.data({wdRepeat: null});
-		if (ajax.path !== true) {
-			log("data-wd-repeat=\""+value+"\" - Attribute value is not an accessible file path.", "e");
-		} else {
+		if (ajax.path === true) {
 			ajax.request(function(x) {
 				if (x.error || x.json === null) {
 					log(file+": Error accessing file, timeout or it's not a json file.", "e");
@@ -2489,37 +2548,38 @@ function WDtext(input) {
 		return;
 	};
 
-	/*Ordena elementos filhos*/
+	/*Ordena elementos filhos data-wd-sort="number"*/
 	function data_wdSort(e) {
 		if (!("wdSort" in e.dataset)) {
 			return;
 		}
 		var order;
 		order = WD(e.dataset.wdSort);
-		WD(e).sort(order.type !== "number" ? 1 : order.valueOf()).data({wdSort: null});
+		WD(e).sort(order.signal).data({wdSort: null});
 		return;
 	};
 
-	/*Filtra elementos filhos*/
-	function data_wdFilter(e) {
+	/*Filtra elementos filhos data-wd-filter=show{min}${css}|hide{min}${css}&*/
+	function data_wdFilter(e) {//text, show, min
 		if (!("wdFilter" in e.dataset)) {
 			return;
 		}
-		var value, text, show, min, target;
-		value  = e.dataset.wdFilter.split(":");
-		text   = "value" in e ? e.value : e.textContent;
-		show   = (/^\!/).test(value[0]) ? false : true;
-		min    = (/^\!?[0-9]+/).test(value[0]) ? WD(value[0].replace("!", "")).valueOf() : 0;
-		target = value.length === 2 ? WD($(value[1])) : WD($(value[0]));
-		if (target !== "dom") {
-			log("data-wd-filter=\""+value.join(":")+"\" - Undefined target.", "e");
-		} else {
-			target.filter(text, show, min);
+		var value, text, data, show, min, target;
+		value = e.dataset.wdFilter.split("&");
+		text  = "value" in e ? e.value : e.textContent;
+		for (var i = 0; i < value.length; i++) {
+			data   = getData(value[i]);
+			show   = "hide" in data ? false : true;
+			min    = "hide" in data ? data.hide : data.show;
+			target = "$" in data ? $(data["$"]) : null;
+			if (WD(target).type === "dom") {
+				WD(target).filter(text, show, min);
+			}
 		}
 		return;
 	};
 
-	/*Define máscara do elemento*/
+	/*Define máscara do elemento data-wd-mask="StringMask"*/
 	function data_wdMask(e) {
 		if (!("wdMask" in e.dataset)) {
 			return;
@@ -2545,77 +2605,80 @@ function WDtext(input) {
 		return;
 	};
 
-	/*Define os elementos a serem exibidos*/
+	/*Define os elementos a serem exibidos data-wd-page=page:size*/
 	function data_wdPage(e) {
 		if (!("wdPage" in e.dataset)) {
 			return;
 		}
-		var page, size, attr;
+		var attr, page, size;
 		attr = e.dataset.wdPage.split(":");
-		page = WD(attr[0]).type !== "number" ? 0 : WD(attr[0]).valueOf();
-		size = WD(attr[1]).type !== "number" ? 0 : WD(attr[1]).valueOf();
+		page = attr[0];
+		size = attr[1];
 		WD(e).page(page, size).data({wdPage: null});
 		return;
 	};
 	
-	/*Executa o método click() ao elemento após o load*/
+	/*Executa o método click() ao elemento após o load data-wd-click=""*/
 	function data_wdClick(e) {
 		if (!("wdClick" in e.dataset)) {
 			return;
 		}
-		if (!("click" in e)) {
-			log("data-wd-click: Element does not have the click event.", "w");
-		} else {
+		if ("click" in e) {
 			e.click();
 		}
 		WD(e).data({wdClick: null});
 		return;
 	};
 
-	/*Executa uma ação ao alvo após o click*/
+	/*Executa uma ação ao alvo após o click data-wd-action=action1{css1}action2{css2}*/
 	function data_wdAction(e) {
 		if (!("wdAction" in e.dataset)) {
 			return;
 		}
-		var attr, action, target, value;
-		attr = e.dataset.wdAction.split("&");
-		for (var i = 0; i < attr.length; i++) {
-			value  = attr[i].split(":");
-			action = WD(value[0]).toString();
-			target = WD($(value[1])).type !== "dom" ? WD(e) : WD($(value[1]));
-			target.action(action);
-		}
-		return;
-	};
-
-	/*Define dataset a partir do click*/
-	function data_wdData(e) {
-		if (!("wdData" in e.dataset)) {
-			return;
-		}
-		var attr, data, target, value;
-		attr = e.dataset.wdData.split("&");
-		for (var i = 0; i < attr.length; i++) {
-			value  = attr[i].split(":");
-			data   = WD(value[0]).toString();
-			target = WD($(value[1])).type !== "dom" ? WD(e) : WD($(value[1]));
-			target.data(data);
-		}
-		return;
-	};
-
-	/*Define o link ativo do elemento nav*/
-	function data_wdActive(e) {
-		if (WD(e.parentElement.tagName).title() === "Nav") {
-			WD(e.parentElement.children).class({del: ".js-wd-nav-active"});
-			if (e.tagName.toUpperCase() === "A") {
-				WD(e).class({del: ".js-wd-nav-active"});
+		var value, data, target;
+		value = e.dataset.wdAction;
+		data  = getData(value);
+		for (var action in data) {
+			target = WD(data[action]);
+			if (target.type === "dom") {
+				target.action(action);
+			} else {
+				WD(e).action(action);
 			}
 		}
 		return;
 	};
 
-	/*Ordena as colunas de uma tabela*/
+	/*Define dataset a partir do click data-wd-data=attr1{value}${css}&*/
+	function data_wdData(e) {
+		if (!("wdData" in e.dataset)) {
+			return;
+		}
+		var value, data, target;
+		value = e.dataset.wdData.split("&");
+		for (var i = 0; i < value.length; i++) {
+			data   = getData(value[i]);
+			target = "$" in data ? WD($(data["$"])) : WD(e);
+			delete data["$"];
+			if (target.type === "dom") {
+					target.data(data);
+			}
+		}
+		return;
+	};
+
+	/*Define o link ativo do elemento nav sem interface data*/
+	function data_wdActive(e) {
+		if (WD(e.parentElement.tagName).title() === "Nav") {
+			WD(e.parentElement.children).class({del: "wd-nav-active"});
+			if (e.tagName.toUpperCase() === "A") {
+				WD(e).class({add: "wd-nav-active"});
+			}
+		}
+		return;
+	};
+
+	/*Ordena as colunas de uma tabela data-wd-sort-col=""*/
 	function data_wdSortCol(e) {
 		if (!("wdSortCol" in e.dataset)) {
 			return;
@@ -2641,30 +2704,28 @@ function WDtext(input) {
 	/*Guarda o tamanho da tela*/
 	var deviceController = null;
 	
-	/*Define o estilo do elemento a partir do tamanho da tela*/
+	/*Define o estilo do elemento a partir do tamanho da tela data-wd-device=Desktop{css}Tablet{css}Phone{css}Mobile{css}*/
 	function data_wdDevice(e) {
 		if (!("wdDevice" in e.dataset)) {
 			return;
 		}
-		var device, attr, css, value;
-		device = deviceController;
-		attr   = e.dataset.wdDevice.split("&");
-		css    = {Desktop: "", Mobile: "", Tablet: "", Phone: ""};
-		for (var c = 0; c < attr.length; c++) {
-			value = attr[c].split(":");
-			if (value.length === 2) {
-				css[WD(value[0]).title()] = WD(value[1]);
-			}
-		}
+		var device, value, data, desktop, mobile, tablet, phone;
+		device  = deviceController;
+		value   = e.dataset.wdDevice;
+		data    = getData(value);
+		desktop = "Desktop" in data ? data.Desktop : "";
+		mobile  = "Mobile"  in data ? data.Mobile  : "";
+		tablet  = "Tablet"  in data ? data.Tablet  : "";
+		phone   = "Phone"   in data ? data.Phone   : "";
 		switch(device) {
 			case "Desktop":
-				WD(e).class({del: css.Phone}).class({del: css.Tablet}).class({del: css.Device}).class({add: css.Desktop});
+				WD(e).class({del: phone}).class({del: tablet}).class({del: mobile}).class({add: desktop});
 				break;
 			case "Tablet":
-				WD(e).class({del: css.Desktop}).class({del: css.Phone}).class({add: css.Device}).class({add: css.Tablet});
+				WD(e).class({del: desktop}).class({del: phone}).class({add: mobile}).class({add: tablet});
 				break;
 			case "Phone":
-				WD(e).class({del: css.Desktop}).class({del: css.Tablet}).class({add: css.Device}).class({add: css.Phone});
+				WD(e).class({del: desktop}).class({del: tablet}).class({add: mobile}).class({add: phone});
 				break;
 		}
 		return;
@@ -2677,8 +2738,8 @@ function WDtext(input) {
 		var bar, top, hbar, htop;
 		bar  = WD($(".wd-bar, .wd-bar-N"));
 		top  = WD($(window.location.hash));
-		hbar = bar.type === "dom" && bar.items > 0 ? bar.item[0].offsetHeight : 0;
-		htop = top.type === "dom" && top.items > 0 ? top.item[0].offsetTop : 0;
+		hbar = bar.type === "dom" && bar.items > 0 ? bar.item(0).offsetHeight : 0;
+		htop = top.type === "dom" && top.items > 0 ? top.item(0).offsetTop : 0;
 		if (hbar !== 0) {
 			window.scrollTo(0, htop - hbar);
 		}
@@ -2695,8 +2756,8 @@ function WDtext(input) {
 			organizationProcedures();
 			stylingProcedures();
 		} else {
-			WD(attr.item[0]).run(data_wdRepeat);
-			WD(attr.item[0]).run(data_wdLoad);
+			WD(attr.item(0)).run(data_wdRepeat);
+			WD(attr.item(0)).run(data_wdLoad);
 		}
 		return;
 	};
@@ -2773,14 +2834,11 @@ function WDtext(input) {
 	var style;
 	style = document.createElement("STYLE");
 	style.textContent  = ".js-wd-no-display {display: none !important;}";
-	style.textContent += ".js-wd-nav-active {background-color: #000000; color: #FFFFFF;}";
+	style.textContent += ".wd-nav-active {background-color: #000000; color: #FFFFFF;}";
 	WD(window).handler({load: function() {
 		document.head.appendChild(style);
 		return;
 	}});
-
-
-
 
 	/*Definindo eventos*/
 	WD(window).handler({
@@ -2800,15 +2858,6 @@ function WDtext(input) {
 }());
 
 /*Atalho para o uso do método querySelectorAll em wdDom*/
-function wd$(input, root) {
-	var query = null;
-	if (root === undefined || !("querySelectorAll" in root)) {
-		root = document;
-	}
-	try {
-		query = root.querySelectorAll(input);
-	} catch(e) {
-		query = null;
-	}
-	return wd(query);
-};
+function wd$(selector, root) {
+	return wd(wd().$(selector, root));
+}
