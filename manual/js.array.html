@@ -1,41 +1,22 @@
-<p class="wd-indent">This is an object for manipulating arrays. The supplied argument (primitive value) is <u>not changed</u> by methods or attributes. The following primitive values ​​define the object:</p>
+<p class="wd-indent">This is an object for manipulating arrays, the type attribute returns the value <q>array</q>. The following primitive values ​​define the object:</p>
 
 <ul class="wd-list">
 	<li>JavaScript Array Object</li>
 </ul>
 
-<p class="wd-indent">When identifying the type of the primitive value, the object returns the string <q>array</q>.</p>
+<p class="wd-indent">The returned object has the following characteristics:</p>
 
-<pre class="wd-code"><cite>//Example</cite>
-<code>var</code> input = <span id="js_array_example1"></span>[<var>1</var>, <q>wd</q>, <var>true</var>];
-<code>var</code> object = wd(input);
-object.type;
-<sample><q id="js_array_example2"></q></sample>
-</pre>
-
-
-<script>
-var x = [1, "wd", true];
-wd$("#js_array_example1").load(printArray(x));
-wd$("#js_array_example2").load(wd(x).type);
-</script>
-
-<p class="wd-indent">The object has the following attributes:</p>
-
-<ul class="wd-list">
-	<li>organized</li>
-	<li>sort</li>
-	<li>unique</li>
-</ul>
-
-<p class="wd-indent">The object has the following methods:</p>
-
-<ul class="wd-list">
-	<li>add</li>
-	<li>amount</li>
-	<li>del</li>
-	<li>replace</li>
-	<li>toggle</li>
-</ul>
+<ul class="wd-list" id="js_array_eg1"></ul>
 
 <p class="wd-indent">See the menu for more details.</p>
+
+<h3>valueOf and toString retunrs</h3>
+
+<p class="wd-indent">The "toString" method returns the value of the array in JSON format. The "valueOf" method returns the browser default value.</p>
+
+<script>
+var eg = {
+	"#js_array_eg1": "<li>"+wd(wd([]).tools).del("type", "tools").join("</li><li>")+"</li>",
+}
+setText(eg, true);
+</script>

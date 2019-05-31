@@ -1,109 +1,100 @@
-<p class="wd-indent"><q><i>WD JavaScript Tools</i></q> consists of a JavaScript object whose attributes and methods depend on the type and structure of the informed argument. As a rule, the methods do not change the input value.</p>
+<p class="wd-indent"><q><i>WD JavaScript Tools</i></q> consists of a JavaScript function that, depending on the type and content of the passed argument, returns an object with specific attributes and methods.</p>
 
 <p class="wd-indent">Its syntax is as follows:</p>
 
 <div class="wd-code">wd(input);</div>
 
-<p class="wd-indent">The <code>input</code> value defines the attributes and methods of the object. The value of <code>input</code> is organized into ten categories:</p>
+<p class="wd-indent">The <code>input</code> value defines the object to return and its attributes/methods. The object returned is organized into seven categories:</p>
 
 <ul class="wd-list" data-wd-sort="1">
 	<li>Array</li>
-	<li>Boolean</li>
 	<li>Date</li>
+	<li>Time</li>
 	<li>HTML</li>
 	<li>Number</li>
-	<li>Path</li>
 	<li>RegExp</li>
 	<li>Text</li>
 </ul>
 
 <p class="wd-indent">See the menu for more details.</p>
 
-<p class="wd-indent">All methods and attributes returned by the <code>wd</code> object come from internal objects. With the exception of the object assigned to the "input" type <q>path</q>, whose inheritance comes from the object assigned to the <q>input</q> type <q>text</q>, other objects inherit their attributes and methods from a primitive object.</p>
-
-<p class="wd-indent">The primitive object has the following attributes:</p>
-
-<ul class="wd-list">
-	<li>type</li>
-</ul>
-
-<p class="wd-indent">The primitive object has the following methods:</p>
-
-<ul class="wd-list">
-	<li>valueOf</li>
-	<li>toString</li>
-	<li>toSource</li>
-</ul>
-
-<p class="wd-indent">Depending on the returned object, the attribute and methods listed above may have different behavior, whose characteristics will be presented individually.</p>
+<p class="wd-indent">These objects inherit their basic characteristics from a common object that is invoked when the information passed in the argument does not fall into any of the categories mentioned. The following characteristics are shared:</p>
 
 <h3>type</h3>
 
-<p class="wd-indent">Returns the type of the value entered in the <code>input</code> argument.It is called as follows:</p>
+<p class="wd-indent">It is an attribute that identifies the type of information passed on. The following values strings ​​can be returned:</p>
 
-<pre class="wd-code">wd(input).type;</pre>
+<ul class="wd-list" data-wd-sort="1">
+	<li><q>undefined</q></li>
+	<li><q>null</q></li>
+	<li><q>boolean</q></li>
+	<li><q>number</q></li>
+	<li><q>date</q></li>
+	<li><q>time</q></li>
+	<li><q>array</q></li>
+	<li><q>regexp</q></li>
+	<li><q>function</q></li>
+	<li><q>dom</q></li>
+	<li><q>text</q></li>
+</ul>
 
-<p class="wd-indent">The attribute may return the following values:</p>
+<p class="wd-indent">If the argument does not fit into any of the above categories, it returns the constructor name. And if there is no constructor, it will return <q>unknown</q>.</p>
 
-<dl class="wd-padding-childs">
-	<dt><q>?</q></dt>
-	<dd><i>undefined values</i></dd>
-	<dt><q>0</q></dt>
-	<dd><i>null values and empty strings</i></dd>
-	<dt><q>bool</q></dt>
-	<dd><i>Boolean values</i></dd>
-	<dt><q>number</q></dt>
-	<dd><i>Numeric values</i></dd>
-	<dt><q>time</q></dt>
-	<dd><i>Time values</i></dd>
-	<dt><q>date</q></dt>
-	<dd><i>Date values</i></dd>
-	<dt><q>path</q></dt>
-	<dd><i>Accessible file path</i></dd>
-	<dt><q>text</q></dt>
-	<dd><i>Strings not specified</i></dd>
-	<dt><q>array</q></dt>
-	<dd><i>List values</i></dd>
-	<dt><q>regex</q></dt>
-	<dd><i>Regular expression</i></dd>
-	<dt><q>f()</q></dt>
-	<dd><i>Function object</i></dd>
-	<dt><q>object</q></dt>
-	<dd><i>Object values ({})</i></dd>
-	<dt><q>html</q></dt>
-	<dd><i>HTML element</i></dd>
-	<dt><q>[html]</q></dt>
-	<dd><i>List of HTML elements</i></dd>
-	<dt><q>doc</q></dt>
-	<dd><i>HTML Document</i></dd>
-	<dt><q>win</q></dt>
-	<dd><i>window object</i></dd>
-	<dt><q>unknown</q></dt>
-	<dd><i>Value returned when it is not possible to set the argument type, as above, or its constructor.</i></dd>
-</dl>
+<h4>Example</h4>
 
-<pre class="wd-code"><cite>//Example</cite>
-<code>var</code> x = document.querySelectorAll(<q>li</q>);
-wd(x).type;
-<sample><q id="js_example1"></q></sample>
-wd(<q>        </q>).type();
-<sample><q id="js_example2"></q></sample>
+<pre class="wd-code">
+wd().type;
+<sample><q id="js_eg1"></q></sample>
+</pre>
+
+<h3>Tools</h3>
+
+<p class="wd-indent">Is an attribute that returns a list of enumerable methods and attributes of the invoked object.</p>
+
+<h4>Example</h4>
+
+<pre class="wd-code">
+wd().tools;
+<sample><var id="js_eg2"></var></sample>
+</pre>
+
+<h3>valueOf and toString</h3>
+
+<p class="wd-indent">These are methods that return object comparison (<code>valueOf</code>) and text (<code>toString</code>) values. They may or may not accept arguments and return different types of values ​​depending on the type of object invoked. Inexisting specific value, its default value is the one defined by the browser.</p>
+
+<h4>Example</h4>
+
+<pre class="wd-code">
+wd().toString();
+<sample><q id="js_eg3"></q></sample>
+wd().valueOf();
+<sample><var id="js_eg4"></var></sample>
+wd(<var>null</var>).toString();
+<sample><q id="js_eg5"></q></sample>
+wd(<var>null</var>).valueOf();
+<sample><var id="js_eg6"></var></sample>
+wd(<var>true</var>).toString();
+<sample><q id="js_eg7"></q></sample>
+wd(<var>true</var>).valueOf();
+<sample><var id="js_eg8"></var></sample>
+wd(<var>false</var>).toString();
+<sample><q id="js_eg9"></q></sample>
+wd(<var>false</var>).valueOf();
+<sample><var id="js_eg10"></var></sample>
 </pre>
 
 <script>
-wd$("#js_example1").get[0].textContent = wd(document.querySelectorAll("li")).type;
-wd$("#js_example2").get[0].textContent = wd("        ").type;
+var eg = {
+	"#js_eg1": wd().type,
+	"#js_eg2": wd(wd().tools).toString(),
+	"#js_eg3": wd().toString(),
+	"#js_eg4": wd().valueOf(),
+	"#js_eg5": wd(null).toString(),
+	"#js_eg6": wd(null).valueOf(),
+	"#js_eg7": wd(true).toString(),
+	"#js_eg8": wd(true).valueOf(),
+	"#js_eg9": wd(false).toString(),
+	"#js_eg10": wd(false).valueOf(),
+};
+setText(eg);
 </script>
-
-
-<h3>valueOf</h3>
-
-<p class="wd-indent">Returns valueOf() method of <code>input</code>.</p>
-
-<h3>toString</h3>
-
-<p class="wd-indent">Returns toString() method of <code>input</code>.</p>
-
-<h3>toSource</h3>
-
-<p class="wd-indent">Returns <code>input</code>.</p>

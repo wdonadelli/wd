@@ -1,7 +1,6 @@
 [
 	{"x": "HOME===============================================================",
 		"title": "Home",
-		"description": "WD Home Page",
 		"id": "home",
 		"file": "manual/home.html",
 		"style": "wd-case-title wd-color-blue",
@@ -10,7 +9,6 @@
 
 	{"x": "JS=================================================================",
 		"title": "WD JavaScript Tools",
-		"description": "WD JavaScript Tools",
 		"id": "js",
 		"file": "manual/js.html",
 		"style": "wd-color-blue",
@@ -19,15 +17,13 @@
 
 	{"x": "JS-ARRAY===========================================================",
 		"title": "Array",
-		"description": "List of values.",
 		"id": "js_array",
 		"file": "manual/js.array.html",
 		"style": "wd-case-title",
-		"click":  ""
+		"click":  "data-wd-click=''"
 	},
 	{
 		"title": "Array.add",
-		"description": "Method",
 		"id": "js_array_add",
 		"file": "manual/js.array.add.html",
 		"style": "wd-size-s wd-indent",
@@ -35,7 +31,6 @@
 	},
 	{
 		"title": "Array.amount",
-		"description": "Method",
 		"id": "js_array_amount",
 		"file": "manual/js.array.amount.html",
 		"style": "wd-size-s wd-indent",
@@ -43,7 +38,6 @@
 	},
 	{
 		"title": "Array.del",
-		"description": "Method",
 		"id": "js_array_del",
 		"file": "manual/js.array.del.html",
 		"style": "wd-size-s wd-indent",
@@ -51,7 +45,6 @@
 	},
 	{
 		"title": "Array.organized",
-		"description": "Attribute",
 		"id": "js_array_organized",
 		"file": "manual/js.array.organized.html",
 		"style": "wd-size-s wd-indent",
@@ -59,7 +52,6 @@
 	},
 	{
 		"title": "Array.replace",
-		"description": "Method",
 		"id": "js_array_replace",
 		"file": "manual/js.array.replace.html",
 		"style": "wd-size-s wd-indent",
@@ -67,7 +59,6 @@
 	},
 	{
 		"title": "Array.sort",
-		"description": "Attribute",
 		"id": "js_array_sort",
 		"file": "manual/js.array.sort.html",
 		"style": "wd-size-s wd-indent",
@@ -75,7 +66,6 @@
 	},
 	{
 		"title": "Array.toggle",
-		"description": "Method",
 		"id": "js_array_toggle",
 		"file": "manual/js.array.toggle.html",
 		"style": "wd-size-s wd-indent",
@@ -83,33 +73,14 @@
 	},
 	{
 		"title": "Array.unique",
-		"description": "Attribute",
 		"id": "js_array_unique",
 		"file": "manual/js.array.unique.html",
 		"style": "wd-size-s wd-indent",
 		"click":  ""
 	},
 	
-	{"x": "JS-BOOLEAN=========================================================",
-		"title": "Boolean",
-		"description": "Boolean values.",
-		"id": "js_bool",
-		"file": "manual/js.bool.html",
-		"style": "wd-case-title",
-		"click":  ""
-	},
-	{
-		"title": "Boolean.valueOf",
-		"description": "Attribute",
-		"id": "js_bool_valueOf",
-		"file": "manual/js.bool.valueOf.html",
-		"style": "wd-size-s wd-indent",
-		"click":  ""
-	},
-
 	{"x": "JS-DATE============================================================",
 		"title": "Date",
-		"description": "Values ​​that represent dates.",
 		"id": "js_date",
 		"file": "manual/js.date.html",
 		"style": "wd-case-title",
@@ -117,7 +88,6 @@
 	},
 	{
 		"title": "Date.week",
-		"description": "Attribute",
 		"id": "js_date_week",
 		"file": "manual/js.date.week.html",
 		"style": "wd-size-s wd-indent",
@@ -125,7 +95,6 @@
 	},
 	{
 		"title": "Date.day",
-		"description": "Attribute",
 		"id": "js_date_day",
 		"file": "manual/js.date.day.html",
 		"style": "wd-size-s wd-indent",
@@ -133,7 +102,6 @@
 	},
 	{
 		"title": "Date.month",
-		"description": "Attribute",
 		"id": "js_date_month",
 		"file": "manual/js.date.month.html",
 		"style": "wd-size-s wd-indent",
@@ -141,7 +109,6 @@
 	},
 	{
 		"title": "Date.year",
-		"description": "Attribute",
 		"id": "js_date_year",
 		"file": "manual/js.date.year.html",
 		"style": "wd-size-s wd-indent",
@@ -149,7 +116,6 @@
 	},
 	{
 		"title": "Date.leap",
-		"description": "Attribute",
 		"id": "js_date_leap",
 		"file": "manual/js.date.leap.html",
 		"style": "wd-size-s wd-indent",
@@ -157,7 +123,6 @@
 	},
 	{
 		"title": "Date.days",
-		"description": "Attribute",
 		"id": "js_date_days",
 		"file": "manual/js.date.days.html",
 		"style": "wd-size-s wd-indent",
@@ -165,7 +130,6 @@
 	},
 	{
 		"title": "Date.width",
-		"description": "Attribute",
 		"id": "js_date_width",
 		"file": "manual/js.date.width.html",
 		"style": "wd-size-s wd-indent",
@@ -173,7 +137,6 @@
 	},
 	{
 		"title": "Date.weeks",
-		"description": "Attribute",
 		"id": "js_date_weeks",
 		"file": "manual/js.date.weeks.html",
 		"style": "wd-size-s wd-indent",
@@ -181,7 +144,6 @@
 	},
 	{
 		"title": "Date.countdown",
-		"description": "Attribute",
 		"id": "js_date_countdown",
 		"file": "manual/js.date.countdown.html",
 		"style": "wd-size-s wd-indent",
@@ -189,7 +151,6 @@
 	},
 	{
 		"title": "Date.toString",
-		"description": "Method",
 		"id": "js_date_toString",
 		"file": "manual/js.date.toString.html",
 		"style": "wd-size-s wd-indent",
@@ -197,7 +158,6 @@
 	},
 	{
 		"title": "Date.valueOf",
-		"description": "Method",
 		"id": "js_date_valueOf",
 		"file": "manual/js.date.valueOf.html",
 		"style": "wd-size-s wd-indent",
@@ -205,7 +165,6 @@
 	},
 	{
 		"title": "Date.format",
-		"description": "Method",
 		"id": "js_date_format",
 		"file": "manual/js.date.format.html",
 		"style": "wd-size-s wd-indent",
@@ -214,7 +173,6 @@
 
 	{"x": "JS-HTML============================================================",
 		"title": "HTML",
-		"description": "Elements or list of HTML elements.",
 		"id": "js_html",
 		"file": "manual/js.html.html",
 		"style": "wd-case-title",
@@ -222,7 +180,6 @@
 	},
 	{
 		"title": "HTML.get",
-		"description": "Attribute",
 		"id": "js_html_get",
 		"file": "manual/js.html.get.html",
 		"style": "wd-size-s wd-indent",
@@ -230,7 +187,6 @@
 	},
 	{
 		"title": "HTML.styles",
-		"description": "Attribute",
 		"id": "js_html_styles",
 		"file": "manual/js.html.styles.html",
 		"style": "wd-size-s wd-indent",
@@ -238,7 +194,6 @@
 	},
 	{
 		"title": "HTML.execute",
-		"description": "Method",
 		"id": "js_html_execute",
 		"file": "manual/js.html.execute.html",
 		"style": "wd-size-s wd-indent",
@@ -246,7 +201,6 @@
 	},
 	{
 		"title": "HTML.handler",
-		"description": "Method",
 		"id": "js_html_handler",
 		"file": "manual/js.html.handler.html",
 		"style": "wd-size-s wd-indent",
@@ -254,7 +208,6 @@
 	},
 	{
 		"title": "HTML.class",
-		"description": "Method",
 		"id": "js_html_class",
 		"file": "manual/js.html.class.html",
 		"style": "wd-size-s wd-indent",
@@ -262,7 +215,6 @@
 	},
 	{
 		"title": "HTML.style",
-		"description": "Method",
 		"id": "js_html_style",
 		"file": "manual/js.html.style.html",
 		"style": "wd-size-s wd-indent",
@@ -270,7 +222,6 @@
 	},
 	{
 		"title": "HTML.data",
-		"description": "Method",
 		"id": "js_html_data",
 		"file": "manual/js.html.data.html",
 		"style": "wd-size-s wd-indent",
@@ -278,7 +229,6 @@
 	},
 	{
 		"title": "HTML.filter",
-		"description": "Method",
 		"id": "js_html_filter",
 		"file": "manual/js.html.filter.html",
 		"style": "wd-size-s wd-indent",
@@ -286,7 +236,6 @@
 	},
 	{
 		"title": "HTML.sort",
-		"description": "Method",
 		"id": "js_html_sort",
 		"file": "manual/js.html.sort.html",
 		"style": "wd-size-s wd-indent",
@@ -294,7 +243,6 @@
 	},
 	{
 		"title": "HTML.page",
-		"description": "Method",
 		"id": "js_html_page",
 		"file": "manual/js.html.page.html",
 		"style": "wd-size-s wd-indent",
@@ -302,7 +250,6 @@
 	},
 	{
 		"title": "HTML.repeat",
-		"description": "Method",
 		"id": "js_html_repeat",
 		"file": "manual/js.html.repeat.html",
 		"style": "wd-size-s wd-indent",
@@ -310,7 +257,6 @@
 	},
 	{
 		"title": "HTML.load",
-		"description": "Method",
 		"id": "js_html_load",
 		"file": "manual/js.html.load.html",
 		"style": "wd-size-s wd-indent",
@@ -318,7 +264,6 @@
 	},
 	{
 		"title": "HTML.action",
-		"description": "Method",
 		"id": "js_html_action",
 		"file": "manual/js.html.action.html",
 		"style": "wd-size-s wd-indent",
@@ -327,7 +272,6 @@
 
 	{"x": "JS-NUMBER==========================================================",
 		"title": "Number",
-		"description": "Values ​​that identify numbers.",
 		"id": "js_number",
 		"file": "manual/js.number.html",
 		"style": "wd-case-title",
@@ -335,7 +279,6 @@
 	},
 	{
 		"title": "Number.integer",
-		"description": "Attribute",
 		"id": "js_number_integer",
 		"file": "manual/js.number.integer.html",
 		"style": "wd-size-s wd-indent",
@@ -343,7 +286,6 @@
 	},
 	{
 		"title": "Number.fraction",
-		"description": "Attribute",
 		"id": "js_number_fraction",
 		"file": "manual/js.number.fraction.html",
 		"style": "wd-size-s wd-indent",
@@ -351,7 +293,6 @@
 	},
 	{
 		"title": "Number.isInteger",
-		"description": "Attribute",
 		"id": "js_number_isInteger",
 		"file": "manual/js.number.isInteger.html",
 		"style": "wd-size-s wd-indent",
@@ -359,7 +300,6 @@
 	},
 	{
 		"title": "Number.isFloat",
-		"description": "Attribute",
 		"id": "js_number_isFloat",
 		"file": "manual/js.number.isFloat.html",
 		"style": "wd-size-s wd-indent",
@@ -367,7 +307,6 @@
 	},
 	{
 		"title": "Number.isNatural",
-		"description": "Attribute",
 		"id": "js_number_isNatural",
 		"file": "manual/js.number.isNatural.html",
 		"style": "wd-size-s wd-indent",
@@ -375,7 +314,6 @@
 	},
 	{
 		"title": "Number.isNegative",
-		"description": "Attribute",
 		"id": "js_number_isNegative",
 		"file": "manual/js.number.isNegative.html",
 		"style": "wd-size-s wd-indent",
@@ -383,7 +321,6 @@
 	},
 	{
 		"title": "Number.isPositive",
-		"description": "Attribute",
 		"id": "js_number_isPositive",
 		"file": "manual/js.number.isPositive.html",
 		"style": "wd-size-s wd-indent",
@@ -391,7 +328,6 @@
 	},
 	{
 		"title": "Number.abs",
-		"description": "Attribute",
 		"id": "js_number_abs",
 		"file": "manual/js.number.abs.html",
 		"style": "wd-size-s wd-indent",
@@ -399,7 +335,6 @@
 	},
 	{
 		"title": "Number.inverse",
-		"description": "Attribute",
 		"id": "js_number_inverse",
 		"file": "manual/js.number.inverse.html",
 		"style": "wd-size-s wd-indent",
@@ -407,7 +342,6 @@
 	},
 	{
 		"title": "Number.roundUp",
-		"description": "Attribute",
 		"id": "js_number_roundUp",
 		"file": "manual/js.number.roundUp.html",
 		"style": "wd-size-s wd-indent",
@@ -415,7 +349,6 @@
 	},
 	{
 		"title": "Number.locale",
-		"description": "Method",
 		"id": "js_number_locale",
 		"file": "manual/js.number.locale.html",
 		"style": "wd-size-s wd-indent",
@@ -423,7 +356,6 @@
 	},
 	{
 		"title": "Number.currency",
-		"description": "Method",
 		"id": "js_number_currency",
 		"file": "manual/js.number.currency.html",
 		"style": "wd-size-s wd-indent",
@@ -431,7 +363,6 @@
 	},
 	{
 		"title": "Number.round",
-		"description": "Method",
 		"id": "js_number_round",
 		"file": "manual/js.number.round.html",
 		"style": "wd-size-s wd-indent",
@@ -439,41 +370,14 @@
 	},
 	{
 		"title": "Number.scientific",
-		"description": "Method",
 		"id": "js_number_scientific",
 		"file": "manual/js.number.scientific.html",
 		"style": "wd-size-s wd-indent",
 		"click": ""
 	},
 
-	{"x": "JS-PATH============================================================",
-		"title": "Path",
-		"description": "Values ​​that represent an accessible file.",
-		"id": "js_path",
-		"file": "manual/js.path.html",
-		"style": "wd-case-title",
-		"click":  ""
-	},
-	{
-		"title": "Path.get",
-		"description": "Method",
-		"id": "js_path_get",
-		"file": "manual/js.path.get.html",
-		"style": "wd-size-s wd-indent",
-		"click": ""
-	},
-	{
-		"title": "Path.post",
-		"description": "Method",
-		"id": "js_path_post",
-		"file": "manual/js.path.post.html",
-		"style": "wd-size-s wd-indent",
-		"click": ""
-	},
-	
 	{"x": "JS-REGEXP==========================================================",
 		"title": "RegExp",
-		"description": "Values ​​that represent a regular expression.",
 		"id": "js_regex",
 		"file": "manual/js.regex.html",
 		"style": "wd-case-title",
@@ -481,7 +385,6 @@
 	},
 	{
 		"title": "Regex.mask",
-		"description": "Method",
 		"id": "js_regex_mask",
 		"file": "manual/js.regex.mask.html",
 		"style": "wd-size-s wd-indent",
@@ -490,7 +393,6 @@
 
 	{"x": "JS-TEXT============================================================",
 		"title": "Text",
-		"description": "Strings not specified by other categories.",
 		"id": "js_text",
 		"file": "manual/js.text.html",
 		"style": "wd-case-title",
@@ -498,7 +400,6 @@
 	},
 	{
 		"title": "Text.title",
-		"description": "Attribute",
 		"id": "js_text_title",
 		"file": "manual/js.text.title.html",
 		"style": "wd-size-s wd-indent",
@@ -506,7 +407,6 @@
 	},
 	{
 		"title": "Text.trim",
-		"description": "Attribute",
 		"id": "js_text_trim",
 		"file": "manual/js.text.trim.html",
 		"style": "wd-size-s wd-indent",
@@ -514,7 +414,6 @@
 	},
 	{
 		"title": "Text.tt",
-		"description": "Attribute",
 		"id": "js_text_tt",
 		"file": "manual/js.text.tt.html",
 		"style": "wd-size-s wd-indent",
@@ -523,7 +422,6 @@
 
 	{"x": "JS-TIME============================================================",
 		"title": "Time",
-		"description": "Values ​​that represent time.",
 		"id": "js_time",
 		"file": "manual/js.time.html",
 		"style": "wd-case-title",
@@ -531,7 +429,6 @@
 	},
 	{
 		"title": "Time.hour",
-		"description": "Attribute",
 		"id": "js_time_hour",
 		"file": "manual/js.time.hour.html",
 		"style": "wd-size-s wd-indent",
@@ -539,7 +436,6 @@
 	},
 	{
 		"title": "Time.minute",
-		"description": "Attribute",
 		"id": "js_time_minute",
 		"file": "manual/js.time.minute.html",
 		"style": "wd-size-s wd-indent",
@@ -547,7 +443,6 @@
 	},
 	{
 		"title": "Time.second",
-		"description": "Attribute",
 		"id": "js_time_second",
 		"file": "manual/js.time.second.html",
 		"style": "wd-size-s wd-indent",
@@ -555,7 +450,6 @@
 	},
 	{
 		"title": "Time.h24",
-		"description": "Attribute",
 		"id": "js_time_h24",
 		"file": "manual/js.time.h24.html",
 		"style": "wd-size-s wd-indent",
@@ -563,7 +457,6 @@
 	},
 	{
 		"title": "Time.ampm",
-		"description": "Attribute",
 		"id": "js_time_ampm",
 		"file": "manual/js.time.ampm.html",
 		"style": "wd-size-s wd-indent",
@@ -571,7 +464,6 @@
 	},
 	{
 		"title": "Time.toString",
-		"description": "Method",
 		"id": "js_time_toString",
 		"file": "manual/js.time.toString.html",
 		"style": "wd-size-s wd-indent",
@@ -579,7 +471,6 @@
 	},
 	{
 		"title": "Time.valueOf",
-		"description": "Method",
 		"id": "js_time_valueOf",
 		"file": "manual/js.time.valueOf.html",
 		"style": "wd-size-s wd-indent",
@@ -587,7 +478,6 @@
 	},
 	{
 		"title": "Time.format",
-		"description": "Method",
 		"id": "js_time_format",
 		"file": "manual/js.time.format.html",
 		"style": "wd-size-s wd-indent",
@@ -601,7 +491,6 @@
 	
 	{"x": "DATA===============================================================",
 		"title": "WD Attributes Tools",
-		"description": "WD Attributes Tools",
 		"id": "data",
 		"file": "manual/data.html",
 		"style": "wd-color-blue",
@@ -609,7 +498,6 @@
 	},
 	{
 		"title": "dataWdLoad",
-		"description": "Attribute",
 		"id": "data_wd_load",
 		"file": "manual/data.wdload.html",
 		"style": "wd-size-s wd-indent",
@@ -617,7 +505,6 @@
 	},
 	{
 		"title": "dataWdRepeat",
-		"description": "Attribute",
 		"id": "data_wd_repeat",
 		"file": "manual/data.wdrepeat.html",
 		"style": "wd-size-s wd-indent",
@@ -625,7 +512,6 @@
 	},
 	{
 		"title": "dataWdSort",
-		"description": "Attribute",
 		"id": "data_wd_sort",
 		"file": "manual/data.wdsort.html",
 		"style": "wd-size-s wd-indent",
@@ -633,7 +519,6 @@
 	},
 	{
 		"title": "dataWdFilter",
-		"description": "Attribute",
 		"id": "data_wd_filter",
 		"file": "manual/data.wdfilter.html",
 		"style": "wd-size-s wd-indent",
@@ -641,7 +526,6 @@
 	},
 	{
 		"title": "dataWdMask",
-		"description": "Attribute",
 		"id": "data_wd_mask",
 		"file": "manual/data.wdmask.html",
 		"style": "wd-size-s wd-indent",
@@ -649,7 +533,6 @@
 	},
 	{
 		"title": "dataWdPage",
-		"description": "Attribute",
 		"id": "data_wd_page",
 		"file": "manual/data.wdpage.html",
 		"style": "wd-size-s wd-indent",
@@ -657,7 +540,6 @@
 	},
 	{
 		"title": "dataWdAction",
-		"description": "Attribute",
 		"id": "data_wd_action",
 		"file": "manual/data.wdaction.html",
 		"style": "wd-size-s wd-indent",
@@ -665,7 +547,6 @@
 	},
 	{
 		"title": "dataWdSortCol",
-		"description": "Attribute",
 		"id": "data_wd_sortcol",
 		"file": "manual/data.wdsortcol.html",
 		"style": "wd-size-s wd-indent",
@@ -673,7 +554,6 @@
 	},
 	{
 		"title": "dataWdDevice",
-		"description": "Attribute",
 		"id": "data_wd_device",
 		"file": "manual/data.wddevice.html",
 		"style": "wd-size-s wd-indent",
@@ -688,7 +568,6 @@
 	
 	{"x": "CSS================================================================",
 		"title": "WD Style Sheet",
-		"description": "WD Style Sheet",
 		"id": "css",
 		"file": "manual/css.html",
 		"style": "wd-color-blue",

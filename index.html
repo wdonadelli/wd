@@ -9,51 +9,62 @@
 		<script src="wd.js"></script>
 		<link rel="stylesheet" href="wd.css"/>
 		<script>
-function printArray(array) {
-	var txt = "["
-	for (var i = 0; i < array.length; i++) {
-		if (typeof array[i] === "string") {
-			txt += "<q>"+array[i]+"</q>, ";
+function setText(obj, html) {
+	for (var i in obj) {
+		if (html === true) {
+			wd$(i).item(0).innerHTML = obj[i];
 		} else {
-			txt += "<var>"+array[i]+"</var>, ";
+			wd$(i).item(0).textContent = obj[i];
 		}
 	}
-	return txt.replace(/\,\ $/, "]");
-	//return "["+array.join(", ")+"]";
+	return;
+}
+function title(value) {
+	wd$("#title").item(0).textContent = value;
+	return;
 };
 		</script>
 	</head>
-<body class="wd-align-J" data-wd-device="desktop: wd-body-E">
+<body class="wd-align-J" data-wd-device="Desktop{wd-body-E}">
 
+
+	<!--MAIN PAGE-->
 	<main class="wd-box">
 
+		<!--HEADER-->
 		<header class="wd-head wd-bgcolor-black wd-follow-N">
 			<h1>WD Manual</h1>
 		</header>
 
-		<nav class="wd-nav wd-bgcolor-navy wd-follow-N" data-wd-device="desktop: wd-hide">
-			<a href="#menu" data-wd-action="open: #menu" class="wd-symbol-menu"></a>
+		<!--NAV-->
+		<nav class="wd-nav wd-bgcolor-navy wd-follow-N" data-wd-device="Desktop{wd-hide}">
+			<a href="#menu" data-wd-action="open{#menu}" class="wd-symbol-menu"></a>
 		</nav>
 		
+		<!--CONTENT-->
 		<section class="wd-box">
 			<header class="wd-head">
-				<h2 class="wd-align-C">?</h2>
+				<h2 class="wd-align-C" id="title">?</h2>
 			</header>
 			<article id="content"></article>
 		</section>
 		
-		<footer class="wd-foot"></br></footer>
 	</main>
-	
-	<section id="menu" data-wd-device="phone: wd-dialog-full&tablet: wd-dialog-full&desktop: wd-bar-W" class="wd-box wd-bgcolor-white wd-border-V" style="overflow: auto">
 
+<!--========================================================================-->
+
+	<!--MENU-->
+	<section id="menu" data-wd-device="Mobile{wd-dialog-full}Desktop{wd-bar-W}" class="wd-box wd-bgcolor-white wd-border-V" style="overflow: auto">
+
+		<!--HEADER-->
 		<header class="wd-head wd-bgcolor-teal wd-follow-N">
 			<h3>Menu</h3>
-			<span data-wd-device="desktop: wd-hide" class="wd-place-E wd-symbol-cancel" data-wd-action="close: #menu"></span>
+			<span data-wd-device="Desktop{wd-hide}" class="wd-place-E wd-symbol-cancel" data-wd-action="close{#menu}"></span>
 		</header>
 
-		<nav class="wd-nav-V" data-wd-repeat="manual/menu.json">
-			<a href="#" data-wd-data="wdLoad: #content" title="{{description}}" class="{{style}}" {{click}}>{{title}}</a>
+		<!--NAV-->
+		<nav class="wd-nav-V" data-wd-repeat="get{manual/menu.json}">
+			<a href="#" data-wd-data="wdLoad{get{{{file}}}}${#content}" class="{{style}}" {{click}} onclick="title('{{title}}');">{{title}}</a>
 		</nav>
 
 	</section>
