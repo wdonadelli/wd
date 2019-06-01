@@ -29,7 +29,7 @@ function title(value) {
 
 
 	<!--MAIN PAGE-->
-	<main class="wd-box">
+	<main class="wd-box" id="main">
 
 		<!--HEADER-->
 		<header class="wd-head wd-bgcolor-black wd-follow-N">
@@ -42,12 +42,7 @@ function title(value) {
 		</nav>
 		
 		<!--CONTENT-->
-		<section class="wd-box">
-			<header class="wd-head">
-				<h2 class="wd-align-C" id="title">?</h2>
-			</header>
-			<article id="content"></article>
-		</section>
+		<section class="wd-box" id="content"></section>
 		
 	</main>
 
@@ -64,7 +59,7 @@ function title(value) {
 
 		<!--NAV-->
 		<nav class="wd-nav-V" data-wd-repeat="get{manual/menu.json}">
-			<a href="#" data-wd-data="wdLoad{get{{{file}}}}${#content}" class="{{style}}" {{click}} onclick="title('{{title}}');">{{title}}</a>
+			<a href="#main" data-wd-data="wdLoad{get{{{file}}}}${#content}" class="{{style}}" {{click}} onclick="title('{{title}}');">{{title}}</a>
 		</nav>
 
 	</section>

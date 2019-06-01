@@ -443,13 +443,6 @@ var wd = (function() {
 				case "boolean":
 					x = this._value.valueOf() === true ? "True" : "False";
 					break;
-				case "array":
-					try {
-						x = JSON.stringify(this._value);
-					} catch(e) {
-						x = this._value.toString();
-					}
-					break;
 				case "object":
 					try {
 						x = JSON.stringify(this._value);
@@ -1808,7 +1801,7 @@ function WDtext(input) {
 			var index;
 			index = this.inside(item, true);
 			for (var i = 0 ; i < index.length; i++) {
-				this.valueOf()[index[i]] = value;
+				this._value[index[i]] = value;
 			}
 			return this.valueOf();
 		}
@@ -1916,6 +1909,21 @@ function WDtext(input) {
 			}
 			aFinal = aFinal.concat(aOthers);
 			return aFinal;
+		}
+	});
+
+	/*Define método toString*/
+	Object.defineProperties(WDarray.prototype, {
+		toString: {
+			value: function() {
+				var x;
+				try {
+					x = JSON.stringify(this._value);
+				} catch(e) {
+					x = this._value.toString();
+				}
+				return x;
+			}
 		}
 	});
 
