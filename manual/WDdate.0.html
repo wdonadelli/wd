@@ -1,0 +1,38 @@
+<header class="wd-head">
+	<h2 class="wd-align-C">WDdate</h2>
+</header>
+
+<p class="wd-indent">This is an object for date manipulation, disregarding the effects inherent to the time zone. The date should be a string in the following formats:</p>
+
+<ul class="wd-list">
+	<li><q>YYYY-MM-DD</q></li>
+	<li><q>MM/DD/YYYY</q></li>
+	<li><q>DD.MM.YYYY</q></li>
+</ul>
+
+<dl class="wd-border wd-padding wd-rounded">
+	<dt>YYYY</dt>
+	<dd>Four-digit year (integer from 0001 to 9999).</dd>
+	<dt>MM</dt>
+	<dd>Month with two digits (integer from 01 to 12).</dd>
+	<dt>DD</dt>
+	<dd>Day with two digits (integer from 01 to 31).</dd>
+</dl>
+
+<p class="wd-indent">The Date object will also be considered as the date. The special string <q>%today</q> specifies the current date. The textual representation of the date must be a valid date, otherwise it will not be treated as a date and a different object will be returned.</p>
+
+<p class="wd-indent">The returned object has the following characteristics:</p>
+
+<ul class="wd-list" id="eg1"></ul>
+
+<p class="wd-indent">See the menu for more details.</p>
+
+<h3>valueOf and toString methods</h3>
+
+<p class="wd-indent">The <code>toString</code> method returns the date in <q>YYYY-MM-DD</q> format. The <code>valueOf</code> method returns the number of days elapsed from <time>0001-01-01</time> (day 1) until day <time>9999-12-31</time> (last day), based on the projection of the Gregorian calendar. If the date limit is exceeded, the date will be set at the respective limit.</p>
+
+<script>
+var eg = {}
+eg["#eg1"] = "<li>"+wd(wd("%today").tools).del("type", "tools").join("</li><li>")+"</li>";
+setText(eg, true);
+</script>

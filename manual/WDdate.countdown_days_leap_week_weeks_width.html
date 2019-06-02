@@ -1,0 +1,103 @@
+<header class="wd-head">
+	<h2 class="wd-align-C">WDdate: more data</h2>
+</header>
+
+<!---------------------------------------------------------------------------->
+<h3>WDdate.countdown</h3>
+
+<p class="wd-indent">It is a attribute that gets the number of days remaining for the end of the year (last day).</p>
+
+<p class="wd-code wd-align-C">wd(date).countdown</p>
+
+<h4>Example</h4>
+
+<pre class="wd-code">
+wd(<q>%today</q>).toString();
+<sample><q id="eg1"></q></sample>
+wd(<q>%today</q>).countdown;
+<sample id="eg2"></sample>
+</pre>
+
+<!---------------------------------------------------------------------------->
+<h3>WDdate.days</h3>
+
+<p class="wd-indent">It is a attribute that gets the value of the day of the year (from 1).</p>
+
+<p class="wd-code wd-align-C">wd(date).days</p>
+
+<h4>Example</h4>
+
+<pre class="wd-code">
+wd(<q>%today</q>).days;
+<sample id="eg3"></sample>
+</pre>
+
+<!---------------------------------------------------------------------------->
+<h3>WDdate.leap</h3>
+
+<p class="wd-indent">It is a attribute that informs if it is leap year (true/false).</p>
+
+<p class="wd-code wd-align-C">wd(date).leap</p>
+
+<h4>Example</h4>
+
+<pre class="wd-code">
+wd(<q>%today</q>).leap;
+<sample id="eg4"></sample>
+</pre>
+
+<!---------------------------------------------------------------------------->
+<h3>WDdate.week</h3>
+
+<p class="wd-indent">It is a attribute that gets the value of the day of the week from 1 (sunday) to 7 (saturday).</p>
+
+<p class="wd-code wd-align-C">wd(date).week</p>
+
+<h4>Example</h4>
+
+<pre class="wd-code">
+wd(<q>%today</q>).week;
+<sample id="eg5"></sample>
+</pre>
+
+<!---------------------------------------------------------------------------->
+<h3>WDdate.weeks</h3>
+
+<p class="wd-indent">It is a attribute that gets the value of the week of the year (from 1).</p>
+
+<p class="wd-code wd-align-C">wd(date).weeks</p>
+
+<h4>Example</h4>
+
+<pre class="wd-code">
+wd(<q>%today</q>).weeks;
+<sample id="eg6"></sample>
+</pre>
+
+<!---------------------------------------------------------------------------->
+<h3>WDdate.width</h3>
+
+<p class="wd-indent">It is a attribute that gets the number of days in a month.</p>
+
+<p class="wd-code wd-align-C">wd(date).width</p>
+
+<h4>Example</h4>
+
+<pre class="wd-code">
+wd(<q>%today</q>).width;
+<sample id="eg7"></sample>
+</pre>
+
+<script>
+var eg = {};
+eg["#eg1"] = wd("%today").toString();
+eg["#eg2"] = wd("%today").countdown;
+eg["#eg3"] = wd("%today").days;
+eg["#eg4"] = wd("%today").leap === true ? "true" : "false";
+eg["#eg5"] = wd("%today").week;
+eg["#eg6"] = wd("%today").weeks;
+eg["#eg7"] = wd("%today").width;
+setText(eg);
+</script>
+
+

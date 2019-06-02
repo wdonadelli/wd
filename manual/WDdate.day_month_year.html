@@ -1,0 +1,100 @@
+<header class="wd-head">
+	<h2 class="wd-align-C">WDdate: setting date</h2>
+</header>
+
+<!---------------------------------------------------------------------------->
+<h3>WDdate.day</h3>
+
+<p class="wd-indent">It is a attribute that that gets/sets the value of the day (1-31). If you set a value beyond the limits, the time will be adapted.</p>
+
+<p class="wd-code wd-align-C">wd(date).day</p>
+
+<h4>Example</h4>
+
+<pre class="wd-code">
+<code>var</code> x = <q id="eg1"></q>;
+<code>var</code> y = wd(x);
+y.day;
+<sample id="eg2"></sample>
+y.day = <var>21</var>;
+y.day;
+<sample id="eg3"></sample>
+y.day = <var>0</var>;
+y.day;
+<sample id="eg4"></sample>
+</pre>
+
+<!---------------------------------------------------------------------------->
+<h3>WDdate.month</h3>
+
+<p class="wd-indent">It is a attribute that that gets/sets the value of the month from 1 (january) to 12 (december). If you set a value beyond the limits, the time will be adapted.</p>
+
+<p class="wd-code wd-align-C">wd(date).month</p>
+
+<h4>Example</h4>
+
+<pre class="wd-code">
+<code>var</code> x = <q id="eg5"></q>;
+<code>var</code> y = wd(x);
+y.month;
+<sample id="eg6"></sample>
+y.month = <var>3</var>;
+y.month;
+<sample id="eg7"></sample>
+y.month = <var>14</var>;
+y.month;
+<sample id="eg8"></sample>
+</pre>
+
+
+<!---------------------------------------------------------------------------->
+<h3>WDdate.year</h3>
+
+<p class="wd-indent">It is a attribute that that gets/sets the value of the year (1-9999). If you set a value beyond the limits, the time will be adapted.</p>
+
+<p class="wd-code wd-align-C">wd(date).year</p>
+
+<h4>Example</h4>
+
+<pre class="wd-code">
+<code>var</code> x = <q id="eg9"></q>;
+<code>var</code> y = wd(x);
+y.year;
+<sample id="eg10"></sample>
+y.year = <var>1999</var>;
+y.year;
+<sample id="eg11"></sample>
+y.year = <var>12345</var>;
+y.year;
+<sample id="eg12"></sample>
+</pre>
+
+<script>
+var eg = {};
+var x = "1991-07-24";
+var y = wd(x);
+eg["#eg1"] = x;
+eg["#eg2"] = y.day;
+y.day = 21;
+eg["#eg3"] = y.day;
+y.day = 0;
+eg["#eg4"] = y.day;
+
+y = wd(x);
+eg["#eg5"] = x;
+eg["#eg6"] = y.month;
+y.month = 3;
+eg["#eg7"] = y.month;
+y.month = 14;
+eg["#eg8"] = y.month;
+
+y = wd(x);
+eg["#eg9"] = x;
+eg["#eg10"] = y.year;
+y.year = 1999;
+eg["#eg11"] = y.year;
+y.year = 12345;
+eg["#eg12"] = y.year;
+
+setText(eg);
+</script>

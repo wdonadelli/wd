@@ -750,7 +750,7 @@ function WDtext(input) {
 				serial = serial.toString();
 			}log(serial);
 			time   = WD(time);
-			if (time.number === "natural") {
+			if ((time.number === "integer" || time.number === "float") && time.valueOf() > 0) {
 				xhttp.timeout =  1000*time.valueOf();
 			}
 			xhttp.onreadystatechange = function (ev) {
@@ -894,13 +894,11 @@ function WDtext(input) {
 		get: function() {
 			var x;
 			if (this.valueOf() === Infinity || this.valueOf() === -Infinity) {
-				x = "real";
+				x = "infinity";
 			} else if (this.valueOf() % 1 !== 0) {
-				x = "rational";
-			} else if (this.valueOf() % 1 === 0 && this.valueOf() <= 0) {
+				x = "float";
+			} else if (this.valueOf() % 1 === 0) {
 				x = "integer";
-			} else if (this.valueOf() % 1 === 0 && this.valueOf() > 0) {
-				x = "natural";
 			} else {
 				x = "?";
 			}
@@ -1002,9 +1000,10 @@ function WDtext(input) {
 		value: function(width) {
 			var x;
 			width = WD(width);
-			if (width.number === "natural" || width.valueOf() === 0) {
+			if (width.number === "integer" || width.number === "float") {
+				width = WD(width.abs).integer;
 				try {
-				 	x = Number(this.valueOf().toFixed(width.valueOf())).valueOf();
+				 	x = Number(this.valueOf().toFixed(width)).valueOf();
 				} catch(e) {
 					x = this.valueOf();
 					log(e.toString(), "w");
@@ -1075,26 +1074,26 @@ function WDtext(input) {
 	Object.defineProperty(WDnumber.prototype, "fixed", {
 		enumerable: true,
 		value: function(int, frac, sign) {
-			if (WD(sign).type !== "boolean") {
+			if (sign !== false) {
 				sign = true;
 			}
 			var s, x, y, z;
-			if (this.number === "real") {
+			if (this.number === "infinity") {
 				z = this.toString();
 			} else {
 				s = sign ? (this.signal < 0 ? "-" : "+") : "";
 				x = String(this.integer).replace(/[^0-9]/, "").split("");
-				int  = WD(int);
-				if (int.number === "natural") {
-					while(x.length < int.valueOf()) {
+				int = WD(int);
+				if (int.number === "integer" || int.number === "float") {
+					while(x.length < int.integer) {
 						x.unshift(0);
 					}
 				}
 				y = WD(this.round(frac)).fraction;
 				y = y === 0 ? [] : String(y).split(".")[1].split("");
 				frac = WD(frac);
-				if (frac.number === "natural") {
-					while(y.length < frac.valueOf()) {
+				if (int.number === "integer" || int.number === "float") {
+					while(y.length < frac.integer) {
 						y.push(0);
 					}
 				}
@@ -1154,14 +1153,15 @@ function WDtext(input) {
 			var h24, h;
 			h24 = 24*60*60;
 			h = WD(h);
-			if (h.number === "rational") {
-				log("The value must be an integer.", "w");
-			} else if (h.valueOf() >= 0) {
-				this._value = 3600*h.valueOf() + 60*this.minute + this.second;
-			} else {
-				this._value = 3600*h.valueOf() + 60*this.minute + this.second;
+			if (h.number === "integer" || h.number === "float") {
+				h = h.integer;
+				if (h >= 0) {
+					this._value = 3600*h + 60*this.minute + this.second;
+				} else {
+					this._value = 3600*h + 60*this.minute + this.second;
+				}
+				this.valueOf();
 			}
-			this.valueOf();
 			return;
 		}
 	});
@@ -1177,15 +1177,16 @@ function WDtext(input) {
 		set: function(m) {
 			var time;
 			m = WD(m);
-			if (m.number === "rational") {
-				log("The value must be an integer.", "w");
-			} else if (m.valueOf() > 59 || m.valueOf() < 0) {
-				time = 60*(m.valueOf() - this.minute);
-				this._value += time;
-			} else {
-				this._value = 3600*this.hour + 60*m.valueOf() + this.second;
+			if (m.number === "integer" || m.number === "float") {
+				m = m.integer;
+				if (m > 59 || m < 0) {
+					time = 60*(m - this.minute);
+					this._value += time;
+				} else {
+					this._value = 3600*this.hour + 60*m + this.second;
+				}
+				this.valueOf();
 			}
-			this.valueOf();
 			return;
 		}
 	});
@@ -1200,15 +1201,16 @@ function WDtext(input) {
 		set: function(s) {
 			var time;
 			s = WD(s);
-			if (s.number === "rational") {
-				log("The value must be an integer.", "w");
-			} else if (s.valueOf() > 59 || s.valueOf() < 0) {
-				time = s.valueOf() - this.second;
-				this._value += time;
-			} else {
-				this._value = 3600*this.hour + 60*this.minute + s.valueOf();
+			if (s.number === "integer" || s.number === "float") {
+				s = s.integer;
+				if (s > 59 || s < 0) {
+					time = s - this.second;
+					this._value += time;
+				} else {
+					this._value = 3600*this.hour + 60*this.minute + s;
+				}
+				this.valueOf();
 			}
-			this.valueOf();
 			return;
 		}
 	});	
@@ -1269,15 +1271,15 @@ function WDtext(input) {
 		},
 		valueOf: {
 			value: function() {
-				var h24;
+				var h24, x;
 				h24 = 24*60*60;
-				if (WD(this._value).type !== "number") {
+				x   = WD(this._value);
+				if (x.type !== "number" || x.number === "infinity") {
 					log("Improper change of internal value has been adjusted to the minimum value.", "w");
 					this._value = 0;
-				}
-				if (WD(this._value).number === "rational") {
+				} else if (x.number !== "integer") {
 					log("Considering that time was defined as a non-integer value, its value was approximated!", "w");
-					this._value = WD(this._value).round(0);
+					this._value = WD(this._value).integer;
 				}
 				if (this._value < 0) {
 					this._value = this._value % h24 + h24;
@@ -1353,7 +1355,7 @@ function WDtext(input) {
 		}
 		for (var i = 0; i < date.length; i++) {
 			x = WD(date[i]);
-			if (x.number !== "natural") throw Error("An unexpected error occurred while setting date!");
+			if (x.number !== "integer" || date[i] <= 0) throw Error("An unexpected error occurred while setting date!");
 			date[i] = x.valueOf();
 		}
 
@@ -1382,10 +1384,14 @@ function WDtext(input) {
 		},
 		set: function(x) {
 			var y = WD(x);
-			if (y.number !== "natural" || y.valueOf() > Y_max || y.valueOf() < Y_min) {
+			if (y.type !== "number") {
 				log("The value must be a positive integer between "+Y_min+" and "+Y_max+".", "w");
+			} else if (y.valueOf() > Y_max) {
+				this._value = DATE_max;
+			} else if (y.valueOf() < Y_min) {
+				this._value = DATE_min;
 			} else {
-				this._value = dateToNumber(y.valueOf(), this.month, this.day);
+				this._value = dateToNumber(y.integer, this.month, this.day);
 			}
 			return this.valueOf();
 		}
@@ -1406,10 +1412,10 @@ function WDtext(input) {
 			y = this.year;
 			m = WD(x);
 			d = this.day;
-			if (m.number !== "integer" && m.number !== "natural") {
+			if (m.type !== "number" || m.number === "infinity") {
 				log("The value must be an integer.", "w");
 			} else {
-				m = m.valueOf();
+				m = m.integer;
 				if (m === 0) {
 					y = this.year-1;
 					m = 12;
@@ -1492,15 +1498,16 @@ function WDtext(input) {
 		set: function(x) {
 			var d, z;
 			d = WD(x);
-			if (d.number !== "integer" && d.number !== "natural") {
+			if (d.type !== "number" || d.number === "infinity") {
 				log("The value must be an integer.", "w");
 			} else {
-				if (d.valueOf() > this.width) {
-					z = this.valueOf() + d.valueOf() - this.day;
-				} else if (d.valueOf() < 1) {
-					z = this.valueOf() - (this.day - d.valueOf());
+				d = d.integer;
+				if (d > this.width) {
+					z = this.valueOf() + d - this.day;
+				} else if (d < 1) {
+					z = this.valueOf() - (this.day - d);
 				} else {
-					z = this.valueOf() + (d.valueOf() - this.day);
+					z = this.valueOf() + (d - this.day);
 				}
 				this._value = z;
 			}
@@ -1662,9 +1669,9 @@ function WDtext(input) {
 				} else if (this._value > DATE_max) {
 					log("Upper limit for date has been extrapolated. Limit value set.", "w");
 					this._value = DATE_max;
-				} else if (WD(this._value).number !== "natural") {
+				} else if (WD(this._value).number !== "integer") {
 					log("Incorrect change of internal value was adjusted to approximate value.", "w");
-					this._value = WD(this._value).round(0);
+					this._value = WD(this._value).integer;
 				}
 				return this._value;
 			}
@@ -2123,12 +2130,13 @@ function WDtext(input) {
 			if (show !== false) {
 				show = true;
 			}
-			if (WD(min).number !== "natural") {
+			if (WD(min).type !== "number" || WD(min).number === "infinity" || min < 0) {
 				min = 0;
 			}
 			if (WD(text) !== "text") {
 				text = String(text).toString();
 			}
+			min  = WD(min).integer;
 			text = text.toUpperCase();
 			this.run(function (elem) {
 				var child, content;
