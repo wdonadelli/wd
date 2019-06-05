@@ -8,7 +8,7 @@
 
 	{	"x": "=================================================================",
 		"title": "WD JavaScript Tools",
-		"file":  "manual/js.html",
+		"file":  "manual/WD.0.html",
 		"style": "wd-color-blue",
 		"click": ""
 	},
@@ -278,65 +278,24 @@
 	},
 
 	{	"x": "JS-TIME============================================================",
-		"title": "Time",
-		"file":  "manual/js.time.html",
+		"title": "WDtime",
+		"file":  "manual/WDtime.0.html",
 		"style": "wd-case-title",
 		"click": ""
 	},
 	{
-		"title": "Time.hour",
-		"file":  "manual/js.time.hour.html",
+		"title": "WDtime: setting time",
+		"file":  "manual/WDtime.hour_minute_second.html",
 		"style": "wd-size-s",
 		"click": ""
 	},
 	{
-		"title": "Time.minute",
-		"file":  "manual/js.time.minute.html",
-		"style": "wd-size-s",
-		"click": ""
-	},
-	{
-		"title": "Time.second",
-		"file":  "manual/js.time.second.html",
-		"style": "wd-size-s",
-		"click": ""
-	},
-	{
-		"title": "Time.h24",
-		"file":  "manual/js.time.h24.html",
-		"style": "wd-size-s",
-		"click": ""
-	},
-	{
-		"title": "Time.ampm",
-		"file":  "manual/js.time.ampm.html",
-		"style": "wd-size-s",
-		"click": ""
-	},
-	{
-		"title": "Time.toString",
-		"file":  "manual/js.time.toString.html",
-		"style": "wd-size-s",
-		"click": ""
-	},
-	{
-		"title": "Time.valueOf",
-		"file":  "manual/js.time.valueOf.html",
-		"style": "wd-size-s",
-		"click": ""
-	},
-	{
-		"title": "Time.format",
-		"file":  "manual/js.time.format.html",
+		"title": "WDtime: formats",
+		"file":  "manual/WDtime.h12_format.html",
 		"style": "wd-size-s",
 		"click": ""
 	},
 
-
-	
-	
-	
-	
 	{	"x": "DATA===============================================================",
 		"title": "WD Attributes Tools",
 		"file":  "manual/data.html",

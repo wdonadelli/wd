@@ -1217,7 +1217,7 @@ function WDtext(input) {
 
 
 	/*Retorna a hora no formato ampm*/
-	Object.defineProperty(WDtime.prototype, "ampm", {
+	Object.defineProperty(WDtime.prototype, "h12", {
 		enumerable: true,
 		get: function() {
 			var h, m, p;
@@ -1246,7 +1246,7 @@ function WDtext(input) {
 			chars = {
 			"%h": this.hour,
 			"%H": WD(this.hour).fixed(2, 0, false),
-			"#h": this.ampm,
+			"#h": this.h12,
 			"%m": this.minute,
 			"%M": WD(this.minute).fixed(2, 0, false),
 			"%s": this.second,
