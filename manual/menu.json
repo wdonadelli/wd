@@ -3,7 +3,7 @@
 		"title": "Home",
 		"file":  "manual/home.html",
 		"style": "wd-case-title wd-color-blue",
-		"click": "data-wd-click=''"
+		"click": ""
 	},
 
 	{	"x": "=================================================================",
@@ -23,7 +23,7 @@
 		"title": "WDarray: changing items",
 		"file":  "manual/WDarray.add_del_toggle_replace.html",
 		"style": "wd-size-s",
-		"click": "data-wd-click=''"
+		"click": ""
 	},
 	{
 		"title": "WDarray: size and location",
@@ -240,39 +240,33 @@
 	},
 
 	{	"x": "JS-REGEXP==========================================================",
-		"title": "RegExp",
-		"file":  "manual/js.regex.html",
+		"title": "WDregexp",
+		"file":  "manual/WDregexp.0.html",
 		"style": "wd-case-title",
 		"click": ""
 	},
 	{
-		"title": "Regex.mask",
-		"file":  "manual/js.regex.mask.html",
+		"title": "WDregexp: mask",
+		"file":  "manual/WDregexp.mask.html",
 		"style": "wd-size-s",
 		"click": ""
 	},
 
 	{	"x": "JS-TEXT============================================================",
-		"title": "Text",
-		"file":  "manual/js.text.html",
+		"title": "WDtext",
+		"file":  "manual/WDtext.0.html",
 		"style": "wd-case-title",
 		"click": ""
 	},
 	{
-		"title": "Text.title",
-		"file":  "manual/js.text.title.html",
+		"title": "WDtext: formatting",
+		"file":  "manual/WDtext.clear_replace_title_trim.html",
 		"style": "wd-size-s",
 		"click": ""
 	},
 	{
-		"title": "Text.trim",
-		"file":  "manual/js.text.trim.html",
-		"style": "wd-size-s",
-		"click": ""
-	},
-	{
-		"title": "Text.tt",
-		"file":  "manual/js.text.tt.html",
+		"title": "WDtext: request",
+		"file":  "manual/WDtext.path_request.html",
 		"style": "wd-size-s",
 		"click": ""
 	},
@@ -293,7 +287,7 @@
 		"title": "WDtime: formats",
 		"file":  "manual/WDtime.h12_format.html",
 		"style": "wd-size-s",
-		"click": ""
+		"click": "data-wd-click=''"
 	},
 
 	{	"x": "DATA===============================================================",
