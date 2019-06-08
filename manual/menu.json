@@ -63,183 +63,63 @@
 		"click": ""
 	},
 
-	{	"x": "JS-HTML============================================================",
-		"title": "HTML",
-		"file":  "manual/js.html.html",
+	{	"x": "============================================================",
+		"title": "WDdom",
+		"file":  "manual/WDdom.0.html",
 		"style": "wd-case-title",
 		"click": ""
 	},
 	{
-		"title": "HTML.get",
-		"file":  "manual/js.html.get.html",
+		"title": "WDdom: view",
+		"file":  "manual/WDdom.action_filter_page_sort.html",
 		"style": "wd-size-s",
 		"click": ""
 	},
 	{
-		"title": "HTML.styles",
-		"file":  "manual/js.html.styles.html",
+		"title": "WDdom: setting",
+		"file":  "manual/WDdom.class_data_style.html",
 		"style": "wd-size-s",
 		"click": ""
 	},
 	{
-		"title": "HTML.execute",
-		"file":  "manual/js.html.execute.html",
+		"title": "WDdom: getting",
+		"file":  "manual/WDdom.form_getStyle_item_items.html",
 		"style": "wd-size-s",
 		"click": ""
 	},
 	{
-		"title": "HTML.handler",
-		"file":  "manual/js.html.handler.html",
-		"style": "wd-size-s",
-		"click": ""
-	},
-	{
-		"title": "HTML.class",
-		"file":  "manual/js.html.class.html",
-		"style": "wd-size-s",
-		"click": ""
-	},
-	{
-		"title": "HTML.style",
-		"file":  "manual/js.html.style.html",
-		"style": "wd-size-s",
-		"click": ""
-	},
-	{
-		"title": "HTML.data",
-		"file":  "manual/js.html.data.html",
-		"style": "wd-size-s",
-		"click": ""
-	},
-	{
-		"title": "HTML.filter",
-		"file":  "manual/js.html.filter.html",
-		"style": "wd-size-s",
-		"click": ""
-	},
-	{
-		"title": "HTML.sort",
-		"file":  "manual/js.html.sort.html",
-		"style": "wd-size-s",
-		"click": ""
-	},
-	{
-		"title": "HTML.page",
-		"file":  "manual/js.html.page.html",
-		"style": "wd-size-s",
-		"click": ""
-	},
-	{
-		"title": "HTML.repeat",
-		"file":  "manual/js.html.repeat.html",
-		"style": "wd-size-s",
-		"click": ""
-	},
-	{
-		"title": "HTML.load",
-		"file":  "manual/js.html.load.html",
-		"style": "wd-size-s",
-		"click": ""
-	},
-	{
-		"title": "HTML.action",
-		"file":  "manual/js.html.action.html",
+		"title": "WDdom: methods",
+		"file":  "manual/WDdom.handler_run.html",
 		"style": "wd-size-s",
 		"click": ""
 	},
 
-	{	"x": "JS-NUMBER==========================================================",
-		"title": "Number",
-		"file":  "manual/js.number.html",
+	{	"x": "=================================================================",
+		"title": "WDnumber",
+		"file":  "manual/WDnumber.0.html",
 		"style": "wd-case-title",
-		"click": ""
+		"click": "data-wd-click=''"
 	},
 	{
-		"title": "Number.integer",
-		"file":  "manual/js.number.integer.html",
+		"title": "WDnumber: attributes",
+		"file":  "manual/WDnumber.abs_fraction_integer_inverse_number.html",
 		"style": "wd-size-s",
 		"click": ""
 	},
 	{
-		"title": "Number.fraction",
-		"file":  "manual/js.number.fraction.html",
+		"title": "WDnumber: text/html",
+		"file":  "manual/WDnumber.currency_fixed_locale_scientific.html",
 		"style": "wd-size-s",
 		"click": ""
 	},
 	{
-		"title": "Number.isInteger",
-		"file":  "manual/js.number.isInteger.html",
-		"style": "wd-size-s",
-		"click": ""
-	},
-	{
-		"title": "Number.isFloat",
-		"file":  "manual/js.number.isFloat.html",
-		"style": "wd-size-s",
-		"click": ""
-	},
-	{
-		"title": "Number.isNatural",
-		"file":  "manual/js.number.isNatural.html",
-		"style": "wd-size-s",
-		"click": ""
-	},
-	{
-		"title": "Number.isNegative",
-		"file":  "manual/js.number.isNegative.html",
-		"style": "wd-size-s",
-		"click": ""
-	},
-	{
-		"title": "Number.isPositive",
-		"file":  "manual/js.number.isPositive.html",
-		"style": "wd-size-s",
-		"click": ""
-	},
-	{
-		"title": "Number.abs",
-		"file":  "manual/js.number.abs.html",
-		"style": "wd-size-s",
-		"click": ""
-	},
-	{
-		"title": "Number.inverse",
-		"file":  "manual/js.number.inverse.html",
-		"style": "wd-size-s",
-		"click": ""
-	},
-	{
-		"title": "Number.roundUp",
-		"file":  "manual/js.number.roundUp.html",
-		"style": "wd-size-s",
-		"click": ""
-	},
-	{
-		"title": "Number.locale",
-		"file":  "manual/js.number.locale.html",
-		"style": "wd-size-s",
-		"click": ""
-	},
-	{
-		"title": "Number.currency",
-		"file":  "manual/js.number.currency.html",
-		"style": "wd-size-s",
-		"click": ""
-	},
-	{
-		"title": "Number.round",
-		"file":  "manual/js.number.round.html",
-		"style": "wd-size-s",
-		"click": ""
-	},
-	{
-		"title": "Number.scientific",
-		"file":  "manual/js.number.scientific.html",
+		"title": "WDnumber: methods",
+		"file":  "manual/WDnumber.round.html",
 		"style": "wd-size-s",
 		"click": ""
 	},
 
-	{	"x": "JS-REGEXP==========================================================",
+	{	"x": "=================================================================",
 		"title": "WDregexp",
 		"file":  "manual/WDregexp.0.html",
 		"style": "wd-case-title",
@@ -252,7 +132,7 @@
 		"click": ""
 	},
 
-	{	"x": "JS-TEXT============================================================",
+	{	"x": "===================================================================",
 		"title": "WDtext",
 		"file":  "manual/WDtext.0.html",
 		"style": "wd-case-title",
@@ -271,7 +151,7 @@
 		"click": ""
 	},
 
-	{	"x": "JS-TIME============================================================",
+	{	"x": "=================================================================",
 		"title": "WDtime",
 		"file":  "manual/WDtime.0.html",
 		"style": "wd-case-title",
@@ -287,7 +167,7 @@
 		"title": "WDtime: formats",
 		"file":  "manual/WDtime.h12_format.html",
 		"style": "wd-size-s",
-		"click": "data-wd-click=''"
+		"click": ""
 	},
 
 	{	"x": "DATA===============================================================",

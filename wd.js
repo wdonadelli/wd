@@ -584,9 +584,6 @@ function WDtext(input) {
 	Object.defineProperty(WDtext.prototype, "title", {
 		enumerable: true,
 		value: function(change) {
-			if (change !== true) {
-				change = false;
-			}
 			var input, value;
 			input = this.toString().toLowerCase().split("");
 			value = "";
@@ -610,14 +607,11 @@ function WDtext(input) {
 	Object.defineProperty(WDtext.prototype, "trim", {
 		enumerable: true,
 		value: function(change) {
-			if (change !== true) {
-				change = false;
-			}
 			var value;
-			value = this.toString().trim().replace(/\ +/g, " ");
+			value = this.replace("  ", " ");
 			if (change === true) {
 				this._value = value;
-				value =  this;
+				value = this;
 			}
 			return value;	
 		}
@@ -627,11 +621,12 @@ function WDtext(input) {
 	Object.defineProperty(WDtext.prototype, "replace", {
 		enumerable: true,
 		value: function(oldValue, newValue, change) {
-			if (change !== true) {
-				change = false;
-			}
 			var value, run;
-			if (WD(oldValue).type !== "regexp") {
+			if (oldValue === null || oldValue === undefined || oldValue === "") {
+				oldValue = null;
+			} else if (WD(oldValue).type === "regexp") {
+				oldValue = new RegExp(WD(oldValue).toString(), "g");
+			} else {
 				oldValue = String(oldValue).toString();
 			}
 			if (newValue === null || newValue === undefined) {
@@ -640,18 +635,18 @@ function WDtext(input) {
 				newValue = String(newValue).toString();
 			}
 			value = this.toString();
-			run   = true;
-			if (newValue !== oldValue) {
-				while (run) {
+			if (WD(oldValue).type === "regexp") {
+				value = value.replace(oldValue, newValue);
+			} else if (newValue !== oldValue && oldValue !== null) {
+				run = true;
+				while (run === true) {
 						value = value.replace(oldValue, newValue);
 						run = WD(oldValue).type === "regexp" ? value.search(oldValue) : value.indexOf(oldValue);
 						run = run < 0 ? false : true;
 				}
-			} else {
-				log("replace: Substitution ignored, values ​​equal!", "w");
 			}
 			if (change === true) {
-				this._value = value;
+				this._value = WD(value).type === "text" ? value : "'"+value;
 				value = this;
 			}
 			return value;	
@@ -662,9 +657,6 @@ function WDtext(input) {
 	Object.defineProperty(WDtext.prototype, "clear", {
 		enumerable: true,
 		value: function(change) {
-			if (change !== true) {
-				change = false;
-			}
 			var value, clear;
 			var clear = {
 				A: /[À-Æ]/g,
@@ -906,24 +898,6 @@ function WDtext(input) {
 		}
 	});
 
-	/*Retorna se o número é positivo (1), negativo (-1) ou nulo (0)*/
-	Object.defineProperty(WDnumber.prototype, "signal", {
-		enumerable: true,
-		get: function() {
-			var x;
-			if (this.valueOf() === 0) {
-				x = 0;
-			} else if (this.valueOf() > 0) {
-				x = 1;
-			} else if (this.valueOf() < 0) {
-				x = -1;
-			} else {
-				x = "?";
-			}
-			return x;
-		}
-	});
-
 	/*Retorna o valor inteiro do número*/
 	Object.defineProperty(WDnumber.prototype, "integer", {
 		enumerable: true,
@@ -978,23 +952,7 @@ function WDtext(input) {
 		}
 	});
 
-	/*Arredonda o número para cima*/
-	Object.defineProperty(WDnumber.prototype, "up", {
-		enumerable: true,
-		get: function() {
-			var x;
-			if (this.fraction === 0) {
-				x = this.valueOf();
-			} else if (this.valueOf() > 0) {
-				x = this.integer+1;
-			} else {
-				x = this.integer-1;
-			}
-			return x;
-		}
-	});
-
-	/*Arredonda o valor informado para determinado número de casas*/
+	/*Arredonda o valor para determinado número de casas ou para cima (sem argumento)*/
 	Object.defineProperty(WDnumber.prototype, "round", {
 		enumerable: true,
 		value: function(width) {
@@ -1009,7 +967,13 @@ function WDtext(input) {
 					log(e.toString(), "w");
 				}
 			} else {
-				x = this.valueOf();
+				if (this.fraction === 0) {
+					x = this.valueOf();
+				} else if (this.valueOf() > 0) {
+					x = this.integer+1;
+				} else {
+					x = this.integer-1;
+				}
 			}
 			return x;
 		}
@@ -1074,14 +1038,11 @@ function WDtext(input) {
 	Object.defineProperty(WDnumber.prototype, "fixed", {
 		enumerable: true,
 		value: function(int, frac, sign) {
-			if (sign !== false) {
-				sign = true;
-			}
 			var s, x, y, z;
 			if (this.number === "infinity") {
 				z = this.toString();
 			} else {
-				s = sign ? (this.signal < 0 ? "-" : "+") : "";
+				s = sign === false ? "" : (this.valueOf() < 0 ? "-" : "+");
 				x = String(this.integer).replace(/[^0-9]/, "").split("");
 				int = WD(int);
 				if (int.number === "integer" || int.number === "float") {
@@ -2359,7 +2320,7 @@ function WDtext(input) {
 				lines  = elem.children;
 				amount = lines.length;
 				width  = size <= 1 ? WD(size * amount).integer : WD(size).integer;
-				pages  = WD(amount / width).up;
+				pages  = WD(amount / width).round();
 				if (page >= pages - 1 || page === -1) {/*page igual ou posterior a última página*/
 					start = (pages - 1) * width;
 					end   = amount - 1;
@@ -2570,8 +2531,8 @@ function WDtext(input) {
 			return;
 		}
 		var order;
-		order = WD(e.dataset.wdSort);
-		WD(e).sort(order.signal).data({wdSort: null});
+		order = WD(e.dataset.wdSort).valueOf();
+		WD(e).sort(order).data({wdSort: null});
 		return;
 	};
 

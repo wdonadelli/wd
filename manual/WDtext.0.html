@@ -1,32 +1,28 @@
-<p class="wd-indent">This is an object for manipulating strings. The supplied argument (primitive value) is <u>not changed</u> by methods or attributes. The following primitive values ​​define the object:</p>
+<header class="wd-head">
+	<h2 class="wd-align-C">WDtext</h2>
+</header>
+
+<p class="wd-indent">This is an object for handling textual content and ajax requests. The type attribute returns the value <q>text</q>. The following primitive values ​​define the object:</p>
 
 <ul class="wd-list">
-	<li>Strings not specified.</li>
+	<li>JavaScript String Object</li>
 </ul>
 
-<p class="wd-indent">Strings can specify dates, time, numbers, and accessible paths. The object that this section deals with will be displayed when the other quoted string forms are not specified. As for accessible paths, they inherit the same methods / attributes of this object.</p>
+<p class="wd-indent">To be considered as text type, the input value must be a String that does not meet the criteria for defining date, time, number or null (empty String).</p>
 
-<p class="wd-indent">When identifying the type of the primitive value, the object returns the string <q>text</q>.</p>
+<p class="wd-indent">The returned object has the following characteristics:</p>
 
-<pre class="wd-code"><cite>//Example</cite>
-<code>var</code> input = <q>Deus lux mundi est.</q>;
-<code>var</code> object = wd(input);
-object.type;
-<sample><q>text</q></sample>
-</pre>
-
-<p class="wd-indent">The object has the following attributes:</p>
-
-<ul class="wd-list">
-	<li>title</li>
-	<li>trim</li>
-	<li>tt</li>
-</ul>
-
-<p class="wd-indent">The object has the following methods:</p>
-
-<ul class="wd-list">
-	<li><s>mask</s> (Deprecated - js.v.1.3.0 - 2019-03-24)</li>
-</ul>
+<ul class="wd-list" id="eg1"></ul>
 
 <p class="wd-indent">See the menu for more details.</p>
+
+<h3>valueOf and toString methods</h3>
+
+<p class="wd-indent">The <code>toString</code> and <code>valueOf</code> methods returns the browser default value.</p>
+
+<script>
+var eg = {
+	"#eg1": "<li>"+wd(wd("'").tools).del("type", "tools").join("</li><li>")+"</li>",
+}
+setText(eg, true);
+</script>
