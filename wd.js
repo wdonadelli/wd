@@ -822,7 +822,7 @@ function WDtext(input) {
 			for (var i = 0; i < pattern.length; i++) {
 				if (pattern[i] === "\\") {
 					i++;
-					if (WD(metaReference).inside(pattern[i])) {
+					if (!WD(metaReference).inside(pattern[i])) {
 						target += pattern[i];
 					}	else {
 						target += metacharacter[WD(metaReference).inside(pattern[i], true)[0]];

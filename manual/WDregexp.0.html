@@ -1,29 +1,26 @@
-<p class="wd-indent">This is an object for manipulating regular expressions. The supplied argument (primitive value) is <u>not changed</u> by methods or attributes. The following primitive values ​​define the object:</p>
+<header class="wd-head">
+	<h2 class="wd-align-C">WDregex</h2>
+</header>
+
+<p class="wd-indent">This is an object for manipulating regular expressions. The type attribute returns the value <q>regexp</q>. The following primitive values ​​define the object:</p>
 
 <ul class="wd-list">
-	<li>Regular Expression</li>
+	<li>JavaScript RegExp Object</li>
 </ul>
 
-<p class="wd-indent">When identifying the type of the primitive value, the object returns the string <q>regex</q>.</p>
+<p class="wd-indent">The returned object has the following characteristics:</p>
 
-<pre class="wd-code"><cite>//Example</cite>
-<code>var</code> input = [<var>/[^0-9]/</var>];
-<code>var</code> object = wd(input);
-object.type;
-<sample><q>regex</q></sample>
-</pre>
-
-<!--
-<p class="wd-indent">The object has the following attributes:</p>
-
-<ul class="wd-list">
-	<li></li>
-</ul>
--->
-<p class="wd-indent">The object has the following methods:</p>
-
-<ul class="wd-list">
-	<li>mask</li>
-</ul>
+<ul class="wd-list" id="eg1"></ul>
 
 <p class="wd-indent">See the menu for more details.</p>
+
+<h3>valueOf and toString methods</h3>
+
+<p class="wd-indent">The <code>toString</code> method return <code>source</code> attribute of <code>RegExp</code> object. The <code>valueOf</code> methods returns the browser default value.</p>
+
+<script>
+var eg = {
+	"#eg1": "<li>"+wd(wd(/[0-9]/).tools).del("type", "tools").join("</li><li>")+"</li>",
+}
+setText(eg, true);
+</script>
