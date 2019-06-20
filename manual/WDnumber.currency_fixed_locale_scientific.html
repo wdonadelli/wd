@@ -1,0 +1,162 @@
+<header class="wd-head">
+	<h2 class="wd-align-C">WDnumber: text/html</h2>
+</header>
+
+<!---------------------------------------------------------------------------->
+<h3>WDnumber.currency</h3>
+
+<p class="wd-indent">It is an method that returns a string with currency formatting if the browser contemplates the corresponding method. Otherwise, returns the number in a generic currency format.</p>
+
+<p class="wd-code wd-align-C">wd(number).currency(currency, locale)</p>
+
+<p class="wd-indent">The <code>currency</code> argument consists of a string representing the currency (e.g. <q>USD</q> to US Dollar). If not defined or non-existent, the entered text will be added in front of the return string that will be formatted according to the <code>locale</code> method.</p>
+
+<p class="wd-indent">The <code>locale</code> argument (optional) consists of a string representing the location (e.g. <q>pt-BR</q>). If not set, the location will be the one entered in the <i>lang</i> attribute of the <code>html</code> tag, the value provided by the browser or <q>en-US</q>.</p>
+
+<h4>Example</h4>
+<pre class="wd-code">
+wd(<q class="eg1"></q>).currency(<q id="eg2"></q>, <q id="eg3"></q>);
+<sample id="eg4"></sample>
+wd(<q class="eg1"></q>).currency(<q id="eg5"></q>);
+<sample id="eg6"></sample>
+wd(<q class="eg1"></q>).currency();
+<sample id="eg7"></sample>
+</pre>
+
+<!---------------------------------------------------------------------------->
+<h3>WDnumber.float</h3>
+
+<p class="wd-indent">It is an attribute that returns the fractional part of the number.</p>
+
+<p class="wd-code wd-align-C">wd(number).float</p>
+
+<h4>Example</h4>
+
+<pre class="wd-code">
+wd(<q class="eg1"></q>).float;
+<sample id="eg7"></sample>
+wd(<var class="eg3"></var>).float;
+<sample id="eg8"></sample>
+wd(<var class="eg5"></var>).float;
+<sample id="eg9"></sample>
+</pre>
+
+<!---------------------------------------------------------------------------->
+<h3>WDnumber.integer</h3>
+
+<p class="wd-indent">It is an attribute that returns the integer part of the number.</p>
+
+<p class="wd-code wd-align-C">wd(number).integer</p>
+
+<h4>Example</h4>
+
+<pre class="wd-code">
+wd(<q class="eg1"></q>).integer;
+<sample id="eg10"></sample>
+wd(<var class="eg3"></var>).integer;
+<sample id="eg11"></sample>
+wd(<var class="eg5"></var>).integer;
+<sample id="eg12"></sample>
+</pre>
+
+<!---------------------------------------------------------------------------->
+<h3>WDnumber.inverse</h3>
+
+<p class="wd-indent">It is an attribute that returns the inverse number value ( <var>1 / x</var> ).</p>
+
+<p class="wd-code wd-align-C">wd(number).inverse</p>
+
+<h4>Example</h4>
+
+<pre class="wd-code">
+wd(<q class="eg1"></q>).inverse;
+<sample id="eg13"></sample>
+wd(<var class="eg3"></var>).inverse;
+<sample id="eg14"></sample>
+wd(<var class="eg5"></var>).inverse;
+<sample id="eg15"></sample>
+</pre>
+
+<!---------------------------------------------------------------------------->
+<h3>WDnumber.number</h3>
+
+<p class="wd-indent">It is an attribute that returns <q>integer</q> for integers (negative, positive, and zero), <q>float</q> for non-integer numbers, and <q>infinity</q> for <code>Infinity</code> and <code>-Infinity</code> values.</p>
+
+<p class="wd-code wd-align-C">wd(number).number</p>
+
+<h4>Example</h4>
+
+<pre class="wd-code">
+wd(<q class="eg1"></q>).number;
+<sample><q id="eg16"></q></sample>
+wd(<var class="eg3"></var>).number;
+<sample><q id="eg17"></q></sample>
+wd(<var class="eg5"></var>).number;
+<sample><q id="eg18"></q></sample>
+</pre>
+
+
+
+
+<script>
+var x = ["wd", 100, "wd"];
+var y = wd(x);
+var eg = {};
+eg[".eg1"] = "-12000.568";
+eg["#eg2"] = "BRL";
+eg["#eg3"] = "pt-BR";
+eg["#eg4"] = wd(eg[".eg1"]).currency(eg["#eg2"], eg["#eg3"]);
+eg["#eg5"] = "?";
+eg["#eg6"] = wd(eg[".eg1"]).currency(eg["#eg5"]);
+eg["#eg7"] = wd(eg[".eg1"]).currency();
+eg["#eg8"] = wd(eg[".eg3"]).float;
+eg["#eg9"] = wd(eg[".eg5"]).float;
+eg["#eg10"] = wd(eg[".eg1"]).integer;
+eg["#eg11"] = wd(eg[".eg3"]).integer;
+eg["#eg12"] = wd(eg[".eg5"]).integer;
+eg["#eg13"] = wd(eg[".eg1"]).inverse;
+eg["#eg14"] = wd(eg[".eg3"]).inverse;
+eg["#eg15"] = wd(eg[".eg5"]).inverse;
+eg["#eg16"] = wd(eg[".eg1"]).number;
+eg["#eg17"] = wd(eg[".eg3"]).number;
+eg["#eg18"] = wd(eg[".eg5"]).number;
+
+
+setText(eg);
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<p class="wd-indent">This is a <u>method</u> that This is a  It is called as follows:</p>
+
+<pre class="wd-code">wd(input).currency(val, cod);</pre>
+
+
+
+<pre class="wd-code"><cite>//Example</cite>
+wd(<var>1000.23</var>).currency(<q>USD</q>, <q>en-US</q>);
+<sample><q>$1,000.23</q></sample>
+wd(<var>1000.23</var>).currency(<q>$?</q>, <q>pt-BR</q>);
+<sample><q>$?1.000,23</q></sample>
+</pre>

@@ -11,11 +11,13 @@
 		<script>
 function setText(obj, html) {
 	for (var i in obj) {
-		if (html === true) {
-			wd$(i).item(0).innerHTML = obj[i];
-		} else {
-			wd$(i).item(0).textContent = obj[i];
-		}
+		wd$(i).run(function(x) {
+			if (html === true) {
+				x.innerHTML = obj[i];
+			} else {
+				x.textContent = obj[i];
+			}
+		});
 	}
 	return;
 }

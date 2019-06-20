@@ -1,12 +1,15 @@
 <header class="wd-head">
-	<h2 class="wd-align-C">WDarray</h2>
+	<h2 class="wd-align-C">WDnumber</h2>
 </header>
 
-<p class="wd-indent">This is an object for manipulating arrays. The type attribute returns the value <q>array</q>. The following primitive values ​​define the object:</p>
+<p class="wd-indent">This is an object for manipulating numbers. The type attribute returns the value <q>number</q>. The following primitive values ​​define the object:</p>
 
 <ul class="wd-list">
 	<li>JavaScript Array Object</li>
+	<li>JavaScript String Object</li>
 </ul>
+
+<p class="wd-indent">In case of String, this must be in numeric format. To be considered a number, the numbers <code>Infinity</code> and <code>-Infinity</code> must be accompanied by the respective signs (+/-) so that the Strings can be considered a number.</p>
 
 <p class="wd-indent">The returned object has the following characteristics:</p>
 
@@ -16,7 +19,7 @@
 
 <h3>valueOf and toString methods</h3>
 
-<p class="wd-indent">The <code>toString</code> method returns the value of the array in JSON format. The <code>valueOf</code> method returns the browser default value.</p>
+<p class="wd-indent">The <code>toString</code> and <code>valueOf</code> methods return the browser default value.</p>
 
 <script>
 var eg = {
@@ -24,60 +27,3 @@ var eg = {
 }
 setText(eg, true);
 </script>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<p class="wd-indent">This is an object for number manipulation. The supplied argument (primitive value) is <u>not changed</u> by methods or attributes. The following primitive values ​​define the object:</p>
-
-<ul class="wd-list">
-	<li>Numbers</li>
-	<li>Numbers in string format.</li>
-</ul>
-
-<p class="wd-indent">Numbers in text format will also be treated as numbers, so <q>5</q> and <q>+5</q> are treated as <code>5</code>, <q>1e2</q> and <q>+1e+2</q> are treated as <code>100</code>, <q>+Infinity</q> will be treated as <code>Infinity</code>, <q>-Infinity</q> as <code>-Infinity</code> and <q>Infinity</q> will not be treated as a number.</p>
-
-<p class="wd-indent">When identifying the type of the primitive value, the object returns the string <q>number</q>.</p>
-
-<pre class="wd-code"><cite>//Example</cite>
-<code>var</code> input = <q>5.45</q>;
-<code>var</code> object = wd(input);
-object.type;
-<sample><q>number</q></sample>
-</pre>
-
-<p class="wd-indent">The object has the following attributes:</p>
-
-<ul class="wd-list">
-	<li>integer</li>
-	<li>fraction</li>
-	<li>isInteger</li>
-	<li>isFloat</li>
-	<li>isNatural</li>
-	<li>isNegative</li>
-	<li>isPositive</li>
-	<li>abs</li>
-	<li>inverse</li>
-	<li>roundUp</li>
-</ul>
-
-<p class="wd-indent">The object has the following methods:</p>
-
-<ul class="wd-list">
-	<li>locale</li>
-	<li>currency</li>
-	<li>round</li>
-	<li>scientific</li>
-</ul>
-
-<p class="wd-indent">See the menu for more details.</p>

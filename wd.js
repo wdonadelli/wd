@@ -913,14 +913,18 @@ function WDtext(input) {
 	});
 
 	/*Retorna o valor inteiro do número*/
-	Object.defineProperty(WDnumber.prototype, "fraction", {
+	Object.defineProperty(WDnumber.prototype, "float", {
 		enumerable: true,
 		get: function() {
-			var x;
+			var x, i;
 			if (this.valueOf() === Infinity || this.valueOf() === -Infinity) {
 				x = this.valueOf();
 			} else if (this.valueOf() % 1 !== 0) {
-				x = Number(this.toString().replace(/.*\./, "0.")).valueOf();
+				i = 1;
+				while((this.valueOf() * 10**i) % 1 !== 0) {
+					i++;
+				}
+				x = Number(this.valueOf().toFixed(i).replace(/.+\./, "0."));
 			} else {
 				x = 0;
 			}
@@ -967,7 +971,7 @@ function WDtext(input) {
 					log(e.toString(), "w");
 				}
 			} else {
-				if (this.fraction === 0) {
+				if (this.float === 0) {
 					x = this.valueOf();
 				} else if (this.valueOf() > 0) {
 					x = this.integer+1;
@@ -1006,8 +1010,10 @@ function WDtext(input) {
 			try {
 				x = this.valueOf().toLocaleString(locale);
 			} catch(e) {
-				x = this.valueOf().toString();
-				log(e.toString(), "w");
+				x = this.fixed(0, 0).split("").reverse().join("").replace("+", "");
+				x = x.replace(/([0-9]{3})/g, "$1,");
+				x = x.split("").reverse().join("");
+				x = x+"."+String(this.float).replace("0.", "");
 			}
 			return x;
 		}
@@ -1022,13 +1028,13 @@ function WDtext(input) {
 				locale = lang();
 			}
 			if (currency === undefined) {
-				currency = "¤";
+				currency = "USD";
 			}
 			try {
 				x = this.valueOf().toLocaleString(locale, {style: "currency", currency: currency});
 			} catch(e) {
-				x = currency+this.locale();
-				log(e.toString(), "w");
+				x = ("¤"+this.locale()).replace("¤-", "-¤").split(".")[0];
+				x = x+"."+this.fixed(0, 2).split(".")[1];
 			}
 			return x;
 		}
@@ -1050,7 +1056,7 @@ function WDtext(input) {
 						x.unshift(0);
 					}
 				}
-				y = WD(this.round(frac)).fraction;
+				y = WD(this.round(frac)).float;
 				y = y === 0 ? [] : String(y).split(".")[1].split("");
 				frac = WD(frac);
 				if (int.number === "integer" || int.number === "float") {
