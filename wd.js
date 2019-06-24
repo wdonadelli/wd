@@ -925,6 +925,7 @@ function WDtext(input) {
 					i++;
 				}
 				x = Number(this.valueOf().toFixed(i).replace(/.+\./, "0."));
+				x = this.valueOf() < 0 ? -1 * x : x;
 			} else {
 				x = 0;
 			}
@@ -937,22 +938,6 @@ function WDtext(input) {
 		enumerable: true,
 		get: function() {
 			return this.valueOf() < 0 ? - this.valueOf() : this.valueOf();
-		}
-	});
-
-	/*Retorna o inverso do número (1/x)*/
-	Object.defineProperty(WDnumber.prototype, "inverse", {
-		enumerable: true,
-		get: function() {
-			var x;
-			if (this.valueOf() === 0) {
-				x = Infinity;
-			} else if (this.valueOf() === Infinity || this.valueOf() === -Infinity) {
-				x = 0;
-			} else {
-				x = 1/this.valueOf();
-			}
-			return x;
 		}
 	});
 
@@ -984,17 +969,38 @@ function WDtext(input) {
 	});
 
 	/*Transcreve a notação científica para html*/
-	Object.defineProperty(WDnumber.prototype, "scientific", {
+	Object.defineProperty(WDnumber.prototype, "ten", {
 		enumerable: true,
 		value: function(width) {
-			var x;
+			var x, sup, value;
+			sup = {
+				"0": "⁰",
+				"1": "¹",
+				"2": "²",
+				"3": "³",
+				"4": "⁴",
+				"5": "⁵",
+				"6": "⁶",
+				"7": "⁷",
+				"8": "⁸",
+				"9": "⁹",
+				"+": "⁺",
+				"-": "⁻",
+				"x": "×"
+			};
 			try {
 				x = this.valueOf().toExponential(width);
 			} catch(e) {
 				x = this.valueOf().toExponential();
-				log(e.toString(), "w");
 			}
-			x = x.replace(/e(.+)$/, " &times; 10<sup>$1</sup>").replace(/\+/g, "");
+			value = x.split("e")[1].split("");
+			for (var i = 0; i < value.length; i++) {
+				value[i] = sup[value[i]];
+			}
+			value = " × 10"+value.join("");
+			x = x.replace(/e.+/, value);
+			
+			//x = x.replace(/e(.+)$/, " &times; 10<sup>$1</sup>").replace(/\+/g, "");
 			return x;
 		}
 	});
@@ -1010,31 +1016,31 @@ function WDtext(input) {
 			try {
 				x = this.valueOf().toLocaleString(locale);
 			} catch(e) {
-				x = this.fixed(0, 0).split("").reverse().join("").replace("+", "");
-				x = x.replace(/([0-9]{3})/g, "$1,");
-				x = x.split("").reverse().join("");
-				x = x+"."+String(this.float).replace("0.", "");
+				x = this.fixed().split(".");
+				x[0] = x[0].split("").reverse();
+				x[0] = x[0].join("").replace(/([0-9]{3})/g, "$1,");
+				x[0] = x[0].replace(/\,(\+|\-)/, "$1").split("").reverse().join("");
+				x = x.join(".");
 			}
 			return x;
 		}
 	});
 
 	/*Retorna o número no formato monetário local ou defuinido no html*/
-	Object.defineProperty(WDnumber.prototype, "currency", {
+	Object.defineProperty(WDnumber.prototype, "coin", {
 		enumerable: true,
 		value: function(currency, locale) {
 			var x;
 			if (WD(locale).type !== "text")   {
 				locale = lang();
 			}
-			if (currency === undefined) {
-				currency = "USD";
+			if (WD(currency).type !== "text") {
+				currency = locale === "en-US" ? "USD" : "¤";
 			}
 			try {
 				x = this.valueOf().toLocaleString(locale, {style: "currency", currency: currency});
 			} catch(e) {
-				x = ("¤"+this.locale()).replace("¤-", "-¤").split(".")[0];
-				x = x+"."+this.fixed(0, 2).split(".")[1];
+				x = WD(this.fixed(0, 2)).locale().replace(/^(\+|\-)?/, "$1"+currency+" ");
 			}
 			return x;
 		}
@@ -1043,32 +1049,76 @@ function WDtext(input) {
 	/*Fixa a quantidade de caracteres na parte inteira do número*/
 	Object.defineProperty(WDnumber.prototype, "fixed", {
 		enumerable: true,
-		value: function(int, frac, sign) {
-			var s, x, y, z;
+		value: function(int, frac) {
+			var integer, float, x, value;
 			if (this.number === "infinity") {
-				z = this.toString();
+				x = this.toString();
 			} else {
-				s = sign === false ? "" : (this.valueOf() < 0 ? "-" : "+");
-				x = String(this.integer).replace(/[^0-9]/, "").split("");
+				if ((/^[\+\-]?[0-9]+(\.[0-9]+)?$/).test(this.toString())) {
+					value   = this.toString().split(".");
+					integer = value[0].replace(/[^0-9]/g, "").split("");
+					float = value.length > 1 ? value[1].split("") : [];
+				} else if ((/^[\+\-]?[0-9]+(\.[0-9]+)?e[\+\-]?[0-9]+$/i).test(this.toString())) {
+					value   = this.toString().replace(/[^0-9e]/gi, "").split("e");
+					integer = value[0].split("");
+					float   = value[0].split("");
+					value = WD(value[1]).valueOf();
+					if (this.abs >= 1) {
+						float = ["0"];
+						while (integer.length < value) {
+							integer.push("0");
+						}
+					} else {
+						integer = ["0"];
+						while (float.length < value) {
+							float.unshift("0");
+						}
+					}
+				}
 				int = WD(int);
 				if (int.number === "integer" || int.number === "float") {
-					while(x.length < int.integer) {
-						x.unshift(0);
-					}
+					int = int.round(0) > 1 ? int.round(0) : 1;
+				} else {
+					int = 1;
 				}
-				y = WD(this.round(frac)).float;
-				y = y === 0 ? [] : String(y).split(".")[1].split("");
 				frac = WD(frac);
-				if (int.number === "integer" || int.number === "float") {
-					while(y.length < frac.integer) {
-						y.push(0);
+				if (frac.number === "integer" ||frac.number === "float") {
+					frac = frac.round(0) > 1 ? frac.round(0) : 1;
+				} else {
+					frac = 1;
+				}
+				while (integer.length < int) {
+					integer.unshift("0");
+				}
+				if (frac > float.length) {
+					while (float.length < frac) {
+						float.push("0");
+					}
+				} else if (frac > 1) {
+					while (float.length !== frac) {
+						float[frac] = "";
+						frac++
 					}
 				}
-				x =  x.join("");
-				y =  y.length === 0 ? "" : "."+y.join("");
-				z = s+x+y
+				x = integer.join("")+"."+float.join("");
+				x = this.valueOf() > 0 ? "+"+x : "-"+x;
 			}
-			return z;			
+			return x;
+		}
+	});
+
+	/*Retorna o método toString*/
+	Object.defineProperties(WDnumber.prototype, {
+		toString: {
+			value: function() {
+				var x;
+				if (this.number === "infinity") {
+					x = this.valueOf() < 0 ? "-∞" : "+∞";
+				} else {
+					x = this.valueOf().toString();
+				}
+				return x;
+			}
 		}
 	});
 
