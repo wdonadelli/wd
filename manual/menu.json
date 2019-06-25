@@ -108,7 +108,7 @@
 	},
 	{
 		"title": "WDnumber: text/html",
-		"file":  "manual/WDnumber.currency_fixed_locale_scientific.html",
+		"file":  "manual/WDnumber.coin_fixed_locale_power10.html",
 		"style": "wd-size-s",
 		"click": ""
 	},

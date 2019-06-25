@@ -969,9 +969,9 @@ function WDtext(input) {
 	});
 
 	/*Transcreve a notação científica para html*/
-	Object.defineProperty(WDnumber.prototype, "ten", {
+	Object.defineProperty(WDnumber.prototype, "power10", {
 		enumerable: true,
-		value: function(width) {
+		value: function(width, html) {
 			var x, sup, value;
 			sup = {
 				"0": "⁰",
@@ -989,18 +989,22 @@ function WDtext(input) {
 				"x": "×"
 			};
 			try {
+				width = WD(width);
+				width = width.number === "integer" && width >= 0 ? width.valueOf() : undefined;
 				x = this.valueOf().toExponential(width);
 			} catch(e) {
 				x = this.valueOf().toExponential();
 			}
-			value = x.split("e")[1].split("");
-			for (var i = 0; i < value.length; i++) {
-				value[i] = sup[value[i]];
+			if (html === true) {
+				x = x.replace(/e(.+)$/, " &times; 10<sup>$1</sup>");
+			} else {
+				value = x.split("e")[1].split("");
+				for (var i = 0; i < value.length; i++) {
+					value[i] = sup[value[i]];
+				}
+				value = " × 10"+value.join("");
+				x = x.replace(/e.+/, value);
 			}
-			value = " × 10"+value.join("");
-			x = x.replace(/e.+/, value);
-			
-			//x = x.replace(/e(.+)$/, " &times; 10<sup>$1</sup>").replace(/\+/g, "");
 			return x;
 		}
 	});
@@ -1094,7 +1098,7 @@ function WDtext(input) {
 					while (float.length < frac) {
 						float.push("0");
 					}
-				} else if (frac > 1) {
+				} else {
 					while (float.length !== frac) {
 						float[frac] = "";
 						frac++
