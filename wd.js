@@ -988,22 +988,26 @@ function WDtext(input) {
 				"-": "⁻",
 				"x": "×"
 			};
-			try {
-				width = WD(width);
-				width = width.number === "integer" && width >= 0 ? width.valueOf() : undefined;
-				x = this.valueOf().toExponential(width);
-			} catch(e) {
-				x = this.valueOf().toExponential();
-			}
-			if (html === true) {
-				x = x.replace(/e(.+)$/, " &times; 10<sup>$1</sup>");
+			if (this.number === "infinity") {
+				x = this.toString();
 			} else {
-				value = x.split("e")[1].split("");
-				for (var i = 0; i < value.length; i++) {
-					value[i] = sup[value[i]];
+				try {
+					width = WD(width);
+					width = width.number === "integer" && width >= 0 ? width.valueOf() : undefined;
+					x = this.valueOf().toExponential(width);
+				} catch(e) {
+					x = this.valueOf().toExponential();
 				}
-				value = " × 10"+value.join("");
-				x = x.replace(/e.+/, value);
+				if (html === true) {
+					x = x.replace(/e(.+)$/, " &times; 10<sup>$1</sup>");
+				} else {
+					value = x.split("e")[1].split("");
+					for (var i = 0; i < value.length; i++) {
+						value[i] = sup[value[i]];
+					}
+					value = " × 10"+value.join("");
+					x = x.replace(/e.+/, value);
+				}
 			}
 			return x;
 		}
@@ -1020,11 +1024,15 @@ function WDtext(input) {
 			try {
 				x = this.valueOf().toLocaleString(locale);
 			} catch(e) {
-				x = this.fixed().split(".");
-				x[0] = x[0].split("").reverse();
-				x[0] = x[0].join("").replace(/([0-9]{3})/g, "$1,");
-				x[0] = x[0].replace(/\,(\+|\-)/, "$1").split("").reverse().join("");
-				x = x.join(".");
+				if (this.number === "infinity") {
+					x = this.toString();
+				} else {
+					x = this.fixed().split(".");
+					x[0] = x[0].split("").reverse();
+					x[0] = x[0].join("").replace(/([0-9]{3})/g, "$1,");
+					x[0] = x[0].replace(/\,(\+|\-)/, "$1").split("").reverse().join("");
+					x = x.join(".");
+				}
 			}
 			return x;
 		}
@@ -1041,10 +1049,14 @@ function WDtext(input) {
 			if (WD(currency).type !== "text") {
 				currency = locale === "en-US" ? "USD" : "¤";
 			}
-			try {
-				x = this.valueOf().toLocaleString(locale, {style: "currency", currency: currency});
-			} catch(e) {
-				x = WD(this.fixed(0, 2)).locale().replace(/^(\+|\-)?/, "$1"+currency+" ");
+			if (this.number === "infinity") {
+				x = this.toString();
+			} else {
+				try {
+					x = this.valueOf().toLocaleString(locale, {style: "currency", currency: currency});
+				} catch(e) {
+					x = WD(this.fixed(0, 2)).locale().replace(/^(\+|\-)?/, "$1"+currency+" ");
+				}
 			}
 			return x;
 		}
