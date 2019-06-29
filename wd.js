@@ -1055,7 +1055,10 @@ function WDtext(input) {
 				try {
 					x = this.valueOf().toLocaleString(locale, {style: "currency", currency: currency});
 				} catch(e) {
-					x = WD(this.fixed(0, 2)).locale().replace(/^(\+|\-)?/, "$1"+currency+" ");
+					currency = this.valueOf() < 0 ? "-"+currency : currency;
+					x = WD(WD(this.integer).abs+0.5).locale().replace(/(.)5$/, "$1");
+					x = x+(WD(WD(this.float).abs+1).fixed(0, 2).replace(/.+([0-9]{2})$/, "$1"));
+					x = currency+" "+x;
 				}
 			}
 			return x;

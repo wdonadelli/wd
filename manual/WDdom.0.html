@@ -1,11 +1,17 @@
 <header class="wd-head">
-	<h2 class="wd-align-C">WDarray</h2>
+	<h2 class="wd-align-C">WDdom</h2>
 </header>
 
-<p class="wd-indent">This is an object for manipulating arrays. The type attribute returns the value <q>array</q>. The following primitive values ​​define the object:</p>
+<p class="wd-indent">This is an object for manipulating of DOM. The type attribute returns the value <q>dom</q>. The following primitive values ​​define the object:</p>
 
 <ul class="wd-list">
-	<li>JavaScript Array Object</li>
+	<li>document</li>
+	<li>window</li>
+	<li>HTMLElement</li>
+	<li>NodeList</li>
+	<li>HTMLCollection</li>
+	<li>HTMLAllCollection</li>
+	<li>HTMLFormControlsCollection</li>
 </ul>
 
 <p class="wd-indent">The returned object has the following characteristics:</p>
@@ -14,116 +20,46 @@
 
 <p class="wd-indent">See the menu for more details.</p>
 
+<h3>self-return</h3>
+
+<p class="wd-indent">Some methods of the object return themselves, so you can apply them in sequence.</p>
+
+<h4>Example</h4>
+
+<pre class="wd-code">
+<code>var</code> x = document.getElementById(<q>div</q>);
+<code>var</code> y = wd(x);
+y.type;
+<sample><q id="eg2"></q></sample>
+<cite>//methods in sequence:</cite>
+y.action(<q>open</q>).filter(<q>target</q>);
+</pre>
+
+<h3>querySelectorAll</h3>
+
+<p class="wd-indent">There is a shortcut to using the <code>querySelectorAll</code> method. To do this, use the <code>wd$</code> function:</p>
+
+<pre class="wd-code wd-align-C">wd$(css, root);</pre>
+
+<p class="wd-indent">The <code>css</code> argument must be a CSS selector and the <code>root</code> argument (optional) must be a parent element, its default value is <code>document</code>.</p>
+
+<h4>Example</h4>
+
+<pre class="wd-code">
+<code>var</code> qsa = document.querySelectorAll(<q>div</q>);
+<code>var</code> obj = wd(qsa);
+<cite>//Using the shortcut:</cite>
+<code>var</code> obj = wd$(<q>div</q>);
+</pre>
+
 <h3>valueOf and toString methods</h3>
 
-<p class="wd-indent">The <code>toString</code> method returns the value of the array in JSON format. The <code>valueOf</code> method returns the browser default value.</p>
+<p class="wd-indent">The <code>toString</code> method returns the browser default value. The <code>valueOf</code> method returns an array of the reported elements.</p>
 
 <script>
-var eg = {
-	"#eg1": "<li>"+wd(wd(document).tools).del("type", "tools").join("</li><li>")+"</li>",
-}
+var eg = {}
+eg["#eg1"] = "<li>"+wd(wd(document).tools).del("type", "tools").join("</li><li>")+"</li>";
+eg["#eg2"] = wd(document).type;
 setText(eg, true);
 </script>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<p class="wd-indent">This is an object for manipulation of DOM/BOM. The supplied argument (primitive value) is <u>not changed</u> by methods or attributes. The following primitive values ​​define the object:</p>
-
-<ul class="wd-list">
-	<li>HTMLElement</li>
-	<li>NodeList</li>
-	<li>HTMLCollection</li>
-	<li>HTMLAllCollection</li>
-	<li>HTMLFormControlsCollection</li>
-	<li>document</li>
-	<li>window</li>
-</ul>
-
-<p class="wd-indent">When identifying the type of the primitive value, the object returns the string <q>html</q>, if a single element, <q>[html]</q>, if a list of elements, <q>doc</q>, if a <code>document</code> object, or <q>win</q>, if a <code>window</code> object.</p>
-
-<p class="wd-indent">The methods of the object return to itself, so it is possible to apply them in sequence. The attributes return a list and each item in the list contains the requested product for each element indicated in the input argument.</p>
-
-<pre class="wd-code"><cite>//Example</cite>
-<code>var</code> x = document.querySelectorAll(<q>div</q>);
-<code>var</code> y = document.getElementById(<q>ID1</q>);
-wd(x).type;
-<sample><q>[html]</q></sample>
-wd(y).type;
-<sample><q>html</q></sample>
-<cite>//methods in sequence</cite>
-wd(x).action(<q>open</q>).filter(<q>target</q>);
-<cite>//first item of x</cite>
-wd(x).get[0];
-<sample>&lt;<i>div#div1</i>&gt;</sample>
-</pre>
-
-<p class="wd-indent">If you use the <code>querySelectorAll</code> method, you can use the object <code>wd$</code> instead of <code>wd</code>. It is called as follows:</p>
-
-<pre class="wd-code">wd$(css, root);</pre>
-
-<p class="wd-indent">The <code>css</code> argument must be a CSS selector and the <code>root</code> argument (optional) must be a parent element,  its default value is <i>document</i>.</p>
-
-<p class="wd-indent">The function argument .</p>
-
-<pre class="wd-code"><cite>//The same result is obtained:</cite>
-wd(document.querySelectorAll(<q>div</q>));
-wd$(<q>div</q>);
-<cite>//or...</cite>
-document.getElementById(<q>data1</q>).querySelectorAll(<q>div</q>);
-wd$(<q>div</q>, document.getElementById(<q>data1</q>));
-</pre>
-
-<p class="wd-indent">The object has the following attributes:</p>
-
-<ul class="wd-list">
-	<li>get</li>
-	<li>styles</li>
-</ul>
-
-<p class="wd-indent">The object has the following methods:</p>
-
-<ul class="wd-list">
-	<li>execute</li>
-	<li>handler</li>
-	<li>class</li>
-	<li>style</li>
-	<li>data</li>
-	<li>filter</li>
-	<li>sort</li>
-	<li>page</li>
-	<li>repeat</li>
-	<li>load</li>
-	<li>action</li>
-</ul>
-
-<p class="wd-indent">See the menu for more details.</p>

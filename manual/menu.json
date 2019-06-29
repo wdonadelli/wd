@@ -73,7 +73,7 @@
 		"title": "WDdom: view",
 		"file":  "manual/WDdom.action_filter_page_sort.html",
 		"style": "wd-size-s",
-		"click": ""
+		"click": "data-wd-click=''"
 	},
 	{
 		"title": "WDdom: setting",
@@ -98,7 +98,7 @@
 		"title": "WDnumber",
 		"file":  "manual/WDnumber.0.html",
 		"style": "wd-case-title",
-		"click": "data-wd-click=''"
+		"click": ""
 	},
 	{
 		"title": "WDnumber: attributes",
