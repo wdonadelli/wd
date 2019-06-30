@@ -20,11 +20,14 @@ function setText(obj, html) {
 		});
 	}
 	return;
-}
-function title(value) {
-	wd$("#title").item(0).textContent = value;
-	return;
 };
+function replaceCode(input) {
+	input = wd(input);
+	input.replace("var ", "<code>var</code> ", true);
+	input.replace("function ", "<code>function</code> ", true);
+	return input.toString().replace(/\"([^"]+)\"/g, "<q>$1</q>");
+};
+
 		</script>
 	</head>
 <body class="wd-align-J" data-wd-device="Desktop{wd-body-E}">

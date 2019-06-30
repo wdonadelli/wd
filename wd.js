@@ -2691,7 +2691,7 @@ function WDtext(input) {
 		value = e.dataset.wdAction;
 		data  = getData(value);
 		for (var action in data) {
-			target = WD(data[action]);
+			target = WD($(data[action]));
 			if (target.type === "dom") {
 				target.action(action);
 			} else {
