@@ -1,29 +1,178 @@
-<p class="wd-indent">This is a <u>method</u> that manipulates the <i>class</i> attribute. It is called as follows:</p>
+<header class="wd-head">
+	<h2 class="wd-align-C">WDdom: setting</h2>
+</header>
+<nav class="wd-nav wd-color-blue">
+	<a href="#main" data-wd-action="tab{#tab_class}">Class</a>
+	<a href="#main" data-wd-action="tab{#tab_data}">Data</a>
+	<a href="#main" data-wd-action="tab{#tab_style}">Style</a>
+</nav>
 
-<pre class="wd-code">wd(input).class(list);</pre>
+<!---------------------------------------------------------------------------->
 
-<p class="wd-indent">The <code>list</code> argument is an object that accepts three keys: <q>add</q>, <q>del</q> and <q>toggle</q>, executed in this order. The key values ​​are strings that represent the value to be added, removed, or alternate, respectively. If there are more than one attribute to set, the values ​​must be contained in an array. If the value is <i>null</i>, the class attribute is empty..</p>
+<div>
+	<div id="tab_class">
+		<h3>WDdom.class</h3>
 
-<h3>Example</h3>
+		<p class="wd-indent">It is a method that manipulates the <i>class</i> attribute.</p>
 
-<pre class="wd-code"><code>var</code> x = document.querySelectorAll(<q>a</q>);
-<cite>//Clearing the attribute</cite>
-wd(x).class(<var>null</var>);
-<cite>//Adding item to attribute</cite>
-wd(x).class({
-	add: <q>class1</q>
-});
-<cite>//Adding items to attribute</cite>
-wd(x).class({
-	add: [<q>class2</q>, <q>class3</q>, <q>class4</q>]
-});
-<cite>//Removing items from the attribute</cite>
-wd(x).class({
-	del: [<q>class3</q>, <q>class4</q>]
-});
-<cite>//Toggling attribute items</cite>
-wd(x).class({
-	toggle: [<q>class1</q>, <q>class5</q>]
-});
-<cite>//<q>class1</q> has been removed and <q>class5</q> added</cite>
-</pre>
+		<p class="wd-code wd-align-C">wd(dom).class(list)</p>
+
+		<p class="wd-indent">The <code>list</code> argument is an object that accepts three keys: <q>add</q>, <q>del</q> and <q>toggle</q>, executed in this order. The key values ​​are strings that represent the value to be added, removed, or alternate, respectively. If there are more than one attribute to set, the values ​​must be separated by white space. If the value is null or undefined, the class attribute is empty.</p>
+
+		<h4>Example</h4>
+
+		<h5>HTML code</h5>
+
+		<pre class="wd-code" id="eg1"></pre>
+
+		<h5>JavaScript</h5>
+
+		<pre class="wd-code">wd$(<q>#eg3 p</q>).class(<input type="text" class="argument" id="eg2" placeholder="list"/>); <cite>//try it (write in JSON format)</cite></pre>
+
+		<script>
+function aClass() {
+	var arg;
+	arg = wd$("#eg2").item(0).value;
+	if (arg === "null") {
+		arg = null;
+	} else if (arg === "undefined") {
+		arg = undefined;
+	}
+	try {arg = JSON.parse(arg);} catch(e) {}
+	wd$("#eg3 p").class(arg);
+	return;
+}
+		</script>
+
+		<a href="#eg3" class="wd-button" onclick="aClass();">Execute</a>
+
+		<h4>Result</h4>
+
+		<div id="eg3">
+			<style>
+.stl1 {color: #FF0000;}
+.stl2 {text-decoration: underline;}
+.stl3 {font-weight: bold;}
+.stl4 {background-color: #0000FF;}
+			</style>
+			<p>Text for test.</p>
+		</div>
+
+	</div>
+
+	<div id="tab_data">
+		<h3>WDdom.data</h3>
+
+		<p class="wd-indent">It is a method that that manipulates the <i>data</i> attribute.</p>
+
+		<p class="wd-code wd-align-C">wd(dom).data(list)</p>
+
+		<p class="wd-indent">The <code>list</code> argument is an object whose keys and values ​​respectively represent the names of attributes and values. Do not use the <q>data-</q> prefix in the attribute name. Compound attributes can be represented by dashes or camelCase. If the key value is <i>null</i>, the value of the attribute is removed from the element.</p>
+
+		<p class="wd-align-C wd-color-green wd-symbol-ok wd-padding wd-rounded wd-border">This method is an important tool for defining the attributes present in <q>WD Attributes Tools</q>.</p>
+
+		<h4>Example</h4>
+
+		<h5>HTML code</h5>
+
+		<pre class="wd-code" id="eg4"></pre>
+
+		<h5>JavaScript</h5>
+	
+		<pre class="wd-code">wd$(<q>#eg6</q>).data(<input type="text" class="argument" id="eg5" placeholder="list"/>); <cite>//try it (write in JSON format)</cite></pre>
+
+		<script>
+function data() {
+	var arg;
+	arg = wd$("#eg5").item(0).value;
+	try {arg = JSON.parse(arg);} catch(e) {}
+	wd$("#eg6").data(arg);
+	wd$("#eg4").item(0).textContent = wd$("#eg6").item(0).outerHTML.replace(/\t+/g, "");
+	return;
+}
+		</script>
+
+		<a href="#eg6" class="wd-button" onclick="data();">Execute</a>
+
+		<h4>Result</h4>
+
+		<div id="eg6">See the HTML code (above)</div>
+
+	</div>
+
+	<div id="tab_style">
+		<h3>WDdom.style</h3>
+
+		<p class="wd-indent">It is a method that manipulates the <i>style</i> attribute.</p>
+
+		<p class="wd-code wd-align-C">wd(dom).style(list)</p>
+
+		<p class="wd-indent">The <code>list</code> argument is an object whose keys and values ​​represent, respectively, CSS attributes and values. Keys can be in CSS or camelCase style. If the attribute does not exist, it will be ignored.</p>
+
+		<h4>Example</h4>
+
+		<h5>HTML code</h5>
+
+		<pre class="wd-code" id="eg7"></pre>
+
+		<h5>JavaScript</h5>
+	
+		<pre class="wd-code">wd$(<q>#eg6</q>).data(<input type="text" class="argument" id="eg8" placeholder="list"/>); <cite>//try it (write in JSON format)</cite></pre>
+
+		<script>
+function style() {
+	var pag, size;
+	pag  = wd$("#eg10").item(0).value;
+	size = wd$("#eg11").item(0).value;
+	wd$("#eg12").page(pag, size);
+	return;
+}
+		</script>
+
+		<a href="#eg9" class="wd-button" onclick="style();">Execute</a>
+
+		<h4>Result</h4>
+
+		<p id="eg9">Text for test.</p>
+
+	</div>
+
+</div>
+
+<script>
+var eg = {};
+eg["#eg1"]  = document.getElementById("eg3").outerHTML.replace(/\t+/g, "");
+eg["#eg4"]  = document.getElementById("eg6").outerHTML.replace(/\t+/g, "");
+eg["#eg7"]  = document.getElementById("eg9").outerHTML.replace(/\t+/g, "");
+
+setText(eg);
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

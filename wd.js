@@ -2127,9 +2127,9 @@ function WDtext(input) {
 				var css, cls, i;
 				css = WD(elem.className);
 				css = css.type === "null" ? [] : css.trim().split(" ");
-				if (list === null || list === undefined) {
+				if (WD(list).type === "null" || WD(list).type === "undefined") {
 					css = [];
-				} else {
+				} else if (WD(list).type === "object") {
 					css = WD(css);
 					if (WD(list.add).type === "text") {
 						cls = WD(list.add).trim().split(" ");
