@@ -2162,7 +2162,7 @@ function WDtext(input) {
 	/*Exibe somente os elementos filhos cujo conteúdo textual contenha o valor informado*/
 	Object.defineProperty(WDdom.prototype, "filter", {
 		enumerable: true,
-		value: function (text, show, min) {
+		value: function (text, min, show) {
 			if (show !== false) {
 				show = true;
 			}
@@ -2612,7 +2612,7 @@ function WDtext(input) {
 	};
 
 	/*Filtra elementos filhos data-wd-filter=show{min}${css}|hide{min}${css}&*/
-	function data_wdFilter(e) {//text, show, min
+	function data_wdFilter(e) {//text, min, show
 		if (!("wdFilter" in e.dataset)) {
 			return;
 		}
@@ -2625,7 +2625,7 @@ function WDtext(input) {
 			min    = "hide" in data ? data.hide : data.show;
 			target = "$" in data ? $(data["$"]) : null;
 			if (WD(target).type === "dom") {
-				WD(target).filter(text, show, min);
+				WD(target).filter(text, min, show);
 			}
 		}
 		return;
