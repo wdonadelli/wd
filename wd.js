@@ -344,7 +344,7 @@ var wd = (function() {
 			value: input
 		});
 	};
-	
+
 	Object.defineProperty(WD.prototype, "constructor", {
 		value: WD
 	});
@@ -573,13 +573,13 @@ function WDtext(input) {
 			value: input.trim()
 		});
 	};
-	
+
 	WDtext.prototype = Object.create(WD.prototype, {
 		constructor: {
 			value: WDtext
 		}
 	});
-	
+
 	/*Deixa o texto só com a primeira letra de cada palavra em maiúsculo*/
 	Object.defineProperty(WDtext.prototype, "title", {
 		enumerable: true,
@@ -587,7 +587,7 @@ function WDtext(input) {
 			var input, value;
 			input = this.toString().toLowerCase().split("");
 			value = "";
-			
+
 			for (var i = 0; i < input.length; i++) {
 				if (input[i-1] === " " || i === 0) {
 					value += input[i].toUpperCase();
@@ -873,7 +873,7 @@ function WDtext(input) {
 			value: isString(input) ? Number(input).valueOf() : input.valueOf()
 		});
 	};
-	
+
 	WDnumber.prototype = Object.create(WD.prototype, {
 		constructor: {
 			value: WDnumber
@@ -1064,7 +1064,7 @@ function WDtext(input) {
 			return x;
 		}
 	});
-	
+
 	/*Fixa a quantidade de caracteres na parte inteira do número*/
 	Object.defineProperty(WDnumber.prototype, "fixed", {
 		enumerable: true,
@@ -1836,7 +1836,7 @@ function WDtext(input) {
 			return this.inside(item, true).length;
 		}
 	});
-	
+
 	/*Troca o valor antigo pelo novo valor em todas ocorrências*/
 	Object.defineProperty(WDarray.prototype, "replace", {
 		enumerable: true,
@@ -1982,7 +1982,7 @@ function WDtext(input) {
 		}
 		return x;
 	};
-	
+
 	/*Define a função para os disparadores*/
 	function getEventMethod(input) {
 		var wdEventHandler = function(ev) {
@@ -2011,7 +2011,7 @@ function WDtext(input) {
 			value: input
 		});
 	};
-	
+
 	WDdom.prototype = Object.create(WD.prototype, {
 		constructor: {
 			value: WDdom
@@ -2022,17 +2022,17 @@ function WDtext(input) {
 	Object.defineProperty(WDdom.prototype, "run", {
 		enumerable: true,
 		value: function(method) {
-			if (WD(method).type !== "function") {
-				log("The \"method\" argument is required.", "w");
-				return null;
-			}
-			var x;
-			for (var i = 0; i < this.valueOf().length; i++) {
-				x = this.valueOf()[i];
-				if (x !== window && x.nodeType != 1 && x.nodeType != 9) {
-					continue;
+			if (WD(method).type === "function") {
+				var x;
+				for (var i = 0; i < this.valueOf().length; i++) {
+					x = this.valueOf()[i];
+					if (x !== window && x.nodeType != 1 && x.nodeType != 9) {
+						continue;
+					}
+					method(x);
 				}
-				method(x);
+			} else {
+				log("run: Invalid argument!", "w");
 			}
 			return this;
 		}
@@ -2042,9 +2042,6 @@ function WDtext(input) {
 	Object.defineProperty(WDdom.prototype, "load", {
 		enumerable: true,
 		value: function(text) {
-			if (text === undefined || text === null) {
-				text =  "";
-			}
 			this.run(function(elem) {
 				var scripts, script;
 				elem.innerHTML = text;
@@ -2070,23 +2067,29 @@ function WDtext(input) {
 	Object.defineProperty(WDdom.prototype, "data", {
 		enumerable: true,
 		value: function(obj) {
-			if (WD(obj).type !== "object") {
-				log("data: Invalid argument!", "w");
-				return this;
-			}
-			this.run(function(elem) {
-				var key;
-				for (var i in obj) {
-					key = camelCase(i);
-					if (obj[i] === null) {
-						delete elem.dataset[key];
+			if (obj === null || WD(obj).type === "object") {
+				this.run(function(elem) {
+					var key;
+					if (obj === null) {
+						for (key in elem.dataset) {
+							delete elem.dataset[key];
+						}
 					} else {
-						elem.dataset[key] = WD(obj[i]).type === "regexp" ? WD(obj[i]).toString() : obj[i];
-						settingProcedures(elem, key);
+						for (var i in obj) {
+							key = camelCase(i);
+							if (obj[i] === null) {
+								delete elem.dataset[key];
+							} else {
+								elem.dataset[key] = WD(obj[i]).type === "regexp" ? WD(obj[i]).toString() : obj[i];
+								settingProcedures(elem, key);
+							}
+						}
 					}
-				}
-				return;
-			});
+					return;
+				});
+			} else {
+				log("data: Invalid argument!", "w");
+			}
 			return this;
 		}
 	});
@@ -2095,22 +2098,28 @@ function WDtext(input) {
 	Object.defineProperty(WDdom.prototype, "style", {
 		enumerable: true,
 		value: function(styles) {
-			if (WD(styles).type !== "object") {
-				log("style: Invalid argument!", "w");
-				return this;
-			}
-			this.run(function(elem) {
-				var key;
-				for (var i in styles) {
-					key = camelCase(i);
-					if (key in elem.style) {
-						elem.style[key] = styles[i];
+			if (styles === null || WD(styles).type === "object") {
+				this.run(function(elem) {
+					var key;
+					if (styles === null) {
+						while (elem.style.length > 0) {
+							key = elem.style[0];
+							elem.style[key] = null;
+						}
 					} else {
-						log("The \""+i+"\" style was not found in "+elem.tagName+" element!", "w");
+						for (var i in styles) {
+							key = camelCase(i);
+							if (!(key in elem.style)) {
+								log("style: Unknown attribute. ("+i+")", "w");
+							}
+							elem.style[key] = styles[i];
+						}
 					}
-				}
-				return;
-			});
+					return;
+				});
+			} else {
+				log("style: Invalid argument!", "w");
+			}
 			return this;
 		}
 	});
@@ -2119,46 +2128,46 @@ function WDtext(input) {
 	Object.defineProperty(WDdom.prototype, "class", {
 		enumerable: true,
 		value: function (list) {
-			if (!WD(["object", "null", "undefined"]).inside(WD(list).type)) {
+			if (list === null || WD(list).type === "object") {
+				this.run(function(elem) {
+					var css, cls, i;
+					css = WD(elem.className);
+					css = css.type === "null" ? [] : css.trim().split(" ");
+					if (list === null) {
+						css = [];
+					} else {
+						css = WD(css);
+						if (WD(list.add).type === "text") {
+							cls = WD(list.add).trim().split(" ");
+							for (i = 0; i < cls.length; i++) {
+								css.add(cls[i]);
+							}
+						}
+						if (WD(list.del).type === "text") {
+							cls = WD(list.del).trim().split(" ");
+							for (i = 0; i < cls.length; i++) {
+								css.del(cls[i]);
+							}
+						}
+						if (WD(list.toggle).type === "text") {
+							cls = WD(list.toggle).trim().split(" ");
+							for (i = 0; i < cls.length; i++) {
+								css.toggle(cls[i]);
+							}
+						}
+						css = css.valueOf();
+					}
+					elem.className = WD(css).sort(true).join(" ");
+					return;
+				});
+			} else {
 				log("class: Invalid argument!", "w");
-				return this;
 			}
-			this.run(function(elem) {
-				var css, cls, i;
-				css = WD(elem.className);
-				css = css.type === "null" ? [] : css.trim().split(" ");
-				if (WD(list).type === "null" || WD(list).type === "undefined") {
-					css = [];
-				} else if (WD(list).type === "object") {
-					css = WD(css);
-					if (WD(list.add).type === "text") {
-						cls = WD(list.add).trim().split(" ");
-						for (i = 0; i < cls.length; i++) {
-							css.add(cls[i]);
-						}
-					}
-					if (WD(list.del).type === "text") {
-						cls = WD(list.del).trim().split(" ");
-						for (i = 0; i < cls.length; i++) {
-							css.del(cls[i]);
-						}
-					}
-					if (WD(list.toggle).type === "text") {
-						cls = WD(list.toggle).trim().split(" ");
-						for (i = 0; i < cls.length; i++) {
-							css.toggle(cls[i]);
-						}
-					}
-					css = css.valueOf();
-				}
-				elem.className = WD(css).sort(true).join(" ");
-				return;
-			});
 			return this;
 		}
-		
+
 	});
-	
+
 	/*Exibe somente os elementos filhos cujo conteúdo textual contenha o valor informado*/
 	Object.defineProperty(WDdom.prototype, "filter", {
 		enumerable: true,
@@ -2290,51 +2299,60 @@ function WDtext(input) {
 	Object.defineProperty(WDdom.prototype, "handler", {
 		enumerable: true,
 		value: function (events) {
-			if (WD(events).type !== "object") {
+			if (events === null || WD(events).type === "object") {
+				this.run(function(elem) {
+					var action, event, methods, array, wdEventHandler;
+					if (events === null) {
+						for (var i in elem) {
+							if ((/^on/i).test(i) && WD(elem[i]).type === "function") {
+								if (elem[i].name === "wdEventHandler") {
+									elem[i] = null;
+								}
+							}
+						}
+					} else {
+						for (var i in events) {
+							action = (/^\-/).test(i) ? "del" : "add";
+							event  = i.replace(/[^a-zA-Z]/g, "").toLowerCase();
+							event  = (/^on/).test(event) ? event : "on"+event;
+							if (!(event in elem)) {
+								log("handler: Unknown event. ("+event+")", "w");
+							}
+							var array;
+							if (WD(elem[event]).type !== "function") {
+								array = WD([]);
+							} else if (elem[event].name === "wdEventHandler") {
+								array = WD(elem[event]("getMethods"));
+							} else {
+								array = WD([elem[event]]);
+							}
+							methods = WD(events[i]).type === "array" ? events[i] : [events[i]];
+							for (var m = 0; m < methods.length; m++) {
+								if (WD(methods[m]).type !== "function" && methods[m] !== null ) {
+									log("handler: Invalid key value. ("+event+")", "w");
+									continue;
+								}
+								if (methods[m] === null) {
+									array = WD([]);
+								} else if (action === "add") {
+									array.add(methods[m]);
+								} else {
+									array.del(methods[m]);
+								}
+							}
+							array = array.valueOf();
+							if (array.length > 0) {
+								elem[event] = getEventMethod(array);
+							} else {
+								elem[event] = null;
+							}
+						}
+					}
+					return;
+				});
+			} else {
 				log("handler: Invalid argument!", "w");
-				return this;
 			}
-			this.run(function(elem) {
-				var action, event, methods, array, wdEventHandler;
-				for(var i in events) {
-					action  = (/^\-/).test(i) ? "del" : "add";
-					event   = i.replace(/[^a-zA-Z]/g, "").toLowerCase();
-					event   = (/^on/).test(event) ? event : "on"+event;
-					if (!(event in elem)) {
-						log("handler: invalid event: "+event+"!", "w");
-						continue;
-					}
-					var array;
-					if (WD(elem[event]).type !== "function") {
-						array = WD([]);
-					} else if (elem[event].name === "wdEventHandler") {
-						array = WD(elem[event]("getMethods"));
-					} else {
-						array = WD([elem[event]]);
-					}
-					methods = WD(events[i]).type === "array" ? events[i] : [events[i]];
-					for (var m = 0; m < methods.length; m++) {
-						if (WD(methods[m]).type !== "function" && methods[m] !== null ) {
-							log("handler: invalid value in "+event+" event!", "w");
-							continue;
-						}
-						if (methods[m] === null) {
-							array = WD([]);
-						} else if (action === "add") {
-							array.add(methods[m]);
-						} else {
-							array.del(methods[m]);
-						}
-					}
-					array = array.valueOf();
-					if (array.length > 0) {
-						elem[event] = getEventMethod(array);
-					} else {
-						elem[event] = null;
-					}
-				}
-				return;
-			});
 			return this;
 		}
 	});
@@ -2343,53 +2361,50 @@ function WDtext(input) {
 	Object.defineProperty(WDdom.prototype, "repeat", {
 		enumerable: true,
 		value: function (json) {
-			if (WD(json).type !== "array") {
-				log("repeat: Invalid argument!", "w");
-				return this;
-			}
-			this.run(function(elem) {
-				var inner, re, html;
-				html = elem.innerHTML;
-				if (html.search(/\{\{.+\}\}/gi) >= 0) {
-					elem.dataset.wdRepeatModel = html;
-				} else if ("wdRepeatModel" in elem.dataset) {
-					html = elem.dataset.wdRepeatModel;
-				} else {
-					html = null;
-				}
-				if (html === null) {
-					elem.innerHTML = "<center><code>-- Error: Replication structure not found! --</code></center>";
-				} else {
-					elem.innerHTML = "";
-					html = WD(html).replace("}}=\"\"", "}}");
-					for (var i = 0; i < json.length; i++) {
-						inner = html;
-						if (WD(json[i]).type !== "object") {
-							log("repeat: Incorrect structure ignored!", "i");
-							continue;
-						}
-						for (var c in json[i]) {
-							inner = WD(inner).replace("{{"+c+"}}", json[i][c]);
-						}
-						elem.innerHTML += inner;
+			if (WD(json).type === "array") {
+				this.run(function(elem) {
+					var inner, re, html;
+					html = elem.innerHTML;
+					if (html.search(/\{\{.+\}\}/gi) >= 0) {
+						elem.dataset.wdRepeatModel = html;
+					} else if ("wdRepeatModel" in elem.dataset) {
+						html = elem.dataset.wdRepeatModel;
+					} else {
+						html = null;
 					}
-					loadingProcedures();
-				}
-				return;
-			});	
+					if (html === null) {
+						elem.innerHTML = "<center><code>-- Error: Replication structure not found! --</code></center>";
+					} else {
+						elem.innerHTML = "";
+						html = WD(html).replace("}}=\"\"", "}}");
+						for (var i = 0; i < json.length; i++) {
+							inner = html;
+							if (WD(json[i]).type !== "object") {
+								log("repeat: Incorrect structure ignored!", "i");
+								continue;
+							}
+							for (var c in json[i]) {
+								inner = WD(inner).replace("{{"+c+"}}", json[i][c]);
+							}
+							elem.innerHTML += inner;
+						}
+						loadingProcedures();
+					}
+					return;
+				});	
+			} else {
+				log("repeat: Invalid argument.", "w");
+			}
 			return this;
 		}
 	});
-		
+
 	/*Exibe somente os elementos filhos no intervalo numérico informado*/
 	Object.defineProperty(WDdom.prototype, "page", {
 		enumerable: true,
 		value: function (page, size) {
 			page = WD(page).type !== "number" ? 0 : WD(page).integer;
 			size = WD(size).type !== "number" || WD(size).abs === Infinity ? 1 : WD(size).abs;
-			if (page === 0 && size === 1) {
-				log("page: default values ​​have been defined!", "i");
-			}
 			this.run(function(elem) {
 				var lines, amount, width, pages, start, end;
 				lines  = elem.children;
@@ -2470,7 +2485,7 @@ function WDtext(input) {
 			return x;
 		}
 	});
-	
+
 	/*Obtem a serialização de formulário*/
 	Object.defineProperty(WDdom.prototype, "form", {
 		enumerable: true,
@@ -2669,7 +2684,7 @@ function WDtext(input) {
 		WD(e).page(page, size).data({wdPage: null});
 		return;
 	};
-	
+
 	/*Executa o método click() ao elemento após o load data-wd-click=""*/
 	function data_wdClick(e) {
 		if (!("wdClick" in e.dataset)) {
@@ -2755,7 +2770,7 @@ function WDtext(input) {
 
 	/*Guarda o tamanho da tela*/
 	var deviceController = null;
-	
+
 	/*Define o estilo do elemento a partir do tamanho da tela data-wd-device=Desktop{css}Tablet{css}Phone{css}Mobile{css}*/
 	function data_wdDevice(e) {
 		if (!("wdDevice" in e.dataset)) {
@@ -2813,7 +2828,7 @@ function WDtext(input) {
 		}
 		return;
 	};
-	
+
 	/*Procedimento para organizar elementos após fim dos carregamentos*/
 	function organizationProcedures() {
 		WD($("[data-wd-sort]")).run(data_wdSort);
@@ -2833,7 +2848,7 @@ function WDtext(input) {
 		data_wdSortCol(ev.target);
 		return;
 	};
-	
+
 	/*Procedimento a executar após acionamento do teclado*/
 	function keyboardProcedures(ev) {
 		data_wdFilter(ev.target);
@@ -2861,7 +2876,7 @@ function WDtext(input) {
 		}
 		return;
 	};
-	
+
 	/*Procedimento a executar após redimensionamento da tela*/
 	function stylingProcedures() {
 		WD($("[data-wd-device]")).run(data_wdDevice);
