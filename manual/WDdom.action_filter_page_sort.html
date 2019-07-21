@@ -226,9 +226,9 @@ function sort() {
 
 <script>
 var eg = {};
-eg["#eg1"]  = document.getElementById("eg3").outerHTML.replace(/\t+/g, "");
-eg["#eg4"]  = document.getElementById("eg8").outerHTML.replace(/\t+/g, "");
-eg["#eg9"]  = document.getElementById("eg12").outerHTML.replace(/\t+/g, "");
-eg["#eg13"] = document.getElementById("eg15").outerHTML.replace(/\t+/g, "");
+eg["#eg1"]  = getCode("#eg3", true);
+eg["#eg4"]  = getCode("#eg8", true);
+eg["#eg9"]  = getCode("#eg12", true);
+eg["#eg13"] = getCode("#eg15", true);
 setText(eg);
 </script>

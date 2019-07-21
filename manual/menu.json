@@ -79,13 +79,13 @@
 		"title": "WDdom: setting",
 		"file":  "manual/WDdom.class_data_style.html",
 		"style": "wd-size-s",
-		"click": "data-wd-click=''"
+		"click": ""
 	},
 	{
 		"title": "WDdom: getting",
 		"file":  "manual/WDdom.form_getStyle_item_items.html",
 		"style": "wd-size-s",
-		"click": ""
+		"click": "data-wd-click=''"
 	},
 	{
 		"title": "WDdom: methods",

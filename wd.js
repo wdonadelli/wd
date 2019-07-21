@@ -2471,16 +2471,18 @@ function WDtext(input) {
 	Object.defineProperty(WDdom.prototype, "getStyle", {
 		enumerable: true,
 		value: function(css) {
-			var x, style;;
+			var x, style;
 			x = [];
-			if ("getComputedStyle" in window) {
+			if (!("getComputedStyle" in window)) {
+				log("getStyle: Your browser does not have the necessary tool!", "w");
+			} else if (WD(css).type === "text") {
 				this.run(function(elem) {
 					style = window.getComputedStyle(elem, null);
 					x.push(css in style ? style.getPropertyValue(css) : null);
 					return;
 				});
 			} else {
-				log("getStyle: Your browser does not have the necessary tool!", "w");
+				log("getStyle: Invalid argument.", "w");
 			}
 			return x;
 		}
@@ -2495,7 +2497,7 @@ function WDtext(input) {
 			this.run(function(elem) {
 				var tag, type, font, name, value, check;
 				tag   = elem.tagName.toLowerCase();
-				type  = tag === "input" ? elem.type.toLowerCase() : null; //typo considerado no objeto
+				type  = tag === "input" ? elem.type.toLowerCase() : null; //type considerado no objeto
 				font  = tag === "input" ? elem.attributes.type.value.toLowerCase() : type; //type informado no html
 				name  = "name"  in elem ? elem.name  : null;
 				value = "value" in elem ? elem.value : null;

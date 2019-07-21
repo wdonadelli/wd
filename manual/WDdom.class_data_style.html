@@ -35,7 +35,7 @@ function aClass() {
 	arg = wd$("#eg2").item(0).value;
 	try {arg = JSON.parse(arg);} catch(e) {}
 	wd$("#eg3 p").class(arg);
-	wd$("#eg1").item(0).textContent = wd$("#eg3").item(0).outerHTML.replace(/\t+/g, "");
+	wd$("#eg1").item(0).innerHTML = getCode("#eg3", true);
 	return;
 }
 		</script>
@@ -86,7 +86,7 @@ function data() {
 	arg = wd$("#eg5").item(0).value;
 	try {arg = JSON.parse(arg);} catch(e) {}
 	wd$("#eg6").data(arg);
-	wd$("#eg4").item(0).textContent = wd$("#eg6").item(0).outerHTML.replace(/\t+/g, "");
+	wd$("#eg4").item(0).innerHTML = getCode("#eg6", true);
 	return;
 }
 		</script>
@@ -126,7 +126,7 @@ function sstyle() {
 	arg = wd$("#eg8").item(0).value;
 	try {arg = JSON.parse(arg);} catch(e) {}
 	wd$("#eg9").style(arg);
-	wd$("#eg7").item(0).textContent = wd$("#eg9").item(0).outerHTML.replace(/\t+/g, "");
+	wd$("#eg7").item(0).innerHTML = getCode("#eg9", true);
 	return;
 }
 		</script>
@@ -143,9 +143,8 @@ function sstyle() {
 
 <script>
 var eg = {};
-eg["#eg1"]  = document.getElementById("eg3").outerHTML.replace(/\t+/g, "");
-eg["#eg4"]  = document.getElementById("eg6").outerHTML.replace(/\t+/g, "");
-eg["#eg7"]  = document.getElementById("eg9").outerHTML.replace(/\t+/g, "");
-
+eg["#eg1"] = getCode("#eg3", true);
+eg["#eg4"] = getCode("#eg6", true);
+eg["#eg7"] = getCode("#eg9", true);
 setText(eg);
 </script>

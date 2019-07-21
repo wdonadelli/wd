@@ -9,23 +9,37 @@
 		<script src="wd.js"></script>
 		<link rel="stylesheet" href="wd.css"/>
 		<script>
-function setText(obj, html) {
+function getCode(target, outer) {
+	var indent, type, input;
+	input = wd$(target).item(0);
+	input = outer === true ? input.outerHTML : input.innerHTML;
+	indent = input.trim().split("\n");console.log(indent);
+	indent = indent.length > 1 ? indent[1].replace(/^\t(\t+)?[^\t]+/g, "$1") : "";
+	indent = new RegExp("\n"+indent, "g");
+	input  = input.trim().replace(indent, "\n");
+	type   = input.split("")[0];
+	type   = type === "<" ? "html" : "js";
+	input = input.replace(/\</gi, "&lt;");
+	input = input.replace(/\>/gi, "&gt;");
+	input = input.replace(/\"([^"]+)\"/g, "<q>$1</q>");
+	if (type === "js") {
+		input = input.replace(/var\ /g, "<code>var</code> ");
+		input = input.replace(/function\ /g, "<code>function</code> ");
+		input = input.replace(/return(\ |\;)/g, "<code>return</code>$1");
+	} else if (type === "html") {
+		input = input.replace(/\&lt\;([a-z0-9]+)/gi, "&lt;<code>$1</code>");
+		input = input.replace(/(\/?[a-z0-9]+)\&gt\;/gi, "<code>$1</code>&gt;");
+	}
+	return input;
+}
+
+function setText(obj) {
 	for (var i in obj) {
 		wd$(i).run(function(x) {
-			if (html === true) {
-				x.innerHTML = obj[i];
-			} else {
-				x.textContent = obj[i];
-			}
+			x.innerHTML = obj[i];
 		});
 	}
 	return;
-};
-function replaceCode(input) {
-	input = wd(input);
-	input.replace("var ", "<code>var</code> ", true);
-	input.replace("function ", "<code>function</code> ", true);
-	return input.toString().replace(/\"([^"]+)\"/g, "<q>$1</q>");
 };
 		</script>
 		<style>
@@ -73,7 +87,7 @@ function replaceCode(input) {
 
 		<!--NAV-->
 		<nav class="wd-nav-V" data-wd-repeat="get{manual/menu.json}">
-			<a href="#main" data-wd-data="wdLoad{get{{{file}}}}${#content}" class="{{style}}" {{click}} onclick="title('{{title}}');">{{title}}</a>
+			<a href="#main" data-wd-data="wdLoad{get{{{file}}}}${#content}" class="{{style}}" {{click}} >{{title}}</a>
 		</nav>
 
 	</section>
