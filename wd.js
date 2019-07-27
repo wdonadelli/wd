@@ -646,7 +646,8 @@ function WDtext(input) {
 				}
 			}
 			if (change === true) {
-				this._value = WD(value).type === "text" ? value : "'"+value;
+				//this._value = WD(value).type === "text" ? value : "'"+value;
+				this._value = value;//FIXME será que fica bom assim, sem colocar o apóstrofo na frente?
 				value = this;
 			}
 			return value;	
@@ -1069,58 +1070,36 @@ function WDtext(input) {
 	Object.defineProperty(WDnumber.prototype, "fixed", {
 		enumerable: true,
 		value: function(int, frac) {
-			var integer, float, x, value;
+			var integer, float, x;
 			if (this.number === "infinity") {
 				x = this.toString();
 			} else {
-				if ((/^[\+\-]?[0-9]+(\.[0-9]+)?$/).test(this.toString())) {
-					value   = this.toString().split(".");
-					integer = value[0].replace(/[^0-9]/g, "").split("");
-					float = value.length > 1 ? value[1].split("") : [];
-				} else if ((/^[\+\-]?[0-9]+(\.[0-9]+)?e[\+\-]?[0-9]+$/i).test(this.toString())) {
-					value   = this.toString().replace(/[^0-9e]/gi, "").split("e");
-					integer = value[0].split("");
-					float   = value[0].split("");
-					value = WD(value[1]).valueOf();
-					if (this.abs >= 1) {
-						float = ["0"];
-						while (integer.length < value) {
-							integer.push("0");
-						}
-					} else {
-						integer = ["0"];
-						while (float.length < value) {
-							float.unshift("0");
-						}
-					}
-				}
-				int = WD(int);
-				if (int.number === "integer" || int.number === "float") {
-					int = int.round(0) > 1 ? int.round(0) : 1;
-				} else {
+				integer = WD(this.abs).integer;
+				float   = WD(this.abs).float;
+				integer = integer === 0 ? [] : integer.toString().split("");
+				float   = float   === 0 ? [] : float.toString().split(".")[1].split("");
+				int  = WD(int).type  !== "number" ? 1 : WD(int).integer;
+				frac = WD(frac).type !== "number" ? float.length : WD(frac).integer;
+				if (WD(int).number === "infinity" || int < 1) {
 					int = 1;
 				}
-				frac = WD(frac);
-				if (frac.number === "integer" ||frac.number === "float") {
-					frac = frac.round(0) > 1 ? frac.round(0) : 1;
-				} else {
-					frac = 1;
+				if (WD(frac).number === "infinity" || frac < 0) {
+					frac = float.length;
 				}
 				while (integer.length < int) {
 					integer.unshift("0");
 				}
-				if (frac > float.length) {
-					while (float.length < frac) {
+				while (float.length !== frac) {
+					if (float.length < frac) {
 						float.push("0");
-					}
-				} else {
-					while (float.length !== frac) {
-						float[frac] = "";
-						frac++
+					} else {
+						float.pop();
 					}
 				}
-				x = integer.join("")+"."+float.join("");
-				x = this.valueOf() > 0 ? "+"+x : "-"+x;
+				x = float.length === 0 ? integer.join("") : integer.join("")+"."+float.join("");
+				if (this.valueOf() < 0) {
+					x = "-"+x;
+				}
 			}
 			return x;
 		}
@@ -1265,8 +1244,8 @@ function WDtext(input) {
 			} else {
 				h = this.hour - 12;
 			}
-			h = WD(h).fixed(2, 0, false);
-			m = WD(this.minute).fixed(2, 0, false);
+			h = WD(h).fixed(2, 0);
+			m = WD(this.minute).fixed(2, 0);
 			return h+":"+m+p;
 		}
 	});
@@ -1281,12 +1260,12 @@ function WDtext(input) {
 			var x, chars;
 			chars = {
 			"%h": this.hour,
-			"%H": WD(this.hour).fixed(2, 0, false),
+			"%H": WD(this.hour).fixed(2, 0),
 			"#h": this.h12,
 			"%m": this.minute,
-			"%M": WD(this.minute).fixed(2, 0, false),
+			"%M": WD(this.minute).fixed(2, 0),
 			"%s": this.second,
-			"%S": WD(this.second).fixed(2, 0, false),
+			"%S": WD(this.second).fixed(2, 0),
 			};
 			x = WD(string);
 			for (var i in chars) {
@@ -1569,7 +1548,7 @@ function WDtext(input) {
 			enumerable: true,
 			get: function() {
 				var y, ref;
-				y   = WD(this.year).fixed(4, 0, false);
+				y   = WD(this.year).fixed(4, 0);
 				ref = WD(y+"-01-01").valueOf();
 				return this.valueOf() - ref + 1;
 			}		
@@ -1578,7 +1557,7 @@ function WDtext(input) {
 			enumerable: true,
 			get: function() {
 				var ref, weeks, y;
-				y     = WD(this.year).fixed(4, 0, false);
+				y     = WD(this.year).fixed(4, 0);
 				ref   = WD(y+"-01-01").week;
 				weeks = WD(1 + (ref + this.days - 2)/7).integer;
 				return weeks;
@@ -1661,15 +1640,15 @@ function WDtext(input) {
 			var x, chars;
 			chars = {
 				"%d": this.day,
-				"%D": WD(this.day).fixed(2, 0, false),
+				"%D": WD(this.day).fixed(2, 0),
 				"@d": this.days,
 				"%m": this.month,
-				"%M": WD(this.month).fixed(2, 0, false),
+				"%M": WD(this.month).fixed(2, 0),
 				"@m": this.width,
 				"#m": this.shortMonth(locale),
 				"#M": this.longMonth(locale),
 				"%y": this.year,
-				"%Y": WD(this.year).fixed(4, 0, false),
+				"%Y": WD(this.year).fixed(4, 0),
 				"%w": this.week,
 				"@w": this.weeks,
 				"#w": this.shortWeek(locale),
