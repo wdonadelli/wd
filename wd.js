@@ -153,7 +153,9 @@ var wd = (function() {
 	/*Verifica se o valor é boleano*/
 	function isBoolean(value) {
 		var x;
-		if (typeof value === "boolean") {
+		if (x === true || x === false) {
+			x = true;
+		} else if (typeof value === "boolean") {
 			x = true;
 		} else if ("Boolean" in window && value instanceof Boolean) {
 			x = true;
@@ -319,10 +321,10 @@ var wd = (function() {
 		}
 
 		if (!isNull(input) && !isUndefined(input)) {
-			if (isBoolean(input)) {
-				input = input.valueOf();
-			} else if (isString(input) && input.trim() === "") {
+			if (isString(input) && input.trim() === "") {
 				input = null;
+			} else if (isBoolean(input)) {
+				input = input.valueOf();
 			} else if (isRegExp(input)) {
 				return new WDregexp(input);
 			} else if (isTime(input)) {
@@ -349,43 +351,30 @@ var wd = (function() {
 		value: WD
 	});
 
-	Object.defineProperty(WD.prototype, "$", {
-		value: $
-	});
-
 	/*Retorna o tipo do argumento informado*/
 	Object.defineProperty(WD.prototype, "type", {
 		enumerable: true,
 		get: function () {
 			var x, types;
+			x = null;
 			types = {
 				"undefined": isUndefined,
 				"null": isNull,
 				"boolean": isBoolean,
-				"number": isNumber,
-				"date": isDate,
-				"time": isTime,
-				"array": isArray,
-				"regexp": isRegExp,
 				"function": isFunction,
-				"dom": isDOM,
-				"text": isText
 			};
-			x = null;
-			if ((/^WD[a-z]+$/).test(this.constructor.name)) {
-				x = this.constructor.name.replace("WD", "");
-			} else {
-				for (var i in types) {
-					if (types[i](this._value)) {
-						x = i;
-						break;
-					}
-				};
-			}
-			if (x === null && "constructor" in this._value) {
-				x = this._value.constructor.name.toLowerCase();
-			} else if (x === null) {
-				x = "unknown";
+			for (var i in types) {
+				if (types[i](this._value)) {
+					x = i;
+					break;
+				}
+			};
+			if (x === null) {
+				try {
+					x = this._value.constructor.name.toLowerCase();
+				} catch(e) {
+					x = "unknown";
+				}
 			}
 			return x;
 		}
@@ -403,62 +392,63 @@ var wd = (function() {
 		}
 	});
 
-	/*retorna o método valueOf*/
-	Object.defineProperty(WD.prototype, "valueOf", {
-		value: function () {
-			var x;
-			switch(this.type) {
-				case "null":
-					x = 0;
-					break;
-				case "undefined":
-					x = Infinity;
-					break;
-				case "boolean":
-					x = this._value.valueOf() === true ? 1 : 0;
-					break;
-				default:
-					try {
-						x = this._value.valueOf();
-					} catch(e) {
-						log(e, "w");
-						x = Number(this._value).valueOf();
+	/*retorna o método valueOf e toString*/
+	Object.defineProperties(WD.prototype, {
+		$: {
+			value: $
+		},
+		valueOf: {
+			value: function () {
+				var x;
+				switch(this.type) {
+					case "null":
+						x = 0;
+						break;
+					case "undefined":
+						x = Infinity;
+						break;
+					case "boolean":
+						x = this._value.valueOf() === true ? 1 : 0;
+						break;
+					default:
+						try {
+							x = this._value.valueOf();
+						} catch(e) {
+							x = Number(this._value).valueOf();
+						}
 					}
-				}
-			return x;
-		}
-	});
-
-	/*retorna o método toString*/
-	Object.defineProperty(WD.prototype, "toString", {
-		value: function () {
-			var x;
-			switch(this.type) {
-				case "null":
-					x = "Ø";
-					break;
-				case "undefined":
-					x = "?";
-					break;
-				case "boolean":
-					x = this._value.valueOf() === true ? "True" : "False";
-					break;
-				case "object":
-					try {
-						x = JSON.stringify(this._value);
-					} catch(e) {
-						x = this._value.toString();
+				return x;
+			}
+		},
+		toString: {
+			value: function () {
+				var x;
+				switch(this.type) {
+					case "null":
+						x = "Ø";
+						break;
+					case "undefined":
+						x = "?";
+						break;
+					case "boolean":
+						x = this._value === true ? "True" : "False";
+						break;
+					case "object":
+						try {
+							x = JSON.stringify(this._value);
+						} catch(e) {
+							x = this._value.toString();
+						}
+						break;
+					default:
+						try {
+							x = this._value.toString();
+						} catch(e) {
+							x = String(this._value).toString();
+						}
 					}
-					break;
-				default:
-					try {
-						x = this._value.toString();
-					} catch(e) {
-						log(e, "w");
-						x = String(this._value).toString();
-					}
-				}
-			return x;
+				return x;
+			}
 		}
 	});
 
@@ -561,7 +551,7 @@ var wd = (function() {
 
 /*...........................................................................*/
 
-function WDtext(input) {
+	function WDtext(input) {
 		if (!(this instanceof WDtext)) {
 			return new WDtext(input);
 		}
@@ -621,36 +611,21 @@ function WDtext(input) {
 	Object.defineProperty(WDtext.prototype, "replace", {
 		enumerable: true,
 		value: function(oldValue, newValue, change) {
-			var value, run;
-			if (oldValue === null || oldValue === undefined || oldValue === "") {
-				oldValue = null;
-			} else if (WD(oldValue).type === "regexp") {
-				oldValue = new RegExp(WD(oldValue).toString(), "g");
-			} else {
-				oldValue = String(oldValue).toString();
-			}
-			if (newValue === null || newValue === undefined) {
-				newValue = "";
-			} else {
-				newValue = String(newValue).toString();
-			}
+			var value;
 			value = this.toString();
+			newValue = newValue === null || newValue === undefined ? "" : new String(newValue).toString();
 			if (WD(oldValue).type === "regexp") {
+				oldValue = new RegExp(WD(oldValue).toString(), "g");
 				value = value.replace(oldValue, newValue);
-			} else if (newValue !== oldValue && oldValue !== null) {
-				run = true;
-				while (run === true) {
-						value = value.replace(oldValue, newValue);
-						run = WD(oldValue).type === "regexp" ? value.search(oldValue) : value.indexOf(oldValue);
-						run = run < 0 ? false : true;
-				}
+			} else {
+				oldValue = oldValue === null || oldValue === undefined ? "" : oldValue;
+				value = value.split(oldValue).join(newValue);
 			}
 			if (change === true) {
-				//this._value = WD(value).type === "text" ? value : "'"+value;
-				this._value = value;//FIXME será que fica bom assim, sem colocar o apóstrofo na frente?
+				this._value = value;
 				value = this;
 			}
-			return value;	
+			return value;
 		}
 	});
 
@@ -780,6 +755,14 @@ function WDtext(input) {
 			return types;
 		}
 	});
+	
+	/*Retorna o atributo type*/
+	Object.defineProperties(WDtext.prototype, {
+		type: {
+			value: "text"
+		}
+	});
+
 
 /* === REGEXP ============================================================== */
 
@@ -852,8 +835,11 @@ function WDtext(input) {
 		}
 	});
 
-	/*Retorna o método toString*/
+	/*Retorna o método toString e o atributo type*/
 	Object.defineProperties(WDregexp.prototype, {
+		type: {
+			value: "regexp"
+		},
 		toString: {
 			value: function() {
 				return this._value.source;
@@ -921,11 +907,7 @@ function WDtext(input) {
 			if (this.valueOf() === Infinity || this.valueOf() === -Infinity) {
 				x = this.valueOf();
 			} else if (this.valueOf() % 1 !== 0) {
-				i = 1;
-				while((this.valueOf() * 10**i) % 1 !== 0) {
-					i++;
-				}
-				x = Number(this.valueOf().toFixed(i).replace(/.+\./, "0."));
+				x = Number("0."+this.toString().split(".")[1]);
 				x = this.valueOf() < 0 ? -1 * x : x;
 			} else {
 				x = 0;
@@ -1074,10 +1056,11 @@ function WDtext(input) {
 			if (this.number === "infinity") {
 				x = this.toString();
 			} else {
-				integer = WD(this.abs).integer;
-				float   = WD(this.abs).float;
-				integer = integer === 0 ? [] : integer.toString().split("");
-				float   = float   === 0 ? [] : float.toString().split(".")[1].split("");
+				x = this.toString().split(".");
+				integer = x[0];
+				float   = x[1] === undefined ? "0" : x[1];
+				integer = integer === "0" ? [] : integer.split("");
+				float   = float   === "0" ? [] : float.split("");
 				int  = WD(int).type  !== "number" ? 1 : WD(int).integer;
 				frac = WD(frac).type !== "number" ? float.length : WD(frac).integer;
 				if (WD(int).number === "infinity" || int < 1) {
@@ -1107,13 +1090,33 @@ function WDtext(input) {
 
 	/*Retorna o método toString*/
 	Object.defineProperties(WDnumber.prototype, {
+		type: {
+			value: "number"
+		},
 		toString: {
 			value: function() {
-				var x;
+				var x, val, num, dot, pow;
 				if (this.number === "infinity") {
 					x = this.valueOf() < 0 ? "-∞" : "+∞";
 				} else {
-					x = this.valueOf().toString();
+					val = this._value.toString().toLowerCase().split("e");
+					pow = WD(val[1]).type === "number" ? WD(val[1]).valueOf() : 0;
+					num = val[0].split(".");
+					num[0] = num[0].replace(/[^0-9]/g, "").replace(/^0+/, "");
+					num[1] = WD(num[1]).type === "number" ? num[1].replace(/0+$/, "") : "";
+					dot = pow < 0 ? num[1].length+WD(pow).abs : num[1].length;
+					num = num[0]+num[1];
+					for (var i = 0; i < WD(pow).abs; i++) {
+						if (pow < 0) {
+							num = "0"+num;
+						} else {
+							num = num+"0";
+						}
+					}
+					dot = new RegExp("([0-9]{"+dot+"})$");
+					num = num.replace(dot, ".$1").replace(/\.0+?$/, "").replace(/^0+?\./, "0.");
+					num = this.valueOf() < 0 ? "-"+num : num;
+					x = num;
 				}
 				return x;
 			}
@@ -1279,6 +1282,9 @@ function WDtext(input) {
 
 	/*Retorna o método toString e valueOf*/
 	Object.defineProperties(WDtime.prototype, {
+		type: {
+			value: "time"
+		},
 		toString: {
 			value: function() {
 				return this.format("%H:%M:%S");
@@ -1668,6 +1674,9 @@ function WDtext(input) {
 
 	/*Retorna o método toString e valueOf*/
 	Object.defineProperties(WDdate.prototype, {
+		type: {
+			value: "date"
+		},
 		toString: {
 			value: function() {
 				return this.format("%Y-%M-%D");
@@ -1936,6 +1945,9 @@ function WDtext(input) {
 
 	/*Define método toString*/
 	Object.defineProperties(WDarray.prototype, {
+		type: {
+			value: "array"
+		},
 		toString: {
 			value: function() {
 				var x;
@@ -2505,6 +2517,9 @@ function WDtext(input) {
 
 	/*Retorna o método toString, valueOf*/
 	Object.defineProperties(WDdom.prototype, {
+		type: {
+			value: "dom"
+		},
 		valueOf: {
 			value: function() {
 				var x;
