@@ -1114,7 +1114,10 @@ var wd = (function() {
 						}
 					}
 					dot = new RegExp("([0-9]{"+dot+"})$");
-					num = num.replace(dot, ".$1").replace(/\.0+?$/, "").replace(/^0+?\./, "0.");
+					num = num.replace(dot, ".$1");log(num);
+					num = num.replace(/^\.$/, "0");
+					num = num.replace(/\.(0+)?$/, "");
+					num = num.replace(/^0+?([0-9]\.)/, "$1");
 					num = this.valueOf() < 0 ? "-"+num : num;
 					x = num;
 				}
