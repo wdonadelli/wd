@@ -1057,7 +1057,7 @@ var wd = (function() {
 				x = this.toString();
 			} else {
 				x = this.toString().split(".");
-				integer = x[0];
+				integer = x[0].replace(/[^0-9]/, "");;
 				float   = x[1] === undefined ? "0" : x[1];
 				integer = integer === "0" ? [] : integer.split("");
 				float   = float   === "0" ? [] : float.split("");
@@ -1114,10 +1114,10 @@ var wd = (function() {
 						}
 					}
 					dot = new RegExp("([0-9]{"+dot+"})$");
-					num = num.replace(dot, ".$1");log(num);
+					num = num.replace(dot, ".$1");
 					num = num.replace(/^\.$/, "0");
 					num = num.replace(/\.(0+)?$/, "");
-					num = num.replace(/^0+?([0-9]\.)/, "$1");
+					num = num.replace(/^(0+)?([0-9]\.)/, "$1");
 					num = this.valueOf() < 0 ? "-"+num : num;
 					x = num;
 				}

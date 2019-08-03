@@ -5,7 +5,7 @@
 	<a href="#main" data-wd-action="tab{#tab_form}">Form</a>
 	<a href="#main" data-wd-action="tab{#tab_getStyle}">getStyle</a>
 	<a href="#main" data-wd-action="tab{#tab_item}">Item</a>
-	<a href="#main" data-wd-action="tab{#tab_items}">Items</a>
+	<a href="#main" data-wd-action="tab{#tab_item}">Item</a>
 </nav>
 
 <!---------------------------------------------------------------------------->
@@ -100,55 +100,41 @@ function getStyle() {
 
 <!---------------------------------------------------------------------------->
 
-	<div id="tab_item">
-		<h3>WDdom.item</h3>
+	<div id="tab_style">
+		<h3>WDdom.style</h3>
 
-		<p class="wd-indent">It is a method that returns the element contained in the element set from its numeric reference information.</p>
+		<p class="wd-indent">It is a method that manipulates the <i>style</i> attribute.</p>
 
-		<p class="wd-code wd-align-C">wd(dom).item(index)</p>
+		<p class="wd-code wd-align-C">wd(dom).style(list)</p>
 
-		<p class="wd-indent">The <code>index</code> argument indicates the element to return. If the number is less than zero, returns the element from the last element (-1 returns the last, -2 the second to last, and so on). If the value is not numeric, returns an array with all elements.</p>
+		<p class="wd-indent">The <code>list</code> argument is an object whose keys and values ​​represent, respectively, CSS attributes and values. Keys can be in CSS or camelCase style. If the value is <var>null</var> the value of the <code>style</code> attribute will be empty. If the attribute does not exist, it can be ignored..</p>
 
 		<h4>Example</h4>
 
 		<h5>HTML code</h5>
 
-		<pre class="wd-code" id="eg8"></pre>
+		<pre class="wd-code" id="eg7"></pre>
 
 		<h5>JavaScript</h5>
 	
-		<pre class="wd-code">wd$(<q>#eg11 > *</q>).item(<var id="eg9"></var>).textContent;
-<sample><q id="eg10"></q></sample></pre>
+		<pre class="wd-code">wd$(<q>#eg6</q>).data(<input type="text" class="argument" id="eg8" placeholder="list"/>); <cite>//try it (write in JSON format)</cite></pre>
+
+		<script>
+function sstyle() {
+	var arg;
+	arg = wd$("#eg8").item(0).value;
+	try {arg = JSON.parse(arg);} catch(e) {}
+	wd$("#eg9").style(arg);
+	wd$("#eg7").item(0).textContent = wd$("#eg9").item(0).outerHTML.replace(/\t+/g, "");
+	return;
+}
+		</script>
+
+		<a href="#eg9" class="wd-button" onclick="sstyle();">Execute</a>
 
 		<h4>Result</h4>
 
-		<div id="eg11">
-			<p>Text 1</p>
-			<p>Text 2</p>
-			<p>Text 3</p>
-		</div>
-
-	</div>
-
-<!---------------------------------------------------------------------------->
-
-	<div id="tab_items">
-		<h3>WDdom.items</h3>
-
-		<p class="wd-indent">It is an attributes that returns  the number of elements contained in the set.</p>
-
-		<p class="wd-code wd-align-C">wd(dom).items</p>
-
-		<h4>Example</h4>
-
-		<h5>HTML code</h5>
-
-		<pre class="wd-code" id="eg12"></pre>
-
-		<h5>JavaScript</h5>
-	
-		<pre class="wd-code">wd$(<q>#eg11 > *</q>).items;
-<sample><var id="eg13"></var></sample></pre>
+		<p id="eg9">Text for test.</p>
 
 	</div>
 
@@ -159,10 +145,104 @@ var eg = {};
 eg["#eg1"] = getCode("#eg4", true);
 eg["#eg2"] = getCode("#eg3");
 eg["#eg5"] = getCode("#eg7", true);
-eg["#eg8"] = getCode("#eg11", true);
-eg["#eg9"] = -2;
-eg["#eg10"] = wd$("#eg11 > *").item(-2).textContent;
-eg["#eg12"] = getCode("#eg11", true);
-eg["#eg13"] = wd$("#eg11 > *").items;
 setText(eg);
 </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!--
+
+<p class="wd-indent">This is a <u>method</u> that loads the html content, in text format, inside the element similar to the <code>innerHTML</code> method. It is called as follows:</p>
+
+<pre class="wd-code">wd(input).load(html);</pre>
+
+<p class="wd-indent">The <code>html</code> argument is the HTML content.</p>
+
+<h3>Example</h3>
+
+<h4>HTML code</h4>
+
+<pre class="wd-code" id="js_html_load_example2"></pre>
+
+<h4>JavaScript</h4>
+
+<pre class="wd-code"><code>function</code> f() {
+
+	<code>var</code> html = <q id="js_html_load_example4"></q>
+
+	wd$(<q>#js_html_load_example1</q>).load(html);
+};
+</pre>
+
+<form class="wd-boxform-H">
+	<a href="#none" class="wd-button" id="js_html_load_example3" title="Executes f()">Try f()</a>
+</form>
+
+<h4>Result</h4>
+
+<div id="js_html_load_example1" class="wd-padding wd-border wd-rounded"></div>
+
+
+
+
+<script>
+var html = "<blockquote cite=\"https://en.wikipedia.org/wiki/Uncertainty_principle\">In quantum mechanics, the uncertainty principle (also known as <b>Heisenberg's uncertainty principle</b>) is any of a variety of mathematical inequalities asserting a fundamental limit to the precision with which certain pairs of physical properties of a particle, known as complementary variables or canonically conjugate variables such as position <var>x</var> and momentum <var>p</var>, can be known.</blockquote><article class=\"wd-align-E\">(<a href=\"https://en.wikipedia.org/wiki/Uncertainty_principle\" target=\"_blank\">Wikipedia</a>, <time datetime=\"2019-04-12 23:46\">2019-04-12 23:46</time>)</article>";
+
+
+function jsHtmlLoadFunction1() {
+	wd$("#js_html_load_example1").load(html);
+	return;
+};
+
+wd$("#js_html_load_example4").get[0].textContent = html;
+wd$("#js_html_load_example2").get[0].textContent = wd$("#js_html_load_example1").get[0].outerHTML;
+wd$("#js_html_load_example3").handler({click: jsHtmlLoadFunction1});
+</script>
+-->
