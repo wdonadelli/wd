@@ -1,4 +1,4 @@
-# wd v2
+#WD Web Libraries V2
 
 This project consists of the distribution of two libraries for web application development.
 
