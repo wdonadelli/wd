@@ -1,44 +1,159 @@
-<p class="wd-indent">This is a <u>method</u> that executes the function entered in the argument in the same amount of existing elements, that is, if it is a list of nodes with n elements, the function will be performed n times. It is called as follows:</p>
+<header class="wd-head">
+	<h2 class="wd-align-C">WDdom: methods</h2>
+</header>
+<nav class="wd-nav wd-color-blue">
+	<a href="#main" data-wd-action="tab{#tab_handler}">handler</a>
+	<a href="#main" data-wd-action="tab{#tab_run}">run</a>
+</nav>
 
-<pre class="wd-code">wd(input).execute(method);</pre>
+<!---------------------------------------------------------------------------->
 
-<p class="wd-indent">The <code>method</code> argument is the function to be executed. The reported method accepts an argument representing the nth element.</p>
+<div>
+	<div id="tab_handler">
+		<h3>WDdom.handler</h3>
 
-<p class="wd-align-C wd-color-green wd-symbol-ok wd-padding wd-rounded wd-border">It is the main method of the object.</p>
+		<p class="wd-indent">It is a method that sets triggers for events to elements defined in the input. It is a standalone method that uses the corresponding attribute of the element to assign the methods to execute when the event is fired.</p>
 
-<h3>Example</h3>
+		<p class="wd-code wd-align-C">wd(dom).handler(list)</p>
 
-<h4>HTML code</h4>
-<pre class="wd-code" id="js_html_execute_example5"></pre>
+		<p class="wd-indent">The <code>list</code> argument is an object whose keys and values ​​respectively represent  the names of events and their methods. Event names are case insensitive and may or may not have the prefix <q>on</q>:</p>
+		
+		<p class="wd-code">list = {onclick: method1}; <cite>/*or*/</cite> list = {Click: method1};</p>
 
-<h4>JavaScript</h4>
+		<p class="wd-indent">If there is more than one method to be set on the trigger, then the methods must be entered in arrays. Setting the method value to <code>null</code> will remove all triggers in the event:</p>
+		
+		<p class="wd-code">list = {onclick: [method1, method2, method3], mouseOver: <var>null</var>};</p>
+		
+		<p class="wd-indent">If you want to exclude a specific method, you must enter the prefix <q>-</q> to the event name:</p>
+		
+		<p class="wd-code">list = {<q>-CLICK</q>: [method1, method2]};</p>
+		
+		<p class="wd-indent">If the <code>list</code> argument is null, all triggers defined by the method will be removed from the element from all events.</p>
 
-<pre class="wd-code"><code>function</code> m(x) {
-	x.style.color = <q>#FF0000</q>;
-	x.textContent = <q>Red Color</q>;
-};
-wd$(<q>#js_html_execute_example1, #js_html_execute_example2</q>).execute(m);
-</pre>
+		<h4>Example</h4>
 
-<a href="#none" class="wd-button" id="js_html_execute_example3" title="Executes m()">try</a>
+		<h5>HTML code</h5>
 
-<h4>Result</h4>
+		<pre class="wd-code" id="eg1"></pre>
 
-<div id="js_html_execute_example4">
-	<p id="js_html_execute_example1" >Example1</p>
-	<p id="js_html_execute_example2" >Example2</p>
+		<h5>JavaScript</h5>
+
+		<pre class="wd-code" id="eg2"></pre>
+
+<script id="eg3">
+function mouseOver() {
+	this.textContent = "Mouse over the element!";
+	return;
+}
+
+function mouseLeave() {
+	this.textContent = "Try me!";
+	return;
+}
+
+function click1() {
+	alert("Click 1!")
+	return;
+}
+
+function click2() {
+	alert("Click 2!")
+	return;
+}
+
+function handler1() {
+	wd$("#eg4").handler({
+		onclick: [click1, click2],
+		mouseOver: mouseOver,
+		MOUSELEAVE: mouseLeave
+	});
+	return;
+}
+
+function handler2() {
+	wd$("#eg4").handler({
+		"-onclick": click2,
+		onmouseLeave: null
+	});
+	return;
+}
+
+function handler3() {
+	wd$("#eg4").handler(null);
+	return;
+}
+		</script>
+
+		<a href="#eg4" class="wd-button" onclick="handler1();">Execute 1</a>
+		<a href="#eg4" class="wd-button" onclick="handler2();">Execute 2</a>
+		<a href="#eg4" class="wd-button" onclick="handler3();">Execute 3</a>
+
+		<h4>Result</h4>
+
+		<a href="#eg4" id="eg4" class="wd-padding">Try me!</a>
+
+	</div>
+
+<!---------------------------------------------------------------------------->
+
+	<div id="tab_run">
+
+		<h3>WDdom.run</h3>
+
+		<p class="wd-indent">It is a method that executes the function entered in the argument in the same amount of existing elements, that is, if it is a list of nodes with <var>n</var> elements, the function will be performed <var>n</var> times.</p>
+
+		<p class="wd-code wd-align-C">wd(dom).run(method)</p>
+		
+		<p class="wd-indent">The <code>method</code> argument is the function to be executed. The reported method accepts an argument representing the nth element.</p>
+
+		<p class="wd-align-C wd-color-green wd-symbol-ok wd-padding wd-rounded wd-border">It is the main method of the object.</p>
+
+		<h4>Example</h4>
+
+		<h5>HTML code</h5>
+
+		<pre class="wd-code" id="eg5"></pre>
+
+		<h5>JavaScript</h5>
+	
+		<pre class="wd-code" id="eg6"></pre>
+
+		<script id="eg7">
+function runMethod(elem) {
+	elem.textContent = "New item";
+	elem.style.color = "#F000F0";
+	elem.style.backgroundColor = "#F0F000";
+	return;
+}
+
+function execute() {
+	wd$("#eg8 > li").run(runMethod);
+	return;
+}
+		</script>
+
+		<a href="#eg8" class="wd-button" onclick="execute();">Execute</a>
+
+		<h4>Result</h4>
+
+		<ul class="wd-list" id="eg8">
+			<li>Item 1</li>
+			<li>Item 2</li>
+			<li>Item 3</li>
+			<li>Item 4</li>
+			<li>Item 5</li>
+		</ul>
+
+	</div>
 </div>
 
 <script>
-function jsHtmlExecuteFunction1(x) {
-	x.style.color = "#FF0000";
-	x.textContent = "Red Color";
-}
-function jsHtmlExecuteFunction2() {
-	wd$("#js_html_execute_example1, #js_html_execute_example2").execute(jsHtmlExecuteFunction1);
-}
+var eg = {};
+eg["#eg1"] = getCode("#eg4", true);
+eg["#eg2"] = getCode("#eg3");
 
-wd$("#js_html_execute_example3").handler({click: jsHtmlExecuteFunction2});
-wd$("#js_html_execute_example5").get[0].textContent = wd$("#js_html_execute_example4").get[0].outerHTML
+eg["#eg5"] = getCode("#eg8", true);
+eg["#eg6"] = getCode("#eg7");
+//eg["#eg"] = getCode("#eg6");
+setText(eg);
 </script>
-

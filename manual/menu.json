@@ -73,7 +73,7 @@
 		"title": "WDdom: content",
 		"file":  "manual/WDdom.load_repeat.html",
 		"style": "wd-size-s",
-		"click": "data-wd-click=''"
+		"click": ""
 	},
 	{
 		"title": "WDdom: getting",
@@ -85,7 +85,7 @@
 		"title": "WDdom: methods",
 		"file":  "manual/WDdom.handler_run.html",
 		"style": "wd-size-s",
-		"click": ""
+		"click": "data-wd-click=''"
 	},
 	{
 		"title": "WDdom: setting",
