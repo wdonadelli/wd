@@ -2367,7 +2367,7 @@ var wd = (function() {
 						html = null;
 					}
 					if (html === null) {
-						elem.innerHTML = "<center><code>-- Error: Replication structure not found! --</code></center>";
+						elem.innerHTML = "<center><mark><small>-- Error: Replication structure not found! --</small></mark></center>";
 					} else {
 						elem.innerHTML = "";
 						html = WD(html).replace("}}=\"\"", "}}");
@@ -2566,80 +2566,80 @@ var wd = (function() {
 
 	/*Carrega html externo data-wd-load=post{file}|get{file}*/
 	function data_wdLoad(e) {
-		if (!("wdLoad" in e.dataset)) {
-			return;
-		}
 		var value, method, file, ajax, target;
-		value  = getData(e.dataset.wdLoad);
-		method = "post" in value ? "post" : "get";
-		file   = value[method];
-		ajax   = WD(file);
-		target = WD(e);
-		target.data({wdLoad: null});
-		if (ajax.path === true) {
-			ajax.request(function(x) {
-				if (x.error) {
-					log(file+": Error accessing file or timeout.", "e");
-				} else {
-					target.load(x.text);
+		if ("wdLoad" in e.dataset) {
+			value  = getData(e.dataset.wdLoad);
+			if ("post" in value || "get" in value) {
+				method = "post" in value ? "post" : "get";
+				file   = value[method];
+				ajax   = WD(file);
+				target = WD(e);
+				target.data({wdLoad: null});
+				if (ajax.path === true) {
+					ajax.request(function(x) {
+						if (x.error) {
+							log(file+": Error accessing file or timeout.", "e");
+						} else {
+							target.load(x.text);
+						}
+						return;
+					})[method]();
 				}
-				return;
-			})[method]();
+			}
 		}
 		return;
 	};
 
 	/*Constroe html a partir de um arquivo json data-wd-repeat=post{file}|get{file}*/
 	function data_wdRepeat(e) {
-		if (!("wdRepeat" in e.dataset)) {
-			return;
-		}
 		var value, method, file, ajax, target;
-		value  = getData(e.dataset.wdRepeat);
-		method = "post" in value ? "post" : "get";
-		file   = value[method];
-		ajax   = WD(file);
-		target = WD(e);
-		target.data({wdRepeat: null});
-		if (ajax.path === true) {
-			ajax.request(function(x) {
-				if (x.error || x.json === null) {
-					log(file+": Error accessing file, timeout or it's not a json file.", "e");
-				} else {
-					target.repeat(x.json);
+		if ("wdRepeat" in e.dataset) {
+			value  = getData(e.dataset.wdRepeat);
+			if ("post" in value || "get" in value) {
+				method = "post" in value ? "post" : "get";
+				file   = value[method];
+				ajax   = WD(file);
+				target = WD(e);
+				target.data({wdRepeat: null});
+				if (ajax.path === true) {
+					ajax.request(function(x) {
+						if (x.error || x.json === null) {
+							log(file+": Error accessing file, timeout or it's not a json file.", "e");
+						} else {
+							target.repeat(x.json);
+						}
+						return;
+					})[method]();
 				}
-				return;
-			})[method]();
+			}
 		}
 		return;
 	};
 
 	/*Ordena elementos filhos data-wd-sort="number"*/
 	function data_wdSort(e) {
-		if (!("wdSort" in e.dataset)) {
-			return;
-		}
 		var order;
-		order = WD(e.dataset.wdSort).valueOf();
-		WD(e).sort(order).data({wdSort: null});
+		if ("wdSort" in e.dataset) {
+			order = WD(e.dataset.wdSort).valueOf();
+			WD(e).sort(order).data({wdSort: null});
+		}
 		return;
 	};
 
 	/*Filtra elementos filhos data-wd-filter=show{min}${css}|hide{min}${css}&*/
 	function data_wdFilter(e) {//text, min, show
-		if (!("wdFilter" in e.dataset)) {
-			return;
-		}
 		var value, text, data, show, min, target;
-		value = e.dataset.wdFilter.split("&");
-		text  = "value" in e ? e.value : e.textContent;
-		for (var i = 0; i < value.length; i++) {
-			data   = getData(value[i]);
-			show   = "hide" in data ? false : true;
-			min    = "hide" in data ? data.hide : data.show;
-			target = "$" in data ? $(data["$"]) : null;
-			if (WD(target).type === "dom") {
-				WD(target).filter(text, min, show);
+		if ("wdFilter" in e.dataset) {
+			value = e.dataset.wdFilter.split("&");
+			text  = "value" in e ? e.value : e.textContent;
+			for (var i = 0; i < value.length; i++) {
+				data   = getData(value[i]);
+				show   = "hide" in data ? false : true;
+				min    = "hide" in data ? data.hide : data.show;
+				target = "$" in data ? $(data["$"]) : null;
+				if (WD(target).type === "dom") {
+					WD(target).filter(text, min, show);
+				}
 			}
 		}
 		return;

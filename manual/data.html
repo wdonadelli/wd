@@ -1,8 +1,12 @@
-<p class="wd-indent"><q><i>WD Attributes Tools</i></q> consists of a JavaScript library that automates some methods of the <q><i>WD JavaScript Tools</i></q> HTML object as attributes to be inserted into HTML elements.</p>
+<header class="wd-head">
+	<h2 class="wd-align-C">WD Attributes Tools</h2>
+</header>
+
+<p class="wd-indent">The <i>WD Attributes Tools</i> consists of a JavaScript library that automates some methods of the <i>WD JavaScript Tools</i> HTML object as attributes to be inserted into HTML elements.</p>
 
 <p class="wd-indent">Its syntax is as follows:</p>
 
-<div class="wd-code">data-wd-attributeName=<q>value</q></div>
+<div class="wd-code wd-align-C">data-wd-<i>attributeName</i>=<q>value</q></div>
 
 <p class="wd-indent">The <code>attributeName</code> defines the name of the attribute that has the following possibilities:</p>
 
@@ -20,20 +24,4 @@
 	<li>phone</li>
 </ul>
 
-<p class="wd-indent">Each attribute is sensitive to a certain event, whose possibilities are listed below:</p>
-
-<ul class="wd-list" data-wd-sort="1">
-	<li>onLoad</li>
-	<li>onResize</li>
-	<li>onClick</li>
-	<li>onKeyUp</li>
-	<li>onHashChange</li>
-	<li>onChange (see <code>HTML.data</code> object)</li>
-	<li>onDefinition (see <code>HTML.data</code> object)</li>
-</ul>
-
-<pre class="wd-code"><cite>//Example</cite>
-&lt;a href=<q>#</q> <b>data-wd-action</b>=<q>hide</q>&gt;Hide&lt;/a&gt;
-</pre>
-
-<p class="wd-indent">See the menu for more details.</p>
+<p class="wd-indent">Each attribute is sensitive to a specific event whose possibilities depend on the attribute. The target element of the engine also depends on the attribute. See menu for details.</p>

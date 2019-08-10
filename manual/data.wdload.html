@@ -1,12 +1,18 @@
-<p class="wd-indent">The purpose of the attribute is to load the contents of an accessible path or file into the element that contains it in HTML format:</p>
+<header class="wd-head">
+	<h2 class="wd-align-C">dataWdLoad</h2>
+</header>
 
-<pre class="wd-code">data-wd-load=<q>method:path</q></pre>
+<p class="wd-indent">The purpose of the attribute is to load the contents of an accessible path or file into the element that contains it in HTML format.</p>
 
-<p class="wd-indent">The <code>method<code> attribute is optional and the possible values ​​are <q>get</q> and <q>post</q>. The default value is <q>get</q>.</p>
+<pre class="wd-code">data-wd-load=<q>post{HTML file path}</q> <cite>&lt;!--For the POST method (default)--&gt;</cite>
+data-wd-load=<q>get{HTML file path}</q>  <cite>&lt;!--For the GET method--&gt;</cite></pre>
 
-<p class="wd-indent">The <code>path</code> attribute is required and its value is the name of the accessible path or file to load.</p>
+<p class="wd-indent">See the following chapters:</p>
 
-<p class="wd-align-C wd-color-green wd-symbol-ok wd-padding wd-rounded wd-border">See the methods <code>HTML.load</code>, <code>Path.get</code> and <code>Path.post</code> to understand the source of its operation!</p>
+<ul class="wd-list">
+	<li><a href="#main" data-wd-data="wdLoad{get{manual/WDdom.load_repeat.html}}${#content}">WDdom: content (WDdom.load)</a></li>
+	<li><a href="#main" data-wd-data="wdLoad{get{manual/WDtext.path_request.html}}${#content}">WDtext: request</a></li>
+</ul>
 
 <h3>Target:</h3>
 
@@ -17,28 +23,33 @@
 <h3>Sensitivity:</h3>
 
 <ul class="wd-list">
-	<li>When loading the document.</li>
-	<li>When defining the attribute on the element (<i>See the <code>HTML.data</code> method</i>).</li>
-	<li>After external data loading procedures (repeat/load).</li>
+	<li>After loading the document;</li>
+	<li>After defining the attribute on the element with the method <a href="#main" data-wd-data="wdLoad{get{manual/WDdom.class_data_style.html}}${#content}">WDdom.data</a>;</li>
+	<li>After external data loading procedures using the <i>WD Attributes Tools</i> library.</li>
 </ul>
 
-<h3>Example:</h3>
+<h3>Example</h3>
 
-<h4>Sets Attribute:</h4>
+<h4>HTML code</h4>
 
-<p>
-	<code>
-		data-wd-load=
-		<a href="#none" onclick="wd$('#data_wdload_example1').data({wdLoad: 'manual/examples/example.html'});"><q>example.html?id=3</q></a> |
-		<a href="#none" onclick="wd$('#data_wdload_example1').data({wdLoad: 'post:manual/examples/example.txt'});"><q>post:example.txt</q></a> |
-		<a href="#none" onclick="wd$('#data_wdload_example1').data({wdLoad: ''});"><q></q></a>
-	</code>
-</p>
+<pre class="wd-code" id="eg1"></pre>
 
-<h4>Result:</h4>
+<h4>External file</h4>
 
-<div id="data_wdload_example1" class="wd-border wd-rounded wd-box wd-padding wd-bgcolor-yellow"> </div>
-	
+<pre class="wd-code" id="eg2"></pre>
+
+<h4>Result</h4>
+
+<div data-wd-load="post{manual/eg/eg.html}" id="eg3"></div>
+
 <script>
-wd$("#data_wdload_example1").get[0].textContent = wd$("#data_wdload_example1").get[0].outerHTML;
+var eg = {};
+eg["#eg1"] = getCode("#eg3", true);
+setText(eg);
+wd("manual/eg/eg.html").request(function(x) {
+	wd$("#eg2").item(0).textContent = x.text
+	var n = {};
+	n["#eg2"] = getCode("#eg2");
+	setText(n);
+}).get();
 </script>

@@ -1,3 +1,86 @@
+<header class="wd-head">
+	<h2 class="wd-align-C">dataWdFilter</h2>
+</header>
+
+<p class="wd-indent">The purpose of the attribute is displays only child elements, objects defined in the CSS selector, whose textual content (<code>value/content</code>) is contained in the element.</p>
+
+<pre class="wd-code">data-wd-filter=<q>show{min}${target}</q>
+data-wd-filter=<q>hide{min}${target}</q>
+data-wd-filter=<q>show{min}${target<sub>1</sub>}&hide{min}${target<sub>2</sub>}&hide{min}${target<sub>3</sub>}</q></pre>
+
+<p class="wd-indent">See the following chapters:</p>
+
+<ul class="wd-list">
+	<li><a href="#main" data-wd-data="wdLoad{get{manual/WDdom.0.html}}${#content}">WDdom (querySelectorAll)</a></li>
+	<li><a href="#main" data-wd-data="wdLoad{get{manual/WDdom.action_filter_page_sort.html}}${#content}">WDdom: view (WDdom.filter)</a></li>
+</ul>
+
+<h3>Target:</h3>
+
+<ul class="wd-list">
+	<li>Element children defined by the CSS selector.</li>
+</ul>
+
+<h3>Sensitivity:</h3>
+
+<ul class="wd-list">
+	<li>After loading the document;</li>
+	<li>After defining the attribute on the element with the method <a href="#main" data-wd-data="wdLoad{get{manual/WDdom.class_data_style.html}}${#content}">WDdom.data</a>;</li>
+	<li>After external data loading procedures using the <i>WD Attributes Tools</i> library;</li>
+	<li>When you change the value of the form field from the keyboard.</li>
+</ul>
+
+<h3>Example</h3>
+
+<h4>HTML code</h4>
+
+<pre class="wd-code" id="eg1"></pre>
+
+<h4>Result</h4>
+
+<ol class="wd-list" data-wd-sort="-1" id="eg2">
+	<li>Item 01/10</li>
+	<li>Item 02/10</li>
+	<li>Item 03/10</li>
+	<li>Item 04/10</li>
+	<li>Item 05/10</li>
+	<li>Item 06/10</li>
+	<li>Item 07/10</li>
+	<li>Item 08/10</li>
+	<li>Item 09/10</li>
+	<li>Item 10/10</li>
+</ol>
+
+<script>
+var eg = {};
+eg["#eg1"] = getCode("#eg2", true);
+setText(eg);
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 <p class="wd-indent">The purpose of the attribute is displays only child elements, objects defined in the CSS selector, whose textual content (<code>value/content</code>) is contained in the element:</p>
 
 <pre class="wd-code">data-wd-filter=<q>min:CSS</q></pre>

@@ -1,19 +1,27 @@
 [
-	{	"x": "=================================================================",
+	{
 		"title": "Home",
 		"file":  "manual/home.html",
 		"style": "wd-case-title wd-color-blue",
 		"click": ""
 	},
 
-	{	"x": "=================================================================",
+
+
+
+
+	{
 		"title": "WD JavaScript Tools",
 		"file":  "manual/WD.0.html",
 		"style": "wd-color-blue",
 		"click": ""
 	},
 
-	{	"x": "=================================================================",
+
+
+
+
+	{
 		"title": "WDarray",
 		"file":  "manual/WDarray.0.html",
 		"style": "wd-case-title",
@@ -37,8 +45,12 @@
 		"style": "wd-size-s",
 		"click": ""
 	},
-	
-	{	"x": "=================================================================",
+
+
+
+
+
+	{
 		"title": "WDdate",
 		"file":  "manual/WDdate.0.html",
 		"style": "wd-case-title",
@@ -63,7 +75,11 @@
 		"click": ""
 	},
 
-	{	"x": "============================================================",
+
+
+
+
+	{
 		"title": "WDdom",
 		"file":  "manual/WDdom.0.html",
 		"style": "wd-case-title",
@@ -79,13 +95,13 @@
 		"title": "WDdom: getting",
 		"file":  "manual/WDdom.form_getStyle_item_items.html",
 		"style": "wd-size-s",
-		"click": "data-wd-click=''"
+		"click": ""
 	},
 	{
 		"title": "WDdom: methods",
 		"file":  "manual/WDdom.handler_run.html",
 		"style": "wd-size-s",
-		"click": "data-wd-click=''"
+		"click": ""
 	},
 	{
 		"title": "WDdom: setting",
@@ -100,7 +116,11 @@
 		"click": ""
 	},
 
-	{	"x": "=================================================================",
+
+
+
+
+	{
 		"title": "WDnumber",
 		"file":  "manual/WDnumber.0.html",
 		"style": "wd-case-title",
@@ -125,7 +145,11 @@
 		"click": ""
 	},
 
-	{	"x": "=================================================================",
+
+
+
+
+	{
 		"title": "WDregexp",
 		"file":  "manual/WDregexp.0.html",
 		"style": "wd-case-title",
@@ -138,7 +162,12 @@
 		"click": ""
 	},
 
-	{	"x": "===================================================================",
+
+
+
+
+
+	{
 		"title": "WDtext",
 		"file":  "manual/WDtext.0.html",
 		"style": "wd-case-title",
@@ -157,7 +186,11 @@
 		"click": ""
 	},
 
-	{	"x": "=================================================================",
+
+
+
+
+	{
 		"title": "WDtime",
 		"file":  "manual/WDtime.0.html",
 		"style": "wd-case-title",
@@ -176,11 +209,16 @@
 		"click": ""
 	},
 
-	{	"x": "DATA===============================================================",
+
+
+
+
+
+	{
 		"title": "WD Attributes Tools",
 		"file":  "manual/data.html",
 		"style": "wd-color-blue",
-		"click": ""
+		"click": "data-wd-click=''"
 	},
 	{
 		"title": "dataWdLoad",
@@ -236,14 +274,12 @@
 		"style": "wd-size-s",
 		"click": ""
 	},
-	
-	
-	
-	
-	
-	
-	
-	{	"x": "CSS================================================================",
+
+
+
+
+
+	{
 		"title": "WD Style Sheet",
 		"file":  "manual/css.html",
 		"style": "wd-color-blue",
