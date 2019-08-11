@@ -4,9 +4,6 @@
 
 <p class="wd-indent">The purpose of the attribute is to clone the child elements from a JSON format file to the parent element that contains the attribute.</p>
 
-<pre class="wd-code">data-wd-repeat=<q>post{JSON file path}</q> <cite>&lt;!--For the POST method (default)--&gt;</cite>
-data-wd-repeat=<q>get{JSON file path}</q>  <cite>&lt;!--For the GET method--&gt;</cite></pre>
-
 <p class="wd-indent">See the following chapters:</p>
 
 <ul class="wd-list">
@@ -14,13 +11,24 @@ data-wd-repeat=<q>get{JSON file path}</q>  <cite>&lt;!--For the GET method--&gt;
 	<li><a href="#main" data-wd-data="wdLoad{get{manual/WDtext.path_request.html}}${#content}">WDtext: request</a></li>
 </ul>
 
-<h3>Target:</h3>
+<h3>Attribute</h3>
+
+<p class="wd-indent">For the POST method (default):</p>
+
+<pre class="wd-code wd-align-C">data-wd-repeat=<q>post{HTML file path}</q></pre>
+
+<p class="wd-indent">For the GET method:</p>
+
+<pre class="wd-code wd-align-C">data-wd-repeat=<q>get{HTML file path}</q></pre>
+
+
+<h3>Target</h3>
 
 <ul class="wd-list">
 	<li>Child elements.</li>
 </ul>
 
-<h3>Sensitivity:</h3>
+<h3>Sensitivity</h3>
 
 <ul class="wd-list">
 	<li>After loading the document;</li>

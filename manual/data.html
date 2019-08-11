@@ -4,11 +4,13 @@
 
 <p class="wd-indent">The <i>WD Attributes Tools</i> consists of a JavaScript library that automates some methods of the <i>WD JavaScript Tools</i> HTML object as attributes to be inserted into HTML elements.</p>
 
-<p class="wd-indent">Its syntax is as follows:</p>
+<h3>Attribute</h3>
 
-<div class="wd-code wd-align-C">data-wd-<i>attributeName</i>=<q>value</q></div>
+<p class="wd-indent">The tool uses the HTML attribute <code>data</code> to define which action will be implemented. The attribute structure has the prefix <q>data-wd-</q> followed by the tool name as follows:</p>
 
-<p class="wd-indent">The <code>attributeName</code> defines the name of the attribute that has the following possibilities:</p>
+<pre class="wd-code wd-align-C">data-wd-<i>toolName</i>=<q>value</q></pre>
+
+<p class="wd-indent">The <code>toolName</code> represents the name of the tool to be implemented in the element having the following possibilities:</p>
 
 <ul class="wd-list" data-wd-sort="1">
 	<li>load</li>
@@ -25,3 +27,34 @@
 </ul>
 
 <p class="wd-indent">Each attribute is sensitive to a specific event whose possibilities depend on the attribute. The target element of the engine also depends on the attribute. See menu for details.</p>
+
+<h3>Value</h3>
+
+<p class="wd-indent">The value of the attributes depends on the tool used and can be in the following ways:</p>
+
+<h4>Primitive value</h4>
+
+<p class="wd-indent">These are simple textual values ​​that can represent a numeral, a name, or code:</p>
+
+<pre class="wd-code">data-wd-tool=<q>1</q></pre>
+
+<h4>Action and argument</h4>
+
+<p class="wd-indent">The attribute may require the indication of a subaction that may or may not require an argument. The subaction will be represented by its name followed by the characters <code>{}</code>. If this subaction requires argument, this value must be entered between the characters <code>{}</code>. The subaction can be single or multiple:</p>
+
+<pre class="wd-code">data-wd-tool=<q>subaction{argument}</q>
+data-wd-tool=<q>subaction<sub>1</sub>{argument<sub>1</sub>}subaction<sub>2</sub>{argument<sub>2</sub>}</q></pre>
+
+<h4>Actions and targets</h4>
+
+<p class="wd-indent">The attribute may require that a target be set for the engine. The target will be represented by CSS selector and will be defined in the subargument argument <code>$</code>.</p>
+
+<pre class="wd-code">data-wd-tool=<q>${div, .class1, #id2}</q>
+data-wd-tool=<q>subaction{argument}${div, .class1, #id2}</q>
+data-wd-tool=<q>subaction<sub>1</sub>{argument<sub>1</sub>}subaction<sub>2</sub>{argument<sub>2</sub>}${div, .class1, #id2}</q></pre>
+
+<h4>Groupings</h4>
+
+<p class="wd-indent">The attribute may allow different subactions to be applied to different targets. For this situation, you will need to group the subactions with their targets. The separation of the groups will be made by the character <code>&amp;</code>:</p>
+
+<pre class="wd-code">data-wd-tool=<q>subaction<sub>1</sub>{argument<sub>1</sub>}${div, .class1, #id1}&amp;subaction<sub>2</sub>{argument<sub>2</sub>}${.class2, #id1}</q></pre>
