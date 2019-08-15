@@ -48,18 +48,45 @@
 
 <h4>Result</h4>
 
-<ol class="wd-list" data-wd-sort="-1" id="eg2">
-	<li>Item 01/10</li>
-	<li>Item 02/10</li>
-	<li>Item 03/10</li>
-	<li>Item 04/10</li>
-	<li>Item 05/10</li>
-	<li>Item 06/10</li>
-	<li>Item 07/10</li>
-	<li>Item 08/10</li>
-	<li>Item 09/10</li>
-	<li>Item 10/10</li>
-</ol>
+<div id="eg2">
+	<form class="wd-box-form">
+		<input data-wd-filter="show{}${#eg3}&hide{}${#eg4}&hide{3}${#eg5}" type="text" class="wd-input" placeholder="Search..." />
+	</form>
+
+	<div data-wd-device="Desktop{wd-row}">
+		<div data-wd-device="Desktop{wd-col-04}">
+			<h5>List 1</h5>
+			<ol class="wd-list" id="eg3">
+				<li>Guitar</li>
+				<li>Bass Guitar</li>
+				<li>Drum</li>
+				<li>Keyboard</li>
+				<li>Microphone</li>
+			</ol>
+		</div>
+		<div data-wd-device="Desktop{wd-col-04}">
+			<h5>List 2</h5>
+			<ol class="wd-list" id="eg4">
+				<li>Guitar</li>
+				<li>Bass Guitar</li>
+				<li>Drum</li>
+				<li>Keyboard</li>
+				<li>Microphone</li>
+			</ol>
+		</div>
+		<div data-wd-device="Desktop{wd-col-04}">
+			<h5>List 3</h5>
+			<ol class="wd-list" id="eg5">
+				<li>Guitar</li>
+				<li>Bass Guitar</li>
+				<li>Drum</li>
+				<li>Keyboard</li>
+				<li>Microphone</li>
+			</ol>
+		</div>
+	</div>
+</div>
+
 
 <script>
 var eg = {};
