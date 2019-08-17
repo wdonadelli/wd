@@ -2647,69 +2647,66 @@ var wd = (function() {
 
 	/*Define máscara do elemento data-wd-mask="StringMask"*/
 	function data_wdMask(e) {
-		if (!("wdMask" in e.dataset)) {
-			return;
-		}
 		var value, re, mask;
-		value = "value" in e ? e.value : e.textContent;
-		re    = new RegExp(e.dataset.wdMask);
-		mask  = WD(re).mask(value);
-		if (mask === false) {
-			if ("setCustomValidity" in e) {
-				e.setCustomValidity("Incorrect format: "+re.source);
-			}
-		} else {
-			if ("value" in e) {
-				e.value = mask
+		if ("wdMask" in e.dataset) {
+			value = "value" in e ? e.value : e.textContent;
+			re    = new RegExp(e.dataset.wdMask);
+			mask  = WD(re).mask(value);
+			if (mask === false) {
+				if ("setCustomValidity" in e) {
+					e.setCustomValidity("Incorrect format: "+re.source);
+				}
 			} else {
-				e.textContent = mask;
-			}
-			if ("setCustomValidity" in e) {
-				e.setCustomValidity("");
+				if ("value" in e) {
+					e.value = mask;
+				}
+				if ("textContent" in e) {
+					e.textContent = mask;
+				}
+				if ("setCustomValidity" in e) {
+					e.setCustomValidity("");
+				}
 			}
 		}
 		return;
 	};
 
-	/*Define os elementos a serem exibidos data-wd-page=page:size*/
+	/*Define os elementos a serem exibidos data-wd-page=page{p}size{s}*/
 	function data_wdPage(e) {
-		if (!("wdPage" in e.dataset)) {
-			return;
-		}
 		var attr, page, size;
-		attr = e.dataset.wdPage.split(":");
-		page = attr[0];
-		size = attr[1];
-		WD(e).page(page, size).data({wdPage: null});
+		if ("wdPage" in e.dataset) {
+			attr = getData(e.dataset.wdPage);
+			page = attr.page;
+			size = attr.size;
+			WD(e).page(page, size).data({wdPage: null});
+		}
 		return;
 	};
 
 	/*Executa o método click() ao elemento após o load data-wd-click=""*/
 	function data_wdClick(e) {
-		if (!("wdClick" in e.dataset)) {
-			return;
+		if ("wdClick" in e.dataset) {
+			if ("click" in e) {
+				e.click();
+			}
+			WD(e).data({wdClick: null});
 		}
-		if ("click" in e) {
-			e.click();
-		}
-		WD(e).data({wdClick: null});
 		return;
 	};
 
 	/*Executa uma ação ao alvo após o click data-wd-action=action1{css1}action2{css2}*/
 	function data_wdAction(e) {
-		if (!("wdAction" in e.dataset)) {
-			return;
-		}
 		var value, data, target;
-		value = e.dataset.wdAction;
-		data  = getData(value);
-		for (var action in data) {
-			target = WD($(data[action]));
-			if (target.type === "dom") {
-				target.action(action);
-			} else {
-				WD(e).action(action);
+		if ("wdAction" in e.dataset) {
+			value = e.dataset.wdAction;
+			data  = getData(value);
+			for (var action in data) {
+				target = WD($(data[action]));
+				if (target.type === "dom") {
+					target.action(action);
+				} else {
+					WD(e).action(action);
+				}
 			}
 		}
 		return;
@@ -2717,17 +2714,16 @@ var wd = (function() {
 
 	/*Define dataset a partir do click data-wd-data=attr1{value}${css}&*/
 	function data_wdData(e) {
-		if (!("wdData" in e.dataset)) {
-			return;
-		}
 		var value, data, target;
-		value = e.dataset.wdData.split("&");
-		for (var i = 0; i < value.length; i++) {
-			data   = getData(value[i]);
-			target = "$" in data ? WD($(data["$"])) : WD(e);
-			delete data["$"];
-			if (target.type === "dom") {
-					target.data(data);
+		if ("wdData" in e.dataset) {
+			value = e.dataset.wdData.split("&");
+			for (var i = 0; i < value.length; i++) {
+				data   = getData(value[i]);
+				target = "$" in data ? WD($(data["$"])) : WD(e);
+				delete data["$"];
+				if (target.type === "dom") {
+						target.data(data);
+				}
 			}
 		}
 		return;

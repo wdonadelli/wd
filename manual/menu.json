@@ -221,26 +221,38 @@
 		"click": "data-wd-click=''"
 	},
 	{
-		"title": "dataWdLoad",
-		"file":  "manual/data.wdload.html",
+		"title": "dataWdAction",
+		"file":  "manual/data.wdaction.html",
 		"style": "wd-size-s",
 		"click": ""
 	},
 	{
-		"title": "dataWdRepeat",
-		"file":  "manual/data.wdrepeat.html",
+		"title": "dataWdClick",
+		"file":  "manual/data.wdclick.html",
 		"style": "wd-size-s",
 		"click": ""
 	},
 	{
-		"title": "dataWdSort",
-		"file":  "manual/data.wdsort.html",
+		"title": "dataWdData",
+		"file":  "manual/data.wddata.html",
+		"style": "wd-size-s",
+		"click": ""
+	},
+	{
+		"title": "dataWdDevice",
+		"file":  "manual/data.wddevice.html",
 		"style": "wd-size-s",
 		"click": ""
 	},
 	{
 		"title": "dataWdFilter",
 		"file":  "manual/data.wdfilter.html",
+		"style": "wd-size-s",
+		"click": ""
+	},
+	{
+		"title": "dataWdLoad",
+		"file":  "manual/data.wdload.html",
 		"style": "wd-size-s",
 		"click": ""
 	},
@@ -257,8 +269,14 @@
 		"click": ""
 	},
 	{
-		"title": "dataWdAction",
-		"file":  "manual/data.wdaction.html",
+		"title": "dataWdRepeat",
+		"file":  "manual/data.wdrepeat.html",
+		"style": "wd-size-s",
+		"click": ""
+	},
+	{
+		"title": "dataWdSort",
+		"file":  "manual/data.wdsort.html",
 		"style": "wd-size-s",
 		"click": ""
 	},
@@ -268,12 +286,7 @@
 		"style": "wd-size-s",
 		"click": ""
 	},
-	{
-		"title": "dataWdDevice",
-		"file":  "manual/data.wddevice.html",
-		"style": "wd-size-s",
-		"click": ""
-	},
+
 
 
 
