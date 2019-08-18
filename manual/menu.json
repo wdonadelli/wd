@@ -222,67 +222,67 @@
 	},
 	{
 		"title": "dataWdAction",
-		"file":  "manual/data.wdaction.html",
+		"file":  "manual/data.wdAction.html",
 		"style": "wd-size-s",
 		"click": ""
 	},
 	{
 		"title": "dataWdClick",
-		"file":  "manual/data.wdclick.html",
+		"file":  "manual/data.wdClick.html",
 		"style": "wd-size-s",
 		"click": ""
 	},
 	{
 		"title": "dataWdData",
-		"file":  "manual/data.wddata.html",
+		"file":  "manual/data.wdData.html",
 		"style": "wd-size-s",
 		"click": ""
 	},
 	{
 		"title": "dataWdDevice",
-		"file":  "manual/data.wddevice.html",
+		"file":  "manual/data.wdDevice.html",
 		"style": "wd-size-s",
 		"click": ""
 	},
 	{
 		"title": "dataWdFilter",
-		"file":  "manual/data.wdfilter.html",
+		"file":  "manual/data.wdFilter.html",
 		"style": "wd-size-s",
 		"click": ""
 	},
 	{
 		"title": "dataWdLoad",
-		"file":  "manual/data.wdload.html",
+		"file":  "manual/data.wdLoad.html",
 		"style": "wd-size-s",
 		"click": ""
 	},
 	{
 		"title": "dataWdMask",
-		"file":  "manual/data.wdmask.html",
+		"file":  "manual/data.wdMask.html",
 		"style": "wd-size-s",
 		"click": ""
 	},
 	{
 		"title": "dataWdPage",
-		"file":  "manual/data.wdpage.html",
+		"file":  "manual/data.wdPage.html",
 		"style": "wd-size-s",
 		"click": ""
 	},
 	{
 		"title": "dataWdRepeat",
-		"file":  "manual/data.wdrepeat.html",
+		"file":  "manual/data.wdRepeat.html",
 		"style": "wd-size-s",
 		"click": ""
 	},
 	{
 		"title": "dataWdSort",
-		"file":  "manual/data.wdsort.html",
+		"file":  "manual/data.wdSort.html",
 		"style": "wd-size-s",
 		"click": ""
 	},
 	{
 		"title": "dataWdSortCol",
-		"file":  "manual/data.wdsortcol.html",
+		"file":  "manual/data.wdSortCol.html",
 		"style": "wd-size-s",
 		"click": ""
 	},
