@@ -598,7 +598,7 @@ var wd = (function() {
 		enumerable: true,
 		value: function(change) {
 			var value;
-			value = this.replace("  ", " ");
+			value = this.toString().trim().replace(/\ +/g, " ");
 			if (change === true) {
 				this._value = value;
 				value = this;
