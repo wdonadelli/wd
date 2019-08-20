@@ -1,24 +1,25 @@
 <header class="wd-head">
-	<h2 class="wd-align-C">dataWdAction</h2>
+	<h2 class="wd-align-C">dataWdData</h2>
 </header>
 
-<p class="wd-indent">The purpose of the attribute is performs the action defined on elements identified by the CSS selector.</p>
+<p class="wd-indent">The purpose of the attribute is to define the dataset method of the elements indicated by the CSS selector.</p>
 
 <p class="wd-indent">See the following chapters:</p>
 
 <ul class="wd-list">
-	<li><a href="#main" data-wd-data="wdLoad{get{manual/WDdom.0.html}}${#content}">WDdom (querySelectorAll)</a></li>
-	<li><a href="#main" data-wd-data="wdLoad{get{manual/WDdom.action_filter_page_sort.html}}${#content}">WDdom: view (WDdom.action)</a></li>
-	<li><a href="#main" data-wd-data="wdLoad{get{manual/data.wdClick.html}}${#content}">dataWdClick</a></li>
+	<li><a href="#main" data-wd-data="wdClick{}${[title='WDdom']}">WDdom (querySelectorAll)</a></li>
+	<li><a href="#main" data-wd-data="wdClick{}${[title='WDdom: setting']}">WDdom: setting (WDdom.data)</a></li>
+	<li><a href="#main" data-wd-data="wdClick{}${[title='dataWdClick']}">dataWdClick</a></li>
 </ul>
 
 <h3>Attribute</h3>
 
-<pre class="wd-code wd-align-C">data-wd-action=<q>act{target}</q></pre>
+
+<pre class="wd-code wd-align-C">data-wd-data=<q>key{value}${target}</q></pre>
 
 <p class="wd-indent">For various targets and subactions:</p>
 
-<pre class="wd-code wd-align-C">data-wd-action=<q>act<sub>1</sub>{target<sub>1</sub>}act<sub>2</sub>{target<sub>2</sub>}</q></pre>
+<pre class="wd-code wd-align-C">data-wd-data=<q>key<sub>1</sub>{value<sub>1</sub>}key<sub>2</sub>{value<sub>2</sub>}${target}&amp;key<sub>3</sub>{value<sub>3</sub>}${target<sub>3</sub>}</q></pre>
 
 <h3>Target</h3>
 
@@ -41,29 +42,9 @@
 <h4>Result</h4>
 
 <div id="eg2" class="wd-margin">
-	<nav class="wd-nav wd-bgcolor-gray">
-		<a data-wd-action="tab{#egtab1}" data-wd-click="" href="##" >Tab1</a>
-		<a data-wd-action="tab{#egtab2}" href="##" >Tab2</a>
-	</nav>
-
-	<div class="wd-border">
-		<div id="egtab1" class="wd-box">
-			<header class="wd-head wd-bgcolor-blue">
-				<h3>Tab1</h3>
-			</header>
-			<p>Tab1 content.</p>
-		</div>
-		<div id="egtab2" class="wd-box">
-			<header class="wd-head wd-bgcolor-green">
-				<h3>Tab2</h3>
-			</header>
-			<p>Tab2 content.</p>
-			<form class="wd-boxform-H">
-				<a data-wd-action="show{#showhide2}hide{#showhide1}" id="showhide1" href="##" class="wd-button">#1: Show 2/Hide 1</a>
-				<a data-wd-action="show{#showhide1}hide{#showhide2}" id="showhide2" href="##" class="wd-button">#2: Show 1/Hide 2</a>
-			</form>
-		</div>
-	</div>
+	<button data-wd-data="wdLoad{get{manual/eg/eg.txt}}${#eg3}&wdLoad{get{manual/eg/eg.json}}${#eg4}" type="button" class="wd-button">Click Me!</button>
+	<pre id="eg3" class="wd-border wd-box">Something will happen here!</pre>
+	<pre id="eg4" class="wd-border wd-box">Something will happen here!</pre>
 </div>
 
 <script>

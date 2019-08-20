@@ -275,6 +275,12 @@
 		"click": ""
 	},
 	{
+		"title": "dataWdRequest",
+		"file":  "manual/data.wdRequest.html",
+		"style": "wd-size-s",
+		"click": ""
+	},
+	{
 		"title": "dataWdSort",
 		"file":  "manual/data.wdSort.html",
 		"style": "wd-size-s",
