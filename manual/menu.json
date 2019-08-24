@@ -246,7 +246,7 @@
 		"title": "WD Attributes Tools",
 		"file":  "manual/data.html",
 		"style": "wd-color-blue",
-		"click": "data-wd-click=''",
+		"click": "",
 		"id": "data"
 	},
 	{
@@ -343,7 +343,7 @@
 		"title": "WD Style Sheet",
 		"file":  "manual/css.html",
 		"style": "wd-color-blue",
-		"click": "",
+		"click": "data-wd-click=''",
 		"id": "css"
 	}
 ]

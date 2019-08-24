@@ -2616,6 +2616,24 @@ var wd = (function() {
 		return;
 	};
 
+	/*Faz requisição a um arquivo externo data-wd-request=post{file}method{function()}|get{file}method{function()}*/
+	function data_wdRequest(e) {
+		var value, func, file, ajax, target, method;
+		if ("wdRequest" in e.dataset) {
+			value  = getData(e.dataset.wdRequest);
+			if ("post" in value || "get" in value) {
+				method = "post" in value ? "post" : "get";
+				file   = value[method];
+				ajax   = WD(file);
+				func   = WD(window[value.method]).type === "function" ? window[value.method] : undefined;
+				if (ajax.path === true) {
+					ajax.request(func)[method]();
+				}
+			}
+		}
+		return;
+	};
+
 	/*Ordena elementos filhos data-wd-sort="number"*/
 	function data_wdSort(e) {
 		var order;
@@ -2742,11 +2760,8 @@ var wd = (function() {
 
 	/*Ordena as colunas de uma tabela data-wd-sort-col=""*/
 	function data_wdSortCol(e) {
-		if (!("wdSortCol" in e.dataset)) {
-			return;
-		}
-		if (WD(e.parentElement.parentElement.tagName).title() === "Thead") {
-			var order, thead, heads, bodies;
+		var order, thead, heads, bodies;
+		if ("wdSortCol" in e.dataset && WD(e.parentElement.parentElement.tagName).title() === "Thead") {
 			order  = e.dataset.wdSortCol === "+1" ? -1 : 1;
 			thead  = e.parentElement.parentElement;
 			heads  = e.parentElement.children;
@@ -2766,29 +2781,28 @@ var wd = (function() {
 	/*Guarda o tamanho da tela*/
 	var deviceController = null;
 
-	/*Define o estilo do elemento a partir do tamanho da tela data-wd-device=Desktop{css}Tablet{css}Phone{css}Mobile{css}*/
+	/*Define o estilo do elemento a partir do tamanho da tela data-wd-device=desktop{css}tablet{css}phone{css}mobile{css}*/
 	function data_wdDevice(e) {
-		if (!("wdDevice" in e.dataset)) {
-			return;
-		}
 		var device, value, data, desktop, mobile, tablet, phone;
-		device  = deviceController;
-		value   = e.dataset.wdDevice;
-		data    = getData(value);
-		desktop = "Desktop" in data ? data.Desktop : "";
-		mobile  = "Mobile"  in data ? data.Mobile  : "";
-		tablet  = "Tablet"  in data ? data.Tablet  : "";
-		phone   = "Phone"   in data ? data.Phone   : "";
-		switch(device) {
-			case "Desktop":
-				WD(e).class({del: phone}).class({del: tablet}).class({del: mobile}).class({add: desktop});
-				break;
-			case "Tablet":
-				WD(e).class({del: desktop}).class({del: phone}).class({add: mobile}).class({add: tablet});
-				break;
-			case "Phone":
-				WD(e).class({del: desktop}).class({del: tablet}).class({add: mobile}).class({add: phone});
-				break;
+		if ("wdDevice" in e.dataset) {
+			device  = deviceController;
+			value   = e.dataset.wdDevice;
+			data    = getData(value);
+			desktop = "desktop" in data ? data.desktop : "";
+			mobile  = "mobile"  in data ? data.mobile  : "";
+			tablet  = "tablet"  in data ? data.tablet  : "";
+			phone   = "phone"   in data ? data.phone   : "";
+			switch(device) {
+				case "Desktop":
+					WD(e).class({del: phone}).class({del: tablet}).class({del: mobile}).class({add: desktop});
+					break;
+				case "Tablet":
+					WD(e).class({del: desktop}).class({del: phone}).class({add: mobile}).class({add: tablet});
+					break;
+				case "Phone":
+					WD(e).class({del: desktop}).class({del: tablet}).class({add: mobile}).class({add: phone});
+					break;
+			}
 		}
 		return;
 	};
@@ -2798,10 +2812,10 @@ var wd = (function() {
 	/*Procedimentos quando se usa as classes wd-bar ao mudar a âncora*/
 	function hashProcedures() {
 		var bar, top, hbar, htop;
-		bar  = WD($(".wd-bar, .wd-bar-N"));
+		bar  = WD($(".wd-bar, .wd-bar-N, .wd-follow, .wd-follow-N"));/*FIXME acertar esse CSS depois de arruamar o wd.css*/
 		top  = WD($(window.location.hash));
 		hbar = bar.type === "dom" && bar.items > 0 ? bar.item(0).offsetHeight : 0;
-		htop = top.type === "dom" && top.items > 0 ? top.item(0).offsetTop : 0;
+		htop = top.type === "dom" && top.items > 0 ? top.item(0).offsetTop : 0;log("barra: "+hbar+" - topo: "+htop);
 		if (hbar !== 0) {
 			window.scrollTo(0, htop - hbar);
 		}
@@ -2841,6 +2855,7 @@ var wd = (function() {
 		data_wdData(ev.target);
 		data_wdActive(ev.target);
 		data_wdSortCol(ev.target);
+		data_wdRequest(ev.target);
 		return;
 	};
 
@@ -2893,6 +2908,7 @@ var wd = (function() {
 		return;
 	};
 
+	/*Definindo e incluindo os estilos utilizados pelo javascript na tag head*/
 	var style;
 	style = document.createElement("STYLE");
 	style.textContent  = ".js-wd-no-display {display: none !important;}";

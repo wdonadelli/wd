@@ -5,7 +5,7 @@
 		<meta charset="utf-8"/>
 		<meta name="viewport" content="width=device-width, initial-scale=1"/>
 		<meta name="author" content="Willian Donadelli"/>
-		<meta name="keywords" content="Web Development,Web Design,HTML,CSS,JavaScript,Library,QuerySelector">
+		<meta name="keywords" content="WD Style Sheet, WD JavaScript Tools, WD Attributes Tools, HTML, CSS, JavaScript, Library, QuerySelector">
 		<script src="wd.js"></script>
 		<link rel="stylesheet" href="wd.css"/>
 		<script>
@@ -13,7 +13,7 @@ function getCode(target, outer) {
 	var indent, type, input;
 	input = wd$(target).item(0);
 	input = outer === true ? input.outerHTML : input.innerHTML;
-	indent = input.trim().split("\n");console.log(indent);
+	indent = input.trim().split("\n");
 	indent = indent.length > 1 ? indent[1].replace(/^\t(\t+)?[^\t]+/g, "$1") : "";
 	indent = new RegExp("\n"+indent, "g");
 	input  = input.trim().replace(indent, "\n");
@@ -53,7 +53,7 @@ function setText(obj) {
 }
 	</style>
 	</head>
-<body class="wd-align-J" data-wd-device="Desktop{wd-body-E}">
+<body class="wd-align-J" data-wd-device="desktop{wd-body-E}">
 
 
 	<!--MAIN PAGE-->
@@ -66,7 +66,7 @@ function setText(obj) {
 		</header>
 
 		<!--NAV-->
-		<nav class="wd-nav wd-bgcolor-navy wd-follow-N" data-wd-device="Desktop{wd-hide}">
+		<nav class="wd-nav wd-bgcolor-navy wd-follow-N" data-wd-device="desktop{wd-hide}">
 			<a href="#menu" data-wd-action="open{#menu}" class="wd-symbol-menu"></a>
 		</nav>
 		
@@ -78,12 +78,12 @@ function setText(obj) {
 <!--========================================================================-->
 
 	<!--MENU-->
-	<section id="menu" data-wd-device="Mobile{wd-dialog-full}Desktop{wd-bar-W}" class="wd-box wd-bgcolor-white wd-border-V" style="overflow: auto">
+	<section id="menu" data-wd-device="mobile{wd-dialog-full}desktop{wd-bar-W}" class="wd-box wd-bgcolor-white wd-border-V" style="overflow: auto">
 
 		<!--HEADER-->
 		<header class="wd-head wd-bgcolor-teal wd-follow-N">
 			<h3>Menu</h3>
-			<span data-wd-device="Desktop{wd-hide}" class="wd-place-E wd-symbol-cancel" data-wd-action="close{#menu}"></span>
+			<span data-wd-device="desktop{wd-hide}" class="wd-place-E wd-symbol-cancel" data-wd-action="close{#menu}"></span>
 		</header>
 
 		<!--NAV-->

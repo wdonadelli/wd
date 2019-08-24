@@ -1,46 +1,76 @@
-<p class="wd-indent">The purpose of the attribute sorts columns of tables (<code>table</code>). The attribute must be contained in the elements <code>td</code> or <code>th</code>, children of <code>tr</code>, child of <code>thead</code>. When you click on the elements that contain the attribute, the respective column will be sorted in ascending order (<code>tbody</code>). When you click on the element again, the sort order reverses:</p>
+<header class="wd-head">
+	<h2 class="wd-align-C">dataWdSortCol</h2>
+</header>
 
-<pre class="wd-code">data-wd-sort-col=<q></q></pre>
+<p class="wd-indent">The purpose of the attribute is to sort table columns (<code>table</code> tag). The attribute must be contained in the elements <code>td</code> or <code>th</code>, children of <code>tr</code>, child of <code>thead</code>. When the element with the attribute is clicked, its column will be sorted in ascending order. If clicked again, the sort order will be reversed.</p>
 
-<p class="wd-align-C wd-color-green wd-symbol-ok wd-padding wd-rounded wd-border">See the method <code>HTML.sort</code> to understand the source of its operation!</p>
+<p class="wd-indent">See the following chapters:</p>
 
-<h3>Target:</h3>
+<ul class="wd-list">
+	<li><a href="#main" data-wd-data="wdClick{}${#js35}">WDdom: view (WDdom.sort)</a></li>
+	<li><a href="#main" data-wd-data="wdClick{}${#data2}">dataWdClick</a></li>
+</ul>
+
+<h3>Attribute</h3>
+
+<pre class="wd-code wd-align-C">data-wd-sort-col=<q> </q></pre>
+
+<h3>Target</h3>
 
 <ul class="wd-list">
 	<li><code>tbody</code> children.</li>
 </ul>
 
-<h3>Sensitivity:</h3>
+<h3>Sensitivity</h3>
 
 <ul class="wd-list">
 	<li>When the element receives a click.</li>
 </ul>
 
-<h3>Example:</h3>
+<h3>Example</h3>
 
-<h4>HTML Structure:</h4>
+<h4>HTML code</h4>
 
-<pre class="wd-code" id="data_wdsortcol_example2"></pre>
+<pre class="wd-code" id="eg1"></pre>
 
-<h4>Result:</h4>
+<h4>Result</h4>
 
-<div id="data_wdsortcol_example1">
-	<table class="wd-table">
-		<thead>
-			<tr class="wd-bgcolor-black">
-				<th data-wd-sort-col="">Value</th>
-				<th data-wd-sort-col="">Comment</th>
-			</tr>
-		</thead>
-		<tbody data-wd-repeat="manual/examples/sort.json">
-			<tr>
-				<td>{{value}}</td>
-				<td>{{name}}</td>
-			</tr>
-		</tbody>
-	</table>
-</div>
+<table class="wd-table" id="eg2" width="100%">
+	<thead class="wd-table wd-border" >
+		<tr class="wd-bgcolor-black">
+			<th data-wd-sort-col=" ">Name</th>
+			<th data-wd-sort-col=" ">Birth</th>
+			<th data-wd-sort-col=" ">Income</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td>Lucius</td>
+			<td>10.07.1983</td>
+			<td class="wd-align-E">1000</td>
+		</tr>
+		<tr>
+			<td>Iulia</td>
+			<td>07/09/1983</td>
+			<td class="wd-align-E">300</td>
+		</tr>
+		<tr>
+			<td>Cæsar</td>
+			<td>2004-02-01</td>
+			<td class="wd-align-E">-500</td>
+		</tr>
+		<tr>
+			<td>Augustus</td>
+			<td>14.12.1995</td>
+			<td class="wd-align-E">000</td>
+		</tr>
+	</tbody>
+</table>
+
+<hr></hr>
 
 <script>
-wd$("#data_wdsortcol_example2").get[0].textContent = wd$("#data_wdsortcol_example1").get[0].outerHTML;
+var eg = {};
+eg["#eg1"] = getCode("#eg2", true);
+setText(eg);
 </script>
