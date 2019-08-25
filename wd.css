@@ -1,4 +1,4 @@
-﻿/* Willian Donadelli | <wdonadelli@gmail.com> | v1.1.1 */
+﻿/* Willian Donadelli | <wdonadelli@gmail.com> | v2.0.0 */
 
 *, *:before, *:after {box-sizing: border-box;}
 /*--- animações ---*/
@@ -14,6 +14,17 @@
 	from {opacity: 1;}
 	to   {opacity: 0;}
 }
+
+@keyframes visible-in {
+	from {opacity: 0; visibility: hidden;}
+	to   {opacity: 1; visibility: visible;}
+}
+@keyframes visible-out {
+	from {opacity: 1; visibility: visible;}
+	to   {opacity: 0; visibility: hidden;}
+}
+
+
 @keyframes from-top {
 	from {top: -100%; bottom: 200%; opacity: 0;}
 	to   {opacity: 1;}
@@ -49,12 +60,6 @@ a {
 a:hover {
 	text-decoration: underline;
 }
-h1 {font-size: 2.00em;}
-h2 {font-size: 1.50em;}
-h3 {font-size: 1.20em;}
-h4 {font-size: 1.00em;}
-h4 {font-size: 0.85em;}
-h6 {font-size: 0.65em;}
 /*--- Forms ---*/
 .wd-input,
 .wd-button,
@@ -173,6 +178,51 @@ h6 {font-size: 0.65em;}
 .wd-boxform-H > .wd-input {
 	width: 100%;
 }
+
+/*-------------------------------------------------------------------- box --*/
+/*-- color --*/
+.wd-box-black,  .wd-box-black-child > *  {color: #f2f2f2; background-color: #000000;}
+.wd-box-white,  .wd-box-white-child > *  {color: #000000; background-color: #ffffff;}
+.wd-box-grey,   .wd-box-grey-child > *   {color: #e6e6e6; background-color: #595959;}
+.wd-box-red,    .wd-box-red-child > *    {color: #ffe6e6; background-color: #cc0000;}
+.wd-box-green,  .wd-box-green-child > *  {color: #e6ffff; background-color: #006666;}
+.wd-box-blue,   .wd-box-blue-child > *   {color: #e6e6ff; background-color: #000080;}
+.wd-box-yellow, .wd-box-yellow-child > * {color: #ffffe6; background-color: #808000;}
+.wd-box-orange, .wd-box-orange-child > * {color: #fff4e6; background-color: #cc7000;}
+.wd-box-brown,  .wd-box-brown-child > *  {color: #f9e2d2; background-color: #874312;}
+.wd-box-pink,   .wd-box-pink-child > *   {color: #ffe6f2; background-color: #ff1a8c;}
+.wd-box-purple, .wd-box-purple-child > * {color: #f0ebfa; background-color: #6633cc;}
+/*-- position --*/
+.wd-box-n, .wd-box-e, .wd-box-s, .wd-box-w,
+.wd-box-ne, .wd-box-se, .wd-box-sw, .wd-box-nw,
+.wd-box-central {
+	position: absolute;
+	display: block;
+	margin: 0;
+	text-align: center;
+	vertical-align: middle;
+}
+.wd-box-n  {top: 0; left: 50%; transform: translate(-50%, 0);}
+.wd-box-ne {top: 0; right: 0;}
+.wd-box-e  {right: 0; top: 50%; transform: translate(0, -50%);}
+.wd-box-se {bottom: 0; right: 0;}
+.wd-box-s  {bottom: 0; left: 50%; transform: translate(-50%, 0);}
+.wd-box-sw {bottom: 0; left: 0;}
+.wd-box-w  {left: 0; top: 50%; transform: translate(0, -50%);}
+.wd-box-nw {top: 0; left: 0;}
+.wd-box-central {top: 50%; left: 50%; transform: translate(-50%, -50%);}
+/*-- show/hide --*/
+* > .wd-box-show-in, .wd-box-show-in-child > *               {opacity: 0; visibility: hidden;  animation: visible-out 0.8s;}
+*:hover > .wd-box-show-in, .wd-box-show-in-child:hover > *   {opacity: 1; visibility: visible; animation: visible-in 0.8s;}
+* > .wd-box-show-out, .wd-box-show-out-child > *             {opacity: 1; visibility: visible; animation: visible-in 0.8s;}
+*:hover > .wd-box-show-out, .wd-box-show-out-child:hover > * {opacity: 0; visibility: hidden;  animation: visible-out 0.8s;}
+
+
+
+
+
+
+
 /*--- containers ---*/
 .wd-box {
 	padding: 0 0.5em;
@@ -786,219 +836,79 @@ h6 {font-size: 0.65em;}
 	border-color: #778899 !important;
 	box-shadow: inset 0 0 10px 0.2em #778899, 2px 0 0 #778899, -2px 0 0 #778899;
 }
-/*--- text ---*/
-.wd-case,
-.wd-case-childs > *,
-.wd-case-lower,
-.wd-case-lower-childs > * {
-	text-transform: lowercase;
+/*------------------------------------------------------------------- text --*/
+/*-- color --*/
+.wd-text-black,  .wd-text-black-child > *  {color: #000000;}
+.wd-text-white,  .wd-text-white-child > *  {color: #ffffff;}
+.wd-text-grey,   .wd-text-grey-child > *   {color: #595959;}
+.wd-text-red,    .wd-text-red-child > *    {color: #e60000;}
+.wd-text-green,  .wd-text-green-child > *  {color: #006666;}
+.wd-text-blue,   .wd-text-blue-child > *   {color: #0000e6;}
+.wd-text-yellow, .wd-text-yellow-child > * {color: #808000;}
+.wd-text-orange, .wd-text-orange-child > * {color: #e67e00;}
+.wd-text-brown,  .wd-text-brown-child > *  {color: #874312;}
+.wd-text-pink,   .wd-text-pink-child > *   {color: #ff3399;}
+.wd-text-purple, .wd-text-purple-child > * {color: #592d86;}
+/*-- size --*/
+.wd-text-xxsmall, .wd-text-xxsmall-child > * {font-size: xx-small;}
+.wd-text-xsmall,  .wd-text-xsmall-child > *  {font-size: x-small;}
+.wd-text-small,   .wd-text-small-child > *   {font-size: small;}
+.wd-text-smaller, .wd-text-smaller-child > * {font-size: smaller;}
+.wd-text-medium,  .wd-text-medium-child > *  {font-size: medium;}
+.wd-text-larger,  .wd-text-larger-child > *  {font-size: larger;}
+.wd-text-large,   .wd-text-large-child > *   {font-size: large;}
+.wd-text-xlarge,  .wd-text-xlarge-child > *  {font-size: x-large;}
+.wd-text-xxlarge, .wd-text-xxlarge-child > * {font-size: xx-large;}
+/*-- align --*/
+.wd-text-left,    .wd-text-left-child > *    {text-align: left;}
+.wd-text-center,  .wd-text-center-child > *  {text-align: center;}
+.wd-text-right,   .wd-text-right-child > *   {text-align: right;}
+.wd-text-justify, .wd-text-justify-child > * {text-align: justify;}
+.wd-text-middle,  .wd-text-middle-child > *  {text-align: middle;}
+.wd-text-top,     .wd-text-top-child > *     {text-align: top;}
+.wd-text-bottom,  .wd-text-bottom-child > *  {text-align: bottom;}
+/*-- case --*/
+.wd-text-upper,  .wd-text-upper-child > *  {text-transform: uppercase;}
+.wd-text-normal, .wd-text-normal-child > * {text-transform: normal;}
+.wd-text-lower,  .wd-text-lower-child > *  {text-transform: lowercase;}
+.wd-text-title,  .wd-text-titler-child > * {text-transform: capitalize;}
+/*-- Head --*/
+.wd-text-h1, .wd-text-h1-child > *, h1 {font-size: 2.00em;}
+.wd-text-h2, .wd-text-h2-child > *, h2 {font-size: 1.50em;}
+.wd-text-h3, .wd-text-h3-child > *, h3 {font-size: 1.20em;}
+.wd-text-h4, .wd-text-h4-child > *, h4 {font-size: 1.00em;}
+.wd-text-h5, .wd-text-h5-child > *, h5 {font-size: 0.85em;}
+.wd-text-h6, .wd-text-h6-child > *, h6 {font-size: 0.65em;}
+.wd-text-h1, .wd-text-h1-child > *, h1,
+.wd-text-h2, .wd-text-h2-child > *, h2,
+.wd-text-h3, .wd-text-h3-child > *, h3,
+.wd-text-h4, .wd-text-h4-child > *, h4,
+.wd-text-h5, .wd-text-h5-child > *, h5,
+.wd-text-h6, .wd-text-h6-child > *, h6 {
+	font-weight: bold;
+	margin: 0.5em 0;
+	padding: 0.25em;
 }
-.wd-case-title,
-.wd-case-title-childs > * {
-	text-transform: capitalize;
-}
-.wd-case-upper,
-.wd-case-upper-childs > * {
-	text-transform: uppercase;
-}
-.wd-align,
-.wd-align-childs > *,
-.wd-align-J,
-.wd-align-J-childs > * {
-	text-align: justify;
-}
-.wd-align-E,
-.wd-align-E-childs > * {
-	text-align: right;
-}
-.wd-align-W,
-.wd-align-W-childs > * {
-	text-align: left;
-}
-.wd-align-C,
-.wd-align-C-childs > * {
-	text-align: center;
-}
-.wd-align-M,
-.wd-align-M-childs > * {
-	vertical-align: middle;
-}
-.wd-align-N,
-.wd-align-N-childs > * {
-	vertical-align: top;
-}
-.wd-align-S,
-.wd-align-S-childs > * {
-	vertical-align: bottom;
-}
-.wd-size,
-.wd-size-childs > * {
-	font-size: medium;
-}
-.wd-size-rs,
-.wd-size-rs-childs > * {
-	font-size: smaller;
-}
-.wd-size-rl,
-.wd-size-rl-childs > * {
-	font-size: larger;
-}
-.wd-size-xxs,
-.wd-size-xxs-childs > * {
-	font-size: xx-small;
-}
-.wd-size-xs,
-.wd-size-xs-childs > * {
-	font-size: x-small;
-}
-.wd-size-s,
-.wd-size-s-childs > * {
-	font-size: small;
-}
-.wd-size-l,
-.wd-size-l-childs > * {
-	font-size: large;
-}
-.wd-size-xl,
-.wd-size-xl-childs > * {
-	font-size: x-large;
-}
-.wd-size-xxl,
-.wd-size-xxl-childs > * {
-	font-size: xx-large;
-}
-.wd-indent,
-.wd-indent-childs > * {
-	text-indent: 40px;
-}
-/*--- position ---*/
-.wd-place,
-.wd-place-N,
-.wd-place-NE,
-.wd-place-E,
-.wd-place-SE,
-.wd-place-S,
-.wd-place-SW,
-.wd-place-W,
-.wd-place-NW,
-.wd-place-M {
-	position: absolute;
-	display: block;
-	margin: 0;
-	text-align: center;
-	vertical-align: middle;
-}
-.wd-place-N {
-	top: 0;
-	left: 50%;
-	transform: translate(-50%, 0);
-}
-.wd-place-NE {
-	top: 0;
-	right: 0;
-}
-.wd-place-E {
-	right: 0;
-	top: 50%;
-	transform: translate(0, -50%);
-}
-.wd-place-SE {
-	bottom: 0;
-	right: 0;
-}
-.wd-place-S {
-	bottom: 0;
-	left: 50%;
-	transform: translate(-50%, 0);
-}
-.wd-place-SW {
-	bottom: 0;
-	left: 0;
-}
-.wd-place-W {
-	left: 0;
-	top: 50%;
-	transform: translate(0, -50%);
-}
-.wd-place-NW {
-	top: 0;
-	left: 0;
-}
-.wd-place,
-.wd-place-M {
-	top: 50%;
-	left: 50%;
-	transform: translate(-50%, -50%);
-}
-.wd-showplace > .wd-place-N,
-.wd-showplace > .wd-place-NE,
-.wd-showplace > .wd-place-E,
-.wd-showplace > .wd-place-SE,
-.wd-showplace > .wd-place-S,
-.wd-showplace > .wd-place-SW,
-.wd-showplace > .wd-place-W,
-.wd-showplace > .wd-place-NW,
-.wd-showplace > .wd-place,
-.wd-showplace > .wd-place-M,
-.wd-showplace-in > .wd-place-N,
-.wd-showplace-in > .wd-place-NE,
-.wd-showplace-in > .wd-place-E,
-.wd-showplace-in > .wd-place-SE,
-.wd-showplace-in > .wd-place-S,
-.wd-showplace-in > .wd-place-SW,
-.wd-showplace-in > .wd-place-W,
-.wd-showplace-in > .wd-place-NW,
-.wd-showplace-in > .wd-place,
-.wd-showplace-in > .wd-place-M {
-	display: none !important;
-}
-.wd-showplace:hover > .wd-place-N,
-.wd-showplace:hover > .wd-place-NE,
-.wd-showplace:hover > .wd-place-E,
-.wd-showplace:hover > .wd-place-SE,
-.wd-showplace:hover > .wd-place-S,
-.wd-showplace:hover > .wd-place-SW,
-.wd-showplace:hover > .wd-place-W,
-.wd-showplace:hover > .wd-place-NW,
-.wd-showplace:hover > .wd-place,
-.wd-showplace:hover > .wd-place-M,
-.wd-showplace-in:hover > .wd-place-N,
-.wd-showplace-in:hover > .wd-place-NE,
-.wd-showplace-in:hover > .wd-place-E,
-.wd-showplace-in:hover > .wd-place-SE,
-.wd-showplace-in:hover > .wd-place-S,
-.wd-showplace-in:hover > .wd-place-SW,
-.wd-showplace-in:hover > .wd-place-W,
-.wd-showplace-in:hover > .wd-place-NW,
-.wd-showplace-in:hover > .wd-place,
-.wd-showplace-in:hover > .wd-place-M {
-	display: block !important;
-	animation: fade-in 0.8s;
-}
-.wd-showplace-out > .wd-place-N,
-.wd-showplace-out > .wd-place-NE,
-.wd-showplace-out > .wd-place-E,
-.wd-showplace-out > .wd-place-SE,
-.wd-showplace-out > .wd-place-S,
-.wd-showplace-out > .wd-place-SW,
-.wd-showplace-out > .wd-place-W,
-.wd-showplace-out > .wd-place-NW,
-.wd-showplace-out > .wd-place,
-.wd-showplace-out > .wd-place-M {
-	animation: fade-in 0.8s;
-}
-.wd-showplace-out:hover > .wd-place-N,
-.wd-showplace-out:hover > .wd-place-NE,
-.wd-showplace-out:hover > .wd-place-E,
-.wd-showplace-out:hover > .wd-place-SE,
-.wd-showplace-out:hover > .wd-place-S,
-.wd-showplace-out:hover > .wd-place-SW,
-.wd-showplace-out:hover > .wd-place-W,
-.wd-showplace-out:hover > .wd-place-NW,
-.wd-showplace-out:hover > .wd-place,
-.wd-showplace-out:hover > .wd-place-M {
-	display: none !important;
-}
+/*-- Elements --*/
+.wd-text-p, .wd-text-p-child > *       {text-indent: 4em; text-align: justify;}
+.wd-text-b, .wd-text-b-child > *       {font-weight: bold;}
+.wd-text-u, .wd-text-u-child > *       {text-decoration: underline;}
+.wd-text-i, .wd-text-i-child > *       {font-style: italic;}
+.wd-text-s, .wd-text-s-child > *       {text-decoration: line-through;}
+.wd-text-mark, .wd-text-mark-child > * {background-color: #FFFF00;}
+
+
+
+
+
+
+
+
+
+
+
+
+
 .wd-float,
 .wd-float-W {
 	float: left;
@@ -1022,132 +932,27 @@ h6 {font-size: 0.65em;}
 		visibility: visible;
 	}
 }
-/*--- colors ---*/
-.wd-bgcolor-black {
-	background-color: #000000;
-	color: #F0F8FF;
-}
-.wd-bgcolor-silver {
-	background-color: #C0C0C0;
-	color: #FFFAF0;
-}
-.wd-bgcolor-gray {
-	background-color: #808080;
-	color: #F0F8FF;
-}
-.wd-bgcolor,
-.wd-bgcolor-white {
-	background-color: #FFFFFF;
-	color: #000000;
-}
-.wd-bgcolor-maroon {
-	background-color: #800000;
-	color: #FFF8DC;
-}
-.wd-bgcolor-red {
-	background-color: #FF0000;
-	color: #FFF8DC;
-}
-.wd-bgcolor-purple {
-	background-color: #800080;
-	color: #ADD8E6;
-}
-.wd-bgcolor-fuchsia {
-	background-color: #FF00FF;
-	color: #FFFAF0;
-}
-.wd-bgcolor-green {
-	background-color: #008000;
-	color: #F5FFFA;
-}
-.wd-bgcolor-lime {
-	background-color: #00FF00;
-	color: #4B0082;
-}
-.wd-bgcolor-olive {
-	background-color: #808000;
-	color: #F0FFF0;
-}
-.wd-bgcolor-yellow {
-	background-color: #FFFF00;
-	color: #1E90FF;
-}
-.wd-bgcolor-navy {
-	background-color: #000080;
-	color: #1E90FF;
-}
-.wd-bgcolor-blue {
-	background-color: #0000FF;
-	color: #F0F8FF;
-}
-.wd-bgcolor-teal {
-	background-color: #008080;
-	color: #F5FFFA;
-}
-.wd-bgcolor-aqua {
-	background-color: #00FFFF;
-	color: #0000CD;
-}
-.wd-bgcolor-orange {
-	background-color: #FFA500;
-	color: #C71585;
-}
-.wd-color,
-.wd-color-black {
-	color: #000000;
-}
-.wd-color-silver {
-	color: #C0C0C0;
-	text-shadow: 1px 1px 0 #778899;
-}
-.wd-color-gray {
-	color: #808080;
-}
-.wd-color-white {
-	color: #FFFFFF;
-	text-shadow: 2px 2px 2em #000000, -2px -2px 2em #000000;
-}
-.wd-color-maroon {
-	color: #800000;
-}
-.wd-color-red {
-	color: #FF0000;
-}
-.wd-color-purple {
-	color: #800080;
-}
-.wd-color-fuchsia {
-	color: #FF00FF;
-}
-.wd-color-green {
-	color: #008000;
-}
-.wd-color-lime {
-	color: #00FF00;
-}
-.wd-color-olive {
-	color: #808000;
-}
-.wd-color-yellow {
-	color: #FFFF00;
-	text-shadow: 1px 1px 0 #778899;
-}
-.wd-color-navy {
-	color: #000080;
-}
-.wd-color-blue {
-	color: #0000FF;
-}
-.wd-color-teal {
-	color: #008080;
-}
-.wd-color-aqua {
-	color: #00FFFF;
-	text-shadow: 1px 1px 0 #778899;
-}
-.wd-color-orange {
-	color: #FFA500;
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /*--- symbol ---*/
 .wd-symbol-add::before {
 	content: "\2795";

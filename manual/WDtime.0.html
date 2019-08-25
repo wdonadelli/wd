@@ -1,8 +1,8 @@
 <header class="wd-head">
-	<h2 class="wd-align-C">WDtime</h2>
+	<h2 class="wd-text-center">WDtime</h2>
 </header>
 
-<p class="wd-indent">This is an object for time manipulation, disregarding the effects inherent to the time zone. The type attribute returns the value <q>time</q>. The time should be a string in the following formats:</p>
+<p class="wd-text-p">This is an object for time manipulation, disregarding the effects inherent to the time zone. The type attribute returns the value <q>time</q>. The time should be a string in the following formats:</p>
 
 <ul class="wd-list">
 	<li><q>H:MM</q></li>
@@ -12,7 +12,7 @@
 	<li><q>H12:MM PM</q> <sup>**</sup></li>
 </ul>
 
-<ul class="wd-size-s" type="none">
+<ul class="wd-text-small" type="none">
 	<li><sup>*</sup> case insensitive</li>
 	<li><sup>**</sup> case insensitive and with optional white space</li>
 </ul>
@@ -28,20 +28,20 @@
 	<dd>12h clock (integer from 1 to 12).</dd>
 </dl>
 
-<p class="wd-indent">The special string <q>%now</q> specifies the current time. The textual representation of the time must be a valid value (<q>00:00:00</q> to <q>24:59:59</q>), otherwise it will not be treated as a time and a different object will be returned.</p>
+<p class="wd-text-p">The special string <q>%now</q> specifies the current time. The textual representation of the time must be a valid value (<q>00:00:00</q> to <q>24:59:59</q>), otherwise it will not be treated as a time and a different object will be returned.</p>
 
-<p class="wd-indent"><b>Obs.</b>: <q>00:59:59</q> is equal to <q>24:59:59</q></p>
+<p class="wd-text-p"><b>Obs.</b>: <q>00:59:59</q> is equal to <q>24:59:59</q></p>
 
 
-<p class="wd-indent">The returned object has the following characteristics:</p>
+<p class="wd-text-p">The returned object has the following characteristics:</p>
 
 <ul class="wd-list" id="eg1"></ul>
 
-<p class="wd-indent">See the menu for more details.</p>
+<p class="wd-text-p">See the menu for more details.</p>
 
 <h3>valueOf and toString methods</h3>
 
-<p class="wd-indent">The <code>toString</code> method returns the time in <q>HH:MM:SS</q> format. The <code>valueOf</code> method returns the number of seconds elapsed from <time>0</time> (<time>00:00:00</time>) until 86399 (<time>23:59:59</time>). If the time limit has been exceeded, plus or minus, the count will restart by observing the day cycle.</p>
+<p class="wd-text-p">The <code>toString</code> method returns the time in <q>HH:MM:SS</q> format. The <code>valueOf</code> method returns the number of seconds elapsed from <time>0</time> (<time>00:00:00</time>) until 86399 (<time>23:59:59</time>). If the time limit has been exceeded, plus or minus, the count will restart by observing the day cycle.</p>
 
 <script>
 var eg = {}

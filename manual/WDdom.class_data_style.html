@@ -1,7 +1,7 @@
 <header class="wd-head">
-	<h2 class="wd-align-C">WDdom: setting</h2>
+	<h2 class="wd-text-center">WDdom: setting</h2>
 </header>
-<nav class="wd-nav wd-color-blue">
+<nav class="wd-nav wd-text-blue">
 	<a href="#main" data-wd-action="tab{#tab_class}">Class</a>
 	<a href="#main" data-wd-action="tab{#tab_data}">Data</a>
 	<a href="#main" data-wd-action="tab{#tab_style}">Style</a>
@@ -13,11 +13,11 @@
 	<div id="tab_class">
 		<h3>WDdom.class</h3>
 
-		<p class="wd-indent">It is a method that manipulates the <i>class</i> attribute.</p>
+		<p class="wd-text-p">It is a method that manipulates the <i>class</i> attribute.</p>
 
-		<p class="wd-code wd-align-C">wd(dom).class(list)</p>
+		<p class="wd-code wd-text-center">wd(dom).class(list)</p>
 
-		<p class="wd-indent">The <code>list</code> argument is an object that accepts three keys: <q>add</q>, <q>del</q> and <q>toggle</q>, executed in this order. The key values ​​are strings that represent the value to be added, removed, or alternate, respectively. If there are more than one attribute to set, the values ​​must be separated by white space. If the value is <var>null</var> the value of the <code>class</code> attribute will be empty.</p>
+		<p class="wd-text-p">The <code>list</code> argument is an object that accepts three keys: <q>add</q>, <q>del</q> and <q>toggle</q>, executed in this order. The key values ​​are strings that represent the value to be added, removed, or alternate, respectively. If there are more than one attribute to set, the values ​​must be separated by white space. If the value is <var>null</var> the value of the <code>class</code> attribute will be empty.</p>
 
 		<h4>Example</h4>
 
@@ -62,13 +62,13 @@ function aClass() {
 
 		<h3>WDdom.data</h3>
 
-		<p class="wd-indent">It is a method that that manipulates the <i>data</i> attribute.</p>
+		<p class="wd-text-p">It is a method that that manipulates the <i>data</i> attribute.</p>
 
-		<p class="wd-code wd-align-C">wd(dom).data(list)</p>
+		<p class="wd-code wd-text-center">wd(dom).data(list)</p>
 
-		<p class="wd-indent">The <code>list</code> argument is an object whose keys and values ​​respectively represent the names of attributes and values. Do not use the <q>data-</q> prefix in the attribute name. Compound attributes can be represented by dashes or camelCase. If the key value is <i>null</i>, the value of the attribute is removed from the element. If the <code>list</code> argument is null, all keys in the <code>dataset</code> attribute are cleared.</p>
+		<p class="wd-text-p">The <code>list</code> argument is an object whose keys and values ​​respectively represent the names of attributes and values. Do not use the <q>data-</q> prefix in the attribute name. Compound attributes can be represented by dashes or camelCase. If the key value is <i>null</i>, the value of the attribute is removed from the element. If the <code>list</code> argument is null, all keys in the <code>dataset</code> attribute are cleared.</p>
 
-		<p class="wd-align-C wd-color-green wd-symbol-ok wd-padding wd-rounded wd-border">This method is an important tool for defining the attributes present in <q>WD Attributes Tools</q>.</p>
+		<p class="wd-text-center wd-text-green wd-symbol-ok wd-padding wd-rounded wd-border">This method is an important tool for defining the attributes present in <q>WD Attributes Tools</q>.</p>
 
 		<h4>Example</h4>
 
@@ -104,11 +104,11 @@ function data() {
 	<div id="tab_style">
 		<h3>WDdom.style</h3>
 
-		<p class="wd-indent">It is a method that manipulates the <i>style</i> attribute.</p>
+		<p class="wd-text-p">It is a method that manipulates the <i>style</i> attribute.</p>
 
-		<p class="wd-code wd-align-C">wd(dom).style(list)</p>
+		<p class="wd-code wd-text-center">wd(dom).style(list)</p>
 
-		<p class="wd-indent">The <code>list</code> argument is an object whose keys and values ​​represent, respectively, CSS attributes and values. Keys can be in CSS or camelCase style. If the value is <var>null</var> the value of the <code>style</code> attribute will be empty. If the attribute does not exist, it can be ignored..</p>
+		<p class="wd-text-p">The <code>list</code> argument is an object whose keys and values ​​represent, respectively, CSS attributes and values. Keys can be in CSS or camelCase style. If the value is <var>null</var> the value of the <code>style</code> attribute will be empty. If the attribute does not exist, it can be ignored..</p>
 
 		<h4>Example</h4>
 

@@ -1,0 +1,87 @@
+<header class="wd-head">
+	<h2 class="wd-text-center">CSS: box</h2>
+</header>
+
+<nav class="wd-nav">
+	<a href="#color">Color</a>
+	<a href="#positioning">Positioning</a>
+	<a href="#show">Show Box</a>
+	<a href="#case">Case</a>
+	<a href="#formatting">Formatting</a>
+</nav>
+
+
+<p class="wd-text-p">Below are the styles applied to textual elements.</p>
+
+<h3 id="color">Color</h3>
+
+<ul class="wd-list">
+	<li class="wd-box-black">wd-box-black</li>
+	<li class="wd-box-white">wd-box-white</li>
+	<li class="wd-box-red">wd-box-red</li>
+	<li class="wd-box-green">wd-box-green</li>
+	<li class="wd-box-blue">wd-box-blue</li>
+	<li class="wd-box-grey">wd-box-grey</li>
+	<li class="wd-box-yellow">wd-box-yellow</li>
+	<li class="wd-box-orange">wd-box-orange</li>
+	<li class="wd-box-brown">wd-box-brown</li>
+	<li class="wd-box-pink">wd-box-pink</li>
+	<li class="wd-box-purple">wd-box-purple</li>
+</ul>
+
+<h3 id="positioning">Positioning</h3>
+
+<p class="wd-text-p">Parent element cannot have static placement. It does not have the suffix <q>-child</q>.</p>
+
+<div id="eg1" style="position: relative; border: 1px dotted black; height: 200px;">
+	<span class="wd-box-n">wd-box-n</span>
+	<span class="wd-box-ne">wd-box-ne</span>
+	<span class="wd-box-e">wd-box-e</span>
+	<span class="wd-box-se">wd-box-se</span>
+	<span class="wd-box-s">wd-box-s</span>
+	<span class="wd-box-sw">wd-box-sw</span>
+	<span class="wd-box-w">wd-box-w</span>
+	<span class="wd-box-nw">wd-box-nw</span>
+	<span class="wd-box-central">wd-box-central</span>
+</div>
+
+<h4>HTML code</h4>
+
+<pre class="wd-code" id="eg2"></pre>
+
+<h3 id="show">Show Box</h3>
+
+<p class="wd-text-p">Enter and exit with the mouse in the container below.</p>
+
+<div id="eg3" class="wd-box-grey  wd-text-center-child">
+	<p class="wd-box-show-in">wd-box-show-in</p>
+	<p class="wd-box-show-out">wd-box-show-out</p>
+</div>
+
+<h4>HTML code</h4>
+
+<pre class="wd-code" id="eg4"></pre>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+var eg = {};
+eg["#eg2"] = getCode("#eg1", true);
+eg["#eg4"] = getCode("#eg3", true);
+setText(eg);
+</script>
+
