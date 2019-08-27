@@ -5,7 +5,7 @@
 <!---------------------------------------------------------------------------->
 <h3>WDtext.clear</h3>
 
-<p class="wd-text-p">It is a method that removes the accents from the alphabet. If the <code>change</code> argument is true, the informed text will change and the method will return itself, allowing chain changes. Otherwise, the method returns the changed value only, without changing the internal value.</p>
+<p class="wd-p">It is a method that removes the accents from the alphabet. If the <code>change</code> argument is true, the informed text will change and the method will return itself, allowing chain changes. Otherwise, the method returns the changed value only, without changing the internal value.</p>
 
 <p class="wd-code wd-text-center">wd(text).clear(change)</p>
 
@@ -24,11 +24,11 @@ y.clear(<var>true</var>).toString();<cite>//changed the original text (applicati
 <!---------------------------------------------------------------------------->
 <h3>WDtext.replace</h3>
 
-<p class="wd-text-p">It is a method that replaces the information contained in the first argument (<code>old</code>) with the information contained in the second argument (<code>new</code>). All identical elements located in the text will be replaced. The <code>change</code> argument has the same purpose as the argument of the same name as the <code>clear</code> method.</p>
+<p class="wd-p">It is a method that replaces the information contained in the first argument (<code>old</code>) with the information contained in the second argument (<code>new</code>). All identical elements located in the text will be replaced. The <code>change</code> argument has the same purpose as the argument of the same name as the <code>clear</code> method.</p>
 
 <p class="wd-code wd-text-center">wd(text).replace(old, new, change)</p>
 
-<p class="wd-text-p">The <code>new</code> argument accepts regular expressions but, if null or undefined, nothing will be substituted. The argument <code>old</code>, if null or undetermined, will have an empty string defined as value. If the override changes the original value and results in a different text value, an apostrophe is added to the beginning of the value.</p>
+<p class="wd-p">The <code>new</code> argument accepts regular expressions but, if null or undefined, nothing will be substituted. The argument <code>old</code>, if null or undetermined, will have an empty string defined as value. If the override changes the original value and results in a different text value, an apostrophe is added to the beginning of the value.</p>
 
 <h4>Example</h4>
 
@@ -48,7 +48,7 @@ wd(x).replace(<var>/./</var>, <var>8</var>, <var>true</var>).toString();
 <!---------------------------------------------------------------------------->
 <h3>WDtext.title</h3>
 
-<p class="wd-text-p">It is a method that changes the value of String by leaving only the first letter of each word in uppercase. The <code>change</code> argument has the same purpose as the argument of the same name as the <code>clear</code> method.</p>
+<p class="wd-p">It is a method that changes the value of String by leaving only the first letter of each word in uppercase. The <code>change</code> argument has the same purpose as the argument of the same name as the <code>clear</code> method.</p>
 
 <p class="wd-code wd-text-center">wd(text).title(change)</p>
 
@@ -62,7 +62,7 @@ wd(<q id="eg10"></q>).title();
 <!---------------------------------------------------------------------------->
 <h3>WDtext.trim</h3>
 
-<p class="wd-text-p">It is a method that changes the value of String without unnecessary spaces. The <code>change</code> argument has the same purpose as the argument of the same name as the <code>clear</code> method.</p>
+<p class="wd-p">It is a method that changes the value of String without unnecessary spaces. The <code>change</code> argument has the same purpose as the argument of the same name as the <code>clear</code> method.</p>
 
 <p class="wd-code wd-text-center">wd(text).trim(change)</p>
 

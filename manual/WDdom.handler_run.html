@@ -12,23 +12,23 @@
 	<div id="tab_handler">
 		<h3>WDdom.handler</h3>
 
-		<p class="wd-text-p">It is a method that sets triggers for events to elements defined in the input. It is a standalone method that uses the corresponding attribute of the element to assign the methods to execute when the event is fired.</p>
+		<p class="wd-p">It is a method that sets triggers for events to elements defined in the input. It is a standalone method that uses the corresponding attribute of the element to assign the methods to execute when the event is fired.</p>
 
 		<p class="wd-code wd-text-center">wd(dom).handler(list)</p>
 
-		<p class="wd-text-p">The <code>list</code> argument is an object whose keys and values ​​respectively represent  the names of events and their methods. Event names are case insensitive and may or may not have the prefix <q>on</q>:</p>
+		<p class="wd-p">The <code>list</code> argument is an object whose keys and values ​​respectively represent  the names of events and their methods. Event names are case insensitive and may or may not have the prefix <q>on</q>:</p>
 		
 		<p class="wd-code">list = {onclick: method1}; <cite>/*or*/</cite> list = {Click: method1};</p>
 
-		<p class="wd-text-p">If there is more than one method to be set on the trigger, then the methods must be entered in arrays. Setting the method value to <code>null</code> will remove all triggers in the event:</p>
+		<p class="wd-p">If there is more than one method to be set on the trigger, then the methods must be entered in arrays. Setting the method value to <code>null</code> will remove all triggers in the event:</p>
 		
 		<p class="wd-code">list = {onclick: [method1, method2, method3], mouseOver: <var>null</var>};</p>
 		
-		<p class="wd-text-p">If you want to exclude a specific method, you must enter the prefix <q>-</q> to the event name:</p>
+		<p class="wd-p">If you want to exclude a specific method, you must enter the prefix <q>-</q> to the event name:</p>
 		
 		<p class="wd-code">list = {<q>-CLICK</q>: [method1, method2]};</p>
 		
-		<p class="wd-text-p">If the <code>list</code> argument is null, all triggers defined by the method will be removed from the element from all events.</p>
+		<p class="wd-p">If the <code>list</code> argument is null, all triggers defined by the method will be removed from the element from all events.</p>
 
 		<h4>Example</h4>
 
@@ -100,11 +100,11 @@ function handler3() {
 
 		<h3>WDdom.run</h3>
 
-		<p class="wd-text-p">It is a method that executes the function entered in the argument in the same amount of existing elements, that is, if it is a list of nodes with <var>n</var> elements, the function will be performed <var>n</var> times.</p>
+		<p class="wd-p">It is a method that executes the function entered in the argument in the same amount of existing elements, that is, if it is a list of nodes with <var>n</var> elements, the function will be performed <var>n</var> times.</p>
 
 		<p class="wd-code wd-text-center">wd(dom).run(method)</p>
 		
-		<p class="wd-text-p">The <code>method</code> argument is the function to be executed. The reported method accepts an argument representing the nth element.</p>
+		<p class="wd-p">The <code>method</code> argument is the function to be executed. The reported method accepts an argument representing the nth element.</p>
 
 		<p class="wd-text-center wd-text-green wd-symbol-ok wd-padding wd-rounded wd-border">It is the main method of the object.</p>
 

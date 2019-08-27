@@ -357,7 +357,14 @@
 		"title": "CSS: Box",
 		"file":  "manual/css.box.html",
 		"style": "wd-text-small",
-		"click": "data-wd-click=''",
+		"click": "",
 		"id": "css2"
+	},
+		{
+		"title": "CSS: Generic",
+		"file":  "manual/css.generic.html",
+		"style": "wd-text-small",
+		"click": "data-wd-click=''",
+		"id": "css3"
 	}
 ]
