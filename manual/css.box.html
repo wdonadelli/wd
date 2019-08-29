@@ -6,6 +6,12 @@
 	<a href="#color">Color</a>
 	<a href="#positioning">Positioning</a>
 	<a href="#show">Show Box</a>
+	<a href="#shadow">Shadow</a>
+	<a href="#cloud">Cloud</a>
+	<a href="#opaque">Opaque</a>
+	<a href="#upon">Upon</a>
+	<a href="#zebra">Zebra</a>
+	<a href="#rowcol">Row/Col</a>
 </nav>
 
 
@@ -60,26 +66,64 @@
 
 <pre class="wd-code" id="eg4"></pre>
 
+<h3 id="shadow">Shadow</h3>
 
+<div class="wd-padding wd-xmargin wd-box-shadow">wd-box-shadow</div>
+<div class="wd-padding wd-xmargin wd-box-shadow-in">wd-box-shadow-in (Mouse over)</div>
+<div class="wd-padding wd-xmargin wd-box-shadow-out">wd-box-shadow-out (Mouse over)</div>
 
+<h3 id="cloud">Cloud</h3>
 
+<div class="wd-padding wd-xxmargin wd-box-cloud">wd-box-cloud</div>
+<div class="wd-padding wd-xxmargin wd-box-cloud-in">wd-box-cloud-in (Mouse over)</div>
+<div class="wd-padding wd-xxmargin wd-box-cloud-out">wd-box-cloud-out (Mouse over)</div>
 
+<h3 id="opaque">Opaque</h3>
 
+<div class="wd-padding wd-margin wd-box-opaque">wd-box-opaque</div>
+<div class="wd-padding wd-margin wd-box-opaque-in">wd-box-opaque-in (Mouse over)</div>
+<div class="wd-padding wd-margin wd-box-opaque-out">wd-box-opaque-out (Mouse over)</div>
 
+<h3 id="upon">Upon</h3>
 
+<ul type="none" class="wd-list wd-box-upon-child">
+	<li>wd-box-upon (Mouse over)</li>
+	<li>wd-box-upon (Mouse over)</li>
+	<li>wd-box-upon (Mouse over)</li>
+</ul>
 
+<h3 id="zebra">Zebra</h3>
 
+<p class="wd-p">The class is applied to child elements. It does not have the suffix <q>-child</q>.</p>
 
+<ul type="none" class="wd-list wd-box-zebra">
+	<li>wd-box-zebra (No highlight)</li>
+	<li>wd-box-zebra (With highlight)</li>
+	<li>wd-box-zebra (No highlight)</li>
+	<li>wd-box-zebra (With highlight)</li>
+	<li>wd-box-zebra (No highlight)</li>
+	<li>wd-box-zebra (With highlight)</li>
+</ul>
 
+<h3 id="rowcol">Row/Col</h3>
 
+<p class="wd-p">The <code>wd-box-row</code> class defines a container to group other containers formatted as columns of predefined sizes. The <code>wd-box-col-XX</code> sets the size of the columns of the <code>wd-box-row</code> child containers. The row supports up to 12 columns and each suffix represents how many cells will be occupied by the child container. For example, the -02 suffix will be two-cell size out of a total of 12. There are fewer cells than the total, so the columns will fit to fill the entire row. It does not have the suffix <q>-child</q>.</p>
 
+<div class="wd-box-row wd-xpadding-child wd-border-child wd-text-center-child" id="eg5">
+	<div class="wd-box-col-02">Cell 02/12<br/>(wd-box-col-02)</div>
+	<div class="wd-box-col-06">Cell 06/12<br/>(wd-box-col-06)</div>
+	<div class="wd-box-col-04">Cell 04/12<br/>(wd-box-col-04)</div>
+</div>
 
+<h4>HTML code</h4>
 
+<pre class="wd-code" id="eg6"></pre>
 
 <script>
 var eg = {};
 eg["#eg2"] = getCode("#eg1", true);
 eg["#eg4"] = getCode("#eg3", true);
+eg["#eg6"] = getCode("#eg5", true);
 setText(eg);
 </script>
 

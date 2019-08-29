@@ -407,71 +407,7 @@ a:hover {
 .wd-list > li {
 	padding: 0.25em 0.25em 0.25em 40px;
 }
-/*--- row/col---*/
-.wd-row {
-	display: table;
-	width: 100%;
-}
-.wd-row > .wd-col-12 {
-	display: table-cell;
-	vertical-align: top;
-	width: 100%;
-}
-.wd-row > .wd-col-11 {
-	display: table-cell;
-	vertical-align: top;
-	width: 91.66666666666667%;
-}
-.wd-row > .wd-col-10 {
-	display: table-cell;
-	vertical-align: top;
-	width: 83.33333333333333%;
-}
-.wd-row > .wd-col-09 {
-	display: table-cell;
-	vertical-align: top;
-	width: 75%;
-}
-.wd-row > .wd-col-08 {
-	display: table-cell;
-	vertical-align: top;
-	width: 66.66666666666667%;
-}
-.wd-row > .wd-col-07 {
-	display: table-cell;
-	vertical-align: top;
-	width: 58.333333333333336%;
-}
-.wd-row > .wd-col-06 {
-	display: table-cell;
-	vertical-align: top;
-	width: 50%;
-}
-.wd-row > .wd-col-05 {
-	display: table-cell;
-	vertical-align: top;
-	width: 41.666666666666664%;
-}
-.wd-row > .wd-col-04 {
-	display: table-cell;
-	vertical-align: top;
-	width: 33.333333333333336%;
-}
-.wd-row > .wd-col-03 {
-	display: table-cell;
-	vertical-align: top;
-	width: 25%;
-}
-.wd-row > .wd-col-02 {
-	display: table-cell;
-	vertical-align: top;
-	width: 16.666666666666668%;
-}
-.wd-row > .wd-col-01 {
-	display: table-cell;
-	vertical-align: top;
-	width: 8.333333333333334%;
-}
+
 /*--- dropdown ---*/
 .wd-dropbox,
 .wd-dropbox-click {
@@ -708,69 +644,6 @@ a:hover {
 .wd-modal > .wd-msg-S {
 	position: absolute;
 }
-/*--- corner ---*/
-.wd-rounded,
-.wd-rounded-N,
-.wd-rounded-childs > *,
-.wd-rounded-N-childs > * {
-	border-top-right-radius: 0.2em;
-	border-top-left-radius: 0.2em;
-}
-.wd-rounded,
-.wd-rounded-S,
-.wd-rounded-childs > *,
-.wd-rounded-S-childs > * {
-	border-bottom-right-radius: 0.2em;
-	border-bottom-left-radius: 0.2em;
-}
-.wd-rounded-E,
-.wd-rounded-E-childs > * {
-	border-top-right-radius: 0.2em;
-	border-bottom-right-radius: 0.2em;
-}
-.wd-rounded-W,
-.wd-rounded-W-childs > * {
-	border-top-left-radius: 0.2em;
-	border-bottom-left-radius: 0.2em;
-}
-.wd-shadow,
-.wd-shadow-childs > *,
-.wd-shadow-in:hover,
-.wd-shadow-in-childs > *:hover,
-.wd-shadow-out,
-.wd-shadow-out-childs > * {
-	box-shadow: 0 0 3em 1em #778899, 3px 2px #000000;
-}
-.wd-shadow-in,
-.wd-shadow-in-childs > *,
-.wd-shadow-out:hover,
-.wd-shadow-out-childs > *:hover {
-	box-shadow: none;
-}
-.wd-opaque,
-.wd-opaque-childs > *,
-.wd-opaque-in:hover,
-.wd-opaque-in-childs > *:hover,
-.wd-opaque-out,
-.wd-opaque-out-childs > * {
-	opacity: 0.5 !important;
-}
-.wd-opaque-out:hover,
-.wd-opaque-out-childs > *:hover {
-	opacity: 1 !important;
-}
-.wd-zebra > *:nth-child(even) {
-	background-color: #778899 !important;
-	color: #FFF5EE !important;
-	border-color: #778899 !important;
-}
-.wd-upon:hover,
-.wd-upon-childs > *:hover {
-	background-color: #FFFFFF !important;
-	color: #000000 !important;
-	border-color: #778899 !important;
-	box-shadow: inset 0 0 10px 0.2em #778899, 2px 0 0 #778899, -2px 0 0 #778899;
-}
 
 
 
@@ -789,19 +662,32 @@ a:hover {
 
 
 
+/*------------------------------------------------------------------- form --*/
+
+/*-- generic --*/
+
+/*-- input --*/
+
+/*-- button --*/
+
+/*-- label --*/
+
+/*-- form --*/
+
+/*------------------------------------------------------------------ flyer --*/
+
+/*-- header/footer --*/
+
+/*-- nav --*/
+
+/*-- flyer --*/
+
+
+/*----------------------------------------------------------------- window --*/
 
 
 
-
-
-
-
-
-
-
-
-
-
+/*---------------------------------------------------------------- dropbox --*/
 
 
 
@@ -847,26 +733,6 @@ a:hover {
 .wd-text-lower,  .wd-text-lower-child > *  {text-transform: lowercase;}
 .wd-text-title,  .wd-text-titler-child > * {text-transform: capitalize;}
 
-/*---------------------------------------------------------------- generic --*/
-
-/*-- Head --*/
-.wd-h1, .wd-h1-child > *, h1 {font-size: 2.00em;}
-.wd-h2, .wd-h2-child > *, h2 {font-size: 1.50em;}
-.wd-h3, .wd-h3-child > *, h3 {font-size: 1.20em;}
-.wd-h4, .wd-h4-child > *, h4 {font-size: 1.00em;}
-.wd-h5, .wd-h5-child > *, h5 {font-size: 0.85em;}
-.wd-h6, .wd-h6-child > *, h6 {font-size: 0.65em;}
-.wd-h1, .wd-h1-child > *, h1,
-.wd-h2, .wd-h2-child > *, h2,
-.wd-h3, .wd-h3-child > *, h3,
-.wd-h4, .wd-h4-child > *, h4,
-.wd-h5, .wd-h5-child > *, h5,
-.wd-h6, .wd-h6-child > *, h6 {
-	font-weight: bold;
-	margin: 0.5em 0;
-	padding: 0.25em;
-}
-
 /*-------------------------------------------------------------------- box --*/
 
 /*-- color --*/
@@ -905,9 +771,85 @@ a:hover {
 *:hover > .wd-box-show-in, .wd-box-show-in-child:hover > *   {opacity: 1; visibility: visible; animation: visible-in 0.8s;}
 * > .wd-box-show-out, .wd-box-show-out-child > *             {opacity: 1; visibility: visible; animation: visible-in 0.8s;}
 *:hover > .wd-box-show-out, .wd-box-show-out-child:hover > * {opacity: 0; visibility: hidden;  animation: visible-out 0.8s;}
+/*-- shadow --*/
+.wd-box-shadow, .wd-box-shadow-child > *,
+.wd-box-shadow-out, .wd-box-shadow-child-out > *,
+.wd-box-shadow-in:hover, .wd-box-shadow-child-in > *:hover {box-shadow: 0.5em 0.5em 0.5em #cccccc;}
+.wd-box-shadow-out:hover, .wd-box-shadow-child-out > *:hover {box-shadow: none;}
+/*-- cloud --*/
+.wd-box-cloud, .wd-box-cloud-child > *,
+.wd-box-cloud-out, .wd-box-cloud-child-out > *,
+.wd-box-cloud-in:hover, .wd-box-cloud-child-in > *:hover {
+	box-shadow: 0 0 1em 0.5em #cccccc;
+}
+.wd-box-cloud-out:hover, .wd-box-cloud-child-out > *:hover {
+	box-shadow: none;
+}
+/*-- opaque --*/
+.wd-box-opaque, .wd-box-opaque-child > *,
+.wd-box-opaque-out, .wd-box-opaque-child-out > *,
+.wd-box-opaque-in:hover, .wd-box-opaque-child-in > *:hover {
+	opacity: 0.5;
+}
+.wd-box-opaque-out:hover, .wd-box-opaque-child-out > *:hover {
+	opacity: 1;
+}
+/*-- upon --*/
+.wd-box-upon:hover, .wd-box-upon-child > *:hover {
+	background-color:  #d9d9d9;
+	color: #1E90FF;
+	box-shadow: inset 0 0 1em 0.1em #b3b3b3;
+}
+/*-- zebra --*/
+.wd-box-zebra > *:nth-child(even) {
+	background-color:  #d9d9d9;
+	color: #1E90FF;
+	box-shadow: inset 0 0 1em 0.1em #b3b3b3;
+}
+/*--- row/col---*/
+.wd-box-row {display: table; width: 100%;}
+.wd-box-row > .wd-box-col-01, .wd-box-row > .wd-box-col-02, .wd-box-row > .wd-box-col-03,
+.wd-box-row > .wd-box-col-04, .wd-box-row > .wd-box-col-05, .wd-box-row > .wd-box-col-06,
+.wd-box-row > .wd-box-col-07, .wd-box-row > .wd-box-col-08, .wd-box-row > .wd-box-col-09,
+.wd-box-row > .wd-box-col-10, .wd-box-row > .wd-box-col-11, .wd-box-row > .wd-box-col-12 {
+	display: table-cell;
+	vertical-align: top;
+}
+.wd-box-row > .wd-box-col-12 {width: 100%;}
+.wd-box-row > .wd-box-col-11 {width: 91.66666666666667%;}
+.wd-box-row > .wd-box-col-10 {width: 83.33333333333333%;}
+.wd-box-row > .wd-box-col-09 {width: 75%;}
+.wd-box-row > .wd-box-col-08 {width: 66.66666666666667%;}
+.wd-box-row > .wd-box-col-07 {width: 58.333333333333336%;}
+.wd-box-row > .wd-box-col-06 {width: 50%;}
+.wd-box-row > .wd-box-col-05 {width: 41.666666666666664%;}
+.wd-box-row > .wd-box-col-04 {width: 33.333333333333336%;}
+.wd-box-row > .wd-box-col-03 {width: 25%;}
+.wd-box-row > .wd-box-col-02 {width: 16.666666666666668%;}
+.wd-box-row > .wd-box-col-01 {width: 8.333333333333334%;}
 
-/*------------------------------------------------------------------ mixed --*/
 
+
+
+/*---------------------------------------------------------------- generic --*/
+
+/*-- Title --*/
+.wd-h1, .wd-h1-child > *, h1 {font-size: 2.00em;}
+.wd-h2, .wd-h2-child > *, h2 {font-size: 1.50em;}
+.wd-h3, .wd-h3-child > *, h3 {font-size: 1.20em;}
+.wd-h4, .wd-h4-child > *, h4 {font-size: 1.00em;}
+.wd-h5, .wd-h5-child > *, h5 {font-size: 0.85em;}
+.wd-h6, .wd-h6-child > *, h6 {font-size: 0.65em;}
+.wd-h1, .wd-h1-child > *, h1,
+.wd-h2, .wd-h2-child > *, h2,
+.wd-h3, .wd-h3-child > *, h3,
+.wd-h4, .wd-h4-child > *, h4,
+.wd-h5, .wd-h5-child > *, h5,
+.wd-h6, .wd-h6-child > *, h6 {
+	font-weight: bold;
+	margin: 0.5em 0;
+	padding: 0.25em;
+}
 /*-- Paragraph --*/
 .wd-p, .wd-p-child > *       {text-indent: 4em; text-align: justify;}
 .wd-b, .wd-b-child > *       {font-weight: bold;}
@@ -1059,10 +1001,22 @@ a:hover {
 .wd-xxborder,        .wd-xxborder-child > *,
 .wd-xxborder-right,  .wd-xxborder-right-child > *,
 .wd-xxborder-length, .wd-xxborder-length-child > * {border-right: thick solid;}
+/*-- radius --*/
+.wd-radius,      .wd-radius-child > *,
+.wd-radius-top,  .wd-radius-top-child > *,
+.wd-radius-left, .wd-radius-left-child > * {border-top-left-radius: 0.5em;}
 
+.wd-radius,       .wd-radius-child > *,
+.wd-radius-top,   .wd-radius-top-child > *,
+.wd-radius-right, .wd-radius-right-child > * {border-top-right-radius: 0.3em;}
 
+.wd-radius,        .wd-radius-child > *,
+.wd-radius-bottom, .wd-radius-bottom-child > *,
+.wd-radius-left,   .wd-radius-left-child > * {border-bottom-left-radius: 0.3em;}
 
-
+.wd-radius,        .wd-radius-child > *,
+.wd-radius-bottom, .wd-radius-bottom-child > *,
+.wd-radius-right,  .wd-radius-right-child > * {border-bottom-right-radius: 0.3em;}
 
 
 
@@ -1095,9 +1049,9 @@ a:hover {
 	}
 }
 
+/*----------------------------------------------------------------- symbol --*/
 
-
-
+/*------------------------------------------------------------------- code --*/
 
 
 
