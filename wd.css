@@ -14,7 +14,6 @@
 	from {opacity: 1;}
 	to   {opacity: 0;}
 }
-
 @keyframes visible-in {
 	from {opacity: 0; visibility: hidden;}
 	to   {opacity: 1; visibility: visible;}
@@ -23,8 +22,6 @@
 	from {opacity: 1; visibility: visible;}
 	to   {opacity: 0; visibility: hidden;}
 }
-
-
 @keyframes from-top {
 	from {top: -100%; bottom: 200%; opacity: 0;}
 	to   {opacity: 1;}
@@ -40,6 +37,12 @@
 @keyframes from-right {
 	from {left: 200%; right: -100%; opacity: 0;}
 	to   {opacity: 1;}
+}
+@keyframes quickie {
+	0%   {left: 100%; right: -100%; opacity: 0;}
+	15%  {left: 0; right: 0; opacity: 1;}
+	85%  {left: 0; right: 0; opacity: 1;}
+	100% {left: -100%; right: 100%; opacity: 0;}
 }
 /*--- geral ---*/
 html {
@@ -204,9 +207,6 @@ a:hover {
 
 
 /*--- containers ---*/
-.wd-box {
-	padding: 0 0.5em;
-}
 .wd-body-C,
 .wd-body-W {
 	margin-right: 20%;
@@ -214,94 +214,6 @@ a:hover {
 .wd-body-C,
 .wd-body-E {
 	margin-left: 20%;
-}
-.wd-head {
-	margin-bottom: 0.5em;
-}
-.wd-foot {
-	margin-top: 0.5em;
-}
-.wd-head,
-.wd-foot {
-	padding: 0.5em;
-}
-.wd-head > *,
-.wd-foot > * {
-	margin: 0.25em 0;
-}
-.wd-box > .wd-head,
-.wd-box > .wd-foot {
-	margin-right: -0.5em;
-	margin-left: -0.5em;
-}
-.wd-nav,
-.wd-nav-H,
-.wd-nav-V {
-	background-color: inherit;
-	color: inherit;
-}
-.wd-nav,
-.wd-nav-H {
-	display: flex;
-}
-.wd-nav::after,
-.wd-nav-H::after,
-.wd-nav-V::after {
-	content: "";
-	clear: both;
-	display: table;
-}
-.wd-nav > *,
-.wd-nav-H > *,
-.wd-nav-V > * {
-	margin: 0;
-	padding: 0.5em;
-	color: inherit;
-	background-color: inherit;
-	text-decoration: none !important;
-	cursor: pointer;
-}
-.wd-nav > *,
-.wd-nav-H > * {
-	display: inline-block;
-	float: left;
-	text-align: center;
-}
-.wd-nav-V > * {
-	display: block;
-	float: none;
-	text-align: left;
-	width: 100%;
-}
-.wd-nav > a:hover,
-.wd-nav > a:focus,
-.wd-nav > a[data-wd-active],
-.wd-nav-H > a:hover,
-.wd-nav-H > a:focus,
-.wd-nav-H > a[data-wd-active],
-.wd-nav-V > a:hover,
-.wd-nav-V > a:focus,
-.wd-nav-V > a[data-wd-active] {
-	background-color: #FFFFFF !important;
-	color: #000000 !important;
-	border-color: #778899 !important;
-	box-shadow: inset 0 0 10px 0.2em #778899, inset 0 -2px #000000;
-}
-.wd-box > .wd-nav,
-.wd-box > .wd-nav-H,
-.wd-box > .wd-nav-V {
-	margin-right: -0.5em;
-	margin-left: -0.5em;
-}
-.wd-head + .wd-nav,
-.wd-head + .wd-nav-H,
-.wd-head + .wd-nav-V {
-	margin-top: -0.5em;
-}
-.wd-nav + .wd-foot,
-.wd-nav-H + .wd-foot,
-.wd-nav-V + .wd-foot {
-	margin-top: 0;
 }
 .wd-bar,
 .wd-bar-N,
@@ -454,10 +366,170 @@ a:hover {
 	top: 0;
 }
 /*--- dialog ---*/
+.wd-msg,
+.wd-msg-N,
+.wd-msg-S {
+	display: none;
+	position: fixed;
+	margin: auto;
+	left: 0;
+	right: 0;
+	width: 60%;
+	text-align: center;
+	z-index: 2000;
+}
+.wd-msgform,
+.wd-msgform-help,
+.wd-msgform-warn {
+	display: none;
+	position: fixed;
+	margin: auto;
+	top: 5%;
+	left: 0;
+	right: 0;
+	width: 60%;
+	font-size: small;
+	padding: 0.25em;
+	font-style: italic;
+	text-align: center;
+	z-index: 2000;
+}
+.wd-input:focus + .wd-msgform,
+.wd-input:focus + .wd-msgform-help {
+	display: block;
+	animation: from-right 0.4s, fade-out 9.6s;
+}
+.wd-input:out-of-range + .wd-msgform-warn,
+.wd-input:invalid + .wd-msgform-warn {
+	display: block;
+	animation: from-left 0.4s;
+}
+.wd-modal[data-wd-open] > .wd-msg,
+.wd-modal[data-wd-open] > .wd-msg-N,
+.wd-msg[data-wd-open],
+.wd-msg-N[data-wd-open] {
+	display: block;
+	top: 5%;
+	animation: from-left 0.4s;
+}
+.wd-modal[data-wd-open] > .wd-msg-S,
+.wd-msg-S[data-wd-open] {
+	display: block;
+	bottom: 5%;
+	animation: from-right 0.4s;
+}
+.wd-modal > .wd-msg,
+.wd-modal > .wd-msg-N,
+.wd-modal > .wd-msg-S {
+	position: absolute;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*------------------------------------------------------------------- form --*/
+
+/*-- generic --*/
+
+/*-- input --*/
+
+/*-- button --*/
+
+/*-- label --*/
+
+/*-- form --*/
+
+/*------------------------------------------------------------------ flyer --*/
+
+/*-- nav --*/
+.wd-nav {
+	display: flex;
+	padding: 0;
+}
+.wd-nav:after {
+	content: "";
+	clear: both;
+	display: table;
+}
+.wd-nav > * {
+	background-color: inherit;
+	color: inherit;
+	cursor: pointer;
+	display: inline-block;
+	float: left;
+	margin: 0;
+	padding: 0.5em;
+	text-align: center;	
+	text-decoration: none !important;
+}
+.wd-nav > a:hover,
+.wd-nav > a:focus,
+.wd-nav > a.wd-nav-active {
+	background-color: #d9d9d9;
+	color: #1e90ff;
+	box-shadow: inset 0 0 1em 0.1em #b3b3b3;
+}
+.wd-nav.wd-vertical {display: block;}
+.wd-nav.wd-vertical > * {
+	display: block;
+	float: none;
+	text-align: left;
+	width: 100%;
+}
+/*-- head/footer --*/
+.wd-head, .wd-foot {
+	display: block;
+	padding: 0.5em 1em;
+}
+.wd-head > *, .wd-foot > * {
+	margin: 0.25em 0;
+	padding-right: 0;
+	padding-left: 0;
+}
+.wd-head > .wd-nav, .wd-foot > .wd-nav {
+	margin-right: -1em;
+	margin-left: -1em;
+}
+.wd-head > .wd-nav:last-child,
+.wd-foot > .wd-nav:last-child {margin-bottom: -0.5em;}
+.wd-head > .wd-nav:first-child,
+.wd-foot > .wd-nav:first-child {margin-top: -0.5em;}
+/*-- flyer --*/
+.wd-flyer {
+	display: block;
+	padding: 0.5em;
+}
+.wd-flyer > .wd-head,
+.wd-flyer > .wd-foot,
+.wd-flyer > .wd-nav {
+	margin-right: -0.5em;
+	margin-left: -0.5em;
+}
+.wd-flyer > .wd-head:first-child {margin-top: -0.5em;}
+.wd-flyer > .wd-foot:last-child  {margin-bottom: -0.5em;}
+
+/*----------------------------------------------------------------- window --*/
+
+/*-- modal--*/
 .wd-modal {
 	display: none;
 	position: fixed;
 	top: 0;
+	bottom: 0;
 	left: 0;
 	right: 0;
 	width: 100%;
@@ -465,11 +537,83 @@ a:hover {
 	background-color: #000000;
 	background-color: rgba(0,0,0,0.8);
 	opacity: 1;
-	z-index: 1000;
+	z-index: 9999;
 }
-.wd-modal[data-wd-open] {
-	display: block;
+.wd-modal.wd-open {display: block;}
+/*-- window --*/
+.wd-window {
+	display: none;
+	position: fixed;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	width: 100%;
+	height: 100%;
+	margin: auto;
+	overflow: auto;
+	z-index: 99999;
+	animation: zoom-in 0.4s;
 }
+.wd-modal > .wd-window {position: absolute;}
+.wd-window.wd-open, .wd-modal.wd-open > .wd-window {display: block;}
+/*-- small --*/
+.wd-window.wd-win-small {
+	top: 40%;
+	bottom: initial;
+	width: 20%;
+	max-height: 20%;
+}
+/*-- medium --*/
+.wd-window.wd-win-medium {
+	top: 30%;
+	bottom: initial;
+	width: 40%;
+	max-height: 40%;
+}
+/*-- big --*/
+.wd-window.wd-win-big {
+	top: 5%;
+	bottom: initial;
+	width: 90%;
+	max-height: 90%;
+}
+/*-- top --*/
+.wd-window.wd-win-top {
+	bottom: initial;
+	max-height: 40%;
+	animation: from-top 0.4s;
+}
+/*-- bottom --*/
+.wd-window.wd-win-bottom {
+	top: initial;
+	max-height: 40%;
+	animation: from-bottom 0.4s;
+}
+/*-- left --*/
+.wd-window.wd-win-left {
+	right: initial;
+	max-width: 25%;
+	animation: from-left 0.4s;
+}
+/*-- right --*/
+.wd-window.wd-win-right {
+	left: initial;
+	max-width: 25%;
+	animation: from-right 0.4s;
+}
+/*-- notification --*/
+.wd-window.wd-win-note {
+	bottom: initial;
+	width: 95%;
+	height: 15%;
+	left: -100%;
+	right: 100%;
+	opacity: 0;
+	animation: quickie 5s;
+}
+
+
 .wd-dialog,
 .wd-dialog-small,
 .wd-dialog-big,
@@ -587,63 +731,6 @@ a:hover {
 .wd-modal > .wd-dialog-W {
 	position: absolute;
 }
-.wd-msg,
-.wd-msg-N,
-.wd-msg-S {
-	display: none;
-	position: fixed;
-	margin: auto;
-	left: 0;
-	right: 0;
-	width: 60%;
-	text-align: center;
-	z-index: 2000;
-}
-.wd-msgform,
-.wd-msgform-help,
-.wd-msgform-warn {
-	display: none;
-	position: fixed;
-	margin: auto;
-	top: 5%;
-	left: 0;
-	right: 0;
-	width: 60%;
-	font-size: small;
-	padding: 0.25em;
-	font-style: italic;
-	text-align: center;
-	z-index: 2000;
-}
-.wd-input:focus + .wd-msgform,
-.wd-input:focus + .wd-msgform-help {
-	display: block;
-	animation: from-right 0.4s, fade-out 9.6s;
-}
-.wd-input:out-of-range + .wd-msgform-warn,
-.wd-input:invalid + .wd-msgform-warn {
-	display: block;
-	animation: from-left 0.4s;
-}
-.wd-modal[data-wd-open] > .wd-msg,
-.wd-modal[data-wd-open] > .wd-msg-N,
-.wd-msg[data-wd-open],
-.wd-msg-N[data-wd-open] {
-	display: block;
-	top: 5%;
-	animation: from-left 0.4s;
-}
-.wd-modal[data-wd-open] > .wd-msg-S,
-.wd-msg-S[data-wd-open] {
-	display: block;
-	bottom: 5%;
-	animation: from-right 0.4s;
-}
-.wd-modal > .wd-msg,
-.wd-modal > .wd-msg-N,
-.wd-modal > .wd-msg-S {
-	position: absolute;
-}
 
 
 
@@ -662,28 +749,6 @@ a:hover {
 
 
 
-/*------------------------------------------------------------------- form --*/
-
-/*-- generic --*/
-
-/*-- input --*/
-
-/*-- button --*/
-
-/*-- label --*/
-
-/*-- form --*/
-
-/*------------------------------------------------------------------ flyer --*/
-
-/*-- header/footer --*/
-
-/*-- nav --*/
-
-/*-- flyer --*/
-
-
-/*----------------------------------------------------------------- window --*/
 
 
 

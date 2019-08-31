@@ -364,7 +364,21 @@
 		"title": "CSS: Generic",
 		"file":  "manual/css.generic.html",
 		"style": "wd-text-small",
-		"click": "data-wd-click=''",
+		"click": "",
 		"id": "css3"
+	},
+	{
+		"title": "CSS: Flyer",
+		"file":  "manual/css.flyer.html",
+		"style": "wd-text-small",
+		"click": "",
+		"id": "css4"
+	},
+	{
+		"title": "CSS: Window",
+		"file":  "manual/css.window.html",
+		"style": "wd-text-small",
+		"click": "data-wd-click=''",
+		"id": "css5"
 	}
 ]

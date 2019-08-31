@@ -1,0 +1,102 @@
+<header class="wd-head">
+	<h2 class="wd-text-center">CSS: Flyer</h2>
+</header>
+
+<nav class="wd-navs">
+	<a href="#head">Header</a>
+	<a href="#foot">Footer</a>
+	<a href="#nav">Navegator</a>
+	<a href="#flyer">Flyer</a>
+</nav>
+
+<p class="wd-p">It is a stylized container that includes header, footer and browser. Its components can also be used within other block elements.</p>
+
+<h3 id="head">Header</h3>
+
+<header class="wd-head wd-box-green" id="eg1">
+	<h3>Header</h3>
+	<p>wd-head</p>
+</header>
+
+<h4>HTML code</h4>
+
+<pre class="wd-code" id="eg2"></pre>
+
+<h3 id="foot">Footer</h3>
+
+<footer class="wd-foot wd-box-green" id="eg3">
+	<h3>Footer</h3>
+	<p>wd-foot</p>
+</footer>
+
+<h4>HTML code</h4>
+
+<pre class="wd-code" id="eg4"></pre>
+
+<h3 id="nav">Navegator</h3>
+
+<p class="wd-p">Use the "wd-nav" class to define a link grouping container.</p>
+
+<nav class="wd-nav wd-box-green" id="eg5">
+	<a href="##">Link 1</a>
+	<a href="##">Link 2</a>
+	<a href="##">Link 3</a>
+</nav>
+
+<h4>HTML code</h4>
+
+<pre class="wd-code" id="eg6"></pre>
+
+<p class="wd-p">The browser can also be in vertical format. To do this, add the <code>wd-vertical</code> class together with the <code>wd-nav</code> class:</p>
+
+<nav class="wd-nav wd-vertical wd-box-green" id="eg7">
+	<a href="##">Link 1</a>
+	<a href="##">Link 2</a>
+	<a href="##">Link 3</a>
+</nav>
+
+<h4>HTML code</h4>
+
+<pre class="wd-code" id="eg8"></pre>
+
+
+
+
+
+<h3 id="flyer">Flyer</h3>
+
+<div id="eg9" class="wd-flyer wd-box-cloud wd-radius">
+	<header class="wd-head wd-box-green wd-radius-top">
+		<h1>Header</h1>
+		<p>Subtitle</p>
+	</header>
+	<nav class="wd-nav wd-box-brown">
+		<a href="##">Link 1</a>
+		<a href="##">Link 2</a>
+		<a href="##">Link 3</a>
+	</nav>
+
+	<p class="wd-p">Flyer content.</p>
+
+	<footer class="wd-foot wd-box-black wd-radius-bottom">
+		<p class="wd-text-right">Footer</p>
+	</footer>
+</div>
+
+<h4>HTML code</h4>
+
+<pre class="wd-code" id="eg10"></pre>
+
+
+
+
+<script>
+var eg = {};
+eg["#eg2"] = getCode("#eg1", true);
+eg["#eg4"] = getCode("#eg3", true);
+eg["#eg6"] = getCode("#eg5", true);
+eg["#eg8"] = getCode("#eg7", true);
+eg["#eg10"] = getCode("#eg9", true);
+setText(eg);
+</script>
+

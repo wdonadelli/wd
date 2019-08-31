@@ -2912,7 +2912,7 @@ var wd = (function() {
 	var style;
 	style = document.createElement("STYLE");
 	style.textContent  = ".js-wd-no-display {display: none !important;}";
-	style.textContent += ".wd-nav-active {background-color: #000000; color: #FFFFFF;}";
+	style.textContent += ".wd-nav-active {outline: 1px dotted black;}";
 	WD(window).handler({load: function() {
 		document.head.appendChild(style);
 		return;

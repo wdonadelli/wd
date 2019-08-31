@@ -57,7 +57,7 @@ function setText(obj) {
 
 
 	<!--MAIN PAGE-->
-	<main class="wd-box" id="main">
+	<main class="wd-flyer" id="main">
 
 		<!--HEADER-->
 		<header class="wd-head wd-box-black wd-follow-N">
@@ -71,24 +71,31 @@ function setText(obj) {
 		</nav>
 		
 		<!--CONTENT-->
-		<section class="wd-box" id="content"></section>
+		<section class="wd-flyer" id="content"></section>
 		
 	</main>
 
 <!--========================================================================-->
 
 	<!--MENU-->
-	<section id="menu" data-wd-device="mobile{wd-dialog-full}desktop{wd-bar-W}" class="wd-box wd-bgcolor-white wd-border-V" style="overflow: auto">
+	<section id="menu" data-wd-device="mobile{wd-dialog-full}desktop{wd-bar-W}" class="wd-flyer" style="overflow: auto">
 
 		<!--HEADER-->
-		<header class="wd-head wd-box-green wd-follow-N">
+		<header class="wd-head wd-box-green wd-follow-Ncc">
 			<h3>Menu</h3>
-			<span data-wd-device="desktop{wd-hide}" class="wd-box-e wd-symbol-cancel" data-wd-action="close{#menu}"></span>
+			<!--<span data-wd-device="desktop{wd-hide}" class="wd-symbol-cancel" data-wd-action="close{#menu}"></span>-->
 		</header>
 
 		<!--NAV-->
-		<nav class="wd-nav-V" data-wd-repeat="get{manual/menu.json}">
-			<a href="#main" data-wd-data="wdLoad{get{{{file}}}}${#content}" class="{{style}}" {{click}} title="{{id}}|{{title}}" id="{{id}}">{{title}}</a>
+		<nav class="wd-nav wd-vertical" data-wd-repeat="get{manual/menu.json}">
+			<a 
+				href="#main"
+				data-wd-data="wdLoad{get{{{file}}}}${#content}"
+				class="{{style}}"
+				title="{{id}}|{{title}}"
+				id="{{id}}"
+				{{click}}
+			>{{title}}</a>
 		</nav>
 
 	</section>
