@@ -347,38 +347,52 @@
 		"id": "css"
 	},
 	{
-		"title": "CSS: Text",
-		"file":  "manual/css.text.html",
+		"title": "CSS: Box",
+		"file":  "manual/css.box.html",
 		"style": "wd-text-small",
 		"click": "",
 		"id": "css1"
 	},
 	{
-		"title": "CSS: Box",
-		"file":  "manual/css.box.html",
+		"title": "CSS: Combo",
+		"file":  "manual/css.combo.html",
 		"style": "wd-text-small",
 		"click": "",
 		"id": "css2"
-	},
-		{
-		"title": "CSS: Generic",
-		"file":  "manual/css.generic.html",
-		"style": "wd-text-small",
-		"click": "",
-		"id": "css3"
 	},
 	{
 		"title": "CSS: Flyer",
 		"file":  "manual/css.flyer.html",
 		"style": "wd-text-small",
 		"click": "",
+		"id": "css3"
+	},
+	{
+		"title": "CSS: Form",
+		"file":  "manual/css.form.html",
+		"style": "wd-text-small",
+		"click": "data-wd-click=''",
 		"id": "css4"
+	},
+	{
+		"title": "CSS: Generic",
+		"file":  "manual/css.generic.html",
+		"style": "wd-text-small",
+		"click": "",
+		"id": "css5"
+	},
+	{
+		"title": "CSS: Text",
+		"file":  "manual/css.text.html",
+		"style": "wd-text-small",
+		"click": "",
+		"id": "css6"
 	},
 	{
 		"title": "CSS: Window",
 		"file":  "manual/css.window.html",
 		"style": "wd-text-small",
-		"click": "data-wd-click=''",
-		"id": "css5"
+		"click": "",
+		"id": "css7"
 	}
 ]

@@ -2,14 +2,15 @@
 	<h2 class="wd-text-center">CSS: Flyer</h2>
 </header>
 
-<nav class="wd-navs">
+<nav class="wd-nav">
 	<a href="#head">Header</a>
 	<a href="#foot">Footer</a>
 	<a href="#nav">Navegator</a>
+	<a href="#wdcontent">Content</a>
 	<a href="#flyer">Flyer</a>
 </nav>
 
-<p class="wd-p">It is a stylized container that includes header, footer and browser. Its components can also be used within other block elements.</p>
+<p class="wd-p">It is a stylized container that includes header, footer and browser. Its components can also be used within other block elements. It does not have the suffix <q>-child</q>.</p>
 
 <h3 id="head">Header</h3>
 
@@ -47,7 +48,7 @@
 
 <pre class="wd-code" id="eg6"></pre>
 
-<p class="wd-p">The browser can also be in vertical format. To do this, add the <code>wd-vertical</code> class together with the <code>wd-nav</code> class:</p>
+<p class="wd-p">The navegator can also be in vertical format. To do this, add the <code>wd-vertical</code> class together with the <code>wd-nav</code> class:</p>
 
 <nav class="wd-nav wd-vertical wd-box-green" id="eg7">
 	<a href="##">Link 1</a>
@@ -59,13 +60,18 @@
 
 <pre class="wd-code" id="eg8"></pre>
 
+<h3 id="wdcontent">Content</h3>
 
+<div class="wd-content wd-border" id="eg9"><code>wd-content</code>: Container with vertical margin and padding and devoid of the same horizontal characteristics.</div>
+<div class="wd-content wd-border"><code>wd-content</code>: Container with vertical margin and padding and devoid of the same horizontal characteristics.</div>
 
+<h4>HTML code</h4>
 
+<pre class="wd-code" id="eg10"></pre>
 
 <h3 id="flyer">Flyer</h3>
 
-<div id="eg9" class="wd-flyer wd-box-cloud wd-radius">
+<div id="eg11" class="wd-flyer wd-box-cloud wd-radius">
 	<header class="wd-head wd-box-green wd-radius-top">
 		<h1>Header</h1>
 		<p>Subtitle</p>
@@ -76,7 +82,7 @@
 		<a href="##">Link 3</a>
 	</nav>
 
-	<p class="wd-p">Flyer content.</p>
+	<div class="wd-content wd-border-height">Flyer Content 1.</div>
 
 	<footer class="wd-foot wd-box-black wd-radius-bottom">
 		<p class="wd-text-right">Footer</p>
@@ -85,7 +91,7 @@
 
 <h4>HTML code</h4>
 
-<pre class="wd-code" id="eg10"></pre>
+<pre class="wd-code" id="eg12"></pre>
 
 
 
@@ -97,6 +103,7 @@ eg["#eg4"] = getCode("#eg3", true);
 eg["#eg6"] = getCode("#eg5", true);
 eg["#eg8"] = getCode("#eg7", true);
 eg["#eg10"] = getCode("#eg9", true);
+eg["#eg12"] = getCode("#eg11", true);
 setText(eg);
 </script>
 

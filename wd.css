@@ -1,7 +1,19 @@
 ﻿/* Willian Donadelli | <wdonadelli@gmail.com> | v2.0.0 */
 
 *, *:before, *:after {box-sizing: border-box;}
-/*--- animações ---*/
+
+/*------------------------------------------------------------ integration --*/
+
+*[data-wd-action],
+*[data-wd-request],
+*[data-wd-sort-col],
+*[data-wd-data] {cursor: pointer;}
+*[data-wd-sort-col="-1"]:before {content: "\2191 ";}
+*[data-wd-sort-col="+1"]:before {content: "\2193 ";}
+.wd-modal[data-wd-action] > .wd-window {cursor: initial;}
+
+/*-------------------------------------------------------------- animation --*/
+
 @keyframes zoom-in {
 	from {transform: scale(0); opacity: 0;}
 	to   {transform: scale(1); opacity: 1;}
@@ -38,13 +50,9 @@
 	from {left: 200%; right: -100%; opacity: 0;}
 	to   {opacity: 1;}
 }
-@keyframes quickie {
-	0%   {left: 100%; right: -100%; opacity: 0;}
-	15%  {left: 0; right: 0; opacity: 1;}
-	85%  {left: 0; right: 0; opacity: 1;}
-	100% {left: -100%; right: 100%; opacity: 0;}
-}
-/*--- geral ---*/
+
+/*------------------------------------------------------------------ geral --*/
+
 html {
 	font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
 	font-size: 16px;
@@ -63,68 +71,43 @@ a {
 a:hover {
 	text-decoration: underline;
 }
-/*--- Forms ---*/
-.wd-input,
-.wd-button,
-.wd-label {
+
+/*------------------------------------------------------------------- form --*/
+
+/*-- input --*/
+.wd-input, .wd-button, .wd-label {
 	font-family: Verdana,sans-serif;
 	font-size: 16px;
 	line-height: 20px;
 }
-.wd-label {
-	vertical-align: middle;
-}
 .wd-input {
 	padding: 0.25em 0.5em;
-	border: thin solid #686868;
+	border: thin solid #b3b3b3;
+	border-radius: 2px;
 }
-.wd-input:hover {
-	border-color: #4169E1;
-}
-.wd-input:focus {
-	border-color: #4169E1;
-	box-shadow: 0 0 0 1px #4169E1;
-} 
-.wd-input:disabled,
-.wd-input[disabled] {
-	opacity: 0.5;
-	pointer-events: none;
-}
-.wd-input[required],
-.wd-input:required {
-	border-color: #DC143C;
-}
-.wd-input[required]:focus,
-.wd-input:required:focus {
-	box-shadow: 0 0 0 1px #DC143C;
-}
-.wd-input:out-of-range,
-.wd-input:invalid {
-	border-color: #DC143C;
-	box-shadow: inset 0 0 10px 1px #DC143C;
-
-}
-.wd-input[type=radio],
-.wd-input[type=checkbox] {
+.wd-input:hover {border-color: #1e90ff;}
+.wd-input:focus {border-color: #1e90ff; box-shadow: 0 0 0 1px #1e90ff;} 
+.wd-input:disabled,        .wd-input[disabled] {opacity: 0.5; pointer-events: none;}
+.wd-input[required],       .wd-input:required {border-color: #dc143c;}
+.wd-input[required]:focus, .wd-input:required:focus {box-shadow: 0 0 0 1px #dc143c;}
+.wd-input:out-of-range,    .wd-input:invalid {border-color: #dc143c; box-shadow: inset 0 0 2px #dc143c;}
+.wd-input[type=radio], .wd-input[type=checkbox] {
 	display: inline;
 	width: initial !important;
 	padding: auto;
 	border: 0;
 }
-.wd-input[type=range],
-.wd-input[type=file],
-.wd-input[type=range]:focus,
-.wd-input[type=file]:focus,
-.wd-input[type=range]:hover,
-.wd-input[type=file]:hover {
+.wd-input[type=range],       .wd-input[type=file],
+.wd-input[type=range]:focus, .wd-input[type=file]:focus,
+.wd-input[type=range]:hover, .wd-input[type=file]:hover {
 	border: none !important;
 	box-shadow: none;
 	color: #000000;
 }
-.wd-input[type=range]:required,
-.wd-input[type=file][required] {
-	color: #DC143C;
-}
+.wd-input[type=range]:required, .wd-input[type=file][required] {color: #dc143c;}
+/*-- label --*/
+.wd-label {vertical-align: middle;}
+/*-- button --*/
 .wd-button {
 	padding: 0.25em 2em;
 	cursor: pointer;
@@ -134,42 +117,29 @@ a:hover {
 	background-color: #B0C4DE;
 	color: #000000;
 }
-.wd-button:hover,
-.wd-button:focus {
+.wd-button:hover, .wd-button:focus {
 	background-color: #FFFFFF !important;
 	color: #000000 !important;
 	border-color: #778899;
 	box-shadow: inset 0 0 10px 0.2em #778899, inset 0 0 0 2px #000000;
 }
-.wd-button:disabled,
-.wd-button[disabled] {
-	opacity: 0.5;
-	pointer-events: none;
-}
-.wd-boxform,
-.wd-boxform-V {
-	display: block;
-	padding: 0;
-}
-.wd-boxform > .wd-label,
-.wd-boxform > .wd-input,
-.wd-boxform > .wd-button,
-.wd-boxform-V > .wd-label,
-.wd-boxform-V > .wd-input,
-.wd-boxform-V > .wd-button {
+.wd-button:disabled, .wd-button[disabled] {opacity: 0.5; pointer-events: none;}
+/*-- form --*/
+.wd-form {display: block; padding: 0}
+.wd-form > .wd-label,
+.wd-form > .wd-input,
+.wd-form > .wd-button {
 	display: block;
 	width: 100%;
 	margin: 0.25em 0;
 }
-.wd-boxform-H {
+.wd-form.wd-horizontal {
 	display: inline-block;
 	display: flex;
-	margin: 0.25em 0;
-	width: 100%;
 }
-.wd-boxform-H > .wd-label,
-.wd-boxform-H > .wd-input,
-.wd-boxform-H > .wd-button {
+.wd-form.wd-horizontal > .wd-label,
+.wd-form.wd-horizontal > .wd-input,
+.wd-form.wd-horizontal > .wd-button {
 	align-items: stretch;
 	margin: auto;
 	width: auto;
@@ -178,280 +148,6 @@ a:hover {
 	min-width: 15%;
 	max-width: 15%;
 }
-.wd-boxform-H > .wd-input {
-	width: 100%;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*--- containers ---*/
-.wd-body-C,
-.wd-body-W {
-	margin-right: 20%;
-}
-.wd-body-C,
-.wd-body-E {
-	margin-left: 20%;
-}
-.wd-bar,
-.wd-bar-N,
-.wd-bar-S,
-.wd-bar-E,
-.wd-bar-W {
-	display: block;
-	position: fixed;
-	margin: 0 !important;
-	z-index: 100;
-}
-.wd-bar,
-.wd-bar-N,
-.wd-bar-S {
-	left: 0;
-	right: 0;
-}
-.wd-bar,
-.wd-bar-N {
-	top: 0;
-}
-.wd-bar-S {
-	bottom: 0;
-}
-.wd-bar-W,
-.wd-bar-E {
-	top: 0;
-	bottom: 0;
-	width: 20%;
-}
-.wd-bar-E {
-	right: 0;
-}
-.wd-bar-W {
-	left: 0;
-}
-.wd-body-C .wd-bar,
-.wd-body-C .wd-bar-N,
-.wd-body-C .wd-bar-S,
-.wd-body-E .wd-bar,
-.wd-body-E .wd-bar-N,
-.wd-body-E .wd-bar-S {
-	left: 20%;
-}
-.wd-body-C .wd-bar,
-.wd-body-C .wd-bar-N,
-.wd-body-C .wd-bar-S,
-.wd-body-W .wd-bar,
-.wd-body-W .wd-bar-N,
-.wd-body-W .wd-bar-S {
-	right: 20%;
-}
-.wd-follow,
-.wd-follow-N,
-.wd-follow-S {
-	position: sticky;
-	z-index: 100;
-}
-.wd-follow,
-.wd-follow-N {
-	top: 0;
-}
-.wd-follow-S {
-	bottom: 0;
-}
-.wd-overflow {
-	overflow: auto;
-}
-/*--- table ---*/
-.wd-table {
-	font-family: Verdana,sans-serif;
-	font-size: 14px;
-	line-height: 16px;
-	border-collapse: collapse;
-	margin-left: auto;
-	margin-right: auto;
-}
-.wd-table[border] {
-	border-style: solid;
-}
-.wd-table caption,
-.wd-table th {
-	font-weight: bold;
-}
-.wd-table td,
-.wd-table th {
-	padding: 0.25em;
-}
-.wd-table thead *[data-wd-sort-col] {
-	cursor: pointer;
-}
-.wd-table thead *[data-wd-sort-col="-1"]:before {
-	content: "\2191 ";
-}
-.wd-table thead *[data-wd-sort-col="+1"]:before {
-	content: "\2193 ";
-}
-/*--- list---*/
-.wd-list {
-	list-style-position: inside;
-	padding: 0;
-}
-.wd-list > li {
-	padding: 0.25em 0.25em 0.25em 40px;
-}
-
-/*--- dropdown ---*/
-.wd-dropbox,
-.wd-dropbox-click {
-	position: relative;
-	cursor: pointer;
-}
-.wd-drop,
-.wd-drop-N,
-.wd-drop-S,
-.wd-drop-W,
-.wd-drop-E {
-	display: none;
-	position: absolute;
-	margin: 0;
-	width: 15em;
-	max-height: 20em;
-	overflow: auto;
-	z-index: 2;
-}
-.wd-dropbox:hover > .wd-drop-N,
-.wd-dropbox-click[data-wd-open] > .wd-drop-N {
-	display: block;
-	left: 0;
-	bottom: 100%;
-}
-.wd-dropbox:hover > .wd-drop,
-.wd-dropbox:hover > .wd-drop-S,
-.wd-dropbox-click[data-wd-open] > .wd-drop,
-.wd-dropbox-click[data-wd-open] > .wd-drop-S {
-	display: block;
-	left: 0;
-	top: 100%;
-}
-.wd-dropbox:hover > .wd-drop-E,
-.wd-dropbox-click[data-wd-open] > .wd-drop-E {
-	display: block;
-	left: 100%;
-	top: 0;
-}
-.wd-dropbox:hover > .wd-drop-W,
-.wd-dropbox-click[data-wd-open] > .wd-drop-W {
-	display: block;
-	right: 100%;
-	top: 0;
-}
-/*--- dialog ---*/
-.wd-msg,
-.wd-msg-N,
-.wd-msg-S {
-	display: none;
-	position: fixed;
-	margin: auto;
-	left: 0;
-	right: 0;
-	width: 60%;
-	text-align: center;
-	z-index: 2000;
-}
-.wd-msgform,
-.wd-msgform-help,
-.wd-msgform-warn {
-	display: none;
-	position: fixed;
-	margin: auto;
-	top: 5%;
-	left: 0;
-	right: 0;
-	width: 60%;
-	font-size: small;
-	padding: 0.25em;
-	font-style: italic;
-	text-align: center;
-	z-index: 2000;
-}
-.wd-input:focus + .wd-msgform,
-.wd-input:focus + .wd-msgform-help {
-	display: block;
-	animation: from-right 0.4s, fade-out 9.6s;
-}
-.wd-input:out-of-range + .wd-msgform-warn,
-.wd-input:invalid + .wd-msgform-warn {
-	display: block;
-	animation: from-left 0.4s;
-}
-.wd-modal[data-wd-open] > .wd-msg,
-.wd-modal[data-wd-open] > .wd-msg-N,
-.wd-msg[data-wd-open],
-.wd-msg-N[data-wd-open] {
-	display: block;
-	top: 5%;
-	animation: from-left 0.4s;
-}
-.wd-modal[data-wd-open] > .wd-msg-S,
-.wd-msg-S[data-wd-open] {
-	display: block;
-	bottom: 5%;
-	animation: from-right 0.4s;
-}
-.wd-modal > .wd-msg,
-.wd-modal > .wd-msg-N,
-.wd-modal > .wd-msg-S {
-	position: absolute;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*------------------------------------------------------------------- form --*/
-
-/*-- generic --*/
-
-/*-- input --*/
-
-/*-- button --*/
-
-/*-- label --*/
-
-/*-- form --*/
 
 /*------------------------------------------------------------------ flyer --*/
 
@@ -508,6 +204,11 @@ a:hover {
 .wd-foot > .wd-nav:last-child {margin-bottom: -0.5em;}
 .wd-head > .wd-nav:first-child,
 .wd-foot > .wd-nav:first-child {margin-top: -0.5em;}
+/*-- content --*/
+.wd-content {
+	margin: 0.5em 0;
+	padding: 0.5em 0;
+}
 /*-- flyer --*/
 .wd-flyer {
 	display: block;
@@ -602,163 +303,38 @@ a:hover {
 	max-width: 25%;
 	animation: from-right 0.4s;
 }
-/*-- notification --*/
+/*-- note --*/
 .wd-window.wd-win-note {
 	bottom: initial;
 	width: 95%;
 	height: 15%;
-	left: -100%;
-	right: 100%;
-	opacity: 0;
-	animation: quickie 5s;
-}
-
-
-.wd-dialog,
-.wd-dialog-small,
-.wd-dialog-big,
-.wd-dialog-full,
-.wd-dialog-N,
-.wd-dialog-S,
-.wd-dialog-E,
-.wd-dialog-W {
-	display: none;
-	position: fixed;
-	margin: auto;
-	left: 0;
-	right: 0;
-	overflow: auto;
-	z-index: 1000;
-}
-.wd-dialog {
-	top: 30%;	
-	width: 40%;	
-	max-height: 40%;
-}
-.wd-dialog-small {
-	top: 40%;
-	width: 20%;
-	max-height: 20%;
-}
-.wd-dialog-big {
-	top: 5%;
-	width: 90%;
-	max-height: 90%;
-}
-.wd-dialog-full {
-	top: 0;
-	bottom: 0;
-	width: 100%;
-	height: 100%;
-	max-height: initial;
-}
-.wd-dialog-N {
-	top: 0;
-	width: 100%;
-	max-height: 40%;
-}
-.wd-dialog-S {
-	top: initial;
-	bottom: 0;
-	width: 100%;
-	max-height: 40%;
-}
-.wd-dialog-W {
-	top: 0;
-	bottom: 0;
-	right: initial;
-	height: 100%;
-	max-height: initial;
-	width: auto;
-	max-width: 35%;
-}
-.wd-dialog-E {
-	top: 0;
-	bottom: 0;
-	left: initial;
-	height: 100%;
-	max-height: initial;
-	width: auto;
-	max-width: 35%;
-}
-.wd-dialog[data-wd-open],
-.wd-modal[data-wd-open] > .wd-dialog {
-	display: block;
-	animation: zoom-in 0.4s;
-}
-.wd-dialog-small[data-wd-open],
-.wd-modal[data-wd-open] > .wd-dialog-small {
-	display: block;
-	animation: zoom-in 0.4s;
-}
-.wd-dialog-big[data-wd-open],
-.wd-modal[data-wd-open] > .wd-dialog-big {
-	display: block;
-	animation: zoom-in 0.4s;
-}
-.wd-dialog-full[data-wd-open],
-.wd-modal[data-wd-open] > .wd-dialog-full {
-	display: block;
-	animation: zoom-in 0.4s;
-}
-.wd-dialog-N[data-wd-open],
-.wd-modal[data-wd-open] > .wd-dialog-N {
-	display: block;
-	animation: from-top 0.4s;
-}
-.wd-dialog-S[data-wd-open],
-.wd-modal[data-wd-open] > .wd-dialog-S {
-	display: block;
-	animation: from-bottom 0.4s;
-}
-.wd-dialog-W[data-wd-open],
-.wd-modal[data-wd-open] > .wd-dialog-W {
-	display: block;
-	animation: from-left 0.4s;
-}
-.wd-dialog-E[data-wd-open],
-.wd-modal[data-wd-open] > .wd-dialog-E {
-	display: block;
 	animation: from-right 0.4s;
 }
-.wd-modal > .wd-dialog,
-.wd-modal > .wd-dialog-small,
-.wd-modal > .wd-dialog-big,
-.wd-modal > .wd-dialog-full,
-.wd-modal > .wd-dialog-N,
-.wd-modal > .wd-dialog-S,
-.wd-modal > .wd-dialog-E,
-.wd-modal > .wd-dialog-W {
-	position: absolute;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /*---------------------------------------------------------------- dropbox --*/
 
-
-
-
-
-
+/*-- combo --*/
+.wd-combo {position: relative; cursor: pointer;}
+/*-- combo-child --*/
+.wd-hover-top,    .wd-click-top,
+.wd-hover-bottom, .wd-click-bottom,
+.wd-hover-left,   .wd-click-left,
+.wd-hover-right,  .wd-click-right {
+	display: none;
+	position: absolute;
+	margin: 0;
+	width: 15em;
+	max-height: 20em;
+	overflow: auto;
+	z-index: 2;
+}
+.wd-hover-top,    .wd-click-top    {left: 0; bottom: 100%;}
+.wd-hover-bottom, .wd-click-bottom {left: 0; top: 100%;}
+.wd-hover-left,   .wd-click-left   {left: 100%; top: 0;}
+.wd-hover-right,  .wd-click-right  {right: 100%; top: 0;}
+.wd-combo:hover > .wd-hover-top,    .wd-combo.wd-open > .wd-click-top,
+.wd-combo:hover > .wd-hover-bottom, .wd-combo.wd-open > .wd-click-bottom,
+.wd-combo:hover > .wd-hover-left,   .wd-combo.wd-open > .wd-click-left,
+.wd-combo:hover > .wd-hover-right,  .wd-combo.wd-open > .wd-click-right {display: block;}
 
 /*------------------------------------------------------------------- text --*/
 
@@ -862,13 +438,13 @@ a:hover {
 /*-- upon --*/
 .wd-box-upon:hover, .wd-box-upon-child > *:hover {
 	background-color:  #d9d9d9;
-	color: #1E90FF;
+	color: #1e90ff;
 	box-shadow: inset 0 0 1em 0.1em #b3b3b3;
 }
 /*-- zebra --*/
 .wd-box-zebra > *:nth-child(even) {
 	background-color:  #d9d9d9;
-	color: #1E90FF;
+	color: #1e90ff;
 	box-shadow: inset 0 0 1em 0.1em #b3b3b3;
 }
 /*--- row/col---*/
@@ -892,9 +468,6 @@ a:hover {
 .wd-box-row > .wd-box-col-03 {width: 25%;}
 .wd-box-row > .wd-box-col-02 {width: 16.666666666666668%;}
 .wd-box-row > .wd-box-col-01 {width: 8.333333333333334%;}
-
-
-
 
 /*---------------------------------------------------------------- generic --*/
 
@@ -1082,7 +655,124 @@ a:hover {
 .wd-radius,        .wd-radius-child > *,
 .wd-radius-bottom, .wd-radius-bottom-child > *,
 .wd-radius-right,  .wd-radius-right-child > * {border-bottom-right-radius: 0.3em;}
+/*-- table --*/
+.wd-table {
+	font-family: Verdana,sans-serif;
+	font-size: 14px;
+	line-height: 16px;
+	border-collapse: collapse;
+	margin-left: auto;
+	margin-right: auto;
+}
+.wd-table[border] {border-style: solid;}
+.wd-table caption, .wd-table th {font-weight: bold;}
+.wd-table td, .wd-table th {padding: 0.25em;}
+/*-- list --*/
+.wd-list {list-style-position: inside; padding: 0;}
+.wd-list > li {padding: 0.25em 0.25em 0.25em 40px;}
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*-- FIXME --*/
+/*--- containers ---*/
+.wd-body-C,
+.wd-body-W {
+	margin-right: 20%;
+}
+.wd-body-C,
+.wd-body-E {
+	margin-left: 20%;
+}
+.wd-bar,
+.wd-bar-N,
+.wd-bar-S,
+.wd-bar-E,
+.wd-bar-W {
+	display: block;
+	position: fixed;
+	margin: 0 !important;
+	z-index: 100;
+}
+.wd-bar,
+.wd-bar-N,
+.wd-bar-S {
+	left: 0;
+	right: 0;
+}
+.wd-bar,
+.wd-bar-N {
+	top: 0;
+}
+.wd-bar-S {
+	bottom: 0;
+}
+.wd-bar-W,
+.wd-bar-E {
+	top: 0;
+	bottom: 0;
+	width: 20%;
+}
+.wd-bar-E {
+	right: 0;
+}
+.wd-bar-W {
+	left: 0;
+}
+.wd-body-C .wd-bar,
+.wd-body-C .wd-bar-N,
+.wd-body-C .wd-bar-S,
+.wd-body-E .wd-bar,
+.wd-body-E .wd-bar-N,
+.wd-body-E .wd-bar-S {
+	left: 20%;
+}
+.wd-body-C .wd-bar,
+.wd-body-C .wd-bar-N,
+.wd-body-C .wd-bar-S,
+.wd-body-W .wd-bar,
+.wd-body-W .wd-bar-N,
+.wd-body-W .wd-bar-S {
+	right: 20%;
+}
+.wd-follow,
+.wd-follow-N,
+.wd-follow-S {
+	position: sticky;
+	z-index: 100;
+}
+.wd-follow,
+.wd-follow-N {
+	top: 0;
+}
+.wd-follow-S {
+	bottom: 0;
+}
+.wd-overflow {
+	overflow: auto;
+}
+/*--- dialog ---*/
+.wd-input:focus + .wd-msgform,
+.wd-input:focus + .wd-msgform-help {
+	display: block;
+	animation: from-right 0.4s, fade-out 9.6s;
+}
+.wd-input:out-of-range + .wd-msgform-warn,
+.wd-input:invalid + .wd-msgform-warn {
+	display: block;
+	animation: from-left 0.4s;
+}
 
 
 
@@ -1114,9 +804,9 @@ a:hover {
 	}
 }
 
-/*----------------------------------------------------------------- symbol --*/
 
-/*------------------------------------------------------------------- code --*/
+
+
 
 
 
@@ -1249,7 +939,7 @@ a:hover {
 	white-space: pre;
 	font-size: 1em;
 	padding: 0.5em;
-	color: #1E90FF;
+	color: #1e90ff;
 	background-color: #E6E6FA;
 	border: thin inset #000000;
 	overflow: auto;
@@ -1281,7 +971,4 @@ a:hover {
 }
 .wd-code sample:before {
 	content: "\226B  ";
-}
-*[data-wd-action] {
-	cursor: pointer;
 }
