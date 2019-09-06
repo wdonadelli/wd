@@ -1,139 +1,104 @@
-<header class="wd-head">
-	<h2 class="wd-text-center">CSS: Form</h2>
+<header class="wd-head" >
+	<h2 class="wd-text-center" >CSS: Form</h2>
 </header>
 
-<nav class="wd-navs">
-	<a href="#elements">Elements</a>
-	<a href="#form">form</a>
-</nav>
+<p class="wd-p" >These are classes for styling form elements. It does not have the suffix <q>-child</q>.</p>
 
-<p class="wd-p">These are classes for styling form elements. It does not have the suffix <q>-child</q>.</p>
+<p class="wd-p" >There are three types of styling for form elements:</p>
 
-<h3 id="elements">Elements</h3>
-
-<p class="wd-p">There are three types of styling for form elements:</p>
-
-<ul class="wd-list">
+<ul class="wd-list" >
 	<li><code>wd-label</code></li>
 	<li><code>wd-input</code></li>
 	<li><code>wd-button</code></li>
 </ul>
 
-<form class="wd-xxmargin">
-	<fieldset class="wd-padding">
-		<legend class="wd-padding wd-border wd-box-blue">Standard behavior</legend>
-		<label>input</label>
-		<input type="text" placeholder="input"/>
-		<label >input (disabled)</label>
-		<input type="text" disabled="" placeholder="disabled"/>
-		<label >input (read only)</label>
-		<input type="text" readonly="" placeholder="read only"/>
-		<label>input (required)</label>
-		<input type="text" required="" placeholder="required"/>
-		<label>input (invalid)</label>
-		<input type="email" required="" placeholder="invalid (email)"/>
-		<label>button (file)</label>
-		<input type="file" />
-		<label><input type="checkbox" />checkbox</label>
-		<label><input type="radio" name="radio" />radio 1</label>
-		<label><input type="radio" name="radio" />radio 2</label>
-		<label>button</label>
-		<button type="button" />button</button>
-		<label>button (Link)</label>
-		<a href="##">Link</a>
-		<label>button (color)</label>
-		<input type="color" />
-		<label>button (range)</label>
-		<input type="range" />
-		<label>button (input)</label>
-		<input type="button" value="input" />
-	</fieldset>
-</form>
+<p class="wd-p" >There are two possibilities for styling for forms:</p>
 
-<form class="wd-xxmargin" id="eg1">
-	<fieldset class="wd-padding">
-		<legend class="wd-padding wd-border wd-box-blue">With class</legend>
-		<label  class="label">input</label>
-		<input  class="wd-input" type="text" placeholder="input"/>
-		<label  class="label">input (disabled)</label>
-		<input  class="wd-input" type="text" disabled="" placeholder="disabled"/>
-		<label  class="label">input (read only)</label>
-		<input  class="wd-input" type="text" readonly="" placeholder="read only"/>
-		<label  class="label">input (required)</label>
-		<input  class="wd-input" type="text" required="" placeholder="required"/>
-		<label  class="label">input (invalid)</label>
-		<input  class="wd-input" type="email" placeholder="invalid (email)"/>
-		<label  class="label">input (file)</label>
-		<input  class="wd-input" type="file" />
-		<label  class="label">button</label>
-		<label  class="label"><input class="wd-input" type="checkbox" />checkbox</label>
-		<label  class="label"><input class="wd-input" type="radio" name="radio" />radio 1</label>
-		<label  class="label"><input class="wd-input" type="radio" name="radio" />radio 2</label>
-		<button class="wd-button" type="button" />button</button>
-		<label  class="label">button (Link)</label>
-		<a      class="wd-button" href="##">Link</a>
-		<label  class="label">button (color)</label>
-		<input  class="wd-button" type="color" />
-		<label  class="label">button (range)</label>
-		<input  class="wd-button" type="range" />
-		<label  class="label">button (input)</label>
-		<input  class="wd-button" type="button" value="input" />
-	</fieldset>
-</form>
-
-<h4>HTML code</h4>
-
-<pre class="wd-code" id="eg2"></pre>
-
-<p class="wd-text-center wd-text-yellow wd-symbol-ok wd-padding wd-rounded wd-border">Radio and checkbox types must be within a label element.</p>
-
-<h3 id="form">Form</h3>
-
-<p class="wd-p">There are two possibilities for styling for forms:</p>
-
-<ul class="wd-list">
-	<li><code>wd-form</code> (vertical)</li>
-	<li><code>wd-form wd-horizontal</code> (horizontal)</li>
+<ul class="wd-list" >
+	<li><code>wd-vform</code> (vertical)</li>
+	<li><code>wd-hform</code> (horizontal)</li>
 </ul>
 
-<fieldset>
-	<legend class="wd-padding wd-border wd-box-blue">Vertical (default)</legend>
-	<form class="wd-form" id="eg3">
-		<label  class="wd-label">Name</label>
-		<input  class="wd-input" type="text" placeholder="Name"/>
-		<label  class="wd-label"><input  class="wd-input" type="radio" name="Married" /> Married</label>
-		<label  class="wd-label"><input  class="wd-input" type="radio" name="Married" />Not Married</label>
-		<button class="wd-button wd-box-green" type="button">OK</button>
-		<button class="wd-button wd-text-red" type="button">Cancel</button>
-	</form>
-</fieldset>
+<p class="wd-p" >The types <code>radio</code> and <code>checkbox</code> must be within a label element. In the <code>color</code> input type, the <code>wd-button</code> class should be used instead of <code>wd-input</code>.</p>
+
+<h3>Example</h3>
+
+<form id="eg1" >
+	<fieldset class="wd-vform wd-xmargin" >
+		<legend class="wd-b wd-text-big wd-padding" >Identification</legend>
+		<label class="label" >Name</label>
+		<input class="wd-input" type="text" required="" />
+		<label class="label" >E-mail</label>
+		<input class="wd-input" type="email" />
+		<label class="label" >Age</label>
+		<div class="wd-hform wd-margin" >
+			<label class="wd-label" >
+				<input class="wd-input" type="radio" name="age" checked="" />
+				<span>Under 18</span>
+			</label>
+			<label class="wd-label" >
+				<input class="wd-input" type="radio" name="age" />
+				<span>18 years or older</span>
+			</label>
+			<label class="wd-label" >
+				<input class="wd-input" type="radio" name="age" />
+				<span>More than 30 years.</span>
+			</label>
+		</div>
+		<div class="wd-box-row wd-margin" >
+			<div class="wd-box-col-02 wd-vform" >
+				<label class="wd-label" >Nickname:</label>
+			</div>
+			<div class="wd-box-col-08 wd-vform" >
+				<input class="wd-input wd-radius-left" type="text" />
+			</div>
+			<div class="wd-box-col-02 wd-vform" >
+				<button class="wd-button wd-radius-right" type="button" >Check</button>
+			</div>
+		</div>
+	</fieldset>
+
+	<fieldset class="wd-vform wd-xmargin" >
+		<legend class="wd-b wd-text-big wd-padding" >Preferences</legend>
+		<label class="wd-label" >Color</label>
+		<input class="wd-button" type="color" />
+		<label class="wd-label" >Sports</label>
+		<select class="wd-input" >
+			<option>Soccer</option>
+			<option>Basketball</option>
+			<option>Volleyball</option>
+			<option>Others</option>
+		</select>
+		<label class="wd-label" >Photo</label>
+		<input class="wd-input" type="file" />
+		<label class="wd-label" >Talk about you</label>
+		<textarea class="wd-input" ></textarea>
+	</fieldset>
+	<div class="wd-vform wd-margin" >
+		<label class="wd-label" >
+			<input class="wd-input" type="checkbox" />
+			<span>Data confirmed.</span>
+		</label>
+		<label class="wd-label" >
+			<input class="wd-input" type="checkbox" />
+			<span>I accept the terms.</span>
+		</label>
+	</div>
+	<div class="wd-hform wd-margin" >
+		<a class="wd-button wd-box-green" href="##" >Ok</a>
+		<input class="wd-button" type="reset" value="Clean" />
+		<button class="wd-button wd-box-red" type="button" >Cancel</button>
+	</div>
+</form>
 
 <h4>HTML code</h4>
 
-<pre class="wd-code" id="eg4"></pre>
-
-<fieldset>
-	<legend class="wd-padding wd-border wd-box-blue">Horizontal</legend>
-	<form class="wd-form wd-horizontal" id="eg5">
-		<label  class="wd-label">Name</label>
-		<input  class="wd-input" type="text" placeholder="Name"/>
-		<label  class="wd-label"><input  class="wd-input" type="radio" name="Married" /> Married</label>
-		<label  class="wd-label"><input  class="wd-input" type="radio" name="Married" />Not Married</label>
-		<button class="wd-button wd-box-green" type="button">OK</button>
-		<button class="wd-button wd-text-red" type="button">Cancel</button>
-	</form>
-</fieldset>
-
-<h4>HTML code</h4>
-
-<pre class="wd-code" id="eg6"></pre>
+<pre class="wd-code" id="eg2" ></pre>
 
 
 <script>
 var eg = {};
 eg["#eg2"] = getCode("#eg1", true);
-eg["#eg4"] = getCode("#eg3", true);
-eg["#eg6"] = getCode("#eg5", true);
 setText(eg);
 </script>
 

@@ -86,11 +86,22 @@ a:hover {
 	border-radius: 2px;
 }
 .wd-input:hover {border-color: #1e90ff;}
-.wd-input:focus {border-color: #1e90ff; box-shadow: 0 0 0 1px #1e90ff;} 
-.wd-input:disabled,        .wd-input[disabled] {opacity: 0.5; pointer-events: none;}
+.wd-input:focus {
+	border-color: #1e90ff;
+	box-shadow: 0 0 0 1px #1e90ff;
+} 
+.wd-input:disabled,        .wd-input[disabled] {
+	opacity: 0.5;
+	pointer-events: none;
+}
 .wd-input[required],       .wd-input:required {border-color: #dc143c;}
 .wd-input[required]:focus, .wd-input:required:focus {box-shadow: 0 0 0 1px #dc143c;}
-.wd-input:out-of-range,    .wd-input:invalid {border-color: #dc143c; box-shadow: inset 0 0 2px #dc143c;}
+.wd-input:out-of-range,    .wd-input:invalid {
+	border-color: #dc143c;
+	box-shadow: inset 0 0 2px #dc143c;
+	text-decoration: underline;
+	font-style: italic;
+}
 .wd-input[type=radio], .wd-input[type=checkbox] {
 	display: inline;
 	width: initial !important;
@@ -123,29 +134,36 @@ a:hover {
 	border-color: #778899;
 	box-shadow: inset 0 0 10px 0.2em #778899, inset 0 0 0 2px #000000;
 }
-.wd-button[type=color] {padding: 0; width: 7em; height: 1.875em; vertical-align: middle;}
+.wd-button[type=color] {
+	padding: 0;
+/*	width: 7em !important;*/
+	height: 1.875em !important;
+	vertical-align: middle;
+}
 .wd-button:disabled, .wd-button[disabled] {opacity: 0.5; pointer-events: none;}
-/*-- form --*/
-.wd-form {display: block; padding: 0}
-.wd-form > .wd-label,
-.wd-form > .wd-input,
-.wd-form > .wd-button {
+/*-- vertical form --*/
+.wd-vform {
+	display: block;
+}
+.wd-vform > .wd-label,
+.wd-vform > .wd-input,
+.wd-vform > .wd-button {
 	display: block;
 	width: 100%;
 	margin: 0.25em 0;
 }
-.wd-form.wd-horizontal {
+/*-- horizontal form --*/
+.wd-hform {
 	display: inline-block;
 	display: flex;
 }
-.wd-form.wd-horizontal > .wd-label,
-.wd-form.wd-horizontal > .wd-input,
-.wd-form.wd-horizontal > .wd-button {
+.wd-hform > .wd-label,
+.wd-hform > .wd-input,
+.wd-hform > .wd-button {
 	align-items: stretch;
 	margin: auto;
-	width: auto;
 }
-.wd-form.wd-horizontal > .wd-label:only-of-type {
+.wd-hform > .wd-label:only-of-type {
 	min-width: 15%;
 	max-width: 15%;
 }
