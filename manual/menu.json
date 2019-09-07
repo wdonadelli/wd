@@ -371,7 +371,7 @@
 		"title": "CSS: Form",
 		"file":  "manual/css.form.html",
 		"style": "wd-text-small",
-		"click": "data-wd-click=''",
+		"click": "",
 		"id": "css4"
 	},
 	{
@@ -382,17 +382,24 @@
 		"id": "css5"
 	},
 	{
+		"title": "CSS: Icon",
+		"file":  "manual/css.icon.html",
+		"style": "wd-text-small",
+		"click": "data-wd-click=''",
+		"id": "css6"
+	},
+	{
 		"title": "CSS: Text",
 		"file":  "manual/css.text.html",
 		"style": "wd-text-small",
 		"click": "",
-		"id": "css6"
+		"id": "css7"
 	},
 	{
 		"title": "CSS: Window",
 		"file":  "manual/css.window.html",
 		"style": "wd-text-small",
 		"click": "",
-		"id": "css7"
+		"id": "css8"
 	}
 ]
