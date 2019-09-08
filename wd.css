@@ -191,9 +191,9 @@ a:hover {
 	text-align: center;	
 	text-decoration: none !important;
 }
-.wd-nav > a:hover,
-.wd-nav > a:focus,
-.wd-nav > a.wd-nav-active {
+.wd-nav > *:hover,
+.wd-nav > *:focus,
+.wd-nav > *.wd-nav-active {
 	background-color: #d9d9d9;
 	color: #1e90ff;
 	box-shadow: inset 0 0 1em 0.1em #b3b3b3;
@@ -338,13 +338,13 @@ a:hover {
 .wd-hover-bottom, .wd-click-bottom,
 .wd-hover-left,   .wd-click-left,
 .wd-hover-right,  .wd-click-right {
-	display: none;
+	display: none !important;
 	position: absolute;
 	margin: 0;
-	width: 15em;
+	width: 10em;
 	max-height: 20em;
 	overflow: auto;
-	z-index: 2;
+
 }
 .wd-hover-top,    .wd-click-top    {left: 0; bottom: 100%;}
 .wd-hover-bottom, .wd-click-bottom {left: 0; top: 100%;}
@@ -353,7 +353,7 @@ a:hover {
 .wd-combo:hover > .wd-hover-top,    .wd-combo.wd-open > .wd-click-top,
 .wd-combo:hover > .wd-hover-bottom, .wd-combo.wd-open > .wd-click-bottom,
 .wd-combo:hover > .wd-hover-left,   .wd-combo.wd-open > .wd-click-left,
-.wd-combo:hover > .wd-hover-right,  .wd-combo.wd-open > .wd-click-right {display: block;}
+.wd-combo:hover > .wd-hover-right,  .wd-combo.wd-open > .wd-click-right {display: block !important;}
 
 /*------------------------------------------------------------------- text --*/
 

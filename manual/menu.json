@@ -357,7 +357,7 @@
 		"title": "CSS: Combo",
 		"file":  "manual/css.combo.html",
 		"style": "wd-text-small",
-		"click": "",
+		"click": "data-wd-click=''",
 		"id": "css2"
 	},
 	{
@@ -385,7 +385,7 @@
 		"title": "CSS: Icon",
 		"file":  "manual/css.icon.html",
 		"style": "wd-text-small",
-		"click": "data-wd-click=''",
+		"click": "",
 		"id": "css6"
 	},
 	{

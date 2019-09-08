@@ -1,90 +1,115 @@
 <header class="wd-head">
-	<h2 class="wd-text-center">CSS: Window</h2>
+	<h2 class="wd-text-center">CSS: Combo</h2>
 </header>
 
-<nav class="wd-navs">
-	<a href="#modal">Modal</a>
-	<a href="#window">Window</a>
+<nav class="wd-nav">
+	<a href="#hover">Hover</a>
+	<a href="#click">Click</a>
+	<a href="#textCombo">Text</a>
+	<a href="#navCombo">Navegator</a>
 </nav>
 
 <p class="wd-p">It is a stylized container that displays a secondary window over the main window. It does not have the suffix <q>-child</q>.</p>
 
-<h3 id="modal">Modal</h3>
+<h3 id="hover">Hover type</h3>
 
-<p class="wd-p">This is a background that covers the main document. It will open when it contains the <code>wd-open</code> class. See the <a href="#main" data-wd-data="wdClick{}${#data1}">dataWdAction</a> attribute.</p>
-
-<a href="##" data-wd-action="open{#eg1}" class="wd-button">Open Modal Window</a>
-
-<div class="wd-modal wd-text-white" id="eg1" data-wd-action="close{#eg1}">
-	<span class="wd-box-central">Click on background to close!</span>
-</div>
-
-<pre class="wd-code" id="eg2"></pre>
-
-<h3 id="window">Window</h3>
-
-<p class="wd-p">It will open when it contains the <code>wd-open</code> class. See the <a href="#main" data-wd-data="wdClick{}${#data1}">dataWdAction</a> attribute.</p>
-
-<a href="##" data-wd-action="open{#eg3}" class="wd-button">Open Window</a>
-
-<div class="wd-window wd-box-white" id="eg3">
-	<h3>Window</h3>
-	<p class="wd-p">Background colors are recommended.</p>
-	<span class="wd-box-ne wd-text-blue wd-padding" data-wd-action="close{#eg3}">Close</span>
-</div>
-
-<pre class="wd-code" id="eg4"></pre>
-
-<h4>Features</h4>
-
-<p class="wd-p">The window may have different characteristics. To do this, add the following classes together with the <code>wd-window</code> class to change the window's shape:</p>
-
-<div data-wd-action="close{#win1}" class="wd-padding wd-window wd-win-small wd-box-orange" id="win1">Click on window to close!</div>
-<div data-wd-action="close{#win2}" class="wd-padding wd-window wd-win-medium wd-box-orange" id="win2">Click on window to close!</div>
-<div data-wd-action="close{#win3}" class="wd-padding wd-window wd-win-big wd-box-orange" id="win3">Click on window to close!</div>
-<div data-wd-action="close{#win4}" class="wd-padding wd-window wd-win-top wd-box-orange" id="win4">Click on window to close!</div>
-<div data-wd-action="close{#win5}" class="wd-padding wd-window wd-win-bottom wd-box-orange" id="win5">Click on window to close!</div>
-<div data-wd-action="close{#win6}" class="wd-padding wd-window wd-win-left wd-box-orange" id="win6">Click on window to close!</div>
-<div data-wd-action="close{#win7}" class="wd-padding wd-window wd-win-right wd-box-orange" id="win7">Click on window to close!</div>
-<div data-wd-action="close{#win8}" class="wd-padding wd-window wd-win-note wd-box-orange" id="win8">Click on window to close!</div>
-
-<nav class="wd-nav wd-vertical">
-	<a href="##" data-wd-action="open{#win1}">wd-win-small</a>
-	<a href="##" data-wd-action="open{#win2}">wd-win-medium</a>
-	<a href="##" data-wd-action="open{#win3}">wd-win-big</a>
-	<a href="##" data-wd-action="open{#win4}">wd-win-top</a>
-	<a href="##" data-wd-action="open{#win5}">wd-win-bottom</a>
-	<a href="##" data-wd-action="open{#win6}">wd-win-left</a>
-	<a href="##" data-wd-action="open{#win7}">wd-win-right</a>
-	<a href="##" data-wd-action="open{#win8}">wd-win-note</a>
-</nav>
-
-<h4>With Modal Window</h4>
-
-<p class="wd-p">To open a window individually, the container must be contained in a modal window. The "wd-open" class must be entered in the modal window:</p>
-
-<a href="##" data-wd-action="open{#eg5}" class="wd-button">Open Modal Window</a>
-
-<div class="wd-modal wd-text-white" id="eg5" data-wd-action="close{#eg5}">
-	<div class="wd-window wd-win-big wd-flyer wd-radius wd-box-white">
-		<header class="wd-head wd-box-green wd-radius-top">
-			<h1>Window</h1>
-		</header>
-
-		<div class="wd-content ">A big window with background.</div>
-		
-		<a href="##" data-wd-action="close{#eg5}" class="wd-button wd-margin wd-box-se">Close</a>
-		
+<div style="position: relative; height: 200px;" id="eg1">
+	<div class="wd-box-n wd-button wd-combo">
+		<span class="wd-icon-s">Hover</span>
+		<nav class="wd-hover-bottom wd-box-cloud wd-box-white wd-nav wd-vertical" >
+			<span>Item 1</span>
+			<span>Item 2</span>
+			<span>Item 3</span>
+		</nav>
+	</div>
+	<div class="wd-box-s wd-button wd-combo">
+		<span class="wd-icon-n">Hover</span>
+		<nav class="wd-hover-top wd-box-cloud wd-box-white wd-nav wd-vertical" >
+			<span>Item 1</span>
+			<span>Item 2</span>
+			<span>Item 3</span>
+		</nav>
+	</div>
+	<div class="wd-box-e wd-button wd-combo">
+		<span class="wd-icon-w">Hover</span>
+		<nav class="wd-hover-right wd-box-cloud wd-box-white wd-nav wd-vertical" >
+			<span>Item 1</span>
+			<span>Item 2</span>
+			<span>Item 3</span>
+		</nav>
+	</div>
+	<div class="wd-box-w wd-button wd-combo">
+		<span class="wd-icon-e">Hover</span>
+		<nav class="wd-hover-left wd-box-cloud wd-box-white wd-nav wd-vertical" >
+			<span>Item 1</span>
+			<span>Item 2</span>
+			<span>Item 3</span>
+		</nav>
 	</div>
 </div>
 
+<h4>HTML code</h4>
+
+<pre class="wd-code" id="eg2"></pre>
+
+<h3 id="click">Click type</h3>
+
+<div style="position: relative; height: 200px;" id="eg3">
+	<div class="wd-box-n wd-button wd-combo" data-wd-action="toggle-open{#click1}" id="click1">
+		<div data-wd-action="toggle-open{#click1}" class="wd-icon-s">Click</div>
+		<nav class="wd-click-bottom wd-box-cloud wd-box-white wd-nav wd-vertical">
+			<span>Item 1</span>
+			<span>Item 2</span>
+			<span data-wd-action="toggle-open{#click1}">Item 3 (Close)</span>
+		</nav>
+	</div>
+	<div class="wd-box-s wd-button wd-combo" data-wd-action="toggle-open{#click2}" id="click2">
+		<span data-wd-action="toggle-open{#click2}" class="wd-icon-n">Click</span>
+		<nav class="wd-click-top wd-box-cloud wd-box-white wd-nav wd-vertical" >
+			<span>Item 1</span>
+			<span>Item 2</span>
+			<span data-wd-action="toggle-open{#click2}">Item 3 (Close)</span>
+		</nav>
+	</div>
+	<div class="wd-box-e wd-button wd-combo" data-wd-action="toggle-open{#click3}" id="click3">
+		<span data-wd-action="toggle-open{#click3}" class="wd-icon-w">Click</span>
+		<nav class="wd-click-right wd-box-cloud wd-box-white wd-nav wd-vertical" >
+			<span>Item 1</span>
+			<span>Item 2</span>
+			<span data-wd-action="toggle-open{#click3}">Item 3 (Close)</span>
+		</nav>
+	</div>
+	<div class="wd-box-w wd-button wd-combo" data-wd-action="toggle-open{#click4}" id="click4">
+		<span data-wd-action="toggle-open{#click4}" class="wd-icon-e">Click</span>
+		<nav class="wd-click-left wd-box-cloud wd-box-white wd-nav wd-vertical" >
+			<span>Item 1</span>
+			<span>Item 2</span>
+			<span data-wd-action="toggle-open{#click4}">Item 3 (Close)</span>
+		</nav>
+	</div>
+</div>
+
+<h4>HTML code</h4>
+
+<pre class="wd-code" id="eg4"></pre>
+
+<h3 id="textCombo">Text</h3>
+
+<p class="wd-p"><i class="wd-combo"><span>Lorem ipsum</span><span class="wd-hover-top wd-box-cloud wd-box-white wd-xpadding wd-text-left">çdkfjçsdlkf</span></i> dolor sit amet, consectetur adipiscing elit. Aliquam eu sapien sit amet dolor elementum viverra. Cras at porttitor arcu, ac cursus dolor. Morbi vehicula pulvinar aliquam. Sed faucibus ut nunc et mollis. Nullam varius posuere enim, nec euismod nisi fringilla eget. Aliquam tempus nisi ut orci blandit, ac sollicitudin.</p>
+
+
+<h4>HTML code</h4>
+
 <pre class="wd-code" id="eg6"></pre>
+
+
+<h3 id="navCombo">Navegator</h3>
 
 <script>
 var eg = {};
 eg["#eg2"] = getCode("#eg1", true);
 eg["#eg4"] = getCode("#eg3", true);
-eg["#eg6"] = getCode("#eg5", true);
+//eg["#eg6"] = getCode("#eg5", true);
 setText(eg);
 </script>
 
