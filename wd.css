@@ -835,7 +835,7 @@ a:hover {
 .wd-icon-stop:before     {margin-right: 0.5em; text-decoration: none !important; content: "\25FC";}
 .wd-icon-forward:before  {margin-right: 0.5em; text-decoration: none !important; content: "\23E9";}
 .wd-icon-backward:before {margin-right: 0.5em; text-decoration: none !important; content: "\23EA";}
-.wd-icon-rec:before      {margin-right: 0.5em; text-decoration: none !important; content: "\1F535";}
+.wd-icon-rec:before      {margin-right: 0.5em; text-decoration: none !important; content: "\25CF";}
 .wd-icon-music:before    {margin-right: 0.5em; text-decoration: none !important; content: "\1F3BC";}
 .wd-icon-video:before    {margin-right: 0.5em; text-decoration: none !important; content: "\1F4F9";}
 .wd-icon-image:before    {margin-right: 0.5em; text-decoration: none !important; content: "\1F304";}
@@ -864,33 +864,32 @@ a:hover {
 .wd-icon-bookmark:before {margin-right: 0.5em; text-decoration: none !important; content: "\1F516";}
 .wd-icon-bell:before     {margin-right: 0.5em; text-decoration: none !important; content: "\1F514";}
 .wd-icon-help:before     {margin-right: 0.5em; text-decoration: none !important; content: "\1F4A1";}
-.wd-icon-home:before     {margin-right: 0.5em; text-decoration: none !important; content: "\1F3E1";}
+.wd-icon-home:before     {margin-right: 0.5em; text-decoration: none !important; content: "\1F3E0";}
 .wd-icon-target:before   {margin-right: 0.5em; text-decoration: none !important; content: "\1F3C1";}
 .wd-icon-door:before     {margin-right: 0.5em; text-decoration: none !important; content: "\1F6AA";}
 .wd-icon-close:before    {margin-right: 0.5em; text-decoration: none !important; content: "\274C";}
-.wd-icon-reload:before   {margin-right: 0.5em; text-decoration: none !important; content: "\1F504";}
+.wd-icon-reload:before   {margin-right: 0.5em; text-decoration: none !important; content: "\21BB";}
 .wd-icon-config:before   {margin-right: 0.5em; text-decoration: none !important; content: "\1F529";}
 .wd-icon-menu:before     {margin-right: 0.5em; text-decoration: none !important; content: "\2630";}
 .wd-icon-list:before     {margin-right: 0.5em; text-decoration: none !important; content: "\22EE";}
 .wd-icon-key:before      {margin-right: 0.5em; text-decoration: none !important; content: "\1F511";}
-.wd-icon-allowed:before  {margin-right: 0.5em; text-decoration: none !important; content: "\1F513";}
-.wd-icon-lock:before     {margin-right: 0.5em; text-decoration: none !important; content: "\1F512";}
+.wd-icon-unlocked:before {margin-right: 0.5em; text-decoration: none !important; content: "\1F513";}
+.wd-icon-locked:before   {margin-right: 0.5em; text-decoration: none !important; content: "\1F512";}
 .wd-icon-battery:before  {margin-right: 0.5em; text-decoration: none !important; content: "\1F50B";}
 .wd-icon-sound:before    {margin-right: 0.5em; text-decoration: none !important; content: "\1F50A";}
-.wd-icon-silence:before  {margin-right: 0.5em; text-decoration: none !important; content: "\1F507";}
 .wd-icon-network:before  {margin-right: 0.5em; text-decoration: none !important; content: "\1F4F6";}
 .wd-icon-user:before     {margin-right: 0.5em; text-decoration: none !important; content: "\1F464";}
 /*-- genre --*/
 .wd-icon-he:before       {margin-right: 0.5em; text-decoration: none !important; content: "\1F6B9";}
 .wd-icon-she:before      {margin-right: 0.5em; text-decoration: none !important; content: "\1F6BA";}
 /*-- arrows --*/
-.wd-icon-n:before       {margin-right: 0.5em; text-decoration: none !important; content: "\2B06";}
+.wd-icon-n:before       {margin-right: 0.5em; text-decoration: none !important; content: "\2191";}
 .wd-icon-ne:before      {margin-right: 0.5em; text-decoration: none !important; content: "\2197";}
-.wd-icon-e:before       {margin-right: 0.5em; text-decoration: none !important; content: "\27A1";}
+.wd-icon-e:before       {margin-right: 0.5em; text-decoration: none !important; content: "\2192";}
 .wd-icon-se:before      {margin-right: 0.5em; text-decoration: none !important; content: "\2198";}
-.wd-icon-s:before       {margin-right: 0.5em; text-decoration: none !important; content: "\2B07";}
+.wd-icon-s:before       {margin-right: 0.5em; text-decoration: none !important; content: "\2193";}
 .wd-icon-sw:before      {margin-right: 0.5em; text-decoration: none !important; content: "\2199";}
-.wd-icon-w:before       {margin-right: 0.5em; text-decoration: none !important; content: "\2B05";}
+.wd-icon-w:before       {margin-right: 0.5em; text-decoration: none !important; content: "\2190";}
 .wd-icon-nw:before      {margin-right: 0.5em; text-decoration: none !important; content: "\2196";}
 /*-- devices --*/
 .wd-icon-email:before    {margin-right: 0.5em; text-decoration: none !important; content: "\1F4E7";}
