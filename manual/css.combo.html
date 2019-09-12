@@ -95,21 +95,38 @@
 
 <h3 id="textCombo">Text</h3>
 
-<p class="wd-p"><i class="wd-combo"><span>Lorem ipsum</span><span class="wd-hover-top wd-box-cloud wd-box-white wd-xpadding wd-text-left">çdkfjçsdlkf</span></i> dolor sit amet, consectetur adipiscing elit. Aliquam eu sapien sit amet dolor elementum viverra. Cras at porttitor arcu, ac cursus dolor. Morbi vehicula pulvinar aliquam. Sed faucibus ut nunc et mollis. Nullam varius posuere enim, nec euismod nisi fringilla eget. Aliquam tempus nisi ut orci blandit, ac sollicitudin.</p>
+<p class="wd-p" id="eg5">The combo can also be used to highlight hidden information. Hover <span class="wd-combo"><u>here</u> to see an example.<span class="wd-hover-top wd-box-cloud wd-box-white wd-padding">Example complementary message.</span></span></p>
 
 
 <h4>HTML code</h4>
 
 <pre class="wd-code" id="eg6"></pre>
 
-
 <h3 id="navCombo">Navegator</h3>
+
+<p class="wd-p">The combo can also be used within the navigator:</p>
+
+<nav class="wd-nav" style="margin-bottom: 200px;" id="eg7">
+	<span>Item 1</span>
+	<span>Item 2</span>
+	<div class="wd-combo">
+		<span class="wd-icon-s">Item 3</span>
+		<nav class="wd-hover-bottom wd-nav wd-vertical wd-box-black">
+			<span>Item 3.1</span>
+			<span>Item 3.2</span>
+			<span>Item 3.3</span>
+		</nav>
+	</div>
+</nav>
+
+<pre class="wd-code" id="eg8"></pre>
 
 <script>
 var eg = {};
 eg["#eg2"] = getCode("#eg1", true);
 eg["#eg4"] = getCode("#eg3", true);
-//eg["#eg6"] = getCode("#eg5", true);
+eg["#eg6"] = getCode("#eg5", true);
+eg["#eg8"] = getCode("#eg7", true);
 setText(eg);
 </script>
 

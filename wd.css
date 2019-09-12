@@ -83,7 +83,6 @@ a:hover {
 .wd-input {
 	padding: 0.25em 0.5em;
 	border: thin solid #b3b3b3;
-	border-radius: 2px;
 }
 .wd-input:hover {border-color: #1e90ff;}
 .wd-input:focus {
@@ -117,16 +116,18 @@ a:hover {
 }
 .wd-input[type=range]:required, .wd-input[type=file][required] {color: #dc143c;}
 /*-- label --*/
-.wd-label {vertical-align: middle;}
+.wd-label {
+	vertical-align: middle;
+}
 /*-- button --*/
 .wd-button {
-	padding: 0.25em 2em;
-	cursor: pointer;
+	background-color: #B0C4DE;
 	border: thin solid;
+	color: #000000;
+	cursor: pointer;
+	padding: 0.25em 2em;
 	text-decoration: none !important;
 	text-align: center;
-	background-color: #B0C4DE;
-	color: #000000;
 }
 .wd-button:hover, .wd-button:focus {
 	background-color: #FFFFFF !important;
@@ -247,7 +248,7 @@ a:hover {
 /*-- modal--*/
 .wd-modal {
 	display: none;
-	position: fixed;
+	position: fixed !important;
 	top: 0;
 	bottom: 0;
 	left: 0;
@@ -263,7 +264,7 @@ a:hover {
 /*-- window --*/
 .wd-window {
 	display: none;
-	position: fixed;
+	position: fixed !important;
 	top: 0;
 	bottom: 0;
 	left: 0;
@@ -275,7 +276,7 @@ a:hover {
 	z-index: 99999;
 	animation: zoom-in 0.4s;
 }
-.wd-modal > .wd-window {position: absolute;}
+.wd-modal > .wd-window {position: absolute !important;}
 .wd-window.wd-open, .wd-modal.wd-open > .wd-window {display: block;}
 /*-- small --*/
 .wd-window.wd-win-small {
@@ -339,12 +340,12 @@ a:hover {
 .wd-hover-left,   .wd-click-left,
 .wd-hover-right,  .wd-click-right {
 	display: none !important;
-	position: absolute;
 	margin: 0;
-	width: 10em;
 	max-height: 20em;
 	overflow: auto;
-
+	position: absolute !important;
+	text-indent: 0;
+	width: 10em;
 }
 .wd-hover-top,    .wd-click-top    {left: 0; bottom: 100%;}
 .wd-hover-bottom, .wd-click-bottom {left: 0; top: 100%;}
@@ -411,7 +412,7 @@ a:hover {
 .wd-box-n, .wd-box-e, .wd-box-s, .wd-box-w,
 .wd-box-ne, .wd-box-se, .wd-box-sw, .wd-box-nw,
 .wd-box-central {
-	position: absolute;
+	position: absolute !important;
 	display: block;
 	margin: 0;
 	text-align: center;
@@ -704,7 +705,7 @@ a:hover {
 
 
 
-/*-- FIXME --*/
+/*-- FIXME: colocar junto ao BOX --*/
 /*--- containers ---*/
 .wd-body-C,
 .wd-body-W {
@@ -765,6 +766,8 @@ a:hover {
 .wd-body-W .wd-bar-S {
 	right: 20%;
 }
+
+/*FIXME: colocar junto ao header e footer*/
 .wd-follow,
 .wd-follow-N,
 .wd-follow-S {
@@ -781,7 +784,8 @@ a:hover {
 .wd-overflow {
 	overflow: auto;
 }
-/*--- dialog ---*/
+
+/*--- dialog FIXME: colocar junto aos formulários ---*/ 
 .wd-input:focus + .wd-msgform,
 .wd-input:focus + .wd-msgform-help {
 	display: block;
@@ -795,17 +799,6 @@ a:hover {
 
 
 
-
-
-
-
-.wd-float,
-.wd-float-W {
-	float: left;
-}
-.wd-float-E {
-	float: right;
-}
 .wd-hide,
 .wd-hide-screen {
 	visibility: hidden;
@@ -905,24 +898,8 @@ a:hover {
 .wd-icon-tv:before       {margin-right: 0.5em; text-decoration: none !important; content: "\1F4FA";}
 .wd-icon-cam:before      {margin-right: 0.5em; text-decoration: none !important; content: "\1F4F7";}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /*------------------------------------------------------------------- code --*/
+
 .wd-code {
 	font-family: monospace;
 	white-space: pre;

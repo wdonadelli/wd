@@ -21,6 +21,7 @@ function getCode(target, outer) {
 	type   = type === "<" ? "html" : "js";
 	input = input.replace(/\</gi, "&lt;");
 	input = input.replace(/\>/gi, "&gt;");
+	input = input.replace(/\"\"/gi, "<q></q>");
 	input = input.replace(/\"([^"]+)\"/g, "<q>$1</q>");
 	if (type === "js") {
 		input = input.replace(/var\ /g, "<code>var</code> ");
