@@ -250,6 +250,8 @@ a:hover {
 }
 .wd-flyer > .wd-head:first-child {margin-top: -0.5em;}
 .wd-flyer > .wd-foot:last-child  {margin-bottom: -0.5em;}
+.wd-flyer > .wd-head.wd-buddy:first-child {top: -0.5em;}
+.wd-flyer > .wd-foot.wd-buddy:last-child  {margin-bottom: -0.5em;}
 
 /*----------------------------------------------------------------- window --*/
 
@@ -776,6 +778,15 @@ a:hover {
 .wd-icon-sw:before      {margin-right: 0.5em; text-decoration: none !important; content: "\2199";}
 .wd-icon-w:before       {margin-right: 0.5em; text-decoration: none !important; content: "\2190";}
 .wd-icon-nw:before      {margin-right: 0.5em; text-decoration: none !important; content: "\2196";}
+
+
+.wd-icon-soon:before    {margin-right: 0.5em; text-decoration: none !important; content: "\1F51C";}
+.wd-icon-back:before    {margin-right: 0.5em; text-decoration: none !important; content: "\1F519";}
+.wd-icon-top:before     {margin-right: 0.5em; text-decoration: none !important; content: "\1F51D";}
+
+.wd-icon-right:before   {margin-right: 0.5em; text-decoration: none !important; content: "\2771";}
+.wd-icon-left:before    {margin-right: 0.5em; text-decoration: none !important; content: "\2770";}
+
 /*-- devices --*/
 .wd-icon-email:before    {margin-right: 0.5em; text-decoration: none !important; content: "\1F4E7";}
 .wd-icon-mail:before     {margin-right: 0.5em; text-decoration: none !important; content: "\1F4EE";}

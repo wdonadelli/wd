@@ -61,11 +61,11 @@ function setText(obj) {
 <body class="wd-text-justify">
 
 	<!--MAIN PAGE-->
-	<main class="wd-flyer wd-xxmargin-bottom" id="main">
+	<main class="wd-flyer" id="main">
 
 		<!--HEADER-->
-		<header class="wd-head wd-box-red wd-follow-N">
-			<h1>WD Web Libraries Handbook</h1>
+		<header class="wd-head wd-box-red">
+			<h1><a href="#main" data-wd-data="wdLoad{get{manual/home.html}}${#content}" class="wd-box-red">WD Web Libraries Handbook</a></h1>
 			<h4>Version: V2</h4>
 		</header>
 
@@ -82,7 +82,7 @@ function setText(obj) {
 			<section data-wd-device="mobile{wd-win-full}desktop{wd-win-left}" class="wd-window wd-flyer wd-box-white">
 
 				<!--HEADER-->
-				<header class="wd-head wd-box-green wd-xxmargin-bottom" style="position: relative;">
+				<header class="wd-head wd-box-green wd-margin-bottom wd-buddy" >
 					<h3>Menu</h3>
 					<span class="wd-icon-close wd-box-e" data-wd-action="close{#menu}"></span>
 				</header>
@@ -102,6 +102,9 @@ function setText(obj) {
 
 			</section>
 		</div>
+		<footer class="wd-foot wd-text-right wd-buddy wd-text-large">
+			<a href="#main" class="wd-icon-top"></a>
+		</footer>
 	</main>
 </body>
 </html>
