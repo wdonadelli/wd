@@ -1,981 +1,80 @@
-﻿/* Willian Donadelli | <wdonadelli@gmail.com> | v1.3.2 */
+﻿/* Willian Donadelli | <wdonadelli@gmail.com> | v2.0.0 */
 
 "use strict";
+
 var wd = (function() {
 
-/*===========================================================================*/
-	/*Parâmetros de configuração de data*/
-	var Y_0 = 1, Y_4 = 4, Y_100 = 100, Y_400 = 400, WEEK_REF = 1, Y_max = 9999;
+/* === WD ================================================================== */
 
-	/*Guarda o tamanho da tela*/
-	var deviceController = null;
-
-	/*Janela modal para processamentos ajax*/
-	const MODAL = document.createElement("DIV");
-	MODAL.textContent = "Loading data, please wait!";
-	htmlStyle(MODAL, {
-		display: "block", width: "100%", height: "100%", zIndex: 999999,
-		position: "fixed", top: 0, right: 0, bottom: 0, left: 0,
-		color: "white", backgroundColor: "black", opacity: "0.9", cursor: "progress"
-	});
-	
-	/*Checar a existências dos objetos nativos utilizados na bibiloteca*/
-	function checkMainObjects() {	
-		var objects = [
-			"Boolean",
-			"Number",
-			"String",
-			"Array",
-			"RegExp",
-			"Function",
-			"Date",
-			"HTMLElement",
-			"NodeList",
-			"HTMLCollection",
-			"HTMLAllCollection",
-			"HTMLFormControlsCollection"
-		];
-		
-		for (var o = 0; o < objects.length; o++) {
-			if (!(objects[o] in window)) {
-				window[objects[o]] = function() {};
-			}
-		}
-		return;
-	};
-
-	checkMainObjects();
-
-	/*Controlador da janela modal (ajax)*/
-	var modalController = 0;
-
-	function addAjaxModal() {
-		modalController++;
-		checkAjaxModal();
-		return;
-	}
-
-	function delAjaxModal() {
-		window.setTimeout(function () {
-			modalController--;
-			checkAjaxModal();
-			return;
-		}, 250);;
-		return;
-	}
-	
-	function checkAjaxModal() {
-		if (modalController <= 0) {
-			modalController = 0;
-			htmlAction(MODAL, "del");
-		} else if (MODAL.parentElement !== document.body) {
-			document.body.appendChild(MODAL);
-		}
-		return;
-	};
-/*===========================================================================*/
-	function WD(input) {
-		if (!(this instanceof WD)) {return new WD(input);}
-		Object.defineProperties(this, {_input: {value: input}});
-	};
-	Object.defineProperties(WD.prototype, {
-		constructor: {value: WD},
-		valueOf:  {value: function() {return this._input.valueOf();}},
-		toString: {value: function() {return this._input.toString();}},
-		toSource: {value: function() {return this._input;}},
-		type:     {enumerable: true, get: function() {return type(this._input);}}
-	});
-/*---------------------------------------------------------------------------*/
-	function WDstring(input) {
-		if (!(this instanceof WDstring)) {return new WDstring(input);}
-		WD.call(this, input);
-	};
-	WDstring.prototype = Object.create(WD.prototype, {
-		constructor: {value: WDstring},
-		title:  {enumerable: true, get: function() {return stringTitle(this._input);}},
-		trim:   {enumerable: true, get: function() {return stringTrim(this._input);}},
-		tt:     {enumerable: true, get: function() {return stringTitle(this.trim);}},
-	});
-/*---------------------------------------------------------------------------*/
-	function WDarray(input) {
-		if (!(this instanceof WDarray)) {return new WDarray(input);}
-		WD.call(this, input);
-	};
-	WDarray.prototype = Object.create(WD.prototype, {
-		constructor: {value: WDarray},
-		sort:      {enumerable: true, get: function() {return arraySort(this._input);}},
-		unique:    {enumerable: true, get: function() {return arrayUnique(this._input);}},
-		organized: {enumerable: true, get: function() {return arrayOrganized(this._input);}},
-		del:       {enumerable: true, value: function(item) {return arrayDel(this._input, item);}},
-		add:       {enumerable: true, value: function(item) {return arrayAdd(this._input, item);}},
-		toggle:    {enumerable: true, value: function(item) {return arrayToggle(this._input, item);}},
-		amount:    {enumerable: true, value: function(item) {return arrayCount(this._input, item);}},
-		replace:   {enumerable: true, value: function(item, value) {return arrayReplace(this._input, item, value);}},
-	});
-/*---------------------------------------------------------------------------*/
-	function WDregexp(input) {
-		if (!(this instanceof WDregexp)) {return new WDregexp(input);}
-		WD.call(this, input);
-	};
-	WDregexp.prototype = Object.create(WD.prototype, {
-		constructor: {value: WDregexp},
-		mask: {enumerable: true, value: function(string) {return regexpMask(string, this._input);}},
-	});
-/*---------------------------------------------------------------------------*/
-	function WDboolean(input) {
-		if (!(this instanceof WDboolean)) {return new WDboolean(input);}
-		WD.call(this, input);
-	};
-	WDboolean.prototype = Object.create(WD.prototype, {
-		constructor: {value: WDboolean},
-		valueOf: {enumerable: true, value: function() {return input === true ? 1 : 0;}},
-	});
-/*---------------------------------------------------------------------------*/
-	function WDnumber(input) {
-		if (!(this instanceof WDnumber)) {return new WDnumber(input);}
-		WD.call(this, input);
-	};
-	WDnumber.prototype = Object.create(WD.prototype, {
-		constructor: {value: WDnumber},
-		integer:    {enumerable: true, get: function() {return numberInteger(this._input);}},
-		fraction:   {enumerable: true, get: function() {return numberFraction(this._input);}},
-		isInteger:  {enumerable: true, get: function() {return numberIsInteger(this._input);}},
-		isFloat:    {enumerable: true, get: function() {return numberIsFloat(this._input);}},
-		isNatural:  {enumerable: true, get: function() {return numberIsNatural(this._input);}},
-		isNegative: {enumerable: true, get: function() {return numberIsNegative(this._input);}},
-		isPositive: {enumerable: true, get: function() {return numberIsPositive(this._input);}},
-		abs:        {enumerable: true, get: function() {return numberAbs(this._input);}},
-		inverse:    {enumerable: true, get: function() {return numberInverse(this._input);}},
-		roundUp:    {enumerable: true, get: function() {return numberRoundUp(this._input);}},
-		round:      {enumerable: true, value: function(n) {return numberRound(this._input, n);}},
-		scientific: {enumerable: true, value: function(n) {return numberScientific(this._input, n);}},
-		locale:     {enumerable: true, value: function(cod) {return numberLocale(this._input, cod);}},
-		currency:   {enumerable: true, value: function(val, cod) {return numberCurrency(this._input, cod, val);}
-		},
-	});
-/*---------------------------------------------------------------------------*/
-	function WDdate(input) {
-		if (!(this instanceof WDdate)) {return new WDdate(input);}
-		WD.call(this, input);
-		Object.defineProperties(this, {_d: {writable: true, value: dateDefiner(input)}});
-	};
-	WDdate.prototype = Object.create(WD.prototype, {
-		constructor: {value: WDdate},
-		day: {enumerable: true,
-			get: function() {return dateFromNumber(this._d).d;},
-			set: function(input) {this._d = dateSet(this._d, input, "d"); return;}
-		},
-		month: {enumerable: true,
-			get: function() {return dateFromNumber(this._d).m;},
-			set: function(input) {this._d = dateSet(this._d, input, "m"); return;}
-		},
-		year: {enumerable: true,
-			get: function() {return dateFromNumber(this._d).y;},
-			set: function(input) {this._d = dateSet(this._d, input, "y"); return;}
-		},
-		week:      {enumerable: true, get: function() {return dateWeek(this._d);}},
-		leap:      {enumerable: true, get: function() {return dateLeap(this.year);}},
-		days:      {enumerable: true, get: function() {return dateDayYear(this.year, this.month, this.day);}},
-		width:     {enumerable: true, get: function() {return dateLenghtMonth(this.year, this.month);}},
-		weeks:     {enumerable: true, get: function() {return dateWeeks(this.year, this.days);}},
-		countdown: {enumerable: true, get: function() {return dateCountdown(this.year, this.month, this.day);}},
-		format:    {enumerable: true, value: function(string, locale) {return dateFormat(this._d, string, locale);}},
-		toString:  {value: function() {return dateFormat(this._d);}},
-		valueOf:   {value: function() {return this._d;}},
-	});
-/*---------------------------------------------------------------------------*/
-	function WDtime(input) {
-		if (!(this instanceof WDtime)) {return new WDtime(input);}
-		WD.call(this, input);
-		Object.defineProperties(this, {_t: {writable: true, value: timeDefiner(input)}});
-	};
-	WDtime.prototype = Object.create(WD.prototype, {
-		constructor: {value: WDtime},
-		hour: {enumerable: true,
-			get: function() {return timeGet(this._t, "h");},
-			set: function(input) {this._t = timeToNumber(input, this.minute, this.second, this._t); return;}
-		},
-		minute: {enumerable: true,
-			get: function() {return timeGet(this._t, "m");},
-			set: function(input) {this._t = timeToNumber(this.hour, input, this.second, this._t); return;}
-		},
-		second: {enumerable: true,
-			get: function() {return timeGet(this._t, "s")},
-			set: function(input) {this._t = timeToNumber(this.hour, this.minute, input, this._t); return;}
-		},
-		h24:      {enumerable: true, get: function() {return timeGet(this._t, "h24")}},
-		ampm:     {enumerable: true, get: function() {return timeGet(this._t, "ampm")}},
-		format:   {enumerable: true, value: function(string) {return timeFormat(this._t, string);}},
-		toString: {value: function() {return timeGet(this._t);}},
-		valueOf:  {value: function() {return this._t;}},
-	});
-/*---------------------------------------------------------------------------*/
-	function WDajax(input) {
-		if (!(this instanceof WDajax)) {return new WDajax(input);}
-		WD.call(this, input);
-	};
-	WDajax.prototype = Object.create(WDstring.prototype, {
-		constructor: {value: WDajax},
-		post: {enumerable: true, value: function(execute, time) {ajaxSend(this._input, "POST", execute, time);}},
-		get:  {enumerable: true, value: function(execute, time) {ajaxSend(this._input, "GET", execute, time);}},
-		type: {enumerable: true, get: function() {return type(this._input, true);}}
-	});
-/*---------------------------------------------------------------------------*/
-	function WDhtml(input) {
-		if (!(this instanceof WDhtml)) {return new WDhtml(input);}
-		WD.call(this, input);
-	};
-	WDhtml.prototype = Object.create(WD.prototype, {
-		constructor: {value: WDhtml},
-		execute: {enumerable: true, value: function(method) {
-			htmlRun(this._input, method); return;
-		}},
-		handler: {enumerable: true, value: function(events, remove) {
-			htmlRun(this._input, function(elem) {htmlHandler(elem, events, remove); return;}); return this;
-		}},
-		class: {enumerable: true, value: function(list) {
-			htmlRun(this._input, function(elem) {htmlClass(elem, list); return;}); return this;
-		}},
-		style: {enumerable: true, value: function(list) {
-			htmlRun(this._input, function(elem) {htmlStyle(elem, list); return;}); return this;
-		}},
-		data: {enumerable: true, value: function(list) {
-			htmlRun(this._input, function(elem) {htmlData(elem, list); return;}); return this;
-		}},
-		filter: {enumerable: true, value: function(text, min) {
-			htmlRun(this._input, function(elem) {htmlFilter(elem, text, min); return;}); return this;
-		}},
-		sort: {enumerable: true, value: function(order, col) {
-			htmlRun(this._input, function(elem) {htmlSort(elem, order, col); return;}); return this;
-		}},
-		page: {enumerable: true, value: function(page, size) {
-			htmlRun(this._input, function(elem) {htmlPage(elem, page, size); return;}); return this;
-		}},
-		repeat: {enumerable: true, value: function(obj) {
-			htmlRun(this._input, function(elem) {htmlRepeat(elem, obj); return;}); return this;
-		}},
-		load: {enumerable: true, value: function(html) {
-			htmlRun(this._input, function(elem) {htmlLoad(elem, html); return;}); return this;
-		}},
-		action: {enumerable: true, value: function(act) {
-			htmlRun(this._input, function(elem) {htmlAction(elem, act); return;}); return this;
-		}},
-		get:    {enumerable: true, get: function() {return type(this._input) !== "[html]" ? [this._input] : this._input;}},
-		styles: {enumerable: true, get: function() {return htmlGetStyles(type(this._input) !== "[html]" ? [this._input] : this._input);}},
-	});
-
-/*===========================================================================*/
-	function data_wdLoad(e) {
-		/*Carrega html externo*/
-		if (!("wdLoad" in e.dataset)) {return;}
-		var value, method, file, ajax, target;
-		value  = e.dataset.wdLoad;
-		method = (/^post\:/i).test(value) ? "post" : "get";
-		file   = value.replace(/^(post|get)\:/i, "");
-		ajax   = wd(file);
-		target = wd(e);
-		target.data({wdLoad: null});
-		if (ajax.type !== "path") {
-			msg("data-wd-load=\""+value+"\" - Attribute value is not an accessible file path.", "e")
-		} else {
-			ajax[method](function(x) {
-				if (x.error) {
-					msg(file+": Error accessing file or timeout.", "e");
-				} else {
-					target.load(x.text);
-				}
-				return;
-			});
-		}
-		return;
-	};
-
-	function data_wdRepeat(e) {
-		/*Constroe html a partir de um arquivo json*/
-		if (!("wdRepeat" in e.dataset)) {return;}
-		var value, method, file, ajax, target;
-		value  = e.dataset.wdRepeat;
-		method = (/^post\:/i).test(value) ? "post" : "get";
-		file   = value.replace(/^(post|get)\:/i, "");
-		ajax   = wd(file);
-		target = wd(e);
-		target.data({wdRepeat: null});
-		if (ajax.type !== "path") {
-			msg("data-wd-repeat=\""+value+"\" - Attribute value is not an accessible file path.", "e");
-		} else {
-			ajax[method](function(x) {
-				if (x.error || x.json === null) {
-					msg(file+": Error accessing file, timeout or it's not a json file.", "e");
-				} else {
-					target.repeat(x.json);
-				}
-				return;
-			});
-		}
-		return;
-	};
-
-	function data_wdSort(e) {
-		/*Ordena elementos filhos*/
-		if (!("wdSort" in e.dataset)) {return;}
-		var order = wd(e.dataset.wdSort);
-		wd(e).sort(order.type !== "number" ? 1 : order.valueOf()).data({wdSort: null});
-		return;
-	};
-
-	function data_wdFilter(e) {
-		/*Filtra elementos filhos*/
-		if (!("wdFilter" in e.dataset)) {return;}
-		var min, target, text;
-		text   = "value" in e ? e.value : e.textContent;
-		min    = (/^[0-9]+\:/).test(e.dataset.wdFilter) ? wd(e.dataset.wdFilter.split(":")[0]).valueOf() : 0;
-		target = e.dataset.wdFilter.replace(/^[0-9]+\:/, "");
-		wd($(target)).filter(text, min);
-		return;
-	};
-
-	function data_wdMask(e) {
-		/*Define máscara do elemento*/
-		if (!("wdMask" in e.dataset)) {return;}
-		var value, re, mask;
-		value = "value" in e ? e.value : e.textContent;
-		re    = new RegExp(e.dataset.wdMask);
-		mask  = wd(re).mask(value);
-		if (mask === false) {
-			if ("setCustomValidity" in e) {e.setCustomValidity("Incorrect value: "+re.source);}
-		} else {
-			if ("value" in e) {e.value = mask} else {e.textContent = mask;}
-			if ("setCustomValidity" in e) {e.setCustomValidity("");}
-		}
-		return;
-	};
-
-	function data_wdPage(e) {
-		/*Define os elementos a serem exibidos*/
-		if (!("wdPage" in e.dataset)) {return;}
-		var page, size, attr;
-		attr = e.dataset.wdPage.replace(/[^\-\.\:0-9]/g, "").split(":");
-		page = wd(attr[0]).type !== "number" ? 0 : wd(attr[0]).valueOf();
-		size = wd(attr[1]).type !== "number" ? 0 : wd(attr[1]).valueOf();
-		wd(e).page(page, size).data({wdPage: null});
-		return;
-	};
-	
-	function data_wdClick(e) {
-		/*Executa o método click() ao elemento após o load*/
-		if (!("wdClick" in e.dataset)) {return;}
-		if (!("click" in e)) {
-			msg("data-wd-click: Element does not have the click event.", "w");
-		} else {
-			e.click();
-		}
-		wd(e).data({wdClick: null});
-		return;
-	};
-
-	function data_wdAction(e) {
-		/*Executa uma ação ao alvo após o click*/
-		if (!("wdAction" in e.dataset)) {return;}
-		var attr, action, target;
-		attr = e.dataset.wdAction.split("&");
-		for (var i = 0; i < attr.length; i++) {
-			action = attr[i].split(":")[0].trim();
-			target = attr[i].split(":")[1] === undefined ? e : $(attr[i].trim().replace(action+":", ""));
-			wd(target).action(action);
-		}
-		return;
-	};
-
-	function data_wdActive(e) {
-		/*Define o link ativo do elemento nav*/
-		if (e.parentElement !== null && e.parentElement.tagName.toUpperCase() === "NAV") {
-			wd(e.parentElement.children).data({wdActive: null});
-			if (e.tagName.toUpperCase() === "A") {
-				wd(e).data({wdActive: true});
-			}
-		}
-		return;
-	};
-
-	function data_wdSortCol(e) {
-		/*Ordena as colunas de uma tabela*/
-		if (!("wdSortCol" in e.dataset)) {return;}
-		if (e.parentElement.parentElement.tagName.toUpperCase() !== "THEAD") {return;}
-		var order, thead, heads, bodies;
-		order  = e.dataset.wdSortCol === "+1" ? -1 : 1;
-		thead  = e.parentElement.parentElement;
-		heads  = e.parentElement.children;
-		bodies = thead.parentElement.tBodies;
-		wd(heads).data({wdSortCol: ""});
-		for (var i = 0; i < heads.length; i++) {
-			if (heads[i] === e) {
-				wd(bodies).sort(order, i);
-				wd(e).data({wdSortCol: order === 1 ? "+1" : "-1"});
-				break;
-			}
-		}
-		return;
-	};
-		
-	function data_wdDevice(e) {
-		/*Define o estilo do elemento a partir do tamanho da tela*/
-		if (!("wdDesktop" in e.dataset) && !("wdTablet" in e.dataset) && !("wdPhone" in e.dataset)) {return;}
-		var device, desktop, tablet, phone, add, del;
-		device  = deviceController;
-		desktop = "wdDesktop" in e.dataset ? e.dataset.wdDesktop : "";
-		tablet  = "wdTablet"  in e.dataset ? e.dataset.wdTablet : "";
-		phone   = "wdPhone"   in e.dataset ? e.dataset.wdPhone : "";
-		switch(device) {
-			case "desktop":
-				add = desktop.split(" ");
-				del = (tablet+" "+phone).split(" ");
-				break;
-			case "tablet":
-				add = tablet.split(" ");
-				del = (desktop+" "+phone).split(" ");
-				break;
-			case "phone":
-				add = phone.split(" ");
-				del = (desktop+" "+tablet).split(" ");
-				break;
-		}
-		for (var i = 0; i < add.length; i++) {
-			del = arrayDel(del, add[i]);
-		}
-		wd(e).class({add: add, del: del});
-		return;
-	};
-
-/*===========================================================================*/
-	function hashProcedures() {
-		/*Procedimentos quando se usa as classes wd-bar ao mudar a âncora*/
-		var bar, hbar, hash, target, htop;
-		bar    = $(".wd-bar, .wd-bar-N");
-		hbar   = bar.length === 0 ? 0 : bar[0].offsetHeight;
-		hash   = window.location.hash;
-		target = hash === undefined || hash === "" ? [] : $(hash);
-		htop   = target.length === 0 ? 0 : target[0].offsetTop;
-		if (hbar !== 0) {
-			window.scrollTo(0, htop - hbar);
-		}
-		return;
-	};
-
-	function loadingProcedures() {
-		/*Procedimentos para carregar objetos externos*/
-		var attr = $("[data-wd-load], [data-wd-repeat]");
-		if (deviceController === null) {scalingProcedures();}
-		if (attr.length === 0) {
-			organizationProcedures();
-			stylingProcedures();
-		} else {
-			wd(attr[0]).execute(data_wdRepeat);
-			wd(attr[0]).execute(data_wdLoad);
-		}
-		return;
-	};
-	
-	function organizationProcedures() {
-		/*Procedimento para organizar elementos após fim dos carregamentos*/
-		wd($("[data-wd-sort]")).execute(data_wdSort);
-		wd($("[data-wd-filter]")).execute(data_wdFilter);
-		wd($("[data-wd-mask]")).execute(data_wdMask);
-		wd($("[data-wd-page]")).execute(data_wdPage);
-		wd($("[data-wd-click]")).execute(data_wdClick);
-		return;
-	};
-
-	function clickProcedures(ev) {
-		/*Procedimento a executar após eventos click*/
-		if (ev.which !== 1) {return;}
-		data_wdAction(ev.target);
-		data_wdActive(ev.target);
-		data_wdSortCol(ev.target);
-		return;
-	};
-	
-	function keyboardProcedures(ev) {
-		/*Procedimento a executar após acionamento do teclado*/
-		data_wdFilter(ev.target);
-		data_wdMask(ev.target);
-		return;
-	};
-
-	function scalingProcedures(ev) {
-		/*Procedimento para definir o dispositivo pelo tamanho da tela*/
-		var device, width, height;
-		width  = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
-		height = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
-		if (width >= 768) {
-			device = "desktop";
-		} else if (width >= 600) {
-			device = "tablet";
-		} else {
-			device = "phone";
-		};
-		if (device !== deviceController) {
-			deviceController = device;
-			if (type(ev) !== "?") {
-				stylingProcedures();
-			}
-		}
-		return;
-	};
-	
-	function stylingProcedures() {
-		/*Procedimento a executar após redimensionamento da tela*/
-		wd($("[data-wd-desktop], [data-wd-tablet], [data-wd-phone]")).execute(data_wdDevice);
-		return;
-	};
-
-	function settingProcedures(e, attr) {
-		/*Procedimento a executar após definição de dataset*/
-		switch(attr) {
-			case "wdLoad":    loadingProcedures(); break;
-			case "wdRepeat":  loadingProcedures(); break;
-			case "wdSort":    data_wdSort(e);      break;
-			case "wdFilter":  data_wdFilter(e);    break;
-			case "wdMask":    data_wdMask(e);      break;
-			case "wdPage":    data_wdPage(e);      break;
-			case "wdClick":   data_wdClick(e);     break;
-			case "wdDesktop": data_wdDevice(e);    break;
-			case "wdTablet":  data_wdDevice(e);    break;
-			case "wdPhone":   data_wdDevice(e);    break;
-		};
-		return;
-	};
-
-	/*Definindo eventos*/
-	wd(window).handler({
-		load: [loadingProcedures, hashProcedures],
-		resize: scalingProcedures,
-		hashchange: hashProcedures
-	});
-	wd(document).handler({
-		click: clickProcedures,
-		keyup: keyboardProcedures
-	});
-
-/*===========================================================================*/
-	function wd(input) {
-		/*Retorna o construtor de acordo com o tipo de input*/
-		switch(type(input, true)) {
-			case "text":   return WDstring(input); break;
-			case "bool":   return WDboolean(input); break;
-			case "number": return WDnumber(numberDefiner(input)); break;
-			case "array":  return WDarray(input); break;
-			case "regex":  return WDregexp(input); break;
-			case "date":   return WDdate(input); break;
-			case "time":   return WDtime(input); break;
-			case "path":   return WDajax(input); break;
-			case "html":   return WDhtml(input); break;
-			case "[html]": return WDhtml(input); break;
-			case "doc":    return WDhtml(input); break;
-			case "win":    return WDhtml(input); break;
-			default:       return WD(input);
-		}
-		return null;
-	};
-
-	function msg(text, type) {
-		/*Imprime mensagem no console*/
-		var types = {e: "error", w: "warn", i: "info"};
+	/*Imprime mensagem no console*/
+	function log(msg, type) {
+		var types = {e: "error", w: "warn", i: "info", l: "log"};
 		if (types[type] in console) {
-			console[types[type]](text);
+			console[types[type]](msg);
 		} else {
-			console.log(text);
+			console.log(msg);
 		}
 		return;
 	};
 
-	function $(selector, root) {
-		/*Retorna os elementos html identificados pelo seletor css no elemento root*/
-		if (root === undefined) {root = document;}
-		return root.querySelectorAll(selector);
-	};
-
+	/*Retorna a linguagem do documento, a definida ou a do navegador*/
 	function lang() {
-		/*Retorna a linguagem do documento, a definida ou a do navegador*/
-		var lang = document.body.parentElement.lang.replace(/\ +/g, "");
-		return lang.length !== 0 ? lang : navigator.language || navigator.browserLanguage || "en-US";
+		var value, attr;
+		attr  = document.body.parentElement.attributes;
+		value = "lang" in attr ? attr.lang.value.replace(/\ /g, "") : "";
+		if (value === "") {
+			value = navigator.language || navigator.browserLanguage || "en-US";
+		}
+		return value;
 	};
 
-	function type(input, ajax) {
-		/*Retorna o tipo de input*/
-		if (ajax === undefined) {ajax = false;}
+	/*Retorna os elementos html identificados pelo seletor css no elemento root*/	
+	function $(selector, root) {
 		var x;
-		if (input === undefined) {
-			x = "?";
-		} else if (input === null) {
-			x = "0";
-		} else if (typeof input === "boolean" || input instanceof Boolean) {
-			x = "bool";
-		} else if (typeof input === "number" || input instanceof Number) {
-			x = "number";
-		} else if (typeof input === "string" || input instanceof String) {
-			if (numberDefiner(input) !== null) {
-				x = "number";
-			} else if (timeDefiner(input) !== null) {
-				x = "time";
-			} else if (dateDefiner(input) !== null) {
-				x = "date";
-			} else if (ajax === true && ajaxFileExists(input)) {
-				x = "path";
-			} else {
-				x = "text";
-			}
-		} else if (Array.isArray(input) || input instanceof Array) {
-			x = "array";
-		} else if (input.constructor === RegExp || input instanceof RegExp) {
-			x = "regex";
-		} else if (typeof input === "f()" || input instanceof Function) {
-			x = "f()";
-		} else if (input instanceof Date) {
-			x = "date";
-		} else if (input.constructor === Object) {
-			x = "object";
-		} else if (input instanceof HTMLElement) {
-			x = "html";
-		} else if (
-			input instanceof NodeList ||
-			input instanceof HTMLCollection ||
-			input instanceof HTMLAllCollection ||
-			input instanceof HTMLFormControlsCollection
-		) {
-			x = "[html]";
-		} else if (input === document) {
-			x = "doc";
-		} else if (input === window) {
-			x = "win";
-		} else {
-			try {
-				x = input.constructor.name;
-			} catch(e) {
-				x = "unknown"
-			}
+		if (root === undefined || !("querySelectorAll" in root)) {
+			root = document;
+		}
+		try {
+			x = root.querySelectorAll(selector);
+		} catch(e) {
+			x = null;
 		}
 		return x;
 	};
 
-/*===========================================================================*/
-	function regexpMask(input, regex) {
-		/*Se input casar com regex, retorna input com a máscara de regex, caso contrário, falso*/
-		input = String(input);
-		if (regex.test(input)) {return input;}
-		var pattern, check, target, group, close, metaReference, metacharacter, expression;
-		pattern = regex.source;
-		check   = "";
-		target  = "";
-		group   = 1;
-		close   = true;
-		metaReference = ["n", "d", "D", "w", "W", "s", "S", "t", "r", "n", "v", "f", "b", "B"];
-		metacharacter = ["\n", "\d", "\D", "\w", "\W", "\s", "\S", "\t", "\r", "\n", "\v", "\f", "\b", "\B"];
-		expression    = ["[", "]", "|", "^", "$", ".", "(", ")", "*", "+", "?", "{", "}"];
-		for (var i = 0; i < pattern.length; i++) {
-			if (pattern[i] === "\\") {
-				i++;
-				if (metaReference.indexOf(pattern[i]) < 0) {
-					target += pattern[i];
-				}	else {
-					target += metacharacter[metaReference.indexOf(pattern[i])];
-				}
-			} else if (pattern[i] === "(") {
-				check  += pattern[i];
-				target += "$"+group;
-				close   = false;
-				group++;
-			} else if (pattern[i] === ")") {
-				check += pattern[i];
-				close  = true;
-			} else if (close && expression.indexOf(pattern[i]) === -1) {
-				target += pattern[i];
-			} else {
-				check += pattern[i];
-			}
-		}
-		check = new RegExp(check);
-		if (check.test(input)) {
-			input = input.replace(check, target);
-			return input;
-		}
-		return false;
-	};
-
-/*===========================================================================*/
-	function stringTitle(input) {
-		/*Retorna input com primeira letra de cada palavra em caixa alta*/
-		var value = "";
+	/*Obtem o nome e o valor da expressão name{valor}*/
+	function getData(input) {
+		var x, open, name, value;
+		x     = {};
+		open  = 0;
+		name  = "";
+		value = "";
+		input = String(input).trim().split("");
 		for (var i = 0; i < input.length; i++) {
-			if (input[i-1] === " " || i === 0) {value += input[i].toUpperCase();
-			} else {
+			if (input[i] === "{" && open === 0) {
+				open++;
+			} else if (input[i] === "}" && open === 1) {
+				open--;
+				x[name.trim()] = value.trim();
+				name  = "";
+				value = "";
+			} else if (open > 0) {
+				if (input[i] === "{") {
+					open++;
+				} else if (input[i] === "}") {
+					open--;
+				}
 				value += input[i];
-			}
-		}
-		return value;
-	};
-
-	function stringTrim(input) {
-		/*Elimina espaços desnecessários de input*/
-		return input.trim().replace(/ +/g, " ");
-	};
-
-	function stringClear(input) {
-		/*Elimina os acentos de input*/
-		var clear = {
-			A: /[À-Æ]/g,
-			C: /[Ç]/g,
-			E: /[È-Ë]/g,
-			I: /[Ì-Ï]/g,
-			D: /[Ð]/g,
-			N: /[Ñ]/g,
-			O: /[Ò-ÖØ]/g,
-			U: /[Ù-Ü]/g,
-			Y: /[Ý]/g,
-			a: /[à-æ]/g,
-			c: /[ç]/g,
-			e: /[è-ë]/g,
-			i: /[ì-ï]/g,
-			d: /[ð]/g,
-			n: /[ñ]/g,
-			o: /[ò-öø]/g,
-			u: /[ù-ü]/g,
-			y: /[ýÿ]/g
-		};
-		input = String(input);
-		if ("normalize" in String) {
-			input = input.normalize('NFD').replace(/[\u0300-\u036f]/g, "");
-		} else {
-			for (var i in clear) {
-				input = input.replace(clear[i], i);
-			}
-		}
-		return input;
-	};
-
-/*===========================================================================*/
-	function arrayDel(array, item) {
-		/*Retona array sem item*/
-		while (array.indexOf(item) >= 0) {
-			array.splice(array.indexOf(item), 1);
-		}
-		return array;
-	};
-	
-	function arrayAdd(array, item) {
-		/*Retona o array acrescido de item, se item ainda não estiver listado*/
-		if (array.indexOf(item) < 0) {array.push(item);}
-		return array;
-	};
-
-	function arrayToggle(array, item) {
-		/*Retorna array acrescido ou diminuído de item a depender da existência de item em array*/
-		if (arrayCount(array, item) === 0) {
-			array = arrayAdd(array, item);
-		} else {
-			array = arrayDel(array, item);
-		}
-		return array;
-	};
-
-	function arrayCount(array, item) {
-		/*Retorna a quantidade de vezes que o item aparece em array*/
-		var count = 0;
-		for (var i = 0; i < array.length; i++) {
-			if (array[i] === item) {count++;}
-		}
-		return count;
-	};
-
-	function arrayReplace(array, item, value) {
-		/*Retorna array com substituição de item por value*/
-		if (item === value) {return array;}
-		while (array.indexOf(item) >= 0) {
-			array[array.indexOf(item)] = value;
-		}
-		return array;
-	};
-
-	function arraySort(array) {
-		/*Retorna o array ordenado: números, tempo, data e outros*/
-		var aNumber, aTime, aDate, aNormal, aReturn, re, y, x, kind;
-		aNumber = [];
-		aTime   = [];
-		aDate   = [];
-		aNormal = [];
-		aReturn = [];
-		for (var i = 0; i < array.length; i++) {
-			x    = array[i];
-			kind = type(x);
-			if (kind === "number") {
-				aNumber.push({"x": x, "y": numberDefiner(x)});
-			} else if (kind === "date") {
-				aDate.push({"x": x, "y": dateDefiner(x)});
-			} else if (kind === "time") {
-				aDate.push({"x": x, "y": timeDefiner(x)});
 			} else {
-				aNormal.push({"x": x, "y": stringClear(x)});
+				name += input[i];
 			}
 		}
-		aNumber.sort(function(a,b) {return a.y - b.y;});
-		aTime.sort(function(a,b) {return a.y - b.y;});
-		aDate.sort(function(a,b) {return a.y - b.y;});
-		aNormal.sort(function(a,b) {return a.y > b.y;});
-		aNumber.forEach(function(v, i, a) {a[i] = v.x;});
-		aTime.forEach(function(v, i, a) {a[i] = v.x;});
-		aDate.forEach(function(v, i, a) {a[i] = v.x;});
-		aNormal.forEach(function(v, i, a) {a[i] = v.x;});
-		aReturn = aReturn.concat(aNumber, aTime, aDate, aNormal);
-		return aReturn;
+		return x;
 	};
 
-	function arrayUnique(array) {
-		/*Retorna array sem elementos duplicados*/
-		return array.filter(function(v, i, a) {return a.indexOf(v) == i;});
-	};
-
-	function arrayOrganized(array) {
-		/*Retorna array combinadocom arrayUnique e arraySort*/
-		return arraySort(arrayUnique(array));
-	};
-
-/*===========================================================================*/
-	function numberDefiner(input) {
-		/*checa se o valor de entrada é um número e retorna seu valor, caso contrário, retorna falso*/
-		var value;
-		if (typeof input === "number" || input instanceof Number) {
-			value = input;
-		} else {
-			input = String(input).trim();
-			if (/^(\+|\-)?[0-9]+(\.[0-9]+)?$/.test(input)) {
-				value = Number(input);
-			} else if (/^(\+|\-)?[0-9]+(\.[0-9]+)?e(\+|\-)?[0-9]+$/.test(input)) {
-				value = Number(input);
-			} else if (/^(\+|\-)Infinity$/.test(input)) {
-				value = Number(input);
-			} else {
-				value = null;
-			}
-		}
-		return value;
-	};
-
-	function numberInteger(input) {
-		/*Retorna o valor inteiro do número*/
-		input = numberDefiner(input);
-		return Number(String(input).replace(/\.[0-9]+/g, ""));
-	};
-
-	function numberFraction(input) {
-		/*Retorna a parte decimal do número*/
-		input = numberDefiner(input);
-		return input%1 === 0 ? 0 : Number(String(input).replace(/[0-9]+\./g, "0."));
-	};
-
-	function numberIsInteger(input) {
-		/*Verifica se o número é inteiro*/
-		input = numberDefiner(input);
-		return input%1 === 0 ? true : false;
-	};
-
-	function numberIsFloat(input) {
-		/*Verifica se o número é decimal*/
-		input = numberDefiner(input);
-		return input%1 !== 0 ? true : false;
-	};
-
-	function numberIsNatural(input) {
-		/*Verifica se o número é natural >= 0*/
-		input = numberDefiner(input);
-		return input%1 === 0 && input >= 0 ? true : false;
-	};
-
-	function numberIsNegative(input) {
-		/*Verifica se o número é maior que zero*/
-		input = numberDefiner(input);
-		return input < 0 ? true : false;
-	};
-
-	function numberIsPositive(input) {
-		/*Verifica se o número é menor que zero*/
-		input = numberDefiner(input);
-		return input > 0 ? true : false;
-	};
-
-	function numberAbs(input) {
-		/*Retorna o valor absoluto do número*/
-		input = numberDefiner(input);
-		return input < 0 ? -input : input;
-	};
-
-	function numberInverse(input) {
-		/*Retorna o inverso do número (1/x)*/
-		input = numberDefiner(input);
+	/*Retorna verdadeiro se o ano for bissexto*/
+	function isLeap(y) {
 		var x;
-		if (input === 0) {
-			x = Infinity;
-		} else if (input === Infinity || input === -Infinity) {
-			x = 0;
-		} else {
-			x = 1/input;
-		}
-		return x;
-	};
-
-	function numberRound(input, width) {
-		/*Arredonda o número*/
-		input = numberDefiner(input);
-		return Number(input.toFixed(width));
-	};
-
-	function numberRoundUp(input) {
-		/*Arredonda o número para cima*/
-		input = numberDefiner(input);
-		var x = input;
-		if (numberIsInteger(input)) {
-			x = input;
-		} else if (input > 0) {
-			x = numberInteger(input)+1;
-		} else {
-			x = numberInteger(input)-1;
-		}
-		return x;
-	};
-
-	function numberScientific(input, width) {
-		/*Transcreve a notação científica para html*/
-		input = numberDefiner(input);
-		return input.toExponential(width).replace(/e(.+)$/, " x 10<sup>$1</sup>").replace("+", "");
-	};
-
-	function numberLocale(input, locale) {
-		/*Retorna o número no formato local ou definido no html*/
-		input = numberDefiner(input);
-		if (locale === undefined) {locale = lang();}
-		return "toLocaleString" in Number ? input.toLocaleString(locale) : input.toString();
-	};
-
-	function numberCurrency(input, locale, currency) {
-		/*Retorna o número no formato monetário local ou defuinido no html*/
-		input = numberDefiner(input);
-		if (locale === undefined) {locale = lang();}
-		if (currency === undefined) {currency = "";}
-		var x;
-		if ("toLocaleString" in Number) {
-			try {
-				x = input.toLocaleString(locale, {style: "currency", currency: currency});
-			} catch(e) {
-				x = currency+numberLocale(input, locale);
-			}
-		} else {
-			x = input.toString();
-		}
-		return x;
-	};
-
-/*===========================================================================*/
-	function dateLeap(y) {
-		/*Retorna verdadeiro se o y (ano) é bissexto e falso se não for*/
-		var x = false;
 		if (y === 0) {
 			x = false;
 		} else if (y%400 === 0) {
@@ -990,44 +89,223 @@ var wd = (function() {
 		return x;
 	};
 
-	function dateWeek(n) {
-		/*Retorna o dia da semana(1 - domingo, 7 - sábado)*/
-		return (n + WEEK_REF)%7 === 0 ? 7 : (n + WEEK_REF)%7;
+	/*Verifica se o valor é undefined*/
+	function isUndefined(value) {
+		return value === undefined ? true : false;
 	};
 
-	function dateWeeks(y, days) {
-		/*Retorna a semana do ano*/
-		var ref, weeks;
-		ref   = dateWeek(dateToNumber(y, 1, 1));
-		weeks = numberInteger(1 + (ref + days - 2)/7);
-		return weeks;
+	/*Verifica se o valor é nulo*/
+	function isNull(value) {
+		return value === null ? true : false;
 	};
 
-	function dateDayYear(y, m, d) {
-		/*Retorna o da do ano*/
-		var n = dateLeap(y) ? 1 : 0;
-		return [0, 31, 59+n, 90+n, 120+n, 151+n, 181+n, 212+n, 243+n, 273+n, 304+n, 334+n][m-1]+d;
-	};
-	
-	function dateCountdown(y, m, d) {
-		/*Contagem regressiva para o fim do ano*/
-		return (dateLeap(y) ? 366 : 365) - dateDayYear(y, m, d);
-	};
-
-	function dateLenghtMonth(y, m) {
-		/*Retorna a quantidade de dias do mês*/
-		var n = dateLeap(y) ? 1 : 0;
-		return [31, 28+n, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][m-1];
-	};
-	
-	function dateChecking(y, m, d) {
-		/*Checa se a data existe*/
+	/*Verifica se o valor é uma string genérica*/
+	function isString(value) {
 		var x;
-		if (y < Y_0 || y > Y_max) {
+		if (typeof value === "string") {
+			x = true
+		} else if ("String" in window && value instanceof String) {
+			x = true;
+		} else if ("String" in window && value.constructor === String) {
+			x = true;
+		} else {
 			x = false;
-		} else if (m < 1 || m > 12) {
+		}
+		return x;
+	};
+
+	/*Verifica se o valor é uma expressão regular*/
+	function isRegExp(value) {
+		var x;
+		if (typeof value === "regexp") {
+			x = true;
+		} else if ("RegExp" in window && value instanceof RegExp) {
+			x = true;
+		} else if ("RegExp" in window && value.constructor === RegExp) {
+			x = true;
+		} else {
 			x = false;
-		} else if (d < 1 || d > dateLenghtMonth(y, m)) {
+		}
+		return x;
+	};
+
+	/*Verifica se o valor é um número*/
+	function isNumber(value) {
+		var x;
+		if (typeof value === "number") {
+			x = true;
+		} else if ("Number" in window && value instanceof Number) {
+			x = true;
+		} else if ("Number" in window && value.constructor === Number) {
+			x = true;
+		} else if (!isString(value)) {
+			x = false;
+		} else if (value.trim() === "Infinity") {
+			x = false;
+		} else if (value.trim() == Number(value.trim())) {
+			x = true;
+		} else {
+			x = false;
+		}
+		return x;
+	};
+
+	/*Verifica se o valor é boleano*/
+	function isBoolean(value) {
+		var x;
+		if (x === true || x === false) {
+			x = true;
+		} else if (typeof value === "boolean") {
+			x = true;
+		} else if ("Boolean" in window && value instanceof Boolean) {
+			x = true;
+		} else if ("Boolean" in window && value.constructor === Boolean) {
+			x = true;
+		} else {
+			x = false;
+		}
+		return x;
+	};
+
+	/*Verifica se o valor é uma lista*/
+	function isArray(value) {
+		var x;
+		if ("Array" in window && "isArray" in Array && Array.isArray(value)) {
+			x = true;
+		} else if ("Array" in window && value instanceof Array) {
+			x = true;
+		} else if ("Array" in window && value.constructor === Array) {
+			x = true;
+		} else {
+			x = false;
+		}
+		return x;
+	};
+
+	/*Verifica se o valor é uma função*/
+	function isFunction(value) {
+		var x;
+		if (typeof value === "function") {
+			x = true;
+		} else if ("Function" in window && value instanceof Function) {
+			x = true;
+		} else if ("Function" in window && value.constructor === Function) {
+			x = true;
+		} else {
+			x = false;
+		}
+		return x;
+	};
+
+	/*Verifica se o valor é um elemento(s) HTML*/
+	function isDOM(value) {
+		var x;
+		if (value === document || value === window) {
+			x = true;
+		} else if ("HTMLElement" in window && value instanceof HTMLElement) {
+			x = true;
+		} else if ("HTMLElement" in window && value.constructor === HTMLElement) {
+			x = true;
+		} else if ("NodeList" in window && value instanceof NodeList) {
+			x = true;
+		} else if ("NodeList" in window && value.constructor === NodeList) {
+			x = true;
+		} else if ("HTMLCollection" in window && value instanceof HTMLCollection) {
+			x = true;
+		} else if ("HTMLCollection" in window && value.constructor === HTMLCollection) {
+			x = true;
+		} else if ("HTMLAllCollection" in window && value instanceof HTMLAllCollection) {
+			x = true;
+		} else if ("HTMLAllCollection" in window && value.constructor === HTMLAllCollection) {
+			x = true;
+		} else if ("HTMLFormControlsCollection" in window && value instanceof HTMLFormControlsCollection) {
+			x = true;
+		} else if ("HTMLFormControlsCollection" in window && value.constructor === HTMLFormControlsCollection) {
+			x = true;
+		} else {
+			x = false;
+		}
+		return x;
+	};
+
+	/*Verifica se o valor é um tempo válido*/
+	function isTime(value) {
+		var x;
+		if (!isString(value)) {
+			x = false;
+		} else if (value.trim() === "%now") {
+			x =  true;
+		} else if (/^(0?[0-9]|1[0-9]|2[0-4])(\:[0-5][0-9]){1,2}$/.test(value.trim())) {
+			x =  true;
+		} else if ((/^(0?[1-9]|1[0-2])\:[0-5][0-9]\ ?(am|pm)$/i).test(value.trim())) {
+			x =  true;
+		} else if ((/^(0?[0-9]|1[0-9]|2[0-4])h[0-5][0-9]$/i).test(value.trim())) {
+			x =  true;
+		} else {
+			x =  false;
+		}
+		return x;
+	};
+
+	/*Verifica se o valor é uma data válida*/
+	function isDate(value) {
+		var x, d, m, y, array;
+		if ("Date" in window && value instanceof Date) {
+			x = true;
+		} else if ("Date" in window && value.constructor === Date) {
+			x = true;
+		} else if (!isString(value)) {
+			x = false;
+		} else if (value.trim() === "%today") {
+			x = true;
+		} else {
+			if (/^[0-9]{4}\-[0-9]{2}\-[0-9]{2}$/.test(value.trim())) {/*YYYY-MM-DD*/
+				array = value.split("-");
+				d = Number(array[2]);
+				m = Number(array[1]);
+				y = Number(array[0]);
+			} else if (/^[0-9]{2}\/[0-9]{2}\/[0-9]{4}$/.test(value.trim())) {/*MM/DD/YYYY*/
+				array = value.split("/");
+				d = Number(array[1]);
+				m = Number(array[0]);
+				y = Number(array[2]);
+			} else if (/^[0-9]{2}\.[0-9]{2}\.[0-9]{4}$/.test(value.trim())) {/*DD.MM.YYYY*/
+				array = value.split(".");
+				d = Number(array[0]);
+				m = Number(array[1]);
+				y = Number(array[2]);
+			} else {
+				array = null;
+			}
+			if (array === null) {
+				x = false;
+			} else if (y > 9999 || y < 1) {
+				x = false;
+			} else if (m > 12 || m < 1) {
+				x = false;
+			} else if (d > 31 || d < 1) {
+				x = false;
+			} else if (d > 30 && [2, 4, 6, 9, 11].indexOf(m) >= 0) {
+				x = false;
+			} else if (d > 29 && m == 2) {
+				x = false;
+			} else if (d == 29 && m == 2 && !isLeap(y)) {
+				x = false;
+			} else {
+				x = true;
+			}
+		}
+		return x;
+	};
+
+	/*Verifica se o valor é um texto*/
+	function isText(value) {
+		var x;
+		if (!isString(value)) {
+			x = false;
+		} else if (value.trim() === "") {
+			x = false;
+		} else if (isTime(value) || isDate(value) || isNumber(value)) {
 			x = false;
 		} else {
 			x = true;
@@ -1035,758 +313,2629 @@ var wd = (function() {
 		return x;
 	};
 
-	function dateToNumber(y, m, d) {
-		/*Transforma a data para a referência numérica*/
-		var l4, l100, l400, delta;
-		delta = y === Y_0 ? 0 : 365*(y - Y_0);
-		l4    = y < Y_4 ? 0   : numberInteger((y - 1)/4);
-		l100  = y < Y_100 ? 0 : numberInteger((y - 1)/100);
-		l400  = y < Y_400 ? 0 : numberInteger((y - 1)/400);
-		return delta + l4 - l100 + l400 + dateDayYear(y, m, d);
-	};
+/*...........................................................................*/
 
-	function dateFromNumber(n) {
-		/*Transforma número em data*/
-		var y, m = 1, d = 1, x;
-		y = numberInteger(n/365) + Y_0;
-		while (dateToNumber(y,1,1) > n) {y--;}
-		while (dateToNumber(y, m+1, 1) - 1 < n) {m++;}
-		while (dateToNumber(y, m, d) !== n) {d++;}
-		return {y: y, m: m, d: d};
-	};
-
-	function dateDefiner(input) {
-		/*Define o valor numérico da data se verdadeiro, ou retorna null se data inválida*/
-		var date;
-		if (input === "%today") {
-			input = new Date();
-			date = {y: input.getFullYear(), m: input.getMonth()+1, d: input.getDate()};
-		} else if (input instanceof Date) {
-			date = {y: input.getFullYear(), m: input.getMonth()+1, d: input.getDate()};
-		} else if (/^[0-9]{4}\-[0-9]{2}\-[0-9]{2}$/.test(input)) {/*YYYY-MM-DD*/
-			input = input.split("-");
-			date = {y: numberDefiner(input[0]), m: numberDefiner(input[1]), d: numberDefiner(input[2])};
-		} else if (/^[0-9]{2}\/[0-9]{2}\/[0-9]{4}$/.test(input)) {/*MM/DD/YYYY*/
-			input = input.split("/");
-			date = {y: numberDefiner(input[2]), m: numberDefiner(input[0]), d: numberDefiner(input[1])};
-		} else if (/^[0-9]{2}\.[0-9]{2}\.[0-9]{4}$/.test(input)) {/*DD.MM.YYYY*/
-			input = input.split(".");
-			date = {y: numberDefiner(input[2]), m: numberDefiner(input[1]), d: numberDefiner(input[0])};
-		} else {
-			date = null;
+	function WD(input) {
+		if (!(this instanceof WD)) {
+			return new WD(input);
 		}
-		if (date !== null && dateChecking(date.y, date.m, date.d) === true) {
-			date = dateToNumber(date.y, date.m, date.d);
-		} else {
-			date = null;
-		}
-		return date;
-	};
 
-	function dateSet(value, input, id) {
-		/*Altera o valor da data a partir da definição de dia, mês ou ano*/
-		input = numberDefiner(input);
-		var date, test, output, y, m, d;
-		if (type(input) !== "number" || !numberIsInteger(input)) {
-			msg("Values must be an integer number.", "e");
-			output  = value;
-		} else {
-			date = dateFromNumber(value);
-			test = {y: date.y, m: date.m, d: date.d};
-			test[id] = input;
-			if (id !== "d" && test.d > dateLenghtMonth(test.y, test.m)) {
-				test.d = dateLenghtMonth(test.y, test.m);
+		if (!isNull(input) && !isUndefined(input)) {
+			if (isString(input) && input.trim() === "") {
+				input = null;
+			} else if (isBoolean(input)) {
+				input = input.valueOf();
+			} else if (isRegExp(input)) {
+				return new WDregexp(input);
+			} else if (isTime(input)) {
+				return new WDtime(input);
+			} else if (isDate(input)) {
+				return new WDdate(input);
+			} else if (isArray(input)) {
+				return new WDarray(input);
+			} else if (isDOM(input)) {
+				return new WDdom(input);
+			} else if (isNumber(input)) {
+				return new WDnumber(input);
+			} else if (isText(input)) {
+				return new WDtext(input);
 			}
-			if (dateChecking(test.y, test.m, test.d) === true) {
-				output = dateToNumber(test.y, test.m, test.d);
-			} else if (id === "d") {
-				output = dateToNumber(date.y, date.m, 1) - 1 + input;
-			} else if (id === "m") {
-				y = date.y + (input <= 0 ? numberInteger((input - 12)/12) : numberInteger((input - 1)/12));
-				m = input < 1 ? 12 - numberAbs(input)%12 : input%12	;
-				if (m === 0) {
-					m = 12;
+		}
+
+		Object.defineProperty(this, "_value", {
+			value: input
+		});
+	};
+
+	Object.defineProperty(WD.prototype, "constructor", {
+		value: WD
+	});
+
+	/*Retorna o tipo do argumento informado*/
+	Object.defineProperty(WD.prototype, "type", {
+		enumerable: true,
+		get: function () {
+			var x, types;
+			x = null;
+			types = {
+				"undefined": isUndefined,
+				"null": isNull,
+				"boolean": isBoolean,
+				"function": isFunction,
+			};
+			for (var i in types) {
+				if (types[i](this._value)) {
+					x = i;
+					break;
 				}
-				d = date.d > dateLenghtMonth(y, m) ? dateLenghtMonth(y, m) : date.d;
-				output = dateToNumber(y, m, d);
-			} else if (id === "y") {
-				m = date.m;
-				y = input;
-				d = date.d > dateLenghtMonth(y, m) ? dateLenghtMonth(y, m) : date.d;
-				output = dateToNumber(y, m, d);
-			}
-			if (output < 1) {
-				msg("Lower limit for date has been extrapolated. Limit value set.", "w");
-				output = 1;
-			}
-			else if (output > dateToNumber(Y_max, 12, 31)){
-				msg("Upper limit for date has been extrapolated. Limit value set.", "w");
-				output = dateToNumber(Y_max, 12, 31);
-			}
-		}
-		return output;
-	};
-
-	function dateFormat(value, string, locale) {
-		/*Formata a data de acordo conforme especificado na string*/
-		if (locale === undefined) {locale = lang();}
-		var date, ref, names;
-		date   = dateFromNumber(value);
-		ref    = new Date(1970, date.m - 1, 15, 12, 0, 0, 0);
-		ref.setDate(15 + dateWeek(value) - (ref.getDay()+1));
-		names = {
-			"%d": date.d, "%D": ("00"+date.d).slice(-2), "@d": dateDayYear(date.y, date.m, date.d),
-			"%m": date.m, "%M": ("00"+date.m).slice(-2), "@m": dateLenghtMonth(date.y, date.m),
-			"#m": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][date.m - 1],
-			"#M": [
-				"January", "February", "March", "April",
-				"May", "June", "July", "August",
-				"September", "October", "November", "December"
-			][date.m - 1],
-			"%y": date.y, "%Y": ("0000"+date.y).slice(-4),
-			"%w": dateWeek(value), "@w": dateWeeks(date.y, dateDayYear(date.y, date.m, date.d)),
-			"#w": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][dateWeek(value) - 1],
-			"#W": ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][dateWeek(value) - 1],
-			"%l": dateLeap(date.y) ? 366 : 365, "%c": dateCountdown(date.y, date.m, date.d)
-		}
-		try {
-			ref.toLocaleString(locale);
-			names["#w"] = ref.toLocaleString(locale, {weekday: "short"});
-			names["#W"] = ref.toLocaleString(locale, {weekday: "long"});
-			names["#m"] = ref.toLocaleString(locale, {month: "short"});
-			names["#M"] = ref.toLocaleString(locale, {month: "long"});
-		} catch(e) {
-			msg("dateFormat: toLocaleString not defined.", "a");
-		}
-		if (type(string) === "?") {
-			string = ("0000"+date.y).slice(-4)+"-"+("00"+date.m).slice(-2)+"-"+("00"+date.d).slice(-2);
-		} else {
-			for (var i in names) {string = string.replace(new RegExp(i, "g"), names[i]);}
-		}
-		return string;
-	};
-
-/*===========================================================================*/
-	function timeDefiner(input) {
-		/*Define o valor numérico do tempo se verdadeiro, ou retorna null se inválido*/
-		var time;
-		if (input === "%now") {
-			input = new Date();
-			time = 3600*input.getHours() + 60*input.getMinutes() + input.getSeconds();
-		} else if (/^[0-9]+(\:[0-5][0-9]){1,2}$/.test(input)) {
-			input = input.split(":");
-			time  = 3600*Number(input[0]) + 60*Number(input[1]) + (input[2] === undefined ? 0 : Number(input[2]))
-		} else if ((/^12:[0-5][0-9]am$/i).test(input)) {
-			input = input.split(/[^0-9]/);
-			time  = 3600*0+60*Number(input[1]);
-		} else if ((/^(0?[1-9]|1[0-1]):[0-5][0-9]am$/i).test(input)) {
-			input = input.split(/[^0-9]/);
-			time  = 3600*Number(input[0])+60*Number(input[1]);
-		} else if ((/^12:[0-5][0-9]pm$/i).test(input)) {
-			input = input.split(/[^0-9]/);
-			time  = 3600*12+60*Number(input[1]);
-		} else if ((/^(0?[1-9]|1[0-1]):[0-5][0-9]pm$/i).test(input)) {
-			input = input.split(/[^0-9]/);
-			time  = 3600*(12+Number(input[0]))+60*Number(input[1]);
-		} else if ((/^([01][0-9]|2[0-3])h[0-5][0-9]$/i).test(input)) {
-			input = input.toLowerCase().split("h");
-			time  = 3600*Number(input[0])+60*Number(input[1]);
-		} else {
-			time = null;
-		}
-		return time;
-	};
-	
-	function timeToNumber(h, m, s, t) {
-		/*Transforma tempo para segundos*/
-		if (
-			type(h) !== "number" || !numberIsInteger(h) ||
-			type(m) !== "number" || !numberIsInteger(m) ||
-			type(s) !== "number" || !numberIsInteger(s)
-		) {
-			msg("Values must be an integer number.", "e");
-		} else {
-			t = 3600*numberDefiner(h) + 60*numberDefiner(m) + numberDefiner(s);
-			if (t < 0) {
-				msg("Lower limit for time has been extrapolated. Limit value set.", "w");
-				t = 0;
-			}
-		}
-		return t;
-	};
-
-	function timeFromNumber(t) {
-		/*Transforma segundos em tempo*/
-		var h, m, s;
-		h = numberInteger(t/3600);
-		m = numberInteger((t - (3600*h))/60)
-		s = t - 3600*h - 60*m;
-		return {h: h, m: m, s: s};
-	};
-
-	function timeGet(t, id) {
-		/*Retorna as propriedades do tempo*/
-		var time, h24, output;
-		time = timeFromNumber(t);
-		h24  = time.h%24;
-		if (id in time) {
-			output = time[id];
-		} else if (id === "h24") {
-			output = h24;
-		} else if (id === "ampm") {
-			if (h24 === 0) {
-				output = "12:"+("00"+time.m).slice(-2)+"am";
-			} else if (h24 < 12) {
-				output = h24+":"+("00"+time.m).slice(-2)+"am";
-			} else if (h24 === 12) {
-				output = "12:"+("00"+time.m).slice(-2)+"pm";
-			} else {
-				output = (h24-12)+":"+("00"+time.m).slice(-2)+"pm";
-			}
-		} else {
-			output = time.h+":"+("00"+time.m).slice(-2)+":"+("00"+time.s).slice(-2)
-		}
-		return output;
-	};
-
-	function timeFormat(t, string) {
-		/*Formata o tempo de acordo com o especificado na string substituindo os valores dos objetos*/
-		var time, names;
-		time = timeFromNumber(t);
-		names = {
-			"%h": time.h, "%H": timeGet(t, "h24"), "#h": timeGet(t, "ampm"),
-			"%m": time.m, "%M": ("00"+time.m).slice(-2),
-			"%s": time.s, "%S": ("00"+time.s).slice(-2),
-		}
-		if (type(string) === "?") {
-			string = timeGet(t);
-		} else {
-			for (var i in names) {
-				string = string.replace(new RegExp(i, "g"), names[i]);
-			}
-		}
-		return string;
-	};
-
-/*===========================================================================*/
-	function ajaxGetRequest() {
-		/*Obtém objeto para requisições ajax*/
-		try {return new XMLHttpRequest();} catch(e) {}
-		try {return new ActiveXObject("Msxml2.XMLHTTP");} catch(e) {}
-		try {return new ActiveXObject("Microsoft.XMLHTP");} catch(e) {}
-		msg("AJAX is not available in your browser.", "e");
-		return null;	
-	};
-
-	function ajaxFileExists(input) {
-		/*Verifica se input é um caminho ou arquivo acessível*/
-		var xhttp = ajaxGetRequest();
-		if (xhttp === null) {return false;}
-		try {
-			xhttp.open("HEAD", ajaxPath(input).action, false);
-			xhttp.send();
-			return xhttp.status === 200 || xhttp.status === 304 ? true : false;
-		} catch(e) {
-			return false;
-		}
-	};
-
-	function ajaxResponse(response, error) {
-		/*Retorna objeto contendo os métodos com as informações da requisição*/
-		var argument = {
-			error: error,
-			request: response,
-			get text() {return this.error ? null : this.request.responseText;},
-			get xml()  {return this.error ? null : this.request.responseXML;},
-			get json() {
-				if (this.error) {return null;}
+			};
+			if (x === null) {
 				try {
-					return JSON.parse(this.text);
+					x = this._value.constructor.name.toLowerCase();
 				} catch(e) {
-					try {return eval("("+this.text+")");} catch(e) {return null;}
+					x = "unknown";
 				}
 			}
-		};
-		Object.freeze(argument);
-		return argument;	
+			return x;
+		}
+	});
+
+	/*Exibe os métodos e atributos enumeráveis do objeto*/
+	Object.defineProperty(WD.prototype, "tools", {
+		enumerable: true,
+		get: function () {
+			var x = []
+			for (var i in this) {
+				x.push(i);
+			}
+			return WD(x).sort();
+		}
+	});
+
+	/*retorna o método valueOf e toString*/
+	Object.defineProperties(WD.prototype, {
+		$: {
+			value: $
+		},
+		valueOf: {
+			value: function () {
+				var x;
+				switch(this.type) {
+					case "null":
+						x = 0;
+						break;
+					case "undefined":
+						x = Infinity;
+						break;
+					case "boolean":
+						x = this._value.valueOf() === true ? 1 : 0;
+						break;
+					default:
+						try {
+							x = this._value.valueOf();
+						} catch(e) {
+							x = Number(this._value).valueOf();
+						}
+					}
+				return x;
+			}
+		},
+		toString: {
+			value: function () {
+				var x;
+				switch(this.type) {
+					case "null":
+						x = "Ø";
+						break;
+					case "undefined":
+						x = "?";
+						break;
+					case "boolean":
+						x = this._value === true ? "True" : "False";
+						break;
+					case "object":
+						try {
+							x = JSON.stringify(this._value);
+						} catch(e) {
+							x = this._value.toString();
+						}
+						break;
+					default:
+						try {
+							x = this._value.toString();
+						} catch(e) {
+							x = String(this._value).toString();
+						}
+					}
+				return x;
+			}
+		}
+	});
+
+/* === TEXT ================================================================ */
+
+	/*Obtém objeto para requisições ajax*/
+	function request() {
+		var x;
+		if ("XMLHttpRequest" in window) {
+			x = new XMLHttpRequest();
+		} else if ("ActiveXObject" in window) {
+			try {
+				x = new ActiveXObject("Msxml2.XMLHTTP");
+			} catch(e) {
+				x = new ActiveXObject("Microsoft.XMLHTP");
+			}
+		} else {
+			x = null;
+			log("XMLHttpRequest and  ActiveXObject are not available in your browser!", "e");
+		}
+		return x;
 	};
 
-	function ajaxSend(path, method, execute, time) {
-		/*Solicita e retorna requisição ajax*/
-		addAjaxModal();
-		var argument = {error: true, request: null, text: null, xml: null, json: null};
-		try {
-			var path, request;
-			request = ajaxGetRequest()
-			path    = ajaxPath(path);
-			if (type(time) === "number") {request.timeout = 1000*numberDefiner(time);}
-			request.onreadystatechange = function(ev) {
-				if (this.readyState === 4) {
-					if (this.status === 200 || this.status === 304) {
-						argument = ajaxResponse(this, false);
-					} else {
-						argument = ajaxResponse(this, true);
+	/*Controlador da janela modal (ajax)*/
+	var loadModal = {
+		modal: document.createElement("DIV"),
+		start: function() {
+			this.modal.textContent           = "Loading data, please wait!";
+			this.modal.style.display         = "block";
+			this.modal.style.width           = "100%";
+			this.modal.style.height          = "100%";
+			this.modal.style.position        = "fixed";
+			this.modal.style.top             = "0";
+			this.modal.style.right           = "0";
+			this.modal.style.bottom          = "0";
+			this.modal.style.left            = "0";
+			this.modal.style.color           = "white";
+			this.modal.style.backgroundColor = "black";
+			this.modal.style.opacity         = "0.9";
+			this.modal.style.zIndex          = "999999";
+			this.modal.style.cursor          = "progress";
+			return;
+		},
+		counter: 0,
+		add: function() {
+			this.counter++;
+			this.check();
+			return;
+		},
+		del: function() {
+			var target = this;
+			window.setTimeout(function () {
+				target.counter--;
+				target.check();
+				return;
+			}, 250);
+			return;
+		},
+		check: function() {
+			if (this.counter > 0) {
+				document.body.appendChild(this.modal);
+			} else if (this.counter === 0) {
+				this.modal.parentElement.removeChild(this.modal);
+			} else {
+				this.counter = 0;
+				this.modal.parentElement.removeChild(this.modal);
+			}
+			return;		
+		}
+	};
+	loadModal.start();
+
+	/*Função que verifica o sucesso da requisição ajax*/
+ 	function stateChange(ev, method) {
+ 		var arg, target;
+ 		target = this;
+ 		arg = {
+			error: true,
+			request: target,
+			text: null,
+			xml: null,
+			json: null
+		};
+		if (this.readyState === 4) {
+			if (this.status === 200 || this.status === 304) {
+				arg.error = false;
+				arg.text = target.responseText || null;
+				arg.xml  = target.responseXML || null;
+				try {
+					arg.json = JSON.parse(target.responseText) || eval("("+target.responseText+")");
+				} catch(e) {
+					arg.json = null;
+				}
+				loadModal.del();
+				method.call(this, arg);
+			}
+		}
+		return;
+	};
+
+/*...........................................................................*/
+
+	function WDtext(input) {
+		if (!(this instanceof WDtext)) {
+			return new WDtext(input);
+		}
+		if (!isText(input)) {
+			return new WD(input);
+		}
+		Object.defineProperty(this, "_value", {
+			writable: true,
+			value: input.trim()
+		});
+	};
+
+	WDtext.prototype = Object.create(WD.prototype, {
+		constructor: {
+			value: WDtext
+		}
+	});
+
+	/*Deixa o texto só com a primeira letra de cada palavra em maiúsculo*/
+	Object.defineProperty(WDtext.prototype, "title", {
+		enumerable: true,
+		value: function(change) {
+			var input, value;
+			input = this.toString().toLowerCase().split("");
+			value = "";
+
+			for (var i = 0; i < input.length; i++) {
+				if (input[i-1] === " " || i === 0) {
+					value += input[i].toUpperCase();
+				} else {
+					value += input[i];
+				}
+			}
+			if (change === true) {
+				this._value = value;
+				value =  this;
+			}
+			return value;
+		}
+	});
+
+	/*Elimina espaços desnecessários de input*/
+	Object.defineProperty(WDtext.prototype, "trim", {
+		enumerable: true,
+		value: function(change) {
+			var value;
+			value = this.toString().trim().replace(/\ +/g, " ");
+			if (change === true) {
+				this._value = value;
+				value = this;
+			}
+			return value;	
+		}
+	});
+
+	/*Localiza e altera o conteúdo do texto pelo valor informado*/
+	Object.defineProperty(WDtext.prototype, "replace", {
+		enumerable: true,
+		value: function(oldValue, newValue, change) {
+			var value;
+			value = this.toString();
+			newValue = newValue === null || newValue === undefined ? "" : new String(newValue).toString();
+			if (WD(oldValue).type === "regexp") {
+				oldValue = new RegExp(WD(oldValue).toString(), "g");
+				value = value.replace(oldValue, newValue);
+			} else {
+				oldValue = oldValue === null || oldValue === undefined ? "" : oldValue;
+				value = value.split(oldValue).join(newValue);
+			}
+			if (change === true) {
+				this._value = value;
+				value = this;
+			}
+			return value;
+		}
+	});
+
+	/*Elimina os acentos de input*/
+	Object.defineProperty(WDtext.prototype, "clear", {
+		enumerable: true,
+		value: function(change) {
+			var value, clear;
+			var clear = {
+				A: /[À-Æ]/g,
+				C: /[Ç]/g,
+				E: /[È-Ë]/g,
+				I: /[Ì-Ï]/g,
+				D: /[Ð]/g,
+				N: /[Ñ]/g,
+				O: /[Ò-ÖØ]/g,
+				U: /[Ù-Ü]/g,
+				Y: /[Ý]/g,
+				a: /[à-æ]/g,
+				c: /[ç]/g,
+				e: /[è-ë]/g,
+				i: /[ì-ï]/g,
+				d: /[ð]/g,
+				n: /[ñ]/g,
+				o: /[ò-öø]/g,
+				u: /[ù-ü]/g,
+				y: /[ýÿ]/g
+			};
+			value = this.toString();
+			if ("normalize" in String) {
+				value = value.normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+			} else {
+				for (var i in clear) {
+					value = value.replace(clear[i], i);
+				}
+			}
+			if (change === true) {
+					this._value = value;
+					value =  this;
+				}
+			return value;
+		}
+	});
+
+	/*Verifica se o texto é uma caminho acessível*/
+	Object.defineProperty(WDtext.prototype, "path", {
+		enumerable: true,
+		get: function() {
+			var x, xhttp, path;
+			xhttp = request();
+			path  = this.toString().split("?")[0].replace(/^\'/, "");
+			if (xhttp === null || path.trim() === "") {
+				x = false;
+			} else {
+				try {
+					xhttp.open("HEAD", path, false);
+					xhttp.send();
+					x = xhttp.status === 200 || xhttp.status === 304 ? true : false;
+				} catch(e) {
+					x = false;
+				}
+			}
+			return x;
+		}
+	});
+
+	/*Obtêm o conteúdo do caminho e retorna o método de requisição*/
+	Object.defineProperty(WDtext.prototype, "request", {
+		enumerable: true,
+		value: function(method, time) {
+			if (this.path === false) {
+				log("\""+this.valueOf()+"\" is not an accessible path!", "w");
+				return null;
+			}
+			if (WD(method).type !== "function") {
+				log("request: The \"method\" argument is required.", "w");
+				return null;
+			}
+			var xhttp, value, path, serial, time, types;
+			xhttp  = request();
+			value  = this.toString().replace(/^\'/, "").split("?");
+			path   = value[0];
+			serial = value[1];
+			if (WD(serial).type !== "text")  {
+				serial = "";
+			} else if ((/^\$\{.+\}$/).test(WD(serial).toString())) {
+				serial = $(getData(serial)["$"]);
+				serial = serial !== null ? WD(serial).form : "";
+			} else {
+				serial = serial.toString();
+			}log(serial);
+			time   = WD(time);
+			if ((time.number === "integer" || time.number === "float") && time.valueOf() > 0) {
+				xhttp.timeout =  1000*time.valueOf();
+			}
+			xhttp.onreadystatechange = function (ev) {
+				stateChange.call(this, ev, method);
+			}
+			types = {
+				get: function() {
+					loadModal.add();
+					try {
+						xhttp.open("GET", path+"?"+serial, true);
+						xhttp.send();
+						return true;
+					} catch(e) {
+						log(e, "w");
+						loadModal.del();
+						return false;
 					}
-					delAjaxModal();
-					if (type(execute) === "f()") {execute.call(this, argument);}
+				},
+				post: function () {
+					loadModal.add();
+					try {
+						xhttp.open("POST", path, true);
+						xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+						//xhttp.setRequestHeader("Content-type", "multipart/form-data");
+						xhttp.send(serial === "" ? null : serial);
+						return true;
+					} catch(e) {
+						log(e, "w");
+						loadModal.del();
+						return false;
+					}
+				}
+			}
+			return types;
+		}
+	});
+	
+	/*Retorna o atributo type*/
+	Object.defineProperties(WDtext.prototype, {
+		type: {
+			value: "text"
+		}
+	});
+
+
+/* === REGEXP ============================================================== */
+
+	function WDregexp(input) {
+		if (!(this instanceof WDregexp)) {
+			return new WDregexp(input);
+		}
+
+		if (!isRegExp(input)) {
+			return new WD(input);
+		}
+		Object.defineProperty(this, "_value", {
+			value: input.valueOf()
+		});
+	};
+
+	WDregexp.prototype = Object.create(WD.prototype, {
+		constructor: {
+			value: WDregexp
+		}
+	});
+
+	/*Aplica máscara ao valor de entrada se casar com a re*/
+	Object.defineProperty(WDregexp.prototype, "mask", {
+		enumerable: true,
+		value: function (input) {
+			var pattern, check, target, group, close;
+			var metaReference, metacharacter, expression;
+			input = String(input).toString();
+			if (this._value.test(input)) {
+				return input;
+			}
+			pattern = this.toString();
+			check   = "";
+			target  = "";
+			group   = 1;
+			close   = true;
+			metaReference = ["n", "d", "D", "w", "W", "s", "S", "t", "r", "n", "v", "f", "b", "B"];
+			metacharacter = ["\n", "\d", "\D", "\w", "\W", "\s", "\S", "\t", "\r", "\n", "\v", "\f", "\b", "\B"];
+			expression    = ["[", "]", "|", "^", "$", ".", "(", ")", "*", "+", "?", "{", "}"];
+			for (var i = 0; i < pattern.length; i++) {
+				if (pattern[i] === "\\") {
+					i++;
+					if (!WD(metaReference).inside(pattern[i])) {
+						target += pattern[i];
+					}	else {
+						target += metacharacter[WD(metaReference).inside(pattern[i], true)[0]];
+					}
+				} else if (pattern[i] === "(") {
+					check  += pattern[i];
+					target += "$"+group;
+					close   = false;
+					group++;
+				} else if (pattern[i] === ")") {
+					check += pattern[i];
+					close  = true;
+				} else if (close && !WD(expression).inside(pattern[i])) {
+					target += pattern[i];
+				} else {
+					check += pattern[i];
+				}
+			}
+			check = new RegExp(check);
+			if (check.test(input)) {
+				input = input.replace(check, target);
+			} else {
+				input = false;
+			}
+			return input;
+		}
+	});
+
+	/*Retorna o método toString e o atributo type*/
+	Object.defineProperties(WDregexp.prototype, {
+		type: {
+			value: "regexp"
+		},
+		toString: {
+			value: function() {
+				return this._value.source;
+			}
+		}
+	});
+
+/* === NUMBER ============================================================== */
+
+	function WDnumber(input) {
+		if (!(this instanceof WDnumber)) {
+			return new WDnumber(input);
+		}
+		if (!isNumber(input)) {
+			return new WD(input);
+		}
+		Object.defineProperty(this, "_value", {
+			value: isString(input) ? Number(input).valueOf() : input.valueOf()
+		});
+	};
+
+	WDnumber.prototype = Object.create(WD.prototype, {
+		constructor: {
+			value: WDnumber
+		}
+	});
+
+	/*Retorna o tipo do número*/
+	Object.defineProperty(WDnumber.prototype, "number", {
+		enumerable: true,
+		get: function() {
+			var x;
+			if (this.valueOf() === Infinity || this.valueOf() === -Infinity) {
+				x = "infinity";
+			} else if (this.valueOf() % 1 !== 0) {
+				x = "float";
+			} else if (this.valueOf() % 1 === 0) {
+				x = "integer";
+			} else {
+				x = "?";
+			}
+			return x
+		}
+	});
+
+	/*Retorna o valor inteiro do número*/
+	Object.defineProperty(WDnumber.prototype, "integer", {
+		enumerable: true,
+		get: function() {
+			var x;
+			if (this.valueOf() === Infinity || this.valueOf() === -Infinity) {
+				x = this.valueOf();
+			} else {
+				x = this.valueOf() - (this.valueOf() % 1);
+			}
+			return x;
+		}
+	});
+
+	/*Retorna o valor inteiro do número*/
+	Object.defineProperty(WDnumber.prototype, "float", {
+		enumerable: true,
+		get: function() {
+			var x, i;
+			if (this.valueOf() === Infinity || this.valueOf() === -Infinity) {
+				x = this.valueOf();
+			} else if (this.valueOf() % 1 !== 0) {
+				x = Number("0."+this.toString().split(".")[1]);
+				x = this.valueOf() < 0 ? -1 * x : x;
+			} else {
+				x = 0;
+			}
+			return x;
+		}
+	});
+
+	/*Retorna o valor absoluto do número*/
+	Object.defineProperty(WDnumber.prototype, "abs", {
+		enumerable: true,
+		get: function() {
+			return this.valueOf() < 0 ? - this.valueOf() : this.valueOf();
+		}
+	});
+
+	/*Arredonda o valor para determinado número de casas ou para cima (sem argumento)*/
+	Object.defineProperty(WDnumber.prototype, "round", {
+		enumerable: true,
+		value: function(width) {
+			var x;
+			width = WD(width);
+			if (width.number === "integer" || width.number === "float") {
+				width = WD(width.abs).integer;
+				try {
+				 	x = Number(this.valueOf().toFixed(width)).valueOf();
+				} catch(e) {
+					x = this.valueOf();
+					log(e.toString(), "w");
+				}
+			} else {
+				if (this.float === 0) {
+					x = this.valueOf();
+				} else if (this.valueOf() > 0) {
+					x = this.integer+1;
+				} else {
+					x = this.integer-1;
+				}
+			}
+			return x;
+		}
+	});
+
+	/*Transcreve a notação científica para html*/
+	Object.defineProperty(WDnumber.prototype, "power10", {
+		enumerable: true,
+		value: function(width, html) {
+			var x, sup, value;
+			sup = {
+				"0": "⁰",
+				"1": "¹",
+				"2": "²",
+				"3": "³",
+				"4": "⁴",
+				"5": "⁵",
+				"6": "⁶",
+				"7": "⁷",
+				"8": "⁸",
+				"9": "⁹",
+				"+": "⁺",
+				"-": "⁻",
+				"x": "×"
+			};
+			if (this.number === "infinity") {
+				x = this.toString();
+			} else {
+				try {
+					width = WD(width);
+					width = width.number === "integer" && width >= 0 ? width.valueOf() : undefined;
+					x = this.valueOf().toExponential(width);
+				} catch(e) {
+					x = this.valueOf().toExponential();
+				}
+				if (html === true) {
+					x = x.replace(/e(.+)$/, " &times; 10<sup>$1</sup>");
+				} else {
+					value = x.split("e")[1].split("");
+					for (var i = 0; i < value.length; i++) {
+						value[i] = sup[value[i]];
+					}
+					value = " × 10"+value.join("");
+					x = x.replace(/e.+/, value);
+				}
+			}
+			return x;
+		}
+	});
+
+	/*Retorna o número no formato local ou definido no html*/
+	Object.defineProperty(WDnumber.prototype, "locale", {
+		enumerable: true,
+		value: function(locale) {
+			var x;
+			if (WD(locale).type !== "text") {
+				locale = lang();
+			}
+			try {
+				x = this.valueOf().toLocaleString(locale);
+			} catch(e) {
+				if (this.number === "infinity") {
+					x = this.toString();
+				} else {
+					x = this.fixed().split(".");
+					x[0] = x[0].split("").reverse();
+					x[0] = x[0].join("").replace(/([0-9]{3})/g, "$1,");
+					x[0] = x[0].replace(/\,(\+|\-)/, "$1").split("").reverse().join("");
+					x = x.join(".");
+				}
+			}
+			return x;
+		}
+	});
+
+	/*Retorna o número no formato monetário local ou defuinido no html*/
+	Object.defineProperty(WDnumber.prototype, "coin", {
+		enumerable: true,
+		value: function(currency, locale) {
+			var x;
+			if (WD(locale).type !== "text")   {
+				locale = lang();
+			}
+			if (WD(currency).type !== "text") {
+				currency = locale === "en-US" ? "USD" : "¤";
+			}
+			if (this.number === "infinity") {
+				x = this.toString();
+			} else {
+				try {
+					x = this.valueOf().toLocaleString(locale, {style: "currency", currency: currency});
+				} catch(e) {
+					currency = this.valueOf() < 0 ? "-"+currency : currency;
+					x = WD(WD(this.integer).abs+0.5).locale().replace(/(.)5$/, "$1");
+					x = x+(WD(WD(this.float).abs+1).fixed(0, 2).replace(/.+([0-9]{2})$/, "$1"));
+					x = currency+" "+x;
+				}
+			}
+			return x;
+		}
+	});
+
+	/*Fixa a quantidade de caracteres na parte inteira do número*/
+	Object.defineProperty(WDnumber.prototype, "fixed", {
+		enumerable: true,
+		value: function(int, frac) {
+			var integer, float, x;
+			if (this.number === "infinity") {
+				x = this.toString();
+			} else {
+				x = this.toString().split(".");
+				integer = x[0].replace(/[^0-9]/, "");;
+				float   = x[1] === undefined ? "0" : x[1];
+				integer = integer === "0" ? [] : integer.split("");
+				float   = float   === "0" ? [] : float.split("");
+				int  = WD(int).type  !== "number" ? 1 : WD(int).integer;
+				frac = WD(frac).type !== "number" ? float.length : WD(frac).integer;
+				if (WD(int).number === "infinity" || int < 1) {
+					int = 1;
+				}
+				if (WD(frac).number === "infinity" || frac < 0) {
+					frac = float.length;
+				}
+				while (integer.length < int) {
+					integer.unshift("0");
+				}
+				while (float.length !== frac) {
+					if (float.length < frac) {
+						float.push("0");
+					} else {
+						float.pop();
+					}
+				}
+				x = float.length === 0 ? integer.join("") : integer.join("")+"."+float.join("");
+				if (this.valueOf() < 0) {
+					x = "-"+x;
+				}
+			}
+			return x;
+		}
+	});
+
+	/*Retorna o método toString*/
+	Object.defineProperties(WDnumber.prototype, {
+		type: {
+			value: "number"
+		},
+		toString: {
+			value: function() {
+				var x, val, num, dot, pow;
+				if (this.number === "infinity") {
+					x = this.valueOf() < 0 ? "-∞" : "+∞";
+				} else {
+					val = this._value.toString().toLowerCase().split("e");
+					pow = WD(val[1]).type === "number" ? WD(val[1]).valueOf() : 0;
+					num = val[0].split(".");
+					num[0] = num[0].replace(/[^0-9]/g, "").replace(/^0+/, "");
+					num[1] = WD(num[1]).type === "number" ? num[1].replace(/0+$/, "") : "";
+					dot = pow < 0 ? num[1].length+WD(pow).abs : num[1].length;
+					num = num[0]+num[1];
+					for (var i = 0; i < WD(pow).abs; i++) {
+						if (pow < 0) {
+							num = "0"+num;
+						} else {
+							num = num+"0";
+						}
+					}
+					dot = new RegExp("([0-9]{"+dot+"})$");
+					num = num.replace(dot, ".$1");
+					num = num.replace(/^\.$/, "0");
+					num = num.replace(/\.(0+)?$/, "");
+					num = num.replace(/^(0+)?([0-9]\.)/, "$1");
+					num = this.valueOf() < 0 ? "-"+num : num;
+					x = num;
+				}
+				return x;
+			}
+		}
+	});
+
+/* === TIME ================================================================ */
+
+	function WDtime(input) {
+		if (!(this instanceof WDtime)) {
+			return new WDtime(input);
+		}
+		if (!isTime(input)) {
+			return new WD(input);
+		}
+		var time, x;
+		input = input.replace(/\ /g, "").replace(/h/i, ":").toLowerCase();
+		if (input === "%now") {
+			x    = new Date();
+			time = [x.getHours(), x.getMinutes(), x.getSeconds()];
+		} else if ((/am$/).test(input)) {
+			x     = input.replace("am", "").split(":");
+			time  = [Number(x[0]).valueOf(), Number(x[1]).valueOf(), 0];
+		} else if ((/pm$/).test(input)) {
+			x     = input.replace("pm", "").split(":");
+			time  = [x[0] === "12" ? 0 : 12 + Number(x[0]).valueOf(), Number(x[1]).valueOf(), 0];
+		} else if (/^(0?[0-9]|1[0-9]|2[0-4])(\:[0-5][0-9]){1,2}$/.test(input)) {
+			x     = input.split(":");
+			time  = [Number(x[0]).valueOf()%24, Number(x[1]).valueOf(), x[2] === undefined ? 0 : Number(x[2]).valueOf()];
+		} else throw Error("An unexpected error occurred while setting time!");
+
+		Object.defineProperty(this, "_value", {
+			writable: true,
+			value: 3600*time[0]+60*time[1]+time[2]
+		});
+	};
+
+	WDtime.prototype = Object.create(WD.prototype, {
+		constructor: {
+			value: WDtime
+		}
+	});
+
+	/*Define e obtem o valor da hora*/
+	Object.defineProperty(WDtime.prototype, "hour", {
+		enumerable: true,
+		get: function() {
+			var h = WD(this.valueOf()/3600);
+			return h.integer;
+		},
+		set: function(h) {
+			var h24, h;
+			h24 = 24*60*60;
+			h = WD(h);
+			if (h.number === "integer" || h.number === "float") {
+				h = h.integer;
+				if (h >= 0) {
+					this._value = 3600*h + 60*this.minute + this.second;
+				} else {
+					this._value = 3600*h + 60*this.minute + this.second;
+				}
+				this.valueOf();
+			}
+			return;
+		}
+	});
+
+	/*Define e obtem o valor do minuto*/
+	Object.defineProperty(WDtime.prototype, "minute", {
+		enumerable: true,
+		get: function() {
+			var m = this.valueOf() - 3600*this.hour;
+			m = WD(m/60);
+			return m.integer;
+		},
+		set: function(m) {
+			var time;
+			m = WD(m);
+			if (m.number === "integer" || m.number === "float") {
+				m = m.integer;
+				if (m > 59 || m < 0) {
+					time = 60*(m - this.minute);
+					this._value += time;
+				} else {
+					this._value = 3600*this.hour + 60*m + this.second;
+				}
+				this.valueOf();
+			}
+			return;
+		}
+	});
+
+	/*Define e obtem o valor do segundo*/
+	Object.defineProperty(WDtime.prototype, "second", {
+		enumerable: true,
+		get: function() {
+			var s = this.valueOf() - 3600*this.hour - 60*this.minute;
+			return s;
+		},
+		set: function(s) {
+			var time;
+			s = WD(s);
+			if (s.number === "integer" || s.number === "float") {
+				s = s.integer;
+				if (s > 59 || s < 0) {
+					time = s - this.second;
+					this._value += time;
+				} else {
+					this._value = 3600*this.hour + 60*this.minute + s;
+				}
+				this.valueOf();
+			}
+			return;
+		}
+	});	
+
+
+	/*Retorna a hora no formato ampm*/
+	Object.defineProperty(WDtime.prototype, "h12", {
+		enumerable: true,
+		get: function() {
+			var h, m, p;
+			p = this.hour < 12 ? "AM" : "PM"; 
+			if (this.hour === 0) {
+				h = 12;
+			} else if (this.hour <= 12) {
+				h = this.hour;
+			} else {
+				h = this.hour - 12;
+			}
+			h = WD(h).fixed(2, 0);
+			m = WD(this.minute).fixed(2, 0);
+			return h+":"+m+p;
+		}
+	});
+
+	/*Formata o tempo de acordo com o especificado na string*/
+	Object.defineProperty(WDtime.prototype, "format", {
+		enumerable: true,
+		value: function(string) {
+			if (WD(string).type !== "text") {
+				return this.toString();
+			}
+			var x, chars;
+			chars = {
+			"%h": this.hour,
+			"%H": WD(this.hour).fixed(2, 0),
+			"#h": this.h12,
+			"%m": this.minute,
+			"%M": WD(this.minute).fixed(2, 0),
+			"%s": this.second,
+			"%S": WD(this.second).fixed(2, 0),
+			};
+			x = WD(string);
+			for (var i in chars) {
+				if (x.toString().indexOf(i) >= 0) {
+					x.replace(i, chars[i], true);
+				}
+			}
+			return x.toString();
+		}
+	});
+
+	/*Retorna o método toString e valueOf*/
+	Object.defineProperties(WDtime.prototype, {
+		type: {
+			value: "time"
+		},
+		toString: {
+			value: function() {
+				return this.format("%H:%M:%S");
+			}
+		},
+		valueOf: {
+			value: function() {
+				var h24, x;
+				h24 = 24*60*60;
+				x   = WD(this._value);
+				if (x.type !== "number" || x.number === "infinity") {
+					log("Improper change of internal value has been adjusted to the minimum value.", "w");
+					this._value = 0;
+				} else if (x.number !== "integer") {
+					log("Considering that time was defined as a non-integer value, its value was approximated!", "w");
+					this._value = WD(this._value).integer;
+				}
+				if (this._value < 0) {
+					this._value = this._value % h24 + h24;
+				} else if (this._value >= h24) {
+					this._value = this._value % h24;
+				}
+				return this._value;
+			}
+		}
+	});
+
+/* === DATE ================================================================ */
+
+	/*Parâmetros de configuração de data*/
+	var Y_min    = 1;    /*ano inicial*/
+	var Y_max    = 9999; /*ano final*/
+	var Y_004    = 4;    /*primeiro ano divisível por 4*/
+	var Y_100    = 100   /*primeiro ano divisível por 100*/
+	var Y_400    = 400   /*primeiro ano divisível por 400*/
+	var WEEK_1st = 1;    /*dia da semana + 1 de DATE_min*/
+	var DATE_min = dateToNumber(Y_min, 1, 1);   /*data mínima*/
+	var DATE_max = dateToNumber(Y_max, 12, 31); /*data máxima*/
+
+	/*Retorna o dia do ano*/
+	function dateDayYear(y, m, d) {
+		/*Retorna o da do ano*/
+		var x365, x366, x;
+		x365 = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
+		x366 = [0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335];
+		x = isLeap(y) ? x366[m-1]+d : x365[m-1]+d;
+		return x;
+	};
+
+	/*Converte uma data para seu valor numérico*/
+	function dateToNumber(y, m, d) {
+		var l4, l100, l400, delta, x;
+		delta = WD(y === Y_min ? 0 : 365*(y - Y_min));
+		l4    = WD(y  <  Y_004 ? 0 : (y - 1)/4);
+		l100  = WD(y  <  Y_100 ? 0 : (y - 1)/100);
+		l400  = WD(y  <  Y_400 ? 0 : (y - 1)/400);
+		x = delta.integer + l4.integer - l100.integer + l400.integer + dateDayYear(y, m, d);
+		return x;
+	};
+
+/*...........................................................................*/
+
+	function WDdate(input) {
+		if (!(this instanceof WDdate)) {
+			return new WDdate(input);
+		}
+		if (!isDate(input)) {
+			return new WD(input);
+		}
+		var date, x;
+		if ("Date" in window && (input instanceof Date || input.constructor === Date)) {
+			x = input;
+			date = [x.getFullYear(), x.getMonth()+1, x.getDate()];
+		} else {
+			input = input.trim();
+			if (input === "%today") {
+				x = new Date();
+				date = [x.getFullYear(), x.getMonth()+1, x.getDate()];
+			} else if (input.split("-").length === 3) {
+				x = input.split("-");
+				date = [x[0], x[1], x[2]];
+			} else if (input.split("/").length === 3) {
+				x = input.split("/");
+				date = [x[2], x[0], x[1]];
+			} else if (input.split(".").length === 3) {
+				x = input.split(".");
+				date = [x[2], x[1], x[0]];
+			} else throw Error("An unexpected error occurred while setting date!");
+		}
+		for (var i = 0; i < date.length; i++) {
+			x = WD(date[i]);
+			if (x.number !== "integer" || date[i] <= 0) throw Error("An unexpected error occurred while setting date!");
+			date[i] = x.valueOf();
+		}
+
+		Object.defineProperty(this, "_value", {
+			writable: true,
+			value: dateToNumber(date[0], date[1], date[2])
+		});
+	};
+
+	WDdate.prototype = Object.create(WD.prototype, {
+		constructor: {
+			value: WDdate
+		}
+	});
+
+	/*Obtêm e define o ano*/
+	Object.defineProperty(WDdate.prototype, "year", {
+		enumerable: true,
+		get: function() {
+			var y;
+			y = WD(this.valueOf()/365).integer + Y_min;
+			while (dateToNumber(y, 1, 1) > this.valueOf()) {
+				y--;
+			}
+			return y;
+		},
+		set: function(x) {
+			var y = WD(x);
+			if (y.type !== "number") {
+				log("The value must be a positive integer between "+Y_min+" and "+Y_max+".", "w");
+			} else if (y.valueOf() > Y_max) {
+				this._value = DATE_max;
+			} else if (y.valueOf() < Y_min) {
+				this._value = DATE_min;
+			} else {
+				this._value = dateToNumber(y.integer, this.month, this.day);
+			}
+			return this.valueOf();
+		}
+	});
+
+	/*Obtêm e define o mês*/
+	Object.defineProperty(WDdate.prototype, "month", {
+		enumerable: true,
+		get: function() {
+			var m = 1;
+			while (dateToNumber(this.year, m+1, 1) - 1 < this.valueOf()) {
+				m++;
+			}
+			return m;
+		},
+		set: function(x) {
+			var y, m, d;
+			y = this.year;
+			m = WD(x);
+			d = this.day;
+			if (m.type !== "number" || m.number === "infinity") {
+				log("The value must be an integer.", "w");
+			} else {
+				m = m.integer;
+				if (m === 0) {
+					y = this.year-1;
+					m = 12;
+				} else if (m < 0) {
+					y = this.year + WD((m - 12)/12).integer;
+					m = 12 + m%12;
+				} else if (m > 12) {
+					y = this.year + WD((m - 1)/12).integer;
+					m = m%12;
+				}
+				if (WD([4, 6, 9, 11]).inside(m) && d > 30) {
+					d = 30;
+				} else if (m === 2 && d > 28) {
+					d = isLeap(y) ? 29 : 28;
+				}
+				this._value = dateToNumber(y, m, d);
+			}
+			return this.valueOf();
+		}
+	});
+
+	/*Retorna o mês em formato textual*/
+	Object.defineProperties(WDdate.prototype, {
+		shortMonth: {
+			enumerable: true,
+			value: function(locale) {
+				if (WD(locale).type !== "text") {
+					locale = lang();
+				}
+				var x, main, ref;
+				main = [
+					"Jan", "Feb", "Mar", "Apr",
+					"May", "Jun", "Jul", "Aug",
+					"Sep", "Oct", "Nov", "Dec"
+				];
+				try {
+					ref = new Date(2010, this.month - 1, 1, 12, 0, 0, 0);
+					x = ref.toLocaleString(locale, {month: "short"});
+				} catch(e) {
+					log("shortMonth: Default behavior has been performed!", "w");
+					x = main[this.month-1];
+				}
+				return x.toLowerCase();
+			}
+		},
+		longMonth: {
+			enumerable: true,
+			value: function(locale) {
+				if (WD(locale).type !== "text") {
+					locale = lang();
+				}
+				var x, main, ref;
+				main = [
+					"January",   "February", "March",    "April",
+					"May",       "June",     "July",     "August",
+					"September", "October",  "November", "December"
+				];
+				try {
+					ref = new Date(2010, this.month - 1, 1, 12, 0, 0, 0);
+					x = ref.toLocaleString(locale, {month: "long"});
+				} catch(e) {
+					log("longMonth: Default behavior has been performed!", "w");
+					x = main[this.month-1];
+				}
+				return x.toLowerCase();
+			}
+		}
+	});
+
+	/*Obtêm e define o dia*/
+	Object.defineProperty(WDdate.prototype, "day", {
+		enumerable: true,
+		get: function() {
+			var d = 1;
+			while (dateToNumber(this.year, this.month, d) !== this.valueOf()) {
+				d++;
+			}
+			return d;
+		},
+		set: function(x) {
+			var d, z;
+			d = WD(x);
+			if (d.type !== "number" || d.number === "infinity") {
+				log("The value must be an integer.", "w");
+			} else {
+				d = d.integer;
+				if (d > this.width) {
+					z = this.valueOf() + d - this.day;
+				} else if (d < 1) {
+					z = this.valueOf() - (this.day - d);
+				} else {
+					z = this.valueOf() + (d - this.day);
+				}
+				this._value = z;
+			}
+			return this.valueOf();
+		}
+	});
+
+	/*Pequenos métodos para data*/
+	Object.defineProperties(WDdate.prototype, {
+		leap: {
+			enumerable: true,
+			get: function() {toString()
+				return isLeap(this.year);
+			}
+		},
+		week: {
+			enumerable: true,
+			get: function() {
+				return (this.valueOf() + WEEK_1st)%7 === 0 ? 7 : (this.valueOf() + WEEK_1st)%7;
+			}
+		},
+		days: {
+			enumerable: true,
+			get: function() {
+				var y, ref;
+				y   = WD(this.year).fixed(4, 0);
+				ref = WD(y+"-01-01").valueOf();
+				return this.valueOf() - ref + 1;
+			}		
+		},
+		weeks: {
+			enumerable: true,
+			get: function() {
+				var ref, weeks, y;
+				y     = WD(this.year).fixed(4, 0);
+				ref   = WD(y+"-01-01").week;
+				weeks = WD(1 + (ref + this.days - 2)/7).integer;
+				return weeks;
+			}
+		},
+		width: {
+			enumerable: true,
+			get: function() {
+				var w;
+				if (WD([1, 3, 5, 7, 8, 10, 12]).inside(this.month)) {
+					w = 31;
+				} else if (WD([4, 6, 9, 11]).inside(this.month)) {
+					w = 30;
+				} else {
+					w = this.leap ? 29 : 28;
+				}
+				return w;
+			}
+		},
+		countdown: {
+			enumerable: true,
+			get: function() {
+				return (this.leap ? 366 : 365) - this.days;
+			}
+		}
+	});
+
+	/*Retorna o dia da semana em formato textual*/
+	Object.defineProperties(WDdate.prototype, {
+		shortWeek: {
+			enumerable: true,
+			value: function(locale) {
+				if (WD(locale).type !== "text") {
+					locale = lang();
+				}
+				var x, main, ref;
+				main = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+				main = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+				try {
+					ref = new Date(1970, this.month - 1, 15, 12, 0, 0, 0);
+					ref.setDate(15 + this.week - (ref.getDay()+1));
+					ref.toLocaleString(locale);
+					x = ref.toLocaleString(locale, {weekday: "short"});
+				} catch(e) {
+					log("shortWeek: Default behavior has been performed!", "w");
+					x = main[this.week-1];
+				}
+				return x.toLowerCase();
+			}
+		},
+		longWeek: {
+			enumerable: true,
+			value: function(locale) {
+				if (WD(locale).type !== "text") {
+					locale = lang();
+				}
+				var x, main, ref;
+				main = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+				try {
+					ref = new Date(1970, this.month - 1, 15, 12, 0, 0, 0);
+					ref.setDate(15 + this.week - (ref.getDay()+1));
+					ref.toLocaleString(locale);
+					x = ref.toLocaleString(locale, {weekday: "long"});
+				} catch(e) {
+					log("shortWeek: Default behavior has been performed!", "w");
+					x = main[this.week-1];
+				}
+				return x.toLowerCase();
+			}
+		}
+	});
+
+	/*Formata a data de acordo com a string informada*/
+	Object.defineProperty(WDdate.prototype, "format", {
+		enumerable: true,
+		value: function(string, locale) {
+			if (WD(string).type !== "text") {
+				return this.toString();
+			}
+			var x, chars;
+			chars = {
+				"%d": this.day,
+				"%D": WD(this.day).fixed(2, 0),
+				"@d": this.days,
+				"%m": this.month,
+				"%M": WD(this.month).fixed(2, 0),
+				"@m": this.width,
+				"#m": this.shortMonth(locale),
+				"#M": this.longMonth(locale),
+				"%y": this.year,
+				"%Y": WD(this.year).fixed(4, 0),
+				"%w": this.week,
+				"@w": this.weeks,
+				"#w": this.shortWeek(locale),
+				"#W": this.longWeek(locale),
+				"%l": this.leap ? 366 : 365,
+				"%c": this.countdown
+			}
+			x = WD(string);
+			for (var i in chars) {
+				if (x.toString().indexOf(i) >= 0) {
+					x.replace(i, chars[i], true);
+				}
+			}
+			return x.toString();
+		}
+	});
+
+	/*Retorna o método toString e valueOf*/
+	Object.defineProperties(WDdate.prototype, {
+		type: {
+			value: "date"
+		},
+		toString: {
+			value: function() {
+				return this.format("%Y-%M-%D");
+			}
+		},
+		valueOf: {
+			value: function() {
+				if (WD(this._value).type !== "number") {
+					log("Improper change of internal value has been adjusted to the minimum value.", "w");
+					this._value = DATE_min;
+				} else if (this._value < DATE_min) {
+					log("Lower limit for date has been extrapolated. Limit value set.", "w");
+					this._value = DATE_min;
+				} else if (this._value > DATE_max) {
+					log("Upper limit for date has been extrapolated. Limit value set.", "w");
+					this._value = DATE_max;
+				} else if (WD(this._value).number !== "integer") {
+					log("Incorrect change of internal value was adjusted to approximate value.", "w");
+					this._value = WD(this._value).integer;
+				}
+				return this._value;
+			}
+		}
+	});
+
+/* === ARRAY =============================================================== */
+
+	function WDarray(input) {
+		if (!(this instanceof WDarray)) {
+			return new WDarray(input);
+		}
+		if (!isArray(input)){
+			return new WD(input);
+		}
+		var x = [];
+		if ("slice" in input) {
+			x = input.slice();
+		} else {
+			for (var i = 0; i < input.length; i++) {
+				x.push(input[i]);
+			}
+		}
+		Object.defineProperty(this, "_value", {
+			value: x
+		});
+	};
+
+	WDarray.prototype = Object.create(WD.prototype, {
+		constructor: {
+			value: WDarray
+		}
+	});
+
+	/*Informar o comprimento do array*/
+	Object.defineProperties(WDarray.prototype, {
+		items: {
+			enumerable: true,
+			get: function() {
+				return this.valueOf().length;
+			}
+		},
+		item: {
+			enumerable: true,
+			value: function(i) {
+				var x;
+				i = WD(i);
+				if (i.type !== "number") {
+					x = this.valueOf();
+				} else if (i.valueOf() < 0) {
+					x = this.valueOf()[this.items - i.abs];
+				} else {
+					x = this.valueOf()[i.valueOf()];
+				}
+				return x;
+			}
+		}
+	});
+
+	/*Informar se o argumento está contido no array*/
+	Object.defineProperty(WDarray.prototype, "inside", {
+		enumerable: true,
+		value: function(item, show) {
+			if (show !== true) {
+				show = false;
+			}
+			var x;
+			x = show === true ? [] : false;
+			for (var i = 0; i < this.items; i++) {
+				if (this.valueOf()[i] === item) {
+					if (show === true) {
+						x.push(i);
+					} else {
+						x = true;
+						break;
+					}
+				}
+			}
+			return x;
+		}
+	});
+
+	/*Remove todos os itens do array e o retorna*/
+	Object.defineProperty(WDarray.prototype, "del", {
+		enumerable: true,
+		value: function() {
+			for (var i = 0 ; i < arguments.length; i++) {
+				while (this.inside(arguments[i])) {
+					this._value.splice(this.valueOf().indexOf(arguments[i]), 1);
+				}
+			}
+			return this.valueOf();
+		}
+	});
+
+	/*Adiciona itens ao array e o retorna*/
+	Object.defineProperty(WDarray.prototype, "add", {
+		enumerable: true,
+		value: function() {
+			for (var i = 0 ; i < arguments.length; i++) {
+					this._value.push(arguments[i]);
+			}
+			return this.valueOf();
+		}
+	});
+
+	/*Adiciona itens se o item não existir e recíproca*/
+	Object.defineProperty(WDarray.prototype, "toggle", {
+		enumerable: true,
+		value: function() {
+			for (var i = 0 ; i < arguments.length; i++) {
+				if (this.inside(arguments[i])) {
+					this.del(arguments[i]);
+				} else {
+					this.add(arguments[i]);
+				}
+			}
+			return this.valueOf();
+		}
+	});
+
+	/*Retorna a quantidade de vezes que o item aparece em array*/
+	Object.defineProperty(WDarray.prototype, "count", {
+		enumerable: true,
+		value: function(item) {
+			return this.inside(item, true).length;
+		}
+	});
+
+	/*Troca o valor antigo pelo novo valor em todas ocorrências*/
+	Object.defineProperty(WDarray.prototype, "replace", {
+		enumerable: true,
+		value: function(item, value) {
+			var index;
+			index = this.inside(item, true);
+			for (var i = 0 ; i < index.length; i++) {
+				this._value[index[i]] = value;
+			}
+			return this.valueOf();
+		}
+	});
+
+	Object.defineProperty(WDarray.prototype, "unique", {
+		enumerable: true,
+		value: function(sort) {
+			var array;
+			array = sort === true ? this.sort() : this.valueOf();
+			array =  array.filter(function(v, i, a) {
+				return a.indexOf(v) == i;
+			});
+			return array;
+		}
+	});
+
+	/*Retorna o array ordenado: nulo, números, tempo, data, text e outros*/
+	Object.defineProperty(WDarray.prototype, "sort", {
+		enumerable: true,
+		value: function(unique) {
+			var aNull, aNumber, aTime, aDate, aText, aOthers, aFinal;
+			var uNull, uNumber, uTime, uDate, uText, uOthers;
+			var real, made;
+			aNull   = []; uNull   = [];
+			aNumber = []; uNumber = [];
+			aTime   = []; uTime   = [];
+			aDate   = []; uDate   = [];
+			aText   = []; uText   = [];
+			aOthers = []; uOthers = [];
+			aFinal  = [];
+			for (var i = 0; i < this.valueOf().length; i++) {
+				real = this.valueOf()[i];
+				made = WD(real);
+				switch(made.type) {
+					case "null":
+						if (unique !== true) {
+							aNull.push(real);
+						} else if (!WD(uNull).inside(made.valueOf())) {
+							aNull.push(null);
+							uNull.push(made.valueOf());
+						}
+						break;
+					case "number":
+						if (unique !== true) {
+							aNumber.push({real: real, made: made.valueOf()});
+						} else if (!WD(uNumber).inside(made.valueOf())) {
+							aNumber.push({real: made.valueOf(), made: made.valueOf()});
+							uNumber.push(made.valueOf());
+						}
+						break;
+					case "time":
+						if (unique !== true) {
+							aTime.push({real: real, made: made.valueOf()});
+						} else if (!WD(uTime).inside(made.valueOf())) {
+							aTime.push({real: made.toString(), made: made.valueOf()});
+							uTime.push(made.valueOf());
+						}
+						break;
+					case "date":
+						if (unique !== true) {
+							aDate.push({real: real, made: made.valueOf()});
+						} else if (!WD(uDate).inside(made.valueOf())) {
+							aDate.push({real: made.toString(), made: made.valueOf()});
+							uDate.push(made.valueOf());
+						}
+						break;
+					case "text":
+						if (unique !== true) {
+							aText.push({real: real, made: made.toString().toUpperCase()});
+						} else if (!WD(uText).inside(made.toString())) {
+							aText.push({real: made.toString(), made: made.toString().toUpperCase()});
+							uText.push(made.toString());
+						}
+						break;
+					default:
+						if (unique !== true) {
+							aOthers.push(real);
+						} else if (!WD(uOthers).inside(real)) {
+							aOthers.push(real);
+							uOthers.push(real);
+						}
+				}
+			}
+			aNull.sort();
+			aNumber.sort(function(a,b) {
+				return a.made - b.made;
+			});
+			aTime.sort(function(a,b) {
+				return a.made - b.made;
+			});
+			aDate.sort(function(a,b) {
+				return a.made - b.made;
+			});
+			aText.sort(function(a,b) {
+				return a.made > b.made;
+			});
+			aOthers.sort();
+			aFinal = aFinal.concat(aNull);
+			made = [aNumber, aTime, aDate, aText];
+			for (i = 0; i < made.length; i++) {
+				for (var j = 0; j < made[i].length; j++) {
+					aFinal.push(made[i][j].real);
+				}		
+			}
+			aFinal = aFinal.concat(aOthers);
+			return aFinal;
+		}
+	});
+
+	/*Define método toString*/
+	Object.defineProperties(WDarray.prototype, {
+		type: {
+			value: "array"
+		},
+		toString: {
+			value: function() {
+				var x;
+				try {
+					x = JSON.stringify(this._value);
+				} catch(e) {
+					x = this._value.toString();
+				}
+				return x;
+			}
+		}
+	});
+
+/* === DOM ================================================================= */
+
+	/*Transforma atributo com traço para camel case*/
+	function camelCase(input) {
+		var x = WD(input).toString();
+		if ((/\-/).test(x)) {
+			x = WD(x.replace(/\-/g, " ")).title(true).toString().split(" ");
+			x[0] = x[0].toLowerCase();
+			x = x.join("");
+		}
+		return x;
+	};
+
+	/*Define a função para os disparadores*/
+	function getEventMethod(input) {
+		var wdEventHandler = function(ev) {
+			var methods = input;
+			if (ev === "getMethods") {
+				return methods;
+			}
+			for (var i = 0; i < methods.length; i++) {
+				methods[i].call(this, ev);
+			}
+			return;
+		};
+		return wdEventHandler;
+	};
+
+/*...........................................................................*/
+
+	function WDdom(input) {
+		if (!(this instanceof WDdom)) {
+			return new WDdom(input);
+		}
+		if (!isDOM(input)){
+			return new WD(input);
+		}
+		Object.defineProperty(this, "_value", {
+			value: input
+		});
+	};
+
+	WDdom.prototype = Object.create(WD.prototype, {
+		constructor: {
+			value: WDdom
+		}
+	});
+
+	/*Executa o método informado loopando todos elementos html (input)*/
+	Object.defineProperty(WDdom.prototype, "run", {
+		enumerable: true,
+		value: function(method) {
+			if (WD(method).type === "function") {
+				var x;
+				for (var i = 0; i < this.valueOf().length; i++) {
+					x = this.valueOf()[i];
+					if (x !== window && x.nodeType != 1 && x.nodeType != 9) {
+						continue;
+					}
+					method(x);
+				}
+			} else {
+				log("run: Invalid argument!", "w");
+			}
+			return this;
+		}
+	});
+
+	/*Carrega página HTML requisitada no elemento informado*/
+	Object.defineProperty(WDdom.prototype, "load", {
+		enumerable: true,
+		value: function(text) {
+			this.run(function(elem) {
+				var scripts, script;
+				elem.innerHTML = text;
+				scripts = elem.querySelectorAll("script");
+				for (var i = 0; i < scripts.length; i++) {
+					script = document.createElement("script");
+					if (scripts[i].src === "") {
+						script.textContent = scripts[i].textContent;
+					} else {
+						script.src = scripts[i].src;
+					}
+					elem.appendChild(script);
+					WD(script).action("del");
+				}
+				loadingProcedures();
+				return;
+			});
+			return this;
+		}
+	});
+
+	/*Define o valor dos atributos data*/
+	Object.defineProperty(WDdom.prototype, "data", {
+		enumerable: true,
+		value: function(obj) {
+			if (obj === null || WD(obj).type === "object") {
+				this.run(function(elem) {
+					var key;
+					if (obj === null) {
+						for (key in elem.dataset) {
+							delete elem.dataset[key];
+						}
+					} else {
+						for (var i in obj) {
+							key = camelCase(i);
+							if (obj[i] === null) {
+								delete elem.dataset[key];
+							} else {
+								elem.dataset[key] = WD(obj[i]).type === "regexp" ? WD(obj[i]).toString() : obj[i];
+								settingProcedures(elem, key);
+							}
+						}
+					}
+					return;
+				});
+			} else {
+				log("data: Invalid argument!", "w");
+			}
+			return this;
+		}
+	});
+
+	/*Define o atributo style do elemento a partir da nomenclatura CSS*/
+	Object.defineProperty(WDdom.prototype, "style", {
+		enumerable: true,
+		value: function(styles) {
+			if (styles === null || WD(styles).type === "object") {
+				this.run(function(elem) {
+					var key;
+					if (styles === null) {
+						while (elem.style.length > 0) {
+							key = elem.style[0];
+							elem.style[key] = null;
+						}
+					} else {
+						for (var i in styles) {
+							key = camelCase(i);
+							if (!(key in elem.style)) {
+								log("style: Unknown attribute. ("+i+")", "w");
+							}
+							elem.style[key] = styles[i];
+						}
+					}
+					return;
+				});
+			} else {
+				log("style: Invalid argument!", "w");
+			}
+			return this;
+		}
+	});
+
+	/*Manipula os valores do atributo class*/
+	Object.defineProperty(WDdom.prototype, "class", {
+		enumerable: true,
+		value: function (list) {
+			if (list === null || WD(list).type === "object") {
+				this.run(function(elem) {
+					var css, cls, i;
+					css = WD(elem.className);
+					css = css.type === "null" ? [] : css.trim().split(" ");
+					if (list === null) {
+						css = [];
+					} else {
+						css = WD(css);
+						if (WD(list.add).type === "text") {
+							cls = WD(list.add).trim().split(" ");
+							for (i = 0; i < cls.length; i++) {
+								css.add(cls[i]);
+							}
+						}
+						if (WD(list.del).type === "text") {
+							cls = WD(list.del).trim().split(" ");
+							for (i = 0; i < cls.length; i++) {
+								css.del(cls[i]);
+							}
+						}
+						if (WD(list.toggle).type === "text") {
+							cls = WD(list.toggle).trim().split(" ");
+							for (i = 0; i < cls.length; i++) {
+								css.toggle(cls[i]);
+							}
+						}
+						css = css.valueOf();
+					}
+					elem.className = WD(css).sort(true).join(" ");
+					return;
+				});
+			} else {
+				log("class: Invalid argument!", "w");
+			}
+			return this;
+		}
+
+	});
+
+	/*Exibe somente os elementos filhos cujo conteúdo textual contenha o valor informado*/
+	Object.defineProperty(WDdom.prototype, "filter", {
+		enumerable: true,
+		value: function (text, min, show) {
+			if (show !== false) {
+				show = true;
+			}
+			if (WD(min).type !== "number" || WD(min).number === "infinity" || min < 0) {
+				min = 0;
+			}
+			if (WD(text) !== "text") {
+				text = String(text).toString();
+			}
+			min  = WD(min).integer;
+			text = text.toUpperCase();
+			this.run(function (elem) {
+				var child, content;
+				child  = elem.children;
+				for (var i = 0; i < child.length; i++) {
+					if (!("textContent" in child[i])) {
+						continue;
+					}
+					content = child[i].textContent.toUpperCase();
+					if (show === true) {
+						if (text.length < min || content.indexOf(text) >= 0 || text === "") {
+							WD(child[i]).action("show");
+						} else {
+							WD(child[i]).action("hide");
+						}
+					} else {
+						if (text.length >= min && content.indexOf(text) >= 0 && text !== "") {
+							WD(child[i]).action("show");
+						} else {
+							WD(child[i]).action("hide");
+						}
+					}
+				};
+				return;
+			});
+			return this;
+		}
+	});
+
+	/*Define ação para o objeto html*/
+	Object.defineProperty(WDdom.prototype, "action", {
+		enumerable: true,
+		value: function (action) {
+			action = String(action).toString().toLowerCase();
+			this.run(function(elem) {
+				var tag = elem.tagName.toUpperCase();
+				switch(action) {
+					case "open":
+						if ("open" in elem) {
+							elem.open = true;
+						} else {
+							WD(elem).class({add: "wd-open"});
+						}
+						break;
+					case "close":
+						if ("open" in elem) {
+							elem.open = false;
+						} else {
+							WD(elem).class({del: "wd-open"});
+						}
+						break;
+					case "toggle-open":
+						if ("open" in elem) {
+							elem.open = elem.open !== true ? true : false;
+						} else {
+							WD(elem).class({toggle: "wd-open"});
+						}
+						break;
+					case "tab":
+						var bros = elem.parentElement.children;
+						WD(bros).action("hide");
+						WD(elem).action("show");
+						break;
+					case "del":
+						if (elem.remove !== undefined) {
+							elem.remove();
+							} else {
+							elem.parentElement.removeChild(elem);
+						}
+						break;
+					case "show":
+						WD(elem).class({del: "js-wd-no-display"});
+						break;
+					case "hide":
+						WD(elem).class({add: "js-wd-no-display"});
+						break;
+					case "check":
+						if ("checked" in elem) {
+							elem.checked = true;
+						} else {
+							WD(elem).class({add: "wd-cheked"});
+						}
+						break;
+					case "uncheck":
+						if ("checked" in elem) {
+							elem.checked = false;
+						} else {
+							WD(elem).class({del: "wd-cheked"});
+						}
+						break;
+					case "toggle-check":
+						if ("checked" in elem) {
+							elem.checked = elem.checked !== true ? true : false;
+						} else {
+							WD(elem).class({toggle: "wd-cheked"});
+						}
+						break;
+					case "clean":
+						if ("value" in elem) {
+							elem.value = "";
+						} else if ("textContent" in elem) {
+							elem.textContent = ""
+						} else if ("innerHTML" in elem) {
+							elem.innerHTML = "";
+						}
+						break;
+					}
+					return;
+				});
+			return this;
+		}
+	});
+
+	/*Adiciona ou remove disparadores*/
+	Object.defineProperty(WDdom.prototype, "handler", {
+		enumerable: true,
+		value: function (events) {
+			if (events === null || WD(events).type === "object") {
+				this.run(function(elem) {
+					var action, event, methods, array, wdEventHandler;
+					if (events === null) {
+						for (var i in elem) {
+							if ((/^on/i).test(i) && WD(elem[i]).type === "function") {
+								if (elem[i].name === "wdEventHandler") {
+									elem[i] = null;
+								}
+							}
+						}
+					} else {
+						for (var i in events) {
+							action = (/^\-/).test(i) ? "del" : "add";
+							event  = i.replace(/[^a-zA-Z]/g, "").toLowerCase();
+							event  = (/^on/).test(event) ? event : "on"+event;
+							if (!(event in elem)) {
+								log("handler: Unknown event. ("+event+")", "w");
+							}
+							var array;
+							if (WD(elem[event]).type !== "function") {
+								array = WD([]);
+							} else if (elem[event].name === "wdEventHandler") {
+								array = WD(elem[event]("getMethods"));
+							} else {
+								array = WD([elem[event]]);
+							}
+							methods = WD(events[i]).type === "array" ? events[i] : [events[i]];
+							for (var m = 0; m < methods.length; m++) {
+								if (WD(methods[m]).type !== "function" && methods[m] !== null ) {
+									log("handler: Invalid key value. ("+event+")", "w");
+									continue;
+								}
+								if (methods[m] === null) {
+									array = WD([]);
+								} else if (action === "add") {
+									array.add(methods[m]);
+								} else {
+									array.del(methods[m]);
+								}
+							}
+							array = array.valueOf();
+							if (array.length > 0) {
+								elem[event] = getEventMethod(array);
+							} else {
+								elem[event] = null;
+							}
+						}
+					}
+					return;
+				});
+			} else {
+				log("handler: Invalid argument!", "w");
+			}
+			return this;
+		}
+	});
+
+	/*Constroi elementos html a partir de um array de objetos*/
+	Object.defineProperty(WDdom.prototype, "repeat", {
+		enumerable: true,
+		value: function (json) {
+			if (WD(json).type === "array") {
+				this.run(function(elem) {
+					var inner, re, html;
+					html = elem.innerHTML;
+					if (html.search(/\{\{.+\}\}/gi) >= 0) {
+						elem.dataset.wdRepeatModel = html;
+					} else if ("wdRepeatModel" in elem.dataset) {
+						html = elem.dataset.wdRepeatModel;
+					} else {
+						html = null;
+					}
+					if (html === null) {
+						elem.innerHTML = "<center><mark><small>-- Error: Replication structure not found! --</small></mark></center>";
+					} else {
+						elem.innerHTML = "";
+						html = WD(html).replace("}}=\"\"", "}}");
+						for (var i = 0; i < json.length; i++) {
+							inner = html;
+							if (WD(json[i]).type !== "object") {
+								log("repeat: Incorrect structure ignored!", "i");
+								continue;
+							}
+							for (var c in json[i]) {
+								inner = WD(inner).replace("{{"+c+"}}", json[i][c]);
+							}
+							elem.innerHTML += inner;
+						}
+						loadingProcedures();
+					}
+					return;
+				});	
+			} else {
+				log("repeat: Invalid argument.", "w");
+			}
+			return this;
+		}
+	});
+
+	/*Exibe somente os elementos filhos no intervalo numérico informado*/
+	Object.defineProperty(WDdom.prototype, "page", {
+		enumerable: true,
+		value: function (page, size) {
+			page = WD(page).type !== "number" ? 0 : WD(page).integer;
+			size = WD(size).type !== "number" || WD(size).abs === Infinity ? 1 : WD(size).abs;
+			this.run(function(elem) {
+				var lines, amount, width, pages, start, end;
+				lines  = elem.children;
+				amount = lines.length;
+				width  = size <= 1 ? WD(size * amount).integer : WD(size).integer;
+				pages  = WD(amount / width).round();
+				if (page >= pages - 1 || page === -1) {/*page igual ou posterior a última página*/
+					start = (pages - 1) * width;
+					end   = amount - 1;
+				} else if (pages + page <= 0) {/*-page igual ou anterior a primeira página*/
+					start = 0;
+					end   = start + width - 1;
+				} else if (page < 0) {/*-page entre a primeira e última página*/
+					start = (pages + page) * width;
+					end   = start + width - 1;
+				} else {/*page entre a primeira e última página*/
+					start = page * width;
+					end   = start + width - 1;
+				}
+				WD(lines).action("hide");
+				for (var i = start; i <= end; i++) {
+					WD(lines[i]).action("show");
 				}
 				return;
-			};
-			if (method === "POST") {
-				request.open(method, path.action, true);
-				request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-				request.send(path.serial);
-				//request.setRequestHeader("Content-type", "multipart/form-data");
-				//request.send(path.file);
-			} else {
-				request.open(method, path.full, true);
-				request.send();
-			}
-		} catch(e) {
-			delAjaxModal();
-			if (type(execute) === "f()") {execute.call(this, argument);}
+			});
+			return this;
 		}
-		return;
-	};
+	});
 
-	function ajaxPath(input) {
-		/*Retorna objeto contendo as informações sobre a URL separadas em action, serial e full*/
-		var action, serial, hash;
-		input  = input.split("?");
-		action = input[0];
-		if (input.length === 1) {
-			serial = "";
-		} else if (input[1][0] === "@") {
-			serial = ajaxGetSerialForm(input[1].split("#")[0]);
-		} else {
-			serial = input.join("?").replace(action+"?", "");
-		}
-		return {
-			action: action,
-			serial: serial === "" ? null : serial,
-			full: serial === "" ? action : action+"?"+serial,
-		};
-	};
-	
-	
-	function ajaxGetSerialForm(fname) {
-		/*Obtem a serialização a partir do formulário informado*/
-		var form, serial, inputs, elem, name, tag, value, itype, atype, check;
-		form = document.getElementsByName(fname.replace("@", ""))[0];
-		serial = [];
-		if (form !== undefined && form.tagName.toUpperCase() === "FORM") {
-			inputs = form.elements;
-			for (var i = 0; i < inputs.length; i++) {
-				elem  = inputs[i];
-				name  = elem.name;
-				tag   = elem.tagName.toUpperCase();
-				value = elem.value;
-				itype = tag === "INPUT" ? elem.type.toUpperCase() : null;
-				atype = tag === "INPUT" ? elem.attributes.type.value.toUpperCase() : itype;
-				check = itype === "RADIO" || itype === "CHECKBOX" ? elem.checked : null;
-				if (name === undefined || name === null || stringTrim(name) === "") {
-					continue;
-				} else if ((itype === "RADIO" || itype === "CHECKBOX") && check === false) {
-					continue;
-				} else if (atype === "DATE" || itype === "DATE") {
-						value = type(value) === "date" && value !== "%today" ? dateFormat(dateDefiner(value)) : value;
-				} else if (atype === "TIME" || itype === "TIME") {
-						value = type(value) === "time" && value !== "%now" ? timeFormat(timeDefiner(value)) : value;
+	/*Ordena os filhos do elemento com base em seu conteúdo textual*/
+	Object.defineProperty(WDdom.prototype, "sort", {
+		enumerable: true,
+		value: function (order, col) {
+			if (WD(order).type !== "number") {
+				order = 1;
+			}
+			if (WD(col).type !== "number") {
+				col = null;
+			}
+			this.run(function(elem) {
+				var dom, text, sort, index, target, value;
+				dom  = WD(elem.children).valueOf();
+				text = [];
+				sort = [];
+				for (var i = 0; i < dom.length; i++) {
+					target = WD(dom[i].children[col]).type === "dom" ? dom[i].children[col] : dom[i];
+					value  = target.textContent || target.innerText || target.innerHTML;
+					text.push(value.trim());
+					sort.push(value.trim());
 				}
-				serial.push(name+"="+encodeURIComponent(value));
-			}
+				sort = order < 0 ? WD(sort).sort().reverse() : WD(sort).sort();
+				for (var j = 0; j < sort.length; j++) {
+					index = text.indexOf(sort[j]);
+					text[index] = null;
+					elem.appendChild(dom[index]);
+				}
+				return;
+			});
+			return this;
 		}
-		return serial.join("&");
-	};
-/*===========================================================================*/
-	function htmlLoad(elem, text) {
-		/*Carrega página HTML requisitada no elemento informado*/
-		var scripts, script;
-		elem.innerHTML = text;
-		scripts = elem.querySelectorAll("script");
-		for (var i = 0; i < scripts.length; i++) {
-			script = document.createElement("script");
-			if (scripts[i].src === "") {
-				script.textContent = scripts[i].textContent;
-			} else {
-				script.src = scripts[i].src;
-			}
-			elem.appendChild(script);
-			htmlAction(script, "del");
-		}
-		loadingProcedures();
-		return;
-	};
+	});
 
-	function htmlRun(input, method) {
-		/*Executa o método informado loopando todos elementos html (input)*/
-		if (["html", "doc", "win"].indexOf(type(input)) >= 0) {input = [input];}
-		for (var i = 0; i < input.length; i++) {
-			if (input[i] !== window && input[i].nodeType != 1 && input[i].nodeType != 9) {continue;}
-			method(input[i]);
-		}
-		return;
-	};
-
-	function htmlCamelCase(input) {
-		/*Transforma atributo com traço para camel case*/
-		var camel = "";
-		input = stringTrim(input).toLowerCase();
-		for (var n in input) {
-			if (input[n] === "-") {
-				continue;
-			} else if (input[n-1] === "-") {
-				camel += input[n].toUpperCase();
-			} else {
-				camel += input[n];
-			}
-		}
-		return camel;
-	};
-
-	function htmlSetHandler(elem, event, method, act) {
-		/*Define função para adicionar eventos*/
-		event = (/^on/i).test(event) ? event.toLowerCase() : "on"+event.toLowerCase();
-		if (type(method) !== "f()" && method !== null) {
-			msg("The "+event+" attribute must be a function or null value.", "e");
-			return;
-		}
-		if (!(event in elem)) {
-			msg("The \""+event+"\" attribute was not found in "+elem.tagName+" element!", "w");
-			return;
-		}
-		if (method === null) {
-			elem[event] = null;
-			return;
-		}
-		var methods;
-		if (type(elem[event]) !== "f()") {
-			methods = [];
-		} else if (elem[event].name === "wdEventHandler") {
-				methods = elem[event]("showMethods");
-		} else {
-			methods = [elem[event]];
-		}
-		if (act === "add") {
-			methods = arrayAdd(methods, method);
-		} else if (act === "del") {
-			methods = arrayDel(methods, method);
-		}
-		function wdEventHandler(ev) {
-			if (ev === "showMethods") {return methods;}
-			for (var i = 0; i < methods.length; i++) {methods[i].call(this, ev);}
-		}
-		elem[event] = wdEventHandler;
-		return;
-	};
-
-	function htmlHandler(elem, obj, remove) {
-		/*Determina ação para definir manipuladores de evento a partir de um objeto*/
-		if (obj === undefined) {obj = {};}
-		if (remove === undefined) {remove = false;}
-		var act, method, methods;
-		act = remove === true ? "del" : "add";
-		for (var event in obj) {
-			methods = type(obj[event]) === "array" ? obj[event] : [obj[event]];
-			for (var j = 0; j < methods.length; j++) {
-				method = methods[j];
-				htmlSetHandler(elem, event, method, act);
-			}
-		}
-		return;
-	};
-
-	function htmlStyle(elem, styles) {
-		/*Define o atributo style do elemento a partir da nomenclatura CSS*/
-		if (styles === undefined) {styles = {};}
-		var css, camel;
-		for (var i in styles) {
-			camel = stringTrim(i);
-			css   = htmlCamelCase(i);
-			if (camel in elem.style) {
-				elem.style[camel] = styles[i];
-			} else if (css in elem.style) {
-				elem.style[css] = styles[i];
-			} else {
-				msg("htmlStyle: the \""+i+"\" attribute was not found in "+elem.tagName+" element!", "w");
-			}
-		}
-		return;
-	};
-
-	function htmlClass(elem, list) {
-		/*Manipula os valores do atributo class*/
-		if (list === undefined) {list = {};}
-		var values, i;
-		values = arrayOrganized(stringTrim(elem.className).split(" "));
-		if (list === null) {
-			values = [];
-		} else if (type(list) === "object") {
-			if ("add" in list) {
-				if (type(list.add) !== "array") {
-					list.add = [list.add];
-				}
-				for (i = 0; i < list.add.length; i++) {
-					values = arrayAdd(values, list.add[i]);
-				}
-			}
-			if ("del" in list) {
-				if (type(list.del) !== "array") {
-					list.del = [list.del];
-				}
-				for (i = 0; i < list.del.length; i++) {
-					values = arrayDel(values, list.del[i]);
-				}
-			}
-			if ("toggle" in list) {
-				if (type(list.toggle) !== "array") {
-					list.toggle = [list.toggle];
-				}
-				for (i = 0; i < list.toggle.length; i++) {
-					values = arrayToggle(values, list.toggle[i]);
-				}
-			}
-		}
-		elem.className = values.length === 0 ? "" : stringTrim(arrayOrganized(values).join(" "));
-		return;
-	};
-	
-	function htmlData(elem, obj) {
-		/*Define o valor dos atributos data*/
-		if (obj === undefined) {obj = {};}
-		var key;
-		for (var i in obj) {
-			key = /\-/.test(i) ? htmlCamelCase(i) : i;
-			if (obj[i] === null) {
-				delete elem.dataset[key];
-			} else {
-				elem.dataset[key] = type(obj[i]) === "regex" ? obj[i].source : obj[i];
-				settingProcedures(elem, key);
-			}
-		}
-		return;
-	};
-
-	function htmlFilter(elem, string, min) {
-		/*Exibe somente os elementos filhos cujo conteúdo textual contenha o valor informado*/
-		if (string === undefined) {string = "";}
-		if (min === undefined) {min = 0;}
-		
-		
-		if (string.length < min) {return;}
-		var child, content;
-		string = string.toUpperCase();
-		child  = elem.children;
-		for (var i = 0; i < child.length; i++) {
-			content = child[i].textContent.toUpperCase();
-			if   (content.indexOf(string) === -1) {child[i].style.display = "none";}
-			else {child[i].style.display = null;}
-		};
-		return;
-	};
-
-	function htmlRepeat(elem, object) {
-		/*Constroi elementos html a partir de um array de objetos*/
-		var inner, re, html;
-		html = elem.innerHTML;
-		if (html.search(/\{\{.+\}\}/gi) >= 0) {
-			elem.dataset.wdRepeatModel = html;
-		} else if ("wdRepeatModel" in elem.dataset) {
-			html = elem.dataset.wdRepeatModel;
-		} else {
-			return false;
-		}
-		elem.innerHTML = "";
-		html = html.replace(/\}\}\=\"\"/gi, "}}");
-		for (var i in object) {
-			inner = html;
-			for (var c in object[i]) {
-				re = new RegExp("\\{\\{"+c+"\\}\\}", "g");
-				inner = inner.replace(re, object[i][c]);
-			};
-			elem.innerHTML += inner;
-		};
-		loadingProcedures();
-		return;
-	};
-
-	function htmlSort(elem, order, col) {
-		/*Ordena os filhos do elemento com base em seu conteúdo textual*/
-		if (order === undefined) {order = 1;}
-		if (col === undefined) {col = null;}
-		var dom = [], text = [], sort = [], seq = [], index, childs;
-		childs = elem.children;
-		for (var i = 0; i < childs.length; i++) {
-			dom.push(childs[i]);
-			if (col === null) {
-				text.push(stringTrim(childs[i].textContent.toUpperCase()));
-				sort.push(stringTrim(childs[i].textContent.toUpperCase()));
-			}
-			else {
-				text.push(stringTrim(childs[i].children[col].textContent.toUpperCase()));
-				sort.push(stringTrim(childs[i].children[col].textContent.toUpperCase()));
-			}
-		};
-		sort = arraySort(sort);
-		for (i = 0; i < sort.length; i++) {
-			index = text.indexOf(sort[i]);
-			seq.push(index);
-			text[index] = null;
-		};
-		if (order < 0) {seq.reverse();}
-		for (i = 0; i < seq.length; i++) {
-			elem.appendChild(dom[seq[i]]);
-		};
-		return;
-	};
-
-	function htmlPage(elem, page, size) {
-		/*Exibe somente os elementos filhos no intervalo numérico informado*/
-		if (page === undefined) {page = 0;}
-		if (size === undefined) {size = 1;}
-		var lines, width, pages = [], section = [];
-		page = numberRound(page, 0);
-		size = size === 0 ? 1 : numberAbs(size);
-		lines = elem.children;
-		width = (size <= 1 && size > 0) ? numberRound(size * lines.length, 0) : numberRound(size, 0);
-		for (var i = 0; i < lines.length; i++) {
-			section.push(lines[i]);
-			if (section.length%width === 0 || i+1 === lines.length) {
-				pages.push(section);
-				section = [];
-			}
-		}
-		if (page < 0) {page = (pages.length + page) < 0 ? 0 : pages.length + page;}
-		if (page+1 > pages.length) {page = pages.length-1;}
-		for (i = 0; i < pages.length; i++) {
-			for (var n = 0; n < pages[i].length; n++) {
-				if (i === page) {
-					pages[i][n].style.display = null;
-				} else {
-					pages[i][n].style.display = "none";
-				}
-			}
-		}
-		return pages.length;
-	};
-
-	function htmlAction(elem, act) {
-		/*Define ação para o objeto html*/
-		if (act === undefined) {act = "toggle";}
-		var tag = elem.tagName.toUpperCase();
-		switch(act) {
-			case "open":
-				if (tag === "DIALOG" && "showModal" in elem) {
-					elem.showModal();
-				} else if (tag === "DETAILS" && "open" in elem) {
-					elem.open = true;
-				} else {
-					elem.dataset.wdOpen = true;
-				}
-				break;
-			case "close":
-				if (tag === "DIALOG" && "close" in elem) {
-					elem.close();
-				} else if (tag === "DETAILS" && "open" in elem) {
-					elem.open = false;
-				}
-				delete elem.dataset.wdOpen;
-				break;
-			case "toggle":
-				if (elem.open === true || "wdOpen" in elem.dataset) {
-					htmlAction(elem, "close");
-				} else {
-					htmlAction(elem, "open");
-				}
-				break;
-			case "tab":
-				var childs = elem.parentElement.children;
-				for (var i = 0; i < childs.length; i++) {childs[i].style.display = "none";}
-				elem.style.display = null;
-				break;
-			case "del":
-				if (elem.remove !== undefined) {
-					elem.remove();
-				} else {
-					elem.parentElement.removeChild(elem);
-				}
-				break;
-			case "show":
-				if (elem.style.display === "none") {
-					elem.style.display = "wdHide" in elem.dataset ? elem.dataset.wdHide : null;
-				}
-				delete elem.dataset.wdHide;
-				break;
-			case "hide":
-				if (elem.style.display !== "none") {
-					elem.dataset.wdHide = elem.style.display;
-					elem.style.display = "none";
-				}
-				break;
-			case "check":
-				if (elem.tagName.toUpperCase() === "INPUT") {
-					if (elem.type.toUpperCase() === "CHECKBOX" || elem.type.toUpperCase() === "RADIO") {
-						elem.checked = true;
-					}
-				}
-				break;
-			case "uncheck":
-				if (elem.tagName.toUpperCase() === "INPUT") {
-					if (elem.type.toUpperCase() === "CHECKBOX" || elem.type.toUpperCase() === "RADIO") {
-						elem.checked = false;
-					}
-				}
-				break;
-			case "togglecheck":
-				if (elem.tagName.toUpperCase() === "INPUT") {
-					if (elem.type.toUpperCase() === "CHECKBOX" || elem.type.toUpperCase() === "RADIO") {
-						elem.checked = elem.checked === true ? false : true;
-					}
-				}
-				break;
-			case "clean":
-				if ("value" in elem) {
-					elem.value = "";
-				} else if ("textContent" in elem) {
-					elem.textContent = ""
-				} else if ("innerHTML" in elem) {
-					elem.innerHTML = "";
-				}
-				break;
-		}
-		return;
-	};
-
-	function htmlGetStyles(input) {
-		/*Retorna um array contendo os estilos (padrão ou computado) de todos os elementos de input*/
-		var list = [];
-		for (var i = 0; i < input.length; i++) {
-			try {
-				list.push({
-					default:  "getDefaultComputedStyle" in window ? window.getDefaultComputedStyle(input[i], null) : {},
-					computed: "getComputedStyle" in window ? window.getComputedStyle(input[i], null) : {}
+	/*Obtêm o estilo aplicado aos elementos (lista)*/
+	Object.defineProperty(WDdom.prototype, "getStyle", {
+		enumerable: true,
+		value: function(css) {
+			var x, style;
+			x = [];
+			if (!("getComputedStyle" in window)) {
+				log("getStyle: Your browser does not have the necessary tool!", "w");
+			} else if (WD(css).type === "text") {
+				this.run(function(elem) {
+					style = window.getComputedStyle(elem, null);
+					x.push(css in style ? style.getPropertyValue(css) : null);
+					return;
 				});
-			} catch(e) {
-				list.push({default: {}, computed: {}});
+			} else {
+				log("getStyle: Invalid argument.", "w");
+			}
+			return x;
+		}
+	});
+
+	/*Obtem a serialização de formulário*/
+	Object.defineProperty(WDdom.prototype, "form", {
+		enumerable: true,
+		get: function() {
+			var x;
+			x = [];
+			this.run(function(elem) {
+				var tag, type, font, name, value, check;
+				tag   = elem.tagName.toLowerCase();
+				type  = tag === "input" ? elem.type.toLowerCase() : null; //type considerado no objeto
+				font  = tag === "input" ? elem.attributes.type.value.toLowerCase() : type; //type informado no html
+				name  = "name"  in elem ? elem.name  : null;
+				value = "value" in elem ? elem.value : null;
+				check = type === "radio" || type === "checkbox" ? elem.checked : null;
+				if ((type === "radio" || type === "checkbox") && check !== true) {
+					value = null;
+				} else if (type === "radio" || type === "checkbox" && check === true) {
+					value =  WD(value).type === "null" ? "True" : value;
+				} else if (type === "date" || font === "date") {
+					value = value !== "%today" && WD(value).type === "date" ? WD(value).toString() : value;
+				} else if (type === "time" || font === "time") {
+					value = value !== "%now" && WD(value).type === "time" ? WD(value).toString() : value;
+				} else if (type === "number" || font === "number") {
+					value = WD(value).type === "number" ? WD(value).valueOf() : value;
+				} else if (type === "range" || font === "range") {
+					value = WD(value).type === "number" ? WD(value).valueOf() : value;
+				}
+				if (WD(value).type !== "null" && WD(name).type !== "null") {
+					x.push(name+"="+encodeURIComponent(value));
+				}
+				return;
+			});
+			return x.join("&");
+		}
+	});
+
+	/*Retorna o método toString, valueOf*/
+	Object.defineProperties(WDdom.prototype, {
+		type: {
+			value: "dom"
+		},
+		valueOf: {
+			value: function() {
+				var x;
+				if (this._value === document || this._value === window) {
+					x = [this._value];
+				} else if (this._value instanceof HTMLElement) {
+					x = [this._value];
+				} else {
+					x = [];
+					for (var i = 0; i < this._value.length; i++) {
+						x.push(this._value[i]);
+					}
+				}
+				return x;
+			}
+		},
+		items: {
+			enumerable: true,
+			get: function() {
+				return this.valueOf().length;
+			}
+		},
+		item: {
+			enumerable: true,
+			value: function(i) {
+				var x;
+				i = WD(i);
+				if (i.type !== "number") {
+					x = this.valueOf();
+				} else if (i.valueOf() < 0) {
+					x = this.valueOf()[this.items - i.abs];
+				} else {
+					x = this.valueOf()[i.valueOf()];
+				}
+				return x;
 			}
 		}
-		return list;
+	});
+
+/* === JS ATTRIBUTES ======================================================= */
+
+	/*Carrega html externo data-wd-load=post{file}|get{file}*/
+	function data_wdLoad(e) {
+		var value, method, file, ajax, target;
+		if ("wdLoad" in e.dataset) {
+			value  = getData(e.dataset.wdLoad);
+			if ("post" in value || "get" in value) {
+				method = "post" in value ? "post" : "get";
+				file   = value[method];
+				ajax   = WD(file);
+				target = WD(e);
+				target.data({wdLoad: null});
+				if (ajax.path === true) {
+					ajax.request(function(x) {
+						if (x.error) {
+							log(file+": Error accessing file or timeout.", "e");
+						} else {
+							target.load(x.text);
+						}
+						return;
+					})[method]();
+				}
+			}
+		}
+		return;
 	};
-/*===========================================================================*/
-	return wd;
+
+	/*Constroe html a partir de um arquivo json data-wd-repeat=post{file}|get{file}*/
+	function data_wdRepeat(e) {
+		var value, method, file, ajax, target;
+		if ("wdRepeat" in e.dataset) {
+			value  = getData(e.dataset.wdRepeat);
+			if ("post" in value || "get" in value) {
+				method = "post" in value ? "post" : "get";
+				file   = value[method];
+				ajax   = WD(file);
+				target = WD(e);
+				target.data({wdRepeat: null});
+				if (ajax.path === true) {
+					ajax.request(function(x) {
+						if (x.error || x.json === null) {
+							log(file+": Error accessing file, timeout or it's not a json file.", "e");
+						} else {
+							target.repeat(x.json);
+						}
+						return;
+					})[method]();
+				}
+			}
+		}
+		return;
+	};
+
+	/*Faz requisição a um arquivo externo data-wd-request=post{file}method{function()}|get{file}method{function()}*/
+	function data_wdRequest(e) {
+		var value, func, file, ajax, target, method;
+		if ("wdRequest" in e.dataset) {
+			value  = getData(e.dataset.wdRequest);
+			if ("post" in value || "get" in value) {
+				method = "post" in value ? "post" : "get";
+				file   = value[method];
+				ajax   = WD(file);
+				func   = WD(window[value.method]).type === "function" ? window[value.method] : undefined;
+				if (ajax.path === true) {
+					ajax.request(func)[method]();
+				}
+			}
+		}
+		return;
+	};
+
+	/*Ordena elementos filhos data-wd-sort="number"*/
+	function data_wdSort(e) {
+		var order;
+		if ("wdSort" in e.dataset) {
+			order = WD(e.dataset.wdSort).valueOf();
+			WD(e).sort(order).data({wdSort: null});
+		}
+		return;
+	};
+
+	/*Filtra elementos filhos data-wd-filter=show{min}${css}|hide{min}${css}&*/
+	function data_wdFilter(e) {//text, min, show
+		var value, text, data, show, min, target;
+		if ("wdFilter" in e.dataset) {
+			value = e.dataset.wdFilter.split("&");
+			text  = "value" in e ? e.value : e.textContent;
+			for (var i = 0; i < value.length; i++) {
+				data   = getData(value[i]);
+				show   = "hide" in data ? false : true;
+				min    = "hide" in data ? data.hide : data.show;
+				target = "$" in data ? $(data["$"]) : null;
+				if (WD(target).type === "dom") {
+					WD(target).filter(text, min, show);
+				}
+			}
+		}
+		return;
+	};
+
+	/*Define máscara do elemento data-wd-mask="StringMask"*/
+	function data_wdMask(e) {
+		var value, re, mask;
+		if ("wdMask" in e.dataset) {
+			value = "value" in e ? e.value : e.textContent;
+			re    = new RegExp(e.dataset.wdMask);
+			mask  = WD(re).mask(value);
+			if (mask === false) {
+				if ("setCustomValidity" in e) {
+					e.setCustomValidity("Incorrect format: "+re.source);
+				}
+			} else {
+				if ("value" in e) {
+					e.value = mask;
+				}
+				if ("textContent" in e) {
+					e.textContent = mask;
+				}
+				if ("setCustomValidity" in e) {
+					e.setCustomValidity("");
+				}
+			}
+		}
+		return;
+	};
+
+	/*Define os elementos a serem exibidos data-wd-page=page{p}size{s}*/
+	function data_wdPage(e) {
+		var attr, page, size;
+		if ("wdPage" in e.dataset) {
+			attr = getData(e.dataset.wdPage);
+			page = attr.page;
+			size = attr.size;
+			WD(e).page(page, size).data({wdPage: null});
+		}
+		return;
+	};
+
+	/*Executa o método click() ao elemento após o load data-wd-click=""*/
+	function data_wdClick(e) {
+		if ("wdClick" in e.dataset) {
+			if ("click" in e) {
+				e.click();
+			}
+			WD(e).data({wdClick: null});
+		}
+		return;
+	};
+
+	/*Executa uma ação ao alvo após o click data-wd-action=action1{css1}action2{css2}*/
+	function data_wdAction(e) {
+		var value, data, target;
+		if ("wdAction" in e.dataset) {
+			value = e.dataset.wdAction;
+			data  = getData(value);
+			for (var action in data) {
+				target = WD($(data[action]));
+				if (target.type === "dom") {
+					target.action(action);
+				} else {
+					WD(e).action(action);
+				}
+			}
+		}
+		return;
+	};
+
+	/*Define dataset a partir do click data-wd-data=attr1{value}${css}&*/
+	function data_wdData(e) {
+		var value, data, target;
+		if ("wdData" in e.dataset) {
+			value = e.dataset.wdData.split("&");
+			for (var i = 0; i < value.length; i++) {
+				data   = getData(value[i]);
+				target = "$" in data ? WD($(data["$"])) : WD(e);
+				delete data["$"];
+				if (target.type === "dom") {
+						target.data(data);
+				}
+			}
+		}
+		return;
+	};
+
+	/*Define o link ativo do elemento nav sem interface data*/
+	function data_wdActive(e) {
+		if (WD(e.parentElement.tagName).title() === "Nav") {
+			WD(e.parentElement.children).class({del: "wd-nav-active"});
+			if (e.tagName.toUpperCase() === "A") {
+				WD(e).class({add: "wd-nav-active"});
+			}
+		}
+		return;
+	};
+
+	/*Ordena as colunas de uma tabela data-wd-sort-col=""*/
+	function data_wdSortCol(e) {
+		var order, thead, heads, bodies;
+		if ("wdSortCol" in e.dataset && WD(e.parentElement.parentElement.tagName).title() === "Thead") {
+			order  = e.dataset.wdSortCol === "+1" ? -1 : 1;
+			thead  = e.parentElement.parentElement;
+			heads  = e.parentElement.children;
+			bodies = thead.parentElement.tBodies;
+			WD(heads).data({wdSortCol: ""});
+			for (var i = 0; i < heads.length; i++) {
+				if (heads[i] === e) {
+					WD(bodies).sort(order, i);
+					WD(e).data({wdSortCol: order === 1 ? "+1" : "-1"});
+					break;
+				}
+			}
+		}
+		return;
+	};
+
+	/*Guarda o tamanho da tela*/
+	var deviceController = null;
+
+	/*Define o estilo do elemento a partir do tamanho da tela data-wd-device=desktop{css}tablet{css}phone{css}mobile{css}*/
+	function data_wdDevice(e) {
+		var device, value, data, desktop, mobile, tablet, phone;
+		if ("wdDevice" in e.dataset) {
+			device  = deviceController;
+			value   = e.dataset.wdDevice;
+			data    = getData(value);
+			desktop = "desktop" in data ? data.desktop : "";
+			mobile  = "mobile"  in data ? data.mobile  : "";
+			tablet  = "tablet"  in data ? data.tablet  : "";
+			phone   = "phone"   in data ? data.phone   : "";
+			switch(device) {
+				case "Desktop":
+					WD(e).class({del: phone}).class({del: tablet}).class({del: mobile}).class({add: desktop});
+					break;
+				case "Tablet":
+					WD(e).class({del: desktop}).class({del: phone}).class({add: mobile}).class({add: tablet});
+					break;
+				case "Phone":
+					WD(e).class({del: desktop}).class({del: tablet}).class({add: mobile}).class({add: phone});
+					break;
+			}
+		}
+		return;
+	};
+
+/* === JS ENGINE =========================================================== */
+
+	/*Procedimentos quando se usa as classes wd-bar ao mudar a âncora*/
+	function hashProcedures() {
+		var bar, top, hbar, htop;
+		bar  = WD($(".wd-nav.wd-buddy, .wd-head.wd-buddy"));
+		top  = WD($(window.location.hash));
+		hbar = bar.type === "dom" && bar.items > 0 ? bar.item(0).offsetHeight : 0;
+		htop = top.type === "dom" && top.items > 0 ? top.item(0).offsetTop : 0;log("barra: "+hbar+" - topo: "+htop);
+		if (hbar !== 0) {
+			window.scrollTo(0, htop - hbar);
+		}
+		return;
+	};
+
+	function loadingProcedures() {
+		/*Procedimentos para carregar objetos externos*/
+		var attr = WD($("[data-wd-load], [data-wd-repeat]"));
+		if (deviceController === null) {
+			scalingProcedures();
+		}
+		if (attr.type !== "dom" || attr.items === 0) {
+			organizationProcedures();
+			stylingProcedures();
+		} else {
+			WD(attr.item(0)).run(data_wdRepeat);
+			WD(attr.item(0)).run(data_wdLoad);
+		}
+		return;
+	};
+
+	/*Procedimento para organizar elementos após fim dos carregamentos*/
+	function organizationProcedures() {
+		WD($("[data-wd-sort]")).run(data_wdSort);
+		WD($("[data-wd-filter]")).run(data_wdFilter);
+		WD($("[data-wd-mask]")).run(data_wdMask);
+		WD($("[data-wd-page]")).run(data_wdPage);
+		WD($("[data-wd-click]")).run(data_wdClick);
+		return;
+	};
+
+	/*Procedimento a executar após eventos click*/
+	function clickProcedures(ev) {
+		if (ev.which !== 1) {return;}
+		data_wdAction(ev.target);
+		data_wdData(ev.target);
+		data_wdActive(ev.target);
+		data_wdSortCol(ev.target);
+		data_wdRequest(ev.target);
+		return;
+	};
+
+	/*Procedimento a executar após acionamento do teclado*/
+	function keyboardProcedures(ev) {
+		data_wdFilter(ev.target);
+		data_wdMask(ev.target);
+		return;
+	};
+
+	function scalingProcedures(ev) {
+		/*Procedimento para definir o dispositivo pelo tamanho da tela*/
+		var device, width, height;
+		width  = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+		height = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+		if (width >= 768) {
+			device = "Desktop";
+		} else if (width >= 600) {
+			device = "Tablet";
+		} else {
+			device = "Phone";
+		};
+		if (device !== deviceController) {
+			deviceController = device;
+			if (WD(ev).type !== "undefined") {
+				stylingProcedures();
+			}
+		}
+		return;
+	};
+
+	/*Procedimento a executar após redimensionamento da tela*/
+	function stylingProcedures() {
+		WD($("[data-wd-device]")).run(data_wdDevice);
+		return;
+	};
+
+	/*Procedimento a executar após definição de dataset*/
+	function settingProcedures(e, attr) {
+		switch(attr) {
+			case "wdLoad":    loadingProcedures(); break;
+			case "wdRepeat":  loadingProcedures(); break;
+			case "wdSort":    data_wdSort(e);      break;
+			case "wdFilter":  data_wdFilter(e);    break;
+			case "wdMask":    data_wdMask(e);      break;
+			case "wdPage":    data_wdPage(e);      break;
+			case "wdClick":   data_wdClick(e);     break;
+			case "wdDevice":  data_wdDevice(e);    break;
+		};
+		return;
+	};
+
+	/*Definindo e incluindo os estilos utilizados pelo javascript na tag head*/
+	var style;
+	style = document.createElement("STYLE");
+	style.textContent  = ".js-wd-no-display {display: none !important;}";
+	style.textContent += ".wd-nav-active {outline: 1px dotted black;}";
+	WD(window).handler({load: function() {
+		document.head.appendChild(style);
+		return;
+	}});
+
+	/*Definindo eventos*/
+	WD(window).handler({
+		load: [loadingProcedures, hashProcedures],
+		resize: scalingProcedures,
+		hashchange: hashProcedures
+	});
+	WD(document).handler({
+		click: clickProcedures,
+		keyup: keyboardProcedures
+	});
+
+/* === END ================================================================= */
+
+	return WD;
+
 }());
 
-
-function wd$(input, root) {
-	/**/
-	var query = null;
-	if (root === undefined || !("querySelectorAll" in root)) {
-		root = document;
-	}
-	try {
-		query = root.querySelectorAll(input);
-	} catch(e) {
-		query = null;
-	}
-	return wd(query);
-};
+/*Atalho para o uso do método querySelectorAll em wdDom*/
+function wd$(selector, root) {
+	return wd(wd().$(selector, root));
+}
