@@ -168,6 +168,11 @@ a:hover {
 	min-width: 15%;
 	max-width: 15%;
 }
+/*-- help/warn --*/
+.wd-input-help, .wd-input-warn   {visibility: hidden !important;}
+.wd-input:focus + .wd-input-help,
+.wd-input:out-of-range + .wd-input-warn,
+.wd-input:invalid + .wd-input-warn {visibility: visible !important;}
 
 /*------------------------------------------------------------------ flyer --*/
 
@@ -206,6 +211,7 @@ a:hover {
 	text-align: left;
 	width: 100%;
 }
+.wd-nav.wd-buddy {position: sticky; z-index: 99; top: 0;}
 /*-- head/footer --*/
 .wd-head, .wd-foot {
 	display: block;
@@ -224,6 +230,8 @@ a:hover {
 .wd-foot > .wd-nav:last-child {margin-bottom: -0.5em;}
 .wd-head > .wd-nav:first-child,
 .wd-foot > .wd-nav:first-child {margin-top: -0.5em;}
+.wd-head.wd-buddy {position: sticky; z-index: 99; top: 0;}
+.wd-foot.wd-buddy {position: sticky; z-index: 99; bottom: 0;}
 /*-- content --*/
 .wd-content {
 	margin: 0.5em 0;
@@ -400,9 +408,9 @@ a:hover {
 .wd-box-black,  .wd-box-black-child > *  {color: #f2f2f2; background-color: #000000;}
 .wd-box-white,  .wd-box-white-child > *  {color: #000000; background-color: #ffffff;}
 .wd-box-grey,   .wd-box-grey-child > *   {color: #e6e6e6; background-color: #595959;}
-.wd-box-red,    .wd-box-red-child > *    {color: #ffe6e6; background-color: #cc0000;}
+.wd-box-red,    .wd-box-red-child > *    {color: #ffe9e6; background-color: #991700;}
 .wd-box-green,  .wd-box-green-child > *  {color: #e6ffff; background-color: #006666;}
-.wd-box-blue,   .wd-box-blue-child > *   {color: #e6e6ff; background-color: #000080;}
+.wd-box-blue,   .wd-box-blue-child > *   {color: #cce6ff; background-color: #004d99;}
 .wd-box-yellow, .wd-box-yellow-child > * {color: #ffffe6; background-color: #808000;}
 .wd-box-orange, .wd-box-orange-child > * {color: #fff4e6; background-color: #cc7000;}
 .wd-box-brown,  .wd-box-brown-child > *  {color: #f9e2d2; background-color: #874312;}
@@ -662,7 +670,7 @@ a:hover {
 /*-- radius --*/
 .wd-radius,      .wd-radius-child > *,
 .wd-radius-top,  .wd-radius-top-child > *,
-.wd-radius-left, .wd-radius-left-child > * {border-top-left-radius: 0.5em;}
+.wd-radius-left, .wd-radius-left-child > * {border-top-left-radius: 0.3em;}
 
 .wd-radius,       .wd-radius-child > *,
 .wd-radius-top,   .wd-radius-top-child > *,
@@ -675,12 +683,13 @@ a:hover {
 .wd-radius,        .wd-radius-child > *,
 .wd-radius-bottom, .wd-radius-bottom-child > *,
 .wd-radius-right,  .wd-radius-right-child > * {border-bottom-right-radius: 0.3em;}
+
 /*-- table --*/
 .wd-table {
+	border-collapse: collapse;
 	font-family: Verdana,sans-serif;
 	font-size: 14px;
 	line-height: 16px;
-	border-collapse: collapse;
 	margin-left: auto;
 	margin-right: auto;
 }
@@ -690,130 +699,13 @@ a:hover {
 /*-- list --*/
 .wd-list {list-style-position: inside; padding: 0;}
 .wd-list > li {padding: 0.25em 0.25em 0.25em 40px;}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*-- FIXME: colocar junto ao BOX --*/
-/*--- containers ---*/
-.wd-body-C,
-.wd-body-W {
-	margin-right: 20%;
-}
-.wd-body-C,
-.wd-body-E {
-	margin-left: 20%;
-}
-.wd-bar,
-.wd-bar-N,
-.wd-bar-S,
-.wd-bar-E,
-.wd-bar-W {
-	display: block;
-	position: fixed;
-	margin: 0 !important;
-	z-index: 100;
-}
-.wd-bar,
-.wd-bar-N,
-.wd-bar-S {
-	left: 0;
-	right: 0;
-}
-.wd-bar,
-.wd-bar-N {
-	top: 0;
-}
-.wd-bar-S {
-	bottom: 0;
-}
-.wd-bar-W,
-.wd-bar-E {
-	top: 0;
-	bottom: 0;
-	width: 20%;
-}
-.wd-bar-E {
-	right: 0;
-}
-.wd-bar-W {
-	left: 0;
-}
-.wd-body-C .wd-bar,
-.wd-body-C .wd-bar-N,
-.wd-body-C .wd-bar-S,
-.wd-body-E .wd-bar,
-.wd-body-E .wd-bar-N,
-.wd-body-E .wd-bar-S {
-	left: 20%;
-}
-.wd-body-C .wd-bar,
-.wd-body-C .wd-bar-N,
-.wd-body-C .wd-bar-S,
-.wd-body-W .wd-bar,
-.wd-body-W .wd-bar-N,
-.wd-body-W .wd-bar-S {
-	right: 20%;
-}
-
-/*FIXME: colocar junto ao header e footer*/
-.wd-follow,
-.wd-follow-N,
-.wd-follow-S {
-	position: sticky;
-	z-index: 100;
-}
-.wd-follow,
-.wd-follow-N {
-	top: 0;
-}
-.wd-follow-S {
-	bottom: 0;
-}
-.wd-overflow {
-	overflow: auto;
-}
-
-/*--- dialog FIXME: colocar junto aos formulários ---*/ 
-.wd-input:focus + .wd-msgform,
-.wd-input:focus + .wd-msgform-help {
-	display: block;
-	animation: from-right 0.4s, fade-out 9.6s;
-}
-.wd-input:out-of-range + .wd-msgform-warn,
-.wd-input:invalid + .wd-msgform-warn {
-	display: block;
-	animation: from-left 0.4s;
-}
-
-
-
-.wd-hide,
-.wd-hide-screen {
-	visibility: hidden;
-}
-.wd-hide-print {
-	visibility: visible;
-}
+/*-- hide --*/
+.wd-hide        {visibility: hidden !important;}
+.wd-hide-screen {visibility: hidden !important;}
+.wd-hide-print  {visibility: visible !important;}
 @media print {
-	.wd-hide-print {
-		visibility: hidden;
-	}
-	.wd-hide,
-	.wd-hide-screen {
-		visibility: visible;
-	}
+	.wd-hide-print  {visibility: hidden !important;}
+	.wd-hide-screen {visibility: visible !important;}
 }
 
 /*----------------------------------------------------------------- symbol --*/
@@ -901,40 +793,46 @@ a:hover {
 /*------------------------------------------------------------------- code --*/
 
 .wd-code {
-	font-family: monospace;
-	white-space: pre;
-	font-size: 1em;
+	background-color: #E6E6FA !important;
+	border: thin inset #0073e6 !important;
+	border-radius: 0.3em;
+	color: #0073e6 !important;
+	display: block;
+	font-family: monospace !important;
+	font-size: 0.9em !important;
+	font-style: normal !important;
+	font-weight: normal !important;
+	overflow: auto !important;
 	padding: 0.5em;
-	color: #1e90ff;
-	background-color: #E6E6FA;
-	border: thin inset #000000;
-	overflow: auto;
-	font-style: normal;
-	font-weight: normal;
+	white-space: pre;
 }
 .wd-code q,
 .wd-code var {
-	color: #FF1493;
-	font-style: normal;
-	font-weight: normal;
+	color: #ff1493 !important;
+	font-size: inherit;
+	font-style: inherit;
+	font-weight: inherit;
 }
 .wd-code cite {
-	color: #6A5ACD;
-	font-style: italic;
-	font-weight: normal;
+	color: #4e3cc3 !important;
+	font-size: inherit;
+	font-style: italic !important;
+	font-weight: inherit;
 }
 .wd-code code {
-	color: #006400;
-	font-style: normal;
+	color: #004d00;
+	font-size: inherit;
+	font-style: inherit;
 	font-weight: bold;
 }
 .wd-code sample {
-	color: #4B0082;
-	background-color: #E6E6AA;
-	font-style: normal;
-	font-weight: normal;
+	bbackground-color: #E6E6AA;
+	color: #916a08;
+	font-size: inherit;
+	font-style: inherit;
+	font-weight: inherit;
 	padding: 2px 0;
 }
 .wd-code sample:before {
-	content: "\226B  ";
+	content: "\21B3  ";
 }

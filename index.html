@@ -1,11 +1,15 @@
 ﻿<!DOCTYPE html>
 <html>
 	<head>
-		<title>WD Manual</title>
-		<meta charset="utf-8"/>
+		<title>WD Web Libraries Handbook</title>
+		<meta charset="UTF-8"/>
 		<meta name="viewport" content="width=device-width, initial-scale=1"/>
+		<meta name="keywords" content="wd, stylesheet, attributes, tools, HTML, CSS, javaScript, library, queryselector, handbook, github, donadelli">
 		<meta name="author" content="Willian Donadelli"/>
-		<meta name="keywords" content="WD Style Sheet, WD JavaScript Tools, WD Attributes Tools, HTML, CSS, JavaScript, Library, QuerySelector">
+		<meta name="description" content="WD Web Libraries Handbook"/>
+		<meta name="rating" content="general" />
+		<meta http-equiv="pragma" content="no-cache" />
+		<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
 		<script src="wd.js"></script>
 		<link rel="stylesheet" href="wd.css"/>
 		<script>
@@ -54,52 +58,50 @@ function setText(obj) {
 }
 	</style>
 	</head>
-<body class="wd-text-justify" data-wd-device="desktop{wd-body-E}">
-
+<body class="wd-text-justify">
 
 	<!--MAIN PAGE-->
-	<main class="wd-flyer" id="main">
+	<main class="wd-flyer wd-xxmargin-bottom" id="main">
 
 		<!--HEADER-->
-		<header class="wd-head wd-box-black wd-follow-N">
-			<h1>WD Web Libraries Manual</h1>
+		<header class="wd-head wd-box-red wd-follow-N">
+			<h1>WD Web Libraries Handbook</h1>
 			<h4>Version: V2</h4>
 		</header>
 
 		<!--NAV-->
-		<nav class="wd-nav wd-box-red wd-follow-N" data-wd-device="desktop{wd-hide}">
-			<a href="#menu" data-wd-action="open{#menu}" class="wd-icon-menu"></a>
+		<nav class="wd-nav wd-box-blue wd-buddy wd-border-top">
+			<span data-wd-action="open{#menu}" class="wd-icon-menu"></span>
 		</nav>
 		
 		<!--CONTENT-->
 		<section class="wd-flyer" id="content"></section>
 		
+		<!--MENU-->
+		<div id="menu" class="wd-modal" data-wd-action="close{#menu}">
+			<section data-wd-device="mobile{wd-win-full}desktop{wd-win-left}" class="wd-window wd-flyer wd-box-white">
+
+				<!--HEADER-->
+				<header class="wd-head wd-box-green wd-xxmargin-bottom" style="position: relative;">
+					<h3>Menu</h3>
+					<span class="wd-icon-close wd-box-e" data-wd-action="close{#menu}"></span>
+				</header>
+
+				<!--NAV-->
+				<nav class="wd-nav wd-vertical wd-xxmargin-bottom" data-wd-repeat="get{manual/menu.json}">
+					<a 
+						href="#main"
+						data-wd-data="wdLoad{get{{{file}}}}${#content}"
+						data-wd-action="close{#menu}"
+						class="{{style}}"
+						title="{{id}}|{{title}}"
+						id="{{id}}"
+						{{click}}
+					>{{title}}</a>
+				</nav>
+
+			</section>
+		</div>
 	</main>
-
-<!--========================================================================-->
-
-	<!--MENU-->
-	<section id="menu" data-wd-device="mobile{wd-dialog-full}desktop{wd-bar-W}" class="wd-flyer" style="overflow: auto">
-
-		<!--HEADER-->
-		<header class="wd-head wd-box-green wd-follow-Ncc">
-			<h3>Menu</h3>
-			<!--<span data-wd-device="desktop{wd-hide}" class="wd-icon-close" data-wd-action="close{#menu}"></span>-->
-		</header>
-
-		<!--NAV-->
-		<nav class="wd-nav wd-vertical" data-wd-repeat="get{manual/menu.json}">
-			<a 
-				href="#main"
-				data-wd-data="wdLoad{get{{{file}}}}${#content}"
-				class="{{style}}"
-				title="{{id}}|{{title}}"
-				id="{{id}}"
-				{{click}}
-			>{{title}}</a>
-		</nav>
-
-	</section>
-
 </body>
 </html>

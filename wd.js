@@ -2812,7 +2812,7 @@ var wd = (function() {
 	/*Procedimentos quando se usa as classes wd-bar ao mudar a âncora*/
 	function hashProcedures() {
 		var bar, top, hbar, htop;
-		bar  = WD($(".wd-bar, .wd-bar-N, .wd-follow, .wd-follow-N"));/*FIXME acertar esse CSS depois de arruamar o wd.css*/
+		bar  = WD($(".wd-nav.wd-buddy, .wd-head.wd-buddy"));
 		top  = WD($(window.location.hash));
 		hbar = bar.type === "dom" && bar.items > 0 ? bar.item(0).offsetHeight : 0;
 		htop = top.type === "dom" && top.items > 0 ? top.item(0).offsetTop : 0;log("barra: "+hbar+" - topo: "+htop);

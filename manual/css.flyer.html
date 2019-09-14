@@ -23,6 +23,17 @@
 
 <pre class="wd-code" id="eg2"></pre>
 
+<p class="wd-p">Use the <code>wd-buddy</code> class together so that the header follows the page transition at the top of the screen. The navigator (<code>wd-nav</code>) has the same behavior.</p>
+
+<header class="wd-head wd-buddy wd-box-purple" id="eg1_1">
+	<h3>Header Buddy</h3>
+	<p>wd-head wd-buddy</p>
+</header>
+
+<h4>HTML code</h4>
+
+<pre class="wd-code" id="eg1_2"></pre>
+
 <h3 id="foot">Footer</h3>
 
 <footer class="wd-foot wd-box-green" id="eg3">
@@ -33,6 +44,19 @@
 <h4>HTML code</h4>
 
 <pre class="wd-code" id="eg4"></pre>
+
+<p class="wd-p">Use the <code>wd-buddy</code> class together so that the footer follows the page transition at the bottom of the screen.
+
+<footer class="wd-foot wd-buddy wd-box-purple" id="eg3_1">
+	<h3>Footer Buddy</h3>
+	<p>wd-foot wd-buddy</p>
+</footer>
+
+<h4>HTML code</h4>
+
+<pre class="wd-code" id="eg3_2"></pre>
+
+<h4>HTML code</h4>
 
 <h3 id="nav">Navegator</h3>
 
@@ -93,13 +117,12 @@
 
 <pre class="wd-code" id="eg12"></pre>
 
-
-
-
 <script>
 var eg = {};
 eg["#eg2"] = getCode("#eg1", true);
+eg["#eg1_2"] = getCode("#eg1_1", true);
 eg["#eg4"] = getCode("#eg3", true);
+eg["#eg3_2"] = getCode("#eg3_1", true);
 eg["#eg6"] = getCode("#eg5", true);
 eg["#eg8"] = getCode("#eg7", true);
 eg["#eg10"] = getCode("#eg9", true);

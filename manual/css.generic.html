@@ -2,12 +2,14 @@
 	<h2 class="wd-text-center">CSS: generic</h2>
 </header>
 
-<nav class="wd-nav">
+<nav class="wd-nav" data-wd-device="mobile{wd-vertical}">
 	<a href="#titles">Titles</a>
 	<a href="#text">Text</a>
 	<a href="#padding">Padding</a>
 	<a href="#margin">Margin</a>
 	<a href="#border">Border</a>
+	<a href="#radius">Radius</a>
+	<a href="#hide">Hide</a>
 </nav>
 
 <p class="wd-p">Below are the generic styles applied to both the elements or their content.</p>
@@ -34,8 +36,6 @@
 
 <h3 id="padding">Padding</h3>
 
-<h4>Sides</h4>
-
 <ul class="wd-list">
 	<li class="wd-padding">wd-padding (<i>All</i>)</li>
 	<li class="wd-padding-length">wd-padding-length (<i>left and right</i>)</li>
@@ -54,7 +54,6 @@
 
 <h3 id="margin">Margin</h3>
 
-<h4>Sides</h4>
 <hr/>
 <div class="wd-border wd-padding wd-margin">wd-margin (<i>All</i>)</div>
 <hr/>
@@ -83,8 +82,6 @@
 
 <h3 id="border">Border</h3>
 
-<h4>Sides</h4>
-
 <div class="wd-margin wd-padding wd-border">wd-border (<i>All</i>)</div>
 <div class="wd-margin wd-padding wd-border-length">wd-border-length (<i>left and right</i>)</div>
 <div class="wd-margin wd-padding wd-border-height">wd-border-height (<i>top and bottom</i>)</div>
@@ -99,9 +96,7 @@
 <div class="wd-margin wd-padding wd-xborder">wd-xborder... (<var>medium</var>)</div>
 <div class="wd-margin wd-padding wd-xxborder">wd-xxborder... (<var>large</var>)</div>
 
-<h3 id="border">Border</h3>
-
-<h4>Sides</h4>
+<h3 id="radius">Radius</h3>
 
 <div class="wd-margin wd-padding wd-border wd-radius">wd-radius</div>
 <div class="wd-margin wd-padding wd-border wd-radius-top">wd-radius-top</div>
@@ -109,4 +104,24 @@
 <div class="wd-margin wd-padding wd-border wd-radius-bottom">wd-radius-bottom</div>
 <div class="wd-margin wd-padding wd-border wd-radius-left">wd-radius-left</div>
 
+<h3 id="hide">Hide</h3>
+
+<div id="eg1">
+	<h4>wd-hide</h4>
+	<p class="wd-hide">Always invisible</p>
+	<h4>wd-hide-screen</h4>
+	<p class="wd-hide-screen">Invisible on screen but visible for printing.</p>
+	<h4>wd-hide-print</h4>
+	<p class="wd-hide-print">Invisible to print but visible on screen.</p>
+</div>
+
+<h4>HTML code</h4>
+
+<pre class="wd-code" id="eg2" ></pre>
+
+<script>
+var eg = {};
+eg["#eg2"] = getCode("#eg1", true);
+setText(eg);
+</script>
 

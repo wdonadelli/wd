@@ -21,6 +21,17 @@
 
 <p class="wd-p" >The types <code>radio</code> and <code>checkbox</code> must be within a label element. In the <code>color</code> input type, the <code>wd-button</code> class should be used instead of <code>wd-input</code>.</p>
 
+<p class="wd-p" >There are two possibilities for adding alert or help messages to form elements:</p>
+
+<ul class="wd-list" >
+	<li><code>wd-input-help</code></li>
+	<li><code>wd-input-warn</code></li>
+</ul>
+
+<p class="wd-p">Elements with warning or help messages must be siblings of the input element, whose class attribute must contain the <code>wd-input</code> class, and must be positioned after the reference element.</p>
+
+<p class="wd-p">Alert messages will be displayed when the reference element contains an invalid value. Help messages will be displayed when the reference element has focus.</p>
+
 <h3>Example</h3>
 
 <form id="eg1" >
@@ -28,8 +39,10 @@
 		<legend class="wd-b wd-text-big wd-padding" >Identification</legend>
 		<label class="label" >Name</label>
 		<input class="wd-input" type="text" required="" />
+		<div class="wd-input-warn wd-text-small wd-text-red">The field is required.</div>
 		<label class="label" >E-mail</label>
 		<input class="wd-input" type="email" />
+		<div class="wd-input-help wd-text-small wd-text-blue">Enter your contact email.</div>
 		<label class="label" >Age</label>
 		<div class="wd-hform wd-margin" >
 			<label class="wd-label" >

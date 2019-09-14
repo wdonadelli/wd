@@ -3,7 +3,7 @@
 		"title": "Home",
 		"file":  "manual/home.html",
 		"style": "wd-text-title wd-text-blue",
-		"click": "",
+		"click": "data-wd-click=''",
 		"id": "home"
 	},
 
@@ -357,7 +357,7 @@
 		"title": "CSS: Combo",
 		"file":  "manual/css.combo.html",
 		"style": "wd-text-small",
-		"click": "data-wd-click=''",
+		"click": "",
 		"id": "css2"
 	},
 	{
