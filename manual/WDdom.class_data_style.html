@@ -1,0 +1,150 @@
+<header class="wd-head">
+	<h2 class="wd-text-center">WDdom: setting</h2>
+</header>
+<nav class="wd-nav wd-text-blue">
+	<a href="#main" data-wd-action="tab{#tab_class}">Class</a>
+	<a href="#main" data-wd-action="tab{#tab_data}">Data</a>
+	<a href="#main" data-wd-action="tab{#tab_style}">Style</a>
+</nav>
+
+<!---------------------------------------------------------------------------->
+
+<div>
+	<div id="tab_class">
+		<h3>WDdom.class</h3>
+
+		<p class="wd-p">It is a method that manipulates the <i>class</i> attribute.</p>
+
+		<p class="wd-code wd-text-center">wd(dom).class(list)</p>
+
+		<p class="wd-p">The <code>list</code> argument is an object that accepts three keys: <q>add</q>, <q>del</q> and <q>toggle</q>, executed in this order. The key values ​​are strings that represent the value to be added, removed, or alternate, respectively. If there are more than one attribute to set, the values ​​must be separated by white space. If the value is <var>null</var> the value of the <code>class</code> attribute will be empty.</p>
+
+		<h4>Example</h4>
+
+		<h5>HTML code</h5>
+
+		<pre class="wd-code" id="eg1"></pre>
+
+		<h5>JavaScript</h5>
+
+		<pre class="wd-code">wd$(<q>#eg3 p</q>).class(<input type="text" class="argument" id="eg2" placeholder="list"/>); <cite>//try it (write in JSON format)</cite></pre>
+
+		<script>
+function aClass() {
+	var arg;
+	arg = wd$("#eg2").item(0).value;
+	try {arg = JSON.parse(arg);} catch(e) {}
+	wd$("#eg3 p").class(arg);
+	wd$("#eg1").item(0).innerHTML = getCode("#eg3", true);
+	return;
+}
+		</script>
+
+		<a href="#eg3" class="wd-button" onclick="aClass();">Execute</a>
+
+		<h4>Result</h4>
+
+		<div id="eg3">
+			<style>
+.stl1 {color: #FF0000;}
+.stl2 {text-decoration: underline;}
+.stl3 {font-weight: bold;}
+.stl4 {background-color: #0000FF;}
+			</style>
+			<p>Text for test.</p>
+		</div>
+
+	</div>
+
+<!---------------------------------------------------------------------------->
+
+	<div id="tab_data">
+
+		<h3>WDdom.data</h3>
+
+		<p class="wd-p">It is a method that that manipulates the <i>data</i> attribute.</p>
+
+		<p class="wd-code wd-text-center">wd(dom).data(list)</p>
+
+		<p class="wd-p">The <code>list</code> argument is an object whose keys and values ​​respectively represent the names of attributes and values. Do not use the <q>data-</q> prefix in the attribute name. Compound attributes can be represented by dashes or camelCase. If the key value is <i>null</i>, the value of the attribute is removed from the element. If the <code>list</code> argument is null, all keys in the <code>dataset</code> attribute are cleared.</p>
+
+		<p class="wd-text-center wd-text-green wd-icon-ok wd-padding wd-rounded wd-border">This method is an important tool for defining the attributes present in <q>WD Attributes Tools</q>.</p>
+
+		<h4>Example</h4>
+
+		<h5>HTML code</h5>
+
+		<pre class="wd-code" id="eg4"></pre>
+
+		<h5>JavaScript</h5>
+	
+		<pre class="wd-code">wd$(<q>#eg6</q>).data(<input type="text" class="argument" id="eg5" placeholder="list"/>); <cite>//try it (write in JSON format)</cite></pre>
+
+		<script>
+function data() {
+	var arg;
+	arg = wd$("#eg5").item(0).value;
+	try {arg = JSON.parse(arg);} catch(e) {}
+	wd$("#eg6").data(arg);
+	wd$("#eg4").item(0).innerHTML = getCode("#eg6", true);
+	return;
+}
+		</script>
+
+		<a href="#eg6" class="wd-button" onclick="data();">Execute</a>
+
+		<h4>Result</h4>
+
+		<div id="eg6">See the HTML code (above)</div>
+
+	</div>
+
+<!---------------------------------------------------------------------------->
+
+	<div id="tab_style">
+		<h3>WDdom.style</h3>
+
+		<p class="wd-p">It is a method that manipulates the <i>style</i> attribute.</p>
+
+		<p class="wd-code wd-text-center">wd(dom).style(list)</p>
+
+		<p class="wd-p">The <code>list</code> argument is an object whose keys and values ​​represent, respectively, CSS attributes and values. Keys can be in CSS or camelCase style. If the value is <var>null</var> the value of the <code>style</code> attribute will be empty. If the attribute does not exist, it can be ignored..</p>
+
+		<h4>Example</h4>
+
+		<h5>HTML code</h5>
+
+		<pre class="wd-code" id="eg7"></pre>
+
+		<h5>JavaScript</h5>
+	
+		<pre class="wd-code">wd$(<q>#eg6</q>).data(<input type="text" class="argument" id="eg8" placeholder="list"/>); <cite>//try it (write in JSON format)</cite></pre>
+
+		<script>
+function sstyle() {
+	var arg;
+	arg = wd$("#eg8").item(0).value;
+	try {arg = JSON.parse(arg);} catch(e) {}
+	wd$("#eg9").style(arg);
+	wd$("#eg7").item(0).innerHTML = getCode("#eg9", true);
+	return;
+}
+		</script>
+
+		<a href="#eg9" class="wd-button" onclick="sstyle();">Execute</a>
+
+		<h4>Result</h4>
+
+		<p id="eg9">Text for test.</p>
+
+	</div>
+
+</div>
+
+<script>
+var eg = {};
+eg["#eg1"] = getCode("#eg3", true);
+eg["#eg4"] = getCode("#eg6", true);
+eg["#eg7"] = getCode("#eg9", true);
+setText(eg);
+</script>

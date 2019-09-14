@@ -1,0 +1,5 @@
+Nominativo	Genitivo
+nox	noctis
+rex	regis
+lex	legis
+pax	pacis

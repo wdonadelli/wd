@@ -1,0 +1,155 @@
+<header class="wd-head">
+	<h2 class="wd-text-center">WDtext: request</h2>
+</header>
+
+<nav class="wd-nav wd-text-blue">
+	<a href="#main" data-wd-action="tab{#tab_path}">Path</a>
+	<a href="#main" data-wd-action="tab{#tab_request}">Request</a>
+	<a href="#main" data-wd-action="tab{#tab_get}">GET Request</a>
+	<a href="#main" data-wd-action="tab{#tab_post}">POST Request</a>
+</nav>
+
+<div>
+
+<!---------------------------------------------------------------------------->
+	<div id="tab_path">
+
+		<h3>WDtext.path</h3>
+
+		<p class="wd-p">It is an attribute that returns true if the entered text matches an accessible file or path. If the name or address consists only of numbers (not advisable), enter an apostrophe in front of the text, that character will be disregarded.</p>
+
+		<p class="wd-code wd-text-center">wd(text).path</p>
+
+		<h4>Example</h4>
+		
+		<pre class="wd-code">
+wd(<q id="eg1"></q>).path;
+<sample><var id="eg2"></var></sample></pre>
+	</div>
+
+<!---------------------------------------------------------------------------->
+	<div id="tab_request">
+
+		<h3>WDtext.request</h3>
+
+		<p class="wd-p">It is a method that returns an object containing the <code>post</code> and <code>get</code> methods if the <code>path</code> attribute is true. The <code>get</code> and <code>post</code> methods executes an asynchronous requests. The <code>request</code> method accepts two arguments, the first being a function (mandatory) and the second a value of time in seconds. If the function is not informed or <code>path</code> is false, the null value is returned.</p>
+
+		<p class="wd-code wd-text-center">wd(text).request(method, time)</p>
+
+		<p class="wd-p">The <code>method</code> argument is a function to be executed after request process. The function accepts an argument that returns an object containing four attributes:</p>
+
+		<dl class="wd-border wd-padding wd-rounded">
+			<dt><code>error</code></dt>
+			<dd>Informs if an error occurred in the request (<i>true</i>/<i>false</i>).</dd>
+			<dt><code>request</code></dt>
+			<dd>Returns the request object.</dd>
+			<dt><code>text</code></dt>
+			<dd>Gets the result of the request in text format. Returns null in case of error.</dd>
+			<dt><code>xml</code></dt>
+			<dd>Gets the result of the request in xml format. Returns null in case of error.</dd>
+			<dt><code>json</code></dt>
+			<dd>Gets the result of the request in json format. Returns null in case of error.</dd>
+		</dl>
+
+		<p class="wd-p">The <code>time</code> argument (optional) is the value waiting time for the request, in seconds.</p>
+
+	</div>
+
+<!---------------------------------------------------------------------------->
+	<div id="tab_get">
+
+		<h3>WDtext.request.get</h3>
+
+		<p class="wd-p">This is a method that performs requests using the GET method and <q>application/x-www-form-urlencoded</q> <i>enctype</i>.
+
+		<p class="wd-code wd-text-center">wd(text).request(method, time).get()</p>
+
+		<h4>Example</h4>
+
+		<pre class="wd-code"><code>var</code> object = wd(<q>file.php?text=lux&number=12</q>);
+		<code>function</code> y(x) {
+			console.log(x.error);
+			console.log(x.request);
+			console.log(x.text);
+			console.log(x.xml);
+			console.log(x.json);
+			<code>return</code>;
+		};
+		object.request(y, <var>10</var>).get();</pre>
+
+		<p class="wd-p">Use the expression <q>$(<i>CSS Selector</i>)</q> after the question mark (<q>?</q>) of the path so that the data of the elements of the specified form, by name attribute, are captured automatically, as if the form had been submitted. See <a href="##" data-wd-data="wdClick{}${#js032}">WDdom.form</a> for more details.</p>
+
+		<h4>Example</h4>
+
+		<pre class="wd-code"><code>var</code> object = wd(<q>file.php?$(#field1, #form1 > *)</q>);</pre>
+
+	</div>
+
+<!---------------------------------------------------------------------------->
+
+	<div id="tab_post">
+
+		<h3>WDtext.request.post</h3>
+
+		<p class="wd-p">This is a method that performs requests using the POST method and <q>application/x-www-form-urlencoded</q> <i>enctype</i>. This method works in the same way as the <q>Path.get</q> method.</p>
+
+		<p class="wd-code wd-text-center">wd(text).request(method, time).post()</p>
+
+		<h4>Example</h4>
+
+		<h5>HTML Code</h5>
+
+		<pre id="eg3" class="wd-code"></pre>
+
+		<h5>HTML Code</h5>
+
+		<pre id="eg4" class="wd-code"></pre>
+
+		<script id="eg5">
+function post(type) {
+	var file = "manual/eg/eg."+type;;
+	wd(file).request(function(x) {
+		document.getElementById("eg7").textContent  = x.error;
+		document.getElementById("eg8").textContent  = x.request;
+		document.getElementById("eg9").textContent  = x.text;
+		document.getElementById("eg10").textContent = x.xml;
+		document.getElementById("eg11").textContent = x.json;
+		return;
+	}).post();
+}
+		</script>
+
+		<h5>Result</h5>
+
+		<div id="eg6">
+			<form data-wd-device="desktop{wd-form wd-horizontal}mobile{wd-form}">
+				<button type="button" class="wd-button" onclick="post('html');">post(<q>html</q>)</button>
+				<button type="button" class="wd-button" onclick="post('json');">post(<q>json</q>)</button>
+				<button type="button" class="wd-button" onclick="post('txt');">post(<q>txt</q>)</button>
+				<button type="button" class="wd-button" onclick="post('xml');">post(<q>xml</q>)</button>
+			</form>
+
+			<dl>
+				<dt><code>x.error</code></dt>
+				<dd><pre class="wd-code" id="eg7"></pre></dd>
+				<dt><code>x.request</code></dt>
+				<dd><pre class="wd-code" id="eg8"></pre></dd>
+				<dt><code>x.text</code></dt>
+				<dd><pre class="wd-code" id="eg9"></pre></dd>
+				<dt><code>x.xml</code></dt>
+				<dd><pre class="wd-code" id="eg10"></pre></dd>
+				<dt><code>x.json</code></dt>
+				<dd><pre class="wd-code" id="eg11"></pre></dd>
+			</dl>
+		</div>
+	</div>
+</div>
+
+<script>
+var eg = {};
+eg["#eg1"] = "file.xml";
+eg["#eg2"] = wd("manual/eg/eg.xml").path;
+eg["#eg3"] = getCode("#eg6");
+eg["#eg4"] = getCode("#eg5");
+setText(eg);
+</script>

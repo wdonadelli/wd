@@ -1,0 +1,39 @@
+<header class="wd-head">
+	<h2 class="wd-text-center">WDnumber: methods</h2>
+</header>
+
+<!---------------------------------------------------------------------------->
+<h3>WDnumber.coin</h3>
+
+
+<p class="wd-p">It is a method that returns the numeric value rounded.</p>
+
+<p class="wd-code wd-text-center">wd(number).round(n)</p>
+
+<p class="wd-p">The <code>n</code> argument (optional) indicates the number of decimal places to be considered in the rounding. If the argument is omitted, the number will be rounded to the integer above.</p>
+
+<h4>Example</h4>
+
+<pre class="wd-code">
+wd(<var class="eg1"></var>).round(<var class="eg3"></var>);
+<sample><var id="eg5"></var></sample>
+wd(<var class="eg1"></var>).round();
+<sample><var id="eg6"></var></sample>
+wd(<var class="eg2"></var>).round(<var class="eg4"></var>);
+<sample><var id="eg7"></var></sample>
+wd(<var class="eg2"></var>).round();
+<sample><var id="eg8"></var></sample>
+</pre>
+
+<script>
+var eg = {};
+eg[".eg1"] = -3.457;
+eg[".eg2"] = 3.457;
+eg[".eg3"] = 1;
+eg[".eg4"] = 2;
+eg["#eg5"] = wd(eg[".eg1"]).round(eg[".eg3"]);
+eg["#eg6"] = wd(eg[".eg1"]).round();
+eg["#eg7"] = wd(eg[".eg2"]).round(eg[".eg4"]);
+eg["#eg8"] = wd(eg[".eg2"]).round();
+setText(eg);
+</script>

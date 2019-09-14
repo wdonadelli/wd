@@ -1,4 +1,4 @@
-﻿/* Willian Donadelli | <wdonadelli@gmail.com> | v1.1.1 */
+/* Willian Donadelli | <wdonadelli@gmail.com> | v1.1.1 */
 
 *, *:before, *:after {box-sizing: border-box;}
 /*--- animações ---*/
@@ -1297,3 +1297,4 @@ h6 {font-size: 0.65em;}
 *[data-wd-action] {
 	cursor: pointer;
 }
+
