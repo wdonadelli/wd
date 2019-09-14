@@ -1,0 +1,73 @@
+<header class="wd-head">
+	<h2 class="wd-text-center">dataWdAction</h2>
+</header>
+
+<p class="wd-p">The purpose of the attribute is performs the action defined on elements identified by the CSS selector.</p>
+
+<p class="wd-p">See the following chapters:</p>
+
+<ul class="wd-list">
+	<li><a href="#main" data-wd-data="wdClick{}${#js3}">WDdom (querySelectorAll)</a></li>
+	<li><a href="#main" data-wd-data="wdClick{}${#js35}">WDdom: view (WDdom.action)</a></li>
+	<li><a href="#main" data-wd-data="wdClick{}${#data2}">dataWdClick</a></li>
+</ul>
+
+<h3>Attribute</h3>
+
+<pre class="wd-code wd-text-center">data-wd-action=<q>act{target}</q></pre>
+
+<p class="wd-p">For various targets and subactions:</p>
+
+<pre class="wd-code wd-text-center">data-wd-action=<q>act<sub>1</sub>{target<sub>1</sub>}act<sub>2</sub>{target<sub>2</sub>}</q></pre>
+
+<h3>Target</h3>
+
+<ul class="wd-list">
+	<li>Element defined by the CSS selector.</li>
+</ul>
+
+<h3>Sensitivity</h3>
+
+<ul class="wd-list">
+	<li>When the element receives a click.</li>
+</ul>
+
+<h3>Example</h3>
+
+<h4>HTML code</h4>
+
+<pre class="wd-code" id="eg1"></pre>
+
+<h4>Result</h4>
+
+<div id="eg2" class="wd-margin">
+	<nav class="wd-nav wd-box-grey">
+		<a data-wd-action="tab{#egtab1}" data-wd-click=" " href="##" >Tab1</a>
+		<a data-wd-action="tab{#egtab2}" href="##" >Tab2</a>
+	</nav>
+
+	<div class="wd-border">
+		<div id="egtab1" class="wd-flyer">
+			<header class="wd-head wd-box-blue">
+				<h3>Tab1</h3>
+			</header>
+			<p>Tab1 content.</p>
+		</div>
+		<div id="egtab2" class="wd-flyer">
+			<header class="wd-head wd-box-green">
+				<h3>Tab2</h3>
+			</header>
+			<p>Tab2 content.</p>
+			<form class="wd-form wd-horizontal">
+				<a data-wd-action="show{#showhide2}hide{#showhide1}" id="showhide1" href="##" class="wd-button">#1: Show 2/Hide 1</a>
+				<a data-wd-action="show{#showhide1}hide{#showhide2}" id="showhide2" href="##" class="wd-button">#2: Show 1/Hide 2</a>
+			</form>
+		</div>
+	</div>
+</div>
+
+<script>
+var eg = {};
+eg["#eg1"] = getCode("#eg2", true);
+setText(eg);
+</script>

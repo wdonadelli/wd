@@ -1,0 +1,84 @@
+<header class="wd-head">
+	<h2 class="wd-text-center">dataWdDevice</h2>
+</header>
+
+<p class="wd-p">The purpose of the tribute is to make the element responsive by defining classes depending on screen size, without the need for specific CSS code.</p>
+
+<p class="wd-p">There are five size possibilities (subactions):</p>
+
+<dl class="wd-padding-childs">
+	<dt><b>desktop</b></dt>
+	<dd><i>For screen sizes starting at 768px.</i></dd>
+	<dd>In this case, all classes listed in the options below will be removed from the element's <q>class</q> attribute while the classes listed in this option will be added to the element's <q>class</q> attributes.</q>
+	<dt><b>mobile</b></dt>
+	<dd><i>For screen sizes smaller than 768px.</i></dd>
+	<dd>In this case, all classes listed in the above option will be removed from the element's <q>class</q> attribute while the classes listed in this option will be added to the <q>class</q> attribute of the element.</dd>
+	<dt><b>tablet</b></dt>
+	<dd><i>For screen sizes from 600 to 767px.</i></dd>
+	<dd>In this case, all classes listed in the first and last options will be removed from the element's <q>class</q> attribute while the classes listed in this option will be added to the <q>class</q> attribute of the element.</dd>
+	<dt><b>phone</b></dt>
+	<dd><i>For screen sizes smaller than 600px.</i></dd>
+	<dd>In this case, all classes listed in the first and second-to-last options will be removed from the element's <q>class</q> attribute while the classes listed in this option will be added to the <q>class</q> attribute of the element.</dd>
+</dl>
+
+<p class="wd-text-center wd-text-red wd-icon-error wd-padding wd-rounded wd-border">Beware of conflicts!</p>
+
+<p class="wd-p">See the following chapters:</p>
+
+<ul class="wd-list">
+	<li><a href="#main" data-wd-data="wdClick{}${#js34}">WDdom: setting (WDdom.class)</a></li>
+</ul>
+
+<h3>Attribute</h3>
+
+<pre class="wd-code wd-text-center">data-wd-device=desktop{class<sub>1</sub> class<sub>2</sub>}mobile{class<sub>1</sub>}tablet{class<sub>3</sub>}phone{class<sub>4</sub>}</pre>
+
+<h3>Target</h3>
+
+<ul class="wd-list">
+	<li>Element.</li>
+</ul>
+
+<h3>Sensitivity</h3>
+
+<ul class="wd-list">
+	<li>After loading the document;</li>
+	<li>After defining the attribute on the element with the method <a href="#main" data-wd-data="wdClick{}${#js34}">WDdom.data</a>;</li>
+	<li>After external data loading procedures using the <i>WD Attributes Tools</i> library;</li>
+	<li>When to change the screen size.</li>
+</ul>
+
+<h3>Example</h3>
+
+<h4>HTML code</h4>
+
+<pre class="wd-code" id="eg1"></pre>
+
+<h4>Result</h4>
+
+<p class="wd-p">Change the screen size and see the result:</p>
+
+<div id="eg2" class="wd-padding">
+
+	<style>
+.screen {background-color: #000000; color: #FFFFFF;}
+.no-screen {background-color: #FFFFFF; color: #B3CCCC;}
+.sub-screen {text-decoration: underline; font-weight: bold;}
+	</style>
+
+	<ul type="none" class="wd-list">
+		<li data-wd-device="desktop{screen}mobile{no-screen}">Desktop</li>
+		<li data-wd-device="desktop{no-screen}mobile{screen}"><span>Mobile</span>
+			<ul class="wd-list" type="none">
+				<li data-wd-device="tablet{sub-screen}">Tablet</li>
+				<li data-wd-device="phone{sub-screen}">Phone</li>
+			</ul>
+		</li>
+	</ul>
+</div>	
+
+<script>
+var eg = {};
+eg["#eg1"] = getCode("#eg2", true);
+setText(eg);
+</script>

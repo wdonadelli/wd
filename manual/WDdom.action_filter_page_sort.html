@@ -1,0 +1,234 @@
+<header class="wd-head">
+	<h2 class="wd-text-center">WDdom: view</h2>
+</header>
+<nav class="wd-nav wd-text-blue">
+	<a href="#main" data-wd-action="tab{#tab_action}">Action</a>
+	<a href="#main" data-wd-action="tab{#tab_filter}">Filter</a>
+	<a href="#main" data-wd-action="tab{#tab_page}">Page</a>
+	<a href="#main" data-wd-action="tab{#tab_sort}">Sort</a>
+</nav>
+
+<!---------------------------------------------------------------------------->
+
+<div>
+	<div id="tab_action">
+		<h3>WDdom.action</h3>
+
+		<p class="wd-p">It is a method that defines actions for the element.</p>
+
+		<p class="wd-code wd-text-center">wd(dom).action(act)</p>
+
+		<p class="wd-p">The <code>act</code> argument is a string that represents the behavior to be applied to the element, as shown below:</p>
+
+		<dl class="wd-padding wd-border wd-rounded">
+			<dt>open</dt>
+			<dd>If the element contains the <code>open</code> attribute, it will be set to true. Otherwise, the <code>wd-open</code> class will be added to the element becoming dependent on the style sheet.</dd>
+			<dt>close</dt>
+			<dd>If the element contains the <code>open</code> attribute, it will be set to false. Otherwise, the <code>wd-open</code> class, if any, will be removed from the element.</dd>
+			<dt>toggle-open</dt>
+			<dd>Toggles between <q>open</q> and <q>close</q>.</dd>
+			<dt>tab</dt>
+			<dd>Displays only the element informed, your brothers will be hidden.</dd>
+			<dt>del</dt>
+			<dd>Removes the element from DOM.</dd>
+			<dt>show</dt>
+			<dd>Shows the element.</dd>
+			<dt>hide</dt>
+			<dd>Hides the element.</dd>
+			<dt>check</dt>
+			<dd>Check <code>input</code> elements of type <i>radio</i> or <i>checkbox</i>.</dd>
+			<dt>uncheck</dt>
+			<dd>Uncheck <code>input</code> elements of type <i>radio</i> or <i>checkbox</i>.</dd>
+			<dt>toggle-check</dt>
+			<dd>Toggles the check of the <code>input</code> elements of the type <i>radio</i> or <i>checkbox</i>.</dd>
+			<dt>clean</dt>
+			<dd>Clears the content of the element.</dd>
+		</dl>
+
+		<h4>Example</h4>
+
+		<h5>HTML code</h5>
+
+		<pre class="wd-code" id="eg1"></pre>
+
+		<h5>JavaScript</h5>
+
+		<pre class="wd-code">wd$(<q>#eg3 input</q>).action(<q><input type="text" class="argument" id="eg2" placeholder="act"/></q>); <cite>//try it</cite></pre>
+
+		<script>
+function action() {
+	var arg;
+	arg = wd$("#eg2").item(0).value;
+	wd$("#eg3 input").action(arg);
+	return;
+}
+		</script>
+
+		<a href="#eg3" class="wd-button" onclick="action();">Execute</a>
+
+		<h4>Result</h4>
+
+		<form id="eg3" class="wd-form wd-padding">
+			<label class="wd-label"><input type="checkbox" class="wd-input"/>Check 1</label>
+			<label class="wd-label"><input type="checkbox" class="wd-input"/>Check 2</label>
+			<label class="wd-label"><input type="checkbox" class="wd-input"/>Check 3</label>
+			<label class="wd-label"><input type="checkbox" class="wd-input"/>Check 4</label>
+		</form>
+
+	</div>
+
+	<div id="tab_filter">
+		<h3>WDdom.filter</h3>
+
+		<p class="wd-p">It is a method that that displays only child elements that display the textual content entered in the argument.</p>
+
+		<p class="wd-code wd-text-center">wd(dom).filter(text, min, show)</p>
+
+		<p class="wd-p">The <code>text</code> argument is the text to be located in the element.</p>
+
+		<p class="wd-p">The <code>min</code> argument (optional) is the minimum number of characters for the method to be executed. The default value is zero.</p>
+
+		<p class="wd-p">The <code>show</code> argument (optional) is a Boolean value and defines whether the elements to be found will be displayed as long as the minimum number of characters is not reached. The default value is true.</p>
+
+		<h4>Example</h4>
+
+		<h5>HTML code</h5>
+
+		<pre class="wd-code" id="eg4"></pre>
+
+		<h5>JavaScript</h5>
+	
+		<pre class="wd-code">wd$(<q>#eg</q>).filter(<q><input type="text" class="argument" id="eg5" placeholder="text"/></q>, <input type="text" class="argument" id="eg6" placeholder="min"/>, <label><input type="checkbox" checked="" id="eg7"/>show</label>); <cite>//try it</cite></pre>
+
+		<script>
+function filter() {
+	var text, show, mini;
+	text = wd$("#eg5").item(0).value;
+	mini = wd$("#eg6").item(0).value;
+	show = wd$("#eg7").item(0).checked;
+	wd$("#eg8").filter(text, mini, show);
+	return;
+}
+		</script>
+
+		<a href="#eg8" class="wd-button" onclick="filter();">Execute</a>
+
+		<h4>Result</h4>
+
+		<ol class="wd-list" id="eg8">
+			<li>Guitar</li>
+			<li>Bass Guitar</li>
+			<li>Drum</li>
+			<li>Keyboard</li>
+			<li>Microphone</li>
+		</ol>
+
+	</div>
+
+	<div id="tab_page">
+		<h3>WDdom.page</h3>
+
+		<p class="wd-p">It is a method that divides the child elements into defined quantity groups and display a given group, leaving the others inhibited.</p>
+
+		<p class="wd-code wd-text-center">wd(dom).page(page, size)</p>
+
+		<p class="wd-p">The <code>page</code> argument is a integer that indicates the group to be displayed. Zero indicates the first group, 1 the second group, -1 the last group, -2 the penultimate group, and so on. If the reported value exceeds the number of groups, the threshold group is displayed, that is, the first or last group, as the case may be.</p>
+
+		<p class="wd-p">The <code>size</code> argument is Integer that indicates the size of each group. If the number is greater than zero and less than or equal to one, the size of the group will be defined by percentage.</p>
+
+		<h4>Example</h4>
+
+		<h5>HTML code</h5>
+
+		<pre class="wd-code" id="eg9"></pre>
+
+		<h5>JavaScript</h5>
+	
+		<pre class="wd-code">wd$(<q>#eg12</q>).filter(<input type="text" class="argument" id="eg10" placeholder="page"/>, <input type="text" class="argument" id="eg11" placeholder="size"/>); <cite>//try it</cite></pre>
+
+		<script>
+function page() {
+	var pag, size;
+	pag  = wd$("#eg10").item(0).value;
+	size = wd$("#eg11").item(0).value;
+	wd$("#eg12").page(pag, size);
+	return;
+}
+		</script>
+
+		<a href="#eg12" class="wd-button" onclick="page();">Execute</a>
+
+		<h4>Result</h4>
+
+		<ol class="wd-list" id="eg12">
+			<li>Item 01/10</li>
+			<li>Item 02/10</li>
+			<li>Item 03/10</li>
+			<li>Item 04/10</li>
+			<li>Item 05/10</li>
+			<li>Item 06/10</li>
+			<li>Item 07/10</li>
+			<li>Item 08/10</li>
+			<li>Item 09/10</li>
+			<li>Item 10/10</li>
+		</ol>
+
+	</div>
+
+	<div id="tab_sort">
+
+		<h3>WDdom.sort</h3>
+
+		<p class="wd-p">It is a method that sorts the child elements in ascending or descending order.</p>
+
+		<p class="wd-code wd-text-center">wd(dom).sort(order, col)</p>
+		
+		<p class="wd-p">The <code>order</code> argument (optional) is the number that indicates the order. If less than zero, decreasing, otherwise increasing. The default value is 1.</p>
+
+		<p class="wd-p">The <code>col</code> argument (optional) is the number that indicates the column to use as a reference to define the order. If the child elements, which are to be sorted, also have children (columns), it is possible to define these elements as a parameter for sorting (eg <code>td</code> elements of a table). The default value is <i>null</i>.</p>
+
+		<h4>Example</h4>
+
+		<h5>HTML code</h5>
+
+		<pre class="wd-code" id="eg13"></pre>
+
+		<h5>JavaScript</h5>
+	
+		<pre class="wd-code">wd$(<q>#eg15</q>).filter(<input type="text" class="argument" id="eg14" placeholder="order"/>); <cite>//try it</cite></pre>
+
+		<script>
+function sort() {
+	var arg;
+	arg = wd$("#eg14").item(0).value;
+	wd$("#eg15").sort(arg);
+	return;
+}
+		</script>
+
+		<a href="#eg15" class="wd-button" onclick="sort();">Execute</a>
+
+		<h4>Result</h4>
+
+		<ol class="wd-list" id="eg15">
+			<li>Guitar</li>
+			<li>Bass Guitar</li>
+			<li>Drum</li>
+			<li>Keyboard</li>
+			<li>Microphone 2</li>
+			<li>microphone 1</li>
+			<li>MICROPHONE 3</li>
+		</ol>
+
+	</div>
+
+</div>
+
+<script>
+var eg = {};
+eg["#eg1"]  = getCode("#eg3", true);
+eg["#eg4"]  = getCode("#eg8", true);
+eg["#eg9"]  = getCode("#eg12", true);
+eg["#eg13"] = getCode("#eg15", true);
+setText(eg);
+</script>

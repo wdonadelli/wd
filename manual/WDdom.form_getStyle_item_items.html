@@ -1,0 +1,168 @@
+<header class="wd-head">
+	<h2 class="wd-text-center">WDdom: getting</h2>
+</header>
+<nav class="wd-nav wd-text-blue">
+	<a href="#main" data-wd-action="tab{#tab_form}">Form</a>
+	<a href="#main" data-wd-action="tab{#tab_getStyle}">getStyle</a>
+	<a href="#main" data-wd-action="tab{#tab_item}">Item</a>
+	<a href="#main" data-wd-action="tab{#tab_items}">Items</a>
+</nav>
+
+<!---------------------------------------------------------------------------->
+
+<div>
+	<div id="tab_form">
+		<h3>WDdom.form</h3>
+
+		<p class="wd-p">It is an attribute that captures the values ​​of the form fields and serializes them, as long as it contains the <code>name</code> attribute. It does not have self-return behavior.</p>
+
+		<p class="wd-code wd-text-center">wd(dom).form</p>
+
+		<h4>Example</h4>
+
+		<h5>HTML code</h5>
+
+		<pre class="wd-code" id="eg1"></pre>
+
+		<h5>JavaScript</h5>
+
+		<pre class="wd-code" id="eg2"></pre>
+
+		<script id="eg3">
+function form() {
+	alert(wd$("#eg4 *").form);
+	return;
+}
+		</script>
+
+		<h4>Result</h4>
+
+		<fieldset id="eg4">
+			<legend class="wd-padding">Form:</legend>
+			<form class="wd-form">
+				<input type="text" name="egform1" class="wd-input" placeholder="text"/>
+				<label class="wd-label"><input type="checkbox" name="egform2" class="wd-input" value="True" /> Check</label>
+				<label class="wd-label"><input type="radio" name="egform3" class="wd-input" value="radio 1"/> Radio 1</label>
+				<label class="wd-label"><input type="radio" name="egform3" class="wd-input" value="radio 2"/> Radio 2</label>
+				<select name="egform4" class="wd-input">
+					<option value="select 1">Select 1</option>
+					<option value="select 2">Select 2</option>
+					<option value="select 3">Select 3</option>
+				</select>
+				<textarea name="egform5" class="wd-input" placeholder="textarea"></textarea>
+				<a href="#eg4" class="wd-button" onclick="form();">Execute</a>
+			</form>
+		</fieldset>
+
+	</div>
+
+<!---------------------------------------------------------------------------->
+
+	<div id="tab_getStyle">
+
+		<h3>WDdom.getStyle</h3>
+
+		<p class="wd-p">It is a method that returns the computed style of the element. The <code>css</code> argument is the name of the style attribute to search. The function return is an array whose items correspond to the values ​​of the attribute indicated in the argument for each element. It does not have self-return behavior.</p>
+
+		<p class="wd-code wd-text-center">wd(dom).getStyle(css)</p>
+
+		<h4>Example</h4>
+
+		<h5>HTML code</h5>
+
+		<pre class="wd-code" id="eg5"></pre>
+
+		<h5>JavaScript</h5>
+	
+		<pre class="wd-code">alert(wd$(<q>#eg7 &gt; p</q>).getStyle(<q><input type="text" class="argument" id="eg6" placeholder="css"/></q>));<cite>//try it</cite></pre>
+
+		<script>
+function getStyle() {
+	var arg, val;
+	val = wd$("#eg6").item(0).value;
+	arg = wd$("#eg7 > p").getStyle(val);
+	alert(wd(arg).toString());
+	return;
+}
+		</script>
+
+		<a href="#eg7" class="wd-button" onclick="getStyle();">Execute</a>
+
+		<h4>Result</h4>
+
+		<div id="eg7">
+			<p style="color: #0000FF;">color blue</p>
+			<p style="background-color: #00FF00;">background green</p>
+			<p style="text-decoration: underline;">underline</p>
+		</div>
+
+	</div>
+
+<!---------------------------------------------------------------------------->
+
+	<div id="tab_item">
+		<h3>WDdom.item</h3>
+
+		<p class="wd-p">It is a method that returns the element contained in the element set from its numeric reference information.</p>
+
+		<p class="wd-code wd-text-center">wd(dom).item(index)</p>
+
+		<p class="wd-p">The <code>index</code> argument indicates the element to return. If the number is less than zero, returns the element from the last element (-1 returns the last, -2 the second to last, and so on). If the value is not numeric, returns an array with all elements.</p>
+
+		<h4>Example</h4>
+
+		<h5>HTML code</h5>
+
+		<pre class="wd-code" id="eg8"></pre>
+
+		<h5>JavaScript</h5>
+	
+		<pre class="wd-code">wd$(<q>#eg11 > *</q>).item(<var id="eg9"></var>).textContent;
+<sample><q id="eg10"></q></sample></pre>
+
+		<h4>Result</h4>
+
+		<div id="eg11">
+			<p>Text 1</p>
+			<p>Text 2</p>
+			<p>Text 3</p>
+		</div>
+
+	</div>
+
+<!---------------------------------------------------------------------------->
+
+	<div id="tab_items">
+		<h3>WDdom.items</h3>
+
+		<p class="wd-p">It is an attributes that returns  the number of elements contained in the set.</p>
+
+		<p class="wd-code wd-text-center">wd(dom).items</p>
+
+		<h4>Example</h4>
+
+		<h5>HTML code</h5>
+
+		<pre class="wd-code" id="eg12"></pre>
+
+		<h5>JavaScript</h5>
+	
+		<pre class="wd-code">wd$(<q>#eg11 > *</q>).items;
+<sample><var id="eg13"></var></sample></pre>
+
+	</div>
+
+</div>
+
+<script>
+var eg = {};
+eg["#eg1"] = getCode("#eg4", true);
+eg["#eg2"] = getCode("#eg3");
+eg["#eg5"] = getCode("#eg7", true);
+eg["#eg8"] = getCode("#eg11", true);
+eg["#eg9"] = -2;
+eg["#eg10"] = wd$("#eg11 > *").item(-2).textContent;
+eg["#eg12"] = getCode("#eg11", true);
+eg["#eg13"] = wd$("#eg11 > *").items;
+setText(eg);
+</script>
