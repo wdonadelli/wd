@@ -2,7 +2,7 @@
 	{
 		"title": "Home",
 		"file":  "manual/home.html",
-		"style": "wd-text-title wd-text-blue",
+		"style": "wd-text-blue wd-text-larger",
 		"click": "data-wd-click=''",
 		"id": "home"
 	},
@@ -14,7 +14,7 @@
 	{
 		"title": "WD JavaScript Tools",
 		"file":  "manual/WD.0.html",
-		"style": "wd-text-blue",
+		"style": "wd-text-blue wd-text-larger",
 		"click": "",
 		"id": "js"
 	},
@@ -26,28 +26,28 @@
 	{
 		"title": "WDarray",
 		"file":  "manual/WDarray.0.html",
-		"style": "wd-text-title",
+		"style": "wd-text-title wd-b",
 		"click": "",
 		"id": "js1"
 	},
 	{
 		"title": "WDarray: changing items",
 		"file":  "manual/WDarray.add_del_toggle_replace.html",
-		"style": "wd-text-small",
+		"style": "wd-text-smaller",
 		"click": "",
 		"id": "js10"
 	},
 	{
 		"title": "WDarray: size and location",
 		"file":  "manual/WDarray.count_inside_item_items.html",
-		"style": "wd-text-small",
+		"style": "wd-text-smaller",
 		"click": "js11",
 		"id": ""
 	},
 	{
 		"title": "WDarray: organizing items",
 		"file":  "manual/WDarray.sort_unique.html",
-		"style": "wd-text-small",
+		"style": "wd-text-smaller",
 		"click": "",
 		"id": "js12"
 	},
@@ -59,28 +59,28 @@
 	{
 		"title": "WDdate",
 		"file":  "manual/WDdate.0.html",
-		"style": "wd-text-title",
+		"style": "wd-text-title wd-b",
 		"click": "",
 		"id": "js2"
 	},
 	{
 		"title": "WDdate: setting date",
 		"file":  "manual/WDdate.day_month_year.html",
-		"style": "wd-text-small",
+		"style": "wd-text-smaller",
 		"click": "",
 		"id": "js21"
 	},
 	{
 		"title": "WDdate: more data",
 		"file":  "manual/WDdate.countdown_days_leap_week_weeks_width.html",
-		"style": "wd-text-small",
+		"style": "wd-text-smaller",
 		"click": "",
 		"id": "js22"
 	},
 	{
 		"title": "WDdate: formats",
 		"file":  "manual/WDdate.format_longMonth_longWeek_shortMonth_short_Week.html",
-		"style": "wd-text-small",
+		"style": "wd-text-smaller",
 		"click": "",
 		"id": "js23"
 	},
@@ -92,42 +92,42 @@
 	{
 		"title": "WDdom",
 		"file":  "manual/WDdom.0.html",
-		"style": "wd-text-title",
+		"style": "wd-text-title wd-b",
 		"click": "",
 		"id": "js3"
 	},
 	{
 		"title": "WDdom: content",
 		"file":  "manual/WDdom.load_repeat.html",
-		"style": "wd-text-small",
+		"style": "wd-text-smaller",
 		"click": "",
 		"id": "js31"
 	},
 	{
 		"title": "WDdom: getting",
 		"file":  "manual/WDdom.form_getStyle_item_items.html",
-		"style": "wd-text-small",
+		"style": "wd-text-smaller",
 		"click": "",
 		"id": "js32"
 	},
 	{
 		"title": "WDdom: methods",
 		"file":  "manual/WDdom.handler_run.html",
-		"style": "wd-text-small",
+		"style": "wd-text-smaller",
 		"click": "",
 		"id": "js33"
 	},
 	{
 		"title": "WDdom: setting",
 		"file":  "manual/WDdom.class_data_style.html",
-		"style": "wd-text-small",
+		"style": "wd-text-smaller",
 		"click": "",
 		"id": "js34"
 	},
 	{
 		"title": "WDdom: view",
 		"file":  "manual/WDdom.action_filter_page_sort.html",
-		"style": "wd-text-small",
+		"style": "wd-text-smaller",
 		"click": "",
 		"id": "js35"
 	},
@@ -139,28 +139,28 @@
 	{
 		"title": "WDnumber",
 		"file":  "manual/WDnumber.0.html",
-		"style": "wd-text-title",
+		"style": "wd-text-title wd-b",
 		"click": "",
 		"id": "js4"
 	},
 	{
 		"title": "WDnumber: attributes",
 		"file":  "manual/WDnumber.abs_float_integer_number.html",
-		"style": "wd-text-small",
+		"style": "wd-text-smaller",
 		"click": "",
 		"id": "js41"
 	},
 	{
 		"title": "WDnumber: text/html",
 		"file":  "manual/WDnumber.coin_fixed_locale_power10.html",
-		"style": "wd-text-small",
+		"style": "wd-text-smaller",
 		"click": "",
 		"id": "js42"
 	},
 	{
 		"title": "WDnumber: methods",
 		"file":  "manual/WDnumber.round.html",
-		"style": "wd-text-small",
+		"style": "wd-text-smaller",
 		"click": "",
 		"id": "js43"
 	},
@@ -172,14 +172,14 @@
 	{
 		"title": "WDregexp",
 		"file":  "manual/WDregexp.0.html",
-		"style": "wd-text-title",
+		"style": "wd-text-title wd-b",
 		"click": "",
 		"id": "js5"
 	},
 	{
 		"title": "WDregexp: mask",
 		"file":  "manual/WDregexp.mask.html",
-		"style": "wd-text-small",
+		"style": "wd-text-smaller",
 		"click": "",
 		"id": "js51"
 	},
@@ -192,21 +192,21 @@
 	{
 		"title": "WDtext",
 		"file":  "manual/WDtext.0.html",
-		"style": "wd-text-title",
+		"style": "wd-text-title wd-b",
 		"click": "",
 		"id": "js6"
 	},
 	{
 		"title": "WDtext: formatting",
 		"file":  "manual/WDtext.clear_replace_title_trim.html",
-		"style": "wd-text-small",
+		"style": "wd-text-smaller",
 		"click": "",
 		"id": "js61"
 	},
 	{
 		"title": "WDtext: request",
 		"file":  "manual/WDtext.path_request.html",
-		"style": "wd-text-small",
+		"style": "wd-text-smaller",
 		"click": "",
 		"id": "js62"
 	},
@@ -218,21 +218,21 @@
 	{
 		"title": "WDtime",
 		"file":  "manual/WDtime.0.html",
-		"style": "wd-text-title",
+		"style": "wd-text-title wd-b",
 		"click": "",
 		"id": "js7"
 	},
 	{
 		"title": "WDtime: setting time",
 		"file":  "manual/WDtime.hour_minute_second.html",
-		"style": "wd-text-small",
+		"style": "wd-text-smaller",
 		"click": "",
 		"id": "js71"
 	},
 	{
 		"title": "WDtime: formats",
 		"file":  "manual/WDtime.h12_format.html",
-		"style": "wd-text-small",
+		"style": "wd-text-smaller",
 		"click": "",
 		"id": "js72"
 	},
@@ -245,91 +245,91 @@
 	{
 		"title": "WD Attributes Tools",
 		"file":  "manual/data.html",
-		"style": "wd-text-blue",
+		"style": "wd-text-blue wd-text-larger",
 		"click": "",
 		"id": "data"
 	},
 	{
 		"title": "dataWdAction",
 		"file":  "manual/data.wdAction.html",
-		"style": "wd-text-small",
+		"style": "wd-text-smaller",
 		"click": "",
 		"id": "data1"
 	},
 	{
 		"title": "dataWdClick",
 		"file":  "manual/data.wdClick.html",
-		"style": "wd-text-small",
+		"style": "wd-text-smaller",
 		"click": "",
 		"id": "data2"
 	},
 	{
 		"title": "dataWdData",
 		"file":  "manual/data.wdData.html",
-		"style": "wd-text-small",
+		"style": "wd-text-smaller",
 		"click": "",
 		"id": "data3"
 	},
 	{
 		"title": "dataWdDevice",
 		"file":  "manual/data.wdDevice.html",
-		"style": "wd-text-small",
+		"style": "wd-text-smaller",
 		"click": "",
 		"id": "data4"
 	},
 	{
 		"title": "dataWdFilter",
 		"file":  "manual/data.wdFilter.html",
-		"style": "wd-text-small",
+		"style": "wd-text-smaller",
 		"click": "",
 		"id": "data5"
 	},
 	{
 		"title": "dataWdLoad",
 		"file":  "manual/data.wdLoad.html",
-		"style": "wd-text-small",
+		"style": "wd-text-smaller",
 		"click": "",
 		"id": "data6"
 	},
 	{
 		"title": "dataWdMask",
 		"file":  "manual/data.wdMask.html",
-		"style": "wd-text-small",
+		"style": "wd-text-smaller",
 		"click": "",
 		"id": "data7"
 	},
 	{
 		"title": "dataWdPage",
 		"file":  "manual/data.wdPage.html",
-		"style": "wd-text-small",
+		"style": "wd-text-smaller",
 		"click": "",
 		"id": "data8"
 	},
 	{
 		"title": "dataWdRepeat",
 		"file":  "manual/data.wdRepeat.html",
-		"style": "wd-text-small",
+		"style": "wd-text-smaller",
 		"click": "",
 		"id": "data9"
 	},
 	{
 		"title": "dataWdRequest",
 		"file":  "manual/data.wdRequest.html",
-		"style": "wd-text-small",
+		"style": "wd-text-smaller",
 		"click": "",
 		"id": "data10"
 	},
 	{
 		"title": "dataWdSort",
 		"file":  "manual/data.wdSort.html",
-		"style": "wd-text-small",
+		"style": "wd-text-smaller",
 		"click": "",
 		"id": "data11"
 	},
 	{
 		"title": "dataWdSortCol",
 		"file":  "manual/data.wdSortCol.html",
-		"style": "wd-text-small",
+		"style": "wd-text-smaller",
 		"click": "",
 		"id": "data12"
 	},
@@ -342,63 +342,63 @@
 	{
 		"title": "WD Style Sheet",
 		"file":  "manual/css.html",
-		"style": "wd-text-blue",
+		"style": "wd-text-blue wd-text-larger",
 		"click": "",
 		"id": "css"
 	},
 	{
 		"title": "CSS: Box",
 		"file":  "manual/css.box.html",
-		"style": "wd-text-small",
+		"style": "wd-text-smaller",
 		"click": "",
 		"id": "css1"
 	},
 	{
 		"title": "CSS: Combo",
 		"file":  "manual/css.combo.html",
-		"style": "wd-text-small",
+		"style": "wd-text-smaller",
 		"click": "",
 		"id": "css2"
 	},
 	{
 		"title": "CSS: Flyer",
 		"file":  "manual/css.flyer.html",
-		"style": "wd-text-small",
+		"style": "wd-text-smaller",
 		"click": "",
 		"id": "css3"
 	},
 	{
 		"title": "CSS: Form",
 		"file":  "manual/css.form.html",
-		"style": "wd-text-small",
+		"style": "wd-text-smaller",
 		"click": "",
 		"id": "css4"
 	},
 	{
 		"title": "CSS: Generic",
 		"file":  "manual/css.generic.html",
-		"style": "wd-text-small",
+		"style": "wd-text-smaller",
 		"click": "",
 		"id": "css5"
 	},
 	{
 		"title": "CSS: Icon",
 		"file":  "manual/css.icon.html",
-		"style": "wd-text-small",
+		"style": "wd-text-smaller",
 		"click": "",
 		"id": "css6"
 	},
 	{
 		"title": "CSS: Text",
 		"file":  "manual/css.text.html",
-		"style": "wd-text-small",
+		"style": "wd-text-smaller",
 		"click": "",
 		"id": "css7"
 	},
 	{
 		"title": "CSS: Window",
 		"file":  "manual/css.window.html",
-		"style": "wd-text-small",
+		"style": "wd-text-smaller",
 		"click": "",
 		"id": "css8"
 	}

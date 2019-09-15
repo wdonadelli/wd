@@ -70,7 +70,7 @@ function setText(obj) {
 		</header>
 
 		<!--NAV-->
-		<nav class="wd-nav wd-box-blue wd-buddy wd-border-top">
+		<nav class="wd-nav wd-box-blue wd-buddy wd-box-opaque-out">
 			<span data-wd-action="open{#menu}" class="wd-icon-menu"></span>
 		</nav>
 		
@@ -88,7 +88,7 @@ function setText(obj) {
 				</header>
 
 				<!--NAV-->
-				<nav class="wd-nav wd-vertical wd-xxmargin-bottom" data-wd-repeat="get{manual/menu.json}">
+				<nav class="wd-nav wd-vertical wd-xxmargin-bottom" data-wd-repeat="get{manual/menu.json}" data-wd-device="mobile{wd-text-larger}">
 					<a 
 						href="#main"
 						data-wd-data="wdLoad{get{{{file}}}}${#content}"
@@ -102,8 +102,8 @@ function setText(obj) {
 
 			</section>
 		</div>
-		<footer class="wd-foot wd-text-right wd-buddy wd-text-large">
-			<a href="#main" class="wd-icon-top"></a>
+		<footer class="wd-foot wd-text-right wd-buddy wd-box-white wd-box-opaque-out">
+			<a href="#main" class="wd-icon-top wd-text-xlarge"></a>
 		</footer>
 	</main>
 </body>
