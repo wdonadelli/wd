@@ -102,7 +102,7 @@ a:hover {
 .wd-input[type=radio], .wd-input[type=checkbox] {
 	display: inline;
 	width: initial !important;
-	padding: auto;
+	padding: 0;
 	border: 0;
 }
 .wd-input[type=range],       .wd-input[type=file],
@@ -847,7 +847,6 @@ a:hover {
 	font-weight: bold;
 }
 .wd-code sample {
-	bbackground-color: #E6E6AA;
 	color: #916a08;
 	font-size: inherit;
 	font-style: inherit;
