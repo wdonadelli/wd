@@ -47,13 +47,13 @@
 
 <h4>Result</h4>
 
-<div data-wd-load="post{manual/eg/eg.html}" id="eg3"></div>
+<div data-wd-load="post{eg/eg.html}" id="eg3"></div>
 
 <script>
 var eg = {};
 eg["#eg1"] = getCode("#eg3", true);
 setText(eg);
-wd("manual/eg/eg.html").request(function(x) {
+wd("eg/eg.html").request(function(x) {
 	wd$("#eg2").item(0).textContent = x.text
 	var n = {};
 	n["#eg2"] = getCode("#eg2");

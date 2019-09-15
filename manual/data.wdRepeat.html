@@ -48,7 +48,7 @@
 
 <h4>Result</h4>
 
-<dl data-wd-repeat="get{manual/eg/eg.json}" id="eg3">
+<dl data-wd-repeat="get{eg/eg.json}" id="eg3">
 	<dt><b>{{nominativo}}</b></dt>
 	<dd><i>{{genitivo}}</i></dd>
 </dl>
@@ -57,7 +57,7 @@
 var eg = {};
 eg["#eg1"] = getCode("#eg3", true);
 setText(eg);
-wd("manual/eg/eg.json").request(function(x) {
+wd("eg/eg.json").request(function(x) {
 	wd$("#eg2").item(0).textContent = x.text
 	var n = {};
 	n["#eg2"] = getCode("#eg2");

@@ -56,7 +56,6 @@
 html {
 	font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
 	font-size: 16px;
-	line-height: 20px;
 }
 body {
 	margin: 0; padding: 0;
@@ -78,7 +77,6 @@ a:hover {
 .wd-input, .wd-button, .wd-label {
 	font-family: Verdana,sans-serif;
 	font-size: 16px;
-	line-height: 20px;
 }
 .wd-input {
 	padding: 0.25em 0.5em;
@@ -691,16 +689,26 @@ a:hover {
 	border-collapse: collapse;
 	font-family: Verdana,sans-serif;
 	font-size: 14px;
-	line-height: 16px;
-	margin-left: auto;
-	margin-right: auto;
+	margin: auto;
 }
 .wd-table[border] {border-style: solid;}
-.wd-table caption, .wd-table th {font-weight: bold;}
-.wd-table td, .wd-table th {padding: 0.25em;}
+.wd-table caption, .wd-table th {
+	font-weight: bold;
+	padding: 0.3em;
+	text-align: center;
+	vertical-align: middle;
+}
+.wd-table td {
+	padding: 0.3em;
+	vertical-align: top;
+}
 /*-- list --*/
-.wd-list {list-style-position: inside; padding: 0;}
-.wd-list > li {padding: 0.25em 0.25em 0.25em 40px;}
+.wd-list, .wd-list ul, .wd-list ol {
+	list-style-position: inside;
+	padding: 0;
+}
+.wd-list li {padding: 0.3em 0.3em 0.3em 2em;}
+.wd-list ul > li:last-child, .wd-list ol > li:last-child {padding-bottom: 0;}
 /*-- hide --*/
 .wd-hide        {visibility: hidden !important;}
 .wd-hide-screen {visibility: hidden !important;}
@@ -796,6 +804,8 @@ a:hover {
 .wd-icon-date:before     {margin-right: 0.5em; text-decoration: none !important; content: "\1F4C5";}
 .wd-icon-time:before     {margin-right: 0.5em; text-decoration: none !important; content: "\23F3";}
 .wd-icon-chart:before    {margin-right: 0.5em; text-decoration: none !important; content: "\1F4CA";}
+.wd-icon-increase:before {margin-right: 0.5em; text-decoration: none !important; content: "\1F4C8";}
+.wd-icon-decrease:before {margin-right: 0.5em; text-decoration: none !important; content: "\1F4C9";}
 .wd-icon-money:before    {margin-right: 0.5em; text-decoration: none !important; content: "\1F4B0";}
 .wd-icon-radio:before    {margin-right: 0.5em; text-decoration: none !important; content: "\1F4FB";}
 .wd-icon-tv:before       {margin-right: 0.5em; text-decoration: none !important; content: "\1F4FA";}

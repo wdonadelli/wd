@@ -107,7 +107,7 @@ wd(<q id="eg1"></q>).path;
 
 		<script id="eg5">
 function post(type) {
-	var file = "manual/eg/eg."+type;;
+	var file = "eg/eg."+type;;
 	wd(file).request(function(x) {
 		document.getElementById("eg7").textContent  = x.error;
 		document.getElementById("eg8").textContent  = x.request;
@@ -148,7 +148,7 @@ function post(type) {
 <script>
 var eg = {};
 eg["#eg1"] = "file.xml";
-eg["#eg2"] = wd("manual/eg/eg.xml").path;
+eg["#eg2"] = wd("eg/eg.xml").path;
 eg["#eg3"] = getCode("#eg6");
 eg["#eg4"] = getCode("#eg5");
 setText(eg);
