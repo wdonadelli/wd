@@ -716,7 +716,7 @@ var wd = (function() {
 				serial = serial !== null ? WD(serial).form : "";
 			} else {
 				serial = serial.toString();
-			}log(serial);
+			}
 			time   = WD(time);
 			if ((time.number === "integer" || time.number === "float") && time.valueOf() > 0) {
 				xhttp.timeout =  1000*time.valueOf();
@@ -2815,7 +2815,7 @@ var wd = (function() {
 		bar  = WD($(".wd-nav.wd-buddy, .wd-head.wd-buddy"));
 		top  = WD($(window.location.hash));
 		hbar = bar.type === "dom" && bar.items > 0 ? bar.item(0).offsetHeight : 0;
-		htop = top.type === "dom" && top.items > 0 ? top.item(0).offsetTop : 0;log("barra: "+hbar+" - topo: "+htop);
+		htop = top.type === "dom" && top.items > 0 ? top.item(0).offsetTop : 0;
 		if (hbar !== 0) {
 			window.scrollTo(0, htop - hbar);
 		}
