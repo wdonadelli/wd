@@ -1093,7 +1093,7 @@ var wd = (function() {
 		type: {
 			value: "number"
 		},
-		toString: {
+		toString: {//FIXME: está prejudicando no float (eg: 1.5 => 5)
 			value: function() {
 				var x, val, num, dot, pow;
 				if (this.number === "infinity") {
