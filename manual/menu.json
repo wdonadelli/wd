@@ -145,7 +145,7 @@
 	},
 	{
 		"title": "WDnumber: attributes",
-		"file":  "manual/WDnumber.abs_float_integer_number.html",
+		"file":  "manual/WDnumber.abs_decimal_integer_number.html",
 		"style": "wd-text-smaller",
 		"click": "",
 		"id": "js41"
