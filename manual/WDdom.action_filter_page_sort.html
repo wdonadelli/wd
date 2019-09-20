@@ -185,7 +185,7 @@ function page() {
 		
 		<p class="wd-p">The <code>order</code> argument (optional) is the number that indicates the order. If less than zero, decreasing, otherwise increasing. The default value is 1.</p>
 
-		<p class="wd-p">The <code>col</code> argument (optional) is the number that indicates the column to use as a reference to define the order. If the child elements, which are to be sorted, also have children (columns), it is possible to define these elements as a parameter for sorting (eg <code>td</code> elements of a table). The default value is <i>null</i>.</p>
+		<p class="wd-p">The <code>col</code> argument (optional) is a positive integer indicating the column to use as a reference to define the sort order. If the child elements to be sorted also have children (columns), you can use these elements as a parameter for sorting (for example, <code>td</code> elements, children of <code>tr</code>, from a table). The value starts at zero (first child) and cannot be greater than the number of children of the element to be sorted.</p>
 
 		<h4>Example</h4>
 

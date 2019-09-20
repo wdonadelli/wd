@@ -1854,12 +1854,12 @@ var wd = (function() {
 	});
 
 	/*Retorna o array ordenado: nulo, números, tempo, data, text e outros*/
-
 	Object.defineProperty(WDarray.prototype, "sort", {
 		enumerable: true,
 		value: function(unique) {
 			var asort, type, seq, array, key;
 			asort = {};
+			/*organizando items por tipo*/
 			for (var i = 0; i < this.items; i++) {
 				type = WD(this.item(i)).type
 				if (!(type in asort)) {
@@ -1867,6 +1867,7 @@ var wd = (function() {
 				}
 				asort[type].push(this.item(i));
 			}
+			/*determinando a forma de ordem pelo tipo do item*/
 			for (var t in asort) {
 				asort[t].sort(function(a, b) {
 					var order, x, y;
@@ -1887,11 +1888,8 @@ var wd = (function() {
 				});
 			}
 			array = [];
-			seq = [
-				"null", "number", "time", "date", "text",
-				"boolean", "dom", "function", "regexp", "array",
-				"object", "unknown", "undefined"
-			];
+			/*Adicionando a sequência básica ao array*/
+			seq = ["null", "number", "time", "date", "text"];
 			for (var j = 0; j < seq.length; j++) {
 				key = seq[j];
 				if (key in asort) {
@@ -1899,6 +1897,18 @@ var wd = (function() {
 						array.push(asort[key][k]);
 					}
 				}
+			}
+			/*Adicionando os outros itens ao array*/
+			for (var p in asort) {
+				if (seq.indexOf(p) < 0) {
+					for (var q = 0; q < asort[p].length; q++) {
+						array.push(asort[p][q]);
+					}
+				}
+			}
+			/*verificando argumento*/
+			if (unique === true) {
+				array = WD(array).unique();
 			}
 			return array;
 		}
@@ -2390,28 +2400,40 @@ var wd = (function() {
 	Object.defineProperty(WDdom.prototype, "sort", {
 		enumerable: true,
 		value: function (order, col) {
-			if (WD(order).type !== "number") {
-				order = 1;
-			}
-			if (WD(col).type !== "number") {
-				col = null;
-			}
+			order = WD(order);
+			col   = WD(col);
 			this.run(function(elem) {
-				var dom, text, sort, index, target, value;
-				dom  = WD(elem.children).valueOf();
-				text = [];
-				sort = [];
-				for (var i = 0; i < dom.length; i++) {
-					target = WD(dom[i].children[col]).type === "dom" ? dom[i].children[col] : dom[i];
-					value  = target.textContent || target.innerText || target.innerHTML;
-					text.push(value.trim());
-					sort.push(value.trim());
+				var array, asort, childs;
+				array = WD(elem.children).valueOf();
+				/*para ordenar os filhos através dos netos*/
+				if (col.number === "integer" && col.valueOf() >= 0) {
+					col = col.valueOf();
+					/*verificando e definindo netos*/
+					for (var i = 0; i < array.length; i++) {
+						childs = array[i].children;
+						if (childs.length > 0 && childs.length > col) {
+							array[i] = childs[col];
+						}
+					}
+					/*ordenando*/
+					asort = WD(array).sort();
+					/*redefinindo os filhos*/
+					for (var k = 0; k < asort.length; k++) {
+						if (asort[k].parentElement !== elem) {
+							asort[k] = asort[k].parentElement;
+						}
+					}
+				/*caso contrário, ordenar só os filhos*/
+				} else {
+					asort = WD(array).sort();
 				}
-				sort = order < 0 ? WD(sort).sort().reverse() : WD(sort).sort();
-				for (var j = 0; j < sort.length; j++) {
-					index = text.indexOf(sort[j]);
-					text[index] = null;
-					elem.appendChild(dom[index]);
+				/*Definindo a ordem dos elementos*/
+				if (order.type === "number" && order.valueOf() < 0) {
+					asort = asort.reverse();
+				}
+				/*adicionando os elementos ao pai*/
+				for (var j = 0; j < asort.length; j++) {
+					elem.appendChild(asort[j]);
 				}
 				return;
 			});
