@@ -181,6 +181,17 @@ var wd = (function() {
 		}
 		return x;
 	};
+	
+	/*Verifica se o valor é um objeto simples {}*/
+	function isObject(value) {
+		var x;
+		if (typeof value === "object" && (/^\{.*\}$/).test(JSON.stringify(value)) === true) {
+			x = true;
+		} else {
+			x = false;
+		}
+		return x;
+	};
 
 	/*Verifica se o valor é uma função*/
 	function isFunction(value) {
@@ -362,6 +373,7 @@ var wd = (function() {
 				"null": isNull,
 				"boolean": isBoolean,
 				"function": isFunction,
+				"object": isObject
 			};
 			for (var i in types) {
 				if (types[i](this._value)) {
@@ -434,11 +446,7 @@ var wd = (function() {
 						x = this._value === true ? "True" : "False";
 						break;
 					case "object":
-						try {
-							x = JSON.stringify(this._value);
-						} catch(e) {
-							x = this._value.toString();
-						}
+						x = JSON.stringify(this._value);
 						break;
 					default:
 						try {
@@ -542,9 +550,11 @@ var wd = (function() {
 				} catch(e) {
 					arg.json = null;
 				}
-				loadModal.del();
-				method.call(this, arg);
+				//loadModal.del();
+				//method.call(this, arg);
 			}
+			loadModal.del();
+			method.call(this, arg);
 		}
 		return;
 	};
@@ -742,7 +752,7 @@ var wd = (function() {
 					try {
 						xhttp.open("POST", path, true);
 						xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-						//xhttp.setRequestHeader("Content-type", "multipart/form-data");
+						/*xhttp.setRequestHeader("Content-type", "multipart/form-data");*/
 						xhttp.send(serial === "" ? null : serial);
 						return true;
 					} catch(e) {
@@ -893,7 +903,7 @@ var wd = (function() {
 			if (this.valueOf() === Infinity || this.valueOf() === -Infinity) {
 				x = this.valueOf();
 			} else {
-				x = this.valueOf() - (this.valueOf() % 1);
+				x = Number(this.toString().split(".")[0]);
 			}
 			return x;
 		}
@@ -1051,35 +1061,35 @@ var wd = (function() {
 	/*Fixa a quantidade de caracteres na parte inteira do número*/
 	Object.defineProperty(WDnumber.prototype, "fixed", {
 		enumerable: true,
-		value: function(int, frac) {
-			var integer, float, x;
+		value: function(int, dec) {
+			var integer, decimal, x;
 			if (this.number === "infinity") {
 				x = this.toString();
 			} else {
 				x = this.toString().split(".");
 				integer = x[0].replace(/[^0-9]/, "");;
-				float   = x[1] === undefined ? "0" : x[1];
+				decimal = x[1] === undefined ? "0" : x[1];
 				integer = integer === "0" ? [] : integer.split("");
-				float   = float   === "0" ? [] : float.split("");
-				int  = WD(int).type  !== "number" ? 1 : WD(int).integer;
-				frac = WD(frac).type !== "number" ? float.length : WD(frac).integer;
+				decimal = decimal === "0" ? [] : decimal.split("");
+				int = WD(int).type !== "number" ? 1 : WD(int).integer;
+				dec = WD(dec).type !== "number" ? decimal.length : WD(dec).integer;
 				if (WD(int).number === "infinity" || int < 1) {
 					int = 1;
 				}
-				if (WD(frac).number === "infinity" || frac < 0) {
-					frac = float.length;
+				if (WD(dec).number === "infinity" || dec < 0) {
+					dec = decimal.length;
 				}
 				while (integer.length < int) {
 					integer.unshift("0");
 				}
-				while (float.length !== frac) {
-					if (float.length < frac) {
-						float.push("0");
+				while (decimal.length !== dec) {
+					if (decimal.length < dec) {
+						decimal.push("0");
 					} else {
-						float.pop();
+						decimal.pop();
 					}
 				}
-				x = float.length === 0 ? integer.join("") : integer.join("")+"."+float.join("");
+				x = decimal.length === 0 ? integer.join("") : integer.join("")+"."+decimal.join("");
 				if (this.valueOf() < 0) {
 					x = "-"+x;
 				}
@@ -1093,34 +1103,32 @@ var wd = (function() {
 		type: {
 			value: "number"
 		},
-		toString: {//FIXME: está prejudicando no float (eg: 1.5 => 5)
+		toString: {
 			value: function() {
-				var x, val, num, dot, pow;
+				var x, str, pow, val;
+				str = this.valueOf().toString();
 				if (this.number === "infinity") {
-					x = this.valueOf() < 0 ? "-∞" : "+∞";
-				} else {
-					val = this._value.toString().toLowerCase().split("e");
-					pow = WD(val[1]).type === "number" ? WD(val[1]).valueOf() : 0;
-					num = val[0].split(".");
-					num[0] = num[0].replace(/[^0-9]/g, "").replace(/^0+/, "");
-					num[1] = WD(num[1]).type === "number" ? num[1].replace(/0+$/, "") : "";
-					dot = pow < 0 ? num[1].length+WD(pow).abs : num[1].length;
-					num = num[0]+num[1];
-					for (var i = 0; i < WD(pow).abs; i++) {
-						if (pow < 0) {
-							num = "0"+num;
-						} else {
-							num = num+"0";
-						}
+					x = "∞";
+				} else if ((/e\+?[0-9]+$/i).test(str) === true) {
+					str = str.toLowerCase().split("e");
+					val = str[0].replace(/[^0-9]/g, "").split("");
+					pow = Number(str[1].replace(/[^0-9]/, "")).valueOf();
+					while (val.length !== pow+1) {
+						val.push("0");
 					}
-					dot = new RegExp("([0-9]{"+dot+"})$");
-					num = num.replace(dot, ".$1");
-					num = num.replace(/^\.$/, "0");
-					num = num.replace(/\.(0+)?$/, "");
-					num = num.replace(/^(0+)?([0-9]\.)/, "$1");
-					num = this.valueOf() < 0 ? "-"+num : num;
-					x = num;
+					x = val.join("");
+				} else if ((/e-[0-9]+$/i).test(str) === true) {
+					str = str.toLowerCase().split("e");
+					val = str[0].replace(/[^0-9]/g, "").split("");
+					pow = Number(str[1].replace(/[^0-9]/, "")).valueOf();
+					for (var i = 0; i < pow; i++) {
+						val.unshift("0");
+					};
+					x = val.join("").replace(/([0-9])/, "$1.");log(x);
+				} else {
+					x = str.replace(/[^0-9\.]/g, "");
 				}
+				x = this.valueOf() < 0 ? "-"+x : x;
 				return x;
 			}
 		}
