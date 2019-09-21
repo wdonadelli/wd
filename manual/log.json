@@ -1,0 +1,37 @@
+[
+	{
+		"date": "2019-09-21",
+		"version": "2.0.1",
+		"library": "wd.js",
+		"target": "WDdom.sort",
+		"description": "Fixed HTML element classification bug that did not work in some browsers."
+	},
+	{
+		"date": "2019-09-21",
+		"version": "2.0.1",
+		"library": "wd.js",
+		"target": "WDnumber.decimal",
+		"description": "Fixed bug that caused incorrect attribute value to be returned."
+	},
+	{
+		"date": "2019-09-21",
+		"version": "2.0.1",
+		"library": "wd.js",
+		"target": "WDnumber.toString",
+		"description": "Fixed bug that caused incorrect attribute value to be returned."
+	},
+	{
+		"date": "2019-09-21",
+		"version": "2.0.1",
+		"library": "wd.js",
+		"target": "WD.type",
+		"description": "Fixed error trying to identify simple object in IE9."
+	},
+	{
+		"date": "2019-09-21",
+		"version": "2.0.1",
+		"library": "wd.js",
+		"target": "WDtext.request",
+		"description": "Proper response implemented in situations where the request fails."
+	}
+]

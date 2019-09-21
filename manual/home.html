@@ -25,7 +25,7 @@
 		<a href="v2/wd.css" download="" class="wd-icon-download"></a>
 	</li>
 	<li>
-		<a href="https://github.com/wdonadelli/wd/blob/master/LICENSE" target="_blank">License</a>
+		<a href="##" data-wd-action="open{#log}">Log records</a>
 	</li>
 </ul>
 
@@ -43,10 +43,38 @@
 		<a href="v1/wd.css" target="_blank">Style Sheet</a>
 		<a href="v1/wd.css" download="" class="wd-icon-download"></a>
 	</li>
-	<li>
-		<a href="v1/LICENSE.txt" target="_blank">License</a>
-		<a href="v1/LICENSE.txt" download="" class="wd-icon-download"></a>
-	</li>
 </ul>
 
 <p class="wd-text-right"><i>Willian Donadelli</i> <a href="mailto:wdonadelli@gmail.com">&lt;wdonadelli@gmail.com&gt;</a></p>
+
+
+<div class="wd-window wd-flyer wd-box-white wd-open" id="log">
+	<header class="wd-head wd-buddy wd-box-white wd-xpadding wd-box-opaque-out">
+		<span class="wd-icon-close wd-box-e" data-wd-action="close{#log}"></span>
+	</header>
+
+	<div class="wd-content">
+
+		<table class="wd-table">
+			<caption class="wd-box-black wd-text-larger">Log Records</caption>
+			<thead>
+				<tr class="wd-text-left-child">
+					<th>Date</th>
+					<th>Version</th>
+					<th>Library</th>
+					<th>Target</th>
+					<th>Description</th>
+				</tr>
+			</thead>
+			<tbody data-wd-repeat="get{manual/log.json}" class="wd-border-bottom-child wd-box-upon-child">
+				<tr>
+					<td>{{date}}</td>
+					<td>{{version}}</td>
+					<td><i>{{library}}</i></td>
+					<td><code>{{target}}</code></td>
+					<td>{{description}}</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+</div>

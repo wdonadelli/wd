@@ -550,8 +550,6 @@ var wd = (function() {
 				} catch(e) {
 					arg.json = null;
 				}
-				//loadModal.del();
-				//method.call(this, arg);
 			}
 			loadModal.del();
 			method.call(this, arg);
@@ -1124,7 +1122,7 @@ var wd = (function() {
 					for (var i = 0; i < pow; i++) {
 						val.unshift("0");
 					};
-					x = val.join("").replace(/([0-9])/, "$1.");log(x);
+					x = val.join("").replace(/([0-9])/, "$1.");
 				} else {
 					x = str.replace(/[^0-9\.]/g, "");
 				}
@@ -2479,8 +2477,8 @@ var wd = (function() {
 			this.run(function(elem) {
 				var tag, type, font, name, value, check;
 				tag   = elem.tagName.toLowerCase();
-				type  = tag === "input" ? elem.type.toLowerCase() : null; //type considerado no objeto
-				font  = tag === "input" ? elem.attributes.type.value.toLowerCase() : type; //type informado no html
+				type  = tag === "input" ? elem.type.toLowerCase() : null; /*considerado no objeto*/
+				font  = tag === "input" ? elem.attributes.type.value.toLowerCase() : type; /*informado no html*/
 				name  = "name"  in elem ? elem.name  : null;
 				value = "value" in elem ? elem.value : null;
 				check = type === "radio" || type === "checkbox" ? elem.checked : null;
@@ -2566,7 +2564,7 @@ var wd = (function() {
 				if (ajax.path === true) {
 					ajax.request(function(x) {
 						if (x.error) {
-							log(file+": Error accessing file or timeout.", "e");
+							log(file+": The request with the file failed.", "e");
 						} else {
 							target.load(x.text);
 						}
@@ -2592,7 +2590,7 @@ var wd = (function() {
 				if (ajax.path === true) {
 					ajax.request(function(x) {
 						if (x.error || x.json === null) {
-							log(file+": Error accessing file, timeout or it's not a json file.", "e");
+							log(file+": The request with the JSON file failed.", "e");
 						} else {
 							target.repeat(x.json);
 						}
@@ -2633,7 +2631,7 @@ var wd = (function() {
 	};
 
 	/*Filtra elementos filhos data-wd-filter=show{min}${css}|hide{min}${css}&*/
-	function data_wdFilter(e) {//text, min, show
+	function data_wdFilter(e) {
 		var value, text, data, show, min, target;
 		if ("wdFilter" in e.dataset) {
 			value = e.dataset.wdFilter.split("&");

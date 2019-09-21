@@ -379,40 +379,40 @@ a:hover {
 /*------------------------------------------------------------------- text --*/
 
 /*-- color --*/
-.wd-text-black,  .wd-text-black-child > *  {color: #000000;}
-.wd-text-white,  .wd-text-white-child > *  {color: #ffffff;}
-.wd-text-grey,   .wd-text-grey-child > *   {color: #595959;}
-.wd-text-red,    .wd-text-red-child > *    {color: #e60000;}
-.wd-text-green,  .wd-text-green-child > *  {color: #006666;}
-.wd-text-blue,   .wd-text-blue-child > *   {color: #0000e6;}
-.wd-text-yellow, .wd-text-yellow-child > * {color: #808000;}
-.wd-text-orange, .wd-text-orange-child > * {color: #e67e00;}
-.wd-text-brown,  .wd-text-brown-child > *  {color: #874312;}
-.wd-text-pink,   .wd-text-pink-child > *   {color: #ff3399;}
-.wd-text-purple, .wd-text-purple-child > * {color: #592d86;}
+.wd-text-black,  .wd-text-black-child > *  {color: #000000 !important;}
+.wd-text-white,  .wd-text-white-child > *  {color: #ffffff !important;}
+.wd-text-grey,   .wd-text-grey-child > *   {color: #595959 !important;}
+.wd-text-red,    .wd-text-red-child > *    {color: #e60000 !important;}
+.wd-text-green,  .wd-text-green-child > *  {color: #006666 !important;}
+.wd-text-blue,   .wd-text-blue-child > *   {color: #0000e6 !important;}
+.wd-text-yellow, .wd-text-yellow-child > * {color: #808000 !important;}
+.wd-text-orange, .wd-text-orange-child > * {color: #e67e00 !important;}
+.wd-text-brown,  .wd-text-brown-child > *  {color: #874312 !important;}
+.wd-text-pink,   .wd-text-pink-child > *   {color: #ff3399 !important;}
+.wd-text-purple, .wd-text-purple-child > * {color: #592d86 !important;}
 /*-- size --*/
-.wd-text-xxsmall, .wd-text-xxsmall-child > * {font-size: xx-small;}
-.wd-text-xsmall,  .wd-text-xsmall-child > *  {font-size: x-small;}
-.wd-text-small,   .wd-text-small-child > *   {font-size: small;}
-.wd-text-smaller, .wd-text-smaller-child > * {font-size: smaller;}
-.wd-text-medium,  .wd-text-medium-child > *  {font-size: medium;}
-.wd-text-larger,  .wd-text-larger-child > *  {font-size: larger;}
-.wd-text-large,   .wd-text-large-child > *   {font-size: large;}
-.wd-text-xlarge,  .wd-text-xlarge-child > *  {font-size: x-large;}
-.wd-text-xxlarge, .wd-text-xxlarge-child > * {font-size: xx-large;}
+.wd-text-xxsmall, .wd-text-xxsmall-child > * {font-size: xx-small !important;}
+.wd-text-xsmall,  .wd-text-xsmall-child > *  {font-size: x-small !important;}
+.wd-text-small,   .wd-text-small-child > *   {font-size: small !important;}
+.wd-text-smaller, .wd-text-smaller-child > * {font-size: smaller !important;}
+.wd-text-medium,  .wd-text-medium-child > *  {font-size: medium !important;}
+.wd-text-larger,  .wd-text-larger-child > *  {font-size: larger !important;}
+.wd-text-large,   .wd-text-large-child > *   {font-size: large !important;}
+.wd-text-xlarge,  .wd-text-xlarge-child > *  {font-size: x-large !important;}
+.wd-text-xxlarge, .wd-text-xxlarge-child > * {font-size: xx-large !important;}
 /*-- align --*/
-.wd-text-left,    .wd-text-left-child > *    {text-align: left;}
-.wd-text-center,  .wd-text-center-child > *  {text-align: center;}
-.wd-text-right,   .wd-text-right-child > *   {text-align: right;}
-.wd-text-justify, .wd-text-justify-child > * {text-align: justify;}
-.wd-text-middle,  .wd-text-middle-child > *  {vertical-align: middle;}
-.wd-text-top,     .wd-text-top-child > *     {vertical-align: top;}
-.wd-text-bottom,  .wd-text-bottom-child > *  {vertical-align: bottom;}
+.wd-text-left,    .wd-text-left-child > *    {text-align: left !important;}
+.wd-text-center,  .wd-text-center-child > *  {text-align: center !important;}
+.wd-text-right,   .wd-text-right-child > *   {text-align: right !important;}
+.wd-text-justify, .wd-text-justify-child > * {text-align: justify !important;}
+.wd-text-middle,  .wd-text-middle-child > *  {vertical-align: middle !important;}
+.wd-text-top,     .wd-text-top-child > *     {vertical-align: top !important;}
+.wd-text-bottom,  .wd-text-bottom-child > *  {vertical-align: bottom !important;}
 /*-- case --*/
-.wd-text-upper,  .wd-text-upper-child > *  {text-transform: uppercase;}
-.wd-text-normal, .wd-text-normal-child > * {text-transform: none;}
-.wd-text-lower,  .wd-text-lower-child > *  {text-transform: lowercase;}
-.wd-text-title,  .wd-text-titler-child > * {text-transform: capitalize;}
+.wd-text-upper,  .wd-text-upper-child > *  {text-transform: uppercase !important;}
+.wd-text-normal, .wd-text-normal-child > * {text-transform: none !important;}
+.wd-text-lower,  .wd-text-lower-child > *  {text-transform: lowercase !important;}
+.wd-text-title,  .wd-text-titler-child > * {text-transform: capitalize !important;}
 
 /*-------------------------------------------------------------------- box --*/
 
