@@ -1,0 +1,80 @@
+<header class="wd-head">
+	<h2 class="wd-text-center">The WD Libraries</h2>
+</header>
+
+<p class="wd-p">This project consists of the distribution of two libraries for web application development.</p>
+
+<p class="wd-p">The <q><i>Web Development</i></q> tool consists of a library written in JavaScript whose purpose is to provide various tools to give dynamism and agility to the application in development. This tool is divided into two segments, one based on the JavaScript code (<b>WD JavaScript Tools</b>) and another based on the attributes of the HTML elements (<b>WD Attributes Tools</b>).</p>
+
+<p class="wd-p">The <q><i>Web Design</i></q> tool (<b>WD Style Sheet</b>) consists of a library written in CSS whose purpose is to provide the styling of the developing application by means of basic class attributes.</p>
+
+<p class="wd-p">In order to demonstrate some of the functionalities of the libraries, this manual was constructed using the project tools. See the menu for more details.</p>
+
+<p class="wd-p">Links to version 2 (current version):</p>
+
+<ul class="wd-list">
+	<li>
+		<a href="https://github.com/wdonadelli/wd" target="_blank">GitHub Page</a>
+	</li>
+	<li>
+		<a href="v2/wd.js" target="_blank">Javascript</a>
+		<a href="v2/wd.js" download="" class="wd-icon-download"></a>
+	</li>
+	<li>
+		<a href="v2/wd.css" target="_blank">Style Sheet</a>
+		<a href="v2/wd.css" download="" class="wd-icon-download"></a>
+	</li>
+	<li>
+		<a href="##" data-wd-action="open{#log}">Log records</a>
+	</li>
+</ul>
+
+<p class="wd-p">Links to version 1 (deprecated):</p>
+
+<ul class="wd-list">
+	<li>
+		<a href="v1/manual.html" target="_blank">Manual</a>
+	</li>
+	<li>
+		<a href="v1/wd.js" target="_blank">Javascript</a>
+		<a href="v1/wd.js" download="" class="wd-icon-download"></a>
+	</li>
+	<li>
+		<a href="v1/wd.css" target="_blank">Style Sheet</a>
+		<a href="v1/wd.css" download="" class="wd-icon-download"></a>
+	</li>
+</ul>
+
+<p class="wd-text-right"><i>Willian Donadelli</i> <a href="mailto:wdonadelli@gmail.com">&lt;wdonadelli@gmail.com&gt;</a></p>
+
+
+<div class="wd-window wd-flyer wd-box-white" id="log">
+	<header class="wd-head wd-buddy wd-box-white wd-xpadding wd-box-opaque-out">
+		<span class="wd-icon-close wd-box-e" data-wd-action="close{#log}"></span>
+	</header>
+
+	<div class="wd-content">
+
+		<table class="wd-table">
+			<caption class="wd-box-black wd-text-larger">Log Records</caption>
+			<thead>
+				<tr class="wd-text-left-child">
+					<th>Date</th>
+					<th>Version</th>
+					<th>Library</th>
+					<th>Target</th>
+					<th>Description</th>
+				</tr>
+			</thead>
+			<tbody data-wd-repeat="get{manual/log.json}" class="wd-border-bottom-child wd-box-upon-child">
+				<tr>
+					<td>{{date}}</td>
+					<td>{{version}}</td>
+					<td><i>{{library}}</i></td>
+					<td><code>{{target}}</code></td>
+					<td>{{description}}</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+</div>

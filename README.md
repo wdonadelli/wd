@@ -1,4 +1,4 @@
-# WD Web Libraries Handbook V2
+# WD Web Libraries
 
 This project consists of the distribution of two libraries for web application development.
 

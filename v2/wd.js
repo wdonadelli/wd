@@ -1,4 +1,4 @@
-﻿/* Willian Donadelli | <wdonadelli@gmail.com> | v2.0.0 */
+﻿/* Willian Donadelli | <wdonadelli@gmail.com> | v2.0.1 */
 
 "use strict";
 
@@ -175,6 +175,17 @@ var wd = (function() {
 		} else if ("Array" in window && value instanceof Array) {
 			x = true;
 		} else if ("Array" in window && value.constructor === Array) {
+			x = true;
+		} else {
+			x = false;
+		}
+		return x;
+	};
+	
+	/*Verifica se o valor é um objeto simples {}*/
+	function isObject(value) {
+		var x;
+		if (typeof value === "object" && (/^\{.*\}$/).test(JSON.stringify(value)) === true) {
 			x = true;
 		} else {
 			x = false;
@@ -362,6 +373,7 @@ var wd = (function() {
 				"null": isNull,
 				"boolean": isBoolean,
 				"function": isFunction,
+				"object": isObject
 			};
 			for (var i in types) {
 				if (types[i](this._value)) {
@@ -434,11 +446,7 @@ var wd = (function() {
 						x = this._value === true ? "True" : "False";
 						break;
 					case "object":
-						try {
-							x = JSON.stringify(this._value);
-						} catch(e) {
-							x = this._value.toString();
-						}
+						x = JSON.stringify(this._value);
 						break;
 					default:
 						try {
@@ -542,9 +550,9 @@ var wd = (function() {
 				} catch(e) {
 					arg.json = null;
 				}
-				loadModal.del();
-				method.call(this, arg);
 			}
+			loadModal.del();
+			method.call(this, arg);
 		}
 		return;
 	};
@@ -718,7 +726,7 @@ var wd = (function() {
 				serial = serial.toString();
 			}
 			time   = WD(time);
-			if ((time.number === "integer" || time.number === "float") && time.valueOf() > 0) {
+			if ((time.number === "integer" || time.number === "real") && time.valueOf() > 0) {
 				xhttp.timeout =  1000*time.valueOf();
 			}
 			xhttp.onreadystatechange = function (ev) {
@@ -742,7 +750,7 @@ var wd = (function() {
 					try {
 						xhttp.open("POST", path, true);
 						xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-						//xhttp.setRequestHeader("Content-type", "multipart/form-data");
+						/*xhttp.setRequestHeader("Content-type", "multipart/form-data");*/
 						xhttp.send(serial === "" ? null : serial);
 						return true;
 					} catch(e) {
@@ -875,7 +883,7 @@ var wd = (function() {
 			if (this.valueOf() === Infinity || this.valueOf() === -Infinity) {
 				x = "infinity";
 			} else if (this.valueOf() % 1 !== 0) {
-				x = "float";
+				x = "real";
 			} else if (this.valueOf() % 1 === 0) {
 				x = "integer";
 			} else {
@@ -893,14 +901,14 @@ var wd = (function() {
 			if (this.valueOf() === Infinity || this.valueOf() === -Infinity) {
 				x = this.valueOf();
 			} else {
-				x = this.valueOf() - (this.valueOf() % 1);
+				x = Number(this.toString().split(".")[0]);
 			}
 			return x;
 		}
 	});
 
-	/*Retorna o valor inteiro do número*/
-	Object.defineProperty(WDnumber.prototype, "float", {
+	/*Retorna o valor decimal do número*/
+	Object.defineProperty(WDnumber.prototype, "decimal", {
 		enumerable: true,
 		get: function() {
 			var x, i;
@@ -930,7 +938,7 @@ var wd = (function() {
 		value: function(width) {
 			var x;
 			width = WD(width);
-			if (width.number === "integer" || width.number === "float") {
+			if (width.number === "integer" || width.number === "real") {
 				width = WD(width.abs).integer;
 				try {
 				 	x = Number(this.valueOf().toFixed(width)).valueOf();
@@ -939,7 +947,7 @@ var wd = (function() {
 					log(e.toString(), "w");
 				}
 			} else {
-				if (this.float === 0) {
+				if (this.decimal === 0) {
 					x = this.valueOf();
 				} else if (this.valueOf() > 0) {
 					x = this.integer+1;
@@ -1040,7 +1048,7 @@ var wd = (function() {
 				} catch(e) {
 					currency = this.valueOf() < 0 ? "-"+currency : currency;
 					x = WD(WD(this.integer).abs+0.5).locale().replace(/(.)5$/, "$1");
-					x = x+(WD(WD(this.float).abs+1).fixed(0, 2).replace(/.+([0-9]{2})$/, "$1"));
+					x = x+(WD(WD(this.decimal).abs+1).fixed(0, 2).replace(/.+([0-9]{2})$/, "$1"));
 					x = currency+" "+x;
 				}
 			}
@@ -1051,35 +1059,35 @@ var wd = (function() {
 	/*Fixa a quantidade de caracteres na parte inteira do número*/
 	Object.defineProperty(WDnumber.prototype, "fixed", {
 		enumerable: true,
-		value: function(int, frac) {
-			var integer, float, x;
+		value: function(int, dec) {
+			var integer, decimal, x;
 			if (this.number === "infinity") {
 				x = this.toString();
 			} else {
 				x = this.toString().split(".");
 				integer = x[0].replace(/[^0-9]/, "");;
-				float   = x[1] === undefined ? "0" : x[1];
+				decimal = x[1] === undefined ? "0" : x[1];
 				integer = integer === "0" ? [] : integer.split("");
-				float   = float   === "0" ? [] : float.split("");
-				int  = WD(int).type  !== "number" ? 1 : WD(int).integer;
-				frac = WD(frac).type !== "number" ? float.length : WD(frac).integer;
+				decimal = decimal === "0" ? [] : decimal.split("");
+				int = WD(int).type !== "number" ? 1 : WD(int).integer;
+				dec = WD(dec).type !== "number" ? decimal.length : WD(dec).integer;
 				if (WD(int).number === "infinity" || int < 1) {
 					int = 1;
 				}
-				if (WD(frac).number === "infinity" || frac < 0) {
-					frac = float.length;
+				if (WD(dec).number === "infinity" || dec < 0) {
+					dec = decimal.length;
 				}
 				while (integer.length < int) {
 					integer.unshift("0");
 				}
-				while (float.length !== frac) {
-					if (float.length < frac) {
-						float.push("0");
+				while (decimal.length !== dec) {
+					if (decimal.length < dec) {
+						decimal.push("0");
 					} else {
-						float.pop();
+						decimal.pop();
 					}
 				}
-				x = float.length === 0 ? integer.join("") : integer.join("")+"."+float.join("");
+				x = decimal.length === 0 ? integer.join("") : integer.join("")+"."+decimal.join("");
 				if (this.valueOf() < 0) {
 					x = "-"+x;
 				}
@@ -1095,32 +1103,30 @@ var wd = (function() {
 		},
 		toString: {
 			value: function() {
-				var x, val, num, dot, pow;
+				var x, str, pow, val;
+				str = this.valueOf().toString();
 				if (this.number === "infinity") {
-					x = this.valueOf() < 0 ? "-∞" : "+∞";
-				} else {
-					val = this._value.toString().toLowerCase().split("e");
-					pow = WD(val[1]).type === "number" ? WD(val[1]).valueOf() : 0;
-					num = val[0].split(".");
-					num[0] = num[0].replace(/[^0-9]/g, "").replace(/^0+/, "");
-					num[1] = WD(num[1]).type === "number" ? num[1].replace(/0+$/, "") : "";
-					dot = pow < 0 ? num[1].length+WD(pow).abs : num[1].length;
-					num = num[0]+num[1];
-					for (var i = 0; i < WD(pow).abs; i++) {
-						if (pow < 0) {
-							num = "0"+num;
-						} else {
-							num = num+"0";
-						}
+					x = "∞";
+				} else if ((/e\+?[0-9]+$/i).test(str) === true) {
+					str = str.toLowerCase().split("e");
+					val = str[0].replace(/[^0-9]/g, "").split("");
+					pow = Number(str[1].replace(/[^0-9]/, "")).valueOf();
+					while (val.length !== pow+1) {
+						val.push("0");
 					}
-					dot = new RegExp("([0-9]{"+dot+"})$");
-					num = num.replace(dot, ".$1");
-					num = num.replace(/^\.$/, "0");
-					num = num.replace(/\.(0+)?$/, "");
-					num = num.replace(/^(0+)?([0-9]\.)/, "$1");
-					num = this.valueOf() < 0 ? "-"+num : num;
-					x = num;
+					x = val.join("");
+				} else if ((/e-[0-9]+$/i).test(str) === true) {
+					str = str.toLowerCase().split("e");
+					val = str[0].replace(/[^0-9]/g, "").split("");
+					pow = Number(str[1].replace(/[^0-9]/, "")).valueOf();
+					for (var i = 0; i < pow; i++) {
+						val.unshift("0");
+					};
+					x = val.join("").replace(/([0-9])/, "$1.");
+				} else {
+					x = str.replace(/[^0-9\.]/g, "");
 				}
+				x = this.valueOf() < 0 ? "-"+x : x;
 				return x;
 			}
 		}
@@ -1174,7 +1180,7 @@ var wd = (function() {
 			var h24, h;
 			h24 = 24*60*60;
 			h = WD(h);
-			if (h.number === "integer" || h.number === "float") {
+			if (h.number === "integer" || h.number === "real") {
 				h = h.integer;
 				if (h >= 0) {
 					this._value = 3600*h + 60*this.minute + this.second;
@@ -1198,7 +1204,7 @@ var wd = (function() {
 		set: function(m) {
 			var time;
 			m = WD(m);
-			if (m.number === "integer" || m.number === "float") {
+			if (m.number === "integer" || m.number === "real") {
 				m = m.integer;
 				if (m > 59 || m < 0) {
 					time = 60*(m - this.minute);
@@ -1222,7 +1228,7 @@ var wd = (function() {
 		set: function(s) {
 			var time;
 			s = WD(s);
-			if (s.number === "integer" || s.number === "float") {
+			if (s.number === "integer" || s.number === "real") {
 				s = s.integer;
 				if (s > 59 || s < 0) {
 					time = s - this.second;
@@ -1857,92 +1863,60 @@ var wd = (function() {
 	Object.defineProperty(WDarray.prototype, "sort", {
 		enumerable: true,
 		value: function(unique) {
-			var aNull, aNumber, aTime, aDate, aText, aOthers, aFinal;
-			var uNull, uNumber, uTime, uDate, uText, uOthers;
-			var real, made;
-			aNull   = []; uNull   = [];
-			aNumber = []; uNumber = [];
-			aTime   = []; uTime   = [];
-			aDate   = []; uDate   = [];
-			aText   = []; uText   = [];
-			aOthers = []; uOthers = [];
-			aFinal  = [];
-			for (var i = 0; i < this.valueOf().length; i++) {
-				real = this.valueOf()[i];
-				made = WD(real);
-				switch(made.type) {
-					case "null":
-						if (unique !== true) {
-							aNull.push(real);
-						} else if (!WD(uNull).inside(made.valueOf())) {
-							aNull.push(null);
-							uNull.push(made.valueOf());
-						}
-						break;
-					case "number":
-						if (unique !== true) {
-							aNumber.push({real: real, made: made.valueOf()});
-						} else if (!WD(uNumber).inside(made.valueOf())) {
-							aNumber.push({real: made.valueOf(), made: made.valueOf()});
-							uNumber.push(made.valueOf());
-						}
-						break;
-					case "time":
-						if (unique !== true) {
-							aTime.push({real: real, made: made.valueOf()});
-						} else if (!WD(uTime).inside(made.valueOf())) {
-							aTime.push({real: made.toString(), made: made.valueOf()});
-							uTime.push(made.valueOf());
-						}
-						break;
-					case "date":
-						if (unique !== true) {
-							aDate.push({real: real, made: made.valueOf()});
-						} else if (!WD(uDate).inside(made.valueOf())) {
-							aDate.push({real: made.toString(), made: made.valueOf()});
-							uDate.push(made.valueOf());
-						}
-						break;
-					case "text":
-						if (unique !== true) {
-							aText.push({real: real, made: made.toString().toUpperCase()});
-						} else if (!WD(uText).inside(made.toString())) {
-							aText.push({real: made.toString(), made: made.toString().toUpperCase()});
-							uText.push(made.toString());
-						}
-						break;
-					default:
-						if (unique !== true) {
-							aOthers.push(real);
-						} else if (!WD(uOthers).inside(real)) {
-							aOthers.push(real);
-							uOthers.push(real);
-						}
+			var asort, type, seq, array, key;
+			asort = {};
+			/*organizando items por tipo*/
+			for (var i = 0; i < this.items; i++) {
+				type = WD(this.item(i)).type
+				if (!(type in asort)) {
+					asort[type] = [];
+				}
+				asort[type].push(this.item(i));
+			}
+			/*determinando a forma de ordem pelo tipo do item*/
+			for (var t in asort) {
+				asort[t].sort(function(a, b) {
+					var order, x, y;
+					if (t === "dom") {
+						x = a.textContent || a.innerText || a.innerHTML;
+						y = b.textContent || b.innerText || b.innerHTML;
+						order = x.trim().toUpperCase() > y.trim().toUpperCase() ? 1 : -1;
+					} else if (["number", "boolean", "date", "time"].indexOf(t) >= 0) {
+						x = WD(a).valueOf();
+						y = WD(b).valueOf();
+						order = x - y >= 0 ? 1 : -1;
+					} else {
+						x = WD(a).toString().trim().toUpperCase();
+						y = WD(b).toString().trim().toUpperCase();
+						order = x > y ? 1 : -1;
+					}
+					return order;
+				});
+			}
+			array = [];
+			/*Adicionando a sequência básica ao array*/
+			seq = ["null", "number", "time", "date", "text"];
+			for (var j = 0; j < seq.length; j++) {
+				key = seq[j];
+				if (key in asort) {
+					for (var k = 0; k < asort[key].length; k++) {
+						array.push(asort[key][k]);
+					}
 				}
 			}
-			aNull.sort();
-			aNumber.sort(function(a,b) {
-				return a.made - b.made;
-			});
-			aTime.sort(function(a,b) {
-				return a.made - b.made;
-			});
-			aDate.sort(function(a,b) {
-				return a.made - b.made;
-			});
-			aText.sort(function(a,b) {
-				return a.made > b.made;
-			});
-			aOthers.sort();
-			aFinal = aFinal.concat(aNull);
-			made = [aNumber, aTime, aDate, aText];
-			for (i = 0; i < made.length; i++) {
-				for (var j = 0; j < made[i].length; j++) {
-					aFinal.push(made[i][j].real);
-				}		
+			/*Adicionando os outros itens ao array*/
+			for (var p in asort) {
+				if (seq.indexOf(p) < 0) {
+					for (var q = 0; q < asort[p].length; q++) {
+						array.push(asort[p][q]);
+					}
+				}
 			}
-			aFinal = aFinal.concat(aOthers);
-			return aFinal;
+			/*verificando argumento*/
+			if (unique === true) {
+				array = WD(array).unique();
+			}
+			return array;
 		}
 	});
 
@@ -2432,28 +2406,40 @@ var wd = (function() {
 	Object.defineProperty(WDdom.prototype, "sort", {
 		enumerable: true,
 		value: function (order, col) {
-			if (WD(order).type !== "number") {
-				order = 1;
-			}
-			if (WD(col).type !== "number") {
-				col = null;
-			}
+			order = WD(order);
+			col   = WD(col);
 			this.run(function(elem) {
-				var dom, text, sort, index, target, value;
-				dom  = WD(elem.children).valueOf();
-				text = [];
-				sort = [];
-				for (var i = 0; i < dom.length; i++) {
-					target = WD(dom[i].children[col]).type === "dom" ? dom[i].children[col] : dom[i];
-					value  = target.textContent || target.innerText || target.innerHTML;
-					text.push(value.trim());
-					sort.push(value.trim());
+				var array, asort, childs;
+				array = WD(elem.children).valueOf();
+				/*para ordenar os filhos através dos netos*/
+				if (col.number === "integer" && col.valueOf() >= 0) {
+					col = col.valueOf();
+					/*verificando e definindo netos*/
+					for (var i = 0; i < array.length; i++) {
+						childs = array[i].children;
+						if (childs.length > 0 && childs.length > col) {
+							array[i] = childs[col];
+						}
+					}
+					/*ordenando*/
+					asort = WD(array).sort();
+					/*redefinindo os filhos*/
+					for (var k = 0; k < asort.length; k++) {
+						if (asort[k].parentElement !== elem) {
+							asort[k] = asort[k].parentElement;
+						}
+					}
+				/*caso contrário, ordenar só os filhos*/
+				} else {
+					asort = WD(array).sort();
 				}
-				sort = order < 0 ? WD(sort).sort().reverse() : WD(sort).sort();
-				for (var j = 0; j < sort.length; j++) {
-					index = text.indexOf(sort[j]);
-					text[index] = null;
-					elem.appendChild(dom[index]);
+				/*Definindo a ordem dos elementos*/
+				if (order.type === "number" && order.valueOf() < 0) {
+					asort = asort.reverse();
+				}
+				/*adicionando os elementos ao pai*/
+				for (var j = 0; j < asort.length; j++) {
+					elem.appendChild(asort[j]);
 				}
 				return;
 			});
@@ -2491,8 +2477,8 @@ var wd = (function() {
 			this.run(function(elem) {
 				var tag, type, font, name, value, check;
 				tag   = elem.tagName.toLowerCase();
-				type  = tag === "input" ? elem.type.toLowerCase() : null; //type considerado no objeto
-				font  = tag === "input" ? elem.attributes.type.value.toLowerCase() : type; //type informado no html
+				type  = tag === "input" ? elem.type.toLowerCase() : null; /*considerado no objeto*/
+				font  = tag === "input" ? elem.attributes.type.value.toLowerCase() : type; /*informado no html*/
 				name  = "name"  in elem ? elem.name  : null;
 				value = "value" in elem ? elem.value : null;
 				check = type === "radio" || type === "checkbox" ? elem.checked : null;
@@ -2578,7 +2564,7 @@ var wd = (function() {
 				if (ajax.path === true) {
 					ajax.request(function(x) {
 						if (x.error) {
-							log(file+": Error accessing file or timeout.", "e");
+							log(file+": The request with the file failed.", "e");
 						} else {
 							target.load(x.text);
 						}
@@ -2604,7 +2590,7 @@ var wd = (function() {
 				if (ajax.path === true) {
 					ajax.request(function(x) {
 						if (x.error || x.json === null) {
-							log(file+": Error accessing file, timeout or it's not a json file.", "e");
+							log(file+": The request with the JSON file failed.", "e");
 						} else {
 							target.repeat(x.json);
 						}
@@ -2645,7 +2631,7 @@ var wd = (function() {
 	};
 
 	/*Filtra elementos filhos data-wd-filter=show{min}${css}|hide{min}${css}&*/
-	function data_wdFilter(e) {//text, min, show
+	function data_wdFilter(e) {
 		var value, text, data, show, min, target;
 		if ("wdFilter" in e.dataset) {
 			value = e.dataset.wdFilter.split("&");
