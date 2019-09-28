@@ -33,5 +33,12 @@
 		"library": "wd.js",
 		"target": "WDtext.request",
 		"description": "Proper response implemented in situations where the request fails."
+	},
+	{
+		"date": "2019-09-27",
+		"version": "2.0.1",
+		"library": "wd.css",
+		"target": "wd-win-...",
+		"description": "Made adjustments to meet IE9."
 	}
 ]

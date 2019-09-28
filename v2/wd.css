@@ -1,4 +1,4 @@
-﻿/* Willian Donadelli | <wdonadelli@gmail.com> | v2.0.0 */
+﻿/* Willian Donadelli | <wdonadelli@gmail.com> | v2.0.1 */
 
 *, *:before, *:after {box-sizing: border-box;}
 
@@ -10,7 +10,7 @@
 *[data-wd-data] {cursor: pointer;}
 *[data-wd-sort-col="-1"]:before {content: "\2191 ";}
 *[data-wd-sort-col="+1"]:before {content: "\2193 ";}
-.wd-modal[data-wd-action] > .wd-window {cursor: initial;}
+.wd-modal[data-wd-action] > .wd-window {cursor: auto;}
 
 /*-------------------------------------------------------------- animation --*/
 
@@ -101,7 +101,7 @@ a:hover {
 }
 .wd-input[type=radio], .wd-input[type=checkbox] {
 	display: inline;
-	width: initial !important;
+	width: auto !important;
 	padding: 0;
 	border: 0;
 }
@@ -209,11 +209,6 @@ a:hover {
 	text-align: left;
 	width: 100%;
 }
-.wd-nav.wd-buddy {
-	position: sticky;
-	z-index: 99;
-	top: 0;
-}
 /*-- head/footer --*/
 .wd-head, .wd-foot {
 	display: block;
@@ -232,16 +227,6 @@ a:hover {
 .wd-foot > .wd-nav:last-child {margin-bottom: -0.5em;}
 .wd-head > .wd-nav:first-child,
 .wd-foot > .wd-nav:first-child {margin-top: -0.5em;}
-.wd-head.wd-buddy {
-	position: sticky;
-	z-index: 99;
-	top: 0;
-}
-.wd-foot.wd-buddy {
-	position: sticky;
-	z-index: 99;
-	bottom: 0;
-}
 /*-- content --*/
 .wd-content {
 	margin: 0.5em 0;
@@ -260,7 +245,16 @@ a:hover {
 }
 .wd-flyer > .wd-head:first-child {margin-top: -0.5em;}
 .wd-flyer > .wd-foot:last-child  {margin-bottom: -0.5em;}
+/*-- buddy --*/
+.wd-nav.wd-buddy, .wd-head.wd-buddy, .wd-foot.wd-buddy {
+	position: sticky;
+	z-index: 99;
+}
+.wd-nav.wd-buddy  {top: 0;}
+.wd-head.wd-buddy {top: 0;}
+.wd-foot.wd-buddy {bottom: 0;}
 .wd-flyer > .wd-head.wd-buddy:first-child {top: -0.5em;}
+
 
 
 /*----------------------------------------------------------------- window --*/
@@ -301,51 +295,51 @@ a:hover {
 /*-- small --*/
 .wd-window.wd-win-small {
 	top: 40%;
-	bottom: initial;
+	bottom: auto;
 	width: 20%;
 	max-height: 20%;
 }
 /*-- medium --*/
 .wd-window.wd-win-medium {
 	top: 30%;
-	bottom: initial;
+	bottom: auto;
 	width: 40%;
 	max-height: 40%;
 }
 /*-- big --*/
 .wd-window.wd-win-big {
 	top: 5%;
-	bottom: initial;
+	bottom: auto;
 	width: 90%;
 	max-height: 90%;
 }
 /*-- top --*/
 .wd-window.wd-win-top {
-	bottom: initial;
+	bottom: auto;
 	max-height: 40%;
 	animation: from-top 0.4s;
 }
 /*-- bottom --*/
 .wd-window.wd-win-bottom {
-	top: initial;
+	top: auto;
 	max-height: 40%;
 	animation: from-bottom 0.4s;
 }
 /*-- left --*/
 .wd-window.wd-win-left {
-	right: initial;
+	right: auto;
 	max-width: 25%;
 	animation: from-left 0.4s;
 }
 /*-- right --*/
 .wd-window.wd-win-right {
-	left: initial;
+	left: auto;
 	max-width: 25%;
 	animation: from-right 0.4s;
 }
 /*-- note --*/
 .wd-window.wd-win-note {
-	bottom: initial;
+	bottom: auto;
 	width: 95%;
 	height: 15%;
 	animation: from-right 0.4s;
