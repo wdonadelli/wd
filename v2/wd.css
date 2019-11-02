@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 ﻿/* Willian Donadelli | <wdonadelli@gmail.com> | v2.0.1 */
+=======
+﻿/* Willian Donadelli | <wdonadelli@gmail.com> | v2.0.2 */
+>>>>>>> master
 
 *, *:before, *:after {box-sizing: border-box;}
 
@@ -272,7 +276,11 @@ a:hover {
 	background-color: #000000;
 	background-color: rgba(0,0,0,0.8);
 	opacity: 1;
+<<<<<<< HEAD
 	z-index: 9999;
+=======
+	z-index: 99999;
+>>>>>>> master
 }
 .wd-modal.wd-open {display: block;}
 /*-- window --*/
@@ -287,7 +295,11 @@ a:hover {
 	height: 100%;
 	margin: auto;
 	overflow: auto;
+<<<<<<< HEAD
 	z-index: 99999;
+=======
+	z-index: 99998;
+>>>>>>> master
 	animation: zoom-in 0.4s;
 }
 .wd-modal > .wd-window {position: absolute !important;}
