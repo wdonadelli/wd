@@ -40,5 +40,12 @@
 		"library": "wd.css",
 		"target": "wd-win-...",
 		"description": "Made adjustments to meet IE9."
+	},
+	{
+		"date": "2019-11-02",
+		"version": "2.0.2",
+		"library": "wd.css",
+		"target": "wd-modal-..., wd-window",
+		"description": "Made adjustments in z-index."
 	}
 ]
