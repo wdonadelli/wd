@@ -6,4 +6,8 @@ The *Web Development* tool consists of a library written in JavaScript whose pur
 
 The *Web Design* tool (**WD Style Sheet**) consists of a library written in CSS whose purpose is to provide the styling of the developing application by means of basic class attributes.
 
-[Click here](https://wdonadelli.github.io/wd/) to access the manual.
+## Links
+
+- [Click here](https://wdonadelli.github.io/wd/) to access the manual.
+- [Click here](https://wdonadelli.github.io/wd/v2/wd.js) to access the updated JS library.
+- [Click here](https://wdonadelli.github.io/wd/v2/wd.css) to access the updated CSS library.
