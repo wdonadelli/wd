@@ -1,4 +1,4 @@
-﻿/* Willian Donadelli | <wdonadelli@gmail.com> | v2.0.1 */
+﻿/* Willian Donadelli | <wdonadelli@gmail.com> | https://github.com/wdonadelli/wd | v2.0.1 */
 
 "use strict";
 
