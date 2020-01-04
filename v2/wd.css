@@ -1,4 +1,4 @@
-﻿/* Willian Donadelli | <wdonadelli@gmail.com> | v2.0.2 */
+﻿/* Willian Donadelli | <wdonadelli@gmail.com> | https://github.com/wdonadelli/wd | v2.0.3 */
 
 *, *:before, *:after {box-sizing: border-box;}
 
@@ -852,13 +852,13 @@ a:hover {
 	font-style: inherit;
 	font-weight: bold;
 }
-.wd-code sample {
+.wd-code samp {
 	color: #916a08;
 	font-size: inherit;
 	font-style: inherit;
 	font-weight: inherit;
 	padding: 2px 0;
 }
-.wd-code sample:before {
+.wd-code samp:before {
 	content: "\21B3  ";
 }

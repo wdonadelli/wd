@@ -12,6 +12,7 @@
 	<a href="#hide">Hide</a>
 	<a href="#table">Table</a>
 	<a href="#list">List</a>
+	<a href="#code">Code</a>
 </nav>
 
 <p class="wd-p">Below are the generic styles applied to both the elements or their content.</p>
@@ -192,10 +193,66 @@
 
 <pre class="wd-code" id="eg6" ></pre>
 
+
+
+
+
+
+
+
+
+
+
+<h3 id="code">Code</h3>
+
+<p class="wd-p">Use <code>wd-code</code> to create a text box formatted for computer code editing. Use the elements below (children of <code>wd-code</code>) to format the box:</p>
+
+<pre id="eg7" class="wd-code">
+	<cite>/* -- &lt;q&gt; to format strings --*/</cite>
+	<q>String</q>
+	<cite>/* -- &lt;var&gt; to format variable values --*/</cite>
+	<var>True</var>
+	<cite>/* -- &lt;code&gt; to format expressions --*/</cite>
+	<code>function</code>
+	<cite>/* -- &lt;samp&gt; to format outputs --*/</cite>
+	<samp>4.52</samp>
+	<cite>/* -- &lt;cite&gt; to format comments --*/</cite>
+	<cite>//Example</cite>
+	<cite>-------------------------------------</cite>
+	<code>function</code> double(x) {
+		<code>var</code> y;
+		<code>if</code> (x &lt; 0) {
+			y = <q>Enter a positive value.</q>;
+		} <code>else</code> {
+			y = <var>2</var> * x;
+		}
+		<code>return</code> y;
+	}
+	<cite>//testing</cite>
+	double(<var>4</var>);
+	<samp>8</samp>
+</pre>
+ 
+<h4>HTML code</h4>
+
+<pre class="wd-code" id="eg8" ></pre>
+
+
+
+
+
+
+
+
+
+
+
+
 <script>
 var eg = {};
 eg["#eg2"] = getCode("#eg1", true);
 eg["#eg4"] = getCode("#eg3", true);
 eg["#eg6"] = getCode("#eg5", true);
+eg["#eg8"] = getCode("#eg7", true);
 setText(eg);
 </script>
