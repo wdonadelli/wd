@@ -54,5 +54,12 @@
 		"library": "wd.css",
 		"target": "wd-code",
 		"description": "corrected misconception in typing (sample to samp)."
+	},
+	{
+		"date": "2020-03-21",
+		"version": "2.0.2",
+		"library": "wd.js",
+		"target": "data_wdActive",
+		"description": "Click on the corrected \"body\" element in the identification of the \"nav\" parent element."
 	}
 ]
