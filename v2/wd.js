@@ -1,5 +1,5 @@
 /*----------------------------------------------------------------------------
-wd.js (v2.0.2)
+wd.js (v2.0.3)
 <wdonadelli@gmail.com>
 https://github.com/wdonadelli/wd
 ------------------------------------------------------------------------------
@@ -1891,7 +1891,7 @@ var wd = (function() {
 		value: function(unique) {
 			var asort, type, seq, array, key;
 			asort = {};
-			/*organizando items por tipo*/
+			/*agrupando em arrays os items pelo tipo*/
 			for (var i = 0; i < this.items; i++) {
 				type = WD(this.item(i)).type
 				if (!(type in asort)) {
@@ -1899,14 +1899,14 @@ var wd = (function() {
 				}
 				asort[type].push(this.item(i));
 			}
-			/*determinando a forma de ordem pelo tipo do item*/
+			/*determinando a ordem de cada tipo*/
 			for (var t in asort) {
 				asort[t].sort(function(a, b) {
 					var order, x, y;
 					if (t === "dom") {
 						x = a.textContent || a.innerText || a.innerHTML;
 						y = b.textContent || b.innerText || b.innerHTML;
-						order = x.trim().toUpperCase() > y.trim().toUpperCase() ? 1 : -1;
+						order = WD([x, y]).sort().indexOf(x) > 0 ? 1 : -1;
 					} else if (["number", "boolean", "date", "time"].indexOf(t) >= 0) {
 						x = WD(a).valueOf();
 						y = WD(b).valueOf();
@@ -1920,7 +1920,7 @@ var wd = (function() {
 				});
 			}
 			array = [];
-			/*Adicionando a sequência básica ao array*/
+			/*montando array conforme ordem de tipos*/
 			seq = ["null", "number", "time", "date", "text"];
 			for (var j = 0; j < seq.length; j++) {
 				key = seq[j];
