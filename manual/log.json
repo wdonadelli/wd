@@ -61,5 +61,19 @@
 		"library": "wd.js",
 		"target": "data_wdActive",
 		"description": "Click on the corrected \"body\" element in the identification of the \"nav\" parent element."
+	},
+	{
+		"date": "2020-04-14",
+		"version": "2.0.3",
+		"library": "wd.js",
+		"target": "WDarray.sort",
+		"description": "Fixed DOM element sorting error."
+	},
+	{
+		"date": "2020-04-14",
+		"version": "2.0.4",
+		"library": "wd.css",
+		"target": "wd-list wd-table",
+		"description": "Changed the placement of wd-table and wd-list to avoid damage to specific CSS."
 	}
 ]
