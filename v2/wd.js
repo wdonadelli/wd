@@ -1,5 +1,5 @@
 /*----------------------------------------------------------------------------
-wd.js (v2.0.3)
+wd.js (v2.0.4)
 <wdonadelli@gmail.com>
 https://github.com/wdonadelli/wd
 ------------------------------------------------------------------------------
@@ -2778,7 +2778,11 @@ var wd = (function() {
 			thead  = e.parentElement.parentElement;
 			heads  = e.parentElement.children;
 			bodies = thead.parentElement.tBodies;
-			WD(heads).data({wdSortCol: ""});
+			WD(heads).run(function(x) {
+				if ("wdSortCol" in x.dataset) {
+					x.dataset.wdSortCol = "";
+				}
+			});
 			for (var i = 0; i < heads.length; i++) {
 				if (heads[i] === e) {
 					WD(bodies).sort(order, i);

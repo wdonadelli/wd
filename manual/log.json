@@ -75,5 +75,12 @@
 		"library": "wd.css",
 		"target": "wd-list wd-table",
 		"description": "Changed the placement of wd-table and wd-list to avoid damage to specific CSS."
+	},
+	{
+		"date": "2020-04-19",
+		"version": "2.0.4",
+		"library": "wd.js",
+		"target": "data_wdSortCol",
+		"description": "Fixed an error that allowed sorting columns without the attribute."
 	}
 ]
