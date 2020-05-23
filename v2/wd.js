@@ -1,5 +1,5 @@
 /*----------------------------------------------------------------------------
-wd.js (v2.0.4)
+wd.js (v2.1.4)
 <wdonadelli@gmail.com>
 https://github.com/wdonadelli/wd
 ------------------------------------------------------------------------------
@@ -2675,12 +2675,27 @@ var wd = (function() {
 		return;
 	};
 
+	/* Define atalhos para o atributo data-wd-mask */
+	var shortcutMask = {
+		"DDMMYYYY": /^(0[1-9]|[12][0-9]|3[0-1])\.(0[1-9]|1[0-2])\.([0-9]{4})$/,
+		"MMDDYYYY": /^(0[1-9]|1[0-2])\/(0[1-9]|[12][0-9]|3[0-1])\/([0-9]{4})$/,
+		"YYYYMMDD": /^([0-9]{4})\-(0[1-9]|1[0-2])\-(0[1-9]|[12][0-9]|3[0-1])$/,
+		"HHMMSS": /^([01][0-9]|2[0-4])\:([0-5][0-9])\:([0-5][0-9])$/,
+		"HHMM": /^([01][0-9]|2[0-4])\h([0-5][0-9])$/,
+		"AMPM": /^(0[1-9]|1[0-2])\:([0-5][0-9][apAP])m$/,
+	};
+
+
 	/*Define máscara do elemento data-wd-mask="StringMask"*/
 	function data_wdMask(e) {
 		var value, re, mask;
 		if ("wdMask" in e.dataset) {
 			value = "value" in e ? e.value : e.textContent;
-			re    = new RegExp(e.dataset.wdMask);
+			if (e.dataset.wdMask in shortcutMask) {
+				re = shortcutMask[e.dataset.wdMask];
+			} else {
+				re    = new RegExp(e.dataset.wdMask);
+			}
 			mask  = WD(re).mask(value);
 			if (mask === false) {
 				if ("setCustomValidity" in e) {

@@ -82,5 +82,12 @@
 		"library": "wd.js",
 		"target": "data_wdSortCol",
 		"description": "Fixed an error that allowed sorting columns without the attribute."
+	},
+	{
+		"date": "2020-05-23",
+		"version": "2.1.4",
+		"library": "wd.js",
+		"target": "data_wdMask",
+		"description": "Time and date shortcuts were defined for the data-wd-mask attribute (collaboration by Cleber Alexandre da Silva)."
 	}
 ]

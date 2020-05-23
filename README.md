@@ -16,4 +16,14 @@ The *Web Design* tool (**WD Style Sheet**) consists of a library written in CSS 
 
 See the running project through the example available at [WebExample1](https://github.com/wdonadelli/WebExample1).
 
+## Demo Videos (YouTube)
+
+- [WD Web Libraries - Ordering DOM](https://youtu.be/DcuxvjcYz3U)
+- [WD Web Libraries - Search filter](https://youtu.be/7A_kB5yXU7U)
+- [WD Web Libraries - Sorting table columns](https://youtu.be/Zfy83ThpUjI)
+- [WD Web Libraries - Responsive style](https://youtu.be/lBXmARk2Gp8)
+- [WD Web Libraries - Loading external pages](https://youtu.be/ixHghH22Bhs)
+- [WD Web Libraries - building standard blocks by repetition](https://youtu.be/Up1B6ZwE89k)
+- [WD Web Libraries - Inserting masks](https://youtu.be/R7oTG-KK9yE)
+
 _Willian Donadelli_ (<wdonadelli@gmail.com>)
