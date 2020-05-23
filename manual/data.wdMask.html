@@ -51,8 +51,42 @@
 	</select>
 </form>
 
+
+<h3>Shortcuts</h3>
+
+<p class="wd-p">You can use shortcuts for the time and date masks as follows:</p>
+
+<table class="wd-table" width="100%">
+	<thead>
+		<tr>
+			<th class="wd-text-left">Shortcut</th>
+			<th class="wd-text-left">Format</th>
+	</tr>
+	</thead>
+	<tbody class="wd-box-zebra">
+		<tr><td><q>YYYYMMDD</q></td> <td><q>9999-12-31</q></td></tr>
+		<tr><td><q>MMDDYYYY</q></td> <td><q>12/31/9999</q></td></tr>
+		<tr><td><q>DDMMYYYY</q></td> <td><q>31.12.9999</q></td></tr>
+		<tr><td><q>HHMMSS</q></td> <td><q>24:59:59</q></td></tr>
+		<tr><td><q>HHMM</q></td> <td><q>24h59</q></td></tr>
+		<tr><td><q>AMPM</q></td> <td><q>12:59am</q> / <q>12:59pm</q></td></tr>
+	</tbody>
+</table>
+
+<h4>Example</h4>
+
+<div id="eg4" class="wd-vform">
+	<input type="text" class="wd-input" data-wd-mask="AMPM" placeholder="AMPM" />
+	<input type="text" class="wd-input" data-wd-mask="DDMMYYYY" placeholder="DDMMYYYY" />
+</div>
+
+<pre class="wd-code" id="eg3"></pre>
+
+<p class="wd-p">It is just a mask, the attribute will not check the value.</p>
+
 <script>
 var eg = {};
 eg["#eg1"] = getCode("#eg2", true);
+eg["#eg3"] = getCode("#eg4", true);
 setText(eg);
 </script>
