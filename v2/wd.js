@@ -1,5 +1,5 @@
 /*----------------------------------------------------------------------------
-wd.js (v2.1.4)
+wd.js (v2.2.4)
 <wdonadelli@gmail.com>
 https://github.com/wdonadelli/wd
 ------------------------------------------------------------------------------
@@ -2520,8 +2520,17 @@ var wd = (function() {
 					value = WD(value).type === "number" ? WD(value).valueOf() : value;
 				} else if (type === "range" || font === "range") {
 					value = WD(value).type === "number" ? WD(value).valueOf() : value;
+				} else if (type === "file") {
+					if ("files" in elem) {
+						for (var i = 0; i < elem.files.length; i++) {
+							x.push(name+"="+encodeURIComponent(elem.files[i].name));
+						}
+						name = null;
+					} else {//FIXME verificar na w3c como é o padrão para campos em branco, exibe ou não?
+						value = value.split(/(\/|\\)/).reverse()[0];
+					}
 				}
-				if (WD(value).type !== "null" && WD(name).type !== "null") {
+				if (WD(value).type !== "null" && WD(name).type !== "null") {//wd(value) == null está deixando de fora os campos em branco
 					x.push(name+"="+encodeURIComponent(value));
 				}
 				return;
