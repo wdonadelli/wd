@@ -13,20 +13,99 @@
 		<script src="v2/wd.js"></script>
 		<script>
 function loko() {
-	wd$("#form").item(0).value = wd$("#loko *").form;
+	wd$("#form").item(0).textContent = wd$("#loko *").form;
 }
+
+function myLog(nome, arg) {
+	console.log(nome);
+	console.log(arg);
+	//console.log(arg.target);
+}
+
+function loading() {
+	var request = new XMLHttpRequest() || new ActiveXObject("Msxml2.XMLHTTP") || new ActiveXObject("Microsoft.XMLHTP");
+
+
+	request.onreadystatechange = function(x) {
+	
+	
+		myLog("onreadystatechange", request);
+		if (request.readyState === 2) {request.abort();}
+	}
+
+
+	//request.onload             = function(x) {myLog("onload", x);}
+	//request.onloadend          = function(x) {myLog("onloadend", x);}
+	//request.onloadstart        = function(x) {myLog("onloadstart", x);}
+	//request.onprogress         = function(x) {myLog("onprogress", x);}
+
+
+
+	request.onabort            = function(x) {myLog("onabort", x);}
+	request.onerror            = function(x) {myLog("onerror", x);}
+	request.ontimeout          = function(x) {myLog("ontimeout", x);}
+
+
+	request.open("GET", "teste.php", true);
+	request.send();
+}
+
+
+
+
+
+function WDdataRequest(request, time) {
+
+	this.state = function() {
+		// <= 2 START
+		// == 3 PROGRESS
+		// == 4 END
+		return "START|PROGRESS|END|ABORTED|ERROR";
+	}
+	this.time = function() {
+		return;
+	}
+	this.XML = function() {
+		return "xml";
+	}
+	this.JSON = function() {
+		return "xml";
+	}
+	this.TEXT = function() {
+		return "xml";
+	}
+	this.message = function() {
+		return request.statusText;
+	}
+
+
+}
+
+
+
+
+
+
+
 		</script>
 		
 	</head>
 
-	<body onload="loko();">
+	<body onload="loko();loading();">
 
 
 	<form id="loko" class="wd-vform" >
 		<input type="text" name="texto" class="wd-input" onkeyup="loko();"/>
 		<input type="file" name="arquivo1" class="wd-input" onchange="loko();"/>
 		<input type="file" name="arquivo2" multiple class="wd-input" onchange="loko();"/>
-		<textarea id="form" class="wd-text-red wd-input"></textarea>
+		<input type="checkbox" name="check" multiple class="wd-input" onchange="loko();"/> sem value
+		<input type="checkbox" name="vcheck" multiple class="wd-input" value="mycheck" onchange="loko();"/> com value
+		<input type="radio" name="radio" multiple class="wd-input" onchange="loko();"/> sem value 1
+		<input type="radio" name="radio" multiple class="wd-input" onchange="loko();"/> sem value 2
+		
+		<input type="radio" name="vradio" multiple class="wd-input" value="radio1" onchange="loko();"/> com value 1
+		<input type="radio" name="vradio" multiple class="wd-input" value="radio2" onchange="loko();"/> com value 2
+		<p id="form" class="wd-text-red wd-input"></p>
 		<input type="submit" name=""  class="wd-button"/>
 	</form>
 

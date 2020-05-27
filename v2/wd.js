@@ -2501,17 +2501,14 @@ var wd = (function() {
 			var x;
 			x = [];
 			this.run(function(elem) {
-				var tag, type, font, name, value, check;
+				var tag, type, font, name, value;
 				tag   = elem.tagName.toLowerCase();
 				type  = tag === "input" ? elem.type.toLowerCase() : null; /*considerado no objeto*/
 				font  = tag === "input" ? elem.attributes.type.value.toLowerCase() : type; /*informado no html*/
 				name  = "name"  in elem ? elem.name  : null;
 				value = "value" in elem ? elem.value : null;
-				check = type === "radio" || type === "checkbox" ? elem.checked : null;
-				if ((type === "radio" || type === "checkbox") && check !== true) {
-					value = null;
-				} else if (type === "radio" || type === "checkbox" && check === true) {
-					value =  WD(value).type === "null" ? "True" : value;
+				if (type === "radio" || type === "checkbox") {
+					value = elem.checked ? value : null;
 				} else if (type === "date" || font === "date") {
 					value = value !== "%today" && WD(value).type === "date" ? WD(value).toString() : value;
 				} else if (type === "time" || font === "time") {
@@ -2524,13 +2521,13 @@ var wd = (function() {
 					if ("files" in elem) {
 						for (var i = 0; i < elem.files.length; i++) {
 							x.push(name+"="+encodeURIComponent(elem.files[i].name));
+							value = null;
 						}
-						name = null;
-					} else {//FIXME verificar na w3c como é o padrão para campos em branco, exibe ou não?
+					} else {
 						value = value.split(/(\/|\\)/).reverse()[0];
 					}
 				}
-				if (WD(value).type !== "null" && WD(name).type !== "null") {//wd(value) == null está deixando de fora os campos em branco
+				if (value !== null && WD(name).type !== "null") {
 					x.push(name+"="+encodeURIComponent(value));
 				}
 				return;
