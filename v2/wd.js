@@ -506,7 +506,55 @@ var wd = (function() {
 		return x;
 	};
 
-	/*Controlador da janela modal (ajax)*/
+/*----------------------------------------------------------------------------*/
+	/* Controlador da janela modal */
+	var wdModal = document.createElement("DIV");
+
+	/* atributos do janela modal */
+	wdModal.textContent           = "Loading data, please wait!";
+	wdModal.textContent           = "Loading data, please wait!";
+	wdModal.style.display         = "block";
+	wdModal.style.width           = "100%";
+	wdModal.style.height          = "100%";
+	wdModal.style.position        = "fixed";
+	wdModal.style.top             = "0";
+	wdModal.style.right           = "0";
+	wdModal.style.bottom          = "0";
+	wdModal.style.left            = "0";
+	wdModal.style.color           = "white";
+	wdModal.style.backgroundColor = "black";
+	wdModal.style.opacity         = "0.9";
+	wdModal.style.zIndex          = "999999";
+	wdModal.style.cursor          = "progress";
+
+	/* contador da janela modal */
+	var wdModalCount = 0;
+
+	/* abrir chamada modal */
+	function wdModalOpen() {
+		wdModalCount++;
+		if (wdModalCount === 0) {/* abrir só se não estiver aberto */
+			document.body.appendChild(wdModal);
+		}
+		return;
+	}
+	
+	/* fechar chamada modal */
+	function wdModalClose() {
+		window.setTimeout(function () {
+			wdModalCount--;
+			if (wdModalCount < 1) {/* fechar se não houver requisição aberta */
+				document.body.removeChild(wdModal);
+			}
+			return;
+		}, 250);
+		return;
+	}
+/*----------------------------------------------------------------------------*/
+
+
+
+
 	var loadModal = {
 		modal: document.createElement("DIV"),
 		start: function() {
@@ -2501,13 +2549,27 @@ var wd = (function() {
 			var x;
 			x = [];
 			this.run(function(elem) {
-				var tag, type, font, name, value;
-				tag   = elem.tagName.toLowerCase();
-				type  = tag === "input" ? elem.type.toLowerCase() : null; /*considerado no objeto*/
-				font  = tag === "input" ? elem.attributes.type.value.toLowerCase() : type; /*informado no html*/
+				var type, font, name, value;
+
+				/* para prosseguir é preciso que o elemento tenha value e name */
 				name  = "name"  in elem ? elem.name  : null;
 				value = "value" in elem ? elem.value : null;
-				if (type === "radio" || type === "checkbox") {
+				if (name === null || value === null || WD(name).type === "null") {
+					return;
+				}
+
+				/* definindo demais variáveis */
+				type = null; /* type do objeto */
+				font = null; /* type do código fonte */
+				if (elem.tagName.toLowerCase() === "input") {
+					type = elem.type.toLowerCase();
+					font = elem.attributes.type.value.toLowerCase();
+				}
+
+				/* definindo types específicos */
+				if (type === null || font === null) {
+					/* passar pelas condicionais */
+				} else if (type === "radio" || type === "checkbox") {
 					value = elem.checked ? value : null;
 				} else if (type === "date" || font === "date") {
 					value = value !== "%today" && WD(value).type === "date" ? WD(value).toString() : value;
@@ -2517,17 +2579,19 @@ var wd = (function() {
 					value = WD(value).type === "number" ? WD(value).valueOf() : value;
 				} else if (type === "range" || font === "range") {
 					value = WD(value).type === "number" ? WD(value).valueOf() : value;
-				} else if (type === "file") {
+				} else if (type === "file" || font === "file") {
 					if ("files" in elem) {
 						for (var i = 0; i < elem.files.length; i++) {
 							x.push(name+"="+encodeURIComponent(elem.files[i].name));
-							value = null;
+							value = null; /* para evitar o último condicional */
 						}
 					} else {
 						value = value.split(/(\/|\\)/).reverse()[0];
 					}
 				}
-				if (value !== null && WD(name).type !== "null") {
+
+				/* definindo série, exceto se files existir e for maior que zero */
+				if (value !== null) {
 					x.push(name+"="+encodeURIComponent(value));
 				}
 				return;

@@ -26,18 +26,15 @@ function loading() {
 	var request = new XMLHttpRequest() || new ActiveXObject("Msxml2.XMLHTTP") || new ActiveXObject("Microsoft.XMLHTP");
 
 
-	request.onreadystatechange = function(x) {
-	
-	
-		myLog("onreadystatechange", request);
-		if (request.readyState === 2) {request.abort();}
-	}
+	request.onreadystatechange = function(x) {myLog("onreadystatechange", request);}
+	//request.onreadystatechange = function(x) {myLog("onreadystatechange", request);if (request.readyState === 2) {request.abort();}}
+	//request.upload.progress = function(x) {console.log("UPLOAD");console.log(x);}
 
 
 	//request.onload             = function(x) {myLog("onload", x);}
 	//request.onloadend          = function(x) {myLog("onloadend", x);}
 	//request.onloadstart        = function(x) {myLog("onloadstart", x);}
-	//request.onprogress         = function(x) {myLog("onprogress", x);}
+	request.onprogress         = function(x) {myLog("onprogress", x);console.log(x.loaded);}
 
 
 
@@ -46,11 +43,12 @@ function loading() {
 	request.ontimeout          = function(x) {myLog("ontimeout", x);}
 
 
-	request.open("GET", "teste.php", true);
+	request.open("POST", "v2/wd.css", true);
+	//request.open("POST", "pacoteGrandeTeste.js", true);
 	request.send();
 }
 
-
+// onprogress não funciona para medir o tamanho final do arquivo no GET ou POST
 
 
 
@@ -80,6 +78,33 @@ function WDdataRequest(request, time) {
 
 
 }
+
+var WD = wd;
+
+
+function wdAJAX(action, method, pack, async, callback) {
+
+	/* variáveis locais */
+	var request;
+
+	/* obtendo a interface */
+	
+
+
+
+
+
+
+
+
+
+
+
+}
+
+
+
+
 
 
 
