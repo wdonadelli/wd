@@ -22,31 +22,6 @@ function myLog(nome, arg) {
 	//console.log(arg.target);
 }
 
-function loading() {
-	var request = new XMLHttpRequest() || new ActiveXObject("Msxml2.XMLHTTP") || new ActiveXObject("Microsoft.XMLHTP");
-
-
-	//request.onreadystatechange = function(x) {myLog("onreadystatechange", request);}
-	//request.onreadystatechange = function(x) {myLog("onreadystatechange", request);if (request.readyState === 2) {request.abort();}}
-	//request.upload.progress = function(x) {console.log("UPLOAD");console.log(x);}
-
-
-	request.onload             = function(x) {myLog("onload", x);}
-	request.onloadend          = function(x) {myLog("onloadend", x);}
-	request.onloadstart        = function(x) {myLog("onloadstart", x);}
-	request.onprogress         = function(x) {myLog("onprogress", x);console.log(x.loaded);}
-
-
-
-	request.onabort            = function(x) {myLog("onabort", x);}
-	request.onerror            = function(x) {myLog("onerror", x);}
-	request.ontimeout          = function(x) {myLog("ontimeout", x);}
-
-
-	request.open("POST", "v2/wd.css", true);
-	//request.open("POST", "pacoteGrandeTeste.js", true);
-	//request.send();
-}
 
 // onprogress não funciona para medir o tamanho final do arquivo no GET ou POST
 
@@ -64,7 +39,13 @@ var wdModalClose = function() {console.log("wdOpenClose");}
 function wdStandardRequest(method, action, pack, async, callback) {
 
 	/* variáveis locais */
-	var request, data, time;
+	var request, data, time, aborted;
+
+	/*tempo inicial da chamada */
+	time = new Date();
+
+	/* definindo valor padrão de aborted */
+	aborted = false;
 
 	/* obtendo a interface */
 	if ("XMLHttpRequest" in window) {
@@ -80,12 +61,9 @@ function wdStandardRequest(method, action, pack, async, callback) {
 		return false;
 	}
 
-	/*tempo inicial da chamada */
-	time = new Date();
-
 	/* objeto com os dados */
 	data = {
-		state: "UNSENT",      /* UNSENT|OPENED|HEADERS|LOADING|DONE|ABORTED|ERROR */
+		status: "UNSENT",     /* UNSENT|OPENED|HEADERS|LOADING|DONE|ABORTED|ERROR */
 		time: 0,              /* tempo decorrido desde o início da chamada */
 		message: "",          /* registra mensagem do statusText */
 		load: 0,              /* registra o tamanho carregado na requisição */
@@ -94,7 +72,7 @@ function wdStandardRequest(method, action, pack, async, callback) {
 		JSON: null,           /* registra o JSON da requisição */
 		XML: null,            /* registra o XML da requisição */
 		abort: function() {   /* registra a função para abortar*/
-			//data.state = "ABORTED";
+			aborted = true;
 			request.abort();
 			return;
 		}
@@ -105,17 +83,23 @@ function wdStandardRequest(method, action, pack, async, callback) {
 
 	/* função a ser executada a cada mudança de estado */
 	request.onreadystatechange = function(x) {
-		if (request.readyState < 1) {
+		if (request.readyState < 1 || request.readyState === 3) {
 			return;
-		} else if (request.readyState == 1) {
-			data.state = "OPENED";
-		} else if (request.readyState == 2) {
-			data.state = "HEADERS";
-		} else if (request.readyState == 3) {
-			data.state = "LOADING";
-		} else if (request.readyState == 4) {
+		} else if (["ERROR", "NOTFOUND", "ABORTED", "DONE"].indexOf(data.status) >= 0) {
+			return;
+		} else if (aborted === true) {
+			data.status = "ABORTED";
+		} else if (request.readyState === 1) {
+			data.status = "OPENED";
+		} else if (request.readyState > 1 && request.readyState < 4) {
+			if (request.status !== 200 && request.status !== 304) {
+				data.status = "NOTFOUND";
+			} else {
+				data.status = "HEADERS";
+			}
+		} else if (request.readyState === 4) {
 			if (request.status === 200 || request.status === 304) {
-				data.state = "DONE";
+				data.status = "DONE";
 				data.TEXT  = request.responseText;
 				data.XML   = request.responseXML;
 				try {
@@ -124,47 +108,29 @@ function wdStandardRequest(method, action, pack, async, callback) {
 					data.JSON = null;
 				}
 			} else {
-				data.state = "ERROR";
+				data.status = "ERROR";
 			}
-			wdModalClose();
 		}
-		data.message = request.statusText;
+		data.message = request.statusText === "" ? data.message : request.statusText;
 		data.time = (new Date()) - time;
+		if (["ERROR", "NOTFOUND", "ABORTED", "DONE"].indexOf(data.status) >= 0) {
+			wdModalClose();
+		}		
 		callback(data);
-		return;
-	}
-
-	/* função a ser executada no caso de erro */
-	request.onerror = function(x) {
-		if (data.state !== "ERROR" && data.state !== "ABORTED") {
-			data.state = "ERROR";
-			data.message = request.statusText;
-			wdModalClose();
-			data.time = (new Date()) - time;
-			callback(data);
-		}
-		return;
-	}
-
-	/* função a ser executada no caso de abortar */
-	request.onabort = function(x) {
-		/* chamar apenas uma vez o aborte */
-		if (data.state !== "ABORTED") {
-			data.state = "ABORTED";
-			data.message = request.statusText;
-			wdModalClose();
-			data.time = (new Date()) - time;
-			callback(data);
-		}
 		return;
 	}
 
 	/* função a ser executada durante o progresso */
 	request.onprogress = function(x) {
-		data.load = x.loaded;
-		data.message = request.statusText;
-		data.time = (new Date()) - time;
-		callback(data);
+		if (["ERROR", "NOTFOUND", "ABORTED", "DONE"].indexOf(data.status) >= 0) {
+			return;
+		} else {
+			data.status = "LOADING";
+			data.load = x.loaded;
+			data.message = request.statusText;
+			data.time = (new Date()) - time;
+			callback(data);
+		}
 		return;
 	}
 	
@@ -187,33 +153,51 @@ function wdStandardRequest(method, action, pack, async, callback) {
 	return true;
 }
 
+function DONE() {
+	console.log("----------------- DONE -----------------");
+	wdStandardRequest("POST", "grande.txt", null, true, function(x) {
+		console.log(x);
+		return;
+	});
+}
 
+function ABORTED () {
+	console.log("----------------- ABORTED -----------------");
+	wdStandardRequest("POST", "grande.txt", null, true, function(x) {
+		console.log(x);
+		if (x.time > 31) {
+			x.abort();
+		}
+		return;
+	});
+}
 
-wdStandardRequest("POST", "grande.txt", null, true, function(x) {
-	console.log(x);
-	if (x.time > 31) {
-		x.abort();
-	}
-	return;
-});
+function NOTFOUND () {
+	console.log("----------------- NOTFOUND -----------------");
+	wdStandardRequest("POST", "grande2.txt", null, true, function(x) {
+		console.log(x);
+		return;
+	});
+}
+
+//DONE();
+//ABORTED();
+NOTFOUND();
 
 
 
 /*
 		FIXME
 
- - se eu provoco o abort, o primeiro evento tem que ser o abort e não o error
- - se o arquivo não existe, tenho que provocar o erro
- 
- 
- **** acho que o jeito é tirar o ABORTED ****
+ - testar com um arquivo binário
+ - fechar o modal após aborted e not found
 
 */
 		</script>
 		
 	</head>
 
-	<body onload="loko();loading();">
+	<body onload="loko();">
 
 
 	<form id="loko" class="wd-vform" >
