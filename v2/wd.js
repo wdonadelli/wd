@@ -1,5 +1,15 @@
 /*----------------------------------------------------------------------------
 wd.js (v2.2.4)
+
+FIXME
+MELHORIAS V2.2.4
+metodo form:
+	melhorias na interpretação de dados
+	quando se tratar de iinput type file, o atributo name conterá no final um _ seguido do sequencial a partir de zero (para múltiplos arquivos)
+inclusão do método Form
+
+
+
 <wdonadelli@gmail.com>
 https://github.com/wdonadelli/wd
 ------------------------------------------------------------------------------
@@ -512,17 +522,17 @@ var wd = (function() {
 
 	/* atributos do janela modal */
 	wdModal.textContent           = "Loading data, please wait!";
-	wdModal.textContent           = "Loading data, please wait!";
 	wdModal.style.display         = "block";
 	wdModal.style.width           = "100%";
 	wdModal.style.height          = "100%";
+	wdModal.style.padding         = "0.5em";
 	wdModal.style.position        = "fixed";
 	wdModal.style.top             = "0";
 	wdModal.style.right           = "0";
 	wdModal.style.bottom          = "0";
 	wdModal.style.left            = "0";
-	wdModal.style.color           = "white";
-	wdModal.style.backgroundColor = "black";
+	wdModal.style.color           = "#FFFFFF";
+	wdModal.style.backgroundColor = "#005544";
 	wdModal.style.opacity         = "0.9";
 	wdModal.style.zIndex          = "999999";
 	wdModal.style.cursor          = "progress";
@@ -532,17 +542,19 @@ var wd = (function() {
 
 	/* abrir chamada modal */
 	function wdModalOpen() {
-		wdModalCount++;
 		if (wdModalCount === 0) {/* abrir só se não estiver aberto */
 			document.body.appendChild(wdModal);
 		}
+		wdModalCount++;
 		return;
 	}
 	
 	/* fechar chamada modal */
 	function wdModalClose() {
 		window.setTimeout(function () {
-			wdModalCount--;
+			if (wdModalCount > 0) {
+				wdModalCount--;
+			}
 			if (wdModalCount < 1) {/* fechar se não houver requisição aberta */
 				document.body.removeChild(wdModal);
 			}
@@ -550,6 +562,208 @@ var wd = (function() {
 		}, 250);
 		return;
 	}
+
+	function wdStandardRequest(action, pack, callback, method, async) {
+
+		/* variáveis locais */
+		var request, data, time;
+
+		/* verificando argumentos */
+
+		if (WD(action).type !== "text") {
+			return false;
+		}
+
+		if (pack === undefined || WD(pack).type === "null") {
+			pack = null;
+		}
+
+		method = (method === undefined || WD(method).type !== "text") ? "GET" : method.toUpperCase();
+
+		if (async === undefined) {
+			async = true;
+		}
+
+		if (WD(callback).type !== "function") {
+			callback = null
+		}
+
+		/* obtendo a interface */
+		if ("XMLHttpRequest" in window) {
+			request = new XMLHttpRequest();
+		} else if ("ActiveXObject" in window) {
+			try {
+				request = new ActiveXObject("Msxml2.XMLHTTP");
+			} catch(e) {
+				request = new ActiveXObject("Microsoft.XMLHTP");
+			}
+		} else {
+			//log("XMLHttpRequest and ActiveXObject are not available!", "e");
+			return false;
+		}
+
+		/* objeto com os dados */
+		data = {
+			closed:  false,     /* indica o término da requisição */
+			status:  "UNSENT",  /* UNSENT|OPENED|HEADERS|LOADING|UPLOADING|DONE|NOTFOUND|ABORTED|ERROR|TIMEOUT */
+			time:    0,         /* tempo decorrido desde o início da chamada (milisegundos)*/
+			load:    0,         /* registra o tamanho carregado na requisição */
+			upload:  0,         /* registra o tamanho carregado no upload */
+			TEXT:    null,      /* registra o conteúdo textual da requisição */
+			JSON:    null,      /* registra o JSON da requisição */
+			XML:     null,      /* registra o XML da requisição */
+			request: request,   /* registra os dados da requisição */
+			abort: function() { /* registra a função para abortar*/
+				if (data.closed === false) {
+					data.status = "ABORTED";
+					data.closed = true;
+					request.abort();
+					if (callback !== null) {
+						callback(data);
+					}
+				}
+				return;
+			},
+
+		};
+
+		/* função a ser executada a cada mudança de estado */
+		request.onreadystatechange = function(x) {//console.log(request);
+			if (request.readyState < 1 || data.closed === true) {
+				return;
+			} else if (data.status === "UNSENT") {
+				data.status = "OPENED";
+			} else if (request.status === 404) {
+				data.status = "NOTFOUND";
+				data.closed = true;
+			} else if (request.readyState === 2) {
+				data.status = "HEADERS";
+			} else if (request.readyState === 3) {
+				if ("onprogress" in request) {
+					return;
+				} else {
+					data.status = "LOADING";
+				}
+			} else if (request.readyState === 4) {
+				data.closed = true;
+				if (request.status === 200 || request.status === 304) {
+					data.status = "DONE";
+					data.TEXT   = request.responseText;
+					data.XML    = request.responseXML;
+					try {
+						data.JSON = JSON.parse(data.TEXT) || eval("("+data.TEXT+")");
+					} catch(e) {
+						data.JSON = null;
+					}
+				} else {
+					data.status = "ERROR";
+				}
+			}
+			data.time = (new Date()) - time;
+			if (data.closed === true) {
+				wdModalClose();
+			}
+			if (callback !== null) {
+				callback(data);
+			}
+			return;
+		}
+
+		/* função a ser executada durante o progresso */
+		request.onprogress = function(x) {
+			if (data.closed === false) {
+				data.status = "LOADING";
+				data.load = x.loaded;
+				data.time = (new Date()) - time;
+				if (callback !== null) {
+					callback(data);
+				}
+			}
+			return;
+		}
+
+		/* função a ser executada no caso de erro */
+		request.error = function(x) {
+			if (data.closed === false) {
+				data.status = "ERROR";
+				data.closed = true;
+				data.time = (new Date()) - time;
+				if (callback !== null) {
+					callback(data);
+				}
+			}
+			return;
+		}
+
+		/* função a ser executada no caso de expirar o tempo */
+		request.error = function(x) {
+			if (data.closed === false) {
+				data.status = "TIMEOUT";
+				data.closed = true;
+				data.time = (new Date()) - time;
+				if (callback !== null) {
+					callback(data);
+				}
+			}
+			return;
+		}
+
+		/* funções a serem executada durante o upload */
+		if ("upload" in request) {
+			if ("onprogress" in request.upload) {
+				request.upload.onprogress = function(x) {
+					if (data.closed === false) {
+						data.status = "UPLOADING";
+						data.upload = x.loaded;
+						data.time = (new Date()) - time;
+						if (callback !== null) {
+							callback(data);
+						}
+					}
+					return;
+				}
+			}
+		}
+
+	/* abrir janela modal */
+	wdModalOpen();
+
+	/*tempo inicial da chamada */
+	time = new Date();
+
+	/* envio da requisição */
+	if (method === "GET" && WD(pack).type === "text") {
+		action += action.split("?").length > 1 ? pack : "?"+pack;
+		pack = null;
+	}
+	request.open(method, action, async);
+
+	if (method === "POST" && WD(pack).type === "text") {
+		request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+	}
+
+	request.send(pack);
+
+	return true;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /*----------------------------------------------------------------------------*/
 
 
@@ -756,21 +970,20 @@ var wd = (function() {
 	Object.defineProperty(WDtext.prototype, "path", {
 		enumerable: true,
 		get: function() {
-			var x, xhttp, path;
-			xhttp = request();
-			path  = this.toString().split("?")[0].replace(/^\'/, "");
-			if (xhttp === null || path.trim() === "") {
-				x = false;
-			} else {
-				try {
-					xhttp.open("HEAD", path, false);
-					xhttp.send();
-					x = xhttp.status === 200 || xhttp.status === 304 ? true : false;
-				} catch(e) {
-					x = false;
+			var path, ispath;
+
+			ispath = false;
+			/* para o caso do endereço ser um número, remover ' do início */
+			path = this.toString().replace(/^\'/, "");
+
+			wdStandardRequest(path, null, function(x) {
+				if (x.closed && x.status === "DONE") {
+					ispath = true;
 				}
-			}
-			return x;
+				return;
+			}, "HEAD", false);
+
+			return ispath;
 		}
 	});
 
@@ -778,60 +991,74 @@ var wd = (function() {
 	Object.defineProperty(WDtext.prototype, "request", {
 		enumerable: true,
 		value: function(method, time) {
-			if (this.path === false) {
-				log("\""+this.valueOf()+"\" is not an accessible path!", "w");
-				return null;
-			}
 			if (WD(method).type !== "function") {
 				log("request: The \"method\" argument is required.", "w");
 				return null;
 			}
-			var xhttp, value, path, serial, time, types;
-			xhttp  = request();
-			value  = this.toString().replace(/^\'/, "").split("?");
-			path   = value[0];
-			serial = value[1];
-			if (WD(serial).type !== "text")  {
-				serial = "";
-			} else if ((/^\$\{.+\}$/).test(WD(serial).toString())) {
-				serial = $(getData(serial)["$"]);
-				serial = serial !== null ? WD(serial).form : "";
+
+			var value, path, pack, GET, POST, types, result;
+
+			/* para o caso do endereço ser um número, remover ' do início */
+			value = this.toString().replace(/^\'/, "").split("?");
+			path  = value[0];
+			pack  = value[1];
+
+			/* definindo pack (serialized) */
+			if (WD(pack).type !== "text")  {
+				GET  = null;
+				POST = null;
+			} else if ((/^\$\{.+\}$/).test(WD(pack).toString())) {
+				pack = $(getData(pack)["$"]);
+				GET  = pack !== null ? WD(pack).form : null;
+				POST = pack !== null ? WD(pack).Form : null;
 			} else {
-				serial = serial.toString();
+				GET  = pack.toString();
+				POST = pack.toString();
 			}
-			time   = WD(time);
+
+			/* ajustando o tempo */
+			time = WD(time);
 			if ((time.number === "integer" || time.number === "real") && time.valueOf() > 0) {
-				xhttp.timeout =  1000*time.valueOf();
+				time = 1000*time.valueOf();
+			} else {
+				time = 0;
 			}
-			xhttp.onreadystatechange = function (ev) {
-				stateChange.call(this, ev, method);
+
+			/* resultado da função */
+			result = {
+				error: true,
+				request: null,
+				text: null,
+				xml: null,
+				json: null
+			};
+
+			/* função a ser executada */
+			function textRequestFunction(PACK, METHOD) {
+				wdStandardRequest(path, PACK, function(x) {
+					result.request = x.request;
+					if (x.closed === false && time > 0 && data.time > time) {
+						x.abort();
+					} else if (x.closed === true && x.status === "DONE") {
+						result.error   = false;
+						result.text    = x.TEXT;
+						result.xml     = x.XML;
+						result.json    = x.JSON;
+						method(result);
+					} else if (x.closed === true && x.status !== "DONE") {
+						method(result);
+					}
+					return;			
+				}, METHOD);
+				return;
 			}
+
 			types = {
 				get: function() {
-					loadModal.add();
-					try {
-						xhttp.open("GET", path+"?"+serial, true);
-						xhttp.send();
-						return true;
-					} catch(e) {
-						log(e, "w");
-						loadModal.del();
-						return false;
-					}
+					textRequestFunction(GET, "GET");
 				},
 				post: function () {
-					loadModal.add();
-					try {
-						xhttp.open("POST", path, true);
-						xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-						/*xhttp.setRequestHeader("Content-type", "multipart/form-data");*/
-						xhttp.send(serial === "" ? null : serial);
-						return true;
-					} catch(e) {
-						log(e, "w");
-						loadModal.del();
-						return false;
-					}
+					textRequestFunction(POST, "POST");
 				}
 			}
 			return types;
@@ -2040,6 +2267,70 @@ var wd = (function() {
 		return wdEventHandler;
 	};
 
+
+	/*obter os dados de formulários nome|valor (retora um array de objetos)*/
+	function wdForm(elem) {
+		var form, type, name, value;
+		
+		/*é preciso que o elemento tenha value e name ou retornará null*/
+		form = [];
+		type = [];
+		name  = "name"  in elem ? elem.name  : null;
+		value = "value" in elem ? elem.value : null;
+		if (name === null || value === null || WD(name).type === "null") {
+			return form;
+		}
+
+		/* caso o elemento seja um input (possui o atributo type) */
+		if (elem.tagName.toLowerCase() === "input") {
+
+			/* verificando o type definido e o type informado */
+			type.push(elem.type.toLowerCase());
+			type.push("type" in elem.attributes ? elem.attributes.type.value.toLowerCase() : type[0]);
+
+			/* caixas de seleção */
+			if (WD(type).inside("radio") || WD(type).inside("checkbox")) {
+				value = elem.checked ? value : null;
+			/* data */
+			} else if (WD(type).inside("date")) {
+				value = WD(value).type === "date" && value !== "%today" ? WD(value).toString() : null;
+			/* tempo */
+			} else if (WD(type).inside("time")) {
+				value = WD(value).type === "time" && value !== "%now" ? WD(value).toString() : null;
+			/* número */
+			} else if (WD(type).inside("number") || WD(type).inside("range")) {
+				value = WD(value).type === "number" ? WD(value).valueOf() : null;
+			/* arquivos */
+			} else if (WD(type).inside("file")) {
+				/* se houver o atributo files (caso especial) */
+				if ("files" in elem) {
+					for (var i = 0; i < elem.files.length; i++) {
+						form.push({
+							name:  name+"_"+i,
+							value: encodeURIComponent(elem.files[i].name),
+							post:  elem.files[i]
+						});
+						/* para evitar o último condicional */
+						value = null;
+					}
+				} else {
+					value = value.split(/(\/|\\)/).reverse()[0];
+				}
+			}
+		}
+
+		/* definindo série, exceto se files existir e for maior que zero */
+		if (value !== null) {
+			form.push({
+				name:  name,
+				value: encodeURIComponent(value),
+				post:  value
+			});
+		}
+
+		return form;
+	};
+
 /*...........................................................................*/
 
 	function WDdom(input) {
@@ -2546,59 +2837,43 @@ var wd = (function() {
 	Object.defineProperty(WDdom.prototype, "form", {
 		enumerable: true,
 		get: function() {
-			var x;
-			x = [];
+			var x = [];
 			this.run(function(elem) {
-				var type, font, name, value;
-
-				/* para prosseguir é preciso que o elemento tenha value e name */
-				name  = "name"  in elem ? elem.name  : null;
-				value = "value" in elem ? elem.value : null;
-				if (name === null || value === null || WD(name).type === "null") {
-					return;
-				}
-
-				/* definindo demais variáveis */
-				type = null; /* type do objeto */
-				font = null; /* type do código fonte */
-				if (elem.tagName.toLowerCase() === "input") {
-					type = elem.type.toLowerCase();
-					font = elem.attributes.type.value.toLowerCase();
-				}
-
-				/* definindo types específicos */
-				if (type === null || font === null) {
-					/* passar pelas condicionais */
-				} else if (type === "radio" || type === "checkbox") {
-					value = elem.checked ? value : null;
-				} else if (type === "date" || font === "date") {
-					value = value !== "%today" && WD(value).type === "date" ? WD(value).toString() : value;
-				} else if (type === "time" || font === "time") {
-					value = value !== "%now" && WD(value).type === "time" ? WD(value).toString() : value;
-				} else if (type === "number" || font === "number") {
-					value = WD(value).type === "number" ? WD(value).valueOf() : value;
-				} else if (type === "range" || font === "range") {
-					value = WD(value).type === "number" ? WD(value).valueOf() : value;
-				} else if (type === "file" || font === "file") {
-					if ("files" in elem) {
-						for (var i = 0; i < elem.files.length; i++) {
-							x.push(name+"="+encodeURIComponent(elem.files[i].name));
-							value = null; /* para evitar o último condicional */
-						}
-					} else {
-						value = value.split(/(\/|\\)/).reverse()[0];
-					}
-				}
-
-				/* definindo série, exceto se files existir e for maior que zero */
-				if (value !== null) {
-					x.push(name+"="+encodeURIComponent(value));
+				var data = wdForm(elem);
+				for (var i = 0; i < data.length; i++) {
+					x.push(data[i].name+"="+data[i].value);
 				}
 				return;
 			});
 			return x.join("&");
 		}
 	});
+
+	/*Obtem a serialização de formulário com FromData*/
+	Object.defineProperty(WDdom.prototype, "Form", {
+		enumerable: true,
+		get: function() {
+			if (!("FormData" in window)) {
+				return this.form;
+			}
+
+			var x = new FormData();
+
+			this.run(function(elem) {
+				var data = wdForm(elem);
+				for (var i = 0; i < data.length; i++) {
+					x.append(
+						data[i].name,
+						data[i].post === null ? data[i].value : data[i].post
+					);
+				}
+				return;
+			});
+			return x;
+		}
+	});
+
+
 
 	/*Retorna o método toString, valueOf*/
 	Object.defineProperties(WDdom.prototype, {

@@ -23,228 +23,29 @@ function myLog(nome, arg) {
 }
 
 
-// onprogress não funciona para medir o tamanho final do arquivo no GET ou POST
-
-var WD = wd;
-var wdModalOpen  = function() {console.log("wdOpenModal");}
-var wdModalClose = function() {console.log("wdOpenClose");}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//==============================================================================
-
-function wdStandardRequest(action, pack, callback, method, async) {
-
-	/* variáveis locais */
-	var request, data, time;
-
-	/* verificando argumentos */
-
-	if (WD(action).type !== "text") {
-		return false;
-	}
-
-	if (pack === undefined || WD(pack).type === "null") {
-		pack = null;
-	}
-
-	method = (method === undefined || WD(method).type !== "text") ? "GET" : method.toUpperCase();
-
-	if (async === undefined) {
-		async = true;
-	}
-
-	if (WD(callback).type !== "function") {
-		callback = null
-	}
-
-	/* obtendo a interface */
-	if ("XMLHttpRequest" in window) {
-		request = new XMLHttpRequest();
-	} else if ("ActiveXObject" in window) {
-		try {
-			request = new ActiveXObject("Msxml2.XMLHTTP");
-		} catch(e) {
-			request = new ActiveXObject("Microsoft.XMLHTP");
-		}
-	} else {
-		//log("XMLHttpRequest and ActiveXObject are not available!", "e");
-		return false;
-	}
-
-	/* metodo que verifica se o status já está encerrado */
-	requestClosed = function() {
-		if (["ERROR", "NOTFOUND", "ABORTED", "DONE"].indexOf(data.status) >= 0) {
-			return true;
-		}
-		return false;
-	}
-
-	/* objeto com os dados */
-	data = {
-		status: "UNSENT",     /* UNSENT|OPENED|HEADERS|LOADING|UPLOADING|DONE|NOTFOUND|ABORTED|ERROR */
-		time: 0,              /* tempo decorrido desde o início da chamada */
-		load: 0,              /* registra o tamanho carregado na requisição */
-		upload: 0,            /* registra o tamanho carregado no upload */
-		TEXT: null,           /* registra o conteúdo textual da requisição */
-		JSON: null,           /* registra o JSON da requisição */
-		XML: null,            /* registra o XML da requisição */
-		abort: function() {   /* registra a função para abortar*/
-			if (!requestClosed()) {
-				data.status = "ABORTED";
-				request.abort();
-				if (callback !== null) {
-					callback(data);
-				}
-			}
-			return;
-		}
-	};
-
-	/* função a ser executada a cada mudança de estado */
-	request.onreadystatechange = function(x) {//console.log(request);
-		if (request.readyState < 1 || requestClosed()) {
-			return;
-		} else if (data.status === "UNSENT") {
-			data.status = "OPENED";
-		} else if (request.status === 404) {
-			data.status = "NOTFOUND";
-		} else if (request.readyState === 2) {
-			data.status = "HEADERS";
-		} else if (request.readyState === 3) {
-			if ("onprogress" in request) {
-				return;
-			} else {
-				data.status = "LOADING";
-			}
-		} else if (request.readyState === 4) {
-			if (request.status === 200 || request.status === 304) {
-				data.status = "DONE";
-				data.TEXT   = request.responseText;
-				data.XML    = request.responseXML;
-				try {
-					data.JSON = JSON.parse(data.TEXT) || eval("("+data.TEXT+")");
-				} catch(e) {
-					data.JSON = null;
-				}
-			} else {
-				data.status = "ERROR";
-			}
-		}
-		data.time = (new Date()) - time;
-		if (requestClosed()) {
-			wdModalClose();
-		}
-		if (callback !== null) {
-			callback(data);
-		}
-		return;
-	}
-
-	/* função a ser executada durante o progresso */
-	request.onprogress = function(x) {
-		if (!requestClosed()) {
-			data.status = "LOADING";
-			data.load = x.loaded;
-			data.time = (new Date()) - time;
-			if (callback !== null) {
-				callback(data);
-			}
-		}
-		return;
-	}
-	
-	/* funções a serem executada durante o upload */
-	if ("upload" in request) {
-		if ("onprogress" in request.upload) {
-			request.upload.onprogress = function(x) {
-				if (!requestClosed()) {
-					data.status = "UPLOADING";
-					data.upload = x.loaded;
-					data.time = (new Date()) - time;
-					if (callback !== null) {
-						callback(data);
-					}
-				}
-				return;
-			}
-		}
-	}
-
-	/* abrir janela modal */
-	wdModalOpen();
-
-	/*tempo inicial da chamada */
-	time = new Date();
-
-	/* envio da requisição */
-	request.open(method, action, async);
-
-	if (method === "POST" && WD(pack).type === "text") {
-		request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-	}
-
-	request.send(pack);
-
-	return true;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 //==============================================================================
 
 function testeData() {
-	var data = new FormData();
-	data.append("texto", "willian gostosão");
-	//data.append("arquivo1", wd$("input[name=arquivo2]").item(0).files[0]);
-
-	var text = wd$("form *").form;
-
-	wdStandardRequest("teste.php?nome=valor", data, function(x) {
+	var data = wd$("form *").Form;
+	
+	//console.log("O arquivo existe? ", wd("teste.php?puta=gostosa").path);
+	wd("teste.php?bunda=gostosa").request(function(x) {
 		console.log(x);
-		if (x.status === "DONE") {
+		console.log(x.text);
+	}).post();
+
+	
+/*
+	wdStandardRequest("teste.php?puta=gostosa", data, function(x) {
+		console.log(x);
+		//x.abort();
+		if (x.closed) {
 			console.log(x.TEXT);
+			//console.log(data);
 		}
 		return;
-	}, "POST");
+	}, "POST", true);
+*/
 	return;
 }
 
@@ -354,6 +155,7 @@ function PATH () {
 		<input type="radio" name="vradio" multiple class="wd-input" value="radio2" onchange="loko();"/> com value 2
 		<p id="form" class="wd-text-red wd-input"></p>
 		<input type="submit" name=""  class="wd-button"/>
+		<input id="loku" />
 	</form>
 
 
