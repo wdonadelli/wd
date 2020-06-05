@@ -29,9 +29,9 @@ function testeData() {
 	var data = wd$("form *").Form;
 	
 	//console.log("O arquivo existe? ", wd("teste.php?puta=gostosa").path);
-	wd("teste.php?bunda=gostosa").request(function(x) {
+	wd("teste.php?${*}").request(function(x) {
 		console.log(x);
-		console.log(x.text);
+		//console.log(x.text);
 	}).post();
 
 	

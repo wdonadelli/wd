@@ -7,7 +7,7 @@ metodo form:
 	melhorias na interpretação de dados
 	quando se tratar de iinput type file, o atributo name conterá no final um _ seguido do sequencial a partir de zero (para múltiplos arquivos)
 inclusão do método Form
-
+inclusão do método upper e lower em text
 
 
 <wdonadelli@gmail.com>
@@ -499,7 +499,7 @@ var wd = (function() {
 /* === TEXT ================================================================ */
 
 	/*Obtém objeto para requisições ajax*/
-	function request() {
+	/*function request() {
 		var x;
 		if ("XMLHttpRequest" in window) {
 			x = new XMLHttpRequest();
@@ -514,7 +514,7 @@ var wd = (function() {
 			log("XMLHttpRequest and  ActiveXObject are not available in your browser!", "e");
 		}
 		return x;
-	};
+	};*/
 
 /*----------------------------------------------------------------------------*/
 	/* Controlador da janela modal */
@@ -569,7 +569,6 @@ var wd = (function() {
 		var request, data, time;
 
 		/* verificando argumentos */
-
 		if (WD(action).type !== "text") {
 			return false;
 		}
@@ -578,7 +577,7 @@ var wd = (function() {
 			pack = null;
 		}
 
-		method = (method === undefined || WD(method).type !== "text") ? "GET" : method.toUpperCase();
+		method = WD(method).type === "text" ? method.toUpperCase() : "GET";
 
 		if (async === undefined) {
 			async = true;
@@ -598,21 +597,22 @@ var wd = (function() {
 				request = new ActiveXObject("Microsoft.XMLHTP");
 			}
 		} else {
-			//log("XMLHttpRequest and ActiveXObject are not available!", "e");
+			log("XMLHttpRequest and ActiveXObject are not available!", "e");
 			return false;
 		}
 
 		/* objeto com os dados */
 		data = {
-			closed:  false,     /* indica o término da requisição */
-			status:  "UNSENT",  /* UNSENT|OPENED|HEADERS|LOADING|UPLOADING|DONE|NOTFOUND|ABORTED|ERROR|TIMEOUT */
-			time:    0,         /* tempo decorrido desde o início da chamada (milisegundos)*/
-			load:    0,         /* registra o tamanho carregado na requisição */
-			upload:  0,         /* registra o tamanho carregado no upload */
-			TEXT:    null,      /* registra o conteúdo textual da requisição */
-			JSON:    null,      /* registra o JSON da requisição */
-			XML:     null,      /* registra o XML da requisição */
-			request: request,   /* registra os dados da requisição */
+			closed:   false,     /* indica o término da requisição */
+			status:   "UNSENT",  /* UNSENT|OPENED|HEADERS|LOADING|UPLOADING|DONE|NOTFOUND|ABORTED|ERROR|TIMEOUT */
+			time:     0,         /* tempo decorrido desde o início da chamada (milisegundos)*/
+			load:     0,         /* registra o tamanho carregado na requisição */
+			upload:   0,         /* registra o tamanho carregado no upload */
+			progress: 0,        /* registra o andamento da requisição */
+			text:     null,      /* registra o conteúdo textual da requisição */
+			text:     null,      /* registra o JSON da requisição */
+			xml:      null,      /* registra o XML da requisição */
+			request:  request,   /* registra os dados da requisição */
 			abort: function() { /* registra a função para abortar*/
 				if (data.closed === false) {
 					data.status = "ABORTED";
@@ -648,10 +648,10 @@ var wd = (function() {
 				data.closed = true;
 				if (request.status === 200 || request.status === 304) {
 					data.status = "DONE";
-					data.TEXT   = request.responseText;
-					data.XML    = request.responseXML;
+					data.text   = request.responseText;
+					data.xml    = request.responseXML;
 					try {
-						data.JSON = JSON.parse(data.TEXT) || eval("("+data.TEXT+")");
+						data.JSON = JSON.parse(data.text) || eval("("+data.text+")");
 					} catch(e) {
 						data.JSON = null;
 					}
@@ -672,15 +672,21 @@ var wd = (function() {
 		/* função a ser executada durante o progresso */
 		request.onprogress = function(x) {
 			if (data.closed === false) {
-				data.status = "LOADING";
-				data.load = x.loaded;
+				data.status   = "LOADING";
+				data.load     = WD(x.loaded).type === "number" ? x.loaded : 0;
+				data.progress = 1;
+				if (WD(x.total).type === "number" && x.total > 0) {
+					data.progress = data.load/x.total;
+				}
 				data.time = (new Date()) - time;
 				if (callback !== null) {
 					callback(data);
 				}
+				data.progress = 0;
 			}
 			return;
 		}
+
 
 		/* função a ser executada no caso de erro */
 		request.error = function(x) {
@@ -696,7 +702,7 @@ var wd = (function() {
 		}
 
 		/* função a ser executada no caso de expirar o tempo */
-		request.error = function(x) {
+		request.ontimeout = function(x) {
 			if (data.closed === false) {
 				data.status = "TIMEOUT";
 				data.closed = true;
@@ -713,12 +719,17 @@ var wd = (function() {
 			if ("onprogress" in request.upload) {
 				request.upload.onprogress = function(x) {
 					if (data.closed === false) {
-						data.status = "UPLOADING";
-						data.upload = x.loaded;
+						data.status   = "UPLOADING";
+						data.upload   = WD(x.loaded).type === "number" ? x.loaded : 0;
+						data.progress = 1;
+						if (WD(x.total).type === "number" && x.total > 0) {
+							data.progress = data.upload/x.total;
+						}
 						data.time = (new Date()) - time;
 						if (callback !== null) {
 							callback(data);
 						}
+						data.progress = 0;
 					}
 					return;
 				}
@@ -736,6 +747,7 @@ var wd = (function() {
 		action += action.split("?").length > 1 ? pack : "?"+pack;
 		pack = null;
 	}
+
 	request.open(method, action, async);
 
 	if (method === "POST" && WD(pack).type === "text") {
@@ -746,104 +758,6 @@ var wd = (function() {
 
 	return true;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*----------------------------------------------------------------------------*/
-
-
-
-
-	var loadModal = {
-		modal: document.createElement("DIV"),
-		start: function() {
-			this.modal.textContent           = "Loading data, please wait!";
-			this.modal.style.display         = "block";
-			this.modal.style.width           = "100%";
-			this.modal.style.height          = "100%";
-			this.modal.style.position        = "fixed";
-			this.modal.style.top             = "0";
-			this.modal.style.right           = "0";
-			this.modal.style.bottom          = "0";
-			this.modal.style.left            = "0";
-			this.modal.style.color           = "white";
-			this.modal.style.backgroundColor = "black";
-			this.modal.style.opacity         = "0.9";
-			this.modal.style.zIndex          = "999999";
-			this.modal.style.cursor          = "progress";
-			return;
-		},
-		counter: 0,
-		add: function() {
-			this.counter++;
-			this.check();
-			return;
-		},
-		del: function() {
-			var target = this;
-			window.setTimeout(function () {
-				target.counter--;
-				target.check();
-				return;
-			}, 250);
-			return;
-		},
-		check: function() {
-			if (this.counter > 0) {
-				document.body.appendChild(this.modal);
-			} else if (this.counter === 0) {
-				this.modal.parentElement.removeChild(this.modal);
-			} else {
-				this.counter = 0;
-				this.modal.parentElement.removeChild(this.modal);
-			}
-			return;		
-		}
-	};
-	loadModal.start();
-
-	/*Função que verifica o sucesso da requisição ajax*/
- 	function stateChange(ev, method) {
- 		var arg, target;
- 		target = this;
- 		arg = {
-			error: true,
-			request: target,
-			text: null,
-			xml: null,
-			json: null
-		};
-		if (this.readyState === 4) {
-			if (this.status === 200 || this.status === 304) {
-				arg.error = false;
-				arg.text = target.responseText || null;
-				arg.xml  = target.responseXML || null;
-				try {
-					arg.json = JSON.parse(target.responseText) || eval("("+target.responseText+")");
-				} catch(e) {
-					arg.json = null;
-				}
-			}
-			loadModal.del();
-			method.call(this, arg);
-		}
-		return;
-	};
 
 /*...........................................................................*/
 
@@ -886,6 +800,34 @@ var wd = (function() {
 				value =  this;
 			}
 			return value;
+		}
+	});
+
+	/*caixa alta*/
+	Object.defineProperty(WDtext.prototype, "upper", {
+		enumerable: true,
+		value: function(change) {
+			var value;
+			value = this.toString().toUpperCase();
+			if (change === true) {
+				this._value = value;
+				value = this;
+			}
+			return value;	
+		}
+	});
+
+	/*caixa baixa*/
+	Object.defineProperty(WDtext.prototype, "lower", {
+		enumerable: true,
+		value: function(change) {
+			var value;
+			value = this.toString().toLowerCase();
+			if (change === true) {
+				this._value = value;
+				value = this;
+			}
+			return value;	
 		}
 	});
 
@@ -987,15 +929,33 @@ var wd = (function() {
 		}
 	});
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// -- FIXME  -- transformar isso em algo menor
+
 	/*Obtêm o conteúdo do caminho e retorna o método de requisição*/
 	Object.defineProperty(WDtext.prototype, "request", {
 		enumerable: true,
 		value: function(method, time) {
-			if (WD(method).type !== "function") {
-				log("request: The \"method\" argument is required.", "w");
-				return null;
-			}
-
 			var value, path, pack, GET, POST, types, result;
 
 			/* para o caso do endereço ser um número, remover ' do início */
@@ -1041,9 +1001,9 @@ var wd = (function() {
 						x.abort();
 					} else if (x.closed === true && x.status === "DONE") {
 						result.error   = false;
-						result.text    = x.TEXT;
-						result.xml     = x.XML;
-						result.json    = x.JSON;
+						result.text    = x.text;
+						result.xml     = x.xml;
+						result.json    = x.json;
 						method(result);
 					} else if (x.closed === true && x.status !== "DONE") {
 						method(result);
@@ -1071,6 +1031,62 @@ var wd = (function() {
 			value: "text"
 		}
 	});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	/*Obtêm o conteúdo do caminho e retorna o método de requisição*/
+	Object.defineProperty(WDtext.prototype, "Request", {
+		enumerable: true,
+		value: function(callback, method) {
+			var path, pack;
+
+			/* definindo variáveis e valor padrão */
+			pack    = this.toString().split("?");
+			path    = pack[0];
+			pack[0] = "";
+			pack    = pack.join("?").replace("?", "");
+
+			/*efetuando a requisição*/
+			wdStandardRequest(path, pack, callback, method);
+
+			return true;
+		}
+	});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 /* === REGEXP ============================================================== */
