@@ -22,9 +22,6 @@ function myLog(nome, arg) {
 	//console.log(arg.target);
 }
 
-
-//==============================================================================
-
 function testeData() {
 	var data = wd$("form *").Form;
 	
@@ -34,108 +31,10 @@ function testeData() {
 		//console.log(x.text);
 	}).post();
 
-	
-/*
-	wdStandardRequest("teste.php?puta=gostosa", data, function(x) {
-		console.log(x);
-		//x.abort();
-		if (x.closed) {
-			console.log(x.TEXT);
-			//console.log(data);
-		}
-		return;
-	}, "POST", true);
-*/
 	return;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-function DONE() {
-	console.log("----------------- DONE -----------------");
-	wdStandardRequest( "grande.txt", null, function(x) {
-		console.log(x);
-		return;
-	}, "POST", true);
-}
-
-function ABORTED () {
-	console.log("----------------- ABORTED -----------------");
-	wdStandardRequest("grande.txt", null, function(x) {
-		console.log(x);
-		//if (x.time > 15) {
-		//if (x.status === "OPENED") {
-			x.abort();
-//		}
-		return;
-	}, null, "POST", true);
-}
-
-function NOTFOUND () {
-	console.log("----------------- NOTFOUND -----------------");
-	wdStandardRequest("grande2.txt", null, function(x) {
-		console.log(x);
-		return;
-	}, "POST", true);
-}
-
-function PATH () {
-	console.log("----------------- PATH -----------------");
-	var existe;
-	wdStandardRequest("grande.txt", null, function(x) {
-		existe = x.status === "DONE" ? true : false;
-		return;
-	}, "HEAD", false);
-	console.log(existe ? "Existe o arquivo" : "Não existe o arquivo");
-	return existe;
-}
-
-
-
-
-
-
-
-//DONE();
-//ABORTED();
-//NOTFOUND();
-//PATH();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*
-		FIXME
-
- - testar com um arquivo binário
- - fechar o modal após aborted e not found
-
-*/
-		</script>
+	</script>
 		
 	</head>
 

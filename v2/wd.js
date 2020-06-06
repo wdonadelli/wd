@@ -362,161 +362,6 @@ var wd = (function() {
 
 /*...........................................................................*/
 
-	function WD(input) {
-		if (!(this instanceof WD)) {
-			return new WD(input);
-		}
-
-		if (!isNull(input) && !isUndefined(input)) {
-			if (isString(input) && input.trim() === "") {
-				input = null;
-			} else if (isBoolean(input)) {
-				input = input.valueOf();
-			} else if (isRegExp(input)) {
-				return new WDregexp(input);
-			} else if (isTime(input)) {
-				return new WDtime(input);
-			} else if (isDate(input)) {
-				return new WDdate(input);
-			} else if (isArray(input)) {
-				return new WDarray(input);
-			} else if (isDOM(input)) {
-				return new WDdom(input);
-			} else if (isNumber(input)) {
-				return new WDnumber(input);
-			} else if (isText(input)) {
-				return new WDtext(input);
-			}
-		}
-
-		Object.defineProperty(this, "_value", {
-			value: input
-		});
-	};
-
-	Object.defineProperty(WD.prototype, "constructor", {
-		value: WD
-	});
-
-	/*Retorna o tipo do argumento informado*/
-	Object.defineProperty(WD.prototype, "type", {
-		enumerable: true,
-		get: function () {
-			var x, types;
-			x = null;
-			types = {
-				"undefined": isUndefined,
-				"null": isNull,
-				"boolean": isBoolean,
-				"function": isFunction,
-				"object": isObject
-			};
-			for (var i in types) {
-				if (types[i](this._value)) {
-					x = i;
-					break;
-				}
-			};
-			if (x === null) {
-				try {
-					x = this._value.constructor.name.toLowerCase();
-				} catch(e) {
-					x = "unknown";
-				}
-			}
-			return x;
-		}
-	});
-
-	/*Exibe os métodos e atributos enumeráveis do objeto*/
-	Object.defineProperty(WD.prototype, "tools", {
-		enumerable: true,
-		get: function () {
-			var x = []
-			for (var i in this) {
-				x.push(i);
-			}
-			return WD(x).sort();
-		}
-	});
-
-	/*retorna o método valueOf e toString*/
-	Object.defineProperties(WD.prototype, {
-		$: {
-			value: $
-		},
-		valueOf: {
-			value: function () {
-				var x;
-				switch(this.type) {
-					case "null":
-						x = 0;
-						break;
-					case "undefined":
-						x = Infinity;
-						break;
-					case "boolean":
-						x = this._value.valueOf() === true ? 1 : 0;
-						break;
-					default:
-						try {
-							x = this._value.valueOf();
-						} catch(e) {
-							x = Number(this._value).valueOf();
-						}
-					}
-				return x;
-			}
-		},
-		toString: {
-			value: function () {
-				var x;
-				switch(this.type) {
-					case "null":
-						x = "Ø";
-						break;
-					case "undefined":
-						x = "?";
-						break;
-					case "boolean":
-						x = this._value === true ? "True" : "False";
-						break;
-					case "object":
-						x = JSON.stringify(this._value);
-						break;
-					default:
-						try {
-							x = this._value.toString();
-						} catch(e) {
-							x = String(this._value).toString();
-						}
-					}
-				return x;
-			}
-		}
-	});
-
-/* === TEXT ================================================================ */
-
-	/*Obtém objeto para requisições ajax*/
-	/*function request() {
-		var x;
-		if ("XMLHttpRequest" in window) {
-			x = new XMLHttpRequest();
-		} else if ("ActiveXObject" in window) {
-			try {
-				x = new ActiveXObject("Msxml2.XMLHTTP");
-			} catch(e) {
-				x = new ActiveXObject("Microsoft.XMLHTP");
-			}
-		} else {
-			x = null;
-			log("XMLHttpRequest and  ActiveXObject are not available in your browser!", "e");
-		}
-		return x;
-	};*/
-
-/*----------------------------------------------------------------------------*/
 	/* Controlador da janela modal */
 	var wdModal = document.createElement("DIV");
 
@@ -578,6 +423,7 @@ var wd = (function() {
 		}
 
 		method = WD(method).type === "text" ? method.toUpperCase() : "GET";
+
 
 		if (async === undefined) {
 			async = true;
@@ -683,6 +529,7 @@ var wd = (function() {
 					callback(data);
 				}
 				data.progress = 0;
+				data.load     = 0;
 			}
 			return;
 		}
@@ -730,36 +577,212 @@ var wd = (function() {
 							callback(data);
 						}
 						data.progress = 0;
+						data.upload   = 0;
 					}
 					return;
 				}
 			}
 		}
 
-	/* abrir janela modal */
-	wdModalOpen();
+		/* abrir janela modal */
+		wdModalOpen();
 
-	/*tempo inicial da chamada */
-	time = new Date();
+		/*tempo inicial da chamada */
+		time = new Date();
 
-	/* envio da requisição */
-	if (method === "GET" && WD(pack).type === "text") {
-		action += action.split("?").length > 1 ? pack : "?"+pack;
-		pack = null;
+		/* envio da requisição */
+		if (method === "GET" && WD(pack).type === "text") {
+			action += action.split("?").length > 1 ? pack : "?"+pack;
+			pack = null;
+		}
+
+		request.open(method, action, async);
+
+		if (method === "POST" && WD(pack).type === "text") {
+			request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+		}
+
+		request.send(pack);
+
+		return true;
 	}
 
-	request.open(method, action, async);
+/*----------------------------------------------------------------------------*/
 
-	if (method === "POST" && WD(pack).type === "text") {
-		request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-	}
+	function WD(input) {
+		if (!(this instanceof WD)) {
+			return new WD(input);
+		}
 
-	request.send(pack);
+		if (!isNull(input) && !isUndefined(input)) {
+			if (isString(input) && input.trim() === "") {
+				input = null;
+			} else if (isBoolean(input)) {
+				input = input.valueOf();
+			} else if (isRegExp(input)) {
+				return new WDregexp(input);
+			} else if (isTime(input)) {
+				return new WDtime(input);
+			} else if (isDate(input)) {
+				return new WDdate(input);
+			} else if (isArray(input)) {
+				return new WDarray(input);
+			} else if (isDOM(input)) {
+				return new WDdom(input);
+			} else if (isNumber(input)) {
+				return new WDnumber(input);
+			} else if (isText(input)) {
+				return new WDtext(input);
+			}
+		}
 
-	return true;
-}
+		Object.defineProperty(this, "_value", {
+			value: input
+		});
+	};
 
-/*...........................................................................*/
+	Object.defineProperty(WD.prototype, "constructor", {
+		value: WD
+	});
+
+	/*Retorna o tipo do argumento informado*/
+	Object.defineProperty(WD.prototype, "type", {
+		enumerable: true,
+		get: function () {
+			var x, types;
+			x = null;
+			types = {
+				"undefined": isUndefined,
+				"null": isNull,
+				"boolean": isBoolean,
+				"function": isFunction,
+				"object": isObject
+			};
+			for (var i in types) {
+				if (types[i](this._value)) {
+					x = i;
+					break;
+				}
+			};
+			if (x === null) {
+				try {
+					x = this._value.constructor.name.toLowerCase();
+				} catch(e) {
+					x = "unknown";
+				}
+			}
+			return x;
+		}
+	});
+
+	/*Exibe os métodos e atributos enumeráveis do objeto*/
+	Object.defineProperty(WD.prototype, "tools", {
+		enumerable: true,
+		get: function () {
+			var x = []
+			for (var i in this) {
+				x.push(i);
+			}
+			return WD(x).sort();
+		}
+	});
+
+
+	/*ferramenta para requisições api com xmlhttlrequest*/
+	Object.defineProperty(WD.prototype, "send", {
+		enumerable: true,
+		value: function(action, callback, method, async) {
+			if (WD(action).type !== "text") {
+				return false;
+			}
+
+			var pack;			
+
+			switch(this.type) {
+				case "text":
+					pack = this.toString();
+					break;
+				case "dom":
+					if (WD(method).type === "text" && WD(method).upper() === "POST") {
+						pack = this.Form;
+					} else {
+						pack = this.form;
+					}
+					break;
+				case "null":
+					pack = null;
+					break;
+				case "undefined":
+					pack = null;
+					break;
+				default:
+					pack = "value="+this.toString();
+			}
+
+			/*efetuando a requisição*/
+			wdStandardRequest(action, pack, callback, method, async);
+
+			return true;
+		}
+	});
+
+	/*retorna o método valueOf e toString*/
+	Object.defineProperties(WD.prototype, {
+		$: {
+			value: $
+		},
+		valueOf: {
+			value: function () {
+				var x;
+				switch(this.type) {
+					case "null":
+						x = 0;
+						break;
+					case "undefined":
+						x = Infinity;
+						break;
+					case "boolean":
+						x = this._value.valueOf() === true ? 1 : 0;
+						break;
+					default:
+						try {
+							x = this._value.valueOf();
+						} catch(e) {
+							x = Number(this._value).valueOf();
+						}
+					}
+				return x;
+			}
+		},
+		toString: {
+			value: function () {
+				var x;
+				switch(this.type) {
+					case "null":
+						x = "Ø";
+						break;
+					case "undefined":
+						x = "?";
+						break;
+					case "boolean":
+						x = this._value === true ? "True" : "False";
+						break;
+					case "object":
+						x = JSON.stringify(this._value);
+						break;
+					default:
+						try {
+							x = this._value.toString();
+						} catch(e) {
+							x = String(this._value).toString();
+						}
+					}
+				return x;
+			}
+		}
+	});
+
+/* === TEXT ================================================================ */
 
 	function WDtext(input) {
 		if (!(this instanceof WDtext)) {
@@ -914,11 +937,11 @@ var wd = (function() {
 		get: function() {
 			var path, ispath;
 
+			/*definindo variáveis*/
 			ispath = false;
-			/* para o caso do endereço ser um número, remover ' do início */
 			path = this.toString().replace(/^\'/, "");
 
-			wdStandardRequest(path, null, function(x) {
+			this.send(path, function(x) {
 				if (x.closed && x.status === "DONE") {
 					ispath = true;
 				}
@@ -1051,24 +1074,7 @@ var wd = (function() {
 
 
 
-	/*Obtêm o conteúdo do caminho e retorna o método de requisição*/
-	Object.defineProperty(WDtext.prototype, "Request", {
-		enumerable: true,
-		value: function(callback, method) {
-			var path, pack;
 
-			/* definindo variáveis e valor padrão */
-			pack    = this.toString().split("?");
-			path    = pack[0];
-			pack[0] = "";
-			pack    = pack.join("?").replace("?", "");
-
-			/*efetuando a requisição*/
-			wdStandardRequest(path, pack, callback, method);
-
-			return true;
-		}
-	});
 
 
 
