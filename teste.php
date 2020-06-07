@@ -60,7 +60,9 @@ function testeData() {
 
 	<pre>
 <?php
+echo "\n---\n\nREQUEST:\n\n";
 print_r($_REQUEST);
+echo "\n---\n\nFILES:\n\n";
 print_r($_FILES);
 
 //move_uploaded_file($_FILES['arquivo1']['tmp_name'], "/home/wd/bundinha2.pdf");

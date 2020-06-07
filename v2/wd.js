@@ -363,52 +363,52 @@ var wd = (function() {
 /*...........................................................................*/
 
 	/* Controlador da janela modal */
-	var wdModal = document.createElement("DIV");
+	var modalWindow = document.createElement("DIV");
 
 	/* atributos do janela modal */
-	wdModal.textContent           = "Loading data, please wait!";
-	wdModal.style.display         = "block";
-	wdModal.style.width           = "100%";
-	wdModal.style.height          = "100%";
-	wdModal.style.padding         = "0.5em";
-	wdModal.style.position        = "fixed";
-	wdModal.style.top             = "0";
-	wdModal.style.right           = "0";
-	wdModal.style.bottom          = "0";
-	wdModal.style.left            = "0";
-	wdModal.style.color           = "#FFFFFF";
-	wdModal.style.backgroundColor = "#005544";
-	wdModal.style.opacity         = "0.9";
-	wdModal.style.zIndex          = "999999";
-	wdModal.style.cursor          = "progress";
+	modalWindow.textContent           = "Loading data, please wait!";
+	modalWindow.style.display         = "block";
+	modalWindow.style.width           = "100%";
+	modalWindow.style.height          = "100%";
+	modalWindow.style.padding         = "0.5em";
+	modalWindow.style.position        = "fixed";
+	modalWindow.style.top             = "0";
+	modalWindow.style.right           = "0";
+	modalWindow.style.bottom          = "0";
+	modalWindow.style.left            = "0";
+	modalWindow.style.color           = "#FFFFFF";
+	modalWindow.style.backgroundColor = "#005544";
+	modalWindow.style.opacity         = "0.9";
+	modalWindow.style.zIndex          = "999999";
+	modalWindow.style.cursor          = "progress";
 
 	/* contador da janela modal */
-	var wdModalCount = 0;
+	var modalWindowCount = 0;
 
 	/* abrir chamada modal */
-	function wdModalOpen() {
-		if (wdModalCount === 0) {/* abrir só se não estiver aberto */
-			document.body.appendChild(wdModal);
+	function modalWindowOpen() {
+		if (modalWindowCount === 0) {/* abrir só se não estiver aberto */
+			document.body.appendChild(modalWindow);
 		}
-		wdModalCount++;
+		modalWindowCount++;
 		return;
 	}
 	
 	/* fechar chamada modal */
-	function wdModalClose() {
+	function modalWindowClose() {
 		window.setTimeout(function () {
-			if (wdModalCount > 0) {
-				wdModalCount--;
+			if (modalWindowCount > 0) {
+				modalWindowCount--;
 			}
-			if (wdModalCount < 1) {/* fechar se não houver requisição aberta */
-				document.body.removeChild(wdModal);
+			if (modalWindowCount < 1) {/* fechar se não houver requisição aberta */
+				document.body.removeChild(modalWindow);
 			}
 			return;
 		}, 250);
 		return;
 	}
 
-	function wdStandardRequest(action, pack, callback, method, async) {
+	function standardRequest(action, pack, callback, method, async) {
 
 		/* variáveis locais */
 		var request, data, time;
@@ -423,7 +423,6 @@ var wd = (function() {
 		}
 
 		method = WD(method).type === "text" ? method.toUpperCase() : "GET";
-
 
 		if (async === undefined) {
 			async = true;
@@ -449,32 +448,76 @@ var wd = (function() {
 
 		/* objeto com os dados */
 		data = {
-			closed:   false,     /* indica o término da requisição */
-			status:   "UNSENT",  /* UNSENT|OPENED|HEADERS|LOADING|UPLOADING|DONE|NOTFOUND|ABORTED|ERROR|TIMEOUT */
-			time:     0,         /* tempo decorrido desde o início da chamada (milisegundos)*/
-			load:     0,         /* registra o tamanho carregado na requisição */
-			upload:   0,         /* registra o tamanho carregado no upload */
+			closed:   false,    /* indica o término da requisição */
+			status:   "UNSENT", /* UNSENT|OPENED|HEADERS|LOADING|UPLOADING|DONE|NOTFOUND|ABORTED|ERROR|TIMEOUT */
+			time:     0,        /* tempo decorrido desde o início da chamada (milisegundos)*/
+			size:     0,        /* registra o tamanho total do arquivo */
+			loaded:   0,        /* registra o tamanho carregado na requisição */
 			progress: 0,        /* registra o andamento da requisição */
-			text:     null,      /* registra o conteúdo textual da requisição */
-			text:     null,      /* registra o JSON da requisição */
-			xml:      null,      /* registra o XML da requisição */
-			request:  request,   /* registra os dados da requisição */
-			abort: function() { /* registra a função para abortar*/
-				if (data.closed === false) {
-					data.status = "ABORTED";
-					data.closed = true;
-					request.abort();
-					if (callback !== null) {
-						callback(data);
-					}
-				}
-				return;
-			},
-
+			text:     null,     /* registra o conteúdo textual da requisição */
+			xml:      null,     /* registra o XML da requisição */
+			json:     null,     /* registra o JSON da requisição */
+			request:  request,  /* registra os dados da requisição */
 		};
 
+		/* função para definir eventos */
+		function wdSetEvents(status, closed, loaded, size) {
+			if (data.closed === false) {
+				data.status   = status;
+				data.closed   = closed === true ? true : false;
+				data.loaded   = WD(loaded).type === "number" ? loaded : 0;
+				data.size     = WD(size).type   === "number" ? size   : 0;
+				data.progress = data.size > 0 ? data.loaded/data.size : 0;
+				data.time = (new Date()) - time;
+				if (status === "ABORTED") {
+					request.abort();
+				}
+				if (callback !== null) {
+					callback(data);
+				}
+				data.progress = 0;
+				data.loaded   = 0;
+				data.size     = 0;
+			}
+			return;
+		}
+
+		/* função para abortar*/
+		data.abort = function() { 
+			wdSetEvents("ABORTED", true, 0, 0);
+			return;
+		},
+
+		/* função de progresso no load */
+		request.onprogress = function(x) {
+			wdSetEvents("LOADING", false, x.loaded, x.total);
+			return;
+		}
+
+		/* função de erro */
+		request.onerror = function(x) {
+			wdSetEvents("ERROR", true, 0, 0);
+			return;
+		}
+
+		/* função de expirar o tempo */
+		request.ontimeout = function(x) {
+			wdSetEvents("TIMEOUT", true, 0, 0);
+			return;
+		}
+
+		/* funções a serem executada durante o upload */
+		if ("upload" in request) {
+			request.upload.onprogress = function(x) {
+				wdSetEvents("UPLOADING", false, x.loaded, x.total);
+				return;
+			}
+			request.upload.onabort   = request.onerror;
+			request.upload.ontimeout = request.ontimeout;
+		}
+
 		/* função a ser executada a cada mudança de estado */
-		request.onreadystatechange = function(x) {//console.log(request);
+		request.onreadystatechange = function(x) {
 			if (request.readyState < 1 || data.closed === true) {
 				return;
 			} else if (data.status === "UNSENT") {
@@ -507,7 +550,7 @@ var wd = (function() {
 			}
 			data.time = (new Date()) - time;
 			if (data.closed === true) {
-				wdModalClose();
+				modalWindowClose();
 			}
 			if (callback !== null) {
 				callback(data);
@@ -515,77 +558,8 @@ var wd = (function() {
 			return;
 		}
 
-		/* função a ser executada durante o progresso */
-		request.onprogress = function(x) {
-			if (data.closed === false) {
-				data.status   = "LOADING";
-				data.load     = WD(x.loaded).type === "number" ? x.loaded : 0;
-				data.progress = 1;
-				if (WD(x.total).type === "number" && x.total > 0) {
-					data.progress = data.load/x.total;
-				}
-				data.time = (new Date()) - time;
-				if (callback !== null) {
-					callback(data);
-				}
-				data.progress = 0;
-				data.load     = 0;
-			}
-			return;
-		}
-
-
-		/* função a ser executada no caso de erro */
-		request.error = function(x) {
-			if (data.closed === false) {
-				data.status = "ERROR";
-				data.closed = true;
-				data.time = (new Date()) - time;
-				if (callback !== null) {
-					callback(data);
-				}
-			}
-			return;
-		}
-
-		/* função a ser executada no caso de expirar o tempo */
-		request.ontimeout = function(x) {
-			if (data.closed === false) {
-				data.status = "TIMEOUT";
-				data.closed = true;
-				data.time = (new Date()) - time;
-				if (callback !== null) {
-					callback(data);
-				}
-			}
-			return;
-		}
-
-		/* funções a serem executada durante o upload */
-		if ("upload" in request) {
-			if ("onprogress" in request.upload) {
-				request.upload.onprogress = function(x) {
-					if (data.closed === false) {
-						data.status   = "UPLOADING";
-						data.upload   = WD(x.loaded).type === "number" ? x.loaded : 0;
-						data.progress = 1;
-						if (WD(x.total).type === "number" && x.total > 0) {
-							data.progress = data.upload/x.total;
-						}
-						data.time = (new Date()) - time;
-						if (callback !== null) {
-							callback(data);
-						}
-						data.progress = 0;
-						data.upload   = 0;
-					}
-					return;
-				}
-			}
-		}
-
 		/* abrir janela modal */
-		wdModalOpen();
+		modalWindowOpen();
 
 		/*tempo inicial da chamada */
 		time = new Date();
@@ -720,7 +694,7 @@ var wd = (function() {
 			}
 
 			/*efetuando a requisição*/
-			wdStandardRequest(action, pack, callback, method, async);
+			standardRequest(action, pack, callback, method, async);
 
 			return true;
 		}
@@ -952,99 +926,51 @@ var wd = (function() {
 		}
 	});
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// -- FIXME  -- transformar isso em algo menor
-
-	/*Obtêm o conteúdo do caminho e retorna o método de requisição*/
+	/*Obtêm o conteúdo do caminho e retorna o método de requisição (descontinuar)*/
 	Object.defineProperty(WDtext.prototype, "request", {
 		enumerable: true,
 		value: function(method, time) {
-			var value, path, pack, GET, POST, types, result;
+			var path, pack;
 
 			/* para o caso do endereço ser um número, remover ' do início */
-			value = this.toString().replace(/^\'/, "").split("?");
-			path  = value[0];
-			pack  = value[1];
+			pack    = this.toString().replace(/^\'/, "").split("?");
+			path    = pack[0];
+			pack[0] = "";
+			pack = pack.join("?").replace("?", "");
 
 			/* definindo pack (serialized) */
-			if (WD(pack).type !== "text")  {
-				GET  = null;
-				POST = null;
-			} else if ((/^\$\{.+\}$/).test(WD(pack).toString())) {
+			if (WD(pack).type !== "text") {
+				pack = null;
+			} else if ((/^\$\{.+\}$/).test(pack)) {
 				pack = $(getData(pack)["$"]);
-				GET  = pack !== null ? WD(pack).form : null;
-				POST = pack !== null ? WD(pack).Form : null;
-			} else {
-				GET  = pack.toString();
-				POST = pack.toString();
 			}
 
-			/* ajustando o tempo */
+			/* ajustando o tempo (segundos = *1000) */
 			time = WD(time);
-			if ((time.number === "integer" || time.number === "real") && time.valueOf() > 0) {
-				time = 1000*time.valueOf();
-			} else {
-				time = 0;
-			}
-
-			/* resultado da função */
-			result = {
-				error: true,
-				request: null,
-				text: null,
-				xml: null,
-				json: null
-			};
+			time = (time.type === "number" && time.valueOf() > 0) ? 1000*time.valueOf() : 0;
 
 			/* função a ser executada */
-			function textRequestFunction(PACK, METHOD) {
-				wdStandardRequest(path, PACK, function(x) {
-					result.request = x.request;
-					if (x.closed === false && time > 0 && data.time > time) {
+			function textRequestFunction(METHOD) {
+				WD(pack).send(path, function(x) {
+					if (x.closed === true) {
+						x.error = x.status === "DONE" ? false : true;
+						method(x);
+					} else if (time > 0 && data.time > time) {
 						x.abort();
-					} else if (x.closed === true && x.status === "DONE") {
-						result.error   = false;
-						result.text    = x.text;
-						result.xml     = x.xml;
-						result.json    = x.json;
-						method(result);
-					} else if (x.closed === true && x.status !== "DONE") {
-						method(result);
 					}
 					return;			
 				}, METHOD);
 				return;
 			}
 
-			types = {
+			return {
 				get: function() {
-					textRequestFunction(GET, "GET");
+					textRequestFunction("GET");
 				},
 				post: function () {
-					textRequestFunction(POST, "POST");
+					textRequestFunction("POST");
 				}
-			}
-			return types;
+			};
 		}
 	});
 	
@@ -1054,46 +980,6 @@ var wd = (function() {
 			value: "text"
 		}
 	});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /* === REGEXP ============================================================== */
 
