@@ -7,7 +7,9 @@ metodo form:
 	melhorias na interpretação de dados
 	quando se tratar de iinput type file, o atributo name conterá no final um _ seguido do sequencial a partir de zero (para múltiplos arquivos)
 inclusão do método Form
-inclusão do método upper e lower em text
+inclusão do método upper e lower em WDtext
+inclusão do método send em WD
+inclusão do atributo data-wd-send
 
 
 <wdonadelli@gmail.com>
@@ -540,9 +542,9 @@ var wd = (function() {
 					data.text   = request.responseText;
 					data.xml    = request.responseXML;
 					try {
-						data.JSON = JSON.parse(data.text) || eval("("+data.text+")");
+						data.json = JSON.parse(data.text) || eval("("+data.text+")");
 					} catch(e) {
-						data.JSON = null;
+						data.json = null;
 					}
 				} else {
 					data.status = "ERROR";
@@ -2829,11 +2831,41 @@ var wd = (function() {
 
 /* === JS ATTRIBUTES ======================================================= */
 
-	/*Carrega html externo data-wd-load=post{file}|get{file}*/
-	function data_wdLoad(e) {
-		var value, method, file, ajax, target;
+	/*Carrega html externo data-wd-load=post|get{file}${}*/
+	function data_wdLoad(e) {console.log("FIXME");
+		var value, method, file, pack, target;
 		if ("wdLoad" in e.dataset) {
-			value  = getData(e.dataset.wdLoad);
+			value = e.dataset.wdLoad;
+			/*corrigindo modelo de versão anterior para novo modelo*/
+			if (value.search(/\?\$\{/) >= 0) {
+				value = value.replace("?${", "}${").replace("}}", "}");
+			}console.log(value);
+			value  = getData(value);
+			method = "post" in value ? "post" : "get";
+			file   = value[method];
+			pack   = "$" in value ? $(value["$"]) : null;
+			target = WD(e);
+			target.data({wdLoad: null});
+			WD(pack).send(file, function(x) {
+				if (x.closed === true) {
+					target.load(x.text === null ? "" : x.text);
+					if (x.status !== "DONE") {
+						log(file+": The request with the file failed.", "e");
+					}
+				}
+			}, method);
+
+
+
+
+
+
+
+
+
+
+
+			/*value  = getData(e.dataset.wdLoad);
 			if ("post" in value || "get" in value) {
 				method = "post" in value ? "post" : "get";
 				file   = value[method];
@@ -2843,17 +2875,36 @@ var wd = (function() {
 				if (ajax.path === true) {
 					ajax.request(function(x) {
 						if (x.error) {
-							log(file+": The request with the file failed.", "e");
+							
 						} else {
 							target.load(x.text);
 						}
 						return;
 					})[method]();
 				}
-			}
+			}*/
 		}
 		return;
 	};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 	/*Constroe html a partir de um arquivo json data-wd-repeat=post{file}|get{file}*/
 	function data_wdRepeat(e) {
@@ -2881,21 +2932,33 @@ var wd = (function() {
 		return;
 	};
 
-	/*Faz requisição a um arquivo externo data-wd-request=post{file}method{function()}|get{file}method{function()}*/
+
+
+
+	/*Faz requisição a um arquivo externo data-wd-send=post|get{file}${CSS selector}callback{function()}*/
+	function data_wdSend(e) {
+		var value, method, file, pack, callback;
+		if ("wdSend" in e.dataset) {
+			value    = getData(e.dataset.wdSend);
+			method   = "post" in value ? "post" : "get";
+			file     = value[method];
+			pack     = "$" in value ? $(value["$"]) : null;
+			callback = window[value["callback"]];
+			WD(pack).send(file, callback, method);
+		}			
+		return;
+	};
+
+	/*Faz requisição a um arquivo externo data-wd-request=post|get{file}method{function()}*/
 	function data_wdRequest(e) {
-		var value, func, file, ajax, target, method;
+		var value, method, file, callback;
 		if ("wdRequest" in e.dataset) {
-			value  = getData(e.dataset.wdRequest);
-			if ("post" in value || "get" in value) {
-				method = "post" in value ? "post" : "get";
-				file   = value[method];
-				ajax   = WD(file);
-				func   = WD(window[value.method]).type === "function" ? window[value.method] : undefined;
-				if (ajax.path === true) {
-					ajax.request(func)[method]();
-				}
-			}
-		}
+			value    = getData(e.dataset.wdRequest);
+			method   = "post" in value ? "post" : "get";
+			file     = value[method];
+			callback = window[value["method"]];
+			WD(file).request(callback)[method]();
+		}			
 		return;
 	};
 
@@ -3140,6 +3203,7 @@ var wd = (function() {
 		data_wdActive(ev.target);
 		data_wdSortCol(ev.target);
 		data_wdRequest(ev.target);
+		data_wdSend(ev.target);
 		return;
 	};
 

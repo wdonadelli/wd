@@ -22,15 +22,9 @@ function myLog(nome, arg) {
 	//console.log(arg.target);
 }
 
-function testeData() {
-	var data = wd$("form *").Form;
-	
-	//console.log("O arquivo existe? ", wd("teste.php?puta=gostosa").path);
-	wd("teste.php?${*}").request(function(x) {
-		console.log(x);
-		//console.log(x.text);
-	}).post();
-
+function testeData(x) {
+	console.log(x);
+	if (x.closed && x.status === "DONE") console.log(x.text);
 	return;
 }
 
@@ -38,7 +32,7 @@ function testeData() {
 		
 	</head>
 
-	<body onload="loko();testeData();">
+	<body onload="loko();">
 
 
 	<form id="loko" class="wd-vform" >
@@ -53,12 +47,12 @@ function testeData() {
 		<input type="radio" name="vradio" multiple class="wd-input" value="radio1" onchange="loko();"/> com value 1
 		<input type="radio" name="vradio" multiple class="wd-input" value="radio2" onchange="loko();"/> com value 2
 		<p id="form" class="wd-text-red wd-input"></p>
-		<input type="submit" name=""  class="wd-button"/>
-		<input id="loku" />
+		<input type="button" value="Send()" class="wd-button" data-wd-send="post{teste.php}${*}callback{testeData}"/>
+		<input type="button" value="Request()" class="wd-button" data-wd-request="get{teste.php?${*}}method{testeData}"/>
 	</form>
 
 
-	<pre>
+	<pre data-wd-load="post{manual/log.json}">
 <?php
 echo "\n---\n\nREQUEST:\n\n";
 print_r($_REQUEST);
@@ -69,6 +63,11 @@ print_r($_FILES);
 ?>
 
 	</pre>
+
+
+
+
+
 
 	</body>
 </html>
