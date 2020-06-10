@@ -2179,7 +2179,7 @@ var wd = (function() {
 
 
 	/*obter os dados de formulários nome|valor (retora um array de objetos)*/
-	function wdForm(elem) {
+	function getFormData(elem) {
 		var form, type, name, value;
 		
 		/*é preciso que o elemento tenha value e name ou retornará null*/
@@ -2615,9 +2615,7 @@ var wd = (function() {
 					} else {
 						html = null;
 					}
-					if (html === null) {
-						elem.innerHTML = "<center><mark><small>-- Error: Replication structure not found! --</small></mark></center>";
-					} else {
+					if (html !== null) {
 						elem.innerHTML = "";
 						html = WD(html).replace("}}=\"\"", "}}");
 						for (var i = 0; i < json.length; i++) {
@@ -2749,7 +2747,7 @@ var wd = (function() {
 		get: function() {
 			var x = [];
 			this.run(function(elem) {
-				var data = wdForm(elem);
+				var data = getFormData(elem);
 				for (var i = 0; i < data.length; i++) {
 					x.push(data[i].name+"="+data[i].value);
 				}
@@ -2770,7 +2768,7 @@ var wd = (function() {
 			var x = new FormData();
 
 			this.run(function(elem) {
-				var data = wdForm(elem);
+				var data = getFormData(elem);
 				for (var i = 0; i < data.length; i++) {
 					x.append(
 						data[i].name,
@@ -2832,14 +2830,14 @@ var wd = (function() {
 /* === JS ATTRIBUTES ======================================================= */
 
 	/*Carrega html externo data-wd-load=post|get{file}${}*/
-	function data_wdLoad(e) {console.log("FIXME");
+	function data_wdLoad(e) {
 		var value, method, file, pack, target;
 		if ("wdLoad" in e.dataset) {
 			value = e.dataset.wdLoad;
 			/*corrigindo modelo de versão anterior para novo modelo*/
 			if (value.search(/\?\$\{/) >= 0) {
 				value = value.replace("?${", "}${").replace("}}", "}");
-			}console.log(value);
+			}
 			value  = getData(value);
 			method = "post" in value ? "post" : "get";
 			file   = value[method];
@@ -2854,86 +2852,36 @@ var wd = (function() {
 					}
 				}
 			}, method);
-
-
-
-
-
-
-
-
-
-
-
-			/*value  = getData(e.dataset.wdLoad);
-			if ("post" in value || "get" in value) {
-				method = "post" in value ? "post" : "get";
-				file   = value[method];
-				ajax   = WD(file);
-				target = WD(e);
-				target.data({wdLoad: null});
-				if (ajax.path === true) {
-					ajax.request(function(x) {
-						if (x.error) {
-							
-						} else {
-							target.load(x.text);
-						}
-						return;
-					})[method]();
-				}
-			}*/
 		}
 		return;
 	};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 	/*Constroe html a partir de um arquivo json data-wd-repeat=post{file}|get{file}*/
 	function data_wdRepeat(e) {
-		var value, method, file, ajax, target;
+		var value, method, file, pack, target;
 		if ("wdRepeat" in e.dataset) {
-			value  = getData(e.dataset.wdRepeat);
-			if ("post" in value || "get" in value) {
-				method = "post" in value ? "post" : "get";
-				file   = value[method];
-				ajax   = WD(file);
-				target = WD(e);
-				target.data({wdRepeat: null});
-				if (ajax.path === true) {
-					ajax.request(function(x) {
-						if (x.error || x.json === null) {
-							log(file+": The request with the JSON file failed.", "e");
-						} else {
-							target.repeat(x.json);
-						}
-						return;
-					})[method]();
-				}
+			value = e.dataset.wdRepeat;
+			/*corrigindo modelo de versão anterior para novo modelo*/
+			if (value.search(/\?\$\{/) >= 0) {
+				value = value.replace("?${", "}${").replace("}}", "}");
 			}
+			value  = getData(value);
+			method = "post" in value ? "post" : "get";
+			file   = value[method];
+			pack   = "$" in value ? $(value["$"]) : null;
+			target = WD(e);
+			target.data({wdRepeat: null});
+			WD(pack).send(file, function(x) {
+				if (x.closed === true) {
+					target.repeat(x.json === null ? [] : x.json);
+					if (x.status !== "DONE") {
+						log(file+": The request with the file failed.", "e");
+					}
+				}
+			}, method);
 		}
 		return;
 	};
-
-
-
 
 	/*Faz requisição a um arquivo externo data-wd-send=post|get{file}${CSS selector}callback{function()}*/
 	function data_wdSend(e) {
@@ -3267,6 +3215,13 @@ var wd = (function() {
 	}});
 
 	/*Definindo eventos*/
+
+/*
+FIXME estudar alterar o evento handler do dom
+quando o elemento body tem os atributos onload ou onresize, os respectivos eventos (abaixo) não funcionam
+trocar por addEventListener e attachEvent, deixando o atributo para o último caso
+*/
+	
 	WD(window).handler({
 		load: [loadingProcedures, hashProcedures],
 		resize: scalingProcedures,

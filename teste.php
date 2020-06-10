@@ -32,7 +32,7 @@ function testeData(x) {
 		
 	</head>
 
-	<body onload="loko();">
+	<body onload="alert('11uy1u1yo1u1y');" onresize="console.log('drogas')"; data-wd-device="desktop{wd-box-red}mobile{wd-box-blue}">
 
 
 	<form id="loko" class="wd-vform" >
@@ -48,11 +48,13 @@ function testeData(x) {
 		<input type="radio" name="vradio" multiple class="wd-input" value="radio2" onchange="loko();"/> com value 2
 		<p id="form" class="wd-text-red wd-input"></p>
 		<input type="button" value="Send()" class="wd-button" data-wd-send="post{teste.php}${*}callback{testeData}"/>
-		<input type="button" value="Request()" class="wd-button" data-wd-request="get{teste.php?${*}}method{testeData}"/>
+		<input type="button" value="Request()" class="wd-button" data-wd-request="get{teste.php?${*}}method{testeData}" onclick="alert(123);"/>
 	</form>
 
 
-	<pre data-wd-load="post{manual/log.json}">
+	<pre data-wd-repeat="post{manual/log.json}">
+		<p>{{target}}</p>
+
 <?php
 echo "\n---\n\nREQUEST:\n\n";
 print_r($_REQUEST);
@@ -65,6 +67,12 @@ print_r($_FILES);
 	</pre>
 
 
+	<div onclickxxx="alert('loko');" id="evento" class="wd-xxxmargin wd-border">
+		<ul>
+			<li><p>Item <span>111111111111111111111</span></p></li>
+			<li>item 2</li>
+		</ul>
+	</div>
 
 
 
