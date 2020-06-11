@@ -32,7 +32,7 @@ function testeData(x) {
 		
 	</head>
 
-	<body onload="alerdst('11uy1u1yo1u1y');" onresize="console.log('drogas');" data-WD-DEVICE="desktop{wd-box-red}mobile{wd-box-blue}">
+	<body data-WD-DEVICE="desktop{wd-box-red}mobile{wd-box-blue}" data-:qo.e_w="will">
 
 
 	<form id="loko" class="wd-vform" >

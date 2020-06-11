@@ -838,13 +838,17 @@ var wd = (function() {
 		enumerable: true,
 		value: function() {
 			var x;
-			x = WD(this.clear());
-			x.lower(true);
-			x.replace("-", " ", true);
-			x.trim(true);
-			x = x.title().split(" ");
-			x[0] = x[0].toLowerCase();
-			x = x.join("");
+			x = this.clear();
+			if ((/^[a-z0-9\.\_\:][a-zA-Z0-9\.\_\:]+$/).test(x)) {
+				/*fazer nada*/
+			} else if ((/^[a-z0-9\_\.\:]+((\-[a-z0-9\_\.\:]+)+)?$/g).test(x) === true) {
+				x    = x.toLowerCase().replace(/\-/g, " ");
+				x    = WD(x).title().split(" ");
+				x[0] = x[0].toLowerCase();
+				x    = x.join("");
+			} else {
+				x = null;
+			}
 			return x;
 		}
 	});
@@ -853,14 +857,17 @@ var wd = (function() {
 	Object.defineProperty(WDtext.prototype, "dash", {
 		enumerable: true,
 		value: function(char) {
-			char = WD(char).type === "text" ? WD(char).toString()[0] : "-";
 			var x;
-			x = WD(this.clear());
-			x.replace("-", " ", true);
-			x.trim(true);
-			x.replace(" ", "-", true);
-			x = x.toString().replace(/([A-Z])/g, "-$1").toLowerCase();
-			return x.replace(/\-+/g, char);
+			x = this.clear();
+			if ((/^[a-z0-9\_\.\:]+((\-[a-z0-9\_\.\:]+)+)?$/g).test(x) === true) {
+				/*fazer nada*/
+			} else if ((/^[a-z0-9\.\_\:][a-zA-Z0-9\.\_\:]+$/).test(x) === true) {
+				char = WD(char).type === "text" ? WD(char).toString()[0] : "-";
+				x = x.replace(/([A-Z])/g, "-$1").toLowerCase().replace(/\-/g, char);
+			} else {
+				x = null;
+			}
+			return x;
 		}
 	});
 
@@ -2327,31 +2334,33 @@ var wd = (function() {
 		/*attributos do objeto*/
 		this.elem = elem;
 
+		this.setName = function(name) {
+			name = WD(name).toString().replace(/^data\-/i, "");
+			name = WD(name).camel();
+			return name;
+		}
+
 		/* métodos do objeto*/
 		this.dataset = function() {
-			var dataset, name, value;
+			var data, name, value;
 			if ("dataset" in this.elem) {
-				dataset = this.elem.dataset;
+				data = this.elem.dataset;
 			} else {
-				dataset = {};
+				data = {};
 				for (var i = 0; i < this.elem.attributes.length; i++) {
 					name  = this.elem.attributes[i].name;
 					value = this.elem.attributes[i].value;
 					if ((/^data\-/i).test(name) === true) {
-						name = WD(name.replace(/^data\-/i, "")).camel();
-						dataset[name] = value;
+						name = name.replace(/^data\-/i, "").toLowerCase();
+						name = WD(name).camel();
+						data[name] = value;
 					}
 				}
 			}
-			return dataset;
+			return data;
 		}
 
-		this.setName = function(name) {
-			name = WD(name).toString().replace(/^data\-/i, "");
-			return WD(name).camel();
-		}
-
-		this.in = function(name) {
+		this.has = function(name) {
 			name = this.setName(name);
 			return name in this.dataset();
 		}
@@ -2366,7 +2375,10 @@ var wd = (function() {
 		
 		this.set = function(name, value) {
 			name = this.setName(name);
-			if ("dataset" in elem) {
+			value = WD(value).type === "regexp" ? WD(value).toString() : value;
+			if (name === null) {
+				return false;
+			} else if ("dataset" in elem) {
 				this.elem.dataset[name] = value;
 				return true;
 			} else {
@@ -2374,12 +2386,14 @@ var wd = (function() {
 				this.elem.setAttribute(name, value);
 				return true;
 			}
-			return null;
+			return false;
 		}
 
 		this.del = function(name) {
 			name = this.setName(name);
-			if ("dataset" in elem) {
+			if (name === null) {
+				return false;
+			} else if ("dataset" in elem) {
 				this.elem.dataset[name] = null;
 				delete elem.dataset[name];
 				return true;
@@ -2475,8 +2489,8 @@ var wd = (function() {
 							key = data.setName(i);
 							if (input[i] === null) {
 								data.del(key);
-							} else {
-								data.set(key, WD(input[i]).type === "regexp" ? WD(input[i]).toString() : input[i]);
+							} else {console.log(key);
+								data.set(key, input[i]);
 								settingProcedures(elem, key);
 							}
 						}
@@ -2729,12 +2743,15 @@ var wd = (function() {
 		value: function (json) {
 			if (WD(json).type === "array") {
 				this.run(function(elem) {
-					var inner, re, html;
+					var inner, re, html, data;
 					html = elem.innerHTML;
+					data = new DataAttr(elem);
 					if (html.search(/\{\{.+\}\}/gi) >= 0) {
-						elem.dataset.wdRepeatModel = html;
+						data.set("wdRepeatModel", html);
+						//elem.dataset.wdRepeatModel = html;
 					} else if ("wdRepeatModel" in elem.dataset) {
-						html = elem.dataset.wdRepeatModel;
+						html = data.get("wdRepeatModel");
+						//html = elem.dataset.wdRepeatModel;
 					} else {
 						html = null;
 					}
@@ -2954,9 +2971,13 @@ var wd = (function() {
 
 	/*Carrega html externo data-wd-load=post|get{file}${}*/
 	function data_wdLoad(e) {
-		var value, method, file, pack, target;
-		if ("wdLoad" in e.dataset) {
-			value = e.dataset.wdLoad;
+		var value, method, file, pack, target, data;
+		data = new DataAttr(e);
+		if (data.has("wdLoad") === true) {
+//		if ("wdLoad" in e.dataset) {
+			value = data.get("wdLoad");
+//			value = e.dataset.wdLoad;
+			
 			/*corrigindo modelo de versão anterior para novo modelo*/
 			if (value.search(/\?\$\{/) >= 0) {
 				value = value.replace("?${", "}${").replace("}}", "}");
@@ -2981,9 +3002,13 @@ var wd = (function() {
 
 	/*Constroe html a partir de um arquivo json data-wd-repeat=post{file}|get{file}*/
 	function data_wdRepeat(e) {
-		var value, method, file, pack, target;
-		if ("wdRepeat" in e.dataset) {
-			value = e.dataset.wdRepeat;
+		var value, method, file, pack, target, data;
+		data = new DataAttr(e);
+		if (data.has("wdRepeat") === true) {
+		//if ("wdRepeat" in e.dataset) {
+			value = data.get("wdRepeat");
+			//value = e.dataset.wdRepeat;
+			
 			/*corrigindo modelo de versão anterior para novo modelo*/
 			if (value.search(/\?\$\{/) >= 0) {
 				value = value.replace("?${", "}${").replace("}}", "}");
@@ -3008,9 +3033,12 @@ var wd = (function() {
 
 	/*Faz requisição a um arquivo externo data-wd-send=post|get{file}${CSS selector}callback{function()}*/
 	function data_wdSend(e) {
-		var value, method, file, pack, callback;
-		if ("wdSend" in e.dataset) {
-			value    = getData(e.dataset.wdSend);
+		var value, method, file, pack, callback, data;
+		data = new DataAttr(e);
+		if (data.has("wdSend") === true) {
+		//if ("wdSend" in e.dataset) {
+			value    = getData(data.get("wdSend"));
+			//value    = getData(e.dataset.wdSend);
 			method   = "post" in value ? "post" : "get";
 			file     = value[method];
 			pack     = "$" in value ? $(value["$"]) : null;
@@ -3022,9 +3050,12 @@ var wd = (function() {
 
 	/*Faz requisição a um arquivo externo data-wd-request=post|get{file}method{function()}*/
 	function data_wdRequest(e) {
-		var value, method, file, callback;
-		if ("wdRequest" in e.dataset) {
-			value    = getData(e.dataset.wdRequest);
+		var value, method, file, callback, data;
+		data = new DataAttr(e);
+		if (data.has("wdRequest") === true) {
+		//if ("wdRequest" in e.dataset) {
+			value    = getData(data.get("wdRequest"));
+			//value    = getData(e.dataset.wdRequest);
 			method   = "post" in value ? "post" : "get";
 			file     = value[method];
 			callback = window[value["method"]];
@@ -3035,9 +3066,12 @@ var wd = (function() {
 
 	/*Ordena elementos filhos data-wd-sort="number"*/
 	function data_wdSort(e) {
-		var order;
-		if ("wdSort" in e.dataset) {
-			order = WD(e.dataset.wdSort).valueOf();
+		var order, data;
+		data = new DataAttr(e);
+		if (data.has("wdSort") === true) {
+		//if ("wdSort" in e.dataset) {
+			order = WD(data.get("wdSort")).valueOf();
+			//order = WD(e.dataset.wdSort).valueOf();
 			WD(e).sort(order).data({wdSort: null});
 		}
 		return;
@@ -3045,9 +3079,12 @@ var wd = (function() {
 
 	/*Filtra elementos filhos data-wd-filter=show{min}${css}|hide{min}${css}&*/
 	function data_wdFilter(e) {
-		var value, text, data, show, min, target;
-		if ("wdFilter" in e.dataset) {
-			value = e.dataset.wdFilter.split("&");
+		var value, text, data, show, min, target, ndata;
+		ndata = new DataAttr(e);
+		if (ndata.has("wdFilter") === true) {
+		//if ("wdFilter" in e.dataset) {
+			value = ndata.get("wdFilter").split("&");
+			//value = e.dataset.wdFilter.split("&");
 			text  = "value" in e ? e.value : e.textContent;
 			for (var i = 0; i < value.length; i++) {
 				data   = getData(value[i]);
@@ -3075,8 +3112,10 @@ var wd = (function() {
 
 	/*Define máscara do elemento data-wd-mask="StringMask"*/
 	function data_wdMask(e) {
-		var value, re, mask;
-		if ("wdMask" in e.dataset) {
+		var value, re, mask, data;
+		data = new DataAttr(e);
+		if (data.has("wdMask") === true) {
+		//if ("wdMask" in e.dataset) {//fixme parei aqui na transformação do dataset para dataattr
 			value = "value" in e ? e.value : e.textContent;
 			if (e.dataset.wdMask in shortcutMask) {
 				re = shortcutMask[e.dataset.wdMask];
@@ -3200,11 +3239,14 @@ var wd = (function() {
 	var deviceController = null;
 
 	/*Define o estilo do elemento a partir do tamanho da tela data-wd-device=desktop{css}tablet{css}phone{css}mobile{css}*/
-	function data_wdDevice(e) {
-		var device, value, data, desktop, mobile, tablet, phone;
-		if ("wdDevice" in e.dataset) {
+	function data_wdDevice(e) {console.log("CHAMOU wddevice");//FIXME
+		var device, value, data, desktop, mobile, tablet, phone, ndata;
+		ndata = new DataAttr(e);console.log(ndata.dataset());//FIXME
+		if (ndata.has("wdDevice") === true) {console.log("achou wddevice");//FIXME
+		//if ("wdDevice" in e.dataset) {
 			device  = deviceController;
-			value   = e.dataset.wdDevice;
+			value   = ndata.get("wdDevice");console.log(value);//FIXME
+			//value   = e.dataset.wdDevice;
 			data    = getData(value);
 			desktop = "desktop" in data ? data.desktop : "";
 			mobile  = "mobile"  in data ? data.mobile  : "";
@@ -3339,12 +3381,6 @@ var wd = (function() {
 
 	/*Definindo eventos*/
 
-/*
-FIXME estudar alterar o evento handler do dom
-quando o elemento body tem os atributos onload ou onresize, os respectivos eventos (abaixo) não funcionam
-trocar por addEventListener e attachEvent, deixando o atributo para o último caso
-*/
-	
 	WD(window).handler({
 		load: [loadingProcedures, hashProcedures],
 		resize: scalingProcedures,
@@ -3365,5 +3401,4 @@ trocar por addEventListener e attachEvent, deixando o atributo para o último ca
 function wd$(selector, root) {
 	return wd(wd().$(selector, root));
 }
-
-
+/* ========================================================================= */
