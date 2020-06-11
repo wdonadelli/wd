@@ -32,7 +32,7 @@ function testeData(x) {
 		
 	</head>
 
-	<body onload="alert('11uy1u1yo1u1y');" onresize="console.log('drogas')"; data-wd-device="desktop{wd-box-red}mobile{wd-box-blue}">
+	<body onload="alerdst('11uy1u1yo1u1y');" onresize="console.log('drogas');" data-WD-DEVICE="desktop{wd-box-red}mobile{wd-box-blue}">
 
 
 	<form id="loko" class="wd-vform" >
@@ -52,7 +52,7 @@ function testeData(x) {
 	</form>
 
 
-	<pre data-wd-repeat="post{manual/log.json}">
+	<pre data-wd-repeatd="post{manual/log.json}">
 		<p>{{target}}</p>
 
 <?php

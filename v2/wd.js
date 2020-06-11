@@ -10,7 +10,10 @@ inclusão do método Form
 inclusão do método upper e lower em WDtext
 inclusão do método send em WD
 inclusão do atributo data-wd-send
-
+alteração no método handler (não pode mais null e adicinado argumento remove)
+inclusão do método dash e camel em TEXT
+método data agora aceita o "data-" no início
+FIXME nos eventos onclick inserir o crescimento de bolha no caso de elemento inline
 
 <wdonadelli@gmail.com>
 https://github.com/wdonadelli/wd
@@ -812,7 +815,7 @@ var wd = (function() {
 				this._value = value;
 				value = this;
 			}
-			return value;	
+			return value;
 		}
 	});
 
@@ -827,6 +830,37 @@ var wd = (function() {
 				value = this;
 			}
 			return value;	
+		}
+	});
+
+	/*transforma abc-def em abcDef*/
+	Object.defineProperty(WDtext.prototype, "camel", {
+		enumerable: true,
+		value: function() {
+			var x;
+			x = WD(this.clear());
+			x.lower(true);
+			x.replace("-", " ", true);
+			x.trim(true);
+			x = x.title().split(" ");
+			x[0] = x[0].toLowerCase();
+			x = x.join("");
+			return x;
+		}
+	});
+
+	/*transforma abc-def em abcDef*/
+	Object.defineProperty(WDtext.prototype, "dash", {
+		enumerable: true,
+		value: function(char) {
+			char = WD(char).type === "text" ? WD(char).toString()[0] : "-";
+			var x;
+			x = WD(this.clear());
+			x.replace("-", " ", true);
+			x.trim(true);
+			x.replace(" ", "-", true);
+			x = x.toString().replace(/([A-Z])/g, "-$1").toLowerCase();
+			return x.replace(/\-+/g, char);
 		}
 	});
 
@@ -2151,17 +2185,6 @@ var wd = (function() {
 
 /* === DOM ================================================================= */
 
-	/*Transforma atributo com traço para camel case*/
-	function camelCase(input) {
-		var x = WD(input).toString();
-		if ((/\-/).test(x)) {
-			x = WD(x.replace(/\-/g, " ")).title(true).toString().split(" ");
-			x[0] = x[0].toLowerCase();
-			x = x.join("");
-		}
-		return x;
-	};
-
 	/*Define a função para os disparadores*/
 	function getEventMethod(input) {
 		var wdEventHandler = function(ev) {
@@ -2176,6 +2199,60 @@ var wd = (function() {
 		};
 		return wdEventHandler;
 	};
+
+	/*função para definir o método de implementação de eventos*/
+	function setHandler(event, method, elem, remove) {
+
+		/* checando e definindo valores padrão */
+		if (WD(method).type !== "function") {
+			return false;
+		}
+		remove = remove === true ? true : false;
+		event  = event.toLowerCase().replace(/^\-/, "").replace(/^on/, "");
+		var special = [];
+
+		if (remove === true) {
+			if ("removeEventListener" in elem) {
+				elem.removeEventListener(event, method, false);
+			} else if ("detachEvent" in elem) {
+				elem.detachEvent("on"+event, method);
+			} else if (("on"+event) in elem) {
+				/*função especial para navegadores bem antigos*/
+				if (WD(elem["on"+event]).type === "function" && elem["on"+event].name === "wdEventHandler") {
+					special = WD(elem["on"+event]("getMethods")).del(method);
+				}
+				elem["on"+event] = null;
+				for (var i = 0; i < special.length; i++) {
+					setHandler(event, special[i], elem);
+				}
+			} else {
+				return false;
+			}
+		} else {
+			if ("addEventListener" in elem) {
+				elem.addEventListener(event, method, false);
+			} else if ("attachEvent" in elem) {
+				elem.attachEvent("on"+event, method);
+			} else if (("on"+event) in elem) {
+				/*função especial para navegadores bem antigos*/
+				if (WD(elem["on"+event]).type === "function") {
+					special = elem["on"+event].name === "wdEventHandler" ? elem["on"+event]("getMethods") : [elem["on"+event]];
+				}
+				special = WD(special);
+				special.add(method);
+				special = special.unique();
+				elem["on"+event] = getEventMethod(special);
+			} else {
+				return false;
+			}
+		}
+
+		return true;
+	};
+
+
+
+
 
 
 	/*obter os dados de formulários nome|valor (retora um array de objetos)*/
@@ -2239,6 +2316,81 @@ var wd = (function() {
 		}
 
 		return form;
+	};
+
+	/*trabalhar com dataset em crossbrowser*/
+	function DataAttr(elem) {
+		if (!(this instanceof DataAttr)) {
+			return new DataAttr(elem, name);
+		}
+
+		/*attributos do objeto*/
+		this.elem = elem;
+
+		/* métodos do objeto*/
+		this.dataset = function() {
+			var dataset, name, value;
+			if ("dataset" in this.elem) {
+				dataset = this.elem.dataset;
+			} else {
+				dataset = {};
+				for (var i = 0; i < this.elem.attributes.length; i++) {
+					name  = this.elem.attributes[i].name;
+					value = this.elem.attributes[i].value;
+					if ((/^data\-/i).test(name) === true) {
+						name = WD(name.replace(/^data\-/i, "")).camel();
+						dataset[name] = value;
+					}
+				}
+			}
+			return dataset;
+		}
+
+		this.setName = function(name) {
+			name = WD(name).toString().replace(/^data\-/i, "");
+			return WD(name).camel();
+		}
+
+		this.in = function(name) {
+			name = this.setName(name);
+			return name in this.dataset();
+		}
+		
+		this.get = function(name) {
+			name = this.setName(name);
+			if (name in this.dataset()) {
+				return this.dataset()[name];
+			}
+			return null;
+		}
+		
+		this.set = function(name, value) {
+			name = this.setName(name);
+			if ("dataset" in elem) {
+				this.elem.dataset[name] = value;
+				return true;
+			} else {
+				name = "data-"+WD(name).dash();
+				this.elem.setAttribute(name, value);
+				return true;
+			}
+			return null;
+		}
+
+		this.del = function(name) {
+			name = this.setName(name);
+			if ("dataset" in elem) {
+				this.elem.dataset[name] = null;
+				delete elem.dataset[name];
+				return true;
+			} else {
+				name = "data-"+WD(name).dash();
+				this.set(name, null);
+				this.elem.removeAttribute(name);
+				return true
+			}
+			return false;
+		}
 	};
 
 /*...........................................................................*/
@@ -2309,21 +2461,22 @@ var wd = (function() {
 	/*Define o valor dos atributos data*/
 	Object.defineProperty(WDdom.prototype, "data", {
 		enumerable: true,
-		value: function(obj) {
-			if (obj === null || WD(obj).type === "object") {
+		value: function(input) {
+			if (input === null || WD(input).type === "object") {
 				this.run(function(elem) {
-					var key;
-					if (obj === null) {
-						for (key in elem.dataset) {
-							delete elem.dataset[key];
+					var key, data;
+					data = new DataAttr(elem);
+					if (input === null) {
+						for (key in data.dataset()) {
+							data.del(key);
 						}
 					} else {
-						for (var i in obj) {
-							key = camelCase(i);
-							if (obj[i] === null) {
-								delete elem.dataset[key];
+						for (var i in input) {
+							key = data.setName(i);
+							if (input[i] === null) {
+								data.del(key);
 							} else {
-								elem.dataset[key] = WD(obj[i]).type === "regexp" ? WD(obj[i]).toString() : obj[i];
+								data.set(key, WD(input[i]).type === "regexp" ? WD(input[i]).toString() : input[i]);
 								settingProcedures(elem, key);
 							}
 						}
@@ -2351,7 +2504,7 @@ var wd = (function() {
 						}
 					} else {
 						for (var i in styles) {
-							key = camelCase(i);
+							key = WD(i).camel();
 							if (!(key in elem.style)) {
 								log("style: Unknown attribute. ("+i+")", "w");
 							}
@@ -2541,62 +2694,32 @@ var wd = (function() {
 	/*Adiciona ou remove disparadores*/
 	Object.defineProperty(WDdom.prototype, "handler", {
 		enumerable: true,
-		value: function (events) {
-			if (events === null || WD(events).type === "object") {
-				this.run(function(elem) {
-					var action, event, methods, array, wdEventHandler;
-					if (events === null) {
-						for (var i in elem) {
-							if ((/^on/i).test(i) && WD(elem[i]).type === "function") {
-								if (elem[i].name === "wdEventHandler") {
-									elem[i] = null;
-								}
-							}
-						}
-					} else {
-						for (var i in events) {
-							action = (/^\-/).test(i) ? "del" : "add";
-							event  = i.replace(/[^a-zA-Z]/g, "").toLowerCase();
-							event  = (/^on/).test(event) ? event : "on"+event;
-							if (!(event in elem)) {
-								log("handler: Unknown event. ("+event+")", "w");
-							}
-							var array;
-							if (WD(elem[event]).type !== "function") {
-								array = WD([]);
-							} else if (elem[event].name === "wdEventHandler") {
-								array = WD(elem[event]("getMethods"));
-							} else {
-								array = WD([elem[event]]);
-							}
-							methods = WD(events[i]).type === "array" ? events[i] : [events[i]];
-							for (var m = 0; m < methods.length; m++) {
-								if (WD(methods[m]).type !== "function" && methods[m] !== null ) {
-									log("handler: Invalid key value. ("+event+")", "w");
-									continue;
-								}
-								if (methods[m] === null) {
-									array = WD([]);
-								} else if (action === "add") {
-									array.add(methods[m]);
-								} else {
-									array.del(methods[m]);
-								}
-							}
-							array = array.valueOf();
-							if (array.length > 0) {
-								elem[event] = getEventMethod(array);
-							} else {
-								elem[event] = null;
-							}
-						}
-					}
-					return;
-				});
-			} else {
-				log("handler: Invalid argument!", "w");
+		value: function (input, remove) {
+
+			if (WD(input).type !== "object") {
+				return false;
 			}
-			return this;
+
+			var del, event, methods;
+
+			/*looping nos eventos*/
+			for (var i in input) {
+				event   = i;
+				del     = (remove === true || (/^\-/).test(event)) ? true : false;
+				methods = WD(input[i]).type === "array" ? WD(input[i]).unique() : [input[i]];
+
+				/*looping nos métodos*/
+				for (var n = 0; n < methods.length; n++) {
+					/*looping nos elementos*/
+					this.run(function(elem) {
+						if (!setHandler(event, methods[n], elem, del)) {
+							log("handler: Invalid argument ("+event+" "+methods[n].name+")", "w");
+						}
+						return;
+					});
+				}
+			}
+			return true;
 		}
 	});
 
@@ -3242,3 +3365,5 @@ trocar por addEventListener e attachEvent, deixando o atributo para o último ca
 function wd$(selector, root) {
 	return wd(wd().$(selector, root));
 }
+
+
