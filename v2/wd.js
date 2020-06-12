@@ -13,6 +13,8 @@ inclusão do atributo data-wd-send
 alteração no método handler (não pode mais null e adicinado argumento remove)
 inclusão do método dash e camel em TEXT
 método data agora aceita o "data-" no início
+wd-active-click funciona para span também
+atributo file: data-wd-file=size{value}type{}char{}len{}
 FIXME nos eventos onclick inserir o crescimento de bolha no caso de elemento inline
 
 <wdonadelli@gmail.com>
@@ -2974,14 +2976,13 @@ var wd = (function() {
 		var value, method, file, pack, target, data;
 		data = new DataAttr(e);
 		if (data.has("wdLoad") === true) {
-//		if ("wdLoad" in e.dataset) {
 			value = data.get("wdLoad");
-//			value = e.dataset.wdLoad;
-			
+
 			/*corrigindo modelo de versão anterior para novo modelo*/
 			if (value.search(/\?\$\{/) >= 0) {
 				value = value.replace("?${", "}${").replace("}}", "}");
 			}
+
 			value  = getData(value);
 			method = "post" in value ? "post" : "get";
 			file   = value[method];
@@ -3005,14 +3006,13 @@ var wd = (function() {
 		var value, method, file, pack, target, data;
 		data = new DataAttr(e);
 		if (data.has("wdRepeat") === true) {
-		//if ("wdRepeat" in e.dataset) {
 			value = data.get("wdRepeat");
-			//value = e.dataset.wdRepeat;
 			
 			/*corrigindo modelo de versão anterior para novo modelo*/
 			if (value.search(/\?\$\{/) >= 0) {
 				value = value.replace("?${", "}${").replace("}}", "}");
 			}
+
 			value  = getData(value);
 			method = "post" in value ? "post" : "get";
 			file   = value[method];
@@ -3036,9 +3036,7 @@ var wd = (function() {
 		var value, method, file, pack, callback, data;
 		data = new DataAttr(e);
 		if (data.has("wdSend") === true) {
-		//if ("wdSend" in e.dataset) {
 			value    = getData(data.get("wdSend"));
-			//value    = getData(e.dataset.wdSend);
 			method   = "post" in value ? "post" : "get";
 			file     = value[method];
 			pack     = "$" in value ? $(value["$"]) : null;
@@ -3053,9 +3051,7 @@ var wd = (function() {
 		var value, method, file, callback, data;
 		data = new DataAttr(e);
 		if (data.has("wdRequest") === true) {
-		//if ("wdRequest" in e.dataset) {
 			value    = getData(data.get("wdRequest"));
-			//value    = getData(e.dataset.wdRequest);
 			method   = "post" in value ? "post" : "get";
 			file     = value[method];
 			callback = window[value["method"]];
@@ -3069,9 +3065,7 @@ var wd = (function() {
 		var order, data;
 		data = new DataAttr(e);
 		if (data.has("wdSort") === true) {
-		//if ("wdSort" in e.dataset) {
 			order = WD(data.get("wdSort")).valueOf();
-			//order = WD(e.dataset.wdSort).valueOf();
 			WD(e).sort(order).data({wdSort: null});
 		}
 		return;
@@ -3082,9 +3076,7 @@ var wd = (function() {
 		var value, text, data, show, min, target, ndata;
 		ndata = new DataAttr(e);
 		if (ndata.has("wdFilter") === true) {
-		//if ("wdFilter" in e.dataset) {
 			value = ndata.get("wdFilter").split("&");
-			//value = e.dataset.wdFilter.split("&");
 			text  = "value" in e ? e.value : e.textContent;
 			for (var i = 0; i < value.length; i++) {
 				data   = getData(value[i]);
@@ -3115,12 +3107,11 @@ var wd = (function() {
 		var value, re, mask, data;
 		data = new DataAttr(e);
 		if (data.has("wdMask") === true) {
-		//if ("wdMask" in e.dataset) {//fixme parei aqui na transformação do dataset para dataattr
 			value = "value" in e ? e.value : e.textContent;
-			if (e.dataset.wdMask in shortcutMask) {
-				re = shortcutMask[e.dataset.wdMask];
+			if (data.get("wdMask") in shortcutMask) {
+				re = shortcutMask[data.get("wdMask")];
 			} else {
-				re    = new RegExp(e.dataset.wdMask);
+				re = new RegExp(data.get("wdMask"));
 			}
 			mask  = WD(re).mask(value);
 			if (mask === false) {
@@ -3144,9 +3135,10 @@ var wd = (function() {
 
 	/*Define os elementos a serem exibidos data-wd-page=page{p}size{s}*/
 	function data_wdPage(e) {
-		var attr, page, size;
-		if ("wdPage" in e.dataset) {
-			attr = getData(e.dataset.wdPage);
+		var attr, page, size, data;
+		data = new DataAttr(e);
+		if (data.has("wdPage") === true) {
+			attr = getData(data.get("wdPage"));
 			page = attr.page;
 			size = attr.size;
 			WD(e).page(page, size).data({wdPage: null});
@@ -3156,7 +3148,9 @@ var wd = (function() {
 
 	/*Executa o método click() ao elemento após o load data-wd-click=""*/
 	function data_wdClick(e) {
-		if ("wdClick" in e.dataset) {
+		var data;
+		data = new DataAttr(e);
+		if (data.has("wdClick") === true) {
 			if ("click" in e) {
 				e.click();
 			}
@@ -3167,9 +3161,10 @@ var wd = (function() {
 
 	/*Executa uma ação ao alvo após o click data-wd-action=action1{css1}action2{css2}*/
 	function data_wdAction(e) {
-		var value, data, target;
-		if ("wdAction" in e.dataset) {
-			value = e.dataset.wdAction;
+		var value, data, target, ndata;
+		ndata = new DataAttr(e);
+		if (ndata.has("wdAction") === true) {
+			value = ndata.get("wdAction");
 			data  = getData(value);
 			for (var action in data) {
 				target = WD($(data[action]));
@@ -3185,9 +3180,10 @@ var wd = (function() {
 
 	/*Define dataset a partir do click data-wd-data=attr1{value}${css}&*/
 	function data_wdData(e) {
-		var value, data, target;
-		if ("wdData" in e.dataset) {
-			value = e.dataset.wdData.split("&");
+		var value, data, target, ndata;
+		ndata = new DataAttr(e);
+		if (ndata.has("wdData") === true) {
+			value = ndata.get("wdData").split("&");
 			for (var i = 0; i < value.length; i++) {
 				data   = getData(value[i]);
 				target = "$" in data ? WD($(data["$"])) : WD(e);
@@ -3202,9 +3198,9 @@ var wd = (function() {
 
 	/*Define o link ativo do elemento nav sem interface data*/
 	function data_wdActive(e) {
-		if (e.parentElement != null && WD(e.parentElement.tagName).title() === "Nav") {
+		if (e.parentElement !== null && WD(e.parentElement.tagName).title() === "Nav") {
 			WD(e.parentElement.children).class({del: "wd-nav-active"});
-			if (e.tagName.toUpperCase() === "A") {
+			if (["A", "SPAN"].indexOf(e.tagName.toUpperCase()) >= 0) {
 				WD(e).class({add: "wd-nav-active"});
 			}
 		}
@@ -3213,15 +3209,18 @@ var wd = (function() {
 
 	/*Ordena as colunas de uma tabela data-wd-sort-col=""*/
 	function data_wdSortCol(e) {
-		var order, thead, heads, bodies;
-		if ("wdSortCol" in e.dataset && WD(e.parentElement.parentElement.tagName).title() === "Thead") {
-			order  = e.dataset.wdSortCol === "+1" ? -1 : 1;
+		var order, thead, heads, bodies, data;
+		data = new DataAttr(e);
+		if (data.has("wdSortCol") === true && WD(e.parentElement.parentElement.tagName).title() === "Thead") {
+			order  = data.get("wdSortCol") === "+1" ? -1 : 1;
 			thead  = e.parentElement.parentElement;
 			heads  = e.parentElement.children;
 			bodies = thead.parentElement.tBodies;
 			WD(heads).run(function(x) {
-				if ("wdSortCol" in x.dataset) {
-					x.dataset.wdSortCol = "";
+				var ndata;
+				ndata = new DataAttr(x);
+				if (ndata.has("wdSortCol") === true) {
+					ndata.set("wdSortCol", "");
 				}
 			});
 			for (var i = 0; i < heads.length; i++) {
@@ -3239,14 +3238,12 @@ var wd = (function() {
 	var deviceController = null;
 
 	/*Define o estilo do elemento a partir do tamanho da tela data-wd-device=desktop{css}tablet{css}phone{css}mobile{css}*/
-	function data_wdDevice(e) {console.log("CHAMOU wddevice");//FIXME
+	function data_wdDevice(e) {
 		var device, value, data, desktop, mobile, tablet, phone, ndata;
-		ndata = new DataAttr(e);console.log(ndata.dataset());//FIXME
-		if (ndata.has("wdDevice") === true) {console.log("achou wddevice");//FIXME
-		//if ("wdDevice" in e.dataset) {
+		ndata = new DataAttr(e);
+		if (ndata.has("wdDevice") === true) {
 			device  = deviceController;
-			value   = ndata.get("wdDevice");console.log(value);//FIXME
-			//value   = e.dataset.wdDevice;
+			value   = ndata.get("wdDevice");
 			data    = getData(value);
 			desktop = "desktop" in data ? data.desktop : "";
 			mobile  = "mobile"  in data ? data.mobile  : "";
@@ -3267,6 +3264,63 @@ var wd = (function() {
 		return;
 	};
 
+	/*analisa as informações do arquivo data-wd-file=size{value}type{}char{}len{}*/
+	function data_wdFile(e) {
+		var tag, type, files, value, data, info, error;
+		data  = new DataAttr(e);
+		tag   = e.tagName.toLowerCase();
+		type  = e.type.toLowerCase();
+		files = "files" in e ? e.files : [];
+		error = [];
+		if (data.has("wdFile") === true && tag === "input" && type === "file") {
+			value = getData(data.get("wdFile"));
+			for (var i = 0; i < files.length; i++) {
+				/* verificar a quantidade de arquivos */
+				info = WD(value["len"]);
+				if ("len" in value && info.type === "number" && i === 0) {
+					if (files.length > info.round()) {
+						error.push("- Maximum number of files exceeded.");
+					}
+				}
+				/* verificar o tamanho do arquivo */
+				info = WD(value["size"]);
+				if ("size" in value && "size" in files[i] && info.type === "number") {
+					if (files[i].size > info.valueOf()) {
+						error.push("- "+files[i].name+"\n\tlarger file size than allowed.");
+					}
+				}
+				/* verificar o tipo do arquivo */
+				info = WD(value["type"]);
+				if ("type" in value && "type" in files[i] && info.type === "text") {
+					info = WD(info.toString().split(" "));
+					if (info.inside(files[i].type) === false) {
+						error.push("- "+files[i].name+"\n\tfile type not allowed.");
+					}
+				}
+				/* verificar caracteres do arquivo */
+				info = WD(value["char"]);
+				if ("char" in value && "name" in files[i] && info.type === "text") {
+					info = new RegExp("["+info.toString()+"]");
+					if (files[i].name.search(info) >= 0) {
+						error.push("- "+files[i].name+"\n\tcharacters not allowed in the file name: "+value["char"]);
+					}
+				}console.log(error);
+			}
+			/* apagando arquivos e exibindo erro */
+			if (error.length > 0) {
+				e.value = null;
+				if ("setCustomValidity" in e) {
+					e.setCustomValidity(error.join("\n"));
+				}
+			} else {
+				if ("setCustomValidity" in e) {
+					e.setCustomValidity("");
+				}
+			}
+		}
+		return;
+	};
+
 /* === JS ENGINE =========================================================== */
 
 	/*Procedimentos quando se usa as classes wd-bar ao mudar a âncora*/
@@ -3282,8 +3336,8 @@ var wd = (function() {
 		return;
 	};
 
+	/*Procedimentos para carregar objetos externos*/
 	function loadingProcedures() {
-		/*Procedimentos para carregar objetos externos*/
 		var attr = WD($("[data-wd-load], [data-wd-repeat]"));
 		if (deviceController === null) {
 			scalingProcedures();
@@ -3327,8 +3381,8 @@ var wd = (function() {
 		return;
 	};
 
+	/*Procedimento para definir o dispositivo pelo tamanho da tela*/
 	function scalingProcedures(ev) {
-		/*Procedimento para definir o dispositivo pelo tamanho da tela*/
 		var device, width, height;
 		width  = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
 		height = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
@@ -3349,8 +3403,14 @@ var wd = (function() {
 	};
 
 	/*Procedimento a executar após redimensionamento da tela*/
-	function stylingProcedures() {
+	function stylingProcedures(ev) {
 		WD($("[data-wd-device]")).run(data_wdDevice);
+		return;
+	};
+
+	/*Procedimento a executar após alguma mudança*/
+	function changeProcedures(ev) {
+		data_wdFile(ev.target);
 		return;
 	};
 
@@ -3365,30 +3425,31 @@ var wd = (function() {
 			case "wdPage":    data_wdPage(e);      break;
 			case "wdClick":   data_wdClick(e);     break;
 			case "wdDevice":  data_wdDevice(e);    break;
+			case "wdFile":    data_wdFile(e);      break;
 		};
 		return;
 	};
 
 	/*Definindo e incluindo os estilos utilizados pelo javascript na tag head*/
-	var style;
-	style = document.createElement("STYLE");
-	style.textContent  = ".js-wd-no-display {display: none !important;}";
-	style.textContent += ".wd-nav-active {outline: 1px dotted black;}";
-	WD(window).handler({load: function() {
+	function headScriptProcedures(ev) {
+		var style;
+		style = document.createElement("STYLE");
+		style.textContent  = ".js-wd-no-display {display: none !important;}";
+		style.textContent += ".wd-nav-active {outline: 1px dotted black;}";
 		document.head.appendChild(style);
 		return;
-	}});
+	};
 
 	/*Definindo eventos*/
-
 	WD(window).handler({
-		load: [loadingProcedures, hashProcedures],
+		load: [headScriptProcedures, loadingProcedures, hashProcedures],
 		resize: scalingProcedures,
 		hashchange: hashProcedures
 	});
 	WD(document).handler({
-		click: clickProcedures,
-		keyup: keyboardProcedures
+		click:  clickProcedures,
+		keyup:  keyboardProcedures,
+		change: changeProcedures
 	});
 
 /* === END ================================================================= */

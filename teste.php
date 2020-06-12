@@ -32,13 +32,17 @@ function testeData(x) {
 		
 	</head>
 
-	<body data-WD-DEVICE="desktop{wd-box-red}mobile{wd-box-blue}" data-:qo.e_w="will">
+	<body data-WD-DEVICE="desktop{}mobile{wd-box-blue}" data-:qo.e_w="will">
 
 
 	<form id="loko" class="wd-vform" >
 		<input type="text" name="texto" class="wd-input" onkeyup="loko();"/>
 		<input type="file" name="arquivo1" class="wd-input" onchange="loko();"/>
-		<input type="file" name="arquivo2" multiple class="wd-input" onchange="loko();"/>
+		<input type="file" name="arquivo2" multiple class="wd-input" onchange="loko();"
+			
+		data-wd-file="size{1048576}len{3}type{application/pdf text/html}char{()}"
+		
+		/>
 		<input type="checkbox" name="check" multiple class="wd-input" onchange="loko();"/> sem value
 		<input type="checkbox" name="vcheck" multiple class="wd-input" value="mycheck" onchange="loko();"/> com value
 		<input type="radio" name="radio" multiple class="wd-input" onchange="loko();"/> sem value 1
