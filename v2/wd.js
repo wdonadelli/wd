@@ -15,7 +15,21 @@ inclusão do método dash e camel em TEXT
 método data agora aceita o "data-" no início
 wd-active-click funciona para span também
 atributo file: data-wd-file=size{value}type{}char{}len{}
-FIXME nos eventos onclick inserir o crescimento de bolha no caso de elemento inline
+nos eventos onclick inserir o crescimento de bolha no caso de elemento inline
+wdConfig para definir as mensagens
+
+wdConfig {
+	loading 
+	fileSize
+	fileTotal
+	fileChar
+	fileLen
+	fileType
+	errorMask
+	
+
+
+
 
 <wdonadelli@gmail.com>
 https://github.com/wdonadelli/wd
@@ -373,7 +387,7 @@ var wd = (function() {
 	var modalWindow = document.createElement("DIV");
 
 	/* atributos do janela modal */
-	modalWindow.textContent           = "Loading data, please wait!";
+	modalWindow.textContent           = 	"Loading data, please wait!";
 	modalWindow.style.display         = "block";
 	modalWindow.style.width           = "100%";
 	modalWindow.style.height          = "100%";
@@ -1019,6 +1033,55 @@ var wd = (function() {
 		}
 	});
 	
+	/*Exibe uma mensagem temporária na tela*/
+	Object.defineProperty(WDtext.prototype, "message", {
+		enumerable: true,
+		value: function(type) {
+			var msgWindow = document.createElement("DIV");
+			msgWindow.innerHTML = this.toString();
+			if (type === "error") {
+				type = "#DC143C";
+			} else if (type === "info") {
+				type = "#1E90FF";
+			} else if (type === "alert") {
+				type = "#ff8c00";
+			} else if (type === "ok") {
+				type = "#008080";
+			} else {
+				type = "#000000";
+			};
+
+			WD(msgWindow).style({
+				display: "block",
+				width: deviceController === "Desktop" ? "20%" : "auto",
+				padding: "0.5em",
+				position: "fixed",
+				top: "0.5em",
+				right: "0.5em",
+				left: deviceController === "Desktop" ? "auto" : "0.5em",
+				color: type,
+				backgroundColor: "#FFFFFF",
+				border: "1px solid "+type,
+				boxShadow: "0.5em 0.5em 0.5em #cccccc",
+				borderRadius: "0.2em",
+				zIndex: "999999",
+				cursor: "pointer",
+			});
+			msgWindow.onclick     = function() {
+				document.body.removeChild(msgWindow);
+				return;
+			}
+			document.body.appendChild(msgWindow);
+			window.setTimeout(function() {
+				if (msgWindow.parentElement !== null) {
+					document.body.removeChild(msgWindow);
+				}
+				return
+			}, 5000);
+			return;
+		}
+	});
+		
 	/*Retorna o atributo type*/
 	Object.defineProperties(WDtext.prototype, {
 		type: {
@@ -2658,9 +2721,9 @@ var wd = (function() {
 						WD(elem).action("show");
 						break;
 					case "del":
-						if (elem.remove !== undefined) {
+						if ("remove" in elem) {
 							elem.remove();
-							} else {
+						} else {
 							elem.parentElement.removeChild(elem);
 						}
 						break;
@@ -3114,7 +3177,21 @@ var wd = (function() {
 				re = new RegExp(data.get("wdMask"));
 			}
 			mask  = WD(re).mask(value);
-			if (mask === false) {
+			if (mask !== false) {
+				e["value" in e ? "value" : "textContent"] = mask;
+			} else if ("value" in e) {
+				window.setTimeout(function() {
+					if (e.value === "" || e.hasFocus() === true) {//FIXME hasFocus não verificae se o elemento está com o cursor
+						/* não fazer nada */
+					} else if (WD(re).mask(e.value) === false) {
+						WD("Incorrect format: "+re.source).message("alert");
+					}
+					return;
+				}, 2000);
+			}
+			
+			
+			/*if (mask === false) {
 				if ("setCustomValidity" in e) {
 					e.setCustomValidity("Incorrect format: "+re.source);
 				}
@@ -3128,7 +3205,7 @@ var wd = (function() {
 				if ("setCustomValidity" in e) {
 					e.setCustomValidity("");
 				}
-			}
+			}*/
 		}
 		return;
 	};
@@ -3266,7 +3343,7 @@ var wd = (function() {
 
 	/*analisa as informações do arquivo data-wd-file=size{value}type{}char{}len{}*/
 	function data_wdFile(e) {
-		var tag, type, files, value, data, info, error;
+		var tag, type, files, value, data, info, error, name;
 		data  = new DataAttr(e);
 		tag   = e.tagName.toLowerCase();
 		type  = e.type.toLowerCase();
@@ -3275,18 +3352,20 @@ var wd = (function() {
 		if (data.has("wdFile") === true && tag === "input" && type === "file") {
 			value = getData(data.get("wdFile"));
 			for (var i = 0; i < files.length; i++) {
+				name = "name" in files[0] ? "<u>"+files[0].name+"</u><br>" : ""
+
 				/* verificar a quantidade de arquivos */
 				info = WD(value["len"]);
 				if ("len" in value && info.type === "number" && i === 0) {
 					if (files.length > info.round()) {
-						error.push("- Maximum number of files exceeded.");
+						error.push("Maximum number of files exceeded.");
 					}
 				}
 				/* verificar o tamanho do arquivo */
 				info = WD(value["size"]);
 				if ("size" in value && "size" in files[i] && info.type === "number") {
 					if (files[i].size > info.valueOf()) {
-						error.push("- "+files[i].name+"\n\tlarger file size than allowed.");
+						error.push(name+"<i>larger file size than allowed</i>.");
 					}
 				}
 				/* verificar o tipo do arquivo */
@@ -3294,7 +3373,7 @@ var wd = (function() {
 				if ("type" in value && "type" in files[i] && info.type === "text") {
 					info = WD(info.toString().split(" "));
 					if (info.inside(files[i].type) === false) {
-						error.push("- "+files[i].name+"\n\tfile type not allowed.");
+						error.push(name+"<i>file type not allowed</i>.");
 					}
 				}
 				/* verificar caracteres do arquivo */
@@ -3302,20 +3381,14 @@ var wd = (function() {
 				if ("char" in value && "name" in files[i] && info.type === "text") {
 					info = new RegExp("["+info.toString()+"]");
 					if (files[i].name.search(info) >= 0) {
-						error.push("- "+files[i].name+"\n\tcharacters not allowed in the file name: "+value["char"]);
+						error.push(name+"<i>characters not allowed in the file name</i>: "+value["char"]);
 					}
 				}console.log(error);
 			}
 			/* apagando arquivos e exibindo erro */
 			if (error.length > 0) {
 				e.value = null;
-				if ("setCustomValidity" in e) {
-					e.setCustomValidity(error.join("\n"));
-				}
-			} else {
-				if ("setCustomValidity" in e) {
-					e.setCustomValidity("");
-				}
+				WD(error.join("<hr>")).message("error");
 			}
 		}
 		return;
@@ -3365,12 +3438,16 @@ var wd = (function() {
 	/*Procedimento a executar após eventos click*/
 	function clickProcedures(ev) {
 		if (ev.which !== 1) {return;}
-		data_wdAction(ev.target);
-		data_wdData(ev.target);
-		data_wdActive(ev.target);
-		data_wdSortCol(ev.target);
-		data_wdRequest(ev.target);
-		data_wdSend(ev.target);
+		var elem = ev.target
+		while (elem !== null) {
+			data_wdAction(elem);
+			data_wdData(elem);
+			data_wdActive(elem);
+			data_wdSortCol(elem);
+			data_wdRequest(elem);
+			data_wdSend(elem);
+			elem = elem.parentElement;
+		}
 		return;
 	};
 
