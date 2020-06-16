@@ -17,7 +17,7 @@ wd-active-click funciona para span também
 atributo file: data-wd-file=size{value}type{}char{}len{}
 nos eventos onclick inserir o crescimento de bolha no caso de elemento inline
 toggle-show em action
-wdConfig para definir as mensagens
+wdConfig para definir as mensagens em body
 wdConfig {
 	loading 
 	fileSize
@@ -63,16 +63,11 @@ var wd = (function() {
 
 /* === WD ================================================================== */
 
-	/*obter mensagens personalizadas a partir da variável wdConfig*/
-	var wdMessage = {
-		loading:   "Loading data, please wait.",
-		fileSize:  "larger file size than allowed.",
-		fileTotal: "Total file size larger than allowed.",
-		fileChar:  "characters not allowed in the file name",
-		fileLen:   "Maximum number of files exceeded.",
-		fileType:  "file type not allowed."
-	};
-
+	/*guarda as mensagens da biblioteca*/
+	var wdConfig = {};
+	/*Guarda o tamanho da tela*/
+	var deviceController = null;
+	
 	/*Imprime mensagem no console*/
 	function log(msg, type) {
 		var types = {e: "error", w: "warn", i: "info", l: "log"};
@@ -105,36 +100,6 @@ var wd = (function() {
 			x = root.querySelectorAll(selector);
 		} catch(e) {
 			x = null;
-		}
-		return x;
-	};
-
-	/*Obtem o nome e o valor da expressão name{valor}*/
-	function getData(input) {
-		var x, open, name, value;
-		x     = {};
-		open  = 0;
-		name  = "";
-		value = "";
-		input = String(input).trim().split("");
-		for (var i = 0; i < input.length; i++) {
-			if (input[i] === "{" && open === 0) {
-				open++;
-			} else if (input[i] === "}" && open === 1) {
-				open--;
-				x[name.trim()] = value.trim();
-				name  = "";
-				value = "";
-			} else if (open > 0) {
-				if (input[i] === "{") {
-					open++;
-				} else if (input[i] === "}") {
-					open--;
-				}
-				value += input[i];
-			} else {
-				name += input[i];
-			}
 		}
 		return x;
 	};
@@ -397,7 +362,6 @@ var wd = (function() {
 	var modalWindow = document.createElement("DIV");
 
 	/* atributos do janela modal */
-	modalWindow.textContent           = wdMessage.loading;
 	modalWindow.style.display         = "block";
 	modalWindow.style.width           = "100%";
 	modalWindow.style.height          = "100%";
@@ -418,6 +382,8 @@ var wd = (function() {
 
 	/* abrir chamada modal */
 	function modalWindowOpen() {
+		data_wdConfig();
+		modalWindow.textContent = wdConfig.loading;
 		if (modalWindowCount === 0) {/* abrir só se não estiver aberto */
 			document.body.appendChild(modalWindow);
 		}
@@ -498,7 +464,7 @@ var wd = (function() {
 				data.closed   = closed === true ? true : false;
 				data.loaded   = WD(loaded).type === "number" ? loaded : 0;
 				data.size     = WD(size).type   === "number" ? size   : 0;
-				data.progress = data.size > 0 ? data.loaded/data.size : 0;
+				data.progress = data.size > 0 ? data.loaded/data.size : 1;
 				data.time = (new Date()) - time;
 				if (status === "ABORTED") {
 					request.abort();
@@ -567,9 +533,11 @@ var wd = (function() {
 			} else if (request.readyState === 4) {
 				data.closed = true;
 				if (request.status === 200 || request.status === 304) {
-					data.status = "DONE";
-					data.text   = request.responseText;
-					data.xml    = request.responseXML;
+					data.status   = "DONE";
+					data.progress = 1;
+					data.text     = request.responseText;
+					data.xml      = request.responseXML;
+
 					try {
 						data.json = JSON.parse(data.text) || eval("("+data.text+")");
 					} catch(e) {
@@ -1005,13 +973,13 @@ var wd = (function() {
 			pack    = this.toString().replace(/^\'/, "").split("?");
 			path    = pack[0];
 			pack[0] = "";
-			pack = pack.join("?").replace("?", "");
+			pack = pack.join("?").replace("?", "");/*!!!deixar assim para o caso de ter mais de um ?*/
 
 			/* definindo pack (serialized) */
 			if (WD(pack).type !== "text") {
 				pack = null;
 			} else if ((/^\$\{.+\}$/).test(pack)) {
-				pack = $(getData(pack)["$"]);
+				pack = $(new DataAttr().convert(pack)["$"]);
 			}
 
 			/* ajustando o tempo (segundos = *1000) */
@@ -2409,15 +2377,18 @@ var wd = (function() {
 		}
 
 		/*attributos do objeto*/
-		this.elem = elem;
+		this.elem = WD(elem).type !== "dom" ? document.body : elem;
 
+		/* métodos do objeto*/
+
+		/*define o nome do atributo*/
 		this.setName = function(name) {
 			name = WD(name).toString().replace(/^data\-/i, "");
 			name = WD(name).camel();
 			return name;
 		}
 
-		/* métodos do objeto*/
+		/*retorna todos os atributos do tipo data em forma de objeto*/
 		this.dataset = function() {
 			var data, name, value;
 			if ("dataset" in this.elem) {
@@ -2437,11 +2408,13 @@ var wd = (function() {
 			return data;
 		}
 
+		/*verifica se o atributo existe*/
 		this.has = function(name) {
 			name = this.setName(name);
 			return name in this.dataset();
 		}
 
+		/*obtém o valor do atributo*/
 		this.get = function(name) {
 			name = this.setName(name);
 			if (name in this.dataset()) {
@@ -2450,6 +2423,7 @@ var wd = (function() {
 			return null;
 		}
 
+		/*define o valor do atributo*/
 		this.set = function(name, value) {
 			name = this.setName(name);
 			value = WD(value).type === "regexp" ? WD(value).toString() : value;
@@ -2466,6 +2440,7 @@ var wd = (function() {
 			return false;
 		}
 
+		/* remove o atributo*/
 		this.del = function(name) {
 			name = this.setName(name);
 			if (name === null) {
@@ -2482,6 +2457,58 @@ var wd = (function() {
 			}
 			return false;
 		}
+
+		/*obter os atributo pares key1{value1}... em objeto {key1: value1,...}*/
+		this.convert = function(input) {
+			var x, open, name, value;
+			x     = {};
+			open  = 0;
+			name  = "";
+			value = "";
+			input = String(input).trim().split("");
+			for (var i = 0; i < input.length; i++) {
+				if (input[i] === "{" && open === 0) {
+					open++;
+				} else if (input[i] === "}" && open === 1) {
+					open--;
+					x[name.trim()] = value.trim();
+					name  = "";
+					value = "";
+				} else if (open > 0) {
+					if (input[i] === "{") {
+						open++;
+					} else if (input[i] === "}") {
+						open--;
+					}
+					value += input[i];
+				} else {
+					name += input[i];
+				}
+			}
+			return x;
+		};
+
+		/*retorna o objeto de convert a partir do atributo*/
+		this.core = function(attr) {
+			var x = {};
+			if (this.has(attr)) {
+				x = this.convert(this.get(attr));
+			}
+			return x;
+		};
+
+		/*retorna um array de objetos de core quando separados por &*/
+		this.cores = function(attr) {
+			var x, value;
+			x     = [];
+			value = this.get(attr).replace(/\}\&/g, "}--&--").split("--&--");
+			if (this.has(attr)) {
+				for (var i = 0; i < value.length; i++) {
+					x.push(this.convert(value[i]));
+				}
+			}
+			return x;
+		};
 	};
 
 /*...........................................................................*/
@@ -3047,19 +3074,39 @@ var wd = (function() {
 
 /* === JS ATTRIBUTES ======================================================= */
 
+	/*define as mensagens da biblioteca wdConfig*/
+	function data_wdConfig() {
+		var data, value;
+		wdConfig = {
+			loading:   "Loading data, please wait.",
+			fileSize:  "larger file size than allowed.",
+			fileTotal: "Total file size larger than allowed.",
+			fileChar:  "characters not allowed in the file name",
+			fileLen:   "Maximum number of files exceeded.",
+			fileType:  "file type not allowed."
+		};
+		data  = new DataAttr(document.body);
+		value = data.core("wdConfig");
+		for (var i in wdConfig) {
+			if (i in value) {
+				wdConfig[i] = value[i];
+			}
+		}
+		return;
+	};
+
 	/*Carrega html externo data-wd-load=post|get{file}${}*/
 	function data_wdLoad(e) {
 		var value, method, file, pack, target, data;
 		data = new DataAttr(e);
-		if (data.has("wdLoad") === true) {
-			value = data.get("wdLoad");
+		if (data.has("wdLoad")) {
 
 			/*corrigindo modelo de versão anterior para novo modelo*/
-			if (value.search(/\?\$\{/) >= 0) {
-				value = value.replace("?${", "}${").replace("}}", "}");
+			if (data.get("wdLoad").search(/\?\$\{/) >= 0) {
+				data.set("wdLoad", data.get("wdLoad").replace("?${", "}${").replace("}}", "}"));
 			}
 
-			value  = getData(value);
+			value  = data.core("wdLoad");
 			method = "post" in value ? "post" : "get";
 			file   = value[method];
 			pack   = "$" in value ? $(value["$"]) : null;
@@ -3081,15 +3128,14 @@ var wd = (function() {
 	function data_wdRepeat(e) {
 		var value, method, file, pack, target, data;
 		data = new DataAttr(e);
-		if (data.has("wdRepeat") === true) {
-			value = data.get("wdRepeat");
+		if (data.has("wdRepeat")) {
 
 			/*corrigindo modelo de versão anterior para novo modelo*/
-			if (value.search(/\?\$\{/) >= 0) {
-				value = value.replace("?${", "}${").replace("}}", "}");
+			if (data.get("wdRepeat").search(/\?\$\{/) >= 0) {
+				data.set("wdRepeat", data.get("wdRepeat").replace("?${", "}${").replace("}}", "}"));
 			}
 
-			value  = getData(value);
+			value  = data.core("wdRepeat");
 			method = "post" in value ? "post" : "get";
 			file   = value[method];
 			pack   = "$" in value ? $(value["$"]) : null;
@@ -3111,8 +3157,8 @@ var wd = (function() {
 	function data_wdSend(e) {
 		var value, method, file, pack, callback, data;
 		data = new DataAttr(e);
-		if (data.has("wdSend") === true) {
-			value    = getData(data.get("wdSend"));
+		if (data.has("wdSend")) {
+			value    = data.core("wdSend");
 			method   = "post" in value ? "post" : "get";
 			file     = value[method];
 			pack     = "$" in value ? $(value["$"]) : null;
@@ -3126,8 +3172,8 @@ var wd = (function() {
 	function data_wdRequest(e) {
 		var value, method, file, callback, data;
 		data = new DataAttr(e);
-		if (data.has("wdRequest") === true) {
-			value    = getData(data.get("wdRequest"));
+		if (data.has("wdRequest")) {
+			value    = data.core("wdRequest");
 			method   = "post" in value ? "post" : "get";
 			file     = value[method];
 			callback = window[value["method"]];
@@ -3140,25 +3186,25 @@ var wd = (function() {
 	function data_wdSort(e) {
 		var order, data;
 		data = new DataAttr(e);
-		if (data.has("wdSort") === true) {
+		if (data.has("wdSort")) {
 			order = WD(data.get("wdSort")).valueOf();
 			WD(e).sort(order).data({wdSort: null});
 		}
 		return;
 	};
 
-	/*Filtra elementos filhos data-wd-filter=show{min}${css}|hide{min}${css}&*/
+	/*Filtra elementos filhos data-wd-filter=show|hide{min}${css}&...*/
 	function data_wdFilter(e) {
-		var value, text, data, show, min, target, ndata;
-		ndata = new DataAttr(e);
-		if (ndata.has("wdFilter") === true) {
-			value = ndata.get("wdFilter").split("&");
+		var value, text, data, show, min, target;
+
+		data = new DataAttr(e);
+		if (data.has("wdFilter")) {
 			text  = "value" in e ? e.value : e.textContent;
+			value = data.cores("wdFilter");
 			for (var i = 0; i < value.length; i++) {
-				data   = getData(value[i]);
-				show   = "hide" in data ? false : true;
-				min    = "hide" in data ? data.hide : data.show;
-				target = "$" in data ? $(data["$"]) : null;
+				show   = "hide" in value[i] ? false : true;
+				min    = "hide" in value[i] ? value[i].hide : value[i].show;
+				target = "$"    in value[i] ? $(value[i]["$"]) : null;
 				if (WD(target).type === "dom") {
 					WD(target).filter(text, min, show);
 				}
@@ -3167,21 +3213,19 @@ var wd = (function() {
 		return;
 	};
 
-	/* Define atalhos para o atributo data-wd-mask */
-	var shortcutMask = {
-		"DDMMYYYY": /^(0[1-9]|[12][0-9]|3[0-1])\.(0[1-9]|1[0-2])\.([0-9]{4})$/,
-		"MMDDYYYY": /^(0[1-9]|1[0-2])\/(0[1-9]|[12][0-9]|3[0-1])\/([0-9]{4})$/,
-		"YYYYMMDD": /^([0-9]{4})\-(0[1-9]|1[0-2])\-(0[1-9]|[12][0-9]|3[0-1])$/,
-		"HHMMSS": /^([01][0-9]|2[0-4])\:([0-5][0-9])\:([0-5][0-9])$/,
-		"HHMM": /^([01][0-9]|2[0-4])\h([0-5][0-9])$/,
-		"AMPM": /^(0[1-9]|1[0-2])\:([0-5][0-9][apAP])m$/,
-	};
-
 	/*Define máscara do elemento data-wd-mask="StringMask"*/
 	function data_wdMask(e) {
-		var value, re, mask, data;
+		var value, re, mask, data, shortcutMask;
+		shortcutMask = {
+			"DDMMYYYY": /^(0[1-9]|[12][0-9]|3[0-1])\.(0[1-9]|1[0-2])\.([0-9]{4})$/,
+			"MMDDYYYY": /^(0[1-9]|1[0-2])\/(0[1-9]|[12][0-9]|3[0-1])\/([0-9]{4})$/,
+			"YYYYMMDD": /^([0-9]{4})\-(0[1-9]|1[0-2])\-(0[1-9]|[12][0-9]|3[0-1])$/,
+			"HHMMSS": /^([01][0-9]|2[0-4])\:([0-5][0-9])\:([0-5][0-9])$/,
+			"HHMM": /^([01][0-9]|2[0-4])\h([0-5][0-9])$/,
+			"AMPM": /^(0[1-9]|1[0-2])\:([0-5][0-9][apAP])m$/,
+		};
 		data = new DataAttr(e);
-		if (data.has("wdMask") === true) {
+		if (data.has("wdMask")) {
 			value = "value" in e ? e.value : e.textContent;
 			if (data.get("wdMask") in shortcutMask) {
 				re = shortcutMask[data.get("wdMask")];
@@ -3207,8 +3251,8 @@ var wd = (function() {
 	function data_wdPage(e) {
 		var attr, page, size, data;
 		data = new DataAttr(e);
-		if (data.has("wdPage") === true) {
-			attr = getData(data.get("wdPage"));
+		if (data.has("wdPage")) {
+			attr = data.core("wdPage");
 			page = attr.page;
 			size = attr.size;
 			WD(e).page(page, size).data({wdPage: null});
@@ -3220,7 +3264,7 @@ var wd = (function() {
 	function data_wdClick(e) {
 		var data;
 		data = new DataAttr(e);
-		if (data.has("wdClick") === true) {
+		if (data.has("wdClick")) {
 			if ("click" in e) {
 				e.click();
 			}
@@ -3231,13 +3275,13 @@ var wd = (function() {
 
 	/*Executa uma ação ao alvo após o click data-wd-action=action1{css1}action2{css2}*/
 	function data_wdAction(e) {
-		var value, data, target, ndata;
-		ndata = new DataAttr(e);
-		if (ndata.has("wdAction") === true) {
-			value = ndata.get("wdAction");
-			data  = getData(value);
-			for (var action in data) {
-				target = WD($(data[action]));
+		var value, data, target;
+		data = new DataAttr(e);
+		if (data.has("wdAction")) {
+			value = data.core("wdAction");console.log(action);
+			for (var action in value) {
+				target = WD($(value[action]));
+				/* se o alvo não for um dom, será aplicado ao próprio elemento*/
 				if (target.type === "dom") {
 					target.action(action);
 				} else {
@@ -3250,16 +3294,18 @@ var wd = (function() {
 
 	/*Define dataset a partir do click data-wd-data=attr1{value}${css}&*/
 	function data_wdData(e) {
-		var value, data, target, ndata;
-		ndata = new DataAttr(e);
-		if (ndata.has("wdData") === true) {
-			value = ndata.get("wdData").split("&");
+		var value, data, target;
+		data = new DataAttr(e);
+		if (data.has("wdData")) {
+			value = data.cores("wdData");
 			for (var i = 0; i < value.length; i++) {
-				data   = getData(value[i]);
-				target = "$" in data ? WD($(data["$"])) : WD(e);
-				delete data["$"];
+				/* se o alvo não for um dom, será aplicado ao próprio elemento*/
+				target = target = "$" in value[i] ? WD($(value[i]["$"])) : WD(e);
+				delete value[i]["$"]; /*!!! a chave $ não definirá data-$*/
 				if (target.type === "dom") {
-						target.data(data);
+					target.data(value[i]);
+				} else {
+					WD(e).data(value[i]);
 				}
 			}
 		}
@@ -3281,7 +3327,7 @@ var wd = (function() {
 	function data_wdSortCol(e) {
 		var order, thead, heads, bodies, data;
 		data = new DataAttr(e);
-		if (data.has("wdSortCol") === true && WD(e.parentElement.parentElement.tagName).title() === "Thead") {
+		if (data.has("wdSortCol") && WD(e.parentElement.parentElement.tagName).title() === "Thead") {
 			order  = data.get("wdSortCol") === "+1" ? -1 : 1;
 			thead  = e.parentElement.parentElement;
 			heads  = e.parentElement.children;
@@ -3289,7 +3335,7 @@ var wd = (function() {
 			WD(heads).run(function(x) {
 				var ndata;
 				ndata = new DataAttr(x);
-				if (ndata.has("wdSortCol") === true) {
+				if (ndata.has("wdSortCol")) {
 					ndata.set("wdSortCol", "");
 				}
 			});
@@ -3304,22 +3350,17 @@ var wd = (function() {
 		return;
 	};
 
-	/*Guarda o tamanho da tela*/
-	var deviceController = null;
-
 	/*Define o estilo do elemento a partir do tamanho da tela data-wd-device=desktop{css}tablet{css}phone{css}mobile{css}*/
 	function data_wdDevice(e) {
-		var device, value, data, desktop, mobile, tablet, phone, ndata;
-		ndata = new DataAttr(e);
-		if (ndata.has("wdDevice") === true) {
-			device  = deviceController;
-			value   = ndata.get("wdDevice");
-			data    = getData(value);
-			desktop = "desktop" in data ? data.desktop : "";
-			mobile  = "mobile"  in data ? data.mobile  : "";
-			tablet  = "tablet"  in data ? data.tablet  : "";
-			phone   = "phone"   in data ? data.phone   : "";
-			switch(device) {
+		var data, value, desktop, mobile, tablet, phone;
+		data = new DataAttr(e);
+		if (data.has("wdDevice")) {
+			value   = data.core("wdDevice");
+			desktop = "desktop" in value ? value.desktop : "";
+			mobile  = "mobile"  in value ? value.mobile  : "";
+			tablet  = "tablet"  in value ? value.tablet  : "";
+			phone   = "phone"   in value ? value.phone   : "";
+			switch(deviceController) {
 				case "Desktop":
 					WD(e).class({del: phone}).class({del: tablet}).class({del: mobile}).class({add: desktop});
 					break;
@@ -3337,15 +3378,16 @@ var wd = (function() {
 	/*analisa as informações do arquivo data-wd-file=size{value}type{}char{}len{}*/
 	function data_wdFile(e) {
 		var tag, type, files, value, data, info, error, name, total;
+		data_wdConfig();
 		data  = new DataAttr(e);
 		tag   = e.tagName.toLowerCase();
 		type  = e.type.toLowerCase();
 		files = "files" in e ? e.files : [];
 		error = [];
 		total = 0;
-		if (data.has("wdFile") === true && tag === "input" && type === "file") {
+		value = data.core("wdFile");
 
-			value = getData(data.get("wdFile"));
+		if (data.has("wdFile") && tag === "input" && type === "file") {
 
 			for (var i = 0; i < files.length; i++) {
 
@@ -3357,7 +3399,7 @@ var wd = (function() {
 				info = WD(value["size"]);
 				if (info.type === "number" && "size" in files[i]) {
 					if (files[i].size > info.valueOf()) {
-						error.push(name+wdMessage.fileSize);
+						error.push(name+wdConfig.fileSize);
 					}
 				}
 
@@ -3366,7 +3408,7 @@ var wd = (function() {
 				if (info.type === "text" && "type" in files[i]) {
 					info = WD(info.toString().split(" "));
 					if (info.inside(files[i].type) === false) {
-						error.push(name+wdMessage.fileType);
+						error.push(name+wdConfig.fileType);
 					}
 				}
 				/* verificar caracteres do arquivo */
@@ -3374,7 +3416,7 @@ var wd = (function() {
 				if (info.type === "text" && "name" in files[i]) {
 					info = new RegExp("["+info.toString()+"]");
 					if (files[i].name.search(info) >= 0) {
-						error.push(name+wdMessage.fileChar+": "+value["char"]);
+						error.push(name+wdConfig.fileChar+": "+value["char"]);
 					}
 				}
 			}
@@ -3383,7 +3425,7 @@ var wd = (function() {
 			info = WD(value["len"]);
 			if (info.type === "number" && "length" in files) {
 				if (files.length > info.round()) {
-					error.push(wdMessage.fileLen);
+					error.push(wdConfig.fileLen);
 				}
 			}
 
@@ -3391,14 +3433,17 @@ var wd = (function() {
 			info = WD(value["total"]);
 			if (info.type === "number") {
 				if (total > info.round()) {
-					error.push(wdMessage.fileTotal);
+					error.push(wdConfig.fileTotal);
 				}
 			}
 
 			/* apagando arquivos e exibindo erro */
 			if (error.length > 0) {
 				e.value = null;
-				WD(error.join("<hr>")).message("error");
+				WD("<small>"+error.join("<hr>")+"<small>").message("error");
+				WD(e).class({add: "js-wd-mask-error"});
+			} else {
+				WD(e).class({del: "js-wd-mask-error"});
 			}
 		}
 		return;
@@ -3528,23 +3573,9 @@ var wd = (function() {
 		return;
 	};
 
-	/*Definindo mensagens personalizadas*/
-	function messagesProcedures(ev) {
-		if ("wdConfig" in window && WD(window.wdConfig).type === "object") {
-			if ("loading"   in window.wdConfig) {wdMessage.loading   = window.wdConfig.loading;}
-			if ("fileSize"  in window.wdConfig) {wdMessage.fileSize  = window.wdConfig.fileSize;}
-			if ("fileTotal" in window.wdConfig) {wdMessage.fileTotal = window.wdConfig.fileTotal;}
-			if ("fileChar"  in window.wdConfig) {wdMessage.fileChar  = window.wdConfig.fileChar;}
-			if ("fileLen"   in window.wdConfig) {wdMessage.fileLen   = window.wdConfig.fileLen;}
-			if ("fileType"  in window.wdConfig) {wdMessage.fileType  = window.wdConfig.fileType;}
-			if ("errorMask" in window.wdConfig) {wdMessage.errorMask = window.wdConfig.errorMask;}
-		}
-		return;
-	};
-
 	/*Definindo eventos*/
 	WD(window).handler({
-		load: [headScriptProcedures, loadingProcedures, hashProcedures, messagesProcedures],
+		load: [headScriptProcedures, loadingProcedures, hashProcedures, data_wdConfig],
 		resize: scalingProcedures,
 		hashchange: hashProcedures
 	});
