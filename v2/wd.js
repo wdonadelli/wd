@@ -26,7 +26,7 @@ wdConfig {
 	fileLen
 	fileType
 }
-
+array.item mudança no retorno do método, ou retorna o valor ou o undefined
 
 
 
@@ -2046,15 +2046,15 @@ var wd = (function() {
 		},
 		item: {
 			enumerable: true,
-			value: function(i) {
-				var x;
-				i = WD(i);
-				if (i.type !== "number") {
-					x = this.valueOf();
-				} else if (i.valueOf() < 0) {
-					x = this.valueOf()[this.items - i.abs];
-				} else {
-					x = this.valueOf()[i.valueOf()];
+			value: function(index) {
+				var x = undefined;
+				index = WD(index).type === "number" ? WD(index).integer : null;
+				if (index === null) {
+					/* não fazer nada */
+				} else if (index >= 0 && index < this.items) {
+					x = this.valueOf()[index];
+				} else if (index < 0 && -index <= this.items) {
+					x = this.valueOf()[this.items + index];
 				}
 				return x;
 			}
@@ -2064,23 +2064,18 @@ var wd = (function() {
 	/*Informar se o argumento está contido no array*/
 	Object.defineProperty(WDarray.prototype, "inside", {
 		enumerable: true,
-		value: function(item, show) {
-			if (show !== true) {
-				show = false;
-			}
-			var x;
-			x = show === true ? [] : false;
+		value: function(value, indexes) {
+			var x, list;
+			x    = false;
+			list = [];
 			for (var i = 0; i < this.items; i++) {
-				if (this.valueOf()[i] === item) {
-					if (show === true) {
-						x.push(i);
-					} else {
-						x = true;
-						break;
-					}
+				if (this.item(i) === value) {
+					list.push(i);
+					x = true;
+					if (indexes !== true) {break;}
 				}
 			}
-			return x;
+			return indexes === true ? list : x;
 		}
 	});
 
@@ -2217,7 +2212,7 @@ var wd = (function() {
 		}
 	});
 
-	/*Define método toString*/
+	/*Define método toString e valueOf*/
 	Object.defineProperties(WDarray.prototype, {
 		type: {
 			value: "array"
@@ -2231,6 +2226,11 @@ var wd = (function() {
 					x = this._value.toString();
 				}
 				return x;
+			}
+		},
+		valueOf: {
+			value: function() {
+				return this._value;
 			}
 		}
 	});
