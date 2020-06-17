@@ -23,9 +23,9 @@ function run() {
 		input  = value !== "" ? eval("("+value+")") : undefined;
 		object = wd(input);
 		wd$("#input").item(0).innerHTML    = value;
-		wd$("#type").item(0).innerHTML     = "<q>"+object.type+"</q>";
+		wd$("#type").item(0).innerHTML     = object.type;
 		wd$("#tools").item(0).innerHTML    = wd(object.tools).toString();
-		wd$("#toString").item(0).innerHTML = "<q>"+object.toString()+"</q>";
+		wd$("#toString").item(0).innerHTML = object.toString();
 		wd$("#valueOf").item(0).innerHTML  = object.valueOf();
 		object.send("target.php", function(x) {
 			if (x.closed) {
@@ -83,7 +83,7 @@ myObject.send(<q>target.php</q>, <code>function</code>(x) {
 	}
 	<code>return;</code>
 }, <q>GET</q>);
-<samp><var id="send"></var></samp>
+<samp id="send"></samp>
 		</pre>
 
 

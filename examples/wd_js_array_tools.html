@@ -27,28 +27,30 @@ function run() {
 			wd$("*[id]").run(function (x) {x.innerHTML = "";return;});
 		} else {console.log(object);
 			wd$("#input").item(0).innerHTML     = value;
-			wd$("#items").item(0).innerHTML     = object.items;
+			wd$("#items").item(0).innerHTML     = object.items;	
+
+			wd$("#del").item(0).innerHTML       = wd(object.del(25)).toString();
+			wd$("#add").item(0).innerHTML       = wd(object.add("10:23pm", "11h23", 58, "1983-03-15", "23.02.1983")).toString();
+			wd$("#toggle").item(0).innerHTML    = wd(object.toggle(-999, "foot")).toString();
+
 			wd$("#item25").item(0).innerHTML    = object.item(2.5);
 			wd$("#item-2").item(0).innerHTML    = object.item(-2);
 			wd$("#itemAZ").item(0).innerHTML    = object.item("AZ");
-			
-			wd$("#inside25").item(0).innerHTML    = object.inside(25);
-			wd$("#inside1023").item(0).innerHTML  = object.inside("10:23");
-			wd$("#inside-6t").item(0).innerHTML   = wd(object.inside(-6, true)).toString();
-			wd$("#inside25t").item(0).innerHTML   = wd(object.inside(25, true)).toString();
 
+			wd$("#inside25").item(0).innerHTML   = object.inside(25);
+			wd$("#inside25t").item(0).innerHTML  = wd(object.inside(25, true)).toString();
+			wd$("#inside-6").item(0).innerHTML   = object.inside(-6);
+			wd$("#inside-6t").item(0).innerHTML  = wd(object.inside(-6, true)).toString();
+			wd$("#count").item(0).innerHTML      = object.count(-6);
+			wd$("#replace").item(0).innerHTML    = wd(object.replace(-6, -777)).toString();
 
+			wd$("#sort").item(0).innerHTML       = wd(object.sort()).toString();
+			wd$("#sortt").item(0).innerHTML      = wd(object.sort(true)).toString();
+			wd$("#unique").item(0).innerHTML     = wd(object.unique()).toString();
+			wd$("#uniquet").item(0).innerHTML    = wd(object.unique(true)).toString();
 
-
-
-
-
-
-
-
-
-			wd$("#toString").item(0).innerHTML = "<q>"+object.toString()+"</q>";
-			wd$("#valueOf").item(0).innerHTML  = object.valueOf();
+			wd$("#toString").item(0).innerHTML   = object.toString();
+			wd$("#valueOf").item(0).innerHTML    = wd(object.valueOf()).toString();
 			object.send("target.php", function(x) {
 				if (x.closed) {
 					wd$("#send").item(0).innerHTML = "\""+x.text+"\"";
@@ -79,7 +81,9 @@ function run() {
 
 			<div class="wd-vform wd-border wd-padding">
 				<label class="wd-label" for="input">Set the value of the <code>input</code> argument:</label>
-				<input type="text" name="input" class="wd-input" value="[58,-6,5,'foot','10:23pm','10:23','1983-03-15','23.02.1983',-6]"/>
+				<input type="text" name="input" class="wd-input" 
+					value="[25,58,-6,5,25,'foot',25,-6]"
+				/>
 				<input type="button" class="wd-button" value="Run" onclick="run();" />
 			</div>
 
@@ -91,40 +95,59 @@ function run() {
 myObject.items;
 <samp id="items"></samp>
 
-<cite>/* Method item */</cite>
-myObject.item(2.5);
+<cite>/* Methods: del, add and toggle */</cite>
+myObject.del(<var>25</var>);
+<samp id="del"></samp>
+
+myObject.add(<q>10:23pm</q>, <q>11h23</q>, <var>58</var>,  <q>1983-03-15</q>, <q>23.02.1983</q>);
+<samp id="add"></samp>
+
+myObject.toggle(<var>-999</var>, <q>foot</q>);
+<samp id="toggle"></samp>
+
+<cite>/* Method: item */</cite>
+myObject.item(<var>2.5</var>);
 <samp id="item25"></samp>
 
-myObject.item(-2);
+myObject.item(<var>-2</var>);
 <samp id="item-2"></samp>
 
 myObject.item(<q>AZ</q>);
 <samp id="itemAZ"></samp>
 
-<cite>/* Method inside */</cite>
-myObject.inside(25);
+<cite>/* Methods: inside, count and replace*/</cite>
+myObject.inside(<var>25</var>);
 <samp id="inside25"></samp>
 
-myObject.inside(<q>10:23</q>);
-<samp id="inside1023"></samp>
-
-myObject.inside(-6, <var>true</var>);
-<samp id="inside-6t"></samp>
-
-myObject.inside(25, <var>true</var>);
+myObject.inside(<var>25</var>, <var>true</var>);
 <samp id="inside25t"></samp>
 
+myObject.inside(<var>-6</var>);
+<samp id="inside-6"></samp>
 
+myObject.inside(<var>-6</var>, <var>true</var>);
+<samp id="inside-6t"></samp>
 
+myObject.count(<var>-6</var>);
+<samp id="count"></samp>
 
+myObject.replace(<var>-6</var>, <var>-777</var>);
+<samp id="replace"></samp>
 
+<cite>/* Methods: sort and unique*/</cite>
+myObject.sort();
+<samp id="sort"></samp>
 
+myObject.sort(<var>true</var>);
+<samp id="sortt"></samp>
 
+myObject.unique();
+<samp id="unique"></samp>
 
+myObject.unique(<var>true</var>);
+<samp id="uniquet"></samp>
 
-
-
-
+<cite>/* Methods: others*/</cite>
 myObject.toString();
 <samp id="toString"></samp>
 
@@ -137,11 +160,9 @@ myObject.send(<q>target.php</q>, <code>function</code>(x) {
 	}
 	<code>return;</code>
 }, <q>GET</q>);
-<samp><var id="send"></var></samp>
+<samp id="send"></samp>
 		</pre>
 
-
-["add","count","del","inside","item","items","replace","send","sort","toggle","tools","unique"]
 
 
 	</main>
