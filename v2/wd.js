@@ -27,7 +27,7 @@ wdConfig {
 	fileType
 }
 array.item mudança no retorno do método, ou retorna o valor ou o undefined
-
+atalhos para tempo (h m s) e data (y m d)
 
 
 
@@ -1537,8 +1537,26 @@ var wd = (function() {
 			}
 			return;
 		}
-	});	
+	});
 
+	/* atalhos para o tempo */
+	Object.defineProperties(WDtime.prototype, {
+		h: {
+			enumerable: true,
+			get: function () {return this.hour;},
+			set: function (x) {return this.hour = x;}
+		},
+		m: {
+			enumerable: true,
+			get: function () {return this.minute;},
+			set: function (x) {return this.minute = x;}
+		},
+		s: {
+			enumerable: true,
+			get: function () {return this.second;},
+			set: function (x) {return this.second = x;}
+		}
+	});
 
 	/*Retorna a hora no formato ampm*/
 	Object.defineProperty(WDtime.prototype, "h12", {
@@ -1764,6 +1782,55 @@ var wd = (function() {
 		}
 	});
 
+	/*Obtêm e define o dia*/
+	Object.defineProperty(WDdate.prototype, "day", {
+		enumerable: true,
+		get: function() {
+			var d = 1;
+			while (dateToNumber(this.year, this.month, d) !== this.valueOf()) {
+				d++;
+			}
+			return d;
+		},
+		set: function(x) {
+			var d, z;
+			d = WD(x);
+			if (d.type !== "number" || d.number === "infinity") {
+				log("The value must be an integer.", "w");
+			} else {
+				d = d.integer;
+				if (d > this.width) {
+					z = this.valueOf() + d - this.day;
+				} else if (d < 1) {
+					z = this.valueOf() - (this.day - d);
+				} else {
+					z = this.valueOf() + (d - this.day);
+				}
+				this._value = z;
+			}
+			return this.valueOf();
+		}
+	});
+
+	/* atalhos para data */
+	Object.defineProperties(WDdate.prototype, {
+		y: {
+			enumerable: true,
+			get: function () {return this.year;},
+			set: function (x) {return this.year = x;}
+		},
+		m: {
+			enumerable: true,
+			get: function () {return this.month;},
+			set: function (x) {return this.month = x;}
+		},
+		d: {
+			enumerable: true,
+			get: function () {return this.day;},
+			set: function (x) {return this.day = x;}
+		}
+	});
+
 	/*Retorna o mês em formato textual*/
 	Object.defineProperties(WDdate.prototype, {
 		shortMonth: {
@@ -1809,36 +1876,6 @@ var wd = (function() {
 				}
 				return x.toLowerCase();
 			}
-		}
-	});
-
-	/*Obtêm e define o dia*/
-	Object.defineProperty(WDdate.prototype, "day", {
-		enumerable: true,
-		get: function() {
-			var d = 1;
-			while (dateToNumber(this.year, this.month, d) !== this.valueOf()) {
-				d++;
-			}
-			return d;
-		},
-		set: function(x) {
-			var d, z;
-			d = WD(x);
-			if (d.type !== "number" || d.number === "infinity") {
-				log("The value must be an integer.", "w");
-			} else {
-				d = d.integer;
-				if (d > this.width) {
-					z = this.valueOf() + d - this.day;
-				} else if (d < 1) {
-					z = this.valueOf() - (this.day - d);
-				} else {
-					z = this.valueOf() + (d - this.day);
-				}
-				this._value = z;
-			}
-			return this.valueOf();
 		}
 	});
 
