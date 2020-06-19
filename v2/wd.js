@@ -830,7 +830,7 @@ var wd = (function() {
 	/*transforma abc-def em abcDef*/
 	Object.defineProperty(WDtext.prototype, "camel", {
 		enumerable: true,
-		value: function() {
+		get: function() {
 			var x;
 			x = this.clear();
 			if ((/^[a-z0-9\.\_\:][a-zA-Z0-9\.\_\:]+$/).test(x)) {
@@ -850,7 +850,7 @@ var wd = (function() {
 	/*transforma abc-def em abcDef*/
 	Object.defineProperty(WDtext.prototype, "dash", {
 		enumerable: true,
-		value: function(char) {
+		get: function(char) {
 			var x;
 			x = this.clear();
 			if ((/^[a-z0-9\_\.\:]+((\-[a-z0-9\_\.\:]+)+)?$/g).test(x) === true) {
@@ -1065,6 +1065,7 @@ var wd = (function() {
 	/*Retorna o atributo type*/
 	Object.defineProperties(WDtext.prototype, {
 		type: {
+			enumerable: true,
 			value: "text"
 		}
 	});
@@ -1143,6 +1144,7 @@ var wd = (function() {
 	/*Retorna o método toString e o atributo type*/
 	Object.defineProperties(WDregexp.prototype, {
 		type: {
+			enumerable: true,
 			value: "regexp"
 		},
 		toString: {
@@ -1396,6 +1398,7 @@ var wd = (function() {
 	/*Retorna o método toString*/
 	Object.defineProperties(WDnumber.prototype, {
 		type: {
+			enumerable: true,
 			value: "number"
 		},
 		toString: {
@@ -1607,6 +1610,7 @@ var wd = (function() {
 	/*Retorna o método toString e valueOf*/
 	Object.defineProperties(WDtime.prototype, {
 		type: {
+			enumerable: true,
 			value: "time"
 		},
 		toString: {
@@ -2018,6 +2022,7 @@ var wd = (function() {
 	/*Retorna o método toString e valueOf*/
 	Object.defineProperties(WDdate.prototype, {
 		type: {
+			enumerable: true,
 			value: "date"
 		},
 		toString: {
@@ -2252,6 +2257,7 @@ var wd = (function() {
 	/*Define método toString e valueOf*/
 	Object.defineProperties(WDarray.prototype, {
 		type: {
+			enumerable: true,
 			value: "array"
 		},
 		toString: {
@@ -2339,11 +2345,6 @@ var wd = (function() {
 		return true;
 	};
 
-
-
-
-
-
 	/*obter os dados de formulários nome|valor (retora um array de objetos)*/
 	function getFormData(elem) {
 		var form, type, name, value;
@@ -2421,7 +2422,7 @@ var wd = (function() {
 		/*define o nome do atributo*/
 		this.setName = function(name) {
 			name = WD(name).toString().replace(/^data\-/i, "");
-			name = WD(name).camel();
+			name = WD(name).camel;
 			return name;
 		}
 
@@ -2437,7 +2438,7 @@ var wd = (function() {
 					value = this.elem.attributes[i].value;
 					if ((/^data\-/i).test(name) === true) {
 						name = name.replace(/^data\-/i, "").toLowerCase();
-						name = WD(name).camel();
+						name = WD(name).camel;
 						data[name] = value;
 					}
 				}
@@ -2470,7 +2471,7 @@ var wd = (function() {
 				this.elem.dataset[name] = value;
 				return true;
 			} else {
-				name = "data-"+WD(name).dash();
+				name = "data-"+WD(name).dash;
 				this.elem.setAttribute(name, value);
 				return true;
 			}
@@ -2487,7 +2488,7 @@ var wd = (function() {
 				delete elem.dataset[name];
 				return true;
 			} else {
-				name = "data-"+WD(name).dash();
+				name = "data-"+WD(name).dash;
 				this.set(name, null);
 				this.elem.removeAttribute(name);
 				return true
@@ -2659,7 +2660,7 @@ var wd = (function() {
 						}
 					} else {
 						for (var i in styles) {
-							key = WD(i).camel();
+							key = WD(i).camel;
 							if (!(key in elem.style)) {
 								log("style: Unknown attribute. ("+i+")", "w");
 							}
@@ -3068,6 +3069,7 @@ var wd = (function() {
 	/*Retorna o método toString, valueOf*/
 	Object.defineProperties(WDdom.prototype, {
 		type: {
+			enumerable: true,
 			value: "dom"
 		},
 		valueOf: {

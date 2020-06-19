@@ -51,12 +51,6 @@ function run() {
 
 			wd$("#toString").item(0).innerHTML   = object.toString();
 			wd$("#valueOf").item(0).innerHTML    = wd(object.valueOf()).toString();
-			object.send("target.php", function(x) {
-				if (x.closed) {
-					wd$("#send").item(0).innerHTML = "\""+x.text+"\"";
-				}
-				return;
-			}, "GET");
 		}
 	} catch(e) {
 		wd(e.message).message("info");
@@ -153,14 +147,6 @@ myObject.toString();
 
 myObject.valueOf();
 <samp id="valueOf"></samp>
-
-myObject.send(<q>target.php</q>, <code>function</code>(x) {
-	if (x.closed) {
-		console.log(x.text);
-	}
-	<code>return;</code>
-}, <q>GET</q>);
-<samp id="send"></samp>
 		</pre>
 
 
