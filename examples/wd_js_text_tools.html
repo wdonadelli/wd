@@ -32,22 +32,24 @@ function run() {
 			wd$("#clear").item(0).innerHTML    = object.clear;
 			wd$("#dash").item(0).innerHTML     = object.dash === null  ? "null" : object.dash;
 			wd$("#lower").item(0).innerHTML    = object.lower;
-			wd$("#path").item(0).innerHTML     = object.path;
 			wd$("#title").item(0).innerHTML    = object.title;
 			wd$("#trim").item(0).innerHTML     = object.trim;
 			wd$("#upper").item(0).innerHTML    = object.upper;
+
+			wd$("#path").item(0).innerHTML     = object.path;
+			object.request(function(x) {console.log(x);
+				if (x.error) {
+					wd$("#request").item(0).innerHTML = "error";
+				} else {
+					wd$("#request").item(0).innerHTML = "\""+x.text+"\"";
+				}
+				return;
+			}).get();
 
 			wd$("#replace").item(0).innerHTML  = object.replace("a", "_A_");
 			wd$("#force").item(0).innerHTML    = object.force("trim", "title");
 			wd$("#toString").item(0).innerHTML = object.toString();
 			wd$("#valueOf").item(0).innerHTML  = object.valueOf();
-
-/*
-			wd$("#format").item(0).innerHTML   = object.format("Hour: %h, Minute: %m, Second: %s");
-			wd$("#hour").item(0).innerHTML     = object.hour -= 3;
-			wd$("#minute").item(0).innerHTML   = object.minute += 61;
-			wd$("#second").item(0).innerHTML   = object.second += 62;
-	*/
 		}
 	} catch(e) {
 		wd(e.message).message("info");
@@ -96,9 +98,6 @@ myObject.dash;
 myObject.lower;
 <samp id="lower"></samp>
 
-myObject.path;
-<samp id="path"></samp>
-
 myObject.title;
 <samp id="title"></samp>
 
@@ -107,6 +106,19 @@ myObject.trim;
 
 myObject.upper;
 <samp id="upper"></samp>
+
+myObject.path;
+<samp id="path"></samp>
+
+myObject.request(<code>function</code>(x) {
+	<code>if</code> (x.error) {
+		console.log(<q>error</q>);
+	} <code>else</code> {
+		console.log(x.text);
+	}
+	<code>return</code>;
+}).get();
+<samp id="request"></samp>
 
 myObject.replace(<q>a</q>, <q>_A_</q>);
 <samp id="replace"></samp>
@@ -120,7 +132,6 @@ myObject.toString();
 myObject.valueOf();
 <samp id="valueOf"></samp>
 		</pre>
-
 
 
 	</main>
