@@ -682,6 +682,9 @@ var wd = (function() {
 						pack = this.form;
 					}
 					break;
+				case "number":
+					pack = "value="+this.valueOf();
+					break;
 				case "null":
 					pack = null;
 					break;

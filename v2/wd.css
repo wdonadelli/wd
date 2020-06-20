@@ -1,5 +1,5 @@
 /*----------------------------------------------------------------------------
-wd.css (v2.0.4)
+wd.css (v2.1.4)
 <wdonadelli@gmail.com>
 https://github.com/wdonadelli/wd
 ------------------------------------------------------------------------------
@@ -863,26 +863,38 @@ a:hover {
 .wd-code var {
 	color: #ff1493 !important;
 	font-size: inherit;
-	font-style: inherit;
-	font-weight: inherit;
+	font-style: normal;
+	font-weight: normal;
 }
 .wd-code cite {
 	color: #4e3cc3 !important;
 	font-size: inherit;
 	font-style: italic !important;
-	font-weight: inherit;
+	font-weight: normal;
 }
 .wd-code code {
 	color: #004d00;
 	font-size: inherit;
-	font-style: inherit;
+	font-style: normal;
 	font-weight: bold;
+}
+.wd-code em {
+	color: inherit;
+	font-size: inherit;
+	font-style: normal;
+	font-weight: normal;
+}
+.wd-code em:before {
+	content: "\003C"
+}
+.wd-code em:after {
+	content: "\003E"
 }
 .wd-code samp {
 	color: #916a08;
 	font-size: inherit;
-	font-style: inherit;
-	font-weight: inherit;
+	font-style: normal;
+	font-weight: normal;
 	padding: 2px 0;
 }
 .wd-code samp:before {

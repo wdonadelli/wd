@@ -29,7 +29,7 @@ function run() {
 		wd$("#valueOf").item(0).innerHTML  = object.valueOf();
 		object.send("target.php", function(x) {
 			if (x.closed) {
-				wd$("#send").item(0).innerHTML = "\""+x.text+"\"";
+				wd("<pre>"+x.text+"</pre>").message("info");
 			}
 			return;
 		}, "GET");
@@ -79,11 +79,10 @@ myObject.valueOf();
 
 myObject.send(<q>target.php</q>, <code>function</code>(x) {
 	<code>if</code> (x.closed) {
-		console.log(x.text);
+		wd(<q><em>pre</em></q>+x.text+<q><em>/pre</em></q>).message(<q>info</q>);
 	}
 	<code>return;</code>
 }, <q>GET</q>);
-<samp id="send"></samp>
 		</pre>
 
 

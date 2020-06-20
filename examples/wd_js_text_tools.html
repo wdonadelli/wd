@@ -39,9 +39,9 @@ function run() {
 			wd$("#path").item(0).innerHTML     = object.path;
 			object.request(function(x) {console.log(x);
 				if (x.error) {
-					wd$("#request").item(0).innerHTML = "error";
+					wd("Request error.").message("error");
 				} else {
-					wd$("#request").item(0).innerHTML = "\""+x.text+"\"";
+					wd("<pre>"+x.text+"</pre>").message("ok");
 				}
 				return;
 			}).get();
@@ -112,13 +112,12 @@ myObject.path;
 
 myObject.request(<code>function</code>(x) {
 	<code>if</code> (x.error) {
-		console.log(<q>error</q>);
+		wd(<q>Request error.</q>).message(<q>error</q>);
 	} <code>else</code> {
-		console.log(x.text);
+		wd(<q><em>pre</em></q>+x.text+<q><em>/pre</em></q>).message(<q>ok</q>);
 	}
 	<code>return</code>;
 }).get();
-<samp id="request"></samp>
 
 myObject.replace(<q>a</q>, <q>_A_</q>);
 <samp id="replace"></samp>
