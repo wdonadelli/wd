@@ -7,11 +7,11 @@ metodo form:
 	melhorias na interpretação de dados
 	quando se tratar de iinput type file, o atributo name conterá no final um _ seguido do sequencial a partir de zero (para múltiplos arquivos)
 inclusão do método Form
-inclusão do método upper e lower em WDtext
+inclusão de dash camel upper lower force em WDtext; clear, title, trim viraram attributos
 inclusão do método send em WD
 inclusão do atributo data-wd-send
 alteração no método handler (não pode mais null e adicinado argumento remove)
-inclusão do método dash e camel em TEXT
+inclusão do método 
 método data agora aceita o "data-" no início
 wd-active-click funciona para span também
 atributo file: data-wd-file=size{value}type{}char{}len{}
@@ -676,7 +676,7 @@ var wd = (function() {
 					pack = this.toString();
 					break;
 				case "dom":
-					if (WD(method).type === "text" && WD(method).upper() === "POST") {
+					if (WD(method).type === "text" && WD(method).upper === "POST") {
 						pack = this.Form;
 					} else {
 						pack = this.form;
@@ -779,21 +779,16 @@ var wd = (function() {
 	/*Deixa o texto só com a primeira letra de cada palavra em maiúsculo*/
 	Object.defineProperty(WDtext.prototype, "title", {
 		enumerable: true,
-		value: function(change) {
+		get: function() {
 			var input, value;
-			input = this.toString().toLowerCase().split("");
+			input = this.lower.split("");
 			value = "";
-
 			for (var i = 0; i < input.length; i++) {
 				if (input[i-1] === " " || i === 0) {
 					value += input[i].toUpperCase();
 				} else {
 					value += input[i];
 				}
-			}
-			if (change === true) {
-				this._value = value;
-				value =  this;
 			}
 			return value;
 		}
@@ -802,28 +797,16 @@ var wd = (function() {
 	/*caixa alta*/
 	Object.defineProperty(WDtext.prototype, "upper", {
 		enumerable: true,
-		value: function(change) {
-			var value;
-			value = this.toString().toUpperCase();
-			if (change === true) {
-				this._value = value;
-				value = this;
-			}
-			return value;
+		get: function() {
+			return this.toString().toUpperCase();
 		}
 	});
 
 	/*caixa baixa*/
 	Object.defineProperty(WDtext.prototype, "lower", {
 		enumerable: true,
-		value: function(change) {
-			var value;
-			value = this.toString().toLowerCase();
-			if (change === true) {
-				this._value = value;
-				value = this;
-			}
-			return value;	
+		get: function() {
+			return this.toString().toLowerCase();
 		}
 	});
 
@@ -832,14 +815,16 @@ var wd = (function() {
 		enumerable: true,
 		get: function() {
 			var x;
-			x = this.clear();
-			if ((/^[a-z0-9\.\_\:][a-zA-Z0-9\.\_\:]+$/).test(x)) {
+			x = this.clear;
+			if ((/^[a-z0-9\.\_\:][a-zA-Z0-9\.\_\:]+$/).test(x)) {/*checa se já está em camel*/
 				/*fazer nada*/
-			} else if ((/^[a-z0-9\_\.\:]+((\-[a-z0-9\_\.\:]+)+)?$/g).test(x) === true) {
+			} else if ((/^[a-z0-9\_\.\:]+((\-[a-z0-9\_\.\:]+)+)?$/g).test(x) === true) {/*checa se é elegível para camel*/
 				x    = x.toLowerCase().replace(/\-/g, " ");
-				x    = WD(x).title().split(" ");
+				x    = WD(x).title.split(" ");
 				x[0] = x[0].toLowerCase();
 				x    = x.join("");
+			} else if (WD(x).dash !== null) {
+				x = WD(WD(x).dash).camel;
 			} else {
 				x = null;
 			}
@@ -850,14 +835,16 @@ var wd = (function() {
 	/*transforma abc-def em abcDef*/
 	Object.defineProperty(WDtext.prototype, "dash", {
 		enumerable: true,
-		get: function(char) {
+		get: function() {
 			var x;
-			x = this.clear();
-			if ((/^[a-z0-9\_\.\:]+((\-[a-z0-9\_\.\:]+)+)?$/g).test(x) === true) {
+			x = this.clear;
+			if ((/^[a-z0-9\_\.\:]+((\-[a-z0-9\_\.\:]+)+)?$/g).test(x) === true) {/*checa se já está em dash*/
 				/*fazer nada*/
-			} else if ((/^[a-z0-9\.\_\:][a-zA-Z0-9\.\_\:]+$/).test(x) === true) {
-				char = WD(char).type === "text" ? WD(char).toString()[0] : "-";
-				x = x.replace(/([A-Z])/g, "-$1").toLowerCase().replace(/\-/g, char);
+			} else if ((/^[a-z0-9\.\_\:][a-zA-Z0-9\.\_\:]+$/).test(x) === true) {/*checa se é elegível para dash*/
+				x = x.replace(/([A-Z])/g, "-$1").toLowerCase();
+			} else if ((/[^a-zA-Z0-9\.\_\:\-\ ]/).test(x) === false) {/*forçando a barra*/
+				x = x.toLowerCase().replace(/\ +/g, " ").trim().replace(/\ /g, "-");
+				x = x.replace(/\-+/g, "-").replace(/^\-+/, "").replace(/\-+$/, "");
 			} else {
 				x = null;
 			}
@@ -868,14 +855,25 @@ var wd = (function() {
 	/*Elimina espaços desnecessários de input*/
 	Object.defineProperty(WDtext.prototype, "trim", {
 		enumerable: true,
-		value: function(change) {
+		get: function() {
 			var value;
 			value = this.toString().trim().replace(/\ +/g, " ");
-			if (change === true) {
-				this._value = value;
-				value = this;
-			}
 			return value;	
+		}
+	});
+
+	/*aplica os atributos ao objeto*/
+	Object.defineProperty(WDtext.prototype, "force", {
+		enumerable: true,
+		value: function() {
+			var attr;
+			attr = ["title", "upper", "lower", "trim", "clear"];
+			for (var i = 0; i < arguments.length; i++) {
+				if (attr.indexOf(arguments[i]) >= 0) {
+					this._value = this[arguments[i]];
+				}
+			}
+			return this.toString();
 		}
 	});
 
@@ -904,7 +902,7 @@ var wd = (function() {
 	/*Elimina os acentos de input*/
 	Object.defineProperty(WDtext.prototype, "clear", {
 		enumerable: true,
-		value: function(change) {
+		get: function() {
 			var value, clear;
 			var clear = {
 				A: /[À-Æ]/g,
@@ -934,10 +932,6 @@ var wd = (function() {
 					value = value.replace(clear[i], i);
 				}
 			}
-			if (change === true) {
-					this._value = value;
-					value =  this;
-				}
 			return value;
 		}
 	});
@@ -2690,19 +2684,19 @@ var wd = (function() {
 					} else {
 						css = WD(css);
 						if (WD(list.add).type === "text") {
-							cls = WD(list.add).trim().split(" ");
+							cls = WD(list.add).trim.split(" ");
 							for (i = 0; i < cls.length; i++) {
 								css.add(cls[i]);
 							}
 						}
 						if (WD(list.del).type === "text") {
-							cls = WD(list.del).trim().split(" ");
+							cls = WD(list.del).trim.split(" ");
 							for (i = 0; i < cls.length; i++) {
 								css.del(cls[i]);
 							}
 						}
 						if (WD(list.toggle).type === "text") {
-							cls = WD(list.toggle).trim().split(" ");
+							cls = WD(list.toggle).trim.split(" ");
 							for (i = 0; i < cls.length; i++) {
 								css.toggle(cls[i]);
 							}
@@ -3353,7 +3347,7 @@ var wd = (function() {
 
 	/*Define o link ativo do elemento nav sem interface data*/
 	function data_wdActive(e) {
-		if (e.parentElement !== null && WD(e.parentElement.tagName).title() === "Nav") {
+		if (e.parentElement !== null && WD(e.parentElement.tagName).title === "Nav") {
 			WD(e.parentElement.children).class({del: "wd-nav-active"});
 			if (["A", "SPAN"].indexOf(e.tagName.toUpperCase()) >= 0) {
 				WD(e).class({add: "wd-nav-active"});
@@ -3366,7 +3360,7 @@ var wd = (function() {
 	function data_wdSortCol(e) {
 		var order, thead, heads, bodies, data;
 		data = new DataAttr(e);
-		if (data.has("wdSortCol") && WD(e.parentElement.parentElement.tagName).title() === "Thead") {
+		if (data.has("wdSortCol") && WD(e.parentElement.parentElement.tagName).title === "Thead") {
 			order  = data.get("wdSortCol") === "+1" ? -1 : 1;
 			thead  = e.parentElement.parentElement;
 			heads  = e.parentElement.children;
