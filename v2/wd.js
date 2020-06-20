@@ -856,9 +856,7 @@ var wd = (function() {
 	Object.defineProperty(WDtext.prototype, "trim", {
 		enumerable: true,
 		get: function() {
-			var value;
-			value = this.toString().trim().replace(/\ +/g, " ");
-			return value;	
+			return this.toString().replace(/\ +/g, " ").trim();
 		}
 	});
 
@@ -882,18 +880,18 @@ var wd = (function() {
 		enumerable: true,
 		value: function(oldValue, newValue, change) {
 			var value;
-			value = this.toString();
+			oldValue = oldValue === null || oldValue === undefined ? "" : oldValue;
 			newValue = newValue === null || newValue === undefined ? "" : new String(newValue).toString();
+			value    = this.toString();
 			if (WD(oldValue).type === "regexp") {
 				oldValue = new RegExp(WD(oldValue).toString(), "g");
-				value = value.replace(oldValue, newValue);
+				value    = value.replace(oldValue, newValue);
 			} else {
-				oldValue = oldValue === null || oldValue === undefined ? "" : oldValue;
+				oldValue = new String(oldValue).toString();
 				value = value.split(oldValue).join(newValue);
 			}
 			if (change === true) {
 				this._value = value;
-				value = this;
 			}
 			return value;
 		}
@@ -905,29 +903,28 @@ var wd = (function() {
 		get: function() {
 			var value, clear;
 			var clear = {
-				A: /[À-Æ]/g,
+				A: /[À-Å]/g,
 				C: /[Ç]/g,
 				E: /[È-Ë]/g,
 				I: /[Ì-Ï]/g,
-				D: /[Ð]/g,
 				N: /[Ñ]/g,
-				O: /[Ò-ÖØ]/g,
+				O: /[Ò-Ö]/g,
 				U: /[Ù-Ü]/g,
-				Y: /[Ý]/g,
-				a: /[à-æ]/g,
+				Y: /[ÝŸ]/g,
+				a: /[à-å]/g,
 				c: /[ç]/g,
 				e: /[è-ë]/g,
 				i: /[ì-ï]/g,
-				d: /[ð]/g,
 				n: /[ñ]/g,
-				o: /[ò-öø]/g,
+				o: /[ò-ö]/g,
 				u: /[ù-ü]/g,
 				y: /[ýÿ]/g
 			};
-			value = this.toString();
-			if ("normalize" in String) {
+			value = new String(this.toString());
+			if ("normalize" in value) {
 				value = value.normalize('NFD').replace(/[\u0300-\u036f]/g, "");
 			} else {
+				value = value.toString();
 				for (var i in clear) {
 					value = value.replace(clear[i], i);
 				}
@@ -2678,7 +2675,7 @@ var wd = (function() {
 				this.run(function(elem) {
 					var css, cls, i;
 					css = WD(elem.className);
-					css = css.type === "null" ? [] : css.trim().split(" ");
+					css = css.type === "null" ? [] : css.trim.split(" ");
 					if (list === null) {
 						css = [];
 					} else {
@@ -3311,7 +3308,7 @@ var wd = (function() {
 		var value, data, target;
 		data = new DataAttr(e);
 		if (data.has("wdAction")) {
-			value = data.core("wdAction");console.log(action);
+			value = data.core("wdAction");
 			for (var action in value) {
 				target = WD($(value[action]));
 				/* se o alvo não for um dom, será aplicado ao próprio elemento*/
