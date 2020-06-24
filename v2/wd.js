@@ -1283,7 +1283,7 @@ var wd = (function() {
 					x = this.valueOf().toExponential();
 				}
 				if (html === true) {
-					x = x.replace(/e(.+)$/, " &times; 10<sup>$1</sup>");
+					x = x.replace(/e(.+)$/, " &times; 10<sup><small>$1</small></sup>");
 				} else {
 					value = x.split("e")[1].split("");
 					for (var i = 0; i < value.length; i++) {

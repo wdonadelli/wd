@@ -22,34 +22,27 @@ function run() {
 		value  = wd$("input[name=input]").item(0).value;
 		input  = value !== "" ? eval("("+value+")") : undefined;
 		object = wd(input);
-		if (object.type !== "text") {
-			wd("The value entered must be a text.").message("alert");
+		if (object.type !== "number") {
+			wd("The value entered must be a number.").message("alert");
 			wd$("*[id]").run(function (x) {x.innerHTML = "";return;});
 		} else {
 			wd$("#input").item(0).innerHTML    = value;
 
-			wd$("#camel").item(0).innerHTML    = object.camel === null ? "null" : object.camel;
-			wd$("#clear").item(0).innerHTML    = object.clear;
-			wd$("#dash").item(0).innerHTML     = object.dash === null  ? "null" : object.dash;
-			wd$("#lower").item(0).innerHTML    = object.lower;
-			wd$("#title").item(0).innerHTML    = object.title;
-			wd$("#trim").item(0).innerHTML     = object.trim;
-			wd$("#upper").item(0).innerHTML    = object.upper;
-
-			wd$("#path").item(0).innerHTML     = object.path;
-			object.request(function(x) {console.log(x);
-				if (x.error) {
-					wd("Request error.").message("error");
-				} else {
-					wd("<pre>"+x.text+"</pre>").message("ok");
-				}
-				return;
-			}).get();
-
-			wd$("#replace").item(0).innerHTML  = object.replace("a", "_A_");
-			wd$("#force").item(0).innerHTML    = object.force("trim", "title");
+			wd$("#abs").item(0).innerHTML      = object.abs;
+			wd$("#decimal").item(0).innerHTML  = object.decimal;
+			wd$("#integer").item(0).innerHTML  = object.integer;
+			wd$("#number").item(0).innerHTML   = object.number;
+			wd$("#coin").item(0).innerHTML     = object.coin("EUR", "it-IT");
+			wd$("#fixed").item(0).innerHTML    = object.fixed(5, 5);
+			wd$("#locale").item(0).innerHTML   = object.locale("he-IL");
+			wd$("#power10").item(0).innerHTML  = object.power10();
+			wd$("#power10t").item(0).innerText = object.power10(2, true);
+			wd$("#power10s").item(0).innerHTML = "/* "+object.power10(2, true)+" */";
+			wd$("#round").item(0).innerText    = object.round();
+			wd$("#round1").item(0).innerText   = object.round(1);
 			wd$("#toString").item(0).innerHTML = object.toString();
 			wd$("#valueOf").item(0).innerHTML  = object.valueOf();
+
 		}
 	} catch(e) {
 		wd(e.message).message("info");
@@ -67,7 +60,7 @@ function run() {
 
 		<header class="wd-head wd-box-blue">
 			<h1>WD Web Libraries Examples</h1>
-			<p><a href="https://github.com/wdonadelli/wd/wiki/WD-JS-Text-Tools" target="_blank" class="wd-text-white">WD JS Text Tools</a></p>
+			<p><a href="https://github.com/wdonadelli/wd/wiki/WD-JS-Number-Tools" target="_blank" class="wd-text-white">WD JS Number Tools</a></p>
 		</header>
 
 		<section class="wd-content">
@@ -75,8 +68,7 @@ function run() {
 			<div class="wd-vform wd-border wd-padding">
 				<label class="wd-label" for="input">Set the value of the <code>input</code> argument:</label>
 				<input type="text" name="input" class="wd-input" autofocus="true"
-					value="'  O Cálculo da área   é a emoção   integral.   '"
-					title="Try to inform 'target.php'"
+					value="-1200.054"
 				/>
 				<input type="button" class="wd-button" value="Run" onclick="run();" />
 			</div>
@@ -86,44 +78,39 @@ function run() {
 		<pre class="wd-code wd-content">
 <code>var</code> myObject = wd(<var id="input"></var>);
 
-myObject.camel;
-<samp id="camel"></samp>
+myObject.abs;
+<samp id="abs"></samp>
 
-myObject.clear;
-<samp id="clear"></samp>
+myObject.decimal;
+<samp id="decimal"></samp>
 
-myObject.dash;
-<samp id="dash"></samp>
+myObject.integer;
+<samp id="integer"></samp>
 
-myObject.lower;
-<samp id="lower"></samp>
+myObject.number;
+<samp id="number"></samp>
 
-myObject.title;
-<samp id="title"></samp>
+myObject.coin(<q>EUR</q>, <q>it-IT</q>);
+<samp id="coin"></samp>
 
-myObject.trim;
-<samp id="trim"></samp>
+myObject.fixed(<var>5</var>, <var>5</var>);
+<samp id="fixed"></samp>
 
-myObject.upper;
-<samp id="upper"></samp>
+myObject.locale(<q>he-IL</q>);
+<samp id="locale"></samp>
 
-myObject.path;
-<samp id="path"></samp>
+myObject.power10();
+<samp id="power10"></samp>
 
-myObject.request(<code>function</code>(x) {
-	<code>if</code> (x.error) {
-		wd(<q>Request error.</q>).message(<q>error</q>);
-	} <code>else</code> {
-		wd(<q><em>pre</em></q>+x.text+<q><em>/pre</em></q>).message(<q>ok</q>);
-	}
-	<code>return</code>;
-}).get();
+myObject.power10(<var>2</var>, <var>true</var>);
+<samp id="power10t"></samp>
+<cite id="power10s"></cite>
 
-myObject.replace(<q>a</q>, <q>_A_</q>);
-<samp id="replace"></samp>
+myObject.round();
+<samp id="round"></samp>
 
-myObject.force(<q>trim</q>, <q>title</q>);
-<samp id="force"></samp>
+myObject.round(<var>1</var>);
+<samp id="round1"></samp>
 
 myObject.toString();
 <samp id="toString"></samp>
@@ -134,9 +121,6 @@ myObject.valueOf();
 
 
 	</main>
-
-
-
 
 </body>
 </html>
