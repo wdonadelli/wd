@@ -1,0 +1,239 @@
+﻿<!DOCTYPE html>
+<html>
+
+	<head>
+		<title>WD Web Libraries Examples</title>
+		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1"/>
+		<meta name="keywords" content="wd, stylesheet, attributes, tools, HTML, CSS, javaScript, library, queryselector, handbook, github, donadelli, wdonadelli">
+		<meta name="author" content="Willian Donadelli"/>
+		<meta name="description" content="WD Web Libraries Examples"/>
+		<meta name="rating" content="general" />
+		<!--<meta http-equiv="pragma" content="no-cache" />-->
+		<meta name="revisit-after" content="2 days" />
+		<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+		<script src="../v2/wd.js"></script>
+		<link  href="../v2/wd.css" rel="stylesheet" />
+
+		<script>
+function viewCode(css) {
+	if (css !== undefined) {
+		var x = wd$(css).item(0).outerHTML.replace(/\t\t\t([^\t])/g, "$1")	;
+		wd$("#winContent").item(0).textContent = x;
+		wd$("#win").action("open");
+	} else {
+		wd$("#win").action("close");
+	}
+	return;
+}
+
+/*============================================================================*/
+
+function section1() {
+	var object = wd$("#Form1 *");
+	wd$("#form").item(0).textContent     = object.form;
+	wd$("#Form").item(0).textContent     = object.Form;
+	wd$("#items").item(0).textContent    = object.items;
+	wd$("#item1").item(0).textContent    = object.item(0).outerHTML;
+	wd$("#item2").item(0).textContent    = object.item(2).outerHTML;
+	wd$("#item3").item(0).textContent    = object.item(-5).outerHTML;
+	wd$("#getStyle1").item(0).textContent = object.getStyle("color")[0];
+	wd$("#getStyle2").item(0).textContent = object.getStyle("font-size")[0];
+	wd$("#toString").item(0).innerHTML   = object.toString();
+	wd$("#valueOf").item(0).innerHTML    = object.valueOf();
+}
+
+/*============================================================================*/
+
+
+
+
+
+
+
+
+
+
+	</script>
+
+	</head>
+
+<body class="wd-text-justify" ">
+
+	<main class="wd-flyer">
+
+		<header class="wd-head wd-box-blue">
+			<h1>WD Web Libraries Examples</h1>
+			<p><a href="https://github.com/wdonadelli/wd/wiki/WD-JS-DOM-Tools" target="_blank" class="wd-text-white">WD JS DOM Tools</a></p>
+		</header>
+
+		<section class="wd-content">
+
+			<h2 class="wd-text-green">Section 1</h2>
+
+			<fieldset class="wd-vform" id="Form1">
+				<legend>Form 1</legend>
+				<label class="wd-label">Text</label>
+				<input type="text" name="Text" class="wd-input"/>
+				<label class="wd-label">
+					<input type="checkbox" name="Check" class="wd-input"/>Check
+				</label>
+				<label class="wd-label">Area</label>
+				<textarea name="Area" class="wd-input"></textarea>
+				<label class="wd-label">Combo</label>
+				<select name="Combo" class="wd-input">
+					<option value="Value 1">Value 1</option>
+					<option value="Value 2">Value 2</option>
+					<option value="Value 3">Value 3</option>
+				</select>
+			</fieldset>
+			<div class="hform wd-margin">
+				<button type="button" class="wd-button" onclick="viewCode('#Form1');">Code</button>
+			</div>
+
+
+			<pre class="wd-content wd-code">
+<code>var</code> myObject = wd$(<q>#Form1 *</q>);
+
+myObject.form;
+<samp id="form"></samp>
+
+myObject.Form;
+<samp id="Form"></samp>
+
+myObject.items;
+<samp id="items"></samp>
+
+myObject.item(0).outerHTML;
+<samp id="item1"></samp>
+
+myObject.item(2).outerHTML;
+<samp id="item2"></samp>
+
+myObject.items(-5).outerHTML;
+<samp id="item3"></samp>
+
+myObject.getStyle(<q>color</q>)[0];
+<samp id="getStyle1"></samp>
+
+myObject.getStyle(<q>font-size</q>)[0];
+<samp id="getStyle2"></samp>
+
+myObject.toString();
+<samp id="toString"></samp>
+
+myObject.valueOf();
+<samp id="valueOf"></samp>
+			</pre>
+			<div class="hform wd-margin">
+				<button type="button" class="wd-button" onclick="section1();">Run</button>
+			</div>
+		</section>
+
+<!--+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-->
+
+
+
+
+
+
+
+		<section class="wd-content">
+
+			<h2 class="wd-text-green">Section 2</h2>
+
+			<fieldset class="wd-vform" id="Form1">
+				<legend>Form 1</legend>
+				<label class="wd-label">Text</label>
+				<input type="text" name="Text" class="wd-input"/>
+				<label class="wd-label">
+					<input type="checkbox" name="Check" class="wd-input"/>Check
+				</label>
+				<label class="wd-label">Area</label>
+				<textarea name="Area" class="wd-input"></textarea>
+				<label class="wd-label">Combo</label>
+				<select name="Combo" class="wd-input">
+					<option value="Value 1">Value 1</option>
+					<option value="Value 2">Value 2</option>
+					<option value="Value 3">Value 3</option>
+				</select>
+			</fieldset>
+			<div class="hform wd-margin">
+				<button type="button" class="wd-button" onclick="viewCode('#Form1');">Code</button>
+			</div>
+
+
+			<pre class="wd-content wd-code">
+<code>var</code> myObject = wd$(<q>#Form1 *</q>);
+
+myObject.form;
+<samp id="form"></samp>
+
+myObject.Form;
+<samp id="Form"></samp>
+
+myObject.items;
+<samp id="items"></samp>
+
+myObject.item(0).outerHTML;
+<samp id="item1"></samp>
+
+myObject.item(2).outerHTML;
+<samp id="item2"></samp>
+
+myObject.items(-5).outerHTML;
+<samp id="item3"></samp>
+
+myObject.getStyle(<q>color</q>)[0];
+<samp id="getStyle1"></samp>
+
+myObject.getStyle(<q>font-size</q>)[0];
+<samp id="getStyle2"></samp>
+
+myObject.toString();
+<samp id="toString"></samp>
+
+myObject.valueOf();
+<samp id="valueOf"></samp>
+			</pre>
+			<div class="hform wd-margin">
+				<button type="button" class="wd-button" onclick="section1();">Run</button>
+			</div>
+		</section>
+
+
+
+
+
+
+
+
+
+
+<!--
+0: "action"
+​1: "class"
+​2: "data"
+​3: "filter"
+​​7: "handler"
+​10: "load"
+​11: "page"
+​12: "repeat"
+​13: "run"
+​15: "sort"
+​16: "style"
+​-->
+	</main>
+
+
+
+<div class="wd-window wd-flyer wd-box-white" id="win" data-wd-action="close{}">
+	<header class="wd-head">
+		<h3>Code</h3>
+	</header>
+	<pre id="winContent" class="wd-code"></pre>
+</div>
+
+
+</body>
+</html>
