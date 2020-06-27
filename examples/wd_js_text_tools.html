@@ -84,7 +84,7 @@ function run() {
 		</section>
 
 		<pre class="wd-code wd-content">
-<code>var</code> myObject = wd(<var id="input"></var>);
+<em>var</em> myObject = wd(<var id="input"></var>);
 
 myObject.camel;
 <samp id="camel"></samp>
@@ -110,13 +110,13 @@ myObject.upper;
 myObject.path;
 <samp id="path"></samp>
 
-myObject.request(<code>function</code>(x) {
-	<code>if</code> (x.error) {
+myObject.request(<em>function</em>(x) {
+	<em>if</em> (x.error) {
 		wd(<q>Request error.</q>).message(<q>error</q>);
-	} <code>else</code> {
+	} <em>else</em> {
 		wd(<q><em>pre</em></q>+x.text+<q><em>/pre</em></q>).message(<q>ok</q>);
 	}
-	<code>return</code>;
+	<em>return</em>;
 }).get();
 
 myObject.replace(<q>a</q>, <q>_A_</q>);

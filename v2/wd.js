@@ -26,9 +26,12 @@ wdConfig {
 	fileLen
 	fileType
 }
-array.item mudança no retorno do método, ou retorna o valor ou o undefined
+array.item e dom.item mudança no retorno do método, ou retorna o valor ou o undefined
 atalhos para tempo (h m s) e data (y m d)
 
+
+CSS
+wd-code inclusão
 
 
 <wdonadelli@gmail.com>
@@ -2084,10 +2087,8 @@ var wd = (function() {
 			enumerable: true,
 			value: function(index) {
 				var x = undefined;
-				index = WD(index).type === "number" ? WD(index).integer : null;
-				if (index === null) {
-					/* não fazer nada */
-				} else if (index >= 0 && index < this.items) {
+				index = WD(index).type === "number" ? WD(index).integer : 0;
+				if (index >= 0 && index < this.items) {
 					x = this.valueOf()[index];
 				} else if (index < 0 && -index <= this.items) {
 					x = this.valueOf()[this.items + index];
@@ -2296,7 +2297,6 @@ var wd = (function() {
 		if (WD(method).type !== "function") {
 			return false;
 		}
-		remove = remove === true ? true : false;
 		event  = event.toLowerCase().replace(/^\-/, "").replace(/^on/, "");
 		var special = [];
 
@@ -2589,7 +2589,7 @@ var wd = (function() {
 		value: function(text) {
 			this.run(function(elem) {
 				var scripts, script;
-				elem.innerHTML = text;
+				elem.innerHTML = text === undefined || text === null ? "" : text;
 				scripts = elem.querySelectorAll("script");
 				for (var i = 0; i < scripts.length; i++) {
 					script = document.createElement("script");
@@ -2718,15 +2718,12 @@ var wd = (function() {
 	Object.defineProperty(WDdom.prototype, "filter", {
 		enumerable: true,
 		value: function (text, min, show) {
-			if (show !== false) {
-				show = true;
-			}
 			if (WD(min).type !== "number" || WD(min).number === "infinity" || min < 0) {
 				min = 0;
 			}
-			if (WD(text) !== "text") {
-				text = String(text).toString();
-			}
+
+			text = text === undefined || text === null ? "" : String(text).toString();
+
 			min  = WD(min).integer;
 			text = text.toUpperCase();
 			this.run(function (elem) {
@@ -2737,7 +2734,7 @@ var wd = (function() {
 						continue;
 					}
 					content = child[i].textContent.toUpperCase();
-					if (show === true) {
+					if (show !== false) {
 						if (text.length < min || content.indexOf(text) >= 0 || text === "") {
 							WD(child[i]).action("show");
 						} else {
@@ -3090,15 +3087,14 @@ var wd = (function() {
 		},
 		item: {
 			enumerable: true,
-			value: function(i) {
+			value: function(index) {
 				var x;
-				i = WD(i);
-				if (i.type !== "number") {
-					x = this.valueOf();
-				} else if (i.valueOf() < 0) {
-					x = this.valueOf()[this.items - i.abs];
-				} else {
-					x = this.valueOf()[i.valueOf()];
+				x = undefined;
+				index = WD(index).type === "number" ? WD(index).integer : 0;
+				if (index >= 0 && index < this.items) {
+					x = this.valueOf()[index];
+				} else if (index < 0 && -index <= this.items) {
+					x = this.valueOf()[this.items + index];
 				}
 				return x;
 			}

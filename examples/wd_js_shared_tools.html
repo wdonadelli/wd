@@ -63,7 +63,7 @@ function run() {
 		</section>
 
 		<pre class="wd-code wd-content">
-<code>var</code> myObject = wd(<var id="input"></var>);
+<em>var</em> myObject = wd(<var id="input"></var>);
 
 myObject.type;
 <samp id="type"></samp>
@@ -77,11 +77,11 @@ myObject.toString();
 myObject.valueOf();
 <samp id="valueOf"></samp>
 
-myObject.send(<q>target.php</q>, <code>function</code>(x) {
-	<code>if</code> (x.closed) {
+myObject.send(<q>target.php</q>, <em>function</em>(x) {
+	<em>if</em> (x.closed) {
 		wd(<q><em>pre</em></q>+x.text+<q><em>/pre</em></q>).message(<q>info</q>);
 	}
-	<code>return;</code>
+	<em>return;</em>
 }, <q>GET</q>);
 		</pre>
 

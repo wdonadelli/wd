@@ -844,6 +844,10 @@ a:hover {
 .wd-icon-cam:before      {margin-right: 0.5em; text-decoration: none !important; content: "\1F4F7";}
 
 /*------------------------------------------------------------------- code --*/
+code {
+	background-color: #E6E6FA !important;
+	color: #0073e6 !important;
+}
 
 .wd-code {
 	background-color: #E6E6FA !important;
@@ -862,41 +866,41 @@ a:hover {
 .wd-code q,
 .wd-code var {
 	color: #ff1493 !important;
-	font-size: inherit;
-	font-style: normal;
-	font-weight: normal;
+	font-size: inherit !important;
+	font-style: normal !important;
+	font-weight: normal !important;
 }
 .wd-code cite {
 	color: #4e3cc3 !important;
-	font-size: inherit;
+	font-size: inherit !important;
 	font-style: italic !important;
-	font-weight: normal;
-}
-.wd-code code {
-	color: #004d00;
-	font-size: inherit;
-	font-style: normal;
-	font-weight: bold;
+	font-weight: normal !important;
 }
 .wd-code em {
-	color: inherit;
-	font-size: inherit;
-	font-style: normal;
-	font-weight: normal;
+	color: #004d00 !important;
+	font-size: inherit !important;
+	font-style: normal !important;
+	font-weight: bold !important;
 }
-.wd-code em:before {
-	content: "\003C"
+.wd-code code {
+	color: inherit  !important;
+	font-size: inherit !important;
+	font-style: normal !important;
+	font-weight: normal !important;
 }
-.wd-code em:after {
-	content: "\003E"
+.wd-code code:before {
+	content: "\003C" !important;
+}
+.wd-code code:after {
+	content: "\003E" !important;
 }
 .wd-code samp {
-	color: #916a08;
-	font-size: inherit;
-	font-style: normal;
-	font-weight: normal;
-	padding: 2px 0;
+	color: #916a08 !important;
+	font-size: inherit !important;
+	font-style: normal !important;
+	font-weight: normal !important;
+	padding: 2px 0 !important;
 }
 .wd-code samp:before {
-	content: "\21B3  ";
+	content: "\21B3  " !important;
 }
