@@ -79,7 +79,7 @@ myObject.valueOf();
 
 myObject.send(<q>target.php</q>, <em>function</em>(x) {
 	<em>if</em> (x.closed) {
-		wd(<q><em>pre</em></q>+x.text+<q><em>/pre</em></q>).message(<q>info</q>);
+		wd(<q><code>pre</code></q>+x.text+<q><code>/pre</code></q>).message(<q>info</q>);
 	}
 	<em>return;</em>
 }, <q>GET</q>);

@@ -16,7 +16,7 @@ método data agora aceita o "data-" no início
 wd-active-click funciona para span também
 atributo file: data-wd-file=size{value}type{}char{}len{}
 nos eventos onclick inserir o crescimento de bolha no caso de elemento inline
-toggle-show em action
+toggle-show, enable, disable, toggle-enable em action
 wdConfig para definir as mensagens em body
 wdConfig {
 	loading 
@@ -374,8 +374,6 @@ var wd = (function() {
 	modalWindow.style.right           = "0";
 	modalWindow.style.bottom          = "0";
 	modalWindow.style.left            = "0";
-	modalWindow.style.color           = "#FFFFFF";
-	modalWindow.style.backgroundColor = "#005544";
 	modalWindow.style.opacity         = "0.9";
 	modalWindow.style.zIndex          = "999999";
 	modalWindow.style.cursor          = "progress";
@@ -386,7 +384,10 @@ var wd = (function() {
 	/* abrir chamada modal */
 	function modalWindowOpen() {
 		data_wdConfig();
-		modalWindow.textContent = wdConfig.loading;
+		modalWindow.textContent           = wdConfig.loading;
+		modalWindow.style.color           = wdConfig.color;
+		modalWindow.style.backgroundColor = wdConfig.bgcolor;
+		
 		if (modalWindowCount === 0) {/* abrir só se não estiver aberto */
 			document.body.appendChild(modalWindow);
 		}
@@ -2808,21 +2809,42 @@ var wd = (function() {
 						if ("checked" in elem) {
 							elem.checked = true;
 						} else {
-							WD(elem).class({add: "wd-cheked"});
+							WD(elem).class({add: "js-wd-checked"});
 						}
 						break;
 					case "uncheck":
 						if ("checked" in elem) {
 							elem.checked = false;
 						} else {
-							WD(elem).class({del: "wd-cheked"});
+							WD(elem).class({del: "js-wd-checked"});
 						}
 						break;
 					case "toggle-check":
 						if ("checked" in elem) {
 							elem.checked = elem.checked !== true ? true : false;
 						} else {
-							WD(elem).class({toggle: "wd-cheked"});
+							WD(elem).class({toggle: "js-wd-checked"});
+						}
+						break;
+					case "enable":
+						if ("disabled" in elem) {
+							elem.disabled = false;
+						} else {
+							WD(elem).class({del: "js-wd-disabled"});
+						}
+						break;
+					case "disable":
+						if ("disabled" in elem) {
+							elem.disabled = true;
+						} else {
+							WD(elem).class({add: "js-wd-disabled"});
+						}
+						break;
+					case "toggle-enable":
+						if ("disabled" in elem) {
+							elem.disabled = elem.disabled !== true ? true : false;
+						} else {
+							WD(elem).class({toggle: "js-wd-disabled"});
 						}
 						break;
 					case "clean":
@@ -3108,6 +3130,8 @@ var wd = (function() {
 		var data, value;
 		wdConfig = {
 			loading:   "Loading data, please wait.",
+			bgcolor:   "#005544",
+			color:     "#FFFFFF",
 			fileSize:  "larger file size than allowed.",
 			fileTotal: "Total file size larger than allowed.",
 			fileChar:  "characters not allowed in the file name",
@@ -3404,7 +3428,7 @@ var wd = (function() {
 		return;
 	};
 
-	/*analisa as informações do arquivo data-wd-file=size{value}type{}char{}len{}*/
+	/*analisa as informações do arquivo data-wd-file=size{value}type{}char{}len{}total{}*/
 	function data_wdFile(e) {
 		var tag, type, files, value, data, info, error, name, total;
 		data_wdConfig();
@@ -3595,9 +3619,11 @@ var wd = (function() {
 	function headScriptProcedures(ev) {
 		var style;
 		style = document.createElement("STYLE");
-		style.textContent  = ".js-wd-no-display {display: none !important;}";
-		style.textContent += ".wd-nav-active    {outline: 1px dotted #000000;}";
-		style.textContent += ".js-wd-mask-error {color: #663399 !important; background-color: #e8e0f0 !important;}";
+		style.textContent  = ".js-wd-no-display     {display: none !important;}";
+		style.textContent += ".wd-nav-active        {outline: 1px dotted #000000;}";
+		style.textContent += ".js-wd-mask-error     {color: #663399 !important; background-color: #e8e0f0 !important;}";
+		style.textContent += ".js-wd-checked:before {content: \"\\2713 \"}";
+		style.textContent += ".js-wd-disabled       {pointer-events: none; background-color: #ccc; cursor: default !important;}";
 		document.head.appendChild(style);
 		return;
 	};
