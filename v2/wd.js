@@ -32,7 +32,7 @@ atalhos para tempo (h m s) e data (y m d)
 
 CSS
 wd-code inclusão
-
+.wd-nodisplay
 
 <wdonadelli@gmail.com>
 https://github.com/wdonadelli/wd
@@ -1030,7 +1030,9 @@ var wd = (function() {
 
 				WD(msgWindow).style({
 					display: "block",
-					width: deviceController === "Desktop" ? "20%" : "auto",
+					minWidth: deviceController === "Desktop" ? "25%" : "auto",
+					maxWidth: deviceController === "Desktop" ? "33%" : "auto",
+					wordWrap: "break-word",
 					padding: "0.5em",
 					position: "fixed",
 					top: "0.5em",
@@ -3623,7 +3625,7 @@ var wd = (function() {
 		style.textContent += ".wd-nav-active        {outline: 1px dotted #000000;}";
 		style.textContent += ".js-wd-mask-error     {color: #663399 !important; background-color: #e8e0f0 !important;}";
 		style.textContent += ".js-wd-checked:before {content: \"\\2713 \"}";
-		style.textContent += ".js-wd-disabled       {pointer-events: none; background-color: #ccc; cursor: default !important;}";
+		style.textContent += ".js-wd-disabled       {pointer-events: none; color: #ccc; opacity: 0.8; cursor: default !important;}";
 		document.head.appendChild(style);
 		return;
 	};
