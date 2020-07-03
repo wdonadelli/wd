@@ -66,11 +66,18 @@ var wd = (function() {
 
 /* === WD ================================================================== */
 
+	/*Variáveis globais*/
+
 	/*guarda as mensagens da biblioteca*/
-	var wdConfig = {};
-	/*Guarda o tamanho da tela*/
-	var deviceController = null;
-	
+	var wdConfig;
+	/*guarda o tamanho da tela*/
+	var deviceController;
+	/*guarda propriedade da janela modal*/
+	var modalWindow, modalWindowCount;
+	/*guarda as propriedades da data*/
+	var Y_min, Y_max, Y_004, Y_100, Y_400, WEEK_1st, DATE_min, DATE_max;
+
+
 	/*Imprime mensagem no console*/
 	function log(msg, type) {
 		var types = {e: "error", w: "warn", i: "info", l: "log"};
@@ -362,7 +369,7 @@ var wd = (function() {
 /*...........................................................................*/
 
 	/* Controlador da janela modal */
-	var modalWindow = document.createElement("DIV");
+	modalWindow = document.createElement("DIV");
 
 	/* atributos do janela modal */
 	modalWindow.style.display         = "block";
@@ -379,7 +386,7 @@ var wd = (function() {
 	modalWindow.style.cursor          = "progress";
 
 	/* contador da janela modal */
-	var modalWindowCount = 0;
+	modalWindowCount = 0;
 
 	/* abrir chamada modal */
 	function modalWindowOpen() {
@@ -1643,14 +1650,14 @@ var wd = (function() {
 /* === DATE ================================================================ */
 
 	/*Parâmetros de configuração de data*/
-	var Y_min    = 1;    /*ano inicial*/
-	var Y_max    = 9999; /*ano final*/
-	var Y_004    = 4;    /*primeiro ano divisível por 4*/
-	var Y_100    = 100   /*primeiro ano divisível por 100*/
-	var Y_400    = 400   /*primeiro ano divisível por 400*/
-	var WEEK_1st = 1;    /*dia da semana + 1 de DATE_min*/
-	var DATE_min = dateToNumber(Y_min, 1, 1);   /*data mínima*/
-	var DATE_max = dateToNumber(Y_max, 12, 31); /*data máxima*/
+	Y_min    = 1;    /*ano inicial*/
+	Y_max    = 9999; /*ano final*/
+	Y_004    = 4;    /*primeiro ano divisível por 4*/
+	Y_100    = 100   /*primeiro ano divisível por 100*/
+	Y_400    = 400   /*primeiro ano divisível por 400*/
+	WEEK_1st = 1;    /*dia da semana + 1 de DATE_min*/
+	DATE_min = dateToNumber(Y_min, 1, 1);   /*data mínima*/
+	DATE_max = dateToNumber(Y_max, 12, 31); /*data máxima*/
 
 	/*Retorna o dia do ano*/
 	function dateDayYear(y, m, d) {
@@ -3522,7 +3529,7 @@ var wd = (function() {
 	/*Procedimentos para carregar objetos externos*/
 	function loadingProcedures() {
 		var attr = WD($("[data-wd-load], [data-wd-repeat]"));
-		if (deviceController === null) {
+		if (deviceController === null || deviceController === undefined) {
 			scalingProcedures();
 		}
 		if (attr.type !== "dom" || attr.items === 0) {
