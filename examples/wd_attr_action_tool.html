@@ -42,10 +42,9 @@
 					<span data-wd-action="disable{#myForm input}">Disable</span>
 					<span data-wd-action="toggle-enable{#myForm input}">Toggle</span>
 				</nav>
-				<nav class="wd-nav wd-text-red">
-					<span data-wd-action="toggle-enable{#myForm input}toggle-check{#myForm input}">Toggle All</span>
-					<span data-wd-action="toggle-check{#myForm p}">Un/Check p</span>
-					<span data-wd-action="toggle-enable{#myForm p}">En/Disable p</span>
+				<nav class="wd-nav">
+					<span data-wd-action="enable{#myForm input}check{#myForm input}">All</span>
+					<span data-wd-action="disable{#myForm input}uncheck{#myForm input}">Nothing</span>
 				</nav>
 				
 				<form id="myForm" class="wd-vform">
@@ -58,8 +57,17 @@
 					<label class="wd-label">
 						C) <input type="checkbox" class="wd-input" />
 					</label>
-					<p>Textual content in a paragraph.</p>
 				</form>
+
+				<hr/>
+
+				<dl>
+					<dt><span class="wd-b">Shopping list</span> (<kbd data-wd-action="toggle-enable{#check_enable dd}">Dis/Enable</kbd>)</dt>
+					<dd data-wd-action="toggle-check{}">Beef</dd>
+					<dd data-wd-action="toggle-check{}">Milk</dd>
+					<dd data-wd-action="toggle-check{}">Butter</dd>
+				</dl>
+				
 			</article>
 			<button type="button" class="wd-button" onclick="viewCode('#check_enable');">Code</button>
 

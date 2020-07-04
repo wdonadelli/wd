@@ -749,7 +749,7 @@ a:hover {
 	.wd-hide-print  {visibility: hidden !important;}
 	.wd-hide-screen {visibility: visible !important;}
 }
-.wd-nodisplay {display: none;}
+.wd-no-display {display: none;}
 
 /*----------------------------------------------------------------- symbol --*/
 
