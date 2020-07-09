@@ -2349,64 +2349,165 @@ var wd = (function() {
 		return true;
 	};
 
-	/*obter os dados de formulários nome|valor (retora um array de objetos)*/
-	function getFormData(elem) {
-		var form, type, name, value;
-
-		/*é preciso que o elemento tenha value e name ou retornará null*/
-		form = [];
-		type = [];
-		name  = "name"  in elem ? elem.name  : null;
-		value = "value" in elem ? elem.value : null;
-		if (name === null || value === null || WD(name).type === "null") {
-			return form;
+	/*define algumas propriedades dos elementos para fins de máscara e envio de requisições*/
+	function DataElem(elem) {
+		if (!(this instanceof DataElem)) {
+			return new DataElem(elem);
 		}
 
-		/* caso o elemento seja um input (possui o atributo type) */
-		if (elem.tagName.toLowerCase() === "input") {
+		/* atributos do objeto*/
+		var forms = {
+			textarea: {
+				textarea:   {send: true,  mask: "value"}
+			},
+			select: {
+				select:   {send: true,  mask: null}
+			},
+			button: {
+				submit: {send: false, mask: "textContent"},
+				button: {send: false, mask: "textContent"},
+				reset:  {send: false, mask: "textContent"}
+			},
+			input: {
+				button:           {send: false, mask: "value"},
+				reset:            {send: false, mask: "value"},
+				submit:           {send: false, mask: "value"},
+				image:            {send: false, mask: null},
+				color:            {send: true,  mask: null},
+				radio:            {send: true,  mask: null},
+				checkbox:         {send: true,  mask: null},
+				date:             {send: true,  mask: false },
+				datetime:         {send: true,  mask: false },
+				"datetime-local": {send: true,  mask: false },
+				email:            {send: true,  mask: true  },
+				text:             {send: true,  mask: "value"},
+				search:           {send: true,  mask: "value"},
+				tel:              {send: true,  mask: "value"},
+				url:              {send: true,  mask: "value"},
+				month:            {send: true,  mask: null},
+				number:           {send: true,  mask: null},
+				password:         {send: true,  mask: null},
+				range:            {send: true,  mask: null},
+				time:             {send: true,  mask: null},
+				week:             {send: true,  mask: null},
+				hidden:           {send: true,  mask: null},
+				file:             {send: true,  mask: null}
+			}
+		};
 
-			/* verificando o type definido e o type informado */
-			type.push(elem.type.toLowerCase());
-			type.push("type" in elem.attributes ? elem.attributes.type.value.toLowerCase() : type[0]);
+		this.elem = elem;
 
-			/* caixas de seleção */
-			if (WD(type).inside("radio") || WD(type).inside("checkbox")) {
-				value = elem.checked ? value : null;
-			/* data */
-			} else if (WD(type).inside("date")) {
-				value = WD(value).type === "date" && value !== "%today" ? WD(value).toString() : null;
-			/* tempo */
-			} else if (WD(type).inside("time")) {
-				value = WD(value).type === "time" && value !== "%now" ? WD(value).toString() : null;
-			/* número */
-			} else if (WD(type).inside("number") || WD(type).inside("range")) {
-				value = WD(value).type === "number" ? WD(value).valueOf() : null;
-			/* arquivos */
-			} else if (WD(type).inside("file")) {
-				/* se houver o atributo files (caso especial) */
-				if ("files" in elem) {
-					for (var i = 0; i < elem.files.length; i++) {
-						form.push({
-							name:  name+"_"+i,
-							value: encodeURIComponent(elem.files[i].name),
-							post:  elem.files[i]
-						});
-						/* para evitar o último condicional */
-						value = null;
-					}
-				} else {
+		/*devolve a tag do elemento*/
+		this.tag  = function() {
+			return this.elem.tagName.toLowerCase();
+		}
+
+		/*indica se é um elemento de formulário*/
+		this.form = function() {
+			return this.tag() in forms ? true : false;
+		}
+
+		/*devolve o tipo do formulário, se houver, ou null*/
+		this.type = function() {
+			var value, tag, attr, type;
+			value = null;
+			if (this.form() === true) {
+				tag  = this.tag();
+				attr = "type" in this.elem.attributes ? this.elem.attributes.type.value.toLowerCase() : null;
+				type = "type" in this.elem ? this.elem.type.toLowerCase() : null;
+			 	if (attr !== null && attr in forms[tag]) {
+					value = attr;
+				} else if (type !== null && type in forms[tag]) {
+					value = type;
+				} else if (tag in forms[tag]) {
+					value = tag;
+				}
+			}
+			return value;
+		};
+
+		/*indica se é um elemento para enviar nas requisições*/
+		this.send = function() {
+			var value;
+			value = false;
+			if (this.name() !== null && this.value() !== null && this.type() !== null) {
+				value = forms[this.tag()][this.type()].send;
+			}
+			return value;
+		}
+
+		/*devolve o atributo para aplicação da data, ou null se a maścara não for possível (só para formulário)*/
+		this.mask = function() {
+			var value;
+			value = "textContent" in this.elem ? "textContent" : null;
+			if (this.form() === true && this.type() !== null) {
+				value = forms[this.tag()][this.type()].mask;
+			}
+			return value;
+		}
+
+		/*devolve o valor do atributo name (formulário), se existir, caso contrário retorna null*/
+		this.name = function() {
+			var name;
+			name = null;
+			if (this.form() === true) {
+				name = "name" in this.elem ? this.elem.name : null;
+				name =  WD(name).type === "null" ? null : name;
+			}
+			return name;
+		}
+
+		/*devolve o valor do atributo value (fomulário), se existir, caso contrário retorna null*/
+		this.value = function() {
+			var value, type;
+			value = "value" in this.elem ? this.elem.value : null;
+			if (this.form() === true) {
+				type = this.type();
+				if (type === "radio" || type === "checkbox") {
+					value = this.elem.checked === true ? value : null;
+				} else if (type === "date") {
+					value = WD(value).type === "date" && value !== "%today" ? WD(value).toString() : null;
+				} else if (type === "time") {
+					value = WD(value).type === "time" && value !== "%now" ? WD(value).toString() : null;
+				} else if (type === "number" || type === "range") {
+					value = WD(value).type === "number" ? WD(value).valueOf() : null;
+				} else if (type === "file" && "files" in this.elem) {
+					value =  this.elem.files.length > 0 ? this.elem.files : "";
+				} else if (type === "file") {
 					value = value.split(/(\/|\\)/).reverse()[0];
 				}
 			}
+			return value;
 		}
+	};
 
-		/* definindo série, exceto se files existir e for maior que zero */
-		if (value !== null) {
-			form.push({
-				name:  name,
-				value: encodeURIComponent(value),
-				post:  value
-			});
+
+
+	/*obter os dados de formulários nome|valor (retora um array de objetos)*/
+	function getFormData(elem) {
+		var form, name, value, edata;
+
+		/*é preciso que o elemento tenha value e name ou retornará null*/
+		form  = [];
+		edata = new DataElem(elem);
+		if (edata.send() === true) {
+			name  = edata.name();
+			value = edata.value();
+			if (edata.type() === "file" && "files" in elem && value !== "") {
+				for (var i = 0; i < value.length; i++) {
+					form.push({
+						name:  name+"_"+i,
+						value: encodeURIComponent(value[i].name),
+						post:  value[i]
+					});
+				}
+			} else {
+				form.push({
+					name:  name,
+					value: encodeURIComponent(value),
+					post:  value
+				});
+			}
 		}
 
 		return form;
@@ -2415,7 +2516,7 @@ var wd = (function() {
 	/*trabalhar com dataset em crossbrowser*/
 	function DataAttr(elem) {
 		if (!(this instanceof DataAttr)) {
-			return new DataAttr(elem, name);
+			return new DataAttr(elem);
 		}
 
 		/*attributos do objeto*/
@@ -2552,6 +2653,8 @@ var wd = (function() {
 			return x;
 		};
 	};
+
+
 
 /*...........................................................................*/
 
@@ -3277,7 +3380,7 @@ var wd = (function() {
 
 	/*Define máscara do elemento data-wd-mask="StringMask"*/
 	function data_wdMask(e) {
-		var value, re, mask, data, shortcutMask;
+		var value, re, mask, data, shortcutMask, form;
 		shortcutMask = {
 			"DDMMYYYY": /^(0[1-9]|[12][0-9]|3[0-1])\.(0[1-9]|1[0-2])\.([0-9]{4})$/,
 			"MMDDYYYY": /^(0[1-9]|1[0-2])\/(0[1-9]|[12][0-9]|3[0-1])\/([0-9]{4})$/,
@@ -3288,15 +3391,21 @@ var wd = (function() {
 		};
 		data = new DataAttr(e);
 		if (data.has("wdMask")) {
-			value = "value" in e ? e.value : e.textContent;
+	//FIXME
+	
+			form = eForm(e);
+			//value = "value" in e ? e.value : e.textContent;
+			value = form === true ? e.value : e.textContent;
 			if (data.get("wdMask") in shortcutMask) {
 				re = shortcutMask[data.get("wdMask")];
 			} else {
 				re = new RegExp(data.get("wdMask"));
 			}
-			mask  = WD(re).mask(value);
+			mask  = WD(re).mask(value);console.log(value);
 			if (mask !== false) {
-				e["value" in e ? "value" : "textContent"] = mask;
+//				e["value" in e ? "value" : "textContent"] = mask;
+				e[form === true ? "value" : "textContent"] = mask;
+				
 			}
 			if ("value" in e) {
 				if (mask === false && e.value !== "") {
