@@ -60,6 +60,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.﻿
 ----------------------------------------------------------------------------*/
 
+
+//FIXME inserir evento oninput para mascaras e filter?
+//FIXME dá pra fazer assim: oninput para attr == value e onkeyup para demais elementos
+//TODO novo disparador: wd$("*").trigger().click(callback).mouseout(callback2)
+//TODO acertar o core (&&&&&)
+
 "use strict";
 
 var wd = (function() {
@@ -2300,6 +2306,8 @@ var wd = (function() {
 		return wdEventHandler;
 	};
 
+/*............................................................................*/
+
 	/*função para definir o método de implementação de eventos*/
 	function setHandler(event, method, elem, remove) {
 
@@ -2349,6 +2357,8 @@ var wd = (function() {
 		return true;
 	};
 
+/*............................................................................*/
+
 	/*define algumas propriedades dos elementos para fins de máscara e envio de requisições*/
 	function DataElem(elem) {
 		if (!(this instanceof DataElem)) {
@@ -2376,10 +2386,10 @@ var wd = (function() {
 				color:            {send: true,  mask: null},
 				radio:            {send: true,  mask: null},
 				checkbox:         {send: true,  mask: null},
-				date:             {send: true,  mask: false },
-				datetime:         {send: true,  mask: false },
-				"datetime-local": {send: true,  mask: false },
-				email:            {send: true,  mask: true  },
+				date:             {send: true,  mask: null},
+				datetime:         {send: true,  mask: null},
+				"datetime-local": {send: true,  mask: null},
+				email:            {send: true,  mask: "value"},
 				text:             {send: true,  mask: "value"},
 				search:           {send: true,  mask: "value"},
 				tel:              {send: true,  mask: "value"},
@@ -2457,7 +2467,7 @@ var wd = (function() {
 			return name;
 		}
 
-		/*devolve o valor do atributo value (fomulário), se existir, caso contrário retorna null*/
+		/*devolve (string ou lista) o valor do atributo value (formulários), se existir, caso contrário retorna null*/
 		this.value = function() {
 			var value, type;
 			value = "value" in this.elem ? this.elem.value : null;
@@ -2472,46 +2482,58 @@ var wd = (function() {
 				} else if (type === "number" || type === "range") {
 					value = WD(value).type === "number" ? WD(value).valueOf() : null;
 				} else if (type === "file" && "files" in this.elem) {
-					value =  this.elem.files.length > 0 ? this.elem.files : "";
+					value =  this.elem.files.length > 0 ? this.elem.files : null;
 				} else if (type === "file") {
-					value = value.split(/(\/|\\)/).reverse()[0];
+					value = value === "" ? null : [{name: value.split(/(\/|\\)/).reverse()[0], type: "???"}];
+				} else if (type === "select") {
+					value = [];
+					for (var i = 0; i < this.elem.length; i++) {
+						if (this.elem[i].selected === true) {
+							value.push(this.elem[i].value);
+						}
+					}
+					value = value.length === 0 ? null :  value;
 				}
 			}
 			return value;
 		}
-	};
 
-
-
-	/*obter os dados de formulários nome|valor (retora um array de objetos)*/
-	function getFormData(elem) {
-		var form, name, value, edata;
-
-		/*é preciso que o elemento tenha value e name ou retornará null*/
-		form  = [];
-		edata = new DataElem(elem);
-		if (edata.send() === true) {
-			name  = edata.name();
-			value = edata.value();
-			if (edata.type() === "file" && "files" in elem && value !== "") {
-				for (var i = 0; i < value.length; i++) {
+		/* devolve (array de objetos) os valores para serem enviados via requisição*/
+		this.getFormData = function() {
+			var form, name, value;
+			form  = [];
+			if (this.send() === true) {
+				name  = this.name();
+				value = this.value();
+				if (this.type() === "file") {
+					for (var i = 0; i < value.length; i++) {
+						form.push({
+							name:  i === 0 ? name : name+"_"+i,
+							value: encodeURIComponent(value[i].name),
+							post:  value[i].type === "???" ? value[i].name : value[i]
+						});
+					}
+				} else if (this.type() === "select") {
+					for (var i = 0; i < value.length; i++) {
+						form.push({
+							name:  i === 0 ? name : name+"_"+i,
+							value: encodeURIComponent(value[i]),
+							post:  value[i]
+						});
+					}
+				} else {
 					form.push({
-						name:  name+"_"+i,
-						value: encodeURIComponent(value[i].name),
-						post:  value[i]
+						name:  name,
+						value: encodeURIComponent(value),
+						post:  value
 					});
 				}
-			} else {
-				form.push({
-					name:  name,
-					value: encodeURIComponent(value),
-					post:  value
-				});
 			}
-		}
-
-		return form;
+			return form;
+		};
 	};
+
+/*............................................................................*/
 
 	/*trabalhar com dataset em crossbrowser*/
 	function DataAttr(elem) {
@@ -3155,7 +3177,7 @@ var wd = (function() {
 		get: function() {
 			var x = [];
 			this.run(function(elem) {
-				var data = getFormData(elem);
+				var data = new DataElem(elem).getFormData();
 				for (var i = 0; i < data.length; i++) {
 					x.push(data[i].name+"="+data[i].value);
 				}
@@ -3172,11 +3194,9 @@ var wd = (function() {
 			if (!("FormData" in window)) {
 				return this.form;
 			}
-
 			var x = new FormData();
-
 			this.run(function(elem) {
-				var data = getFormData(elem);
+				var data = DataElem(elem).getFormData();
 				for (var i = 0; i < data.length; i++) {
 					x.append(
 						data[i].name,
@@ -3380,7 +3400,7 @@ var wd = (function() {
 
 	/*Define máscara do elemento data-wd-mask="StringMask"*/
 	function data_wdMask(e) {
-		var value, re, mask, data, shortcutMask, form;
+		var value, re, mask, data, shortcutMask, attr;
 		shortcutMask = {
 			"DDMMYYYY": /^(0[1-9]|[12][0-9]|3[0-1])\.(0[1-9]|1[0-2])\.([0-9]{4})$/,
 			"MMDDYYYY": /^(0[1-9]|1[0-2])\/(0[1-9]|[12][0-9]|3[0-1])\/([0-9]{4})$/,
@@ -3390,24 +3410,20 @@ var wd = (function() {
 			"AMPM": /^(0[1-9]|1[0-2])\:([0-5][0-9][apAP])m$/,
 		};
 		data = new DataAttr(e);
-		if (data.has("wdMask")) {
-	//FIXME
-	
-			form = eForm(e);
-			//value = "value" in e ? e.value : e.textContent;
-			value = form === true ? e.value : e.textContent;
+		attr = new DataElem(e).mask();
+		if (data.has("wdMask") && attr !== null) {
+
+			value = e[attr];
 			if (data.get("wdMask") in shortcutMask) {
 				re = shortcutMask[data.get("wdMask")];
 			} else {
 				re = new RegExp(data.get("wdMask"));
 			}
-			mask  = WD(re).mask(value);console.log(value);
+			mask = WD(re).mask(value);console.log(value);
 			if (mask !== false) {
-//				e["value" in e ? "value" : "textContent"] = mask;
-				e[form === true ? "value" : "textContent"] = mask;
-				
+				e[attr] = mask;
 			}
-			if ("value" in e) {
+			if (attr === "value") {
 				if (mask === false && e.value !== "") {
 					WD(e).class({add: "js-wd-mask-error"});
 				} else {
