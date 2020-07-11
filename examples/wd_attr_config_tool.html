@@ -36,8 +36,10 @@
 				<input type="color" name="color" class="wd-input" value="#1111FF" onchange="configBody();" \>
 				<label class="wd-label">bgcolor</label>
 				<input type="color" name="bgcolor" class="wd-input" value="#CFCFFF" onchange="configBody();" \>
+				<label class="wd-label">fileTitle</label>
+				<input type="text" name="fileTitle" class="wd-input" value="This file cannot!!!" onchange="configBody();" \>
 				<label class="wd-label">fileSize</label>
-				<input type="text" name="fileSize" class="wd-input" value="<i>This file is <u>too</u> <b>big</b>, man.</i>" onchange="configBody();" \>
+				<input type="text" name="fileSize" class="wd-input" value="<i>This file is <u>too big</u>, man.</i>" onchange="configBody();" \>
 				<label class="wd-label">fileTotal</label>
 				<input type="text" name="fileTotal" class="wd-input" value="Dude, you've crossed the line." onchange="configBody();" \>
 				<label class="wd-label">fileChar</label>
@@ -52,7 +54,7 @@
 				<input type="file" class="wd-input" multiple=""
 					data-wd-file="size{1024}total{2048}char{-_}len{2}type{application/pdf}"
 				/>
-				<button type="button" class="wd-button" onclick="wd().send('wd_attr_config_tool.html')">Test loading</button>
+				<button type="button" class="wd-button" onclick="testLoading();">Test loading</button>
 
 			</form>
 

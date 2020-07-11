@@ -10,7 +10,10 @@ inclusão do método Form
 inclusão de dash camel upper lower force em WDtext; clear, title, trim viraram attributos
 inclusão do método send em WD
 inclusão do atributo data-wd-send
+
 alteração no método handler (não pode mais null e adicinado argumento remove)
+inclusão de método trigger como alteranativa ao handler
+
 inclusão do método 
 método data agora aceita o "data-" no início
 wd-active-click funciona para span também
@@ -20,6 +23,7 @@ toggle-show, enable, disable, toggle-enable em action
 wdConfig para definir as mensagens em body
 wdConfig {
 	loading 
+	fileTitle
 	fileSize
 	fileTotal
 	fileChar
@@ -32,7 +36,8 @@ atalhos para tempo (h m s) e data (y m d)
 
 CSS
 wd-code inclusão
-.wd-nodisplay
+.wd-no-display
+FIXME colocar cor braca no bgcolor do window
 
 <wdonadelli@gmail.com>
 https://github.com/wdonadelli/wd
@@ -61,10 +66,9 @@ SOFTWARE.﻿
 ----------------------------------------------------------------------------*/
 
 
-//FIXME inserir evento oninput para mascaras e filter?
+//FIXME inserir evento oninput para máscaras e filter?
 //FIXME dá pra fazer assim: oninput para attr == value e onkeyup para demais elementos
-//TODO novo disparador: wd$("*").trigger().click(callback).mouseout(callback2)
-//TODO acertar o core (&&&&&)
+//TODO TODO TODO acertar o core (&&&&&)
 
 "use strict";
 
@@ -82,7 +86,10 @@ var wd = (function() {
 	var modalWindow, modalWindowCount;
 	/*guarda as propriedades da data*/
 	var Y_min, Y_max, Y_004, Y_100, Y_400, WEEK_1st, DATE_min, DATE_max;
+	/*guarda os eventos de window*/
+	var winEvents;
 
+/*............................................................................*/
 
 	/*Imprime mensagem no console*/
 	function log(msg, type) {
@@ -1025,7 +1032,7 @@ var wd = (function() {
 	/*Exibe uma mensagem temporária na tela*/
 	Object.defineProperty(WDtext.prototype, "message", {
 		enumerable: true,
-		value: function(type) {
+		value: function(type, time) {
 			if (WD(document.body).type === "dom") {
 				var msgWindow = document.createElement("DIV");
 				msgWindow.innerHTML = this.toString();
@@ -1045,6 +1052,8 @@ var wd = (function() {
 					display: "block",
 					minWidth: deviceController === "Desktop" ? "25%" : "auto",
 					maxWidth: deviceController === "Desktop" ? "33%" : "auto",
+					maxHeight: "90%",
+					overflow: "auto",
 					wordWrap: "break-word",
 					padding: "0.5em",
 					position: "fixed",
@@ -1064,12 +1073,25 @@ var wd = (function() {
 					return;
 				}
 				document.body.appendChild(msgWindow);
-				window.setTimeout(function() {
-					if (msgWindow.parentElement !== null) {
-						document.body.removeChild(msgWindow);
-					}
-					return
-				}, 6500);
+
+				/*fechamento automático*/
+				time = WD(time);
+				if (time.type !== "number") {
+					time = 6500;
+				} else if (time.number === "integer" || time.number === "real") {
+					time = time.valueOf() * 1000;
+				} else {
+					time = 0;
+				}
+
+				if (time > 0) {
+					window.setTimeout(function() {
+						if (msgWindow.parentElement !== null) {
+							document.body.removeChild(msgWindow);
+						}
+						return;
+					}, time);
+				}
 			}
 			return;
 		}
@@ -2291,6 +2313,37 @@ var wd = (function() {
 
 /* === DOM ================================================================= */
 
+	/*define os atributos e métodos de winEvents para o método trigger*/
+	winEvents = {};
+	winEvents._$del = false;
+	winEvents._$run = null;
+
+	function runWinEvents(event) {
+		if (!(this instanceof runWinEvents)) {
+			return new runWinEvents(event);
+		}
+		this.event  = event;
+		this.run = function (callback) {
+			var event = this.event;
+			winEvents._$run.run(function(elem) {
+				setHandler(event, callback, elem, winEvents._$del);
+				return;
+			});
+			return winEvents;
+		}
+	}
+
+	for (var ev in window) {
+		if ((/^on/).test(ev) === true) {
+			var event, object
+			event = ev.replace(/^on/, "");
+			object = new runWinEvents(event);
+			winEvents[event] = object.run.bind(object);
+		}
+	}
+
+/*............................................................................*/
+
 	/*Define a função para os disparadores*/
 	function getEventMethod(input) {
 		var wdEventHandler = function(ev) {
@@ -3001,12 +3054,8 @@ var wd = (function() {
 	Object.defineProperty(WDdom.prototype, "handler", {
 		enumerable: true,
 		value: function (input, remove) {
-
-			if (WD(input).type !== "object") {
-				return false;
-			}
-
 			var del, event, methods;
+			if (WD(input).type !== "object") {return false;}
 
 			/*looping nos eventos*/
 			for (var i in input) {
@@ -3026,6 +3075,16 @@ var wd = (function() {
 				}
 			}
 			return true;
+		}
+	});
+
+	/*Adiciona ou remove disparadores*/
+	Object.defineProperty(WDdom.prototype, "trigger", {
+		enumerable: true,
+		value: function (remove) {
+			winEvents._$del = remove;
+			winEvents._$run = this;
+			return winEvents;
 		}
 	});
 
@@ -3264,11 +3323,12 @@ var wd = (function() {
 			loading:   "Loading data, please wait.",
 			bgcolor:   "#005544",
 			color:     "#FFFFFF",
-			fileSize:  "larger file size than allowed.",
+			fileTitle: "Files",
+			fileSize:  "Larger file size than allowed.",
 			fileTotal: "Total file size larger than allowed.",
-			fileChar:  "characters not allowed in the file name",
+			fileChar:  "Characters not allowed in the file name.",
 			fileLen:   "Maximum number of files exceeded.",
-			fileType:  "file type not allowed."
+			fileType:  "File type not allowed."
 		};
 		data  = new DataAttr(document.body);
 		value = data.core("wdConfig");
@@ -3564,29 +3624,35 @@ var wd = (function() {
 
 	/*analisa as informações do arquivo data-wd-file=size{value}type{}char{}len{}total{}*/
 	function data_wdFile(e) {
-		var tag, type, files, value, data, info, error, name, total;
+		var tag, type, files, value, data, info, error, name, msg;
 		data_wdConfig();
 		data  = new DataAttr(e);
 		tag   = e.tagName.toLowerCase();
 		type  = e.type.toLowerCase();
 		files = "files" in e ? e.files : [];
-		error = [];
-		total = 0;
 		value = data.core("wdFile");
+		msg   = ["<h2>"+wdConfig.fileTitle+"</h2>"];
+		error = {
+			fileSize:  [],
+			fileType:  [],
+			fileChar:  [],
+			fileLen:   0,
+			fileTotal: 0
+		};
 
 		if (data.has("wdFile") && tag === "input" && type === "file") {
 
 			for (var i = 0; i < files.length; i++) {
 
-				/* atributos dos arquivos */
-				name   = "name" in files[i] ? "<b>"+files[i].name+"</b><br>" : "";
-				total += "size" in files[i] ? files[i].size : 0;
+				error.fileTotal += "size" in files[i] ? files[i].size : 0;
+				error.fileLen++;
+				name = "name" in files[i] ? files[i].name : "";
 
 				/* verificar tamanho individual do arquivo*/
 				info = WD(value["size"]);
 				if (info.type === "number" && "size" in files[i]) {
 					if (files[i].size > info.valueOf()) {
-						error.push(name+wdConfig.fileSize);
+						error.fileSize.push(name);
 					}
 				}
 
@@ -3595,15 +3661,16 @@ var wd = (function() {
 				if (info.type === "text" && "type" in files[i]) {
 					info = WD(info.toString().split(" "));
 					if (info.inside(files[i].type) === false) {
-						error.push(name+wdConfig.fileType);
+						error.fileType.push(name);
 					}
 				}
+
 				/* verificar caracteres do arquivo */
 				info = WD(value["char"]);
 				if (info.type === "text" && "name" in files[i]) {
 					info = new RegExp("["+info.toString()+"]");
 					if (files[i].name.search(info) >= 0) {
-						error.push(name+wdConfig.fileChar+": "+value["char"]);
+						error.fileChar.push(name);
 					}
 				}
 			}
@@ -3611,23 +3678,44 @@ var wd = (function() {
 			/* verificar quantidade de arquivos */
 			info = WD(value["len"]);
 			if (info.type === "number" && "length" in files) {
-				if (files.length > info.round()) {
-					error.push(wdConfig.fileLen);
+				if (error.fileLen > info.round()) {
+					msg.push("<dt><b>"+wdConfig.fileLen+"</b> ["+error.fileLen+"/"+info.round()+"]</dt>");
 				}
 			}
 
 			/* verificar tamanho total dos arquivos */
 			info = WD(value["total"]);
 			if (info.type === "number") {
-				if (total > info.round()) {
-					error.push(wdConfig.fileTotal);
+				if (error.fileTotal > info.round()) {
+					msg.push("<dt><b>"+wdConfig.fileTotal+"</b> ["+error.fileTotal+"/"+info.round()+"]</dt>");
 				}
 			}
 
+			/*verificando tamanho dos arquivos*/
+			info = WD(value["size"]);
+			if (error.fileSize.length > 0) {
+				msg.push("<dt><b>"+wdConfig.fileSize+"</b> ["+info+"]</dt>");
+				msg.push("<dd>"+error.fileSize.join("</dd><dd>")+"</dd>");
+			}
+
+			/*verificando tipo dos arquivos*/
+			info = WD(value["type"]);
+			if (error.fileType.length > 0) {
+				msg.push("<dt><b>"+wdConfig.fileType+"</b> ["+info+"]</dt>");
+				msg.push("<dd>"+error.fileType.join("</dd><dd>")+"</dd>");
+			}
+
+			/*verificando caracteres do arquivos*/
+			info = WD(value["char"]);
+			if (error.fileChar.length > 0) {
+				msg.push("<dt><b>"+wdConfig.fileChar+"</b> ["+info+"]</dt>");
+				msg.push("<dd>"+error.fileChar.join("</dd><dd>")+"</dd>");
+			}
+
 			/* apagando arquivos e exibindo erro */
-			if (error.length > 0) {
+			if (msg.length > 1) {
 				e.value = null;
-				WD("<small>"+error.join("<hr>")+"<small>").message("error");
+				WD("<small><dl>"+msg.join("")+"<dl></small>").message("info", 0);
 				WD(e).class({add: "js-wd-mask-error"});
 			} else {
 				WD(e).class({del: "js-wd-mask-error"});

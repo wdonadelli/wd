@@ -10,7 +10,7 @@ function viewCode(css) {
 	return;
 }
 
-/*wd_attr_config_toll*/
+/*wd_attr_config_tool*/
 function configBody() {
 	var config = "";
 	wd$("#config input").run(function(x) {
@@ -20,7 +20,7 @@ function configBody() {
 	return;
 }
 
-/*wd_attr_file_toll*/
+/*wd_attr_file_tool*/
 function setFile() {
 	var config = "";
 	wd$("#dataFile input").run(function(x) {
@@ -28,4 +28,13 @@ function setFile() {
 	});
 	wd$("#typeFile").data({wdFile: config});
 	return;
+}
+
+/*wd_attr_config_tool*/
+function testLoading() {
+	wd().send('wd_attr_config_tool.html', function(x) {
+		if (x.status === "DONE") {
+			alert("Hi!");
+		}
+	});
 }
