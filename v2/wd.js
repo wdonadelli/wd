@@ -22,7 +22,9 @@ nos eventos onclick inserir o crescimento de bolha no caso de elemento inline
 toggle-show, enable, disable, toggle-enable em action
 wdConfig para definir as mensagens em body
 wdConfig {
-	loading 
+	loading
+	color
+	bgcolor
 	fileTitle
 	fileSize
 	fileTotal
@@ -37,7 +39,6 @@ atalhos para tempo (h m s) e data (y m d)
 CSS
 wd-code inclusão
 .wd-no-display
-FIXME colocar cor braca no bgcolor do window
 
 <wdonadelli@gmail.com>
 https://github.com/wdonadelli/wd
@@ -66,9 +67,9 @@ SOFTWARE.﻿
 ----------------------------------------------------------------------------*/
 
 
-//FIXME inserir evento oninput para máscaras e filter?
-//FIXME dá pra fazer assim: oninput para attr == value e onkeyup para demais elementos
-//TODO TODO TODO acertar o core (&&&&&)
+//XXX inserir evento oninput para máscaras e filter?
+//XXX dá pra fazer assim: oninput para attr == value e onkeyup para demais elementos
+
 
 "use strict";
 
@@ -2314,31 +2315,36 @@ var wd = (function() {
 /* === DOM ================================================================= */
 
 	/*define os atributos e métodos de winEvents para o método trigger*/
-	winEvents = {};
-	winEvents._$del = false;
-	winEvents._$run = null;
+	function wdWinEvents(run, del) {
+		if (!(this instanceof wdWinEvents)) {
+			return new wdWinEvents(run, del);
+		}
 
-	function runWinEvents(event) {
-		if (!(this instanceof runWinEvents)) {
-			return new runWinEvents(event);
-		}
-		this.event  = event;
-		this.run = function (callback) {
-			var event = this.event;
-			winEvents._$run.run(function(elem) {
-				setHandler(event, callback, elem, winEvents._$del);
-				return;
-			});
-			return winEvents;
-		}
+		Object.defineProperties(wdWinEvents.prototype, {/*utilizado .prototype para _$del e _$run por causa do bind*/
+			constructor: {value: wdWinEvents},
+			_$del: {value: del},
+			_$run: {value: run}
+		});
+
+		return;
+	}
+
+	function runWinEvents(event, callback) {
+		var object = this;
+		object._$run.run(function(elem) {
+			setHandler(event, callback, elem, object._$del);
+			return;
+		});
+		return this;
 	}
 
 	for (var ev in window) {
 		if ((/^on/).test(ev) === true) {
-			var event, object
-			event = ev.replace(/^on/, "");
-			object = new runWinEvents(event);
-			winEvents[event] = object.run.bind(object);
+			var event = ev.replace(/^on/, "");
+			Object.defineProperty(wdWinEvents.prototype, event, {
+				enumerable: true,
+				value: runWinEvents.bind(wdWinEvents.prototype, event) /*ver anotação acima sobre bind*/
+			});
 		}
 	}
 
@@ -2676,8 +2682,8 @@ var wd = (function() {
 			return false;
 		}
 
-		/*obter os atributo pares key1{value1}... em objeto {key1: value1,...}*/
-		this.convert = function(input) {
+		/*XXX obter os atributo pares key1{value1}... em objeto {key1: value1,...}*/
+/*		this.convert = function(input) {
 			var x, open, name, value;
 			x     = {};
 			open  = 0;
@@ -2705,17 +2711,59 @@ var wd = (function() {
 			}
 			return x;
 		};
+*/
 
-		/*retorna o objeto de convert a partir do atributo*/
+//FIXME unificando core
+		this.convert = function(input) {
+			var keys, open, name, value, list;
+			keys  = {};
+			list  = [];
+			open  = 0;
+			name  = "";
+			value = "";
+			input = String(input).trim().split("");
+			for (var i = 0; i < input.length; i++) {
+				if (input[i] === "{" && open === 0) {
+					open++;
+				} else if (input[i] === "}" && open === 1) {
+					open--;
+					keys[name.trim()] = value.trim();
+					name  = "";
+					value = "";
+					if (input[i+1] === "&" || (i+1) >= input.length) {
+						i += input[i+1] === "&" ? 1 : 0;
+						list.push(keys);
+						keys = {};
+					}
+				} else if (open > 0) {
+					if (input[i] === "{") {
+						open++;
+					} else if (input[i] === "}") {
+						open--;
+					}
+					value += input[i];
+				} else {
+					name += input[i];
+				}
+			}
+			return list;
+		};
+
+
+
+
+
+
+		/*TODO retorna o objeto de convert a partir do atributo*/
 		this.core = function(attr) {
-			var x = {};
+			var x = [{}];
 			if (this.has(attr)) {
 				x = this.convert(this.get(attr));
 			}
 			return x;
 		};
 
-		/*retorna um array de objetos de core quando separados por &*/
+		/*XXX retorna um array de objetos de core quando separados por &*/
 		this.cores = function(attr) {
 			var x, value;
 			x     = [];
@@ -3082,9 +3130,18 @@ var wd = (function() {
 	Object.defineProperty(WDdom.prototype, "trigger", {
 		enumerable: true,
 		value: function (remove) {
+			var win;
+			win = new wdWinEvents(this, remove);
+			return win;
+
+
+/*
 			winEvents._$del = remove;
 			winEvents._$run = this;
 			return winEvents;
+*/
+
+
 		}
 	});
 
@@ -3331,7 +3388,7 @@ var wd = (function() {
 			fileType:  "File type not allowed."
 		};
 		data  = new DataAttr(document.body);
-		value = data.core("wdConfig");
+		value = data.core("wdConfig")[0];
 		for (var i in wdConfig) {
 			if (i in value) {
 				wdConfig[i] = value[i];
@@ -3380,7 +3437,7 @@ var wd = (function() {
 				data.set("wdRepeat", data.get("wdRepeat").replace("?${", "}${").replace("}}", "}"));
 			}
 
-			value  = data.core("wdRepeat");
+			value  = data.core("wdRepeat")[0];
 			method = "post" in value ? "post" : "get";
 			file   = value[method];
 			pack   = "$" in value ? $(value["$"]) : null;
@@ -3445,7 +3502,7 @@ var wd = (function() {
 		data = new DataAttr(e);
 		if (data.has("wdFilter")) {
 			text  = "value" in e ? e.value : e.textContent;
-			value = data.cores("wdFilter");
+			value = data.core("wdFilter");
 			for (var i = 0; i < value.length; i++) {
 				show   = "hide" in value[i] ? false : true;
 				min    = "hide" in value[i] ? value[i].hide : value[i].show;
@@ -3479,7 +3536,7 @@ var wd = (function() {
 			} else {
 				re = new RegExp(data.get("wdMask"));
 			}
-			mask = WD(re).mask(value);console.log(value);
+			mask = WD(re).mask(value);
 			if (mask !== false) {
 				e[attr] = mask;
 			}
@@ -3525,7 +3582,7 @@ var wd = (function() {
 		var value, data, target;
 		data = new DataAttr(e);
 		if (data.has("wdAction")) {
-			value = data.core("wdAction");
+			value = data.core("wdAction")[0];
 			for (var action in value) {
 				target = WD($(value[action]));
 				/* se o alvo não for um dom, será aplicado ao próprio elemento*/
@@ -3544,10 +3601,10 @@ var wd = (function() {
 		var value, data, target;
 		data = new DataAttr(e);
 		if (data.has("wdData")) {
-			value = data.cores("wdData");
+			value = data.core("wdData");
 			for (var i = 0; i < value.length; i++) {
 				/* se o alvo não for um dom, será aplicado ao próprio elemento*/
-				target = target = "$" in value[i] ? WD($(value[i]["$"])) : WD(e);
+				target = "$" in value[i] ? WD($(value[i]["$"])) : WD(e);
 				delete value[i]["$"]; /*!!! a chave $ não definirá data-$*/
 				if (target.type === "dom") {
 					target.data(value[i]);
@@ -3630,7 +3687,7 @@ var wd = (function() {
 		tag   = e.tagName.toLowerCase();
 		type  = e.type.toLowerCase();
 		files = "files" in e ? e.files : [];
-		value = data.core("wdFile");
+		value = data.core("wdFile")[0];
 		msg   = ["<h2>"+wdConfig.fileTitle+"</h2>"];
 		error = {
 			fileSize:  [],

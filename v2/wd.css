@@ -340,6 +340,7 @@ a:hover {
 	overflow: auto;
 	z-index: 99998;
 	animation: zoom-in 0.4s;
+	background-color: #FFFFFF;
 }
 .wd-modal > .wd-window {position: absolute !important;}
 .wd-window.wd-open, .wd-modal.wd-open > .wd-window {display: block;}
