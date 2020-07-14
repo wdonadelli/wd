@@ -53,9 +53,9 @@
 				<p>These are some examples applied to forms:</p>
 				<form class="wd-vform" >
 					<label class="wd-label">Time</label>
-					<input type="text" class="wd-input" data-wd-mask="HHMMSS" value="103045" />
+					<input type="text" class="wd-input" data-wd-mask="HHMMSS" value="103045" placeholder="HH:MM:SS" />
 					<label class="wd-label">Date</label>
-					<input type="text" class="wd-input" data-wd-mask="YYYYMMDD" value="20201003" />
+					<input type="text" class="wd-input" data-wd-mask="YYYYMMDD" value="20201003" placeholder="YYYY-MM-DD" />
 					<label class="wd-label">Time/Date</label>
 					<select class="wd-input">
 						<option data-wd-mask="HHMM" value="10:30:00">1030</option>
@@ -64,7 +64,7 @@
 						<option data-wd-mask="DDMMYYYY" value="2020-10-03">03102020</option>
 					</select>
 					<label class="wd-label">Custom</label>
-					<textarea class="wd-input" data-wd-mask="^([0-9]{2})\.([0-9]{3})\-([0-9]{3})$"></textarea>
+					<textarea class="wd-input" data-wd-mask="^([0-9]{2})\.([0-9]{3})\-([0-9]{3})$" placeholder="XX.XXX-XXX" >00123456</textarea>
 				</form>
 
 			</article>
@@ -72,11 +72,6 @@
 			<button type="button" class="wd-button" onclick="viewCode('#mask_form');">Code</button>
 
 		</section>
-
-
-
-
-
 
 	</main>
 	

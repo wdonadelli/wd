@@ -998,7 +998,7 @@ var wd = (function() {
 			if (WD(pack).type !== "text") {
 				pack = null;
 			} else if ((/^\$\{.+\}$/).test(pack)) {
-				pack = $(new DataAttr().convert(pack)["$"]);
+				pack = $(new DataAttr().convert(pack)[0]["$"]);
 			}
 
 			/* ajustando o tempo (segundos = *1000) */
@@ -2320,7 +2320,7 @@ var wd = (function() {
 			return new wdWinEvents(run, del);
 		}
 
-		Object.defineProperties(wdWinEvents.prototype, {/*utilizado .prototype para _$del e _$run por causa do bind*/
+		Object.defineProperties(this, {/*utilizado .prototype para _$del e _$run por causa do bind*/
 			constructor: {value: wdWinEvents},
 			_$del: {value: del},
 			_$run: {value: run}
@@ -2330,13 +2330,29 @@ var wd = (function() {
 	}
 
 	function runWinEvents(event, callback) {
-		var object = this;
+		var object = this;log(this.bunda());
 		object._$run.run(function(elem) {
 			setHandler(event, callback, elem, object._$del);
 			return;
 		});
 		return this;
 	}
+
+	Object.defineProperty(wdWinEvents.prototype, "eventExists", {
+		enumerable: true,
+		value: function(event, callback) {
+			return event in this ? this[event](callback) : this;
+		}
+	});
+
+	Object.defineProperty(wdWinEvents.prototype, "bunda", {
+		enumerable: true,
+		value: function() {
+			return this;
+		}
+	});
+
+
 
 	for (var ev in window) {
 		if ((/^on/).test(ev) === true) {
@@ -2682,42 +2698,11 @@ var wd = (function() {
 			return false;
 		}
 
-		/*XXX obter os atributo pares key1{value1}... em objeto {key1: value1,...}*/
-/*		this.convert = function(input) {
-			var x, open, name, value;
-			x     = {};
-			open  = 0;
-			name  = "";
-			value = "";
-			input = String(input).trim().split("");
-			for (var i = 0; i < input.length; i++) {
-				if (input[i] === "{" && open === 0) {
-					open++;
-				} else if (input[i] === "}" && open === 1) {
-					open--;
-					x[name.trim()] = value.trim();
-					name  = "";
-					value = "";
-				} else if (open > 0) {
-					if (input[i] === "{") {
-						open++;
-					} else if (input[i] === "}") {
-						open--;
-					}
-					value += input[i];
-				} else {
-					name += input[i];
-				}
-			}
-			return x;
-		};
-*/
-
-//FIXME unificando core
+		/*obter atributos pares key1{value1}...&... em objeto [{key1: value1,...}, ...]*/
 		this.convert = function(input) {
-			var keys, open, name, value, list;
-			keys  = {};
-			list  = [];
+			var open, name, value, list, key;
+			list  = [{}];
+			key   = 0;
 			open  = 0;
 			name  = "";
 			value = "";
@@ -2727,13 +2712,13 @@ var wd = (function() {
 					open++;
 				} else if (input[i] === "}" && open === 1) {
 					open--;
-					keys[name.trim()] = value.trim();
+					list[key][name.trim()] = value.trim();
 					name  = "";
 					value = "";
-					if (input[i+1] === "&" || (i+1) >= input.length) {
-						i += input[i+1] === "&" ? 1 : 0;
-						list.push(keys);
-						keys = {};
+					if (input[i+1] === "&") {
+						list.push({});
+						key++;
+						i++;
 					}
 				} else if (open > 0) {
 					if (input[i] === "{") {
@@ -2749,35 +2734,11 @@ var wd = (function() {
 			return list;
 		};
 
-
-
-
-
-
-		/*TODO retorna o objeto de convert a partir do atributo*/
+		/*retorna o objeto de convert a partir do atributo*/
 		this.core = function(attr) {
-			var x = [{}];
-			if (this.has(attr)) {
-				x = this.convert(this.get(attr));
-			}
-			return x;
-		};
-
-		/*XXX retorna um array de objetos de core quando separados por &*/
-		this.cores = function(attr) {
-			var x, value;
-			x     = [];
-			value = this.get(attr).replace(/\}\&/g, "}--&--").split("--&--");
-			if (this.has(attr)) {
-				for (var i = 0; i < value.length; i++) {
-					x.push(this.convert(value[i]));
-				}
-			}
-			return x;
+			return this.has(attr) === true ? this.convert(this.get(attr)) : [{}];
 		};
 	};
-
-
 
 /*...........................................................................*/
 
@@ -3133,15 +3094,6 @@ var wd = (function() {
 			var win;
 			win = new wdWinEvents(this, remove);
 			return win;
-
-
-/*
-			winEvents._$del = remove;
-			winEvents._$run = this;
-			return winEvents;
-*/
-
-
 		}
 	});
 
@@ -3408,7 +3360,7 @@ var wd = (function() {
 				data.set("wdLoad", data.get("wdLoad").replace("?${", "}${").replace("}}", "}"));
 			}
 
-			value  = data.core("wdLoad");
+			value  = data.core("wdLoad")[0];
 			method = "post" in value ? "post" : "get";
 			file   = value[method];
 			pack   = "$" in value ? $(value["$"]) : null;
@@ -3461,11 +3413,14 @@ var wd = (function() {
 		data = new DataAttr(e);
 		if (data.has("wdSend")) {
 			value    = data.core("wdSend");
-			method   = "post" in value ? "post" : "get";
-			file     = value[method];
-			pack     = "$" in value ? $(value["$"]) : null;
-			callback = window[value["callback"]];
-			WD(pack).send(file, callback, method);
+			log(value);
+			for (var i = 0; i < value.length; i++) {
+				method   = "post" in value[i] ? "post" : "get";
+				file     = value[i][method]; /*method: ver linha anterior*/
+				pack     = "$" in value[i] ? $(value[i]["$"]) : null;
+				callback = window[value[i]["callback"]];
+				WD(pack).send(file, callback, method);
+			}
 		}			
 		return;
 	};
@@ -3475,7 +3430,7 @@ var wd = (function() {
 		var value, method, file, callback, data;
 		data = new DataAttr(e);
 		if (data.has("wdRequest")) {
-			value    = data.core("wdRequest");
+			value    = data.core("wdRequest")[0];
 			method   = "post" in value ? "post" : "get";
 			file     = value[method];
 			callback = window[value["method"]];
@@ -3556,7 +3511,7 @@ var wd = (function() {
 		var attr, page, size, data;
 		data = new DataAttr(e);
 		if (data.has("wdPage")) {
-			attr = data.core("wdPage");
+			attr = data.core("wdPage")[0];
 			page = attr.page;
 			size = attr.size;
 			WD(e).page(page, size).data({wdPage: null});
@@ -3569,9 +3524,7 @@ var wd = (function() {
 		var data;
 		data = new DataAttr(e);
 		if (data.has("wdClick")) {
-			if ("click" in e) {
-				e.click();
-			}
+			if ("click" in e) {e.click();}
 			WD(e).data({wdClick: null});
 		}
 		return;
@@ -3659,7 +3612,7 @@ var wd = (function() {
 		var data, value, desktop, mobile, tablet, phone;
 		data = new DataAttr(e);
 		if (data.has("wdDevice")) {
-			value   = data.core("wdDevice");
+			value   = data.core("wdDevice")[0];
 			desktop = "desktop" in value ? value.desktop : "";
 			mobile  = "mobile"  in value ? value.mobile  : "";
 			tablet  = "tablet"  in value ? value.tablet  : "";
