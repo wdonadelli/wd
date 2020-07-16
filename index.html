@@ -26,7 +26,14 @@
 		</header>
 
 		<form class="wd-margin">
-			<input type="search" data-wd-filter="show{}${#examples}" autofocus="" placeholder="Search..." class="wd-input" />
+			<datalist id="WD">
+				<option value="WD ATTR">Attributes</option>
+				<option value="WD JS">Scripts</option>
+				<option value="WD CSS">Style Sheet</option>
+			</datalist>
+
+		
+			<input type="search" data-wd-filter="show{}${#examples}" autofocus="" placeholder="Search..." class="wd-input" list="WD" />
 		</form>
 
 

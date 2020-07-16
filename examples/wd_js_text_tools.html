@@ -23,7 +23,7 @@ function run() {
 		input  = value !== "" ? eval("("+value+")") : undefined;
 		object = wd(input);
 		if (object.type !== "text") {
-			wd("The value entered must be a text.").message("alert");
+			wd("The value entered must be a text.").message("warn");
 			wd$("*[id]").run(function (x) {x.innerHTML = "";return;});
 		} else {
 			wd$("#input").item(0).innerHTML    = value;

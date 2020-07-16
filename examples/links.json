@@ -22,17 +22,13 @@
 	{"title": "WD ATTR Send Tool", "file": "wd_attr_send_tool.html"},
 	{"title": "WD ATTR Sort Tool", "file": "wd_attr_sort_tool.html"},
 	{"title": "WD ATTR Sort Column Tool", "file": "wd_attr_sort_column_tool.html"},
-	{"title": "", "file": ""},
-	{"title": "", "file": ""}
+	{"title": "WD CSS Box Style", "file": "wd_css_box_style.html"},
+	{"title": "WD CSS Color Style", "file": "wd_css_color_style.html"},
+	{"title": "WD CSS Form Style", "file": "wd_css_form_style.html"},
+	{"title": "WD CSS Icon Style", "file": "wd_css_icon_style.html"},
+	{"title": "WD CSS Menu Style", "file": "wd_css_menu_style.html"},
+	{"title": "WD CSS Miscellaneous Style", "file": "wd_css_miscellaneous_style.html"},
+	{"title": "WD CSS Section Style", "file": "wd_css_section_style.html"},
+	{"title": "WD CSS Text Style", "file": "wd_css_text_style.html"},
+	{"title": "WD CSS Window Style", "file": "wd_css_window_style.html"}
 ]
-	
-	
-    
-    
-    
-    
-    
-    
-    
-    
-

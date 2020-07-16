@@ -39,6 +39,7 @@ atalhos para tempo (h m s) e data (y m d)
 CSS
 wd-code inclusão
 .wd-no-display
+.wd-input-message
 
 <wdonadelli@gmail.com>
 https://github.com/wdonadelli/wd
@@ -1041,7 +1042,7 @@ var wd = (function() {
 					type = "#DC143C";
 				} else if (type === "info") {
 					type = "#1E90FF";
-				} else if (type === "alert") {
+				} else if (type === "warn") {
 					type = "#ff8c00";
 				} else if (type === "ok") {
 					type = "#008080";
