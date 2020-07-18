@@ -28,6 +28,19 @@
 
 		<section class="wd-content">
 
+						<span class="wd-form">
+							<input class="wd-input " type="email" autofocus=""/>
+							<span class="wd-form-help">Enter your personal email.</span>
+							<span class="wd-form-warn">The email must be in the appropriate format.</span>
+						</span>
+
+						<span class="wd-form">
+							<input class="wd-input " type="email" />
+							<span class="wd-form-help">Enter your personal email.</span>
+							<span class="wd-form-warn">The email must be in the appropriate format.</span>
+						</span>
+
+
 			<article id="fields" class="wd-margin-height">
 
 				<h3 class="wd-text-grey">Fields</h3>
@@ -119,10 +132,9 @@
 							<span class="wd-input-warn">This is a <u>required</u> field.</span>
 						</div>
 
-						<input type="email" class="wd-input" placeholder="email"/>
+						<input type="number" min="18" max="35" class="wd-input" placeholder="18 &le; number &le; 35"/>
 						<div class="wd-input-msg">
-							<span class="wd-input-help">Enter your personal email.</span>
-							<span class="wd-input-warn">The email must be in the appropriate format.</span>
+							<span class="wd-input-warn">Enter a number between 18 and 35.</span>
 						</div>
 					</fieldset>
 
@@ -140,13 +152,20 @@
 
 				<div class="wd-box-row wd-margin" >
 					<div class="wd-box-col-02 wd-vform" >
-						<label class="wd-label" >Nickname:</label>
+						<label class="wd-label" >email:</label>
 					</div>
 					<div class="wd-box-col-08 wd-vform" >
-						<input class="wd-input wd-radius-left" type="text" />
+						<input class="wd-input " type="email" />
+						<div class="wd-input-msg">
+							<span class="wd-input-help">Enter your personal email.</span>
+							<span class="wd-input-warn">The email must be in the appropriate format.</span>
+						</div>
 					</div>
 					<div class="wd-box-col-02 wd-vform" >
 						<button class="wd-button wd-radius-right" type="button" >Check</button>
+						<div class="wd-input-msg">
+							<span class="wd-input-help">Confirm the operation.</span>
+						</div>
 					</div>
 				</div>
 

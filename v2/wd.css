@@ -26,6 +26,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.﻿
 
 TODO criar um wd-itemize wd-item wd-subitem wd-item-alpha wd-item-roman
+XXX wd-combo foi substituído por wd-tip
 
 ----------------------------------------------------------------------------*/
 
@@ -238,7 +239,13 @@ hr {
 	min-width: 15%;
 	max-width: 15%;
 }
-/*-- Messages --*/
+/*-- Input Messages --*/
+/*modelo anterior (manter compatibilidade)*/
+.wd-input + .wd-input-help, .wd-input + .wd-input-warn   {visibility: hidden;}
+.wd-input:focus + .wd-input-help,
+.wd-input:out-of-range + .wd-input-warn,
+.wd-input:invalid + .wd-input-warn {visibility: visible;}
+/*novo modelo
 .wd-input-msg {
 	position: relative;
 }
@@ -251,22 +258,70 @@ hr {
 	padding: 0.3em 0.5em;
 	position: absolute;
 	border-radius: 0.2em;
-	top: 1px;;
+	top: 1px;
 	left: 1em;
 }
-.wd-input:focus + .wd-input-msg > .wd-input-help {
-	color: #1e90ff;
+.wd-input-help {color: #1e90ff;}
+.wd-input-warn {color: #b22222;}
+.wd-input:focus + .wd-input-msg > .wd-input-help,
+.wd-button:focus + .wd-input-msg > .wd-input-help {
 	display: block;
 }
 .wd-input:out-of-range + .wd-input-msg > .wd-input-help,
 .wd-input:invalid + .wd-input-msg > .wd-input-help {
 	display: none;
 }
-.wd-input:out-of-range + .wd-input-msg > .wd-input-warn,
-.wd-input:invalid + .wd-input-msg > .wd-input-warn {
-	color: #b22222;
+.wd-input:out-of-range:focus + .wd-input-msg > .wd-input-warn,
+.wd-input:invalid:focus + .wd-input-msg > .wd-input-warn {
 	display: block;
 }
+*/
+
+/*FIXME TODO*/
+.wd-form {
+	position: relative;
+}
+
+
+.wd-form > .wd-form-help, .wd-form > .wd-form-warn {
+	display: none;
+	background-color: #fffaf0;
+	border: thin solid;
+	box-shadow: 0.5em 0.5em 0.5em #cccccc;
+	font-size: small;
+	padding: 0.3em 0.5em;
+	position: absolute;
+	border-radius: 0.2em;
+	top: 150%;
+	top: calc(100% + 0.8em);
+	left: 1em;
+	animation: fade-in 0.4s;
+}
+.wd-form-help {color: #1e90ff;}
+.wd-form-warn {color: #b22222;}
+.wd-form > .wd-input:focus ~ .wd-form-help,
+.wd-form > .wd-button:focus ~ .wd-form-help {display: block;}
+.wd-form > .wd-input:out-of-range ~ .wd-form-help,
+.wd-form > .wd-input:invalid ~ .wd-form-help {display: none;}
+.wd-form > .wd-input:out-of-range:focus ~ .wd-form-warn,
+.wd-form > .wd-input:invalid:focus ~ .wd-form-warn {display: block;}
+
+
+
+
+/*
+wd-hform > wd-form > wd.input = wd-hform > wd-input
+wd-vform > wd-form > wd.input = wd-vform > wd-input
+
+*/
+
+
+
+
+
+
+
+
 
 
 
@@ -387,7 +442,7 @@ hr {
 	margin: auto;
 	overflow: auto;
 	z-index: 99998;
-	animation: zoom-in 0.4s;
+	animation: zoom-in 0.5s;
 	background-color: #FFFFFF;
 }
 .wd-modal > .wd-window {position: absolute !important;}
@@ -417,58 +472,72 @@ hr {
 .wd-window.wd-win-top {
 	bottom: auto;
 	max-height: 40%;
-	animation: from-top 0.4s;
+	animation: from-top 0.5s;
 }
 /*-- bottom --*/
 .wd-window.wd-win-bottom {
 	top: auto;
 	max-height: 40%;
-	animation: from-bottom 0.4s;
+	animation: from-bottom 0.5s;
 }
 /*-- left --*/
 .wd-window.wd-win-left {
 	right: auto;
 	max-width: 25%;
-	animation: from-left 0.4s;
+	animation: from-left 0.5s;
 }
 /*-- right --*/
 .wd-window.wd-win-right {
 	left: auto;
 	max-width: 25%;
-	animation: from-right 0.4s;
+	animation: from-right 0.5s;
 }
 /*-- note --*/
 .wd-window.wd-win-note {
 	bottom: auto;
 	width: 95%;
 	height: 15%;
-	animation: from-right 0.4s;
+	animation: from-right 0.5s;
 }
 /*---------------------------------------------------------------- dropbox --*/
 
-/*-- combo --*/
-.wd-combo {position: relative; cursor: pointer;}
-/*-- combo-child --*/
-.wd-hover-top,    .wd-click-top,
-.wd-hover-bottom, .wd-click-bottom,
-.wd-hover-left,   .wd-click-left,
-.wd-hover-right,  .wd-click-right {
+/*-- tip --*/
+.wd-tip {position: relative;}
+.wd-tip-hover-top,    .wd-tip-click-top,
+.wd-tip-hover-right,  .wd-tip-click-right,
+.wd-tip-hover-bottom, .wd-tip-click-bottom,
+.wd-tip-hover-left,   .wd-tip-click-left {
+	background-color: white;
 	display: none !important;
-	margin: 0;
 	max-height: 20em;
 	overflow: auto;
-	position: absolute !important;
+	position: absolute;
 	text-indent: 0;
-	width: 10em;
+	width: 20em;
 }
-.wd-hover-top,    .wd-click-top    {left: 0; bottom: 100%;}
-.wd-hover-bottom, .wd-click-bottom {left: 0; top: 100%;}
-.wd-hover-left,   .wd-click-left   {left: 100%; top: 0;}
-.wd-hover-right,  .wd-click-right  {right: 100%; top: 0;}
-.wd-combo:hover > .wd-hover-top,    .wd-combo.wd-open > .wd-click-top,
-.wd-combo:hover > .wd-hover-bottom, .wd-combo.wd-open > .wd-click-bottom,
-.wd-combo:hover > .wd-hover-left,   .wd-combo.wd-open > .wd-click-left,
-.wd-combo:hover > .wd-hover-right,  .wd-combo.wd-open > .wd-click-right {display: block !important;}
+.wd-tip-hover-top, .wd-tip-click-top {
+	border-radius: 0.2em 0.2em 0 0;
+	bottom: 100%; left: 0;
+}
+.wd-tip-hover-right, .wd-tip-click-right {
+	border-radius: 0 0.2em 0.2em 0;
+	left: 100%; top: 0;
+}
+.wd-tip-hover-bottom, .wd-tip-click-bottom {
+	border-radius: 0 0 0.2em 0.2em;
+	left: 0; top: 100%;
+}
+.wd-tip-hover-left, .wd-tip-click-left {
+	border-radius: 0.2em 0 0 0.2em;
+	right: 100%; top: 0;
+}
+.wd-tip:hover > .wd-tip-hover-top,    .wd-tip.wd-open > .wd-tip-click-top,
+.wd-tip:hover > .wd-tip-hover-right,  .wd-tip.wd-open > .wd-tip-click-right,
+.wd-tip:hover > .wd-tip-hover-bottom, .wd-tip.wd-open > .wd-tip-click-bottom,
+.wd-tip:hover > .wd-tip-hover-left,   .wd-tip.wd-open > .wd-tip-click-left {
+	display: block !important;
+	animation: fade-in 0.5s;
+}
 
 /*------------------------------------------------------------------- text --*/
 
@@ -906,18 +975,6 @@ hr {
 	white-space: pre;
 }
 code {padding: 0 0.3em;}
-.wd-code q, .wd-code var, code q, code var {
-	color: #ff1493 !important;
-	font-size: inherit !important;
-	font-style: normal !important;
-	font-weight: normal !important;
-}
-.wd-code cite, code cite {
-	color: #4e3cc3 !important;
-	font-size: inherit !important;
-	font-style: italic !important;
-	font-weight: normal !important;
-}
 .wd-code em, code em {
 	color: #004d00 !important;
 	font-size: inherit !important;
@@ -938,7 +995,7 @@ code {padding: 0 0.3em;}
 	content: "\003E" !important;
 	font-weight: bold !important;
 }
-.wd-code samp {
+.wd-code samp, code samp, .wd-code samp *, code samp * {
 	color: #916a08 !important;
 	font-size: inherit !important;
 	font-style: normal !important;
@@ -947,4 +1004,17 @@ code {padding: 0 0.3em;}
 }
 .wd-code samp:before {
 	content: "\21B3  " !important;
+}
+.wd-code q, .wd-code var, code q, code var,
+.wd-code q *, .wd-code var *, code q, code var * {
+	color: #ff1493 !important;
+	font-size: inherit !important;
+	font-style: normal !important;
+	font-weight: normal !important;
+}
+.wd-code cite, code cite, .wd-code cite *, code cite * {
+	color: #4e3cc3 !important;
+	font-size: inherit !important;
+	font-style: italic !important;
+	font-weight: normal !important;
 }

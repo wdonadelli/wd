@@ -16,7 +16,7 @@ inclusão de método trigger como alteranativa ao handler
 
 inclusão do método 
 método data agora aceita o "data-" no início
-wd-active-click funciona para span também
+wd-nav-active funciona para span também
 atributo file: data-wd-file=size{value}type{}char{}len{}
 nos eventos onclick inserir o crescimento de bolha no caso de elemento inline
 toggle-show, enable, disable, toggle-enable em action
