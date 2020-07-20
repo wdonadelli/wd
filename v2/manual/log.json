@@ -1,0 +1,93 @@
+[
+	{
+		"date": "2019-09-21",
+		"version": "2.0.1",
+		"library": "wd.js",
+		"target": "WDdom.sort",
+		"description": "Fixed HTML element classification bug that did not work in some browsers."
+	},
+	{
+		"date": "2019-09-21",
+		"version": "2.0.1",
+		"library": "wd.js",
+		"target": "WDnumber.decimal",
+		"description": "Fixed bug that caused incorrect attribute value to be returned."
+	},
+	{
+		"date": "2019-09-21",
+		"version": "2.0.1",
+		"library": "wd.js",
+		"target": "WDnumber.toString",
+		"description": "Fixed bug that caused incorrect attribute value to be returned."
+	},
+	{
+		"date": "2019-09-21",
+		"version": "2.0.1",
+		"library": "wd.js",
+		"target": "WD.type",
+		"description": "Fixed error trying to identify simple object in IE9."
+	},
+	{
+		"date": "2019-09-21",
+		"version": "2.0.1",
+		"library": "wd.js",
+		"target": "WDtext.request",
+		"description": "Proper response implemented in situations where the request fails."
+	},
+	{
+		"date": "2019-09-27",
+		"version": "2.0.1",
+		"library": "wd.css",
+		"target": "wd-win-...",
+		"description": "Made adjustments to meet IE9."
+	},
+	{
+		"date": "2019-11-02",
+		"version": "2.0.2",
+		"library": "wd.css",
+		"target": "wd-modal-..., wd-window",
+		"description": "Made adjustments in z-index."
+	},
+	{
+		"date": "2020-01-03",
+		"version": "2.0.3",
+		"library": "wd.css",
+		"target": "wd-code",
+		"description": "corrected misconception in typing (sample to samp)."
+	},
+	{
+		"date": "2020-03-21",
+		"version": "2.0.2",
+		"library": "wd.js",
+		"target": "data_wdActive",
+		"description": "Click on the corrected \"body\" element in the identification of the \"nav\" parent element."
+	},
+	{
+		"date": "2020-04-14",
+		"version": "2.0.3",
+		"library": "wd.js",
+		"target": "WDarray.sort",
+		"description": "Fixed DOM element sorting error."
+	},
+	{
+		"date": "2020-04-14",
+		"version": "2.0.4",
+		"library": "wd.css",
+		"target": "wd-list wd-table",
+		"description": "Changed the placement of wd-table and wd-list to avoid damage to specific CSS."
+	},
+	{
+		"date": "2020-04-19",
+		"version": "2.0.4",
+		"library": "wd.js",
+		"target": "data_wdSortCol",
+		"description": "Fixed an error that allowed sorting columns without the attribute."
+	},
+	{
+		"date": "2020-05-23",
+		"version": "2.1.4",
+		"library": "wd.js",
+		"target": "data_wdMask",
+		"description": "Time and date shortcuts were defined for the data-wd-mask attribute (collaboration by Cleber Alexandre da Silva)."
+	}
+]

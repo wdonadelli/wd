@@ -1,0 +1,158 @@
+﻿<!DOCTYPE html>
+<html>
+
+	<head>
+		<title>WD Web Libraries Examples</title>
+		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1"/>
+		<meta name="keywords" content="wd, stylesheet, attributes, tools, HTML, CSS, javaScript, library, queryselector, handbook, github, donadelli, wdonadelli">
+		<meta name="author" content="Willian Donadelli"/>
+		<meta name="description" content="WD Web Libraries Examples"/>
+		<meta name="rating" content="general" />
+		<!--<meta http-equiv="pragma" content="no-cache" />-->
+		<meta name="revisit-after" content="2 days" />
+		<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+		<script src="../v2/wd.js"></script>
+		<link  href="../v2/wd.css" rel="stylesheet" />
+
+		<script>
+function run() {
+	var value, input, object;
+	try {
+		value  = wd$("input[name=input]").item(0).value;
+		input  = value !== "" ? eval("("+value+")") : undefined;
+		object = wd(input);
+		if (object.type !== "date") {
+			wd("The value entered must be an date.").message("alert");
+			wd$("*[id]").run(function (x) {x.innerHTML = "";return;});
+		} else {
+			wd$("#input").item(0).innerHTML      = value;
+
+			wd$("#d").item(0).innerHTML          = object.d;
+			wd$("#m").item(0).innerHTML          = object.m;
+			wd$("#y").item(0).innerHTML          = object.y;
+
+		
+			wd$("#countdown").item(0).innerHTML  = object.countdown;
+			wd$("#days").item(0).innerHTML       = object.days;
+			wd$("#leap").item(0).innerHTML       = object.leap;
+			wd$("#week").item(0).innerHTML       = object.week;
+			wd$("#weeks").item(0).innerHTML      = object.weeks;
+			wd$("#width").item(0).innerHTML      = object.width;
+
+			wd$("#format").item(0).innerHTML     = object.format("#W %d #M %Y", "it-IT");
+			
+			wd$("#longMonth").item(0).innerHTML  = object.longMonth();
+			wd$("#longWeek").item(0).innerHTML   = object.longWeek();
+			wd$("#shortMonth").item(0).innerHTML = object.shortMonth();
+			wd$("#shortWeek").item(0).innerHTML  = object.shortWeek();
+
+			wd$("#year").item(0).innerHTML       = object.year -= 3;
+			wd$("#month").item(0).innerHTML      = object.month += 13;
+			wd$("#day").item(0).innerHTML        = object.day += 32;
+
+
+			wd$("#toString").item(0).innerHTML   = object.toString();
+			wd$("#valueOf").item(0).innerHTML    = wd(object.valueOf()).toString();
+		}
+	} catch(e) {
+		wd(e.message).message("info");
+		wd$("*[id]").run(function (x) {x.innerHTML = "";return;});
+		console.log(e);
+	}
+}
+	</script>
+
+	</head>
+
+<body class="wd-text-justify" ">
+
+	<main class="wd-flyer">
+
+		<header class="wd-head wd-box-blue">
+			<h1>WD Web Libraries Examples</h1>
+			<p><a href="https://github.com/wdonadelli/wd/wiki/WD-JS-Date-Tools#wd-js-date-tools" target="_blank" class="wd-text-white">WD JS Date Tools</a></p>
+		</header>
+
+		<section class="wd-content">
+
+			<div class="wd-vform wd-border wd-padding">
+				<label class="wd-label" for="input">Set the value of the <code>input</code> argument:</label>
+				<input type="text" name="input" class="wd-input" autofocus="true"
+					value="'%today'"
+				/>
+				<input type="button" class="wd-button" value="Run" onclick="run();" />
+			</div>
+
+		</section>
+
+		<pre class="wd-code wd-content">
+<em>var</em> myObject = wd(<var id="input"></var>);
+
+myObject.d;
+<samp id="d"></samp>
+
+myObject.m;
+<samp id="m"></samp>
+
+myObject.y;
+<samp id="y"></samp>
+
+myObject.countdown;
+<samp id="countdown"></samp>
+
+myObject.days;
+<samp id="days"></samp>
+
+myObject.leap;
+<samp id="leap"></samp>
+
+myObject.week;
+<samp id="week"></samp>
+
+myObject.weeks;
+<samp id="weeks"></samp>
+
+myObject.width;
+<samp id="width"></samp>
+
+myObject.format(<q>#W %d #M %Y</q>, <q>it-IT</q>);
+<samp id="format"></samp>
+
+myObject.longMonth();
+<samp id="longMonth"></samp>
+
+myObject.longWeek();
+<samp id="longWeek"></samp>
+
+myObject.shortMonth();
+<samp id="shortMonth"></samp>
+
+myObject.shortWeek();
+<samp id="shortWeek"></samp>
+
+myObject.year -= 3;
+<samp id="year"></samp>
+
+myObject.month += 13;
+<samp id="month"></samp>
+
+myObject.day += 32;
+<samp id="day"></samp>
+
+myObject.toString();
+<samp id="toString"></samp>
+
+myObject.valueOf();
+<samp id="valueOf"></samp>
+		</pre>
+
+
+
+	</main>
+
+
+
+
+</body>
+</html>

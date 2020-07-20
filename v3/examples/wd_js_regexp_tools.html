@@ -1,0 +1,94 @@
+﻿<!DOCTYPE html>
+<html>
+
+	<head>
+		<title>WD Web Libraries Examples</title>
+		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1"/>
+		<meta name="keywords" content="wd, stylesheet, attributes, tools, HTML, CSS, javaScript, library, queryselector, handbook, github, donadelli, wdonadelli">
+		<meta name="author" content="Willian Donadelli"/>
+		<meta name="description" content="WD Web Libraries Examples"/>
+		<meta name="rating" content="general" />
+		<!--<meta http-equiv="pragma" content="no-cache" />-->
+		<meta name="revisit-after" content="2 days" />
+		<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+		<script src="../v2/wd.js"></script>
+		<link  href="../v2/wd.css" rel="stylesheet" />
+
+		<script>
+function run() {
+	var value, input, object;
+	try {
+		value1 = wd$("input[name=input]").item(0).value;
+		value2 = wd$("input[name=value]").item(0).value;
+		input1 = value1 !== "" ? eval("("+value1+")") : undefined;
+		input2 = value2 !== "" ? eval("("+value2+")") : undefined;
+		object = wd(input1);
+		if (object.type !== "regexp") {
+			wd("The value entered must be a regular expression.").message("alert");
+			wd$("*[id]").run(function (x) {x.innerHTML = "";return;});
+		} else {
+			wd$("#input").item(0).innerHTML    = value1;
+			wd$("#value").item(0).innerHTML    = value2;
+			wd$("#mask").item(0).innerHTML     = object.mask(input2);
+			wd$("#toString").item(0).innerHTML = object.toString();
+			wd$("#valueOf").item(0).innerHTML  = object.valueOf();
+		}
+	} catch(e) {
+		wd(e.message).message("info");
+		wd$("*[id]").run(function (x) {x.innerHTML = "";return;});
+		console.log(e);
+	}
+}
+	</script>
+
+	</head>
+
+<body class="wd-text-justify" ">
+
+	<main class="wd-flyer">
+
+		<header class="wd-head wd-box-blue">
+			<h1>WD Web Libraries Examples</h1>
+			<p><a href="https://github.com/wdonadelli/wd/wiki/WD-JS-RegExp-Tools" target="_blank" class="wd-text-white">WD JS RegExp Tools</a></p>
+		</header>
+
+		<section class="wd-content">
+
+			<div class="wd-vform wd-border wd-padding">
+				<label class="wd-label" for="input">Set the value of the <code>input</code> argument:</label>
+				<input type="text" name="input" class="wd-input" autofocus="true"
+					value="/^([0-9]{3})\.([0-9]{3})\.([0-9]{3})\-([0-9]{2})$/"
+				/>
+				<label class="wd-label" for="value">Set the value of the <code>value</code> argument:</label>
+				<input type="text" name="value" class="wd-input" autofocus="true"
+					value="'01234567890'"
+				/>
+				<input type="button" class="wd-button" value="Run" onclick="run();" />
+			</div>
+
+		</section>
+
+		<pre class="wd-code wd-content">
+<em>var</em> regex = <var id="input"></var>;
+
+<em>var</em> value = <var id="value"></var>;
+
+wd(regex).mask(value);
+<samp id="mask"></samp>
+
+wd(regex).toString();
+<samp id="toString"></samp>
+
+wd(regex).valueOf();
+<samp id="valueOf"></samp>
+		</pre>
+
+
+	</main>
+
+
+
+
+</body>
+</html>

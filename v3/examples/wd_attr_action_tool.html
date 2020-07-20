@@ -1,0 +1,144 @@
+﻿<!DOCTYPE html>
+<html>
+
+	<head>
+		<title>WD Web Libraries Examples</title>
+		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1"/>
+		<meta name="keywords" content="wd, stylesheet, attributes, tools, HTML, CSS, javaScript, library, queryselector, handbook, github, donadelli, wdonadelli">
+		<meta name="author" content="Willian Donadelli"/>
+		<meta name="description" content="WD Web Libraries Examples"/>
+		<meta name="rating" content="general" />
+		<!--<meta http-equiv="pragma" content="no-cache" />-->
+		<meta name="revisit-after" content="2 days" />
+		<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+		<script src="../v2/wd.js"></script>
+		<link  href="../v2/wd.css" rel="stylesheet" />
+		<script src="scripts.js">	</script>
+
+	</head>
+
+<body class="wd-text-justify">
+
+	<main class="wd-flyer">
+
+		<header class="wd-head wd-box-blue">
+			<h1>WD Web Libraries Examples</h1>
+			<p><a href="https://github.com/wdonadelli/wd/wiki/WD-ATTR-Action-Tool" target="_blank" class="wd-text-white">WD ATTR Action Tool</a></p>
+		</header>
+
+		<section class="wd-content">
+
+			<article id="check_enable" class="wd-margin-height">
+				<h3 class="wd-text-grey">Check/Enable</h3>
+
+				<nav class="wd-nav">
+					<span data-wd-action="check{#myForm input}">Check</span>
+					<span data-wd-action="uncheck{#myForm input}">Uncheck</span>
+					<span data-wd-action="toggle-check{#myForm input}">Toggle</span>
+				</nav>
+				<nav class="wd-nav">
+					<span data-wd-action="enable{#myForm input}">Enable</span>
+					<span data-wd-action="disable{#myForm input}">Disable</span>
+					<span data-wd-action="toggle-enable{#myForm input}">Toggle</span>
+				</nav>
+				<nav class="wd-nav">
+					<span data-wd-action="enable{#myForm input}check{#myForm input}">All</span>
+					<span data-wd-action="disable{#myForm input}uncheck{#myForm input}">Nothing</span>
+				</nav>
+				
+				<form id="myForm" class="wd-vform">
+					<label class="wd-label">
+						A) <input type="checkbox" class="wd-input" />
+					</label>
+					<label class="wd-label">
+						B) <input type="checkbox" class="wd-input" />
+					</label>
+					<label class="wd-label">
+						C) <input type="checkbox" class="wd-input" />
+					</label>
+				</form>
+
+				<hr/>
+
+				<dl>
+					<dt><span class="wd-b">Shopping list</span> (<kbd data-wd-action="toggle-enable{#check_enable dd}">Dis/Enable</kbd>)</dt>
+					<dd data-wd-action="toggle-check{}">Beef</dd>
+					<dd data-wd-action="toggle-check{}">Milk</dd>
+					<dd data-wd-action="toggle-check{}">Butter</dd>
+				</dl>
+				
+			</article>
+			<button type="button" class="wd-button" onclick="viewCode('#check_enable');">Code</button>
+
+		</section>
+
+
+		<section class="wd-content">
+
+			<article id="tab" class="wd-margin-height">
+				<h3 class="wd-text-grey">Tab</h3>
+
+				<nav class="wd-nav wd-border">
+					<span data-wd-action="tab{#tab1}">Tab 1</span>
+					<span data-wd-action="tab{#tab2}">Tab 2</span>
+					<span data-wd-action="tab{#tab3}">Tab 3</span>
+				</nav>
+				
+				<div>
+					<div id="tab1" class="wd-flyer wd-border">
+						<header class="wd-head wd-box-green">
+							<h4>Tab 1</h4>
+						</header>
+						<p class="wd-content">Content 1.</p>
+					</div>
+					<div id="tab2" class="wd-flyer wd-border">
+						<header class="wd-head wd-box-red">
+							<h4>Tab 2</h4>
+						</header>
+						<p class="wd-content">Content 2.</p>
+					</div>
+					<div id="tab3" class="wd-flyer wd-border">
+						<header class="wd-head wd-box-blue">
+							<h4>Tab 3</h4>
+						</header>
+						<p class="wd-content">Content 3.</p>
+					</div>
+				</div>
+
+			</article>
+			<button type="button" class="wd-button" onclick="viewCode('#tab');">Code</button>
+			<p class="wd-text-small wd-i">See <a href="wd_attr_click_tool.html" target="_blank">WD ATTR Click Tool</a> to activate a standard box.</p>
+
+		</section>
+
+		<section class="wd-content">
+
+			<article id="modalWindow" class="wd-margin-height">
+				<h3 class="wd-text-grey">Window (CSS required)</h3>
+
+				<button type="button" class="wd-button" data-wd-action="open{#modal}">Window</button>
+
+				<div class="wd-modal" id="modal">
+					<div class="wd-flyer wd-window wd-win-medium wd-box-yellow">
+						<header class="wd-head wd-box-black">
+							<h3>My modal window.</h3>
+						</header>
+						<div class="wd-content">
+							Content.
+						</div>
+						<span class="wd-box-se wd-xmargin" data-wd-action="close{#modal}">Close!</span>
+					</div>
+				</div>
+
+			</article>
+			<button type="button" class="wd-button" onclick="viewCode('#modalWindow');">Code</button>
+
+		</section>
+
+	</main>
+	
+	<div data-wd-load="get{modal.html}"></div>
+
+</body>
+</html>

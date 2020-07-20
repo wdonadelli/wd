@@ -1,0 +1,80 @@
+﻿<!DOCTYPE html>
+<html>
+
+	<head>
+		<title>WD Web Libraries Examples</title>
+		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1"/>
+		<meta name="keywords" content="wd, stylesheet, attributes, tools, HTML, CSS, javaScript, library, queryselector, handbook, github, donadelli, wdonadelli">
+		<meta name="author" content="Willian Donadelli"/>
+		<meta name="description" content="WD Web Libraries Examples"/>
+		<meta name="rating" content="general" />
+		<!--<meta http-equiv="pragma" content="no-cache" />-->
+		<meta name="revisit-after" content="2 days" />
+		<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+		<script src="../v2/wd.js"></script>
+		<link  href="../v2/wd.css" rel="stylesheet" />
+		<script src="scripts.js">	</script>
+
+	</head>
+
+<body class="wd-text-justify">
+
+	<main class="wd-flyer">
+
+		<header class="wd-head wd-box-blue">
+			<h1>WD Web Libraries Examples</h1>
+			<p><a href="https://github.com/wdonadelli/wd/wiki/WD-ATTR-Send-Tool" target="_blank" class="wd-text-white">WD ATTR Send Tool</a></p>
+		</header>
+
+		<section class="wd-content">
+
+			<article id="send" class="wd-margin-height">
+
+				<script>
+function send1(x) {
+	if (x.status === "DONE") {wd("<pre>"+x.text+"</pre>").message("info", 0);}
+}
+function send2(x) {
+	if (x.status === "DONE") {alert(x.text)};
+}
+				</script>
+
+				<h3 class="wd-text-grey">Form 1</h3>
+
+				<form class="wd-vform" id="send1">
+					<input type="hidden" name="form" value="Form 1" />
+					<label class="wd-label">Name</label>
+					<input type="text" class="wd-input" name="name" />
+					<label class="wd-label">Age</label>
+					<input type="number" class="wd-input" name="age" />
+				</form>
+
+				<h3 class="wd-text-grey">Form 2</h3>
+
+				<form class="wd-vform" id="send2">
+					<input type="hidden" name="form" value="Form 2" />
+					<label class="wd-label">History</label>
+					<textarea class="wd-input" name="history" ></textarea>
+					<label class="wd-label">
+						<input type="checkbox" class="wd-input" name="confirm" value="confirmed" /> Confirm
+					</label>
+				</form>
+
+				<button
+					data-wd-send="get{target.php?send=1&}${#send1 *}callback{send1}&get{target.php?send=2&}${#send2 *}callback{send2}"
+					type="button" class="wd-button wd-icon-upload"					
+				>Send</button>
+
+			</article>
+
+			<button type="button" class="wd-button" onclick="viewCode('#send');">Code</button>
+
+		</section>
+
+	</main>
+	
+	<div data-wd-load="get{modal.html}"></div>
+
+</body>
+</html>
