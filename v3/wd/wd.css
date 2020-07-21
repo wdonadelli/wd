@@ -28,7 +28,7 @@ SOFTWARE.﻿
 TODO criar um wd-itemize wd-item wd-subitem wd-item-alpha wd-item-roman
 XXX wd-combo foi substituído por wd-tip
 
-------------------------------------------------------------------------------*/
+--------------------------------------------------------------------------------
 
 /*============================================================================*/
 /*-- ESTILOS PARA NORMALIZAÇÃO --*/
@@ -36,56 +36,82 @@ XXX wd-combo foi substituído por wd-tip
 *, *:before, *:after {
 	box-sizing: border-box;
 }
-html {
-	font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
-	font-size: 16px;
-}
-html.wd-clear {
-	font-family: initial;
-	font-size:  initial;
-}
+
 body, main, section, article, header, footer, nav, adress {
 	display: block;
 	margin: 0;
 	padding: 0;
 }
 
+h1, h2, h3, h4, h5, h6, p, pre, figure, figcaption, img {
+	display: block;
+}
+
 /*============================================================================*/
 /*-- ESTILOS DE BASE --*/
+/*
+/------------------------------------------------------------------------------\
+|Os estilos de base terão efeitos na página se precedidos da classe wd, caso   |
+|contrário, terão seu visual padrão ou aquele definido na normalização.        |
+|Caso queira aplicar os efeitos em todos os descendentes, deve-se inserir a    |
+|class wd na tag html ou tratar cada container pai individulamente.            |
+\------------------------------------------------------------------------------/
+*/
 
-/* -- Elementos de Seção --*/
-.wd-article, article {
+.wd {
+	background-color: #ffffff;
+	color: #000000;
+	font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+	font-size: 16px;
+}
+
+/* -- Elementos de Seção -- */
+.wd article {
 	margin: 0.5em 0;
 	padding: 0.5em;
 }
-header, footer {
-	padding: 0.5em 1em;
+.wd article:first-child {
+	margin-top: 0;
+}
+.wd article:last-child {
+	margin-bottom: 0;
 }
 
-
-
-.wd-head > *, .wd-foot > * {
+.wd header, .wd footer {
+	padding: 0.5em 1em;
+	margin: 0.5em;
+}
+.wd header:first-child {
+	margin-top: -0.5em;
+}
+.wd footer:last-child {
+	margin-bottom: -0.5em;
+}
+.wd header > *, .wd footer > * {
 	margin: 0.25em 0;
 	padding-right: 0;
 	padding-left: 0;
 }
-
-
-
-/*-------------------------------------------------------------------- menu --*/
-
-/*-- nav --*/
-.wd-nav {
-	display: block;
-	display: flex;
-	padding: 0;
+.wd header > nav, .wd footer > nav {
+	margin-right: -1em;
+	margin-left: -1em;
 }
-.wd-nav:after {
+.wd header > nav:first-child, .wd footer > nav:first-child {
+	margin-top: -0.5em;
+}
+.wd header > nav:last-child, .wd footer > nav:last-child {
+	margin-bottom: -0.5em;
+}
+
+.wd nav {
+	display: flex;
+}
+.wd nav:after {
 	content: "";
 	clear: both;
 	display: table;
 }
-.wd-nav > * {
+.wd nav > * {
 	background-color: inherit;
 	color: inherit;
 	cursor: pointer;
@@ -96,9 +122,9 @@ header, footer {
 	text-align: center;	
 	text-decoration: none;
 }
-.wd-nav > *:hover,
-.wd-nav > *:focus,
-.wd-nav > *.wd-nav-active {
+.wd nav > *:hover,
+.wd nav > *:focus,
+.wd nav > *.wd-nav-active {
 	background-color: #f2f2f2;
 	box-shadow: inset 0 0 1em 0.1em #bfbfbf;
 	border-radius: 0.2em;
@@ -106,82 +132,126 @@ header, footer {
 	text-decoration: none;
 }
 
-.wd-nav.wd-vertical {
+.wd nav.wd-hnav {
 	display: block;
 }
-.wd-nav.wd-vertical > * {
+.wd nav.wd-hnav > * {
 	display: block;
 	float: none;
 	text-align: left;
 	width: 100%;
 }
 
-/*-- head/footer --*/
-.wd-head, .wd-foot {
-	display: block;
-	padding: 0.5em 1em;
-}
-.wd-head > *, .wd-foot > * {
-	margin: 0.25em 0;
-	padding-right: 0;
-	padding-left: 0;
-}
-.wd-head > .wd-nav, .wd-foot > .wd-nav {
-	margin-right: -1em;
-	margin-left: -1em;
-}
-.wd-head > .wd-nav:last-child,
-.wd-foot > .wd-nav:last-child {margin-bottom: -0.5em;}
-.wd-head > .wd-nav:first-child,
-.wd-foot > .wd-nav:first-child {margin-top: -0.5em;}
-/*-- content --*/
-.wd-content {
-	margin: 0.5em 0;
-	padding: 0.5em 0;
-}
-/*-- flyer --*/
-.wd-flyer {
-	display: block;
-	padding: 0.5em;
-}
-.wd-flyer > .wd-head,
-.wd-flyer > .wd-foot,
-.wd-flyer > .wd-nav {
+.wd article > header,
+.wd article > footer,
+.wd article > nav {
 	margin-right: -0.5em;
 	margin-left: -0.5em;
 }
-.wd-flyer > .wd-head:first-child {margin-top: -0.5em;}
-.wd-flyer > .wd-foot:last-child  {margin-bottom: -0.5em;}
-/*-- buddy --*/
-.wd-nav.wd-buddy, .wd-head.wd-buddy, .wd-foot.wd-buddy {
-	position: sticky;
-	z-index: 99;
+
+/* -- Elementos de cabeçalho e texto -- */
+.wd h1, .wd h2, .wd h3, .wd h4, .wd h5, .wd h6 {
+	font-weight: bold;
+	margin: 0.5em 0;
+	padding: 0.25em;
+	text-align: left;
 }
-.wd-nav.wd-buddy  {top: 0;}
-.wd-head.wd-buddy {top: 0;}
-.wd-foot.wd-buddy {bottom: 0;}
-.wd-flyer > .wd-head.wd-buddy:first-child {top: -0.5em;}
+.wd h1 {font-size: 2.00em; text-align: center;}
+.wd h2 {font-size: 1.50em;}
+.wd h3 {font-size: 1.20em;}
+.wd h4 {font-size: 1.00em;}
+.wd h5 {font-size: 0.85em;}
+.wd h6 {font-size: 0.65em;}
+
+.wd p {
+	margin: 1em 0;
+	text-align: justify;
+	text-indent: 4em;
+}
+
+.wd pre, .wd figure {
+	margin: 1em 0;
+}
+.wd img {
+	margin: auto;	
+}
+.wd figure > img {
+	text-align: center;
+}
+.wd figcaption {
+	font-size: smaller;
+	padding: 0.3em;
+	text-align: center;
+
+}
 
 
 
+/*-- Paragraph --*/
+
+.wd-b, .wd-b-child > *       {font-weight: bold;}
+.wd-u, .wd-u-child > *       {text-decoration: underline;}
+.wd-i, .wd-i-child > *       {font-style: italic;}
+.wd-s, .wd-s-child > *       {text-decoration: line-through;}
+.wd-mark, .wd-mark-child > * {background-color: #FFFF00;}
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+.wd-code, code {
+	background-color: #E6E6FA !important;
+	border-radius: 0.2em;
+	color: #0073e6 !important;
+	font-family: monospace !important;
+	font-size: 0.9em !important;
+	font-style: normal !important;
+	font-weight: normal !important;
+	overflow: auto !important;
+	white-space: pre;
+}
+code {padding: 0 0.3em;}
+.wd-code em, code em {
+	color: #004d00 !important;
+	font-size: inherit !important;
+	font-style: normal !important;
+	font-weight: bold !important;
+}
+.wd-code kbd, code kbd {
+	color: inherit  !important;
+	font-size: inherit !important;
+	font-style: normal !important;
+	font-weight: normal !important;
+}
+.wd-code kbd:before, code kbd:before {
+	content: "\003C" !important;
+	font-weight: bold !important;
+}
+.wd-code kbd:after, code kbd:after {
+	content: "\003E" !important;
+	font-weight: bold !important;
+}
+.wd-code samp, code samp, .wd-code samp *, code samp * {
+	color: #916a08 !important;
+	font-size: inherit !important;
+	font-style: normal !important;
+	font-weight: normal !important;
+	padding: 2px 0 !important;
+}
+.wd-code samp:before {
+	content: "\21B3  " !important;
+}
+.wd-code q, .wd-code var, code q, code var,
+.wd-code q *, .wd-code var *, code q, code var * {
+	color: #ff1493 !important;
+	font-size: inherit !important;
+	font-style: normal !important;
+	font-weight: normal !important;
+}
+.wd-code cite, code cite, .wd-code cite *, code cite * {
+	color: #4e3cc3 !important;
+	font-size: inherit !important;
+	font-style: italic !important;
+	font-weight: normal !important;
+}
 
 
 
@@ -215,6 +285,99 @@ hr {
 	border: 0;
 	border-top: 2px solid #bfbfbf;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*-- buddy --*/
+.wd-.wd nav-buddy, .wd-head.wd-buddy, .wd-foot.wd-buddy {
+	position: sticky;
+	z-index: 99;
+}
+.wd-.wd nav-buddy  {top: 0;}
+.wd-head.wd-buddy {top: 0;}
+.wd-foot.wd-buddy {bottom: 0;}
+.wd-flyer > .wd-head.wd-buddy:first-child {top: -0.5em;}
+
+
+
+
+
+
+
+
+
+
+
+
+/*-------------------------------------------------------------------- menu --*/
+
+/*-- nav --*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -945,87 +1108,7 @@ wd-vform > wd-form > wd.input = wd-vform > wd-input
 /*------------------------------------------------------------------- code --*/
 
 /*-- Title --*/
-.wd-h1, .wd-h1-child > *, h1 {font-size: 2.00em;}
-.wd-h2, .wd-h2-child > *, h2 {font-size: 1.50em;}
-.wd-h3, .wd-h3-child > *, h3 {font-size: 1.20em;}
-.wd-h4, .wd-h4-child > *, h4 {font-size: 1.00em;}
-.wd-h5, .wd-h5-child > *, h5 {font-size: 0.85em;}
-.wd-h6, .wd-h6-child > *, h6 {font-size: 0.65em;}
-.wd-h1, .wd-h1-child > *, h1,
-.wd-h2, .wd-h2-child > *, h2,
-.wd-h3, .wd-h3-child > *, h3,
-.wd-h4, .wd-h4-child > *, h4,
-.wd-h5, .wd-h5-child > *, h5,
-.wd-h6, .wd-h6-child > *, h6 {
-	font-weight: bold;
-	margin: 0.5em 0;
-	padding: 0.25em;
-}
-/*-- Paragraph --*/
-.wd-p, .wd-p-child > *       {text-indent: 4em; text-align: justify;}
-.wd-b, .wd-b-child > *       {font-weight: bold;}
-.wd-u, .wd-u-child > *       {text-decoration: underline;}
-.wd-i, .wd-i-child > *       {font-style: italic;}
-.wd-s, .wd-s-child > *       {text-decoration: line-through;}
-.wd-mark, .wd-mark-child > * {background-color: #FFFF00;}
 
-
-
-.wd-code, code {
-	background-color: #E6E6FA !important;
-	border-radius: 0.2em;
-	color: #0073e6 !important;
-	font-family: monospace !important;
-	font-size: 0.9em !important;
-	font-style: normal !important;
-	font-weight: normal !important;
-	overflow: auto !important;
-	white-space: pre;
-}
-code {padding: 0 0.3em;}
-.wd-code em, code em {
-	color: #004d00 !important;
-	font-size: inherit !important;
-	font-style: normal !important;
-	font-weight: bold !important;
-}
-.wd-code kbd, code kbd {
-	color: inherit  !important;
-	font-size: inherit !important;
-	font-style: normal !important;
-	font-weight: normal !important;
-}
-.wd-code kbd:before, code kbd:before {
-	content: "\003C" !important;
-	font-weight: bold !important;
-}
-.wd-code kbd:after, code kbd:after {
-	content: "\003E" !important;
-	font-weight: bold !important;
-}
-.wd-code samp, code samp, .wd-code samp *, code samp * {
-	color: #916a08 !important;
-	font-size: inherit !important;
-	font-style: normal !important;
-	font-weight: normal !important;
-	padding: 2px 0 !important;
-}
-.wd-code samp:before {
-	content: "\21B3  " !important;
-}
-.wd-code q, .wd-code var, code q, code var,
-.wd-code q *, .wd-code var *, code q, code var * {
-	color: #ff1493 !important;
-	font-size: inherit !important;
-	font-style: normal !important;
-	font-weight: normal !important;
-}
-.wd-code cite, code cite, .wd-code cite *, code cite * {
-	color: #4e3cc3 !important;
-	font-size: inherit !important;
-	font-style: italic !important;
-	font-weight: normal !important;
-}
 
 /*----------------------------------------------------------------- symbol --*/
 
