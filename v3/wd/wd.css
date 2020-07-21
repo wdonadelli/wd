@@ -37,13 +37,27 @@ XXX wd-combo foi substituído por wd-tip
 	box-sizing: border-box;
 }
 
-body, main, section, article, header, footer, nav, adress {
+body, main, section, article, header, footer, nav, adress, aside {
 	display: block;
 	margin: 0;
 	padding: 0;
 }
 
-h1, h2, h3, h4, h5, h6, p, pre, figure, figcaption, img {
+h1, h2, h3, h4, h5, h6, p, pre, blockquote {
+	display: block;
+}
+
+hr {
+	box-zising: content-box;
+	height: 0;
+	overflow: visible;
+}
+
+img, figure, figcaption, picture {
+	display: block;
+}
+
+ul, ol, dl {
 	display: block;
 }
 
@@ -169,8 +183,43 @@ h1, h2, h3, h4, h5, h6, p, pre, figure, figcaption, img {
 	text-indent: 4em;
 }
 
-.wd pre, .wd figure {
-	margin: 1em 0;
+.wd blockquote {
+	text-align: justify;
+	margin: 1em 0 1em 8em;
+	font-size: 0.9em;
+}
+
+.wd pre {
+	margin: 0.5em 0;
+}
+
+
+/* -- Semântica textual -- */
+.wd code {
+	background-color: #E6E6FA;
+	border-radius: 0.2em;
+	color: #0073e6;
+	font-family: monospace;
+	font-size: 0.9em;
+	padding: 0 0.3em;
+}
+
+.wd a {
+	color: #4169E1;
+	text-decoration: none;
+}
+.wd a:hover {
+	text-decoration: underline;
+}
+.wd hr {
+	border: 1px solid #bfbfbf;
+}
+.wd summary {
+	cursor: pointer;
+}
+/* -- Imagens -- */
+.wd figure, .wd picture {
+	margin: 0.5em 0;
 }
 .wd img {
 	margin: auto;	
@@ -182,12 +231,55 @@ h1, h2, h3, h4, h5, h6, p, pre, figure, figcaption, img {
 	font-size: smaller;
 	padding: 0.3em;
 	text-align: center;
-
+}
+/* -- Listas -- */
+.wd ul, .wd ol, .wd dl {
+	margin: 0.5em 0;
+	padding: 0;
+}
+.wd ul, .wd ol {
+	list-style-position: inside;
+}
+.wd ul > li , .wd ol > li {
+	padding: 0.3em 0.3em 0.3em 2em;
+}
+.wd dl > dt, .wd dl > dd {
+	padding: 0.3em;
+	margin: 0;
+}
+.wd dl > dt {
+	font-weight: bold;
+}
+.wd dl > dd {
+	margin-left: 2em;
 }
 
+	
 
 
-/*-- Paragraph --*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 .wd-b, .wd-b-child > *       {font-weight: bold;}
 .wd-u, .wd-u-child > *       {text-decoration: underline;}
@@ -197,7 +289,7 @@ h1, h2, h3, h4, h5, h6, p, pre, figure, figcaption, img {
 
 
 
-.wd-code, code {
+.wd-code {
 	background-color: #E6E6FA !important;
 	border-radius: 0.2em;
 	color: #0073e6 !important;
@@ -208,28 +300,27 @@ h1, h2, h3, h4, h5, h6, p, pre, figure, figcaption, img {
 	overflow: auto !important;
 	white-space: pre;
 }
-code {padding: 0 0.3em;}
-.wd-code em, code em {
+.wd-code em {
 	color: #004d00 !important;
 	font-size: inherit !important;
 	font-style: normal !important;
 	font-weight: bold !important;
 }
-.wd-code kbd, code kbd {
+.wd-code kbd {
 	color: inherit  !important;
 	font-size: inherit !important;
 	font-style: normal !important;
 	font-weight: normal !important;
 }
-.wd-code kbd:before, code kbd:before {
+.wd-code kbd:before {
 	content: "\003C" !important;
 	font-weight: bold !important;
 }
-.wd-code kbd:after, code kbd:after {
+.wd-code kbd:after {
 	content: "\003E" !important;
 	font-weight: bold !important;
 }
-.wd-code samp, code samp, .wd-code samp *, code samp * {
+.wd-code samp, .wd-code samp * {
 	color: #916a08 !important;
 	font-size: inherit !important;
 	font-style: normal !important;
@@ -239,14 +330,13 @@ code {padding: 0 0.3em;}
 .wd-code samp:before {
 	content: "\21B3  " !important;
 }
-.wd-code q, .wd-code var, code q, code var,
-.wd-code q *, .wd-code var *, code q, code var * {
+.wd-code q, .wd-code var, .wd-code q *, .wd-code var * {
 	color: #ff1493 !important;
 	font-size: inherit !important;
 	font-style: normal !important;
 	font-weight: normal !important;
 }
-.wd-code cite, code cite, .wd-code cite *, code cite * {
+.wd-code cite, .wd-code cite * {
 	color: #4e3cc3 !important;
 	font-size: inherit !important;
 	font-style: italic !important;
@@ -269,22 +359,6 @@ code {padding: 0 0.3em;}
 
 
 
-
-summary {
-	cursor: pointer;
-}
-a {
-	color: #4169E1;
-	text-decoration: none;
-}
-a:hover {
-	text-decoration: underline;
-}
-
-hr {
-	border: 0;
-	border-top: 2px solid #bfbfbf;
-}
 
 
 
@@ -466,13 +540,7 @@ hr {
 	vertical-align: top;
 }
 
-/*-------------------------------------------------------------------- list --*/
 
-.wd-list {
-	list-style-position: inside;
-	padding: 0;
-}
-.wd-list > * {padding: 0.3em 0.3em 0.3em 2em;}
 
 /*-------------------------------------------------------------------- form --*/
 
