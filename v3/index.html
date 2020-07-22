@@ -1,5 +1,5 @@
 ﻿<!DOCTYPE html>
-<html>
+<html class="wd">
 
 	<head>
 		<title>WD Web Libraries Examples</title>
@@ -16,29 +16,29 @@
 		<link  href="wd/wd.css" rel="stylesheet" />
 	</head>
 
-<body class="wd-text-justify">
+<body>
 
-	<main class="wd-flyer">
+	<main class="wd-xxmargin-length-child">
 
-		<header class="wd-head wd-box-blue">
+		<header class="wd-box-blue">
 			<h1>WD Web Libraries Examples</h1>
 			<p><a href="https://github.com/wdonadelli/wd/wiki" target="_blank" class="wd-text-white">WD Web Libraries Handbook</a></p>
 		</header>
 
-		<form class="wd-margin">
+		<form>
 			<datalist id="WD">
 				<option value="WD ATTR">Attributes</option>
 				<option value="WD JS">Scripts</option>
 				<option value="WD CSS">Style Sheet</option>
 			</datalist>
-
 		
 			<input type="search" data-wd-filter="show{}${#examples}" autofocus="" placeholder="Search..." class="wd-input" list="WD" />
+
 		</form>
 
 
-		<section class="wd-content">
-			<ul class="wd-list" data-wd-repeat="get{examples/links.json}" id="examples">
+		<section>
+			<ul data-wd-repeat="get{examples/links.json}" id="examples">
 				<li><a href="examples/{{file}}" title={{title}} target="_blank" >{{title}}</a></li>
 			</ul>
 		</section>
