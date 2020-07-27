@@ -131,6 +131,7 @@ fieldset {
 }
 
 .wd nav {
+	display: block; /*se não houver flex*/
 	display: flex;
 }
 .wd nav:after {
@@ -169,6 +170,24 @@ fieldset {
 }
 .wd nav.wd-vertical > *.wd-nav-active {
 	box-shadow: inset -0.3em 0 0 0 #6a5acd;
+}
+
+.wd nav.wd-menu {
+	display: block;
+	position: relative;
+	text-align: center;
+}
+
+.wd nav.wd-menu > * {
+	float: none;
+	margin: 1em;
+	overflow: hidden;
+	padding: 1em 0.5em;
+	position: relative;
+	white-space: nowrap;
+	width: 8.8em;
+	text-overflow: ellipsis;
+	text-align: center;
 }
 
 .wd article > header,
@@ -326,26 +345,24 @@ fieldset {
 	font-family: Verdana,sans-serif;
 	font-size: 1em;
 	outline: inherit;
-}
-
-.wd label {
+	padding: 0.5em;
+	line-height: 1.5;
 	vertical-align: middle;
 }
 
-.wd input, .wd select, .wd textarea {
+.wd input, .wd select, .wd textarea, .wd button {
 	background-color: #f8f8ff;
 	border: thin solid #b3b3b3;
 	border-radius: 0.2em;
-	padding: 0.4em 0.5em;
+
 }
 .wd input:hover, .wd select:hover, .wd textarea:hover, .wd button:hover,
 .wd input:focus, .wd select:focus, .wd textarea:focus, .wd button:focus {
 	border: thin solid #1e90ff;
 }
-.wd input:focus, .wd select:focus, .wd textarea:focus, .wd button:focus {
+.wd input:focus, .wd select:focus, .wd textarea:focus {
 	box-shadow: 0 0 0 1px #1e90ff;
 } 
-
 
 .wd input:required:hover,  .wd select:required:hover,  .wd textarea:required:hover,
 .wd input[required]:hover, .wd select[required]:hover, .wd textarea[required]:hover,
@@ -384,24 +401,25 @@ fieldset {
 	pointer-events: none;
 }
 
-
-/*FIXME o botão tá com problema, quantdo passa o mouse ele muda a dimensão*/
-
-
 .wd input[type=submit], .wd input[type=button], .wd input[type=reset],
 .wd input[color], .wd button {
-	background-color: #f8f8ff;
-	border: thin solid inherit;
-	border-radius: 0.2em;
+	background-color: #f2f2f2;
 	cursor: pointer;
-	padding: 0.4em 2em;
+	padding-left: 2em;
+	padding-right: 2em;
 	text-decoration: none;
 	text-align: center;
 }
+.wd input[type=submit]:active, .wd input[type=button]:active, .wd input[type=reset]:active,
+.wd input[color]:active, .wd button:active {
+	background-color: #777777 !important;
+	color: #f2f2f2;
+	border-color: #777777;
+}
+
 .wd input[type=color] {
-	padding: 0;
-	height: 2.13em;
-	vertical-align: top;
+	padding: 0.3em;
+	height: 2.6em;
 }
 
 /*============================================================================*/
@@ -691,189 +709,64 @@ fieldset {
 	animation: from-right 0.5s;
 }
 
-
-
-
-
-/* -- Menu -- */
-
-
-
-
-/* -- FIXME XXX TODO ====================================================== --*/
-
-
-/* -- Menu -- */
-.wd .wd-menu {
-	display: block;
-/*	display: flex; /*Tipo de container*/
-/*	flex-direction: row; /*row = linha, column = coluna*/
-/*	flex-wrap: wrap; /*wrap = organiza no espaço, nowrap = não se organiza*/
-/*	justify-content: space-around; /*espaço entre os filhos*/
-/*	align-items: flex-start; /*alinhamento horizontal*/
-/*	align-content: flex-start; /*alinhamento vertical*/
-	position: relative;
-	text-align: center;
-	background-color: #000000;
-	background-color: rgba(0,0,0,0.5);
-}
-
-.wd .wd-menu > * {
-	display: inline-block;
-	background-color: black;
-	font-size: 32px;    /*padronizar no menu*/
-	line-height: 1;     /*valor de 32px*/
-	margin: 1em;        /*margem de 16px*/ 
-	text-align: center;
-	padding: 2em 0;    /*preenchimento de 128px na vertical*/
-	width: 160px;
-	height: 160px;        /*font-size + 2*padding = 160px*/ 
-
-/*	max-width: 6em;*/
-/*	max-width: 6em;*/
-
-	position: relative;
-}
-
-
-.wd .wd-menu > img {
-	display: inline-block;
-	padding: 32px;
-
-}
-
-/*
-.wd .wd-menu > *:after {
-	display: inline-block;
-	content: attr(title);
-	position: absolute;
-	left: 0;
-	right: 0;
-	bottom: 0;
-
-}
-*/
-
-
-
-.wd .wd-box {
-	display: block;
-	display: flex; /*Tipo de container*/
-	flex-direction: row; /*row = linha, column = coluna*/
-	flex-wrap: wrap; /*wrap = organiza no espaço, nowrap = não se organiza*/
-	justify-content: space-between; /*espaço entre os filhos*/
-	align-items: flex-start; /*alinhamento horizontal*/
-	align-content: flex-start; /*alinhamento vertical*/
-}
-
-.wd .wd-hbox {
-	display: block;
-	display: flex;
-	flex-direction: row;
-	flex-wrap: nowrap;
-	justify-content: space-between;
-	align-items: flex-start;
-	align-content: flex-start;
-}
-
-.wd .wd-vbox {
-	display: block;
-	display: flex;
-	flex-direction: column;
-	flex-wrap: nowrap;
-	justify-content: space-between;
-	align-items: flex-start;
-	align-content: flex-start;
-}
-
-
-
-
 /*-- Input Messages --*/
-/*modelo anterior (manter compatibilidade)*/
-.wd-input + .wd-input-help, .wd-input + .wd-input-warn   {visibility: hidden;}
-.wd-input:focus + .wd-input-help,
-.wd-input:out-of-range + .wd-input-warn,
-.wd-input:invalid + .wd-input-warn {visibility: visible;}
-/*novo modelo
-.wd-input-msg {
-	position: relative;
-}
-.wd-input-msg > .wd-input-help, .wd-input-msg > .wd-input-warn {
+.wd .wd-form-msg {
 	display: none;
-	background-color: #fffaf0;
-	border: thin solid;
-	box-shadow: 0.5em 0.5em 0.5em #cccccc;
-	font-size: small;
-	padding: 0.3em 0.5em;
-	position: absolute;
-	border-radius: 0.2em;
-	top: 1px;
-	left: 1em;
+	position: fixed;
+	top: 0;
+	left: 0;
 }
-.wd-input-help {color: #1e90ff;}
-.wd-input-warn {color: #b22222;}
-.wd-input:focus + .wd-input-msg > .wd-input-help,
-.wd-button:focus + .wd-input-msg > .wd-input-help {
+.wd input:focus    + .wd-form-msg,
+.wd textarea:focus + .wd-form-msg,
+.wd select:focus   + .wd-form-msg,
+.wd button:focus   + .wd-form-msg {
+	animation: from-left 0.4s;
 	display: block;
 }
-.wd-input:out-of-range + .wd-input-msg > .wd-input-help,
-.wd-input:invalid + .wd-input-msg > .wd-input-help {
+
+.wd .wd-form-msg > .wd-form-msg-info, 
+.wd .wd-form-msg > .wd-form-msg-warn {
+	background-color: #fffaf0;
+	border-right: thin solid inherit;
+	border-bottom: thin solid inherit;
+	border-bottom-right-radius: 0.3em;
+	box-shadow: 0.5em 0.5em 0.5em #cccccc;
 	display: none;
+	font-size: small;
+	padding: 0.5em;
 }
-.wd-input:out-of-range:focus + .wd-input-msg > .wd-input-warn,
-.wd-input:invalid:focus + .wd-input-msg > .wd-input-warn {
+
+.wd .wd-form-msg > .wd-form-msg-info {color: #1e90ff;}
+.wd .wd-form-msg > .wd-form-msg-warn {color: #b22222;}
+
+.wd input    + .wd-form-msg > .wd-form-msg-info,
+.wd textarea + .wd-form-msg > .wd-form-msg-info,
+.wd select   + .wd-form-msg > .wd-form-msg-info,
+.wd button   + .wd-form-msg > .wd-form-msg-info {
 	display: block;
 }
-*/
 
-/*FIXME TODO*/
-.wd-form {
-	position: relative;
-}
-
-
-.wd-form > .wd-form-help, .wd-form > .wd-form-warn {
+.wd input:out-of-range + .wd-form-msg > .wd-form-msg-info,
+.wd input:invalid      + .wd-form-msg > .wd-form-msg-info {
 	display: none;
-	background-color: #fffaf0;
-	border: thin solid;
-	box-shadow: 0.5em 0.5em 0.5em #cccccc;
-	font-size: small;
-	padding: 0.3em 0.5em;
-	position: absolute;
-	border-radius: 0.2em;
-	top: 150%;
-	top: calc(100% + 0.8em);
-	left: 1em;
-	animation: fade-in 0.4s;
 }
-.wd-form-help {color: #1e90ff;}
-.wd-form-warn {color: #b22222;}
-.wd-form > .wd-input:focus ~ .wd-form-help,
-.wd-form > .wd-button:focus ~ .wd-form-help {display: block;}
-.wd-form > .wd-input:out-of-range ~ .wd-form-help,
-.wd-form > .wd-input:invalid ~ .wd-form-help {display: none;}
-.wd-form > .wd-input:out-of-range:focus ~ .wd-form-warn,
-.wd-form > .wd-input:invalid:focus ~ .wd-form-warn {display: block;}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+.wd input:out-of-range    + .wd-form-msg > .wd-form-msg-warn,
+.wd input:invalid         + .wd-form-msg > .wd-form-msg-warn,
+.wd textarea:out-of-range + .wd-form-msg > .wd-form-msg-warn,
+.wd textarea:invalid      + .wd-form-msg > .wd-form-msg-warn,
+.wd select:out-of-range   + .wd-form-msg > .wd-form-msg-warn,
+.wd select:invalid        + .wd-form-msg > .wd-form-msg-warn {
+	display: block;
+}
 
 /* -- Relatório -- */
+/*					HIERARQUIA 
+/------------------------------------------------\
+| Escalão primário:   h1 > h2 > p > section > p  |
+| escalão secundário: ol                         |
+\------------------------------------------------/
+*/
 .wd .wd-report            {font-size: 16px; text-align: justify;}
 .wd .wd-report h1         {text-align: center;}
 .wd .wd-report p          {margin: 1em 0;}
@@ -888,12 +781,6 @@ fieldset {
 .wd .wd-report ol > li:last-child {margin: 0;}
 
 /* itemização */
-/*				ESQUEMA DE HIERARQUIA 
-/------------------------------------------------\
-| Escalão primário:   h1 > h2 > p > section > p  |
-| escalão secundário: ol                         |
-\------------------------------------------------/
-*/
 .wd .wd-report           {counter-reset: chapter item subitem subitem1 subitem2 subitem3;}
 .wd .wd-report h1        {counter-reset: chapter item subitem subitem1 subitem2 subitem3;}
 .wd .wd-report h2        {counter-reset: item subitem subitem1 subitem2 subitem3;}
@@ -902,39 +789,28 @@ fieldset {
 .wd .wd-report ol ol     {counter-reset: subitem3;}
 .wd .wd-report ol        {counter-reset: subitem2 subitem3;}
 
-.wd .wd-report ol li li li:before {counter-increment: subitem3; content: counter(subitem3) ". ";}
-.wd .wd-report ol li li:before    {counter-increment: subitem2; content: counter(subitem2, lower-alpha) ") ";}
-.wd .wd-report ol li:before       {counter-increment: subitem1; content: counter(subitem1, upper-roman) " - ";}
-
-.wd .wd-report.wd-itemize h2:before {counter-increment: chapter;content: counter(chapter) ". ";}
-.wd .wd-report.wd-itemize h2[data-wd-css-item-before]:before,
-.wd .wd-report.wd-itemize h2[data-wd-css-item-after]:before {
-	content: attr(data-wd-css-item-before) counter(chapter) attr(data-wd-css-item-after);
-}
-
-.wd .wd-report.wd-itemize p:before  {counter-increment: item; content: counter(item) ". ";}
-.wd .wd-report.wd-itemize p[data-wd-css-item-before]:before,
-.wd .wd-report.wd-itemize p[data-wd-css-item-after]:before {
-	content: attr(data-wd-css-item-before) counter(item) attr(data-wd-css-item-after);
-}
-.wd .wd-report.wd-itemize section p:before {
-	counter-increment: subitem; content: counter(item) "." counter(subitem) ". ";
-}
-
-
-
-
-
-
-
+.wd .wd-report ol li li li:before          {counter-increment: subitem3; content: counter(subitem3) ". ";}
+.wd .wd-report ol li li:before             {counter-increment: subitem2; content: counter(subitem2, lower-alpha) ") ";}
+.wd .wd-report ol li:before                {counter-increment: subitem1; content: counter(subitem1, upper-roman) " - ";}
+.wd .wd-report.wd-itemize h2:before        {counter-increment: chapter;content: counter(chapter) ". ";}
+.wd .wd-report.wd-itemize p:before         {counter-increment: item; content: counter(item) ". ";}
+.wd .wd-report.wd-itemize p:before         {counter-increment: item; content: counter(item) ". ";}
+.wd .wd-report.wd-itemize section p:before {counter-increment: subitem; content: counter(item) "." counter(subitem) ". ";}
 
 /*============================================================================*/
 
 /*--  ESTILOS ESTRUTURAIS -- */
 
-
-
-
+.wd .wd-struct-left:after     {clear: both; content: ""; display: table; overflow: auto;}
+.wd .wd-struct-right:after    {clear: both; content: ""; display: table; overflow: auto;}
+.wd .wd-struct-center:after   {clear: both; content: ""; display: table; overflow: auto;}
+.wd .wd-struct        > main  {margin-left: auto; margin-right: auto; width: 66.67%;}
+.wd .wd-struct-left   > main  {float: left;  width: 80%;}
+.wd .wd-struct-left   > aside {float: right; width: 20%;}
+.wd .wd-struct-right  > main  {float: right; width: 80%;}
+.wd .wd-struct-right  > aside {float: left;  width: 20%;}
+.wd .wd-struct-center > main  {float: left;  width: 60%;}
+.wd .wd-struct-center > aside {float: left;  width: 20%;}
 
 /*============================================================================*/
 /*--  ESTILOS UTILITÁRIOS -- */
@@ -967,7 +843,6 @@ fieldset {
 
 /* -- Companheiro -- */
 .wd .wd-buddy-top, .wd .wd-buddy-bottom {
-	position: fixed !important; /*se não estiver implementado sticky*/
 	position: sticky !important;
 	z-index: 99 !important;
 }

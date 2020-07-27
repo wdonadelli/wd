@@ -13,11 +13,36 @@
 	</head>
 
 <body class="">
+
+
+<header class="">
+	<h1>Header</h1>
+	<p>Subtitule</p>
+</header>
+
+
+<aside class="">
+	<h3>ASIDE 1</h3>
+	<nav class="wd-menu">
+		<span>Item 1</span>
+		<span>Memória louca da silva</span>
+		<span class="wd-icon-user"> Item 3</span>
+		<span>Item 3</span>
+		<span>Item 3</span>
+		<span>Item 3</span>
+		<span>Item 3</span>
+		<span>Item 3</span>
+	</nav>
+</aside>
+
+
+
+
 	<main  class="">
 
 		<section class="">
 			<article class="">
-				<header class="">
+				<header class="wd-buddy-top">
 					<h1>Header</h1>
 					<p>Subtitule</p>
 					<nav>
@@ -30,7 +55,7 @@
 				<section class="wd-report wd-itemize">
 					<h1>Lorem ipsum</h1>
 
-					<h2 data-wd-css-item-before="Capítulo " data-wd-css-item-after=": ">Meu Capítulo</h2>
+					<h2>Meu Capítulo</h2>
 
 					<p>Lorem ipsum dolor <code>sit amet</code>, consectetur adipiscing elit. Curabitur placerat elit at lectus porttitor, eget auctor lorem iaculis. Duis vehicula massa in consequat cursus. Vivamus eros erat, dignissim at viverra vitae, molestie at risus. Proin pharetra est eu enim facilisis imperdiet. Maecenas at cursus metus. Curabitur quis pharetra orci. Sed non felis tellus. Donec ullamcorper nulla ligula, non volutpat massa blandit non. Nulla ut dignissim metus.</p>
 									
@@ -38,7 +63,7 @@
 
 					<p>Suspendisse mollis, ex non eleifend venenatis, quam massa mollis augue, id interdum diam sapien et mauris. Sed pulvinar lectus tortor, a finibus ipsum feugiat in. Suspendisse euismod lacus quis turpis eleifend finibus. Fusce dictum, risus id fermentum porta, orci ante euismod est, in vehicula arcu nunc id tortor. (lipsum.com)</p>
 
-					<h2 data-wd-css-item-before="Capítulo " data-wd-css-item-after=": ">Meu Capítulo</h2>
+					<h2 >Meu Capítulo</h2>
 
 					<p>Suspendisse mollis, ex non eleifend venenatis, quam massa mollis augue, id interdum diam sapien et mauris. Sed pulvinar lectus tortor, a finibus ipsum feugiat in. Suspendisse euismod lacus quis turpis eleifend finibus. Fusce dictum, risus id fermentum porta, orci ante euismod est, in vehicula arcu nunc id tortor. (lipsum.com)</p>
 
@@ -138,11 +163,17 @@
 
 				<fieldset>
 					<legend>Formulário</legend>
-					<form class="wd-vertical">
+					<form class="wd-verticalf wd-border">
 						<label>Label</label>
-						<input type="text" />
-						<input type="text" required/>
-						<button type="button">Botão</button>
+						<input type="text" required=""/>
+						<div class="wd-form-msg">
+							<span class="wd-form-msg-info">Essa é uma mensagem informativa.</span>
+							<span class="wd-form-msg-warn">Essa é uma mensagem de alerta.</span>
+						</div>
+						<input type="text" reqsuired/>
+						<button type="button" class="">Botão</button>
+						<input type="button" value="buda" class=""/>
+
 					</form>
 				</fieldset>
 				
@@ -163,8 +194,8 @@
 				</div>
 
 
-				<div class="wd-box-yellow wd-window wd-win-big wd-opedn">
-					<div class="wd-menu">
+				<div class=" wd-bgcolor-black wd-window wd-win-big wd-dopen">
+					<nav class="wd-menu">
 						<span>menu</span>
 						<span class="wd-icon-home" title="Home"></span>
 						<span class="wd-icon-user"></span>
@@ -184,7 +215,7 @@
 						<span class="wd-icon-he"></span>
 						<span class="wd-icon-clock"></span>
 						<span class="wd-icon-money"></span>
-					</div>
+					</nav>
 				</div>
 
 
@@ -200,6 +231,16 @@
 
 
 	</main>
+	
+	<aside class="">
+		<h3>ASIDE 2</h3>
+		<nav class="wd-vertical">
+			<span>Item 1</span>
+			<span>Item 2</span>
+			<span>Item 3</span>
+		</nav>
+	</aside>
+	
 	
 </body>
 </html>
