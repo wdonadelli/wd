@@ -70,15 +70,18 @@ fieldset {
 }
 
 /*============================================================================*/
+
+	/***************************************************************************\
+	|Os estilos terão efeito na página se precedidos da classe wd, caso         |
+	|contrário, terão seu visual padrão ou aquele definido na normalização.     |        |
+	|Caso queira aplicar os efeitos em todos os descendentes, deve-se inserir a |
+	|class wd na tag html ou tratar cada container pai individulamente.         |
+	\***************************************************************************/
+
 /*-- ESTILOS DE BASE --*/
-/*
-/------------------------------------------------------------------------------\
-|Os estilos de base terão efeitos na página se precedidos da classe wd, caso   |
-|contrário, terão seu visual padrão ou aquele definido na normalização.        |
-|Caso queira aplicar os efeitos em todos os descendentes, deve-se inserir a    |
-|class wd na tag html ou tratar cada container pai individulamente.            |
-\------------------------------------------------------------------------------/
-*/
+
+
+
 
 .wd {
 	background-color: #ffffff;
@@ -104,11 +107,18 @@ fieldset {
 	padding: 0.5em 2em;
 }
 .wd header:first-child {
-	margin-top: -0.5em;
+	margin-top: 0;
 }
 .wd footer:last-child {
+	margin-bottom: 0;
+}
+.wd article > header:first-child {
+	margin-top: -0.5em;
+}
+.wd article > footer:last-child {
 	margin-bottom: -0.5em;
 }
+
 .wd header > *, .wd footer > * {
 	margin: 0.5em 0;
 }
@@ -148,7 +158,6 @@ fieldset {
 	margin: 0;
 	opacity: 0.7;
 	padding: 0.5em;
-	text-align: center;	
 	text-decoration: none;
 }
 .wd nav > *:hover,
@@ -156,38 +165,9 @@ fieldset {
 	opacity: 1;
 	box-shadow: inset 0 -0.1em 0 0 #1e90ff;
 }
-.wd nav > *.wd-nav-active {
+/* -- integração com wd js -- */
+.wd nav > *.wd-active {
 	box-shadow: inset 0 -0.3em 0 0 #1e90ff;
-}
-
-.wd nav.wd-vertical > * {
-	text-align: left;
-}
-
-.wd nav.wd-vertical > *:hover,
-.wd nav.wd-vertical > *:focus {
-	box-shadow: inset -0.1em 0 0 0 #6a5acd;
-}
-.wd nav.wd-vertical > *.wd-nav-active {
-	box-shadow: inset -0.3em 0 0 0 #6a5acd;
-}
-
-.wd nav.wd-menu {
-	display: block;
-	position: relative;
-	text-align: center;
-}
-
-.wd nav.wd-menu > * {
-	float: none;
-	margin: 1em;
-	overflow: hidden;
-	padding: 1em 0.5em;
-	position: relative;
-	white-space: nowrap;
-	width: 8.8em;
-	text-overflow: ellipsis;
-	text-align: center;
 }
 
 .wd article > header,
@@ -326,15 +306,12 @@ fieldset {
 	padding: 0;
 	margin: 0.5em 0;
 }
-.wd form.wd-vertical > * {
-	margin: 0.25em 0;
-}
 
 .wd fieldset {
-	border: thin solid inherit;
+	border: thin solid;
 	border-radius: 0.2em;
 	margin: 0.5em 0;
-	padding: 0.5;
+	padding: 0.5em;
 }
 .wd fieldset > legend {
 	padding: 0.3em;
@@ -463,6 +440,14 @@ fieldset {
 	to   {opacity: 1;}
 }
 
+	/***************************\
+	|	Níveis Z-INDEX           |
+	|	Nível 1: 999 wd-form-msg |
+	|	Nível 2: 888 wd-modal    |
+	|	Nível 3: 777 wd-window   |
+	|	Nível 4: 666 wd-fixed    |
+	|	Nível 5: 555 wd-tip      |
+	\***************************/
 
 /* -- Colunas -- */
 .wd .wd-row {
@@ -583,9 +568,7 @@ fieldset {
 .wd .wd-col-mark-12 > * > *:nth-child(12) {background-color: #ffff00;}
 
 /* --  Caixa de Dicas --FIXME (acho que isso não está bom) */
-.wd .wd-tip {
-	position: relative;
-}
+.wd .wd-tip {position: relative;}
 
 .wd-tip-hover-top,    .wd-tip-click-top,
 .wd-tip-hover-right,  .wd-tip-click-right,
@@ -597,24 +580,15 @@ fieldset {
 	overflow: auto;
 	position: absolute;
 	text-indent: 0;
-	width: 20em;
+	width: 10em;
+	z-index: 555;
 }
-.wd-tip-hover-top, .wd-tip-click-top {
-	border-radius: 0.2em 0.2em 0 0;
-	bottom: 100%; left: 0;
-}
-.wd-tip-hover-right, .wd-tip-click-right {
-	border-radius: 0 0.2em 0.2em 0;
-	left: 100%; top: 0;
-}
-.wd-tip-hover-bottom, .wd-tip-click-bottom {
-	border-radius: 0 0 0.2em 0.2em;
-	left: 0; top: 100%;
-}
-.wd-tip-hover-left, .wd-tip-click-left {
-	border-radius: 0.2em 0 0 0.2em;
-	right: 100%; top: 0;
-}
+.wd-tip-hover-top, .wd-tip-click-top       {bottom: 100%; left:   0;}
+.wd-tip-hover-right, .wd-tip-click-right   {left:   100%; top:    0;}
+.wd-tip-hover-bottom, .wd-tip-click-bottom {left:      0; top: 100%;}
+.wd-tip-hover-left, .wd-tip-click-left     {right:  100%; top:    0;}
+
+/* -- integração com wd js -- */
 .wd .wd-tip:hover > .wd-tip-hover-top,    .wd-tip.wd-open > .wd-tip-click-top,
 .wd .wd-tip:hover > .wd-tip-hover-right,  .wd-tip.wd-open > .wd-tip-click-right,
 .wd .wd-tip:hover > .wd-tip-hover-bottom, .wd-tip.wd-open > .wd-tip-click-bottom,
@@ -622,6 +596,45 @@ fieldset {
 	display: block !important;
 	animation: fade-in 0.5s;
 }
+
+/* -- caixa de blocos -- */
+.wd .wd-block {display: block;}
+
+.wd .wd-block > * {
+	display: block;
+	float: none;
+	margin-left: 0;
+	margin-right: 0;
+	width: 100%;
+}
+
+/* -- grade simples -- */
+.wd .wd-grid {
+	display: block;
+	opacity: 1;
+	position: relative;
+	text-align: center;
+}
+
+.wd .wd-grid > * {
+	float: none;
+	margin: 1em;
+	opacity: 0.5;
+	overflow: hidden;
+	padding: 1em 0.5em;
+	position: relative;
+	white-space: nowrap;
+	width: 9em;
+	text-overflow: ellipsis;
+	text-align: center;
+}
+
+.wd .wd-grid > *:hover {opacity: 1;}
+
+
+/*FIXME criar uns blocos maiores tipo uma caixa de apresentação do conteúdo ficar com cabeçalho e rodapé fixos (absolute)*/
+
+
 
 /* -- Janelas -- */
 .wd .wd-modal {
@@ -636,11 +649,10 @@ fieldset {
 	background-color: #000000;
 	background-color: rgba(0,0,0,0.8);
 	opacity: 1;
-	z-index: 99999;
+	z-index: 888;
 }
-.wd .wd-modal.wd-open {
-	display: block;
-}
+/* -- integração com wd js -- */
+.wd .wd-modal.wd-open {display: block;}
 
 .wd .wd-window {
 	display: none;
@@ -653,16 +665,14 @@ fieldset {
 	height: 100%;
 	margin: auto;
 	overflow: auto;
-	z-index: 99998;
+	z-index: 777;
 	animation: zoom-in 0.5s;
 	background-color: #FFFFFF;
 }
-.wd .wd-modal > .wd-window {
-	position: absolute !important;
-}
-.wd .wd-window.wd-open, .wd .wd-modal.wd-open > .wd-window {
-	display: block;
-}
+.wd .wd-modal > .wd-window {position: absolute !important;}
+
+/* -- integração com wd js -- */
+.wd .wd-window.wd-open, .wd .wd-modal.wd-open > .wd-window {display: block;}
 
 .wd .wd-window.wd-win-small {
 	top: 40%;
@@ -715,6 +725,7 @@ fieldset {
 	position: fixed;
 	top: 0;
 	left: 0;
+	z-index: 999;
 }
 .wd input:focus    + .wd-form-msg,
 .wd textarea:focus + .wd-form-msg,
@@ -727,13 +738,17 @@ fieldset {
 .wd .wd-form-msg > .wd-form-msg-info, 
 .wd .wd-form-msg > .wd-form-msg-warn {
 	background-color: #fffaf0;
-	border-right: thin solid inherit;
-	border-bottom: thin solid inherit;
+	border-right: thin solid;
+	border-bottom: thin solid;
 	border-bottom-right-radius: 0.3em;
 	box-shadow: 0.5em 0.5em 0.5em #cccccc;
 	display: none;
 	font-size: small;
+	margin: 0;
 	padding: 0.5em;
+	position: fixed;
+	top: 0;
+	left: 0;
 }
 
 .wd .wd-form-msg > .wd-form-msg-info {color: #1e90ff;}
@@ -743,6 +758,7 @@ fieldset {
 .wd textarea + .wd-form-msg > .wd-form-msg-info,
 .wd select   + .wd-form-msg > .wd-form-msg-info,
 .wd button   + .wd-form-msg > .wd-form-msg-info {
+	animation: from-left 0.4s;
 	display: block;
 }
 
@@ -757,16 +773,18 @@ fieldset {
 .wd textarea:invalid      + .wd-form-msg > .wd-form-msg-warn,
 .wd select:out-of-range   + .wd-form-msg > .wd-form-msg-warn,
 .wd select:invalid        + .wd-form-msg > .wd-form-msg-warn {
+	animation: from-left 0.4s;
 	display: block;
 }
 
 /* -- Relatório -- */
-/*					HIERARQUIA 
-/------------------------------------------------\
-| Escalão primário:   h1 > h2 > p > section > p  |
-| escalão secundário: ol                         |
-\------------------------------------------------/
-*/
+
+	/************************************************\
+	|					HIERARQUIA                        |
+	| Escalão primário:   h1 > h2 > p > section > p  |
+	| escalão secundário: ol                         |
+	\************************************************/
+
 .wd .wd-report            {font-size: 16px; text-align: justify;}
 .wd .wd-report h1         {text-align: center;}
 .wd .wd-report p          {margin: 1em 0;}
@@ -798,19 +816,26 @@ fieldset {
 .wd .wd-report.wd-itemize section p:before {counter-increment: subitem; content: counter(item) "." counter(subitem) ". ";}
 
 /*============================================================================*/
+/*--  ESTILOS ESTRUTURAIS FIXME isso não funciona no explorer) -- */
 
-/*--  ESTILOS ESTRUTURAIS -- */
+/* -- Cabeçalho e Rodapés fixos -- */
+.wd body.wd-fixed > header,
+.wd body.wd-fixed > footer {
+	position: fixed;
+	left: 0;
+	right: 0;
+	width: 100%;
+	z-index: 666;
+}
+.wd body.wd-fixed > header {top: 0;}
+.wd body.wd-fixed > footer {bottom: 0;}
 
-.wd .wd-struct-left:after     {clear: both; content: ""; display: table; overflow: auto;}
-.wd .wd-struct-right:after    {clear: both; content: ""; display: table; overflow: auto;}
-.wd .wd-struct-center:after   {clear: both; content: ""; display: table; overflow: auto;}
-.wd .wd-struct        > main  {margin-left: auto; margin-right: auto; width: 66.67%;}
-.wd .wd-struct-left   > main  {float: left;  width: 80%;}
-.wd .wd-struct-left   > aside {float: right; width: 20%;}
-.wd .wd-struct-right  > main  {float: right; width: 80%;}
-.wd .wd-struct-right  > aside {float: left;  width: 20%;}
-.wd .wd-struct-center > main  {float: left;  width: 60%;}
-.wd .wd-struct-center > aside {float: left;  width: 20%;}
+/* -- corpo (main) centralizado -- */
+.wd body.wd-center > main {
+	margin-left: auto;
+	margin-right: auto;
+	width: 66.67%;
+}
 
 /*============================================================================*/
 /*--  ESTILOS UTILITÁRIOS -- */
@@ -844,23 +869,13 @@ fieldset {
 /* -- Companheiro -- */
 .wd .wd-buddy-top, .wd .wd-buddy-bottom {
 	position: sticky !important;
-	z-index: 99 !important;
+	z-index: 666 !important;
 }
 .wd .wd-buddy-top    {top: 0 !important;}
 .wd .wd-buddy-bottom {bottom: 0 !important;}
 .wd article > .wd-buddy-top, .wd article > .wd-buddy-bottom {
 	top:    -0.5em !important;
 	bottom: -0.5em !important;
-}
-
-/* -- Verticalização -- */
-.wd .wd-vertical {
-	display: block !important;
-}
-.wd .wd-vertical > * {
-	display: block !important;
-	float: none !important;
-	width: 100% !important;
 }
 
 /* -- cores -- */
@@ -1169,19 +1184,18 @@ fieldset {
 .wd .wd-icon-cam:before      {text-decoration: none !important; content: "\1F4F7" !important;}
 
 /* -- sombra -- */
-/*
-	ESCLARECIMENTOS
-/--------------------------------------------------------------------\
-| shadow             - aplica sombra ao elemento                     |
-| shadow-child       - aplica "shadow" a todos os filhos             |
-| shadow-enter       - ao passar o mouse, aplica "shadow"            |
-| shadow-leave       - ao passar o mouse, aplica "shadow"            |
-| shadow-enter-child - aplica "shadow-enter" aos filhos              |
-| shadow-leave-child - aplica "shadow-leave" aos filhos              |
-| shadow-in          - aplica "shadow" ao passar o mouse sobre o pai |
-| shadow-out         - aplica "shadow" ao tirar o mouse sobre o pai  |
-\--------------------------------------------------------------------/
-*/
+
+	/********************************************************************\
+	|	ESCLARECIMENTOS                                                   |
+	| shadow             - aplica sombra ao elemento                     |
+	| shadow-child       - aplica "shadow" a todos os filhos             |
+	| shadow-enter       - ao passar o mouse, aplica "shadow"            |
+	| shadow-leave       - ao passar o mouse, aplica "shadow"            |
+	| shadow-enter-child - aplica "shadow-enter" aos filhos              |
+	| shadow-leave-child - aplica "shadow-leave" aos filhos              |
+	| shadow-in          - aplica "shadow" ao passar o mouse sobre o pai |
+	| shadow-out         - aplica "shadow" ao tirar o mouse sobre o pai  |
+	\********************************************************************/
 
 .wd .wd-shadow, .wd .wd-shadow-child > *,
 .wd .wd-shadow-enter:hover, .wd .wd-shadow-leave,
@@ -1314,17 +1328,3 @@ fieldset {
 	font-style: italic !important;
 	font-weight: normal !important;
 }
-
-/* FIXME acabar com essa integração via CSS e passar para o js */
-
-/*------------------------------------------------------------ integration --*/
-
-*[data-wd-action],
-*[data-wd-request],
-*[data-wd-sort-col],
-*[data-wd-data] {cursor: pointer;}
-*[data-wd-sort-col="-1"]:before {content: "\2191 ";}
-*[data-wd-sort-col="+1"]:before {content: "\2193 ";}
-.wd-modal[data-wd-action] > .wd-window {cursor: auto;}
-
-/*-------------------------------------------------------------- animation --*/

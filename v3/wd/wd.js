@@ -16,6 +16,7 @@ inclusão de método trigger como alteranativa ao handler
 
 inclusão do método 
 método data agora aceita o "data-" no início
+wd-nav-active virou wd-active
 wd-nav-active funciona para span também
 atributo file: data-wd-file=size{value}type{}char{}len{}
 nos eventos onclick inserir o crescimento de bolha no caso de elemento inline
@@ -3573,9 +3574,9 @@ var wd = (function() {
 	/*Define o link ativo do elemento nav sem interface data*/
 	function data_wdActive(e) {
 		if (e.parentElement !== null && WD(e.parentElement.tagName).title === "Nav") {
-			WD(e.parentElement.children).class({del: "wd-nav-active"});
+			WD(e.parentElement.children).class({del: "wd-active"});
 			if (["A", "SPAN"].indexOf(e.tagName.toUpperCase()) >= 0) {
-				WD(e).class({add: "wd-nav-active"});
+				WD(e).class({add: "wd-active"});
 			}
 		}
 		return;
@@ -3737,8 +3738,57 @@ var wd = (function() {
 
 /* === JS ENGINE =========================================================== */
 
-	/*Procedimentos quando se usa as classes wd-bar ao mudar a âncora*/
+	/*Procedimentos quando se usa as classes wd-bar ao mudar a âncora FIXME*/
 	function hashProcedures() {
+		var conf, css, stl, obj, attr;
+
+		/*definindo variáveis para captura de dados*/
+		conf = {body: {}, head: {}, foot: {}};
+		css  = {body: "body", head: "body > header", foot:"body > footer"};
+		stl  = ["height", "position", "top", "bottom", "margin-top", "margin-bottom"];
+
+		/*alimentando variável conf*/
+		for (var i in css) {
+			obj = wd$(css[i]);
+			for (var j = 0; j < stl.length; j++) {
+				conf[i][stl[j]] = obj.items > 0 ? obj.getStyle(stl[j])[0].toLowerCase() : "";
+				if (stl[j] !== "position") {
+					attr = WD(conf[i][stl[j]].replace(/[^0-9\.]/g, ""));
+					conf[i][stl[j]] = attr.type !== "number" ? 0 : attr.valueOf();
+				}
+			}
+			conf[i].hTop    = conf[i].height + conf[i].top    + conf[i]["margin-bottom"];
+			conf[i].hBottom = conf[i].height + conf[i].bottom + conf[i]["margin-top"];
+		}
+		console.log(conf);
+
+		/* -- colocar margins em body se houver elementos fixados -- */
+		if (conf.head.position === "fixed" && conf.body["margin-top"] !== conf.head.hTop) {
+			document.body.style.marginTop = conf.head.hTop+"px";
+		}
+		if (conf.foot.position === "fixed" && conf.body["margin-bottom"] !== conf.foot.hBottom) {
+			document.body.style.marginBottom = conf.foot.hBottom+"px";
+		}
+
+
+/*FIXME tem que continuar agora para fazer o hash
+		
+		bar  = WD($(".wd-nav.wd-buddy, .wd-head.wd-buddy"));
+		top  = WD($(window.location.hash));
+		hbar = bar.type === "dom" && bar.items > 0 ? bar.item(0).offsetHeight : 0;
+		htop = top.type === "dom" && top.items > 0 ? top.item(0).offsetTop : 0;
+		if (hbar !== 0) {
+			window.scrollTo(0, htop - hbar);
+		}
+		return;
+
+*/
+
+
+
+
+
+		/*
 		var bar, top, hbar, htop;
 		bar  = WD($(".wd-nav.wd-buddy, .wd-head.wd-buddy"));
 		top  = WD($(window.location.hash));
@@ -3748,6 +3798,7 @@ var wd = (function() {
 			window.scrollTo(0, htop - hbar);
 		}
 		return;
+		*/
 	};
 
 	/*Procedimentos para carregar objetos externos*/
@@ -3853,10 +3904,14 @@ var wd = (function() {
 		var style;
 		style = document.createElement("STYLE");
 		style.textContent  = ".js-wd-no-display     {display: none !important;}";
-		style.textContent += ".wd-nav-active        {outline: 1px dotted #000000;}";
 		style.textContent += ".js-wd-mask-error     {color: #663399 !important; background-color: #e8e0f0 !important;}";
 		style.textContent += ".js-wd-checked:before {content: \"\\2713 \"}";
 		style.textContent += ".js-wd-disabled       {pointer-events: none; color: #ccc; opacity: 0.8; cursor: default !important;}";
+		style.textContent += "*[data-wd-action], *[data-wd-request], *[data-wd-sort-col], *[data-wd-data] {cursor: pointer;}";
+		style.textContent += "*[data-wd-sort-col]:before {content: \"\\2195 \";}";
+		style.textContent += "*[data-wd-sort-col=\"-1\"]:before {content: \"\\2191 \";}";
+		style.textContent += "*[data-wd-sort-col=\"+1\"]:before {content: \"\\2193 \";}";
+		style.textContent += ".wd-modal[data-wd-action] > .wd-window {cursor: auto;}";
 		document.head.appendChild(style);
 		return;
 	};

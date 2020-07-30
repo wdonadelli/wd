@@ -12,10 +12,10 @@
 		<link  href="wd/wd.css" rel="stylesheet" />
 	</head>
 
-<body class="">
+<body class="wd-fixed wd-center">
 
 
-<header class="">
+<header class="wd-bgcolor-green">
 	<h1>Header</h1>
 	<p>Subtitule</p>
 </header>
@@ -23,7 +23,7 @@
 
 <aside class="">
 	<h3>ASIDE 1</h3>
-	<nav class="wd-menu">
+	<nav class="wd-block">
 		<span>Item 1</span>
 		<span>Memória louca da silva</span>
 		<span class="wd-icon-user"> Item 3</span>
@@ -42,13 +42,21 @@
 
 		<section class="">
 			<article class="">
-				<header class="wd-buddy-top">
+				<header class="wdf-buddy-top">
 					<h1>Header</h1>
 					<p>Subtitule</p>
 					<nav>
 						<span>Item 1</span>
 						<span>Item 2</span>
-						<span>Item 3</span>
+						<span class="wd-tip">
+							<span>Item 3</span>
+							<nav class="wd-tip-hover-bottom wd-block">
+								<span>Item 3-1</span>
+								<span>Item 3-2</span>
+								<span>Item 3-3</span>
+							</nav>
+						</span>
+						<span>Item 4</span>
 					</nav>
 				</header>
 			
@@ -57,7 +65,7 @@
 
 					<h2>Meu Capítulo</h2>
 
-					<p>Lorem ipsum dolor <code>sit amet</code>, consectetur adipiscing elit. Curabitur placerat elit at lectus porttitor, eget auctor lorem iaculis. Duis vehicula massa in consequat cursus. Vivamus eros erat, dignissim at viverra vitae, molestie at risus. Proin pharetra est eu enim facilisis imperdiet. Maecenas at cursus metus. Curabitur quis pharetra orci. Sed non felis tellus. Donec ullamcorper nulla ligula, non volutpat massa blandit non. Nulla ut dignissim metus.</p>
+					<p>Lorem ipsum dolor <code>sit amet</code>, consectetur adipiscing elit. Curabitur placerat elit at lectus porttitor, eget auctor lorem iaculis. Duis vehicula massa in consequat cursus. Vivamus eros erat, dignissim at viverra vitae, molestie at risus. Proin pharetra est eu enim facilisis imperdiet. Maecenas at cursus metus. Curabitur quis pharetra orci. Sed non felis tellus. Donec ullamcorper nulla ligula, non volutpat <span class="wd-tip"><span class="wd-tip-hover-top wd-padding wd-cloud">Muita loucura nessa massa, né?</span>massa</span> blandit non. Nulla ut dignissim metus.</p>
 									
 					<blockquote>Suspendisse mollis, ex non eleifend venenatis, quam massa mollis augue, id interdum diam sapien et mauris. Sed pulvinar lectus tortor, a finibus ipsum feugiat in. Suspendisse euismod lacus quis turpis eleifend finibus. Fusce dictum, risus id fermentum porta, orci ante euismod est, in vehicula arcu nunc id tortor. (lipsum.com)</blockquote>
 
@@ -119,7 +127,7 @@
 				<table border="1" width="100%">
 					<caption>Tabela</caption>
 					<thead>
-						<tr><th>Col 1</th><th>Col 2</th><th>Col 3</th></tr>
+						<tr><th data-wd-sort-col="">Col 1</th><th data-wd-sort-col="">Col 2</th><th data-wd-sort-col="">Col 3</th></tr>
 					</thead>
 					<tbody>
 						<tr><td>Linha 1.1</td><td>Linha 1.2</td><td>Linha 1.3</td></tr>
@@ -163,7 +171,7 @@
 
 				<fieldset>
 					<legend>Formulário</legend>
-					<form class="wd-verticalf wd-border">
+					<form class="wd-block wd-border wd-padding wd-margin-height-child">
 						<label>Label</label>
 						<input type="text" required=""/>
 						<div class="wd-form-msg">
@@ -194,8 +202,8 @@
 				</div>
 
 
-				<div class=" wd-bgcolor-black wd-window wd-win-big wd-dopen">
-					<nav class="wd-menu">
+				<div class="wd-window wd-win-big wd-opewn">
+					<nav class="wd-grid wd-bgcolor-black wd-upon-enter-child">
 						<span>menu</span>
 						<span class="wd-icon-home" title="Home"></span>
 						<span class="wd-icon-user"></span>
@@ -221,9 +229,7 @@
 
 
 				
-				<footer class="">
-					<h3>Footer</h3>
-				</footer>
+
 
 
 			</article>
@@ -237,10 +243,13 @@
 		<nav class="wd-vertical">
 			<span>Item 1</span>
 			<span>Item 2</span>
-			<span>Item 3</span>
+			<span>Item 3ww</span>
 		</nav>
 	</aside>
-	
-	
+
+
+	<footer class="wd-bgcolor-green">
+		<h3>Footer</h3>
+	</footer>
 </body>
 </html>
