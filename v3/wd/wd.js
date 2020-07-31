@@ -3738,9 +3738,9 @@ var wd = (function() {
 
 /* === JS ENGINE =========================================================== */
 
-	/*Procedimentos quando se usa as classes wd-bar ao mudar a âncora FIXME*/
+	/*Adequar margins quando há elementos fixados no topo ou na base e mudar a posição quando mudar o hash*/
 	function hashProcedures() {
-		var conf, css, stl, obj, attr;
+		var conf, css, stl, obj, attr, hash, posY;
 
 		/*definindo variáveis para captura de dados*/
 		conf = {body: {}, head: {}, foot: {}};
@@ -3749,7 +3749,7 @@ var wd = (function() {
 
 		/*alimentando variável conf*/
 		for (var i in css) {
-			obj = wd$(css[i]);
+			obj = WD($(css[i]));
 			for (var j = 0; j < stl.length; j++) {
 				conf[i][stl[j]] = obj.items > 0 ? obj.getStyle(stl[j])[0].toLowerCase() : "";
 				if (stl[j] !== "position") {
@@ -3770,35 +3770,12 @@ var wd = (function() {
 			document.body.style.marginBottom = conf.foot.hBottom+"px";
 		}
 
-
-/*FIXME tem que continuar agora para fazer o hash
-		
-		bar  = WD($(".wd-nav.wd-buddy, .wd-head.wd-buddy"));
-		top  = WD($(window.location.hash));
-		hbar = bar.type === "dom" && bar.items > 0 ? bar.item(0).offsetHeight : 0;
-		htop = top.type === "dom" && top.items > 0 ? top.item(0).offsetTop : 0;
-		if (hbar !== 0) {
-			window.scrollTo(0, htop - hbar);
+		/* -- movimentando a tela do hash -- */
+		hash = WD($(window.location.hash));
+		if (conf.head.position === "fixed" && hash.type === "dom" && hash.items > 0) {
+			window.scrollTo(0, hash.item().offsetTop - conf.head.hTop);
 		}
 		return;
-
-*/
-
-
-
-
-
-		/*
-		var bar, top, hbar, htop;
-		bar  = WD($(".wd-nav.wd-buddy, .wd-head.wd-buddy"));
-		top  = WD($(window.location.hash));
-		hbar = bar.type === "dom" && bar.items > 0 ? bar.item(0).offsetHeight : 0;
-		htop = top.type === "dom" && top.items > 0 ? top.item(0).offsetTop : 0;
-		if (hbar !== 0) {
-			window.scrollTo(0, htop - hbar);
-		}
-		return;
-		*/
 	};
 
 	/*Procedimentos para carregar objetos externos*/
@@ -3907,7 +3884,7 @@ var wd = (function() {
 		style.textContent += ".js-wd-mask-error     {color: #663399 !important; background-color: #e8e0f0 !important;}";
 		style.textContent += ".js-wd-checked:before {content: \"\\2713 \"}";
 		style.textContent += ".js-wd-disabled       {pointer-events: none; color: #ccc; opacity: 0.8; cursor: default !important;}";
-		style.textContent += "*[data-wd-action], *[data-wd-request], *[data-wd-sort-col], *[data-wd-data] {cursor: pointer;}";
+		style.textContent += "*[data-wd-action], *[data-wd-send], *[data-wd-sort-col], *[data-wd-data] {cursor: pointer;}";
 		style.textContent += "*[data-wd-sort-col]:before {content: \"\\2195 \";}";
 		style.textContent += "*[data-wd-sort-col=\"-1\"]:before {content: \"\\2191 \";}";
 		style.textContent += "*[data-wd-sort-col=\"+1\"]:before {content: \"\\2193 \";}";
