@@ -1,38 +1,6 @@
 /*----------------------------------------------------------------------------
 wd.js (v3.0.0)
 
-FIXME
-remoção dos métodos form e Form para o usuário
-inclusão de dash camel upper lower force em WDtext; clear, title, trim viraram attributos
-inclusão do método send em WD que substituiu WDtext.request
-inclusão do atributo data-wd-send que o substituiu 
-alteração no método handler
-método data agora aceita o "data-" no início
-wd-nav-active virou wd-active, que aceita span tbm
-atributo file: data-wd-file=size{value}type{}char{}len{}
-nos eventos onclick inseriu-se o crescimento de bolha no caso de elemento inline
-toggle-show, enable, disable, toggle-enable em action
-wdConfig para definir as mensagens em body
-wdConfig {
-	loading
-	color
-	bgcolor
-	fileTitle
-	fileSize
-	fileTotal
-	fileChar
-	fileLen
-	fileType
-}
-array.item e dom.item mudança no retorno do método, ou retorna o valor ou o undefined
-atalhos para tempo (h m s) e data (y m d)
-
-
-
-
-CSS
-reformulação total
-
 <wdonadelli@gmail.com>
 https://github.com/wdonadelli/wd
 ------------------------------------------------------------------------------
@@ -58,11 +26,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.﻿
 ----------------------------------------------------------------------------*/
-
-
-//XXX inserir evento oninput para máscaras e filter?
-//XXX dá pra fazer assim: oninput para attr == value e onkeyup para demais elementos
-
 
 "use strict";
 
@@ -3594,7 +3557,6 @@ var wd = (function() {
 			conf[i].hTop    = conf[i].height + conf[i].top    + conf[i]["margin-bottom"];
 			conf[i].hBottom = conf[i].height + conf[i].bottom + conf[i]["margin-top"];
 		}
-		console.log(conf);
 
 		/* -- colocar margins em body se houver elementos fixados -- */
 		if (conf.head.position === "fixed" && conf.body["margin-top"] !== conf.head.hTop) {
