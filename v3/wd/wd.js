@@ -951,27 +951,6 @@ var wd = (function() {
 		}
 	});
 
-	/*Verifica se o texto é uma caminho acessível*/
-	Object.defineProperty(WDtext.prototype, "path", {
-		enumerable: true,
-		get: function() {
-			var path, ispath;
-
-			/*definindo variáveis*/
-			ispath = false;
-			path = this.toString().replace(/^\'/, "");
-
-			this.send(path, function(x) {
-				if (x.closed && x.status === "DONE") {
-					ispath = true;
-				}
-				return;
-			}, "HEAD", false);
-
-			return ispath;
-		}
-	});
-
 	/*Exibe uma mensagem temporária na tela*/
 	Object.defineProperty(WDtext.prototype, "message", {
 		enumerable: true,
