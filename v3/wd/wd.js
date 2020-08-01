@@ -1,25 +1,16 @@
 /*----------------------------------------------------------------------------
-wd.js (v2.2.4)
+wd.js (v3.0.0)
 
 FIXME
-MELHORIAS V2.2.4
-metodo form:
-	melhorias na interpretação de dados
-	quando se tratar de iinput type file, o atributo name conterá no final um _ seguido do sequencial a partir de zero (para múltiplos arquivos)
-inclusão do método Form
+remoção dos métodos form e Form para o usuário
 inclusão de dash camel upper lower force em WDtext; clear, title, trim viraram attributos
-inclusão do método send em WD
-inclusão do atributo data-wd-send
-
-alteração no método handler (não pode mais null e adicinado argumento remove)
-inclusão de método trigger como alteranativa ao handler
-
-inclusão do método 
+inclusão do método send em WD que substituiu WDtext.request
+inclusão do atributo data-wd-send que o substituiu 
+alteração no método handler
 método data agora aceita o "data-" no início
-wd-nav-active virou wd-active
-wd-nav-active funciona para span também
+wd-nav-active virou wd-active, que aceita span tbm
 atributo file: data-wd-file=size{value}type{}char{}len{}
-nos eventos onclick inserir o crescimento de bolha no caso de elemento inline
+nos eventos onclick inseriu-se o crescimento de bolha no caso de elemento inline
 toggle-show, enable, disable, toggle-enable em action
 wdConfig para definir as mensagens em body
 wdConfig {
@@ -37,10 +28,10 @@ array.item e dom.item mudança no retorno do método, ou retorna o valor ou o un
 atalhos para tempo (h m s) e data (y m d)
 
 
+
+
 CSS
-wd-code inclusão
-.wd-no-display
-.wd-input-message
+reformulação total
 
 <wdonadelli@gmail.com>
 https://github.com/wdonadelli/wd
@@ -699,14 +690,11 @@ var wd = (function() {
 			var pack;			
 
 			switch(this.type) {
-				case "text":
-					pack = this.toString();
-					break;
 				case "dom":
 					if (WD(method).type === "text" && WD(method).upper === "POST") {
-						pack = this.Form;
+						pack = this._Form;
 					} else {
-						pack = this.form;
+						pack = this._form;
 					}
 					break;
 				case "number":
@@ -981,54 +969,6 @@ var wd = (function() {
 			}, "HEAD", false);
 
 			return ispath;
-		}
-	});
-
-	/*Obtêm o conteúdo do caminho e retorna o método de requisição (descontinuar)*/
-	Object.defineProperty(WDtext.prototype, "request", {
-		enumerable: true,
-		value: function(method, time) {
-			var path, pack;
-
-			/* para o caso do endereço ser um número, remover ' do início */
-			pack    = this.toString().replace(/^\'/, "").split("?");
-			path    = pack[0];
-			pack[0] = "";
-			pack = pack.join("?").replace("?", "");/*!!!deixar assim para o caso de ter mais de um ?*/
-
-			/* definindo pack (serialized) */
-			if (WD(pack).type !== "text") {
-				pack = null;
-			} else if ((/^\$\{.+\}$/).test(pack)) {
-				pack = $(new DataAttr().convert(pack)[0]["$"]);
-			}
-
-			/* ajustando o tempo (segundos = *1000) */
-			time = WD(time);
-			time = (time.type === "number" && time.valueOf() > 0) ? 1000*time.valueOf() : 0;
-
-			/* função a ser executada */
-			function textRequestFunction(METHOD) {
-				WD(pack).send(path, function(x) {
-					if (x.closed === true) {
-						x.error = x.status === "DONE" ? false : true;
-						method(x);
-					} else if (time > 0 && data.time > time) {
-						x.abort();
-					}
-					return;			
-				}, METHOD);
-				return;
-			}
-
-			return {
-				get: function() {
-					textRequestFunction("GET");
-				},
-				post: function () {
-					textRequestFunction("POST");
-				}
-			};
 		}
 	});
 
@@ -2316,59 +2256,7 @@ var wd = (function() {
 
 /* === DOM ================================================================= */
 
-	/*define os atributos e métodos de winEvents para o método trigger*/
-	function wdWinEvents(run, del) {
-		if (!(this instanceof wdWinEvents)) {
-			return new wdWinEvents(run, del);
-		}
-
-		Object.defineProperties(this, {/*utilizado .prototype para _$del e _$run por causa do bind*/
-			constructor: {value: wdWinEvents},
-			_$del: {value: del},
-			_$run: {value: run}
-		});
-
-		return;
-	}
-
-	function runWinEvents(event, callback) {
-		var object = this;log(this.bunda());
-		object._$run.run(function(elem) {
-			setHandler(event, callback, elem, object._$del);
-			return;
-		});
-		return this;
-	}
-
-	Object.defineProperty(wdWinEvents.prototype, "eventExists", {
-		enumerable: true,
-		value: function(event, callback) {
-			return event in this ? this[event](callback) : this;
-		}
-	});
-
-	Object.defineProperty(wdWinEvents.prototype, "bunda", {
-		enumerable: true,
-		value: function() {
-			return this;
-		}
-	});
-
-
-
-	for (var ev in window) {
-		if ((/^on/).test(ev) === true) {
-			var event = ev.replace(/^on/, "");
-			Object.defineProperty(wdWinEvents.prototype, event, {
-				enumerable: true,
-				value: runWinEvents.bind(wdWinEvents.prototype, event) /*ver anotação acima sobre bind*/
-			});
-		}
-	}
-
-/*............................................................................*/
-
-	/*Define a função para os disparadores*/
+	/*Define a função para os disparadores em navegadores mais antigos*/
 	function getEventMethod(input) {
 		var wdEventHandler = function(ev) {
 			var methods = input;
@@ -2386,28 +2274,35 @@ var wd = (function() {
 /*............................................................................*/
 
 	/*função para definir o método de implementação de eventos*/
-	function setHandler(event, method, elem, remove) {
+	function wdSetHandler(event, method, elem, remove) {
 
 		/* checando e definindo valores padrão */
 		if (WD(method).type !== "function") {
+			log("handler: " + event + " callback needs to be a function..", "e");
 			return false;
 		}
 		event  = event.toLowerCase().replace(/^\-/, "").replace(/^on/, "");
 		var special = [];
 
+		/*log de eventos*/
+		if (!("on"+event in elem)) {
+			log("handler: " + event + " event does not exist in " + elem.tagName.toLowerCase() + ".", "w");
+		}
+
+		/*vinculando evento*/
 		if (remove === true) {
 			if ("removeEventListener" in elem) {
 				elem.removeEventListener(event, method, false);
 			} else if ("detachEvent" in elem) {
 				elem.detachEvent("on"+event, method);
 			} else if (("on"+event) in elem) {
-				/*função especial para navegadores bem antigos*/
+				/*função especial para navegadores mais antigos*/
 				if (WD(elem["on"+event]).type === "function" && elem["on"+event].name === "wdEventHandler") {
 					special = WD(elem["on"+event]("getMethods")).del(method);
 				}
 				elem["on"+event] = null;
 				for (var i = 0; i < special.length; i++) {
-					setHandler(event, special[i], elem);
+					wdSetHandler(event, special[i], elem);
 				}
 			} else {
 				return false;
@@ -2418,7 +2313,7 @@ var wd = (function() {
 			} else if ("attachEvent" in elem) {
 				elem.attachEvent("on"+event, method);
 			} else if (("on"+event) in elem) {
-				/*função especial para navegadores bem antigos*/
+				/*função especial para navegadores mais antigos*/
 				if (WD(elem["on"+event]).type === "function") {
 					special = elem["on"+event].name === "wdEventHandler" ? elem["on"+event]("getMethods") : [elem["on"+event]];
 				}
@@ -3061,41 +2956,19 @@ var wd = (function() {
 		}
 	});
 
-	/*Adiciona ou remove disparadores*/
 	Object.defineProperty(WDdom.prototype, "handler", {
 		enumerable: true,
-		value: function (input, remove) {
-			var del, event, methods;
-			if (WD(input).type !== "object") {return false;}
+		value: function (events, remove) {
 
-			/*looping nos eventos*/
-			for (var i in input) {
-				event   = i;
-				del     = (remove === true || (/^\-/).test(event)) ? true : false;
-				methods = WD(input[i]).type === "array" ? WD(input[i]).unique() : [input[i]];
-
-				/*looping nos métodos*/
-				for (var n = 0; n < methods.length; n++) {
-					/*looping nos elementos*/
-					this.run(function(elem) {
-						if (!setHandler(event, methods[n], elem, del)) {
-							log("handler: Invalid argument ("+event+" "+methods[n].name+")", "w");
-						}
-						return;
-					});
-				}
+			if (WD(events).type === "object") {
+				this.run(function(elem) {
+					for (var event in events) {
+						wdSetHandler(event, events[event], elem, remove);
+					}
+					return;
+				});
 			}
-			return true;
-		}
-	});
-
-	/*Adiciona ou remove disparadores*/
-	Object.defineProperty(WDdom.prototype, "trigger", {
-		enumerable: true,
-		value: function (remove) {
-			var win;
-			win = new wdWinEvents(this, remove);
-			return win;
+			return this;
 		}
 	});
 
@@ -3241,9 +3114,8 @@ var wd = (function() {
 		}
 	});
 
-	/*Obtem a serialização de formulário*/
-	Object.defineProperty(WDdom.prototype, "form", {
-		enumerable: true,
+	/*Obtem a serialização de formulário (não disponível ao usuário)*/
+	Object.defineProperty(WDdom.prototype, "_form", {
 		get: function() {
 			var x = [];
 			this.run(function(elem) {
@@ -3257,12 +3129,11 @@ var wd = (function() {
 		}
 	});
 
-	/*Obtem a serialização de formulário com FromData*/
-	Object.defineProperty(WDdom.prototype, "Form", {
-		enumerable: true,
+	/*Obtem a serialização de formulário com FromData (não disponível ao usuário)*/
+	Object.defineProperty(WDdom.prototype, "_Form", {
 		get: function() {
 			if (!("FormData" in window)) {
-				return this.form;
+				return this._form;
 			}
 			var x = new FormData();
 			this.run(function(elem) {
@@ -3278,8 +3149,6 @@ var wd = (function() {
 			return x;
 		}
 	});
-
-
 
 	/*Retorna o método toString, valueOf*/
 	Object.defineProperties(WDdom.prototype, {
@@ -3423,20 +3292,6 @@ var wd = (function() {
 				callback = window[value[i]["callback"]];
 				WD(pack).send(file, callback, method);
 			}
-		}			
-		return;
-	};
-
-	/*Faz requisição a um arquivo externo data-wd-request=post|get{file}method{function()}*/
-	function data_wdRequest(e) {
-		var value, method, file, callback, data;
-		data = new DataAttr(e);
-		if (data.has("wdRequest")) {
-			value    = data.core("wdRequest")[0];
-			method   = "post" in value ? "post" : "get";
-			file     = value[method];
-			callback = window[value["method"]];
-			WD(file).request(callback)[method]();
 		}			
 		return;
 	};
@@ -3813,7 +3668,6 @@ var wd = (function() {
 			data_wdData(elem);
 			data_wdActive(elem);
 			data_wdSortCol(elem);
-			data_wdRequest(elem);
 			data_wdSend(elem);
 			elem = elem.parentElement;
 		}
@@ -3895,13 +3749,21 @@ var wd = (function() {
 
 	/*Definindo eventos*/
 	WD(window).handler({
-		load: [headScriptProcedures, loadingProcedures, hashProcedures, data_wdConfig],
+		load: headScriptProcedures
+	}).handler({
+		load: loadingProcedures
+	}).handler({
+		load: hashProcedures
+	}).handler({
+		load: data_wdConfig,
 		resize: scalingProcedures,
 		hashchange: hashProcedures
 	});
+
 	WD(document).handler({
 		click:  clickProcedures,
 		keyup:  keyboardProcedures,
+		input:  keyboardProcedures,
 		change: changeProcedures
 	});
 
