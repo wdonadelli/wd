@@ -3574,6 +3574,10 @@ var wd = (function() {
 		return;
 	};
 
+		//FIXME na hora de redimensionar a página, tem que mudar as margens também
+
+
+
 	/*Procedimentos para carregar objetos externos*/
 	function loadingProcedures() {
 		var attr = WD($("[data-wd-load], [data-wd-repeat]"));

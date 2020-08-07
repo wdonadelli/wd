@@ -30,40 +30,26 @@ SOFTWARE.﻿
 /*============================================================================*/
 /*-- ESTILOS PARA NORMALIZAÇÃO --*/
 
-*, *:before, *:after {
-	box-sizing: border-box;
-}
-body, main, section, article, header, footer, nav, adress, aside {
-	display: block;
-	margin: 0;
-	padding: 0;
-}
-h1, h2, h3, h4, h5, h6, p, pre, blockquote {
-	display: block;
-}
+*, *:before, *:after {box-sizing: border-box;}
+
 hr {
 	box-sizing: content-box;
 	height: 0;
 	overflow: visible;
 }
-figure, figcaption, picture {
+
+body, main, section, article, header, footer, nav, adress, aside, details, form, fieldset {
 	display: block;
+	margin: 0;
+	padding: 0;
 }
-img {
-	display: inline-block;
-}
-ul, ol, dl {
-	display: block;
-}
-form {
-	display: block;
-}
-label, button, input, select, textarea {
-	display: inline;
-}
-fieldset {
-	display: block;
-}
+
+summary {display: list-item;}
+h1, h2, h3, h4, h5, h6, p, pre, blockquote {display: block;}
+figure, figcaption, picture {display: block;}
+img {display: inline-block;}
+ul, ol, dl {display: block;}
+label, button, input, select, textarea {display: inline;}
 
 /*============================================================================*/
 
@@ -75,9 +61,6 @@ fieldset {
 	\***************************************************************************/
 
 /*-- ESTILOS DE BASE --*/
-
-
-
 
 .wd {
 	background-color: #ffffff;
@@ -174,6 +157,9 @@ fieldset {
 	margin-left: -0.5em;
 }
 
+/* -- Elementos de bloco -- */
+.wd details > details {margin-left: 1em;}
+
 /* -- Elementos de cabeçalho e texto -- */
 .wd h1, .wd h2, .wd h3, .wd h4, .wd h5, .wd h6 {
 	font-weight: bold;
@@ -214,12 +200,11 @@ fieldset {
 	text-decoration: underline;
 }
 
-.wd hr {
-	border: 1px solid #bfbfbf;
-}
+.wd hr {border: 1px solid #bfbfbf;}
 
 .wd summary {
 	cursor: pointer;
+	padding: 0.3em;
 }
 
 /* -- Imagens -- */
@@ -543,7 +528,7 @@ fieldset {
 .wd-tip-hover-bottom, .wd-tip-click-bottom {left:      0; top: 100%;}
 .wd-tip-hover-left, .wd-tip-click-left     {right:  100%; top:    0;}
 
-/* -- integração com wd js -- */
+/* -- integração com wd js (wd-open) -- */
 .wd .wd-tip:hover > .wd-tip-hover-top,    .wd-tip.wd-open > .wd-tip-click-top,
 .wd .wd-tip:hover > .wd-tip-hover-right,  .wd-tip.wd-open > .wd-tip-click-right,
 .wd .wd-tip:hover > .wd-tip-hover-bottom, .wd-tip.wd-open > .wd-tip-click-bottom,
@@ -769,6 +754,70 @@ fieldset {
 .wd .wd-report.wd-itemize p:before         {counter-increment: item; content: counter(item) ". ";}
 .wd .wd-report.wd-itemize p:before         {counter-increment: item; content: counter(item) ". ";}
 .wd .wd-report.wd-itemize section p:before {counter-increment: subitem; content: counter(item) "." counter(subitem) ". ";}
+
+/* -- código -- */
+.wd .wd-code {
+	background-color: #E6E6FA !important;
+	border-radius: 0.2em;
+	color: #0073e6 !important;
+	font-family: monospace !important;
+	font-size: 0.9em !important;
+	font-style: normal !important;
+	font-weight: normal !important;
+	overflow: auto !important;
+	white-space: pre-wrap !important;
+}
+/* palavras chaves */
+.wd .wd-code em {
+	color: #004d00 !important;
+	font-size: inherit !important;
+	font-style: normal !important;
+	font-weight: bold !important;
+}
+/* tags HTML */
+.wd .wd-code kbd {
+	color: inherit  !important;
+	font-size: inherit !important;
+	font-style: normal !important;
+	font-weight: normal !important;
+}
+.wd .wd-code kbd:before {
+	content: "\003C" !important;
+	font-weight: bold !important;
+}
+.wd .wd-code kbd:after {
+	content: "\003E" !important;
+	font-weight: bold !important;
+}
+/* resultado na tela */
+.wd .wd-code samp, .wd .wd-code samp * {
+	color: #916a08 !important;
+	font-size: inherit !important;
+	font-style: normal !important;
+	font-weight: normal !important;
+	padding: 2px 0 !important;
+}
+.wd .wd-code samp:before {
+	content: "\21B3  " !important;
+}
+/* strings e variáveis */
+.wd .wd-code q, .wd .wd-code var, .wd .wd-code q *, .wd .wd-code var * {
+	color: #ff1493 !important;
+	font-size: inherit !important;
+	font-style: normal !important;
+	font-weight: normal !important;
+}
+/* comentários */
+.wd .wd-code cite, .wd .wd-code cite * {
+	color: #4e3cc3 !important;
+	font-size: inherit !important;
+	font-style: italic !important;
+	font-weight: normal !important;
+}
+
+
+
+
 
 /*============================================================================*/
 /*--  ESTILOS ESTRUTURAIS -- */
@@ -1191,7 +1240,7 @@ fieldset {
 }
 
 /*-- destaque (VER ESCLARECIMENTOS EM SOMBRA) --*/
-.wd .wd-zebra > *:nth-child(even),
+.wd .wd-upon-toggle > *:nth-child(even),
 .wd .wd-upon, .wd .wd-upon-child > *,
 .wd .wd-upon-enter:hover, .wd .wd-upon-enter-child > *:hover,
 .wd *:hover > .wd-upon-in {
@@ -1222,64 +1271,4 @@ fieldset {
 	.wd .wd-hide-print {visibility: hidden !important;}
 	.wd .wd-show-print {visibility: visible !important;}
 	.wd .wd-overlook-print {display: none !important;}
-}
-
-/* -- código -- */
-.wd .wd-code {
-	background-color: #E6E6FA !important;
-	border-radius: 0.2em;
-	color: #0073e6 !important;
-	font-family: monospace !important;
-	font-size: 0.9em !important;
-	font-style: normal !important;
-	font-weight: normal !important;
-	overflow: auto !important;
-	white-space: pre-wrap !important;
-}
-/* palavras chaves */
-.wd .wd-code em {
-	color: #004d00 !important;
-	font-size: inherit !important;
-	font-style: normal !important;
-	font-weight: bold !important;
-}
-/* tags HTML */
-.wd .wd-code kbd {
-	color: inherit  !important;
-	font-size: inherit !important;
-	font-style: normal !important;
-	font-weight: normal !important;
-}
-.wd .wd-code kbd:before {
-	content: "\003C" !important;
-	font-weight: bold !important;
-}
-.wd .wd-code kbd:after {
-	content: "\003E" !important;
-	font-weight: bold !important;
-}
-/* resultado na tela */
-.wd .wd-code samp, .wd .wd-code samp * {
-	color: #916a08 !important;
-	font-size: inherit !important;
-	font-style: normal !important;
-	font-weight: normal !important;
-	padding: 2px 0 !important;
-}
-.wd .wd-code samp:before {
-	content: "\21B3  " !important;
-}
-/* strings e variáveis */
-.wd .wd-code q, .wd .wd-code var, .wd .wd-code q *, .wd .wd-code var * {
-	color: #ff1493 !important;
-	font-size: inherit !important;
-	font-style: normal !important;
-	font-weight: normal !important;
-}
-/* comentários */
-.wd .wd-code cite, .wd .wd-code cite * {
-	color: #4e3cc3 !important;
-	font-size: inherit !important;
-	font-style: italic !important;
-	font-weight: normal !important;
 }
