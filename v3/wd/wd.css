@@ -877,29 +877,29 @@ label, button, input, select, textarea {display: inline;}
 }
 
 /* -- cores -- */
-.wd .wd-bgcolor-black,  .wd .wd-bgcolor-black-child > *  {color: #f2f2f2 !important; background-color: #262626 !important;}
-.wd .wd-bgcolor-white,  .wd .wd-bgcolor-white-child > *  {color: #262626 !important; background-color: #f2f2f2 !important;}
-.wd .wd-bgcolor-grey,   .wd .wd-bgcolor-grey-child > *   {color: #e6e6e6 !important; background-color: #595959 !important;}
-.wd .wd-bgcolor-red,    .wd .wd-bgcolor-red-child > *    {color: #ffe9e6 !important; background-color: #fa3838 !important;}
-.wd .wd-bgcolor-green,  .wd .wd-bgcolor-green-child > *  {color: #e6ffff !important; background-color: #006666 !important;}
-.wd .wd-bgcolor-blue,   .wd .wd-bgcolor-blue-child > *   {color: #cce6ff !important; background-color: #004d99 !important;}
-.wd .wd-bgcolor-yellow, .wd .wd-bgcolor-yellow-child > * {color: #808000 !important; background-color: #f9f906 !important;}
-.wd .wd-bgcolor-orange, .wd .wd-bgcolor-orange-child > * {color: #4d3200 !important; background-color: #ffa500 !important;}
-.wd .wd-bgcolor-brown,  .wd .wd-bgcolor-brown-child > *  {color: #f9e2d2 !important; background-color: #874312 !important;}
-.wd .wd-bgcolor-pink,   .wd .wd-bgcolor-pink-child > *   {color: #660011 !important; background-color: #ffc2f0 !important;}
-.wd .wd-bgcolor-purple, .wd .wd-bgcolor-purple-child > * {color: #f0ebfa !important; background-color: #6633cc !important;}
+.wd .wd-bg-black,  .wd .wd-bg-black-child > *  {color: #f2f2f2 !important; background-color: #333333 !important;}
+.wd .wd-bg-white,  .wd .wd-bg-white-child > *  {color: #1a1a1a !important; background-color: #e6e6e6 !important;}
+.wd .wd-bg-grey,   .wd .wd-bg-grey-child > *   {color: #e6e6e6 !important; background-color: #8c8c8c !important;}
+.wd .wd-bg-red,    .wd .wd-bg-red-child > *    {color: #fee6e6 !important; background-color: #db5757 !important;}
+.wd .wd-bg-green,  .wd .wd-bg-green-child > *  {color: #e6ffff !important; background-color: #194d4d !important;}
+.wd .wd-bg-blue,   .wd .wd-bg-blue-child > *   {color: #cce6ff !important; background-color: #1f4d7a !important;}
+.wd .wd-bg-yellow, .wd .wd-bg-yellow-child > * {color: #636303 !important; background-color: #fbfb6a !important;}
+.wd .wd-bg-orange, .wd .wd-bg-orange-child > * {color: #4d3200 !important; background-color: #e69500 !important;}
+.wd .wd-bg-brown,  .wd .wd-bg-brown-child > *  {color: #f9e2d2 !important; background-color: #734626 !important;}
+.wd .wd-bg-pink,   .wd .wd-bg-pink-child > *   {color: #1a0013 !important; background-color: #ffccf2 !important;}
+.wd .wd-bg-purple, .wd .wd-bg-purple-child > * {color: #f0ebfa !important; background-color: #6c46b9 !important;}
 
-.wd .wd-color-black,  .wd .wd-color-black-child > *  {color: #262626 !important;}
-.wd .wd-color-white,  .wd .wd-color-white-child > *  {color: #f2f2f2 !important;}
-.wd .wd-color-grey,   .wd .wd-color-grey-child > *   {color: #595959 !important;}
-.wd .wd-color-red,    .wd .wd-color-red-child > *    {color: #e60000 !important;}
-.wd .wd-color-green,  .wd .wd-color-green-child > *  {color: #006666 !important;}
-.wd .wd-color-blue,   .wd .wd-color-blue-child > *   {color: #0000e6 !important;}
-.wd .wd-color-yellow, .wd .wd-color-yellow-child > * {color: #808000 !important;}
-.wd .wd-color-orange, .wd .wd-color-orange-child > * {color: #e67e00 !important;}
-.wd .wd-color-brown,  .wd .wd-color-brown-child > *  {color: #874312 !important;}
-.wd .wd-color-pink,   .wd .wd-color-pink-child > *   {color: #ff3399 !important;}
-.wd .wd-color-purple, .wd .wd-color-purple-child > * {color: #592d86 !important;}
+.wd .wd-fg-black,  .wd .wd-fg-black-child > *  {color: #262626 !important;}
+.wd .wd-fg-white,  .wd .wd-fg-white-child > *  {color: #f2f2f2 !important;}
+.wd .wd-fg-grey,   .wd .wd-fg-grey-child > *   {color: #595959 !important;}
+.wd .wd-fg-red,    .wd .wd-fg-red-child > *    {color: #e60000 !important;}
+.wd .wd-fg-green,  .wd .wd-fg-green-child > *  {color: #006666 !important;}
+.wd .wd-fg-blue,   .wd .wd-fg-blue-child > *   {color: #0000e6 !important;}
+.wd .wd-fg-yellow, .wd .wd-fg-yellow-child > * {color: #808000 !important;}
+.wd .wd-fg-orange, .wd .wd-fg-orange-child > * {color: #e67e00 !important;}
+.wd .wd-fg-brown,  .wd .wd-fg-brown-child > *  {color: #874312 !important;}
+.wd .wd-fg-pink,   .wd .wd-fg-pink-child > *   {color: #ff3399 !important;}
+.wd .wd-fg-purple, .wd .wd-fg-purple-child > * {color: #592d86 !important;}
 
 /* - Tamanho de Texto -- */
 .wd .wd-size-xxsmall, .wd .wd-size-xxsmall-child > * {font-size: xx-small !important;}
@@ -925,7 +925,7 @@ label, button, input, select, textarea {display: inline;}
 .wd .wd-case-upper,  .wd .wd-case-upper-child > *  {text-transform: uppercase !important;}
 .wd .wd-case-normal, .wd .wd-case-normal-child > * {text-transform: none !important;}
 .wd .wd-case-lower,  .wd .wd-case-lower-child > *  {text-transform: lowercase !important;}
-.wd .wd-case-title,  .wd .wd-case-titler-child > * {text-transform: capitalize !important;}
+.wd .wd-case-title,  .wd .wd-case-title-child > *  {text-transform: capitalize !important;}
 
 /* -- Padding -- */
 .wd .wd-padding,        .wd .wd-padding-child > *,

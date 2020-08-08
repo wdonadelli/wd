@@ -1,51 +1,49 @@
 <article>
-	<nav class="wd-cloud">
-		<span data-wd-action="tab{#tabColor}" data-wd-click="">Color</span>
-		<span data-wd-action="tab{#tabIcon}">Icon</span>
-		<span data-wd-action="tab{#tabOthers}">Others</span>
-	</nav>
 
-
-	<div data-wd-device="desktop{wd-xxmargin-child}" id="boxTab">
+	<div class="wd-margin-bottom-child" id="boxTab">
 
 <!----------------------------------------------------------------------------->
 		<div id="tabColor">
 
+			<h2>Color</h2>
+
 			<h3>Foreground</h3>
 
 			<ul class="wd-size-xlarge" type="none">
-				<li class="wd-color-black">wd-color-black</li>
-				<li class="wd-color-white">wd-color-white<span class="wd-color-grey wd-color-small">(wd-color-white)</span></li>
-				<li class="wd-color-grey">wd-color-grey</li>
-				<li class="wd-color-red">wd-color-red</li>
-				<li class="wd-color-green">wd-color-green</li>
-				<li class="wd-color-blue">wd-color-blue</li>
-				<li class="wd-color-yellow">wd-color-yellow</li>
-				<li class="wd-color-orange">wd-color-orange</li>
-				<li class="wd-color-brown">wd-color-brown</li>
-				<li class="wd-color-pink">wd-color-pink</li>
-				<li class="wd-color-purple">wd-color-purple</li>
+				<li class="wd-fg-black">wd-fg-black</li>
+				<li class="wd-fg-white">wd-fg-white<span class="wd-fg-grey wd-fg-small">(wd-fg-white)</span></li>
+				<li class="wd-fg-grey">wd-fg-grey</li>
+				<li class="wd-fg-red">wd-fg-red</li>
+				<li class="wd-fg-green">wd-fg-green</li>
+				<li class="wd-fg-blue">wd-fg-blue</li>
+				<li class="wd-fg-yellow">wd-fg-yellow</li>
+				<li class="wd-fg-orange">wd-fg-orange</li>
+				<li class="wd-fg-brown">wd-fg-brown</li>
+				<li class="wd-fg-pink">wd-fg-pink</li>
+				<li class="wd-fg-purple">wd-fg-purple</li>
 			</ul>
 
 			<h3>Background</h3>
 
 			<ul class="wd-size-xlarge" type="none">
-				<li class="wd-bgcolor-black">wd-bgcolor-black</li>
-				<li class="wd-bgcolor-white">wd-bgcolor-white</li>
-				<li class="wd-bgcolor-grey">wd-bgcolor-grey</li>
-				<li class="wd-bgcolor-red">wd-bgcolor-red</li>
-				<li class="wd-bgcolor-green">wd-bgcolor-green</li>
-				<li class="wd-bgcolor-blue">wd-bgcolor-blue</li>
-				<li class="wd-bgcolor-yellow">wd-bgcolor-yellow</li>
-				<li class="wd-bgcolor-orange">wd-bgcolor-orange</li>
-				<li class="wd-bgcolor-brown">wd-bgcolor-brown</li>
-				<li class="wd-bgcolor-pink">wd-bgcolor-pink</li>
-				<li class="wd-bgcolor-purple">wd-bgcolor-purple</li>
+				<li class="wd-bg-black">wd-bg-black</li>
+				<li class="wd-bg-white">wd-bg-white</li>
+				<li class="wd-bg-grey">wd-bg-grey</li>
+				<li class="wd-bg-red">wd-bg-red</li>
+				<li class="wd-bg-green">wd-bg-green</li>
+				<li class="wd-bg-blue">wd-bg-blue</li>
+				<li class="wd-bg-yellow">wd-bg-yellow</li>
+				<li class="wd-bg-orange">wd-bg-orange</li>
+				<li class="wd-bg-brown">wd-bg-brown</li>
+				<li class="wd-bg-pink">wd-bg-pink</li>
+				<li class="wd-bg-purple">wd-bg-purple</li>
 			</ul>
 		</div>
 
 <!----------------------------------------------------------------------------->
 		<div id="tabIcon">
+
+			<h2>Icon</h2>
 
 			<h3>Math</h3>
 
@@ -170,10 +168,47 @@
 
 <!----------------------------------------------------------------------------->
 		<div id="tabOthers">
-		
-		
-		</div>
 
+			<h2>Others</h2>
+
+			<div style="background-color: #ffdddd; color: #ff0000;" class="wd-xmargin-height wd-padding">Background
+				<div style="background-color: #ddffdd; color: #00ff00;" class="wd-padding">Parent
+					<div style="background-color: #ddddff; color: #0000ff;" class="wd-padding">Child</div>
+				</div>
+			</div>
+
+
+			<div style="background-color: #ffdddd; color: #ff0000; position: relative;">
+				<div style="background-color: #ddffdd; color: #00ff00;" id="parent">
+					<div style="background-color: #ddddff; color: #0000ff;">first child</div>
+					<div style="background-color: #ddddff; color: #0000ff;" id="child">Child*</div>
+					<div style="background-color: #ddddff; color: #0000ff;">LAST CHILD</div>
+				</div>
+			</div>
+
+			<form class="wd-row">
+
+				<div class="wd-col-06 wd-block wd-padding">
+
+					<label>Parent</label>
+					<select data-wd-repeat="get{utilities.json}" data-wd-sort="1" onchange="setCss(this, '#parent');">
+						<option value="{{value}}">{{value}}</option>
+					</select>
+
+				</div>
+
+				<div class="wd-col-06 wd-block wd-padding">
+
+					<label>Child*</label>
+					<select data-wd-repeat="get{utilities.json}" data-wd-sort="1" onchange="setCss(this, '#child');">
+						<option value="{{value}}">{{value}}</option>
+					</select>
+
+				</div>
+
+			</form>
+
+		</div>
 	</div>
 
 
