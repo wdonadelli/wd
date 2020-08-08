@@ -70,6 +70,29 @@ label, button, input, select, textarea {display: inline;}
 	line-height: 1.5;
 }
 
+/* -- Semântica textual -- */
+.wd code {
+	background-color: #E6E6FA;
+	border-radius: 0.2em;
+	color: #0073e6;
+	font-family: monospace;
+	font-size: smaller;
+	padding: 0 0.3em;
+}
+
+.wd a[href] {
+	color: #4169E1;
+	text-decoration: underline;
+}
+
+.wd hr {border: 1px solid #bfbfbf;}
+
+.wd summary {
+	cursor: pointer;
+	padding: 0.3em;
+}
+
+
 /* -- Elementos de Seção -- */
 .wd article {
 	margin: 0.5em 0;
@@ -180,31 +203,6 @@ label, button, input, select, textarea {display: inline;}
 }
 .wd pre {
 	margin: 0.5em 0;
-}
-
-/* -- Semântica textual -- */
-.wd code {
-	background-color: #E6E6FA;
-	border-radius: 0.2em;
-	color: #0073e6;
-	font-family: monospace;
-	font-size: smaller;
-	padding: 0 0.3em;
-}
-
-.wd a[href] {
-	color: #4169E1;
-	text-decoration: none;
-}
-.wd a[href]:hover {
-	text-decoration: underline;
-}
-
-.wd hr {border: 1px solid #bfbfbf;}
-
-.wd summary {
-	cursor: pointer;
-	padding: 0.3em;
 }
 
 /* -- Imagens -- */
@@ -814,10 +812,6 @@ label, button, input, select, textarea {display: inline;}
 	font-style: italic !important;
 	font-weight: normal !important;
 }
-
-
-
-
 
 /*============================================================================*/
 /*--  ESTILOS ESTRUTURAIS -- */

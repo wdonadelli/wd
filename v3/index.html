@@ -16,30 +16,20 @@
 		<link  href="wd/wd.css" rel="stylesheet" />
 	</head>
 
-<body>
+<body class="wd-center wd-bgcolor-white">
 
-	<main class="wd-xxmargin-length-child">
+	<header class="wd-bgcolor-black">
+		<h1>WD Web Libraries Examples</h1>
+	</header>
 
-		<header class="wd-box-blue">
-			<h1>WD Web Libraries Examples</h1>
-			<p><a href="https://github.com/wdonadelli/wd/wiki" target="_blank" class="wd-text-white">WD Web Libraries Handbook</a></p>
-		</header>
-
-		<form>
-			<datalist id="WD">
-				<option value="WD ATTR">Attributes</option>
-				<option value="WD JS">Scripts</option>
-				<option value="WD CSS">Style Sheet</option>
-			</datalist>
-		
-			<input type="search" data-wd-filter="show{}${#examples}" autofocus="" placeholder="Search..." class="wd-input" list="WD" />
-
-		</form>
-
+	<main class="wd-padding">
 
 		<section>
-			<ul data-wd-repeat="get{examples/links.json}" id="examples">
-				<li><a href="examples/{{file}}" title={{title}} target="_blank" >{{title}}</a></li>
+			<ul>
+				<li><a href="https://github.com/wdonadelli/wd/wiki" target="_blank" >WD Web Libraries Handbook</a>
+				<li><a href="examples/WD_Attributes_Tools/" title="WD Attributes Tools" target="_blank" >WD Attributes Tools</a></li>
+				<li><a href="examples/WD_JavaScript_Tools/" title="WD JavaScript Tools" target="_blank" >WD JavaScript Tools</a></li>
+				<li><a href="examples/WD_Style_Sheet/" title="WD Style Sheet" target="_blank" >WD Style Sheet</a></li>
 			</ul>
 		</section>
 

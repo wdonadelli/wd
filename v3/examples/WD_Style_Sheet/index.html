@@ -1,0 +1,52 @@
+﻿<!DOCTYPE html>
+<html class="wd">
+
+	<head>
+		<title>WD Style Sheet Examples</title>
+		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1"/>
+		<meta name="keywords" content="wd, stylesheet, attributes, tools, HTML, CSS, javaScript, library, queryselector, handbook, github, donadelli, wdonadelli">
+		<meta name="author" content="Willian Donadelli"/>
+		<meta name="description" content="WD Web Libraries Examples"/>
+		<meta name="rating" content="general" />
+		<!--<meta http-equiv="pragma" content="no-cache" />-->
+		<meta name="revisit-after" content="2 days" />
+		<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+		<script src="../../wd/wd.js"></script>
+		<link  href="../../wd/wd.css" rel="stylesheet" />
+		<script src="../examples.js"></script>
+	</head>
+
+<body class="wd-fixed">
+
+		<header class="wd-bgcolor-white">
+			<h1>WD Style Sheet Examples</h1>
+			<nav class="wd-bgcolor-black">
+				<span class="wd-icon-menu" title="List of examples" data-wd-action="toggle-open{#menuBar}"> Menu</span>
+				<span class="wd-icon-key" title="On and off style" onclick="onOffStyle();"> On/Off</span>
+				<span class="wd-icon-search" onclick="boxCode('#boxTab > *');"> Code</span>
+				<a href="https://github.com/wdonadelli/wd/wiki/WD-Style-Sheet" target="_blank" class="wd-icon-help" title="Handbook"> Wiki</a>
+			</nav>
+		</header>
+
+	<main></main>
+
+
+<div class="wd-modal" id="menuBar" data-wd-action="close{#menuBar}">
+	<div class="wd-window wd-win-left" data-wd-device="desktop{wd-win-left}">
+		<article>
+			<header class="wd-bgcolor-blue">
+				<h3>Menu</h3>
+			</header>
+			<nav class="wd-block">
+				<span data-wd-data="wdLoad{get{WD-CSS-Utilities-Style.html}}${main}" data-wd-click="">Utilities</span>
+			</nav>
+		</article>
+	</div>
+</div>
+
+<div data-wd-load="get{../boxCode.html}"></div>
+
+
+</body>
+</html>
