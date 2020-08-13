@@ -92,64 +92,12 @@ label, button, input, select, textarea {display: inline;}
 	padding: 0.3em;
 }
 
-
-/* -- Elementos de Seção -- */
-.wd article {
-	margin: 0.5em 0;
-	padding: 0.5em;
-}
-.wd article:first-child {
-	margin-top: 0;
-}
-.wd article:last-child {
-	margin-bottom: 0;
-}
-
-.wd header, .wd footer {
-	margin: 0.5em 0;
-	padding: 0.5em 2em;
-}
-.wd header:first-child {
-	margin-top: 0;
-}
-.wd footer:last-child {
-	margin-bottom: 0;
-}
-.wd article > header:first-child {
-	margin-top: -0.5em;
-}
-.wd article > footer:last-child {
-	margin-bottom: -0.5em;
-}
-
-.wd header > *, .wd footer > * {
-	margin: 0.5em 0;
-}
-.wd header > *:first-child, .wd footer > *:first-child {
-	margin-top: 0;
-}
-.wd header > *:last-child, .wd footer > *:last-child {
-	margin-bottom: 0;
-}
-
-.wd nav {
-	display: block; /*se não houver flex*/
-	display: flex;
-}
+/* -- Navegador -- */
+.wd nav {display: flex;}
 .wd nav:after {
 	content: "";
 	clear: both;
 	display: table;
-}
-.wd header > nav, .wd footer > nav {
-	margin-right: -2em;
-	margin-left: -2em;
-}
-.wd header > nav:first-child, .wd footer > nav:first-child {
-	margin-top: -0.5em;
-}
-.wd header > nav:last-child, .wd footer > nav:last-child {
-	margin-bottom: -0.5em;
 }
 
 .wd nav > *, .wd nav > a[href] {
@@ -163,52 +111,26 @@ label, button, input, select, textarea {display: inline;}
 	padding: 0.5em;
 	text-decoration: none;
 }
-
-.wd nav > *:hover,
-.wd nav > *:focus {
-	box-shadow: inset 0 -0.1em 0 0 #1e90ff;
-}
-/* -- integração com wd js -- */
-.wd nav > *.wd-active {
-	box-shadow: inset 0 -0.3em 0 0 #1e90ff;
-}
-
-.wd article > header,
-.wd article > footer,
-.wd article > nav {
-	margin-right: -0.5em;
-	margin-left: -0.5em;
-}
+.wd nav > *:hover     {box-shadow: inset 0 -0.1em 0 0 #1e90ff;}
+.wd nav > *.wd-active {box-shadow: inset 0 -0.3em 0 0 #1e90ff;}
 
 /* -- Elementos de bloco -- */
 .wd details > details {margin-left: 1em;}
 
 /* -- Elementos de cabeçalho e texto -- */
-.wd h1, .wd h2, .wd h3, .wd h4, .wd h5, .wd h6 {
-	font-weight: bold;
-	margin: 0.5em 0;
-}
-.wd h1 {font-size: 2.00em;}
-.wd h2 {font-size: 1.50em;}
-.wd h3 {font-size: 1.20em;}
-.wd h4 {font-size: 1.00em;}
-.wd h5 {font-size: 0.85em;}
-.wd h6 {font-size: 0.65em;}
-
-.wd p {
-	margin: 1em 0;
-}
-.wd blockquote {
-	margin: 1em 8em;
-}
-.wd pre {
-	margin: 0.5em 0;
-}
+.wd h1, .wd h2, .wd h3, .wd h4, .wd h5, .wd h6 {font-weight: bold; margin: 0.5em 0;}
+.wd h1  {font-size: 2.00em;}
+.wd h2  {font-size: 1.50em;}
+.wd h3  {font-size: 1.20em;}
+.wd h4  {font-size: 1.00em;}
+.wd h5  {font-size: 0.85em;}
+.wd h6  {font-size: 0.65em;}
+.wd p   {margin: 1em 0;}
+.wd pre {margin: 0.5em 0;}
+.wd blockquote {margin: 1em 8em;}
 
 /* -- Imagens -- */
-.wd figure, .wd picture {
-	margin: 0.5em 0;
-}
+.wd figure, .wd picture {margin: 0.5em 0;}
 
 .wd figure > img {
 	display: block;
@@ -227,27 +149,19 @@ label, button, input, select, textarea {display: inline;}
 	margin: 0.5em 0;
 	padding: 0;
 }
-.wd ul, .wd ol {
-	list-style-position: inside;
-}
+.wd ul, .wd ol {list-style-position: inside;}
 .wd ul > li > ul:only-child, .wd ul > li > ol:only-child, 
 .wd ol > li > ul:only-child, .wd ol > li > ol:only-child {
 	margin: 0;
 }
-.wd ul > li, .wd ol > li {
-	padding: 0.3em 0.3em 0.3em 2em;
-}
+.wd ul > li, .wd ol > li {padding: 0.3em 0.3em 0.3em 2em;}
 
 .wd dl > dt, .wd dl > dd {
 	padding: 0.3em;
 	margin: 0;
 }
-.wd dl > dt {
-	font-weight: bold;
-}
-.wd dl > dd {
-	margin-left: 2em;
-}
+.wd dl > dt {font-weight: bold;}
+.wd dl > dd {margin-left: 2em;}
 
 /* -- Tabelas -- */
 .wd table {
@@ -715,6 +629,43 @@ label, button, input, select, textarea {display: inline;}
 	display: block;
 }
 
+/* -- Flyer -- */
+
+/* container */
+.wd .wd-flyer {padding: 0.5em;}
+
+/* flyer > flyer */
+.wd .wd-flyer > .wd-flyer {margin: 0.5em 0;}
+.wd .wd-flyer > .wd-flyer:first-child {margin-top: 0;}
+.wd .wd-flyer > .wd-flyer:last-child  {margin-bottom: 0;}
+
+/* header/footer/nav */
+.wd .wd-flyer > header,
+.wd .wd-flyer > footer {padding: 0.5em 2em;}
+.wd .wd-flyer > header,
+.wd .wd-flyer > footer,
+.wd .wd-flyer > nav {margin: 0.5em -0.5em 0.5em -0.5em;}
+.wd .wd-flyer > header:first-child,
+.wd .wd-flyer > footer:first-child,
+.wd .wd-flyer > nav:first-child {margin-top: -0.5em;}
+.wd .wd-flyer > header:last-child,
+.wd .wd-flyer > footer:last-child,
+.wd .wd-flyer > nav:last-child {margin-bottom: -0.5em;}
+
+/* filhos de header/footer */
+.wd .wd-flyer > header > *,
+.wd .wd-flyer > footer > * {margin: 0.5em 0;}
+.wd .wd-flyer > header > *:first-child,
+.wd .wd-flyer > footer > *:first-child {margin-top: 0;}
+.wd .wd-flyer > header > *:last-child,
+.wd .wd-flyer > footer > *:last-child  {margin-bottom: 0;}
+.wd .wd-flyer > header > nav,
+.wd .wd-flyer > footer > nav {margin-right: -2em; margin-left: -2em;}
+.wd .wd-flyer > header > nav:first-child,
+.wd .wd-flyer > footer > nav:first-child {margin-top: -0.5em;}
+.wd .wd-flyer > header > nav:last-child,
+.wd .wd-flyer > footer > nav:last-child  {margin-bottom: -0.5em;}
+
 /* -- Relatório -- */
 
 	/************************************************\
@@ -871,7 +822,7 @@ label, button, input, select, textarea {display: inline;}
 }
 .wd .wd-buddy-top    {top: 0 !important;}
 .wd .wd-buddy-bottom {bottom: 0 !important;}
-.wd article > .wd-buddy-top, .wd article > .wd-buddy-bottom {
+.wd .wd-flyer > .wd-buddy-top, .wd .wd-flyer > .wd-buddy-bottom {
 	top:    -0.5em !important;
 	bottom: -0.5em !important;
 }
