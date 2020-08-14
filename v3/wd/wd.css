@@ -768,23 +768,36 @@ label, button, input, select, textarea {display: inline;}
 /*--  ESTILOS ESTRUTURAIS -- */
 
 /* -- Cabeçalho e Rodapés fixos -- */
-.wd body.wd-fixed > header,
-.wd body.wd-fixed > footer {
+.wd body.wd-fixed > header, body.wd.wd-fixed > header,
+.wd body.wd-fixed > footer, body.wd.wd-fixed > footer {
 	position: fixed;
 	left: 0;
 	right: 0;
 	width: 100%;
 	z-index: 666;
 }
-.wd body.wd-fixed > header {top: 0;}
-.wd body.wd-fixed > footer {bottom: 0;}
+.wd body.wd-fixed > header, body.wd.wd-fixed > header {top: 0;}
+.wd body.wd-fixed > footer, body.wd.wd-fixed > footer {bottom: 0;}
 
 /* -- corpo (main) centralizado -- */
-.wd body.wd-center > main {
+.wd body.wd-center > main, body.wd.wd-center > main {
 	margin-left: auto;
 	margin-right: auto;
-	width: 66.67%;
+	width: 70%;
 }
+
+.wd body.wd-left > main, body.wd.wd-left > main {
+	margin-left: 0;
+	margin-right: auto;
+	width: 85%;
+}
+
+.wd body.wd-right > main, body.wd.wd-right > main {
+	margin-left: auto;
+	margin-right: 0;
+	width: 85%;
+}
+
 
 /*============================================================================*/
 /*--  ESTILOS UTILITÁRIOS -- */

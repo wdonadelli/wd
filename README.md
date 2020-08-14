@@ -2,21 +2,19 @@
 
 This project consists of the distribution of two libraries for web application development.
 
-The *Web Development* tool consists of a library written in JavaScript whose purpose is to provide various tools to give dynamism and agility to the application in development. This tool is divided into two segments, one based on the JavaScript code (**WD JavaScript Tools**) and another based on the attributes of the HTML elements (**WD Attributes Tools**).
+The **Web Development** tool consists of a library written in JavaScript whose purpose is to provide various tools to give dynamism and agility to the application in development. This tool is divided into two segments, one for creating JavaScript scripts ([WD JavaScript Tools](WD-JavaScript-Tools)) and another for defining actions using attributes of HTML elements ([WD Attributes Tools](WD-Attributes-Tools)).
 
-The *Web Design* tool (**WD Style Sheet**) consists of a library written in CSS whose purpose is to provide the styling of the developing application by means of basic class attributes.
+The **Web Design** tool ([WD Style Sheet](WD-Style-Sheet)) consists of a library written in CSS whose purpose is to provide the styling of the developing application by means of basic class attributes.
 
 ## Links
 
-- [Click here](https://wdonadelli.github.io/wd/) to access the manual.
-- [Click here](https://wdonadelli.github.io/wd/v2/wd.js) to access the updated JS library.
-- [Click here](https://wdonadelli.github.io/wd/v2/wd.css) to access the updated CSS library.
+- [Wiki](https://github.com/wdonadelli/wd/wiki)
+- [Javascript](https://wdonadelli.github.io/wd/v3/wd/wd.js)
+- [Style Sheet](https://wdonadelli.github.io/wd/v3/wd/wd.css)
+- [Release Notes](https://github.com/wdonadelli/wd/wiki/WD-Release-Notes)
+- [Examples](https://wdonadelli.github.io/wd/v3)
 
-## Example
-
-See the running project through the example available at [WebExample1](https://github.com/wdonadelli/WebExample1).
-
-## Demo Videos (YouTube)
+## YouTube Demo Videos
 
 - [WD Web Libraries - Ordering DOM](https://youtu.be/DcuxvjcYz3U)
 - [WD Web Libraries - Search filter](https://youtu.be/7A_kB5yXU7U)
