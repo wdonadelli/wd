@@ -1,0 +1,27 @@
+[
+	{
+		"name": "Home",
+		"title": "Main page",
+		"attr": "data-wd-click=\"\" data-wd-data=\"wdLoad{get{examples/home.html}}${main}\""
+	},
+	{
+		"name": "CSS Colors",
+		"title": "Color palette",
+		"attr": "data-wd-data=\"wdLoad{get{examples/CSS/colors.html}}${main}\""
+	},
+	{
+		"name": "CSS Icons",
+		"title": "Icons",
+		"attr": "data-wd-data=\"wdLoad{get{examples/CSS/icons.html}}${main}\""
+	},
+	{
+		"name": "CSS Utilities",
+		"title": "Other Utilities",
+		"attr": "data-wd-data=\"wdLoad{get{examples/CSS/utilities.html}}${main}\""
+	},
+	{
+		"name": "CSS Window",
+		"title": "Window",
+		"attr": "data-wd-data=\"wdLoad{get{examples/CSS/window.html}}${main}\""
+	}
+]

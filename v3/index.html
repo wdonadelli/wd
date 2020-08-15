@@ -14,43 +14,83 @@
 		<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
 		<script src="wd/wd.js"></script>
 		<link  href="wd/wd.css" rel="stylesheet" />
-		<script src="examples/examples.js"></script>
+		<script src="examples/scripts.js"></script>
 	</head>
 
 <body class="wd-fixed">
 
 	<header class="wd-bg-white">
+
 		<h1>WD Libraries Examples</h1>
+
 		<nav class="wd-bg-black">
-			<span class="wd-icon-menu"   title="List of examples"  data-wd-action="toggle-open{#menuBar}"> Menu</span>
-			<span class="wd-icon-key"    title="On and off style"  onclick="onOffStyle();"> Style</span>
-			<span class="wd-icon-search" title="Source code"       onclick="boxCode('#boxTab > *');"> Code</span>
-			<a    class="wd-icon-help"   title="Handbook"          href="https://github.com/wdonadelli/wd/wiki" target="_blank" > Wiki</a>
+
+			<span
+				id="menu_button"
+				class="wd-icon-menu"
+				title="Menu"
+				data-wd-action="toggle-open{#menu}"
+			> Menu</span>
+
+			<span
+				id="toggle_style"
+				class="wd-icon-key"
+				title="Style"
+				onclick="toggleStyle();"
+			> Style</span>
+
+			<span
+				id="show_code"
+				class="wd-icon-search"
+				title="Code"
+				onclick="showCode();"
+			> Code</span>
+
+
+			<a
+				id="wiki_link"
+				class="wd-icon-help"
+				title="Handbook"
+				href="https://github.com/wdonadelli/wd/wiki"
+				target="_blank"
+			> Wiki</a>
+
 		</nav>
 	</header>
 
 	<!-- Conteúdo -->
-	<main></main>
+	<main class="wd-xpadding"></main>
 
 	<!-- Menu lateral -->
-	<section class="wd-modal" id="menuBar" data-wd-action="close{#menuBar}">
+	<section
+		id="menu"
+		class="wd-modal"
+		data-wd-action="close{#menu}">
+
 		<article class="wd-window wd-win-left" data-wd-device="desktop{wd-win-left}">
+
 			<header class="wd-bg-blue">
 				<h3>Menu</h3>
 			</header>
-			<nav class="wd-block">
-				<span data-wd-data="wdLoad{get{WD-CSS-Utilities-Style.html}}${main}"	data-wd-action="tab{#menuUtilities}">Utilities</span>
-				<span data-wd-data="wdLoad{get{WD-CSS-Base-Style.html}}${main}"	data-wd-action="tab{#menuBase}">Base</span>
+
+			<nav class="wd-block" data-wd-repeat="get{examples/menu.json}">
+				<a href="#" title="{{title}}" {{attr}}>{{name}}</a>
 			</nav>
+
 		</article>
+
 	</section>
 
 	<!-- Janela de código -->
-	<section class="wd-window wd-flyer" id="boxCode" data-wd-action="close{}" onclick="boxCode()";>
+	<section
+		id="winCode"
+		class="wd-window wd-flyer"
+		data-wd-action="close{}"
+	>
 		<header class="wd-bg-grey">
 			<h2>Code</h2>
 		</header>
-		<pre id="boxCodeContent" class="wd-code wd-xpadding wd-border"></pre>
+		<pre id="sourceCode" class="wd-code wd-xpadding wd-border"></pre>
 	</section>
 	
 	</div>

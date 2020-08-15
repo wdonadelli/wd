@@ -1,0 +1,74 @@
+<h2>Other Utilities</h2>
+
+<style>
+.background-utilities {background-color: #ffdddd; color: #ff0000;}
+.parent-utilities     {background-color: #ddffdd; color: #00ff00;}
+.childs-utilities     {background-color: #ddddff; color: #0000ff;}
+</style>
+
+
+<div style="position: relative;" class="background-utilities">
+	<div id="parent_utilities" class="parent-utilities">
+		<div class="childs-utilities">first child</div>
+		<div id="child_utilities" class="childs-utilities">Child*</div>
+		<div class="childs-utilities">LAST CHILD</div>
+	</div>
+</div>
+
+<p data-wd-action="toggle-open{#menu_model}" class="wd-icon-list">Model</p>
+
+<form class="wd-row wd-padding-child">
+
+	<div class="wd-block wd-col-06">
+		<label><span data-wd-action="toggle-open{#menu_utilities}" class="wd-icon-list"></span>Parent</label>
+		<input
+			type="text"
+			list="utilities_list"
+			onkeyup="setCSS('#parent_utilities', this.value+' parent-utilities');"
+			oninput="setCSS('#parent_utilities', this.value+' parent-utilities');"
+		/>
+	</div>
+
+	<div class="wd-block wd-col-06">
+		<label><span data-wd-action="toggle-open{#menu_utilities}" class="wd-icon-list"></span>Child*</label>
+		<input
+			type="text"
+			list="utilities_list"
+			onkeyup="setCSS('#child_utilities', this.value+' childs-utilities');"
+			oninput="setCSS('#child_utilities', this.value+' childs-utilities');"
+		/>
+	</div>
+
+</form>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!----------------------------------------------------------------------------->
+<div class="wd-window wd-win-small wd-cloud" data-wd-action="close{}" id="menu_model">
+	<div class="wd-padding background-utilities">Background
+		<div class="wd-padding parent-utilities">Parent
+			<div class="wd-padding childs-utilities">Child</div>
+		</div>
+	</div>
+</div>
+
+
+<datalist data-wd-repeat="get{examples/CSS/utilities.json}" id="utilities_list">
+	<option value="{{value}}" >{{value}}</value>
+</datalist>
+
+<div class="wd-window wd-win-top wd-bg-black" id="menu_utilities" data-wd-action="close{}">
+	<ul data-wd-repeat="get{examples/CSS/utilities.json}">
+		<li>{{value}}</li>
+	</ul>
+</div>
