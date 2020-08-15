@@ -129,6 +129,15 @@ label, button, input, select, textarea {display: inline;}
 .wd pre {margin: 0.5em 0;}
 .wd blockquote {margin: 1em 8em;}
 
+/* -- headers, footers e navs -- */
+.wd header, .wd footer {padding: 0.5em 2em;}
+.wd header > *,   .wd footer > *   {margin: 0.5em 0;}
+.wd header > nav, .wd footer > nav {margin-right: -2em; margin-left: -2em;}
+.wd header > *:first-child,   .wd footer > *:first-child   {margin-top: 0;}
+.wd header > nav:first-child, .wd footer > nav:first-child {margin-top: -0.5em;}
+.wd header > *:last-child,    .wd footer > *:last-child    {margin-bottom: 0;}
+.wd header > nav:last-child,  .wd footer > nav:last-child  {margin-bottom: -0.5em;}
+
 /* -- Imagens -- */
 .wd figure, .wd picture {margin: 0.5em 0;}
 
@@ -630,41 +639,13 @@ label, button, input, select, textarea {display: inline;}
 }
 
 /* -- Flyer -- */
-
-/* container */
 .wd .wd-flyer {padding: 0.5em;}
-
-/* flyer > flyer */
-.wd .wd-flyer > .wd-flyer {margin: 0.5em 0;}
-.wd .wd-flyer > .wd-flyer:first-child {margin-top: 0;}
-.wd .wd-flyer > .wd-flyer:last-child  {margin-bottom: 0;}
-
-/* header/footer/nav */
-.wd .wd-flyer > header,
-.wd .wd-flyer > footer {padding: 0.5em 2em;}
-.wd .wd-flyer > header,
-.wd .wd-flyer > footer,
-.wd .wd-flyer > nav {margin: 0.5em -0.5em 0.5em -0.5em;}
-.wd .wd-flyer > header:first-child,
-.wd .wd-flyer > footer:first-child,
-.wd .wd-flyer > nav:first-child {margin-top: -0.5em;}
-.wd .wd-flyer > header:last-child,
-.wd .wd-flyer > footer:last-child,
-.wd .wd-flyer > nav:last-child {margin-bottom: -0.5em;}
-
-/* filhos de header/footer */
-.wd .wd-flyer > header > *,
-.wd .wd-flyer > footer > * {margin: 0.5em 0;}
-.wd .wd-flyer > header > *:first-child,
-.wd .wd-flyer > footer > *:first-child {margin-top: 0;}
-.wd .wd-flyer > header > *:last-child,
-.wd .wd-flyer > footer > *:last-child  {margin-bottom: 0;}
-.wd .wd-flyer > header > nav,
-.wd .wd-flyer > footer > nav {margin-right: -2em; margin-left: -2em;}
-.wd .wd-flyer > header > nav:first-child,
-.wd .wd-flyer > footer > nav:first-child {margin-top: -0.5em;}
-.wd .wd-flyer > header > nav:last-child,
-.wd .wd-flyer > footer > nav:last-child  {margin-bottom: -0.5em;}
+.wd .wd-flyer > *             {margin: 0.5em 0;}
+.wd .wd-flyer > header, .wd .wd-flyer > footer, .wd .wd-flyer > nav {margin-left: -0.5em; margin-right: -0.5em;}
+.wd .wd-flyer > *:first-child {margin-top: 0;}
+.wd .wd-flyer > header:first-child, .wd .wd-flyer > footer:first-child, .wd .wd-flyer > nav:first-child {margin-top: -0.5em;}
+.wd .wd-flyer > *:last-child  {margin-bottom: 0;}
+.wd .wd-flyer > header:last-child,  .wd .wd-flyer > footer:last-child,  .wd .wd-flyer > nav:last-child  {margin-bottom: -0.5em;}
 
 /* -- Relatório -- */
 
