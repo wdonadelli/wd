@@ -165,10 +165,7 @@ label, button, input, select, textarea {display: inline;}
 }
 .wd ul > li, .wd ol > li {padding: 0.3em 0.3em 0.3em 2em;}
 
-.wd dl > dt, .wd dl > dd {
-	padding: 0.3em;
-	margin: 0;
-}
+.wd dl > dt, .wd dl > dd {padding: 0.3em; margin: 0;}
 .wd dl > dt {font-weight: bold;}
 .wd dl > dd {margin-left: 2em;}
 

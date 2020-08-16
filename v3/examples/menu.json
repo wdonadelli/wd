@@ -4,6 +4,13 @@
 		"title": "Main page",
 		"attr": "data-wd-click=\"\" data-wd-data=\"wdLoad{get{examples/home.html}}${main}\""
 	},
+
+	{
+		"name": "CSS Base",
+		"title": "Base",
+		"attr": "data-wd-data=\"wdLoad{get{examples/CSS/base.html}}${main}\""
+	},
+
 	{
 		"name": "CSS Colors",
 		"title": "Color palette",
