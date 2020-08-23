@@ -127,7 +127,7 @@ label, button, input, select, textarea {display: inline;}
 .wd h6  {font-size: 0.65em;}
 .wd p   {margin: 1em 0;}
 .wd pre {margin: 0.5em 0;}
-.wd blockquote {margin: 1em 8em;}
+.wd blockquote {margin: 1em auto; width: 75%;}
 
 /* -- headers, footers e navs -- */
 .wd header, .wd footer {padding: 0.5em 2em;}
@@ -154,18 +154,16 @@ label, button, input, select, textarea {display: inline;}
 }
 
 /* -- Listas -- */
-.wd ul, .wd ol, .wd dl {
+.wd ul, .wd ol {
+	list-style-position: inside;
 	margin: 0.5em 0;
 	padding: 0;
 }
-.wd ul, .wd ol {list-style-position: inside;}
-.wd ul > li > ul:only-child, .wd ul > li > ol:only-child, 
-.wd ol > li > ul:only-child, .wd ol > li > ol:only-child {
-	margin: 0;
-}
-.wd ul > li, .wd ol > li {padding: 0.3em 0.3em 0.3em 2em;}
+.wd ul ul, .wd ul ol, .wd ol ol, .wd ol ul {margin: 0;}
+.wd ul > li, .wd ol > li {padding: 0.2em 0.2em 0.2em 2em;}
 
-.wd dl > dt, .wd dl > dd {padding: 0.3em; margin: 0;}
+.wd dl {margin: 0.5em 0; padding: 0;}
+.wd dl > dt, .wd dl > dd {padding: 0.2em; margin: 0;}
 .wd dl > dt {font-weight: bold;}
 .wd dl > dd {margin-left: 2em;}
 
@@ -467,17 +465,17 @@ label, button, input, select, textarea {display: inline;}
 }
 
 /* -- grades -- */
-.wd .wd-grid, .wd .wd-grid-box {
+.wd .wd-grid, .wd .wd-hgrid, .wd .wd-vgrid {
 	display: block;
 	text-align: center;
 }
 
-.wd .wd-grid > *, .wd .wd-grid-box > * {
+.wd .wd-grid > *, .wd .wd-hgrid > *, .wd .wd-vgrid > * {
 	display: inline-block;
 	float: none;
 }
 
-.wd .wd-grid > *, .wd .wd-grid > *:first-child, .wd .wd-grid > *:last-child {
+.wd .wd-grid > * {
 	height: 3.5em;
 	margin: 1em;
 	overflow: hidden;
@@ -488,14 +486,21 @@ label, button, input, select, textarea {display: inline;}
 	text-align: center;
 }
 
-.wd .wd-grid-box > *, .wd .wd-grid-box > *:first-child, .wd .wd-grid-box > *:last-child {
-	height: 15em;
+.wd .wd-hgrid > * {
+	height: 13em;
 	margin: 2em;
 	overflow: auto;
 	text-align: left;
-	width: 25em;
+	width: 18em;
 }
 
+.wd .wd-vgrid > * {
+	height: 18em;
+	margin: 2em;
+	overflow: auto;
+	text-align: left;
+	width: 13em;
+}
 
 /* -- Janelas -- */
 .wd .wd-modal {
@@ -652,35 +657,73 @@ label, button, input, select, textarea {display: inline;}
 	| escalão secundário: ol                         |
 	\************************************************/
 
-.wd .wd-report            {font-size: 16px; text-align: justify;}
-.wd .wd-report h1         {text-align: center;}
-.wd .wd-report p          {margin: 1em 0;}
-.wd .wd-report > p         {text-indent: 4em;}
-.wd .wd-report blockquote {font-size: smaller; margin: 1.5em 0 1.5em 8em;}
-.wd .wd-report section    {margin-left: 4em;}
-.wd .wd-report ul         {list-style-type: disc; margin: 1em 0 1em 4em;}
-.wd .wd-report ul > li    {padding: 0.1em;}
-.wd .wd-report ol         {list-style-type: none; margin: 1em 0 1em 4em;}
-.wd .wd-report li > ol    {margin: 0;}
-.wd .wd-report ol > li    {margin: 1em 0; padding: 0;}
-.wd .wd-report ol > li:last-child {margin: 0;}
+.wd .wd-report {
+	font-size: 16px;
+	text-align: justify;
+}
+.wd .wd-report h1, .wd .wd-report h2 {
+	margin-left: auto;
+	margin-right: auto;
+	text-align: center;
+}
+@media screen and (min-width: 768px) {
+	.wd .wd-report h1 {width: 75%;}
+	.wd .wd-report h2 {width: 50%;}
+}
+.wd .wd-report p {
+	margin: 1em 0;
+	text-indent: 2em;
+}
+@media screen and (min-width: 768px) {
+	.wd .wd-report p {text-indent: 4em;}
+}
+.wd .wd-report blockquote {
+	font-size: smaller;
+	margin: 1.5em 0 1.5em auto;
+	width: 75%;
+}
+.wd .wd-report ul, .wd .wd-report ol {margin: 1em 0;}
+.wd .wd-report ul {list-style-type: disc;}
+.wd .wd-report ol {list-style-type: none;}
+.wd .wd-report ol ol, .wd .wd-report ol ul {margin: 0;}
+.wd .wd-report ul > li, .wd .wd-report ol > li {padding: 0.1em 0 0.1em 2em; margin: 0;}
+@media screen and (min-width: 768px) {
+	.wd .wd-report ul > li, .wd .wd-report ol > li {padding-left: 4em;}
+}
+.wd .wd-report ul ul > li, .wd .wd-report ul ol > li,
+.wd .wd-report ol ol > li, .wd .wd-report ol ul > li {padding-left: 1em;}
+@media screen and (min-width: 768px) {
+	.wd .wd-report ul ul > li, .wd .wd-report ul ol > li,
+	.wd .wd-report ol ol > li, .wd .wd-report ol ul > li {padding-left: 2em;}
+}
+.wd .wd-report table {width: 80%;}
+.wd .wd-report table > caption {
+	font-weight: normal;
+	caption-side: bottom;
+	font-size: smaller;
+	padding: 0.3em;
+	text-align: center;
+}
 
-/* itemização */
-.wd .wd-report           {counter-reset: chapter item subitem subitem1 subitem2 subitem3;}
-.wd .wd-report h1        {counter-reset: chapter item subitem subitem1 subitem2 subitem3;}
-.wd .wd-report h2        {counter-reset: item subitem subitem1 subitem2 subitem3;}
-.wd .wd-report p         {counter-reset: subitem subitem1 subitem2 subitem3;}
-.wd .wd-report section p {counter-reset: subitem1 subitem2 subitem3;}
-.wd .wd-report ol ol     {counter-reset: subitem3;}
-.wd .wd-report ol        {counter-reset: subitem2 subitem3;}
-
-.wd .wd-report ol li li li:before          {counter-increment: subitem3; content: counter(subitem3) ". ";}
-.wd .wd-report ol li li:before             {counter-increment: subitem2; content: counter(subitem2, lower-alpha) ") ";}
-.wd .wd-report ol li:before                {counter-increment: subitem1; content: counter(subitem1, upper-roman) " - ";}
-.wd .wd-report.wd-itemize h2:before        {counter-increment: chapter;content: counter(chapter) ". ";}
-.wd .wd-report.wd-itemize p:before         {counter-increment: item; content: counter(item) ". ";}
-.wd .wd-report.wd-itemize p:before         {counter-increment: item; content: counter(item) ". ";}
-.wd .wd-report.wd-itemize section p:before {counter-increment: subitem; content: counter(item) "." counter(subitem) ". ";}
+/*chapter, figcaption, caption, ol, ol ol, ol ol ol*/
+.wd .wd-report       {counter-reset: chapter item subitem subitem1 subitem2 fig tab;}
+.wd .wd-report h1    {counter-reset: chapter item subitem subitem1 subitem2 fig tab;}
+.wd .wd-report h2    {counter-reset: chapter item subitem subitem1 subitem2 fig tab;}
+.wd .wd-report h3    {counter-reset: item subitem subitem1 subitem2;}
+.wd .wd-report p     {counter-reset: subitem subitem1 subitem2;}
+.wd .wd-report ol ol {counter-reset: subitem2;}
+.wd .wd-report ol    {counter-reset: subitem1 subitem2;}
+.wd .wd-report caption:before      {counter-increment: tab; content: attr(title) counter(tab) ": ";}
+.wd .wd-report figcaption:before   {counter-increment: fig; content: attr(title) counter(fig) ": ";}
+.wd .wd-report ol li li li:before  {counter-increment: subitem2; content: counter(subitem2) ". ";}
+.wd .wd-report ol li li:before     {counter-increment: subitem1; content: counter(subitem1, lower-alpha) ") ";}
+.wd .wd-report ol li:before        {counter-increment: subitem;  content: counter(subitem,  upper-roman) " - ";}
+.wd .wd-report h3:before           {counter-increment: chapter;content: attr(title) counter(chapter) ". ";}
+.wd .wd-report.wd-itemize p        {text-indent: 0;}
+.wd .wd-report.wd-itemize p:before {counter-increment: item; content: attr(title) counter(item) "."; margin-right: 2em;}
+@media screen and (min-width: 768px) {
+	.wd .wd-report.wd-itemize p:before {margin-right: 4em;}
+}
 
 /* -- código -- */
 .wd .wd-code {
@@ -745,6 +788,13 @@ label, button, input, select, textarea {display: inline;}
 /*============================================================================*/
 /*--  ESTILOS ESTRUTURAIS -- */
 
+/*FIXME
+para imprimir, deve-se retirar os efeitos estruturais
+de fixed para absolute
+de width 70/85% para 100% e margin auto
+*/
+
+
 /* -- Cabeçalho e Rodapés fixos -- */
 .wd body.wd-fixed > header, body.wd.wd-fixed > header,
 .wd body.wd-fixed > footer, body.wd.wd-fixed > footer {
@@ -756,6 +806,7 @@ label, button, input, select, textarea {display: inline;}
 }
 .wd body.wd-fixed > header, body.wd.wd-fixed > header {top: 0;}
 .wd body.wd-fixed > footer, body.wd.wd-fixed > footer {bottom: 0;}
+
 
 /* -- corpo (main) centralizado -- */
 .wd body.wd-center > main, body.wd.wd-center > main {

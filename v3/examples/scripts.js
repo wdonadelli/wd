@@ -22,6 +22,54 @@ function setCSS(css, value) {
 	return;
 }
 
+function oTools(input) {
+	var arr, tools;
+	arr = [];
+	tools = input.tools;
+	for (var i = 0; i < tools.length; i++) {
+		var obj = {};
+		obj.tool = wd(input[tools[i]]).type === "function" ? tools[i]+"()" : tools[i];
+		arr.push(obj);
+	}
+	return arr;
+}
+
+
+function js(check) {
+	var input, tool, args, aux, out, screen;
+	input = wd$("#input").item().value.trim() === "" ? undefined : wd$("#input").item().value;
+
+	if (check === true) {
+		try {
+			aux = oTools(wd(eval(input)));
+			wd$("#tool").repeat(aux);
+		} catch(e) {
+			wd("ERROR: "+e.toString()).message("error");
+			wd$("#tool").repeat([]);
+			wd$("#args").item().value = "";
+			return;
+		}
+	}
+
+	tool = wd$("#tool").item().value;
+	args = wd$("#args").item().value;
+	aux  = ("wd("+input+")."+tool).replace("()", "("+args+");");
+	try {
+		out = (eval(aux));
+	} catch(e) {
+		wd("ERROR: "+e.toString()).message("error");
+		return;
+	}
+	screen  = ("wd(<var>"+input+"</var>)."+tool).replace("()", "(<var>"+args+"</var>);");
+	screen += "<br><samp>"+out+"</samp>";
+	console.log(screen);
+	wd$("#output").item().innerHTML = screen;
+	return;
+
+
+}
+
+
 
 
 

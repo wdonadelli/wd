@@ -1,0 +1,32 @@
+<h2>Tip</h2>
+
+<form class="wd-block">
+	<select onchange="setCSS('#tip, #tip2', 'wd-bg-black '+this.value);">
+		<option value="wd-tip-hover-top"    >Top Hover</option>
+		<option value="wd-tip-hover-right"  >Right Hover</option>
+		<option value="wd-tip-hover-bottom" selected="" >Bottom Hover</option>
+		<option value="wd-tip-hover-left"   >Left Hover</option>
+		<option value="wd-tip-click-top"    >Top Click</option>
+		<option value="wd-tip-click-right"  >Right Click</option>
+		<option value="wd-tip-click-bottom" >Bottom Click</option>
+		<option value="wd-tip-click-left"   >Left Click</option>
+	</select>
+
+<p class="wd-size-small">Use the form above to define the tip type and positioning. (See <a href="https://github.com/wdonadelli/wd/wiki/WD-ATTR-Action-Tool" target="_blank">action</a> attribute).</p>
+
+</select>
+
+<div style="position: relative; height: 150px;">
+
+	<div class="wd-tip wd-place-ctr" id="box_tip">
+		<button type="button" data-wd-action="toggle-open{#box_tip}">Hover/Click</button>
+		<div id="tip" class="wd-tip-hover-bottom wd-bg-black">Hello!</div>
+	</div>
+
+</div>
+
+<p>Morbi est nulla, finibus ut rhoncus eget, tempor
+	<span class="wd-tip wd-align-center" id="box_tip2">
+		<u data-wd-action="toggle-open{#box_tip2}" class="wd-fg-red">vitae</u>
+		<span id="tip2" class="wd-tip-hover-bottom wd-bg-black">life</span>
+	</span> felis. Integer efficitur et lectus ac porttitor. Cras suscipit libero felis, in posuere eros varius quis. Aliquam erat volutpat. Fusce tempus arcu in tellus hendrerit, a dapibus sem dignissim. Quisque mi libero, vehicula eget sem nec, molestie eleifend urna. In hac habitasse platea dictumst. Nulla rutrum rutrum facilisis.</p>

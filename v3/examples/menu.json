@@ -10,11 +10,30 @@
 		"title": "Base",
 		"attr": "data-wd-data=\"wdLoad{get{examples/CSS/base.html}}${main}\""
 	},
-
+	{
+		"name": "CSS Code",
+		"title": "Code",
+		"attr": "data-wd-data=\"wdLoad{get{examples/CSS/code.html}}${main}\""
+	},
 	{
 		"name": "CSS Colors",
 		"title": "Color palette",
 		"attr": "data-wd-data=\"wdLoad{get{examples/CSS/colors.html}}${main}\""
+	},
+	{
+		"name": "CSS Columns",
+		"title": "Columns",
+		"attr": "data-wd-data=\"wdLoad{get{examples/CSS/columns.html}}${main}\""
+	},
+	{
+		"name": "CSS Flyer",
+		"title": "Flyer",
+		"attr": "data-wd-data=\"wdLoad{get{examples/CSS/flyer.html}}${main}\""
+	},
+	{
+		"name": "CSS Grid",
+		"title": "Grid",
+		"attr": "data-wd-data=\"wdLoad{get{examples/CSS/grid.html}}${main}\""
 	},
 	{
 		"name": "CSS Icons",
@@ -22,13 +41,33 @@
 		"attr": "data-wd-data=\"wdLoad{get{examples/CSS/icons.html}}${main}\""
 	},
 	{
+		"name": "CSS Input Message",
+		"title": "Input Message",
+		"attr": "data-wd-data=\"wdLoad{get{examples/CSS/input.html}}${main}\""
+	},
+	{
+		"name": "CSS Report",
+		"title": "Report",
+		"attr": "data-wd-data=\"wdLoad{get{examples/CSS/report.html}}${main}\""
+	},
+	{
+		"name": "CSS Tip",
+		"title": "Tip",
+		"attr": "data-wd-data=\"wdLoad{get{examples/CSS/tip.html}}${main}\""
+	},
+	{
 		"name": "CSS Utilities",
-		"title": "Other Utilities",
+		"title": "Utilities",
 		"attr": "data-wd-data=\"wdLoad{get{examples/CSS/utilities.html}}${main}\""
 	},
 	{
 		"name": "CSS Window",
 		"title": "Window",
 		"attr": "data-wd-data=\"wdLoad{get{examples/CSS/window.html}}${main}\""
+	},
+	{
+		"name": "JS Generic",
+		"title": "generic",
+		"attr": "data-wd-data=\"wdLoad{get{examples/JS/generic.html}}${main}\""
 	}
 ]

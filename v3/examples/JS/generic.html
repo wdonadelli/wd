@@ -1,0 +1,46 @@
+<h2>Generic</h2>
+
+<p class="wd-code wd-align-center wd-padding">wd(<var>input</var>).<var>tool</var>(<var>args</var>);</p>
+
+<form class="wd-margin-height-child">
+
+	<div class="wd-row">
+		<div class="wd-col-03">
+			<label>input</label>
+		</div>
+		<div class="wd-col-09 wd-block">
+			<input id="input" type="text" onblur="js(true);" />
+		</div>
+	</div>
+
+	<div class="wd-row">
+		<div class="wd-col-03">
+			<label>tool</label>
+		</div>
+		<div class="wd-col-09 wd-block">
+			<select id="tool" onchange="js();" >
+				<option value="{{tool}}">{{tool}}</option>
+			</select>
+		</div>
+	</div>
+
+	<div class="wd-row">
+		<div class="wd-col-03">
+			<label>args</label>
+		</div>
+		<div class="wd-col-09 wd-block">
+			<input id="args" type="text" onblur="js();" />
+		</div>
+	</div>
+
+	<div class="wd-row">
+		<div class="wd-col-03">
+			<label>Output</label>
+		</div>
+		<div class="wd-col-09">
+			<p id="output" class="wd-code wd-padding"></p>
+		</div>
+	</div>
+</form>
+
+<script>js(true);</script>

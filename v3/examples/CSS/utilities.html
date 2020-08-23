@@ -1,73 +1,74 @@
-<h2>Other Utilities</h2>
+<h2>Utilities</h2>
 
 <style>
-.background-utilities {background-color: #ffdddd; color: #ff0000;}
-.parent-utilities     {background-color: #ddffdd; color: #00ff00;}
-.childs-utilities     {background-color: #ddddff; color: #0000ff;}
+.utilities > div             {background-color: #ffdddd; color: #ff0000; border: 1px dotted black; padding: 0.5em;}
+.utilities > div > div       {background-color: #ddffdd; color: #00ff00;}
+.utilities > div > div > div {background-color: #ddddff; color: #0000ff;}
 </style>
 
-
-<div style="position: relative;" class="background-utilities">
-	<div id="parent_utilities" class="parent-utilities">
-		<div class="childs-utilities">first child</div>
-		<div id="child_utilities" class="childs-utilities">Child*</div>
-		<div class="childs-utilities">LAST CHILD</div>
-	</div>
-</div>
-
-<p data-wd-action="toggle-open{#menu_model}" class="wd-icon-list">Model</p>
-
-<form class="wd-row wd-padding-child">
-
-	<div class="wd-block wd-col-06">
-		<label><span data-wd-action="toggle-open{#menu_utilities}" class="wd-icon-list"></span>Parent</label>
-		<input
-			type="text"
-			list="utilities_list"
-			onkeyup="setCSS('#parent_utilities', this.value+' parent-utilities');"
-			oninput="setCSS('#parent_utilities', this.value+' parent-utilities');"
-		/>
-	</div>
-
-	<div class="wd-block wd-col-06">
-		<label><span data-wd-action="toggle-open{#menu_utilities}" class="wd-icon-list"></span>Child*</label>
-		<input
-			type="text"
-			list="utilities_list"
-			onkeyup="setCSS('#child_utilities', this.value+' childs-utilities');"
-			oninput="setCSS('#child_utilities', this.value+' childs-utilities');"
-		/>
-	</div>
-
+<form class="wd-block">
+	<label>
+		<span>Class</span>
+		<span data-wd-action="toggle-open{#menu_utilities}" >(<span class="wd-icon-list">list</span>)</span>
+		<span data-wd-action="toggle-open{#menu_model}" >(<span class="wd-icon-search">model</span>)</span>
+	</label>
+		
+	<input
+		type="text"
+		onkeyup="setCSS('#parent > div, #child > div > div', this.value);"
+		oninput="setCSS('#parent > div, #child > div > div', this.value);"
+	/>
+	<p class="wd-size-small">Use the text field above to define the class of the parent element (left) and the child elements (right).</p>
 </form>
 
-
-
-
-
-
-
-
-
-
-
-
-
-<!----------------------------------------------------------------------------->
-<div class="wd-window wd-win-small wd-cloud" data-wd-action="close{}" id="menu_model">
-	<div class="wd-padding background-utilities">Background
-		<div class="wd-padding parent-utilities">Parent
-			<div class="wd-padding childs-utilities">Child</div>
+<div class="wd-row utilities" id="utilities">
+	<div class="wd-col-06" id="parent">
+		<h4>Parent</h4>
+		<div style="position: relative;">
+			<div>first child</div>
+			<div>Middle child</div>
+			<div>LAST CHILD</div>
+		</div>
+	</div>
+	<div class="wd-col-06" id="child">
+		<h4>Childs</h4>
+		<div style="position: relative;">
+			<div>first child</div>
+			<div>Middle child</div>
+			<div>LAST CHILD</div>
 		</div>
 	</div>
 </div>
 
 
-<datalist data-wd-repeat="get{examples/CSS/utilities.json}" id="utilities_list">
-	<option value="{{value}}" >{{value}}</value>
-</datalist>
+<h3>Place</h3>
 
-<div class="wd-window wd-win-top wd-bg-black" id="menu_utilities" data-wd-action="close{}">
+<div class="wd-border wd-bg-white wd-bg-black-child" style="position: relative; height: 100px;">
+	<span class="wd-place-n">wd-place-n</span>
+	<span class="wd-place-ne">wd-place-ne</span>
+	<span class="wd-place-e">wd-place-e</span>
+	<span class="wd-place-se">wd-place-se</span>
+	<span class="wd-place-s">wd-place-s</span>
+	<span class="wd-place-sw">wd-place-sw</span>
+	<span class="wd-place-w">wd-place-w</span>
+	<span class="wd-place-nw">wd-place-nw</span>
+	<span class="wd-place-ctr">wd-place-ctr</span>
+</div>
+
+
+<!----------------------------------------------------------------------------->
+<div class="wd-window wd-win-small wd-cloud utilities wd-bg-black" data-wd-action="close{}" id="menu_model">
+	<h4>Model</h4>
+	<div>Background
+		<div>Parent
+			<div>Child</div>
+		</div>
+	</div>
+</div>
+
+
+<div class="wd-window wd-flyer wd-win-bottom wd-bg-black" id="menu_utilities" data-wd-action="close{}">
+	<h3>List</h3>
 	<ul data-wd-repeat="get{examples/CSS/utilities.json}">
 		<li>{{value}}</li>
 	</ul>
