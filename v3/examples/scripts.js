@@ -28,46 +28,43 @@ function oTools(input) {
 	tools = input.tools;
 	for (var i = 0; i < tools.length; i++) {
 		var obj = {};
-		obj.tool = wd(input[tools[i]]).type === "function" ? tools[i]+"()" : tools[i];
+		obj.tool = wd(input[tools[i]]).type === "function" ? tools[i]+"();" : tools[i]+";";
 		arr.push(obj);
 	}
 	return arr;
 }
 
-
-function js(check) {
-	var input, tool, args, aux, out, screen;
-	input = wd$("#input").item().value.trim() === "" ? undefined : wd$("#input").item().value;
-
-	if (check === true) {
+function generic(val) {
+	var input, aux;
+	input = wd$("#input").item().value;
+	wd$("#methods").repeat([]);
+	if (val !== undefined) {
+		wd$("#input").item().value += val;
+		generic();
+	} else if ((/^wd\$?\((.+)?\)\.$/).test(input)) {
 		try {
-			aux = oTools(wd(eval(input)));
-			wd$("#tool").repeat(aux);
+			aux = oTools(eval("("+input.replace(/\.$/, "")+")"));
+			wd$("#methods").repeat(aux);
 		} catch(e) {
-			wd("ERROR: "+e.toString()).message("error");
-			wd$("#tool").repeat([]);
-			wd$("#args").item().value = "";
+			wd$("#output").item().textContent = "ERROR: "+e.message;
+			return;
+		}
+	} else if ((/^wd\$?\((.+)?\)\.[0-9a-zA-Z]+(\((.+)?\)\;|\;)$/).test(input)) {
+		try {
+			aux = eval("("+input.replace(/\;$/, "")+");");
+			wd$("#output").item().textContent = JSON.stringify(aux);
+		} catch(e) {
+			wd$("#output").item().textContent = "ERROR: "+e.message;
 			return;
 		}
 	}
-
-	tool = wd$("#tool").item().value;
-	args = wd$("#args").item().value;
-	aux  = ("wd("+input+")."+tool).replace("()", "("+args+");");
-	try {
-		out = (eval(aux));
-	} catch(e) {
-		wd("ERROR: "+e.toString()).message("error");
-		return;
-	}
-	screen  = ("wd(<var>"+input+"</var>)."+tool).replace("()", "(<var>"+args+"</var>);");
-	screen += "<br><samp>"+out+"</samp>";
-	console.log(screen);
-	wd$("#output").item().innerHTML = screen;
 	return;
-
-
 }
+
+
+
+
+
 
 
 
