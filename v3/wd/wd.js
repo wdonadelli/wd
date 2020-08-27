@@ -1179,7 +1179,7 @@ var wd = (function() {
 	});
 
 	/*Transcreve a notação científica para html*/
-	Object.defineProperty(WDnumber.prototype, "power10", {
+	Object.defineProperty(WDnumber.prototype, "e10", {
 		enumerable: true,
 		value: function(width, html) {
 			var x, sup, value;

@@ -24,11 +24,15 @@ function setCSS(css, value) {
 
 function oTools(input) {
 	var arr, tools;
-	arr = [];
+	arr = [
+		{tool: "toString();", args: 0},
+		{tool: "valueOf();", args: 0}
+	];
 	tools = input.tools;
 	for (var i = 0; i < tools.length; i++) {
 		var obj = {};
 		obj.tool = wd(input[tools[i]]).type === "function" ? tools[i]+"();" : tools[i]+";";
+		obj.args = wd(input[tools[i]]).type === "function" ? input[tools[i]].length : 0;
 		arr.push(obj);
 	}
 	return arr;
@@ -36,7 +40,7 @@ function oTools(input) {
 
 function generic(val) {
 	var input, aux;
-	input = wd$("#input").item().value;
+	input = wd$("#input").item().value.replace(/\n/g, "");
 	wd$("#methods").repeat([]);
 	if (val !== undefined) {
 		wd$("#input").item().value += val;
@@ -49,7 +53,7 @@ function generic(val) {
 			wd$("#output").item().textContent = "ERROR: "+e.message;
 			return;
 		}
-	} else if ((/^wd\$?\((.+)?\)\.[0-9a-zA-Z]+(\((.+)?\)\;|\;)$/).test(input)) {
+	} else if ((/^wd\$?\((.+)?\)\.[0-9a-zA-Z]+(\((.+)?\))?\;$/).test(input)) {
 		try {
 			aux = eval("("+input.replace(/\;$/, "")+");");
 			wd$("#output").item().textContent = JSON.stringify(aux);
@@ -57,6 +61,8 @@ function generic(val) {
 			wd$("#output").item().textContent = "ERROR: "+e.message;
 			return;
 		}
+	} else {
+		wd$("#output").item().textContent = "";
 	}
 	return;
 }

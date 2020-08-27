@@ -1,19 +1,19 @@
 <h2>Generic</h2>
 
-<form class="wd-block">
+<div class="wd-block">
 
 	<label>Test Area:</label>
 
-	<input type="text" id="input" placeholder="wd(input).tool(args);" onkeyup="generic();" value="wd()" title="Field to test the script." />
+	<textarea id="input" placeholder="wd(input).tool(args);" onkeyup="generic();" title="Field to test the script." >wd()</textarea>
 
 	<nav id="methods" class="wd-size-small wd-block wd-bg-black" style="max-height: 150px; overflow: auto;">
-		<a href="#" onclick="generic(this.textContent);">{{tool}}</a>
+		<a href="#" onclick="generic(this.textContent);" title="Args: {{args}}">{{tool}}</a>
 	</nav>
 
 	<label>Output:</label>
 	<pre class="wd-padding wd-code"><samp id="output"></samp></pre>
 
-</form>
+</div>
 
 <ul class="wd-size-small wd-i">
 	<li>Use the text field to test the generic functionality of the JavaScript tool.</li>
