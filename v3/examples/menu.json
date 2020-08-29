@@ -5,6 +5,68 @@
 		"attr": "data-wd-click=\"\" data-wd-data=\"wdLoad{get{examples/home.html}}${main}\""
 	},
 
+
+	{
+		"name": "ATTR Action",
+		"title": "Action",
+		"attr": "data-wd-data=\"wdLoad{get{examples/ATTR/action.html}}${main}\""
+	},
+	{
+		"name": "ATTR Click",
+		"title": "Click",
+		"attr": "data-wd-data=\"wdLoad{get{examples/ATTR/click.html}}${main}\""
+	},
+	{
+		"name": "ATTR Device",
+		"title": "Device",
+		"attr": "data-wd-data=\"wdLoad{get{examples/ATTR/device.html}}${main}\""
+	},
+	{
+		"name": "ATTR Filter",
+		"title": "Filter",
+		"attr": "data-wd-data=\"wdLoad{get{examples/ATTR/filter.html}}${main}\""
+	},
+	{
+		"name": "ATTR Load",
+		"title": "Load",
+		"attr": "data-wd-data=\"wdLoad{get{examples/ATTR/load.html}}${main}\""
+	},
+	{
+		"name": "ATTR Mask",
+		"title": "Mask",
+		"attr": "data-wd-data=\"wdLoad{get{examples/ATTR/mask.html}}${main}\""
+	},
+	{
+		"name": "ATTR Page",
+		"title": "Page",
+		"attr": "data-wd-data=\"wdLoad{get{examples/ATTR/page.html}}${main}\""
+	},
+	{
+		"name": "ATTR Repeat",
+		"title": "Repeat",
+		"attr": "data-wd-data=\"wdLoad{get{examples/ATTR/repeat.html}}${main}\""
+	},
+
+
+
+	{
+		"name": "ATTR Sort",
+		"title": "Sort",
+		"attr": "data-wd-data=\"wdLoad{get{examples/ATTR/sort.html}}${main}\""
+	},
+	{
+		"name": "ATTR Sort Column",
+		"title": "Sort Column",
+		"attr": "data-wd-data=\"wdLoad{get{examples/ATTR/sortcolumn.html}}${main}\""
+	},
+
+
+
+
+
+
+
+
 	{
 		"name": "CSS Base",
 		"title": "Base",

@@ -1,0 +1,35 @@
+<h2>Repeat</h2>
+
+<nav>
+	<span
+		data-wd-data="wdRepeat{get{examples/list1.json}}${#list}&wdLoad{get{examples/list1.json}}${#json}"
+	>List 1</span>
+	<span
+		data-wd-data="wdRepeat{get{examples/list2.json}}${#list}&wdLoad{get{examples/list2.json}}${#json}"
+	>List 2</span>
+</nav>
+
+<h3>List</h3>
+
+<!--
+
+-- NOTE --
+
+After loading the page the attribute disappears!
+
+The element has the following structure:
+
+<ol id="list" data-wd-repeat="get{examples/list1.json}">
+	<li>{{name}}, age {{age}};</li>
+</ol>
+
+-->
+
+<ol id="list" data-wd-repeat="get{examples/list1.json}">
+	<li>{{name}}, age {{age}};</li>
+</ol>
+
+<h3>JSON file</h3>
+
+<pre class="wd-code wd-padding wd-radius" id="json" data-wd-load="get{examples/list1.json}"></pre>
+

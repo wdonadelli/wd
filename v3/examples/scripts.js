@@ -9,6 +9,7 @@ function showCode(input) {
 		var text;
 		if (x.closed) {
 			text = x.status === "DONE" ? x.text : wd$(input).item().innerHTML;
+			text = text.replace(/\&amp\;/g, "&");
 			wd$("#sourceCode").item().textContent = text;
 			wd$("#winCode").action("open");			
 		}

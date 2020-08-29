@@ -882,17 +882,17 @@ de width 70/85% para 100% e margin auto
 .wd .wd-bg-pink,   .wd .wd-bg-pink-child > *   {color: #1a0013 !important; background-color: #ffccf2 !important;}
 .wd .wd-bg-purple, .wd .wd-bg-purple-child > * {color: #f0ebfa !important; background-color: #6c46b9 !important;}
 
-.wd .wd-fg-black,  .wd .wd-fg-black-child > *  {color: #262626 !important;}
-.wd .wd-fg-white,  .wd .wd-fg-white-child > *  {color: #f2f2f2 !important;}
-.wd .wd-fg-grey,   .wd .wd-fg-grey-child > *   {color: #595959 !important;}
-.wd .wd-fg-red,    .wd .wd-fg-red-child > *    {color: #e60000 !important;}
-.wd .wd-fg-green,  .wd .wd-fg-green-child > *  {color: #006666 !important;}
-.wd .wd-fg-blue,   .wd .wd-fg-blue-child > *   {color: #0000e6 !important;}
-.wd .wd-fg-yellow, .wd .wd-fg-yellow-child > * {color: #808000 !important;}
-.wd .wd-fg-orange, .wd .wd-fg-orange-child > * {color: #e67e00 !important;}
-.wd .wd-fg-brown,  .wd .wd-fg-brown-child > *  {color: #874312 !important;}
-.wd .wd-fg-pink,   .wd .wd-fg-pink-child > *   {color: #ff3399 !important;}
-.wd .wd-fg-purple, .wd .wd-fg-purple-child > * {color: #592d86 !important;}
+.wd .wd-fg-black,  .wd .wd-fg-black-child > *  {color: #333333 !important;}
+.wd .wd-fg-white,  .wd .wd-fg-white-child > *  {color: #e6e6e6 !important;}
+.wd .wd-fg-grey,   .wd .wd-fg-grey-child > *   {color: #8c8c8c !important;}
+.wd .wd-fg-red,    .wd .wd-fg-red-child > *    {color: #db5757 !important;}
+.wd .wd-fg-green,  .wd .wd-fg-green-child > *  {color: #194d4d !important;}
+.wd .wd-fg-blue,   .wd .wd-fg-blue-child > *   {color: #1f4d7a !important;}
+.wd .wd-fg-yellow, .wd .wd-fg-yellow-child > * {color: #c7c705 !important;}
+.wd .wd-fg-orange, .wd .wd-fg-orange-child > * {color: #e69500 !important;}
+.wd .wd-fg-brown,  .wd .wd-fg-brown-child > *  {color: #734626 !important;}
+.wd .wd-fg-pink,   .wd .wd-fg-pink-child > *   {color: #ff99e6 !important;}
+.wd .wd-fg-purple, .wd .wd-fg-purple-child > * {color: #6c46b9 !important;}
 
 /* - Tamanho de Texto -- */
 .wd .wd-size-xxsmall, .wd .wd-size-xxsmall-child > * {font-size: xx-small !important;}

@@ -1,0 +1,91 @@
+<h2>Action</h2>
+
+<h3>Check/Enable (form)</h3>
+
+<div class="wd-row wd-border wd-padding-child">
+
+	<div class="wd-col-04">
+		<h3>Check</h3>
+		<nav class="wd-block">
+			<span data-wd-action="check{#myForm input}">All</span>
+			<span data-wd-action="uncheck{#myForm input}">None</span>
+			<span data-wd-action="toggle-check{#myForm input}">Toggle</span>
+		</nav>
+	</div>
+
+	<div class="wd-col-04 wd-border-length">
+		<h3>Enable</h3>
+		<nav class="wd-block">
+			<span data-wd-action="enable{#myForm input}">All</span>
+			<span data-wd-action="disable{#myForm input}">None</span>
+			<span data-wd-action="toggle-enable{#myForm input}">Toggle</span>
+		</nav>
+	</div>
+
+	<div class="wd-col-04 wd-block" id="myForm">
+		<h3>Items</h3>	
+		<label>A) <input type="checkbox" /></label>
+		<label>B) <input type="checkbox" /></label>
+		<label>C) <input type="checkbox" /></label>
+	</div>
+
+</div>
+
+<h3>Check/Enable (text)</h3>
+
+<dl id="myList">
+	<dt>Shopping list</dt>
+	<dd data-wd-action="toggle-check{}">Beef</dd>
+	<dd data-wd-action="toggle-check{}">Milk</dd>
+	<dd data-wd-action="toggle-check{}">Butter</dd>
+</dl>
+
+<div>
+	<button type="button" data-wd-action="toggle-enable{#myList > dd}">Dis/Enable</Button>
+</div>
+
+<h3>Tab</h3>
+
+<nav class="wd-bg-black">
+	<span data-wd-action="tab{#tab1}">Tab 1</span>
+	<span data-wd-action="tab{#tab2}">Tab 2</span>
+	<span data-wd-action="tab{#tab3}">Tab 3</span>
+</nav>
+
+<div class="wd-border-child">
+	<div id="tab1" class="wd-flyer">
+		<header class="wd-bg-green">
+			<h4>Tab 1</h4>
+		</header>
+		<p>Content 1.</p>
+	</div>
+	<div id="tab2" class="wd-flyer">
+		<header class="wd-bg-red">
+			<h4>Tab 2</h4>
+		</header>
+		<p>Content 2.</p>
+	</div>
+	<div id="tab3" class="wd-flyer">
+		<header class="wd-bg-blue">
+			<h4>Tab 3</h4>
+		</header>
+		<p>Content 3.</p>
+	</div>
+</div>
+<p class="wd-size-small wd-i">See WD ATTR Click Tool to activate a standard box.</p>
+
+<h3>Open/Close (Window CSS required)</h3>
+
+<div>
+	<button type="button" class="wd-button" data-wd-action="open{#modal}">Click Me!</button>
+</div>
+
+<div class="wd-modal" id="modal">
+	<div class="wd-flyer wd-window wd-win-medium wd-bg-white wd-cloud wd-radius">
+		<header class="wd-bg-black">
+			<h3>My modal window</h3>
+		</header>
+		<p>Content.</p>
+		<button type="button" class="wd-place-se wd-xmargin wd-icon-door" data-wd-action="close{#modal}"> Exit</button>
+	</div>
+</div>
