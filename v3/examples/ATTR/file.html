@@ -1,0 +1,20 @@
+<h2>File</h2>
+
+<div class="wd-block" id="fileConfig">
+	<p class="wd-size-small wd-i">use the fields below to configure the file field to perform the test.</p>
+	<label>Size (Bytes)</label>
+	<input type="number" min="0" step="1" name="size" value="1048576" onblur="setFileConfig();" \>
+	<label>Total (Bytes)</label>
+	<input type="number" min="0" step="1" name="total" value="2097152" onblur="setFileConfig();" \>
+	<label>Char</label>
+	<input type="text" name="char" value="-_" onblur="setFileConfig();" \>
+	<label>Len</label>
+	<input type="number" min="0" step="1" name="len" value="1" onblur="setFileConfig();" \>
+	<label>Type</label>
+	<input type="text" name="type" value="application/pdf image/png" onblur="setFileConfig();" \>
+	<p class="wd-size-small wd-i">Use the field below to test the effects of the settings.</p>
+	<label>Test</label>
+	<input type="file" id="fileTest" multiple="" />
+</div>
+
+<script>setFileConfig();</script>

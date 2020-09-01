@@ -70,6 +70,18 @@ function generic(val) {
 
 
 
+/*wd_attr_file_tool*/
+function setFileConfig() {
+	var config = [];
+	wd$("#fileConfig > input").run(function (x) {
+		if (x.type.toLowerCase() === "file" || x.value === "" || x.value === "0") {return;}
+		config.push(x.name+"{"+x.value+"}");
+		return;
+	});
+	wd$("#fileTest").data({wdFile: config.join("")});
+	return;
+}
+
 
 
 
@@ -117,15 +129,7 @@ function configBody() {
 	return;
 }
 
-/*wd_attr_file_tool*/
-function setFile() {
-	var config = "";
-	wd$("#dataFile input").run(function(x) {
-		config += x.name+"{"+x.value+"}";
-	});
-	wd$("#typeFile").data({wdFile: config});
-	return;
-}
+
 
 /*wd_attr_config_tool*/
 function testLoading() {
