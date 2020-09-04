@@ -3,12 +3,13 @@ function toggleStyle() {
 	return;
 }
 
-function showCode(input) {
-	input = wd(input).type === "text" ? input : "main";
+function showCode(input, outside) {
+	outside = outside === true ? "outerHTML" : "innerHTML";
+	input   = wd(input).type === "text" ? input : "main";
 	wd().send(input, function(x) {
 		var text;
 		if (x.closed) {
-			text = x.status === "DONE" ? x.text : wd$(input).item().innerHTML;
+			text = x.status === "DONE" ? x.text : wd$(input).item()[outside];
 			text = text.replace(/\&amp\;/g, "&");
 			wd$("#sourceCode").item().textContent = text;
 			wd$("#winCode").action("open");			

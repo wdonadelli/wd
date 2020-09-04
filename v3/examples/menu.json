@@ -17,6 +17,11 @@
 		"attr": "data-wd-data=\"wdLoad{get{examples/ATTR/click.html}}${main}\""
 	},
 	{
+		"name": "ATTR Config",
+		"title": "Config",
+		"attr": "data-wd-data=\"wdLoad{get{examples/ATTR/config.html}}${main}\""
+	},
+	{
 		"name": "ATTR Device",
 		"title": "Device",
 		"attr": "data-wd-data=\"wdLoad{get{examples/ATTR/device.html}}${main}\""

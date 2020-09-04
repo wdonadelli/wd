@@ -1,0 +1,64 @@
+<h2>Config</h2>
+
+<div class="wd-row">
+
+	<div class="wd-col-06 wd-block">
+		<button type="button" data-wd-action="open{#config}" class="wd-icon-config" > Config</button>
+	</div>
+
+	<div class="wd-col-06 wd-block">
+		<button type="button" class="wd-icon-search" onclick="showCode('body', true);" > Code</button>
+	</div>
+</div>
+
+<h3>Test Area</h3>
+
+<div class="wd-block">
+	<button type="button" class="wd-icon-reload" onclick="testLoading();">Test loading</button>
+	<label class="wd-icon-file" > Test File</label>
+	<input type="file" multiple="" data-wd-file="size{1024}total{2048}char{-_}len{2}type{application/pdf}" />
+</div>
+
+<div class="wd-size-small wd-border-top">
+	<p class="wd-i">The file input is configured with the following parameters:</p>
+
+	<ul>
+		<li>size: 1024B</li>
+		<li>total: 2048B</li>
+		<li>char: -_</li>
+		<li>len: 2</li>
+		<li>type: application/pdf</li>
+	</ul>
+</div>
+
+<div id="config" class="wd-window wd-flyer wd-bg-white">
+
+	<header class=" wd-bg-black">
+		<h3 class="wd-icon-config" > Config</h3>
+	</header>
+
+	<span data-wd-action="close{#config}" class="wd-icon-back wd-place-ne wd-margin"></span>
+
+	<div class="wd-block wd-margin-height-child">
+		<p class="wd-size-small wd-i">Use the fields below to define configuration options.</p>
+		<label>loading</label>
+		<input type="text" name="loading" value="Have patience, bro &hearts;" />
+		<label>color</label>
+		<input type="color" name="color" value="#1111FF" />
+		<label>bgcolor</label>
+		<input type="color" name="bgcolor" value="#CFCFFF" />
+		<label>fileTitle</label>
+		<input type="text" name="fileTitle" value="This file cannot!!!" />
+		<label>fileSize</label>
+		<input type="text" name="fileSize" value="<i>This file is <u>too big</u>, man.</i>" />
+		<label>fileTotal</label>
+		<input type="text" name="fileTotal" value="Dude, you've crossed the line." />
+		<label>fileChar</label>
+		<input type="text" name="fileChar" value="There are strange things about the file name." />
+		<label>fileLen</label>
+		<input type="text" name="fileLen" value="You can't take everyone." />
+		<label>fileType	</label>
+		<input type="text" name="fileType" value="What file is this, are you crazy?" />
+		<button type="button" data-wd-action="close{#config}" class="wd-icon-ok" >OK</button>
+	</div>
+</div>

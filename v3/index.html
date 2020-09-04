@@ -62,19 +62,16 @@
 	<main class="wd-xpadding"></main>
 
 	<!-- Menu lateral -->
-	<section
-		id="menu"
-		class="wd-modal"
-		data-wd-action="close{#menu}">
+	<section id="menu" class="wd-modal" data-wd-action="close{#menu}">
 
-		<article class="wd-window wd-win-left" data-wd-device="desktop{wd-win-left}">
+		<article class="wd-window wd-flyer" data-wd-device="desktop{wd-win-left}">
 
 			<header class="wd-bg-blue">
-				<h3>Menu</h3>
+				<h3 class="wd-icon-menu"> Menu</h3>
 			</header>
 
 			<nav class="wd-block" data-wd-repeat="get{examples/menu.json}">
-				<a href="#" title="{{title}}" {{attr}}>{{name}}</a>
+				<a href="#" title="{{title}}" class="wd-icon-right" {{attr}}> {{name}}</a>
 			</nav>
 
 		</article>
@@ -82,15 +79,16 @@
 	</section>
 
 	<!-- Janela de código -->
-	<section
-		id="winCode"
-		class="wd-window wd-flyer"
-		data-wd-action="close{}"
-	>
-		<header class="wd-bg-grey">
-			<h2>Code</h2>
+	<section id="winCode" class="wd-window wd-flyer" data-wd-action="close{}"	>
+
+		<header class="wd-bg-red">
+			<h2 class="wd-icon-search"> Code</h2>
 		</header>
-		<pre id="sourceCode" class="wd-code wd-xpadding wd-border"></pre>
+
+		<p class="wd-i wd-fg-red">Click anywhere to close the window.</p>
+
+		<pre id="sourceCode" class="wd-code wd-xpadding wd-border" style="overflow: auto;"></pre>
+
 	</section>
 	
 	</div>
