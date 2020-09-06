@@ -361,9 +361,9 @@ var wd = (function() {
 	/* abrir chamada modal */
 	function modalWindowOpen() {
 		data_wdConfig();
-		modalWindow.textContent           = wdConfig.loading;
-		modalWindow.style.color           = wdConfig.color;
-		modalWindow.style.backgroundColor = wdConfig.bgcolor;
+		modalWindow.textContent           = wdConfig.modalMsg;
+		modalWindow.style.color           = wdConfig.modalFg;
+		modalWindow.style.backgroundColor = wdConfig.modalBg;
 		
 		if (modalWindowCount === 0) {/* abrir só se não estiver aberto */
 			document.body.appendChild(modalWindow);
@@ -3142,9 +3142,9 @@ var wd = (function() {
 	function data_wdConfig() {
 		var data, value;
 		wdConfig = {
-			loading:   "Loading data, please wait.",
-			bgcolor:   "#005544",
-			color:     "#FFFFFF",
+			modalMsg:  "Loading data, please wait.",
+			modalFg:   "#FFFFFF",
+			modalBg:   "#005544",
 			fileTitle: "Files",
 			fileSize:  "Larger file size than allowed.",
 			fileTotal: "Total file size larger than allowed.",

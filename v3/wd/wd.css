@@ -216,7 +216,6 @@ label, button, input, select, textarea {display: inline;}
 }
 
 .wd button, .wd input, .wd label, .wd select, .wd textarea, .wd fieldset > legend {
-	color: #404040;
 	font-family: Verdana,sans-serif;
 	font-size: 1em;
 	outline: inherit;
@@ -226,6 +225,7 @@ label, button, input, select, textarea {display: inline;}
 }
 
 .wd input, .wd select, .wd textarea, .wd button {
+	color: #404040;
 	background-color: #f8f8ff;
 	border: thin solid #b3b3b3;
 	border-radius: 0.2em;

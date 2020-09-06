@@ -69,23 +69,35 @@ function generic(val) {
 	return;
 }
 
-
-
-/*wd_attr_file_tool*/
-function setFileConfig() {
-	var config = [];
-	wd$("#fileConfig > input").run(function (x) {
-		if (x.type.toLowerCase() === "file" || x.value === "" || x.value === "0") {return;}
-		config.push(x.name+"{"+x.value+"}");
+function setAttrConfig(attr, get, set, eg, force) {
+	var object = {};
+	var example;
+	object[attr] = [];
+	wd$(get).run(function (x) {
+		if (x.value !== "" && x.value !== "0" && x.value !== undefined && x.value !== null) {
+			object[attr].push(x.name+"{"+x.value+"}");
+		}
 		return;
 	});
-	wd$("#fileTest").data({wdFile: config.join("")});
+	object[attr] = object[attr].length === 0 ? null : object[attr].join("");
+
+	example = wd$(set).item().outerHTML.split(">");
+	example[0] = example[0].replace(/\/$/, "");
+	example[1] = example.length === 2 ? " />" : " > ..."
+	if (object[attr] !== null) {
+		example[0] += " data-"+(wd(attr).dash)+"=\""+object[attr]+"\"";
+	}
+	wd$(eg).item().textContent = example[0]+example[1];
+
+	wd$(set).data(object);
 	return;
 }
 
-
-
-
+function testLoading() {
+	wd().send("examples/target.php", function(x) {
+		if (x.closed) {alert("End?");}
+	});
+}
 
 
 
@@ -133,10 +145,4 @@ function configBody() {
 
 
 /*wd_attr_config_tool*/
-function testLoading() {
-	wd().send('wd_attr_config_tool.html', function(x) {
-		if (x.status === "DONE") {
-			alert("Hi!");
-		}
-	});
-}
+

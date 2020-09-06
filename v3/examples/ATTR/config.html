@@ -1,14 +1,10 @@
 <h2>Config</h2>
 
-<div class="wd-row">
+<h3>Configuration</h3>
 
-	<div class="wd-col-06 wd-block">
-		<button type="button" data-wd-action="open{#config}" class="wd-icon-config" > Config</button>
-	</div>
-
-	<div class="wd-col-06 wd-block">
-		<button type="button" class="wd-icon-search" onclick="showCode('body', true);" > Code</button>
-	</div>
+<div class="wd-block wd-margin-height-child">
+	<button type="button" data-wd-action="open{#config}" class="wd-icon-config" > Config</button>
+	<div class="wd-code wd-radius wd-padding" id="config_eg"></div>
 </div>
 
 <h3>Test Area</h3>
@@ -31,22 +27,46 @@
 	</ul>
 </div>
 
+
+
+
+
+
+
+
+
 <div id="config" class="wd-window wd-flyer wd-bg-white">
 
-	<header class=" wd-bg-black">
-		<h3 class="wd-icon-config" > Config</h3>
+	<header class="wd-bg-black">
+		<h3 class="wd-icon-config" > Configuration</h3>
 	</header>
 
-	<span data-wd-action="close{#config}" class="wd-icon-back wd-place-ne wd-margin"></span>
+	<div class="wd-row">
 
-	<div class="wd-block wd-margin-height-child">
+		<div class="wd-col-04 wd-block">
+			<button type="button" onlick="configLang('it')">Italian</button>
+		</div>
+
+		<div class="wd-col-04 wd-block">
+			<button type="button" onlick="configLang('pt')">Portuguese (Brazil)</button>
+		</div>
+
+		<div class="wd-col-04 wd-block">
+			<button type="button" onlick="configLang('de')">German</button>
+		</div>
+
+	</div>
+
+
+
+	<div class="wd-block">
 		<p class="wd-size-small wd-i">Use the fields below to define configuration options.</p>
-		<label>loading</label>
-		<input type="text" name="loading" value="Have patience, bro &hearts;" />
-		<label>color</label>
-		<input type="color" name="color" value="#1111FF" />
-		<label>bgcolor</label>
-		<input type="color" name="bgcolor" value="#CFCFFF" />
+		<label>modalMsg</label>
+		<input type="text" name="modalMsg" value="Have patience, bro &hearts;" />
+		<label>modalFg</label>
+		<input type="text" name="modalFg" value="#1111FF" />
+		<label>modalBg</label>
+		<input type="text" name="modalBg" value="#CFCFFF" />
 		<label>fileTitle</label>
 		<input type="text" name="fileTitle" value="This file cannot!!!" />
 		<label>fileSize</label>
@@ -59,6 +79,15 @@
 		<input type="text" name="fileLen" value="You can't take everyone." />
 		<label>fileType	</label>
 		<input type="text" name="fileType" value="What file is this, are you crazy?" />
-		<button type="button" data-wd-action="close{#config}" class="wd-icon-ok" >OK</button>
 	</div>
+	
+	<footer class="wd-buddy-bottom wd-block wd-bg-white">
+		<button type="button" class="wd-icon-ok"
+			data-wd-action="close{#config}"
+			onclick="setAttrConfig('wdConfig', '#config input', 'body', '#config_eg');"
+		> OK</button>
+	</footer>
+	
 </div>
+
+<script>setAttrConfig('wdConfig', '#none', 'body', '#config_eg');</script>

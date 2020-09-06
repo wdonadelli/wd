@@ -1,20 +1,58 @@
 <h2>File</h2>
 
-<div class="wd-block" id="fileConfig">
-	<p class="wd-size-small wd-i">use the fields below to configure the file field to perform the test.</p>
-	<label>Size (Bytes)</label>
-	<input type="number" min="0" step="1" name="size" value="1048576" onblur="setFileConfig();" \>
-	<label>Total (Bytes)</label>
-	<input type="number" min="0" step="1" name="total" value="2097152" onblur="setFileConfig();" \>
-	<label>Char</label>
-	<input type="text" name="char" value="-_" onblur="setFileConfig();" \>
-	<label>Len</label>
-	<input type="number" min="0" step="1" name="len" value="1" onblur="setFileConfig();" \>
-	<label>Type</label>
-	<input type="text" name="type" value="application/pdf image/png" onblur="setFileConfig();" \>
-	<p class="wd-size-small wd-i">Use the field below to test the effects of the settings.</p>
-	<label>Test</label>
+<h3>Configuration</h3>
+
+<div class="wd-block wd-margin-height-child">
+	<button type="button" data-wd-action="open{#fileConfig}" class="wd-icon-config" > Config</button>
+	<div class="wd-code wd-radius wd-padding" id="file_eg"></div>
+</div>
+
+<h3>Test Area</h3>
+
+<p class="wd-size-small wd-i">Use the field below to test the effects of the settings.</p>
+
+<div class="wd-block">		
+	<label class="wd-icon-file"> File</label>
 	<input type="file" id="fileTest" multiple="" />
 </div>
 
-<script>setFileConfig();</script>
+
+
+
+
+
+
+
+
+
+
+<div id="fileConfig" class="wd-window wd-flyer wd-bg-white">
+
+	<header class="wd-bg-black">
+		<h3 class="wd-icon-config" > Configuration</h3>
+	</header>
+
+	<div class="wd-block">
+		<p class="wd-size-small wd-i">use the fields below to configure the file field to perform the test.</p>
+		<label>Size (Bytes)</label>
+		<input type="number" min="0" step="1" name="size" value="1048576" \>
+		<label>Total (Bytes)</label>
+		<input type="number" min="0" step="1" name="total" value="2097152" \>
+		<label>Char</label>
+		<input type="text" name="char" value="-_" \>
+		<label>Len</label>
+		<input type="number" min="0" step="1" name="len" value="1" \>
+		<label>Type</label>
+		<input type="text" name="type" value="application/pdf image/png" \>
+	</div>
+	
+	<footer class="wd-buddy-bottom wd-block wd-bg-white">
+		<button type="button" class="wd-icon-ok"
+			data-wd-action="close{#fileConfig}"
+			onclick="setAttrConfig('wdFile', '#fileConfig input', '#fileTest', '#file_eg');"
+		> OK</button>
+	</footer>
+
+</div>
+
+<script>setAttrConfig('wdFile', '#none', '#fileTest', '#file_eg');</script>
