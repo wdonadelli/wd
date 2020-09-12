@@ -69,17 +69,65 @@ function generic(val) {
 	return;
 }
 
-function setAttrConfig(attr, get, set, eg, force) {
-	var object = {};
-	var example;
-	object[attr] = [];
-	wd$(get).run(function (x) {
+/*============================================================================*/
+function getCode(css, all) {
+	var inner, outer, elem;
+	elem  = wd$(css);
+	outer = elem.item().outerHTML;
+	inner = elem.item().innerHTML;
+	if (all === true || inner === "") {
+		return outer;
+	}
+	outer = outer.replace(/[\n\t]/g, "");
+	inner = inner.replace(/[\n\t]/g, "");
+	outer = outer.replace(inner, "...");
+	return outer;
+}
+
+function setAttrCode(code, attr) {
+	code = code.replace(/^(\<[a-z]+)(\ |\/\>|\>)/, "$1 "+attr+" $2");
+	return code;
+}
+
+function setAttr(css, attr, value, all) {
+	var obj, code, html;
+	code = getCode(css, all);
+	if (attr === null || value === null) {return code;}
+	obj = {};
+	obj[attr] = value;
+	html = setAttrCode(code, " data-"+(wd(attr).dash)+"=\""+value+"\"");
+	wd$(css).data(obj);
+	return html;
+}
+
+function getAttrValue(css) {
+	var array = [];
+	wd$(css).run(function (x) {
 		if (x.value !== "" && x.value !== "0" && x.value !== undefined && x.value !== null) {
-			object[attr].push(x.name+"{"+x.value+"}");
+			array.push(x.name+"{"+x.value+"}");
 		}
 		return;
 	});
-	object[attr] = object[attr].length === 0 ? null : object[attr].join("");
+	return array.length === 0 ? "" : array.join("");
+}
+
+function setExample(from, to, form, attr, all) {
+	var code, attr, value;
+	value = form  === null ? null : getAttrValue(form);
+	code  = setAttr(from, attr, value, all);
+	wd$(to).item().textContent = code;
+	return;
+}
+
+
+
+
+
+
+
+
+function setAttrConfig(attr, get, set, eg, force) {
+	var example;
 
 	example = wd$(set).item().outerHTML.split(">");
 	example[0] = example[0].replace(/\/$/, "");
@@ -92,7 +140,7 @@ function setAttrConfig(attr, get, set, eg, force) {
 	wd$(set).data(object);
 	return;
 }
-
+/*============================================================================*/
 function testLoading() {
 	wd().send("examples/target.php", function(x) {
 		if (x.closed) {alert("End?");}

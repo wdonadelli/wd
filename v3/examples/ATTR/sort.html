@@ -2,15 +2,7 @@
 
 <h3>Loading</h3>
 
-<!--
-
--- NOTE --
-
-After loading the page the attribute disappears!
-
-The element has the following structure:
-
-<ul data-wd-sort="1">
+<ul id="sort0" data-wd-sort="1">
 	<li>John</li>
 	<li>Mary</li>
 	<li>Paul</li>
@@ -20,26 +12,22 @@ The element has the following structure:
 	<li>Lisa</li>
 </ul>
 
--->
-
-<ul data-wd-sort="1">
-	<li>John</li>
-	<li>Mary</li>
-	<li>Paul</li>
-	<li>Lucas</li>
-	<li>Maria</li>
-	<li>Alfred</li>
-	<li>Lisa</li>
-</ul>
+<h4>Initial Code</h4>
+<div class="wd-code wd-radius wd-padding" id="sort_eg0"></div>
+<script>setExample("#sort0", "#sort_eg0", null, null);</script>
 
 <h3>Multiple information</h3>
 
-<div class="wd-margin-height">
-	<button data-wd-data="wdSort{1}${#sort}"  type="button" class="wd-icon-s" >Sort</button>
-	<button data-wd-data="wdSort{-1}${#sort}" type="button" class="wd-icon-n" >Sort</button>
+<div class="wd-margin-height wd-row">
+	<div class="wd-col-06 wd-block">
+		<button data-wd-data="wdSort{1}${#sort1}" type="button" class="wd-icon-s" > Sort</button>
+	</div>
+	<div class="wd-col-06 wd-block">
+		<button data-wd-data="wdSort{-1}${#sort1}" type="button" class="wd-icon-n" > Sort</button>
+	</div>
 </div>
 
-<ul id="sort">
+<ul id="sort1">
 	<li class="wd-fg-blue">21h23</li>
 	<li class="wd-fg-red">2020-03-10</li>
 	<li class="wd-fg-green">30</li>
@@ -61,3 +49,8 @@ The element has the following structure:
 	<li class="wd-fg-green">-30.1</li>
 	<li>Alfred</li>
 </ul>
+
+<h4>Initial Code</h4>
+<div class="wd-code wd-radius wd-padding" id="sort_eg1"></div>
+<script>setExample("#sort1", "#sort_eg1", null, null);</script>
+

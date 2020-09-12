@@ -1,6 +1,6 @@
 <h2>Sort Column</h2>
 
-<table width="100%" class="wd-border">
+<table width="100%" class="wd-border" id="sortcol">
 
 	<thead>
 		<tr>
@@ -50,3 +50,9 @@
 		</tr>
 	</tbody>
 </table>
+
+
+<h4>Initial Code</h4>
+<div class="wd-code wd-radius wd-padding" id="sortcol_eg"></div>
+<script>wd$("#sortcol_eg").item().textContent = "\t"+wd$("#sortcol thead").item().outerHTML;</script>
+<script>setExample("#sortcol thead", "#sortcol_eg", null, null, true);</script>

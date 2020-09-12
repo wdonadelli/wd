@@ -3142,7 +3142,7 @@ var wd = (function() {
 	function data_wdConfig() {
 		var data, value;
 		wdConfig = {
-			modalMsg:  "Loading data, please wait.",
+			modalMsg:  "Request in progress...",
 			modalFg:   "#FFFFFF",
 			modalBg:   "#005544",
 			fileTitle: "Files",
