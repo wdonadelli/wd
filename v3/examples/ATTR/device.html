@@ -2,83 +2,26 @@
 
 <h3>Basic</h3>
 
-<div>
-	<div data-wd-device="desktop{wd-upon}">Desktop</div>
-	<div data-wd-device="mobile{wd-upon}">Mobile</div>
-	<div data-wd-device="tablet{wd-upon}">Tablet</div>
-	<div data-wd-device="phone{wd-upon}">Phone</div>
+<style id="cssdevice">
+.highlight {
+	color: #FFFFFF;
+	background-color: #222222;
+	padding: 5px;
+	text-align: center;
+}
+</style>
+
+<div id="device">
+	<div data-wd-device="desktop{highlight}">Desktop</div>
+	<div data-wd-device="mobile{highlight}">Mobile</div>
+	<div data-wd-device="tablet{highlight}">Tablet</div>
+	<div data-wd-device="phone{highlight}">Phone</div>
 </div>
 
-<h3>Example</h3>
+<h4>Code</h4>
 
+<div id="egcssdevice"></div>
+<script>boxExample("#cssdevice", "#egcssdevice", true);</script>
 
-<section class="wd-flyer wd-margin-height wd-radius wd-cloud">
-
-	<header data-wd-device="desktop{wd-bg-blue}mobile{wd-bg-green}" class="wd-radius-top" >
-		<div>
-			<h3 data-wd-device="mobile{wd-overlook}">Desktop</h3>
-			<h3 data-wd-device="desktop{wd-overlook}phone{wd-overlook}">Tablet</h3>
-			<h3 data-wd-device="desktop{wd-overlook}tablet{wd-overlook}">Phone</h3>
-		</div>
-	</header>
-
-	<div data-wd-device="desktop{wd-row}" class="wd-padding-child">
-
-		<div class="wd-col-03">
-
-			<nav data-wd-device="desktop{wd-block}">
-				<span data-wd-action="tab{#latim}"  >Latim</span>
-				<span data-wd-action="tab{#english}">English</span>
-				<span data-wd-action="tab{#espanol}">Español</span>
-			</nav>
-
-		</div>
-		
-		<div class="wd-col-09">
-			
-			<article id="latim">
-				<h4>VETUS TESTAMENTUM</h4>
-				<h5>LIBER GENESIS</h5>
-				<p>1 In principio creavit Deus caelum et terram.</p>
-				<p>2 Terra autem erat inanis et vacua, et tenebrae super faciem abyssi, et spiritus Dei ferebatur super aquas.</p>
-				<p>3 Dixitque Deus: <q>Fiat lux</q>. Et facta est lux.</p>
-				<p>4 Et vidit Deus lucem quod esset bona et divisit Deus lucem ac tenebras.</p>
-				<p>5 Appellavitque Deus lucem Diem et tenebras Noctem. Factumque est vespere et mane, dies unus.</p>
-				<p>6 Dixit quoque Deus: <q>Fiat firmamentum in medio aquarum et dividat aquas ab aquis</q>.</p>
-				<p>7 Et fecit Deus firmamentum divisitque aquas, quae erant sub firmamento, ab his, quae erant super firmamentum. Et factum est ita.</p>
-				<p>8 Vocavitque Deus firmamentum Caelum. Et factum est vespere et mane, dies secundus...</p>
-				<p class="wd-align-right"><a href="http://www.vatican.va/archive/bible/nova_vulgata/documents/nova-vulgata_vt_genesis_lt.html" target="_blank">Source</a></p>
-			</article>
-
-			<article id="english">
-				<h4>THE PENTATEUCH</h4>
-				<h5>THE BOOK OF GENESIS</h5>
-				<p>1 In the beginning when God created the heavens and the earth,</p>
-				<p>2 the earth was a formless void and darkness covered the face of the deep, while a wind from God swept over the face of the waters.</p>
-				<p>3 Then God said, <q>Let there be light</q>; and there was light.</p>
-				<p>4 And God saw that the light was good; and God separated the light from the darkness.</p>
-				<p>5 God called the light Day, and the darkness he called Night. And there was evening and there was morning, the first day.</p>
-				<p>6 And God said, <q>Let there be a dome in the midst of the waters, and let it separate the waters from the waters</q>.</p>
-				<p>7 So God made the dome and separated the waters that were under the dome from the waters that were above the dome. And it was so.</p>
-				<p>8 God called the dome Sky. And there was evening and there was morning, the second day...</p>
-				<p class="wd-align-right"><a href="http://www.vatican.va/archive/bible/genesis/documents/bible_genesis_en.html" target="_blank">Source</a></p>
-			</article>
-
-			<article id="espanol">
-				<h4>El ANTIGUI TESTAMENTO</h4>
-				<h5>GENESIS</h5>
-				<p>1. En el principio creó Dios los cielos y la tierra.</p>
-				<p>2. La tierra era caos y confusión y oscuridad por encima del abismo, y un viento de Dios aleteaba por encima de las aguas.</p>
-				<p>3. Dijo Dios: <q>Haya luz</q>, y hubo luz.</p>
-				<p>4. Vio Dios que la luz estaba bien, y apartó Dios la luz de la oscuridad;</p>
-				<p>5. y llamó Dios a la luz </q>día</q>, y a la oscuridad la llamó <q>noche</q>. Y atardeció y amaneció: día primero.</p>
-				<p>6. Dijo Dios: <q>Haya un firmamento por en medio de las aguas, que las aparte unas de otras</q>.</p>
-				<p>7. E hizo Dios el firmamento; y apartó las aguas de por debajo del firmamento, de las aguas de por encima del firmamento. Y así fue.</p>
-				<p>8. Y llamó Dios al firmamento <q>cielos</q>. Y atardeció y amaneció: día segundo...</p>
-				<p class="wd-align-right"><a href="http://www.vatican.va/archive/bible/genesis/documents/bible_genesis_sp.html" target="_blank">Source</a></p>
-			</article>
-		</div>
-
-</section>
-
-
+<div id="egdevice"></div>
+<script>boxExample("#device", "#egdevice", true);</script>

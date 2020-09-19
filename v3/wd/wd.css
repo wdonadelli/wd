@@ -50,6 +50,7 @@ figure, figcaption, picture {display: block;}
 img {display: inline-block;}
 ul, ol, dl {display: block;}
 label, button, input, select, textarea {display: inline;}
+script, style {display: none !important;}
 
 /*============================================================================*/
 

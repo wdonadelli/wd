@@ -1,0 +1,115 @@
+<h2>Data</h2>
+
+<h3>Click</h3>
+
+<nav id="dataclick">
+	<span data-wd-data="wdClick{}${#click}">Link 1</span>
+	<span onclick="alert('[Link 2] was clicked.');" id="click" >Link 2</span>
+</nav>
+
+<div id="egdataclick"></div>
+<script>boxExample("#dataclick", "#egdataclick", true);</script>
+
+<hr>
+<!----------------------------------------------------------------------------->
+
+<h3>Device</h3>
+
+<nav id="datadevice">
+	<span
+		data-wd-data="wdDevice{desktop{wd-b wd-fg-green wd-case-upper}mobile{wd-i wd-bg-blue wd-case-lower}}${#device}"
+	>Style 1</span>
+	<span
+		data-wd-data="wdDevice{desktop{wd-i wd-bg-blue wd-case-lower}mobile{wd-b wd-fg-green wd-case-upper}}${#device}"
+	>Style 2</span>
+</nav>
+
+<div id="egdatadevice"></div>
+<script>boxExample("#datadevice", "#egdatadevice", true);</script>
+
+<div id="device" class="wd-border wd-radius wd-padding">My device STYLE</div>
+
+<hr>
+<!----------------------------------------------------------------------------->
+
+<h3>Filter</h3>
+
+<nav id="datafilter">
+	<span data-wd-data="wdFilter{show{}${#listfilter}}${#filter}">Show</span>
+	<span data-wd-data="wdFilter{hide{}${#listfilter}}${#filter}">Hide</span>
+	<span data-wd-data="wdFilter{show{3}${#listfilter}}${#filter}">Show 3</span>
+	<span data-wd-data="wdFilter{hide{3}${#listfilter}}${#filter}">Hide 3</span>
+</nav>
+
+<div id="egdatafilter"></div>
+<script>boxExample("#datafilter", "#egdatafilter", true);</script>
+
+<div class="wd-block">
+	<input type="search" placeholder="Source" id="filter" />
+</div>
+
+<ol id="listfilter">
+	<li>bus station</li>
+	<li>radio STATION</li>
+	<li>Train sTaTion</li>
+	<li>Monday</li>
+	<li>Tuesday</li>
+	<li>Wednesday</li>
+	<li>Thursday</li>
+	<li>Friday</li>
+	<li>Saturday</li>
+	<li>Sunday</li>
+</ol>
+
+<hr>
+<!----------------------------------------------------------------------------->
+
+<h3>Mask</h3>
+
+<nav id="datamask">
+	<span data-wd-data="wdMask{YYYYMMDD}${#mask}">YMD</span>
+	<span data-wd-data="wdMask{MMDDYYYY}${#mask}">MDY</span>
+	<span data-wd-data="wdMask{DDMMYYYY}${#mask}">DMY</span>
+	<span data-wd-data="wdMask{HHMM}${#mask}">24</span>
+	<span data-wd-data="wdMask{AMPM}${#mask}">12</span>
+</nav>
+
+<div id="egdatamask"></div>
+<script>boxExample("#datamask", "#egdatamask", true);</script>
+
+<div class="wd-block">
+	<input type="search" id="mask" value="12101991" />
+</div>
+
+<hr>
+<!----------------------------------------------------------------------------->
+
+
+<h3>Load and Repeat</h3>
+
+<nav id="dataloadrepeat">
+	<span
+		data-wd-data="wdRepeat{get{examples/list1.json}}${#repeat}&wdLoad{get{examples/list1.json}}${#load}"
+	>List 1</span>
+	<span
+		data-wd-data="wdRepeat{get{examples/list2.json}}${#repeat}&wdLoad{get{examples/list2.json}}${#load}"
+	>List 2</span>
+</nav>
+
+<div id="egdataloadrepeat"></div>
+<script>boxExample("#dataloadrepeat", "#egdataloadrepeat", true);</script>
+
+<h4>Load</h4>
+
+<pre class="wd-code wd-padding wd-radius" id="load"></pre>
+
+<h4>Repeat</h4>
+
+<ol id="repeat">
+	<li>{{name}}, age {{age}};</li>
+</ol>
+
+<hr>
+
+
+

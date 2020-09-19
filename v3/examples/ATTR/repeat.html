@@ -1,26 +1,17 @@
 <h2>Repeat</h2>
 
-<nav>
-	<span
-		data-wd-data="wdRepeat{get{examples/list1.json}}${#list}&wdLoad{get{examples/list1.json}}${#json}"
-	>List 1</span>
-	<span
-		data-wd-data="wdRepeat{get{examples/list2.json}}${#list}&wdLoad{get{examples/list2.json}}${#json}"
-	>List 2</span>
-</nav>
-
 <h3>List</h3>
 
 <ol id="list" data-wd-repeat="get{examples/list1.json}">
 	<li>{{name}}, age {{age}};</li>
 </ol>
 
-<h4>Initial Code</h4>
-<div class="wd-code wd-radius wd-padding" id="list_eg"></div>
-<script>setExample("#list", "#list_eg", null, null, true);</script>
+<h4>Code</h4>
 
+<div id="eglist"></div>
+<script>boxExample("#list", "#eglist", true);</script>
 
-<h3>JSON file</h3>
+<h4>JSON file</h4>
 
-<pre class="wd-code wd-padding wd-radius" id="json" data-wd-load="get{examples/list1.json}"></pre>
+<pre class="wd-code wd-padding wd-radius" data-wd-load="get{examples/list1.json}"></pre>
 

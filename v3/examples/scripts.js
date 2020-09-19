@@ -84,6 +84,21 @@ function getCode(css, all) {
 	return outer;
 }
 
+
+function boxExample(from, to, all) {
+	wd$(to).
+		class({add: "wd-code wd-radius wd-padding wd-margin-height"}).
+		item().textContent = getCode(from, all).replace(/\&amp\;/g, "&");
+	return;
+}
+
+
+
+
+
+
+
+
 function setAttrCode(code, attr) {
 	code = code.replace(/^(\<[a-z]+)(\ |\/\>|\>)/, "$1 "+attr+" $2");
 	return code;
@@ -113,7 +128,13 @@ function getAttrValue(css) {
 
 function setExample(from, to, form, attr, all) {
 	var code, attr, value;
-	value = form  === null ? null : getAttrValue(form);
+	if (form === null) {
+		value = null;
+	} else if ((/^\{/).test(form)) {
+		value = form.replace(/^\{/, "").replace(/\}$/, "");
+	} else {
+		value = getAttrValue(form);
+	}
 	code  = setAttr(from, attr, value, all);
 	wd$(to).item().textContent = code;
 	return;
@@ -146,6 +167,45 @@ function testLoading() {
 		if (x.closed) {alert("End?");}
 	});
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

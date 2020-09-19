@@ -2,7 +2,7 @@
 
 <h3>Text</h3>
 
-<ul>
+<ul id="mask1">
 	<li data-wd-mask="HHMMSS" >103045</li>
 	<li data-wd-mask="HHMM" >1030</li>
 	<li data-wd-mask="AMPM" >1030a</li>
@@ -11,21 +11,44 @@
 	<li data-wd-mask="DDMMYYYY" >03102020</li>
 </ul>
 
+<h4>Code</h4>
+<div id="egmask1"></div>
+<script>boxExample("#mask1", "#egmask1", true);</script>
+
 <h3>Form</h3>
 
 <div class="wd-block" >
 	<label>Time</label>
-	<input type="text" data-wd-mask="HHMMSS" value="103045" placeholder="HH:MM:SS" />
+	<input type="text" data-wd-mask="HHMMSS" value="103045" placeholder="HH:MM:SS" id="mask2" />
+
+	<h4>Code</h4>
+	<div id="egmask2"></div>
+	<script>boxExample("#mask2", "#egmask2", true);</script>
+
 	<label>Date</label>
-	<input type="text" data-wd-mask="YYYYMMDD" value="20201003" placeholder="YYYY-MM-DD" />
+	<input type="text" data-wd-mask="YYYYMMDD" value="20201003" placeholder="YYYY-MM-DD" id="mask3" />
+
+	<h4>Code</h4>
+	<div id="egmask3"></div>
+	<script>boxExample("#mask3", "#egmask3", true);</script>
+
 	<label>Time/Date</label>
-	<select>
+	<select id="mask4" >
 		<option data-wd-mask="HHMM"     value="10:30:00"   >1030</option>
 		<option data-wd-mask="AMPM"     value="10:30:00"   >1030a</option>
 		<option data-wd-mask="MMDDYYYY" value="2020-10-03" >10032020</option>
 		<option data-wd-mask="DDMMYYYY" value="2020-10-03" >03102020</option>
 	</select>
-	<label>Custom</label>
-	<textarea data-wd-mask="^([0-9]{2})\.([0-9]{3})\-([0-9]{3})$" placeholder="XX.XXX-XXX" >00123456</textarea>
-</div>
 
+	<h4>Code</h4>
+	<div id="egmask4"></div>
+	<script>boxExample("#mask4", "#egmask4", true);</script>
+
+	<label>Custom</label>
+	<textarea data-wd-mask="^([0-9]{2})\.([0-9]{3})\-([0-9]{3})$" placeholder="XX.XXX-XXX" id="mask5" >00123456</textarea>
+
+	<h4>Code</h4>
+	<div id="egmask5"></div>
+	<script>boxExample("#mask5", "#egmask5", true);</script>
+
+</div>
