@@ -78,12 +78,11 @@
 <script>boxExample("#datamask", "#egdatamask", true);</script>
 
 <div class="wd-block">
-	<input type="search" id="mask" value="12101991" />
+	<input type="search" id="mask" value="12121212" />
 </div>
 
 <hr>
 <!----------------------------------------------------------------------------->
-
 
 <h3>Load and Repeat</h3>
 
@@ -110,6 +109,88 @@
 </ol>
 
 <hr>
+<!----------------------------------------------------------------------------->
 
+<h3>Page</h3>
+
+<nav id="datapage">
+	<span data-wd-data="wdPage{page{0}size{6}}${#listpage}">00-05</span>
+	<span data-wd-data="wdPage{page{1}size{6}}${#listpage}">06-11</span>
+	<span data-wd-data="wdPage{page{2}size{6}}${#listpage}">12-17</span>
+	<span data-wd-data="wdPage{page{3}size{6}}${#listpage}">18-23</span>
+	<span data-wd-data="wdPage{page{-1}size{6}}${#listpage}">24-25</span>
+
+</nav>
+
+<div id="egdatapage"></div>
+<script>boxExample("#datapage", "#egdatapage", true);</script>
+
+<ol id="listpage">
+	<li>Item 00</li>
+	<li>Item 01</li>
+	<li>Item 02</li>
+	<li>Item 03</li>
+	<li>Item 04</li>
+	<li>Item 05</li>
+	<li>Item 06</li>
+	<li>Item 07</li>
+	<li>Item 08</li>
+	<li>Item 09</li>
+	<li>Item 10</li>
+	<li>Item 11</li>
+	<li>Item 12</li>
+	<li>Item 13</li>
+	<li>Item 14</li>
+	<li>Item 15</li>
+	<li>Item 16</li>
+	<li>Item 17</li>
+	<li>Item 18</li>
+	<li>Item 19</li>
+	<li>Item 20</li>
+	<li>Item 21</li>
+	<li>Item 22</li>
+	<li>Item 23</li>
+	<li>Item 24</li>
+	<li>Item 25</li>
+</ol>
+
+<hr>
+<!----------------------------------------------------------------------------->
+
+<h3>Sort</h3>
+
+<nav id="datasort">
+	<span data-wd-data="wdSort{1}${#listsort}"  class="wd-icon-s" > Sort</span>
+	<span data-wd-data="wdSort{-1}${#listsort}" class="wd-icon-n" > Sort</span>
+</nav>
+
+<div id="egdatasort"></div>
+<script>boxExample("#datasort", "#egdatasort", true);</script>
+
+<ul id="listsort">
+	<li class="wd-fg-blue">21h23</li>
+	<li class="wd-fg-red">2020-03-10</li>
+	<li class="wd-fg-green">30</li>
+	<li>John</li>
+	<li class="wd-fg-blue">10:24pm</li>
+	<li class="wd-fg-red">03/09/2020</li>
+	<li class="wd-fg-green">200</li>
+	<li>Mary</li>
+	<li class="wd-fg-blue">21:23:01</li>
+	<li class="wd-fg-red">11.03.2020</li>
+	<li class="wd-fg-green">30.1</li>
+	<li>Paul</li>
+	<li class="wd-fg-blue">00:01</li>
+	<li class="wd-fg-red">07.04.1999</li>
+	<li class="wd-fg-green">-30</li>
+	<li>Lisa</li>
+	<li class="wd-fg-blue">24h00</li>
+	<li class="wd-fg-red">07/04/1999</li>
+	<li class="wd-fg-green">-30.1</li>
+	<li>Alfred</li>
+</ul>
+
+<hr>
+<!----------------------------------------------------------------------------->
 
 

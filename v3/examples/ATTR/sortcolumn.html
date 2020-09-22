@@ -1,9 +1,9 @@
 <h2>Sort Column</h2>
 
-<table width="100%" class="wd-border" id="sortcol">
+<table width="100%" class="wd-border">
 
 	<thead>
-		<tr>
+		<tr id="sortcol">
 			<th>#</th>
 			<th data-wd-sort-col="">Time</th>
 			<th data-wd-sort-col="">Date</th>
@@ -52,7 +52,7 @@
 </table>
 
 
-<h4>Initial Code</h4>
-<div class="wd-code wd-radius wd-padding" id="sortcol_eg"></div>
-<script>wd$("#sortcol_eg").item().textContent = "\t"+wd$("#sortcol thead").item().outerHTML;</script>
-<script>setExample("#sortcol thead", "#sortcol_eg", null, null, true);</script>
+<h4>Code</h4>
+
+<div id="egsortcol"></div>
+<script>boxExample("#sortcol", "#egsortcol", true);</script>
