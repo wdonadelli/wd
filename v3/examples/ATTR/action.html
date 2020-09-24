@@ -1,93 +1,113 @@
 <h2>Action</h2>
 
-<h3>Check/Enable (form)</h3>
+<h3>Check/Uncheck/Toggle</h3>
 
-<div class="wd-row wd-border wd-padding-child">
+<nav id="check">
+	<span data-wd-action="check{#testcheck input, #testcheck span}">Check</span>
+	<span data-wd-action="uncheck{#testcheck input, #testcheck span}">Uncheck</span>
+	<span data-wd-action="toggle-check{#testcheck input, #testcheck span}">Toggle</span>
+</nav>
 
-	<div class="wd-col-04">
-		<h3>Check</h3>
-		<nav class="wd-block">
-			<span data-wd-action="check{#myForm input}">All</span>
-			<span data-wd-action="uncheck{#myForm input}">None</span>
-			<span data-wd-action="toggle-check{#myForm input}">Toggle</span>
-		</nav>
-	</div>
+<div id="egcheck"></div>
+<script>boxExample("#check", "#egcheck", true);</script>
 
-	<div class="wd-col-04 wd-border-length">
-		<h3>Enable</h3>
-		<nav class="wd-block">
-			<span data-wd-action="enable{#myForm input}">All</span>
-			<span data-wd-action="disable{#myForm input}">None</span>
-			<span data-wd-action="toggle-enable{#myForm input}">Toggle</span>
-		</nav>
-	</div>
-
-	<div class="wd-col-04 wd-block" id="myForm">
-		<h3>Items</h3>	
-		<label>A) <input type="checkbox" /></label>
-		<label>B) <input type="checkbox" /></label>
-		<label>C) <input type="checkbox" /></label>
-	</div>
-
+<div class="wd-padding wd-align-center" id="testcheck">
+	<label><input type="checkbox" />Box 1</label>
+	<label><input type="checkbox" />Box 2</label>
+	<span>Text 1</span>
+	<span>Text 2</span>
 </div>
 
-<h3>Check/Enable (text)</h3>
+<hr>
+<!----------------------------------------------------------------------------->
 
-<dl id="myList">
-	<dt>Shopping list</dt>
-	<dd data-wd-action="toggle-check{}">Beef</dd>
-	<dd data-wd-action="toggle-check{}">Milk</dd>
-	<dd data-wd-action="toggle-check{}">Butter</dd>
-</dl>
-<p class="wd-i wd-size-small">Click on the items.</p>
+<h3>Enable/Disable/Toggle</h3>
 
+<nav id="enable">
+	<span data-wd-action="enable{#testenable input, #testenable span}">Enable</span>
+	<span data-wd-action="disable{#testenable input, #testenable span}">Disable</span>
+	<span data-wd-action="toggle-enable{#testenable input, #testenable span}">Toggle</span>
+</nav>
 
-<div>
-	<button type="button" data-wd-action="toggle-enable{#myList > dd}">Dis/Enable</Button>
+<div id="egenable"></div>
+<script>boxExample("#enable", "#egenable", true);</script>
+
+<div class="wd-padding wd-align-center" id="testenable">
+	<label><input type="checkbox" />Box 1</label>
+	<label><input type="checkbox" />Box 2</label>
+	<span>Text 1</span>
+	<span>Text 2</span>
 </div>
+
+<hr>
+<!----------------------------------------------------------------------------->
+
+<h3>Open/Close/Toggle</h3>
+
+<nav id="open">
+	<span data-wd-action="open{#testopen}">Open</span>
+	<span data-wd-action="close{#testopen}">Close</span>
+	<span data-wd-action="toggle-open{#testopen}">Toggle</span>
+</nav>
+
+<div id="egopen"></div>
+<script>boxExample("#open", "#egopen", true);</script>
+
+<details class="wd-cloud" id="testopen">
+	<summary class="wd-bg-green">Open</summary>
+	<p class="wd-margin">content</p>
+</details>
+
+<p class="wd-i wd-fg-red wd-size-small">The example will work if the browser supports the <code>open</code> attribute of the <code>details</code> object.</p>
+
+<hr>
+<!----------------------------------------------------------------------------->
+
+<h3>Show/Hide/Toggle</h3>
+
+<nav id="show">
+	<span data-wd-action="show{#testshow input, #testshow span}">Show</span>
+	<span data-wd-action="hide{#testshow input, #testshow span}">Hide</span>
+	<span data-wd-action="toggle-show{#testshow input, #testshow span}">Toggle</span>
+</nav>
+
+<div id="egshow"></div>
+<script>boxExample("#show", "#egshow", true);</script>
+
+<div class="wd-padding wd-align-center" id="testshow">
+	<label><input type="checkbox" />Box 1</label>
+	<label><input type="checkbox" />Box 2</label>
+	<span>Text 1</span>
+	<span>Text 2</span>
+</div>
+
+<hr>
+<!----------------------------------------------------------------------------->
 
 <h3>Tab</h3>
 
-<nav class="wd-bg-black">
+<nav id="tab">
 	<span data-wd-action="tab{#tab1}">Tab 1</span>
 	<span data-wd-action="tab{#tab2}">Tab 2</span>
 	<span data-wd-action="tab{#tab3}">Tab 3</span>
 </nav>
 
-<div class="wd-border-child">
-	<div id="tab1" class="wd-flyer">
-		<header class="wd-bg-green">
-			<h4>Tab 1</h4>
-		</header>
-		<p>Content 1.</p>
-	</div>
-	<div id="tab2" class="wd-flyer">
-		<header class="wd-bg-red">
-			<h4>Tab 2</h4>
-		</header>
-		<p>Content 2.</p>
-	</div>
-	<div id="tab3" class="wd-flyer">
-		<header class="wd-bg-blue">
-			<h4>Tab 3</h4>
-		</header>
-		<p>Content 3.</p>
-	</div>
-</div>
-<p class="wd-size-small wd-i">See WD ATTR Click Tool to activate a standard box.</p>
+<div id="egtab"></div>
+<script>boxExample("#tab", "#egtab", true);</script>
 
-<h3>Open/Close (Window CSS required)</h3>
-
-<div>
-	<button type="button" class="wd-button" data-wd-action="open{#modal}">Click Me!</button>
+<div class="wd-grid wd-cloud-child wd-border">
+	<span id="tab1">Tab 1</span>
+	<span id="tab2">Tab 2</span>
+	<span id="tab3">Tab 3</span>
 </div>
 
-<div class="wd-modal" id="modal">
-	<div class="wd-flyer wd-window wd-win-medium wd-bg-white wd-cloud wd-radius">
-		<header class="wd-bg-black">
-			<h3>My modal window</h3>
-		</header>
-		<p>Content.</p>
-		<button type="button" class="wd-place-se wd-xmargin wd-icon-door" data-wd-action="close{#modal}"> Exit</button>
-	</div>
-</div>
+<hr>
+<!----------------------------------------------------------------------------->
+
+
+
+
+
+
+
+

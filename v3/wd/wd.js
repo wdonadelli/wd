@@ -2796,7 +2796,7 @@ var wd = (function() {
 		value: function (action) {
 			action = String(action).toString().toLowerCase();
 			this.run(function(elem) {
-				var tag = elem.tagName.toUpperCase();
+				var dataElem = new DataElem(elem);
 				switch(action) {
 					case "open":
 						if ("open" in elem) {
@@ -2883,13 +2883,7 @@ var wd = (function() {
 						}
 						break;
 					case "clean":
-						if ("value" in elem) {
-							elem.value = "";
-						} else if ("textContent" in elem) {
-							elem.textContent = ""
-						} else if ("innerHTML" in elem) {
-							elem.innerHTML = "";
-						}
+						elem[(dataElem.form() === true ? "value" : "texContent")] = ""
 						break;
 					}
 					return;
