@@ -104,7 +104,40 @@
 <hr>
 <!----------------------------------------------------------------------------->
 
+<h3>Clean/Delete</h3>
 
+<script>
+function actReset() {
+	var a = document.createElement("p");
+	var b = document.createElement("input");
+	a.contentEditable = true;
+	a.textContent = "Object text.";
+	wd(a).class({add: "wd-mark"});
+	b.type  = "text";
+	b.value = "Form value";
+	wd$("#testclean > *").action("del");
+	wd$("#testclean").item().appendChild(a);
+	wd$("#testclean").item().appendChild(b);
+	return;
+}
+</script>
+
+
+<nav id="clean">
+	<span data-wd-action="clean{#testclean > *}">Clean</span>
+	<span data-wd-action="del{#testclean > *}">Delete</span>
+	<span onclick="actReset();" >Reset</span>
+</nav>
+
+<div id="egclean"></div>
+<script>boxExample("#clean", "#egclean", true);</script>
+
+<div id="testclean" class="wd-block"></div>
+
+<script>actReset();</script>
+
+<hr>
+<!----------------------------------------------------------------------------->
 
 
 

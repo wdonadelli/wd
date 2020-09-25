@@ -2883,7 +2883,7 @@ var wd = (function() {
 						}
 						break;
 					case "clean":
-						elem[(dataElem.form() === true ? "value" : "texContent")] = ""
+						elem[(dataElem.form() === true ? "value" : "textContent")] = ""
 						break;
 					}
 					return;
