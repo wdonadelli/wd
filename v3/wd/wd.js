@@ -2824,11 +2824,36 @@ var wd = (function() {
 						WD(bros).action("hide");
 						WD(elem).action("show");
 						break;
-					case "del":
-						if ("remove" in elem) {
-							elem.remove();
-						} else {
-							elem.parentElement.removeChild(elem);
+					case "next":
+						var child, ready, array;
+						child = WD(elem.children);
+						ready = false;
+						for (var i = -1; i >= -child.items; i--) {
+							array = child.item(i).className.split(" ");
+							if (WD(array).inside("js-wd-no-display") === false) {
+								WD(child.item(i+1)).action("tab");
+								ready = true;
+								break;
+							}
+						}
+						if (ready !== true) {
+							WD(child.item(0)).action("tab");
+						}
+						break;
+					case "prev":
+						var child, ready, array;
+						child = WD(elem.children);
+						ready = false;
+						for (var i = 0; i < child.items; i++) {
+							array = child.item(i).className.split(" ");
+							if (WD(array).inside("js-wd-no-display") === false) {
+								WD(child.item(i-1)).action("tab");
+								ready = true;
+								break;
+							}
+						}
+						if (ready !== true) {
+							WD(child.item(-1)).action("tab");
 						}
 						break;
 					case "show":
@@ -2885,9 +2910,16 @@ var wd = (function() {
 					case "clean":
 						elem[(dataElem.form() === true ? "value" : "textContent")] = ""
 						break;
-					}
-					return;
-				});
+					case "del":
+						if ("remove" in elem) {
+							elem.remove();
+						} else {
+							elem.parentElement.removeChild(elem);
+						}
+						break;
+				}
+				return;
+			});
 			return this;
 		}
 	});
