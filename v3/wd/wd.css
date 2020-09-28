@@ -102,7 +102,7 @@ script, style {display: none !important;}
 }
 
 .wd nav > *, .wd nav > a[href] {
-	background-color: inherit;
+	background-color: transparent;
 	color: inherit;
 	cursor: pointer;
 	display: inline-block;
