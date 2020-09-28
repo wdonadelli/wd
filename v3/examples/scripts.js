@@ -137,6 +137,7 @@ function langConfig(lang) {
 	} else {
 		wd$("body").data({wdConfig: null});
 	}
+	boxExample("body", "#egconfig");
 };
 
 
@@ -148,70 +149,6 @@ function langConfig(lang) {
 
 
 
-
-
-function setAttrCode(code, attr) {
-	code = code.replace(/^(\<[a-z]+)(\ |\/\>|\>)/, "$1 "+attr+" $2");
-	return code;
-}
-
-function setAttr(css, attr, value, all) {
-	var obj, code, html;
-	code = getCode(css, all);
-	if (attr === null || value === null) {return code;}
-	obj = {};
-	obj[attr] = value;
-	html = setAttrCode(code, " data-"+(wd(attr).dash)+"=\""+value+"\"");
-	wd$(css).data(obj);
-	return html;
-}
-
-function getAttrValue(css) {
-	var array = [];
-	wd$(css).run(function (x) {
-		if (x.value !== "" && x.value !== "0" && x.value !== undefined && x.value !== null) {
-			array.push(x.name+"{"+x.value+"}");
-		}
-		return;
-	});
-	return array.length === 0 ? "" : array.join("");
-}
-
-function setExample(from, to, form, attr, all) {
-	var code, attr, value;
-	if (form === null) {
-		value = null;
-	} else if ((/^\{/).test(form)) {
-		value = form.replace(/^\{/, "").replace(/\}$/, "");
-	} else {
-		value = getAttrValue(form);
-	}
-	code  = setAttr(from, attr, value, all);
-	wd$(to).item().textContent = code;
-	return;
-}
-
-
-
-
-
-
-
-/*
-function setAttrConfig(attr, get, set, eg, force) {
-	var example;
-
-	example = wd$(set).item().outerHTML.split(">");
-	example[0] = example[0].replace(/\/$/, "");
-	example[1] = example.length === 2 ? " />" : " > ..."
-	if (object[attr] !== null) {
-		example[0] += " data-"+(wd(attr).dash)+"=\""+object[attr]+"\"";
-	}
-	wd$(eg).item().textContent = example[0]+example[1];
-
-	wd$(set).data(object);
-	return;
-}*/
 /*============================================================================*/
 function testLoading() {
 	wd().send("examples/target.php", function(x) {
