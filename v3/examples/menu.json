@@ -61,9 +61,11 @@
 		"title": "Repeat",
 		"attr": "data-wd-data=\"wdLoad{get{examples/ATTR/repeat.html}}${main}\""
 	},
-
-
-
+	{
+		"name": "ATTR Send",
+		"title": "Send",
+		"attr": "data-wd-data=\"wdLoad{get{examples/ATTR/send.html}}${main}\""
+	},
 	{
 		"name": "ATTR Sort",
 		"title": "Sort",
@@ -74,11 +76,6 @@
 		"title": "Sort Column",
 		"attr": "data-wd-data=\"wdLoad{get{examples/ATTR/sortcolumn.html}}${main}\""
 	},
-
-
-
-
-
 
 
 

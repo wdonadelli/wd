@@ -871,28 +871,29 @@ de width 70/85% para 100% e margin auto
 }
 
 /* -- cores -- */
-.wd .wd-bg-black,  .wd .wd-bg-black-child > *  {color: #f2f2f2 !important; background-color: #333333 !important;}
-.wd .wd-bg-black,  .wd .wd-bg-black-child > *  {background-image: linear-gradient(#595959, #333333);}
-.wd .wd-bg-white,  .wd .wd-bg-white-child > *  {color: #1a1a1a !important; background-color: #e6e6e6 !important;}
-.wd .wd-bg-white,  .wd .wd-bg-white-child > *  {background-image: linear-gradient(#ffffff, #e6e6e6);}
-.wd .wd-bg-grey,   .wd .wd-bg-grey-child > *   {color: #e6e6e6 !important; background-color: #8c8c8c !important;}
-.wd .wd-bg-grey,   .wd .wd-bg-grey-child > *   {background-image: linear-gradient(#b3b3b3, #8c8c8c);}
-.wd .wd-bg-red,    .wd .wd-bg-red-child > *    {color: #fee6e6 !important; background-color: #db5757 !important;}
-.wd .wd-bg-red,    .wd .wd-bg-red-child > *    {background-image: linear-gradient(#e48181, #db5757);}
-.wd .wd-bg-green,  .wd .wd-bg-green-child > *  {color: #e6ffff !important; background-color: #194d4d !important;}
-.wd .wd-bg-green,  .wd .wd-bg-green-child > *  {background-image: linear-gradient(#2c8787, #194d4d);}
-.wd .wd-bg-blue,   .wd .wd-bg-blue-child > *   {color: #cce6ff !important; background-color: #1f4d7a !important;}
-.wd .wd-bg-blue,   .wd .wd-bg-blue-child > *   {background-image: linear-gradient(#2f73b6, #1f4d7a);}
+.wd .wd-bg-black,  .wd .wd-bg-black-child  > * {color: #f2f2f2 !important; background-color: #333333 !important;}
+.wd .wd-bg-white,  .wd .wd-bg-white-child  > * {color: #1a1a1a !important; background-color: #e6e6e6 !important;}
+.wd .wd-bg-grey,   .wd .wd-bg-grey-child   > * {color: #e6e6e6 !important; background-color: #8c8c8c !important;}
+.wd .wd-bg-red,    .wd .wd-bg-red-child    > * {color: #fee6e6 !important; background-color: #db5757 !important;}
+.wd .wd-bg-green,  .wd .wd-bg-green-child  > * {color: #e6ffff !important; background-color: #194d4d !important;}
+.wd .wd-bg-blue,   .wd .wd-bg-blue-child   > * {color: #cce6ff !important; background-color: #1f4d7a !important;}
 .wd .wd-bg-yellow, .wd .wd-bg-yellow-child > * {color: #636303 !important; background-color: #fbfb6a !important;}
-.wd .wd-bg-yellow, .wd .wd-bg-yellow-child > * {background-image: linear-gradient(#fdfdb4, #fbfb6a);}
 .wd .wd-bg-orange, .wd .wd-bg-orange-child > * {color: #4d3200 !important; background-color: #e69500 !important;}
-.wd .wd-bg-orange, .wd .wd-bg-orange-child > * {background-image: linear-gradient(#ffc14d, #e69500);}
-.wd .wd-bg-brown,  .wd .wd-bg-brown-child > *  {color: #f9e2d2 !important; background-color: #734626 !important;}
-.wd .wd-bg-brown,  .wd .wd-bg-brown-child > *  {background-image: linear-gradient(#995e33, #734626);}
-.wd .wd-bg-pink,   .wd .wd-bg-pink-child > *   {color: #1a0013 !important; background-color: #ffb3ec !important;}
-.wd .wd-bg-pink,   .wd .wd-bg-pink-child > *   {background-image: linear-gradient(#ffe6f9, #ffb3ec);}
+.wd .wd-bg-brown,  .wd .wd-bg-brown-child  > * {color: #f9e2d2 !important; background-color: #734626 !important;}
+.wd .wd-bg-pink,   .wd .wd-bg-pink-child   > * {color: #1a0013 !important; background-color: #ffb3ec !important;}
 .wd .wd-bg-purple, .wd .wd-bg-purple-child > * {color: #f0ebfa !important; background-color: #6c46b9 !important;}
-.wd .wd-bg-purple, .wd .wd-bg-purple-child > * {background-image: linear-gradient(#a790d5, #6c46b9);}
+
+.wd header.wd-bg-black,  .wd .wd-bg-black-child  > header {background-image: linear-gradient(#595959, #333333);}
+.wd header.wd-bg-white,  .wd .wd-bg-white-child  > header {background-image: linear-gradient(#ffffff, #e6e6e6);}
+.wd header.wd-bg-grey,   .wd .wd-bg-grey-child   > header {background-image: linear-gradient(#b3b3b3, #8c8c8c);}
+.wd header.wd-bg-red,    .wd .wd-bg-red-child    > header {background-image: linear-gradient(#e48181, #db5757);}
+.wd header.wd-bg-green,  .wd .wd-bg-green-child  > header {background-image: linear-gradient(#2c8787, #194d4d);}
+.wd header.wd-bg-blue,   .wd .wd-bg-blue-child   > header {background-image: linear-gradient(#2f73b6, #1f4d7a);}
+.wd header.wd-bg-yellow, .wd .wd-bg-yellow-child > header {background-image: linear-gradient(#fdfdb4, #fbfb6a);}
+.wd header.wd-bg-orange, .wd .wd-bg-orange-child > header {background-image: linear-gradient(#ffc14d, #e69500);}
+.wd header.wd-bg-brown,  .wd .wd-bg-brown-child  > header {background-image: linear-gradient(#995e33, #734626);}
+.wd header.wd-bg-pink,   .wd .wd-bg-pink-child   > header {background-image: linear-gradient(#ffe6f9, #ffb3ec);}
+.wd header.wd-bg-purple, .wd .wd-bg-purple-child > header {background-image: linear-gradient(#a790d5, #6c46b9);}
 
 .wd .wd-fg-black,  .wd .wd-fg-black-child > *  {color: #333333 !important;}
 .wd .wd-fg-white,  .wd .wd-fg-white-child > *  {color: #e6e6e6 !important;}
