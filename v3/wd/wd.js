@@ -70,6 +70,23 @@ var wd = (function() {
 		return value;
 	};
 
+	/*calculadora de bytes*/
+	function calcByte(value) {
+		var size;
+		if (value >= 1099511627776) {
+				size = WD(value/1099511627776).round(2)+"TB";
+		}else if (value >= 1073741824) {
+				size = WD(value/1073741824).round(2)+"GB";
+		} else if (value >= 1048576) {
+				size = WD(value/1048576).round(2)+"MB";
+		} else if (value >= 1024) {
+			size = WD(value/1024).round(2)+"kB";
+		} else {
+			size = value+"B"
+		}
+		return size;
+	}
+
 	/*Retorna os elementos html identificados pelo seletor css no elemento root*/	
 	function $(selector, root) {
 		var x;
@@ -3166,18 +3183,101 @@ var wd = (function() {
 
 	/*define as mensagens da biblioteca wdConfig*/
 	function data_wdConfig() {
-		var data, value;
+		var data, value, local, attr;
+		attr = {
+			modalMsg: {
+				en: "Request in progress...",
+				pt: "Requisição em progresso...",
+				es: "Solicitud en curso...",
+				it: "Richiesta in corso...",
+				ru: "Запрос выполняется...",
+				du: "Anfrage in Bearbeitung...",
+				fr: "Demande en cours.",
+				zh: "请求正在进行中。",
+			},
+			fileTitle: {
+				en: "Broken rules",
+				pt: "Regras quebradas",
+				es: "Reglas rotas",
+				it: "Regole infrante",
+				ru: "Нарушенные правила",
+				du: "Gebrochene Regeln",
+				fr: "Règles brisées",
+				zh: "违反规则",
+			},
+			fileSize: {
+				en: "File size",
+				pt: "Tamanho do arquivo",
+				es: "Tamaño del archivo",
+				it: "Dimensione del file",
+				ru: "Размер файла",
+				du: "Dateigröße",
+				fr: "Taille du fichier",
+				zh: "文件大小",
+			},
+			fileTotal: {
+				en: "Total file size",
+				pt: "Tamanho total do arquivo",
+				es: "Tamaño total del archivo",
+				it: "Dimensione totale del file",
+				ru: "Общий размер файла",
+				du: "Gesamtgröße der Datei",
+				fr: "Taille totale du fichier",
+				zh: "文件总大小",
+			},
+			fileChar: {
+				en: "Symbols not allowed",
+				pt: "Símbolos não permitidos",
+				es: "Símbolos no permitidos",
+				it: "Simboli non ammessi",
+				ru: "Символы не разрешены",
+				du: "Symbole nicht erlaubt",
+				fr: "Symboles non autorisés",
+				zh: "不允许使用符号",
+			},
+			fileLen: {
+				en: "Number of files",
+				pt: "Número de arquivos",
+				es: "Número de archivos",
+				it: "Numero di file",
+				ru: "Количество файлов",
+				du: "Anzahl der Dateien",
+				fr: "Nombre de fichiers",
+				zh: "文件数",
+			},
+			fileType: {
+				en: "Allowed file type",
+				pt: "Tipo de arquivo permitido",
+				es: "Tipo de archivo permitido",
+				it: "Tipo di file consentito",
+				ru: "Допустимый тип файла",
+				du: "Zulässiger Dateityp",
+				fr: "Type de fichier autorisé",
+				zh: "允许的文件类型",
+			},
+		};
+
+		local = lang().substr(0, 2).toLowerCase();
+		wdConfig = {modalFg: "#FFFFFF", modalBg:   "#000000"};
+		for (var j in attr) {
+			wdConfig[j] = local in attr[j] ? attr[j][local] : attr[j]["en"];
+		}
+
+
+/*
 		wdConfig = {
 			modalMsg:  "Request in progress...",
 			modalFg:   "#FFFFFF",
-			modalBg:   "#005544",
+			modalBg:   "#000000",
 			fileTitle: "Files",
-			fileSize:  "Larger file size than allowed.",
-			fileTotal: "Total file size larger than allowed.",
-			fileChar:  "Characters not allowed in the file name.",
-			fileLen:   "Maximum number of files exceeded.",
-			fileType:  "File type not allowed."
+			fileSize:  "File size",
+			fileTotal: "Total file size",
+			fileChar:  "Prohibited characters",
+			fileLen:   "Number of files",
+			fileType:  "Allowed file type"
 		};
+*/
+
 		data  = new DataAttr(document.body);
 		value = data.core("wdConfig")[0];
 		for (var i in wdConfig) {
@@ -3187,6 +3287,7 @@ var wd = (function() {
 		}
 		return;
 	};
+
 
 	/*Carrega html externo data-wd-load=post|get{file}${}*/
 	function data_wdLoad(e) {
@@ -3514,7 +3615,7 @@ var wd = (function() {
 			info = WD(value["len"]);
 			if (info.type === "number" && "length" in files) {
 				if (error.fileLen > info.round()) {
-					msg.push("<dt><b>"+wdConfig.fileLen+"</b> ["+error.fileLen+"/"+info.round()+"]</dt>");
+					msg.push("<dt><b>"+wdConfig.fileLen+" &gt; "+info.round()+"</b>.</dt>");
 				}
 			}
 
@@ -3522,28 +3623,28 @@ var wd = (function() {
 			info = WD(value["total"]);
 			if (info.type === "number") {
 				if (error.fileTotal > info.round()) {
-					msg.push("<dt><b>"+wdConfig.fileTotal+"</b> ["+error.fileTotal+"/"+info.round()+"]</dt>");
+					msg.push("<dt><b>"+wdConfig.fileTotal+" &gt; "+calcByte(info)+"</b>.</dt>");
 				}
 			}
 
 			/*verificando tamanho dos arquivos*/
 			info = WD(value["size"]);
 			if (error.fileSize.length > 0) {
-				msg.push("<dt><b>"+wdConfig.fileSize+"</b> ["+info+"]</dt>");
+				msg.push("<dt><b>"+wdConfig.fileSize+" &gt; "+calcByte(info)+"</b>:</dt>");
 				msg.push("<dd>"+error.fileSize.join("</dd><dd>")+"</dd>");
 			}
 
 			/*verificando tipo dos arquivos*/
 			info = WD(value["type"]);
 			if (error.fileType.length > 0) {
-				msg.push("<dt><b>"+wdConfig.fileType+"</b> ["+info+"]</dt>");
+				msg.push("<dt><b>"+wdConfig.fileType+"</b> ["+info+"]:</dt>");
 				msg.push("<dd>"+error.fileType.join("</dd><dd>")+"</dd>");
 			}
 
 			/*verificando caracteres do arquivos*/
 			info = WD(value["char"]);
 			if (error.fileChar.length > 0) {
-				msg.push("<dt><b>"+wdConfig.fileChar+"</b> ["+info+"]</dt>");
+				msg.push("<dt><b>"+wdConfig.fileChar+"</b> ["+info+"]:</dt>");
 				msg.push("<dd>"+error.fileChar.join("</dd><dd>")+"</dd>");
 			}
 
@@ -3601,7 +3702,7 @@ var wd = (function() {
 	};
 
 		//FIXME na hora de redimensionar a página, tem que mudar as margens também
-
+		//FIXME fazer um atributo carrossel
 
 
 	/*Procedimentos para carregar objetos externos*/

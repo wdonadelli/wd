@@ -1,75 +1,37 @@
 <h2>Utilities</h2>
 
-<style>
-.utilities > div             {background-color: #ffdddd; color: #ff0000; border: 1px dotted black; padding: 0.5em;}
-.utilities > div > div       {background-color: #ddffdd; color: #00ff00;}
-.utilities > div > div > div {background-color: #ddddff; color: #0000ff;}
-</style>
-
 <form class="wd-block">
-	<label>
-		<span>Class</span>
-		<span data-wd-action="toggle-open{#menu_utilities}" >(<span class="wd-icon-list">list</span>)</span>
-		<span data-wd-action="toggle-open{#menu_model}" >(<span class="wd-icon-search">model</span>)</span>
-	</label>
-		
-	<input
-		type="text"
-		onkeyup="setCSS('#parent > div, #child > div > div', this.value);"
-		oninput="setCSS('#parent > div, #child > div > div', this.value);"
-	/>
-	<p class="wd-size-small">Use the text field above to define the class of the parent element (left) and the child elements (right).</p>
+
+	<label>Parent</label>
+	<input type="text" onkeyup="setCSS('#parent', this.value);" />
+	<div class="wd-form-msg">
+		<span class="wd-form-msg-info">Defines the class of the parent element.</span>
+	</div>
+
+	<label>Child</label>
+	<input type="text" onkeyup="setCSS('#child', this.value);" />
+	<div class="wd-form-msg">
+		<span class="wd-form-msg-info">Defines the class of the child (middle) element.</span>
+	</div>
+
 </form>
 
-<div class="wd-row utilities" id="utilities">
-	<div class="wd-col-06" id="parent">
-		<h4>Parent</h4>
-		<div style="position: relative;">
-			<div>first child</div>
-			<div>Middle child</div>
-			<div>LAST CHILD</div>
-		</div>
-	</div>
-	<div class="wd-col-06" id="child">
-		<h4>Childs</h4>
-		<div style="position: relative;">
-			<div>first child</div>
-			<div>Middle child</div>
-			<div>LAST CHILD</div>
-		</div>
+<div id="utilities" onclick="showCode('#utilities', false);" style="background-color: #dddddd">
+	<div style="position: relative;" id="parent">
+		<div>first child</div>
+		<div id="child">Middle child</div>
+		<div>LAST CHILD</div>
 	</div>
 </div>
 
+<details>
+	<summary>Class List</summary>
 
-<h3>Place</h3>
-
-<div class="wd-border wd-bg-white wd-bg-black-child" style="position: relative; height: 100px;">
-	<span class="wd-place-n">wd-place-n</span>
-	<span class="wd-place-ne">wd-place-ne</span>
-	<span class="wd-place-e">wd-place-e</span>
-	<span class="wd-place-se">wd-place-se</span>
-	<span class="wd-place-s">wd-place-s</span>
-	<span class="wd-place-sw">wd-place-sw</span>
-	<span class="wd-place-w">wd-place-w</span>
-	<span class="wd-place-nw">wd-place-nw</span>
-	<span class="wd-place-ctr">wd-place-ctr</span>
-</div>
-
-
-<!----------------------------------------------------------------------------->
-<div class="wd-window wd-win-small wd-cloud utilities wd-bg-black" data-wd-action="close{}" id="menu_model">
-	<h4>Model</h4>
-	<div>Background
-		<div>Parent
-			<div>Child</div>
-		</div>
+	<div class="wd-block">
+		<input type="search" data-wd-filter="show{}${#class_list}" placeholder="Search"/>
 	</div>
-</div>
 
-
-<div class="wd-window wd-flyer wd-win-bottom wd-bg-black" id="menu_utilities" data-wd-action="close{}">
-	<h3>List</h3>
-	<ul data-wd-repeat="get{examples/CSS/utilities.json}">
+	<ul data-wd-repeat="get{examples/CSS/utilities.json}" id="class_list">
 		<li>{{value}}</li>
 	</ul>
-</div>
+</details>

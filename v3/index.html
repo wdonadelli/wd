@@ -15,6 +15,7 @@
 		<script src="wd/wd.js"></script>
 		<link  href="wd/wd.css" rel="stylesheet" />
 		<script src="examples/scripts.js"></script>
+		<style>*[onclick^="showCode"] {cursor: nwse-resize;}</style>
 	</head>
 
 <body>
@@ -62,7 +63,7 @@
 	<main class="wd-xpadding"></main>
 
 	<!-- Menu lateral -->
-	<section id="menu" class="wd-modal" data-wd-action="close{#menu}">
+	<section id="menu" class="wd-modal" >
 
 		<article class="wd-window wd-flyer" data-wd-device="desktop{wd-win-left}">
 
@@ -70,8 +71,13 @@
 				<h3 class="wd-icon-menu"> Menu</h3>
 			</header>
 
-			<nav class="wd-block" data-wd-repeat="get{examples/menu.json}">
-				<a href="#" title="{{title}}" class="wd-icon-right" {{attr}}> {{name}}</a>
+			<div class="wd-block">
+				<input type="search" placeholder="Search..." data-wd-filter="show{}${#menu_items}" />
+			</div>
+
+
+			<nav class="wd-block" data-wd-repeat="get{examples/menu.json}" id="menu_items">
+				<a href="#" title="{{title}}" class="wd-icon-right" {{attr}} data-wd-action="close{#menu}"> {{name}}</a>
 			</nav>
 
 		</article>
@@ -79,15 +85,21 @@
 	</section>
 
 	<!-- Janela de código -->
-	<section id="winCode" class="wd-window wd-flyer" data-wd-action="close{}"	>
+	<section id="winCode" class="wd-window wd-flyer"	>
 
-		<header class="wd-bg-red">
+		<header class="wd-bg-blue">
 			<h2 class="wd-icon-search"> Code</h2>
 		</header>
 
-		<p class="wd-i wd-fg-red">Click anywhere to close the window.</p>
+		<header class="wd-align-right">
+			<button type="button" class="wd-icon-door" data-wd-action="close{#winCode}"> Exit</button>
+		</header>
 
 		<pre id="sourceCode" class="wd-code wd-xpadding wd-border" style="overflow: auto;"></pre>
+
+		<footer>
+			<button type="button" class="wd-icon-door" data-wd-action="close{#winCode}"> Exit</button>
+		</footer>
 
 	</section>
 	

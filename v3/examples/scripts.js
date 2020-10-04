@@ -1,29 +1,17 @@
+/*-- Menu Style -- */
 function toggleStyle() {
 	wd$("html").class({toggle: "wd"});
 	return;
 }
 
-function showCode(input, outside) {
-	outside = outside === true ? "outerHTML" : "innerHTML";
-	input   = wd(input).type === "text" ? input : "main";
-	wd().send(input, function(x) {
-		var text;
-		if (x.closed) {
-			text = x.status === "DONE" ? x.text : wd$(input).item()[outside];
-			text = text.replace(/\&amp\;/g, "&");
-			wd$("#sourceCode").item().textContent = text;
-			wd$("#winCode").action("open");			
-		}
-		return;	
-	});
-	return;
-}
-
+/*-- Define código CSS --*/
 function setCSS(css, value) {
 	wd$(css).class(null).class({add: value});
 	return;
 }
 
+/*============================================================================*/
+/*-- Elabora a lista de métodos --*/
 function oTools(input) {
 	var arr, tools;
 	arr = [
@@ -40,6 +28,7 @@ function oTools(input) {
 	return arr;
 }
 
+/*-- Exibe a lista com os métodos --*/
 function generic(val) {
 	var input, aux;
 	input = wd$("#input").item().value.replace(/\n/g, "");
@@ -70,11 +59,16 @@ function generic(val) {
 }
 
 /*============================================================================*/
+
+/*-- Obtém o código do elemento --*/
 function getCode(css, all) {
 	var inner, outer, elem;
 	elem  = wd$(css);
 	outer = elem.item().outerHTML;
 	inner = elem.item().innerHTML;
+	if (all === false) {
+		return inner;
+	}
 	if (all === true || inner === "") {
 		return outer;
 	}
@@ -84,13 +78,48 @@ function getCode(css, all) {
 	return outer;
 }
 
-
+/*-- Define as características da caixa de exemplo --*/
 function boxExample(from, to, all) {
 	wd$(to).
 		class({add: "wd-code wd-radius wd-padding wd-margin-height"}).
 		item().textContent = getCode(from, all).replace(/\&amp\;/g, "&");
 	return;
 }
+
+/*-- Exibe a janela com o código --*/
+function showCode(css, all) {
+	all = css === undefined ?  false : all;
+	css = css === undefined ? "main" : css;
+	var text = getCode(css, all);
+	wd$("#sourceCode").item().textContent = text;
+	wd$("#winCode").action("open");
+	return;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 function langConfig(lang) {
 	var obj = {
