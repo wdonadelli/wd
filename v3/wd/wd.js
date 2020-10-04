@@ -3263,21 +3263,6 @@ var wd = (function() {
 			wdConfig[j] = local in attr[j] ? attr[j][local] : attr[j]["en"];
 		}
 
-
-/*
-		wdConfig = {
-			modalMsg:  "Request in progress...",
-			modalFg:   "#FFFFFF",
-			modalBg:   "#000000",
-			fileTitle: "Files",
-			fileSize:  "File size",
-			fileTotal: "Total file size",
-			fileChar:  "Prohibited characters",
-			fileLen:   "Number of files",
-			fileType:  "Allowed file type"
-		};
-*/
-
 		data  = new DataAttr(document.body);
 		value = data.core("wdConfig")[0];
 		for (var i in wdConfig) {
