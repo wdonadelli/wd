@@ -63,11 +63,11 @@
 	<main class="wd-xpadding"></main>
 
 	<!-- Menu lateral -->
-	<section id="menu" class="wd-modal" >
+	<section id="menu" class="wd-modal">
 
 		<article class="wd-window wd-flyer" data-wd-device="desktop{wd-win-left}">
 
-			<header class="wd-bg-blue">
+			<header class="wd-bg-blue" data-wd-action="close{#menu}" data-wd-device="desktop{wd-buddy-top}">
 				<h3 class="wd-icon-menu"> Menu</h3>
 			</header>
 
@@ -79,6 +79,10 @@
 			<nav class="wd-block" data-wd-repeat="get{examples/menu.json}" id="menu_items">
 				<a href="#" title="{{title}}" class="wd-icon-right" {{attr}} data-wd-action="close{#menu}"> {{name}}</a>
 			</nav>
+
+			<footer class="wd-xmagin-height wd-bg-white wd-block wd-cloud" data-wd-device="desktop{wd-buddy-bottom}">
+				<button type="button" class="wd-icon-left" data-wd-action="close{#menu}"> Back</button>
+			</footer>
 
 		</article>
 

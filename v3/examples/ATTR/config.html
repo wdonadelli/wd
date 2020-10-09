@@ -1,9 +1,7 @@
 <h2>Config</h2>
 
 <nav>
-	<span onclick="langConfig('it');">Italiano</span>
-	<span onclick="langConfig('de');">Deutsche</span>
-	<span onclick="langConfig('pt');">Português</span>
+	<span onclick="langConfig(null);">Custom</span>
 	<span onclick="langConfig();">Reset</span>
 </nav>
 
@@ -13,7 +11,7 @@
 <fieldset>
 	<legend>Test Area</legend>
 
-	<div class="wd-row wd-margin-height">
+	<div class="wd-row wd-margin-height" data-wd-device="mobile{wd-block}">
 		<div class="wd-col-06 wd-block">
 			<button type="button" class="wd-icon-reload" onclick="testLoading();"> Loading</button>
 		</div>

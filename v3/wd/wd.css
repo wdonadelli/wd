@@ -64,8 +64,6 @@ script, style {display: none !important;}
 /*-- ESTILOS DE BASE --*/
 
 .wd {
-	background-color: #ffffff;
-	color: #000000;
 	font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
 	font-size: 16px;
 	line-height: 1.5;
@@ -907,7 +905,33 @@ de width 70/85% para 100% e margin auto
 .wd .wd-fg-pink,   .wd .wd-fg-pink-child > *   {color: #ff99e6 !important;}
 .wd .wd-fg-purple, .wd .wd-fg-purple-child > * {color: #6c46b9 !important;}
 
-/* - Tamanho de Texto -- */
+/* -- Wallpaper -- */
+.wd .wd-bg-image {
+	background-repeat: no-repeat;
+	background-position: center center;
+	background-attachment: scroll;
+	background-size: cover;
+}
+.wd .wd-bg-photo {
+	background-repeat: no-repeat;
+	background-position: center center;
+	background-attachment: scroll;
+	background-size: contain;
+}
+.wd .wd-bg-paper {
+	background-repeat: no-repeat;
+	background-position: center center;
+	background-attachment: fixed;
+	background-size: cover;
+}
+.wd .wd-bg-figures {
+	background-repeat: round;
+	background-position: center center;
+	background-attachment: scroll;
+	background-size: auto;
+}
+
+/* -- Tamanho de Texto -- */
 .wd .wd-size-xxsmall, .wd .wd-size-xxsmall-child > * {font-size: xx-small !important;}
 .wd .wd-size-xsmall,  .wd .wd-size-xsmall-child > *  {font-size: x-small  !important;}
 .wd .wd-size-small,   .wd .wd-size-small-child > *   {font-size: small    !important;}
@@ -932,6 +956,7 @@ de width 70/85% para 100% e margin auto
 .wd .wd-case-normal, .wd .wd-case-normal-child > * {text-transform: none !important;}
 .wd .wd-case-lower,  .wd .wd-case-lower-child > *  {text-transform: lowercase !important;}
 .wd .wd-case-title,  .wd .wd-case-title-child > *  {text-transform: capitalize !important;}
+.wd .wd-case-caps,   .wd .wd-case-caps-child > *   {font-variant:   small-caps !important;}
 
 /* -- Padding -- */
 .wd .wd-padding,        .wd .wd-padding-child > *,

@@ -96,99 +96,29 @@ function showCode(css, all) {
 	return;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+/*ferramenta de teste do config.html*/
 function langConfig(lang) {
-	var obj = {
-		it: {
-			modalMsg:  "Richiesta in corso ...",
-			modalFg:   "#FFFFFF",
-			modalBg:   "#005544",
-			fileTitle: "File",
-			fileSize:  "Dimensioni del file maggiori di quelle consentite.",
-			fileTotal: "Dimensione totale del file maggiore di quella consentita.",
-			fileChar:  "Caratteri non consentiti nel nome del file.",
-			fileLen:   "Numero massimo di file superato.",
-			fileType:  "Tipo di file non consentito."
-		},
-		de: {
-			modalMsg:  "Anfrage in Bearbeitung...",
-			modalFg:   "#FFFFFF",
-			modalBg:   "#005544",
-			fileTitle: "Dateien",
-			fileSize:  "Größere Dateigröße als zulässig.",
-			fileTotal: "Gesamtdateigröße größer als zulässig.",
-			fileChar:  "Zeichen im Dateinamen nicht zulässig.",
-			fileLen:   "Maximale Anzahl von Dateien überschritten.",
-			fileType:  "Dateityp nicht erlaubt."
-		},
-		pt: {
-			modalMsg:  "Solicitação em andamento ...",
-			modalFg:   "#FFFFFF",
-			modalBg:   "#005544",
-			fileTitle: "Arquivos",
-			fileSize:  "Tamanho de arquivo maior do que o permitido.",
-			fileTotal: "O tamanho total do arquivo é maior do que o permitido.",
-			fileChar:  "Caracteres não permitidos no nome do arquivo.",
-			fileLen:   "Número máximo de arquivos excedido.",
-			fileType:  "Tipo de arquivo não permitido."
-		}
-	};
-	if (lang in obj) {
-		var content = "";
-		for (var i in obj[lang]) {
-			content += i+"{"+obj[lang][i]+"}";
-		}
-		wd$("body").data({wdConfig: content});
-	} else {
-		wd$("body").data({wdConfig: null});
-	}
+	var obj = [
+		"modalMsg{Downloading data can take some time!}",
+		"modalFg{white}",
+		"modalBg{#4169E1}",
+		"fileTitle{Something failed ...}",
+		"fileSize{Very large file}",
+		"fileTotal{Total size too large}",
+		"fileChar{Strange characters found}",
+		"fileLen{Too many files}",
+		"fileType{Strange files}"
+	];
+	wd$("body").data({wdConfig: (lang === undefined ? null : obj.join(""))});
 	boxExample("body", "#egconfig");
 };
-
-
-
-
-
-
-
-
-
 
 /*============================================================================*/
 function testLoading() {
 	wd().send("examples/target.php", function(x) {
-		if (x.closed) {alert("End?");}
+		if (x.closed) {alert("Click to close:");}
 	});
 }
-
-
-
-
-
 
 
 

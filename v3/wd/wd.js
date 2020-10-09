@@ -359,18 +359,19 @@ var wd = (function() {
 	modalWindow = document.createElement("DIV");
 
 	/* atributos do janela modal */
-	modalWindow.style.display         = "block";
-	modalWindow.style.width           = "100%";
-	modalWindow.style.height          = "100%";
-	modalWindow.style.padding         = "0.5em";
-	modalWindow.style.position        = "fixed";
-	modalWindow.style.top             = "0";
-	modalWindow.style.right           = "0";
-	modalWindow.style.bottom          = "0";
-	modalWindow.style.left            = "0";
-	modalWindow.style.opacity         = "0.9";
-	modalWindow.style.zIndex          = "999999";
-	modalWindow.style.cursor          = "progress";
+	modalWindow.style.display    = "block";
+	modalWindow.style.width      = "100%";
+	modalWindow.style.height     = "100%";
+	modalWindow.style.padding    = "1em";
+	modalWindow.style.position   = "fixed";
+	modalWindow.style.top        = "0";
+	modalWindow.style.right      = "0";
+	modalWindow.style.bottom     = "0";
+	modalWindow.style.left       = "0";
+	modalWindow.style.zIndex     = "999999";
+	modalWindow.style.cursor     = "progress";
+	modalWindow.style.fontWeight = "bold";
+	modalWindow.style.textAlign = "right";
 
 	/* contador da janela modal */
 	modalWindowCount = 0;
@@ -380,6 +381,7 @@ var wd = (function() {
 		data_wdConfig();
 		modalWindow.textContent           = wdConfig.modalMsg;
 		modalWindow.style.color           = wdConfig.modalFg;
+		modalWindow.style.backgroundColor = "#000000";
 		modalWindow.style.backgroundColor = wdConfig.modalBg;
 		
 		if (modalWindowCount === 0) {/* abrir só se não estiver aberto */
@@ -535,7 +537,6 @@ var wd = (function() {
 					data.progress = 1;
 					data.text     = request.responseText;
 					data.xml      = request.responseXML;
-
 					try {
 						data.json = JSON.parse(data.text) || eval("("+data.text+")");
 					} catch(e) {
@@ -3258,7 +3259,7 @@ var wd = (function() {
 		};
 
 		local = lang().substr(0, 2).toLowerCase();
-		wdConfig = {modalFg: "#FFFFFF", modalBg:   "#000000"};
+		wdConfig = {modalFg: "#FFFFFF", modalBg: "rgba(0, 0, 0, 0.8)"};
 		for (var j in attr) {
 			wdConfig[j] = local in attr[j] ? attr[j][local] : attr[j]["en"];
 		}
@@ -3647,9 +3648,9 @@ var wd = (function() {
 
 /* === JS ENGINE =========================================================== */
 
-	/*Adequar margins quando há elementos fixados no topo ou na base e mudar a posição quando mudar o hash*/
+	/*Adequar margens quando há elementos fixados no topo ou na base e mudar a posição quando mudar o hash*/
 	function hashProcedures() {
-		var conf, css, stl, obj, attr, hash, posY;
+		var conf, css, stl, obj, attr, hash;
 
 		/*definindo variáveis para captura de dados*/
 		conf = {body: {}, head: {}, foot: {}};
