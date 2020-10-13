@@ -537,11 +537,7 @@ var wd = (function() {
 					data.progress = 1;
 					data.text     = request.responseText;
 					data.xml      = request.responseXML;
-					try {
-						data.json = JSON.parse(data.text) || eval("("+data.text+")");
-					} catch(e) {
-						data.json = null;
-					}
+					data.json     = WD(""+data.text+"").fJSON;
 				} else {
 					data.status = "ERROR";
 				}
@@ -848,6 +844,55 @@ var wd = (function() {
 				x = null;
 			}
 			return x;
+		}
+	});
+
+	/*transforma notação JSON em objeto*/
+	Object.defineProperty(WDtext.prototype, "fJSON", {
+		enumerable: true,
+		get: function() {
+			var json;
+			try {
+				json = JSON.parse(this.toString()) || eval("("+this.toString()+")");
+			} catch(e) {
+				json = null;
+			}
+			return json;
+		}
+	});
+
+	/*transforma notação JSON em objeto*/
+	Object.defineProperty(WDtext.prototype, "fTABLE", {
+		enumerable: true,
+		get: function() {
+			var head, json, rows, cols;
+			try {
+				json = [];
+				rows = this.toString().split("\n");
+				head = rows[0].split("\t");
+				/*Definir atributos (nome das colunas)*/
+				for (var c = 0; c < head.length; c++) {
+					head[c] = WD(head[c]).type === "text" ? WD(head[c]).dash : "unnamed-column-"+c;
+				}
+				/*Definindo os valores do atributos (valores das colunas)*/
+				for (var r = 1; r < rows.length; r++) {
+					json.push({});
+					cols = rows[r].split("\t");
+					for (var h = 0; h < head.length; h++) {
+						var value = WD(cols[h]);
+						if (value.type === "number") {
+							json[r-1][head[h]] = value.valueOf();
+						} else if (value.type === "null" || value.type === "undefined") {
+							json[r-1][head[h]] = "";
+						} else {
+							json[r-1][head[h]] = value.toString();
+						}
+					}
+				}
+			} catch(e) {
+				json = null;
+			}
+			return json;
 		}
 	});
 
@@ -3648,9 +3693,9 @@ var wd = (function() {
 
 /* === JS ENGINE =========================================================== */
 
-	/*Adequar margens quando há elementos fixados no topo ou na base e mudar a posição quando mudar o hash*/
-	function hashProcedures() {
-		var conf, css, stl, obj, attr, hash;
+	/*Obtém as dimensões de body e do filho com display = fixed, se houver para manipular o posicionamento da página*/
+	function fixedHeader() {
+		var conf, css, stl, obj, attr;
 
 		/*definindo variáveis para captura de dados*/
 		conf = {body: {}, head: {}, foot: {}};
@@ -3672,22 +3717,34 @@ var wd = (function() {
 		}
 
 		/* -- colocar margins em body se houver elementos fixados -- */
-		if (conf.head.position === "fixed" && conf.body["margin-top"] !== conf.head.hTop) {
-			document.body.style.marginTop = conf.head.hTop+"px";
-		}
-		if (conf.foot.position === "fixed" && conf.body["margin-bottom"] !== conf.foot.hBottom) {
-			document.body.style.marginBottom = conf.foot.hBottom+"px";
+		conf.margin = function() {
+			if (this.head.position === "fixed" && this.body["margin-top"] !== this.head.hTop) {
+				document.body.style.marginTop = this.head.hTop+"px";log("margem executada");
+			}
+			if (this.foot.position === "fixed" && this.body["margin-bottom"] !== this.foot.hBottom) {
+				document.body.style.marginBottom = this.foot.hBottom+"px";
+			}
+			return;
 		}
 
 		/* -- movimentando a tela do hash -- */
-		hash = WD($(window.location.hash));
-		if (conf.head.position === "fixed" && hash.type === "dom" && hash.items > 0) {
-			window.scrollTo(0, hash.item().offsetTop - conf.head.hTop);
+		conf.hash = function() {
+			this.margin();
+			var hash = WD($(window.location.hash));
+			if (this.head.position === "fixed" && hash.type === "dom" && hash.items > 0) {
+				window.scrollTo(0, hash.item().offsetTop - this.head.hTop);
+			}
+			return;
 		}
+		return conf;
+	};
+
+	/*Adequar margens quando há elementos fixados no topo ou na base e mudar a posição quando mudar o hash*/
+	function hashProcedures() {
+		fixedHeader().hash();
 		return;
 	};
 
-		//FIXME na hora de redimensionar a página, tem que mudar as margens também
 		//FIXME fazer um atributo carrossel
 
 
@@ -3757,6 +3814,7 @@ var wd = (function() {
 				stylingProcedures();
 			}
 		}
+		fixedHeader().margin();
 		return;
 	};
 
