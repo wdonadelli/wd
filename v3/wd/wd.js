@@ -3589,6 +3589,30 @@ var wd = (function() {
 		return;
 	};
 
+	/*Define um carrossel de elementos data-wd-device=tempo*/
+	function data_wdSlide(e) {
+		var data, time;
+		data = new DataAttr(e);
+		if (data.has("wdSlide") && !data.has("wdSlideRun")) {
+			time = WD(data.get("wdSlide"));
+			if (time.type === "number" && time.number === "integer") {
+				time = time.valueOf() <= 0 ? 1000 : time.valueOf();
+			} else {
+				time = 1000;
+			}
+			WD(e).action("next");
+			data.set("wdSlideRun", "");
+			window.setTimeout(function() {
+				data.del("wdSlideRun");
+				data_wdSlide(e);
+				return;
+			}, time);
+		} else {
+			data.del("wdSlideRun");
+		}
+		return;
+	};
+
 	/*analisa as informações do arquivo data-wd-file=size{value}type{}char{}len{}total{}*/
 	function data_wdFile(e) {
 		var tag, type, files, value, data, info, error, name, msg;
@@ -3719,7 +3743,7 @@ var wd = (function() {
 		/* -- colocar margins em body se houver elementos fixados -- */
 		conf.margin = function() {
 			if (this.head.position === "fixed" && this.body["margin-top"] !== this.head.hTop) {
-				document.body.style.marginTop = this.head.hTop+"px";log("margem executada");
+				document.body.style.marginTop = this.head.hTop+"px";
 			}
 			if (this.foot.position === "fixed" && this.body["margin-bottom"] !== this.foot.hBottom) {
 				document.body.style.marginBottom = this.foot.hBottom+"px";
@@ -3745,9 +3769,6 @@ var wd = (function() {
 		return;
 	};
 
-		//FIXME fazer um atributo carrossel
-
-
 	/*Procedimentos para carregar objetos externos*/
 	function loadingProcedures() {
 		var attr = WD($("[data-wd-load], [data-wd-repeat]"));
@@ -3771,6 +3792,7 @@ var wd = (function() {
 		WD($("[data-wd-mask]")).run(data_wdMask);
 		WD($("[data-wd-page]")).run(data_wdPage);
 		WD($("[data-wd-click]")).run(data_wdClick);
+		WD($("[data-wd-slide]")).run(data_wdSlide);
 		return;
 	};
 
@@ -3842,6 +3864,7 @@ var wd = (function() {
 			case "wdClick":   data_wdClick(e);     break;
 			case "wdDevice":  data_wdDevice(e);    break;
 			case "wdFile":    data_wdFile(e);      break;
+			case "wdSlide":   data_wdSlide(e);     break;
 		};
 		return;
 	};
