@@ -1,0 +1,126 @@
+﻿<!DOCTYPE html>
+<html class="wd">
+
+	<head>
+		<title>WD Web Libraries Examples</title>
+		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1"/>
+		<meta name="keywords" content="wd, stylesheet, attributes, tools, HTML, CSS, javaScript, library, queryselector, handbook, github, donadelli, wdonadelli">
+		<meta name="author" content="Willian Donadelli"/>
+		<meta name="description" content="WD Web Libraries Examples"/>
+		<meta name="rating" content="general" />
+		<!--<meta http-equiv="pragma" content="no-cache" />-->
+		<meta name="revisit-after" content="2 days" />
+		<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+		<script src="wd/wd.js"></script>
+		<link  href="wd/wd.css" rel="stylesheet" />
+		<script src="examples/scripts.js"></script>
+		<style>*[onclick^="showCode"] {cursor: nwse-resize;}</style>
+	</head>
+
+<body>
+
+	<header class="wd-bg-white" data-wd-device="desktop{wd-buddy-top}">
+
+		<h1>WD Libraries Examples</h1>
+
+		<nav class="wd-bg-black">
+
+			<span
+				id="menu_button"
+				class="wd-icon-menu"
+				title="Menu"
+				data-wd-action="toggle-open{#menu}"
+			> Menu</span>
+
+			<span
+				id="toggle_style"
+				class="wd-icon-key"
+				title="Style"
+				onclick="toggleStyle();"
+			> Style</span>
+
+			<span
+				id="show_code"
+				class="wd-icon-search"
+				title="Code"
+				onclick="showCode();"
+			> Code</span>
+
+
+			<a
+				id="wiki_link"
+				class="wd-icon-help"
+				title="Handbook"
+				href="https://github.com/wdonadelli/wd/wiki"
+				target="_blank"
+			> Wiki</a>
+
+		</nav>
+	</header>
+
+	<div id="slide" data-wd-slide="1000">
+		<div>Slide 1</div>
+		<div>Slide 2</div>
+		<div>Slide 3</div>
+	</div>
+
+	<div id="slide2" data-wd-slide="3000">
+		<div>Slide A</div>
+		<div>Slide B</div>
+		<div>Slide C</div>
+	</div>
+
+
+	<!-- Conteúdo -->
+	<main class="wd-xpadding"></main>
+	
+	<!-- Menu lateral -->
+	<aside id="menu" class="wd-modal">
+
+		<article class="wd-window wd-flyer" data-wd-device="desktop{wd-win-left}">
+
+			<header class="wd-bg-blue" data-wd-action="close{#menu}" data-wd-device="desktop{wd-buddy-top}">
+				<h3 class="wd-icon-menu"> Menu</h3>
+			</header>
+
+			<div class="wd-block">
+				<input type="search" placeholder="Search..." data-wd-filter="show{}${#menu_items}" />
+			</div>
+
+
+			<nav class="wd-block" data-wd-repeat="get{examples/menu.json}" id="menu_items">
+				<a href="#" title="{{title}}" class="wd-icon-right" {{attr}} data-wd-action="close{#menu}"> {{name}}</a>
+			</nav>
+
+			<footer class="wd-xmagin-height wd-bg-white wd-block wd-cloud" data-wd-device="desktop{wd-buddy-bottom}">
+				<button type="button" class="wd-icon-left" data-wd-action="close{#menu}"> Back</button>
+			</footer>
+
+		</article>
+
+	</aside>
+
+	<!-- Janela de código -->
+	<section id="winCode" class="wd-window wd-flyer"	>
+
+		<header class="wd-bg-blue">
+			<h2 class="wd-icon-search"> Code</h2>
+		</header>
+
+		<header class="wd-align-right">
+			<button type="button" class="wd-icon-door" data-wd-action="close{#winCode}"> Exit</button>
+		</header>
+
+		<pre id="sourceCode" class="wd-code wd-xpadding wd-border" style="overflow: auto;"></pre>
+
+		<footer>
+			<button type="button" class="wd-icon-door" data-wd-action="close{#winCode}"> Exit</button>
+		</footer>
+
+	</section>
+	
+	</div>
+
+</body>
+</html>

@@ -218,10 +218,13 @@ script, style {display: none !important;}
 	font-family: Verdana,sans-serif;
 	font-size: 1em;
 	outline: inherit;
+	height: 2.625em;
 	padding: 0.5em;
 	line-height: 1.5;
 	vertical-align: middle;
 }
+
+
 
 .wd input, .wd select, .wd textarea, .wd button {
 	color: #404040;
@@ -293,7 +296,21 @@ script, style {display: none !important;}
 
 .wd input[type=color] {
 	padding: 0.3em;
-	height: 2.6em;
+}
+
+/*TODO testando select personalizado*/
+.wd select::-ms-expand {
+     display: none;
+}
+
+.wd select {
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	appearance: none;
+	background-image: url("data:image/svg+xml;utf8,<svg fill='black' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
+  background-repeat: no-repeat;
+  background-position-x: 100%;
+  background-position-y: 50%;
 }
 
 /*============================================================================*/

@@ -2,10 +2,10 @@
 <html class="wd">
 
 	<head>
-		<title>WD Web Libraries Examples</title>
+		<title>WD Web Libraries</title>
 		<meta charset="UTF-8"/>
 		<meta name="viewport" content="width=device-width, initial-scale=1"/>
-		<meta name="keywords" content="wd, stylesheet, attributes, tools, HTML, CSS, javaScript, library, queryselector, handbook, github, donadelli, wdonadelli">
+		<meta name="keywords" content="wd, stylesheet, attributes,s, HTML, CSS, javaScript, library, queryselector, handbook, github, donadelli, wdonadelli">
 		<meta name="author" content="Willian Donadelli"/>
 		<meta name="description" content="WD Web Libraries Examples"/>
 		<meta name="rating" content="general" />
@@ -20,107 +20,99 @@
 
 <body>
 
-	<header class="wd-bg-white" data-wd-device="desktop{wd-buddy-top}">
-
-		<h1>WD Libraries Examples</h1>
-
-		<nav class="wd-bg-black">
-
-			<span
-				id="menu_button"
-				class="wd-icon-menu"
-				title="Menu"
-				data-wd-action="toggle-open{#menu}"
-			> Menu</span>
-
-			<span
-				id="toggle_style"
-				class="wd-icon-key"
-				title="Style"
-				onclick="toggleStyle();"
-			> Style</span>
-
-			<span
-				id="show_code"
-				class="wd-icon-search"
-				title="Code"
-				onclick="showCode();"
-			> Code</span>
-
-
-			<a
-				id="wiki_link"
-				class="wd-icon-help"
-				title="Handbook"
-				href="https://github.com/wdonadelli/wd/wiki"
-				target="_blank"
-			> Wiki</a>
-
-		</nav>
+	<header class="wd-bg-white wd-xborder-bottom">
+		<h2 class="wd-case-caps">WD Web Libraries</h2>
 	</header>
 
-	<div id="slide" data-wd-slide="1000">
-		<div>Slide 1</div>
-		<div>Slide 2</div>
-		<div>Slide 3</div>
-	</div>
+	<main class="wd-flyer">
 
-	<div id="slide2" data-wd-slide="3000">
-		<div>Slide A</div>
-		<div>Slide B</div>
-		<div>Slide C</div>
-	</div>
+	<nav>
+		<span data-wd-action="tab{#model}" data-wd-click="">MODEL</span>
+		<span data-wd-action="tab{#target}">TARGET</span>
+		<span data-wd-action="tab{#attr}">ATTR</span>
+		<span data-wd-action="tab{#css}">CSS</span>
+		<span data-wd-action="tab{#js}">JS</span>
 
+	</nav>
 
-	<!-- Conteúdo -->
-	<main class="wd-xpadding"></main>
-	
-	<!-- Menu lateral -->
-	<aside id="menu" class="wd-modal">
-
-		<article class="wd-window wd-flyer" data-wd-device="desktop{wd-win-left}">
-
-			<header class="wd-bg-blue" data-wd-action="close{#menu}" data-wd-device="desktop{wd-buddy-top}">
-				<h3 class="wd-icon-menu"> Menu</h3>
-			</header>
-
-			<div class="wd-block">
-				<input type="search" placeholder="Search..." data-wd-filter="show{}${#menu_items}" />
+	<section>	
+		<form data-wd-device="desktop{wd-row}" id="attr">
+			<div class="wd-col-04 wd-block">
+				<select id="attr-attr">
+					<option value="wdAction">data-wd-action=</option>
+					<option value="wdClick">data-wd-click=</option>
+					<option value="wdConfig">data-wd-config=</option>
+					<option value="wdData">data-wd-data=</option>
+					<option value="wdDevice">data-wd-device=</option>
+					<option value="wdFile">data-wd-file=</option>
+					<option value="wdFilter">data-wd-filter=</option>
+					<option value="wdLoad">data-wd-load=</option>
+					<option value="wdMask">data-wd-mask=</option>
+					<option value="wdPage">data-wd-page=</option>
+					<option value="wdRepeat">data-wd-repeat=</option>
+					<option value="wdSend">data-wd-send=</option>
+					<option value="wdSlide">data-wd-slide=</option>
+					<option value="wdSort">data-wd-sort=</option>
+					<option value="wdSortColumn">data-wd-sort-column=</option>
+				</select>
 			</div>
+			<div class="wd-col-06 wd-block">
+				<input type="text" id="attr-value" placeholder="data-wd-attr" />
+			</div>
+			<div class="wd-col-01 wd-block">
+				<button type="button" class="wd-icon-plus"></button>
+			</div>
+			<div class="wd-col-01 wd-block">
+				<button type="button" class="wd-icon-minus"></button>
+			</div>
+		</form>
 
+		<form data-wd-device="desktop{wd-row}" id="css">
+			<div class="wd-col-10 wd-block">
+				<input type="text" id="css-value" placeholder="class" />
+			</div>
+			<div class="wd-col-02 wd-block">
+				<button type="button" class="wd-icon-play"></button>
+			</div>
+		</form>
 
-			<nav class="wd-block" data-wd-repeat="get{examples/menu.json}" id="menu_items">
-				<a href="#" title="{{title}}" class="wd-icon-right" {{attr}} data-wd-action="close{#menu}"> {{name}}</a>
-			</nav>
+		<form data-wd-device="desktop{wd-row}" id="js">
+			<div class="wd-col-10 wd-block">
+				<input type="text" id="js-value" placeholder="wd(...)..." />
+			</div>
+			<div class="wd-col-02 wd-block">
+				<button type="button" class="wd-icon-play"></button>
+			</div>
+		</form>
 
-			<footer class="wd-xmagin-height wd-bg-white wd-block wd-cloud" data-wd-device="desktop{wd-buddy-bottom}">
-				<button type="button" class="wd-icon-left" data-wd-action="close{#menu}"> Back</button>
-			</footer>
-
-		</article>
-
-	</aside>
-
-	<!-- Janela de código -->
-	<section id="winCode" class="wd-window wd-flyer"	>
-
-		<header class="wd-bg-blue">
-			<h2 class="wd-icon-search"> Code</h2>
-		</header>
-
-		<header class="wd-align-right">
-			<button type="button" class="wd-icon-door" data-wd-action="close{#winCode}"> Exit</button>
-		</header>
-
-		<pre id="sourceCode" class="wd-code wd-xpadding wd-border" style="overflow: auto;"></pre>
-
-		<footer>
-			<button type="button" class="wd-icon-door" data-wd-action="close{#winCode}"> Exit</button>
-		</footer>
+		<form data-wd-device="desktop{wd-row}" id="model">
+			<div class="wd-col-10 wd-block">
+				<select id="model-value" >
+					<option></option>
+				</select>
+			</div>
+			<div class="wd-col-02 wd-block">
+				<button type="button" class="wd-icon-play"></button>
+			</div>
+		</form>
 
 	</section>
-	
-	</div>
+
+	<section data-wd-device="desktop{wd-row}" class="wd-margin-height-child">
+
+		<article class="wd-col-06 wd-block">
+			<label class="wd-bg-green">View</label>
+			<div id="view" class="wd-cloud wd-margin-height">dfgdfg</div>
+		</article>
+
+		<article class="wd-col-06 wd-block">
+			<label class="wd-bg-purple">Code</label>
+			<pre id="code" class="wd-code wd-padding wd-radius">dfgdfg</pre>
+		</article>
+
+	</section>
+
+	</main>
 
 </body>
 </html>
