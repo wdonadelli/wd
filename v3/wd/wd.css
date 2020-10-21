@@ -1247,7 +1247,7 @@ de width 70/85% para 100% e margin auto
 .wd .wd-shadow-enter:hover, .wd .wd-shadow-leave,
 .wd .wd-shadow-enter-child > *:hover, .wd .wd-shadow-leave-child > *,
 .wd * > .wd-shadow-out, .wd *:hover > .wd-shadow-in {
-	box-shadow: 0.5em 0.5em 0.5em #cccccc !important;
+	box-shadow: 0.3em 0.3em #cccccc !important;
 }
 .wd .wd-shadow-enter, .wd .wd-shadow-leave:hover,
 .wd .wd-shadow-enter-child > *, .wd .wd-shadow-leave-child > *:hover,
@@ -1260,7 +1260,7 @@ de width 70/85% para 100% e margin auto
 .wd .wd-cloud-enter:hover, .wd .wd-cloud-leave,
 .wd .wd-cloud-enter-child > *:hover, .wd .wd-cloud-leave-child > *,
 .wd * > .wd-cloud-out, .wd *:hover > .wd-cloud-in {
-	box-shadow: 0 0 1em 0.5em #cccccc !important;
+	box-shadow: 0 0 0.5em 0.2em #cccccc !important;
 }
 .wd .wd-cloud-enter, .wd .wd-cloud-leave:hover,
 .wd .wd-cloud-enter-child > *, .wd .wd-cloud-leave-child > *:hover,

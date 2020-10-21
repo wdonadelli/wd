@@ -2687,20 +2687,26 @@ var wd = (function() {
 		enumerable: true,
 		value: function(text) {
 			this.run(function(elem) {
-				var scripts, script;
-				elem.innerHTML = text === undefined || text === null ? "" : text;
-				scripts = elem.querySelectorAll("script");
-				for (var i = 0; i < scripts.length; i++) {
-					script = document.createElement("script");
-					if (scripts[i].src === "") {
-						script.textContent = scripts[i].textContent;
-					} else {
-						script.src = scripts[i].src;
+				var scripts, script, dataElem;
+				text     = text === undefined || text === null ? "" : text;
+				dataElem = new DataElem(elem);
+				if (dataElem.form === "value") {//FIXME eu quero que quando for carregar um campo de texto, carregue o conteúdo da página na atributo value
+					elem.value = text
+				} else {
+					elem.innerHTML = text;
+					scripts = elem.querySelectorAll("script");
+					for (var i = 0; i < scripts.length; i++) {
+						script = document.createElement("script");
+						if (scripts[i].src === "") {
+							script.textContent = scripts[i].textContent;
+						} else {
+							script.src = scripts[i].src;
+						}
+						elem.appendChild(script);
+						WD(script).action("del");
 					}
-					elem.appendChild(script);
-					WD(script).action("del");
+					loadingProcedures();
 				}
-				loadingProcedures();
 				return;
 			});
 			return this;
@@ -2890,6 +2896,7 @@ var wd = (function() {
 					case "next":
 						var child, ready, array;
 						child = WD(elem.children);
+						if (child.items === 0) {break;}
 						ready = false;
 						for (var i = -1; i >= -child.items; i--) {
 							array = child.item(i).className.split(" ");
@@ -2906,6 +2913,7 @@ var wd = (function() {
 					case "prev":
 						var child, ready, array;
 						child = WD(elem.children);
+						if (child.items === 0) {break;}
 						ready = false;
 						for (var i = 0; i < child.items; i++) {
 							array = child.item(i).className.split(" ");
