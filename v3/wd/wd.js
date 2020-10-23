@@ -2823,10 +2823,14 @@ var wd = (function() {
 				min = 0;
 			}
 
-			text = text === undefined || text === null ? "" : String(text).toString();
 
+			//FIXME contemplar REGEXP? ou inserir uma nova função em REGexp?
+			text = text === undefined || text === null ? "" : String(text).toString();
 			min  = WD(min).integer;
 			text = text.toUpperCase();
+
+
+
 			this.run(function (elem) {
 				var child, content;
 				child  = elem.children;
@@ -3405,6 +3409,12 @@ var wd = (function() {
 		data = new AttrHTML(e);
 		if (data.has("wdFilter")) {
 			text  = "value" in e ? e.value : e.textContent;
+			if ((/^\\.+\\$/).test(text) === true) {/*FIXME testar regexp*/
+				log("ALOOOOOOOOOOOOOOO");
+			
+			
+			}
+			
 			value = data.core("wdFilter");
 			for (var i = 0; i < value.length; i++) {
 				show   = "hide" in value[i] ? false : true;
