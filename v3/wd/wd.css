@@ -311,6 +311,7 @@ script, style {display: none !important;}
   background-repeat: no-repeat;
   background-position-x: 100%;
   background-position-y: 50%;
+  padding-right: 25px;
 }
 
 /*============================================================================*/
