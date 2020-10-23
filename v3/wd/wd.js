@@ -2335,312 +2335,312 @@ var wd = (function() {
 	};
 
 /*............................................................................*/
-
-	/*define algumas propriedades dos elementos para fins de máscara e envio de requisições*/
-	function DataElem(elem) {
-		if (!(this instanceof DataElem)) {
-			return new DataElem(elem);
+	/*trabalha com os elementos de formulário e os atributos name, value, type, data*/
+	function AttrHTML(elem) {
+		if (!(this instanceof AttrHTML)) {
+				return new AttrHTML(elem);
 		}
-
-		/* atributos do objeto*/
-		var forms = {
-			textarea: {
-				textarea:   {send: true,  mask: "value"}
-			},
-			select: {
-				select:   {send: true,  mask: null}
-			},
-			button: {
-				submit: {send: false, mask: "textContent"},
-				button: {send: false, mask: "textContent"},
-				reset:  {send: false, mask: "textContent"}
-			},
-			input: {
-				button:           {send: false, mask: "value"},
-				reset:            {send: false, mask: "value"},
-				submit:           {send: false, mask: "value"},
-				image:            {send: false, mask: null},
-				color:            {send: true,  mask: null},
-				radio:            {send: true,  mask: null},
-				checkbox:         {send: true,  mask: null},
-				date:             {send: true,  mask: null},
-				datetime:         {send: true,  mask: null},
-				"datetime-local": {send: true,  mask: null},
-				email:            {send: true,  mask: "value"},
-				text:             {send: true,  mask: "value"},
-				search:           {send: true,  mask: "value"},
-				tel:              {send: true,  mask: "value"},
-				url:              {send: true,  mask: "value"},
-				month:            {send: true,  mask: null},
-				number:           {send: true,  mask: null},
-				password:         {send: true,  mask: null},
-				range:            {send: true,  mask: null},
-				time:             {send: true,  mask: null},
-				week:             {send: true,  mask: null},
-				hidden:           {send: true,  mask: null},
-				file:             {send: true,  mask: null}
-			}
-		};
-
 		this.elem = elem;
+	}
 
-		/*devolve a tag do elemento*/
-		this.tag  = function() {
-			return this.elem.tagName.toLowerCase();
-		}
-
-		/*indica se é um elemento de formulário*/
-		this.form = function() {
-			return this.tag() in forms ? true : false;
-		}
-
-		/*devolve o tipo do formulário, se houver, ou null*/
-		this.type = function() {
-			var value, tag, attr, type;
-			value = null;
-			if (this.form() === true) {
-				tag  = this.tag();
-				attr = "type" in this.elem.attributes ? this.elem.attributes.type.value.toLowerCase() : null;
-				type = "type" in this.elem ? this.elem.type.toLowerCase() : null;
-			 	if (attr !== null && attr in forms[tag]) {
-					value = attr;
-				} else if (type !== null && type in forms[tag]) {
-					value = type;
-				} else if (tag in forms[tag]) {
-					value = tag;
+	Object.defineProperties(AttrHTML.prototype, {
+		constructor: {
+			value: AttrHTML
+		},
+		_forms: {
+			get: function() {/*retorna os parâmetros dos formulários para send, mask e load: tag > type > parameters*/
+				var attr = {
+					textarea: {
+						textarea: {send: true,  mask: "value", load: "value"}
+					},
+					select: {
+						select: {send: true,  mask: null, load: null}
+					},
+					button: {
+						submit: {send: false, mask: "textContent", load: "textContent"},
+						button: {send: false, mask: "textContent", load: "textContent"},
+						reset:  {send: false, mask: "textContent", load: "textContent"}
+					},
+					input: {
+						button:           {send: false, mask: "value", load: "value"},
+						reset:            {send: false, mask: "value", load: "value"},
+						submit:           {send: false, mask: "value", load: "value"},
+						image:            {send: false, mask: null,    load: null},
+						color:            {send: true,  mask: null,    load: null},
+						radio:            {send: true,  mask: null,    load: null},
+						checkbox:         {send: true,  mask: null,    load: null},
+						date:             {send: true,  mask: null,    load: null},
+						datetime:         {send: true,  mask: null,    load: null},
+						"datetime-local": {send: true,  mask: null,    load: null},
+						email:            {send: true,  mask: "value", load: "value"},
+						text:             {send: true,  mask: "value", load: "value"},
+						search:           {send: true,  mask: "value", load: "value"},
+						tel:              {send: true,  mask: "value", load: "value"},
+						url:              {send: true,  mask: "value", load: "value"},
+						month:            {send: true,  mask: null,    load: null},
+						number:           {send: true,  mask: null,    load: null},
+						password:         {send: true,  mask: null,    load: null},
+						range:            {send: true,  mask: null,    load: null},
+						time:             {send: true,  mask: null,    load: null},
+						week:             {send: true,  mask: null,    load: null},
+						hidden:           {send: true,  mask: null,    load: "value"},
+						file:             {send: true,  mask: null,    load: null}
+					},
+					option: {
+						option: {send: false, mask: "textContent", load: null}
+					}
+				};
+				return attr;
+			}
+		},
+		tag: {
+			get: function() {/*retona a tag do elemento*/
+				return this.elem.tagName.toLowerCase();
+			}
+		},
+		form: {
+			get: function() {/*retorna se é elemento de formulário*/
+				return this.tag in this._forms ? true : false;
+			}
+		},
+		type: {
+			get: function() {/*retorna o tipo de elemento de formulário ou tag*/
+				var value, tag, attr, type;
+				value = null;
+				if (this.form === true) {
+					tag  = this.tag;
+					attr = "type" in this.elem.attributes ? this.elem.attributes.type.value.toLowerCase() : null;
+					type = "type" in this.elem ? this.elem.type.toLowerCase() : null;
+				 	if (attr !== null && attr in this._forms[tag]) {
+						value = attr; /*atributo DIGITADO no HTML*/
+					} else if (type !== null && type in this._forms[tag]) {
+						value = type; /*atributo CONSIDERADO no HTML*/
+					} else if (tag in this._forms[tag]) {
+						value = tag;
+					}
 				}
+				return value;
 			}
-			return value;
-		};
-
-		/*indica se é um elemento para enviar nas requisições*/
-		this.send = function() {
-			var value;
-			value = false;
-			if (this.name() !== null && this.value() !== null && this.type() !== null) {
-				value = forms[this.tag()][this.type()].send;
+		},
+		name: {
+			get: function() {/*devolve o valor do atributo name ou null*/
+				var name = "name" in this.elem ? this.elem.name : null
+				return WD(name).type === "null" ? null : name;
 			}
-			return value;
-		}
-
-		/*devolve o atributo para aplicação da data, ou null se a maścara não for possível (só para formulário)*/
-		this.mask = function() {
-			var value;
-			value = "textContent" in this.elem ? "textContent" : null;
-			if (this.form() === true && this.type() !== null) {
-				value = forms[this.tag()][this.type()].mask;
+		},
+		fname: {
+			get: function() {/*devolve o valor do atributo nome dos formulários apenas, ou null*/
+				return (this.name !== null && this.form === true) ? this.name : null;
 			}
-			return value;
-		}
-
-		/*devolve o valor do atributo name (formulário), se existir, caso contrário retorna null*/
-		this.name = function() {
-			var name;
-			name = null;
-			if (this.form() === true) {
-				name = "name" in this.elem ? this.elem.name : null;
-				name =  WD(name).type === "null" ? null : name;
+		},
+		value: {
+			get: function() {/*devolve o valor do atributo value (formulários: string/lista), se existir, caso contrário retorna null*/
+				var value = null;
+				if (this.form === true && "value" in this.elem) {
+					var type = this.type;
+					value = this.elem.value;
+					if (type === "radio" || type === "checkbox") {
+						value = this.elem.checked === true ? value : null;
+					} else if (type === "date") {
+						value = WD(value).type === "date" && value !== "%today" ? WD(value).toString() : null;
+					} else if (type === "time") {
+						value = WD(value).type === "time" && value !== "%now" ? WD(value).toString() : null;
+					} else if (type === "number" || type === "range") {
+						value = WD(value).type === "number" ? WD(value).valueOf() : null;
+					} else if (type === "file" && "files" in this.elem) {
+						value =  this.elem.files.length > 0 ? this.elem.files : null;
+					} else if (type === "file") {
+						value = value === "" ? null : [{name: value.split(/(\/|\\)/).reverse()[0], type: "???"}];
+					} else if (type === "select") {
+						value = [];
+						for (var i = 0; i < this.elem.length; i++) {
+							if (this.elem[i].selected === true) {
+								value.push(this.elem[i].value);
+							}
+						}
+						value = value.length === 0 ? null :  value;
+					}
+				}
+				return value;
 			}
-			return name;
-		}
-
-		/*devolve (string ou lista) o valor do atributo value (formulários), se existir, caso contrário retorna null*/
-		this.value = function() {
-			var value, type;
-			value = "value" in this.elem ? this.elem.value : null;
-			if (this.form() === true) {
-				type = this.type();
-				if (type === "radio" || type === "checkbox") {
-					value = this.elem.checked === true ? value : null;
-				} else if (type === "date") {
-					value = WD(value).type === "date" && value !== "%today" ? WD(value).toString() : null;
-				} else if (type === "time") {
-					value = WD(value).type === "time" && value !== "%now" ? WD(value).toString() : null;
-				} else if (type === "number" || type === "range") {
-					value = WD(value).type === "number" ? WD(value).valueOf() : null;
-				} else if (type === "file" && "files" in this.elem) {
-					value =  this.elem.files.length > 0 ? this.elem.files : null;
-				} else if (type === "file") {
-					value = value === "" ? null : [{name: value.split(/(\/|\\)/).reverse()[0], type: "???"}];
-				} else if (type === "select") {
-					value = [];
-					for (var i = 0; i < this.elem.length; i++) {
-						if (this.elem[i].selected === true) {
-							value.push(this.elem[i].value);
+		},
+		send: {
+			get: function() {/*indica se é um elemento para enviar nas requisições*/
+				var value = false;
+				if (this.fname !== null && this.value !== null && this.type !== null) {
+					value = this._forms[this.tag][this.type].send;
+				}
+				return value;
+			}
+		},
+		mask: {
+			get: function() {/*devolve o atributo para aplicação da máscara, ou null se não for possível*/
+				var value = "textContent" in this.elem ? "textContent" : null;
+				if (this.form === true && this.type !== null) {
+					value = this._forms[this.tag][this.type].mask;
+				}
+				return value;
+			}
+		},
+		load: {
+			get: function() {/*devolve o atributo para aplicação do load, ou null se não for possível*/
+				var value = null;
+				if (this.form === true && this.type !== null) {
+					value = this._forms[this.tag][this.type].load;
+				} else if ("innerHTML" in this.elem) {
+					value = "innerHTML";
+				} else if ("textContent" in this.elem) {
+					value = "textContent";
+				}
+				return value;
+			}
+		},
+		formData: {
+			get: function() {/* devolve (array de objetos) os valores para serem enviados via requisição*/
+				var form, name, value;
+				form  = [];
+				if (this.send === true) {
+					name  = this.name;
+					value = this.value;
+					if (this.type === "file") {
+						for (var i = 0; i < value.length; i++) {
+							form.push({
+								name:  i === 0 ? name : name+"_"+i,
+								value: encodeURIComponent(value[i].name),
+								post:  value[i].type === "???" ? value[i].name : value[i]
+							});
+						}
+					} else if (this.type === "select") {
+						for (var i = 0; i < value.length; i++) {
+							form.push({
+								name:  i === 0 ? name : name+"_"+i,
+								value: encodeURIComponent(value[i]),
+								post:  value[i]
+							});
+						}
+					} else {
+						form.push({
+							name:  name,
+							value: encodeURIComponent(value),
+							post:  value
+						});
+					}
+				}
+				return form;
+			}
+		},
+		dataName: {
+			value: function(attr) {/*define o nome do attributo data sem o prefixo data-*/
+				attr = WD(WD(attr).toString().replace(/^data\-/i, "")).camel;
+				return WD(attr).type === "text" ? attr : undefined;
+			}
+		},
+		dataset: {
+			get: function() {/*retorna objeto dataset*/
+				var data, name, value;
+				if ("dataset" in this.elem) {
+					data = this.elem.dataset;
+				} else {
+					data = {};
+					for (var i = 0; i < this.elem.attributes.length; i++) {
+						name  = this.elem.attributes[i].name;
+						value = this.elem.attributes[i].value;
+						if ((/^data\-/i).test(name) === true) {
+							name = this.dataName(name);
+							if (name !== undefined) {
+								data[name] = value;
+							}
 						}
 					}
-					value = value.length === 0 ? null :  value;
 				}
+				return data;
 			}
-			return value;
-		}
-
-		/* devolve (array de objetos) os valores para serem enviados via requisição*/
-		this.getFormData = function() {
-			var form, name, value;
-			form  = [];
-			if (this.send() === true) {
-				name  = this.name();
-				value = this.value();
-				if (this.type() === "file") {
-					for (var i = 0; i < value.length; i++) {
-						form.push({
-							name:  i === 0 ? name : name+"_"+i,
-							value: encodeURIComponent(value[i].name),
-							post:  value[i].type === "???" ? value[i].name : value[i]
-						});
-					}
-				} else if (this.type() === "select") {
-					for (var i = 0; i < value.length; i++) {
-						form.push({
-							name:  i === 0 ? name : name+"_"+i,
-							value: encodeURIComponent(value[i]),
-							post:  value[i]
-						});
-					}
+		},
+		data: {
+			value: function (attr, val) {/*define ou retorna o valor de data*/
+				attr = this.dataName(attr);
+				val  = WD(val).type === "regexp" ? WD(val).toString() : val;
+				if (attr === undefined) {
+					return attr;			
+				} else if (val === undefined) {
+					return attr in this.dataset ? this.dataset[attr] : val;
+				} else if ("dataset" in this.elem) {
+					this.elem.dataset[attr] = val;
+					return val;
 				} else {
-					form.push({
-						name:  name,
-						value: encodeURIComponent(value),
-						post:  value
-					});
+					attr = "data-"+WD(attr).dash;
+					this.elem.setAttribute(attr, val);
+					return val;
 				}
+				return undefined;
 			}
-			return form;
-		};
-	};
-
-/*............................................................................*/
-
-	/*trabalhar com dataset em crossbrowser*/
-	function DataAttr(elem) {
-		if (!(this instanceof DataAttr)) {
-			return new DataAttr(elem);
-		}
-
-		/*attributos do objeto*/
-		this.elem = WD(elem).type !== "dom" ? document.body : elem;
-
-		/* métodos do objeto*/
-
-		/*define o nome do atributo*/
-		this.setName = function(name) {
-			name = WD(name).toString().replace(/^data\-/i, "");
-			name = WD(name).camel;
-			return name;
-		}
-
-		/*retorna todos os atributos do tipo data em forma de objeto*/
-		this.dataset = function() {
-			var data, name, value;
-			if ("dataset" in this.elem) {
-				data = this.elem.dataset;
-			} else {
-				data = {};
-				for (var i = 0; i < this.elem.attributes.length; i++) {
-					name  = this.elem.attributes[i].name;
-					value = this.elem.attributes[i].value;
-					if ((/^data\-/i).test(name) === true) {
-						name = name.replace(/^data\-/i, "").toLowerCase();
-						name = WD(name).camel;
-						data[name] = value;
-					}
+		},
+		del: {
+			value: function(name) {/* remove o atributo data*/
+				name = this.dataName(name);
+				if (name  === undefined) {
+					return false;
+				} else if ("dataset" in this.elem) {
+					this.elem.dataset[name] = null;
+					delete this.elem.dataset[name];
+					return true;
+				} else {
+					name = "data-"+WD(name).dash;
+					this.data(name, null);
+					this.elem.removeAttribute(name);
+					return true
 				}
-			}
-			return data;
-		}
-
-		/*verifica se o atributo existe*/
-		this.has = function(name) {
-			name = this.setName(name);
-			return name in this.dataset();
-		}
-
-		/*obtém o valor do atributo*/
-		this.get = function(name) {
-			name = this.setName(name);
-			if (name in this.dataset()) {
-				return this.dataset()[name];
-			}
-			return null;
-		}
-
-		/*define o valor do atributo*/
-		this.set = function(name, value) {
-			name = this.setName(name);
-			value = WD(value).type === "regexp" ? WD(value).toString() : value;
-			if (name === null) {
 				return false;
-			} else if ("dataset" in elem) {
-				this.elem.dataset[name] = value;
-				return true;
-			} else {
-				name = "data-"+WD(name).dash;
-				this.elem.setAttribute(name, value);
-				return true;
 			}
-			return false;
-		}
-
-		/* remove o atributo*/
-		this.del = function(name) {
-			name = this.setName(name);
-			if (name === null) {
-				return false;
-			} else if ("dataset" in elem) {
-				this.elem.dataset[name] = null;
-				delete elem.dataset[name];
-				return true;
-			} else {
-				name = "data-"+WD(name).dash;
-				this.set(name, null);
-				this.elem.removeAttribute(name);
-				return true
+		},
+		has: {
+			value: function(name) {/*verifica se o atributo data existe*/
+				name = this.dataName(name);
+				return name in this.dataset;
 			}
-			return false;
-		}
-
-		/*obter atributos pares key1{value1}...&... em objeto [{key1: value1,...}, ...]*/
-		this.convert = function(input) {
-			var open, name, value, list, key;
-			list  = [{}];
-			key   = 0;
-			open  = 0;
-			name  = "";
-			value = "";
-			input = String(input).trim().split("");
-			for (var i = 0; i < input.length; i++) {
-				if (input[i] === "{" && open === 0) {
-					open++;
-				} else if (input[i] === "}" && open === 1) {
-					open--;
-					list[key][name.trim()] = value.trim();
-					name  = "";
-					value = "";
-					if (input[i+1] === "&") {
-						list.push({});
-						key++;
-						i++;
-					}
-				} else if (open > 0) {
-					if (input[i] === "{") {
+		},
+		_dataConvert: {
+			value: function(input) {/*obter atributos pares key1{value1}...&... em objeto [{key1: value1,...}, ...]*/
+				var open, name, value, list, key;
+				list  = [{}];
+				key   = 0;
+				open  = 0;
+				name  = "";
+				value = "";
+				input = String(input).trim().split("");
+				for (var i = 0; i < input.length; i++) {
+					if (input[i] === "{" && open === 0) {
 						open++;
-					} else if (input[i] === "}") {
+					} else if (input[i] === "}" && open === 1) {
 						open--;
+						list[key][name.trim()] = value.trim();
+						name  = "";
+						value = "";
+						if (input[i+1] === "&") {
+							list.push({});
+							key++;
+							i++;
+						}
+					} else if (open > 0) {
+						if (input[i] === "{") {
+							open++;
+						} else if (input[i] === "}") {
+							open--;
+						}
+						value += input[i];
+					} else {
+						name += input[i];
 					}
-					value += input[i];
-				} else {
-					name += input[i];
 				}
+				return list;
 			}
-			return list;
-		};
-
-		/*retorna o objeto de convert a partir do atributo*/
-		this.core = function(attr) {
-			return this.has(attr) === true ? this.convert(this.get(attr)) : [{}];
-		};
-	};
+		},
+		core: {
+			value: function(attr) {/*retorna o objeto de convert a partir do atributo*/
+				return this.has(attr) === true ? this._dataConvert(this.data(attr)) : [{}];
+			}
+		}
+	});
 
 /*...........................................................................*/
 
@@ -2687,13 +2687,11 @@ var wd = (function() {
 		enumerable: true,
 		value: function(text) {
 			this.run(function(elem) {
-				var scripts, script, dataElem;
+				var scripts, script, HTML;
 				text     = text === undefined || text === null ? "" : text;
-				dataElem = new DataElem(elem);
-				if (dataElem.form === "value") {//FIXME eu quero que quando for carregar um campo de texto, carregue o conteúdo da página na atributo value
-					elem.value = text
-				} else {
-					elem.innerHTML = text;
+				HTML = new AttrHTML(elem);
+				elem[HTML.load] = text;
+				if (HTML.load === "innerHTML") {
 					scripts = elem.querySelectorAll("script");
 					for (var i = 0; i < scripts.length; i++) {
 						script = document.createElement("script");
@@ -2720,26 +2718,24 @@ var wd = (function() {
 			if (input === null || WD(input).type === "object") {
 				this.run(function(elem) {
 					var key, data;
-					data = new DataAttr(elem);
+					data = new AttrHTML(elem)
 					if (input === null) {
-						for (key in data.dataset()) {
+						for (key in data.dataset) {
 							data.del(key);
 						}
 					} else {
 						for (var i in input) {
-							key = data.setName(i);
+							key = data.dataName(i);
 							if (input[i] === null) {
 								data.del(key);
 							} else {
-								data.set(key, input[i]);
+								data.data(key, input[i]);
 								settingProcedures(elem, key);
 							}
 						}
 					}
 					return;
 				});
-			} else {
-				log("data: Invalid argument!", "w");
 			}
 			return this;
 		}
@@ -2865,7 +2861,7 @@ var wd = (function() {
 		value: function (action) {
 			action = String(action).toString().toLowerCase();
 			this.run(function(elem) {
-				var dataElem = new DataElem(elem);
+				var HTML = new AttrHTML(elem);
 				switch(action) {
 					case "open":
 						if ("open" in elem) {
@@ -2979,7 +2975,7 @@ var wd = (function() {
 						}
 						break;
 					case "clean":
-						elem[(dataElem.form() === true ? "value" : "textContent")] = ""
+						elem[HTML.load] = ""
 						break;
 					case "del":
 						if ("remove" in elem) {
@@ -3019,11 +3015,11 @@ var wd = (function() {
 				this.run(function(elem) {
 					var inner, re, html, data;
 					html = elem.innerHTML;
-					data = new DataAttr(elem);
+					data = new AttrHTML(elem);
 					if (html.search(/\{\{.+\}\}/gi) >= 0) {
-						data.set("wdRepeatModel", html);
+						data.data("wdRepeatModel", html);
 					} else if ("wdRepeatModel" in elem.dataset) {
-						html = data.get("wdRepeatModel");
+						html = data.data("wdRepeatModel");
 					} else {
 						html = null;
 					}
@@ -3158,7 +3154,7 @@ var wd = (function() {
 		get: function() {
 			var x = [];
 			this.run(function(elem) {
-				var data = new DataElem(elem).getFormData();
+				var data = new AttrHTML(elem).formData;
 				for (var i = 0; i < data.length; i++) {
 					x.push(data[i].name+"="+data[i].value);
 				}
@@ -3176,7 +3172,7 @@ var wd = (function() {
 			}
 			var x = new FormData();
 			this.run(function(elem) {
-				var data = DataElem(elem).getFormData();
+				var data = AttrHTML(elem).formData;
 				for (var i = 0; i < data.length; i++) {
 					x.append(
 						data[i].name,
@@ -3317,7 +3313,7 @@ var wd = (function() {
 			wdConfig[j] = local in attr[j] ? attr[j][local] : attr[j]["en"];
 		}
 
-		data  = new DataAttr(document.body);
+		data  = new AttrHTML(document.body);
 		value = data.core("wdConfig")[0];
 		for (var i in wdConfig) {
 			if (i in value) {
@@ -3331,14 +3327,8 @@ var wd = (function() {
 	/*Carrega html externo data-wd-load=post|get{file}${}*/
 	function data_wdLoad(e) {
 		var value, method, file, pack, target, data;
-		data = new DataAttr(e);
-		if (data.has("wdLoad")) {
-
-			/*corrigindo modelo de versão anterior para novo modelo*/
-			if (data.get("wdLoad").search(/\?\$\{/) >= 0) {
-				data.set("wdLoad", data.get("wdLoad").replace("?${", "}${").replace("}}", "}"));
-			}
-
+		data = new AttrHTML(e);
+		if (data.has("wdLoad") ===  true) {
 			value  = data.core("wdLoad")[0];
 			method = "post" in value ? "post" : "get";
 			file   = value[method];
@@ -3349,7 +3339,7 @@ var wd = (function() {
 				if (x.closed === true) {
 					target.load(x.text === null ? "" : x.text);
 					if (x.status !== "DONE") {
-						log(file+": The request with the file failed.", "e");
+						log("wdLoad: Request failed!", "e"); log(e);
 					}
 				}
 			}, method);
@@ -3360,14 +3350,8 @@ var wd = (function() {
 	/*Constroe html a partir de um arquivo json data-wd-repeat=post{file}|get{file}*/
 	function data_wdRepeat(e) {
 		var value, method, file, pack, target, data;
-		data = new DataAttr(e);
+		data = new AttrHTML(e);
 		if (data.has("wdRepeat")) {
-
-			/*corrigindo modelo de versão anterior para novo modelo*/
-			if (data.get("wdRepeat").search(/\?\$\{/) >= 0) {
-				data.set("wdRepeat", data.get("wdRepeat").replace("?${", "}${").replace("}}", "}"));
-			}
-
 			value  = data.core("wdRepeat")[0];
 			method = "post" in value ? "post" : "get";
 			file   = value[method];
@@ -3378,7 +3362,7 @@ var wd = (function() {
 				if (x.closed === true) {
 					target.repeat(x.json === null ? [] : x.json);
 					if (x.status !== "DONE") {
-						log(file+": The request with the file failed.", "e");
+						log("wdRepeat: Request failed!", "e"); log(e);
 					}
 				}
 			}, method);
@@ -3389,10 +3373,9 @@ var wd = (function() {
 	/*Faz requisição a um arquivo externo data-wd-send=post|get{file}${CSS selector}callback{function()}*/
 	function data_wdSend(e) {
 		var value, method, file, pack, callback, data;
-		data = new DataAttr(e);
+		data = new AttrHTML(e);
 		if (data.has("wdSend")) {
 			value    = data.core("wdSend");
-			log(value);
 			for (var i = 0; i < value.length; i++) {
 				method   = "post" in value[i] ? "post" : "get";
 				file     = value[i][method]; /*method: ver linha anterior*/
@@ -3407,9 +3390,9 @@ var wd = (function() {
 	/*Ordena elementos filhos data-wd-sort="number"*/
 	function data_wdSort(e) {
 		var order, data;
-		data = new DataAttr(e);
+		data = new AttrHTML(e);
 		if (data.has("wdSort")) {
-			order = WD(data.get("wdSort")).valueOf();
+			order = WD(data.data("wdSort")).valueOf();
 			WD(e).sort(order).data({wdSort: null});
 		}
 		return;
@@ -3419,7 +3402,7 @@ var wd = (function() {
 	function data_wdFilter(e) {
 		var value, text, data, show, min, target;
 
-		data = new DataAttr(e);
+		data = new AttrHTML(e);
 		if (data.has("wdFilter")) {
 			text  = "value" in e ? e.value : e.textContent;
 			value = data.core("wdFilter");
@@ -3437,7 +3420,7 @@ var wd = (function() {
 
 	/*Define máscara do elemento data-wd-mask="StringMask"*/
 	function data_wdMask(e) {
-		var value, re, mask, data, shortcutMask, attr;
+		var value, re, mask, shortcutMask, HTML;
 		shortcutMask = {
 			"DDMMYYYY": /^(0[1-9]|[12][0-9]|3[0-1])\.(0[1-9]|1[0-2])\.([0-9]{4})$/,
 			"MMDDYYYY": /^(0[1-9]|1[0-2])\/(0[1-9]|[12][0-9]|3[0-1])\/([0-9]{4})$/,
@@ -3446,21 +3429,19 @@ var wd = (function() {
 			"HHMM": /^([01][0-9]|2[0-4])\h([0-5][0-9])$/,
 			"AMPM": /^(0[1-9]|1[0-2])\:([0-5][0-9][apAP])m$/,
 		};
-		data = new DataAttr(e);
-		attr = new DataElem(e).mask();
-		if (data.has("wdMask") && attr !== null) {
-
-			value = e[attr];
-			if (data.get("wdMask") in shortcutMask) {
-				re = shortcutMask[data.get("wdMask")];
+		HTML = new AttrHTML(e);
+		if (HTML.has("wdMask") && HTML.mask !== null) {
+			value = e[HTML.mask];
+			if (HTML.data("wdMask") in shortcutMask) {
+				re = shortcutMask[HTML.data("wdMask")];
 			} else {
-				re = new RegExp(data.get("wdMask"));
+				re = new RegExp(HTML.data("wdMask"));
 			}
 			mask = WD(re).mask(value);
 			if (mask !== false) {
-				e[attr] = mask;
+				e[HTML.mask] = mask;
 			}
-			if (attr === "value") {
+			if (HTML.mask === "value") {
 				if (mask === false && e.value !== "") {
 					WD(e).class({add: "js-wd-mask-error"});
 				} else {
@@ -3474,7 +3455,7 @@ var wd = (function() {
 	/*Define os elementos a serem exibidos data-wd-page=page{p}size{s}*/
 	function data_wdPage(e) {
 		var attr, page, size, data;
-		data = new DataAttr(e);
+		data = new AttrHTML(e);
 		if (data.has("wdPage")) {
 			attr = data.core("wdPage")[0];
 			page = attr.page;
@@ -3487,7 +3468,7 @@ var wd = (function() {
 	/*Executa o método click() ao elemento após o load data-wd-click=""*/
 	function data_wdClick(e) {
 		var data;
-		data = new DataAttr(e);
+		data = new AttrHTML(e);
 		if (data.has("wdClick")) {
 			if ("click" in e) {e.click();}
 			WD(e).data({wdClick: null});
@@ -3498,7 +3479,7 @@ var wd = (function() {
 	/*Executa uma ação ao alvo após o click data-wd-action=action1{css1}action2{css2}*/
 	function data_wdAction(e) {
 		var value, data, target;
-		data = new DataAttr(e);
+		data = new AttrHTML(e);
 		if (data.has("wdAction")) {
 			value = data.core("wdAction")[0];
 			for (var action in value) {
@@ -3517,7 +3498,7 @@ var wd = (function() {
 	/*Define dataset a partir do click data-wd-data=attr1{value}${css}&*/
 	function data_wdData(e) {
 		var value, data, target;
-		data = new DataAttr(e);
+		data = new AttrHTML(e);
 		if (data.has("wdData")) {
 			value = data.core("wdData");
 			for (var i = 0; i < value.length; i++) {
@@ -3548,17 +3529,17 @@ var wd = (function() {
 	/*Ordena as colunas de uma tabela data-wd-sort-col=""*/
 	function data_wdSortCol(e) {
 		var order, thead, heads, bodies, data;
-		data = new DataAttr(e);
+		data = new AttrHTML(e);
 		if (data.has("wdSortCol") && WD(e.parentElement.parentElement.tagName).title === "Thead") {
-			order  = data.get("wdSortCol") === "+1" ? -1 : 1;
+			order  = data.data("wdSortCol") === "+1" ? -1 : 1;
 			thead  = e.parentElement.parentElement;
 			heads  = e.parentElement.children;
 			bodies = thead.parentElement.tBodies;
 			WD(heads).run(function(x) {
 				var ndata;
-				ndata = new DataAttr(x);
+				ndata = new AttrHTML(x);
 				if (ndata.has("wdSortCol")) {
-					ndata.set("wdSortCol", "");
+					ndata.data("wdSortCol", "");
 				}
 			});
 			for (var i = 0; i < heads.length; i++) {
@@ -3575,7 +3556,7 @@ var wd = (function() {
 	/*Define o estilo do elemento a partir do tamanho da tela data-wd-device=desktop{css}tablet{css}phone{css}mobile{css}*/
 	function data_wdDevice(e) {
 		var data, value, desktop, mobile, tablet, phone;
-		data = new DataAttr(e);
+		data = new AttrHTML(e);
 		if (data.has("wdDevice")) {
 			value   = data.core("wdDevice")[0];
 			desktop = "desktop" in value ? value.desktop : "";
@@ -3600,16 +3581,16 @@ var wd = (function() {
 	/*Define um carrossel de elementos data-wd-device=tempo*/
 	function data_wdSlide(e) {
 		var data, time;
-		data = new DataAttr(e);
+		data = new AttrHTML(e);
 		if (data.has("wdSlide") && !data.has("wdSlideRun")) {
-			time = WD(data.get("wdSlide"));
+			time = WD(data.data("wdSlide"));
 			if (time.type === "number" && time.number === "integer") {
 				time = time.valueOf() <= 0 ? 1000 : time.valueOf();
 			} else {
 				time = 1000;
 			}
 			WD(e).action("next");
-			data.set("wdSlideRun", "");
+			data.data("wdSlideRun", "");
 			window.setTimeout(function() {
 				data.del("wdSlideRun");
 				data_wdSlide(e);
@@ -3625,7 +3606,7 @@ var wd = (function() {
 	function data_wdFile(e) {
 		var tag, type, files, value, data, info, error, name, msg;
 		data_wdConfig();
-		data  = new DataAttr(e);
+		data  = new AttrHTML(e);
 		tag   = e.tagName.toLowerCase();
 		type  = e.type.toLowerCase();
 		files = "files" in e ? e.files : [];

@@ -1,3 +1,8 @@
+//DataAttr
+//DataElem
+
+
+
 function AttrHTML(elem) {
 	if (!(this instanceof AttrHTML)) {
 			return new AttrHTML(elem);
@@ -157,7 +162,7 @@ Object.defineProperties(AttrHTML.prototype, {
 			return value;
 		}
 	},
-	getFormData: {
+	formData: {
 		get: function() {/* devolve (array de objetos) os valores para serem enviados via requisição*/
 			var form, name, value;
 			form  = [];
@@ -191,16 +196,10 @@ Object.defineProperties(AttrHTML.prototype, {
 			return form;
 		}
 	},
-	dataAttr: {
+	dataName: {
 		value: function(attr) {/*define o nome do attributo data sem o prefixo data-*/
-			attr = WD(attr);
-			if (attr.type !== "text") {
-				attr = undefined;
-			} else {
-				attr = WD(attr.toString().replace(/^data\-/i, ""));
-				attr = attr.type === "text" ? attr.camel : undefined;
-			}
-			return attr;
+			attr = WD(WD(attr).toString().replace(/^data\-/i, "")).camel;
+			return WD(attr).type === "text" ? attr : undefined;
 		}
 	},
 	dataset: {
@@ -214,23 +213,24 @@ Object.defineProperties(AttrHTML.prototype, {
 					name  = this.elem.attributes[i].name;
 					value = this.elem.attributes[i].value;
 					if ((/^data\-/i).test(name) === true) {
-						name = name.replace(/^data\-/i, "").toLowerCase();
-						name = WD(name).camel;
-						data[name] = value;
+						name = this.dataName(name);
+						if (name !== undefined) {
+							data[name] = value;
+						}
 					}
 				}
 			}
 			return data;
 		}
 	},
-	dataVal: {
+	data: {
 		value: function (attr, val) {/*define ou retorna o valor de data*/
-			attr = this.dataAttr(attr);
+			attr = this.dataName(attr);
 			val  = WD(val).type === "regexp" ? WD(val).toString() : val;
 			if (attr === undefined) {
 				return attr;			
 			} else if (val === undefined) {
-				return attr in this.dataset ? this.dataset[attr] : undefined;
+				return attr in this.dataset ? this.dataset[attr] : val;
 			} else if ("dataset" in this.elem) {
 				this.elem.dataset[attr] = val;
 				return val;
@@ -241,50 +241,11 @@ Object.defineProperties(AttrHTML.prototype, {
 			}
 			return undefined;
 		}
-	}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*............................................................................*/
-
-
-
-
-		/*verifica se o atributo existe*/
-		this.has = function(name) {
-			name = this.setName(name);
-			return name in this.dataset();
-		}
-
-
-		/* remove o atributo*/
-		this.del = function(name) {
-			name = this.setName(name);
-			if (name === null) {
+	},
+	del: {
+		value: function(name) {/* remove o atributo data*/
+			name = this.dataName(name);
+			if (name  === undefined) {
 				return false;
 			} else if ("dataset" in elem) {
 				this.elem.dataset[name] = null;
@@ -292,15 +253,21 @@ Object.defineProperties(AttrHTML.prototype, {
 				return true;
 			} else {
 				name = "data-"+WD(name).dash;
-				this.set(name, null);
+				this.data(name, null);
 				this.elem.removeAttribute(name);
 				return true
 			}
 			return false;
 		}
-
-		/*obter atributos pares key1{value1}...&... em objeto [{key1: value1,...}, ...]*/
-		this.convert = function(input) {
+	},
+	has: {
+		value: function(name) {/*verifica se o atributo data existe*/
+			name = this.dataName(name);
+			return name in this.dataset;
+		}
+	},
+	_dataConvert: {
+		value: function(input) {/*obter atributos pares key1{value1}...&... em objeto [{key1: value1,...}, ...]*/
 			var open, name, value, list, key;
 			list  = [{}];
 			key   = 0;
@@ -333,17 +300,11 @@ Object.defineProperties(AttrHTML.prototype, {
 				}
 			}
 			return list;
-		};
-
-		/*retorna o objeto de convert a partir do atributo*/
-		this.core = function(attr) {
-			return this.has(attr) === true ? this.convert(this.get(attr)) : [{}];
-		};
-	};
-
-
-
-
-
-
+		}
+	},
+	core: {
+		value: function(attr) {/*retorna o objeto de convert a partir do atributo*/
+			return this.has(attr) === true ? this._dataConvert(this.data(attr)) : [{}];
+		}
+	}
 });
