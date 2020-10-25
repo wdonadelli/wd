@@ -131,10 +131,5 @@
 		"name": "CSS Window",
 		"color": "wd-bg-purple",
 		"attr": "examples/css_window.html"
-	},
-	{
-		"name": "JS Generic",
-		"color": "wd-bg-purple",
-		"attr": "examples/JS/generic.html"
 	}
 ]
