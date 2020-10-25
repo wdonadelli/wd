@@ -1,147 +1,140 @@
 [
 	{
-		"name": "Home",
-		"title": "Main page",
-		"attr": "examples/home.html"
-	},
-
-
-	{
 		"name": "ATTR Action",
-		"title": "Action",
-		"attr": "examples/ATTR/action.html"
+		"color": "wd-bg-blue",
+		"attr": "examples/attr_action.html"
 	},
 	{
 		"name": "ATTR Click",
-		"title": "Click",
-		"attr": "examples/ATTR/click.html"
+		"color": "wd-bg-blue",
+		"attr": "examples/attr_click.html"
 	},
 	{
 		"name": "ATTR Config",
-		"title": "Config",
-		"attr": "examples/ATTR/config.html"
+		"color": "wd-bg-blue",
+		"attr": "examples/attr_config.html"
 	},
 	{
 		"name": "ATTR Data",
-		"title": "Device",
-		"attr": "examples/ATTR/data.html"
+		"color": "wd-bg-blue",
+		"attr": "examples/attr_data.html"
 	},
 	{
 		"name": "ATTR Device",
-		"title": "Device",
-		"attr": "examples/ATTR/device.html"
+		"color": "wd-bg-blue",
+		"attr": "examples/attr_device.html"
 	},
 	{
 		"name": "ATTR File",
-		"title": "File",
-		"attr": "examples/ATTR/file.html"
+		"color": "wd-bg-blue",
+		"attr": "examples/attr_file.html"
 	},
 	{
 		"name": "ATTR Filter",
-		"title": "Filter",
-		"attr": "examples/ATTR/filter.html"
+		"color": "wd-bg-blue",
+		"attr": "examples/attr_filter.html"
 	},
 	{
 		"name": "ATTR Load",
-		"title": "Load",
-		"attr": "examples/ATTR/load.html"
+		"color": "wd-bg-blue",
+		"attr": "examples/attr_load.html"
 	},
 	{
 		"name": "ATTR Mask",
-		"title": "Mask",
-		"attr": "examples/ATTR/mask.html"
+		"color": "wd-bg-blue",
+		"attr": "examples/attr_mask.html"
 	},
 	{
 		"name": "ATTR Page",
-		"title": "Page",
-		"attr": "examples/ATTR/page.html"
+		"color": "wd-bg-blue",
+		"attr": "examples/attr_page.html"
 	},
 	{
 		"name": "ATTR Repeat",
-		"title": "Repeat",
-		"attr": "examples/ATTR/repeat.html"
+		"color": "wd-bg-blue",
+		"attr": "examples/attr_repeat.html"
 	},
 	{
 		"name": "ATTR Send",
-		"title": "Send",
-		"attr": "examples/ATTR/send.html"
+		"color": "wd-bg-blue",
+		"attr": "examples/attr_send.html"
 	},
 	{
 		"name": "ATTR Sort",
-		"title": "Sort",
-		"attr": "examples/ATTR/sort.html"
+		"color": "wd-bg-blue",
+		"attr": "examples/attr_sort.html"
 	},
 	{
 		"name": "ATTR Sort Column",
-		"title": "Sort Column",
-		"attr": "examples/ATTR/sortcolumn.html"
+		"color": "wd-bg-blue",
+		"attr": "examples/attr_sortcolumn.html"
 	},
 
 
 
 	{
 		"name": "CSS Base",
-		"title": "Base",
-		"attr": "examples/CSS/base.html"
+		"color": "wd-bg-purple",
+		"attr": "examples/css_base.html"
 	},
 	{
 		"name": "CSS Code",
-		"title": "Code",
-		"attr": "examples/CSS/code.html"
+		"color": "wd-bg-purple",
+		"attr": "examples/css_code.html"
 	},
 	{
 		"name": "CSS Colors",
-		"title": "Color palette",
-		"attr": "examples/CSS/colors.html"
+		"color": "wd-bg-purple",
+		"attr": "examples/css_colors.html"
 	},
 	{
 		"name": "CSS Columns",
-		"title": "Columns",
-		"attr": "examples/CSS/columns.html"
+		"color": "wd-bg-purple",
+		"attr": "examples/css_columns.html"
 	},
 	{
 		"name": "CSS Flyer",
-		"title": "Flyer",
-		"attr": "examples/CSS/flyer.html"
+		"color": "wd-bg-purple",
+		"attr": "examples/css_flyer.html"
 	},
 	{
 		"name": "CSS Grid",
-		"title": "Grid",
-		"attr": "examples/CSS/grid.html"
+		"color": "wd-bg-purple",
+		"attr": "examples/css_grid.html"
 	},
 	{
 		"name": "CSS Icons",
-		"title": "Icons",
-		"attr": "examples/CSS/icons.html"
+		"color": "wd-bg-purple",
+		"attr": "examples/css_icons.html"
 	},
 	{
 		"name": "CSS Input Message",
-		"title": "Input Message",
-		"attr": "examples/CSS/input.html"
+		"color": "wd-bg-purple",
+		"attr": "examples/css_input.html"
 	},
 	{
 		"name": "CSS Report",
-		"title": "Report",
-		"attr": "examples/CSS/report.html"
+		"color": "wd-bg-purple",
+		"attr": "examples/css_report.html"
 	},
 	{
 		"name": "CSS Tip",
-		"title": "Tip",
-		"attr": "examples/CSS/tip.html"
+		"color": "wd-bg-purple",
+		"attr": "examples/css_tip.html"
 	},
 	{
 		"name": "CSS Utilities",
-		"title": "Utilities",
-		"attr": "examples/CSS/utilities.html"
+		"color": "wd-bg-purple",
+		"attr": "examples/css_utilities.html"
 	},
 	{
 		"name": "CSS Window",
-		"title": "Window",
-		"attr": "examples/CSS/window.html"
+		"color": "wd-bg-purple",
+		"attr": "examples/css_window.html"
 	},
 	{
 		"name": "JS Generic",
-		"title": "generic",
+		"color": "wd-bg-purple",
 		"attr": "examples/JS/generic.html"
 	}
 ]

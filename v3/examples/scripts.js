@@ -4,6 +4,47 @@ function toggleStyle() {
 	return;
 }
 
+/*-- Exibe o código renderizado --*/
+function showView() {
+	var value = wd$("#code").item().value;
+	if ((/^wd\$?\((.+)?\)\.[0-9a-zA-Z]+(\((.+)?\))?\;$/).test(value) === true) {
+		try {
+			var aux = eval("("+value.replace(/\;$/, "")+");");
+			wd$("#view").item().textContent = JSON.stringify(aux);
+		} catch(e) {
+			wd$("#view").item().textContent = "ERROR: "+e.message;
+			return;
+		}
+	} else {
+		wd$("#view").load(value);
+	}
+	return;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /*-- Define código CSS --*/
 function setCSS(css, value) {
 	wd$(css).class(null).class({add: value});
@@ -119,85 +160,3 @@ function testLoading() {
 		if (x.closed) {alert("Click to close:");}
 	});
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* All */
-function viewCode(css) {
-	if (css !== undefined) {
-		var x = wd$(css).item(0).outerHTML.replace(/\t\t\t([^\t])/g, "$1")	;
-		wd$("#winContent").item(0).textContent = x;
-		wd$("#win").action("open");
-	} else {
-		wd$("#win").action("close");
-	}
-	return;
-}
-
-/*wd_attr_config_tool*/
-function configBody() {
-	var config = "";
-	wd$("#config input").run(function(x) {
-		config += x.name+"{"+x.value+"}";
-	});
-	wd(document.body).data({wdConfig: config});
-	return;
-}
-
-
-
-/*wd_attr_config_tool*/
-

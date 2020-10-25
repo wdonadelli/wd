@@ -23,39 +23,54 @@
 		<h2>WD Libraries Examples</h2>
 
 		<nav class="wd-bg-black">
-			<span class="wd-icon-menu" title="Menu" data-wd-action="toggle-open{#menu}" > Menu</span>
-			<span class="wd-icon-key" title="Style" onclick="toggleStyle();" > Style</span>
-			<a    href="https://github.com/wdonadelli/wd/wiki" class="wd-icon-help" title="Handbook" target="_blank" > Wiki</a>
+
+			<span
+				class="wd-icon-menu"
+				title="Menu"
+				data-wd-action="open{#menu}"
+			> Menu</span>
+
+
+			<span
+				class="wd-icon-key"
+				title="Style"
+				onclick="toggleStyle();"
+			> Style</span>
+
+			<a
+				href="https://github.com/wdonadelli/wd/wiki"
+				class="wd-icon-help"
+				title="Handbook"
+				target="_blank"
+			> Wiki</a>
 		</nav>
+
 	</header>
 
 
 	<!-- Conteúdo -->
-	<main>
-		<section>
-			<ul data-wd-repeat="get{examples/menu.json}">
-				<li><a href="#" data-wd-data="wdLoad{get{{{attr}}}}${#code, #view}">{{name}}</a></li>
-			</ul>
-		</section>
-
-
-
+	<main class="wd-flyer">
+		
 		<section data-wd-device="desktop{wd-row}">
 
-			<article class="wd-col-06 wd-flyer">
+			<article class="wd-col-06">
 
-				<header class="wd-bg-blue"><h3>Code</h3></header>
+				<header class="wd-bg-blue">
+					<h4>Code</h4>
+				</header>
 
 				<form class="wd-block">
 					<textarea id="code" class="wd-code" style="height: 250px;"></textarea>
-					<button type="button" class="wd-icon-play"></button>
+					<button type="button" class="wd-icon-reload" onclick="showView();"></button>
 				</form>
 
 			</article>
 
 			<article class="wd-col-06 wd-flyer">
 
-				<header class="wd-bg-green"><h3>View</h3></header>
+				<header class="wd-bg-green">
+					<h4>View</h4>
+				</header>
 
 				<div>
 					<div id="view"></div>
@@ -67,29 +82,53 @@
 
 	</main>
 
-	<!-- Menu lateral -->
+	<!-- Menu -->
 	<aside id="menu" class="wd-modal">
 
-		<article class="wd-window wd-flyer" data-wd-device="desktop{wd-win-left}">
+		<section class="wd-window wd-flyer wd-bg-white" >
 
-			<header class="wd-bg-blue" data-wd-action="close{#menu}" data-wd-device="desktop{wd-buddy-top}">
+			<header class="wd-bg-blue" data-wd-action="close{#menu}">
 				<h3 class="wd-icon-menu"> Menu</h3>
 			</header>
 
-			<div class="wd-block">
-				<input type="search" placeholder="Search..." data-wd-filter="show{}${#menu_items}" />
-			</div>
+			<form>
 
+				<div class="wd-row">
 
-			<nav class="wd-block" data-wd-repeat="get{examples/menu.json}" id="menu_items">
-				<a href="#" title="{{title}}" class="wd-icon-right" {{attr}} data-wd-action="close{#menu}"> {{name}}</a>
-			</nav>
+					<div class="wd-col-10 wd-block">
+						<input
+							type="search"
+							id="search"
+							data-wd-filter="show{}${#examples}"
+							autofocus=""
+							placeholder="Search..." 
+						/>
+					</div>
 
-			<footer class="wd-xmagin-height wd-bg-white wd-block wd-cloud" data-wd-device="desktop{wd-buddy-bottom}">
-				<button type="button" class="wd-icon-left" data-wd-action="close{#menu}"> Back</button>
-			</footer>
+					<div class="wd-col-02 wd-block">
+						<button type="button" class="wd-icon-door" data-wd-action="close{#menu}"> Exit</button>
+					</div>
 
-		</article>
+				</div>
+
+			</form>
+
+			<section
+				id="examples"
+				class="wd-grid wd-cloud-child wd-bg-black-child wd-border-width wd-cloud"
+				data-wd-repeat="get{examples/menu.json}"
+			>
+
+				<a
+					href="#"
+					data-wd-data="wdLoad{get{{{attr}}}}${#code, #view}"
+					class="wd-upon-enter {{color}}"
+					data-wd-action="close{#menu}"
+				>{{name}}</a>
+
+			</section>
+
+		</section>
 
 	</aside>
 

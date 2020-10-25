@@ -2823,13 +2823,11 @@ var wd = (function() {
 				min = 0;
 			}
 
-
-			//FIXME contemplar REGEXP? ou inserir uma nova função em REGexp?
-			text = text === undefined || text === null ? "" : String(text).toString();
-			min  = WD(min).integer;
-			text = text.toUpperCase();
-
-
+			if (text !== null && text !== undefined && WD(text).type !== "regexp") {
+				text = String(text).toString().toUpperCase();
+			} else if (WD(text).type !== "regexp") {
+				text = "";
+			}
 
 			this.run(function (elem) {
 				var child, content;
@@ -2838,8 +2836,16 @@ var wd = (function() {
 					if (!("textContent" in child[i])) {
 						continue;
 					}
-					content = child[i].textContent.toUpperCase();
-					if (show !== false) {
+
+					content = WD(text).type === "regexp" ? child[i].textContent : child[i].textContent.toUpperCase();
+
+					if (WD(text).type === "regexp") {
+						if (text.test(content) === true) {
+							WD(child[i]).action("show");
+						} else {
+							WD(child[i]).action("hide");
+						}
+					} else if (show !== false) {
 						if (text.length < min || content.indexOf(text) >= 0 || text === "") {
 							WD(child[i]).action("show");
 						} else {
@@ -3408,13 +3414,14 @@ var wd = (function() {
 
 		data = new AttrHTML(e);
 		if (data.has("wdFilter")) {
-			text  = "value" in e ? e.value : e.textContent;
-			if ((/^\\.+\\$/).test(text) === true) {/*FIXME testar regexp*/
-				log("ALOOOOOOOOOOOOOOO");
-			
-			
+
+			text = data.form ===  true ? data.value : e.textContent;
+			if ((/^\/.+\/$/).test(text) === true) {
+				text = new RegExp(text.replace(/^\//, "").replace(/\/$/, ""));
+			} else if ((/^\/.+\/i$/).test(text) === true) {
+				text = new RegExp(text.replace(/^\//, "").replace(/\/i$/, ""), "i");
 			}
-			
+
 			value = data.core("wdFilter");
 			for (var i = 0; i < value.length; i++) {
 				show   = "hide" in value[i] ? false : true;
@@ -3471,6 +3478,42 @@ var wd = (function() {
 			page = attr.page;
 			size = attr.size;
 			WD(e).page(page, size).data({wdPage: null});
+		}
+		return;
+	};
+
+	/*Define seu valor em outro elemento*/
+	function data_wdSet(e) {
+		var attr, value, data;
+		data = new AttrHTML(e);
+		if (data.has("wdSet")) {
+			attr = data.core("wdSet")[0];
+			if ("$" in attr) {
+				value = data.form === true ? e.value : e.textContent;
+				WD($(attr["$"])).run(function(x) {
+					var target = new AttrHTML(x);
+					x[(target.form === true ? "value" : "textContent")] = value;
+					return;
+				});
+			}
+		}
+		return;
+	};
+
+	/*Obtem para si o valor de outro elemento*/
+	function data_wdGet(e) {
+		var attr, value, data;
+		data = new AttrHTML(e);
+		if (data.has("wdGet")) {
+			attr = data.core("wdGet")[0];
+			if ("$" in attr) {
+				WD($(attr["$"])).run(function(x) {
+					var target = new AttrHTML(x);
+					value = target.form === true ? x.value : x.textContent;
+					e[(data.form === true ? "value" : "textContent")] = value;				
+					return;
+				});
+			}
 		}
 		return;
 	};
@@ -3805,7 +3848,9 @@ var wd = (function() {
 			data_wdActive(elem);
 			data_wdSortCol(elem);
 			data_wdSend(elem);
-			elem = elem.parentElement;
+			data_wdSet(elem);
+			data_wdGet(elem);
+			elem = elem.parentElement;/*efeito bolha*/
 		}
 		return;
 	};
