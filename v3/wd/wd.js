@@ -454,6 +454,7 @@ var wd = (function() {
 			text:     null,     /* registra o conteúdo textual da requisição */
 			xml:      null,     /* registra o XML da requisição */
 			json:     null,     /* registra o JSON da requisição */
+			csv:      null,     /* transforma um arquivo CSV em JSON */
 			request:  request,  /* registra os dados da requisição */
 		};
 
@@ -537,7 +538,8 @@ var wd = (function() {
 					data.progress = 1;
 					data.text     = request.responseText;
 					data.xml      = request.responseXML;
-					data.json     = WD(""+data.text+"").fJSON;
+					data.json     = WD(data.text).type === "text" ? WD(data.text).json : null;
+					data.csv      = WD(data.text).type === "text" ? WD(data.text).csv : null;
 				} else {
 					data.status = "ERROR";
 				}
@@ -848,7 +850,7 @@ var wd = (function() {
 	});
 
 	/*transforma notação JSON em objeto*/
-	Object.defineProperty(WDtext.prototype, "fJSON", {
+	Object.defineProperty(WDtext.prototype, "json", {
 		enumerable: true,
 		get: function() {
 			var json;
@@ -862,7 +864,7 @@ var wd = (function() {
 	});
 
 	/*transforma notação JSON em objeto*/
-	Object.defineProperty(WDtext.prototype, "fTABLE", {
+	Object.defineProperty(WDtext.prototype, "csv", {//FIXME
 		enumerable: true,
 		get: function() {
 			var head, json, rows, cols;
@@ -2608,12 +2610,13 @@ var wd = (function() {
 				name  = "";
 				value = "";
 				input = String(input).trim().split("");
-				for (var i = 0; i < input.length; i++) {
-					if (input[i] === "{" && open === 0) {
+				for (var i = 0; i < input.length; i++) {/*ler todos os caracteres do atributo individualmente*/
+					if (input[i] === "{" && open === 0) {/*se encontrado { pela primeira vez, abrir captura*/
 						open++;
-					} else if (input[i] === "}" && open === 1) {
+					} else if (input[i] === "}" && open === 1) {/*se encontrado } em mesmo número que {, finalizar captura*/
 						open--;
-						list[key][name.trim()] = value.trim();
+						value = value.trim();
+						list[key][name.trim()] = value === "null" ? null : value;/*para deletar atributo*/
 						name  = "";
 						value = "";
 						if (input[i+1] === "&") {
@@ -2621,14 +2624,14 @@ var wd = (function() {
 							key++;
 							i++;
 						}
-					} else if (open > 0) {
+					} else if (open > 0) {/*se já estiver aberta a captura, acrescenta ou diminui verificador e captura o valor do atributo*/
 						if (input[i] === "{") {
 							open++;
 						} else if (input[i] === "}") {
 							open--;
 						}
 						value += input[i];
-					} else {
+					} else {/*se não se trata das outras possibilidades, captura o nome do atributo*/
 						name += input[i];
 					}
 				}
@@ -3342,7 +3345,7 @@ var wd = (function() {
 			value  = data.core("wdLoad")[0];
 			method = "post" in value ? "post" : "get";
 			file   = value[method];
-			pack   = "$" in value ? $(value["$"]) : null;
+			pack   = "$" in value ? $(value["$"]) : null;/*se for informado um formulário, seus dados serão enviados à requisição*/
 			target = WD(e);
 			target.data({wdLoad: null});
 			WD(pack).send(file, function(x) {
@@ -3357,7 +3360,7 @@ var wd = (function() {
 		return;
 	};
 
-	/*Constroe html a partir de um arquivo json data-wd-repeat=post{file}|get{file}*/
+	/*Constroe html a partir de um arquivo json data-wd-repeat=post{file}|get{file}${}*/
 	function data_wdRepeat(e) {
 		var value, method, file, pack, target, data;
 		data = new AttrHTML(e);
@@ -3365,14 +3368,20 @@ var wd = (function() {
 			value  = data.core("wdRepeat")[0];
 			method = "post" in value ? "post" : "get";
 			file   = value[method];
-			pack   = "$" in value ? $(value["$"]) : null;
+			pack   = "$" in value ? $(value["$"]) : null;/*se for informado um formulário, seus dados serão enviados à requisição*/
 			target = WD(e);
 			target.data({wdRepeat: null});
 			WD(pack).send(file, function(x) {
 				if (x.closed === true) {
-					target.repeat(x.json === null ? [] : x.json);
+					if (x.json !== null) {
+						target.repeat(x.json);
+					} else if (x.csv !== null) {
+						target.repeat(x.csv);
+					} else {
+						target.repeat([]);
+					}
 					if (x.status !== "DONE") {
-						log("wdRepeat: Request failed!", "e"); log(e);
+						log("wdRepeat: Request failed!", "e");
 					}
 				}
 			}, method);
@@ -3484,15 +3493,16 @@ var wd = (function() {
 
 	/*Define seu valor em outro elemento*/
 	function data_wdSet(e) {
-		var attr, value, data;
+		var data, core, attr, target;
 		data = new AttrHTML(e);
 		if (data.has("wdSet")) {
-			attr = data.core("wdSet")[0];
-			if ("$" in attr) {
-				value = data.form === true ? e.value : e.textContent;
-				WD($(attr["$"])).run(function(x) {
-					var target = new AttrHTML(x);
-					x[(target.form === true ? "value" : "textContent")] = value;
+			core = data.core("wdSet");
+			for (var c = 0; c < core.length; c++) {
+				attr   = core[c];
+				target = WD($(attr["$"])).type === "dom" ? WD($(attr["$"])) : WD(e);
+				target.run(function(x) {
+					if ("text" in attr)  {x.textContent = attr["text"];}
+					if ("value" in attr) {x.value = attr["value"];}
 					return;
 				});
 			}
@@ -3502,10 +3512,16 @@ var wd = (function() {
 
 	/*Obtem para si o valor de outro elemento*/
 	function data_wdGet(e) {
-		var attr, value, data;
+		var data, core, attr, target;
 		data = new AttrHTML(e);
 		if (data.has("wdGet")) {
-			attr = data.core("wdGet")[0];
+			attr   = data.core("wdGet")[0];
+
+
+			target = WD($(attr["$"])).type === "dom" ? WD($(attr["$"])) : WD(e);
+			
+			
+			
 			if ("$" in attr) {
 				WD($(attr["$"])).run(function(x) {
 					var target = new AttrHTML(x);
@@ -3556,7 +3572,9 @@ var wd = (function() {
 			value = data.core("wdData");
 			for (var i = 0; i < value.length; i++) {
 				/* se o alvo não for um dom, será aplicado ao próprio elemento*/
-				target = "$" in value[i] ? WD($(value[i]["$"])) : WD(e);
+//				target = WD($(attr["$"])).type === "dom" ? WD($(attr["$"])) : WD(e);
+				target = WD($(value[i]["$"])).type === "dom" ? WD($(value[i]["$"])) : WD(e);
+
 				delete value[i]["$"]; /*!!! a chave $ não definirá data-$*/
 				if (target.type === "dom") {
 					target.data(value[i]);

@@ -1,9 +1,18 @@
 <h2>Set/Get</h2>
 
+<h3>Set</h3>
+
+<nav>
+	<span data-wd-set="text{Text A}${#label}&value{Value A}${#input}">SET A</span>
+	<span data-wd-set="text{Text B}value{Value B}${#label, #input}">SET B</span>
+	<span data-wd-set="text{Text B}value{Value B}${#label, #input}">GET text (<)</span>
+	<span data-wd-set="text{Text B}value{Value B}${#label, #input}">GET value ()</span>
+</nav>
+
 <form class="wd-block">
-	<input type="text" id="target" />
-	<label>Set</label>
-	<input type="button" data-wd-set="${#target}" value="My Value" />
-	<label>Get</label>
-	<input type="button" data-wd-get="${#target}" value="Get" />
+	<label id="label"></label>
+	<input type="text" id="input" />
 </form>
+
+
+	

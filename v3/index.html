@@ -35,6 +35,7 @@
 				class="wd-icon-key"
 				title="Style"
 				onclick="toggleStyle();"
+				style="cursor: pointer"
 			> Style</span>
 
 			<a
@@ -59,7 +60,7 @@
 					<h4>Code</h4>
 				</header>
 
-				<form class="wd-block">
+				<form class="wd-block" data-wd-device="desktop{wd-buddy-top}">
 					<textarea id="code" class="wd-code" style="height: 250px;" data-wd-load="get{examples/home.html}"></textarea>
 					<button type="button" class="wd-icon-reload" onclick="reload();"> Reload</button>
 				</form>
