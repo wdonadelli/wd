@@ -1,37 +1,20 @@
 <h2>Utilities</h2>
 
-<form class="wd-block">
-
-	<label>Parent</label>
-	<input type="text" onkeyup="setCSS('#parent', this.value);" />
-	<div class="wd-form-msg">
-		<span class="wd-form-msg-info">Defines the class of the parent element.</span>
-	</div>
-
-	<label>Child</label>
-	<input type="text" onkeyup="setCSS('#child', this.value);" />
-	<div class="wd-form-msg">
-		<span class="wd-form-msg-info">Defines the class of the child (middle) element.</span>
-	</div>
-
-</form>
-
-<div id="utilities" onclick="showCode('#utilities', false);" style="background-color: #dddddd">
-	<div style="position: relative;" id="parent">
+<div style="background-color: #dddddd">
+	<div style="position: relative;">
 		<div>first child</div>
-		<div id="child">Middle child</div>
+		<div>Middle child</div>
 		<div>LAST CHILD</div>
 	</div>
 </div>
 
-<details>
-	<summary>Class List</summary>
+<h3>Class List</h3>
 
 	<div class="wd-block">
-		<input type="search" data-wd-filter="show{}${#class_list}" placeholder="Search"/>
+		<input type="search" data-wd-filter="hide{3}${#class_list}" placeholder="Search"/>
 	</div>
 
-	<ul data-wd-repeat="get{examples/CSS/utilities.json}" id="class_list">
+	<ul data-wd-repeat="get{examples/utilities.json}" id="class_list">
 		<li>{{value}}</li>
 	</ul>
 </details>

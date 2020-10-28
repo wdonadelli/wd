@@ -1,0 +1,19 @@
+<div id="myDiv">Hi</div>
+
+<script>
+/*-------------------------------------------------------------------
+Use the "getValue" function to display the result in the preview box.
+--------------------------------------------------------------------*/
+getValue(wd().type);
+getValue(wd(null).type);
+getValue(wd("").type);
+getValue(wd("text content").type);
+getValue(wd(true).type);
+getValue(wd(12).type);
+getValue(wd("2010-01-02").type);
+getValue(wd("%today").type);
+getValue(wd("10:45").type);
+getValue(wd("%now").type);
+getValue(wd(document.getElementById("myDiv")).type);
+getValue(wd$("#myDiv").type);
+</script>

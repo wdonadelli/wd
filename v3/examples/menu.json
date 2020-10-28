@@ -1,5 +1,11 @@
 [
 	{
+		"name": "Home",
+		"color": "wd-bg-white",
+		"attr": "examples/home.html"
+	},
+
+	{
 		"name": "ATTR Action",
 		"color": "wd-bg-blue",
 		"attr": "examples/attr_action.html"
@@ -58,6 +64,16 @@
 		"name": "ATTR Send",
 		"color": "wd-bg-blue",
 		"attr": "examples/attr_send.html"
+	},
+	{
+		"name": "ATTR Set/Get",
+		"color": "wd-bg-blue",
+		"attr": "examples/attr_set_get.html"
+	},
+	{
+		"name": "ATTR Slide",
+		"color": "wd-bg-blue",
+		"attr": "examples/attr_slide.html"
 	},
 	{
 		"name": "ATTR Sort",
@@ -131,5 +147,11 @@
 		"name": "CSS Window",
 		"color": "wd-bg-purple",
 		"attr": "examples/css_window.html"
+	},
+
+	{
+		"name": "JS Example",
+		"color": "wd-bg-green",
+		"attr": "examples/js_script.html"
 	}
 ]

@@ -2688,7 +2688,7 @@ var wd = (function() {
 		value: function(text) {
 			this.run(function(elem) {
 				var scripts, script, HTML;
-				text     = text === undefined || text === null ? "" : text;
+				text = text === undefined || text === null ? "" : text;
 				HTML = new AttrHTML(elem);
 				elem[HTML.load] = text;
 				if (HTML.load === "innerHTML") {
@@ -2703,8 +2703,8 @@ var wd = (function() {
 						elem.appendChild(script);
 						WD(script).action("del");
 					}
-					loadingProcedures();
 				}
+				loadingProcedures();
 				return;
 			});
 			return this;

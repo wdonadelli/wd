@@ -39,7 +39,7 @@
 
 			<a
 				href="https://github.com/wdonadelli/wd/wiki"
-				class="wd-icon-help"
+				class="wd-icon-link"
 				title="Handbook"
 				target="_blank"
 			> Wiki</a>
@@ -60,8 +60,8 @@
 				</header>
 
 				<form class="wd-block">
-					<textarea id="code" class="wd-code" style="height: 250px;"></textarea>
-					<button type="button" class="wd-icon-reload" onclick="showView();"></button>
+					<textarea id="code" class="wd-code" style="height: 250px;" data-wd-load="get{examples/home.html}"></textarea>
+					<button type="button" class="wd-icon-reload" onclick="reload();"> Reload</button>
 				</form>
 
 			</article>
@@ -73,7 +73,7 @@
 				</header>
 
 				<div>
-					<div id="view"></div>
+					<div id="view" data-wd-load="get{examples/home.html}"></div>
 				</div>
 
 			</article>

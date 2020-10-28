@@ -1,6 +1,6 @@
 <h2>Send</h2>
 
-<script id="script">
+<script>
 function myExample(x) {
 	if (x.closed) {
 		wd$("#send > pre").item().textContent = wd(x).toString();
@@ -15,21 +15,11 @@ function myExample2(x) {
 }
 </script>
 
-<h3>Script</h3>
-<div id="egscript"></div>
-<script>boxExample("#script", "#egscript", true);</script>
-
-<h3>Basic</h3>
-
 <div class="wd-margin-height wd-block" id="send">
 	<button type="button" class="wd-icon-upload" data-wd-send="get{examples/target.php}callback{myExample}" > Send</button>
 	<label>Out</label>
 	<pre class="wd-code wd-padding"></pre>
 </div>
-
-<h4>Code</h4>
-<div id="egsend"></div>
-<script>boxExample("#send", "#egsend", true);</script>
 
 <h3>Form</h3>
 
@@ -41,7 +31,3 @@ function myExample2(x) {
 	<label>Out</label>
 	<pre class="wd-code wd-padding"></pre>
 </div>
-
-<h4>Code</h4>
-<div id="egsend2"></div>
-<script>boxExample("#send2", "#egsend2", true);</script>

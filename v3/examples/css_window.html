@@ -1,45 +1,25 @@
 <h2>Window</h2>
 
-<div class="wd-modal" id="modal" data-wd-action="close{}">
-	<div class="wd-window" id="win1" style="background-color: #ddddff; border: 1px solid black;">
-		<p>Window Content. Click to close.</p>
+<div class="wd-modal" data-wd-action="close{}">
+	<div class="wd-window">
+		<p>Window Content.</p>
 	</div>
 </div>
 
-<div class="wd-window" id="win2" data-wd-action="close{}" style="background-color: #ddddff; border: 1px solid black;">
+<div class="wd-window" data-wd-action="close{}">
 	<p>Window Content. Click to close.</p>
 </div>
 
+<p>Use <code>wd-open</code> to open the window.</p>
 
-
-
-
-
-
-<!----------------------------------------------------------------------------->
-<form class="wd-margin-height-child wd-block">
-	<label>Type</label>
-	<select onchange="setCSS('#win1, #win2', this.value);" title="Type of window">
-		<option value="wd-window">Default</option>
-		<option value="wd-window wd-win-small">Small</option>
-		<option value="wd-window wd-win-medium">Medium</option>
-		<option value="wd-window wd-win-big">Big</option>
-		<option value="wd-window wd-win-left">Left</option>
-		<option value="wd-window wd-win-right">Right</option>
-		<option value="wd-window wd-win-top">Top</option>
-		<option value="wd-window wd-win-bottom">Bottom</option>
-		<option value="wd-window wd-win-note">Note</option>
-	</select>
-	<div>
-		<div class="wd-row">
-			<div class="wd-block wd-col-06">
-				<button type="button" data-wd-action="toggle-open{#modal}" title="Open without background">Modal</button>
-			</div>
-			<div class="wd-block wd-col-06">
-				<button type="button" data-wd-action="toggle-open{#win2}" title="Open with background">No Modal</button>
-			</div>
-		</div>
-	</div>
-</form>
-
-<p class="wd-size-small">Use the form above to select the type of window and open examples of windows with and without background (See <a href="https://github.com/wdonadelli/wd/wiki/WD-ATTR-Action-Tool" target="_blank">action</a> attribute).</p>
+<h4>Add-ons</h4>
+<ul>
+	<li>wd-small</li>
+	<li>wd-medium</li>
+	<li>wd-big</li>
+	<li>wd-left</li>
+	<li>wd-right</li>
+	<li>wd-top</li>
+	<li>wd-bottom</li>
+	<li>wd-note</li>
+</ul>

@@ -2,16 +2,13 @@
 
 <h3>Check/Uncheck/Toggle</h3>
 
-<nav id="check">
+<nav>
 	<span data-wd-action="check{#testcheck input, #testcheck span}">Check</span>
 	<span data-wd-action="uncheck{#testcheck input, #testcheck span}">Uncheck</span>
 	<span data-wd-action="toggle-check{#testcheck input, #testcheck span}">Toggle</span>
 </nav>
 
-<div id="egcheck"></div>
-<script>boxExample("#check", "#egcheck", true);</script>
-
-<div class="wd-padding wd-align-center" id="testcheck">
+<div class="wd-padding wd-align-center">
 	<label><input type="checkbox" />Box 1</label>
 	<label><input type="checkbox" />Box 2</label>
 	<span>Text 1</span>
@@ -23,16 +20,13 @@
 
 <h3>Enable/Disable/Toggle</h3>
 
-<nav id="enable">
+<nav>
 	<span data-wd-action="enable{#testenable input, #testenable span}">Enable</span>
 	<span data-wd-action="disable{#testenable input, #testenable span}">Disable</span>
 	<span data-wd-action="toggle-enable{#testenable input, #testenable span}">Toggle</span>
 </nav>
 
-<div id="egenable"></div>
-<script>boxExample("#enable", "#egenable", true);</script>
-
-<div class="wd-padding wd-align-center" id="testenable">
+<div class="wd-padding wd-align-center">
 	<label><input type="checkbox" />Box 1</label>
 	<label><input type="checkbox" />Box 2</label>
 	<span>Text 1</span>
@@ -44,16 +38,13 @@
 
 <h3>Open/Close/Toggle</h3>
 
-<nav id="open">
+<nav>
 	<span data-wd-action="open{#testopen}">Open</span>
 	<span data-wd-action="close{#testopen}">Close</span>
 	<span data-wd-action="toggle-open{#testopen}">Toggle</span>
 </nav>
 
-<div id="egopen"></div>
-<script>boxExample("#open", "#egopen", true);</script>
-
-<details class="wd-cloud" id="testopen">
+<details class="wd-cloud">
 	<summary class="wd-bg-green">Open</summary>
 	<p class="wd-margin">content</p>
 </details>
@@ -65,16 +56,13 @@
 
 <h3>Show/Hide/Toggle</h3>
 
-<nav id="show">
+<nav>
 	<span data-wd-action="show{#testshow input, #testshow span}">Show</span>
 	<span data-wd-action="hide{#testshow input, #testshow span}">Hide</span>
 	<span data-wd-action="toggle-show{#testshow input, #testshow span}">Toggle</span>
 </nav>
 
-<div id="egshow"></div>
-<script>boxExample("#show", "#egshow", true);</script>
-
-<div class="wd-padding wd-align-center" id="testshow">
+<div class="wd-padding wd-align-center">
 	<label><input type="checkbox" />Box 1</label>
 	<label><input type="checkbox" />Box 2</label>
 	<span>Text 1</span>
@@ -86,16 +74,13 @@
 
 <h3>Tab/Next/Previous</h3>
 
-<nav id="tab">
+<nav>
 	<span data-wd-action="tab{#tab1}">Tab 1</span>
 	<span data-wd-action="tab{#tab2}">Tab 2</span>
 	<span data-wd-action="tab{#tab3}">Tab 3</span>
 	<span data-wd-action="next{#tabgroup}">Next</span>
 	<span data-wd-action="prev{#tabgroup}">Previous</span>
 </nav>
-
-<div id="egtab"></div>
-<script>boxExample("#tab", "#egtab", true);</script>
 
 <div class="wd-grid wd-cloud-child wd-border" id="tabgroup">
 	<span id="tab1">Tab 1</span>
@@ -124,25 +109,14 @@ function actReset() {
 }
 </script>
 
-
-<nav id="clean">
+<nav>
 	<span data-wd-action="clean{#testclean > *}">Clean</span>
 	<span data-wd-action="del{#testclean > *}">Delete</span>
 	<span onclick="actReset();" >Reset</span>
 </nav>
 
-<div id="egclean"></div>
-<script>boxExample("#clean", "#egclean", true);</script>
-
-<div id="testclean" class="wd-block"></div>
+<div class="wd-block"></div>
 
 <script>actReset();</script>
 
 <hr>
-<!----------------------------------------------------------------------------->
-
-
-
-
-
-
