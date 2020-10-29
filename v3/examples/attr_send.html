@@ -15,6 +15,8 @@ function myExample2(x) {
 }
 </script>
 
+<h3>Objects</h3>
+
 <div class="wd-margin-height wd-block" id="send">
 	<button type="button" class="wd-icon-upload" data-wd-send="get{examples/target.php}callback{myExample}" > Send</button>
 	<label>Out</label>
@@ -24,9 +26,15 @@ function myExample2(x) {
 <h3>Form</h3>
 
 <div class="wd-margin-height wd-block" id="send2">
+
 	<label>Name</label>
-	<input type="text" name="Name" />
-	<label><input type="checkbox" name="Confirm" />Confirm?</label>
+	<input type="text" name="text" />
+
+	<label><input type="checkbox" name="box" />Confirm?</label>
+
+	<label>File</label>
+	<input type="file" name="file" multiple="" />
+
 	<button type="button" class="wd-icon-upload" data-wd-send="get{examples/target.php}callback{myExample2}${#send2 *}" > Send</button>
 	<label>Out</label>
 	<pre class="wd-code wd-padding"></pre>

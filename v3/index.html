@@ -19,10 +19,7 @@
 
 <body>
 
-	<header class="wd-bg-white">
-		<h2>WD Libraries Examples</h2>
-
-		<nav class="wd-bg-black">
+		<nav class="wd-bg-black wd-buddy-top">
 
 			<span
 				class="wd-icon-menu"
@@ -44,40 +41,40 @@
 				title="Handbook"
 				target="_blank"
 			> Wiki</a>
+			
+			<span
+				class="wd-icon-search"
+				title="View"
+				data-wd-action="next{main}"
+				data-wd-click=""
+			> View</span>
+
 		</nav>
 
+	<header class="wd-bg-black wd-xborder-bottom wd-case-caps wd-align-center">
+		<h2>WD Libraries</h2>
 	</header>
 
 
 	<!-- Conteúdo -->
-	<main class="wd-flyer">
+	<main class="wd-margin-length wd-xmargin-height">
 		
-		<section data-wd-device="desktop{wd-row}">
+		<section class="wd-flyer">
 
-			<article class="wd-col-06">
+			<header class="wd-bg-green wd-shadow"><h3>Example View</h3></header>
 
-				<header class="wd-bg-blue">
-					<h4>Code</h4>
-				</header>
+			<div id="view" data-wd-load="get{examples/home.html}"></div>
 
-				<form class="wd-block" data-wd-device="desktop{wd-buddy-top}">
-					<textarea id="code" class="wd-code" style="height: 250px;" data-wd-load="get{examples/home.html}"></textarea>
-					<button type="button" class="wd-icon-reload" onclick="reload();"> Reload</button>
-				</form>
+		</section>
 
-			</article>
+		<section class="wd-flyer">
 
-			<article class="wd-col-06 wd-flyer">
+			<header class="wd-bg-blue wd-shadow"><h3>Example Code</h3></header>
 
-				<header class="wd-bg-green">
-					<h4>View</h4>
-				</header>
-
-				<div>
-					<div id="view" data-wd-load="get{examples/home.html}"></div>
-				</div>
-
-			</article>
+			<form class="wd-block">
+				<textarea id="code" class="wd-code" style="height: 300px;" data-wd-load="get{examples/home.html}"></textarea>
+				<button type="button" class="wd-icon-search" data-wd-action="next{main}" onclick="reload();"> View</button>
+			</form>
 
 		</section>
 
@@ -107,7 +104,9 @@
 					</div>
 
 					<div class="wd-col-02 wd-block">
-						<button type="button" class="wd-icon-close" data-wd-action="close{#menu}"> Exit</button>
+						<button type="button" class="wd-icon-close" data-wd-action="close{#menu}">
+							<span data-wd-device="mobile{wd-overlook}">Exit</span>
+						</button>
 					</div>
 
 				</div>

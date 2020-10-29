@@ -1,6 +1,6 @@
 <?php
-echo "\nFILES:\n";
+echo "\nFILES: ";
 print_r($_FILES);
-echo "\nREQUEST:\n";
+echo "\nREQUEST: ";
 print_r($_REQUEST);
 ?>
