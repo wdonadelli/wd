@@ -19,6 +19,8 @@
 
 <body>
 
+<div><span class="wd-title" title="willian">Donadelli</span></div>
+
 		<nav class="wd-bg-black wd-buddy-top">
 
 			<span
@@ -61,7 +63,9 @@
 		
 		<section class="wd-flyer">
 
-			<header class="wd-bg-green wd-shadow"><h3>Example View</h3></header>
+			<header class="wd-bg-green wd-shadow">
+				<h3 data-wd-action="next{main}">Example View</h3>
+			</header>
 
 			<div id="view" data-wd-load="get{examples/home.html}"></div>
 
@@ -69,7 +73,9 @@
 
 		<section class="wd-flyer">
 
-			<header class="wd-bg-blue wd-shadow"><h3>Example Code</h3></header>
+			<header class="wd-bg-blue wd-shadow">
+				<h3 data-wd-action="next{main}">Example Code</h3>
+			</header>
 
 			<form class="wd-block">
 				<textarea id="code" class="wd-code" style="height: 300px;" data-wd-load="get{examples/home.html}"></textarea>
@@ -81,52 +87,46 @@
 	</main>
 
 	<!-- Menu -->
-	<aside id="menu" class="wd-modal">
+	<aside  id="menu" class="wd-window-full wd-flyer wd-bg-white" >
 
-		<section class="wd-window wd-flyer wd-bg-white" >
+		<header class="wd-bg-blue" data-wd-action="close{#menu}">
+			<h3 class="wd-icon-menu"> Menu</h3>
+		</header>
 
-			<header class="wd-bg-blue" data-wd-action="close{#menu}">
-				<h3 class="wd-icon-menu"> Menu</h3>
-			</header>
+		<form>
 
-			<form>
+			<div class="wd-row">
 
-				<div class="wd-row">
-
-					<div class="wd-col-10 wd-block">
-						<input
-							type="search"
-							id="search"
-							data-wd-filter="show{}${#examples}"
-							autofocus=""
-							placeholder="Search..." 
-						/>
-					</div>
-
-					<div class="wd-col-02 wd-block">
-						<button type="button" class="wd-icon-close" data-wd-action="close{#menu}">
-							<span data-wd-device="mobile{wd-overlook}">Exit</span>
-						</button>
-					</div>
-
+				<div class="wd-col-11 wd-block">
+					<input
+						type="search"
+						id="search"
+						data-wd-filter="show{}${#examples}"
+						autofocus=""
+						placeholder="Search..." 
+					/>
 				</div>
 
-			</form>
+				<div class="wd-col-01 wd-block">
+					<button type="button" class="wd-icon-close" data-wd-action="close{#menu}"></button>
+				</div>
 
-			<section
-				id="examples"
-				class="wd-grid wd-cloud-child wd-bg-black-child wd-border-width wd-cloud"
-				data-wd-repeat="get{examples/menu.json}"
-			>
+			</div>
 
-				<a
-					href="#"
-					data-wd-data="wdLoad{get{{{attr}}}}${#code, #view}"
-					class="wd-upon-enter {{color}}"
-					data-wd-action="close{#menu}"
-				>{{name}}</a>
+		</form>
 
-			</section>
+		<section
+			id="examples"
+			class="wd-grid wd-cloud-child wd-bg-black-child wd-border-width wd-cloud"
+			data-wd-repeat="get{examples/menu.json}"
+		>
+
+			<a
+				href="#"
+				data-wd-data="wdLoad{get{{{attr}}}}${#code, #view}"
+				class="wd-upon-enter {{color}}"
+				data-wd-action="close{#menu}"
+			>{{name}}</a>
 
 		</section>
 

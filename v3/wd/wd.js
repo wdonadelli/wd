@@ -3501,32 +3501,9 @@ var wd = (function() {
 				attr   = core[c];
 				target = WD($(attr["$"])).type === "dom" ? WD($(attr["$"])) : WD(e);
 				target.run(function(x) {
-					if ("text" in attr)  {x.textContent = attr["text"];}
-					if ("value" in attr) {x.value = attr["value"];}
-					return;
-				});
-			}
-		}
-		return;
-	};
-
-	/*Obtem para si o valor de outro elemento*/
-	function data_wdGet(e) {
-		var data, core, attr, target;
-		data = new AttrHTML(e);
-		if (data.has("wdGet")) {
-			attr   = data.core("wdGet")[0];
-
-
-			target = WD($(attr["$"])).type === "dom" ? WD($(attr["$"])) : WD(e);
-			
-			
-			
-			if ("$" in attr) {
-				WD($(attr["$"])).run(function(x) {
-					var target = new AttrHTML(x);
-					value = target.form === true ? x.value : x.textContent;
-					e[(data.form === true ? "value" : "textContent")] = value;				
+					if ("text"  in attr) {x.textContent = attr["text"];}
+					if ("value" in attr) {x.value       = attr["value"];}
+					if ("class" in attr) {x.className   = attr["class"];}
 					return;
 				});
 			}
@@ -3867,7 +3844,6 @@ var wd = (function() {
 			data_wdSortCol(elem);
 			data_wdSend(elem);
 			data_wdSet(elem);
-			data_wdGet(elem);
 			elem = elem.parentElement;/*efeito bolha*/
 		}
 		return;
@@ -3935,7 +3911,9 @@ var wd = (function() {
 	function headScriptProcedures(ev) {
 		var style;
 		style = document.createElement("STYLE");
-		style.textContent  = ".js-wd-no-display     {display: none !important;}";
+		style.textContent = "";
+		style.textContent += ".js-wd-no-display     {display: none !important;}";
+		style.textContent += ".js-wd-no-display     {display: none !important;}";
 		style.textContent += ".js-wd-mask-error     {color: #663399 !important; background-color: #e8e0f0 !important;}";
 		style.textContent += ".js-wd-checked:before {content: \"\\2713 \"}";
 		style.textContent += ".js-wd-disabled       {pointer-events: none; color: #ccc; opacity: 0.8; cursor: default !important;}";
@@ -3943,7 +3921,6 @@ var wd = (function() {
 		style.textContent += "*[data-wd-sort-col]:before {content: \"\\2195 \";}";
 		style.textContent += "*[data-wd-sort-col=\"-1\"]:before {content: \"\\2191 \";}";
 		style.textContent += "*[data-wd-sort-col=\"+1\"]:before {content: \"\\2193 \";}";
-		style.textContent += ".wd-modal[data-wd-action] > .wd-window {cursor: auto;}";
 		document.head.appendChild(style);
 		return;
 	};

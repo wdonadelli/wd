@@ -319,8 +319,8 @@ script, style {display: none !important;}
 
 /* -- Efeitos (uso interno) -- */
 @keyframes zoom-in {
-	from {transform: scale(0); opacity: 0;}
-	to   {transform: scale(1); opacity: 1;}
+	from {-ms-transform: scale(0); -webkit-transform: scale(0); transform: scale(0); opacity: 0;}
+	to   {-ms-transform: scale(1); -webkit-transform: scale(1); transform: scale(1); opacity: 1;}
 }
 @keyframes fade-in {
 	from {opacity: 0;}
@@ -520,87 +520,108 @@ script, style {display: none !important;}
 }
 
 /* -- Janelas -- */
+.wd .wd-window,      .wd .wd-window-full,
+.wd .wd-window-left, .wd .wd-window-right,
+.wd .wd-window-top,  .wd .wd-window-bottom,
 .wd .wd-modal {
 	display: none;
 	position: fixed;
+	opacity: 1;
+
+}
+/*exibindo a janela*/
+.wd .wd-window.wd-open,                  .wd .wd-window-full.wd-open,
+.wd .wd-window-left.wd-open,             .wd .wd-window-right.wd-open,
+.wd .wd-window-top.wd-open,              .wd .wd-window-bottom.wd-open,
+.wd .wd-modal.wd-open > .wd-window,      .wd .wd-modal.wd-open > .wd-window-full,
+.wd .wd-modal.wd-open > .wd-window-left, .wd .wd-modal.wd-open > .wd-window-right,
+.wd .wd-modal.wd-open > .wd-window-top,  .wd .wd-modal.wd-open > .wd-window-bottom,
+.wd .wd-modal.wd-open {display: block;}
+/*plano de fundo*/
+.wd .wd-modal {
+	animation: fade-in 0.5s;
 	top: 0;
+	right: 0;
 	bottom: 0;
 	left: 0;
-	right: 0;
 	width: 100%;
 	height: 100%;
 	background-color: #000000;
 	background-color: rgba(0,0,0,0.8);
-	opacity: 1;
 	z-index: 888;
 }
-/* -- integração com wd js -- */
-.wd .wd-modal.wd-open {display: block;}
-
-.wd .wd-window {
-	display: none;
-	position: fixed !important;
-	top: 0;
-	bottom: 0;
-	left: 0;
-	right: 0;
-	width: 100%;
-	height: 100%;
-	margin: auto;
+/*janelas de conteúdo*/
+.wd .wd-window,      .wd .wd-window-full,
+.wd .wd-window-left, .wd .wd-window-right,
+.wd .wd-window-top,  .wd .wd-window-bottom {
+	background-color: #ffffff;
 	overflow: auto;
 	z-index: 777;
-	animation: zoom-in 0.5s;
-	background-color: #FFFFFF;
+	cursor: auto;
 }
-.wd .wd-modal > .wd-window {position: absolute !important;}
-
-/* -- integração com wd js -- */
-.wd .wd-window.wd-open, .wd .wd-modal.wd-open > .wd-window {display: block;}
-
-.wd .wd-window.wd-win-small {
-	top: 40%;
-	bottom: auto;
-	width: 20%;
-	max-height: 20%;
+.wd .wd-modal > .wd-window,      .wd .wd-modal > .wd-window-full,
+.wd .wd-modal > .wd-window-left, .wd .wd-modal > .wd-window-right,
+.wd .wd-modal > .wd-window-top,  .wd .wd-modal > .wd-window-bottom {
+	position: absolute;
 }
-.wd .wd-window.wd-win-medium {
-	top: 30%;
-	bottom: auto;
-	width: 40%;
-	max-height: 40%;
-}
-.wd .wd-window.wd-win-big {
-	top: 5%;
-	bottom: auto;
-	width: 90%;
+/*janela simples*/
+.wd .wd-window {
+	animation: fade-in 0.5s;
+	top: 50%;
+	left: 50%;
+	width: auto;
+	max-width: 90%;
+	height: auto;
 	max-height: 90%;
+	-ms-transform: translate(-50%, -50%);
+	-webkit-transform: translate(-50%, -50%);
+	transform: translate(-50%, -50%);
 }
-.wd .wd-window.wd-win-top {
-	bottom: auto;
+/*tela inteira*/
+.wd .wd-window-full {
+	animation: zoom-in 0.5s;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+}
+/*nas extremidades*/
+.wd .wd-window-top, .wd .wd-window-bottom {
+	right: 0;
+	left: 0;
+	width: 100%;
+	height: auto;
 	max-height: 40%;
-	animation: from-top 0.5s;
 }
-.wd .wd-window.wd-win-bottom {
-	top: auto;
-	max-height: 40%;
-	animation: from-bottom 0.5s;
-}
-.wd .wd-window.wd-win-left {
-	right: auto;
+.wd .wd-window-top    {animation: from-top 0.5s;    top: 0;}
+.wd .wd-window-bottom {animation: from-bottom 0.5s; bottom: 0;}
+/*nas laterais*/
+.wd .wd-window-right, .wd .wd-window-left {
+	top: 0;
+	bottom: 0;
+	width: auto;
 	max-width: 25%;
-	animation: from-left 0.5s;
+	height: 100%;
 }
-.wd .wd-window.wd-win-right {
-	left: auto;
-	max-width: 25%;
-	animation: from-right 0.5s;
-}
-.wd .wd-window.wd-win-note {
-	bottom: auto;
-	width: 95%;
-	height: 15%;
-	animation: from-right 0.5s;
-}
+.wd .wd-window-right {animation: from-right 0.5s; right: 0;}
+.wd .wd-window-left  {animation: from-left 0.5s;  left: 0;}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /*-- Input Messages --*/
 .wd .wd-form-msg {
@@ -805,13 +826,6 @@ script, style {display: none !important;}
 /*============================================================================*/
 /*--  ESTILOS ESTRUTURAIS -- */
 
-/*FIXME
-para imprimir, deve-se retirar os efeitos estruturais
-de fixed para absolute
-de width 70/85% para 100% e margin auto
-*/
-
-
 /* -- Cabeçalho e Rodapés fixos -- */
 .wd body.wd-fixed > header, body.wd.wd-fixed > header,
 .wd body.wd-fixed > footer, body.wd.wd-fixed > footer {
@@ -824,6 +838,12 @@ de width 70/85% para 100% e margin auto
 .wd body.wd-fixed > header, body.wd.wd-fixed > header {top: 0;}
 .wd body.wd-fixed > footer, body.wd.wd-fixed > footer {bottom: 0;}
 
+@media print {
+	.wd body.wd-fixed > header, body.wd.wd-fixed > header,
+	.wd body.wd-fixed > footer, body.wd.wd-fixed > footer {
+		position: relative;
+	}
+}
 
 /* -- corpo (main) centralizado -- */
 .wd body.wd-center > main, body.wd.wd-center > main {
@@ -844,28 +864,79 @@ de width 70/85% para 100% e margin auto
 	width: 85%;
 }
 
+@media print {
+	.wd body.wd-center > main, body.wd.wd-center > main,
+	.wd body.wd-left   > main, body.wd.wd-left   > main
+	.wd body.wd-right  > main, body.wd.wd-right  > main {
+		margin: auto;
+		width: 100%;
+	}
+}
 
 /*============================================================================*/
 /*--  ESTILOS UTILITÁRIOS -- */
 
 /* -- Localização -- */
 .wd .wd-place-n,  .wd .wd-place-e,  .wd .wd-place-s,  .wd .wd-place-w,
-.wd .wd-place-ne, .wd .wd-place-se, .wd .wd-place-sw, .wd .wd-place-nw, .wd .wd-place-ctr {
+.wd .wd-place-ne, .wd .wd-place-se, .wd .wd-place-sw, .wd .wd-place-nw,
+.wd .wd-place-ctr {
 	display: block !important;
 	position: absolute !important;
 	margin: 0 !important;
 	text-align: center !important;
 	vertical-align: middle !important;
 }
-.wd .wd-place-n   {top:    0 !important; left: 50% !important; transform: translate(-50%, 0) !important;}
-.wd .wd-place-ne  {top:    0 !important; right:  0 !important;}
-.wd .wd-place-e   {right:  0 !important; top:  50% !important; transform: translate(0, -50%) !important;}
-.wd .wd-place-se  {bottom: 0 !important; right:  0 !important;}
-.wd .wd-place-s   {bottom: 0 !important; left: 50% !important; transform: translate(-50%, 0) !important;}
-.wd .wd-place-sw  {bottom: 0 !important; left:   0 !important;}
-.wd .wd-place-w   {left:   0 !important; top:  50% !important; transform: translate(0, -50%) !important;}
-.wd .wd-place-nw  {top:    0 !important; left:   0 !important;}
-.wd .wd-place-ctr {top:  50% !important; left: 50% !important; transform: translate(-50%, -50%) !important;}
+.wd .wd-place-n {
+	top:  0 !important;
+	left: 50% !important;
+	-ms-transform: translate(-50%, 0) !important;
+	-webkit-transform: translate(-50%, 0) !important;
+	transform: translate(-50%, 0) !important;
+}
+.wd .wd-place-ne {
+	top:   0 !important;
+	right: 0 !important;
+}
+.wd .wd-place-e {
+	right: 0 !important;
+	top:   50% !important;
+	-ms-transform: translate(0, -50%) !important;
+	-webkit-transform: translate(0, -50%) !important;
+	transform: translate(0, -50%) !important;
+}
+.wd .wd-place-se {
+	bottom: 0 !important;
+	right:  0 !important;
+}
+.wd .wd-place-s {
+	bottom: 0 !important;
+	left:   50% !important;
+	-ms-transform: translate(-50%, 0) !important;
+	-webkit-transform: translate(-50%, 0) !important;
+	transform: translate(-50%, 0) !important;
+}
+.wd .wd-place-sw {
+	bottom: 0 !important;
+	left:   0 !important;
+}
+.wd .wd-place-w {
+	left: 0 !important;
+	top:  50% !important;
+	-ms-transform: translate(0, -50%) !important;
+	-webkit-transform: translate(0, -50%) !important;
+	transform: translate(0, -50%) !important;
+}
+.wd .wd-place-nw {
+	top:  0 !important;
+	left: 0 !important;
+}
+.wd .wd-place-ctr {
+	top:  50% !important;
+	left: 50% !important;
+	-ms-transform: translate(-50%, -50%) !important;
+	-webkit-transform: translate(-50%, -50%) !important;
+	transform: translate(-50%, -50%) !important;
+}
 
 /* -- Textual --*/
 .wd .wd-b, .wd .wd-b-child > *       {font-weight: bold !important;}

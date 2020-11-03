@@ -66,9 +66,9 @@
 		"attr": "examples/attr_send.html"
 	},
 	{
-		"name": "ATTR Set/Get",
+		"name": "ATTR Set",
 		"color": "wd-bg-blue",
-		"attr": "examples/attr_set_get.html"
+		"attr": "examples/attr_set.html"
 	},
 	{
 		"name": "ATTR Slide",
