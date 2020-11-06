@@ -864,7 +864,7 @@ var wd = (function() {
 	});
 
 	/*transforma notação JSON em objeto*/
-	Object.defineProperty(WDtext.prototype, "csv", {//FIXME
+	Object.defineProperty(WDtext.prototype, "csv", {
 		enumerable: true,
 		get: function() {
 			var head, json, rows, cols;
@@ -982,24 +982,14 @@ var wd = (function() {
 	/*Exibe uma mensagem temporária na tela*/
 	Object.defineProperty(WDtext.prototype, "message", {
 		enumerable: true,
-		value: function(type, time) {
-			if (WD(document.body).type === "dom") {
+		value: function(time) {//FIXME tirei um argumento e transformei em milisegundos
+			if (WD(document.body).type === "dom") {/*verificar se o documento foi carregado*/
 				var msgWindow = document.createElement("DIV");
 				msgWindow.innerHTML = this.toString();
-				if (type === "error") {
-					type = "#DC143C";
-				} else if (type === "info") {
-					type = "#1E90FF";
-				} else if (type === "warn") {
-					type = "#ff8c00";
-				} else if (type === "ok") {
-					type = "#008080";
-				} else {
-					type = "#000000";
-				};
 
 				WD(msgWindow).style({
 					display: "block",
+					fontSize: "0.9em",
 					minWidth: deviceController === "Desktop" ? "25%" : "auto",
 					maxWidth: deviceController === "Desktop" ? "33%" : "auto",
 					maxHeight: "90%",
@@ -1007,16 +997,16 @@ var wd = (function() {
 					wordWrap: "break-word",
 					padding: "0.5em",
 					position: "fixed",
-					top: "0.5em",
-					right: "0.5em",
-					left: deviceController === "Desktop" ? "auto" : "0.5em",
-					color: type,
-					backgroundColor: "#FFFFFF",
-					border: "1px solid "+type,
-					boxShadow: "0.5em 0.5em 0.5em #cccccc",
-					borderRadius: "0.2em",
+					top: "0.2em",
+					right: "0.2em",
+					left: deviceController === "Desktop" ? "auto" : "0.2em",
+					border: "1px solid #f8f8ff",
+					color: "#333333",
+					backgroundColor: "#f8f8ff",
+					boxShadow: "0 0 0.5em 0.2em #333333",
 					zIndex: "999999",
 					cursor: "pointer",
+					animation: "js-wd-fade 0.5s"
 				});
 				msgWindow.onclick = function() {
 					document.body.removeChild(msgWindow);
@@ -1028,10 +1018,10 @@ var wd = (function() {
 				time = WD(time);
 				if (time.type !== "number") {
 					time = 6500;
-				} else if (time.number === "integer" || time.number === "real") {
-					time = time.valueOf() * 1000;
-				} else {
+				} else if (time.number === "infinity" || time.valueOf() <= 0) {
 					time = 0;
+				} else {
+					time = time.valueOf();
 				}
 
 				if (time > 0) {
@@ -3256,68 +3246,52 @@ var wd = (function() {
 				ru: "Запрос выполняется...",
 				du: "Anfrage in Bearbeitung...",
 				fr: "Demande en cours.",
-				zh: "请求正在进行中。",
 			},
 			fileTitle: {
-				en: "Broken rules",
-				pt: "Regras quebradas",
-				es: "Reglas rotas",
-				it: "Regole infrante",
-				ru: "Нарушенные правила",
-				du: "Gebrochene Regeln",
-				fr: "Règles brisées",
-				zh: "违反规则",
+				en: "Archives: occurrences",
+				pt: "Arquivos: ocorrências",
+				es: "Archivos: ocurrencias",
+				it: "Archivi: occorrenze",
+				ru: "Архивы: случаи",
+				du: "Archiv: Vorkommen",
+				fr: "Archives: occurrences",
 			},
 			fileSize: {
-				en: "File size",
-				pt: "Tamanho do arquivo",
-				es: "Tamaño del archivo",
-				it: "Dimensione del file",
-				ru: "Размер файла",
-				du: "Dateigröße",
-				fr: "Taille du fichier",
-				zh: "文件大小",
+				en: "Individual size exceeded",
+				pt: "Tamanho individual excedido",
+				es: "Se superó el tamaño individual",
+				it: "Dimensione individuale superata",
+				ru: "Превышен индивидуальный размер",
+				du: "Einzelgröße überschritten",
+				fr: "Taille individuelle dépassée",
 			},
 			fileTotal: {
-				en: "Total file size",
-				pt: "Tamanho total do arquivo",
-				es: "Tamaño total del archivo",
-				it: "Dimensione totale del file",
-				ru: "Общий размер файла",
-				du: "Gesamtgröße der Datei",
-				fr: "Taille totale du fichier",
-				zh: "文件总大小",
+				en: "Total size exceeded",
+				pt: "Tamanho total excedido",
+				es: "Tamaño total excedido",
+				it: "Dimensioni totali superate",
+				ru: "Общий размер превышен",
+				du: "Gesamtgröße überschritten",
+				fr: "Taille totale dépassée",
 			},
 			fileChar: {
-				en: "Symbols not allowed",
-				pt: "Símbolos não permitidos",
-				es: "Símbolos no permitidos",
-				it: "Simboli non ammessi",
+				en: "Characters not allowed",
+				pt: "Caracteres não permitidos",
+				es: "Caracteres no permitidos",
+				it: "Caratteri non ammessi",
 				ru: "Символы не разрешены",
-				du: "Symbole nicht erlaubt",
-				fr: "Symboles non autorisés",
-				zh: "不允许使用符号",
+				du: "Zeichen nicht erlaubt",
+				fr: "Caractères non autorisés",
 			},
 			fileLen: {
-				en: "Number of files",
-				pt: "Número de arquivos",
-				es: "Número de archivos",
-				it: "Numero di file",
-				ru: "Количество файлов",
-				du: "Anzahl der Dateien",
-				fr: "Nombre de fichiers",
-				zh: "文件数",
-			},
-			fileType: {
-				en: "Allowed file type",
-				pt: "Tipo de arquivo permitido",
-				es: "Tipo de archivo permitido",
-				it: "Tipo di file consentito",
-				ru: "Допустимый тип файла",
-				du: "Zulässiger Dateityp",
-				fr: "Type de fichier autorisé",
-				zh: "允许的文件类型",
-			},
+				en: "Number of files exceeded",
+				pt: "Número de arquivos excedido",
+				es: "Se superó el número de archivos",
+				it: "Numero di file superato",
+				ru: "Превышено количество файлов",
+				du: "Anzahl der Dateien überschritten",
+				fr: "Nombre de fichiers dépassé",
+			}
 		};
 
 		local = lang().substr(0, 2).toLowerCase();
@@ -3659,10 +3633,9 @@ var wd = (function() {
 		type  = e.type.toLowerCase();
 		files = "files" in e ? e.files : [];
 		value = data.core("wdFile")[0];
-		msg   = ["<h2>"+wdConfig.fileTitle+"</h2>"];
+		msg   = [];
 		error = {
 			fileSize:  [],
-			fileType:  [],
 			fileChar:  [],
 			fileLen:   0,
 			fileTotal: 0
@@ -3684,15 +3657,6 @@ var wd = (function() {
 					}
 				}
 
-				/* verificar o tipo do arquivo */
-				info = WD(value["type"]);
-				if (info.type === "text" && "type" in files[i]) {
-					info = WD(info.toString().split(" "));
-					if (info.inside(files[i].type) === false) {
-						error.fileType.push(name);
-					}
-				}
-
 				/* verificar caracteres do arquivo */
 				info = WD(value["char"]);
 				if (info.type === "text" && "name" in files[i]) {
@@ -3707,7 +3671,7 @@ var wd = (function() {
 			info = WD(value["len"]);
 			if (info.type === "number" && "length" in files) {
 				if (error.fileLen > info.round()) {
-					msg.push("<dt><b>"+wdConfig.fileLen+" &gt; "+info.round()+"</b>.</dt>");
+					msg.push(wdConfig.fileLen+" &larr; "+info.round());
 				}
 			}
 
@@ -3715,35 +3679,26 @@ var wd = (function() {
 			info = WD(value["total"]);
 			if (info.type === "number") {
 				if (error.fileTotal > info.round()) {
-					msg.push("<dt><b>"+wdConfig.fileTotal+" &gt; "+calcByte(info)+"</b>.</dt>");
+					msg.push(wdConfig.fileTotal+" &larr; "+calcByte(info));
 				}
 			}
 
 			/*verificando tamanho dos arquivos*/
 			info = WD(value["size"]);
 			if (error.fileSize.length > 0) {
-				msg.push("<dt><b>"+wdConfig.fileSize+" &gt; "+calcByte(info)+"</b>:</dt>");
-				msg.push("<dd>"+error.fileSize.join("</dd><dd>")+"</dd>");
-			}
-
-			/*verificando tipo dos arquivos*/
-			info = WD(value["type"]);
-			if (error.fileType.length > 0) {
-				msg.push("<dt><b>"+wdConfig.fileType+"</b> ["+info+"]:</dt>");
-				msg.push("<dd>"+error.fileType.join("</dd><dd>")+"</dd>");
+				msg.push(wdConfig.fileSize+" &larr; "+calcByte(info));
 			}
 
 			/*verificando caracteres do arquivos*/
 			info = WD(value["char"]);
 			if (error.fileChar.length > 0) {
-				msg.push("<dt><b>"+wdConfig.fileChar+"</b> ["+info+"]:</dt>");
-				msg.push("<dd>"+error.fileChar.join("</dd><dd>")+"</dd>");
+				msg.push(wdConfig.fileChar+" &larr; "+info);
 			}
 
 			/* apagando arquivos e exibindo erro */
 			if (msg.length > 1) {
 				e.value = null;
-				WD("<small><dl>"+msg.join("")+"<dl></small>").message("info", 0);
+				WD("<h3><center>"+wdConfig.fileTitle+"</center></h3><ul><li>"+msg.join("</li><li>")+"</li></ul>").message(10000);
 				WD(e).class({add: "js-wd-mask-error"});
 			} else {
 				WD(e).class({del: "js-wd-mask-error"});
@@ -3912,7 +3867,8 @@ var wd = (function() {
 		var style;
 		style = document.createElement("STYLE");
 		style.textContent = "";
-		style.textContent += ".js-wd-no-display     {display: none !important;}";
+		style.textContent += "@keyframes js-wd-fade  {from {opacity: 0;} to {opacity: 1;}}";
+		style.textContent += "@keyframes js-wd-fade2 {from {opacity: 0.5;} to {opacity: 1;}}";
 		style.textContent += ".js-wd-no-display     {display: none !important;}";
 		style.textContent += ".js-wd-mask-error     {color: #663399 !important; background-color: #e8e0f0 !important;}";
 		style.textContent += ".js-wd-checked:before {content: \"\\2713 \"}";
@@ -3921,6 +3877,8 @@ var wd = (function() {
 		style.textContent += "*[data-wd-sort-col]:before {content: \"\\2195 \";}";
 		style.textContent += "*[data-wd-sort-col=\"-1\"]:before {content: \"\\2191 \";}";
 		style.textContent += "*[data-wd-sort-col=\"+1\"]:before {content: \"\\2193 \";}";
+		style.textContent += "*[data-wd-repeat] > *, *[data-wd-load] > * {visibility: hidden;}";
+		style.textContent += "*[data-wd-slide] > * {animation: js-wd-fade2 1s;}";
 		document.head.appendChild(style);
 		return;
 	};
