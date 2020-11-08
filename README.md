@@ -12,7 +12,7 @@ The **Web Design** tool ([WD Style Sheet](WD-Style-Sheet)) consists of a library
 - [Javascript](https://wdonadelli.github.io/wd/v3/wd/wd.js)
 - [Style Sheet](https://wdonadelli.github.io/wd/v3/wd/wd.css)
 - [Release Notes](https://github.com/wdonadelli/wd/wiki/WD-Release-Notes)
-- [Examples](https://wdonadelli.github.io/wd/v3)
+- [Test Area](https://wdonadelli.github.io/wd/v3)
 
 ## YouTube Demo Videos
 
