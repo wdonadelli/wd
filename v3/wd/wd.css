@@ -298,7 +298,7 @@ script, style {display: none !important;}
 	padding: 0.3em;
 }
 
-/*TODO testando select personalizado*/
+/*testando select personalizado*/
 .wd select::-ms-expand {
      display: none;
 }
@@ -318,39 +318,39 @@ script, style {display: none !important;}
 /* -- ESTILOS DE COMPONENTES -- */
 
 /* -- Efeitos (uso interno) -- */
-@keyframes zoom-in {
+@keyframes wd-zoom-in {
 	from {-ms-transform: scale(0); -webkit-transform: scale(0); transform: scale(0); opacity: 0;}
 	to   {-ms-transform: scale(1); -webkit-transform: scale(1); transform: scale(1); opacity: 1;}
 }
-@keyframes fade-in {
+@keyframes wd-fade-in {
 	from {opacity: 0;}
 	to   {opacity: 1;}
 }
-@keyframes fade-out {
+@keyframes wd-fade-out {
 	from {opacity: 1;}
 	to   {opacity: 0;}
 }
-@keyframes visible-in {
+@keyframes wd-visible-in {
 	from {opacity: 0; visibility: hidden;}
 	to   {opacity: 1; visibility: visible;}
 }
-@keyframes visible-out {
+@keyframes wd-visible-out {
 	from {opacity: 1; visibility: visible;}
 	to   {opacity: 0; visibility: hidden;}
 }
-@keyframes from-top {
+@keyframes wd-from-top {
 	from {top: -100%; bottom: 200%; opacity: 0;}
 	to   {opacity: 1;}
 }
-@keyframes from-bottom {
+@keyframes wd-from-bottom {
 	from {top: 200%; bottom: -100%; opacity: 0;}
 	to   {opacity: 1;}
 }
-@keyframes from-left {
+@keyframes wd-from-left {
 	from {left: -100%; right: 200%; opacity: 0;}
 	to   {opacity: 1;}
 }
-@keyframes from-right {
+@keyframes wd-from-right {
 	from {left: 200%; right: -100%; opacity: 0;}
 	to   {opacity: 1;}
 }
@@ -456,10 +456,10 @@ script, style {display: none !important;}
 	width: 10em;
 	z-index: 555;
 }
-.wd-tip-hover-top, .wd-tip-click-top       {bottom: 100%; left:   0;}
-.wd-tip-hover-right, .wd-tip-click-right   {left:   100%; top:    0;}
+.wd-tip-hover-top,    .wd-tip-click-top    {bottom: 100%; left:   0;}
+.wd-tip-hover-right,  .wd-tip-click-right  {left:   100%; top:    0;}
 .wd-tip-hover-bottom, .wd-tip-click-bottom {left:      0; top: 100%;}
-.wd-tip-hover-left, .wd-tip-click-left     {right:  100%; top:    0;}
+.wd-tip-hover-left,   .wd-tip-click-left   {right:  100%; top:    0;}
 
 /* -- integração com wd js (wd-open) -- */
 .wd .wd-tip:hover > .wd-tip-hover-top,    .wd-tip.wd-open > .wd-tip-click-top,
@@ -467,7 +467,7 @@ script, style {display: none !important;}
 .wd .wd-tip:hover > .wd-tip-hover-bottom, .wd-tip.wd-open > .wd-tip-click-bottom,
 .wd .wd-tip:hover > .wd-tip-hover-left,   .wd-tip.wd-open > .wd-tip-click-left {
 	display: block !important;
-	animation: fade-in 0.5s;
+	animation: wd-fade-in 0.5s;
 }
 
 /* -- caixa de blocos -- */
@@ -519,6 +519,13 @@ script, style {display: none !important;}
 	width: 13em;
 }
 
+/* -- Detalhes -- */
+.wd .wd-details {display: none;}
+.wd .wd-details.wd-open {
+	display: block;
+	animation: wd-fade-in 0.5s;
+}
+
 /* -- Janelas -- */
 .wd .wd-window,      .wd .wd-window-full,
 .wd .wd-window-left, .wd .wd-window-right,
@@ -539,7 +546,7 @@ script, style {display: none !important;}
 .wd .wd-modal.wd-open {display: block;}
 /*plano de fundo*/
 .wd .wd-modal {
-	animation: fade-in 0.5s;
+	animation: wd-fade-in 0.5s;
 	top: 0;
 	right: 0;
 	bottom: 0;
@@ -566,7 +573,7 @@ script, style {display: none !important;}
 }
 /*janela simples*/
 .wd .wd-window {
-	animation: fade-in 0.5s;
+	animation: wd-fade-in 0.5s;
 	top: 50%;
 	left: 50%;
 	width: auto;
@@ -579,7 +586,7 @@ script, style {display: none !important;}
 }
 /*tela inteira*/
 .wd .wd-window-full {
-	animation: zoom-in 0.5s;
+	animation: wd-zoom-in 0.5s;
 	top: 0;
 	right: 0;
 	bottom: 0;
@@ -595,8 +602,8 @@ script, style {display: none !important;}
 	height: auto;
 	max-height: 40%;
 }
-.wd .wd-window-top    {animation: from-top 0.5s;    top: 0;}
-.wd .wd-window-bottom {animation: from-bottom 0.5s; bottom: 0;}
+.wd .wd-window-top    {animation: wd-from-top 0.5s;    top: 0;}
+.wd .wd-window-bottom {animation: wd-from-bottom 0.5s; bottom: 0;}
 /*nas laterais*/
 .wd .wd-window-right, .wd .wd-window-left {
 	top: 0;
@@ -605,23 +612,8 @@ script, style {display: none !important;}
 	max-width: 25%;
 	height: 100%;
 }
-.wd .wd-window-right {animation: from-right 0.5s; right: 0;}
-.wd .wd-window-left  {animation: from-left 0.5s;  left: 0;}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+.wd .wd-window-right {animation: wd-from-right 0.5s; right: 0;}
+.wd .wd-window-left  {animation: wd-from-left 0.5s;  left: 0;}
 
 /*-- Input Messages --*/
 .wd .wd-form-msg {
@@ -635,7 +627,7 @@ script, style {display: none !important;}
 .wd textarea:focus + .wd-form-msg,
 .wd select:focus   + .wd-form-msg,
 .wd button:focus   + .wd-form-msg {
-	animation: from-left 0.4s;
+	animation: wd-from-left 0.4s;
 	display: block;
 }
 
@@ -659,7 +651,7 @@ script, style {display: none !important;}
 .wd textarea + .wd-form-msg > .wd-form-msg-info,
 .wd select   + .wd-form-msg > .wd-form-msg-info,
 .wd button   + .wd-form-msg > .wd-form-msg-info {
-	animation: from-bottom 0.4s;
+	animation: wd-from-bottom 0.4s;
 	display: block;
 }
 
@@ -674,7 +666,7 @@ script, style {display: none !important;}
 .wd textarea:invalid      + .wd-form-msg > .wd-form-msg-warn,
 .wd select:out-of-range   + .wd-form-msg > .wd-form-msg-warn,
 .wd select:invalid        + .wd-form-msg > .wd-form-msg-warn {
-	animation: from-bottom 0.4s;
+	animation: wd-from-bottom 0.4s;
 	display: block;
 }
 
@@ -875,6 +867,36 @@ script, style {display: none !important;}
 
 /*============================================================================*/
 /*--  ESTILOS UTILITÁRIOS -- */
+
+/* -- atributos -- */
+.wd .wd-attr-cite:after {
+	content: " (" attr(cite) ")";
+}
+.wd q.wd-attr-cite:after {
+	content: "\201C" " (" attr(cite) ")";
+}
+.wd q.wd-attr-cite:before {
+	content: "\201D";
+}
+.wd blockquote.wd-attr-cite:after {
+	content: attr(cite);
+	font-style: italic;
+	display: block;
+	text-align: right;
+	opacity: 0.8;
+}
+.wd .wd-attr-href:after {
+	content: attr(href);
+	font-style: italic;
+}
+.wd *[href^="mailto:"].wd-attr-href:after {
+	content: "\2039" attr(href) "\203A";
+	font-style: italic;
+}
+.wd .wd-attr-title:after {
+	content: " (" attr(title) ")";
+	font-style: italic;
+}
 
 /* -- Localização -- */
 .wd .wd-place-n,  .wd .wd-place-e,  .wd .wd-place-s,  .wd .wd-place-w,
@@ -1369,12 +1391,12 @@ script, style {display: none !important;}
 .wd .wd-hide {visibility: hidden  !important;}
 
 .wd * > .wd-show-box, .wd *:hover > .wd-hide-box {
-	animation: visible-out 0.8s !important;
+	animation: wd-visible-out 0.8s !important;
 	opacity: 0 !important;
 	visibility: hidden !important;
 }
 .wd *:hover > .wd-show-box, .wd * > .wd-hide-box {
-	animation: visible-in 0.8s !important;
+	animation: wd-visible-in 0.8s !important;
 	opacity: 1 !important;
 	visibility: visible !important;
 }

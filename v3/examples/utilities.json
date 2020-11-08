@@ -14,6 +14,10 @@
 	{"value": "wd-align-top-child"},
 	{"value": "wd-align-bottom-child"},
 
+	{"value": "wd-attr-cite"},
+	{"value": "wd-attr-href"},
+	{"value": "wd-attr-title"},
+
 	{"value": "wd-border"},
 	{"value": "wd-border-top"},
 	{"value": "wd-border-right"},

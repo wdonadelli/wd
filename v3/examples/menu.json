@@ -109,6 +109,11 @@
 		"attr": "examples/css_columns.html"
 	},
 	{
+		"name": "CSS Details",
+		"color": "wd-bg-purple",
+		"attr": "examples/css_details.html"
+	},
+	{
 		"name": "CSS Flyer",
 		"color": "wd-bg-purple",
 		"attr": "examples/css_flyer.html"

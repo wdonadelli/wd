@@ -982,7 +982,7 @@ var wd = (function() {
 	/*Exibe uma mensagem temporária na tela*/
 	Object.defineProperty(WDtext.prototype, "message", {
 		enumerable: true,
-		value: function(time) {//FIXME tirei um argumento e transformei em milisegundos
+		value: function(time) {
 			if (WD(document.body).type === "dom") {/*verificar se o documento foi carregado*/
 				var msgWindow = document.createElement("DIV");
 				msgWindow.innerHTML = this.toString();
