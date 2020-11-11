@@ -1,5 +1,6 @@
 /*----------------------------------------------------------------------------
 wd.css (v3.0.0)
+
 <wdonadelli@gmail.com>
 https://github.com/wdonadelli/wd
 --------------------------------------------------------------------------------
@@ -24,7 +25,6 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.﻿
-
 --------------------------------------------------------------------------------
 
 /*============================================================================*/
@@ -322,38 +322,55 @@ script, style {display: none !important;}
 	from {-ms-transform: scale(0); -webkit-transform: scale(0); transform: scale(0); opacity: 0;}
 	to   {-ms-transform: scale(1); -webkit-transform: scale(1); transform: scale(1); opacity: 1;}
 }
+.wd-animation-zoom-in {animation: wd-zoom-in 0.8s;}
+
 @keyframes wd-fade-in {
 	from {opacity: 0;}
 	to   {opacity: 1;}
 }
+.wd-animation-fade-in {animation: wd-fade-in 0.8s;}
+
 @keyframes wd-fade-out {
 	from {opacity: 1;}
 	to   {opacity: 0;}
 }
+.wd-animation-fade-out {animation: wd-fade-out 0.8s;}
+
 @keyframes wd-visible-in {
 	from {opacity: 0; visibility: hidden;}
 	to   {opacity: 1; visibility: visible;}
 }
+.wd-animation-visible-in {animation: wd-visible-in 0.8s;}
+
 @keyframes wd-visible-out {
 	from {opacity: 1; visibility: visible;}
 	to   {opacity: 0; visibility: hidden;}
 }
+.wd-animation-visible-out {animation: wd-visible-out 0.8s;}
+
 @keyframes wd-from-top {
 	from {top: -100%; bottom: 200%; opacity: 0;}
 	to   {opacity: 1;}
 }
+.wd-animation-from-top {animation: wd-from-top 0.8s;}
+
 @keyframes wd-from-bottom {
 	from {top: 200%; bottom: -100%; opacity: 0;}
 	to   {opacity: 1;}
 }
+.wd-animation-from-bottom {animation: wd-from-bottom 0.8s;}
+
 @keyframes wd-from-left {
 	from {left: -100%; right: 200%; opacity: 0;}
 	to   {opacity: 1;}
 }
+.wd-animation-from-left {animation: wd-from-left 0.8s;}
+
 @keyframes wd-from-right {
 	from {left: 200%; right: -100%; opacity: 0;}
 	to   {opacity: 1;}
 }
+.wd-animation-from-right {animation: wd-from-right 0.8s;}
 
 	/***************************\
 	|	Níveis Z-INDEX           |
@@ -517,13 +534,6 @@ script, style {display: none !important;}
 	overflow: auto;
 	text-align: left;
 	width: 13em;
-}
-
-/* -- Detalhes -- */
-.wd .wd-details {display: none;}
-.wd .wd-details.wd-open {
-	display: block;
-	animation: wd-fade-in 0.5s;
 }
 
 /* -- Janelas -- */

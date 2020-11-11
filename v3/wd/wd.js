@@ -3523,9 +3523,7 @@ var wd = (function() {
 			value = data.core("wdData");
 			for (var i = 0; i < value.length; i++) {
 				/* se o alvo não for um dom, será aplicado ao próprio elemento*/
-//				target = WD($(attr["$"])).type === "dom" ? WD($(attr["$"])) : WD(e);
 				target = WD($(value[i]["$"])).type === "dom" ? WD($(value[i]["$"])) : WD(e);
-
 				delete value[i]["$"]; /*!!! a chave $ não definirá data-$*/
 				if (target.type === "dom") {
 					target.data(value[i]);
@@ -3882,6 +3880,9 @@ var wd = (function() {
 		document.head.appendChild(style);
 		return;
 	};
+
+
+//FIXME adicionar um faveicon se não existir
 
 	/*Definindo eventos*/
 	WD(window).handler({
