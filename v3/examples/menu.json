@@ -1,0 +1,157 @@
+[
+	{
+		"name": "Home",
+		"color": "wd-bg-white",
+		"attr": "examples/home.html"
+	},
+
+	{
+		"name": "ATTR Action",
+		"color": "wd-bg-blue",
+		"attr": "examples/attr_action.html"
+	},
+	{
+		"name": "ATTR Click",
+		"color": "wd-bg-blue",
+		"attr": "examples/attr_click.html"
+	},
+	{
+		"name": "ATTR Config",
+		"color": "wd-bg-blue",
+		"attr": "examples/attr_config.html"
+	},
+	{
+		"name": "ATTR Data",
+		"color": "wd-bg-blue",
+		"attr": "examples/attr_data.html"
+	},
+	{
+		"name": "ATTR Device",
+		"color": "wd-bg-blue",
+		"attr": "examples/attr_device.html"
+	},
+	{
+		"name": "ATTR File",
+		"color": "wd-bg-blue",
+		"attr": "examples/attr_file.html"
+	},
+	{
+		"name": "ATTR Filter",
+		"color": "wd-bg-blue",
+		"attr": "examples/attr_filter.html"
+	},
+	{
+		"name": "ATTR Load",
+		"color": "wd-bg-blue",
+		"attr": "examples/attr_load.html"
+	},
+	{
+		"name": "ATTR Mask",
+		"color": "wd-bg-blue",
+		"attr": "examples/attr_mask.html"
+	},
+	{
+		"name": "ATTR Page",
+		"color": "wd-bg-blue",
+		"attr": "examples/attr_page.html"
+	},
+	{
+		"name": "ATTR Repeat",
+		"color": "wd-bg-blue",
+		"attr": "examples/attr_repeat.html"
+	},
+	{
+		"name": "ATTR Send",
+		"color": "wd-bg-blue",
+		"attr": "examples/attr_send.html"
+	},
+	{
+		"name": "ATTR Set",
+		"color": "wd-bg-blue",
+		"attr": "examples/attr_set.html"
+	},
+	{
+		"name": "ATTR Slide",
+		"color": "wd-bg-blue",
+		"attr": "examples/attr_slide.html"
+	},
+	{
+		"name": "ATTR Sort",
+		"color": "wd-bg-blue",
+		"attr": "examples/attr_sort.html"
+	},
+	{
+		"name": "ATTR Sort Column",
+		"color": "wd-bg-blue",
+		"attr": "examples/attr_sortcolumn.html"
+	},
+
+
+
+	{
+		"name": "CSS Base",
+		"color": "wd-bg-purple",
+		"attr": "examples/css_base.html"
+	},
+	{
+		"name": "CSS Code",
+		"color": "wd-bg-purple",
+		"attr": "examples/css_code.html"
+	},
+	{
+		"name": "CSS Colors",
+		"color": "wd-bg-purple",
+		"attr": "examples/css_colors.html"
+	},
+	{
+		"name": "CSS Columns",
+		"color": "wd-bg-purple",
+		"attr": "examples/css_columns.html"
+	},
+	{
+		"name": "CSS Flyer",
+		"color": "wd-bg-purple",
+		"attr": "examples/css_flyer.html"
+	},
+	{
+		"name": "CSS Grid",
+		"color": "wd-bg-purple",
+		"attr": "examples/css_grid.html"
+	},
+	{
+		"name": "CSS Icons",
+		"color": "wd-bg-purple",
+		"attr": "examples/css_icons.html"
+	},
+	{
+		"name": "CSS Input Message",
+		"color": "wd-bg-purple",
+		"attr": "examples/css_input.html"
+	},
+	{
+		"name": "CSS Report",
+		"color": "wd-bg-purple",
+		"attr": "examples/css_report.html"
+	},
+	{
+		"name": "CSS Tip",
+		"color": "wd-bg-purple",
+		"attr": "examples/css_tip.html"
+	},
+	{
+		"name": "CSS Utilities",
+		"color": "wd-bg-purple",
+		"attr": "examples/css_utilities.html"
+	},
+	{
+		"name": "CSS Window",
+		"color": "wd-bg-purple",
+		"attr": "examples/css_window.html"
+	},
+
+	{
+		"name": "JS Example",
+		"color": "wd-bg-green",
+		"attr": "examples/js_script.html"
+	}
+]

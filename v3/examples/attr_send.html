@@ -1,0 +1,41 @@
+<h2>Send</h2>
+
+<script>
+function myExample(x) {
+	if (x.closed) {
+		wd$("#send > pre").item().textContent = wd(x).toString();
+	}
+	return;
+}
+function myExample2(x) {
+	if (x.closed) {
+		wd$("#send2 > pre").item().textContent = x.text;
+	}
+	return;
+}
+</script>
+
+<h3>Objects</h3>
+
+<div class="wd-margin-height wd-block" id="send">
+	<button type="button" class="wd-icon-upload" data-wd-send="get{examples/target.php}callback{myExample}" > Send</button>
+	<label>Out</label>
+	<pre class="wd-code wd-padding"></pre>
+</div>
+
+<h3>Form</h3>
+
+<div class="wd-margin-height wd-block" id="send2">
+
+	<label>Name</label>
+	<input type="text" name="text" />
+
+	<label><input type="checkbox" name="box" />Confirm?</label>
+
+	<label>File</label>
+	<input type="file" name="file" multiple="" />
+
+	<button type="button" class="wd-icon-upload" data-wd-send="get{examples/target.php}callback{myExample2}${#send2 *}" > Send</button>
+	<label>Out</label>
+	<pre class="wd-code wd-padding"></pre>
+</div>
