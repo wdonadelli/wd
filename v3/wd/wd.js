@@ -982,10 +982,11 @@ var wd = (function() {
 	/*Exibe uma mensagem temporária na tela*/
 	Object.defineProperty(WDtext.prototype, "message", {
 		enumerable: true,
-		value: function(time) {
+		value: function(time, className) {
 			if (WD(document.body).type === "dom") {/*verificar se o documento foi carregado*/
 				var msgWindow = document.createElement("DIV");
 				msgWindow.innerHTML = this.toString();
+				if (WD(className).type === "text") {msgWindow.className = className;}
 
 				WD(msgWindow).style({
 					display: "block",
@@ -3878,11 +3879,15 @@ var wd = (function() {
 		style.textContent += "*[data-wd-repeat] > *, *[data-wd-load] > * {visibility: hidden;}";
 		style.textContent += "*[data-wd-slide] > * {animation: js-wd-fade2 1s;}";
 		document.head.appendChild(style);
+		
+		if (WD($("link[rel=icon]")).items === 0) {
+			var favicon = document.createElement("link");
+			favicon.rel = "icon";
+			favicon.href = "https://wdonadelli.github.io/wd/image/favicon.ico";
+			document.head.appendChild(favicon);
+		}
 		return;
 	};
-
-
-//FIXME adicionar um faveicon se não existir
 
 	/*Definindo eventos*/
 	WD(window).handler({
