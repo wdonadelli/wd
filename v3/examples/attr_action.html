@@ -8,7 +8,7 @@
 	<span data-wd-action="toggle-check{#testcheck input, #testcheck span}">Toggle</span>
 </nav>
 
-<div class="wd-padding wd-align-center">
+<div class="wd-padding wd-align-center" id="testcheck" >
 	<label><input type="checkbox" />Box 1</label>
 	<label><input type="checkbox" />Box 2</label>
 	<span>Text 1</span>
@@ -26,7 +26,7 @@
 	<span data-wd-action="toggle-enable{#testenable input, #testenable span}">Toggle</span>
 </nav>
 
-<div class="wd-padding wd-align-center">
+<div class="wd-padding wd-align-center" id="testenable" >
 	<label><input type="checkbox" />Box 1</label>
 	<label><input type="checkbox" />Box 2</label>
 	<span>Text 1</span>
@@ -44,12 +44,12 @@
 	<span data-wd-action="toggle-open{#testopen}">Toggle</span>
 </nav>
 
-<details class="wd-cloud">
+<details class="wd-cloud wd-margin-height" id="testopen" >
 	<summary class="wd-bg-green">Open</summary>
 	<p class="wd-margin">content</p>
 </details>
 
-<p class="wd-i wd-fg-red wd-size-small">The example will work if the browser supports the <code>open</code> attribute of the <code>details</code> object.</p>
+<p class="wd-i wd-fg-red">The example will work if the browser supports the <code>open</code> attribute of the <code>details</code> object.</p>
 
 <hr>
 <!----------------------------------------------------------------------------->
@@ -62,7 +62,7 @@
 	<span data-wd-action="toggle-show{#testshow input, #testshow span}">Toggle</span>
 </nav>
 
-<div class="wd-padding wd-align-center">
+<div class="wd-padding wd-align-center" id="testshow" >
 	<label><input type="checkbox" />Box 1</label>
 	<label><input type="checkbox" />Box 2</label>
 	<span>Text 1</span>
@@ -115,7 +115,7 @@ function actReset() {
 	<span onclick="actReset();" >Reset</span>
 </nav>
 
-<div class="wd-block"></div>
+<div class="wd-block" id="testclean" ></div>
 
 <script>actReset();</script>
 
