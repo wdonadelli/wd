@@ -1,5 +1,5 @@
 /*----------------------------------------------------------------------------
-wd.js (v3.0.0)
+wd.js (v3.1.0)
 
 <wdonadelli@gmail.com>
 https://github.com/wdonadelli/wd
@@ -410,11 +410,6 @@ var wd = (function() {
 		/* variáveis locais */
 		var request, data, time;
 
-		/* verificando argumentos */
-		if (WD(action).type !== "text") {
-			return false;
-		}
-
 		if (pack === undefined || WD(pack).type === "null") {
 			pack = null;
 		}
@@ -566,7 +561,15 @@ var wd = (function() {
 			pack = null;
 		}
 
-		request.open(method, action, async);
+		try {
+			request.open(method, action, async);
+		} catch(e) {
+			log(action+": "+e.message, "e");
+			data.closed = true;
+			callback(data);
+			modalWindowClose();
+			return false;
+		}
 
 		if (method === "POST" && WD(pack).type === "text") {
 			request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
@@ -662,9 +665,6 @@ var wd = (function() {
 	Object.defineProperty(WD.prototype, "send", {
 		enumerable: true,
 		value: function(action, callback, method, async) {
-			if (WD(action).type !== "text") {
-				return false;
-			}
 
 			var pack;			
 
@@ -692,7 +692,7 @@ var wd = (function() {
 			/*efetuando a requisição*/
 			standardRequest(action, pack, callback, method, async);
 
-			return true;
+			return this;
 		}
 	});
 
@@ -3327,7 +3327,7 @@ var wd = (function() {
 				if (x.closed === true) {
 					target.load(x.text === null ? "" : x.text);
 					if (x.status !== "DONE") {
-						log("wdLoad: Request failed!", "e"); log(e);
+						log("wdLoad: Request failed!", "e");
 					}
 				}
 			}, method);
@@ -3346,6 +3346,7 @@ var wd = (function() {
 			pack   = "$" in value ? $(value["$"]) : null;/*se for informado um formulário, seus dados serão enviados à requisição*/
 			target = WD(e);
 			target.data({wdRepeat: null});
+
 			WD(pack).send(file, function(x) {
 				if (x.closed === true) {
 					if (x.json !== null) {
