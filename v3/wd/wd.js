@@ -3867,13 +3867,15 @@ var wd = (function() {
 		var style;
 		style = document.createElement("STYLE");
 		style.textContent = "";
-		style.textContent += "@keyframes js-wd-fade  {from {opacity: 0;} to {opacity: 1;}}";
-		style.textContent += "@keyframes js-wd-fade2 {from {opacity: 0.5;} to {opacity: 1;}}";
+		style.textContent += "@keyframes js-wd-fade  {from {opacity: 0;  } to {opacity: 1;}}";
+		style.textContent += "@keyframes js-wd-fade2 {from {opacity: 0.4;} to {opacity: 1;}}";
 		style.textContent += ".js-wd-no-display     {display: none !important;}";
 		style.textContent += ".js-wd-mask-error     {color: #663399 !important; background-color: #e8e0f0 !important;}";
 		style.textContent += ".js-wd-checked:before {content: \"\\2713 \"}";
 		style.textContent += ".js-wd-disabled       {pointer-events: none; color: #ccc; opacity: 0.8; cursor: default !important;}";
-		style.textContent += "*[data-wd-action], *[data-wd-send], *[data-wd-sort-col], *[data-wd-data] {cursor: pointer;}";
+		style.textContent += "*[data-wd-action],   *[data-wd-send] {cursor: pointer;}";
+		style.textContent += "*[data-wd-sort-col], *[data-wd-data] {cursor: pointer;}";
+		style.textContent += "*[data-wd-set]                       {cursor: pointer;}";
 		style.textContent += "*[data-wd-sort-col]:before {content: \"\\2195 \";}";
 		style.textContent += "*[data-wd-sort-col=\"-1\"]:before {content: \"\\2191 \";}";
 		style.textContent += "*[data-wd-sort-col=\"+1\"]:before {content: \"\\2193 \";}";
