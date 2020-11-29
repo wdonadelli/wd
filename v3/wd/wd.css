@@ -143,10 +143,12 @@ script, style {display: none !important;}
 /* -- Imagens -- */
 .wd figure, .wd picture {margin: 0.5em 0;}
 
-.wd figure > img {
+.wd figure > img,
+.wd figure > a > img {
 	display: block;
 	margin: auto;
 	text-align: center;
+	max-width: 100%;
 }
 
 .wd figcaption {
