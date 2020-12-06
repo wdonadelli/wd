@@ -820,6 +820,24 @@ script, style {display: none !important;}
 	font-style: italic !important;
 	font-weight: normal !important;
 }
+/* linhas */
+.wd .wd-code {
+	counter-reset: line;
+}
+.wd .wd-code > span:before {
+	background-color: #ffffff;
+	color: #cccccc;
+	content: counter(line);
+	counter-increment: line;
+	margin-right: 0.5em;
+	padding: 0 0.5em;
+	text-align: right;
+}
+
+
+
+
+
 
 /*============================================================================*/
 /*--  ESTILOS ESTRUTURAIS -- */
