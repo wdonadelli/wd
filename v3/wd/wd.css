@@ -312,10 +312,9 @@ script, style {display: none !important;}
 	-moz-appearance: none;
 	appearance: none;
 	background-image: url("data:image/svg+xml;utf8,<svg fill='black' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
-  background-repeat: no-repeat;
-  background-position-x: 100%;
-  background-position-y: 50%;
-  padding-right: 25px;
+	background-repeat: no-repeat;
+	background-position: right center;
+	padding-right: 25px;
 }
 
 /*============================================================================*/
@@ -522,6 +521,24 @@ script, style {display: none !important;}
 	text-align: left;
 	width: 13em;
 }
+
+/* -- blocos em linha infinita -- */
+.wd .wd-line, .wd .wd-vline, .wd .wd-hline {
+	overflow-x: hidden;
+	white-space: nowrap;
+}
+.wd .wd-line:hover, .wd .wd-vline:hover, .wd .wd-hline:hover {overflow-x: auto;}
+
+.wd .wd-line > *, .wd .wd-vline > *, .wd .wd-hline > * {
+	display: inline-block;
+	float: none;
+	margin: 2em;
+	overflow: auto;
+	text-align: left;
+
+}
+.wd .wd-vline > * {height: 18em; width: 13em;}
+.wd .wd-hline > * {height: 13em; width: 18em;}
 
 /* -- Janelas -- */
 .wd .wd-window,      .wd .wd-window-full,
@@ -1038,28 +1055,28 @@ script, style {display: none !important;}
 
 /* -- Wallpaper -- */
 .wd .wd-bg-image {
-	background-repeat: no-repeat;
-	background-position: center center;
-	background-attachment: scroll;
-	background-size: cover;
+	background-repeat: no-repeat !important;
+	background-position: center center !important;
+	background-attachment: scroll !important;
+	background-size: cover !important;
 }
 .wd .wd-bg-photo {
-	background-repeat: no-repeat;
-	background-position: center center;
-	background-attachment: scroll;
-	background-size: contain;
+	background-repeat: no-repeat !important;
+	background-position: center center !important;
+	background-attachment: scroll !important;
+	background-size: contain !important;
 }
 .wd .wd-bg-paper {
-	background-repeat: no-repeat;
-	background-position: center center;
-	background-attachment: fixed;
-	background-size: cover;
+	background-repeat: no-repeat !important;
+	background-position: center center !important;
+	background-attachment: fixed !important;
+	background-size: cover !important;
 }
 .wd .wd-bg-figures {
-	background-repeat: round;
-	background-position: center center;
-	background-attachment: scroll;
-	background-size: auto;
+	background-repeat: round !important;
+	background-position: center center !important;
+	background-attachment: scroll !important;
+	background-size: auto !important;
 }
 
 /* -- Tamanho de Texto -- */
@@ -1343,7 +1360,15 @@ script, style {display: none !important;}
 .wd .wd-icon-radio:before    {content: "\1F4FB" !important;}
 .wd .wd-icon-tv:before       {content: "\1F4FA" !important;}
 .wd .wd-icon-cam:before      {content: "\1F4F7" !important;}
-.wd a[class*="wd-icon-"]     {text-decoration: none;}
+.wd .wd-icon-custom {
+	display: inline-block;
+	background-repeat: no-repeat !important;
+	background-position: center center !important;
+	background-size: 1em 1em !important;
+	height: 1em;
+	width: 1em;
+}
+.wd a[class*="wd-icon-"] {text-decoration: none;}
 
 /* -- sombra -- */
 
