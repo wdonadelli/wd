@@ -129,6 +129,11 @@
 		"attr": "examples/css_input.html"
 	},
 	{
+		"name": "CSS Line",
+		"color": "wd-bg-purple",
+		"attr": "examples/css_line.html"
+	},
+	{
 		"name": "CSS Report",
 		"color": "wd-bg-purple",
 		"attr": "examples/css_report.html"
