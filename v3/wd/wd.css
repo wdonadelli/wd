@@ -1360,14 +1360,7 @@ script, style {display: none !important;}
 .wd .wd-icon-radio:before    {content: "\1F4FB" !important;}
 .wd .wd-icon-tv:before       {content: "\1F4FA" !important;}
 .wd .wd-icon-cam:before      {content: "\1F4F7" !important;}
-.wd .wd-icon-custom {
-	display: inline-block;
-	background-repeat: no-repeat !important;
-	background-position: center center !important;
-	background-size: 1em 1em !important;
-	height: 1em;
-	width: 1em;
-}
+.wd .wd-icon-custom          {height: 1em; width: 1em;}
 .wd a[class*="wd-icon-"] {text-decoration: none;}
 
 /* -- sombra -- */
