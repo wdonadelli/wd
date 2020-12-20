@@ -494,7 +494,6 @@ script, style {display: none !important;}
 	display: inline-block;
 	line-height: 1.5;
 	float: none;
-	max-width: 100%;
 }
 .wd .wd-grid > * {
 	height: 3.5em;
@@ -1006,40 +1005,42 @@ script, style {display: none !important;}
 
 /* -- cores -- */
 .wd .wd-bg-black,  .wd .wd-bg-black-child  > * {color: #f2f2f2 !important; background-color: #333333 !important;}
-.wd .wd-bg-white,  .wd .wd-bg-white-child  > * {color: #1a1a1a !important; background-color: #e6e6e6 !important;}
-.wd .wd-bg-grey,   .wd .wd-bg-grey-child   > * {color: #e6e6e6 !important; background-color: #8c8c8c !important;}
-.wd .wd-bg-red,    .wd .wd-bg-red-child    > * {color: #ffffff !important; background-color: #db5757 !important;}
-.wd .wd-bg-green,  .wd .wd-bg-green-child  > * {color: #e6ffff !important; background-color: #194d4d !important;}
-.wd .wd-bg-blue,   .wd .wd-bg-blue-child   > * {color: #cce6ff !important; background-color: #1f4d7a !important;}
-.wd .wd-bg-yellow, .wd .wd-bg-yellow-child > * {color: #636303 !important; background-color: #fbfb6a !important;}
-.wd .wd-bg-orange, .wd .wd-bg-orange-child > * {color: #4d3200 !important; background-color: #e69500 !important;}
-.wd .wd-bg-brown,  .wd .wd-bg-brown-child  > * {color: #f9e2d2 !important; background-color: #734626 !important;}
-.wd .wd-bg-pink,   .wd .wd-bg-pink-child   > * {color: #1a0013 !important; background-color: #ffb3ec !important;}
-.wd .wd-bg-purple, .wd .wd-bg-purple-child > * {color: #f0ebfa !important; background-color: #6c46b9 !important;}
+.wd .wd-bg-white,  .wd .wd-bg-white-child  > * {color: #333333 !important; background-color: #e6e6e6 !important;}
+.wd .wd-bg-grey,   .wd .wd-bg-grey-child   > * {color: #ffffff !important; background-color: #8c8c8c !important;}
+.wd .wd-bg-red,    .wd .wd-bg-red-child    > * {color: #f2f2f2 !important; background-color: #fa3838 !important;}
+.wd .wd-bg-green,  .wd .wd-bg-green-child  > * {color: #ffffff !important; background-color: #2c8759 !important;}
+.wd .wd-bg-blue,   .wd .wd-bg-blue-child   > * {color: #ffffff !important; background-color: #3480cb !important;}
+.wd .wd-bg-yellow, .wd .wd-bg-yellow-child > * {color: #323201 !important; background-color: #ffff80 !important;}
+.wd .wd-bg-orange, .wd .wd-bg-orange-child > * {color: #332100 !important; background-color: #ffaf1a !important;}
+.wd .wd-bg-brown,  .wd .wd-bg-brown-child  > * {color: #ffffff !important; background-color: #ac6939 !important;}
+.wd .wd-bg-pink,   .wd .wd-bg-pink-child   > * {color: #ff1ac9 !important; background-color: #ffccf3 !important;}
+.wd .wd-bg-purple, .wd .wd-bg-purple-child > * {color: #ffffff !important; background-color: #8a6bc7 !important;}
+.wd .wd-bg-none,   .wd .wd-bg-none-child   > * {background-color: transparent !important;}
+.wd .wd-bg-basic,  .wd .wd-bg-none-basic   > * {color: #000000 !important; background-color: #ffffff !important;}
 
-.wd header.wd-bg-black,  .wd .wd-bg-black-child  > header {background-image: linear-gradient(#595959, #333333);}
-.wd header.wd-bg-white,  .wd .wd-bg-white-child  > header {background-image: linear-gradient(#ffffff, #e6e6e6);}
-.wd header.wd-bg-grey,   .wd .wd-bg-grey-child   > header {background-image: linear-gradient(#b3b3b3, #8c8c8c);}
-.wd header.wd-bg-red,    .wd .wd-bg-red-child    > header {background-image: linear-gradient(#e48181, #db5757);}
-.wd header.wd-bg-green,  .wd .wd-bg-green-child  > header {background-image: linear-gradient(#2c8787, #194d4d);}
-.wd header.wd-bg-blue,   .wd .wd-bg-blue-child   > header {background-image: linear-gradient(#2f73b6, #1f4d7a);}
-.wd header.wd-bg-yellow, .wd .wd-bg-yellow-child > header {background-image: linear-gradient(#fdfdb4, #fbfb6a);}
-.wd header.wd-bg-orange, .wd .wd-bg-orange-child > header {background-image: linear-gradient(#ffc14d, #e69500);}
-.wd header.wd-bg-brown,  .wd .wd-bg-brown-child  > header {background-image: linear-gradient(#995e33, #734626);}
-.wd header.wd-bg-pink,   .wd .wd-bg-pink-child   > header {background-image: linear-gradient(#ffe6f9, #ffb3ec);}
-.wd header.wd-bg-purple, .wd .wd-bg-purple-child > header {background-image: linear-gradient(#a790d5, #6c46b9);}
+.wd header.wd-bg-black,  .wd .wd-bg-black-child  > header {background-image: linear-gradient(#4d4d4d, #333333);}
+.wd header.wd-bg-white,  .wd .wd-bg-white-child  > header {background-image: linear-gradient(#f2f2f2, #e6e6e6);}
+.wd header.wd-bg-grey,   .wd .wd-bg-grey-child   > header {background-image: linear-gradient(#a6a6a6, #8c8c8c);}
+.wd header.wd-bg-red,    .wd .wd-bg-red-child    > header {background-image: linear-gradient(#f91f1f, #fa3838);}
+.wd header.wd-bg-green,  .wd .wd-bg-green-child  > header {background-image: linear-gradient(#329a66, #2c8759);}
+.wd header.wd-bg-blue,   .wd .wd-bg-blue-child   > header {background-image: linear-gradient(#498cd0, #3480cb);}
+.wd header.wd-bg-yellow, .wd .wd-bg-yellow-child > header {background-image: linear-gradient(#ffff33, #ffff80);}
+.wd header.wd-bg-orange, .wd .wd-bg-orange-child > header {background-image: linear-gradient(#ffb833, #ffaf1a);}
+.wd header.wd-bg-brown,  .wd .wd-bg-brown-child  > header {background-image: linear-gradient(#bf7540, #ac6939);}
+.wd header.wd-bg-pink,   .wd .wd-bg-pink-child   > header {background-image: linear-gradient(#ffe6f9, #ffccf3);}
+.wd header.wd-bg-purple, .wd .wd-bg-purple-child > header {background-image: linear-gradient(#a790d5, #8a6bc7);}
 
 .wd .wd-fg-black,  .wd .wd-fg-black-child > *  {color: #333333 !important;}
 .wd .wd-fg-white,  .wd .wd-fg-white-child > *  {color: #e6e6e6 !important;}
 .wd .wd-fg-grey,   .wd .wd-fg-grey-child > *   {color: #8c8c8c !important;}
-.wd .wd-fg-red,    .wd .wd-fg-red-child > *    {color: #db5757 !important;}
-.wd .wd-fg-green,  .wd .wd-fg-green-child > *  {color: #194d4d !important;}
-.wd .wd-fg-blue,   .wd .wd-fg-blue-child > *   {color: #1f4d7a !important;}
-.wd .wd-fg-yellow, .wd .wd-fg-yellow-child > * {color: #c7c705 !important;}
-.wd .wd-fg-orange, .wd .wd-fg-orange-child > * {color: #e69500 !important;}
-.wd .wd-fg-brown,  .wd .wd-fg-brown-child > *  {color: #734626 !important;}
-.wd .wd-fg-pink,   .wd .wd-fg-pink-child > *   {color: #ff99e6 !important;}
-.wd .wd-fg-purple, .wd .wd-fg-purple-child > * {color: #6c46b9 !important;}
+.wd .wd-fg-red,    .wd .wd-fg-red-child > *    {color: #fa3838 !important;}
+.wd .wd-fg-green,  .wd .wd-fg-green-child > *  {color: #2c8759 !important;}
+.wd .wd-fg-blue,   .wd .wd-fg-blue-child > *   {color: #3480cb !important;}
+.wd .wd-fg-yellow, .wd .wd-fg-yellow-child > * {color: #e0e006 !important;}
+.wd .wd-fg-orange, .wd .wd-fg-orange-child > * {color: #ffaf1a !important;}
+.wd .wd-fg-brown,  .wd .wd-fg-brown-child > *  {color: #ac6939 !important;}
+.wd .wd-fg-pink,   .wd .wd-fg-pink-child > *   {color: #ff80df !important;}
+.wd .wd-fg-purple, .wd .wd-fg-purple-child > * {color: #623fa6 !important;}
 
 /* -- Wallpaper -- */
 .wd .wd-bg-image {
