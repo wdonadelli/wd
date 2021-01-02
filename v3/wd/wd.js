@@ -3600,7 +3600,7 @@ var wd = (function() {
 		return;
 	};
 
-	/*Define um carrossel de elementos data-wd-device=tempo*/
+	/*Define um carrossel de elementos data-wd-slide=tempo*/
 	function data_wdSlide(e) {
 		var data, time;
 		data = new AttrHTML(e);
@@ -3620,6 +3620,29 @@ var wd = (function() {
 			}, time);
 		} else {
 			data.del("wdSlideRun");
+		}
+		return;
+	};
+
+	/*TODO experimental: Define um link de compartilhamento de redes sociais data-wd-shared=rede*/
+	function data_wdShared(e) {
+		var social, data, link, url, title;
+		data = new AttrHTML(e);
+		if (data.has("wdShared")) {
+			url    = encodeURIComponent(document.URL);
+			title  = encodeURIComponent(document.title);
+			social = WD(data.data("wdShared")).toString().toLowerCase();
+			switch (social) {
+				case "facebook": 
+					link = "https://www.facebook.com/sharer/sharer.php?u='"+url+"'&t='"+url+"'";
+					break;
+				case "twitter":
+					link = "https://www.twitter.com/intent/tweet?text="+title+":%20"+url;
+					break;
+				default:
+					link = null;
+			}
+			if (link !== null) {window.open(link);}
 		}
 		return;
 	};
@@ -3799,6 +3822,7 @@ var wd = (function() {
 			data_wdSortCol(elem);
 			data_wdSend(elem);
 			data_wdSet(elem);
+			data_wdShared(elem);
 			elem = elem.parentElement;/*efeito bolha*/
 		}
 		return;
@@ -3881,6 +3905,12 @@ var wd = (function() {
 		style.textContent += "*[data-wd-sort-col=\"+1\"]:before {content: \"\\2193 \";}";
 		style.textContent += "*[data-wd-repeat] > *, *[data-wd-load] > * {visibility: hidden;}";
 		style.textContent += "*[data-wd-slide] > * {animation: js-wd-fade2 1s;}";
+		/*-- TODO experimental --*/
+		style.textContent += "*[data-wd-shared] {cursor: pointer; display: inline-block; width: 1em; height: 1em;}";
+		style.textContent += "*[data-wd-shared] {background-repeat: no-repeat; background-size: cover;}";
+		style.textContent += "*[data-wd-shared=\"facebook\"] {background-image: url('https://static.xx.fbcdn.net/rsrc.php/yo/r/iRmz9lCMBD2.ico');}";
+		style.textContent += "*[data-wd-shared=\"twitter\"] {background-image: url('https://abs.twimg.com/favicons/twitter.ico');}";
+		/*-- TODO experimental --*/
 		document.head.appendChild(style);
 		
 		if (WD($("link[rel=icon]")).items === 0) {
