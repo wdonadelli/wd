@@ -3634,10 +3634,19 @@ var wd = (function() {
 			social = WD(data.data("wdShared")).toString().toLowerCase();
 			switch (social) {
 				case "facebook": 
-					link = "https://www.facebook.com/sharer/sharer.php?u='"+url+"'&t='"+url+"'";
+					link = "https://www.facebook.com/sharer.php?u="+url;
 					break;
 				case "twitter":
-					link = "https://www.twitter.com/intent/tweet?text="+title+":%20"+url;
+					link = "https://twitter.com/share?url="+url+"&text="+title+"&via=&hashtags=";
+					break;
+				case "linkedin":
+					link = "https://www.linkedin.com/shareArticle?url="+url+"&title="+title;
+					break;
+				case "reddit":
+					link = "https://reddit.com/submit?url="+url+"&title="+title;
+					break;
+				case "evernote":
+					link = "https://www.evernote.com/clip.action?url="+url+"&title="+title;
 					break;
 				default:
 					link = null;
@@ -3905,12 +3914,15 @@ var wd = (function() {
 		style.textContent += "*[data-wd-sort-col=\"+1\"]:before {content: \"\\2193 \";}";
 		style.textContent += "*[data-wd-repeat] > *, *[data-wd-load] > * {visibility: hidden;}";
 		style.textContent += "*[data-wd-slide] > * {animation: js-wd-fade2 1s;}";
-		/*-- TODO experimental --*/
+		/*-- TODO experimental: */
 		style.textContent += "*[data-wd-shared] {cursor: pointer; display: inline-block; width: 1em; height: 1em;}";
 		style.textContent += "*[data-wd-shared] {background-repeat: no-repeat; background-size: cover;}";
 		style.textContent += "*[data-wd-shared=\"facebook\"] {background-image: url('https://static.xx.fbcdn.net/rsrc.php/yo/r/iRmz9lCMBD2.ico');}";
-		style.textContent += "*[data-wd-shared=\"twitter\"] {background-image: url('https://abs.twimg.com/favicons/twitter.ico');}";
-		/*-- TODO experimental --*/
+		style.textContent += "*[data-wd-shared=\"twitter\"]  {background-image: url('https://abs.twimg.com/favicons/twitter.ico');}";
+		style.textContent += "*[data-wd-shared=\"linkedin\"] {background-image: url('https://static-exp1.licdn.com/scds/common/u/images/logos/favicons/v1/favicon.ico');}";
+		style.textContent += "*[data-wd-shared=\"reddit\"]   {background-image: url('https://www.redditinc.com/assets/images/favicons/favicon-32x32.png');}";
+		style.textContent += "*[data-wd-shared=\"evernote\"] {background-image: url('https://www.evernote.com/favicon.ico?v2');}";
+		/*TODO experimental --*/
 		document.head.appendChild(style);
 		
 		if (WD($("link[rel=icon]")).items === 0) {

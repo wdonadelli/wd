@@ -71,6 +71,11 @@
 		"attr": "examples/attr_set.html"
 	},
 	{
+		"name": "ATTR Shared",
+		"color": "wd-bg-blue",
+		"attr": "examples/attr_shared.html"
+	},
+	{
 		"name": "ATTR Slide",
 		"color": "wd-bg-blue",
 		"attr": "examples/attr_slide.html"
