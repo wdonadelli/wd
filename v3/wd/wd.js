@@ -1,5 +1,5 @@
 /*----------------------------------------------------------------------------
-wd.js (v3.0.0)
+wd.js (v3.1.0)
 
 <wdonadelli@gmail.com>
 https://github.com/wdonadelli/wd
@@ -410,11 +410,6 @@ var wd = (function() {
 		/* variáveis locais */
 		var request, data, time;
 
-		/* verificando argumentos */
-		if (WD(action).type !== "text") {
-			return false;
-		}
-
 		if (pack === undefined || WD(pack).type === "null") {
 			pack = null;
 		}
@@ -566,7 +561,15 @@ var wd = (function() {
 			pack = null;
 		}
 
-		request.open(method, action, async);
+		try {
+			request.open(method, action, async);
+		} catch(e) {
+			log(action+": "+e.message, "e");
+			data.closed = true;
+			callback(data);
+			modalWindowClose();
+			return false;
+		}
 
 		if (method === "POST" && WD(pack).type === "text") {
 			request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
@@ -662,9 +665,6 @@ var wd = (function() {
 	Object.defineProperty(WD.prototype, "send", {
 		enumerable: true,
 		value: function(action, callback, method, async) {
-			if (WD(action).type !== "text") {
-				return false;
-			}
 
 			var pack;			
 
@@ -692,7 +692,7 @@ var wd = (function() {
 			/*efetuando a requisição*/
 			standardRequest(action, pack, callback, method, async);
 
-			return true;
+			return this;
 		}
 	});
 
@@ -3327,7 +3327,7 @@ var wd = (function() {
 				if (x.closed === true) {
 					target.load(x.text === null ? "" : x.text);
 					if (x.status !== "DONE") {
-						log("wdLoad: Request failed!", "e"); log(e);
+						log("wdLoad: Request failed!", "e");
 					}
 				}
 			}, method);
@@ -3346,6 +3346,7 @@ var wd = (function() {
 			pack   = "$" in value ? $(value["$"]) : null;/*se for informado um formulário, seus dados serão enviados à requisição*/
 			target = WD(e);
 			target.data({wdRepeat: null});
+
 			WD(pack).send(file, function(x) {
 				if (x.closed === true) {
 					if (x.json !== null) {
@@ -3599,7 +3600,7 @@ var wd = (function() {
 		return;
 	};
 
-	/*Define um carrossel de elementos data-wd-device=tempo*/
+	/*Define um carrossel de elementos data-wd-slide=tempo*/
 	function data_wdSlide(e) {
 		var data, time;
 		data = new AttrHTML(e);
@@ -3619,6 +3620,38 @@ var wd = (function() {
 			}, time);
 		} else {
 			data.del("wdSlideRun");
+		}
+		return;
+	};
+
+	/*TODO experimental: Define um link de compartilhamento de redes sociais data-wd-shared=rede*/
+	function data_wdShared(e) {
+		var social, data, link, url, title;
+		data = new AttrHTML(e);
+		if (data.has("wdShared")) {
+			url    = encodeURIComponent(document.URL);
+			title  = encodeURIComponent(document.title);
+			social = WD(data.data("wdShared")).toString().toLowerCase();
+			switch (social) {
+				case "facebook": 
+					link = "https://www.facebook.com/sharer.php?u="+url;
+					break;
+				case "twitter":
+					link = "https://twitter.com/share?url="+url+"&text="+title+"&via=&hashtags=";
+					break;
+				case "linkedin":
+					link = "https://www.linkedin.com/shareArticle?url="+url+"&title="+title;
+					break;
+				case "reddit":
+					link = "https://reddit.com/submit?url="+url+"&title="+title;
+					break;
+				case "evernote":
+					link = "https://www.evernote.com/clip.action?url="+url+"&title="+title;
+					break;
+				default:
+					link = null;
+			}
+			if (link !== null) {window.open(link);}
 		}
 		return;
 	};
@@ -3798,6 +3831,7 @@ var wd = (function() {
 			data_wdSortCol(elem);
 			data_wdSend(elem);
 			data_wdSet(elem);
+			data_wdShared(elem);
 			elem = elem.parentElement;/*efeito bolha*/
 		}
 		return;
@@ -3866,18 +3900,29 @@ var wd = (function() {
 		var style;
 		style = document.createElement("STYLE");
 		style.textContent = "";
-		style.textContent += "@keyframes js-wd-fade  {from {opacity: 0;} to {opacity: 1;}}";
-		style.textContent += "@keyframes js-wd-fade2 {from {opacity: 0.5;} to {opacity: 1;}}";
+		style.textContent += "@keyframes js-wd-fade  {from {opacity: 0;  } to {opacity: 1;}}";
+		style.textContent += "@keyframes js-wd-fade2 {from {opacity: 0.4;} to {opacity: 1;}}";
 		style.textContent += ".js-wd-no-display     {display: none !important;}";
 		style.textContent += ".js-wd-mask-error     {color: #663399 !important; background-color: #e8e0f0 !important;}";
 		style.textContent += ".js-wd-checked:before {content: \"\\2713 \"}";
 		style.textContent += ".js-wd-disabled       {pointer-events: none; color: #ccc; opacity: 0.8; cursor: default !important;}";
-		style.textContent += "*[data-wd-action], *[data-wd-send], *[data-wd-sort-col], *[data-wd-data] {cursor: pointer;}";
+		style.textContent += "*[data-wd-action],   *[data-wd-send] {cursor: pointer;}";
+		style.textContent += "*[data-wd-sort-col], *[data-wd-data] {cursor: pointer;}";
+		style.textContent += "*[data-wd-set]                       {cursor: pointer;}";
 		style.textContent += "*[data-wd-sort-col]:before {content: \"\\2195 \";}";
 		style.textContent += "*[data-wd-sort-col=\"-1\"]:before {content: \"\\2191 \";}";
 		style.textContent += "*[data-wd-sort-col=\"+1\"]:before {content: \"\\2193 \";}";
 		style.textContent += "*[data-wd-repeat] > *, *[data-wd-load] > * {visibility: hidden;}";
 		style.textContent += "*[data-wd-slide] > * {animation: js-wd-fade2 1s;}";
+		/*-- TODO experimental: */
+		style.textContent += "*[data-wd-shared] {cursor: pointer; display: inline-block; width: 1em; height: 1em;}";
+		style.textContent += "*[data-wd-shared] {background-repeat: no-repeat; background-size: cover;}";
+		style.textContent += "*[data-wd-shared=\"facebook\"] {background-image: url('https://static.xx.fbcdn.net/rsrc.php/yo/r/iRmz9lCMBD2.ico');}";
+		style.textContent += "*[data-wd-shared=\"twitter\"]  {background-image: url('https://abs.twimg.com/favicons/twitter.ico');}";
+		style.textContent += "*[data-wd-shared=\"linkedin\"] {background-image: url('https://static-exp1.licdn.com/scds/common/u/images/logos/favicons/v1/favicon.ico');}";
+		style.textContent += "*[data-wd-shared=\"reddit\"]   {background-image: url('https://www.redditinc.com/assets/images/favicons/favicon-32x32.png');}";
+		style.textContent += "*[data-wd-shared=\"evernote\"] {background-image: url('https://www.evernote.com/favicon.ico?v2');}";
+		/*TODO experimental --*/
 		document.head.appendChild(style);
 		
 		if (WD($("link[rel=icon]")).items === 0) {
