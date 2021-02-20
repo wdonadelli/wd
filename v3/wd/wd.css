@@ -1,5 +1,5 @@
 /*----------------------------------------------------------------------------
-wd.css (v3.1.0)
+wd.css (v3.2.0)
 
 <wdonadelli@gmail.com>
 https://github.com/wdonadelli/wd
@@ -983,7 +983,14 @@ script, style {display: none !important;}
 	transform: translate(-50%, -50%) !important;
 }
 
-/* -- Textual --*/
+/* -- Textual --*///fixme
+.wd .wd-plain, .wd .wd-plain-child > * {
+	font-style: normal !important;
+	font-weight: normal !important;
+	text-decoration: none !important;
+	background-color: transparent !important;
+}
+
 .wd .wd-b, .wd .wd-b-child > *       {font-weight: bold !important;}
 .wd .wd-u, .wd .wd-u-child > *       {text-decoration: underline !important;}
 .wd .wd-i, .wd .wd-i-child > *       {font-style: italic !important;}
@@ -1003,31 +1010,33 @@ script, style {display: none !important;}
 }
 
 /* -- cores -- */
-.wd .wd-bg-black,  .wd .wd-bg-black-child  > * {color: #f2f2f2 !important; background-color: #333333 !important;}
-.wd .wd-bg-white,  .wd .wd-bg-white-child  > * {color: #333333 !important; background-color: #e6e6e6 !important;}
-.wd .wd-bg-grey,   .wd .wd-bg-grey-child   > * {color: #ffffff !important; background-color: #8c8c8c !important;}
-.wd .wd-bg-red,    .wd .wd-bg-red-child    > * {color: #f2f2f2 !important; background-color: #fa3838 !important;}
-.wd .wd-bg-green,  .wd .wd-bg-green-child  > * {color: #ffffff !important; background-color: #2c8759 !important;}
-.wd .wd-bg-blue,   .wd .wd-bg-blue-child   > * {color: #ffffff !important; background-color: #3480cb !important;}
-.wd .wd-bg-yellow, .wd .wd-bg-yellow-child > * {color: #323201 !important; background-color: #ffff80 !important;}
-.wd .wd-bg-orange, .wd .wd-bg-orange-child > * {color: #332100 !important; background-color: #ffaf1a !important;}
-.wd .wd-bg-brown,  .wd .wd-bg-brown-child  > * {color: #ffffff !important; background-color: #ac6939 !important;}
-.wd .wd-bg-pink,   .wd .wd-bg-pink-child   > * {color: #ff1ac9 !important; background-color: #ffccf3 !important;}
-.wd .wd-bg-purple, .wd .wd-bg-purple-child > * {color: #ffffff !important; background-color: #8a6bc7 !important;}
-.wd .wd-bg-none,   .wd .wd-bg-none-child   > * {background-color: transparent !important;}
-.wd .wd-bg-basic,  .wd .wd-bg-none-basic   > * {color: #000000 !important; background-color: #ffffff !important;}
+.wd .wd-bg-black,  .wd .wd-bg-black-child  > * {color: #f2f2f2 !important; background-color: #4d4d4d !important;}
+.wd .wd-bg-white,  .wd .wd-bg-white-child  > * {color: #333333 !important; background-color: #f2f2f2 !important;}
+.wd .wd-bg-grey,   .wd .wd-bg-grey-child   > * {color: #404040 !important; background-color: #cccccc !important;}
+.wd .wd-bg-red,    .wd .wd-bg-red-child    > * {color: #4b0202 !important; background-color: #fecdcd !important;}
+.wd .wd-bg-green,  .wd .wd-bg-green-child  > * {color: #0c271a !important; background-color: #d8f3e6 !important;}
+.wd .wd-bg-blue,   .wd .wd-bg-blue-child   > * {color: #10263d !important; background-color: #aeccea !important;}
+.wd .wd-bg-yellow, .wd .wd-bg-yellow-child > * {color: #cc8500 !important; background-color: #ffffe6 !important;}
+.wd .wd-bg-orange, .wd .wd-bg-orange-child > * {color: #332100 !important; background-color: #ffedcc !important;}
+.wd .wd-bg-brown,  .wd .wd-bg-brown-child  > * {color: #392313 !important; background-color: #dfba9f !important;}
+.wd .wd-bg-pink,   .wd .wd-bg-pink-child   > * {color: #b30089 !important; background-color: #ffe6f9 !important;}
+.wd .wd-bg-purple, .wd .wd-bg-purple-child > * {color: #36235c !important; background-color: #e2daf1 !important;}
+.wd .wd-bg-basic,  .wd .wd-bg-basic-child  > * {color: #000000 !important; background-color: #ffffff !important;}
 
-.wd header.wd-bg-black,  .wd .wd-bg-black-child  > header {background-image: linear-gradient(#4d4d4d, #333333);}
-.wd header.wd-bg-white,  .wd .wd-bg-white-child  > header {background-image: linear-gradient(#f2f2f2, #e6e6e6);}
-.wd header.wd-bg-grey,   .wd .wd-bg-grey-child   > header {background-image: linear-gradient(#a6a6a6, #8c8c8c);}
-.wd header.wd-bg-red,    .wd .wd-bg-red-child    > header {background-image: linear-gradient(#f91f1f, #fa3838);}
-.wd header.wd-bg-green,  .wd .wd-bg-green-child  > header {background-image: linear-gradient(#329a66, #2c8759);}
-.wd header.wd-bg-blue,   .wd .wd-bg-blue-child   > header {background-image: linear-gradient(#498cd0, #3480cb);}
-.wd header.wd-bg-yellow, .wd .wd-bg-yellow-child > header {background-image: linear-gradient(#ffff33, #ffff80);}
-.wd header.wd-bg-orange, .wd .wd-bg-orange-child > header {background-image: linear-gradient(#ffb833, #ffaf1a);}
-.wd header.wd-bg-brown,  .wd .wd-bg-brown-child  > header {background-image: linear-gradient(#bf7540, #ac6939);}
-.wd header.wd-bg-pink,   .wd .wd-bg-pink-child   > header {background-image: linear-gradient(#ffe6f9, #ffccf3);}
-.wd header.wd-bg-purple, .wd .wd-bg-purple-child > header {background-image: linear-gradient(#a790d5, #8a6bc7);}
+.wd header.wd-bg-black,  .wd .wd-bg-black header,  .wd .wd-bg-black-child  > header {background-color: #333333 !important;}
+.wd header.wd-bg-white,  .wd .wd-bg-white header,  .wd .wd-bg-white-child  > header {background-color: #d9d9d9 !important;}
+.wd header.wd-bg-grey,   .wd .wd-bg-grey header,   .wd .wd-bg-grey-child   > header {background-color: #8c8c8c !important; color: #f2f2f2;}
+.wd header.wd-bg-red,    .wd .wd-bg-red header,    .wd .wd-bg-red-child    > header {background-color: #fb6a6a !important; color: #f2f2f2;}
+.wd header.wd-bg-green,  .wd .wd-bg-green header,  .wd .wd-bg-green-child  > header {background-color: #2c8759 !important; color: #f2f2f2;}
+.wd header.wd-bg-blue,   .wd .wd-bg-blue header,   .wd .wd-bg-blue-child   > header {background-color: #2f73b6 !important; color: #f2f2f2;}
+.wd header.wd-bg-yellow, .wd .wd-bg-yellow header, .wd .wd-bg-yellow-child > header {background-color: #ffff00 !important; color: #0d0d0d;}
+.wd header.wd-bg-orange, .wd .wd-bg-orange header, .wd .wd-bg-orange-child > header {background-color: #ffa600 !important; color: #f2f2f2;}
+.wd header.wd-bg-brown,  .wd .wd-bg-brown header,  .wd .wd-bg-brown-child  > header {background-color: #86522d !important; color: #f2f2f2;}
+.wd header.wd-bg-pink,   .wd .wd-bg-pink header,   .wd .wd-bg-pink-child   > header {background-color: #ff1ac9 !important; color: #f2f2f2;}
+.wd header.wd-bg-purple, .wd .wd-bg-purple header, .wd .wd-bg-purple-child > header {background-color: #6c46b9 !important; color: #f2f2f2;}
+.wd header.wd-bg-basic,  .wd .wd-bg-basic header,  .wd .wd-bg-basic-child  > header {background-color: #000000 !important; color: #ffffff;}
+
+.wd .wd-bg-none, .wd .wd-bg-none-child > * {background-color: transparent !important;}
 
 .wd .wd-fg-black,  .wd .wd-fg-black-child > *  {color: #333333 !important;}
 .wd .wd-fg-white,  .wd .wd-fg-white-child > *  {color: #e6e6e6 !important;}
@@ -1095,6 +1104,8 @@ script, style {display: none !important;}
 .wd .wd-case-caps,   .wd .wd-case-caps-child > *   {font-variant:   small-caps !important;}
 
 /* -- Padding -- */
+.wd .wd-padding-none, .wd .wd-padding-none-child > * {padding: 0 !important;}
+
 .wd .wd-padding,        .wd .wd-padding-child > *,
 .wd .wd-padding-top,    .wd .wd-padding-top-child > *,
 .wd .wd-padding-height, .wd .wd-padding-height-child > * {padding-top: 0.5em !important;}
@@ -1144,6 +1155,8 @@ script, style {display: none !important;}
 .wd .wd-xxpadding-length, .wd .wd-xxpadding-length-child > * {padding-right: 2em !important;}
 
 /* -- Margem -- */
+.wd .wd-margin-none, .wd .wd-margin-none-child > * {margin: 0 !important;}
+
 .wd .wd-margin,        .wd .wd-margin-child > *,
 .wd .wd-margin-top,    .wd .wd-margin-top-child > *,
 .wd .wd-margin-height, .wd .wd-margin-height-child > * {margin-top: 0.5em !important;}
@@ -1193,7 +1206,9 @@ script, style {display: none !important;}
 .wd .wd-xxmargin-length, .wd .wd-xxmargin-length-child > * {margin-right: 2em !important;}
 
 /* -- Border -- */
-.wd .wd-border-box,    .wd .wd-border-box-child > * {border: 1px solid transparent;}
+.wd .wd-border-none, .wd .wd-border-none-child > * {border: 0;}
+.wd .wd-border-box,  .wd .wd-border-box-child  > * {border: 1px solid transparent;}
+
 .wd .wd-border,        .wd .wd-border-child > *,
 .wd .wd-border-top,    .wd .wd-border-top-child > *,
 .wd .wd-border-height, .wd .wd-border-height-child > * {border-top: thin solid !important;}
@@ -1243,6 +1258,8 @@ script, style {display: none !important;}
 .wd .wd-xxborder-length, .wd .wd-xxborder-length-child > * {border-right: thick solid !important;}
 
 /* -- Borda arredondada -- */
+.wd .wd-radius-none, .wd .wd-radius-none-child > * {border-radius: 0;}
+
 .wd .wd-radius,      .wd .wd-radius-child > *,
 .wd .wd-radius-top,  .wd .wd-radius-top-child > *,
 .wd .wd-radius-left, .wd .wd-radius-left-child > *      {border-top-left-radius: 0.3em !important;}
@@ -1364,6 +1381,8 @@ script, style {display: none !important;}
 	| shadow-in          - aplica "shadow" ao passar o mouse sobre o pai |
 	| shadow-out         - aplica "shadow" ao tirar o mouse sobre o pai  |
 	\********************************************************************/
+
+.wd .wd-shadow-none, .wd .wd-shadow-none-child > * {box-shadow: none !important;}
 
 .wd .wd-shadow, .wd .wd-shadow-child > *,
 .wd .wd-shadow-enter:hover, .wd .wd-shadow-leave,
