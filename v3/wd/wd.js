@@ -3956,6 +3956,11 @@ var wd = (function() {
 		return;
 	};
 
+	//FIXME criar um inputProcedures para evitar duplicidade de eventos
+	//não deixar o keyboardProcedures funcionar quando for formulário
+	//na hora de digitar no campo de texto o sistema vai travando
+
+
 	/*Procedimento para definir o dispositivo pelo tamanho da tela*/
 	function scalingProcedures(ev) {
 		var device, width, height;
