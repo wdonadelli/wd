@@ -1,5 +1,5 @@
 /*----------------------------------------------------------------------------
-wd.js (v3.1.0)
+wd.js (v3.2.0)
 
 <wdonadelli@gmail.com>
 https://github.com/wdonadelli/wd
@@ -1410,6 +1410,27 @@ var wd = (function() {
 
 /* === TIME ================================================================ */
 
+	//FIXME
+	/*Retona o correpondente método de acordo com o atalho*/
+	function timeFormat(obj, char) {
+		var x;
+
+		switch(char) {
+			case "%h": x = obj.hour; break;
+			case "%H": x = WD(obj.hour).fixed(2, 0); break;
+			case "#h": x = obj.h12; break;
+			case "%m": x = obj.minute; break;
+			case "%M": x = WD(obj.minute).fixed(2, 0); break;
+			case "%s": x = obj.second; break;
+			case "%S": x = WD(obj.second).fixed(2, 0); break;
+			default  : x = "";
+		}
+	
+		return x;	
+	};
+
+/*............................................................................*/
+
 	function WDtime(input) {
 		if (!(this instanceof WDtime)) {
 			return new WDtime(input);
@@ -1564,19 +1585,13 @@ var wd = (function() {
 				return this.toString();
 			}
 			var x, chars;
-			chars = {
-			"%h": this.hour,
-			"%H": WD(this.hour).fixed(2, 0),
-			"#h": this.h12,
-			"%m": this.minute,
-			"%M": WD(this.minute).fixed(2, 0),
-			"%s": this.second,
-			"%S": WD(this.second).fixed(2, 0),
-			};
+
 			x = WD(string);
-			for (var i in chars) {
-				if (x.toString().indexOf(i) >= 0) {
-					x.replace(i, chars[i], true);
+			chars = ["%h", "%H", "#h", "%m", "%M", "%s", "%S"];
+
+			for (var i = 0; i < chars.length; i++) {
+				if (x.toString().indexOf(chars[i]) >= 0) {
+					x.replace(chars[i], timeFormat(this, chars[i]), true);
 				}
 			}
 			return x.toString();
@@ -1591,7 +1606,13 @@ var wd = (function() {
 		},
 		toString: {
 			value: function() {
-				return this.format("%H:%M:%S");
+				var h, m, s;
+
+				h = WD(this.hour).fixed(2, 0);
+				m = WD(this.minute).fixed(2, 0);
+				s = WD(this.second).fixed(2, 0);
+
+				return [h, m, s].join(":");
 			}
 		},
 		valueOf: {
@@ -1647,6 +1668,36 @@ var wd = (function() {
 		l400  = WD(y  <  Y_400 ? 0 : (y - 1)/400);
 		x = delta.integer + l4.integer - l100.integer + l400.integer + dateDayYear(y, m, d);
 		return x;
+	};
+
+	//FIXME
+	/*Retona o correpondente método de acordo com o atalho*/
+	function dateFormat(obj, char, locale) {
+		var x;
+
+		switch(char) {
+			case "%d": x = obj.day; break;
+			case "%D": x = WD(obj.day).fixed(2, 0); break;
+			case "@d": x = obj.days; break;
+			case "%m": x = obj.month; break;
+			case "%M": x = WD(obj.month).fixed(2, 0); break;
+			case "@m": x = obj.width; break;
+			case "#m": x = obj.shortMonth(locale); break;
+			case "#M": x = obj.longMonth(locale); break;
+			case "%y": x = obj.year; break;
+			case "%Y": x = WD(obj.year).fixed(4, 0); break;
+			case "%w": x = obj.week; break;
+			case "@w": x = obj.weeks; break;
+			case "#w": x = obj.shortWeek(locale); break;
+			case "#W": x = obj.longWeek(locale); break;
+			case "%l": x = obj.leap ? 366 : 365; break;
+			case "%c": x = obj.countdown; break;
+			case "%b": x = obj.wDays; break;
+			case "%B": x = obj.wDaysYear; break;
+			default  : x = "";
+		}
+	
+		return x;	
 	};
 
 /*...........................................................................*/
@@ -1911,7 +1962,75 @@ var wd = (function() {
 			get: function() {
 				return (this.leap ? 366 : 365) - this.days;
 			}
+		},
+		
+		
+		
+		//FIXME XXX comendo muita memória
+		wDaysYear: {
+			enumerable: true,
+			get: function() {
+				var lastSat, lastSun, firstSat, firstSun, sun, sat, y;
+
+				y = WD(this.year).fixed(4, 0);
+				firstSat = WD(y+"-01-01");
+				firstSun = WD(y+"-01-01");
+				lastSat  = WD(y+"-12-31");
+				lastSun  = WD(y+"-12-31");
+
+				firstSat.d += 7 - firstSat.week;
+				firstSun.d += firstSun.week === 1 ? 0 : (8 - firstSun.week);
+				lastSat.d  -= lastSat.week  === 7 ? 0 : lastSat.week;
+				lastSun.d  -= lastSun.week - 1;
+
+				sat = (lastSat.valueOf() - firstSat.valueOf())/7 + 1;
+				sun = (lastSun.valueOf() - firstSun.valueOf())/7 + 1;
+
+				return (this.leap ? 366 : 365) - (sun + sat);
+			}
+		},
+		
+
+		wDays: {//FIXME XXX comendo muita memória
+			enumerable: true,
+			get: function() {
+				var lastSat, lastSun, firstSat, firstSun, sun, sat, y;
+
+				y = WD(this.year).fixed(4, 0);
+				firstSat = WD(y+"-01-01");
+				firstSun = WD(y+"-01-01");
+				lastSat  = WD(this.toString());
+				lastSun  = WD(this.toString());
+
+				firstSat.d += 7 - firstSat.week;
+				firstSun.d += firstSun.week === 1 ? 0 : (8 - firstSun.week);
+				lastSat.d  -= lastSat.week  === 7 ? 0 : lastSat.week;
+				lastSun.d  -= lastSun.week - 1;
+
+				sat = (lastSat.valueOf() - firstSat.valueOf())/7 + 1;
+				sun = (lastSun.valueOf() - firstSun.valueOf())/7 + 1;
+
+				return this.days - (sun + sat);
+			}
 		}
+		
+
+
+
+
+
+
+
+
+
+
+
+		
+		
+		
+		
+		
+		
 	});
 
 	/*Retorna o dia da semana em formato textual*/
@@ -1967,30 +2086,19 @@ var wd = (function() {
 				return this.toString();
 			}
 			var x, chars;
-			chars = {
-				"%d": this.day,
-				"%D": WD(this.day).fixed(2, 0),
-				"@d": this.days,
-				"%m": this.month,
-				"%M": WD(this.month).fixed(2, 0),
-				"@m": this.width,
-				"#m": this.shortMonth(locale),
-				"#M": this.longMonth(locale),
-				"%y": this.year,
-				"%Y": WD(this.year).fixed(4, 0),
-				"%w": this.week,
-				"@w": this.weeks,
-				"#w": this.shortWeek(locale),
-				"#W": this.longWeek(locale),
-				"%l": this.leap ? 366 : 365,
-				"%c": this.countdown
-			}
+
 			x = WD(string);
-			for (var i in chars) {
-				if (x.toString().indexOf(i) >= 0) {
-					x.replace(i, chars[i], true);
+			chars = [
+				"%d", "%D", "@d", "%m", "%M", "@m", "#m", "#M", "%y",
+				"%Y", "%w", "@w", "#w", "#W", "%l", "%c", "%b", "%B"
+			];
+
+			for (var i = 0; i < chars.length; i++) {
+				if (x.toString().indexOf(chars[i]) >= 0) {
+					x.replace(chars[i], dateFormat(this, chars[i], locale), true);
 				}
 			}
+
 			return x.toString();
 		}
 	});
@@ -2003,7 +2111,11 @@ var wd = (function() {
 		},
 		toString: {
 			value: function() {
-				return this.format("%Y-%M-%D");
+				var y, m, d;
+				y = WD(this.year).fixed(4, 0);
+				m = WD(this.month).fixed(2, 0);
+				d = WD(this.day).fixed(2, 0);
+				return [y, m, d].join("-");
 			}
 		},
 		valueOf: {
