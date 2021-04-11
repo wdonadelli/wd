@@ -74,13 +74,13 @@ var wd = (function() {
 	function calcByte(value) {
 		var size;
 		if (value >= 1099511627776) {
-				size = WD(value/1099511627776).round(2)+"TB";
+				size = new WD(value/1099511627776).round(2)+"TB";
 		}else if (value >= 1073741824) {
-				size = WD(value/1073741824).round(2)+"GB";
+				size = new WD(value/1073741824).round(2)+"GB";
 		} else if (value >= 1048576) {
-				size = WD(value/1048576).round(2)+"MB";
+				size = new WD(value/1048576).round(2)+"MB";
 		} else if (value >= 1024) {
-			size = WD(value/1024).round(2)+"kB";
+			size = new WD(value/1024).round(2)+"kB";
 		} else {
 			size = value+"B"
 		}
@@ -130,227 +130,132 @@ var wd = (function() {
 
 	/*Verifica se o valor é uma string genérica*/
 	function isString(value) {
-		var x;
-		if (typeof value === "string") {
-			x = true
-		} else if ("String" in window && value instanceof String) {
-			x = true;
-		} else if ("String" in window && value.constructor === String) {
-			x = true;
-		} else {
-			x = false;
-		}
-		return x;
+		if (typeof value === "string") {return true;}
+		if ("String" in window && value instanceof String) {return true;}
+		if ("String" in window && value.constructor === String) {return true;}
+		return false;
 	};
 
 	/*Verifica se o valor é uma expressão regular*/
 	function isRegExp(value) {
-		var x;
-		if (typeof value === "regexp") {
-			x = true;
-		} else if ("RegExp" in window && value instanceof RegExp) {
-			x = true;
-		} else if ("RegExp" in window && value.constructor === RegExp) {
-			x = true;
-		} else {
-			x = false;
-		}
-		return x;
+		if (typeof value === "regexp") {return true;}
+		if ("RegExp" in window && value instanceof RegExp) {return true;}
+		if ("RegExp" in window && value.constructor === RegExp) {return true;}
+		return false;
 	};
 
 	/*Verifica se o valor é um número*/
 	function isNumber(value) {
-		var x;
-		if (typeof value === "number") {
-			x = true;
-		} else if ("Number" in window && value instanceof Number) {
-			x = true;
-		} else if ("Number" in window && value.constructor === Number) {
-			x = true;
-		} else if (!isString(value)) {
-			x = false;
-		} else if (value.trim() === "Infinity") {
-			x = false;
-		} else if (value.trim() == Number(value.trim())) {
-			x = true;
-		} else {
-			x = false;
-		}
-		return x;
+		if (typeof value === "number") {return true;}
+		if ("Number" in window && value instanceof Number) {return true;}
+		if ("Number" in window && value.constructor === Number) {return true;}
+		if (!isString(value)) {return false;}
+		if (value.trim() === "Infinity") {return false;}
+		if (value.trim() == Number(value.trim())) {return true;}
+		return false;
 	};
 
 	/*Verifica se o valor é boleano*/
 	function isBoolean(value) {
-		var x;
-		if (x === true || x === false) {
-			x = true;
-		} else if (typeof value === "boolean") {
-			x = true;
-		} else if ("Boolean" in window && value instanceof Boolean) {
-			x = true;
-		} else if ("Boolean" in window && value.constructor === Boolean) {
-			x = true;
-		} else {
-			x = false;
-		}
-		return x;
+		if (value === true || value === false) {return true;}
+		if (typeof value === "boolean") {return true;}
+		if ("Boolean" in window && value instanceof Boolean) {return true;}
+		if ("Boolean" in window && value.constructor === Boolean) {return true;}
+		return false;
 	};
 
 	/*Verifica se o valor é uma lista*/
 	function isArray(value) {
-		var x;
-		if ("Array" in window && "isArray" in Array && Array.isArray(value)) {
-			x = true;
-		} else if ("Array" in window && value instanceof Array) {
-			x = true;
-		} else if ("Array" in window && value.constructor === Array) {
-			x = true;
-		} else {
-			x = false;
-		}
-		return x;
+		if ("Array" in window && "isArray" in Array && Array.isArray(value)) {return true;}
+		if ("Array" in window && value instanceof Array) {return true;}
+		if ("Array" in window && value.constructor === Array) {return true;}
+		return false;
 	};
 
 	/*Verifica se o valor é um objeto simples {}*/
 	function isObject(value) {
-		var x;
-		if (typeof value === "object" && (/^\{.*\}$/).test(JSON.stringify(value)) === true) {
-			x = true;
-		} else {
-			x = false;
-		}
-		return x;
+		if (typeof value === "object" && (/^\{.*\}$/).test(JSON.stringify(value)) === true) {return true;}
+		return false;
 	};
 
 	/*Verifica se o valor é uma função*/
 	function isFunction(value) {
-		var x;
-		if (typeof value === "function") {
-			x = true;
-		} else if ("Function" in window && value instanceof Function) {
-			x = true;
-		} else if ("Function" in window && value.constructor === Function) {
-			x = true;
-		} else {
-			x = false;
-		}
-		return x;
+		if (typeof value === "function") {return true;}
+		if ("Function" in window && value instanceof Function) {return true;}
+		if ("Function" in window && value.constructor === Function) {return true;}
+		return false;
 	};
 
 	/*Verifica se o valor é um elemento(s) HTML*/
 	function isDOM(value) {
-		var x;
-		if (value === document || value === window) {
-			x = true;
-		} else if ("HTMLElement" in window && value instanceof HTMLElement) {
-			x = true;
-		} else if ("HTMLElement" in window && value.constructor === HTMLElement) {
-			x = true;
-		} else if ("NodeList" in window && value instanceof NodeList) {
-			x = true;
-		} else if ("NodeList" in window && value.constructor === NodeList) {
-			x = true;
-		} else if ("HTMLCollection" in window && value instanceof HTMLCollection) {
-			x = true;
-		} else if ("HTMLCollection" in window && value.constructor === HTMLCollection) {
-			x = true;
-		} else if ("HTMLAllCollection" in window && value instanceof HTMLAllCollection) {
-			x = true;
-		} else if ("HTMLAllCollection" in window && value.constructor === HTMLAllCollection) {
-			x = true;
-		} else if ("HTMLFormControlsCollection" in window && value instanceof HTMLFormControlsCollection) {
-			x = true;
-		} else if ("HTMLFormControlsCollection" in window && value.constructor === HTMLFormControlsCollection) {
-			x = true;
-		} else {
-			x = false;
-		}
-		return x;
+		if (value === document || value === window) {return true;}
+		if ("HTMLElement" in window && value instanceof HTMLElement) {return true;}
+		if ("HTMLElement" in window && value.constructor === HTMLElement) {return true;}
+		if ("NodeList" in window && value instanceof NodeList) {return true;}
+		if ("NodeList" in window && value.constructor === NodeList) {return true;}
+		if ("HTMLCollection" in window && value instanceof HTMLCollection) {return true;}
+		if ("HTMLCollection" in window && value.constructor === HTMLCollection) {return true;}
+		if ("HTMLAllCollection" in window && value instanceof HTMLAllCollection) {return true;}
+		if ("HTMLAllCollection" in window && value.constructor === HTMLAllCollection) {return true;}
+		if ("HTMLFormControlsCollection" in window && value instanceof HTMLFormControlsCollection) {return true;}
+		if ("HTMLFormControlsCollection" in window && value.constructor === HTMLFormControlsCollection) {return true;}
+		return false;
 	};
 
 	/*Verifica se o valor é um tempo válido*/
 	function isTime(value) {
-		var x;
-		if (!isString(value)) {
-			x = false;
-		} else if (value.trim() === "%now") {
-			x =  true;
-		} else if (/^(0?[0-9]|1[0-9]|2[0-4])(\:[0-5][0-9]){1,2}$/.test(value.trim())) {
-			x =  true;
-		} else if ((/^(0?[1-9]|1[0-2])\:[0-5][0-9]\ ?(am|pm)$/i).test(value.trim())) {
-			x =  true;
-		} else if ((/^(0?[0-9]|1[0-9]|2[0-4])h[0-5][0-9]$/i).test(value.trim())) {
-			x =  true;
-		} else {
-			x =  false;
-		}
-		return x;
+		if (!isString(value)) {return false;}
+		if (value.trim() === "%now") {return true;}
+		if (/^(0?[0-9]|1[0-9]|2[0-4])(\:[0-5][0-9]){1,2}$/.test(value.trim())) {return true;}
+		if ((/^(0?[1-9]|1[0-2])\:[0-5][0-9]\ ?(am|pm)$/i).test(value.trim())) {return  true;}
+		if ((/^(0?[0-9]|1[0-9]|2[0-4])h[0-5][0-9]$/i).test(value.trim())) {return true;}
+		return false;
 	};
 
 	/*Verifica se o valor é uma data válida*/
 	function isDate(value) {
-		var x, d, m, y, array;
-		if ("Date" in window && value instanceof Date) {
-			x = true;
-		} else if ("Date" in window && value.constructor === Date) {
-			x = true;
-		} else if (!isString(value)) {
-			x = false;
-		} else if (value.trim() === "%today") {
-			x = true;
+		var d, m, y, array;
+		if ("Date" in window && value instanceof Date) {return true;}
+		if ("Date" in window && value.constructor === Date) {return true;}
+		if (!isString(value)) {return false;}
+		if (value.trim() === "%today") {return true;}
+
+		/*capturando formatos padrão*/
+		if (/^[0-9]{4}\-[0-9]{2}\-[0-9]{2}$/.test(value.trim())) {/*YYYY-MM-DD*/
+			array = value.split("-");
+			d = Number(array[2]);
+			m = Number(array[1]);
+			y = Number(array[0]);
+		} else if (/^[0-9]{2}\/[0-9]{2}\/[0-9]{4}$/.test(value.trim())) {/*MM/DD/YYYY*/
+			array = value.split("/");
+			d = Number(array[1]);
+			m = Number(array[0]);
+			y = Number(array[2]);
+		} else if (/^[0-9]{2}\.[0-9]{2}\.[0-9]{4}$/.test(value.trim())) {/*DD.MM.YYYY*/
+			array = value.split(".");
+			d = Number(array[0]);
+			m = Number(array[1]);
+			y = Number(array[2]);
 		} else {
-			if (/^[0-9]{4}\-[0-9]{2}\-[0-9]{2}$/.test(value.trim())) {/*YYYY-MM-DD*/
-				array = value.split("-");
-				d = Number(array[2]);
-				m = Number(array[1]);
-				y = Number(array[0]);
-			} else if (/^[0-9]{2}\/[0-9]{2}\/[0-9]{4}$/.test(value.trim())) {/*MM/DD/YYYY*/
-				array = value.split("/");
-				d = Number(array[1]);
-				m = Number(array[0]);
-				y = Number(array[2]);
-			} else if (/^[0-9]{2}\.[0-9]{2}\.[0-9]{4}$/.test(value.trim())) {/*DD.MM.YYYY*/
-				array = value.split(".");
-				d = Number(array[0]);
-				m = Number(array[1]);
-				y = Number(array[2]);
-			} else {
-				array = null;
-			}
-			if (array === null) {
-				x = false;
-			} else if (y > 9999 || y < 1) {
-				x = false;
-			} else if (m > 12 || m < 1) {
-				x = false;
-			} else if (d > 31 || d < 1) {
-				x = false;
-			} else if (d > 30 && [2, 4, 6, 9, 11].indexOf(m) >= 0) {
-				x = false;
-			} else if (d > 29 && m == 2) {
-				x = false;
-			} else if (d == 29 && m == 2 && !isLeap(y)) {
-				x = false;
-			} else {
-				x = true;
-			}
+			return false;
 		}
-		return x;
+
+		/*analisando formatos padrão*/
+		if (y > 9999 || y < 1) {return false;}
+		if (m > 12 || m < 1) {return false;}
+		if (d > 31 || d < 1) {return false;}
+		if (d > 30 && [2, 4, 6, 9, 11].indexOf(m) >= 0) {return false;}
+		if (d > 29 && m == 2) {return false;}
+		if (d == 29 && m == 2 && !isLeap(y)) {return false;}
+		return true;
 	};
 
 	/*Verifica se o valor é um texto*/
 	function isText(value) {
-		var x;
-		if (!isString(value)) {
-			x = false;
-		} else if (value.trim() === "") {
-			x = false;
-		} else if (isTime(value) || isDate(value) || isNumber(value)) {
-			x = false;
-		} else {
-			x = true;
-		}
-		return x;
+		if (!isString(value)) {return false;}
+		if (value.trim() === "") {return false;}
+		if (isTime(value) || isDate(value) || isNumber(value)) {return false;}
+		return true;
 	};
 
 /*...........................................................................*/
@@ -410,17 +315,17 @@ var wd = (function() {
 		/* variáveis locais */
 		var request, data, time;
 
-		if (pack === undefined || WD(pack).type === "null") {
+		if (pack === undefined || new WD(pack).type === "null") {
 			pack = null;
 		}
 
-		method = WD(method).type === "text" ? method.toUpperCase() : "GET";
+		method = new WD(method).type === "text" ? method.toUpperCase() : "GET";
 
 		if (async === undefined) {
 			async = true;
 		}
 
-		if (WD(callback).type !== "function") {
+		if (new WD(callback).type !== "function") {
 			callback = null
 		}
 
@@ -458,8 +363,8 @@ var wd = (function() {
 			if (data.closed === false) {
 				data.status   = status;
 				data.closed   = closed === true ? true : false;
-				data.loaded   = WD(loaded).type === "number" ? loaded : 0;
-				data.size     = WD(size).type   === "number" ? size   : 0;
+				data.loaded   = new WD(loaded).type === "number" ? loaded : 0;
+				data.size     = new WD(size).type   === "number" ? size   : 0;
 				data.progress = data.size > 0 ? data.loaded/data.size : 1;
 				data.time = (new Date()) - time;
 				if (status === "ABORTED") {
@@ -533,8 +438,8 @@ var wd = (function() {
 					data.progress = 1;
 					data.text     = request.responseText;
 					data.xml      = request.responseXML;
-					data.json     = WD(data.text).type === "text" ? WD(data.text).json : null;
-					data.csv      = WD(data.text).type === "text" ? WD(data.text).csv : null;
+					data.json     = new WD(data.text).type === "text" ? WD(data.text).json : null;
+					data.csv      = new WD(data.text).type === "text" ? WD(data.text).csv : null;
 				} else {
 					data.status = "ERROR";
 				}
@@ -556,7 +461,7 @@ var wd = (function() {
 		time = new Date();
 
 		/* envio da requisição */
-		if (method === "GET" && WD(pack).type === "text") {
+		if (method === "GET" && new WD(pack).type === "text") {
 			action += action.split("?").length > 1 ? pack : "?"+pack;
 			pack = null;
 		}
@@ -571,7 +476,7 @@ var wd = (function() {
 			return false;
 		}
 
-		if (method === "POST" && WD(pack).type === "text") {
+		if (method === "POST" && new WD(pack).type === "text") {
 			request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 		}
 
@@ -670,7 +575,7 @@ var wd = (function() {
 
 			switch(this.type) {
 				case "dom":
-					if (WD(method).type === "text" && WD(method).upper === "POST") {
+					if (new WD(method).type === "text" && new WD(method).upper === "POST") {
 						pack = this._Form;
 					} else {
 						pack = this._form;
@@ -817,11 +722,11 @@ var wd = (function() {
 				/*fazer nada*/
 			} else if ((/^[a-z0-9\_\.\:]+((\-[a-z0-9\_\.\:]+)+)?$/g).test(x) === true) {/*checa se é elegível para camel*/
 				x    = x.toLowerCase().replace(/\-/g, " ");
-				x    = WD(x).title.split(" ");
+				x    = new WD(x).title.split(" ");
 				x[0] = x[0].toLowerCase();
 				x    = x.join("");
-			} else if (WD(x).dash !== null) {
-				x = WD(WD(x).dash).camel;
+			} else if (new WD(x).dash !== null) {
+				x = new WD(new WD(x).dash).camel;
 			} else {
 				x = null;
 			}
@@ -874,14 +779,14 @@ var wd = (function() {
 				head = rows[0].split("\t");
 				/*Definir atributos (nome das colunas)*/
 				for (var c = 0; c < head.length; c++) {
-					head[c] = WD(head[c]).type === "text" ? WD(head[c]).dash : "unnamed-column-"+c;
+					head[c] = new WD(head[c]).type === "text" ? WD(head[c]).dash : "unnamed-column-"+c;
 				}
 				/*Definindo os valores do atributos (valores das colunas)*/
 				for (var r = 1; r < rows.length; r++) {
 					json.push({});
 					cols = rows[r].split("\t");
 					for (var h = 0; h < head.length; h++) {
-						var value = WD(cols[h]);
+						var value = new WD(cols[h]);
 						if (value.type === "number") {
 							json[r-1][head[h]] = value.valueOf();
 						} else if (value.type === "null" || value.type === "undefined") {
@@ -929,8 +834,8 @@ var wd = (function() {
 			oldValue = oldValue === null || oldValue === undefined ? "" : oldValue;
 			newValue = newValue === null || newValue === undefined ? "" : new String(newValue).toString();
 			value    = this.toString();
-			if (WD(oldValue).type === "regexp") {
-				oldValue = new RegExp(WD(oldValue).toString(), "g");
+			if (new WD(oldValue).type === "regexp") {
+				oldValue = new RegExp(new WD(oldValue).toString(), "g");
 				value    = value.replace(oldValue, newValue);
 			} else {
 				oldValue = new String(oldValue).toString();
@@ -983,10 +888,10 @@ var wd = (function() {
 	Object.defineProperty(WDtext.prototype, "message", {
 		enumerable: true,
 		value: function(time, className) {
-			if (WD(document.body).type === "dom") {/*verificar se o documento foi carregado*/
+			if (new WD(document.body).type === "dom") {/*verificar se o documento foi carregado*/
 				var msgWindow = document.createElement("DIV");
 				msgWindow.innerHTML = this.toString();
-				if (WD(className).type === "text") {msgWindow.className = className;}
+				if (new WD(className).type === "text") {msgWindow.className = className;}
 
 				WD(msgWindow).style({
 					display: "block",
@@ -1016,7 +921,7 @@ var wd = (function() {
 				document.body.appendChild(msgWindow);
 
 				/*fechamento automático*/
-				time = WD(time);
+				time = new WD(time);
 				if (time.type !== "number") {
 					time = 6500;
 				} else if (time.number === "infinity" || time.valueOf() <= 0) {
@@ -1212,9 +1117,9 @@ var wd = (function() {
 		enumerable: true,
 		value: function(width) {
 			var x;
-			width = WD(width);
+			width = new WD(width);
 			if (width.number === "integer" || width.number === "real") {
-				width = WD(width.abs).integer;
+				width = new WD(width.abs).integer;
 				try {
 				 	x = Number(this.valueOf().toFixed(width)).valueOf();
 				} catch(e) {
@@ -1258,7 +1163,7 @@ var wd = (function() {
 				x = this.toString();
 			} else {
 				try {
-					width = WD(width);
+					width = new WD(width);
 					width = width.number === "integer" && width >= 0 ? width.valueOf() : undefined;
 					x = this.valueOf().toExponential(width);
 				} catch(e) {
@@ -1284,7 +1189,7 @@ var wd = (function() {
 		enumerable: true,
 		value: function(locale) {
 			var x;
-			if (WD(locale).type !== "text") {
+			if (new WD(locale).type !== "text") {
 				locale = lang();
 			}
 			try {
@@ -1309,10 +1214,10 @@ var wd = (function() {
 		enumerable: true,
 		value: function(currency, locale) {
 			var x;
-			if (WD(locale).type !== "text")   {
+			if (new WD(locale).type !== "text")   {
 				locale = lang();
 			}
-			if (WD(currency).type !== "text") {
+			if (new WD(currency).type !== "text") {
 				currency = locale === "en-US" ? "USD" : "¤";
 			}
 			if (this.number === "infinity") {
@@ -1322,8 +1227,8 @@ var wd = (function() {
 					x = this.valueOf().toLocaleString(locale, {style: "currency", currency: currency});
 				} catch(e) {
 					currency = this.valueOf() < 0 ? "-"+currency : currency;
-					x = WD(WD(this.integer).abs+0.5).locale().replace(/(.)5$/, "$1");
-					x = x+(WD(WD(this.decimal).abs+1).fixed(0, 2).replace(/.+([0-9]{2})$/, "$1"));
+					x = new WD(new WD(this.integer).abs+0.5).locale().replace(/(.)5$/, "$1");
+					x = x+(new WD(new WD(this.decimal).abs+1).fixed(0, 2).replace(/.+([0-9]{2})$/, "$1"));
 					x = currency+" "+x;
 				}
 			}
@@ -1344,12 +1249,12 @@ var wd = (function() {
 				decimal = x[1] === undefined ? "0" : x[1];
 				integer = integer === "0" ? [] : integer.split("");
 				decimal = decimal === "0" ? [] : decimal.split("");
-				int = WD(int).type !== "number" ? 1 : WD(int).integer;
-				dec = WD(dec).type !== "number" ? decimal.length : WD(dec).integer;
-				if (WD(int).number === "infinity" || int < 1) {
+				int = new WD(int).type !== "number" ? 1 : new WD(int).integer;
+				dec = new WD(dec).type !== "number" ? decimal.length : new WD(dec).integer;
+				if (new WD(int).number === "infinity" || int < 1) {
 					int = 1;
 				}
-				if (WD(dec).number === "infinity" || dec < 0) {
+				if (new WD(dec).number === "infinity" || dec < 0) {
 					dec = decimal.length;
 				}
 				while (integer.length < int) {
@@ -1410,23 +1315,18 @@ var wd = (function() {
 
 /* === TIME ================================================================ */
 
-	//FIXME
 	/*Retona o correpondente método de acordo com o atalho*/
 	function timeFormat(obj, char) {
-		var x;
-
 		switch(char) {
-			case "%h": x = obj.hour; break;
-			case "%H": x = WD(obj.hour).fixed(2, 0); break;
-			case "#h": x = obj.h12; break;
-			case "%m": x = obj.minute; break;
-			case "%M": x = WD(obj.minute).fixed(2, 0); break;
-			case "%s": x = obj.second; break;
-			case "%S": x = WD(obj.second).fixed(2, 0); break;
-			default  : x = "";
+			case "%h": return obj.hour;
+			case "%H": return new WD(obj.hour).fixed(2, 0);
+			case "#h": return obj.h12;
+			case "%m": return obj.minute;
+			case "%M": return new WD(obj.minute).fixed(2, 0);
+			case "%s": return obj.second;
+			case "%S": return new WD(obj.second).fixed(2, 0);
 		}
-	
-		return x;	
+		return "";
 	};
 
 /*............................................................................*/
@@ -1470,13 +1370,13 @@ var wd = (function() {
 	Object.defineProperty(WDtime.prototype, "hour", {
 		enumerable: true,
 		get: function() {
-			var h = WD(this.valueOf()/3600);
+			var h = new WD(this.valueOf()/3600);
 			return h.integer;
 		},
 		set: function(h) {
 			var h24, h;
 			h24 = 24*60*60;
-			h = WD(h);
+			h = new WD(h);
 			if (h.number === "integer" || h.number === "real") {
 				h = h.integer;
 				if (h >= 0) {
@@ -1495,12 +1395,12 @@ var wd = (function() {
 		enumerable: true,
 		get: function() {
 			var m = this.valueOf() - 3600*this.hour;
-			m = WD(m/60);
+			m = new WD(m/60);
 			return m.integer;
 		},
 		set: function(m) {
 			var time;
-			m = WD(m);
+			m = new WD(m);
 			if (m.number === "integer" || m.number === "real") {
 				m = m.integer;
 				if (m > 59 || m < 0) {
@@ -1524,7 +1424,7 @@ var wd = (function() {
 		},
 		set: function(s) {
 			var time;
-			s = WD(s);
+			s = new WD(s);
 			if (s.number === "integer" || s.number === "real") {
 				s = s.integer;
 				if (s > 59 || s < 0) {
@@ -1571,8 +1471,8 @@ var wd = (function() {
 			} else {
 				h = this.hour - 12;
 			}
-			h = WD(h).fixed(2, 0);
-			m = WD(this.minute).fixed(2, 0);
+			h = new WD(h).fixed(2, 0);
+			m = new WD(this.minute).fixed(2, 0);
 			return h+":"+m+p;
 		}
 	});
@@ -1581,12 +1481,12 @@ var wd = (function() {
 	Object.defineProperty(WDtime.prototype, "format", {
 		enumerable: true,
 		value: function(string) {
-			if (WD(string).type !== "text") {
+			if (new WD(string).type !== "text") {
 				return this.toString();
 			}
 			var x, chars;
 
-			x = WD(string);
+			x = new WD(string);
 			chars = ["%h", "%H", "#h", "%m", "%M", "%s", "%S"];
 
 			for (var i = 0; i < chars.length; i++) {
@@ -1608,9 +1508,9 @@ var wd = (function() {
 			value: function() {
 				var h, m, s;
 
-				h = WD(this.hour).fixed(2, 0);
-				m = WD(this.minute).fixed(2, 0);
-				s = WD(this.second).fixed(2, 0);
+				h = new WD(this.hour).fixed(2, 0);
+				m = new WD(this.minute).fixed(2, 0);
+				s = new WD(this.second).fixed(2, 0);
 
 				return [h, m, s].join(":");
 			}
@@ -1619,13 +1519,13 @@ var wd = (function() {
 			value: function() {
 				var h24, x;
 				h24 = 24*60*60;
-				x   = WD(this._value);
+				x   = new WD(this._value);
 				if (x.type !== "number" || x.number === "infinity") {
 					log("Improper change of internal value has been adjusted to the minimum value.", "w");
 					this._value = 0;
 				} else if (x.number !== "integer") {
 					log("Considering that time was defined as a non-integer value, its value was approximated!", "w");
-					this._value = WD(this._value).integer;
+					this._value = new WD(this._value).integer;
 				}
 				if (this._value < 0) {
 					this._value = this._value % h24 + h24;
@@ -1651,53 +1551,46 @@ var wd = (function() {
 
 	/*Retorna o dia do ano*/
 	function dateDayYear(y, m, d) {
-		/*Retorna o da do ano*/
-		var x365, x366, x;
-		x365 = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
-		x366 = [0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335];
-		x = isLeap(y) ? x366[m-1]+d : x365[m-1]+d;
-		return x;
+		var i, days;
+		i = isLeap(y) ? 1 : 0;
+		days = [0, 31, 59+i, 90+i, 120+i, 151+i, 181+i, 212+i, 243+i, 273+i, 304+i, 334+i];
+		return days[m-1] + d;
 	};
 
 	/*Converte uma data para seu valor numérico*/
 	function dateToNumber(y, m, d) {
 		var l4, l100, l400, delta, x;
-		delta = WD(y === Y_min ? 0 : 365*(y - Y_min));
-		l4    = WD(y  <  Y_004 ? 0 : (y - 1)/4);
-		l100  = WD(y  <  Y_100 ? 0 : (y - 1)/100);
-		l400  = WD(y  <  Y_400 ? 0 : (y - 1)/400);
+		delta = new WD(y === Y_min ? 0 : 365*(y - Y_min));
+		l4    = new WD(y  <  Y_004 ? 0 : (y - 1)/4);
+		l100  = new WD(y  <  Y_100 ? 0 : (y - 1)/100);
+		l400  = new WD(y  <  Y_400 ? 0 : (y - 1)/400);
 		x = delta.integer + l4.integer - l100.integer + l400.integer + dateDayYear(y, m, d);
 		return x;
 	};
 
-	//FIXME
 	/*Retona o correpondente método de acordo com o atalho*/
 	function dateFormat(obj, char, locale) {
-		var x;
-
 		switch(char) {
-			case "%d": x = obj.day; break;
-			case "%D": x = WD(obj.day).fixed(2, 0); break;
-			case "@d": x = obj.days; break;
-			case "%m": x = obj.month; break;
-			case "%M": x = WD(obj.month).fixed(2, 0); break;
-			case "@m": x = obj.width; break;
-			case "#m": x = obj.shortMonth(locale); break;
-			case "#M": x = obj.longMonth(locale); break;
-			case "%y": x = obj.year; break;
-			case "%Y": x = WD(obj.year).fixed(4, 0); break;
-			case "%w": x = obj.week; break;
-			case "@w": x = obj.weeks; break;
-			case "#w": x = obj.shortWeek(locale); break;
-			case "#W": x = obj.longWeek(locale); break;
-			case "%l": x = obj.leap ? 366 : 365; break;
-			case "%c": x = obj.countdown; break;
-			case "%b": x = obj.wDays; break;
-			case "%B": x = obj.wDaysYear; break;
-			default  : x = "";
+			case "%d": return obj.day;
+			case "%D": return new WD(obj.day).fixed(2, 0);
+			case "@d": return obj.days;
+			case "%m": return obj.month;
+			case "%M": return new WD(obj.month).fixed(2, 0);
+			case "@m": return obj.width;
+			case "#m": return obj.shortMonth(locale);
+			case "#M": return obj.longMonth(locale);
+			case "%y": return obj.year;
+			case "%Y": return new WD(obj.year).fixed(4, 0);
+			case "%w": return obj.week;
+			case "@w": return obj.weeks;
+			case "#w": return obj.shortWeek(locale);
+			case "#W": return obj.longWeek(locale);
+			case "%l": return obj.leap ? 366 : 365;
+			case "%c": return obj.countdown;
+			case "%b": return obj.wDays;
+			case "%B": return obj.wDaysYear;
 		}
-	
-		return x;	
+		return "";
 	};
 
 /*...........................................................................*/
@@ -1730,7 +1623,7 @@ var wd = (function() {
 			} else throw Error("An unexpected error occurred while setting date!");
 		}
 		for (var i = 0; i < date.length; i++) {
-			x = WD(date[i]);
+			x = new WD(date[i]);
 			if (x.number !== "integer" || date[i] <= 0) throw Error("An unexpected error occurred while setting date!");
 			date[i] = x.valueOf();
 		}
@@ -1752,14 +1645,14 @@ var wd = (function() {
 		enumerable: true,
 		get: function() {
 			var y;
-			y = WD(this.valueOf()/365).integer + Y_min;
+			y = new WD(this.valueOf()/365).integer + Y_min;
 			while (dateToNumber(y, 1, 1) > this.valueOf()) {
 				y--;
 			}
 			return y;
 		},
 		set: function(x) {
-			var y = WD(x);
+			var y = new WD(x);
 			if (y.type !== "number") {
 				log("The value must be a positive integer between "+Y_min+" and "+Y_max+".", "w");
 			} else if (y.valueOf() > Y_max) {
@@ -1777,16 +1670,27 @@ var wd = (function() {
 	Object.defineProperty(WDdate.prototype, "month", {
 		enumerable: true,
 		get: function() {
-			var m = 1;
+			/*var m = 1;
 			while (dateToNumber(this.year, m+1, 1) - 1 < this.valueOf()) {
 				m++;
+				log("lololo");
 			}
-			return m;
+			return m;*/
+			var l, days, x;
+			l = isLeap(this.year) ? 1 : 0;
+			days = [0, 31, 59+l, 90+l, 120+l, 151+l, 181+l, 212+l, 243+l, 273+l, 304+l, 334+l];
+			x = dateToNumber(this.year, 1, 1);
+			for (var i = 1; i < days.length; i++) {
+				if (this.valueOf() < (x + days[i])) {
+					return i;
+				}
+			}
+			return 12;
 		},
 		set: function(x) {
 			var y, m, d;
 			y = this.year;
-			m = WD(x);
+			m = new WD(x);
 			d = this.day;
 			if (m.type !== "number" || m.number === "infinity") {
 				log("The value must be an integer.", "w");
@@ -1802,7 +1706,7 @@ var wd = (function() {
 					y = this.year + WD((m - 1)/12).integer;
 					m = m%12;
 				}
-				if (WD([4, 6, 9, 11]).inside(m) && d > 30) {
+				if (new WD([4, 6, 9, 11]).inside(m) && d > 30) {
 					d = 30;
 				} else if (m === 2 && d > 28) {
 					d = isLeap(y) ? 29 : 28;
@@ -1817,15 +1721,13 @@ var wd = (function() {
 	Object.defineProperty(WDdate.prototype, "day", {
 		enumerable: true,
 		get: function() {
-			var d = 1;
-			while (dateToNumber(this.year, this.month, d) !== this.valueOf()) {
-				d++;
-			}
-			return d;
+			var d;
+			d = dateToNumber(this.year, this.month, 1);
+			return (this.valueOf() - d + 1);
 		},
 		set: function(x) {
 			var d, z;
-			d = WD(x);
+			d = new WD(x);
 			if (d.type !== "number" || d.number === "infinity") {
 				log("The value must be an integer.", "w");
 			} else {
@@ -1867,7 +1769,7 @@ var wd = (function() {
 		shortMonth: {
 			enumerable: true,
 			value: function(locale) {
-				if (WD(locale).type !== "text") {
+				if (new WD(locale).type !== "text") {
 					locale = lang();
 				}
 				var x, main, ref;
@@ -1889,7 +1791,7 @@ var wd = (function() {
 		longMonth: {
 			enumerable: true,
 			value: function(locale) {
-				if (WD(locale).type !== "text") {
+				if (new WD(locale).type !== "text") {
 					locale = lang();
 				}
 				var x, main, ref;
@@ -1928,8 +1830,8 @@ var wd = (function() {
 			enumerable: true,
 			get: function() {
 				var y, ref;
-				y   = WD(this.year).fixed(4, 0);
-				ref = WD(y+"-01-01").valueOf();
+				y   = new WD(this.year).fixed(4, 0);
+				ref = new WD(y+"-01-01").valueOf();
 				return this.valueOf() - ref + 1;
 			}		
 		},
@@ -1937,9 +1839,9 @@ var wd = (function() {
 			enumerable: true,
 			get: function() {
 				var ref, weeks, y;
-				y     = WD(this.year).fixed(4, 0);
-				ref   = WD(y+"-01-01").week;
-				weeks = WD(1 + (ref + this.days - 2)/7).integer;
+				y     = new WD(this.year).fixed(4, 0);
+				ref   = new WD(y+"-01-01").week;
+				weeks = new WD(1 + (ref + this.days - 2)/7).integer;
 				return weeks;
 			}
 		},
@@ -1947,9 +1849,9 @@ var wd = (function() {
 			enumerable: true,
 			get: function() {
 				var w;
-				if (WD([1, 3, 5, 7, 8, 10, 12]).inside(this.month)) {
+				if (new WD([1, 3, 5, 7, 8, 10, 12]).inside(this.month)) {
 					w = 31;
-				} else if (WD([4, 6, 9, 11]).inside(this.month)) {
+				} else if (new WD([4, 6, 9, 11]).inside(this.month)) {
 					w = 30;
 				} else {
 					w = this.leap ? 29 : 28;
@@ -1963,20 +1865,18 @@ var wd = (function() {
 				return (this.leap ? 366 : 365) - this.days;
 			}
 		},
-		
-		
-		
-		//FIXME XXX comendo muita memória
+
+		//FIXME NOVO
 		wDaysYear: {
 			enumerable: true,
 			get: function() {
 				var lastSat, lastSun, firstSat, firstSun, sun, sat, y;
 
-				y = WD(this.year).fixed(4, 0);
-				firstSat = WD(y+"-01-01");
-				firstSun = WD(y+"-01-01");
-				lastSat  = WD(y+"-12-31");
-				lastSun  = WD(y+"-12-31");
+				y = new WD(this.year).fixed(4, 0);
+				firstSat = new WD(y+"-01-01");
+				firstSun = new WD(y+"-01-01");
+				lastSat  = new WD(y+"-12-31");
+				lastSun  = new WD(y+"-12-31");
 
 				firstSat.d += 7 - firstSat.week;
 				firstSun.d += firstSun.week === 1 ? 0 : (8 - firstSun.week);
@@ -1989,18 +1889,17 @@ var wd = (function() {
 				return (this.leap ? 366 : 365) - (sun + sat);
 			}
 		},
-		
 
-		wDays: {//FIXME XXX comendo muita memória
+		wDays: {//FIXME NOVO
 			enumerable: true,
 			get: function() {
 				var lastSat, lastSun, firstSat, firstSun, sun, sat, y;
 
-				y = WD(this.year).fixed(4, 0);
-				firstSat = WD(y+"-01-01");
-				firstSun = WD(y+"-01-01");
-				lastSat  = WD(this.toString());
-				lastSun  = WD(this.toString());
+				y = new WD(this.year).fixed(4, 0);
+				firstSat = new WD(y+"-01-01");
+				firstSun = new WD(y+"-01-01");
+				lastSat  = new WD(this.toString());
+				lastSun  = new WD(this.toString());
 
 				firstSat.d += 7 - firstSat.week;
 				firstSun.d += firstSun.week === 1 ? 0 : (8 - firstSun.week);
@@ -2013,24 +1912,6 @@ var wd = (function() {
 				return this.days - (sun + sat);
 			}
 		}
-		
-
-
-
-
-
-
-
-
-
-
-
-		
-		
-		
-		
-		
-		
 	});
 
 	/*Retorna o dia da semana em formato textual*/
@@ -2038,7 +1919,7 @@ var wd = (function() {
 		shortWeek: {
 			enumerable: true,
 			value: function(locale) {
-				if (WD(locale).type !== "text") {
+				if (new WD(locale).type !== "text") {
 					locale = lang();
 				}
 				var x, main, ref;
@@ -2059,7 +1940,7 @@ var wd = (function() {
 		longWeek: {
 			enumerable: true,
 			value: function(locale) {
-				if (WD(locale).type !== "text") {
+				if (new WD(locale).type !== "text") {
 					locale = lang();
 				}
 				var x, main, ref;
@@ -2082,12 +1963,12 @@ var wd = (function() {
 	Object.defineProperty(WDdate.prototype, "format", {
 		enumerable: true,
 		value: function(string, locale) {
-			if (WD(string).type !== "text") {
+			if (new WD(string).type !== "text") {
 				return this.toString();
 			}
 			var x, chars;
 
-			x = WD(string);
+			x = new WD(string);
 			chars = [
 				"%d", "%D", "@d", "%m", "%M", "@m", "#m", "#M", "%y",
 				"%Y", "%w", "@w", "#w", "#W", "%l", "%c", "%b", "%B"
@@ -2112,15 +1993,15 @@ var wd = (function() {
 		toString: {
 			value: function() {
 				var y, m, d;
-				y = WD(this.year).fixed(4, 0);
-				m = WD(this.month).fixed(2, 0);
-				d = WD(this.day).fixed(2, 0);
+				y = new WD(this.year).fixed(4, 0);
+				m = new WD(this.month).fixed(2, 0);
+				d = new WD(this.day).fixed(2, 0);
 				return [y, m, d].join("-");
 			}
 		},
 		valueOf: {
 			value: function() {
-				if (WD(this._value).type !== "number") {
+				if (new WD(this._value).type !== "number") {
 					log("Improper change of internal value has been adjusted to the minimum value.", "w");
 					this._value = DATE_min;
 				} else if (this._value < DATE_min) {
@@ -2129,9 +2010,9 @@ var wd = (function() {
 				} else if (this._value > DATE_max) {
 					log("Upper limit for date has been extrapolated. Limit value set.", "w");
 					this._value = DATE_max;
-				} else if (WD(this._value).number !== "integer") {
+				} else if (new WD(this._value).number !== "integer") {
 					log("Incorrect change of internal value was adjusted to approximate value.", "w");
-					this._value = WD(this._value).integer;
+					this._value = new WD(this._value).integer;
 				}
 				return this._value;
 			}
@@ -2178,7 +2059,7 @@ var wd = (function() {
 			enumerable: true,
 			value: function(index) {
 				var x = undefined;
-				index = WD(index).type === "number" ? WD(index).integer : 0;
+				index = new WD(index).type === "number" ? WD(index).integer : 0;
 				if (index >= 0 && index < this.items) {
 					x = this.valueOf()[index];
 				} else if (index < 0 && -index <= this.items) {
@@ -2287,7 +2168,7 @@ var wd = (function() {
 			asort = {};
 			/*agrupando em arrays os items pelo tipo*/
 			for (var i = 0; i < this.items; i++) {
-				type = WD(this.item(i)).type
+				type = new WD(this.item(i)).type
 				if (!(type in asort)) {
 					asort[type] = [];
 				}
@@ -2300,14 +2181,14 @@ var wd = (function() {
 					if (t === "dom") {
 						x = a.textContent || a.innerText || a.innerHTML;
 						y = b.textContent || b.innerText || b.innerHTML;
-						order = WD([x, y]).sort().indexOf(x) > 0 ? 1 : -1;
+						order = new WD([x, y]).sort().indexOf(x) > 0 ? 1 : -1;
 					} else if (["number", "boolean", "date", "time"].indexOf(t) >= 0) {
-						x = WD(a).valueOf();
-						y = WD(b).valueOf();
+						x = new WD(a).valueOf();
+						y = new WD(b).valueOf();
 						order = x - y >= 0 ? 1 : -1;
 					} else {
-						x = WD(a).toString().trim().toUpperCase();
-						y = WD(b).toString().trim().toUpperCase();
+						x = new WD(a).toString().trim().toUpperCase();
+						y = new WD(b).toString().trim().toUpperCase();
 						order = x > y ? 1 : -1;
 					}
 					return order;
@@ -2334,7 +2215,7 @@ var wd = (function() {
 			}
 			/*verificando argumento*/
 			if (unique === true) {
-				array = WD(array).unique();
+				array = new WD(array).unique();
 			}
 			return array;
 		}
@@ -2387,7 +2268,7 @@ var wd = (function() {
 	function wdSetHandler(event, method, elem, remove) {
 
 		/* checando e definindo valores padrão */
-		if (WD(method).type !== "function") {
+		if (new WD(method).type !== "function") {
 			log("handler: " + event + " callback needs to be a function..", "e");
 			return false;
 		}
@@ -2407,8 +2288,8 @@ var wd = (function() {
 				elem.detachEvent("on"+event, method);
 			} else if (("on"+event) in elem) {
 				/*função especial para navegadores mais antigos*/
-				if (WD(elem["on"+event]).type === "function" && elem["on"+event].name === "wdEventHandler") {
-					special = WD(elem["on"+event]("getMethods")).del(method);
+				if (new WD(elem["on"+event]).type === "function" && elem["on"+event].name === "wdEventHandler") {
+					special = new WD(elem["on"+event]("getMethods")).del(method);
 				}
 				elem["on"+event] = null;
 				for (var i = 0; i < special.length; i++) {
@@ -2424,10 +2305,10 @@ var wd = (function() {
 				elem.attachEvent("on"+event, method);
 			} else if (("on"+event) in elem) {
 				/*função especial para navegadores mais antigos*/
-				if (WD(elem["on"+event]).type === "function") {
+				if (new WD(elem["on"+event]).type === "function") {
 					special = elem["on"+event].name === "wdEventHandler" ? elem["on"+event]("getMethods") : [elem["on"+event]];
 				}
-				special = WD(special);
+				special = new WD(special);
 				special.add(method);
 				special = special.unique();
 				elem["on"+event] = getEventMethod(special);
@@ -2547,11 +2428,11 @@ var wd = (function() {
 					if (type === "radio" || type === "checkbox") {
 						value = this.elem.checked === true ? value : null;
 					} else if (type === "date") {
-						value = WD(value).type === "date" && value !== "%today" ? WD(value).toString() : null;
+						value = new WD(value).type === "date" && value !== "%today" ? WD(value).toString() : null;
 					} else if (type === "time") {
-						value = WD(value).type === "time" && value !== "%now" ? WD(value).toString() : null;
+						value = new WD(value).type === "time" && value !== "%now" ? WD(value).toString() : null;
 					} else if (type === "number" || type === "range") {
-						value = WD(value).type === "number" ? WD(value).valueOf() : null;
+						value = new WD(value).type === "number" ? WD(value).valueOf() : null;
 					} else if (type === "file" && "files" in this.elem) {
 						value =  this.elem.files.length > 0 ? this.elem.files : null;
 					} else if (type === "file") {
@@ -2636,7 +2517,7 @@ var wd = (function() {
 		},
 		dataName: {
 			value: function(attr) {/*define o nome do attributo data sem o prefixo data-*/
-				attr = WD(WD(attr).toString().replace(/^data\-/i, "")).camel;
+				attr = new WD(new WD(attr).toString().replace(/^data\-/i, "")).camel;
 				return WD(attr).type === "text" ? attr : undefined;
 			}
 		},
@@ -2664,7 +2545,7 @@ var wd = (function() {
 		data: {
 			value: function (attr, val) {/*define ou retorna o valor de data*/
 				attr = this.dataName(attr);
-				val  = WD(val).type === "regexp" ? WD(val).toString() : val;
+				val  = new WD(val).type === "regexp" ? WD(val).toString() : val;
 				if (attr === undefined) {
 					return attr;			
 				} else if (val === undefined) {
@@ -2772,7 +2653,7 @@ var wd = (function() {
 	Object.defineProperty(WDdom.prototype, "run", {
 		enumerable: true,
 		value: function(method) {
-			if (WD(method).type === "function") {
+			if (new WD(method).type === "function") {
 				var x;
 				for (var i = 0; i < this.valueOf().length; i++) {
 					x = this.valueOf()[i];
@@ -2821,7 +2702,7 @@ var wd = (function() {
 	Object.defineProperty(WDdom.prototype, "data", {
 		enumerable: true,
 		value: function(input) {
-			if (input === null || WD(input).type === "object") {
+			if (input === null || new WD(input).type === "object") {
 				this.run(function(elem) {
 					var key, data;
 					data = new AttrHTML(elem)
@@ -2851,7 +2732,7 @@ var wd = (function() {
 	Object.defineProperty(WDdom.prototype, "style", {
 		enumerable: true,
 		value: function(styles) {
-			if (styles === null || WD(styles).type === "object") {
+			if (styles === null || new WD(styles).type === "object") {
 				this.run(function(elem) {
 					var key;
 					if (styles === null) {
@@ -2861,7 +2742,7 @@ var wd = (function() {
 						}
 					} else {
 						for (var i in styles) {
-							key = WD(i).camel;
+							key = new WD(i).camel;
 							if (!(key in elem.style)) {
 								log("style: Unknown attribute. ("+i+")", "w");
 							}
@@ -2881,36 +2762,36 @@ var wd = (function() {
 	Object.defineProperty(WDdom.prototype, "class", {
 		enumerable: true,
 		value: function (list) {
-			if (list === null || WD(list).type === "object") {
+			if (list === null || new WD(list).type === "object") {
 				this.run(function(elem) {
 					var css, cls, i;
-					css = WD(elem.className);
+					css = new WD(elem.className);
 					css = css.type === "null" ? [] : css.trim.split(" ");
 					if (list === null) {
 						css = [];
 					} else {
-						css = WD(css);
-						if (WD(list.add).type === "text") {
-							cls = WD(list.add).trim.split(" ");
+						css = new WD(css);
+						if (new WD(list.add).type === "text") {
+							cls = new WD(list.add).trim.split(" ");
 							for (i = 0; i < cls.length; i++) {
 								css.add(cls[i]);
 							}
 						}
-						if (WD(list.del).type === "text") {
-							cls = WD(list.del).trim.split(" ");
+						if (new WD(list.del).type === "text") {
+							cls = new WD(list.del).trim.split(" ");
 							for (i = 0; i < cls.length; i++) {
 								css.del(cls[i]);
 							}
 						}
-						if (WD(list.toggle).type === "text") {
-							cls = WD(list.toggle).trim.split(" ");
+						if (new WD(list.toggle).type === "text") {
+							cls = new WD(list.toggle).trim.split(" ");
 							for (i = 0; i < cls.length; i++) {
 								css.toggle(cls[i]);
 							}
 						}
 						css = css.valueOf();
 					}
-					elem.className = WD(css).sort(true).join(" ");
+					elem.className = new WD(css).sort(true).join(" ");
 					return;
 				});
 			} else {
@@ -2925,13 +2806,13 @@ var wd = (function() {
 	Object.defineProperty(WDdom.prototype, "filter", {
 		enumerable: true,
 		value: function (text, min, show) {
-			if (WD(min).type !== "number" || WD(min).number === "infinity" || min < 0) {
+			if (new WD(min).type !== "number" || new WD(min).number === "infinity" || min < 0) {
 				min = 0;
 			}
 
-			if (text !== null && text !== undefined && WD(text).type !== "regexp") {
+			if (text !== null && text !== undefined && new WD(text).type !== "regexp") {
 				text = String(text).toString().toUpperCase();
-			} else if (WD(text).type !== "regexp") {
+			} else if (new WD(text).type !== "regexp") {
 				text = "";
 			}
 
@@ -2943,9 +2824,9 @@ var wd = (function() {
 						continue;
 					}
 
-					content = WD(text).type === "regexp" ? child[i].textContent : child[i].textContent.toUpperCase();
+					content = new WD(text).type === "regexp" ? child[i].textContent : child[i].textContent.toUpperCase();
 
-					if (WD(text).type === "regexp") {
+					if (new WD(text).type === "regexp") {
 						if (text.test(content) === true) {
 							WD(child[i]).action("show");
 						} else {
@@ -3007,12 +2888,12 @@ var wd = (function() {
 						break;
 					case "next":
 						var child, ready, array;
-						child = WD(elem.children);
+						child = new WD(elem.children);
 						if (child.items === 0) {break;}
 						ready = false;
 						for (var i = -1; i >= -child.items; i--) {
 							array = child.item(i).className.split(" ");
-							if (WD(array).inside("js-wd-no-display") === false) {
+							if (new WD(array).inside("js-wd-no-display") === false) {
 								WD(child.item(i+1)).action("tab");
 								ready = true;
 								break;
@@ -3024,12 +2905,12 @@ var wd = (function() {
 						break;
 					case "prev":
 						var child, ready, array;
-						child = WD(elem.children);
+						child = new WD(elem.children);
 						if (child.items === 0) {break;}
 						ready = false;
 						for (var i = 0; i < child.items; i++) {
 							array = child.item(i).className.split(" ");
-							if (WD(array).inside("js-wd-no-display") === false) {
+							if (new WD(array).inside("js-wd-no-display") === false) {
 								WD(child.item(i-1)).action("tab");
 								ready = true;
 								break;
@@ -3111,7 +2992,7 @@ var wd = (function() {
 		enumerable: true,
 		value: function (events, remove) {
 
-			if (WD(events).type === "object") {
+			if (new WD(events).type === "object") {
 				this.run(function(elem) {
 					for (var event in events) {
 						wdSetHandler(event, events[event], elem, remove);
@@ -3127,7 +3008,7 @@ var wd = (function() {
 	Object.defineProperty(WDdom.prototype, "repeat", {
 		enumerable: true,
 		value: function (json) {
-			if (WD(json).type === "array") {
+			if (new WD(json).type === "array") {
 				this.run(function(elem) {
 					var inner, re, html, data;
 					html = elem.innerHTML;
@@ -3141,15 +3022,15 @@ var wd = (function() {
 					}
 					if (html !== null) {
 						elem.innerHTML = "";
-						html = WD(html).replace("}}=\"\"", "}}");
+						html = new WD(html).replace("}}=\"\"", "}}");
 						for (var i = 0; i < json.length; i++) {
 							inner = html;
-							if (WD(json[i]).type !== "object") {
+							if (new WD(json[i]).type !== "object") {
 								log("repeat: Incorrect structure ignored!", "i");
 								continue;
 							}
 							for (var c in json[i]) {
-								inner = WD(inner).replace("{{"+c+"}}", json[i][c]);
+								inner = new WD(inner).replace("{{"+c+"}}", json[i][c]);
 							}
 							elem.innerHTML += inner;
 						}
@@ -3168,14 +3049,14 @@ var wd = (function() {
 	Object.defineProperty(WDdom.prototype, "page", {
 		enumerable: true,
 		value: function (page, size) {
-			page = WD(page).type !== "number" ? 0 : WD(page).integer;
-			size = WD(size).type !== "number" || WD(size).abs === Infinity ? 1 : WD(size).abs;
+			page = new WD(page).type !== "number" ? 0 : new WD(page).integer;
+			size = new WD(size).type !== "number" || new WD(size).abs === Infinity ? 1 : new WD(size).abs;
 			this.run(function(elem) {
 				var lines, amount, width, pages, start, end;
 				lines  = elem.children;
 				amount = lines.length;
-				width  = size <= 1 ? WD(size * amount).integer : WD(size).integer;
-				pages  = WD(amount / width).round();
+				width  = size <= 1 ? WD(size * amount).integer : new WD(size).integer;
+				pages  = new WD(amount / width).round();
 				if (page >= pages - 1 || page === -1) {/*page igual ou posterior a última página*/
 					start = (pages - 1) * width;
 					end   = amount - 1;
@@ -3203,11 +3084,11 @@ var wd = (function() {
 	Object.defineProperty(WDdom.prototype, "sort", {
 		enumerable: true,
 		value: function (order, col) {
-			order = WD(order);
-			col   = WD(col);
+			order = new WD(order);
+			col   = new WD(col);
 			this.run(function(elem) {
 				var array, asort, childs;
-				array = WD(elem.children).valueOf();
+				array = new WD(elem.children).valueOf();
 				/*para ordenar os filhos através dos netos*/
 				if (col.number === "integer" && col.valueOf() >= 0) {
 					col = col.valueOf();
@@ -3219,7 +3100,7 @@ var wd = (function() {
 						}
 					}
 					/*ordenando*/
-					asort = WD(array).sort();
+					asort = new WD(array).sort();
 					/*redefinindo os filhos*/
 					for (var k = 0; k < asort.length; k++) {
 						if (asort[k].parentElement !== elem) {
@@ -3228,7 +3109,7 @@ var wd = (function() {
 					}
 				/*caso contrário, ordenar só os filhos*/
 				} else {
-					asort = WD(array).sort();
+					asort = new WD(array).sort();
 				}
 				/*Definindo a ordem dos elementos*/
 				if (order.type === "number" && order.valueOf() < 0) {
@@ -3252,7 +3133,7 @@ var wd = (function() {
 			x = [];
 			if (!("getComputedStyle" in window)) {
 				log("getStyle: Your browser does not have the necessary tool!", "w");
-			} else if (WD(css).type === "text") {
+			} else if (new WD(css).type === "text") {
 				this.run(function(elem) {
 					style = window.getComputedStyle(elem, null);
 					x.push(css in style ? style.getPropertyValue(css) : null);
@@ -3334,7 +3215,7 @@ var wd = (function() {
 			value: function(index) {
 				var x;
 				x = undefined;
-				index = WD(index).type === "number" ? WD(index).integer : 0;
+				index = new WD(index).type === "number" ? WD(index).integer : 0;
 				if (index >= 0 && index < this.items) {
 					x = this.valueOf()[index];
 				} else if (index < 0 && -index <= this.items) {
@@ -3433,7 +3314,7 @@ var wd = (function() {
 			method = "post" in value ? "post" : "get";
 			file   = value[method];
 			pack   = "$" in value ? $(value["$"]) : null;/*se for informado um formulário, seus dados serão enviados à requisição*/
-			target = WD(e);
+			target = new WD(e);
 			target.data({wdLoad: null});
 			WD(pack).send(file, function(x) {
 				if (x.closed === true) {
@@ -3456,7 +3337,7 @@ var wd = (function() {
 			method = "post" in value ? "post" : "get";
 			file   = value[method];
 			pack   = "$" in value ? $(value["$"]) : null;/*se for informado um formulário, seus dados serão enviados à requisição*/
-			target = WD(e);
+			target = new WD(e);
 			target.data({wdRepeat: null});
 
 			WD(pack).send(file, function(x) {
@@ -3499,7 +3380,7 @@ var wd = (function() {
 		var order, data;
 		data = new AttrHTML(e);
 		if (data.has("wdSort")) {
-			order = WD(data.data("wdSort")).valueOf();
+			order = new WD(data.data("wdSort")).valueOf();
 			WD(e).sort(order).data({wdSort: null});
 		}
 		return;
@@ -3524,7 +3405,7 @@ var wd = (function() {
 				show   = "hide" in value[i] ? false : true;
 				min    = "hide" in value[i] ? value[i].hide : value[i].show;
 				target = "$"    in value[i] ? $(value[i]["$"]) : null;
-				if (WD(target).type === "dom") {
+				if (new WD(target).type === "dom") {
 					WD(target).filter(text, min, show);
 				}
 			}
@@ -3551,7 +3432,7 @@ var wd = (function() {
 			} else {
 				re = new RegExp(HTML.data("wdMask"));
 			}
-			mask = WD(re).mask(value);
+			mask = new WD(re).mask(value);
 			if (mask !== false) {
 				e[HTML.mask] = mask;
 			}
@@ -3587,7 +3468,7 @@ var wd = (function() {
 			core = data.core("wdSet");
 			for (var c = 0; c < core.length; c++) {
 				attr   = core[c];
-				target = WD($(attr["$"])).type === "dom" ? WD($(attr["$"])) : WD(e);
+				target = new WD($(attr["$"])).type === "dom" ? WD($(attr["$"])) : new WD(e);
 				target.run(function(x) {
 					if ("text"  in attr) {x.textContent = attr["text"];}
 					if ("value" in attr) {x.value       = attr["value"];}
@@ -3617,7 +3498,7 @@ var wd = (function() {
 		if (data.has("wdAction")) {
 			value = data.core("wdAction")[0];
 			for (var action in value) {
-				target = WD($(value[action]));
+				target = new WD($(value[action]));
 				/* se o alvo não for um dom, será aplicado ao próprio elemento*/
 				if (target.type === "dom") {
 					target.action(action);
@@ -3637,7 +3518,7 @@ var wd = (function() {
 			value = data.core("wdData");
 			for (var i = 0; i < value.length; i++) {
 				/* se o alvo não for um dom, será aplicado ao próprio elemento*/
-				target = WD($(value[i]["$"])).type === "dom" ? WD($(value[i]["$"])) : WD(e);
+				target = new WD($(value[i]["$"])).type === "dom" ? WD($(value[i]["$"])) : new WD(e);
 				delete value[i]["$"]; /*!!! a chave $ não definirá data-$*/
 				if (target.type === "dom") {
 					target.data(value[i]);
@@ -3651,7 +3532,7 @@ var wd = (function() {
 
 	/*Define o link ativo do elemento nav sem interface data*/
 	function data_wdActive(e) {
-		if (e.parentElement !== null && WD(e.parentElement.tagName).title === "Nav") {
+		if (e.parentElement !== null && new WD(e.parentElement.tagName).title === "Nav") {
 			WD(e.parentElement.children).class({del: "wd-active"});
 			if (["A", "SPAN"].indexOf(e.tagName.toUpperCase()) >= 0) {
 				WD(e).class({add: "wd-active"});
@@ -3664,7 +3545,7 @@ var wd = (function() {
 	function data_wdSortCol(e) {
 		var order, thead, heads, bodies, data;
 		data = new AttrHTML(e);
-		if (data.has("wdSortCol") && WD(e.parentElement.parentElement.tagName).title === "Thead") {
+		if (data.has("wdSortCol") && new WD(e.parentElement.parentElement.tagName).title === "Thead") {
 			order  = data.data("wdSortCol") === "+1" ? -1 : 1;
 			thead  = e.parentElement.parentElement;
 			heads  = e.parentElement.children;
@@ -3717,7 +3598,7 @@ var wd = (function() {
 		var data, time;
 		data = new AttrHTML(e);
 		if (data.has("wdSlide") && !data.has("wdSlideRun")) {
-			time = WD(data.data("wdSlide"));
+			time = new WD(data.data("wdSlide"));
 			if (time.type === "number" && time.number === "integer") {
 				time = time.valueOf() <= 0 ? 1000 : time.valueOf();
 			} else {
@@ -3743,7 +3624,7 @@ var wd = (function() {
 		if (data.has("wdShared")) {
 			url    = encodeURIComponent(document.URL);
 			title  = encodeURIComponent(document.title);
-			social = WD(data.data("wdShared")).toString().toLowerCase();
+			social = new WD(data.data("wdShared")).toString().toLowerCase();
 			switch (social) {
 				case "facebook": 
 					link = "https://www.facebook.com/sharer.php?u="+url;
@@ -3794,7 +3675,7 @@ var wd = (function() {
 				name = "name" in files[i] ? files[i].name : "";
 
 				/* verificar tamanho individual do arquivo*/
-				info = WD(value["size"]);
+				info = new WD(value["size"]);
 				if (info.type === "number" && "size" in files[i]) {
 					if (files[i].size > info.valueOf()) {
 						error.fileSize.push(name);
@@ -3802,7 +3683,7 @@ var wd = (function() {
 				}
 
 				/* verificar caracteres do arquivo */
-				info = WD(value["char"]);
+				info = new WD(value["char"]);
 				if (info.type === "text" && "name" in files[i]) {
 					info = new RegExp("["+info.toString()+"]");
 					if (files[i].name.search(info) >= 0) {
@@ -3812,7 +3693,7 @@ var wd = (function() {
 			}
 
 			/* verificar quantidade de arquivos */
-			info = WD(value["len"]);
+			info = new WD(value["len"]);
 			if (info.type === "number" && "length" in files) {
 				if (error.fileLen > info.round()) {
 					msg.push(wdConfig.fileLen+" &larr; "+info.round());
@@ -3820,7 +3701,7 @@ var wd = (function() {
 			}
 
 			/* verificar tamanho total dos arquivos */
-			info = WD(value["total"]);
+			info = new WD(value["total"]);
 			if (info.type === "number") {
 				if (error.fileTotal > info.round()) {
 					msg.push(wdConfig.fileTotal+" &larr; "+calcByte(info));
@@ -3828,13 +3709,13 @@ var wd = (function() {
 			}
 
 			/*verificando tamanho dos arquivos*/
-			info = WD(value["size"]);
+			info = new WD(value["size"]);
 			if (error.fileSize.length > 0) {
 				msg.push(wdConfig.fileSize+" &larr; "+calcByte(info));
 			}
 
 			/*verificando caracteres do arquivos*/
-			info = WD(value["char"]);
+			info = new WD(value["char"]);
 			if (error.fileChar.length > 0) {
 				msg.push(wdConfig.fileChar+" &larr; "+info);
 			}
@@ -3864,11 +3745,11 @@ var wd = (function() {
 
 		/*alimentando variável conf*/
 		for (var i in css) {
-			obj = WD($(css[i]));
+			obj = new WD($(css[i]));
 			for (var j = 0; j < stl.length; j++) {
 				conf[i][stl[j]] = obj.items > 0 ? obj.getStyle(stl[j])[0].toLowerCase() : "";
 				if (stl[j] !== "position") {
-					attr = WD(conf[i][stl[j]].replace(/[^0-9\.]/g, ""));
+					attr = new WD(conf[i][stl[j]].replace(/[^0-9\.]/g, ""));
 					conf[i][stl[j]] = attr.type !== "number" ? 0 : attr.valueOf();
 				}
 			}
@@ -3890,7 +3771,7 @@ var wd = (function() {
 		/* -- movimentando a tela do hash -- */
 		conf.hash = function() {
 			this.margin();
-			var hash = WD($(window.location.hash));
+			var hash = new WD($(window.location.hash));
 			if (this.head.position === "fixed" && hash.type === "dom" && hash.items > 0) {
 				window.scrollTo(0, hash.item().offsetTop - this.head.hTop);
 			}
@@ -3907,7 +3788,7 @@ var wd = (function() {
 
 	/*Procedimentos para carregar objetos externos*/
 	function loadingProcedures() {
-		var attr = WD($("[data-wd-load], [data-wd-repeat]"));
+		var attr = new WD($("[data-wd-load], [data-wd-repeat]"));
 		if (deviceController === null || deviceController === undefined) {
 			scalingProcedures();
 		}
@@ -3951,15 +3832,20 @@ var wd = (function() {
 
 	/*Procedimento a executar após acionamento do teclado*/
 	function keyboardProcedures(ev) {
+		var data = new AttrHTML(ev.target);
+		if (data.form !== true || !("oninput" in window)) {
+			data_wdFilter(ev.target);
+			data_wdMask(ev.target);
+		}
+		return;
+	};
+
+	/*Procedimento a executar após acionamento do teclado em formulários*/
+	function inputProcedures(ev) {
 		data_wdFilter(ev.target);
 		data_wdMask(ev.target);
 		return;
 	};
-
-	//FIXME criar um inputProcedures para evitar duplicidade de eventos
-	//não deixar o keyboardProcedures funcionar quando for formulário
-	//na hora de digitar no campo de texto o sistema vai travando
-
 
 	/*Procedimento para definir o dispositivo pelo tamanho da tela*/
 	function scalingProcedures(ev) {
@@ -3975,7 +3861,7 @@ var wd = (function() {
 		};
 		if (device !== deviceController) {
 			deviceController = device;
-			if (WD(ev).type !== "undefined") {
+			if (new WD(ev).type !== "undefined") {
 				stylingProcedures();
 			}
 		}
@@ -4042,7 +3928,7 @@ var wd = (function() {
 		/*TODO experimental --*/
 		document.head.appendChild(style);
 		
-		if (WD($("link[rel=icon]")).items === 0) {
+		if (new WD($("link[rel=icon]")).items === 0) {
 			var favicon = document.createElement("link");
 			favicon.rel = "icon";
 			favicon.href = "https://wdonadelli.github.io/wd/image/favicon.ico";
@@ -4067,7 +3953,7 @@ var wd = (function() {
 	WD(document).handler({
 		click:  clickProcedures,
 		keyup:  keyboardProcedures,
-		input:  keyboardProcedures,
+		input:  inputProcedures,
 		change: changeProcedures
 	});
 
