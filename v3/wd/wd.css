@@ -1032,6 +1032,23 @@ script, style {display: none !important;}
 .wd .wd-bg-purple, .wd .wd-bg-purple-child > * {color: #402060 !important; background-color: #e6d9f2 !important;}
 .wd .wd-bg-basic,  .wd .wd-bg-basic-child  > * {color: #000000 !important; background-color: #ffffff !important;}
 /* cabeçalho */
+
+
+/*FIXME: teste essa bagaça:
+<div class="wd-bg-red">
+<header>H1</header>
+<p>lalalalalallala</p>
+<div class="wd-bg-green">
+<header>H2</header>
+<p>lolololololololo</p>
+</div>
+<div>
+<header class="wd-bg-white">H1.2</header>
+<p>llililililililili</p>
+</div>
+</div>
+*/
+
 .wd header.wd-bg-black, .wd .wd-bg-black header,
 .wd .wd-bg-black-child > header, .wd .wd-bg-black-child > * header {
 	background-color: #1a1a1a !important;
