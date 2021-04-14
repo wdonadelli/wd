@@ -72,50 +72,34 @@ var wd = (function() {
 
 	/*calculadora de bytes*/
 	function calcByte(value) {
-		var size;
-		if (value >= 1099511627776) {
-				size = new WD(value/1099511627776).round(2)+"TB";
-		}else if (value >= 1073741824) {
-				size = new WD(value/1073741824).round(2)+"GB";
-		} else if (value >= 1048576) {
-				size = new WD(value/1048576).round(2)+"MB";
-		} else if (value >= 1024) {
-			size = new WD(value/1024).round(2)+"kB";
-		} else {
-			size = value+"B"
-		}
-		return size;
+		if (value >= 1099511627776) return new WD(value/1099511627776).round(2)+"TB";
+		if (value >= 1073741824)    return new WD(value/1073741824).round(2)+"GB";
+		if (value >= 1048576)       return new WD(value/1048576).round(2)+"MB";
+		if (value >= 1024)          return new WD(value/1024).round(2)+"kB";
+		return value+"B";
 	}
 
 	/*Retorna os elementos html identificados pelo seletor css no elemento root*/	
 	function $(selector, root) {
 		var x;
-		if (root === undefined || !("querySelectorAll" in root)) {
-			root = document;
-		}
+		if (
+			root === undefined ||
+			!isDOM(root) ||
+			!("querySelectorAll" in root)
+		) {root = document;}
 		try {
-			x = root.querySelectorAll(selector);
-		} catch(e) {
-			x = null;
-		}
-		return x;
+			return root.querySelectorAll(selector);
+		} catch(e) {}
+		return null;
 	};
 
 	/*Retorna verdadeiro se o ano for bissexto*/
 	function isLeap(y) {
-		var x;
-		if (y === 0) {
-			x = false;
-		} else if (y%400 === 0) {
-			x = true;
-		} else if (y%100 === 0) {
-			x = false;
-		} else if (y%4 === 0) {
-			x = true;
-		} else {
-			x = false;
-		}
-		return x;
+		if (y === 0)     return false;
+		if (y%400 === 0) return true;
+		if (y%100 === 0) return false;
+		if (y%4 === 0)   return true;
+		return false;
 	};
 
 	/*Verifica se o valor é undefined*/
@@ -130,95 +114,95 @@ var wd = (function() {
 
 	/*Verifica se o valor é uma string genérica*/
 	function isString(value) {
-		if (typeof value === "string") {return true;}
-		if ("String" in window && value instanceof String) {return true;}
-		if ("String" in window && value.constructor === String) {return true;}
+		if (typeof value === "string") return true;
+		if ("String" in window && value instanceof String) return true;
+		if ("String" in window && value.constructor === String) return true;
 		return false;
 	};
 
 	/*Verifica se o valor é uma expressão regular*/
 	function isRegExp(value) {
-		if (typeof value === "regexp") {return true;}
-		if ("RegExp" in window && value instanceof RegExp) {return true;}
-		if ("RegExp" in window && value.constructor === RegExp) {return true;}
+		if (typeof value === "regexp") return true;
+		if ("RegExp" in window && value instanceof RegExp) return true;
+		if ("RegExp" in window && value.constructor === RegExp) return true;
 		return false;
 	};
 
 	/*Verifica se o valor é um número*/
 	function isNumber(value) {
 		if (typeof value === "number") {return true;}
-		if ("Number" in window && value instanceof Number) {return true;}
-		if ("Number" in window && value.constructor === Number) {return true;}
-		if (!isString(value)) {return false;}
-		if (value.trim() === "Infinity") {return false;}
-		if (value.trim() == Number(value.trim())) {return true;}
+		if ("Number" in window && value instanceof Number) return true;
+		if ("Number" in window && value.constructor === Number) return true;
+		if (!isString(value)) return false;
+		if (value.trim() === "Infinity") return false;
+		if (value.trim() == Number(value.trim())) return true;
 		return false;
 	};
 
 	/*Verifica se o valor é boleano*/
 	function isBoolean(value) {
-		if (value === true || value === false) {return true;}
-		if (typeof value === "boolean") {return true;}
-		if ("Boolean" in window && value instanceof Boolean) {return true;}
-		if ("Boolean" in window && value.constructor === Boolean) {return true;}
+		if (value === true || value === false) return true;
+		if (typeof value === "boolean") return true;
+		if ("Boolean" in window && value instanceof Boolean) return true;
+		if ("Boolean" in window && value.constructor === Boolean) return true;
 		return false;
 	};
 
 	/*Verifica se o valor é uma lista*/
 	function isArray(value) {
-		if ("Array" in window && "isArray" in Array && Array.isArray(value)) {return true;}
-		if ("Array" in window && value instanceof Array) {return true;}
-		if ("Array" in window && value.constructor === Array) {return true;}
+		if ("Array" in window && "isArray" in Array && Array.isArray(value)) return true;
+		if ("Array" in window && value instanceof Array) return true;
+		if ("Array" in window && value.constructor === Array) return true;
 		return false;
 	};
 
 	/*Verifica se o valor é um objeto simples {}*/
 	function isObject(value) {
-		if (typeof value === "object" && (/^\{.*\}$/).test(JSON.stringify(value)) === true) {return true;}
+		if (typeof value === "object" && (/^\{.*\}$/).test(JSON.stringify(value)) === true) return true;
 		return false;
 	};
 
 	/*Verifica se o valor é uma função*/
 	function isFunction(value) {
 		if (typeof value === "function") {return true;}
-		if ("Function" in window && value instanceof Function) {return true;}
-		if ("Function" in window && value.constructor === Function) {return true;}
+		if ("Function" in window && value instanceof Function) return true;
+		if ("Function" in window && value.constructor === Function) return true;
 		return false;
 	};
 
 	/*Verifica se o valor é um elemento(s) HTML*/
 	function isDOM(value) {
-		if (value === document || value === window) {return true;}
-		if ("HTMLElement" in window && value instanceof HTMLElement) {return true;}
-		if ("HTMLElement" in window && value.constructor === HTMLElement) {return true;}
-		if ("NodeList" in window && value instanceof NodeList) {return true;}
-		if ("NodeList" in window && value.constructor === NodeList) {return true;}
-		if ("HTMLCollection" in window && value instanceof HTMLCollection) {return true;}
-		if ("HTMLCollection" in window && value.constructor === HTMLCollection) {return true;}
-		if ("HTMLAllCollection" in window && value instanceof HTMLAllCollection) {return true;}
-		if ("HTMLAllCollection" in window && value.constructor === HTMLAllCollection) {return true;}
-		if ("HTMLFormControlsCollection" in window && value instanceof HTMLFormControlsCollection) {return true;}
-		if ("HTMLFormControlsCollection" in window && value.constructor === HTMLFormControlsCollection) {return true;}
+		if (value === document || value === window) return true;
+		if ("HTMLElement" in window && value instanceof HTMLElement) return true;
+		if ("HTMLElement" in window && value.constructor === HTMLElement) return true;
+		if ("NodeList" in window && value instanceof NodeList) return true;
+		if ("NodeList" in window && value.constructor === NodeList) return true;
+		if ("HTMLCollection" in window && value instanceof HTMLCollection) return true;
+		if ("HTMLCollection" in window && value.constructor === HTMLCollection) return true;
+		if ("HTMLAllCollection" in window && value instanceof HTMLAllCollection) return true;
+		if ("HTMLAllCollection" in window && value.constructor === HTMLAllCollection) return true;
+		if ("HTMLFormControlsCollection" in window && value instanceof HTMLFormControlsCollection) return true;
+		if ("HTMLFormControlsCollection" in window && value.constructor === HTMLFormControlsCollection) return true;
 		return false;
 	};
 
 	/*Verifica se o valor é um tempo válido*/
 	function isTime(value) {
-		if (!isString(value)) {return false;}
-		if (value.trim() === "%now") {return true;}
-		if (/^(0?[0-9]|1[0-9]|2[0-4])(\:[0-5][0-9]){1,2}$/.test(value.trim())) {return true;}
-		if ((/^(0?[1-9]|1[0-2])\:[0-5][0-9]\ ?(am|pm)$/i).test(value.trim())) {return  true;}
-		if ((/^(0?[0-9]|1[0-9]|2[0-4])h[0-5][0-9]$/i).test(value.trim())) {return true;}
+		if (!isString(value)) return false;
+		if (value.trim() === "%now") return true;
+		if (/^(0?[0-9]|1[0-9]|2[0-4])(\:[0-5][0-9]){1,2}$/.test(value.trim())) return true;
+		if ((/^(0?[1-9]|1[0-2])\:[0-5][0-9]\ ?(am|pm)$/i).test(value.trim())) return  true;
+		if ((/^(0?[0-9]|1[0-9]|2[0-4])h[0-5][0-9]$/i).test(value.trim())) return true;
 		return false;
 	};
 
 	/*Verifica se o valor é uma data válida*/
 	function isDate(value) {
 		var d, m, y, array;
-		if ("Date" in window && value instanceof Date) {return true;}
-		if ("Date" in window && value.constructor === Date) {return true;}
-		if (!isString(value)) {return false;}
-		if (value.trim() === "%today") {return true;}
+		if ("Date" in window && value instanceof Date) return true;
+		if ("Date" in window && value.constructor === Date) return true;
+		if (!isString(value)) return false;
+		if (value.trim() === "%today") return true;
 
 		/*capturando formatos padrão*/
 		if (/^[0-9]{4}\-[0-9]{2}\-[0-9]{2}$/.test(value.trim())) {/*YYYY-MM-DD*/
@@ -241,20 +225,20 @@ var wd = (function() {
 		}
 
 		/*analisando formatos padrão*/
-		if (y > 9999 || y < 1) {return false;}
-		if (m > 12 || m < 1) {return false;}
-		if (d > 31 || d < 1) {return false;}
-		if (d > 30 && [2, 4, 6, 9, 11].indexOf(m) >= 0) {return false;}
-		if (d > 29 && m == 2) {return false;}
-		if (d == 29 && m == 2 && !isLeap(y)) {return false;}
+		if (y > 9999 || y < 1) return false;
+		if (m > 12 || m < 1) return false;
+		if (d > 31 || d < 1) return false;
+		if (d > 30 && [2, 4, 6, 9, 11].indexOf(m) >= 0) return false;
+		if (d > 29 && m == 2) return false;
+		if (d == 29 && m == 2 && !isLeap(y)) return false;
 		return true;
 	};
 
 	/*Verifica se o valor é um texto*/
 	function isText(value) {
-		if (!isString(value)) {return false;}
-		if (value.trim() === "") {return false;}
-		if (isTime(value) || isDate(value) || isNumber(value)) {return false;}
+		if (!isString(value)) return false;
+		if (value.trim() === "") return false;
+		if (isTime(value) || isDate(value) || isNumber(value)) return false;
 		return true;
 	};
 
@@ -311,7 +295,6 @@ var wd = (function() {
 	}
 
 	function standardRequest(action, pack, callback, method, async) {
-
 		/* variáveis locais */
 		var request, data, time;
 

@@ -983,7 +983,7 @@ script, style {display: none !important;}
 	transform: translate(-50%, -50%) !important;
 }
 
-/* -- Textual --*//*FIXME*/
+/* -- Textual --*/
 .wd .wd-plain, .wd .wd-plain-child > * {
 	font-style: normal !important;
 	font-weight: normal !important;
