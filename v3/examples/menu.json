@@ -31,6 +31,11 @@
 		"attr": "examples/attr_device.html"
 	},
 	{
+		"name": "ATTR Edit",
+		"color": "wd-bg-blue",
+		"attr": "examples/attr_edit.html"
+	},
+	{
 		"name": "ATTR File",
 		"color": "wd-bg-blue",
 		"attr": "examples/attr_file.html"

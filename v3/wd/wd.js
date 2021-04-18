@@ -93,6 +93,18 @@ var wd = (function() {
 		return null;
 	};
 
+	/*Verifica se é uma porcentagem e retorna seu valor*/
+	function isPercentage(value) {
+		if (!isString(value)) return false;
+		value = value.trim();
+		if (value[value.length - 1] !== "%") return false;
+		value = value.substr(0, (value.length - 1)).trim();
+		if (value == Number(value)) return true;
+		return false;	
+	};
+
+
+
 	/*Retorna verdadeiro se o ano for bissexto*/
 	function isLeap(y) {
 		if (y === 0)     return false;
@@ -492,6 +504,8 @@ var wd = (function() {
 				return new WDdom(input);
 			} else if (isNumber(input)) {
 				return new WDnumber(input);
+			} else if (isPercentage(input)) {
+				return new WDnumber(Number(input.replace("%", ""))/100);
 			} else if (isText(input)) {
 				return new WDtext(input);
 			}
@@ -1653,12 +1667,6 @@ var wd = (function() {
 	Object.defineProperty(WDdate.prototype, "month", {
 		enumerable: true,
 		get: function() {
-			/*var m = 1;
-			while (dateToNumber(this.year, m+1, 1) - 1 < this.valueOf()) {
-				m++;
-				log("lololo");
-			}
-			return m;*/
 			var l, days, x;
 			l = isLeap(this.year) ? 1 : 0;
 			days = [0, 31, 59+l, 90+l, 120+l, 151+l, 181+l, 212+l, 243+l, 273+l, 304+l, 334+l];
@@ -3129,6 +3137,41 @@ var wd = (function() {
 		}
 	});
 
+	/*FIXME Retorna uma matriz com a captura dos dados em HTML*/
+	Object.defineProperty(WDdom.prototype, "matrix", {
+		enumerable: true,
+		value: function() {
+			var x = [];
+			this.run(function(elem) {
+				var table, head, body, value;
+				if (elem.tagName.toLowerCase() === "table") {
+					head  = elem.tHead.children[0].children;
+					body  = elem.tBodies[0].children;
+					table = {title: "", header: [], matrix:  []};
+
+					table.title = elem.caption.textContent;					
+
+					for (var h = 0; h < head.length; h++) {
+						table.header.push(head[h].textContent);
+					}
+
+					for (var r = 0; r < body.length; r++) {
+						table.matrix.push([]);
+						for (var c = 0; c < body[r].children.length; c++) {
+							value = new WD(body[r].children[c].textContent);
+							table.matrix[r].push(
+								(value.type === "number" ? value.valueOf() : value.toString())
+							);
+						}
+					}
+					x.push(table);
+				}
+				return;
+			});
+			return x;
+		}
+	});
+
 	/*Obtem a serialização de formulário (não disponível ao usuário)*/
 	Object.defineProperty(WDdom.prototype, "_form", {
 		get: function() {
@@ -3377,10 +3420,14 @@ var wd = (function() {
 		if (data.has("wdFilter")) {
 
 			text = data.form ===  true ? data.value : e.textContent;
-			if ((/^\/.+\/$/).test(text) === true) {
-				text = new RegExp(text.replace(/^\//, "").replace(/\/$/, ""));
-			} else if ((/^\/.+\/i$/).test(text) === true) {
-				text = new RegExp(text.replace(/^\//, "").replace(/\/i$/, ""), "i");
+
+			/*verificar se é uma expressão regular */
+			if (text[0] === "/" && text.length > 3) {
+				if (text[text.length - 1] === "/") {
+					text = new RegExp(text.substr(1, (text.length - 2)));
+				} else if (text.substr((text.length - 2), 2) === "/i") {
+					text = new RegExp(text.substr(1, (text.length - 3)), "i");
+				}
 			}
 
 			value = data.core("wdFilter");
@@ -3519,6 +3566,36 @@ var wd = (function() {
 			WD(e.parentElement.children).class({del: "wd-active"});
 			if (["A", "SPAN"].indexOf(e.tagName.toUpperCase()) >= 0) {
 				WD(e).class({add: "wd-active"});
+			}
+		}
+		return;
+	};
+
+	/*FIXME executa funções para edição de texto data-wd-edit=comando{especificação}*/
+	function data_wdEdit(e) {
+		var data, value;
+		/*Ferramenta complicada*/
+		if (!("execCommand" in document)) {
+			log("This browser is not supported.", "e")
+			return;
+		}
+		data = new AttrHTML(e);
+		if (data.has("wdEdit")) {
+			value = data.core("wdEdit")[0];
+			for (var i in value) {
+				var cmd, arg;
+				cmd = i;
+				arg = value[i] === "" ? undefined : value[i];
+				switch(i) {
+					case "createLink":
+						arg = prompt("Link:");
+						cmd = arg === "" || arg === null ? "unlink" : i;
+						break;
+					case "insertImage":
+						arg = prompt("Link:");
+						break;
+				}
+				document.execCommand(cmd, false, arg);
 			}
 		}
 		return;
@@ -3808,6 +3885,7 @@ var wd = (function() {
 			data_wdSend(elem);
 			data_wdSet(elem);
 			data_wdShared(elem);
+			data_wdEdit(elem);
 			elem = elem.parentElement;/*efeito bolha*/
 		}
 		return;
