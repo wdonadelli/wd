@@ -99,11 +99,8 @@ var wd = (function() {
 		value = value.trim();
 		if (value[value.length - 1] !== "%") return false;
 		value = value.substr(0, (value.length - 1)).trim();
-		if (value == Number(value)) return true;
-		return false;	
+		return value.length === 0 ? false : isNumber(value);
 	};
-
-
 
 	/*Retorna verdadeiro se o ano for bissexto*/
 	function isLeap(y) {
@@ -804,7 +801,7 @@ var wd = (function() {
 	Object.defineProperty(WDtext.prototype, "trim", {
 		enumerable: true,
 		get: function() {
-			return this.toString().replace(/\ +/g, " ").trim();
+			return this.toString().replace(/[\0- ]+/g, " ").trim();
 		}
 	});
 
@@ -888,7 +885,11 @@ var wd = (function() {
 			if (new WD(document.body).type === "dom") {/*verificar se o documento foi carregado*/
 				var msgWindow = document.createElement("DIV");
 				msgWindow.innerHTML = this.toString();
-				if (new WD(className).type === "text") {msgWindow.className = className;}
+				if (new WD(className).type === "text") {
+					msgWindow.className = "js-wd-box-message "+className;
+				} else {
+					msgWindow.className = "js-wd-box-message";
+				}
 
 				WD(msgWindow).style({
 					display: "block",
@@ -903,14 +904,13 @@ var wd = (function() {
 					top: "0.2em",
 					right: "0.2em",
 					left: deviceController === "Desktop" ? "auto" : "0.2em",
-					border: "1px solid #f8f8ff",
-					color: "#333333",
-					backgroundColor: "#f8f8ff",
+					borderRadius: deviceController === "Desktop" ? "0.2em" : "0",
 					boxShadow: "0 0 0.5em 0.2em #333333",
 					zIndex: "999999",
 					cursor: "pointer",
 					animation: "js-wd-fade 0.5s"
 				});
+
 				msgWindow.onclick = function() {
 					document.body.removeChild(msgWindow);
 					return;
@@ -3911,7 +3911,7 @@ var wd = (function() {
 	/*Procedimento para definir o dispositivo pelo tamanho da tela*/
 	function scalingProcedures(ev) {
 		var device, width, height;
-		width  = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+		width  = window.innerWidth  || document.documentElement.clientWidth  || document.body.clientWidth;
 		height = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
 		if (width >= 768) {
 			device = "Desktop";
@@ -3963,30 +3963,30 @@ var wd = (function() {
 	function headScriptProcedures(ev) {
 		var style;
 		style = document.createElement("STYLE");
-		style.textContent = "";
-		style.textContent += "@keyframes js-wd-fade  {from {opacity: 0;  } to {opacity: 1;}}";
-		style.textContent += "@keyframes js-wd-fade2 {from {opacity: 0.4;} to {opacity: 1;}}";
-		style.textContent += ".js-wd-no-display     {display: none !important;}";
-		style.textContent += ".js-wd-mask-error     {color: #663399 !important; background-color: #e8e0f0 !important;}";
-		style.textContent += ".js-wd-checked:before {content: \"\\2713 \"}";
-		style.textContent += ".js-wd-disabled       {pointer-events: none; color: #ccc; opacity: 0.8; cursor: default !important;}";
-		style.textContent += "*[data-wd-action],   *[data-wd-send] {cursor: pointer;}";
-		style.textContent += "*[data-wd-sort-col], *[data-wd-data] {cursor: pointer;}";
-		style.textContent += "*[data-wd-set]                       {cursor: pointer;}";
-		style.textContent += "*[data-wd-sort-col]:before {content: \"\\2195 \";}";
-		style.textContent += "*[data-wd-sort-col=\"-1\"]:before {content: \"\\2191 \";}";
-		style.textContent += "*[data-wd-sort-col=\"+1\"]:before {content: \"\\2193 \";}";
-		style.textContent += "*[data-wd-repeat] > *, *[data-wd-load] > * {visibility: hidden;}";
-		style.textContent += "*[data-wd-slide] > * {animation: js-wd-fade2 1s;}";
-		/*-- TODO experimental: */
-		style.textContent += "*[data-wd-shared] {cursor: pointer; display: inline-block; width: 1em; height: 1em;}";
-		style.textContent += "*[data-wd-shared] {background-repeat: no-repeat; background-size: cover;}";
-		style.textContent += "*[data-wd-shared=\"facebook\"] {background-image: url('https://static.xx.fbcdn.net/rsrc.php/yo/r/iRmz9lCMBD2.ico');}";
-		style.textContent += "*[data-wd-shared=\"twitter\"]  {background-image: url('https://abs.twimg.com/favicons/twitter.ico');}";
-		style.textContent += "*[data-wd-shared=\"linkedin\"] {background-image: url('https://static-exp1.licdn.com/scds/common/u/images/logos/favicons/v1/favicon.ico');}";
-		style.textContent += "*[data-wd-shared=\"reddit\"]   {background-image: url('https://www.redditinc.com/assets/images/favicons/favicon-32x32.png');}";
-		style.textContent += "*[data-wd-shared=\"evernote\"] {background-image: url('https://www.evernote.com/favicon.ico?v2');}";
-		/*TODO experimental --*/
+		style.textContent = 
+" @keyframes js-wd-fade  {from {opacity: 0;  } to {opacity: 1;}}" +
+" @keyframes js-wd-fade2 {from {opacity: 0.4;} to {opacity: 1;}}" +
+" .js-wd-no-display     {display: none !important;}" +
+" .js-wd-mask-error     {color: #663399 !important; background-color: #e8e0f0 !important;}" +
+" .js-wd-checked:before {content: \"\\2713 \"}" +
+" .js-wd-disabled       {pointer-events: none; color: #ccc; opacity: 0.8; cursor: default !important;}" +
+" *[data-wd-action],   *[data-wd-send] {cursor: pointer;}" +
+" *[data-wd-sort-col], *[data-wd-data] {cursor: pointer;}" +
+" *[data-wd-set]                       {cursor: pointer;}" +
+" *[data-wd-sort-col]:before {content: \"\\2195 \";}" +
+" *[data-wd-sort-col=\"-1\"]:before {content: \"\\2191 \";}" +
+" *[data-wd-sort-col=\"+1\"]:before {content: \"\\2193 \";}" +
+" *[data-wd-repeat] > *, *[data-wd-load] > * {visibility: hidden;}" +
+" *[data-wd-slide] > * {animation: js-wd-fade2 1s;}" +
+" .js-wd-box-message {color: #333333; background-color: #f8f8ff; border-style: solid;  border-width: 1px;}" +
+" /*TODO Experimental*/" +
+" *[data-wd-shared] {cursor: pointer; display: inline-block; width: 1em; height: 1em;}" +
+" *[data-wd-shared] {background-repeat: no-repeat; background-size: cover;}" +
+" *[data-wd-shared=\"facebook\"] {background-image: url('https://static.xx.fbcdn.net/rsrc.php/yo/r/iRmz9lCMBD2.ico');}" +
+" *[data-wd-shared=\"twitter\"]  {background-image: url('https://abs.twimg.com/favicons/twitter.ico');}" +
+" *[data-wd-shared=\"linkedin\"] {background-image: url('https://static-exp1.licdn.com/scds/common/u/images/logos/favicons/v1/favicon.ico');}" +
+" *[data-wd-shared=\"reddit\"]   {background-image: url('https://www.redditinc.com/assets/images/favicons/favicon-32x32.png');}" +
+" *[data-wd-shared=\"evernote\"] {background-image: url('https://www.evernote.com/favicon.ico?v2');}";
 		document.head.appendChild(style);
 		
 		if (new WD($("link[rel=icon]")).items === 0) {
