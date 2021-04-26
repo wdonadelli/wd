@@ -1856,8 +1856,6 @@ var wd = (function() {
 				return (this.leap ? 366 : 365) - this.days;
 			}
 		},
-
-		//FIXME NOVO
 		wDaysYear: {
 			enumerable: true,
 			get: function() {
@@ -1880,8 +1878,7 @@ var wd = (function() {
 				return (this.leap ? 366 : 365) - (sun + sat);
 			}
 		},
-
-		wDays: {//FIXME NOVO
+		wDays: {
 			enumerable: true,
 			get: function() {
 				var lastSat, lastSun, firstSat, firstSun, sun, sat, y;
@@ -3137,7 +3134,7 @@ var wd = (function() {
 		}
 	});
 
-	/*FIXME Retorna uma matriz com a captura dos dados em HTML*/
+	/*Retorna uma matriz com a captura dos dados em HTML*/
 	Object.defineProperty(WDdom.prototype, "matrix", {
 		enumerable: true,
 		value: function() {
@@ -3571,7 +3568,7 @@ var wd = (function() {
 		return;
 	};
 
-	/*FIXME executa funções para edição de texto data-wd-edit=comando{especificação}*/
+	/*executa funções para edição de texto data-wd-edit=comando{especificação}&...*/
 	function data_wdEdit(e) {
 		var data, value;
 		/*Ferramenta complicada*/
