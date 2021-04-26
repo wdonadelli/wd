@@ -1015,18 +1015,42 @@ script, style {display: none !important;}
 
 /* -- cores -- */
 /* Conteúdo */
-.wd .wd-bg-black,  .wd .wd-bg-black-child  > * {color: #f2f2f2; background-color: #333333;}
-.wd .wd-bg-white,  .wd .wd-bg-white-child  > * {color: #1a1a1a; background-color: #ffffff;}
-.wd .wd-bg-grey,   .wd .wd-bg-grey-child   > * {color: #333333; background-color: #e6e6e6;}
-.wd .wd-bg-red,    .wd .wd-bg-red-child    > * {color: #4d0000; background-color: #ffe6e6;}
-.wd .wd-bg-green,  .wd .wd-bg-green-child  > * {color: #003300; background-color: #e6ffe6;}
-.wd .wd-bg-blue,   .wd .wd-bg-blue-child   > * {color: #00264d; background-color: #e6f2ff;}
-.wd .wd-bg-yellow, .wd .wd-bg-yellow-child > * {color: #666600; background-color: #fcfce8;}
-.wd .wd-bg-orange, .wd .wd-bg-orange-child > * {color: #664200; background-color: #ffe4b3;}
-.wd .wd-bg-brown,  .wd .wd-bg-brown-child  > * {color: #432109; background-color: #f9e2d2;}
-.wd .wd-bg-pink,   .wd .wd-bg-pink-child   > * {color: #ff0080; background-color: #ffe6f2;}
-.wd .wd-bg-purple, .wd .wd-bg-purple-child > * {color: #402060; background-color: #e6d9f2;}
-.wd .wd-bg-basic,  .wd .wd-bg-basic-child  > * {color: #000000; background-color: #ffffff;}
+.wd .wd-bg-black,  .wd .wd-bg-black-child  > * {
+	color: #f2f2f2; background-color: #333333;
+}
+.wd .wd-bg-white,  .wd .wd-bg-white-child  > * {
+	color: #1a1a1a; background-color: #ffffff;
+}
+.wd .wd-bg-grey,   .wd .wd-bg-grey-child   > * {
+	color: #333333; background-color: #e6e6e6;
+}
+.wd .wd-bg-red,    .wd .wd-bg-red-child    > * {
+	color: #4d0000; background-color: #ffe6e6;
+}
+.wd .wd-bg-green,  .wd .wd-bg-green-child  > * {
+	color: #003300; background-color: #e6ffe6;
+}
+.wd .wd-bg-blue,   .wd .wd-bg-blue-child   > * {
+	color: #00264d; background-color: #e6f2ff;
+}
+.wd .wd-bg-yellow, .wd .wd-bg-yellow-child > * {
+	color: #666600; background-color: #fcfce8;
+}
+.wd .wd-bg-orange, .wd .wd-bg-orange-child > * {
+	color: #664200; background-color: #ffe4b3;
+}
+.wd .wd-bg-brown,  .wd .wd-bg-brown-child  > * {
+	color: #432109; background-color: #f9e2d2;
+}
+.wd .wd-bg-pink,   .wd .wd-bg-pink-child   > * {
+	color: #ff0080; background-color: #ffe6f2;
+}
+.wd .wd-bg-purple, .wd .wd-bg-purple-child > * {
+	color: #402060; background-color: #e6d9f2;
+}
+.wd .wd-bg-basic,  .wd .wd-bg-basic-child  > * {
+	color: #000000; background-color: #ffffff;
+}
 /* cabeçalho genérico */
 .wd .wd-bg-black > header,.wd .wd-bg-black-child > * > header {
 	background-color: #1a1a1a; color: #f2f2f2;

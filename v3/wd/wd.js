@@ -3978,7 +3978,7 @@ var wd = (function() {
 " *[data-wd-sort-col=\"+1\"]:before {content: \"\\2193 \";}" +
 " *[data-wd-repeat] > *, *[data-wd-load] > * {visibility: hidden;}" +
 " *[data-wd-slide] > * {animation: js-wd-fade2 1s;}" +
-" .js-wd-box-message {color: #333333; background-color: #f8f8ff; border-style: solid;  border-width: 1px;}" +
+" .js-wd-box-message {color: #333333; background-color: #f8f8ff; border-style: solid; border-width: 1px;}" +
 " /*TODO Experimental*/" +
 " *[data-wd-shared] {cursor: pointer; display: inline-block; width: 1em; height: 1em;}" +
 " *[data-wd-shared] {background-repeat: no-repeat; background-size: cover;}" +
