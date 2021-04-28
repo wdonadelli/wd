@@ -3497,9 +3497,13 @@ var wd = (function() {
 				attr   = core[c];
 				target = new WD($(attr["$"])).type === "dom" ? WD($(attr["$"])) : new WD(e);
 				target.run(function(x) {
-					if ("text"  in attr) {x.textContent = attr["text"];}
-					if ("value" in attr) {x.value       = attr["value"];}
-					if ("class" in attr) {x.className   = attr["class"];}
+					if ("text"  in attr) {x.textContent  = attr["text"];}
+					if ("value" in attr) {x.value        = attr["value"];}
+					if ("class" in attr) {x.className    = attr["class"];}
+					if ("join"  in attr) {x.textContent += attr["join"];}
+					if ("acss"  in attr) {WD(x).class({add: attr["acss"]});}
+					if ("dcss"  in attr) {WD(x).class({del: attr["dcss"]});}
+					if ("tcss"  in attr) {WD(x).class({toggle: attr["tcss"]});}
 					return;
 				});
 			}
