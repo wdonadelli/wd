@@ -17,15 +17,13 @@
 		<script src="examples/scripts.js"></script>
 	</head>
 
-<body>
+<body class="wd-bg-basic">
 
-	<header class="wd-bg-black wd-xborder-bottom wd-case-caps wd-align-center" id="head">
+	<header class="wd-case-caps wd-align-center" id="head">
 		<h2>WD Libraries</h2>
 	</header>
 
-
-
-	<nav class="wd-bg-white wd-buddy-top">
+	<nav class="wd-buddy-top wd-bg-white">
 
 		<span
 			class="wd-icon-menu"
@@ -84,10 +82,10 @@
 	</main>
 
 	<!-- Menu -->
-	<aside  id="menu" class="wd-window-full wd-flyer wd-bg-white" >
+	<aside  id="menu" class="wd-window-full wd-flyer wd-bg-grey" >
 
-		<header class="wd-bg-blue" data-wd-action="close{#menu}">
-			<h3 class="wd-icon-menu"> Menu</h3>
+		<header class="wd-bg-bluedd">
+			<h3><span class="wd-icon-menu" data-wd-action="close{#menu}"></span> Menu</h3>
 		</header>
 
 		<form>
@@ -114,14 +112,14 @@
 
 		<section
 			id="examples"
-			class="wd-grid wd-cloud-child wd-bg-black-child wd-border-width wd-cloud wd-xmargin-child"
+			class="wd-grid wd-border-child wd-xmargin-child "
 			data-wd-repeat="get{examples/menu.json}"
 		>
 
 			<a
 				href="#"
 				data-wd-data="wdLoad{get{{{attr}}}}${#code, #view}"
-				class="wd-upon-enter {{color}}"
+				class="wd-upon-enter wd-fg-black wd-bg-{{color}}"
 				data-wd-action="close{#menu}"
 				title="{{name}}"
 			>{{name}}</a>

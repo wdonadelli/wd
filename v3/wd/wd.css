@@ -1,5 +1,5 @@
 /*----------------------------------------------------------------------------
-wd.css (v3.1.0)
+wd.css (v3.2.0)
 
 <wdonadelli@gmail.com>
 https://github.com/wdonadelli/wd
@@ -984,12 +984,23 @@ script, style {display: none !important;}
 }
 
 /* -- Textual --*/
+.wd .wd-plain, .wd .wd-plain-child > * {
+	font-style: normal !important;
+	font-weight: normal !important;
+	text-decoration: none !important;
+	background-color: transparent !important;
+}
+
 .wd .wd-b, .wd .wd-b-child > *       {font-weight: bold !important;}
 .wd .wd-u, .wd .wd-u-child > *       {text-decoration: underline !important;}
 .wd .wd-i, .wd .wd-i-child > *       {font-style: italic !important;}
 .wd .wd-s, .wd .wd-s-child > *       {text-decoration: line-through !important;}
 .wd .wd-mark, .wd .wd-mark-child > * {background-color: #ffff00 !important;}
 
+.wd .wd-b-none, .wd .wd-b-none-child > *       {font-weight: normal !important;}
+.wd .wd-i-none, .wd .wd-i-none-child > *       {font-style: normal !important;}
+.wd .wd-line-none, .wd .wd-line-none-child > * {text-decoration: none !important;}
+.wd .wd-mark-none, .wd .wd-mark-none-child > * {background-color: transparent !important;}
 /* -- Companheiro -- */
 .wd .wd-buddy-top, .wd .wd-buddy-bottom {
 	position: sticky !important;
@@ -1003,32 +1014,143 @@ script, style {display: none !important;}
 }
 
 /* -- cores -- */
-.wd .wd-bg-black,  .wd .wd-bg-black-child  > * {color: #f2f2f2 !important; background-color: #333333 !important;}
-.wd .wd-bg-white,  .wd .wd-bg-white-child  > * {color: #333333 !important; background-color: #e6e6e6 !important;}
-.wd .wd-bg-grey,   .wd .wd-bg-grey-child   > * {color: #ffffff !important; background-color: #8c8c8c !important;}
-.wd .wd-bg-red,    .wd .wd-bg-red-child    > * {color: #f2f2f2 !important; background-color: #fa3838 !important;}
-.wd .wd-bg-green,  .wd .wd-bg-green-child  > * {color: #ffffff !important; background-color: #2c8759 !important;}
-.wd .wd-bg-blue,   .wd .wd-bg-blue-child   > * {color: #ffffff !important; background-color: #3480cb !important;}
-.wd .wd-bg-yellow, .wd .wd-bg-yellow-child > * {color: #323201 !important; background-color: #ffff80 !important;}
-.wd .wd-bg-orange, .wd .wd-bg-orange-child > * {color: #332100 !important; background-color: #ffaf1a !important;}
-.wd .wd-bg-brown,  .wd .wd-bg-brown-child  > * {color: #ffffff !important; background-color: #ac6939 !important;}
-.wd .wd-bg-pink,   .wd .wd-bg-pink-child   > * {color: #ff1ac9 !important; background-color: #ffccf3 !important;}
-.wd .wd-bg-purple, .wd .wd-bg-purple-child > * {color: #ffffff !important; background-color: #8a6bc7 !important;}
-.wd .wd-bg-none,   .wd .wd-bg-none-child   > * {background-color: transparent !important;}
-.wd .wd-bg-basic,  .wd .wd-bg-none-basic   > * {color: #000000 !important; background-color: #ffffff !important;}
+/* Conteúdo */
+.wd .wd-bg-black,  .wd .wd-bg-black-child  > * {
+	color: #f2f2f2; background-color: #333333;
+}
+.wd .wd-bg-white,  .wd .wd-bg-white-child  > * {
+	color: #1a1a1a; background-color: #ffffff;
+}
+.wd .wd-bg-grey,   .wd .wd-bg-grey-child   > * {
+	color: #333333; background-color: #e6e6e6;
+}
+.wd .wd-bg-red,    .wd .wd-bg-red-child    > * {
+	color: #4d0000; background-color: #ffe6e6;
+}
+.wd .wd-bg-green,  .wd .wd-bg-green-child  > * {
+	color: #003300; background-color: #e6ffe6;
+}
+.wd .wd-bg-blue,   .wd .wd-bg-blue-child   > * {
+	color: #00264d; background-color: #e6f2ff;
+}
+.wd .wd-bg-yellow, .wd .wd-bg-yellow-child > * {
+	color: #666600; background-color: #fcfce8;
+}
+.wd .wd-bg-orange, .wd .wd-bg-orange-child > * {
+	color: #664200; background-color: #ffe4b3;
+}
+.wd .wd-bg-brown,  .wd .wd-bg-brown-child  > * {
+	color: #432109; background-color: #f9e2d2;
+}
+.wd .wd-bg-pink,   .wd .wd-bg-pink-child   > * {
+	color: #ff0080; background-color: #ffe6f2;
+}
+.wd .wd-bg-purple, .wd .wd-bg-purple-child > * {
+	color: #402060; background-color: #e6d9f2;
+}
+.wd .wd-bg-basic,  .wd .wd-bg-basic-child  > * {
+	color: #000000; background-color: #ffffff;
+}
+/* cabeçalho genérico */
+.wd .wd-bg-black > header,.wd .wd-bg-black-child > * > header {
+	background-color: #1a1a1a; color: #f2f2f2;
+}
+.wd .wd-bg-white > header, .wd .wd-bg-white-child > * > header {
+	background-color: #f2f2f2; color: #0d0d0d;
+}
+.wd .wd-bg-grey > header, .wd .wd-bg-grey-child > * > header {
+	background-color: #737373; color: #f2f2f2;
+}
+.wd .wd-bg-red > header, .wd .wd-bg-red-child > * > header {
+	background-color: #b30000; color: #f2f2f2;
+}
+.wd .wd-bg-green > header, .wd .wd-bg-green-child > * > header {
+	background-color: #2c8759; color: #f2f2f2;
+}
+.wd .wd-bg-blue > header, .wd .wd-bg-blue-child > * > header {
+	background-color: #0066cc; color: #f2f2f2;
+}
+.wd .wd-bg-yellow > header, .wd .wd-bg-yellow-child > * > header {
+	background-color: #f2f20d; color: #0d0d0d;
+}
+.wd .wd-bg-orange > header, .wd .wd-bg-orange-child > * > header {
+	background-color: #ffa500; color: #0d0d0d;
+}
+.wd .wd-bg-brown > header, .wd .wd-bg-brown-child > * > header {
+	background-color: #874312; color: #f2f2f2;
+}
+.wd .wd-bg-pink > header, .wd .wd-bg-pink-child > * > header {
+	background-color: #ff66b3; color: #f2f2f2;
+}
+.wd .wd-bg-purple > header, .wd .wd-bg-purple-child > * > header {
+	background-color: #663399; color: #f2f2f2;
+}
+.wd .wd-bg-basic > header, .wd .wd-bg-basic-child > * > header {
+	background-color: #000000; color: #ffffff;
+}
+/* Cabeçalho específico */
+.wd header.wd-bg-black, .wd footer.wd-bg-black, .wd nav.wd-bg-black,
+.wd button.wd-bg-black, .wd input[type=button].wd-bg-black,
+.wd input[type=reset].wd-bg-black, .wd input[type=submit].wd-bg-black {
+	background-color: #1a1a1a; color: #f2f2f2;
+}
+.wd header.wd-bg-white, .wd footer.wd-bg-white, .wd nav.wd-bg-white,
+.wd button.wd-bg-white, .wd input[type=button].wd-bg-white,
+.wd input[type=reset].wd-bg-white, .wd input[type=submit].wd-bg-white {
+	background-color: #f2f2f2; color: #0d0d0d;
+}
+.wd header.wd-bg-grey, .wd footer.wd-bg-grey, .wd nav.wd-bg-grey,
+.wd button.wd-bg-grey, .wd input[type=button].wd-bg-grey,
+.wd input[type=reset].wd-bg-grey, .wd input[type=submit].wd-bg-grey {
+	background-color: #737373; color: #f2f2f2;
+}
+.wd header.wd-bg-red, .wd footer.wd-bg-red, .wd nav.wd-bg-red,
+.wd button.wd-bg-red, .wd input[type=button].wd-bg-red,
+.wd input[type=reset].wd-bg-red, .wd input[type=submit].wd-bg-red {
+	background-color: #b30000; color: #f2f2f2;
+}
+.wd header.wd-bg-green, .wd footer.wd-bg-green, .wd nav.wd-bg-green,
+.wd button.wd-bg-green, .wd input[type=button].wd-bg-green,
+.wd input[type=reset].wd-bg-green, .wd input[type=submit].wd-bg-green {
+	background-color: #2c8759; color: #f2f2f2;
+}
+.wd header.wd-bg-blue, .wd footer.wd-bg-blue, .wd nav.wd-bg-blue,
+.wd button.wd-bg-blue, .wd input[type=button].wd-bg-blue,
+.wd input[type=reset].wd-bg-blue, .wd input[type=submit].wd-bg-blue {
+	background-color: #0066cc; color: #f2f2f2;
+}
+.wd header.wd-bg-yellow, .wd footer.wd-bg-yellow, .wd nav.wd-bg-yellow,
+.wd button.wd-bg-yellow, .wd input[type=button].wd-bg-yellow,
+.wd input[type=reset].wd-bg-yellow, .wd input[type=submit].wd-bg-yellow {
+	background-color: #f2f20d; color: #0d0d0d;
+}
+.wd header.wd-bg-orange, .wd footer.wd-bg-orange, .wd nav.wd-bg-orange,
+.wd button.wd-bg-orange, .wd input[type=button].wd-bg-orange,
+.wd input[type=reset].wd-bg-orange, .wd input[type=submit].wd-bg-orange {
+	background-color: #ffa500; color: #0d0d0d;
+}
+.wd header.wd-bg-brown, .wd footer.wd-bg-brown, .wd nav.wd-bg-brown,
+.wd button.wd-bg-brown, .wd input[type=button].wd-bg-brown,
+.wd input[type=reset].wd-bg-brown, .wd input[type=submit].wd-bg-brown {
+	background-color: #874312; color: #f2f2f2;
+}
+.wd header.wd-bg-pink, .wd footer.wd-bg-pink, .wd nav.wd-bg-pink,
+.wd button.wd-bg-pink, .wd input[type=button].wd-bg-pink,
+.wd input[type=reset].wd-bg-pink, .wd input[type=submit].wd-bg-pink {
+	background-color: #ff66b3; color: #f2f2f2;
+}
+.wd header.wd-bg-purple, .wd footer.wd-bg-purple, .wd nav.wd-bg-purple,
+.wd button.wd-bg-purple, .wd input[type=button].wd-bg-purple,
+.wd input[type=reset].wd-bg-purple, .wd input[type=submit].wd-bg-purple {
+	background-color: #663399; color: #f2f2f2;
+}
+.wd header.wd-bg-basic, .wd footer.wd-bg-basic, .wd nav.wd-bg-basic,
+.wd button.wd-bgbasic-, .wd input[type=button].wd-bg-basic,
+.wd input[type=reset].wd-bg-basic, .wd input[type=submit].wd-bg-basic {
+	background-color: #000000; color: #ffffff;
+}
 
-.wd header.wd-bg-black,  .wd .wd-bg-black-child  > header {background-image: linear-gradient(#4d4d4d, #333333);}
-.wd header.wd-bg-white,  .wd .wd-bg-white-child  > header {background-image: linear-gradient(#f2f2f2, #e6e6e6);}
-.wd header.wd-bg-grey,   .wd .wd-bg-grey-child   > header {background-image: linear-gradient(#a6a6a6, #8c8c8c);}
-.wd header.wd-bg-red,    .wd .wd-bg-red-child    > header {background-image: linear-gradient(#f91f1f, #fa3838);}
-.wd header.wd-bg-green,  .wd .wd-bg-green-child  > header {background-image: linear-gradient(#329a66, #2c8759);}
-.wd header.wd-bg-blue,   .wd .wd-bg-blue-child   > header {background-image: linear-gradient(#498cd0, #3480cb);}
-.wd header.wd-bg-yellow, .wd .wd-bg-yellow-child > header {background-image: linear-gradient(#ffff33, #ffff80);}
-.wd header.wd-bg-orange, .wd .wd-bg-orange-child > header {background-image: linear-gradient(#ffb833, #ffaf1a);}
-.wd header.wd-bg-brown,  .wd .wd-bg-brown-child  > header {background-image: linear-gradient(#bf7540, #ac6939);}
-.wd header.wd-bg-pink,   .wd .wd-bg-pink-child   > header {background-image: linear-gradient(#ffe6f9, #ffccf3);}
-.wd header.wd-bg-purple, .wd .wd-bg-purple-child > header {background-image: linear-gradient(#a790d5, #8a6bc7);}
-
+/* Texto */
 .wd .wd-fg-black,  .wd .wd-fg-black-child > *  {color: #333333 !important;}
 .wd .wd-fg-white,  .wd .wd-fg-white-child > *  {color: #e6e6e6 !important;}
 .wd .wd-fg-grey,   .wd .wd-fg-grey-child > *   {color: #8c8c8c !important;}
@@ -1040,6 +1162,9 @@ script, style {display: none !important;}
 .wd .wd-fg-brown,  .wd .wd-fg-brown-child > *  {color: #ac6939 !important;}
 .wd .wd-fg-pink,   .wd .wd-fg-pink-child > *   {color: #ff80df !important;}
 .wd .wd-fg-purple, .wd .wd-fg-purple-child > * {color: #623fa6 !important;}
+/* Sem cabeçalho e sem cor */
+.wd .wd-bg-none {background-color: transparent !important;}
+.wd .wd-fg-none {color: #000000 !important;}
 
 /* -- Wallpaper -- */
 .wd .wd-bg-image {
@@ -1089,10 +1214,10 @@ script, style {display: none !important;}
 
 /*-- Tamanho da Caixa --*/
 .wd .wd-case-upper,  .wd .wd-case-upper-child > *  {text-transform: uppercase !important;}
-.wd .wd-case-normal, .wd .wd-case-normal-child > * {text-transform: none !important;}
 .wd .wd-case-lower,  .wd .wd-case-lower-child > *  {text-transform: lowercase !important;}
 .wd .wd-case-title,  .wd .wd-case-title-child > *  {text-transform: capitalize !important;}
 .wd .wd-case-caps,   .wd .wd-case-caps-child > *   {font-variant:   small-caps !important;}
+.wd .wd-case-normal, .wd .wd-case-normal-child > * {text-transform: none !important;}
 
 /* -- Padding -- */
 .wd .wd-padding,        .wd .wd-padding-child > *,
@@ -1143,6 +1268,8 @@ script, style {display: none !important;}
 .wd .wd-xxpadding-right,  .wd .wd-xxpadding-right-child > *,
 .wd .wd-xxpadding-length, .wd .wd-xxpadding-length-child > * {padding-right: 2em !important;}
 
+.wd .wd-padding-none, .wd .wd-padding-none-child > * {padding: 0 !important;}
+
 /* -- Margem -- */
 .wd .wd-margin,        .wd .wd-margin-child > *,
 .wd .wd-margin-top,    .wd .wd-margin-top-child > *,
@@ -1192,8 +1319,9 @@ script, style {display: none !important;}
 .wd .wd-xxmargin-right,  .wd .wd-xxmargin-right-child > *,
 .wd .wd-xxmargin-length, .wd .wd-xxmargin-length-child > * {margin-right: 2em !important;}
 
+.wd .wd-margin-none, .wd .wd-margin-none-child > * {margin: 0 !important;}
+
 /* -- Border -- */
-.wd .wd-border-box,    .wd .wd-border-box-child > * {border: 1px solid transparent;}
 .wd .wd-border,        .wd .wd-border-child > *,
 .wd .wd-border-top,    .wd .wd-border-top-child > *,
 .wd .wd-border-height, .wd .wd-border-height-child > * {border-top: thin solid !important;}
@@ -1242,6 +1370,9 @@ script, style {display: none !important;}
 .wd .wd-xxborder-right,  .wd .wd-xxborder-right-child > *,
 .wd .wd-xxborder-length, .wd .wd-xxborder-length-child > * {border-right: thick solid !important;}
 
+.wd .wd-border-box,  .wd .wd-border-box-child  > * {border: 1px solid transparent !important;}
+.wd .wd-border-none, .wd .wd-border-none-child > * {border: 0 !important;}
+
 /* -- Borda arredondada -- */
 .wd .wd-radius,      .wd .wd-radius-child > *,
 .wd .wd-radius-top,  .wd .wd-radius-top-child > *,
@@ -1258,6 +1389,8 @@ script, style {display: none !important;}
 .wd .wd-radius,        .wd .wd-radius-child > *,
 .wd .wd-radius-bottom, .wd .wd-radius-bottom-child > *,
 .wd .wd-radius-right,  .wd .wd-radius-right-child > *   {border-bottom-right-radius: 0.3em !important;}
+
+.wd .wd-radius-none, .wd .wd-radius-none-child > * {border-radius: 0 !important;}
 
 /* -- "Ícones" -- */
 /*-- Matemática --*/
@@ -1376,6 +1509,7 @@ script, style {display: none !important;}
 .wd * > .wd-shadow-in, .wd *:hover > .wd-shadow-out    {
 	box-shadow: none !important;
 }
+.wd .wd-shadow-none, .wd .wd-shadow-none-child > * {box-shadow: none !important;}
 
 /* -- Nuvem (VER ESCLARECIMENTOS EM SOMBRA) -- */
 .wd .wd-cloud, .wd .wd-cloud-child > *,
@@ -1389,6 +1523,7 @@ script, style {display: none !important;}
 .wd * > .wd-cloud-in, .wd *:hover > .wd-cloud-out    {
 	box-shadow: none !important;
 }
+.wd .wd-cloud-none, .wd .wd-cloud-none-child > * {box-shadow: none !important;}
 
 /*-- opaco (VER ESCLARECIMENTOS EM SOMBRA) --*/
 .wd .wd-opaque, .wd .wd-opaque-child > *,
@@ -1402,6 +1537,7 @@ script, style {display: none !important;}
 .wd * > .wd-opaque-in, .wd *:hover > .wd-opaque-out    {
 	opacity: 1 !important;
 }
+.wd .wd-opaque-none, .wd .wd-opaque-none-child > * {opacity: 1 !important;}
 
 /*-- destaque (VER ESCLARECIMENTOS EM SOMBRA) --*/
 .wd .wd-upon-toggle > *:nth-child(even),
