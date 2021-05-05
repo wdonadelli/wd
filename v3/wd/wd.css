@@ -180,7 +180,8 @@ script, style {display: none !important;}
 	margin-left: auto;
 	margin-right: auto;
 }
-/*.wd-table[border] {border-style: solid;}*/
+
+.wd-table[border] {border-style: solid;}
 
 .wd table caption {
 	font-weight: bold;
@@ -419,21 +420,21 @@ script, style {display: none !important;}
 .wd .wd-col-blue-05 > * > *:nth-child(5),  .wd .wd-col-blue-06 > * > *:nth-child(6), 
 .wd .wd-col-blue-07 > * > *:nth-child(7),  .wd .wd-col-blue-08 > * > *:nth-child(8), 
 .wd .wd-col-blue-09 > * > *:nth-child(9),  .wd .wd-col-blue-10 > * > *:nth-child(10), 
-.wd .wd-col-blue-11 > * > *:nth-child(11), .wd .wd-col-blue-12 > * > *:nth-child(12) {color: #0000e6;}
+.wd .wd-col-blue-11 > * > *:nth-child(11), .wd .wd-col-blue-12 > * > *:nth-child(12) {color: #3480cb;}
 
 .wd .wd-col-red-01 > * > *:nth-child(1),  .wd .wd-col-red-02 > * > *:nth-child(2), 
 .wd .wd-col-red-03 > * > *:nth-child(3),  .wd .wd-col-red-04 > * > *:nth-child(4), 
 .wd .wd-col-red-05 > * > *:nth-child(5),  .wd .wd-col-red-06 > * > *:nth-child(6), 
 .wd .wd-col-red-07 > * > *:nth-child(7),  .wd .wd-col-red-08 > * > *:nth-child(8), 
 .wd .wd-col-red-09 > * > *:nth-child(9),  .wd .wd-col-red-10 > * > *:nth-child(10), 
-.wd .wd-col-red-11 > * > *:nth-child(11), .wd .wd-col-red-12 > * > *:nth-child(12) {color: #e60000;}
+.wd .wd-col-red-11 > * > *:nth-child(11), .wd .wd-col-red-12 > * > *:nth-child(12) {color: #fa3838;}
 
 .wd .wd-col-green-01 > * > *:nth-child(1),  .wd .wd-col-green-02 > * > *:nth-child(2), 
 .wd .wd-col-green-03 > * > *:nth-child(3),  .wd .wd-col-green-04 > * > *:nth-child(4), 
 .wd .wd-col-green-05 > * > *:nth-child(5),  .wd .wd-col-green-06 > * > *:nth-child(6), 
 .wd .wd-col-green-07 > * > *:nth-child(7),  .wd .wd-col-green-08 > * > *:nth-child(8), 
 .wd .wd-col-green-09 > * > *:nth-child(9),  .wd .wd-col-green-10 > * > *:nth-child(10), 
-.wd .wd-col-green-11 > * > *:nth-child(11), .wd .wd-col-green-12 > * > *:nth-child(12) {color: #006666;}
+.wd .wd-col-green-11 > * > *:nth-child(11), .wd .wd-col-green-12 > * > *:nth-child(12) {color: #2c8759;}
 
 .wd .wd-col-mark-01 > * > *:nth-child(1),  .wd .wd-col-mark-02 > * > *:nth-child(2), 
 .wd .wd-col-mark-03 > * > *:nth-child(3),  .wd .wd-col-mark-04 > * > *:nth-child(4), 
