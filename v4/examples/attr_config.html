@@ -1,0 +1,16 @@
+<h2>Config</h2>
+
+<nav>
+	<span
+		data-wd-data="wdConfig{modalMsg{Downloading data can take some time!}modalFg{white}modalBg{#4169E1}fileTitle{Something failed ...}fileSize{Very large file}fileTotal{Total size too large}fileChar{Strange characters found}fileLen{Too many files}fileType{Strange files}}${body}"
+	>Custom</span>
+	<span data-wd-data="wdConfig{null}${body}">Default</span>
+</nav>
+
+<fieldset>
+	<legend>Test Area</legend>
+	<div class="wd-block">
+		<button type="button" class="wd-icon-reload" data-wd-send="get{examples/target.php}callback{testLoading}"> Loading</button>
+		<input type="file" id="file" multiple="" data-wd-file="size{102400}total{512000}char{-}len{2}type{application/pdf}" />
+	</div>
+</fieldset>
