@@ -112,7 +112,17 @@ var wd = (function() {
 			return time;
 		}
 
-
+		/*Define data ao meio dia*/
+		static noonDate(date, d, m, y) {
+			date.setMilliseconds(0);
+			date.setSeconds(0);
+			date.setMinutes(0);
+			date.setHours(12);
+			date.setFullYear(y === undefined ? date.getFullYear() : y);
+			date.setMonth(   m === undefined ? date.getMonth()    : (m - 1));
+			date.setDate(    d === undefined ? date.getDate()     : d);
+			return date;
+		}		
 	}
 
 /*============================================================================*/
@@ -120,242 +130,299 @@ var wd = (function() {
 	class checkType {
 
 		constructor(input) {
-			this._input = input;
-			this._value = input;
-			this._type  = undefined;
+			this._input = input;     /* guarda o valor de entrada */
+			this._value = undefined; /* guarda o valor do objeto */
+			this._type  = "unknown"; /* guarda o tipo do objeto */
 			if (this.isString) this._input = input.trim();
-			this.setType();
-			this.setValue();
+			this._run();
 		}
 
-		get isNull() {
-			return this.typeNull > 0 ? true : false;
-		}
-		
-		get isUndefined() {
-			return this._input === undefined ? true : false;
-		}
-	
-		get isRegExp() {
-			if (typeof this._input === "regexp") return true;
-			if (this._input instanceof RegExp)   return true;
+		get isString() { /*String não é um tipo do objeto*/
+			if (typeof this._input === "string") return true;
+
+			if (this._input instanceof String)   return true;
+
 			return false;
 		}
 
-		get isString() {
-			if (typeof this._input === "string") return true;
-			if (this._input instanceof String)   return true;
+		get isNull() {
+			if (
+				this._input === null ||
+				this._input === ""
+			) {
+				this._type  = "null";
+				this._value = null;
+				return true;
+			}
+			return false;
+		}
+		
+		get isUndefined() {
+			if (this._input === undefined) {
+				this._type  = "undefined";
+				this._value = undefined;
+				return true;
+			}
+
+			return false;
+		}
+	
+		get isRegExp() {
+			if (
+				typeof this._input === "regexp" ||
+				this._input instanceof RegExp
+			) {
+				this._type  = "regexp";
+				this._value = this._input;
+				return true;
+			}
+
 			return false;
 		}
 
 		get isBoolean() {
-			if (this._input === true || this._input === false) return true;
-			if (typeof this._input === "boolean")              return true;
-			if (this._input instanceof Boolean)                return true;
+			if (
+				this._input === true  ||
+				this._input === false ||
+			 	typeof this._input === "boolean" ||
+				this._input instanceof Boolean
+			) {
+				this._type  = "boolean";
+				this._value = this._input.valueOf();
+				return true;
+			}
+
 			return false;
 		}
 
 		get isArray() {
-			if (Array.isArray(this._input))   return true;
-			if (this._input instanceof Array) return true;
+			if (
+				Array.isArray(this._input) ||
+				this._input instanceof Array
+			) {
+				this._type  = "array";
+				this._value = this._input;
+				return true;
+			}
+
 			return false;
 		}
 
 		get isObject() {
-			return (
+			if (
 				typeof this._input === "object" &&
 				(/^\{.*\}$/).test(JSON.stringify(this._input))
-			) ? true : false;
+			) {
+				this._type  = "object";
+				this._value = this._input;
+				return true;
+			}
+
+			return false;
 		}
 
 		get isFunction() {
-			if (typeof this._input === "function") return true;
-			if (this._input instanceof Function)   return true;
+			if (
+				typeof this._input === "function" ||
+				this._input instanceof Function
+			){
+				this._type  = "function";
+				this._value = this._input;
+				return true;
+			}
+
 			return false;
 		}
 
 		get isDOM() {
-			if (this._input === document || this._input === window) return true;
-			if (this._input instanceof HTMLElement)                 return true;
-			if (this._input instanceof NodeList)                    return true;
-			if (this._input instanceof HTMLCollection)              return true;
-			if (this._input instanceof HTMLAllCollection)           return true;
-			if (this._input instanceof HTMLFormControlsCollection)  return true;
+			if (
+				this._input === document ||
+				this._input === window   ||
+				this._input instanceof HTMLElement
+			) {
+				this._type  = "dom";
+				this._value = [this._input];
+				return true;
+			}
+
+			if (
+				this._input instanceof NodeList ||
+				this._input instanceof HTMLCollection ||
+				this._input instanceof HTMLAllCollection ||
+				this._input instanceof HTMLFormControlsCollection
+			) {
+				this._type  = "dom";
+				this._value = [];
+				for (let i = 0; i < this._input.length; i++) {
+					this._value.push(this._input[i]);
+				}
+				return true;
+			}
+
 			return false;
-		}
-
-		get isTime() {
-			return this.typeTime > 0 ? true : false;
-		};
-
-		get isDate() {
-			return this.typeDate > 0 ? true :  false;
-		}
-
-		get isNumber() {Tool.log(this.typeNumber);
-			return this.typeNumber > 0 ? true : false;
 		}
 
 		get isText() {
 			if (!this.isString)     return false;
+
 			if (this._input === "") return false;
+
 			if (this.isTime || this.isDate || this.isNumber) return false;
+
+			this._type  = "text";
+			this._value = this._input;
 			return true;
 		}
 
-		get typeNumber() {
-			if (typeof this._input === "number")    return 1; /*Default*/
-			if (this._input instanceof Number)      return 1; /*Default*/
-			if (!this.isString)                     return 0;
-			if (this._input === "Infinity")         return 0;
-			if (this._input == Number(this._input)) return 2; /*String*/
-			if (this._input[this._input.length - 1] === "%") {
+		get isNumber() {
+			if (
+				typeof this._input === "number" ||
+				this._input instanceof Number
+			) {
+				this._type  = "number";
+				this._value = this._input.valueOf();
+				return true;
+			}
+
+			if (!this.isString) return false;
+
+			if (this._input === "Infinity") return false;
+
+			if (this._input == Number(this._input)) {
+				this._type  = "number";
+				this._value = Number(this._input).valueOf();
+				return true;
+			}
+
+			if (
+				this._input[this._input.length - 1] === "%" &&
+				this._input.length > 1
+			) {
 				let save    = this._input.toString();
 				this._input = save.substr(0, (save.length - 1)).trim();
 				if (this.isNumber) {
+					this._type  = "number";
+					this._value = Number(this._input).valueOf() / 100;
 					this._input = save;
-					return 3; /*String %*/
+					return true;
+				} else {
+					this._input = save;
 				}
-				this._input = save;
 			}
-			return 0;
+
+			return false;
 		}
 
-		get typeNull() {
-			if (this._input === null) return 1;
-			if (this._input === "")   return 2;
-			return 0;
+		get isTime() {
+			if (!this.isString) return false;
+
+			if (this._input === "%now") {/*NOW*/
+				this._type  = "time";
+				let time    = new Date();
+				this._value = Tool.timeNumber(
+					time.getHours(),
+					time.getMinutes(),
+					time.getSeconds()
+				);
+				return true;
+			}
+
+			if (/^(0?[0-9]|1[0-9]|2[0-4])(\:[0-5][0-9]){1,2}$/.test(this._input)) {/*HH:MM:SS*/
+				this._type  = "time";
+				let time    = this._input.split(":");
+				this._value = Tool.timeNumber(
+					Number(time[0]),
+					Number(time[1]),
+					time.length === 3 ? Number(time[2]) : 0
+				);
+				return true;
+			}
+
+			if ((/^(0?[1-9]|1[0-2])\:[0-5][0-9]\ ?(am|pm)$/i).test(this._input)) {/*HH:MM AM|PM*/
+				this._type  = "time";
+				this._input = this._input.toLowerCase();
+				let sep     = this._input[this._input.length - 2];
+				let time    = this._input.split(sep)[0].trim().split(":");
+				let hour    = Number(time[0]);
+				this._value = Tool.timeNumber(
+					sep === "a" ? hour : (hour === 12 ? 0 : (12 + hour)),
+					Number(time[1])
+				);
+				return true;
+			}
+
+			if ((/^(0?[0-9]|1[0-9]|2[0-4])h[0-5][0-9]$/i).test(this._input)) { /*24HhMM*/
+				this._type  = "time";
+				let time    = this._input.toLowerCase().split("h");
+				this._value = Tool.timeNumber(
+					Number(time[0]),
+					Number(time[1])
+				);
+				return true;
+			}
+			return false;
 		}
 
-		get typeTime() {
-			if (!this.isString)                                                   return 0;
-			if (this._input === "%now")                                           return 1; /*NOW*/
-			if (/^(0?[0-9]|1[0-9]|2[0-4])(\:[0-5][0-9]){1,2}$/.test(this._input)) return 2; /*HH:MM:SS*/
-			if ((/^(0?[1-9]|1[0-2])\:[0-5][0-9]\ ?(am|pm)$/i).test(this._input))  return 3; /*HH:MM AM|PM*/
-			if ((/^(0?[0-9]|1[0-9]|2[0-4])h[0-5][0-9]$/i).test(this._input))      return 4; /*24HhMM*/
-			return 0;
-		}
+		get isDate() {
+			if (this._input instanceof Date) {/*DATE*/
+				this._type  = "date";
+				this._value = Tool.noonDate(this._input);
+				return true;
+			}
 
-		get typeDate() {
+			if (!this.isString) return false;
+
+			if (this._input === "%today") {/*TODAY*/
+				this._type  = "date";
+				this._value = new Date();
+				this._value = Tool.noonDate(new Date());
+				return true;
+			}
+
 			let d, m, y, array, type, symbol, index;
-			if (this._input instanceof Date) return 1;
-			if (!this.isString)              return 0;
-			if (this._input === "%today")    return 2;
-			/*capturando formatos padrão*/
-			if (/^[0-9]{4}\-[0-9]{2}\-[0-9]{2}$/.test(this._input)) {
-				type = 3; /*YYYY-MM-DD*/
-			} else if (/^[0-9]{2}\/[0-9]{2}\/[0-9]{4}$/.test(this._input)) {
-				type = 4; /*MM/DD/YYYY*/
-			} else if (/^[0-9]{2}\.[0-9]{2}\.[0-9]{4}$/.test(this._input)) {
-				type = 5; /*DD.MM.YYYY*/
-			} else {return 0;}
 
-			symbol = [null, null, null, "-", "/", "."];
-			index  = {
-				d: [null, null, null, 2, 1, 0],
-				m: [null, null, null, 1, 0, 1],
-				y: [null, null, null, 0, 2, 2]
-			};
+			/*capturando formatos padrão*/
+			if (/^[0-9]{4}\-[0-9]{2}\-[0-9]{2}$/.test(this._input)) { /*YYYY-MM-DD*/
+				type = 0;
+			} else if (/^[0-9]{2}\/[0-9]{2}\/[0-9]{4}$/.test(this._input)) { /*MM/DD/YYYY*/
+				type = 1;
+			} else if (/^[0-9]{2}\.[0-9]{2}\.[0-9]{4}$/.test(this._input)) { /*DD.MM.YYYY*/
+				type = 2;
+			} else {return false;}
+
+			symbol = ["-", "/", "."];
+			index  = {d: [2, 1, 0], m: [1, 0, 1], y: [0, 2, 2]};
 			array  = this._input.split(symbol[type]);
+
 			d = Number(array[index.d[type]]);
 			m = Number(array[index.m[type]]);
 			y = Number(array[index.y[type]]);
 
 			/*analisando formatos padrão*/
-			if (y > 9999 || y < 1)  return 0;
-			if (m > 12   || m < 1)  return 0;
-			if (d > 31   || d < 1)  return 0;
-			if (d > 30   && [2, 4, 6, 9, 11].indexOf(m) >= 0) return 0;
-			if (d > 29   && m == 2) return 0;
-			if (d == 29  && m == 2 && !Tool.isLeap(y)) return 0;
-			return type;
+			if (y > 9999 || y < 1)  return false;
+			if (m > 12   || m < 1)  return false;
+			if (d > 31   || d < 1)  return false;
+			if (d > 30   && [2, 4, 6, 9, 11].indexOf(m) >= 0) return false;
+			if (d > 29   && m == 2) return false;
+			if (d == 29  && m == 2 && !Tool.isLeap(y)) return false;
+			
+			this._type  = "date";
+			this._value = new Date();
+			this._value = Tool.noonDate(this._value, d, m, y);
+			return true;
 		}
 
-		setType() {
-			       if (this.isNull)      {this._type = "null";
-			} else if (this.isUndefined) {this._type = "undefined";
-			} else if (this.isBoolean)   {this._type = "boolean";
-			} else if (this.isRegExp)    {this._type = "regexp";
-			} else if (this.isArray)     {this._type = "array";
-			} else if (this.isFunction)  {this._type = "function";
-			} else if (this.isObject)    {this._type = "object";
-			} else if (this.isDOM)       {this._type = "dom";
-			} else if (this.isTime)      {this._type = "time";
-			} else if (this.isDate)      {this._type = "date";
-			} else if (this.isNumber)    {this._type = "number";
-			} else if (this.isText)      {this._type = "text";
-			} else                       {this._type = "unknown";}
-			return;
-		}
-
-		setDOMvalue() {
-			if (
-					this._input === document ||
-					this._input === window   ||
-					this._input instanceof HTMLElement
-				) {
-					this._value = [this._input];
-				} else {
-					this._value = [];
-					for (let i = 0; i < this._input.length; i++) {
-						this._value.push(this._input[i]);
-					}
-				}
-			return;	
-		}
-
-		setTIMEvalue(type) {
-			let time, sep;
-			this._input = this._input.toLowerCase();
-
-			switch(this.typeTime) {
-				case 1: /*NOW*/
-					time = new Date();
-					this._value = Tool.timeNumber(
-						time.getHours(),
-						time.getMinutes(),
-						time.getSeconds()
-					);
-					break;
-				case 2: /*HH:MM:SS*/
-					time = this._input.split(":");
-					this._value = Tool.timeNumber(
-						Number(time[0]),
-						Number(time[1]),
-						time.length === 3 ? Number(time[2]) : 0
-					);
-					break;
-				case 3: /*HH:MM AM|PM*/
-					sep  = this._input[this._input.length - 2];
-					time = this._input.split(sep)[0].trim().split(":");
-					this._value = Tool.timeNumber(
-						sep === "a" ? Number(time[0]) : (time[0] === "12" ? 0 : (12 + Number(time[0]))),
-						Number(time[1])
-					);
-				case 4: /*24HhMM*/
-					time = this._input.split("h");
-					this._value = Tool.timeNumber(
-						Number(time[0]),
-						Number(time[1])
-					);
-					break;
+		_run() {
+			let methods = [
+				"isNull", "isUndefined", "isBoolean", "isRegExp", "isArray",
+				"isFunction", "isObject", "isDOM", "isTime", "isDate",
+				"isNumber", "isText"
+			];
+			for (let i = 0; i < methods.length; i++) {
+				if (this[methods[i]]) return;
 			}
-			return;
-		}
-
-
-
-
-		setValue() {
-			/* observar somente aqueles tipos que precisam ser alterados */
-			switch(this.type) {
-				case "null":    this._value = null; break;
-				case "boolean": this._value = this._input.valueOf(); break;
-				case "dom":     this.setDOMvalue(); break;
-				case "time":    this.setTIMEvalue(); break;
-				case "date":    this.setDATEvalue(); break;
-			}
-			return;		
+			this._type  = "unknown";
+			this._value = this._input;
 		}
 
 		get type()  {return this._type;}
