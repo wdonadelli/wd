@@ -267,20 +267,21 @@ var wd = (function() {
 
 			if (!this.isString) return false;
 
-			if (!(/^\$\{.+\}$/).test(this._input)) return false
+			let save = this._input.toString();
 
-			try {
-				let selector = this._input.substr(2, (this._input.length - 3));
-				let nodeList = document.querySelectorAll(selector);
-				if (nodeList.length === 0) return false;
-				this._type  = "dom";
-				this._value = [];
-				for (let i = 0; i < nodeList.length; i++) {
-					this._value.push(nodeList[i]);
-				}
-				return true;
-			} catch(e) {}
+			if ((/^\$\$\{.+\}$/).test(this._input)) {
+				let selector = save.substr(3, (save.length - 4));
+				this._input  = Tool.$$(selector);
+				if (this.isDOM && this._input.length > 0) return true;
+			}
 
+			if ((/^\$\{.+\}$/).test(this._input)) {
+				let selector = save.substr(2, (save.length - 3));
+				this._input  = Tool.$(selector);
+				if (this.isDOM) return true;
+			}
+
+			this._input = save;
 			return false;
 		}
 
