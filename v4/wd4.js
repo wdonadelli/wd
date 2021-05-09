@@ -78,6 +78,12 @@ var wd = (function() {
 	
 		/*Retorna os elementos html identificados pelo seletor css no elemento root*/	
 		static $(selector = "*", root = document) {
+			try {return root.querySelector(selector);    } catch(e) {}
+			try {return document.querySelector(selector);} catch(e) {}
+			return null;
+		}
+
+		static $$(selector = "*", root = document) {
 			try {return root.querySelectorAll(selector);    } catch(e) {}
 			try {return document.querySelectorAll(selector);} catch(e) {}
 			return null;
@@ -259,16 +265,27 @@ var wd = (function() {
 				return true;
 			}
 
+			if (!this.isString) return false;
+
+			if (!(/^\$\{.+\}$/).test(this._input)) return false
+
+			try {
+				let selector = this._input.substr(2, (this._input.length - 3));
+				let nodeList = document.querySelectorAll(selector);
+				if (nodeList.length === 0) return false;
+				this._type  = "dom";
+				this._value = [];
+				for (let i = 0; i < nodeList.length; i++) {
+					this._value.push(nodeList[i]);
+				}
+				return true;
+			} catch(e) {}
+
 			return false;
 		}
 
 		get isText() {
-			if (!this.isString)     return false;
-
-			if (this._input === "") return false;
-
-			if (this.isTime || this.isDate || this.isNumber) return false;
-
+			if (!this.isString) return false;
 			this._type  = "text";
 			this._value = this._input;
 			return true;
