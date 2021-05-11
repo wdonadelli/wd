@@ -136,6 +136,7 @@ var wd = (function() {
 	class Typing {
 
 		constructor(input) {
+			this._INPUT = input;     /* guarda o valor de entrada (imutável) */
 			this._input = input;     /* guarda o valor de entrada */
 			this._value = undefined; /* guarda o valor do objeto */
 			this._type  = "unknown"; /* guarda o tipo do objeto */
@@ -312,6 +313,20 @@ var wd = (function() {
 				return true;
 			}
 
+			if ((/^[0-9]+\!/).test(this._input)) {
+				let number = Number(this._input.substr(0, (this._input.length - 1)));
+				let value  = 1;
+				while (number > 1) {
+					value *= number;
+					number--;
+				}
+				this._type  = "number";
+				this._value = value;
+				return true;
+			}
+
+
+
 			if (
 				this._input[this._input.length - 1] === "%" &&
 				this._input.length > 1
@@ -445,6 +460,7 @@ var wd = (function() {
 
 		get type()  {return this._type;}
 		get value() {return this._value;}
+		get input() {return this._INPUT;}
 	}
 
 /*============================================================================*/
@@ -487,6 +503,8 @@ var wd = (function() {
 	}
 
 /*============================================================================*/
+
+	const MODALwindow = new Modal();
 
 	class Request {
 		constructor() { /*inicializa todas as variáveis internas*/
