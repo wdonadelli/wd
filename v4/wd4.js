@@ -29,7 +29,7 @@ SOFTWARE.﻿
 
 "use strict";
 
-var wd = (function() {
+//var wd = (function() {
 
 /* === WD ================================================================== */
 
@@ -48,511 +48,494 @@ var wd = (function() {
 
 /*............................................................................*/
 
-	class Tool {
 
-		/*Imprime mensagem no console*/
-		static log(msg = "", type = "log") {
-			console[type in console ? type : "log"](msg);
-			return;
-		}
-	
-		/*Retorna a linguagem do documento, a definida ou a do navegador*/
-		static get lang() {
-			let value, attr;
-			attr  = document.body.parentElement.attributes;
-			value = "lang" in attr ? attr.lang.value.replace(/\ /g, "") : "";
-			if (value === "") {
-				value = navigator.language || navigator.browserLanguage || "en-US";
-			}
-			return value;
-		}
-	
-		/*calculadora de bytes*/
-		static calcByte(value = 0) {
-			if (value >= 1099511627776) return (value/1099511627776).toFixed(2)+"TB";
-			if (value >= 1073741824)    return (value/1073741824).toFixed(2)+"GB";
-			if (value >= 1048576)       return (value/1048576).toFixed(2)+"MB";
-			if (value >= 1024)          return (value/1024).toFixed(2)+"kB";
-			return value+"B";
-		}
-	
-		/*Retorna os elementos html identificados pelo seletor css no elemento root*/	
-		static $(selector = "*", root = document) {
-			try {return root.querySelector(selector);    } catch(e) {}
-			try {return document.querySelector(selector);} catch(e) {}
-			return null;
-		}
-
-		static $$(selector = "*", root = document) {
-			try {return root.querySelectorAll(selector);    } catch(e) {}
-			try {return document.querySelectorAll(selector);} catch(e) {}
-			return null;
-		}
-
-		/*Retorna verdadeiro se o ano for bissexto*/
-		static isLeap(y) {
-			if (y === 0)     return false;
-			if (y%400 === 0) return true;
-			if (y%100 === 0) return false;
-			if (y%4 === 0)   return true;
-			return false;
-		}
-
-		/*Converte tempo em número*/
-		static timeNumber(h = 0, m = 0, s = 0) {
-			let time = 0;
-			time += h * 3600;
-			time += m * 60;
-			time += s;
-			return time % 86400;
-		}
-
-		/*Converte número em tempo (objeto)*/
-		static numberTime(n = 0) {
-			let time = {};
-			n      = n < 0 ? (86400 + (n % 86400)) : (n % 86400);
-			time.h = (n - (n % 3600)) / 3600;
-			n      = n - (3600 * time.h);
-			time.m = (n - (n % 60)) / 60;
-			time.s = n - (60 * time.m);
-			return time;
-		}
-
-		/*Define data ao meio dia*/
-		static noonDate(date, d, m, y) {
-			date.setMilliseconds(0);
-			date.setSeconds(0);
-			date.setMinutes(0);
-			date.setHours(12);
-			date.setFullYear(y === undefined ? date.getFullYear() : y);
-			date.setMonth(   m === undefined ? date.getMonth()    : (m - 1));
-			date.setDate(    d === undefined ? date.getDate()     : d);
-			return date;
-		}		
+	function WDbox(input) {
+		if (!(this instanceof WDbox)) return new WDbox(input);
+		Object.defineProperty(this, "_input", {value: input});
 	}
+
+	Object.defineProperty(WDbox.prototype, "constructor", {value: WDbox});
+
+	/*Imprime mensagem no console*/
+	WDbox.log   = function(x) {return console.log(x);}
+	WDbox.info  = function(x) {return console.info(x);}
+	WDbox.error = function(x) {return console.error(x);}
+	WDbox.warn  = function(x) {return console.warn(x);}
+
+	WDbox.get = function lang() { /*Retorna a linguagem do documento: definida ou navegador*/
+		var attr  = document.body.parentElement.attributes;
+		var value = "lang" in attr ? attr.lang.value.replace(/\ /g, "") : null;
+		if (value === null) value = navigator.language || navigator.browserLanguage || "en-US";
+		return value;
+	}
+	
+	WDbox.calcByte = function(value = 0) { /*calculadora de bytes*/
+		if (value >= 1099511627776) return (value/1099511627776).toFixed(2)+"TB";
+		if (value >= 1073741824)    return (value/1073741824).toFixed(2)+"GB";
+		if (value >= 1048576)       return (value/1048576).toFixed(2)+"MB";
+		if (value >= 1024)          return (value/1024).toFixed(2)+"kB";
+		return value+"B";
+	}
+	
+	/*Retorna os elementos html identificados pelo seletor css no elemento root*/	
+	WDbox.$ = function(selector = "*", root = document) {
+		try {return root.querySelector(selector);    } catch(e) {}
+		try {return document.querySelector(selector);} catch(e) {}
+		return null;
+	}
+	WDbox.$$ = function(selector = "*", root = document) {
+		try {return root.querySelectorAll(selector);    } catch(e) {}
+		try {return document.querySelectorAll(selector);} catch(e) {}
+		return null;
+	}
+
+	WDbox.isLeap = function(y) { /*Retorna verdadeiro se o ano for bissexto*/
+		if (y === 0)     return false;
+		if (y%400 === 0) return true;
+		if (y%100 === 0) return false;
+		if (y%4 === 0)   return true;
+		return false;
+	}
+
+	WDbox.timeNumber = function(h, m, s) { /*Converte tempo em número*/
+		var time = 0;
+		time += h === undefined ? 0 : (h * 3600);
+		time += m === undefined ? 0 : (m * 60);
+		time += s === undefined ? 0 : s;
+		return time % 86400;
+	}
+
+	WDbox.numberTime = function(n) { /*Converte número em tempo (objeto)*/
+		var time = {};
+		n      = n < 0 ? (86400 + (n % 86400)) : (n % 86400);
+		time.h = (n - (n % 3600)) / 3600;
+		n      = n - (3600 * time.h);
+		time.m = (n - (n % 60)) / 60;
+		time.s = n - (60 * time.m);
+		return time;
+	}
+		
+	WDbox.noonDate = function(date, d, m, y) { /*Define data ao meio dia*/
+		date.setMilliseconds(0);
+		date.setSeconds(0);
+		date.setMinutes(0);
+		date.setHours(12);
+		date.setFullYear(y === undefined ? date.getFullYear() : y);
+		date.setMonth(   m === undefined ? date.getMonth()    : (m - 1));
+		date.setDate(    d === undefined ? date.getDate()     : d);
+		return date;
+	}		
+
 
 /*============================================================================*/
 
-	class Typing {
+	function WDtype(input) {
+		if (!(this instanceof WDtype)) return new WDtype(input);
+		this._INPUT = input;     /* guarda o valor de entrada (imutável) */
+		this._input = input;     /* guarda o valor de entrada */
+		this._value = undefined; /* guarda o valor do objeto */
+		this._type  = "unknown"; /* guarda o tipo do objeto */
+		if (this.isString) this._input = input.trim();
+		this._run();
+	}
 
-		constructor(input) {
-			this._INPUT = input;     /* guarda o valor de entrada (imutável) */
-			this._input = input;     /* guarda o valor de entrada */
-			this._value = undefined; /* guarda o valor do objeto */
-			this._type  = "unknown"; /* guarda o tipo do objeto */
-			if (this.isString) this._input = input.trim();
-			this._run();
-		}
-
-		get isString() { /*String não é um tipo do objeto*/
-			if (typeof this._input === "string") return true;
-
-			if (this._input instanceof String)   return true;
-
-			return false;
-		}
-
-		get isNull() {
-			if (
-				this._input === null ||
-				this._input === ""
-			) {
-				this._type  = "null";
-				this._value = null;
-				return true;
-			}
-			return false;
-		}
-		
-		get isUndefined() {
-			if (this._input === undefined) {
-				this._type  = "undefined";
-				this._value = undefined;
-				return true;
-			}
-
-			return false;
-		}
+	Object.defineProperty(WDtype.prototype, "constructor", {value: WDtype});
 	
-		get isRegExp() {
-			if (
-				typeof this._input === "regexp" ||
-				this._input instanceof RegExp
-			) {
-				this._type  = "regexp";
-				this._value = this._input;
-				return true;
-			}
+	Object.defineProperty(WDtype.prototype, "isString", {get: function() {
+		if (typeof this._input === "string") return true;
+		if (this._input instanceof String)   return true;
+		return false;
+	}});
 
-			return false;
+	Object.defineProperty(WDtype.prototype, "isNull", {get: function() {
+		if (this._input === null || this._input === "") {
+			this._type  = "null";
+			this._value = null;
+			return true;
 		}
-
-		get isBoolean() {
-			if (
-				this._input === true  ||
-				this._input === false ||
-			 	typeof this._input === "boolean" ||
-				this._input instanceof Boolean
-			) {
-				this._type  = "boolean";
-				this._value = this._input.valueOf();
-				return true;
-			}
-
-			return false;
+		return false;
+	}});
+		
+	Object.defineProperty(WDtype.prototype, "isUndefined", {get: function() {
+		if (this._input === undefined) {
+			this._type  = "undefined";
+			this._value = undefined;
+			return true;
 		}
-
-		get isArray() {
-			if (
-				Array.isArray(this._input) ||
-				this._input instanceof Array
-			) {
-				this._type  = "array";
-				this._value = this._input;
-				return true;
-			}
-
-			return false;
-		}
-
-		get isObject() {
-			if (
-				typeof this._input === "object" &&
-				(/^\{.*\}$/).test(JSON.stringify(this._input))
-			) {
-				this._type  = "object";
-				this._value = this._input;
-				return true;
-			}
-
-			return false;
-		}
-
-		get isFunction() {
-			if (
-				typeof this._input === "function" ||
-				this._input instanceof Function
-			){
-				this._type  = "function";
-				this._value = this._input;
-				return true;
-			}
-
-			return false;
-		}
-
-		get isDOM() {
-			if (
-				this._input === document ||
-				this._input === window   ||
-				this._input instanceof HTMLElement
-			) {
-				this._type  = "dom";
-				this._value = [this._input];
-				return true;
-			}
-
-			if (
-				this._input instanceof NodeList ||
-				this._input instanceof HTMLCollection ||
-				this._input instanceof HTMLAllCollection ||
-				this._input instanceof HTMLFormControlsCollection
-			) {
-				this._type  = "dom";
-				this._value = [];
-				for (let i = 0; i < this._input.length; i++) {
-					this._value.push(this._input[i]);
-				}
-				return true;
-			}
-
-			if (!this.isString) return false;
-
-			let save = this._input.toString();
-
-			if ((/^\$\$\{.+\}$/).test(this._input)) {
-				let selector = save.substr(3, (save.length - 4));
-				this._input  = Tool.$$(selector);
-				if (this.isDOM && this._input.length > 0) return true;
-			}
-
-			if ((/^\$\{.+\}$/).test(this._input)) {
-				let selector = save.substr(2, (save.length - 3));
-				this._input  = Tool.$(selector);
-				if (this.isDOM) return true;
-			}
-
-			this._input = save;
-			return false;
-		}
-
-		get isText() {
-			if (!this.isString) return false;
-			this._type  = "text";
+		return false;
+	}});
+	
+	Object.defineProperty(WDtype.prototype, "isRegExp", {get: function() {
+		if (typeof this._input === "regexp" || this._input instanceof RegExp) {
+			this._type  = "regexp";
 			this._value = this._input;
 			return true;
 		}
+		return false;
+	}});
 
-		get isNumber() {
-			if (
-				typeof this._input === "number" ||
-				this._input instanceof Number
-			) {
-				this._type  = "number";
-				this._value = this._input.valueOf();
-				return true;
-			}
+	Object.defineProperty(WDtype.prototype, "isBoolean", {get: function() {
+		if (
+			this._input === true  ||
+			this._input === false ||
+		 	typeof this._input === "boolean" ||
+			this._input instanceof Boolean
+		) {
+			this._type  = "boolean";
+			this._value = this._input.valueOf();
+			return true;
+		}
+		return false;
+	}});
 
-			if (!this.isString) return false;
+	Object.defineProperty(WDtype.prototype, "isArray", {get: function() {
+		if (Array.isArray(this._input) || this._input instanceof Array) {
+			this._type  = "array";
+			this._value = this._input;
+			return true;
+		}
+		return false;
+	}});
 
-			if (this._input === "Infinity") return false;
+	Object.defineProperty(WDtype.prototype, "isObject", {get: function() {
+		if (
+			typeof this._input === "object" &&
+			(/^\{.*\}$/).test(JSON.stringify(this._input))
+		) {
+			this._type  = "object";
+			this._value = this._input;
+			return true;
+		}
+		return false;
+	}});
 
-			if (this._input == Number(this._input)) {
-				this._type  = "number";
-				this._value = Number(this._input).valueOf();
-				return true;
-			}
+	Object.defineProperty(WDtype.prototype, "isFunction", {get: function() {
+		if (typeof this._input === "function" || this._input instanceof Function){
+			this._type  = "function";
+			this._value = this._input;
+			return true;
+		}
+		return false;
+	}});
 
-			if ((/^[0-9]+\!/).test(this._input)) {
-				let number = Number(this._input.substr(0, (this._input.length - 1)));
-				let value  = 1;
-				while (number > 1) {
-					value *= number;
-					number--;
-				}
-				this._type  = "number";
-				this._value = value;
-				return true;
-			}
-
-
-
-			if (
-				this._input[this._input.length - 1] === "%" &&
-				this._input.length > 1
-			) {
-				let save    = this._input.toString();
-				this._input = save.substr(0, (save.length - 1)).trim();
-				if (this.isNumber) {
-					this._type  = "number";
-					this._value = Number(this._input).valueOf() / 100;
-					this._input = save;
-					return true;
-				} else {
-					this._input = save;
-				}
-			}
-
-			return false;
+	Object.defineProperty(WDtype.prototype, "isDOM", {get: function() {
+		if (
+			this._input === document ||
+			this._input === window   ||
+			this._input instanceof HTMLElement
+		) {
+			this._type  = "dom";
+			this._value = [this._input];
+			return true;
 		}
 
-		get isTime() {
-			if (!this.isString) return false;
-
-			if (this._input === "%now") {/*NOW*/
-				this._type  = "time";
-				let time    = new Date();
-				this._value = Tool.timeNumber(
-					time.getHours(),
-					time.getMinutes(),
-					time.getSeconds()
-				);
-				return true;
+		if (
+			this._input instanceof NodeList ||
+			this._input instanceof HTMLCollection ||
+			this._input instanceof HTMLAllCollection ||
+			this._input instanceof HTMLFormControlsCollection
+		) {
+			this._type  = "dom";
+			this._value = [];
+			for (var i = 0; i < this._input.length; i++) {
+				this._value.push(this._input[i]);
 			}
-
-			if (/^(0?[0-9]|1[0-9]|2[0-4])(\:[0-5][0-9]){1,2}$/.test(this._input)) {/*HH:MM:SS*/
-				this._type  = "time";
-				let time    = this._input.split(":");
-				this._value = Tool.timeNumber(
-					Number(time[0]),
-					Number(time[1]),
-					time.length === 3 ? Number(time[2]) : 0
-				);
-				return true;
-			}
-
-			if ((/^(0?[1-9]|1[0-2])\:[0-5][0-9]\ ?(am|pm)$/i).test(this._input)) {/*HH:MM AM|PM*/
-				this._type  = "time";
-				this._input = this._input.toLowerCase();
-				let sep     = this._input[this._input.length - 2];
-				let time    = this._input.split(sep)[0].trim().split(":");
-				let hour    = Number(time[0]);
-				this._value = Tool.timeNumber(
-					sep === "a" ? hour : (hour === 12 ? 0 : (12 + hour)),
-					Number(time[1])
-				);
-				return true;
-			}
-
-			if ((/^(0?[0-9]|1[0-9]|2[0-4])h[0-5][0-9]$/i).test(this._input)) { /*24HhMM*/
-				this._type  = "time";
-				let time    = this._input.toLowerCase().split("h");
-				this._value = Tool.timeNumber(
-					Number(time[0]),
-					Number(time[1])
-				);
-				return true;
-			}
-			return false;
+			return true;
 		}
 
-		get isDate() {
-			if (this._input instanceof Date) {/*DATE*/
-				this._type  = "date";
-				this._value = Tool.noonDate(this._input);
-				return true;
+		if (!this.isString) return false;
+
+		var save = this._input.toString();
+
+		if ((/^\$\$\{.+\}$/).test(this._input)) {
+			var selector = save.substr(3, (save.length - 4));
+			this._input  = WDbox.$$(selector);
+			if (this.isDOM && this._input.length > 0) return true;
+		}
+
+		if ((/^\$\{.+\}$/).test(this._input)) {
+			var selector = save.substr(2, (save.length - 3));
+			this._input  = WDbox.$(selector);
+			if (this.isDOM) return true;
+		}
+
+		this._input = save;
+		return false;
+	}});
+
+	Object.defineProperty(WDtype.prototype, "isText", {get: function() {
+		if (!this.isString) return false;
+		this._type  = "text";
+		this._value = this._input;
+		return true;
+	}});
+
+	Object.defineProperty(WDtype.prototype, "isNumber", {get: function() {
+		if (typeof this._input === "number" || this._input instanceof Number) {
+			this._type  = "number";
+			this._value = this._input.valueOf();
+			return true;
+		}
+
+		if (!this.isString) return false;
+
+		if (this._input === "Infinity") return false;
+
+		if (this._input == Number(this._input)) {
+			this._type  = "number";
+			this._value = Number(this._input).valueOf();
+			return true;
+		}
+
+		if ((/^[0-9]+\!/).test(this._input)) {
+			var number = Number(this._input.substr(0, (this._input.length - 1)));
+			var value  = 1;
+			while (number > 1) {
+				value *= number;
+				number--;
 			}
+			this._type  = "number";
+			this._value = value;
+			return true;
+		}
 
-			if (!this.isString) return false;
-
-			if (this._input === "%today") {/*TODAY*/
-				this._type  = "date";
-				this._value = new Date();
-				this._value = Tool.noonDate(new Date());
+		if (
+			this._input[this._input.length - 1] === "%" &&
+			this._input.length > 1
+		) {
+			var save    = this._input.toString();
+			this._input = save.substr(0, (save.length - 1)).trim();
+			if (this.isNumber) {
+				this._type  = "number";
+				this._value = Number(this._input).valueOf() / 100;
+				this._input = save;
 				return true;
+			} else {
+				this._input = save;
 			}
+		}
 
-			let d, m, y, array, type, symbol, index;
+		return false;
+	}});
 
-			/*capturando formatos padrão*/
-			if (/^[0-9]{4}\-[0-9]{2}\-[0-9]{2}$/.test(this._input)) { /*YYYY-MM-DD*/
-				type = 0;
-			} else if (/^[0-9]{2}\/[0-9]{2}\/[0-9]{4}$/.test(this._input)) { /*MM/DD/YYYY*/
-				type = 1;
-			} else if (/^[0-9]{2}\.[0-9]{2}\.[0-9]{4}$/.test(this._input)) { /*DD.MM.YYYY*/
-				type = 2;
-			} else {return false;}
+	Object.defineProperty(WDtype.prototype, "isTime", {get: function() {
+		if (!this.isString) return false;
 
-			symbol = ["-", "/", "."];
-			index  = {d: [2, 1, 0], m: [1, 0, 1], y: [0, 2, 2]};
-			array  = this._input.split(symbol[type]);
+		if (this._input === "%now") {/*NOW*/
+			this._type  = "time";
+			var time    = new Date();
+			this._value = WDbox.timeNumber(
+				time.getHours(),
+				time.getMinutes(),
+				time.getSeconds()
+			);
+			return true;
+		}
 
-			d = Number(array[index.d[type]]);
-			m = Number(array[index.m[type]]);
-			y = Number(array[index.y[type]]);
+		if (/^(0?[0-9]|1[0-9]|2[0-4])(\:[0-5][0-9]){1,2}$/.test(this._input)) {/*HH:MM:SS*/
+			this._type  = "time";
+			var time    = this._input.split(":");
+			this._value = WDbox.timeNumber(
+				Number(time[0]),
+				Number(time[1]),
+				time.length === 3 ? Number(time[2]) : 0
+			);
+			return true;
+		}
 
-			/*analisando formatos padrão*/
-			if (y > 9999 || y < 1)  return false;
-			if (m > 12   || m < 1)  return false;
-			if (d > 31   || d < 1)  return false;
-			if (d > 30   && [2, 4, 6, 9, 11].indexOf(m) >= 0) return false;
-			if (d > 29   && m == 2) return false;
-			if (d == 29  && m == 2 && !Tool.isLeap(y)) return false;
-			
+		if ((/^(0?[1-9]|1[0-2])\:[0-5][0-9]\ ?(am|pm)$/i).test(this._input)) {/*HH:MM AM|PM*/
+			this._type  = "time";
+			this._input = this._input.toLowerCase();
+			var sep     = this._input[this._input.length - 2];
+			var time    = this._input.split(sep)[0].trim().split(":");
+			var hour    = Number(time[0]);
+			this._value = WDbox.timeNumber(
+				sep === "a" ? hour : (hour === 12 ? 0 : (12 + hour)),
+				Number(time[1])
+			);
+			return true;
+		}
+
+		if ((/^(0?[0-9]|1[0-9]|2[0-4])h[0-5][0-9]$/i).test(this._input)) { /*24HhMM*/
+			this._type  = "time";
+			var time    = this._input.toLowerCase().split("h");
+			this._value = WDbox.timeNumber(
+				Number(time[0]),
+				Number(time[1])
+			);
+			return true;
+		}
+		return false;
+	}});
+
+	Object.defineProperty(WDtype.prototype, "isDate", {get: function() {
+		if (this._input instanceof Date) {/*DATE*/
+			this._type  = "date";
+			this._value = WDbox.noonDate(this._input);
+			return true;
+		}
+
+		if (!this.isString) return false;
+
+		if (this._input === "%today") {/*TODAY*/
 			this._type  = "date";
 			this._value = new Date();
-			this._value = Tool.noonDate(this._value, d, m, y);
+			this._value = WDbox.noonDate(new Date());
 			return true;
 		}
 
-		_run() {
-			let methods = [
-				"isNull", "isUndefined", "isBoolean", "isRegExp", "isArray",
-				"isFunction", "isObject", "isDOM", "isTime", "isDate",
-				"isNumber", "isText"
-			];
-			for (let i = 0; i < methods.length; i++) {
-				if (this[methods[i]]) return;
-			}
-			this._type  = "unknown";
-			this._value = this._input;
-		}
+		var d, m, y, array, type, symbol, index;
 
-		get type()  {return this._type;}
-		get value() {return this._value;}
-		get input() {return this._INPUT;}
-	}
+		/*capturando formatos padrão*/
+		if (/^[0-9]{4}\-[0-9]{2}\-[0-9]{2}$/.test(this._input)) { /*YYYY-MM-DD*/
+			type = 0;
+		} else if (/^[0-9]{2}\/[0-9]{2}\/[0-9]{4}$/.test(this._input)) { /*MM/DD/YYYY*/
+			type = 1;
+		} else if (/^[0-9]{2}\.[0-9]{2}\.[0-9]{4}$/.test(this._input)) { /*DD.MM.YYYY*/
+			type = 2;
+		} else {return false;}
+
+		symbol = ["-", "/", "."];
+		index  = {d: [2, 1, 0], m: [1, 0, 1], y: [0, 2, 2]};
+		array  = this._input.split(symbol[type]);
+
+		d = Number(array[index.d[type]]);
+		m = Number(array[index.m[type]]);
+		y = Number(array[index.y[type]]);
+
+		/*analisando formatos padrão*/
+		if (y > 9999 || y < 1)  return false;
+		if (m > 12   || m < 1)  return false;
+		if (d > 31   || d < 1)  return false;
+		if (d > 30   && [2, 4, 6, 9, 11].indexOf(m) >= 0) return false;
+		if (d > 29   && m == 2) return false;
+		if (d == 29  && m == 2 && !WDbox.isLeap(y)) return false;
+		
+		this._type  = "date";
+		this._value = new Date();
+		this._value = WDbox.noonDate(this._value, d, m, y);
+		return true;
+	}});
+
+	Object.defineProperty(WDtype.prototype, "_run", {value: function() {
+		var methods = [
+			"isNull", "isUndefined", "isBoolean", "isRegExp", "isArray",
+			"isFunction", "isObject", "isDOM", "isTime", "isDate",
+			"isNumber", "isText"
+		];
+		for (var i = 0; i < methods.length; i++) {
+			if (this[methods[i]]) return;
+		}
+		this._type  = "unknown";
+		this._value = this._input;
+	}});
+
+	Object.defineProperty(WDtype.prototype, "type", {
+		get: function() {return this._type;}
+	});
+
+	Object.defineProperty(WDtype.prototype, "value", {
+		get: function() {return this._value;}
+	});
+
+	Object.defineProperty(WDtype.prototype, "input", {
+		get: function() {return this._INPUT;}
+	});
 
 /*============================================================================*/
 
-	class Modal {
-		constructor() {
-			this.count  = 0;
-			this.window = document.createElement("DIV");
-			for (let i in this.style) {this.window.style[i] = this.style[i];}
-		}
+	function WDrequest(input) {
+		if (!(this instanceof WDrequest)) return new WDrequest(input);
+		this._action   = null;
+		this._pack     = null;
+		this._callback = null;
+		this._method   = "GET";
+		this._async    = true;
 
-		style = {
+		this._request  = null;     /* registra o objeto para requisições */
+		this._closed   = false;    /* indica o término da requisição */
+		this._status   = "UNSENT"; /* UNSENT|OPENED|HEADERS|LOADING|UPLOADING|DONE|NOTFOUND|ABORTED|ERROR|TIMEOUT */
+		this._time     = 0;        /* tempo decorrido desde o início da chamada (milisegundos)*/
+		this._size     = 0;        /* registra o tamanho total do arquivo */
+		this._loaded   = 0;        /* registra o tamanho carregado na requisição */
+		this._progress = 0;        /* registra o andamento da requisição */
+		this._text     = null;     /* registra o conteúdo textual da requisição */
+		this._xml      = null;     /* registra o XML da requisição */
+		this._json     = null;     /* registra o JSON da requisição */
+		this._csv      = null;     /* transforma um arquivo CSV em JSON */
+
+		this.setDefaultModalStyle();
+		//this.setRequestHandlers();
+	}
+
+	Object.defineProperty(WDrequest.prototype, "constructor", {value: WDrequest});
+
+	WDrequest.window = document.createElement("DIV"); /*guarda a janela modal*/
+	WDrequest.count  = 0;     /*guarda o número de janelas abertas*/
+	WDrequest.styled = false; /*guarda a informação se a janela já foi estilizada*/
+
+	Object.defineProperty(WDrequest.prototype, "setDefaultModalStyle", {value: function() {
+		if (this.constructor.styled) return;
+		var style = {
 			display:  "block",	width: "100%",	height: "100%", padding: "1em",
 			position: "fixed", top: "0", right: "0", bottom: "0",	left: "0",
 			zIndex: "999999",	cursor: "progress", fontWeight: "bold", textAlign: "right"
 		};
+		for (var i in style) this.constructor.window.style[i] = style[i];
+		this.constructor.styled = true;
+		return;
+	}});
+
+	Object.defineProperty(WDrequest.prototype, "openModal", {value: function() {
+		/*FIXME
+		data_wdConfig();
+		*/
+		this.constructor.window.textContent           = "Aguarde";//wdConfig.modalMsg;
+		this.constructor.window.style.color           = "white";//wdConfig.modalFg;
+		this.constructor.window.style.backgroundColor = "#000000";
+		//this.constructor.window.style.backgroundColor = wdConfig.modalBg;
+
+		if (this.constructor.count === 0) {
+			document.body.appendChild(this.constructor.window);
+		}
+		this.constructor.count++;
+		return;
+	}});
 	
-		open(text, fg, bg) {
-			/*FIXME
-			data_wdConfig();
-			modalWindow.textContent           = wdConfig.modalMsg;
-			modalWindow.style.color           = wdConfig.modalFg;
-			modalWindow.style.backgroundColor = "#000000";
-			modalWindow.style.backgroundColor = wdConfig.modalBg;
-			*/
+	Object.defineProperty(WDrequest.prototype, "closeModal", {value: function() {
+		var parent = this.constructor;
+//		window.setTimeout(function () {
+			if (parent.count > 0) parent.count--;
+			if (parent.count < 1) document.body.removeChild(parent.window);
+//			return;
+//		}, 250);
+		return;
+	}});
 
-			if (this.count === 0) document.body.appendChild(this.window);
-			this.count++;
-			return;
-		}
-	
-		close() {
-			window.setTimeout(function () {
-				if (this.count > 0) this.count--;
-				if (this.count < 1) document.body.removeChild(this.window);
-				return;
-			}, 250);
-			return;
-		}
-	}
+	Object.defineProperty(WDrequest.prototype, "_abort", {value: function() {
+		this.setEvents("ABORTED", true, 0, 0);
+		return;
+	}});
 
-/*============================================================================*/
+	Object.defineProperty(WDrequest.prototype, "data", {get: function() {
+		var data = {
+			request: null, closed: null, status: null, time: null,
+			size: null, loaded: null, progress: null,
+			text: null, xml: null, json: null, csv: null,
+			abort: null
+		};
+		for (var i in data) data[i] = this["_"+i];
+		return data;
+	}});
 
-	const MODALwindow = new Modal();
-
-	class Request {
-		constructor() { /*inicializa todas as variáveis internas*/
-			this._action   = null;
-			this._pack     = null;
-			this._callback = null;
-			this._method   = "GET";
-			this._async    = true;
-
-			this._request  = new XMLHttpRequest();
-			this._closed   = false;    /* indica o término da requisição */
-			this._status   = "UNSENT"; /* UNSENT|OPENED|HEADERS|LOADING|UPLOADING|DONE|NOTFOUND|ABORTED|ERROR|TIMEOUT */
-			this._time     = 0;        /* tempo decorrido desde o início da chamada (milisegundos)*/
-			this._size     = 0;        /* registra o tamanho total do arquivo */
-			this._loaded   = 0;        /* registra o tamanho carregado na requisição */
-			this._progress = 0;        /* registra o andamento da requisição */
-			this._text     = null;     /* registra o conteúdo textual da requisição */
-			this._xml      = null;     /* registra o XML da requisição */
-			this._json     = null;     /* registra o JSON da requisição */
-			this._csv      = null;     /* transforma um arquivo CSV em JSON */
-
-			this.setRequestHandlers();
-		}	
-
-		_abort() { /*método para abortar*/
-			this.setEvents("ABORTED", true, 0, 0);
-			return;
-		}			
-
-		get data() {/*obtém o argumento do callback*/
-			let data = {
-				request: null, closed: null, status: null, time: null,
-				size: null, loaded: null, progress: null,
-				text: null, xml: null, json: null, csv: null,
-				abort: null
-			};
-
-			for (let i in data) data[i] = this["_"+data[i]];
-			return data;
-		}
-
-		setEvents(status, closed, loaded, size) {
+	Object.defineProperty(WDrequest.prototype, "setEvents", {
+		value: function (status, closed, loaded, size) {
 			if (this._closed !== false) return;
 			this._status   = status;
 			this._closed   = closed;
-			this._loaded   = 0;
-			this._size     = 0;
-			this._progress = this.size > 0 ? this.loaded/this.size : 1;
+			this._loaded   = loaded;
+			this._size     = size;
+			this._progress = this._size > 0 ? this._loaded/this._size : 1;
 			this._time     = (new Date()) - this._time;
 			if (this._status === "ABORTED") this._request.abort();
 			if (this._callback !== null)    this._callback(this.data);
@@ -561,41 +544,44 @@ var wd = (function() {
 			this._size     = 0;
 			return;
 		}
+	});
 
-		setRequestHandlers() { /*define o ciclo da requisição*/
-			let parent = this;
+	Object.defineProperty(WDrequest.prototype, "setRequestHandlers", {
+		value: function() {/*define o ciclo da requisição*/
+			var parent = this;
 
-			this.request.onprogress = function(x) {
+			this._request.onprogress = function(x) {
 				parent.setEvents("LOADING", false, x.loaded, x.total);
 				return;
 			}
 
-			this.request.onerror = function(x) {
+			this._request.onerror = function(x) {
 				parent.setEvents("ERROR", true, 0, 0);
 				return;
 			}
 
-			this.request.ontimeout = function(x) {
+			this._request.ontimeout = function(x) {
 				parent.setEvents("TIMEOUT", true, 0, 0);
 				return;
 			}
 
-			this.request.upload.onprogress = function(x) {
+			this._request.upload.onprogress = function(x) {
 				parent.setEvents("UPLOADING", false, x.loaded, x.total);
 				return;
 			}
 
-			this.request.upload.onabort   = this.request.onerror;
+			this._request.upload.onabort   = this._request.onerror;
 
-			this.request.upload.ontimeout = this.request.ontimeout;
+			this._request.upload.ontimeout = this._request.ontimeout;
 
-			this.request.onreadystatechange = function(x) {
+			this._request.onreadystatechange = function(x) {
 
 				if (parent._request.readyState < 1) return;
 				if (parent._closed) return;
 
 				if (parent._status === "UNSENT") {
 					parent._status = "OPENED";
+					parent.openModal();
 				} else if (parent._request.status === 404) {
 					parent._status = "NOTFOUND";
 					parent._closed = true;
@@ -603,16 +589,13 @@ var wd = (function() {
 					parent._status = "HEADERS";
 				} else if (parent._request.readyState === 3) {
 					parent._status = "LOADING";
-				} else if (request.readyState === 4) {
+				} else if (parent._request.readyState === 4) {
 					parent._closed = true;
-					if (
-						parent._request.status === 200 ||
-						parent._request.status === 304
-					) {
+					if (parent._request.status === 200 || parent._request.status === 304) {
 						parent._status   = "DONE";
 						parent._progress = 1;
-						parent._text     = request.responseText;
-						parent._xml      = request.responseXML;
+						parent._text     = parent._request.responseText;
+						parent._xml      = parent._request.responseXML;
 						//FIXME parent._json     = new WD(data.text).type === "text" ? WD(data.text).json : null;
 						//FIXME parent._csv      = new WD(data.text).type === "text" ? WD(data.text).csv : null;
 					} else {
@@ -621,92 +604,108 @@ var wd = (function() {
 				}
 
 				parent._time = (new Date()) - parent._time;
-				if (parent._closed === true)   Tool.log("abril modal"); //FIXME modalWindowClose();
 				if (parent._callback !== null) parent._callback(parent.data);
+
+				if (parent._closed) parent.closeModal();
 
 				return;
 			}
 
 			return;
 		}
+	});
 
-		get action() {return this._action;}
-
-		set action(x) {
-			let input = new Typing(x);
+	Object.defineProperty(WDrequest.prototype, "action", {
+		get: function() {
+			return this._action;
+		},
+		set: function(x) {
+			var input = WDtype(x);
 			this._action = input.type === "text" ? x : null;
-			return;
+			return this._action;
 		}
+	});
 
-		get callback {return this._callback;}
-
-		set callback(x) {
-			let input = new Typing(x);
+	Object.defineProperty(WDrequest.prototype, "callback", {
+		get: function() {
+			return this._callback;
+		},
+		set: function(x) {
+			var input = WDtype(x);
 			this._callback = input.type === "function" ? x : null;
-			return;
+			return this._callback;
 		}
+	});
 		
-		get method {return this._method;}
-
-		set method(x) {
-			let input = new Typing(x);
+	Object.defineProperty(WDrequest.prototype, "method", {
+		get: function() {
+			return this._method;
+		},
+		set: function(x) {
+			var input = WDtype(x);
 			this._method = input.type === "text" ? x.toLowerCase() : "GET";
-			return;
+			return this._method;
 		}
+	});
 
-		get async {return this._async;}
-
-		set async(x) {
+	Object.defineProperty(WDrequest.prototype, "async", {
+		get: function() {
+			return this._async;
+		},
+		set: function(x) {
 			this._async = x === false ? false : true;
-			return;
+			return this._async;
+		}
+	});
+
+	Object.defineProperty(WDrequest.prototype, "pack", {
+		get: function() {
+			return this._pack;
+		},
+		set: function(x) {
+			var input = WDtype(x);
+			this._pack = (input.type === "null" || input.type === "undefined") ? null : x;
+			return this._pack;
+		}
+	});
+
+	Object.defineProperty(WDrequest.prototype, "send", {value: function() {
+		//this.openModal();
+		
+		this._request = new XMLHttpRequest();
+		this.setRequestHandlers();
+		
+
+		var pack = WDtype(this._pack);
+
+		/*tempo inicial da chamada */
+		this._time = new Date();
+
+		if (this._method === "GET" && pack.type === "text") {
+			var action = this._action.split("?");
+			this._action += action.length > 1 ? pack.value : "?" + pack.value;
+			this._pack = null;
 		}
 
-		get pack {return this._pack;}
-
-		set pack(x) {
-			let input = new Typing(x);
-			if (input.type === "null" || input.type === "undefined") {
-				this._pack = null;
-			} else {
-				this._pack = x;
-			}
-			return;
+		try {
+			this._request.open(this._method, this._action, this._async);
+		} catch(e) {
+			WDbox.error(this._action + " > " +e.message)
+			this._closed = true;
+			this._callback(this.data);
+			this.closeModal();
+			return false;
 		}
 
-		send()	{
-	
-			/* abrir janela modal */
-			//FIXME modalWindowOpen();
-			Tool.log("abriu modal");
-
-			/*tempo inicial da chamada */
-			this._time = new Date();
-
-			/* FIXME PAREI AQUI envio da requisição */
-			if (method === "GET" && new WD(pack).type === "text") {
-				action += action.split("?").length > 1 ? pack : "?"+pack;
-				pack = null;
-			}
-
-			try {
-				request.open(method, action, async);
-			} catch(e) {
-				log(action+": "+e.message, "e");
-				data.closed = true;
-				callback(data);
-				modalWindowClose();
-				return false;
-			}
-
-			if (method === "POST" && new WD(pack).type === "text") {
-				request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-			}
-
-			request.send(pack);
-
-			return true;
+		if (this._method === "POST" && pack.type === "text") {
+			this._request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 		}
-	}
+
+		this._request.send(this._pack);
+
+		return true;
+	}});
+
 
 
 
@@ -3877,7 +3876,7 @@ var wd = (function() {
 			value   = data.core("wdDevice")[0];
 			desktop = "desktop" in value ? value.desktop : "";
 			mobile  = "mobile"  in value ? value.mobile  : "";
-			tablet  = "tablet"  in value ? value.tablet  : "";
+			tabvar  = "tablet"  in value ? value.tabvar  : "";
 			phone   = "phone"   in value ? value.phone   : "";
 			switch(deviceController) {
 				case "Desktop":
@@ -4261,9 +4260,9 @@ var wd = (function() {
 
 /* === END ================================================================= */
 
-	return WD;
+//	return WD;
 
-}());
+//}());
 
 /*Atalho para o uso do método querySelectorAll em wdDom*/
 function wd$(selector, root) {
