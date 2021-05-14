@@ -69,7 +69,7 @@ SOFTWARE.﻿
 		return value;
 	}
 	
-	WDbox.calcByte = function(value = 0) { /*calculadora de bytes*/
+	WDbox.calcByte = function(value) { /*calculadora de bytes*/
 		if (value >= 1099511627776) return (value/1099511627776).toFixed(2)+"TB";
 		if (value >= 1073741824)    return (value/1073741824).toFixed(2)+"GB";
 		if (value >= 1048576)       return (value/1048576).toFixed(2)+"MB";
@@ -78,30 +78,30 @@ SOFTWARE.﻿
 	}
 	
 	/*Retorna os elementos html identificados pelo seletor css no elemento root*/	
-	WDbox.$ = function(selector = "*", root = document) {
+	WDbox.$ = function(selector, root) {
 		try {return root.querySelector(selector);    } catch(e) {}
 		try {return document.querySelector(selector);} catch(e) {}
 		return null;
 	}
-	WDbox.$$ = function(selector = "*", root = document) {
+	WDbox.$$ = function(selector, root) {
 		try {return root.querySelectorAll(selector);    } catch(e) {}
 		try {return document.querySelectorAll(selector);} catch(e) {}
 		return null;
 	}
 
 	WDbox.isLeap = function(y) { /*Retorna verdadeiro se o ano for bissexto*/
-		if (y === 0)     return false;
-		if (y%400 === 0) return true;
-		if (y%100 === 0) return false;
-		if (y%4 === 0)   return true;
+		if (y === 0)       return false;
+		if (y % 400 === 0) return true;
+		if (y % 100 === 0) return false;
+		if (y % 4 === 0)   return true;
 		return false;
 	}
 
 	WDbox.timeNumber = function(h, m, s) { /*Converte tempo em número*/
 		var time = 0;
-		time += h === undefined ? 0 : (h * 3600);
-		time += m === undefined ? 0 : (m * 60);
-		time += s === undefined ? 0 : s;
+		time += h * 3600;
+		time += m * 60;
+		time += s;
 		return time % 86400;
 	}
 
@@ -351,7 +351,8 @@ SOFTWARE.﻿
 			var hour    = Number(time[0]);
 			this._value = WDbox.timeNumber(
 				sep === "a" ? hour : (hour === 12 ? 0 : (12 + hour)),
-				Number(time[1])
+				Number(time[1]),
+				0
 			);
 			return true;
 		}
@@ -361,7 +362,8 @@ SOFTWARE.﻿
 			var time    = this._input.toLowerCase().split("h");
 			this._value = WDbox.timeNumber(
 				Number(time[0]),
-				Number(time[1])
+				Number(time[1]),
+				0
 			);
 			return true;
 		}
@@ -446,71 +448,73 @@ SOFTWARE.﻿
 
 	function WDrequest(input) {
 		if (!(this instanceof WDrequest)) return new WDrequest(input);
-		this._action   = null;
+		this._action   = input;
 		this._pack     = null;
 		this._callback = null;
 		this._method   = "GET";
 		this._async    = true;
 
+		this._start    = 0;        /* registra o início da requisição */
 		this._request  = null;     /* registra o objeto para requisições */
 		this._closed   = false;    /* indica o término da requisição */
 		this._status   = "UNSENT"; /* UNSENT|OPENED|HEADERS|LOADING|UPLOADING|DONE|NOTFOUND|ABORTED|ERROR|TIMEOUT */
 		this._time     = 0;        /* tempo decorrido desde o início da chamada (milisegundos)*/
-		this._size     = 0;        /* registra o tamanho total do arquivo */
+		this._total    = 0;        /* registra o tamanho total do arquivo */
 		this._loaded   = 0;        /* registra o tamanho carregado na requisição */
 		this._progress = 0;        /* registra o andamento da requisição */
 		this._text     = null;     /* registra o conteúdo textual da requisição */
 		this._xml      = null;     /* registra o XML da requisição */
 		this._json     = null;     /* registra o JSON da requisição */
 		this._csv      = null;     /* transforma um arquivo CSV em JSON */
-
-		this.setDefaultModalStyle();
-		//this.setRequestHandlers();
 	}
 
-	Object.defineProperty(WDrequest.prototype, "constructor", {value: WDrequest});
-
+	/* Métodos Estáticos ------------------------------------------------------*/
 	WDrequest.window = document.createElement("DIV"); /*guarda a janela modal*/
+
 	WDrequest.count  = 0;     /*guarda o número de janelas abertas*/
+
 	WDrequest.styled = false; /*guarda a informação se a janela já foi estilizada*/
 
-	Object.defineProperty(WDrequest.prototype, "setDefaultModalStyle", {value: function() {
-		if (this.constructor.styled) return;
-		var style = {
-			display:  "block",	width: "100%",	height: "100%", padding: "1em",
-			position: "fixed", top: "0", right: "0", bottom: "0",	left: "0",
-			zIndex: "999999",	cursor: "progress", fontWeight: "bold", textAlign: "right"
-		};
-		for (var i in style) this.constructor.window.style[i] = style[i];
-		this.constructor.styled = true;
-		return;
-	}});
+	WDrequest.style  = {      /*guarda o stylo padrão da janela*/
+		display:  "block", width: "100%", height: "100%", padding: "1em",
+		position: "fixed", top: "0", right: "0", bottom: "0",	left: "0",
+		zIndex: "999999",	cursor: "progress", fontWeight: "bold", textAlign: "right"
+	};
 
-	Object.defineProperty(WDrequest.prototype, "openModal", {value: function() {
+	WDrequest.setStyle = function() { /*define o estilo padrão se ainda não definido*/
+		if (this.styled) return;
+		for (var i in this.style) this.window.style[i] = this.style[i];
+		this.styled = true;
+		return;
+	}
+
+	WDrequest.open = function() {
+		this.setStyle();
 		/*FIXME
 		data_wdConfig();
 		*/
-		this.constructor.window.textContent           = "Aguarde";//wdConfig.modalMsg;
-		this.constructor.window.style.color           = "white";//wdConfig.modalFg;
-		this.constructor.window.style.backgroundColor = "#000000";
-		//this.constructor.window.style.backgroundColor = wdConfig.modalBg;
+		this.window.textContent           = "Aguarde";//wdConfig.modalMsg;
+		this.window.style.color           = "white";//wdConfig.modalFg;
+		this.window.style.backgroundColor = "#000000";
+		//this.window.style.backgroundColor = wdConfig.modalBg;
 
-		if (this.constructor.count === 0) {
-			document.body.appendChild(this.constructor.window);
-		}
-		this.constructor.count++;
+		if (this.count === 0) document.body.appendChild(this.window);
+		this.count++;
 		return;
-	}});
-	
-	Object.defineProperty(WDrequest.prototype, "closeModal", {value: function() {
-		var parent = this.constructor;
-//		window.setTimeout(function () {
+	}
+
+	WDrequest.close = function() {
+		var parent = this;
+		window.setTimeout(function () { //FIXME: se tiver que usar o setTimeout, precisa mudar o this
 			if (parent.count > 0) parent.count--;
 			if (parent.count < 1) document.body.removeChild(parent.window);
-//			return;
-//		}, 250);
+			return;
+		}, 250);
 		return;
-	}});
+	}
+
+	/* Métodos de Protótipos --------------------------------------------------*/
+	Object.defineProperty(WDrequest.prototype, "constructor", {value: WDrequest});
 
 	Object.defineProperty(WDrequest.prototype, "_abort", {value: function() {
 		this.setEvents("ABORTED", true, 0, 0);
@@ -519,29 +523,29 @@ SOFTWARE.﻿
 
 	Object.defineProperty(WDrequest.prototype, "data", {get: function() {
 		var data = {
-			request: null, closed: null, status: null, time: null,
-			size: null, loaded: null, progress: null,
+			action: null, closed: null, status: null, time: null,
+			total: null, loaded: null, progress: null,
 			text: null, xml: null, json: null, csv: null,
-			abort: null
+			request: null, abort: null
 		};
 		for (var i in data) data[i] = this["_"+i];
 		return data;
 	}});
 
 	Object.defineProperty(WDrequest.prototype, "setEvents", {
-		value: function (status, closed, loaded, size) {
-			if (this._closed !== false) return;
+		value: function (status, closed, loaded, total) {
+			if (this._closed) return;
 			this._status   = status;
 			this._closed   = closed;
 			this._loaded   = loaded;
-			this._size     = size;
-			this._progress = this._size > 0 ? this._loaded/this._size : 1;
-			this._time     = (new Date()) - this._time;
+			this._total    = total;
+			this._progress = this._total > 0 ? this._loaded/this._total : 1;
+			this._time     = (new Date()) - this._start;
 			if (this._status === "ABORTED") this._request.abort();
 			if (this._callback !== null)    this._callback(this.data);
 			this._progress = 0;
 			this._loaded   = 0;
-			this._size     = 0;
+			this._total    = 0;
 			return;
 		}
 	});
@@ -550,52 +554,51 @@ SOFTWARE.﻿
 		value: function() {/*define o ciclo da requisição*/
 			var parent = this;
 
-			this._request.onprogress = function(x) {
+			this.request.onprogress = function(x) {
 				parent.setEvents("LOADING", false, x.loaded, x.total);
 				return;
 			}
 
-			this._request.onerror = function(x) {
+			this.request.onerror = function(x) {
 				parent.setEvents("ERROR", true, 0, 0);
 				return;
 			}
 
-			this._request.ontimeout = function(x) {
+			this.request.ontimeout = function(x) {
 				parent.setEvents("TIMEOUT", true, 0, 0);
 				return;
 			}
 
-			this._request.upload.onprogress = function(x) {
+			this.request.upload.onprogress = function(x) {
 				parent.setEvents("UPLOADING", false, x.loaded, x.total);
 				return;
 			}
 
-			this._request.upload.onabort   = this._request.onerror;
+			this.request.upload.onabort   = this._request.onerror;
+			this.request.upload.ontimeout = this._request.ontimeout;
 
-			this._request.upload.ontimeout = this._request.ontimeout;
-
-			this._request.onreadystatechange = function(x) {
+			this.request.onreadystatechange = function(x) {
 
 				if (parent._request.readyState < 1) return;
 				if (parent._closed) return;
 
 				if (parent._status === "UNSENT") {
 					parent._status = "OPENED";
-					parent.openModal();
-				} else if (parent._request.status === 404) {
+					parent.constructor.open();
+				} else if (parent.request.status === 404) {
 					parent._status = "NOTFOUND";
 					parent._closed = true;
-				} else if (parent._request.readyState === 2) {
+				} else if (parent.request.readyState === 2) {
 					parent._status = "HEADERS";
-				} else if (parent._request.readyState === 3) {
+				} else if (parent.request.readyState === 3) {
 					parent._status = "LOADING";
-				} else if (parent._request.readyState === 4) {
+				} else if (parent.request.readyState === 4) {
 					parent._closed = true;
-					if (parent._request.status === 200 || parent._request.status === 304) {
+					if (parent.request.status === 200 || parent.request.status === 304) {
 						parent._status   = "DONE";
 						parent._progress = 1;
-						parent._text     = parent._request.responseText;
-						parent._xml      = parent._request.responseXML;
+						parent._text     = parent.request.responseText;
+						parent._xml      = parent.request.responseXML;
 						//FIXME parent._json     = new WD(data.text).type === "text" ? WD(data.text).json : null;
 						//FIXME parent._csv      = new WD(data.text).type === "text" ? WD(data.text).csv : null;
 					} else {
@@ -603,200 +606,300 @@ SOFTWARE.﻿
 					}
 				}
 
-				parent._time = (new Date()) - parent._time;
-				if (parent._callback !== null) parent._callback(parent.data);
-
-				if (parent._closed) parent.closeModal();
+				parent._time = (new Date()) - parent._start;
+				if (parent.callback !== null) parent.callback(parent.data);
+				if (parent._closed) parent.constructor.close();
 
 				return;
 			}
-
 			return;
 		}
 	});
 
 	Object.defineProperty(WDrequest.prototype, "action", {
-		get: function() {
-			return this._action;
-		},
-		set: function(x) {
-			var input = WDtype(x);
-			this._action = input.type === "text" ? x : null;
-			return this._action;
-		}
+		get: function()  {return this._action;},
+		set: function(x) {return this._action = x;}
 	});
 
 	Object.defineProperty(WDrequest.prototype, "callback", {
-		get: function() {
-			return this._callback;
-		},
-		set: function(x) {
-			var input = WDtype(x);
-			this._callback = input.type === "function" ? x : null;
-			return this._callback;
-		}
+		get: function()  {return this._callback;},
+		set: function(x) {return this._callback = x;}
 	});
 		
 	Object.defineProperty(WDrequest.prototype, "method", {
-		get: function() {
-			return this._method;
-		},
-		set: function(x) {
-			var input = WDtype(x);
-			this._method = input.type === "text" ? x.toLowerCase() : "GET";
-			return this._method;
-		}
+		get: function()  {return this._method;},
+		set: function(x) {return this._method = x.toUpperCase();}
 	});
 
 	Object.defineProperty(WDrequest.prototype, "async", {
-		get: function() {
-			return this._async;
-		},
-		set: function(x) {
-			this._async = x === false ? false : true;
-			return this._async;
-		}
+		get: function()  {return this._async;},
+		set: function(x) {return this._async = x === false ? false : true;}
 	});
 
 	Object.defineProperty(WDrequest.prototype, "pack", {
-		get: function() {
-			return this._pack;
-		},
-		set: function(x) {
-			var input = WDtype(x);
-			this._pack = (input.type === "null" || input.type === "undefined") ? null : x;
-			return this._pack;
-		}
+		get: function()  {return this._pack;},
+		set: function(x) {return this._pack = x;}
+	});
+
+	Object.defineProperty(WDrequest.prototype, "request", {
+		get: function()  {return this._request;},
+		set: function(x) {return this._request = x;}
 	});
 
 	Object.defineProperty(WDrequest.prototype, "send", {value: function() {
-		//this.openModal();
-		
-		this._request = new XMLHttpRequest();
-		this.setRequestHandlers();
-		
 
+		this._start  = new Date();
+		this.request = new XMLHttpRequest();
+		this.setRequestHandlers();
 		var pack = WDtype(this._pack);
 
-		/*tempo inicial da chamada */
-		this._time = new Date();
-
-		if (this._method === "GET" && pack.type === "text") {
-			var action = this._action.split("?");
-			this._action += action.length > 1 ? pack.value : "?" + pack.value;
-			this._pack = null;
+		if (this.method === "GET" && pack.type === "text") {
+			var action   = this.action.split("?");
+			this.action += action.length > 1 ? pack.value : "?" + pack.value;
+			this.pack    = null;
 		}
 
 		try {
-			this._request.open(this._method, this._action, this._async);
+			this.request.open(this.method, this.action, this.async);
 		} catch(e) {
 			WDbox.error(this._action + " > " +e.message)
 			this._closed = true;
-			this._callback(this.data);
-			this.closeModal();
+			if (this.callback !== null) this.callback(this.data);
+			this.constructor.close();
 			return false;
 		}
 
-		if (this._method === "POST" && pack.type === "text") {
-			this._request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+		if (this.method === "POST" && pack.type === "text") {
+			this.request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 		}
 
-		this._request.send(this._pack);
+		this.request.send(this.pack);
 
 		return true;
 	}});
 
-
-
-
-
-
-
-
-
-
-
-/*----------------------------------------------------------------------------*/
+/*============================================================================*/
 
 	function WD(input) {
-		if (!(this instanceof WD)) {
-			return new WD(input);
+		var wd  = new WDtype(input);
+		var obj = {
+			"undefined": WDundefined, "null":     WDnull,
+			"boolean":   WDboolean,   "function": WDfunction,
+			"object":    WDobject,    "regexp":   WDregexp,
+//			"array":     WDarray,     "dom":      WDdom,
+//			"time":      WDtime,      "date":     WDdate,
+//			"number":    WDnumber,    "text":     WDtext
+		};
+		for (var i in obj) {
+			if (wd.type === i) return new obj[i](wd.input, wd.type, wd.value);
 		}
+		return new WDmain(wd.input, wd.type, wd.value)
+	}
 
-		if (!isNull(input) && !isUndefined(input)) {
-			if (isString(input) && input.trim() === "") {
-				input = null;
-			} else if (isBoolean(input)) {
-				input = input.valueOf();
-			} else if (isRegExp(input)) {
-				return new WDregexp(input);
-			} else if (isTime(input)) {
-				return new WDtime(input);
-			} else if (isDate(input)) {
-				return new WDdate(input);
-			} else if (isArray(input)) {
-				return new WDarray(input);
-			} else if (isDOM(input)) {
-				return new WDdom(input);
-			} else if (isNumber(input)) {
-				return new WDnumber(input);
-			} else if (isPercentage(input)) {
-				return new WDnumber(Number(input.replace("%", ""))/100);
-			} else if (isText(input)) {
-				return new WDtext(input);
+/*============================================================================*/
+
+	function WDmain(input, type, value) {
+		if (!(this instanceof WDmain)) return new WDmain(input, type, value);
+
+		var writables = ["time", "date"];
+
+		Object.defineProperties(this, {
+			_input: {value: input},
+			_type:  {value: type},
+			_value: {
+				value: value,
+				writable: writables.indexOf(type) >= 0 ? true : false
 			}
-		}
-
-		Object.defineProperty(this, "_value", {
-			value: input
 		});
-	};
+	}
 
-	Object.defineProperty(WD.prototype, "constructor", {
-		value: WD
+	Object.defineProperties(WDmain.prototype, {
+		constructor: {value: WDmain},
+		type:     {get:   function() {return this._type;}, enumerable: true},
+		valueOf:  {value: function() {return this._value.valueOf();}},
+		toString: {value: function() {return this._value.toString();}}
 	});
 
-	/*Retorna o tipo do argumento informado*/
-	Object.defineProperty(WD.prototype, "type", {
+	Object.defineProperty(WDmain.prototype, "send", {//FIXME
 		enumerable: true,
-		get: function () {
-			var x, types;
-			x = null;
-			types = {
-				"undefined": isUndefined,
-				"null": isNull,
-				"boolean": isBoolean,
-				"function": isFunction,
-				"object": isObject
-			};
-			for (var i in types) {
-				if (types[i](this._value)) {
-					x = i;
-					break;
-				}
-			};
-			if (x === null) {
-				try {
-					x = this._value.constructor.name.toLowerCase();
-				} catch(e) {
-					x = "unknown";
+		value: function() {return "SEND";}
+	});
+
+/*============================================================================*/
+
+	function WDundefined(input, type, value) {
+		if (!(this instanceof WDundefined)) return new WDundefined(input, type, value);
+		WDmain.call(this, input, type, value);
+	}
+
+	WDundefined.prototype = Object.create(WDmain.prototype, {
+		constructor: {value: WDundefined}
+	});
+
+	Object.defineProperties(WDundefined.prototype, {
+		valueOf:  {value: function() {return Infinity;}},
+		toString: {value: function() {return "?";}}
+	});
+
+/*============================================================================*/
+
+	function WDnull(input, type, value) {
+		if (!(this instanceof WDnull)) return new WDnull(input, type, value);
+		WDmain.call(this, input, type, value);
+	}
+
+	WDnull.prototype = Object.create(WDmain.prototype, {
+		constructor: {value: WDnull}
+	});
+
+	Object.defineProperties(WDnull.prototype, {
+		valueOf:  {value: function() {return 0;}},
+		toString: {value: function() {return "";}}
+	});
+
+
+/*============================================================================*/
+
+	function WDboolean(input, type, value) {
+		if (!(this instanceof WDboolean)) return new WDboolean(input, type, value);
+		WDmain.call(this, input, type, value);
+	}
+
+	WDboolean.prototype = Object.create(WDmain.prototype, {
+		constructor: {value: WDboolean}
+	});
+
+	Object.defineProperties(WDboolean.prototype, {
+		valueOf:  {value: function() {return this._value ? 1 : 0;}},
+		toString: {value: function() {return this._value ? "TRUE" : "FALSE";}}
+	});
+
+/*============================================================================*/
+
+	function WDfunction(input, type, value) {
+		if (!(this instanceof WDfunction)) return new WDfunction(input, type, value);
+		WDmain.call(this, input, type, value);
+	}
+
+	WDfunction.prototype = Object.create(WDmain.prototype, {
+		constructor: {value: WDfunction}
+	});
+
+/*============================================================================*/
+
+	function WDobject(input, type, value) {
+		if (!(this instanceof WDobject)) return new WDobject(input, type, value);
+		WDmain.call(this, input, type, value);
+	}
+
+	WDobject.prototype = Object.create(WDmain.prototype, {
+		constructor: {value: WDobject}
+	});
+
+	Object.defineProperty(WDobject.prototype, "toString", {
+		value: function() {return JSON.stringify(this._value);}
+	});
+
+/*============================================================================*/
+
+	function WDregexp(input, type, value) {
+		if (!(this instanceof WDregexp)) return new WDregexp(input, type, value);
+		WDmain.call(this, input, type, value);
+	}
+
+	WDregexp.prototype = Object.create(WDmain.prototype, {
+		constructor: {value: WDregexp}
+	});
+
+	Object.defineProperty(WDregexp.prototype, "toString", {
+		value: function() {return JSON.stringify(this._value.source);}
+	});
+
+	Object.defineProperty(WDregexp.prototype, "mask", {
+		enumerable: true,
+		value: function (input) {
+			var pattern, check, target, group, close;
+			var metaReference, metacharacter, expression;
+			input = String(input).toString();
+			if (this._value.test(input)) {
+				return input;
+			}
+			pattern = this.toString();
+			check   = "";
+			target  = "";
+			group   = 1;
+			close   = true;
+			metaReference = ["n", "d", "D", "w", "W", "s", "S", "t", "r", "n", "v", "f", "b", "B"];
+			metacharacter = ["\n", "\d", "\D", "\w", "\W", "\s", "\S", "\t", "\r", "\n", "\v", "\f", "\b", "\B"];
+			expression    = ["[", "]", "|", "^", "$", ".", "(", ")", "*", "+", "?", "{", "}"];
+			for (var i = 0; i < pattern.length; i++) {
+				if (pattern[i] === "\\") {
+					i++;
+					if (!WD(metaReference).inside(pattern[i])) {
+						target += pattern[i];
+					}	else {
+						target += metacharacter[WD(metaReference).inside(pattern[i], true)[0]];
+					}
+				} else if (pattern[i] === "(") {
+					check  += pattern[i];
+					target += "$"+group;
+					close   = false;
+					group++;
+				} else if (pattern[i] === ")") {
+					check += pattern[i];
+					close  = true;
+				} else if (close && !WD(expression).inside(pattern[i])) {
+					target += pattern[i];
+				} else {
+					check += pattern[i];
 				}
 			}
-			return x;
+			check = new RegExp(check);
+			if (check.test(input)) {
+				input = input.replace(check, target);
+			} else {
+				input = false;
+			}
+			return input;
 		}
 	});
 
-	/*Exibe os métodos e atributos enumeráveis do objeto*/
-	Object.defineProperty(WD.prototype, "tools", {
-		enumerable: true,
-		get: function () {
-			var x = []
-			for (var i in this) {
-				x.push(i);
-			}
-			return WD(x).sort();
-		}
-	});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 	/*ferramenta para requisições api com xmlhttlrequest*/
@@ -1189,87 +1292,6 @@ SOFTWARE.﻿
 
 /* === REGEXP ============================================================== */
 
-	function WDregexp(input) {
-		if (!(this instanceof WDregexp)) {
-			return new WDregexp(input);
-		}
-
-		if (!isRegExp(input)) {
-			return new WD(input);
-		}
-		Object.defineProperty(this, "_value", {
-			value: input.valueOf()
-		});
-	};
-
-	WDregexp.prototype = Object.create(WD.prototype, {
-		constructor: {
-			value: WDregexp
-		}
-	});
-
-	/*Aplica máscara ao valor de entrada se casar com a re*/
-	Object.defineProperty(WDregexp.prototype, "mask", {
-		enumerable: true,
-		value: function (input) {
-			var pattern, check, target, group, close;
-			var metaReference, metacharacter, expression;
-			input = String(input).toString();
-			if (this._value.test(input)) {
-				return input;
-			}
-			pattern = this.toString();
-			check   = "";
-			target  = "";
-			group   = 1;
-			close   = true;
-			metaReference = ["n", "d", "D", "w", "W", "s", "S", "t", "r", "n", "v", "f", "b", "B"];
-			metacharacter = ["\n", "\d", "\D", "\w", "\W", "\s", "\S", "\t", "\r", "\n", "\v", "\f", "\b", "\B"];
-			expression    = ["[", "]", "|", "^", "$", ".", "(", ")", "*", "+", "?", "{", "}"];
-			for (var i = 0; i < pattern.length; i++) {
-				if (pattern[i] === "\\") {
-					i++;
-					if (!WD(metaReference).inside(pattern[i])) {
-						target += pattern[i];
-					}	else {
-						target += metacharacter[WD(metaReference).inside(pattern[i], true)[0]];
-					}
-				} else if (pattern[i] === "(") {
-					check  += pattern[i];
-					target += "$"+group;
-					close   = false;
-					group++;
-				} else if (pattern[i] === ")") {
-					check += pattern[i];
-					close  = true;
-				} else if (close && !WD(expression).inside(pattern[i])) {
-					target += pattern[i];
-				} else {
-					check += pattern[i];
-				}
-			}
-			check = new RegExp(check);
-			if (check.test(input)) {
-				input = input.replace(check, target);
-			} else {
-				input = false;
-			}
-			return input;
-		}
-	});
-
-	/*Retorna o método toString e o atributo type*/
-	Object.defineProperties(WDregexp.prototype, {
-		type: {
-			enumerable: true,
-			value: "regexp"
-		},
-		toString: {
-			value: function() {
-				return this._value.source;
-			}
-		}
-	});
 
 /* === NUMBER ============================================================== */
 
