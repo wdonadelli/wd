@@ -196,7 +196,7 @@ SOFTWARE.﻿
 	Object.defineProperty(WDtype.prototype, "isObject", {get: function() {
 		if (
 			typeof this._input === "object" &&
-			(/^\{.*\}$/).test(JSON.stringify(this._input))
+			(/^\{.*\}$/).test(JSON.stringify(this._input))//FIXME: isso aqui tá acusando que dom é objeto
 		) {
 			this._type  = "object";
 			this._value = this._input;
@@ -416,10 +416,19 @@ SOFTWARE.﻿
 	}});
 
 	Object.defineProperty(WDtype.prototype, "_run", {value: function() {
-		var methods = [
-			"isNull", "isUndefined", "isBoolean", "isRegExp", "isArray",
-			"isFunction", "isObject", "isDOM", "isTime", "isDate",
-			"isNumber", "isText"
+		var methods = [/*importante: objetos específicos devem estar antes dos genéricos*/
+			"isUndefined", /*0*/
+			"isNull",      /*0*/
+			"isBoolean",   /*0*/
+			"isRegExp",    /*0*/
+			"isArray",     /*0*/
+			"isDOM",       /*0*/
+			"isFunction",  /*0*/
+			"isTime",      /*0*/
+			"isDate",      /*0*/
+			"isNumber",    /*0*/
+			"isText",      /*1*/
+			"isObject"     /*2*/
 		];
 		for (var i = 0; i < methods.length; i++) {
 			if (this[methods[i]]) return;
@@ -691,6 +700,10 @@ SOFTWARE.﻿
 		}
 		return new WDmain(wd.input, wd.type, wd.value)
 	}
+
+	WD.constructor = WD;
+	WD.$  = function(css, root) {return this.constructor(WDbox.$(css, root));}
+	WD.$$ = function(css, root) {return this.constructor(WDbox.$$(css, root));}
 
 /*============================================================================*/
 
