@@ -39,12 +39,8 @@ SOFTWARE.﻿
 	var wdConfig;
 	/*guarda o tamanho da tela*/
 	var deviceController;
-	/*guarda propriedade da janela modal*/
-	var modalWindow, modalWindowCount;
 	/*guarda as propriedades da data*/
 	var Y_min, Y_max, Y_004, Y_100, Y_400, WEEK_1st, DATE_min, DATE_max;
-	/*guarda os eventos de window*/
-	var winEvents;
 
 /*............................................................................*/
 
