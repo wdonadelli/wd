@@ -196,7 +196,8 @@ SOFTWARE.﻿
 	Object.defineProperty(WDtype.prototype, "isObject", {get: function() {
 		if (
 			typeof this._input === "object" &&
-			(/^\{.*\}$/).test(JSON.stringify(this._input))//FIXME: isso aqui tá acusando que dom é objeto
+			this._input instanceof Object &&
+			(/^\{.*\}$/).test(JSON.stringify(this._input))
 		) {
 			this._type  = "object";
 			this._value = this._input;
