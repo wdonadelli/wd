@@ -741,7 +741,7 @@ SOFTWARE.﻿
 			"object":    WDobject,    "regexp":   WDregexp,
 //			"array":     WDarray,     "dom":      WDdom,
 //			"time":      WDtime,      "date":     WDdate,
-/*			"number":    WDnumber, */   "text":     WDtext
+			"number":    WDnumber,    "text":     WDtext
 		};
 		for (var i in obj) {
 			if (wd.type === i) return new obj[i](wd.input, wd.type, wd.value);
@@ -944,6 +944,18 @@ SOFTWARE.﻿
 		}
 	});
 
+	Object.defineProperty(WDtext.prototype, "toggle", {/*inverte a caixa*/
+		enumerable: true,
+		get: function() {
+			var input = this.toString().split("");
+			for (var i = 0; i < input.length; i++) {
+				var test = input[i].toUpperCase();
+				input[i] = input[i] === test ? input[i].toLowerCase() : test;
+			}
+			return input.join("");
+		}
+	});
+
 	Object.defineProperty(WDtext.prototype, "upper", {/*caixa alta*/
 		enumerable: true,
 		get: function() {
@@ -1130,70 +1142,41 @@ SOFTWARE.﻿
 
 /*============================================================================*/
 
-	function WDnumber(input) {
-		if (!(this instanceof WDnumber)) {
-			return new WDnumber(input);
-		}
-		if (!isNumber(input)) {
-			return new WD(input);
-		}
-		Object.defineProperty(this, "_value", {
-			value: isString(input) ? Number(input).valueOf() : input.valueOf()
-		});
-	};
+	function WDnumber(input, type, value) {
+		if (!(this instanceof WDnumber)) return new WDnumber(input, type, value);
+		WDmain.call(this, input, type, value);
+	}
 
-	WDnumber.prototype = Object.create(WD.prototype, {
-		constructor: {
-			value: WDnumber
-		}
+	WDnumber.prototype = Object.create(WDmain.prototype, {
+		constructor: {value: WDnumber}
 	});
 
 	/*Retorna o tipo do número*/
-	Object.defineProperty(WDnumber.prototype, "number", {
+	Object.defineProperty(WDnumber.prototype, "nType", {
 		enumerable: true,
 		get: function() {
-			var x;
-			if (this.valueOf() === Infinity || this.valueOf() === -Infinity) {
-				x = "infinity";
-			} else if (this.valueOf() % 1 !== 0) {
-				x = "real";
-			} else if (this.valueOf() % 1 === 0) {
-				x = "integer";
-			} else {
-				x = "?";
-			}
-			return x
+			if (this.valueOf() === 0)          return "null";
+			if (this.valueOf() === Infinity)   return "+infinity";
+			if (this.valueOf() === -Infinity)  return "-infinity";
+			if (this.valueOf() === this.trunc) return this.valueOf() < 0 ? "-integer" : "+integer";
+			return this.valueOf() < 0 ? "-real" : "+real";
+		}
+	});//orType e andType?
+
+	Object.defineProperty(WDnumber.prototype, "trunc", { /*parte inteira*/
+		enumerable: true,
+		get: function() {
+			return this.valueOf() < 0 ? Math.ceil(this.valueOf()) : Math.floor(this.valueOf());
 		}
 	});
 
-	/*Retorna o valor inteiro do número*/
-	Object.defineProperty(WDnumber.prototype, "integer", {
+	Object.defineProperty(WDnumber.prototype, "decimal", {/*parte decimal*/
 		enumerable: true,
 		get: function() {
-			var x;
-			if (this.valueOf() === Infinity || this.valueOf() === -Infinity) {
-				x = this.valueOf();
-			} else {
-				x = Number(this.toString().split(".")[0]);
-			}
-			return x;
-		}
-	});
-
-	/*Retorna o valor decimal do número*/
-	Object.defineProperty(WDnumber.prototype, "decimal", {
-		enumerable: true,
-		get: function() {
-			var x, i;
-			if (this.valueOf() === Infinity || this.valueOf() === -Infinity) {
-				x = this.valueOf();
-			} else if (this.valueOf() % 1 !== 0) {
-				x = Number("0."+this.toString().split(".")[1]);
-				x = this.valueOf() < 0 ? -1 * x : x;
-			} else {
-				x = 0;
-			}
-			return x;
+			var base10 = 1;
+			var number = this.valueOf();
+			while (((number * base10) % 1) !== 0) base10 = base10 * 10;
+			return (number*base10 - this.trunc*base10) / base10;
 		}
 	});
 
