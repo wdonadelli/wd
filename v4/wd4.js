@@ -1033,18 +1033,21 @@ SOFTWARE.﻿
 		}
 	});
 
-	/*aplica os atributos ao objeto*/
-	Object.defineProperty(WDtext.prototype, "force", {
+	Object.defineProperty(WDtext.prototype, "apply", {	/*atributos múltiplos*/
 		enumerable: true,
 		value: function() {
-			var attr;
-			attr = ["title", "upper", "lower", "trim", "clear"];
+			var save = this._value.toString();
 			for (var i = 0; i < arguments.length; i++) {
-				if (attr.indexOf(arguments[i]) >= 0) {
-					this._value = this[arguments[i]];
-				}
+				if (!(arguments[i] in this)) continue;
+				var check = Object.getOwnPropertyDescriptor(WDtext.prototype, arguments[i]);
+				if (check.get === undefined) continue;
+				var value = new WDtype(this[arguments[i]]);
+				if (value.type !== "text")   continue;
+				this._value = value.input;
 			}
-			return this.toString();
+			var text = this._value.toString();
+			this._value = save;
+			return text;
 		}
 	});
 
@@ -1151,17 +1154,28 @@ SOFTWARE.﻿
 		constructor: {value: WDnumber}
 	});
 
-	/*Retorna o tipo do número*/
-	Object.defineProperty(WDnumber.prototype, "nType", {
+	Object.defineProperty(WDnumber.prototype, "nType", {/* tipo do número */
 		enumerable: true,
 		get: function() {
-			if (this.valueOf() === 0)          return "null";
+			if (this.valueOf() === 0)          return "zero";
 			if (this.valueOf() === Infinity)   return "+infinity";
 			if (this.valueOf() === -Infinity)  return "-infinity";
 			if (this.valueOf() === this.trunc) return this.valueOf() < 0 ? "-integer" : "+integer";
 			return this.valueOf() < 0 ? "-real" : "+real";
 		}
-	});//orType e andType?
+	});
+
+	Object.defineProperty(WDnumber.prototype, "test", {/* testa o tipo do número */
+		enumerable: true,
+		value: function() {
+			var type = this.nType;
+			for (var i = 0; i < arguments.length; i++) {
+				if (arguments[i] === type) return true;
+				if (arguments[i] === type.substr(1, type.length)) return true;
+			}
+			return false;
+		}
+	});
 
 	Object.defineProperty(WDnumber.prototype, "trunc", { /*parte inteira*/
 		enumerable: true,
