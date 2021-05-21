@@ -130,11 +130,10 @@ SOFTWARE.﻿
 		return date;
 	}		
 
-
 	WDbox.csv = function(input) {/*CSV para Array*/
 		var data = [];
 
-		var rows = input.split("\n");
+		var rows = input.trim().split("\n");
 
 		for (var r = 0; r < rows.length; r++) {
 			data.push([]);
@@ -154,13 +153,13 @@ SOFTWARE.﻿
 		return data;
 	}
 
+	WDbox.device = function() {/*tipo do dispositivo*/
+		if (window.innerWidth >= 768) return "Desktop";
+		if (window.innerWidth >= 600) return "Tablet";
+		return "Phone";
+	};
 
-
-
-
-
-
-
+	WDbox.Device = undefined; /*último device definido FIXME: vai precisar disso? talvez inserir no lugar do wdconfig*/
 
 /*============================================================================*/
 
@@ -331,7 +330,7 @@ SOFTWARE.﻿
 			return true;
 		}
 
-		if ((/^[0-9]+\!/).test(this._input)) {
+		if ((/^[0-9]+\!$/).test(this._input)) {
 			var number = Number(this._input.substr(0, (this._input.length - 1)));
 			var value  = 1;
 			while (number > 1) {
@@ -343,20 +342,11 @@ SOFTWARE.﻿
 			return true;
 		}
 
-		if (
-			this._input[this._input.length - 1] === "%" &&
-			this._input.length > 1
-		) {
-			var save    = this._input.toString();
-			this._input = save.substr(0, (save.length - 1)).trim();
-			if (this.isNumber) {
-				this._type  = "number";
-				this._value = Number(this._input).valueOf() / 100;
-				this._input = save;
-				return true;
-			} else {
-				this._input = save;
-			}
+		if ((/^[0-9]+(\.[0-9]+)?\%$/).test(this._input)) {
+			var number  = Number(this._input.substr(0, (this._input.length - 1)));
+			this._type  = "number";
+			this._value = number / 100;
+			return true;
 		}
 
 		return false;
@@ -733,6 +723,104 @@ SOFTWARE.﻿
 
 /*============================================================================*/
 
+	function WDsignal(input) {
+		if (!(this instanceof WDsignal)) return new WDsignal(input);
+		this._msg = input;
+	}
+
+	/* Métodos estáticos ------------------------------------------------------*/
+	WDsignal.window = document.createElement("DIV"); /*container das mensagens*/
+	WDsignal.opened = false; /*container aberto?*/
+	WDsignal.styled = false; /*container estilizado?*/
+
+	WDsignal.cbase  = {position: "fixed", top:   "0", margin: "auto", zIndex: "999999"};
+	WDsignal.cmicro = {left:   "initial", right: "0", width:  "25%", textAlign: "left"};
+	WDsignal.csmall = {right:  "initial", left:  "0", width: "100%", textAlign: "center"};
+
+	WDsignal.mbase  = {
+		textAlign: "inherit", border: "2px solid", borderRadius: "0.5em",
+		margin: "0.5em", padding: "0.5em", cursor: "pointer", opacity: "1",
+		backgroundColor: "#FFFFFF", boxShadow: "2px 2px #DCDCDC"
+	};
+	WDsignal.minfo  = {color: "#4682B4"};
+	WDsignal.mwarn  = {color: "#FF8C00"};
+	WDsignal.merror = {color: "#B22222"};
+	WDsignal.mok    = {color: "#228B22"};
+	WDsignal.mdoubt = {color: "#663399"};
+	WDsignal.status = {merror: -2, mdoubt: -1, mwarn: 0, mok: 1, minfo: 2}
+
+	WDsignal.msg = function(type, msg) {
+		var parent = this;
+
+		var box = document.createElement("P");
+		box.innerHTML = msg;
+
+		for (var i in this.mbase) box.style[i] = this.mbase[i];
+		for (var i in this[type]) box.style[i] = this[type][i];
+
+		box.onclick = function() {
+			parent.window.removeChild(box);
+			parent.close();
+			return;
+		}
+
+		window.setTimeout(function() {
+			try{
+				parent.window.removeChild(box);
+				parent.close();
+			} catch(e) {}
+			return;
+		}, 8000);
+		
+		this.open();
+		this.window.appendChild(box);
+		return this.status[type];
+	}
+
+	WDsignal.open = function() {
+		if (!this.styled) {
+			for (var i in this.cbase) this.window.style[i] = this.cbase[i];
+			this.styled = true;
+		}
+
+		var style = WDbox.device() === "Desktop" ? this.cmicro : this.csmall;
+		for (var i in style) this.window.style[i] = style[i];
+
+		if (!this.opened) document.body.appendChild(this.window);
+		this.opened = true;
+		return;
+	}
+
+	WDsignal.close = function() {
+		if (!this.opened) return;
+		if (this.window.children.length > 0) return;
+
+		document.body.removeChild(this.window);
+		this.opened = false;
+		return;
+	}
+	
+	/* Métodos de Protótipos --------------------------------------------------*/
+	Object.defineProperty(WDsignal.prototype, "constructor", {value: WDsignal});
+
+	Object.defineProperty(WDsignal.prototype, "info", {value: function() {
+		return this.constructor.msg("minfo", this._msg);
+	}});
+	Object.defineProperty(WDsignal.prototype, "warn", {value: function() {
+		return this.constructor.msg("mwarn", this._msg);
+	}});
+	Object.defineProperty(WDsignal.prototype, "error", {value: function() {
+		return this.constructor.msg("merror", this._msg);
+	}});
+	Object.defineProperty(WDsignal.prototype, "ok", {value: function() {
+		return this.constructor.msg("mok", this._msg);
+	}});
+	Object.defineProperty(WDsignal.prototype, "doubt", {value: function() {
+		return this.constructor.msg("mdoubt", this._msg);
+	}});
+
+/*============================================================================*/
+
 	function WD(input) {
 		var wd  = new WDtype(input);
 		var obj = {
@@ -827,6 +915,18 @@ SOFTWARE.﻿
 			request.send();
 
 			return true;
+		}
+	});
+
+	Object.defineProperty(WDmain.prototype, "signal", {/*renderizar mensagem*/
+		enumerable: true,
+		value: function(type) {
+			var signal = new WDsignal(this.toString());
+			if (type === "warn")  return signal.warn();
+			if (type === "doubt") return signal.doubt();
+			if (type === "ok")    return signal.ok();
+			if (type === "error") return signal.error();
+			return signal.info();
 		}
 	});
 
@@ -1078,68 +1178,6 @@ SOFTWARE.﻿
 			for (var i in clear) value = value.replace(clear[i], i);
 
 			return value;
-		}
-	});
-
-	/*Exibe uma mensagem temporária na tela*/
-	Object.defineProperty(WDtext.prototype, "message", {
-		enumerable: true,
-		value: function(time, className) {
-			if (new WD(document.body).type === "dom") {/*verificar se o documento foi carregado*/
-				var msgWindow = document.createElement("DIV");
-				msgWindow.innerHTML = this.toString();
-				if (new WD(className).type === "text") {
-					msgWindow.className = "js-wd-box-message "+className;
-				} else {
-					msgWindow.className = "js-wd-box-message";
-				}
-
-				WD(msgWindow).style({
-					display: "block",
-					fontSize: "0.9em",
-					minWidth: deviceController === "Desktop" ? "25%" : "auto",
-					maxWidth: deviceController === "Desktop" ? "33%" : "auto",
-					maxHeight: "90%",
-					overflow: "auto",
-					wordWrap: "break-word",
-					padding: "0.5em",
-					position: "fixed",
-					top: "0.2em",
-					right: "0.2em",
-					left: deviceController === "Desktop" ? "auto" : "0.2em",
-					borderRadius: deviceController === "Desktop" ? "0.2em" : "0",
-					boxShadow: "0 0 0.5em 0.2em #333333",
-					zIndex: "999999",
-					cursor: "pointer",
-					animation: "js-wd-fade 0.5s"
-				});
-
-				msgWindow.onclick = function() {
-					document.body.removeChild(msgWindow);
-					return;
-				}
-				document.body.appendChild(msgWindow);
-
-				/*fechamento automático*/
-				time = new WD(time);
-				if (time.type !== "number") {
-					time = 6500;
-				} else if (time.number === "infinity" || time.valueOf() <= 0) {
-					time = 0;
-				} else {
-					time = time.valueOf();
-				}
-
-				if (time > 0) {
-					window.setTimeout(function() {
-						if (msgWindow.parentElement !== null) {
-							document.body.removeChild(msgWindow);
-						}
-						return;
-					}, time);
-				}
-			}
-			return;
 		}
 	});
 
