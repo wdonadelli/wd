@@ -1181,12 +1181,90 @@ SOFTWARE.﻿
 		}
 	});
 
+	Object.defineProperty(WDtext.prototype, "mask", { /*máscaras temáticas*/
+		enumerable: true,
+		value: function(check, callback) {
+
+			check = String(check).toString();
+			var input = this.toString();
+			var code  = {"#": "[0-9]", "@": "[a-zA-Z]", "*": ".", "?": ""};
+			var mask  = ["^"];
+			var gaps  = [];
+			var only  = ["^"]
+			var func  = new WDtype(callback);
+			if (func.type !== "function") callback = function(x) {return true;}
+			
+
+
+			/* obtendo a máscara e os containers para ocupação */
+			for (var i = 0; i < input.length; i++) {
+				var char = input[i];
+
+				if (char in code) { /*caracteres de máscara*/
+					mask.push(code[char]);
+					gaps.push(null);
+					only.push(code[char])
+				} else if ((/\w/).test(char)) { /*números, letras e sublinhado*/
+					mask.push(char === "_" ? "\\_" : char);
+					gaps.push(char);
+				} else if (char === "\\" && input[i+1] in re) { /*caracteres especiais*/
+					mask.push(char+input[i+1]);
+					gaps.push(input[i+1]);
+					i++;
+				} else { /*outros caracteres*/
+					mask.push("\\"+char);
+					gaps.push(char);
+				}
+			}
+
+			mask.push("$");
+			mask = new RegExp(mask.join(""));
+
+			/*se o usuário entrou com a máscara formatada*/
+			if (mask.test(check) && callback(check)) return check;
+
+			only.push("$");
+			only = new RegExp(only.join(""));
+
+			/*se os caracteres não estiverem de acordo com a máscara*/
+			if (!only.test(check)) return null;
+
+			var n = 0;
+			for (var i = 0; i < gaps.length; i++) {
+				if (gaps[i] === null) {
+					gaps[i] = check[n];
+					n++;
+				}
+			}
+			gaps = gaps.join("");
+
+			/*se os caracteres passaram pelo teste*/
+			if (callback(gaps)) return gaps;
+
+			return null;
+
+
+
+
+
+	}});
+
+
+
 /*============================================================================*/
 
 	function WDnumber(input, type, value) {
 		if (!(this instanceof WDnumber)) return new WDnumber(input, type, value);
 		WDmain.call(this, input, type, value);
 	}
+
+	WDnumber.lenDec = function(x) {/*conta casas decimais*/
+		if (x === Infinity || x === -Infinity) return 0;
+		var i = 0;
+		while ((x * Math.pow(10, i)) % 1 !== 0) i++;
+		return i;
+	}
+
 
 	WDnumber.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDnumber}
@@ -1225,10 +1303,9 @@ SOFTWARE.﻿
 	Object.defineProperty(WDnumber.prototype, "decimal", {/*parte decimal*/
 		enumerable: true,
 		get: function() {
-			var base10 = 1;
-			var number = this.valueOf();
-			while (((number * base10) % 1) !== 0) base10 = base10 * 10;
-			return (number*base10 - this.trunc*base10) / base10;
+			var pow10  = Math.pow(10, this.constructor.lenDec(this.valueOf()));
+			if (pow10 === 1) return 0;
+			return (this.valueOf()*pow10 - this.trunc*pow10) / pow10;
 		}
 	});
 
@@ -1240,30 +1317,55 @@ SOFTWARE.﻿
 		}
 	});
 
-	/*Arredonda o valor para determinado número de casas ou para cima (sem argumento)*/
-	Object.defineProperty(WDnumber.prototype, "round", {
+	Object.defineProperty(WDnumber.prototype, "fraction", {//FIXME
 		enumerable: true,
-		value: function(width) {
-			var x;
-			width = new WD(width);
-			if (width.number === "integer" || width.number === "real") {
-				width = new WD(width.abs).integer;
-				try {
-				 	x = Number(this.valueOf().toFixed(width)).valueOf();
-				} catch(e) {
-					x = this.valueOf();
-					log(e.toString(), "w");
-				}
-			} else {
-				if (this.decimal === 0) {
-					x = this.valueOf();
-				} else if (this.valueOf() > 0) {
-					x = this.integer+1;
-				} else {
-					x = this.integer-1;
+		get: function() {
+			if (this.nType === "zero")      return  "0/1";
+			if (this.nType === "+infinity") return  "1/0";
+			if (this.nType === "-infinity") return "-1/0";
+			if (this.nType === "+integer")  return  "0/1";
+			if (this.nType === "-integer")  return "-0/1";
+
+			var ref = (this.valueOf() < 0 ? -1 : 1) * this.decimal;
+
+			var den = Number((1/ref).toFixed(1));
+			var num = 10;
+
+			den = den*num;
+
+			var prime = [
+				2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61,
+				67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137,
+				139, 149, 151, 157, 163, 167, 173, 179, 181, 191, 193, 197, 199,
+				211, 223, 227, 229, 233, 239, 241, 251, 257, 263, 269, 271, 277,
+				281, 283, 293, 307, 311, 313, 317, 331, 337, 347, 349, 353, 359,
+				367, 373, 379, 383, 389, 397, 401
+			];
+
+			for (var i = 0; i < prime.length; i++) {console.log(prime[i]);
+				if (prime[i] > num) break;
+			
+				while ((num % prime[i] === 0) && (den % prime[i] === 0)) {
+					num = Math.floor(num / prime[i]);
+					den = Math.floor(den / prime[i]);
 				}
 			}
-			return x;
+
+			var erro = 100*((num/den) - ref)/ref;
+
+			num = String(num).toString();
+			den = String(den).toString();
+
+			return num+"/"+den+" ("+erro.toFixed(2)+"%)";
+	}})
+
+
+
+
+	Object.defineProperty(WDnumber.prototype, "round", {/*arredonda casas decimais*/
+		enumerable: true,
+		value: function(width) {
+			return Number(this.valueOf().toFixed(width)).valueOf();
 		}
 	});
 
@@ -1404,42 +1506,6 @@ SOFTWARE.﻿
 		}
 	});
 
-	/*Retorna o método toString*/
-	Object.defineProperties(WDnumber.prototype, {
-		type: {
-			enumerable: true,
-			value: "number"
-		},
-		toString: {
-			value: function() {
-				var x, str, pow, val;
-				str = this.valueOf().toString();
-				if (this.number === "infinity") {
-					x = "∞";
-				} else if ((/e\+?[0-9]+$/i).test(str) === true) {
-					str = str.toLowerCase().split("e");
-					val = str[0].replace(/[^0-9]/g, "").split("");
-					pow = Number(str[1].replace(/[^0-9]/, "")).valueOf();
-					while (val.length !== pow+1) {
-						val.push("0");
-					}
-					x = val.join("");
-				} else if ((/e-[0-9]+$/i).test(str) === true) {
-					str = str.toLowerCase().split("e");
-					val = str[0].replace(/[^0-9]/g, "").split("");
-					pow = Number(str[1].replace(/[^0-9]/, "")).valueOf();
-					for (var i = 0; i < pow; i++) {
-						val.unshift("0");
-					};
-					x = val.join("").replace(/([0-9])/, "$1.");
-				} else {
-					x = str.replace(/[^0-9\.]/g, "");
-				}
-				x = this.valueOf() < 0 ? "-"+x : x;
-				return x;
-			}
-		}
-	});
 
 /* === TIME ================================================================ */
 
