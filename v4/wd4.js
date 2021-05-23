@@ -1362,107 +1362,59 @@ SOFTWARE.﻿
 
 
 
+
+
+
+
+
+
+
+
 	Object.defineProperty(WDnumber.prototype, "round", {/*arredonda casas decimais*/
 		enumerable: true,
 		value: function(width) {
+			var check = WDtype(width);
+			width = check.type === "number" ? check.value : 0;
 			return Number(this.valueOf().toFixed(width)).valueOf();
 		}
 	});
 
-	/*Transcreve a notação científica para html*/
-	Object.defineProperty(WDnumber.prototype, "e10", {
+	Object.defineProperty(WDnumber.prototype, "pow10", {/*notação científica*/
 		enumerable: true,
-		value: function(width, html) {
-			var x, sup, value;
-			sup = {
-				"0": "⁰",
-				"1": "¹",
-				"2": "²",
-				"3": "³",
-				"4": "⁴",
-				"5": "⁵",
-				"6": "⁶",
-				"7": "⁷",
-				"8": "⁸",
-				"9": "⁹",
-				"+": "⁺",
-				"-": "⁻",
-				"x": "×"
+		value: function(width) {
+			if (this.test("infinity", "zero")) return this.toString();
+
+			var check = WDtype(width);
+			width = check.type === "number" ? check.value : 0;
+
+			var chars = {
+				"0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵",
+				"6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹", "+": "⁺", "-": "⁻"
 			};
-			if (this.number === "infinity") {
-				x = this.toString();
-			} else {
-				try {
-					width = new WD(width);
-					width = width.number === "integer" && width >= 0 ? width.valueOf() : undefined;
-					x = this.valueOf().toExponential(width);
-				} catch(e) {
-					x = this.valueOf().toExponential();
-				}
-				if (html === true) {
-					x = x.replace(/e(.+)$/, " &times; 10<sup><small>$1</small></sup>");
-				} else {
-					value = x.split("e")[1].split("");
-					for (var i = 0; i < value.length; i++) {
-						value[i] = sup[value[i]];
-					}
-					value = " × 10"+value.join("");
-					x = x.replace(/e.+/, value);
-				}
+			var exp = this.valueOf().toExponential(width).split(/[eE]/);
+			for (var i in chars) {
+				var re = (/[0-9]/).test(i) ? new RegExp(i, "g") : new RegExp("\\"+i, "g");
+				exp[1] = exp[1].replace(re, chars[i]);
 			}
-			return x;
+			return exp.join(" x 10");
 		}
 	});
 
-	/*Retorna o número no formato local ou definido no html*/
-	Object.defineProperty(WDnumber.prototype, "locale", {
+	Object.defineProperty(WDnumber.prototype, "locale", {/*notação local*/
 		enumerable: true,
-		value: function(locale) {
-			var x;
-			if (new WD(locale).type !== "text") {
-				locale = lang();
-			}
-			try {
-				x = this.valueOf().toLocaleString(locale);
-			} catch(e) {
-				if (this.number === "infinity") {
-					x = this.toString();
-				} else {
-					x = this.fixed().split(".");
-					x[0] = x[0].split("").reverse();
-					x[0] = x[0].join("").replace(/([0-9]{3})/g, "$1,");
-					x[0] = x[0].replace(/\,(\+|\-)/, "$1").split("").reverse().join("");
-					x = x.join(".");
-				}
-			}
-			return x;
-		}
-	});
+		value: function(locale, currency) {
+			locale = (/^[a-z]{2}\-[A-Z]{2}$/).test(locale) ? locale : WDbox.lang();
+			var option = {style: 'currency', currency: currency};
 
-	/*Retorna o número no formato monetário local ou defuinido no html*/
-	Object.defineProperty(WDnumber.prototype, "coin", {
-		enumerable: true,
-		value: function(currency, locale) {
-			var x;
-			if (new WD(locale).type !== "text")   {
-				locale = lang();
-			}
-			if (new WD(currency).type !== "text") {
-				currency = locale === "en-US" ? "USD" : "¤";
-			}
-			if (this.number === "infinity") {
-				x = this.toString();
-			} else {
-				try {
-					x = this.valueOf().toLocaleString(locale, {style: "currency", currency: currency});
-				} catch(e) {
-					currency = this.valueOf() < 0 ? "-"+currency : currency;
-					x = new WD(new WD(this.integer).abs+0.5).locale().replace(/(.)5$/, "$1");
-					x = x+(new WD(new WD(this.decimal).abs+1).fixed(0, 2).replace(/.+([0-9]{2})$/, "$1"));
-					x = currency+" "+x;
-				}
-			}
-			return x;
+			/* Monetário */
+			try {return new Intl.NumberFormat(locale, option).format(this.valueOf());} catch(e) {}
+			try {return this.valueOf().toLocaleString(locale, option)} catch(e) {}
+
+			/* Normal */
+			try {return new Intl.NumberFormat(locale).format(this.valueOf());} catch(e) {}
+			try {return this.valueOf().toLocaleString(locale)} catch(e) {}
+			
+			return this.toString();
 		}
 	});
 
