@@ -1309,13 +1309,16 @@ SOFTWARE.﻿
 		}
 	});
 
-	/*Retorna o valor absoluto do número*/
-	Object.defineProperty(WDnumber.prototype, "abs", {
+	Object.defineProperty(WDnumber.prototype, "abs", {/*valor absoluto*/
 		enumerable: true,
 		get: function() {
 			return this.valueOf() < 0 ? - this.valueOf() : this.valueOf();
 		}
 	});
+
+
+
+
 
 	Object.defineProperty(WDnumber.prototype, "fraction", {//FIXME
 		enumerable: true,
