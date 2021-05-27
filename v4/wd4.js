@@ -1017,7 +1017,7 @@ SOFTWARE.﻿
 	});
 
 	Object.defineProperty(WDregexp.prototype, "toString", {
-		value: function() {return JSON.stringify(this._value.source);}
+		value: function() {return this._value.source;}
 	});
 
 /*============================================================================*/
@@ -1133,14 +1133,14 @@ SOFTWARE.﻿
 		}
 	});
 
-	Object.defineProperty(WDtext.prototype, "apply", {	/*atributos múltiplos*/
+	Object.defineProperty(WDtext.prototype, "format", {	/*atributos múltiplos*/
 		enumerable: true,
 		value: function() {
 			var save = this._value.toString();
 			for (var i = 0; i < arguments.length; i++) {
 				if (!(arguments[i] in this)) continue;
 				var check = Object.getOwnPropertyDescriptor(WDtext.prototype, arguments[i]);
-				if (check.get === undefined) continue;
+				if (check === undefined || check.get === undefined) continue;
 				var value = new WDtype(this[arguments[i]]);
 				if (value.type !== "text")   continue;
 				this._value = value.input;
@@ -1258,7 +1258,7 @@ SOFTWARE.﻿
 		WDmain.call(this, input, type, value);
 	}
 
-	WDnumber.lenDec = function(x) {/*conta casas decimais*/
+	WDnumber.nFloat = function(x) {/*conta casas decimais*/
 		if (x === Infinity || x === -Infinity) return 0;
 		var i = 0;
 		while ((x * Math.pow(10, i)) % 1 !== 0) i++;
@@ -1273,10 +1273,10 @@ SOFTWARE.﻿
 	Object.defineProperty(WDnumber.prototype, "nType", {/* tipo do número */
 		enumerable: true,
 		get: function() {
-			if (this.valueOf() === 0)          return "zero";
-			if (this.valueOf() === Infinity)   return "+infinity";
-			if (this.valueOf() === -Infinity)  return "-infinity";
-			if (this.valueOf() === this.trunc) return this.valueOf() < 0 ? "-integer" : "+integer";
+			if (this.valueOf() === 0)         return "zero";
+			if (this.valueOf() ===  Infinity) return "+infinity";
+			if (this.valueOf() === -Infinity) return "-infinity";
+			if (this.valueOf() === this.int)  return this.valueOf() < 0 ? "-integer" : "+integer";
 			return this.valueOf() < 0 ? "-real" : "+real";
 		}
 	});
@@ -1293,19 +1293,19 @@ SOFTWARE.﻿
 		}
 	});
 
-	Object.defineProperty(WDnumber.prototype, "trunc", { /*parte inteira*/
+	Object.defineProperty(WDnumber.prototype, "int", { /*parte inteira*/
 		enumerable: true,
 		get: function() {
-			return this.valueOf() < 0 ? Math.ceil(this.valueOf()) : Math.floor(this.valueOf());
+			return parseInt(this.valueOf(), 10);
 		}
 	});
 
 	Object.defineProperty(WDnumber.prototype, "decimal", {/*parte decimal*/
 		enumerable: true,
 		get: function() {
-			var pow10  = Math.pow(10, this.constructor.lenDec(this.valueOf()));
+			var pow10  = Math.pow(10, WDnumber.nFloat(this.valueOf()));
 			if (pow10 === 1) return 0;
-			return (this.valueOf()*pow10 - this.trunc*pow10) / pow10;
+			return (this.valueOf()*pow10 - this.int*pow10) / pow10;
 		}
 	});
 
@@ -1329,7 +1329,7 @@ SOFTWARE.﻿
 			if (this.nType === "+integer")  return  "0/1";
 			if (this.nType === "-integer")  return "-0/1";
 
-			var ref = (this.valueOf() < 0 ? -1 : 1) * this.decimal;
+			var ref = Math.abs(this.decimal);
 
 			var den = Number((1/ref).toFixed(1));
 			var num = 10;
@@ -1376,8 +1376,7 @@ SOFTWARE.﻿
 	Object.defineProperty(WDnumber.prototype, "round", {/*arredonda casas decimais*/
 		enumerable: true,
 		value: function(width) {
-			var check = WDtype(width);
-			width = check.type === "number" ? check.value : 0;
+			width = isFinite(width) ? Math.abs(parseInt(width)) : 0;
 			return Number(this.valueOf().toFixed(width)).valueOf();
 		}
 	});
@@ -1387,8 +1386,7 @@ SOFTWARE.﻿
 		value: function(width) {
 			if (this.test("infinity", "zero")) return this.toString();
 
-			var check = WDtype(width);
-			width = check.type === "number" ? check.value : 0;
+			width = isFinite(width) ? Math.abs(parseInt(width)) : undefined;
 
 			var chars = {
 				"0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵",
@@ -1406,58 +1404,43 @@ SOFTWARE.﻿
 	Object.defineProperty(WDnumber.prototype, "locale", {/*notação local*/
 		enumerable: true,
 		value: function(locale, currency) {
-			locale = (/^[a-z]{2}\-[A-Z]{2}$/).test(locale) ? locale : WDbox.lang();
-			var option = {style: 'currency', currency: currency};
+			locale   = locale   === undefined ? WDbox.lang() : locale;
+			currency = currency === undefined ? currency : {style: "currency", currency: currency};
 
-			/* Monetário */
-			try {return new Intl.NumberFormat(locale, option).format(this.valueOf());} catch(e) {}
-			try {return this.valueOf().toLocaleString(locale, option)} catch(e) {}
-
-			/* Normal */
+			/* Monetário/Normal - moderno*/
+			console.log(1);
+			try {return new Intl.NumberFormat(locale, currency).format(this.valueOf());} catch(e) {}
+			console.log(2);
 			try {return new Intl.NumberFormat(locale).format(this.valueOf());} catch(e) {}
+
+			/* Monetário/Normal - antigo FIXME: será que preciso testar no modo antigo?*/
+			console.log(3);
+			try {return this.valueOf().toLocaleString(locale, currency)} catch(e) {}
+			console.log(4);
 			try {return this.valueOf().toLocaleString(locale)} catch(e) {}
-			
-			return this.toString();
+			console.log(5);
+			/* se nada der certo */
+			return this.valueOf().toLocaleString();
 		}
 	});
 
-	/*Fixa a quantidade de caracteres na parte inteira do número*/
-	Object.defineProperty(WDnumber.prototype, "fixed", {
+	Object.defineProperty(WDnumber.prototype, "fixed", {/*fixador de números*/
 		enumerable: true,
-		value: function(int, dec) {
-			var integer, decimal, x;
-			if (this.number === "infinity") {
-				x = this.toString();
-			} else {
-				x = this.toString().split(".");
-				integer = x[0].replace(/[^0-9]/, "");;
-				decimal = x[1] === undefined ? "0" : x[1];
-				integer = integer === "0" ? [] : integer.split("");
-				decimal = decimal === "0" ? [] : decimal.split("");
-				int = new WD(int).type !== "number" ? 1 : new WD(int).integer;
-				dec = new WD(dec).type !== "number" ? decimal.length : new WD(dec).integer;
-				if (new WD(int).number === "infinity" || int < 1) {
-					int = 1;
-				}
-				if (new WD(dec).number === "infinity" || dec < 0) {
-					dec = decimal.length;
-				}
-				while (integer.length < int) {
-					integer.unshift("0");
-				}
-				while (decimal.length !== dec) {
-					if (decimal.length < dec) {
-						decimal.push("0");
-					} else {
-						decimal.pop();
-					}
-				}
-				x = decimal.length === 0 ? integer.join("") : integer.join("")+"."+decimal.join("");
-				if (this.valueOf() < 0) {
-					x = "-"+x;
-				}
-			}
-			return x;
+		value: function(ldec, lint) {
+			if (this.test("infinity")) return this.toString();
+
+			ldec = isFinite(ldec) ? Math.abs(parseInt(ldec)) : 2;
+			lint = isFinite(lint) ? Math.abs(parseInt(lint)) : WDnumber.nFloat(this.valueOf());
+
+			var dec = Math.abs(this.decimal);
+			dec = dec === 0 ? "" : "."+dec.toFixed(ldec).split(".")[1];
+
+			var int = Math.abs(this.int);
+			int = int.toLocaleString("en-US").split(".")[0].replace(/\,/g, "").split("");
+			while (int.length < lint) int.unshift("0");
+			int = int.join("");
+
+			return (this.valueOf() < 0 ? "-" : "+") + int+dec;
 		}
 	});
 
