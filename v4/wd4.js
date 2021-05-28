@@ -740,7 +740,7 @@ SOFTWARE.﻿
 	WDsignal.mbase  = {
 		textAlign: "inherit", border: "2px solid", borderRadius: "0.5em",
 		margin: "0.5em", padding: "0.5em", cursor: "pointer", opacity: "1",
-		backgroundColor: "#FFFFFF", boxShadow: "2px 2px #DCDCDC"
+		backgroundColor: "#FFFFFF", /*boxShadow: "2px 2px #DCDCDC"*/
 	};
 	WDsignal.minfo  = {color: "#4682B4"};
 	WDsignal.mwarn  = {color: "#FF8C00"};
@@ -828,7 +828,7 @@ SOFTWARE.﻿
 			"boolean":   WDboolean,   "function": WDfunction,
 			"object":    WDobject,    "regexp":   WDregexp,
 //			"array":     WDarray,     "dom":      WDdom,
-//			"time":      WDtime,      "date":     WDdate,
+			"time":      WDtime,     // "date":     WDdate,
 			"number":    WDnumber,    "text":     WDtext
 		};
 		for (var i in obj) {
@@ -1265,7 +1265,6 @@ SOFTWARE.﻿
 		return i;
 	}
 
-
 	WDnumber.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDnumber}
 	});
@@ -1376,7 +1375,7 @@ SOFTWARE.﻿
 	Object.defineProperty(WDnumber.prototype, "round", {/*arredonda casas decimais*/
 		enumerable: true,
 		value: function(width) {
-			width = isFinite(width) ? Math.abs(parseInt(width)) : 0;
+			width = isFinite(width) ? Math.abs(parseInt(width), 10) : 0;
 			return Number(this.valueOf().toFixed(width)).valueOf();
 		}
 	});
@@ -1386,7 +1385,7 @@ SOFTWARE.﻿
 		value: function(width) {
 			if (this.test("infinity", "zero")) return this.toString();
 
-			width = isFinite(width) ? Math.abs(parseInt(width)) : undefined;
+			width = isFinite(width) ? Math.abs(parseInt(width), 10) : undefined;
 
 			var chars = {
 				"0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵",
@@ -1429,8 +1428,8 @@ SOFTWARE.﻿
 		value: function(ldec, lint) {
 			if (this.test("infinity")) return this.toString();
 
-			ldec = isFinite(ldec) ? Math.abs(parseInt(ldec)) : 2;
-			lint = isFinite(lint) ? Math.abs(parseInt(lint)) : WDnumber.nFloat(this.valueOf());
+			ldec = isFinite(ldec) ? Math.abs(parseInt(ldec), 10) : 2;
+			lint = isFinite(lint) ? Math.abs(parseInt(lint), 10) : WDnumber.nFloat(this.valueOf());
 
 			var dec = Math.abs(this.decimal);
 			dec = dec === 0 ? "" : "."+dec.toFixed(ldec).split(".")[1];
@@ -1444,149 +1443,83 @@ SOFTWARE.﻿
 		}
 	});
 
+/*============================================================================*/
 
-/* === TIME ================================================================ */
+	function WDtime(input, type, value) {
+		if (!(this instanceof WDtime)) return new WDtime(input, type, value);
+		WDmain.call(this, input, type, value);
+	}
 
-	/*Retona o correpondente método de acordo com o atalho*/
-	function timeFormat(obj, char) {
-		switch(char) {
-			case "%h": return obj.hour;
-			case "%H": return new WD(obj.hour).fixed(2, 0);
-			case "#h": return obj.h12;
-			case "%m": return obj.minute;
-			case "%M": return new WD(obj.minute).fixed(2, 0);
-			case "%s": return obj.second;
-			case "%S": return new WD(obj.second).fixed(2, 0);
-		}
+	WDtime.format = function(obj, char) {
+		if (char === "%h") return String(obj.h).toString();
+		if (char === "%H") return (obj.h < 10 ? "0" : "") + String(obj.h).toString();
+		if (char === "#h") return obj.h12;
+		if (char === "%m") return String(obj.m).toString();
+		if (char === "%M") return (obj.m < 10 ? "0" : "") + String(obj.m).toString();
+		if (char === "%s") return String(obj.s).toString();
+		if (char === "%S") return (obj.s < 10 ? "0" : "") + String(obj.s).toString();
 		return "";
-	};
+	}
 
-/*............................................................................*/
-
-	function WDtime(input) {
-		if (!(this instanceof WDtime)) {
-			return new WDtime(input);
-		}
-		if (!isTime(input)) {
-			return new WD(input);
-		}
-		var time, x;
-		input = input.replace(/\ /g, "").replace(/h/i, ":").toLowerCase();
-		if (input === "%now") {
-			x    = new Date();
-			time = [x.getHours(), x.getMinutes(), x.getSeconds()];
-		} else if ((/am$/).test(input)) {
-			x     = input.replace("am", "").split(":");
-			time  = [Number(x[0]).valueOf(), Number(x[1]).valueOf(), 0];
-		} else if ((/pm$/).test(input)) {
-			x     = input.replace("pm", "").split(":");
-			time  = [x[0] === "12" ? 0 : 12 + Number(x[0]).valueOf(), Number(x[1]).valueOf(), 0];
-		} else if (/^(0?[0-9]|1[0-9]|2[0-4])(\:[0-5][0-9]){1,2}$/.test(input)) {
-			x     = input.split(":");
-			time  = [Number(x[0]).valueOf()%24, Number(x[1]).valueOf(), x[2] === undefined ? 0 : Number(x[2]).valueOf()];
-		} else throw Error("An unexpected error occurred while setting time!");
-
-		Object.defineProperty(this, "_value", {
-			writable: true,
-			value: 3600*time[0]+60*time[1]+time[2]
-		});
-	};
-
-	WDtime.prototype = Object.create(WD.prototype, {
-		constructor: {
-			value: WDtime
-		}
+	WDtime.prototype = Object.create(WDmain.prototype, {
+		constructor: {value: WDtime}
 	});
 
-	/*Define e obtem o valor da hora*/
-	Object.defineProperty(WDtime.prototype, "hour", {
-		enumerable: true,
-		get: function() {
-			var h = new WD(this.valueOf()/3600);
-			return h.integer;
-		},
-		set: function(h) {
-			var h24, h;
-			h24 = 24*60*60;
-			h = new WD(h);
-			if (h.number === "integer" || h.number === "real") {
-				h = h.integer;
-				if (h >= 0) {
-					this._value = 3600*h + 60*this.minute + this.second;
-				} else {
-					this._value = 3600*h + 60*this.minute + this.second;
-				}
-				this.valueOf();
-			}
-			return;
-		}
-	});
 
-	/*Define e obtem o valor do minuto*/
-	Object.defineProperty(WDtime.prototype, "minute", {
-		enumerable: true,
-		get: function() {
-			var m = this.valueOf() - 3600*this.hour;
-			m = new WD(m/60);
-			return m.integer;
-		},
-		set: function(m) {
-			var time;
-			m = new WD(m);
-			if (m.number === "integer" || m.number === "real") {
-				m = m.integer;
-				if (m > 59 || m < 0) {
-					time = 60*(m - this.minute);
-					this._value += time;
-				} else {
-					this._value = 3600*this.hour + 60*m + this.second;
-				}
-				this.valueOf();
-			}
-			return;
-		}
-	});
-
-	/*Define e obtem o valor do segundo*/
-	Object.defineProperty(WDtime.prototype, "second", {
-		enumerable: true,
-		get: function() {
-			var s = this.valueOf() - 3600*this.hour - 60*this.minute;
-			return s;
-		},
-		set: function(s) {
-			var time;
-			s = new WD(s);
-			if (s.number === "integer" || s.number === "real") {
-				s = s.integer;
-				if (s > 59 || s < 0) {
-					time = s - this.second;
-					this._value += time;
-				} else {
-					this._value = 3600*this.hour + 60*this.minute + s;
-				}
-				this.valueOf();
-			}
-			return;
-		}
-	});
-
-	/* atalhos para o tempo */
-	Object.defineProperties(WDtime.prototype, {
+	Object.defineProperties(WDtime.prototype, {/*define/obtem a hora*/
 		h: {
 			enumerable: true,
-			get: function () {return this.hour;},
-			set: function (x) {return this.hour = x;}
+			get: function() {
+				return WDbox.numberTime(this.valueOf()).h;
+			},
+			set: function(x) {
+				x = isFinite(x) ? parseInt(x, 10) : 24;
+				this._value = WDbox.timeNumber(x, this.m, this.s);
+				return this.h;
+			}
 		},
+		hour: {
+			enumerable: true,
+			get: function()  {return this.h;},
+			set: function(x) {return this.h = x;}
+		}
+	});
+
+	Object.defineProperties(WDtime.prototype, {/*define/obtem o minuto*/
 		m: {
 			enumerable: true,
-			get: function () {return this.minute;},
-			set: function (x) {return this.minute = x;}
+			get: function() {
+				return WDbox.numberTime(this.valueOf()).m;
+			},
+			set: function(x) {
+				x = isFinite(x) ? parseInt(x, 10) : 60;
+				this._value = WDbox.timeNumber(this.h, x, this.s);
+				return this.m;
+			}
 		},
+		minute: {
+			enumerable: true,
+			get: function()  {return this.m;},
+			set: function(x) {return this.m = x;}
+		}
+	});
+
+	Object.defineProperties(WDtime.prototype, {/*define/obtem o segundo*/
 		s: {
 			enumerable: true,
-			get: function () {return this.second;},
-			set: function (x) {return this.second = x;}
+			get: function() {
+				return WDbox.numberTime(this.valueOf()).s;
+			},
+			set: function(x) {
+				x = isFinite(x) ? parseInt(x, 10) : 60;
+				this._value = WDbox.timeNumber(this.h, this.m, x);
+				return this.s;
+			}
+		},
+		second: {
+			enumerable: true,
+			get: function()  {return this.s;},
+			set: function(x) {return this.s = x;}
 		}
 	});
 
@@ -1594,79 +1527,29 @@ SOFTWARE.﻿
 	Object.defineProperty(WDtime.prototype, "h12", {
 		enumerable: true,
 		get: function() {
-			var h, m, p;
-			p = this.hour < 12 ? "AM" : "PM"; 
-			if (this.hour === 0) {
-				h = 12;
-			} else if (this.hour <= 12) {
-				h = this.hour;
-			} else {
-				h = this.hour - 12;
-			}
-			h = new WD(h).fixed(2, 0);
-			m = new WD(this.minute).fixed(2, 0);
-			return h+":"+m+p;
+			var h = this.h === 0 ? 12 : (this.h <= 12 ? this.h : (this.h - 12));
+			var m = (this.m < 10 ? ":0" : ":") + String(this.m).toString();
+			var p = this.h < 12 ? " AM" : " PM"; 
+			return String(h).toString()+m+p;
 		}
 	});
 
-	/*Formata o tempo de acordo com o especificado na string*/
-	Object.defineProperty(WDtime.prototype, "format", {
+	Object.defineProperty(WDtime.prototype, "format", {/*formata saída string*/
 		enumerable: true,
-		value: function(string) {
-			if (new WD(string).type !== "text") {
-				return this.toString();
-			}
-			var x, chars;
-
-			x = new WD(string);
-			chars = ["%h", "%H", "#h", "%m", "%M", "%s", "%S"];
+		value: function(str) {
+			var str   = String(str).toString();
+			var chars = ["%h", "%H", "#h", "%m", "%M", "%s", "%S"];
 
 			for (var i = 0; i < chars.length; i++) {
-				if (x.toString().indexOf(chars[i]) >= 0) {
-					x.replace(chars[i], timeFormat(this, chars[i]), true);
-				}
+				str = str.split(chars[i]);
+				str = str.join(WDtime.format(this, chars[i]));
 			}
-			return x.toString();
+			return str;
 		}
 	});
 
-	/*Retorna o método toString e valueOf*/
 	Object.defineProperties(WDtime.prototype, {
-		type: {
-			enumerable: true,
-			value: "time"
-		},
-		toString: {
-			value: function() {
-				var h, m, s;
-
-				h = new WD(this.hour).fixed(2, 0);
-				m = new WD(this.minute).fixed(2, 0);
-				s = new WD(this.second).fixed(2, 0);
-
-				return [h, m, s].join(":");
-			}
-		},
-		valueOf: {
-			value: function() {
-				var h24, x;
-				h24 = 24*60*60;
-				x   = new WD(this._value);
-				if (x.type !== "number" || x.number === "infinity") {
-					log("Improper change of internal value has been adjusted to the minimum value.", "w");
-					this._value = 0;
-				} else if (x.number !== "integer") {
-					log("Considering that time was defined as a non-integer value, its value was approximated!", "w");
-					this._value = new WD(this._value).integer;
-				}
-				if (this._value < 0) {
-					this._value = this._value % h24 + h24;
-				} else if (this._value >= h24) {
-					this._value = this._value % h24;
-				}
-				return this._value;
-			}
-		}
+		toString: {value: function() {return this.format("%h:%M:%S");}}
 	});
 
 /* === DATE ================================================================ */
