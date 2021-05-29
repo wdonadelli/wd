@@ -3780,9 +3780,3 @@ SOFTWARE.﻿
 //	return WD;
 
 //}());
-
-/*Atalho para o uso do método querySelectorAll em wdDom*/
-function wd$(selector, root) {
-	return wd(wd().$(selector, root));
-}
-/* ========================================================================= */
