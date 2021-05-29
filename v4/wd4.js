@@ -124,9 +124,9 @@ SOFTWARE.﻿
 		date.setSeconds(0);
 		date.setMinutes(0);
 		date.setHours(12);
-		date.setFullYear(y === undefined ? date.getFullYear() : y);
-		date.setMonth(   m === undefined ? date.getMonth()    : (m - 1));
-		date.setDate(    d === undefined ? date.getDate()     : d);
+		if (isFinite(y)) date.setFullYear(y);
+		if (isFinite(m)) date.setMonth(m - 1);
+		if (isFinite(d)) date.setDate(d);
 		return date;
 	}		
 
@@ -828,7 +828,7 @@ SOFTWARE.﻿
 			"boolean":   WDboolean,   "function": WDfunction,
 			"object":    WDobject,    "regexp":   WDregexp,
 //			"array":     WDarray,     "dom":      WDdom,
-			"time":      WDtime,     // "date":     WDdate,
+			"time":      WDtime,      "date":     WDdate,
 			"number":    WDnumber,    "text":     WDtext
 		};
 		for (var i in obj) {
@@ -1473,9 +1473,10 @@ SOFTWARE.﻿
 				return WDbox.numberTime(this.valueOf()).h;
 			},
 			set: function(x) {
-				x = isFinite(x) ? parseInt(x, 10) : 24;
+				if (!isFinite(x)) return;
+				x = parseInt(x, 10);
 				this._value = WDbox.timeNumber(x, this.m, this.s);
-				return this.h;
+				return;
 			}
 		},
 		hour: {
@@ -1492,9 +1493,10 @@ SOFTWARE.﻿
 				return WDbox.numberTime(this.valueOf()).m;
 			},
 			set: function(x) {
-				x = isFinite(x) ? parseInt(x, 10) : 60;
+				if (!isFinite(x)) return;
+				x = parseInt(x, 10);
 				this._value = WDbox.timeNumber(this.h, x, this.s);
-				return this.m;
+				return;
 			}
 		},
 		minute: {
@@ -1511,9 +1513,10 @@ SOFTWARE.﻿
 				return WDbox.numberTime(this.valueOf()).s;
 			},
 			set: function(x) {
-				x = isFinite(x) ? parseInt(x, 10) : 60;
+				if (!isFinite(x)) return;
+				x = parseInt(x, 10);
 				this._value = WDbox.timeNumber(this.h, this.m, x);
-				return this.s;
+				return;
 			}
 		},
 		second: {
@@ -1554,34 +1557,6 @@ SOFTWARE.﻿
 
 /* === DATE ================================================================ */
 
-	/*Parâmetros de configuração de data*/
-	Y_min    = 1;    /*ano inicial*/
-	Y_max    = 9999; /*ano final*/
-	Y_004    = 4;    /*primeiro ano divisível por 4*/
-	Y_100    = 100   /*primeiro ano divisível por 100*/
-	Y_400    = 400   /*primeiro ano divisível por 400*/
-	WEEK_1st = 1;    /*dia da semana + 1 de DATE_min*/
-	DATE_min = dateToNumber(Y_min, 1, 1);   /*data mínima*/
-	DATE_max = dateToNumber(Y_max, 12, 31); /*data máxima*/
-
-	/*Retorna o dia do ano*/
-	function dateDayYear(y, m, d) {
-		var i, days;
-		i = isLeap(y) ? 1 : 0;
-		days = [0, 31, 59+i, 90+i, 120+i, 151+i, 181+i, 212+i, 243+i, 273+i, 304+i, 334+i];
-		return days[m-1] + d;
-	};
-
-	/*Converte uma data para seu valor numérico*/
-	function dateToNumber(y, m, d) {
-		var l4, l100, l400, delta, x;
-		delta = new WD(y === Y_min ? 0 : 365*(y - Y_min));
-		l4    = new WD(y  <  Y_004 ? 0 : (y - 1)/4);
-		l100  = new WD(y  <  Y_100 ? 0 : (y - 1)/100);
-		l400  = new WD(y  <  Y_400 ? 0 : (y - 1)/400);
-		x = delta.integer + l4.integer - l100.integer + l400.integer + dateDayYear(y, m, d);
-		return x;
-	};
 
 	/*Retona o correpondente método de acordo com o atalho*/
 	function dateFormat(obj, char, locale) {
@@ -1610,361 +1585,155 @@ SOFTWARE.﻿
 
 /*...........................................................................*/
 
-	function WDdate(input) {
-		if (!(this instanceof WDdate)) {
-			return new WDdate(input);
-		}
-		if (!isDate(input)) {
-			return new WD(input);
-		}
-		var date, x;
-		if ("Date" in window && (input instanceof Date || input.constructor === Date)) {
-			x = input;
-			date = [x.getFullYear(), x.getMonth()+1, x.getDate()];
-		} else {
-			input = input.trim();
-			if (input === "%today") {
-				x = new Date();
-				date = [x.getFullYear(), x.getMonth()+1, x.getDate()];
-			} else if (input.split("-").length === 3) {
-				x = input.split("-");
-				date = [x[0], x[1], x[2]];
-			} else if (input.split("/").length === 3) {
-				x = input.split("/");
-				date = [x[2], x[0], x[1]];
-			} else if (input.split(".").length === 3) {
-				x = input.split(".");
-				date = [x[2], x[1], x[0]];
-			} else throw Error("An unexpected error occurred while setting date!");
-		}
-		for (var i = 0; i < date.length; i++) {
-			x = new WD(date[i]);
-			if (x.number !== "integer" || date[i] <= 0) throw Error("An unexpected error occurred while setting date!");
-			date[i] = x.valueOf();
-		}
+	function WDdate(input, type, value) {
+		if (!(this instanceof WDdate)) return new WDdate(input, type, value);
+		WDmain.call(this, input, type, value);
+	}
 
-		Object.defineProperty(this, "_value", {
-			writable: true,
-			value: dateToNumber(date[0], date[1], date[2])
-		});
-	};
-
-	WDdate.prototype = Object.create(WD.prototype, {
-		constructor: {
-			value: WDdate
-		}
+	WDdate.prototype = Object.create(WDmain.prototype, {
+		constructor: {value: WDdate}
 	});
 
-	/*Obtêm e define o ano*/
-	Object.defineProperty(WDdate.prototype, "year", {
-		enumerable: true,
-		get: function() {
-			var y;
-			y = new WD(this.valueOf()/365).integer + Y_min;
-			while (dateToNumber(y, 1, 1) > this.valueOf()) {
-				y--;
-			}
-			return y;
-		},
-		set: function(x) {
-			var y = new WD(x);
-			if (y.type !== "number") {
-				log("The value must be a positive integer between "+Y_min+" and "+Y_max+".", "w");
-			} else if (y.valueOf() > Y_max) {
-				this._value = DATE_max;
-			} else if (y.valueOf() < Y_min) {
-				this._value = DATE_min;
-			} else {
-				this._value = dateToNumber(y.integer, this.month, this.day);
-			}
-			return this.valueOf();
-		}
-	});
 
-	/*Obtêm e define o mês*/
-	Object.defineProperty(WDdate.prototype, "month", {
-		enumerable: true,
-		get: function() {
-			var l, days, x;
-			l = isLeap(this.year) ? 1 : 0;
-			days = [0, 31, 59+l, 90+l, 120+l, 151+l, 181+l, 212+l, 243+l, 273+l, 304+l, 334+l];
-			x = dateToNumber(this.year, 1, 1);
-			for (var i = 1; i < days.length; i++) {
-				if (this.valueOf() < (x + days[i])) {
-					return i;
-				}
-			}
-			return 12;
-		},
-		set: function(x) {
-			var y, m, d;
-			y = this.year;
-			m = new WD(x);
-			d = this.day;
-			if (m.type !== "number" || m.number === "infinity") {
-				log("The value must be an integer.", "w");
-			} else {
-				m = m.integer;
-				if (m === 0) {
-					y = this.year-1;
-					m = 12;
-				} else if (m < 0) {
-					y = this.year + WD((m - 12)/12).integer;
-					m = 12 + m%12;
-				} else if (m > 12) {
-					y = this.year + WD((m - 1)/12).integer;
-					m = m%12;
-				}
-				if (new WD([4, 6, 9, 11]).inside(m) && d > 30) {
-					d = 30;
-				} else if (m === 2 && d > 28) {
-					d = isLeap(y) ? 29 : 28;
-				}
-				this._value = dateToNumber(y, m, d);
-			}
-			return this.valueOf();
-		}
-	});
-
-	/*Obtêm e define o dia*/
-	Object.defineProperty(WDdate.prototype, "day", {
-		enumerable: true,
-		get: function() {
-			var d;
-			d = dateToNumber(this.year, this.month, 1);
-			return (this.valueOf() - d + 1);
-		},
-		set: function(x) {
-			var d, z;
-			d = new WD(x);
-			if (d.type !== "number" || d.number === "infinity") {
-				log("The value must be an integer.", "w");
-			} else {
-				d = d.integer;
-				if (d > this.width) {
-					z = this.valueOf() + d - this.day;
-				} else if (d < 1) {
-					z = this.valueOf() - (this.day - d);
-				} else {
-					z = this.valueOf() + (d - this.day);
-				}
-				this._value = z;
-			}
-			return this.valueOf();
-		}
-	});
-
-	/* atalhos para data */
-	Object.defineProperties(WDdate.prototype, {
+	Object.defineProperties(WDdate.prototype, {/*ANO*/
 		y: {
 			enumerable: true,
-			get: function () {return this.year;},
-			set: function (x) {return this.year = x;}
+			get: function() {
+				return this._value.getFullYear();
+			},
+			set: function(x) {
+				if (!isFinite(x) || x < 0) return;
+				x = parseInt(x, 10);
+				this._value = WDbox.noonDate(this._value, undefined, undefined, x);
+				return
+			}
 		},
-		m: {
+		year: {
 			enumerable: true,
-			get: function () {return this.month;},
-			set: function (x) {return this.month = x;}
+			get: function() {return this.y;},
+			set: function(x) {return this.y = x;}
 		},
-		d: {
+		length: {/*dias no ano*/
 			enumerable: true,
-			get: function () {return this.day;},
-			set: function (x) {return this.day = x;}
+			get: function() {
+				return WDbox.isLeap(this.y) ? 366 : 365;
+			}
+		},
+		week: {/*semana cheia do ano*/
+			enumerable: true,
+			get: function() {
+				var ref = this.days - this.today + 1;
+				return (ref % 7 > 0 ? 1 : 0) + parseInt(ref/7);
+			}
 		}
 	});
 
-	/*Retorna o mês em formato textual*/
-	Object.defineProperties(WDdate.prototype, {
+	Object.defineProperties(WDdate.prototype, {/*MÊS*/
+		m: {
+			enumerable: true,
+			get: function() {
+				return this._value.getMonth() + 1;
+			},
+			set: function(x) {
+				if (!isFinite(x)) return;
+				x = parseInt(x, 10);
+				this._value = WDbox.noonDate(this._value, undefined, x, undefined);
+				return
+			}
+		},
+		month: {
+			enumerable: true,
+			get: function() {return this.m;},
+			set: function(x) {return this.m = x;}
+		},
+		size: { /*quantidade de dias no mês*/
+			enumerable: true,
+			get: function() {
+				var list = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+				return (this.m === 2 && WDbox.isLeap(this.y) ? 1 : 0) + list[this.m - 1];
+			},
+		},
 		shortMonth: {
 			enumerable: true,
 			value: function(locale) {
-				if (new WD(locale).type !== "text") {
-					locale = lang();
-				}
-				var x, main, ref;
-				main = [
-					"Jan", "Feb", "Mar", "Apr",
-					"May", "Jun", "Jul", "Aug",
-					"Sep", "Oct", "Nov", "Dec"
-				];
-				try {
-					ref = new Date(2010, this.month - 1, 1, 12, 0, 0, 0);
-					x = ref.toLocaleString(locale, {month: "short"});
-				} catch(e) {
-					log("shortMonth: Default behavior has been performed!", "w");
-					x = main[this.month-1];
-				}
-				return x.toLowerCase();
+				locale = locale === undefined ? WDbox.lang() : locale;
+				try {return this._value.toLocaleString(locale, {month: "short"});} catch(e) {}
+				return this._value.toLocaleString(undefined,   {month: "short"});
 			}
 		},
 		longMonth: {
 			enumerable: true,
 			value: function(locale) {
-				if (new WD(locale).type !== "text") {
-					locale = lang();
-				}
-				var x, main, ref;
-				main = [
-					"January",   "February", "March",    "April",
-					"May",       "June",     "July",     "August",
-					"September", "October",  "November", "December"
-				];
-				try {
-					ref = new Date(2010, this.month - 1, 1, 12, 0, 0, 0);
-					x = ref.toLocaleString(locale, {month: "long"});
-				} catch(e) {
-					log("longMonth: Default behavior has been performed!", "w");
-					x = main[this.month-1];
-				}
-				return x.toLowerCase();
+				locale = locale === undefined ? WDbox.lang() : locale;
+				try {return this._value.toLocaleString(locale, {month: "long"});} catch(e) {}
+				return this._value.toLocaleString(undefined,   {month: "long"});
 			}
 		}
 	});
 
-	/*Pequenos métodos para data*/
-	Object.defineProperties(WDdate.prototype, {
-		leap: {
-			enumerable: true,
-			get: function() {toString()
-				return isLeap(this.year);
-			}
-		},
-		week: {
+	Object.defineProperties(WDdate.prototype, {/*DIA*/
+		d: {
 			enumerable: true,
 			get: function() {
-				return (this.valueOf() + WEEK_1st)%7 === 0 ? 7 : (this.valueOf() + WEEK_1st)%7;
+				return this._value.getDate();
+			},
+			set: function(x) {
+				if (!isFinite(x)) return;
+				x = parseInt(x, 10);
+				this._value = WDbox.noonDate(this._value, x, undefined, undefined);
+				return
 			}
 		},
-		days: {
+		day: {
 			enumerable: true,
-			get: function() {
-				var y, ref;
-				y   = new WD(this.year).fixed(4, 0);
-				ref = new WD(y+"-01-01").valueOf();
-				return this.valueOf() - ref + 1;
-			}		
+			get: function() {return this.d;},
+			set: function(x) {return this.d = x;}
 		},
-		weeks: {
+		days: { /*dias transcorridos no ano*/
 			enumerable: true,
 			get: function() {
-				var ref, weeks, y;
-				y     = new WD(this.year).fixed(4, 0);
-				ref   = new WD(y+"-01-01").week;
-				weeks = new WD(1 + (ref + this.days - 2)/7).integer;
-				return weeks;
+				var days  = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
+				var extra = (this.m > 2 && WDbox.isLeap(this.y)) ? 1 : 0;
+				return days[this.m - 1] + this.d + extra;
 			}
 		},
-		width: {
+		today: { /*dia da semana [1-7]*/
 			enumerable: true,
 			get: function() {
-				var w;
-				if (new WD([1, 3, 5, 7, 8, 10, 12]).inside(this.month)) {
-					w = 31;
-				} else if (new WD([4, 6, 9, 11]).inside(this.month)) {
-					w = 30;
-				} else {
-					w = this.leap ? 29 : 28;
-				}
-				return w;
+				return this._value.getDay() + 1;
 			}
 		},
-		countdown: {
-			enumerable: true,
-			get: function() {
-				return (this.leap ? 366 : 365) - this.days;
-			}
-		},
-		wDaysYear: {
-			enumerable: true,
-			get: function() {
-				var lastSat, lastSun, firstSat, firstSun, sun, sat, y;
-
-				y = new WD(this.year).fixed(4, 0);
-				firstSat = new WD(y+"-01-01");
-				firstSun = new WD(y+"-01-01");
-				lastSat  = new WD(y+"-12-31");
-				lastSun  = new WD(y+"-12-31");
-
-				firstSat.d += 7 - firstSat.week;
-				firstSun.d += firstSun.week === 1 ? 0 : (8 - firstSun.week);
-				lastSat.d  -= lastSat.week  === 7 ? 0 : lastSat.week;
-				lastSun.d  -= lastSun.week - 1;
-
-				sat = (lastSat.valueOf() - firstSat.valueOf())/7 + 1;
-				sun = (lastSun.valueOf() - firstSun.valueOf())/7 + 1;
-
-				return (this.leap ? 366 : 365) - (sun + sat);
-			}
-		},
-		wDays: {
-			enumerable: true,
-			get: function() {
-				var lastSat, lastSun, firstSat, firstSun, sun, sat, y;
-
-				y = new WD(this.year).fixed(4, 0);
-				firstSat = new WD(y+"-01-01");
-				firstSun = new WD(y+"-01-01");
-				lastSat  = new WD(this.toString());
-				lastSun  = new WD(this.toString());
-
-				firstSat.d += 7 - firstSat.week;
-				firstSun.d += firstSun.week === 1 ? 0 : (8 - firstSun.week);
-				lastSat.d  -= lastSat.week  === 7 ? 0 : lastSat.week;
-				lastSun.d  -= lastSun.week - 1;
-
-				sat = (lastSat.valueOf() - firstSat.valueOf())/7 + 1;
-				sun = (lastSun.valueOf() - firstSun.valueOf())/7 + 1;
-
-				return this.days - (sun + sat);
-			}
-		}
-	});
-
-	/*Retorna o dia da semana em formato textual*/
-	Object.defineProperties(WDdate.prototype, {
-		shortWeek: {
+		shortDay: {
 			enumerable: true,
 			value: function(locale) {
-				if (new WD(locale).type !== "text") {
-					locale = lang();
-				}
-				var x, main, ref;
-				main = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-				main = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-				try {
-					ref = new Date(1970, this.month - 1, 15, 12, 0, 0, 0);
-					ref.setDate(15 + this.week - (ref.getDay()+1));
-					ref.toLocaleString(locale);
-					x = ref.toLocaleString(locale, {weekday: "short"});
-				} catch(e) {
-					log("shortWeek: Default behavior has been performed!", "w");
-					x = main[this.week-1];
-				}
-				return x.toLowerCase();
+				locale = locale === undefined ? WDbox.lang() : locale;
+				try {return this._value.toLocaleString(locale, {weekday: "short"});} catch(e) {}
+				return this._value.toLocaleString(undefined,   {weekday: "short"});
 			}
 		},
-		longWeek: {
+		longDay: {
 			enumerable: true,
 			value: function(locale) {
-				if (new WD(locale).type !== "text") {
-					locale = lang();
-				}
-				var x, main, ref;
-				main = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-				try {
-					ref = new Date(1970, this.month - 1, 15, 12, 0, 0, 0);
-					ref.setDate(15 + this.week - (ref.getDay()+1));
-					ref.toLocaleString(locale);
-					x = ref.toLocaleString(locale, {weekday: "long"});
-				} catch(e) {
-					log("shortWeek: Default behavior has been performed!", "w");
-					x = main[this.week-1];
-				}
-				return x.toLowerCase();
+				locale = locale === undefined ? WDbox.lang() : locale;
+				try {return this._value.toLocaleString(locale, {weekday: "long"});} catch(e) {}
+				return this._value.toLocaleString(undefined,   {weekday: "long"});
+			}
+		},
+		working: {
+			enumerable: true,
+			get: function() {
+				var sun = this.week;
+				var sat = (this.today === 7 ? 1 : 0) + sun;
+				var ref = this.days - (sun + sat);
+				return ref <= 0 ? (ref + Math.abs(ref)) : ref;
 			}
 		}
+		
+		
+		
 	});
 
+	
 	/*Formata a data de acordo com a string informada*/
 	Object.defineProperty(WDdate.prototype, "format", {
 		enumerable: true,
@@ -1992,35 +1761,14 @@ SOFTWARE.﻿
 
 	/*Retorna o método toString e valueOf*/
 	Object.defineProperties(WDdate.prototype, {
-		type: {
-			enumerable: true,
-			value: "date"
-		},
 		toString: {
 			value: function() {
-				var y, m, d;
-				y = new WD(this.year).fixed(4, 0);
-				m = new WD(this.month).fixed(2, 0);
-				d = new WD(this.day).fixed(2, 0);
-				return [y, m, d].join("-");
-			}
+				return this._value.toISOString();
+			}		
 		},
 		valueOf: {
 			value: function() {
-				if (new WD(this._value).type !== "number") {
-					log("Improper change of internal value has been adjusted to the minimum value.", "w");
-					this._value = DATE_min;
-				} else if (this._value < DATE_min) {
-					log("Lower limit for date has been extrapolated. Limit value set.", "w");
-					this._value = DATE_min;
-				} else if (this._value > DATE_max) {
-					log("Upper limit for date has been extrapolated. Limit value set.", "w");
-					this._value = DATE_max;
-				} else if (new WD(this._value).number !== "integer") {
-					log("Incorrect change of internal value was adjusted to approximate value.", "w");
-					this._value = new WD(this._value).integer;
-				}
-				return this._value;
+				return (this._value < 0 ? -1 : 0) + parseInt(this._value/86400000);
 			}
 		}
 	});
