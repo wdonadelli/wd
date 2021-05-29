@@ -1406,19 +1406,9 @@ SOFTWARE.﻿
 			locale   = locale   === undefined ? WDbox.lang() : locale;
 			currency = currency === undefined ? currency : {style: "currency", currency: currency};
 
-			/* Monetário/Normal - moderno*/
-			console.log(1);
 			try {return new Intl.NumberFormat(locale, currency).format(this.valueOf());} catch(e) {}
-			console.log(2);
 			try {return new Intl.NumberFormat(locale).format(this.valueOf());} catch(e) {}
 
-			/* Monetário/Normal - antigo FIXME: será que preciso testar no modo antigo?*/
-			console.log(3);
-			try {return this.valueOf().toLocaleString(locale, currency)} catch(e) {}
-			console.log(4);
-			try {return this.valueOf().toLocaleString(locale)} catch(e) {}
-			console.log(5);
-			/* se nada der certo */
 			return this.valueOf().toLocaleString();
 		}
 	});
