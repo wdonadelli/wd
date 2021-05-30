@@ -52,6 +52,8 @@ SOFTWARE.﻿
 
 	Object.defineProperty(WDbox.prototype, "constructor", {value: WDbox});
 
+	WDbox.version = "v4.0.0 2021-10-01";
+
 	/*Imprime mensagem no console*/
 	WDbox.log   = function(x) {return console.log(x);}
 	WDbox.info  = function(x) {return console.info(x);}
@@ -120,6 +122,7 @@ SOFTWARE.﻿
 	}
 		
 	WDbox.noonDate = function(date, d, m, y) { /*Define data ao meio dia*/
+		if (date === null || date === undefined) date = new Date();
 		date.setMilliseconds(0);
 		date.setSeconds(0);
 		date.setMinutes(0);
@@ -233,7 +236,7 @@ SOFTWARE.﻿
 	Object.defineProperty(WDtype.prototype, "isArray", {get: function() {
 		if (Array.isArray(this._input) || this._input instanceof Array) {
 			this._type  = "array";
-			this._value = this._input;
+			this._value = this._input.slice();
 			return true;
 		}
 		return false;
@@ -827,7 +830,7 @@ SOFTWARE.﻿
 			"undefined": WDundefined, "null":     WDnull,
 			"boolean":   WDboolean,   "function": WDfunction,
 			"object":    WDobject,    "regexp":   WDregexp,
-//			"array":     WDarray,     "dom":      WDdom,
+			"array":     WDarray,     //"dom":      WDdom,
 			"time":      WDtime,      "date":     WDdate,
 			"number":    WDnumber,    "text":     WDtext
 		};
@@ -838,8 +841,11 @@ SOFTWARE.﻿
 	}
 
 	WD.constructor = WD;
-	WD.$  = function(css, root) {return this.constructor(WDbox.$(css, root));}
-	WD.$$ = function(css, root) {return this.constructor(WDbox.$$(css, root));}
+	Object.defineProperties(WD, {
+		version: {get:   function()          {return WDbox.version;}},
+		$:       {value: function(css, root) {return WD(WDbox.$(css, root));}},
+		$$:      {value: function(css, root) {return WD(WDbox.$$(css, root));}}
+	});
 
 /*============================================================================*/
 
@@ -849,9 +855,10 @@ SOFTWARE.﻿
 		var writables = ["time", "date", "text"];
 
 		Object.defineProperties(this, {
-			_input: {value: input},
-			_type:  {value: type},
-			_value: {
+			version: {get: function() {return WD.version;}},
+			_input:  {value: input},
+			_type:   {value: type},
+			_value:  {
 				value: value,
 				writable: writables.indexOf(type) >= 0 ? true : false
 			}
@@ -1545,40 +1552,43 @@ SOFTWARE.﻿
 		toString: {value: function() {return this.format("%h:%M:%S");}}
 	});
 
-/* === DATE ================================================================ */
-
-
-	/*Retona o correpondente método de acordo com o atalho*/
-	function dateFormat(obj, char, locale) {
-		switch(char) {
-			case "%d": return obj.day;
-			case "%D": return new WD(obj.day).fixed(2, 0);
-			case "@d": return obj.days;
-			case "%m": return obj.month;
-			case "%M": return new WD(obj.month).fixed(2, 0);
-			case "@m": return obj.width;
-			case "#m": return obj.shortMonth(locale);
-			case "#M": return obj.longMonth(locale);
-			case "%y": return obj.year;
-			case "%Y": return new WD(obj.year).fixed(4, 0);
-			case "%w": return obj.week;
-			case "@w": return obj.weeks;
-			case "#w": return obj.shortWeek(locale);
-			case "#W": return obj.longWeek(locale);
-			case "%l": return obj.leap ? 366 : 365;
-			case "%c": return obj.countdown;
-			case "%b": return obj.wDays;
-			case "%B": return obj.wDaysYear;
-		}
-		return "";
-	};
-
-/*...........................................................................*/
+/*============================================================================*/
 
 	function WDdate(input, type, value) {
 		if (!(this instanceof WDdate)) return new WDdate(input, type, value);
 		WDmain.call(this, input, type, value);
 	}
+
+	WDdate.searchFirstDay = function(search, year) {
+		var init = WDbox.noonDate(null, 1, 1, year).getDay() + 1;
+		var diff = search < init ? search + 7 - init : search - init
+		return 1 + diff;
+	}
+
+	WDdate.format = function(obj, char, locale) {
+
+		if (char === "%d") return String(obj.d).toString();
+		if (char === "%D") return (obj.d < 10 ? "0" : "") + String(obj.d).toString();
+		if (char === "@d") return String(obj.today).toString();
+		if (char === "@D") return String(obj.days).toString();
+		if (char === "#d") return obj.shortDay(locale);
+		if (char === "#D") return obj.longDay(locale);
+		if (char === "$d") return String(obj.working).toString();
+
+		if (char === "%m") return String(obj.m).toString();
+		if (char === "%M") return (obj.m < 10 ? "0" : "") + String(obj.m).toString();
+		if (char === "@m") return String(obj.size).toString();
+		if (char === "#m") return obj.shortMonth(locale);
+		if (char === "#M") return obj.longMonth(locale);
+
+		if (char === "%y") return String(obj.y).toString();
+		if (char === "%Y") return String("0000" + obj.y).slice(-4)
+		if (char === "@y") return String(obj.week).toString();
+		if (char === "@Y") return String(obj.length).toString();
+		if (char === "$y") return String(obj.workingYear).toString();
+
+		return "";
+	};
 
 	WDdate.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDdate}
@@ -1614,6 +1624,17 @@ SOFTWARE.﻿
 			get: function() {
 				var ref = this.days - this.today + 1;
 				return (ref % 7 > 0 ? 1 : 0) + parseInt(ref/7);
+			}
+		},
+		workingYear: {
+			enumerable: true,
+			get: function() {
+				var sat  = WDdate.searchFirstDay(7, this.y);
+				var sun  = WDdate.searchFirstDay(1, this.y);
+				var nSat = parseInt((this.length - sat)/7) + 1;
+				var nSun = parseInt((this.length - sun)/7) + 1;
+				var work = this.length - (nSat + nSun)
+				return work < 0 ? 0 : work;
 			}
 		}
 	});
@@ -1712,48 +1733,38 @@ SOFTWARE.﻿
 		working: {
 			enumerable: true,
 			get: function() {
-				var sun = this.week;
-				var sat = (this.today === 7 ? 1 : 0) + sun;
-				var ref = this.days - (sun + sat);
-				return ref <= 0 ? (ref + Math.abs(ref)) : ref;
+				var sat  = WDdate.searchFirstDay(7, this.y);
+				var sun  = WDdate.searchFirstDay(1, this.y);
+				var nSat = parseInt((this.days - sat)/7) + 1;
+				var nSun = parseInt((this.days - sun)/7) + 1;
+				var work = this.days - (nSat + nSun)
+				return work < 0 ? 0 : work;
 			}
 		}
-		
-		
-		
 	});
 
-	
-	/*Formata a data de acordo com a string informada*/
-	Object.defineProperty(WDdate.prototype, "format", {
+	Object.defineProperty(WDdate.prototype, "format", {/*formata data*/
 		enumerable: true,
-		value: function(string, locale) {
-			if (new WD(string).type !== "text") {
-				return this.toString();
-			}
-			var x, chars;
-
-			x = new WD(string);
-			chars = [
-				"%d", "%D", "@d", "%m", "%M", "@m", "#m", "#M", "%y",
-				"%Y", "%w", "@w", "#w", "#W", "%l", "%c", "%b", "%B"
+		value: function(str, locale) {
+			var str   = String(str).toString();
+			var chars = [
+				"%d", "%D", "@d", "@D", "#d", "#D", "$d",
+				"%m", "%M", "@m", "#m", "#M",
+				"%y", "%Y", "@y", "@Y", "$y"
 			];
 
 			for (var i = 0; i < chars.length; i++) {
-				if (x.toString().indexOf(chars[i]) >= 0) {
-					x.replace(chars[i], dateFormat(this, chars[i], locale), true);
-				}
+				str = str.split(chars[i]);
+				str = str.join(WDdate.format(this, chars[i], locale));
 			}
-
-			return x.toString();
+			return str;
 		}
 	});
 
-	/*Retorna o método toString e valueOf*/
 	Object.defineProperties(WDdate.prototype, {
 		toString: {
 			value: function() {
-				return this._value.toISOString();
+				return this.format("%Y-%M-%D");
 			}		
 		},
 		valueOf: {
@@ -1765,33 +1776,15 @@ SOFTWARE.﻿
 
 /* === ARRAY =============================================================== */
 
-	function WDarray(input) {
-		if (!(this instanceof WDarray)) {
-			return new WDarray(input);
-		}
-		if (!isArray(input)){
-			return new WD(input);
-		}
-		var x = [];
-		if ("slice" in input) {
-			x = input.slice();
-		} else {
-			for (var i = 0; i < input.length; i++) {
-				x.push(input[i]);
-			}
-		}
-		Object.defineProperty(this, "_value", {
-			value: x
-		});
-	};
+	function WDarray(input, type, value) {
+		if (!(this instanceof WDarray)) return new WDarray(input, type, value);
+		WDmain.call(this, input, type, value);
+	}
 
-	WDarray.prototype = Object.create(WD.prototype, {
-		constructor: {
-			value: WDarray
-		}
+	WDarray.prototype = Object.create(WDmain.prototype, {
+		constructor: {value: WDarray}
 	});
 
-	/*Informar o comprimento do array*/
 	Object.defineProperties(WDarray.prototype, {
 		items: {
 			enumerable: true,
