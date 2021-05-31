@@ -852,7 +852,7 @@ SOFTWARE.﻿
 	function WDmain(input, type, value) {
 		if (!(this instanceof WDmain)) return new WDmain(input, type, value);
 
-		var writables = ["time", "date", "text"];
+		var writables = ["time", "date", "text", "array"];
 
 		Object.defineProperties(this, {
 			version: {get: function() {return WD.version;}},
@@ -1785,61 +1785,53 @@ SOFTWARE.﻿
 		constructor: {value: WDarray}
 	});
 
-	Object.defineProperties(WDarray.prototype, {
-		items: {
-			enumerable: true,
-			get: function() {
-				return this.valueOf().length;
-			}
-		},
-		item: {
-			enumerable: true,
-			value: function(index) {
-				var x = undefined;
-				index = new WD(index).type === "number" ? WD(index).integer : 0;
-				if (index >= 0 && index < this.items) {
-					x = this.valueOf()[index];
-				} else if (index < 0 && -index <= this.items) {
-					x = this.valueOf()[this.items + index];
-				}
-				return x;
-			}
-		}
-	});
-
-	/*Informar se o argumento está contido no array*/
-	Object.defineProperty(WDarray.prototype, "inside", {
+	Object.defineProperty(WDarray.prototype, "item", {/*retorna o índice especificado*/
 		enumerable: true,
-		value: function(value, indexes) {
-			var x, list;
-			x    = false;
-			list = [];
-			for (var i = 0; i < this.items; i++) {
-				if (this.item(i) === value) {
-					list.push(i);
-					x = true;
-					if (indexes !== true) {break;}
-				}
-			}
-			return indexes === true ? list : x;
+		value: function(i) {
+			if (!isFinite(i)) return this._value.length;
+			i = parseInt(i);
+			i = i < 0 ? this._value.length + i : i;
+			return this._value[i];
 		}
 	});
 
-	/*Remove todos os itens do array e o retorna*/
-	Object.defineProperty(WDarray.prototype, "del", {
+	Object.defineProperty(WDarray.prototype, "inside", {/*informa se contem o item*/
 		enumerable: true,
 		value: function() {
-			for (var i = 0 ; i < arguments.length; i++) {
-				while (this.inside(arguments[i])) {
-					this._value.splice(this.valueOf().indexOf(arguments[i]), 1);
+			if (arguments.length === 0) return false;
+			for (var i = 0; i < arguments.length; i++) {
+				if (this._value.indexOf(arguments[i]) < 0) return false;
+			}
+			return true;
+		}
+	});
+
+	Object.defineProperty(WDarray.prototype, "search", {/*procura item no array*/
+		enumerable: true,
+		value: function(value) {
+			var index = [];
+			for (var i = 0; i < this._value.length; i++) {
+				if (this._value[i] === value) index.push(i);
+			}
+			return index.length === 0 ? null : index;
+		}
+	});
+
+	Object.defineProperty(WDarray.prototype, "del", {/*remove itens*/
+		enumerable: true,
+		value: function() {
+			for (var i = 0; i < arguments.length; i++) {
+				var index = this.search(arguments[i]);
+				if (index !== null) {
+					index = index.reverse();
+					for (var j = 0; j < index.length; j++) this._value.splice(index[j], 1);
 				}
 			}
 			return this.valueOf();
 		}
 	});
 
-	/*Adiciona itens ao array e o retorna*/
-	Object.defineProperty(WDarray.prototype, "add", {
+	Object.defineProperty(WDarray.prototype, "add", {/*adiciona items*/
 		enumerable: true,
 		value: function() {
 			for (var i = 0 ; i < arguments.length; i++) {
@@ -1849,56 +1841,47 @@ SOFTWARE.﻿
 		}
 	});
 
-	/*Adiciona itens se o item não existir e recíproca*/
-	Object.defineProperty(WDarray.prototype, "toggle", {
+	Object.defineProperty(WDarray.prototype, "toggle", {/*adiciona/remove items*/
 		enumerable: true,
 		value: function() {
 			for (var i = 0 ; i < arguments.length; i++) {
-				if (this.inside(arguments[i])) {
-					this.del(arguments[i]);
-				} else {
-					this.add(arguments[i]);
-				}
+				if (this.inside(arguments[i])) {this.del(arguments[i]);}
+				else                           {this.add(arguments[i]);}
 			}
 			return this.valueOf();
 		}
 	});
 
-	/*Retorna a quantidade de vezes que o item aparece em array*/
-	Object.defineProperty(WDarray.prototype, "count", {
+	Object.defineProperty(WDarray.prototype, "count", {/*quantidade de items*/
 		enumerable: true,
 		value: function(item) {
-			return this.inside(item, true).length;
+			var items = this.search(item);
+			return items === null ? 0 : items.length;
 		}
 	});
 
-	/*Troca o valor antigo pelo novo valor em todas ocorrências*/
-	Object.defineProperty(WDarray.prototype, "replace", {
+	Object.defineProperty(WDarray.prototype, "replace", {/*troca o valor dos items*/
 		enumerable: true,
 		value: function(item, value) {
-			var index;
-			index = this.inside(item, true);
-			for (var i = 0 ; i < index.length; i++) {
-				this._value[index[i]] = value;
-			}
+			var index = this.search(item, true);
+			if (index === null) return this.valueOf();
+
+			for (var i = 0; i < index.length; i++) this._value[index[i]] = value;
 			return this.valueOf();
 		}
 	});
 
-	Object.defineProperty(WDarray.prototype, "unique", {
+	Object.defineProperty(WDarray.prototype, "unique", {/*remove itens repetidos*/
 		enumerable: true,
-		value: function(sort) {
-			var array;
-			array = sort === true ? this.sort() : this.valueOf();
-			array =  array.filter(function(v, i, a) {
+		value: function() {
+			this._value =  this._value.filter(function(v, i, a) {
 				return a.indexOf(v) == i;
 			});
-			return array;
+			return this.valueOf();
 		}
 	});
 
-	/*Retorna o array ordenado: nulo, números, tempo, data, text e outros*/
-	Object.defineProperty(WDarray.prototype, "sort", {
+	Object.defineProperty(WDarray.prototype, "sort", {/*ordena items*/
 		enumerable: true,
 		value: function(unique) {
 			var asort, type, seq, array, key;
@@ -1958,26 +1941,15 @@ SOFTWARE.﻿
 		}
 	});
 
-	/*Define método toString e valueOf*/
 	Object.defineProperties(WDarray.prototype, {
-		type: {
-			enumerable: true,
-			value: "array"
-		},
 		toString: {
 			value: function() {
-				var x;
-				try {
-					x = JSON.stringify(this._value);
-				} catch(e) {
-					x = this._value.toString();
-				}
-				return x;
+				return JSON.stringify(this._value);
 			}
 		},
 		valueOf: {
 			value: function() {
-				return this._value;
+				return this._value.slice();
 			}
 		}
 	});
