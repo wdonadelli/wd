@@ -838,6 +838,7 @@ SOFTWARE.﻿
 		return x.value;
 	}
 
+	/* Métodos estáticos ------------------------------------------------------*/
 	WDtable.data = function(input, col) {
 		col = isFinite(col) ? Math.abs(parseInt(col)) : null;
 		var array = [];
@@ -852,43 +853,44 @@ SOFTWARE.﻿
 		return array.length === 0 ? null : array;
 	}
 
+	/* Métodos de Protótipos --------------------------------------------------*/
 	Object.defineProperty(WDtable.prototype, "constructor", {value: WDtable});
 
-	Object.defineProperties(WDtable.prototype, {
+	Object.defineProperties(WDtable.prototype, {/*média*/
 		arithmetic: {
-			value: function(e) {
-				if (this.array1 === null) return null;
+			value: function(e, array) {//FIXME items e array precisam ser indicados para serem usados de forma genérica
+				if (this[array] === null) return null;
 				var value = 0;
 				for (var n = 0; n < this.items1; n++) {
-					if (e < 0 && this.array1[n] === 0) continue;
-					value += Math.pow(this.array1[n], e);
+					if (e < 0 && this[array][n] === 0) continue;
+					value += Math.pow(this[array][n], e);
 				}
 				return value;
 			}
 		},
 		geometric: {
-			value: function(e) {
-				if (this.array1 === null) return null;
+			value: function(e, array) {
+				if (this[array1] === null) return null;
 				var value = 1;
 				for (var n = 0; n < this.items1; n++) {
-					value = value * Math.pow(Math.abs(this.array1[n]), e);
+					value = value * Math.pow(Math.abs(this[array][n]), e);
 				}
 				return value;
 			}
 		},
 		deviation: {
-			value: function(ref, e) {
-				if (this.array1 === null || ref === null) return null;
+			value: function(ref, e, array) {
+				if (this[array] === null || ref === null) return null;
 				var value = 0;
 				for (var n = 0; n < this.items1; n++) {
-					value += Math.pow(Math.abs(this.array1[n] - ref), e);
+					value += Math.pow(Math.abs(this[array][n] - ref), e);
 				}
 				return value;
 			}
 		},
 		sum: {
 			get: function() {
-				return this.arithmetic(1);
+				return this.arithmetic(1, "array1");
 			}
 		},
 		simpleAverage: {
@@ -899,7 +901,7 @@ SOFTWARE.﻿
 		},
 		geometricAverage: {
 			get: function() {
-				var sum = this.geometric(1);
+				var sum = this.geometric(1, "array1");
 				return sum === null ? null : Math.pow(sum, 1/this.items1);
 			}
 		},
@@ -935,10 +937,56 @@ SOFTWARE.﻿
 				return mean === null ? null : (mean/this.items1);
 			}
 		}
-		
-		
-		
 	});
+
+	Object.defineProperties(WDtable.prototype, {/*regressão*/
+		linear: {
+			value: function(e) {
+				if (this.array1 === null || this.array2 === null) return null;
+				var value = 0;
+
+
+				for (var n = 0; n < this.items1; n++) {
+					if (e < 0 && this.array1[n] === 0) continue;
+					value += Math.pow(this.array1[n], e);
+				}
+
+
+
+
+				return value;
+
+			}
+
+		},
+
+		quadratic: {
+
+			value: function(e) {
+
+				if (this.array1 === null) return null;
+
+				var value = 1;
+
+				for (var n = 0; n < this.items1; n++) {
+					value = value * Math.pow(Math.abs(this.array1[n]), e);
+				}
+				return value;
+			}
+		},
+		exponential: {
+			value: function(ref, e) {
+				if (this.array1 === null || ref === null) return null;
+				var value = 0;
+				for (var n = 0; n < this.items1; n++) {
+					value += Math.pow(Math.abs(this.array1[n] - ref), e);
+				}
+				return value;
+			}
+		},
+
+	});
+
 
 /*============================================================================*/
 
@@ -2074,6 +2122,41 @@ SOFTWARE.﻿
 		enumerable: true,
 		value: function(col) {
 			var table = new WDtable(this.valueOf(), col);
+			var data = {
+				sum: {
+					value: table.sum,
+					mDeviation: table.meanDeviation("sum"),
+					sDeviation: table.standardDeviation("sum")
+				},
+				median: {
+					value: table.median,
+					mDeviation: table.meanDeviation("median"),
+					sDeviation: table.standardDeviation("median")
+				},
+				average: {
+					value: table.simpleAverage,
+					mDeviation: table.meanDeviation("simpleAverage"),
+					sDeviation: table.standardDeviation("simpleAverage")
+				},
+				geometric: {
+					value: table.geometricAverage,
+					mDeviation: table.meanDeviation("geometricAverage"),
+					sDeviation: table.standardDeviation("geometricAverage")
+				},
+				harmonic: {
+					value: table.harmonicAverage,
+					mDeviation: table.meanDeviation("harmonicAverage"),
+					sDeviation: table.standardDeviation("harmonicAverage")
+				}
+			};
+			return data;
+		}
+	});
+
+	Object.defineProperty(WDarray.prototype, "leastSquares", {/*mínimos quadrados*/
+		enumerable: true,
+		value: function(col1, col2) {
+			var table = new WDtable(this.valueOf(), col1, col2);
 			var data = {
 				sum: {
 					value: table.sum,
