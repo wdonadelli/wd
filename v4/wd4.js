@@ -44,7 +44,6 @@ SOFTWARE.﻿
 
 /*............................................................................*/
 
-
 	function WDbox(input) {
 		if (!(this instanceof WDbox)) return new WDbox(input);
 		Object.defineProperty(this, "_input", {value: input});
@@ -821,6 +820,125 @@ SOFTWARE.﻿
 	Object.defineProperty(WDsignal.prototype, "doubt", {value: function() {
 		return this.constructor.msg("mdoubt", this._msg);
 	}});
+
+/*============================================================================*/
+
+	function WDtable(input, col1, col2) {/* funções estatísticas para array e matriz*/
+		if (!(this instanceof WDtable)) return new WDtable(input, col1, col2);
+		this.array1 = WDtable.data(input, col1);
+		this.array2 = WDtable.data(input, col2);
+		this.items1 = this.array1 === null ? 0 : this.array1.length;
+		this.items2 = this.array2 === null ? 0 : this.array2.length;
+	}
+
+	WDtable.compute = function(x) {
+		x = new WDtype(x);
+		if (x.type !== "number") return null;
+		if (Math.abs(x.value) === Infinity) return null;
+		return x.value;
+	}
+
+	WDtable.data = function(input, col) {
+		col = isFinite(col) ? Math.abs(parseInt(col)) : null;
+		var array = [];
+		for (var i = 0; i < input.length; i++) {
+			var check = new WDtype(input[i]);
+			if (col !== null && check.type !== "array") continue;
+			var path = col === null ? input[i] : input[i][col];
+			var item = WDtable.compute(path);
+			if (item === null) continue;
+			array.push(item);			
+		}
+		return array.length === 0 ? null : array;
+	}
+
+	Object.defineProperty(WDtable.prototype, "constructor", {value: WDtable});
+
+	Object.defineProperties(WDtable.prototype, {
+		arithmetic: {
+			value: function(e) {
+				if (this.array1 === null) return null;
+				var value = 0;
+				for (var n = 0; n < this.items1; n++) {
+					if (e < 0 && this.array1[n] === 0) continue;
+					value += Math.pow(this.array1[n], e);
+				}
+				return value;
+			}
+		},
+		geometric: {
+			value: function(e) {
+				if (this.array1 === null) return null;
+				var value = 1;
+				for (var n = 0; n < this.items1; n++) {
+					value = value * Math.pow(Math.abs(this.array1[n]), e);
+				}
+				return value;
+			}
+		},
+		deviation: {
+			value: function(ref, e) {
+				if (this.array1 === null || ref === null) return null;
+				var value = 0;
+				for (var n = 0; n < this.items1; n++) {
+					value += Math.pow(Math.abs(this.array1[n] - ref), e);
+				}
+				return value;
+			}
+		},
+		sum: {
+			get: function() {
+				return this.arithmetic(1);
+			}
+		},
+		simpleAverage: {
+			get: function() {
+				var sum = this.sum;
+				return sum === null ? null : sum/this.items1;
+			}
+		},
+		geometricAverage: {
+			get: function() {
+				var sum = this.geometric(1);
+				return sum === null ? null : Math.pow(sum, 1/this.items1);
+			}
+		},
+		harmonicAverage: {
+			get: function() {
+				var sum = this.arithmetic(-1);
+				var div = this.items1;
+				for (var n = 0; n < this.items1; n++) {
+					if (this.items1[n] === 0) div--;
+				}
+				return (sum === null || sum === 0) ? null : div/sum;
+			}
+		},
+		median: {
+			get: function() {
+				if (this.array1 === null) return null;
+				var array = this.array1.slice();
+				var n     = array.length;
+				array.sort(function(x,y) {return x - y >= 0 ? 1 : -1});
+				if (n % 2 !== 0) return array[((n - 1)/2)];
+				return (array[n/2] + array[(n/2)-1])/2;
+			}
+		},
+		standardDeviation: {
+			value: function(ref) {
+				var square = this.deviation(this[ref], 2);
+				return square === null ? null : Math.sqrt(square/this.items1);
+			}
+		},
+		meanDeviation: {
+			value: function(ref) {
+				var mean = this.deviation(this[ref], 1);
+				return mean === null ? null : (mean/this.items1);
+			}
+		}
+		
+		
+		
+	});
 
 /*============================================================================*/
 
@@ -1781,6 +1899,28 @@ SOFTWARE.﻿
 		WDmain.call(this, input, type, value);
 	}
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	WDarray.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDarray}
 	});
@@ -1883,63 +2023,91 @@ SOFTWARE.﻿
 
 	Object.defineProperty(WDarray.prototype, "sort", {/*ordena items*/
 		enumerable: true,
-		value: function(unique) {
-			var asort, type, seq, array, key;
-			asort = {};
-			/*agrupando em arrays os items pelo tipo*/
-			for (var i = 0; i < this.items; i++) {
-				type = new WD(this.item(i)).type
-				if (!(type in asort)) {
-					asort[type] = [];
-				}
-				asort[type].push(this.item(i));
+		value: function() {
+			var arrays = {};
+
+			for (var i = 0; i < this._value.length; i++) {
+				var type = new WDtype(this._value[i]).type;
+				if (!(type in arrays)) arrays[type] = [];
+				arrays[type].push(this._value[i]);
 			}
-			/*determinando a ordem de cada tipo*/
-			for (var t in asort) {
-				asort[t].sort(function(a, b) {
-					var order, x, y;
-					if (t === "dom") {
-						x = a.textContent || a.innerText || a.innerHTML;
-						y = b.textContent || b.innerText || b.innerHTML;
-						order = new WD([x, y]).sort().indexOf(x) > 0 ? 1 : -1;
-					} else if (["number", "boolean", "date", "time"].indexOf(t) >= 0) {
-						x = new WD(a).valueOf();
-						y = new WD(b).valueOf();
-						order = x - y >= 0 ? 1 : -1;
-					} else {
-						x = new WD(a).toString().trim().toUpperCase();
-						y = new WD(b).toString().trim().toUpperCase();
-						order = x > y ? 1 : -1;
+
+			for (var type in arrays) {
+				arrays[type].sort(function(a, b) {
+					if (type === "dom") {
+						var x = a.textContent;
+						var y = b.textContent;
+						var h = WD([x,y]).sort();
+						return h.indexOf(x) > 0 ? 1 : -1;
 					}
-					return order;
+					if (type === "text") {
+						var x = new WD(a).format("clear", "upper");
+						var y = new WD(b).format("clear", "upper");
+						return x > y;
+					}
+					if (["number", "boolean", "date", "time"].indexOf(type) >= 0) {
+						var x = new WDtype(a).value;
+						var y = new WDtype(b).value;
+						return x - y >= 0 ? 1 : -1;
+					}
+					return x > y;					
 				});
 			}
-			array = [];
-			/*montando array conforme ordem de tipos*/
-			seq = ["null", "number", "time", "date", "text"];
-			for (var j = 0; j < seq.length; j++) {
-				key = seq[j];
-				if (key in asort) {
-					for (var k = 0; k < asort[key].length; k++) {
-						array.push(asort[key][k]);
-					}
-				}
+
+			var order = [
+				"number", "time", "date", "text", "boolean", "null",
+				"dom", "array", "object", "function", "regexp", "undefined"
+			];
+			var sort = []
+
+			for (var i = 0; i < order.length; i++) {
+				if (!(order[i] in arrays)) continue;
+				var array = arrays[order[i]];
+				for (var j = 0; j < array.length; j++) sort.push(array[j]);
 			}
-			/*Adicionando os outros itens ao array*/
-			for (var p in asort) {
-				if (seq.indexOf(p) < 0) {
-					for (var q = 0; q < asort[p].length; q++) {
-						array.push(asort[p][q]);
-					}
-				}
-			}
-			/*verificando argumento*/
-			if (unique === true) {
-				array = new WD(array).unique();
-			}
-			return array;
+			return sort;
 		}
 	});
+
+
+	Object.defineProperty(WDarray.prototype, "data", {/*valores estatísticos*/
+		enumerable: true,
+		value: function(col) {
+			var table = new WDtable(this.valueOf(), col);
+			var data = {
+				sum: {
+					value: table.sum,
+					mDeviation: table.meanDeviation("sum"),
+					sDeviation: table.standardDeviation("sum")
+				},
+				median: {
+					value: table.median,
+					mDeviation: table.meanDeviation("median"),
+					sDeviation: table.standardDeviation("median")
+				},
+				average: {
+					value: table.simpleAverage,
+					mDeviation: table.meanDeviation("simpleAverage"),
+					sDeviation: table.standardDeviation("simpleAverage")
+				},
+				geometric: {
+					value: table.geometricAverage,
+					mDeviation: table.meanDeviation("geometricAverage"),
+					sDeviation: table.standardDeviation("geometricAverage")
+				},
+				harmonic: {
+					value: table.harmonicAverage,
+					mDeviation: table.meanDeviation("harmonicAverage"),
+					sDeviation: table.standardDeviation("harmonicAverage")
+				}
+			};
+			return data;
+		}
+	});
+
+
+
+
 
 	Object.defineProperties(WDarray.prototype, {
 		toString: {
