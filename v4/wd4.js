@@ -823,173 +823,6 @@ SOFTWARE.﻿
 
 /*============================================================================*/
 
-	function WDtable(input, col1, col2) {/* funções estatísticas para array e matriz*/
-		if (!(this instanceof WDtable)) return new WDtable(input, col1, col2);
-		this.array1 = WDtable.data(input, col1);
-		this.array2 = WDtable.data(input, col2);
-		this.items1 = this.array1 === null ? 0 : this.array1.length;
-		this.items2 = this.array2 === null ? 0 : this.array2.length;
-	}
-
-	WDtable.compute = function(x) {
-		x = new WDtype(x);
-		if (x.type !== "number") return null;
-		if (Math.abs(x.value) === Infinity) return null;
-		return x.value;
-	}
-
-	/* Métodos estáticos ------------------------------------------------------*/
-	WDtable.data = function(input, col) {
-		col = isFinite(col) ? Math.abs(parseInt(col)) : null;
-		var array = [];
-		for (var i = 0; i < input.length; i++) {
-			var check = new WDtype(input[i]);
-			if (col !== null && check.type !== "array") continue;
-			var path = col === null ? input[i] : input[i][col];
-			var item = WDtable.compute(path);
-			if (item === null) continue;
-			array.push(item);			
-		}
-		return array.length === 0 ? null : array;
-	}
-
-	/* Métodos de Protótipos --------------------------------------------------*/
-	Object.defineProperty(WDtable.prototype, "constructor", {value: WDtable});
-
-	Object.defineProperties(WDtable.prototype, {/*média*/
-		arithmetic: {
-			value: function(e, array) {//FIXME items e array precisam ser indicados para serem usados de forma genérica
-				if (this[array] === null) return null;
-				var value = 0;
-				for (var n = 0; n < this.items1; n++) {
-					if (e < 0 && this[array][n] === 0) continue;
-					value += Math.pow(this[array][n], e);
-				}
-				return value;
-			}
-		},
-		geometric: {
-			value: function(e, array) {
-				if (this[array1] === null) return null;
-				var value = 1;
-				for (var n = 0; n < this.items1; n++) {
-					value = value * Math.pow(Math.abs(this[array][n]), e);
-				}
-				return value;
-			}
-		},
-		deviation: {
-			value: function(ref, e, array) {
-				if (this[array] === null || ref === null) return null;
-				var value = 0;
-				for (var n = 0; n < this.items1; n++) {
-					value += Math.pow(Math.abs(this[array][n] - ref), e);
-				}
-				return value;
-			}
-		},
-		sum: {
-			get: function() {
-				return this.arithmetic(1, "array1");
-			}
-		},
-		simpleAverage: {
-			get: function() {
-				var sum = this.sum;
-				return sum === null ? null : sum/this.items1;
-			}
-		},
-		geometricAverage: {
-			get: function() {
-				var sum = this.geometric(1, "array1");
-				return sum === null ? null : Math.pow(sum, 1/this.items1);
-			}
-		},
-		harmonicAverage: {
-			get: function() {
-				var sum = this.arithmetic(-1);
-				var div = this.items1;
-				for (var n = 0; n < this.items1; n++) {
-					if (this.items1[n] === 0) div--;
-				}
-				return (sum === null || sum === 0) ? null : div/sum;
-			}
-		},
-		median: {
-			get: function() {
-				if (this.array1 === null) return null;
-				var array = this.array1.slice();
-				var n     = array.length;
-				array.sort(function(x,y) {return x - y >= 0 ? 1 : -1});
-				if (n % 2 !== 0) return array[((n - 1)/2)];
-				return (array[n/2] + array[(n/2)-1])/2;
-			}
-		},
-		standardDeviation: {
-			value: function(ref) {
-				var square = this.deviation(this[ref], 2);
-				return square === null ? null : Math.sqrt(square/this.items1);
-			}
-		},
-		meanDeviation: {
-			value: function(ref) {
-				var mean = this.deviation(this[ref], 1);
-				return mean === null ? null : (mean/this.items1);
-			}
-		}
-	});
-
-	Object.defineProperties(WDtable.prototype, {/*regressão*/
-		linear: {
-			value: function(e) {
-				if (this.array1 === null || this.array2 === null) return null;
-				var value = 0;
-
-
-				for (var n = 0; n < this.items1; n++) {
-					if (e < 0 && this.array1[n] === 0) continue;
-					value += Math.pow(this.array1[n], e);
-				}
-
-
-
-
-				return value;
-
-			}
-
-		},
-
-		quadratic: {
-
-			value: function(e) {
-
-				if (this.array1 === null) return null;
-
-				var value = 1;
-
-				for (var n = 0; n < this.items1; n++) {
-					value = value * Math.pow(Math.abs(this.array1[n]), e);
-				}
-				return value;
-			}
-		},
-		exponential: {
-			value: function(ref, e) {
-				if (this.array1 === null || ref === null) return null;
-				var value = 0;
-				for (var n = 0; n < this.items1; n++) {
-					value += Math.pow(Math.abs(this.array1[n] - ref), e);
-				}
-				return value;
-			}
-		},
-
-	});
-
-
-/*============================================================================*/
-
 	function WD(input) {
 		var wd  = new WDtype(input);
 		var obj = {
@@ -1947,7 +1780,77 @@ SOFTWARE.﻿
 		WDmain.call(this, input, type, value);
 	}
 
+	Object.defineProperties(WDarray, {
+		getValues: {
+			value: function(source) {
+				var check = new WDtype(source);
+				if (check.type !== "array") return null;
+				var data = {list: [], index: [], items: 0};
+				for (var i = 0; i < source.length; i++) {
+					var val = new WDtype(source[i]);
+					if (val.type !== "number" || !isFinite(val.value)) continue;
+					data.index.push(i);
+					data.list.push(val.value);
+				}
+				data.items = data.list.length;
+				return data.items === 0 ? null : data;
+			}
+		},
+		compareList: {
+			value: function(list1, list2) {
+				if (list1.items !== list2.items) return false;
+				for (var i = 0; i < list1.items; i++) {
+					if (list1.index[i] !== list2.index[i]) return false;
+				}
+				return true;
+			}
+		},
+		sum: {
+			value: function(list1, exp1, list2, exp2) {
+				var data = {value: 0, items: 0};
+				for (var i = 0; i < list1.items; i++) {
+					if (exp1 < 0 && list1.list[i] === 0) continue; /*divisão por zero*/
+					if (list2 !== undefined && exp2 < 0 && list2.list[i] === 0) continue; /*divisão por zero*/
+					var val1 = Math.pow(list1.list[i], exp1);
+					var val2 = list2 === undefined ? 1 : Math.pow(list2.list[i], exp2);
+					data.value += val1 * val2;
+					data.items++;
+				}
+				return data.items === 0 ? null : data;
+			}
+		},
+		product: {
+			value: function(list, exp) {
+				var data = {value: 1, items: 0};
+				for (var i = 0; i < list.items; i++) {
+					if (exp < 0 && list.list[i] === 0) continue; /*divisão por zero*/
+					var val = Math.pow(list.list[i], exp);
+					data.value = data.value * val;
+					data.items++;
+				}
+				return data.items === 0 ? null : data;
+			}
+		},
+		deviation: {
+			value: function(list, ref, exp) {
+				var data = {value: 0, items: 0};
+				for (var i = 0; i < list.items; i++) {
+					var check = new WDtype(ref);
+					if (check.type === "function") {
+						var diff = Math.abs(ref(list.list[i]) - list.list[i]);
+					} else {
+						var diff = Math.abs(ref - list.list[i]);
+					}
+					if (exp < 0 && diff === 0) continue; /*divisão por zero*/
+					var val = Math.pow(diff, exp);
+					data.value += val;
+					data.items++;
+				}
+				return data.items === 0 ? null : data;
+			}
+		}
 
+	});
 
 
 
@@ -2118,75 +2021,97 @@ SOFTWARE.﻿
 	});
 
 
-	Object.defineProperty(WDarray.prototype, "data", {/*valores estatísticos*/
-		enumerable: true,
-		value: function(col) {
-			var table = new WDtable(this.valueOf(), col);
-			var data = {
-				sum: {
-					value: table.sum,
-					mDeviation: table.meanDeviation("sum"),
-					sDeviation: table.standardDeviation("sum")
-				},
-				median: {
-					value: table.median,
-					mDeviation: table.meanDeviation("median"),
-					sDeviation: table.standardDeviation("median")
-				},
-				average: {
-					value: table.simpleAverage,
-					mDeviation: table.meanDeviation("simpleAverage"),
-					sDeviation: table.standardDeviation("simpleAverage")
-				},
-				geometric: {
-					value: table.geometricAverage,
-					mDeviation: table.meanDeviation("geometricAverage"),
-					sDeviation: table.standardDeviation("geometricAverage")
-				},
-				harmonic: {
-					value: table.harmonicAverage,
-					mDeviation: table.meanDeviation("harmonicAverage"),
-					sDeviation: table.standardDeviation("harmonicAverage")
-				}
-			};
-			return data;
-		}
+	Object.defineProperties(WDarray.prototype, {/*estatísticas*/
+		SUM: {/*soma*/
+			enumerable: true,
+			get: function() {
+				var list = WDarray.getValues(this.valueOf());
+				if (list === null) return null;
+				var data = WDarray.sum(list, 1);
+				return data ===  null ? null : data.value;
+			}
+		},
+		AVERAGE: {/*média simples*/
+			enumerable: true,
+			get: function() {
+				var list = WDarray.getValues(this.valueOf());
+				if (list === null) return null;
+				var data = WDarray.sum(list, 1);
+				return data ===  null ? null : data.value / data.items;
+			}
+		},
+		GEOMETRIC: {/*média geométrica*/
+			enumerable: true,
+			get: function() {
+				var list = WDarray.getValues(this.valueOf());
+				if (list === null) return null;
+				var data = WDarray.product(list, 1);
+				return data ===  null ? null : Math.pow(Math.abs(data.value),1/data.items);
+			}
+		},
+		HARMONIC: {/*média harmônica*/
+			enumerable: true,
+			get: function() {
+				var list = WDarray.getValues(this.valueOf());
+				if (list === null) return null;
+				var data = WDarray.sum(list, -1);
+				return data ===  null ? null : data.items / data.value;
+			}
+		},
+		MEDIAN: {/*mediana*/
+			enumerable: true,
+			get: function() {
+				var list = WDarray.getValues(this.valueOf());
+				if (list === null) return null;
+				var data = list.list.sort(function(x,y) {return x - y >= 0 ? 1 : -1});
+				if (list.items % 2 !== 0) return data[((list.items - 1)/2)];
+				return (data[list.items/2] + data[(list.items/2)-1])/2;
+			}
+		},
+		MIN: {/*menor valor*/
+			enumerable: true,
+			get: function() {
+				var list = WDarray.getValues(this.valueOf());
+				if (list === null) return null;
+				var data = list.list.sort(function(x,y) {return x - y >= 0 ? 1 : -1});
+				return data[0];
+			}
+		},
+		MAX: {/*maior valor*/
+			enumerable: true,
+			get: function() {
+				var list = WDarray.getValues(this.valueOf());
+				if (list === null) return null;
+				var data = list.list.sort(function(x,y) {return x - y >= 0 ? 1 : -1});
+				return data.reverse()[0];
+			}
+		},
+		DEVIATION: {/*desvio*/
+			enumerable: true,
+			value: function(attr, mean) {
+				attr = String(attr).toUpperCase();
+				mean = mean === true ? 1 : 0.5;
+				var ref = attr in this ? this[attr] : this.AVERAGE;
+				if (ref === null) return null;
+				var list = WDarray.getValues(this.valueOf());
+				var data = WDarray.deviation(list, ref, mean);
+				return data ===  null ? null : Math.pow(data.value/data.items, mean);
+			}
+		},
+		LINEAR: {/*regressão linear: mínimos quadrados*/
+			enumerable: true,
+			value: function(X, constant) {
+			
+			}
+		},
+
+
+
+
+
 	});
 
-	Object.defineProperty(WDarray.prototype, "leastSquares", {/*mínimos quadrados*/
-		enumerable: true,
-		value: function(col1, col2) {
-			var table = new WDtable(this.valueOf(), col1, col2);
-			var data = {
-				sum: {
-					value: table.sum,
-					mDeviation: table.meanDeviation("sum"),
-					sDeviation: table.standardDeviation("sum")
-				},
-				median: {
-					value: table.median,
-					mDeviation: table.meanDeviation("median"),
-					sDeviation: table.standardDeviation("median")
-				},
-				average: {
-					value: table.simpleAverage,
-					mDeviation: table.meanDeviation("simpleAverage"),
-					sDeviation: table.standardDeviation("simpleAverage")
-				},
-				geometric: {
-					value: table.geometricAverage,
-					mDeviation: table.meanDeviation("geometricAverage"),
-					sDeviation: table.standardDeviation("geometricAverage")
-				},
-				harmonic: {
-					value: table.harmonicAverage,
-					mDeviation: table.meanDeviation("harmonicAverage"),
-					sDeviation: table.standardDeviation("harmonicAverage")
-				}
-			};
-			return data;
-		}
-	});
+
 
 
 
