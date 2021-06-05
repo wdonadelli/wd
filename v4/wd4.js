@@ -323,8 +323,7 @@ SOFTWARE.﻿
 		}
 
 		if (!this.isString) return false;
-
-		if (this._input === "Infinity") return false;
+		if ((/Infinity$/).test(this._input)) return false;
 
 		if (this._input == Number(this._input)) {
 			this._type  = "number";
@@ -829,7 +828,7 @@ SOFTWARE.﻿
 			"undefined": WDundefined, "null":     WDnull,
 			"boolean":   WDboolean,   "function": WDfunction,
 			"object":    WDobject,    "regexp":   WDregexp,
-			"array":     WDarray,     //"dom":      WDdom,
+			"array":     WDarray,     "dom":      WDdom,
 			"time":      WDtime,      "date":     WDdate,
 			"number":    WDnumber,    "text":     WDtext
 		};
@@ -1836,8 +1835,8 @@ SOFTWARE.﻿
 				var data = {value: 0, items: 0};
 				for (var i = 0; i < list.items; i++) {
 					var check = new WDtype(ref);
-					if (check.type === "function") {
-						var diff = Math.abs(ref(list.list[i]) - list.list[i]);
+					if (check.type === "array") {
+						var diff = Math.abs(ref[i] - list.list[i]);
 					} else {
 						var diff = Math.abs(ref - list.list[i]);
 					}
@@ -1848,8 +1847,14 @@ SOFTWARE.﻿
 				}
 				return data.items === 0 ? null : data;
 			}
+		},
+		fList: {
+			value: function(x, f) {
+				var data = [];
+				for (var i = 0; i < x.length; i++) data.push(f(x[i]));
+				return data;
+			}
 		}
-
 	});
 
 
@@ -1882,7 +1887,7 @@ SOFTWARE.﻿
 			if (!isFinite(i)) return this._value.length;
 			i = parseInt(i);
 			i = i < 0 ? this._value.length + i : i;
-			return this._value[i];
+			return this.valueOf()[i];
 		}
 	});
 
@@ -2016,7 +2021,9 @@ SOFTWARE.﻿
 				var array = arrays[order[i]];
 				for (var j = 0; j < array.length; j++) sort.push(array[j]);
 			}
-			return sort;
+			this._value = sort;
+			
+			return this.valueOf();
 		}
 	});
 
@@ -2100,8 +2107,30 @@ SOFTWARE.﻿
 		},
 		LINEAR: {/*regressão linear: mínimos quadrados*/
 			enumerable: true,
-			value: function(X, constant) {
-			
+			value: function(input, details) {
+				var check = new WDtype(input);
+				if (check.type !== "array") return null;
+				var y = WDarray.getValues(this.valueOf());
+				var x = WDarray.getValues(input);
+				if (y === null || x === null) return null;
+				if (!WDarray.compareList(x,y)) return null;
+				var X  = WDarray.sum(x, 1);
+				var Y  = WDarray.sum(y, 1);
+				var X2 = WDarray.sum(x, 2);
+				var XY = WDarray.sum(x, 1, y, 1);
+				if ([X, Y, XY, X2].indexOf(null) >= 0) return null;
+				try {
+					var N  = XY.items;
+					var data = {};
+					data.a   = ((N * XY.value) - (X.value * Y.value)) / ((N * X2.value) - (X.value * X.value));
+					data.b   = ((Y.value) - (X.value * data.a)) / (N);
+					data.f   = function(x) {return data.a*x+data.b;};
+					data.y   = WDarray.fList(x.list, data.f);
+					var err  = WDarray.deviation(y, data.y, 2);
+					data.d   = err === null ? null : Math.pow(err.value/err.items, 0.5);
+					return details === true ? data : data.f;
+				} catch(e){}
+				return null;
 			}
 		},
 
@@ -2130,81 +2159,197 @@ SOFTWARE.﻿
 		}
 	});
 
-/* === DOM ================================================================= */
 
-	/*Define a função para os disparadores em navegadores mais antigos*/
-	function getEventMethod(input) {
-		var wdEventHandler = function(ev) {
-			var methods = input;
-			if (ev === "getMethods") {
-				return methods;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*============================================================================*/
+
+	function WDdom(input, type, value) {
+		if (!(this instanceof WDdom)) return new WDdom(input, type, value);
+		WDmain.call(this, input, type, value);
+	}
+
+	Object.defineProperties(WDdom, {
+		tag: {
+			value: function(e) {return e.tagName.toLowerCase();}
+		},
+		form: {
+			value: function(e) {
+				var form = ["textarea", "select", "button", "input", "option"];
+				return form.indexOf(this.tag(e)) < 0 ? false : true;
 			}
-			for (var i = 0; i < methods.length; i++) {
-				methods[i].call(this, ev);
+		},
+		type: {
+			value: function(e) {
+				if (!this.form(e)) return null;
+				var types = [
+					"button", "reset", "submit", "image", "color", "radio",
+					"checkbox", "date", "datetime", "datetime-local", "email",
+					"text", "search", "tel", "url", "month", "number", "password",
+					"range", "time", "week", "hidden", "file"
+				];
+				var attr = "type" in e.attributes ? e.attributes.type.value.toLowerCase() : null;
+				var type = "type" in e ? e.type.toLowerCase() : null;
+			 	if (types.indexOf(attr) >= 0) return attr; /*DIGITADO no HTML*/
+			 	if (types.indexOf(type) >= 0) return type; /*CONSIDERADO no HTML*/
+				return this.tag(e);
 			}
-			return;
-		};
-		return wdEventHandler;
-	};
-
-/*............................................................................*/
-
-	/*função para definir o método de implementação de eventos*/
-	function wdSetHandler(event, method, elem, remove) {
-
-		/* checando e definindo valores padrão */
-		if (new WD(method).type !== "function") {
-			log("handler: " + event + " callback needs to be a function..", "e");
-			return false;
-		}
-		event  = event.toLowerCase().replace(/^\-/, "").replace(/^on/, "");
-		var special = [];
-
-		/*log de eventos*/
-		if (!("on"+event in elem)) {
-			log("handler: " + event + " event does not exist in " + elem.tagName.toLowerCase() + ".", "w");
-		}
-
-		/*vinculando evento*/
-		if (remove === true) {
-			if ("removeEventListener" in elem) {
-				elem.removeEventListener(event, method, false);
-			} else if ("detachEvent" in elem) {
-				elem.detachEvent("on"+event, method);
-			} else if (("on"+event) in elem) {
-				/*função especial para navegadores mais antigos*/
-				if (new WD(elem["on"+event]).type === "function" && elem["on"+event].name === "wdEventHandler") {
-					special = new WD(elem["on"+event]("getMethods")).del(method);
+		},
+		name: {
+			value: function(e) {
+				if (!this.form(e) || !("name" in e)) return null;
+				return e.name;
+			}
+		},
+		value: {
+			value: function(e) {
+				if (!this.form(e) || !("value" in e)) return null;
+				var type  = this.type(e);
+				var value = e.value;
+				var check = WD(value);
+				if (type === "radio" || type === "checkbox") return e.checked ? value : null;
+				if (type === "date" && value !== "%today")   return check.type === "date" ? check.toString() : null;
+				if (type === "time" && value !== "%now")     return check.type === "time" ? check.toString() : null;
+				if (type === "number" || type === "range")   return check.type === "number" ? check.valueOf() : null;
+				if (type === "file") return e.files.length > 0 ? e.files : null;
+				if (type === "select") {
+					value = [];
+					for (var i = 0; i < e.length; i++) {
+						if (e[i].selected) value.push(e[i].value);
+					}
+					return value.length === 0 ? null :  value;
 				}
-				elem["on"+event] = null;
-				for (var i = 0; i < special.length; i++) {
-					wdSetHandler(event, special[i], elem);
-				}
-			} else {
-				return false;
+				return value;
 			}
-		} else {
-			if ("addEventListener" in elem) {
-				elem.addEventListener(event, method, false);
-			} else if ("attachEvent" in elem) {
-				elem.attachEvent("on"+event, method);
-			} else if (("on"+event) in elem) {
-				/*função especial para navegadores mais antigos*/
-				if (new WD(elem["on"+event]).type === "function") {
-					special = elem["on"+event].name === "wdEventHandler" ? elem["on"+event]("getMethods") : [elem["on"+event]];
-				}
-				special = new WD(special);
-				special.add(method);
-				special = special.unique();
-				elem["on"+event] = getEventMethod(special);
-			} else {
-				return false;
+		},
+		send: {
+			value: function(e) {
+				if (this.name(e) === null || this.value(e) === null) return false;
+				var noSend = ["submit", "button", "reset", "image", "option"];
+				if (noSend.indexOf(this.type(e)) >= 0) return false;
+				if (noSend.indexOf(this.tag(e))  >= 0) return false;
+				return true;
 			}
-		}
+		},
+		mask: {
+			value: function(e) {
+				if (this.form(e)) {
+					var text = ["button", "option"];
+					if (text.indexOf(this.tag(e)) >= 0) return "textContent";
+					var value = [
+						"textarea", "button", "submit", "email", "text", "search",
+						"tel", "url"
+					];
+					if (value.indexOf(this.tag(e)) >= 0) return "value";
+					return null;	
+				}
+				return "textContent" in e ? "textContent" : null;
+			}
+		},
+		load: {//FIXME parei aqui 
+			value: function(e) {
+				var value = null;
+				if (this.form === true && this.type !== null) {
+					value = this._forms[this.tag][this.type].load;
+				} else if ("innerHTML" in this.elem) {
+					value = "innerHTML";
+				} else if ("textContent" in this.elem) {
+					value = "textContent";
+				}
+				return value;
+			}
+		},
 
-		return true;
-	};
 
+
+
+				textarea: {
+						textarea: {send: true,  mask: "value", load: "value"}
+					},
+					select: {
+						select: {send: true,  mask: null, load: null}
+					},
+					button: {
+						submit: {send: false, mask: "textContent", load: "textContent"},
+						button: {send: false, mask: "textContent", load: "textContent"},
+						reset:  {send: false, mask: "textContent", load: "textContent"}
+					},
+					input: {
+						button:           {send: false, mask: "value", load: "value"},
+						reset:            {send: false, mask: "value", load: "value"},
+						submit:           {send: false, mask: "value", load: "value"},
+						image:            {send: false, mask: null,    load: null},
+						color:            {send: true,  mask: null,    load: null},
+
+						radio:            {send: true,  mask: null,    load: null},
+						checkbox:         {send: true,  mask: null,    load: null},
+						date:             {send: true,  mask: null,    load: null},
+						datetime:         {send: true,  mask: null,    load: null},
+						"datetime-local": {send: true,  mask: null,    load: null},
+						email:            {send: true,  mask: "value", load: "value"},
+						text:             {send: true,  mask: "value", load: "value"},
+						search:           {send: true,  mask: "value", load: "value"},
+						tel:              {send: true,  mask: "value", load: "value"},
+						url:              {send: true,  mask: "value", load: "value"},
+						month:            {send: true,  mask: null,    load: null},
+						number:           {send: true,  mask: null,    load: null},
+						password:         {send: true,  mask: null,    load: null},
+						range:            {send: true,  mask: null,    load: null},
+						time:             {send: true,  mask: null,    load: null},
+						week:             {send: true,  mask: null,    load: null},
+						hidden:           {send: true,  mask: null,    load: "value"},
+
+						file:             {send: true,  mask: null,    load: null}
+					},
+					option: {
+						option: {send: false, mask: "textContent", load: null}
+					}
+
+
+
+
+
+
+
+
+
+
+
+
+	});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//TODO destruir esse AttrHTML
 /*............................................................................*/
 	/*trabalha com os elementos de formulário e os atributos name, value, type, data*/
 	function AttrHTML(elem) {
@@ -2516,43 +2661,158 @@ SOFTWARE.﻿
 
 /*...........................................................................*/
 
-	function WDdom(input) {
-		if (!(this instanceof WDdom)) {
-			return new WDdom(input);
-		}
-		if (!isDOM(input)){
-			return new WD(input);
-		}
-		Object.defineProperty(this, "_value", {
-			value: input
-		});
-	};
-
-	WDdom.prototype = Object.create(WD.prototype, {
-		constructor: {
-			value: WDdom
-		}
+	WDdom.prototype = Object.create(WDmain.prototype, {
+		constructor: {value: WDdom}
 	});
 
-	/*Executa o método informado loopando todos elementos html (input)*/
-	Object.defineProperty(WDdom.prototype, "run", {
+
+
+
+
+
+
+	Object.defineProperty(WDdom.prototype, "item", {/*item ou quantidade*/
+		enumerable: true,
+		value: WDarray.prototype.item
+	});
+
+	Object.defineProperty(WDdom.prototype, "run", {/*executa um job nos elementos*/
 		enumerable: true,
 		value: function(method) {
-			if (new WD(method).type === "function") {
-				var x;
-				for (var i = 0; i < this.valueOf().length; i++) {
-					x = this.valueOf()[i];
-					if (x !== window && x.nodeType != 1 && x.nodeType != 9) {
-						continue;
-					}
-					method(x);
-				}
-			} else {
-				log("run: Invalid argument!", "w");
+			var check = new WDtype(method);
+			if (check.type !== "function") return this;
+			for (var i = 0; i < this.item(); i++) {
+				var x = this.item(i);
+				if (x !== window && x.nodeType != 1 && x.nodeType != 9) continue;
+				method(x);
 			}
 			return this;
 		}
 	});
+
+	Object.defineProperty(WDdom.prototype, "handler", {/*disparadores*/
+		enumerable: true,
+		value: function (events, remove) {
+			var check = WDtype(events);
+			if (check.type !== "object") return this;
+
+			this.run(function(elem) {
+				for (var ev in events) {
+					var method = WDtype(events[ev]);
+					if (method.type !== "function") continue;
+					var action = remove === true ? "removeEventListener" : "addEventListener";
+					var event  = ev.toLowerCase().replace(/^on/, "");
+					elem[action](event, method.input, false);
+				}
+				return;
+			});
+
+			return this;
+		}
+	});
+
+	Object.defineProperty(WDdom.prototype, "style", {/*define style*/
+		enumerable: true,
+		value: function(styles) {
+			var check = new WDtype(styles);
+			if (check.type !== "object" && check.value !== null) return this;
+
+			this.run(function(elem) {
+				if (styles === null) {
+					while (elem.style.length > 0) elem.style[elem.style[0]] = null;
+					return;
+				}
+				for (var i in styles) {
+					key = new WD(i).camel;
+					elem.style[key] = styles[i];
+				}
+				return;
+			});
+			return this;
+		}
+	});
+
+	Object.defineProperty(WDdom.prototype, "class", {/*manipular className*/
+		enumerable: true,
+		value: function (list) {
+			var check = new WDtype(list);
+			if (check.type !== "object" && check.value !== null) return this;
+
+			this.run(function(elem) {
+				if (list === null) {
+					elem.className = "";
+					return;
+				}
+
+				var css = WD(elem.className.split(" "));
+				if (css.type !== "array") css = WD([]);
+
+				var act = ["add", "del", "toggle"];
+				for (var i = 0; i < act.length; i++) {
+					if (!(act[i] in list)) continue;
+					var check = new WDtype(list[act[i]]);
+					if (check.type !== "text") continue;
+					var items = check.value.split(" ");
+					for (var j = 0; j < items.length; j++) css[act[i]](items[j]);
+				}
+
+				css.del("");
+				css.unique();
+				css.sort();
+
+				elem.className = css.valueOf().join(" ");
+				return;
+			});
+			return this;
+		}
+	});
+
+	/*Define o valor dos atributos data*/
+	Object.defineProperty(WDdom.prototype, "data", {
+		enumerable: true,
+		value: function(input) {
+			var check = new WDtype(input);
+			if (check.type !== "object" && check.value !== null) return this;
+
+			this.run(function(elem) {
+				if (input === null) {
+					for (var i in elem.dataset) {
+						elem.dataset[i] = null;
+						delete elem.dataset[i];
+					}
+					return;
+				}
+
+				for (var i in input) {
+					var key = WD(i);
+					if (key.type !== "text") continue;
+					key = key.camel;
+				
+					if (input[i] === null) {
+						elem.dataset[key] = null;
+						delete elem.dataset[key];
+					} else {
+						elem.dataset[key] = input[i];
+						settingProcedures(elem, key);
+					}
+				}
+				return;
+			});
+			return this;
+		}
+	});
+
+
+
+
+
+
+
+
+
+
+
+
 
 	/*Carrega página HTML requisitada no elemento informado*/
 	Object.defineProperty(WDdom.prototype, "load", {
@@ -2583,109 +2843,10 @@ SOFTWARE.﻿
 		}
 	});
 
-	/*Define o valor dos atributos data*/
-	Object.defineProperty(WDdom.prototype, "data", {
-		enumerable: true,
-		value: function(input) {
-			if (input === null || new WD(input).type === "object") {
-				this.run(function(elem) {
-					var key, data;
-					data = new AttrHTML(elem)
-					if (input === null) {
-						for (key in data.dataset) {
-							data.del(key);
-						}
-					} else {
-						for (var i in input) {
-							key = data.dataName(i);
-							if (input[i] === null) {
-								data.del(key);
-							} else {
-								data.data(key, input[i]);
-								settingProcedures(elem, key);
-							}
-						}
-					}
-					return;
-				});
-			}
-			return this;
-		}
-	});
 
-	/*Define o atributo style do elemento a partir da nomenclatura CSS*/
-	Object.defineProperty(WDdom.prototype, "style", {
-		enumerable: true,
-		value: function(styles) {
-			if (styles === null || new WD(styles).type === "object") {
-				this.run(function(elem) {
-					var key;
-					if (styles === null) {
-						while (elem.style.length > 0) {
-							key = elem.style[0];
-							elem.style[key] = null;
-						}
-					} else {
-						for (var i in styles) {
-							key = new WD(i).camel;
-							if (!(key in elem.style)) {
-								log("style: Unknown attribute. ("+i+")", "w");
-							}
-							elem.style[key] = styles[i];
-						}
-					}
-					return;
-				});
-			} else {
-				log("style: Invalid argument!", "w");
-			}
-			return this;
-		}
-	});
+	
 
-	/*Manipula os valores do atributo class*/
-	Object.defineProperty(WDdom.prototype, "class", {
-		enumerable: true,
-		value: function (list) {
-			if (list === null || new WD(list).type === "object") {
-				this.run(function(elem) {
-					var css, cls, i;
-					css = new WD(elem.className);
-					css = css.type === "null" ? [] : css.trim.split(" ");
-					if (list === null) {
-						css = [];
-					} else {
-						css = new WD(css);
-						if (new WD(list.add).type === "text") {
-							cls = new WD(list.add).trim.split(" ");
-							for (i = 0; i < cls.length; i++) {
-								css.add(cls[i]);
-							}
-						}
-						if (new WD(list.del).type === "text") {
-							cls = new WD(list.del).trim.split(" ");
-							for (i = 0; i < cls.length; i++) {
-								css.del(cls[i]);
-							}
-						}
-						if (new WD(list.toggle).type === "text") {
-							cls = new WD(list.toggle).trim.split(" ");
-							for (i = 0; i < cls.length; i++) {
-								css.toggle(cls[i]);
-							}
-						}
-						css = css.valueOf();
-					}
-					elem.className = new WD(css).sort(true).join(" ");
-					return;
-				});
-			} else {
-				log("class: Invalid argument!", "w");
-			}
-			return this;
-		}
 
-	});
 
 	/*Exibe somente os elementos filhos cujo conteúdo textual contenha o valor informado*/
 	Object.defineProperty(WDdom.prototype, "filter", {
@@ -2873,21 +3034,7 @@ SOFTWARE.﻿
 		}
 	});
 
-	Object.defineProperty(WDdom.prototype, "handler", {
-		enumerable: true,
-		value: function (events, remove) {
 
-			if (new WD(events).type === "object") {
-				this.run(function(elem) {
-					for (var event in events) {
-						wdSetHandler(event, events[event], elem, remove);
-					}
-					return;
-				});
-			}
-			return this;
-		}
-	});
 
 	/*Constroi elementos html a partir de um array de objetos*/
 	Object.defineProperty(WDdom.prototype, "repeat", {
@@ -3102,49 +3249,6 @@ SOFTWARE.﻿
 		}
 	});
 
-	/*Retorna o método toString, valueOf*/
-	Object.defineProperties(WDdom.prototype, {
-		type: {
-			enumerable: true,
-			value: "dom"
-		},
-		valueOf: {
-			value: function() {
-				var x;
-				if (this._value === document || this._value === window) {
-					x = [this._value];
-				} else if (this._value instanceof HTMLElement) {
-					x = [this._value];
-				} else {
-					x = [];
-					for (var i = 0; i < this._value.length; i++) {
-						x.push(this._value[i]);
-					}
-				}
-				return x;
-			}
-		},
-		items: {
-			enumerable: true,
-			get: function() {
-				return this.valueOf().length;
-			}
-		},
-		item: {
-			enumerable: true,
-			value: function(index) {
-				var x;
-				x = undefined;
-				index = new WD(index).type === "number" ? WD(index).integer : 0;
-				if (index >= 0 && index < this.items) {
-					x = this.valueOf()[index];
-				} else if (index < 0 && -index <= this.items) {
-					x = this.valueOf()[this.items + index];
-				}
-				return x;
-			}
-		}
-	});
 
 /* === JS ATTRIBUTES ======================================================= */
 
