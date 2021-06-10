@@ -2497,26 +2497,24 @@ SOFTWARE.﻿
 
 
 
-	/*Carrega página HTML requisitada no elemento informado*/
-	Object.defineProperty(WDdom.prototype, "load", {
+	Object.defineProperty(WDdom.prototype, "load", { /*carregar HTML/Texto*/
 		enumerable: true,
 		value: function(text) {
+			text = text === undefined || text === null ? "" : new String(text).toString();
 			this.run(function(elem) {
-				var scripts, script, HTML;
-				text = text === undefined || text === null ? "" : text;
-				HTML = new AttrHTML(elem);
-				elem[HTML.load] = text;
-				if (HTML.load === "innerHTML") {
-					scripts = elem.querySelectorAll("script");
+				var attr = WDdom.load(elem);
+				elem[attr] = text;
+				if (attr === "innerHTML") {
+					var scripts = elem.querySelectorAll("script");
 					for (var i = 0; i < scripts.length; i++) {
-						script = document.createElement("script");
+						var script = document.createElement("script");
 						if (scripts[i].src === "") {
 							script.textContent = scripts[i].textContent;
 						} else {
 							script.src = scripts[i].src;
 						}
 						elem.appendChild(script);
-						WD(script).action("del");
+						WD(script).action("del");//FIXME o que isso faz mesmo?
 					}
 				}
 				loadingProcedures();
@@ -2535,27 +2533,26 @@ SOFTWARE.﻿
 	Object.defineProperty(WDdom.prototype, "filter", {
 		enumerable: true,
 		value: function (text, min, show) {
-			if (new WD(min).type !== "number" || new WD(min).number === "infinity" || min < 0) {
-				min = 0;
-			}
-
-			if (text !== null && text !== undefined && new WD(text).type !== "regexp") {
-				text = String(text).toString().toUpperCase();
-			} else if (new WD(text).type !== "regexp") {
-				text = "";
-			}
+			min = isFinite(min) ? Math.abs(parseInt(min)) : 0;
+			var check = new WDtype(text)
+			if (check.type === "null" || check.type === "undefined") text = "";
+			text = check.type === "regexp" ? text : new String(text).toUpperCase();
 
 			this.run(function (elem) {
-				var child, content;
-				child  = elem.children;
+				var child = elem.children;
 				for (var i = 0; i < child.length; i++) {
-					if (!("textContent" in child[i])) {
-						continue;
+					if (!("textContent" in child[i])) continue;
+
+					var content = WD(child[i].textContent);
+					if (content.type === "null") {
+						content = "";
+					} else if (content.type === "text") {
+						content = content.format("clear", "upper");
+					} else {
+						content = check.type === "regexp" ? content.format("clear") : child[i].textContent;
 					}
 
-					content = new WD(text).type === "regexp" ? child[i].textContent : child[i].textContent.toUpperCase();
-
-					if (new WD(text).type === "regexp") {
+					if (new WD(text).type === "regexp") {//FIXME parei aqui
 						if (text.test(content) === true) {
 							WD(child[i]).action("show");
 						} else {
@@ -2588,28 +2585,20 @@ SOFTWARE.﻿
 			action = String(action).toString().toLowerCase();
 			this.run(function(elem) {
 				var HTML = new AttrHTML(elem);
-				switch(action) {
-					case "open":
-						if ("open" in elem) {
-							elem.open = true;
-						} else {
-							WD(elem).class({add: "wd-open"});
-						}
-						break;
-					case "close":
-						if ("open" in elem) {
-							elem.open = false;
-						} else {
-							WD(elem).class({del: "wd-open"});
-						}
-						break;
-					case "toggle-open":
-						if ("open" in elem) {
-							elem.open = elem.open !== true ? true : false;
-						} else {
-							WD(elem).class({toggle: "wd-open"});
-						}
-						break;
+
+
+				if (action === "open" && "open" in elem) {//FIXME isso não está bom
+					elem.open = true;
+				} else if (action === "close" && "open" in elem) {
+					elem.open = true;
+				} else if (action === "toggle-open" && "open" in elem) {
+					elem.open = elem.open ? false : true;
+				}
+					
+					
+					
+					
+
 					case "tab":
 						var bros = elem.parentElement.children;
 						WD(bros).action("hide");
