@@ -2188,16 +2188,16 @@ SOFTWARE.﻿
 	}
 
 	Object.defineProperties(WDdom, {
-		tag: {
+		tag: {/*retorna a tag do elemento*/
 			value: function(e) {return e.tagName.toLowerCase();}
 		},
-		form: {
+		form: {/*informa se o elemento é de formulário*/
 			value: function(e) {
 				var form = ["textarea", "select", "button", "input", "option"];
 				return form.indexOf(this.tag(e)) < 0 ? false : true;
 			}
 		},
-		type: {
+		type: {/*informa o tipo do elemento de formulário*/
 			value: function(e) {
 				if (!this.form(e)) return null;
 				var types = [
@@ -2213,13 +2213,14 @@ SOFTWARE.﻿
 				return this.tag(e);
 			}
 		},
-		name: {
+		name: {/*informa o valor do atributo name do formulário*/
 			value: function(e) {
 				if (!this.form(e) || !("name" in e)) return null;
-				return e.name;
+				var name = WDtype(e.name);
+				return name.type === "text" ? name.input : null;
 			}
 		},
-		value: {
+		value: {/*retorna o valor do atributo value do formulário*/
 			value: function(e) {
 				if (!this.form(e) || !("value" in e)) return null;
 				var type  = this.type(e);
@@ -2235,12 +2236,12 @@ SOFTWARE.﻿
 					for (var i = 0; i < e.length; i++) {
 						if (e[i].selected) value.push(e[i].value);
 					}
-					return value.length === 0 ? null :  value;
+					return value.length === 0 ? null : value;
 				}
 				return value;
 			}
 		},
-		send: {
+		send: {/*informa se os dados do elemento podem ser enviados*/
 			value: function(e) {
 				if (this.name(e) === null || this.value(e) === null) return false;
 				var noSend = ["submit", "button", "reset", "image", "option"];
@@ -2249,7 +2250,7 @@ SOFTWARE.﻿
 				return true;
 			}
 		},
-		mask: {
+		mask: {/*retorna o atributo para aplicação da máscara*/
 			value: function(e) {
 				if (this.form(e)) {
 					var text = ["button", "option"];
@@ -2264,397 +2265,85 @@ SOFTWARE.﻿
 				return "textContent" in e ? "textContent" : null;
 			}
 		},
-		load: {//FIXME parei aqui 
+		load: {/*retona o atributo para carregar outro elemento interno*/
 			value: function(e) {
-				var value = null;
-				if (this.form === true && this.type !== null) {
-					value = this._forms[this.tag][this.type].load;
-				} else if ("innerHTML" in this.elem) {
-					value = "innerHTML";
-				} else if ("textContent" in this.elem) {
-					value = "textContent";
-				}
-				return value;
+				if (this.tag(e) === "button" || this.tag(e) === "option") return "textContent";
+				var value = [
+					"textarea", "button", "reset", "submit", "email", "text",
+					"search", "tel", "url", "hidden"
+				];
+				if (this.form(e)) return value.indexOf(this.type(e)) >= 0 ? "value" : null;
+				return "innerHTML" in e ? "innerHTML" : "textContent";
 			}
 		},
-
-
-
-
-				textarea: {
-						textarea: {send: true,  mask: "value", load: "value"}
-					},
-					select: {
-						select: {send: true,  mask: null, load: null}
-					},
-					button: {
-						submit: {send: false, mask: "textContent", load: "textContent"},
-						button: {send: false, mask: "textContent", load: "textContent"},
-						reset:  {send: false, mask: "textContent", load: "textContent"}
-					},
-					input: {
-						button:           {send: false, mask: "value", load: "value"},
-						reset:            {send: false, mask: "value", load: "value"},
-						submit:           {send: false, mask: "value", load: "value"},
-						image:            {send: false, mask: null,    load: null},
-						color:            {send: true,  mask: null,    load: null},
-
-						radio:            {send: true,  mask: null,    load: null},
-						checkbox:         {send: true,  mask: null,    load: null},
-						date:             {send: true,  mask: null,    load: null},
-						datetime:         {send: true,  mask: null,    load: null},
-						"datetime-local": {send: true,  mask: null,    load: null},
-						email:            {send: true,  mask: "value", load: "value"},
-						text:             {send: true,  mask: "value", load: "value"},
-						search:           {send: true,  mask: "value", load: "value"},
-						tel:              {send: true,  mask: "value", load: "value"},
-						url:              {send: true,  mask: "value", load: "value"},
-						month:            {send: true,  mask: null,    load: null},
-						number:           {send: true,  mask: null,    load: null},
-						password:         {send: true,  mask: null,    load: null},
-						range:            {send: true,  mask: null,    load: null},
-						time:             {send: true,  mask: null,    load: null},
-						week:             {send: true,  mask: null,    load: null},
-						hidden:           {send: true,  mask: null,    load: "value"},
-
-						file:             {send: true,  mask: null,    load: null}
-					},
-					option: {
-						option: {send: false, mask: "textContent", load: null}
-					}
-
-
-
-
-
-
-
-
-
-
-
-
-	});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//TODO destruir esse AttrHTML
-/*............................................................................*/
-	/*trabalha com os elementos de formulário e os atributos name, value, type, data*/
-	function AttrHTML(elem) {
-		if (!(this instanceof AttrHTML)) {
-				return new AttrHTML(elem);
-		}
-		this.elem = elem;
-	}
-
-	Object.defineProperties(AttrHTML.prototype, {
-		constructor: {
-			value: AttrHTML
-		},
-		_forms: {
-			get: function() {/*retorna os parâmetros dos formulários para send, mask e load: tag > type > parameters*/
-				var attr = {
-					textarea: {
-						textarea: {send: true,  mask: "value", load: "value"}
-					},
-					select: {
-						select: {send: true,  mask: null, load: null}
-					},
-					button: {
-						submit: {send: false, mask: "textContent", load: "textContent"},
-						button: {send: false, mask: "textContent", load: "textContent"},
-						reset:  {send: false, mask: "textContent", load: "textContent"}
-					},
-					input: {
-						button:           {send: false, mask: "value", load: "value"},
-						reset:            {send: false, mask: "value", load: "value"},
-						submit:           {send: false, mask: "value", load: "value"},
-						image:            {send: false, mask: null,    load: null},
-						color:            {send: true,  mask: null,    load: null},
-						radio:            {send: true,  mask: null,    load: null},
-						checkbox:         {send: true,  mask: null,    load: null},
-						date:             {send: true,  mask: null,    load: null},
-						datetime:         {send: true,  mask: null,    load: null},
-						"datetime-local": {send: true,  mask: null,    load: null},
-						email:            {send: true,  mask: "value", load: "value"},
-						text:             {send: true,  mask: "value", load: "value"},
-						search:           {send: true,  mask: "value", load: "value"},
-						tel:              {send: true,  mask: "value", load: "value"},
-						url:              {send: true,  mask: "value", load: "value"},
-						month:            {send: true,  mask: null,    load: null},
-						number:           {send: true,  mask: null,    load: null},
-						password:         {send: true,  mask: null,    load: null},
-						range:            {send: true,  mask: null,    load: null},
-						time:             {send: true,  mask: null,    load: null},
-						week:             {send: true,  mask: null,    load: null},
-						hidden:           {send: true,  mask: null,    load: "value"},
-						file:             {send: true,  mask: null,    load: null}
-					},
-					option: {
-						option: {send: false, mask: "textContent", load: null}
-					}
-				};
-				return attr;
-			}
-		},
-		tag: {
-			get: function() {/*retona a tag do elemento*/
-				return this.elem.tagName.toLowerCase();
-			}
-		},
-		form: {
-			get: function() {/*retorna se é elemento de formulário*/
-				return this.tag in this._forms ? true : false;
-			}
-		},
-		type: {
-			get: function() {/*retorna o tipo de elemento de formulário ou tag*/
-				var value, tag, attr, type;
-				value = null;
-				if (this.form === true) {
-					tag  = this.tag;
-					attr = "type" in this.elem.attributes ? this.elem.attributes.type.value.toLowerCase() : null;
-					type = "type" in this.elem ? this.elem.type.toLowerCase() : null;
-				 	if (attr !== null && attr in this._forms[tag]) {
-						value = attr; /*atributo DIGITADO no HTML*/
-					} else if (type !== null && type in this._forms[tag]) {
-						value = type; /*atributo CONSIDERADO no HTML*/
-					} else if (tag in this._forms[tag]) {
-						value = tag;
-					}
-				}
-				return value;
-			}
-		},
-		name: {
-			get: function() {/*devolve o valor do atributo name ou null*/
-				var name = "name" in this.elem ? this.elem.name : null
-				return WD(name).type === "null" ? null : name;
-			}
-		},
-		fname: {
-			get: function() {/*devolve o valor do atributo nome dos formulários apenas, ou null*/
-				return (this.name !== null && this.form === true) ? this.name : null;
-			}
-		},
-		value: {
-			get: function() {/*devolve o valor do atributo value (formulários: string/lista), se existir, caso contrário retorna null*/
-				var value = null;
-				if (this.form === true && "value" in this.elem) {
-					var type = this.type;
-					value = this.elem.value;
-					if (type === "radio" || type === "checkbox") {
-						value = this.elem.checked === true ? value : null;
-					} else if (type === "date") {
-						value = new WD(value).type === "date" && value !== "%today" ? WD(value).toString() : null;
-					} else if (type === "time") {
-						value = new WD(value).type === "time" && value !== "%now" ? WD(value).toString() : null;
-					} else if (type === "number" || type === "range") {
-						value = new WD(value).type === "number" ? WD(value).valueOf() : null;
-					} else if (type === "file" && "files" in this.elem) {
-						value =  this.elem.files.length > 0 ? this.elem.files : null;
-					} else if (type === "file") {
-						value = value === "" ? null : [{name: value.split(/(\/|\\)/).reverse()[0], type: "???"}];
-					} else if (type === "select") {
-						value = [];
-						for (var i = 0; i < this.elem.length; i++) {
-							if (this.elem[i].selected === true) {
-								value.push(this.elem[i].value);
-							}
-						}
-						value = value.length === 0 ? null :  value;
-					}
-				}
-				return value;
-			}
-		},
-		send: {
-			get: function() {/*indica se é um elemento para enviar nas requisições*/
-				var value = false;
-				if (this.fname !== null && this.value !== null && this.type !== null) {
-					value = this._forms[this.tag][this.type].send;
-				}
-				return value;
-			}
-		},
-		mask: {
-			get: function() {/*devolve o atributo para aplicação da máscara, ou null se não for possível*/
-				var value = "textContent" in this.elem ? "textContent" : null;
-				if (this.form === true && this.type !== null) {
-					value = this._forms[this.tag][this.type].mask;
-				}
-				return value;
-			}
-		},
-		load: {
-			get: function() {/*devolve o atributo para aplicação do load, ou null se não for possível*/
-				var value = null;
-				if (this.form === true && this.type !== null) {
-					value = this._forms[this.tag][this.type].load;
-				} else if ("innerHTML" in this.elem) {
-					value = "innerHTML";
-				} else if ("textContent" in this.elem) {
-					value = "textContent";
-				}
-				return value;
-			}
-		},
-		formData: {
-			get: function() {/* devolve (array de objetos) os valores para serem enviados via requisição*/
-				var form, name, value;
-				form  = [];
-				if (this.send === true) {
-					name  = this.name;
-					value = this.value;
-					if (this.type === "file") {
-						for (var i = 0; i < value.length; i++) {
-							form.push({
-								name:  i === 0 ? name : name+"_"+i,
-								value: encodeURIComponent(value[i].name),
-								post:  value[i].type === "???" ? value[i].name : value[i]
-							});
-						}
-					} else if (this.type === "select") {
-						for (var i = 0; i < value.length; i++) {
-							form.push({
-								name:  i === 0 ? name : name+"_"+i,
-								value: encodeURIComponent(value[i]),
-								post:  value[i]
-							});
-						}
-					} else {
+		formdata: {
+			value: function(e) {/*retorna um array de objetos com os dados para envio em requisições*/
+				var form  = [];
+				if (!this.send(e)) return form;
+				var name  = this.name(e);
+				var value = this.value(e);
+				if (this.type(e) === "file") {
+					for (var i = 0; i < value.length; i++) {
 						form.push({
-							name:  name,
-							value: encodeURIComponent(value),
-							post:  value
+							NAME: i === 0 ? name : name+"_"+i, /*atributo nome*/
+							GET:  encodeURIComponent(value[i].name), /*nome do arquivo*/
+							POST: value[i] /*dados do arquivo*/
 						});
 					}
+					return form;
 				}
+				if (this.tag(e) === "select") {
+					for (var i = 0; i < value.length; i++) {
+						form.push({
+							NAME: i === 0 ? name : name+"_"+i,
+							GET:  encodeURIComponent(value[i]),
+							POST: value[i]
+						});
+					}
+					return form;
+				}
+				form.push({
+					NAME: name,
+					GET:  encodeURIComponent(value),
+					POST: value
+				});
 				return form;
 			}
 		},
-		dataName: {
-			value: function(attr) {/*define o nome do attributo data sem o prefixo data-*/
-				attr = new WD(new WD(attr).toString().replace(/^data\-/i, "")).camel;
-				return WD(attr).type === "text" ? attr : undefined;
-			}
-		},
 		dataset: {
-			get: function() {/*retorna objeto dataset*/
-				var data, name, value;
-				if ("dataset" in this.elem) {
-					data = this.elem.dataset;
-				} else {
-					data = {};
-					for (var i = 0; i < this.elem.attributes.length; i++) {
-						name  = this.elem.attributes[i].name;
-						value = this.elem.attributes[i].value;
-						if ((/^data\-/i).test(name) === true) {
-							name = this.dataName(name);
-							if (name !== undefined) {
-								data[name] = value;
-							}
-						}
-					}
-				}
-				return data;
-			}
-		},
-		data: {
-			value: function (attr, val) {/*define ou retorna o valor de data*/
-				attr = this.dataName(attr);
-				val  = new WD(val).type === "regexp" ? WD(val).toString() : val;
-				if (attr === undefined) {
-					return attr;			
-				} else if (val === undefined) {
-					return attr in this.dataset ? this.dataset[attr] : val;
-				} else if ("dataset" in this.elem) {
-					this.elem.dataset[attr] = val;
-					return val;
-				} else {
-					attr = "data-"+WD(attr).dash;
-					this.elem.setAttribute(attr, val);
-					return val;
-				}
-				return undefined;
-			}
-		},
-		del: {
-			value: function(name) {/* remove o atributo data*/
-				name = this.dataName(name);
-				if (name  === undefined) {
-					return false;
-				} else if ("dataset" in this.elem) {
-					this.elem.dataset[name] = null;
-					delete this.elem.dataset[name];
-					return true;
-				} else {
-					name = "data-"+WD(name).dash;
-					this.data(name, null);
-					this.elem.removeAttribute(name);
-					return true
-				}
-				return false;
-			}
-		},
-		has: {
-			value: function(name) {/*verifica se o atributo data existe*/
-				name = this.dataName(name);
-				return name in this.dataset;
-			}
-		},
-		_dataConvert: {
-			value: function(input) {/*obter atributos pares key1{value1}...&... em objeto [{key1: value1,...}, ...]*/
-				var open, name, value, list, key;
-				list  = [{}];
-				key   = 0;
-				open  = 0;
-				name  = "";
-				value = "";
-				input = String(input).trim().split("");
-				for (var i = 0; i < input.length; i++) {/*ler todos os caracteres do atributo individualmente*/
-					if (input[i] === "{" && open === 0) {/*se encontrado { pela primeira vez, abrir captura*/
+			value: function(e, attr) {/*obter o conteúdo de dataset e ransformar em um array de objetos*/
+				var list = [{}];
+				if (!(attr in e.dataset)) return list;
+				var key    = 0;
+				var open   = 0;
+				var name   = "";
+				var value  = "";
+				var object = false;
+				var core  = String(e.dataset[attr]).trim().split("");
+				for (var i = 0; i < core.length; i++) {
+					if (core[i] === "{" && open === 0) {/*abrir captura*/
 						open++;
-					} else if (input[i] === "}" && open === 1) {/*se encontrado } em mesmo número que {, finalizar captura*/
+					} else if (core[i] === "}" && open === 1) {/*finalizar captura*/
 						open--;
-						value = value.trim();
-						list[key][name.trim()] = value === "null" ? null : value;/*para deletar atributo*/
+						object = true;
+						value  = value.trim();
+						name   = name.trim();
+						list[key][name] = value === "null" ? null : value;
 						name  = "";
 						value = "";
-						if (input[i+1] === "&") {
+						if (core[i+1] === "&") {/*novo grupo*/
 							list.push({});
 							key++;
 							i++;
 						}
-					} else if (open > 0) {/*se já estiver aberta a captura, acrescenta ou diminui verificador e captura o valor do atributo*/
-						if (input[i] === "{") {
-							open++;
-						} else if (input[i] === "}") {
-							open--;
-						}
-						value += input[i];
-					} else {/*se não se trata das outras possibilidades, captura o nome do atributo*/
-						name += input[i];
+					} else if (open > 0) {/*capturando valores do atributo*/
+						if (core[i] === "{") {open++;} else if (core[i] === "}") {open--;}
+						value += core[i];
+					} else {/*capturando nome do atributo*/
+						name += core[i];
 					}
 				}
-				return list;
-			}
-		},
-		core: {
-			value: function(attr) {/*retorna o objeto de convert a partir do atributo*/
-				return this.has(attr) === true ? this._dataConvert(this.data(attr)) : [{}];
+				return object ? list : (name.trim() === "null" ? null : name);
 			}
 		}
 	});
@@ -2664,12 +2353,6 @@ SOFTWARE.﻿
 	WDdom.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDdom}
 	});
-
-
-
-
-
-
 
 	Object.defineProperty(WDdom.prototype, "item", {/*item ou quantidade*/
 		enumerable: true,
