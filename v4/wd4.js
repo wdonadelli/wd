@@ -1780,75 +1780,66 @@ SOFTWARE.﻿
 	}
 
 	Object.defineProperties(WDarray, {
-		getValues: {
-			value: function(source) {
-				var check = new WDtype(source);
-				if (check.type !== "array") return null;
-				var data = {list: [], index: [], items: 0};
-				for (var i = 0; i < source.length; i++) {
-					var val = new WDtype(source[i]);
-					if (val.type !== "number" || !isFinite(val.value)) continue;
-					data.index.push(i);
-					data.list.push(val.value);
-				}
-				data.items = data.list.length;
-				return data.items === 0 ? null : data;
-			}
-		},
-		compareList: {
+		setArray: {
 			value: function(list1, list2) {
-				if (list1.items !== list2.items) return false;
-				for (var i = 0; i < list1.items; i++) {
-					if (list1.index[i] !== list2.index[i]) return false;
+				var loop = list1.length;
+				if (list2 !== undefined && list2.length < loop) loop = list2.length;
+				var array1 = [];
+				var array2 = list2 === undefined ? null : [];
+				for (var i = 0; i < loop; i++) {
+					var check1 = WDtype(list1[i]);
+					var check2 = array2 === null ? null : WDtype(list2[i]);
+					if (check1.type !== "number" || !isFinite(check1.value)) continue;
+					if (array2 !== null) {
+						if (check2.type !== "number" || !isFinite(check2.value)) continue;
+						array2.push(check2.value);
+					}
+					array1.push(check1.value);
 				}
-				return true;
+				if (array1.length === 0) return {array1: null, array2: null};
+				return {array1: array1, array2: array2};
 			}
 		},
 		sum: {
 			value: function(list1, exp1, list2, exp2) {
-				var data = {value: 0, items: 0};
-				for (var i = 0; i < list1.items; i++) {
-					if (exp1 < 0 && list1.list[i] === 0) continue; /*divisão por zero*/
-					if (list2 !== undefined && exp2 < 0 && list2.list[i] === 0) continue; /*divisão por zero*/
-					var val1 = Math.pow(list1.list[i], exp1);
-					var val2 = list2 === undefined ? 1 : Math.pow(list2.list[i], exp2);
-					data.value += val1 * val2;
-					data.items++;
+				if (list2 === undefined) list2 = null;
+				var value = 0;
+				for (var i = 0; i < list1.length; i++) {
+					if (exp1 < 0 && list1[i] === 0) return null; /*divisão por zero*/
+					if (list2 !== null && exp2 < 0 && list2[i] === 0) return null; /*divisão por zero*/
+					var val1 = Math.pow(list1[i], exp1);
+					var val2 = list2 === null ? 1 : Math.pow(list2[i], exp2);
+					value += val1 * val2;
 				}
-				return data.items === 0 ? null : data;
+				return value;
 			}
 		},
 		product: {
 			value: function(list, exp) {
-				var data = {value: 1, items: 0};
-				for (var i = 0; i < list.items; i++) {
-					if (exp < 0 && list.list[i] === 0) continue; /*divisão por zero*/
-					var val = Math.pow(list.list[i], exp);
-					data.value = data.value * val;
-					data.items++;
+				var value = 1;
+				for (var i = 0; i < list.length; i++) {
+					if (exp < 0 && list[i] === 0) return null; /*divisão por zero*/
+					var val = Math.pow(list[i], exp);
+					value = value * val;
 				}
-				return data.items === 0 ? null : data;
+				return value;
 			}
 		},
 		deviation: {
 			value: function(list, ref, exp) {
-				var data = {value: 0, items: 0};
-				for (var i = 0; i < list.items; i++) {
-					var check = new WDtype(ref);
-					if (check.type === "array") {
-						var diff = Math.abs(ref[i] - list.list[i]);
-					} else {
-						var diff = Math.abs(ref - list.list[i]);
-					}
-					if (exp < 0 && diff === 0) continue; /*divisão por zero*/
+				var value = 0;
+				var check = new WDtype(ref);
+				for (var i = 0; i < list.length; i++) {
+					var diff = Math.abs((check.type === "array" ? ref[i] : ref) - list[i]);
+					if (exp < 0 && diff === 0) return null; /*divisão por zero*/
 					var val = Math.pow(diff, exp);
-					data.value += val;
-					data.items++;
+					value += val;
 				}
-				return data.items === 0 ? null : data;
+				console.log(value);
+				return value;
 			}
 		},
-		fList: {
+		functionList: {
 			value: function(x, f) {
 				var data = [];
 				for (var i = 0; i < x.length; i++) data.push(f(x[i]));
@@ -2032,77 +2023,68 @@ SOFTWARE.﻿
 		SUM: {/*soma*/
 			enumerable: true,
 			get: function() {
-				var list = WDarray.getValues(this.valueOf());
-				if (list === null) return null;
-				var data = WDarray.sum(list, 1);
-				return data ===  null ? null : data.value;
+				var list = WDarray.setArray(this._value).array1;
+				return list === null ? list : WDarray.sum(list, 1);
 			}
 		},
 		AVERAGE: {/*média simples*/
 			enumerable: true,
 			get: function() {
-				var list = WDarray.getValues(this.valueOf());
-				if (list === null) return null;
-				var data = WDarray.sum(list, 1);
-				return data ===  null ? null : data.value / data.items;
+				var list = WDarray.setArray(this._value).array1;
+				return list === null ? list : WDarray.sum(list, 1) / list.length;
 			}
 		},
 		GEOMETRIC: {/*média geométrica*/
 			enumerable: true,
 			get: function() {
-				var list = WDarray.getValues(this.valueOf());
+				var list = WDarray.setArray(this._value).array1;
 				if (list === null) return null;
 				var data = WDarray.product(list, 1);
-				return data ===  null ? null : Math.pow(Math.abs(data.value),1/data.items);
+				return data ===  null ? data : Math.pow(Math.abs(data),1/list.length);
 			}
 		},
 		HARMONIC: {/*média harmônica*/
 			enumerable: true,
 			get: function() {
-				var list = WDarray.getValues(this.valueOf());
+				var list = WDarray.setArray(this._value).array1;
 				if (list === null) return null;
 				var data = WDarray.sum(list, -1);
-				return data ===  null ? null : data.items / data.value;
+				return data ===  null ? data : list.length / data;
 			}
 		},
 		MEDIAN: {/*mediana*/
 			enumerable: true,
 			get: function() {
-				var list = WDarray.getValues(this.valueOf());
+				var list = WDarray.setArray(this.sort()).array1;
 				if (list === null) return null;
-				var data = list.list.sort(function(x,y) {return x - y >= 0 ? 1 : -1});
-				if (list.items % 2 !== 0) return data[((list.items - 1)/2)];
-				return (data[list.items/2] + data[(list.items/2)-1])/2;
+				if (list.length % 2 !== 0) return list[((list.length - 1)/2)];
+				return (list[list.length/2] + list[(list.length/2)-1])/2;
 			}
 		},
 		MIN: {/*menor valor*/
 			enumerable: true,
 			get: function() {
-				var list = WDarray.getValues(this.valueOf());
-				if (list === null) return null;
-				var data = list.list.sort(function(x,y) {return x - y >= 0 ? 1 : -1});
-				return data[0];
+				var list = WDarray.setArray(this.sort()).array1;
+				return list === null ? list : list[0];
 			}
 		},
 		MAX: {/*maior valor*/
 			enumerable: true,
 			get: function() {
-				var list = WDarray.getValues(this.valueOf());
-				if (list === null) return null;
-				var data = list.list.sort(function(x,y) {return x - y >= 0 ? 1 : -1});
-				return data.reverse()[0];
+				var list = WDarray.setArray(this.sort()).array1;
+				return list === null ? list : list.reverse()[0];
 			}
 		},
 		DEVIATION: {/*desvio*/
 			enumerable: true,
 			value: function(attr, mean) {
-				attr = String(attr).toUpperCase();
-				mean = mean === true ? 1 : 0.5;
+				attr = new String(attr).toUpperCase();
+				mean = mean === true ? 1 : 2;
 				var ref = attr in this ? this[attr] : this.AVERAGE;
 				if (ref === null) return null;
-				var list = WDarray.getValues(this.valueOf());
+				var list = WDarray.setArray(this._value).array1;
 				var data = WDarray.deviation(list, ref, mean);
-				return data ===  null ? null : Math.pow(data.value/data.items, mean);
+				return data ===  null ? data : Math.pow(data/list.length, 1/mean);
 			}
 		},
 		LINEAR: {/*regressão linear: mínimos quadrados*/
@@ -2597,7 +2579,7 @@ SOFTWARE.﻿
 					
 					
 					
-					
+	/*				
 
 					case "tab":
 						var bros = elem.parentElement.children;
@@ -2699,7 +2681,7 @@ SOFTWARE.﻿
 							elem.parentElement.removeChild(elem);
 						}
 						break;
-				}
+				}*/
 				return;
 			});
 			return this;
