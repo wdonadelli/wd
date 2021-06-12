@@ -1317,7 +1317,7 @@ SOFTWARE.﻿
 
 
 
-	Object.defineProperty(WDnumber.prototype, "fraction", {//FIXME
+	Object.defineProperty(WDnumber.prototype, "frac", {//FIXME
 		enumerable: true,
 		get: function() {
 			if (this.nType === "zero")      return  "0/1";
@@ -1875,7 +1875,7 @@ SOFTWARE.﻿
 		}
 	});
 
-	Object.defineProperty(WDarray.prototype, "inside", {/*informa se contem o item*/
+	Object.defineProperty(WDarray.prototype, "check", {/*informa se contem o item*/
 		enumerable: true,
 		value: function() {
 			if (arguments.length === 0) return false;
@@ -1925,7 +1925,7 @@ SOFTWARE.﻿
 		enumerable: true,
 		value: function() {
 			for (var i = 0 ; i < arguments.length; i++) {
-				if (this.inside(arguments[i])) {this.del(arguments[i]);}
+				if (this.check(arguments[i])) {this.del(arguments[i]);}
 				else                           {this.add(arguments[i]);}
 			}
 			return this.valueOf();
@@ -2557,7 +2557,7 @@ SOFTWARE.﻿
 						ready = false;
 						for (var i = -1; i >= -child.items; i--) {
 							array = child.item(i).className.split(" ");
-							if (new WD(array).inside("js-wd-no-display") === false) {
+							if (new WD(array).check("js-wd-no-display") === false) {
 								WD(child.item(i+1)).action("tab");
 								ready = true;
 								break;
@@ -2574,7 +2574,7 @@ SOFTWARE.﻿
 						ready = false;
 						for (var i = 0; i < child.items; i++) {
 							array = child.item(i).className.split(" ");
-							if (new WD(array).inside("js-wd-no-display") === false) {
+							if (new WD(array).check("js-wd-no-display") === false) {
 								WD(child.item(i-1)).action("tab");
 								ready = true;
 								break;
