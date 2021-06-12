@@ -1192,7 +1192,7 @@ SOFTWARE.﻿
 
 			check = String(check).toString();
 			var input = this.toString();
-			var code  = {"#": "[0-9]", "@": "[a-zA-Z]", "*": ".", "?": ""};
+			var code  = {"#": "[0-9]", "@": "[a-zA-ZÀ-ÿ]", "*": ".", "?": "?"};//FIXME o ? é dor de cabeça: WD("## #?####-####").mask(4136169446)
 			var mask  = ["^"];
 			var gaps  = [];
 			var only  = ["^"]
@@ -1247,14 +1247,7 @@ SOFTWARE.﻿
 			if (callback(gaps)) return gaps;
 
 			return null;
-
-
-
-
-
 	}});
-
-
 
 /*============================================================================*/
 
@@ -1835,38 +1828,38 @@ SOFTWARE.﻿
 					var val = Math.pow(diff, exp);
 					value += val;
 				}
-				console.log(value);
 				return value;
 			}
 		},
-		functionList: {
+		setY: {
 			value: function(x, f) {
 				var data = [];
 				for (var i = 0; i < x.length; i++) data.push(f(x[i]));
 				return data;
 			}
+		},
+		strDev: {
+			value: function(list, ref) {
+				if (ref === null) return null;
+				var data = this.deviation(list, ref, 2);
+				return data ===  null ? data : Math.sqrt(data/list.length);
+			}
+		},
+		leastSquares: {
+			value: function(x, y) {
+				var X  = this.sum(x, 1);
+				var Y  = this.sum(y, 1);
+				var X2 = this.sum(x, 2);
+				var XY = this.sum(x, 1, y, 1);
+				if ([X, Y, XY, X2].indexOf(null) >= 0) return null;
+				var N    = y.length;
+				var data = {};
+				data.a   = ((N * XY) - (X * Y)) / ((N * X2) - (X * X));
+				data.b   = ((Y) - (X * data.a)) / (N);
+				return data;
+			}
 		}
 	});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 	WDarray.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDarray}
@@ -1928,7 +1921,7 @@ SOFTWARE.﻿
 		}
 	});
 
-	Object.defineProperty(WDarray.prototype, "toggle", {/*adiciona/remove items*/
+	Object.defineProperty(WDarray.prototype, "tgl", {/*adiciona/remove items*/
 		enumerable: true,
 		value: function() {
 			for (var i = 0 ; i < arguments.length; i++) {
@@ -2018,115 +2011,108 @@ SOFTWARE.﻿
 		}
 	});
 
+	Object.defineProperty(WDarray.prototype, "data", {/*dados estatísticos*/
+		enumerable: true,
+		get: function() {
+			var list = WDarray.setArray(this.sort()).array1;
+			if (list === null) return null;
+			var len  = list.length;
+			var val  = null;
+			var data = {};
 
-	Object.defineProperties(WDarray.prototype, {/*estatísticas*/
-		SUM: {/*soma*/
-			enumerable: true,
-			get: function() {
-				var list = WDarray.setArray(this._value).array1;
-				return list === null ? list : WDarray.sum(list, 1);
-			}
-		},
-		AVERAGE: {/*média simples*/
-			enumerable: true,
-			get: function() {
-				var list = WDarray.setArray(this._value).array1;
-				return list === null ? list : WDarray.sum(list, 1) / list.length;
-			}
-		},
-		GEOMETRIC: {/*média geométrica*/
-			enumerable: true,
-			get: function() {
-				var list = WDarray.setArray(this._value).array1;
-				if (list === null) return null;
-				var data = WDarray.product(list, 1);
-				return data ===  null ? data : Math.pow(Math.abs(data),1/list.length);
-			}
-		},
-		HARMONIC: {/*média harmônica*/
-			enumerable: true,
-			get: function() {
-				var list = WDarray.setArray(this._value).array1;
-				if (list === null) return null;
-				var data = WDarray.sum(list, -1);
-				return data ===  null ? data : list.length / data;
-			}
-		},
-		MEDIAN: {/*mediana*/
-			enumerable: true,
-			get: function() {
-				var list = WDarray.setArray(this.sort()).array1;
-				if (list === null) return null;
-				if (list.length % 2 !== 0) return list[((list.length - 1)/2)];
-				return (list[list.length/2] + list[(list.length/2)-1])/2;
-			}
-		},
-		MIN: {/*menor valor*/
-			enumerable: true,
-			get: function() {
-				var list = WDarray.setArray(this.sort()).array1;
-				return list === null ? list : list[0];
-			}
-		},
-		MAX: {/*maior valor*/
-			enumerable: true,
-			get: function() {
-				var list = WDarray.setArray(this.sort()).array1;
-				return list === null ? list : list.reverse()[0];
-			}
-		},
-		DEVIATION: {/*desvio*/
-			enumerable: true,
-			value: function(attr, mean) {
-				attr = new String(attr).toUpperCase();
-				mean = mean === true ? 1 : 2;
-				var ref = attr in this ? this[attr] : this.AVERAGE;
-				if (ref === null) return null;
-				var list = WDarray.setArray(this._value).array1;
-				var data = WDarray.deviation(list, ref, mean);
-				return data ===  null ? data : Math.pow(data/list.length, 1/mean);
-			}
-		},
-		LINEAR: {/*regressão linear: mínimos quadrados*/
-			enumerable: true,
-			value: function(input, details) {
-				var check = new WDtype(input);
-				if (check.type !== "array") return null;
-				var y = WDarray.getValues(this.valueOf());
-				var x = WDarray.getValues(input);
-				if (y === null || x === null) return null;
-				if (!WDarray.compareList(x,y)) return null;
-				var X  = WDarray.sum(x, 1);
-				var Y  = WDarray.sum(y, 1);
-				var X2 = WDarray.sum(x, 2);
-				var XY = WDarray.sum(x, 1, y, 1);
-				if ([X, Y, XY, X2].indexOf(null) >= 0) return null;
-				try {
-					var N  = XY.items;
-					var data = {};
-					data.a   = ((N * XY.value) - (X.value * Y.value)) / ((N * X2.value) - (X.value * X.value));
-					data.b   = ((Y.value) - (X.value * data.a)) / (N);
-					data.f   = function(x) {return data.a*x+data.b;};
-					data.y   = WDarray.fList(x.list, data.f);
-					var err  = WDarray.deviation(y, data.y, 2);
-					data.d   = err === null ? null : Math.pow(err.value/err.items, 0.5);
-					return details === true ? data : data.f;
-				} catch(e){}
-				return null;
-			}
-		},
+			/*soma e média, mediana, mínimo, máximo*/
+			val = WDarray.sum(list, 1);
+			data.sum     = {value: val};
+			data.average = {value: val === null ? null : val/len};
+			data.median  = {value: len % 2 !== 0 ? list[(len-1)/2] : (list[len/2]+list[(len/2)-1])/2};
+			data.min     = {value: list[0]};
+			data.max     = {value: list.reverse()[0]};
 
+			/*média geométrica*/
+			val = WDarray.product(list, 1);
+			data.geometric = {value: val === null ? null : Math.pow(Math.abs(val), 1/len)};
 
+			/*média harmônica*/
+			val = WDarray.sum(list, -1);
+			data.harmonic = {value: val === null ? null : len/val};
 
+			/*desvio padrão*/
+			data.sum.deviation       = WDarray.strDev(list, data.sum.value);
+			data.average.deviation   = WDarray.strDev(list, data.average.value);
+			data.median.deviation    = WDarray.strDev(list, data.median.value);
+			data.min.deviation       = WDarray.strDev(list, data.min.value);
+			data.max.deviation       = WDarray.strDev(list, data.max.value);
+			data.geometric.deviation = WDarray.strDev(list, data.geometric.value);
+			data.harmonic.deviation  = WDarray.strDev(list, data.harmonic.value);
 
-
+			return data;
+		}
 	});
 
+	Object.defineProperty(WDarray.prototype, "regression", {/*regressão linear*/
+		enumerable: true,
+		value: function(input) {
+			var check = WDtype(input);
+			if (check.type !== "array") return null;
+			var matrix = WDarray.setArray(this._value, input);
+			var y = matrix.array1;
+			var x = matrix.array2;
+			if (x === null || y === null) return null;
+			var data = {};
+			var val  = null;
+			var refx = [];
+			var refy = [];
 
+			/*regressão linear*/
+			val = WDarray.leastSquares(x, y);
+			data.linear = {
+				a: val === null ? null : val.a,
+				b: val === null ? null : val.b
+			};
+			data.linear.f = val === null ? null : function(x) {return data.linear.a*x+data.linear.b;}
+			data.linear.y = val === null ? null : WDarray.setY(x, data.linear.f);
+			data.linear.d = val === null ? null : WDarray.strDev(y, data.linear.y);
 
+			/*regressão exponencial (Y>=0)*/
+			refy = WDarray.setY(y, Math.log);
+			if (refy === null) {val = null;} else {
+				var matrix2 = WDarray.setArray(refy, x);
+				var y2 = matrix2.array1;
+				var x2 = matrix2.array2;
+				if (x2 === null || y2 === null) {val = null} else {
+					val = WDarray.leastSquares(x2, y2);
+				}
+			}
+			data.exponential = {
+				a: val === null ? null : Math.exp(val.b),
+				b: val === null ? null : val.a,
+			};
+			data.exponential.f = val === null ? null : function(x) {return data.exponential.a*Math.exp(data.exponential.b*x);},
+			data.exponential.y = val === null ? null : WDarray.setY(x, data.exponential.f);
+			data.exponential.d = val === null ? null : WDarray.strDev(y, data.exponential.y);
 
+			/*regressão geométrica (Y>=0, X>=0)*/
+			refy = WDarray.setY(y, Math.log);
+			refx = WDarray.setY(x, Math.log);
+			if (refy === null || refx === null) {val = null;} else {
+				var matrix2 = WDarray.setArray(refy, refx);
+				var y2 = matrix2.array1;
+				var x2 = matrix2.array2;
+				if (x2 === null || y2 === null) {val = null} else {
+					val = WDarray.leastSquares(x2, y2);
+				}
+			}
+			data.geometric = {
+				a: val === null ? null : Math.exp(val.b),
+				b: val === null ? null : val.a,
+			};
+			data.geometric.f = val === null ? null : function(x) {return data.geometric.a*Math.pow(x, data.geometric.b);},
+			data.geometric.y = val === null ? null : WDarray.setY(x, data.geometric.f);
+			data.geometric.d = val === null ? null : WDarray.strDev(y, data.geometric.y);
 
-
+			return data;
+		}
+	});
 
 	Object.defineProperties(WDarray.prototype, {
 		toString: {
@@ -2140,27 +2126,6 @@ SOFTWARE.﻿
 			}
 		}
 	});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /*============================================================================*/
 
@@ -2397,7 +2362,7 @@ SOFTWARE.﻿
 		}
 	});
 
-	Object.defineProperty(WDdom.prototype, "class", {/*manipular className*/
+	Object.defineProperty(WDdom.prototype, "css", {/*manipular className*/
 		enumerable: true,
 		value: function (list) {
 			var check = new WDtype(list);
@@ -2412,13 +2377,12 @@ SOFTWARE.﻿
 				var css = WD(elem.className.split(" "));
 				if (css.type !== "array") css = WD([]);
 
-				var act = ["add", "del", "toggle"];
-				for (var i = 0; i < act.length; i++) {
-					if (!(act[i] in list)) continue;
-					var check = new WDtype(list[act[i]]);
+				for (var i in list) {
+					if (["add", "del", "tgl"].indexOf(i) < 0) continue
+					var check = new WDtype(list[i]);
 					if (check.type !== "text") continue;
 					var items = check.value.split(" ");
-					for (var j = 0; j < items.length; j++) css[act[i]](items[j]);
+					for (var j = 0; j < items.length; j++) css[i](items[j]);
 				}
 
 				css.del("");
