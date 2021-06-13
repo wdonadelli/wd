@@ -2066,8 +2066,9 @@ SOFTWARE.﻿
 			/*regressão linear*/
 			val = WDarray.leastSquares(x, y);
 			data.linear = {
+				e: "y = a x + b",
 				a: val === null ? null : val.a,
-				b: val === null ? null : val.b
+				b: val === null ? null : val.b,
 			};
 			data.linear.f = val === null ? null : function(x) {return data.linear.a*x+data.linear.b;}
 			data.linear.y = val === null ? null : WDarray.setY(x, data.linear.f);
@@ -2084,6 +2085,7 @@ SOFTWARE.﻿
 				}
 			}
 			data.exponential = {
+				e: "y = a exp(b x)",
 				a: val === null ? null : Math.exp(val.b),
 				b: val === null ? null : val.a,
 			};
@@ -2103,6 +2105,7 @@ SOFTWARE.﻿
 				}
 			}
 			data.geometric = {
+				e: "y = a x**b",
 				a: val === null ? null : Math.exp(val.b),
 				b: val === null ? null : val.a,
 			};
@@ -2133,6 +2136,17 @@ SOFTWARE.﻿
 		if (!(this instanceof WDdom)) return new WDdom(input, type, value);
 		WDmain.call(this, input, type, value);
 	}
+
+	Object.defineProperties(WDdom, {
+		checkCss: {
+			value: function(e, css) {
+				var list = e.className.replace(WDbox.re.empty, " ").split(" ");
+				return list.indexOf(css) >= 0 ? true : false;
+			}
+		}
+	});
+		
+
 
 	Object.defineProperties(WDdom, {
 		tag: {/*retorna a tag do elemento*/
@@ -2396,8 +2410,7 @@ SOFTWARE.﻿
 		}
 	});
 
-	/*Define o valor dos atributos data*/
-	Object.defineProperty(WDdom.prototype, "data", {
+	Object.defineProperty(WDdom.prototype, "data", {/*define dataset*/
 		enumerable: true,
 		value: function(input) {
 			var check = new WDtype(input);
@@ -2431,18 +2444,6 @@ SOFTWARE.﻿
 		}
 	});
 
-
-
-
-
-
-
-
-
-
-
-
-
 	Object.defineProperty(WDdom.prototype, "load", { /*carregar HTML/Texto*/
 		enumerable: true,
 		value: function(text) {
@@ -2460,62 +2461,49 @@ SOFTWARE.﻿
 							script.src = scripts[i].src;
 						}
 						elem.appendChild(script);
-						WD(script).action("del");//FIXME o que isso faz mesmo?
+						WD(script).action("kill");
 					}
+					loadingProcedures();
 				}
-				loadingProcedures();
 				return;
 			});
 			return this;
 		}
 	});
 
-
-	
-
-
-
 	/*Exibe somente os elementos filhos cujo conteúdo textual contenha o valor informado*/
 	Object.defineProperty(WDdom.prototype, "filter", {
 		enumerable: true,
-		value: function (text, min, show) {
-			min = isFinite(min) ? Math.abs(parseInt(min)) : 0;
-			var check = new WDtype(text)
-			if (check.type === "null" || check.type === "undefined") text = "";
-			text = check.type === "regexp" ? text : new String(text).toUpperCase();
+		value: function (search, min) {
+			min = isFinite(min) && min !== 0 ? parseInt(min) : 1;
+			/*definindo valor de busca*/
+			var check1 = WD(search)
+			if      (search === null || search === undefined) {search = "";}
+			else if (check1.type === "text")   {search = check1.format("upper", "clear");}
+			else if (check1.type !== "regexp") {search = new String(search).trim().toUpperCase();}
 
 			this.run(function (elem) {
 				var child = elem.children;
 				for (var i = 0; i < child.length; i++) {
 					if (!("textContent" in child[i])) continue;
 
-					var content = WD(child[i].textContent);
-					if (content.type === "null") {
-						content = "";
-					} else if (content.type === "text") {
-						content = content.format("clear", "upper");
-					} else {
-						content = check.type === "regexp" ? content.format("clear") : child[i].textContent;
-					}
+					/*obtendo área de busca*/
+					var content = child[i].textContent.trim().toUpperCase();
+					var check2  = WD(content);
+					if (check2.type === "text") content = check2.format("clear");
 
-					if (new WD(text).type === "regexp") {//FIXME parei aqui
-						if (text.test(content) === true) {
-							WD(child[i]).action("show");
-						} else {
-							WD(child[i]).action("hide");
-						}
-					} else if (show !== false) {
-						if (text.length < min || content.indexOf(text) >= 0 || text === "") {
-							WD(child[i]).action("show");
-						} else {
-							WD(child[i]).action("hide");
-						}
+					var target = WD(child[i]);					
+
+					if (check1.type === "regexp" && search.test(content)) {
+						target.action("show");
+						continue;
+					}
+					var found = content.indexOf(search) >= 0 ? true :  false;
+					var width = search.length;
+					if (min < 0) {
+						target.action((found && width >= -min) ? "show" :  "hide");
 					} else {
-						if (text.length >= min && content.indexOf(text) >= 0 && text !== "") {
-							WD(child[i]).action("show");
-						} else {
-							WD(child[i]).action("hide");
-						}
+						target.action((!found && width >= min) ? "hide" :  "show");
 					}
 				};
 				return;
@@ -2528,124 +2516,108 @@ SOFTWARE.﻿
 	Object.defineProperty(WDdom.prototype, "action", {
 		enumerable: true,
 		value: function (action) {
-			action = String(action).toString().toLowerCase();
+			action = new String(action).toLowerCase();
+
 			this.run(function(elem) {
-				var HTML = new AttrHTML(elem);
+				var list = WD(elem);
 
-
-				if (action === "open" && "open" in elem) {//FIXME isso não está bom
-					elem.open = true;
-				} else if (action === "close" && "open" in elem) {
-					elem.open = true;
-				} else if (action === "toggle-open" && "open" in elem) {
-					elem.open = elem.open ? false : true;
+				if (action === "open") {
+					if ("open" in elem) elem.open = true;
+					return;
 				}
-					
-					
-					
-	/*				
-
-					case "tab":
-						var bros = elem.parentElement.children;
-						WD(bros).action("hide");
-						WD(elem).action("show");
+				if (action === "close") {
+					if ("open" in elem) elem.open = false;
+					return;
+				}
+				if (action === "open?") {
+					if ("open" in elem) elem.open = elem.open ? false : true;
+					return;
+				}
+				if (action === "show") {
+					list.css({del: "js-wd-no-display"});
+					return;
+				}
+				if (action === "hide") {
+					list.css({add: "js-wd-no-display"});
+					return;
+				}
+				if (action === "show?") {
+					list.css({tgl: "js-wd-no-display"});
+					return;
+				}
+				if (action === "check") {
+					if ("checked" in elem) {elem.checked = true;}
+					else {list.css({add: "js-wd-checked"});}
+					return;
+				}
+				if (action === "uncheck") {
+					if ("checked" in elem) {elem.checked = false;}
+					else {list.css({del: "js-wd-checked"});}
+					return;
+				}
+				if (action === "check?") {
+					if ("checked" in elem) {elem.checked = elem.checked ? false : true;}
+					else {list.css({tgl: "js-wd-checked"});}
+					return;
+				}
+				if (action === "enable") {
+					if ("disabled" in elem) {elem.disabled = false;}
+					else {list.css({del: "js-wd-disabled"});}
+					return;
+				}
+				if (action === "disable") {
+					if ("disabled" in elem) {elem.disabled = true;}
+					else {list.css({add: "js-wd-disabled"});}
+					return;
+				}
+				if (action === "enable?") {
+					if ("disabled" in elem) {elem.disabled = elem.disabled ? false : true;}
+					else {list.css({tgl: "js-wd-disabled"});}
+					return;
+				}
+				if (action === "clear") {
+					elem[WDdom.load(elem)] = "";
+					return;
+				}
+				if (action === "kill") {
+					if ("remove" in elem) {elem.remove();}
+					else {elem.parentElement.removeChild(elem);}
+					return;
+				}
+				if (action === "tab") {
+					var bros = WD(elem.parentElement.children);
+					bros.action("hide");
+					list.action("show")
+					return;
+				}
+				if (action === "prev") {
+					var child  = elem.children;
+					var length = child.length;
+					if (length === 0) return;
+					var target = child[length-1];
+					for (var i = 0; i < length; i++) {
+						if (WDdom.checkCss(child[i], "js-wd-no-display")) continue;
+						if (i !== 0) target = child[i-1];
 						break;
-					case "next":
-						var child, ready, array;
-						child = new WD(elem.children);
-						if (child.items === 0) {break;}
-						ready = false;
-						for (var i = -1; i >= -child.items; i--) {
-							array = child.item(i).className.split(" ");
-							if (new WD(array).check("js-wd-no-display") === false) {
-								WD(child.item(i+1)).action("tab");
-								ready = true;
-								break;
-							}
-						}
-						if (ready !== true) {
-							WD(child.item(0)).action("tab");
-						}
+					}
+					var apply = WD(target);
+					apply.action("tab");
+					return;
+				}
+				if (action === "next") {
+					var child  = elem.children;
+					var length = child.length;
+					if (length === 0) return;
+					var target = child[0];
+					for (var i = (length-1); i >= 0; i--) {
+						if (WDdom.checkCss(child[i], "js-wd-no-display")) continue;
+						if (i !== (length - 1)) target = child[i+1];
 						break;
-					case "prev":
-						var child, ready, array;
-						child = new WD(elem.children);
-						if (child.items === 0) {break;}
-						ready = false;
-						for (var i = 0; i < child.items; i++) {
-							array = child.item(i).className.split(" ");
-							if (new WD(array).check("js-wd-no-display") === false) {
-								WD(child.item(i-1)).action("tab");
-								ready = true;
-								break;
-							}
-						}
-						if (ready !== true) {
-							WD(child.item(-1)).action("tab");
-						}
-						break;
-					case "show":
-						WD(elem).class({del: "js-wd-no-display"});
-						break;
-					case "hide":
-						WD(elem).class({add: "js-wd-no-display"});
-						break;
-					case "toggle-show":
-						WD(elem).class({toggle: "js-wd-no-display"});
-						break;
-					case "check":
-						if ("checked" in elem) {
-							elem.checked = true;
-						} else {
-							WD(elem).class({add: "js-wd-checked"});
-						}
-						break;
-					case "uncheck":
-						if ("checked" in elem) {
-							elem.checked = false;
-						} else {
-							WD(elem).class({del: "js-wd-checked"});
-						}
-						break;
-					case "toggle-check":
-						if ("checked" in elem) {
-							elem.checked = elem.checked !== true ? true : false;
-						} else {
-							WD(elem).class({toggle: "js-wd-checked"});
-						}
-						break;
-					case "enable":
-						if ("disabled" in elem) {
-							elem.disabled = false;
-						} else {
-							WD(elem).class({del: "js-wd-disabled"});
-						}
-						break;
-					case "disable":
-						if ("disabled" in elem) {
-							elem.disabled = true;
-						} else {
-							WD(elem).class({add: "js-wd-disabled"});
-						}
-						break;
-					case "toggle-enable":
-						if ("disabled" in elem) {
-							elem.disabled = elem.disabled !== true ? true : false;
-						} else {
-							WD(elem).class({toggle: "js-wd-disabled"});
-						}
-						break;
-					case "clean":
-						elem[HTML.load] = ""
-						break;
-					case "del":
-						if ("remove" in elem) {
-							elem.remove();
-						} else {
-							elem.parentElement.removeChild(elem);
-						}
-						break;
-				}*/
+					}
+					var apply = WD(target);
+					apply.action("tab");
+					return;
+				}
 				return;
 			});
 			return this;
