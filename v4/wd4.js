@@ -739,7 +739,7 @@ SOFTWARE.﻿
 	WDsignal.csmall = {right:  "initial", left:  "0", width: "100%", textAlign: "center"};
 
 	WDsignal.mbase  = {
-		textAlign: "inherit", border: "2px solid", borderRadius: "0.5em",
+		textAlign: "inherit", border: "1px solid", borderRadius: "0.1em",
 		margin: "0.5em", padding: "0.5em", cursor: "pointer", opacity: "1",
 		backgroundColor: "#FFFFFF", /*boxShadow: "2px 2px #DCDCDC"*/
 	};
@@ -774,7 +774,7 @@ SOFTWARE.﻿
 		}, 8000);
 		
 		this.open();
-		this.window.appendChild(box);
+		this.window.insertAdjacentElement("afterbegin", box);
 		return this.status[type];
 	}
 
@@ -1049,7 +1049,7 @@ SOFTWARE.﻿
 		}
 	});
 
-	Object.defineProperty(WDtext.prototype, "toggle", {/*inverte a caixa*/
+	Object.defineProperty(WDtext.prototype, "tgl", {/*inverte a caixa*/
 		enumerable: true,
 		get: function() {
 			var input = this.toString().split("");
@@ -2471,8 +2471,7 @@ SOFTWARE.﻿
 		}
 	});
 
-	/*Exibe somente os elementos filhos cujo conteúdo textual contenha o valor informado*/
-	Object.defineProperty(WDdom.prototype, "filter", {
+	Object.defineProperty(WDdom.prototype, "filter", {/*exibe somente o texto casado*/
 		enumerable: true,
 		value: function (search, min) {
 			min = isFinite(min) && min !== 0 ? parseInt(min) : 1;
@@ -2624,78 +2623,65 @@ SOFTWARE.﻿
 		}
 	});
 
-
-
-	/*Constroi elementos html a partir de um array de objetos*/
-	Object.defineProperty(WDdom.prototype, "repeat", {
+	Object.defineProperty(WDdom.prototype, "repeat", {/*clona elementos por array*/
 		enumerable: true,
 		value: function (json) {
-			if (new WD(json).type === "array") {
-				this.run(function(elem) {
-					var inner, re, html, data;
-					html = elem.innerHTML;
-					data = new AttrHTML(elem);
-					if (html.search(/\{\{.+\}\}/gi) >= 0) {
-						data.data("wdRepeatModel", html);
-					} else if ("wdRepeatModel" in elem.dataset) {
-						html = data.data("wdRepeatModel");
-					} else {
-						html = null;
-					}
-					if (html !== null) {
-						elem.innerHTML = "";
-						html = new WD(html).replace("}}=\"\"", "}}");
-						for (var i = 0; i < json.length; i++) {
-							inner = html;
-							if (new WD(json[i]).type !== "object") {
-								log("repeat: Incorrect structure ignored!", "i");
-								continue;
-							}
-							for (var c in json[i]) {
-								inner = new WD(inner).replace("{{"+c+"}}", json[i][c]);
-							}
-							elem.innerHTML += inner;
-						}
-						loadingProcedures();
-					}
+			var check = new WDtype(json);
+			if (check.type !== "array") return this;
+			this.run(function(elem) {
+				var html = elem.innerHTML;
+
+				if (html.search(/\{\{.+\}\}/gi) >= 0) {
+					elem.dataset.wdRepeatModel = html;
+				} else if ("wdRepeatModel" in elem.dataset) {
+					html = elem.dataset.wdRepeatModel;
+				} else {
 					return;
-				});	
-			} else {
-				log("repeat: Invalid argument.", "w");
-			}
+				}
+				elem.innerHTML = "";
+				html = html.replace(/\}\}\=\"\"/g, "}}");
+				for (var i = 0; i < json.length; i++) {
+					var inner  = html;
+					var object = new WDtype(json[i]);
+					if (object.type !== "object") continue;
+					for (var c in json[i]) {
+						var re = new RegExp("{{"+c+"}}", "g");
+						inner = inner.replace(re, json[i][c]);
+					}
+					elem.innerHTML += inner;
+				}
+				loadingProcedures();
+				return;
+			});	
 			return this;
 		}
 	});
 
-	/*Exibe somente os elementos filhos no intervalo numérico informado*/
-	Object.defineProperty(WDdom.prototype, "page", {
+	Object.defineProperty(WDdom.prototype, "page", {/*divide os elementos em "páginas"*/
 		enumerable: true,
 		value: function (page, size) {
-			page = new WD(page).type !== "number" ? 0 : new WD(page).integer;
-			size = new WD(size).type !== "number" || new WD(size).abs === Infinity ? 1 : new WD(size).abs;
+			page = isFinite(page) ? parseInt(page) : 0;
+			size = isFinite(size) && size > 0 ? Math.abs(size) : 1;
+
 			this.run(function(elem) {
-				var lines, amount, width, pages, start, end;
-				lines  = elem.children;
-				amount = lines.length;
-				width  = size <= 1 ? WD(size * amount).integer : new WD(size).integer;
-				pages  = new WD(amount / width).round();
-				if (page >= pages - 1 || page === -1) {/*page igual ou posterior a última página*/
-					start = (pages - 1) * width;
-					end   = amount - 1;
-				} else if (pages + page <= 0) {/*-page igual ou anterior a primeira página*/
-					start = 0;
-					end   = start + width - 1;
-				} else if (page < 0) {/*-page entre a primeira e última página*/
-					start = (pages + page) * width;
-					end   = start + width - 1;
-				} else {/*page entre a primeira e última página*/
-					start = page * width;
-					end   = start + width - 1;
+				var book  = elem.children;
+				var lines = size < 1 ? parseInt(size*book.length) : parseInt(size);
+				var pages = parseInt(book.length/lines);
+				var print = [];
+				console.info("page: ", page, ", size: ", size, ", length: ", book.length, ", lines: ", lines, ", pages: ", pages);
+				
+				
+				for (var i = 0; i < book.length; i++) {
+					var p = parseInt(i/lines);
+					if (print[p] === undefined) print.push([]);
+					console.log("p: ", p, "i: ", i);
+					print[p].push(book[i]);
 				}
-				WD(lines).action("hide");
-				for (var i = start; i <= end; i++) {
-					WD(lines[i]).action("show");
-				}
+				WD(book).action("hide");
+				var show = WD(print).item(page);
+				if (show === undefined) show = page < 0 ? print[0] : print[pages];
+				
+				for (var i = 0; i < show.length; i++) WD(show[i]).action("show");
 				return;
 			});
 			return this;
@@ -3094,7 +3080,7 @@ SOFTWARE.﻿
 					if ("join"  in attr) {x.textContent += attr["join"];}
 					if ("acss"  in attr) {WD(x).class({add: attr["acss"]});}
 					if ("dcss"  in attr) {WD(x).class({del: attr["dcss"]});}
-					if ("tcss"  in attr) {WD(x).class({toggle: attr["tcss"]});}
+					if ("tcss"  in attr) {WD(x).class({tgl: attr["tcss"]});}
 					return;
 				});
 			}
