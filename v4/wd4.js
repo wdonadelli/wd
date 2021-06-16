@@ -2688,45 +2688,31 @@ SOFTWARE.﻿
 		}
 	});
 
-	/*Ordena os filhos do elemento com base em seu conteúdo textual*/
-	Object.defineProperty(WDdom.prototype, "sort", {
+	Object.defineProperty(WDdom.prototype, "sort", {/*ordenar elementos filhos*/
 		enumerable: true,
 		value: function (order, col) {
-			order = new WD(order);
-			col   = new WD(col);
+			order = isFinite(order) ? order : 1;
+			col   = isFinite(col) && col >= 0 ? parseInt(col) : null;
+
 			this.run(function(elem) {
-				var array, asort, childs;
-				array = new WD(elem.children).valueOf();
-				/*para ordenar os filhos através dos netos*/
-				if (col.number === "integer" && col.valueOf() >= 0) {
-					col = col.valueOf();
-					/*verificando e definindo netos*/
-					for (var i = 0; i < array.length; i++) {
-						childs = array[i].children;
-						if (childs.length > 0 && childs.length > col) {
-							array[i] = childs[col];
-						}
+				var children = elem.children;
+				var aux = [];
+
+				for (var i = 0; i < children.length; i++) {
+					if (col === null) {
+						aux.push(children[i]);
+					} else if (children[i].children[col] !== undefined) {
+						aux.push(children[i].children[col]);
 					}
-					/*ordenando*/
-					asort = new WD(array).sort();
-					/*redefinindo os filhos*/
-					for (var k = 0; k < asort.length; k++) {
-						if (asort[k].parentElement !== elem) {
-							asort[k] = asort[k].parentElement;
-						}
-					}
-				/*caso contrário, ordenar só os filhos*/
-				} else {
-					asort = new WD(array).sort();
 				}
-				/*Definindo a ordem dos elementos*/
-				if (order.type === "number" && order.valueOf() < 0) {
-					asort = asort.reverse();
+
+				var exec = WD(aux);
+				var sort = exec.sort();
+				if (order < 0) sort = sort.reverse();
+				for (var i = 0; i < sort.length; i++) {
+					elem.appendChild(col === null ? sort[i] : sort[i].parentElement);
 				}
-				/*adicionando os elementos ao pai*/
-				for (var j = 0; j < asort.length; j++) {
-					elem.appendChild(asort[j]);
-				}
+
 				return;
 			});
 			return this;
