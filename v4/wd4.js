@@ -2719,23 +2719,18 @@ SOFTWARE.﻿
 		}
 	});
 
-	/*Obtêm o estilo aplicado aos elementos (lista)*/
-	Object.defineProperty(WDdom.prototype, "getStyle", {
+	Object.defineProperty(WDdom.prototype, "styles", {/*lista os estilos*/
 		enumerable: true,
 		value: function(css) {
-			var x, style;
-			x = [];
-			if (!("getComputedStyle" in window)) {
-				log("getStyle: Your browser does not have the necessary tool!", "w");
-			} else if (new WD(css).type === "text") {
-				this.run(function(elem) {
-					style = window.getComputedStyle(elem, null);
-					x.push(css in style ? style.getPropertyValue(css) : null);
-					return;
-				});
-			} else {
-				log("getStyle: Invalid argument.", "w");
-			}
+			var check = WDtype(css);
+			if (check.type !== "text") return null;
+			css = check.value;
+			var x = [];
+			this.run(function(elem) {
+				var style = window.getComputedStyle(elem, null);
+				x.push(css in style ? style.getPropertyValue(css) : null);
+				return;
+			});
 			return x;
 		}
 	});
