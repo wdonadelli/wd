@@ -2736,9 +2736,9 @@ SOFTWARE.﻿
 	});
 
 	/*Retorna uma matriz com a captura dos dados em HTML*/
-	Object.defineProperty(WDdom.prototype, "matrix", {
+	Object.defineProperty(WDdom.prototype, "tbody", {
 		enumerable: true,
-		value: function() {
+		value: function(tfoot) {//FIXME tfoot é pra dizer se vai pergar os dados de tfoot também
 			var x = [];
 			this.run(function(elem) {
 				var table, head, body, value;
