@@ -2397,7 +2397,7 @@ SOFTWARE.﻿
 				if (css.type !== "array") css = WD([]);
 
 				for (var i in list) {
-					if (["add", "del", "tgl"].indexOf(i) < 0) continue
+					if (["add", "del", "tgl", "toggle"].indexOf(i) < 0) continue
 					var check = new WDtype(list[i]);
 					if (check.type !== "text") continue;
 					var items = check.value.split(" ");
