@@ -134,22 +134,14 @@ SOFTWARE.﻿
 
 	WDbox.csv = function(input) {/*CSV para Array*/
 		var data = [];
-
 		var rows = input.trim().split("\n");
-
 		for (var r = 0; r < rows.length; r++) {
 			data.push([]);
-
 			var cols = rows[r].split("\t")
-
 			for (var c = 0; c < cols.length; c++) {
-				var col = new WDtype(cols[c]);
-
-				if (col.type === "number") {
-					data[r].push(col.value);
-				} else {
-					data[r].push(col.input.replace(/^\"/, "").replace(/\"$/, ""));
-				}
+				var value = cols[c];
+				if ((/^\"(.+)?\"$/).test(value)) value = value.replace(/^\"/, "").replace(/\"$/, "");
+				data[r].push(value);
 			}
 		}
 		return data;
@@ -1198,8 +1190,6 @@ SOFTWARE.﻿
 			var only  = ["^"]
 			var func  = new WDtype(callback);
 			if (func.type !== "function") callback = function(x) {return true;}
-			
-
 
 			/* obtendo a máscara e os containers para ocupação */
 			for (var i = 0; i < input.length; i++) {
@@ -2011,6 +2001,23 @@ SOFTWARE.﻿
 		}
 	});
 
+	Object.defineProperty(WDarray.prototype, "matrix", {/*obtem a coluna de uma matriz*/
+		enumerable: true,
+		value: function(col) {
+			col = isFinite(col) ? parseInt(Math.abs(col)) : 0;
+			var data = [];
+			for (var i = 0; i < this._value.length; i++) {
+				var check = WDtype(this._value[i]);
+				if (check.type !== "array") {
+					data.push(col === 0 ? check.input : undefined);
+				} else {
+					data.push(check.input[col]);
+				}
+			}
+			return data;
+		}
+	});
+
 	Object.defineProperty(WDarray.prototype, "data", {/*dados estatísticos*/
 		enumerable: true,
 		get: function() {
@@ -2145,8 +2152,6 @@ SOFTWARE.﻿
 			}
 		}
 	});
-		
-
 
 	Object.defineProperties(WDdom, {
 		tag: {/*retorna a tag do elemento*/
@@ -2623,7 +2628,7 @@ SOFTWARE.﻿
 		}
 	});
 
-	Object.defineProperty(WDdom.prototype, "repeat", {/*clona elementos por array*/
+	Object.defineProperty(WDdom.prototype, "repeat", {/*clona elementos por array*///FIXME isso não foi avaliado ainda
 		enumerable: true,
 		value: function (json) {
 			var check = new WDtype(json);
@@ -2735,38 +2740,26 @@ SOFTWARE.﻿
 		}
 	});
 
-	/*Retorna uma matriz com a captura dos dados em HTML*/
-	Object.defineProperty(WDdom.prototype, "tbody", {
+	Object.defineProperty(WDdom.prototype, "table", {/*captura dados da tabela*/
 		enumerable: true,
-		value: function(tfoot) {//FIXME tfoot é pra dizer se vai pergar os dados de tfoot também
-			var x = [];
+		value: function() {
+			var tables = [];
 			this.run(function(elem) {
-				var table, head, body, value;
-				if (elem.tagName.toLowerCase() === "table") {
-					head  = elem.tHead.children[0].children;
-					body  = elem.tBodies[0].children;
-					table = {title: "", header: [], matrix:  []};
-
-					table.title = elem.caption.textContent;					
-
-					for (var h = 0; h < head.length; h++) {
-						table.header.push(head[h].textContent);
+				if (WDdom.tag(elem) !== "table") return tables.push(null);
+				var data = [];
+				var rows = elem.rows;
+				for (var row = 0; row < rows.length; row++) {
+					var cols = rows[row].children;
+					if (data[row] === undefined) data.push([]);
+					for (var col = 0; col < cols.length; col++) {
+						if (data[row][col] === undefined) data[row].push([]);
+						data[row][col] = cols[col].textContent;
 					}
-
-					for (var r = 0; r < body.length; r++) {
-						table.matrix.push([]);
-						for (var c = 0; c < body[r].children.length; c++) {
-							value = new WD(body[r].children[c].textContent);
-							table.matrix[r].push(
-								(value.type === "number" ? value.valueOf() : value.toString())
-							);
-						}
-					}
-					x.push(table);
 				}
+				tables.push(data);
 				return;
 			});
-			return x;
+			return tables;
 		}
 	});
 
