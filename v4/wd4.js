@@ -1041,7 +1041,7 @@ SOFTWARE.﻿
 		}
 	});
 
-	Object.defineProperty(WDtext.prototype, "tgl", {/*inverte a caixa*/
+	Object.defineProperty(WDtext.prototype, "toggle", {/*inverte a caixa*/
 		enumerable: true,
 		get: function() {
 			var input = this.toString().split("");
@@ -1911,7 +1911,7 @@ SOFTWARE.﻿
 		}
 	});
 
-	Object.defineProperty(WDarray.prototype, "tgl", {/*adiciona/remove items*/
+	Object.defineProperty(WDarray.prototype, "toggle", {/*adiciona/remove items*/
 		enumerable: true,
 		value: function() {
 			for (var i = 0 ; i < arguments.length; i++) {
@@ -2401,7 +2401,7 @@ SOFTWARE.﻿
 					var check = new WDtype(list[i]);
 					if (check.type !== "text") continue;
 					var items = check.value.split(" ");
-					for (var j = 0; j < items.length; j++) css[i](items[j]);
+					for (var j = 0; j < items.length; j++) css[i === "tgl" ? "toggle" : i](items[j]);
 				}
 
 				css.del("");
