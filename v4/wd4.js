@@ -67,6 +67,12 @@ SOFTWARE.﻿
 		empty: /[\0- ]+/g,
 	};
 
+	WDbox.int = function(n) {
+		var val = new Number(n).valueOf();
+		return val < 0 ? Math.ceil(n) : Math.floor(n);
+	};
+
+
 	WDbox.lang = function() { /*Retorna a linguagem do documento: definida ou navegador*/
 		var attr  = document.body.parentElement.attributes;
 		var value = "lang" in attr ? attr.lang.value.replace(/\ /g, "") : null;
@@ -145,6 +151,18 @@ SOFTWARE.﻿
 			}
 		}
 		return data;
+	}
+
+	WDbox.matrixObject = function(array) {/*matriz de array para objeto*/
+		var x = [];
+		for (var row = 1; row < array.length; row++) {
+			var cols = array[row];
+			x.push({});
+			for (var col = 0; col < cols.length; col++) {
+				x[row-1][array[0][col]] = array[row][col];
+			}
+		}
+		return x;
 	}
 
 	WDbox.device = function() {/*tipo do dispositivo*/
@@ -892,15 +910,12 @@ SOFTWARE.﻿
 
 			var pack;
 
-			switch(this.type) {
-				case "dom":
-					pack = method === "POST" ? this._Form : this._form;
-					break;
-				case "number":
-					pack = "value="+this.valueOf();
-					break;
-				default:
-					pack = "value="+this.toString();
+			if (this.type === "dom") {
+				pack = this.form(method);
+			} else if (this.type === "number") {
+				pack = "value="+this.valueOf();
+			} else {
+				pack = "value="+this.toString();
 			}
 
 			/*efetuando a requisição*/
@@ -1023,6 +1038,67 @@ SOFTWARE.﻿
 		if (!(this instanceof WDtext)) return new WDtext(input, type, value);
 		WDmain.call(this, input, type, value);
 	}
+
+	Object.defineProperties(WDtext, {
+		mask: {
+			value: function(input, check, callback) {
+			check = String(check).toString();
+			var code  = {"#": "[0-9]", "@": "[a-zA-ZÀ-ÿ]", "*": "."};
+			var mask  = ["^"];
+			var gaps  = [];
+			var only  = ["^"]
+			var func  = new WDtype(callback);
+			if (func.type !== "function") callback = function(x) {return true;}
+
+			/* obtendo a máscara e os containers para ocupação */
+			for (var i = 0; i < input.length; i++) {
+				var char = input[i];
+
+				if (char in code) { /*caracteres de máscara*/
+					mask.push(code[char]);
+					gaps.push(null);
+					only.push(code[char])
+				} else if ((/\w/).test(char)) { /*números, letras e sublinhado*/
+					mask.push(char === "_" ? "\\_" : char);
+					gaps.push(char);
+				} else if (char === "\\" && input[i+1] in re) { /*caracteres especiais*/
+					mask.push(char+input[i+1]);
+					gaps.push(input[i+1]);
+					i++;
+				} else { /*outros caracteres*/
+					mask.push("\\"+char);
+					gaps.push(char);
+				}
+			}
+
+			mask.push("$");
+			mask = new RegExp(mask.join(""));
+
+			/*se o usuário entrou com a máscara formatada*/
+			if (mask.test(check) && callback(check)) return check;
+
+			only.push("$");
+			only = new RegExp(only.join(""));
+
+			/*se os caracteres não estiverem de acordo com a máscara*/
+			if (!only.test(check)) return null;
+
+			var n = 0;
+			for (var i = 0; i < gaps.length; i++) {
+				if (gaps[i] === null) {
+					gaps[i] = check[n];
+					n++;
+				}
+			}
+			gaps = gaps.join("");
+
+			/*se os caracteres passaram pelo teste*/
+			if (callback(gaps)) return gaps;
+
+			return null;
+			}
+		}
+	});
 
 	WDtext.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDtext}
@@ -1181,63 +1257,14 @@ SOFTWARE.﻿
 	Object.defineProperty(WDtext.prototype, "mask", { /*máscaras temáticas*/
 		enumerable: true,
 		value: function(check, callback) {
-
-			check = String(check).toString();
-			var input = this.toString();
-			var code  = {"#": "[0-9]", "@": "[a-zA-ZÀ-ÿ]", "*": ".", "?": "?"};//FIXME o ? é dor de cabeça: WD("## #?####-####").mask(4136169446)
-			var mask  = ["^"];
-			var gaps  = [];
-			var only  = ["^"]
-			var func  = new WDtype(callback);
-			if (func.type !== "function") callback = function(x) {return true;}
-
-			/* obtendo a máscara e os containers para ocupação */
-			for (var i = 0; i < input.length; i++) {
-				var char = input[i];
-
-				if (char in code) { /*caracteres de máscara*/
-					mask.push(code[char]);
-					gaps.push(null);
-					only.push(code[char])
-				} else if ((/\w/).test(char)) { /*números, letras e sublinhado*/
-					mask.push(char === "_" ? "\\_" : char);
-					gaps.push(char);
-				} else if (char === "\\" && input[i+1] in re) { /*caracteres especiais*/
-					mask.push(char+input[i+1]);
-					gaps.push(input[i+1]);
-					i++;
-				} else { /*outros caracteres*/
-					mask.push("\\"+char);
-					gaps.push(char);
-				}
+			var masks = this.toString().split("?");
+			for (var i = 0; i < masks.length; i++) {
+				var mask = WDtext.mask(masks[i], check, callback);
+				if (mask !== null) return mask;
 			}
-
-			mask.push("$");
-			mask = new RegExp(mask.join(""));
-
-			/*se o usuário entrou com a máscara formatada*/
-			if (mask.test(check) && callback(check)) return check;
-
-			only.push("$");
-			only = new RegExp(only.join(""));
-
-			/*se os caracteres não estiverem de acordo com a máscara*/
-			if (!only.test(check)) return null;
-
-			var n = 0;
-			for (var i = 0; i < gaps.length; i++) {
-				if (gaps[i] === null) {
-					gaps[i] = check[n];
-					n++;
-				}
-			}
-			gaps = gaps.join("");
-
-			/*se os caracteres passaram pelo teste*/
-			if (callback(gaps)) return gaps;
-
 			return null;
-	}});
+		}
+	});
 
 /*============================================================================*/
 
@@ -1246,12 +1273,16 @@ SOFTWARE.﻿
 		WDmain.call(this, input, type, value);
 	}
 
-	WDnumber.nFloat = function(x) {/*conta casas decimais*/
-		if (x === Infinity || x === -Infinity) return 0;
-		var i = 0;
-		while ((x * Math.pow(10, i)) % 1 !== 0) i++;
-		return i;
-	}
+	Object.defineProperties(WDnumber, {
+		nFloat: {
+			value: function(x) {/*conta casas decimais*/
+				if (!isFinite(x)) return 0;
+				var i = 0;
+				while ((x * Math.pow(10, i)) % 1 !== 0) i++;
+				return i;
+			}
+		}
+	});
 
 	WDnumber.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDnumber}
@@ -1283,7 +1314,7 @@ SOFTWARE.﻿
 	Object.defineProperty(WDnumber.prototype, "int", { /*parte inteira*/
 		enumerable: true,
 		get: function() {
-			return parseInt(this.valueOf(), 10);
+			return WDbox.int(this.valueOf());
 		}
 	});
 
@@ -1299,29 +1330,15 @@ SOFTWARE.﻿
 	Object.defineProperty(WDnumber.prototype, "abs", {/*valor absoluto*/
 		enumerable: true,
 		get: function() {
-			return this.valueOf() < 0 ? - this.valueOf() : this.valueOf();
+			return this.valueOf() * (this.valueOf() < 0 ? -1 : 1);
 		}
 	});
 
-
-
-
-
-	Object.defineProperty(WDnumber.prototype, "frac", {//FIXME
+	Object.defineProperty(WDnumber.prototype, "frac", {
 		enumerable: true,
 		get: function() {
-			if (this.nType === "zero")      return  "0/1";
-			if (this.nType === "+infinity") return  "1/0";
-			if (this.nType === "-infinity") return "-1/0";
-			if (this.nType === "+integer")  return  "0/1";
-			if (this.nType === "-integer")  return "-0/1";
-
-			var ref = Math.abs(this.decimal);
-
-			var den = Number((1/ref).toFixed(1));
-			var num = 10;
-
-			den = den*num;
+			if (this.test("integer", "zero")) return new String(this.int).valueOf();
+			if (this.test("+infinity")) return this.toString();
 
 			var prime = [
 				2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61,
@@ -1331,39 +1348,35 @@ SOFTWARE.﻿
 				281, 283, 293, 307, 311, 313, 317, 331, 337, 347, 349, 353, 359,
 				367, 373, 379, 383, 389, 397, 401
 			];
-
-			for (var i = 0; i < prime.length; i++) {console.log(prime[i]);
-				if (prime[i] > num) break;
-			
-				while ((num % prime[i] === 0) && (den % prime[i] === 0)) {
-					num = Math.floor(num / prime[i]);
-					den = Math.floor(den / prime[i]);
+			var data  = {int: Math.abs(this.int), num: 1, den: 1, error: 1};
+			var value = Math.abs(this.decimal);
+			for (var i = 0; i < prime.length; i++) {
+				var n = 1;
+				var d = prime[i]
+				while (n < d) {
+					var err = Math.abs((n/d)-value)/value;
+					if (err < data.error) {
+						data.den   = d;
+						data.num   = n;
+						data.error = err;
+					}
+					if (data.error === 0) break;
+					n++
 				}
+				if (data.error === 0) break;
 			}
-
-			var erro = 100*((num/den) - ref)/ref;
-
-			num = String(num).toString();
-			den = String(den).toString();
-
-			return num+"/"+den+" ("+erro.toFixed(2)+"%)";
-	}})
-
-
-
-
-
-
-
-
-
-
+			data.int = data.int === 0 ? "" : new String(data.int).toString()+" ";
+			data.num = new String(data.num).toString()+"/";
+			data.den = new String(data.den).toString();
+			return (this.valueOf() < 0 ? "-" : "")+data.int+data.num+data.den;
+		}
+	});
 
 
 	Object.defineProperty(WDnumber.prototype, "round", {/*arredonda casas decimais*/
 		enumerable: true,
 		value: function(width) {
-			width = isFinite(width) ? Math.abs(parseInt(width), 10) : 0;
+			width = isFinite(width) ? Math.abs(WDbox.int(width)) : 0;
 			return Number(this.valueOf().toFixed(width)).valueOf();
 		}
 	});
@@ -1373,7 +1386,7 @@ SOFTWARE.﻿
 		value: function(width) {
 			if (this.test("infinity", "zero")) return this.toString();
 
-			width = isFinite(width) ? Math.abs(parseInt(width), 10) : undefined;
+			width = isFinite(width) ? Math.abs(WDbox.int(width)) : undefined;
 
 			var chars = {
 				"0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵",
@@ -1406,8 +1419,8 @@ SOFTWARE.﻿
 		value: function(ldec, lint) {
 			if (this.test("infinity")) return this.toString();
 
-			ldec = isFinite(ldec) ? Math.abs(parseInt(ldec), 10) : 2;
-			lint = isFinite(lint) ? Math.abs(parseInt(lint), 10) : WDnumber.nFloat(this.valueOf());
+			ldec = isFinite(ldec) ? Math.abs(WDbox.int(ldec)) : 2;
+			lint = isFinite(lint) ? Math.abs(WDbox.int(lint)) : WDnumber.nFloat(this.valueOf());
 
 			var dec = Math.abs(this.decimal);
 			dec = dec === 0 ? "" : "."+dec.toFixed(ldec).split(".")[1];
@@ -1418,6 +1431,15 @@ SOFTWARE.﻿
 			int = int.join("");
 
 			return (this.valueOf() < 0 ? "-" : "+") + int+dec;
+		}
+	});
+
+	Object.defineProperties(WDnumber.prototype, {
+		toString: {
+			value: function() {
+				if (Math.abs(this.valueOf()) !== Infinity) return this.valueOf().toString();
+				return (this.valueOf() < 0 ? "-" : "") + "∞";
+			}
 		}
 	});
 
@@ -1452,7 +1474,7 @@ SOFTWARE.﻿
 			},
 			set: function(x) {
 				if (!isFinite(x)) return;
-				x = parseInt(x, 10);
+				x = WDbox.int(x);
 				this._value = WDbox.timeNumber(x, this.m, this.s);
 				return;
 			}
@@ -1472,7 +1494,7 @@ SOFTWARE.﻿
 			},
 			set: function(x) {
 				if (!isFinite(x)) return;
-				x = parseInt(x, 10);
+				x = WDbox.int(x);
 				this._value = WDbox.timeNumber(this.h, x, this.s);
 				return;
 			}
@@ -1492,7 +1514,7 @@ SOFTWARE.﻿
 			},
 			set: function(x) {
 				if (!isFinite(x)) return;
-				x = parseInt(x, 10);
+				x = WDbox.int(x);
 				this._value = WDbox.timeNumber(this.h, this.m, x);
 				return;
 			}
@@ -1584,7 +1606,7 @@ SOFTWARE.﻿
 			},
 			set: function(x) {
 				if (!isFinite(x) || x < 0) return;
-				x = parseInt(x, 10);
+				x = WDbox.int(x);
 				this._value = WDbox.noonDate(this._value, undefined, undefined, x);
 				return
 			}
@@ -1604,7 +1626,7 @@ SOFTWARE.﻿
 			enumerable: true,
 			get: function() {
 				var ref = this.days - this.today + 1;
-				return (ref % 7 > 0 ? 1 : 0) + parseInt(ref/7);
+				return (ref % 7 > 0 ? 1 : 0) + WDbox.int(ref/7);
 			}
 		},
 		workingYear: {
@@ -1612,8 +1634,8 @@ SOFTWARE.﻿
 			get: function() {
 				var sat  = WDdate.searchFirstDay(7, this.y);
 				var sun  = WDdate.searchFirstDay(1, this.y);
-				var nSat = parseInt((this.length - sat)/7) + 1;
-				var nSun = parseInt((this.length - sun)/7) + 1;
+				var nSat = WDbox.int((this.length - sat)/7) + 1;
+				var nSun = WDbox.int((this.length - sun)/7) + 1;
 				var work = this.length - (nSat + nSun)
 				return work < 0 ? 0 : work;
 			}
@@ -1628,7 +1650,7 @@ SOFTWARE.﻿
 			},
 			set: function(x) {
 				if (!isFinite(x)) return;
-				x = parseInt(x, 10);
+				x = WDbox.int(x);
 				this._value = WDbox.noonDate(this._value, undefined, x, undefined);
 				return
 			}
@@ -1671,7 +1693,7 @@ SOFTWARE.﻿
 			},
 			set: function(x) {
 				if (!isFinite(x)) return;
-				x = parseInt(x, 10);
+				x = WDbox.int(x);
 				this._value = WDbox.noonDate(this._value, x, undefined, undefined);
 				return
 			}
@@ -1716,8 +1738,8 @@ SOFTWARE.﻿
 			get: function() {
 				var sat  = WDdate.searchFirstDay(7, this.y);
 				var sun  = WDdate.searchFirstDay(1, this.y);
-				var nSat = parseInt((this.days - sat)/7) + 1;
-				var nSun = parseInt((this.days - sun)/7) + 1;
+				var nSat = WDbox.int((this.days - sat)/7) + 1;
+				var nSun = WDbox.int((this.days - sun)/7) + 1;
 				var work = this.days - (nSat + nSun)
 				return work < 0 ? 0 : work;
 			}
@@ -1750,7 +1772,7 @@ SOFTWARE.﻿
 		},
 		valueOf: {
 			value: function() {
-				return (this._value < 0 ? -1 : 0) + parseInt(this._value/86400000);
+				return (this._value < 0 ? -1 : 0) + WDbox.int(this._value/86400000);
 			}
 		}
 	});
@@ -1859,7 +1881,7 @@ SOFTWARE.﻿
 		enumerable: true,
 		value: function(i) {
 			if (!isFinite(i)) return this._value.length;
-			i = parseInt(i);
+			i = WDbox.int(i);
 			i = i < 0 ? this._value.length + i : i;
 			return this.valueOf()[i];
 		}
@@ -2004,7 +2026,7 @@ SOFTWARE.﻿
 	Object.defineProperty(WDarray.prototype, "matrix", {/*obtem a coluna de uma matriz*/
 		enumerable: true,
 		value: function(col) {
-			col = isFinite(col) ? parseInt(Math.abs(col)) : 0;
+			col = isFinite(col) ? WDbox.int(Math.abs(col)) : 0;
 			var data = [];
 			for (var i = 0; i < this._value.length; i++) {
 				var check = WDtype(this._value[i]);
@@ -2124,6 +2146,36 @@ SOFTWARE.﻿
 		}
 	});
 
+	Object.defineProperty(WDarray.prototype, "ratio", {/*comparação entre valores*/
+		enumerable: true,
+		value: function(label) {
+			var data = this.data;
+			var sum = data === null ? null : data.sum.value
+			if (sum === null) return null;
+			var check = new WDtype(label);
+			var type  = check.type;
+			var list  = WDarray.setArray(this._value).array1;
+			var x = {};
+			console.info(list, sum, data);
+			for (var i = 0; i < list.length; i++) {
+				var name  = type === "array" && label[i] !== undefined ? new String(label[i]).toString() : "Item_"+i;
+				var value = list[i]/sum;
+				x[name] = value;
+			}
+			return x;
+		}
+	});
+
+
+
+
+
+
+
+
+
+
+
 	Object.defineProperties(WDarray.prototype, {
 		toString: {
 			value: function() {
@@ -2204,7 +2256,7 @@ SOFTWARE.﻿
 					}
 					return value.length === 0 ? null : value;
 				}
-				return value;
+				return value === "" ? null : value;
 			}
 		},
 		send: {/*informa se os dados do elemento podem ser enviados*/
@@ -2479,7 +2531,7 @@ SOFTWARE.﻿
 	Object.defineProperty(WDdom.prototype, "filter", {/*exibe somente o texto casado*/
 		enumerable: true,
 		value: function (search, min) {
-			min = isFinite(min) && min !== 0 ? parseInt(min) : 1;
+			min = isFinite(min) && min !== 0 ? WDbox.int(min) : 1;
 			/*definindo valor de busca*/
 			var check1 = WD(search)
 			if      (search === null || search === undefined) {search = "";}
@@ -2516,8 +2568,7 @@ SOFTWARE.﻿
 		}
 	});
 
-	/*Define ação para o objeto html*/
-	Object.defineProperty(WDdom.prototype, "action", {
+	Object.defineProperty(WDdom.prototype, "action", {/*executa determinadas ações*/
 		enumerable: true,
 		value: function (action) {
 			action = new String(action).toLowerCase();
@@ -2628,7 +2679,7 @@ SOFTWARE.﻿
 		}
 	});
 
-	Object.defineProperty(WDdom.prototype, "repeat", {/*clona elementos por array*///FIXME isso não foi avaliado ainda
+	Object.defineProperty(WDdom.prototype, "repeat", {/*clona elementos por array*/
 		enumerable: true,
 		value: function (json) {
 			var check = new WDtype(json);
@@ -2665,19 +2716,19 @@ SOFTWARE.﻿
 	Object.defineProperty(WDdom.prototype, "page", {/*divide os elementos em "páginas"*/
 		enumerable: true,
 		value: function (page, size) {
-			page = isFinite(page) ? parseInt(page) : 0;
+			page = isFinite(page) ? WDbox.int(page) : 0;
 			size = isFinite(size) && size > 0 ? Math.abs(size) : 1;
 
 			this.run(function(elem) {
 				var book  = elem.children;
-				var lines = size < 1 ? parseInt(size*book.length) : parseInt(size);
-				var pages = parseInt(book.length/lines);
+				var lines = size < 1 ? WDbox.int(size*book.length) : WDbox.int(size);
+				var pages = WDbox.int(book.length/lines);
 				var print = [];
 				console.info("page: ", page, ", size: ", size, ", length: ", book.length, ", lines: ", lines, ", pages: ", pages);
 				
 				
 				for (var i = 0; i < book.length; i++) {
-					var p = parseInt(i/lines);
+					var p = WDbox.int(i/lines);
 					if (print[p] === undefined) print.push([]);
 					console.log("p: ", p, "i: ", i);
 					print[p].push(book[i]);
@@ -2697,7 +2748,7 @@ SOFTWARE.﻿
 		enumerable: true,
 		value: function (order, col) {
 			order = isFinite(order) ? order : 1;
-			col   = isFinite(col) && col >= 0 ? parseInt(col) : null;
+			col   = isFinite(col) && col >= 0 ? WDbox.int(col) : null;
 
 			this.run(function(elem) {
 				var children = elem.children;
@@ -2763,39 +2814,29 @@ SOFTWARE.﻿
 		}
 	});
 
-	/*Obtem a serialização de formulário (não disponível ao usuário)*/
-	Object.defineProperty(WDdom.prototype, "_form", {
-		get: function() {
-			var x = [];
+	Object.defineProperty(WDdom.prototype, "form", {/*obtém serialização de formulário*/
+		value: function(method) {
+			method = new String(method).toUpperCase().trim();
+			var x = method === "GET" ? [] : new FormData();
 			this.run(function(elem) {
-				var data = new AttrHTML(elem).formData;
+				var data = WDdom.formdata(elem);
 				for (var i = 0; i < data.length; i++) {
-					x.push(data[i].name+"="+data[i].value);
+					var name  = data[i].NAME;
+					var value = method === "GET" ? data[i].GET : data[i].POST;
+					var check = new WDtype(value);
+					if (check.type === "array") {
+						for (var j = 0; j < value.length; j++) {
+							if (method === "GET") {x.push(name+"="+value[j]);}
+							else                  {x.append(name, value[j]);}
+						}
+					} else {
+						if (method === "GET") {x.push(name+"="+value);}
+						else                  {x.append(name, value);}
+					}
 				}
 				return;
 			});
-			return x.join("&");
-		}
-	});
-
-	/*Obtem a serialização de formulário com FromData (não disponível ao usuário)*/
-	Object.defineProperty(WDdom.prototype, "_Form", {
-		get: function() {
-			if (!("FormData" in window)) {
-				return this._form;
-			}
-			var x = new FormData();
-			this.run(function(elem) {
-				var data = AttrHTML(elem).formData;
-				for (var i = 0; i < data.length; i++) {
-					x.append(
-						data[i].name,
-						data[i].post === null ? data[i].value : data[i].post
-					);
-				}
-				return;
-			});
-			return x;
+			return method === "GET" ? x.join("&") : x;
 		}
 	});
 
