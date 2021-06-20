@@ -641,6 +641,18 @@ SOFTWARE.﻿
 			this._progress = 0;
 			this._loaded   = 0;
 			this._total    = 0;
+
+			var n = 100*this._progress;
+			//FIXME: descobrir como se faz isso para rodar o progresso na tela
+			Array.apply(null, Array(4)).forEach(function (undef, index) {
+				setTimeout(function() {
+					WDrequest.window.textContent = n.toFixed(0)+"%";
+					WDrequest.window.style.color = "white";
+					WDrequest.window.style.opacity = "1";
+				}
+				, 0);
+			});
+
 			return;
 		}
 	});
@@ -2953,17 +2965,17 @@ SOFTWARE.﻿
 
 /*----------------------------------------------------------------------------*/
 
-	function data_wdSend(e) {/*Requisições: data-wd-send=post|get{file}${form}callback{name}&*/
+	function data_wdSend(e) {/*Requisições: data-wd-send=post|get{file}${form}call{name}&*/
 		if (!("wdSend" in e.dataset)) return;
 		var data = WDdom.dataset(e, "wdSend");
 		for (var i = 0; i < data.length; i++) {
 			if (!("get" in data[i]) && !("post" in data[i])) continue;
-			var method   = "get" in data[i] ? "get" : "post";
-			var file     = data[i][method];
-			var pack     = "$" in data[i] ? WDbox.$$(data[i]["$"]) : null;
-			var callback = window[data[i].callback];
-			var exec     = WD(pack);
-			exec.send(file, callback, method);
+			var method = "get" in data[i] ? "get" : "post";
+			var file   = data[i][method];
+			var pack   = "$" in data[i] ? WDbox.$$(data[i]["$"]) : null;
+			var call   = window[data[i]["call"]];
+			var exec   = WD(pack);
+			exec.send(file, call, method);
 		}
 		return;
 	};
