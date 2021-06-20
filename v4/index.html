@@ -82,7 +82,7 @@
 
 
 
-<ul>
+<ul data-wd-sort="-1" id="lista">
 <li>   peça    </li>
 <li>   maria   </li>
 <li>   mária   </li>
@@ -135,10 +135,12 @@
 			</tbody>
 		</table>
 
+<div id="repeat" data-wd-repeat="get{examples/list1.csv}">
+<p>{{name}} - {{age}}
+</div>
 
 
-
-
+<pre id="teste" data-wd-send="post{examples/target.php}${input, select}callback{bunda}" class="wd-code"></pre>
 
 
 	</main>

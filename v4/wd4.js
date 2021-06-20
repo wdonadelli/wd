@@ -72,7 +72,6 @@ SOFTWARE.﻿
 		return val < 0 ? Math.ceil(n) : Math.floor(n);
 	};
 
-
 	WDbox.lang = function() { /*Retorna a linguagem do documento: definida ou navegador*/
 		var attr  = document.body.parentElement.attributes;
 		var value = "lang" in attr ? attr.lang.value.replace(/\ /g, "") : null;
@@ -169,6 +168,54 @@ SOFTWARE.﻿
 		if (window.innerWidth >= 768) return "Desktop";
 		if (window.innerWidth >= 600) return "Tablet";
 		return "Phone";
+	};
+
+	WDbox.posts = 	{
+		fileTitle: {
+			en: "Archives: occurrences",
+			pt: "Arquivos: ocorrências",
+			es: "Archivos: ocurrencias",
+			it: "Archivi: occorrenze",
+			ru: "Архивы: случаи",
+			du: "Archiv: Vorkommen",
+			fr: "Archives: occurrences",
+		},
+		fileSize: {
+			en: "Individual size exceeded",
+			pt: "Tamanho individual excedido",
+			es: "Se superó el tamaño individual",
+			it: "Dimensione individuale superata",
+			ru: "Превышен индивидуальный размер",
+			du: "Einzelgröße überschritten",
+			fr: "Taille individuelle dépassée",
+		},
+		fileTotal: {
+			en: "Total size exceeded",
+			pt: "Tamanho total excedido",
+			es: "Tamaño total excedido",
+			it: "Dimensioni totali superate",
+			ru: "Общий размер превышен",
+			du: "Gesamtgröße überschritten",
+			fr: "Taille totale dépassée",
+		},
+		fileChar: {
+			en: "Characters not allowed",
+			pt: "Caracteres não permitidos",
+			es: "Caracteres no permitidos",
+			it: "Caratteri non ammessi",
+			ru: "Символы не разрешены",
+			du: "Zeichen nicht erlaubt",
+			fr: "Caractères non autorisés",
+		},
+		fileLen: {
+			en: "Number of files exceeded",
+			pt: "Número de arquivos excedido",
+			es: "Se superó el número de archivos",
+			it: "Numero di file superato",
+			ru: "Превышено количество файлов",
+			du: "Anzahl der Dateien überschritten",
+			fr: "Nombre de fichiers dépassé",
+		}
 	};
 
 	WDbox.Device = undefined; /*último device definido FIXME: vai precisar disso? talvez inserir no lugar do wdconfig*/
@@ -530,13 +577,15 @@ SOFTWARE.﻿
 	WDrequest.styled = false; /*guarda a informação se a janela já foi estilizada*/
 
 	WDrequest.style  = {      /*guarda o stylo padrão da janela*/
-		display:  "block", width: "100%", height: "100%", padding: "1em",
+		display:  "block", width: "100%", height: "100%", padding: "0.1em",
 		position: "fixed", top: "0", right: "0", bottom: "0",	left: "0",
-		zIndex: "999999",	cursor: "progress", fontWeight: "bold", textAlign: "right"
+		zIndex: "999999",	cursor: "progress",
+		opacity: "0.4", fontSize: "4em", backgroundColor: "#000000"
 	};
 
 	WDrequest.setStyle = function() { /*define o estilo padrão se ainda não definido*/
 		if (this.styled) return;
+		this.window.textContent = "\u23F1";
 		for (var i in this.style) this.window.style[i] = this.style[i];
 		this.styled = true;
 		return;
@@ -544,14 +593,6 @@ SOFTWARE.﻿
 
 	WDrequest.open = function() {
 		this.setStyle();
-		/*FIXME
-		data_wdConfig();
-		*/
-		this.window.textContent           = "Aguarde";//wdConfig.modalMsg;
-		this.window.style.color           = "white";//wdConfig.modalFg;
-		this.window.style.backgroundColor = "#000000";
-		//this.window.style.backgroundColor = wdConfig.modalBg;
-
 		if (this.count === 0) document.body.appendChild(this.window);
 		this.count++;
 		return;
@@ -901,11 +942,10 @@ SOFTWARE.﻿
 			if (!action.isFullString) return false;
 
 			callback = new WDtype(callback);
-			method   = new WDtype(callback);
 
 			action   = action.input.trim();
 			callback = callback.type === "function" ? callback.input : null;
-			method   = method.isFullString ? method.input.trim() : "GET";
+			method   = new String(method).toUpperCase().trim();
 			async    = async === false ? false : true;
 
 			var pack;
@@ -920,7 +960,7 @@ SOFTWARE.﻿
 
 			/*efetuando a requisição*/
 			var request      = new WDrequest(action);
-			request.method   = method.toUpperCase();
+			request.method   = method;
 			request.callback = callback;
 			request.async    = async;
 			request.pack     = pack;
@@ -1281,6 +1321,29 @@ SOFTWARE.﻿
 				while ((x * Math.pow(10, i)) % 1 !== 0) i++;
 				return i;
 			}
+		},
+		prime: {
+			value: [
+				2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61,
+				67, 71, 73, 79, 83, 89, 97, 
+			]
+		},
+		mdc: {
+			value: function(a, b) {
+				var div   = [];
+				var prime = this.prime;
+				for (var i = 0; i < prime.length; i++) {
+					if (prime[i] > a || prime[i] > b) break;
+					while (a % prime[i] === 0 && b % prime[i] === 0) {
+						div.push(prime[i]);
+						a = a/prime[i];
+						b = b/prime[i];
+					}
+				}
+				var mdc = 1;
+				for (var i = 0; i < div.length; i++) mdc = mdc * div[i];
+				return mdc;
+			}
 		}
 	});
 
@@ -1334,25 +1397,21 @@ SOFTWARE.﻿
 		}
 	});
 
-	Object.defineProperty(WDnumber.prototype, "frac", {
+	Object.defineProperty(WDnumber.prototype, "frac", {/*representação em fração (2 casas)*/
 		enumerable: true,
 		get: function() {
-			if (this.test("integer", "zero")) return new String(this.int).valueOf();
+			if (this.test("integer", "zero")) return this.int.toFixed(0);
 			if (this.test("+infinity")) return this.toString();
 
-			var prime = [
-				2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61,
-				67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137,
-				139, 149, 151, 157, 163, 167, 173, 179, 181, 191, 193, 197, 199,
-				211, 223, 227, 229, 233, 239, 241, 251, 257, 263, 269, 271, 277,
-				281, 283, 293, 307, 311, 313, 317, 331, 337, 347, 349, 353, 359,
-				367, 373, 379, 383, 389, 397, 401
-			];
-			var data  = {int: Math.abs(this.int), num: 1, den: 1, error: 1};
+			var data  = {int: Math.abs(this.int), num: 0, den: 1, error: 1};
 			var value = Math.abs(this.decimal);
+			var prime = WDnumber.prime;
+			prime.push(10);
+			prime.push(100);
+
 			for (var i = 0; i < prime.length; i++) {
-				var n = 1;
-				var d = prime[i]
+				var n = 0;
+				var d = prime[i];
 				while (n < d) {
 					var err = Math.abs((n/d)-value)/value;
 					if (err < data.error) {
@@ -1361,17 +1420,24 @@ SOFTWARE.﻿
 						data.error = err;
 					}
 					if (data.error === 0) break;
-					n++
+					n++;
 				}
 				if (data.error === 0) break;
 			}
-			data.int = data.int === 0 ? "" : new String(data.int).toString()+" ";
-			data.num = new String(data.num).toString()+"/";
-			data.den = new String(data.den).toString();
-			return (this.valueOf() < 0 ? "-" : "")+data.int+data.num+data.den;
+
+			var mdc = WDnumber.mdc(data.num, data.den);
+			data.num = data.num/mdc;
+			data.den = data.den/mdc;
+
+			if (data.num === 0 && data.int === 0) return "0";
+			if (data.num === 0 && data.int !== 0) return data.int.toFixed(0);
+
+			data.int = data.int === 0 ? "" : data.int.toFixed(0)+" ";
+			data.num = data.num.toFixed(0)+"/";
+			data.den = data.den.toFixed(0);
+			return (this.int < 0 ? "-" : "")+data.int+data.num+data.den;
 		}
 	});
-
 
 	Object.defineProperty(WDnumber.prototype, "round", {/*arredonda casas decimais*/
 		enumerable: true,
@@ -1850,7 +1916,7 @@ SOFTWARE.﻿
 				return data;
 			}
 		},
-		strDev: {
+		stdDev: {
 			value: function(list, ref) {
 				if (ref === null) return null;
 				var data = this.deviation(list, ref, 2);
@@ -2066,13 +2132,13 @@ SOFTWARE.﻿
 			data.harmonic = {value: val === null ? null : len/val};
 
 			/*desvio padrão*/
-			data.sum.deviation       = WDarray.strDev(list, data.sum.value);
-			data.average.deviation   = WDarray.strDev(list, data.average.value);
-			data.median.deviation    = WDarray.strDev(list, data.median.value);
-			data.min.deviation       = WDarray.strDev(list, data.min.value);
-			data.max.deviation       = WDarray.strDev(list, data.max.value);
-			data.geometric.deviation = WDarray.strDev(list, data.geometric.value);
-			data.harmonic.deviation  = WDarray.strDev(list, data.harmonic.value);
+			data.sum.deviation       = WDarray.stdDev(list, data.sum.value);
+			data.average.deviation   = WDarray.stdDev(list, data.average.value);
+			data.median.deviation    = WDarray.stdDev(list, data.median.value);
+			data.min.deviation       = WDarray.stdDev(list, data.min.value);
+			data.max.deviation       = WDarray.stdDev(list, data.max.value);
+			data.geometric.deviation = WDarray.stdDev(list, data.geometric.value);
+			data.harmonic.deviation  = WDarray.stdDev(list, data.harmonic.value);
 
 			return data;
 		}
@@ -2087,21 +2153,24 @@ SOFTWARE.﻿
 			var y = matrix.array1;
 			var x = matrix.array2;
 			if (x === null || y === null) return null;
-			var data = {};
+			var data = {linear: null, geometric: null, exponential: null};
 			var val  = null;
 			var refx = [];
 			var refy = [];
 
 			/*regressão linear*/
 			val = WDarray.leastSquares(x, y);
-			data.linear = {
-				e: "y = a x + b",
-				a: val === null ? null : val.a,
-				b: val === null ? null : val.b,
-			};
-			data.linear.f = val === null ? null : function(x) {return data.linear.a*x+data.linear.b;}
-			data.linear.y = val === null ? null : WDarray.setY(x, data.linear.f);
-			data.linear.d = val === null ? null : WDarray.strDev(y, data.linear.y);
+			if (val !== null) {
+				data.linear = {};
+				data.linear.e = "y = a x + b";
+				data.linear.a = val.a;
+				data.linear.b = val.b;
+				data.linear.x = x;
+				data.linear.y = y;
+				data.linear.f = function(x) {return data.linear.a*x+data.linear.b;};
+				data.linear.Y = WDarray.setY(x, data.linear.f);
+				data.linear.d = WDarray.stdDev(y, data.linear.Y);
+			}
 
 			/*regressão exponencial (Y>=0)*/
 			refy = WDarray.setY(y, Math.log);
@@ -2113,14 +2182,17 @@ SOFTWARE.﻿
 					val = WDarray.leastSquares(x2, y2);
 				}
 			}
-			data.exponential = {
-				e: "y = a exp(b x)",
-				a: val === null ? null : Math.exp(val.b),
-				b: val === null ? null : val.a,
-			};
-			data.exponential.f = val === null ? null : function(x) {return data.exponential.a*Math.exp(data.exponential.b*x);},
-			data.exponential.y = val === null ? null : WDarray.setY(x, data.exponential.f);
-			data.exponential.d = val === null ? null : WDarray.strDev(y, data.exponential.y);
+			if (val !== null) {
+				data.exponential = {};
+				data.exponential.e = "y = a exp(b x)";
+				data.exponential.a = Math.exp(val.b);
+				data.exponential.b = val.a;
+				data.exponential.x = x;
+				data.exponential.y = y;
+				data.exponential.f = function(x) {return data.exponential.a*Math.exp(data.exponential.b*x);},
+				data.exponential.Y = WDarray.setY(x, data.exponential.f);
+				data.exponential.d = WDarray.stdDev(y, data.exponential.Y);
+			}
 
 			/*regressão geométrica (Y>=0, X>=0)*/
 			refy = WDarray.setY(y, Math.log);
@@ -2133,14 +2205,17 @@ SOFTWARE.﻿
 					val = WDarray.leastSquares(x2, y2);
 				}
 			}
-			data.geometric = {
-				e: "y = a x**b",
-				a: val === null ? null : Math.exp(val.b),
-				b: val === null ? null : val.a,
-			};
-			data.geometric.f = val === null ? null : function(x) {return data.geometric.a*Math.pow(x, data.geometric.b);},
-			data.geometric.y = val === null ? null : WDarray.setY(x, data.geometric.f);
-			data.geometric.d = val === null ? null : WDarray.strDev(y, data.geometric.y);
+			if (val !== null) {
+				data.geometric = {};
+				data.geometric.e = "y = a x**b";
+				data.geometric.a = Math.exp(val.b);
+				data.geometric.b = val.a;
+				data.geometric.x = x;
+				data.geometric.y = y;
+				data.geometric.f = function(x) {return data.geometric.a*Math.pow(x, data.geometric.b);},
+				data.geometric.Y = WDarray.setY(x, data.geometric.f);
+				data.geometric.d = WDarray.stdDev(y, data.geometric.Y);
+			}
 
 			return data;
 		}
@@ -2165,16 +2240,6 @@ SOFTWARE.﻿
 			return x;
 		}
 	});
-
-
-
-
-
-
-
-
-
-
 
 	Object.defineProperties(WDarray.prototype, {
 		toString: {
@@ -2695,15 +2760,12 @@ SOFTWARE.﻿
 					return;
 				}
 				elem.innerHTML = "";
-				html = html.replace(/\}\}\=\"\"/g, "}}");
+				html = html.split("}}=\"\"").join("}}");
 				for (var i = 0; i < json.length; i++) {
 					var inner  = html;
 					var object = new WDtype(json[i]);
 					if (object.type !== "object") continue;
-					for (var c in json[i]) {
-						var re = new RegExp("{{"+c+"}}", "g");
-						inner = inner.replace(re, json[i][c]);
-					}
+					for (var c in json[i]) inner = inner.split("{{"+c+"}}").join(json[i][c]);
 					elem.innerHTML += inner;
 				}
 				loadingProcedures();
@@ -2841,165 +2903,87 @@ SOFTWARE.﻿
 	});
 
 
-/* === JS ATTRIBUTES ======================================================= */
+/*============================================================================*/
+/* -- ATRIBUTOS -- */
+/*============================================================================*/
 
-	/*define as mensagens da biblioteca wdConfig*/
-	function data_wdConfig() {
-		var data, value, local, attr;
-		attr = {
-			modalMsg: {
-				en: "Request in progress...",
-				pt: "Requisição em progresso...",
-				es: "Solicitud en curso...",
-				it: "Richiesta in corso...",
-				ru: "Запрос выполняется...",
-				du: "Anfrage in Bearbeitung...",
-				fr: "Demande en cours.",
-			},
-			fileTitle: {
-				en: "Archives: occurrences",
-				pt: "Arquivos: ocorrências",
-				es: "Archivos: ocurrencias",
-				it: "Archivi: occorrenze",
-				ru: "Архивы: случаи",
-				du: "Archiv: Vorkommen",
-				fr: "Archives: occurrences",
-			},
-			fileSize: {
-				en: "Individual size exceeded",
-				pt: "Tamanho individual excedido",
-				es: "Se superó el tamaño individual",
-				it: "Dimensione individuale superata",
-				ru: "Превышен индивидуальный размер",
-				du: "Einzelgröße überschritten",
-				fr: "Taille individuelle dépassée",
-			},
-			fileTotal: {
-				en: "Total size exceeded",
-				pt: "Tamanho total excedido",
-				es: "Tamaño total excedido",
-				it: "Dimensioni totali superate",
-				ru: "Общий размер превышен",
-				du: "Gesamtgröße überschritten",
-				fr: "Taille totale dépassée",
-			},
-			fileChar: {
-				en: "Characters not allowed",
-				pt: "Caracteres não permitidos",
-				es: "Caracteres no permitidos",
-				it: "Caratteri non ammessi",
-				ru: "Символы не разрешены",
-				du: "Zeichen nicht erlaubt",
-				fr: "Caractères non autorisés",
-			},
-			fileLen: {
-				en: "Number of files exceeded",
-				pt: "Número de arquivos excedido",
-				es: "Se superó el número de archivos",
-				it: "Numero di file superato",
-				ru: "Превышено количество файлов",
-				du: "Anzahl der Dateien überschritten",
-				fr: "Nombre de fichiers dépassé",
+	function data_wdLoad(e) {/*carrega HTML: data-wd-load=post|get{file}${form}*/
+		if (!("wdLoad" in e.dataset)) return;
+		var data = WDdom.dataset(e, "wdLoad")[0];
+		if (!("get" in data) && !("post" in data)) return;
+
+		var target = WD(e);
+		var method = "get" in data ? "get" : "post";
+		var file   = data[method];
+		var pack   = "$" in data ? WDbox.$$(data["$"]) : null;
+		var exec   = WD(pack);
+
+		target.data({wdLoad: null});
+
+		exec.send(file, function(x) {
+			if (x.closed) target.load(x.text);
+		}, method);
+		return;
+	};
+
+/*----------------------------------------------------------------------------*/
+
+	function data_wdRepeat(e) {/*Repete modelo HTML: data-wd-repeat=post{file}|get{file}${form}*/
+		if (!("wdRepeat" in e.dataset)) return;
+		var data = WDdom.dataset(e, "wdRepeat")[0];
+		if (!("get" in data) && !("post" in data)) return;
+
+		var target = WD(e);
+		var method = "get" in data ? "get" : "post";
+		var file   = data[method];
+		var pack   = "$" in data ? WDbox.$$(data["$"]) : null;
+		var exec   = WD(pack);
+
+		target.data({wdRepeat: null});
+
+		exec.send(file, function(x) {
+			if (x.closed) {
+				if (x.json !== null) return target.repeat(x.json);
+				if (x.csv !== null)  return target.repeat(WDbox.matrixObject(x.csv));
+				return target.repeat([]);
 			}
-		};
-
-		local = lang().substr(0, 2).toLowerCase();
-		wdConfig = {modalFg: "#FFFFFF", modalBg: "rgba(0, 0, 0, 0.8)"};
-		for (var j in attr) {
-			wdConfig[j] = local in attr[j] ? attr[j][local] : attr[j]["en"];
-		}
-
-		data  = new AttrHTML(document.body);
-		value = data.core("wdConfig")[0];
-		for (var i in wdConfig) {
-			if (i in value) {
-				wdConfig[i] = value[i];
-			}
-		}
+		}, method);
 		return;
 	};
 
+/*----------------------------------------------------------------------------*/
 
-	/*Carrega html externo data-wd-load=post|get{file}${}*/
-	function data_wdLoad(e) {
-		var value, method, file, pack, target, data;
-		data = new AttrHTML(e);
-		if (data.has("wdLoad") ===  true) {
-			value  = data.core("wdLoad")[0];
-			method = "post" in value ? "post" : "get";
-			file   = value[method];
-			pack   = "$" in value ? $(value["$"]) : null;/*se for informado um formulário, seus dados serão enviados à requisição*/
-			target = new WD(e);
-			target.data({wdLoad: null});
-			WD(pack).send(file, function(x) {
-				if (x.closed === true) {
-					target.load(x.text === null ? "" : x.text);
-					if (x.status !== "DONE") {
-						log("wdLoad: Request failed!", "e");
-					}
-				}
-			}, method);
+	function data_wdSend(e) {/*Requisições: data-wd-send=post|get{file}${form}callback{name}&*/
+		if (!("wdSend" in e.dataset)) return;
+		var data = WDdom.dataset(e, "wdSend");
+		for (var i = 0; i < data.length; i++) {
+			if (!("get" in data[i]) && !("post" in data[i])) continue;
+			var method   = "get" in data[i] ? "get" : "post";
+			var file     = data[i][method];
+			var pack     = "$" in data[i] ? WDbox.$$(data[i]["$"]) : null;
+			var callback = window[data[i].callback];
+			var exec     = WD(pack);
+			exec.send(file, callback, method);
 		}
 		return;
 	};
 
-	/*Constroe html a partir de um arquivo json data-wd-repeat=post{file}|get{file}${}*/
-	function data_wdRepeat(e) {
-		var value, method, file, pack, target, data;
-		data = new AttrHTML(e);
-		if (data.has("wdRepeat")) {
-			value  = data.core("wdRepeat")[0];
-			method = "post" in value ? "post" : "get";
-			file   = value[method];
-			pack   = "$" in value ? $(value["$"]) : null;/*se for informado um formulário, seus dados serão enviados à requisição*/
-			target = new WD(e);
-			target.data({wdRepeat: null});
+/*----------------------------------------------------------------------------*/
 
-			WD(pack).send(file, function(x) {
-				if (x.closed === true) {
-					if (x.json !== null) {
-						target.repeat(x.json);
-					} else if (x.csv !== null) {
-						target.repeat(x.csv);
-					} else {
-						target.repeat([]);
-					}
-					if (x.status !== "DONE") {
-						log("wdRepeat: Request failed!", "e");
-					}
-				}
-			}, method);
-		}
+	function data_wdSort(e) {/*Ordenar HTML: data-wd-sort="number"*/
+		if (!("wdSort" in e.dataset)) return;
+		var target = WD(e);
+		target.sort(e.dataset.wdSort).data({wdSort: null});
 		return;
 	};
 
-	/*Faz requisição a um arquivo externo data-wd-send=post|get{file}${CSS selector}callback{function()}*/
-	function data_wdSend(e) {
-		var value, method, file, pack, callback, data;
-		data = new AttrHTML(e);
-		if (data.has("wdSend")) {
-			value    = data.core("wdSend");
-			for (var i = 0; i < value.length; i++) {
-				method   = "post" in value[i] ? "post" : "get";
-				file     = value[i][method]; /*method: ver linha anterior*/
-				pack     = "$" in value[i] ? $(value[i]["$"]) : null;
-				callback = window[value[i]["callback"]];
-				WD(pack).send(file, callback, method);
-			}
-		}			
-		return;
-	};
+/*----------------------------------------------------------------------------*/
 
-	/*Ordena elementos filhos data-wd-sort="number"*/
-	function data_wdSort(e) {
-		var order, data;
-		data = new AttrHTML(e);
-		if (data.has("wdSort")) {
-			order = new WD(data.data("wdSort")).valueOf();
-			WD(e).sort(order).data({wdSort: null});
-		}
-		return;
-	};
+
+
+
+
+
 
 	/*Filtra elementos filhos data-wd-filter=show|hide{min}${css}&...*/
 	function data_wdFilter(e) {
@@ -3031,6 +3015,17 @@ SOFTWARE.﻿
 		}
 		return;
 	};
+
+
+
+
+
+
+
+
+
+
+
 
 	/*Define máscara do elemento data-wd-mask="StringMask"*/
 	function data_wdMask(e) {
@@ -3441,7 +3436,7 @@ SOFTWARE.﻿
 
 	/*Procedimentos para carregar objetos externos*/
 	function loadingProcedures() {
-		var attr = new WD($("[data-wd-load], [data-wd-repeat]"));
+		var attr = new WD(WDbox.$$("[data-wd-load], [data-wd-repeat]"));
 		if (deviceController === null || deviceController === undefined) {
 			scalingProcedures();
 		}
