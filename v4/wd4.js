@@ -98,6 +98,12 @@ SOFTWARE.﻿
 		try {return document.querySelectorAll(selector);} catch(e) {}
 		return null;
 	}
+	WDbox.get$$ = function(obj) {
+		var qall = "$$" in obj && obj["$$"].trim() !== "" ? WDbox.$$(obj["$$"]) : null;
+		var qone = "$"  in obj && obj["$"].trim()  !== "" ? WDbox.$(obj["$"])   : null;
+		if (qall !== null && qall.length > 0) return qall;
+		return qone;
+	}
 
 	WDbox.isLeap = function(y) { /*Retorna verdadeiro se o ano for bissexto*/
 		if (y === 0)       return false;
@@ -903,9 +909,9 @@ SOFTWARE.﻿
 
 	WD.constructor = WD;
 	Object.defineProperties(WD, {
-		version: {get:   function()          {return WDbox.version;}},
-		$:       {value: function(css, root) {return WD(WDbox.$(css, root));}},
-		$$:      {value: function(css, root) {return WD(WDbox.$$(css, root));}}
+		version: {get:   function()     {return WDbox.version;}},
+		$:  {value: function(css, root) {return WD(WDbox.$(css, root));}},
+		$$: {value: function(css, root) {return WD(WDbox.$$(css, root));}}
 	});
 
 /*============================================================================*/
@@ -2607,8 +2613,9 @@ SOFTWARE.﻿
 
 	Object.defineProperty(WDdom.prototype, "filter", {/*exibe somente o texto casado*/
 		enumerable: true,
-		value: function (search, min) {
-			min = isFinite(min) && min !== 0 ? WDbox.int(min) : 1;
+		value: function (search, chars) {
+			chars = isFinite(chars) && chars !== 0 ? WDbox.int(chars) : 1;
+
 			/*definindo valor de busca*/
 			var check1 = WD(search)
 			if      (search === null || search === undefined) {search = "";}
@@ -2633,10 +2640,10 @@ SOFTWARE.﻿
 					}
 					var found = content.indexOf(search) >= 0 ? true :  false;
 					var width = search.length;
-					if (min < 0) {
-						target.action((found && width >= -min) ? "show" :  "hide");
+					if (chars < 0) {
+						target.action((found && width >= -chars) ? "show" :  "hide");
 					} else {
-						target.action((!found && width >= min) ? "hide" :  "show");
+						target.action((!found && width >= chars) ? "hide" :  "show");
 					}
 				};
 				return;
@@ -2927,7 +2934,7 @@ SOFTWARE.﻿
 		var target = WD(e);
 		var method = "get" in data ? "get" : "post";
 		var file   = data[method];
-		var pack   = "$" in data ? WDbox.$$(data["$"]) : null;
+		var pack   = WDbox.get$$(data);
 		var exec   = WD(pack);
 
 		target.data({wdLoad: null});
@@ -2948,7 +2955,7 @@ SOFTWARE.﻿
 		var target = WD(e);
 		var method = "get" in data ? "get" : "post";
 		var file   = data[method];
-		var pack   = "$" in data ? WDbox.$$(data["$"]) : null;
+		var pack   = WDbox.get$$(data);
 		var exec   = WD(pack);
 
 		target.data({wdRepeat: null});
@@ -2972,7 +2979,7 @@ SOFTWARE.﻿
 			if (!("get" in data[i]) && !("post" in data[i])) continue;
 			var method = "get" in data[i] ? "get" : "post";
 			var file   = data[i][method];
-			var pack   = "$" in data[i] ? WDbox.$$(data[i]["$"]) : null;
+			var pack   = WDbox.get$$(data[i]);
 			var call   = window[data[i]["call"]];
 			var exec   = WD(pack);
 			exec.send(file, call, method);
@@ -2982,82 +2989,63 @@ SOFTWARE.﻿
 
 /*----------------------------------------------------------------------------*/
 
-	function data_wdSort(e) {/*Ordenar HTML: data-wd-sort="number"*/
+	function data_wdSort(e) {/*Ordenar HTML: data-wd-sort="order{±1}col{>0?}"*/
 		if (!("wdSort" in e.dataset)) return;
+		var data  = WDdom.dataset(e, "wdSort")[0];
+		var order = "order" in data ? data.order : 1;
+		var col   = "col" in data ? data.col : null;
 		var target = WD(e);
-		target.sort(e.dataset.wdSort).data({wdSort: null});
+		target.sort(order, col).data({wdSort: null});
 		return;
 	};
 
 /*----------------------------------------------------------------------------*/
 
+	function data_wdFilter(e) {/*Filtrar elementos: data-wd-filter=chars{}${css}&...*/
+		if (!("wdFilter" in e.dataset)) return;
 
-
-
-
-
-
-	/*Filtra elementos filhos data-wd-filter=show|hide{min}${css}&...*/
-	function data_wdFilter(e) {
-		var value, text, data, show, min, target;
-
-		data = new AttrHTML(e);
-		if (data.has("wdFilter")) {
-
-			text = data.form ===  true ? data.value : e.textContent;
-
-			/*verificar se é uma expressão regular */
-			if (text[0] === "/" && text.length > 3) {
-				if (text[text.length - 1] === "/") {
-					text = new RegExp(text.substr(1, (text.length - 2)));
-				} else if (text.substr((text.length - 2), 2) === "/i") {
-					text = new RegExp(text.substr(1, (text.length - 3)), "i");
-				}
-			}
-
-			value = data.core("wdFilter");
-			for (var i = 0; i < value.length; i++) {
-				show   = "hide" in value[i] ? false : true;
-				min    = "hide" in value[i] ? value[i].hide : value[i].show;
-				target = "$"    in value[i] ? $(value[i]["$"]) : null;
-				if (new WD(target).type === "dom") {
-					WD(target).filter(text, min, show);
-				}
+		var search = WDdom.form(e) ? WDdom.value(e) : e.textContent;
+		if (search[0] === "/" && search.length > 3) {/*É RegExp?*/
+			if (search[search.length - 1] === "/") {
+				search = new RegExp(search.substr(1, (search.length - 2)));
+			} else if (search.substr((search.length - 2), 2) === "/i") {
+				search = new RegExp(search.substr(1, (search.length - 3)), "i");
 			}
 		}
+
+		var data = WDdom.dataset(e, "wdFilter");
+		for (var i = 0; i < data.length; i++) {
+			var chars  = data[i].chars;
+			var target = WDbox.get$$(data[i]);
+			if (target !== null) WD(target).filter(search, chars);
+		}
+	}
 		return;
 	};
 
+/*----------------------------------------------------------------------------*/
 
+	function data_wdMask(e) {/*Máscara: data-wd-mask="format{mask}call{callback}"*/
+		if (!("wdMask" in e.dataset)) return;
+		var attr = WDdom.mask(e);
+		if (attr === null) return;
+		var data = WDdom.dataset(e, "wdMask")[0];
+		if (!("format") in data) return;
+		var mask = data.format;
+		var func = data["call"];
+		var text = e[attr];
 
-
-
-
-
-
-
-
-
-
-	/*Define máscara do elemento data-wd-mask="StringMask"*/
-	function data_wdMask(e) {
-		var value, re, mask, shortcutMask, HTML;
-		shortcutMask = {
-			"DDMMYYYY": /^(0[1-9]|[12][0-9]|3[0-1])\.(0[1-9]|1[0-2])\.([0-9]{4})$/,
-			"MMDDYYYY": /^(0[1-9]|1[0-2])\/(0[1-9]|[12][0-9]|3[0-1])\/([0-9]{4})$/,
-			"YYYYMMDD": /^([0-9]{4})\-(0[1-9]|1[0-2])\-(0[1-9]|[12][0-9]|3[0-1])$/,
-			"HHMMSS": /^([01][0-9]|2[0-4])\:([0-5][0-9])\:([0-5][0-9])$/,
-			"HHMM": /^([01][0-9]|2[0-4])\h([0-5][0-9])$/,
-			"AMPM": /^(0[1-9]|1[0-2])\:([0-5][0-9][apAP])m$/,
+		var shorts = {//FIXME parei aqui
+			"%DMY": "##.##.####",
+			"%MDY": "##/##/####",
+			"%YMD": "####-##-##",
+			"%H": "#:##?##:##?#:##:##?##:##:##"
 		};
-		HTML = new AttrHTML(e);
-		if (HTML.has("wdMask") && HTML.mask !== null) {
-			value = e[HTML.mask];
-			if (HTML.data("wdMask") in shortcutMask) {
-				re = shortcutMask[HTML.data("wdMask")];
-			} else {
-				re = new RegExp(HTML.data("wdMask"));
-			}
+		if (mask in shorts) mask = shorts[mask];
+
+		var teste = WD(mask).;
+
+
 			mask = new WD(re).mask(value);
 			if (mask !== false) {
 				e[HTML.mask] = mask;
