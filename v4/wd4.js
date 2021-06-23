@@ -2360,7 +2360,7 @@ SOFTWARE.﻿
 						"textarea", "button", "submit", "email", "text", "search",
 						"tel", "url"
 					];
-					if (value.indexOf(this.tag(e)) >= 0) return "value";
+					if (value.indexOf(this.tag(e)) >= 0 || value.indexOf(this.type(e)) >= 0 ) return "value";
 					return null;	
 				}
 				return "textContent" in e ? "textContent" : null;
@@ -2422,9 +2422,9 @@ SOFTWARE.﻿
 				var object = false;
 				var core  = String(e.dataset[attr]).trim().split("");
 				for (var i = 0; i < core.length; i++) {
-					if (core[i] === "{" && open === 0) {/*abrir captura*/
+					if (core[i] === "{" && open === 0) {/*abrir captura do valor do atributo*/
 						open++;
-					} else if (core[i] === "}" && open === 1) {/*finalizar captura*/
+					} else if (core[i] === "}" && open === 1) {/*finalizar captura do valor do atributo*/
 						open--;
 						object = true;
 						value  = value.trim();
@@ -2437,14 +2437,23 @@ SOFTWARE.﻿
 							key++;
 							i++;
 						}
-					} else if (open > 0) {/*capturando valores do atributo*/
+					} else if (open > 0) {/*capturando valor do atributo*/
 						if (core[i] === "{") {open++;} else if (core[i] === "}") {open--;}
 						value += core[i];
 					} else {/*capturando nome do atributo*/
 						name += core[i];
 					}
 				}
-				return object ? list : (name.trim() === "null" ? null : name);
+				return object ? list : (name.trim() === "null" ? null : name);//FIXME
+			}
+		},
+		brosIndex: {
+			value: function(e) {
+				var bros = e.parentElement.children;
+				for (var i = 0; i < bros.length; i++) {
+					if (bros[i] === e) return i;
+				}
+				return 0;
 			}
 		}
 	});
@@ -3001,6 +3010,34 @@ SOFTWARE.﻿
 
 /*----------------------------------------------------------------------------*/
 
+	function data_wdTsort(e) {/*Ordena tabelas: data-wd-sort-col=""*/
+		if (!("wdTsort" in e.dataset)) return;
+		if (WDdom.tag(e.parentElement.parentElement) !== "thead") return;
+		var order = e.dataset.wdTsort === "+1" ? -1 : 1;
+		var col   = WDdom.brosIndex(e);
+		var heads = e.parentElement.children;
+		var thead = e.parentElement.parentElement;
+		var body  = thead.parentElement.tBodies;
+
+		console.log(e, order, col);
+
+		WD(body).sort(order, col);
+		WD(heads).data({wdTsort: ""});
+		WD(e).data({wdTsort: (order < 0 ? "-1" : "+1")});
+
+		return;
+	};
+
+
+
+
+
+
+
+
+
+/*----------------------------------------------------------------------------*/
+
 	function data_wdFilter(e) {/*Filtrar elementos: data-wd-filter=chars{}${css}&...*/
 		if (!("wdFilter" in e.dataset)) return;
 
@@ -3019,7 +3056,6 @@ SOFTWARE.﻿
 			var target = WDbox.get$$(data[i]);
 			if (target !== null) WD(target).filter(search, chars);
 		}
-	}
 		return;
 	};
 
@@ -3029,50 +3065,61 @@ SOFTWARE.﻿
 		if (!("wdMask" in e.dataset)) return;
 		var attr = WDdom.mask(e);
 		if (attr === null) return;
-		var data = WDdom.dataset(e, "wdMask")[0];
-		if (!("format") in data) return;
-		var mask = data.format;
-		var func = data["call"];
-		var text = e[attr];
-
-		var shorts = {//FIXME parei aqui
-			"%DMY": "##.##.####",
-			"%MDY": "##/##/####",
-			"%YMD": "####-##-##",
-			"%H": "#:##?##:##?#:##:##?##:##:##"
+		var checks = {
+			date: function(x) {return WD(x).type === "date" ? true : false},
+			time: function(x) {return WD(x).type === "time" ? true : false},
 		};
-		if (mask in shorts) mask = shorts[mask];
+		var shorts = {
+			"%DMY": {mask: "##.##.####", func: checks.date},
+			"%MDY": {mask: "##/##/####", func: checks.date},
+			"%YMD": {mask: "####-##-##", func: checks.date},
+			"%H":   {mask: "#:##?##:##?#:##:##?##:##:##", func: checks.time}
+		};
+		var text = e[attr];
+		var mask = e.dataset.wdMask;
+		var func;
+		if (mask in shorts) {
+			func = shorts[mask].func;
+			mask = shorts[mask].mask;
+		} else {
+			var data = WDdom.dataset(e, "wdMask")[0];
+			if (!("format" in data[0])) return;
+			mask = data[0].format;
+			func = data[0]["call"];
+		}
 
-		var teste = WD(mask).;
-
-
-			mask = new WD(re).mask(value);
-			if (mask !== false) {
-				e[HTML.mask] = mask;
-			}
-			if (HTML.mask === "value") {
-				if (mask === false && e.value !== "") {
-					WD(e).class({add: "js-wd-mask-error"});
-				} else {
-					WD(e).class({del: "js-wd-mask-error"});
-				}
-			}
+		var value = WD(mask).mask(text, func);
+		if (value !== null) e[attr] = value;
+		if (attr === "value") {
+			if (e.value !== "" && value === null) return WD(e).css({add: "js-wd-mask-error"});
+			return WD(e).css({del: "js-wd-mask-error"});
 		}
 		return;
 	};
 
-	/*Define os elementos a serem exibidos data-wd-page=page{p}size{s}*/
-	function data_wdPage(e) {
-		var attr, page, size, data;
-		data = new AttrHTML(e);
-		if (data.has("wdPage")) {
-			attr = data.core("wdPage")[0];
-			page = attr.page;
-			size = attr.size;
-			WD(e).page(page, size).data({wdPage: null});
-		}
+/*----------------------------------------------------------------------------*/
+
+	function data_wdPage(e) {/*separação em grupos: data-wd-page=page{p}size{s}*/
+		if (!("wdPage" in e.dataset)) return;
+		var data = WDdom.dataset(e, "wdPage")[0];
+		WD(e).page(data.page, data.size).data({wdPage: null});
 		return;
 	};
+
+/*----------------------------------------------------------------------------*/
+
+	function data_wdClick(e) {/*Executa click(): data-wd-click=""*/
+		if (!("wdClick" in e.dataset)) return;
+		if ("click" in e) e.click();
+		WD(e).data({wdClick: null});
+		return;
+	};
+
+
+
+
+
+
 
 	/*Define seu valor em outro elemento*/
 	function data_wdSet(e) {
@@ -3098,16 +3145,6 @@ SOFTWARE.﻿
 		return;
 	};
 
-	/*Executa o método click() ao elemento após o load data-wd-click=""*/
-	function data_wdClick(e) {
-		var data;
-		data = new AttrHTML(e);
-		if (data.has("wdClick")) {
-			if ("click" in e) {e.click();}
-			WD(e).data({wdClick: null});
-		}
-		return;
-	};
 
 	/*Executa uma ação ao alvo após o click data-wd-action=action1{css1}action2{css2}*/
 	function data_wdAction(e) {
@@ -3189,32 +3226,6 @@ SOFTWARE.﻿
 		return;
 	};
 
-	/*Ordena as colunas de uma tabela data-wd-sort-col=""*/
-	function data_wdSortCol(e) {
-		var order, thead, heads, bodies, data;
-		data = new AttrHTML(e);
-		if (data.has("wdSortCol") && new WD(e.parentElement.parentElement.tagName).title === "Thead") {
-			order  = data.data("wdSortCol") === "+1" ? -1 : 1;
-			thead  = e.parentElement.parentElement;
-			heads  = e.parentElement.children;
-			bodies = thead.parentElement.tBodies;
-			WD(heads).run(function(x) {
-				var ndata;
-				ndata = new AttrHTML(x);
-				if (ndata.has("wdSortCol")) {
-					ndata.data("wdSortCol", "");
-				}
-			});
-			for (var i = 0; i < heads.length; i++) {
-				if (heads[i] === e) {
-					WD(bodies).sort(order, i);
-					WD(e).data({wdSortCol: order === 1 ? "+1" : "-1"});
-					break;
-				}
-			}
-		}
-		return;
-	};
 
 	/*Define o estilo do elemento a partir do tamanho da tela data-wd-device=desktop{css}tablet{css}phone{css}mobile{css}*/
 	function data_wdDevice(e) {
@@ -3469,7 +3480,7 @@ SOFTWARE.﻿
 			data_wdAction(elem);
 			data_wdData(elem);
 			data_wdActive(elem);
-			data_wdSortCol(elem);
+			data_wdTsort(elem);
 			data_wdSend(elem);
 			data_wdSet(elem);
 			data_wdShared(elem);
