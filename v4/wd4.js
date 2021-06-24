@@ -37,10 +37,6 @@ SOFTWARE.﻿
 
 	/*guarda as mensagens da biblioteca*/
 	var wdConfig;
-	/*guarda o tamanho da tela*/
-	var deviceController;
-	/*guarda as propriedades da data*/
-	var Y_min, Y_max, Y_004, Y_100, Y_400, WEEK_1st, DATE_min, DATE_max;
 
 /*............................................................................*/
 
@@ -171,9 +167,9 @@ SOFTWARE.﻿
 	}
 
 	WDbox.device = function() {/*tipo do dispositivo*/
-		if (window.innerWidth >= 768) return "Desktop";
-		if (window.innerWidth >= 600) return "Tablet";
-		return "Phone";
+		if (window.innerWidth >= 768) return "desktop";
+		if (window.innerWidth >= 600) return "tablet";
+		return "phone";
 	};
 
 	WDbox.posts = 	{
@@ -223,8 +219,6 @@ SOFTWARE.﻿
 			fr: "Nombre de fichiers dépassé",
 		}
 	};
-
-	WDbox.Device = undefined; /*último device definido FIXME: vai precisar disso? talvez inserir no lugar do wdconfig*/
 
 /*============================================================================*/
 
@@ -2353,17 +2347,16 @@ SOFTWARE.﻿
 		},
 		mask: {/*retorna o atributo para aplicação da máscara*/
 			value: function(e) {
-				if (this.form(e)) {
-					var text = ["button", "option"];
-					if (text.indexOf(this.tag(e)) >= 0) return "textContent";
-					var value = [
-						"textarea", "button", "submit", "email", "text", "search",
-						"tel", "url"
-					];
-					if (value.indexOf(this.tag(e)) >= 0 || value.indexOf(this.type(e)) >= 0 ) return "value";
-					return null;	
-				}
-				return "textContent" in e ? "textContent" : null;
+				if (!this.form(e)) return "textContent" in e ? "textContent" : null;
+				var text = ["button", "option"];
+				if (text.indexOf(this.tag(e)) >= 0) return "textContent";
+				var value = [
+					"textarea", "button", "submit", "email", "text", "search",
+					"tel", "url"
+				];
+				if (value.indexOf(this.tag(e)) >= 0)  return "value";
+				if (value.indexOf(this.type(e)) >= 0) return "value";
+				return null;	
 			}
 		},
 		load: {/*retona o atributo para carregar outro elemento interno*/
@@ -2444,7 +2437,7 @@ SOFTWARE.﻿
 						name += core[i];
 					}
 				}
-				return object ? list : (name.trim() === "null" ? null : name);//FIXME
+				return object ? list : (name.trim() === "null" ? [{value: null}] : [{value: name}]);
 			}
 		},
 		brosIndex: {
@@ -2956,7 +2949,7 @@ SOFTWARE.﻿
 
 /*----------------------------------------------------------------------------*/
 
-	function data_wdRepeat(e) {/*Repete modelo HTML: data-wd-repeat=post{file}|get{file}${form}*/
+	function data_wdRepeat(e) {/*Repete modelo HTML: data-wd-repeat=post|get{file}${form}*/
 		if (!("wdRepeat" in e.dataset)) return;
 		var data = WDdom.dataset(e, "wdRepeat")[0];
 		if (!("get" in data) && !("post" in data)) return;
@@ -3010,7 +3003,7 @@ SOFTWARE.﻿
 
 /*----------------------------------------------------------------------------*/
 
-	function data_wdTsort(e) {/*Ordena tabelas: data-wd-sort-col=""*/
+	function data_wdTsort(e) {/*Ordena tabelas: data-wd-tsort=""*/
 		if (!("wdTsort" in e.dataset)) return;
 		if (WDdom.tag(e.parentElement.parentElement) !== "thead") return;
 		var order = e.dataset.wdTsort === "+1" ? -1 : 1;
@@ -3027,14 +3020,6 @@ SOFTWARE.﻿
 
 		return;
 	};
-
-
-
-
-
-
-
-
 
 /*----------------------------------------------------------------------------*/
 
@@ -3061,10 +3046,12 @@ SOFTWARE.﻿
 
 /*----------------------------------------------------------------------------*/
 
-	function data_wdMask(e) {/*Máscara: data-wd-mask="format{mask}call{callback}"*/
+	function data_wdMask(e) {/*Máscara: data-wd-mask="model{mask}call{callback}"*/
 		if (!("wdMask" in e.dataset)) return;
 		var attr = WDdom.mask(e);
 		if (attr === null) return;
+		var data = WDdom.dataset(e, "wdMask")[0];
+		if (!("model" in data)) return;
 		var checks = {
 			date: function(x) {return WD(x).type === "date" ? true : false},
 			time: function(x) {return WD(x).type === "time" ? true : false},
@@ -3076,16 +3063,11 @@ SOFTWARE.﻿
 			"%H":   {mask: "#:##?##:##?#:##:##?##:##:##", func: checks.time}
 		};
 		var text = e[attr];
-		var mask = e.dataset.wdMask;
-		var func;
+		var mask = data.model;
+		var func = "call" in data ? data["call"] : null;
 		if (mask in shorts) {
-			func = shorts[mask].func;
-			mask = shorts[mask].mask;
-		} else {
-			var data = WDdom.dataset(e, "wdMask")[0];
-			if (!("format" in data[0])) return;
-			mask = data[0].format;
-			func = data[0]["call"];
+			func = shorts[data.model].func;
+			mask = shorts[data.model].mask;
 		}
 
 		var value = WD(mask).mask(text, func);
@@ -3115,8 +3097,84 @@ SOFTWARE.﻿
 		return;
 	};
 
+/*----------------------------------------------------------------------------*/
 
+	function data_wdData(e) {/*define dataset: data-wd-data=attr1{value}${css}&*/
+		if (!("wdData" in e.dataset)) return;
+		var data = WDdom.dataset(e, "wdData");
+		for (var i = 0; i < data.length; i++) {
+			var target = WDbox.get$$(data[i]);
+			delete data[i]["$"];
+			delete data[i]["$$"];
+			for (var j in data[i]) if (data[i][j] === "null") data[i][j] = null;
+			WD(target === null ? e : target).data(data[i]);
+		}
+		return;
+	};
 
+/*----------------------------------------------------------------------------*/
+
+	function data_wdEdit(e) {/*edita texto: data-wd-edit=comando{especificação}...*/
+		if (!("execCommand" in document)) return;
+		if (!("wdEdit" in e.dataset)) return;
+		var data = WDdom.dataset(e, "wdEdit")[0];
+		for (var i in data) {
+			var cmd = i;
+			var arg = data[i].trim() === "" ? undefined : data[i].trim();
+			if (cmd === "createLink") {
+				arg = prompt("Link:");
+				if (arg === "" || arg === null) cmd = "unlink";
+			}
+			if (cmd === "insertImage") {
+				arg = prompt("Link:");
+			}
+			document.execCommand(cmd, false, arg);
+		}
+		return;
+	};
+
+/*----------------------------------------------------------------------------*/
+
+	function data_wdDevice(e) {/*Estilo widescreen: data-wd-device=desktop{css}tablet{css}phone{css}mobile{css}*/
+		if (!("wdDevice" in e.dataset)) return;
+		var data = WDdom.dataset(e, "wdDevice")[0];
+		var desktop = "desktop" in data ? data.desktop : "";
+		var mobile  = "mobile"  in data ? data.mobile  : "";
+		var tablet  = "tablet"  in data ? data.tablet  : "";
+		var phone   = "phone"   in data ? data.phone   : "";
+		var device  = WDbox.device();
+		if (device === "desktop") {
+			return WD(e).class({del: phone}).class({del: tablet}).class({del: mobile}).class({add: desktop});
+		}
+		if (device === "tablet") {
+			return WD(e).class({del: desktop}).class({del: phone}).class({add: mobile}).class({add: tablet});
+		}
+		if (device === "phone") {
+			return WD(e).class({del: desktop}).class({del: tablet}).class({add: mobile}).class({add: phone});
+		}
+		return;
+	};
+
+/*----------------------------------------------------------------------------*/
+
+	function data_wdSlide(e) {/*Carrossel: data-wd-slide=time*/
+		if (!("wdSlide" in e.dataset)) return delete e.dataset.wdSlideRun;
+		var time = isFinite(e.dataset.wdSlide) ? WDbox.int(e.dataset.wdSlide) : 1000;;
+
+		if (!("wdSlideRun" in e.dataset)) {
+			WD(e).action((time < 0 ? "prev" : "next"));
+			e.dataset.wdSlideRun = "1";
+			window.setTimeout(function() {
+				delete e.dataset.wdSlideRun
+				data_wdSlide(e);
+				return;
+			}, (time === 0 ? 1000 : Math.abs(time)));
+			return;
+		}
+		return delete e.dataset.wdSlideRun;
+	};
+
+/*----------------------------------------------------------------------------*/
 
 
 
@@ -3165,25 +3223,7 @@ SOFTWARE.﻿
 		return;
 	};
 
-	/*Define dataset a partir do click data-wd-data=attr1{value}${css}&*/
-	function data_wdData(e) {
-		var value, data, target;
-		data = new AttrHTML(e);
-		if (data.has("wdData")) {
-			value = data.core("wdData");
-			for (var i = 0; i < value.length; i++) {
-				/* se o alvo não for um dom, será aplicado ao próprio elemento*/
-				target = new WD($(value[i]["$"])).type === "dom" ? WD($(value[i]["$"])) : new WD(e);
-				delete value[i]["$"]; /*!!! a chave $ não definirá data-$*/
-				if (target.type === "dom") {
-					target.data(value[i]);
-				} else {
-					WD(e).data(value[i]);
-				}
-			}
-		}
-		return;
-	};
+
 
 	/*Define o link ativo do elemento nav sem interface data*/
 	function data_wdActive(e) {
@@ -3196,85 +3236,10 @@ SOFTWARE.﻿
 		return;
 	};
 
-	/*executa funções para edição de texto data-wd-edit=comando{especificação}&...*/
-	function data_wdEdit(e) {
-		var data, value;
-		/*Ferramenta complicada*/
-		if (!("execCommand" in document)) {
-			log("This browser is not supported.", "e")
-			return;
-		}
-		data = new AttrHTML(e);
-		if (data.has("wdEdit")) {
-			value = data.core("wdEdit")[0];
-			for (var i in value) {
-				var cmd, arg;
-				cmd = i;
-				arg = value[i] === "" ? undefined : value[i];
-				switch(i) {
-					case "createLink":
-						arg = prompt("Link:");
-						cmd = arg === "" || arg === null ? "unlink" : i;
-						break;
-					case "insertImage":
-						arg = prompt("Link:");
-						break;
-				}
-				document.execCommand(cmd, false, arg);
-			}
-		}
-		return;
-	};
 
 
-	/*Define o estilo do elemento a partir do tamanho da tela data-wd-device=desktop{css}tablet{css}phone{css}mobile{css}*/
-	function data_wdDevice(e) {
-		var data, value, desktop, mobile, tablet, phone;
-		data = new AttrHTML(e);
-		if (data.has("wdDevice")) {
-			value   = data.core("wdDevice")[0];
-			desktop = "desktop" in value ? value.desktop : "";
-			mobile  = "mobile"  in value ? value.mobile  : "";
-			tabvar  = "tablet"  in value ? value.tabvar  : "";
-			phone   = "phone"   in value ? value.phone   : "";
-			switch(deviceController) {
-				case "Desktop":
-					WD(e).class({del: phone}).class({del: tablet}).class({del: mobile}).class({add: desktop});
-					break;
-				case "Tablet":
-					WD(e).class({del: desktop}).class({del: phone}).class({add: mobile}).class({add: tablet});
-					break;
-				case "Phone":
-					WD(e).class({del: desktop}).class({del: tablet}).class({add: mobile}).class({add: phone});
-					break;
-			}
-		}
-		return;
-	};
 
-	/*Define um carrossel de elementos data-wd-slide=tempo*/
-	function data_wdSlide(e) {
-		var data, time;
-		data = new AttrHTML(e);
-		if (data.has("wdSlide") && !data.has("wdSlideRun")) {
-			time = new WD(data.data("wdSlide"));
-			if (time.type === "number" && time.number === "integer") {
-				time = time.valueOf() <= 0 ? 1000 : time.valueOf();
-			} else {
-				time = 1000;
-			}
-			WD(e).action("next");
-			data.data("wdSlideRun", "");
-			window.setTimeout(function() {
-				data.del("wdSlideRun");
-				data_wdSlide(e);
-				return;
-			}, time);
-		} else {
-			data.del("wdSlideRun");
-		}
-		return;
-	};
+
 
 	/*TODO experimental: Define um link de compartilhamento de redes sociais data-wd-shared=rede*/
 	function data_wdShared(e) {

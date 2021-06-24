@@ -79,8 +79,11 @@
 
 	<p id="data" data-loko="{}"></p>
 
-<input type="text" data-wd-mask="%DMY" oninput="data_wdMask(this)" />
+<input type="text" data-wd-mask="model{0,0#?0,##?#,##?##,##?###,##?#.###,##}" onblur="data_wdMask(this)" />
 
+<div id="datinha" contenteditable="">datinha</div>
+
+<button type="button" data-wd-edit="bold{}" onclick="data_wdEdit(this)">bold</button>
 
 <ul data-wd-sort="-1" id="lista">
 <li>   peça    </li>
