@@ -644,14 +644,16 @@ SOFTWARE.﻿
 
 			var n = 100*this._progress;
 			//FIXME: descobrir como se faz isso para rodar o progresso na tela
-			Array.apply(null, Array(4)).forEach(function (undef, index) {
+			document.title = n;
+
+/*			Array.apply(null, Array(4)).forEach(function (undef, index) {
 				setTimeout(function() {
 					WDrequest.window.textContent = n.toFixed(0)+"%";
 					WDrequest.window.style.color = "white";
 					WDrequest.window.style.opacity = "1";
 				}
 				, 0);
-			});
+			});*/
 
 			return;
 		}
@@ -2654,6 +2656,35 @@ SOFTWARE.﻿
 		}
 	});
 
+	Object.defineProperty(WDdom.prototype, "set", {/*Define atributos*/
+		enumerable: true,
+		value: function (attr, value) {
+			attr = String(attr).trim();
+			this.run(function(elem) {
+				var check = new WDtype(attr in elem ? elem[attr] : null);
+				if (check.type === "function") return elem[attr](value);
+
+				if (attr in elem) {//FIXME precisa de mais atenção
+					if (value === "?" && elem[attr] === true) {
+						elem[attr] =  false;
+					} else if (value === "?" && elem[attr] === false) {
+						elem[attr] = true;
+					} else {
+						elem[attr] = value;
+					}
+					if (elem[attr] === value) return;
+				}
+
+				if (value === undefined || value === null) return elem.removeAttribute(attr);
+				var val = elem.getAttribute(attr);
+				if (value === "?" && val === "true")  return elem.setAttribute(attr, "false");
+				if (value === "?" && val === "false") return elem.setAttribute(attr, "true");
+				return elem.setAttribute(attr, value);				
+			});
+			return this;
+		}
+	});
+
 	Object.defineProperty(WDdom.prototype, "action", {/*executa determinadas ações*/
 		enumerable: true,
 		value: function (action) {
@@ -3176,6 +3207,27 @@ SOFTWARE.﻿
 
 /*----------------------------------------------------------------------------*/
 
+	function data_wdShared(e) {/*TODO: Redes sociais: data-wd-shared=rede*/
+		if (!("Shared" in e.dataset)) return;
+		var url    = encodeURIComponent(document.URL);
+		var title  = encodeURIComponent(document.title);
+		var social = e.dataset.wdShared.trim().toLowerCase();
+		var link   = {
+			facebook: "https://www.facebook.com/sharer.php?u="+url,
+			twitter:  "https://twitter.com/share?url="+url+"&text="+title+"&via=&hashtags=",
+			linkedin: "https://www.linkedin.com/shareArticle?url="+url+"&title="+title,
+			reddit:   "https://reddit.com/submit?url="+url+"&title="+title,
+			evernote: "https://www.evernote.com/clip.action?url="+url+"&title="+title,
+		}
+		if (social in link) {window.open(link[social]);}
+		return;
+	};
+
+/*----------------------------------------------------------------------------*/
+
+
+
+
 
 
 
@@ -3241,37 +3293,7 @@ SOFTWARE.﻿
 
 
 
-	/*TODO experimental: Define um link de compartilhamento de redes sociais data-wd-shared=rede*/
-	function data_wdShared(e) {
-		var social, data, link, url, title;
-		data = new AttrHTML(e);
-		if (data.has("wdShared")) {
-			url    = encodeURIComponent(document.URL);
-			title  = encodeURIComponent(document.title);
-			social = new WD(data.data("wdShared")).toString().toLowerCase();
-			switch (social) {
-				case "facebook": 
-					link = "https://www.facebook.com/sharer.php?u="+url;
-					break;
-				case "twitter":
-					link = "https://twitter.com/share?url="+url+"&text="+title+"&via=&hashtags=";
-					break;
-				case "linkedin":
-					link = "https://www.linkedin.com/shareArticle?url="+url+"&title="+title;
-					break;
-				case "reddit":
-					link = "https://reddit.com/submit?url="+url+"&title="+title;
-					break;
-				case "evernote":
-					link = "https://www.evernote.com/clip.action?url="+url+"&title="+title;
-					break;
-				default:
-					link = null;
-			}
-			if (link !== null) {window.open(link);}
-		}
-		return;
-	};
+
 
 	/*analisa as informações do arquivo data-wd-file=size{value}type{}char{}len{}total{}*/
 	function data_wdFile(e) {
