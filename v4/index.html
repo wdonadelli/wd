@@ -23,15 +23,12 @@
 		<h2>WD Libraries</h2>
 	</header>
 
-
-
-
 	<nav class="wd-buddy-top wd-bg-white">
 
 		<span
 			class="wd-icon-menu"
 			title="Menu"
-			data-wd-action="open{#menu}"
+			data-wd-css="tgl{wd-open}${#menu}"
 		> Menu</span>
 
 
@@ -62,53 +59,11 @@
 		
 		<section class="wd-flyer">
 
-
-
-	<input type="time" name="text" />
-	<input type="file" name="file" multiple="true"/>
-	<select multiple="true" name="sel">
-		<option>1</option>
-		<option>2</option>
-		<option>3</option>
-		<option>4</option>
-		<option>5</option>
-	</select>
-	<input type="checkbox" name="check" value="checado" />
-	<input type="radio" name="radio" value="radio1" />
-	<input type="radio" name="radio" value="radio2" />
-
-	<p id="data" data-loko="{}"></p>
-
-<input type="text" data-wd-mask="model{0,0#?0,##?#,##?##,##?###,##?#.###,##}" onblur="data_wdMask(this)" />
-
-<div id="datinha" contenteditable="">datinha</div>
-
-<button type="button" data-wd-edit="bold{}" onclick="data_wdEdit(this)">bold</button>
-
-<ul data-wd-sort="-1" id="lista">
-<li>   peça    </li>
-<li>   maria   </li>
-<li>   mária   </li>
-<li>   mário   </li>
-<li>   mario   </li>
-</ul>
-
-<svg width="100" height="100">
-  <circle cx="50" cy="50" r="40" stroke="green" stroke-width="4" fill="yellow" />
-</svg>
-
-  <canvas id="myCanvas" width="200" height="100" style="border:1px solid #000000;">
-</canvas> 
-
-
-
-<details><p>bosta</p></details>
-
-
+<input type="file" name="file" id="arq">
 
 			<nav class="wd-size-large">
-				<a href="#" data-wd-action="tab{#tab_code}" class="wd-icon-copy" > Code</a>
-				<a href="#" data-wd-action="tab{#tab_view}" id="nav_view" data-wd-click="" class="wd-icon-search" > View</a>
+				<a href="#" data-wd-nav="${#tab_code}" class="wd-icon-copy" > Code</a>
+				<a href="#" data-wd-nav="${#tab_view}" id="nav_view" data-wd-click="" class="wd-icon-search" > View</a>
 			</nav>
 
 			<section>
@@ -119,31 +74,12 @@
 
 				<form id="tab_code" class="wd-block">
 					<textarea id="code" class="wd-code" style="height: 300px;" data-wd-load="get{examples/home.html}"></textarea>
-					<button type="button" class="wd-icon-reload" data-wd-data="wdClick{}${#nav_view}" onclick="reload();"> Reload</button>
+					<button type="button" class="wd-icon-reload" data-wd-data="wdClick{}${#nav_view}" "> Reload</button>
 				</form>
 
 			</section>
 
 		</section>
-
-		<table>
-			<thead>
-				<tr><th>Nome</th><th>Dia</th><th>Data</th></tr>
-			</thead>
-
-			<tbody id="table">
-				<tr><td>willian</td><td>15</td><td>15.03.1983</td></tr>
-				<tr><td>helen</td><td>04</td><td>04.04.1983</td></tr>
-				<tr><td>helena</td><td>07</td><td>07.09.2017</td></tr>
-			</tbody>
-		</table>
-
-<div id="repeat" data-wd-repeat="get{examples/list1.csv}">
-<p>{{name}} - {{age}}
-</div>
-
-
-<pre id="teste" data-wd-send="post{examples/target.php}$${input, select}" class="wd-code"></pre>
 
 
 	</main>
@@ -151,8 +87,8 @@
 	<!-- Menu -->
 	<aside  id="menu" class="wd-window-full wd-flyer wd-bg-grey" >
 
-		<header class="wd-bg-bluedd">
-			<h3><span class="wd-icon-menu" data-wd-action="close{#menu}"></span> Menu</h3>
+		<header class="wd-bg-blue">
+			<h3><span class="wd-icon-menu" data-wd-css="tgl{wd-open}${#menu}"></span> Menu</h3>
 		</header>
 
 		<form>
@@ -163,14 +99,14 @@
 					<input
 						type="search"
 						id="search"
-						data-wd-filter="show{}${#examples}"
+						data-wd-filter="chars{}${#examples}"
 						autofocus=""
 						placeholder="Search..." 
 					/>
 				</div>
 
 				<div class="wd-col-01 wd-block">
-					<button type="button" class="wd-icon-close" data-wd-action="close{#menu}"></button>
+					<button type="button" class="wd-icon-close" data-wd-set="value{}${#search}"></button>
 				</div>
 
 			</div>

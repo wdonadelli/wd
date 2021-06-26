@@ -38,6 +38,9 @@ SOFTWARE.﻿
 
 
 
+//FIXME TODO
+.js-wd-checked:before {content: \"\\2713 \"}
+.js-wd-disabled       {pointer-events: none; color: #ccc; opacity: 0.8; cursor: default !important;}
 
 
 

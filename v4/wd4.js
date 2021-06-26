@@ -29,16 +29,7 @@ SOFTWARE.﻿
 
 "use strict";
 
-//var wd = (function() {
-
-/* === WD ================================================================== */
-
-	/*Variáveis globais*/
-
-	/*guarda as mensagens da biblioteca*/
-	var wdConfig;
-
-/*............................................................................*/
+var wd = (function() {
 
 	function WDbox(input) {
 		if (!(this instanceof WDbox)) return new WDbox(input);
@@ -172,17 +163,19 @@ SOFTWARE.﻿
 		return "phone";
 	};
 
+	WDbox.deviceController = null;
+
 	WDbox.posts = 	{
-		fileTitle: {
-			en: "Archives: occurrences",
-			pt: "Arquivos: ocorrências",
-			es: "Archivos: ocurrencias",
-			it: "Archivi: occorrenze",
-			ru: "Архивы: случаи",
-			du: "Archiv: Vorkommen",
-			fr: "Archives: occurrences",
+		type: {
+			en: "Type not allowed",
+			pt: "Tipo não permitido",
+			es: "Tipo no permitido",
+			it: "Tipo non consentito",
+			ru: "Тип не разрешен",
+			du: "Typ nicht zulässig",
+			fr: "Type non autorisé",
 		},
-		fileSize: {
+		size: {
 			en: "Individual size exceeded",
 			pt: "Tamanho individual excedido",
 			es: "Se superó el tamaño individual",
@@ -191,7 +184,7 @@ SOFTWARE.﻿
 			du: "Einzelgröße überschritten",
 			fr: "Taille individuelle dépassée",
 		},
-		fileTotal: {
+		total: {
 			en: "Total size exceeded",
 			pt: "Tamanho total excedido",
 			es: "Tamaño total excedido",
@@ -200,7 +193,7 @@ SOFTWARE.﻿
 			du: "Gesamtgröße überschritten",
 			fr: "Taille totale dépassée",
 		},
-		fileChar: {
+		char: {
 			en: "Characters not allowed",
 			pt: "Caracteres não permitidos",
 			es: "Caracteres no permitidos",
@@ -209,7 +202,7 @@ SOFTWARE.﻿
 			du: "Zeichen nicht erlaubt",
 			fr: "Caractères non autorisés",
 		},
-		fileLen: {
+		len: {
 			en: "Number of files exceeded",
 			pt: "Número de arquivos excedido",
 			es: "Se superó el número de archivos",
@@ -643,17 +636,19 @@ SOFTWARE.﻿
 			this._total    = 0;
 
 			var n = 100*this._progress;
-			//FIXME: descobrir como se faz isso para rodar o progresso na tela
-			document.title = n;
 
-/*			Array.apply(null, Array(4)).forEach(function (undef, index) {
-				setTimeout(function() {
-					WDrequest.window.textContent = n.toFixed(0)+"%";
-					WDrequest.window.style.color = "white";
-					WDrequest.window.style.opacity = "1";
-				}
-				, 0);
-			});*/
+			function teste() {
+				document.title = n
+				requestAnimationFrame(teste);
+			
+			}
+
+			teste();
+
+
+
+
+
 
 			return;
 		}
@@ -804,9 +799,9 @@ SOFTWARE.﻿
 	WDsignal.csmall = {right:  "initial", left:  "0", width: "100%", textAlign: "center"};
 
 	WDsignal.mbase  = {
-		textAlign: "inherit", border: "1px solid", borderRadius: "0.1em",
+		textAlign: "inherit", border: "1px solid", borderRadius: "0.2em",
 		margin: "0.5em", padding: "0.5em", cursor: "pointer", opacity: "1",
-		backgroundColor: "#FFFFFF", /*boxShadow: "2px 2px #DCDCDC"*/
+		backgroundColor: "#FFFFFF"
 	};
 	WDsignal.minfo  = {color: "#4682B4"};
 	WDsignal.mwarn  = {color: "#FF8C00"};
@@ -849,7 +844,7 @@ SOFTWARE.﻿
 			this.styled = true;
 		}
 
-		var style = WDbox.device() === "Desktop" ? this.cmicro : this.csmall;
+		var style = WDbox.device() === "desktop" ? this.cmicro : this.csmall;
 		for (var i in style) this.window.style[i] = style[i];
 
 		if (!this.opened) document.body.appendChild(this.window);
@@ -2605,12 +2600,44 @@ SOFTWARE.﻿
 							script.src = scripts[i].src;
 						}
 						elem.appendChild(script);
-						WD(script).action("kill");
+						WD(script).set("remove");
 					}
-					loadingProcedures();
 				}
+				loadingProcedures();
 				return;
 			});
+			return this;
+		}
+	});
+
+	Object.defineProperty(WDdom.prototype, "repeat", {/*clona elementos por array*/
+		enumerable: true,
+		value: function (json) {
+			var check = new WDtype(json);
+			if (check.type !== "array") return this;
+			this.run(function(elem) {
+				var html = elem.innerHTML;
+
+				if (html.search(/\{\{.+\}\}/gi) >= 0) {
+
+					elem.dataset.wdRepeatModel = html;
+				} else if ("wdRepeatModel" in elem.dataset) {
+					html = elem.dataset.wdRepeatModel;
+				} else {
+					return;
+				}
+				elem.innerHTML = "";
+				html = html.split("}}=\"\"").join("}}");
+				for (var i = 0; i < json.length; i++) {
+					var inner  = html;
+					var object = new WDtype(json[i]);
+					if (object.type !== "object") continue;
+					for (var c in json[i]) inner = inner.split("{{"+c+"}}").join(json[i][c]);
+					elem.innerHTML += inner;
+				}
+				loadingProcedures();
+				return;
+			});	
 			return this;
 		}
 	});
@@ -2639,15 +2666,15 @@ SOFTWARE.﻿
 					var target = WD(child[i]);					
 
 					if (check1.type === "regexp" && search.test(content)) {
-						target.action("show");
+						target.nav("show");
 						continue;
 					}
 					var found = content.indexOf(search) >= 0 ? true :  false;
 					var width = search.length;
 					if (chars < 0) {
-						target.action((found && width >= -chars) ? "show" :  "hide");
+						target.nav((found && width >= -chars) ? "show" :  "hide");
 					} else {
-						target.action((!found && width >= chars) ? "hide" :  "show");
+						target.nav((!found && width >= chars) ? "hide" :  "show");
 					}
 				};
 				return;
@@ -2665,14 +2692,13 @@ SOFTWARE.﻿
 				if (check.type === "function") return elem[attr](value);
 
 				if (attr in elem) {//FIXME precisa de mais atenção
-					if (value === "?" && elem[attr] === true) {
-						elem[attr] =  false;
-					} else if (value === "?" && elem[attr] === false) {
-						elem[attr] = true;
-					} else {
-						elem[attr] = value;
+					var val = elem[attr];
+					if (value === "?" && (val === true || val === false)) {
+						elem[attr] = val ? false : true;
+						return;
 					}
-					if (elem[attr] === value) return;
+					elem[attr] = value;
+					return;
 				}
 
 				if (value === undefined || value === null) return elem.removeAttribute(attr);
@@ -2685,83 +2711,17 @@ SOFTWARE.﻿
 		}
 	});
 
-	Object.defineProperty(WDdom.prototype, "action", {/*executa determinadas ações*/
+	Object.defineProperty(WDdom.prototype, "nav", {/*navegação*/
 		enumerable: true,
 		value: function (action) {
 			action = new String(action).toLowerCase();
 
 			this.run(function(elem) {
 				var list = WD(elem);
+				if (action === "show")   return list.css({del: "js-wd-no-display"});
+				if (action === "hide")   return list.css({add: "js-wd-no-display"});
+				if (action === "toggle") return list.css({tgl: "js-wd-no-display"});
 
-				if (action === "open") {
-					if ("open" in elem) elem.open = true;
-					return;
-				}
-				if (action === "close") {
-					if ("open" in elem) elem.open = false;
-					return;
-				}
-				if (action === "open?") {
-					if ("open" in elem) elem.open = elem.open ? false : true;
-					return;
-				}
-				if (action === "show") {
-					list.css({del: "js-wd-no-display"});
-					return;
-				}
-				if (action === "hide") {
-					list.css({add: "js-wd-no-display"});
-					return;
-				}
-				if (action === "show?") {
-					list.css({tgl: "js-wd-no-display"});
-					return;
-				}
-				if (action === "check") {
-					if ("checked" in elem) {elem.checked = true;}
-					else {list.css({add: "js-wd-checked"});}
-					return;
-				}
-				if (action === "uncheck") {
-					if ("checked" in elem) {elem.checked = false;}
-					else {list.css({del: "js-wd-checked"});}
-					return;
-				}
-				if (action === "check?") {
-					if ("checked" in elem) {elem.checked = elem.checked ? false : true;}
-					else {list.css({tgl: "js-wd-checked"});}
-					return;
-				}
-				if (action === "enable") {
-					if ("disabled" in elem) {elem.disabled = false;}
-					else {list.css({del: "js-wd-disabled"});}
-					return;
-				}
-				if (action === "disable") {
-					if ("disabled" in elem) {elem.disabled = true;}
-					else {list.css({add: "js-wd-disabled"});}
-					return;
-				}
-				if (action === "enable?") {
-					if ("disabled" in elem) {elem.disabled = elem.disabled ? false : true;}
-					else {list.css({tgl: "js-wd-disabled"});}
-					return;
-				}
-				if (action === "clear") {
-					elem[WDdom.load(elem)] = "";
-					return;
-				}
-				if (action === "kill") {
-					if ("remove" in elem) {elem.remove();}
-					else {elem.parentElement.removeChild(elem);}
-					return;
-				}
-				if (action === "tab") {
-					var bros = WD(elem.parentElement.children);
-					bros.action("hide");
-					list.action("show")
-					return;
-				}
 				if (action === "prev") {
 					var child  = elem.children;
 					var length = child.length;
@@ -2773,9 +2733,9 @@ SOFTWARE.﻿
 						break;
 					}
 					var apply = WD(target);
-					apply.action("tab");
-					return;
+					return apply.nav();
 				}
+
 				if (action === "next") {
 					var child  = elem.children;
 					var length = child.length;
@@ -2787,42 +2747,14 @@ SOFTWARE.﻿
 						break;
 					}
 					var apply = WD(target);
-					apply.action("tab");
-					return;
+					return apply.nav();
 				}
+				/*default*/
+				var bros = WD(elem.parentElement.children);
+				bros.nav("hide");
+				list.nav("show")
 				return;
 			});
-			return this;
-		}
-	});
-
-	Object.defineProperty(WDdom.prototype, "repeat", {/*clona elementos por array*/
-		enumerable: true,
-		value: function (json) {
-			var check = new WDtype(json);
-			if (check.type !== "array") return this;
-			this.run(function(elem) {
-				var html = elem.innerHTML;
-
-				if (html.search(/\{\{.+\}\}/gi) >= 0) {
-					elem.dataset.wdRepeatModel = html;
-				} else if ("wdRepeatModel" in elem.dataset) {
-					html = elem.dataset.wdRepeatModel;
-				} else {
-					return;
-				}
-				elem.innerHTML = "";
-				html = html.split("}}=\"\"").join("}}");
-				for (var i = 0; i < json.length; i++) {
-					var inner  = html;
-					var object = new WDtype(json[i]);
-					if (object.type !== "object") continue;
-					for (var c in json[i]) inner = inner.split("{{"+c+"}}").join(json[i][c]);
-					elem.innerHTML += inner;
-				}
-				loadingProcedures();
-				return;
-			});	
 			return this;
 		}
 	});
@@ -2847,11 +2779,11 @@ SOFTWARE.﻿
 					console.log("p: ", p, "i: ", i);
 					print[p].push(book[i]);
 				}
-				WD(book).action("hide");
+				WD(book).nav("hide");
 				var show = WD(print).item(page);
 				if (show === undefined) show = page < 0 ? print[0] : print[pages];
 				
-				for (var i = 0; i < show.length; i++) WD(show[i]).action("show");
+				for (var i = 0; i < show.length; i++) WD(show[i]).nav("show");
 				return;
 			});
 			return this;
@@ -2983,6 +2915,7 @@ SOFTWARE.﻿
 	function data_wdRepeat(e) {/*Repete modelo HTML: data-wd-repeat=post|get{file}${form}*/
 		if (!("wdRepeat" in e.dataset)) return;
 		var data = WDdom.dataset(e, "wdRepeat")[0];
+
 		if (!("get" in data) && !("post" in data)) return;
 
 		var target = WD(e);
@@ -3043,8 +2976,6 @@ SOFTWARE.﻿
 		var thead = e.parentElement.parentElement;
 		var body  = thead.parentElement.tBodies;
 
-		console.log(e, order, col);
-
 		WD(body).sort(order, col);
 		WD(heads).data({wdTsort: ""});
 		WD(e).data({wdTsort: (order < 0 ? "-1" : "+1")});
@@ -3058,6 +2989,7 @@ SOFTWARE.﻿
 		if (!("wdFilter" in e.dataset)) return;
 
 		var search = WDdom.form(e) ? WDdom.value(e) : e.textContent;
+		if (search === null) search = "";
 		if (search[0] === "/" && search.length > 3) {/*É RegExp?*/
 			if (search[search.length - 1] === "/") {
 				search = new RegExp(search.substr(1, (search.length - 2)));
@@ -3193,7 +3125,7 @@ SOFTWARE.﻿
 		var time = isFinite(e.dataset.wdSlide) ? WDbox.int(e.dataset.wdSlide) : 1000;;
 
 		if (!("wdSlideRun" in e.dataset)) {
-			WD(e).action((time < 0 ? "prev" : "next"));
+			WD(e).nav((time < 0 ? "prev" : "next"));
 			e.dataset.wdSlideRun = "1";
 			window.setTimeout(function() {
 				delete e.dataset.wdSlideRun
@@ -3208,7 +3140,7 @@ SOFTWARE.﻿
 /*----------------------------------------------------------------------------*/
 
 	function data_wdShared(e) {/*TODO: Redes sociais: data-wd-shared=rede*/
-		if (!("Shared" in e.dataset)) return;
+		if (!("wdShared" in e.dataset)) return;
 		var url    = encodeURIComponent(document.URL);
 		var title  = encodeURIComponent(document.title);
 		var social = e.dataset.wdShared.trim().toLowerCase();
@@ -3225,160 +3157,131 @@ SOFTWARE.﻿
 
 /*----------------------------------------------------------------------------*/
 
-
-
-
-
-
-
-	/*Define seu valor em outro elemento*/
-	function data_wdSet(e) {
-		var data, core, attr, target;
-		data = new AttrHTML(e);
-		if (data.has("wdSet")) {
-			core = data.core("wdSet");
-			for (var c = 0; c < core.length; c++) {
-				attr   = core[c];
-				target = new WD($(attr["$"])).type === "dom" ? WD($(attr["$"])) : new WD(e);
-				target.run(function(x) {
-					if ("text"  in attr) {x.textContent  = attr["text"];}
-					if ("value" in attr) {x.value        = attr["value"];}
-					if ("class" in attr) {x.className    = attr["class"];}
-					if ("join"  in attr) {x.textContent += attr["join"];}
-					if ("acss"  in attr) {WD(x).class({add: attr["acss"]});}
-					if ("dcss"  in attr) {WD(x).class({del: attr["dcss"]});}
-					if ("tcss"  in attr) {WD(x).class({tgl: attr["tcss"]});}
-					return;
-				});
+	function data_wdSet(e) {/*define attributos: data-wd-set=attr{value}${css}&...*/
+		if (!("wdSet" in e.dataset)) return;
+		var data = WDdom.dataset(e, "wdSet");
+		for (var i = 0; i < data.length; i++) {
+			var target = WDbox.get$$(data[i]);
+			delete data[i]["$"];
+			delete data[i]["$$"];
+			for (var j in data[i]) {
+				if (data[i][j] === "null") data[i][j] = null;
+				WD(target === null ? e : target).set(j, data[i][j]);
 			}
 		}
 		return;
 	};
 
+/*----------------------------------------------------------------------------*/
 
-	/*Executa uma ação ao alvo após o click data-wd-action=action1{css1}action2{css2}*/
-	function data_wdAction(e) {
-		var value, data, target;
-		data = new AttrHTML(e);
-		if (data.has("wdAction")) {
-			value = data.core("wdAction")[0];
-			for (var action in value) {
-				target = new WD($(value[action]));
-				/* se o alvo não for um dom, será aplicado ao próprio elemento*/
-				if (target.type === "dom") {
-					target.action(action);
-				} else {
-					WD(e).action(action);
-				}
-			}
+	function data_wdCss(e) {/*define class: data-wd-css=add{value}del{}${css}&...*/
+		if (!("wdCss" in e.dataset)) return;
+		var data = WDdom.dataset(e, "wdCss");
+		for (var i = 0; i < data.length; i++) {
+			var target = WDbox.get$$(data[i]);
+			delete data[i]["$"];
+			delete data[i]["$$"];
+			WD(target === null ? e : target).css(data[i]);
 		}
 		return;
 	};
 
+/*----------------------------------------------------------------------------*/
 
-
-	/*Define o link ativo do elemento nav sem interface data*/
-	function data_wdActive(e) {
-		if (e.parentElement !== null && new WD(e.parentElement.tagName).title === "Nav") {
-			WD(e.parentElement.children).class({del: "wd-active"});
-			if (["A", "SPAN"].indexOf(e.tagName.toUpperCase()) >= 0) {
-				WD(e).class({add: "wd-active"});
-			}
+	function data_wdNav(e) {/*Navegação: data-wd-nav=type{arg}${css}&*/
+		if (!("wdNav" in e.dataset)) return;
+		var data = WDdom.dataset(e, "wdNav");
+		for (var i = 0; i < data.length; i++) {
+			var target = WDbox.get$$(data[i]);
+			var value  = "type" in data[i] ? data[i].type : null;
+			WD(target === null ? e : target).nav(value);
 		}
 		return;
 	};
 
+/*----------------------------------------------------------------------------*/
 
+	function data_wdSignal(e) {/*Mensagem input: data-wd-signal=message*/
+		if (!("wdSignal" in e.dataset)) return;
+		if (!WDdom.form(e)) return;
+		WD(e.dataset.wdSignal).signal("info");
+		return;
+	};
 
-
-
-
-
+/*----------------------------------------------------------------------------*/
 
 	/*analisa as informações do arquivo data-wd-file=size{value}type{}char{}len{}total{}*/
 	function data_wdFile(e) {
-		var tag, type, files, value, data, info, error, name, msg;
-		data_wdConfig();
-		data  = new AttrHTML(e);
-		tag   = e.tagName.toLowerCase();
-		type  = e.type.toLowerCase();
-		files = "files" in e ? e.files : [];
-		value = data.core("wdFile")[0];
-		msg   = [];
-		error = {
-			fileSize:  [],
-			fileChar:  [],
-			fileLen:   0,
-			fileTotal: 0
-		};
+		if (!("wdFile" in e.dataset)) return;
+		if (WDdom.type(e) !== "file") return;
+		var files = e.files;
+		var data  = WDdom.dataset(e, "wdFile")[0];
+		var check = {len: 0, total: 0, size: 0, name: "", type: "", error: null};
 
-		if (data.has("wdFile") && tag === "input" && type === "file") {
+		for (var i = 0; i < files.length; i++) {
+			check.name = files[i].name;
 
-			for (var i = 0; i < files.length; i++) {
+			check.len++;
+			if (isFinite(data.len) && check.len > WDbox.int(data.len)) check.error = "len";
+			if (check.error !== null) break;
 
-				error.fileTotal += "size" in files[i] ? files[i].size : 0;
-				error.fileLen++;
-				name = "name" in files[i] ? files[i].name : "";
+			check.size = files[i].size;
+			if (isFinite(data.size) && check.size > WDbox.int(data.size)) check.error = "size";
+			if (check.error !== null) break;
 
-				/* verificar tamanho individual do arquivo*/
-				info = new WD(value["size"]);
-				if (info.type === "number" && "size" in files[i]) {
-					if (files[i].size > info.valueOf()) {
-						error.fileSize.push(name);
-					}
-				}
+			check.total += check.size;
+			if (isFinite(data.total) && check.total > WDbox.int(data.total)) check.error = "total";
+			if (check.error !== null) break;
 
-				/* verificar caracteres do arquivo */
-				info = new WD(value["char"]);
-				if (info.type === "text" && "name" in files[i]) {
-					info = new RegExp("["+info.toString()+"]");
-					if (files[i].name.search(info) >= 0) {
-						error.fileChar.push(name);
-					}
-				}
+			check.type = files[i].type;
+			if ("type" in data && data.type !== check.type) check.error = "type";
+			if (check.error !== null) break;
+
+			if ("char" in data && data.char !== "") {
+				check.char = data.char;
+				var char = new RegExp("["+data.char+"]");
+				if (check.name.search(char) >= 0) check.error = "char";
 			}
-
-			/* verificar quantidade de arquivos */
-			info = new WD(value["len"]);
-			if (info.type === "number" && "length" in files) {
-				if (error.fileLen > info.round()) {
-					msg.push(wdConfig.fileLen+" &larr; "+info.round());
-				}
-			}
-
-			/* verificar tamanho total dos arquivos */
-			info = new WD(value["total"]);
-			if (info.type === "number") {
-				if (error.fileTotal > info.round()) {
-					msg.push(wdConfig.fileTotal+" &larr; "+calcByte(info));
-				}
-			}
-
-			/*verificando tamanho dos arquivos*/
-			info = new WD(value["size"]);
-			if (error.fileSize.length > 0) {
-				msg.push(wdConfig.fileSize+" &larr; "+calcByte(info));
-			}
-
-			/*verificando caracteres do arquivos*/
-			info = new WD(value["char"]);
-			if (error.fileChar.length > 0) {
-				msg.push(wdConfig.fileChar+" &larr; "+info);
-			}
-
-			/* apagando arquivos e exibindo erro */
-			if (msg.length > 1) {
-				e.value = null;
-				WD("<h3><center>"+wdConfig.fileTitle+"</center></h3><ul><li>"+msg.join("</li><li>")+"</li></ul>").message(10000);
-				WD(e).class({add: "js-wd-mask-error"});
-			} else {
-				WD(e).class({del: "js-wd-mask-error"});
-			}
+			if (check.error !== null) break;
 		}
+
+		if (check.error !== null) {
+			var loc = WDbox.lang().substr(0,2);
+			var err = check.error;
+			var txt = loc in WDbox.posts[err] ? WDbox.posts[err][loc] : WDbox.posts[err].en;
+			var msg = check.name;
+			if (check.error === "size") {
+				msg = msg + " ("+WDbox.calcByte(check.size)+")<br>"+txt+": "+WDbox.calcByte(data.size);
+			} else if (check.error === "type") {
+				msg = msg + " ("+check.type+")<br>"+txt+": "+data.type;
+			} else if (check.error === "char") {
+				msg = msg + "<br>"+txt+": ["+data.char+"]";
+			} else if (check.error === "total") {
+				msg = WDbox.calcByte(check.total)+"<br>"+txt+": "+WDbox.calcByte(data.total);
+			} else if (check.error === "len") {
+				msg = check.len+"<br>"+txt+": "+data.len;
+			}
+
+			WD(msg).signal("error");
+			e.value = null;
+			return WD(e).css({add: "js-wd-mask-error"});
+		}
+		return WD(e).css({del: "js-wd-mask-error"});
+	};
+
+/*============================================================================*/
+/* -- MOTOR -- */
+/*============================================================================*/
+
+	function navLink(e) {/*link ativo do navegador*/
+		if (e.parentElement === null) return;
+		if (WDdom.tag(e.parentElement) !== "nav") return;
+		WD(e.parentElement.children).css({del: "js-wd-nav"});
+		WD(e).css({add: "js-wd-nav"});//FIXME colocar o que para mencionar que o link é o clicado? data, css, outroa atributo?
 		return;
 	};
 
-/* === JS ENGINE =========================================================== */
+/*----------------------------------------------------------------------------*/
 
 	/*Obtém as dimensões de body e do filho com display = fixed, se houver para manipular o posicionamento da página*/
 	function fixedHeader() {
@@ -3391,7 +3294,7 @@ SOFTWARE.﻿
 
 		/*alimentando variável conf*/
 		for (var i in css) {
-			obj = new WD($(css[i]));
+			obj = new WD.$(css[i]);
 			for (var j = 0; j < stl.length; j++) {
 				conf[i][stl[j]] = obj.items > 0 ? obj.getStyle(stl[j])[0].toLowerCase() : "";
 				if (stl[j] !== "position") {
@@ -3417,7 +3320,7 @@ SOFTWARE.﻿
 		/* -- movimentando a tela do hash -- */
 		conf.hash = function() {
 			this.margin();
-			var hash = new WD($(window.location.hash));
+			var hash = new WD.$(window.location.hash);
 			if (this.head.position === "fixed" && hash.type === "dom" && hash.items > 0) {
 				window.scrollTo(0, hash.item().offsetTop - this.head.hTop);
 			}
@@ -3426,110 +3329,70 @@ SOFTWARE.﻿
 		return conf;
 	};
 
-	/*Adequar margens quando há elementos fixados no topo ou na base e mudar a posição quando mudar o hash*/
-	function hashProcedures() {
+
+/*----------------------------------------------------------------------------*/
+
+	function hashProcedures() {/*procedimento ao clicar em links*/
 		fixedHeader().hash();
 		return;
 	};
 
-	/*Procedimentos para carregar objetos externos*/
-	function loadingProcedures() {
-		var attr = new WD(WDbox.$$("[data-wd-load], [data-wd-repeat]"));
-		if (deviceController === null || deviceController === undefined) {
-			scalingProcedures();
-		}
-		if (attr.type !== "dom" || attr.items === 0) {
+/*----------------------------------------------------------------------------*/
+
+	function loadingProcedures() {/*procedimento para carregamentos*/
+		if (WDbox.deviceController === null) scalingProcedures();
+
+		var objects = WD.$$("[data-wd-load], [data-wd-repeat]");
+
+
+
+
+		
+		if (objects.item() === 0) {
 			organizationProcedures();
 			stylingProcedures();
 		} else {
-			WD(attr.item(0)).run(data_wdRepeat);
-			WD(attr.item(0)).run(data_wdLoad);
+			WD(objects.item(0)).run(data_wdRepeat);
+			WD(objects.item(0)).run(data_wdLoad);
 		}
 		return;
 	};
 
-	/*Procedimento para organizar elementos após fim dos carregamentos*/
-	function organizationProcedures() {
-		WD($("[data-wd-sort]")).run(data_wdSort);
-		WD($("[data-wd-filter]")).run(data_wdFilter);
-		WD($("[data-wd-mask]")).run(data_wdMask);
-		WD($("[data-wd-page]")).run(data_wdPage);
-		WD($("[data-wd-click]")).run(data_wdClick);
-		WD($("[data-wd-slide]")).run(data_wdSlide);
-		return;
-	};
+/*----------------------------------------------------------------------------*/
 
-	/*Procedimento a executar após eventos click*/
-	function clickProcedures(ev) {
-		if (ev.which !== 1) {return;}
-		var elem = ev.target
-		while (elem !== null) {
-			data_wdAction(elem);
-			data_wdData(elem);
-			data_wdActive(elem);
-			data_wdTsort(elem);
-			data_wdSend(elem);
-			data_wdSet(elem);
-			data_wdShared(elem);
-			data_wdEdit(elem);
-			elem = elem.parentElement;/*efeito bolha*/
-		}
-		return;
-	};
+	function scalingProcedures(ev) {/*procedimentos para definir tela*/
+		var device = WDbox.device();
 
-	/*Procedimento a executar após acionamento do teclado*/
-	function keyboardProcedures(ev) {
-		var data = new AttrHTML(ev.target);
-		if (data.form !== true || !("oninput" in window)) {
-			data_wdFilter(ev.target);
-			data_wdMask(ev.target);
-		}
-		return;
-	};
-
-	/*Procedimento a executar após acionamento do teclado em formulários*/
-	function inputProcedures(ev) {
-		data_wdFilter(ev.target);
-		data_wdMask(ev.target);
-		return;
-	};
-
-	/*Procedimento para definir o dispositivo pelo tamanho da tela*/
-	function scalingProcedures(ev) {
-		var device, width, height;
-		width  = window.innerWidth  || document.documentElement.clientWidth  || document.body.clientWidth;
-		height = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
-		if (width >= 768) {
-			device = "Desktop";
-		} else if (width >= 600) {
-			device = "Tablet";
-		} else {
-			device = "Phone";
-		};
-		if (device !== deviceController) {
-			deviceController = device;
-			if (new WD(ev).type !== "undefined") {
-				stylingProcedures();
-			}
+		if (device !== WDbox.deviceController) {
+			WDbox.deviceController = device;
+			if (WD(ev).type !== "undefined") stylingProcedures();
 		}
 		fixedHeader().margin();
 		return;
 	};
 
-	/*Procedimento a executar após redimensionamento da tela*/
-	function stylingProcedures(ev) {
-		WD($("[data-wd-device]")).run(data_wdDevice);
+/*----------------------------------------------------------------------------*/
+
+	function organizationProcedures() {/*procedimento pós carregamentos*/
+		WD.$$("[data-wd-sort]").run(data_wdSort);
+		WD.$$("[data-wd-filter]").run(data_wdFilter);
+		WD.$$("[data-wd-mask]").run(data_wdMask);
+		WD.$$("[data-wd-page]").run(data_wdPage);
+		WD.$$("[data-wd-click]").run(data_wdClick);
+		WD.$$("[data-wd-slide]").run(data_wdSlide);
 		return;
 	};
 
-	/*Procedimento a executar após alguma mudança*/
-	function changeProcedures(ev) {
-		data_wdFile(ev.target);
+/*----------------------------------------------------------------------------*/
+
+	function stylingProcedures(ev) {/*procedimentos para mudança de dispositivos*/
+		WD.$$("[data-wd-device]").run(data_wdDevice);
 		return;
 	};
 
-	/*Procedimento a executar após definição de dataset*/
-	function settingProcedures(e, attr) {
+/*----------------------------------------------------------------------------*/
+
+	function settingProcedures(e, attr) {/*procedimentos para dataset*/
 		switch(attr) {
 			case "wdLoad":    loadingProcedures(); break;
 			case "wdRepeat":  loadingProcedures(); break;
@@ -3539,14 +3402,73 @@ SOFTWARE.﻿
 			case "wdPage":    data_wdPage(e);      break;
 			case "wdClick":   data_wdClick(e);     break;
 			case "wdDevice":  data_wdDevice(e);    break;
-			case "wdFile":    data_wdFile(e);      break;
 			case "wdSlide":   data_wdSlide(e);     break;
+			case "wdSignal":  data_wdSignal(e);    break;
+			case "wdFile":    data_wdFile(e);      break;
 		};
 		return;
 	};
 
-	/*Definindo e incluindo os estilos utilizados pelo javascript na tag head*/
-	function headScriptProcedures(ev) {
+/*----------------------------------------------------------------------------*/
+
+	function clickProcedures(ev) {/*procedimentos para cliques*/
+		if (ev.which !== 1) return;
+		var elem = ev.target
+		while (elem !== null) {
+			data_wdSend(elem);
+			data_wdTsort(elem);
+			data_wdData(elem);
+			data_wdEdit(elem);
+			data_wdShared(elem);
+			data_wdSet(elem);
+			data_wdCss(elem);
+			data_wdNav(elem);
+			navLink(elem);
+			elem = elem.parentElement;/*efeito bolha*/
+		}
+		return;
+	};
+
+/*----------------------------------------------------------------------------*/
+
+	function keyboardProcedures(ev) {/*procedimentos para teclado*/
+		if (WDdom.form(ev.target)) return;
+		data_wdFilter(ev.target);
+		data_wdMask(ev.target);
+		return;
+	};
+
+/*----------------------------------------------------------------------------*/
+
+	function inputProcedures(ev) {/*procedimentos para formulários*/
+		data_wdFilter(ev.target);
+		return;
+	};
+
+/*----------------------------------------------------------------------------*/
+
+	function focusoutProcedures(ev) {/*procedimentos para saída de formulários*/
+		data_wdMask(ev.target);
+		return;
+	};
+
+/*----------------------------------------------------------------------------*/
+
+	function focusinProcedures(ev) {/*procedimentos para entrada de formulários*/
+		data_wdSignal(ev.target);
+		return;
+	};
+
+/*----------------------------------------------------------------------------*/
+
+	function changeProcedures(ev) {/*procedimentos para outras mudanças*/
+		data_wdFile(ev.target);
+		return;
+	};
+
+/*----------------------------------------------------------------------------*/
+
+	function headScriptProcedures(ev) {/*procedimentos de CSS interno*/
 		var style;
 		style = document.createElement("STYLE");
 		style.textContent = 
@@ -3554,17 +3476,16 @@ SOFTWARE.﻿
 " @keyframes js-wd-fade2 {from {opacity: 0.4;} to {opacity: 1;}}" +
 " .js-wd-no-display     {display: none !important;}" +
 " .js-wd-mask-error     {color: #663399 !important; background-color: #e8e0f0 !important;}" +
-" .js-wd-checked:before {content: \"\\2713 \"}" +
-" .js-wd-disabled       {pointer-events: none; color: #ccc; opacity: 0.8; cursor: default !important;}" +
-" *[data-wd-action],   *[data-wd-send] {cursor: pointer;}" +
-" *[data-wd-sort-col], *[data-wd-data] {cursor: pointer;}" +
+" *[data-wd-nav],   *[data-wd-send] {cursor: pointer;}" +
+" *[data-wd-tsort], *[data-wd-data] {cursor: pointer;}" +
 " *[data-wd-set]                       {cursor: pointer;}" +
-" *[data-wd-sort-col]:before {content: \"\\2195 \";}" +
-" *[data-wd-sort-col=\"-1\"]:before {content: \"\\2191 \";}" +
-" *[data-wd-sort-col=\"+1\"]:before {content: \"\\2193 \";}" +
+" *[data-wd-tsort]:before {content: \"\\2195 \";}" +
+" *[data-wd-tsort=\"-1\"]:before {content: \"\\2191 \";}" +
+" *[data-wd-tsort=\"+1\"]:before {content: \"\\2193 \";}" +
 " *[data-wd-repeat] > *, *[data-wd-load] > * {visibility: hidden;}" +
 " *[data-wd-slide] > * {animation: js-wd-fade2 1s;}" +
-" .js-wd-box-message {color: #333333; background-color: #f8f8ff; border-style: solid; border-width: 1px;}" +
+" nav > * {opacity: 0.4;}"+
+" nav > *.js-wd-nav, nav > *:hover {box-shadow: inset 0 -0.3em 0 0; opacity: 1;}"+
 " /*TODO Experimental*/" +
 " *[data-wd-shared] {cursor: pointer; display: inline-block; width: 1em; height: 1em;}" +
 " *[data-wd-shared] {background-repeat: no-repeat; background-size: cover;}" +
@@ -3575,7 +3496,7 @@ SOFTWARE.﻿
 " *[data-wd-shared=\"evernote\"] {background-image: url('https://www.evernote.com/favicon.ico?v2');}";
 		document.head.appendChild(style);
 		
-		if (new WD($("link[rel=icon]")).items === 0) {
+		if (new WD.$$("link[rel=icon]").items === 0) {
 			var favicon = document.createElement("link");
 			favicon.rel = "icon";
 			favicon.href = "https://wdonadelli.github.io/wd/image/favicon.ico";
@@ -3584,28 +3505,29 @@ SOFTWARE.﻿
 		return;
 	};
 
-	/*Definindo eventos*/
-	WD(window).handler({
+/*----------------------------------------------------------------------------*/
+
+	WD(window).handler({/*Definindo eventos window*/
 		load: headScriptProcedures
 	}).handler({
 		load: loadingProcedures
 	}).handler({
 		load: hashProcedures
 	}).handler({
-		load: data_wdConfig,
 		resize: scalingProcedures,
-		hashchange: hashProcedures
+		hashchange: hashProcedures,
 	});
 
-	WD(document).handler({
+	WD(document).handler({/*Definindo eventos document*/
 		click:  clickProcedures,
 		keyup:  keyboardProcedures,
 		input:  inputProcedures,
-		change: changeProcedures
+		change: changeProcedures,
+		focusin: focusinProcedures,
+		focusout: focusoutProcedures,
 	});
 
-/* === END ================================================================= */
 
-//	return WD;
+	return WD;
 
-//}());
+}());
