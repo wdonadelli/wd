@@ -635,21 +635,16 @@ var wd = (function() {
 			this._loaded   = 0;
 			this._total    = 0;
 
-			var n = 100*this._progress;
-
-			function teste() {
-				document.title = n
-				requestAnimationFrame(teste);
-			
+/*FIXME estudar mais
+			var start = 100*this._progress;
+			function step(time) {
+				if (start === undefined) start = time;
+				var elapsed = time - start;
+				WDrequest.window.textContent = elapsed;
+				if (elapsed < 2000) window.requestAnimationFrame(step);
 			}
-
-			teste();
-
-
-
-
-
-
+			window.requestAnimationFrame(step);
+*/
 			return;
 		}
 	});
@@ -3107,13 +3102,13 @@ var wd = (function() {
 		var phone   = "phone"   in data ? data.phone   : "";
 		var device  = WDbox.device();
 		if (device === "desktop") {
-			return WD(e).class({del: phone}).class({del: tablet}).class({del: mobile}).class({add: desktop});
+			return WD(e).css({del: phone}).css({del: tablet}).css({del: mobile}).css({add: desktop});
 		}
 		if (device === "tablet") {
-			return WD(e).class({del: desktop}).class({del: phone}).class({add: mobile}).class({add: tablet});
+			return WD(e).css({del: desktop}).css({del: phone}).css({add: mobile}).css({add: tablet});
 		}
 		if (device === "phone") {
-			return WD(e).class({del: desktop}).class({del: tablet}).class({add: mobile}).class({add: phone});
+			return WD(e).css({del: desktop}).css({del: tablet}).css({add: mobile}).css({add: phone});
 		}
 		return;
 	};
@@ -3269,9 +3264,7 @@ var wd = (function() {
 		return WD(e).css({del: "js-wd-mask-error"});
 	};
 
-/*============================================================================*/
-/* -- MOTOR -- */
-/*============================================================================*/
+/*----------------------------------------------------------------------------*/
 
 	function navLink(e) {/*link ativo do navegador*/
 		if (e.parentElement === null) return;
@@ -3281,93 +3274,139 @@ var wd = (function() {
 		return;
 	};
 
+/*============================================================================*/
+/* -- DISPARADORES -- */
+/*============================================================================*/
+
+	function loadProcedures(ev) {
+		/*definer o dispositivo*/
+		WDbox.deviceController = WDbox.device();
+
+		/*criar o estilo interno*/
+		var styles = [
+			{target: "@keyframes js-wd-fade",
+				value: "from {opacity: 0.4;} to {opacity: 1;}"},
+				//value: "from {transform: translate(100%);scaleX(0);}"},
+			{target: ".js-wd-no-display",
+				value: "display: none !important;"},
+			{target: ".js-wd-mask-error",
+				value: "color: #663399 !important; background-color: #e8e0f0 !important;"},
+			{target: "[data-wd-nav], [data-wd-send], [data-wd-tsort], [data-wd-data]",
+				value: "cursor: pointer;"},
+			{target: "[data-wd-set], [data-wd-edit], [data-wd-shared], [data-wd-css]",
+				value: "cursor: pointer;"},
+			{target: "[data-wd-tsort]:before",
+				value: "content: \"\\2195 \";"},
+			{target: "[data-wd-tsort=\"-1\"]:before",
+				value: "content: \"\\2191 \";"},
+			{target: "[data-wd-tsort=\"+1\"]:before",
+				value: "content: \"\\2193 \";"},
+			{target: "[data-wd-repeat] > *, [data-wd-load] > *",
+				value: "visibility: hidden !important;"},
+			{target: "[data-wd-slide] > * ",
+				value: "animation: js-wd-fade 0.4s;"},
+			{target: "nav > *",
+				value: "opacity: 0.4;"},
+			{target: "nav > *.js-wd-nav, nav > *:hover",
+				value: "box-shadow: inset 0 -0.3em 0 0; opacity: 1;"},
+			{target: "[data-wd-shared]",
+				value: "display: inline-block; width: 1em; height: 1em;background-repeat: no-repeat; background-size: cover;"},
+			{target: "[data-wd-shared=facebook]",
+				value: "background-image: url('https://static.xx.fbcdn.net/rsrc.php/yo/r/iRmz9lCMBD2.ico');"},
+			{target: "[data-wd-shared=twitter]",
+				value: "background-image: url('https://abs.twimg.com/favicons/twitter.ico');"},
+			{target: "[data-wd-shared=linkedin]",
+				value: "background-image: url('https://static-exp1.licdn.com/scds/common/u/images/logos/favicons/v1/favicon.ico');"},
+			{target: "[data-wd-shared=reddit]",
+				value: "background-image: url('https://www.redditinc.com/assets/images/favicons/favicon-32x32.png');"},
+			{target: "[data-wd-shared=evernote]",
+				value: "background-image: url('https://www.evernote.com/favicon.ico?v2');"},
+		];
+		var style = document.createElement("STYLE");			
+		for(var i = 0; i < styles.length; i++)
+			style.textContent += styles[i].target+" {"+styles[i].value+"}\n"
+		document.head.appendChild(style);
+
+		/*definindo ícone*/
+		if (WDbox.$("link[rel=icon]") !== null) {
+			var favicon = document.createElement("LINK");
+			favicon.rel = "icon";
+			favicon.href = "https://wdonadelli.github.io/wd/image/favicon.ico";
+			document.head.appendChild(favicon);
+		}
+
+		/*aplicando carregamentos*/
+		loadingProcedures();
+
+		/*Verificando âncoras lincadas*/
+		hashProcedures();
+
+		return;
+	}
+
 /*----------------------------------------------------------------------------*/
 
-	/*Obtém as dimensões de body e do filho com display = fixed, se houver para manipular o posicionamento da página*/
-	function fixedHeader() {
-		var conf, css, stl, obj, attr;
-
-		/*definindo variáveis para captura de dados*/
-		conf = {body: {}, head: {}, foot: {}};
-		css  = {body: "body", head: "body > header", foot:"body > footer"};
-		stl  = ["height", "position", "top", "bottom", "margin-top", "margin-bottom"];
-
-		/*alimentando variável conf*/
-		for (var i in css) {
-			obj = new WD.$(css[i]);
-			for (var j = 0; j < stl.length; j++) {
-				conf[i][stl[j]] = obj.items > 0 ? obj.getStyle(stl[j])[0].toLowerCase() : "";
-				if (stl[j] !== "position") {
-					attr = new WD(conf[i][stl[j]].replace(/[^0-9\.]/g, ""));
-					conf[i][stl[j]] = attr.type !== "number" ? 0 : attr.valueOf();
-				}
-			}
-			conf[i].hTop    = conf[i].height + conf[i].top    + conf[i]["margin-bottom"];
-			conf[i].hBottom = conf[i].height + conf[i].bottom + conf[i]["margin-top"];
+	function hashProcedures(ev) {/*define margens de body quando houver cabeçalhos filhos fixos: caso muito especial*/
+		var measures = function (e) {
+			var obj = WD(e);
+			if (obj.type !== "dom" || obj.item() === 0) return null;
+			return {
+				elem:         obj.item(0),
+				tag:          WDdom.tag(obj.item(0)),
+				position:     obj.styles("position")[0].toLowerCase(),
+				height:       WDbox.int(obj.styles("height")[0].replace(/[^0-9\.]/g, "")),
+				marginTop:    WDbox.int(obj.styles("margin-top")[0].replace(/[^0-9\.]/g, "")),
+				marginBottom: WDbox.int(obj.styles("margin-bottom")[0].replace(/[^0-9\.]/g, "")),
+				bottom:       WDbox.int(obj.styles("bottom")[0].replace(/[^0-9\.]/g, "")),
+				top:          WDbox.int(obj.styles("top")[0].replace(/[^0-9\.]/g, "")),
+			};
 		}
 
-		/* -- colocar margins em body se houver elementos fixados -- */
-		conf.margin = function() {
-			if (this.head.position === "fixed" && this.body["margin-top"] !== this.head.hTop) {
-				document.body.style.marginTop = this.head.hTop+"px";
-			}
-			if (this.foot.position === "fixed" && this.body["margin-bottom"] !== this.foot.hBottom) {
-				document.body.style.marginBottom = this.foot.hBottom+"px";
-			}
-			return;
-		}
+		var head = measures("${body > header}");
+		if (head !== null && head.position === "fixed")
+			document.body.style.marginTop = (head.top+head.height+head.marginBottom)+"px";
 
-		/* -- movimentando a tela do hash -- */
-		conf.hash = function() {
-			this.margin();
-			var hash = new WD.$(window.location.hash);
-			if (this.head.position === "fixed" && hash.type === "dom" && hash.items > 0) {
-				window.scrollTo(0, hash.item().offsetTop - this.head.hTop);
-			}
-			return;
-		}
-		return conf;
-	};
+		var foot = measures("${body > footer}");
+		if (foot !== null && foot.position === "fixed")
+			document.body.style.marginBottom = (foot.bottom+foot.height+foot.marginTop)+"px";
 
+		var body = measures(document.body);
+		var hash = measures("${"+window.location.hash+"}");
+		if (hash !== null && head.position === "fixed")
+			window.scrollTo(0, hash.elem.offsetTop - body.marginTop);
 
-/*----------------------------------------------------------------------------*/
-
-	function hashProcedures() {/*procedimento ao clicar em links*/
-		fixedHeader().hash();
 		return;
 	};
 
 /*----------------------------------------------------------------------------*/
 
 	function loadingProcedures() {/*procedimento para carregamentos*/
-		if (WDbox.deviceController === null) scalingProcedures();
 
-		var objects = WD.$$("[data-wd-load], [data-wd-repeat]");
-
-
-
-
-		
-		if (objects.item() === 0) {
-			organizationProcedures();
-			stylingProcedures();
-		} else {
-			WD(objects.item(0)).run(data_wdRepeat);
-			WD(objects.item(0)).run(data_wdLoad);
+		var repeat = WD.$$("[data-wd-repeat]");
+		while (repeat.item() > 0) {
+			repeat.run(data_wdRepeat);
+			repeat = WD.$$("[data-wd-repeat]");
 		}
+
+		var load = WD.$$("[data-wd-load]");
+		while (load.item() > 0) {
+			load.run(data_wdLoad);
+			load = WD.$$("[data-wd-load]");
+		}
+
+		organizationProcedures();
 		return;
 	};
 
 /*----------------------------------------------------------------------------*/
 
-	function scalingProcedures(ev) {/*procedimentos para definir tela*/
+	function scalingProcedures(ev) {/*procedimentos para definir dispositivo e aplicar estilos*/
 		var device = WDbox.device();
-
 		if (device !== WDbox.deviceController) {
 			WDbox.deviceController = device;
-			if (WD(ev).type !== "undefined") stylingProcedures();
+			WD.$$("[data-wd-device]").run(data_wdDevice);
 		}
-		fixedHeader().margin();
+		hashProcedures();
 		return;
 	};
 
@@ -3380,12 +3419,6 @@ var wd = (function() {
 		WD.$$("[data-wd-page]").run(data_wdPage);
 		WD.$$("[data-wd-click]").run(data_wdClick);
 		WD.$$("[data-wd-slide]").run(data_wdSlide);
-		return;
-	};
-
-/*----------------------------------------------------------------------------*/
-
-	function stylingProcedures(ev) {/*procedimentos para mudança de dispositivos*/
 		WD.$$("[data-wd-device]").run(data_wdDevice);
 		return;
 	};
@@ -3431,7 +3464,7 @@ var wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 
-	function keyboardProcedures(ev) {/*procedimentos para teclado*/
+	function keyboardProcedures(ev) {/*procedimentos para teclado (exceto formulários)*/
 		if (WDdom.form(ev.target)) return;
 		data_wdFilter(ev.target);
 		data_wdMask(ev.target);
@@ -3441,79 +3474,31 @@ var wd = (function() {
 /*----------------------------------------------------------------------------*/
 
 	function inputProcedures(ev) {/*procedimentos para formulários*/
-		data_wdFilter(ev.target);
-		return;
+		return data_wdFilter(ev.target);
 	};
 
 /*----------------------------------------------------------------------------*/
 
 	function focusoutProcedures(ev) {/*procedimentos para saída de formulários*/
-		data_wdMask(ev.target);
-		return;
+		return data_wdMask(ev.target);
 	};
 
 /*----------------------------------------------------------------------------*/
 
 	function focusinProcedures(ev) {/*procedimentos para entrada de formulários*/
-		data_wdSignal(ev.target);
-		return;
+		return data_wdSignal(ev.target);
 	};
 
 /*----------------------------------------------------------------------------*/
 
 	function changeProcedures(ev) {/*procedimentos para outras mudanças*/
-		data_wdFile(ev.target);
-		return;
-	};
-
-/*----------------------------------------------------------------------------*/
-
-	function headScriptProcedures(ev) {/*procedimentos de CSS interno*/
-		var style;
-		style = document.createElement("STYLE");
-		style.textContent = 
-" @keyframes js-wd-fade  {from {opacity: 0;  } to {opacity: 1;}}" +
-" @keyframes js-wd-fade2 {from {opacity: 0.4;} to {opacity: 1;}}" +
-" .js-wd-no-display     {display: none !important;}" +
-" .js-wd-mask-error     {color: #663399 !important; background-color: #e8e0f0 !important;}" +
-" *[data-wd-nav],   *[data-wd-send] {cursor: pointer;}" +
-" *[data-wd-tsort], *[data-wd-data] {cursor: pointer;}" +
-" *[data-wd-set]                       {cursor: pointer;}" +
-" *[data-wd-tsort]:before {content: \"\\2195 \";}" +
-" *[data-wd-tsort=\"-1\"]:before {content: \"\\2191 \";}" +
-" *[data-wd-tsort=\"+1\"]:before {content: \"\\2193 \";}" +
-" *[data-wd-repeat] > *, *[data-wd-load] > * {visibility: hidden;}" +
-" *[data-wd-slide] > * {animation: js-wd-fade2 1s;}" +
-" nav > * {opacity: 0.4;}"+
-" nav > *.js-wd-nav, nav > *:hover {box-shadow: inset 0 -0.3em 0 0; opacity: 1;}"+
-" /*TODO Experimental*/" +
-" *[data-wd-shared] {cursor: pointer; display: inline-block; width: 1em; height: 1em;}" +
-" *[data-wd-shared] {background-repeat: no-repeat; background-size: cover;}" +
-" *[data-wd-shared=\"facebook\"] {background-image: url('https://static.xx.fbcdn.net/rsrc.php/yo/r/iRmz9lCMBD2.ico');}" +
-" *[data-wd-shared=\"twitter\"]  {background-image: url('https://abs.twimg.com/favicons/twitter.ico');}" +
-" *[data-wd-shared=\"linkedin\"] {background-image: url('https://static-exp1.licdn.com/scds/common/u/images/logos/favicons/v1/favicon.ico');}" +
-" *[data-wd-shared=\"reddit\"]   {background-image: url('https://www.redditinc.com/assets/images/favicons/favicon-32x32.png');}" +
-" *[data-wd-shared=\"evernote\"] {background-image: url('https://www.evernote.com/favicon.ico?v2');}";
-		document.head.appendChild(style);
-		
-		if (new WD.$$("link[rel=icon]").items === 0) {
-			var favicon = document.createElement("link");
-			favicon.rel = "icon";
-			favicon.href = "https://wdonadelli.github.io/wd/image/favicon.ico";
-			document.head.appendChild(favicon);
-		}
-		return;
+		return data_wdFile(ev.target);
 	};
 
 /*----------------------------------------------------------------------------*/
 
 	WD(window).handler({/*Definindo eventos window*/
-		load: headScriptProcedures
-	}).handler({
-		load: loadingProcedures
-	}).handler({
-		load: hashProcedures
-	}).handler({
+		load: loadProcedures,
 		resize: scalingProcedures,
 		hashchange: hashProcedures,
 	});

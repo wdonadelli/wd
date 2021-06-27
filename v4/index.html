@@ -66,6 +66,15 @@
 				<a href="#" data-wd-nav="${#tab_view}" id="nav_view" data-wd-click="" class="wd-icon-search" > View</a>
 			</nav>
 
+
+<div data-wd-slide="5000" id="slide">
+	<div class="wd-bg-red">Slide 1</div>
+	<div class="wd-bg-blue">Slide 2</div>
+	<div class="wd-bg-green">Slide 3</div>
+</div>
+
+
+
 			<section>
 
 				<section id="tab_view">
@@ -123,13 +132,15 @@
 				href="#"
 				data-wd-data="wdLoad{get{{{attr}}}}${#code, #view}"
 				class="wd-upon-enter wd-fg-black wd-bg-{{color}}"
-				data-wd-action="close{#menu}"
+				data-wd-css="del{wd-open}${#menu}"
 				title="{{name}}"
 			>{{name}}</a>
 
 		</section>
 
 	</aside>
+
+
 
 
 </body>
