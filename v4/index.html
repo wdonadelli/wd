@@ -16,11 +16,8 @@
 		<link  href="wd4.css" rel="stylesheet" />
 		<script>
 function loadExample() {
-	var value = document.URL.split("?page=");
-	if (value.length === 2 && value[1] !== "") {
-		var path = value[0]+"/examples/"+value[1].replace(/\#/g, "")+".html";
-		wd.$$("#code, #page").data({wdLoad: "post{"+path+"}"});
-	}
+	var path = document.URL.replace("?page=", "examples/").replace(/\#/g, "")+".html";
+	wd.$$("#code, #page").data({wdLoad: "post{"+path+"}"});
 }
 
 function reloadExample() {
