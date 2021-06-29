@@ -54,10 +54,19 @@ var wd = (function() {
 		empty: /[\0- ]+/g,
 	};
 
-	WDbox.int = function(n) {
+	WDbox.int = function(n, abs) {
 		var val = new Number(n).valueOf();
+		if (abs === true) val = Math.abs(val);
 		return val < 0 ? Math.ceil(n) : Math.floor(n);
 	};
+
+	WDbox.finite = function(n) {
+		if (n === null || n === undefined) return false;
+		if (n === true || n === false) return false;
+		if (isNaN(n)) return false;
+		return isFinite(n) ? true : false;
+	};
+
 
 	WDbox.lang = function() { /*Retorna a linguagem do documento: definida ou navegador*/
 		var attr  = document.body.parentElement.attributes;
@@ -124,9 +133,9 @@ var wd = (function() {
 		date.setSeconds(0);
 		date.setMinutes(0);
 		date.setHours(12);
-		if (isFinite(y)) date.setFullYear(y);
-		if (isFinite(m)) date.setMonth(m - 1);
-		if (isFinite(d)) date.setDate(d);
+		if (WDbox.finite(y)) date.setFullYear(y);
+		if (WDbox.finite(m)) date.setMonth(m - 1);
+		if (WDbox.finite(d)) date.setDate(d);
 		return date;
 	}		
 
@@ -373,6 +382,7 @@ var wd = (function() {
 		}
 
 		if (!this.isString) return false;
+		if (isNaN(this._input)) return false;
 		if ((/Infinity$/).test(this._input)) return false;
 
 		if (this._input == Number(this._input)) {
@@ -1320,7 +1330,7 @@ var wd = (function() {
 	Object.defineProperties(WDnumber, {
 		nFloat: {
 			value: function(x) {/*conta casas decimais*/
-				if (!isFinite(x)) return 0;
+				if (!WDbox.finite(x)) return 0;
 				var i = 0;
 				while ((x * Math.pow(10, i)) % 1 !== 0) i++;
 				return i;
@@ -1446,7 +1456,7 @@ var wd = (function() {
 	Object.defineProperty(WDnumber.prototype, "round", {/*arredonda casas decimais*/
 		enumerable: true,
 		value: function(width) {
-			width = isFinite(width) ? Math.abs(WDbox.int(width)) : 0;
+			width = WDbox.finite(width) ? Math.abs(WDbox.int(width)) : 0;
 			return Number(this.valueOf().toFixed(width)).valueOf();
 		}
 	});
@@ -1456,7 +1466,7 @@ var wd = (function() {
 		value: function(width) {
 			if (this.test("infinity", "zero")) return this.toString();
 
-			width = isFinite(width) ? Math.abs(WDbox.int(width)) : undefined;
+			width = WDbox.finite(width) ? Math.abs(WDbox.int(width)) : undefined;
 
 			var chars = {
 				"0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵",
@@ -1489,8 +1499,8 @@ var wd = (function() {
 		value: function(ldec, lint) {
 			if (this.test("infinity")) return this.toString();
 
-			ldec = isFinite(ldec) ? Math.abs(WDbox.int(ldec)) : 2;
-			lint = isFinite(lint) ? Math.abs(WDbox.int(lint)) : WDnumber.nFloat(this.valueOf());
+			ldec = WDbox.finite(ldec) ? Math.abs(WDbox.int(ldec)) : 2;
+			lint = WDbox.finite(lint) ? Math.abs(WDbox.int(lint)) : WDnumber.nFloat(this.valueOf());
 
 			var dec = Math.abs(this.decimal);
 			dec = dec === 0 ? "" : "."+dec.toFixed(ldec).split(".")[1];
@@ -1543,7 +1553,7 @@ var wd = (function() {
 				return WDbox.numberTime(this.valueOf()).h;
 			},
 			set: function(x) {
-				if (!isFinite(x)) return;
+				if (!WDbox.finite(x)) return;
 				x = WDbox.int(x);
 				this._value = WDbox.timeNumber(x, this.m, this.s);
 				return;
@@ -1563,7 +1573,7 @@ var wd = (function() {
 				return WDbox.numberTime(this.valueOf()).m;
 			},
 			set: function(x) {
-				if (!isFinite(x)) return;
+				if (!WDbox.finite(x)) return;
 				x = WDbox.int(x);
 				this._value = WDbox.timeNumber(this.h, x, this.s);
 				return;
@@ -1583,7 +1593,7 @@ var wd = (function() {
 				return WDbox.numberTime(this.valueOf()).s;
 			},
 			set: function(x) {
-				if (!isFinite(x)) return;
+				if (!WDbox.finite(x)) return;
 				x = WDbox.int(x);
 				this._value = WDbox.timeNumber(this.h, this.m, x);
 				return;
@@ -1675,7 +1685,7 @@ var wd = (function() {
 				return this._value.getFullYear();
 			},
 			set: function(x) {
-				if (!isFinite(x) || x < 0) return;
+				if (!WDbox.finite(x) || x < 0) return;
 				x = WDbox.int(x);
 				this._value = WDbox.noonDate(this._value, undefined, undefined, x);
 				return
@@ -1719,7 +1729,7 @@ var wd = (function() {
 				return this._value.getMonth() + 1;
 			},
 			set: function(x) {
-				if (!isFinite(x)) return;
+				if (!WDbox.finite(x)) return;
 				x = WDbox.int(x);
 				this._value = WDbox.noonDate(this._value, undefined, x, undefined);
 				return
@@ -1762,7 +1772,7 @@ var wd = (function() {
 				return this._value.getDate();
 			},
 			set: function(x) {
-				if (!isFinite(x)) return;
+				if (!WDbox.finite(x)) return;
 				x = WDbox.int(x);
 				this._value = WDbox.noonDate(this._value, x, undefined, undefined);
 				return
@@ -1864,9 +1874,9 @@ var wd = (function() {
 				for (var i = 0; i < loop; i++) {
 					var check1 = WDtype(list1[i]);
 					var check2 = array2 === null ? null : WDtype(list2[i]);
-					if (check1.type !== "number" || !isFinite(check1.value)) continue;
+					if (check1.type !== "number" || !WDbox.finite(check1.value)) continue;
 					if (array2 !== null) {
-						if (check2.type !== "number" || !isFinite(check2.value)) continue;
+						if (check2.type !== "number" || !WDbox.finite(check2.value)) continue;
 						array2.push(check2.value);
 					}
 					array1.push(check1.value);
@@ -1950,7 +1960,7 @@ var wd = (function() {
 	Object.defineProperty(WDarray.prototype, "item", {/*retorna o índice especificado*/
 		enumerable: true,
 		value: function(i) {
-			if (!isFinite(i)) return this._value.length;
+			if (!WDbox.finite(i)) return this._value.length;
 			i = WDbox.int(i);
 			i = i < 0 ? this._value.length + i : i;
 			return this.valueOf()[i];
@@ -2096,7 +2106,7 @@ var wd = (function() {
 	Object.defineProperty(WDarray.prototype, "matrix", {/*obtem a coluna de uma matriz*/
 		enumerable: true,
 		value: function(col) {
-			col = isFinite(col) ? WDbox.int(Math.abs(col)) : 0;
+			col = WDbox.finite(col) ? WDbox.int(Math.abs(col)) : 0;
 			var data = [];
 			for (var i = 0; i < this._value.length; i++) {
 				var check = WDtype(this._value[i]);
@@ -2640,7 +2650,7 @@ var wd = (function() {
 	Object.defineProperty(WDdom.prototype, "filter", {/*exibe somente o texto casado*/
 		enumerable: true,
 		value: function (search, chars) {
-			chars = isFinite(chars) && chars !== 0 ? WDbox.int(chars) : 1;
+			chars = WDbox.finite(chars) && chars !== 0 ? WDbox.int(chars) : 1;
 
 			/*definindo valor de busca*/
 			var check1 = WD(search)
@@ -2757,8 +2767,8 @@ var wd = (function() {
 	Object.defineProperty(WDdom.prototype, "page", {/*divide os elementos em "páginas"*/
 		enumerable: true,
 		value: function (page, size) {
-			page = isFinite(page) ? WDbox.int(page) : 0;
-			size = isFinite(size) && size > 0 ? Math.abs(size) : 1;
+			page = WDbox.finite(page) ? WDbox.int(page) : 0;
+			size = WDbox.finite(size) && size > 0 ? Math.abs(size) : 1;
 
 			this.run(function(elem) {
 				var book  = elem.children;
@@ -2788,8 +2798,8 @@ var wd = (function() {
 	Object.defineProperty(WDdom.prototype, "sort", {/*ordenar elementos filhos*/
 		enumerable: true,
 		value: function (order, col) {
-			order = isFinite(order) ? order : 1;
-			col   = isFinite(col) && col >= 0 ? WDbox.int(col) : null;
+			order = WDbox.finite(order) ? WDbox.int(order) : 1;
+			col   = WDbox.finite(col)   ? WDbox.int(col, true) : null;
 
 			this.run(function(elem) {
 				var children = elem.children;
@@ -2803,8 +2813,7 @@ var wd = (function() {
 					}
 				}
 
-				var exec = WD(aux);
-				var sort = exec.sort();
+				var sort = WD(aux).sort();
 				if (order < 0) sort = sort.reverse();
 				for (var i = 0; i < sort.length; i++) {
 					elem.appendChild(col === null ? sort[i] : sort[i].parentElement);
@@ -2955,8 +2964,7 @@ var wd = (function() {
 		var data  = WDdom.dataset(e, "wdSort")[0];
 		var order = "order" in data ? data.order : 1;
 		var col   = "col" in data ? data.col : null;
-		var target = WD(e);
-		target.sort(order, col).data({wdSort: null});
+		WD(e).sort(order, col).data({wdSort: null});
 		return;
 	};
 
@@ -2972,7 +2980,9 @@ var wd = (function() {
 		var body  = thead.parentElement.tBodies;
 
 		WD(body).sort(order, col);
-		WD(heads).data({wdTsort: ""});
+		WD(heads).run(function(x) {
+			if ("wdTsort" in x.dataset) x.dataset.wdTsort = "";
+		});
 		WD(e).data({wdTsort: (order < 0 ? "-1" : "+1")});
 
 		return;
@@ -3117,7 +3127,7 @@ var wd = (function() {
 
 	function data_wdSlide(e) {/*Carrossel: data-wd-slide=time*/
 		if (!("wdSlide" in e.dataset)) return delete e.dataset.wdSlideRun;
-		var time = isFinite(e.dataset.wdSlide) ? WDbox.int(e.dataset.wdSlide) : 1000;;
+		var time = WDbox.finite(e.dataset.wdSlide) ? WDbox.int(e.dataset.wdSlide) : 1000;;
 
 		if (!("wdSlideRun" in e.dataset)) {
 			WD(e).nav((time < 0 ? "prev" : "next"));
@@ -3217,15 +3227,15 @@ var wd = (function() {
 			check.name = files[i].name;
 
 			check.len++;
-			if (isFinite(data.len) && check.len > WDbox.int(data.len)) check.error = "len";
+			if (WDbox.finite(data.len) && check.len > WDbox.int(data.len)) check.error = "len";
 			if (check.error !== null) break;
 
 			check.size = files[i].size;
-			if (isFinite(data.size) && check.size > WDbox.int(data.size)) check.error = "size";
+			if (WDbox.finite(data.size) && check.size > WDbox.int(data.size)) check.error = "size";
 			if (check.error !== null) break;
 
 			check.total += check.size;
-			if (isFinite(data.total) && check.total > WDbox.int(data.total)) check.error = "total";
+			if (WDbox.finite(data.total) && check.total > WDbox.int(data.total)) check.error = "total";
 			if (check.error !== null) break;
 
 			check.type = files[i].type;
