@@ -2075,14 +2075,14 @@ var wd = (function() {
 					if (type === "text") {
 						var x = new WD(a).format("clear", "upper");
 						var y = new WD(b).format("clear", "upper");
-						return x > y;
+						return x > y ? 1 : -1;
 					}
 					if (["number", "boolean", "date", "time"].indexOf(type) >= 0) {
 						var x = new WDtype(a).value;
 						var y = new WDtype(b).value;
 						return x - y >= 0 ? 1 : -1;
 					}
-					return x > y;					
+					return x > y ? 1 : -1;					
 				});
 			}
 
@@ -2098,7 +2098,7 @@ var wd = (function() {
 				for (var j = 0; j < array.length; j++) sort.push(array[j]);
 			}
 			this._value = sort;
-			
+
 			return this.valueOf();
 		}
 	});
@@ -2963,7 +2963,7 @@ var wd = (function() {
 		if (!("wdSort" in e.dataset)) return;
 		var data  = WDdom.dataset(e, "wdSort")[0];
 		var order = "order" in data ? data.order : 1;
-		var col   = "col" in data ? data.col : null;
+		var col   = "col"   in data ? data.col : null;
 		WD(e).sort(order, col).data({wdSort: null});
 		return;
 	};
