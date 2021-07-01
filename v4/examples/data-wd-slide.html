@@ -1,0 +1,17 @@
+<h3>data-wd-slide</h3>
+
+<div data-wd-slide="2000" id="slide">
+	<div style="height: 50px;" class="wd-bg-blue" >Slide 1</div>
+	<div style="height: 50px;" class="wd-bg-red"  >Slide 2</div>
+	<div style="height: 50px;" class="wd-bg-green" >Slide 3</div>
+</div>
+
+
+<dl>
+	<dt>Using <code>data-wd-data</code>:</dt>
+	<dd><a href="#slide" data-wd-data="wdSlide{2000}${#slide}">Initial</a></dd>
+	<dd><a href="#slide" data-wd-data="wdSlide{500}${#slide}">Faster</a></dd>
+	<dd><a href="#slide" data-wd-data="wdSlide{5000}${#slide}">Slower</a></dd>
+	<dd><a href="#slide" data-wd-data="wdSlide{null}${#slide}">Stop</a></dd>
+	<dd><a href="#slide" data-wd-data="wdSlide{-2000}${#slide}">Inverted</a></dd>
+</dl>

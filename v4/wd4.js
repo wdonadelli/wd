@@ -382,7 +382,6 @@ var wd = (function() {
 		}
 
 		if (!this.isString) return false;
-		if (isNaN(this._input)) return false;
 		if ((/Infinity$/).test(this._input)) return false;
 
 		if (this._input == Number(this._input)) {
@@ -392,7 +391,7 @@ var wd = (function() {
 		}
 
 		if ((/^[0-9]+\!$/).test(this._input)) {
-			var number = Number(this._input.substr(0, (this._input.length - 1)));
+			var number = Number(this._input.replace("!", "")).valueOf();
 			var value  = 1;
 			while (number > 1) {
 				value *= number;
@@ -403,13 +402,12 @@ var wd = (function() {
 			return true;
 		}
 
-		if ((/^[0-9]+(\.[0-9]+)?\%$/).test(this._input)) {
-			var number  = Number(this._input.substr(0, (this._input.length - 1)));
+		if ((/^[\+\-]?([0-9]+|\.[0-9]+|[0-9]+\.[0-9]+)\%$/).test(this._input)) {
+			var number  = Number(this._input.replace("%", "")).valueOf();
 			this._type  = "number";
 			this._value = number / 100;
 			return true;
 		}
-
 		return false;
 	}});
 
@@ -3032,7 +3030,7 @@ var wd = (function() {
 		};
 		var text = e[attr];
 		var mask = data.model;
-		var func = "call" in data ? data["call"] : null;
+		var func = "call" in data && data["call"] in window ? window[data["call"]] : null;
 		if (mask in shorts) {
 			func = shorts[data.model].func;
 			mask = shorts[data.model].mask;
@@ -3295,7 +3293,7 @@ var wd = (function() {
 		/*criar o estilo interno*/
 		var styles = [
 			{target: "@keyframes js-wd-fade",
-				value: "from {opacity: 0.4;} to {opacity: 1;}"},
+				value: "from {opacity: 0.5;} to {opacity: 1;}"},
 				//value: "from {transform: translate(100%);scaleX(0);}"},
 			{target: ".js-wd-no-display",
 				value: "display: none !important;"},
@@ -3314,7 +3312,7 @@ var wd = (function() {
 			{target: "[data-wd-repeat] > *, [data-wd-load] > *",
 				value: "visibility: hidden !important;"},
 			{target: "[data-wd-slide] > * ",
-				value: "animation: js-wd-fade 0.4s;"},
+				value: "animation: js-wd-fade 1s;"},
 			{target: "nav > *",
 				value: "opacity: 0.4;"},
 			{target: "nav > *.js-wd-nav, nav > *:hover",
