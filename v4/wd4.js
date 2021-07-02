@@ -2766,20 +2766,17 @@ var wd = (function() {
 		enumerable: true,
 		value: function (page, size) {
 			page = WDbox.finite(page) ? WDbox.int(page) : 0;
-			size = WDbox.finite(size) && size > 0 ? Math.abs(size) : 1;
+			size = WDbox.finite(size) && size > 0 ? Math.abs(size) : -1;
 
 			this.run(function(elem) {
 				var book  = elem.children;
-				var lines = size < 1 ? WDbox.int(size*book.length) : WDbox.int(size);
+				var lines = size <= 0 ? book.length : WDbox.int(size < 1 ? size*book.length : size);
 				var pages = WDbox.int(book.length/lines);
 				var print = [];
-				console.info("page: ", page, ", size: ", size, ", length: ", book.length, ", lines: ", lines, ", pages: ", pages);
-				
 				
 				for (var i = 0; i < book.length; i++) {
 					var p = WDbox.int(i/lines);
 					if (print[p] === undefined) print.push([]);
-					console.log("p: ", p, "i: ", i);
 					print[p].push(book[i]);
 				}
 				WD(book).nav("hide");
