@@ -1,0 +1,22 @@
+<h3>data-wd-nav</h3>
+
+<nav>
+	<span data-wd-nav="type{show}${#tab}">Show</span>
+	<span data-wd-nav="type{hide}${#tab}">Hide</span>
+	<span data-wd-nav="type{toggle}${#tab}">Toggle</span>
+</nav>
+
+<div id="tab" >
+	<div id="box1" style="background-color: #FF0000; height: 100px">Box 1</div>
+	<div id="box2" style="background-color: #00FF00; height: 100px">Box 2</div>
+	<div id="box3" style="background-color: #0000FF; height: 100px">Box 3</div>
+</div>
+
+<nav>
+	<span data-wd-nav="type{prev}${#tab}">Prev</span>
+	<span data-wd-nav="type{}${#box1}">Box 1</span>
+	<span data-wd-nav="type{}${#box2}">Box 2</span>
+	<span data-wd-nav="type{}${#box3}">Box 3</span>
+	<span data-wd-nav="type{next}${#tab}">Next</span>
+	<span data-wd-nav="type{show}$${#tab > *}">*</span>
+</nav>

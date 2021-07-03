@@ -1,0 +1,32 @@
+<h3>data-wd-set</h3>
+
+<nav>
+	<a href="#check" data-wd-set="checked{true}$${#check input}">All</a>
+	<a href="#check" data-wd-set="checked{false}$${#check input}">None</a>
+	<a href="#check" data-wd-set="checked{?}$${#check input}">Toggle</a>
+</nav>
+
+<form id="check">
+	<label>Item 1 <input type="checkbox" name="item1" /></label>
+	<label>Item 2 <input type="checkbox" name="item2" /></label>
+	<label>Item 3 <input type="checkbox" name="item3" /></label>
+</form>
+
+
+<nav>
+	<a href="#open" data-wd-set="open{true}${#open}">Open</a>
+	<a href="#open" data-wd-set="open{false}${#open}">Close</a>
+	<a href="#open" data-wd-set="open{?}${#open}">Toggle</a>
+	<a href="#open" data-wd-set="textContent{Open/Close}${#open > summary}">Open/Close</a>
+	<a href="#open" data-wd-set="textContent{Summary}${#open > summary}">Summary</a>
+</nav>
+
+<details id="open">
+	<summary>Summary</summary>
+	<p>Opened!</p>
+</details>
+
+<!--FIXME-->
+<button type="button" data-wd-set="confirm{Hello!}${window}">Confirm</button>
+
+

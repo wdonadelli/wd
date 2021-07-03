@@ -31,9 +31,6 @@ SOFTWARE.﻿
 
 :root {
 	--var-bg-blue: #002345;
-
-
-
 }
 
 
@@ -49,8 +46,9 @@ SOFTWARE.﻿
 
 
 /*-- ESTILOS PARA NORMALIZAÇÃO --*/
-
 *, *:before, *:after {box-sizing: border-box;}
+
+html {scroll-behavior: smooth;}
 
 hr {
 	box-sizing: content-box;

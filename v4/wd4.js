@@ -95,10 +95,15 @@ var wd = (function() {
 		return null;
 	}
 	WDbox.get$$ = function(obj) {
-		var qall = "$$" in obj && obj["$$"].trim() !== "" ? WDbox.$$(obj["$$"]) : null;
-		var qone = "$"  in obj && obj["$"].trim()  !== "" ? WDbox.$(obj["$"])   : null;
-		if (qall !== null && qall.length > 0) return qall;
-		return qone;
+		var selOne = "$"  in obj && obj["$"].trim()  !== "" ? obj["$"].trim()  : null;
+		var selAll = "$$" in obj && obj["$$"].trim() !== "" ? obj["$$"].trim() : null;
+		var words  = {"document": document, "window":  window};
+		if (selOne in words) return words[selOne];
+		if (selAll in words) return words[selAll];
+		var qAll = selAll === null ? null : WDbox.$$(selAll);
+		var qOne = selOne === null ? null : WDbox.$(selOne);
+		if (qAll !== null && qAll.length > 0) return qAll;
+		return qOne;
 	}
 
 	WDbox.isLeap = function(y) { /*Retorna verdadeiro se o ano for bissexto*/
@@ -578,10 +583,10 @@ var wd = (function() {
 	WDrequest.styled = false; /*guarda a informação se a janela já foi estilizada*/
 
 	WDrequest.style  = {      /*guarda o stylo padrão da janela*/
-		display:  "block", width: "100%", height: "100%", padding: "0.1em",
+		display:  "block", width: "100%", height: "100%", padding: "0.1em", margin: "0",
 		position: "fixed", top: "0", right: "0", bottom: "0",	left: "0",
-		zIndex: "999999",	cursor: "progress",
-		opacity: "0.4", fontSize: "4em", backgroundColor: "#000000"
+		zIndex: "999999",	 cursor: "progress",
+		fontSize: "4em",   backgroundColor: "rgba(0,0,0,0.4)"
 	};
 
 	WDrequest.setStyle = function() { /*define o estilo padrão se ainda não definido*/
@@ -2694,7 +2699,7 @@ var wd = (function() {
 				var check = new WDtype(attr in elem ? elem[attr] : null);
 				if (check.type === "function") return elem[attr](value);
 
-				if (attr in elem) {//FIXME precisa de mais atenção
+				if (attr in elem) {//FIXME precisa de mais atenção por quê?
 					var val = elem[attr];
 					if (value === "?" && (val === true || val === false)) {
 						elem[attr] = val ? false : true;
@@ -2710,6 +2715,25 @@ var wd = (function() {
 				if (value === "?" && val === "false") return elem.setAttribute(attr, "true");
 				return elem.setAttribute(attr, value);				
 			});
+			return this;
+		}
+	});
+
+	Object.defineProperty(WDdom.prototype, "full", {/*fullScreen: apenas para o 1º elemento*/
+		enumerable: true,
+		value: function (exit) {
+			var action = {
+				open: ["requestFullscreen", "webkitRequestFullscreen", "msRequestFullscreen"],
+				exit: ["exitFullscreen", "webkitExitFullscreen", "msExitFullscreen"]
+			};
+			var full   = exit === true ? action.exit : action.open;
+			var target = exit === true ? document : this._value[0];
+			for (var i = 0; i < full.length; i++) {
+				if (full[i] in target) {
+					try {target[full[i]]();} catch(e) {}
+					break;
+				}
+			}
 			return this;
 		}
 	});
@@ -3120,6 +3144,18 @@ var wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 
+	function data_wdFull(e) {/*Estilo fullscreen: data-wd-full=exit{}${}*/
+		if (!("wdFull" in e.dataset)) return;
+		var data   = WDdom.dataset(e, "wdFull")[0];
+		var exit   = "exit" in data ? true : false;
+		var target = WDbox.get$$(data);
+		if (target === null) target = document.documentElement;
+		WD(target).full(exit);
+		return;
+	};
+
+/*----------------------------------------------------------------------------*/
+
 	function data_wdSlide(e) {/*Carrossel: data-wd-slide=time*/
 		if (!("wdSlide" in e.dataset)) return delete e.dataset.wdSlideRun;
 		var time = WDbox.finite(e.dataset.wdSlide) ? WDbox.int(e.dataset.wdSlide) : 1000;;
@@ -3159,13 +3195,14 @@ var wd = (function() {
 
 	function data_wdSet(e) {/*define attributos: data-wd-set=attr{value}${css}&...*/
 		if (!("wdSet" in e.dataset)) return;
-		var data = WDdom.dataset(e, "wdSet");
+		var data  = WDdom.dataset(e, "wdSet");
+		var words = {"null": null, "false": false, "true": true};
 		for (var i = 0; i < data.length; i++) {
-			var target = WDbox.get$$(data[i]);
+			var target = WDbox.get$$(data[i]);console.log(target)
 			delete data[i]["$"];
 			delete data[i]["$$"];
 			for (var j in data[i]) {
-				if (data[i][j] === "null") data[i][j] = null;
+				if (data[i][j] in words) data[i][j] = words[data[i][j]];
 				WD(target === null ? e : target).set(j, data[i][j]);
 			}
 		}
@@ -3317,7 +3354,7 @@ var wd = (function() {
 			{target: "[data-wd-shared]",
 				value: "display: inline-block; width: 1em; height: 1em;background-repeat: no-repeat; background-size: cover;"},
 			{target: "[data-wd-shared=facebook]",
-				value: "background-image: url('https://static.xx.fbcdn.net/rsrc.php/yo/r/iRmz9lCMBD2.ico');"},
+				value: "background-image: url('https://static.xx.fbcdn.net/rsrc.php/yb/r/hLRJ1GG_y0J.ico');"},
 			{target: "[data-wd-shared=twitter]",
 				value: "background-image: url('https://abs.twimg.com/favicons/twitter.ico');"},
 			{target: "[data-wd-shared=linkedin]",
@@ -3461,6 +3498,7 @@ var wd = (function() {
 			data_wdSet(elem);
 			data_wdCss(elem);
 			data_wdNav(elem);
+			data_wdFull(elem);
 			navLink(elem);
 			elem = elem.parentElement;/*efeito bolha*/
 		}
