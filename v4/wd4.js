@@ -2699,20 +2699,24 @@ var wd = (function() {
 				var check = new WDtype(attr in elem ? elem[attr] : null);
 				if (check.type === "function") return elem[attr](value);
 
-				if (attr in elem) {//FIXME precisa de mais atenção por quê?
-					var val = elem[attr];
-					if (value === "?" && (val === true || val === false)) {
-						elem[attr] = val ? false : true;
+				if (attr in elem) {
+					try {
+						var val = elem[attr];
+						if (value === "?" && (val === true || val === false)) {
+							elem[attr] = val ? false : true;
+							return;
+						}
+						elem[attr] = value;
 						return;
-					}
-					elem[attr] = value;
-					return;
+					} catch(e) {}
 				}
 
 				if (value === undefined || value === null) return elem.removeAttribute(attr);
 				var val = elem.getAttribute(attr);
-				if (value === "?" && val === "true")  return elem.setAttribute(attr, "false");
-				if (value === "?" && val === "false") return elem.setAttribute(attr, "true");
+				if (value === "?") {
+					if (val === null) return elem.setAttribute(attr, "");
+					if (val !== null) return elem.removeAttribute(attr);
+				}
 				return elem.setAttribute(attr, value);				
 			});
 			return this;
@@ -3198,7 +3202,7 @@ var wd = (function() {
 		var data  = WDdom.dataset(e, "wdSet");
 		var words = {"null": null, "false": false, "true": true};
 		for (var i = 0; i < data.length; i++) {
-			var target = WDbox.get$$(data[i]);console.log(target)
+			var target = WDbox.get$$(data[i]);
 			delete data[i]["$"];
 			delete data[i]["$$"];
 			for (var j in data[i]) {
@@ -3218,6 +3222,7 @@ var wd = (function() {
 			var target = WDbox.get$$(data[i]);
 			delete data[i]["$"];
 			delete data[i]["$$"];
+			if (JSON.stringify(data[i]) === "{}") data[i] = null;
 			WD(target === null ? e : target).css(data[i]);
 		}
 		return;
@@ -3247,59 +3252,75 @@ var wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 
-	/*analisa as informações do arquivo data-wd-file=size{value}type{}char{}len{}total{}*/
-	function data_wdFile(e) {
+	function data_wdFile(e) {/*Análise de arquivos: data-wd-file=s{}t{}c{}l{}t{}
+	/*analisa as informações do arquivo 
+		s: size   (tamanho individual do arquivo)
+		f: file   (tipo do arquivo aceito)
+		c: char   (caracteres não permitidos)
+		l: lenght (quantidade máxima de arquivos)
+		t: total  (tamanho total de arquivos)
+		valor: valor|texto de erro
+	*/
+
 		if (!("wdFile" in e.dataset)) return;
 		if (WDdom.type(e) !== "file") return;
+		var data   = WDdom.dataset(e, "wdFile")[0];
+		var config = {};
+		for (var i in data) {
+			var attr  = data[i].split("|");
+			config[i] = {
+				value: (i === "f" || i === "c" ? attr[0] : WDbox.int(attr[0])),
+				error: (attr.lenght < 2 ? "?" : attr[1])
+			};
+		}
+		var info  = {l: 0, t: 0, s: 0, c: "", f: "", e: null};
 		var files = e.files;
-		var data  = WDdom.dataset(e, "wdFile")[0];
-		var check = {len: 0, total: 0, size: 0, name: "", type: "", error: null};
 
 		for (var i = 0; i < files.length; i++) {
-			check.name = files[i].name;
-
-			check.len++;
-			if (WDbox.finite(data.len) && check.len > WDbox.int(data.len)) check.error = "len";
-			if (check.error !== null) break;
-
-			check.size = files[i].size;
-			if (WDbox.finite(data.size) && check.size > WDbox.int(data.size)) check.error = "size";
-			if (check.error !== null) break;
-
-			check.total += check.size;
-			if (WDbox.finite(data.total) && check.total > WDbox.int(data.total)) check.error = "total";
-			if (check.error !== null) break;
-
-			check.type = files[i].type;
-			if ("type" in data && data.type !== check.type) check.error = "type";
-			if (check.error !== null) break;
-
-			if ("char" in data && data.char !== "") {
-				check.char = data.char;
-				var char = new RegExp("["+data.char+"]");
-				if (check.name.search(char) >= 0) check.error = "char";
+			info.l  = i+1;
+			info.c  = files[i].name;
+			info.s  = files[i].size;
+			info.t += files[i].size;
+			info.f  = files[i].type;
+			info.e  = null;
+			var re  = null;
+			if ("c" in config) {
+				var val = "\\"+config.c.value.split("").join("\\")
+				re = new RegExp("(["+val+"])", "g");
+			} 
+			console.log(config);
+			if ("l" in config && info.l > config.l.value) {/*Quantidade de arquivos*/
+				info.e = "l";
+			} else if ("s" in config && info.s > config.s.value) {/*Tamanho do arquivo*/
+				info.e = "s";
+			} else if ("t" in config && info.t > config.t.value) {/*Tamanho total dos arquivos*/
+				info.e = "t";
+			} else if ("f" in config && config.f.value.split(" ").indexOf(info.f) < 0) {/*Tipo de arquivo*/
+				info.e = "f";
+			} else if ("c" in config && re !== null && re.test(info.c)) {/*Caracteres proibidos*/
+				info.e = "c";
 			}
-			if (check.error !== null) break;
+			if (info.e !== null) break;
+
 		}
 
-		if (check.error !== null) {
-			var loc = WDbox.lang().substr(0,2);
-			var err = check.error;
-			var txt = loc in WDbox.posts[err] ? WDbox.posts[err][loc] : WDbox.posts[err].en;
-			var msg = check.name;
-			if (check.error === "size") {
-				msg = msg + " ("+WDbox.calcByte(check.size)+")<br>"+txt+": "+WDbox.calcByte(data.size);
-			} else if (check.error === "type") {
-				msg = msg + " ("+check.type+")<br>"+txt+": "+data.type;
-			} else if (check.error === "char") {
-				msg = msg + "<br>"+txt+": ["+data.char+"]";
-			} else if (check.error === "total") {
-				msg = WDbox.calcByte(check.total)+"<br>"+txt+": "+WDbox.calcByte(data.total);
-			} else if (check.error === "len") {
-				msg = check.len+"<br>"+txt+": "+data.len;
+		if (info.e !== null) {
+			if (["t", "s"].indexOf(info.e) >= 0) {/*Calculando bytes*/
+				info[info.e]         = WDbox.calcByte(info[info.e]);
+				config[info.e].value = WDbox.calcByte(config[info.e].value);
 			}
 
-			WD(msg).signal("error");
+			var message = "<p>"+config[info.e].error+":</p>";
+			/*arquivos individuais*/
+			if (["s", "f", "c"].indexOf(info.e) >= 0)	message += "<p>- "+info.c+"</p>";
+			/*valores*/
+			if (["l", "s", "t"].indexOf(info.e) >= 0)	message += "<p>- "+info[info.e]+"/"+config[info.e].value+"</p>";
+			/*caracteres*/
+			if (info.e === "c") message += "<p>- "+info.c.replace(re, "<u>$1</u>")+"</p>";
+			/*tipo*/
+			if (info.e === "f") message += "<p>- (<s>"+info.f+"</s>)</p>";
+
+			WD(message).signal("error");
 			e.value = null;
 			return WD(e).css({add: "js-wd-mask-error"});
 		}

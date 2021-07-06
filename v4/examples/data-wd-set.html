@@ -12,21 +12,36 @@
 	<label>Item 3 <input type="checkbox" name="item3" /></label>
 </form>
 
+<hr>
 
 <nav>
 	<a href="#open" data-wd-set="open{true}${#open}">Open</a>
 	<a href="#open" data-wd-set="open{false}${#open}">Close</a>
 	<a href="#open" data-wd-set="open{?}${#open}">Toggle</a>
-	<a href="#open" data-wd-set="textContent{Open/Close}${#open > summary}">Open/Close</a>
-	<a href="#open" data-wd-set="textContent{Summary}${#open > summary}">Summary</a>
+	<a href="#open" data-wd-set="textContent{Hello!}${#open p}">Hello!</a>
+	<a href="#open" data-wd-set="textContent{Hi!}${#open p}">Hi!</a>
 </nav>
 
 <details id="open">
-	<summary>Summary</summary>
+	<summary>Open</summary>
 	<p>Opened!</p>
 </details>
 
-<!--FIXME-->
-<button type="button" data-wd-set="confirm{Hello!}${window}">Confirm</button>
+<hr>
 
+<input type="text" id="input" value="initial"/>
+<nav>
+	<a href="#input" data-wd-set="value{}${#input}">Empty</a>
+	<a href="#input" data-wd-set="value{Input}${#input}">Content</a>
+	<a href="#input" data-wd-set="disabled{?}${#input}">Disabled</a>
+	<a href="#input" data-wd-set="readOnly{?}${#input}">Read Only</a>
+</nav>
 
+<hr>
+
+<input type="text" id="any" value="Click in DOM"/>
+<nav>
+	<a href="#any" data-wd-set="data-any{}${#any}">Add data-any</a>
+	<a href="#any" data-wd-set="data-any{null}${#any}">Del data-any</a>
+	<a href="#any" data-wd-set="data-any{?}${#any}">Tgl data-any</a>
+</nav>
