@@ -179,54 +179,6 @@ var wd = (function() {
 
 	WDbox.deviceController = null;
 
-	WDbox.posts = 	{
-		type: {
-			en: "Type not allowed",
-			pt: "Tipo não permitido",
-			es: "Tipo no permitido",
-			it: "Tipo non consentito",
-			ru: "Тип не разрешен",
-			du: "Typ nicht zulässig",
-			fr: "Type non autorisé",
-		},
-		size: {
-			en: "Individual size exceeded",
-			pt: "Tamanho individual excedido",
-			es: "Se superó el tamaño individual",
-			it: "Dimensione individuale superata",
-			ru: "Превышен индивидуальный размер",
-			du: "Einzelgröße überschritten",
-			fr: "Taille individuelle dépassée",
-		},
-		total: {
-			en: "Total size exceeded",
-			pt: "Tamanho total excedido",
-			es: "Tamaño total excedido",
-			it: "Dimensioni totali superate",
-			ru: "Общий размер превышен",
-			du: "Gesamtgröße überschritten",
-			fr: "Taille totale dépassée",
-		},
-		char: {
-			en: "Characters not allowed",
-			pt: "Caracteres não permitidos",
-			es: "Caracteres no permitidos",
-			it: "Caratteri non ammessi",
-			ru: "Символы не разрешены",
-			du: "Zeichen nicht erlaubt",
-			fr: "Caractères non autorisés",
-		},
-		len: {
-			en: "Number of files exceeded",
-			pt: "Número de arquivos excedido",
-			es: "Se superó el número de archivos",
-			it: "Numero di file superato",
-			ru: "Превышено количество файлов",
-			du: "Anzahl der Dateien überschritten",
-			fr: "Nombre de fichiers dépassé",
-		}
-	};
-
 /*============================================================================*/
 
 	function WDtype(input) {
@@ -796,6 +748,7 @@ var wd = (function() {
 		if (!(this instanceof WDsignal)) return new WDsignal(input);
 		this._msg = input;
 	}
+	Object.defineProperty(WDsignal.prototype, "constructor", {value: WDsignal});
 
 	/* Métodos estáticos ------------------------------------------------------*/
 	WDsignal.window = document.createElement("DIV"); /*container das mensagens*/
@@ -803,47 +756,77 @@ var wd = (function() {
 	WDsignal.styled = false; /*container estilizado?*/
 
 	WDsignal.cbase  = {position: "fixed", top:   "0", margin: "auto", zIndex: "999999"};
-	WDsignal.cmicro = {left:   "initial", right: "0", width:  "25%", textAlign: "left"};
+	WDsignal.cmicro = {left:   "initial", right: "0", width:  "33%", textAlign: "left"};
 	WDsignal.csmall = {right:  "initial", left:  "0", width: "100%", textAlign: "center"};
 
-	WDsignal.mbase  = {
-		textAlign: "inherit", border: "1px solid", borderRadius: "0.2em",
-		margin: "0.5em", padding: "0.5em", cursor: "pointer", opacity: "1",
-		backgroundColor: "#FFFFFF"
-	};
-	WDsignal.minfo  = {color: "#4682B4"};
-	WDsignal.mwarn  = {color: "#FF8C00"};
-	WDsignal.merror = {color: "#B22222"};
-	WDsignal.mok    = {color: "#228B22"};
-	WDsignal.mdoubt = {color: "#663399"};
-	WDsignal.status = {merror: -2, mdoubt: -1, mwarn: 0, mok: 1, minfo: 2}
-
-	WDsignal.msg = function(type, msg) {
+	WDsignal.msg = function(type, message) {
 		var parent = this;
 
-		var box = document.createElement("P");
-		box.innerHTML = msg;
+		/*Elementos da mensagem*/
+		var box = {
+			div:  document.createElement("DIV"),
+			head: document.createElement("HEADER"),
+			btn:  document.createElement("SPAN"),
+			icon: document.createElement("SPAN"),
+			msg:  document.createElement("SECTION")
+		};
 
-		for (var i in this.mbase) box.style[i] = this.mbase[i];
-		for (var i in this[type]) box.style[i] = this[type][i];
+		/*Montagem*/
+		box.div.appendChild(box.head);
+		box.div.appendChild(box.msg);
+		box.head.appendChild(box.icon);
+		box.head.appendChild(box.btn);
 
-		box.onclick = function() {
-			parent.window.removeChild(box);
+		/*Estilos*/
+		var style = {
+			div: {
+				border: "1px solid rgba(0,128,255,1)", borderRadius: "0.2em", margin: "0.5em",
+				backgroundColor: "#FFFFFF", boxShadow: "1px 1px 6px rgba(0,0,0,0.6)"
+			},
+			head: {
+				padding: "0.1em", borderTopLeftRadius: "inherit", borderTopRightRadius: "inherit",
+				backgroundColor: "rgba(0,128,255,1)", textAlign: "right"
+			},
+			btn:  {marginRight: "0.5em", cursor: "pointer"},
+			icon: {float: "left", marginLeft: "0.5em"},
+			msg:  {padding: "0.5em", borderRadius: "inherit"}
+		};
+
+		for (var b in box)
+			for (var s in style[b])
+				box[b].style[s] = style[b][s];
+
+		/*textos*/
+		var types = {
+			info:  "\u2139",
+			warn:  "\u26A0",
+			error: "\u26D4",
+			ok:    "\u2714",
+			doubt: "\u003F",
+		};
+		box.btn.textContent  = "\u2716";
+		box.msg.innerHTML    = message;
+		box.icon.textContent = type in types ? types[type] : "";
+
+		/*Disparadores*/
+		box.btn.onclick = function() {
+			box.div.remove();
 			parent.close();
 			return;
 		}
 
 		window.setTimeout(function() {
 			try{
-				parent.window.removeChild(box);
+				box.div.remove();
 				parent.close();
 			} catch(e) {}
 			return;
-		}, 8000);
-		
+		}, 9000);
+
+		/*Incluir na janela*/		
 		this.open();
-		this.window.insertAdjacentElement("afterbegin", box);
-		return this.status[type];
+		this.window.insertAdjacentElement("afterbegin", box.div);
+		return;
 	}
 
 	WDsignal.open = function() {
@@ -868,25 +851,6 @@ var wd = (function() {
 		this.opened = false;
 		return;
 	}
-	
-	/* Métodos de Protótipos --------------------------------------------------*/
-	Object.defineProperty(WDsignal.prototype, "constructor", {value: WDsignal});
-
-	Object.defineProperty(WDsignal.prototype, "info", {value: function() {
-		return this.constructor.msg("minfo", this._msg);
-	}});
-	Object.defineProperty(WDsignal.prototype, "warn", {value: function() {
-		return this.constructor.msg("mwarn", this._msg);
-	}});
-	Object.defineProperty(WDsignal.prototype, "error", {value: function() {
-		return this.constructor.msg("merror", this._msg);
-	}});
-	Object.defineProperty(WDsignal.prototype, "ok", {value: function() {
-		return this.constructor.msg("mok", this._msg);
-	}});
-	Object.defineProperty(WDsignal.prototype, "doubt", {value: function() {
-		return this.constructor.msg("mdoubt", this._msg);
-	}});
 
 /*============================================================================*/
 
@@ -990,12 +954,8 @@ var wd = (function() {
 	Object.defineProperty(WDmain.prototype, "signal", {/*renderizar mensagem*/
 		enumerable: true,
 		value: function(type) {
-			var signal = new WDsignal(this.toString());
-			if (type === "warn")  return signal.warn();
-			if (type === "doubt") return signal.doubt();
-			if (type === "ok")    return signal.ok();
-			if (type === "error") return signal.error();
-			return signal.info();
+			WDsignal.msg(type, this.toString());
+			return this.type === "dom" ? this : null;
 		}
 	});
 
@@ -1868,7 +1828,35 @@ var wd = (function() {
 	}
 
 	Object.defineProperties(WDarray, {
-		setArray: {
+		cell: {
+			value: function(matrix, cell) {/*obter lista de valores da matrix a partir de endereços de celulas (linha:coluna)*/
+				cell = new String(cell).trim();
+				if (!(/^([0-9]+)?\:([0-9]+)?$/).test(cell)) return null;
+
+				cell = cell.split(":");
+				var row = cell[0] === "" ? null : WDbox.int(cell[0]);
+				var col = cell[1] === "" ? null : WDbox.int(cell[1]);
+				var ref = "cell";
+				if (row === null && col === null) ref = "all"; else
+				if (row !== null && col === null) ref = "row"; else
+				if (row === null && col !== null) ref = "col";
+				var list = [];
+				console.info(row, col, ref)
+
+				for (var r = 0; r < matrix.length; r++) {
+					var check = WDtype(matrix[r]);
+					if (check.type !== "array") continue;
+					for (var c = 0; c < matrix[r].length; c++) {
+						if (ref === "row"  && row !== r) continue;
+						if (ref === "col"  && col !== c) continue;
+						if (ref === "cell" && (row !== r || col !== c) ) continue;
+						list.push(matrix[r][c]);
+					}
+				}
+				return list;
+			}
+		},
+		setArray: {/*define listas (até 2) com valores numéricos*/
 			value: function(list1, list2) {
 				var loop = list1.length;
 				if (list2 !== undefined && list2.length < loop) loop = list2.length;
@@ -1888,7 +1876,7 @@ var wd = (function() {
 				return {array1: array1, array2: array2};
 			}
 		},
-		sum: {
+		sum: {/*soma listas e aplica operações matemáticas entre elas (até 2)*/
 			value: function(list1, exp1, list2, exp2) {
 				if (list2 === undefined) list2 = null;
 				var value = 0;
@@ -1903,7 +1891,7 @@ var wd = (function() {
 			}
 		},
 		product: {
-			value: function(list, exp) {
+			value: function(list, exp) {/*calcula o produto da lista e aplica potenciação*/
 				var value = 1;
 				for (var i = 0; i < list.length; i++) {
 					if (exp < 0 && list[i] === 0) return null; /*divisão por zero*/
@@ -1914,7 +1902,7 @@ var wd = (function() {
 			}
 		},
 		deviation: {
-			value: function(list, ref, exp) {
+			value: function(list, ref, exp) {/*calcula desvios a partir de uma lista/função e referência*/
 				var value = 0;
 				var check = new WDtype(ref);
 				for (var i = 0; i < list.length; i++) {
@@ -1926,21 +1914,21 @@ var wd = (function() {
 				return value;
 			}
 		},
-		setY: {
+		setY: {/*define uma lista a partir da aplicação de uma função sobre os valores de outra lista*/
 			value: function(x, f) {
 				var data = [];
 				for (var i = 0; i < x.length; i++) data.push(f(x[i]));
 				return data;
 			}
 		},
-		stdDev: {
+		stdDev: {/*Calcula o desvio padrão*/
 			value: function(list, ref) {
 				if (ref === null) return null;
 				var data = this.deviation(list, ref, 2);
 				return data ===  null ? data : Math.sqrt(data/list.length);
 			}
 		},
-		leastSquares: {
+		leastSquares: {/*Método dos mínimos quadrados*/
 			value: function(x, y) {
 				var X  = this.sum(x, 1);
 				var Y  = this.sum(y, 1);
@@ -1953,7 +1941,7 @@ var wd = (function() {
 				data.b   = ((Y) - (X * data.a)) / (N);
 				return data;
 			}
-		}
+		},
 	});
 
 	WDarray.prototype = Object.create(WDmain.prototype, {
@@ -2106,20 +2094,10 @@ var wd = (function() {
 		}
 	});
 
-	Object.defineProperty(WDarray.prototype, "matrix", {/*obtem a coluna de uma matriz*/
+	Object.defineProperty(WDarray.prototype, "cell", {/*obtem a lista a partir de uma referência row:col*/
 		enumerable: true,
-		value: function(col) {
-			col = WDbox.finite(col) ? WDbox.int(Math.abs(col)) : 0;
-			var data = [];
-			for (var i = 0; i < this._value.length; i++) {
-				var check = WDtype(this._value[i]);
-				if (check.type !== "array") {
-					data.push(col === 0 ? check.input : undefined);
-				} else {
-					data.push(check.input[col]);
-				}
-			}
-			return data;
+		value: function(ref) {
+			return WDarray.cell(this._value, ref);
 		}
 	});
 
@@ -2869,7 +2847,8 @@ var wd = (function() {
 		value: function() {
 			var tables = [];
 			this.run(function(elem) {
-				if (WDdom.tag(elem) !== "table") return tables.push(null);
+				var tag = WDdom.tag(elem);
+				if (["tfoot", "tbody", "thead"].indexOf(tag) < 0) return tables.push(null);
 				var data = [];
 				var rows = elem.rows;
 				for (var row = 0; row < rows.length; row++) {
@@ -3246,9 +3225,53 @@ var wd = (function() {
 	function data_wdSignal(e) {/*Mensagem input: data-wd-signal=message*/
 		if (!("wdSignal" in e.dataset)) return;
 		if (!WDdom.form(e)) return;
-		WD(e.dataset.wdSignal).signal("info");
+		WD(e.dataset.wdSignal).signal("info");//FIXME meio inútil
 		return;
 	};
+
+
+
+/*----------------------------------------------------------------------------*/
+
+	function data_wdTable(e) {/*Mensagem input: data-wd-table=data{sum+}cell{}${table}*/
+		if (!("wdTable" in e.dataset)) return;
+		var data   = WDdom.dataset(e, "wdTable")[0];
+		var target = WDbox.get$$(data);
+		if (target === null) return;
+		var table = WD(target).table()[0];
+		if (table === null) return;
+
+		var operation = "data" in data ? data.data.toLowerCase() : "sum";
+		var deviation = operation[operation.length-1] === "+" ? true : false;
+		if (deviation) operation = operation.replace("+", "");
+		var ref = "cell" in data ? data.cell : ":";
+
+		var db = WD(table).cell(ref);
+		var dt = WD(db).data;
+		if (dt === null) return null;
+		var value = operation in dt ? dt[operation].value : "#ERROR";
+		var delta = operation in dt ? dt[operation].deviation : "#ERROR";
+		
+		e.textContent = deviation ? value+" ± "+delta : value;
+		return;
+	};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /*----------------------------------------------------------------------------*/
 
@@ -3257,9 +3280,9 @@ var wd = (function() {
 		s: size   (tamanho individual do arquivo)
 		f: file   (tipo do arquivo aceito)
 		c: char   (caracteres não permitidos)
-		l: lenght (quantidade máxima de arquivos)
+		l: length (quantidade máxima de arquivos)
 		t: total  (tamanho total de arquivos)
-		valor: valor|texto de erro
+		valor: valor|texto de erro //FIXME isso tá muito ruim ainda
 	*/
 
 		if (!("wdFile" in e.dataset)) return;
@@ -3270,7 +3293,7 @@ var wd = (function() {
 			var attr  = data[i].split("|");
 			config[i] = {
 				value: (i === "f" || i === "c" ? attr[0] : WDbox.int(attr[0])),
-				error: (attr.lenght < 2 ? "?" : attr[1])
+				error: (attr.length < 2 ? "?" : attr[1])
 			};
 		}
 		var info  = {l: 0, t: 0, s: 0, c: "", f: "", e: null};
@@ -3310,17 +3333,17 @@ var wd = (function() {
 				config[info.e].value = WDbox.calcByte(config[info.e].value);
 			}
 
-			var message = "<p>"+config[info.e].error+":</p>";
+			var message = "<span>"+config[info.e].error+":</span>";
 			/*arquivos individuais*/
-			if (["s", "f", "c"].indexOf(info.e) >= 0)	message += "<p>- "+info.c+"</p>";
+			if (["s", "f", "c"].indexOf(info.e) >= 0)	message += "<br><span>- "+info.c+"</span>";
 			/*valores*/
-			if (["l", "s", "t"].indexOf(info.e) >= 0)	message += "<p>- "+info[info.e]+"/"+config[info.e].value+"</p>";
+			if (["l", "s", "t"].indexOf(info.e) >= 0)	message += "<br><span>- "+info[info.e]+"/"+config[info.e].value+"</span>";
 			/*caracteres*/
-			if (info.e === "c") message += "<p>- "+info.c.replace(re, "<u>$1</u>")+"</p>";
+			if (info.e === "c") message += "<br><span>- "+info.c.replace(re, "<u>$1</u>")+"</span>";
 			/*tipo*/
-			if (info.e === "f") message += "<p>- (<s>"+info.f+"</s>)</p>";
+			if (info.e === "f") message += "<br><span>- (<s>"+info.f+"</s>)</span>";
 
-			WD(message).signal("error");
+			WD(message).signal("warn");
 			e.value = null;
 			return WD(e).css({add: "js-wd-mask-error"});
 		}
@@ -3483,6 +3506,7 @@ var wd = (function() {
 		WD.$$("[data-wd-click]").run(data_wdClick);
 		WD.$$("[data-wd-slide]").run(data_wdSlide);
 		WD.$$("[data-wd-device]").run(data_wdDevice);
+		WD.$$("[data-wd-table]").run(data_wdTable);
 		return;
 	};
 
@@ -3501,6 +3525,7 @@ var wd = (function() {
 			case "wdSlide":   data_wdSlide(e);     break;
 			case "wdSignal":  data_wdSignal(e);    break;
 			case "wdFile":    data_wdFile(e);      break;
+			case "wdTable":   data_wdTable(e);     break;
 		};
 		return;
 	};

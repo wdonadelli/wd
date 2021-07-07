@@ -1,0 +1,44 @@
+<h3>data-wd-table</h3>
+
+<table border="1" width="100%">
+
+	<caption>Data</caption>
+	<thead style="background-color: rgba(255,255,0,0.3)">
+		<tr><th>#</th><th>Data 1</th><th>Data 2</th><th>Data 3</th></tr>
+	</thead>
+
+	<tbody style="background-color: rgba(0,255,255,0.3)" id="table">
+		<tr><td>1</td><td>10%</td><td>1.02e12</td><td>-2</td></tr>
+		<tr><td>2</td><td>20%</td><td>9.91e11</td><td>-1</td></tr>
+		<tr><td>3</td><td>15%</td><td>1.10e12</td><td>0</td></tr>
+		<tr><td>4</td><td>18%</td><td>1.21e12</td><td>1</td></tr>
+		<tr><td>5</td><td>13%</td><td>1.11e12</td><td>2</td></tr>
+	</tbody>
+
+	<tfoot style="background-color: rgba(0,0,255,0.3)">
+		<tr>
+			<th>Sum</th>
+			<td data-wd-table="data{sum}cell{:1}${#table}"></td>
+			<td data-wd-table="data{sum+}cell{:2}${#table}"></td>
+			<td data-wd-table="data{sum+}cell{:3}${#table}"></td>
+		</tr>
+		<tr>
+			<th>Average</th>
+			<td data-wd-table="data{average}cell{:1}${#table}"></td>
+			<td data-wd-table="data{average+}cell{:2}${#table}"></td>
+			<td data-wd-table="data{average+}cell{:3}${#table}"></td>
+		</tr>
+		<tr>
+			<th>Min</th>
+			<td data-wd-table="data{min}cell{:1}${#table}"></td>
+			<td data-wd-table="data{min+}cell{:2}${#table}"></td>
+			<td data-wd-table="data{min+}cell{:3}${#table}"></td>
+		</tr>
+		<tr>
+			<th>Max</th>
+			<td data-wd-table="data{max}cell{:1}${#table}"></td>
+			<td data-wd-table="data{max+}cell{:2}${#table}"></td>
+			<td data-wd-table="data{max+}cell{:3}${#table}"></td>
+		</tr>
+	</tfoot>
+</table>
