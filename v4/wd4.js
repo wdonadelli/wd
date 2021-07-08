@@ -298,7 +298,8 @@ var wd = (function() {
 			this._input instanceof NodeList ||
 			this._input instanceof HTMLCollection ||
 			this._input instanceof HTMLAllCollection ||
-			this._input instanceof HTMLFormControlsCollection
+			this._input instanceof HTMLFormControlsCollection ||
+			this._input instanceof HTMLOptionsCollection
 		) {
 			this._type  = "dom";
 			this._value = [];
@@ -307,6 +308,19 @@ var wd = (function() {
 			}
 			return true;
 		}
+
+		try {
+			if (
+				"nodeType" in this._input &&
+				this._input.nodeType === 1 &&
+				this._input.constructor.name in window &&
+				"parentElement" in this._input
+			) {
+				this._type  = "dom";
+				this._value = [this._input];
+				return true;
+			}
+		} catch(e) {}
 
 		if (!this.isString) return false;
 
@@ -2539,8 +2553,11 @@ var wd = (function() {
 					return;
 				}
 
-				var css = WD(elem.className.split(" "));
-				if (css.type !== "array") css = WD([]);
+				var attr = WD(elem.className);
+				if (attr.type !== "text" && attr.type !== "null") /*Há elementos que className não é texto*/
+					attr = WD(elem.getAttribute("class"));
+
+				var css = attr.type === "text" ? WD(attr.toString().split(" ")) : WD([]);
 
 				for (var i in list) {
 					if (["add", "del", "tgl", "toggle"].indexOf(i) < 0) continue
@@ -2554,7 +2571,9 @@ var wd = (function() {
 				css.unique();
 				css.sort();
 
-				elem.className = css.valueOf().join(" ");
+				try      {elem.className = css.valueOf().join(" ");}
+				catch(e) {elem.setAttribute("class", css.valueOf().join(" "));}/*Há elementos que className não é editável*/
+
 				return;
 			});
 			return this;
