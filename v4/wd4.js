@@ -54,6 +54,10 @@ var wd = (function() {
 		empty: /[\0- ]+/g,
 	};
 
+	WDbox.clearSpaces = function (x, punct) {
+		return x.replace(WDbox.re.empty, (punct === undefined ? " " : punct));
+	};
+
 	WDbox.int = function(n, abs) {
 		var val = new Number(n).valueOf();
 		if (abs === true) val = Math.abs(val);
@@ -781,7 +785,7 @@ var wd = (function() {
 		var style = {
 			div: {
 				border: "1px solid rgba(0,128,255,1)", borderRadius: "0.2em", margin: "0.5em",
-				backgroundColor: "#FFFFFF", boxShadow: "1px 1px 6px rgba(0,0,0,0.6)"
+				backgroundColor: "#FFFFFF", boxShadow: "1px 1px 6px rgba(0,0,0,0.6)", opacity: 1
 			},
 			head: {
 				padding: "0.1em", borderTopLeftRadius: "inherit", borderTopRightRadius: "inherit",
@@ -791,6 +795,7 @@ var wd = (function() {
 			icon: {float: "left", marginLeft: "0.5em"},
 			msg:  {padding: "0.5em", borderRadius: "inherit"}
 		};
+		box.div.className = "js-wd-signal";
 
 		for (var b in box)
 			for (var s in style[b])
@@ -1166,7 +1171,7 @@ var wd = (function() {
 			var x = this.clear.replace(WDbox.re.noids, "");
 			if (WDbox.re.camel.test(x)) return x;
 
-			x = x.replace(WDbox.re.empty, "-").split("");
+			x = WDbox.clearSpaces(x, "-").split("");
 
 			for (var i = 0; i < x.length; i++) {
 				if (x[i].toLowerCase() != x[i]) x[i] = "-"+x[i];
@@ -1188,7 +1193,7 @@ var wd = (function() {
 			var x = this.clear.replace(WDbox.re.noids, "");
 			if (WDbox.re.dash.test(x)) return x;
 
-			x = x.replace(WDbox.re.empty, "-").split("");
+			x = WDbox.clearSpaces(x, "-").split("");
 
 			for (var i = 1; i < x.length; i++) {
 				x[i] = x[i].toLowerCase() == x[i] ? x[i] : "-"+x[i];
@@ -1219,7 +1224,7 @@ var wd = (function() {
 	Object.defineProperty(WDtext.prototype, "trim", { /*remove espeços extras*/
 		enumerable: true,
 		get: function() {
-			return this.toString().replace(WDbox.re.empty, " ").trim();
+			return WDbox.clearSpaces(this.toString()).trim();
 		}
 	});
 
@@ -1830,29 +1835,50 @@ var wd = (function() {
 	Object.defineProperties(WDarray, {
 		cell: {
 			value: function(matrix, cell) {/*obter lista de valores da matrix a partir de endereços de celulas (linha:coluna)*/
-				cell = new String(cell).trim();
-				if (!(/^([0-9]+)?\:([0-9]+)?$/).test(cell)) return null;
+				cell = new String(cell).trim().split(":");
+				if (cell.length < 2) cell.push("");
 
-				cell = cell.split(":");
-				var row = cell[0] === "" ? null : WDbox.int(cell[0]);
-				var col = cell[1] === "" ? null : WDbox.int(cell[1]);
-				var ref = "cell";
-				if (row === null && col === null) ref = "all"; else
-				if (row !== null && col === null) ref = "row"; else
-				if (row === null && col !== null) ref = "col";
+				var row  = {i: -Infinity, n: Infinity};
+				var col  = {i: -Infinity, n: Infinity};
 				var list = [];
-				console.info(row, col, ref)
+
+				/*row*/
+				if ((/^[0-9]+$/).test(cell[0])) {
+					row.i = WDbox.int(cell[0]);
+					row.n = WDbox.int(cell[0]);
+				} else if ((/^\-[0-9]+$/).test(cell[0])) {
+					row.n = WDbox.int(cell[0].replace("-", ""));
+				} else if ((/^[0-9]+\-$/).test(cell[0])) {
+					row.i = WDbox.int(cell[0].replace("-", ""));
+				} else if ((/^[0-9]+\-[0-9]+$/).test(cell[0])) {
+					var gap = cell[0].split("-");
+					row.i   = WDbox.int(gap[0]);
+					row.n   = WDbox.int(gap[1]);
+				}
+
+				/*col*/
+				if ((/^[0-9]+$/).test(cell[1])) {
+					col.i = WDbox.int(cell[1]);
+					col.n = WDbox.int(cell[1]);
+				} else if ((/^\-[0-9]+$/).test(cell[1])) {
+					col.n = WDbox.int(cell[1].replace("-", ""));
+				} else if ((/^[0-9]+\-$/).test(cell[1])) {
+					col.i = WDbox.int(cell[1].replace("-", ""));
+				} else if ((/^[0-9]+\-[0-9]+$/).test(cell[1])) {
+					var gap = cell[1].split("-");
+					col.i   = WDbox.int(gap[0]);
+					col.n   = WDbox.int(gap[1]);
+				}
 
 				for (var r = 0; r < matrix.length; r++) {
 					var check = WDtype(matrix[r]);
 					if (check.type !== "array") continue;
 					for (var c = 0; c < matrix[r].length; c++) {
-						if (ref === "row"  && row !== r) continue;
-						if (ref === "col"  && col !== c) continue;
-						if (ref === "cell" && (row !== r || col !== c) ) continue;
-						list.push(matrix[r][c]);
+						if (r >= row.i && r <= row.n && c >= col.i && c <= col.n)
+							list.push(matrix[r][c]);
 					}
 				}
+
 				return list;
 			}
 		},
@@ -2259,7 +2285,7 @@ var wd = (function() {
 	Object.defineProperties(WDdom, {
 		checkCss: {
 			value: function(e, css) {
-				var list = e.className.replace(WDbox.re.empty, " ").split(" ");
+				var list = WDbox.clearSpaces(e.className).split(" ");
 				return list.indexOf(css) >= 0 ? true : false;
 			}
 		}
@@ -2848,7 +2874,7 @@ var wd = (function() {
 			var tables = [];
 			this.run(function(elem) {
 				var tag = WDdom.tag(elem);
-				if (["tfoot", "tbody", "thead"].indexOf(tag) < 0) return tables.push(null);
+				if (["tfoot", "tbody", "thead", "table"].indexOf(tag) < 0) return tables.push(null);
 				var data = [];
 				var rows = elem.rows;
 				for (var row = 0; row < rows.length; row++) {
@@ -3233,7 +3259,7 @@ var wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 
-	function data_wdTable(e) {/*Mensagem input: data-wd-table=data{sum+}cell{}${table}*/
+	function data_wdTable(e) {/*Mensagem input: data-wd-table=data{sum+}cell{}${table}digits{n}*/
 		if (!("wdTable" in e.dataset)) return;
 		var data   = WDdom.dataset(e, "wdTable")[0];
 		var target = WDbox.get$$(data);
@@ -3244,34 +3270,24 @@ var wd = (function() {
 		var operation = "data" in data ? data.data.toLowerCase() : "sum";
 		var deviation = operation[operation.length-1] === "+" ? true : false;
 		if (deviation) operation = operation.replace("+", "");
-		var ref = "cell" in data ? data.cell : ":";
+		var cell = "cell"   in data ? data.cell : ":";
+		var dgt  = "digits" in data ? WDbox.int(data.digits, true) : null;
 
-		var db = WD(table).cell(ref);
-		var dt = WD(db).data;
-		if (dt === null) return null;
-		var value = operation in dt ? dt[operation].value : "#ERROR";
-		var delta = operation in dt ? dt[operation].deviation : "#ERROR";
+		var cells = WD(table).cell(cell);
+		var info  = WD(cells).data;
+
+		if (!(operation in info)) operation = "sum";
+		if (info[operation].value !== null && dgt !== null)
+			info[operation].value = info[operation].value.toPrecision(dgt);
+		if (info[operation].deviation !== null && dgt !== null)
+			info[operation].deviation = info[operation].deviation.toPrecision(dgt);
+
+		var value = info[operation].value === null ? "NULL" : info[operation].value;
+		var delta = info[operation].deviation === null ? "NULL" : info[operation].deviation;
 		
 		e.textContent = deviation ? value+" ± "+delta : value;
 		return;
 	};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /*----------------------------------------------------------------------------*/
 
@@ -3370,16 +3386,19 @@ var wd = (function() {
 
 		/*criar o estilo interno*/
 		var styles = [
-			{target: "@keyframes js-wd-fade",
-				value: "from {opacity: 0.5;} to {opacity: 1;}"},
-				//value: "from {transform: translate(100%);scaleX(0);}"},
+			{target: "@keyframes js-wd-fade-in",
+				value: "from {opacity: 0;} to {opacity: 1;}"},
+			{target: "@keyframes js-wd-fade-out",
+				value: "from {opacity: 1;} to {opacity: 0;}"},
+			{target: ".js-wd-signal",
+				value: "animation-name: js-wd-fade-in, js-wd-fade-out; animation-duration: 1.5s, 1.5s; animation-delay: 0s, 7.5s;"},
 			{target: ".js-wd-no-display",
 				value: "display: none !important;"},
 			{target: ".js-wd-mask-error",
 				value: "color: #663399 !important; background-color: #e8e0f0 !important;"},
 			{target: "[data-wd-nav], [data-wd-send], [data-wd-tsort], [data-wd-data]",
 				value: "cursor: pointer;"},
-			{target: "[data-wd-set], [data-wd-edit], [data-wd-shared], [data-wd-css]",
+			{target: "[data-wd-set], [data-wd-edit], [data-wd-shared], [data-wd-css], [data-wd-table]",
 				value: "cursor: pointer;"},
 			{target: "[data-wd-tsort]:before",
 				value: "content: \"\\2195 \";"},
@@ -3390,11 +3409,11 @@ var wd = (function() {
 			{target: "[data-wd-repeat] > *, [data-wd-load] > *",
 				value: "visibility: hidden !important;"},
 			{target: "[data-wd-slide] > * ",
-				value: "animation: js-wd-fade 1s;"},
-			{target: "nav > *",
-				value: "opacity: 0.4;"},
-			{target: "nav > *.js-wd-nav, nav > *:hover",
-				value: "box-shadow: inset 0 -0.3em 0 0; opacity: 1;"},
+				value: "animation: js-wd-fade-in 1s;"},
+//			{target: "nav > *",
+//				value: "opacity: 0.4;"},
+//			{target: "nav > *.js-wd-nav, nav > *:hover",
+//				value: "box-shadow: inset 0 -0.3em 0 0; opacity: 1;"},
 			{target: "[data-wd-shared]",
 				value: "display: inline-block; width: 1em; height: 1em;background-repeat: no-repeat; background-size: cover;"},
 			{target: "[data-wd-shared=facebook]",
@@ -3545,8 +3564,9 @@ var wd = (function() {
 			data_wdCss(elem);
 			data_wdNav(elem);
 			data_wdFull(elem);
+			data_wdTable(elem);
 			navLink(elem);
-			elem = elem.parentElement;/*efeito bolha*/
+			elem = "wdNoBubbles" in elem.dataset ? null : elem.parentElement;/*efeito bolha*/
 		}
 		return;
 	};
@@ -3593,11 +3613,11 @@ var wd = (function() {
 	});
 
 	WD(document).handler({/*Definindo eventos document*/
-		click:  clickProcedures,
-		keyup:  keyboardProcedures,
-		input:  inputProcedures,
-		change: changeProcedures,
-		focusin: focusinProcedures,
+		click:    clickProcedures,
+		keyup:    keyboardProcedures,
+		input:    inputProcedures,
+		change:   changeProcedures,
+		focusin:  focusinProcedures,
 		focusout: focusoutProcedures,
 	});
 
