@@ -3429,6 +3429,18 @@ var wd = (function() {
 				value: "visibility: hidden !important;"},
 			{target: "[data-wd-slide] > * ",
 				value: "animation: js-wd-fade-in 1s;"},
+
+
+			{target: "[data-wd-chart]",
+				value: "position: relative; width: 100%; padding-top: 56.25%;"},
+
+			{target: "[data-wd-chart] > svg ",
+				value: "height: 100%; width: 100%; position: absolute; top: 0; left: 0; bottom: 0; right: 0;"},
+
+
+
+
+
 //			{target: "nav > *",
 //				value: "opacity: 0.4;"},
 //			{target: "nav > *.js-wd-nav, nav > *:hover",
