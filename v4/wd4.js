@@ -3029,9 +3029,12 @@ var wd = (function() {
 
 	Object.defineProperties(WDchartLinear.prototype, {
 		lines: {value: 5},
+		padding: {
+			get: function() {return {top: 15, right: 15, bottom: 15, left: 15};}
+		},
 		padd: {/*Espaços da grade principal para a borda do svg*/
 			value: function(n) {
-				var padd    = {top: 15, right: 15, bottom: 15, left: 15};
+				var padd    = this.padding;
 				padd.right  = this.ratio * padd.right;
 				padd.left   = this.ratio * padd.left;
 				padd.width  = 100 - padd.left - padd.right;
@@ -3053,7 +3056,7 @@ var wd = (function() {
 				var rect = this.createSVG("rect", {
 					x: padd.left, y: padd.top,
 					width: padd.width, height: padd.height,
-					fill: "transparent", stroke: "#000000", "stroke-width": "1"
+					fill: "#F9F9F9", stroke: "#000000", "stroke-width": "1"
 				});
 				return rect;
 			}
