@@ -2137,7 +2137,14 @@ var wd = (function() {
 	Object.defineProperty(WDarray.prototype, "cell", {/*obtem a lista a partir de uma referência row:col*/
 		enumerable: true,
 		value: function(ref) {
-			return WDarray.cell(this._value, ref);
+			ref = new String(ref).trim();
+			ref = WDbox.clearSpaces(ref).split(" ");
+			var data = [];
+			for (var i = 0; i < ref.length; i++) {
+				var value = WDarray.cell(this._value, ref[i]);
+				for (var j = 0; j < value.length; j++) data.push(value[j]);
+			}
+			return data;
 		}
 	});
 
@@ -2480,6 +2487,14 @@ var wd = (function() {
 		constructor: {value: WDdom}
 	});
 
+	Object.defineProperty(WDdom.prototype, "chart", {/*FIXME provisório*/
+		value: function(x) {
+			return new WDchartLinear(this.item(0),x);
+		}
+	});
+
+
+
 	Object.defineProperty(WDdom.prototype, "item", {/*item ou quantidade*/
 		enumerable: true,
 		value: WDarray.prototype.item
@@ -2532,7 +2547,7 @@ var wd = (function() {
 					return;
 				}
 				for (var i in styles) {
-					key = new WD(i).camel;
+					var key = new WD(i).camel;
 					elem.style[key] = styles[i];
 				}
 				return;
@@ -2941,6 +2956,215 @@ var wd = (function() {
 /*============================================================================*/
 /* -- ATRIBUTOS -- */
 /*============================================================================*/
+
+	function WDchart(box, ratio) {/*Objeto para criar gráficos*/
+		if (!(this instanceof WDchart)) return new WDchart(box, ratio);
+		ratio = WDbox.finite(ratio) ? Math.abs(ratio) : 9/16;console.log(ratio)
+		this.box = box;
+		this.svg = null;
+		this.ratio = ratio <= 1 ? ratio : 1/ratio;
+		this.setBox();
+		this.setSVG();
+	}
+
+	Object.defineProperties(WDchart.prototype, {
+		constructor: {
+			value: WDchart
+		},
+		ref: {/*converte número em fração: 100 = "100%"*/
+			value: function(x) {return new String(x).toString()+"%";}
+		},
+		createSVG: {/*cria e define os atributos do elementos svg*/
+			value: function(type, obj) {
+				var elem = document.createElementNS("http://www.w3.org/2000/svg", type);
+				var ref  = ["x", "y", "x1", "x2", "y1", "y2", "height", "width", "cx", "cy", "r"];
+				for (var i in obj) {
+					if (ref.indexOf(i) >= 0 && WDbox.finite(obj[i]))
+						elem.setAttribute(i, this.ref(obj[i]));
+					else
+						elem.setAttribute(i, obj[i]);
+				}
+				return elem;
+			}
+		},
+		scale: {/*Define a escala*/
+			value: function(start, end, min, max) {
+				return (end - start)/(max - min);
+			}
+		},
+		setBox: {/*Define as características sa caixa que guardará o svg*/
+			value: function() {
+				this.box.innerHTML = "";
+				WD(this.box).css(null).style(null).style({
+					position: "relative", width: "100%",
+					paddingTop: this.ref(100 * this.ratio), backgroundColor: "#FFFFFF"
+				});
+				return;
+			}
+		},
+		setSVG: {/*Define o próprio SVG*/
+			value: function() {
+				this.svg = this.createSVG("svg", {});
+				WD(this.svg).style({
+					height: "100%", width: "100%", position: "absolute",
+					top: "0", left: "0", bottom: "0", right: "0",
+					backgroundColor: "none", border: "1px solid black"
+				});
+				this.box.appendChild(this.svg);
+				return;
+			}
+		},
+	});
+
+/*----------------------------------------------------------------------------*/
+
+	function WDchartLinear(box, ratio) {
+		if (!(this instanceof WDchartLinear)) return new WDchartLinear(box, ratio);
+		WDchart.call(this, box, ratio);
+	}
+
+	WDchartLinear.prototype = Object.create(WDchart.prototype, {
+		constructor: {value: WDchartLinear}
+	});
+
+	Object.defineProperties(WDchartLinear.prototype, {
+		lines: {value: 5},
+		padd: {/*Espaços da grade principal para a borda do svg*/
+			value: function(n) {
+				var padd    = {top: 15, right: 15, bottom: 15, left: 15};
+				padd.right  = this.ratio * padd.right;
+				padd.left   = this.ratio * padd.left;
+				padd.width  = 100 - padd.left - padd.right;
+				padd.height = 100 - padd.top - padd.bottom;
+				padd.hX1    = padd.left;
+				padd.hX2    = 100 - padd.right;
+				padd.hY1    = padd.top  + (n*padd.height/this.lines);
+				padd.hY2    = padd.hY1;
+				padd.vX1    = padd.left + (n*padd.width/this.lines);
+				padd.vX2    = padd.vX1;
+				padd.vY1    = padd.top;
+				padd.vY2    = 100 - padd.bottom;
+				return padd;
+			}
+		},
+		getGrid: {/*Define e retorna a grade principal*/
+			value: function() {
+				var padd = this.padd(0);
+				var rect = this.createSVG("rect", {
+					x: padd.left, y: padd.top,
+					width: padd.width, height: padd.height,
+					fill: "transparent", stroke: "#000000", "stroke-width": "1"
+				});
+				return rect;
+			}
+		},
+		getAuxLines: {/*Define e retorna a linha auxiliar específica*/
+			value: function(pos, n) {
+				var padd = this.padd(n);
+				var line = this.createSVG("line", {
+					x1: pos === "h" ? padd.hX1 : padd.vX1,
+					y1: pos === "h" ? padd.hY1 : padd.vY1,
+					x2: pos === "h" ? padd.hX2 : padd.vX2,
+					y2: pos === "h" ? padd.hY2 : padd.vY2,
+					stroke: "#A9A9A9",
+					"stroke-width": "1",
+					"stroke-dasharray": "5,5"
+				});
+				return line;
+			}
+		}
+
+	});
+
+
+
+	Object.defineProperty(WDchartLinear.prototype, "setArea", {
+		value: function() {
+			var grid = this.getGrid();
+			this.svg.appendChild(grid);
+			for (var i = 1; i < this.lines; i++) {
+				var hline = this.getAuxLines("h", i);
+				var vline = this.getAuxLines("v", i);
+				this.svg.appendChild(hline);
+				this.svg.appendChild(vline);
+			}
+			return;
+ 		}
+	});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+
+	Object.defineProperty(WDchart.prototype, "plot", {
+		value: function(x, y, plot) {
+			this.setSVG()
+			var padd   = this.padding.plot;
+			var data   = WD(y).regression(x);
+			var axisX  = data.linear.x;
+			var axisY  = data.linear.y;
+			var dataX  = WD(axisX).data;
+			var dataY  = WD(axisY).data;
+			var scaleX = this.scale(padd.left, 100-padd.right,  dataX.min.value, dataX.max.value);
+			var scaleY = this.scale(padd.top,  100-padd.bottom, dataY.min.value, dataY.max.value);
+			for (var i = 0; i < axisX.length; i++) {
+				var circle = this.createSVG("circle", {
+					cx: axisX[i]*scaleX + padd.left,
+					cy: 100-(axisY[i]*scaleY + padd.bottom),
+					r: "3px",
+					fill: "#0000FF"
+				});
+				this.svg.appendChild(circle);
+			}
+			
+			this.lineArea();
+			
+		}
+	});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*...........................................................................*/
 
 	function data_wdLoad(e) {/*carrega HTML: data-wd-load=post|get{file}${form}*/
 		if (!("wdLoad" in e.dataset)) return;
@@ -3394,6 +3618,71 @@ var wd = (function() {
 		WD(e).css({add: "js-wd-nav"});//FIXME colocar o que para mencionar que o link é o clicado? data, css, outroa atributo?
 		return;
 	};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	function data_wdChart(e) {
+		/*Gráfico: data-wd-chart=
+			plot{x|y|regression}
+			line{x|y1|y2|y3...}
+			circle{x|y} > x = labels
+			bar{x|y1|y2|y3...}
+			get|post{file} > para arquivo externo
+			${table}  > para tabela
+		*/
+		if (!("wdChart" in e.dataset)) return;
+		var data  = WDdom.dataset(e, "wdChart")[0];
+		/*Tipo de gráfico*/
+		var chart = null;
+		if ("plot"   in data) chart = "plot";   else
+		if ("line"   in data) chart = "line";   else
+		if ("circle" in data) chart = "circle"; else
+		if ("bar"    in data) chart = "bar"; else return;
+		/*Fonte de informação*/
+		var source = null;
+		if ("$" in data || "$$" in data)     source = "table"; else
+		if ("get" in data || "post" in data) source = "file";  else return;
+		/*Dados do gráfico*/
+		var datachart = data[chart].split("|");
+
+
+
+
+
+			
+			
+
+		var ref = data[chart].split("|");
+
+
+
+
+
+
+
+
+
+
+
+
+
+		return;
+	}
+
+
 
 /*============================================================================*/
 /* -- DISPARADORES -- */
