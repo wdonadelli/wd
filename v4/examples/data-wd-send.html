@@ -18,7 +18,7 @@ function fsend(x) {
 	<label style="display: block; width: 100%">File</label>
 	<input type="file" name="file" multiple="" style="display: block; width: 100%" />
 
-	<button type="button" data-wd-send="post{examples/target.php}call{fsend}$${#input *}"  style="display: block; width: 100%"> Send</button>
+	<button type="button" data-wd-send="path{examples/target.php}call{fsend}$${#input *}"  style="display: block; width: 100%"> Send</button>
 
 	<label style="display: block; width: 100%">Output (php):</label>
 	<pre id="output" style="font-size: smaller; color: #FF0000;"></pre>	

@@ -2493,8 +2493,6 @@ var wd = (function() {
 		}
 	});
 
-
-
 	Object.defineProperty(WDdom.prototype, "item", {/*item ou quantidade*/
 		enumerable: true,
 		value: WDarray.prototype.item
@@ -2959,37 +2957,63 @@ var wd = (function() {
 
 	function WDchart(box, ratio) {/*Objeto para criar gráficos*/
 		if (!(this instanceof WDchart)) return new WDchart(box, ratio);
-		ratio = WDbox.finite(ratio) ? Math.abs(ratio) : 9/16;console.log(ratio)
-		this.box = box;
-		this.svg = null;
-		this.ratio = ratio <= 1 ? ratio : 1/ratio;
-		this.setBox();
-		this.setSVG();
+		ratio      = WDbox.finite(ratio) ? Math.abs(ratio) : 9/16;
+		Object.defineProperties(this, {
+			box:   {value: box}, /*guarda o elemento container*/
+			svg:   {value: this.createSVG("svg")}, /*Guarda o elemento SVG*/
+			ratio: {value: ratio <= 1 ? ratio : 1/ratio}, /*guarda a proporção do gráfico*/
+			scale: {value: {x: 1, y: 1}} /*guarda o fator de escala*/
+		});
+		this.setBox(); /*estilizar o container*/
+		this.setSVG(); /*definir o svg*/
 	}
 
 	Object.defineProperties(WDchart.prototype, {
 		constructor: {
 			value: WDchart
 		},
+		colors: {value: [
+			"#0000FF", "#FF0000", "#00FF00", "#663399", "#A0522D", "#D2B48C",
+			"#1E90FF", "#FF69B4", "#008080", "#800080", "#FFA500", "#DAA520"
+			]
+		},
+		color: {
+			value: function(i) {
+				return i < this.colors.length ? this.colors[i] : this.colors[i % this.colors.length];
+			}
+		},
 		ref: {/*converte número em fração: 100 = "100%"*/
 			value: function(x) {return new String(x).toString()+"%";}
 		},
-		createSVG: {/*cria e define os atributos do elementos svg*/
-			value: function(type, obj) {
+		createSVG: {/*cria e devolve um elemento svg e define seus atributos*/
+			value: function(type, obj, text, title) {
 				var elem = document.createElementNS("http://www.w3.org/2000/svg", type);
-				var ref  = ["x", "y", "x1", "x2", "y1", "y2", "height", "width", "cx", "cy", "r"];
-				for (var i in obj) {
-					if (ref.indexOf(i) >= 0 && WDbox.finite(obj[i]))
-						elem.setAttribute(i, this.ref(obj[i]));
-					else
-						elem.setAttribute(i, obj[i]);
+				/*define os atributos (valores de ref em porcentagem)*/
+				var ref  = [
+					"x", "y", "x1", "x2", "y1", "y2", "height", "width",
+					"cx", "cy", "r", "dx", "dy"
+				];
+				if (obj !== undefined || obj !== null) {
+					for (var i in obj) {
+						if (ref.indexOf(i) >= 0 && WDbox.finite(obj[i]))
+							elem.setAttribute(i, this.ref(obj[i]));
+						else
+							elem.setAttribute(i, obj[i]);
+					}
+				}
+				/*define um texto*/
+				if (text !== undefined && text !== null) {
+					var span = this.createSVG("tspan");
+					span.textContent = text;
+					elem.appendChild(span);
+				}
+				/*define um título (tool tip)*/
+				if (title !== undefined && title !== null) {
+					var tip = this.createSVG("title");
+					tip.textContent = title;
+					elem.appendChild(tip);
 				}
 				return elem;
-			}
-		},
-		scale: {/*Define a escala*/
-			value: function(start, end, min, max) {
-				return (end - start)/(max - min);
 			}
 		},
 		setBox: {/*Define as características sa caixa que guardará o svg*/
@@ -3002,9 +3026,8 @@ var wd = (function() {
 				return;
 			}
 		},
-		setSVG: {/*Define o próprio SVG*/
+		setSVG: {/*Define o SVG e suas características*/
 			value: function() {
-				this.svg = this.createSVG("svg", {});
 				WD(this.svg).style({
 					height: "100%", width: "100%", position: "absolute",
 					top: "0", left: "0", bottom: "0", right: "0",
@@ -3021,17 +3044,21 @@ var wd = (function() {
 	function WDchartLinear(box, ratio) {
 		if (!(this instanceof WDchartLinear)) return new WDchartLinear(box, ratio);
 		WDchart.call(this, box, ratio);
+		this.data  = []; /*guarda os dados dos pontos em {x,y,label,plotagem }*/
+		this.dataX = []; /*guarda todos os valores de x para definir a escala*/
+		this.dataY = []; /*guarda todos os valores de y para definir a escala*/
+		this.dataF = []; /*guarda os endereços de plotagem de função*/
 	}
 
 	WDchartLinear.prototype = Object.create(WDchart.prototype, {
-		constructor: {value: WDchartLinear}
+		constructor: {value: WDchartLinear},
+		lines:       {value: 5}, /*número de linhas auxiliares dos eixos = n - 1*/
+		padding:     {           /*parâmetro para construção da área de plotagem*/
+			get: function() {return {top: 15, right: 15, bottom: 15, left: 15};}
+		}
 	});
 
 	Object.defineProperties(WDchartLinear.prototype, {
-		lines: {value: 5},
-		padding: {
-			get: function() {return {top: 15, right: 15, bottom: 15, left: 15};}
-		},
 		padd: {/*Espaços da grade principal para a borda do svg*/
 			value: function(n) {
 				var padd    = this.padding;
@@ -3075,70 +3102,124 @@ var wd = (function() {
 				});
 				return line;
 			}
-		}
+		},
+		setArea: {
+			value: function() {
+				var grid = this.getGrid();
+				this.svg.appendChild(grid);
+				for (var i = 1; i < this.lines; i++) {
+					var hline = this.getAuxLines("h", i);
+					var vline = this.getAuxLines("v", i);
+					this.svg.appendChild(hline);
+					this.svg.appendChild(vline);
+				}
+				return;
+ 			}
+ 		},
+ 		setScale: {
+ 			value: function() {
+ 				var padd = this.padd(0);
 
+ 				/*escala em x*/
+ 				var xdata    = WD(this.dataX).data;
+ 				this.scale.x = padd.width/(xdata.max.value - xdata.min.value);
+
+ 				/*transformando funções em pontos para Y*/
+ 				for (var i = 0; i < this.dataF.length; i++) {
+ 					var value = xdata.min.value;
+ 					var newY  = [];
+ 					var newX  = [];
+					while (value < xdata.max.value) {
+						var val = null;
+						try {var val = this.data[i].y(value);} catch(e) {}
+						if (WDbox.finite(val)) {
+							newX.push(value);
+							newY.push(val);
+							this.dataY.push(val);
+						}
+						value += 1/this.scale.x; /*1% em unidades reais*/
+					}
+					/*substituindo funções por pontos e definindo o novo x*/
+					this.data[i].y = newY;
+					this.data[i].x = newX;
+ 				}
+
+ 				/*escala em y*/
+ 				var ydata    = WD(this.dataY).data;
+ 				this.scale.y = padd.height/(ydata.max.value - ydata.min.value);
+
+ 				return;
+ 			}
+ 		},
+ 		setLine: {
+ 			value: function(x1, y1, x2, y2, color, title) {
+ 				var line = this.createSVG("line", {
+ 					x1: x1, y1: y1, x2: x2, y2: y2,
+ 					stroke: this.color(color), "stroke-width": "2px"
+ 				}, null, title);
+ 				this.svg.appendChild(line);
+ 			}
+ 		},
+ 		setPoint: {
+ 			value: function(cx, cy, color, title) {
+ 				console.log(cx, cy, color, title);
+	 			var circle = this.createSVG("circle", {
+					cx: cx, cy: cy, r: "3px", fill: this.color(color)
+				}, null, title);
+ 				this.svg.appendChild(circle);
+ 			}
+ 		},
+ 		getXY: {
+ 			value: function(x,y) {
+ 				var padd = this.padd(0);
+ 				return {
+ 					x: padd.left + (x * this.scale.x),
+ 					y: padd.top + padd.height - (y * this.scale.y)
+ 				};
+ 			}
+ 		}
 	});
 
+	Object.defineProperty(WDchartLinear.prototype, "add", {
+		enumerable: true,
+		value: function(y, x, label, line) {/*Adiciona conjunto de dados para plotagem*/
+			this.data.push({y: y, x: x, label: label,	line: (line === false ? false : true)});
 
+			for (var i = 0; i < x.length; i++) this.dataX.push(x[i]);
 
-	Object.defineProperty(WDchartLinear.prototype, "setArea", {
-		value: function() {
-			var grid = this.getGrid();
-			this.svg.appendChild(grid);
-			for (var i = 1; i < this.lines; i++) {
-				var hline = this.getAuxLines("h", i);
-				var vline = this.getAuxLines("v", i);
-				this.svg.appendChild(hline);
-				this.svg.appendChild(vline);
-			}
+			if (WD(y).type === "function") this.dataF.push(this.data.length-1);
+			else for (var i = 0; i < y.length; i++) this.dataY.push(y[i]);
+				
 			return;
  		}
 	});
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	
-
-	Object.defineProperty(WDchart.prototype, "plot", {
-		value: function(x, y, plot) {
-			this.setSVG()
-			var padd   = this.padding.plot;
-			var data   = WD(y).regression(x);
-			var axisX  = data.linear.x;
-			var axisY  = data.linear.y;
-			var dataX  = WD(axisX).data;
-			var dataY  = WD(axisY).data;
-			var scaleX = this.scale(padd.left, 100-padd.right,  dataX.min.value, dataX.max.value);
-			var scaleY = this.scale(padd.top,  100-padd.bottom, dataY.min.value, dataY.max.value);
-			for (var i = 0; i < axisX.length; i++) {
-				var circle = this.createSVG("circle", {
-					cx: axisX[i]*scaleX + padd.left,
-					cy: 100-(axisY[i]*scaleY + padd.bottom),
-					r: "3px",
-					fill: "#0000FF"
-				});
-				this.svg.appendChild(circle);
+	Object.defineProperty(WDchartLinear.prototype, "plot", {
+		enumerable: true,
+		value: function(title) {/*executa a plotagem*/
+			this.setScale();
+			this.setArea();
+			for (var i = 0; i < this.data.length; i++) {
+				for (var j = 0; j < this.data[i].y.length; j++) {
+					if (this.data[i].line) {
+						if (this.data[i].y[j+1] === undefined) break;
+						var coord = {
+							x1: this.data[i].x[j],   y1: this.data[i].y[j],
+							x2: this.data[i].x[j+1], y2: this.data[i].y[j+1]
+						};
+						var pos1 = this.getXY(coord.x1, coord.y1);
+						var pos2 = this.getXY(coord.x2, coord.y2)
+						var title = "("+coord.x1+", "+coord.y1+")";
+						this.setLine(pos1.x, pos1.y, pos2.x, pos2.y, i, title);
+					} else {
+						var coord = {x1: this.data[i].x[j], y1: this.data[i].y[j]};
+						var pos = this.getXY(coord.x1, coord.y1);
+						var title = "("+coord.x1+", "+coord.y1+")";
+						this.setPoint(pos.x, pos.y, i, title);
+					}
+				}
 			}
-			
-			this.lineArea();
-			
+			return;
 		}
 	});
 
@@ -3169,19 +3250,16 @@ var wd = (function() {
 
 /*...........................................................................*/
 
-	function data_wdLoad(e) {/*carrega HTML: data-wd-load=post|get{file}${form}*/
+	function data_wdLoad(e) {/*carrega HTML: data-wd-load=path{file}method{get|post}${form}*/
 		if (!("wdLoad" in e.dataset)) return;
-		var data = WDdom.dataset(e, "wdLoad")[0];
-		if (!("get" in data) && !("post" in data)) return;
-
+		var data   = WDdom.dataset(e, "wdLoad")[0];
 		var target = WD(e);
-		var method = "get" in data ? "get" : "post";
-		var file   = data[method];
+		var method = "method" in data ? data.method : "post";
+		var file   = data.path;
 		var pack   = WDbox.get$$(data);
 		var exec   = WD(pack);
 
 		target.data({wdLoad: null});
-
 		exec.send(file, function(x) {
 			if (x.closed) target.load(x.text);
 		}, method);
@@ -3190,20 +3268,16 @@ var wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 
-	function data_wdRepeat(e) {/*Repete modelo HTML: data-wd-repeat=post|get{file}${form}*/
+	function data_wdRepeat(e) {/*Repete modelo HTML: data-wd-repeat=path{file}method{get|post}${form}*/
 		if (!("wdRepeat" in e.dataset)) return;
-		var data = WDdom.dataset(e, "wdRepeat")[0];
-
-		if (!("get" in data) && !("post" in data)) return;
-
+		var data   = WDdom.dataset(e, "wdRepeat")[0];
 		var target = WD(e);
-		var method = "get" in data ? "get" : "post";
-		var file   = data[method];
+		var method = "method" in data ? data.method : "post";
+		var file   = data.path;
 		var pack   = WDbox.get$$(data);
 		var exec   = WD(pack);
 
 		target.data({wdRepeat: null});
-
 		exec.send(file, function(x) {
 			if (x.closed) {
 				if (x.json !== null) return target.repeat(x.json);
@@ -3216,13 +3290,13 @@ var wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 
-	function data_wdSend(e) {/*Requisições: data-wd-send=post|get{file}${form}call{name}&*/
+	function data_wdSend(e) {/*Requisições: data-wd-send=path{file}method{get|post}${form}call{name}&*/
 		if (!("wdSend" in e.dataset)) return;
 		var data = WDdom.dataset(e, "wdSend");
 		for (var i = 0; i < data.length; i++) {
 			if (!("get" in data[i]) && !("post" in data[i])) continue;
-			var method = "get" in data[i] ? "get" : "post";
-			var file   = data[i][method];
+			var method = "method" in data[i] ? data.method[i] : "post";
+			var file   = data[i].path;
 			var pack   = WDbox.get$$(data[i]);
 			var call   = window[data[i]["call"]];
 			var exec   = WD(pack);
@@ -3466,7 +3540,7 @@ var wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 
-	function data_wdCss(e) {/*define class: data-wd-css=add{value}del{}${css}&...*/
+	function data_wdCss(e) {/*define class: data-wd-css=add{value}tgl{css}del{css}${css}&...*/
 		if (!("wdCss" in e.dataset)) return;
 		var data = WDdom.dataset(e, "wdCss");
 		for (var i = 0; i < data.length; i++) {
@@ -3537,77 +3611,60 @@ var wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 
-	function data_wdFile(e) {/*Análise de arquivos: data-wd-file=s{}t{}c{}l{}t{}
+	function data_wdFile(e) {/*Análise de arquivos: data-wd-file=fs{}ft{}fc{}nf{}ms{}call*/
 	/*analisa as informações do arquivo 
-		s: size   (tamanho individual do arquivo)
-		f: file   (tipo do arquivo aceito)
-		c: char   (caracteres não permitidos)
-		l: length (quantidade máxima de arquivos)
-		t: total  (tamanho total de arquivos)
-		valor: valor|texto de erro //FIXME isso tá muito ruim ainda
+		nf: number of files      (quantidade máxima de arquivos)
+		ms: maximum size         (tamanho total de arquivos)
+		fs: file size            (tamanho individual do arquivo)
+		ft: file type            (tipo do arquivo aceito)
+		fc: forbidden characters (caracteres não permitidos)
+		call: função a ser chamada
 	*/
+		if (!("wdFile" in e.dataset) || WDdom.type(e) !== "file") return;
 
-		if (!("wdFile" in e.dataset)) return;
-		if (WDdom.type(e) !== "file") return;
-		var data   = WDdom.dataset(e, "wdFile")[0];
-		var config = {};
-		for (var i in data) {
-			var attr  = data[i].split("|");
-			config[i] = {
-				value: (i === "f" || i === "c" ? attr[0] : WDbox.int(attr[0])),
-				error: (attr.length < 2 ? "?" : attr[1])
-			};
-		}
-		var info  = {l: 0, t: 0, s: 0, c: "", f: "", e: null};
+		var data  = WDdom.dataset(e, "wdFile")[0];
+		var info  = {error: null, file: null, value: null, parameter: null};
 		var files = e.files;
 
-		for (var i = 0; i < files.length; i++) {
-			info.l  = i+1;
-			info.c  = files[i].name;
-			info.s  = files[i].size;
-			info.t += files[i].size;
-			info.f  = files[i].type;
-			info.e  = null;
-			var re  = null;
-			if ("c" in config) {
-				var val = "\\"+config.c.value.split("").join("\\")
-				re = new RegExp("(["+val+"])", "g");
-			} 
-			console.log(config);
-			if ("l" in config && info.l > config.l.value) {/*Quantidade de arquivos*/
-				info.e = "l";
-			} else if ("s" in config && info.s > config.s.value) {/*Tamanho do arquivo*/
-				info.e = "s";
-			} else if ("t" in config && info.t > config.t.value) {/*Tamanho total dos arquivos*/
-				info.e = "t";
-			} else if ("f" in config && config.f.value.split(" ").indexOf(info.f) < 0) {/*Tipo de arquivo*/
-				info.e = "f";
-			} else if ("c" in config && re !== null && re.test(info.c)) {/*Caracteres proibidos*/
-				info.e = "c";
-			}
-			if (info.e !== null) break;
+		if ("nf" in data && files.length > WDbox.int(data.nf, true)) {
+			info.error     = "nf";
+			info.value     = files.length;
+			info.file      = "";
+			info.parameter = WDbox.int(data.nf, true);
+		} else {
+			var ms = 0;
+			var fc = "fc" in data ? new RegExp("("+data.fc+")", "g") : null;
 
+			for (var i = 0; i < files.length; i++) {
+				ms += files[i].size;
+				if ("ms" in data && ms > WDbox.int(data.ms, true)) {
+					info.error     = "ms";
+					info.value     = WDbox.calcByte(ms);
+					info.parameter = WDbox.calcByte(WDbox.int(data.ms, true));
+				} else if ("fs" in data && files[i].size > WDbox.int(data.fs, true)) {
+					info.error     = "fs";
+					info.value     = WDbox.calcByte(files[i].size);
+					info.parameter = WDbox.calcByte(WDbox.int(data.fs, true));
+				} else if ("ft" in data && data.ft.split(" ").indexOf(files[i].type) < 0) {
+					info.error     = "ft";
+					info.value     = files[i].type;
+					info.parameter = data.ft;
+				} else if (fc !== null && fc.test(files[i].name)) {
+					info.error     = "fc";
+					info.value     = files[i].name.replace(fc, "<b style=\"color: #FF0000;\">$1</b>");
+					info.parameter = data.fc;
+				}
+				if (info.error !== null) {
+					break;
+				}
+			}
 		}
 
-		if (info.e !== null) {
-			if (["t", "s"].indexOf(info.e) >= 0) {/*Calculando bytes*/
-				info[info.e]         = WDbox.calcByte(info[info.e]);
-				config[info.e].value = WDbox.calcByte(config[info.e].value);
-			}
-
-			var message = "<span>"+config[info.e].error+":</span>";
-			/*arquivos individuais*/
-			if (["s", "f", "c"].indexOf(info.e) >= 0)	message += "<br><span>- "+info.c+"</span>";
-			/*valores*/
-			if (["l", "s", "t"].indexOf(info.e) >= 0)	message += "<br><span>- "+info[info.e]+"/"+config[info.e].value+"</span>";
-			/*caracteres*/
-			if (info.e === "c") message += "<br><span>- "+info.c.replace(re, "<u>$1</u>")+"</span>";
-			/*tipo*/
-			if (info.e === "f") message += "<br><span>- (<s>"+info.f+"</s>)</span>";
-
-			WD(message).signal("warn");
+		if (info.error !== null) {
 			e.value = null;
-			return WD(e).css({add: "js-wd-mask-error"});
+			WD(e).css({add: "js-wd-mask-error"});
+			if (WD(window[data["call"]]).type === "function") window[data["call"]](info);
+			return;
 		}
 		return WD(e).css({del: "js-wd-mask-error"});
 	};

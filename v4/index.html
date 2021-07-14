@@ -23,7 +23,7 @@ function err(e) {
 function loadExample() {
 	try {
 		var path = document.URL.replace("?page=", "examples/").replace(/\#(.+)?/g, "")+".html";
-		wd.$$("#ie_code, #ie_page").data({wdLoad: "post{"+path+"}"});
+		wd.$$("#ie_code, #ie_page").data({wdLoad: "path{"+path+"}"});
 	} catch(e) {err(e);}
 }
 
