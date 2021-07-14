@@ -3131,7 +3131,7 @@ var wd = (function() {
  					var newX  = [];
 					while (value < xdata.max.value) {
 						var val = null;
-						try {var val = this.data[i].y(value);} catch(e) {}
+						try {val = this.data[i].y(value);} catch(e) {}
 						if (WDbox.finite(val)) {
 							newX.push(value);
 							newY.push(val);
@@ -3142,6 +3142,7 @@ var wd = (function() {
 					/*substituindo funções por pontos e definindo o novo x*/
 					this.data[i].y = newY;
 					this.data[i].x = newX;
+					console.log(newX, newY);
  				}
 
  				/*escala em y*/
@@ -3182,7 +3183,7 @@ var wd = (function() {
 
 	Object.defineProperty(WDchartLinear.prototype, "add", {
 		enumerable: true,
-		value: function(y, x, label, line) {/*Adiciona conjunto de dados para plotagem*/
+		value: function(x, y, label, line) {/*Adiciona conjunto de dados para plotagem*/
 			this.data.push({y: y, x: x, label: label,	line: (line === false ? false : true)});
 
 			for (var i = 0; i < x.length; i++) this.dataX.push(x[i]);
@@ -3209,12 +3210,13 @@ var wd = (function() {
 						};
 						var pos1 = this.getXY(coord.x1, coord.y1);
 						var pos2 = this.getXY(coord.x2, coord.y2)
-						var title = "("+coord.x1+", "+coord.y1+")";
+						var title = "(x1,y1) = ("+coord.x1+", "+coord.y1+")\n";
+						title += "(x2,y2) = ("+coord.x1+", "+coord.y2+")";
 						this.setLine(pos1.x, pos1.y, pos2.x, pos2.y, i, title);
 					} else {
 						var coord = {x1: this.data[i].x[j], y1: this.data[i].y[j]};
 						var pos = this.getXY(coord.x1, coord.y1);
-						var title = "("+coord.x1+", "+coord.y1+")";
+						var title = "(x,y) = ("+coord.x1+", "+coord.y1+")";
 						this.setPoint(pos.x, pos.y, i, title);
 					}
 				}
