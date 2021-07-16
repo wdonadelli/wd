@@ -1347,7 +1347,7 @@ var wd = (function() {
 		constructor: {value: WDnumber}
 	});
 
-	Object.defineProperty(WDnumber.prototype, "nType", {/* tipo do número */
+	Object.defineProperty(WDnumber.prototype, "ntype", {/* tipo do número */
 		enumerable: true,
 		get: function() {
 			if (this.valueOf() === 0)         return "zero";
@@ -1361,7 +1361,7 @@ var wd = (function() {
 	Object.defineProperty(WDnumber.prototype, "test", {/* testa o tipo do número */
 		enumerable: true,
 		value: function() {
-			var type = this.nType;
+			var type = this.ntype;
 			for (var i = 0; i < arguments.length; i++) {
 				if (arguments[i] === type) return true;
 				if (arguments[i] === type.substr(1, type.length)) return true;
@@ -2957,15 +2957,15 @@ var wd = (function() {
 
 	function WDchart(box, ratio) {/*Objeto para criar gráficos*/
 		if (!(this instanceof WDchart)) return new WDchart(box, ratio);
-		ratio      = WDbox.finite(ratio) ? Math.abs(ratio) : 9/16;
+		ratio = WDbox.finite(ratio) ? Math.abs(ratio) : 9/16;
 		Object.defineProperties(this, {
-			box:   {value: box}, /*guarda o elemento container*/
-			svg:   {value: this.createSVG("svg")}, /*Guarda o elemento SVG*/
-			ratio: {value: ratio <= 1 ? ratio : 1/ratio}, /*guarda a proporção do gráfico*/
-			scale: {value: {x: 1, y: 1}} /*guarda o fator de escala*/
+			box:      {value: box},                               /*guarda o elemento container*/
+			svg:      {value: this.createSVG("svg")},             /*Guarda o elemento SVG*/
+			ratio:    {value: ratio <= 1 ? ratio : 1/ratio},      /*guarda a proporção do gráfico*/
+			scale:    {value: {x: 1, y: 1}},                      /*guarda o fator de escala*/
+			value:    {value: {x: {min: 0, max: 0}, y: {min: 0, max: 0}}}, /*guarda os extremos*/
+			measures: {value: {}},                                         /*guarda as dimensões do gráfico*/
 		});
-		this.setBox(); /*estilizar o container*/
-		this.setSVG(); /*definir o svg*/
 	}
 
 	Object.defineProperties(WDchart.prototype, {
@@ -2984,6 +2984,16 @@ var wd = (function() {
 		},
 		ref: {/*converte número em fração: 100 = "100%"*/
 			value: function(x) {return new String(x).toString()+"%";}
+		},
+		setValue: {/*define os limites*/
+			value: function(axis, value) {
+				var value = WD(value);
+				if (value.type !== "number" || value.test("infinity")) return;
+				value = value.valueOf();
+				if (value > this.value[axis].max) this.value[axis].max = value; else
+				if (value < this.value[axis].min) this.value[axis].min = value;
+				return;
+			}
 		},
 		createSVG: {/*cria e devolve um elemento svg e define seus atributos*/
 			value: function(type, obj, text, title) {
@@ -3016,7 +3026,7 @@ var wd = (function() {
 				return elem;
 			}
 		},
-		setBox: {/*Define as características sa caixa que guardará o svg*/
+		setBox: {/*Define as características sa caixa que guardará o svg: chamar no plot*/
 			value: function() {
 				this.box.innerHTML = "";
 				WD(this.box).css(null).style(null).style({
@@ -3026,7 +3036,7 @@ var wd = (function() {
 				return;
 			}
 		},
-		setSVG: {/*Define o SVG e suas características*/
+		setSVG: {/*Define o SVG e suas características: chamar no plot*/
 			value: function() {
 				WD(this.svg).style({
 					height: "100%", width: "100%", position: "absolute",
@@ -3044,110 +3054,108 @@ var wd = (function() {
 	function WDchartLinear(box, ratio) {
 		if (!(this instanceof WDchartLinear)) return new WDchartLinear(box, ratio);
 		WDchart.call(this, box, ratio);
-		this.data  = []; /*guarda os dados dos pontos em {x,y,label,plotagem }*/
-		this.dataX = []; /*guarda todos os valores de x para definir a escala*/
-		this.dataY = []; /*guarda todos os valores de y para definir a escala*/
-		this.dataF = []; /*guarda os endereços de plotagem de função*/
+		this.data = []; /*guarda os dados dos pontos em {x,y,label,plotagem,função}*/
+		this.func = []; /*guarda os endereços de plotagem de função*/
 	}
 
 	WDchartLinear.prototype = Object.create(WDchart.prototype, {
 		constructor: {value: WDchartLinear},
-		lines:       {value: 5}, /*número de linhas auxiliares dos eixos = n - 1*/
-		padding:     {           /*parâmetro para construção da área de plotagem*/
-			get: function() {return {top: 15, right: 15, bottom: 15, left: 15};}
-		}
+		lines:       {value: 5},                            /*linhas auxiliares (n - 1)*/
+		padding:     {value: {t: 15, r: 15, b: 15, l: 15}} /*espaços internos*/
 	});
 
 	Object.defineProperties(WDchartLinear.prototype, {
-		padd: {/*Espaços da grade principal para a borda do svg*/
-			value: function(n) {
-				var padd    = this.padding;
-				padd.right  = this.ratio * padd.right;
-				padd.left   = this.ratio * padd.left;
-				padd.width  = 100 - padd.left - padd.right;
-				padd.height = 100 - padd.top - padd.bottom;
-				padd.hX1    = padd.left;
-				padd.hX2    = 100 - padd.right;
-				padd.hY1    = padd.top  + (n*padd.height/this.lines);
-				padd.hY2    = padd.hY1;
-				padd.vX1    = padd.left + (n*padd.width/this.lines);
-				padd.vX2    = padd.vX1;
-				padd.vY1    = padd.top;
-				padd.vY2    = 100 - padd.bottom;
-				return padd;
+		setMeasures: {/*Define as medidas do gráfico (relativa, top, right, bottom, left, width, height)*/
+			value: function() {
+				this.measures.t = this.padding.t;
+				this.measures.r = this.padding.r * this.ratio;
+				this.measures.b = this.padding.b;
+				this.measures.l = this.padding.l * this.ratio;
+				this.measures.w = 100 - this.measures.l - this.measures.r;
+				this.measures.h = 100 - this.measures.t - this.measures.b;
+				return;
 			}
 		},
-		getGrid: {/*Define e retorna a grade principal*/
+		getAuxLines: {
+			value: function(n) {
+				return {
+					h: {
+						x1: this.measures.l,
+						y1: this.measures.t + n*(this.measures.h/this.lines),
+						x2: this.measures.l + this.measures.w,
+						y2: this.measures.t + n*(this.measures.h/this.lines)
+					},
+					v: {
+						x1: this.measures.l + n*(this.measures.w/this.lines),
+						y1: this.measures.t,
+						x2: this.measures.l + n*(this.measures.w/this.lines),
+						y2: this.measures.t + this.measures.h,
+					}
+				};
+			}
+		},
+		setArea: {/*Define a área do gráfico*/
 			value: function() {
-				var padd = this.padd(0);
+
+				/*área principal*/
 				var rect = this.createSVG("rect", {
-					x: padd.left, y: padd.top,
-					width: padd.width, height: padd.height,
+					x: this.measures.l, y: this.measures.t,
+					width: this.measures.w, height: this.measures.h,
 					fill: "#F9F9F9", stroke: "#000000", "stroke-width": "1"
 				});
-				return rect;
-			}
-		},
-		getAuxLines: {/*Define e retorna a linha auxiliar específica*/
-			value: function(pos, n) {
-				var padd = this.padd(n);
-				var line = this.createSVG("line", {
-					x1: pos === "h" ? padd.hX1 : padd.vX1,
-					y1: pos === "h" ? padd.hY1 : padd.vY1,
-					x2: pos === "h" ? padd.hX2 : padd.vX2,
-					y2: pos === "h" ? padd.hY2 : padd.vY2,
-					stroke: "#A9A9A9",
-					"stroke-width": "1",
-					"stroke-dasharray": "5,5"
-				});
-				return line;
-			}
-		},
-		setArea: {
-			value: function() {
-				var grid = this.getGrid();
-				this.svg.appendChild(grid);
+				this.svg.appendChild(rect);
+
+				/*linhas secundárias*/
 				for (var i = 1; i < this.lines; i++) {
-					var hline = this.getAuxLines("h", i);
-					var vline = this.getAuxLines("v", i);
-					this.svg.appendChild(hline);
-					this.svg.appendChild(vline);
+					var aux = this.getAuxLines(i);
+					for (var p in aux) {
+						var line = this.createSVG("line", {
+							x1: aux[p].x1, y1: aux[p].y1,
+							x2: aux[p].x2, y2: aux[p].y2,
+							stroke: "#A9A9A9",
+							"stroke-width": "1",
+							"stroke-dasharray": "5,5"
+						});
+						this.svg.appendChild(line);
+					}
 				}
 				return;
  			}
  		},
+
  		setScale: {
  			value: function() {
- 				var padd = this.padd(0);
 
  				/*escala em x*/
- 				var xdata    = WD(this.dataX).data;
- 				this.scale.x = padd.width/(xdata.max.value - xdata.min.value);
+ 				this.scale.x = this.measures.w/(this.value.x.max - this.value.x.min);
 
  				/*transformando funções em pontos para Y*/
- 				for (var i = 0; i < this.dataF.length; i++) {
- 					var value = xdata.min.value;
- 					var newY  = [];
- 					var newX  = [];
-					while (value < xdata.max.value) {
-						var val = null;
-						try {val = this.data[i].y(value);} catch(e) {}
-						if (WDbox.finite(val)) {
-							newX.push(value);
-							newY.push(val);
-							this.dataY.push(val);
-						}
-						value += 1/this.scale.x; /*1% em unidades reais*/
+ 				for (var i = 0; i < this.data.length; i++) {
+					if (!this.data[i].func) continue;
+
+ 					var X    = this.value.x.min;
+ 					var newY = [];
+ 					var newX = [];
+					while (X < this.value.x.max) {
+						try {
+							var Y = this.data[i].y(X);
+							if (WDbox.finite(Y)) {
+								newX.push(X);
+								newY.push(Y);
+								this.setValue("y", Y);
+							}
+						} catch(e) {}
+						X += 1/this.scale.x; /*1% em unidades reais*/
 					}
+
 					/*substituindo funções por pontos e definindo o novo x*/
 					this.data[i].y = newY;
 					this.data[i].x = newX;
-					console.log(newX, newY);
  				}
 
  				/*escala em y*/
- 				var ydata    = WD(this.dataY).data;
- 				this.scale.y = padd.height/(ydata.max.value - ydata.min.value);
+ 				this.scale.y = this.measures.h/(this.value.y.max - this.value.y.min);
+ 				console.log(this.scale);
 
  				return;
  			}
@@ -3163,7 +3171,7 @@ var wd = (function() {
  		},
  		setPoint: {
  			value: function(cx, cy, color, title) {
- 				console.log(cx, cy, color, title);
+
 	 			var circle = this.createSVG("circle", {
 					cx: cx, cy: cy, r: "3px", fill: this.color(color)
 				}, null, title);
@@ -3172,25 +3180,32 @@ var wd = (function() {
  		},
  		getXY: {
  			value: function(x,y) {
- 				var padd = this.padd(0);
+ 				/*ajustando ao eixo*/
+ 				x = x - this.value.x.min;
+ 				y = y - this.value.y.min;
+ 				/*devolvendo o ponto*/
  				return {
- 					x: padd.left + (x * this.scale.x),
- 					y: padd.top + padd.height - (y * this.scale.y)
+ 					x: this.measures.l + (x * this.scale.x),
+ 					y: 100 - (this.measures.b + y * this.scale.y)
  				};
  			}
  		}
 	});
 
+
+
+
+
 	Object.defineProperty(WDchartLinear.prototype, "add", {
 		enumerable: true,
 		value: function(x, y, label, line) {/*Adiciona conjunto de dados para plotagem*/
-			this.data.push({y: y, x: x, label: label,	line: (line === false ? false : true)});
+			line = line === false ? false : true;
+			var func = WD(y).type === "function" ? true : false;
 
-			for (var i = 0; i < x.length; i++) this.dataX.push(x[i]);
+			this.data.push({y: y, x: x, label: label,	line: line, func: func});
+			for (var i = 0; i < x.length; i++) this.setValue("x", x[i]);
+			for (var i = 0; i < y.length; i++) this.setValue("y", y[i]);
 
-			if (WD(y).type === "function") this.dataF.push(this.data.length-1);
-			else for (var i = 0; i < y.length; i++) this.dataY.push(y[i]);
-				
 			return;
  		}
 	});
@@ -3198,8 +3213,12 @@ var wd = (function() {
 	Object.defineProperty(WDchartLinear.prototype, "plot", {
 		enumerable: true,
 		value: function(title) {/*executa a plotagem*/
-			this.setScale();
-			this.setArea();
+			this.setBox();      /*configura o container do gráfico*/
+			this.setSVG();      /*configura o SVG*/
+			this.setMeasures(); /*define as medidas do gráfico*/
+			this.setArea();     /*define a área do gráfico*/
+			this.setScale();    /*define a relação entre as escalas reais e gráficas*/
+			
 			for (var i = 0; i < this.data.length; i++) {
 				for (var j = 0; j < this.data[i].y.length; j++) {
 					if (this.data[i].line) {
