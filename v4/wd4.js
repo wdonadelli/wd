@@ -1476,7 +1476,7 @@ var wd = (function() {
 		}
 	});
 
-	Object.defineProperty(WDnumber.prototype, "fixed", {/*fixador de números*/
+	Object.defineProperty(WDnumber.prototype, "fixed", {/*fixador de números FIXME: isso não está funcionando direito (1)fixed(1)*/
 		enumerable: true,
 		value: function(ldec, lint) {
 			if (this.test("infinity")) return this.toString();
@@ -2957,12 +2957,12 @@ var wd = (function() {
 
 	function WDchart(box, ratio) {/*Objeto para criar gráficos*/
 		if (!(this instanceof WDchart)) return new WDchart(box, ratio);
-		ratio = WDbox.finite(ratio) ? Math.abs(ratio) : 9/16;
+		ratio = WDbox.finite(ratio) ? Math.abs(ratio) : 0.6;
 		Object.defineProperties(this, {
-			box:      {value: box},                               /*guarda o elemento container*/
-			svg:      {value: this.createSVG("svg")},             /*Guarda o elemento SVG*/
-			ratio:    {value: ratio <= 1 ? ratio : 1/ratio},      /*guarda a proporção do gráfico*/
-			scale:    {value: {x: 1, y: 1}},                      /*guarda o fator de escala*/
+			box:      {value: box},                               /*elemento container*/
+			svg:      {value: this.createSVG("svg")},             /*elemento SVG*/
+			ratio:    {value: ratio <= 1 ? ratio : 1/ratio},      /*proporção do gráfico*/
+			scale:    {value: {x: 1, y: 1, d: 0.1}},              /*fator de escala (x/y) e delta (%)*/
 			value:    {value: {x: {min: 0, max: 0}, y: {min: 0, max: 0}}}, /*guarda os extremos*/
 			measures: {value: {}},                                         /*guarda as dimensões do gráfico*/
 		});
@@ -3003,7 +3003,7 @@ var wd = (function() {
 					"x", "y", "x1", "x2", "y1", "y2", "height", "width",
 					"cx", "cy", "r", "dx", "dy"
 				];
-				if (obj !== undefined || obj !== null) {
+				if (obj !== undefined && obj !== null) {
 					for (var i in obj) {
 						if (ref.indexOf(i) >= 0 && WDbox.finite(obj[i]))
 							elem.setAttribute(i, this.ref(obj[i]));
@@ -3047,6 +3047,97 @@ var wd = (function() {
 				return;
 			}
 		},
+		setLabel: {/*cria textos para exibir na tela*/
+			value: function (text, x, y, color, point, vertical) {
+				var anchor  = {n: 1, ne: 2, e: 2, se: 2, s: 1, sw: 0, w: 0, nw: 0, c: 1};
+				var base    = {n: 2, ne: 2, e: 1, se: 0, s: 0, sw: 0, w: 1, nw: 2, c: 1};
+				var vanchor = ["start", "middle", "end"];
+				var vbase   = ["auto", "middle", "hanging"];
+				color       = WDbox.finite(color) ? this.color(color) : "#000000" ;
+				point       = point in base ? point : "c" ;
+				var attr = {
+					x: this.ref(x), y: this.ref(y),
+					fill: color,
+					"text-anchor":       vanchor[anchor[point]],
+					"dominant-baseline": vbase[base[point]],
+					"font-size": "80%",
+					"font-family": "monospace"
+				};
+				 if (vertical === true) {
+				 	attr.transform = "rotate(270)";
+				 	attr.y = this.ratio * attr.y;
+				 }
+				 var label = this.createSVG("text", attr, text);
+				 this.svg.appendChild(label);
+			}
+		},
+		setLine: {
+ 			value: function(x1, y1, x2, y2, color, title) {
+ 				var line = this.createSVG("line", {
+ 					x1: x1, y1: y1, x2: x2, y2: y2,
+ 					stroke: this.color(color), "stroke-width": "2px"
+ 				}, null, title);
+ 				this.svg.appendChild(line);
+ 			}
+ 		},
+ 		setPoint: {
+ 			value: function(cx, cy, color, title) {
+
+	 			var circle = this.createSVG("circle", {
+					cx: cx, cy: cy, r: "3px", fill: this.color(color)
+				}, null, title);
+ 				this.svg.appendChild(circle);
+ 			}
+ 		},
+ 		setScale: {
+ 			value: function() {
+
+ 				/*escala em x*/
+ 				this.scale.x = this.measures.w/(this.value.x.max - this.value.x.min);
+
+ 				/*transformando funções em pontos para Y*/
+ 				for (var i = 0; i < this.data.length; i++) {
+					if (!this.data[i].func) continue;
+
+ 					var X    = this.value.x.min;
+ 					var newY = [];
+ 					var newX = [];
+					while (X < this.value.x.max) {
+						try {
+							var Y = this.data[i].y(X);
+							if (WDbox.finite(Y)) {
+								newX.push(X);
+								newY.push(Y);
+								this.setValue("y", Y);
+							}
+						} catch(e) {}
+						X += this.scale.d / this.scale.x;
+					}
+
+					/*substituindo funções por pontos e definindo o novo x*/
+					this.data[i].y = newY;
+					this.data[i].x = newX;
+ 				}
+
+ 				/*escala em y*/
+ 				this.scale.y = this.measures.h/(this.value.y.max - this.value.y.min);
+ 				console.log(this.scale);
+
+ 				return;
+ 			}
+ 		},
+ 		getXY: {
+ 			value: function(x,y) {
+ 				/*ajustando ao eixo*/
+ 				x = x - this.value.x.min;
+ 				y = y - this.value.y.min;
+ 				/*devolvendo o ponto*/
+ 				return {
+ 					x: this.measures.l + (x * this.scale.x),
+ 					y: 100 - (this.measures.b + y * this.scale.y)
+ 				};
+ 			}
+ 		}
 	});
 
 /*----------------------------------------------------------------------------*/
@@ -3060,8 +3151,8 @@ var wd = (function() {
 
 	WDchartLinear.prototype = Object.create(WDchart.prototype, {
 		constructor: {value: WDchartLinear},
-		lines:       {value: 5},                            /*linhas auxiliares (n - 1)*/
-		padding:     {value: {t: 15, r: 15, b: 15, l: 15}} /*espaços internos*/
+		lines:       {value: 4},                            /*linhas auxiliares (n - 1)*/
+		padding:     {value: {t: 5, r: 5, b: 20, l: 20}} /*espaços internos FIXME era tudo 15*/
 	});
 
 	Object.defineProperties(WDchartLinear.prototype, {
@@ -3074,6 +3165,12 @@ var wd = (function() {
 				this.measures.w = 100 - this.measures.l - this.measures.r;
 				this.measures.h = 100 - this.measures.t - this.measures.b;
 				return;
+			}
+		},
+		setLabelValue: {
+			value: function(x) {
+				if (Math.abs(x) > 999999) return x.toExponential(1);
+				return WD(x).fixed(1,0);
 			}
 		},
 		getAuxLines: {
@@ -3097,99 +3194,54 @@ var wd = (function() {
 		setArea: {/*Define a área do gráfico*/
 			value: function() {
 
-				/*área principal*/
-				var rect = this.createSVG("rect", {
-					x: this.measures.l, y: this.measures.t,
-					width: this.measures.w, height: this.measures.h,
-					fill: "#F9F9F9", stroke: "#000000", "stroke-width": "1"
-				});
-				this.svg.appendChild(rect);
-
-				/*linhas secundárias*/
-				for (var i = 1; i < this.lines; i++) {
+				/*linhas secundárias e numeração dos eixos*/
+				var label = {
+					v:  this.value.x.min,
+					dv: (this.value.x.max - this.value.x.min)/this.lines,
+					v0: this.value.x.min,
+					vn: this.value.x.max,
+					/*o eixo y inicia em cima, então tem que fazer o inverso de x:*/
+					h:  this.value.y.max,
+					dh: -(this.value.y.max - this.value.y.min)/this.lines,
+					h0: this.value.y.max,
+					hn: this.value.y.min,
+				};
+				for (var i = 0; i < this.lines+1; i++) {
 					var aux = this.getAuxLines(i);
 					for (var p in aux) {
 						var line = this.createSVG("line", {
 							x1: aux[p].x1, y1: aux[p].y1,
 							x2: aux[p].x2, y2: aux[p].y2,
-							stroke: "#A9A9A9",
-							"stroke-width": "1",
-							"stroke-dasharray": "5,5"
+							stroke: i === 0 || i === this.lines ? "#000000" : "#A9A9A9",
+							"stroke-width": i === 0 || i === this.lines ? "2" : "1",
+							"stroke-dasharray": i === 0 || i === this.lines ? "0" : "5,5"
 						});
 						this.svg.appendChild(line);
+
+						/*numeração dos eixos*/
+						var text = i === 0 ? label[p+"0"] : label[p];
+						if (i === this.lines) text = label[p+"n"];
+						
+						
+						console.log(text, this.setLabelValue(text));
+						this.setLabel(
+							this.setLabelValue(text), /*text*/
+							aux[p].x1 + (p === "h" ? -1 : 0), /*x*/
+							aux[p].y1 + (p === "v" ? this.measures.h+1 : 0), /*y*/
+							null,
+							(p === "h" ? "e" : "n")
+						);
+						label[p] += label["d"+p];
 					}
 				}
+
+
+
+
+
 				return;
  			}
  		},
-
- 		setScale: {
- 			value: function() {
-
- 				/*escala em x*/
- 				this.scale.x = this.measures.w/(this.value.x.max - this.value.x.min);
-
- 				/*transformando funções em pontos para Y*/
- 				for (var i = 0; i < this.data.length; i++) {
-					if (!this.data[i].func) continue;
-
- 					var X    = this.value.x.min;
- 					var newY = [];
- 					var newX = [];
-					while (X < this.value.x.max) {
-						try {
-							var Y = this.data[i].y(X);
-							if (WDbox.finite(Y)) {
-								newX.push(X);
-								newY.push(Y);
-								this.setValue("y", Y);
-							}
-						} catch(e) {}
-						X += 1/this.scale.x; /*1% em unidades reais*/
-					}
-
-					/*substituindo funções por pontos e definindo o novo x*/
-					this.data[i].y = newY;
-					this.data[i].x = newX;
- 				}
-
- 				/*escala em y*/
- 				this.scale.y = this.measures.h/(this.value.y.max - this.value.y.min);
- 				console.log(this.scale);
-
- 				return;
- 			}
- 		},
- 		setLine: {
- 			value: function(x1, y1, x2, y2, color, title) {
- 				var line = this.createSVG("line", {
- 					x1: x1, y1: y1, x2: x2, y2: y2,
- 					stroke: this.color(color), "stroke-width": "2px"
- 				}, null, title);
- 				this.svg.appendChild(line);
- 			}
- 		},
- 		setPoint: {
- 			value: function(cx, cy, color, title) {
-
-	 			var circle = this.createSVG("circle", {
-					cx: cx, cy: cy, r: "3px", fill: this.color(color)
-				}, null, title);
- 				this.svg.appendChild(circle);
- 			}
- 		},
- 		getXY: {
- 			value: function(x,y) {
- 				/*ajustando ao eixo*/
- 				x = x - this.value.x.min;
- 				y = y - this.value.y.min;
- 				/*devolvendo o ponto*/
- 				return {
- 					x: this.measures.l + (x * this.scale.x),
- 					y: 100 - (this.measures.b + y * this.scale.y)
- 				};
- 			}
- 		}
 	});
 
 
@@ -3216,8 +3268,8 @@ var wd = (function() {
 			this.setBox();      /*configura o container do gráfico*/
 			this.setSVG();      /*configura o SVG*/
 			this.setMeasures(); /*define as medidas do gráfico*/
-			this.setArea();     /*define a área do gráfico*/
 			this.setScale();    /*define a relação entre as escalas reais e gráficas*/
+			this.setArea();     /*define a área do gráfico*/
 			
 			for (var i = 0; i < this.data.length; i++) {
 				for (var j = 0; j < this.data[i].y.length; j++) {
@@ -3229,8 +3281,7 @@ var wd = (function() {
 						};
 						var pos1 = this.getXY(coord.x1, coord.y1);
 						var pos2 = this.getXY(coord.x2, coord.y2)
-						var title = "(x1,y1) = ("+coord.x1+", "+coord.y1+")\n";
-						title += "(x2,y2) = ("+coord.x1+", "+coord.y2+")";
+						var title = "(x,y) = ("+coord.x1+", "+coord.y1+")";
 						this.setLine(pos1.x, pos1.y, pos2.x, pos2.y, i, title);
 					} else {
 						var coord = {x1: this.data[i].x[j], y1: this.data[i].y[j]};
