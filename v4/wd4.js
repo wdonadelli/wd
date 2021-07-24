@@ -618,7 +618,7 @@ var wd = (function() {
 			this._loaded   = 0;
 			this._total    = 0;
 
-/*FIXME estudar mais
+/*FIXME estudar mais para fazer o negócio mudar o dom dinamicamente (contagem regressiva)
 			var start = 100*this._progress;
 			function step(time) {
 				if (start === undefined) start = time;
@@ -785,14 +785,12 @@ var wd = (function() {
 			div:  document.createElement("DIV"),
 			head: document.createElement("HEADER"),
 			btn:  document.createElement("SPAN"),
-			icon: document.createElement("SPAN"),
 			msg:  document.createElement("SECTION")
 		};
 
 		/*Montagem*/
 		box.div.appendChild(box.head);
 		box.div.appendChild(box.msg);
-		box.head.appendChild(box.icon);
 		box.head.appendChild(box.btn);
 
 		/*Estilos*/
@@ -806,7 +804,6 @@ var wd = (function() {
 				backgroundColor: "rgba(0,128,255,1)", textAlign: "right"
 			},
 			btn:  {marginRight: "0.5em", cursor: "pointer"},
-			icon: {float: "left", marginLeft: "0.5em"},
 			msg:  {padding: "0.5em", borderRadius: "inherit"}
 		};
 		box.div.className = "js-wd-signal";
@@ -817,15 +814,14 @@ var wd = (function() {
 
 		/*textos*/
 		var types = {
-			info:  "\u2139",
-			warn:  "\u26A0",
-			error: "\u26D4",
-			ok:    "\u2714",
-			doubt: "\u003F",
+			warn:  "rgba(222, 168, 33, 1)",
+			error: "rgba(236, 19, 19, 1)",
+			ok:    "rgba(0, 153, 0, 1)",
+			doubt: "rgba(128, 64, 191, 1)",
 		};
 		box.btn.textContent  = "\u2716";
 		box.msg.innerHTML    = message;
-		box.icon.textContent = type in types ? types[type] : "";
+		if (type in types) box.head.style.backgroundColor = types[type];
 
 		/*Disparadores*/
 		box.btn.onclick = function() {
@@ -1476,23 +1472,26 @@ var wd = (function() {
 		}
 	});
 
-	Object.defineProperty(WDnumber.prototype, "fixed", {/*fixador de números FIXME: isso não está funcionando direito (1)fixed(1)*/
+	Object.defineProperty(WDnumber.prototype, "fixed", {/*fixador de números*/
 		enumerable: true,
 		value: function(ldec, lint) {
 			if (this.test("infinity")) return this.toString();
 
-			ldec = WDbox.finite(ldec) ? Math.abs(WDbox.int(ldec)) : 2;
-			lint = WDbox.finite(lint) ? Math.abs(WDbox.int(lint)) : WDnumber.nFloat(this.valueOf());
+			lint = WDbox.finite(lint) ? WDbox.int(lint, true) : WDnumber.nFloat(this.valueOf());
+			ldec = WDbox.finite(ldec) ? WDbox.int(ldec, true) : 0;
 
-			var dec = Math.abs(this.decimal);
-			dec = dec === 0 ? "" : "."+dec.toFixed(ldec).split(".")[1];
+			var sign = this.valueOf() < 0 ? "-" : "+";
+			var int  = Math.abs(this.int);
+			var dec  = Math.abs(this.decimal);
 
-			var int = Math.abs(this.int);
+			dec = dec.toFixed((ldec > 20 ? 20 : ldec));
+			dec = ldec === 0 ? "" : dec.replace("0.", ".");
+
 			int = int.toLocaleString("en-US").split(".")[0].replace(/\,/g, "").split("");
 			while (int.length < lint) int.unshift("0");
 			int = int.join("");
 
-			return (this.valueOf() < 0 ? "-" : "+") + int+dec;
+			return sign+int+dec;
 		}
 	});
 
@@ -3939,17 +3938,11 @@ var wd = (function() {
 
 	function loadingProcedures() {/*procedimento para carregamentos*/
 
-		var repeat = WD.$$("[data-wd-repeat]");
-		while (repeat.item() > 0) {
-			repeat.run(data_wdRepeat);
-			repeat = WD.$$("[data-wd-repeat]");
-		}
+		var repeat = WD.$("[data-wd-repeat]");
+		if (repeat.type === "dom") repeat.run(data_wdRepeat);
 
-		var load = WD.$$("[data-wd-load]");
-		while (load.item() > 0) {
-			load.run(data_wdLoad);
-			load = WD.$$("[data-wd-load]");
-		}
+		var load = WD.$("[data-wd-load]");
+		if (load.type === "dom") load.run(data_wdLoad);
 
 		organizationProcedures();
 		return;
