@@ -31,6 +31,17 @@ SOFTWARE.﻿
 
 var wd = (function() {
 
+	function WDexception(value) {
+		if (!(this instanceof WDexception)) return new WDexception(value);
+		this.value = value === undefined ? "WD" : value;
+		this.message = "An error has been identified and the process has been stopped.";
+		this.toString = function() {
+			return this.value + " Exception: " + this.message;
+		};
+	}
+
+/*============================================================================*/
+
 	function WDbox(input) {
 		if (!(this instanceof WDbox)) return new WDbox(input);
 		Object.defineProperty(this, "_input", {value: input});
@@ -298,8 +309,8 @@ var wd = (function() {
 			this._input instanceof NodeList ||
 			this._input instanceof HTMLCollection ||
 			this._input instanceof HTMLAllCollection ||
-			this._input instanceof HTMLFormControlsCollection ||
-			this._input instanceof HTMLOptionsCollection
+			this._input instanceof HTMLOptionsCollection ||
+			"HTMLFormControlsCollection" in window && this._input instanceof HTMLFormControlsCollection /*IE 11*/
 		) {
 			this._type  = "dom";
 			this._value = [];
@@ -627,7 +638,17 @@ var wd = (function() {
 				if (elapsed < 2000) window.requestAnimationFrame(step);
 			}
 			window.requestAnimationFrame(step);
+
+			//Esse exemplo é mais simples
+			var progress = this._progress;
+			function step() {
+				document.title = progress;
+				if (progress < 1) requestAnimationFrame(step)
+			}
+			requestAnimationFrame(step);
 */
+
+
 			return;
 		}
 	});
@@ -796,12 +817,12 @@ var wd = (function() {
 		/*Estilos*/
 		var style = {
 			div: {
-				border: "1px solid rgba(0,128,255,1)", borderRadius: "0.2em", margin: "0.5em",
+				border: "1px solid rgba(0,0,0,0.6)", borderRadius: "0.2em", margin: "0.5em",
 				backgroundColor: "#FFFFFF", boxShadow: "1px 1px 6px rgba(0,0,0,0.6)", opacity: 1
 			},
 			head: {
 				padding: "0.1em", borderTopLeftRadius: "inherit", borderTopRightRadius: "inherit",
-				backgroundColor: "rgba(0,128,255,1)", textAlign: "right"
+				backgroundColor: "rgba(0,128,255,0.6)", textAlign: "right"
 			},
 			btn:  {marginRight: "0.5em", cursor: "pointer"},
 			msg:  {padding: "0.5em", borderRadius: "inherit"}
@@ -814,10 +835,10 @@ var wd = (function() {
 
 		/*textos*/
 		var types = {
-			warn:  "rgba(222, 168, 33, 1)",
-			error: "rgba(236, 19, 19, 1)",
-			ok:    "rgba(0, 153, 0, 1)",
-			doubt: "rgba(128, 64, 191, 1)",
+			warn:  "rgba(222, 168, 33, 0.6)",
+			error: "rgba(236, 19, 19, 0.6)",
+			ok:    "rgba(0, 153, 0, 0.6)",
+			doubt: "rgba(128, 64, 191, 0.6)",
 		};
 		box.btn.textContent  = "\u2716";
 		box.msg.innerHTML    = message;
@@ -1477,15 +1498,16 @@ var wd = (function() {
 		value: function(ldec, lint) {
 			if (this.test("infinity")) return this.toString();
 
-			lint = WDbox.finite(lint) ? WDbox.int(lint, true) : WDnumber.nFloat(this.valueOf());
+			lint = WDbox.finite(lint) ? WDbox.int(lint, true) : 0;
 			ldec = WDbox.finite(ldec) ? WDbox.int(ldec, true) : 0;
 
-			var sign = this.valueOf() < 0 ? "-" : "+";
+			var sign = this.valueOf() < 0 ? "-" : "";
 			var int  = Math.abs(this.int);
 			var dec  = Math.abs(this.decimal);
 
 			dec = dec.toFixed((ldec > 20 ? 20 : ldec));
-			dec = ldec === 0 ? "" : dec.replace("0.", ".");
+			if ((/^1/).test(dec)) int++;
+			dec = ldec === 0 ? "" : "."+dec.split(".")[1];
 
 			int = int.toLocaleString("en-US").split(".")[0].replace(/\,/g, "").split("");
 			while (int.length < lint) int.unshift("0");
@@ -2955,15 +2977,14 @@ var wd = (function() {
 /*============================================================================*/
 
 	function WDchart(box, ratio) {/*Objeto para criar gráficos*/
-		if (!(this instanceof WDchart)) return new WDchart(box, ratio);
-		ratio = WDbox.finite(ratio) ? Math.abs(ratio) : 0.6;
+		if (!(this instanceof WDchart)) return new WDchart(box);
 		Object.defineProperties(this, {
-			box:      {value: box},                               /*elemento container*/
-			svg:      {value: this.createSVG("svg")},             /*elemento SVG*/
-			ratio:    {value: ratio <= 1 ? ratio : 1/ratio},      /*proporção do gráfico*/
-			scale:    {value: {x: 1, y: 1, d: 0.1}},              /*fator de escala (x/y) e delta (%)*/
-			value:    {value: {x: {min: 0, max: 0}, y: {min: 0, max: 0}}}, /*guarda os extremos*/
-			measures: {value: {}},                                         /*guarda as dimensões do gráfico*/
+			box:      {value: box},                                      /*elemento container*/
+			svg:      {value: this.createSVG("svg")},                    /*elemento SVG*/
+			ratio:    {value: window.screen.height/window.screen.width}, /*proporção do gráfico*/
+			scale:    {value: {x: 1, y: 1, d: 0.1}},                     /*fator de escala (x/y) e delta (menor unidade de gráfico em %)*/
+			value:    {value: {x: {min: null, max: null}, y: {min: null, max: null}}}, /*guarda os extremos*/
+			measures: {value: {}}, /*guarda as dimensões do gráfico*/
 		});
 	}
 
@@ -2971,12 +2992,12 @@ var wd = (function() {
 		constructor: {
 			value: WDchart
 		},
-		colors: {value: [
+		colors: {value: [ /*Sequência de corer de cada conjunto de dados*/
 			"#0000FF", "#FF0000", "#00FF00", "#663399", "#A0522D", "#D2B48C",
 			"#1E90FF", "#FF69B4", "#008080", "#800080", "#FFA500", "#DAA520"
 			]
 		},
-		color: {
+		color: { /*define a cor a ser usada (ciclo)*/
 			value: function(i) {
 				return i < this.colors.length ? this.colors[i] : this.colors[i % this.colors.length];
 			}
@@ -2984,30 +3005,46 @@ var wd = (function() {
 		ref: {/*converte número em fração: 100 = "100%"*/
 			value: function(x) {return new String(x).toString()+"%";}
 		},
-		setValue: {/*define os limites*/
+		setValue: {/*define o tamanho dos eixos e registra em this.value*/
 			value: function(axis, value) {
 				var value = WD(value);
 				if (value.type !== "number" || value.test("infinity")) return;
 				value = value.valueOf();
-				if (value > this.value[axis].max) this.value[axis].max = value; else
+				if (this.value[axis].max === null || this.value[axis].min === null) {
+					this.value[axis].min = value;
+					this.value[axis].max = value;
+					return;
+				}
+				if (value > this.value[axis].max) this.value[axis].max = value;
 				if (value < this.value[axis].min) this.value[axis].min = value;
 				return;
 			}
 		},
-		createSVG: {/*cria e devolve um elemento svg e define seus atributos*/
-			value: function(type, obj, text, title) {
+		checkValue: {/*Verifica se os extremos estão adequados*/
+			value: function(axis) {
+				if (axis !== "x" && axis !== "y") {
+					this.checkValue("x");
+					this.checkValue("y");
+					return;
+				}
+				if (this.value[axis].min >= this.value[axis].max) return false;
+				if (this.value[axis].min === null || this.value[axis].max === null) return false;;
+				return true;
+			}
+		},
+		createSVG: {/*cria e retorna elementos svg conforme configurações*/
+			value: function(type, attr, text, title) {
 				var elem = document.createElementNS("http://www.w3.org/2000/svg", type);
-				/*define os atributos (valores de ref em porcentagem)*/
-				var ref  = [
+				var ref  = [ /*Esses valores devem ser definidos em porcentagem*/
 					"x", "y", "x1", "x2", "y1", "y2", "height", "width",
 					"cx", "cy", "r", "dx", "dy"
 				];
-				if (obj !== undefined && obj !== null) {
-					for (var i in obj) {
-						if (ref.indexOf(i) >= 0 && WDbox.finite(obj[i]))
-							elem.setAttribute(i, this.ref(obj[i]));
+				if (attr !== undefined && attr !== null) {
+					for (var i in attr) {
+						if (ref.indexOf(i) >= 0 && WDbox.finite(attr[i]))
+							elem.setAttribute(i, this.ref(attr[i]));
 						else
-							elem.setAttribute(i, obj[i]);
+							elem.setAttribute(i, attr[i]);
 					}
 				}
 				/*define um texto*/
@@ -3025,22 +3062,21 @@ var wd = (function() {
 				return elem;
 			}
 		},
-		setBox: {/*Define as características sa caixa que guardará o svg: chamar no plot*/
+		setBox: {/*Define as características do container do svg*/
 			value: function() {
-				this.box.innerHTML = "";
-				WD(this.box).css(null).style(null).style({
+				WD(this.box).set("innerHTML", "").css(null).style(null).style({
 					position: "relative", width: "100%",
 					paddingTop: this.ref(100 * this.ratio), backgroundColor: "#FFFFFF"
 				});
 				return;
 			}
 		},
-		setSVG: {/*Define o SVG e suas características: chamar no plot*/
+		setSVG: {/*Define as características do SVG e adiciona ao container*/
 			value: function() {
 				WD(this.svg).style({
 					height: "100%", width: "100%", position: "absolute",
 					top: "0", left: "0", bottom: "0", right: "0",
-					backgroundColor: "none", border: "1px solid black"
+					backgroundColor: "#F8F8FF", border: "1px dotted black"
 				});
 				this.box.appendChild(this.svg);
 				return;
@@ -3048,14 +3084,14 @@ var wd = (function() {
 		},
 		setLabel: {/*cria textos para exibir na tela*/
 			value: function (text, x, y, color, point, vertical) {
-				var anchor  = {n: 1, ne: 2, e: 2, se: 2, s: 1, sw: 0, w: 0, nw: 0, c: 1};
-				var base    = {n: 2, ne: 2, e: 1, se: 0, s: 0, sw: 0, w: 1, nw: 2, c: 1};
 				var vanchor = ["start", "middle", "end"];
+				var anchor  = {n: 1, ne: 2, e: 2, se: 2, s: 1, sw: 0, w: 0, nw: 0, c: 1};
 				var vbase   = ["auto", "middle", "hanging"];
+				var base    = {n: 2, ne: 2, e: 1, se: 0, s: 0, sw: 0, w: 1, nw: 2, c: 1};
 				color       = WDbox.finite(color) ? this.color(color) : "#000000" ;
-				point       = point in base ? point : "c" ;
+				point       = point in base ? point : "c" ;/*padrão é ancorar pelo centro*/
 				var attr = {
-					x: this.ref(x), y: this.ref(y),
+					x: x, y: y,
 					fill: color,
 					"text-anchor":       vanchor[anchor[point]],
 					"dominant-baseline": vbase[base[point]],
@@ -3064,13 +3100,14 @@ var wd = (function() {
 				};
 				 if (vertical === true) {
 				 	attr.transform = "rotate(270)";
-				 	attr.y = this.ratio * attr.y;
+				 	attr.y = x/this.ratio;
+				 	attr.x = -this.ratio*y;
 				 }
 				 var label = this.createSVG("text", attr, text);
 				 this.svg.appendChild(label);
 			}
 		},
-		setLine: {
+		setLine: {/*Desenha uma linha no gráfico: coordenadas inicial e final)*/
  			value: function(x1, y1, x2, y2, color, title) {
  				var line = this.createSVG("line", {
  					x1: x1, y1: y1, x2: x2, y2: y2,
@@ -3079,22 +3116,22 @@ var wd = (function() {
  				this.svg.appendChild(line);
  			}
  		},
- 		setPoint: {
+ 		setPoint: {/*Desenha um ponto no gráfico: coordenadas do centro*/
  			value: function(cx, cy, color, title) {
-
 	 			var circle = this.createSVG("circle", {
 					cx: cx, cy: cy, r: "3px", fill: this.color(color)
 				}, null, title);
  				this.svg.appendChild(circle);
  			}
  		},
- 		setScale: {
+ 		setScale: {/*Define o valor da escala horizontal e vertical*/
  			value: function() {
 
  				/*escala em x*/
  				this.scale.x = this.measures.w/(this.value.x.max - this.value.x.min);
+ 				if (!this.checkValue("x")) throw "Chart Exception: X axis error";
 
- 				/*transformando funções em pontos para Y*/
+				/*transformar funções em conjunto de pontos para o eixo Y*/
  				for (var i = 0; i < this.data.length; i++) {
 					if (!this.data[i].func) continue;
 
@@ -3120,12 +3157,12 @@ var wd = (function() {
 
  				/*escala em y*/
  				this.scale.y = this.measures.h/(this.value.y.max - this.value.y.min);
- 				console.log(this.scale);
+ 				if (!this.checkValue("y")) throw "Chart Exception: Y axis error";
 
  				return;
  			}
  		},
- 		getXY: {
+ 		getXY: {/*Define as coordenadas do gráfico a partir dos valores reais*/
  			value: function(x,y) {
  				/*ajustando ao eixo*/
  				x = x - this.value.x.min;
@@ -3150,8 +3187,8 @@ var wd = (function() {
 
 	WDchartLinear.prototype = Object.create(WDchart.prototype, {
 		constructor: {value: WDchartLinear},
-		lines:       {value: 4},                            /*linhas auxiliares (n - 1)*/
-		padding:     {value: {t: 5, r: 5, b: 20, l: 20}} /*espaços internos FIXME era tudo 15*/
+		lines:       {value: 4},                         /*linhas auxiliares (n - 1)*/
+		padding:     {value: {t: 10, r: 5, b: 10, l: 20}} /*espaços internos entre a lateral e o gráfico*/
 	});
 
 	Object.defineProperties(WDchartLinear.prototype, {
@@ -3166,13 +3203,19 @@ var wd = (function() {
 				return;
 			}
 		},
-		setLabelValue: {
+		setLabelValue: {/*define a forma de exibição do valor numérico*/
 			value: function(x) {
-				if (Math.abs(x) > 999999) return x.toExponential(1);
-				return WD(x).fixed(1,0);
+				var val = Math.abs(x);
+				var inv = 1/val;
+				if (val === 0) return "0";
+				if (val >= 1e10 || inv >= 1e10) return x.toExponential(0);
+				if (val >= 1e3  || inv >= 1e3 ) return x.toExponential(1);
+				if (val >= 1e2  || inv >= 1e2 ) return WD(x).fixed(0,0);
+				if (val >= 1e1  || inv >= 1e1 ) return WD(x).fixed(1,0);
+				return WD(x).fixed(2,0);
 			}
 		},
-		getAuxLines: {
+		getAuxLines: {/*Retorna as características das linhas do gráfico (laterais e auxiliares)*/
 			value: function(n) {
 				return {
 					h: {
@@ -3205,14 +3248,16 @@ var wd = (function() {
 					h0: this.value.y.max,
 					hn: this.value.y.min,
 				};
+				/*desenhando linhas principais*/
 				for (var i = 0; i < this.lines+1; i++) {
 					var aux = this.getAuxLines(i);
 					for (var p in aux) {
 						var line = this.createSVG("line", {
 							x1: aux[p].x1, y1: aux[p].y1,
 							x2: aux[p].x2, y2: aux[p].y2,
-							stroke: i === 0 || i === this.lines ? "#000000" : "#A9A9A9",
-							"stroke-width": i === 0 || i === this.lines ? "2" : "1",
+							/*i = 0 || i = lines > linhas externas*/
+							"stroke":           i === 0 || i === this.lines ? "#000000" : "#A9A9A9",
+							"stroke-width":     i === 0 || i === this.lines ? "2" : "1",
 							"stroke-dasharray": i === 0 || i === this.lines ? "0" : "5,5"
 						});
 						this.svg.appendChild(line);
@@ -3220,20 +3265,31 @@ var wd = (function() {
 						/*numeração dos eixos*/
 						var text = i === 0 ? label[p+"0"] : label[p];
 						if (i === this.lines) text = label[p+"n"];
+
+						var pos = p === "h" ? "e" : "n";
+						if (i === 0 || i === this.lines) {
+							if (p === "h") pos = i === 0 ? "ne" : "se";
+							else           pos = i === 0 ? "nw" : "ne";
+							
+						}
 						
-						
-						console.log(text, this.setLabelValue(text));
-						this.setLabel(
-							this.setLabelValue(text), /*text*/
-							aux[p].x1 + (p === "h" ? -1 : 0), /*x*/
-							aux[p].y1 + (p === "v" ? this.measures.h+1 : 0), /*y*/
+						this.setLabel(/*text, x, y, color, point, vertical*/
+							this.setLabelValue(text),
+							aux[p].x1 + (p === "h" ? -1 : 0),
+							aux[p].y1 + (p === "v" ? this.measures.h+1 : 0),
 							null,
-							(p === "h" ? "e" : "n")
+							pos
 						);
 						label[p] += label["d"+p];
 					}
 				}
 
+				/*Nome dos eixos*/
+				var xaxis = this.measures.l + (this.measures.w)/2;
+				var yaxis = this.measures.t + (this.measures.h)/2;
+				this.setLabel("Eixo X", xaxis, 99.9, null, "s", false);
+				this.setLabel("Eixo Y", 0.1, yaxis, null, "n", true);
+				
 
 
 
@@ -3255,8 +3311,8 @@ var wd = (function() {
 
 			this.data.push({y: y, x: x, label: label,	line: line, func: func});
 			for (var i = 0; i < x.length; i++) this.setValue("x", x[i]);
-			for (var i = 0; i < y.length; i++) this.setValue("y", y[i]);
-
+			if (!func)
+				for (var i = 0; i < y.length; i++) this.setValue("y", y[i]);
 			return;
  		}
 	});
