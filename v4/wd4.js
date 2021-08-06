@@ -2997,14 +2997,15 @@ var wd = (function() {
 		},
 		color: { /*define a cor a ser usada (ciclo)*/
 			value: function(i) {
-				if (i === null || i === undefined) return "#000000";
+				if (!WDbox.finite(i)) return "#000000";
+				i = WDbox.int(i, true);
 				return i < this.colors.length ? this.colors[i] : this.colors[i % this.colors.length];
 			}
 		},
 		ref: {/*converte número em fração: 100 = "100%"*/
 			value: function(x) {return new String(x).toString()+"%";}
 		},
-		setValue: {/*define o tamanho dos eixos (extremos) e os registra em this.value*/
+		setValue: {/*define o tamanho dos extremos e os registra em this.value*/
 			value: function(axis, value) {
 				var value = WD(value);
 				if (value.type !== "number" || value.test("infinity")) return;
@@ -3086,7 +3087,7 @@ var wd = (function() {
 				var anchor  = {n: 1, ne: 2, e: 2, se: 2, s: 1, sw: 0, w: 0, nw: 0, c: 1};
 				var vbase   = ["auto", "middle", "hanging"];
 				var base    = {n: 2, ne: 2, e: 1, se: 0, s: 0, sw: 0, w: 1, nw: 2, c: 1};
-				color       = WDbox.finite(color) ? this.color(color) : "#000000" ;
+				color       = this.color(color);
 				point       = point in base ? point : "c" ;/*padrão é ancorar pelo centro*/
 				var attr = {
 					x: x, y: y,
