@@ -2983,15 +2983,13 @@ var wd = (function() {
 			svg:      {value: this.createSVG("svg")},                    /*elemento SVG*/
 			ratio:    {value: window.screen.height/window.screen.width}, /*proporção do gráfico*/
 			scale:    {value: {x: 1, y: 1, d: 0.1}},                     /*fator de escala (x/y) e delta (menor unidade de gráfico em %)*/
-			value:    {value: {x: {min: null, max: null}, y: {min: null, max: null}}}, /*guarda os extremos*/
+			value:    {value: {x: {min: null, max: null}, y: {min: null, max: null}}}, /*guarda os valores extremos*/
 			measures: {value: {}}, /*guarda as dimensões do gráfico*/
 		});
 	}
 
 	Object.defineProperties(WDchart.prototype, {
-		constructor: {
-			value: WDchart
-		},
+		constructor: {value: WDchart},
 		colors: {value: [ /*Sequência de corer de cada conjunto de dados*/
 			"#0000FF", "#FF0000", "#00FF00", "#663399", "#A0522D", "#D2B48C",
 			"#1E90FF", "#FF69B4", "#008080", "#800080", "#FFA500", "#DAA520"
@@ -2999,13 +2997,14 @@ var wd = (function() {
 		},
 		color: { /*define a cor a ser usada (ciclo)*/
 			value: function(i) {
+				if (i === null || i === undefined) return "#000000";
 				return i < this.colors.length ? this.colors[i] : this.colors[i % this.colors.length];
 			}
 		},
 		ref: {/*converte número em fração: 100 = "100%"*/
 			value: function(x) {return new String(x).toString()+"%";}
 		},
-		setValue: {/*define o tamanho dos eixos e registra em this.value*/
+		setValue: {/*define o tamanho dos eixos (extremos) e os registra em this.value*/
 			value: function(axis, value) {
 				var value = WD(value);
 				if (value.type !== "number" || value.test("infinity")) return;
@@ -3065,8 +3064,7 @@ var wd = (function() {
 		setBox: {/*Define as características do container do svg*/
 			value: function() {
 				WD(this.box).set("innerHTML", "").css(null).style(null).style({
-					position: "relative", width: "100%",
-					paddingTop: this.ref(100 * this.ratio), backgroundColor: "#FFFFFF"
+					position: "relative", paddingTop: this.ref(100 * this.ratio)
 				});
 				return;
 			}
@@ -3095,7 +3093,7 @@ var wd = (function() {
 					fill: color,
 					"text-anchor":       vanchor[anchor[point]],
 					"dominant-baseline": vbase[base[point]],
-					"font-size": "80%",
+					"font-size": "0.8em",
 					"font-family": "monospace"
 				};
 				 if (vertical === true) {
@@ -3108,10 +3106,12 @@ var wd = (function() {
 			}
 		},
 		setLine: {/*Desenha uma linha no gráfico: coordenadas inicial e final)*/
- 			value: function(x1, y1, x2, y2, color, title) {
+ 			value: function(x1, y1, x2, y2, color, title, dash) {
  				var line = this.createSVG("line", {
  					x1: x1, y1: y1, x2: x2, y2: y2,
- 					stroke: this.color(color), "stroke-width": "2px"
+ 					stroke: this.color(color),
+ 					"stroke-width":     dash === true ? "1px" : "2px",
+ 					"stroke-dasharray": dash === true ? "1,5" : "0"
  				}, null, title);
  				this.svg.appendChild(line);
  			}
@@ -3252,17 +3252,13 @@ var wd = (function() {
 				for (var i = 0; i < this.lines+1; i++) {
 					var aux = this.getAuxLines(i);
 					for (var p in aux) {
-						var line = this.createSVG("line", {
-							x1: aux[p].x1, y1: aux[p].y1,
-							x2: aux[p].x2, y2: aux[p].y2,
-							/*i = 0 || i = lines > linhas externas*/
-							"stroke":           i === 0 || i === this.lines ? "#000000" : "#A9A9A9",
-							"stroke-width":     i === 0 || i === this.lines ? "2" : "1",
-							"stroke-dasharray": i === 0 || i === this.lines ? "0" : "5,5"
-						});
-						this.svg.appendChild(line);
 
-						/*numeração dos eixos*/
+						/*eixos*/
+						this.setLine(aux[p].x1, aux[p].y1, aux[p].x2, aux[p].y2,
+							null, "", (i === 0 || i === this.lines ? false : true)
+						);
+
+						/*valores dos eixos*/
 						var text = i === 0 ? label[p+"0"] : label[p];
 						if (i === this.lines) text = label[p+"n"];
 
@@ -3284,7 +3280,7 @@ var wd = (function() {
 					}
 				}
 
-				/*Nome dos eixos*/
+				/*Nome dos eixos (centralização na área útil do gráfico)*/
 				var xaxis = this.measures.l + (this.measures.w)/2;
 				var yaxis = this.measures.t + (this.measures.h)/2;
 				this.setLabel("Eixo X", xaxis, 99.9, null, "s", false);
@@ -3414,6 +3410,34 @@ var wd = (function() {
 		}, method);
 		return;
 	};
+
+/*----------------------------------------------------------------------------*/
+
+	function data_wdChart(e) {/*Plota Gráfico: data-wd-chart=path{csv}type{}data{x,y,...}${form}*/
+		//type: plot, line, bar, circle
+
+		if (!("wdChart" in e.dataset)) return;
+		var data   = WDdom.dataset(e, "wdLoad")[0];
+		var target = WD(e);
+		var method = "method" in data ? data.method : "post";
+		var file   = data.path;
+		var pack   = WDbox.get$$(data);
+		var exec   = WD(pack);
+
+		target.data({wdLoad: null});
+		exec.send(file, function(x) {
+			if (x.closed) target.load(x.text);
+		}, method);
+		return;
+	}
+
+
+
+
+
+
+
+
 
 /*----------------------------------------------------------------------------*/
 
@@ -3819,55 +3843,6 @@ var wd = (function() {
 
 
 
-
-
-	function data_wdChart(e) {
-		/*Gráfico: data-wd-chart=
-			plot{x|y|regression}
-			line{x|y1|y2|y3...}
-			circle{x|y} > x = labels
-			bar{x|y1|y2|y3...}
-			get|post{file} > para arquivo externo
-			${table}  > para tabela
-		*/
-		if (!("wdChart" in e.dataset)) return;
-		var data  = WDdom.dataset(e, "wdChart")[0];
-		/*Tipo de gráfico*/
-		var chart = null;
-		if ("plot"   in data) chart = "plot";   else
-		if ("line"   in data) chart = "line";   else
-		if ("circle" in data) chart = "circle"; else
-		if ("bar"    in data) chart = "bar"; else return;
-		/*Fonte de informação*/
-		var source = null;
-		if ("$" in data || "$$" in data)     source = "table"; else
-		if ("get" in data || "post" in data) source = "file";  else return;
-		/*Dados do gráfico*/
-		var datachart = data[chart].split("|");
-
-
-
-
-
-			
-			
-
-		var ref = data[chart].split("|");
-
-
-
-
-
-
-
-
-
-
-
-
-
-		return;
-	}
 
 
 
