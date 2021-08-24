@@ -3259,7 +3259,11 @@ var wd = (function() {
 							null, "", (i === 0 || i === this.lines ? false : true)
 						);
 
-						/*valores dos eixos*/
+
+
+
+
+						/*valores dos eixos FIXME: resumir isso aqui */
 						var text = i === 0 ? label[p+"0"] : label[p];
 						if (i === this.lines) text = label[p+"n"];
 
@@ -3278,6 +3282,13 @@ var wd = (function() {
 							pos
 						);
 						label[p] += label["d"+p];
+
+
+
+
+
+
+
 					}
 				}
 
