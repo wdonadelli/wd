@@ -1122,60 +1122,62 @@ var wd = (function() {
 		WDmain.call(this, input, type, value);
 	}
 
-	Object.defineProperty(WDtext, "mask", {/*checa e retorna uma máscara (obs.: não é o método de protótipo)*/
-		value: function(input, check, callback) {
-			check = String(check).toString();
-			var code  = {"#": "[0-9]", "@": "[a-zA-ZÀ-ÿ]", "*": "."};
-			var mask  = ["^"]; /*Formato da máscara (conteúdo + caracteres)*/
-			var only  = ["^"]; /*Conteúdo da máscara (conteúdo apenas)*/
-			var gaps  = [];    /*Caracteres da máscara (comprimento do formato)*/
-			var func  = new WDtype(callback);
-			if (func.type !== "function") callback = function(x) {return true;}
+	Object.defineProperties(WDtext, {
+		mask: {/*checa e retorna uma máscara (obs.: não é o método de protótipo)*/
+			value: function(input, check, callback) {
+				check = String(check).toString();
+				var code  = {"#": "[0-9]", "@": "[a-zA-ZÀ-ÿ]", "*": "."};
+				var mask  = ["^"]; /*Formato da máscara (conteúdo + caracteres)*/
+				var only  = ["^"]; /*Conteúdo da máscara (conteúdo apenas)*/
+				var gaps  = [];    /*Caracteres da máscara (comprimento do formato)*/
+				var func  = new WDtype(callback);
+				if (func.type !== "function") callback = function(x) {return true;}
 
-			/* obtendo a máscara e os containers para ocupação */
-			for (var i = 0; i < input.length; i++) {
-				var char = input[i];
+				/* obtendo a máscara e os containers para ocupação */
+				for (var i = 0; i < input.length; i++) {
+					var char = input[i];
 
-				if (char in code) { /*caracteres de máscara*/
-					mask.push(code[char]);
-					gaps.push(null);
-					only.push(code[char])
-				} else if ((/\w/).test(char)) { /*números, letras e sublinhado*/
-					mask.push(char === "_" ? "\\_" : char);
-					gaps.push(char);
-				} else if (char === "\\" && input[i+1] in re) { /*caracteres especiais*/
-					mask.push(char+input[i+1]);
-					gaps.push(input[i+1]);
-					i++;
-				} else { /*outros caracteres*/
-					mask.push("\\"+char);
-					gaps.push(char);
+					if (char in code) { /*caracteres de máscara*/
+						mask.push(code[char]);
+						gaps.push(null);
+						only.push(code[char])
+					} else if ((/\w/).test(char)) { /*números, letras e sublinhado*/
+						mask.push(char === "_" ? "\\_" : char);
+						gaps.push(char);
+					} else if (char === "\\" && input[i+1] in re) { /*caracteres especiais*/
+						mask.push(char+input[i+1]);
+						gaps.push(input[i+1]);
+						i++;
+					} else { /*outros caracteres*/
+						mask.push("\\"+char);
+						gaps.push(char);
+					}
 				}
-			}
 
-			/*returnar se o usuário entrou com a máscara já formatada adequadamente*/
-			mask.push("$");
-			mask = new RegExp(mask.join(""));
-			if (mask.test(check) && callback(check)) return check;
+				/*returnar se o usuário entrou com a máscara já formatada adequadamente*/
+				mask.push("$");
+				mask = new RegExp(mask.join(""));
+				if (mask.test(check) && callback(check)) return check;
 
-			/*se os caracteres não estiverem de acordo com a máscara*/
-			only.push("$");
-			only = new RegExp(only.join(""));
-			if (!only.test(check)) return null;
+				/*se os caracteres não estiverem de acordo com a máscara*/
+				only.push("$");
+				only = new RegExp(only.join(""));
+				if (!only.test(check)) return null;
 
-			/*se os caracteres estiverem de acordo com a máscara*/
-			var n = 0;
-			for (var i = 0; i < gaps.length; i++) {
-				if (gaps[i] === null) {
-					gaps[i] = check[n];
-					n++;
+				/*se os caracteres estiverem de acordo com a máscara*/
+				var n = 0;
+				for (var i = 0; i < gaps.length; i++) {
+					if (gaps[i] === null) {
+						gaps[i] = check[n];
+						n++;
+					}
 				}
+				gaps = gaps.join("");
+
+				if (callback(gaps)) return gaps;
+
+				return null;
 			}
-			gaps = gaps.join("");
-
-			if (callback(gaps)) return gaps;
-
-			return null;
 		}
 	});
 
@@ -1944,10 +1946,10 @@ var wd = (function() {
 				return list;
 			}
 		},
-		setArray: {/*define listas (até 2) com valores numéricos somente*/
+		arrayNumeric: {/*define listas (até 2) com valores numéricos somente*/
 			value: function(list1, list2) {
 				if (list2 === undefined) list2 = list1;
-				var loop = list1.length >= list2.length ? list1.length : list2.length;
+				var loop = list1.length < list2.length ? list1.length : list2.length;
 				var array1 = [];
 				var array2 = [];
 				for (var i = 0; i < loop; i++) {
@@ -2194,50 +2196,86 @@ var wd = (function() {
 		}
 	});
 
-	Object.defineProperty(WDarray.prototype, "data", {/*dados estatísticos*/
-		enumerable: true,
-		get: function() {
-			var list = WDarray.setArray(this.sort()).array1;
-			if (list === null) return null;
-			var len  = list.length;
-			var val  = null;
-			var data = {};
-
-			/*soma e média, mediana, mínimo, máximo*/
-			val = WDarray.sum(list, 1);
-			data.sum     = {value: val};
-			data.average = {value: val === null ? null : val/len};
-			data.median  = {value: len % 2 !== 0 ? list[(len-1)/2] : (list[len/2]+list[(len/2)-1])/2};
-			data.min     = {value: list[0]};
-			data.max     = {value: list.reverse()[0]};
-
-			/*média geométrica*/
-			val = WDarray.product(list, 1);
-			data.geometric = {value: val === null ? null : Math.pow(Math.abs(val), 1/len)};
-
-			/*média harmônica*/
-			val = WDarray.sum(list, -1);
-			data.harmonic = {value: val === null ? null : len/val};
-
-			/*desvio padrão*/
-			data.sum.deviation       = WDarray.stdDev(list, data.sum.value);
-			data.average.deviation   = WDarray.stdDev(list, data.average.value);
-			data.median.deviation    = WDarray.stdDev(list, data.median.value);
-			data.min.deviation       = WDarray.stdDev(list, data.min.value);
-			data.max.deviation       = WDarray.stdDev(list, data.max.value);
-			data.geometric.deviation = WDarray.stdDev(list, data.geometric.value);
-			data.harmonic.deviation  = WDarray.stdDev(list, data.harmonic.value);
-
-			return data;
+	Object.defineProperties(WDarray.prototype, {/*Dados estatísticos (apenas valores numéricos finitos)*/
+		numeric: {/*retorna uma lista apenas com números finitos*/
+			enumerable: true,
+			get: function() {
+				var data = WDarray.arrayNumeric(this.sort());
+				return data.array1;
+			}
+		},
+		sum: {/*retorna a soma*/
+			enumerable: true,
+			get: function() {
+				var num = this.numeric;
+				return num === null ? null : WDarray.sum(this.numeric, 1);
+			}
+		},
+		min: {/*retorna o menor valor*/
+			enumerable: true,
+			get: function() {
+				var num = this.numeric;
+				return num === null ? null : num[0];
+			}
+		},
+		max: {/*retorna o maior valor*/
+			enumerable: true,
+			get: function() {
+				var num = this.numeric;
+				return num === null ? null : num[num.length-1];
+			}
+		},
+		average: {/*retorna a média*/
+			enumerable: true,
+			get: function() {
+				var sum = this.sum;
+				var num = this.numeric;
+				return sum === null ? null : sum/num.length;
+			}
+		},
+		median: {/*retorna a mediana*/
+			enumerable: true,
+			get: function() {
+				var num = this.numeric;
+				if (num === null) return null;
+				var len = num.length;
+				return len % 2 !== 0 ? num[(len-1)/2] : (num[len/2]+num[(len/2)-1])/2;
+			}
+		},
+		geometric: {/*retorna a média geométrica*/
+			enumerable: true,
+			get: function() {
+				var num = this.numeric;
+				if (num === null) return null;
+				var len = num.length;
+				var val = WDarray.product(num, 1);
+				return val === null ? null : Math.pow(Math.abs(val), 1/len);
+			}
+		},
+		harmonic: {/*retorna a média harmônica*/
+			enumerable: true,
+			get: function() {
+				var num = this.numeric;
+				if (num === null) return null;
+				var len = num.length;
+				var val = WDarray.sum(num, -1);
+				return val === null ? null : len/val;
+			}
 		}
 	});
+			
+
+
+
+
+
 
 	Object.defineProperty(WDarray.prototype, "regression", {/*regressão linear*/
 		enumerable: true,
 		value: function(input) {
 			var check = WDtype(input);
 			if (check.type !== "array") return null;
-			var matrix = WDarray.setArray(this._value, input);
+			var matrix = WDarray.arrayNumeric(this._value, input);
 			var y = matrix.array1;
 			var x = matrix.array2;
 			if (x === null || y === null) return null;
@@ -2263,7 +2301,7 @@ var wd = (function() {
 			/*regressão exponencial (Y>=0)*/
 			refy = WDarray.setY(y, Math.log);
 			if (refy === null) {val = null;} else {
-				var matrix2 = WDarray.setArray(refy, x);
+				var matrix2 = WDarray.arrayNumeric(refy, x);
 				var y2 = matrix2.array1;
 				var x2 = matrix2.array2;
 				if (x2 === null || y2 === null) {val = null} else {
@@ -2286,7 +2324,7 @@ var wd = (function() {
 			refy = WDarray.setY(y, Math.log);
 			refx = WDarray.setY(x, Math.log);
 			if (refy === null || refx === null) {val = null;} else {
-				var matrix2 = WDarray.setArray(refy, refx);
+				var matrix2 = WDarray.arrayNumeric(refy, refx);
 				var y2 = matrix2.array1;
 				var x2 = matrix2.array2;
 				if (x2 === null || y2 === null) {val = null} else {
@@ -2317,7 +2355,7 @@ var wd = (function() {
 			if (sum === null) return null;
 			var check = new WDtype(label);
 			var type  = check.type;
-			var list  = WDarray.setArray(this._value).array1;
+			var list  = WDarray.arrayNumeric(this._value).array1;
 			var x = {};
 			console.info(list, sum, data);
 			for (var i = 0; i < list.length; i++) {
@@ -2326,6 +2364,26 @@ var wd = (function() {
 				x[name] = value;
 			}
 			return x;
+		}
+	});
+
+
+
+	Object.defineProperty(WDarray.prototype, "deviation", {/*retorna o desvio padrão em relação à referência*/
+		enumerable: true,
+		value: function(ref) {
+			var num = this.numeric;
+			if (num === null) return null;
+			/*valores numéricos*/
+			var lnum = ["sum", "min", "max", "average", "median", "geometric", "harmonic"];
+			if (lnum.indexOf(ref) >= 0) {
+				var val = this[ref];
+				return val === null ? null : WDarray.stdDev(num, val);
+			}
+
+
+
+			return null;
 		}
 	});
 
