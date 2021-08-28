@@ -77,11 +77,10 @@ var wd = (function() {
 
 	WDbox.finite = function(n) {
 		if (n === null || n === undefined) return false;
-		if (n === true || n === false) return false;
-		if (isNaN(n)) return false;
-		return isFinite(n) ? true : false;
+		if (n === true || n === false)     return false;
+		if (isNaN(n)   || !isFinite(n))    return false;
+		return true;
 	};
-
 
 	WDbox.lang = function() { /*Retorna a linguagem do documento: definida ou navegador*/
 		var attr  = document.body.parentElement.attributes;
@@ -89,7 +88,7 @@ var wd = (function() {
 		if (value === null) value = navigator.language || navigator.browserLanguage || "en-US";
 		return value;
 	}
-	
+
 	WDbox.calcByte = function(value) { /*calculadora de bytes*/
 		if (value >= 1099511627776) return (value/1099511627776).toFixed(2)+"TB";
 		if (value >= 1073741824)    return (value/1073741824).toFixed(2)+"GB";
@@ -97,8 +96,8 @@ var wd = (function() {
 		if (value >= 1024)          return (value/1024).toFixed(2)+"kB";
 		return value+"B";
 	}
-	
-	/*Retorna os elementos html identificados pelo seletor css no elemento root*/	
+
+	/*Retorna os elementos html identificados pelo seletor css no elemento root*/
 	WDbox.$ = function(selector, root) {
 		try {return root.querySelector(selector);    } catch(e) {}
 		try {return document.querySelector(selector);} catch(e) {}
@@ -146,7 +145,7 @@ var wd = (function() {
 		time.s = n - (60 * time.m);
 		return time;
 	}
-		
+
 	WDbox.noonDate = function(date, d, m, y) { /*Define data ao meio dia*/
 		if (date === null || date === undefined) date = new Date();
 		date.setMilliseconds(0);
@@ -157,7 +156,7 @@ var wd = (function() {
 		if (WDbox.finite(m)) date.setMonth(m - 1);
 		if (WDbox.finite(d)) date.setDate(d);
 		return date;
-	}		
+	}
 
 	WDbox.csv = function(input) {/*CSV para Array*/
 		var data = [];
@@ -207,7 +206,7 @@ var wd = (function() {
 	}
 
 	Object.defineProperty(WDtype.prototype, "constructor", {value: WDtype});
-	
+
 	Object.defineProperty(WDtype.prototype, "isFullString", {get: function() {
 		if (!this.isString)            return false;
 		if (this._input.trim() === "") return false;
@@ -220,8 +219,6 @@ var wd = (function() {
 		return false;
 	}});
 
-
-
 	Object.defineProperty(WDtype.prototype, "isNull", {get: function() {
 		if (this._input === null || this._input === "") {
 			this._type  = "null";
@@ -230,7 +227,7 @@ var wd = (function() {
 		}
 		return false;
 	}});
-		
+
 	Object.defineProperty(WDtype.prototype, "isUndefined", {get: function() {
 		if (this._input === undefined) {
 			this._type  = "undefined";
@@ -239,7 +236,7 @@ var wd = (function() {
 		}
 		return false;
 	}});
-	
+
 	Object.defineProperty(WDtype.prototype, "isRegExp", {get: function() {
 		if (typeof this._input === "regexp" || this._input instanceof RegExp) {
 			this._type  = "regexp";
@@ -314,9 +311,8 @@ var wd = (function() {
 		) {
 			this._type  = "dom";
 			this._value = [];
-			for (var i = 0; i < this._input.length; i++) {
+			for (var i = 0; i < this._input.length; i++)
 				this._value.push(this._input[i]);
-			}
 			return true;
 		}
 
@@ -491,7 +487,7 @@ var wd = (function() {
 		if (d > 30   && [2, 4, 6, 9, 11].indexOf(m) >= 0) return false;
 		if (d > 29   && m == 2) return false;
 		if (d == 29  && m == 2 && !WDbox.isLeap(y)) return false;
-		
+
 		this._type  = "date";
 		this._value = new Date();
 		this._value = WDbox.noonDate(this._value, d, m, y);
@@ -728,7 +724,7 @@ var wd = (function() {
 		get: function()  {return this._callback;},
 		set: function(x) {return this._callback = x;}
 	});
-		
+
 	Object.defineProperty(WDrequest.prototype, "method", {
 		get: function()  {return this._method;},
 		set: function(x) {return this._method = x.toUpperCase();}
@@ -859,7 +855,7 @@ var wd = (function() {
 			return;
 		}, 9000);
 
-		/*Incluir na janela*/		
+		/*Incluir na janela*/
 		this.open();
 		this.window.insertAdjacentElement("afterbegin", box.div);
 		return;
@@ -995,6 +991,14 @@ var wd = (function() {
 		}
 	});
 
+	Object.defineProperty(WDmain.prototype, "finite", {/*informa se é um número é finito*/
+		enumerable: true,
+		get: function() {
+			if (this.type !== "number") return false;
+			return this.abs !== Infinity ? true : false;
+		}
+	});
+
 /*============================================================================*/
 
 	function WDundefined(input, type, value) {
@@ -1027,7 +1031,6 @@ var wd = (function() {
 		toString: {value: function() {return "";}}
 	});
 
-
 /*============================================================================*/
 
 	function WDboolean(input, type, value) {
@@ -1053,6 +1056,33 @@ var wd = (function() {
 
 	WDfunction.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDfunction}
+	});
+
+	Object.defineProperty(WDfunction.prototype, "data", {/*apresenta um conjuto de dados (x,y) a partir de uma função*/
+		enumerable: true,
+		value: function(min, max, delta) {
+			if (!WDbox.finite(min) || !WDbox.finite(max) || !WDbox.finite(delta))
+				return null;
+			min   = new Number(min).valueOf();
+			max   = new Number(max).valueOf();
+			delta = new Number(delta).valueOf();
+			if (min >= max || delta <= 0) return null;
+
+			var data  = {x: [], y: []};
+			while (delta > 0) {
+				if (min >= max) {
+					min = max;
+					delta = 0;
+				}
+				var val = this._value(min);
+				if (WDbox.finite(min)) {
+					data.x.push(min);
+					data.y.push(val);
+				}
+				min += delta;
+			}
+			return data;
+		}
 	});
 
 /*============================================================================*/
@@ -1092,14 +1122,13 @@ var wd = (function() {
 		WDmain.call(this, input, type, value);
 	}
 
-	Object.defineProperties(WDtext, {
-		mask: {
-			value: function(input, check, callback) {
+	Object.defineProperty(WDtext, "mask", {/*checa e retorna uma máscara (obs.: não é o método de protótipo)*/
+		value: function(input, check, callback) {
 			check = String(check).toString();
 			var code  = {"#": "[0-9]", "@": "[a-zA-ZÀ-ÿ]", "*": "."};
-			var mask  = ["^"];
-			var gaps  = [];
-			var only  = ["^"]
+			var mask  = ["^"]; /*Formato da máscara (conteúdo + caracteres)*/
+			var only  = ["^"]; /*Conteúdo da máscara (conteúdo apenas)*/
+			var gaps  = [];    /*Caracteres da máscara (comprimento do formato)*/
 			var func  = new WDtype(callback);
 			if (func.type !== "function") callback = function(x) {return true;}
 
@@ -1124,18 +1153,17 @@ var wd = (function() {
 				}
 			}
 
+			/*returnar se o usuário entrou com a máscara já formatada adequadamente*/
 			mask.push("$");
 			mask = new RegExp(mask.join(""));
-
-			/*se o usuário entrou com a máscara formatada*/
 			if (mask.test(check) && callback(check)) return check;
 
+			/*se os caracteres não estiverem de acordo com a máscara*/
 			only.push("$");
 			only = new RegExp(only.join(""));
-
-			/*se os caracteres não estiverem de acordo com a máscara*/
 			if (!only.test(check)) return null;
 
+			/*se os caracteres estiverem de acordo com a máscara*/
 			var n = 0;
 			for (var i = 0; i < gaps.length; i++) {
 				if (gaps[i] === null) {
@@ -1145,18 +1173,16 @@ var wd = (function() {
 			}
 			gaps = gaps.join("");
 
-			/*se os caracteres passaram pelo teste*/
 			if (callback(gaps)) return gaps;
 
 			return null;
-			}
 		}
 	});
 
 	WDtext.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDtext}
 	});
-	
+
 	Object.defineProperty(WDtext.prototype, "caps", {/*captular*/
 		enumerable: true,
 		get: function() {
@@ -1229,7 +1255,7 @@ var wd = (function() {
 			for (var i = 1; i < x.length; i++) {
 				x[i] = x[i].toLowerCase() == x[i] ? x[i] : "-"+x[i];
 			}
-			
+
 			x = x.join("").toLowerCase().replace(/\-+/g, "-");
 			x = x.replace(/^\-+/g, "").replace(/\-+$/g, "");
 
@@ -1245,7 +1271,7 @@ var wd = (function() {
 		}
 	});
 
-	Object.defineProperty(WDtext.prototype, "csv", {
+	Object.defineProperty(WDtext.prototype, "csv", { /*CSV para matriz*/
 		enumerable: true,
 		get: function() {
 			return WDbox.csv(this.toString());
@@ -1259,7 +1285,7 @@ var wd = (function() {
 		}
 	});
 
-	Object.defineProperty(WDtext.prototype, "format", {	/*atributos múltiplos*/
+	Object.defineProperty(WDtext.prototype, "format", { /*aplica atributos múltiplos*/
 		enumerable: true,
 		value: function() {
 			var save = this._value.toString();
@@ -1292,7 +1318,8 @@ var wd = (function() {
 		get: function() {
 			var value = new String(this.toString());
 
-			if ("normalize" in value) return value.normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+			if ("normalize" in value)
+				return value.normalize('NFD').replace(/[\u0300-\u036f]/g, "");
 
 			var clear = {
 				A: /[À-Å]/g, C: /[Ç]/g,   E: /[È-Ë]/g, I: /[Ì-Ï]/g,
@@ -1851,7 +1878,7 @@ var wd = (function() {
 		toString: {
 			value: function() {
 				return this.format("%Y-%M-%D");
-			}		
+			}
 		},
 		valueOf: {
 			value: function() {
@@ -1869,7 +1896,7 @@ var wd = (function() {
 
 	Object.defineProperties(WDarray, {
 		cell: {
-			value: function(matrix, cell) {/*obter lista de valores da matrix a partir de endereços de celulas (linha:coluna)*/
+			value: function(matrix, cell) {/*obtem lista de valores da matriz a partir de endereços de celulas (linha:coluna)*/
 				cell = new String(cell).trim().split(":");
 				if (cell.length < 2) cell.push("");
 
@@ -1917,21 +1944,19 @@ var wd = (function() {
 				return list;
 			}
 		},
-		setArray: {/*define listas (até 2) com valores numéricos*/
+		setArray: {/*define listas (até 2) com valores numéricos somente*/
 			value: function(list1, list2) {
-				var loop = list1.length;
-				if (list2 !== undefined && list2.length < loop) loop = list2.length;
+				if (list2 === undefined) list2 = list1;
+				var loop = list1.length >= list2.length ? list1.length : list2.length;
 				var array1 = [];
-				var array2 = list2 === undefined ? null : [];
+				var array2 = [];
 				for (var i = 0; i < loop; i++) {
 					var check1 = WDtype(list1[i]);
-					var check2 = array2 === null ? null : WDtype(list2[i]);
 					if (check1.type !== "number" || !WDbox.finite(check1.value)) continue;
-					if (array2 !== null) {
-						if (check2.type !== "number" || !WDbox.finite(check2.value)) continue;
-						array2.push(check2.value);
-					}
+					var check2 = WDtype(list2[i]);
+					if (check2.type !== "number" || !WDbox.finite(check2.value)) continue;
 					array1.push(check1.value);
+					array2.push(check2.value);
 				}
 				if (array1.length === 0) return {array1: null, array2: null};
 				return {array1: array1, array2: array2};
@@ -2134,7 +2159,7 @@ var wd = (function() {
 						var y = new WDtype(b).value;
 						return x - y >= 0 ? 1 : -1;
 					}
-					return x > y ? 1 : -1;					
+					return x > y ? 1 : -1;
 				});
 			}
 
@@ -2407,7 +2432,7 @@ var wd = (function() {
 				];
 				if (value.indexOf(this.tag(e)) >= 0)  return "value";
 				if (value.indexOf(this.type(e)) >= 0) return "value";
-				return null;	
+				return null;
 			}
 		},
 		load: {/*retona o atributo para carregar outro elemento interno*/
@@ -2633,7 +2658,7 @@ var wd = (function() {
 					var key = WD(i);
 					if (key.type !== "text") continue;
 					key = key.camel;
-				
+
 					if (input[i] === null) {
 						elem.dataset[key] = null;
 						delete elem.dataset[key];
@@ -2702,7 +2727,7 @@ var wd = (function() {
 				}
 				loadingProcedures();
 				return;
-			});	
+			});
 			return this;
 		}
 	});
@@ -2728,7 +2753,7 @@ var wd = (function() {
 					var check2  = WD(content);
 					if (check2.type === "text") content = check2.format("clear");
 
-					var target = WD(child[i]);					
+					var target = WD(child[i]);
 
 					if (check1.type === "regexp" && search.test(content)) {
 						target.nav("show");
@@ -2774,7 +2799,7 @@ var wd = (function() {
 					if (val === null) return elem.setAttribute(attr, "");
 					if (val !== null) return elem.removeAttribute(attr);
 				}
-				return elem.setAttribute(attr, value);				
+				return elem.setAttribute(attr, value);
 			});
 			return this;
 		}
@@ -2858,7 +2883,7 @@ var wd = (function() {
 				var lines = size <= 0 ? book.length : WDbox.int(size < 1 ? size*book.length : size);
 				var pages = WDbox.int(book.length/lines);
 				var print = [];
-				
+
 				for (var i = 0; i < book.length; i++) {
 					var p = WDbox.int(i/lines);
 					if (print[p] === undefined) print.push([]);
@@ -2867,7 +2892,7 @@ var wd = (function() {
 				WD(book).nav("hide");
 				var show = WD(print).item(page);
 				if (show === undefined) show = page < 0 ? print[0] : print[pages];
-				
+
 				for (var i = 0; i < show.length; i++) WD(show[i]).nav("show");
 				return;
 			});
@@ -3271,9 +3296,9 @@ var wd = (function() {
 						if (i === 0 || i === this.lines) {
 							if (p === "h") pos = i === 0 ? "ne" : "se";
 							else           pos = i === 0 ? "nw" : "ne";
-							
+
 						}
-						
+
 						this.setLabel(/*text, x, y, color, point, vertical*/
 							this.setLabelValue(text),
 							aux[p].x1 + (p === "h" ? -1 : 0),
@@ -3297,7 +3322,7 @@ var wd = (function() {
 				var yaxis = this.measures.t + (this.measures.h)/2;
 				this.setLabel("Eixo X", xaxis, 99.9, null, "s", false);
 				this.setLabel("Eixo Y", 0.1, yaxis, null, "n", true);
-				
+
 
 
 
@@ -3333,7 +3358,7 @@ var wd = (function() {
 			this.setMeasures(); /*define as medidas do gráfico*/
 			this.setScale();    /*define a relação entre as escalas reais e gráficas*/
 			this.setArea();     /*define a área do gráfico*/
-			
+
 			for (var i = 0; i < this.data.length; i++) {
 				for (var j = 0; j < this.data[i].y.length; j++) {
 					if (this.data[i].line) {
@@ -3767,7 +3792,7 @@ var wd = (function() {
 
 		var value = info[operation].value === null ? "NULL" : info[operation].value;
 		var delta = info[operation].deviation === null ? "NULL" : info[operation].deviation;
-		
+
 		e.textContent = deviation ? value+" ± "+delta : value;
 		return;
 	};
@@ -3921,7 +3946,7 @@ var wd = (function() {
 			{target: "[data-wd-shared=evernote]",
 				value: "background-image: url('https://www.evernote.com/favicon.ico?v2');"},
 		];
-		var style = document.createElement("STYLE");			
+		var style = document.createElement("STYLE");
 		for(var i = 0; i < styles.length; i++)
 			style.textContent += styles[i].target+" {"+styles[i].value+"}\n"
 		document.head.appendChild(style);
