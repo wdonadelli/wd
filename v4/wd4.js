@@ -2030,6 +2030,17 @@ var wd = (function() {
 				return data;
 			}
 		},
+		finite: {
+			value: function(input) {
+				var data = {list: [], items: 0};
+				for (var i = 0; i < input.length;i++) {
+					var check = WDtype(input[i]);
+					data.list.push(WDbox.finite(input[i]) ? check.value : null);
+					data.items += WDbox.finite(input[i]) ? 1 : 0;
+				}
+				return array;
+			}
+		}
 	});
 
 	WDarray.prototype = Object.create(WDmain.prototype, {
@@ -2204,9 +2215,15 @@ var wd = (function() {
 				return data.array1;
 			}
 		},
+
+
+
 		sum: {/*retorna a soma*/
 			enumerable: true,
 			get: function() {
+				
+
+
 				var num = this.numeric;
 				return num === null ? null : WDarray.sum(this.numeric, 1);
 			}
@@ -2267,7 +2284,7 @@ var wd = (function() {
 
 
 
-
+//FIXME parei aqui para refazer essas bagaças
 
 
 	Object.defineProperty(WDarray.prototype, "regression", {/*regressão linear*/
