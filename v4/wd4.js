@@ -357,7 +357,10 @@ var wd = (function() {
 	}});
 
 	Object.defineProperty(WDtype.prototype, "isNumber", {get: function() {
-		if (typeof this._input === "number" || this._input instanceof Number) {
+		if (
+			(typeof this._input === "number" || this._input instanceof Number) &&
+			!isNaN(this._input)
+		) {
 			this._type  = "number";
 			this._value = this._input.valueOf();
 			return true;
@@ -365,13 +368,13 @@ var wd = (function() {
 
 		if (!this.isString) return false;
 		if ((/Infinity$/).test(this._input)) return false;
-
-		if (this._input == Number(this._input)) {
+		/*número em forma de texto (padrão)*/
+		if (this._input == Number(this._input)) {console.log("AQUI")
 			this._type  = "number";
 			this._value = Number(this._input).valueOf();
 			return true;
 		}
-
+		/*fatorial*/
 		if ((/^[0-9]+\!$/).test(this._input)) {
 			var number = Number(this._input.replace("!", "")).valueOf();
 			var value  = 1;
@@ -383,7 +386,7 @@ var wd = (function() {
 			this._value = value;
 			return true;
 		}
-
+		/*porcentagem*/
 		if ((/^[\+\-]?([0-9]+|\.[0-9]+|[0-9]+\.[0-9]+)\%$/).test(this._input)) {
 			var number  = Number(this._input.replace("%", "")).valueOf();
 			this._type  = "number";
@@ -1056,33 +1059,6 @@ var wd = (function() {
 
 	WDfunction.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDfunction}
-	});
-
-	Object.defineProperty(WDfunction.prototype, "data", {/*apresenta um conjuto de dados (x,y) a partir de uma função*/
-		enumerable: true,
-		value: function(min, max, delta) {
-			if (!WDbox.finite(min) || !WDbox.finite(max) || !WDbox.finite(delta))
-				return null;
-			min   = new Number(min).valueOf();
-			max   = new Number(max).valueOf();
-			delta = new Number(delta).valueOf();
-			if (min >= max || delta <= 0) return null;
-
-			var data  = {x: [], y: []};
-			while (delta > 0) {
-				if (min >= max) {
-					min = max;
-					delta = 0;
-				}
-				var val = this._value(min);
-				if (WDbox.finite(min)) {
-					data.x.push(min);
-					data.y.push(val);
-				}
-				min += delta;
-			}
-			return data;
-		}
 	});
 
 /*============================================================================*/
