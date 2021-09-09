@@ -1,19 +1,13 @@
 var WD = wd;
 
-function WDdataSet(x) {
-	if (!(this instanceof WDdataSet)) return new WDdataSet(x);
-	if (WD(x).type !== "array") x = [];
-	var val = this.CHECKFINITE(x)
-	Object.defineProperties(this, {
-		x: {value: val}, /*array com conteúdo não finitos anulados*/
-		a: {value: WD(val).del(null)}, /*array somente com números finitos*/
-	});
+function WDdataSet() {
+	if (!(this instanceof WDdataSet)) return new WDdataSet();
 }
 
 Object.defineProperty(WDdataSet.prototype, "constructor", {value: WDdataSet});
 
 Object.defineProperties(WDdataSet.prototype, {
-	CHECKFINITE: {
+	SET_FINITE: {
 		value: function(x) {
 			var data = [];
 			for (var i = 0; i < x.length; i++) {
@@ -61,13 +55,13 @@ Object.defineProperties(WDdataSet.prototype, {
 			return value;
 		}
 	},
-	STDDEV: {/*Calcula o desvio padrão*/
+	STD_DEV: {/*Calcula o desvio padrão*/
 		value: function(list, ref) {
 			var data = this.DEVIATION(list, ref, 2);
 			return data ===  null ? data : Math.sqrt(data/list.length);
 		}
 	},
-	LEASTSQUARES: {/*Método dos mínimos quadrados*/
+	LEAST_SQUARES: {/*Método dos mínimos quadrados*/
 		value: function(x, y) {
 			var X  = this.SUM(x, 1);
 			var Y  = this.SUM(y, 1);
@@ -93,7 +87,7 @@ Object.defineProperties(WDdataSet.prototype, {
 			return lists;
 		}
 	},
-	SETY: {/*define uma lista a partir da aplicação de uma função sobre os valores de outra lista*/
+	SET_Y: {/*define uma lista a partir da aplicação de uma função sobre os valores de outra lista*/
 		value: function(x, f) {
 			var data = [];
 			for (var i = 0; i < x.length; i++) data.push(f(x[i]));
@@ -106,174 +100,197 @@ Object.defineProperties(WDdataSet.prototype, {
 
 
 
+/*----------------------------------------------------------------------------*/
 
+function WDstatistics(a) {
+	if (!(this instanceof WDstatistics)) return new WDstatistics(a);
+	WDdataSet.call(this);
+	if (WD(a).type !== "array") a = [];
+	var val = WD(this.SET_FINITE(a)).del(null);
+	Object.defineProperties(this, {
+		a: {value: val},
+		l: {value: val.length}
+	});
+}
 
+WDstatistics.prototype = Object.create(WDdataSet.prototype, {
+		constructor: {value: WDstatistics}
+});
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Object.defineProperties(WDdataSet.prototype, {
+Object.defineProperties(WDstatistics.prototype, {/*-- Estatística --*/
 	sum: {/*soma*/
 		get: function() {
-			if (this.a.length === 0) return null;
-			var data = {value: this.SUM(this.a, 1)};
-			data.delta = this.STDDEV(this.a, data.value);
-			return data;
+			if (this.l === 0) return null;
+			var val  = this.SUM(this.a, 1)
+			var diff = this.STD_DEV(this.a, val);
+			return {value: val, delta: diff};
 		}
 	},
 	min: {/*menor valor*/
 		get: function() {
 			if (this.a.length === 0) return null;
-			var data = {value: WD(this.a).sort()[0]};
-			data.delta = this.STDDEV(this.a, data.value);
-			return data;
+			var val  = WD(this.a).sort()[0];
+			var diff = this.STD_DEV(this.a, val);
+			return {value: val, delta: diff};
 		}
 	},
 	max: {/*maior valor*/
 		get: function() {
-			if (this.a.length === 0) return null;
-			var data = {value: WD(this.a).sort().reverse()[0]};
-			data.delta = this.STDDEV(this.a, data.value);
-			return data;
+			if (this.l === 0) return null;
+			var val  = WD(this.a).sort().reverse()[0];
+			var diff = this.STD_DEV(this.a, val);
+			return {value: val, delta: diff};
 		}
 	},
 	average: {/*média*/
 		get: function() {
-			if (this.a.length === 0) return null;
-			var data = {value: this.sum.value/this.a.length};
-			data.delta = this.STDDEV(this.a, data.value);
-			return data;
+			if (this.l === 0) return null;
+			var val  = this.sum.value/this.l;
+			var diff = this.STD_DEV(this.a, val);
+			return {value: val, delta: diff};
 		}
 	},
 	median: {/*mediana*/
 		get: function() {
-			if (this.a.length === 0) return null;
+			if (this.l === 0) return null;
 			var a = WD(this.a).sort();
-			var l = a.length;
-			var data = {value: (l % 2 === 0) ? (a[l/2]+a[(l/2)-1])/2 : a[(l-1)/2]};
-			data.delta = this.STDDEV(this.a, data.value);
-			return data;
+			var l = this.l;
+			var val  = (l % 2 === 0) ? (a[l/2]+a[(l/2)-1])/2 : a[(l-1)/2];
+			var diff = this.STD_DEV(this.a, val);
+			return {value: val, delta: diff};
 		}
 	},
 	geometric: {/*média geométrica*/
 		get: function() {
-			if (this.a.length === 0) return null;
-			var v = this.PRODUCT(this.a, 1);
-			var l = this.a.length;
-			var data = {value: v === null ? null : Math.pow(Math.abs(v), 1/l)};
-			data.delta = v === null ? null : this.STDDEV(this.a, data.value);
-			return data;
+			if (this.l === 0) return null;
+			var val  = Math.pow(Math.abs(this.PRODUCT(this.a, 1)), 1/this.l);
+			var diff = this.STD_DEV(this.a, val);
+			return {value: val, delta: diff}
 		}
 	},
 	harmonic: {/*média harmônica*/
 		get: function() {
-			if (this.a.length === 0) return null;
-			var v = this.SUM(this.a, -1);
-			var l = this.a.length;
-			var data = {value: v === null ? null : l/v};
-			data.delta = v === null ? null : this.STDDEV(this.a, data.value);
-			return data;
+			if (this.l === 0) return null;
+			var harm = this.SUM(this.a, -1);
+			var val  = harm === 0 || harm === null ? null : this.l/harm;
+			var diff = val === null ? null : this.STD_DEV(this.a, val);
+			return {value: val, delta: diff}
 		}
 	},
-	linearRegression: {/*regressão linear*/
-		value: function(y) {
-			/*conjunto x,y*/
-			var axes = this.ADJUST_LISTS(this.x, this.CHECKFINITE(y));
-			if (axes.length === 0) return null;
-			/*regressão*/
-			var val = this.LEASTSQUARES(axes.list1, axes.list2);
+});
+
+/*----------------------------------------------------------------------------*/
+
+function WDregression(x, y) {
+	if (!(this instanceof WDregression)) return new WDregression(x, y);
+	WDdataSet.call(this);
+	if (WD(x).type !== "array") x = [];
+	if (WD(y).type !== "array") y = [];
+	var val = this.ADJUST_LISTS(this.SET_FINITE(x), this.SET_FINITE(y));
+	Object.defineProperties(this, {
+		x: {value: val.list1},
+		y: {value: val.list2},
+		l: {value: val.length}
+	});
+}
+
+WDregression.prototype = Object.create(WDdataSet.prototype, {
+		constructor: {value: WDregression}
+});
+
+Object.defineProperties(WDregression.prototype, {/*-- Regressões --*/
+	linear: {/*regressão linear*/
+		get: function() {
+			if (this.l === 0) return null;
+			var val = this.LEAST_SQUARES(this.x, this.y);
 			if (val === null) return null;
 			var data = {
 				e: "y(x) = a.x+b",
 				a: val.a,
 				b: val.b,
-				x: axes.list1,
-				y: axes.list2,
+				f: function(x) {return this.a*x + this.b;},
 			};
-			data.f = function(x) {return data.a*x + data.b;}
-			var diff = this.ADJUST_LISTS(data.y, this.SETY(data.x, data.f));
-			data.d = this.STDDEV(diff.list1, diff.list2);
-			var cal = this.CONTINUOUS;
-			data.c = function(min, max, delta) {return cal(data.f, min, max, delta);};
 			return data;
 		}
 	},
-	exponentialRegression: {/*regressão exponencial*/
-		value: function(y) {
-			/*conjunto x,y*/
-			var axes = this.ADJUST_LISTS(this.x, this.CHECKFINITE(y));
-			if (axes.length === 0) return null;
+	exponential: {/*regressão exponencial*/
+		get: function() {
+			if (this.l === 0) return null;
 			/*pontos para a regressão (ajustando Y para equação linear)*/
-			var axes2 = this.ADJUST_LISTS(
-				axes.list1,
-				this.CHECKFINITE(this.SETY(axes.list2, Math.log))
-			);
-			if (axes2.length === 0) return null;
+			var y    = this.SET_FINITE(this.SET_Y(this.y, Math.log));
+			var axes = this.ADJUST_LISTS(this.x, y);
+			if (axes.length === 0) return null;
 			/*regressão*/
-			var val = this.LEASTSQUARES(axes2.list1, axes2.list2);
+			var val = this.LEAST_SQUARES(axes.list1, axes.list2);
 			if (val === null) return null;
 			var data = {
 				e: "y(x) = a.exp(b.x)",
 				a: Math.exp(val.b),
 				b: val.a,
-				x: axes.list1,
-				y: axes.list2,
+				f: function(x) {return this.a*Math.exp(this.b*x);}			
 			};
-			data.f = function(x) {return data.a*Math.exp(data.b*x);}			
-			var diff = this.ADJUST_LISTS(data.y, this.SETY(data.x, data.f));
-			data.d = this.STDDEV(diff.list1, diff.list2);
 			return data;
 		}
 	},
-	geometricRegression: {/*regressão geométrica*/
-		value: function(y) {
-			/*conjunto x,y*/
-			var axes = this.ADJUST_LISTS(this.x, this.CHECKFINITE(y));
+	geometric: {/*regressão geométrica*/
+		get: function() {
+			if (this.l === 0) return null;
+			/*pontos para a regressão (ajustando X/Y para equação linear)*/
+			var x = this.SET_FINITE(this.SET_Y(this.x, Math.log));
+			var y = this.SET_FINITE(this.SET_Y(this.y, Math.log));
+			var axes = this.ADJUST_LISTS(x, y);
 			if (axes.length === 0) return null;
-			/*pontos para a regressão (ajustando Y para equação linear)*/
-			var axes2 = this.ADJUST_LISTS(
-				this.CHECKFINITE(this.SETY(axes.list1, Math.log)),
-				this.CHECKFINITE(this.SETY(axes.list2, Math.log))
-			);
-			if (axes2.length === 0) return null;
 			/*regressão*/
-			var val = this.LEASTSQUARES(axes2.list1, axes2.list2);
+			var val = this.LEAST_SQUARES(axes.list1, axes.list2);
 			if (val === null) return null;
 			var data = {
 				e: "y(x) = y = a.x**b",
 				a: Math.exp(val.b),
 				b: val.a,
-				x: axes.list1,
-				y: axes.list2,
+				f: function(x) {return this.a*Math.pow(x, this.b);}
 			};
-			data.f = function(x) {return data.a*Math.pow(x, data.b);}
 
-			//FIXME tudo isso pode ficar numa fórmula só, acho
-			var diff = this.ADJUST_LISTS(data.y, this.SETY(data.x, data.f));
-			data.d = this.STDDEV(diff.list1, diff.list2);
+
+
+
+
+			/*FIXME tudo isso pode ficar numa fórmula só, acho
+			var diff = this.ADJUST_LISTS(data.y, this.SET_Y(data.x, data.f));
+			data.d = this.STD_DEV(diff.list1, diff.list2);
 			data.c = function(delta) {
 				return this.CONTINUOUS(data.f, data.x[0], data.x[data.x.length-1], delta);
 			};
 			data.i = function(delta) {
 				var val = data.c(delta);
 				return this.INTEGRAL(val.x, val.y);
-			}
+			}*/
 			return data;
 		}
 	},
+	integral: {
+		get: function() {
+			if (this.l === 0) return null;
+			var int = 0;
+			for (var i = 0; i < (this.l - 1); i++) {
+				var fi = {x: this.x[i],   y: this.y[i]};
+				var fn = {x: this.x[i+1], y: this.y[i+1]};
+				int += (fn.y + fi.y)*(fn.x - fi.x)/2;
+			}
+			return int;
+		}
+	},
+
+
+
+
+
+
+
+
+
+
+
+
 	continuous: {
 		value: function(func, delta) {
 			if (!WD(delta).finite || WD(func).type !== "function") return null;
@@ -296,21 +313,6 @@ Object.defineProperties(WDdataSet.prototype, {
 				min += delta;
 			}
 			return data;
-		}
-	},
-	integral: {
-		value: function(y) {
-			if (WD(y).type !== "array") return null;
-			var axes = this.ADJUST_LISTS(this.x, this.CHECKFINITE(y));
-			if (axes.length === 0) return null;
-			var int = 0;
-			for (var i = 0; i < (axes.length - 1); i++) {
-				var fi = {x: axes.list1[i],   y: axes.list2[i]};
-				var fn = {x: axes.list1[i+1], y: axes.list2[i+1]};
-				console.log((fn.y + fi.y)*(fn.x - fi.x)/2);
-				int += (fn.y + fi.y)*(fn.x - fi.x)/2;
-			}
-			return int;
 		}
 	},
 

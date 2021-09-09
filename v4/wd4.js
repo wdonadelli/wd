@@ -369,7 +369,7 @@ var wd = (function() {
 		if (!this.isString) return false;
 		if ((/Infinity$/).test(this._input)) return false;
 		/*número em forma de texto (padrão)*/
-		if (this._input == Number(this._input)) {console.log("AQUI")
+		if (this._input == Number(this._input)) {
 			this._type  = "number";
 			this._value = Number(this._input).valueOf();
 			return true;
