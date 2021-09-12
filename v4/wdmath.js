@@ -202,31 +202,6 @@ Object.defineProperties(WDstatistics.prototype, {/*-- Estatística --*/
 			return data;
 		}
 	},
-	ratio: {//FIXME: o que fazer com números negativos
-		value: function(y) {
-			if (this.l === 0 || WD(y).type !== "array") return null;
-			var sum = this.sum.value;
-			var val = [];
-			for (var i = 0; i < var_name.length; i++) {
-				
-			}
-			
-			
-			var sum = data === null ? null : data.sum.value
-			if (sum === null) return null;
-			var check = new WDtype(label);
-			var type  = check.type;
-			var list  = WDarray.arrayNumeric(this._value).array1;
-			var x = {};
-			console.info(list, sum, data);
-			for (var i = 0; i < list.length; i++) {
-				var name  = type === "array" && label[i] !== undefined ? new String(label[i]).toString() : "Item_"+i;
-				var value = list[i]/sum;
-				x[name] = value;
-			}
-			return x;
-		}
-	},
 });
 
 /*----------------------------------------------------------------------------*/
@@ -326,6 +301,66 @@ Object.defineProperties(WDregression.prototype, {/*-- Regressões --*/
 	},
 });
 
+/*----------------------------------------------------------------------------*/
+
+function WDcomparison(x, y) {
+	if (!(this instanceof WDcomparison)) return new WDcomparison(x, y);
+	WDdataSet.call(this);
+	if (WD(x).type !== "array") x = [];
+	if (WD(y).type !== "array") y = [];
+
+	Object.defineProperties(this, {
+		x: {value: this.SET_STRING(x)},
+		y: {value: this.SET_FINITE(y)},
+	});
+}
+
+WDcomparison.prototype = Object.create(WDdataSet.prototype, {
+		constructor: {value: WDcomparison}
+});
+
+Object.defineProperties(WDcomparison.prototype, {/*-- Comparação de dados --*/
+	SET_STRING: {
+		value: function(x) {
+			for (var i = 0; i < x.length; i++)
+				x[i] = WD(x[i]).type === "null" ? "#"+i : String(x[i]).toLowerCase().trim();
+			return x;
+		}
+	},
+	occurrences: {/*quantidade de ocorrências de cada item*/
+		get: function() {
+			if (this.x.length === 0) return null;
+			var data = {};
+			for (var i = 0; i < this.x.length; i++) {
+				if (!(this.x[i] in data)) data[this.x[i]] = 0;
+				data[this.x[i]]++;
+			}
+			return data;
+		}
+	},
+	amount: {/*quantidade de cada item (soma itens iguais)*/
+		get: function() {
+			var data = this.occurrences;
+			if (data === null || this.y.length === 0) return null;
+			for (var i in data) data[i] = 0;
+			for (var i = 0; i < this.x.length; i++) {
+				if (i >= this.y.length) break;
+				data[this.x[i]] += this.y[i] === null ? 0 : this.y[i];
+			}
+			return data;
+		}
+	},
+	ratio: {/*porcetagem da quantidade*/
+		get: function() {
+			var data = this.amount;
+			if (data === null) return null;
+			var sum = 0;
+			for (var i in data) sum += data[i];
+			for (var i in data) data[i] = data[i]/sum;
+			return data;
+		}
+	},
+});
 
 
 
@@ -350,9 +385,7 @@ Object.defineProperties(WDregression.prototype, {/*-- Regressões --*/
 
 
 
-
-
-
+/*----------------------------------------------------------------------------*/
 
 	function WDchart(box, ratio) {/*Objeto para criar gráficos*/
 		if (!(this instanceof WDchart)) return new WDchart(box);
