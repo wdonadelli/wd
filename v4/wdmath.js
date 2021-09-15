@@ -323,7 +323,7 @@ Object.defineProperties(WDcomparison.prototype, {/*-- Comparação de dados --*/
 	SET_STRING: {
 		value: function(x) {
 			for (var i = 0; i < x.length; i++)
-				x[i] = WD(x[i]).type === "null" ? "#"+i : String(x[i]).toLowerCase().trim();
+				x[i] = WD(x[i]).type === "null" ? "#" : String(x[i]).toLowerCase().trim();
 			return x;
 		}
 	},
@@ -387,111 +387,111 @@ Object.defineProperties(WDcomparison.prototype, {/*-- Comparação de dados --*/
 
 /*----------------------------------------------------------------------------*/
 
-	function WDchart(box, ratio) {/*Objeto para criar gráficos*/
+	function WDchart(box) {/*Objeto para criar gráficos*/
 		if (!(this instanceof WDchart)) return new WDchart(box);
-		Object.defineProperties(this, {
-			box:      {value: box},                                      /*elemento container*/
-			svg:      {value: this.createSVG("svg")},                    /*elemento SVG*/
-			ratio:    {value: window.screen.height/window.screen.width}, /*proporção do gráfico*/
-			scale:    {value: {x: 1, y: 1, d: 0.1}},                     /*fator de escala (x/y) e delta (menor unidade de gráfico em %)*/
-			value:    {value: {x: {min: null, max: null}, y: {min: null, max: null}}}, /*guarda os valores extremos*/
-			measures: {value: {}}, /*guarda as dimensões do gráfico*/
+		Object.defineProperties(this, {/*atributos do objeto*/
+			BOX:      {value: box},                    /*elemento container*/
+			SVG:      {value: this.CREATE_SVG("svg")}, /*elemento SVG*/
+			SCALE:    {value: {x: 1, y: 1, d: 0.1}},   /*fator de escala (x/y) e delta (menor unidade de gráfico em %)*/
+			N:        {value: 0, writable: true},      /*sequência da cor*/
+			MEASURES: {value: {}},                     /*guarda as dimensões do gráfico*/
+			ENDS:     {value: {x: {min: null, max: null}, y: {min: null, max: null}}}, /*guarda os valores extremos*/
+
 		});
 	}
 
 	Object.defineProperties(WDchart.prototype, {
 		constructor: {value: WDchart},
-		colors: {value: [ /*Sequência de corer de cada conjunto de dados*/
-			"#0000FF", "#FF0000", "#00FF00", "#663399", "#A0522D", "#D2B48C",
-			"#1E90FF", "#FF69B4", "#008080", "#800080", "#FFA500", "#DAA520"
+		RATIO: {/*proporção do gráfico*/
+			value: window.screen.height/window.screen.width
+		},
+		COLORS: {/*Cores dos gráficos*/
+			value: [ 
+				"#0000FF", "#FF0000", "#00FF00", "#663399", "#A0522D", "#D2B48C",
+				"#1E90FF", "#FF69B4", "#008080", "#800080", "#FFA500", "#DAA520"
 			]
 		},
-		color: { /*define a cor a ser usada (ciclo)*/
-			value: function(i) {
-				if (!WDbox.finite(i)) return "#000000";
-				i = WDbox.int(i, true);
-				return i < this.colors.length ? this.colors[i] : this.colors[i % this.colors.length];
+		COLOR: {/*Retorna cor a ser utilizada*/
+			value: function() {
+				var color = this.COLORS[this.N];
+				this.N = (this.N + 1) === this.N.length ? 0 : this.N + 1;
+				return color;
 			}
 		},
-		ref: {/*converte número em fração: 100 = "100%"*/
-			value: function(x) {return new String(x).toString()+"%";}
+		REF: {/*converte número em porcentagem: 100 => "100%"*/
+			value: function(x) {
+				return new String(x).toString()+"%";
+			}
 		},
-		setValue: {/*define o tamanho dos extremos e os registra em this.value*/
-			value: function(axis, value) {
-				var value = WD(value);
-				if (value.type !== "number" || value.test("infinity")) return;
-				value = value.valueOf();
-				if (this.value[axis].max === null || this.value[axis].min === null) {
-					this.value[axis].min = value;
-					this.value[axis].max = value;
-					return;
-				}
-				if (value > this.value[axis].max) this.value[axis].max = value;
-				if (value < this.value[axis].min) this.value[axis].min = value;
+		SET_ENDS: {/*registra as extremidades*/
+			value: function(axis, array) {
+				var data = WDstatistics(array);
+				var min  = data.min.value;
+				var max  = data.max.value;
+				if (this.ENDS[axis].min === null || min < this.ENDS[axis].min)
+					this.ENDS[axis].min = min;
+				if (this.ENDS[axis].max === null || max > this.ENDS[axis].max)
+					this.ENDS[axis].max = max;
 				return;
 			}
 		},
-		checkValue: {/*Verifica se os extremos estão adequados*/
-			value: function(axis) {
-				if (axis !== "x" && axis !== "y") {
-					this.checkValue("x");
-					this.checkValue("y");
-					return;
+		CHECK_ENDS: {/*Verifica se os extremos estão adequados*/
+			value: function() {
+				for (var i in this.ENDS) {
+					if (this.ENDS[i].min >= this.ENDS[i].max) return false;
+					if (this.ENDS[i].min === null || this.ENDS[i].max === null) return false;
 				}
-				if (this.value[axis].min >= this.value[axis].max) return false;
-				if (this.value[axis].min === null || this.value[axis].max === null) return false;;
 				return true;
 			}
 		},
-		createSVG: {/*cria e retorna elementos svg conforme configurações*/
-			value: function(type, attr, text, title) {
+		CREATE_SVG: {/*cria e retorna elementos svg conforme configurações*/
+			value: function(type, attr) {
 				var elem = document.createElementNS("http://www.w3.org/2000/svg", type);
-				var ref  = [ /*Esses valores devem ser definidos em porcentagem*/
+				var ref  = [ /*Valores a serem definidos em porcentagem*/
 					"x", "y", "x1", "x2", "y1", "y2", "height", "width",
 					"cx", "cy", "r", "dx", "dy"
 				];
-				if (attr !== undefined && attr !== null) {
-					for (var i in attr) {
-						if (ref.indexOf(i) >= 0 && WDbox.finite(attr[i]))
-							elem.setAttribute(i, this.ref(attr[i]));
-						else
-							elem.setAttribute(i, attr[i]);
+
+				for (var i in attr) {
+					var val = attr[i];
+					if (i === "tspan" || i === "title") {
+						var info = this.CREATE_SVG(i, {});
+						info.textContent = val;
+						elem.appendChild(info);
+					} else {
+						if (ref.indexOf(i) >= 0 && WD(val).finite) val = this.REF(val);
+						elem.setAttribute(i, val);
 					}
 				}
-				/*define um texto*/
-				if (text !== undefined && text !== null) {
-					var span = this.createSVG("tspan");
-					span.textContent = text;
-					elem.appendChild(span);
-				}
-				/*define um título (tool tip)*/
-				if (title !== undefined && title !== null) {
-					var tip = this.createSVG("title");
-					tip.textContent = title;
-					elem.appendChild(tip);
-				}
+
 				return elem;
 			}
 		},
-		setBox: {/*Define as características do container do svg*/
+		SET_BOX: {/*Define as características do container do svg*/
 			value: function() {
-				WD(this.box).set("innerHTML", "").css(null).style(null).style({
-					position: "relative", paddingTop: this.ref(100 * this.ratio)
+				WD(this.BOX).set("innerHTML", "").css(null).style(null).style({
+					position: "relative", paddingTop: this.ref(100 * this.RATIO)
 				});
 				return;
 			}
 		},
-		setSVG: {/*Define as características do SVG e adiciona ao container*/
+		SET_SVG: {/*Define as características do SVG e adiciona ao container*/
 			value: function() {
-				WD(this.svg).style({
+				WD(this.SVG).style({
 					height: "100%", width: "100%", position: "absolute",
 					top: "0", left: "0", bottom: "0", right: "0",
 					backgroundColor: "#F8F8FF", border: "1px dotted black"
 				});
-				this.box.appendChild(this.svg);
+				this.BOX.appendChild(this.svg);
 				return;
 			}
 		},
+
+
+
+
+
+
 		setLabel: {/*cria textos para exibir na tela*/
 			value: function (text, x, y, color, point, vertical) {
 				var vanchor = ["start", "middle", "end"];
@@ -510,8 +510,8 @@ Object.defineProperties(WDcomparison.prototype, {/*-- Comparação de dados --*/
 				};
 				 if (vertical === true) {
 				 	attr.transform = "rotate(270)";
-				 	attr.y = x/this.ratio;
-				 	attr.x = -this.ratio*y;
+				 	attr.y = x/this.RATIO;
+				 	attr.x = -this.RATIO*y;
 				 }
 				 var label = this.createSVG("text", attr, text);
 				 this.svg.appendChild(label);
@@ -607,9 +607,9 @@ Object.defineProperties(WDcomparison.prototype, {/*-- Comparação de dados --*/
 		setMeasures: {/*Define as medidas do gráfico (relativa, top, right, bottom, left, width, height)*/
 			value: function() {
 				this.measures.t = this.padding.t;
-				this.measures.r = this.padding.r * this.ratio;
+				this.measures.r = this.padding.r * this.RATIO;
 				this.measures.b = this.padding.b;
-				this.measures.l = this.padding.l * this.ratio;
+				this.measures.l = this.padding.l * this.RATIO;
 				this.measures.w = 100 - this.measures.l - this.measures.r;
 				this.measures.h = 100 - this.measures.t - this.measures.b;
 				return;
