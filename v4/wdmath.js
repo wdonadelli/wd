@@ -394,10 +394,11 @@ Object.defineProperties(WDcomparison.prototype, {/*-- Comparação de dados --*/
 			SVG:      {value: this.CREATE_SVG("svg")}, /*elemento SVG*/
 			SCALE:    {value: {x: 1, y: 1, d: 0.1}},   /*fator de escala (x/y) e delta (menor unidade de gráfico em %)*/
 			N:        {value: 0, writable: true},      /*sequência da cor*/
-			MEASURES: {value: {}},                     /*guarda as dimensões do gráfico*/
+			MEASURES: {value: {t: 0, r: 0, b: 0, l: 0, w: 100, h: 100}}, /*guarda as dimensões do gráfico*/
 			ENDS:     {value: {x: {min: null, max: null}, y: {min: null, max: null}}}, /*guarda os valores extremos*/
-
 		});
+		this.SET_BOX();
+		this.SET_SVG();
 	}
 
 	Object.defineProperties(WDchart.prototype, {
@@ -463,14 +464,14 @@ Object.defineProperties(WDcomparison.prototype, {/*-- Comparação de dados --*/
 						elem.setAttribute(i, val);
 					}
 				}
-
+				
 				return elem;
 			}
 		},
 		SET_BOX: {/*Define as características do container do svg*/
 			value: function() {
 				WD(this.BOX).set("innerHTML", "").css(null).style(null).style({
-					position: "relative", paddingTop: this.ref(100 * this.RATIO)
+					position: "relative", paddingTop: this.REF(100 * this.RATIO)
 				});
 				return;
 			}
@@ -482,107 +483,72 @@ Object.defineProperties(WDcomparison.prototype, {/*-- Comparação de dados --*/
 					top: "0", left: "0", bottom: "0", right: "0",
 					backgroundColor: "#F8F8FF", border: "1px dotted black"
 				});
-				this.BOX.appendChild(this.svg);
+				this.BOX.appendChild(this.SVG);
 				return;
 			}
 		},
-
-
-
-
-
-
-		setLabel: {/*cria textos para exibir na tela*/
-			value: function (text, x, y, color, point, vertical) {
+ 		POINT: {/*Desenha um ponto no gráfico: coordenadas do centro*/
+ 			value: function(cx, cy, title) {
+	 			var circle = this.CREATE_SVG("circle", {
+					cx: cx, cy: cy, r: "3px", fill: this.COLOR(), title: title
+				});
+ 				this.SVG.appendChild(circle);
+ 			}
+ 		},
+		LINE: {/*Desenha uma linha no gráfico: coordenadas inicial e final)*/
+ 			value: function(x1, y1, x2, y2, title, dash) {
+ 				var line = this.CREATE_SVG("line", {
+ 					x1: x1, y1: y1, x2: x2, y2: y2,
+ 					stroke: this.COLOR(),
+ 					"stroke-width":     dash === true ? "1px" : "2px",
+ 					"stroke-dasharray": dash === true ? "1,5" : "0",
+ 					title: title
+ 				});
+ 				this.SVG.appendChild(line);
+ 			}
+ 		},
+		LABEL: {/*cria textos para exibir na tela*/
+			value: function (x, y, text, point, vertical) {
 				var vanchor = ["start", "middle", "end"];
 				var anchor  = {n: 1, ne: 2, e: 2, se: 2, s: 1, sw: 0, w: 0, nw: 0, c: 1};
 				var vbase   = ["auto", "middle", "hanging"];
 				var base    = {n: 2, ne: 2, e: 1, se: 0, s: 0, sw: 0, w: 1, nw: 2, c: 1};
-				color       = this.color(color);
-				point       = point in base ? point : "c" ;/*padrão é ancorar pelo centro*/
+				point       = point in base ? point : "c" ;
 				var attr = {
 					x: x, y: y,
-					fill: color,
-					"text-anchor":       vanchor[anchor[point]],
+					fill: this.COLOR(),
+					"text-anchor": vanchor[anchor[point]],
 					"dominant-baseline": vbase[base[point]],
 					"font-size": "0.8em",
-					"font-family": "monospace"
+					"font-family": "monospace",
+					tspan: text
 				};
 				 if (vertical === true) {
 				 	attr.transform = "rotate(270)";
 				 	attr.y = x/this.RATIO;
 				 	attr.x = -this.RATIO*y;
 				 }
-				 var label = this.createSVG("text", attr, text);
-				 this.svg.appendChild(label);
+				 var label = this.CREATE_SVG("text", attr);
+				 this.SVG.appendChild(label);
 			}
 		},
-		setLine: {/*Desenha uma linha no gráfico: coordenadas inicial e final)*/
- 			value: function(x1, y1, x2, y2, color, title, dash) {
- 				var line = this.createSVG("line", {
- 					x1: x1, y1: y1, x2: x2, y2: y2,
- 					stroke: this.color(color),
- 					"stroke-width":     dash === true ? "1px" : "2px",
- 					"stroke-dasharray": dash === true ? "1,5" : "0"
- 				}, null, title);
- 				this.svg.appendChild(line);
- 			}
- 		},
- 		setPoint: {/*Desenha um ponto no gráfico: coordenadas do centro*/
- 			value: function(cx, cy, color, title) {
-	 			var circle = this.createSVG("circle", {
-					cx: cx, cy: cy, r: "3px", fill: this.color(color)
-				}, null, title);
- 				this.svg.appendChild(circle);
- 			}
- 		},
- 		setScale: {/*Define o valor da escala horizontal e vertical*/
+ 		SET_SCALE: {/*Define o valor da escala horizontal e vertical*/
  			value: function() {
-
  				/*escala em x*/
- 				this.scale.x = this.measures.w/(this.value.x.max - this.value.x.min);
- 				if (!this.checkValue("x")) throw "Chart Exception: X axis error";
-
-				/*transformar funções em conjunto de pontos para o eixo Y*/
- 				for (var i = 0; i < this.data.length; i++) {
-					if (!this.data[i].func) continue;
-
- 					var X    = this.value.x.min;
- 					var newY = [];
- 					var newX = [];
-					while (X < this.value.x.max) {
-						try {
-							var Y = this.data[i].y(X);
-							if (WDbox.finite(Y)) {
-								newX.push(X);
-								newY.push(Y);
-								this.setValue("y", Y);
-							}
-						} catch(e) {}
-						X += this.scale.d / this.scale.x;
-					}
-
-					/*substituindo funções por pontos e definindo o novo x*/
-					this.data[i].y = newY;
-					this.data[i].x = newX;
- 				}
-
+ 				this.SCALE.x = this.MEASURES.w/(this.ENDS.x.max - this.ENDS.x.min);
  				/*escala em y*/
- 				this.scale.y = this.measures.h/(this.value.y.max - this.value.y.min);
- 				if (!this.checkValue("y")) throw "Chart Exception: Y axis error";
-
- 				return;
+ 				this.SCALE.y = this.MEASURES.h/(this.ENDS.y.max - this.ENDS.y.min);
  			}
  		},
- 		getXY: {/*Define as coordenadas do gráfico a partir dos valores reais*/
+ 		TARGET: {/*Retorna as coordenadas relativas a partir dos valores reais*/
  			value: function(x,y) {
  				/*ajustando ao eixo*/
- 				x = x - this.value.x.min;
- 				y = y - this.value.y.min;
+ 				x = x - this.ENDS.x.min;
+ 				y = y - this.ENDS.y.min;
  				/*devolvendo o ponto*/
  				return {
- 					x: this.measures.l + (x * this.scale.x),
- 					y: 100 - (this.measures.b + y * this.scale.y)
+ 					x: this.MEASURES.l + (x * this.SCALE.x),
+ 					y: 100 - (this.MEASURES.b + y * this.SCALE.y)
  				};
  			}
  		}
@@ -590,9 +556,30 @@ Object.defineProperties(WDcomparison.prototype, {/*-- Comparação de dados --*/
 
 /*----------------------------------------------------------------------------*/
 
-	function WDchartLinear(box, ratio) {
-		if (!(this instanceof WDchartLinear)) return new WDchartLinear(box, ratio);
-		WDchart.call(this, box, ratio);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*----------------------------------------------------------------------------*/
+
+	function WDchartLinear(box) {
+		if (!(this instanceof WDchartLinear)) return new WDchartLinear(box);
+		WDchart.call(this, box);
 		this.data = []; /*guarda os dados dos pontos em {x,y,label,plotagem,função}*/
 		this.func = []; /*guarda os endereços de plotagem de função*/
 	}
@@ -739,8 +726,6 @@ Object.defineProperties(WDcomparison.prototype, {/*-- Comparação de dados --*/
 	Object.defineProperty(WDchartLinear.prototype, "plot", {
 		enumerable: true,
 		value: function(title) {/*executa a plotagem*/
-			this.setBox();      /*configura o container do gráfico*/
-			this.setSVG();      /*configura o SVG*/
 			this.setMeasures(); /*define as medidas do gráfico*/
 			this.setScale();    /*define a relação entre as escalas reais e gráficas*/
 			this.setArea();     /*define a área do gráfico*/
