@@ -485,7 +485,7 @@ Object.defineProperties(WDcomparison.prototype, {/*-- Comparação de dados --*/
  			}
  		},
 		BUILD_LABEL: {/*cria textos para exibir na tela*/
-			value: function (x, y, text, point, vertical) {
+			value: function (x, y, text, point, vertical, bold) {
 				var vanchor = ["start", "middle", "end"];
 				var anchor  = {n: 1, ne: 2, e: 2, se: 2, s: 1, sw: 0, w: 0, nw: 0, c: 1};
 				var vbase   = ["auto", "middle", "hanging"];
@@ -505,6 +505,7 @@ Object.defineProperties(WDcomparison.prototype, {/*-- Comparação de dados --*/
 				 	attr.y = x/this.RATIO;
 				 	attr.x = -this.RATIO*y;
 				 }
+				 if (bold === true) attr["font-weight"] = "bold";
 				 var label = this.BUILD_SVG("text", attr);
 				 this.SVG.appendChild(label);
 				 return label;
@@ -625,16 +626,16 @@ Object.defineProperties(WDcomparison.prototype, {/*-- Comparação de dados --*/
 						));
 					}
 				}
-				/*nome dos eixos e título*/
-				this.BUILD_LABEL(
+
+				this.BUILD_LABEL(/*nome do eixo X*/
 					this.MEASURES.l + (this.MEASURES.w)/2, 98, this.xlabel, "s", false
 				);
-				this.BUILD_LABEL(
+				this.BUILD_LABEL(/*nome do eixo Y*/
 					2, this.MEASURES.t + (this.MEASURES.h)/2, this.ylabel, "n", true
 				);
-				this.BUILD_LABEL(
+				this.BUILD_LABEL(/*Título do Gráfico*/
 					this.MEASURES.l + (this.MEASURES.w)/2, this.MEASURES.t - 2,
-					this.TITLE, "s", false
+					this.TITLE, "s", false, true
 				);
 			}
 		},
@@ -713,6 +714,7 @@ Object.defineProperties(WDcomparison.prototype, {/*-- Comparação de dados --*/
 				for (var i = 0; i < this.data.length; i++) {
 					var data   = this.data[i];
 					this.COLOR = i;
+					this.ADD_LEGEND(data.label, i);
 
 					for (var j = 0; j < data.x.length; j++) {
 						var title   = "("+data.x[j]+", "+data.y[j]+")";
@@ -732,6 +734,17 @@ Object.defineProperties(WDcomparison.prototype, {/*-- Comparação de dados --*/
 				}
 
 				return;
+			}
+		},
+		ADD_LEGEND: {
+			value: function(text,n) {
+				this.BUILD_LABEL(
+					this.MEASURES.l+this.MEASURES.w+3,
+					(n+1)*this.MEASURES.t+3,
+					text, "sw"
+				);
+	
+			
 			}
 		}
 	});
