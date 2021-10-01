@@ -295,6 +295,14 @@ Object.defineProperties(WDregression.prototype, {/*-- Regressões --*/
 			return int;
 		}
 	},
+	average: {/*calcula a média da variação*/
+		get: function() {
+			if (this.l === 0) return null;
+			var int  = this.integral;
+			var data = new WDstatistics(this.x);
+			return int / (data.max.value - data.min.value);
+		}
+	}
 });
 
 /*----------------------------------------------------------------------------*/
@@ -382,11 +390,7 @@ Object.defineProperties(WDcomparison.prototype, {/*-- Comparação de dados --*/
 			/* Registra a entrada de dados */
 			_DATA: {value: []}
 		});
-		//FIXME deixar isto para a hora de plotar
-		//this.SET_BOX();
-		//this.SET_SVG();
-		//this._COLOR = null;
-	}
+	};
 
 	Object.defineProperties(WDchart.prototype, {
 		constructor: {value: WDchart},
@@ -445,9 +449,9 @@ Object.defineProperties(WDcomparison.prototype, {/*-- Comparação de dados --*/
 		_BUILD_BOX: {/* Define as características do container do SVG */
 			value: function(input) {
 				var box = WD(input);
-				if (input.type !== "dom") return null;
+				if (box.type !== "dom") return null;
 				WD(box.item(0)).set("innerHTML", "").css(null).style(null).style({
-					position: "relative", paddingTop: this.REF(100 * this._RATIO)
+					position: "relative", paddingTop: this._CONVERT(100 * this._RATIO)
 				});
 				return box.item(0);
 			}
@@ -463,13 +467,6 @@ Object.defineProperties(WDcomparison.prototype, {/*-- Comparação de dados --*/
 					"cx", "cy", "r", "dx", "dy"
 				];
 
-				if (type === "svg") /* SVG principal apenas */
-					WD(ele).style({
-						height: "100%", width: "100%", position: "absolute",
-						top: "0", left: "0", bottom: "0", right: "0",
-						backgroundColor: "#F8F8FF", border: "1px dotted black"
-					});
-
 				for (var i in attr) {
 					var val = attr[i];
 					if (i === "tspan" || i === "title") {
@@ -482,7 +479,14 @@ Object.defineProperties(WDcomparison.prototype, {/*-- Comparação de dados --*/
 						elem.setAttribute(i, val);
 					}
 				}
-				
+
+				if (type === "svg") /* SVG principal apenas */
+					WD(elem).style({
+						height: "100%", width: "100%", position: "absolute",
+						top: "0", left: "0", bottom: "0", right: "0",
+						backgroundColor: "#F8F8FF", border: "1px dotted black"
+					});
+
 				return elem;
 			}
 		},
@@ -533,6 +537,15 @@ Object.defineProperties(WDcomparison.prototype, {/*-- Comparação de dados --*/
 				 var label = this._BUILD_SVG("text", attr);
 				 this._SVG.appendChild(label);
 				 return label;
+			}
+		},
+		_CLEAR_SVG: {/* Limpa os filhos do SVG */
+			value: function() {
+				if (this._SVG.parentElement === null)
+					this._BOX.appendChild(this._SVG);
+				var child = this._SVG.children;
+				while (child.length > 0) this._SVG.removeChild(child[0]);
+				return;
 			}
 		},
  		_SET_SCALE: {/* Define o valor da escala horizontal e vertical */
