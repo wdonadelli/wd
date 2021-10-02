@@ -4,9 +4,8 @@ function WDdataSet() {
 	if (!(this instanceof WDdataSet)) return new WDdataSet();
 }
 
-Object.defineProperty(WDdataSet.prototype, "constructor", {value: WDdataSet});
-
 Object.defineProperties(WDdataSet.prototype, {
+	constructor: {value: WDdataSet},
 	SET_FINITE: {
 		value: function(x) {
 			var data = [];
@@ -99,15 +98,15 @@ Object.defineProperties(WDdataSet.prototype, {
 
 /*----------------------------------------------------------------------------*/
 
-function WDstatistics(a) {
-	if (!(this instanceof WDstatistics)) return new WDstatistics(a);
+function WDstatistics(x) {
+	if (!(this instanceof WDstatistics)) return new WDstatistics(x);
 	WDdataSet.call(this);
-	if (WD(a).type !== "array") a = [];
-	var val = WD(this.SET_FINITE(a)).sort();
+	if (WD(x).type !== "array") x = [];
+	var val = WD(WD(this.SET_FINITE(x)).sort()).del(null);
 	Object.defineProperties(this, {
-		o: {value: val}, /*array numérico completo*/
-		a: {value: WD(val).del(null)}, /*array numérico sem nulos*/
-		l: {get: function() {return this.a.length;}}, /*comprimento array sem nulos*/
+		x: {value: val}, /*array numérico sem nulos*/
+		l: {value: val.length}, /*comprimento array sem nulos*/
+		e: {value: val.length < 1 ? true : false} /*erro*/
 	});
 }
 
@@ -118,66 +117,66 @@ WDstatistics.prototype = Object.create(WDdataSet.prototype, {
 Object.defineProperties(WDstatistics.prototype, {/*-- Estatística --*/
 	sum: {/*soma*/
 		get: function() {
-			if (this.l === 0) return null;
-			var val  = this.SUM(this.a, 1)
-			var diff = this.STD_DEV(this.a, val);
+			if (this.e) return null;
+			var val  = this.SUM(this.x, 1)
+			var diff = this.STD_DEV(this.x, val);
 			return {value: val, delta: diff};
 		}
 	},
 	min: {/*menor valor*/
 		get: function() {
-			if (this.l === 0) return null;
-			var val  = this.a[0];
-			var diff = this.STD_DEV(this.a, val);
+			if (this.e) return null;
+			var val  = this.x[0];
+			var diff = this.STD_DEV(this.x, val);
 			return {value: val, delta: diff};
 		}
 	},
 	max: {/*maior valor*/
 		get: function() {
-			if (this.l === 0) return null;
-			var val  = this.a[this.l-1];
-			var diff = this.STD_DEV(this.a, val);
+			if (this.e) return null;
+			var val  = this.x[this.l-1];
+			var diff = this.STD_DEV(this.x, val);
 			return {value: val, delta: diff};
 		}
 	},
 	average: {/*média*/
 		get: function() {
-			if (this.l === 0) return null;
+			if (this.e) return null;
 			var val  = this.sum.value/this.l;
-			var diff = this.STD_DEV(this.a, val);
+			var diff = this.STD_DEV(this.x, val);
 			return {value: val, delta: diff};
 		}
 	},
 	median: {/*mediana*/
 		get: function() {
-			if (this.l === 0) return null;
-			var a = this.a;
+			if (this.e) return null;
+			var a = this.x;
 			var l = this.l;
 			var val  = (l % 2 === 0) ? (a[l/2]+a[(l/2)-1])/2 : a[(l-1)/2];
-			var diff = this.STD_DEV(this.a, val);
+			var diff = this.STD_DEV(this.x, val);
 			return {value: val, delta: diff};
 		}
 	},
 	geometric: {/*média geométrica*/
 		get: function() {
-			if (this.l === 0) return null;
-			var val  = Math.pow(Math.abs(this.PRODUCT(this.a, 1)), 1/this.l);
-			var diff = this.STD_DEV(this.a, val);
+			if (this.e) return null;
+			var val  = Math.pow(Math.abs(this.PRODUCT(this.x, 1)), 1/this.l);
+			var diff = this.STD_DEV(this.x, val);
 			return {value: val, delta: diff}
 		}
 	},
 	harmonic: {/*média harmônica*/
 		get: function() {
-			if (this.l === 0) return null;
-			var harm = this.SUM(this.a, -1);
+			if (this.e) return null;
+			var harm = this.SUM(this.x, -1);
 			var val  = harm === 0 || harm === null ? null : this.l/harm;
-			var diff = val === null ? null : this.STD_DEV(this.a, val);
+			var diff = val === null ? null : this.STD_DEV(this.x, val);
 			return {value: val, delta: diff}
 		}
 	},
 	continuous: {
 		value: function(func, delta) {
-			if (this.l === 0) return null;
+			if (this.e) return null;
 			if (!WD(delta).finite || WD(func).type !== "function") return null;
 			delta    = WD(delta).abs;
 			var min  = this.min.value;
@@ -208,11 +207,14 @@ function WDregression(x, y) {
 	WDdataSet.call(this);
 	if (WD(x).type !== "array") x = [];
 	if (WD(y).type !== "array") y = [];
-	var val = this.ADJUST_LISTS(this.SET_FINITE(x), this.SET_FINITE(y));
+	var val  = this.ADJUST_LISTS(this.SET_FINITE(x), this.SET_FINITE(y));
+	var ends = WDstatistics(val.list1);
+	var diff = ends.e ? 0 : ends.max.value - ends.min.value;
 	Object.defineProperties(this, {
 		x: {value: val.list1},
 		y: {value: val.list2},
-		l: {value: val.length}
+		l: {value: val.length},
+		e: {value: (val.length < 2 || diff === 0) ? true : false}
 	});
 }
 
@@ -229,7 +231,7 @@ Object.defineProperties(WDregression.prototype, {/*-- Regressões --*/
 	},
 	linear: {/*regressão linear*/
 		get: function() {
-			if (this.l === 0) return null;
+			if (this.e) return null;
 			var val = this.LEAST_SQUARES(this.x, this.y);
 			if (val === null) return null;
 			var data = {
@@ -244,7 +246,7 @@ Object.defineProperties(WDregression.prototype, {/*-- Regressões --*/
 	},
 	exponential: {/*regressão exponencial*/
 		get: function() {
-			if (this.l === 0) return null;
+			if (this.e) return null;
 			/*pontos para a regressão (ajustando Y para equação linear)*/
 			var y    = this.SET_FINITE(this.SET_Y(this.y, Math.log));
 			var axes = this.ADJUST_LISTS(this.x, y);
@@ -264,7 +266,7 @@ Object.defineProperties(WDregression.prototype, {/*-- Regressões --*/
 	},
 	geometric: {/*regressão geométrica*/
 		get: function() {
-			if (this.l === 0) return null;
+			if (this.e) return null;
 			/*pontos para a regressão (ajustando X/Y para equação linear)*/
 			var x = this.SET_FINITE(this.SET_Y(this.x, Math.log));
 			var y = this.SET_FINITE(this.SET_Y(this.y, Math.log));
@@ -285,7 +287,7 @@ Object.defineProperties(WDregression.prototype, {/*-- Regressões --*/
 	},
 	integral: {
 		get: function() {
-			if (this.l === 0) return null;
+			if (this.e) return null;
 			var int = 0;
 			for (var i = 0; i < (this.l - 1); i++) {
 				var fi = {x: this.x[i],   y: this.y[i]};
@@ -297,7 +299,7 @@ Object.defineProperties(WDregression.prototype, {/*-- Regressões --*/
 	},
 	average: {/*calcula a média da variação*/
 		get: function() {
-			if (this.l === 0) return null;
+			if (this.e) return null;
 			var int  = this.integral;
 			var data = new WDstatistics(this.x);
 			return int / (data.max.value - data.min.value);
@@ -312,10 +314,13 @@ function WDcomparison(x, y) {
 	WDdataSet.call(this);
 	if (WD(x).type !== "array") x = [];
 	if (WD(y).type !== "array") y = [];
+	x = this.SET_STRING(x);
+	y = this.SET_FINITE(y);
 
 	Object.defineProperties(this, {
-		x: {value: this.SET_STRING(x)},
-		y: {value: this.SET_FINITE(y)},
+		x: {value: x},
+		y: {value: y},
+		e: {value: (y.length < 1 || x.length < 1 ? true : false)}
 	});
 }
 
@@ -333,7 +338,7 @@ Object.defineProperties(WDcomparison.prototype, {/*-- Comparação de dados --*/
 	},
 	occurrences: {/*quantidade de ocorrências de cada item*/
 		get: function() {
-			if (this.x.length === 0) return null;
+			if (this.e) return null;
 			var data = {};
 			for (var i = 0; i < this.x.length; i++) {
 				if (!(this.x[i] in data)) data[this.x[i]] = 0;
@@ -344,8 +349,8 @@ Object.defineProperties(WDcomparison.prototype, {/*-- Comparação de dados --*/
 	},
 	amount: {/*quantidade de cada item (soma itens iguais)*/
 		get: function() {
+			if (this.e) return null;
 			var data = this.occurrences;
-			if (data === null || this.y.length === 0) return null;
 			for (var i in data) data[i] = 0;
 			for (var i = 0; i < this.x.length; i++) {
 				if (i >= this.y.length) break;
@@ -356,8 +361,8 @@ Object.defineProperties(WDcomparison.prototype, {/*-- Comparação de dados --*/
 	},
 	ratio: {/*porcetagem da quantidade*/
 		get: function() {
+			if (this.e) return null;
 			var data = this.amount;
-			if (data === null) return null;
 			var sum = 0;
 			for (var i in data) sum += data[i];
 			for (var i in data) data[i] = data[i]/sum;
@@ -697,7 +702,79 @@ Object.defineProperties(WDcomparison.prototype, {/*-- Comparação de dados --*/
 			}
 		},
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+		_GET_DATA: {
+			value: function(x, y, label) { /* Obtém as propriedades dados de entrada */
+				var data = {};
+				Object.defineProperties(data, {
+					regression: {value: WDregression(x, y)},
+					statistics: {value: WDstatistics(x)},
+					comparison: {value: WDcomparison(x, y)},
+					label:      {value: String(label).trim()},
+					func:       {value: WD(y).type === "function" ? y : null},
+					plan:       {get: function() {
+						if (!this.regression.e) return true;
+						if (this.func !== null && !this.statistics.e) return true;
+						return false;
+					}},
+					ratio: {get: function() {
+						return !this.comparison.e ? true : false;
+					}}
+				});
+				if (data.plan || data.ratio) return data;
+				return null;
+			}
+		},
+		_GET_ENDS: {/* Obtém os limites de x, y*/
+			value: function(object, array) {
+				if (!("min" in object)) object = {min: Infinity, max: -Infinity};
+				var ends = WDstatistics(array);
+				if (ends.min.value < object.min) object.min = ends.min.value;
+				if (ends.max.value > object.max) object.max = ends.max.value;
+				return object;
+			}
+		},
 
+		_PLOT_PLAN: {
+			value: function (type, xlabel, ylabel) {
+			/* Obtendo dados de plotagem e limites preliminares */
+			var data  = [];
+			var xEnds = {};
+			var yEnds = {};
+			for (var i = 0; i < this._DATA.length; i++) {
+				if (!this._DATA[i].plan) continue;
+				var info = this._DATA[i];
+				var item = {
+					line:  type === "line" ? type : "dots",
+					label: info.label,
+					func:  info.func,
+				};
+				if (data.func === null) {
+					item.x = info.regression.x;
+					item.y = info.regression.x;
+					xEnds = _GET_ENDS(xEnds, item.x);
+					yEnds = _GET_ENDS(yEnds, item.y);
+				} else {
+					item.x = [info.statistics.min.value, info.statistics.max.value];
+					item.y = [];
+					xEnds = _GET_ENDS(xEnds, item.x);
+				}
+				data.push(item);
+			}
+			if (data.length === 0) return null;
+			console.log(data);
+			
+		
+
+
+
+
+
+
+
+
+			}
+		},
 
 
 
@@ -708,31 +785,44 @@ Object.defineProperties(WDcomparison.prototype, {/*-- Comparação de dados --*/
 			enumerable: true,
 			value: function(x, y, label) {/* Adiciona conjunto de dados para plotagem */
 				if (this._SVG === null) return null;
-				if (WD(x).type !== "array") return null;
-				if (WD(y).type !== "array" && WD(y).type !== "function") return null;
-				var func = WD(y).type === "function" ? true : false;
-
-				if (func) {
-					var data = WDstatistics(x);
-					x = data.a;
-				} else {
-					var data = WDregression(x, y);
-					x = data.x;
-					y = data.y;
-				}
-
-				if (data.l < 2) return null;
-				this.SET_ENDS("x", x);
-				if (!func) this.SET_ENDS("y", y);
-
-				this.data.push({y: y, x: x, label: label,	line: line, func: func});
-
-				return;
+				var data = this._GET_DATA(x, y, label);
+				if (data === null) return null;
+				this._DATA.push(data);
+				return this._DATA.length-1;
  			}
+		},
+		del: {
+			enumerable: true,
+			value: function(i) {
+				if (i%1 !== 0 || i < 0 || i >= this._DATA.length) return null;
+				this._DATA[i] = null;
+				return true;
+			}
 		},
 		plot: {
 			enumerable: true,
-			value: function() {/*executa a plotagem*/
+			value: function(type, xlabel, ylabel) {/*executa a plotagem*/
+				var types = {
+					line:        this._PLOT_PLAN,
+					dots:        this._PLOT_PLAN,
+					exponential: this._PLOT_PLAN,
+					geometric:   this._PLOT_PLAN,
+					linear:      this._PLOT_PLAN,
+					integral:    this._PLOT_PLAN,
+					average:     this._PLOT_PLAN,
+					//circular:    this._PLOT_CIRCULAR,
+					//bars:        this._PLOT_BARS,
+				};
+				if (type in types) return types[type](type, xlabel, ylabel);
+				return null;
+
+
+
+
+
+
+
+/*
 				if (this.SET_PLAN_CHART() === null) return null;
 
 				for (var i = 0; i < this.data.length; i++) {
@@ -756,8 +846,7 @@ Object.defineProperties(WDcomparison.prototype, {/*-- Comparação de dados --*/
 						}
 					}
 				}
-
-				return;
+*/
 			}
 		},
 	});
