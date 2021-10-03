@@ -386,10 +386,10 @@ Object.defineProperties(WDcomparison.prototype, {/*-- Comparação de dados --*/
 			_NCOLOR: {value: 0, writable: true},
 			/* Dimensões do gráfico (top, right, bottom, left, width, height) */
 			_MEASURES: {value: {t: 0, r: 0, b: 0, l: 0, w: 100, h: 100}},
-			/* Registra os valores máximos e mínimos dos eixos FIXME: criar função? */
-			_ENDS: {value: {x: {min: null, max: null}, y: {min: null, max: null}}},
+			/* Registra os valores máximos e mínimos dos eixos */
+			_ENDS: {value: {x: {min: Infinity, max: -Infinity}, y: {min: Infinity, max: -Infinity}}},
 			/* Margens internas do gráfico FIXME: definir 0 como valor inicial */
-			_PADDING: {value: {t: 6, r: 30, b: 10, l: 30}},
+			_PADDING: {value: {t: 0, r: 0, b: 0, l: 0}},
 			/* Registra o título do gráfico */
 			_TITLE: {value: title === undefined ? "" : title},
 			/* Registra a entrada de dados */
@@ -426,10 +426,8 @@ Object.defineProperties(WDcomparison.prototype, {/*-- Comparação de dados --*/
 				var data = WDstatistics(array);
 				var min  = data.min.value;
 				var max  = data.max.value;
-				if (this._ENDS[axes].min === null || min < this._ENDS[axes].min)
-					this._ENDS[axes].min = min;
-				if (this._ENDS[axes].max === null || max > this._ENDS[axes].max)
-					this._ENDS[axes].max = max;
+				if (min < this._ENDS[axes].min) this._ENDS[axes].min = min;
+				if (max > this._ENDS[axes].max) this._ENDS[axes].max = max;
 				return;
 			}
 		},
@@ -674,97 +672,83 @@ Object.defineProperties(WDcomparison.prototype, {/*-- Comparação de dados --*/
 				return;
 			}
 		},
-		SET_PLAN_CHART: {/*organiza os dados das funções e define escalas e eixos*/
-			value: function() {
-				if (this.data.length === 0 || !this.CHECK_ENDS("x")) return null;
-
-				/*definindo a escala em x*/
-				this.SET_SCALE("x");
-
-				/*trabalhando com funções para definir escala em y*/
-				var delta  = this.SCALE.d / this.SCALE.x;
-				var object = new WDstatistics([this.ENDS.x.min, this.ENDS.x.max]);
-
-				for (var i = 0; i < this.data.length; i++) {
-					if (!this.data[i].func) continue;
-					var value = object.continuous(this.data[i].y, delta);
-					this.data[i].x = value.x;
-					this.data[i].y = value.y;
-					this.SET_ENDS("y", value.y);
-					this.SET_ENDS("x", value.x);
-				}
-				
-				/*definindo escala em y e definindo valores dos eixos*/
-				if (!this.CHECK_ENDS("y")) return null;
-				this.SET_SCALE("y");
-				this.SET_SCALE("x");
-				this.SET_AXES();
-			}
-		},
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-		_GET_DATA: {
-			value: function(x, y, label) { /* Obtém as propriedades dados de entrada */
-				var data = {};
-				Object.defineProperties(data, {
-					regression: {value: WDregression(x, y)},
-					statistics: {value: WDstatistics(x)},
-					comparison: {value: WDcomparison(x, y)},
-					label:      {value: String(label).trim()},
-					func:       {value: WD(y).type === "function" ? y : null},
-					plan:       {get: function() {
-						if (!this.regression.e) return true;
-						if (this.func !== null && !this.statistics.e) return true;
-						return false;
-					}},
-					ratio: {get: function() {
-						return !this.comparison.e ? true : false;
-					}}
-				});
-				if (data.plan || data.ratio) return data;
-				return null;
-			}
-		},
-		_GET_ENDS: {/* Obtém os limites de x, y*/
-			value: function(object, array) {
-				if (!("min" in object)) object = {min: Infinity, max: -Infinity};
-				var ends = WDstatistics(array);
-				if (ends.min.value < object.min) object.min = ends.min.value;
-				if (ends.max.value > object.max) object.max = ends.max.value;
-				return object;
-			}
-		},
-
 		_PLOT_PLAN: {
 			value: function (type, xlabel, ylabel) {
-			/* Obtendo dados de plotagem e limites preliminares */
-			var data  = [];
-			var xEnds = {};
-			var yEnds = {};
-			for (var i = 0; i < this._DATA.length; i++) {
-				if (!this._DATA[i].plan) continue;
-				var info = this._DATA[i];
-				var item = {
-					line:  type === "line" ? type : "dots",
-					label: info.label,
-					func:  info.func,
-				};
-				if (data.func === null) {
-					item.x = info.regression.x;
-					item.y = info.regression.x;
-					xEnds = _GET_ENDS(xEnds, item.x);
-					yEnds = _GET_ENDS(yEnds, item.y);
-				} else {
-					item.x = [info.statistics.min.value, info.statistics.max.value];
-					item.y = [];
-					xEnds = _GET_ENDS(xEnds, item.x);
+				/* Definindo Padding e medidas do gráfico */
+				var padd = {t: 6, r: 30, b: 10, l: 30};
+				for (var i in padd) this._PADDING[i] = padd[i];
+				this._SET_MEASURES();
+
+				/* Obtendo valores básicos */
+				var data  = [];
+				for (var i = 0; i < this._DATA.length; i++) {
+					var info = this._DATA[i];
+					var func = WD(info.y).type === "function" ? info.y : null;
+
+					if (func === null) {
+						var c = WDregression(info.x, info.y);
+						if (c.e) continue;
+						var item = {x: c.x, y: c.y};
+					} else {
+						var c = WDstatistics(info.x);
+						if (c.e || c.min.value === c.max.value) continue;
+						var item = {x: [c.min.value, c.max.value], y: []};
+					}
+
+					this._SET_ENDS("x", item.x);
+					if (func === null) this._SET_ENDS("y", item.y);
+					item.l = info.label;
+					item.f = func;
+					info.t = type === "line" ? "line" : "dots";
+					data.push(item);
 				}
-				data.push(item);
-			}
-			if (data.length === 0) return null;
-			console.log(data);
-			
-		
+				if (data.length === 0) return null;
+
+				/* Definindo questões adicionais */
+				var additional = ["geometric", "linear", "exponential", "average"];
+				if (additional.indexOf(type) >= 0) {
+					for (var i = 0; i < data.length; i++) {
+						if (data[i].f !== null) continue;
+						var obj = WDregression(data[i].x, data[i].y);
+						var val = obj[type];
+						if (val === null) continue;
+						if (type === "average")
+							var label = "average: "+val;
+						else
+							var label = val.replace(
+								"a", this._LABEL_VALUE(val.a)
+							).replace(
+								"b", this._LABEL_VALUE(val.b)
+							);
+						data.push({
+							x: data[i].x,
+							y: [], t: "line", l: label, 
+							f: type === "average" ? function(x) {return val;} : val.f,
+						});
+					}
+				}
+
+				/* Definindo escalas e definindo valores de funções */
+				this._SET_SCALE("x");
+				var delta = this._SCALE.d / this._SCALE.x;
+				for (var i = 0; i < data.length; i++) {
+					if (data[i].f === null) continue;
+					data[i].t = "line";
+					var obj = WDstatistics(data[i].x);
+					var val = obj.continuous(data[i].f, delta);
+					console.log(obj)
+					data[i].x = val.x;
+					data[i].y = val.y;
+					this._SET_ENDS("y", (type === "average" ? val.y : val.y));
+				}
+				this._SET_SCALE("y");
+
+				/* Desenhando plano do Gráfico */
+				this._CLEAR_SVG();
+				console.log(data)
+				//this._SET_AXES();
 
 
 
@@ -785,35 +769,25 @@ Object.defineProperties(WDcomparison.prototype, {/*-- Comparação de dados --*/
 			enumerable: true,
 			value: function(x, y, label) {/* Adiciona conjunto de dados para plotagem */
 				if (this._SVG === null) return null;
-				var data = this._GET_DATA(x, y, label);
-				if (data === null) return null;
-				this._DATA.push(data);
+				this._DATA.push({x: x, y: y, label: label});
 				return this._DATA.length-1;
  			}
-		},
-		del: {
-			enumerable: true,
-			value: function(i) {
-				if (i%1 !== 0 || i < 0 || i >= this._DATA.length) return null;
-				this._DATA[i] = null;
-				return true;
-			}
 		},
 		plot: {
 			enumerable: true,
 			value: function(type, xlabel, ylabel) {/*executa a plotagem*/
 				var types = {
-					line:        this._PLOT_PLAN,
-					dots:        this._PLOT_PLAN,
-					exponential: this._PLOT_PLAN,
-					geometric:   this._PLOT_PLAN,
-					linear:      this._PLOT_PLAN,
-					integral:    this._PLOT_PLAN,
-					average:     this._PLOT_PLAN,
-					//circular:    this._PLOT_CIRCULAR,
-					//bars:        this._PLOT_BARS,
+					line:        "_PLOT_PLAN",
+					dots:        "_PLOT_PLAN",
+					exponential: "_PLOT_PLAN",
+					geometric:   "_PLOT_PLAN",
+					linear:      "_PLOT_PLAN",
+					integral:    "_PLOT_PLAN",
+					average:     "_PLOT_PLAN",
+					//circular:   "_PLOT_CIRCULAR",
+					//bars:       "_PLOT_BARS",
 				};
-				if (type in types) return types[type](type, xlabel, ylabel);
+				if (type in types) return this[types[type]](type, xlabel, ylabel);
 				return null;
 
 
