@@ -174,30 +174,6 @@ Object.defineProperties(WDstatistics.prototype, {/*-- Estatística --*/
 			return {value: val, delta: diff}
 		}
 	},
-	continuous: {
-		value: function(func, delta) {
-			if (this.e) return null;
-			if (!WD(delta).finite || WD(func).type !== "function") return null;
-			delta    = WD(delta).abs;
-			var min  = this.min.value;
-			var max  = this.max.value;
-			var data = {x: [], y: []};
-
-			while (delta > 0) {
-				if (min >= max) {
-					min   = max;
-					delta = 0;
-				}
-				var val = func(min);
-				if (WD(val).finite) {
-					data.x.push(min);
-					data.y.push(val);
-				}
-				min += delta;
-			}
-			return data;
-		}
-	},
 });
 
 /*----------------------------------------------------------------------------*/
@@ -205,14 +181,17 @@ Object.defineProperties(WDstatistics.prototype, {/*-- Estatística --*/
 function WDregression(x, y) {
 	if (!(this instanceof WDregression)) return new WDregression(x, y);
 	WDdataSet.call(this);
+	var f = WD(y).type === "function" ? y : null;
 	if (WD(x).type !== "array") x = [];
 	if (WD(y).type !== "array") y = [];
+	if (f !== null) for (var i = 0; i < x.length; i++) y.push(f(x[i]));
 	var val  = this.ADJUST_LISTS(this.SET_FINITE(x), this.SET_FINITE(y));
 	var ends = WDstatistics(val.list1);
 	var diff = ends.e ? 0 : ends.max.value - ends.min.value;
 	Object.defineProperties(this, {
 		x: {value: val.list1},
 		y: {value: val.list2},
+		f: {value: f},
 		l: {value: val.length},
 		e: {value: (val.length < 2 || diff === 0) ? true : false}
 	});
@@ -235,7 +214,7 @@ Object.defineProperties(WDregression.prototype, {/*-- Regressões --*/
 			var val = this.LEAST_SQUARES(this.x, this.y);
 			if (val === null) return null;
 			var data = {
-				e: "y(x) = a.x+b",
+				e: "y = ax+b",
 				a: val.a,
 				b: val.b,
 			};
@@ -255,7 +234,7 @@ Object.defineProperties(WDregression.prototype, {/*-- Regressões --*/
 			var val = this.LEAST_SQUARES(axes.list1, axes.list2);
 			if (val === null) return null;
 			var data = {
-				e: "y(x) = a.exp(b.x)",
+				e: "y = a.exp(bx)",
 				a: Math.exp(val.b),
 				b: val.a,
 			};
@@ -276,7 +255,7 @@ Object.defineProperties(WDregression.prototype, {/*-- Regressões --*/
 			var val = this.LEAST_SQUARES(axes.list1, axes.list2);
 			if (val === null) return null;
 			var data = {
-				e: "y(x) = y = a.x**b",
+				e: "y = a.x**b",
 				a: Math.exp(val.b),
 				b: val.a,
 			};
@@ -285,7 +264,7 @@ Object.defineProperties(WDregression.prototype, {/*-- Regressões --*/
 			return data;
 		}
 	},
-	integral: {
+	sum: {
 		get: function() {
 			if (this.e) return null;
 			var int = 0;
@@ -294,17 +273,66 @@ Object.defineProperties(WDregression.prototype, {/*-- Regressões --*/
 				var fn = {x: this.x[i+1], y: this.y[i+1]};
 				int += (fn.y + fi.y)*(fn.x - fi.x)/2;
 			}
-			return int;
+			var data = {
+				e: "\u03A3y\u0394x \u2248 "+int,
+				a: 0,
+				b: int,
+			};
+			data.f = function(x) {return data.b;},
+			data.d = null;
+			return data;
 		}
 	},
 	average: {/*calcula a média da variação*/
 		get: function() {
 			if (this.e) return null;
-			var int  = this.integral;
-			var data = new WDstatistics(this.x);
-			return int / (data.max.value - data.min.value);
+			var int  = this.sum.b;
+			var end = new WDstatistics(this.x);
+			var avg = int / (end.max.value - end.min.value);
+			var data = {
+				e: "(\u03A3y\u0394x)/\u0394x \u2248 "+avg,
+				a: 0,
+				b: avg,
+			};
+			data.f = function(x) {return data.b;},
+			data.d = this.REG_DEV(data.f);
+			return data;
 		}
-	}
+	},
+	continuous: {
+		value: function(delta, method) {
+			if (this.e) return null;
+			if (!WD(delta).finite) return null;
+			var methods = ["linear", "exponential", "geometric", "sum", "average"];
+			var func = this.f;
+			if (methods.indexOf(method) >= 0) {
+				var obj = this[method];
+				func = obj === null ? null : obj.f;
+			}
+			if (func === null) return null;
+
+			delta    = WD(delta).abs;
+			var end  = WDstatistics(this.x);
+			var min  = end.min.value;
+			var max  = end.max.value;
+			var data = {x: [], y: []};
+
+			while (delta > 0) {
+				if (min >= max) {
+					min   = max;
+					delta = 0;
+				}
+				var val = func(min);
+				if (WD(val).finite) {
+					data.x.push(min);
+					data.y.push(val);
+				}
+				min += delta;
+			}
+			return data;
+		}
+	},
+
 });
 
 /*----------------------------------------------------------------------------*/
@@ -782,7 +810,7 @@ Object.defineProperties(WDcomparison.prototype, {/*-- Comparação de dados --*/
 					exponential: "_PLOT_PLAN",
 					geometric:   "_PLOT_PLAN",
 					linear:      "_PLOT_PLAN",
-					integral:    "_PLOT_PLAN",
+					sum:    "_PLOT_PLAN",
 					average:     "_PLOT_PLAN",
 					//circular:   "_PLOT_CIRCULAR",
 					//bars:       "_PLOT_BARS",
