@@ -215,7 +215,7 @@ Object.defineProperties(WDregression.prototype, {/*-- Regressões --*/
 			var val = this.LEAST_SQUARES(this.x, this.y);
 			if (val === null) return null;
 			var data = {
-				e: "y = ax+b",
+				e: "y = ax+(b)",
 				a: val.a,
 				b: val.b,
 			};
@@ -235,7 +235,7 @@ Object.defineProperties(WDregression.prototype, {/*-- Regressões --*/
 			var val = this.LEAST_SQUARES(axes.list1, axes.list2);
 			if (val === null) return null;
 			var data = {
-				e: "a.e^bx",
+				e: "y = a\u212F^bx",
 				a: Math.exp(val.b),
 				b: val.a,
 			};
@@ -256,7 +256,7 @@ Object.defineProperties(WDregression.prototype, {/*-- Regressões --*/
 			var val = this.LEAST_SQUARES(axes.list1, axes.list2);
 			if (val === null) return null;
 			var data = {
-				e: "a.x^b",
+				e: "y = ax^b",
 				a: Math.exp(val.b),
 				b: val.a,
 			};
@@ -275,7 +275,7 @@ Object.defineProperties(WDregression.prototype, {/*-- Regressões --*/
 				int += (fn.y + fi.y)*(fn.x - fi.x)/2;
 			}
 			var data = {
-				e: "\u03A3y\u0394x \u2248 "+int,
+				e: "\u03A3y\u0394x \u2248 b",
 				a: 0,
 				b: int,
 			};
@@ -418,7 +418,7 @@ Object.defineProperties(WDcomparison.prototype, {/*-- Comparação de dados --*/
 			/* Elemento SVG a ser plotado os dados */
 			_SVG: {value: this._BUILD_SVG("svg")},
 			/* Escala do gráfico (x/y) e menor unidade gráfica (100 = 100%) */
-			_SCALE: {value: {x: 1, y: 1, d: 1}},
+			_SCALE: {value: {x: 1, y: 1, d: 0.1}},
 			/* Guarda a cor da plotagem */
 			_NCOLOR: {value: 0, writable: true},
 			/* Dimensões do gráfico (top, right, bottom, left, width, height) */
@@ -430,7 +430,8 @@ Object.defineProperties(WDcomparison.prototype, {/*-- Comparação de dados --*/
 			/* Registra o título do gráfico */
 			_TITLE: {value: title === undefined ? "" : title},
 			/* Registra a entrada de dados */
-			_DATA: {value: []}
+			_DATA: {value: []},
+			_LEGEND: {value: {text: 0, func: 0}}
 		});
 	};
 
@@ -546,8 +547,11 @@ Object.defineProperties(WDcomparison.prototype, {/*-- Comparação de dados --*/
 		_BUILD_RECT: {/* Desenha uma retângulo: coordenadas inicial e final */
  			value: function(x1, y1, x2, y2, title) {
  				var rect = this._BUILD_SVG("rect", {
- 					x: x1, y: y1, width: x2-x1, height: y2-y1,
- 					fill: this._COLOR, title: title
+ 					x:      x2 > x1 ? x1 : x2,
+ 					y:      y2 > y1 ? y1 : y2,
+ 					width:  x2 > x1 ? x2-x1 : x1-x2,
+ 					height: y2 > y1 ? y2-y1 : y1-y2,
+ 					fill:   this._COLOR, title: title
  				});
  				this._SVG.appendChild(rect);
  				return rect;
@@ -582,6 +586,8 @@ Object.defineProperties(WDcomparison.prototype, {/*-- Comparação de dados --*/
 		},
 		_CLEAR_SVG: {/* Limpa os filhos do SVG */
 			value: function() {
+				this._LEGEND.text = 0;
+				this._LEGEND.func = 0;
 				if (this._SVG.parentElement === null)
 					this._BOX.appendChild(this._SVG);
 				var child = this._SVG.children;
@@ -607,10 +613,13 @@ Object.defineProperties(WDcomparison.prototype, {/*-- Comparação de dados --*/
  				};
  			}
  		},
-		_ADD_LEGEND: { /* Adiciona Legendas */
-			value: function(text, n) {
+		_ADD_LEGEND: { /* Adiciona Legendas (texto e funções)*/
+			value: function(text, func) {
 				var ref = this._MEASURES;
-				this._BUILD_LABEL(ref.l+ref.w+1, (n+1)*ref.t, "\u25CF "+text, "nw");
+				var n = ++this._LEGEND[(func ? "func" : "text")];
+				var x = func ? ref.l : ref.l+ref.w;
+				var y = n*ref.t;
+				this._BUILD_LABEL(x+1, y+1, (func ? "" : "\u25CF ")+text, "nw");
 			}
 		},
  		_LABEL_VALUE: {/* Define a exibição de valores numéricos */
@@ -695,20 +704,20 @@ Object.defineProperties(WDcomparison.prototype, {/*-- Comparação de dados --*/
 			enumerable: true,
 			value: function(xlabel, ylabel) {/*desenha gráfico plano*/
 				/* Definindo Padding e medidas do gráfico */
-				var padd = {t: 6, r: 30, b: 10, l: 30};
+				var padd = {t: 6, r: 20, b: 10, l: 30};
 				for (var i in padd) this._PADDING[i] = padd[i];
 				this._SET_MEASURES();
 
 				/* Obtendo valores básicos */
 				var types = {
-					average:     {draw1: "dots", draw2: "line"},
-					exponential: {draw1: "dots", draw2: "line"},
-					linear:      {draw1: "dots", draw2: "line"},
-					geometric:   {draw1: "dots", draw2: "line"},
-					sum:         {draw1: "line", draw2: "cols"},
-					line:        {draw1: "line", draw2: null},
-					dots:        {draw1: "dots", draw2: null},
-					function:    {draw1: null,   draw2: "line"},
+					average:     {draw1: "dots", draw2: "line", reg: true},
+					exponential: {draw1: "dots", draw2: "line", reg: true},
+					linear:      {draw1: "dots", draw2: "line", reg: true},
+					geometric:   {draw1: "dots", draw2: "line", reg: true},
+					sum:         {draw1: "line", draw2: "cols", reg: true},
+					line:        {draw1: "line", draw2: null,   reg: false},
+					dots:        {draw1: "dots", draw2: null,   reg: false},
+					function:    {draw1: null,   draw2: "line", reg: false},
 				};
 				var data = [];
 
@@ -724,6 +733,7 @@ Object.defineProperties(WDcomparison.prototype, {/*-- Comparação de dados --*/
 						l: item.l,  /*label*/
 						t: item.t,  /*type*/
 						d: types[item.t].draw1, /*tipo de linha a desenhar*/
+						r: false, /*exibir fórmula ?*/
 					};
 					this._SET_ENDS("x", obj.x);
 					this._SET_ENDS("y", obj.y);
@@ -732,9 +742,9 @@ Object.defineProperties(WDcomparison.prototype, {/*-- Comparação de dados --*/
 				var items = data.length;
 				if (items === 0) return null;
 
-				/* Definindo funções */
+				/* Definindo o array de funções */
 				this._SET_SCALE("x");
-				var delta = this._MEASURES.w*this._SCALE.d;
+				var delta = this._MEASURES.w*this._SCALE.d; /*FIXME para que isso?*/
 				
 				for (var i = 0; i < items; i++) {
 					var item = data[i];
@@ -747,11 +757,13 @@ Object.defineProperties(WDcomparison.prototype, {/*-- Comparação de dados --*/
 						x: value.x,
 						y: value.y,
 						d: types[data[i].t].draw2,
-						l: item.l
+						l: item.l,
+						t: item.type,
+						r: types[item.t].reg
 					};
 					if (item.t in item.o) {
-						var a = this._LABEL_VALUE(value.o.a);
-						var b = (value.o.b < 0 ? "" : "+") + this._LABEL_VALUE(value.o.b);
+						var a = value.o.a;//this._LABEL_VALUE(value.o.a);
+						var b = value.o.b;//(value.o.b < 0 ? "" : "+") + this._LABEL_VALUE(value.o.b);
 						obj.l = value.o.e.replace(/a\.?/, a).replace(/\+?b/, b);
 					}
 					data.push(obj);
@@ -761,28 +773,63 @@ Object.defineProperties(WDcomparison.prototype, {/*-- Comparação de dados --*/
 
 				/* Área de plotagem */
 				this._AREA_PLAN(4, xlabel, ylabel);
-				var id = 0;
+				var id = 0; /*define a cor*/
 
 				for (var i = 0; i < data.length; i++) {
 					var item = data[i];
 					if (item.d === null) continue;
-					this._COLOR = id;
-					this._ADD_LEGEND(item.l, id);
-					id++;
+					this._COLOR = id++;
+					this._ADD_LEGEND(item.l, item.r);
 
 					for (var j = 0; j < item.x.length; j++) {
 						var title = "("+item.x[j]+","+item.y[j]+")";
 						var trg1  = this._TARGET(item.x[j], item.y[j]);
 						var trg2  = this._TARGET(item.x[j+1], item.y[j+1]);
+						var zero  = this._TARGET(item.x[j], 0);
+						if (0 < this._ENDS.y.min) zero  = this._TARGET(item.x[j], this._ENDS.y.min);
+						if (0 > this._ENDS.y.max) zero  = this._TARGET(item.x[j], this._ENDS.y.max);
 
 						if (item.d === "dots")
 							this._BUILD_DOTS(trg1.x, trg1.y, item.l, title);
 						else if (item.d === "line" && trg2 !== null)
 							this._BUILD_LINE(trg1.x, trg1.y, trg2.x, trg2.y, title);
 						else if (item.d === "cols" && trg2 !== null)
-							this._BUILD_RECT(trg1.x, 5, trg2.x, trg2.y, title);
+							this._BUILD_RECT(trg1.x, (trg2.y+trg1.y)/2, trg2.x, zero.y, title);
 					}
 				}
 			}
 		},
 	});
+
+
+
+/*tem que colocar num click ou outro evento ou então numa função*/
+function notifyMe() {
+  // Let's check if the browser supports notifications
+  if (!("Notification" in window)) {
+    alert("This browser does not support desktop notification");
+  }
+
+  // Let's check whether notification permissions have already been granted
+  else if (Notification.permission === "granted") {
+    // If it's okay let's create a notification
+    var notification = new Notification("Hi there!", {body: "willian donadelli", icon: "https://duckduckgo.com/assets/icons/thirdparty/twitter.svg"});
+  }
+
+  // Otherwise, we need to ask the user for permission
+  else if (Notification.permission !== "denied") {
+    Notification.requestPermission().then(function (permission) {
+      // If the user accepts, let's create a notification
+      if (permission === "granted") {
+        var notification = new Notification("Hi there!");
+      }
+    });
+  }
+
+  // At last, if the user has denied notifications, and you
+  // want to be respectful there is no need to bother them any more.
+}
+
+
+function soco() {notifyMe()}
+
