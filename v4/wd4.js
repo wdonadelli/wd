@@ -793,38 +793,41 @@ var wd = (function() {
 	WDsignal.opened = false; /*container aberto?*/
 	WDsignal.styled = false; /*container estilizado?*/
 
-	WDsignal.cbase  = {position: "fixed", top:   "0", margin: "auto", zIndex: "999999"};
-	WDsignal.cmicro = {left:   "initial", right: "0", width:  "33%", textAlign: "left"};
-	WDsignal.csmall = {right:  "initial", left:  "0", width: "100%", textAlign: "center"};
+	WDsignal.cbase  = {position: "fixed", top: "0", right: "0", margin: "auto", zIndex: "999999"};
+	WDsignal.cmicro = {left: "initial", width:  "33%"};
+	WDsignal.cphone = {left: "0",       width: "100%"};
 
-	WDsignal.msg = function(type, message) {
+	WDsignal.msg = function(title, message) {
 		var parent = this;
 
 		/*Elementos da mensagem*/
 		var box = {
-			div:  document.createElement("DIV"),
-			head: document.createElement("HEADER"),
-			btn:  document.createElement("SPAN"),
-			msg:  document.createElement("SECTION")
+			div: document.createElement("DIV"),
+			hdr: document.createElement("HEADER"),
+			btn: document.createElement("SPAN"),
+			ttl: document.createElement("SPAN"),
+			msg: document.createElement("SECTION")
 		};
 
 		/*Montagem*/
-		box.div.appendChild(box.head);
+		box.div.appendChild(box.hdr);
 		box.div.appendChild(box.msg);
-		box.head.appendChild(box.btn);
+		box.div.appendChild(box.btn);
+		box.hdr.appendChild(box.ttl);
 
 		/*Estilos*/
 		var style = {
 			div: {
-				border: "1px solid rgba(0,0,0,0.6)", borderRadius: "0.2em", margin: "0.5em",
-				backgroundColor: "#FFFFFF", boxShadow: "1px 1px 6px rgba(0,0,0,0.6)", opacity: 1
+				margin: "0.5em", position: "relative", padding: "0",
+				border: "1px solid rgba(0, 0, 0, 0.6)", borderRadius: "0.2em",
+				boxShadow: "1px 1px 6px rgba(0, 0, 0, 0.6)",
+				backgroundColor: "rgba(255, 255, 255, 0.8)"
 			},
-			head: {
-				padding: "0.1em", borderTopLeftRadius: "inherit", borderTopRightRadius: "inherit",
-				backgroundColor: "rgba(0,128,255,0.6)", textAlign: "right"
-			},
-			btn:  {marginRight: "0.5em", cursor: "pointer"},
-			msg:  {padding: "0.5em", borderRadius: "inherit"}
+			ttl: {fontWeight: "bold"},
+			hdr: {padding: "0.5em", borderRadius: "inherit inherit 0 0"},
+			msg: {padding: "0.5em", borderRadius: "0 0 inherit inherit"},
+			btn: {cursor: "pointer", position: "absolute", top: "0.5em", right: "0.5em", lineHeight: "1"},
+
 		};
 		box.div.className = "js-wd-signal";
 
@@ -833,15 +836,9 @@ var wd = (function() {
 				box[b].style[s] = style[b][s];
 
 		/*textos*/
-		var types = {
-			warn:  "rgba(222, 168, 33, 0.6)",
-			error: "rgba(236, 19, 19, 0.6)",
-			ok:    "rgba(0, 153, 0, 0.6)",
-			doubt: "rgba(128, 64, 191, 0.6)",
-		};
-		box.btn.textContent  = "\u2716";
-		box.msg.innerHTML    = message;
-		if (type in types) box.head.style.backgroundColor = types[type];
+		box.btn.textContent = "\u00D7";
+		box.msg.innerHTML   = message;
+		box.ttl.textContent = title === undefined ? "\u2139" : title;
 
 		/*Disparadores*/
 		box.btn.onclick = function() {
@@ -851,7 +848,7 @@ var wd = (function() {
 		}
 
 		window.setTimeout(function() {
-			try{
+			try {
 				box.div.remove();
 				parent.close();
 			} catch(e) {}
@@ -870,7 +867,7 @@ var wd = (function() {
 			this.styled = true;
 		}
 
-		var style = WDbox.device() === "desktop" ? this.cmicro : this.csmall;
+		var style = WDbox.device() === "desktop" ? this.cmicro : this.cphone;
 		for (var i in style) this.window.style[i] = style[i];
 
 		if (!this.opened) document.body.appendChild(this.window);
@@ -988,8 +985,27 @@ var wd = (function() {
 
 	Object.defineProperty(WDmain.prototype, "signal", {/*renderizar mensagem*/
 		enumerable: true,
-		value: function(type) {
-			WDsignal.msg(type, this.toString());
+		value: function(title) {
+			WDsignal.msg(title, this.toString());
+			return this.type === "dom" ? this : null;
+		}
+	});
+
+	Object.defineProperty(WDmain.prototype, "notify", {/*renderizar notificação*/
+		enumerable: true,
+		value: function(title) {
+			if (!("Notification" in window))
+				return this.signal(title);
+			if (Notification.permission === "denied")
+				return this.type === "dom" ? this : null;
+			var content = this.toString();
+			if (Notification.permission === "granted")
+				new Notification(title, {body: content});
+			else
+				Notification.requestPermission().then(function(x) {
+					if (x === "granted")
+						new Notification(title, {body: content});
+				});
 			return this.type === "dom" ? this : null;
 		}
 	});
@@ -3102,17 +3118,6 @@ var wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 
-	function data_wdSignal(e) {/*Mensagem input: data-wd-signal=message*/
-		if (!("wdSignal" in e.dataset)) return;
-		if (!WDdom.form(e)) return;
-		WD(e.dataset.wdSignal).signal("info");//FIXME meio inútil
-		return;
-	};
-
-
-
-/*----------------------------------------------------------------------------*/
-
 	function data_wdTable(e) {/*Mensagem input: data-wd-table=data{sum+}cell{}${table}digits{n}*/
 		if (!("wdTable" in e.dataset)) return;
 		var data   = WDdom.dataset(e, "wdTable")[0];
@@ -3212,22 +3217,6 @@ var wd = (function() {
 		WD(e).css({add: "js-wd-nav"});//FIXME colocar o que para mencionar que o link é o clicado? data, css, outroa atributo?
 		return;
 	};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /*============================================================================*/
 /* -- DISPARADORES -- */
@@ -3401,7 +3390,6 @@ var wd = (function() {
 			case "wdClick":   data_wdClick(e);     break;
 			case "wdDevice":  data_wdDevice(e);    break;
 			case "wdSlide":   data_wdSlide(e);     break;
-			case "wdSignal":  data_wdSignal(e);    break;
 			case "wdFile":    data_wdFile(e);      break;
 			case "wdTable":   data_wdTable(e);     break;
 		};
@@ -3453,12 +3441,6 @@ var wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 
-	function focusinProcedures(ev) {/*procedimentos para entrada de formulários*/
-		return data_wdSignal(ev.target);
-	};
-
-/*----------------------------------------------------------------------------*/
-
 	function changeProcedures(ev) {/*procedimentos para outras mudanças*/
 		return data_wdFile(ev.target);
 	};
@@ -3476,11 +3458,8 @@ var wd = (function() {
 		keyup:    keyboardProcedures,
 		input:    inputProcedures,
 		change:   changeProcedures,
-		focusin:  focusinProcedures,
 		focusout: focusoutProcedures,
 	});
 
-
 	return WD;
-
 }());

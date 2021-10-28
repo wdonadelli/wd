@@ -299,7 +299,7 @@ Object.defineProperties(WDregression.prototype, {/*-- Regressões --*/
 			var end = new WDstatistics(this.x);
 			var avg = int / (end.max.value - end.min.value);
 			var data = {
-				e: "(\u03A3y\u0394x)/\u0394x \u2248 "+avg,
+				e: "(\u03A3y\u0394x)/\u0394x \u2248 b",
 				a: 0,
 				b: avg,
 			};
@@ -346,26 +346,28 @@ Object.defineProperties(WDregression.prototype, {/*-- Regressões --*/
 
 /*----------------------------------------------------------------------------*/
 
-function WDcomparison(x, y) {
-	if (!(this instanceof WDcomparison)) return new WDcomparison(x, y);
+function WDcompare(x, y) {
+	if (!(this instanceof WDcompare)) return new WDcompare(x, y);
 	WDdataSet.call(this);
 	if (WD(x).type !== "array") x = [];
 	if (WD(y).type !== "array") y = [];
 	x = this.SET_STRING(x);
 	y = this.SET_FINITE(y);
+	var lenX = WD(x).del(null).length;
+	var lenY = WD(y).del(null).length;
 
 	Object.defineProperties(this, {
 		x: {value: x},
 		y: {value: y},
-		e: {value: (y.length < 1 || x.length < 1 ? true : false)}
+		e: {value: (lenY < 1 || lenX < 1 || lenY !== lenX  ? true : false)}
 	});
 }
 
-WDcomparison.prototype = Object.create(WDdataSet.prototype, {
-		constructor: {value: WDcomparison}
+WDcompare.prototype = Object.create(WDdataSet.prototype, {
+		constructor: {value: WDcompare}
 });
 
-Object.defineProperties(WDcomparison.prototype, {/*-- Comparação de dados --*/
+Object.defineProperties(WDcompare.prototype, {/*-- Comparação de dados --*/
 	SET_STRING: {
 		value: function(x) {
 			for (var i = 0; i < x.length; i++)
@@ -396,7 +398,7 @@ Object.defineProperties(WDcomparison.prototype, {/*-- Comparação de dados --*/
 			return data;
 		}
 	},
-	ratio: {/*porcetagem da quantidade*/
+	ratio: {/*porcentagem da quantidade*/
 		get: function() {
 			if (this.e) return null;
 			var data = this.amount;
@@ -616,9 +618,9 @@ Object.defineProperties(WDcomparison.prototype, {/*-- Comparação de dados --*/
 		_ADD_LEGEND: { /* Adiciona Legendas (texto e funções)*/
 			value: function(text, func) {
 				var ref = this._MEASURES;
-				var n = ++this._LEGEND[(func ? "func" : "text")];
+				var n = this._LEGEND[(func ? "func" : "text")]++;
 				var x = func ? ref.l : ref.l+ref.w;
-				var y = n*ref.t;
+				var y = 4*n+ref.t;
 				this._BUILD_LABEL(x+1, y+1, (func ? "" : "\u25CF ")+text, "nw");
 			}
 		},
@@ -704,7 +706,7 @@ Object.defineProperties(WDcomparison.prototype, {/*-- Comparação de dados --*/
 			enumerable: true,
 			value: function(xlabel, ylabel) {/*desenha gráfico plano*/
 				/* Definindo Padding e medidas do gráfico */
-				var padd = {t: 6, r: 20, b: 10, l: 30};
+				var padd = {t: 6, r: 30, b: 10, l: 30};
 				for (var i in padd) this._PADDING[i] = padd[i];
 				this._SET_MEASURES();
 
@@ -762,9 +764,9 @@ Object.defineProperties(WDcomparison.prototype, {/*-- Comparação de dados --*/
 						r: types[item.t].reg
 					};
 					if (item.t in item.o) {
-						var a = value.o.a;//this._LABEL_VALUE(value.o.a);
-						var b = value.o.b;//(value.o.b < 0 ? "" : "+") + this._LABEL_VALUE(value.o.b);
-						obj.l = value.o.e.replace(/a\.?/, a).replace(/\+?b/, b);
+						var a = value.o.a;
+						var b = value.o.b;
+						obj.l = value.o.e.replace("a", a).replace("b", b);
 					}
 					data.push(obj);
 					this._SET_ENDS("x", value.x);
@@ -799,37 +801,85 @@ Object.defineProperties(WDcomparison.prototype, {/*-- Comparação de dados --*/
 				}
 			}
 		},
+
+
+
+
+
+
+
+
+
+
+		compare: {
+			enumerable: true,
+			value: function(label) {/*desenha gráfico comparativo de colunas*/
+				/* Definindo Padding e medidas do gráfico */
+				var padd = {t: 6, r: 30, b: 10, l: 10};
+				for (var i in padd) this._PADDING[i] = padd[i];
+				this._SET_MEASURES();
+
+				/* Obtendo valores básicos */
+				var data = {x: [], y: []};
+
+				for (var i = 0; i < this._DATA.length; i++) {
+					var item = this._DATA[i];
+					if (item.t !== "compare") continue;
+					var check = WDcompare(item.x, item.y);
+					if (check.e) continue;
+					for (var i = 0; i < check.x.length; i++) {
+						data.x.push[check.x];
+						data.y.push[check.y];
+					}
+				}
+				if (data.x.length === 0) return null;
+
+				/* Definindo dados finais */
+				var final = WDcompare(data.x, data.y);
+
+				this._SET_ENDS("x", value.x);
+				this._SET_ENDS("y", value.y);
+
+				/* Área de plotagem */
+				this._AREA_PLAN(4, xlabel, ylabel);
+				var id = 0; /*define a cor*/
+
+				for (var i = 0; i < data.length; i++) {
+					var item = data[i];
+					if (item.d === null) continue;
+					this._COLOR = id++;
+					this._ADD_LEGEND(item.l, item.r);
+
+					for (var j = 0; j < item.x.length; j++) {
+						var title = "("+item.x[j]+","+item.y[j]+")";
+						var trg1  = this._TARGET(item.x[j], item.y[j]);
+						var trg2  = this._TARGET(item.x[j+1], item.y[j+1]);
+						var zero  = this._TARGET(item.x[j], 0);
+						if (0 < this._ENDS.y.min) zero  = this._TARGET(item.x[j], this._ENDS.y.min);
+						if (0 > this._ENDS.y.max) zero  = this._TARGET(item.x[j], this._ENDS.y.max);
+
+						if (item.d === "dots")
+							this._BUILD_DOTS(trg1.x, trg1.y, item.l, title);
+						else if (item.d === "line" && trg2 !== null)
+							this._BUILD_LINE(trg1.x, trg1.y, trg2.x, trg2.y, title);
+						else if (item.d === "cols" && trg2 !== null)
+							this._BUILD_RECT(trg1.x, (trg2.y+trg1.y)/2, trg2.x, zero.y, title);
+					}
+				}
+			}
+		},
+
+
+
+
+
+
+
+
+
+
+
+
+
 	});
-
-
-
-/*tem que colocar num click ou outro evento ou então numa função*/
-function notifyMe() {
-  // Let's check if the browser supports notifications
-  if (!("Notification" in window)) {
-    alert("This browser does not support desktop notification");
-  }
-
-  // Let's check whether notification permissions have already been granted
-  else if (Notification.permission === "granted") {
-    // If it's okay let's create a notification
-    var notification = new Notification("Hi there!", {body: "willian donadelli", icon: "https://duckduckgo.com/assets/icons/thirdparty/twitter.svg"});
-  }
-
-  // Otherwise, we need to ask the user for permission
-  else if (Notification.permission !== "denied") {
-    Notification.requestPermission().then(function (permission) {
-      // If the user accepts, let's create a notification
-      if (permission === "granted") {
-        var notification = new Notification("Hi there!");
-      }
-    });
-  }
-
-  // At last, if the user has denied notifications, and you
-  // want to be respectful there is no need to bother them any more.
-}
-
-
-function soco() {notifyMe()}
 
