@@ -682,16 +682,48 @@ Object.defineProperties(WDcompare.prototype, {/*-- Comparação de dados --*/
 					);
 				}
 				this._BUILD_LABEL(/* Eixo X */
-					ref.l + ref.w/2, 99, xl, "s", false
+					ref.l + ref.w/2, 100-ref.b/3, xl, "c", false
 				);
 				this._BUILD_LABEL(/* Eixo Y */
-					1, ref.t + ref.h/2, yl, "n", true
+					ref.l/4, ref.t + ref.h/2, yl, "c", true
 				);
 				this._BUILD_LABEL(/* Título */
-					ref.l + (ref.w)/2, ref.t - 1,	this._TITLE, "s", false, true
+					ref.l + (ref.w)/2, ref.t/2,	this._TITLE, "c", false, true
 				);
 			}
 		},
+		_AREA_COMPARE: {
+			value: function(lines, xl, yl) {
+				this._COLOR = -1;
+				this._CLEAR_SVG();
+				this._SET_SCALE("y");
+				this._SET_SCALE("x");
+				var ref = this._MEASURES;
+				var end = this._ENDS;
+				this._BUILD_LABEL(/* Título */
+					ref.l/2, ref.t + (ref.h)/2, this._TITLE, "c", true, true
+				);
+				var zero = this._TARGET(0,0);
+				this._BUILD_LINE(/* Eixo 0 */
+					ref.l,         zero.y,
+					ref.l + ref.w, zero.y,
+					"", false
+				);
+				for (var i = 0; i < (lines+1); i++) {
+					this._BUILD_LINE(/* Eixo Horizontal */
+						ref.l,         ref.t + i * (ref.h / lines),
+						ref.l + ref.w, ref.t + i * (ref.h / lines),
+						"", true
+					);
+					this._BUILD_LINE(/* Eixo Vertical */
+						ref.l + i * (ref.w / lines), ref.t,
+						ref.l + i * (ref.w / lines), ref.t + ref.h,
+						"", true
+					);
+				}
+			}
+		},
+
 
 /* -- Funções acessíveis ---------------------------------------------------- */
 		add: {
@@ -780,7 +812,8 @@ Object.defineProperties(WDcompare.prototype, {/*-- Comparação de dados --*/
 				for (var i = 0; i < data.length; i++) {
 					var item = data[i];
 					if (item.d === null) continue;
-					this._COLOR = id++;
+					this._COLOR = 2*id+1;
+					id++;
 					this._ADD_LEGEND(item.l, item.r);
 
 					for (var j = 0; j < item.x.length; j++) {
@@ -815,7 +848,7 @@ Object.defineProperties(WDcompare.prototype, {/*-- Comparação de dados --*/
 			enumerable: true,
 			value: function(label) {/*desenha gráfico comparativo de colunas*/
 				/* Definindo Padding e medidas do gráfico */
-				var padd = {t: 6, r: 30, b: 10, l: 10};
+				var padd = {t: 10, r: 30, b: 10, l: 10};
 				for (var i in padd) this._PADDING[i] = padd[i];
 				this._SET_MEASURES();
 
@@ -827,44 +860,44 @@ Object.defineProperties(WDcompare.prototype, {/*-- Comparação de dados --*/
 					if (item.t !== "compare") continue;
 					var check = WDcompare(item.x, item.y);
 					if (check.e) continue;
-					for (var i = 0; i < check.x.length; i++) {
-						data.x.push[check.x];
-						data.y.push[check.y];
+					for (var j = 0; j < check.x.length; j++) {
+						data.x.push(check.x[j]);
+						data.y.push(check.y[j]);
 					}
 				}
 				if (data.x.length === 0) return null;
 
 				/* Definindo dados finais */
-				var final = WDcompare(data.x, data.y);
-
-				this._SET_ENDS("x", value.x);
-				this._SET_ENDS("y", value.y);
+				var object = WDcompare(data.x, data.y);
+				var ratio  = object.ratio;
+				var amount = object.amount;
+				var values = {l: [0], x: [], y: [], v: []};
+				for (var i in ratio) {
+					values.l.push(values.l.length);
+					values.x.push(i);
+					values.y.push(ratio[i]);
+					values.v.push(amount[i]);
+				}
+				this._SET_ENDS("x", values.l);
+				this._SET_ENDS("y", values.y);
+				this._SET_ENDS("y", [0]);
 
 				/* Área de plotagem */
-				this._AREA_PLAN(4, xlabel, ylabel);
-				var id = 0; /*define a cor*/
-
-				for (var i = 0; i < data.length; i++) {
-					var item = data[i];
-					if (item.d === null) continue;
-					this._COLOR = id++;
-					this._ADD_LEGEND(item.l, item.r);
-
-					for (var j = 0; j < item.x.length; j++) {
-						var title = "("+item.x[j]+","+item.y[j]+")";
-						var trg1  = this._TARGET(item.x[j], item.y[j]);
-						var trg2  = this._TARGET(item.x[j+1], item.y[j+1]);
-						var zero  = this._TARGET(item.x[j], 0);
-						if (0 < this._ENDS.y.min) zero  = this._TARGET(item.x[j], this._ENDS.y.min);
-						if (0 > this._ENDS.y.max) zero  = this._TARGET(item.x[j], this._ENDS.y.max);
-
-						if (item.d === "dots")
-							this._BUILD_DOTS(trg1.x, trg1.y, item.l, title);
-						else if (item.d === "line" && trg2 !== null)
-							this._BUILD_LINE(trg1.x, trg1.y, trg2.x, trg2.y, title);
-						else if (item.d === "cols" && trg2 !== null)
-							this._BUILD_RECT(trg1.x, (trg2.y+trg1.y)/2, trg2.x, zero.y, title);
-					}
+				this._AREA_COMPARE(10, label);
+				var ref = this._MEASURES;
+				for (var i = 0; i < values.x.length; i++) {
+					this._COLOR = 2*i+1;
+					var trg1 = this._TARGET(i, 0);
+					var trg2 = this._TARGET(i+1, values.y[i]);
+					var trg3 = this._TARGET((i + 0.5), 0);
+					var pct  = this._LABEL_VALUE(values.y[i], true);
+					var val  = this._LABEL_VALUE(values.v[i]);
+					var ttl  = values.x[i]+": "+val+" ("+pct+")";
+					var pos  = values.y[i] < 0 ? -1 : 1;
+					this._BUILD_RECT(trg1.x, trg1.y, trg2.x, trg2.y, ttl);
+					this._BUILD_LABEL(trg3.x, trg2.y-pos, pct, pos < 0 ? "n" : "s", false);
+					this._BUILD_LABEL(trg3.x, trg3.y+pos, val, pos < 0 ? "s" : "n", false);
+					this._ADD_LEGEND(values.x[i]);
 				}
 			}
 		},
