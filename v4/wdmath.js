@@ -412,507 +412,486 @@ Object.defineProperties(WDcompare.prototype, {/*-- Comparação de dados --*/
 
 /*----------------------------------------------------------------------------*/
 
-	function WDchart(box, title) {/*Objeto para criar gráficos*/
-		if (!(this instanceof WDchart)) return new WDchart(box, title);
-		Object.defineProperties(this, {/*atributos do objeto*/
-			/* Container HTML a acomodar o gráfico */
-			_BOX: {value: this._BUILD_BOX(box)},
-			/* Elemento SVG a ser plotado os dados */
-			_SVG: {value: this._BUILD_SVG("svg")},
-			/* Escala do gráfico (x/y) e menor unidade gráfica (100 = 100%) */
-			_SCALE: {value: {x: 1, y: 1, d: 0.1}},
-			/* Guarda a cor da plotagem */
-			_NCOLOR: {value: 0, writable: true},
-			/* Dimensões do gráfico (top, right, bottom, left, width, height) */
-			_MEASURES: {value: {t: 0, r: 0, b: 0, l: 0, w: 100, h: 100}},
-			/* Registra os valores máximos e mínimos dos eixos */
-			_ENDS: {value: {x: {min: Infinity, max: -Infinity}, y: {min: Infinity, max: -Infinity}}},
-			/* Margens internas do gráfico */
-			_PADDING: {value: {t: 0, r: 0, b: 0, l: 0}},
-			/* Registra o título do gráfico */
-			_TITLE: {value: title === undefined ? "" : title},
-			/* Registra a entrada de dados */
-			_DATA: {value: []},
-			_LEGEND: {value: {text: 0, func: 0}}
-		});
-	};
+function WDchart(box, title) {/*Objeto para criar gráficos*/
+	if (!(this instanceof WDchart)) return new WDchart(box, title);
+	Object.defineProperties(this, {/*atributos do objeto*/
+		/* Container HTML a acomodar o gráfico */
+		_BOX: {value: this._BUILD_BOX(box)},
+		/* Elemento SVG a ser plotado os dados */
+		_SVG: {value: this._BUILD_SVG("svg")},
+		/* Escala do gráfico (x/y) e menor unidade gráfica (100 = 100%) */
+		_SCALE: {value: {x: 1, y: 1, d: 0.1}},
+		/* Guarda a cor da plotagem */
+		_NCOLOR: {value: 0, writable: true},
+		/* Dimensões do gráfico (top, right, bottom, left, width, height) */
+		_MEASURES: {value: {t: 0, r: 0, b: 0, l: 0, w: 100, h: 100}},
+		/* Registra os valores máximos e mínimos dos eixos */
+		_ENDS: {value: {x: {min: Infinity, max: -Infinity}, y: {min: Infinity, max: -Infinity}}},
+		/* Margens internas do gráfico */
+		_PADDING: {value: {t: 0, r: 0, b: 0, l: 0}},
+		/* Registra o título do gráfico */
+		_TITLE: {value: title === undefined ? "" : title},
+		/* Registra a entrada de dados */
+		_DATA: {value: []},
+		_LEGEND: {value: {text: 0, func: 0}}
+	});
+};
 
-	Object.defineProperties(WDchart.prototype, {
-		constructor: {value: WDchart},
-		_RATIO: {/* Relação altura/comprimento do gráfico (igual a da tela) */
-			value: window.screen.height/window.screen.width
+Object.defineProperties(WDchart.prototype, {
+	constructor: {value: WDchart},
+	_RATIO: {/* Relação altura/comprimento do gráfico (igual a da tela) */
+		value: window.screen.height/window.screen.width
+	},
+	_COLOR: {/* Define e obtém a cor a partir de um inteiro (looping) */
+		set: function(n) {
+			var ref = n < 0 ? 0 : n%7+1;
+			var bin = (ref < 2 ? "00" : (ref < 4 ? "0" : ""))+ref.toString(2);
+			var clr = bin.split("");
+			clr.forEach(function(e,i,a){a[i] = 153*Number(e);});
+			this._NCOLOR = "rgb("+clr[0]+","+clr[1]+","+clr[2]+")";
 		},
-		_COLOR: {/* Define e obtém a cor a partir de um inteiro (looping) */
-			set: function(n) {
-				var ref = n < 0 ? 0 : n%7+1;
-				var bin = (ref < 2 ? "00" : (ref < 4 ? "0" : ""))+ref.toString(2);
-				var clr = bin.split("");
-				clr.forEach(function(e,i,a){a[i] = 153*Number(e);});
-				this._NCOLOR = "rgb("+clr[0]+","+clr[1]+","+clr[2]+")";
-				console.log(clr)
-			},
-			get: function() {return this._NCOLOR;}
-		},
-		_CONVERT: {/* Converte número em porcentagem: 58 => "58%" */
-			value: function(x) {return new String(x).toString()+"%";}
-		},
-		_DELTA: {/* Devolve a menor partícula em X */
-			get: function() {return this._SCALE.d/this._SCALE.x;}
-		},
-		_SET_ENDS: {/* Registra as extremidades */
-			value: function(axes, array) {
-				var data = WDstatistics(array);
-				var min  = data.min.value;
-				var max  = data.max.value;
-				if (min < this._ENDS[axes].min) this._ENDS[axes].min = min;
-				if (max > this._ENDS[axes].max) this._ENDS[axes].max = max;
-				return;
-			}
-		},
-		_SET_MEASURES: {/* Define as medidas relativas a partir do padding */
-			value: function() {
-				this._MEASURES.t = this._PADDING.t;
-				this._MEASURES.r = this._PADDING.r * this._RATIO;
-				this._MEASURES.b = this._PADDING.b;
-				this._MEASURES.l = this._PADDING.l * this._RATIO;
-				this._MEASURES.w = 100 - this._MEASURES.l - this._MEASURES.r;
-				this._MEASURES.h = 100 - this._MEASURES.t - this._MEASURES.b;
-				return;
-			}
-		},
-		_BUILD_BOX: {/* Define as características do container do SVG */
-			value: function(input) {
-				var box = WD(input);
-				if (box.type !== "dom") return null;
-				WD(box.item(0)).set("innerHTML", "").css(null).style(null).style({
-					position: "relative", paddingTop: this._CONVERT(100 * this._RATIO)
-				});
-				return box.item(0);
-			}
-		},
-		_BUILD_SVG: {/* Cria e retorna elementos svg conforme atributos */
-			value: function(type, attr) {
-				if (this._BOX === null) return null;
-				if (attr === undefined) attr = {};
-				var elem = document.createElementNS("http://www.w3.org/2000/svg", type);
-				/* Propriedades a serem definidas em porcentagem */
-				var ref  = [
-					"x", "y", "x1", "x2", "y1", "y2", "height", "width",
-					"cx", "cy", "r", "dx", "dy"
-				];
+		get: function() {return this._NCOLOR;}
+	},
+	_CONVERT: {/* Converte número em porcentagem: 58 => "58%" */
+		value: function(x) {return new String(x).toString()+"%";}
+	},
+	_DELTA: {/* Devolve a menor partícula em X */
+		get: function() {return this._SCALE.d/this._SCALE.x;}
+	},
+	_SET_ENDS: {/* Registra as extremidades */
+		value: function(axes, array) {
+			var data = WDstatistics(array);
+			var min  = data.min.value;
+			var max  = data.max.value;
+			if (min < this._ENDS[axes].min) this._ENDS[axes].min = min;
+			if (max > this._ENDS[axes].max) this._ENDS[axes].max = max;
+			return;
+		}
+	},
+	_SET_MEASURES: {/* Define as medidas relativas a partir do padding */
+		value: function() {
+			this._MEASURES.t = this._PADDING.t;
+			this._MEASURES.r = this._PADDING.r * this._RATIO;
+			this._MEASURES.b = this._PADDING.b;
+			this._MEASURES.l = this._PADDING.l * this._RATIO;
+			this._MEASURES.w = 100 - this._MEASURES.l - this._MEASURES.r;
+			this._MEASURES.h = 100 - this._MEASURES.t - this._MEASURES.b;
+			return;
+		}
+	},
+	_BUILD_BOX: {/* Define as características do container do SVG */
+		value: function(input) {
+			var box = WD(input);
+			if (box.type !== "dom") return null;
+			WD(box.item(0)).set("innerHTML", "").css(null).style(null).style({
+				position: "relative", paddingTop: this._CONVERT(100 * this._RATIO)
+			});
+			return box.item(0);
+		}
+	},
+	_BUILD_SVG: {/* Cria e retorna elementos svg conforme atributos */
+		value: function(type, attr) {
+			if (this._BOX === null) return null;
+			if (attr === undefined) attr = {};
+			var elem = document.createElementNS("http://www.w3.org/2000/svg", type);
+			/* Propriedades a serem definidas em porcentagem */
+			var ref  = [
+				"x", "y", "x1", "x2", "y1", "y2", "height", "width",
+				"cx", "cy", "r", "dx", "dy"
+			];
 
-				for (var i in attr) {
-					var val = attr[i];
-					if (i === "tspan" || i === "title") {
-						var info = this._BUILD_SVG(i);
-						info.textContent = val;
-						elem.appendChild(info);
-					} else {
-						if (ref.indexOf(i) >= 0 && WD(val).finite)
-							val = this._CONVERT(val);
-						elem.setAttribute(i, val);
-					}
-				}
-
-				if (type === "svg") /* SVG principal apenas */
-					WD(elem).style({
-						height: "100%", width: "100%", position: "absolute",
-						top: "0", left: "0", bottom: "0", right: "0",
-						backgroundColor: "#FFFFFF", border: "1px dotted black"
-					});
-
-				return elem;
-			}
-		},
- 		_BUILD_DOTS: {/* Desenha um ponto: coordenadas do centro */
- 			value: function(cx, cy, title) {
-	 			var point = this._BUILD_SVG("circle", {
-					cx: cx, cy: cy, r: "3px", fill: this._COLOR, title: title
-				});
- 				this._SVG.appendChild(point);
- 				return point;
- 			}
- 		},
-		_BUILD_LINE: {/* Desenha uma linha: coordenadas inicial e final */
- 			value: function(x1, y1, x2, y2, title, dash) {
- 				var line = this._BUILD_SVG("line", {
- 					x1: x1, y1: y1, x2: x2, y2: y2,
- 					stroke: this._COLOR,
- 					"stroke-width":     dash === true ? "1px" : "2px",
- 					"stroke-dasharray": dash === true ? "1,5" : "0",
- 					title: title
- 				});
- 				this._SVG.appendChild(line);
- 				return line;
- 			}
- 		},
-		_BUILD_RECT: {/* Desenha uma retângulo: coordenadas inicial e final */
- 			value: function(x1, y1, x2, y2, title) {
- 				var rect = this._BUILD_SVG("rect", {
- 					x:      x2 > x1 ? x1 : x2,
- 					y:      y2 > y1 ? y1 : y2,
- 					width:  x2 > x1 ? x2-x1 : x1-x2,
- 					height: y2 > y1 ? y2-y1 : y1-y2,
- 					fill:   this._COLOR, title: title
- 				});
- 				this._SVG.appendChild(rect);
- 				return rect;
- 			}
- 		},
-		_BUILD_LABEL: {/* Adiciona texto: coordenadas, texto, âncora, orientação */
-			value: function (x, y, text, point, vertical, bold) {
-				var vanchor = ["start", "middle", "end"];
-				var anchor  = {n: 1, ne: 2, e: 2, se: 2, s: 1, sw: 0, w: 0, nw: 0, c: 1};
-				var vbase   = ["auto", "middle", "hanging"];
-				var base    = {n: 2, ne: 2, e: 1, se: 0, s: 0, sw: 0, w: 1, nw: 2, c: 1};
-				point       = point in base ? point : "c" ;
-				var attr = {
-					x: x, y: y,
-					fill: this._COLOR,
-					"text-anchor": vanchor[anchor[point]],
-					"dominant-baseline": vbase[base[point]],
-					"font-size": "0.8em",
-					"font-family": "monospace",
-					tspan: text
-				};
-				 if (vertical === true) {
-				 	attr.transform = "rotate(270)";
-				 	attr.y = x/this._RATIO;
-				 	attr.x = -this._RATIO*y;
-				 }
-				 if (bold === true) attr["font-weight"] = "bold";
-				 var label = this._BUILD_SVG("text", attr);
-				 this._SVG.appendChild(label);
-				 return label;
-			}
-		},
-		_CLEAR_SVG: {/* Limpa os filhos do SVG */
-			value: function() {
-				this._LEGEND.text = 0;
-				this._LEGEND.func = 0;
-				if (this._SVG.parentElement === null)
-					this._BOX.appendChild(this._SVG);
-				var child = this._SVG.children;
-				while (child.length > 0) this._SVG.removeChild(child[0]);
-				return;
-			}
-		},
- 		_SET_SCALE: {/* Define o valor da escala horizontal e vertical */
- 			value: function(axes) {
- 				var ref = axes === "x" ? this._MEASURES.w : this._MEASURES.h;
- 				this._SCALE[axes] = ref/(this._ENDS[axes].max - this._ENDS[axes].min);
- 				return;
- 			}
- 		},
- 		_TARGET: {/* Transforma coordanadas reais em relativas (%) */
- 			value: function(x,y) {
-				if (!WD(x).finite || !WD(y).finite) return null;
- 				x = x - this._ENDS.x.min;
- 				y = y - this._ENDS.y.min;
- 				return {
- 					x: this._MEASURES.l + (x * this._SCALE.x),
- 					y: 100 - (this._MEASURES.b + y * this._SCALE.y)
- 				};
- 			}
- 		},
-		_ADD_LEGEND: { /* Adiciona Legendas (texto e funções)*/
-			value: function(text, func) {
-				var ref = this._MEASURES;
-				var n = this._LEGEND[(func ? "func" : "text")]++;
-				var x = func ? ref.l : ref.l+ref.w;
-				var y = 4*n+ref.t;
-				this._BUILD_LABEL(x+1, y+1, (func ? "" : "\u25CF ")+text, "nw");
-			}
-		},
- 		_LABEL_VALUE: {/* Define a exibição de valores numéricos */
-			value: function(x, ratio) {
-				if (ratio === true) x = 100*x;
-				var end = ratio === true ? "%" : "";
-				var val = Math.abs(x);
-
-				if (val === 0) return "0"+end;
-				if ((1/val) > 1) {
-					if (val <= 1e-10) return x.toExponential(0)+end;
-					if (val <= 1e-3)  return x.toExponential(1)+end;
-					if (val <= 1e-2)  return WD(x).fixed(2,0)+end;
+			for (var i in attr) {
+				var val = attr[i];
+				if (i === "tspan" || i === "title") {
+					var info = this._BUILD_SVG(i);
+					info.textContent = val;
+					elem.appendChild(info);
 				} else {
-					if (val >= 1e10) return x.toExponential(0)+end;
-					if (val >= 1e3)  return x.toExponential(1)+end;
-					if (val >= 1e2) return WD(x).fixed(0,0)+end;
-					if (val >= 1e1) return WD(x).fixed(1,0)+end;
+					if (ref.indexOf(i) >= 0 && WD(val).finite)
+						val = this._CONVERT(val);
+					elem.setAttribute(i, val);
 				}
-				return WD(x).fixed(2,0)+end;
 			}
-		},
+
+			if (type === "svg") /* SVG principal apenas */
+				WD(elem).style({
+					height: "100%", width: "100%", position: "absolute",
+					top: "0", left: "0", bottom: "0", right: "0",
+					backgroundColor: "#FFFFFF", border: "1px dotted black"
+				});
+
+			return elem;
+		}
+	},
+	_BUILD_DOTS: {/* Desenha um ponto: coordenadas do centro */
+		value: function(cx, cy, title) {
+ 			var point = this._BUILD_SVG("circle", {
+				cx: cx, cy: cy, r: "3px", fill: this._COLOR, title: title
+			});
+			this._SVG.appendChild(point);
+			return point;
+		}
+	},
+	_BUILD_LINE: {/* Desenha uma linha: coordenadas inicial e final */
+		value: function(x1, y1, x2, y2, title, line) {
+			var line = this._BUILD_SVG("line", {
+				x1: x1, y1: y1, x2: x2, y2: y2,
+				stroke: this._COLOR,
+				"stroke-width":     line === 0 ? "1px" : line+"px",
+				"stroke-dasharray": line === 0 ? "1,5" : "0",
+				title: title
+			});
+			this._SVG.appendChild(line);
+			return line;
+		}
+	},
+	_BUILD_RECT: {/* Desenha uma retângulo: coordenadas inicial e final */
+		value: function(x1, y1, x2, y2, title) {
+			var rect = this._BUILD_SVG("rect", {
+				x:      x2 > x1 ? x1 : x2,
+				y:      y2 > y1 ? y1 : y2,
+				width:  x2 > x1 ? x2-x1 : x1-x2,
+				height: y2 > y1 ? y2-y1 : y1-y2,
+				fill:   this._COLOR, title: title
+			});
+			this._SVG.appendChild(rect);
+			return rect;
+		}
+	},
+	_BUILD_LABEL: {/* Adiciona texto: coordenadas, texto, âncora, orientação */
+		value: function (x, y, text, point, vertical, bold) {
+			var vanchor = ["start", "middle", "end"];
+			var anchor  = {n: 1, ne: 2, e: 2, se: 2, s: 1, sw: 0, w: 0, nw: 0, c: 1};
+			var vbase   = ["auto", "middle", "hanging"];
+			var base    = {n: 2, ne: 2, e: 1, se: 0, s: 0, sw: 0, w: 1, nw: 2, c: 1};
+			point       = point in base ? point : "c" ;
+			var attr = {
+				x: x, y: y,
+				fill: this._COLOR,
+				"text-anchor": vanchor[anchor[point]],
+				"dominant-baseline": vbase[base[point]],
+				"font-size": "0.8em",
+				"font-family": "monospace",
+				tspan: text
+			};
+			 if (vertical === true) {
+			 	attr.transform = "rotate(270)";
+			 	attr.y = x/this._RATIO;
+			 	attr.x = -this._RATIO*y;
+			 }
+			 if (bold === true) attr["font-weight"] = "bold";
+			 var label = this._BUILD_SVG("text", attr);
+			 this._SVG.appendChild(label);
+			 return label;
+		}
+	},
+	_CLEAR_SVG: {/* Limpa os filhos do SVG */
+		value: function() {
+			this._LEGEND.text = 0;
+			this._LEGEND.func = 0;
+			if (this._SVG.parentElement === null)
+				this._BOX.appendChild(this._SVG);
+			var child = this._SVG.children;
+			while (child.length > 0) this._SVG.removeChild(child[0]);
+			return;
+		}
+	},
+	_SET_SCALE: {/* Define o valor da escala horizontal e vertical */
+		value: function(axes) {
+			var ref = axes === "x" ? this._MEASURES.w : this._MEASURES.h;
+			this._SCALE[axes] = ref/(this._ENDS[axes].max - this._ENDS[axes].min);
+			return;
+		}
+	},
+	_TARGET: {/* Transforma coordanadas reais em relativas (%) */
+		value: function(x,y) {
+			if (!WD(x).finite || !WD(y).finite) return null;
+			x = x - this._ENDS.x.min;
+			y = y - this._ENDS.y.min;
+			return {
+				x: this._MEASURES.l + (x * this._SCALE.x),
+				y: 100 - (this._MEASURES.b + y * this._SCALE.y)
+			};
+		}
+	},
+	_ADD_LEGEND: { /* Adiciona Legendas (texto e funções)*/
+		value: function(text, func) {
+			if (text === null) return;
+			var ref = this._MEASURES;
+			var n = this._LEGEND[(func ? "func" : "text")]++;
+			var x = func ? ref.l : ref.l+ref.w;
+			var y = 4*n+ref.t;
+			this._BUILD_LABEL(x+1, y+1, (func ? "" : "\u25CF ")+text, "nw");
+		}
+	},
+	_LABEL_VALUE: {/* Define a exibição de valores numéricos */
+		value: function(x, ratio) {
+			if (ratio === true) x = 100*x;
+			var end = ratio === true ? "%" : "";
+			var val = Math.abs(x);
+
+			if (val === 0) return "0"+end;
+			if ((1/val) > 1) {
+				if (val <= 1e-10) return x.toExponential(0)+end;
+				if (val <= 1e-3)  return x.toExponential(1)+end;
+				if (val <= 1e-2)  return WD(x).fixed(2,0)+end;
+			} else {
+				if (val >= 1e10) return x.toExponential(0)+end;
+				if (val >= 1e3)  return x.toExponential(1)+end;
+				if (val >= 1e2) return WD(x).fixed(0,0)+end;
+				if (val >= 1e1) return WD(x).fixed(1,0)+end;
+			}
+			return WD(x).fixed(2,0)+end;
+		}
+	},
 
 /* -- Gráfico plano --------------------------------------------------------- */
-		_AREA_PLAN: {
-			value: function(lines, xl, yl) {
-				this._COLOR = -1;
-				this._CLEAR_SVG();
-				this._SET_SCALE("y");
-				this._SET_SCALE("x");
-				var ref = this._MEASURES;
-				var end = this._ENDS;
-				var dX  = (end.x.max - end.x.min) / lines;
-				var dY  = (end.y.max - end.y.min) / lines;
+	_SET_AREA: {
+		value: function(type, n) {
+			n = n === undefined ? 0 : n;
+			var config = {/* configurações da área do gráfico */
+				plan: {
+					lines: {t: 1, r: 1, b: 1, l: 1, c: 0, n: n === 0 ? 4 : n},
+					padd:  {t: 10, r: 30, b: 10, l: 20},
+					title: {p: "h", r: "t", v: 1/2}
+				},
+				compare: {
+					lines: {t: 0, r: 0, b: 0, l: 0, c: 0, n: n === 0 ? 10 : n},
+					padd:  {t: 10, r: 30, b: 10, l: 10},
+					title: {p: "v", r: "l", v: 1/2}
+				},
+			};
 
-				for (var i = 0; i < (lines+1); i++) {
-					this._BUILD_LINE(/* Eixo Horizontal */
-						ref.l,         ref.t + i * (ref.h / lines),
-						ref.l + ref.w, ref.t + i * (ref.h / lines),
-						"", (i === 0 || i === lines ? false : true)
-					);
-					this._BUILD_LINE(/* Eixo Vertical */
-						ref.l + i * (ref.w / lines), ref.t,
-						ref.l + i * (ref.w / lines), ref.t + ref.h,
-						"", (i === 0 || i === lines ? false : true)
-					);
-					this._BUILD_LABEL(/* Valor Horizontal */
-						ref.l + i * (ref.w / lines), ref.t + ref.h + 1,
-						this._LABEL_VALUE(end.x.min + i * dX),
-						(i === 0 ? "nw" : (i === lines ? "ne" : "n")),
-						false, false
-					);
-					this._BUILD_LABEL(/* Valor Vertical */
-						ref.l - 1, ref.t + ref.h - i * (ref.h / lines),
-						this._LABEL_VALUE(end.y.min + i * dY),
-						(i === 0 ? "se" : (i === lines ? "ne" : "e")),
-						false, false
-					);
-				}
-				this._BUILD_LABEL(/* Eixo X */
-					ref.l + ref.w/2, 100-ref.b/3, xl, "c", false
-				);
-				this._BUILD_LABEL(/* Eixo Y */
-					ref.l/4, ref.t + ref.h/2, yl, "c", true
-				);
-				this._BUILD_LABEL(/* Título */
-					ref.l + (ref.w)/2, ref.t/2,	this._TITLE, "c", false, true
-				);
-			}
-		},
-		_AREA_COMPARE: {
-			value: function(lines, xl, yl) {
-				this._COLOR = -1;
-				this._CLEAR_SVG();
-				this._SET_SCALE("y");
-				this._SET_SCALE("x");
-				var ref = this._MEASURES;
-				var end = this._ENDS;
-				this._BUILD_LABEL(/* Título */
-					ref.l/2, ref.t + (ref.h)/2, this._TITLE, "c", true, true
-				);
-				var zero = this._TARGET(0,0);
-				this._BUILD_LINE(/* Eixo 0 */
-					ref.l,         zero.y,
-					ref.l + ref.w, zero.y,
-					"", false
-				);
-				for (var i = 0; i < (lines+1); i++) {
-					this._BUILD_LINE(/* Eixo Horizontal */
-						ref.l,         ref.t + i * (ref.h / lines),
-						ref.l + ref.w, ref.t + i * (ref.h / lines),
-						"", true
-					);
-					this._BUILD_LINE(/* Eixo Vertical */
-						ref.l + i * (ref.w / lines), ref.t,
-						ref.l + i * (ref.w / lines), ref.t + ref.h,
-						"", true
-					);
-				}
-			}
-		},
+			var data = config[type];
+		
+			/* definindo valores iniciais */
+			this._CLEAR_SVG();
+			this._COLOR = -1;
+			for (var i in data.padd) this._PADDING[i] = data.padd[i];
+			this._SET_MEASURES();
+			this._SET_SCALE("y");
+			this._SET_SCALE("x");
+			var ref = this._MEASURES;
+			var dX  = ref.w / data.lines.n;
+			var dY  = ref.h / data.lines.n;
+			var info = {
+				x: [], y: [], /* coordenada das linhas */
+				dx: dX, dy: dY, /* distância entre dois pontos */
+				cx: (ref.l+ref.w)/2, cy: (ref.t+ref.h)/2, /* centro do gráfico */
+				xi: ref.l, xf: ref.l+ref.w, /* comprimento inicial e final */
+				yi: ref.t, yf: ref.t+ref.h, /* altura inicial e final */
+				
+			};
 
+			/* construindo linhas */
+			for (var i = 0; i < (data.lines.n+1); i++) {
+				var h = i === 0 ? "t" : (i === data.lines.n ? "b" : "c");
+				this._BUILD_LINE(/* Eixo Horizontal */
+					ref.l, ref.t+(i*dY), ref.l+ref.w, ref.t+(i*dY), "", data.lines[h]
+				);
+				info.y.unshift(ref.t+(i*dY));
+				var v = i === 0 ? "l" : (i === data.lines.n ? "r" : "c");
+				this._BUILD_LINE(/* Eixo Vertical */
+					ref.l+(i*dX), ref.t, ref.l+(i*dX), ref.t+ref.h, "", data.lines[h]
+				);
+				info.x.push(ref.l+(i*dX));
+			}
+
+			/* construíndo título */
+			var title = {
+				x: data.title.p === "h" ? ref.l+(ref.w)/2 : ref.l*data.title.v,
+				y: data.title.p === "h" ? ref.t*data.title.v : ref.t+ref.h/2,
+				p: data.title.p === "h" ? false : true
+			};
+			this._BUILD_LABEL(/* Título */
+				title.x, title.y, this._TITLE, "c", title.p, true
+			);
+
+			return info;
+		}
+	},
 
 /* -- Funções acessíveis ---------------------------------------------------- */
-		add: {
-			enumerable: true,
-			value: function(x, y, label, type) {/* Adiciona conjunto de dados para plotagem */
-				if (this._SVG === null) return null;
-				this._DATA.push({x: x, y: y, l: label, t: type});
-				return this._DATA.length-1;
- 			}
-		},
-		plot: {
-			enumerable: true,
-			value: function(xlabel, ylabel) {/*desenha gráfico plano*/
-				/* Definindo Padding e medidas do gráfico */
-				var padd = {t: 6, r: 30, b: 10, l: 30};
-				for (var i in padd) this._PADDING[i] = padd[i];
-				this._SET_MEASURES();
+	add: {
+		enumerable: true,
+		value: function(x, y, label, type) {/* Adiciona conjunto de dados para plotagem */
+			if (this._SVG === null) return null;
+			this._DATA.push({x: x, y: y, l: label, t: type});
+			return this._DATA.length-1;
+		}
+	},
+	plan: {
+		enumerable: true,
+		value: function(xlabel, ylabel) {/*desenha gráfico plano*/
+			var types = {
+				average:     {draw1: "dots", draw2: "line", reg: true},
+				exponential: {draw1: "dots", draw2: "line", reg: true},
+				linear:      {draw1: "dots", draw2: "line", reg: true},
+				geometric:   {draw1: "dots", draw2: "line", reg: true},
+				sum:         {draw1: "line", draw2: "cols", reg: true},
+				line:        {draw1: "line", draw2: null,   reg: false},
+				dots:        {draw1: "dots", draw2: null,   reg: false},
+				function:    {draw1: null,   draw2: "line", reg: false},
+			};
 
-				/* Obtendo valores básicos */
-				var types = {
-					average:     {draw1: "dots", draw2: "line", reg: true},
-					exponential: {draw1: "dots", draw2: "line", reg: true},
-					linear:      {draw1: "dots", draw2: "line", reg: true},
-					geometric:   {draw1: "dots", draw2: "line", reg: true},
-					sum:         {draw1: "line", draw2: "cols", reg: true},
-					line:        {draw1: "line", draw2: null,   reg: false},
-					dots:        {draw1: "dots", draw2: null,   reg: false},
-					function:    {draw1: null,   draw2: "line", reg: false},
+			/* Obtendo valores básicos */
+			var data = [];
+
+			for (var i = 0; i < this._DATA.length; i++) {
+				var item = this._DATA[i];
+				if (item === null || !(item.t in types)) continue;
+				var check = WDregression(item.x, item.y);
+				if (check.e) continue;
+				var obj  = {
+					o: check,   /*WDregression object*/
+					x: check.x, /*X array*/
+					y: check.y, /*Y array*/
+					l: item.l,  /*label*/
+					t: item.t,  /*type*/
+					d: types[item.t].draw1, /*tipo de linha a desenhar*/
+					r: false, /*exibir fórmula ?*/
 				};
-				var data = [];
+				this._SET_ENDS("x", obj.x);
+				this._SET_ENDS("y", obj.y);
+				data.push(obj);
+			}
+			if (data.length === 0) return null;
 
-				for (var i = 0; i < this._DATA.length; i++) {
-					var item = this._DATA[i];
-					if (!(item.t in types)) continue;
-					var check = WDregression(item.x, item.y);
-					if (check.e) continue;
-					var obj  = {
-						o: check,   /*WDregression object*/
-						x: check.x, /*X array*/
-						y: check.y, /*Y array*/
-						l: item.l,  /*label*/
-						t: item.t,  /*type*/
-						d: types[item.t].draw1, /*tipo de linha a desenhar*/
-						r: false, /*exibir fórmula ?*/
-					};
-					this._SET_ENDS("x", obj.x);
-					this._SET_ENDS("y", obj.y);
-					data.push(obj);
+			/* Definindo o array de funções */
+			this._SET_SCALE("x");
+			var items = data.length;			
+
+			for (var i = 0; i < items; i++) {
+				var item = data[i];
+				if (types[item.t].draw2 === null) continue;
+				var value = item.o.continuous(this._DELTA, item.t);
+				if (value === null) continue;
+
+				var obj = {
+					x: value.x,
+					y: value.y,
+					d: types[data[i].t].draw2,
+					l: item.l,
+					t: item.type,
+					r: types[item.t].reg
+				};
+				if (item.t in item.o) {
+					var a = value.o.a;
+					var b = value.o.b;
+					obj.l = value.o.e.replace("a", a).replace("b", b);
 				}
-				var items = data.length;
-				if (items === 0) return null;
+				data.push(obj);
+				this._SET_ENDS("x", value.x);
+				this._SET_ENDS("y", value.y);
+			}
 
-				/* Definindo o array de funções */
-				this._SET_SCALE("x");
-				var delta = this._MEASURES.w*this._SCALE.d; /*FIXME para que isso?*/
-				
-				for (var i = 0; i < items; i++) {
-					var item = data[i];
-					console.log(i, item)
-					if (types[item.t].draw2 === null) continue;
-					var value = item.o.continuous(this._DELTA, item.t);
-					if (value === null) continue;
+			/* Área de plotagem */
+			var lines = 5;
+			var info  = this._SET_AREA("plan", lines);
+			var color = 0; /*define o número da cor*/
 
-					var obj = {
-						x: value.x,
-						y: value.y,
-						d: types[data[i].t].draw2,
-						l: item.l,
-						t: item.type,
-						r: types[item.t].reg
-					};
-					if (item.t in item.o) {
-						var a = value.o.a;
-						var b = value.o.b;
-						obj.l = value.o.e.replace("a", a).replace("b", b);
-					}
-					data.push(obj);
-					this._SET_ENDS("x", value.x);
-					this._SET_ENDS("y", value.y);
-				}
+			for (var i = 0; i < data.length; i++) {
+				var item = data[i];
+				if (item.d === null) continue;
+				this._COLOR = 2*(color++)+1;
+				this._ADD_LEGEND(item.l, item.r);
 
-				/* Área de plotagem */
-				this._AREA_PLAN(4, xlabel, ylabel);
-				var id = 0; /*define a cor*/
+				for (var j = 0; j < item.x.length; j++) {
+					var title = "("+item.x[j]+","+item.y[j]+")";
+					var trg1  = this._TARGET(item.x[j], item.y[j]);
+					var trg2  = this._TARGET(item.x[j+1], item.y[j+1]);
+					var zero  = this._TARGET(item.x[j], 0);
+					if (0 < this._ENDS.y.min) zero  = this._TARGET(item.x[j], this._ENDS.y.min);
+					if (0 > this._ENDS.y.max) zero  = this._TARGET(item.x[j], this._ENDS.y.max);
 
-				for (var i = 0; i < data.length; i++) {
-					var item = data[i];
-					if (item.d === null) continue;
-					this._COLOR = 2*id+1;
-					id++;
-					this._ADD_LEGEND(item.l, item.r);
-
-					for (var j = 0; j < item.x.length; j++) {
-						var title = "("+item.x[j]+","+item.y[j]+")";
-						var trg1  = this._TARGET(item.x[j], item.y[j]);
-						var trg2  = this._TARGET(item.x[j+1], item.y[j+1]);
-						var zero  = this._TARGET(item.x[j], 0);
-						if (0 < this._ENDS.y.min) zero  = this._TARGET(item.x[j], this._ENDS.y.min);
-						if (0 > this._ENDS.y.max) zero  = this._TARGET(item.x[j], this._ENDS.y.max);
-
-						if (item.d === "dots")
-							this._BUILD_DOTS(trg1.x, trg1.y, item.l, title);
-						else if (item.d === "line" && trg2 !== null)
-							this._BUILD_LINE(trg1.x, trg1.y, trg2.x, trg2.y, title);
-						else if (item.d === "cols" && trg2 !== null)
-							this._BUILD_RECT(trg1.x, (trg2.y+trg1.y)/2, trg2.x, zero.y, title);
-					}
+					if (item.d === "dots")
+						this._BUILD_DOTS(trg1.x, trg1.y, item.l, title);
+					else if (item.d === "line" && trg2 !== null)
+						this._BUILD_LINE(trg1.x, trg1.y, trg2.x, trg2.y, title, 2);
+					else if (item.d === "cols" && trg2 !== null)
+						this._BUILD_RECT(trg1.x, (trg2.y+trg1.y)/2, trg2.x, zero.y, title);
 				}
 			}
-		},
+			
+			/* Plotando labels */
+			this._COLOR = -1;
+			this._BUILD_LABEL(info.xf+2, info.yf+1, xlabel, "nw", false, true);
+			this._BUILD_LABEL(info.xi-1, info.yi-2, ylabel, "se", false, true);
 
+			var dX = (this._ENDS.x.max - this._ENDS.x.min) / lines;
+			var dY = (this._ENDS.y.max - this._ENDS.y.min) / lines;
 
+			for (var i = 0; i < info.x.length; i++) {
+				var x  = this._LABEL_VALUE(this._ENDS.x.min + i*dX);
+				var y  = this._LABEL_VALUE(this._ENDS.y.min + i*dY);
+				var px = i === 0 ? "nw" : (i === lines ? "ne" : "n");
+				var py = i === 0 ? "se" : (i === lines ? "ne" : "e");
+				this._BUILD_LABEL(info.x[i], info.yf+1, x, px);
+				this._BUILD_LABEL(info.xi-1, info.y[i], y, py);
+			}
+		}
+	},
 
-
-
-
-
-
-
-
-		compare: {
-			enumerable: true,
-			value: function(label) {/*desenha gráfico comparativo de colunas*/
-				/* Definindo Padding e medidas do gráfico */
-				var padd = {t: 10, r: 30, b: 10, l: 10};
-				for (var i in padd) this._PADDING[i] = padd[i];
-				this._SET_MEASURES();
-
-				/* Obtendo valores básicos */
-				var data = {x: [], y: []};
-
-				for (var i = 0; i < this._DATA.length; i++) {
-					var item = this._DATA[i];
-					if (item.t !== "compare") continue;
-					var check = WDcompare(item.x, item.y);
-					if (check.e) continue;
-					for (var j = 0; j < check.x.length; j++) {
-						data.x.push(check.x[j]);
-						data.y.push(check.y[j]);
-					}
-				}
-				if (data.x.length === 0) return null;
-
-				/* Definindo dados finais */
-				var object = WDcompare(data.x, data.y);
-				var ratio  = object.ratio;
-				var amount = object.amount;
-				var values = {l: [0], x: [], y: [], v: []};
-				for (var i in ratio) {
-					values.l.push(values.l.length);
-					values.x.push(i);
-					values.y.push(ratio[i]);
-					values.v.push(amount[i]);
-				}
-				this._SET_ENDS("x", values.l);
-				this._SET_ENDS("y", values.y);
-				this._SET_ENDS("y", [0]);
-
-				/* Área de plotagem */
-				this._AREA_COMPARE(10, label);
-				var ref = this._MEASURES;
-				for (var i = 0; i < values.x.length; i++) {
-					this._COLOR = 2*i+1;
-					var trg1 = this._TARGET(i, 0);
-					var trg2 = this._TARGET(i+1, values.y[i]);
-					var trg3 = this._TARGET((i + 0.5), 0);
-					var pct  = this._LABEL_VALUE(values.y[i], true);
-					var val  = this._LABEL_VALUE(values.v[i]);
-					var ttl  = values.x[i]+": "+val+" ("+pct+")";
-					var pos  = values.y[i] < 0 ? -1 : 1;
-					this._BUILD_RECT(trg1.x, trg1.y, trg2.x, trg2.y, ttl);
-					this._BUILD_LABEL(trg3.x, trg2.y-pos, pct, pos < 0 ? "n" : "s", false);
-					this._BUILD_LABEL(trg3.x, trg3.y+pos, val, pos < 0 ? "s" : "n", false);
-					this._ADD_LEGEND(values.x[i]);
+	compare: { /* desenha um gráfico de colunas comparativo */
+		enumerable: true,
+		value: function(label) {/*desenha gráfico comparativo de colunas*/
+			/* Obtendo dados básicos */
+			var data = {x: [], y: []};
+			for (var i = 0; i < this._DATA.length; i++) {
+				var item = this._DATA[i];
+				if (item === null || item.t !== "compare") continue;
+				var check = WDcompare(item.x, item.y);
+				if (check.e) continue;
+				for (var j = 0; j < check.x.length; j++) {
+					data.x.push(check.x[j]);
+					data.y.push(check.y[j]);
 				}
 			}
-		},
+			if (data.x.length === 0) return null;
 
+			/* Definindo dados para o gráfico */
+			var object = WDcompare(data.x, data.y);
+			var ratio  = object.ratio;
+			var amount = object.amount;
+			var values = {l: [0], x: [], y: [], v: []};
+			for (var i in ratio) {
+				values.l.push(values.l.length);
+				values.x.push(i);
+				values.y.push(ratio[i]);
+				values.v.push(amount[i]);
+			}
+			this._SET_ENDS("x", values.l);
+			this._SET_ENDS("y", values.y);
+			this._SET_ENDS("y", [0]);
 
+			/* Plotando o gráfico */
+			var info = this._SET_AREA("compare", values.x.length);
+			var sum = 0;
 
+			for (var i = 0; i < values.x.length; i++) {
+				this._COLOR = 2*i+1;
+				var trg1 = this._TARGET(i, 0);
+				var trg2 = this._TARGET(i+1, values.y[i]);
+				var trg3 = this._TARGET((i + 0.5), 0);
+				sum += values.v[i];
+				var pct  = this._LABEL_VALUE(values.y[i], true);
+				var val  = this._LABEL_VALUE(values.v[i]);
+				var ttl  = values.x[i]+": "+val+" ("+pct+")";
+				var pos  = values.y[i] < 0 ? -1 : 1;
+				this._BUILD_RECT(trg1.x, trg1.y, trg2.x, trg2.y, ttl);
+				this._ADD_LEGEND(values.x[i]);
+				/* valor perto do eixo e porcentagem na topo ou base */
+				this._COLOR = -1;
+				this._BUILD_LABEL(trg3.x, trg2.y-pos, pct, pos < 0 ? "n" : "s", false, true);
+				this._BUILD_LABEL(trg3.x, trg3.y+pos, val, pos < 0 ? "s" : "n", false);
+			}
 
+			var zero = this._TARGET(0,0);
+			this._BUILD_LINE(info.xi, zero.y, info.xf, zero.y, "", 1);
+			this._BUILD_LABEL(info.xi-0.5, zero.y, "0", "e");
+			this._BUILD_LABEL(99, 99, "\u03A3y = "+this._LABEL_VALUE(sum), "se");
 
-
-
-
-
-
-
-
-
-	});
-
+			return true;
+		}
+	},
+});
