@@ -731,7 +731,7 @@ Object.defineProperties(WDchart.prototype, {
 				exponential: {draw1: "dots", draw2: "line", reg: true,  dev: true,  prec: 0},
 				linear:      {draw1: "dots", draw2: "line", reg: true,  dev: true,  prec: 0},
 				geometric:   {draw1: "dots", draw2: "line", reg: true,  dev: true,  prec: 0},
-				sum:         {draw1: "l+d",  draw2: "cols", reg: true,  dev: true,  prec: 0.1},
+				sum:         {draw1: "line", draw2: "cols", reg: true,  dev: true,  prec: 0.1},
 				line:        {draw1: "line", draw2: null,   reg: false, dev: false, prec: 10},
 				dots:        {draw1: "dots", draw2: null,   reg: false, dev: false, prec: 0},
 				linedots:    {draw1: "l+d",  draw2: null,   reg: false, dev: false, prec: 10},
