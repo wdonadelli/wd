@@ -215,7 +215,7 @@ Object.defineProperties(WDregression.prototype, {/*-- Regressões --*/
 			var val = this.LEAST_SQUARES(this.x, this.y);
 			if (val === null) return null;
 			var data = {
-				e: "y = ax+(b)",
+				e: "y = (a)x+(b)",
 				a: val.a,
 				b: val.b,
 			};
@@ -235,7 +235,7 @@ Object.defineProperties(WDregression.prototype, {/*-- Regressões --*/
 			var val = this.LEAST_SQUARES(axes.list1, axes.list2);
 			if (val === null) return null;
 			var data = {
-				e: "y = a\u212F^bx",
+				e: "y = (a)\u212F^(bx)",
 				a: Math.exp(val.b),
 				b: val.a,
 			};
@@ -256,7 +256,7 @@ Object.defineProperties(WDregression.prototype, {/*-- Regressões --*/
 			var val = this.LEAST_SQUARES(axes.list1, axes.list2);
 			if (val === null) return null;
 			var data = {
-				e: "y = ax^b",
+				e: "y = (a)x^(b)",
 				a: Math.exp(val.b),
 				b: val.a,
 			};
@@ -269,11 +269,10 @@ Object.defineProperties(WDregression.prototype, {/*-- Regressões --*/
 		get: function() {
 			if (this.e) return null;
 			var int = 0;
-			for (var i = 0; i < (this.l - 1); i++) {
-				var fi = {x: this.x[i],   y: this.y[i]};
-				var fn = {x: this.x[i+1], y: this.y[i+1]};
-				int += (fn.y + fi.y)*(fn.x - fi.x)/2;
-			}
+			/* -- integral = (yf+yi)(xf-xi)/2 -- */
+			for (var i = 0; i < (this.l - 1); i++)
+				int += (this.y[i+1]+this.y[i])*(this.x[i+1]-this.x[i])/2;
+
 			var data = {
 				e: "\u03A3y\u0394x \u2248 b",
 				a: 0,
@@ -304,7 +303,7 @@ Object.defineProperties(WDregression.prototype, {/*-- Regressões --*/
 				b: avg,
 			};
 			data.f = function(x) {return data.b;};
-			data.d = this.REG_DEV(data.f);
+			data.d = null;
 			return data;
 		}
 	},
@@ -420,7 +419,7 @@ function WDchart(box, title) {/*Objeto para criar gráficos*/
 		/* Elemento SVG a ser plotado os dados */
 		_SVG: {value: this._BUILD_SVG("svg")},
 		/* Escala do gráfico (x/y) e menor unidade gráfica (100 = 100%) */
-		_SCALE: {value: {x: 1, y: 1, d: 0.1}},
+		_SCALE: {value: {x: 1, y: 1, d: 1}},
 		/* Guarda a cor da plotagem */
 		_NCOLOR: {value: 0, writable: true},
 		/* Dimensões do gráfico (top, right, bottom, left, width, height) */
@@ -456,7 +455,9 @@ Object.defineProperties(WDchart.prototype, {
 		value: function(x) {return new String(x).toString()+"%";}
 	},
 	_DELTA: {/* Devolve a menor partícula em X */
-		get: function() {return this._SCALE.d/this._SCALE.x;}
+		value: function(x) {
+			return (x <= 0 ? this._SCALE.d : x)/this._SCALE.x;
+		}
 	},
 	_SET_ENDS: {/* Registra as extremidades */
 		value: function(axes, array) {
@@ -546,13 +547,15 @@ Object.defineProperties(WDchart.prototype, {
 		}
 	},
 	_BUILD_RECT: {/* Desenha uma retângulo: coordenadas inicial e final */
-		value: function(x1, y1, x2, y2, title) {
+		value: function(x1, y1, x2, y2, title, opacity) {
 			var rect = this._BUILD_SVG("rect", {
-				x:      x2 > x1 ? x1 : x2,
-				y:      y2 > y1 ? y1 : y2,
-				width:  x2 > x1 ? x2-x1 : x1-x2,
-				height: y2 > y1 ? y2-y1 : y1-y2,
-				fill:   this._COLOR, title: title
+				x:       x2 > x1 ? x1 : x2,
+				y:       y2 > y1 ? y1 : y2,
+				width:   x2 > x1 ? x2-x1 : x1-x2,
+				height:  y2 > y1 ? y2-y1 : y1-y2,
+				fill:    this._COLOR,
+				title:   title,
+				opacity: opacity === true ? 0.3 : 0.8,
 			});
 			this._SVG.appendChild(rect);
 			return rect;
@@ -621,7 +624,7 @@ Object.defineProperties(WDchart.prototype, {
 			var n = this._LEGEND[(func ? "func" : "text")]++;
 			var x = func ? ref.l : ref.l+ref.w;
 			var y = 4*n+ref.t;
-			this._BUILD_LABEL(x+1, y+1, (func ? "" : "\u25CF ")+text, "nw");
+			this._BUILD_LABEL(x+1, y+1, (func ? "" : "\u25CF ")+text, "nw", false, true);
 		}
 	},
 	_LABEL_VALUE: {/* Define a exibição de valores numéricos */
@@ -724,14 +727,15 @@ Object.defineProperties(WDchart.prototype, {
 		enumerable: true,
 		value: function(xlabel, ylabel) {/*desenha gráfico plano*/
 			var types = {
-				average:     {draw1: "dots", draw2: "line", reg: true},
-				exponential: {draw1: "dots", draw2: "line", reg: true},
-				linear:      {draw1: "dots", draw2: "line", reg: true},
-				geometric:   {draw1: "dots", draw2: "line", reg: true},
-				sum:         {draw1: "line", draw2: "cols", reg: true},
-				line:        {draw1: "line", draw2: null,   reg: false},
-				dots:        {draw1: "dots", draw2: null,   reg: false},
-				function:    {draw1: null,   draw2: "line", reg: false},
+				average:     {draw1: "dots", draw2: "line", reg: true,  dev: true,  prec: 10},
+				exponential: {draw1: "dots", draw2: "line", reg: true,  dev: true,  prec: 0},
+				linear:      {draw1: "dots", draw2: "line", reg: true,  dev: true,  prec: 0},
+				geometric:   {draw1: "dots", draw2: "line", reg: true,  dev: true,  prec: 0},
+				sum:         {draw1: "l+d",  draw2: "cols", reg: true,  dev: true,  prec: 0.1},
+				line:        {draw1: "line", draw2: null,   reg: false, dev: false, prec: 10},
+				dots:        {draw1: "dots", draw2: null,   reg: false, dev: false, prec: 0},
+				linedots:    {draw1: "l+d",  draw2: null,   reg: false, dev: false, prec: 10},
+				function:    {draw1: null,   draw2: "line", reg: false, dev: false, prec: 0},
 			};
 
 			/* Obtendo valores básicos */
@@ -746,13 +750,16 @@ Object.defineProperties(WDchart.prototype, {
 					o: check,   /*WDregression object*/
 					x: check.x, /*X array*/
 					y: check.y, /*Y array*/
+					d: types[item.t].draw1, /*tipo de linha a desenhar*/
 					l: item.l,  /*label*/
 					t: item.t,  /*type*/
-					d: types[item.t].draw1, /*tipo de linha a desenhar*/
 					r: false, /*exibir fórmula ?*/
+					s: null, /*desvio padrão*/
 				};
 				this._SET_ENDS("x", obj.x);
 				this._SET_ENDS("y", obj.y);
+				if (item.t === "sum") /*exibir o eixo zero quando for soma*/
+					this._SET_ENDS("y", [0]);
 				data.push(obj);
 			}
 			if (data.length === 0) return null;
@@ -764,29 +771,38 @@ Object.defineProperties(WDchart.prototype, {
 			for (var i = 0; i < items; i++) {
 				var item = data[i];
 				if (types[item.t].draw2 === null) continue;
-				var value = item.o.continuous(this._DELTA, item.t);
+				var value = item.o.continuous(this._DELTA(types[item.t].prec), item.t);
 				if (value === null) continue;
-
 				var obj = {
+					o: item.o,
 					x: value.x,
 					y: value.y,
 					d: types[data[i].t].draw2,
 					l: item.l,
-					t: item.type,
-					r: types[item.t].reg
+					t: item.t,
+					r: types[item.t].reg,
+					s: null,
 				};
 				if (item.t in item.o) {
-					var a = value.o.a;
-					var b = value.o.b;
-					obj.l = value.o.e.replace("a", a).replace("b", b);
+					var a = this._LABEL_VALUE(value.o.a);
+					var b = this._LABEL_VALUE(value.o.b);
+					var s = value.o.d === null ? "" : " \u00B1 "+this._LABEL_VALUE(value.o.d);
+					obj.s = s === null ? null : value.o.d;
+					obj.l = value.o.e.replace("a", a).replace("b", b)+s;
 				}
 				data.push(obj);
 				this._SET_ENDS("x", value.x);
 				this._SET_ENDS("y", value.y);
+				if (obj.s !== null) { /*desvio padrão*/
+					for (var j = 0; j < value.y.length; j++) {
+						this._SET_ENDS("y", [value.y[j]+obj.s]);
+						this._SET_ENDS("y", [value.y[j]-obj.s]);
+					}
+				}
 			}
 
 			/* Área de plotagem */
-			var lines = 5;
+			var lines = 4;
 			var info  = this._SET_AREA("plan", lines);
 			var color = 0; /*define o número da cor*/
 
@@ -804,12 +820,23 @@ Object.defineProperties(WDchart.prototype, {
 					if (0 < this._ENDS.y.min) zero  = this._TARGET(item.x[j], this._ENDS.y.min);
 					if (0 > this._ENDS.y.max) zero  = this._TARGET(item.x[j], this._ENDS.y.max);
 
-					if (item.d === "dots")
+					if (item.d === "dots" || item.d === "l+d") { /*pontos*/
 						this._BUILD_DOTS(trg1.x, trg1.y, item.l, title);
-					else if (item.d === "line" && trg2 !== null)
+					}
+					if ((item.d === "line" || item.d === "l+d") && trg2 !== null) {/*linhas*/
 						this._BUILD_LINE(trg1.x, trg1.y, trg2.x, trg2.y, title, 2);
-					else if (item.d === "cols" && trg2 !== null)
-						this._BUILD_RECT(trg1.x, (trg2.y+trg1.y)/2, trg2.x, zero.y, title);
+						if (types[item.t].dev && item.s !== null) { /*desvio padrão*/
+							var sup1  = this._TARGET(item.x[j], item.y[j]+item.s);
+							var sup2  = this._TARGET(item.x[j+1], item.y[j+1]+item.s);
+							var inf1  = this._TARGET(item.x[j], item.y[j]-item.s);
+							var inf2  = this._TARGET(item.x[j+1], item.y[j+1]-item.s);
+							this._BUILD_LINE(sup1.x, sup1.y, sup2.x, sup2.y, null, 0);
+							this._BUILD_LINE(inf1.x, inf1.y, inf2.x, inf2.y, null, 0);
+						}
+					}
+					if (item.d === "cols" && trg2 !== null) {
+						this._BUILD_RECT(trg1.x, (trg2.y+trg1.y)/2, trg2.x, zero.y, title, true);
+					}
 				}
 			}
 			
@@ -889,7 +916,7 @@ Object.defineProperties(WDchart.prototype, {
 			var zero = this._TARGET(0,0);
 			this._BUILD_LINE(info.xi, zero.y, info.xf, zero.y, "", 1);
 			this._BUILD_LABEL(info.xi-0.5, zero.y, "0", "e");
-			this._BUILD_LABEL(99, 99, "\u03A3y = "+this._LABEL_VALUE(sum), "se");
+			this._BUILD_LABEL(99, 99, "\u03A3y = "+this._LABEL_VALUE(sum), "se", false, true);
 
 			return true;
 		}
