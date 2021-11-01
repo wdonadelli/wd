@@ -179,8 +179,8 @@ Object.defineProperties(WDstatistics.prototype, {/*-- Estatística --*/
 
 /*----------------------------------------------------------------------------*/
 
-function WDregression(x, y) {
-	if (!(this instanceof WDregression)) return new WDregression(x, y);
+function WDanalysis(x, y) {
+	if (!(this instanceof WDanalysis)) return new WDanalysis(x, y);
 	WDdataSet.call(this);
 	var f = WD(y).type === "function" ? y : null;
 	if (WD(x).type !== "array") x = [];
@@ -198,11 +198,11 @@ function WDregression(x, y) {
 	});
 }
 
-WDregression.prototype = Object.create(WDdataSet.prototype, {
-		constructor: {value: WDregression}
+WDanalysis.prototype = Object.create(WDdataSet.prototype, {
+		constructor: {value: WDanalysis}
 });
 
-Object.defineProperties(WDregression.prototype, {/*-- Regressões --*/
+Object.defineProperties(WDanalysis.prototype, {/*-- Regressões --*/
 	REG_DEV: {
 		value: function(f) {
 			var diff = this.ADJUST_LISTS(this.y, this.SET_Y(this.x, f));
@@ -284,7 +284,7 @@ Object.defineProperties(WDregression.prototype, {/*-- Regressões --*/
 				while (n === null && ++i !== X.length)
 					if (x <= X[i]) n = i;
 				if (n === null) n = X.length-1;
-				var line = WDregression([X[n-1],X[n]], [Y[n-1],Y[n]]);
+				var line = WDanalysis([X[n-1],X[n]], [Y[n-1],Y[n]]);
 				return line.linear.f(x);
 			};
 			data.d = null;
@@ -307,31 +307,34 @@ Object.defineProperties(WDregression.prototype, {/*-- Regressões --*/
 			return data;
 		}
 	},
-	continuous: {
+	continuous: { /* define pontos das coordenadas x/y a partir de um intervalos de x (delta)*/
 		value: function(delta, method) {
 			if (this.e) return null;
 			if (!WD(delta).finite) return null;
 			var methods = ["linear", "exponential", "geometric", "sum", "average"];
-			var func = this.f;
-			if (methods.indexOf(method) >= 0) {
-				var obj = this[method];
+			/* define a função: informada ou de análise (methods) */
+			var func = this.f; /* função informada */
+			var obj  = {};     /*objeto vazio, sem utilizade para função informada*/
+			if (methods.indexOf(method) >= 0) { /*função de análise*/
+				obj  = this[method];
 				func = obj === null ? null : obj.f;
 			}
 			if (func === null) return null;
 
+			/* parâmetros para definir os intervalos */
 			delta    = WD(delta).abs;
 			var end  = WDstatistics(this.x);
-			var min  = end.min.value;
+			var min  = end.min.value; /* valor irá variar no looping while */
 			var max  = end.max.value;
 			var data = {x: [], y: [], o: obj};
 
-			while (delta > 0) {
-				if (min >= max) {
+			while (delta > 0) { /*definindo intervalos*/
+				if (min >= max) { /*ponto de parada do looping*/
 					min   = max;
 					delta = 0;
 				}
 				var val = func(min);
-				if (WD(val).finite) {
+				if (WD(val).finite) { /* definindo pontos se y for finito */
 					data.x.push(min);
 					data.y.push(val);
 				}
@@ -418,8 +421,8 @@ function WDchart(box, title) {/*Objeto para criar gráficos*/
 		_BOX: {value: this._BUILD_BOX(box)},
 		/* Elemento SVG a ser plotado os dados */
 		_SVG: {value: this._BUILD_SVG("svg")},
-		/* Escala do gráfico (x/y) e menor unidade gráfica (100 = 100%) */
-		_SCALE: {value: {x: 1, y: 1, d: 1}},
+		/* Escala do gráfico (x/y) */
+		_SCALE: {value: {x: 1, y: 1}},
 		/* Guarda a cor da plotagem */
 		_NCOLOR: {value: 0, writable: true},
 		/* Dimensões do gráfico (top, right, bottom, left, width, height) */
@@ -456,7 +459,7 @@ Object.defineProperties(WDchart.prototype, {
 	},
 	_DELTA: {/* Devolve a menor partícula em X */
 		value: function(x) {
-			return (x <= 0 ? this._SCALE.d : x)/this._SCALE.x;
+			return (x <= 0 ? 1 : x)/this._SCALE.x;
 		}
 	},
 	_SET_ENDS: {/* Registra as extremidades */
@@ -590,6 +593,13 @@ Object.defineProperties(WDchart.prototype, {
 	},
 	_CLEAR_SVG: {/* Limpa os filhos do SVG */
 		value: function() {
+			this._NCOLOR = 0;
+			this._ENDS.x = {min: Infinity, max: -Infinity};
+			this._ENDS.y = {min: Infinity, max: -Infinity};
+			var measures = {t: 0, r: 0, b: 0, l: 0, w: 100, h: 100};
+			for (var i in measures) this._MEASURES[i] = measures[i];
+			var padding  = {t: 0, r: 0, b: 0, l: 0};
+			for (var i in padding) this._PADDING[i] = padding[i];
 			this._LEGEND.text = 0;
 			this._LEGEND.func = 0;
 			if (this._SVG.parentElement === null)
@@ -668,7 +678,6 @@ Object.defineProperties(WDchart.prototype, {
 			var data = config[type];
 		
 			/* definindo valores iniciais */
-			this._CLEAR_SVG();
 			this._COLOR = -1;
 			for (var i in data.padd) this._PADDING[i] = data.padd[i];
 			this._SET_MEASURES();
@@ -726,115 +735,121 @@ Object.defineProperties(WDchart.prototype, {
 	plan: {
 		enumerable: true,
 		value: function(xlabel, ylabel) {/*desenha gráfico plano*/
+			this._CLEAR_SVG();
 			var types = {
-				average:     {draw1: "dots", draw2: "line", reg: true,  dev: true,  prec: 10},
-				exponential: {draw1: "dots", draw2: "line", reg: true,  dev: true,  prec: 0},
-				linear:      {draw1: "dots", draw2: "line", reg: true,  dev: true,  prec: 0},
-				geometric:   {draw1: "dots", draw2: "line", reg: true,  dev: true,  prec: 0},
-				sum:         {draw1: "line", draw2: "cols", reg: true,  dev: true,  prec: 0.1},
-				line:        {draw1: "line", draw2: null,   reg: false, dev: false, prec: 10},
-				dots:        {draw1: "dots", draw2: null,   reg: false, dev: false, prec: 0},
-				linedots:    {draw1: "l+d",  draw2: null,   reg: false, dev: false, prec: 10},
-				function:    {draw1: null,   draw2: "line", reg: false, dev: false, prec: 0},
+				/*data: plot principal, plot secundário, precisão*/
+				average:     {chart1: "dots", chart2: "line", prec: 10, },
+				exponential: {chart1: "dots", chart2: "line", prec: 1,  },
+				linear:      {chart1: "dots", chart2: "line", prec: 1,  },
+				geometric:   {chart1: "dots", chart2: "line", prec: 1,  },
+				sum:         {chart1: "line", chart2: "cols", prec: 0.1,},
+				line:        {chart1: "line", chart2: null,   prec: 10, },
+				dots:        {chart1: "dots", chart2: null,   prec: 1,  },
+				linedots:    {chart1: "l+d",  chart2: null,   prec: 10, },
+				function:    {chart1: null,   chart2: "line", prec: 1,  },
 			};
 
 			/* Obtendo valores básicos */
 			var data = [];
 
-			for (var i = 0; i < this._DATA.length; i++) {
+			for (var i = 0; i < this._DATA.length; i++) { /* obter gráficos primários (chart1) */
 				var item = this._DATA[i];
 				if (item === null || !(item.t in types)) continue;
-				var check = WDregression(item.x, item.y);
-				if (check.e) continue;
+				var check = WDanalysis(item.x, item.y);
+				if (check.e) continue; /* ignorar se os valores de x e y tiverem algum problema */
 				var obj  = {
-					o: check,   /*WDregression object*/
-					x: check.x, /*X array*/
-					y: check.y, /*Y array*/
-					d: types[item.t].draw1, /*tipo de linha a desenhar*/
-					l: item.l,  /*label*/
-					t: item.t,  /*type*/
-					r: false, /*exibir fórmula ?*/
-					s: null, /*desvio padrão*/
+					l: item.l,  /* legenda */
+					t: item.t,  /* tipo do gráfico */
+					c: types[item.t].chart1, /* formato da plotagem (chart) */
+					o: check,   /* WDanalysis object */
+					x: check.x, /* pontos em x */
+					y: check.y, /* pontos em y */
+					f: false, /* exibir fórmula? */
+					d: null, /* valor do desvio padrão, se existente */
 				};
+				/* definindo limites iniciais */
 				this._SET_ENDS("x", obj.x);
 				this._SET_ENDS("y", obj.y);
-				if (item.t === "sum") /*exibir o eixo zero quando for soma*/
-					this._SET_ENDS("y", [0]);
+				if (item.t === "sum") this._SET_ENDS("y", [0]); /* exibir o ponto y = 0 */
 				data.push(obj);
 			}
-			if (data.length === 0) return null;
 
-			/* Definindo o array de funções */
+			if (data.length === 0) return null; /* ignorar se o resultado for vazio */
+
+			/* definir ajustes para averiguar gráficos secundários */
 			this._SET_SCALE("x");
-			var items = data.length;			
+			var items = data.length; /* data sofrerá adições, guardar comprimento inicial */
 
-			for (var i = 0; i < items; i++) {
+			for (var i = 0; i < items; i++) { /* obter gráficos secundários (chart2) */
 				var item = data[i];
-				if (types[item.t].draw2 === null) continue;
+				if (types[item.t].chart2 === null) continue; /* ignorar se não tiver gráfico secundário */
 				var value = item.o.continuous(this._DELTA(types[item.t].prec), item.t);
-				if (value === null) continue;
-				var obj = {
+				if (value === null) continue; /* ignorar se o resultado da ação anterior for nulo */
+				var obj = { /* novo item em data (gráfico secundário) */
+					l: item.l,
+					t: item.t,
+					c: types[data[i].t].chart2,
 					o: item.o,
 					x: value.x,
 					y: value.y,
-					d: types[data[i].t].draw2,
-					l: item.l,
-					t: item.t,
-					r: types[item.t].reg,
-					s: null,
+					f: false,
+					d: null,
 				};
-				if (item.t in item.o) {
+				if (item.t in item.o) { /*gráfico existe em WDanalysis? obter fórmula (legenda) e desvio padrão */
 					var a = this._LABEL_VALUE(value.o.a);
 					var b = this._LABEL_VALUE(value.o.b);
-					var s = value.o.d === null ? "" : " \u00B1 "+this._LABEL_VALUE(value.o.d);
-					obj.s = s === null ? null : value.o.d;
-					obj.l = value.o.e.replace("a", a).replace("b", b)+s;
+					var d = value.o.d === null ? "" : " \u00B1 "+this._LABEL_VALUE(value.o.d);
+					obj.l = value.o.e.replace("a", a).replace("b", b)+d;
+					obj.f = true;
+					obj.d = value.o.d === null ? null : value.o.d;
 				}
 				data.push(obj);
+				/* definindo novos limites */
 				this._SET_ENDS("x", value.x);
 				this._SET_ENDS("y", value.y);
-				if (obj.s !== null) { /*desvio padrão*/
+				if (obj.d !== null) { /* limites em razão dos valores inferior e superior do desvio padrão*/
 					for (var j = 0; j < value.y.length; j++) {
-						this._SET_ENDS("y", [value.y[j]+obj.s]);
-						this._SET_ENDS("y", [value.y[j]-obj.s]);
+						this._SET_ENDS("y", [value.y[j]+obj.d]);
+						this._SET_ENDS("y", [value.y[j]-obj.d]);
 					}
 				}
 			}
 
 			/* Área de plotagem */
-			var lines = 4;
-			var info  = this._SET_AREA("plan", lines);
+			var lines = 4; /*grade do gráficos linhas vertical e horizontal*/
+			var info  = this._SET_AREA("plan", lines); /*define a área do gráfico*/
 			var color = 0; /*define o número da cor*/
 
-			for (var i = 0; i < data.length; i++) {
+			for (var i = 0; i < data.length; i++) {/* verificando todos itens em data*/
 				var item = data[i];
-				if (item.d === null) continue;
+				if (item.c === null) continue;
 				this._COLOR = 2*(color++)+1;
-				this._ADD_LEGEND(item.l, item.r);
+				this._ADD_LEGEND(item.l, item.f);
 
-				for (var j = 0; j < item.x.length; j++) {
-					var title = "("+item.x[j]+","+item.y[j]+")";
+				for (var j = 0; j < item.x.length; j++) { /*obterndo coordenadas*/
+					var title = "("+item.x[j]+", "+item.y[j]+")";
 					var trg1  = this._TARGET(item.x[j], item.y[j]);
 					var trg2  = this._TARGET(item.x[j+1], item.y[j+1]);
 					var zero  = this._TARGET(item.x[j], 0);
-					if (0 < this._ENDS.y.min) zero  = this._TARGET(item.x[j], this._ENDS.y.min);
-					if (0 > this._ENDS.y.max) zero  = this._TARGET(item.x[j], this._ENDS.y.max);
 
-					if (item.d === "dots" || item.d === "l+d") { /*pontos*/
+					if (item.c === "dots" || item.c === "l+d") { /*pontos*/
 						this._BUILD_DOTS(trg1.x, trg1.y, item.l, title);
 					}
-					if ((item.d === "line" || item.d === "l+d") && trg2 !== null) {/*linhas*/
+					
+					if ((item.c === "line" || item.c === "l+d") && trg2 !== null) {/*linhas*/
 						this._BUILD_LINE(trg1.x, trg1.y, trg2.x, trg2.y, title, 2);
-						if (types[item.t].dev && item.s !== null) { /*desvio padrão*/
-							var sup1  = this._TARGET(item.x[j], item.y[j]+item.s);
-							var sup2  = this._TARGET(item.x[j+1], item.y[j+1]+item.s);
-							var inf1  = this._TARGET(item.x[j], item.y[j]-item.s);
-							var inf2  = this._TARGET(item.x[j+1], item.y[j+1]-item.s);
+						
+						if (item.s !== null) { /*desvio padrão*/
+							var sup1  = this._TARGET(item.x[j], item.y[j]+item.d);
+							var sup2  = this._TARGET(item.x[j+1], item.y[j+1]+item.d);
+							var inf1  = this._TARGET(item.x[j], item.y[j]-item.d);
+							var inf2  = this._TARGET(item.x[j+1], item.y[j+1]-item.d);
 							this._BUILD_LINE(sup1.x, sup1.y, sup2.x, sup2.y, null, 0);
 							this._BUILD_LINE(inf1.x, inf1.y, inf2.x, inf2.y, null, 0);
 						}
 					}
-					if (item.d === "cols" && trg2 !== null) {
+					
+					if (item.c === "cols" && trg2 !== null) {/*desenhar área*/
 						this._BUILD_RECT(trg1.x, (trg2.y+trg1.y)/2, trg2.x, zero.y, title, true);
 					}
 				}
@@ -845,9 +860,9 @@ Object.defineProperties(WDchart.prototype, {
 			this._BUILD_LABEL(info.xf+2, info.yf+1, xlabel, "nw", false, true);
 			this._BUILD_LABEL(info.xi-1, info.yi-2, ylabel, "se", false, true);
 
+			/*valores dos eixos*/
 			var dX = (this._ENDS.x.max - this._ENDS.x.min) / lines;
 			var dY = (this._ENDS.y.max - this._ENDS.y.min) / lines;
-
 			for (var i = 0; i < info.x.length; i++) {
 				var x  = this._LABEL_VALUE(this._ENDS.x.min + i*dX);
 				var y  = this._LABEL_VALUE(this._ENDS.y.min + i*dY);
@@ -856,25 +871,27 @@ Object.defineProperties(WDchart.prototype, {
 				this._BUILD_LABEL(info.x[i], info.yf+1, x, px);
 				this._BUILD_LABEL(info.xi-1, info.y[i], y, py);
 			}
+			return true;
 		}
 	},
 
 	compare: { /* desenha um gráfico de colunas comparativo */
 		enumerable: true,
 		value: function(label) {/*desenha gráfico comparativo de colunas*/
+			this._CLEAR_SVG();
 			/* Obtendo dados básicos */
 			var data = {x: [], y: []};
 			for (var i = 0; i < this._DATA.length; i++) {
 				var item = this._DATA[i];
-				if (item === null || item.t !== "compare") continue;
+				if (item === null || item.t !== "compare") continue; /*filtrando tipo de gráfico*/
 				var check = WDcompare(item.x, item.y);
-				if (check.e) continue;
-				for (var j = 0; j < check.x.length; j++) {
+				if (check.e) continue; /* ignorando dados com erros nos valores */
+				for (var j = 0; j < check.x.length; j++) { /*adicionando dados*/
 					data.x.push(check.x[j]);
 					data.y.push(check.y[j]);
 				}
 			}
-			if (data.x.length === 0) return null;
+			if (data.x.length === 0) return null; /*se vazio, retornar*
 
 			/* Definindo dados para o gráfico */
 			var object = WDcompare(data.x, data.y);
@@ -887,15 +904,16 @@ Object.defineProperties(WDchart.prototype, {
 				values.y.push(ratio[i]);
 				values.v.push(amount[i]);
 			}
+			/* definindo limites */
 			this._SET_ENDS("x", values.l);
 			this._SET_ENDS("y", values.y);
-			this._SET_ENDS("y", [0]);
+			this._SET_ENDS("y", [0]); /*sempre exibir o ponto y = 0 */
 
 			/* Plotando o gráfico */
-			var info = this._SET_AREA("compare", values.x.length);
-			var sum = 0;
+			var info = this._SET_AREA("compare", values.x.length); /*definindo grade do gŕafico*/
+			var sum = 0; /*ponto de referência do comparativo*/
 
-			for (var i = 0; i < values.x.length; i++) {
+			for (var i = 0; i < values.x.length; i++) {/*construindo colunas*/
 				this._COLOR = 2*i+1;
 				var trg1 = this._TARGET(i, 0);
 				var trg2 = this._TARGET(i+1, values.y[i]);
@@ -907,14 +925,14 @@ Object.defineProperties(WDchart.prototype, {
 				var pos  = values.y[i] < 0 ? -1 : 1;
 				this._BUILD_RECT(trg1.x, trg1.y, trg2.x, trg2.y, ttl);
 				this._ADD_LEGEND(values.x[i]);
-				/* valor perto do eixo e porcentagem na topo ou base */
+				/* posição: valor no eixo e porcentagem no topo/base */
 				this._COLOR = -1;
 				this._BUILD_LABEL(trg3.x, trg2.y-pos, pct, pos < 0 ? "n" : "s", false, true);
 				this._BUILD_LABEL(trg3.x, trg3.y+pos, val, pos < 0 ? "s" : "n", false);
 			}
-
+			/*desenhando eixo zero*/
 			var zero = this._TARGET(0,0);
-			this._BUILD_LINE(info.xi, zero.y, info.xf, zero.y, "", 1);
+			this._BUILD_LINE(info.xi, zero.y, info.xf, zero.y, "", 2);
 			this._BUILD_LABEL(info.xi-0.5, zero.y, "0", "e");
 			this._BUILD_LABEL(99, 99, "\u03A3y = "+this._LABEL_VALUE(sum), "se", false, true);
 
