@@ -6,17 +6,19 @@ function WDdataSet() {
 
 Object.defineProperties(WDdataSet.prototype, {
 	constructor: {value: WDdataSet},
-	SET_FINITE: {
+	_SET_FINITE: { /* itens não finitos se tornam null no array */
 		value: function(x) {
 			var data = [];
 			for (var i = 0; i < x.length; i++) {
-				var val = WD(x[i]);
-				data.push(val.finite ? val.valueOf() : null);
+				var obj = WD(x[i]);
+				var val = WD(obj.valueOf());
+				var tps = ["number", "time", "date"];
+				data.push(val.finite && tps.indexOf(obj.type) >= 0 ? val.valueOf() : null);
 			}
 			return data;
 		}
 	},
-	SUM: {/*soma listas e aplica operações matemáticas entre elas (até 2)*/
+	_SUM: {/*soma listas e aplica operações matemáticas entre elas (até 2)*/
 		value: function(list1, exp1, list2, exp2) {
 			if (list2 === undefined) list2 = null;
 			var value = 0;
@@ -30,7 +32,7 @@ Object.defineProperties(WDdataSet.prototype, {
 			return value;
 		}
 	},
-	PRODUCT: {
+	_PRODUCT: {
 		value: function(list, exp) {/*calcula o produto da lista e aplica potenciação*/
 			var value = 1;
 			for (var i = 0; i < list.length; i++) {
@@ -41,7 +43,7 @@ Object.defineProperties(WDdataSet.prototype, {
 			return value;
 		}
 	},
-	DEVIATION: {/*calcula devios genéricos*/
+	_DEVIATION: {/*calcula devios genéricos*/
 		value: function(list, ref, exp) {/*calcula desvios a partir de uma lista/função e referência*/
 			var value = 0;
 			var check = WD(ref);
@@ -54,18 +56,18 @@ Object.defineProperties(WDdataSet.prototype, {
 			return value;
 		}
 	},
-	STD_DEV: {/*Calcula o desvio padrão*/
+	_STD_DEV: {/*Calcula o desvio padrão*/
 		value: function(list, ref) {
-			var data = this.DEVIATION(list, ref, 2);
+			var data = this._DEVIATION(list, ref, 2);
 			return data ===  null ? data : Math.sqrt(data/list.length);
 		}
 	},
-	LEAST_SQUARES: {/*Método dos mínimos quadrados*/
+	_LEAST_SQUARES: {/*Método dos mínimos quadrados*/
 		value: function(x, y) {
-			var X  = this.SUM(x, 1);
-			var Y  = this.SUM(y, 1);
-			var X2 = this.SUM(x, 2);
-			var XY = this.SUM(x, 1, y, 1);
+			var X  = this._SUM(x, 1);
+			var Y  = this._SUM(y, 1);
+			var X2 = this._SUM(x, 2);
+			var XY = this._SUM(x, 1, y, 1);
 			if ([X, Y, XY, X2].indexOf(null) >= 0) return null;
 			var N    = y.length;
 			var data = {};
@@ -74,7 +76,7 @@ Object.defineProperties(WDdataSet.prototype, {
 			return data;
 		}
 	},
-	ADJUST_LISTS: {/*retorna as listas em pares de informações não nulas*/
+	_ADJUST_LISTS: {/*retorna as listas em pares de informações não nulas*/
 		value: function(list1, list2) {
 			var loop = list1.length > list2.length ? list2.length : list1.length;
 			var lists = {list1: [], list2: [], length: 0};
@@ -87,10 +89,15 @@ Object.defineProperties(WDdataSet.prototype, {
 			return lists;
 		}
 	},
-	SET_Y: {/*define uma lista a partir da aplicação de uma função sobre os valores de outra lista*/
+	_GET_F_RETURN: {/*define uma lista aplicando uma função sobre outra lista*/
 		value: function(x, f) {
+			x = this._SET_FINITE(x);
 			var data = [];
-			for (var i = 0; i < x.length; i++) data.push(f(x[i]));
+			for (var i = 0; i < x.length; i++) {
+				var val = null;
+				try {val = f(x[i]);} catch(e) {}
+				data.push(WD(val).finite ? val : null);
+			}
 			return data;
 		}
 	},
@@ -103,7 +110,7 @@ function WDstatistics(x) {
 	if (!(this instanceof WDstatistics)) return new WDstatistics(x);
 	WDdataSet.call(this);
 	if (WD(x).type !== "array") x = [];
-	var val = WD(WD(this.SET_FINITE(x)).sort()).del(null);
+	var val = WD(WD(this._SET_FINITE(x)).sort()).del(null);
 	Object.defineProperties(this, {
 		x: {value: val}, /*array numérico sem nulos*/
 		l: {value: val.length}, /*comprimento array sem nulos*/
@@ -119,8 +126,8 @@ Object.defineProperties(WDstatistics.prototype, {/*-- Estatística --*/
 	sum: {/*soma*/
 		get: function() {
 			if (this.e) return null;
-			var val  = this.SUM(this.x, 1)
-			var diff = this.STD_DEV(this.x, val);
+			var val  = this._SUM(this.x, 1)
+			var diff = this._STD_DEV(this.x, val);
 			return {value: val, delta: diff};
 		}
 	},
@@ -128,7 +135,7 @@ Object.defineProperties(WDstatistics.prototype, {/*-- Estatística --*/
 		get: function() {
 			if (this.e) return null;
 			var val  = this.x[0];
-			var diff = this.STD_DEV(this.x, val);
+			var diff = this._STD_DEV(this.x, val);
 			return {value: val, delta: diff};
 		}
 	},
@@ -136,7 +143,7 @@ Object.defineProperties(WDstatistics.prototype, {/*-- Estatística --*/
 		get: function() {
 			if (this.e) return null;
 			var val  = this.x[this.l-1];
-			var diff = this.STD_DEV(this.x, val);
+			var diff = this._STD_DEV(this.x, val);
 			return {value: val, delta: diff};
 		}
 	},
@@ -144,7 +151,7 @@ Object.defineProperties(WDstatistics.prototype, {/*-- Estatística --*/
 		get: function() {
 			if (this.e) return null;
 			var val  = this.sum.value/this.l;
-			var diff = this.STD_DEV(this.x, val);
+			var diff = this._STD_DEV(this.x, val);
 			return {value: val, delta: diff};
 		}
 	},
@@ -154,27 +161,34 @@ Object.defineProperties(WDstatistics.prototype, {/*-- Estatística --*/
 			var a = this.x;
 			var l = this.l;
 			var val  = (l % 2 === 0) ? (a[l/2]+a[(l/2)-1])/2 : a[(l-1)/2];
-			var diff = this.STD_DEV(this.x, val);
+			var diff = this._STD_DEV(this.x, val);
 			return {value: val, delta: diff};
 		}
 	},
 	geometric: {/*média geométrica*/
 		get: function() {
 			if (this.e) return null;
-			var val  = Math.pow(Math.abs(this.PRODUCT(this.x, 1)), 1/this.l);
-			var diff = this.STD_DEV(this.x, val);
+			var val  = Math.pow(Math.abs(this._PRODUCT(this.x, 1)), 1/this.l);
+			var diff = this._STD_DEV(this.x, val);
 			return {value: val, delta: diff}
 		}
 	},
 	harmonic: {/*média harmônica*/
 		get: function() {
 			if (this.e) return null;
-			var harm = this.SUM(this.x, -1);
+			var harm = this._SUM(this.x, -1);
 			var val  = harm === 0 || harm === null ? null : this.l/harm;
-			var diff = val === null ? null : this.STD_DEV(this.x, val);
+			var diff = val === null ? null : this._STD_DEV(this.x, val);
 			return {value: val, delta: diff}
 		}
 	},
+	deviation: {/* retorna o desvio padrão FIXME: matenho o desvio padrão junto ou separado (spreadsheet e WDarray)*/
+		value: function(method) {
+			var (!(method in this)) return null;
+			var val = this[method];
+			return val === null ? null : this._STD_DEV(this.x, val);
+		}
+	}
 });
 
 /*----------------------------------------------------------------------------*/
@@ -185,8 +199,10 @@ function WDanalysis(x, y) {
 	var f = WD(y).type === "function" ? y : null;
 	if (WD(x).type !== "array") x = [];
 	if (WD(y).type !== "array") y = [];
-	if (f !== null) for (var i = 0; i < x.length; i++) y.push(f(x[i]));
-	var val  = this.ADJUST_LISTS(this.SET_FINITE(x), this.SET_FINITE(y));
+	if (f !== null)
+		for (var i = 0; i < x.length; i++)
+			y.push(f(x[i]));
+	var val  = this._ADJUST_LISTS(this._SET_FINITE(x), this._SET_FINITE(y));
 	var ends = WDstatistics(val.list1);
 	var diff = ends.e ? 0 : ends.max.value - ends.min.value;
 	Object.defineProperties(this, {
@@ -205,14 +221,14 @@ WDanalysis.prototype = Object.create(WDdataSet.prototype, {
 Object.defineProperties(WDanalysis.prototype, {/*-- Regressões --*/
 	REG_DEV: {
 		value: function(f) {
-			var diff = this.ADJUST_LISTS(this.y, this.SET_Y(this.x, f));
-			return this.STD_DEV(diff.list1, diff.list2);
+			var diff = this._ADJUST_LISTS(this.y, this._GET_F_RETURN(this.x, f));
+			return this._STD_DEV(diff.list1, diff.list2);
 		}
 	},
 	linear: {/*regressão linear*/
 		get: function() {
 			if (this.e) return null;
-			var val = this.LEAST_SQUARES(this.x, this.y);
+			var val = this._LEAST_SQUARES(this.x, this.y);
 			if (val === null) return null;
 			var data = {
 				e: "y = (a)x+(b)",
@@ -228,11 +244,11 @@ Object.defineProperties(WDanalysis.prototype, {/*-- Regressões --*/
 		get: function() {
 			if (this.e) return null;
 			/*pontos para a regressão (ajustando Y para equação linear)*/
-			var y    = this.SET_FINITE(this.SET_Y(this.y, Math.log));
-			var axes = this.ADJUST_LISTS(this.x, y);
+			var y    = this._SET_FINITE(this._GET_F_RETURN(this.y, Math.log));
+			var axes = this._ADJUST_LISTS(this.x, y);
 			if (axes.length === 0) return null;
 			/*regressão*/
-			var val = this.LEAST_SQUARES(axes.list1, axes.list2);
+			var val = this._LEAST_SQUARES(axes.list1, axes.list2);
 			if (val === null) return null;
 			var data = {
 				e: "y = (a)\u212F^(bx)",
@@ -248,12 +264,12 @@ Object.defineProperties(WDanalysis.prototype, {/*-- Regressões --*/
 		get: function() {
 			if (this.e) return null;
 			/*pontos para a regressão (ajustando X/Y para equação linear)*/
-			var x = this.SET_FINITE(this.SET_Y(this.x, Math.log));
-			var y = this.SET_FINITE(this.SET_Y(this.y, Math.log));
-			var axes = this.ADJUST_LISTS(x, y);
+			var x = this._SET_FINITE(this._GET_F_RETURN(this.x, Math.log));
+			var y = this._SET_FINITE(this._GET_F_RETURN(this.y, Math.log));
+			var axes = this._ADJUST_LISTS(x, y);
 			if (axes.length === 0) return null;
 			/*regressão*/
-			var val = this.LEAST_SQUARES(axes.list1, axes.list2);
+			var val = this._LEAST_SQUARES(axes.list1, axes.list2);
 			if (val === null) return null;
 			var data = {
 				e: "y = (a)x^(b)",
@@ -354,7 +370,7 @@ function WDcompare(x, y) {
 	if (WD(x).type !== "array") x = [];
 	if (WD(y).type !== "array") y = [];
 	x = this.SET_STRING(x);
-	y = this.SET_FINITE(y);
+	y = this._SET_FINITE(y);
 	var lenX = WD(x).del(null).length;
 	var lenY = WD(y).del(null).length;
 
@@ -660,7 +676,7 @@ Object.defineProperties(WDchart.prototype, {
 
 /* -- Gráfico plano --------------------------------------------------------- */
 	_SET_AREA: {
-		value: function(type, n) {
+		value: function(type, n) {/* define a área do gŕafico (n = linhas)*/
 			n = n === undefined ? 0 : n;
 			var config = {/* configurações da área do gráfico */
 				plan: {
@@ -722,6 +738,69 @@ Object.defineProperties(WDchart.prototype, {
 			return info;
 		}
 	},
+	_COMPARE: { /* desenha um gráfico de colunas comparativo */
+		enumerable: true,
+		value: function(xlabel, ylabel) {/*desenha gráfico comparativo de colunas*/
+			/* Obtendo dados básicos */
+			var data = {x: [], y: []};
+			for (var i = 0; i < this._DATA.length; i++) {
+				var item = this._DATA[i];
+				if (item === null) continue;
+				var check = WDcompare(item.x, item.y);
+				if (check.e) continue; /* ignorando dados com erros nos valores */
+				for (var j = 0; j < check.x.length; j++) { /*adicionando dados*/
+					data.x.push(check.x[j]);
+					data.y.push(check.y[j]);
+				}
+			}
+			if (data.x.length === 0) return null; /*se vazio, retornar*
+
+			/* Definindo dados para o gráfico */
+			var object = WDcompare(data.x, data.y);
+			var ratio  = object.ratio;
+			var amount = object.amount;
+			var values = {l: [0], x: [], y: [], v: []};
+			for (var i in ratio) {
+				values.l.push(values.l.length);
+				values.x.push(i);
+				values.y.push(ratio[i]);
+				values.v.push(amount[i]);
+			}
+			/* definindo limites */
+			this._SET_ENDS("x", values.l);
+			this._SET_ENDS("y", values.y);
+			this._SET_ENDS("y", [0]); /*sempre exibir o ponto y = 0 */
+
+			/* Plotando o gráfico */
+			var info = this._SET_AREA("compare", values.x.length); /*definindo grade do gŕafico*/
+			var sum = 0; /*ponto de referência do comparativo*/
+
+			for (var i = 0; i < values.x.length; i++) {/*construindo colunas*/
+				this._COLOR = 2*i+1;
+				var trg1 = this._TARGET(i, 0);
+				var trg2 = this._TARGET(i+1, values.y[i]);
+				var trg3 = this._TARGET((i + 0.5), 0);
+				sum += values.v[i];
+				var pct  = this._LABEL_VALUE(values.y[i], true);
+				var val  = this._LABEL_VALUE(values.v[i]);
+				var ttl  = values.x[i]+": "+val+" ("+pct+")";
+				var pos  = values.y[i] < 0 ? -1 : 1;
+				this._BUILD_RECT(trg1.x, trg1.y, trg2.x, trg2.y, ttl);
+				this._ADD_LEGEND(values.x[i]);
+				/* posição: valor no eixo e porcentagem no topo/base */
+				this._COLOR = -1;
+				this._BUILD_LABEL(trg3.x, trg2.y-pos, pct, pos < 0 ? "n" : "s", false, true);
+				this._BUILD_LABEL(trg3.x, trg3.y+pos, val, pos < 0 ? "s" : "n", false);
+			}
+			/*desenhando eixo zero*/
+			var zero = this._TARGET(0,0);
+			this._BUILD_LINE(info.xi, zero.y, info.xf, zero.y, "", 2);
+			this._BUILD_LABEL(info.xi-0.5, zero.y, "0", "e");
+			this._BUILD_LABEL(99, 99, "\u03A3y = "+this._LABEL_VALUE(sum), "se", false, true);
+
+			return true;
+		}
+	},
 
 /* -- Funções acessíveis ---------------------------------------------------- */
 	add: {
@@ -732,10 +811,12 @@ Object.defineProperties(WDchart.prototype, {
 			return this._DATA.length-1;
 		}
 	},
-	plan: {
+	plot: {
 		enumerable: true,
-		value: function(xlabel, ylabel) {/*desenha gráfico plano*/
+		value: function(xlabel, ylabel, compare) {/*desenha gráfico plano*/
 			this._CLEAR_SVG();
+			if (compare === true) return this._COMPARE();
+			
 			var types = {
 				/*data: plot principal, plot secundário, precisão*/
 				average:     {chart1: "dots", chart2: "line", prec: 10, },
@@ -871,71 +952,6 @@ Object.defineProperties(WDchart.prototype, {
 				this._BUILD_LABEL(info.x[i], info.yf+1, x, px);
 				this._BUILD_LABEL(info.xi-1, info.y[i], y, py);
 			}
-			return true;
-		}
-	},
-
-	compare: { /* desenha um gráfico de colunas comparativo */
-		enumerable: true,
-		value: function(label) {/*desenha gráfico comparativo de colunas*/
-			this._CLEAR_SVG();
-			/* Obtendo dados básicos */
-			var data = {x: [], y: []};
-			for (var i = 0; i < this._DATA.length; i++) {
-				var item = this._DATA[i];
-				if (item === null || item.t !== "compare") continue; /*filtrando tipo de gráfico*/
-				var check = WDcompare(item.x, item.y);
-				if (check.e) continue; /* ignorando dados com erros nos valores */
-				for (var j = 0; j < check.x.length; j++) { /*adicionando dados*/
-					data.x.push(check.x[j]);
-					data.y.push(check.y[j]);
-				}
-			}
-			if (data.x.length === 0) return null; /*se vazio, retornar*
-
-			/* Definindo dados para o gráfico */
-			var object = WDcompare(data.x, data.y);
-			var ratio  = object.ratio;
-			var amount = object.amount;
-			var values = {l: [0], x: [], y: [], v: []};
-			for (var i in ratio) {
-				values.l.push(values.l.length);
-				values.x.push(i);
-				values.y.push(ratio[i]);
-				values.v.push(amount[i]);
-			}
-			/* definindo limites */
-			this._SET_ENDS("x", values.l);
-			this._SET_ENDS("y", values.y);
-			this._SET_ENDS("y", [0]); /*sempre exibir o ponto y = 0 */
-
-			/* Plotando o gráfico */
-			var info = this._SET_AREA("compare", values.x.length); /*definindo grade do gŕafico*/
-			var sum = 0; /*ponto de referência do comparativo*/
-
-			for (var i = 0; i < values.x.length; i++) {/*construindo colunas*/
-				this._COLOR = 2*i+1;
-				var trg1 = this._TARGET(i, 0);
-				var trg2 = this._TARGET(i+1, values.y[i]);
-				var trg3 = this._TARGET((i + 0.5), 0);
-				sum += values.v[i];
-				var pct  = this._LABEL_VALUE(values.y[i], true);
-				var val  = this._LABEL_VALUE(values.v[i]);
-				var ttl  = values.x[i]+": "+val+" ("+pct+")";
-				var pos  = values.y[i] < 0 ? -1 : 1;
-				this._BUILD_RECT(trg1.x, trg1.y, trg2.x, trg2.y, ttl);
-				this._ADD_LEGEND(values.x[i]);
-				/* posição: valor no eixo e porcentagem no topo/base */
-				this._COLOR = -1;
-				this._BUILD_LABEL(trg3.x, trg2.y-pos, pct, pos < 0 ? "n" : "s", false, true);
-				this._BUILD_LABEL(trg3.x, trg3.y+pos, val, pos < 0 ? "s" : "n", false);
-			}
-			/*desenhando eixo zero*/
-			var zero = this._TARGET(0,0);
-			this._BUILD_LINE(info.xi, zero.y, info.xf, zero.y, "", 2);
-			this._BUILD_LABEL(info.xi-0.5, zero.y, "0", "e");
-			this._BUILD_LABEL(99, 99, "\u03A3y = "+this._LABEL_VALUE(sum), "se", false, true);
-
 			return true;
 		}
 	},
