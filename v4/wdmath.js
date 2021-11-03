@@ -686,7 +686,7 @@ Object.defineProperties(WDchart.prototype, {
 		}
 	},
 	_SET_AREA: {
-		value: function(type, n) {/* define a área do gŕafico (n = linhas)*/
+		value: function(type, n, xlabel, ylabel) {/* define a área do gŕafico (n = linhas)*/
 			n = n === undefined ? 0 : n;
 			var config = {/* configurações da área do gráfico */
 				plan: {
@@ -695,7 +695,7 @@ Object.defineProperties(WDchart.prototype, {
 				},
 				compare: {
 					width: {t: 0, r: 0, b: 0, l: 0, c: 0},
-					padd:  {t: 10, r: 30, b: 10, l: 10},
+					padd:  {t: 15, r: 20, b: 10, l: 10},
 				},
 			};
 
@@ -724,26 +724,14 @@ Object.defineProperties(WDchart.prototype, {
 				grid.y.unshift({x: val.h.x1, y: val.h.y1, d: dY});
 			}
 
-			/* construíndo título */
-			this._BUILD_LABEL(ref.cx, ref.t/4, this._TITLE, "n", false, true);
+			/* construíndo título e labels */
+			this._BUILD_LABEL(ref.cx, ref.t/5, this._TITLE, "n", false, true);
+			this._BUILD_LABEL(ref.cx, ref.b+(100-ref.b)*3/4, xlabel, "s", false, true);
+			this._BUILD_LABEL(1/4*ref.l, ref.cy, ylabel, "s", true, true);
 
 			return grid;
 		}
 	},
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 	_COMPARE: { /* desenha um gráfico de colunas comparativo */
 		enumerable: true,
 		value: function(xlabel, ylabel) {/*desenha gráfico comparativo de colunas*/
@@ -751,12 +739,10 @@ Object.defineProperties(WDchart.prototype, {
 			var data = {x: [], y: []};
 			for (var i = 0; i < this._DATA.length; i++) {
 				var item = this._DATA[i];
-				if (item === null) continue;
-				var check = WDcompare(item.x, item.y);
-				if (check.e) continue; /* ignorando dados com erros nos valores */
-				for (var j = 0; j < check.x.length; j++) { /*adicionando dados*/
-					data.x.push(check.x[j]);
-					data.y.push(check.y[j]);
+				if (item.t !== "compare") continue;
+				for (var j = 0; j < item.x.length; j++) { /*adicionando dados*/
+					data.x.push(item.x[j]);
+					data.y.push(item.y[j]);
 				}
 			}
 			if (data.x.length === 0) return null; /*se vazio, retornar*
@@ -778,15 +764,15 @@ Object.defineProperties(WDchart.prototype, {
 			this._SET_ENDS("y", [0]); /*sempre exibir o ponto y = 0 */
 
 			/* Plotando o gráfico */
-			var info = this._SET_AREA("compare", values.x.length); /*definindo grade do gŕafico*/
+			var grid = this._SET_AREA("compare", values.x.length, xlabel, ylabel); /*definindo grade do gŕafico*/
 			var sum = 0; /*ponto de referência do comparativo*/
 
 			for (var i = 0; i < values.x.length; i++) {/*construindo colunas*/
-				this._COLOR = 2*i+1;
+				sum += values.v[i];
+				this._COLOR = i;
 				var trg1 = this._TARGET(i, 0);
 				var trg2 = this._TARGET(i+1, values.y[i]);
 				var trg3 = this._TARGET((i + 0.5), 0);
-				sum += values.v[i];
 				var pct  = this._LABEL_VALUE(values.y[i], true);
 				var val  = this._LABEL_VALUE(values.v[i]);
 				var ttl  = values.x[i]+": "+val+" ("+pct+")";
@@ -794,14 +780,14 @@ Object.defineProperties(WDchart.prototype, {
 				this._BUILD_RECT(trg1.x, trg1.y, trg2.x, trg2.y, ttl);
 				this._ADD_LEGEND(values.x[i]);
 				/* posição: valor no eixo e porcentagem no topo/base */
-				this._COLOR = -1;
 				this._BUILD_LABEL(trg3.x, trg2.y-pos, pct, pos < 0 ? "n" : "s", false, true);
+				this._COLOR = -1;
 				this._BUILD_LABEL(trg3.x, trg3.y+pos, val, pos < 0 ? "s" : "n", false);
 			}
 			/*desenhando eixo zero*/
+			var ref = this._MEASURES;
 			var zero = this._TARGET(0,0);
-			this._BUILD_LINE(info.xi, zero.y, info.xf, zero.y, "", 2);
-			this._BUILD_LABEL(info.xi-0.5, zero.y, "0", "e");
+			this._BUILD_LINE(ref.l, zero.y, ref.r, zero.y, "", 2);
 			this._BUILD_LABEL(99, 99, "\u03A3y = "+this._LABEL_VALUE(sum), "se", false, true);
 
 			return true;
@@ -817,9 +803,9 @@ Object.defineProperties(WDchart.prototype, {
 	},
 
 /* -- Funções acessíveis ---------------------------------------------------- */
-	add: {
+	add: {/* Adiciona conjunto de dados para plotagem */
 		enumerable: true,
-		value: function(x, y, label, analysis) {/* Adiciona conjunto de dados para plotagem */
+		value: function(x, y, label, analysis) {
 			if (this._SVG === null) return null;
 			/*verificando dados*/
 			var obj1 = WDanalysis(x,y);
@@ -827,18 +813,17 @@ Object.defineProperties(WDchart.prototype, {
 			if (obj1.e && obj2.e) return null;
 			var color = this._DATA.length === 0 ? 0 : this._DATA[this._DATA.length-1].c; /*obter a última cor adicionada*/
 			/*dados sem condições de análise*/
-			if (obj1.e) {
+			if (!obj2.e) {
 				this._DATA.push(
-					{x: obj2.x, y: obj2.y, l: label, t: "compare", c: color+1, f: false}
+					{x: obj2.x, y: obj2.y, l: null, t: "compare", c: color+1, f: false}
 				);
-				return true;
 			}
+			if (obj1.e) return true;
 			/*plotar uma função*/
 			if (WD(y).type === "function") {
 				this._DATA.push(
 					{x: obj1.x, y: y, l: label, t: "line", c: color+1, f: false}
 				);
-				
 				return true;
 			}
 			/*plotar somente coordenadas*/
@@ -891,11 +876,10 @@ Object.defineProperties(WDchart.prototype, {
 		enumerable: true,
 		value: function(xlabel, ylabel, compare) {/*desenha gráfico plano*/
 			this._CLEAR_SVG();
-			//if (compare === true) return this._COMPARE();
+			if (compare === true) return this._COMPARE(xlabel, ylabel);
 			
-			var data = [];
-
 			/* Obtendo valores básicos para definir parâmetros dos gráficos */
+			var data = [];
 			for (var i = 0; i < this._DATA.length; i++) {
 				var item = this._DATA[i];
 				if (item.t === "compare") continue;
@@ -929,7 +913,7 @@ Object.defineProperties(WDchart.prototype, {
 
 			/* Plotagem da área e das linhas */
 			var lines = 4;
-			var grid  = this._SET_AREA("plan", lines);
+			var grid  = this._SET_AREA("plan", lines, xlabel, ylabel);
 
 			for (var i = 0; i < data.length; i++) {
 				var item = data[i];
@@ -953,13 +937,9 @@ Object.defineProperties(WDchart.prototype, {
 						this._BUILD_RECT(trg1.x, (trg2.y+trg1.y)/2, trg2.x, zero.y, title, true);
 				}
 			}
-			/* Plotando labels */
-			var ref = this._MEASURES;
-			this._COLOR = -1;
-			this._BUILD_LABEL(ref.cx, ref.b+(100-ref.b)*3/4, xlabel, "s", false, true);
-			this._BUILD_LABEL(1/4*ref.l, ref.cy, ylabel, "s", true, true);
 
 			/*valores dos eixos*/
+			this._COLOR = - 1;
 			var dX = (this._ENDS.x.max - this._ENDS.x.min) / lines;
 			var dY = (this._ENDS.y.max - this._ENDS.y.min) / lines;
 			for (var i = 0; i < grid.x.length; i++) {
