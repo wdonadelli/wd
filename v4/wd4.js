@@ -3002,7 +3002,7 @@ var wd = (function() {
 				var data = {x: [], y: []};
 				for (var i = 0; i < this._DATA.length; i++) {
 					var item = this._DATA[i];
-					if (item.t !== "compare") continue;
+					if (item.t === "deleted" || item.t !== "compare") continue;
 					for (var j = 0; j < item.x.length; j++) { /*adicionando dados*/
 						data.x.push(item.x[j]);
 						data.y.push(item.y[j]);
@@ -3131,6 +3131,15 @@ var wd = (function() {
 				return true;
 			}
 		},
+		clear: {
+			enumerable: true,
+			value: function() {/*apaga todos os dados do gráfico*/
+				this._CLEAR_SVG();
+				for (var i = 0; i < this._DATA.length; i++)
+					this._DATA[i].t = "deleted";
+				return true;
+			}
+		},
 		plot: {
 			enumerable: true,
 			value: function(xlabel, ylabel, compare) {/*desenha gráfico plano*/
@@ -3141,7 +3150,7 @@ var wd = (function() {
 				var data = [];
 				for (var i = 0; i < this._DATA.length; i++) {
 					var item = this._DATA[i];
-					if (item.t === "compare") continue;
+					if (item.t === "deleted" || item.t === "compare") continue;
 					this._SET_ENDS("x", item.x);
 					if (WD(item.y).type === "array")
 						this._SET_ENDS("y", item.y);
@@ -3674,6 +3683,15 @@ var wd = (function() {
 				return;
 			});
 			return method === "GET" ? x.join("&") : x;
+		}
+	});
+
+	Object.defineProperty(WDdom.prototype, "chart", {/*retorna um objeto (aplicável somente ao 1º elemento div) de criação de gráficos*/
+		value: function(title) {
+			for (var i = 0; i < this.item(); i++)
+				if (WDdom.tag(this.item(i)) === "div")
+					return new WDchart(this.item(i), title);
+			return null;
 		}
 	});
 
