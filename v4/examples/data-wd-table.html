@@ -4,7 +4,7 @@
 
 	<caption>Data</caption>
 	<thead style="background-color: rgba(255,255,0,0.3)">
-		<tr><th>#</th><th>Data 1</th><th>Data 2</th><th>Data 3 (editable)</th></tr>
+		<tr><th>#</th><th>1</th><th>2</th><th>3</th></tr>
 	</thead>
 
 	<tbody style="background-color: rgba(0,255,255,0.3)" id="table">
@@ -18,27 +18,27 @@
 	<tfoot style="background-color: rgba(0,0,255,0.3)">
 		<tr>
 			<th>Sum</th>
-			<td data-wd-table="data{sum}cell{:1}${#table}digits{2}"></td>
-			<td data-wd-table="data{sum}cell{:2}${#table}digits{3}"></td>
-			<td data-wd-table="data{sum}cell{:3}${#table}digits{1}"></td>
+			<td data-wd-table="value{statistics.sum}x{:1}${#table}"></td>
+			<td data-wd-table="value{statistics.sum}x{:2}${#table}"></td>
+			<td data-wd-table="value{statistics.sum}x{:3}${#table}"></td>
 		</tr>
 		<tr>
 			<th>Average</th>
-			<td data-wd-table="data{average+}cell{:1}${#table}digits{2}"></td>
-			<td data-wd-table="data{average+}cell{:2}${#table}digits{3}"></td>
-			<td data-wd-table="data{average+}cell{:3}${#table}digits{3}"></td>
+			<td data-wd-table="value{statistics.average}x{:1}${#table}"></td>
+			<td data-wd-table="value{statistics.average}x{:2}${#table}"></td>
+			<td data-wd-table="value{statistics.average}x{:3}${#table}"></td>
 		</tr>
 		<tr>
 			<th>Min</th>
-			<td data-wd-table="data{min}cell{:1}${#table}digits{2}"></td>
-			<td data-wd-table="data{min}cell{:2}${#table}digits{3}"></td>
-			<td data-wd-table="data{min}cell{:3}${#table}"></td>
+			<td data-wd-table="value{statistics.min}x{:1}${#table}"></td>
+			<td data-wd-table="value{statistics.min}x{:2}${#table}"></td>
+			<td data-wd-table="value{statistics.min}x{:3}${#table}"></td>
 		</tr>
 		<tr>
 			<th>Max</th>
-			<td data-wd-table="data{max}cell{:1}${#table}digits{2}"></td>
-			<td data-wd-table="data{max}cell{:2}${#table}digits{3}"></td>
-			<td data-wd-table="data{max}cell{:3}${#table}"></td>
+			<td data-wd-table="value{statistics.max}x{:1}${#table}"></td>
+			<td data-wd-table="value{statistics.max}x{:2}${#table}"></td>
+			<td data-wd-table="value{statistics.max}x{:3}${#table}"></td>
 		</tr>
 	</tfoot>
 </table>

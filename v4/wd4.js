@@ -2295,7 +2295,7 @@ var wd = (function() {
 
 /*............................................................................*/
 
-	Object.defineProperties(WDarray, {
+	Object.defineProperties(WDarray, {/*métodos do construtor*/
 		cell: {
 			value: function(matrix, cell) {/*obtem lista de valores da matriz a partir de endereços de celulas (linha:coluna)*/
 				cell = new String(cell).trim().split(":");
@@ -2503,6 +2503,18 @@ var wd = (function() {
 		}
 	});
 
+	Object.defineProperty(WDarray.prototype, "data", {/*obtem dados estatísticos a partir dos itens do array/matriz*/
+		enumerable: true,
+		value: function(x, y) {
+			var info = {
+				statistics: new WDstatistics(this.cell(x)),
+				compare:    new WDcompare(this.cell(x), this.cell(y)),
+				analysis:   new WDanalysis(this.cell(x), this.cell(y)),
+			}
+			return info;
+		}
+	});
+
 	Object.defineProperties(WDarray.prototype, {
 		toString: {
 			value: function() {
@@ -2523,7 +2535,7 @@ var wd = (function() {
 		WDmain.call(this, input, type, value);
 	}
 
-	Object.defineProperties(WDdom, {
+	Object.defineProperties(WDdom, {/*objetos do construtor*/
 		checkCss: {
 			value: function(e, css) {
 				var list = WDbox.clearSpaces(e.className).split(" ");
@@ -2702,8 +2714,8 @@ var wd = (function() {
 
 /*............................................................................*/
 
-	function WDchart(box, title) {/*Objeto para criar gráficos*/
-		if (!(this instanceof WDchart)) return new WDchart(box, title);
+	function wdChart(box, title) {/*Objeto para criar gráficos*/
+		if (!(this instanceof wdChart)) return new wdChart(box, title);
 		Object.defineProperties(this, {/*atributos do objeto*/
 			/* Container HTML a acomodar o gráfico */
 			_BOX: {value: this._BUILD_BOX(box)},
@@ -2724,8 +2736,8 @@ var wd = (function() {
 		});
 	};
 
-	Object.defineProperties(WDchart.prototype, {
-		constructor: {value: WDchart},
+	Object.defineProperties(wdChart.prototype, {
+		constructor: {value: wdChart},
 		_RATIO: {/* Relação altura/comprimento do gráfico (igual a da tela) */
 			value: window.screen.height/window.screen.width
 		},
@@ -2779,7 +2791,10 @@ var wd = (function() {
 				WD(box.item(0)).set("innerHTML", "").css(null).style(null).style({
 					position: "relative", paddingTop: this._CONVERT(100 * this._RATIO)
 				});
-				return box.item(0);
+				input = box.item(0);
+				var child = input.children;
+				while (child.length > 0) input.removeChild(child[0]);
+				return input;
 			}
 		},
 		_BUILD_SVG: {/* Cria e retorna elementos svg conforme atributos */
@@ -2809,8 +2824,7 @@ var wd = (function() {
 				if (type === "svg") /* para SVG principal apenas */
 					WD(elem).style({
 						height: "100%", width: "100%", position: "absolute",
-						top: "0", left: "0", bottom: "0", right: "0",
-						backgroundColor: "#FFFFFF", border: "1px dotted black"
+						top: "0", left: "0", bottom: "0", right: "0"
 					});
 
 				return elem;
@@ -3087,7 +3101,7 @@ var wd = (function() {
 					return true;
 				}
 				/*plotar somente coordenadas*/
-				if (!(WD(analysis).lower in obj1)) {
+				if (!(analysis in obj1)) {
 					this._DATA.push(
 						{x: obj1.x, y: obj1.y, l: label, t: "dots", c: color+1, f: false}
 					);
@@ -3686,12 +3700,9 @@ var wd = (function() {
 		}
 	});
 
-	Object.defineProperty(WDdom.prototype, "chart", {/*retorna um objeto (aplicável somente ao 1º elemento div) de criação de gráficos*/
+	Object.defineProperty(WDdom.prototype, "chart", {/*retorna um objeto (aplicável somente ao 1º elemento) de criação de gráficos*/
 		value: function(title) {
-			for (var i = 0; i < this.item(); i++)
-				if (WDdom.tag(this.item(i)) === "div")
-					return new WDchart(this.item(i), title);
-			return null;
+			return new wdChart(this.item(0), title);
 		}
 	});
 
@@ -3742,31 +3753,55 @@ var wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 
-	function data_wdChart(e) {/*Plota Gráfico: data-wd-chart=path{csv}type{}data{x,y,...}${form}*/
-		//type: plot, line, bar, circle
-
+	function data_wdChart(e) {/*Plotar Gráfico: data-wd-chart*/
+		/*a partir de uma tabela: table{target}cols{x,y1:anal1,y2:anal2...}labels{title,x,y}*/
+		/*a partir de um arquivo: path{...}method{...}form{...}cols{x,y1:anal1,y2:anal2...}labels{title,x,y}*/
 		if (!("wdChart" in e.dataset)) return;
-		var data   = WDdom.dataset(e, "wdLoad")[0];
+		var data   = WDdom.dataset(e, "wdChart")[0];
 		var target = WD(e);
-		var method = "method" in data ? data.method : "post";
-		var file   = data.path;
-		var pack   = WDbox.get$$(data);
-		var exec   = WD(pack);
 
-		target.data({wdLoad: null});
-		exec.send(file, function(x) {
-			if (x.closed) target.load(x.text);
-		}, method);
+		/*Função para analisar dados e manipular objeto*/
+		var buildChart = function(elem, matrix, data) {
+			var obj = WD(matrix);
+			if (obj.type !== "array") return;
+			var labels = data.labels.split(",");
+			var cols    = data.cols.split(",");
+			var xcol    = cols[0].replace(/[^0-9]/g, "");
+			var xaxis   = obj.cell("1-:"+xcol);
+			var chart   = WD(elem).chart(labels[0].trim());
+			var compare = true;
+			/*obtendo eixo y e adicionando dados*/
+			for (var i = 1; i < cols.length; i++) {
+				var info  = cols[i].split(":");
+				var ycol  = info[0].replace(/[^0-9]/g, "");
+				var anal  = info.length === 2 ? info[1].trim() : "";
+				if (anal !== "compare") compare = false;
+				var yaxis = obj.cell("1-:"+ycol);
+				var label = obj.cell("0:"+ycol);
+				chart.add(xaxis, yaxis, label, anal);
+			}
+			return chart.plot(labels[1].trim(), labels[2].trim(), compare);
+		}
+		/*trabalhar com os dados, se tabela ou arquivo*/
+		if ("table" in data) { /*para fonte tabela*/
+			var table  = WD.$(data.table);
+			var matrix = table.table();
+			if (matrix.length === 0) return;
+			return buildChart(e, matrix[0], data);
+		} else if ("path" in data) { /*para fonte arquivo*/
+			var method = "method" in data ? data.method : "post";
+			var file   = data.path;
+			var pack   = WDbox.get$$(data);
+			var exec   = WD(pack);
+			exec.send(file, function(x) {
+				if (x.closed) {
+					if (x.csv !== null) return buildChart(e, x.csv, data);
+				}
+			}, method);
+		}
+		target.data({wdChart: null});
 		return;
 	}
-
-
-
-
-
-
-
-
 
 /*----------------------------------------------------------------------------*/
 
@@ -4048,39 +4083,29 @@ var wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 
-	function data_wdTable(e) {/*Mensagem input: data-wd-table=data{sum+}cell{}${table}digits{n}*/
-		if (!("wdTable" in e.dataset)) return;
-		var data   = WDdom.dataset(e, "wdTable")[0];
+	function data_wdOutput(e) {/*Atribui um valor ao target: data-wd-output=${target}call{}*/
+		if (!("wdOutput" in e.dataset)) return;
+		var data   = WDdom.dataset(e, "wdOutput")[0];
 		var target = WDbox.get$$(data);
 		if (target === null) return;
+
+
+
+/*
 		var table = WD(target).table()[0];
 		if (table === null) return;
-
-		var operation = "data" in data ? data.data.toLowerCase() : "sum";
-		var deviation = operation[operation.length-1] === "+" ? true : false;
-		if (deviation) operation = operation.replace("+", "");
-		var cell = "cell"   in data ? data.cell : ":";
-		var dgt  = "digits" in data ? WDbox.int(data.digits, true) : null;
-
-		var cells = WD(table).cell(cell);
-		var info  = WD(cells).data;
-
-		if (!(operation in info)) operation = "sum";
-		if (info[operation].value !== null && dgt !== null)
-			info[operation].value = info[operation].value.toPrecision(dgt);
-		if (info[operation].deviation !== null && dgt !== null)
-			info[operation].deviation = info[operation].deviation.toPrecision(dgt);
-
-		var value = info[operation].value === null ? "NULL" : info[operation].value;
-		var delta = info[operation].deviation === null ? "NULL" : info[operation].deviation;
-
-		e.textContent = deviation ? value+" ± "+delta : value;
+		var value = WD(table).data(data.x, data.y);
+		var index = "value" in data ? data.value.split(".") : [];
+		for (var i = 0; i < index.length; i++)
+			try {value = value[index[i]];} catch(e) {value = null; break;}
+		e.textContent = value === null ? "?" : value;
 		return;
+*/
 	};
 
 /*----------------------------------------------------------------------------*/
 
-	function data_wdFile(e) {/*Análise de arquivos: data-wd-file=fs{}ft{}fc{}nf{}ms{}call*/
+	function data_wdFile(e) {/*Análise de arquivos: data-wd-file=fs{}ft{}fc{}nf{}ms{}call{}*/
 	/*analisa as informações do arquivo 
 		nf: number of files      (quantidade máxima de arquivos)
 		ms: maximum size         (tamanho total de arquivos)
@@ -4269,7 +4294,7 @@ var wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 
-	function organizationProcedures() {/*procedimento pós carregamentos*/
+	function organizationProcedures() {/*procedimento PÓS carregamentos*/
 		WD.$$("[data-wd-sort]").run(data_wdSort);
 		WD.$$("[data-wd-filter]").run(data_wdFilter);
 		WD.$$("[data-wd-mask]").run(data_wdMask);
@@ -4277,7 +4302,8 @@ var wd = (function() {
 		WD.$$("[data-wd-click]").run(data_wdClick);
 		WD.$$("[data-wd-slide]").run(data_wdSlide);
 		WD.$$("[data-wd-device]").run(data_wdDevice);
-		WD.$$("[data-wd-table]").run(data_wdTable);
+		WD.$$("[data-wd-table]").run(data_wdOutput);
+		WD.$$("[data-wd-chart]").run(data_wdChart);
 		return;
 	};
 
@@ -4295,7 +4321,8 @@ var wd = (function() {
 			case "wdDevice":  data_wdDevice(e);    break;
 			case "wdSlide":   data_wdSlide(e);     break;
 			case "wdFile":    data_wdFile(e);      break;
-			case "wdTable":   data_wdTable(e);     break;
+			case "wdOutput":  data_wdOutput(e);    break;
+			case "wdChart":   data_wdChart(e);     break;
 		};
 		return;
 	};
@@ -4315,7 +4342,6 @@ var wd = (function() {
 			data_wdCss(elem);
 			data_wdNav(elem);
 			data_wdFull(elem);
-			data_wdTable(elem);
 			navLink(elem);
 			elem = "wdNoBubbles" in elem.dataset ? null : elem.parentElement;/*efeito bolha*/
 		}
@@ -4328,13 +4354,16 @@ var wd = (function() {
 		if (WDdom.form(ev.target)) return;
 		data_wdFilter(ev.target);
 		data_wdMask(ev.target);
+		data_wdOutput(ev.target);
 		return;
 	};
 
 /*----------------------------------------------------------------------------*/
 
 	function inputProcedures(ev) {/*procedimentos para formulários*/
-		return data_wdFilter(ev.target);
+		data_wdFilter(ev.target);
+		data_wdOutput(ev.target);
+		return;
 	};
 
 /*----------------------------------------------------------------------------*/
