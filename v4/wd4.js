@@ -185,7 +185,10 @@ var wd = (function() {
 		return "phone";
 	};
 
+	/* Guarda informação do dispositivo (desktop, mobile...) */
 	WDbox.deviceController = null;
+	/* Guarda o intervalo de tempo para executar funções vinculadas aos eventos de tecla */
+	WDbox.keyTimeRange = 500;
 
 /*============================================================================*/
 
@@ -4350,19 +4353,62 @@ var wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 
-	function keyboardProcedures(ev) {/*procedimentos para teclado (exceto formulários)*/
+	function keyboardProcedures(ev, relay) {/*procedimentos de teclado para outros elementos*/
+		/* não serve para formulários */
 		if (WDdom.form(ev.target)) return;
-		data_wdFilter(ev.target);
-		data_wdMask(ev.target);
-		data_wdOutput(ev.target);
+
+		/*elementos com contentEditable funcionam com o evento input, ver como function no IE11*/
+		/*se funcionar, eliminar esse procedimento com o evento keyup*/
+		
+
+
+		var now  = (new Date()).valueOf();
+		var time = Number(ev.target.dataset.wdTimeKey);
+
+		/*definir atributo e pedir para verificar posteriormente*/
+		if (relay !== true) {
+			ev.target.dataset.wdTimeKey = now;
+			window.setTimeout(function() {/*verificar daqui um intervalo de tempo*/
+				keyboardProcedures(ev, true);
+			}, WDbox.keyTimeRange);
+			return;
+		}
+
+		/*se há o atributo e o agora superar o intervalo, apagar atributo e executar*/
+		if ("wdTimeKey" in ev.target.dataset && now >= (time+WDbox.keyTimeRange)) {
+			delete ev.target.dataset.wdTimeKey;
+
+			data_wdFilter(ev.target);
+			data_wdOutput(ev.target);
+		}
 		return;
 	};
 
 /*----------------------------------------------------------------------------*/
 
-	function inputProcedures(ev) {/*procedimentos para formulários*/
-		data_wdFilter(ev.target);
-		data_wdOutput(ev.target);
+	function inputProcedures(ev, relay) {/*procedimentos de teclado para formulários*/
+		/* Somente para formulários */
+		if (!WDdom.form(ev.target) && ev.target.isContentEditable) return;
+	
+		var now  = (new Date()).valueOf();
+		var time = Number(ev.target.dataset.wdTimeKey);
+
+		/*definir atributo e pedir para verificar posteriormente*/
+		if (relay !== true) {
+			ev.target.dataset.wdTimeKey = now;
+			window.setTimeout(function() {/*verificar daqui um intervalo de tempo*/
+				inputProcedures(ev, true);
+			}, WDbox.keyTimeRange);
+			return;
+		}
+
+		/*se há o atributo e o agora superar o intervalo, apagar atributo e executar*/
+		if ("wdTimeKey" in ev.target.dataset && now >= (time+WDbox.keyTimeRange)) {
+			delete ev.target.dataset.wdTimeKey;
+
+			data_wdFilter(ev.target);
+			data_wdOutput(ev.target);
+		}
 		return;
 	};
 
