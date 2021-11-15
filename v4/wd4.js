@@ -27,20 +27,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.﻿
 ----------------------------------------------------------------------------*/
 
+//FIXME: abandonar IE, não tem oninput não funciona como deveria
+
+
 "use strict";
 
 var wd = (function() {
-
-	function WDexception(value) {
-		if (!(this instanceof WDexception)) return new WDexception(value);
-		this.value = value === undefined ? "WD" : value;
-		this.message = "An error has been identified and the process has been stopped.";
-		this.toString = function() {
-			return this.value + " Exception: " + this.message;
-		};
-	}
-
-/*============================================================================*/
 
 	function WDbox(input) {
 		if (!(this instanceof WDbox)) return new WDbox(input);
@@ -292,7 +284,8 @@ var wd = (function() {
 		if (
 			this._input === document ||
 			this._input === window   ||
-			this._input instanceof HTMLElement
+			this._input instanceof HTMLElement ||
+			this._input instanceof SVGElement
 		) {
 			this._type  = "dom";
 			this._value = [this._input];
@@ -303,7 +296,7 @@ var wd = (function() {
 			this._input instanceof NodeList ||
 			this._input instanceof HTMLCollection ||
 			this._input instanceof HTMLAllCollection ||
-			this._input instanceof HTMLOptionsCollection ||
+			"HTMLOptionsCollection" in window && this._input instanceof HTMLOptionsCollection || /*IE11*/
 			"HTMLFormControlsCollection" in window && this._input instanceof HTMLFormControlsCollection /*IE 11*/
 		) {
 			this._type  = "dom";
@@ -798,13 +791,14 @@ var wd = (function() {
 
 		/*Disparadores*/
 		box.btn.onclick = function() {
-			box.div.remove();
+			box.div.parentElement.removeChild(box.div);
 			parent.close();
 			return;
 		}
 
 		window.setTimeout(function() {
 			try {
+				box.div.parentElement.removeChild(box.div);
 				box.div.remove();
 				parent.close();
 			} catch(e) {}
@@ -2723,7 +2717,8 @@ var wd = (function() {
 			/* Container HTML a acomodar o gráfico */
 			_BOX: {value: this._BUILD_BOX(box)},
 			/* Elemento SVG a ser plotado os dados */
-			_SVG: {value: this._BUILD_SVG("svg")},
+			//_SVG: {value: this._BUILD_SVG("svg"), writable: true},
+			_SVG: {value: null, writable: true},
 			/* Escala do gráfico (x/y) */
 			_SCALE: {value: {x: 1, y: 1}},
 			/* Guarda a cor e a sequência das legendas */
@@ -2742,7 +2737,8 @@ var wd = (function() {
 	Object.defineProperties(wdChart.prototype, {
 		constructor: {value: wdChart},
 		_RATIO: {/* Relação altura/comprimento do gráfico (igual a da tela) */
-			value: window.screen.height/window.screen.width
+			//FIXME: no celular fica esquisito (altura maior que largura)
+			value: window.screen.height > window.screen.width ? 1 : window.screen.height/window.screen.width
 		},
 		_MEASURES: {
 			set: function(x) {
@@ -2899,7 +2895,7 @@ var wd = (function() {
 				 return label;
 			}
 		},
-		_CLEAR_SVG: {/* redefine parâmetros iniciais e limpa filhos do SVG */
+		_CLEAR_SVG: {/* (re)define parâmetros iniciais e SVG */
 			value: function() {
 				this._COLOR = 0;
 				this._ENDS.x   = {min: Infinity, max: -Infinity};
@@ -2907,10 +2903,9 @@ var wd = (function() {
 				this._MEASURES = {t: 0, r: 0, b: 0, l: 0};
 				this._NDATA.r  = 0;
 				this._NDATA.t  = 0;
-				if (this._SVG.parentElement === null)
-					this._BOX.appendChild(this._SVG);
-				var child = this._SVG.children;
-				while (child.length > 0) this._SVG.removeChild(child[0]);
+				if (this._SVG !== null) this._BOX.removeChild(this._SVG);
+				this._SVG = this._BUILD_SVG("svg");
+				this._BOX.appendChild(this._SVG);
 				return;
 			}
 		},
@@ -3084,7 +3079,6 @@ var wd = (function() {
 		add: {/* Adiciona conjunto de dados para plotagem */
 			enumerable: true,
 			value: function(x, y, label, analysis) {
-				if (this._SVG === null) return null;
 				/*verificando dados*/
 				var obj1 = WDanalysis(x,y);
 				var obj2 = WDcompare(x,y);
@@ -4357,7 +4351,7 @@ var wd = (function() {
 		/* não serve para formulários */
 		if (WDdom.form(ev.target)) return;
 
-		/*elementos com contentEditable funcionam com o evento input, ver como function no IE11*/
+		/*FIXME elementos com contentEditable funcionam com o evento input, ver como function no IE11*/
 		/*se funcionar, eliminar esse procedimento com o evento keyup*/
 		
 
