@@ -27,21 +27,95 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.﻿
 ----------------------------------------------------------------------------*/
 
-//FIXME: abandonar IE, não tem oninput não funciona como deveria
-
-
 "use strict";
 
 var wd = (function() {
 
+	var wd_version = "v4.0.0 2022-01-01";
+
+	function wd_lang() { /*Retorna o local: definido ou do navegador*/
+		var attr  = document.body.parentElement.attributes;
+		if ("lang" in attr) return attr.lang.value.replace(/\ /g, "");
+		return navigator.language || navigator.browserLanguage || "en-US";
+	}
+
+	function wd_bytes(value) { /*calculadora de bytes*/
+		if (value >= 1099511627776) return (value/1099511627776).toFixed(2)+"TB";
+		if (value >= 1073741824)    return (value/1073741824).toFixed(2)+"GB";
+		if (value >= 1048576)       return (value/1048576).toFixed(2)+"MB";
+		if (value >= 1024)          return (value/1024).toFixed(2)+"kB";
+		return value+"B";
+	}
+
+	function wd_isLeap(y) { /*Retorna verdadeiro se o ano (y) for bissexto*/
+		if (y === 0)       return false;
+		if (y % 400 === 0) return true;
+		if (y % 100 === 0) return false;
+		if (y % 4 === 0)   return true;
+		return false;
+	}
+
+	function wd_timeNumber(h, m, s) { /*Converte tempo em número*/
+		var time = 0;
+		time += h * 3600;
+		time += m * 60;
+		time += s;
+		return time % 86400;
+	}
+
+	function wd_numberTime(n) { /*Converte número em tempo (objeto[h,m,s])*/
+		var time = {};
+		n      = n < 0 ? (86400 + (n % 86400)) : (n % 86400);
+		time.h = (n - (n % 3600)) / 3600;
+		n      = n - (3600 * time.h);
+		time.m = (n - (n % 60)) / 60;
+		time.s = n - (60 * time.m);
+		return time;
+	}
+
+	function wd_$(selector, root) {/* retorna querySelector */
+		var elem = null;
+		try {elem = root.querySelector(selector);    } catch(e) {}
+		if (elem !== null) return elem;
+		try {elem = document.querySelector(selector);} catch(e) {}
+		return elem;
+	}
+
+	function wd_$$(selector, root) {/* retorna querySelectorAll */
+		var elem = null;
+		try {elem = root.querySelectorAll(selector);    } catch(e) {}
+		if (elem !== null && elem.length > 0) return elem;
+		try {elem = document.querySelectorAll(selector);} catch(e) {}
+		if (elem !== null && elem.length > 0) return elem;
+		return null;
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	function WDbox(input) {
 		if (!(this instanceof WDbox)) return new WDbox(input);
+
 		Object.defineProperty(this, "_input", {value: input});
 	}
 
 	Object.defineProperty(WDbox.prototype, "constructor", {value: WDbox});
 
-	WDbox.version = "v4.0.0 2022-01-01";
+
+
+
+
+
 
 	/*expressoes regulares*/
 	WDbox.re = {
@@ -68,69 +142,19 @@ var wd = (function() {
 		return true;
 	};
 
-	WDbox.lang = function() { /*Retorna a linguagem do documento: definida ou navegador*/
-		var attr  = document.body.parentElement.attributes;
-		var value = "lang" in attr ? attr.lang.value.replace(/\ /g, "") : null;
-		if (value === null) value = navigator.language || navigator.browserLanguage || "en-US";
-		return value;
-	}
-
-	WDbox.calcByte = function(value) { /*calculadora de bytes*/
-		if (value >= 1099511627776) return (value/1099511627776).toFixed(2)+"TB";
-		if (value >= 1073741824)    return (value/1073741824).toFixed(2)+"GB";
-		if (value >= 1048576)       return (value/1048576).toFixed(2)+"MB";
-		if (value >= 1024)          return (value/1024).toFixed(2)+"kB";
-		return value+"B";
-	}
-
 	/*Retorna os elementos html identificados pelo seletor css no elemento root*/
-	WDbox.$ = function(selector, root) {
-		try {return root.querySelector(selector);    } catch(e) {}
-		try {return document.querySelector(selector);} catch(e) {}
-		return null;
-	}
-	WDbox.$$ = function(selector, root) {
-		try {return root.querySelectorAll(selector);    } catch(e) {}
-		try {return document.querySelectorAll(selector);} catch(e) {}
-		return null;
-	}
 	WDbox.get$$ = function(obj) {
 		var selOne = "$"  in obj && obj["$"].trim()  !== "" ? obj["$"].trim()  : null;
 		var selAll = "$$" in obj && obj["$$"].trim() !== "" ? obj["$$"].trim() : null;
 		var words  = {"document": document, "window":  window};
 		if (selOne in words) return words[selOne];
 		if (selAll in words) return words[selAll];
-		var qAll = selAll === null ? null : WDbox.$$(selAll);
-		var qOne = selOne === null ? null : WDbox.$(selOne);
+		var qAll = selAll === null ? null : wd_$$(selAll);
+		var qOne = selOne === null ? null : wd_$(selOne);
 		if (qAll !== null && qAll.length > 0) return qAll;
 		return qOne;
 	}
 
-	WDbox.isLeap = function(y) { /*Retorna verdadeiro se o ano for bissexto*/
-		if (y === 0)       return false;
-		if (y % 400 === 0) return true;
-		if (y % 100 === 0) return false;
-		if (y % 4 === 0)   return true;
-		return false;
-	}
-
-	WDbox.timeNumber = function(h, m, s) { /*Converte tempo em número*/
-		var time = 0;
-		time += h * 3600;
-		time += m * 60;
-		time += s;
-		return time % 86400;
-	}
-
-	WDbox.numberTime = function(n) { /*Converte número em tempo (objeto)*/
-		var time = {};
-		n      = n < 0 ? (86400 + (n % 86400)) : (n % 86400);
-		time.h = (n - (n % 3600)) / 3600;
-		n      = n - (3600 * time.h);
-		time.m = (n - (n % 60)) / 60;
-		time.s = n - (60 * time.m);
-		return time;
-	}
 
 	WDbox.noonDate = function(date, d, m, y) { /*Define data ao meio dia*/
 		if (date === null || date === undefined) date = new Date();
@@ -183,6 +207,169 @@ var wd = (function() {
 	WDbox.keyTimeRange = 500;
 
 /*============================================================================*/
+
+	function WDinput(value) {
+		if (!(this instanceof WDinput)) return new WDinput(value);
+		var str  = typeof value === "string" || value instanceof String ? true : false;
+		var val  = str ? value.trim() : value;
+		var ref  = str ? this.refString(val) : this.refType(val);
+		this.VAL = val; /* guarda o valor analisado */
+		this.REF = ref; /* guarda a referência */
+	}
+
+	Object.defineProperties(WDinput.prototype, {
+		constructor: {
+			value: WDinput
+		},
+		refString: {
+			value: function(val) {
+				var types = {/* valores simbolizados por strings */
+					"null": /^$/,
+					ampm:   /^(0?[1-9]|1[0-2])(\:|h)[0-5][0-9]\ ?(am|pm)$/i,
+					h24:    /^(0?[0-9]|1[0-9]|2[0-4])(\:|h)[0-5][0-9]$/i,
+					time:   /^(0?[0-9]|1[0-9]|2[0-4])(\:[0-5][0-9]){1,2}$/,
+					ymd:    /^[0-9]{4}\-[0-9]{2}\-[0-9]{2}$/,
+					dmy:    /^[0-9]{2}\/[0-9]{2}\/[0-9]{4}$/,
+					mdy:    /^[0-9]{2}\.[0-9]{2}\.[0-9]{4}$/,
+					css1:   /^\$\{.+\}$/,
+					css2:   /^\$\$\{.+\}$/,
+					fact:   /^[0-9]+\!$/,
+					per:    /^[\+\-]?([0-9]+|([0-9]+)?\.[0-9]+)\%$/,
+					strnum: /^[\-\+]?([0-9]+|([0-9]+)?\.[0-9]+)(e[\-\+]?[0-9]+)?$/i,
+				};
+				var checks = { /* referências que precisam de checagem secundária */
+					ymd:  this.checkDate,
+					dmy:  this.checkDate,
+					mdy:  this.checkDate,
+					css1: this.checkCSS,
+					css2: this.checkCSS,
+				};
+				
+				for (var type in types) {/* looping pelos valores */
+					var check = types[type].test(val);
+					if (!check) continue;
+					if (type in checks) { /*se tiver checagem secundária, retornar se verdadeira*/
+						if (checks[type](val, type)) return type;
+					} else { /*se não tiver checagem secundária, devolver porque passou no teste */
+						return type;
+					}
+				}
+
+				return "text";
+			}
+		},
+		refType: { /* valores simbolizados por tipo e construtor */
+			value: function(val) {
+				var types = [
+					{eq1: null, exit: "null"},
+					{eq1: undefined, exit: "undefined"},
+					{eq1: document, eq2: window, exit: "dom"},
+					{eq1: Infinity, eq2: -Infinity, exit: "number"},
+					{eq1: true, eq2: false, tp: "boolean", ct: "Boolean", exit: "boolean"},
+					{tp: "regexp", ct: "RegExp", exit: "regexp"},
+					{tp: "function", ct: "Function", exit: "function"},
+					{tp: "number", ct: "Number", check: !isNaN(val), exit: "number"},
+					{ct: "Array", check: Array.isArray(val), exit: "array"},
+					{ct: "Date", exit: "date"},
+					{ct: "HTMLElement", exit: "dom"},
+					{ct: "SVGElement", exit: "dom"},
+					{ct: "NodeList", exit: "doms"},
+					{ct: "HTMLCollection", exit: "doms"},
+					{ct: "HTMLAllCollection", exit: "doms"},
+					{ct: "HTMLOptionsCollection", exit: "doms"},
+					{ct: "HTMLFormControlsCollection", exit: "doms"},
+				];
+
+				for (var i = 0; i < types.length; i++) {
+					var obj = types[i];
+					/* definir checagem extra, se não definida */
+					if (!("check" in obj)) obj.check = true;
+					/* testar igualdade primária (eq1) */
+					if ("eq1" in obj && val === obj.eq1) return obj.exit;
+					/* testar igualdade secundária (eq2) */
+					if ("eq2" in obj && val === obj.eq2) return obj.exit;
+					/* testar typeof (tp) */
+					if ("tp" in obj && typeof val === obj.tp && obj.check)
+						return obj.exit;
+					/* testar construtor (ct) */
+					if ("ct" in obj && obj.ct in window && val instanceof window[obj.ct])
+						return obj.exit;
+				}
+
+				/* Testar condicionais complexas */
+				if (/* javascript object */
+					typeof val === "object" && val instanceof Object &&
+					(/^\{.*\}$/).test(JSON.stringify(val))
+				) return "object";
+
+				if (/* HTML Element exótico */
+					val instanceof Object      && val.nodeType === 1 &&
+					val.parentElement !== null && val.parentElement !== undefined
+				) return "dom";
+
+				return "unknown";
+			}
+		},
+		checkDate: {
+			value: function (input, type, value) {
+				var types = {
+					ymd: {symbol: "-", y: 0, m: 1, d: 2},
+					dmy: {symbol: "/", y: 2, m: 1, d: 0},
+					mdy: {symbol: ".", y: 2, m: 0, d: 1},
+				}
+				if (!(type in types)) return false;
+
+				var date = input.split(types[type].symbol);
+				var d    = Number(date[types[type].d]);
+				var m    = Number(date[types[type].m]);
+				var y    = Number(date[types[type].y]);
+
+				/*analisando formatos padrão*/
+				if (y > 9999 || y < 1)  return false;
+				if (m > 12   || m < 1)  return false;
+				if (d > 31   || d < 1)  return false;
+				if (d > 30   && [2, 4, 6, 9, 11].indexOf(m) >= 0) return false;
+				if (d > 29   && m == 2) return false;
+				if (d == 29  && m == 2 && !wd_isLeap(y)) return false;
+
+				return value === true ? {y: y, m: m, d: d} : true;
+			}
+		},
+		checkCSS: {
+			value: function (input, type, value) {
+				var types = {
+					css1: {value: input.substr(2, (input.length - 3)), caller: wd_$},
+					css2: {value: input.substr(3, (input.length - 4)), caller: wd_$$},
+				}
+				if (!(type in types)) return false;
+				
+				var list = types[type].caller(types[type].value)
+				if (list === null) return false;
+
+				return value === true ? list : true;
+			}
+		}
+	});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 	function WDtype(input) {
 		if (!(this instanceof WDtype)) return new WDtype(input);
@@ -325,13 +512,13 @@ var wd = (function() {
 
 		if ((/^\$\$\{.+\}$/).test(this._input)) {
 			var selector = save.substr(3, (save.length - 4));
-			this._input  = WDbox.$$(selector);
+			this._input  = wd_$$(selector);
 			if (this.isDOM && this._input.length > 0) return true;
 		}
 
 		if ((/^\$\{.+\}$/).test(this._input)) {
 			var selector = save.substr(2, (save.length - 3));
-			this._input  = WDbox.$(selector);
+			this._input  = wd_$(selector);
 			if (this.isDOM) return true;
 		}
 
@@ -392,7 +579,7 @@ var wd = (function() {
 		if (/^(0?[0-9]|1[0-9]|2[0-4])(\:[0-5][0-9]){1,2}$/.test(this._input)) {/*HH:MM:SS*/
 			this._type  = "time";
 			var time    = this._input.split(":");
-			this._value = WDbox.timeNumber(
+			this._value = wd_timeNumber(
 				Number(time[0]),
 				Number(time[1]),
 				time.length === 3 ? Number(time[2]) : 0
@@ -406,7 +593,7 @@ var wd = (function() {
 			var sep     = this._input[this._input.length - 2];
 			var time    = this._input.split(sep)[0].trim().split(":");
 			var hour    = Number(time[0]);
-			this._value = WDbox.timeNumber(
+			this._value = wd_timeNumber(
 				sep === "a" ? hour : (hour === 12 ? 0 : (12 + hour)),
 				Number(time[1]),
 				0
@@ -417,7 +604,7 @@ var wd = (function() {
 		if ((/^(0?[0-9]|1[0-9]|2[0-4])h[0-5][0-9]$/i).test(this._input)) { /*24HhMM*/
 			this._type  = "time";
 			var time    = this._input.toLowerCase().split("h");
-			this._value = WDbox.timeNumber(
+			this._value = wd_timeNumber(
 				Number(time[0]),
 				Number(time[1]),
 				0
@@ -456,7 +643,7 @@ var wd = (function() {
 		if (d > 31   || d < 1)  return false;
 		if (d > 30   && [2, 4, 6, 9, 11].indexOf(m) >= 0) return false;
 		if (d > 29   && m == 2) return false;
-		if (d == 29  && m == 2 && !WDbox.isLeap(y)) return false;
+		if (d == 29  && m == 2 && !wd_isLeap(y)) return false;
 
 		this._type  = "date";
 		this._value = new Date();
@@ -855,13 +1042,13 @@ var wd = (function() {
 	WD.constructor = WD;
 	Object.defineProperties(WD, {
 		version: {get: function() {
-			return WDbox.version;
+			return wd_version;
 		}},
 		$: {value: function(css, root) {
-			return WD(WDbox.$(css, root));
+			return WD(wd_$(css, root));
 		}},
 		$$: {value: function(css, root) {
-			return WD(WDbox.$$(css, root));
+			return WD(wd_$$(css, root));
 		}},
 		today: {get: function() {
 			return WD(WDbox.noonDate(new Date()));
@@ -872,6 +1059,7 @@ var wd = (function() {
 			for (var i in o) o[i] = (o[i] < 10 ? "0" : "") + o[i].toString();
 			return WD(o.h+":"+o.m+":"+o.s);
 		}},
+		loko: {value: WDinput}
 	});
 
 /*============================================================================*/
@@ -1469,7 +1657,7 @@ var wd = (function() {
 	Object.defineProperty(WDnumber.prototype, "locale", {/*notação local*/
 		enumerable: true,
 		value: function(locale, currency) {
-			locale   = locale   === undefined ? WDbox.lang() : locale;
+			locale   = locale   === undefined ? wd_lang() : locale;
 			currency = currency === undefined ? currency : {style: "currency", currency: currency};
 
 			try {return new Intl.NumberFormat(locale, currency).format(this.valueOf());} catch(e) {}
@@ -1539,12 +1727,12 @@ var wd = (function() {
 		h: {
 			enumerable: true,
 			get: function() {
-				return WDbox.numberTime(this.valueOf()).h;
+				return wd_numberTime(this.valueOf()).h;
 			},
 			set: function(x) {
 				if (!WDbox.finite(x)) return;
 				x = WDbox.int(x);
-				this._value = WDbox.timeNumber(x, this.m, this.s);
+				this._value = wd_timeNumber(x, this.m, this.s);
 				return;
 			}
 		},
@@ -1559,12 +1747,12 @@ var wd = (function() {
 		m: {
 			enumerable: true,
 			get: function() {
-				return WDbox.numberTime(this.valueOf()).m;
+				return wd_numberTime(this.valueOf()).m;
 			},
 			set: function(x) {
 				if (!WDbox.finite(x)) return;
 				x = WDbox.int(x);
-				this._value = WDbox.timeNumber(this.h, x, this.s);
+				this._value = wd_timeNumber(this.h, x, this.s);
 				return;
 			}
 		},
@@ -1579,12 +1767,12 @@ var wd = (function() {
 		s: {
 			enumerable: true,
 			get: function() {
-				return WDbox.numberTime(this.valueOf()).s;
+				return wd_numberTime(this.valueOf()).s;
 			},
 			set: function(x) {
 				if (!WDbox.finite(x)) return;
 				x = WDbox.int(x);
-				this._value = WDbox.timeNumber(this.h, this.m, x);
+				this._value = wd_timeNumber(this.h, this.m, x);
 				return;
 			}
 		},
@@ -1688,7 +1876,7 @@ var wd = (function() {
 		length: {/*dias no ano*/
 			enumerable: true,
 			get: function() {
-				return WDbox.isLeap(this.y) ? 366 : 365;
+				return wd_isLeap(this.y) ? 366 : 365;
 			}
 		},
 		week: {/*semana cheia do ano*/
@@ -1733,13 +1921,13 @@ var wd = (function() {
 			enumerable: true,
 			get: function() {
 				var list = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-				return (this.m === 2 && WDbox.isLeap(this.y) ? 1 : 0) + list[this.m - 1];
+				return (this.m === 2 && wd_isLeap(this.y) ? 1 : 0) + list[this.m - 1];
 			},
 		},
 		shortMonth: {
 			enumerable: true,
 			value: function(locale) {
-				locale = locale === undefined ? WDbox.lang() : locale;
+				locale = locale === undefined ? wd_lang() : locale;
 				try {return this._value.toLocaleString(locale, {month: "short"});} catch(e) {}
 				return this._value.toLocaleString(undefined,   {month: "short"});
 			}
@@ -1747,7 +1935,7 @@ var wd = (function() {
 		longMonth: {
 			enumerable: true,
 			value: function(locale) {
-				locale = locale === undefined ? WDbox.lang() : locale;
+				locale = locale === undefined ? wd_lang() : locale;
 				try {return this._value.toLocaleString(locale, {month: "long"});} catch(e) {}
 				return this._value.toLocaleString(undefined,   {month: "long"});
 			}
@@ -1776,7 +1964,7 @@ var wd = (function() {
 			enumerable: true,
 			get: function() {
 				var days  = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
-				var extra = (this.m > 2 && WDbox.isLeap(this.y)) ? 1 : 0;
+				var extra = (this.m > 2 && wd_isLeap(this.y)) ? 1 : 0;
 				return days[this.m - 1] + this.d + extra;
 			}
 		},
@@ -1789,7 +1977,7 @@ var wd = (function() {
 		shortDay: {
 			enumerable: true,
 			value: function(locale) {
-				locale = locale === undefined ? WDbox.lang() : locale;
+				locale = locale === undefined ? wd_lang() : locale;
 				try {return this._value.toLocaleString(locale, {weekday: "short"});} catch(e) {}
 				return this._value.toLocaleString(undefined,   {weekday: "short"});
 			}
@@ -1797,7 +1985,7 @@ var wd = (function() {
 		longDay: {
 			enumerable: true,
 			value: function(locale) {
-				locale = locale === undefined ? WDbox.lang() : locale;
+				locale = locale === undefined ? wd_lang() : locale;
 				try {return this._value.toLocaleString(locale, {weekday: "long"});} catch(e) {}
 				return this._value.toLocaleString(undefined,   {weekday: "long"});
 			}
@@ -3385,11 +3573,12 @@ var wd = (function() {
 					var scripts = elem.querySelectorAll("script");
 					for (var i = 0; i < scripts.length; i++) {
 						var script = document.createElement("script");
-						if (scripts[i].src === "") {
+
+						if (scripts[i].src === "")
 							script.textContent = scripts[i].textContent;
-						} else {
+						else
 							script.src = scripts[i].src;
-						}
+
 						elem.appendChild(script);
 						WD(script).set("remove");
 					}
@@ -4130,12 +4319,12 @@ var wd = (function() {
 				ms += files[i].size;
 				if ("ms" in data && ms > WDbox.int(data.ms, true)) {
 					info.error     = "ms";
-					info.value     = WDbox.calcByte(ms);
-					info.parameter = WDbox.calcByte(WDbox.int(data.ms, true));
+					info.value     = wd_bytes(ms);
+					info.parameter = wd_bytes(WDbox.int(data.ms, true));
 				} else if ("fs" in data && files[i].size > WDbox.int(data.fs, true)) {
 					info.error     = "fs";
-					info.value     = WDbox.calcByte(files[i].size);
-					info.parameter = WDbox.calcByte(WDbox.int(data.fs, true));
+					info.value     = wd_bytes(files[i].size);
+					info.parameter = wd_bytes(WDbox.int(data.fs, true));
 				} else if ("ft" in data && data.ft.split(" ").indexOf(files[i].type) < 0) {
 					info.error     = "ft";
 					info.value     = files[i].type;
@@ -4213,7 +4402,7 @@ var wd = (function() {
 		document.head.appendChild(style);
 
 		/*definindo ícone*/
-		if (WDbox.$("link[rel=icon]") !== null) {
+		if (wd_$("link[rel=icon]") !== null) {
 			var favicon = document.createElement("LINK");
 			favicon.rel = "icon";
 			favicon.href = "https://wdonadelli.github.io/wd/image/favicon.ico";
