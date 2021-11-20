@@ -33,12 +33,14 @@ var wd = (function() {
 
 	var wd_version = "v4.0.0 2022-01-01";
 
+/*----------------------------------------------------------------------------*/
 	function wd_lang() { /*Retorna o local: definido ou do navegador*/
 		var attr  = document.body.parentElement.attributes;
 		if ("lang" in attr) return attr.lang.value.replace(/\ /g, "");
 		return navigator.language || navigator.browserLanguage || "en-US";
 	}
 
+/*----------------------------------------------------------------------------*/
 	function wd_bytes(value) { /*calculadora de bytes*/
 		if (value >= 1099511627776) return (value/1099511627776).toFixed(2)+"TB";
 		if (value >= 1073741824)    return (value/1073741824).toFixed(2)+"GB";
@@ -47,7 +49,8 @@ var wd = (function() {
 		return value+"B";
 	}
 
-	function wd_isLeap(y) { /*Retorna verdadeiro se o ano (y) for bissexto*/
+/*----------------------------------------------------------------------------*/
+	function wd_is_leap(y) { /*Retorna verdadeiro se o ano (y) for bissexto*/
 		if (y === 0)       return false;
 		if (y % 400 === 0) return true;
 		if (y % 100 === 0) return false;
@@ -55,15 +58,58 @@ var wd = (function() {
 		return false;
 	}
 
-	function wd_timeNumber(h, m, s) { /*Converte tempo em número*/
+/*----------------------------------------------------------------------------*/
+	function wd_set_date(date, d, m, y) { /*Define data de referência */
+		if (date === null || date === undefined) date = new Date();
+		date.setMilliseconds(0);
+		date.setSeconds(0);
+		date.setMinutes(0);
+		date.setHours(12);
+		if (y !== null && y !== undefined) date.setFullYear(y);
+		if (m !== null && m !== undefined) date.setMonth(m - 1);
+		if (d !== null && d !== undefined) date.setDate(d);
+		return date;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_str_date (val) {/* obtém data em formato string */
+		var data = [
+			{re: /^[0-9]{4}\-[0-9]{2}\-[0-9]{2}$/, sym: "-", y: 0, m: 1, d: 2},
+			{re: /^[0-9]{2}\/[0-9]{2}\/[0-9]{4}$/, sym: "/", y: 2, m: 1, d: 0},
+			{re: /^[0-9]{2}\.[0-9]{2}\.[0-9]{4}$/, sym: ".", y: 2, m: 0, d: 1},
+		];
+	
+		var index = -1;
+		for (var i = 0; i < data.length; i++) {
+			if (data[i].re.test(val)) index = i;
+			if (index >= 0) break;
+		}
+
+		if (index < 0) return null;
+
+		var date = val.split(data[index].symbol);
+		var d    = Number(date[data[index].d]);
+		var m    = Number(date[data[index].m]);
+		var y    = Number(date[data[index].y]);
+
+		if (y > 9999 || y < 1 || m > 12 || m < 1 || d > 31 || d < 1) return null;
+		if (d > 30 && [2, 4, 6, 9, 11].indexOf(m) >= 0)              return null;
+		if (m === 2 && (d > 29 || (d === 29 && !wd_is_leap(y))))     return null;
+
+		return wd_set_date(null, y, m, d);
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_time_number(h, m, s) { /*Converte tempo em número*/
 		var time = 0;
 		time += h * 3600;
 		time += m * 60;
-		time += s;
+		time += s === undefined ? 0 : s;
 		return time % 86400;
 	}
 
-	function wd_numberTime(n) { /*Converte número em tempo (objeto[h,m,s])*/
+/*----------------------------------------------------------------------------*/
+	function wd_number_time(n) { /*Converte número em tempo (objeto{h,m,s})*/
 		var time = {};
 		n      = n < 0 ? (86400 + (n % 86400)) : (n % 86400);
 		time.h = (n - (n % 3600)) / 3600;
@@ -73,6 +119,131 @@ var wd = (function() {
 		return time;
 	}
 
+/*----------------------------------------------------------------------------*/
+	function wd_str_time(val) { /* obtém tempo a partir de uma string */
+		var data = [
+			{re: /^(0?[1-9]|1[0-2])\:[0-5][0-9]\ ?(am|pm)$/i, sym: "ampm"},
+			{re: /^(0?[0-9]|1[0-9]|2[0-4])(\:[0-5][0-9]){1,2}$/, sym: "time"},
+		];
+	
+		var index = -1;
+		for (var i = 0; i < data.length; i++) {
+			if (data[i].re.test(val)) index = i;
+			if (index >= 0) break;
+		}
+		if (index < 0) return null;
+
+		var values = val.replace(/[^0-9\:]/g, "").split(":");
+		for (var i = 0; i < values.length; i++)
+			values[i] = new Number(values[i]).valueOf();
+
+		if ((/am$/i).test(val) && values[0] === 12) values[0] = 0;
+		if ((/pm$/i).test(val) && values[0] < 12)   values[0] = values[0] + 12;
+
+		return wd_time_number(values[0], values[1], values[2]);
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_str_number(val) {
+		var data = [
+			{re: /^[0-9]+\!$/, sym: "!"},
+			{re: /^[\+\-]?([0-9]+|([0-9]+)?\.[0-9]+)(e[\-\+]?[0-9]+)?\%$/i, sym: "%"},
+			{re: /^[\-\+]?([0-9]+|([0-9]+)?\.[0-9]+)(e[\-\+]?[0-9]+)?$/i, sym: null},
+		];
+	
+		var index = -1;
+		for (var i = 0; i < data.length; i++) {
+			if (data[i].re.test(val)) index = i;
+			if (index >= 0) break;
+		}
+
+		if (index < 0) return null;
+		if (data[index].sym === "%")
+			return new Number(val.replace("%", "")).valueOf() / 100;
+		if (data[index].sym === "!") {
+			var number =  new Number(val.replace("!", "")).valueOf();
+			var value  = 1;
+			while (number > 1) {
+				value *= number;
+				number--;
+			}
+			return value;
+		}
+
+		return new Number(val).valueOf();
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_dom(val) {
+		if (val === document || val === window) return [val];
+
+		var data = {
+			HTMLElement: "dom",
+			SVGElement:  "dom",
+			NodeList: "doms",
+			HTMLCollection: "doms",
+			HTMLAllCollection: "doms",
+			HTMLOptionsCollection: "doms",
+			HTMLFormControlsCollection: "doms",
+		};
+
+		for (var i in data) {
+			if (i in window && val instanceof window[i]) {
+				if (data[i] === "dom") return [val];
+				var array = [];
+				for (var n = 0; n < val.length; n++) array.push(val[n]);
+				return array;
+			}
+		}
+		return null;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_typeof(val) {/* retorna o tipo do objeto */
+
+		if (typeof val === "string" || val instanceof String) {
+			val = val.trim();
+			if (wd_str_date(val)   !== null) return "date";
+			if (wd_str_time(val)   !== null) return "time";
+			if (wd_str_number(val) !== null) return "number";
+			return val === "" ?  null : "text";
+		}
+
+		if (wd_dom(val) !== null) return "dom";
+
+		var types = [
+			{eq1: null, exit: "null"},
+			{eq1: undefined, exit: "undefined"},
+			{eq1: document, eq2: window, exit: "dom"},
+			{eq1: true, eq2: false, tp: "boolean", ct: "Boolean", exit: "boolean"},
+			{tp: "regexp", ct: "RegExp", exit: "regexp"},
+			{tp: "function", ct: "Function", exit: "function"},
+			{tp: "number", ct: "Number", check: !isNaN(val), exit: "number"},
+			{ct: "Array", check: Array.isArray(val), exit: "array"},
+			{ct: "Date", exit: "date"},
+			{tp: "object", ct: "Object", check: (/^\{.*\}$/).test(JSON.stringify(val)), exit: "object"},
+		];
+
+		for (var i = 0; i < types.length; i++) {
+			var obj = types[i];
+			/* definir checagem extra, se não definida */
+			if (!("check" in obj)) obj.check = true;
+			/* testar igualdade primária (eq1) */
+			if ("eq1" in obj && val === obj.eq1) return obj.exit;
+			/* testar igualdade secundária (eq2) */
+			if ("eq2" in obj && val === obj.eq2) return obj.exit;
+			/* testar typeof (tp) */
+			if ("tp" in obj && typeof val === obj.tp && obj.check)
+				return obj.exit;
+			/* testar construtor (ct) */
+			if ("ct" in obj && obj.ct in window && val instanceof window[obj.ct])
+				return obj.exit;
+		}
+
+		return "unknown";
+	}
+
+/*----------------------------------------------------------------------------*/
 	function wd_$(selector, root) {/* retorna querySelector */
 		var elem = null;
 		try {elem = root.querySelector(selector);    } catch(e) {}
@@ -81,14 +252,53 @@ var wd = (function() {
 		return elem;
 	}
 
+/*----------------------------------------------------------------------------*/
 	function wd_$$(selector, root) {/* retorna querySelectorAll */
 		var elem = null;
 		try {elem = root.querySelectorAll(selector);    } catch(e) {}
-		if (elem !== null && elem.length > 0) return elem;
+		if (elem !== null) return elem;
 		try {elem = document.querySelectorAll(selector);} catch(e) {}
-		if (elem !== null && elem.length > 0) return elem;
-		return null;
+		return elem;
 	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_$$$(obj) { /* captura os valores de $ e $$ dentro de um objeto */
+		var one = obj["$"].trim();
+		var all = obj["$$"].trim();
+		var words  = {"document": document, "window":  window};
+		if (one in words) return words[selOne];
+		if (all in words) return words[selAll];
+		return all !== null ? all : one;
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -142,31 +352,9 @@ var wd = (function() {
 		return true;
 	};
 
-	/*Retorna os elementos html identificados pelo seletor css no elemento root*/
-	WDbox.get$$ = function(obj) {
-		var selOne = "$"  in obj && obj["$"].trim()  !== "" ? obj["$"].trim()  : null;
-		var selAll = "$$" in obj && obj["$$"].trim() !== "" ? obj["$$"].trim() : null;
-		var words  = {"document": document, "window":  window};
-		if (selOne in words) return words[selOne];
-		if (selAll in words) return words[selAll];
-		var qAll = selAll === null ? null : wd_$$(selAll);
-		var qOne = selOne === null ? null : wd_$(selOne);
-		if (qAll !== null && qAll.length > 0) return qAll;
-		return qOne;
-	}
+	
 
 
-	WDbox.noonDate = function(date, d, m, y) { /*Define data ao meio dia*/
-		if (date === null || date === undefined) date = new Date();
-		date.setMilliseconds(0);
-		date.setSeconds(0);
-		date.setMinutes(0);
-		date.setHours(12);
-		if (WDbox.finite(y)) date.setFullYear(y);
-		if (WDbox.finite(m)) date.setMonth(m - 1);
-		if (WDbox.finite(d)) date.setDate(d);
-		return date;
-	}
 
 	WDbox.csv = function(input) {/*CSV para Array*/
 		var data = [];
@@ -208,148 +396,43 @@ var wd = (function() {
 
 /*============================================================================*/
 
-	function WDinput(value) {
-		if (!(this instanceof WDinput)) return new WDinput(value);
-		var str  = typeof value === "string" || value instanceof String ? true : false;
-		var val  = str ? value.trim() : value;
-		var ref  = str ? this.refString(val) : this.refType(val);
-		this.VAL = val; /* guarda o valor analisado */
-		this.REF = ref; /* guarda a referência */
-	}
 
-	Object.defineProperties(WDinput.prototype, {
-		constructor: {
-			value: WDinput
-		},
-		refString: {
-			value: function(val) {
-				var types = {/* valores simbolizados por strings */
-					"null": /^$/,
-					ampm:   /^(0?[1-9]|1[0-2])(\:|h)[0-5][0-9]\ ?(am|pm)$/i,
-					h24:    /^(0?[0-9]|1[0-9]|2[0-4])(\:|h)[0-5][0-9]$/i,
-					time:   /^(0?[0-9]|1[0-9]|2[0-4])(\:[0-5][0-9]){1,2}$/,
-					ymd:    /^[0-9]{4}\-[0-9]{2}\-[0-9]{2}$/,
-					dmy:    /^[0-9]{2}\/[0-9]{2}\/[0-9]{4}$/,
-					mdy:    /^[0-9]{2}\.[0-9]{2}\.[0-9]{4}$/,
-					css1:   /^\$\{.+\}$/,
-					css2:   /^\$\$\{.+\}$/,
-					fact:   /^[0-9]+\!$/,
-					per:    /^[\+\-]?([0-9]+|([0-9]+)?\.[0-9]+)\%$/,
-					strnum: /^[\-\+]?([0-9]+|([0-9]+)?\.[0-9]+)(e[\-\+]?[0-9]+)?$/i,
-				};
-				var checks = { /* referências que precisam de checagem secundária */
-					ymd:  this.checkDate,
-					dmy:  this.checkDate,
-					mdy:  this.checkDate,
-					css1: this.checkCSS,
-					css2: this.checkCSS,
-				};
-				
-				for (var type in types) {/* looping pelos valores */
-					var check = types[type].test(val);
-					if (!check) continue;
-					if (type in checks) { /*se tiver checagem secundária, retornar se verdadeira*/
-						if (checks[type](val, type)) return type;
-					} else { /*se não tiver checagem secundária, devolver porque passou no teste */
-						return type;
-					}
-				}
 
-				return "text";
-			}
-		},
-		refType: { /* valores simbolizados por tipo e construtor */
-			value: function(val) {
-				var types = [
-					{eq1: null, exit: "null"},
-					{eq1: undefined, exit: "undefined"},
-					{eq1: document, eq2: window, exit: "dom"},
-					{eq1: Infinity, eq2: -Infinity, exit: "number"},
-					{eq1: true, eq2: false, tp: "boolean", ct: "Boolean", exit: "boolean"},
-					{tp: "regexp", ct: "RegExp", exit: "regexp"},
-					{tp: "function", ct: "Function", exit: "function"},
-					{tp: "number", ct: "Number", check: !isNaN(val), exit: "number"},
-					{ct: "Array", check: Array.isArray(val), exit: "array"},
-					{ct: "Date", exit: "date"},
-					{ct: "HTMLElement", exit: "dom"},
-					{ct: "SVGElement", exit: "dom"},
-					{ct: "NodeList", exit: "doms"},
-					{ct: "HTMLCollection", exit: "doms"},
-					{ct: "HTMLAllCollection", exit: "doms"},
-					{ct: "HTMLOptionsCollection", exit: "doms"},
-					{ct: "HTMLFormControlsCollection", exit: "doms"},
-				];
 
-				for (var i = 0; i < types.length; i++) {
-					var obj = types[i];
-					/* definir checagem extra, se não definida */
-					if (!("check" in obj)) obj.check = true;
-					/* testar igualdade primária (eq1) */
-					if ("eq1" in obj && val === obj.eq1) return obj.exit;
-					/* testar igualdade secundária (eq2) */
-					if ("eq2" in obj && val === obj.eq2) return obj.exit;
-					/* testar typeof (tp) */
-					if ("tp" in obj && typeof val === obj.tp && obj.check)
-						return obj.exit;
-					/* testar construtor (ct) */
-					if ("ct" in obj && obj.ct in window && val instanceof window[obj.ct])
-						return obj.exit;
-				}
 
-				/* Testar condicionais complexas */
-				if (/* javascript object */
-					typeof val === "object" && val instanceof Object &&
-					(/^\{.*\}$/).test(JSON.stringify(val))
-				) return "object";
 
-				if (/* HTML Element exótico */
-					val instanceof Object      && val.nodeType === 1 &&
-					val.parentElement !== null && val.parentElement !== undefined
-				) return "dom";
 
-				return "unknown";
-			}
-		},
-		checkDate: {
-			value: function (input, type, value) {
-				var types = {
-					ymd: {symbol: "-", y: 0, m: 1, d: 2},
-					dmy: {symbol: "/", y: 2, m: 1, d: 0},
-					mdy: {symbol: ".", y: 2, m: 0, d: 1},
-				}
-				if (!(type in types)) return false;
 
-				var date = input.split(types[type].symbol);
-				var d    = Number(date[types[type].d]);
-				var m    = Number(date[types[type].m]);
-				var y    = Number(date[types[type].y]);
 
-				/*analisando formatos padrão*/
-				if (y > 9999 || y < 1)  return false;
-				if (m > 12   || m < 1)  return false;
-				if (d > 31   || d < 1)  return false;
-				if (d > 30   && [2, 4, 6, 9, 11].indexOf(m) >= 0) return false;
-				if (d > 29   && m == 2) return false;
-				if (d == 29  && m == 2 && !wd_isLeap(y)) return false;
 
-				return value === true ? {y: y, m: m, d: d} : true;
-			}
-		},
-		checkCSS: {
-			value: function (input, type, value) {
-				var types = {
-					css1: {value: input.substr(2, (input.length - 3)), caller: wd_$},
-					css2: {value: input.substr(3, (input.length - 4)), caller: wd_$$},
-				}
-				if (!(type in types)) return false;
-				
-				var list = types[type].caller(types[type].value)
-				if (list === null) return false;
 
-				return value === true ? list : true;
-			}
-		}
-	});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -579,7 +662,7 @@ var wd = (function() {
 		if (/^(0?[0-9]|1[0-9]|2[0-4])(\:[0-5][0-9]){1,2}$/.test(this._input)) {/*HH:MM:SS*/
 			this._type  = "time";
 			var time    = this._input.split(":");
-			this._value = wd_timeNumber(
+			this._value = wd_time_number(
 				Number(time[0]),
 				Number(time[1]),
 				time.length === 3 ? Number(time[2]) : 0
@@ -593,7 +676,7 @@ var wd = (function() {
 			var sep     = this._input[this._input.length - 2];
 			var time    = this._input.split(sep)[0].trim().split(":");
 			var hour    = Number(time[0]);
-			this._value = wd_timeNumber(
+			this._value = wd_time_number(
 				sep === "a" ? hour : (hour === 12 ? 0 : (12 + hour)),
 				Number(time[1]),
 				0
@@ -604,7 +687,7 @@ var wd = (function() {
 		if ((/^(0?[0-9]|1[0-9]|2[0-4])h[0-5][0-9]$/i).test(this._input)) { /*24HhMM*/
 			this._type  = "time";
 			var time    = this._input.toLowerCase().split("h");
-			this._value = wd_timeNumber(
+			this._value = wd_time_number(
 				Number(time[0]),
 				Number(time[1]),
 				0
@@ -617,7 +700,7 @@ var wd = (function() {
 	Object.defineProperty(WDtype.prototype, "isDate", {get: function() {
 		if (this._input instanceof Date) {/*DATE*/
 			this._type  = "date";
-			this._value = WDbox.noonDate(this._input);
+			this._value = wd_set_date(this._input);
 			return true;
 		}
 		if (!this.isString) return false;
@@ -643,11 +726,11 @@ var wd = (function() {
 		if (d > 31   || d < 1)  return false;
 		if (d > 30   && [2, 4, 6, 9, 11].indexOf(m) >= 0) return false;
 		if (d > 29   && m == 2) return false;
-		if (d == 29  && m == 2 && !wd_isLeap(y)) return false;
+		if (d == 29  && m == 2 && !wd_is_leap(y)) return false;
 
 		this._type  = "date";
 		this._value = new Date();
-		this._value = WDbox.noonDate(this._value, d, m, y);
+		this._value = wd_set_date(this._value, d, m, y);
 		return true;
 	}});
 
@@ -1051,7 +1134,7 @@ var wd = (function() {
 			return WD(wd_$$(css, root));
 		}},
 		today: {get: function() {
-			return WD(WDbox.noonDate(new Date()));
+			return WD(wd_set_date(new Date()));
 		}},
 		now: {get: function() {
 			var t = new Date();
@@ -1059,7 +1142,7 @@ var wd = (function() {
 			for (var i in o) o[i] = (o[i] < 10 ? "0" : "") + o[i].toString();
 			return WD(o.h+":"+o.m+":"+o.s);
 		}},
-		loko: {value: WDinput}
+		loko: {value: wd_typeof}
 	});
 
 /*============================================================================*/
@@ -1727,12 +1810,12 @@ var wd = (function() {
 		h: {
 			enumerable: true,
 			get: function() {
-				return wd_numberTime(this.valueOf()).h;
+				return wd_number_time(this.valueOf()).h;
 			},
 			set: function(x) {
 				if (!WDbox.finite(x)) return;
 				x = WDbox.int(x);
-				this._value = wd_timeNumber(x, this.m, this.s);
+				this._value = wd_time_number(x, this.m, this.s);
 				return;
 			}
 		},
@@ -1747,12 +1830,12 @@ var wd = (function() {
 		m: {
 			enumerable: true,
 			get: function() {
-				return wd_numberTime(this.valueOf()).m;
+				return wd_number_time(this.valueOf()).m;
 			},
 			set: function(x) {
 				if (!WDbox.finite(x)) return;
 				x = WDbox.int(x);
-				this._value = wd_timeNumber(this.h, x, this.s);
+				this._value = wd_time_number(this.h, x, this.s);
 				return;
 			}
 		},
@@ -1767,12 +1850,12 @@ var wd = (function() {
 		s: {
 			enumerable: true,
 			get: function() {
-				return wd_numberTime(this.valueOf()).s;
+				return wd_number_time(this.valueOf()).s;
 			},
 			set: function(x) {
 				if (!WDbox.finite(x)) return;
 				x = WDbox.int(x);
-				this._value = wd_timeNumber(this.h, this.m, x);
+				this._value = wd_time_number(this.h, this.m, x);
 				return;
 			}
 		},
@@ -1820,7 +1903,7 @@ var wd = (function() {
 	}
 
 	WDdate.searchFirstDay = function(search, year) {
-		var init = WDbox.noonDate(null, 1, 1, year).getDay() + 1;
+		var init = wd_set_date(null, 1, 1, year).getDay() + 1;
 		var diff = search < init ? search + 7 - init : search - init
 		return 1 + diff;
 	}
@@ -1864,7 +1947,7 @@ var wd = (function() {
 			set: function(x) {
 				if (!WDbox.finite(x) || x < 0) return;
 				x = WDbox.int(x);
-				this._value = WDbox.noonDate(this._value, undefined, undefined, x);
+				this._value = wd_set_date(this._value, undefined, undefined, x);
 				return
 			}
 		},
@@ -1876,7 +1959,7 @@ var wd = (function() {
 		length: {/*dias no ano*/
 			enumerable: true,
 			get: function() {
-				return wd_isLeap(this.y) ? 366 : 365;
+				return wd_is_leap(this.y) ? 366 : 365;
 			}
 		},
 		week: {/*semana cheia do ano*/
@@ -1908,7 +1991,7 @@ var wd = (function() {
 			set: function(x) {
 				if (!WDbox.finite(x)) return;
 				x = WDbox.int(x);
-				this._value = WDbox.noonDate(this._value, undefined, x, undefined);
+				this._value = wd_set_date(this._value, undefined, x, undefined);
 				return
 			}
 		},
@@ -1921,7 +2004,7 @@ var wd = (function() {
 			enumerable: true,
 			get: function() {
 				var list = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-				return (this.m === 2 && wd_isLeap(this.y) ? 1 : 0) + list[this.m - 1];
+				return (this.m === 2 && wd_is_leap(this.y) ? 1 : 0) + list[this.m - 1];
 			},
 		},
 		shortMonth: {
@@ -1951,7 +2034,7 @@ var wd = (function() {
 			set: function(x) {
 				if (!WDbox.finite(x)) return;
 				x = WDbox.int(x);
-				this._value = WDbox.noonDate(this._value, x, undefined, undefined);
+				this._value = wd_set_date(this._value, x, undefined, undefined);
 				return
 			}
 		},
@@ -1964,7 +2047,7 @@ var wd = (function() {
 			enumerable: true,
 			get: function() {
 				var days  = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
-				var extra = (this.m > 2 && wd_isLeap(this.y)) ? 1 : 0;
+				var extra = (this.m > 2 && wd_is_leap(this.y)) ? 1 : 0;
 				return days[this.m - 1] + this.d + extra;
 			}
 		},
@@ -3905,7 +3988,7 @@ var wd = (function() {
 		var target = WD(e);
 		var method = "method" in data ? data.method : "post";
 		var file   = data.path;
-		var pack   = WDbox.get$$(data);
+		var pack   = wd_$$$(data);
 		var exec   = WD(pack);
 
 		target.data({wdLoad: null});
@@ -3923,7 +4006,7 @@ var wd = (function() {
 		var target = WD(e);
 		var method = "method" in data ? data.method : "post";
 		var file   = data.path;
-		var pack   = WDbox.get$$(data);
+		var pack   = wd_$$$(data);
 		var exec   = WD(pack);
 
 		target.data({wdRepeat: null});
@@ -3977,7 +4060,7 @@ var wd = (function() {
 		} else if ("path" in data) { /*para fonte arquivo*/
 			var method = "method" in data ? data.method : "post";
 			var file   = data.path;
-			var pack   = WDbox.get$$(data);
+			var pack   = wd_$$$(data);
 			var exec   = WD(pack);
 			exec.send(file, function(x) {
 				if (x.closed) {
@@ -3998,7 +4081,7 @@ var wd = (function() {
 			if (!("get" in data[i]) && !("post" in data[i])) continue;
 			var method = "method" in data[i] ? data.method[i] : "post";
 			var file   = data[i].path;
-			var pack   = WDbox.get$$(data[i]);
+			var pack   = wd_$$$(data[i]);
 			var call   = window[data[i]["call"]];
 			var exec   = WD(pack);
 			exec.send(file, call, method);
@@ -4055,7 +4138,7 @@ var wd = (function() {
 		var data = WDdom.dataset(e, "wdFilter");
 		for (var i = 0; i < data.length; i++) {
 			var chars  = data[i].chars;
-			var target = WDbox.get$$(data[i]);
+			var target = wd_$$$(data[i]);
 			if (target !== null) WD(target).filter(search, chars);
 		}
 		return;
@@ -4120,7 +4203,7 @@ var wd = (function() {
 		if (!("wdData" in e.dataset)) return;
 		var data = WDdom.dataset(e, "wdData");
 		for (var i = 0; i < data.length; i++) {
-			var target = WDbox.get$$(data[i]);
+			var target = wd_$$$(data[i]);
 			delete data[i]["$"];
 			delete data[i]["$$"];
 			for (var j in data[i]) if (data[i][j] === "null") data[i][j] = null;
@@ -4178,7 +4261,7 @@ var wd = (function() {
 		if (!("wdFull" in e.dataset)) return;
 		var data   = WDdom.dataset(e, "wdFull")[0];
 		var exit   = "exit" in data ? true : false;
-		var target = WDbox.get$$(data);
+		var target = wd_$$$(data);
 		if (target === null) target = document.documentElement;
 		WD(target).full(exit);
 		return;
@@ -4228,7 +4311,7 @@ var wd = (function() {
 		var data  = WDdom.dataset(e, "wdSet");
 		var words = {"null": null, "false": false, "true": true};
 		for (var i = 0; i < data.length; i++) {
-			var target = WDbox.get$$(data[i]);
+			var target = wd_$$$(data[i]);
 			delete data[i]["$"];
 			delete data[i]["$$"];
 			for (var j in data[i]) {
@@ -4245,7 +4328,7 @@ var wd = (function() {
 		if (!("wdCss" in e.dataset)) return;
 		var data = WDdom.dataset(e, "wdCss");
 		for (var i = 0; i < data.length; i++) {
-			var target = WDbox.get$$(data[i]);
+			var target = wd_$$$(data[i]);
 			delete data[i]["$"];
 			delete data[i]["$$"];
 			if (JSON.stringify(data[i]) === "{}") data[i] = null;
@@ -4260,7 +4343,7 @@ var wd = (function() {
 		if (!("wdNav" in e.dataset)) return;
 		var data = WDdom.dataset(e, "wdNav");
 		for (var i = 0; i < data.length; i++) {
-			var target = WDbox.get$$(data[i]);
+			var target = wd_$$$(data[i]);
 			var value  = "type" in data[i] ? data[i].type : null;
 			WD(target === null ? e : target).nav(value);
 		}
@@ -4272,7 +4355,7 @@ var wd = (function() {
 	function data_wdOutput(e) {/*Atribui um valor ao target: data-wd-output=${target}call{}*/
 		if (!("wdOutput" in e.dataset)) return;
 		var data   = WDdom.dataset(e, "wdOutput")[0];
-		var target = WDbox.get$$(data);
+		var target = wd_$$$(data);
 		if (target === null) return;
 
 
