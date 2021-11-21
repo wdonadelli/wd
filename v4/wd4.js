@@ -838,18 +838,10 @@ var wd = (function() {
 
 	WD.constructor = WD;
 	Object.defineProperties(WD, {
-		version: {get: function() {
-			return wd_version;
-		}},
-		$: {value: function(css, root) {
-			return WD(wd_$(css, root));
-		}},
-		$$: {value: function(css, root) {
-			return WD(wd_$$(css, root));
-		}},
-		today: {get: function() {
-			return WD(wd_set_date(new Date()));
-		}},
+		version: {value: wd_version},
+		$:       {value: function(css, root) {return WD(wd_$(css, root));}},
+		$$:      {value: function(css, root) {return WD(wd_$$(css, root));}},
+		today:   {get:   function() {return WD(wd_set_date(new Date()));}},
 		now: {get: function() {
 			var t = new Date();
 			var o = {h: t.getHours(), m: t.getMinutes(), s: t.getSeconds()};
