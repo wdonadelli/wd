@@ -71,33 +71,6 @@ var wd = (function() {
 		return date;
 	}
 
-/*----------------------------------------------------------------------------*/
-	function wd_str_date (val) {/* obtém data em formato string */
-		var data = [
-			{re: /^[0-9]{4}\-[0-9]{2}\-[0-9]{2}$/, sym: "-", y: 0, m: 1, d: 2},
-			{re: /^[0-9]{2}\/[0-9]{2}\/[0-9]{4}$/, sym: "/", y: 2, m: 1, d: 0},
-			{re: /^[0-9]{2}\.[0-9]{2}\.[0-9]{4}$/, sym: ".", y: 2, m: 0, d: 1},
-		];
-	
-		var index = -1;
-		for (var i = 0; i < data.length; i++) {
-			if (data[i].re.test(val)) index = i;
-			if (index >= 0) break;
-		}
-
-		if (index < 0) return null;
-
-		var date = val.split(data[index].symbol);
-		var d    = Number(date[data[index].d]);
-		var m    = Number(date[data[index].m]);
-		var y    = Number(date[data[index].y]);
-
-		if (y > 9999 || y < 1 || m > 12 || m < 1 || d > 31 || d < 1) return null;
-		if (d > 30 && [2, 4, 6, 9, 11].indexOf(m) >= 0)              return null;
-		if (m === 2 && (d > 29 || (d === 29 && !wd_is_leap(y))))     return null;
-
-		return wd_set_date(null, y, m, d);
-	}
 
 /*----------------------------------------------------------------------------*/
 	function wd_time_number(h, m, s) { /*Converte tempo em número*/
@@ -141,6 +114,34 @@ var wd = (function() {
 		if ((/pm$/i).test(val) && values[0] < 12)   values[0] = values[0] + 12;
 
 		return wd_time_number(values[0], values[1], values[2]);
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_str_date (val) {/* obtém data em formato string */
+		var data = [
+			{re: /^[0-9]{4}\-[0-9]{2}\-[0-9]{2}$/, sym: "-", y: 0, m: 1, d: 2},
+			{re: /^[0-9]{2}\/[0-9]{2}\/[0-9]{4}$/, sym: "/", y: 2, m: 1, d: 0},
+			{re: /^[0-9]{2}\.[0-9]{2}\.[0-9]{4}$/, sym: ".", y: 2, m: 0, d: 1},
+		];
+
+		var index = -1;
+		for (var i = 0; i < data.length; i++) {
+			if (data[i].re.test(val)) index = i;
+			if (index >= 0) break;
+		}
+
+		if (index < 0) return null;
+
+		var date = val.split(data[index].sym);
+		var d    = Number(date[data[index].d]);
+		var m    = Number(date[data[index].m]);
+		var y    = Number(date[data[index].y]);
+
+		if (y > 9999 || y < 1 || m > 12 || m < 1 || d > 31 || d < 1) return null;
+		if (d > 30 && [2, 4, 6, 9, 11].indexOf(m) >= 0)              return null;
+		if (m === 2 && (d > 29 || (d === 29 && !wd_is_leap(y))))     return null;
+
+		return wd_set_date(null, d, m, y);
 	}
 
 /*----------------------------------------------------------------------------*/
@@ -199,48 +200,63 @@ var wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_typeof(val) {/* retorna o tipo do objeto */
+	function wd_vtype(val) {/* retorna o tipo e o valor do objeto */
+		var value;
 
+		/* Valores simples */
+		if (val === undefined)             return {type: "undefined", value: val};
+		if (val === null)                  return {type: "null", value: val};
+		if (val === true || val === false) return {type: "boolean", value: val};
+
+		/* Valores em forma de string */
 		if (typeof val === "string" || val instanceof String) {
 			val = val.trim();
-			if (wd_str_date(val)   !== null) return "date";
-			if (wd_str_time(val)   !== null) return "time";
-			if (wd_str_number(val) !== null) return "number";
-			return val === "" ?  null : "text";
+			if (val === "") return {type: "null", value: null};
+
+			var mtds = {
+				"date": wd_str_date, "time": wd_str_time, "number": wd_str_number
+			};
+			for (var t in mtds) {
+				value = mtds[t](val);
+				if (value !== null) return {value: value, type: t}
+			}
+
+			return {type: "text", value: val.toString()};
 		}
 
-		if (wd_dom(val) !== null) return "dom";
+		/* Elementos da árvore DOM */
+		value = wd_dom(val);
+		if (value !== null) return {value: value, type: "dom"};
 
-		var types = [
-			{eq1: null, exit: "null"},
-			{eq1: undefined, exit: "undefined"},
-			{eq1: document, eq2: window, exit: "dom"},
-			{eq1: true, eq2: false, tp: "boolean", ct: "Boolean", exit: "boolean"},
-			{tp: "regexp", ct: "RegExp", exit: "regexp"},
-			{tp: "function", ct: "Function", exit: "function"},
-			{tp: "number", ct: "Number", check: !isNaN(val), exit: "number"},
-			{ct: "Array", check: Array.isArray(val), exit: "array"},
-			{ct: "Date", exit: "date"},
-			{tp: "object", ct: "Object", check: (/^\{.*\}$/).test(JSON.stringify(val)), exit: "object"},
+		/* Outros tipos de valores */
+		var types = [/* to: typeof, ct: constructor, tp: type, ck: checagem */
+			{tp: "Number",   ck: !isNaN(val)},
+			{tp: "Array",    ck: Array.isArray(val)},
+			{tp: "Date",     ck: true},
+			{tp: "Boolean",  ck: true},
+			{tp: "Regexp",   ck: true},
+			{tp: "Function", ck: true},
+			{tp: "Object",   ck: (/^\{.*\}$/).test(JSON.stringify(val))},
 		];
 
+		var vtype = {type: "unknown", value: val};
 		for (var i = 0; i < types.length; i++) {
-			var obj = types[i];
-			/* definir checagem extra, se não definida */
-			if (!("check" in obj)) obj.check = true;
-			/* testar igualdade primária (eq1) */
-			if ("eq1" in obj && val === obj.eq1) return obj.exit;
-			/* testar igualdade secundária (eq2) */
-			if ("eq2" in obj && val === obj.eq2) return obj.exit;
-			/* testar typeof (tp) */
-			if ("tp" in obj && typeof val === obj.tp && obj.check)
-				return obj.exit;
-			/* testar construtor (ct) */
-			if ("ct" in obj && obj.ct in window && val instanceof window[obj.ct])
-				return obj.exit;
+			if (!types[i].ck) continue;
+			if (typeof val === types[i].tp.toLowerCase())
+				vtype.type = types[i].tp.toLowerCase();
+			else if (types[i].tp in window && val instanceof window[types[i].tp])
+				vtype.type = types[i].tp.toLowerCase();
+			if (vtype.type !== "unknown") break;
 		}
 
-		return "unknown";
+		if (vtype.type === "boolean" || vtype.type === "number")
+			vtype.value = vtype.value.valueOf();
+		else if (vtype.type === "array")
+			vtype.value = vtype.value.slice();
+		else if (vtype.type === "date")
+			vtype.value = wd_set_date(vtype.value);
+
+		return vtype;
 	}
 
 /*----------------------------------------------------------------------------*/
@@ -271,10 +287,104 @@ var wd = (function() {
 		return all !== null ? all : one;
 	}
 
+/*----------------------------------------------------------------------------*/
+	function wd_text_caps(input) {
+		var input = input.split("");
+		var empty = true;
+		for (var i = 0; i < input.length; i++) {
+			input[i] = empty ? input[i].toUpperCase() : input[i].toLowerCase();
+			empty    = input[i].trim() === "" ? true : false;
+		}
+		return input.join("");
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_text_toggle(input) {
+		var input = input.split("");
+		for (var i = 0; i < input.length; i++) {
+			var test = input[i].toUpperCase();
+			input[i] = input[i] === test ? input[i].toLowerCase() : test;
+		}
+		return input.join("");
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_mask(input, check, callback) {
+		check = String(check).toString();
+		var code  = {"#": "[0-9]", "@": "[a-zA-ZÀ-ÿ]", "*": "."};
+		var mask  = ["^"]; /*Formato da máscara (conteúdo + caracteres)*/
+		var only  = ["^"]; /*Conteúdo da máscara (conteúdo apenas)*/
+		var gaps  = [];    /*Caracteres da máscara (comprimento do formato)*/
+		var func  = wd_vtype(callback);
+		if (func.type !== "function") callback = function(x) {return true;}
+
+		/* obtendo a máscara e os containers para ocupação */
+		for (var i = 0; i < input.length; i++) {
+			var char = input[i];
+
+			if (char in code) { /*caracteres de máscara*/
+				mask.push(code[char]);
+				gaps.push(null);
+				only.push(code[char])
+			} else if ((/\w/).test(char)) { /*números, letras e sublinhado*/
+				mask.push(char === "_" ? "\\_" : char);
+				gaps.push(char);
+			} else if (char === "\\" && input[i+1] in re) { /*caracteres especiais*/
+				mask.push(char+input[i+1]);
+				gaps.push(input[i+1]);
+				i++;
+			} else { /*outros caracteres*/
+				mask.push("\\"+char);
+				gaps.push(char);
+			}
+		}
+
+		/*returnar se o usuário entrou com a máscara já formatada adequadamente*/
+		mask.push("$");
+		mask = new RegExp(mask.join(""));
+		if (mask.test(check) && callback(check)) return check;
+
+		/*se os caracteres não estiverem de acordo com a máscara*/
+		only.push("$");
+		only = new RegExp(only.join(""));
+		if (!only.test(check)) return null;
+
+		/*se os caracteres estiverem de acordo com a máscara*/
+		var n = 0;
+		for (var i = 0; i < gaps.length; i++) {
+			if (gaps[i] === null) {
+				gaps[i] = check[n];
+				n++;
+			}
+		}
+		gaps = gaps.join("");
+
+		if (callback(gaps)) return gaps;
+
+		return null;
+	}
 
 
+/*----------------------------------------------------------------------------*/
+	function wd_csv_array(input) {/* CSV para Array */
+		var data = [];
+		var rows = input.trim().split("\n");
+		for (var r = 0; r < rows.length; r++) {
+			data.push([]);
+			var cols = rows[r].split("\t")
+			for (var c = 0; c < cols.length; c++) {
+				var value = cols[c];
+				if ((/^\"(.+)?\"$/).test(value)) value = value.replace(/^\"/, "").replace(/\"$/, "");
+				data[r].push(value);
+			}
+		}
+		return data;
+	}
 
-
+/*----------------------------------------------------------------------------*/
+	function wd_no_spaces(txt, char) { /* Troca múltiplos espaço por caracter */
+		return txt.replace(/[\0- ]+/g, (char === undefined ? " " : char)).trim();
+	};
 
 
 
@@ -335,10 +445,7 @@ var wd = (function() {
 		empty: /[\0- ]+/g,
 	};
 
-	WDbox.clearSpaces = function (x, punct) {
-		return x.replace(WDbox.re.empty, (punct === undefined ? " " : punct));
-	};
-
+	
 	WDbox.int = function(n, abs) {
 		var val = new Number(n).valueOf();
 		if (abs === true) val = Math.abs(val);
@@ -352,24 +459,6 @@ var wd = (function() {
 		return true;
 	};
 
-	
-
-
-
-	WDbox.csv = function(input) {/*CSV para Array*/
-		var data = [];
-		var rows = input.trim().split("\n");
-		for (var r = 0; r < rows.length; r++) {
-			data.push([]);
-			var cols = rows[r].split("\t")
-			for (var c = 0; c < cols.length; c++) {
-				var value = cols[c];
-				if ((/^\"(.+)?\"$/).test(value)) value = value.replace(/^\"/, "").replace(/\"$/, "");
-				data[r].push(value);
-			}
-		}
-		return data;
-	}
 
 	WDbox.matrixObject = function(array) {/*matriz de array para objeto*/
 		var x = [];
@@ -393,380 +482,6 @@ var wd = (function() {
 	WDbox.deviceController = null;
 	/* Guarda o intervalo de tempo para executar funções vinculadas aos eventos de tecla */
 	WDbox.keyTimeRange = 500;
-
-/*============================================================================*/
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	function WDtype(input) {
-		if (!(this instanceof WDtype)) return new WDtype(input);
-		this._INPUT = input;     /* guarda o valor de entrada (imutável) */
-		this._input = input;     /* guarda o valor de entrada */
-		this._value = undefined; /* guarda o valor do objeto */
-		this._type  = "unknown"; /* guarda o tipo do objeto */
-		if (this.isString) this._input = input.trim();
-		this._run();
-	}
-
-	Object.defineProperty(WDtype.prototype, "constructor", {value: WDtype});
-
-	Object.defineProperty(WDtype.prototype, "isFullString", {get: function() {
-		if (!this.isString)            return false;
-		if (this._input.trim() === "") return false;
-		return true;
-	}});
-
-	Object.defineProperty(WDtype.prototype, "isString", {get: function() {
-		if (typeof this._input === "string") return true;
-		if (this._input instanceof String)   return true;
-		return false;
-	}});
-
-	Object.defineProperty(WDtype.prototype, "isNull", {get: function() {
-		if (this._input === null || this._input === "") {
-			this._type  = "null";
-			this._value = null;
-			return true;
-		}
-		return false;
-	}});
-
-	Object.defineProperty(WDtype.prototype, "isUndefined", {get: function() {
-		if (this._input === undefined) {
-			this._type  = "undefined";
-			this._value = undefined;
-			return true;
-		}
-		return false;
-	}});
-
-	Object.defineProperty(WDtype.prototype, "isRegExp", {get: function() {
-		if (typeof this._input === "regexp" || this._input instanceof RegExp) {
-			this._type  = "regexp";
-			this._value = this._input;
-			return true;
-		}
-		return false;
-	}});
-
-	Object.defineProperty(WDtype.prototype, "isBoolean", {get: function() {
-		if (
-			this._input === true  ||
-			this._input === false ||
-		 	typeof this._input === "boolean" ||
-			this._input instanceof Boolean
-		) {
-			this._type  = "boolean";
-			this._value = this._input.valueOf();
-			return true;
-		}
-		return false;
-	}});
-
-	Object.defineProperty(WDtype.prototype, "isArray", {get: function() {
-		if (Array.isArray(this._input) || this._input instanceof Array) {
-			this._type  = "array";
-			this._value = this._input.slice();
-			return true;
-		}
-		return false;
-	}});
-
-	Object.defineProperty(WDtype.prototype, "isObject", {get: function() {
-		if (
-			typeof this._input === "object" &&
-			this._input instanceof Object &&
-			(/^\{.*\}$/).test(JSON.stringify(this._input))
-		) {
-			this._type  = "object";
-			this._value = this._input;
-			return true;
-		}
-		return false;
-	}});
-
-	Object.defineProperty(WDtype.prototype, "isFunction", {get: function() {
-		if (typeof this._input === "function" || this._input instanceof Function){
-			this._type  = "function";
-			this._value = this._input;
-			return true;
-		}
-		return false;
-	}});
-
-	Object.defineProperty(WDtype.prototype, "isDOM", {get: function() {
-		if (
-			this._input === document ||
-			this._input === window   ||
-			this._input instanceof HTMLElement ||
-			this._input instanceof SVGElement
-		) {
-			this._type  = "dom";
-			this._value = [this._input];
-			return true;
-		}
-
-		if (
-			this._input instanceof NodeList ||
-			this._input instanceof HTMLCollection ||
-			this._input instanceof HTMLAllCollection ||
-			"HTMLOptionsCollection" in window && this._input instanceof HTMLOptionsCollection || /*IE11*/
-			"HTMLFormControlsCollection" in window && this._input instanceof HTMLFormControlsCollection /*IE 11*/
-		) {
-			this._type  = "dom";
-			this._value = [];
-			for (var i = 0; i < this._input.length; i++)
-				this._value.push(this._input[i]);
-			return true;
-		}
-
-		try {
-			if (
-				"nodeType" in this._input &&
-				this._input.nodeType === 1 &&
-				this._input.constructor.name in window &&
-				"parentElement" in this._input
-			) {
-				this._type  = "dom";
-				this._value = [this._input];
-				return true;
-			}
-		} catch(e) {}
-
-		if (!this.isString) return false;
-
-		var save = this._input.toString();
-
-		if ((/^\$\$\{.+\}$/).test(this._input)) {
-			var selector = save.substr(3, (save.length - 4));
-			this._input  = wd_$$(selector);
-			if (this.isDOM && this._input.length > 0) return true;
-		}
-
-		if ((/^\$\{.+\}$/).test(this._input)) {
-			var selector = save.substr(2, (save.length - 3));
-			this._input  = wd_$(selector);
-			if (this.isDOM) return true;
-		}
-
-		this._input = save;
-		return false;
-	}});
-
-	Object.defineProperty(WDtype.prototype, "isText", {get: function() {
-		if (!this.isString) return false;
-		this._type  = "text";
-		this._value = this._input;
-		return true;
-	}});
-
-	Object.defineProperty(WDtype.prototype, "isNumber", {get: function() {
-		if (
-			(typeof this._input === "number" || this._input instanceof Number) &&
-			!isNaN(this._input)
-		) {
-			this._type  = "number";
-			this._value = this._input.valueOf();
-			return true;
-		}
-
-		if (!this.isString) return false;
-		if ((/Infinity$/).test(this._input)) return false;
-		/*número em forma de texto (padrão)*/
-		if (this._input == Number(this._input)) {
-			this._type  = "number";
-			this._value = Number(this._input).valueOf();
-			return true;
-		}
-		/*fatorial*/
-		if ((/^[0-9]+\!$/).test(this._input)) {
-			var number = Number(this._input.replace("!", "")).valueOf();
-			var value  = 1;
-			while (number > 1) {
-				value *= number;
-				number--;
-			}
-			this._type  = "number";
-			this._value = value;
-			return true;
-		}
-		/*porcentagem*/
-		if ((/^[\+\-]?([0-9]+|\.[0-9]+|[0-9]+\.[0-9]+)\%$/).test(this._input)) {
-			var number  = Number(this._input.replace("%", "")).valueOf();
-			this._type  = "number";
-			this._value = number / 100;
-			return true;
-		}
-		return false;
-	}});
-
-	Object.defineProperty(WDtype.prototype, "isTime", {get: function() {
-		if (!this.isString) return false;
-
-		if (/^(0?[0-9]|1[0-9]|2[0-4])(\:[0-5][0-9]){1,2}$/.test(this._input)) {/*HH:MM:SS*/
-			this._type  = "time";
-			var time    = this._input.split(":");
-			this._value = wd_time_number(
-				Number(time[0]),
-				Number(time[1]),
-				time.length === 3 ? Number(time[2]) : 0
-			);
-			return true;
-		}
-
-		if ((/^(0?[1-9]|1[0-2])\:[0-5][0-9]\ ?(am|pm)$/i).test(this._input)) {/*HH:MM AM|PM*/
-			this._type  = "time";
-			this._input = this._input.toLowerCase();
-			var sep     = this._input[this._input.length - 2];
-			var time    = this._input.split(sep)[0].trim().split(":");
-			var hour    = Number(time[0]);
-			this._value = wd_time_number(
-				sep === "a" ? hour : (hour === 12 ? 0 : (12 + hour)),
-				Number(time[1]),
-				0
-			);
-			return true;
-		}
-
-		if ((/^(0?[0-9]|1[0-9]|2[0-4])h[0-5][0-9]$/i).test(this._input)) { /*24HhMM*/
-			this._type  = "time";
-			var time    = this._input.toLowerCase().split("h");
-			this._value = wd_time_number(
-				Number(time[0]),
-				Number(time[1]),
-				0
-			);
-			return true;
-		}
-		return false;
-	}});
-
-	Object.defineProperty(WDtype.prototype, "isDate", {get: function() {
-		if (this._input instanceof Date) {/*DATE*/
-			this._type  = "date";
-			this._value = wd_set_date(this._input);
-			return true;
-		}
-		if (!this.isString) return false;
-
-		var d, m, y, array, type, symbol, index;
-		/*capturando formatos padrão (YYYY-MM-DD DD/MM/YYYY MM.DD.YYYY)*/
-		if      (/^[0-9]{4}\-[0-9]{2}\-[0-9]{2}$/.test(this._input)) type = 0;
-		else if (/^[0-9]{2}\/[0-9]{2}\/[0-9]{4}$/.test(this._input)) type = 1;
-		else if (/^[0-9]{2}\.[0-9]{2}\.[0-9]{4}$/.test(this._input)) type = 2;
-		else return false;
-
-		symbol = ["-", "/", "."];
-		index  = {d: [2, 0, 1], m: [1, 1, 0], y: [0, 2, 2]};
-		array  = this._input.split(symbol[type]);
-
-		d = Number(array[index.d[type]]);
-		m = Number(array[index.m[type]]);
-		y = Number(array[index.y[type]]);
-
-		/*analisando formatos padrão*/
-		if (y > 9999 || y < 1)  return false;
-		if (m > 12   || m < 1)  return false;
-		if (d > 31   || d < 1)  return false;
-		if (d > 30   && [2, 4, 6, 9, 11].indexOf(m) >= 0) return false;
-		if (d > 29   && m == 2) return false;
-		if (d == 29  && m == 2 && !wd_is_leap(y)) return false;
-
-		this._type  = "date";
-		this._value = new Date();
-		this._value = wd_set_date(this._value, d, m, y);
-		return true;
-	}});
-
-	Object.defineProperty(WDtype.prototype, "_run", {value: function() {
-		var methods = [/*importante: objetos específicos devem estar antes dos genéricos*/
-			"isUndefined", /*0*/
-			"isNull",      /*0*/
-			"isBoolean",   /*0*/
-			"isRegExp",    /*0*/
-			"isArray",     /*0*/
-			"isDOM",       /*0*/
-			"isFunction",  /*0*/
-			"isTime",      /*0*/
-			"isDate",      /*0*/
-			"isNumber",    /*0*/
-			"isText",      /*1*/
-			"isObject"     /*2*/
-		];
-		for (var i = 0; i < methods.length; i++) {
-			if (this[methods[i]]) return;
-		}
-		this._type  = "unknown";
-		this._value = this._input;
-	}});
-
-	Object.defineProperty(WDtype.prototype, "type", {
-		get: function() {return this._type;}
-	});
-
-	Object.defineProperty(WDtype.prototype, "value", {
-		get: function() {return this._value;}
-	});
-
-	Object.defineProperty(WDtype.prototype, "input", {
-		get: function() {return this._INPUT;}
-	});
 
 /*============================================================================*/
 
@@ -922,7 +637,7 @@ var wd = (function() {
 						parent._text      = parent.request.responseText;
 						parent._xml       = parent.request.responseXML;
 						try {parent._json = JSON.parse(parent._text);} catch(e) {};
-						try {parent._csv  = WDbox.csv(parent._text); } catch(e) {};
+						try {parent._csv  = wd_csv_array(parent._text); } catch(e) {};
 					} else {
 						parent._status = "ERROR";
 					}
@@ -973,7 +688,7 @@ var wd = (function() {
 		this._start  = new Date();
 		this.request = new XMLHttpRequest();
 		this.setRequestHandlers();
-		var pack = WDtype(this._pack);
+		var pack = wd_vtype(this._pack);
 
 		if (this.method === "GET" && pack.type === "text") {
 			var action   = this.action.split("?");
@@ -1107,19 +822,18 @@ var wd = (function() {
 /*============================================================================*/
 
 	function WD(input) {
-		var wd  = new WDtype(input);
-		var obj = {
+		var vtype  = wd_vtype(input);
+		var object = {
 			"undefined": WDundefined, "null":     WDnull,
 			"boolean":   WDboolean,   "function": WDfunction,
 			"object":    WDobject,    "regexp":   WDregexp,
 			"array":     WDarray,     "dom":      WDdom,
 			"time":      WDtime,      "date":     WDdate,
-			"number":    WDnumber,    "text":     WDtext
+			"number":    WDnumber,    "text":     WDtext,
+			"unknown":   WDmain
 		};
-		for (var i in obj) {
-			if (wd.type === i) return new obj[i](wd.input, wd.type, wd.value);
-		}
-		return new WDmain(wd.input, wd.type, wd.value)
+
+		return new object[vtype.type](input, vtype.value);
 	}
 
 	WD.constructor = WD;
@@ -1142,34 +856,23 @@ var wd = (function() {
 			for (var i in o) o[i] = (o[i] < 10 ? "0" : "") + o[i].toString();
 			return WD(o.h+":"+o.m+":"+o.s);
 		}},
-		loko: {value: wd_typeof}
 	});
 
 /*============================================================================*/
 
-	function WDmain(input, type, value) {
-		if (!(this instanceof WDmain)) return new WDmain(input, type, value);
-
-		var writables = ["time", "date", "text", "array"];
+	function WDmain(input, value) {
+		if (!(this instanceof WDmain)) return new WDmain(input, value);
 
 		Object.defineProperties(this, {
-			version: {get: function() {return WD.version;}},
 			_input:  {value: input},
-			_type:   {value: type},
-			_value:  {
-				value: value,
-				writable: writables.indexOf(type) >= 0 ? true : false
-			}
+			_value:  {value: value, writable: true}
 		});
 	}
 
 	Object.defineProperties(WDmain.prototype, {
 		constructor: {value: WDmain},
-		type:     {
-			enumerable: true,
-			get:   function() {return this._type;}
-		},
-		valueOf:  {
+		type:        {value: "unknown"},
+		valueOf: {
 			value: function() {
 				try {return this._value.valueOf();} catch(e) {}
 				return Number(this._value).valueOf();
@@ -1187,10 +890,10 @@ var wd = (function() {
 		enumerable: true,
 		value: function (action, callback, method, async) {
 
-			action   = new WDtype(action);
+			action   = wd_vtype(action);
 			if (!action.isFullString) return false;
 
-			callback = new WDtype(callback);
+			callback = wd_vtype(callback);
 
 			action   = action.input.trim();
 			callback = callback.type === "function" ? callback.input : null;
@@ -1256,201 +959,149 @@ var wd = (function() {
 
 /*============================================================================*/
 
-	function WDundefined(input, type, value) {
-		if (!(this instanceof WDundefined)) return new WDundefined(input, type, value);
-		WDmain.call(this, input, type, value);
+	function WDundefined(input, value) {
+		if (!(this instanceof WDundefined)) return new WDundefined(input, value);
+		WDmain.call(this, input, value);
 	}
 
 	WDundefined.prototype = Object.create(WDmain.prototype, {
-		constructor: {value: WDundefined}
-	});
-
-	Object.defineProperties(WDundefined.prototype, {
-		valueOf:  {value: function() {return Infinity;}},
-		toString: {value: function() {return "?";}}
+		constructor: {value: WDundefined},
+		type:        {value: "undefined"},
+		valueOf:     {value: function() {return Infinity;}},
+		toString:    {value: function() {return "?";}}
 	});
 
 /*============================================================================*/
 
-	function WDnull(input, type, value) {
-		if (!(this instanceof WDnull)) return new WDnull(input, type, value);
-		WDmain.call(this, input, type, value);
+	function WDnull(input, value) {
+		if (!(this instanceof WDnull)) return new WDnull(input, value);
+		WDmain.call(this, input, value);
 	}
 
 	WDnull.prototype = Object.create(WDmain.prototype, {
-		constructor: {value: WDnull}
-	});
-
-	Object.defineProperties(WDnull.prototype, {
-		valueOf:  {value: function() {return 0;}},
-		toString: {value: function() {return "";}}
+		constructor: {value: WDnull},
+		type:        {value: "null"},
+		valueOf:     {value: function() {return 0;}},
+		toString:    {value: function() {return "";}}
 	});
 
 /*============================================================================*/
 
-	function WDboolean(input, type, value) {
-		if (!(this instanceof WDboolean)) return new WDboolean(input, type, value);
-		WDmain.call(this, input, type, value);
+	function WDboolean(input, value) {
+		if (!(this instanceof WDboolean)) return new WDboolean(input, value);
+		WDmain.call(this, input, value);
 	}
 
 	WDboolean.prototype = Object.create(WDmain.prototype, {
-		constructor: {value: WDboolean}
-	});
-
-	Object.defineProperties(WDboolean.prototype, {
-		valueOf:  {value: function() {return this._value ? 1 : 0;}},
-		toString: {value: function() {return this._value ? "True" : "False";}}
+		constructor: {value: WDboolean},
+		type:        {value: "boolean"},
+		valueOf:     {value: function() {return this._value ? 1 : 0;}},
+		toString:    {value: function() {return this._value ? "True" : "False";}}
 	});
 
 /*============================================================================*/
 
-	function WDfunction(input, type, value) {
-		if (!(this instanceof WDfunction)) return new WDfunction(input, type, value);
-		WDmain.call(this, input, type, value);
+	function WDfunction(input, value) {
+		if (!(this instanceof WDfunction)) return new WDfunction(input, value);
+		WDmain.call(this, input, value);
 	}
 
 	WDfunction.prototype = Object.create(WDmain.prototype, {
-		constructor: {value: WDfunction}
+		constructor: {value: WDfunction},
+		type:        {value: "function"},
 	});
 
 /*============================================================================*/
 
-	function WDobject(input, type, value) {
-		if (!(this instanceof WDobject)) return new WDobject(input, type, value);
-		WDmain.call(this, input, type, value);
+	function WDobject(input, value) {
+		if (!(this instanceof WDobject)) return new WDobject(input, value);
+		WDmain.call(this, input, value);
 	}
 
 	WDobject.prototype = Object.create(WDmain.prototype, {
-		constructor: {value: WDobject}
-	});
-
-	Object.defineProperty(WDobject.prototype, "toString", {
-		value: function() {return JSON.stringify(this._value);}
+		constructor: {value: WDobject},
+		type:        {value: "object"},
+		toString:    {value: function() {return JSON.stringify(this._value);}}
 	});
 
 /*============================================================================*/
 
-	function WDregexp(input, type, value) {
-		if (!(this instanceof WDregexp)) return new WDregexp(input, type, value);
-		WDmain.call(this, input, type, value);
+	function WDregexp(input, value) {
+		if (!(this instanceof WDregexp)) return new WDregexp(input, value);
+		WDmain.call(this, input, value);
 	}
 
 	WDregexp.prototype = Object.create(WDmain.prototype, {
-		constructor: {value: WDregexp}
-	});
-
-	Object.defineProperty(WDregexp.prototype, "toString", {
-		value: function() {return this._value.source;}
+		constructor: {value: WDregexp},
+		type:        {value: "regexp"},
+		toString:    {value: function() {return this._value.source;}}
 	});
 
 /*============================================================================*/
 
-	function WDtext(input, type, value) {
-		if (!(this instanceof WDtext)) return new WDtext(input, type, value);
-		WDmain.call(this, input, type, value);
+	function WDtext(input, value) {
+		if (!(this instanceof WDtext)) return new WDtext(input, value);
+		WDmain.call(this, input, value);
 	}
 
-	Object.defineProperties(WDtext, {
-		mask: {/*checa e retorna uma máscara (obs.: não é o método de protótipo)*/
-			value: function(input, check, callback) {
-				check = String(check).toString();
-				var code  = {"#": "[0-9]", "@": "[a-zA-ZÀ-ÿ]", "*": "."};
-				var mask  = ["^"]; /*Formato da máscara (conteúdo + caracteres)*/
-				var only  = ["^"]; /*Conteúdo da máscara (conteúdo apenas)*/
-				var gaps  = [];    /*Caracteres da máscara (comprimento do formato)*/
-				var func  = new WDtype(callback);
-				if (func.type !== "function") callback = function(x) {return true;}
+	WDtext.prototype = Object.create(WDmain.prototype, {
+		constructor: {value: WDtext},
+		type:        {value: "text"},
+		upper: { /* retorna valor em caixa alta */
+			enumerable: true,
+			get: function() {return this.toString().toUpperCase();}
+		},
+		lower: { /* retorna valor em caixa baixa */
+			enumerable: true,
+			get: function() {return this.toString().toLowerCase();}
+		},
+		caps: { /* retorna valor capitulado */
+			enumerable: true,
+			get: function() {return wd_text_caps(this.toString());}
+		},
+		toggle: { /* inverte caixa */
+			enumerable: true,
+			get: function() {return wd_text_toggle(this.toString());}
+		},
+		csv: { /* CSV para Matriz */
+			enumerable: true,
+			get: function() {return wd_csv_array(this.toString());}
+		},
+		trim: { /* remove múltiplos espaços */
+			enumerable: true,
+			get: function() {return wd_no_spaces(this.toString());}
+		},
+		json: { /* JSON para Object */
+			enumerable: true,
+			get: function() {
+				try {return JSON.parse(this.toString());} catch(e) { return {};}
+			}
+		},
 
-				/* obtendo a máscara e os containers para ocupação */
-				for (var i = 0; i < input.length; i++) {
-					var char = input[i];
 
-					if (char in code) { /*caracteres de máscara*/
-						mask.push(code[char]);
-						gaps.push(null);
-						only.push(code[char])
-					} else if ((/\w/).test(char)) { /*números, letras e sublinhado*/
-						mask.push(char === "_" ? "\\_" : char);
-						gaps.push(char);
-					} else if (char === "\\" && input[i+1] in re) { /*caracteres especiais*/
-						mask.push(char+input[i+1]);
-						gaps.push(input[i+1]);
-						i++;
-					} else { /*outros caracteres*/
-						mask.push("\\"+char);
-						gaps.push(char);
-					}
+
+
+
+
+
+		mask: { /* máscaras temáticas */
+			enumerable: true,
+			value: function(check, callback) {
+				var masks = this.toString().split("?");
+				for (var i = 0; i < masks.length; i++) {
+					var mask = wd_mask(masks[i], check, callback);
+					if (mask !== null) return mask;
 				}
-
-				/*returnar se o usuário entrou com a máscara já formatada adequadamente*/
-				mask.push("$");
-				mask = new RegExp(mask.join(""));
-				if (mask.test(check) && callback(check)) return check;
-
-				/*se os caracteres não estiverem de acordo com a máscara*/
-				only.push("$");
-				only = new RegExp(only.join(""));
-				if (!only.test(check)) return null;
-
-				/*se os caracteres estiverem de acordo com a máscara*/
-				var n = 0;
-				for (var i = 0; i < gaps.length; i++) {
-					if (gaps[i] === null) {
-						gaps[i] = check[n];
-						n++;
-					}
-				}
-				gaps = gaps.join("");
-
-				if (callback(gaps)) return gaps;
-
 				return null;
 			}
-		}
+		},
 	});
 
-	WDtext.prototype = Object.create(WDmain.prototype, {
-		constructor: {value: WDtext}
-	});
 
-	Object.defineProperty(WDtext.prototype, "caps", {/*captular*/
-		enumerable: true,
-		get: function() {
-			var input = this.lower.split("");
-			var empty = true;
-			for (var i = 0; i < input.length; i++) {
-				input[i] = empty ? input[i].toUpperCase() : input[i];
-				empty    = input[i].trim() === "" ? true : false;
-			}
-			return input.join("");
-		}
-	});
 
-	Object.defineProperty(WDtext.prototype, "toggle", {/*inverte a caixa*/
-		enumerable: true,
-		get: function() {
-			var input = this.toString().split("");
-			for (var i = 0; i < input.length; i++) {
-				var test = input[i].toUpperCase();
-				input[i] = input[i] === test ? input[i].toLowerCase() : test;
-			}
-			return input.join("");
-		}
-	});
 
-	Object.defineProperty(WDtext.prototype, "upper", {/*caixa alta*/
-		enumerable: true,
-		get: function() {
-			return this.toString().toUpperCase();
-		}
-	});
 
-	Object.defineProperty(WDtext.prototype, "lower", {/*caixa baixa*/
-		enumerable: true,
-		get: function() {
-			return this.toString().toLowerCase();
-		}
-	});
+
 
 	Object.defineProperty(WDtext.prototype, "camel", { /*abc-def para abcDef*/
 		enumerable: true,
@@ -1458,7 +1109,7 @@ var wd = (function() {
 			var x = this.clear.replace(WDbox.re.noids, "");
 			if (WDbox.re.camel.test(x)) return x;
 
-			x = WDbox.clearSpaces(x, "-").split("");
+			x = wd_no_spaces(x, "-").split("");
 
 			for (var i = 0; i < x.length; i++) {
 				if (x[i].toLowerCase() != x[i]) x[i] = "-"+x[i];
@@ -1480,7 +1131,7 @@ var wd = (function() {
 			var x = this.clear.replace(WDbox.re.noids, "");
 			if (WDbox.re.dash.test(x)) return x;
 
-			x = WDbox.clearSpaces(x, "-").split("");
+			x = wd_no_spaces(x, "-").split("");
 
 			for (var i = 1; i < x.length; i++) {
 				x[i] = x[i].toLowerCase() == x[i] ? x[i] : "-"+x[i];
@@ -1493,27 +1144,10 @@ var wd = (function() {
 		}
 	});
 
-	Object.defineProperty(WDtext.prototype, "json", {/*JSON para objeto*/
-		enumerable: true,
-		get: function() {
-			try {return JSON.parse(this.toString());} catch(e) {}
-			return null;
-		}
-	});
+	
 
-	Object.defineProperty(WDtext.prototype, "csv", { /*CSV para matriz*/
-		enumerable: true,
-		get: function() {
-			return WDbox.csv(this.toString());
-		}
-	});
 
-	Object.defineProperty(WDtext.prototype, "trim", { /*remove espeços extras*/
-		enumerable: true,
-		get: function() {
-			return WDbox.clearSpaces(this.toString()).trim();
-		}
-	});
+	
 
 	Object.defineProperty(WDtext.prototype, "format", { /*aplica atributos múltiplos*/
 		enumerable: true,
@@ -1523,7 +1157,7 @@ var wd = (function() {
 				if (!(arguments[i] in this)) continue;
 				var check = Object.getOwnPropertyDescriptor(WDtext.prototype, arguments[i]);
 				if (check === undefined || check.get === undefined) continue;
-				var value = new WDtype(this[arguments[i]]);
+				var value = wd_vtype(this[arguments[i]]);
 				if (value.type !== "text")   continue;
 				this._value = value.input;
 			}
@@ -1564,23 +1198,11 @@ var wd = (function() {
 		}
 	});
 
-	Object.defineProperty(WDtext.prototype, "mask", { /*máscaras temáticas*/
-		enumerable: true,
-		value: function(check, callback) {
-			var masks = this.toString().split("?");
-			for (var i = 0; i < masks.length; i++) {
-				var mask = WDtext.mask(masks[i], check, callback);
-				if (mask !== null) return mask;
-			}
-			return null;
-		}
-	});
-
 /*============================================================================*/
 
-	function WDnumber(input, type, value) {
-		if (!(this instanceof WDnumber)) return new WDnumber(input, type, value);
-		WDmain.call(this, input, type, value);
+	function WDnumber(input, value) {
+		if (!(this instanceof WDnumber)) return new WDnumber(input, value);
+		WDmain.call(this, input, value);
 	}
 
 	Object.defineProperties(WDnumber, {
@@ -1618,7 +1240,8 @@ var wd = (function() {
 	});
 
 	WDnumber.prototype = Object.create(WDmain.prototype, {
-		constructor: {value: WDnumber}
+		constructor: {value: WDnumber},
+		type:        {value: "number"},
 	});
 
 	Object.defineProperty(WDnumber.prototype, "ntype", {/* tipo do número */
@@ -1785,9 +1408,9 @@ var wd = (function() {
 
 /*============================================================================*/
 
-	function WDtime(input, type, value) {
-		if (!(this instanceof WDtime)) return new WDtime(input, type, value);
-		WDmain.call(this, input, type, value);
+	function WDtime(input, value) {
+		if (!(this instanceof WDtime)) return new WDtime(input, value);
+		WDmain.call(this, input, value);
 	}
 
 	WDtime.format = function(obj, char) {
@@ -1802,7 +1425,8 @@ var wd = (function() {
 	}
 
 	WDtime.prototype = Object.create(WDmain.prototype, {
-		constructor: {value: WDtime}
+		constructor: {value: WDtime},
+		type:        {value: "time"},
 	});
 
 
@@ -1897,9 +1521,9 @@ var wd = (function() {
 
 /*============================================================================*/
 
-	function WDdate(input, type, value) {
-		if (!(this instanceof WDdate)) return new WDdate(input, type, value);
-		WDmain.call(this, input, type, value);
+	function WDdate(input, value) {
+		if (!(this instanceof WDdate)) return new WDdate(input, value);
+		WDmain.call(this, input, value);
 	}
 
 	WDdate.searchFirstDay = function(search, year) {
@@ -1934,7 +1558,8 @@ var wd = (function() {
 	};
 
 	WDdate.prototype = Object.create(WDmain.prototype, {
-		constructor: {value: WDdate}
+		constructor: {value: WDdate},
+		type:        {value: "date"},
 	});
 
 
@@ -2119,9 +1744,9 @@ var wd = (function() {
 
 /* === ARRAY =============================================================== */
 
-	function WDarray(input, type, value) {
-		if (!(this instanceof WDarray)) return new WDarray(input, type, value);
-		WDmain.call(this, input, type, value);
+	function WDarray(input, value) {
+		if (!(this instanceof WDarray)) return new WDarray(input, value);
+		WDmain.call(this, input, value);
 	}
 
 	function WDdataSet() { /*WDstatistics, WDanalysis e WDcompare vão herdar esse objeto*/
@@ -2602,7 +2227,7 @@ var wd = (function() {
 				}
 
 				for (var r = 0; r < matrix.length; r++) {
-					var check = WDtype(matrix[r]);
+					var check = wd_vtype(matrix[r]);
 					if (check.type !== "array") continue;
 					for (var c = 0; c < matrix[r].length; c++) {
 						if (r >= row.i && r <= row.n && c >= col.i && c <= col.n)
@@ -2618,7 +2243,8 @@ var wd = (function() {
 /*...........................................................................*/
 
 	WDarray.prototype = Object.create(WDmain.prototype, {
-		constructor: {value: WDarray}
+		constructor: {value: WDarray},
+		type:        {value: "array"},
 	});
 
 	Object.defineProperty(WDarray.prototype, "item", {/*retorna o índice especificado*/
@@ -2728,8 +2354,8 @@ var wd = (function() {
 			var array = this.valueOf();
 
 			array.sort(function(a, b) {
-				var atype  = WDtype(a).type;
-				var btype  = WDtype(b).type;
+				var atype  = wd_vtype(a).type;
+				var btype  = wd_vtype(b).type;
 				var aindex = order.indexOf(atype);
 				var bindex = order.indexOf(btype);
 				var avalue = a;
@@ -2745,8 +2371,8 @@ var wd = (function() {
 					avalue = new WD(a).format("clear", "upper");
 					bvalue = new WD(b).format("clear", "upper");
 				} else if (["number", "boolean", "date", "time"].indexOf(atype) >= 0) {
-					avalue = new WDtype(a).value;
-					bvalue = new WDtype(b).value;
+					avalue = wd_vtype(a).value;
+					bvalue = wd_vtype(b).value;
 				}
 				return avalue > bvalue ? 1 : -1;
 			});
@@ -2761,7 +2387,7 @@ var wd = (function() {
 		enumerable: true,
 		value: function(ref) {
 			ref = new String(ref).trim();
-			ref = WDbox.clearSpaces(ref).split(" ");
+			ref = wd_no_spaces(ref).split(" ");
 			var data = [];
 			for (var i = 0; i < ref.length; i++) {
 				var value = WDarray.cell(this._value, ref[i]);
@@ -2798,15 +2424,15 @@ var wd = (function() {
 
 /*============================================================================*/
 
-	function WDdom(input, type, value) {
-		if (!(this instanceof WDdom)) return new WDdom(input, type, value);
-		WDmain.call(this, input, type, value);
+	function WDdom(input, value) {
+		if (!(this instanceof WDdom)) return new WDdom(input, value);
+		WDmain.call(this, input, value);
 	}
 
 	Object.defineProperties(WDdom, {/*objetos do construtor*/
 		checkCss: {
 			value: function(e, css) {
-				var list = WDbox.clearSpaces(e.className).split(" ");
+				var list = wd_no_spaces(e.className).split(" ");
 				return list.indexOf(css) >= 0 ? true : false;
 			}
 		},
@@ -2838,7 +2464,7 @@ var wd = (function() {
 		name: {/*informa o valor do atributo name do formulário*/
 			value: function(e) {
 				if (!this.form(e) || !("name" in e)) return null;
-				var name = WDtype(e.name);
+				var name = wd_vtype(e.name);
 				return name.type === "text" ? name.input : null;
 			}
 		},
@@ -3508,7 +3134,8 @@ var wd = (function() {
 /*...........................................................................*/
 
 	WDdom.prototype = Object.create(WDmain.prototype, {
-		constructor: {value: WDdom}
+		constructor: {value: WDdom},
+		type:        {value: "dom"},
 	});
 
 	Object.defineProperty(WDdom.prototype, "item", {/*item ou quantidade*/
@@ -3519,7 +3146,7 @@ var wd = (function() {
 	Object.defineProperty(WDdom.prototype, "run", {/*executa um job nos elementos*/
 		enumerable: true,
 		value: function(method) {
-			var check = new WDtype(method);
+			var check = wd_vtype(method);
 			if (check.type !== "function") return this;
 			for (var i = 0; i < this.item(); i++) {
 				var x = this.item(i);
@@ -3533,12 +3160,12 @@ var wd = (function() {
 	Object.defineProperty(WDdom.prototype, "handler", {/*disparadores*/
 		enumerable: true,
 		value: function (events, remove) {
-			var check = WDtype(events);
+			var check = wd_vtype(events);
 			if (check.type !== "object") return this;
 
 			this.run(function(elem) {
 				for (var ev in events) {
-					var method = WDtype(events[ev]);
+					var method = wd_vtype(events[ev]);
 					if (method.type !== "function") continue;
 					var action = remove === true ? "removeEventListener" : "addEventListener";
 					var event  = ev.toLowerCase().replace(/^on/, "");
@@ -3554,7 +3181,7 @@ var wd = (function() {
 	Object.defineProperty(WDdom.prototype, "style", {/*define style*/
 		enumerable: true,
 		value: function(styles) {
-			var check = new WDtype(styles);
+			var check = wd_vtype(styles);
 			if (check.type !== "object" && check.value !== null) return this;
 
 			this.run(function(elem) {
@@ -3575,7 +3202,7 @@ var wd = (function() {
 	Object.defineProperty(WDdom.prototype, "css", {/*manipular className*/
 		enumerable: true,
 		value: function (list) {
-			var check = new WDtype(list);
+			var check = wd_vtype(list);
 			if (check.type !== "object" && check.value !== null) return this;
 
 			this.run(function(elem) {
@@ -3592,7 +3219,7 @@ var wd = (function() {
 
 				for (var i in list) {
 					if (["add", "del", "tgl", "toggle"].indexOf(i) < 0) continue
-					var check = new WDtype(list[i]);
+					var check = wd_vtype(list[i]);
 					if (check.type !== "text") continue;
 					var items = check.value.split(" ");
 					for (var j = 0; j < items.length; j++) css[i === "tgl" ? "toggle" : i](items[j]);
@@ -3614,7 +3241,7 @@ var wd = (function() {
 	Object.defineProperty(WDdom.prototype, "data", {/*define dataset*/
 		enumerable: true,
 		value: function(input) {
-			var check = new WDtype(input);
+			var check = wd_vtype(input);
 			if (check.type !== "object" && check.value !== null) return this;
 
 			this.run(function(elem) {
@@ -3676,7 +3303,7 @@ var wd = (function() {
 	Object.defineProperty(WDdom.prototype, "repeat", {/*clona elementos por array*/
 		enumerable: true,
 		value: function (json) {
-			var check = new WDtype(json);
+			var check = wd_vtype(json);
 			if (check.type !== "array") return this;
 			this.run(function(elem) {
 				var html = elem.innerHTML;
@@ -3693,7 +3320,7 @@ var wd = (function() {
 				html = html.split("}}=\"\"").join("}}");
 				for (var i = 0; i < json.length; i++) {
 					var inner  = html;
-					var object = new WDtype(json[i]);
+					var object = wd_vtype(json[i]);
 					if (object.type !== "object") continue;
 					for (var c in json[i]) inner = inner.split("{{"+c+"}}").join(json[i][c]);
 					elem.innerHTML += inner;
@@ -3751,7 +3378,7 @@ var wd = (function() {
 		value: function (attr, value) {
 			attr = String(attr).trim();
 			this.run(function(elem) {
-				var check = new WDtype(attr in elem ? elem[attr] : null);
+				var check = wd_vtype(attr in elem ? elem[attr] : null);
 				if (check.type === "function") return elem[attr](value);
 
 				if (attr in elem) {
@@ -3906,7 +3533,7 @@ var wd = (function() {
 	Object.defineProperty(WDdom.prototype, "styles", {/*lista os estilos*/
 		enumerable: true,
 		value: function(css) {
-			var check = WDtype(css);
+			var check = wd_vtype(css);
 			if (check.type !== "text") return null;
 			css = check.value;
 			var x = [];
@@ -3952,7 +3579,7 @@ var wd = (function() {
 				for (var i = 0; i < data.length; i++) {
 					var name  = data[i].NAME;
 					var value = method === "GET" ? data[i].GET : data[i].POST;
-					var check = new WDtype(value);
+					var check = wd_vtype(value);
 					if (check.type === "array") {
 						for (var j = 0; j < value.length; j++) {
 							if (method === "GET") {x.push(name+"="+value[j]);}
