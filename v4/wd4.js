@@ -364,6 +364,15 @@ var wd = (function() {
 		return null;
 	}
 
+/*----------------------------------------------------------------------------*/
+	function wd_multiple_masks(input, check, callback) {
+		var masks = input.split("?");
+		for (var i = 0; i < masks.length; i++) {
+			var mask = wd_mask(masks[i], check, callback);
+			if (mask !== null) return mask;
+		}
+		return null;
+	}
 
 /*----------------------------------------------------------------------------*/
 	function wd_csv_array(input) {/* CSV para Array */
@@ -386,8 +395,71 @@ var wd = (function() {
 		return txt.replace(/[\0- ]+/g, (char === undefined ? " " : char)).trim();
 	};
 
+/*----------------------------------------------------------------------------*/
+	function wd_text_clear(value) { /* elimina acentos */
+		if ("normalize" in value)
+			return value.normalize('NFD').replace(/[\u0300-\u036f]/g, "");
 
+		var ascii = {
+			A: /[À-Å]/g, C: /[Ç]/g,   E: /[È-Ë]/g, I: /[Ì-Ï]/g,
+			N: /[Ñ]/g,   O: /[Ò-Ö]/g, U: /[Ù-Ü]/g, Y: /[ÝŸ]/g,
+			a: /[à-å]/g, c: /[ç]/g,   e: /[è-ë]/g, i: /[ì-ï]/g,
+			n: /[ñ]/g,   o: /[ò-ö]/g, u: /[ù-ü]/g, y: /[ýÿ]/g
+		};
+		for (var i in ascii)
+			value = value.replace(ascii[i], i);
 
+		return value;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_text_camel(value) { /* abc-def para abcDef */
+		var x = wd_text_clear(value).replace(/[^a-zA-Z0-9\.\_\:\-\ ]/g, "");
+
+		/* testando se já está no formato */
+		if ((/^[a-z0-9\.\_\:][a-zA-Z0-9\.\_\:]+$/).test(x)) return x;
+
+		/* adequando string */
+		var x = wd_no_spaces(value, "-").split("");
+		for (var i = 0; i < x.length; i++) {
+			if (x[i].toLowerCase() != x[i]) x[i] = "-"+x[i];
+			if (x[i-1] === "-") x[i] = x[i].toUpperCase();
+		}
+
+		x = x.join("").replace(/\-+/g, "-").replace(/^\-+/g, "");
+		x = x.split("-");
+		x[0] = x[0].toLowerCase();
+		x = x.join("").replace(/\-/g, "");
+
+		return x === "" ? null : x;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_text_dash() { /*abcDef para abc-def*/
+		var x = wd_text_clear(value).replace(/[^a-zA-Z0-9\.\_\:\-\ ]/g, "");
+
+		/* testando se já está no formato */
+		if ((/^[a-z0-9\_\.\:]+((\-[a-z0-9\_\.\:]+)+)?$/).test(x)) return x;
+
+		/* adequando string */
+		x = wd_no_spaces(x, "-").split("");
+		for (var i = 1; i < x.length; i++) {
+			x[i] = x[i].toLowerCase() == x[i] ? x[i] : "-"+x[i];
+		}
+
+		x = x.join("").toLowerCase().replace(/\-+/g, "-");
+		x = x.replace(/^\-+/g, "").replace(/\-+$/g, "");
+
+		return x === "" ? null : x;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_replace_all(input, search, change) { /* replaceAll simples */
+		search = new String(search);
+		change = new String(change);
+		var x = input.split(search);
+		return x.join(change);
+	}
 
 
 
@@ -436,14 +508,6 @@ var wd = (function() {
 
 
 
-
-	/*expressoes regulares*/
-	WDbox.re = {
-		noids: /[^a-zA-Z0-9\.\_\:\-\ ]/g,
-		camel: /^[a-z0-9\.\_\:][a-zA-Z0-9\.\_\:]+$/,
-		dash:  /^[a-z0-9\_\.\:]+((\-[a-z0-9\_\.\:]+)+)?$/,
-		empty: /[\0- ]+/g,
-	};
 
 	
 	WDbox.int = function(n, abs) {
@@ -841,7 +905,7 @@ var wd = (function() {
 		version: {value: wd_version},
 		$:       {value: function(css, root) {return WD(wd_$(css, root));}},
 		$$:      {value: function(css, root) {return WD(wd_$$(css, root));}},
-		today:   {get:   function() {return WD(wd_set_date(new Date()));}},
+		today:   {get:   function() {return WD(new Date());}},
 		now: {get: function() {
 			var t = new Date();
 			var o = {h: t.getHours(), m: t.getMinutes(), s: t.getSeconds()};
@@ -853,8 +917,6 @@ var wd = (function() {
 /*============================================================================*/
 
 	function WDmain(input, value) {
-		if (!(this instanceof WDmain)) return new WDmain(input, value);
-
 		Object.defineProperties(this, {
 			_input:  {value: input},
 			_value:  {value: value, writable: true}
@@ -966,7 +1028,6 @@ var wd = (function() {
 /*============================================================================*/
 
 	function WDnull(input, value) {
-		if (!(this instanceof WDnull)) return new WDnull(input, value);
 		WDmain.call(this, input, value);
 	}
 
@@ -980,7 +1041,6 @@ var wd = (function() {
 /*============================================================================*/
 
 	function WDboolean(input, value) {
-		if (!(this instanceof WDboolean)) return new WDboolean(input, value);
 		WDmain.call(this, input, value);
 	}
 
@@ -994,7 +1054,6 @@ var wd = (function() {
 /*============================================================================*/
 
 	function WDfunction(input, value) {
-		if (!(this instanceof WDfunction)) return new WDfunction(input, value);
 		WDmain.call(this, input, value);
 	}
 
@@ -1006,7 +1065,6 @@ var wd = (function() {
 /*============================================================================*/
 
 	function WDobject(input, value) {
-		if (!(this instanceof WDobject)) return new WDobject(input, value);
 		WDmain.call(this, input, value);
 	}
 
@@ -1019,7 +1077,6 @@ var wd = (function() {
 /*============================================================================*/
 
 	function WDregexp(input, value) {
-		if (!(this instanceof WDregexp)) return new WDregexp(input, value);
 		WDmain.call(this, input, value);
 	}
 
@@ -1032,7 +1089,6 @@ var wd = (function() {
 /*============================================================================*/
 
 	function WDtext(input, value) {
-		if (!(this instanceof WDtext)) return new WDtext(input, value);
 		WDmain.call(this, input, value);
 	}
 
@@ -1040,101 +1096,103 @@ var wd = (function() {
 		constructor: {value: WDtext},
 		type:        {value: "text"},
 		upper: { /* retorna valor em caixa alta */
-			enumerable: true,
 			get: function() {return this.toString().toUpperCase();}
 		},
 		lower: { /* retorna valor em caixa baixa */
-			enumerable: true,
 			get: function() {return this.toString().toLowerCase();}
 		},
 		caps: { /* retorna valor capitulado */
-			enumerable: true,
 			get: function() {return wd_text_caps(this.toString());}
 		},
 		toggle: { /* inverte caixa */
-			enumerable: true,
 			get: function() {return wd_text_toggle(this.toString());}
 		},
+		clear: { /* remove acentos da string */
+			get: function() {return wd_text_clear(this.toString());}
+		},
+		camel: { /* transforma string para inicioMeioFim */
+			get: function() {return wd_text_camel(this.toString());}
+		},
+		dash: { /* transforma string para inicio-meio-fim */
+			get: function() {return wd_text_dash(this.toString());}
+		},
 		csv: { /* CSV para Matriz */
-			enumerable: true,
 			get: function() {return wd_csv_array(this.toString());}
 		},
 		trim: { /* remove múltiplos espaços */
-			enumerable: true,
 			get: function() {return wd_no_spaces(this.toString());}
 		},
 		json: { /* JSON para Object */
-			enumerable: true,
 			get: function() {
-				try {return JSON.parse(this.toString());} catch(e) { return {};}
+				try {return JSON.parse(this.toString());} catch(e) {return {};}
 			}
 		},
-
-
-
-
-
-
-
+		replace: { /* replaceAll simples (só texto) */
+			value: function(search, change) {
+				return wd_replace_all(this.toString(), search, change);
+			}
+		},
 		mask: { /* máscaras temáticas */
-			enumerable: true,
 			value: function(check, callback) {
-				var masks = this.toString().split("?");
-				for (var i = 0; i < masks.length; i++) {
-					var mask = wd_mask(masks[i], check, callback);
-					if (mask !== null) return mask;
-				}
-				return null;
+				return wd_multiple_masks(this.toString, check, callback);
 			}
 		},
+
 	});
 
 
 
-
-
-
-
-	Object.defineProperty(WDtext.prototype, "camel", { /*abc-def para abcDef*/
-		enumerable: true,
-		get: function() {
-			var x = this.clear.replace(WDbox.re.noids, "");
-			if (WDbox.re.camel.test(x)) return x;
-
-			x = wd_no_spaces(x, "-").split("");
-
-			for (var i = 0; i < x.length; i++) {
-				if (x[i].toLowerCase() != x[i]) x[i] = "-"+x[i];
-				if (x[i-1] === "-") x[i] = x[i].toUpperCase();
+		function wd_apply_getters(object) {//FIXME
+			var obj   = object;
+			var save  = obj._value;
+			var type  = obj.type;
+			var value = obj._value;
+			
+			for (var i = 1; i < arguments.length; i++) {
+				var attr = arguments[i];
+				/* atributo existe? */
+				if (!(attr in obj)) continue;
+				/* é um getter? */
+				var check = Object.getOwnPropertyDescriptor(cons.prototype, attr);
+				if (check === undefined || check.get === undefined) continue;
+				/* o novo valor é do mesmo tipo que o original? */
+				var val = wd_vtype(obj[attr]);
+				if (val.type !== type) continue;
+				/* alterando valor: */
+				this._value = val.value;
 			}
-
-			x = x.join("").replace(/\-+/g, "-").replace(/^\-+/g, "");
-			x = x.split("-");
-			x[0] = x[0].toLowerCase();
-			x = x.join("").replace(/\-/g, "");
-
-			return x === "" ? null : x;
-		}
-	});
-
-	Object.defineProperty(WDtext.prototype, "dash", { /*abcDef para abc-def*/
-		enumerable: true,
-		get: function() {
-			var x = this.clear.replace(WDbox.re.noids, "");
-			if (WDbox.re.dash.test(x)) return x;
-
-			x = wd_no_spaces(x, "-").split("");
-
-			for (var i = 1; i < x.length; i++) {
-				x[i] = x[i].toLowerCase() == x[i] ? x[i] : "-"+x[i];
+			return text;
+			
+			
+			
+			
+			
+			var save = this._value.toString();
+			
+			
+			
+			for (var i = 0; i < arguments.length; i++) {
+				if (!(arguments[i] in this)) continue;
+				var check = Object.getOwnPropertyDescriptor(WDtext.prototype, arguments[i]);
+				if (check === undefined || check.get === undefined) continue;
+				var value = wd_vtype(this[arguments[i]]);
+				if (value.type !== "text")   continue;
+				this._value = value.input;
 			}
-
-			x = x.join("").toLowerCase().replace(/\-+/g, "-");
-			x = x.replace(/^\-+/g, "").replace(/\-+$/g, "");
-
-			return x === "" ? null : x;
+			var text = this._value.toString();
+			this._value = save;
+			return text;
 		}
-	});
+
+
+
+
+
+
+
+
+
+
 
 	
 
@@ -1159,36 +1217,7 @@ var wd = (function() {
 		}
 	});
 
-	Object.defineProperty(WDtext.prototype, "replace", {/*replaceAll*/
-		enumerable: true,
-		value: function(search, change) {
-			search = new String(search);
-			change = new String(change);
-			var x = this.toString().split(search);
-			return x.join(change);
-		}
-	});
 
-	Object.defineProperty(WDtext.prototype, "clear", { /*elimina acentos*/
-		enumerable: true,
-		get: function() {
-			var value = new String(this.toString());
-
-			if ("normalize" in value)
-				return value.normalize('NFD').replace(/[\u0300-\u036f]/g, "");
-
-			var clear = {
-				A: /[À-Å]/g, C: /[Ç]/g,   E: /[È-Ë]/g, I: /[Ì-Ï]/g,
-				N: /[Ñ]/g,   O: /[Ò-Ö]/g, U: /[Ù-Ü]/g, Y: /[ÝŸ]/g,
-				a: /[à-å]/g, c: /[ç]/g,   e: /[è-ë]/g, i: /[ì-ï]/g,
-				n: /[ñ]/g,   o: /[ò-ö]/g, u: /[ù-ü]/g, y: /[ýÿ]/g
-			};
-
-			for (var i in clear) value = value.replace(clear[i], i);
-
-			return value;
-		}
-	});
 
 /*============================================================================*/
 
