@@ -31,7 +31,27 @@ SOFTWARE.﻿
 
 var wd = (function() {
 
+/*------------------------------------------------------------------------------
+BLOCO 1: atributos e funções globais
+BLOCO 2: objetos especiais para atividades específicas
+BLOCO 3: objetos de interface (acessíveis aos usuários)
+BLOCO 4: funções de atributos HTML
+BLOCO 5: boot
+------------------------------------------------------------------------------/*
+
+/* BLOCO 1 */
+/*============================================================================*/
 	var wd_version = "v4.0.0 2022-01-01";
+	/* Guarda informação do dispositivo (desktop, mobile...) */
+	var wd_device_controller = null;
+	/* Guarda o intervalo de tempo para executar funções vinculadas aos eventos de tecla */
+	var wd_key_time_range = 500;
+
+	var wd_primes = [
+		2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61,
+		67, 71, 73, 79, 83, 89, 97, 
+	];
+
 
 /*----------------------------------------------------------------------------*/
 	function wd_lang() { /*Retorna o local: definido ou do navegador*/
@@ -40,6 +60,12 @@ var wd = (function() {
 		return navigator.language || navigator.browserLanguage || "en-US";
 	}
 
+/*----------------------------------------------------------------------------*/
+	function wd_get_device() {/*tipo do dispositivo*/
+		if (window.innerWidth >= 768) return "desktop";
+		if (window.innerWidth >= 600) return "tablet";
+		return "phone";
+	};
 /*----------------------------------------------------------------------------*/
 	function wd_bytes(value) { /*calculadora de bytes*/
 		if (value >= 1099511627776) return (value/1099511627776).toFixed(2)+"TB";
@@ -519,6 +545,86 @@ var wd = (function() {
 		return (value*pow10 - wd_int(value)*pow10) / pow10;
 	}
 
+/*----------------------------------------------------------------------------*/
+	function wd_mdc(a, b) {
+		var div   = [];
+		var prime = wd_primes;
+		for (var i = 0; i < prime.length; i++) {
+			if (prime[i] > a || prime[i] > b) break;
+			while (a % prime[i] === 0 && b % prime[i] === 0) {
+				div.push(prime[i]);
+				a = a/prime[i];
+				b = b/prime[i];
+			}
+		}
+		var mdc = 1;
+		for (var i = 0; i < div.length; i++) mdc = mdc * div[i];
+		return mdc;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_number_type(n) { /* retorna o tipo de número */
+		if (n === 0)         return "zero";
+		var type = n < 0 ? "-" : "+";
+		if (Math.abs(n) === Infinity) return type+"infinity";
+		if (n === wd_int(n))          return type+"integer";
+		return type+"real";
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_number_type_test(n, tests) {/* testa se o tipo de número se enquadra em alguma categoria */
+		var type = wd_number_type(n);
+		for (var i = 0; i < tests.length; i++) {
+			if (tests[i] === type) return true;
+			if (tests[i] === type.substr(1, type.length)) return true;
+		}
+		return false;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_frac_number(n) { /* representação em fração (2 casas) */
+		if (wd_number_type_test(n, "integer", "zero"))
+			return wd_int(n).toFixed(0);
+		if (wd_number_type_test(n, "infinity"))
+			return "infinito"//FIXME this.toString();
+
+		var integer = wd_int(n);
+		var decimal = wd_decimal(n);
+
+		var data  = {int: Math.abs(integer), num: 0, den: 1, error: 1};
+		var value = Math.abs(decimal);
+		var prime = wd_primes.slice();
+		prime.push(10);
+		prime.push(100);
+
+		for (var i = 0; i < prime.length; i++) {
+			var n = 0;
+			var d = prime[i];
+			while (n < d) {
+				var err = Math.abs((n/d)-value)/value;
+				if (err < data.error) {
+					data.den   = d;
+					data.num   = n;
+					data.error = err;
+				}
+				if (data.error === 0) break;
+				n++;
+			}
+			if (data.error === 0) break;
+		}
+
+		var mdc = wd_mdc(data.num, data.den);
+		data.num = data.num/mdc;
+		data.den = data.den/mdc;
+
+		if (data.num === 0 && data.int === 0) return "0";
+		if (data.num === 0 && data.int !== 0) return data.int.toFixed(0);
+
+		data.int = data.int === 0 ? "" : data.int.toFixed(0)+" ";
+		data.num = data.num.toFixed(0)+"/";
+		data.den = data.den.toFixed(0);
+		return (n < 0 ? "-" : "")+data.int+data.num+data.den;
+	}
 
 
 
@@ -530,25 +636,8 @@ var wd = (function() {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	function WDbox(input) {}
-
-
-	WDbox.matrixObject = function(array) {/*matriz de array para objeto*/
+/*----------------------------------------------------------------------------*/
+	function wd_matrix_object(array) {/*matriz de array para objeto*/
 		var x = [];
 		for (var row = 1; row < array.length; row++) {
 			var cols = array[row];
@@ -560,17 +649,7 @@ var wd = (function() {
 		return x;
 	}
 
-	WDbox.device = function() {/*tipo do dispositivo*/
-		if (window.innerWidth >= 768) return "desktop";
-		if (window.innerWidth >= 600) return "tablet";
-		return "phone";
-	};
-
-	/* Guarda informação do dispositivo (desktop, mobile...) */
-	WDbox.deviceController = null;
-	/* Guarda o intervalo de tempo para executar funções vinculadas aos eventos de tecla */
-	WDbox.keyTimeRange = 500;
-
+/* BLOCO 2 */
 /*============================================================================*/
 
 	function WDrequest(input) {
@@ -802,7 +881,7 @@ var wd = (function() {
 		return true;
 	}});
 
-/*============================================================================*/
+/*----------------------------------------------------------------------------*/
 
 	function WDsignal(input) {
 		if (!(this instanceof WDsignal)) return new WDsignal(input);
@@ -890,7 +969,7 @@ var wd = (function() {
 			this.styled = true;
 		}
 
-		var style = WDbox.device() === "desktop" ? this.cmicro : this.cphone;
+		var style = wd_get_device() === "desktop" ? this.cmicro : this.cphone;
 		for (var i in style) this.window.style[i] = style[i];
 
 		if (!this.opened) document.body.appendChild(this.window);
@@ -907,38 +986,7 @@ var wd = (function() {
 		return;
 	}
 
-/*============================================================================*/
-
-	function WD(input) {
-		var vtype  = wd_vtype(input);
-		var object = {
-			"undefined": WDundefined, "null":     WDnull,
-			"boolean":   WDboolean,   "function": WDfunction,
-			"object":    WDobject,    "regexp":   WDregexp,
-			"array":     WDarray,     "dom":      WDdom,
-			"time":      WDtime,      "date":     WDdate,
-			"number":    WDnumber,    "text":     WDtext,
-			"unknown":   WDmain
-		};
-
-		return new object[vtype.type](vtype.value);
-	}
-
-	WD.constructor = WD;
-	Object.defineProperties(WD, {
-		version: {value: wd_version},
-		$:       {value: function(css, root) {return WD(wd_$(css, root));}},
-		$$:      {value: function(css, root) {return WD(wd_$$(css, root));}},
-		today:   {get:   function() {return WD(new Date());}},
-		now: {get: function() {
-			var t = new Date();
-			var o = {h: t.getHours(), m: t.getMinutes(), s: t.getSeconds()};
-			for (var i in o) o[i] = (o[i] < 10 ? "0" : "") + o[i].toString();
-			return WD(o.h+":"+o.m+":"+o.s);
-		}},
-		loko: {value: wd_decimal}
-	});
-
+/* BLOCO 3 */
 /*============================================================================*/
 
 	function WDmain(value) {
@@ -1156,32 +1204,6 @@ var wd = (function() {
 
 	function WDnumber(value) {WDmain.call(this, value);}
 
-	Object.defineProperties(WDnumber, {
-		prime: {
-			value: [
-				2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61,
-				67, 71, 73, 79, 83, 89, 97, 
-			]
-		},
-		mdc: {
-			value: function(a, b) {
-				var div   = [];
-				var prime = this.prime;
-				for (var i = 0; i < prime.length; i++) {
-					if (prime[i] > a || prime[i] > b) break;
-					while (a % prime[i] === 0 && b % prime[i] === 0) {
-						div.push(prime[i]);
-						a = a/prime[i];
-						b = b/prime[i];
-					}
-				}
-				var mdc = 1;
-				for (var i = 0; i < div.length; i++) mdc = mdc * div[i];
-				return mdc;
-			}
-		}
-	});
-
 	WDnumber.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDnumber},
 		type:        {value: "number"},
@@ -1193,77 +1215,24 @@ var wd = (function() {
 		},
 		abs: { /* retorna a parte decimal */
 			get: function() {return Math.abs(this.valueOf());}
-		}
-	});
-
-
-
-
-	Object.defineProperty(WDnumber.prototype, "ntype", {/* tipo do número */
-
-		get: function() {
-			if (this.valueOf() === 0)         return "zero";
-			if (this.valueOf() ===  Infinity) return "+infinity";
-			if (this.valueOf() === -Infinity) return "-infinity";
-			if (this.valueOf() === this.int)  return this.valueOf() < 0 ? "-integer" : "+integer";
-			return this.valueOf() < 0 ? "-real" : "+real";
-		}
-	});
-
-	Object.defineProperty(WDnumber.prototype, "test", {/* testa o tipo do número */
-
-		value: function() {
-			var type = this.ntype;
-			for (var i = 0; i < arguments.length; i++) {
-				if (arguments[i] === type) return true;
-				if (arguments[i] === type.substr(1, type.length)) return true;
+		},
+		ntype: { /* retorna o tipo de número */
+			get: function() {return wd_number_type(this.valueOf());}
+		},
+		frac: { /* representação em fração (2 casas) */
+			get: function () {return wd_frac_number(this.valueOf());}
+		},
+		test: { /* testa se o tipo de número se enquadra em alguma categoria */
+			value: function() {
+				return wd_number_type_test(this.valueOf(), Array.prototype.slice.call(arguments));
 			}
-			return false;
-		}
+		},
 	});
 
 
-	Object.defineProperty(WDnumber.prototype, "frac", {/*representação em fração (2 casas)*/
 
-		get: function() {
-			if (this.test("integer", "zero")) return this.int.toFixed(0);
-			if (this.test("+infinity")) return this.toString();
 
-			var data  = {int: Math.abs(this.int), num: 0, den: 1, error: 1};
-			var value = Math.abs(this.decimal);
-			var prime = WDnumber.prime;
-			prime.push(10);
-			prime.push(100);
 
-			for (var i = 0; i < prime.length; i++) {
-				var n = 0;
-				var d = prime[i];
-				while (n < d) {
-					var err = Math.abs((n/d)-value)/value;
-					if (err < data.error) {
-						data.den   = d;
-						data.num   = n;
-						data.error = err;
-					}
-					if (data.error === 0) break;
-					n++;
-				}
-				if (data.error === 0) break;
-			}
-
-			var mdc = WDnumber.mdc(data.num, data.den);
-			data.num = data.num/mdc;
-			data.den = data.den/mdc;
-
-			if (data.num === 0 && data.int === 0) return "0";
-			if (data.num === 0 && data.int !== 0) return data.int.toFixed(0);
-
-			data.int = data.int === 0 ? "" : data.int.toFixed(0)+" ";
-			data.num = data.num.toFixed(0)+"/";
-			data.den = data.den.toFixed(0);
-			return (this.int < 0 ? "-" : "")+data.int+data.num+data.den;
-		}
-	});
 
 	Object.defineProperty(WDnumber.prototype, "round", {/*arredonda casas decimais*/
 
@@ -1338,6 +1307,35 @@ var wd = (function() {
 			}
 		}
 	});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /*============================================================================*/
 
@@ -2539,8 +2537,45 @@ var wd = (function() {
 		}
 	});
 
-/*............................................................................*/
 
+/*----------------------------------------------------------------------------*/
+
+	function WD(input) { /* função de interface ao usuário */
+		var vtype  = wd_vtype(input);
+		var object = {
+			"undefined": WDundefined, "null":     WDnull,
+			"boolean":   WDboolean,   "function": WDfunction,
+			"object":    WDobject,    "regexp":   WDregexp,
+			"array":     WDarray,     "dom":      WDdom,
+			"time":      WDtime,      "date":     WDdate,
+			"number":    WDnumber,    "text":     WDtext,
+			"unknown":   WDmain
+		};
+
+		return new object[vtype.type](vtype.value);
+	}
+
+	WD.constructor = WD;
+	Object.defineProperties(WD, {
+		version: {value: wd_version},
+		$:       {value: function(css, root) {return WD(wd_$(css, root));}},
+		$$:      {value: function(css, root) {return WD(wd_$$(css, root));}},
+		today:   {get:   function() {return WD(new Date());}},
+		now: {get: function() {
+			var t = new Date();
+			var o = {h: t.getHours(), m: t.getMinutes(), s: t.getSeconds()};
+			for (var i in o) o[i] = (o[i] < 10 ? "0" : "") + o[i].toString();
+			return WD(o.h+":"+o.m+":"+o.s);
+		}},
+		loko: {value: wd_decimal}
+	});
+
+
+/* BLOCO 4 */
+/*============================================================================*/
+
+
+//FIXME mudar wdChart, WDstatistics e WDanalysis para o BLOCO 2
 	function wdChart(box, title) {/*Objeto para criar gráficos*/
 		if (!(this instanceof wdChart)) return new wdChart(box, title);
 		Object.defineProperties(this, {/*atributos do objeto*/
@@ -3573,7 +3608,7 @@ var wd = (function() {
 		exec.send(file, function(x) {
 			if (x.closed) {
 				if (x.json !== null) return target.repeat(x.json);
-				if (x.csv !== null)  return target.repeat(WDbox.matrixObject(x.csv));
+				if (x.csv !== null)  return target.repeat(wd_matrix_object(x.csv));
 				return target.repeat([]);
 			}
 		}, method);
@@ -3802,7 +3837,7 @@ var wd = (function() {
 		var mobile  = "mobile"  in data ? data.mobile  : "";
 		var tablet  = "tablet"  in data ? data.tablet  : "";
 		var phone   = "phone"   in data ? data.phone   : "";
-		var device  = WDbox.device();
+		var device  = wd_get_device();
 		if (device === "desktop") {
 			return WD(e).css({del: phone}).css({del: tablet}).css({del: mobile}).css({add: desktop});
 		}
@@ -4008,7 +4043,7 @@ var wd = (function() {
 
 	function loadProcedures(ev) {
 		/*definer o dispositivo*/
-		WDbox.deviceController = WDbox.device();
+		wd_device_controller = wd_get_device();
 
 		/*criar o estilo interno*/
 		var styles = [
@@ -4112,9 +4147,9 @@ var wd = (function() {
 /*----------------------------------------------------------------------------*/
 
 	function scalingProcedures(ev) {/*procedimentos para definir dispositivo e aplicar estilos*/
-		var device = WDbox.device();
-		if (device !== WDbox.deviceController) {
-			WDbox.deviceController = device;
+		var device = wd_get_device();
+		if (device !== wd_device_controller) {
+			wd_device_controller = device;
 			WD.$$("[data-wd-device]").run(data_wdDevice);
 		}
 		hashProcedures();
@@ -4196,12 +4231,12 @@ var wd = (function() {
 			ev.target.dataset.wdTimeKey = now;
 			window.setTimeout(function() {/*verificar daqui um intervalo de tempo*/
 				keyboardProcedures(ev, true);
-			}, WDbox.keyTimeRange);
+			}, wd_key_time_range);
 			return;
 		}
 
 		/*se há o atributo e o agora superar o intervalo, apagar atributo e executar*/
-		if ("wdTimeKey" in ev.target.dataset && now >= (time+WDbox.keyTimeRange)) {
+		if ("wdTimeKey" in ev.target.dataset && now >= (time+wd_key_time_range)) {
 			delete ev.target.dataset.wdTimeKey;
 
 			data_wdFilter(ev.target);
@@ -4224,12 +4259,12 @@ var wd = (function() {
 			ev.target.dataset.wdTimeKey = now;
 			window.setTimeout(function() {/*verificar daqui um intervalo de tempo*/
 				inputProcedures(ev, true);
-			}, WDbox.keyTimeRange);
+			}, wd_key_time_range);
 			return;
 		}
 
 		/*se há o atributo e o agora superar o intervalo, apagar atributo e executar*/
-		if ("wdTimeKey" in ev.target.dataset && now >= (time+WDbox.keyTimeRange)) {
+		if ("wdTimeKey" in ev.target.dataset && now >= (time+wd_key_time_range)) {
 			delete ev.target.dataset.wdTimeKey;
 
 			data_wdFilter(ev.target);
