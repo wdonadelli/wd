@@ -481,9 +481,8 @@ BLOCO 5: boot
 
 		/* adequando string */
 		x = wd_no_spaces(x, "-").split("");
-		for (var i = 1; i < x.length; i++) {
+		for (var i = 1; i < x.length; i++)
 			x[i] = x[i].toLowerCase() == x[i] ? x[i] : "-"+x[i];
-		}
 
 		x = x.join("").toLowerCase().replace(/\-+/g, "-");
 		x = x.replace(/^\-+/g, "").replace(/\-+$/g, "");
@@ -528,7 +527,7 @@ BLOCO 5: boot
 	};
 
 /*----------------------------------------------------------------------------*/
-	function wd_int(n, abs) { /* retorna o inteiro do número ou seu valor absoluto */
+	function wd_integer(n, abs) { /* retorna o inteiro do número ou seu valor absoluto */
 		var vtype = wd_vtype(n);
 		if (vtype.type !== "number") return null;
 		var val = abs === true ? Math.abs(vtype.value) : vtype.value;
@@ -542,7 +541,7 @@ BLOCO 5: boot
 		while ((value * Math.pow(10, i)) % 1 !== 0) i++;
 		var pow10  = Math.pow(10, i);
 		if (pow10 === 1) return 0;
-		return (value*pow10 - wd_int(value)*pow10) / pow10;
+		return (value*pow10 - wd_integer(value)*pow10) / pow10;
 	}
 
 /*----------------------------------------------------------------------------*/
@@ -563,17 +562,17 @@ BLOCO 5: boot
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_number_type(n) { /* retorna o tipo de número */
+	function wd_num_type(n) { /* retorna o tipo de número */
 		if (n === 0)         return "zero";
 		var type = n < 0 ? "-" : "+";
 		if (Math.abs(n) === Infinity) return type+"infinity";
-		if (n === wd_int(n))          return type+"integer";
+		if (n === wd_integer(n))          return type+"integer";
 		return type+"real";
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_number_type_test(n, tests) {/* testa se o tipo de número se enquadra em alguma categoria */
-		var type = wd_number_type(n);
+	function wd_num_test(n, tests) {/* testa se o tipo de número se enquadra em alguma categoria */
+		var type = wd_num_type(n);
 		for (var i = 0; i < tests.length; i++) {
 			if (tests[i] === type) return true;
 			if (tests[i] === type.substr(1, type.length)) return true;
@@ -582,13 +581,13 @@ BLOCO 5: boot
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_frac_number(n) { /* representação em fração (2 casas) */
-		if (wd_number_type_test(n, "integer", "zero"))
-			return wd_int(n).toFixed(0);
-		if (wd_number_type_test(n, "infinity"))
-			return "infinito"//FIXME this.toString();
+	function wd_num_frac(n) { /* representação em fração (2 casas) */
+		if (wd_num_test(n, ["integer", "zero"]))
+			return wd_integer(n).toFixed(0);
+		if (wd_num_test(n, ["infinity"]))
+			return wd_num_str(n);
 
-		var integer = wd_int(n);
+		var integer = wd_integer(n);
 		var decimal = wd_decimal(n);
 
 		var data  = {int: Math.abs(integer), num: 0, den: 1, error: 1};
@@ -625,6 +624,129 @@ BLOCO 5: boot
 		data.den = data.den.toFixed(0);
 		return (n < 0 ? "-" : "")+data.int+data.num+data.den;
 	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_num_round(n, width) { /* arredonda número para determinado tamanho */
+		width = wd_finite(width) ? wd_integer(width, true) : 0;
+		return new Number(n.toFixed(width)).valueOf();
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_num_pow10(n, width) { /* transforma número em notação científica */
+		if (wd_num_test(n, ["infinity", "zero"])) return wd_num_str(n);
+
+		width = wd_finite(width) ? wd_integer(width, true) : undefined;
+
+		var chars = {
+			"0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵",
+			"6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹", "+": "⁺", "-": "⁻"
+		};
+		var exp = n.toExponential(width).split(/[eE]/);
+		for (var i in chars) {
+			var re = (/[0-9]/).test(i) ? new RegExp(i, "g") : new RegExp("\\"+i, "g");
+			exp[1] = exp[1].replace(re, chars[i]);
+		}
+		return exp.join(" x 10");
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_num_local(n, currency) { /* notação numérica local */
+		if (currency !== undefined) {
+			currency = {style: "currency", currency: currency};
+			try {return new Intl.NumberFormat(wd_lang(), currency).format(n);}
+			catch(e) {}
+		}
+		try {return new Intl.NumberFormat(wd_lang()).format(n);} catch(e) {}
+		return n.toLocaleString();
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_num_fixed(n, ldec, lint) { /* fixa quantidade de dígitos (int e dec) */
+		if (wd_num_test(n, ["infinity"])) return wd_num_str(n);
+
+		lint = wd_finite(lint) ? wd_integer(lint, true) : 0;
+		ldec = wd_finite(ldec) ? wd_integer(ldec, true) : 0;
+
+		var sign = n < 0 ? "-" : "";
+		var int  = Math.abs(wd_integer(n));
+		var dec  = Math.abs(wd_decimal(n));
+
+		dec = dec.toFixed((ldec > 20 ? 20 : ldec));
+		if ((/^1/).test(dec)) int++;
+		dec = ldec === 0 ? "" : "."+dec.split(".")[1];
+
+		int = int.toLocaleString("en-US").split(".")[0].replace(/\,/g, "").split("");
+		while (int.length < lint) int.unshift("0");
+		int = int.join("");
+
+		return sign+int+dec;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_num_str(n, ratio) { /* Define a exibição de valores numéricos */
+		if (ratio === true) n = 100*n;
+		if (wd_num_test(n, ["infinity"]))
+			return (n < 0 ? "\u2212" : "\u002B")+"\u221E";
+		
+		var end = ratio === true ? "\u0025" : "";
+		var val = Math.abs(n);
+
+		if (val === 0) return "0"+end;
+		if ((1/val) > 1) {
+			if (val <= 1e-10) return n.toExponential(0)+end;
+			if (val <= 1e-3)  return n.toExponential(1)+end;
+			if (val <= 1e-2)  return wd_num_fixed(n,2,0)+end;
+		} else {
+			if (val >= 1e10) return n.toExponential(0)+end;
+			if (val >= 1e3)  return n.toExponential(1)+end;
+			if (val >= 1e2)  return wd_num_fixed(n,0,0)+end;
+			if (val >= 1e1)  return wd_num_fixed(n,1,0)+end;
+		}
+		return wd_num_fixed(n,2,0)+end;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_time_ampm(h, m) { /* retorna hora no formato ampm */
+		var p = h < 12 ? " AM" : " PM"; 
+		h = h === 0 ? 12 : (h <= 12 ? h : (h - 12));
+		m = wd_num_fixed(m, 0, 2);
+		return wd_num_fixed(h)+":"+m+p;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_time_format(obj, char) { /* define um formato de tempo a partir de caracteres especiais */
+		char = new String(char).toString();
+		var words = [
+			{c: "%h", v: function() {return wd_num_fixed(obj.h, 0);}},
+			{c: "%H", v: function() {return wd_num_fixed(obj.h, 0, 2);}},
+			{c: "#h", v: function() {return obj.h12;}},
+			{c: "%m", v: function() {return wd_num_fixed(obj.m, 0);}},
+			{c: "%M", v: function() {return wd_num_fixed(obj.m, 0, 2);}},
+			{c: "%s", v: function() {return wd_num_fixed(obj.s, 0);}},
+			{c: "%S", v: function() {return wd_num_fixed(obj.s, 0, 2);}},
+		];
+		for (var i = 0; i < words.length; i++)
+			if (char.indexOf(words[i].c) >= 0)
+				char = wd_replace_all(char, words[i].c, words[i].v());
+		return char
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1083,8 +1205,7 @@ BLOCO 5: boot
 		}
 	});
 
-/*============================================================================*/
-
+/*----------------------------------------------------------------------------*/
 	function WDundefined(value) {WDmain.call(this, value);}
 
 	WDundefined.prototype = Object.create(WDmain.prototype, {
@@ -1094,8 +1215,7 @@ BLOCO 5: boot
 		toString:    {value: function() {return "?";}}
 	});
 
-/*============================================================================*/
-
+/*----------------------------------------------------------------------------*/
 	function WDnull(value) {WDmain.call(this, value);}
 
 	WDnull.prototype = Object.create(WDmain.prototype, {
@@ -1105,8 +1225,7 @@ BLOCO 5: boot
 		toString:    {value: function() {return "";}}
 	});
 
-/*============================================================================*/
-
+/*----------------------------------------------------------------------------*/
 	function WDboolean(value) {WDmain.call(this, value);}
 
 	WDboolean.prototype = Object.create(WDmain.prototype, {
@@ -1116,8 +1235,7 @@ BLOCO 5: boot
 		toString:    {value: function() {return this._value ? "True" : "False";}}
 	});
 
-/*============================================================================*/
-
+/*----------------------------------------------------------------------------*/
 	function WDfunction(value) {WDmain.call(this, value);}
 
 	WDfunction.prototype = Object.create(WDmain.prototype, {
@@ -1125,8 +1243,7 @@ BLOCO 5: boot
 		type:        {value: "function"},
 	});
 
-/*============================================================================*/
-
+/*----------------------------------------------------------------------------*/
 	function WDobject(value) {WDmain.call(this, value);}
 
 	WDobject.prototype = Object.create(WDmain.prototype, {
@@ -1135,8 +1252,7 @@ BLOCO 5: boot
 		toString:    {value: function() {return wd_json(this._value);}}
 	});
 
-/*============================================================================*/
-
+/*----------------------------------------------------------------------------*/
 	function WDregexp(value) {WDmain.call(this, value);}
 
 	WDregexp.prototype = Object.create(WDmain.prototype, {
@@ -1145,8 +1261,7 @@ BLOCO 5: boot
 		toString:    {value: function() {return this._value.source;}}
 	});
 
-/*============================================================================*/
-
+/*----------------------------------------------------------------------------*/
 	function WDtext(value) {WDmain.call(this, value);}
 
 	WDtext.prototype = Object.create(WDmain.prototype, {
@@ -1200,15 +1315,14 @@ BLOCO 5: boot
 
 	});
 
-/*============================================================================*/
-
+/*----------------------------------------------------------------------------*/
 	function WDnumber(value) {WDmain.call(this, value);}
 
 	WDnumber.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDnumber},
 		type:        {value: "number"},
 		int: { /* retorna a parte inteira */
-			get: function() {return wd_int(this.valueOf());}
+			get: function() {return wd_integer(this.valueOf());}
 		},
 		decimal: { /* retorna a parte decimal */
 			get: function() {return wd_decimal (this.valueOf());}
@@ -1217,245 +1331,104 @@ BLOCO 5: boot
 			get: function() {return Math.abs(this.valueOf());}
 		},
 		ntype: { /* retorna o tipo de número */
-			get: function() {return wd_number_type(this.valueOf());}
+			get: function() {return wd_num_type(this.valueOf());}
 		},
 		frac: { /* representação em fração (2 casas) */
-			get: function () {return wd_frac_number(this.valueOf());}
+			get: function () {return wd_num_frac(this.valueOf());}
+		},
+		byte: { /* retorna notação para bytes */
+			get: function () {return wd_bytes(this.valueOf());}
+		},
+		str: { /* retorna string simplificada do número */
+			get: function() {return wd_num_str(this.valueOf());}
 		},
 		test: { /* testa se o tipo de número se enquadra em alguma categoria */
 			value: function() {
-				return wd_number_type_test(this.valueOf(), Array.prototype.slice.call(arguments));
+				return wd_num_test(this.valueOf(), Array.prototype.slice.call(arguments));
+			}
+		},
+		round: { /* arredonda número para determinado tamanho */
+			value: function(width) {
+				return wd_num_round(this.valueOf(), width);
+			}
+		},
+		pow10: { /* transforma número em notação científica */
+			value: function(width) {
+				return wd_num_pow10(this.valueOf(), width);
+			}
+		},
+		locale: { /* notação numérica local */
+			value: function(currency) {
+				return wd_num_local(this.valueOf(), currency);
+			}
+		},
+		fixed: { /* fixa quantidade de dígitos (int e dec) */
+			value: function(ldec, lint) {
+				return wd_num_fixed(this.valueOf(), ldec, lint);
+			}
+		},
+		toString: { /* método padrão */
+			value: function() {
+				return this.test("infinity") ? this.str : this.valueOf().toString();
 			}
 		},
 	});
 
-
-
-
-
-
-	Object.defineProperty(WDnumber.prototype, "round", {/*arredonda casas decimais*/
-
-		value: function(width) {
-			width = wd_finite(width) ? Math.abs(wd_int(width)) : 0;
-			return Number(this.valueOf().toFixed(width)).valueOf();
-		}
-	});
-
-	Object.defineProperty(WDnumber.prototype, "pow10", {/*notação científica*/
-
-		value: function(width) {
-			if (this.test("infinity", "zero")) return this.toString();
-
-			width = wd_finite(width) ? Math.abs(wd_int(width)) : undefined;
-
-			var chars = {
-				"0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵",
-				"6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹", "+": "⁺", "-": "⁻"
-			};
-			var exp = this.valueOf().toExponential(width).split(/[eE]/);
-			for (var i in chars) {
-				var re = (/[0-9]/).test(i) ? new RegExp(i, "g") : new RegExp("\\"+i, "g");
-				exp[1] = exp[1].replace(re, chars[i]);
-			}
-			return exp.join(" x 10");
-		}
-	});
-
-	Object.defineProperty(WDnumber.prototype, "locale", {/*notação local*/
-
-		value: function(locale, currency) {
-			locale   = locale   === undefined ? wd_lang() : locale;
-			currency = currency === undefined ? currency : {style: "currency", currency: currency};
-
-			try {return new Intl.NumberFormat(locale, currency).format(this.valueOf());} catch(e) {}
-			try {return new Intl.NumberFormat(locale).format(this.valueOf());} catch(e) {}
-
-			return this.valueOf().toLocaleString();
-		}
-	});
-
-	Object.defineProperty(WDnumber.prototype, "fixed", {/*fixador de números*/
-
-		value: function(ldec, lint) {
-			if (this.test("infinity")) return this.toString();
-
-			lint = wd_finite(lint) ? wd_int(lint, true) : 0;
-			ldec = wd_finite(ldec) ? wd_int(ldec, true) : 0;
-
-			var sign = this.valueOf() < 0 ? "-" : "";
-			var int  = Math.abs(this.int);
-			var dec  = Math.abs(this.decimal);
-
-			dec = dec.toFixed((ldec > 20 ? 20 : ldec));
-			if ((/^1/).test(dec)) int++;
-			dec = ldec === 0 ? "" : "."+dec.split(".")[1];
-
-			int = int.toLocaleString("en-US").split(".")[0].replace(/\,/g, "").split("");
-			while (int.length < lint) int.unshift("0");
-			int = int.join("");
-
-			return sign+int+dec;
-		}
-	});
-
-	Object.defineProperties(WDnumber.prototype, {
-		toString: {
-			value: function() {
-				if (Math.abs(this.valueOf()) !== Infinity) return this.valueOf().toString();
-				return (this.valueOf() < 0 ? "-" : "") + "∞";
-			}
-		}
-	});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*============================================================================*/
-
-	function WDtime(value) {
-		if (!(this instanceof WDtime)) return new WDtime(value);
-		WDmain.call(this, value);
-	}
-
-	WDtime.format = function(obj, char) {
-		if (char === "%h") return String(obj.h).toString();
-		if (char === "%H") return (obj.h < 10 ? "0" : "") + String(obj.h).toString();
-		if (char === "#h") return obj.h12;
-		if (char === "%m") return String(obj.m).toString();
-		if (char === "%M") return (obj.m < 10 ? "0" : "") + String(obj.m).toString();
-		if (char === "%s") return String(obj.s).toString();
-		if (char === "%S") return (obj.s < 10 ? "0" : "") + String(obj.s).toString();
-		return "";
-	}
+/*----------------------------------------------------------------------------*/
+	function WDtime(value) {WDmain.call(this, value);}
 
 	WDtime.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDtime},
 		type:        {value: "time"},
-	});
-
-
-	Object.defineProperties(WDtime.prototype, {/*define/obtem a hora*/
-		h: {
-	
-			get: function() {
-				return wd_number_time(this.valueOf()).h;
-			},
+		h: { /* define/obtem a hora */
+			get: function() {return wd_number_time(this.valueOf()).h;},
 			set: function(x) {
-				if (!wd_finite(x)) return;
-				x = wd_int(x);
-				this._value = wd_time_number(x, this.m, this.s);
-				return;
+				if (wd_finite(x))
+					this._value = wd_time_number(wd_integer(x), this.m, this.s);
 			}
 		},
 		hour: {
-	
 			get: function()  {return this.h;},
 			set: function(x) {return this.h = x;}
-		}
-	});
-
-	Object.defineProperties(WDtime.prototype, {/*define/obtem o minuto*/
-		m: {
-	
-			get: function() {
-				return wd_number_time(this.valueOf()).m;
-			},
+		},
+		m: { /* define/obtem o minuto */
+			get: function() {return wd_number_time(this.valueOf()).m;},
 			set: function(x) {
-				if (!wd_finite(x)) return;
-				x = wd_int(x);
-				this._value = wd_time_number(this.h, x, this.s);
-				return;
+				if (wd_finite(x))
+					this._value = wd_time_number(this.h, wd_integer(x), this.s);
 			}
 		},
 		minute: {
-	
 			get: function()  {return this.m;},
 			set: function(x) {return this.m = x;}
-		}
-	});
-
-	Object.defineProperties(WDtime.prototype, {/*define/obtem o segundo*/
-		s: {
-	
-			get: function() {
-				return wd_number_time(this.valueOf()).s;
-			},
+		},
+		s: { /* define/obtem o segundo */
+			get: function() {return wd_number_time(this.valueOf()).s;},
 			set: function(x) {
-				if (!wd_finite(x)) return;
-				x = wd_int(x);
-				this._value = wd_time_number(this.h, this.m, x);
-				return;
+				if (wd_finite(x))
+					this._value = wd_time_number(this.h, this.m, wd_integer(x));
 			}
 		},
 		second: {
-	
 			get: function()  {return this.s;},
 			set: function(x) {return this.s = x;}
-		}
-	});
-
-	/*Retorna a hora no formato ampm*/
-	Object.defineProperty(WDtime.prototype, "h12", {
-
-		get: function() {
-			var h = this.h === 0 ? 12 : (this.h <= 12 ? this.h : (this.h - 12));
-			var m = (this.m < 10 ? ":0" : ":") + String(this.m).toString();
-			var p = this.h < 12 ? " AM" : " PM"; 
-			return String(h).toString()+m+p;
-		}
-	});
-
-	Object.defineProperty(WDtime.prototype, "format", {/*formata saída string*/
-
-		value: function(str) {
-			var str   = String(str).toString();
-			var chars = ["%h", "%H", "#h", "%m", "%M", "%s", "%S"];
-
-			for (var i = 0; i < chars.length; i++) {
-				str = str.split(chars[i]);
-				str = str.join(WDtime.format(this, chars[i]));
+		},
+		h12: { /* Retorna a hora no formato ampm */
+			get: function() {return wd_time_ampm(this.h, this.m);},
+		},
+		format: { /* formata saída string */
+			value: function(str) {
+				return wd_time_format(this, str);
 			}
-			return str;
+		},
+		toString: { /* método padrão */
+			value: function() {return this.format("%h:%M:%S");}
 		}
+
 	});
 
-	Object.defineProperties(WDtime.prototype, {
-		toString: {value: function() {return this.format("%h:%M:%S");}}
-	});
-
-/*============================================================================*/
-
-	function WDdate(value) {
-		if (!(this instanceof WDdate)) return new WDdate(value);
-		WDmain.call(this, value);
-	}
+/*----------------------------------------------------------------------------*/
+	function WDdate(value) {WDmain.call(this, value);}
 
 	WDdate.searchFirstDay = function(search, year) {
 		var init = wd_set_date(null, 1, 1, year).getDay() + 1;
@@ -1491,38 +1464,52 @@ BLOCO 5: boot
 	WDdate.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDdate},
 		type:        {value: "date"},
-	});
-
-
-	Object.defineProperties(WDdate.prototype, {/*ANO*/
-		y: {
-	
-			get: function() {
-				return this._value.getFullYear();
-			},
+		y: { /* ano */
+			get: function() {return this._value.getFullYear();},
 			set: function(x) {
-				if (!wd_finite(x) || x < 0) return;
-				x = wd_int(x);
-				this._value = wd_set_date(this._value, undefined, undefined, x);
-				return
+				if (wd_finite(x) && x >= 0)
+					this._value = wd_set_date(this._value, undefined, undefined, wd_integer(x));
 			}
 		},
 		year: {
-	
-			get: function() {return this.y;},
+			get: function()  {return this.y;},
 			set: function(x) {return this.y = x;}
 		},
-		length: {/*dias no ano*/
-	
-			get: function() {
-				return wd_is_leap(this.y) ? 366 : 365;
+		m: { /* mês */
+			get: function() {return this._value.getMonth() + 1;},
+			set: function(x) {
+				if (wd_finite(x))
+					this._value = wd_set_date(this._value, undefined, wd_integer(x), undefined);
 			}
+		},
+		month: {
+			get: function()  {return this.m;},
+			set: function(x) {return this.m = x;}
+		},
+		d: { /* dia */
+			get: function() {return this._value.getDate();},
+			set: function(x) {
+				if (wd_finite(x))
+					this._value = wd_set_date(this._value, wd_integer(x), undefined, undefined);
+			}
+		},
+		day: {
+			get: function() {return this.d;},
+			set: function(x) {return this.d = x;}
+		},
+
+
+
+
+
+		length: {/*dias no ano*/
+			get: function() {return wd_is_leap(this.y) ? 366 : 365;}
 		},
 		week: {/*semana cheia do ano*/
 	
 			get: function() {
 				var ref = this.days - this.today + 1;
-				return (ref % 7 > 0 ? 1 : 0) + wd_int(ref/7);
+				return (ref % 7 > 0 ? 1 : 0) + wd_integer(ref/7);
 			}
 		},
 		workingYear: {
@@ -1530,32 +1517,14 @@ BLOCO 5: boot
 			get: function() {
 				var sat  = WDdate.searchFirstDay(7, this.y);
 				var sun  = WDdate.searchFirstDay(1, this.y);
-				var nSat = wd_int((this.length - sat)/7) + 1;
-				var nSun = wd_int((this.length - sun)/7) + 1;
+				var nSat = wd_integer((this.length - sat)/7) + 1;
+				var nSun = wd_integer((this.length - sun)/7) + 1;
 				var work = this.length - (nSat + nSun)
 				return work < 0 ? 0 : work;
 			}
-		}
-	});
+		},
 
-	Object.defineProperties(WDdate.prototype, {/*MÊS*/
-		m: {
-	
-			get: function() {
-				return this._value.getMonth() + 1;
-			},
-			set: function(x) {
-				if (!wd_finite(x)) return;
-				x = wd_int(x);
-				this._value = wd_set_date(this._value, undefined, x, undefined);
-				return
-			}
-		},
-		month: {
-	
-			get: function() {return this.m;},
-			set: function(x) {return this.m = x;}
-		},
+
 		size: { /*quantidade de dias no mês*/
 	
 			get: function() {
@@ -1578,27 +1547,12 @@ BLOCO 5: boot
 				try {return this._value.toLocaleString(locale, {month: "long"});} catch(e) {}
 				return this._value.toLocaleString(undefined,   {month: "long"});
 			}
-		}
-	});
+		},
 
-	Object.defineProperties(WDdate.prototype, {/*DIA*/
-		d: {
-	
-			get: function() {
-				return this._value.getDate();
-			},
-			set: function(x) {
-				if (!wd_finite(x)) return;
-				x = wd_int(x);
-				this._value = wd_set_date(this._value, x, undefined, undefined);
-				return
-			}
-		},
-		day: {
-	
-			get: function() {return this.d;},
-			set: function(x) {return this.d = x;}
-		},
+
+
+
+
 		days: { /*dias transcorridos no ano*/
 	
 			get: function() {
@@ -1634,8 +1588,8 @@ BLOCO 5: boot
 			get: function() {
 				var sat  = WDdate.searchFirstDay(7, this.y);
 				var sun  = WDdate.searchFirstDay(1, this.y);
-				var nSat = wd_int((this.days - sat)/7) + 1;
-				var nSun = wd_int((this.days - sun)/7) + 1;
+				var nSat = wd_integer((this.days - sat)/7) + 1;
+				var nSun = wd_integer((this.days - sun)/7) + 1;
 				var work = this.days - (nSat + nSun)
 				return work < 0 ? 0 : work;
 			}
@@ -1668,7 +1622,7 @@ BLOCO 5: boot
 		},
 		valueOf: {
 			value: function() {
-				return (this._value < 0 ? -1 : 0) + wd_int(this._value/86400000);
+				return (this._value < 0 ? -1 : 0) + wd_integer(this._value/86400000);
 			}
 		}
 	});
@@ -2131,30 +2085,30 @@ BLOCO 5: boot
 
 				/*row*/
 				if ((/^[0-9]+$/).test(cell[0])) {
-					row.i = wd_int(cell[0]);
-					row.n = wd_int(cell[0]);
+					row.i = wd_integer(cell[0]);
+					row.n = wd_integer(cell[0]);
 				} else if ((/^\-[0-9]+$/).test(cell[0])) {
-					row.n = wd_int(cell[0].replace("-", ""));
+					row.n = wd_integer(cell[0].replace("-", ""));
 				} else if ((/^[0-9]+\-$/).test(cell[0])) {
-					row.i = wd_int(cell[0].replace("-", ""));
+					row.i = wd_integer(cell[0].replace("-", ""));
 				} else if ((/^[0-9]+\-[0-9]+$/).test(cell[0])) {
 					var gap = cell[0].split("-");
-					row.i   = wd_int(gap[0]);
-					row.n   = wd_int(gap[1]);
+					row.i   = wd_integer(gap[0]);
+					row.n   = wd_integer(gap[1]);
 				}
 
 				/*col*/
 				if ((/^[0-9]+$/).test(cell[1])) {
-					col.i = wd_int(cell[1]);
-					col.n = wd_int(cell[1]);
+					col.i = wd_integer(cell[1]);
+					col.n = wd_integer(cell[1]);
 				} else if ((/^\-[0-9]+$/).test(cell[1])) {
-					col.n = wd_int(cell[1].replace("-", ""));
+					col.n = wd_integer(cell[1].replace("-", ""));
 				} else if ((/^[0-9]+\-$/).test(cell[1])) {
-					col.i = wd_int(cell[1].replace("-", ""));
+					col.i = wd_integer(cell[1].replace("-", ""));
 				} else if ((/^[0-9]+\-[0-9]+$/).test(cell[1])) {
 					var gap = cell[1].split("-");
-					col.i   = wd_int(gap[0]);
-					col.n   = wd_int(gap[1]);
+					col.i   = wd_integer(gap[0]);
+					col.n   = wd_integer(gap[1]);
 				}
 
 				for (var r = 0; r < matrix.length; r++) {
@@ -2182,7 +2136,7 @@ BLOCO 5: boot
 
 		value: function(i) {
 			if (!wd_finite(i)) return this._value.length;
-			i = wd_int(i);
+			i = wd_integer(i);
 			i = i < 0 ? this._value.length + i : i;
 			return this.valueOf()[i];
 		}
@@ -3303,7 +3257,7 @@ BLOCO 5: boot
 	Object.defineProperty(WDdom.prototype, "filter", {/*exibe somente o texto casado*/
 
 		value: function (search, chars) {
-			chars = wd_finite(chars) && chars !== 0 ? wd_int(chars) : 1;
+			chars = wd_finite(chars) && chars !== 0 ? wd_integer(chars) : 1;
 
 			/*definindo valor de busca*/
 			var check1 = WD(search)
@@ -3443,17 +3397,17 @@ BLOCO 5: boot
 	Object.defineProperty(WDdom.prototype, "page", {/*divide os elementos em "páginas"*/
 
 		value: function (page, size) {
-			page = wd_finite(page) ? wd_int(page) : 0;
+			page = wd_finite(page) ? wd_integer(page) : 0;
 			size = wd_finite(size) && size > 0 ? Math.abs(size) : -1;
 
 			this.run(function(elem) {
 				var book  = elem.children;
-				var lines = size <= 0 ? book.length : wd_int(size < 1 ? size*book.length : size);
-				var pages = wd_int(book.length/lines);
+				var lines = size <= 0 ? book.length : wd_integer(size < 1 ? size*book.length : size);
+				var pages = wd_integer(book.length/lines);
 				var print = [];
 
 				for (var i = 0; i < book.length; i++) {
-					var p = wd_int(i/lines);
+					var p = wd_integer(i/lines);
 					if (print[p] === undefined) print.push([]);
 					print[p].push(book[i]);
 				}
@@ -3471,8 +3425,8 @@ BLOCO 5: boot
 	Object.defineProperty(WDdom.prototype, "sort", {/*ordenar elementos filhos*/
 
 		value: function (order, col) {
-			order = wd_finite(order) ? wd_int(order) : 1;
-			col   = wd_finite(col)   ? wd_int(col, true) : null;
+			order = wd_finite(order) ? wd_integer(order) : 1;
+			col   = wd_finite(col)   ? wd_integer(col, true) : null;
 
 			this.run(function(elem) {
 				var children = elem.children;
@@ -3866,7 +3820,7 @@ BLOCO 5: boot
 
 	function data_wdSlide(e) {/*Carrossel: data-wd-slide=time*/
 		if (!("wdSlide" in e.dataset)) return delete e.dataset.wdSlideRun;
-		var time = wd_finite(e.dataset.wdSlide) ? wd_int(e.dataset.wdSlide) : 1000;;
+		var time = wd_finite(e.dataset.wdSlide) ? wd_integer(e.dataset.wdSlide) : 1000;;
 
 		if (!("wdSlideRun" in e.dataset)) {
 			WD(e).nav((time < 0 ? "prev" : "next"));
@@ -3984,25 +3938,25 @@ BLOCO 5: boot
 		var info  = {error: null, file: null, value: null, parameter: null};
 		var files = e.files;
 
-		if ("nf" in data && files.length > wd_int(data.nf, true)) {
+		if ("nf" in data && files.length > wd_integer(data.nf, true)) {
 			info.error     = "nf";
 			info.value     = files.length;
 			info.file      = "";
-			info.parameter = wd_int(data.nf, true);
+			info.parameter = wd_integer(data.nf, true);
 		} else {
 			var ms = 0;
 			var fc = "fc" in data ? new RegExp("("+data.fc+")", "g") : null;
 
 			for (var i = 0; i < files.length; i++) {
 				ms += files[i].size;
-				if ("ms" in data && ms > wd_int(data.ms, true)) {
+				if ("ms" in data && ms > wd_integer(data.ms, true)) {
 					info.error     = "ms";
 					info.value     = wd_bytes(ms);
-					info.parameter = wd_bytes(wd_int(data.ms, true));
-				} else if ("fs" in data && files[i].size > wd_int(data.fs, true)) {
+					info.parameter = wd_bytes(wd_integer(data.ms, true));
+				} else if ("fs" in data && files[i].size > wd_integer(data.fs, true)) {
 					info.error     = "fs";
 					info.value     = wd_bytes(files[i].size);
-					info.parameter = wd_bytes(wd_int(data.fs, true));
+					info.parameter = wd_bytes(wd_integer(data.fs, true));
 				} else if ("ft" in data && data.ft.split(" ").indexOf(files[i].type) < 0) {
 					info.error     = "ft";
 					info.value     = files[i].type;
@@ -4106,11 +4060,11 @@ BLOCO 5: boot
 				elem:         obj.item(0),
 				tag:          WDdom.tag(obj.item(0)),
 				position:     obj.styles("position")[0].toLowerCase(),
-				height:       wd_int(obj.styles("height")[0].replace(/[^0-9\.]/g, "")),
-				marginTop:    wd_int(obj.styles("margin-top")[0].replace(/[^0-9\.]/g, "")),
-				marginBottom: wd_int(obj.styles("margin-bottom")[0].replace(/[^0-9\.]/g, "")),
-				bottom:       wd_int(obj.styles("bottom")[0].replace(/[^0-9\.]/g, "")),
-				top:          wd_int(obj.styles("top")[0].replace(/[^0-9\.]/g, "")),
+				height:       wd_integer(obj.styles("height")[0].replace(/[^0-9\.]/g, "")),
+				marginTop:    wd_integer(obj.styles("margin-top")[0].replace(/[^0-9\.]/g, "")),
+				marginBottom: wd_integer(obj.styles("margin-bottom")[0].replace(/[^0-9\.]/g, "")),
+				bottom:       wd_integer(obj.styles("bottom")[0].replace(/[^0-9\.]/g, "")),
+				top:          wd_integer(obj.styles("top")[0].replace(/[^0-9\.]/g, "")),
 			};
 		}
 
