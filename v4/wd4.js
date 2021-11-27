@@ -2074,7 +2074,7 @@ BLOCO 5: boot
 		},
 	});
 
-/*...........................................................................*/
+/*----------------------------------------------------------------------------*/
 
 	WDarray.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDarray},
@@ -2256,12 +2256,8 @@ BLOCO 5: boot
 		}
 	});
 
-/*============================================================================*/
-
-	function WDdom(value) {
-		if (!(this instanceof WDdom)) return new WDdom(value);
-		WDmain.call(this, value);
-	}
+/*----------------------------------------------------------------------------*/
+	function WDdom(value) {WDmain.call(this, value);}
 
 	Object.defineProperties(WDdom, {/*objetos do construtor*/
 		checkCss: {
@@ -2441,43 +2437,8 @@ BLOCO 5: boot
 	});
 
 
+
 /*----------------------------------------------------------------------------*/
-
-	function WD(input) { /* função de interface ao usuário */
-		var vtype  = wd_vtype(input);
-		var object = {
-			"undefined": WDundefined, "null":     WDnull,
-			"boolean":   WDboolean,   "function": WDfunction,
-			"object":    WDobject,    "regexp":   WDregexp,
-			"array":     WDarray,     "dom":      WDdom,
-			"time":      WDtime,      "date":     WDdate,
-			"number":    WDnumber,    "text":     WDtext,
-			"unknown":   WDmain
-		};
-
-		return new object[vtype.type](vtype.value);
-	}
-
-	WD.constructor = WD;
-	Object.defineProperties(WD, {
-		version: {value: wd_version},
-		$:       {value: function(css, root) {return WD(wd_$(css, root));}},
-		$$:      {value: function(css, root) {return WD(wd_$$(css, root));}},
-		today:   {get:   function() {return WD(new Date());}},
-		now: {get: function() {
-			var t = new Date();
-			var o = {h: t.getHours(), m: t.getMinutes(), s: t.getSeconds()};
-			for (var i in o) o[i] = (o[i] < 10 ? "0" : "") + o[i].toString();
-			return WD(o.h+":"+o.m+":"+o.s);
-		}},
-		loko: {value: wd_decimal}
-	});
-
-
-/* BLOCO 4 */
-/*============================================================================*/
-
-
 //FIXME mudar wdChart, WDstatistics e WDanalysis para o BLOCO 2
 	function wdChart(box, title) {/*Objeto para criar gráficos*/
 		if (!(this instanceof wdChart)) return new wdChart(box, title);
@@ -3002,7 +2963,7 @@ BLOCO 5: boot
 		},
 	});
 
-/*...........................................................................*/
+/*----------------------------------------------------------------------------*/
 
 	WDdom.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDdom},
@@ -3473,12 +3434,41 @@ BLOCO 5: boot
 		}
 	});
 
+/*----------------------------------------------------------------------------*/
+	function WD(input) { /* função de interface ao usuário */
+		var vtype  = wd_vtype(input);
+		var object = {
+			"undefined": WDundefined, "null":     WDnull,
+			"boolean":   WDboolean,   "function": WDfunction,
+			"object":    WDobject,    "regexp":   WDregexp,
+			"array":     WDarray,     "dom":      WDdom,
+			"time":      WDtime,      "date":     WDdate,
+			"number":    WDnumber,    "text":     WDtext,
+			"unknown":   WDmain
+		};
 
-/*============================================================================*/
-/* -- ATRIBUTOS -- */
-/*============================================================================*/
+		return new object[vtype.type](vtype.value);
+	}
 
-/*...........................................................................*/
+	WD.constructor = WD;
+	Object.defineProperties(WD, {
+		version: {value: wd_version},
+		$:       {value: function(css, root) {return WD(wd_$(css, root));}},
+		$$:      {value: function(css, root) {return WD(wd_$$(css, root));}},
+		today:   {get:   function() {return WD(new Date());}},
+		now: {get: function() {
+			var t = new Date();
+			var o = {h: t.getHours(), m: t.getMinutes(), s: t.getSeconds()};
+			for (var i in o) o[i] = (o[i] < 10 ? "0" : "") + o[i].toString();
+			return WD(o.h+":"+o.m+":"+o.s);
+		}},
+		loko: {value: wd_decimal}
+	});
+
+
+
+/* BLOCO 4 */
+/*============================================================================*/
 
 	function data_wdLoad(e) {/*carrega HTML: data-wd-load=path{file}method{get|post}${form}*/
 		if (!("wdLoad" in e.dataset)) return;
