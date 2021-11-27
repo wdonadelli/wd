@@ -717,12 +717,12 @@ BLOCO 5: boot
 	function wd_time_format(obj, char) { /* define um formato de tempo a partir de caracteres especiais */
 		char = new String(char).toString();
 		var words = [
-			{c: "%h", v: function() {return wd_num_fixed(obj.h, 0);}},
+			{c: "%h", v: function() {return wd_num_fixed(obj.h, 0, 0);}},
 			{c: "%H", v: function() {return wd_num_fixed(obj.h, 0, 2);}},
 			{c: "#h", v: function() {return obj.h12;}},
-			{c: "%m", v: function() {return wd_num_fixed(obj.m, 0);}},
+			{c: "%m", v: function() {return wd_num_fixed(obj.m, 0, 0);}},
 			{c: "%M", v: function() {return wd_num_fixed(obj.m, 0, 2);}},
-			{c: "%s", v: function() {return wd_num_fixed(obj.s, 0);}},
+			{c: "%s", v: function() {return wd_num_fixed(obj.s, 0, 0);}},
 			{c: "%S", v: function() {return wd_num_fixed(obj.s, 0, 2);}},
 		];
 		for (var i = 0; i < words.length; i++)
@@ -731,9 +731,73 @@ BLOCO 5: boot
 		return char
 	}
 
+/*----------------------------------------------------------------------------*/
+	function wd_date_format(obj, char) { /* define um formato de data a partir de caracteres especiais */
+		char = new String(char).toString();
+		var words = [
+			{c: "%d", v: function() {return wd_num_fixed(obj.d, 0, 0);}},
+			{c: "%D", v: function() {return wd_num_fixed(obj.d, 0, 2);}},
+			{c: "@d", v: function() {return wd_num_fixed(obj.today, 0, 0);}},
+			{c: "@D", v: function() {return wd_num_fixed(obj.days, 0, 0);}},
+			{c: "#d", v: function() {return obj.shortDay;}},
+			{c: "#D", v: function() {return obj.longDay}},
+			{c: "$d", v: function() {return wd_num_fixed(obj.working, 0, 0);}},
+			{c: "%m", v: function() {return wd_num_fixed(obj.m, 0, 0);}},
+			{c: "%M", v: function() {return wd_num_fixed(obj.m, 0, 2);}},
+			{c: "@m", v: function() {return wd_num_fixed(obj.size, 0, 0);}},
+			{c: "#m", v: function() {return obj.shortMonth;}},
+			{c: "#M", v: function() {return obj.longMonth;}},
+			{c: "%y", v: function() {return wd_num_fixed(obj.y, 0, 0);}},
+			{c: "%Y", v: function() {return wd_num_fixed(obj.y, 0, 4);}},
+			{c: "@y", v: function() {return wd_num_fixed(obj.week, 0, 0);}},
+			{c: "@Y", v: function() {return wd_num_fixed(obj.length, 0, 0);}},
+			{c: "$y", v: function() {return wd_num_fixed(obj.workingYear, 0, 0);}},
+		];
+		for (var i = 0; i < words.length; i++)
+			if (char.indexOf(words[i].c) >= 0)
+				char = wd_replace_all(char, words[i].c, words[i].v());
+		return char
+	};
 
+/*----------------------------------------------------------------------------*/
+	function wd_date_first_day(search, year) { /* encontra o primeiro dia do ano (valor inteiro) */
+		var init = wd_set_date(null, 1, 1, year).getDay() + 1;
+		var diff = search < init ? search + 7 - init : search - init
+		return 1 + diff;
+	}
 
+/*----------------------------------------------------------------------------*/
+	function wd_date_locale(obj, value) { /* obtem o nome do atributo da data no local */
+		try {return obj.toLocaleString(wd_lang(), value);} catch(e) {}
+		return obj.toLocaleString(undefined, value);
+	}
 
+	function wd_date_size(m, y) { /* quantidade de dias no mês */
+				var list = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+				return (m === 2 && wd_is_leap(y) ? 1 : 0) + list[m - 1];
+	};
+
+/*----------------------------------------------------------------------------*/
+	function wd_date_working(y, ref) { /* obtem os dias úteis a partir de uma referência */
+		var sat  = wd_date_first_day(7, y);
+		var sun  = wd_date_first_day(1, y);
+		var nSat = wd_integer((ref - sat)/7) + 1;
+		var nSun = wd_integer((ref - sun)/7) + 1;
+		var work = ref - (nSat + nSun)
+		return work < 0 ? 0 : work;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_date_days(y, m, d) { /* dias transcorridos no ano */
+		var days  = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
+		return days[m - 1] + d + ((m > 2 && wd_is_leap(y)) ? 1 : 0);
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_date_week(days, today) { /* retorna a semana do ano (cheia) */
+		var ref = days - today + 1;
+		return (ref % 7 > 0 ? 1 : 0) + wd_integer(ref/7);
+	}
 
 
 
@@ -1430,37 +1494,6 @@ BLOCO 5: boot
 /*----------------------------------------------------------------------------*/
 	function WDdate(value) {WDmain.call(this, value);}
 
-	WDdate.searchFirstDay = function(search, year) {
-		var init = wd_set_date(null, 1, 1, year).getDay() + 1;
-		var diff = search < init ? search + 7 - init : search - init
-		return 1 + diff;
-	}
-
-	WDdate.format = function(obj, char, locale) {
-
-		if (char === "%d") return String(obj.d).toString();
-		if (char === "%D") return (obj.d < 10 ? "0" : "") + String(obj.d).toString();
-		if (char === "@d") return String(obj.today).toString();
-		if (char === "@D") return String(obj.days).toString();
-		if (char === "#d") return obj.shortDay(locale);
-		if (char === "#D") return obj.longDay(locale);
-		if (char === "$d") return String(obj.working).toString();
-
-		if (char === "%m") return String(obj.m).toString();
-		if (char === "%M") return (obj.m < 10 ? "0" : "") + String(obj.m).toString();
-		if (char === "@m") return String(obj.size).toString();
-		if (char === "#m") return obj.shortMonth(locale);
-		if (char === "#M") return obj.longMonth(locale);
-
-		if (char === "%y") return String(obj.y).toString();
-		if (char === "%Y") return String("0000" + obj.y).slice(-4)
-		if (char === "@y") return String(obj.week).toString();
-		if (char === "@Y") return String(obj.length).toString();
-		if (char === "$y") return String(obj.workingYear).toString();
-
-		return "";
-	};
-
 	WDdate.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDdate},
 		type:        {value: "date"},
@@ -1471,20 +1504,12 @@ BLOCO 5: boot
 					this._value = wd_set_date(this._value, undefined, undefined, wd_integer(x));
 			}
 		},
-		year: {
-			get: function()  {return this.y;},
-			set: function(x) {return this.y = x;}
-		},
 		m: { /* mês */
 			get: function() {return this._value.getMonth() + 1;},
 			set: function(x) {
 				if (wd_finite(x))
 					this._value = wd_set_date(this._value, undefined, wd_integer(x), undefined);
 			}
-		},
-		month: {
-			get: function()  {return this.m;},
-			set: function(x) {return this.m = x;}
 		},
 		d: { /* dia */
 			get: function() {return this._value.getDate();},
@@ -1493,146 +1518,70 @@ BLOCO 5: boot
 					this._value = wd_set_date(this._value, wd_integer(x), undefined, undefined);
 			}
 		},
+		year: {
+			get: function()  {return this.y;},
+			set: function(x) {return this.y = x;}
+		},
+		month: {
+			get: function()  {return this.m;},
+			set: function(x) {return this.m = x;}
+		},
 		day: {
-			get: function() {return this.d;},
+			get: function()  {return this.d;},
 			set: function(x) {return this.d = x;}
 		},
-
-
-
-
-
 		length: {/*dias no ano*/
 			get: function() {return wd_is_leap(this.y) ? 366 : 365;}
 		},
-		week: {/*semana cheia do ano*/
-	
-			get: function() {
-				var ref = this.days - this.today + 1;
-				return (ref % 7 > 0 ? 1 : 0) + wd_integer(ref/7);
-			}
+		shortMonth: { /* mês abreviado */
+			get: function() {return wd_date_locale(this._value, {month: "short"});}
 		},
-		workingYear: {
-	
-			get: function() {
-				var sat  = WDdate.searchFirstDay(7, this.y);
-				var sun  = WDdate.searchFirstDay(1, this.y);
-				var nSat = wd_integer((this.length - sat)/7) + 1;
-				var nSun = wd_integer((this.length - sun)/7) + 1;
-				var work = this.length - (nSat + nSun)
-				return work < 0 ? 0 : work;
-			}
+		longMonth: { /* nome do mês */
+			get: function() {return wd_date_locale(this._value, {month: "long"});}
 		},
-
-
-		size: { /*quantidade de dias no mês*/
-	
-			get: function() {
-				var list = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-				return (this.m === 2 && wd_is_leap(this.y) ? 1 : 0) + list[this.m - 1];
-			},
+		shortDay: { /* dia abreviado */
+			get: function() {return wd_date_locale(this._value, {weekday: "short"});}
 		},
-		shortMonth: {
-	
-			value: function(locale) {
-				locale = locale === undefined ? wd_lang() : locale;
-				try {return this._value.toLocaleString(locale, {month: "short"});} catch(e) {}
-				return this._value.toLocaleString(undefined,   {month: "short"});
-			}
+		longDay: { /* nome do dia */
+			get: function() {return wd_date_locale(this._value, {weekday: "long"});}
 		},
-		longMonth: {
-	
-			value: function(locale) {
-				locale = locale === undefined ? wd_lang() : locale;
-				try {return this._value.toLocaleString(locale, {month: "long"});} catch(e) {}
-				return this._value.toLocaleString(undefined,   {month: "long"});
-			}
+		today: { /* dia da semana [1-7] */
+			get: function() {return this._value.getDay() + 1;}
 		},
-
-
-
-
-
+		size: { /* quantidade de dias no mês */
+			get: function() {return wd_date_size(this.m, this.y);}
+		},
+		workingYear: { /* dias úteis no ano */
+			get: function() { return wd_date_working(this.y, this.length);}
+		},
+		working: { /* dias úteis até o momento */
+			get: function() { return wd_date_working(this.y, this.days);}
+		},
 		days: { /*dias transcorridos no ano*/
-	
-			get: function() {
-				var days  = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
-				var extra = (this.m > 2 && wd_is_leap(this.y)) ? 1 : 0;
-				return days[this.m - 1] + this.d + extra;
+			get: function() {return wd_date_days(this.y, this.m, this.d);}
+		},
+		week: {/*semana cheia do ano*/
+			get: function(days, today) {return wd_date_week(this.days, this.today);}
+		},
+		format: { /* formata saída string */
+			value: function(str) {
+				return wd_date_format(this, str);
 			}
 		},
-		today: { /*dia da semana [1-7]*/
-	
-			get: function() {
-				return this._value.getDay() + 1;
-			}
-		},
-		shortDay: {
-	
-			value: function(locale) {
-				locale = locale === undefined ? wd_lang() : locale;
-				try {return this._value.toLocaleString(locale, {weekday: "short"});} catch(e) {}
-				return this._value.toLocaleString(undefined,   {weekday: "short"});
-			}
-		},
-		longDay: {
-	
-			value: function(locale) {
-				locale = locale === undefined ? wd_lang() : locale;
-				try {return this._value.toLocaleString(locale, {weekday: "long"});} catch(e) {}
-				return this._value.toLocaleString(undefined,   {weekday: "long"});
-			}
-		},
-		working: {
-	
-			get: function() {
-				var sat  = WDdate.searchFirstDay(7, this.y);
-				var sun  = WDdate.searchFirstDay(1, this.y);
-				var nSat = wd_integer((this.days - sat)/7) + 1;
-				var nSun = wd_integer((this.days - sun)/7) + 1;
-				var work = this.days - (nSat + nSun)
-				return work < 0 ? 0 : work;
-			}
-		}
-	});
-
-	Object.defineProperty(WDdate.prototype, "format", {/*formata data*/
-
-		value: function(str, locale) {
-			var str   = String(str).toString();
-			var chars = [
-				"%d", "%D", "@d", "@D", "#d", "#D", "$d",
-				"%m", "%M", "@m", "#m", "#M",
-				"%y", "%Y", "@y", "@Y", "$y"
-			];
-
-			for (var i = 0; i < chars.length; i++) {
-				str = str.split(chars[i]);
-				str = str.join(WDdate.format(this, chars[i], locale));
-			}
-			return str;
-		}
-	});
-
-	Object.defineProperties(WDdate.prototype, {
-		toString: {
+		toString: { /* método padrão */
 			value: function() {
 				return this.format("%Y-%M-%D");
 			}
 		},
-		valueOf: {
+		valueOf: { /* método padrão */
 			value: function() {
 				return (this._value < 0 ? -1 : 0) + wd_integer(this._value/86400000);
 			}
-		}
+		},
 	});
 
-/* === ARRAY =============================================================== */
-
-	function WDarray(value) {
-		if (!(this instanceof WDarray)) return new WDarray(value);
-		WDmain.call(this, value);
-	}
+/*............................................................................*/
+	function WDarray(value) {WDmain.call(this, value);}
 
 	function WDdataSet() { /*WDstatistics, WDanalysis e WDcompare vão herdar esse objeto*/
 		if (!(this instanceof WDdataSet)) return new WDdataSet();
