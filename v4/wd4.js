@@ -1740,6 +1740,101 @@ BLOCO 5: boot
 	});
 
 /*----------------------------------------------------------------------------*/
+	function wd_array_numeric(array) { /* define um array numérico, se houver, outros valores ficam nulos, erro retorna nulo */
+		if (wd_vtype(array).type !== "array" || array.length === 0) return null;
+		var list = [];
+		for (var i = 0; i < array.length; i++) {
+			var vtype = wd_vtype(array[i]);
+			if (wd_finite(vtype.value)) list.push(vtype.value);
+			else list.push(null);
+		}
+		return wd_array_del(list, [null]).length === 0 ? null : list;
+	}
+
+	function wd_coord_adjust(x, y) { /* retorna pares de coordenadas numéricas */
+		var list = {x: [], y: [], length: 0};
+		/* x é obrigatório ser diferente de nulo */
+		x = wd_array_numeric(x);
+		if (x === null) return null;
+		y = wd_array_numeric(y);
+		if (y === null) {
+			list.x      = wd_array_del(x, [null]);
+			list.y      = null;
+			list.length = list.x.length
+			return list
+		}
+		/* obtendo as coordenadas */
+		var loop = x.length > y.length ? y.length : x.length;
+		for (var i = 0; i < loop; i++) {
+			if (x[i] === null || y[i] === null) continue;
+			list.x.push(x[i]);
+			list.y.push(y[i]);
+			list.length++;
+		}
+		return list.length === 0 ? null : list;
+	}
+
+	function wd_coord_sum(x, nx, y, ny ) { /* retorna a soma de coordernadas */
+		var list = wd_coord_adjust(x, y);
+		if (list === null) return null;
+		x = list.x;
+		y = list.y;
+
+		var data = {value: 0, length: 0};
+		for (var i = 0; i < list.length; i++) {
+			if (nx < 0 && x[i] === 0) continue;               /*divisão por zero*/
+			if (y !== null && ny < 0 && y[i] === 0) continue; /*divisão por zero*/
+			var val1 = Math.pow(x[i], nx);
+			var val2 = y === null ? 1 : Math.pow(y[i], ny);
+			data.value += val1 * val2;
+			data.length++;
+		}
+		return data;
+	}
+
+	function wd_coord_limits(x) { /* retorna os maiores e menores valores da lista */
+		x = wd_array_numeric(x);
+		if (x === null) return null;
+		x = wd_array_sort(wd_array_del(x, [null]));
+		return {min: x[0], max: x.reverse()[0]};
+	}
+
+	function wd_coord_avg(x) { /* retorna a média dos valores da lista */
+		var sum = wd_coord_sum(x, 1);
+		if (sum === null) return null
+		return sum.value/sum.length;
+	}
+
+	function wd_coord_med(x) { /* retorna a mediana dos valores da lista */
+		x = wd_array_numeric(x);
+		if (x === null) return null
+		x = wd_array_sort(wd_array_del(x, [null]));
+		var l = x.length
+		return l%2 === 0 ? (x[l/2]+x[(l/2)-1])/2 : x[(l-1)/2]
+	}
+
+	function wd_coord_har(x) { /* retorna a mediana dos valores da lista */
+		var list = wd_coord_adjust(x);
+		if (list === null) return null
+		var harm = this._SUM(this.x, -1);
+		return (harm === 0 || harm === null) ? null : this.l/harm;
+	}
+
+
+	function WDstatistics(x) {this.x = x}
+	Object.defineProperties(WDstatistics.prototype, {
+		sum: {get: function(){return wd_coord_sum(this.x, 1);}},
+		min: {get: function(){return wd_coord_limits(this.x).min;}},
+		max: {get: function(){return wd_coord_limits(this.x).max;}},
+		avg: {get: function(){return wd_coord_avg(this.x);}},
+		med: {get: function(){return wd_coord_med(this.x);}},
+		geo: {get: function(){return wd_coord_med(this.x);}},
+		har: {get: function(){return wd_coord_med(this.x);}},
+	});
+
+
+
+
 	function WDarray(value) {WDmain.call(this, value);}
 
 	WDarray.prototype = Object.create(WDmain.prototype, {
@@ -1748,15 +1843,6 @@ BLOCO 5: boot
 
 
 
-		sum: { /* remove itens repetidos */
-			get: function() {return wd_array_unique(this.valueOf());}
-		},
-		min: { /* remove itens repetidos */
-			get: function() {return wd_array_unique(this.valueOf());}
-		},
-		max: { /* remove itens repetidos */
-			get: function() {return wd_array_unique(this.valueOf());}
-		},
 		average: { /* remove itens repetidos */
 			get: function() {return wd_array_unique(this.valueOf());}
 		},
@@ -1861,9 +1947,10 @@ BLOCO 5: boot
 
 		value: function(x, y) {
 			var info = {
-				statistics: new WDstatistics(this.cell(x)),
-				compare:    new WDcompare(this.cell(x), this.cell(y)),
-				analysis:   new WDanalysis(this.cell(x), this.cell(y)),
+				statistics: new WDstatistics(this.valueOf()),
+				//statistics: new WDstatistics(this.cell(x)),
+				//compare:    new WDcompare(this.cell(x), this.cell(y)),
+				//analysis:   new WDanalysis(this.cell(x), this.cell(y)),
 			}
 			return info;
 		}
