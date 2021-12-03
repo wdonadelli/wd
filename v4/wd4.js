@@ -1740,97 +1740,293 @@ BLOCO 5: boot
 	});
 
 /*----------------------------------------------------------------------------*/
-	function wd_array_numeric(array) { /* define um array numérico, se houver, outros valores ficam nulos, erro retorna nulo */
-		if (wd_vtype(array).type !== "array" || array.length === 0) return null;
-		var list = [];
-		for (var i = 0; i < array.length; i++) {
-			var vtype = wd_vtype(array[i]);
-			if (wd_finite(vtype.value)) list.push(vtype.value);
-			else list.push(null);
+
+
+
+
+
+
+
+/*----------------------------------------------------------------------------*/
+	function wd_coord_adjust(x, y, z) { /* retorna pares de coordenadas numéricas */
+	  var coord = {x: [], y: [], z: [], length: 0};
+    /* checando se argumentos são arrays (x é obrigatório) */
+    if (wd_vtype(x).type !== "array") return null;
+    if (wd_vtype(y).type !== "array") y = null;
+    if (wd_vtype(z).type !== "array") z = null;
+
+		/* verificando conteúdo (deve ser numérico */
+		var n = x.length;
+		if (y !== null && y.length < n) n = y.length;
+		if (z !== null && z.length < n) n = z.length;
+		for (var i = 0; i < n; i++) {
+		  var xtype = wd_vtype(x[i]);
+		  var ytype = y === null ? null : wd_vtype(y[i]);
+		  var ztype = z === null ? null : wd_vtype(z[i]);
+		  if (xtype.type !== "number" || !wd_finite(xtype.value))
+		    continue;
+		  if (y !== null && (ytype.type !== "number" || !wd_finite(ytype.value)))
+		    continue;
+		  if (z !== null && (ztype.type !== "number" || !wd_finite(ztype.value)))
+		    continue;
+
+      coord.x.push(xtype.value);
+      if (y !== null) coord.y.push(ytype.value);
+      if (z !== null) coord.z.push(ztype.value);
+      coord.length++;
 		}
-		return wd_array_del(list, [null]).length === 0 ? null : list;
+
+		/* definindo valor final */
+		if (y === null) coord.y = null;
+		if (z === null) coord.z = null;
+		return coord.length === 0 ? null : coord;
 	}
 
-	function wd_coord_adjust(x, y) { /* retorna pares de coordenadas numéricas */
-		var list = {x: [], y: [], length: 0};
-		/* x é obrigatório ser diferente de nulo */
-		x = wd_array_numeric(x);
-		if (x === null) return null;
-		y = wd_array_numeric(y);
-		if (y === null) {
-			list.x      = wd_array_del(x, [null]);
-			list.y      = null;
-			list.length = list.x.length
-			return list
-		}
-		/* obtendo as coordenadas */
-		var loop = x.length > y.length ? y.length : x.length;
-		for (var i = 0; i < loop; i++) {
-			if (x[i] === null || y[i] === null) continue;
-			list.x.push(x[i]);
-			list.y.push(y[i]);
-			list.length++;
-		}
-		return list.length === 0 ? null : list;
-	}
+/*----------------------------------------------------------------------------*/
+	function wd_coord_sum(x, nx, y, ny, z, nz ) { /* retorna a soma de coordernadas */
+		var coord = wd_coord_adjust(x, y, z);
+		if (coord === null) return null;
+		x = coord.x;
+		y = coord.y;
+		z = coord.z;
 
-	function wd_coord_sum(x, nx, y, ny ) { /* retorna a soma de coordernadas */
-		var list = wd_coord_adjust(x, y);
-		if (list === null) return null;
-		x = list.x;
-		y = list.y;
-
+/*----------------------------------------------------------------------------*/
 		var data = {value: 0, length: 0};
-		for (var i = 0; i < list.length; i++) {
-			if (nx < 0 && x[i] === 0) continue;               /*divisão por zero*/
-			if (y !== null && ny < 0 && y[i] === 0) continue; /*divisão por zero*/
-			var val1 = Math.pow(x[i], nx);
-			var val2 = y === null ? 1 : Math.pow(y[i], ny);
-			data.value += val1 * val2;
+		for (var i = 0; i < coord.length; i++) {
+			var vx = Math.pow(x[i],nx);
+			var vy = y === null ? 1 : Math.pow(y[i],ny);
+			var vz = z === null ? 1 : Math.pow(z[i],nz);
+			if (!wd_finite(vx) || !wd_finite(vy) || !wd_finite(vz)) continue;
+			data.value += vx * vy * vz;
 			data.length++;
 		}
-		return data;
+		return data.length === 0 ? null : data;
 	}
 
+/*----------------------------------------------------------------------------*/
+	function wd_coord_product(x, nx) { /* retorna o produto da coordernada */
+		var coord = wd_coord_adjust(x);
+		if (coord === null) return null;
+		x = coord.x;
+		var data = {value: 1, length: 0};
+		for (var i = 0; i < coord.length; i++) {
+			var vx = Math.pow(x[i], nx);
+			if (vx === 0 || !wd_finite(vx)) continue;
+			data.value = data.value * vx;
+			data.length++;
+		}
+		return data.length === 0 ? null : data;
+	}
+
+/*----------------------------------------------------------------------------*/
 	function wd_coord_limits(x) { /* retorna os maiores e menores valores da lista */
-		x = wd_array_numeric(x);
-		if (x === null) return null;
-		x = wd_array_sort(wd_array_del(x, [null]));
+		var coord = wd_coord_adjust(x);
+		if (coord === null) return null;
+		x = wd_array_sort(coord.x);
 		return {min: x[0], max: x.reverse()[0]};
 	}
 
+/*----------------------------------------------------------------------------*/
 	function wd_coord_avg(x) { /* retorna a média dos valores da lista */
 		var sum = wd_coord_sum(x, 1);
 		if (sum === null) return null
 		return sum.value/sum.length;
 	}
 
+/*----------------------------------------------------------------------------*/
 	function wd_coord_med(x) { /* retorna a mediana dos valores da lista */
-		x = wd_array_numeric(x);
-		if (x === null) return null
-		x = wd_array_sort(wd_array_del(x, [null]));
+		var coord = wd_coord_adjust(x);
+		if (coord === null) return null
+		x = wd_array_sort(coord.x);
 		var l = x.length
 		return l%2 === 0 ? (x[l/2]+x[(l/2)-1])/2 : x[(l-1)/2]
 	}
 
-	function wd_coord_har(x) { /* retorna a mediana dos valores da lista */
-		var list = wd_coord_adjust(x);
-		if (list === null) return null
-		var harm = this._SUM(this.x, -1);
-		return (harm === 0 || harm === null) ? null : this.l/harm;
+/*----------------------------------------------------------------------------*/
+	function wd_coord_harm(x) { /* retorna a média harmonica */
+		var harm = wd_coord_sum(x, -1);
+		return (harm === null) ? null : harm.length/harm.value;
+	}
+
+/*----------------------------------------------------------------------------*/
+  function wd_coord_geo(x) { /* retorna a média geométrica */
+		var geo = wd_coord_product(x, 1);
+		return (geo === null) ? null : Math.pow(geo.value, 1/geo.length);
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_coord_deviation(x, ref) { /* retorna o desvio padrão entre listas ou uma referência */
+		/* checando argumentos */
+		var vref  = wd_vtype(ref);
+		var coord = wd_coord_adjust(x, (vref.type === "array" ? ref : null));
+		if (coord === null) return null;
+
+		if (vref.type === "number") {
+			if (!wd_finite(vref.value)) return null;
+			ref = vref.value;
+			x = coord.x;
+		} else if (vref.type === "array") {
+			x   = coord.x;
+			ref = coord.y;
+		} else return null;
+
+		/* calculando */
+		var data = {value: 0, length: 0};
+		for (var i = 0; i < x.length; i++) {
+			var diff = x[i] - (vref.type === "array" ? ref[i] : ref);
+			var val = Math.pow(diff, 2);
+			if (!wd_finite(val)) continue;
+			data.value += val;
+			data.length++;
+		}
+		return data.length === 0 ? null : Math.sqrt(data.value/data.length);
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_coord_least_squares(x, y) { /* Método dos mínimos quadrados (obrigatório 2 coordenadas) */
+		var coord = wd_coord_adjust(x, y);
+		if (coord === null || coord.length < 2) return null;
+		x = coord.x;
+		y = coord.y;
+
+		var X  = wd_coord_sum(x, 1);
+		var Y  = wd_coord_sum(y, 1);
+		var X2 = wd_coord_sum(x, 2);
+		var XY = wd_coord_sum(x, 1, y, 1);
+		if ([X, Y, XY, X2].indexOf(null) >= 0) return null;
+		X  = X.value;
+		Y  = Y.value;
+		X2 = X2.value;
+		XY = XY.value;
+		var N    = coord.length;
+		var data = {};
+		data.a   = ((N * XY) - (X * Y)) / ((N * X2) - (X * X));
+		data.b   = ((Y) - (X * data.a)) / (N);
+		return data;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_coord_setter(x, f) { /* obtem uma nova coordenada mediante aplicação de uma função */
+		var data = [];
+		for (var i = 0; i < x.length; i++) {
+			try {var val = f(x[i]);} catch(e) {var val = null;}
+			data.push(wd_finite(val) ? val : null);
+		}
+		return data;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_coord_rmath(e, a, b, d) { /* define a forma numérica da função */
+		e = wd_replace_all(e, "a", wd_num_str(a));
+		e = wd_replace_all(e, "b", wd_num_str(b));
+		return e+" \u00B1 "+wd_num_str(d);
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_coord_rlinear(x, y) { /* regressão linear */
+		var coord = wd_coord_adjust(x, y);
+		if (coord === null) return null;
+		x = coord.x;
+		y = coord.y;
+		var val = wd_coord_least_squares(x, y);
+		if (val === null) return null;
+		var data = {};
+		data.e = "y = (a)x+(b)";
+		data.a = val.a;
+		data.b = val.b;
+		data.f = function(x) {return data.a*x + data.b;};
+		data.d = wd_coord_deviation(y, wd_coord_setter(x, data.f));
+		data.m = wd_coord_rmath(data.e, data.a, data.b, data.d);
+		return data;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_coord_rexponential(x, y) { /* regressão exponential */
+		var coord = wd_coord_adjust(x, y);
+		if (coord === null) return null;
+		x = coord.x;
+		y = coord.y;
+		var val = wd_coord_least_squares(x, wd_coord_setter(y, Math.log));
+		if (val === null) return null;
+		var data = {};
+		data.e = "y = (a)\u212F^(bx)";
+		data.a = Math.exp(val.b);
+		data.b = val.a;
+		data.f = function(x) {return data.a*Math.exp(data.b*x);};
+		data.d = wd_coord_deviation(y, wd_coord_setter(x, data.f));
+		data.m = wd_coord_rmath(data.e, data.a, data.b, data.d);
+		return data;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_coord_rgeometric(x, y) { /* regressão geométrica */
+		var coord = wd_coord_adjust(x, y);
+		if (coord === null) return null;
+		x = coord.x;
+		y = coord.y;
+		var val = wd_coord_least_squares(
+			wd_coord_setter(x, Math.log), wd_coord_setter(y, Math.log)
+		);
+		if (val === null) return null;
+		var data = {};
+		data.e = "y = (a)x^(b)";
+		data.a = Math.exp(val.b);
+		data.b = val.a;
+		data.f = function(x) {return data.a*Math.pow(x, data.b);};
+		data.d = wd_coord_deviation(y, wd_coord_setter(x, data.f));
+		data.m = wd_coord_rmath(data.e, data.a, data.b, data.d);
+		return data;
 	}
 
 
+
+/*----------------------------------------------------------------------------*/
 	function WDstatistics(x) {this.x = x}
 	Object.defineProperties(WDstatistics.prototype, {
-		sum: {get: function(){return wd_coord_sum(this.x, 1);}},
-		min: {get: function(){return wd_coord_limits(this.x).min;}},
-		max: {get: function(){return wd_coord_limits(this.x).max;}},
-		avg: {get: function(){return wd_coord_avg(this.x);}},
-		med: {get: function(){return wd_coord_med(this.x);}},
-		geo: {get: function(){return wd_coord_med(this.x);}},
-		har: {get: function(){return wd_coord_med(this.x);}},
+		sum:  {get: function(){return wd_coord_sum(this.x, 1).value;}},
+		min:  {get: function(){return wd_coord_limits(this.x).min;}},
+		max:  {get: function(){return wd_coord_limits(this.x).max;}},
+		avg:  {get: function(){return wd_coord_avg(this.x);}},
+		med:  {get: function(){return wd_coord_med(this.x);}},
+		geo:  {get: function(){return wd_coord_geo(this.x);}},
+		harm: {get: function(){return wd_coord_harm(this.x);}},
+		dev:  {value: function(n) {return wd_coord_deviation(this.x, this[n]);}}
 	});
+
+/*----------------------------------------------------------------------------*/
+	function WDanalysis(x, y) {
+		this.x = x;
+		this.y = y;
+	}
+	Object.defineProperties(WDanalysis.prototype, {
+		lin: {get: function(){return wd_coord_rlinear(this.x, this.y);}},
+		exp: {get: function(){return wd_coord_rexponential(this.x, this.y);}},
+		geo: {get: function(){return wd_coord_rgeometric(this.x, this.y);}},
+
+	});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1948,9 +2144,8 @@ BLOCO 5: boot
 		value: function(x, y) {
 			var info = {
 				statistics: new WDstatistics(this.valueOf()),
-				//statistics: new WDstatistics(this.cell(x)),
 				//compare:    new WDcompare(this.cell(x), this.cell(y)),
-				//analysis:   new WDanalysis(this.cell(x), this.cell(y)),
+				analysis:   new WDanalysis(x, y),
 			}
 			return info;
 		}
