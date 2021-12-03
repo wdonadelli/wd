@@ -2036,26 +2036,6 @@ BLOCO 5: boot
 	WDarray.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDarray},
 		type:        {value: "array"},
-
-
-
-		average: { /* remove itens repetidos */
-			get: function() {return wd_array_unique(this.valueOf());}
-		},
-		median: { /* remove itens repetidos */
-			get: function() {return wd_array_unique(this.valueOf());}
-		},
-		geometric: { /* remove itens repetidos */
-			get: function() {return wd_array_unique(this.valueOf());}
-		},
-		harmonic: { /* remove itens repetidos */
-			get: function() {return wd_array_unique(this.valueOf());}
-		},
-
-
-
-
-
 		unique: { /* remove itens repetidos */
 			get: function() {return wd_array_unique(this.valueOf());}
 		},
