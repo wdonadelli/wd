@@ -1,12 +1,7 @@
 /*----------------------------------------------------------------------------
-wd.js (v4.0.0)
-
-<wdonadelli@gmail.com>
-https://github.com/wdonadelli/wd
-------------------------------------------------------------------------------
 MIT License
 
-Copyright (c) 2019 Willian Donadelli
+Copyright (c) 2022 Willian Donadelli <wdonadelli@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -27,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.﻿
 ----------------------------------------------------------------------------*/
 
+/* wd.js (v4.0.0) | https://github.com/wdonadelli/wd */
+
 "use strict";
 
 var wd = (function() {
@@ -39,8 +36,9 @@ BLOCO 4: funções de atributos HTML
 BLOCO 5: boot
 ------------------------------------------------------------------------------/*
 
-/* BLOCO 1 */
-/*============================================================================*/
+/* == BLOCO 1 ================================================================*/
+
+/*----------------------------------------------------------------------------*/
 	var wd_version = "v4.0.0 2022-01-01";
 	/* Guarda informação do dispositivo (desktop, mobile...) */
 	var wd_device_controller = null;
@@ -772,6 +770,7 @@ BLOCO 5: boot
 		return obj.toLocaleString(undefined, value);
 	}
 
+/*----------------------------------------------------------------------------*/
 	function wd_date_size(m, y) { /* quantidade de dias no mês */
 				var list = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 				return (m === 2 && wd_is_leap(y) ? 1 : 0) + list[m - 1];
@@ -957,8 +956,349 @@ BLOCO 5: boot
 		return array;
 	}
 
+/*----------------------------------------------------------------------------*/
+	function wd_coord_adjust(x, y, z) { /* retorna pares de coordenadas numéricas */
+	  var coord = {x: [], y: [], z: [], length: 0};
+    /* checando se argumentos são arrays (x é obrigatório) */
+    if (wd_vtype(x).type !== "array") return null;
+    if (wd_vtype(y).type !== "array") y = null;
+    if (wd_vtype(z).type !== "array") z = null;
+
+		/* verificando conteúdo (deve ser numérico */
+		var n = x.length;
+		if (y !== null && y.length < n) n = y.length;
+		if (z !== null && z.length < n) n = z.length;
+		for (var i = 0; i < n; i++) {
+		  var xtype = wd_vtype(x[i]);
+		  var ytype = y === null ? null : wd_vtype(y[i]);
+		  var ztype = z === null ? null : wd_vtype(z[i]);
+		  if (!wd_finite(xtype.value)) continue;
+		  if (y !== null && !wd_finite(ytype.value)) continue;
+		  if (z !== null && !wd_finite(ztype.value)) continue;
+
+      coord.x.push(xtype.value);
+      if (y !== null) coord.y.push(ytype.value);
+      if (z !== null) coord.z.push(ztype.value);
+      coord.length++;
+		}
+
+		/* definindo valor final */
+		if (y === null) coord.y = null;
+		if (z === null) coord.z = null;
+		return coord.length === 0 ? null : coord;
+	}
 
 /*----------------------------------------------------------------------------*/
+	function wd_coord_sum(x, nx, y, ny, z, nz ) { /* retorna a soma de coordernadas */
+		var coord = wd_coord_adjust(x, y, z);
+		if (coord === null) return null;
+		x = coord.x;
+		y = coord.y;
+		z = coord.z;
+
+/*----------------------------------------------------------------------------*/
+		var data = {value: 0, length: 0};
+		for (var i = 0; i < coord.length; i++) {
+			var vx = Math.pow(x[i],nx);
+			var vy = y === null ? 1 : Math.pow(y[i],ny);
+			var vz = z === null ? 1 : Math.pow(z[i],nz);
+			if (!wd_finite(vx) || !wd_finite(vy) || !wd_finite(vz)) continue;
+			data.value += vx * vy * vz;
+			data.length++;
+		}
+		return data.length === 0 ? null : data;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_coord_product(x, nx) { /* retorna o produto da coordernada */
+		var coord = wd_coord_adjust(x);
+		if (coord === null) return null;
+		x = coord.x;
+		var data = {value: 1, length: 0};
+		for (var i = 0; i < coord.length; i++) {
+			var vx = Math.pow(x[i], nx);
+			if (vx === 0 || !wd_finite(vx)) continue;
+			data.value = data.value * vx;
+			data.length++;
+		}
+		return data.length === 0 ? null : data;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_coord_limits(x) { /* retorna os maiores e menores valores da lista */
+		var coord = wd_coord_adjust(x);
+		if (coord === null) return null;
+		x = wd_array_sort(coord.x);
+		return {min: x[0], max: x.reverse()[0]};
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_coord_avg(x) { /* retorna a média dos valores da lista */
+		var sum = wd_coord_sum(x, 1);
+		if (sum === null) return null
+		return sum.value/sum.length;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_coord_med(x) { /* retorna a mediana dos valores da lista */
+		var coord = wd_coord_adjust(x);
+		if (coord === null) return null
+		x = wd_array_sort(coord.x);
+		var l = x.length
+		return l%2 === 0 ? (x[l/2]+x[(l/2)-1])/2 : x[(l-1)/2]
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_coord_harm(x) { /* retorna a média harmonica */
+		var harm = wd_coord_sum(x, -1);
+		return (harm === null) ? null : harm.length/harm.value;
+	}
+
+/*----------------------------------------------------------------------------*/
+  function wd_coord_geo(x) { /* retorna a média geométrica */
+		var geo = wd_coord_product(x, 1);
+		return (geo === null) ? null : Math.pow(geo.value, 1/geo.length);
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_coord_deviation(x, ref) { /* retorna o desvio padrão entre listas ou uma referência */
+		/* checando argumentos */
+		var vref  = wd_vtype(ref);
+		var coord = wd_coord_adjust(x, (vref.type === "array" ? ref : null));
+		if (coord === null) return null;
+
+		if (vref.type === "number") {
+			if (!wd_finite(vref.value)) return null;
+			ref = vref.value;
+			x = coord.x;
+		} else if (vref.type === "array") {
+			x   = coord.x;
+			ref = coord.y;
+		} else return null;
+
+		/* calculando */
+		var data = {value: 0, length: 0};
+		for (var i = 0; i < x.length; i++) {
+			var diff = x[i] - (vref.type === "array" ? ref[i] : ref);
+			var val = Math.pow(diff, 2);
+			if (!wd_finite(val)) continue;
+			data.value += val;
+			data.length++;
+		}
+		return data.length === 0 ? null : Math.sqrt(data.value/data.length);
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_coord_least_squares(x, y) { /* Método dos mínimos quadrados (obrigatório 2 coordenadas) */
+		var coord = wd_coord_adjust(x, y);
+		if (coord === null || coord.length < 2) return null;
+		x = coord.x;
+		y = coord.y;
+
+		var X  = wd_coord_sum(x, 1);
+		var Y  = wd_coord_sum(y, 1);
+		var X2 = wd_coord_sum(x, 2);
+		var XY = wd_coord_sum(x, 1, y, 1);
+		if ([X, Y, XY, X2].indexOf(null) >= 0) return null;
+		X  = X.value;
+		Y  = Y.value;
+		X2 = X2.value;
+		XY = XY.value;
+		var N    = coord.length;
+		var data = {};
+		data.a   = ((N * XY) - (X * Y)) / ((N * X2) - (X * X));
+		data.b   = ((Y) - (X * data.a)) / (N);
+		return data;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_coord_setter(x, f) { /* obtem uma nova coordenada mediante aplicação de uma função */
+		var data = [];
+		for (var i = 0; i < x.length; i++) {
+			try {var val = f(x[i]);} catch(e) {var val = null;}
+			data.push(wd_finite(val) ? val : null);
+		}
+		return data;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_coord_rmath(e, a, b, d) { /* define a forma numérica da função */
+		e = wd_replace_all(e, "a", wd_num_str(a));
+		e = wd_replace_all(e, "b", wd_num_str(b));
+		return e+(d === 0 ? "" : " \u00B1 "+wd_num_str(d));
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_coord_rlinear(x, y) { /* regressão linear */
+		var coord = wd_coord_adjust(x, y);
+		if (coord === null) return null;
+		x = coord.x;
+		y = coord.y;
+		var val = wd_coord_least_squares(x, y);
+		if (val === null) return null;
+		var data = {};
+		data.e = "y = (a)x+(b)";
+		data.a = val.a;
+		data.b = val.b;
+		data.f = function(x) {return data.a*x + data.b;};
+		data.d = wd_coord_deviation(y, wd_coord_setter(x, data.f));
+		data.m = wd_coord_rmath(data.e, data.a, data.b, data.d);
+		return data;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_coord_rexponential(x, y) { /* regressão exponential */
+		var coord = wd_coord_adjust(x, y);
+		if (coord === null) return null;
+		x = coord.x;
+		y = coord.y;
+		var val = wd_coord_least_squares(x, wd_coord_setter(y, Math.log));
+		if (val === null) return null;
+		var data = {};
+		data.e = "y = (a)\u212F^(bx)";
+		data.a = Math.exp(val.b);
+		data.b = val.a;
+		data.f = function(x) {return data.a*Math.exp(data.b*x);};
+		data.d = wd_coord_deviation(y, wd_coord_setter(x, data.f));
+		data.m = wd_coord_rmath(data.e, data.a, data.b, data.d);
+		return data;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_coord_rgeometric(x, y) { /* regressão geométrica */
+		var coord = wd_coord_adjust(x, y);
+		if (coord === null) return null;
+		x = coord.x;
+		y = coord.y;
+		var val = wd_coord_least_squares(
+			wd_coord_setter(x, Math.log), wd_coord_setter(y, Math.log)
+		);
+		if (val === null) return null;
+		var data = {};
+		data.e = "y = (a)x^(b)";
+		data.a = Math.exp(val.b);
+		data.b = val.a;
+		data.f = function(x) {return data.a*Math.pow(x, data.b);};
+		data.d = wd_coord_deviation(y, wd_coord_setter(x, data.f));
+		data.m = wd_coord_rmath(data.e, data.a, data.b, data.d);
+		return data;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_coord_rsum(x, y) { /* área embaixo da reta que une as coordenadas */
+		var coord = wd_coord_adjust(x, y);
+		if (coord === null) return null;
+		x = coord.x;
+		y = coord.y;
+		/* -- integral ax+b = (yf+yi)(xf-xi)/2 -- */
+		var int = 0;
+		for (var i = 0; i < (coord.length - 1); i++)
+			int += (y[i+1]+y[i])*(x[i+1]-x[i])/2;
+
+		var data = {};
+		data.e = "\u03A3y\u0394x \u2248 b";
+		data.a = 0;
+		data.b = int;
+		data.f = function(z) {
+			var i = 0;
+			var n = null;
+			while (n === null && ++i !== coord.length)
+				if (z <= x[i]) n = i;
+			if (n === null) n = coord.length-1;
+			var line = wd_coord_rlinear([x[n-1], x[n]], [y[n-1], y[n]]);
+			return line === null ? null : line.f(z);
+		}
+		data.d = 0;
+		data.m = wd_coord_rmath(data.e, data.a, data.b, data.d);
+		return data;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_coord_ravg(x, y) { /* calcula a média da área embaixo das retas que ligam os pontos */
+		var sum = wd_coord_rsum(x, y);
+		if (sum === null) return null
+		var end = wd_coord_limits(x);
+		var avg = sum.b / (end.max - end.min);
+		var data = {};
+		data.e = "(\u03A3y\u0394x)/\u0394x \u2248 b";
+		data.a = 0;
+		data.b = avg;
+		data.f = function(x) {return data.b;};
+		data.d = 0;
+		data.m = wd_coord_rmath(data.e, data.a, data.b, data.d);
+		return data;
+	}
+
+/*----------------------------------------------------------------------------*/
+	//FIXME deixar essa função mais genérica
+	function wd_coord_continuous(xcoord, func, dev, delta) { /* retorna coordenadas (x,y) a partir de uma função de regressão */
+		var ends = wd_coord_limits(xcoord);
+		if (ends === null) return null;
+		if (wd_vtype(func).type !== "function") return null;
+		if (!wd_finite(dev))   dev = 0;
+		if (!wd_finite(delta)) delta = (ends.max - ends.min)/xcoords.length;
+		delta = Math.abs(delta);
+
+		/* obtendo amostra */
+		var x = [];
+		while (ends.min < ends.max) {
+			x.push(ends.min);
+			ends.min += delta;
+		}
+		x.push(ends.max);
+
+		/* coordenadas principais */
+		var data = {};
+		var y = wd_coord_setter(x, func)
+		var c = wd_coord_adjust(x, y);
+		if (c === null) return null;
+		data.main = {x: c.x, y: c.y};
+		/* coordenadas superiores e inferiores */
+		data.sup = null;
+		data.sub = null;
+		if (dev !== 0) {
+			y = wd_coord_setter(x, function(n) {return func(n)+dev;})
+			c = wd_coord_adjust(x, y);
+			if (c !== null) data.sup = {x: c.x, y: c.y};
+			y = wd_coord_setter(x, function(n) {return func(n)-dev;})
+			c = wd_coord_adjust(x, y);
+			if (c !== null) data.sub = {x: c.x, y: c.y};
+		}
+		return data;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_coord_compare(x, y) {
+		if (wd_vtype(x).type !== "array" || wd_vtype(y).type !== "array")
+			return null;
+		/* organizando dados */
+		var data = {};
+		var sum  = 0;
+		for (var i = 0; i < x.length; i++) {
+			if (i > (y.length-1)) break;
+			var vtype = wd_vtype(y[i]);
+			if (vtype.type !== "number") continue
+			var name = new String(x[i]).trim();
+			if (name === "") name = "?";
+			if (!(name in data)) {
+				data[name] = {
+					sum: vtype.value,
+					occ: 1,
+					avg: vtype.value,
+				};
+			} else {
+				data[name].sum += vtype.value;
+				data[name].occ++;
+				data[name].avg = data[name].sum/data[name].occ;
+			}
+			sum += vtype.value;
+		}
+		/* obtendo outros dados */
+		for (var name in data) {
+			data[name].per = sum === 0 ? 0 : data[name].sum/sum;
+		}
+		return data;
+	}
 
 
 
@@ -994,8 +1334,72 @@ BLOCO 5: boot
 		return x;
 	}
 
-/* BLOCO 2 */
-/*============================================================================*/
+/* == BLOCO 2 ================================================================*/
+
+/*----------------------------------------------------------------------------*/
+	function WDstatistics(x) {this.x = x}
+	Object.defineProperties(WDstatistics.prototype, {
+		sum:  {get: function(){return wd_coord_sum(this.x, 1).value;}},
+		min:  {get: function(){return wd_coord_limits(this.x).min;}},
+		max:  {get: function(){return wd_coord_limits(this.x).max;}},
+		avg:  {get: function(){return wd_coord_avg(this.x);}},
+		med:  {get: function(){return wd_coord_med(this.x);}},
+		geo:  {get: function(){return wd_coord_geo(this.x);}},
+		harm: {get: function(){return wd_coord_harm(this.x);}},
+		dev:  {value: function(n) {return wd_coord_deviation(this.x, this[n]);}}
+	});
+
+/*----------------------------------------------------------------------------*/
+	function WDanalysis(x, y) {
+		this.x = x;
+		this.y = y;
+	}
+	Object.defineProperties(WDanalysis.prototype, {
+		lin:  {get: function(){return wd_coord_rlinear(this.x, this.y);}},
+		exp:  {get: function(){return wd_coord_rexponential(this.x, this.y);}},
+		geo:  {get: function(){return wd_coord_rgeometric(this.x, this.y);}},
+		sum:  {get: function(){return wd_coord_rsum(this.x, this.y);}},
+		avg:  {get: function(){return wd_coord_ravg(this.x, this.y);}},
+		cont: {value: function(reg, d) {
+			reg = this[reg];
+			return reg === null ? null : wd_coord_continuous(this.x, reg.f, reg.d, d);
+		}}
+	});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 	function WDrequest(input) {
 		if (!(this instanceof WDrequest)) return new WDrequest(input);
@@ -1331,9 +1735,9 @@ BLOCO 5: boot
 		return;
 	}
 
-/* BLOCO 3 */
-/*============================================================================*/
+/* == BLOCO 3 ================================================================*/
 
+/*----------------------------------------------------------------------------*/
 	function WDmain(value) {
 		Object.defineProperties(this, {
 			_value:  {value: value, writable: true}
@@ -1747,263 +2151,554 @@ BLOCO 5: boot
 
 
 
+
 /*----------------------------------------------------------------------------*/
-	function wd_coord_adjust(x, y, z) { /* retorna pares de coordenadas numéricas */
-	  var coord = {x: [], y: [], z: [], length: 0};
-    /* checando se argumentos são arrays (x é obrigatório) */
-    if (wd_vtype(x).type !== "array") return null;
-    if (wd_vtype(y).type !== "array") y = null;
-    if (wd_vtype(z).type !== "array") z = null;
+	function wd_svg_create(type, attr) { /* cria elementos SVG genéricos com medidas relativas */
+		if (attr === undefined) attr = {};
+		/* Propriedades a serem definidas em porcentagem */
+		var ref  = [
+			"x", "y", "x1", "x2", "y1", "y2", "height", "width", "cx", "cy", "r", "dx", "dy"
+		];
 
-		/* verificando conteúdo (deve ser numérico */
-		var n = x.length;
-		if (y !== null && y.length < n) n = y.length;
-		if (z !== null && z.length < n) n = z.length;
-		for (var i = 0; i < n; i++) {
-		  var xtype = wd_vtype(x[i]);
-		  var ytype = y === null ? null : wd_vtype(y[i]);
-		  var ztype = z === null ? null : wd_vtype(z[i]);
-		  if (xtype.type !== "number" || !wd_finite(xtype.value))
-		    continue;
-		  if (y !== null && (ytype.type !== "number" || !wd_finite(ytype.value)))
-		    continue;
-		  if (z !== null && (ztype.type !== "number" || !wd_finite(ztype.value)))
-		    continue;
+		var elem = document.createElementNS("http://www.w3.org/2000/svg", type);
 
-      coord.x.push(xtype.value);
-      if (y !== null) coord.y.push(ytype.value);
-      if (z !== null) coord.z.push(ztype.value);
-      coord.length++;
+		for (var i in attr) {/* definindo atributos */
+			var val = attr[i];
+			if (i === "tspan" || i === "title") {/* texto ou dicas */
+				var info = wd_svg_create(i);
+				info.textContent = val;
+				elem.appendChild(info);
+			} else { /* atributos */
+				if (ref.indexOf(i) >= 0 && wd_finite(val))
+					val = new String(val).toString()+"%";
+				elem.setAttribute(i, val);
+			}
 		}
-
-		/* definindo valor final */
-		if (y === null) coord.y = null;
-		if (z === null) coord.z = null;
-		return coord.length === 0 ? null : coord;
+		return elem;
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_coord_sum(x, nx, y, ny, z, nz ) { /* retorna a soma de coordernadas */
-		var coord = wd_coord_adjust(x, y, z);
-		if (coord === null) return null;
-		x = coord.x;
-		y = coord.y;
-		z = coord.z;
-
-/*----------------------------------------------------------------------------*/
-		var data = {value: 0, length: 0};
-		for (var i = 0; i < coord.length; i++) {
-			var vx = Math.pow(x[i],nx);
-			var vy = y === null ? 1 : Math.pow(y[i],ny);
-			var vz = z === null ? 1 : Math.pow(z[i],nz);
-			if (!wd_finite(vx) || !wd_finite(vy) || !wd_finite(vz)) continue;
-			data.value += vx * vy * vz;
-			data.length++;
-		}
-		return data.length === 0 ? null : data;
+	function wd_svg_dots(cx, cy, r, title, color) { /* cria pontos: coordenada no centro */
+		if (color === undefined) color = "#000000";
+	 	return wd_svg_create("circle", {
+			cx: cx, cy: cy, r: r, fill: color, title: title
+		});
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_coord_product(x, nx) { /* retorna o produto da coordernada */
-		var coord = wd_coord_adjust(x);
-		if (coord === null) return null;
-		x = coord.x;
-		var data = {value: 1, length: 0};
-		for (var i = 0; i < coord.length; i++) {
-			var vx = Math.pow(x[i], nx);
-			if (vx === 0 || !wd_finite(vx)) continue;
-			data.value = data.value * vx;
-			data.length++;
-		}
-		return data.length === 0 ? null : data;
+	function wd_svg_line(x1, y1, x2, y2, width, title, color) { /* cria linhas: coordenadas no início e fim */
+		if (color === undefined) color = "#000000";
+		return wd_svg_create("line", {
+			x1: x1, y1: y1, x2: x2, y2: y2,
+			stroke: color,
+			"stroke-width":     width === 0 ? "1px" : width+"px",
+			"stroke-dasharray": width === 0 ? "1,5" : "0",
+			title: title
+		});
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_coord_limits(x) { /* retorna os maiores e menores valores da lista */
-		var coord = wd_coord_adjust(x);
-		if (coord === null) return null;
-		x = wd_array_sort(coord.x);
-		return {min: x[0], max: x.reverse()[0]};
+	function wd_svg_rect(x1, y1, x2, y2, title, color) { /* cria retângulos: coordenadas nos cantos opostos */
+		if (color === undefined) color = "#000000";
+		return wd_svg_create("rect", {
+			x:       x2 > x1 ? x1 : x2,
+			y:       y2 > y1 ? y1 : y2,
+			width:   x2 > x1 ? x2-x1 : x1-x2,
+			height:  y2 > y1 ? y2-y1 : y1-y2,
+			fill:    color,
+			title:   title,
+			opacity: 0.8,
+		});
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_coord_avg(x) { /* retorna a média dos valores da lista */
-		var sum = wd_coord_sum(x, 1);
-		if (sum === null) return null
-		return sum.value/sum.length;
-	}
-
-/*----------------------------------------------------------------------------*/
-	function wd_coord_med(x) { /* retorna a mediana dos valores da lista */
-		var coord = wd_coord_adjust(x);
-		if (coord === null) return null
-		x = wd_array_sort(coord.x);
-		var l = x.length
-		return l%2 === 0 ? (x[l/2]+x[(l/2)-1])/2 : x[(l-1)/2]
-	}
-
-/*----------------------------------------------------------------------------*/
-	function wd_coord_harm(x) { /* retorna a média harmonica */
-		var harm = wd_coord_sum(x, -1);
-		return (harm === null) ? null : harm.length/harm.value;
-	}
-
-/*----------------------------------------------------------------------------*/
-  function wd_coord_geo(x) { /* retorna a média geométrica */
-		var geo = wd_coord_product(x, 1);
-		return (geo === null) ? null : Math.pow(geo.value, 1/geo.length);
-	}
-
-/*----------------------------------------------------------------------------*/
-	function wd_coord_deviation(x, ref) { /* retorna o desvio padrão entre listas ou uma referência */
-		/* checando argumentos */
-		var vref  = wd_vtype(ref);
-		var coord = wd_coord_adjust(x, (vref.type === "array" ? ref : null));
-		if (coord === null) return null;
-
-		if (vref.type === "number") {
-			if (!wd_finite(vref.value)) return null;
-			ref = vref.value;
-			x = coord.x;
-		} else if (vref.type === "array") {
-			x   = coord.x;
-			ref = coord.y;
-		} else return null;
-
-		/* calculando */
-		var data = {value: 0, length: 0};
-		for (var i = 0; i < x.length; i++) {
-			var diff = x[i] - (vref.type === "array" ? ref[i] : ref);
-			var val = Math.pow(diff, 2);
-			if (!wd_finite(val)) continue;
-			data.value += val;
-			data.length++;
-		}
-		return data.length === 0 ? null : Math.sqrt(data.value/data.length);
-	}
-
-/*----------------------------------------------------------------------------*/
-	function wd_coord_least_squares(x, y) { /* Método dos mínimos quadrados (obrigatório 2 coordenadas) */
-		var coord = wd_coord_adjust(x, y);
-		if (coord === null || coord.length < 2) return null;
-		x = coord.x;
-		y = coord.y;
-
-		var X  = wd_coord_sum(x, 1);
-		var Y  = wd_coord_sum(y, 1);
-		var X2 = wd_coord_sum(x, 2);
-		var XY = wd_coord_sum(x, 1, y, 1);
-		if ([X, Y, XY, X2].indexOf(null) >= 0) return null;
-		X  = X.value;
-		Y  = Y.value;
-		X2 = X2.value;
-		XY = XY.value;
-		var N    = coord.length;
-		var data = {};
-		data.a   = ((N * XY) - (X * Y)) / ((N * X2) - (X * X));
-		data.b   = ((Y) - (X * data.a)) / (N);
-		return data;
-	}
-
-/*----------------------------------------------------------------------------*/
-	function wd_coord_setter(x, f) { /* obtem uma nova coordenada mediante aplicação de uma função */
-		var data = [];
-		for (var i = 0; i < x.length; i++) {
-			try {var val = f(x[i]);} catch(e) {var val = null;}
-			data.push(wd_finite(val) ? val : null);
-		}
-		return data;
-	}
-
-/*----------------------------------------------------------------------------*/
-	function wd_coord_rmath(e, a, b, d) { /* define a forma numérica da função */
-		e = wd_replace_all(e, "a", wd_num_str(a));
-		e = wd_replace_all(e, "b", wd_num_str(b));
-		return e+" \u00B1 "+wd_num_str(d);
-	}
-
-/*----------------------------------------------------------------------------*/
-	function wd_coord_rlinear(x, y) { /* regressão linear */
-		var coord = wd_coord_adjust(x, y);
-		if (coord === null) return null;
-		x = coord.x;
-		y = coord.y;
-		var val = wd_coord_least_squares(x, y);
-		if (val === null) return null;
-		var data = {};
-		data.e = "y = (a)x+(b)";
-		data.a = val.a;
-		data.b = val.b;
-		data.f = function(x) {return data.a*x + data.b;};
-		data.d = wd_coord_deviation(y, wd_coord_setter(x, data.f));
-		data.m = wd_coord_rmath(data.e, data.a, data.b, data.d);
-		return data;
-	}
-
-/*----------------------------------------------------------------------------*/
-	function wd_coord_rexponential(x, y) { /* regressão exponential */
-		var coord = wd_coord_adjust(x, y);
-		if (coord === null) return null;
-		x = coord.x;
-		y = coord.y;
-		var val = wd_coord_least_squares(x, wd_coord_setter(y, Math.log));
-		if (val === null) return null;
-		var data = {};
-		data.e = "y = (a)\u212F^(bx)";
-		data.a = Math.exp(val.b);
-		data.b = val.a;
-		data.f = function(x) {return data.a*Math.exp(data.b*x);};
-		data.d = wd_coord_deviation(y, wd_coord_setter(x, data.f));
-		data.m = wd_coord_rmath(data.e, data.a, data.b, data.d);
-		return data;
-	}
-
-/*----------------------------------------------------------------------------*/
-	function wd_coord_rgeometric(x, y) { /* regressão geométrica */
-		var coord = wd_coord_adjust(x, y);
-		if (coord === null) return null;
-		x = coord.x;
-		y = coord.y;
-		var val = wd_coord_least_squares(
-			wd_coord_setter(x, Math.log), wd_coord_setter(y, Math.log)
-		);
-		if (val === null) return null;
-		var data = {};
-		data.e = "y = (a)x^(b)";
-		data.a = Math.exp(val.b);
-		data.b = val.a;
-		data.f = function(x) {return data.a*Math.pow(x, data.b);};
-		data.d = wd_coord_deviation(y, wd_coord_setter(x, data.f));
-		data.m = wd_coord_rmath(data.e, data.a, data.b, data.d);
-		return data;
+	function wd_svg_label(x, y, text, point, vertical, color, bold) { /* cria textos: coordenadas na âncora (point) */
+		if (color === undefined) color = "#000000";
+		var vanchor = ["start", "middle", "end"];
+		var vbase   = ["auto", "middle", "hanging"];
+		var anchor  = {n: 1, ne: 2, e: 2, se: 2, s: 1, sw: 0, w: 0, nw: 0, c: 1};
+		var base    = {n: 2, ne: 2, e: 1, se: 0, s: 0, sw: 0, w: 1, nw: 2, c: 1};
+		point       = point in base ? point : "c" ;
+		return wd_svg_create("text", {
+			x: x, y: y,
+			fill: color,
+			"text-anchor": vanchor[anchor[point]],
+			"dominant-baseline": vbase[base[point]],
+			"font-size": "0.8em",
+			"font-family": "monospace",
+			"transform": vertical === true ? "rotate(270)" : "none",
+			"font-weight": bold === true ? "bold" : "normal",
+			tspan: text,
+		});
 	}
 
 
 
+
+
+
+
+
+
+
+
+
 /*----------------------------------------------------------------------------*/
-	function WDstatistics(x) {this.x = x}
-	Object.defineProperties(WDstatistics.prototype, {
-		sum:  {get: function(){return wd_coord_sum(this.x, 1).value;}},
-		min:  {get: function(){return wd_coord_limits(this.x).min;}},
-		max:  {get: function(){return wd_coord_limits(this.x).max;}},
-		avg:  {get: function(){return wd_coord_avg(this.x);}},
-		med:  {get: function(){return wd_coord_med(this.x);}},
-		geo:  {get: function(){return wd_coord_geo(this.x);}},
-		harm: {get: function(){return wd_coord_harm(this.x);}},
-		dev:  {value: function(n) {return wd_coord_deviation(this.x, this[n]);}}
+	function wdChart(box, title) {/*Objeto para criar gráficos*/
+		this.box     = box;
+		this.title   = title;
+		this.svg     = null;
+		this.xscale  = 1;
+		this.yscale  = 1;
+		this.color   = "#000000";
+		this.rlegend = 0;
+		this.tlegend = 0;
+		this.xmin    = Infinity;
+		this.xmax    = -Infinity;
+		this.ymin    = Infinity;
+		this.xmax    = -Infinity;
+		this.padding = {t: 0, r: 0, b: 0, l: 0};
+		this.data    = [];
+
+		this.box.className = "js-wd-chart-box";
+	};
+
+	Object.defineProperties(wdChart.prototype, {
+
+
+
+
+		ratio: {/* Relação altura/comprimento do gráfico (igual a da tela) *///FIXME: no celular fica esquisito (altura maior que largura)
+			value: window.screen.height > window.screen.width ? 1 : window.screen.height/window.screen.width
+		},
+		_MEASURES: {
+			set: function(x) {
+				for (var i in x) this._PADDING[i] = x[i];
+			},
+			get: function() {
+				var padd = this._PADDING;
+				return {
+					t: padd.t, r: 100-padd.r, b: 100-padd.b, l: padd.l,
+					w: 100-(padd.l+padd.r), h: 100-(padd.t+padd.b),
+					cx: padd.l+(100-(padd.l+padd.r))/2,
+					cy: padd.t+(100-(padd.t+padd.b))/2,
+
+				}
+			}
+		},
+		_COLOR: {/* Define e obtém a cor a partir de um inteiro (looping) */
+			set: function(n) {
+				var ref = n < 0 ? 0 : (2*n+1)%7+1; /* 2,4,6,1,3,5,7,2...*/
+				var bin = (ref < 2 ? "00" : (ref < 4 ? "0" : ""))+ref.toString(2);
+				var clr = bin.split("");
+				clr.forEach(function(e,i,a){a[i] = 153*Number(e);});
+				this._NDATA.c = "rgb("+clr[0]+","+clr[1]+","+clr[2]+")";
+			},
+			get: function() {return this._NDATA.c;}
+		},
+
+
+		_DELTA: {/* Devolve a menor partícula em X */
+			value: function(x) {
+				return (x <= 0 ? 1 : x)/this._SCALE.x;
+			}
+		},
+		_SET_ENDS: {/* Registra as extremidades */
+			value: function(axes, array) {
+				var data = WDstatistics(array);
+				var min  = data.min;
+				var max  = data.max;
+				if (min < this._ENDS[axes].min) this._ENDS[axes].min = min;
+				if (max > this._ENDS[axes].max) this._ENDS[axes].max = max;
+				return;
+			}
+		},
+		_BUILD_BOX: {/* Define as características do container do SVG (parent) */
+			value: function(input) {
+				var box = WD(input);
+				if (box.type !== "dom") return null;
+				WD(box.item(0)).set("innerHTML", "").css(null).style(null).style({
+					position: "relative", paddingTop: this._CONVERT(100 * this._RATIO)
+				});
+				input = box.item(0);
+				var child = input.children;
+				while (child.length > 0) input.removeChild(child[0]);
+				return input;
+			}
+		},
+
+
+
+		_CLEAR_SVG: {/* (re)define parâmetros iniciais e SVG */
+			value: function() {
+				this._COLOR = 0;
+				this._ENDS.x   = {min: Infinity, max: -Infinity};
+				this._ENDS.y   = {min: Infinity, max: -Infinity};
+				this._MEASURES = {t: 0, r: 0, b: 0, l: 0};
+				this._NDATA.r  = 0;
+				this._NDATA.t  = 0;
+				if (this._SVG !== null) this._BOX.removeChild(this._SVG);
+				this._SVG = this._BUILD_SVG("svg");
+				this._BOX.appendChild(this._SVG);
+				return;
+			}
+		},
+		_SET_SCALE: {/* Define o valor da escala horizontal e vertical */
+			value: function(axes) {
+				var msrs  = this._MEASURES;
+				var delta = this._ENDS[axes].max - this._ENDS[axes].min;
+				var ref = axes === "x" ? msrs.w : msrs.h;
+				this._SCALE[axes] = ref/delta;
+				return;
+			}
+		},
+		_TARGET: {/* Transforma coordanadas reais em relativas (%) */
+			value: function(x,y) {
+				if (!WD(x).finite || !WD(y).finite) return null;
+				x = x - this._ENDS.x.min;
+				y = y - this._ENDS.y.min;
+				var msrs = this._MEASURES;
+				return {
+					x: msrs.l + x*this._SCALE.x,
+					y: msrs.b - y*this._SCALE.y,
+				};
+			}
+		},
+		_ADD_LEGEND: { /* Adiciona Legendas (texto e funções)*/
+			value: function(text, top) {
+				if (text === null) return;
+				var ref = this._MEASURES;
+				var n = this._NDATA[(top ? "t" : "r")]++;
+				var x = top ? ref.l : ref.r;
+				var y = 4*n+ref.t;
+				this._BUILD_LABEL(x+1, y+1, (top ? "" : "\u25CF ")+text, "nw", false, true);
+			}
+		},
+		_SET_AREA: {
+			value: function(type, n, xlabel, ylabel) {/* define a área do gŕafico (n = linhas)*/
+				n = n === undefined ? 0 : n;
+				var config = {/* configurações da área do gráfico */
+					plan: {
+						width: {t: 1, r: 1, b: 1, l: 1, c: 0},
+						padd:  {t: 10, r: 20, b: 10, l: 15},
+					},
+					compare: {
+						width: {t: 0, r: 0, b: 0, l: 0, c: 0},
+						padd:  {t: 15, r: 20, b: 10, l: 10},
+					},
+				};
+
+				/* definindo valores iniciais */
+				var data       = config[type];
+				this._COLOR    = -1;
+				this._MEASURES = data.padd;
+				this._SET_SCALE("y");
+				this._SET_SCALE("x");
+				var ref  = this._MEASURES;
+				var dX   = ref.w/n;
+				var dY   = ref.h/n;
+				var grid = {x: [], y: []};
+
+				/* construindo linhas */
+				for (var i = 0; i < (n+1); i++) {
+					var hRef = data.width[i === 0 ? "b" : (i === n ? "t" : "c")];
+					var vRef = data.width[i === 0 ? "l" : (i === n ? "r" : "c")];
+					var val = {
+						h: {x1: ref.l, x2: ref.r, y1: ref.t+(i*dY), y2: ref.t+(i*dY)},
+						v: {y1: ref.t, y2: ref.b, x1: ref.l+(i*dX), x2: ref.l+(i*dX)},
+					}
+					this._BUILD_LINE(val.h.x1, val.h.y1, val.h.x2, val.h.y2, "", hRef);
+					this._BUILD_LINE(val.v.x1, val.v.y1, val.v.x2, val.v.y2, "", vRef);
+					grid.x.push({x: val.v.x1, y: val.v.y2, d: dX});
+					grid.y.unshift({x: val.h.x1, y: val.h.y1, d: dY});
+				}
+
+				/* construíndo título e labels */
+				this._BUILD_LABEL(ref.cx, ref.t/5, this._TITLE, "n", false, true);
+				this._BUILD_LABEL(ref.cx, ref.b+(100-ref.b)*3/4, xlabel, "s", false, true);
+				this._BUILD_LABEL(1/4*ref.l, ref.cy, ylabel, "s", true, true);
+
+				return grid;
+			}
+		},
+		_COMPARE: { /* desenha um gráfico de colunas comparativo */
+
+			value: function(xlabel, ylabel) {/*desenha gráfico comparativo de colunas*/
+				/* Obtendo dados básicos */
+				var data = {x: [], y: []};
+				for (var i = 0; i < this._DATA.length; i++) {
+					var item = this._DATA[i];
+					if (item.t === "deleted" || item.t !== "compare") continue;
+					for (var j = 0; j < item.x.length; j++) { /*adicionando dados*/
+						data.x.push(item.x[j]);
+						data.y.push(item.y[j]);
+					}
+				}
+				if (data.x.length === 0) return null; /*se vazio, retornar*
+
+				/* Definindo dados para o gráfico */
+				var object = WDcompare(data.x, data.y);
+				var ratio  = object.ratio;
+				var amount = object.amount;
+				var values = {l: [0], x: [], y: [], v: []};
+				for (var i in ratio) {
+					values.l.push(values.l.length);
+					values.x.push(i);
+					values.y.push(ratio[i]);
+					values.v.push(amount[i]);
+				}
+				/* definindo limites */
+				this._SET_ENDS("x", values.l);
+				this._SET_ENDS("y", values.y);
+				this._SET_ENDS("y", [0]); /*sempre exibir o ponto y = 0 */
+
+				/* Plotando o gráfico */
+				var grid = this._SET_AREA("compare", values.x.length, xlabel, ylabel); /*definindo grade do gŕafico*/
+				var sum = 0; /*ponto de referência do comparativo*/
+
+				for (var i = 0; i < values.x.length; i++) {/*construindo colunas*/
+					sum += values.v[i];
+					this._COLOR = i;
+					var trg1 = this._TARGET(i, 0);
+					var trg2 = this._TARGET(i+1, values.y[i]);
+					var trg3 = this._TARGET((i + 0.5), 0);
+					var pct  = this._LABEL_VALUE(values.y[i], true);
+					var val  = this._LABEL_VALUE(values.v[i]);
+					var ttl  = values.x[i]+": "+val+" ("+pct+")";
+					var pos  = values.y[i] < 0 ? -1 : 1;
+					this._BUILD_RECT(trg1.x, trg1.y, trg2.x, trg2.y, ttl);
+					this._ADD_LEGEND(values.x[i]);
+					/* posição: valor no eixo e porcentagem no topo/base */
+					this._BUILD_LABEL(trg3.x, trg2.y-pos, pct, pos < 0 ? "n" : "s", false, true);
+					this._COLOR = -1;
+					this._BUILD_LABEL(trg3.x, trg3.y+pos, val, pos < 0 ? "s" : "n", false);
+				}
+				/*desenhando eixo zero*/
+				var ref = this._MEASURES;
+				var zero = this._TARGET(0,0);
+				this._BUILD_LINE(ref.l, zero.y, ref.r, zero.y, "", 2);
+				this._BUILD_LABEL(99, 99, "\u03A3y = "+this._LABEL_VALUE(sum), "se", false, true);
+
+				return true;
+			}
+		},
+		clear: {
+
+			value: function() {/*apaga todos os dados do gráfico*/
+				this._CLEAR_SVG();
+				for (var i = 0; i < this._DATA.length; i++)
+					this._DATA[i].t = "deleted";
+				return true;
+			}
+		},
+		plot: {
+
+			value: function(xlabel, ylabel, compare) {/*desenha gráfico plano*/
+				this._CLEAR_SVG();
+				if (compare === true) return this._COMPARE(xlabel, ylabel);
+
+				/* Obtendo valores básicos para definir parâmetros dos gráficos */
+				var data = [];
+				for (var i = 0; i < this._DATA.length; i++) {
+					var item = this._DATA[i];
+					if (item.t === "deleted" || item.t === "compare") continue;
+					this._SET_ENDS("x", item.x);
+					if (WD(item.y).type === "array")
+						this._SET_ENDS("y", item.y);
+					if (item.t === "cols") /* exibir o ponto y = 0 */
+						this._SET_ENDS("y", [0]);
+					data.push(item);
+				}
+				if (data.length === 0) return null;
+				this._SET_SCALE("x");
+
+				/* definindo array y para funções */
+				for (var i = 0; i < data.length; i++) {
+					var item = data[i];
+					if (WD(item.y).type !== "function") continue;
+					var obj   = WDanalysis(item.x, item.y);
+					var prec  = this._DELTA(item.t === "cols" ? 0.1 : 1); /*precisão do desenho*/
+					var value = obj.continuous(prec);
+					if (value === null) {/*se erro: considerar sómentos os pontos*/
+						item.y = obj.y;
+					} else {
+						item.x = value.x;
+						item.y = value.y;
+					}
+					/* definindo novos limites */
+					this._SET_ENDS("x", item.x);
+					this._SET_ENDS("y", item.y);
+				}
+
+				/* Plotagem da área e das linhas */
+				var lines = 4;
+				var grid  = this._SET_AREA("plan", lines, xlabel, ylabel);
+
+				for (var i = 0; i < data.length; i++) {
+					var item = data[i];
+					this._COLOR = item.c;
+					this._ADD_LEGEND(item.l, item.f);
+
+					/*coordenadas*/
+					for (var j = 0; j < item.x.length; j++) { /*obterndo coordenadas*/
+						var title = "("+item.x[j]+", "+item.y[j]+")";
+						var trg1  = this._TARGET(item.x[j], item.y[j]);
+						var trg2  = this._TARGET(item.x[j+1], item.y[j+1]);
+						var zero  = this._TARGET(item.x[j], 0);
+
+						if (item.t === "dots")
+							this._BUILD_DOTS(trg1.x, trg1.y, title);
+						if (item.t === "dotted")
+							this._BUILD_DOTS(trg1.x, trg1.y, title, 1);
+						if (item.t === "line" && trg2 !== null)
+							this._BUILD_LINE(trg1.x, trg1.y, trg2.x, trg2.y, title, 2);
+						if (item.t === "cols" && trg2 !== null)
+							this._BUILD_RECT(trg1.x, (trg2.y+trg1.y)/2, trg2.x, zero.y, title, true);
+					}
+				}
+
+				/*valores dos eixos*/
+				this._COLOR = - 1;
+				var dX = (this._ENDS.x.max - this._ENDS.x.min) / lines;
+				var dY = (this._ENDS.y.max - this._ENDS.y.min) / lines;
+				for (var i = 0; i < grid.x.length; i++) {
+					var x  = this._LABEL_VALUE(this._ENDS.x.min + i*dX);
+					var y  = this._LABEL_VALUE(this._ENDS.y.min + i*dY);
+					var px = i === 0 ? "nw" : (i === lines ? "ne" : "n");
+					var py = i === 0 ? "se" : (i === lines ? "ne" : "e");
+					this._BUILD_LABEL(grid.x[i].x, grid.x[i].y+1, x, px);
+					this._BUILD_LABEL(grid.y[i].x-1, grid.y[i].y, y, py);
+				}
+				return true;
+			}
+		},
+
+
+
+
+
+
+
+
+
+
+		add: {/* Adiciona conjunto de dados para plotagem */
+			value: function(x, y, label, type) {
+				//FUNÇÃO | ANÁLISE | COORDENADAS | COMPARAÇÃO//
+
+				if (wd_vtype(y).type === "function") {
+					var data = wd_coord_adjust(x);
+					if (data === null) return null;
+					this.data.push(
+						{x: data.x, y: y, l: label, t: "line", c: color+1, f: true}
+					);
+					return true;
+				}
+
+				if (type === "compare") {
+					var data = wd_coord_compare(x, y);
+					if (data === null) return null;
+					this.data.push(//FIXME
+						{x: null, y: data, l: label, t: "compare", c: color+1, f: false}
+					);
+					return true;
+				}
+
+
+
+
+
+
+
+				var obj1 = WDanalysis(x,y);
+				var obj2 = WDcompare(x,y);
+
+
+
+
+
+				if (obj1.e && obj2.e) return null;
+				var color = this._DATA.length === 0 ? 0 : this._DATA[this._DATA.length-1].c; /*obter a última cor adicionada*/
+				/*dados sem condições de análise*/
+				if (!obj2.e) this._DATA.push(
+					{x: obj2.x, y: obj2.y, l: null, t: "compare", c: color+1, f: false}
+				);
+				if (obj1.e) return true;
+
+				/*plotar uma função*/
+				if (WD(y).type === "function") {
+					this._DATA.push(
+						{x: obj1.x, y: y, l: label, t: "line", c: color+1, f: false}
+					);
+					return true;
+				}
+				/*plotar somente coordenadas*/
+				if (!(analysis in obj1)) {
+					this._DATA.push(
+						{x: obj1.x, y: obj1.y, l: label, t: "dots", c: color+1, f: false}
+					);
+					this._DATA.push(
+						{x: obj1.x, y: obj1.y, l: null, t: "line", c: color+1, f: false}
+					);
+					return true;
+				}
+				/*verificar análise*/
+				var check = obj1[analysis];
+				if (check === null) return null;
+
+				/*referências*/
+				var ref = {
+					average:     {c1: "line", c2: "line"},
+					exponential: {c1: "dots", c2: "line"},
+					linear:      {c1: "dots", c2: "line"},
+					geometric:   {c1: "dots", c2: "line"},
+					sum:         {c1: "line", c2: "cols"},
+				};
+				/* plotando coordanadas*/
+				this._DATA.push(
+					{x: obj1.x, y: obj1.y, l: label, t: ref[analysis].c1, c: color+1, f: false}
+				);
+				/*plotando análise*/
+				var l = this._LABEL_ANALYSIS(check.a, check.b, check.d, check.e);
+				this._DATA.push(
+					{x: obj1.x, y: check.f, l: l, t: ref[analysis].c2, c: color+2, f: true}
+				);
+				/*plotando desvio padrão*/
+				if (check.d !== null) {
+					var f1 = function(x) {return check.f(x)+check.d;}
+					var f2 = function(x) {return check.f(x)-check.d;}
+					this._DATA.push(
+						{x: obj1.x, y: f1, l: null, t: "dotted", c: color+2, f: false}
+					);
+					this._DATA.push(
+						{x: obj1.x, y: f2, l: null, t: "dotted", c: color+2, f: false}
+					);
+				}
+				return true;
+			}
+		},
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	});
 
-/*----------------------------------------------------------------------------*/
-	function WDanalysis(x, y) {
-		this.x = x;
-		this.y = y;
-	}
-	Object.defineProperties(WDanalysis.prototype, {
-		lin: {get: function(){return wd_coord_rlinear(this.x, this.y);}},
-		exp: {get: function(){return wd_coord_rexponential(this.x, this.y);}},
-		geo: {get: function(){return wd_coord_rgeometric(this.x, this.y);}},
 
-	});
+
+
 
 
 
@@ -2124,6 +2819,7 @@ BLOCO 5: boot
 		value: function(x, y) {
 			var info = {
 				statistics: new WDstatistics(this.valueOf()),
+				compare:    wd_coord_compare(x, y),
 				//compare:    new WDcompare(this.cell(x), this.cell(y)),
 				analysis:   new WDanalysis(x, y),
 			}
@@ -2311,533 +3007,6 @@ BLOCO 5: boot
 				return 0;
 			}
 		}
-	});
-
-
-
-/*----------------------------------------------------------------------------*/
-//FIXME mudar wdChart, WDstatistics e WDanalysis para o BLOCO 2
-	function wdChart(box, title) {/*Objeto para criar gráficos*/
-		if (!(this instanceof wdChart)) return new wdChart(box, title);
-		Object.defineProperties(this, {/*atributos do objeto*/
-			/* Container HTML a acomodar o gráfico */
-			_BOX: {value: this._BUILD_BOX(box)},
-			/* Elemento SVG a ser plotado os dados */
-			//_SVG: {value: this._BUILD_SVG("svg"), writable: true},
-			_SVG: {value: null, writable: true},
-			/* Escala do gráfico (x/y) */
-			_SCALE: {value: {x: 1, y: 1}},
-			/* Guarda a cor e a sequência das legendas */
-			_NDATA: {value: {c: "#000000", r: 0, t: 0}},
-			/* Registra os valores máximos e mínimos dos eixos */
-			_ENDS: {value: {x: {min: Infinity, max: -Infinity}, y: {min: Infinity, max: -Infinity}}},
-			/* Margens internas do gráfico */
-			_PADDING: {value: {t: 0, r: 0, b: 0, l: 0}},
-			/* Registra o título do gráfico */
-			_TITLE: {value: title === undefined ? "" : title},
-			/* Registra a entrada de dados */
-			_DATA: {value: []},
-		});
-	};
-
-	Object.defineProperties(wdChart.prototype, {
-		constructor: {value: wdChart},
-		_RATIO: {/* Relação altura/comprimento do gráfico (igual a da tela) */
-			//FIXME: no celular fica esquisito (altura maior que largura)
-			value: window.screen.height > window.screen.width ? 1 : window.screen.height/window.screen.width
-		},
-		_MEASURES: {
-			set: function(x) {
-				for (var i in x) this._PADDING[i] = x[i];
-			},
-			get: function() {
-				var padd = this._PADDING;
-				return {
-					t: padd.t, r: 100-padd.r, b: 100-padd.b, l: padd.l,
-					w: 100-(padd.l+padd.r), h: 100-(padd.t+padd.b),
-					cx: padd.l+(100-(padd.l+padd.r))/2,
-					cy: padd.t+(100-(padd.t+padd.b))/2,
-
-				}
-			}
-		},
-		_COLOR: {/* Define e obtém a cor a partir de um inteiro (looping) */
-			set: function(n) {
-				var ref = n < 0 ? 0 : (2*n+1)%7+1; /* 2,4,6,1,3,5,7,2...*/
-				var bin = (ref < 2 ? "00" : (ref < 4 ? "0" : ""))+ref.toString(2);
-				var clr = bin.split("");
-				clr.forEach(function(e,i,a){a[i] = 153*Number(e);});
-				this._NDATA.c = "rgb("+clr[0]+","+clr[1]+","+clr[2]+")";
-			},
-			get: function() {return this._NDATA.c;}
-		},
-		_CONVERT: {/* Converte número em porcentagem: 58 => "58%" */
-			value: function(x) {return new String(x).toString()+"%";}
-		},
-		_DELTA: {/* Devolve a menor partícula em X */
-			value: function(x) {
-				return (x <= 0 ? 1 : x)/this._SCALE.x;
-			}
-		},
-		_SET_ENDS: {/* Registra as extremidades */
-			value: function(axes, array) {
-				var data = WDstatistics(array);
-				var min  = data.min;
-				var max  = data.max;
-				if (min < this._ENDS[axes].min) this._ENDS[axes].min = min;
-				if (max > this._ENDS[axes].max) this._ENDS[axes].max = max;
-				return;
-			}
-		},
-		_BUILD_BOX: {/* Define as características do container do SVG (parent) */
-			value: function(input) {
-				var box = WD(input);
-				if (box.type !== "dom") return null;
-				WD(box.item(0)).set("innerHTML", "").css(null).style(null).style({
-					position: "relative", paddingTop: this._CONVERT(100 * this._RATIO)
-				});
-				input = box.item(0);
-				var child = input.children;
-				while (child.length > 0) input.removeChild(child[0]);
-				return input;
-			}
-		},
-		_BUILD_SVG: {/* Cria e retorna elementos svg conforme atributos */
-			value: function(type, attr) {
-				if (this._BOX === null) return null;
-				if (attr === undefined) attr = {};
-				/* Propriedades a serem definidas em porcentagem */
-				var ref  = [
-					"x", "y", "x1", "x2", "y1", "y2", "height", "width",
-					"cx", "cy", "r", "dx", "dy"
-				];
-
-				var elem = document.createElementNS("http://www.w3.org/2000/svg", type);
-
-				for (var i in attr) {/* definindo atributos */
-					var val = attr[i];
-					if (i === "tspan" || i === "title") {/* texto ou dicas */
-						var info = this._BUILD_SVG(i);
-						info.textContent = val;
-						elem.appendChild(info);
-					} else { /*atributos*/
-						val = (ref.indexOf(i) >= 0 && WD(val).finite) ? this._CONVERT(val) : val;
-						elem.setAttribute(i, val);
-					}
-				}
-
-				if (type === "svg") /* para SVG principal apenas */
-					WD(elem).style({
-						height: "100%", width: "100%", position: "absolute",
-						top: "0", left: "0", bottom: "0", right: "0"
-					});
-
-				return elem;
-			}
-		},
-		_BUILD_DOTS: {/* Desenha um ponto: coordenadas do centro */
-			value: function(cx, cy, title, r) {
-				r = (r === undefined ? 3 : r)+"px";
-	 			var point = this._BUILD_SVG("circle", {
-					cx: cx, cy: cy, r: r, fill: this._COLOR, title: title
-				});
-				this._SVG.appendChild(point);
-				return point;
-			}
-		},
-		_BUILD_LINE: {/* Desenha uma linha: coordenadas inicial e final */
-			value: function(x1, y1, x2, y2, title, width) {
-				width = width === undefined ? 1 : width;
-				var line = this._BUILD_SVG("line", {
-					x1: x1, y1: y1, x2: x2, y2: y2,
-					stroke: this._COLOR,
-					"stroke-width":     width === 0 ? "1px" : width+"px",
-					"stroke-dasharray": width === 0 ? "1,5" : "0",
-					title: title
-				});
-				this._SVG.appendChild(line);
-				return line;
-			}
-		},
-		_BUILD_RECT: {/* Desenha uma retângulo: coordenadas inicial e final */
-			value: function(x1, y1, x2, y2, title, opacity) {
-				var rect = this._BUILD_SVG("rect", {
-					x:       x2 > x1 ? x1 : x2,
-					y:       y2 > y1 ? y1 : y2,
-					width:   x2 > x1 ? x2-x1 : x1-x2,
-					height:  y2 > y1 ? y2-y1 : y1-y2,
-					fill:    this._COLOR,
-					title:   title,
-					opacity: opacity === true ? 0.3 : 0.8,
-				});
-				this._SVG.appendChild(rect);
-				return rect;
-			}
-		},
-		_BUILD_LABEL: {/* Adiciona texto: coordenadas, texto, âncora, orientação */
-			value: function (x, y, text, point, vertical, bold) {
-				var vanchor = ["start", "middle", "end"];
-				var anchor  = {n: 1, ne: 2, e: 2, se: 2, s: 1, sw: 0, w: 0, nw: 0, c: 1};
-				var vbase   = ["auto", "middle", "hanging"];
-				var base    = {n: 2, ne: 2, e: 1, se: 0, s: 0, sw: 0, w: 1, nw: 2, c: 1};
-				point       = point in base ? point : "c" ;
-				var attr = {
-					x: x, y: y,
-					fill: this._COLOR,
-					"text-anchor": vanchor[anchor[point]],
-					"dominant-baseline": vbase[base[point]],
-					"font-size": "0.8em",
-					"font-family": "monospace",
-					tspan: text
-				};
-				 if (vertical === true) {
-				 	attr.transform = "rotate(270)";
-				 	attr.y = x/this._RATIO;
-				 	attr.x = -this._RATIO*y;
-				 }
-				 if (bold === true) attr["font-weight"] = "bold";
-				 var label = this._BUILD_SVG("text", attr);
-				 this._SVG.appendChild(label);
-				 return label;
-			}
-		},
-		_CLEAR_SVG: {/* (re)define parâmetros iniciais e SVG */
-			value: function() {
-				this._COLOR = 0;
-				this._ENDS.x   = {min: Infinity, max: -Infinity};
-				this._ENDS.y   = {min: Infinity, max: -Infinity};
-				this._MEASURES = {t: 0, r: 0, b: 0, l: 0};
-				this._NDATA.r  = 0;
-				this._NDATA.t  = 0;
-				if (this._SVG !== null) this._BOX.removeChild(this._SVG);
-				this._SVG = this._BUILD_SVG("svg");
-				this._BOX.appendChild(this._SVG);
-				return;
-			}
-		},
-		_SET_SCALE: {/* Define o valor da escala horizontal e vertical */
-			value: function(axes) {
-				var msrs  = this._MEASURES;
-				var delta = this._ENDS[axes].max - this._ENDS[axes].min;
-				var ref = axes === "x" ? msrs.w : msrs.h;
-				this._SCALE[axes] = ref/delta;
-				return;
-			}
-		},
-		_TARGET: {/* Transforma coordanadas reais em relativas (%) */
-			value: function(x,y) {
-				if (!WD(x).finite || !WD(y).finite) return null;
-				x = x - this._ENDS.x.min;
-				y = y - this._ENDS.y.min;
-				var msrs = this._MEASURES;
-				return {
-					x: msrs.l + x*this._SCALE.x,
-					y: msrs.b - y*this._SCALE.y,
-				};
-			}
-		},
-		_ADD_LEGEND: { /* Adiciona Legendas (texto e funções)*/
-			value: function(text, top) {
-				if (text === null) return;
-				var ref = this._MEASURES;
-				var n = this._NDATA[(top ? "t" : "r")]++;
-				var x = top ? ref.l : ref.r;
-				var y = 4*n+ref.t;
-				this._BUILD_LABEL(x+1, y+1, (top ? "" : "\u25CF ")+text, "nw", false, true);
-			}
-		},
-		_LABEL_VALUE: {/* Define a exibição de valores numéricos */
-			value: function(x, ratio) {
-				if (ratio === true) x = 100*x;
-				var end = ratio === true ? "%" : "";
-				var val = Math.abs(x);
-
-				if (val === 0) return "0"+end;
-				if ((1/val) > 1) {
-					if (val <= 1e-10) return x.toExponential(0)+end;
-					if (val <= 1e-3)  return x.toExponential(1)+end;
-					if (val <= 1e-2)  return WD(x).fixed(2,0)+end;
-				} else {
-					if (val >= 1e10) return x.toExponential(0)+end;
-					if (val >= 1e3)  return x.toExponential(1)+end;
-					if (val >= 1e2) return WD(x).fixed(0,0)+end;
-					if (val >= 1e1) return WD(x).fixed(1,0)+end;
-				}
-				return WD(x).fixed(2,0)+end;
-			}
-		},
-		_SET_AREA: {
-			value: function(type, n, xlabel, ylabel) {/* define a área do gŕafico (n = linhas)*/
-				n = n === undefined ? 0 : n;
-				var config = {/* configurações da área do gráfico */
-					plan: {
-						width: {t: 1, r: 1, b: 1, l: 1, c: 0},
-						padd:  {t: 10, r: 20, b: 10, l: 15},
-					},
-					compare: {
-						width: {t: 0, r: 0, b: 0, l: 0, c: 0},
-						padd:  {t: 15, r: 20, b: 10, l: 10},
-					},
-				};
-
-				/* definindo valores iniciais */
-				var data       = config[type];
-				this._COLOR    = -1;
-				this._MEASURES = data.padd;
-				this._SET_SCALE("y");
-				this._SET_SCALE("x");
-				var ref  = this._MEASURES;
-				var dX   = ref.w/n;
-				var dY   = ref.h/n;
-				var grid = {x: [], y: []};
-
-				/* construindo linhas */
-				for (var i = 0; i < (n+1); i++) {
-					var hRef = data.width[i === 0 ? "b" : (i === n ? "t" : "c")];
-					var vRef = data.width[i === 0 ? "l" : (i === n ? "r" : "c")];
-					var val = {
-						h: {x1: ref.l, x2: ref.r, y1: ref.t+(i*dY), y2: ref.t+(i*dY)},
-						v: {y1: ref.t, y2: ref.b, x1: ref.l+(i*dX), x2: ref.l+(i*dX)},
-					}
-					this._BUILD_LINE(val.h.x1, val.h.y1, val.h.x2, val.h.y2, "", hRef);
-					this._BUILD_LINE(val.v.x1, val.v.y1, val.v.x2, val.v.y2, "", vRef);
-					grid.x.push({x: val.v.x1, y: val.v.y2, d: dX});
-					grid.y.unshift({x: val.h.x1, y: val.h.y1, d: dY});
-				}
-
-				/* construíndo título e labels */
-				this._BUILD_LABEL(ref.cx, ref.t/5, this._TITLE, "n", false, true);
-				this._BUILD_LABEL(ref.cx, ref.b+(100-ref.b)*3/4, xlabel, "s", false, true);
-				this._BUILD_LABEL(1/4*ref.l, ref.cy, ylabel, "s", true, true);
-
-				return grid;
-			}
-		},
-		_COMPARE: { /* desenha um gráfico de colunas comparativo */
-	
-			value: function(xlabel, ylabel) {/*desenha gráfico comparativo de colunas*/
-				/* Obtendo dados básicos */
-				var data = {x: [], y: []};
-				for (var i = 0; i < this._DATA.length; i++) {
-					var item = this._DATA[i];
-					if (item.t === "deleted" || item.t !== "compare") continue;
-					for (var j = 0; j < item.x.length; j++) { /*adicionando dados*/
-						data.x.push(item.x[j]);
-						data.y.push(item.y[j]);
-					}
-				}
-				if (data.x.length === 0) return null; /*se vazio, retornar*
-
-				/* Definindo dados para o gráfico */
-				var object = WDcompare(data.x, data.y);
-				var ratio  = object.ratio;
-				var amount = object.amount;
-				var values = {l: [0], x: [], y: [], v: []};
-				for (var i in ratio) {
-					values.l.push(values.l.length);
-					values.x.push(i);
-					values.y.push(ratio[i]);
-					values.v.push(amount[i]);
-				}
-				/* definindo limites */
-				this._SET_ENDS("x", values.l);
-				this._SET_ENDS("y", values.y);
-				this._SET_ENDS("y", [0]); /*sempre exibir o ponto y = 0 */
-
-				/* Plotando o gráfico */
-				var grid = this._SET_AREA("compare", values.x.length, xlabel, ylabel); /*definindo grade do gŕafico*/
-				var sum = 0; /*ponto de referência do comparativo*/
-
-				for (var i = 0; i < values.x.length; i++) {/*construindo colunas*/
-					sum += values.v[i];
-					this._COLOR = i;
-					var trg1 = this._TARGET(i, 0);
-					var trg2 = this._TARGET(i+1, values.y[i]);
-					var trg3 = this._TARGET((i + 0.5), 0);
-					var pct  = this._LABEL_VALUE(values.y[i], true);
-					var val  = this._LABEL_VALUE(values.v[i]);
-					var ttl  = values.x[i]+": "+val+" ("+pct+")";
-					var pos  = values.y[i] < 0 ? -1 : 1;
-					this._BUILD_RECT(trg1.x, trg1.y, trg2.x, trg2.y, ttl);
-					this._ADD_LEGEND(values.x[i]);
-					/* posição: valor no eixo e porcentagem no topo/base */
-					this._BUILD_LABEL(trg3.x, trg2.y-pos, pct, pos < 0 ? "n" : "s", false, true);
-					this._COLOR = -1;
-					this._BUILD_LABEL(trg3.x, trg3.y+pos, val, pos < 0 ? "s" : "n", false);
-				}
-				/*desenhando eixo zero*/
-				var ref = this._MEASURES;
-				var zero = this._TARGET(0,0);
-				this._BUILD_LINE(ref.l, zero.y, ref.r, zero.y, "", 2);
-				this._BUILD_LABEL(99, 99, "\u03A3y = "+this._LABEL_VALUE(sum), "se", false, true);
-
-				return true;
-			}
-		},
-		_LABEL_ANALYSIS: {
-			value: function(a, b, d, e) {
-				d = d === null ? "" : " \u00B1 "+this._LABEL_VALUE(d);
-				a = a === null ? "" : this._LABEL_VALUE(a);
-				b = b === null ? "" : this._LABEL_VALUE(b);
-				return e.replace("a", a).replace("b", b)+d;
-			}
-		},
-		add: {/* Adiciona conjunto de dados para plotagem */
-	
-			value: function(x, y, label, analysis) {
-				/*verificando dados*/
-				var obj1 = WDanalysis(x,y);
-				var obj2 = WDcompare(x,y);
-				if (obj1.e && obj2.e) return null;
-				var color = this._DATA.length === 0 ? 0 : this._DATA[this._DATA.length-1].c; /*obter a última cor adicionada*/
-				/*dados sem condições de análise*/
-				if (!obj2.e) this._DATA.push(
-					{x: obj2.x, y: obj2.y, l: null, t: "compare", c: color+1, f: false}
-				);
-				if (obj1.e) return true;
-
-				/*plotar uma função*/
-				if (WD(y).type === "function") {
-					this._DATA.push(
-						{x: obj1.x, y: y, l: label, t: "line", c: color+1, f: false}
-					);
-					return true;
-				}
-				/*plotar somente coordenadas*/
-				if (!(analysis in obj1)) {
-					this._DATA.push(
-						{x: obj1.x, y: obj1.y, l: label, t: "dots", c: color+1, f: false}
-					);
-					this._DATA.push(
-						{x: obj1.x, y: obj1.y, l: null, t: "line", c: color+1, f: false}
-					);
-					return true;
-				}
-				/*verificar análise*/
-				var check = obj1[analysis];
-				if (check === null) return null;
-
-				/*referências*/
-				var ref = {
-					average:     {c1: "line", c2: "line"},
-					exponential: {c1: "dots", c2: "line"},
-					linear:      {c1: "dots", c2: "line"},
-					geometric:   {c1: "dots", c2: "line"},
-					sum:         {c1: "line", c2: "cols"},
-				};
-				/* plotando coordanadas*/
-				this._DATA.push(
-					{x: obj1.x, y: obj1.y, l: label, t: ref[analysis].c1, c: color+1, f: false}
-				);
-				/*plotando análise*/
-				var l = this._LABEL_ANALYSIS(check.a, check.b, check.d, check.e);
-				this._DATA.push(
-					{x: obj1.x, y: check.f, l: l, t: ref[analysis].c2, c: color+2, f: true}
-				);
-				/*plotando desvio padrão*/
-				if (check.d !== null) {
-					var f1 = function(x) {return check.f(x)+check.d;}
-					var f2 = function(x) {return check.f(x)-check.d;}
-					this._DATA.push(
-						{x: obj1.x, y: f1, l: null, t: "dotted", c: color+2, f: false}
-					);
-					this._DATA.push(
-						{x: obj1.x, y: f2, l: null, t: "dotted", c: color+2, f: false}
-					);
-				}
-				return true;
-			}
-		},
-		clear: {
-	
-			value: function() {/*apaga todos os dados do gráfico*/
-				this._CLEAR_SVG();
-				for (var i = 0; i < this._DATA.length; i++)
-					this._DATA[i].t = "deleted";
-				return true;
-			}
-		},
-		plot: {
-	
-			value: function(xlabel, ylabel, compare) {/*desenha gráfico plano*/
-				this._CLEAR_SVG();
-				if (compare === true) return this._COMPARE(xlabel, ylabel);
-
-				/* Obtendo valores básicos para definir parâmetros dos gráficos */
-				var data = [];
-				for (var i = 0; i < this._DATA.length; i++) {
-					var item = this._DATA[i];
-					if (item.t === "deleted" || item.t === "compare") continue;
-					this._SET_ENDS("x", item.x);
-					if (WD(item.y).type === "array")
-						this._SET_ENDS("y", item.y);
-					if (item.t === "cols") /* exibir o ponto y = 0 */
-						this._SET_ENDS("y", [0]);
-					data.push(item);
-				}
-				if (data.length === 0) return null;
-				this._SET_SCALE("x");
-
-				/* definindo array y para funções */
-				for (var i = 0; i < data.length; i++) {
-					var item = data[i];
-					if (WD(item.y).type !== "function") continue;
-					var obj   = WDanalysis(item.x, item.y);
-					var prec  = this._DELTA(item.t === "cols" ? 0.1 : 1); /*precisão do desenho*/
-					var value = obj.continuous(prec);
-					if (value === null) {/*se erro: considerar sómentos os pontos*/
-						item.y = obj.y;
-					} else {
-						item.x = value.x;
-						item.y = value.y;
-					}
-					/* definindo novos limites */
-					this._SET_ENDS("x", item.x);
-					this._SET_ENDS("y", item.y);
-				}
-
-				/* Plotagem da área e das linhas */
-				var lines = 4;
-				var grid  = this._SET_AREA("plan", lines, xlabel, ylabel);
-
-				for (var i = 0; i < data.length; i++) {
-					var item = data[i];
-					this._COLOR = item.c;
-					this._ADD_LEGEND(item.l, item.f);
-
-					/*coordenadas*/
-					for (var j = 0; j < item.x.length; j++) { /*obterndo coordenadas*/
-						var title = "("+item.x[j]+", "+item.y[j]+")";
-						var trg1  = this._TARGET(item.x[j], item.y[j]);
-						var trg2  = this._TARGET(item.x[j+1], item.y[j+1]);
-						var zero  = this._TARGET(item.x[j], 0);
-
-						if (item.t === "dots")
-							this._BUILD_DOTS(trg1.x, trg1.y, title);
-						if (item.t === "dotted")
-							this._BUILD_DOTS(trg1.x, trg1.y, title, 1);
-						if (item.t === "line" && trg2 !== null)
-							this._BUILD_LINE(trg1.x, trg1.y, trg2.x, trg2.y, title, 2);
-						if (item.t === "cols" && trg2 !== null)
-							this._BUILD_RECT(trg1.x, (trg2.y+trg1.y)/2, trg2.x, zero.y, title, true);
-					}
-				}
-
-				/*valores dos eixos*/
-				this._COLOR = - 1;
-				var dX = (this._ENDS.x.max - this._ENDS.x.min) / lines;
-				var dY = (this._ENDS.y.max - this._ENDS.y.min) / lines;
-				for (var i = 0; i < grid.x.length; i++) {
-					var x  = this._LABEL_VALUE(this._ENDS.x.min + i*dX);
-					var y  = this._LABEL_VALUE(this._ENDS.y.min + i*dY);
-					var px = i === 0 ? "nw" : (i === lines ? "ne" : "n");
-					var py = i === 0 ? "se" : (i === lines ? "ne" : "e");
-					this._BUILD_LABEL(grid.x[i].x, grid.x[i].y+1, x, px);
-					this._BUILD_LABEL(grid.y[i].x-1, grid.y[i].y, y, py);
-				}
-				return true;
-			}
-		},
 	});
 
 /*----------------------------------------------------------------------------*/
@@ -3342,11 +3511,9 @@ BLOCO 5: boot
 		loko: {value: wd_decimal}
 	});
 
+/* == BLOCO 4 ================================================================*/
 
-
-/* BLOCO 4 */
-/*============================================================================*/
-
+/*----------------------------------------------------------------------------*/
 	function data_wdLoad(e) {/*carrega HTML: data-wd-load=path{file}method{get|post}${form}*/
 		if (!("wdLoad" in e.dataset)) return;
 		var data   = WDdom.dataset(e, "wdLoad")[0];
