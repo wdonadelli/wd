@@ -1129,7 +1129,7 @@ BLOCO 5: boot
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_coord_rlinear(x, y) { /* regressão linear */
+	function wd_coord_rlin(x, y) { /* regressão linear */
 		var coord = wd_coord_adjust(x, y);
 		if (coord === null) return null;
 		x = coord.x;
@@ -1147,7 +1147,7 @@ BLOCO 5: boot
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_coord_rexponential(x, y) { /* regressão exponential */
+	function wd_coord_rexp(x, y) { /* regressão exponential */
 		var coord = wd_coord_adjust(x, y);
 		if (coord === null) return null;
 		x = coord.x;
@@ -1165,7 +1165,7 @@ BLOCO 5: boot
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_coord_rgeometric(x, y) { /* regressão geométrica */
+	function wd_coord_rgeo(x, y) { /* regressão geométrica */
 		var coord = wd_coord_adjust(x, y);
 		if (coord === null) return null;
 		x = coord.x;
@@ -1205,7 +1205,7 @@ BLOCO 5: boot
 			while (n === null && ++i !== coord.length)
 				if (z <= x[i]) n = i;
 			if (n === null) n = coord.length-1;
-			var line = wd_coord_rlinear([x[n-1], x[n]], [y[n-1], y[n]]);
+			var line = wd_coord_rlin([x[n-1], x[n]], [y[n-1], y[n]]);
 			return line === null ? null : line.f(z);
 		}
 		data.d = 0;
@@ -1230,12 +1230,11 @@ BLOCO 5: boot
 	}
 
 /*----------------------------------------------------------------------------*/
-	//FIXME deixar essa função mais genérica
-	function wd_coord_continuous(xcoord, func, dev, delta) { /* retorna coordenadas (x,y) a partir de uma função de regressão */
+	function wd_coord_continuous(xcoord, func, delta) { /* retorna coordenadas (x,y) a partir de uma função de regressão */
+		if (wd_vtype(func).type !== "function") return null;
 		var ends = wd_coord_limits(xcoord);
 		if (ends === null) return null;
-		if (wd_vtype(func).type !== "function") return null;
-		if (!wd_finite(dev))   dev = 0;
+		delta = wd_vtype(delta).value;
 		if (!wd_finite(delta)) delta = (ends.max - ends.min)/xcoords.length;
 		delta = Math.abs(delta);
 
@@ -1247,28 +1246,14 @@ BLOCO 5: boot
 		}
 		x.push(ends.max);
 
-		/* coordenadas principais */
-		var data = {};
 		var y = wd_coord_setter(x, func)
 		var c = wd_coord_adjust(x, y);
 		if (c === null) return null;
-		data.main = {x: c.x, y: c.y};
-		/* coordenadas superiores e inferiores */
-		data.sup = null;
-		data.sub = null;
-		if (dev !== 0) {
-			y = wd_coord_setter(x, function(n) {return func(n)+dev;})
-			c = wd_coord_adjust(x, y);
-			if (c !== null) data.sup = {x: c.x, y: c.y};
-			y = wd_coord_setter(x, function(n) {return func(n)-dev;})
-			c = wd_coord_adjust(x, y);
-			if (c !== null) data.sub = {x: c.x, y: c.y};
-		}
-		return data;
+		return {x: c.x, y: c.y};
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_coord_compare(x, y) {
+	function wd_coord_compare(x, y, list) {
 		if (wd_vtype(x).type !== "array" || wd_vtype(y).type !== "array")
 			return null;
 		/* organizando dados */
@@ -1282,20 +1267,28 @@ BLOCO 5: boot
 			if (name === "") name = "?";
 			if (!(name in data)) {
 				data[name] = {
-					sum: vtype.value,
+					amt: vtype.value,
 					occ: 1,
 					avg: vtype.value,
 				};
 			} else {
-				data[name].sum += vtype.value;
+				data[name].amt += vtype.value;
 				data[name].occ++;
-				data[name].avg = data[name].sum/data[name].occ;
+				data[name].avg = data[name].amt/data[name].occ;
 			}
 			sum += vtype.value;
 		}
 		/* obtendo outros dados */
 		for (var name in data) {
-			data[name].per = sum === 0 ? 0 : data[name].sum/sum;
+			data[name].per = sum === 0 ? 0 : data[name].amt/sum;
+		}
+		if (list === true) {
+			var obj = {sum: sum, x: [], amt: [], avg: [], occ:[], per: []};
+			for (var i in data) {
+				obj.x.push(i);
+				for (var j in data[i]) obj[j].push(data[i][j]);
+			}
+			return obj;
 		}
 		return data;
 	}
@@ -1355,9 +1348,9 @@ BLOCO 5: boot
 		this.y = y;
 	}
 	Object.defineProperties(WDanalysis.prototype, {
-		lin:  {get: function(){return wd_coord_rlinear(this.x, this.y);}},
-		exp:  {get: function(){return wd_coord_rexponential(this.x, this.y);}},
-		geo:  {get: function(){return wd_coord_rgeometric(this.x, this.y);}},
+		lin:  {get: function(){return wd_coord_rlin(this.x, this.y);}},
+		exp:  {get: function(){return wd_coord_rexp(this.x, this.y);}},
+		geo:  {get: function(){return wd_coord_rgeo(this.x, this.y);}},
 		sum:  {get: function(){return wd_coord_rsum(this.x, this.y);}},
 		avg:  {get: function(){return wd_coord_ravg(this.x, this.y);}},
 		cont: {value: function(reg, d) {
@@ -2244,57 +2237,67 @@ BLOCO 5: boot
 
 
 /*----------------------------------------------------------------------------*/
-	function wdChart(box, title) {/*Objeto para criar gráficos*/
-		this.box     = box;
-		this.title   = title;
-		this.svg     = null;
-		this.xscale  = 1;
-		this.yscale  = 1;
-		this.color   = "#000000";
-		this.rlegend = 0;
-		this.tlegend = 0;
-		this.xmin    = Infinity;
-		this.xmax    = -Infinity;
-		this.ymin    = Infinity;
-		this.xmax    = -Infinity;
-		this.padding = {t: 0, r: 0, b: 0, l: 0};
-		this.data    = [];
-
-		this.box.className = "js-wd-chart-box";
+	function WDchart(box, title) {/*Objeto para criar gráficos*/
+		this.box   = box;
+		this.title = title;
+		this.data  = [];
+		this.color = 0;
 	};
 
-	Object.defineProperties(wdChart.prototype, {
-
-
-
+	Object.defineProperties(WDchart.prototype, {
+		boot: {
+			value: function () {
+				this.svg    = null;
+				this.xscale = 1;
+				this.yscale = 1;
+				this.xmin   = Infinity;
+				this.xmax   = -Infinity;
+				this.ymin   = Infinity;
+				this.ymax   = -Infinity;
+				this.padd   = {t: 0, r: 0, b: 0, l: 0};
+				this.color = 0;
+				this.legend = 0;
+				this.print  = 0;
+				this.box.className = "";
+				this.box.style = null;
+				this.box.style.paddingTop = new String(100 * this._RATIO).toString()+"%";//TODO
+				this.box.style.position   = "relative";
+				var child = this.box.children;
+				while (child.length > 0) this.box.removeChild(child[0]);
+			}
+		},
 
 		ratio: {/* Relação altura/comprimento do gráfico (igual a da tela) *///FIXME: no celular fica esquisito (altura maior que largura)
 			value: window.screen.height > window.screen.width ? 1 : window.screen.height/window.screen.width
 		},
-		_MEASURES: {
+
+		space: { /* define e obtem os espaços do gráfico a partir do padding */
 			set: function(x) {
-				for (var i in x) this._PADDING[i] = x[i];
+				for (var i in x) this.padd[i] = x[i];
 			},
 			get: function() {
-				var padd = this._PADDING;
+				var padd = this.padd;
 				return {
-					t: padd.t, r: 100-padd.r, b: 100-padd.b, l: padd.l,
-					w: 100-(padd.l+padd.r), h: 100-(padd.t+padd.b),
+					t: padd.t,
+					r: 100-padd.r,
+					b: 100-padd.b,
+					l: padd.l,
+					w: 100-(padd.l+padd.r),
+					h: 100-(padd.t+padd.b),
 					cx: padd.l+(100-(padd.l+padd.r))/2,
 					cy: padd.t+(100-(padd.t+padd.b))/2,
 
 				}
 			}
 		},
-		_COLOR: {/* Define e obtém a cor a partir de um inteiro (looping) */
-			set: function(n) {
-				var ref = n < 0 ? 0 : (2*n+1)%7+1; /* 2,4,6,1,3,5,7,2...*/
-				var bin = (ref < 2 ? "00" : (ref < 4 ? "0" : ""))+ref.toString(2);
-				var clr = bin.split("");
-				clr.forEach(function(e,i,a){a[i] = 153*Number(e);});
-				this._NDATA.c = "rgb("+clr[0]+","+clr[1]+","+clr[2]+")";
-			},
-			get: function() {return this._NDATA.c;}
+		rgb: { /* retorna uma cor a partir de um número */
+			value: function(n) {
+				if (n === undefined) n = this.color;
+				var ref = n <= 0 ? 0 : (2*n+1)%7+1; /* 2,4,6,1,3,5,7,2...*/
+				var val = wd_num_fixed(ref, 0, 3).split("");
+				val.forEach(function(e,i,a){a[i] = 153*Number(e);});
+				return "rgb("+val[0]+","+val[1]+","+val[2]+")";
+			}
 		},
 
 
@@ -2303,55 +2306,7 @@ BLOCO 5: boot
 				return (x <= 0 ? 1 : x)/this._SCALE.x;
 			}
 		},
-		_SET_ENDS: {/* Registra as extremidades */
-			value: function(axes, array) {
-				var data = WDstatistics(array);
-				var min  = data.min;
-				var max  = data.max;
-				if (min < this._ENDS[axes].min) this._ENDS[axes].min = min;
-				if (max > this._ENDS[axes].max) this._ENDS[axes].max = max;
-				return;
-			}
-		},
-		_BUILD_BOX: {/* Define as características do container do SVG (parent) */
-			value: function(input) {
-				var box = WD(input);
-				if (box.type !== "dom") return null;
-				WD(box.item(0)).set("innerHTML", "").css(null).style(null).style({
-					position: "relative", paddingTop: this._CONVERT(100 * this._RATIO)
-				});
-				input = box.item(0);
-				var child = input.children;
-				while (child.length > 0) input.removeChild(child[0]);
-				return input;
-			}
-		},
 
-
-
-		_CLEAR_SVG: {/* (re)define parâmetros iniciais e SVG */
-			value: function() {
-				this._COLOR = 0;
-				this._ENDS.x   = {min: Infinity, max: -Infinity};
-				this._ENDS.y   = {min: Infinity, max: -Infinity};
-				this._MEASURES = {t: 0, r: 0, b: 0, l: 0};
-				this._NDATA.r  = 0;
-				this._NDATA.t  = 0;
-				if (this._SVG !== null) this._BOX.removeChild(this._SVG);
-				this._SVG = this._BUILD_SVG("svg");
-				this._BOX.appendChild(this._SVG);
-				return;
-			}
-		},
-		_SET_SCALE: {/* Define o valor da escala horizontal e vertical */
-			value: function(axes) {
-				var msrs  = this._MEASURES;
-				var delta = this._ENDS[axes].max - this._ENDS[axes].min;
-				var ref = axes === "x" ? msrs.w : msrs.h;
-				this._SCALE[axes] = ref/delta;
-				return;
-			}
-		},
 		_TARGET: {/* Transforma coordanadas reais em relativas (%) */
 			value: function(x,y) {
 				if (!WD(x).finite || !WD(y).finite) return null;
@@ -2482,55 +2437,70 @@ BLOCO 5: boot
 				return true;
 			}
 		},
-		clear: {
 
-			value: function() {/*apaga todos os dados do gráfico*/
-				this._CLEAR_SVG();
-				for (var i = 0; i < this._DATA.length; i++)
-					this._DATA[i].t = "deleted";
-				return true;
+		ends: {
+			value: function(axis, array) {
+				var axes = {
+					x: {min: "xmin", max: "xmax"},
+					y: {min: "ymin", max: "ymax"},
+				};
+				array.push(this[axes[axis].min]);
+				array.push(this[axes[axis].max]);
+				var limits = wd_coord_limits(array);
+				this[axes[axis].min] = limits.min;
+				this[axes[axis].max] = limits.max;
+			}
+		},
+		scale: {/* Define o valor da escala horizontal e vertical e retorna a menor particula */
+			value: function(axis) {
+				var width = this.space[axis === "x" ? "w" : "h"];
+				var delta = this[axis+"max"] - this[axis+"min"];
+				this[axis+"scale"] = width/delta;
+				return 1/this[axis+"scale"];
+			}
+		},
+
+		pdata: { /* prepara os dados da plotagem (plano x,y) */
+			get: function() {
+				var array = [];
+				/* obtendo somente os dados de plotagem solicitado */
+				for (var i = 0; i < this.data.length; i++) {
+					var data = this.data[i];
+					if (data.t === "compare") continue;
+					this.ends("x", data.x);
+					if (data.f !== true) this.ends("y", data.y);
+					array.push(data);
+				}
+				/* definindo a escala em x */
+				this.space = {t: 10, r: 20, b: 10, l: 15};
+				var delta  = this.scale("x");
+				/* definindo valores de funções */
+				for (var i = 0; i < array.length; i++) {
+					var data = array[i];
+					if (data.f !== true) continue;
+					var values = wd_coord_continuous(data.x, data.f, data.t === "cols" ? 0.1 : delta);
+					array[i].x = values.x;
+					array[i].y = values.y;
+					this.ends("y", values.y)
+				}
+				/* definindo a escala em y e retornando */
+				this.scale("y");
+				return array;
+			}
+		},
+		cdata: {
+			get: function() {
+				return [];
 			}
 		},
 		plot: {
+			value: function(xlabel, ylabel, compare) { /* desenha gráfico plano */
+				this.boot();
+				var data = compare === true ? this.cdata : this.pdata;
+				console.log(data);
 
-			value: function(xlabel, ylabel, compare) {/*desenha gráfico plano*/
-				this._CLEAR_SVG();
-				if (compare === true) return this._COMPARE(xlabel, ylabel);
 
-				/* Obtendo valores básicos para definir parâmetros dos gráficos */
-				var data = [];
-				for (var i = 0; i < this._DATA.length; i++) {
-					var item = this._DATA[i];
-					if (item.t === "deleted" || item.t === "compare") continue;
-					this._SET_ENDS("x", item.x);
-					if (WD(item.y).type === "array")
-						this._SET_ENDS("y", item.y);
-					if (item.t === "cols") /* exibir o ponto y = 0 */
-						this._SET_ENDS("y", [0]);
-					data.push(item);
-				}
-				if (data.length === 0) return null;
-				this._SET_SCALE("x");
-
-				/* definindo array y para funções */
-				for (var i = 0; i < data.length; i++) {
-					var item = data[i];
-					if (WD(item.y).type !== "function") continue;
-					var obj   = WDanalysis(item.x, item.y);
-					var prec  = this._DELTA(item.t === "cols" ? 0.1 : 1); /*precisão do desenho*/
-					var value = obj.continuous(prec);
-					if (value === null) {/*se erro: considerar sómentos os pontos*/
-						item.y = obj.y;
-					} else {
-						item.x = value.x;
-						item.y = value.y;
-					}
-					/* definindo novos limites */
-					this._SET_ENDS("x", item.x);
-					this._SET_ENDS("y", item.y);
-				}
-
-				/* Plotagem da área e das linhas */
+				/* Plotagem da área e das linhas
 				var lines = 4;
 				var grid  = this._SET_AREA("plan", lines, xlabel, ylabel);
 
@@ -2539,8 +2509,8 @@ BLOCO 5: boot
 					this._COLOR = item.c;
 					this._ADD_LEGEND(item.l, item.f);
 
-					/*coordenadas*/
-					for (var j = 0; j < item.x.length; j++) { /*obterndo coordenadas*/
+					/*coordenadas
+					for (var j = 0; j < item.x.length; j++) { /*obterndo coordenadas
 						var title = "("+item.x[j]+", "+item.y[j]+")";
 						var trg1  = this._TARGET(item.x[j], item.y[j]);
 						var trg2  = this._TARGET(item.x[j+1], item.y[j+1]);
@@ -2557,7 +2527,7 @@ BLOCO 5: boot
 					}
 				}
 
-				/*valores dos eixos*/
+				/*valores dos eixos
 				this._COLOR = - 1;
 				var dX = (this._ENDS.x.max - this._ENDS.x.min) / lines;
 				var dY = (this._ENDS.y.max - this._ENDS.y.min) / lines;
@@ -2569,131 +2539,78 @@ BLOCO 5: boot
 					this._BUILD_LABEL(grid.x[i].x, grid.x[i].y+1, x, px);
 					this._BUILD_LABEL(grid.y[i].x-1, grid.y[i].y, y, py);
 				}
+				*/
 				return true;
 			}
 		},
-
-
-
-
-
-
-
 
 
 
 		add: {/* Adiciona conjunto de dados para plotagem */
 			value: function(x, y, label, type) {
-				//FUNÇÃO | ANÁLISE | COORDENADAS | COMPARAÇÃO//
 
 				if (wd_vtype(y).type === "function") {
 					var data = wd_coord_adjust(x);
-					if (data === null) return null;
+					if (data === null) return false;
 					this.data.push(
-						{x: data.x, y: y, l: label, t: "line", c: color+1, f: true}
+						{x: data.x, y: y, l: label, t: "line", f: true, c: ++this.color}
 					);
 					return true;
 				}
 
 				if (type === "compare") {
-					var data = wd_coord_compare(x, y);
-					if (data === null) return null;
-					this.data.push(//FIXME
-						{x: null, y: data, l: label, t: "compare", c: color+1, f: false}
+					var data = wd_coord_compare(x, y, true);
+					if (data === null) return false;
+					this.data.push(
+						{x: data.x, y: data.amt, l: label, t: "compare", f: false, c: null}
 					);
 					return true;
 				}
 
+				var coord = wd_coord_adjust(x, y);
+				if (coord === null) return false;
+				x = coord.x;
+				y = coord.y;
 
-
-
-
-
-
-				var obj1 = WDanalysis(x,y);
-				var obj2 = WDcompare(x,y);
-
-
-
-
-
-				if (obj1.e && obj2.e) return null;
-				var color = this._DATA.length === 0 ? 0 : this._DATA[this._DATA.length-1].c; /*obter a última cor adicionada*/
-				/*dados sem condições de análise*/
-				if (!obj2.e) this._DATA.push(
-					{x: obj2.x, y: obj2.y, l: null, t: "compare", c: color+1, f: false}
-				);
-				if (obj1.e) return true;
-
-				/*plotar uma função*/
-				if (WD(y).type === "function") {
-					this._DATA.push(
-						{x: obj1.x, y: y, l: label, t: "line", c: color+1, f: false}
-					);
-					return true;
-				}
-				/*plotar somente coordenadas*/
-				if (!(analysis in obj1)) {
-					this._DATA.push(
-						{x: obj1.x, y: obj1.y, l: label, t: "dots", c: color+1, f: false}
-					);
-					this._DATA.push(
-						{x: obj1.x, y: obj1.y, l: null, t: "line", c: color+1, f: false}
-					);
-					return true;
-				}
-				/*verificar análise*/
-				var check = obj1[analysis];
-				if (check === null) return null;
-
-				/*referências*/
 				var ref = {
-					average:     {c1: "line", c2: "line"},
-					exponential: {c1: "dots", c2: "line"},
-					linear:      {c1: "dots", c2: "line"},
-					geometric:   {c1: "dots", c2: "line"},
-					sum:         {c1: "line", c2: "cols"},
+					avg: {c1: "line", c2: "line", c3: null,   m: wd_coord_ravg},
+					sum: {c1: "line", c2: "cols", c3: null,   m: wd_coord_rsum},
+					exp: {c1: "dots", c2: "line", c3: "dash", m: wd_coord_rexp},
+					lin: {c1: "dots", c2: "line", c3: "dash", m: wd_coord_rlin},
+					geo: {c1: "dots", c2: "line", c3: "dash", m: wd_coord_rgeo},
 				};
-				/* plotando coordanadas*/
-				this._DATA.push(
-					{x: obj1.x, y: obj1.y, l: label, t: ref[analysis].c1, c: color+1, f: false}
-				);
-				/*plotando análise*/
-				var l = this._LABEL_ANALYSIS(check.a, check.b, check.d, check.e);
-				this._DATA.push(
-					{x: obj1.x, y: check.f, l: l, t: ref[analysis].c2, c: color+2, f: true}
-				);
-				/*plotando desvio padrão*/
-				if (check.d !== null) {
-					var f1 = function(x) {return check.f(x)+check.d;}
-					var f2 = function(x) {return check.f(x)-check.d;}
-					this._DATA.push(
-						{x: obj1.x, y: f1, l: null, t: "dotted", c: color+2, f: false}
+
+				if (type in ref) {
+					var data = ref[type].m(x, y);
+					if (data === null) return false;
+					this.data.push(
+						{x: x, y: y, l: label, t: ref[type].c1, f: false, c: ++this.color}
 					);
-					this._DATA.push(
-						{x: obj1.x, y: f2, l: null, t: "dotted", c: color+2, f: false}
+					this.data.push(
+						{x: x, y: data.f, l: data.m, t: ref[type].c2, f: true, c: ++this.color}
 					);
+					if (data.d !== 0) {
+						var sup = function(n) {return data.f(n)+data.d;}
+						var sub = function(n) {return data.f(n)-data.d;}
+						this.data.push(
+							{x: x, y: sup, l: null, t: ref[type].c3, f: true, c: this.color}
+						);
+						this.data.push(
+							{x: x, y: sub, l: null, t: ref[type].c3, f: true, c: this.color}
+						);
+					}
+					return true;
 				}
+
+				this.data.push(
+					{x: x, y: y, l: label, t: "line", f: false, c: ++this.color}
+				);
+				this.data.push(
+					{x: x, y: y, l: null, t: "dots", f: false, c: this.color}
+				);
 				return true;
 			}
 		},
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 	});
 
 
@@ -2819,7 +2736,7 @@ BLOCO 5: boot
 		value: function(x, y) {
 			var info = {
 				statistics: new WDstatistics(this.valueOf()),
-				compare:    wd_coord_compare(x, y),
+				compare:    wd_coord_compare(x, y, true),
 				//compare:    new WDcompare(this.cell(x), this.cell(y)),
 				analysis:   new WDanalysis(x, y),
 			}
@@ -3508,7 +3425,7 @@ BLOCO 5: boot
 			for (var i in o) o[i] = (o[i] < 10 ? "0" : "") + o[i].toString();
 			return WD(o.h+":"+o.m+":"+o.s);
 		}},
-		loko: {value: wd_decimal}
+		loko: {value: WDchart}
 	});
 
 /* == BLOCO 4 ================================================================*/
