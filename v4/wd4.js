@@ -885,6 +885,7 @@ BLOCO 5: boot
 
 /*----------------------------------------------------------------------------*/
 	function wd_array_add(array, values) { /* adiciona items ao array */
+		array = array.slice();
 		for (var i = 0 ; i < values.length; i++) array.push(values[i])
 		return array;
 	}
@@ -910,6 +911,7 @@ BLOCO 5: boot
 	function wd_array_replace(array, item, value) { /* muda os valores de determinado item */
 		var index = wd_array_search(array, item);
 		if (index === null) return array;
+		array = array.slice();
 		for (var i = 0; i < index.length; i++) array[index[i]] = value;
 		return array;
 	}
@@ -929,6 +931,7 @@ BLOCO 5: boot
 			"array", "object", "function", "regexp", "undefined", "unknown"
 		];
 
+		array = array.slice();
 		array.sort(function(a, b) {
 			var atype  = wd_vtype(a).type;
 			var btype  = wd_vtype(b).type;
@@ -1246,7 +1249,7 @@ BLOCO 5: boot
 		}
 		x.push(ends.max);
 
-		var y = wd_coord_setter(x, func)
+		var y = wd_coord_setter(x, func);
 		var c = wd_coord_adjust(x, y);
 		if (c === null) return null;
 		return {x: c.x, y: c.y};
@@ -2158,9 +2161,11 @@ BLOCO 5: boot
 		for (var i in attr) {/* definindo atributos */
 			var val = attr[i];
 			if (i === "tspan" || i === "title") {/* texto ou dicas */
-				var info = wd_svg_create(i);
-				info.textContent = val;
-				elem.appendChild(info);
+				if (val !== null) {
+					var info = wd_svg_create(i);
+					info.textContent = val;
+					elem.appendChild(info);
+				}
 			} else { /* atributos */
 				if (ref.indexOf(i) >= 0 && wd_finite(val))
 					val = new String(val).toString()+"%";
@@ -2219,7 +2224,7 @@ BLOCO 5: boot
 			"dominant-baseline": vbase[base[point]],
 			"font-size": "0.8em",
 			"font-family": "monospace",
-			"transform": vertical === true ? "rotate(270)" : "none",
+			"transform": vertical === true ? "rotate(270)" : "",
 			"font-weight": bold === true ? "bold" : "normal",
 			tspan: text,
 		});
@@ -2329,121 +2334,13 @@ BLOCO 5: boot
 				this._BUILD_LABEL(x+1, y+1, (top ? "" : "\u25CF ")+text, "nw", false, true);
 			}
 		},
-		_SET_AREA: {
-			value: function(type, n, xlabel, ylabel) {/* define a área do gŕafico (n = linhas)*/
-				n = n === undefined ? 0 : n;
-				var config = {/* configurações da área do gráfico */
-					plan: {
-						width: {t: 1, r: 1, b: 1, l: 1, c: 0},
-						padd:  {t: 10, r: 20, b: 10, l: 15},
-					},
-					compare: {
-						width: {t: 0, r: 0, b: 0, l: 0, c: 0},
-						padd:  {t: 15, r: 20, b: 10, l: 10},
-					},
-				};
-
-				/* definindo valores iniciais */
-				var data       = config[type];
-				this._COLOR    = -1;
-				this._MEASURES = data.padd;
-				this._SET_SCALE("y");
-				this._SET_SCALE("x");
-				var ref  = this._MEASURES;
-				var dX   = ref.w/n;
-				var dY   = ref.h/n;
-				var grid = {x: [], y: []};
-
-				/* construindo linhas */
-				for (var i = 0; i < (n+1); i++) {
-					var hRef = data.width[i === 0 ? "b" : (i === n ? "t" : "c")];
-					var vRef = data.width[i === 0 ? "l" : (i === n ? "r" : "c")];
-					var val = {
-						h: {x1: ref.l, x2: ref.r, y1: ref.t+(i*dY), y2: ref.t+(i*dY)},
-						v: {y1: ref.t, y2: ref.b, x1: ref.l+(i*dX), x2: ref.l+(i*dX)},
-					}
-					this._BUILD_LINE(val.h.x1, val.h.y1, val.h.x2, val.h.y2, "", hRef);
-					this._BUILD_LINE(val.v.x1, val.v.y1, val.v.x2, val.v.y2, "", vRef);
-					grid.x.push({x: val.v.x1, y: val.v.y2, d: dX});
-					grid.y.unshift({x: val.h.x1, y: val.h.y1, d: dY});
-				}
-
-				/* construíndo título e labels */
-				this._BUILD_LABEL(ref.cx, ref.t/5, this._TITLE, "n", false, true);
-				this._BUILD_LABEL(ref.cx, ref.b+(100-ref.b)*3/4, xlabel, "s", false, true);
-				this._BUILD_LABEL(1/4*ref.l, ref.cy, ylabel, "s", true, true);
-
-				return grid;
-			}
-		},
-		_COMPARE: { /* desenha um gráfico de colunas comparativo */
-
-			value: function(xlabel, ylabel) {/*desenha gráfico comparativo de colunas*/
-				/* Obtendo dados básicos */
-				var data = {x: [], y: []};
-				for (var i = 0; i < this._DATA.length; i++) {
-					var item = this._DATA[i];
-					if (item.t === "deleted" || item.t !== "compare") continue;
-					for (var j = 0; j < item.x.length; j++) { /*adicionando dados*/
-						data.x.push(item.x[j]);
-						data.y.push(item.y[j]);
-					}
-				}
-				if (data.x.length === 0) return null; /*se vazio, retornar*
-
-				/* Definindo dados para o gráfico */
-				var object = WDcompare(data.x, data.y);
-				var ratio  = object.ratio;
-				var amount = object.amount;
-				var values = {l: [0], x: [], y: [], v: []};
-				for (var i in ratio) {
-					values.l.push(values.l.length);
-					values.x.push(i);
-					values.y.push(ratio[i]);
-					values.v.push(amount[i]);
-				}
-				/* definindo limites */
-				this._SET_ENDS("x", values.l);
-				this._SET_ENDS("y", values.y);
-				this._SET_ENDS("y", [0]); /*sempre exibir o ponto y = 0 */
-
-				/* Plotando o gráfico */
-				var grid = this._SET_AREA("compare", values.x.length, xlabel, ylabel); /*definindo grade do gŕafico*/
-				var sum = 0; /*ponto de referência do comparativo*/
-
-				for (var i = 0; i < values.x.length; i++) {/*construindo colunas*/
-					sum += values.v[i];
-					this._COLOR = i;
-					var trg1 = this._TARGET(i, 0);
-					var trg2 = this._TARGET(i+1, values.y[i]);
-					var trg3 = this._TARGET((i + 0.5), 0);
-					var pct  = this._LABEL_VALUE(values.y[i], true);
-					var val  = this._LABEL_VALUE(values.v[i]);
-					var ttl  = values.x[i]+": "+val+" ("+pct+")";
-					var pos  = values.y[i] < 0 ? -1 : 1;
-					this._BUILD_RECT(trg1.x, trg1.y, trg2.x, trg2.y, ttl);
-					this._ADD_LEGEND(values.x[i]);
-					/* posição: valor no eixo e porcentagem no topo/base */
-					this._BUILD_LABEL(trg3.x, trg2.y-pos, pct, pos < 0 ? "n" : "s", false, true);
-					this._COLOR = -1;
-					this._BUILD_LABEL(trg3.x, trg3.y+pos, val, pos < 0 ? "s" : "n", false);
-				}
-				/*desenhando eixo zero*/
-				var ref = this._MEASURES;
-				var zero = this._TARGET(0,0);
-				this._BUILD_LINE(ref.l, zero.y, ref.r, zero.y, "", 2);
-				this._BUILD_LABEL(99, 99, "\u03A3y = "+this._LABEL_VALUE(sum), "se", false, true);
-
-				return true;
-			}
-		},
-
 		ends: {
 			value: function(axis, array) {
 				var axes = {
 					x: {min: "xmin", max: "xmax"},
 					y: {min: "ymin", max: "ymax"},
 				};
+				array = array.slice();
 				array.push(this[axes[axis].min]);
 				array.push(this[axes[axis].max]);
 				var limits = wd_coord_limits(array);
@@ -2451,7 +2348,7 @@ BLOCO 5: boot
 				this[axes[axis].max] = limits.max;
 			}
 		},
-		scale: {/* Define o valor da escala horizontal e vertical e retorna a menor particula */
+		scale: {/* Define o valor da escala horizontal e vertical e retorna o menor fragmento do eixo (delta) */
 			value: function(axis) {
 				var width = this.space[axis === "x" ? "w" : "h"];
 				var delta = this[axis+"max"] - this[axis+"min"];
@@ -2478,17 +2375,68 @@ BLOCO 5: boot
 				for (var i = 0; i < array.length; i++) {
 					var data = array[i];
 					if (data.f !== true) continue;
-					var values = wd_coord_continuous(data.x, data.f, data.t === "cols" ? 0.1 : delta);
+					var values = wd_coord_continuous(data.x, data.y, data.t === "cols" ? 0.1 : delta);
+					if (values === null) continue;
 					array[i].x = values.x;
 					array[i].y = values.y;
-					this.ends("y", values.y)
+					this.ends("y", values.y);
 				}
 				/* definindo a escala em y e retornando */
 				this.scale("y");
 				return array;
 			}
 		},
-		cdata: {
+		area: { /* prepara os dados da plotagem (plano x,y) */
+			value: function(xlabel, ylabel, n, compare) {
+				/* criando imagem svg */
+				this.svg = wd_svg_create("svg", {fill: "red"});
+				this.svg.setAttribute("class", "js-wd-plot");
+
+
+				var ref = this.space;
+				var clr = this.rgb(0);
+				var dx  = ref.w/n;
+				var dy  = ref.h/n;
+
+				/* construindo linhas */
+				for (var i = 0; i < (n+1); i++) {
+					var x1, y1, x2, y2, dash;
+
+					dash = (i === 0 || i === n) && compare !== true ? 1 : 0;
+					/* eixo vertical */
+					x1 = ref.l+i*dx;
+					x2 = x1;
+					y1 = ref.t;
+					y2 = y1+ref.h;
+					this.svg.appendChild(
+						wd_svg_line(x1, y1, x2, y2, dash, null, clr)
+					);
+					/* eixo horizontal */
+					x1 = ref.l;
+					x2 = x1+ref.w;
+					y1 = ref.t+ref.h-i*dy;
+					y2 = y1;
+					this.svg.appendChild(
+						wd_svg_line(x1, y1, x2, y2, dash, null, clr)
+					);
+				}
+				/* Título e labels */
+					this.svg.appendChild(
+						wd_svg_label(ref.l+ref.w/2, 1, this.title, "n", false, clr, true)
+					);
+					this.svg.appendChild(
+						wd_svg_label(ref.cx, 99, xlabel, "s", false, clr, false)
+					);
+					this.svg.appendChild(//FIXME
+						wd_svg_label(-ref.cy, 1, ylabel, "n", true, clr, false)
+					);
+
+
+
+			}
+		},
+
+		cdata: { /* prepara dados de plotagem para "compare" */
 			get: function() {
 				return [];
 			}
@@ -2497,7 +2445,8 @@ BLOCO 5: boot
 			value: function(xlabel, ylabel, compare) { /* desenha gráfico plano */
 				this.boot();
 				var data = compare === true ? this.cdata : this.pdata;
-				console.log(data);
+				this.area(xlabel, ylabel, (compare === true ? data.length : 4), compare);
+				this.box.appendChild(this.svg)
 
 
 				/* Plotagem da área e das linhas
@@ -2694,7 +2643,7 @@ BLOCO 5: boot
 				return wd_array_replace(this.valueOf(), item, value);
 			}
 		},
-		cell: { /* muda os valores de determinado item */
+		cell: { /* retorna uma lista de valores a partir de endereços de uma matriz do tipo linha:coluna */
 			value: function() {
 				return wd_array_cells(this.valueOf(), Array.prototype.slice.call(arguments));
 			}
@@ -2724,10 +2673,6 @@ BLOCO 5: boot
 
 
 
-
-
-
-//	Object.defineProperty(WDarray.prototype, "cell", {
 
 
 
@@ -3927,6 +3872,8 @@ BLOCO 5: boot
 				value: "animation: js-wd-fade-in 1s;"},
 			{target: "nav > *.js-wd-nav-inactive",
 				value: "background-color: rgba(230,230,230,0.8) !important; color: #737373 !important;"},
+			{target: ".js-wd-plot",
+				value: "height: 100%; width: 100%; position: absolute; top: 0; left: 0; bottom: 0; right: 0;"}
 		];
 		var style = document.createElement("STYLE");
 		for(var i = 0; i < styles.length; i++)
