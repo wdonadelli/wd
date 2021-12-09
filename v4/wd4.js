@@ -960,6 +960,28 @@ BLOCO 5: boot
 	}
 
 /*----------------------------------------------------------------------------*/
+	function wd_matrix_data(matrix, x, y) { /* retorna dados estatísticos de uma matriz */
+		x = wd_matrix_cell(matrix, x);
+		y = wd_matrix_cell(matrix, y);
+		return {
+			get cmp()  {return wd_coord_compare(x, y);},
+			get rlin() {return wd_coord_rlin(x, y);},
+			get rexp() {return wd_coord_rlin(x, y);},
+			get rgeo() {return wd_coord_rgeo(x, y);},
+			get rsum() {return wd_coord_rsum(x, y);},
+			get ravg() {return wd_coord_ravg(x, y);},
+			get sum()  {return wd_coord_sum(x, 1).value;},
+			get min()  {return wd_coord_limits(x).min;},
+			get max()  {return wd_coord_limits(x).max;},
+			get avg()  {return wd_coord_avg(x);},
+			get med()  {return wd_coord_med(x);},
+			get geo()  {return wd_coord_geo(x);},
+			get harm() {return wd_coord_harm(x);},
+			dev: function(n) {return wd_coord_deviation(x, this[n]);}
+		};
+	}
+
+/*----------------------------------------------------------------------------*/
 	function wd_coord_adjust(x, y, z) { /* retorna pares de coordenadas numéricas */
 	  var coord = {x: [], y: [], z: [], length: 0};
     /* checando se argumentos são arrays (x é obrigatório) */
@@ -998,8 +1020,6 @@ BLOCO 5: boot
 		x = coord.x;
 		y = coord.y;
 		z = coord.z;
-
-/*----------------------------------------------------------------------------*/
 		var data = {value: 0, length: 0};
 		for (var i = 0; i < coord.length; i++) {
 			var vx = Math.pow(x[i],nx);
@@ -1256,7 +1276,7 @@ BLOCO 5: boot
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_coord_compare(x, y, list) {
+	function wd_coord_compare(x, y, list) { /* compara dados entre dois arrays x,y */
 		if (wd_vtype(x).type !== "array" || wd_vtype(y).type !== "array")
 			return null;
 		/* organizando dados */
@@ -1296,29 +1316,8 @@ BLOCO 5: boot
 		return data;
 	}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /*----------------------------------------------------------------------------*/
-	function wd_matrix_object(array) {/*matriz de array para objeto*/
+	function wd_matrix_object(array) { /* matriz de array para objeto*/
 		var x = [];
 		for (var row = 1; row < array.length; row++) {
 			var cols = array[row];
@@ -1331,71 +1330,6 @@ BLOCO 5: boot
 	}
 
 /* == BLOCO 2 ================================================================*/
-
-/*----------------------------------------------------------------------------*/
-	function WDstatistics(x) {this.x = x}
-	Object.defineProperties(WDstatistics.prototype, {
-		sum:  {get: function(){return wd_coord_sum(this.x, 1).value;}},
-		min:  {get: function(){return wd_coord_limits(this.x).min;}},
-		max:  {get: function(){return wd_coord_limits(this.x).max;}},
-		avg:  {get: function(){return wd_coord_avg(this.x);}},
-		med:  {get: function(){return wd_coord_med(this.x);}},
-		geo:  {get: function(){return wd_coord_geo(this.x);}},
-		harm: {get: function(){return wd_coord_harm(this.x);}},
-		dev:  {value: function(n) {return wd_coord_deviation(this.x, this[n]);}}
-	});
-
-/*----------------------------------------------------------------------------*/
-	function WDanalysis(x, y) {
-		this.x = x;
-		this.y = y;
-	}
-	Object.defineProperties(WDanalysis.prototype, {
-		lin:  {get: function(){return wd_coord_rlin(this.x, this.y);}},
-		exp:  {get: function(){return wd_coord_rexp(this.x, this.y);}},
-		geo:  {get: function(){return wd_coord_rgeo(this.x, this.y);}},
-		sum:  {get: function(){return wd_coord_rsum(this.x, this.y);}},
-		avg:  {get: function(){return wd_coord_ravg(this.x, this.y);}},
-		cont: {value: function(reg, d) {
-			reg = this[reg];
-			return reg === null ? null : wd_coord_continuous(this.x, reg.f, reg.d, d);
-		}}
-	});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 	function WDrequest(input) {
 		if (!(this instanceof WDrequest)) return new WDrequest(input);
@@ -2648,6 +2582,11 @@ BLOCO 5: boot
 				return wd_array_cells(this.valueOf(), Array.prototype.slice.call(arguments));
 			}
 		},
+		data: { /* obtem dados estatísticos a partir dos itens do array/matriz */
+			value: function(x, y) {
+				return wd_matrix_data(this.valueOf(), x, y);
+			}
+		},
 		toString: { /* método padrão */
 			value: function() {
 				return wd_json(this.valueOf());
@@ -2660,36 +2599,6 @@ BLOCO 5: boot
 		}
 
 	});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	Object.defineProperty(WDarray.prototype, "data", {/* FIXME obtem dados estatísticos a partir dos itens do array/matriz*/
-
-		value: function(x, y) {
-			var info = {
-				statistics: new WDstatistics(this.valueOf()),
-				compare:    wd_coord_compare(x, y, true),
-				//compare:    new WDcompare(this.cell(x), this.cell(y)),
-				analysis:   new WDanalysis(x, y),
-			}
-			return info;
-		}
-	});
-
-
 
 /*----------------------------------------------------------------------------*/
 	function WDdom(value) {WDmain.call(this, value);}
@@ -2876,68 +2785,97 @@ BLOCO 5: boot
 	WDdom.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDdom},
 		type:        {value: "dom"},
-	});
-
-	Object.defineProperty(WDdom.prototype, "item", {/*item ou quantidade*/
-
-		value: WDarray.prototype.item
-	});
-
-	Object.defineProperty(WDdom.prototype, "run", {/*executa um job nos elementos*/
-
-		value: function(method) {
-			var check = wd_vtype(method);
-			if (check.type !== "function") return this;
-			for (var i = 0; i < this.item(); i++) {
-				var x = this.item(i);
-				if (x !== window && x.nodeType != 1 && x.nodeType != 9) continue;
-				method(x);
+		valueOf: { /* método padrão */
+			value: function() {
+				return this._value.slice();
 			}
-			return this;
-		}
+		},
+		item: { /* retorna o item ou quantidade */
+			value: function(i) {
+				return wd_array_item(this.valueOf(), i);
+			}
+		},
+
+
+
+
+
+
+		run: { /* executa um job nos elementos */
+			value: function(method) {
+				wd_dom_run.apply(this, arguments); return this;
+			}
+		},
+		addHandler: { /* adiciona disparadores */
+			value: function(events) {
+				return this.run(wd_html_handler, events);
+			}
+		},
+		delHandler: { /* remove disparadores */
+			value: function(events) {
+				return this.run(wd_html_handler, events, true);
+			}
+		},
+		style: { /* remove disparadores */
+			value: function(styles) {
+				return this.run(wd_html_style, styles);
+			}
+		},
+
+
+
 	});
 
-	Object.defineProperty(WDdom.prototype, "handler", {/*disparadores*/
-
-		value: function (events, remove) {
-			var check = wd_vtype(events);
-			if (check.type !== "object") return this;
-
-			this.run(function(elem) {
-				for (var ev in events) {
-					var method = wd_vtype(events[ev]);
-					if (method.type !== "function") continue;
-					var action = remove === true ? "removeEventListener" : "addEventListener";
-					var event  = ev.toLowerCase().replace(/^on/, "");
-					elem[action](event, method.input, false);
-				}
-				return;
-			});
-
-			return this;
+/*----------------------------------------------------------------------------*/
+	function wd_dom_run(method) { /* função vinculada ao construtor WDdom para executar rotina sobre os elementos */
+		/* checando argumentos obrigatórios */
+		if (wd_vtype(method).type !== "function") return null;
+		/* obtendo argumentos secundários */
+		var args = [];
+		for (var i = 0; i < arguments.length; i++)
+			args.push(arguments[i]);
+		/* looping nos elementos */
+		var query = this.valueOf();
+		for (var i = 0; i < query.length; i++) {
+			var x = query[i];
+			if (x !== window && x.nodeType != 1 && x.nodeType != 9) continue;
+			/* informando elemento como primeiro argumento */
+			args[0] = x;
+			method.apply(null, args);
 		}
-	});
+		return true;
+	}
 
-	Object.defineProperty(WDdom.prototype, "style", {/*define style*/
-
-		value: function(styles) {
-			var check = wd_vtype(styles);
-			if (check.type !== "object" && check.value !== null) return this;
-
-			this.run(function(elem) {
-				if (styles === null) {
-					while (elem.style.length > 0) elem.style[elem.style[0]] = null;
-					return;
-				}
-				for (var i in styles) {
-					var key = new WD(i).camel;
-					elem.style[key] = styles[i];
-				}
-				return;
-			});
-			return this;
+/*----------------------------------------------------------------------------*/
+	function wd_html_handler(elem, events, remove) { /* define ou remove disparadores */
+		if (wd_vtype(elem).type !== "dom") return null;
+		var action = remove === true ? "removeEventListener" : "addEventListener";
+		for (var ev in events) {
+			var method = events[ev];
+			if (wd_vtype(method).type !== "function") continue;
+			var event  = ev.toLowerCase().replace(/^on/, "");
+			elem[action](event, method, false);
 		}
-	});
+		return true;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_html_style(elem, styles) { /* define ou remove estilo ao elemento */
+		if (styles === null) { /* limpando styles */
+			while (elem.style.length > 0)
+				elem.style[elem.style[0]] = null;
+			return true;
+		}
+
+		if (wd_vtype(styles).type !== "object") return null;
+		for (var i in styles) /* definindo styles */
+			elem.style[wd_text_camel(i)] = styles[i];
+		return true;
+	}
+
+/*----------------------------------------------------------------------------*/
+
+
 
 	Object.defineProperty(WDdom.prototype, "css", {/*manipular className*/
 
@@ -4088,13 +4026,13 @@ BLOCO 5: boot
 
 /*----------------------------------------------------------------------------*/
 
-	WD(window).handler({/*Definindo eventos window*/
+	WD(window).addHandler({/*Definindo eventos window*/
 		load: loadProcedures,
 		resize: scalingProcedures,
 		hashchange: hashProcedures,
 	});
 
-	WD(document).handler({/*Definindo eventos document*/
+	WD(document).addHandler({/*Definindo eventos document*/
 		click:    clickProcedures,
 		keyup:    keyboardProcedures,
 		input:    inputProcedures,
