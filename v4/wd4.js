@@ -908,7 +908,7 @@ BLOCO 5: boot
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_array_replace(array, item, value) { /* muda os valores de determinado item */
+	function wd_array_rpl(array, item, value) { /* muda os valores de determinado item */
 		var index = wd_array_search(array, item);
 		if (index === null) return array;
 		array = array.slice();
@@ -1854,7 +1854,7 @@ BLOCO 5: boot
 		json: { /* JSON para Object */
 			get: function() {return wd_json(this.toString());}
 		},
-		replace: { /* replaceAll simples (só texto) */
+		rpl: { /* replaceAll simples (só texto) */
 			value: function(search, change) {
 				return wd_replace_all(this.toString(), search, change);
 			}
@@ -2572,9 +2572,9 @@ BLOCO 5: boot
 				return wd_array_count(this.valueOf(), value);
 			}
 		},
-		replace: { /* muda os valores de determinado item */
+		rpl: { /* muda os valores de determinado item */
 			value: function(item, value) {
-				return wd_array_replace(this.valueOf(), item, value);
+				return wd_array_rpl(this.valueOf(), item, value);
 			}
 		},
 		cell: { /* retorna uma lista de valores a partir de endereços de uma matriz do tipo linha:coluna */
@@ -2821,6 +2821,11 @@ BLOCO 5: boot
 				return this.run(wd_html_style, styles);
 			}
 		},
+		css: { /* manipula atributo class */
+			value: function(obj) {
+				return this.run(wd_html_css, obj);
+			}
+		},
 
 
 
@@ -2874,47 +2879,54 @@ BLOCO 5: boot
 	}
 
 /*----------------------------------------------------------------------------*/
+	function wd_html_class_get(elem) { /* obtem o valor do atributo class (string) */
+		var val = elem.className;
+		if (val === null) return "";
+		if (wd_vtype(val).type !== "text") /* se className não for texto */
+			val = elem.getAttribute("class");
+		return val === null ? "" : val;
+	}
 
+/*----------------------------------------------------------------------------*/
+	function wd_html_class_set(elem, value) { /* define o valor do atributo class */
+		value = wd_no_spaces(value.trim());
+		try      {elem.className = value;}
+		catch(e) {elem.setAttribute("class", value);}/* se className não for editável */
+		return true;
+	}
 
+/*----------------------------------------------------------------------------*/
+	function wd_html_css(elem, obj) { /* manipula o atributo class por meio de um objeto com instruções */
+		if (obj === null) return wd_html_class_set(elem, "");
+		if (wd_vtype(obj).type !== "object") return null;
+		var array = wd_html_class_get(elem).split(" ");
 
-	Object.defineProperty(WDdom.prototype, "css", {/*manipular className*/
+		for (var i in obj) {
+			var val = wd_vtype(obj[i]);
+			if (val.type !== "text") continue;
+			val = wd_no_spaces(val.value).split(" ");
+			if (i === "rpl" && val.length < 2) continue;
 
-		value: function (list) {
-			var check = wd_vtype(list);
-			if (check.type !== "object" && check.value !== null) return this;
-
-			this.run(function(elem) {
-				if (list === null) {
-					elem.className = "";
-					return;
-				}
-
-				var attr = WD(elem.className);
-				if (attr.type !== "text" && attr.type !== "null") /*Há elementos que className não é texto*/
-					attr = WD(elem.getAttribute("class"));
-
-				var css = attr.type === "text" ? WD(attr.toString().split(" ")) : WD([]);
-
-				for (var i in list) {
-					if (["add", "del", "tgl", "toggle"].indexOf(i) < 0) continue
-					var check = wd_vtype(list[i]);
-					if (check.type !== "text") continue;
-					var items = check.value.split(" ");
-					for (var j = 0; j < items.length; j++) css[i === "tgl" ? "toggle" : i](items[j]);
-				}
-
-				css.del("");
-				css.unique();
-				css.sort();
-
-				try      {elem.className = css.valueOf().join(" ");}
-				catch(e) {elem.setAttribute("class", css.valueOf().join(" "));}/*Há elementos que className não é editável*/
-
-				return;
-			});
-			return this;
+			if (i === "add") array = wd_array_add(array, val); else
+			if (i === "del") array = wd_array_del(array, val); else
+			if (i === "tgl") array = wd_array_tgl(array, val); else
+			if (i === "rpl") array = wd_array_rpl(array, val[0], val[1]);
 		}
-	});
+		array = wd_array_sort(wd_array_unique(array)).join(" ");
+		return wd_html_class_set(elem, array);
+	}
+
+
+
+
+
+
+
+
+
+
+
+
 
 	Object.defineProperty(WDdom.prototype, "data", {/*define dataset*/
 
