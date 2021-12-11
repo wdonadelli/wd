@@ -95,7 +95,6 @@ BLOCO 5: boot
 		return date;
 	}
 
-
 /*----------------------------------------------------------------------------*/
 	function wd_time_number(h, m, s) { /*Converte tempo em número*/
 		var time = 0;
@@ -426,7 +425,7 @@ BLOCO 5: boot
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_no_spaces(txt, char) { /* Troca múltiplos espaço por caracter */
+	function wd_no_spaces(txt, char) { /* Troca múltiplos espaço por um caracter*/
 		return txt.replace(/[\0- ]+/g, (char === undefined ? " " : char)).trim();
 	};
 
@@ -659,7 +658,7 @@ BLOCO 5: boot
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_num_fixed(n, ldec, lint) { /* fixa quantidade de dígitos (int e dec) */
+	function wd_num_fixed(n, ldec, lint) { /* fixa quantidade de dígitos (decimal e inteiro) */
 		if (wd_num_test(n, ["infinity"])) return wd_num_str(n);
 
 		lint = wd_finite(lint) ? wd_integer(lint, true) : 0;
@@ -730,6 +729,15 @@ BLOCO 5: boot
 	}
 
 /*----------------------------------------------------------------------------*/
+	function wd_time_iso(number) { /* transforma valor numérico em tempo no formato HH:MM:SS */
+		var obj = wd_number_time(number);
+		var time = wd_num_fixed(obj.h, 0, 0)+":";
+		time    += wd_num_fixed(obj.m, 0, 2)+":";
+		time    += wd_num_fixed(obj.s, 0, 2);
+		return time;
+	}
+
+/*----------------------------------------------------------------------------*/
 	function wd_date_format(obj, char) { /* define um formato de data a partir de caracteres especiais */
 		char = new String(char).toString();
 		var words = [
@@ -756,6 +764,14 @@ BLOCO 5: boot
 				char = wd_replace_all(char, words[i].c, words[i].v());
 		return char
 	};
+
+/*----------------------------------------------------------------------------*/
+	function wd_date_iso(value) { /* retorna data no formato YYYY-MM-YY a partir de um Date() */
+		var date = wd_num_fixed(value.getFullYear(), 0, 4)+"-";
+		date    += wd_num_fixed(value.getMonth()+1, 0, 2)+"-";
+		date    += wd_num_fixed(value.getDate(), 0, 2);
+		return date;
+	}
 
 /*----------------------------------------------------------------------------*/
 	function wd_date_first_day(search, year) { /* encontra o primeiro dia do ano (valor inteiro) */
@@ -1328,6 +1344,400 @@ BLOCO 5: boot
 		}
 		return x;
 	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_html_tag(elem) { /* retorna a tag do elemento em minúsculo */
+		return elem.tagName.toLowerCase();
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_html_form(elem) { /* diz se o elemento é uma campo de formulário */
+		var form = ["textarea", "select", "input"];
+		return form.indexOf(wd_html_tag(elem)) < 0 ? false : true;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_html_form_type(elem) { /* retorna o tipo do campo de formulário */
+		if (!wd_html_form(elem) && wd_html_tag(elem) !== "button") return null;
+		var types = [
+			"button", "reset", "submit", "image", "color", "radio",
+			"checkbox", "date", "datetime", "datetime-local", "email",
+			"text", "search", "tel", "url", "month", "number", "password",
+			"range", "time", "week", "hidden", "file"
+		];
+		if ("type" in elem.attributes) { /* tipo digitado */
+			var type = elem.attributes.type.value.toLowerCase();
+			if (types.indexOf(type) >= 0) return type;
+		}
+		if ("type" in elem) { /* tipo definido */
+			var type = elem.type.toLowerCase();
+			if (types.indexOf(type) >= 0) return type;
+		}
+		return wd_html_tag(elem);
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_html_form_name(elem) { /* retorna o valor do atributo name do campo de formulário */
+		if (wd_html_form_type(elem) === null) return null;
+		var name = wd_vtype(elem.name);
+		return name.type === "text" ? name.value : null;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_html_form_value(elem) { /* retorna o valor do atributo value do campo de formulário */
+		var type = wd_html_form_type(elem);
+		if (type === null) return null;
+		var attr = wd_vtype(elem.value);
+		if (type === "radio" || type === "checkbox")
+			return elem.checked ? attr.value : null;
+		if (type === "date")
+			return attr.type === "date" ? wd_date_iso(attr.value) : null;
+		if (type === "time")
+			return attr.type === "time" ? wd_time_iso(attr.value) : null;
+		if (type === "number" || type === "range")
+			return attr.type === "number" ? attr.value : null;
+		if (type === "file")
+			return elem.files.length > 0 ? elem.files : null;
+		if (type === "select") {
+			value = [];
+			for (var i = 0; i < elem.length; i++)
+				if (elem[i].selected) value.push(e[i].value);
+			return value.length === 0 ? null : value;
+		}
+		return value === "" ? null : value;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_html_form_send(elem) { /* informa se os dados do campo de formulário podem ser enviados */
+		if (wd_html_form_name(elem)  === null) return false;
+		if (wd_html_form_value(elem) === null) return false;
+		var noSend = ["submit", "button", "reset", "image"]; /* não submeter botões */
+		return noSend.indexOf(wd_html_form_type(elem))>= 0 ? false : true;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_html_mask_attr(elem) { /* retorna o atributo para aplicação da máscara */
+		var tag = wd_html_tag(elem);
+		if (tag === "button" || tag === "option") return "textContent";
+		var value = [
+			"textarea", "button", "submit", "email", "text", "search",
+			"tel", "url"
+		];
+		var type = wd_html_form_type(elem);
+		if (value.indexOf(type) >= 0) return "value";
+		return "textContent" in elem ? "textContent" : null;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_html_load_attr(elem) { /* retorna o atributo para carregar HTML em forma de texto */
+		var tag = wd_html_tag(elem);
+		if (tag === "button" || tag === "option") return "textContent";
+		var value = [
+			"textarea", "button", "reset", "submit", "email", "text",
+			"search", "tel", "url", "hidden"
+		];
+		var type = wd_html_form_type(elem);
+		if (value.indexOf(type) >= 0) return "value";
+		return "innerHTML" in elem ? "innerHTML" : "textContent";
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_html_form_data(elem) { /* retorna um array de objetos {NAME|GET|POST} com os dados para envio em requisições */
+		var form  = [];
+		if (!wd_html_form_send(elem)) return form;
+		var name  = wd_html_form_name(elem);
+		var value = wd_html_form_value(elem);
+		var type  = wd_html_form_type(elem);
+		if (type === "file") {
+			for (var i = 0; i < value.length; i++)
+				form.push({
+					NAME: i === 0 ? name : name+"_"+i, /*atributo nome*/
+					GET:  encodeURIComponent(value[i].name), /*nome do arquivo*/
+					POST: value[i] /*dados do arquivo*/
+				});
+			return form;
+		}
+		if (type === "select") {
+			for (var i = 0; i < value.length; i++)
+				form.push({
+					NAME: i === 0 ? name : name+"_"+i,
+					GET:  encodeURIComponent(value[i]),
+					POST: value[i]
+				});
+			return form;
+		}
+		form.push({
+			NAME: name,
+			GET:  encodeURIComponent(value),
+			POST: value
+		});
+		return form;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_html_dataset_notation(elem, attr) { /* transforma o conteúdo em formato especial do dataset em um array de objetos */
+		var list = [{}];
+		if (!(attr in elem.dataset)) return list;
+		var key    = 0;
+		var open   = 0;
+		var name   = "";
+		var value  = "";
+		var object = false;
+		var core   = new String(elem.dataset[attr]).trim().split("");
+		for (var i = 0; i < core.length; i++) {
+			if (core[i] === "{" && open === 0) {/*abrir captura do valor do atributo*/
+				open++;
+			} else if (core[i] === "}" && open === 1) {/*finalizar captura do valor do atributo*/
+				open--;
+				object = true;
+				value  = value.trim();
+				name   = name.trim();
+				list[key][name] = value === "null" ? null : value;
+				name  = "";
+				value = "";
+				if (core[i+1] === "&") {/*novo grupo*/
+					list.push({});
+					key++;
+					i++;
+				}
+			} else if (open > 0) {/*capturando valor do atributo*/
+				if (core[i] === "{") {open++;} else if (core[i] === "}") {open--;}
+				value += core[i];
+			} else {/*capturando nome do atributo*/
+				name += core[i];
+			}
+		}
+		return object ? list : (name.trim() === "null" ? [{value: null}] : [{value: name}]);
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_dom_run(method) { /* função vinculada ao construtor WDdom para executar rotina sobre os elementos */
+		/* checando argumentos obrigatórios */
+		if (wd_vtype(method).type !== "function") return null;
+		/* obtendo argumentos secundários */
+		var args = [null];
+		for (var i = 1; i < arguments.length; i++)
+			args.push(arguments[i]);
+		/* looping nos elementos */
+		var query = this.valueOf();
+		for (var i = 0; i < query.length; i++) {
+			var x = query[i];
+			if (x !== window && x.nodeType !== 1 && x.nodeType !== 9) continue;
+			/* informando elemento como primeiro argumento */
+			args[0] = x;
+			method.apply(null, args);
+		}
+		return true;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_html_handler(elem, events, remove) { /* define ou remove disparadores */
+		if (wd_vtype(elem).type !== "dom") return null;
+		var action = remove === true ? "removeEventListener" : "addEventListener";
+		for (var ev in events) {
+			var method = events[ev];
+			if (wd_vtype(method).type !== "function") continue;
+			var event  = ev.toLowerCase().replace(/^on/, "");
+			elem[action](event, method, false);
+		}
+		return true;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_html_style(elem, styles) { /* define ou remove estilo ao elemento */
+		if (styles === null) { /* limpando styles */
+			while (elem.style.length > 0)
+				elem.style[elem.style[0]] = null;
+			return true;
+		}
+
+		if (wd_vtype(styles).type !== "object") return null;
+		for (var i in styles) /* definindo styles */
+			elem.style[wd_text_camel(i)] = styles[i];
+		return true;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_html_class(elem, value) { /* obtem/define o valor do atributo class */
+		var val = elem.className;
+		if (value === undefined) { /* obter valor do atributo */
+			if (typeof val === "string") return val;
+			val = elem.getAttribute("class");
+			return val === null ? "" : val;
+		}
+		/* definir valor do atributo */
+		if (typeof val === "string") return elem.className = value;
+		return elem.setAttribute("class", value);
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_html_css(elem, obj) { /* manipula o atributo class por meio de um objeto com instruções */
+		if (obj === null) return wd_html_class(elem, "");
+		if (wd_vtype(obj).type !== "object") return null;
+		var array = wd_no_spaces(wd_html_class(elem)).split(" ");
+
+		for (var i in obj) {
+			var val = wd_vtype(obj[i]);
+			if (val.type !== "text") continue;
+			val = wd_no_spaces(val.value).split(" ");
+			if (i === "rpl" && val.length < 2) continue;
+
+			if (i === "add") array = wd_array_add(array, val); else
+			if (i === "del") array = wd_array_del(array, val); else
+			if (i === "tgl") array = wd_array_tgl(array, val); else
+			if (i === "rpl") array = wd_array_rpl(array, val[0], val[1]);
+		}
+		array = wd_array_sort(wd_array_unique(array)).join(" ");
+		return wd_html_class(elem, wd_no_spaces(array));
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_html_data(elem, obj) { /* define atributos dataset no elemento a partir de um objeto */
+		if (obj === null) {
+			for (var i in elem.dataset)
+				delete elem.dataset[i];
+			return true;
+		}
+		if (wd_vtype(obj).type !== "object") return null;
+
+		for (var i in obj) {
+			if (wd_vtype(i).type !== "text") continue;
+			var key = wd_text_camel(i);
+
+			if (obj[i] === null) {
+				delete elem.dataset[key];
+			} else {
+				elem.dataset[key] = obj[i];
+				settingProcedures(elem, key);
+			}
+		}
+		return;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_html_load(elem, text) {
+		text = text === undefined || text === null ? "" : new String(text).toString();
+		var attr = wd_html_load_attr(elem);
+		elem[attr] = text;
+		if (attr === "innerHTML") {
+			var scripts = wd_vtype(wd_$$("script", elem)).value;
+			for (var i = 0; i < scripts.length; i++) {
+				var script = scripts[i].cloneNode(true);
+				elem.removeChild(scripts[i]);
+				elem.appendChild(script);
+			}
+		}
+		loadingProcedures();
+		return;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_html_repeat(elem, json) { /* clona elementos por array repetindo-os */
+		if (wd_vtype(json).type !== "array") return null;
+
+		var html = elem.innerHTML;
+
+		if (html.search(/\{\{.+\}\}/gi) >= 0)
+			elem.dataset.wdRepeatModel = html;
+		else if ("wdRepeatModel" in elem.dataset)
+			html = elem.dataset.wdRepeatModel;
+		else
+			return;
+
+		elem.innerHTML = "";
+		html = html.split("}}=\"\"").join("}}");
+		for (var i = 0; i < json.length; i++) {
+			var inner  = html;
+			if (wd_vtype(json[i]).type !== "object") continue;
+			for (var c in json[i]) inner = inner.split("{{"+c+"}}").join(json[i][c]);
+			elem.innerHTML += inner;
+		}
+		loadingProcedures();
+		return true;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_html_nav(elem, action) { /* define exibições e inibições de elementos */
+		action = new String(action).toLowerCase();
+
+		if (action === "show")   return wd_html_css(elem, {del: "js-wd-no-display"});
+		if (action === "hide")   return wd_html_css(elem, {add: "js-wd-no-display"});
+		if (action === "toggle") return wd_html_css(elem, {tgl: "js-wd-no-display"});
+		if (action === "prev" || action === "next") {
+			var child = wd_vtype(elem.children).value;
+			if (child.length === 0) return null;
+			if (child.length === 1) return wd_html_nav(child[0], "toggle");
+			var first = +Infinity;
+			var last  = -Infinity;
+			/* Procurando pelos filhos visíveis */
+			for (var i = 0; i < child.length; i++) {
+				var css  = wd_html_class(child[i]).split(" ");
+				var show = css.indexOf("js-wd-no-display") < 0 ? true : false;
+				if (show && i < first) first = i;
+				if (show && i > last ) last  = i;
+			}
+			if (first === +Infinity) first = 0;
+			if (last === +Infinity ) last  = child.length-1;
+			/* definindo os próximos a serem exibidos */
+			var next = last >= (child.length-1) ? 0 : last+1;
+			var prev = first <= 0 ? child.length-1 : first-1;
+			console.log("first:", first, "last:", last, "next:", next, "prev:", prev);
+			return wd_html_nav(child[action === "prev" ? prev : next]);
+		}
+		/*default*/
+		var bros = elem.parentElement.children;
+		for (var i = 0; i < bros.length; i++)
+			wd_html_nav(bros[i], (bros[i] === elem ? "show": "hide"));
+		return true;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_html_filter(elem, search, chars) { /* exibe somente o elemento que contenha o texto casado */
+		chars = wd_finite(chars) && chars !== 0 ? wd_integer(chars) : 1;
+
+		/*definindo valor de busca*/
+		var vtype = wd_vtype(search);
+		if (search === null || search === undefined)
+			search = "";
+		else if (vtype.type === "text")
+			search = wd_text_clear(search).toUpperCase();
+		else if (vtype.type !== "regexp")
+			search = new String(search).toUpperCase();
+
+		var child = wd_vtype(elem.children).value;
+		for (var i = 0; i < child.length; i++) {
+			if (!("textContent" in child[i])) continue;
+
+			/* obtendo conteúdo do elemento */
+			var content = wd_text_clear(child[i].textContent).toUpperCase();
+
+			if (vtype.type === "regexp" && search.test(content))
+				return wd_html_nav(child[i]);
+
+			var found = content.indexOf(search) >= 0 ? true : false;
+			var width = search.length;
+			if (chars < 0) {
+				wd_html_nav(child[i], (found && width >= -chars) ? "show" :  "hide");
+			} else {
+				wd_html_nav(child[i], (!found && width >= chars) ? "hide" :  "show");
+			}
+		};
+		return;
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /* == BLOCO 2 ================================================================*/
 
@@ -1979,7 +2389,7 @@ BLOCO 5: boot
 			}
 		},
 		toString: { /* método padrão */
-			value: function() {return this.format("%h:%M:%S");}
+			value: function() {return wd_time_iso(this.valueOf());}
 		}
 
 	});
@@ -2063,7 +2473,7 @@ BLOCO 5: boot
 		},
 		toString: { /* método padrão */
 			value: function() {
-				return this.format("%Y-%M-%D");
+				return wd_date_iso(this._value);
 			}
 		},
 		valueOf: { /* método padrão */
@@ -2603,185 +3013,6 @@ BLOCO 5: boot
 /*----------------------------------------------------------------------------*/
 	function WDdom(value) {WDmain.call(this, value);}
 
-	Object.defineProperties(WDdom, {/*objetos do construtor*/
-		checkCss: {
-			value: function(e, css) {
-				var list = wd_no_spaces(e.className).split(" ");
-				return list.indexOf(css) >= 0 ? true : false;
-			}
-		},
-		tag: {/*retorna a tag do elemento*/
-			value: function(e) {return e.tagName.toLowerCase();}
-		},
-		form: {/*informa se o elemento é de formulário*/
-			value: function(e) {
-				var form = ["textarea", "select", "button", "input", "option"];
-				return form.indexOf(this.tag(e)) < 0 ? false : true;
-			}
-		},
-		type: {/*informa o tipo do elemento de formulário*/
-			value: function(e) {
-				if (!this.form(e)) return null;
-				var types = [
-					"button", "reset", "submit", "image", "color", "radio",
-					"checkbox", "date", "datetime", "datetime-local", "email",
-					"text", "search", "tel", "url", "month", "number", "password",
-					"range", "time", "week", "hidden", "file"
-				];
-				var attr = "type" in e.attributes ? e.attributes.type.value.toLowerCase() : null;
-				var type = "type" in e ? e.type.toLowerCase() : null;
-			 	if (types.indexOf(attr) >= 0) return attr; /*DIGITADO no HTML*/
-			 	if (types.indexOf(type) >= 0) return type; /*CONSIDERADO no HTML*/
-				return this.tag(e);
-			}
-		},
-		name: {/*informa o valor do atributo name do formulário*/
-			value: function(e) {
-				if (!this.form(e) || !("name" in e)) return null;
-				var name = wd_vtype(e.name);
-				return name.type === "text" ? name.input : null;
-			}
-		},
-		value: {/*retorna o valor do atributo value do formulário*/
-			value: function(e) {
-				if (!this.form(e) || !("value" in e)) return null;
-				var type  = this.type(e);
-				var value = e.value;
-				var check = WD(value);
-				if (type === "radio")    return e.checked               ? value            : null;
-				if (type === "checkbox") return e.checked               ? value            : null;
-				if (type === "date")     return check.type === "date"   ? check.toString() : null;
-				if (type === "time")     return check.type === "time"   ? check.toString() : null;
-				if (type === "number")   return check.type === "number" ? check.valueOf()  : null;
-				if (type === "range")    return check.type === "number" ? check.valueOf()  : null;
-				if (type === "file")     return e.files.length > 0      ? e.files : null;
-				if (type === "select") {
-					value = [];
-					for (var i = 0; i < e.length; i++) {
-						if (e[i].selected) value.push(e[i].value);
-					}
-					return value.length === 0 ? null : value;
-				}
-				return value === "" ? null : value;
-			}
-		},
-		send: {/*informa se os dados do elemento podem ser enviados*/
-			value: function(e) {
-				if (this.name(e) === null || this.value(e) === null) return false;
-				var noSend = ["submit", "button", "reset", "image", "option"];
-				if (noSend.indexOf(this.type(e)) >= 0) return false;
-				if (noSend.indexOf(this.tag(e))  >= 0) return false;
-				return true;
-			}
-		},
-		mask: {/*retorna o atributo para aplicação da máscara*/
-			value: function(e) {
-				if (!this.form(e)) return "textContent" in e ? "textContent" : null;
-				var text = ["button", "option"];
-				if (text.indexOf(this.tag(e)) >= 0) return "textContent";
-				var value = [
-					"textarea", "button", "submit", "email", "text", "search",
-					"tel", "url"
-				];
-				if (value.indexOf(this.tag(e)) >= 0)  return "value";
-				if (value.indexOf(this.type(e)) >= 0) return "value";
-				return null;
-			}
-		},
-		load: {/*retona o atributo para carregar outro elemento interno*/
-			value: function(e) {
-				if (this.tag(e) === "button" || this.tag(e) === "option") return "textContent";
-				var value = [
-					"textarea", "button", "reset", "submit", "email", "text",
-					"search", "tel", "url", "hidden"
-				];
-				if (this.form(e)) return value.indexOf(this.type(e)) >= 0 ? "value" : null;
-				return "innerHTML" in e ? "innerHTML" : "textContent";
-			}
-		},
-		formdata: {
-			value: function(e) {/*retorna um array de objetos com os dados para envio em requisições*/
-				var form  = [];
-				if (!this.send(e)) return form;
-				var name  = this.name(e);
-				var value = this.value(e);
-				if (this.type(e) === "file") {
-					for (var i = 0; i < value.length; i++) {
-						form.push({
-							NAME: i === 0 ? name : name+"_"+i, /*atributo nome*/
-							GET:  encodeURIComponent(value[i].name), /*nome do arquivo*/
-							POST: value[i] /*dados do arquivo*/
-						});
-					}
-					return form;
-				}
-				if (this.tag(e) === "select") {
-					for (var i = 0; i < value.length; i++) {
-						form.push({
-							NAME: i === 0 ? name : name+"_"+i,
-							GET:  encodeURIComponent(value[i]),
-							POST: value[i]
-						});
-					}
-					return form;
-				}
-				form.push({
-					NAME: name,
-					GET:  encodeURIComponent(value),
-					POST: value
-				});
-				return form;
-			}
-		},
-		dataset: {
-			value: function(e, attr) {/*obter o conteúdo de dataset e ransformar em um array de objetos*/
-				var list = [{}];
-				if (!(attr in e.dataset)) return list;
-				var key    = 0;
-				var open   = 0;
-				var name   = "";
-				var value  = "";
-				var object = false;
-				var core  = String(e.dataset[attr]).trim().split("");
-				for (var i = 0; i < core.length; i++) {
-					if (core[i] === "{" && open === 0) {/*abrir captura do valor do atributo*/
-						open++;
-					} else if (core[i] === "}" && open === 1) {/*finalizar captura do valor do atributo*/
-						open--;
-						object = true;
-						value  = value.trim();
-						name   = name.trim();
-						list[key][name] = value === "null" ? null : value;
-						name  = "";
-						value = "";
-						if (core[i+1] === "&") {/*novo grupo*/
-							list.push({});
-							key++;
-							i++;
-						}
-					} else if (open > 0) {/*capturando valor do atributo*/
-						if (core[i] === "{") {open++;} else if (core[i] === "}") {open--;}
-						value += core[i];
-					} else {/*capturando nome do atributo*/
-						name += core[i];
-					}
-				}
-				return object ? list : (name.trim() === "null" ? [{value: null}] : [{value: name}]);
-			}
-		},
-		brosIndex: {
-			value: function(e) {
-				var bros = e.parentElement.children;
-				for (var i = 0; i < bros.length; i++) {
-					if (bros[i] === e) return i;
-				}
-				return 0;
-			}
-		}
-	});
-
-/*----------------------------------------------------------------------------*/
-
 	WDdom.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDdom},
 		type:        {value: "dom"},
@@ -2795,12 +3026,6 @@ BLOCO 5: boot
 				return wd_array_item(this.valueOf(), i);
 			}
 		},
-
-
-
-
-
-
 		run: { /* executa um job nos elementos */
 			value: function(method) {
 				wd_dom_run.apply(this, arguments); return this;
@@ -2826,95 +3051,38 @@ BLOCO 5: boot
 				return this.run(wd_html_css, obj);
 			}
 		},
+		data: { /* manipula atributo dataset */
+			value: function(obj) {
+				return this.run(wd_html_data, obj);
+			}
+		},
+		load: { /* carrega elementos HTML em forma de texto */
+			value: function(text) {
+				return this.run(wd_html_load, text);
+			}
+		},
+		repeat: {  /* clona elementos por array repetindo-os */
+			value: function(json) {
+				return this.run(wd_html_repeat, json);
+			}
+		},
+		nav: {  /* define exibições e inibições de elementos */
+			value: function(action) {
+				return this.run(wd_html_nav, action);
+			}
+		},
+		filter: {  /* exibe somente o elemento que contenha o texto casado */
+			value: function(search, chars) {
+				return this.run(wd_html_filter, search, chars);
+			}
+		},
 
 
 
 	});
 
-/*----------------------------------------------------------------------------*/
-	function wd_dom_run(method) { /* função vinculada ao construtor WDdom para executar rotina sobre os elementos */
-		/* checando argumentos obrigatórios */
-		if (wd_vtype(method).type !== "function") return null;
-		/* obtendo argumentos secundários */
-		var args = [];
-		for (var i = 0; i < arguments.length; i++)
-			args.push(arguments[i]);
-		/* looping nos elementos */
-		var query = this.valueOf();
-		for (var i = 0; i < query.length; i++) {
-			var x = query[i];
-			if (x !== window && x.nodeType != 1 && x.nodeType != 9) continue;
-			/* informando elemento como primeiro argumento */
-			args[0] = x;
-			method.apply(null, args);
-		}
-		return true;
-	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_html_handler(elem, events, remove) { /* define ou remove disparadores */
-		if (wd_vtype(elem).type !== "dom") return null;
-		var action = remove === true ? "removeEventListener" : "addEventListener";
-		for (var ev in events) {
-			var method = events[ev];
-			if (wd_vtype(method).type !== "function") continue;
-			var event  = ev.toLowerCase().replace(/^on/, "");
-			elem[action](event, method, false);
-		}
-		return true;
-	}
-
-/*----------------------------------------------------------------------------*/
-	function wd_html_style(elem, styles) { /* define ou remove estilo ao elemento */
-		if (styles === null) { /* limpando styles */
-			while (elem.style.length > 0)
-				elem.style[elem.style[0]] = null;
-			return true;
-		}
-
-		if (wd_vtype(styles).type !== "object") return null;
-		for (var i in styles) /* definindo styles */
-			elem.style[wd_text_camel(i)] = styles[i];
-		return true;
-	}
-
-/*----------------------------------------------------------------------------*/
-	function wd_html_class_get(elem) { /* obtem o valor do atributo class (string) */
-		var val = elem.className;
-		if (val === null) return "";
-		if (wd_vtype(val).type !== "text") /* se className não for texto */
-			val = elem.getAttribute("class");
-		return val === null ? "" : val;
-	}
-
-/*----------------------------------------------------------------------------*/
-	function wd_html_class_set(elem, value) { /* define o valor do atributo class */
-		value = wd_no_spaces(value.trim());
-		try      {elem.className = value;}
-		catch(e) {elem.setAttribute("class", value);}/* se className não for editável */
-		return true;
-	}
-
-/*----------------------------------------------------------------------------*/
-	function wd_html_css(elem, obj) { /* manipula o atributo class por meio de um objeto com instruções */
-		if (obj === null) return wd_html_class_set(elem, "");
-		if (wd_vtype(obj).type !== "object") return null;
-		var array = wd_html_class_get(elem).split(" ");
-
-		for (var i in obj) {
-			var val = wd_vtype(obj[i]);
-			if (val.type !== "text") continue;
-			val = wd_no_spaces(val.value).split(" ");
-			if (i === "rpl" && val.length < 2) continue;
-
-			if (i === "add") array = wd_array_add(array, val); else
-			if (i === "del") array = wd_array_del(array, val); else
-			if (i === "tgl") array = wd_array_tgl(array, val); else
-			if (i === "rpl") array = wd_array_rpl(array, val[0], val[1]);
-		}
-		array = wd_array_sort(wd_array_unique(array)).join(" ");
-		return wd_html_class_set(elem, array);
-	}
 
 
 
@@ -2922,146 +3090,6 @@ BLOCO 5: boot
 
 
 
-
-
-
-
-
-
-	Object.defineProperty(WDdom.prototype, "data", {/*define dataset*/
-
-		value: function(input) {
-			var check = wd_vtype(input);
-			if (check.type !== "object" && check.value !== null) return this;
-
-			this.run(function(elem) {
-				if (input === null) {
-					for (var i in elem.dataset) {
-						elem.dataset[i] = null;
-						delete elem.dataset[i];
-					}
-					return;
-				}
-
-				for (var i in input) {
-					var key = WD(i);
-					if (key.type !== "text") continue;
-					key = key.camel;
-
-					if (input[i] === null) {
-						elem.dataset[key] = null;
-						delete elem.dataset[key];
-					} else {
-						elem.dataset[key] = input[i];
-						settingProcedures(elem, key);
-					}
-				}
-				return;
-			});
-			return this;
-		}
-	});
-
-	Object.defineProperty(WDdom.prototype, "load", { /*carregar HTML/Texto*/
-
-		value: function(text) {
-			text = text === undefined || text === null ? "" : new String(text).toString();
-			this.run(function(elem) {
-				var attr = WDdom.load(elem);
-				elem[attr] = text;
-				if (attr === "innerHTML") {
-					var scripts = elem.querySelectorAll("script");
-					for (var i = 0; i < scripts.length; i++) {
-						var script = document.createElement("script");
-
-						if (scripts[i].src === "")
-							script.textContent = scripts[i].textContent;
-						else
-							script.src = scripts[i].src;
-
-						elem.appendChild(script);
-						WD(script).set("remove");
-					}
-				}
-				loadingProcedures();
-				return;
-			});
-			return this;
-		}
-	});
-
-	Object.defineProperty(WDdom.prototype, "repeat", {/*clona elementos por array*/
-
-		value: function (json) {
-			var check = wd_vtype(json);
-			if (check.type !== "array") return this;
-			this.run(function(elem) {
-				var html = elem.innerHTML;
-
-				if (html.search(/\{\{.+\}\}/gi) >= 0) {
-
-					elem.dataset.wdRepeatModel = html;
-				} else if ("wdRepeatModel" in elem.dataset) {
-					html = elem.dataset.wdRepeatModel;
-				} else {
-					return;
-				}
-				elem.innerHTML = "";
-				html = html.split("}}=\"\"").join("}}");
-				for (var i = 0; i < json.length; i++) {
-					var inner  = html;
-					var object = wd_vtype(json[i]);
-					if (object.type !== "object") continue;
-					for (var c in json[i]) inner = inner.split("{{"+c+"}}").join(json[i][c]);
-					elem.innerHTML += inner;
-				}
-				loadingProcedures();
-				return;
-			});
-			return this;
-		}
-	});
-
-	Object.defineProperty(WDdom.prototype, "filter", {/*exibe somente o texto casado*/
-
-		value: function (search, chars) {
-			chars = wd_finite(chars) && chars !== 0 ? wd_integer(chars) : 1;
-
-			/*definindo valor de busca*/
-			var check1 = WD(search)
-			if      (search === null || search === undefined) {search = "";}
-			else if (check1.type === "text")   {search = check1.format("upper", "clear");}
-			else if (check1.type !== "regexp") {search = new String(search).trim().toUpperCase();}
-
-			this.run(function (elem) {
-				var child = elem.children;
-				for (var i = 0; i < child.length; i++) {
-					if (!("textContent" in child[i])) continue;
-
-					/*obtendo área de busca*/
-					var content = child[i].textContent.trim().toUpperCase();
-					var check2  = WD(content);
-					if (check2.type === "text") content = check2.format("clear");
-
-					var target = WD(child[i]);
-
-					if (check1.type === "regexp" && search.test(content)) {
-						target.nav("show");
-						continue;
-					}
-					var found = content.indexOf(search) >= 0 ? true :  false;
-					var width = search.length;
-					if (chars < 0) {
-						target.nav((found && width >= -chars) ? "show" :  "hide");
-					} else {
-						target.nav((!found && width >= chars) ? "hide" :  "show");
-					}
-				};
-				return;
-			});
-			return this;
-		}
-	});
 
 	Object.defineProperty(WDdom.prototype, "set", {/*Define atributos*/
 
@@ -3114,53 +3142,6 @@ BLOCO 5: boot
 		}
 	});
 
-	Object.defineProperty(WDdom.prototype, "nav", {/*navegação*/
-
-		value: function (action) {
-			action = new String(action).toLowerCase();
-
-			this.run(function(elem) {
-				var list = WD(elem);
-				if (action === "show")   return list.css({del: "js-wd-no-display"});
-				if (action === "hide")   return list.css({add: "js-wd-no-display"});
-				if (action === "toggle") return list.css({tgl: "js-wd-no-display"});
-
-				if (action === "prev") {
-					var child  = elem.children;
-					var length = child.length;
-					if (length === 0) return;
-					var target = child[length-1];
-					for (var i = 0; i < length; i++) {
-						if (WDdom.checkCss(child[i], "js-wd-no-display")) continue;
-						if (i !== 0) target = child[i-1];
-						break;
-					}
-					var apply = WD(target);
-					return apply.nav();
-				}
-
-				if (action === "next") {
-					var child  = elem.children;
-					var length = child.length;
-					if (length === 0) return;
-					var target = child[0];
-					for (var i = (length-1); i >= 0; i--) {
-						if (WDdom.checkCss(child[i], "js-wd-no-display")) continue;
-						if (i !== (length - 1)) target = child[i+1];
-						break;
-					}
-					var apply = WD(target);
-					return apply.nav();
-				}
-				/*default*/
-				var bros = WD(elem.parentElement.children);
-				bros.nav("hide");
-				list.nav("show")
-				return;
-			});
-			return this;
-		}
-	});
 
 	Object.defineProperty(WDdom.prototype, "page", {/*divide os elementos em "páginas"*/
 
@@ -3241,7 +3222,7 @@ BLOCO 5: boot
 		value: function() {
 			var tables = [];
 			this.run(function(elem) {
-				var tag = WDdom.tag(elem);
+				var tag = wd_html_tag(elem);
 				if (["tfoot", "tbody", "thead", "table"].indexOf(tag) < 0) return tables.push(null);
 				var data = [];
 				var rows = elem.rows;
@@ -3328,7 +3309,7 @@ BLOCO 5: boot
 /*----------------------------------------------------------------------------*/
 	function data_wdLoad(e) {/*carrega HTML: data-wd-load=path{file}method{get|post}${form}*/
 		if (!("wdLoad" in e.dataset)) return;
-		var data   = WDdom.dataset(e, "wdLoad")[0];
+		var data   = wd_html_dataset_notation(e, "wdLoad")[0];
 		var target = WD(e);
 		var method = "method" in data ? data.method : "post";
 		var file   = data.path;
@@ -3346,7 +3327,7 @@ BLOCO 5: boot
 
 	function data_wdRepeat(e) {/*Repete modelo HTML: data-wd-repeat=path{file}method{get|post}${form}*/
 		if (!("wdRepeat" in e.dataset)) return;
-		var data   = WDdom.dataset(e, "wdRepeat")[0];
+		var data   = wd_html_dataset_notation(e, "wdRepeat")[0];
 		var target = WD(e);
 		var method = "method" in data ? data.method : "post";
 		var file   = data.path;
@@ -3370,7 +3351,7 @@ BLOCO 5: boot
 		/*a partir de uma tabela: table{target}cols{x,y1:anal1,y2:anal2...}labels{title,x,y}*/
 		/*a partir de um arquivo: path{...}method{...}form{...}cols{x,y1:anal1,y2:anal2...}labels{title,x,y}*/
 		if (!("wdChart" in e.dataset)) return;
-		var data   = WDdom.dataset(e, "wdChart")[0];
+		var data   = wd_html_dataset_notation(e, "wdChart")[0];
 		var target = WD(e);
 
 		/*Função para analisar dados e manipular objeto*/
@@ -3420,7 +3401,7 @@ BLOCO 5: boot
 
 	function data_wdSend(e) {/*Requisições: data-wd-send=path{file}method{get|post}${form}call{name}&*/
 		if (!("wdSend" in e.dataset)) return;
-		var data = WDdom.dataset(e, "wdSend");
+		var data = wd_html_dataset_notation(e, "wdSend");
 		for (var i = 0; i < data.length; i++) {
 			if (!("get" in data[i]) && !("post" in data[i])) continue;
 			var method = "method" in data[i] ? data.method[i] : "post";
@@ -3437,7 +3418,7 @@ BLOCO 5: boot
 
 	function data_wdSort(e) {/*Ordenar HTML: data-wd-sort="order{±1}col{>0?}"*/
 		if (!("wdSort" in e.dataset)) return;
-		var data  = WDdom.dataset(e, "wdSort")[0];
+		var data  = wd_html_dataset_notation(e, "wdSort")[0];
 		var order = "order" in data ? data.order : 1;
 		var col   = "col"   in data ? data.col : null;
 		WD(e).sort(order, col).data({wdSort: null});
@@ -3448,7 +3429,7 @@ BLOCO 5: boot
 
 	function data_wdTsort(e) {/*Ordena tabelas: data-wd-tsort=""*/
 		if (!("wdTsort" in e.dataset)) return;
-		if (WDdom.tag(e.parentElement.parentElement) !== "thead") return;
+		if (wd_html_tag(e.parentElement.parentElement) !== "thead") return;
 		var order = e.dataset.wdTsort === "+1" ? -1 : 1;
 		var col   = WDdom.brosIndex(e);
 		var heads = e.parentElement.children;
@@ -3479,7 +3460,7 @@ BLOCO 5: boot
 			}
 		}
 
-		var data = WDdom.dataset(e, "wdFilter");
+		var data = wd_html_dataset_notation(e, "wdFilter");
 		for (var i = 0; i < data.length; i++) {
 			var chars  = data[i].chars;
 			var target = wd_$$$(data[i]);
@@ -3494,7 +3475,7 @@ BLOCO 5: boot
 		if (!("wdMask" in e.dataset)) return;
 		var attr = WDdom.mask(e);
 		if (attr === null) return;
-		var data = WDdom.dataset(e, "wdMask")[0];
+		var data = wd_html_dataset_notation(e, "wdMask")[0];
 		if (!("model" in data)) return;
 		var checks = {
 			date: function(x) {return WD(x).type === "date" ? true : false},
@@ -3527,7 +3508,7 @@ BLOCO 5: boot
 
 	function data_wdPage(e) {/*separação em grupos: data-wd-page=page{p}size{s}*/
 		if (!("wdPage" in e.dataset)) return;
-		var data = WDdom.dataset(e, "wdPage")[0];
+		var data = wd_html_dataset_notation(e, "wdPage")[0];
 		WD(e).page(data.page, data.size).data({wdPage: null});
 		return;
 	};
@@ -3545,7 +3526,7 @@ BLOCO 5: boot
 
 	function data_wdData(e) {/*define dataset: data-wd-data=attr1{value}${css}&*/
 		if (!("wdData" in e.dataset)) return;
-		var data = WDdom.dataset(e, "wdData");
+		var data = wd_html_dataset_notation(e, "wdData");
 		for (var i = 0; i < data.length; i++) {
 			var target = wd_$$$(data[i]);
 			delete data[i]["$"];
@@ -3561,7 +3542,7 @@ BLOCO 5: boot
 	function data_wdEdit(e) {/*edita texto: data-wd-edit=comando{especificação}...*/
 		if (!("execCommand" in document)) return;
 		if (!("wdEdit" in e.dataset)) return;
-		var data = WDdom.dataset(e, "wdEdit")[0];
+		var data = wd_html_dataset_notation(e, "wdEdit")[0];
 		for (var i in data) {
 			var cmd = i;
 			var arg = data[i].trim() === "" ? undefined : data[i].trim();
@@ -3581,7 +3562,7 @@ BLOCO 5: boot
 
 	function data_wdDevice(e) {/*Estilo widescreen: data-wd-device=desktop{css}tablet{css}phone{css}mobile{css}*/
 		if (!("wdDevice" in e.dataset)) return;
-		var data = WDdom.dataset(e, "wdDevice")[0];
+		var data = wd_html_dataset_notation(e, "wdDevice")[0];
 		var desktop = "desktop" in data ? data.desktop : "";
 		var mobile  = "mobile"  in data ? data.mobile  : "";
 		var tablet  = "tablet"  in data ? data.tablet  : "";
@@ -3603,7 +3584,7 @@ BLOCO 5: boot
 
 	function data_wdFull(e) {/*Estilo fullscreen: data-wd-full=exit{}${}*/
 		if (!("wdFull" in e.dataset)) return;
-		var data   = WDdom.dataset(e, "wdFull")[0];
+		var data   = wd_html_dataset_notation(e, "wdFull")[0];
 		var exit   = "exit" in data ? true : false;
 		var target = wd_$$$(data);
 		if (target === null) target = document.documentElement;
@@ -3652,7 +3633,7 @@ BLOCO 5: boot
 
 	function data_wdSet(e) {/*define attributos: data-wd-set=attr{value}${css}&...*/
 		if (!("wdSet" in e.dataset)) return;
-		var data  = WDdom.dataset(e, "wdSet");
+		var data  = wd_html_dataset_notation(e, "wdSet");
 		var words = {"null": null, "false": false, "true": true};
 		for (var i = 0; i < data.length; i++) {
 			var target = wd_$$$(data[i]);
@@ -3670,7 +3651,7 @@ BLOCO 5: boot
 
 	function data_wdCss(e) {/*define class: data-wd-css=add{value}tgl{css}del{css}${css}&...*/
 		if (!("wdCss" in e.dataset)) return;
-		var data = WDdom.dataset(e, "wdCss");
+		var data = wd_html_dataset_notation(e, "wdCss");
 		for (var i = 0; i < data.length; i++) {
 			var target = wd_$$$(data[i]);
 			delete data[i]["$"];
@@ -3685,7 +3666,7 @@ BLOCO 5: boot
 
 	function data_wdNav(e) {/*Navegação: data-wd-nav=type{arg}${css}&*/
 		if (!("wdNav" in e.dataset)) return;
-		var data = WDdom.dataset(e, "wdNav");
+		var data = wd_html_dataset_notation(e, "wdNav");
 		for (var i = 0; i < data.length; i++) {
 			var target = wd_$$$(data[i]);
 			var value  = "type" in data[i] ? data[i].type : null;
@@ -3698,7 +3679,7 @@ BLOCO 5: boot
 
 	function data_wdOutput(e) {/*Atribui um valor ao target: data-wd-output=${target}call{}*/
 		if (!("wdOutput" in e.dataset)) return;
-		var data   = WDdom.dataset(e, "wdOutput")[0];
+		var data   = wd_html_dataset_notation(e, "wdOutput")[0];
 		var target = wd_$$$(data);
 		if (target === null) return;
 
@@ -3729,7 +3710,7 @@ BLOCO 5: boot
 	*/
 		if (!("wdFile" in e.dataset) || WDdom.type(e) !== "file") return;
 
-		var data  = WDdom.dataset(e, "wdFile")[0];
+		var data  = wd_html_dataset_notation(e, "wdFile")[0];
 		var info  = {error: null, file: null, value: null, parameter: null};
 		var files = e.files;
 
@@ -3780,7 +3761,7 @@ BLOCO 5: boot
 
 	function navLink(e) {/*link ativo do navegador*/
 		if (e.parentElement === null) return;
-		if (WDdom.tag(e.parentElement) !== "nav") return;
+		if (wd_html_tag(e.parentElement) !== "nav") return;
 		WD(e.parentElement.children).css({add: "js-wd-nav-inactive"});
 		WD(e).css({del: "js-wd-nav-inactive"});
 		return;
@@ -3855,7 +3836,7 @@ BLOCO 5: boot
 			if (obj.type !== "dom" || obj.item() === 0) return null;
 			return {
 				elem:         obj.item(0),
-				tag:          WDdom.tag(obj.item(0)),
+				tag:          wd_html_tag(obj.item(0)),
 				position:     obj.styles("position")[0].toLowerCase(),
 				height:       wd_integer(obj.styles("height")[0].replace(/[^0-9\.]/g, "")),
 				marginTop:    wd_integer(obj.styles("margin-top")[0].replace(/[^0-9\.]/g, "")),
