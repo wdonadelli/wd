@@ -959,7 +959,7 @@ BLOCO 5: boot
 			if (aindex > bindex) return  1;
 			if (aindex < bindex) return -1;
 			if (atype === "dom") {/*atype === btype (tipos iguais)*/
-				var check = WD([a.textContent, b.textContent]).sort();
+				var check = wd_array_sort([a.textContent, b.textContent]);
 				avalue = a.textContent === check[0] ? 0 : 1;
 				bvalue = avalue === 0 ? 1 : 0;
 			} else if (atype === "text") {
@@ -1387,15 +1387,15 @@ BLOCO 5: boot
 	function wd_html_form_value(elem) { /* retorna o valor do atributo value do campo de formulário */
 		var type = wd_html_form_type(elem);
 		if (type === null) return null;
-		var attr = wd_vtype(elem.value);
+		var attr = wd_vtype(elem.value).value;
 		if (type === "radio" || type === "checkbox")
-			return elem.checked ? attr.value : null;
+			return elem.checked ? attr : null;
 		if (type === "date")
-			return attr.type === "date" ? wd_date_iso(attr.value) : null;
+			return attr.type === "date" ? wd_date_iso(attr) : null;
 		if (type === "time")
-			return attr.type === "time" ? wd_time_iso(attr.value) : null;
+			return attr.type === "time" ? wd_time_iso(attr) : null;
 		if (type === "number" || type === "range")
-			return attr.type === "number" ? attr.value : null;
+			return attr.type === "number" ? attr : null;
 		if (type === "file")
 			return elem.files.length > 0 ? elem.files : null;
 		if (type === "select") {
@@ -1404,7 +1404,7 @@ BLOCO 5: boot
 				if (elem[i].selected) value.push(e[i].value);
 			return value.length === 0 ? null : value;
 		}
-		return value === "" ? null : value;
+		return attr;
 	}
 
 /*----------------------------------------------------------------------------*/
@@ -1683,6 +1683,21 @@ BLOCO 5: boot
 			var prev = first <= 0 ? child.length-1 : first-1;
 			console.log("first:", first, "last:", last, "next:", next, "prev:", prev);
 			return wd_html_nav(child[action === "prev" ? prev : next]);
+		}
+		if ((/^[0-9]+\:[0-9]+$/).test(action)) {
+			var child = wd_vtype(elem.children).value;
+			if (child.length === 0) return null;
+			var value = action.split(":");
+			var init = wd_vtype(value[0]).value;
+			var end  = wd_vtype(value[1]).value;
+			var show = end >= init ? true : false;
+			for (var i = 0; i < child.length; i++) {
+				if (i >= init && i <= end)
+					wd_html_nav(child[i], (show ? "show" : "hide"));
+				else
+					wd_html_nav(child[i], (show ? "hide" : "show"));
+			}
+			return true;
 		}
 		/*default*/
 		var bros = elem.parentElement.children;
@@ -3076,202 +3091,189 @@ BLOCO 5: boot
 				return this.run(wd_html_filter, search, chars);
 			}
 		},
+		set: {  /* define atributos/funcões no elemento */
+			value: function(attr, val) {
+				return this.run(wd_html_set, attr, val);
+			}
+		},
+		page: {  /* exibe determinados grupos de elementos filhos */
+			value: function(page, size) {
+				return this.run(wd_html_page, page, size);
+			}
+		},
+		sort: { /* ordena elementos filho pelo conteúdo */
+			value: function(order, col) {
+				return this.run(wd_html_sort, order, col);
+			}
+		},
+		full: { /* deixa o elemento em tela cheia (só primeiro elemento) */
+			value: function(exit) {
+				return wd_html_full(this._value[0], exit);
+			}
+		},
+		form: { /* obtém serialização de formulário */
+			value: function(get) {
+				return wd_html_form_submit(this._value, get);
+			}
+		},
+		vstyle: {  /* devolve o valor do estilo especificado (só primeiro elemento) */
+			value: function(css) {
+				return wd_html_style_get(this._value[0], css);
+			}
+		},
 
 
+
+
+		tag: {  /* devolve o nome do elemento em minúsculo (só primeiro elemento) */
+			get: function(css) {return wd_html_tag(this._value[0]);}
+		},
+		table: {  /* transforma os dados de uma tabela (table) em matriz */
+			get: function(css) {return wd_html_table_array(this._value[0]);}
+		},
 
 	});
-
+ /*  */
 
 /*----------------------------------------------------------------------------*/
+	function wd_html_set(elem, attr, val) { /* define atributos/funcões no elemento */
+		var args = [];
+		for (var i = 2; i < arguments.length; i++)
+			args.push(arguments[i]);
+		if (wd_vtype(elem[attr]).type === "function")
+			return elem[attr].apply(elem, args);
+		if (attr in elem)
+			try {return elem[attr] = val;} catch(e) {}
+		return elem.setAttribute(attr, val);
+	}
 
-
-
-
-
-
-
-
-	Object.defineProperty(WDdom.prototype, "set", {/*Define atributos*/
-
-		value: function (attr, value) {
-			attr = String(attr).trim();
-			this.run(function(elem) {
-				var check = wd_vtype(attr in elem ? elem[attr] : null);
-				if (check.type === "function") return elem[attr](value);
-
-				if (attr in elem) {
-					try {
-						var val = elem[attr];
-						if (value === "?" && (val === true || val === false)) {
-							elem[attr] = val ? false : true;
-							return;
-						}
-						elem[attr] = value;
-						return;
-					} catch(e) {}
-				}
-
-				if (value === undefined || value === null) return elem.removeAttribute(attr);
-				var val = elem.getAttribute(attr);
-				if (value === "?") {
-					if (val === null) return elem.setAttribute(attr, "");
-					if (val !== null) return elem.removeAttribute(attr);
-				}
-				return elem.setAttribute(attr, value);
-			});
-			return this;
+/*----------------------------------------------------------------------------*/
+	function wd_html_full(elem, exit) { /* deixa o elemento em tela cheia */
+		var action = {
+			open: ["requestFullscreen", "webkitRequestFullscreen", "msRequestFullscreen"],
+			exit: ["exitFullscreen", "webkitExitFullscreen", "msExitFullscreen"]
+		};
+		var full   = exit === true ? action.exit : action.open;
+		var target = exit === true ? document : elem;
+		for (var i = 0; i < full.length; i++) {
+			if (full[i] in target)
+				try {return target[full[i]]();} catch(e) {}
 		}
-	});
+		return null;
+	}
 
-	Object.defineProperty(WDdom.prototype, "full", {/*fullScreen: apenas para o 1º elemento*/
+/*----------------------------------------------------------------------------*/
+	function wd_html_page(elem, page, size) { /* exibe determinados grupos de elementos filhos */
+		var lines  = wd_vtype(elem.children).value;
+		if (lines.length === 0) return null;
+		page = wd_vtype(page).value;
+		size = wd_vtype(size).value;
+		if (!wd_finite(page) || !wd_finite(size)) return null;
 
-		value: function (exit) {
-			var action = {
-				open: ["requestFullscreen", "webkitRequestFullscreen", "msRequestFullscreen"],
-				exit: ["exitFullscreen", "webkitExitFullscreen", "msExitFullscreen"]
-			};
-			var full   = exit === true ? action.exit : action.open;
-			var target = exit === true ? document : this._value[0];
-			for (var i = 0; i < full.length; i++) {
-				if (full[i] in target) {
-					try {target[full[i]]();} catch(e) {}
-					break;
+		if (size <= 0) /* toda a amostra */
+			size = lines.length;
+		else if (size < 1) /* uma fração da amostra */
+			size = wd_integer(size*lines.length);
+		else /* padrão */
+			size = wd_integer(size);
+
+		if (size === lines.length) /* toda a amostra */
+			page = 0;
+		else if (page < 0) /* última página */
+			page = wd_integer(lines.length/size);
+		else /* padrão */
+			page = wd_integer(page);
+
+		var start = page*size;
+		var end   = start+size-1;
+		return wd_html_nav(elem, ""+start+":"+end+"");
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_html_sort(elem, order, col) { /* ordena elementos filho pelo conteúdo */
+		order = wd_finite(order) ? wd_integer(order) : 1;
+		col   = wd_finite(col)   ? wd_integer(col, true) : null;
+
+		var children = wd_vtype(elem.children).value;
+		var aux = [];
+
+		for (var i = 0; i < children.length; i++) {
+			if (col === null)
+				aux.push(children[i]);
+			else if (children[i].children[col] !== undefined)
+				aux.push(children[i].children[col]);
+		}
+
+		var sort = wd_array_sort(aux);
+		if (order < 0) sort = sort.reverse();
+		for (var i = 0; i < sort.length; i++)
+			elem.appendChild(col === null ? sort[i] : sort[i].parentElement);
+
+		return true;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_html_style_get(elem, css) { /* devolve o valor do estilo especificado */
+		var style = window.getComputedStyle(elem, null);
+		return css in style ? style.getPropertyValue(css) : null;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_html_table_array(elem) { /* transforma os dados de uma tabela (table) em matriz */
+		var tag = wd_html_tag(elem);
+		if (["tfoot", "tbody", "thead", "table"].indexOf(tag) < 0) return null;
+		var data = [];
+		var rows = elem.rows;
+		for (var row = 0; row < rows.length; row++) {
+			var cols = wd_vtype(rows[row].children).value;
+			if (data[row] === undefined) data.push([]);
+			for (var col = 0; col < cols.length; col++) {
+				if (data[row][col] === undefined) data[row].push([]);
+				data[row][col] = wd_vtype(cols[col].textContent).value;
+			}
+		}
+		return data;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_html_form_submit(list, get) { /* obtém serialização de formulário */
+		list = wd_vtype(list).value;
+		var pkg = get === true ? [] : new FormData();
+		for (var e = 0; e < list.length; e++) {
+			var data = wd_html_form_data(list[e]);
+			for (var i = 0; i < data.length; i++) {
+				var name  = data[i].NAME;
+				var value = get === true ? data[i].GET : data[i].POST;
+				if (wd_vtype(value).type === "array") {
+					for (var j = 0; j < value.length; j++) {
+						if (get === true) pkg.push(name+"="+value[j]);
+						else pkg.append(name, value[j]);
+					}
+				} else {
+					if (get === true) pkg.push(name+"="+value);
+					else pkg.append(name, value);
 				}
 			}
-			return this;
 		}
-	});
+		return get === true ? pkg.join("&") : pkg;
+	}
 
 
-	Object.defineProperty(WDdom.prototype, "page", {/*divide os elementos em "páginas"*/
 
-		value: function (page, size) {
-			page = wd_finite(page) ? wd_integer(page) : 0;
-			size = wd_finite(size) && size > 0 ? Math.abs(size) : -1;
-
-			this.run(function(elem) {
-				var book  = elem.children;
-				var lines = size <= 0 ? book.length : wd_integer(size < 1 ? size*book.length : size);
-				var pages = wd_integer(book.length/lines);
-				var print = [];
-
-				for (var i = 0; i < book.length; i++) {
-					var p = wd_integer(i/lines);
-					if (print[p] === undefined) print.push([]);
-					print[p].push(book[i]);
-				}
-				WD(book).nav("hide");
-				var show = WD(print).item(page);
-				if (show === undefined) show = page < 0 ? print[0] : print[pages];
-
-				for (var i = 0; i < show.length; i++) WD(show[i]).nav("show");
-				return;
-			});
-			return this;
-		}
-	});
-
-	Object.defineProperty(WDdom.prototype, "sort", {/*ordenar elementos filhos*/
-
-		value: function (order, col) {
-			order = wd_finite(order) ? wd_integer(order) : 1;
-			col   = wd_finite(col)   ? wd_integer(col, true) : null;
-
-			this.run(function(elem) {
-				var children = elem.children;
-				var aux = [];
-
-				for (var i = 0; i < children.length; i++) {
-					if (col === null) {
-						aux.push(children[i]);
-					} else if (children[i].children[col] !== undefined) {
-						aux.push(children[i].children[col]);
-					}
-				}
-
-				var sort = WD(aux).sort();
-				if (order < 0) sort = sort.reverse();
-				for (var i = 0; i < sort.length; i++) {
-					elem.appendChild(col === null ? sort[i] : sort[i].parentElement);
-				}
-
-				return;
-			});
-			return this;
-		}
-	});
-
-	Object.defineProperty(WDdom.prototype, "styles", {/*lista os estilos*/
-
-		value: function(css) {
-			var check = wd_vtype(css);
-			if (check.type !== "text") return null;
-			css = check.value;
-			var x = [];
-			this.run(function(elem) {
-				var style = window.getComputedStyle(elem, null);
-				x.push(css in style ? style.getPropertyValue(css) : null);
-				return;
-			});
-			return x;
-		}
-	});
-
-	Object.defineProperty(WDdom.prototype, "table", {/*captura dados da tabela*/
-
-		value: function() {
-			var tables = [];
-			this.run(function(elem) {
-				var tag = wd_html_tag(elem);
-				if (["tfoot", "tbody", "thead", "table"].indexOf(tag) < 0) return tables.push(null);
-				var data = [];
-				var rows = elem.rows;
-				for (var row = 0; row < rows.length; row++) {
-					var cols = rows[row].children;
-					if (data[row] === undefined) data.push([]);
-					for (var col = 0; col < cols.length; col++) {
-						if (data[row][col] === undefined) data[row].push([]);
-						data[row][col] = cols[col].textContent;
-					}
-				}
-				tables.push(data);
-				return;
-			});
-			return tables;
-		}
-	});
-
-	Object.defineProperty(WDdom.prototype, "form", {/*obtém serialização de formulário*/
-		value: function(method) {
-			method = new String(method).toUpperCase().trim();
-			var x = method === "GET" ? [] : new FormData();
-			this.run(function(elem) {
-				var data = WDdom.formdata(elem);
-				for (var i = 0; i < data.length; i++) {
-					var name  = data[i].NAME;
-					var value = method === "GET" ? data[i].GET : data[i].POST;
-					var check = wd_vtype(value);
-					if (check.type === "array") {
-						for (var j = 0; j < value.length; j++) {
-							if (method === "GET") {x.push(name+"="+value[j]);}
-							else                  {x.append(name, value[j]);}
-						}
-					} else {
-						if (method === "GET") {x.push(name+"="+value);}
-						else                  {x.append(name, value);}
-					}
-				}
-				return;
-			});
-			return method === "GET" ? x.join("&") : x;
-		}
-	});
 
 	Object.defineProperty(WDdom.prototype, "chart", {/*retorna um objeto (aplicável somente ao 1º elemento) de criação de gráficos*/
 		value: function(title) {
 			return new wdChart(this.item(0), title);
 		}
 	});
+
+
+
+
+
+
+
+
 
 /*----------------------------------------------------------------------------*/
 	function WD(input) { /* função de interface ao usuário */
@@ -3450,7 +3452,7 @@ BLOCO 5: boot
 	function data_wdFilter(e) {/*Filtrar elementos: data-wd-filter=chars{}${css}&...*/
 		if (!("wdFilter" in e.dataset)) return;
 
-		var search = WDdom.form(e) ? WDdom.value(e) : e.textContent;
+		var search = wd_html_form(e) ? WDdom.value(e) : e.textContent;
 		if (search === null) search = "";
 		if (search[0] === "/" && search.length > 3) {/*É RegExp?*/
 			if (search[search.length - 1] === "/") {
@@ -3837,12 +3839,12 @@ BLOCO 5: boot
 			return {
 				elem:         obj.item(0),
 				tag:          wd_html_tag(obj.item(0)),
-				position:     obj.styles("position")[0].toLowerCase(),
-				height:       wd_integer(obj.styles("height")[0].replace(/[^0-9\.]/g, "")),
-				marginTop:    wd_integer(obj.styles("margin-top")[0].replace(/[^0-9\.]/g, "")),
-				marginBottom: wd_integer(obj.styles("margin-bottom")[0].replace(/[^0-9\.]/g, "")),
-				bottom:       wd_integer(obj.styles("bottom")[0].replace(/[^0-9\.]/g, "")),
-				top:          wd_integer(obj.styles("top")[0].replace(/[^0-9\.]/g, "")),
+				position:     obj.vstyle("position")[0].toLowerCase(),
+				height:       wd_integer(obj.vstyle("height")[0].replace(/[^0-9\.]/g, "")),
+				marginTop:    wd_integer(obj.vstyle("margin-top")[0].replace(/[^0-9\.]/g, "")),
+				marginBottom: wd_integer(obj.vstyle("margin-bottom")[0].replace(/[^0-9\.]/g, "")),
+				bottom:       wd_integer(obj.vstyle("bottom")[0].replace(/[^0-9\.]/g, "")),
+				top:          wd_integer(obj.vstyle("top")[0].replace(/[^0-9\.]/g, "")),
 			};
 		}
 
@@ -3948,7 +3950,7 @@ BLOCO 5: boot
 
 	function keyboardProcedures(ev, relay) {/*procedimentos de teclado para outros elementos*/
 		/* não serve para formulários */
-		if (WDdom.form(ev.target)) return;
+		if (wd_html_form(ev.target)) return;
 
 		/*FIXME elementos com contentEditable funcionam com o evento input, ver como function no IE11*/
 		/*se funcionar, eliminar esse procedimento com o evento keyup*/
@@ -3981,7 +3983,7 @@ BLOCO 5: boot
 
 	function inputProcedures(ev, relay) {/*procedimentos de teclado para formulários*/
 		/* Somente para formulários */
-		if (!WDdom.form(ev.target) && ev.target.isContentEditable) return;
+		if (!wd_html_form(ev.target) && ev.target.isContentEditable) return;
 	
 		var now  = (new Date()).valueOf();
 		var time = Number(ev.target.dataset.wdTimeKey);
