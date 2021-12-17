@@ -44,12 +44,15 @@ BLOCO 5: boot
 	var wd_device_controller = null;
 	/* Guarda o intervalo de tempo para executar funções vinculadas aos eventos de tecla */
 	var wd_key_time_range = 500;
+	/* Guarda a barra de progresso das requisições */
+	var wd_request_progress = document.createElement("PROGRESS");
+	wd_request_progress.max = 1;
 	/* Guarda o container da janela modal para requisições */
 	var wd_modal_window = document.createElement("DIV");
+	wd_modal_window.className = "js-wd-modal";
+	wd_modal_window.appendChild(wd_request_progress);
 	/* Guarda o número requisições abertas */
 	var wd_request_counter = 0;
-	/* Guarda a barra de progresso das requisições */
-	var wd_progress_bar = document.createElement("PROGRESS");
 	/* guarda os números primos */
 	var wd_number_primes = [
 		2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61,
@@ -57,15 +60,28 @@ BLOCO 5: boot
 	];
 	/* Guarda os estilos da biblioteca Selector Database */
 	var wd_js_styles = [
-		{s: "", d: ""}
+		{s: ".js-wd-modal", d: [
+			"display: block; width: 100%; height: 100%;",
+			"padding: 0.1em 0.5em; margin: 0; zIndex: 999999;",
+			"position: fixed; top: 0; right: 0; bottom: 0; left: 0;",
+			"cursor: progress; backgroundColor: rgba(0,0,0,0.4);"
+		]},
 
 
 	];
 
+
 /*----------------------------------------------------------------------------*/
 	/* Executando comandos iniciais */
-	wd_modal_window.className = "js-wd-modal"
-	wd_modal_window.className.appendChild(wd_progress_bar);
+
+
+
+	wd_modal_window.style.backgroundColor = "red";
+	wd_modal_window.style.position = "fixed";
+	wd_modal_window.style.top = "0";
+	wd_modal_window.style.right = "0";
+	wd_modal_window.style.bottom = "0";
+	wd_modal_window.style.left = "0";
 
 
 
@@ -1776,6 +1792,148 @@ BLOCO 5: boot
 
 
 
+
+/*----------------------------------------------------------------------------*/
+	function wd_request_set(n) { /* define o número de requisições e decide sobre a janela modal */
+		if (n > 0) {
+			if (wd_request_counter === 0)
+				document.body.appendChild(wd_modal_window);
+			wd_request_counter++;
+		} else {
+			window.setTimeout(function () {
+				wd_request_counter--;
+				if (wd_request_counter < 1)
+					document.body.removeChild(wd_modal_window);
+			}, 250);
+		}
+		return wd_request_counter;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_request(action, pack, callback, method, async) {
+		/* ajustes iniciais */
+		action = new String(action).toString();
+		if (pack === undefined) pack = null;
+		if (wd_vtype(callback).type !== "function") callback = null;
+		method = method === undefined ? "POST" : method.toUpperCase();
+		async  = async !== false ?  true : false;
+
+		/* Chamando requisição e iniciando o tempo */
+		var request = new XMLHttpRequest();
+		var start   = new Date().valueOf();
+
+		/* conjunto de dados a ser repassado para a função */
+		var data = {
+			target: action,
+			request: request,  /* registra o objeto para requisições */
+			closed:  false,    /* indica o término da requisição */
+			status:  "UNSENT", /* UNSENT|OPENED|HEADERS|LOADING|UPLOADING|DONE|NOTFOUND|ABORTED|ERROR|TIMEOUT */
+			total:   0,        /* registra o tamanho total do arquivo */
+			loaded:  0,        /* registra o tamanho carregado na requisição */
+			/* método para abortar */
+			abort: function() {return set_data("ABORTED", true, 0, 0);},
+			/* tempo decorrido desde o início da chamada (milisegundos)*/
+			get time() {return (new Date()).valueOf() - start;},
+			/* registra o andamento da requisição */
+			get progress() {return this.total > 0 ? this.loaded/this.total : 1;},
+			/* registra o conteúdo textual da requisição */
+			get text() {try {return this.request.responseText;} catch(e){return null;}},
+			/* registra o XML da requisição */
+			get xml() {try {return this.request.responseXML;} catch(e){return null;}},
+			/* registra o JSON da requisição */
+			get json() {try {return wd_json(this.text);} catch(e){return null;}},
+			/* transforma um arquivo CSV em ARRAY */
+			get csv() {try {return wd_csv_array(this.text);} catch(e){return null;}},
+		}
+
+		/* disparadores */
+		function set_data(status, closed, loaded, total) {
+			if (data.closed) return;
+			data.status = status;
+			data.closed = closed;
+			data.loaded = loaded;
+			data.total  = total;
+
+			/* barra de progresso */
+			window.setTimeout(function() {
+				return wd_request_progress.value = data.progress;
+			}, 10);
+
+			if (status === "ABORTED") request.abort();
+			if (callback !== null)    callback(data);
+		}
+
+		function state_change(x) {
+			if (request.readyState < 1) return;
+			if (data.closed) return;
+			if (data.status === "UNSENT") {
+				data.status = "OPENED";
+				wd_request_set(1);
+			} else if (request.status === 404) {
+				data.status = "NOTFOUND";
+				data.closed = true;
+			} else if (request.readyState === 2) {
+				data.status = "HEADERS";
+			} else if (request.readyState === 3) {
+				data.status = "LOADING";
+			} else if (request.readyState === 4) {
+				data.closed = true;
+				data.status = (request.status === 200 || request.status === 304) ? "DONE" : "ERROR";
+			}
+			if (callback !== null) callback(data);
+			if (data.closed) wd_request_set(-1);
+		}
+
+		/* definindo disparador aos eventos */
+		request.onprogress = function(x) {set_data("LOADING", false, x.loaded, x.total);}
+		request.onerror    = function(x) {set_data("ERROR",   true, 0, 0);}
+		request.ontimeout  = function(x) {set_data("TIMEOUT", true, 0, 0);}
+		request.upload.onprogress  = function(x) {set_data("UPLOADING", false, x.loaded, x.total);}
+		request.upload.onabort     = request.onerror;
+		request.upload.ontimeout   = request.ontimeout;
+		request.onreadystatechange = state_change;
+		/* executando os comandos para a requisição */
+		var vpack = wd_vtype(pack);
+		/* se a requisição for do tipo GET */
+		if (method === "GET" && vpack.type === "text") {
+			var action = action.split("?");
+			action    += action.length > 1 ? vpack.value : "?" + vpack.value;
+			pack       = null;
+		}
+		/* tentar abrir a requisição */
+		try {
+			request.open(method, action, async);
+		} catch(e) {
+			set_data("ERROR", true, 0, 0)
+			if (callback !== null) callback(data);
+			return null;
+		}
+		/* se o método for POST */
+		if (method === "POST" && pack.type === "text")
+			request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+		/* enviar requisição */
+		request.send(pack);
+		return true;
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* == BLOCO 2 ================================================================*/
 
 
@@ -1899,51 +2057,23 @@ BLOCO 5: boot
 		valueOf: {
 			value: function() {
 				try {return this._value.valueOf();} catch(e) {}
-				return Number(this._value).valueOf();
+				return new Number(this._value).valueOf();
 			}
 		},
 		toString: {
 			value: function() {
 				try {return this._value.toString();} catch(e) {}
-				return String(this._value).toString();
+				return new String(this._value).toString();
 			}
-		}
-	});
-
-	Object.defineProperty(WDmain.prototype, "send", {
-
-		value: function (action, callback, method, async) {
-
-			action   = wd_vtype(action);
-			if (!action.isFullString) return false;
-
-			callback = wd_vtype(callback);
-
-			action   = action.input.trim();
-			callback = callback.type === "function" ? callback.input : null;
-			method   = new String(method).toUpperCase().trim();
-			async    = async === false ? false : true;
-
-			var pack;
-
-			if (this.type === "dom") {
-				pack = this.form(method);
-			} else if (this.type === "number") {
-				pack = "value="+this.valueOf();
-			} else {
-				pack = "value="+this.toString();
+		},
+		send: {
+			value: function (action, callback, method, async) {
+				var pack = "value="+this.toString();
+				if (this.type === "dom")    pack = this.form(method); else
+				if (this.type === "number") pack = "value="+this.valueOf();
+				return wd_request(action, pack, callback, method, async)
 			}
-
-			/*efetuando a requisição*/
-			var request      = new WDrequest(action);
-			request.method   = method;
-			request.callback = callback;
-			request.async    = async;
-			request.pack     = pack;
-			request.send();
-
-			return true;
-		}
+		},
 	});
 
 	Object.defineProperty(WDmain.prototype, "signal", {/*renderizar mensagem*/
