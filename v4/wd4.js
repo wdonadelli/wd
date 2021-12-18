@@ -46,11 +46,12 @@ BLOCO 5: boot
 	var wd_key_time_range = 500;
 	/* Guarda a barra de progresso das requisições */
 	var wd_request_progress = document.createElement("PROGRESS");
-	wd_request_progress.max = 1;
 	/* Guarda o container da janela modal para requisições */
 	var wd_modal_window = document.createElement("DIV");
-	wd_modal_window.className = "js-wd-modal";
-	wd_modal_window.appendChild(wd_request_progress);
+	/* Guarda o container dos CSS da biblioteca */
+	var wd_style_block  = document.createElement("STYLE");
+	/* Guarda o container das mensagens */
+	var wd_signal_block = document.createElement("DIV");
 	/* Guarda o número requisições abertas */
 	var wd_request_counter = 0;
 	/* guarda os números primos */
@@ -59,35 +60,61 @@ BLOCO 5: boot
 		67, 71, 73, 79, 83, 89, 97, 
 	];
 	/* Guarda os estilos da biblioteca Selector Database */
-	var wd_js_styles = [
+	var wd_js_css = [
+		{s: "@keyframes js-wd-fade-in",  d: ["from {opacity: 0;} to {opacity: 1;}"]},
+		{s: "@keyframes js-wd-fade-out", d: ["from {opacity: 1;} to {opacity: 0;}"]},
 		{s: ".js-wd-modal", d: [
 			"display: block; width: 100%; height: 100%;",
-			"padding: 0.1em 0.5em; margin: 0; zIndex: 999999;",
+			"padding: 0.1em 0.5em; margin: 0; z-index: 999999;",
 			"position: fixed; top: 0; right: 0; bottom: 0; left: 0;",
-			"cursor: progress; backgroundColor: rgba(0,0,0,0.4);"
+			"cursor: progress; background-color: rgba(0,0,0,0.4);"
 		]},
-
-
+		{s: ".js-wd-no-display", d: [
+			"display: none !important;"
+		]},
+		{s: ".js-wd-mask-error", d: [
+			"color: #db1414 !important; background-color: #fde8e8 !important;"
+		]},
+		{s: "[data-wd-nav], [data-wd-send], [data-wd-tsort], [data-wd-data]", d: [
+			"cursor: pointer;"
+		]},
+		{s: "[data-wd-set], [data-wd-edit], [data-wd-shared], [data-wd-css], [data-wd-table]", d:[
+			"cursor: pointer;"
+		]},
+		{s: "[data-wd-tsort]:before", d: ["content: \"\\2195 \";"]},
+		{s: "[data-wd-tsort=\"-1\"]:before", d: ["content: \"\\2191 \";"]},
+		{s: "[data-wd-tsort=\"+1\"]:before", d: ["content: \"\\2193 \";"]},
+		{s: "[data-wd-repeat] > *, [data-wd-load] > *", d: [
+			"visibility: hidden !important;"
+		]},
+		{s: "[data-wd-slide] > * ", d: ["animation: js-wd-fade-in 1s;"]},
+		{s: "nav > *.js-wd-nav-inactive", d: [
+			"background-color: rgba(230,230,230,0.8) !important; color: #737373 !important;"
+		]},
+		{s: ".js-wd-plot", d: [
+			"height: 100%; width: 100%; position: absolute; top: 0; left: 0; bottom: 0; right: 0;"
+		]},
+		{s: ".js-wd-signal", d: [
+			"position: fixed; top: 0; right: 30%; left: 30%; width: 40%;",
+			"margin: 0; padding: 0; z-index: 999999;"
+		]},
+		{s: ".js-wd-signal > *", d: [
+			"animation-name: js-wd-fade-in, js-wd-fade-out;",
+			"animation-duration: 1.5s, 1.5s; animation-delay: 0s, 7.5s;",
+			"margin: 5px 0; position: relative; padding: 0; border-radius: 0.2em;",
+			"border: 1px solid rgba(0,0,0,0.6); box-shadow: 1px 1px 6px rgba(0,0,0,0.6);",
+			"background-color: rgba(255,255,255,1);"
+		]},
+		{s: ".js-wd-signal header", d: [
+			"padding: 0.5em; border-radius: inherit inherit 0 0; position: relative;"
+		]},
+		{s: ".js-wd-signal header span", d: [
+			"position: absolute; top: 0.5em; right: 0.5em; line-height: 1; cursor: pointer;"
+		]},
+		{s: ".js-wd-signal div", d: [
+			"padding: 0.5em; border-radius: 0 0 inherit inherit;"
+		]},
 	];
-
-
-/*----------------------------------------------------------------------------*/
-	/* Executando comandos iniciais */
-
-
-
-	wd_modal_window.style.backgroundColor = "red";
-	wd_modal_window.style.position = "fixed";
-	wd_modal_window.style.top = "0";
-	wd_modal_window.style.right = "0";
-	wd_modal_window.style.bottom = "0";
-	wd_modal_window.style.left = "0";
-
-
-
-
-
-
 
 /*----------------------------------------------------------------------------*/
 	function wd_lang() { /*Retorna o local: definido ou do navegador*/
@@ -1778,35 +1805,148 @@ BLOCO 5: boot
 		return;
 	}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+/*----------------------------------------------------------------------------*/
+	function wd_html_set(elem, attr, val) { /* define atributos/funcões no elemento */
+		var args = [];
+		for (var i = 2; i < arguments.length; i++)
+			args.push(arguments[i]);
+		if (wd_vtype(elem[attr]).type === "function")
+			return elem[attr].apply(elem, args);
+		if (attr in elem)
+			try {return elem[attr] = val;} catch(e) {}
+		return elem.setAttribute(attr, val);
+	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_request_set(n) { /* define o número de requisições e decide sobre a janela modal */
-		if (n > 0) {
-			if (wd_request_counter === 0)
-				document.body.appendChild(wd_modal_window);
-			wd_request_counter++;
-		} else {
-			window.setTimeout(function () {
-				wd_request_counter--;
-				if (wd_request_counter < 1)
-					document.body.removeChild(wd_modal_window);
-			}, 250);
+	function wd_html_full(elem, exit) { /* deixa o elemento em tela cheia */
+		var action = {
+			open: ["requestFullscreen", "webkitRequestFullscreen", "msRequestFullscreen"],
+			exit: ["exitFullscreen", "webkitExitFullscreen", "msExitFullscreen"]
+		};
+		var full   = exit === true ? action.exit : action.open;
+		var target = exit === true ? document : elem;
+		for (var i = 0; i < full.length; i++) {
+			if (full[i] in target)
+				try {return target[full[i]]();} catch(e) {}
 		}
-		return wd_request_counter;
+		return null;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_html_page(elem, page, size) { /* exibe determinados grupos de elementos filhos */
+		var lines  = wd_vtype(elem.children).value;
+		if (lines.length === 0) return null;
+		page = wd_vtype(page).value;
+		size = wd_vtype(size).value;
+		if (!wd_finite(page) || !wd_finite(size)) return null;
+
+		if (size <= 0) /* toda a amostra */
+			size = lines.length;
+		else if (size < 1) /* uma fração da amostra */
+			size = wd_integer(size*lines.length);
+		else /* padrão */
+			size = wd_integer(size);
+
+		if (size === lines.length) /* toda a amostra */
+			page = 0;
+		else if (page < 0) /* última página */
+			page = wd_integer(lines.length/size);
+		else /* padrão */
+			page = wd_integer(page);
+
+		var start = page*size;
+		var end   = start+size-1;
+		return wd_html_nav(elem, ""+start+":"+end+"");
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_html_sort(elem, order, col) { /* ordena elementos filho pelo conteúdo */
+		order = wd_finite(order) ? wd_integer(order) : 1;
+		col   = wd_finite(col)   ? wd_integer(col, true) : null;
+
+		var children = wd_vtype(elem.children).value;
+		var aux = [];
+
+		for (var i = 0; i < children.length; i++) {
+			if (col === null)
+				aux.push(children[i]);
+			else if (children[i].children[col] !== undefined)
+				aux.push(children[i].children[col]);
+		}
+
+		var sort = wd_array_sort(aux);
+		if (order < 0) sort = sort.reverse();
+		for (var i = 0; i < sort.length; i++)
+			elem.appendChild(col === null ? sort[i] : sort[i].parentElement);
+
+		return true;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_html_style_get(elem, css) { /* devolve o valor do estilo especificado */
+		var style = window.getComputedStyle(elem, null);
+		return css in style ? style.getPropertyValue(css) : null;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_html_table_array(elem) { /* transforma os dados de uma tabela (table) em matriz */
+		var tag = wd_html_tag(elem);
+		if (["tfoot", "tbody", "thead", "table"].indexOf(tag) < 0) return null;
+		var data = [];
+		var rows = elem.rows;
+		for (var row = 0; row < rows.length; row++) {
+			var cols = wd_vtype(rows[row].children).value;
+			if (data[row] === undefined) data.push([]);
+			for (var col = 0; col < cols.length; col++) {
+				if (data[row][col] === undefined) data[row].push([]);
+				data[row][col] = wd_vtype(cols[col].textContent).value;
+			}
+		}
+		return data;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_html_form_submit(list, get) { /* obtém serialização de formulário */
+		list = wd_vtype(list).value;
+		var pkg = get === true ? [] : new FormData();
+		for (var e = 0; e < list.length; e++) {
+			var data = wd_html_form_data(list[e]);
+			for (var i = 0; i < data.length; i++) {
+				var name  = data[i].NAME;
+				var value = get === true ? data[i].GET : data[i].POST;
+				if (wd_vtype(value).type === "array") {
+					for (var j = 0; j < value.length; j++) {
+						if (get === true) pkg.push(name+"="+value[j]);
+						else pkg.append(name, value[j]);
+					}
+				} else {
+					if (get === true) pkg.push(name+"="+value);
+					else pkg.append(name, value);
+				}
+			}
+		}
+		return get === true ? pkg.join("&") : pkg;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_html_bros_index(elem) {
+		var bros = elem.parentElement.children;
+		for (var i = 0; i < bros.length; i++)
+			if (bros[i] === elem) return i;
+		return 0;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_html_info(elem) { /* devolve informações diversas sobre o primeiro elemento */
+		return {
+			tag: wd_html_tag(elem),
+			value: wd_html_form_value(elem),
+			type: wd_html_form_type(elem),
+			text: elem.textContent,
+			className: wd_html_class(elem),
+			index: wd_html_bros_index(elem),
+			table: wd_html_table_array(elem)
+		}
 	}
 
 /*----------------------------------------------------------------------------*/
@@ -1824,7 +1964,6 @@ BLOCO 5: boot
 
 		/* conjunto de dados a ser repassado para a função */
 		var data = {
-			target: action,
 			request: request,  /* registra o objeto para requisições */
 			closed:  false,    /* indica o término da requisição */
 			status:  "UNSENT", /* UNSENT|OPENED|HEADERS|LOADING|UPLOADING|DONE|NOTFOUND|ABORTED|ERROR|TIMEOUT */
@@ -1846,14 +1985,28 @@ BLOCO 5: boot
 			get csv() {try {return wd_csv_array(this.text);} catch(e){return null;}},
 		}
 
-		/* disparadores */
-		function set_data(status, closed, loaded, total) {
+		/* funções auxiliares e disparadores */
+		function request_set(n) { /* controla o número de requisições e a janela modal */
+			if (n > 0) {
+				if (wd_request_counter === 0)
+					document.body.appendChild(wd_modal_window);
+				wd_request_counter++;
+			} else {
+				window.setTimeout(function () {
+					wd_request_counter--;
+					if (wd_request_counter < 1)
+						document.body.removeChild(wd_modal_window);
+				}, 250);
+			}
+			return wd_request_counter;
+		}
+
+		function set_data(status, closed, loaded, total) { /* disparador: define a variável data */
 			if (data.closed) return;
 			data.status = status;
 			data.closed = closed;
 			data.loaded = loaded;
 			data.total  = total;
-
 			/* barra de progresso */
 			window.setTimeout(function() {
 				return wd_request_progress.value = data.progress;
@@ -1863,12 +2016,12 @@ BLOCO 5: boot
 			if (callback !== null)    callback(data);
 		}
 
-		function state_change(x) {
+		function state_change(x) { /* disparador: mudança de estado */
 			if (request.readyState < 1) return;
 			if (data.closed) return;
 			if (data.status === "UNSENT") {
 				data.status = "OPENED";
-				wd_request_set(1);
+				request_set(1);
 			} else if (request.status === 404) {
 				data.status = "NOTFOUND";
 				data.closed = true;
@@ -1881,7 +2034,7 @@ BLOCO 5: boot
 				data.status = (request.status === 200 || request.status === 304) ? "DONE" : "ERROR";
 			}
 			if (callback !== null) callback(data);
-			if (data.closed) wd_request_set(-1);
+			if (data.closed) request_set(-1);
 		}
 
 		/* definindo disparador aos eventos */
@@ -1916,520 +2069,38 @@ BLOCO 5: boot
 		return true;
 	}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* == BLOCO 2 ================================================================*/
-
-
 /*----------------------------------------------------------------------------*/
-
-	function WDsignal(input) {
-		if (!(this instanceof WDsignal)) return new WDsignal(input);
-		this._msg = input;
-	}
-	Object.defineProperty(WDsignal.prototype, "constructor", {value: WDsignal});
-
-	/* Métodos estáticos ------------------------------------------------------*/
-	WDsignal.window = document.createElement("DIV"); /*container das mensagens*/
-	WDsignal.opened = false; /*container aberto?*/
-	WDsignal.styled = false; /*container estilizado?*/
-
-	WDsignal.cbase  = {position: "fixed", top: "0", right: "0", margin: "auto", zIndex: "999999"};
-	WDsignal.cmicro = {left: "initial", width:  "33%"};
-	WDsignal.cphone = {left: "0",       width: "100%"};
-
-	WDsignal.msg = function(title, message) {
-		var parent = this;
-
-		/*Elementos da mensagem*/
-		var box = {
-			div: document.createElement("DIV"),
-			hdr: document.createElement("HEADER"),
-			btn: document.createElement("SPAN"),
-			ttl: document.createElement("SPAN"),
-			msg: document.createElement("SECTION")
-		};
-
-		/*Montagem*/
-		box.div.appendChild(box.hdr);
-		box.div.appendChild(box.msg);
-		box.div.appendChild(box.btn);
-		box.hdr.appendChild(box.ttl);
-
-		/*Estilos*/
-		var style = {
-			div: {
-				margin: "0.5em", position: "relative", padding: "0",
-				border: "1px solid rgba(0, 0, 0, 0.6)", borderRadius: "0.2em",
-				boxShadow: "1px 1px 6px rgba(0, 0, 0, 0.6)",
-				backgroundColor: "rgba(255, 255, 255, 0.8)"
-			},
-			ttl: {fontWeight: "bold"},
-			hdr: {padding: "0.5em", borderRadius: "inherit inherit 0 0"},
-			msg: {padding: "0.5em", borderRadius: "0 0 inherit inherit"},
-			btn: {cursor: "pointer", position: "absolute", top: "0.5em", right: "0.5em", lineHeight: "1"},
-
-		};
-		box.div.className = "js-wd-signal";
-
-		for (var b in box)
-			for (var s in style[b])
-				box[b].style[s] = style[b][s];
-
-		/*textos*/
-		box.btn.textContent = "\u00D7";
-		box.msg.innerHTML   = message;
-		box.ttl.textContent = title === undefined ? "\u2139" : title;
-
-		/*Disparadores*/
-		box.btn.onclick = function() {
-			box.div.parentElement.removeChild(box.div);
-			parent.close();
-			return;
+	function wd_signal(title, text) {
+		/* definindo elementos */
+		var box = document.createElement("ARTICLE");
+		var hdr = document.createElement("HEADER");
+		var msg = document.createElement("DIV");
+		var cls = document.createElement("SPAN");
+		var ttl = document.createElement("STRONG");
+		/* fechar janela */
+		function close() {
+			wd_signal_block.removeChild(box);
+			if (wd_signal_block.children.length === 0)
+				document.body.removeChild(wd_signal_block);
 		}
-
-		window.setTimeout(function() {
-			try {
-				box.div.parentElement.removeChild(box.div);
-				box.div.remove();
-				parent.close();
-			} catch(e) {}
-			return;
-		}, 9000);
-
-		/*Incluir na janela*/
-		this.open();
-		this.window.insertAdjacentElement("afterbegin", box.div);
+		/* definindo propriedades dos elementos */
+		box.appendChild(hdr);
+		box.appendChild(msg);
+		hdr.appendChild(cls);
+		hdr.appendChild(ttl);
+		msg.innerHTML = text;
+		ttl.innerHTML = title === undefined ? "\u2139" : title;
+		cls.onclick   = close;
+		cls.innerHTML = "\u00D7";
+		/* abrindo container principal, se fechado */
+		if (wd_signal_block.children.length === 0)
+			document.body.appendChild(wd_signal_block);
+		/* adicionando caixa de mensagem */
+		wd_signal_block.insertAdjacentElement("afterbegin", box);
+		/* fechando após determinado intervalo de tempo */
+		window.setTimeout(close, 9000);
 		return;
 	}
-
-	WDsignal.open = function() {
-		if (!this.styled) {
-			for (var i in this.cbase) this.window.style[i] = this.cbase[i];
-			this.styled = true;
-		}
-
-		var style = wd_get_device() === "desktop" ? this.cmicro : this.cphone;
-		for (var i in style) this.window.style[i] = style[i];
-
-		if (!this.opened) document.body.appendChild(this.window);
-		this.opened = true;
-		return;
-	}
-
-	WDsignal.close = function() {
-		if (!this.opened) return;
-		if (this.window.children.length > 0) return;
-
-		document.body.removeChild(this.window);
-		this.opened = false;
-		return;
-	}
-
-/* == BLOCO 3 ================================================================*/
-
-/*----------------------------------------------------------------------------*/
-	function WDmain(value) {
-		Object.defineProperties(this, {
-			_value:  {value: value, writable: true}
-		});
-	}
-
-	Object.defineProperties(WDmain.prototype, {
-		constructor: {value: WDmain},
-		type:        {value: "unknown"},
-		valueOf: {
-			value: function() {
-				try {return this._value.valueOf();} catch(e) {}
-				return new Number(this._value).valueOf();
-			}
-		},
-		toString: {
-			value: function() {
-				try {return this._value.toString();} catch(e) {}
-				return new String(this._value).toString();
-			}
-		},
-		send: {
-			value: function (action, callback, method, async) {
-				var pack = "value="+this.toString();
-				if (this.type === "dom")    pack = this.form(method); else
-				if (this.type === "number") pack = "value="+this.valueOf();
-				return wd_request(action, pack, callback, method, async)
-			}
-		},
-	});
-
-	Object.defineProperty(WDmain.prototype, "signal", {/*renderizar mensagem*/
-
-		value: function(title) {
-			WDsignal.msg(title, this.toString());
-			return this.type === "dom" ? this : null;
-		}
-	});
-
-	Object.defineProperty(WDmain.prototype, "notify", {/*renderizar notificação*/
-
-		value: function(title) {
-			if (!("Notification" in window))
-				return this.signal(title);
-			if (Notification.permission === "denied")
-				return this.type === "dom" ? this : null;
-			var content = this.toString();
-			if (Notification.permission === "granted")
-				new Notification(title, {body: content});
-			else
-				Notification.requestPermission().then(function(x) {
-					if (x === "granted")
-						new Notification(title, {body: content});
-				});
-			return this.type === "dom" ? this : null;
-		}
-	});
-
-	Object.defineProperty(WDmain.prototype, "finite", {/*informa se é um número é finito*/
-
-		get: function() {
-			if (this.type !== "number") return false;
-			return this.abs !== Infinity ? true : false;
-		}
-	});
-
-/*----------------------------------------------------------------------------*/
-	function WDundefined(value) {WDmain.call(this, value);}
-
-	WDundefined.prototype = Object.create(WDmain.prototype, {
-		constructor: {value: WDundefined},
-		type:        {value: "undefined"},
-		valueOf:     {value: function() {return Infinity;}},
-		toString:    {value: function() {return "?";}}
-	});
-
-/*----------------------------------------------------------------------------*/
-	function WDnull(value) {WDmain.call(this, value);}
-
-	WDnull.prototype = Object.create(WDmain.prototype, {
-		constructor: {value: WDnull},
-		type:        {value: "null"},
-		valueOf:     {value: function() {return 0;}},
-		toString:    {value: function() {return "";}}
-	});
-
-/*----------------------------------------------------------------------------*/
-	function WDboolean(value) {WDmain.call(this, value);}
-
-	WDboolean.prototype = Object.create(WDmain.prototype, {
-		constructor: {value: WDboolean},
-		type:        {value: "boolean"},
-		valueOf:     {value: function() {return this._value ? 1 : 0;}},
-		toString:    {value: function() {return this._value ? "True" : "False";}}
-	});
-
-/*----------------------------------------------------------------------------*/
-	function WDfunction(value) {WDmain.call(this, value);}
-
-	WDfunction.prototype = Object.create(WDmain.prototype, {
-		constructor: {value: WDfunction},
-		type:        {value: "function"},
-	});
-
-/*----------------------------------------------------------------------------*/
-	function WDobject(value) {WDmain.call(this, value);}
-
-	WDobject.prototype = Object.create(WDmain.prototype, {
-		constructor: {value: WDobject},
-		type:        {value: "object"},
-		toString:    {value: function() {return wd_json(this._value);}}
-	});
-
-/*----------------------------------------------------------------------------*/
-	function WDregexp(value) {WDmain.call(this, value);}
-
-	WDregexp.prototype = Object.create(WDmain.prototype, {
-		constructor: {value: WDregexp},
-		type:        {value: "regexp"},
-		toString:    {value: function() {return this._value.source;}}
-	});
-
-/*----------------------------------------------------------------------------*/
-	function WDtext(value) {WDmain.call(this, value);}
-
-	WDtext.prototype = Object.create(WDmain.prototype, {
-		constructor: {value: WDtext},
-		type:        {value: "text"},
-		upper: { /* retorna valor em caixa alta */
-			get: function() {return this.toString().toUpperCase();}
-		},
-		lower: { /* retorna valor em caixa baixa */
-			get: function() {return this.toString().toLowerCase();}
-		},
-		caps: { /* retorna valor capitulado */
-			get: function() {return wd_text_caps(this.toString());}
-		},
-		toggle: { /* inverte caixa */
-			get: function() {return wd_text_toggle(this.toString());}
-		},
-		clear: { /* remove acentos da string */
-			get: function() {return wd_text_clear(this.toString());}
-		},
-		camel: { /* transforma string para inicioMeioFim */
-			get: function() {return wd_text_camel(this.toString());}
-		},
-		dash: { /* transforma string para inicio-meio-fim */
-			get: function() {return wd_text_dash(this.toString());}
-		},
-		csv: { /* CSV para Matriz */
-			get: function() {return wd_csv_array(this.toString());}
-		},
-		trim: { /* remove múltiplos espaços */
-			get: function() {return wd_no_spaces(this.toString());}
-		},
-		json: { /* JSON para Object */
-			get: function() {return wd_json(this.toString());}
-		},
-		rpl: { /* replaceAll simples (só texto) */
-			value: function(search, change) {
-				return wd_replace_all(this.toString(), search, change);
-			}
-		},
-		mask: { /* máscaras temáticas */
-			value: function(check, callback) {
-				return wd_multiple_masks(this.toString, check, callback);
-			}
-		},
-		format: { /*aplica atributos múltiplos*/
-			value: function() {
-				return wd_apply_getters(this, Array.prototype.slice.call(arguments));
-			}
-		},
-
-	});
-
-/*----------------------------------------------------------------------------*/
-	function WDnumber(value) {WDmain.call(this, value);}
-
-	WDnumber.prototype = Object.create(WDmain.prototype, {
-		constructor: {value: WDnumber},
-		type:        {value: "number"},
-		int: { /* retorna a parte inteira */
-			get: function() {return wd_integer(this.valueOf());}
-		},
-		decimal: { /* retorna a parte decimal */
-			get: function() {return wd_decimal (this.valueOf());}
-		},
-		abs: { /* retorna a parte decimal */
-			get: function() {return Math.abs(this.valueOf());}
-		},
-		ntype: { /* retorna o tipo de número */
-			get: function() {return wd_num_type(this.valueOf());}
-		},
-		frac: { /* representação em fração (2 casas) */
-			get: function () {return wd_num_frac(this.valueOf());}
-		},
-		byte: { /* retorna notação para bytes */
-			get: function () {return wd_bytes(this.valueOf());}
-		},
-		str: { /* retorna string simplificada do número */
-			get: function() {return wd_num_str(this.valueOf());}
-		},
-		test: { /* testa se o tipo de número se enquadra em alguma categoria */
-			value: function() {
-				return wd_num_test(this.valueOf(), Array.prototype.slice.call(arguments));
-			}
-		},
-		round: { /* arredonda número para determinado tamanho */
-			value: function(width) {
-				return wd_num_round(this.valueOf(), width);
-			}
-		},
-		pow10: { /* transforma número em notação científica */
-			value: function(width) {
-				return wd_num_pow10(this.valueOf(), width);
-			}
-		},
-		locale: { /* notação numérica local */
-			value: function(currency) {
-				return wd_num_local(this.valueOf(), currency);
-			}
-		},
-		fixed: { /* fixa quantidade de dígitos (int e dec) */
-			value: function(ldec, lint) {
-				return wd_num_fixed(this.valueOf(), ldec, lint);
-			}
-		},
-		toString: { /* método padrão */
-			value: function() {
-				return this.test("infinity") ? this.str : this.valueOf().toString();
-			}
-		},
-	});
-
-/*----------------------------------------------------------------------------*/
-	function WDtime(value) {WDmain.call(this, value);}
-
-	WDtime.prototype = Object.create(WDmain.prototype, {
-		constructor: {value: WDtime},
-		type:        {value: "time"},
-		h: { /* define/obtem a hora */
-			get: function() {return wd_number_time(this.valueOf()).h;},
-			set: function(x) {
-				if (wd_finite(x))
-					this._value = wd_time_number(wd_integer(x), this.m, this.s);
-			}
-		},
-		hour: {
-			get: function()  {return this.h;},
-			set: function(x) {return this.h = x;}
-		},
-		m: { /* define/obtem o minuto */
-			get: function() {return wd_number_time(this.valueOf()).m;},
-			set: function(x) {
-				if (wd_finite(x))
-					this._value = wd_time_number(this.h, wd_integer(x), this.s);
-			}
-		},
-		minute: {
-			get: function()  {return this.m;},
-			set: function(x) {return this.m = x;}
-		},
-		s: { /* define/obtem o segundo */
-			get: function() {return wd_number_time(this.valueOf()).s;},
-			set: function(x) {
-				if (wd_finite(x))
-					this._value = wd_time_number(this.h, this.m, wd_integer(x));
-			}
-		},
-		second: {
-			get: function()  {return this.s;},
-			set: function(x) {return this.s = x;}
-		},
-		h12: { /* Retorna a hora no formato ampm */
-			get: function() {return wd_time_ampm(this.h, this.m);},
-		},
-		format: { /* formata saída string */
-			value: function(str) {
-				return wd_time_format(this, str);
-			}
-		},
-		toString: { /* método padrão */
-			value: function() {return wd_time_iso(this.valueOf());}
-		}
-
-	});
-
-/*----------------------------------------------------------------------------*/
-	function WDdate(value) {WDmain.call(this, value);}
-
-	WDdate.prototype = Object.create(WDmain.prototype, {
-		constructor: {value: WDdate},
-		type:        {value: "date"},
-		y: { /* ano */
-			get: function() {return this._value.getFullYear();},
-			set: function(x) {
-				if (wd_finite(x) && x >= 0)
-					this._value = wd_set_date(this._value, undefined, undefined, wd_integer(x));
-			}
-		},
-		m: { /* mês */
-			get: function() {return this._value.getMonth() + 1;},
-			set: function(x) {
-				if (wd_finite(x))
-					this._value = wd_set_date(this._value, undefined, wd_integer(x), undefined);
-			}
-		},
-		d: { /* dia */
-			get: function() {return this._value.getDate();},
-			set: function(x) {
-				if (wd_finite(x))
-					this._value = wd_set_date(this._value, wd_integer(x), undefined, undefined);
-			}
-		},
-		year: {
-			get: function()  {return this.y;},
-			set: function(x) {return this.y = x;}
-		},
-		month: {
-			get: function()  {return this.m;},
-			set: function(x) {return this.m = x;}
-		},
-		day: {
-			get: function()  {return this.d;},
-			set: function(x) {return this.d = x;}
-		},
-		length: {/*dias no ano*/
-			get: function() {return wd_is_leap(this.y) ? 366 : 365;}
-		},
-		shortMonth: { /* mês abreviado */
-			get: function() {return wd_date_locale(this._value, {month: "short"});}
-		},
-		longMonth: { /* nome do mês */
-			get: function() {return wd_date_locale(this._value, {month: "long"});}
-		},
-		shortDay: { /* dia abreviado */
-			get: function() {return wd_date_locale(this._value, {weekday: "short"});}
-		},
-		longDay: { /* nome do dia */
-			get: function() {return wd_date_locale(this._value, {weekday: "long"});}
-		},
-		today: { /* dia da semana [1-7] */
-			get: function() {return this._value.getDay() + 1;}
-		},
-		size: { /* quantidade de dias no mês */
-			get: function() {return wd_date_size(this.m, this.y);}
-		},
-		workingYear: { /* dias úteis no ano */
-			get: function() { return wd_date_working(this.y, this.length);}
-		},
-		working: { /* dias úteis até o momento */
-			get: function() { return wd_date_working(this.y, this.days);}
-		},
-		days: { /*dias transcorridos no ano*/
-			get: function() {return wd_date_days(this.y, this.m, this.d);}
-		},
-		week: {/*semana cheia do ano*/
-			get: function(days, today) {return wd_date_week(this.days, this.today);}
-		},
-		format: { /* formata saída string */
-			value: function(str) {
-				return wd_date_format(this, str);
-			}
-		},
-		toString: { /* método padrão */
-			value: function() {
-				return wd_date_iso(this._value);
-			}
-		},
-		valueOf: { /* método padrão */
-			value: function() {
-				return (this._value < 0 ? -1 : 0) + wd_integer(this._value/86400000);
-			}
-		},
-	});
-
-/*----------------------------------------------------------------------------*/
-
-
-
-
-
-
-
 
 /*----------------------------------------------------------------------------*/
 	function wd_svg_create(type, attr) { /* cria elementos SVG genéricos com medidas relativas */
@@ -2513,16 +2184,7 @@ BLOCO 5: boot
 		});
 	}
 
-
-
-
-
-
-
-
-
-
-
+/* == BLOCO 2 ================================================================*/
 
 /*----------------------------------------------------------------------------*/
 	function WDchart(box, title) {/*Objeto para criar gráficos*/
@@ -2847,34 +2509,389 @@ BLOCO 5: boot
 
 
 
+/* == BLOCO 3 ================================================================*/
+
+/*----------------------------------------------------------------------------*/
+	function WDmain(value) {
+		Object.defineProperties(this, {
+			_value:  {value: value, writable: true}
+		});
+	}
+
+	Object.defineProperties(WDmain.prototype, {
+		constructor: {value: WDmain},
+		type:        {value: "unknown"},
+		valueOf: {
+			value: function() {
+				try {return this._value.valueOf();} catch(e) {}
+				return new Number(this._value).valueOf();
+			}
+		},
+		toString: {
+			value: function() {
+				try {return this._value.toString();} catch(e) {}
+				return new String(this._value).toString();
+			}
+		},
+		send: { /* Efetua requisições */
+			value: function (action, callback, method, async) {
+				var pack = "value="+this.toString();
+				if (this.type === "dom")    pack = this.form(method); else
+				if (this.type === "number") pack = "value="+this.valueOf();
+				return wd_request(action, pack, callback, method, async)
+			}
+		},
+		signal: { /*renderizar mensagem*/
+			value: function(title) {
+				wd_signal(title, this.toString());
+				return this.type === "dom" ? this : null;
+			}
+		},
 
 
 
 
 
 
+		finite: { /* informa se é um número finito */
+			get: function() {return wd_finite(this._value);}
+		}
+	});
 
+	//FIXME obter ícone do favicon
+	Object.defineProperty(WDmain.prototype, "notify", {/*renderizar notificação*/
 
+		value: function(title, img) {
+			if (!("Notification" in window))
+				return this.signal(title, img);
+			var options = {body: this.toString()};
+			if (typeof img === "string") options.icon = img;
 
+			if (Notification.permission === "denied")
+				return this.type === "dom" ? this : null;
+			if (Notification.permission === "granted")
+				new Notification(title, options);
+			else
+				Notification.requestPermission().then(function(x) {
+					if (x === "granted")
+						new Notification(title, options);
+				});
+			return this.type === "dom" ? this : null;
+		}
+	});
 
+/*----------------------------------------------------------------------------*/
+	function WDundefined(value) {WDmain.call(this, value);}
 
+	WDundefined.prototype = Object.create(WDmain.prototype, {
+		constructor: {value: WDundefined},
+		type:        {value: "undefined"},
+		valueOf:     {value: function() {return Infinity;}},
+		toString:    {value: function() {return "?";}}
+	});
 
+/*----------------------------------------------------------------------------*/
+	function WDnull(value) {WDmain.call(this, value);}
 
+	WDnull.prototype = Object.create(WDmain.prototype, {
+		constructor: {value: WDnull},
+		type:        {value: "null"},
+		valueOf:     {value: function() {return 0;}},
+		toString:    {value: function() {return "";}}
+	});
 
+/*----------------------------------------------------------------------------*/
+	function WDboolean(value) {WDmain.call(this, value);}
 
+	WDboolean.prototype = Object.create(WDmain.prototype, {
+		constructor: {value: WDboolean},
+		type:        {value: "boolean"},
+		valueOf:     {value: function() {return this._value ? 1 : 0;}},
+		toString:    {value: function() {return this._value ? "True" : "False";}}
+	});
 
+/*----------------------------------------------------------------------------*/
+	function WDfunction(value) {WDmain.call(this, value);}
 
+	WDfunction.prototype = Object.create(WDmain.prototype, {
+		constructor: {value: WDfunction},
+		type:        {value: "function"},
+	});
 
+/*----------------------------------------------------------------------------*/
+	function WDobject(value) {WDmain.call(this, value);}
 
+	WDobject.prototype = Object.create(WDmain.prototype, {
+		constructor: {value: WDobject},
+		type:        {value: "object"},
+		toString:    {value: function() {return wd_json(this._value);}}
+	});
 
+/*----------------------------------------------------------------------------*/
+	function WDregexp(value) {WDmain.call(this, value);}
 
+	WDregexp.prototype = Object.create(WDmain.prototype, {
+		constructor: {value: WDregexp},
+		type:        {value: "regexp"},
+		toString:    {value: function() {return this._value.source;}}
+	});
 
+/*----------------------------------------------------------------------------*/
+	function WDtext(value) {WDmain.call(this, value);}
 
+	WDtext.prototype = Object.create(WDmain.prototype, {
+		constructor: {value: WDtext},
+		type:        {value: "text"},
+		upper: { /* retorna valor em caixa alta */
+			get: function() {return this.toString().toUpperCase();}
+		},
+		lower: { /* retorna valor em caixa baixa */
+			get: function() {return this.toString().toLowerCase();}
+		},
+		caps: { /* retorna valor capitulado */
+			get: function() {return wd_text_caps(this.toString());}
+		},
+		toggle: { /* inverte caixa */
+			get: function() {return wd_text_toggle(this.toString());}
+		},
+		clear: { /* remove acentos da string */
+			get: function() {return wd_text_clear(this.toString());}
+		},
+		camel: { /* transforma string para inicioMeioFim */
+			get: function() {return wd_text_camel(this.toString());}
+		},
+		dash: { /* transforma string para inicio-meio-fim */
+			get: function() {return wd_text_dash(this.toString());}
+		},
+		csv: { /* CSV para Matriz */
+			get: function() {return wd_csv_array(this.toString());}
+		},
+		trim: { /* remove múltiplos espaços */
+			get: function() {return wd_no_spaces(this.toString());}
+		},
+		json: { /* JSON para Object */
+			get: function() {return wd_json(this.toString());}
+		},
+		rpl: { /* replaceAll simples (só texto) */
+			value: function(search, change) {
+				return wd_replace_all(this.toString(), search, change);
+			}
+		},
+		mask: { /* máscaras temáticas */
+			value: function(check, callback) {
+				return wd_multiple_masks(this.toString, check, callback);
+			}
+		},
+		format: { /*aplica atributos múltiplos*/
+			value: function() {
+				return wd_apply_getters(this, Array.prototype.slice.call(arguments));
+			}
+		},
 
+	});
 
+/*----------------------------------------------------------------------------*/
+	function WDnumber(value) {WDmain.call(this, value);}
 
+	WDnumber.prototype = Object.create(WDmain.prototype, {
+		constructor: {value: WDnumber},
+		type:        {value: "number"},
+		int: { /* retorna a parte inteira */
+			get: function() {return wd_integer(this.valueOf());}
+		},
+		decimal: { /* retorna a parte decimal */
+			get: function() {return wd_decimal (this.valueOf());}
+		},
+		abs: { /* retorna a parte decimal */
+			get: function() {return Math.abs(this.valueOf());}
+		},
+		ntype: { /* retorna o tipo de número */
+			get: function() {return wd_num_type(this.valueOf());}
+		},
+		frac: { /* representação em fração (2 casas) */
+			get: function () {return wd_num_frac(this.valueOf());}
+		},
+		byte: { /* retorna notação para bytes */
+			get: function () {return wd_bytes(this.valueOf());}
+		},
+		str: { /* retorna string simplificada do número */
+			get: function() {return wd_num_str(this.valueOf());}
+		},
+		test: { /* testa se o tipo de número se enquadra em alguma categoria */
+			value: function() {
+				return wd_num_test(this.valueOf(), Array.prototype.slice.call(arguments));
+			}
+		},
+		round: { /* arredonda número para determinado tamanho */
+			value: function(width) {
+				return wd_num_round(this.valueOf(), width);
+			}
+		},
+		pow10: { /* transforma número em notação científica */
+			value: function(width) {
+				return wd_num_pow10(this.valueOf(), width);
+			}
+		},
+		locale: { /* notação numérica local */
+			value: function(currency) {
+				return wd_num_local(this.valueOf(), currency);
+			}
+		},
+		fixed: { /* fixa quantidade de dígitos (int e dec) */
+			value: function(ldec, lint) {
+				return wd_num_fixed(this.valueOf(), ldec, lint);
+			}
+		},
+		toString: { /* método padrão */
+			value: function() {
+				return this.test("infinity") ? this.str : this.valueOf().toString();
+			}
+		},
+	});
 
+/*----------------------------------------------------------------------------*/
+	function WDtime(value) {WDmain.call(this, value);}
 
+	WDtime.prototype = Object.create(WDmain.prototype, {
+		constructor: {value: WDtime},
+		type:        {value: "time"},
+		h: { /* define/obtem a hora */
+			get: function() {return wd_number_time(this.valueOf()).h;},
+			set: function(x) {
+				if (wd_finite(x))
+					this._value = wd_time_number(wd_integer(x), this.m, this.s);
+			}
+		},
+		hour: {
+			get: function()  {return this.h;},
+			set: function(x) {return this.h = x;}
+		},
+		m: { /* define/obtem o minuto */
+			get: function() {return wd_number_time(this.valueOf()).m;},
+			set: function(x) {
+				if (wd_finite(x))
+					this._value = wd_time_number(this.h, wd_integer(x), this.s);
+			}
+		},
+		minute: {
+			get: function()  {return this.m;},
+			set: function(x) {return this.m = x;}
+		},
+		s: { /* define/obtem o segundo */
+			get: function() {return wd_number_time(this.valueOf()).s;},
+			set: function(x) {
+				if (wd_finite(x))
+					this._value = wd_time_number(this.h, this.m, wd_integer(x));
+			}
+		},
+		second: {
+			get: function()  {return this.s;},
+			set: function(x) {return this.s = x;}
+		},
+		h12: { /* Retorna a hora no formato ampm */
+			get: function() {return wd_time_ampm(this.h, this.m);},
+		},
+		format: { /* formata saída string */
+			value: function(str) {
+				return wd_time_format(this, str);
+			}
+		},
+		toString: { /* método padrão */
+			value: function() {return wd_time_iso(this.valueOf());}
+		}
+
+	});
+
+/*----------------------------------------------------------------------------*/
+	function WDdate(value) {WDmain.call(this, value);}
+
+	WDdate.prototype = Object.create(WDmain.prototype, {
+		constructor: {value: WDdate},
+		type:        {value: "date"},
+		y: { /* ano */
+			get: function() {return this._value.getFullYear();},
+			set: function(x) {
+				if (wd_finite(x) && x >= 0)
+					this._value = wd_set_date(this._value, undefined, undefined, wd_integer(x));
+			}
+		},
+		m: { /* mês */
+			get: function() {return this._value.getMonth() + 1;},
+			set: function(x) {
+				if (wd_finite(x))
+					this._value = wd_set_date(this._value, undefined, wd_integer(x), undefined);
+			}
+		},
+		d: { /* dia */
+			get: function() {return this._value.getDate();},
+			set: function(x) {
+				if (wd_finite(x))
+					this._value = wd_set_date(this._value, wd_integer(x), undefined, undefined);
+			}
+		},
+		year: {
+			get: function()  {return this.y;},
+			set: function(x) {return this.y = x;}
+		},
+		month: {
+			get: function()  {return this.m;},
+			set: function(x) {return this.m = x;}
+		},
+		day: {
+			get: function()  {return this.d;},
+			set: function(x) {return this.d = x;}
+		},
+		length: {/*dias no ano*/
+			get: function() {return wd_is_leap(this.y) ? 366 : 365;}
+		},
+		shortMonth: { /* mês abreviado */
+			get: function() {return wd_date_locale(this._value, {month: "short"});}
+		},
+		longMonth: { /* nome do mês */
+			get: function() {return wd_date_locale(this._value, {month: "long"});}
+		},
+		shortDay: { /* dia abreviado */
+			get: function() {return wd_date_locale(this._value, {weekday: "short"});}
+		},
+		longDay: { /* nome do dia */
+			get: function() {return wd_date_locale(this._value, {weekday: "long"});}
+		},
+		today: { /* dia da semana [1-7] */
+			get: function() {return this._value.getDay() + 1;}
+		},
+		size: { /* quantidade de dias no mês */
+			get: function() {return wd_date_size(this.m, this.y);}
+		},
+		workingYear: { /* dias úteis no ano */
+			get: function() { return wd_date_working(this.y, this.length);}
+		},
+		working: { /* dias úteis até o momento */
+			get: function() { return wd_date_working(this.y, this.days);}
+		},
+		days: { /*dias transcorridos no ano*/
+			get: function() {return wd_date_days(this.y, this.m, this.d);}
+		},
+		week: {/*semana cheia do ano*/
+			get: function(days, today) {return wd_date_week(this.days, this.today);}
+		},
+		format: { /* formata saída string */
+			value: function(str) {
+				return wd_date_format(this, str);
+			}
+		},
+		toString: { /* método padrão */
+			value: function() {
+				return wd_date_iso(this._value);
+			}
+		},
+		valueOf: { /* método padrão */
+			value: function() {
+				return (this._value < 0 ? -1 : 0) + wd_integer(this._value/86400000);
+			}
+		},
+	});
+
+/*----------------------------------------------------------------------------*/
 	function WDarray(value) {WDmain.call(this, value);}
 
 	WDarray.prototype = Object.create(WDmain.prototype, {
@@ -3045,159 +3062,18 @@ BLOCO 5: boot
 				return wd_html_style_get(this._value[0], css);
 			}
 		},
-
-
-
-
-		tag: {  /* devolve o nome do elemento em minúsculo (só primeiro elemento) */
-			get: function(css) {return wd_html_tag(this._value[0]);}
-		},
-		table: {  /* transforma os dados de uma tabela (table) em matriz */
-			get: function(css) {return wd_html_table_array(this._value[0]);}
+		info: {  /* devolve informações diversas sobre o primeiro elemento */
+			get: function() {return wd_html_info(this._value[0]);}
 		},
 
 	});
- /*  */
 
-/*----------------------------------------------------------------------------*/
-	function wd_html_set(elem, attr, val) { /* define atributos/funcões no elemento */
-		var args = [];
-		for (var i = 2; i < arguments.length; i++)
-			args.push(arguments[i]);
-		if (wd_vtype(elem[attr]).type === "function")
-			return elem[attr].apply(elem, args);
-		if (attr in elem)
-			try {return elem[attr] = val;} catch(e) {}
-		return elem.setAttribute(attr, val);
-	}
-
-/*----------------------------------------------------------------------------*/
-	function wd_html_full(elem, exit) { /* deixa o elemento em tela cheia */
-		var action = {
-			open: ["requestFullscreen", "webkitRequestFullscreen", "msRequestFullscreen"],
-			exit: ["exitFullscreen", "webkitExitFullscreen", "msExitFullscreen"]
-		};
-		var full   = exit === true ? action.exit : action.open;
-		var target = exit === true ? document : elem;
-		for (var i = 0; i < full.length; i++) {
-			if (full[i] in target)
-				try {return target[full[i]]();} catch(e) {}
-		}
-		return null;
-	}
-
-/*----------------------------------------------------------------------------*/
-	function wd_html_page(elem, page, size) { /* exibe determinados grupos de elementos filhos */
-		var lines  = wd_vtype(elem.children).value;
-		if (lines.length === 0) return null;
-		page = wd_vtype(page).value;
-		size = wd_vtype(size).value;
-		if (!wd_finite(page) || !wd_finite(size)) return null;
-
-		if (size <= 0) /* toda a amostra */
-			size = lines.length;
-		else if (size < 1) /* uma fração da amostra */
-			size = wd_integer(size*lines.length);
-		else /* padrão */
-			size = wd_integer(size);
-
-		if (size === lines.length) /* toda a amostra */
-			page = 0;
-		else if (page < 0) /* última página */
-			page = wd_integer(lines.length/size);
-		else /* padrão */
-			page = wd_integer(page);
-
-		var start = page*size;
-		var end   = start+size-1;
-		return wd_html_nav(elem, ""+start+":"+end+"");
-	}
-
-/*----------------------------------------------------------------------------*/
-	function wd_html_sort(elem, order, col) { /* ordena elementos filho pelo conteúdo */
-		order = wd_finite(order) ? wd_integer(order) : 1;
-		col   = wd_finite(col)   ? wd_integer(col, true) : null;
-
-		var children = wd_vtype(elem.children).value;
-		var aux = [];
-
-		for (var i = 0; i < children.length; i++) {
-			if (col === null)
-				aux.push(children[i]);
-			else if (children[i].children[col] !== undefined)
-				aux.push(children[i].children[col]);
-		}
-
-		var sort = wd_array_sort(aux);
-		if (order < 0) sort = sort.reverse();
-		for (var i = 0; i < sort.length; i++)
-			elem.appendChild(col === null ? sort[i] : sort[i].parentElement);
-
-		return true;
-	}
-
-/*----------------------------------------------------------------------------*/
-	function wd_html_style_get(elem, css) { /* devolve o valor do estilo especificado */
-		var style = window.getComputedStyle(elem, null);
-		return css in style ? style.getPropertyValue(css) : null;
-	}
-
-/*----------------------------------------------------------------------------*/
-	function wd_html_table_array(elem) { /* transforma os dados de uma tabela (table) em matriz */
-		var tag = wd_html_tag(elem);
-		if (["tfoot", "tbody", "thead", "table"].indexOf(tag) < 0) return null;
-		var data = [];
-		var rows = elem.rows;
-		for (var row = 0; row < rows.length; row++) {
-			var cols = wd_vtype(rows[row].children).value;
-			if (data[row] === undefined) data.push([]);
-			for (var col = 0; col < cols.length; col++) {
-				if (data[row][col] === undefined) data[row].push([]);
-				data[row][col] = wd_vtype(cols[col].textContent).value;
-			}
-		}
-		return data;
-	}
-
-/*----------------------------------------------------------------------------*/
-	function wd_html_form_submit(list, get) { /* obtém serialização de formulário */
-		list = wd_vtype(list).value;
-		var pkg = get === true ? [] : new FormData();
-		for (var e = 0; e < list.length; e++) {
-			var data = wd_html_form_data(list[e]);
-			for (var i = 0; i < data.length; i++) {
-				var name  = data[i].NAME;
-				var value = get === true ? data[i].GET : data[i].POST;
-				if (wd_vtype(value).type === "array") {
-					for (var j = 0; j < value.length; j++) {
-						if (get === true) pkg.push(name+"="+value[j]);
-						else pkg.append(name, value[j]);
-					}
-				} else {
-					if (get === true) pkg.push(name+"="+value);
-					else pkg.append(name, value);
-				}
-			}
-		}
-		return get === true ? pkg.join("&") : pkg;
-	}
-
-
-
-
+	// FIXME isso é provisório, só até arrumar o gráfico
 	Object.defineProperty(WDdom.prototype, "chart", {/*retorna um objeto (aplicável somente ao 1º elemento) de criação de gráficos*/
 		value: function(title) {
 			return new wdChart(this.item(0), title);
 		}
 	});
-
-
-
-
-
-
-
-
 
 /*----------------------------------------------------------------------------*/
 	function WD(input) { /* função de interface ao usuário */
@@ -3227,7 +3103,6 @@ BLOCO 5: boot
 			for (var i in o) o[i] = (o[i] < 10 ? "0" : "") + o[i].toString();
 			return WD(o.h+":"+o.m+":"+o.s);
 		}},
-		loko: {value: WDchart}
 	});
 
 /* == BLOCO 4 ================================================================*/
@@ -3357,7 +3232,7 @@ BLOCO 5: boot
 		if (!("wdTsort" in e.dataset)) return;
 		if (wd_html_tag(e.parentElement.parentElement) !== "thead") return;
 		var order = e.dataset.wdTsort === "+1" ? -1 : 1;
-		var col   = WDdom.brosIndex(e);
+		var col   = wd_html_bros_index(e);
 		var heads = e.parentElement.children;
 		var thead = e.parentElement.parentElement;
 		var body  = thead.parentElement.tBodies;
@@ -3696,46 +3571,24 @@ BLOCO 5: boot
 /*============================================================================*/
 /* -- DISPARADORES -- */
 /*============================================================================*/
-
 	function loadProcedures(ev) {
-		/*definer o dispositivo*/
+		/* definindo atributos das variáveis globais (BLOCO 1) */
 		wd_device_controller = wd_get_device();
+		wd_request_progress.max = 1;
+		wd_modal_window.className = "js-wd-modal";
+		wd_modal_window.appendChild(wd_request_progress);
+		document.head.appendChild(wd_style_block);
+		wd_signal_block.className = "js-wd-signal";
 
-		/*criar o estilo interno*/
-		var styles = [
-			{target: "@keyframes js-wd-fade-in",
-				value: "from {opacity: 0;} to {opacity: 1;}"},
-			{target: "@keyframes js-wd-fade-out",
-				value: "from {opacity: 1;} to {opacity: 0;}"},
-			{target: ".js-wd-signal",
-				value: "animation-name: js-wd-fade-in, js-wd-fade-out; animation-duration: 1.5s, 1.5s; animation-delay: 0s, 7.5s;"},
-			{target: ".js-wd-no-display",
-				value: "display: none !important;"},
-			{target: ".js-wd-mask-error",
-				value: "color: #db1414 !important; background-color: #fde8e8 !important;"},
-			{target: "[data-wd-nav], [data-wd-send], [data-wd-tsort], [data-wd-data]",
-				value: "cursor: pointer;"},
-			{target: "[data-wd-set], [data-wd-edit], [data-wd-shared], [data-wd-css], [data-wd-table]",
-				value: "cursor: pointer;"},
-			{target: "[data-wd-tsort]:before",
-				value: "content: \"\\2195 \";"},
-			{target: "[data-wd-tsort=\"-1\"]:before",
-				value: "content: \"\\2191 \";"},
-			{target: "[data-wd-tsort=\"+1\"]:before",
-				value: "content: \"\\2193 \";"},
-			{target: "[data-wd-repeat] > *, [data-wd-load] > *",
-				value: "visibility: hidden !important;"},
-			{target: "[data-wd-slide] > * ",
-				value: "animation: js-wd-fade-in 1s;"},
-			{target: "nav > *.js-wd-nav-inactive",
-				value: "background-color: rgba(230,230,230,0.8) !important; color: #737373 !important;"},
-			{target: ".js-wd-plot",
-				value: "height: 100%; width: 100%; position: absolute; top: 0; left: 0; bottom: 0; right: 0;"}
-		];
-		var style = document.createElement("STYLE");
-		for(var i = 0; i < styles.length; i++)
-			style.textContent += styles[i].target+" {"+styles[i].value+"}\n"
-		document.head.appendChild(style);
+		/* construindo CSS da biblioteca */
+		for(var i = 0; i < wd_js_css.length; i++) {
+			var selector = wd_js_css[i].s;
+			var dataset  = wd_js_css[i].d;
+			var css = selector+" {\n\t"+dataset.join("\n\t")+"\n}\n\n";
+			wd_style_block.textContent += css;
+
+		}
+
 
 		/*definindo ícone*/
 		if (wd_$("link[rel=icon]") !== null) {
@@ -3755,7 +3608,6 @@ BLOCO 5: boot
 	}
 
 /*----------------------------------------------------------------------------*/
-
 	function hashProcedures(ev) {/*define margens de body quando houver cabeçalhos filhos fixos: caso muito especial*/
 		var measures = function (e) {
 			var obj = WD(e);
@@ -3789,7 +3641,6 @@ BLOCO 5: boot
 	};
 
 /*----------------------------------------------------------------------------*/
-
 	function loadingProcedures() {/*procedimento para carregamentos*/
 
 		var repeat = WD.$("[data-wd-repeat]");
@@ -3803,7 +3654,6 @@ BLOCO 5: boot
 	};
 
 /*----------------------------------------------------------------------------*/
-
 	function scalingProcedures(ev) {/*procedimentos para definir dispositivo e aplicar estilos*/
 		var device = wd_get_device();
 		if (device !== wd_device_controller) {
