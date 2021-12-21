@@ -367,11 +367,14 @@ BLOCO 5: boot
 
 /*----------------------------------------------------------------------------*/
 	function wd_$$$(obj) { /* captura os valores de $ e $$ dentro de um objeto */
-		var one = obj["$"].trim();
-		var all = obj["$$"].trim();
+		var one = "$" in obj  ? obj["$"].trim()  : null;
+		var all = "$$" in obj ? obj["$$"].trim() : null;
+		if (one === null && all === null) return null;
 		var words  = {"document": document, "window":  window};
 		if (one in words) return words[selOne];
 		if (all in words) return words[selAll];
+		one = one === null ? null : wd_$(one);
+		all = all === null ? null : wd_$$(all);
 		return all !== null ? all : one;
 	}
 
@@ -1687,10 +1690,12 @@ BLOCO 5: boot
 		if (attr === "innerHTML") {
 			var scripts = wd_vtype(wd_$$("script", elem)).value;
 			for (var i = 0; i < scripts.length; i++) {
-				var script = scripts[i].cloneNode(true);
+				var script = document.createElement("script");
+				if (scripts[i].src !== "") script.src = scripts[i].src;
+				else script.textContent = scripts[i].textContent;
 				elem.removeChild(scripts[i]);
 				elem.appendChild(script);
-			}
+			} //FIXME testar com scr !== ""
 		}
 		loadingProcedures();
 		return;
@@ -3251,7 +3256,7 @@ BLOCO 5: boot
 	function data_wdFilter(e) {/*Filtrar elementos: data-wd-filter=chars{}${css}&...*/
 		if (!("wdFilter" in e.dataset)) return;
 
-		var search = wd_html_form(e) ? WDdom.value(e) : e.textContent;
+		var search = wd_html_form(e) ? wd_html_form_value(e) : e.textContent;
 		if (search === null) search = "";
 		if (search[0] === "/" && search.length > 3) {/*É RegExp?*/
 			if (search[search.length - 1] === "/") {
@@ -3274,7 +3279,7 @@ BLOCO 5: boot
 
 	function data_wdMask(e) {/*Máscara: data-wd-mask="model{mask}call{callback}"*/
 		if (!("wdMask" in e.dataset)) return;
-		var attr = WDdom.mask(e);
+		var attr = wd_html_mask_attr(e);
 		if (attr === null) return;
 		var data = wd_html_dataset_notation(e, "wdMask")[0];
 		if (!("model" in data)) return;
@@ -3509,7 +3514,7 @@ BLOCO 5: boot
 		fc: forbidden characters (caracteres não permitidos)
 		call: função a ser chamada
 	*/
-		if (!("wdFile" in e.dataset) || WDdom.type(e) !== "file") return;
+		if (!("wdFile" in e.dataset) || wd_html_form_type(e) !== "file") return;
 
 		var data  = wd_html_dataset_notation(e, "wdFile")[0];
 		var info  = {error: null, file: null, value: null, parameter: null};

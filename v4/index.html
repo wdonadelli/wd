@@ -5,7 +5,7 @@
 		<title>- - WD Web Libraries - -</title>
 		<meta charset="UTF-8"/>
 		<meta name="viewport" content="width=device-width, initial-scale=1"/>
-		<meta name="keywords" content="wd, stylesheet, attributes, tools, HTML, CSS, javaScript, library, queryselector, handbook, github, donadelli, wdonadelli">
+		<meta name="keywords" content="wd, stylesheet, attributes, tools, HTML, CSS, javaScript, library, queryselector, handbook, github, donadelli, wdonadelli" />
 		<meta name="author" content="Willian Donadelli"/>
 		<meta name="description" content="WD Web Libraries Examples"/>
 		<meta name="rating" content="general" />
@@ -16,7 +16,7 @@
 		<link  href="wd4.css" rel="stylesheet" />
 		<script>
 
-function err(e) {
+function err(e) {console.log(e)
 	document.getElementById("ie_code").value = e;
 }
 
@@ -43,13 +43,13 @@ function getDOM() {
 
 
 function buttons() {
-	wd.$("#ie_apply").handler({click: reloadExample});
-	wd.$("#ie_reset").handler({click: loadExample});
-	wd.$("#ie_dom").handler({click: getDOM});
+	wd.$("#ie_apply").addHandler({click: reloadExample});
+	wd.$("#ie_reset").addHandler({click: loadExample});
+	wd.$("#ie_dom").addHandler({click: getDOM});
 }
 
 try {
-	wd(window).handler({load: loadExample}).handler({load: buttons});
+	wd(window).addHandler({load: loadExample}).addHandler({load: buttons});
 } catch(e) {err(e);}
 
 
