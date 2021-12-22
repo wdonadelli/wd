@@ -474,7 +474,8 @@ BLOCO 5: boot
 			var cols = rows[r].split("\t")
 			for (var c = 0; c < cols.length; c++) {
 				var value = cols[c];
-				if ((/^\"(.+)?\"$/).test(value)) value = value.replace(/^\"/, "").replace(/\"$/, "");
+				if ((/^\"(.+)?\"$/).test(value)) /* limpar aspas desnecessárias */
+					value = value.replace(/^\"/, "").replace(/\"$/, "");
 				data[r].push(value);
 			}
 		}
@@ -482,13 +483,13 @@ BLOCO 5: boot
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_json(input) { /* se texto, retornar um objeto, caso contrário, um JSON */
+	function wd_json(input) { /* se texto, retornar um objeto, se outra coisa, retorna um JSON */
 		if (input === null || input === undefined) return {};
 		if (wd_vtype(input).type === "text") {
-			try {return JSON.parse(input.toString());}
+			try      {return JSON.parse(input.toString());}
 			catch(e) {return {};}
 		}
-		try {return JSON.stringify(input)}
+		try      {return JSON.stringify(input)}
 		catch(e) {return ""}
 	}
 
@@ -1543,7 +1544,7 @@ BLOCO 5: boot
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_html_dataset_notation(elem, attr) { /* transforma o conteúdo em formato especial do dataset em um array de objetos */
+	function wd_html_dataset_value(elem, attr) { /* transforma o conteúdo em formato especial do dataset em um array de objetos */
 		var list = [{}];
 		if (!(attr in elem.dataset)) return list;
 		var key    = 0;
@@ -1683,7 +1684,7 @@ BLOCO 5: boot
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_html_load(elem, text) {
+	function wd_html_load(elem, text) { /* carrega um HTML (texto) no elemento */
 		text = text === undefined || text === null ? "" : new String(text).toString();
 		var attr = wd_html_load_attr(elem);
 		elem[attr] = text;
@@ -1691,11 +1692,11 @@ BLOCO 5: boot
 			var scripts = wd_vtype(wd_$$("script", elem)).value;
 			for (var i = 0; i < scripts.length; i++) {
 				var script = document.createElement("script");
-				if (scripts[i].src !== "") script.src = scripts[i].src;
-				else script.textContent = scripts[i].textContent;
+				var source = scripts[i].src.trim() === "" ? "text" : "src";
+				script[source] = scripts[i][source];
 				elem.removeChild(scripts[i]);
 				elem.appendChild(script);
-			} //FIXME testar com scr !== ""
+			}
 		}
 		loadingProcedures();
 		return;
@@ -1707,17 +1708,17 @@ BLOCO 5: boot
 
 		var html = elem.innerHTML;
 
-		if (html.search(/\{\{.+\}\}/gi) >= 0)
+		if (html.search(/\{\{.+\}\}/gi) >= 0) /* se filho conter {{}}, armazenar no estoque seu conteúdo textual */
 			elem.dataset.wdRepeatModel = html;
-		else if ("wdRepeatModel" in elem.dataset)
+		else if ("wdRepeatModel" in elem.dataset) /* se filho conter informação no estoque, utilizar esse dado */
 			html = elem.dataset.wdRepeatModel;
 		else
 			return;
 
-		elem.innerHTML = "";
-		html = html.split("}}=\"\"").join("}}");
+		elem.innerHTML = ""; /* limpar container */
+		html = html.split("}}=\"\"").join("}}"); /* redifinir attributo cujo navegador troca {{x}} por {{x}}="" */
 		for (var i = 0; i < json.length; i++) {
-			var inner  = html;
+			var inner = html;
 			if (wd_vtype(json[i]).type !== "object") continue;
 			for (var c in json[i]) inner = inner.split("{{"+c+"}}").join(json[i][c]);
 			elem.innerHTML += inner;
@@ -2684,7 +2685,7 @@ BLOCO 5: boot
 		},
 		mask: { /* máscaras temáticas */
 			value: function(check, callback) {
-				return wd_multiple_masks(this.toString, check, callback);
+				return wd_multiple_masks(this.toString(), check, callback);
 			}
 		},
 		format: { /*aplica atributos múltiplos*/
@@ -3115,7 +3116,7 @@ BLOCO 5: boot
 /*----------------------------------------------------------------------------*/
 	function data_wdLoad(e) {/*carrega HTML: data-wd-load=path{file}method{get|post}${form}*/
 		if (!("wdLoad" in e.dataset)) return;
-		var data   = wd_html_dataset_notation(e, "wdLoad")[0];
+		var data   = wd_html_dataset_value(e, "wdLoad")[0];
 		var target = WD(e);
 		var method = "method" in data ? data.method : "post";
 		var file   = data.path;
@@ -3130,10 +3131,9 @@ BLOCO 5: boot
 	};
 
 /*----------------------------------------------------------------------------*/
-
 	function data_wdRepeat(e) {/*Repete modelo HTML: data-wd-repeat=path{file}method{get|post}${form}*/
 		if (!("wdRepeat" in e.dataset)) return;
-		var data   = wd_html_dataset_notation(e, "wdRepeat")[0];
+		var data   = wd_html_dataset_value(e, "wdRepeat")[0];
 		var target = WD(e);
 		var method = "method" in data ? data.method : "post";
 		var file   = data.path;
@@ -3143,8 +3143,12 @@ BLOCO 5: boot
 		target.data({wdRepeat: null});
 		exec.send(file, function(x) {
 			if (x.closed) {
-				if (x.json !== null) return target.repeat(x.json);
-				if (x.csv !== null)  return target.repeat(wd_matrix_object(x.csv));
+				var json = x.json;
+				var csv  = x.csv;
+				if (wd_vtype(json).type === "array")
+					return target.repeat(json);
+				if (wd_vtype(csv).type === "array")
+					return target.repeat(wd_matrix_object(x.csv));
 				return target.repeat([]);
 			}
 		}, method);
@@ -3157,7 +3161,7 @@ BLOCO 5: boot
 		/*a partir de uma tabela: table{target}cols{x,y1:anal1,y2:anal2...}labels{title,x,y}*/
 		/*a partir de um arquivo: path{...}method{...}form{...}cols{x,y1:anal1,y2:anal2...}labels{title,x,y}*/
 		if (!("wdChart" in e.dataset)) return;
-		var data   = wd_html_dataset_notation(e, "wdChart")[0];
+		var data   = wd_html_dataset_value(e, "wdChart")[0];
 		var target = WD(e);
 
 		/*Função para analisar dados e manipular objeto*/
@@ -3204,12 +3208,11 @@ BLOCO 5: boot
 	}
 
 /*----------------------------------------------------------------------------*/
-
 	function data_wdSend(e) {/*Requisições: data-wd-send=path{file}method{get|post}${form}call{name}&*/
 		if (!("wdSend" in e.dataset)) return;
-		var data = wd_html_dataset_notation(e, "wdSend");
+		var data = wd_html_dataset_value(e, "wdSend");
 		for (var i = 0; i < data.length; i++) {
-			if (!("get" in data[i]) && !("post" in data[i])) continue;
+			//if (!("get" in data[i]) && !("post" in data[i])) continue;
 			var method = "method" in data[i] ? data.method[i] : "post";
 			var file   = data[i].path;
 			var pack   = wd_$$$(data[i]);
@@ -3221,10 +3224,9 @@ BLOCO 5: boot
 	};
 
 /*----------------------------------------------------------------------------*/
-
 	function data_wdSort(e) {/*Ordenar HTML: data-wd-sort="order{±1}col{>0?}"*/
 		if (!("wdSort" in e.dataset)) return;
-		var data  = wd_html_dataset_notation(e, "wdSort")[0];
+		var data  = wd_html_dataset_value(e, "wdSort")[0];
 		var order = "order" in data ? data.order : 1;
 		var col   = "col"   in data ? data.col : null;
 		WD(e).sort(order, col).data({wdSort: null});
@@ -3232,7 +3234,6 @@ BLOCO 5: boot
 	};
 
 /*----------------------------------------------------------------------------*/
-
 	function data_wdTsort(e) {/*Ordena tabelas: data-wd-tsort=""*/
 		if (!("wdTsort" in e.dataset)) return;
 		if (wd_html_tag(e.parentElement.parentElement) !== "thead") return;
@@ -3252,21 +3253,18 @@ BLOCO 5: boot
 	};
 
 /*----------------------------------------------------------------------------*/
-
 	function data_wdFilter(e) {/*Filtrar elementos: data-wd-filter=chars{}${css}&...*/
 		if (!("wdFilter" in e.dataset)) return;
 
 		var search = wd_html_form(e) ? wd_html_form_value(e) : e.textContent;
 		if (search === null) search = "";
-		if (search[0] === "/" && search.length > 3) {/*É RegExp?*/
-			if (search[search.length - 1] === "/") {
-				search = new RegExp(search.substr(1, (search.length - 2)));
-			} else if (search.substr((search.length - 2), 2) === "/i") {
-				search = new RegExp(search.substr(1, (search.length - 3)), "i");
-			}
-		}
+		search = search.trim();
+		if ((/^\/.+\/$/).test(search))
+			search = new RegExp(search.substr(1, (search.length - 2)));
+		else if ((/^\/.+\/i$/).test(search))
+			search = new RegExp(search.substr(1, (search.length - 3)), "i");
 
-		var data = wd_html_dataset_notation(e, "wdFilter");
+		var data = wd_html_dataset_value(e, "wdFilter");
 		for (var i = 0; i < data.length; i++) {
 			var chars  = data[i].chars;
 			var target = wd_$$$(data[i]);
@@ -3276,12 +3274,11 @@ BLOCO 5: boot
 	};
 
 /*----------------------------------------------------------------------------*/
-
 	function data_wdMask(e) {/*Máscara: data-wd-mask="model{mask}call{callback}"*/
 		if (!("wdMask" in e.dataset)) return;
 		var attr = wd_html_mask_attr(e);
 		if (attr === null) return;
-		var data = wd_html_dataset_notation(e, "wdMask")[0];
+		var data = wd_html_dataset_value(e, "wdMask")[0];
 		if (!("model" in data)) return;
 		var checks = {
 			date: function(x) {return WD(x).type === "date" ? true : false},
@@ -3311,13 +3308,12 @@ BLOCO 5: boot
 	};
 
 /*----------------------------------------------------------------------------*/
-
 	function data_wdPage(e) {/*separação em grupos: data-wd-page=page{p}size{s}*/
 		if (!("wdPage" in e.dataset)) return;
-		var data = wd_html_dataset_notation(e, "wdPage")[0];
+		var data = wd_html_dataset_value(e, "wdPage")[0];
 		WD(e).page(data.page, data.size).data({wdPage: null});
 		return;
-	};
+	};//FIXME parei aqui
 
 /*----------------------------------------------------------------------------*/
 
@@ -3332,7 +3328,7 @@ BLOCO 5: boot
 
 	function data_wdData(e) {/*define dataset: data-wd-data=attr1{value}${css}&*/
 		if (!("wdData" in e.dataset)) return;
-		var data = wd_html_dataset_notation(e, "wdData");
+		var data = wd_html_dataset_value(e, "wdData");
 		for (var i = 0; i < data.length; i++) {
 			var target = wd_$$$(data[i]);
 			delete data[i]["$"];
@@ -3348,7 +3344,7 @@ BLOCO 5: boot
 	function data_wdEdit(e) {/*edita texto: data-wd-edit=comando{especificação}...*/
 		if (!("execCommand" in document)) return;
 		if (!("wdEdit" in e.dataset)) return;
-		var data = wd_html_dataset_notation(e, "wdEdit")[0];
+		var data = wd_html_dataset_value(e, "wdEdit")[0];
 		for (var i in data) {
 			var cmd = i;
 			var arg = data[i].trim() === "" ? undefined : data[i].trim();
@@ -3368,7 +3364,7 @@ BLOCO 5: boot
 
 	function data_wdDevice(e) {/*Estilo widescreen: data-wd-device=desktop{css}tablet{css}phone{css}mobile{css}*/
 		if (!("wdDevice" in e.dataset)) return;
-		var data = wd_html_dataset_notation(e, "wdDevice")[0];
+		var data = wd_html_dataset_value(e, "wdDevice")[0];
 		var desktop = "desktop" in data ? data.desktop : "";
 		var mobile  = "mobile"  in data ? data.mobile  : "";
 		var tablet  = "tablet"  in data ? data.tablet  : "";
@@ -3390,7 +3386,7 @@ BLOCO 5: boot
 
 	function data_wdFull(e) {/*Estilo fullscreen: data-wd-full=exit{}${}*/
 		if (!("wdFull" in e.dataset)) return;
-		var data   = wd_html_dataset_notation(e, "wdFull")[0];
+		var data   = wd_html_dataset_value(e, "wdFull")[0];
 		var exit   = "exit" in data ? true : false;
 		var target = wd_$$$(data);
 		if (target === null) target = document.documentElement;
@@ -3439,7 +3435,7 @@ BLOCO 5: boot
 
 	function data_wdSet(e) {/*define attributos: data-wd-set=attr{value}${css}&...*/
 		if (!("wdSet" in e.dataset)) return;
-		var data  = wd_html_dataset_notation(e, "wdSet");
+		var data  = wd_html_dataset_value(e, "wdSet");
 		var words = {"null": null, "false": false, "true": true};
 		for (var i = 0; i < data.length; i++) {
 			var target = wd_$$$(data[i]);
@@ -3457,7 +3453,7 @@ BLOCO 5: boot
 
 	function data_wdCss(e) {/*define class: data-wd-css=add{value}tgl{css}del{css}${css}&...*/
 		if (!("wdCss" in e.dataset)) return;
-		var data = wd_html_dataset_notation(e, "wdCss");
+		var data = wd_html_dataset_value(e, "wdCss");
 		for (var i = 0; i < data.length; i++) {
 			var target = wd_$$$(data[i]);
 			delete data[i]["$"];
@@ -3472,7 +3468,7 @@ BLOCO 5: boot
 
 	function data_wdNav(e) {/*Navegação: data-wd-nav=type{arg}${css}&*/
 		if (!("wdNav" in e.dataset)) return;
-		var data = wd_html_dataset_notation(e, "wdNav");
+		var data = wd_html_dataset_value(e, "wdNav");
 		for (var i = 0; i < data.length; i++) {
 			var target = wd_$$$(data[i]);
 			var value  = "type" in data[i] ? data[i].type : null;
@@ -3485,7 +3481,7 @@ BLOCO 5: boot
 
 	function data_wdOutput(e) {/*Atribui um valor ao target: data-wd-output=${target}call{}*/
 		if (!("wdOutput" in e.dataset)) return;
-		var data   = wd_html_dataset_notation(e, "wdOutput")[0];
+		var data   = wd_html_dataset_value(e, "wdOutput")[0];
 		var target = wd_$$$(data);
 		if (target === null) return;
 
@@ -3516,7 +3512,7 @@ BLOCO 5: boot
 	*/
 		if (!("wdFile" in e.dataset) || wd_html_form_type(e) !== "file") return;
 
-		var data  = wd_html_dataset_notation(e, "wdFile")[0];
+		var data  = wd_html_dataset_value(e, "wdFile")[0];
 		var info  = {error: null, file: null, value: null, parameter: null};
 		var files = e.files;
 
