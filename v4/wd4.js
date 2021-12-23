@@ -1840,26 +1840,45 @@ BLOCO 5: boot
 
 /*----------------------------------------------------------------------------*/
 	function wd_html_page(elem, page, size) { /* exibe determinados grupos de elementos filhos */
-		var lines  = wd_vtype(elem.children).value;
+		var lines = wd_vtype(elem.children).value;
 		if (lines.length === 0) return null;
 		page = wd_vtype(page).value;
 		size = wd_vtype(size).value;
+
+		//FIXME ver algo mais interessante para isso
 		if (!wd_finite(page) || !wd_finite(size)) return null;
 
-		if (size <= 0) /* toda a amostra */
-			size = lines.length;
-		else if (size < 1) /* uma fração da amostra */
-			size = wd_integer(size*lines.length);
-		else /* padrão */
-			size = wd_integer(size);
-
-		if (size === lines.length) /* toda a amostra */
+		/*--------------------------------------------------------------------------
+		|	A) se size < 0  obter toda a amostra;
+		|	B) se size < 1  obter uma fração da amostra
+		|	C) se size >= 1 obter a amostra (valor inteiro)
+		|	D) se size = 0  size = 1 (limite mínimo de size)
+		--------------------------------------------------------------------------*/
+		if (size < 0) { /*A*/
 			page = 0;
-		else if (page < 0) /* última página */
-			page = wd_integer(lines.length/size);
+			size = lines.length;
+		} else {
+			size = wd_integer(size < 1 ? size*lines.length : size); /*BC*/
+			if (size === 0) size = 1; /*D*/
+		}
+
+		function last() { /* informa a última página */
+			return wd_integer(lines.length/size + (lines.length % size === 0 ? -1 :0));
+		}
+
+		/*--------------------------------------------------------------------------
+		|	A) se page < 0           exibir a última página;
+		|	B) se size*page >= lines exibir a última página;
+		|	se size < 1 e amostra = 0, amostra = 1 (limite mínimo de size)
+		|	caso contrário, obter a amostra (inteiro)
+		--------------------------------------------------------------------------*/
+
+		//FIXME next e prev valem a pena?
+		if (page < 0 || size*page >= lines.length) /*AB*/
+			page = last();
 		else /* padrão */
 			page = wd_integer(page);
-
+		console.log(size, page);
 		var start = page*size;
 		var end   = start+size-1;
 		return wd_html_nav(elem, ""+start+":"+end+"");
