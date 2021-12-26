@@ -1761,7 +1761,14 @@ BLOCO 5: boot
 			var value = action.split(":");
 			var init = wd_vtype(value[0]).value;
 			var end  = wd_vtype(value[1]).value;
+			if (!wd_finite(init)) init = 0;
+			if (!wd_finite(end))  end  = child.length-1;
 			var show = end >= init ? true : false;
+			if (!show) {
+				var temp = init;
+				init = end;
+				end  = temp;
+			}
 			for (var i = 0; i < child.length; i++) {
 				if (i >= init && i <= end)
 					wd_html_nav(child[i], (show ? "show" : "hide"));
@@ -1924,7 +1931,11 @@ BLOCO 5: boot
 			if (data[row] === undefined) data.push([]);
 			for (var col = 0; col < cols.length; col++) {
 				if (data[row][col] === undefined) data[row].push([]);
-				data[row][col] = wd_vtype(cols[col].textContent).value;
+				var val = wd_vtype(cols[col].textContent);
+				if (val.type === "time") val = wd_time_iso(val.value); else
+				if (val.type === "date") val = wd_date_iso(val.value);
+				else val = val.value;
+				data[row][col] = val;
 			}
 		}
 		return data;
@@ -2973,7 +2984,7 @@ BLOCO 5: boot
 				return wd_array_cells(this.valueOf(), Array.prototype.slice.call(arguments));
 			}
 		},
-		data: { /* obtem dados estatísticos a partir dos itens do array/matriz */
+		data: { /* obtem dados estatísticos a partir dos itens do array/matriz (FIXME array também?)*/
 			value: function(x, y) {
 				return wd_matrix_data(this.valueOf(), x, y);
 			}
@@ -3133,7 +3144,7 @@ BLOCO 5: boot
 /* == BLOCO 4 ================================================================*/
 
 /*----------------------------------------------------------------------------*/
-	function data_wdLoad(e) {/*carrega HTML: data-wd-load=path{file}method{get|post}${form}*/
+	function data_wdLoad(e) { /* carrega HTML: data-wd-load=path{file}method{get|post}${form} */
 		if (!("wdLoad" in e.dataset)) return;
 		var data   = wd_html_dataset_value(e, "wdLoad")[0];
 		var target = WD(e);
@@ -3150,7 +3161,7 @@ BLOCO 5: boot
 	};
 
 /*----------------------------------------------------------------------------*/
-	function data_wdRepeat(e) {/*Repete modelo HTML: data-wd-repeat=path{file}method{get|post}${form}*/
+	function data_wdRepeat(e) { /* Repete modelo HTML: data-wd-repeat=path{file}method{get|post}${form} */
 		if (!("wdRepeat" in e.dataset)) return;
 		var data   = wd_html_dataset_value(e, "wdRepeat")[0];
 		var target = WD(e);
@@ -3176,7 +3187,7 @@ BLOCO 5: boot
 
 /*----------------------------------------------------------------------------*/
 
-	function data_wdChart(e) {/*Plotar Gráfico: data-wd-chart*/
+	function data_wdChart(e) { /*FIXME Plotar Gráfico: data-wd-chart */
 		/*a partir de uma tabela: table{target}cols{x,y1:anal1,y2:anal2...}labels{title,x,y}*/
 		/*a partir de um arquivo: path{...}method{...}form{...}cols{x,y1:anal1,y2:anal2...}labels{title,x,y}*/
 		if (!("wdChart" in e.dataset)) return;
@@ -3227,7 +3238,7 @@ BLOCO 5: boot
 	}
 
 /*----------------------------------------------------------------------------*/
-	function data_wdSend(e) {/*Requisições: data-wd-send=path{file}method{get|post}${form}call{name}&*/
+	function data_wdSend(e) { /* Requisições: data-wd-send=path{file}method{get|post}${form}call{name}& */
 		if (!("wdSend" in e.dataset)) return;
 		var data = wd_html_dataset_value(e, "wdSend");
 		for (var i = 0; i < data.length; i++) {
@@ -3243,7 +3254,7 @@ BLOCO 5: boot
 	};
 
 /*----------------------------------------------------------------------------*/
-	function data_wdSort(e) {/*Ordenar HTML: data-wd-sort="order{±1}col{>0?}"*/
+	function data_wdSort(e) { /* Ordenar HTML: data-wd-sort="order{±1}col{>0?}" */
 		if (!("wdSort" in e.dataset)) return;
 		var data  = wd_html_dataset_value(e, "wdSort")[0];
 		var order = "order" in data ? data.order : 1;
@@ -3253,7 +3264,7 @@ BLOCO 5: boot
 	};
 
 /*----------------------------------------------------------------------------*/
-	function data_wdTsort(e) {/*Ordena tabelas: data-wd-tsort=""*/
+	function data_wdTsort(e) { /* Ordena tabelas: data-wd-tsort="" */
 		if (!("wdTsort" in e.dataset)) return;
 		if (wd_html_tag(e.parentElement.parentElement) !== "thead") return;
 		var order = e.dataset.wdTsort === "+1" ? -1 : 1;
@@ -3272,7 +3283,7 @@ BLOCO 5: boot
 	};
 
 /*----------------------------------------------------------------------------*/
-	function data_wdFilter(e) {/*Filtrar elementos: data-wd-filter=chars{}${css}&...*/
+	function data_wdFilter(e) { /* Filtrar elementos: data-wd-filter=chars{}${css}&... */
 		if (!("wdFilter" in e.dataset)) return;
 
 		var search = wd_html_form(e) ? wd_html_form_value(e) : e.textContent;
@@ -3293,7 +3304,7 @@ BLOCO 5: boot
 	};
 
 /*----------------------------------------------------------------------------*/
-	function data_wdMask(e) {/*Máscara: data-wd-mask="model{mask}call{callback}"*/
+	function data_wdMask(e) { /* Máscara: data-wd-mask="model{mask}call{callback}" */
 		if (!("wdMask" in e.dataset)) return;
 		var attr = wd_html_mask_attr(e);
 		if (attr === null) return;
@@ -3327,7 +3338,7 @@ BLOCO 5: boot
 	};
 
 /*----------------------------------------------------------------------------*/
-	function data_wdPage(e) {/*separação em grupos: data-wd-page=page{p}size{s}*/
+	function data_wdPage(e) { /* separação em grupos: data-wd-page=page{p}size{s} */
 		if (!("wdPage" in e.dataset)) return;
 		var data = wd_html_dataset_value(e, "wdPage")[0];
 		WD(e).page(data.page, data.size).data({wdPage: null});
@@ -3335,8 +3346,7 @@ BLOCO 5: boot
 	};//FIXME parei aqui
 
 /*----------------------------------------------------------------------------*/
-
-	function data_wdClick(e) {/*Executa click(): data-wd-click=""*/
+	function data_wdClick(e) { /* Executa click(): data-wd-click="" */
 		if (!("wdClick" in e.dataset)) return;
 		if ("click" in e) e.click();
 		WD(e).data({wdClick: null});
@@ -3344,8 +3354,7 @@ BLOCO 5: boot
 	};
 
 /*----------------------------------------------------------------------------*/
-
-	function data_wdData(e) {/*define dataset: data-wd-data=attr1{value}${css}&*/
+	function data_wdData(e) { /* define dataset: data-wd-data=attr1{value}${css}& */
 		if (!("wdData" in e.dataset)) return;
 		var data = wd_html_dataset_value(e, "wdData");
 		for (var i = 0; i < data.length; i++) {
@@ -3359,8 +3368,7 @@ BLOCO 5: boot
 	};
 
 /*----------------------------------------------------------------------------*/
-
-	function data_wdEdit(e) {/*edita texto: data-wd-edit=comando{especificação}...*/
+	function data_wdEdit(e) { /* edita texto: data-wd-edit=comando{especificação}... */
 		if (!("execCommand" in document)) return;
 		if (!("wdEdit" in e.dataset)) return;
 		var data = wd_html_dataset_value(e, "wdEdit")[0];
@@ -3370,8 +3378,7 @@ BLOCO 5: boot
 			if (cmd === "createLink") {
 				arg = prompt("Link:");
 				if (arg === "" || arg === null) cmd = "unlink";
-			}
-			if (cmd === "insertImage") {
+			} else if (cmd === "insertImage") {
 				arg = prompt("Link:");
 			}
 			document.execCommand(cmd, false, arg);
@@ -3380,8 +3387,7 @@ BLOCO 5: boot
 	};
 
 /*----------------------------------------------------------------------------*/
-
-	function data_wdDevice(e) {/*Estilo widescreen: data-wd-device=desktop{css}tablet{css}phone{css}mobile{css}*/
+	function data_wdDevice(e) { /* Estilo widescreen: data-wd-device=desktop{css}tablet{css}phone{css}mobile{css} */
 		if (!("wdDevice" in e.dataset)) return;
 		var data = wd_html_dataset_value(e, "wdDevice")[0];
 		var desktop = "desktop" in data ? data.desktop : "";
@@ -3389,21 +3395,17 @@ BLOCO 5: boot
 		var tablet  = "tablet"  in data ? data.tablet  : "";
 		var phone   = "phone"   in data ? data.phone   : "";
 		var device  = wd_get_device();
-		if (device === "desktop") {
+		if (device === "desktop")
 			return WD(e).css({del: phone}).css({del: tablet}).css({del: mobile}).css({add: desktop});
-		}
-		if (device === "tablet") {
+		if (device === "tablet")
 			return WD(e).css({del: desktop}).css({del: phone}).css({add: mobile}).css({add: tablet});
-		}
-		if (device === "phone") {
+		if (device === "phone")
 			return WD(e).css({del: desktop}).css({del: tablet}).css({add: mobile}).css({add: phone});
-		}
 		return;
 	};
 
 /*----------------------------------------------------------------------------*/
-
-	function data_wdFull(e) {/*Estilo fullscreen: data-wd-full=exit{}${}*/
+	function data_wdFull(e) { /* Estilo fullscreen: data-wd-full=exit{}${} */
 		if (!("wdFull" in e.dataset)) return;
 		var data   = wd_html_dataset_value(e, "wdFull")[0];
 		var exit   = "exit" in data ? true : false;
@@ -3414,11 +3416,10 @@ BLOCO 5: boot
 	};
 
 /*----------------------------------------------------------------------------*/
-
-	function data_wdSlide(e) {/*Carrossel: data-wd-slide=time*/
+	function data_wdSlide(e) { /* Carrossel: data-wd-slide=time */
 		if (!("wdSlide" in e.dataset)) return delete e.dataset.wdSlideRun;
 		var time = wd_finite(e.dataset.wdSlide) ? wd_integer(e.dataset.wdSlide) : 1000;;
-
+		/* data-wd-slide-run TODO: explicar essa parada, funciona mas já esqueci a lógica */
 		if (!("wdSlideRun" in e.dataset)) {
 			WD(e).nav((time < 0 ? "prev" : "next"));
 			e.dataset.wdSlideRun = "1";
@@ -3433,8 +3434,7 @@ BLOCO 5: boot
 	};
 
 /*----------------------------------------------------------------------------*/
-
-	function data_wdShared(e) {/*TODO: Link para redes sociais: data-wd-shared=rede*/
+	function data_wdShared(e) { /* TODO: Link para redes sociais: data-wd-shared=rede */
 		if (!("wdShared" in e.dataset)) return;
 		var url    = encodeURIComponent(document.URL);
 		var title  = encodeURIComponent(document.title);
@@ -3451,8 +3451,7 @@ BLOCO 5: boot
 	};
 
 /*----------------------------------------------------------------------------*/
-
-	function data_wdSet(e) {/*define attributos: data-wd-set=attr{value}${css}&...*/
+	function data_wdSet(e) { /* define attributos: data-wd-set=attr{value}${css}&... */
 		if (!("wdSet" in e.dataset)) return;
 		var data  = wd_html_dataset_value(e, "wdSet");
 		var words = {"null": null, "false": false, "true": true};
@@ -3469,8 +3468,7 @@ BLOCO 5: boot
 	};
 
 /*----------------------------------------------------------------------------*/
-
-	function data_wdCss(e) {/*define class: data-wd-css=add{value}tgl{css}del{css}${css}&...*/
+	function data_wdCss(e) { /* define class: data-wd-css=add{value}tgl{css}del{css}rpl${css}&... */
 		if (!("wdCss" in e.dataset)) return;
 		var data = wd_html_dataset_value(e, "wdCss");
 		for (var i = 0; i < data.length; i++) {
@@ -3484,8 +3482,7 @@ BLOCO 5: boot
 	};
 
 /*----------------------------------------------------------------------------*/
-
-	function data_wdNav(e) {/*Navegação: data-wd-nav=type{arg}${css}&*/
+	function data_wdNav(e) { /* Navegação: data-wd-nav=type{arg}${css}& */
 		if (!("wdNav" in e.dataset)) return;
 		var data = wd_html_dataset_value(e, "wdNav");
 		for (var i = 0; i < data.length; i++) {
@@ -3497,30 +3494,30 @@ BLOCO 5: boot
 	};
 
 /*----------------------------------------------------------------------------*/
-
-	function data_wdOutput(e) {/*Atribui um valor ao target: data-wd-output=${target}call{}*/
-		if (!("wdOutput" in e.dataset)) return;
-		var data   = wd_html_dataset_value(e, "wdOutput")[0];
-		var target = wd_$$$(data);
-		if (target === null) return;
-
-
-
-/*
-		var table = WD(target).table()[0];
-		if (table === null) return;
-		var value = WD(table).data(data.x, data.y);
-		var index = "value" in data ? data.value.split(".") : [];
-		for (var i = 0; i < index.length; i++)
-			try {value = value[index[i]];} catch(e) {value = null; break;}
-		e.textContent = value === null ? "?" : value;
+	function data_wdOutput(e) { /* Atribui valor ao target: data-wd-output=${target}call{} */
+		var output = wd_$$("[data-wd-output]");
+		if (output === null) return;
+		/* looping pelos elementos com data-wd-output no documento */
+		for (var i = 0; i < output.length; i++) {
+			var elem   = output[i];
+			var data   = wd_html_dataset_value(elem, "wdOutput")[0];
+			var target = wd_$$$(data);
+			if (!("call" in data) || WD(window[data["call"]]).type !== "function")
+				continue;
+			/* looping pelos elementos citados no atributo data-wd-output */
+			for (var j = 0; j < target.length; j++) {
+				if (target[j] === e) {
+					var attr = wd_html_form(elem) ? "value" : "textContent"
+					elem[attr]  = window[data["call"]]();
+					break;
+				}
+			}
+		}
 		return;
-*/
 	};
 
 /*----------------------------------------------------------------------------*/
-
-	function data_wdFile(e) {/*Análise de arquivos: data-wd-file=fs{}ft{}fc{}nf{}ms{}call{}*/
+	function data_wdFile(e) { /* Análise de arquivos: data-wd-file=fs{}ft{}fc{}nf{}ms{}call{} */
 	/*analisa as informações do arquivo 
 		nf: number of files      (quantidade máxima de arquivos)
 		ms: maximum size         (tamanho total de arquivos)
@@ -3579,8 +3576,7 @@ BLOCO 5: boot
 	};
 
 /*----------------------------------------------------------------------------*/
-
-	function navLink(e) {/*link ativo do navegador*/
+	function navLink(e) { /* link ativo do navegador */
 		if (e.parentElement === null) return;
 		if (wd_html_tag(e.parentElement) !== "nav") return;
 		WD(e.parentElement.children).css({add: "js-wd-nav-inactive"});
@@ -3609,8 +3605,7 @@ BLOCO 5: boot
 
 		}
 
-
-		/*definindo ícone*/
+		/* definindo ícone FIXME*/
 		if (wd_$("link[rel=icon]") !== null) {
 			var favicon = document.createElement("LINK");
 			favicon.rel = "icon";
@@ -3694,7 +3689,7 @@ BLOCO 5: boot
 		WD.$$("[data-wd-click]").run(data_wdClick);
 		WD.$$("[data-wd-slide]").run(data_wdSlide);
 		WD.$$("[data-wd-device]").run(data_wdDevice);
-		WD.$$("[data-wd-table]").run(data_wdOutput);
+		//WD.$$("[data-wd-table]").run(data_wdOutput); FIXME tem que fazer algo diferente para carregar
 		WD.$$("[data-wd-chart]").run(data_wdChart);
 		return;
 	};
@@ -3776,7 +3771,7 @@ BLOCO 5: boot
 /*----------------------------------------------------------------------------*/
 
 	function inputProcedures(ev, relay) {/*procedimentos de teclado para formulários*/
-		/* Somente para formulários */
+		/* Somente para formulários FIXME mudar isso input tbm serve para contenteditable */
 		if (!wd_html_form(ev.target) && ev.target.isContentEditable) return;
 	
 		var now  = (new Date()).valueOf();
@@ -3794,7 +3789,7 @@ BLOCO 5: boot
 		/*se há o atributo e o agora superar o intervalo, apagar atributo e executar*/
 		if ("wdTimeKey" in ev.target.dataset && now >= (time+wd_key_time_range)) {
 			delete ev.target.dataset.wdTimeKey;
-
+			/* execuções */
 			data_wdFilter(ev.target);
 			data_wdOutput(ev.target);
 		}

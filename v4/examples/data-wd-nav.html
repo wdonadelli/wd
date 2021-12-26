@@ -7,9 +7,9 @@
 </nav>
 
 <div id="tab" >
-	<div id="box1" style="background-color: #FF0000; height: 100px">Box 1</div>
-	<div id="box2" style="background-color: #00FF00; height: 100px">Box 2</div>
-	<div id="box3" style="background-color: #0000FF; height: 100px">Box 3</div>
+	<div id="box1" style="background-color: #FF0000; height: 100px; color: #FFFFFF;">Box 1</div>
+	<div id="box2" style="background-color: #00FF00; height: 100px; color: #FFFFFF;">Box 2</div>
+	<div id="box3" style="background-color: #0000FF; height: 100px; color: #FFFFFF;">Box 3</div>
 </div>
 
 <nav>
@@ -19,4 +19,6 @@
 	<span data-wd-nav="type{}${#box3}">Box 3</span>
 	<span data-wd-nav="type{next}${#tab}">Next</span>
 	<span data-wd-nav="type{show}$${#tab > *}">*</span>
+  <span data-wd-nav="type{0:1}$${#tab}">0:1</span>
+  <span data-wd-nav="type{1:0}$${#tab}">1:0</span>
 </nav>
