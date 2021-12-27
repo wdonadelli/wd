@@ -70,10 +70,10 @@ BLOCO 5: boot
 			"cursor: progress; background-color: rgba(0,0,0,0.4);"
 		]},
 		{s: ".js-wd-no-display", d: [
-			"display: none !important;"
+			"display: none;"
 		]},
 		{s: ".js-wd-mask-error", d: [
-			"color: #db1414 !important; background-color: #fde8e8 !important;"
+			"color: #db1414; background-color: #fde8e8;"
 		]},
 		{s: "[data-wd-nav], [data-wd-send], [data-wd-tsort], [data-wd-data]", d: [
 			"cursor: pointer;"
@@ -85,12 +85,10 @@ BLOCO 5: boot
 		{s: "[data-wd-tsort=\"-1\"]:before", d: ["content: \"\\2191 \";"]},
 		{s: "[data-wd-tsort=\"+1\"]:before", d: ["content: \"\\2193 \";"]},
 		{s: "[data-wd-repeat] > *, [data-wd-load] > *", d: [
-			"visibility: hidden !important;"
+			"visibility: hidden;"
 		]},
 		{s: "[data-wd-slide] > * ", d: ["animation: js-wd-fade-in 1s;"]},
-		{s: "nav > *.js-wd-nav-inactive", d: [
-			"background-color: rgba(230,230,230,0.8) !important; color: #737373 !important;"
-		]},
+		{s: "nav > *.js-wd-nav-inactive", d: ["opacity: 0.5;"]},
 		{s: ".js-wd-plot", d: [
 			"height: 100%; width: 100%; position: absolute; top: 0; left: 0; bottom: 0; right: 0;"
 		]},
@@ -1851,9 +1849,8 @@ BLOCO 5: boot
 		if (lines.length === 0) return null;
 		page = wd_vtype(page).value;
 		size = wd_vtype(size).value;
-
-		//FIXME ver algo mais interessante para isso
-		if (!wd_finite(page) || !wd_finite(size)) return null;
+		if (!wd_finite(size)) size = -1;
+		if (!wd_finite(page) && page !== "+" && page !== "-") page = 0;
 
 		/*--------------------------------------------------------------------------
 		|	A) se size < 0  obter toda a amostra;
@@ -1876,19 +1873,33 @@ BLOCO 5: boot
 		/*--------------------------------------------------------------------------
 		|	A) se page < 0           exibir a última página;
 		|	B) se size*page >= lines exibir a última página;
+		|	C) se page = +     exibir a próxima página;
+		|	D) se page = -     exibir a página anterior;
 		|	se size < 1 e amostra = 0, amostra = 1 (limite mínimo de size)
 		|	caso contrário, obter a amostra (inteiro)
 		--------------------------------------------------------------------------*/
 
-		//FIXME next e prev valem a pena?
+		/* próxima página e página anterior */
+		if (page === "+" || page === "-") /*CD*/ {
+			var current = elem.dataset.wdCurrentPage;
+			var npage   = current === undefined ? 0 : wd_vtype(current.split("/")[0]);
+			npage = (npage.type !== "number" || npage.value < 0) ? 0 : npage.value;
+			npage = page === "+" ? npage+1 : npage-1;
+			return wd_html_page(elem, (npage < 0 ? 0 : npage), size);
+		}
+
+		/* análise numérica */
 		if (page < 0 || size*page >= lines.length) /*AB*/
 			page = last();
 		else /* padrão */
 			page = wd_integer(page);
-		console.log(size, page);
 		var start = page*size;
 		var end   = start+size-1;
-		return wd_html_nav(elem, ""+start+":"+end+"");
+		wd_html_nav(elem, ""+start+":"+end+"");
+		/* guardar informação da última página */
+		elem.dataset.wdCurrentPage = page+"/"+wd_integer(lines.length/size);
+		return;
+
 	}
 
 /*----------------------------------------------------------------------------*/
@@ -3343,7 +3354,7 @@ BLOCO 5: boot
 		var data = wd_html_dataset_value(e, "wdPage")[0];
 		WD(e).page(data.page, data.size).data({wdPage: null});
 		return;
-	};//FIXME parei aqui
+	};
 
 /*----------------------------------------------------------------------------*/
 	function data_wdClick(e) { /* Executa click(): data-wd-click="" */
@@ -3434,7 +3445,7 @@ BLOCO 5: boot
 	};
 
 /*----------------------------------------------------------------------------*/
-	function data_wdShared(e) { /* TODO: Link para redes sociais: data-wd-shared=rede */
+	function data_wdShared(e) { /* TODO experimental: Link para redes sociais: data-wd-shared=rede */
 		if (!("wdShared" in e.dataset)) return;
 		var url    = encodeURIComponent(document.URL);
 		var title  = encodeURIComponent(document.title);
@@ -3459,7 +3470,7 @@ BLOCO 5: boot
 			var target = wd_$$$(data[i]);
 			delete data[i]["$"];
 			delete data[i]["$$"];
-			for (var j in data[i]) {
+			for (var j in data[i]) {//FIXME como fazer se tiver mais de um argumento?
 				if (data[i][j] in words) data[i][j] = words[data[i][j]];
 				WD(target === null ? e : target).set(j, data[i][j]);
 			}
@@ -3601,7 +3612,7 @@ BLOCO 5: boot
 			var selector = wd_js_css[i].s;
 			var dataset  = wd_js_css[i].d;
 			var css = selector+" {\n\t"+dataset.join("\n\t")+"\n}\n\n";
-			wd_style_block.textContent += css;
+			wd_style_block.textContent += css.replace(/\;/g, " !important;");
 
 		}
 

@@ -1,29 +1,58 @@
 <h3>data-wd-page</h3>
 
-<ol data-wd-page="page{0}size{3}" id="list">
-	<li>Item 0</li>
-	<li>Item 1</li>
-	<li>Item 2</li>
-	<li>Item 3</li>
-	<li>Item 4</li>
-	<li>Item 5</li>
-	<li>Item 6</li>
-	<li>Item 7</li>
-	<li>Item 8</li>
-	<li>Item 9</li>
-</ol>
+<script>
+function setPage() {
+	var page = wd(document.getElementById("page").value).valueOf();
+	var size = wd(document.getElementById("size").value).valueOf();
+  wd(document.getElementById("list")).page(page,size);
+}
+</script>
 
 <dl>
-	<dt>Using <code>data-wd-data</code>:</dt>
-	<dd><span>3 items: </span>
-		<a href="#list" data-wd-data="wdPage{page{0}size{3}}${#list}">0-2</a> |
-		<a href="#list" data-wd-data="wdPage{page{1}size{3}}${#list}">3-5</a> |
-		<a href="#list" data-wd-data="wdPage{page{2}size{3}}${#list}">6-8</a> |
-		<a href="#list" data-wd-data="wdPage{page{3}size{3}}${#list}">9</a>
+	<dt>Free:</dt>
+	<dd>
+		<label for="size">Size</label>
+	  <input type="number" id="size" oninput="setPage();" />
 	</dd>
-	<dd><span>5 items: </span>
-		<a href="#list" data-wd-data="wdPage{page{0}size{5}}${#list}">First</a> |
-		<a href="#list" data-wd-data="wdPage{page{0}size{0}}${#list}">All</a> |
-		<a href="#list" data-wd-data="wdPage{page{-1}size{5}}${#list}">Last</a>
+	<dd>
+		<label for="page">Page</label>
+	  <input type="number" id="page" oninput="setPage();" />
+	</dd>
+	<dt>5 Items:</dt>
+	<dd>
+		<a href="#list" data-wd-data="wdPage{page{0}size{5}}${#list}"  >First</a> |
+		<a href="#list" data-wd-data="wdPage{page{-}size{5}}${#list}"  >Prev</a> |
+		<a href="#list" data-wd-data="wdPage{page{+}size{5}}${#list}"  >Next</a> |
+	  <a href="#list" data-wd-data="wdPage{page{-1}size{5}}${#list}" >Last</a> |
+		<a href="#list" data-wd-data="wdPage{page{0}size{-1}}${#list}"  >All</a>
 	</dd>
 </dl>
+
+<ol data-wd-page="page{0}size{3}" id="list">
+	<li>Item 00</li>
+	<li>Item 01</li>
+	<li>Item 02</li>
+	<li>Item 03</li>
+	<li>Item 04</li>
+	<li>Item 05</li>
+	<li>Item 06</li>
+	<li>Item 07</li>
+	<li>Item 08</li>
+	<li>Item 09</li>
+  <li>Item 10</li>
+  <li>Item 11</li>
+  <li>Item 12</li>
+  <li>Item 13</li>
+  <li>Item 14</li>
+  <li>Item 15</li>
+  <li>Item 16</li>
+  <li>Item 17</li>
+  <li>Item 18</li>
+  <li>Item 19</li>
+  <li>Item 20</li>
+  <li>Item 21</li>
+  <li>Item 22</li>
+  <li>Item 23</li>
+  <li>Item 24</li>
+  <li>Item 25</li>
+</ol>
