@@ -1,4 +1,4 @@
-/*----------------------------------------------------------------------------
+/*------------------------------------------------------------------------------
 MIT License
 
 Copyright (c) 2022 Willian Donadelli <wdonadelli@gmail.com>
@@ -20,7 +20,7 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.﻿
-----------------------------------------------------------------------------*/
+------------------------------------------------------------------------------*/
 
 /* wd.js (v4.0.0) | https://github.com/wdonadelli/wd */
 
@@ -3505,7 +3505,7 @@ BLOCO 5: boot
 	};
 
 /*----------------------------------------------------------------------------*/
-	function data_wdOutput(e) { /* Atribui valor ao target: data-wd-output=${target}call{} */
+	function data_wdOutput(e, load) { /* Atribui valor ao target: data-wd-output=${target}call{} */
 		var output = wd_$$("[data-wd-output]");
 		if (output === null) return;
 		/* looping pelos elementos com data-wd-output no documento */
@@ -3517,9 +3517,9 @@ BLOCO 5: boot
 				continue;
 			/* looping pelos elementos citados no atributo data-wd-output */
 			for (var j = 0; j < target.length; j++) {
-				if (target[j] === e) {
+				if (target[j] === e || load === true) {
 					var attr = wd_html_form(elem) ? "value" : "textContent"
-					elem[attr]  = window[data["call"]]();
+					elem[attr] = window[data["call"]]();
 					break;
 				}
 			}
@@ -3613,10 +3613,9 @@ BLOCO 5: boot
 			var dataset  = wd_js_css[i].d;
 			var css = selector+" {\n\t"+dataset.join("\n\t")+"\n}\n\n";
 			wd_style_block.textContent += css.replace(/\;/g, " !important;");
-
 		}
 
-		/* definindo ícone FIXME*/
+		/* definindo ícone FIXME tem mais coisas aí colocar um símbolo svg? */
 		if (wd_$("link[rel=icon]") !== null) {
 			var favicon = document.createElement("LINK");
 			favicon.rel = "icon";
@@ -3624,17 +3623,16 @@ BLOCO 5: boot
 			document.head.appendChild(favicon);
 		}
 
-		/*aplicando carregamentos*/
+		/* aplicando carregamentos */
 		loadingProcedures();
-
-		/*Verificando âncoras lincadas*/
+		/* verificando âncoras lincadas */
 		hashProcedures();
 
 		return;
 	}
 
 /*----------------------------------------------------------------------------*/
-	function hashProcedures(ev) {/*define margens de body quando houver cabeçalhos filhos fixos: caso muito especial*/
+	function hashProcedures(ev) { /* define margens de body se houver cabeçalhos filhos fixos: caso muito especial*/
 		var measures = function (e) {
 			var obj = WD(e);
 			if (obj.type !== "dom" || obj.item() === 0) return null;
@@ -3649,17 +3647,17 @@ BLOCO 5: boot
 				top:          wd_integer(obj.vstyle("top")[0].replace(/[^0-9\.]/g, "")),
 			};
 		}
-
+		/* margem superior extra automática: headers */
 		var head = measures("${body > header}");
 		if (head !== null && head.position === "fixed")
 			document.body.style.marginTop = (head.top+head.height+head.marginBottom)+"px";
-
+		/* margem inferior extra automática: footers */
 		var foot = measures("${body > footer}");
 		if (foot !== null && foot.position === "fixed")
 			document.body.style.marginBottom = (foot.bottom+foot.height+foot.marginTop)+"px";
-
+		/* mudar posicionamento em relação ao topo quando linkado internamente (#) */
 		var body = measures(document.body);
-		var hash = measures("${"+window.location.hash+"}");
+		var hash = measures(wd_$(window.location.hash));
 		if (hash !== null && head.position === "fixed")
 			window.scrollTo(0, hash.elem.offsetTop - body.marginTop);
 
@@ -3691,7 +3689,6 @@ BLOCO 5: boot
 	};
 
 /*----------------------------------------------------------------------------*/
-
 	function organizationProcedures() {/*procedimento PÓS carregamentos*/
 		WD.$$("[data-wd-sort]").run(data_wdSort);
 		WD.$$("[data-wd-filter]").run(data_wdFilter);
@@ -3700,33 +3697,31 @@ BLOCO 5: boot
 		WD.$$("[data-wd-click]").run(data_wdClick);
 		WD.$$("[data-wd-slide]").run(data_wdSlide);
 		WD.$$("[data-wd-device]").run(data_wdDevice);
-		//WD.$$("[data-wd-table]").run(data_wdOutput); FIXME tem que fazer algo diferente para carregar
 		WD.$$("[data-wd-chart]").run(data_wdChart);
+		data_wdOutput(document, true);
 		return;
 	};
 
 /*----------------------------------------------------------------------------*/
-
 	function settingProcedures(e, attr) {/*procedimentos para dataset*/
 		switch(attr) {
-			case "wdLoad":    loadingProcedures(); break;
-			case "wdRepeat":  loadingProcedures(); break;
-			case "wdSort":    data_wdSort(e);      break;
-			case "wdFilter":  data_wdFilter(e);    break;
-			case "wdMask":    data_wdMask(e);      break;
-			case "wdPage":    data_wdPage(e);      break;
-			case "wdClick":   data_wdClick(e);     break;
-			case "wdDevice":  data_wdDevice(e);    break;
-			case "wdSlide":   data_wdSlide(e);     break;
-			case "wdFile":    data_wdFile(e);      break;
-			case "wdOutput":  data_wdOutput(e);    break;
-			case "wdChart":   data_wdChart(e);     break;
+			case "wdLoad":    loadingProcedures();    break;
+			case "wdRepeat":  loadingProcedures();    break;
+			case "wdSort":    data_wdSort(e);         break;
+			case "wdFilter":  data_wdFilter(e);       break;
+			case "wdMask":    data_wdMask(e);         break;
+			case "wdPage":    data_wdPage(e);         break;
+			case "wdClick":   data_wdClick(e);        break;
+			case "wdDevice":  data_wdDevice(e);       break;
+			case "wdSlide":   data_wdSlide(e);        break;
+			case "wdFile":    data_wdFile(e);         break;
+			case "wdChart":   data_wdChart(e);        break;
+			case "wdOutput":  data_wdOutput(e, true); break;
 		};
 		return;
 	};
 
 /*----------------------------------------------------------------------------*/
-
 	function clickProcedures(ev) {/*procedimentos para cliques*/
 		if (ev.which !== 1) return;
 		var elem = ev.target
@@ -3741,13 +3736,13 @@ BLOCO 5: boot
 			data_wdNav(elem);
 			data_wdFull(elem);
 			navLink(elem);
-			elem = "wdNoBubbles" in elem.dataset ? null : elem.parentElement;/*efeito bolha*/
+			/* efeito bolha */
+			elem = "wdNoBubbles" in elem.dataset ? null : elem.parentElement;
 		}
 		return;
 	};
 
 /*----------------------------------------------------------------------------*/
-
 	function keyboardProcedures(ev, relay) {/*procedimentos de teclado para outros elementos*/
 		/* não serve para formulários */
 		if (wd_html_form(ev.target)) return;
@@ -3782,45 +3777,52 @@ BLOCO 5: boot
 /*----------------------------------------------------------------------------*/
 
 	function inputProcedures(ev, relay) {/*procedimentos de teclado para formulários*/
-		/* Somente para formulários FIXME mudar isso input tbm serve para contenteditable */
-		if (!wd_html_form(ev.target) && ev.target.isContentEditable) return;
-	
-		var now  = (new Date()).valueOf();
-		var time = Number(ev.target.dataset.wdTimeKey);
 
-		/*definir atributo e pedir para verificar posteriormente*/
+		/* Somente para formulários FIXME mudar isso input tbm serve para contenteditable */
+		//if (!wd_html_form(ev.target) && ev.target.isContentEditable) return;
+
+		/*--------------------------------------------------------------------------
+		| A) após cada digitação/alteração, definir wdTimeKey com o tempo atual
+		| B) chamar novamente a função após um intervalo de tempo
+		\-------------------------------------------------------------------------*/
+		var now = (new Date()).valueOf();
 		if (relay !== true) {
-			ev.target.dataset.wdTimeKey = now;
-			window.setTimeout(function() {/*verificar daqui um intervalo de tempo*/
+			ev.target.dataset.wdTimeKey = now; /*A*/
+			window.setTimeout(function() { /*B*/
 				inputProcedures(ev, true);
 			}, wd_key_time_range);
 			return;
 		}
 
-		/*se há o atributo e o agora superar o intervalo, apagar atributo e executar*/
-		if ("wdTimeKey" in ev.target.dataset && now >= (time+wd_key_time_range)) {
-			delete ev.target.dataset.wdTimeKey;
-			/* execuções */
-			data_wdFilter(ev.target);
-			data_wdOutput(ev.target);
+		/*--------------------------------------------------------------------------
+		| C) se wdTimeKey está difinido, checar o intervalo desde a última alteração
+		| D) se agora for >= tempo definido+intervalo:
+		| E) apagar atributo e
+		| F) executar
+		\-------------------------------------------------------------------------*/
+		if ("wdTimeKey" in ev.target.dataset) { /*C*/
+			var time = new Number(ev.target.dataset.wdTimeKey).valueOf();
+			if (now >= (time+wd_key_time_range)) { /*D*/
+				delete ev.target.dataset.wdTimeKey; /*E*/
+				/*F*/
+				data_wdFilter(ev.target);
+				data_wdOutput(ev.target);
+			}
 		}
 		return;
 	};
 
 /*----------------------------------------------------------------------------*/
-
 	function focusoutProcedures(ev) {/*procedimentos para saída de formulários*/
 		return data_wdMask(ev.target);
 	};
 
 /*----------------------------------------------------------------------------*/
-
 	function changeProcedures(ev) {/*procedimentos para outras mudanças*/
 		return data_wdFile(ev.target);
 	};
 
 /*----------------------------------------------------------------------------*/
-
 	WD(window).addHandler({/*Definindo eventos window*/
 		load: loadProcedures,
 		resize: scalingProcedures,
@@ -3829,7 +3831,7 @@ BLOCO 5: boot
 
 	WD(document).addHandler({/*Definindo eventos document*/
 		click:    clickProcedures,
-		keyup:    keyboardProcedures,
+		//keyup:    keyboardProcedures,
 		input:    inputProcedures,
 		change:   changeProcedures,
 		focusout: focusoutProcedures,

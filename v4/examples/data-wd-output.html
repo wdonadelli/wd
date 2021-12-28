@@ -5,6 +5,7 @@ function calc() {
 	var a = new Number(document.getElementById("A").value).valueOf();
 	var b = new Number(document.getElementById("B").value).valueOf();
 	var s = document.getElementById("S").value;
+	document.getElementById("V").textContent = a+" "+s+" "+b+" = ";
 	if (s === "+") return a+b;
 	if (s === "-") return a-b;
 	if (s === "*") return a*b;
@@ -14,8 +15,12 @@ function calc() {
 
 function sum() {
 	var matrix = wd.$("#data").info.table;
-	var x = wd(matrix).data();
-	return x.sum+"/"+x.avg;
+	return wd(matrix).data().sum;
+}
+
+function avg() {
+	var matrix = wd.$("#data").info.table;
+	return wd(matrix).data().avg;
 }
 </script>
 
@@ -35,19 +40,25 @@ function sum() {
 	<label for="B">B</label>
 	<input type="number" id="B" />
 	<br>
-	<label>A+B = </label>
-	<span data-wd-output="call{calc}$${#A, #B, #S}"></span>
+	<span id="V"></span><span data-wd-output="call{calc}$${#A, #B, #S}"></span>
 </form>
 
 <table border="1">
 	<caption>SUM/AVERAGE</caption>
+  <thead>
+		<tr><th> </th><th>Values</th></tr>
+	</thead>
 	<tbody id="data">
-		<tr><td contenteditable="true">1.2</td></tr>
-		<tr><td contenteditable="true">2.0</td></tr>
-		<tr><td contenteditable="true">1.5</td></tr>
-		<tr><td contenteditable="true">1.9</td></tr>
-		<tr><td contenteditable="true">2.3</td></tr>
+		<tr><td> </td><td contenteditable="true">1.2</td></tr>
+		<tr><td> </td><td contenteditable="true">2.0</td></tr>
+		<tr><td> </td><td contenteditable="true">1.5</td></tr>
+		<tr><td> </td><td contenteditable="true">1.9</td></tr>
+		<tr><td> </td><td contenteditable="true">2.3</td></tr>
 	</tbody>
 	<tfoot>
-		<tr><td data-wd-output="call{sum}$${#data > tr > td}"></td><tr>
-	
+		<tr><th>SUM:</th><td data-wd-output="call{sum}$${#data > tr > td}"></td><tr>
+		<tr><th>AVG:</th><td data-wd-output="call{avg}$${#data > tr > td}"></td><tr>
+	</tfoot>
+</table>
+
+  	
