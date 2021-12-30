@@ -1704,22 +1704,39 @@ BLOCO 5: boot
 	function wd_html_repeat(elem, json) { /* clona elementos por array repetindo-os */
 		if (wd_vtype(json).type !== "array") return null;
 
-		var html = elem.innerHTML;
-
-		if (html.search(/\{\{.+\}\}/gi) >= 0) /* se filho conter {{}}, armazenar no estoque seu conteúdo textual */
+		/*--------------------------------------------------------------------------
+		| A) obter o conteúdo textual dos filhos
+		| B) se o conteúdo de A conter {{}}, armazená-lo em data-wd-repeat-model
+		| C) caso contrário, utilizar o conteúdo gravado de data-wd-repeat-model
+		| D) se nenhum dos dois for verdadeiro, não há modelo a ser repetido
+		\-------------------------------------------------------------------------*/
+		var html = elem.innerHTML; /*A*/
+		if (html.search(/\{\{.+\}\}/gi) >= 0) /*B*/
 			elem.dataset.wdRepeatModel = html;
-		else if ("wdRepeatModel" in elem.dataset) /* se filho conter informação no estoque, utilizar esse dado */
+		else if ("wdRepeatModel" in elem.dataset) /*C*/
 			html = elem.dataset.wdRepeatModel;
-		else
-			return;
+		else return; /*D*/
 
-		elem.innerHTML = ""; /* limpar container */
-		html = html.split("}}=\"\"").join("}}"); /* redifinir attributo cujo navegador troca {{x}} por {{x}}="" */
-		for (var i = 0; i < json.length; i++) {
-			var inner = html;
+		/*--------------------------------------------------------------------------
+		| E) limpar o conteúdo do container
+		| F) corrigir uma adequação dos atributos pelo DOM: de {{x}} para {{x}}=""
+		| G) criar um container temporário para renderizar os clones
+		| H) looping: array de objetos
+		| I) trocar {{attr}} pelo valor do atributo do objeto {attr: valor}
+		| J) renderizar o clone no elemento temporário
+		| K) adicionar o elemento renderizado ao alvo
+		\-------------------------------------------------------------------------*/
+		elem.innerHTML = ""; /*E*/
+		html = html.split("}}=\"\"").join("}}"); /*F*/
+		var temp = document.createElement(wd_html_tag(elem)); /*G*/
+
+		for (var i = 0; i < json.length; i++) { /*H*/
 			if (wd_vtype(json[i]).type !== "object") continue;
-			for (var c in json[i]) inner = inner.split("{{"+c+"}}").join(json[i][c]);
-			elem.innerHTML += inner;
+			var inner = html;
+			for (var c in json[i]) /*I*/
+				inner = inner.split("{{"+c+"}}").join(json[i][c]);
+			temp.innerHTML = inner; /*J*/
+			elem.appendChild(temp.children[0]); /*K*/
 		}
 		loadingProcedures();
 		return true;
@@ -2559,22 +2576,25 @@ BLOCO 5: boot
 /* == BLOCO 3 ================================================================*/
 
 /*----------------------------------------------------------------------------*/
-	function WDmain(value) {
+	function WDmain(input) {
 		Object.defineProperties(this, {
-			_value:  {value: value, writable: true}
+			_value: {value: input.value, writable: true},
+			_type:  {value: input.type}
 		});
 	}
 
 	Object.defineProperties(WDmain.prototype, {
 		constructor: {value: WDmain},
-		type:        {value: "unknown"},
-		valueOf: {
+		type: { /* informa o tipo do argumento */
+			get: function() {return this._type;}
+		},
+		valueOf: { /* método padrão */
 			value: function() {
 				try {return this._value.valueOf();} catch(e) {}
 				return new Number(this._value).valueOf();
 			}
 		},
-		toString: {
+		toString: { /* método padrão */
 			value: function() {
 				try {return this._value.toString();} catch(e) {}
 				return new String(this._value).toString();
@@ -2594,12 +2614,6 @@ BLOCO 5: boot
 				return this.type === "dom" ? this : null;
 			}
 		},
-
-
-
-
-
-
 		finite: { /* informa se é um número finito */
 			get: function() {return wd_finite(this._value);}
 		}
@@ -2628,67 +2642,60 @@ BLOCO 5: boot
 	});
 
 /*----------------------------------------------------------------------------*/
-	function WDundefined(value) {WDmain.call(this, value);}
+	function WDundefined(input) {WDmain.call(this, input);}
 
 	WDundefined.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDundefined},
-		type:        {value: "undefined"},
 		valueOf:     {value: function() {return Infinity;}},
 		toString:    {value: function() {return "?";}}
 	});
 
 /*----------------------------------------------------------------------------*/
-	function WDnull(value) {WDmain.call(this, value);}
+	function WDnull(input) {WDmain.call(this, input);}
 
 	WDnull.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDnull},
-		type:        {value: "null"},
 		valueOf:     {value: function() {return 0;}},
 		toString:    {value: function() {return "";}}
 	});
 
 /*----------------------------------------------------------------------------*/
-	function WDboolean(value) {WDmain.call(this, value);}
+	function WDboolean(input) {WDmain.call(this, input);}
 
 	WDboolean.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDboolean},
-		type:        {value: "boolean"},
 		valueOf:     {value: function() {return this._value ? 1 : 0;}},
 		toString:    {value: function() {return this._value ? "True" : "False";}}
 	});
 
 /*----------------------------------------------------------------------------*/
-	function WDfunction(value) {WDmain.call(this, value);}
+	function WDfunction(input) {WDmain.call(this, input);}
 
 	WDfunction.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDfunction},
-		type:        {value: "function"},
 	});
 
 /*----------------------------------------------------------------------------*/
-	function WDobject(value) {WDmain.call(this, value);}
+	function WDobject(input) {WDmain.call(this, input);}
 
 	WDobject.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDobject},
-		type:        {value: "object"},
 		toString:    {value: function() {return wd_json(this._value);}}
 	});
 
 /*----------------------------------------------------------------------------*/
-	function WDregexp(value) {WDmain.call(this, value);}
+	function WDregexp(input) {WDmain.call(this, input);}
 
 	WDregexp.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDregexp},
-		type:        {value: "regexp"},
 		toString:    {value: function() {return this._value.source;}}
 	});
 
 /*----------------------------------------------------------------------------*/
-	function WDtext(value) {WDmain.call(this, value);}
+	function WDtext(input) {WDmain.call(this, input);}
 
 	WDtext.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDtext},
-		type:        {value: "text"},
 		upper: { /* retorna valor em caixa alta */
 			get: function() {return this.toString().toUpperCase();}
 		},
@@ -2738,11 +2745,10 @@ BLOCO 5: boot
 	});
 
 /*----------------------------------------------------------------------------*/
-	function WDnumber(value) {WDmain.call(this, value);}
+	function WDnumber(input) {WDmain.call(this, input);}
 
 	WDnumber.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDnumber},
-		type:        {value: "number"},
 		int: { /* retorna a parte inteira */
 			get: function() {return wd_integer(this.valueOf());}
 		},
@@ -2797,11 +2803,10 @@ BLOCO 5: boot
 	});
 
 /*----------------------------------------------------------------------------*/
-	function WDtime(value) {WDmain.call(this, value);}
+	function WDtime(input) {WDmain.call(this, input);}
 
 	WDtime.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDtime},
-		type:        {value: "time"},
 		h: { /* define/obtem a hora */
 			get: function() {return wd_number_time(this.valueOf()).h;},
 			set: function(x) {
@@ -2850,11 +2855,10 @@ BLOCO 5: boot
 	});
 
 /*----------------------------------------------------------------------------*/
-	function WDdate(value) {WDmain.call(this, value);}
+	function WDdate(input) {WDmain.call(this, input);}
 
 	WDdate.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDdate},
-		type:        {value: "date"},
 		y: { /* ano */
 			get: function() {return this._value.getFullYear();},
 			set: function(x) {
@@ -2939,11 +2943,10 @@ BLOCO 5: boot
 	});
 
 /*----------------------------------------------------------------------------*/
-	function WDarray(value) {WDmain.call(this, value);}
+	function WDarray(input) {WDmain.call(this, input);}
 
 	WDarray.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDarray},
-		type:        {value: "array"},
 		unique: { /* remove itens repetidos */
 			get: function() {return wd_array_unique(this.valueOf());}
 		},
@@ -2995,7 +2998,7 @@ BLOCO 5: boot
 				return wd_array_cells(this.valueOf(), Array.prototype.slice.call(arguments));
 			}
 		},
-		data: { /* obtem dados estatísticos a partir dos itens do array/matriz (FIXME array também?)*/
+		data: { /* obtem dados estatísticos a partir dos itens de uma matriz */
 			value: function(x, y) {
 				return wd_matrix_data(this.valueOf(), x, y);
 			}
@@ -3014,11 +3017,10 @@ BLOCO 5: boot
 	});
 
 /*----------------------------------------------------------------------------*/
-	function WDdom(value) {WDmain.call(this, value);}
+	function WDdom(input) {WDmain.call(this, input);}
 
 	WDdom.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDdom},
-		type:        {value: "dom"},
 		valueOf: { /* método padrão */
 			value: function() {
 				return this._value.slice();
@@ -3135,7 +3137,7 @@ BLOCO 5: boot
 			"unknown":   WDmain
 		};
 
-		return new object[vtype.type](vtype.value);
+		return new object[vtype.type](vtype);
 	}
 
 	WD.constructor = WD;
@@ -3429,23 +3431,32 @@ BLOCO 5: boot
 /*----------------------------------------------------------------------------*/
 	function data_wdSlide(e) { /* Carrossel: data-wd-slide=time */
 		if (!("wdSlide" in e.dataset)) return delete e.dataset.wdSlideRun;
-		var time = wd_finite(e.dataset.wdSlide) ? wd_integer(e.dataset.wdSlide) : 1000;;
-		/* data-wd-slide-run TODO: explicar essa parada, funciona mas já esqueci a lógica */
-		if (!("wdSlideRun" in e.dataset)) {
-			WD(e).nav((time < 0 ? "prev" : "next"));
-			e.dataset.wdSlideRun = "1";
-			window.setTimeout(function() {
-				delete e.dataset.wdSlideRun
-				data_wdSlide(e);
-				return;
-			}, (time === 0 ? 1000 : Math.abs(time)));
+		/*--------------------------------------------------------------------------
+		| A) Obter o intervalo entre os slides definido em data-wd-slide
+		|	B) se não for um inteiro, definir 1s como padrão
+		\-------------------------------------------------------------------------*/
+		var value = e.dataset.wdSlide; /*A*/
+		var time  = wd_finite(value) ? wd_integer(value) : 1000; /*B*/
+		/*--------------------------------------------------------------------------
+		|	C) data-wd-slide-run informa se o slide foi executado: definir atividades
+		|	D) se tempo < 0, exibir filho anterior, caso conctrário, o próximo
+		|	E) informar o  que o slide foi executado
+		|	F) decorrido o intervalo, zerar execução e chamar novamente a função
+		\-------------------------------------------------------------------------*/
+		if (!("wdSlideRun" in e.dataset)) { /*C*/
+			WD(e).nav((time < 0 ? "prev" : "next")); /*D*/
+			e.dataset.wdSlideRun = "1"; /*E*/
+			window.setTimeout(function() { /*F*/
+				delete e.dataset.wdSlideRun;
+				return data_wdSlide(e);
+			}, Math.abs(time));
 			return;
 		}
 		return delete e.dataset.wdSlideRun;
 	};
 
 /*----------------------------------------------------------------------------*/
-	function data_wdShared(e) { /* TODO experimental: Link para redes sociais: data-wd-shared=rede */
+	function data_wdShared(e) { /* Experimental: compartilhar em redes sociais: data-wd-shared=rede */
 		if (!("wdShared" in e.dataset)) return;
 		var url    = encodeURIComponent(document.URL);
 		var title  = encodeURIComponent(document.title);
@@ -3632,33 +3643,40 @@ BLOCO 5: boot
 	}
 
 /*----------------------------------------------------------------------------*/
-	function hashProcedures(ev) { /* define margens de body se houver cabeçalhos filhos fixos: caso muito especial*/
-		var measures = function (e) {
+	function hashProcedures(ev) {
+		/*--------------------------------------------------------------------------
+		|	define margens e posicionamento de headers e footers, filhos de body,
+		|	quando fixo, quando chamada uma âncora interna (href="#ancora")
+		\-------------------------------------------------------------------------*/
+		var measures = function (e) { /* função interna: obter medidas necessárias */
 			var obj = WD(e);
-			if (obj.type !== "dom" || obj.item() === 0) return null;
-			return {
-				elem:         obj.item(0),
-				tag:          wd_html_tag(obj.item(0)),
-				position:     obj.vstyle("position")[0].toLowerCase(),
-				height:       wd_integer(obj.vstyle("height")[0].replace(/[^0-9\.]/g, "")),
-				marginTop:    wd_integer(obj.vstyle("margin-top")[0].replace(/[^0-9\.]/g, "")),
-				marginBottom: wd_integer(obj.vstyle("margin-bottom")[0].replace(/[^0-9\.]/g, "")),
-				bottom:       wd_integer(obj.vstyle("bottom")[0].replace(/[^0-9\.]/g, "")),
-				top:          wd_integer(obj.vstyle("top")[0].replace(/[^0-9\.]/g, "")),
+			if (obj.type !== "dom" || obj.item() === 0) return {ok: false};
+			var stl = ["height", "marginTop", "marginBottom", "bottom", "top"];
+			var msr = {
+				ok:       true,
+				elem:     obj.item(0),
+				tag:      obj.info.tag,
+				position: obj.vstyle("position").toLowerCase(),
 			};
+			for (var i = 0; i < stl.length; i++) {
+				var val = obj.vstyle(wd_text_dash(stl[i]));
+				msr[i]  = wd_integer(val.replace(/[^0-9\.]/g, ""));
+			}
+			return msr;
 		}
-		/* margem superior extra automática: headers */
-		var head = measures("${body > header}");
-		if (head !== null && head.position === "fixed")
+
+		/* margem superior extra para headers */
+		var head = measures(wd_$("body > header"));
+		if (head.position === "fixed")
 			document.body.style.marginTop = (head.top+head.height+head.marginBottom)+"px";
-		/* margem inferior extra automática: footers */
-		var foot = measures("${body > footer}");
-		if (foot !== null && foot.position === "fixed")
+		/* margem inferior extra para footers */
+		var foot = measures(wd_$("body > footer"));
+		if (foot.position === "fixed")
 			document.body.style.marginBottom = (foot.bottom+foot.height+foot.marginTop)+"px";
-		/* mudar posicionamento em relação ao topo quando linkado internamente (#) */
+		/* mudar posicionamento em relação ao topo */
 		var body = measures(document.body);
 		var hash = measures(wd_$(window.location.hash));
-		if (hash !== null && head.position === "fixed")
+		if (hash.ok && head.position === "fixed")
 			window.scrollTo(0, hash.elem.offsetTop - body.marginTop);
 
 		return;
