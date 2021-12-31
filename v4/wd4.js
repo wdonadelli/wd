@@ -2178,7 +2178,6 @@ BLOCO 5: boot
 		];
 
 		var elem = document.createElementNS("http://www.w3.org/2000/svg", type);
-
 		for (var i in attr) {/* definindo atributos */
 			var val = attr[i];
 			if (i === "tspan" || i === "title") {/* texto ou dicas */
@@ -2278,6 +2277,7 @@ BLOCO 5: boot
 				this.box.className = "";
 				this.box.style = null;
 				this.box.style.border = "1px solid red";//FIXME temporário
+				this.box.style.backgroundColor = "white";//FIXME temporário
 				this.box.style.paddingTop = new String(100 * this.ratio).toString()+"%";//TODO
 				this.box.style.position   = "relative";
 				var child = wd_vtype(this.box.children).value;
@@ -2412,7 +2412,8 @@ BLOCO 5: boot
 				| B) obtendo as medidas referenciais da plotagem (ref)
 				| C) obtendo a cor padrão (clr)
 				| D) obtendo as menores unidades de x e y (dx, dy)
-				| E) contruindo a estrutura do gráfico para receber os dados
+				| E) obtendo as menores unidades de x e y (dx, dy) e
+				| F) obtendo as menores unidades reais de x e y (vx, vy) para eixos
 				\---------------------------------------------------------------------*/
 				this.svg = wd_svg_create("svg", {fill: "red"}); /*A*/
 				this.svg.setAttribute("class", "js-wd-plot"); /*A*/
@@ -2420,35 +2421,49 @@ BLOCO 5: boot
 				var clr = this.rgb(0); /*C*/
 				var dx  = ref.w/n; /*D*/
 				var dy  = ref.h/n; /*D*/
+				var vx  = (this.xmax - this.xmin)/n;
+				var vy  = (this.ymax - this.ymin)/n;
 
-				for (var i = 0; i < (n+1); i++) { /*E*/
-					var x1, y1, x2, y2, dash;
+				for (var i = 0; i < (n+1); i++) { /*F*/
+					var x1, y1, x2, y2, ax, ay, x, y, dash;
 					/* estilo das linhas (externa contínua, interna tracejada) */
 					dash = (i === 0 || i === n) && compare !== true ? 1 : 0;
+					/* valores dos eixos (ancoras e valores) */
+					ax = i === 0 ? "nw" : (i === n ? "ne" : "n");
+					ay = i === 0 ? "ne" : (i === n ? "se" : "e");
+					x = this.xmin + i*vx; /* da esquerda para direita */
+					y = this.ymax - i*vy; /* de cima para baixo */
 					/* coordenadas dos eixos verticais */
 					x1 = ref.l+i*dx;
 					x2 = x1;
 					y1 = ref.t;
 					y2 = y1+ref.h;
-					/* criando eixo vertical */
 					this.svg.appendChild(wd_svg_line(x1, y1, x2, y2, dash, null, clr));
+					/* valores eixo vertical */
+					this.svg.appendChild(wd_svg_label(
+						ref.l - 1, y1 + i*dy, wd_num_str(y), ay, false, clr, false
+					));
+
 					/* coordenadas dos eixos horizontais */
 					x1 = ref.l;
 					x2 = x1+ref.w;
 					y1 = ref.t+ref.h-i*dy;
 					y2 = y1;
-					/* criando eixo horizontal */
 					this.svg.appendChild(wd_svg_line(x1, y1, x2, y2, dash, null, clr));
+					/* valores eixo horizontal */
+					this.svg.appendChild(wd_svg_label(
+						x1 + i*dx, ref.b + 1, wd_num_str(x), ax, false, clr, false
+					));
 				}
 				/* Título e labels */
 				this.svg.appendChild( /* título do gŕafico (centrado no gráfico) */
-					wd_svg_label(ref.l+ref.w/2, 1, this.title, "n", false, clr, true)
+					wd_svg_label(ref.l+ref.w/2, ref.t/2, this.title, "s", false, clr, true)
 				);
 				this.svg.appendChild( /* nome do eixo x (horizontal, inferior e centrado no gráfico) */
-					wd_svg_label(ref.cx, 99, xlabel, "s", false, clr, false)
+					wd_svg_label(ref.cx, (ref.b+100)/2, xlabel, "n", false, clr, false)
 				);
 				this.svg.appendChild( /* nome do eixo x (vertical, esquerda e centrado no gráfico) */
-					wd_svg_label(-this.ratio*ref.cy, 1, ylabel, "n", true, clr, false)
+					wd_svg_label(-this.ratio*ref.cy, ref.l/4, ylabel, "n", true, clr, false)
 				);
 			}
 		},
@@ -2469,7 +2484,6 @@ BLOCO 5: boot
 				this.boot(); /*A*/
 				var data = compare === true ? this.cdata : this.pdata; /*B*/
 				this.area(xlabel, ylabel, (compare === true ? data.length : 4), compare); /*C*/
-				console.log(data);
 
 				for (var i = 0; i < data.length; i++) { /*D*/
 					var item = data[i];
@@ -2485,7 +2499,7 @@ BLOCO 5: boot
 						if (item.t === "dots")
 							frag = wd_svg_dots(xy1.x, xy1.y, 0.5, item.l, this.rgb(item.c));
 						else if (item.t === "line" && !last)
-							frag = wd_svg_line(xy1.x, xy1.y, xy2.x, xy2.y, 1, item.l, this.rgb(item.c));
+							frag = wd_svg_line(xy1.x, xy1.y, xy2.x, xy2.y, 2, item.l, this.rgb(item.c));
 						else if (item.t === "dash" && !last)
 							frag = wd_svg_line(xy1.x, xy1.y, xy2.x, xy2.y, 0, item.l, this.rgb(item.c));
 						else if (item.t === "cols" && !last)
