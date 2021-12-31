@@ -2469,22 +2469,30 @@ BLOCO 5: boot
 				this.boot(); /*A*/
 				var data = compare === true ? this.cdata : this.pdata; /*B*/
 				this.area(xlabel, ylabel, (compare === true ? data.length : 4), compare); /*C*/
+				console.log(data);
 
 				for (var i = 0; i < data.length; i++) { /*D*/
 					var item = data[i];
 
 					for (var j = 0; j < item.x.length; j++) { /*E*/
-						var svg;
-						if (item.t === "dots") svg = vwd_svg_dots(
-							this.point(item.x[j]),
-							this.point(item.y[j]),
-							3,
-							item.l,
-							this.rgb(item.c)
-						);
+						var last, xy1, xy2, frag, zero;
+						last = j === (item.x.length - 1) ? true : false;
+						frag = null;
+						xy1  = this.point(item.x[j], item.y[j]);
+						xy2  = !last ? this.point(item.x[j+1], item.y[j+1]) : null;
+						zero = this.point(0, 0);
+
+						if (item.t === "dots")
+							frag = wd_svg_dots(xy1.x, xy1.y, 0.5, item.l, this.rgb(item.c));
+						else if (item.t === "line" && !last)
+							frag = wd_svg_line(xy1.x, xy1.y, xy2.x, xy2.y, 1, item.l, this.rgb(item.c));
+						else if (item.t === "dash" && !last)
+							frag = wd_svg_line(xy1.x, xy1.y, xy2.x, xy2.y, 0, item.l, this.rgb(item.c));
+						else if (item.t === "cols" && !last)
+							frag = wd_svg_rect(xy1.x, zero.y, xy2.x, xy2.y, item.l, this.rgb(item.c));
 
 
-						this.svg.appendChild(svg);
+						if (frag !== null) this.svg.appendChild(frag);
 					}
 
 
