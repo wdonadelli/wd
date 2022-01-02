@@ -1047,7 +1047,7 @@ BLOCO 5: boot
 		x = wd_matrix_cell(matrix, x);
 		y = wd_matrix_cell(matrix, y);
 		return {
-			get cmp()  {return wd_coord_compare(x, y);},
+			get cmp()  {return wd_coord_compare(x, y, false);},
 			get rlin() {return wd_coord_rlin(x, y);},
 			get rexp() {return wd_coord_rlin(x, y);},
 			get rgeo() {return wd_coord_rgeo(x, y);},
@@ -2197,7 +2197,6 @@ BLOCO 5: boot
 
 /*----------------------------------------------------------------------------*/
 	function wd_svg_dots(cx, cy, r, title, color) { /* cria pontos: coordenada no centro */
-		if (color === undefined) color = "#000000";
 	 	return wd_svg_create("circle", {
 			cx: cx, cy: cy, r: r, fill: color, title: title
 		});
@@ -2205,7 +2204,6 @@ BLOCO 5: boot
 
 /*----------------------------------------------------------------------------*/
 	function wd_svg_line(x1, y1, x2, y2, width, title, color) { /* cria linhas: coordenadas no início e fim */
-		if (color === undefined) color = "#000000";
 		return wd_svg_create("line", {
 			x1: x1, y1: y1, x2: x2, y2: y2,
 			stroke: color,
@@ -2217,7 +2215,6 @@ BLOCO 5: boot
 
 /*----------------------------------------------------------------------------*/
 	function wd_svg_rect(x1, y1, x2, y2, title, color) { /* cria retângulos: coordenadas nos cantos opostos */
-		if (color === undefined) color = "#000000";
 		return wd_svg_create("rect", {
 			x:       x2 > x1 ? x1 : x2,
 			y:       y2 > y1 ? y1 : y2,
@@ -2231,7 +2228,6 @@ BLOCO 5: boot
 
 /*----------------------------------------------------------------------------*/
 	function wd_svg_label(x, y, text, point, vertical, color, bold) { /* cria textos: coordenadas na âncora (point) */
-		if (color === undefined) color = "#000000";
 		var vanchor = ["start", "middle", "end"];
 		var vbase   = ["auto", "middle", "hanging"];
 		var anchor  = {n: 1, ne: 2, e: 2, se: 2, s: 1, sw: 0, w: 0, nw: 0, c: 1};
@@ -2254,34 +2250,32 @@ BLOCO 5: boot
 
 /*----------------------------------------------------------------------------*/
 	function WDchart(box, title) {/*Objeto para criar gráficos*/
-		this.box   = box;
-		this.title = title;
-		this.data  = [];
-		this.color = 0;
+		this.box   = box;   /* container gráfico */
+		this.title = title; /* título do gráfico */
+		this.data  = [];    /* dados de plotagem */
+		this.color = 0;     /* cor de plotagem (não reiniciar no boot) */
 	};
 
 	Object.defineProperties(WDchart.prototype, {
 		boot: {
 			value: function () {
-				this.svg    = null;
-				this.xscale = 1;
-				this.yscale = 1;
-				this.xmin   = +Infinity;
-				this.xmax   = -Infinity;
-				this.ymin   = +Infinity;
-				this.ymax   = -Infinity;
-				this.padd   = {t: 0, r: 0, b: 0, l: 0};
-				this.color  = 0;
-				this.legend = 0;
-				this.print  = 0;
-				this.box.className = "";
-				this.box.style = null;
+				this.svg    = null; /* gráfico (svg element) */
+				this.xscale = 1; /* escala do eixo x */
+				this.yscale = 1; /* escala do eixo y */
+				this.xmin   = +Infinity; /* menor valor em x */
+				this.xmax   = -Infinity; /* maior valor em x */
+				this.ymin   = +Infinity; /* menor valor em y */
+				this.ymax   = -Infinity; /* maior valor em y */
+				this.padd   = {t: 0, r: 0, b: 0, l: 0}; /* espaço interno do gráfico (padding) */
+				this.legend = 0; /* contador de legenda */
+				this.box.className = ""; /* atributo class do container do gráfico */
+				this.box.style = null; /* limpando estilos estilos */
 				this.box.style.border = "1px solid red";//FIXME temporário
 				this.box.style.backgroundColor = "white";//FIXME temporário
-				this.box.style.paddingTop = new String(100 * this.ratio).toString()+"%";//TODO
-				this.box.style.position   = "relative";
-				var child = wd_vtype(this.box.children).value;
-				for (var i = 0; i < child.length; i++)
+				this.box.style.paddingTop = wd_num_str(this.ratio, true); /* proporção do container em relação à tela */
+				this.box.style.position   = "relative"; /* posição do container TODO */
+				var child = wd_vtype(this.box.children).value; /* filhos do container */
+				for (var i = 0; i < child.length; i++) /* limpando filhos (deletando o gráfico) */
 					this.box.removeChild(child[i]);
 			}
 		},
@@ -2312,11 +2306,24 @@ BLOCO 5: boot
 		},
 		rgb: { /* retorna uma cor a partir de um número */
 			value: function(n) {
-				if (n === undefined) n = this.color;
-				var ref = n <= 0 ? 0 : (2*n+1)%7+1; /* 2,4,6,1,3,5,7,2...*/
-				var val = wd_num_fixed(ref, 0, 3).split("");
-				val.forEach(function(e,i,a){a[i] = 153*Number(e);});
-				return "rgb("+val[0]+","+val[1]+","+val[2]+")";
+				var steps  = 4; /* quantidade de copos para encher cada vaso */
+				var delta  = wd_integer(255/steps); /* volume dos copos */
+				var limit  = 3*255 - delta; /* limite, não pode lotar todos os vasos */
+				var volume = (n*delta) % limit; /* cálculo do volume inserido */
+				var shift  = ["123", "213", "231", "132", "312", "321"]; /* alternância de cores (saltos para direita do maior 1 > 2 > 3) */
+				var target = n !== 0 ? (n-1) % shift.length : 0; /* sequência a ser selecionada */
+				var order  = shift[target].split(""); /* ordem a devolver a função */
+				var vases  = {"1": 0, "2": 0, "3": 0}; /* quantidade de líquido nos vasos */
+				if      (volume > 510) vases = {"1": 255,    "2": 255,        "3": volume-510};
+				else if (volume > 255) vases = {"1": 255,    "2": volume-255, "3": 0};
+				else if (volume >   0) vases = {"1": volume, "2": 0,          "3": 0};
+				for (var i in vases) { /* convertendo valores para hex */
+					vases[i] =  vases[i].toString(16);
+					if (vases[i].length < 2) vases[i] = "0"+vases[i];
+				}
+				console.log(n, delta, volume, order, vases);
+				return "#"+vases[order[0]]+vases[order[1]]+vases[order[2]];
+
 			}
 		},
 		point: { /* Transforma coordanadas reais em relativas (%) */
@@ -2331,14 +2338,17 @@ BLOCO 5: boot
 				};
 			}
 		},
-		_ADD_LEGEND: { /* Adiciona Legendas (texto e funções)*/
-			value: function(text, top) {
+		addLegend: { /* Adiciona Legendas (texto e funções)*/
+			value: function(text, clr, compare) {
 				if (text === null) return;
-				var ref = this._MEASURES;
-				var n = this._NDATA[(top ? "t" : "r")]++;
-				var x = top ? ref.l : ref.r;
-				var y = 4*n+ref.t;
-				this._BUILD_LABEL(x+1, y+1, (top ? "" : "\u25CF ")+text, "nw", false, true);
+				text = "\u25CF "+text;
+				var ref = this.space;
+				var y   = (ref.t + 1)+(4*this.legend);
+				var x   = 1 + (compare === true ? ref.r : ref.l);
+				this.svg.appendChild(wd_svg_label(
+					x, y, text, "nw", false, this.rgb(clr), false
+				));
+				return this.legend++;
 			}
 		},
 		ends: { /* define os limites dos eixos */
@@ -2363,208 +2373,6 @@ BLOCO 5: boot
 				return 1/this[axis+"scale"];
 			}
 		},
-		pdata: { /* prepara os dados da plotagem (plano x-y) */
-			get: function() {
-				var array = [];
-				/*----------------------------------------------------------------------
-				| A) looping: filtrando tipo de solicitação e adicionando-os a lista
-				| B) ignorando o tipo compare
-				| C) (pré-)definindo limites superiores e inferiores de x e y (!= função)
-				\---------------------------------------------------------------------*/
-				for (var i = 0; i < this.data.length; i++) { /*A*/
-					var data = this.data[i];
-					if (data.t === "compare") continue; /*B*/
-					this.ends("x", data.x); /*C*/
-					if (data.f !== true) this.ends("y", data.y); /*C*/
-					array.push(data); /*A*/
-				}
-				/*----------------------------------------------------------------------
-				| D) definindo espaços (padding) entre o container e o gráfico
-				| E) definindo e obtendo a escala em x (valor real X disponível)
-				\---------------------------------------------------------------------*/
-				this.space = {t: 10, r: 20, b: 10, l: 15}; /*D*/
-				var delta  = this.scale("x"); /*E*/
-				/*----------------------------------------------------------------------
-				| F) looping: transformando eixo y de função para array numérico
-				| G) definindo novas listas para x e y após transformação em F
-				| H) definindo limites superiores e inferiores em y
-				| I) definindo escala em y e retornando dados
-				\---------------------------------------------------------------------*/
-				for (var i = 0; i < array.length; i++) { /*F*/
-					var data = array[i];
-					if (data.f !== true) continue;
-					var values = wd_coord_continuous( /*F*/
-						data.x, data.y, data.t === "cols" ? 0.1 : delta
-					);
-					if (values === null) continue;
-					array[i].x = values.x; /*G*/
-					array[i].y = values.y; /*G*/
-					this.ends("y", values.y); /*H*/
-				}
-				this.scale("y"); /*I*/
-				return array;
-			}
-		},
-		area: { /* prepara os dados da plotagem (plano x,y) */
-			value: function(xlabel, ylabel, n, compare) {
-				/*----------------------------------------------------------------------
-				| A) criando e definindo o SVG principal
-				| B) obtendo as medidas referenciais da plotagem (ref)
-				| C) obtendo a cor padrão (clr)
-				| D) obtendo as menores unidades de x e y (dx, dy)
-				| E) obtendo as menores unidades de x e y (dx, dy) e
-				| F) obtendo as menores unidades reais de x e y (vx, vy) para eixos
-				\---------------------------------------------------------------------*/
-				this.svg = wd_svg_create("svg", {fill: "red"}); /*A*/
-				this.svg.setAttribute("class", "js-wd-plot"); /*A*/
-				var ref = this.space; /*B*/
-				var clr = this.rgb(0); /*C*/
-				var dx  = ref.w/n; /*D*/
-				var dy  = ref.h/n; /*D*/
-				var vx  = (this.xmax - this.xmin)/n;
-				var vy  = (this.ymax - this.ymin)/n;
-
-				for (var i = 0; i < (n+1); i++) { /*F*/
-					var x1, y1, x2, y2, ax, ay, x, y, dash;
-					/* estilo das linhas (externa contínua, interna tracejada) */
-					dash = (i === 0 || i === n) && compare !== true ? 1 : 0;
-					/* valores dos eixos (ancoras e valores) */
-					ax = i === 0 ? "nw" : (i === n ? "ne" : "n");
-					ay = i === 0 ? "ne" : (i === n ? "se" : "e");
-					x = this.xmin + i*vx; /* da esquerda para direita */
-					y = this.ymax - i*vy; /* de cima para baixo */
-					/* coordenadas dos eixos verticais */
-					x1 = ref.l+i*dx;
-					x2 = x1;
-					y1 = ref.t;
-					y2 = y1+ref.h;
-					this.svg.appendChild(wd_svg_line(x1, y1, x2, y2, dash, null, clr));
-					/* valores eixo vertical */
-					this.svg.appendChild(wd_svg_label(
-						ref.l - 1, y1 + i*dy, wd_num_str(y), ay, false, clr, false
-					));
-
-					/* coordenadas dos eixos horizontais */
-					x1 = ref.l;
-					x2 = x1+ref.w;
-					y1 = ref.t+ref.h-i*dy;
-					y2 = y1;
-					this.svg.appendChild(wd_svg_line(x1, y1, x2, y2, dash, null, clr));
-					/* valores eixo horizontal */
-					this.svg.appendChild(wd_svg_label(
-						x1 + i*dx, ref.b + 1, wd_num_str(x), ax, false, clr, false
-					));
-				}
-				/* Título e labels */
-				this.svg.appendChild( /* título do gŕafico (centrado no gráfico) */
-					wd_svg_label(ref.l+ref.w/2, ref.t/2, this.title, "s", false, clr, true)
-				);
-				this.svg.appendChild( /* nome do eixo x (horizontal, inferior e centrado no gráfico) */
-					wd_svg_label(ref.cx, (ref.b+100)/2, xlabel, "n", false, clr, false)
-				);
-				this.svg.appendChild( /* nome do eixo x (vertical, esquerda e centrado no gráfico) */
-					wd_svg_label(-this.ratio*ref.cy, ref.l/4, ylabel, "n", true, clr, false)
-				);
-			}
-		},
-		cdata: { /* prepara dados de plotagem para "compare" */
-			get: function() {
-				return [];
-			}
-		},
-		plot: { /* executa gráfico */
-			value: function(xlabel, ylabel, compare) {
-				/*----------------------------------------------------------------------
-				| A) preparando (reset) valores do objeto
-				| B) obtendo dados da plotagem especificada (plano ou comparação)
-				| C) definindo área do gráfico (B deve vir primeiro)
-				| D) lopping: conjunto de dados
-				| E) looping: array de valores
-				\---------------------------------------------------------------------*/
-				this.boot(); /*A*/
-				var data = compare === true ? this.cdata : this.pdata; /*B*/
-				this.area(xlabel, ylabel, (compare === true ? data.length : 4), compare); /*C*/
-
-				for (var i = 0; i < data.length; i++) { /*D*/
-					var item = data[i];
-
-					for (var j = 0; j < item.x.length; j++) { /*E*/
-						var last, xy1, xy2, frag, zero;
-						last = j === (item.x.length - 1) ? true : false;
-						frag = null;
-						xy1  = this.point(item.x[j], item.y[j]);
-						xy2  = !last ? this.point(item.x[j+1], item.y[j+1]) : null;
-						zero = this.point(0, 0);
-
-						if (item.t === "dots")
-							frag = wd_svg_dots(xy1.x, xy1.y, 0.5, item.l, this.rgb(item.c));
-						else if (item.t === "line" && !last)
-							frag = wd_svg_line(xy1.x, xy1.y, xy2.x, xy2.y, 2, item.l, this.rgb(item.c));
-						else if (item.t === "dash" && !last)
-							frag = wd_svg_line(xy1.x, xy1.y, xy2.x, xy2.y, 0, item.l, this.rgb(item.c));
-						else if (item.t === "cols" && !last)
-							frag = wd_svg_rect(xy1.x, zero.y, xy2.x, xy2.y, item.l, this.rgb(item.c));
-
-
-						if (frag !== null) this.svg.appendChild(frag);
-					}
-
-
-
-
-
-
-				}
-
-
-
-
-				this.box.appendChild(this.svg);
-
-
-				/* Plotagem da área e das linhas
-				var lines = 4;
-				var grid  = this._SET_AREA("plan", lines, xlabel, ylabel);
-
-				for (var i = 0; i < data.length; i++) {
-					var item = data[i];
-					this._COLOR = item.c;
-					this._ADD_LEGEND(item.l, item.f);
-
-					/*coordenadas
-					for (var j = 0; j < item.x.length; j++) { /*obterndo coordenadas
-						var title = "("+item.x[j]+", "+item.y[j]+")";
-						var trg1  = this._TARGET(item.x[j], item.y[j]);
-						var trg2  = this._TARGET(item.x[j+1], item.y[j+1]);
-						var zero  = this._TARGET(item.x[j], 0);
-
-						if (item.t === "dots")
-							this._BUILD_DOTS(trg1.x, trg1.y, title);
-						if (item.t === "dotted")
-							this._BUILD_DOTS(trg1.x, trg1.y, title, 1);
-						if (item.t === "line" && trg2 !== null)
-							this._BUILD_LINE(trg1.x, trg1.y, trg2.x, trg2.y, title, 2);
-						if (item.t === "cols" && trg2 !== null)
-							this._BUILD_RECT(trg1.x, (trg2.y+trg1.y)/2, trg2.x, zero.y, title, true);
-					}
-				}
-
-				/*valores dos eixos
-				this._COLOR = - 1;
-				var dX = (this._ENDS.x.max - this._ENDS.x.min) / lines;
-				var dY = (this._ENDS.y.max - this._ENDS.y.min) / lines;
-				for (var i = 0; i < grid.x.length; i++) {
-					var x  = this._LABEL_VALUE(this._ENDS.x.min + i*dX);
-					var y  = this._LABEL_VALUE(this._ENDS.y.min + i*dY);
-					var px = i === 0 ? "nw" : (i === lines ? "ne" : "n");
-					var py = i === 0 ? "se" : (i === lines ? "ne" : "e");
-					this._BUILD_LABEL(grid.x[i].x, grid.x[i].y+1, x, px);
-					this._BUILD_LABEL(grid.y[i].x-1, grid.y[i].y, y, py);
-				}
-				*/
-				return true;
-			}
-		},
 		add: {/* Adiciona conjunto de dados para plotagem */
 			value: function(x, y, label, type) {
 				/*----------------------------------------------------------------------
@@ -2575,7 +2383,7 @@ BLOCO 5: boot
 				| atributos do objeto a ser adicionado ao array data:
 				| x: array numérico ou indefindo (compare) em x,
 				| y: array numérico ou função (!compare) em y,
-				| l: identificação da plotagem,
+				| l: identificação da plotagem (legenda),
 				| t: tipo de plotagem,
 				| f: booleano, informa se y é uma função,
 				| c: valor numérico da cor, se existente
@@ -2602,7 +2410,7 @@ BLOCO 5: boot
 				y = coord.y; /*C*/
 				/* tipo de gráficos: cada tipo pode gerar até três conjuntos de dados */
 				var ref = { /* tipo: {c1: tipo de plotagem 1, c2..., c3..., m: método */
-					avg: {c1: "line", c2: "line", c3: null,   m: wd_coord_ravg},
+					avg: {c1: "line", c2: "dots", c3: null,   m: wd_coord_ravg},
 					sum: {c1: "line", c2: "cols", c3: null,   m: wd_coord_rsum},
 					exp: {c1: "dots", c2: "line", c3: "dash", m: wd_coord_rexp},
 					lin: {c1: "dots", c2: "line", c3: "dash", m: wd_coord_rlin},
@@ -2636,6 +2444,198 @@ BLOCO 5: boot
 				this.data.push(
 					{x: x, y: y, l: null, t: "dots", f: false, c: this.color}
 				);
+				return true;
+			}
+		},
+		pdata: { /* prepara os dados da plotagem (plano x-y) */
+			get: function() {
+				var array = [];
+				/*----------------------------------------------------------------------
+				| A) looping: filtrando tipo de solicitação e adicionando-os a lista
+				| B) ignorando o tipo compare
+				| C) (pré-)definindo limites superiores e inferiores de x e y (!= função)
+				\---------------------------------------------------------------------*/
+				for (var i = 0; i < this.data.length; i++) { /*A*/
+					var data = this.data[i];
+					if (data.t === "compare") continue; /*B*/
+					this.ends("x", data.x); /*C*/
+					if (data.t === "cols") this.ends("y", [0]); /* se for coluna tem que mostrar a linha 0 */
+					if (data.f !== true) this.ends("y", data.y); /*C*/
+					array.push(data); /*A*/
+				}
+				/*----------------------------------------------------------------------
+				| D) definindo espaços (padding) entre o container e o gráfico
+				| E) definindo e obtendo a escala em x (valor real X disponível)
+				\---------------------------------------------------------------------*/
+				this.space = {t: 10, r: 5, b: 15, l: 15}; /*D*/
+				var delta  = this.scale("x"); /*E*/
+				/*----------------------------------------------------------------------
+				| F) looping: transformando eixo y de função para array numérico
+				| G) definindo novas listas para x e y após transformação em F
+				| H) definindo limites superiores e inferiores em y
+				| I) definindo escala em y e retornando dados
+				\---------------------------------------------------------------------*/
+				for (var i = 0; i < array.length; i++) { /*F*/
+					var data = array[i];
+					if (data.f !== true) continue;
+					var values = wd_coord_continuous( /*F*/
+						data.x, data.y, data.t === "cols" ? 0.01 : delta /* para sum (cols) o delta deve ser menor */
+					);
+					if (values === null) continue;
+					array[i].x = values.x; /*G*/
+					array[i].y = values.y; /*G*/
+					this.ends("y", values.y); /*H*/
+				}
+				this.scale("y"); /*I*/
+				return array;
+			}
+		},
+		cdata: { /* prepara dados de plotagem para "compare" */
+			get: function() {
+				/*----------------------------------------------------------------------
+				| A) lista especial para agrupar informações para posterior tratamento
+				| B) looping: filtrando tipo de solicitação e adicionando-os a lista
+				| C) ignorando o tipo diferente de compare
+				| D) adicionando informações à nova lista especial
+				\---------------------------------------------------------------------*/
+				var group = {x: [], y: []};
+				for (var i = 0; i < this.data.length; i++) { /*B*/
+					var data = this.data[i];
+					if (data.t !== "compare") continue; /*C*/
+					for (var j = 0; j < data.x.length; j++) { /*D*/
+						group.x.push(data.x[j]);
+						group.y.push(data.y[j]);
+					}
+				}
+				/*----------------------------------------------------------------------
+				| E) se não tiver dados, retornar vazio
+				| F) transformando os dados
+				| H) definindo limites
+				| I) contribuindo um nova lista de dados para plotagem
+				| G) definindo espaços e escala;
+				\---------------------------------------------------------------------*/
+				if (group.x.length === 0) return []; /*E*/
+				var compare = wd_coord_compare(group.x, group.y, true); /*F*/
+				this.ends("y", compare.amt); /*H*/
+				this.ends("x", [0, compare.x.length]); /*H*/
+				this.ends("y", [0]);  /*H (tem que mostrar a linha y = 0) */
+				var array = []; /*I*/
+				for (var i = 0; i < compare.x.length; i++) /*I*/
+					array.push({
+						x: [i, i+1], y: [compare.amt[i], compare.amt[i]],
+						l: compare.x[i]+" ("+wd_num_str(compare.per[i], true)+")",
+						t: "cols", f: false, c: i+1,
+					});
+				this.space = {t: 10, r: 20, b: 10, l: 15}; /*G*/
+				this.scale("x"); /*G*/
+				this.scale("y"); /*G*/
+				console.log(array);
+				return array;
+			}
+		},
+		area: { /* prepara os dados da plotagem (plano x,y) */
+			value: function(xlabel, ylabel, n, compare) {
+				/*----------------------------------------------------------------------
+				| A) criando e definindo o SVG principal
+				| B) obtendo as medidas referenciais da plotagem (ref)
+				| C) obtendo a cor padrão (clr)
+				| D) obtendo as menores unidades de x e y (dx, dy)
+				| E) obtendo as menores unidades de x e y (dx, dy) e
+				| F) contruindo eixos, labels e valores
+				\---------------------------------------------------------------------*/
+				this.svg = wd_svg_create("svg", {fill: "red"}); /*A*/
+				this.svg.setAttribute("class", "js-wd-plot"); /*A*/
+				var ref = this.space; /*B*/
+				var clr = this.rgb(0); /*C*/
+				var dx  = ref.w/n; /*D*/
+				var dy  = ref.h/n; /*D*/
+				var vx  = (this.xmax - this.xmin)/n; /*E*/
+				var vy  = (this.ymax - this.ymin)/n; /*E*/
+
+				for (var i = 0; i < (n+1); i++) { /*F*/
+					var x1, y1, x2, y2, ax, ay, x, y, dash;
+					/* estilo das linhas (externa contínua, interna tracejada) */
+					dash = (i === 0 || i === n) && compare !== true ? 1 : 0;
+					/* valores dos eixos (ancoras e valores) */
+					ax = i === 0 ? "nw" : (i === n ? "ne" : "n");
+					ay = i === 0 ? "ne" : (i === n ? "se" : "e");
+					x = this.xmin + i*vx; /* da esquerda para direita */
+					y = this.ymax - i*vy; /* de cima para baixo */
+					/* coordenadas dos eixos verticais */
+					x1 = ref.l+i*dx;
+					x2 = x1;
+					y1 = ref.t;
+					y2 = y1+ref.h;
+					this.svg.appendChild(wd_svg_line(x1, y1, x2, y2, dash, null, clr));
+					/* valores eixo vertical */
+					this.svg.appendChild(wd_svg_label(
+						ref.l - 1, y1 + i*dy, wd_num_str(y), ay, false, clr, false
+					));
+
+					/* coordenadas dos eixos horizontais */
+					x1 = ref.l;
+					x2 = x1+ref.w;
+					y1 = ref.t+ref.h-i*dy;
+					y2 = y1;
+					this.svg.appendChild(wd_svg_line(x1, y1, x2, y2, dash, null, clr));
+					/* valores eixo horizontal */
+					if (compare !== true)
+						this.svg.appendChild(wd_svg_label(
+							x1 + i*dx, ref.b + 1, wd_num_str(x), ax, false, clr, false
+						));
+				}
+				/* Título e labels */
+				this.svg.appendChild( /* título do gŕafico (centrado no gráfico) */
+					wd_svg_label(ref.l+ref.w/2, ref.t/2, this.title, "s", false, clr, true)
+				);
+				this.svg.appendChild( /* nome do eixo x (horizontal, inferior e centrado no gráfico) */
+					wd_svg_label(ref.cx, (ref.b+100)/2, xlabel, "n", false, clr, false)
+				);
+				this.svg.appendChild( /* nome do eixo x (vertical, esquerda e centrado no gráfico) */
+					wd_svg_label(-this.ratio*ref.cy, ref.l/4, ylabel, "n", true, clr, false)
+				);
+			}
+		},
+		plot: { /* executa gráfico */
+			value: function(xlabel, ylabel, compare) {
+				/*----------------------------------------------------------------------
+				| A) preparando (reset) valores do objeto
+				| B) obtendo dados da plotagem especificada (plano ou comparação)
+				| C) definindo área do gráfico (B deve vir primeiro)
+				| D) lopping: conjunto de dados
+				| E) looping: array de valores
+				\---------------------------------------------------------------------*/
+				this.boot(); /*A*/
+				var data = compare === true ? this.cdata : this.pdata; /*B*/
+				if (data.length === 0) return false;
+				this.area(xlabel, ylabel, (compare === true ? data.length : 4), compare); /*C*/
+
+				for (var i = 0; i < data.length; i++) { /*D*/
+					var item = data[i];
+					var clr  = this.rgb(item.c);
+					var leg  = item.l;
+					this.addLegend(leg, item.c, compare);
+
+					for (var j = 0; j < item.x.length; j++) { /*E*/
+						var last, xy1, xy2, frag, zero;
+						last = j === (item.x.length - 1) ? true : false;
+						frag = null;
+						xy1  = this.point(item.x[j], item.y[j]);
+						xy2  = !last ? this.point(item.x[j+1], item.y[j+1]) : null;
+						zero = this.point(0, 0);
+
+						if (item.t === "dots")
+							frag = wd_svg_dots(xy1.x, xy1.y, 0.5, leg, clr);
+						else if (item.t === "line" && !last)
+							frag = wd_svg_line(xy1.x, xy1.y, xy2.x, xy2.y, 2, leg, clr);
+						else if (item.t === "dash" && !last)
+							frag = wd_svg_line(xy1.x, xy1.y, xy2.x, xy2.y, 0, leg, clr);
+						else if (item.t === "cols" && !last)
+							frag = wd_svg_rect(xy1.x, zero.y, xy2.x, xy2.y, leg, clr);
+						if (frag !== null) this.svg.appendChild(frag);
+					}
+				}
+				this.box.appendChild(this.svg);
 				return true;
 			}
 		},
@@ -3305,16 +3305,15 @@ BLOCO 5: boot
 			var table  = WD.$(data.table);
 			var matrix = table.info.table;
 			if (matrix.length === 0) return;
-			return buildChart(e, matrix[0], data);
+			return buildChart(e, matrix, data);
 		} else if ("path" in data) { /*para fonte arquivo*/
 			var method = "method" in data ? data.method : "post";
 			var file   = data.path;
 			var pack   = wd_$$$(data);
 			var exec   = WD(pack);
 			exec.send(file, function(x) {
-				if (x.closed) {
+				if (x.closed)
 					if (x.csv !== null) return buildChart(e, x.csv, data);
-				}
 			}, method);
 		}
 		target.data({wdChart: null});
