@@ -1,3 +1,41 @@
+				var steps  = 4; /* quantidade de copos para encher cada vaso */
+				var delta  = wd_integer(255/steps); /* volume dos copos */
+				var limit  = 3*255 - delta; /* limite, não pode lotar todos os vasos */
+				var volume = (n*delta) % limit; /* cálculo do volume inserido */
+				var shift  = ["123", "213", "231", "132", "312", "321"]; /* alternância de cores (saltos para direita do maior 1 > 2 > 3) */
+				var target = n !== 0 ? (n-1) % shift.length : 0; /* sequência a ser selecionada */
+				var order  = shift[target].split(""); /* ordem a devolver a função */
+				var vases  = {"1": 0, "2": 0, "3": 0}; /* quantidade de líquido nos vasos */
+				if      (volume > 510) vases = {"1": 255,    "2": 255,        "3": volume-510};
+				else if (volume > 255) vases = {"1": 255,    "2": volume-255, "3": 0};
+				else if (volume >   0) vases = {"1": volume, "2": 0,          "3": 0};
+				for (var i in vases) { /* convertendo valores para hex */
+					vases[i] =  vases[i].toString(16);
+					if (vases[i].length < 2) vases[i] = "0"+vases[i];
+				}
+				console.log(n, delta, volume, order, vases);
+				return "#"+vases[order[0]]+vases[order[1]]+vases[order[2]];
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 //FIXME mudar wdChart, WDstatistics e WDanalysis para o BLOCO 2
 	function wdChart(box, title) {/*Objeto para criar gráficos*/
 		if (!(this instanceof wdChart)) return new wdChart(box, title);

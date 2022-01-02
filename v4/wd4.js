@@ -67,7 +67,7 @@ BLOCO 5: boot
 			"display: block; width: 100%; height: 100%;",
 			"padding: 0.1em 0.5em; margin: 0; z-index: 999999;",
 			"position: fixed; top: 0; right: 0; bottom: 0; left: 0;",
-			"cursor: progress; background-color: rgba(0,0,0,0.4);"
+			"cursor: progress; background-color: rgba(0,0,0,0.4);",
 		]},
 		{s: ".js-wd-no-display", d: [
 			"display: none;"
@@ -75,7 +75,7 @@ BLOCO 5: boot
 		{s: ".js-wd-mask-error", d: [
 			"color: #db1414; background-color: #fde8e8;"
 		]},
-		{s: "[data-wd-nav], [data-wd-send], [data-wd-tsort], [data-wd-data]", d: [
+		{s: "[data-wd-nav], [data-wd-send], [data-wd-tsort], [data-wd-data], [data-wd-full]", d: [
 			"cursor: pointer;"
 		]},
 		{s: "[data-wd-set], [data-wd-edit], [data-wd-shared], [data-wd-css], [data-wd-table]", d:[
@@ -369,8 +369,8 @@ BLOCO 5: boot
 		var all = "$$" in obj ? obj["$$"].trim() : null;
 		if (one === null && all === null) return null;
 		var words  = {"document": document, "window":  window};
-		if (one in words) return words[selOne];
-		if (all in words) return words[selAll];
+		if (one in words) return words[one];
+		if (all in words) return words[all];
 		one = one === null ? null : wd_$(one);
 		all = all === null ? null : wd_$$(all);
 		return all !== null ? all : one;
@@ -1764,7 +1764,6 @@ BLOCO 5: boot
 			/* definindo os próximos a serem exibidos */
 			var next = last >= (child.length-1) ? 0 : last+1;
 			var prev = first <= 0 ? child.length-1 : first-1;
-			console.log("first:", first, "last:", last, "next:", next, "prev:", prev);
 			return wd_html_nav(child[action === "prev" ? prev : next]);
 		}
 		if ((/^[0-9]+\:[0-9]+$/).test(action)) {
@@ -2017,6 +2016,15 @@ BLOCO 5: boot
 	}
 
 /*----------------------------------------------------------------------------*/
+	function wd_html_chart(elem, data, title, xlabel, ylabel, compare) {
+		/* constroe um gráfico a partir de um conjuto de dados [{x: [], y:[], label: "", type:""}]*/
+		var chart = new WDchart(elem, title);
+		for (var i = 0; i < data.length; i++)
+			chart.add(data[i].x, data[i].y, data[i].label, data[i].type);
+		return chart.plot(xlabel, ylabel, compare);
+	}
+
+/*----------------------------------------------------------------------------*/
 	function wd_request(action, pack, callback, method, async) {
 		/* ajustes iniciais */
 		action = new String(action).toString();
@@ -2222,12 +2230,13 @@ BLOCO 5: boot
 			height:  y2 > y1 ? y2-y1 : y1-y2,
 			fill:    color,
 			title:   title,
-			opacity: 0.8,
+			opacity: 0.9,
 		});
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_svg_label(x, y, text, point, vertical, color, bold) { /* cria textos: coordenadas na âncora (point) */
+	function wd_svg_label(x, y, text, point, vertical, color, bold) {
+		/* cria textos: coordenadas na âncora (point) */
 		var vanchor = ["start", "middle", "end"];
 		var vbase   = ["auto", "middle", "hanging"];
 		var anchor  = {n: 1, ne: 2, e: 2, se: 2, s: 1, sw: 0, w: 0, nw: 0, c: 1};
@@ -2270,16 +2279,15 @@ BLOCO 5: boot
 				this.legend = 0; /* contador de legenda */
 				this.box.className = ""; /* atributo class do container do gráfico */
 				this.box.style = null; /* limpando estilos estilos */
-				this.box.style.border = "1px solid red";//FIXME temporário
-				this.box.style.backgroundColor = "white";//FIXME temporário
+				this.box.style.backgroundColor = "#fafafa";
 				this.box.style.paddingTop = wd_num_str(this.ratio, true); /* proporção do container em relação à tela */
-				this.box.style.position   = "relative"; /* posição do container TODO */
+				this.box.style.position   = "relative";
 				var child = wd_vtype(this.box.children).value; /* filhos do container */
 				for (var i = 0; i < child.length; i++) /* limpando filhos (deletando o gráfico) */
 					this.box.removeChild(child[i]);
 			}
 		},
-		ratio: {/* Relação altura/comprimento do gráfico (igual a da tela) *///FIXME: no celular fica esquisito (altura maior que largura)
+		ratio: {/* Relação altura/comprimento do gráfico (igual a da tela) */
 			get: function() {
 				var height = window.screen.height;
 				var width  = window.screen.width;
@@ -2306,24 +2314,17 @@ BLOCO 5: boot
 		},
 		rgb: { /* retorna uma cor a partir de um número */
 			value: function(n) {
-				var steps  = 4; /* quantidade de copos para encher cada vaso */
-				var delta  = wd_integer(255/steps); /* volume dos copos */
-				var limit  = 3*255 - delta; /* limite, não pode lotar todos os vasos */
-				var volume = (n*delta) % limit; /* cálculo do volume inserido */
-				var shift  = ["123", "213", "231", "132", "312", "321"]; /* alternância de cores (saltos para direita do maior 1 > 2 > 3) */
-				var target = n !== 0 ? (n-1) % shift.length : 0; /* sequência a ser selecionada */
-				var order  = shift[target].split(""); /* ordem a devolver a função */
-				var vases  = {"1": 0, "2": 0, "3": 0}; /* quantidade de líquido nos vasos */
-				if      (volume > 510) vases = {"1": 255,    "2": 255,        "3": volume-510};
-				else if (volume > 255) vases = {"1": 255,    "2": volume-255, "3": 0};
-				else if (volume >   0) vases = {"1": volume, "2": 0,          "3": 0};
-				for (var i in vases) { /* convertendo valores para hex */
-					vases[i] =  vases[i].toString(16);
-					if (vases[i].length < 2) vases[i] = "0"+vases[i];
-				}
-				console.log(n, delta, volume, order, vases);
-				return "#"+vases[order[0]]+vases[order[1]]+vases[order[2]];
-
+				if (n === 0) return "#000000";
+				n--;
+				var swap  = ["100", "001", "010", "101", "011", "110"];
+				var index = n % swap.length;
+				var power = wd_integer(n/6) + 1;
+				var value = 255/power;
+				var onoff = swap[index].split("");
+				var color = [];
+				for (var i = 0; i < onoff.length; i++)
+					color.push(onoff[i] === "1" ? wd_integer(value) : 33);
+				return "rgb("+color.join(",")+")";
 			}
 		},
 		point: { /* Transforma coordanadas reais em relativas (%) */
@@ -2339,14 +2340,14 @@ BLOCO 5: boot
 			}
 		},
 		addLegend: { /* Adiciona Legendas (texto e funções)*/
-			value: function(text, clr, compare) {
+			value: function(text, color, compare) {
 				if (text === null) return;
 				text = "\u25CF "+text;
 				var ref = this.space;
 				var y   = (ref.t + 1)+(4*this.legend);
 				var x   = 1 + (compare === true ? ref.r : ref.l);
 				this.svg.appendChild(wd_svg_label(
-					x, y, text, "nw", false, this.rgb(clr), false
+					x, y, text, "nw", false, color, false
 				));
 				return this.legend++;
 			}
@@ -2410,7 +2411,7 @@ BLOCO 5: boot
 				y = coord.y; /*C*/
 				/* tipo de gráficos: cada tipo pode gerar até três conjuntos de dados */
 				var ref = { /* tipo: {c1: tipo de plotagem 1, c2..., c3..., m: método */
-					avg: {c1: "line", c2: "dots", c3: null,   m: wd_coord_ravg},
+					avg: {c1: "line", c2: "line", c3: null,   m: wd_coord_ravg},
 					sum: {c1: "line", c2: "cols", c3: null,   m: wd_coord_rsum},
 					exp: {c1: "dots", c2: "line", c3: "dash", m: wd_coord_rexp},
 					lin: {c1: "dots", c2: "line", c3: "dash", m: wd_coord_rlin},
@@ -2529,12 +2530,12 @@ BLOCO 5: boot
 				this.space = {t: 10, r: 20, b: 10, l: 15}; /*G*/
 				this.scale("x"); /*G*/
 				this.scale("y"); /*G*/
-				console.log(array);
 				return array;
 			}
 		},
 		area: { /* prepara os dados da plotagem (plano x,y) */
 			value: function(xlabel, ylabel, n, compare) {
+				compare = compare === true ? true : false;
 				/*----------------------------------------------------------------------
 				| A) criando e definindo o SVG principal
 				| B) obtendo as medidas referenciais da plotagem (ref)
@@ -2555,7 +2556,7 @@ BLOCO 5: boot
 				for (var i = 0; i < (n+1); i++) { /*F*/
 					var x1, y1, x2, y2, ax, ay, x, y, dash;
 					/* estilo das linhas (externa contínua, interna tracejada) */
-					dash = (i === 0 || i === n) && compare !== true ? 1 : 0;
+					dash = (i === 0 || i === n) ? 1 : 0;
 					/* valores dos eixos (ancoras e valores) */
 					ax = i === 0 ? "nw" : (i === n ? "ne" : "n");
 					ay = i === 0 ? "ne" : (i === n ? "se" : "e");
@@ -2579,7 +2580,7 @@ BLOCO 5: boot
 					y2 = y1;
 					this.svg.appendChild(wd_svg_line(x1, y1, x2, y2, dash, null, clr));
 					/* valores eixo horizontal */
-					if (compare !== true)
+					if (!compare)
 						this.svg.appendChild(wd_svg_label(
 							x1 + i*dx, ref.b + 1, wd_num_str(x), ax, false, clr, false
 						));
@@ -2614,7 +2615,7 @@ BLOCO 5: boot
 					var item = data[i];
 					var clr  = this.rgb(item.c);
 					var leg  = item.l;
-					this.addLegend(leg, item.c, compare);
+					this.addLegend(leg, clr, compare);
 
 					for (var j = 0; j < item.x.length; j++) { /*E*/
 						var last, xy1, xy2, frag, zero;
@@ -2640,8 +2641,6 @@ BLOCO 5: boot
 			}
 		},
 	});
-
-
 
 /* == BLOCO 3 ================================================================*/
 
@@ -3181,17 +3180,14 @@ BLOCO 5: boot
 				return wd_html_style_get(this._value[0], css);
 			}
 		},
+		chart: {
+			value: function(data, title, xlabel, ylabel, compare) {
+				return wd_html_chart(this.item(0), data, title, xlabel, ylabel, compare);
+			}
+		},
 		info: {  /* devolve informações diversas sobre o primeiro elemento */
 			get: function() {return wd_html_info(this._value[0]);}
 		},
-
-	});
-
-	// FIXME isso é provisório, só até arrumar o gráfico
-	Object.defineProperty(WDdom.prototype, "chart", {/*retorna um objeto (aplicável somente ao 1º elemento) de criação de gráficos*/
-		value: function(title) {
-			return new WDchart(this.item(0), title);
-		}
 	});
 
 /*----------------------------------------------------------------------------*/
@@ -3271,13 +3267,11 @@ BLOCO 5: boot
 /*----------------------------------------------------------------------------*/
 
 	function data_wdChart(e) { /*FIXME Plotar Gráfico: data-wd-chart */
-		/*a partir de uma tabela: table{target}cols{x,y1:anal1,y2:anal2...}labels{title,x,y}*/
-		/*a partir de um arquivo: path{...}method{...}form{...}cols{x,y1:anal1,y2:anal2...}labels{title,x,y}*/
+		/*a partir de uma tabela: ${table}cols{x,y1:anal1,y2:anal2...}labels{title,x,y}*/
+		/*a partir de um arquivo: path{...}method{...}${form}cols{x,y1:anal1,y2:anal2...}labels{title,x,y}*/
 		if (!("wdChart" in e.dataset)) return;
-		var data   = wd_html_dataset_value(e, "wdChart")[0];
-		var target = WD(e);
 
-		/*Função para analisar dados e manipular objeto*/
+		/*Função para analisar dados e manipular objeto*/ //FIXME consertar isso aqui
 		var buildChart = function(elem, matrix, data) {
 			var obj = WD(matrix);
 			if (obj.type !== "array") return;
@@ -3299,23 +3293,44 @@ BLOCO 5: boot
 			}
 			return chart.plot(labels[1].trim(), labels[2].trim(), compare);
 		}
-
-		/*trabalhar com os dados, se tabela ou arquivo*/
-		if ("table" in data) { /*para fonte tabela*/
-			var table  = WD.$(data.table);
-			var matrix = table.info.table;
-			if (matrix.length === 0) return;
-			return buildChart(e, matrix, data);
-		} else if ("path" in data) { /*para fonte arquivo*/
-			var method = "method" in data ? data.method : "post";
+		/* obtendo informações sobre a fonte de dados */
+		var data   = wd_html_dataset_value(e, "wdChart")[0];
+		var target = WD(e);
+		var isFile = "path" in data ? true : false;
+		var pack   = wd_$$$(data);
+		var exec   = WD(pack);
+		/* reunindo informações a serem plotadas */
+		var cdata  = [];
+		var cmp    = true;
+		/* labels */
+		var labels = data.labels.split(",");
+		var title  = labels[0];
+		var xlabel = labels[1];
+		var ylabel = labels[2];
+		/* colunas */
+		var cols   = data.cols.split(",");
+		var xref   = "1-:"+cols[0].replace(/[^0-9]/g, "");
+		for (var i = 1; i < cols.length; i++) {
+			var info = cols[i].split(":");
+			var yref = "1-"+info[0].replace(/[^0-9]/g, "");
+			var lref = "0:"+info[0].replace(/[^0-9]/g, "");
+			var type = info.length === 2 ? info[1].trim() : null;
+			if (type !== "cmp") cmp = false;
+			cdata.push({x: xref, y: yref, label: lref, type: type});
+		}
+		/* executando a depender da fonte de informação */
+		if (isFile) {
 			var file   = data.path;
-			var pack   = wd_$$$(data);
-			var exec   = WD(pack);
+			var method = "method" in data ? data.method : "post";
 			exec.send(file, function(x) {
 				if (x.closed)
-					if (x.csv !== null) return buildChart(e, x.csv, data);
+					return buildChart(exec, x.csv, cdata);
 			}, method);
+		} else {
+
+			return buildChart(e, exec.info.table, cdata);
 		}
+		/* limpando atributo */
 		target.data({wdChart: null});
 		return;
 	}
@@ -3493,7 +3508,9 @@ BLOCO 5: boot
 		var data   = wd_html_dataset_value(e, "wdFull")[0];
 		var exit   = "exit" in data ? true : false;
 		var target = wd_$$$(data);
-		if (target === null) target = document.documentElement;
+		if (target === document || target === window)
+			target = document.documentElement;
+		else if (target === null) target = e;
 		WD(target).full(exit);
 		return;
 	};
