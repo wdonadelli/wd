@@ -2016,11 +2016,14 @@ BLOCO 5: boot
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_html_chart(elem, data, title, xlabel, ylabel, compare) {
+	function wd_html_chart(elem, data, title, xlabel, ylabel) {
 		/* constroe um gráfico a partir de um conjuto de dados [{x: [], y:[], label: "", type:""}]*/
-		var chart = new WDchart(elem, title);
-		for (var i = 0; i < data.length; i++)
+		var compare = true;
+		var chart   = new WDchart(elem, title);
+		for (var i = 0; i < data.length; i++) {
+			if (data[i].type !== "compare") compare = false;
 			chart.add(data[i].x, data[i].y, data[i].label, data[i].type);
+		}
 		return chart.plot(xlabel, ylabel, compare);
 	}
 
@@ -2030,7 +2033,7 @@ BLOCO 5: boot
 		action = new String(action).toString();
 		if (pack === undefined) pack = null;
 		if (wd_vtype(callback).type !== "function") callback = null;
-		method = method === undefined ? "POST" : method.toUpperCase();
+		method = method === undefined || method === null ? "POST" : method.toUpperCase();
 		async  = async !== false ?  true : false;
 
 		/* Chamando requisição e iniciando o tempo */
@@ -3181,8 +3184,8 @@ BLOCO 5: boot
 			}
 		},
 		chart: {
-			value: function(data, title, xlabel, ylabel, compare) {
-				return wd_html_chart(this.item(0), data, title, xlabel, ylabel, compare);
+			value: function(data, title, xlabel, ylabel) {
+				return wd_html_chart(this.item(0), data, title, xlabel, ylabel);
 			}
 		},
 		info: {  /* devolve informações diversas sobre o primeiro elemento */
@@ -3227,11 +3230,10 @@ BLOCO 5: boot
 		if (!("wdLoad" in e.dataset)) return;
 		var data   = wd_html_dataset_value(e, "wdLoad")[0];
 		var target = WD(e);
-		var method = "method" in data ? data.method : "post";
+		var method = data.method;
 		var file   = data.path;
 		var pack   = wd_$$$(data);
 		var exec   = WD(pack);
-
 		target.data({wdLoad: null});
 		exec.send(file, function(x) {
 			if (x.closed) target.load(x.text);
@@ -3244,11 +3246,10 @@ BLOCO 5: boot
 		if (!("wdRepeat" in e.dataset)) return;
 		var data   = wd_html_dataset_value(e, "wdRepeat")[0];
 		var target = WD(e);
-		var method = "method" in data ? data.method : "post";
+		var method = data.method;
 		var file   = data.path;
 		var pack   = wd_$$$(data);
 		var exec   = WD(pack);
-
 		target.data({wdRepeat: null});
 		exec.send(file, function(x) {
 			if (x.closed) {
@@ -3265,70 +3266,65 @@ BLOCO 5: boot
 	};
 
 /*----------------------------------------------------------------------------*/
-
-	function data_wdChart(e) { /*FIXME Plotar Gráfico: data-wd-chart */
-		/*a partir de uma tabela: ${table}cols{x,y1:anal1,y2:anal2...}labels{title,x,y}*/
-		/*a partir de um arquivo: path{...}method{...}${form}cols{x,y1:anal1,y2:anal2...}labels{title,x,y}*/
+	function data_wdChart(e) { /* define um gráfico data-wd-chart="..." */
+		/*--------------------------------------------------------------------------
+		| tabela:  ${table}cols{x,y1:type1,y2:type2...}labels{title,x,y}
+		| arquivo: path{file}method{...}${form}cols{x,y1:type1,y2:type2...}labels{title,x,y}
+		\-------------------------------------------------------------------------*/
 		if (!("wdChart" in e.dataset)) return;
 
-		/*Função para analisar dados e manipular objeto*/ //FIXME consertar isso aqui
-		var buildChart = function(elem, matrix, data) {
-			var obj = WD(matrix);
-			if (obj.type !== "array") return;
-			var labels  = data.labels.split(",");
-			var cols    = data.cols.split(",");
-			var xcol    = cols[0].replace(/[^0-9]/g, "");
-			var xaxis   = obj.cell("1-:"+xcol);
-			var chart   = WD(elem).chart(labels[0].trim());
-			var compare = true;
-			/*obtendo eixo y e adicionando dados*/
-			for (var i = 1; i < cols.length; i++) {
-				var info  = cols[i].split(":");
-				var ycol  = info[0].replace(/[^0-9]/g, "");
-				var anal  = info.length === 2 ? info[1].trim() : "";
-				if (anal !== "compare") compare = false;
-				var yaxis = obj.cell("1-:"+ycol);
-				var label = obj.cell("0:"+ycol);
-				chart.add(xaxis, yaxis, label, anal);
-			}
-			return chart.plot(labels[1].trim(), labels[2].trim(), compare);
+		/*Função para  capturar dados da plotagem */
+		var buildChart = function(input) {
+			var cell = WD(input.matrix);
+			if (cell.type !== "array") return;
+			/* obtendo os valores da matriz */console.log(input.data);
+			for (var i = 0; i < input.data.length; i++) {
+				input.data[i].x     = cell.cell(input.data[i].x);
+				input.data[i].y     = cell.cell(input.data[i].y);
+				input.data[i].label = cell.cell(input.data[i].label)[0];
+			}console.log(input.data);
+			return WD(input.elem).chart(input.data, input.title, input.xlabel, input.ylabel);
 		}
 		/* obtendo informações sobre a fonte de dados */
 		var data   = wd_html_dataset_value(e, "wdChart")[0];
 		var target = WD(e);
-		var isFile = "path" in data ? true : false;
-		var pack   = wd_$$$(data);
-		var exec   = WD(pack);
-		/* reunindo informações a serem plotadas */
-		var cdata  = [];
-		var cmp    = true;
-		/* labels */
+		var source = "path" in data ? "file" : "table";
+		/* obtendo dados das plotagens (por referência xref, yref, lref) */
 		var labels = data.labels.split(",");
-		var title  = labels[0];
-		var xlabel = labels[1];
-		var ylabel = labels[2];
-		/* colunas */
 		var cols   = data.cols.split(",");
+		var input  = {
+			elem:   e,
+			title:  labels[0],
+			xlabel: labels[1],
+			ylabel: labels[2],
+			data:   [],
+			matrix: null,
+		};
 		var xref   = "1-:"+cols[0].replace(/[^0-9]/g, "");
-		for (var i = 1; i < cols.length; i++) {
+		for (var i = 1; i < cols.length; i++) { /* looping começa a partir de 1 (colunas em y) */
 			var info = cols[i].split(":");
-			var yref = "1-"+info[0].replace(/[^0-9]/g, "");
+			var yref = "1-:"+info[0].replace(/[^0-9]/g, "");
 			var lref = "0:"+info[0].replace(/[^0-9]/g, "");
 			var type = info.length === 2 ? info[1].trim() : null;
-			if (type !== "cmp") cmp = false;
-			cdata.push({x: xref, y: yref, label: lref, type: type});
+			input.data.push({x: xref, y: yref, label: lref, type: type});
 		}
-		/* executando a depender da fonte de informação */
-		if (isFile) {
+		/* obtendo a matrix e executando */
+		if (source === "file") {
 			var file   = data.path;
-			var method = "method" in data ? data.method : "post";
+			var method = data.method;
+			var pack   = wd_$$$(data);
+			var exec   = WD(pack);
 			exec.send(file, function(x) {
-				if (x.closed)
-					return buildChart(exec, x.csv, cdata);
+				if (x.closed) {
+					input.matrix = x.csv;
+					return buildChart(input);
+				}
 			}, method);
 		} else {
-
-			return buildChart(e, exec.info.table, cdata);
+			var table = WD(wd_$$$(data));
+			if (table.type !== "dom") return;
+			input.matrix = table.info.table;
+			buildChart(input);
 		}
 		/* limpando atributo */
 		target.data({wdChart: null});
@@ -3510,7 +3506,8 @@ BLOCO 5: boot
 		var target = wd_$$$(data);
 		if (target === document || target === window)
 			target = document.documentElement;
-		else if (target === null) target = e;
+		else if (target === null)
+			target = e;
 		WD(target).full(exit);
 		return;
 	};
