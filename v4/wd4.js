@@ -45,7 +45,7 @@ BLOCO 5: boot
 	/* Guarda o intervalo de tempo para executar funções vinculadas aos eventos de tecla */
 	var wd_key_time_range = 500;
 	/* Guarda a barra de progresso das requisições */
-	var wd_request_progress = document.createElement("PROGRESS");
+	var wd_request_progress = document.createElement("DIV");
 	/* Guarda o container da janela modal para requisições */
 	var wd_modal_window = document.createElement("DIV");
 	/* Guarda o container dos CSS da biblioteca */
@@ -56,8 +56,8 @@ BLOCO 5: boot
 	var wd_request_counter = 0;
 	/* guarda os números primos */
 	var wd_number_primes = [
-		2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61,
-		67, 71, 73, 79, 83, 89, 97, 
+		2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71,
+		73, 79, 83, 89, 97,
 	];
 	/* Guarda os estilos da biblioteca Selector Database */
 	var wd_js_css = [
@@ -68,13 +68,16 @@ BLOCO 5: boot
 			"padding: 0.1em 0.5em; margin: 0; z-index: 999999;",
 			"position: fixed; top: 0; right: 0; bottom: 0; left: 0;",
 			"cursor: progress; background-color: rgba(0,0,0,0.4);",
+			"animation: js-wd-fade-in 0.1s;"
 		]},
-		{s: ".js-wd-no-display", d: [
-			"display: none;"
+		{s: ".js-wd-progress-bar", d: [
+			"display: block; padding: 0.5em; margin: 0;",
+			"position: absolute; top: 0; left: 0;",
+			"background-color: #1e90ff; color: #ffffff;",
+			"text-align: right; font-size: 0.5em; font-weight: bold;"
 		]},
-		{s: ".js-wd-mask-error", d: [
-			"color: #db1414; background-color: #fde8e8;"
-		]},
+		{s: ".js-wd-no-display", d: ["display: none;"]},
+		{s: ".js-wd-mask-error", d: ["color: #db1414; background-color: #fde8e8;"]},
 		{s: "[data-wd-nav], [data-wd-send], [data-wd-tsort], [data-wd-data], [data-wd-full]", d: [
 			"cursor: pointer;"
 		]},
@@ -96,20 +99,20 @@ BLOCO 5: boot
 			"position: fixed; top: 0; right: 30%; left: 30%; width: 40%;",
 			"margin: 0; padding: 0; z-index: 999999;"
 		]},
-		{s: ".js-wd-signal > *", d: [
+		{s: ".js-wd-signal-msg", d: [
 			"animation-name: js-wd-fade-in, js-wd-fade-out;",
 			"animation-duration: 1.5s, 1.5s; animation-delay: 0s, 7.5s;",
 			"margin: 5px 0; position: relative; padding: 0; border-radius: 0.2em;",
 			"border: 1px solid rgba(0,0,0,0.6); box-shadow: 1px 1px 6px rgba(0,0,0,0.6);",
 			"background-color: rgba(255,255,255,1);"
 		]},
-		{s: ".js-wd-signal header", d: [
+		{s: ".js-wd-signal-msg > header", d: [
 			"padding: 0.5em; border-radius: inherit inherit 0 0; position: relative;"
 		]},
-		{s: ".js-wd-signal header span", d: [
+		{s: ".js-wd-signal-msg > header > span", d: [
 			"position: absolute; top: 0.5em; right: 0.5em; line-height: 1; cursor: pointer;"
 		]},
-		{s: ".js-wd-signal div", d: [
+		{s: ".js-wd-signal-msg > section", d: [
 			"padding: 0.5em; border-radius: 0 0 inherit inherit;"
 		]},
 	];
@@ -2087,7 +2090,9 @@ BLOCO 5: boot
 			data.total  = total;
 			/* barra de progresso */
 			window.setTimeout(function() {
-				return wd_request_progress.value = data.progress;
+				var value = wd_num_str(data.progress, true)
+				wd_request_progress.textContent = value;
+				wd_request_progress.style.width = value;
 			}, 10);
 
 			if (status === "ABORTED") request.abort();
@@ -2152,7 +2157,7 @@ BLOCO 5: boot
 		/* definindo elementos */
 		var box = document.createElement("ARTICLE");
 		var hdr = document.createElement("HEADER");
-		var msg = document.createElement("DIV");
+		var msg = document.createElement("SECTION");
 		var cls = document.createElement("SPAN");
 		var ttl = document.createElement("STRONG");
 		/* fechar janela */
@@ -2170,6 +2175,7 @@ BLOCO 5: boot
 		ttl.innerHTML = title === undefined ? "\u2139" : title;
 		cls.onclick   = close;
 		cls.innerHTML = "\u00D7";
+		box.className  = "js-wd-signal-msg";
 		/* abrindo container principal, se fechado */
 		if (wd_signal_block.children.length === 0)
 			document.body.appendChild(wd_signal_block);
@@ -2281,7 +2287,7 @@ BLOCO 5: boot
 				this.padd   = {t: 0, r: 0, b: 0, l: 0}; /* espaço interno do gráfico (padding) */
 				this.legend = 0; /* contador de legenda */
 				this.box.className = ""; /* atributo class do container do gráfico */
-				this.box.style = null; /* limpando estilos estilos */
+				wd_html_style(this.box, null); /* limpando estilos estilos */
 				this.box.style.backgroundColor = "#fafafa";
 				this.box.style.paddingTop = wd_num_str(this.ratio, true); /* proporção do container em relação à tela */
 				this.box.style.position   = "relative";
@@ -3277,12 +3283,12 @@ BLOCO 5: boot
 		var buildChart = function(input) {
 			var cell = WD(input.matrix);
 			if (cell.type !== "array") return;
-			/* obtendo os valores da matriz */console.log(input.data);
+			/* obtendo os valores da matriz */
 			for (var i = 0; i < input.data.length; i++) {
 				input.data[i].x     = cell.cell(input.data[i].x);
 				input.data[i].y     = cell.cell(input.data[i].y);
 				input.data[i].label = cell.cell(input.data[i].label)[0];
-			}console.log(input.data);
+			}
 			return WD(input.elem).chart(input.data, input.title, input.xlabel, input.ylabel);
 		}
 		/* obtendo informações sobre a fonte de dados */
@@ -3706,19 +3712,23 @@ BLOCO 5: boot
 	function loadProcedures(ev) {
 		/* definindo atributos das variáveis globais (BLOCO 1) */
 		wd_device_controller = wd_get_device();
-		wd_request_progress.max = 1;
+		wd_request_progress.className = "js-wd-progress-bar";
 		wd_modal_window.className = "js-wd-modal";
 		wd_modal_window.appendChild(wd_request_progress);
 		document.head.appendChild(wd_style_block);
 		wd_signal_block.className = "js-wd-signal";
 
 		/* construindo CSS da biblioteca */
+		var css = [];
 		for(var i = 0; i < wd_js_css.length; i++) {
 			var selector = wd_js_css[i].s;
 			var dataset  = wd_js_css[i].d;
-			var css = selector+" {\n\t"+dataset.join("\n\t")+"\n}\n\n";
-			wd_style_block.textContent += css.replace(/\;/g, " !important;");
+			var value = selector+" {\n\t"+dataset.join("\n\t")+"\n}\n";
+			if (!(/^\@keyframes/).test(value))
+				value = value.replace(/\;/g, " !important;");
+			css.push(value);
 		}
+		wd_style_block.textContent = css.join("\n");
 
 		/* definindo ícone FIXME tem mais coisas aí? colocar um símbolo svg? */
 		if (wd_$("link[rel=icon]") !== null) {
@@ -3777,8 +3787,7 @@ BLOCO 5: boot
 	};
 
 /*----------------------------------------------------------------------------*/
-	function loadingProcedures() {/*procedimento para carregamentos*/
-
+	function loadingProcedures() { /* procedimento para carregamentos */
 		var repeat = WD.$("[data-wd-repeat]");
 		if (repeat.type === "dom") repeat.run(data_wdRepeat);
 
@@ -3790,7 +3799,7 @@ BLOCO 5: boot
 	};
 
 /*----------------------------------------------------------------------------*/
-	function scalingProcedures(ev) {/*procedimentos para definir dispositivo e aplicar estilos*/
+	function scalingProcedures(ev) { /* procedimentos para definir dispositivo e aplicar estilos */
 		var device = wd_get_device();
 		if (device !== wd_device_controller) {
 			wd_device_controller = device;
@@ -3801,7 +3810,7 @@ BLOCO 5: boot
 	};
 
 /*----------------------------------------------------------------------------*/
-	function organizationProcedures() {/*procedimento PÓS carregamentos*/
+	function organizationProcedures() { /* procedimento PÓS carregamentos */
 		WD.$$("[data-wd-sort]").run(data_wdSort);
 		WD.$$("[data-wd-filter]").run(data_wdFilter);
 		WD.$$("[data-wd-mask]").run(data_wdMask);
@@ -3815,7 +3824,7 @@ BLOCO 5: boot
 	};
 
 /*----------------------------------------------------------------------------*/
-	function settingProcedures(e, attr) {/*procedimentos para dataset*/
+	function settingProcedures(e, attr) { /* procedimentos para dataset */
 		switch(attr) {
 			case "wdLoad":    loadingProcedures();    break;
 			case "wdRepeat":  loadingProcedures();    break;
@@ -3834,7 +3843,7 @@ BLOCO 5: boot
 	};
 
 /*----------------------------------------------------------------------------*/
-	function clickProcedures(ev) {/*procedimentos para cliques*/
+	function clickProcedures(ev) { /* procedimentos para cliques */
 		if (ev.which !== 1) return;
 		var elem = ev.target
 		while (elem !== null) {
@@ -3855,44 +3864,14 @@ BLOCO 5: boot
 	};
 
 /*----------------------------------------------------------------------------*/
-	function keyboardProcedures(ev, relay) {/*procedimentos de teclado para outros elementos*/
-		/* não serve para formulários */
-		if (wd_html_form(ev.target)) return;
-
-		/*FIXME elementos com contentEditable funcionam com o evento input, ver como function no IE11*/
-		/*se funcionar, eliminar esse procedimento com o evento keyup*/
-		
-
-
-		var now  = (new Date()).valueOf();
-		var time = Number(ev.target.dataset.wdTimeKey);
-
-		/*definir atributo e pedir para verificar posteriormente*/
-		if (relay !== true) {
-			ev.target.dataset.wdTimeKey = now;
-			window.setTimeout(function() {/*verificar daqui um intervalo de tempo*/
-				keyboardProcedures(ev, true);
-			}, wd_key_time_range);
-			return;
-		}
-
-		/*se há o atributo e o agora superar o intervalo, apagar atributo e executar*/
-		if ("wdTimeKey" in ev.target.dataset && now >= (time+wd_key_time_range)) {
-			delete ev.target.dataset.wdTimeKey;
-
-			data_wdFilter(ev.target);
-			data_wdOutput(ev.target);
-		}
+	function keyboardProcedures(ev, relay) { /* procedimentos de teclado */
+		/* esvaziado na versão 4.0 */
+		//if (!wd_html_form(ev.target) && ev.target.isContentEditable) return;
 		return;
 	};
 
 /*----------------------------------------------------------------------------*/
-
-	function inputProcedures(ev, relay) {/*procedimentos de teclado para formulários*/
-
-		/* Somente para formulários FIXME mudar isso input tbm serve para contenteditable */
-		//if (!wd_html_form(ev.target) && ev.target.isContentEditable) return;
-
+	function inputProcedures(ev, relay) { /* procedimentos de formulário e contenteditable */
 		/*--------------------------------------------------------------------------
 		| A) após cada digitação/alteração, definir wdTimeKey com o tempo atual
 		| B) chamar novamente a função após um intervalo de tempo
@@ -3905,7 +3884,6 @@ BLOCO 5: boot
 			}, wd_key_time_range);
 			return;
 		}
-
 		/*--------------------------------------------------------------------------
 		| C) se wdTimeKey está difinido, checar o intervalo desde a última alteração
 		| D) se agora for >= tempo definido+intervalo:
@@ -3925,25 +3903,25 @@ BLOCO 5: boot
 	};
 
 /*----------------------------------------------------------------------------*/
-	function focusoutProcedures(ev) {/*procedimentos para saída de formulários*/
+	function focusoutProcedures(ev) { /* procedimentos para saída de formulários */
 		return data_wdMask(ev.target);
 	};
 
 /*----------------------------------------------------------------------------*/
-	function changeProcedures(ev) {/*procedimentos para outras mudanças*/
+	function changeProcedures(ev) { /* procedimentos para outras mudanças */
 		return data_wdFile(ev.target);
 	};
 
 /*----------------------------------------------------------------------------*/
-	WD(window).addHandler({/*Definindo eventos window*/
+	WD(window).addHandler({ /* Definindo eventos window */
 		load: loadProcedures,
 		resize: scalingProcedures,
 		hashchange: hashProcedures,
 	});
 
-	WD(document).addHandler({/*Definindo eventos document*/
+	WD(document).addHandler({ /* Definindo eventos document */
 		click:    clickProcedures,
-		//keyup:    keyboardProcedures,
+/*		keyup:    keyboardProcedures, desligado na versão 4 */
 		input:    inputProcedures,
 		change:   changeProcedures,
 		focusout: focusoutProcedures,
