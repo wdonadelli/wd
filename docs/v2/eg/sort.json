@@ -1,0 +1,23 @@
+[
+	{"value": "rex (king)", "name": "Text"},
+	{"value": "pax (peace)", "name": "Text"},
+	{"value": "28.02.2010", "name": "Date"},
+	{"value": "00h23", "name": "Time"},
+	{"value": "01/03/2010", "name": "Date"},
+	{"value": "15:45", "name": "Time"},
+	{"value": "nox (night)", "name": "Text"},
+	{"value": "02:12pm", "name": "Time"},
+	{"value": "100", "name": "Number"},
+	{"value": 2, "name": "Number"},
+	{"value": "1e-2", "name": "Number"},
+	{"value": "03:12am", "name": "Time"},
+	{"value": -45.5, "name": "Number"},
+	{"value": "15:45:01", "name": "Time"},
+	{"value": -1, "name": "Number"},
+	{"value": "lux (light)", "name": "Text"},
+	{"value": "2010-12-01", "name": "Date"},
+	{"value": "Regina (queen)", "name": "Text"},
+	{"value": "Infinity", "name": "Text"},
+	{"value": "+Infinity", "name": "Number"},
+	{"value": "-Infinity", "name": "Number"}
+]

@@ -1,0 +1,53 @@
+<h3>data-wd-mask</h3>
+
+<h3>Models</h3>
+
+<table border="1">
+	<thead>
+		<tr><th>DMY</th><th>YMD</th><th>MDY</th><th>H</th><th>H</th><th>H</th></tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td data-wd-mask="model{%DMY}" >15032010</td>
+			<td data-wd-mask="model{%YMD}" >20100315</td>
+			<td data-wd-mask="model{%MDY}" >12312010</td>
+			<td data-wd-mask="model{%H}" >1030</td>
+			<td data-wd-mask="model{%H}" >10305</td>
+			<td data-wd-mask="model{%H}" contentEditable="true">103054</td>
+		</tr>
+	</tbody>
+</table>
+
+<h3>Form</h3>
+
+<form class="wd-blockf">
+	<input type="text" data-wd-mask="model{%YMD}" placeholder="YYYY-MM-DD" value="20100315"/>
+	<input type="text" data-wd-mask="model{%H}" placeholder="Time" value="0000"/>
+</form>
+
+<script>
+	function age(x) {return parseInt(x) < 18 ? false : true;}
+</script>
+	
+<h3>Mask Validation</h3>
+
+<form class="wd-block">
+	<input type="text" data-wd-mask="model{##?# years}call{age}" placeholder="Age >= 18	"/>
+</form>
+
+<h3>Dynamic Mask</h3>
+
+<form class="wd-block">
+	<input type="text" id="mask" placeholder=""/>
+</form>
+
+<dl>
+	<dt>Using <code>data-wd-data</code>:</dt>
+	<dd><a href="#mask" data-wd-data="wdMask{model{%DMY}}${#mask}">%DMY</a></dd>
+	<dd><a href="#mask" data-wd-data="wdMask{model{%MDY}}${#mask}">%MDY</a></dd>
+	<dd><a href="#mask" data-wd-data="wdMask{model{%YMD}}${#mask}">%YMD</a></dd>
+	<dd><a href="#mask" data-wd-data="wdMask{model{%H}}${#mask}">%H</a></dd>
+	<dd><a href="#mask" data-wd-data="wdMask{model{## @@@ 20##}}${#mask}">## @@@ 20##</a></dd>
+	<dd><a href="#mask" data-wd-data="wdMask{model{(##) # ####-####?(##) ####-####}}${#mask}">(##) # ####-####?(##) ####-####</a></dd>
+	<dd><a href="#mask" data-wd-data="wdMask{model{###.###.###-##}}${#mask}">###.###.###-##</a></dd>
+</dl>

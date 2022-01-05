@@ -2,19 +2,34 @@
 
 This project consists of the distribution of two libraries for web application development.
 
-The **Web Development** tool consists of a library written in JavaScript whose purpose is to provide various tools to give dynamism and agility to the application in development. This tool is divided into two segments, one for creating JavaScript scripts ([WD JavaScript Tools](WD-JavaScript-Tools)) and another for defining actions using attributes of HTML elements ([WD Attributes Tools](WD-Attributes-Tools)).
+The **Web Development** tool consists of a library written in JavaScript whose purpose is to provide various tools to give dynamism and agility to the application in development. This tool is divided into two segments, one for creating JavaScript scripts _WD JavaScript Tools_ and another for defining actions using attributes of HTML elements _WD Attributes Tools_.
 
-The **Web Design** tool ([WD Style Sheet](WD-Style-Sheet)) consists of a library written in CSS whose purpose is to provide the styling of the developing application by means of basic class attributes.
+The **Web Design** tool _WD Style Sheet_ consists of a library written in CSS whose purpose is to provide the styling of the developing application by means of basic class attributes.
 
-## Links
+## Current Version
 
-- [Wiki](https://github.com/wdonadelli/wd/wiki)
-- [Javascript](https://wdonadelli.github.io/wd/v3/wd/wd.js)
-- [Style Sheet](https://wdonadelli.github.io/wd/v3/wd/wd.css)
+- [Docs](https://github.com/wdonadelli/wd/wiki)
+- [Javascript](https://wdonadelli.github.io/wd/source/wd-4.0.0.js)
+- [Style Sheet](https://wdonadelli.github.io/wd/source/wd-4.0.0.css)
 - [Release Notes](https://github.com/wdonadelli/wd/wiki/WD-Release-Notes)
-- [Test Area](https://wdonadelli.github.io/wd/v3)
+- [Lab](https://wdonadelli.github.io/wd/lab/v4/)
 
-## YouTube Demo Videos
+## Previous Versions (discontinued)
+
+- [v3 JavaScript](https://wdonadelli.github.io/wd/source/wd-3.2.0.js)
+- [v3 Style Sheet](https://wdonadelli.github.io/wd/source/wd-3.2.0.css)
+- [v3 Docs](https://wdonadelli.github.io/wd/docs/v3/)
+- [v3 Lab](https://wdonadelli.github.io/wd/lab/v3/)
+
+- [v2 JavaScript](https://wdonadelli.github.io/wd/source/wd-2.1.4.js)
+- [v2 Style Sheet](https://wdonadelli.github.io/wd/source/wd-2.0.4.css)
+- [v2 Docs](https://wdonadelli.github.io/wd/docs/v2/)
+
+- [v1 JavaScript](https://wdonadelli.github.io/wd/source/wd-1.3.2.js)
+- [v1 Style Sheet](https://wdonadelli.github.io/wd/source/wd-1.3.2.css)
+- [v1 Docs](https://wdonadelli.github.io/wd/docs/v1/)
+
+## Old YouTube Demo Videos (v2)
 
 - [WD Web Libraries - Ordering DOM](https://youtu.be/DcuxvjcYz3U)
 - [WD Web Libraries - Search filter](https://youtu.be/7A_kB5yXU7U)

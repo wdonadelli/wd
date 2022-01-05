@@ -1,0 +1,54 @@
+<header class="wd-head">
+	<h2 class="wd-text-center">dataWdData</h2>
+</header>
+
+<p class="wd-p">The purpose of the attribute is to define the dataset method of the elements indicated by the CSS selector.</p>
+
+<p class="wd-p">See the following chapters:</p>
+
+<ul class="wd-list">
+	<li><a href="#main" data-wd-data="wdClick{}${#js3}">WDdom (querySelectorAll)</a></li>
+	<li><a href="#main" data-wd-data="wdClick{}${#js34}">WDdom: setting (WDdom.data)</a></li>
+	<li><a href="#main" data-wd-data="wdClick{}${#data2}">dataWdClick</a></li>
+</ul>
+
+<h3>Attribute</h3>
+
+
+<pre class="wd-code wd-text-center">data-wd-data=<q>key{value}${target}</q></pre>
+
+<p class="wd-p">For various targets and subactions:</p>
+
+<pre class="wd-code wd-text-center">data-wd-data=<q>key<sub>1</sub>{value<sub>1</sub>}key<sub>2</sub>{value<sub>2</sub>}${target}&amp;key<sub>3</sub>{value<sub>3</sub>}${target<sub>3</sub>}</q></pre>
+
+<h3>Target</h3>
+
+<ul class="wd-list">
+	<li>Element defined by the CSS selector.</li>
+</ul>
+
+<h3>Sensitivity</h3>
+
+<ul class="wd-list">
+	<li>When the element receives a click.</li>
+</ul>
+
+<h3>Example</h3>
+
+<h4>HTML code</h4>
+
+<pre class="wd-code" id="eg1"></pre>
+
+<h4>Result</h4>
+
+<div id="eg2" class="wd-margin">
+	<button data-wd-data="wdLoad{get{eg/eg.txt}}${#eg3}&wdLoad{get{eg/eg.json}}${#eg4}" type="button" class="wd-button">Click Me!</button>
+	<pre id="eg3" class="wd-border wd-flyer">Something will happen here!</pre>
+	<pre id="eg4" class="wd-border wd-flyer">Something will happen here!</pre>
+</div>
+
+<script>
+var eg = {};
+eg["#eg1"] = getCode("#eg2", true);
+setText(eg);
+</script>

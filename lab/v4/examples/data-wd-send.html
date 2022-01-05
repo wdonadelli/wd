@@ -1,0 +1,25 @@
+<h3>data-wd-send</h3>
+
+<script>
+function fsend(x) {
+	if (x.closed)
+		document.getElementById("output").textContent = x.text;
+}
+</script>
+
+<div id="input">
+	<label style="display: block; width: 100%">Name</label>
+	<input type="text" name="text"  style="display: block; width: 100%" />
+
+	<label style="display: block; width: 100%">
+		<input type="checkbox" name="box" />Confirm?
+	</label>
+
+	<label style="display: block; width: 100%">File</label>
+	<input type="file" name="file" multiple="" style="display: block; width: 100%" />
+
+	<button type="button" data-wd-send="path{examples/target.php}call{fsend}$${#input *}"  style="display: block; width: 100%"> Send</button>
+
+	<label style="display: block; width: 100%">Output (php):</label>
+	<pre id="output" style="font-size: smaller; color: #FF0000;"></pre>	
+</div>

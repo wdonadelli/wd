@@ -1,0 +1,18 @@
+<h3>data-wd-css</h3>
+
+<style>
+.red   {color: #FF0000;}
+.green {color: #00FF00;}
+.blue  {color: #0000FF;}
+</style>
+
+<p id="color">Text Content</p>
+
+<nav>
+	<a href="#color" data-wd-css="add{red}del{green blue}${#color}">Red</a>
+	<a href="#color" data-wd-css="add{green}del{red blue}${#color}">Green</a>
+	<a href="#color" data-wd-css="add{blue}del{red green}${#color}">Blue</a>
+	<a href="#color" data-wd-css="${#color}">None</a>
+	<a href="#color" data-wd-css="tgl{red}del{green blue}${#color}">Red|None</a>
+  <a href="#color" data-wd-css="rpl{blue green}${#color}">Blue to Green</a>
+</nav>

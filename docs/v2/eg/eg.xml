@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<latim>
+	<nox value="night">
+		<nominativo>nox</nominativo>
+		<genitivo>noctis</genitivo>
+	</nox>
+	<rex value="king">
+		<nominativo>rex</nominativo>
+		<genitivo>regis</genitivo>
+	</rex>
+	<lex value="law">
+		<nominativo>lex</nominativo>
+		<genitivo>legis</genitivo>
+	</lex>
+	<pax value="peace">
+		<nominativo>pax</nominativo>
+		<genitivo>pacis</genitivo>
+	</pax>	
+</latim>

@@ -1,0 +1,135 @@
+<header class="wd-head">
+	<h2 class="wd-text-center">WDdate: formats</h2>
+</header>
+
+<!---------------------------------------------------------------------------->
+<h3>WDdate.format</h3>
+
+<p class="wd-p">It is a method that returns the data of the preformatted object.</p>
+
+<p class="wd-code wd-text-center">wd(date).format(string, locale)</p>
+
+<p class="wd-p">The <code>string</code> argument (optional), if not defined, will return the same object result with the <code>toString</code> method. The argument consists of a string where you can enter attributes of the object as format below:</p>
+
+<dl>
+	<dt>%d</dt>
+	<dd>numerical value of the day.</dd>
+	<dt>%D</dt>
+	<dd>numerical value of the day (two digits).</dd>
+	<dt>@d</dt>
+	<dd>day of year.</dd>
+	<dt>%m</dt>
+	<dd>numerical value of the month.</dd>
+	<dt>%M</dt>
+	<dd>numerical value of the month	 (two digits).</dd>
+	<dt>@m</dt>
+	<dd>number of days in month.</dd>
+	<dt>#m</dt>
+	<dd>short name of the month.</dd>
+	<dt>#M</dt>
+	<dd>long name of the month.</dd>
+	<dt>%y</dt>
+	<dd>numerical value of year.</dd>
+	<dt>%Y</dt>
+	<dd>numerical value of year (four-digit).</dd>
+	<dt>%w</dt>
+	<dd>numerical value of day of week.</dd>
+	<dt>@w</dt>
+	<dd>numerical value of week of year.</dd>
+	<dt>#w</dt>
+	<dd>short name of the day of week.</dd>
+	<dt>#W</dt>
+	<dd>long name of the day of week.</dd>
+	<dt>%l</dt>
+	<dd>days in the year.</dd>
+	<dt>%c</dt>
+	<dd>days remaining for the end of the year.</dd>
+</dl>
+
+<p class="wd-p">The <code>locale</code> argument (optional) consists of a string representing the location (e.g. <q>pt-BR</q>). If not set, the location will be the one entered in the <i>lang</i> attribute of the <code>html</code> tag, the provided browser value or <q>en-US</q></p>
+
+<h4>Example</h4>
+
+<pre class="wd-code">
+wd(<q>%today</q>).toString();
+<samp><q id="eg1"></q></samp>
+wd(<q>%today</q>).format(<q id="eg2"></q>);
+<samp id="eg3"></samp>
+</pre>
+
+<!---------------------------------------------------------------------------->
+<h3>WDdate.longMonth</h3>
+
+<p class="wd-p">It is a method that returns the long name of the month.</p>
+
+<p class="wd-code wd-text-center">wd(date).longMonth(locale)</p>
+
+<p class="wd-p">The definition of <code>locale</code> is the same as the <code>format</code> method.</p>
+
+<h4>Example</h4>
+
+<pre class="wd-code">
+wd(<q>%today</q>).longMonth();
+<samp><q id="eg4"></q></samp>
+</pre>
+
+<!---------------------------------------------------------------------------->
+<h3>WDdate.longWeek</h3>
+
+<p class="wd-p">It is a method that returns the long name of the day of week.</p>
+
+<p class="wd-code wd-text-center">wd(date).longWeek(locale)</p>
+
+<p class="wd-p">The definition of <code>locale</code> is the same as the <code>format</code> method.</p>
+
+<h4>Example</h4>
+
+<pre class="wd-code">
+wd(<q>%today</q>).longWeek();
+<samp><q id="eg5"></q></samp>
+</pre>
+
+<!---------------------------------------------------------------------------->
+<h3>WDdate.shortMonth</h3>
+
+<p class="wd-p">It is a method that gets the short name of the month.</p>
+
+<p class="wd-code wd-text-center">wd(date).shortMonth(locale)</p>
+
+<p class="wd-p">The definition of <code>locale</code> is the same as the <code>format</code> method.</p>
+
+<h4>Example</h4>
+
+<pre class="wd-code">
+wd(<q>%today</q>).shortMonth();
+<samp><q id="eg6"></q></samp>
+</pre>
+
+<!---------------------------------------------------------------------------->
+<h3>WDdate.shortWeek</h3>
+
+<p class="wd-p">It is a method that returns the short name of the day of week.</p>
+
+<p class="wd-code wd-text-center">wd(date).shortWeek(locale)</p>
+
+<p class="wd-p">The definition of <code>locale</code> is the same as the <code>format</code> method.</p>
+
+<h4>Example</h4>
+
+<pre class="wd-code">
+wd(<q>%today</q>).shortWeek();
+<samp><q id="eg7"></q></samp>
+</pre>
+
+<script>
+var x = "%d, %D, @d, %m, %M, @m, #m, #M, %y, %Y, %w, @w, #w, #W, %l, %c";
+var eg = {};
+eg["#eg1"] = wd("%today").toString();
+eg["#eg2"] = x;
+eg["#eg3"] = wd("%today").format(x);
+eg["#eg4"] = wd("%today").longMonth();
+eg["#eg5"] = wd("%today").longWeek();
+eg["#eg6"] = wd("%today").shortMonth();
+eg["#eg7"] = wd("%today").shortWeek();
+setText(eg);
+</script>
