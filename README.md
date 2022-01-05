@@ -16,20 +16,28 @@ The **Web Design** tool _WD Style Sheet_ consists of a library written in CSS wh
 
 ## Previous Versions (discontinued)
 
-- [v3 JavaScript](https://wdonadelli.github.io/wd/source/wd-3.2.0.js)
-- [v3 Style Sheet](https://wdonadelli.github.io/wd/source/wd-3.2.0.css)
-- [v3 Docs](https://wdonadelli.github.io/wd/docs/v3/)
-- [v3 Lab](https://wdonadelli.github.io/wd/lab/v3/)
+### JavaScript
 
-- [v2 JavaScript](https://wdonadelli.github.io/wd/source/wd-2.1.4.js)
-- [v2 Style Sheet](https://wdonadelli.github.io/wd/source/wd-2.0.4.css)
-- [v2 Docs](https://wdonadelli.github.io/wd/docs/v2/)
+- [v3](https://wdonadelli.github.io/wd/source/wd-3.2.0.js)
+- [v2](https://wdonadelli.github.io/wd/source/wd-2.1.4.js)
+- [v1](https://wdonadelli.github.io/wd/source/wd-1.3.2.js)
 
-- [v1 JavaScript](https://wdonadelli.github.io/wd/source/wd-1.3.2.js)
-- [v1 Style Sheet](https://wdonadelli.github.io/wd/source/wd-1.3.2.css)
-- [v1 Docs](https://wdonadelli.github.io/wd/docs/v1/)
+### Style Sheet
+- [v3](https://wdonadelli.github.io/wd/source/wd-3.2.0.css)
+- [v2](https://wdonadelli.github.io/wd/source/wd-2.0.4.css)
+- [v1](https://wdonadelli.github.io/wd/source/wd-1.3.2.css)
 
-## Old YouTube Demo Videos (v2)
+### Docs
+
+- [v3](https://wdonadelli.github.io/wd/docs/v3/)
+- [v2](https://wdonadelli.github.io/wd/docs/v2/)
+- [v1](https://wdonadelli.github.io/wd/docs/v1/)
+
+### Lab
+
+- [v3](https://wdonadelli.github.io/wd/lab/v3/)
+
+### Old YouTube Demo Videos (v2)
 
 - [WD Web Libraries - Ordering DOM](https://youtu.be/DcuxvjcYz3U)
 - [WD Web Libraries - Search filter](https://youtu.be/7A_kB5yXU7U)
