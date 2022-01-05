@@ -19,7 +19,7 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.﻿
+SOFTWARE.
 ------------------------------------------------------------------------------*/
 
 /* wd.js (v4.0.0) | https://github.com/wdonadelli/wd */
@@ -29,12 +29,12 @@ SOFTWARE.﻿
 const wd = (function() {
 
 /*------------------------------------------------------------------------------
-BLOCO 1: atributos e funções globais
-BLOCO 2: objetos especiais para atividades específicas
-BLOCO 3: objetos de interface (acessíveis aos usuários)
-BLOCO 4: funções de atributos HTML
-BLOCO 5: boot
-------------------------------------------------------------------------------/*
+| BLOCO 1: atributos e funções globais
+| BLOCO 2: objetos especiais para atividades específicas
+| BLOCO 3: objetos de interface (acessíveis aos usuários)
+| BLOCO 4: funções de atributos HTML
+| BLOCO 5: boot
+\-----------------------------------------------------------------------------*/
 
 /* == BLOCO 1 ================================================================*/
 
@@ -109,13 +109,13 @@ BLOCO 5: boot
 			"background-color: rgba(255,255,255,1);"
 		]},
 		{s: ".js-wd-signal-msg > header", d: [
-			"padding: 0.5em; border-radius: inherit inherit 0 0; position: relative;"
+			"padding: 0.5em; border-radius: 0.2em 0.2em 0 0; position: relative;"
 		]},
 		{s: ".js-wd-signal-msg > header > span", d: [
 			"position: absolute; top: 0.5em; right: 0.5em; line-height: 1; cursor: pointer;"
 		]},
 		{s: ".js-wd-signal-msg > section", d: [
-			"padding: 0.5em; border-radius: 0 0 inherit inherit;"
+			"padding: 0.5em; border-radius: 0 0 0.2em 0.2em;"
 		]},
 	];
 

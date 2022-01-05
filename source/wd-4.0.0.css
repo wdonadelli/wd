@@ -19,30 +19,55 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.﻿
+SOFTWARE.
 ------------------------------------------------------------------------------*/
 
 /* wd.js (v4.0.0) | https://github.com/wdonadelli/wd */
 
-/*============================================================================*/
+/*------------------------------------------------------------------------------
+| Os estilos terão efeito na página se precedidos da classe wd. Caso contrário,
+| terão seu visual padrão ou aquele definido na normalização.
+| Caso queira aplicar os efeitos em todos os descendentes, deve-se inserir a
+| class wd na tag html ou tratar cada container pai individulamente.
+|
+| BLOCO 1: constantes
+| BLOCO 2: normalização de elementos
+| BLOCO 3: estilizando elementos (wd class)
+| BLOCO 4: atributos de estrutura
+| BLOCO 5: boot
+\-----------------------------------------------------------------------------*/
+
+/* == BLOCO 1 ================================================================*/
 
 :root {
-	--var-bg-blue: #002345;
+	--var-bg-code: rgba(230, 230, 250, 1);
+	--var-fg-code: rgba(0, 115, 230, 1);
+	--var-fg-link: rgba(59, 175, 247, 1);
+
+	--var-em-small: 0.5em;
+	--var-em-medium: 1em;
+	--var-em-large: 2em;
+
+	--var-border-small: thin solid;
+	--var-border-medium: medium solid;
+	--var-border-large: thick solid;
+	--var-border-radius: 0.3em;
 }
 
 
 
-//FIXME TODO
+/*FIXME TODO
 .js-wd-checked:before {content: \"\\2713 \"}
 .js-wd-disabled       {pointer-events: none; color: #ccc; opacity: 0.8; cursor: default !important;}
+*/
 
 
 
 
 
 
+/* == BLOCO 2 ================================================================*/
 
-/*-- ESTILOS PARA NORMALIZAÇÃO --*/
 *, *:before, *:after {box-sizing: border-box;}
 
 html {scroll-behavior: smooth;}
@@ -59,23 +84,31 @@ body, main, section, article, header, footer, nav, adress, aside, details, form,
 	padding: 0;
 }
 
-summary {display: list-item;}
-h1, h2, h3, h4, h5, h6, p, pre, blockquote {display: block;}
-figure, figcaption, picture {display: block;}
-ul, ol, dl {display: block;}
-label, button, input, select, textarea {display: inline;}
-script, style {display: none !important;}
+summary {
+	display: list-item;
+}
 
-/*============================================================================*/
+h1, h2, h3, h4, h5, h6, p, pre, blockquote {
+	display: block;
+}
 
-	/***************************************************************************\
-	|Os estilos terão efeito na página se precedidos da classe wd, caso         |
-	|contrário, terão seu visual padrão ou aquele definido na normalização.     |        |
-	|Caso queira aplicar os efeitos em todos os descendentes, deve-se inserir a |
-	|class wd na tag html ou tratar cada container pai individulamente.         |
-	\***************************************************************************/
+figure, figcaption, picture {
+	display: block;
+}
 
-/*-- ESTILOS DE BASE --*/
+ul, ol, dl {
+	display: block;
+	}
+
+label, button, input, select, textarea {
+	display: inline;
+}
+
+script, style {
+	display: none !important;
+}
+
+/* == BLOCO 3 ================================================================*/
 
 .wd {
 	font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
@@ -85,16 +118,16 @@ script, style {display: none !important;}
 
 /* -- Semântica textual -- */
 .wd code {
-	background-color: #E6E6FA;
+	background-color: var(--var-bg-code);
 	border-radius: 0.2em;
-	color: #0073e6;
+	color: var(--var-fg-code);
 	font-family: monospace;
 	font-size: 0.9em;
 	padding: 0 0.3em;
 }
 
 .wd a[href] {
-	color: #3baff7;
+	color: var(--var-fg-link);
 	text-decoration: underline;
 }
 
@@ -225,7 +258,7 @@ script, style {display: none !important;}
 }
 
 .wd fieldset {
-	border: thin solid;
+	border: var(--var-border-small);
 	border-radius: 0.2em;
 	margin: 0.5em 0;
 	padding: 0.5em;
@@ -247,13 +280,13 @@ script, style {display: none !important;}
 .wd input, .wd select, .wd textarea, .wd button {
 	color: #404040;
 	background-color: #f8f8ff;
-	border: thin solid #b3b3b3;
+	border: var(--var-border-small) #b3b3b3;
 	border-radius: 0.2em;
 
 }
 .wd input:hover, .wd select:hover, .wd textarea:hover, .wd button:hover,
 .wd input:focus, .wd select:focus, .wd textarea:focus, .wd button:focus {
-	border: thin solid #1e90ff;
+	border: var(--var-border-small) #1e90ff;
 }
 .wd input:focus, .wd select:focus, .wd textarea:focus {
 	box-shadow: 0 0 0 1px #1e90ff;
@@ -263,7 +296,7 @@ script, style {display: none !important;}
 .wd input[required]:hover, .wd select[required]:hover, .wd textarea[required]:hover,
 .wd input:required:focus,  .wd select:required:focus,  .wd textarea:required:focus,
 .wd input[required]:focus, .wd select[required]:focus, .wd textarea[required]:focus {
-	border: thin solid #f48aa0;
+	border: var(--var-border-small) #f48aa0;
 }
 .wd input:required:focus,  .wd select:required:focus,  .wd textarea:required:focus,
 .wd input[required]:focus, .wd select[required]:focus, .wd textarea[required]:focus {
@@ -272,7 +305,7 @@ script, style {display: none !important;}
 .wd input:out-of-range,  .wd select:out-of-range,  .wd textarea:out-of-range,
 .wd input:invalid,  .wd select:invalid,  .wd textarea:invalid {
 	background-color: #e8e0f0 !important;
-	border: thin solid #dc143c;
+	border: var(--var-border-small) #dc143c;
 	box-shadow: 0 0 0 1px #dc143c;
 	color: #663399 !important;
 }
@@ -317,11 +350,6 @@ script, style {display: none !important;}
 	padding: 0.3em;
 }
 
-/*testando select personalizado*/
-.wd select::-ms-expand {
-     display: none;
-}
-
 .wd select {
 	-webkit-appearance: none;
 	-moz-appearance: none;
@@ -337,8 +365,8 @@ script, style {display: none !important;}
 
 /* -- Efeitos (uso interno) -- */
 @keyframes wd-zoom-in {
-	from {-ms-transform: scale(0); -webkit-transform: scale(0); transform: scale(0); opacity: 0;}
-	to   {-ms-transform: scale(1); -webkit-transform: scale(1); transform: scale(1); opacity: 1;}
+	from {-webkit-transform: scale(0); transform: scale(0); opacity: 0;}
+	to   {-webkit-transform: scale(1); transform: scale(1); opacity: 1;}
 }
 @keyframes wd-fade-in {
 	from {opacity: 0;}
@@ -650,7 +678,7 @@ script, style {display: none !important;}
 .wd .wd-form-msg > .wd-form-msg-info, 
 .wd .wd-form-msg > .wd-form-msg-warn {
 	background-color: #f2f2f2;
-	border: thin solid;
+	border: var(--var-border-small);
 	display: none;
 	font-size: small;
 	margin: 0;
@@ -1235,178 +1263,228 @@ script, style {display: none !important;}
 .wd .wd-case-caps,   .wd .wd-case-caps-child > *   {font-variant:   small-caps !important;}
 .wd .wd-case-normal, .wd .wd-case-normal-child > * {text-transform: none !important;}
 
-/* -- Padding -- */
+/*-----------------------------------------------------------------------------*/
 .wd .wd-padding,        .wd .wd-padding-child > *,
 .wd .wd-padding-top,    .wd .wd-padding-top-child > *,
-.wd .wd-padding-height, .wd .wd-padding-height-child > * {padding-top: 0.5em !important;}
-
+.wd .wd-padding-height, .wd .wd-padding-height-child > * {
+	padding-top: var(--var-em-small) !important;
+}
 .wd .wd-xpadding,        .wd .wd-xpadding-child > *,
 .wd .wd-xpadding-top,    .wd .wd-xpadding-top-child > *,
-.wd .wd-xpadding-height, .wd .wd-xpadding-height-child > * {padding-top: 1em !important;}
-
+.wd .wd-xpadding-height, .wd .wd-xpadding-height-child > * {
+	padding-top: var(--var-em-medium) !important;
+}
 .wd .wd-xxpadding,        .wd .wd-xxpadding-child > *,
 .wd .wd-xxpadding-top,    .wd .wd-xxpadding-top-child > *,
-.wd .wd-xxpadding-height, .wd .wd-xxpadding-height-child > * {padding-top: 2em !important;}
-
+.wd .wd-xxpadding-height, .wd .wd-xxpadding-height-child > * {
+	padding-top: var(--var-em-large) !important;
+}
 .wd .wd-padding,        .wd .wd-padding-child > *,
 .wd .wd-padding-bottom, .wd .wd-padding-bottom-child > *,
-.wd .wd-padding-height, .wd .wd-padding-height-child > * {padding-bottom: 0.5em !important;}
-
+.wd .wd-padding-height, .wd .wd-padding-height-child > * {
+	padding-bottom: var(--var-em-small) !important;
+}
 .wd .wd-xpadding,        .wd .wd-xpadding-child > *,
 .wd .wd-xpadding-bottom, .wd .wd-xpadding-bottom-child > *,
-.wd .wd-xpadding-height, .wd .wd-xpadding-height-child > * {padding-bottom: 1em !important;}
-
+.wd .wd-xpadding-height, .wd .wd-xpadding-height-child > * {
+	padding-bottom: var(--var-em-medium) !important;
+}
 .wd .wd-xxpadding,        .wd .wd-xxpadding-child > *,
 .wd .wd-xxpadding-bottom, .wd .wd-xxpadding-bottom-child > *,
-.wd .wd-xxpadding-height, .wd .wd-xxpadding-height-child > * {padding-bottom: 2em !important;}
-
+.wd .wd-xxpadding-height, .wd .wd-xxpadding-height-child > * {
+	padding-bottom: var(--var-em-large) !important;
+}
 .wd .wd-padding,        .wd .wd-padding-child > *,
 .wd .wd-padding-left,   .wd .wd-padding-left-child > *,
-.wd .wd-padding-length, .wd .wd-padding-length-child > * {padding-left: 0.5em !important;}
-
+.wd .wd-padding-length, .wd .wd-padding-length-child > * {
+	padding-left: var(--var-em-small) !important;
+}
 .wd .wd-xpadding,        .wd .wd-xpadding-child > *,
 .wd .wd-xpadding-left,   .wd .wd-xpadding-left-child > *,
-.wd .wd-xpadding-length, .wd .wd-xpadding-length-child > * {padding-left: 1em !important;}
-
+.wd .wd-xpadding-length, .wd .wd-xpadding-length-child > * {
+	padding-left: var(--var-em-medium) !important;
+}
 .wd .wd-xxpadding,        .wd .wd-xxpadding-child > *,
 .wd .wd-xxpadding-left,   .wd .wd-xxpadding-left-child > *,
-.wd .wd-xxpadding-length, .wd .wd-xxpadding-length-child > * {padding-left: 2em !important;}
-
+.wd .wd-xxpadding-length, .wd .wd-xxpadding-length-child > * {
+	padding-left: var(--var-em-large) !important;
+}
 .wd .wd-padding,        .wd .wd-padding-child > *,
 .wd .wd-padding-right,  .wd .wd-padding-right-child > *,
-.wd .wd-padding-length, .wd .wd-padding-length-child > * {padding-right: 0.5em !important;}
-
+.wd .wd-padding-length, .wd .wd-padding-length-child > * {
+	padding-right: var(--var-em-small) !important;
+}
 .wd .wd-xpadding,        .wd .wd-xpadding-child > *,
 .wd .wd-xpadding-right,  .wd .wd-xpadding-right-child > *,
-.wd .wd-xpadding-length, .wd .wd-xpadding-length-child > * {padding-right: 1em !important;}
-
+.wd .wd-xpadding-length, .wd .wd-xpadding-length-child > * {
+	padding-right: var(--var-em-medium) !important;
+}
 .wd .wd-xxpadding,        .wd .wd-xxpadding-child > *,
 .wd .wd-xxpadding-right,  .wd .wd-xxpadding-right-child > *,
-.wd .wd-xxpadding-length, .wd .wd-xxpadding-length-child > * {padding-right: 2em !important;}
+.wd .wd-xxpadding-length, .wd .wd-xxpadding-length-child > * {
+	padding-right: var(--var-em-large) !important;
+}
+.wd .wd-padding-none, .wd .wd-padding-none-child > * {
+	padding: 0 !important;
+}
 
-.wd .wd-padding-none, .wd .wd-padding-none-child > * {padding: 0 !important;}
-
-/* -- Margem -- */
+/*----------------------------------------------------------------------------*/
 .wd .wd-margin,        .wd .wd-margin-child > *,
 .wd .wd-margin-top,    .wd .wd-margin-top-child > *,
-.wd .wd-margin-height, .wd .wd-margin-height-child > * {margin-top: 0.5em !important;}
-
+.wd .wd-margin-height, .wd .wd-margin-height-child > * {
+	margin-top: var(--var-em-small) !important;
+}
 .wd .wd-xmargin,        .wd .wd-xmargin-child > *,
 .wd .wd-xmargin-top,    .wd .wd-xmargin-top-child > *,
-.wd .wd-xmargin-height, .wd .wd-xmargin-height-child > * {margin-top: 1em !important;}
-
+.wd .wd-xmargin-height, .wd .wd-xmargin-height-child > * {
+	margin-top: var(--var-em-medium) !important;
+}
 .wd .wd-xxmargin,        .wd .wd-xxmargin-child > *,
 .wd .wd-xxmargin-top,    .wd .wd-xxmargin-top-child > *,
-.wd .wd-xxmargin-height, .wd .wd-xxmargin-height-child > * {margin-top: 2em !important;}
-
+.wd .wd-xxmargin-height, .wd .wd-xxmargin-height-child > * {
+	margin-top: var(--var-em-large) !important;
+}
 .wd .wd-margin,        .wd .wd-margin-child > *,
 .wd .wd-margin-bottom, .wd .wd-margin-bottom-child > *,
-.wd .wd-margin-height, .wd .wd-margin-height-child > * {margin-bottom: 0.5em !important;}
-
+.wd .wd-margin-height, .wd .wd-margin-height-child > * {
+	margin-bottom: var(--var-em-small) !important;
+}
 .wd .wd-xmargin,        .wd .wd-xmargin-child > *,
 .wd .wd-xmargin-bottom, .wd .wd-xmargin-bottom-child > *,
-.wd .wd-xmargin-height, .wd .wd-xmargin-height-child > * {margin-bottom: 1em !important;}
-
+.wd .wd-xmargin-height, .wd .wd-xmargin-height-child > * {
+	margin-bottom: var(--var-em-medium) !important;
+}
 .wd .wd-xxmargin,        .wd .wd-xxmargin-child > *,
 .wd .wd-xxmargin-bottom, .wd .wd-xxmargin-bottom-child > *,
-.wd .wd-xxmargin-height, .wd .wd-xxmargin-height-child > * {margin-bottom: 2em !important;}
-
+.wd .wd-xxmargin-height, .wd .wd-xxmargin-height-child > * {
+	margin-bottom: var(--var-em-large) !important;
+}
 .wd .wd-margin,        .wd .wd-margin-child > *,
 .wd .wd-margin-left,   .wd .wd-margin-left-child > *,
-.wd .wd-margin-length, .wd .wd-margin-length-child > * {margin-left: 0.5em !important;}
-
+.wd .wd-margin-length, .wd .wd-margin-length-child > * {
+	margin-left: var(--var-em-small) !important;
+}
 .wd .wd-xmargin,        .wd .wd-xmargin-child > *,
 .wd .wd-xmargin-left,   .wd .wd-xmargin-left-child > *,
-.wd .wd-xmargin-length, .wd .wd-xmargin-length-child > * {margin-left: 1em !important;}
-
+.wd .wd-xmargin-length, .wd .wd-xmargin-length-child > * {
+	margin-left: var(--var-em-medium) !important;
+}
 .wd .wd-xxmargin,        .wd .wd-xxmargin-child > *,
 .wd .wd-xxmargin-left,   .wd .wd-xxmargin-left-child > *,
-.wd .wd-xxmargin-length, .wd .wd-xxmargin-length-child > * {margin-left: 2em !important;}
-
+.wd .wd-xxmargin-length, .wd .wd-xxmargin-length-child > * {
+	margin-left: var(--var-em-large) !important;
+}
 .wd .wd-margin,        .wd .wd-margin-child > *,
 .wd .wd-margin-right,  .wd .wd-margin-right-child > *,
-.wd .wd-margin-length, .wd .wd-margin-length-child > * {margin-right: 0.5em !important;}
-
+.wd .wd-margin-length, .wd .wd-margin-length-child > * {
+	margin-right: var(--var-em-small) !important;
+}
 .wd .wd-xmargin,        .wd .wd-xmargin-child > *,
 .wd .wd-xmargin-right,  .wd .wd-xmargin-right-child > *,
-.wd .wd-xmargin-length, .wd .wd-xmargin-length-child > * {margin-right: 1em !important;}
-
+.wd .wd-xmargin-length, .wd .wd-xmargin-length-child > * {
+	margin-right: var(--var-em-medium) !important;
+}
 .wd .wd-xxmargin,        .wd .wd-xxmargin-child > *,
 .wd .wd-xxmargin-right,  .wd .wd-xxmargin-right-child > *,
-.wd .wd-xxmargin-length, .wd .wd-xxmargin-length-child > * {margin-right: 2em !important;}
+.wd .wd-xxmargin-length, .wd .wd-xxmargin-length-child > * {
+	margin-right: var(--var-em-large) !important;
+}
+.wd .wd-margin-none, .wd .wd-margin-none-child > * {
+	margin: 0 !important;
+}
 
-.wd .wd-margin-none, .wd .wd-margin-none-child > * {margin: 0 !important;}
-
-/* -- Border -- */
+/*----------------------------------------------------------------------------*/
 .wd .wd-border,        .wd .wd-border-child > *,
 .wd .wd-border-top,    .wd .wd-border-top-child > *,
-.wd .wd-border-height, .wd .wd-border-height-child > * {border-top: thin solid !important;}
-
+.wd .wd-border-height, .wd .wd-border-height-child > * {
+	border-top: var(--var-border-small) !important;
+}
 .wd .wd-xborder,        .wd .wd-xborder-child > *,
 .wd .wd-xborder-top,    .wd .wd-xborder-top-child > *,
-.wd .wd-xborder-height, .wd .wd-xborder-height-child > * {border-top: medium solid !important;}
-
+.wd .wd-xborder-height, .wd .wd-xborder-height-child > * {
+	border-top: var(--var-border-medium) !important;
+}
 .wd .wd-xxborder,        .wd .wd-xxborder-child > *,
 .wd .wd-xxborder-top,    .wd .wd-xxborder-top-child > *,
-.wd .wd-xxborder-height, .wd .wd-xxborder-height-child > * {border-top: thick solid !important;}
-
+.wd .wd-xxborder-height, .wd .wd-xxborder-height-child > * {
+	border-top: var(--var-border-large) !important;
+}
 .wd .wd-border,        .wd .wd-border-child > *,
 .wd .wd-border-bottom, .wd .wd-border-bottom-child > *,
-.wd .wd-border-height, .wd .wd-border-height-child > * {border-bottom: thin solid !important;}
-
+.wd .wd-border-height, .wd .wd-border-height-child > * {
+	border-bottom: var(--var-border-small) !important;
+}
 .wd .wd-xborder,        .wd .wd-xborder-child > *,
 .wd .wd-xborder-bottom, .wd .wd-xborder-bottom-child > *,
-.wd .wd-xborder-height, .wd .wd-xborder-height-child > * {border-bottom: medium solid !important;}
-
+.wd .wd-xborder-height, .wd .wd-xborder-height-child > * {
+	border-bottom: var(--var-border-medium) !important;
+}
 .wd .wd-xxborder,        .wd .wd-xxborder-child > *,
 .wd .wd-xxborder-bottom, .wd .wd-xxborder-bottom-child > *,
-.wd .wd-xxborder-height, .wd .wd-xxborder-height-child > * {border-bottom: thick solid !important;}
-
+.wd .wd-xxborder-height, .wd .wd-xxborder-height-child > * {
+	border-bottom: var(--var-border-large) !important;
+}
 .wd .wd-border,        .wd .wd-border-child > *,
 .wd .wd-border-left,   .wd .wd-border-left-child > *,
-.wd .wd-border-length, .wd .wd-border-length-child > * {border-left: thin solid !important;}
-
+.wd .wd-border-length, .wd .wd-border-length-child > * {
+border-left: var(--var-border-small) !important;
+}
 .wd .wd-xborder,        .wd .wd-xborder-child > *,
 .wd .wd-xborder-left,   .wd .wd-xborder-left-child > *,
-.wd .wd-xborder-length, .wd .wd-xborder-length-child > * {border-left: medium solid !important;}
-
+.wd .wd-xborder-length, .wd .wd-xborder-length-child > * {
+	border-left: var(--var-border-medium) !important;
+}
 .wd .wd-xxborder,        .wd .wd-xxborder-child > *,
 .wd .wd-xxborder-left,   .wd .wd-xxborder-left-child > *,
-.wd .wd-xxborder-length, .wd .wd-xxborder-length-child > * {border-left: thick solid !important;}
-
+.wd .wd-xxborder-length, .wd .wd-xxborder-length-child > * {
+	border-left: var(--var-border-large) !important;
+}
 .wd .wd-border,        .wd .wd-border-child > *,
 .wd .wd-border-right,  .wd .wd-border-right-child > *,
-.wd .wd-border-length, .wd .wd-border-length-child > * {border-right: thin solid !important;}
-
+.wd .wd-border-length, .wd .wd-border-length-child > * {
+	border-right: var(--var-border-small) !important;
+}
 .wd .wd-xborder,        .wd .wd-xborder-child > *,
 .wd .wd-xborder-right,  .wd .wd-xborder-right-child > *,
-.wd .wd-xborder-length, .wd .wd-xborder-length-child > * {border-right: medium solid !important;}
-
+.wd .wd-xborder-length, .wd .wd-xborder-length-child > * {
+	border-right: var(--var-border-medium) !important;
+}
 .wd .wd-xxborder,        .wd .wd-xxborder-child > *,
 .wd .wd-xxborder-right,  .wd .wd-xxborder-right-child > *,
-.wd .wd-xxborder-length, .wd .wd-xxborder-length-child > * {border-right: thick solid !important;}
-
-.wd .wd-border-box,  .wd .wd-border-box-child  > * {border: 1px solid transparent !important;}
-.wd .wd-border-none, .wd .wd-border-none-child > * {border: 0 !important;}
+.wd .wd-xxborder-length, .wd .wd-xxborder-length-child > * {
+	border-right: var(--var-border-large) !important;
+}
+.wd .wd-border-box,  .wd .wd-border-box-child  > * {
+	border: 1px solid transparent !important;
+}
+.wd .wd-border-none, .wd .wd-border-none-child > * {
+	border: 0 !important;
+}
 
 /* -- Borda arredondada -- */
 .wd .wd-radius,      .wd .wd-radius-child > *,
 .wd .wd-radius-top,  .wd .wd-radius-top-child > *,
-.wd .wd-radius-left, .wd .wd-radius-left-child > *      {border-top-left-radius: 0.3em !important;}
-
+.wd .wd-radius-left, .wd .wd-radius-left-child > * {
+	border-top-left-radius: 0.3em !important;
+}
 .wd .wd-radius,       .wd .wd-radius-child > *,
 .wd .wd-radius-top,   .wd .wd-radius-top-child > *,
-.wd .wd-radius-right, .wd .wd-radius-right-child > *    {border-top-right-radius: 0.3em !important;}
-
+.wd .wd-radius-right, .wd .wd-radius-right-child > * {
+	border-top-right-radius: var(--var-border-radius) !important;
+}
 .wd .wd-radius,        .wd .wd-radius-child > *,
 .wd .wd-radius-bottom, .wd .wd-radius-bottom-child > *,
-.wd .wd-radius-left,   .wd .wd-radius-left-child > *    {border-bottom-left-radius: 0.3em !important;}
-
+.wd .wd-radius-left,   .wd .wd-radius-left-child > * {
+	border-bottom-left-radius: var(--var-border-radius) !important;
+}
 .wd .wd-radius,        .wd .wd-radius-child > *,
 .wd .wd-radius-bottom, .wd .wd-radius-bottom-child > *,
-.wd .wd-radius-right,  .wd .wd-radius-right-child > *   {border-bottom-right-radius: 0.3em !important;}
-
-.wd .wd-radius-none, .wd .wd-radius-none-child > * {border-radius: 0 !important;}
+.wd .wd-radius-right,  .wd .wd-radius-right-child > * {
+	border-bottom-right-radius: var(--var-border-radius) !important;
+}
+.wd .wd-radius-none, .wd .wd-radius-none-child > * {
+	border-radius: 0 !important;
+}
 
 /* -- "Ícones" -- */
 /*-- Matemática --*/
