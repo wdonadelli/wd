@@ -2572,7 +2572,7 @@ const wd = (function() {
 				| E) obtendo as menores unidades de x e y (dx, dy) e
 				| F) contruindo eixos, labels e valores
 				\---------------------------------------------------------------------*/
-				this.svg = wd_svg_create("svg", {fill: "red"}); /*A*/
+				this.svg = wd_svg_create("svg", {}); /*A*/
 				this.svg.setAttribute("class", "js-wd-plot"); /*A*/
 				let ref = this.space; /*B*/
 				let clr = this.rgb(0); /*C*/

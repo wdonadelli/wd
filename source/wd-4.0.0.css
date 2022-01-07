@@ -43,6 +43,11 @@ SOFTWARE.
 	--var-bg-code: rgba(230, 230, 250, 1);
 	--var-fg-code: rgba(0, 115, 230, 1);
 	--var-fg-link: rgba(59, 175, 247, 1);
+	--var-fg-col-blue: rgb(52, 128, 203);
+	--var-fg-col-red: rgb(250, 56, 56);
+	--var-bg-col-green: rgb(44, 135, 89);
+	--var-bg-col-mark: rgba(255, 255, 0, 1);
+	--var-bg-shadow: rgba(105, 105, 105, 1);
 
 	--var-em-small: 0.5em;
 	--var-em-medium: 1em;
@@ -52,6 +57,15 @@ SOFTWARE.
 	--var-border-medium: medium solid;
 	--var-border-large: thick solid;
 	--var-border-radius: 0.3em;
+
+
+	--var-inset-shadow: inset 0 0 6px 2px;
+
+
+	--var-padd-top-ratio-square: 1;
+	--var-padd-top-ratio-portrait: calc(16/9);
+	--var-padd-top-ratio-landscape: calc(9/16);
+
 }
 
 
@@ -139,26 +153,22 @@ script, style {
 }
 
 /* -- Navegador -- */
-.wd nav {display: flex;}
-.wd nav:after {
-	content: "";
-	clear: both;
-	display: table;
+.wd nav {
+  display: flex;
+  flex-wrap: nowrap;
 }
-
 .wd nav > *, .wd nav > a[href] {
 	background-color: transparent;
 	color: inherit;
 	cursor: pointer;
-	display: inline-block;
-	float: left;
+	display: block;
 	margin: 0;
-	/*opacity: 0.7;*/
 	padding: 0.5em;
 	text-decoration: none;
 }
-/*.wd nav > *:hover     {box-shadow: inset 0 -0.1em 0 0 #1e90ff;}*/
-/*.wd nav > *.wd-active {box-shadow: inset 0 -0.3em 0 0 #1e90ff;}*/
+.wd nav > *:hover {
+  box-shadow: var(--var-bg-shadow) var(--var-inset-shadow);
+}
 
 /* -- Elementos de bloco -- */
 .wd details > details {margin-left: 1em;}
@@ -176,7 +186,7 @@ script, style {
 .wd h6  {font-size: 0.65em;}
 .wd p   {margin: 1em 0;}
 .wd pre {margin: 0.5em 0;}
-.wd blockquote {margin: 1em auto; width: 75%;}
+.wd blockquote {margin: 1.4em auto; width: 75%;}
 
 /* -- headers, footers e navs -- */
 .wd header, .wd footer {padding: 0.5em 2em;}
@@ -365,8 +375,8 @@ script, style {
 
 /* -- Efeitos (uso interno) -- */
 @keyframes wd-zoom-in {
-	from {-webkit-transform: scale(0); transform: scale(0); opacity: 0;}
-	to   {-webkit-transform: scale(1); transform: scale(1); opacity: 1;}
+	from {transform: scale(0); opacity: 0;}
+	to   {transform: scale(1); opacity: 1;}
 }
 @keyframes wd-fade-in {
 	from {opacity: 0;}
@@ -410,124 +420,142 @@ script, style {
 	|	Nível 5: 555 wd-tip      |
 	\***************************/
 
-/* -- Colunas -- */
-.wd .wd-row {
-	display: table;
+/* -- Blocos -- */
+.wd .wd-block, .wd .wd-block-child > * {
+	display: block !important;
+	float: none !important;
+	margin-left: 0;
+	margin-right: 0;
 	width: 100%;
 }
 
-.wd .wd-row > .wd-col-01, .wd .wd-row > .wd-col-02, .wd .wd-row > .wd-col-03,
-.wd .wd-row > .wd-col-04, .wd .wd-row > .wd-col-05, .wd .wd-row > .wd-col-06,
-.wd .wd-row > .wd-col-07, .wd .wd-row > .wd-col-08, .wd .wd-row > .wd-col-09,
-.wd .wd-row > .wd-col-10, .wd .wd-row > .wd-col-11, .wd .wd-row > .wd-col-12 {
-	display: table-cell;
-	vertical-align: top;
+/* -- Linhas x Colunas -- */
+.wd .wd-row {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: stretch;
 }
-
-.wd .wd-row > .wd-col-12 {width: 100%;}
-.wd .wd-row > .wd-col-11 {width: 91.66666666666667%;}
-.wd .wd-row > .wd-col-10 {width: 83.33333333333333%;}
-.wd .wd-row > .wd-col-09 {width: 75%;}
-.wd .wd-row > .wd-col-08 {width: 66.66666666666667%;}
-.wd .wd-row > .wd-col-07 {width: 58.333333333333336%;}
-.wd .wd-row > .wd-col-06 {width: 50%;}
-.wd .wd-row > .wd-col-05 {width: 41.666666666666664%;}
-.wd .wd-row > .wd-col-04 {width: 33.333333333333336%;}
-.wd .wd-row > .wd-col-03 {width: 25%;}
-.wd .wd-row > .wd-col-02 {width: 16.666666666666668%;}
-.wd .wd-row > .wd-col-01 {width: 8.333333333333334%;}
+.wd .wd-row > *          {flex-grow: 1;}
+.wd .wd-row > .wd-col-01 {flex-grow: 1;}
+.wd .wd-row > .wd-col-02 {flex-grow: 2;}
+.wd .wd-row > .wd-col-03 {flex-grow: 3;}
+.wd .wd-row > .wd-col-04 {flex-grow: 4;}
+.wd .wd-row > .wd-col-05 {flex-grow: 5;}
+.wd .wd-row > .wd-col-06 {flex-grow: 6;}
+.wd .wd-row > .wd-col-07 {flex-grow: 7;}
+.wd .wd-row > .wd-col-08 {flex-grow: 8;}
+.wd .wd-row > .wd-col-09 {flex-grow: 9;}
+.wd .wd-row > .wd-col-10 {flex-grow: 10;}
+.wd .wd-row > .wd-col-11 {flex-grow: 11;}
+.wd .wd-row > .wd-col-12 {flex-grow: 12;}
 
 .wd .wd-col-center-01 > * > *:nth-child(1),  .wd .wd-col-center-02 > * > *:nth-child(2),
 .wd .wd-col-center-03 > * > *:nth-child(3),  .wd .wd-col-center-04 > * > *:nth-child(4),
 .wd .wd-col-center-05 > * > *:nth-child(5),  .wd .wd-col-center-06 > * > *:nth-child(6),
 .wd .wd-col-center-07 > * > *:nth-child(7),  .wd .wd-col-center-08 > * > *:nth-child(8),
 .wd .wd-col-center-09 > * > *:nth-child(9),  .wd .wd-col-center-10 > * > *:nth-child(10),
-.wd .wd-col-center-11 > * > *:nth-child(11), .wd .wd-col-center-12 > * > *:nth-child(12) {text-align: center;}
-
+.wd .wd-col-center-11 > * > *:nth-child(11), .wd .wd-col-center-12 > * > *:nth-child(12) {
+  text-align: center;
+}
 .wd .wd-col-right-01 > * > *:nth-child(1),  .wd .wd-col-right-02 > * > *:nth-child(2),
 .wd .wd-col-right-03 > * > *:nth-child(3),  .wd .wd-col-right-04 > * > *:nth-child(4),
 .wd .wd-col-right-05 > * > *:nth-child(5),  .wd .wd-col-right-06 > * > *:nth-child(6),
 .wd .wd-col-right-07 > * > *:nth-child(7),  .wd .wd-col-right-08 > * > *:nth-child(8),
 .wd .wd-col-right-09 > * > *:nth-child(9),  .wd .wd-col-right-10 > * > *:nth-child(10),
-.wd .wd-col-right-11 > * > *:nth-child(11), .wd .wd-col-right-12 > * > *:nth-child(12) {text-align: right;}
-
+.wd .wd-col-right-11 > * > *:nth-child(11), .wd .wd-col-right-12 > * > *:nth-child(12) {
+  text-align: right;
+}
 .wd .wd-col-left-01 > * > *:nth-child(1),  .wd .wd-col-left-02 > * > *:nth-child(2), 
 .wd .wd-col-left-03 > * > *:nth-child(3),  .wd .wd-col-left-04 > * > *:nth-child(4), 
 .wd .wd-col-left-05 > * > *:nth-child(5),  .wd .wd-col-left-06 > * > *:nth-child(6), 
 .wd .wd-col-left-07 > * > *:nth-child(7),  .wd .wd-col-left-08 > * > *:nth-child(8), 
 .wd .wd-col-left-09 > * > *:nth-child(9),  .wd .wd-col-left-10 > * > *:nth-child(10), 
-.wd .wd-col-left-11 > * > *:nth-child(11), .wd .wd-col-left-12 > * > *:nth-child(12) {text-align: left;}
-
+.wd .wd-col-left-11 > * > *:nth-child(11), .wd .wd-col-left-12 > * > *:nth-child(12) {
+  text-align: left;
+}
 .wd .wd-col-blue-01 > * > *:nth-child(1),  .wd .wd-col-blue-02 > * > *:nth-child(2), 
 .wd .wd-col-blue-03 > * > *:nth-child(3),  .wd .wd-col-blue-04 > * > *:nth-child(4), 
 .wd .wd-col-blue-05 > * > *:nth-child(5),  .wd .wd-col-blue-06 > * > *:nth-child(6), 
 .wd .wd-col-blue-07 > * > *:nth-child(7),  .wd .wd-col-blue-08 > * > *:nth-child(8), 
 .wd .wd-col-blue-09 > * > *:nth-child(9),  .wd .wd-col-blue-10 > * > *:nth-child(10), 
-.wd .wd-col-blue-11 > * > *:nth-child(11), .wd .wd-col-blue-12 > * > *:nth-child(12) {color: #3480cb;}
-
+.wd .wd-col-blue-11 > * > *:nth-child(11), .wd .wd-col-blue-12 > * > *:nth-child(12) {
+  color: var(--var-fg-col-blue);
+}
 .wd .wd-col-red-01 > * > *:nth-child(1),  .wd .wd-col-red-02 > * > *:nth-child(2), 
 .wd .wd-col-red-03 > * > *:nth-child(3),  .wd .wd-col-red-04 > * > *:nth-child(4), 
 .wd .wd-col-red-05 > * > *:nth-child(5),  .wd .wd-col-red-06 > * > *:nth-child(6), 
 .wd .wd-col-red-07 > * > *:nth-child(7),  .wd .wd-col-red-08 > * > *:nth-child(8), 
 .wd .wd-col-red-09 > * > *:nth-child(9),  .wd .wd-col-red-10 > * > *:nth-child(10), 
-.wd .wd-col-red-11 > * > *:nth-child(11), .wd .wd-col-red-12 > * > *:nth-child(12) {color: #fa3838;}
-
+.wd .wd-col-red-11 > * > *:nth-child(11), .wd .wd-col-red-12 > * > *:nth-child(12) {
+  color: var(--var-fg-col-red);
+}
 .wd .wd-col-green-01 > * > *:nth-child(1),  .wd .wd-col-green-02 > * > *:nth-child(2), 
 .wd .wd-col-green-03 > * > *:nth-child(3),  .wd .wd-col-green-04 > * > *:nth-child(4), 
 .wd .wd-col-green-05 > * > *:nth-child(5),  .wd .wd-col-green-06 > * > *:nth-child(6), 
 .wd .wd-col-green-07 > * > *:nth-child(7),  .wd .wd-col-green-08 > * > *:nth-child(8), 
 .wd .wd-col-green-09 > * > *:nth-child(9),  .wd .wd-col-green-10 > * > *:nth-child(10), 
-.wd .wd-col-green-11 > * > *:nth-child(11), .wd .wd-col-green-12 > * > *:nth-child(12) {color: #2c8759;}
-
+.wd .wd-col-green-11 > * > *:nth-child(11), .wd .wd-col-green-12 > * > *:nth-child(12) {
+  color: var(--var-fg-col-green);
+}
 .wd .wd-col-mark-01 > * > *:nth-child(1),  .wd .wd-col-mark-02 > * > *:nth-child(2), 
 .wd .wd-col-mark-03 > * > *:nth-child(3),  .wd .wd-col-mark-04 > * > *:nth-child(4), 
 .wd .wd-col-mark-05 > * > *:nth-child(5),  .wd .wd-col-mark-06 > * > *:nth-child(6), 
 .wd .wd-col-mark-07 > * > *:nth-child(7),  .wd .wd-col-mark-08 > * > *:nth-child(8), 
 .wd .wd-col-mark-09 > * > *:nth-child(9),  .wd .wd-col-mark-10 > * > *:nth-child(10), 
-.wd .wd-col-mark-11 > * > *:nth-child(11), .wd .wd-col-mark-12 > * > *:nth-child(12) {background-color: #ffff00;}
-
-/* --  Caixa de Dicas --FIXME (acho que isso não está bom) */
-.wd .wd-tip {position: relative;}
-
-.wd-tip-hover-top,    .wd-tip-click-top,
-.wd-tip-hover-right,  .wd-tip-click-right,
-.wd-tip-hover-bottom, .wd-tip-click-bottom,
-.wd-tip-hover-left,   .wd-tip-click-left {
-	background-color: white;
-	display: none !important;
-	max-height: 20em;
-	overflow: auto;
-	position: absolute;
-	text-indent: 0;
-	width: 10em;
-	z-index: 555;
-}
-.wd-tip-hover-top,    .wd-tip-click-top    {bottom: 100%; left:   0;}
-.wd-tip-hover-right,  .wd-tip-click-right  {left:   100%; top:    0;}
-.wd-tip-hover-bottom, .wd-tip-click-bottom {left:      0; top: 100%;}
-.wd-tip-hover-left,   .wd-tip-click-left   {right:  100%; top:    0;}
-
-/* -- integração com wd js (wd-open) -- */
-.wd .wd-tip:hover > .wd-tip-hover-top,    .wd-tip.wd-open > .wd-tip-click-top,
-.wd .wd-tip:hover > .wd-tip-hover-right,  .wd-tip.wd-open > .wd-tip-click-right,
-.wd .wd-tip:hover > .wd-tip-hover-bottom, .wd-tip.wd-open > .wd-tip-click-bottom,
-.wd .wd-tip:hover > .wd-tip-hover-left,   .wd-tip.wd-open > .wd-tip-click-left {
-	display: block !important;
-	animation: wd-fade-in 0.5s;
-}
-
-/* -- caixa de blocos -- */
-.wd .wd-block {display: block;}
-
-.wd .wd-block > * {
-	display: block;
-	float: none;
-	margin-left: 0;
-	margin-right: 0;
-	width: 100%;
+.wd .wd-col-mark-11 > * > *:nth-child(11), .wd .wd-col-mark-12 > * > *:nth-child(12) {
+  background-color: var(--var-bg-col-mark);
 }
 
 /* -- grades -- */
+.wd .wd-grid, .wd .wd-grid-line, .wd .wd-grid-blocks {
+	display: flex;
+	justify-content: space-around;
+}
+.wd .wd-grid {
+	flex-wrap: wrap;
+	flex-direction: row;
+}
+.wd .wd-grid-blocks {
+	flex-wrap: wrap;
+	flex-direction: column;
+}
+.wd .wd-grid-line {
+	flex-wrap: nowrap;
+	flex-direction: row;
+	overflow-x: auto;
+	overflow-y: hidden;
+}
+
+.wd .wd-grid > *, .wd .wd-grid-line > *, .wd .wd-grid-blocks > * {
+	overflow: auto !important;
+	margin: var(--var-em-medium);
+	height: 10em;
+}
+.wd .wd-grid > *, .wd .wd-grid-line > *{
+	width: 10em;
+}
+.wd .wd-grid-blocks > * {
+	width: auto;
+}
+
+
+
+
+.wd .wd-grid.wd-grid-portrait > *,
+.wd .wd-grid-line.wd-grid-portrait > *,
+.wd .wd-grid-blocks.wd-grid-portrait > * {
+	width: 9em; height: 16em;
+}
+.wd .wd-grid.wd-grid-landscape > *,
+.wd .wd-grid-line.wd-grid-landscape > *,
+.wd .wd-grid-blocks.wd-grid-landscape > * {
+	width: 16em; height: 9em;
+}
+
+
+
+
+/*
 .wd .wd-grid, .wd .wd-hgrid, .wd .wd-vgrid, .wd .wd-sgrid {
 	display: block;
 	line-height: 1;
@@ -550,13 +578,15 @@ script, style {
 .wd .wd-sgrid > * {height: 16em; overflow: auto; width: 16em;}
 .wd .wd-vgrid > * {height: 18em; overflow: auto; width: 13em;}
 
-/* -- blocos em linha infinita -- */
+
+
+/* -- blocos em linha infinita -- * /
 .wd .wd-line, .wd .wd-vline, .wd .wd-hline, .wd .wd-sline {
 	display: block;
 	line-height: 1;
 	overflow-x: auto;
 	overflow-y: hidden;
-	text-align: left;
+	text-align:  left;
 	white-space: nowrap;
 }
 .wd .wd-line > *, .wd .wd-vline > *, .wd .wd-hline > *, .wd .wd-sline > * {
@@ -569,6 +599,43 @@ script, style {
 .wd .wd-hline > * {height: 13em; overflow: auto; width: 18em;}
 .wd .wd-sline > * {height: 16em; overflow: auto; width: 16em;}
 .wd .wd-vline > * {height: 18em; overflow: auto; width: 13em;}
+*/
+
+
+
+
+
+/* --  Caixa de Dicas --FIXME (acho que isso não está bom) */
+/*.wd .wd-tip {position: relative;}
+
+.wd-tip-hover-top,    .wd-tip-click-top,
+.wd-tip-hover-right,  .wd-tip-click-right,
+.wd-tip-hover-bottom, .wd-tip-click-bottom,
+.wd-tip-hover-left,   .wd-tip-click-left {
+	background-color: white;
+	display: none !important;
+	max-height: 20em;
+	overflow: auto;
+	position: absolute;
+	text-indent: 0;
+	width: 10em;
+	z-index: 555;
+}
+.wd-tip-hover-top,    .wd-tip-click-top    {bottom: 100%; left:   0;}
+.wd-tip-hover-right,  .wd-tip-click-right  {left:   100%; top:    0;}
+.wd-tip-hover-bottom, .wd-tip-click-bottom {left:      0; top: 100%;}
+.wd-tip-hover-left,   .wd-tip-click-left   {right:  100%; top:    0;}
+
+.wd .wd-tip:hover > .wd-tip-hover-top,    .wd-tip.wd-open > .wd-tip-click-top,
+.wd .wd-tip:hover > .wd-tip-hover-right,  .wd-tip.wd-open > .wd-tip-click-right,
+.wd .wd-tip:hover > .wd-tip-hover-bottom, .wd-tip.wd-open > .wd-tip-click-bottom,
+.wd .wd-tip:hover > .wd-tip-hover-left,   .wd-tip.wd-open > .wd-tip-click-left {
+	display: block !important;
+	animation: wd-fade-in 0.5s;
+}
+*/
+
+
 
 
 /* -- Janelas -- */
