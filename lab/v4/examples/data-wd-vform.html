@@ -1,0 +1,11 @@
+<h3>data-wd-vform</h3>
+
+<script>
+function checkFiles(x) {
+	if (x.files.length !== 2) return "Select two files."
+}
+</script>
+
+<input type="text" required="" data-wd-form="" />
+<input type="file" multiple=""  data-wd-vform="call{checkFiles}" />
+

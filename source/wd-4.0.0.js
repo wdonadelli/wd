@@ -79,7 +79,6 @@ const wd = (function() {
 			"text-align: right; font-size: 0.5em; font-weight: bold;"
 		]},
 		{s: ".js-wd-no-display", d: ["display: none;"]},
-		{s: ".js-wd-mask-error", d: ["color: #db1414; background-color: #fde8e8;"]},
 		{s: "[data-wd-nav], [data-wd-send], [data-wd-tsort], [data-wd-data], [data-wd-full]", d: [
 			"cursor: pointer;"
 		]},
@@ -2034,6 +2033,59 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
+	function wd_html_vform(elem, call) {
+		if (!("setCustomValidity" in elem)) return null;
+		if (!("reportValidity" in elem)) return null;
+		if (!("checkValidity" in elem)) return null;
+		if (!("validity" in elem)) return null;
+		/*--------------------------------------------------------------------------
+		| 100 válido   | padrão      | sem função
+		|  $  >> true
+		| 101 válido   | padrão      | com função
+		|  @  >> checar (válido: true; inválido: definir reportar false)
+		| 110 válido   | customizado | sem função (não existe)
+		|  *  >> limpar true
+		| 111 válido   | customizado | com função (não existe)
+		|  *  >> checar (válido: true; inválido: definir reportar false)
+		| 000 inválido | padrão      | sem função
+		|  #  >> reportar false
+		| 001 inválido | padrão      | com função
+		|  #  >> reportar false
+		| 010 inválido | customizado | sem função
+		|  #  >> reportar false
+		| 011 inválido | customizado | com função
+		|  @  >> checar (válido: limpar true; inválido: definir reportar false)
+		\--------------------------------------------------------------------------*/
+		let id = elem.checkValidity()      === true       ? "1" : "0";
+		id    += elem.validity.customError === true       ? "1" : "0";
+		id    += wd_vtype(call).type       === "function" ? "1" : "0";
+		if (["000", "001", "010"].indexOf(id) >= 0) { /*#*/
+			elem.reportValidity();
+			return false;
+		}
+		if (id === "101" || id === "011") { /*@*/
+			let msg = call(elem);
+			if (wd_vtype(msg).type === "text") { /* valor inadequado */
+				elem.setCustomValidity(msg);
+				elem.reportValidity();
+				return false;
+			}
+			if (id === "011") elem.setCustomValidity("");
+			return true;
+		}
+		return true; /*$*/
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_html_vform_array(array, call) {
+		let check = true;
+		for (let i = 0; i < array.length; i++)
+			if (!wd_html_vform(array[i], call))
+				check = false;
+		return check;
+	}
+
+/*----------------------------------------------------------------------------*/
 	function wd_request(action, pack, callback, method, async) {
 		/* ajustes iniciais */
 		action = new String(action).toString();
@@ -2700,8 +2752,12 @@ const wd = (function() {
 		send: { /* Efetua requisições */
 			value: function (action, callback, method, async) {
 				let pack = "value="+this.toString();
-				if (this.type === "dom")    pack = this.form(method); else
-				if (this.type === "number") pack = "value="+this.valueOf();
+				if (this.type === "dom") {
+					if (this.vform() !== true) return null;
+					pack = this.form(method);
+				} else if (this.type === "number") {
+						pack = "value="+this.valueOf();
+				}
 				return wd_request(action, pack, callback, method, async)
 			}
 		},
@@ -3200,6 +3256,13 @@ const wd = (function() {
 		info: {  /* devolve informações diversas sobre o primeiro elemento */
 			get: function() {return wd_html_info(this._value[0]);}
 		},
+		vform: {
+			value: function(call) { /* checa a validade dos dados do formulário a partir de um método */
+				return wd_html_vform_array(this._value, call);
+			}
+		}
+
+
 	});
 
 /*----------------------------------------------------------------------------*/
@@ -3407,17 +3470,20 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-	function data_wdMask(e) { /* Máscara: data-wd-mask="model{mask}call{callback}" */
+	function data_wdMask(e) { /* Máscara: data-wd-mask="model{mask}call{callback}msg{msg}" */
 		if (!("wdMask" in e.dataset)) return;
+		/* obter o atributo de definição do conteúdo (text/value) */
 		let attr = wd_html_mask_attr(e);
 		if (attr === null) return;
+		/* obter dados do dataset */
 		let data = wd_html_dataset_value(e, "wdMask")[0];
 		if (!("model" in data)) return;
-		let checks = {
+
+		let checks = { /* funções de checagem de atalhos */
 			date: function(x) {return WD(x).type === "date" ? true : false},
 			time: function(x) {return WD(x).type === "time" ? true : false},
 		};
-		let shorts = {
+		let shorts = { /* atalhos */
 			"%DMY": {mask: "##/##/####", func: checks.date},
 			"%MDY": {mask: "##.##.####", func: checks.date},
 			"%YMD": {mask: "####-##-##", func: checks.date},
@@ -3426,16 +3492,22 @@ const wd = (function() {
 		let text = e[attr];
 		let mask = data.model;
 		let func = "call" in data && data["call"] in window ? window[data["call"]] : null;
+		let msg  = "msg" in data ? data["msg"] : null;
+		/* obtendo o formato da máscara e função de checagem, se atalho */
 		if (mask in shorts) {
 			func = shorts[data.model].func;
 			mask = shorts[data.model].mask;
 		}
-
+		/* executando chamada e definindo valor casado ao conteúdo */
 		let value = WD(mask).mask(text, func);
 		if (value !== null) e[attr] = value;
+
 		if (attr === "value") {
-			if (e.value !== "" && value === null) return WD(e).css({add: "js-wd-mask-error"});
-			return WD(e).css({del: "js-wd-mask-error"});
+			msg = wd_vtype(msg).type === "null" ? mask : msg;
+			if (e.value !== "" && value === null)
+				WD(e).vform(function () {return msg;})
+			else
+				WD(e).vform(function () {return "";})
 		}
 		return;
 	};
@@ -3642,63 +3714,13 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-	function data_wdFile(e) { /* Análise de arquivos: data-wd-file=fs{}ft{}fc{}nf{}ms{}call{} */
-	/*analisa as informações do arquivo
-		nf: number of files      (quantidade máxima de arquivos)
-		ms: maximum size         (tamanho total de arquivos)
-		fs: file size            (tamanho individual do arquivo)
-		ft: file type            (tipo do arquivo aceito)
-		fc: forbidden characters (caracteres não permitidos)
-		call: função a ser chamada
-	*/
-		if (!("wdFile" in e.dataset) || wd_html_form_type(e) !== "file") return;
-
-		let data  = wd_html_dataset_value(e, "wdFile")[0];
-		let info  = {error: null, file: null, value: null, parameter: null};
-		let files = e.files;
-
-		if ("nf" in data && files.length > wd_integer(data.nf, true)) {
-			info.error     = "nf";
-			info.value     = files.length;
-			info.file      = "";
-			info.parameter = wd_integer(data.nf, true);
-		} else {
-			let ms = 0;
-			let fc = "fc" in data ? new RegExp("("+data.fc+")", "g") : null;
-
-			for (let i = 0; i < files.length; i++) {
-				ms += files[i].size;
-				if ("ms" in data && ms > wd_integer(data.ms, true)) {
-					info.error     = "ms";
-					info.value     = wd_bytes(ms);
-					info.parameter = wd_bytes(wd_integer(data.ms, true));
-				} else if ("fs" in data && files[i].size > wd_integer(data.fs, true)) {
-					info.error     = "fs";
-					info.value     = wd_bytes(files[i].size);
-					info.parameter = wd_bytes(wd_integer(data.fs, true));
-				} else if ("ft" in data && data.ft.split(" ").indexOf(files[i].type) < 0) {
-					info.error     = "ft";
-					info.value     = files[i].type;
-					info.parameter = data.ft;
-				} else if (fc !== null && fc.test(files[i].name)) {
-					info.error     = "fc";
-					info.value     = files[i].name.replace(fc, "<b style=\"color: #FF0000;\">$1</b>");
-					info.parameter = data.fc;
-				}
-				if (info.error !== null) {
-					break;
-				}
-			}
-		}
-
-		if (info.error !== null) {
-			e.value = null;
-			WD(e).css({add: "js-wd-mask-error"});
-			if (WD(window[data["call"]]).type === "function") window[data["call"]](info);
-			return;
-		}
-		return WD(e).css({del: "js-wd-mask-error"});
-	};
+	function data_wdVform(e) { /* checa a validade de um formulário data-wd-vform="call{callback} */
+		if (!("wdVform" in e.dataset)) return;
+		let data = wd_html_dataset_value(e, "wdVform")[0];
+		let func = "call" in data && data["call"] in window ? window[data["call"]] : null;
+		WD(e).vform(func);
+		return;
+	}
 
 /*----------------------------------------------------------------------------*/
 	function navLink(e) { /* link ativo do navegador */
@@ -3822,6 +3844,7 @@ const wd = (function() {
 		WD.$$("[data-wd-slide]").run(data_wdSlide);
 		WD.$$("[data-wd-device]").run(data_wdDevice);
 		WD.$$("[data-wd-chart]").run(data_wdChart);
+		WD.$$("[data-wd-vform]").run(data_wdVform);
 		data_wdOutput(document, true);
 		return;
 	};
@@ -3838,7 +3861,8 @@ const wd = (function() {
 			case "wdClick":   data_wdClick(e);        break;
 			case "wdDevice":  data_wdDevice(e);       break;
 			case "wdSlide":   data_wdSlide(e);        break;
-			case "wdFile":    data_wdFile(e);         break;
+			//case "wdFile":    data_wdFile(e);         break; FIXME deletar essa joça?
+			case "wdVform":   data_wdVform(e);        break;
 			case "wdChart":   data_wdChart(e);        break;
 			case "wdOutput":  data_wdOutput(e, true); break;
 		};
@@ -3907,12 +3931,16 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	function focusoutProcedures(ev) { /* procedimentos para saída de formulários */
-		return data_wdMask(ev.target);
+		data_wdVform(ev.target);
+		data_wdMask(ev.target);
+		return;
 	};
 
 /*----------------------------------------------------------------------------*/
-	function changeProcedures(ev) { /* procedimentos para outras mudanças */
-		return data_wdFile(ev.target);
+	function changeProcedures(ev) { /* procedimentos para outras mudanças em formulários */
+		//return data_wdFile(ev.target); FIXME
+		data_wdVform(ev.target);
+		return;
 	};
 
 /*----------------------------------------------------------------------------*/

@@ -48,6 +48,8 @@ SOFTWARE.
 	--var-bg-col-green: rgb(44, 135, 89);
 	--var-bg-col-mark: rgba(255, 255, 0, 1);
 	--var-bg-shadow: rgba(105, 105, 105, 1);
+	--var-bg-modal: rgba(0, 0, 0, 0.8);
+	--var-bg-window: rgba(255, 255, 255, 1);
 
 	--var-em-small: 0.5em;
 	--var-em-medium: 1em;
@@ -429,26 +431,28 @@ script, style {
 	width: 100%;
 }
 
-/* -- Linhas x Colunas -- */
+/* -- Linhas x Colunas (tabela com containers) -- */
 .wd .wd-row {
   display: flex;
   flex-wrap: nowrap;
   align-items: stretch;
+  width: 100%;
 }
-.wd .wd-row > *          {flex-grow: 1;}
-.wd .wd-row > .wd-col-01 {flex-grow: 1;}
-.wd .wd-row > .wd-col-02 {flex-grow: 2;}
-.wd .wd-row > .wd-col-03 {flex-grow: 3;}
-.wd .wd-row > .wd-col-04 {flex-grow: 4;}
-.wd .wd-row > .wd-col-05 {flex-grow: 5;}
-.wd .wd-row > .wd-col-06 {flex-grow: 6;}
-.wd .wd-row > .wd-col-07 {flex-grow: 7;}
-.wd .wd-row > .wd-col-08 {flex-grow: 8;}
-.wd .wd-row > .wd-col-09 {flex-grow: 9;}
-.wd .wd-row > .wd-col-10 {flex-grow: 10;}
-.wd .wd-row > .wd-col-11 {flex-grow: 11;}
-.wd .wd-row > .wd-col-12 {flex-grow: 12;}
+.wd .wd-row > *          {flex: 1;}
+.wd .wd-row > .wd-col-01 {flex: 1;}
+.wd .wd-row > .wd-col-02 {flex: 2;}
+.wd .wd-row > .wd-col-03 {flex: 3;}
+.wd .wd-row > .wd-col-04 {flex: 4;}
+.wd .wd-row > .wd-col-05 {flex: 5;}
+.wd .wd-row > .wd-col-06 {flex: 6;}
+.wd .wd-row > .wd-col-07 {flex: 7;}
+.wd .wd-row > .wd-col-08 {flex: 8;}
+.wd .wd-row > .wd-col-09 {flex: 9;}
+.wd .wd-row > .wd-col-10 {flex: 10;}
+.wd .wd-row > .wd-col-11 {flex: 11;}
+.wd .wd-row > .wd-col-12 {flex: 12;}
 
+/* -- Formatações de colunas (table > row > col) -- */
 .wd .wd-col-center-01 > * > *:nth-child(1),  .wd .wd-col-center-02 > * > *:nth-child(2),
 .wd .wd-col-center-03 > * > *:nth-child(3),  .wd .wd-col-center-04 > * > *:nth-child(4),
 .wd .wd-col-center-05 > * > *:nth-child(5),  .wd .wd-col-center-06 > * > *:nth-child(6),
@@ -506,30 +510,44 @@ script, style {
   background-color: var(--var-bg-col-mark);
 }
 
-/* -- grades -- */
-.wd .wd-grid, .wd .wd-grid-line, .wd .wd-grid-blocks {
+/* -- espalhar -- (spread) FIXME essa merda não funciona*/
+.wd .wd-grid, .wd .wd-grid-inline {
 	display: flex;
 	justify-content: space-around;
+	flex-direction: row;
 }
 .wd .wd-grid {
 	flex-wrap: wrap;
-	flex-direction: row;
 }
+.wd .wd-grid-line {
+	flex-wrap: nowrap;
+	overflow-x: auto;
+	overflow-y: hidden;
+}
+.wd .wd-grid > *, .wd .wd-grid-line > * {
+	overflow: auto;
+	flex: 1 1 1;
+}
+
+
+/*
 .wd .wd-grid-blocks {
 	flex-wrap: wrap;
 	flex-direction: column;
 }
-.wd .wd-grid-line {
-	flex-wrap: nowrap;
-	flex-direction: row;
-	overflow-x: auto;
-	overflow-y: hidden;
+
+
+.wd .wd-grid-line::after {
+  content: "";
+  clear: both;
+  display: table;
 }
 
 .wd .wd-grid > *, .wd .wd-grid-line > *, .wd .wd-grid-blocks > * {
-	overflow: auto !important;
+	overflow: auto;
 	margin: var(--var-em-medium);
 	height: 10em;
+	flex: 1 1 1;
 }
 .wd .wd-grid > *, .wd .wd-grid-line > *{
 	width: 10em;
@@ -537,18 +555,16 @@ script, style {
 .wd .wd-grid-blocks > * {
 	width: auto;
 }
-
+*/
 
 
 
 .wd .wd-grid.wd-grid-portrait > *,
-.wd .wd-grid-line.wd-grid-portrait > *,
-.wd .wd-grid-blocks.wd-grid-portrait > * {
+.wd .wd-grid-line.wd-grid-portrait > * {
 	width: 9em; height: 16em;
 }
 .wd .wd-grid.wd-grid-landscape > *,
-.wd .wd-grid-line.wd-grid-landscape > *,
-.wd .wd-grid-blocks.wd-grid-landscape > * {
+.wd .wd-grid-line.wd-grid-landscape > * {
 	width: 16em; height: 9em;
 }
 
@@ -645,7 +661,6 @@ script, style {
 .wd .wd-modal {
 	display: none;
 	position: fixed;
-	opacity: 1;
 }
 /*exibindo a janela*/
 .wd .wd-window.wd-open,                  .wd .wd-window-full.wd-open,
@@ -654,7 +669,9 @@ script, style {
 .wd .wd-modal.wd-open > .wd-window,      .wd .wd-modal.wd-open > .wd-window-full,
 .wd .wd-modal.wd-open > .wd-window-left, .wd .wd-modal.wd-open > .wd-window-right,
 .wd .wd-modal.wd-open > .wd-window-top,  .wd .wd-modal.wd-open > .wd-window-bottom,
-.wd .wd-modal.wd-open {display: block;}
+.wd .wd-modal.wd-open {
+  display: block;
+}
 /*plano de fundo*/
 .wd .wd-modal {
 	animation: wd-fade-in 0.5s;
@@ -664,15 +681,14 @@ script, style {
 	left: 0;
 	width: 100%;
 	height: 100%;
-	background-color: #000000;
-	background-color: rgba(0,0,0,0.8);
+	background-color: var(--var-bg-modal);
 	z-index: 888;
 }
 /*janelas de conteúdo*/
 .wd .wd-window,      .wd .wd-window-full,
 .wd .wd-window-left, .wd .wd-window-right,
 .wd .wd-window-top,  .wd .wd-window-bottom {
-	background-color: #ffffff;
+	background-color: var(--var-bg-window);
 	overflow: auto;
 	z-index: 777;
 	cursor: auto;
@@ -691,8 +707,6 @@ script, style {
 	max-width: 90%;
 	height: auto;
 	max-height: 90%;
-	-ms-transform: translate(-50%, -50%);
-	-webkit-transform: translate(-50%, -50%);
 	transform: translate(-50%, -50%);
 }
 /*tela inteira*/
@@ -713,8 +727,14 @@ script, style {
 	height: auto;
 	max-height: 40%;
 }
-.wd .wd-window-top    {animation: wd-from-top 0.5s;    top: 0;}
-.wd .wd-window-bottom {animation: wd-from-bottom 0.5s; bottom: 0;}
+.wd .wd-window-top    {
+	animation: wd-from-top 0.5s;
+	top: 0;
+}
+.wd .wd-window-bottom {
+	animation: wd-from-bottom 0.5s;
+	bottom: 0;
+}
 /*nas laterais*/
 .wd .wd-window-right, .wd .wd-window-left {
 	top: 0;

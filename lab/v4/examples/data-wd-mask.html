@@ -26,13 +26,15 @@
 </form>
 
 <script>
-	function age(x) {return parseInt(x) < 18 ? false : true;}
+	function age(x) {
+		return parseInt(x) < 18 ? false : true;
+	}
 </script>
 	
 <h3>Mask Validation</h3>
 
 <form class="wd-block">
-	<input type="text" data-wd-mask="model{##?# years}call{age}" placeholder="Age >= 18	"/>
+	<input type="text" data-wd-mask="model{##}call{age}msg{Age must be over 18 years old.}" placeholder="Age >= 18	"/>
 </form>
 
 <h3>Dynamic Mask</h3>
