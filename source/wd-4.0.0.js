@@ -133,10 +133,10 @@ const wd = (function() {
 	};
 /*----------------------------------------------------------------------------*/
 	function wd_bytes(value) { /*calculadora de bytes*/
-		if (value >= 1099511627776) return (value/1099511627776).toFixed(2)+"TB";
-		if (value >= 1073741824)    return (value/1073741824).toFixed(2)+"GB";
-		if (value >= 1048576)       return (value/1048576).toFixed(2)+"MB";
-		if (value >= 1024)          return (value/1024).toFixed(2)+"kB";
+		if (value >= Math.pow(1024,4)) return (value/Math.pow(1024,4)).toFixed(2)+"TB";
+		if (value >= Math.pow(1024,3)) return (value/Math.pow(1024,3)).toFixed(2)+"GB";
+		if (value >= Math.pow(1024,2)) return (value/Math.pow(1024,2)).toFixed(2)+"MB";
+		if (value >= Math.pow(1024,1)) return (value/Math.pow(1024,1)).toFixed(2)+"kB";
 		return value+"B";
 	}
 
@@ -2033,11 +2033,11 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_html_vform(elem, call) {
+	function wd_html_vform(elem, call) { /* verifica a validade do formulário */
 		if (!("setCustomValidity" in elem)) return null;
-		if (!("reportValidity" in elem)) return null;
-		if (!("checkValidity" in elem)) return null;
-		if (!("validity" in elem)) return null;
+		if (!("reportValidity" in elem))    return null;
+		if (!("checkValidity" in elem))     return null;
+		if (!("validity" in elem))          return null;
 		/*--------------------------------------------------------------------------
 		| 100 válido   | padrão      | sem função
 		|  $  >> true
@@ -2061,6 +2061,7 @@ const wd = (function() {
 		id    += wd_vtype(call).type       === "function" ? "1" : "0";
 		if (["000", "001", "010"].indexOf(id) >= 0) { /*#*/
 			elem.reportValidity();
+			if (wd_html_form_type(elem) === "file") elem.value = null; /* bug no firefox */
 			return false;
 		}
 		if (id === "101" || id === "011") { /*@*/
@@ -2068,6 +2069,7 @@ const wd = (function() {
 			if (wd_vtype(msg).type === "text") { /* valor inadequado */
 				elem.setCustomValidity(msg);
 				elem.reportValidity();
+				if (wd_html_form_type(elem) === "file") elem.value = null; /* bug no firefox */
 				return false;
 			}
 			if (id === "011") elem.setCustomValidity("");
@@ -2078,11 +2080,18 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	function wd_html_vform_array(array, call) {
-		let check = true;
-		for (let i = 0; i < array.length; i++)
-			if (!wd_html_vform(array[i], call))
-				check = false;
-		return check;
+		for (let i = 0; i < array.length; i++) {
+			let elem = array[i];
+			let func = null;
+			if ("wdVform" in elem.dataset) {
+				let test = wd_vtype(elem.dataset.wdVform).value;
+				if (wd_vtype(window[test]).type === "function")
+					func = window[test];
+			}
+			if (!wd_html_vform(elem, func))
+			 return false;
+		}
+		return true;
 	}
 
 /*----------------------------------------------------------------------------*/
@@ -2217,7 +2226,7 @@ const wd = (function() {
 		let ttl = document.createElement("STRONG");
 		/* fechar janela */
 		function close() {
-			wd_signal_block.removeChild(box);
+			try {wd_signal_block.removeChild(box);} catch(e){}
 			if (wd_signal_block.children.length === 0)
 				document.body.removeChild(wd_signal_block);
 		}
@@ -2753,7 +2762,7 @@ const wd = (function() {
 			value: function (action, callback, method, async) {
 				let pack = "value="+this.toString();
 				if (this.type === "dom") {
-					if (this.vform() !== true) return null;
+					if (this.vform !== true) return null;
 					pack = this.form(method);
 				} else if (this.type === "number") {
 						pack = "value="+this.valueOf();
@@ -3243,26 +3252,22 @@ const wd = (function() {
 				return wd_html_form_submit(this._value, get);
 			}
 		},
-		vstyle: {  /* devolve o valor do estilo especificado (só primeiro elemento) */
+		vstyle: { /* devolve o valor do estilo especificado (só primeiro elemento) */
 			value: function(css) {
 				return wd_html_style_get(this._value[0], css);
 			}
 		},
-		chart: {
+		chart: { /* desenha gráfico de linhas e colunas */
 			value: function(data, title, xlabel, ylabel) {
 				return wd_html_chart(this.item(0), data, title, xlabel, ylabel);
 			}
 		},
-		info: {  /* devolve informações diversas sobre o primeiro elemento */
+		info: { /* devolve informações diversas sobre o primeiro elemento */
 			get: function() {return wd_html_info(this._value[0]);}
 		},
-		vform: {
-			value: function(call) { /* checa a validade dos dados do formulário a partir de um método */
-				return wd_html_vform_array(this._value, call);
-			}
-		}
-
-
+		vform: { /* checa a validade dos dados do formulário */
+			get: function() {return wd_html_vform_array(this._value);}
+		},
 	});
 
 /*----------------------------------------------------------------------------*/
@@ -3408,7 +3413,6 @@ const wd = (function() {
 		if (!("wdSend" in e.dataset)) return;
 		let data = wd_html_dataset_value(e, "wdSend");
 		for (let i = 0; i < data.length; i++) {
-			//if (!("get" in data[i]) && !("post" in data[i])) continue;
 			let method = "method" in data[i] ? data.method[i] : "post";
 			let file   = data[i].path;
 			let pack   = wd_$$$(data[i]);
@@ -3505,9 +3509,9 @@ const wd = (function() {
 		if (attr === "value") {
 			msg = wd_vtype(msg).type === "null" ? mask : msg;
 			if (e.value !== "" && value === null)
-				WD(e).vform(function () {return msg;})
+				wd_html_vform(e, function () {return msg;})
 			else
-				WD(e).vform(function () {return "";})
+				wd_html_vform(e, function () {return "";})
 		}
 		return;
 	};
@@ -3714,12 +3718,9 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-	function data_wdVform(e) { /* checa a validade de um formulário data-wd-vform="call{callback} */
+	function data_wdVform(e) { /* checa a validade de um formulário data-wd-vform="callback" */
 		if (!("wdVform" in e.dataset)) return;
-		let data = wd_html_dataset_value(e, "wdVform")[0];
-		let func = "call" in data && data["call"] in window ? window[data["call"]] : null;
-		WD(e).vform(func);
-		return;
+		return WD(e).vform;
 	}
 
 /*----------------------------------------------------------------------------*/
@@ -3844,7 +3845,6 @@ const wd = (function() {
 		WD.$$("[data-wd-slide]").run(data_wdSlide);
 		WD.$$("[data-wd-device]").run(data_wdDevice);
 		WD.$$("[data-wd-chart]").run(data_wdChart);
-		WD.$$("[data-wd-vform]").run(data_wdVform);
 		data_wdOutput(document, true);
 		return;
 	};
@@ -3861,8 +3861,6 @@ const wd = (function() {
 			case "wdClick":   data_wdClick(e);        break;
 			case "wdDevice":  data_wdDevice(e);       break;
 			case "wdSlide":   data_wdSlide(e);        break;
-			//case "wdFile":    data_wdFile(e);         break; FIXME deletar essa joça?
-			case "wdVform":   data_wdVform(e);        break;
 			case "wdChart":   data_wdChart(e);        break;
 			case "wdOutput":  data_wdOutput(e, true); break;
 		};
@@ -3937,8 +3935,8 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-	function changeProcedures(ev) { /* procedimentos para outras mudanças em formulários */
-		//return data_wdFile(ev.target); FIXME
+	function changeProcedures(ev) { /* procedimentos para outras mudanças em formulários (type=file) */
+		if (wd_html_form_type(ev.target) !== "file") return;
 		data_wdVform(ev.target);
 		return;
 	};
