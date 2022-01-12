@@ -3936,8 +3936,8 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	function changeProcedures(ev) { /* procedimentos para outras mudanças em formulários (type=file) */
-		if (wd_html_form_type(ev.target) !== "file") return;
-		data_wdVform(ev.target);
+		/*if (wd_html_form_type(ev.target) !== "file") return; */
+		/*data_wdVform(ev.target); desligado na versão 4 */
 		return;
 	};
 
@@ -3950,10 +3950,10 @@ const wd = (function() {
 
 	WD(document).addHandler({ /* Definindo eventos document */
 		click:    clickProcedures,
-/*		keyup:    keyboardProcedures, desligado na versão 4 */
 		input:    inputProcedures,
-		change:   changeProcedures,
 		focusout: focusoutProcedures,
+/*		keyup:    keyboardProcedures, desligado na versão 4 */
+/*		change:   changeProcedures, desligado na versão 4 */
 	});
 
 	return WD;

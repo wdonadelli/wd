@@ -40,16 +40,19 @@ SOFTWARE.
 /* == BLOCO 1 ================================================================*/
 
 :root {
-	--var-bg-code: rgba(230, 230, 250, 1);
-	--var-fg-code: rgba(0, 115, 230, 1);
-	--var-fg-link: rgba(59, 175, 247, 1);
-	--var-fg-col-blue: rgb(52, 128, 203);
-	--var-fg-col-red: rgb(250, 56, 56);
+	--var-bg-code:      rgba(230, 230, 250, 1);
+	--var-fg-code:      rgba(0, 115, 230, 1);
+	--var-fg-link:      rgba(59, 175, 247, 1);
+	--var-fg-col-blue:  rgb(52, 128, 203, 1);
+	--var-fg-col-red:   rgba(250, 56, 56, 1);
 	--var-bg-col-green: rgb(44, 135, 89);
-	--var-bg-col-mark: rgba(255, 255, 0, 1);
-	--var-bg-shadow: rgba(105, 105, 105, 1);
-	--var-bg-modal: rgba(0, 0, 0, 0.8);
-	--var-bg-window: rgba(255, 255, 255, 1);
+	--var-bg-col-mark:  rgba(255, 255, 0, 1);
+	--var-bg-shadow:    rgba(105, 105, 105, 1);
+	--var-bg-modal:     rgba(0, 0, 0, 0.8);
+	--var-bg-window:    rgba(255, 255, 255, 1);
+	--var-bg-upon:      rgba(114, 159, 207, 0.5);
+	--var-fg-upon:      rgba(0, 0, 0, 1);
+
 
 	--var-em-small: 0.5em;
 	--var-em-medium: 1em;
@@ -61,8 +64,12 @@ SOFTWARE.
 	--var-border-radius: 0.3em;
 
 
-	--var-inset-shadow: inset 0 0 6px 2px;
 
+
+	--var-shadow-nav:   inset 0em -0.3em 0em 0em rgba(114, 159, 207, 1);
+  --var-shadow:       0.5em 0.5em 0em 0em rgba(136, 138, 133, 1);
+  --var-shadow-cloud: 0em 0em 1.4em 0.5em rgba(211, 215, 207, 1);
+  --var-shadow-upon:  inset 0em 0em 0em 0.2em rgba(114, 159, 207, 1);
 
 	--var-padd-top-ratio-square: 1;
 	--var-padd-top-ratio-portrait: calc(16/9);
@@ -169,7 +176,7 @@ script, style {
 	text-decoration: none;
 }
 .wd nav > *:hover {
-  box-shadow: var(--var-bg-shadow) var(--var-inset-shadow);
+  box-shadow: var(--var-shadow-nav);
 }
 
 /* -- Elementos de bloco -- */
@@ -1497,7 +1504,7 @@ border-left: var(--var-border-small) !important;
 .wd .wd-radius,      .wd .wd-radius-child > *,
 .wd .wd-radius-top,  .wd .wd-radius-top-child > *,
 .wd .wd-radius-left, .wd .wd-radius-left-child > * {
-	border-top-left-radius: 0.3em !important;
+	border-top-left-radius: var(--var-border-radius) !important;
 }
 .wd .wd-radius,       .wd .wd-radius-child > *,
 .wd .wd-radius-top,   .wd .wd-radius-top-child > *,
@@ -1612,71 +1619,113 @@ border-left: var(--var-border-small) !important;
 
 /* -- sombra -- */
 
-	/********************************************************************\
-	|	ESCLARECIMENTOS                                                   |
-	| shadow             - aplica sombra ao elemento                     |
-	| shadow-child       - aplica "shadow" a todos os filhos             |
-	| shadow-enter       - ao passar o mouse, aplica "shadow"            |
-	| shadow-leave       - ao passar o mouse, aplica "shadow"            |
-	| shadow-enter-child - aplica "shadow-enter" aos filhos              |
-	| shadow-leave-child - aplica "shadow-leave" aos filhos              |
-	| shadow-in          - aplica "shadow" ao passar o mouse sobre o pai |
-	| shadow-out         - aplica "shadow" ao tirar o mouse sobre o pai  |
-	\********************************************************************/
+	/*----------------------------------------------------------------------------
+	| shadow             - aplica sombra ao elemento
+	| shadow-child       - aplica "shadow" a todos os filhos
+	| shadow-enter       - ao passar o mouse, aplica "shadow"
+	| shadow-leave       - ao deixar o mouse, aplica "shadow"
+	| shadow-enter-child - aplica "shadow-enter" aos filhos
+	| shadow-leave-child - aplica "shadow-leave" aos filhos
+	| shadow-in          - aplica "shadow" ao passar o mouse sobre o pai
+	| shadow-out         - aplica "shadow" ao tirar o mouse sobre o pai
+	\---------------------------------------------------------------------------*/
 
-.wd .wd-shadow, .wd .wd-shadow-child > *,
-.wd .wd-shadow-enter:hover, .wd .wd-shadow-leave,
-.wd .wd-shadow-enter-child > *:hover, .wd .wd-shadow-leave-child > *,
+.wd .wd-shadow, .wd .wd-shadow-child > * {
+  box-shadow: var(--var-shadow) !important;
+}
+.wd .wd-shadow-none, .wd .wd-shadow-none-child > * {
+  box-shadow: none !important;
+}
+/*----------------------------------------------------------------------------*/
+.wd .wd-shadow-enter, .wd .wd-shadow-enter-child > * {
+	box-shadow: none !important;
+}
+.wd .wd-shadow-enter:hover, .wd .wd-shadow-enter-child > *:hover {
+  box-shadow: var(--var-shadow) !important;
+}
+/*----------------------------------------------------------------------------*/
+.wd .wd-shadow-leave, .wd .wd-shadow-leave-child > * {
+  box-shadow: var(--var-shadow) !important;
+}
+.wd .wd-shadow-leave:hover, .wd .wd-shadow-leave-child > *:hover {
+  box-shadow: none !important;
+}
+/*----------------------------------------------------------------------------*/
 .wd * > .wd-shadow-out, .wd *:hover > .wd-shadow-in {
-	box-shadow: 0.3em 0.3em #cccccc !important;
+	box-shadow: var(--var-shadow) !important;
 }
-.wd .wd-shadow-enter, .wd .wd-shadow-leave:hover,
-.wd .wd-shadow-enter-child > *, .wd .wd-shadow-leave-child > *:hover,
-.wd * > .wd-shadow-in, .wd *:hover > .wd-shadow-out    {
+.wd * > .wd-shadow-in, .wd *:hover > .wd-shadow-out {
 	box-shadow: none !important;
 }
-.wd .wd-shadow-none, .wd .wd-shadow-none-child > * {box-shadow: none !important;}
 
-/* -- Nuvem (VER ESCLARECIMENTOS EM SOMBRA) -- */
-.wd .wd-cloud, .wd .wd-cloud-child > *,
-.wd .wd-cloud-enter:hover, .wd .wd-cloud-leave,
-.wd .wd-cloud-enter-child > *:hover, .wd .wd-cloud-leave-child > *,
+/* -- Nuvem ------------------------------------------------------------------*/
+.wd .wd-cloud, .wd .wd-cloud-child > * {
+  box-shadow: var(--var-shadow-cloud) !important;
+}
+.wd .wd-cloud-none, .wd .wd-cloud-none-child > * {
+  box-shadow: none !important;
+}
+/*----------------------------------------------------------------------------*/
+.wd .wd-cloud-enter, .wd .wd-cloud-enter-child > * {
+	box-shadow: none !important;
+}
+.wd .wd-cloud-enter:hover, .wd .wd-cloud-enter-child > *:hover {
+  box-shadow: var(--var-shadow-cloud) !important;
+}
+/*----------------------------------------------------------------------------*/
+.wd .wd-cloud-leave, .wd .wd-cloud-leave-child > * {
+  box-shadow: var(--var-shadow-cloud) !important;
+}
+.wd .wd-cloud-leave:hover, .wd .wd-cloud-leave-child > *:hover {
+  box-shadow: none !important;
+}
+/*----------------------------------------------------------------------------*/
 .wd * > .wd-cloud-out, .wd *:hover > .wd-cloud-in {
-	box-shadow: 0 0 0.5em 0.2em #cccccc !important;
+	box-shadow: var(--var-shadow-cloud) !important;
 }
-.wd .wd-cloud-enter, .wd .wd-cloud-leave:hover,
-.wd .wd-cloud-enter-child > *, .wd .wd-cloud-leave-child > *:hover,
-.wd * > .wd-cloud-in, .wd *:hover > .wd-cloud-out    {
+.wd * > .wd-cloud-in, .wd *:hover > .wd-cloud-out {
 	box-shadow: none !important;
 }
-.wd .wd-cloud-none, .wd .wd-cloud-none-child > * {box-shadow: none !important;}
 
-/*-- opaco (VER ESCLARECIMENTOS EM SOMBRA) --*/
-.wd .wd-opaque, .wd .wd-opaque-child > *,
-.wd .wd-opaque-enter:hover, .wd .wd-opaque-leave,
-.wd .wd-opaque-enter-child > *:hover, .wd .wd-opaque-leave-child > *,
+/*-- opaco -------------------------------------------------------------------*/
+.wd .wd-opaque, .wd .wd-opaque-child > * {
+  opacity: 0.5 !important;
+}
+.wd .wd-opaque-none, .wd .wd-opaque-none-child > * {
+  opacity: 1 !important;
+}
+/*----------------------------------------------------------------------------*/
+.wd .wd-opaque-enter, .wd .wd-opaque-enter-child > * {
+	opacity: 1 !important;
+}
+.wd .wd-opaque-enter:hover, .wd .wd-opaque-enter-child > *:hover {
+  opacity: 0.5 !important;
+}
+/*----------------------------------------------------------------------------*/
+.wd .wd-opaque-leave, .wd .wd-opaque-leave-child > * {
+  opacity: 0.5 !important;
+}
+.wd .wd-opaque-leave:hover, .wd .wd-opaque-leave-child > *:hover {
+  opacity: 1 !important;
+}
+/*----------------------------------------------------------------------------*/
 .wd * > .wd-opaque-out, .wd *:hover > .wd-opaque-in {
 	opacity: 0.5 !important;
 }
-.wd .wd-opaque-enter, .wd .wd-opaque-leave:hover,
-.wd .wd-opaque-enter-child > *, .wd .wd-opaque-leave-child > *:hover,
-.wd * > .wd-opaque-in, .wd *:hover > .wd-opaque-out    {
+.wd * > .wd-opaque-in, .wd *:hover > .wd-opaque-out {
 	opacity: 1 !important;
 }
-.wd .wd-opaque-none, .wd .wd-opaque-none-child > * {opacity: 1 !important;}
 
-/*-- destaque (VER ESCLARECIMENTOS EM SOMBRA) --*/
+/* -- destaque ---------------------------------------------------------------*/
 .wd .wd-upon-toggle > *:nth-child(even),
 .wd .wd-upon, .wd .wd-upon-child > *,
-.wd .wd-upon-enter:hover, .wd .wd-upon-enter-child > *:hover,
-.wd *:hover > .wd-upon-in {
-	background-color: #f2f2f2 !important;
-	border-color: #bfbfbf !important;
-	color: #4d4d4d !important;
-	box-shadow: inset 0 0 0.3em 0.2em #bfbfbf !important;
+.wd .wd-upon-enter:hover, .wd .wd-upon-enter-child > *:hover {
+	box-shadow: var(--var-shadow-upon) !important;
+	background-color: var(--var-bg-upon) !important;
+	color: var(--var-fg-upon) !important;
 }
 
-/* -- Exibir/Esconder -- */
+/* -- Exibir/Esconder --------------------------------------------------------*/
 .wd .wd-show {visibility: visible !important;}
 .wd .wd-hide {visibility: hidden  !important;}
 

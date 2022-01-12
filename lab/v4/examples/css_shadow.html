@@ -1,0 +1,50 @@
+<h3>Shadow</h3>
+
+<nav>
+  <span data-wd-nav="type{}${#fixed}" data-wd-click="">Fixed</span>
+  <span data-wd-nav="type{}${#enter}">Enter</span>
+  <span data-wd-nav="type{}${#leave}">Leave</span>
+  <span data-wd-nav="type{}${#in}">In</span>
+  <span data-wd-nav="type{}${#out}">Out</span>
+</nav>
+
+
+<div data-wd-css="${#target}add{wd-padding-child wd-xmargin}">
+  <nav id="fixed">
+    <span  data-wd-click="" data-wd-css="$${#target, #target *}&${#target}add{wd-shadow wd-border}">Shadow</span>
+    <span data-wd-css="$${#target, #target *}&${#target}add{wd-cloud}">Cloud</span>
+    <span data-wd-css="$${#target, #target *}&${#target}add{wd-opaque}">Opaque</span>
+    <span data-wd-css="$${#target, #target *}&${#target}add{wd-upon}">Upon</span>
+    <span data-wd-css="$${#target, #target *}&${#target}add{wd-upon-toggle}">upon-toggle</span>
+  </nav>
+  <nav id="enter">
+    <span data-wd-css="$${#target, #target *}&${#target}add{wd-shadow-enter wd-border}">Shadow</span>
+    <span data-wd-css="$${#target, #target *}&${#target}add{wd-cloud-enter}">Cloud</span>
+    <span data-wd-css="$${#target, #target *}&${#target}add{wd-opaque-enter}">Opaque</span>
+    <span data-wd-css="$${#target, #target *}&${#target}add{wd-upon-enter}">Upon</span>
+  </nav>
+  <nav id="leave">
+    <span data-wd-css="$${#target, #target *}&${#target}add{wd-shadow-leave wd-border}">Shadow</span>
+    <span data-wd-css="$${#target, #target *}&${#target}add{wd-cloud-leave}">Cloud</span>
+    <span data-wd-css="$${#target, #target *}&${#target}add{wd-opaque-leave}">Opaque</span>
+  </nav>
+  <nav id="in">
+    <span data-wd-css="$${#target, #target *}&${#target *}add{wd-shadow-in wd-border}">Shadow</span>
+    <span data-wd-css="$${#target, #target *}&${#target *}add{wd-cloud-in}">Cloud</span>
+    <span data-wd-css="$${#target, #target *}&${#target *}add{wd-opaque-in}">Opaque</span>
+  </nav>
+  <nav id="out">
+    <span data-wd-css="$${#target, #target *}&${#target *}add{wd-shadow-out wd-border}">Shadow</span>
+    <span data-wd-css="$${#target, #target *}&${#target *}add{wd-cloud-out}">Cloud</span>
+    <span data-wd-css="$${#target, #target *}&${#target *}add{wd-opaque-out}">Opaque</span>
+  </nav>
+</div>
+
+
+<div id="target">
+	<div>Line 1</div>
+	<div>Line 2</div>
+	<div>Line 3</div>
+  <div>Line 4</div>
+  <div>Line 5</div>
+</div>

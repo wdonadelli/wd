@@ -1,14 +1,8 @@
 <h3>Color Factory</h3>
 
-<style>
-#values input[type=number], #values input[type=text] {width: 100px;}
-#values label {display: inline-block;}
-#full {background-color: white;}
-</style>
-
 <button type="button" data-wd-full="${#full}" >FullScreen</button>
 
-<div id="full">
+<div id="full" style="background-color: white;padding: 10px;">
 
 	<datalist id="list">
 		<option value="header">Header</option>
@@ -18,24 +12,24 @@
 	</datalist>
 
 
-	<form id="values" style="margin: 20px;" >
-		<label for="r" title="Red" >Red:
-			<input type="number" min="0" max="255" step="1" value="255" id="r" placeholder="Red" oninput="colors();" />
-		</label>
-		<label for="g" title="Green" >Green:
-			<input type="number" min="0" max="255" step="1" value="255" id="g" placeholder="Green" oninput="colors();" />
-		</label>
-		<label for="b" title="Blue" >Blue:
-			<input type="number" min="0" max="255" step="1" value="255" id="b" placeholder="Blue" oninput="colors();" />
-		</label>
-		<label for="o" title="Opacity" >Opacity:
-			<input type="number" min="0" max="1" step="0.1" value="1" id="o" placeholder="Opacity" oninput="colors();" />
-		</label>
-		<label title="Color" ><input type="radio" name="s" value="color" />Foreground</label>
-		<label title="BackgroundColor" ><input type="radio" name="s" value="background-color" checked="" />Background</label>
-		<label for="t" title="Target" >Target:
-			<input type="text" id="t" placeholder="Target" list="list" />
-		</label>
+	<form id="values" class="wd-row">
+	  <div class="wd-block-child wd-padding">
+		  <label title="Red" >Red/Green/Blue/Opacity: <b id="rgb" class="wd-i"></b></label>
+		  <input type="range" min="0" max="255" step="1"   value="127" id="r" oninput="colors();" />
+		  <input type="range" min="0" max="255" step="1"   value="127" id="g" oninput="colors();" />
+		  <input type="range" min="0" max="255" step="1"   value="127" id="b" oninput="colors();" />
+		  <input type="range" min="0" max="1"   step="0.1" value="1"   id="o" oninput="colors();" />
+	  </div>
+	  <div class="wd-block-child wd-padding">
+		  <label title="Color" >
+		    <input type="radio" name="s" value="color" onchange="colors();" />Foreground
+		  </label>
+	    <label title="BackgroundColor" >
+	      <input type="radio" name="s" value="background-color" checked="" onchange="colors();" />Background
+	    </label>
+	    <label for="t" title="Target" >Target:</label>
+		  <input type="text" id="t" placeholder="Target" list="list" />
+	  </div>
 	</form>
 
 	<hr>
@@ -54,13 +48,17 @@ function colors() {
 	let t = "#target "+document.getElementById("t").value;
 	let q = document.querySelector(t);
 	if (q === null) return;
-	let r = document.getElementById("r").value;
-	let g = document.getElementById("g").value;
-	let b = document.getElementById("b").value;
-	let o = document.getElementById("o").value;
-	let s = document.getElementsByName("s");
+  var color = [
+	  document.getElementById("r").value,
+	  document.getElementById("g").value,
+	  document.getElementById("b").value,
+	  document.getElementById("o").value
+  ];
+  let s = document.getElementsByName("s");
 	let style =  s[0].checked ? s[0].value : s[1].value;
-	let value = (style === "color" ? "rgb" : "rgba") + "("+r+","+g+","+b+","+o+")";
+	let value = "rgba("+color.join(",")+")";
+  document.getElementById("rgb").textContent = value;
 	q.style[style] = value;
 }
+colors();
 </script>

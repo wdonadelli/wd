@@ -59,7 +59,7 @@ try {
 <body class="wd-flyer">
 
 	<header class="wd-bg-white">
-		<h2>WD Web Library Lab</h2>
+		<h2><span class="wd-icon-menu" data-wd-css="${#menu}tgl{wd-open}"></span> WD Web Library Lab</h2>
 	</header>
 
 
@@ -72,13 +72,13 @@ try {
 						<textarea id="ie_code" style="height: 300px" class="wd-block wd-code"></textarea>
 					</div>
 					<div class="wd-row">
-						<div class="wd-col-01">
+						<div class="wd-block-child">
 							<button type="button" id="ie_apply" data-wd-device="desktop{wd-icon-copy}" title="Render changes."> Apply</button>
 						</div>
-						<div class="wd-col-01">
+						<div class="wd-block-child">
 							<button type="button" id="ie_reset" data-wd-device="desktop{wd-icon-close}" title="Restore the original code."> Reset</button>
 						</div>
-						<div class="wd-col-01">
+						<div class="wd-block-child">
 							<button type="button" id="ie_dom" data-wd-device="desktop{wd-icon-paste}" title="Get and paste the current DOM tree into the text area."> DOM</button>
 						</div>
 					</div>
@@ -88,6 +88,19 @@ try {
 		</div>
 	</main>
 
+
+  <div class="wd-modal" id="menu">
+    <div class="wd-window-left wd-bg-white wd-padding">
+      <article class="wd-flyer">
+        <header>
+          <h4>Menu</h3>
+        </header>
+        <nav data-wd-repeat="path{menu.json}">
+          <div><a href="?page={{target}}">{{target}}</a></div>
+        </nav>
+      </article>
+    </div>
+  </div>
 
 </body>
 </html>
