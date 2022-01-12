@@ -40,6 +40,7 @@ SOFTWARE.
 /* == BLOCO 1 ================================================================*/
 
 :root {
+  /* cores de fundo e de fonte */
 	--var-bg-code:      rgba(230, 230, 250, 1);
 	--var-fg-code:      rgba(0, 115, 230, 1);
 	--var-fg-link:      rgba(59, 175, 247, 1);
@@ -52,41 +53,58 @@ SOFTWARE.
 	--var-bg-window:    rgba(255, 255, 255, 1);
 	--var-bg-upon:      rgba(114, 159, 207, 0.5);
 	--var-fg-upon:      rgba(0, 0, 0, 1);
+  --var-bg-form: #f8f8ff;
+  --var-fg-form: #404040;
+  --var-bg-button: #f2f2f2;
+  --var-bg-button-active: #777777;
+  --var-fg-button-active: #f2f2f2;
 
+  /* tamanhos relativos padrão */
+	--var-size-default: 0.5em;
+	--var-size-medium:  1.0em;
+	--var-size-large:   2.0em;
+	--var-size-extra:   2.5em;
 
-	--var-em-small: 0.5em;
-	--var-em-medium: 1em;
-	--var-em-large: 2em;
-
-	--var-border-small: thin solid;
+  /* bordas */
+	--var-border-thin:   thin solid;
 	--var-border-medium: medium solid;
-	--var-border-large: thick solid;
-	--var-border-radius: 0.3em;
+	--var-border-thick:  thick solid;
+  --var-border-form:          1px solid #b3b3b3;
+  --var-border-form-active:   1px solid #1e90ff;
+  --var-border-form-required: 1px solid #f48aa0;
+  --var-border-form-invalid:  1px solid #dc143c;
+	--var-radius-default: 0.2em;
+	--var-radius-square:  50%;
 
 
-
-
+  /* sombras */
 	--var-shadow-nav:   inset 0em -0.3em 0em 0em rgba(114, 159, 207, 1);
   --var-shadow:       0.5em 0.5em 0em 0em rgba(136, 138, 133, 1);
   --var-shadow-cloud: 0em 0em 1.4em 0.5em rgba(211, 215, 207, 1);
   --var-shadow-upon:  inset 0em 0em 0em 0.2em rgba(114, 159, 207, 1);
+  --var-shadow-form-invalid: inset 0 0 0 1px #dc143c;
 
+  /* razão altura x comprimento */
 	--var-padd-top-ratio-square: 1;
 	--var-padd-top-ratio-portrait: calc(16/9);
 	--var-padd-top-ratio-landscape: calc(9/16);
 
+  /* especificando fontes */
+	--var-font-default: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+	--var-font-size:     16px;
+	--var-font-height:   1.5;
+	--var-font-table:    Verdana,sans-serif;
+	--var-font-headers: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+	--var-font-code:     monospace;
+	--var-font-form:     Verdana, sans-serif;
+
+  /* margem padrão */
+	--var-margin-default: 0.5em 0;
+
+  /* altura dos campos de formulário */
+  /* line height x font size + paddingTop + paddingBottom + borda: 1.5*16 + 0.5*16 + 0.5*16 + 2 = 42 >> 42/16 = 2,625 */
+  --var-height-form: 42px;
 }
-
-
-
-/*FIXME TODO
-.js-wd-checked:before {content: \"\\2713 \"}
-.js-wd-disabled       {pointer-events: none; color: #ccc; opacity: 0.8; cursor: default !important;}
-*/
-
-
-
-
 
 
 /* == BLOCO 2 ================================================================*/
@@ -134,17 +152,17 @@ script, style {
 /* == BLOCO 3 ================================================================*/
 
 .wd {
-	font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
-	font-size: 16px;
-	line-height: 1.5;
+	font-family: var(--var-font-default);
+	font-size: var(--var-font-size);
+	line-height: var(--var-font-height);
 }
 
 /* -- Semântica textual -- */
 .wd code {
 	background-color: var(--var-bg-code);
-	border-radius: 0.2em;
+	border-radius: var(--var-radius-default);
 	color: var(--var-fg-code);
-	font-family: monospace;
+	font-family: var(--var-font-code);
 	font-size: 0.9em;
 	padding: 0 0.3em;
 }
@@ -167,10 +185,8 @@ script, style {
   flex-wrap: nowrap;
 }
 .wd nav > *, .wd nav > a[href] {
-	background-color: transparent;
-	color: inherit;
+	color: inherit !important;
 	cursor: pointer;
-	display: block;
 	margin: 0;
 	padding: 0.5em;
 	text-decoration: none;
@@ -184,8 +200,9 @@ script, style {
 
 /* -- Elementos de cabeçalho e texto -- */
 .wd h1, .wd h2, .wd h3, .wd h4, .wd h5, .wd h6 {
+  font-family: var(--var-font-headers);
 	font-weight: bold;
-	margin: 0.5em 0;
+	margin: var(--var-margin-default);
 }
 .wd h1  {font-size: 2.00em;}
 .wd h2  {font-size: 1.50em;}
@@ -194,21 +211,48 @@ script, style {
 .wd h5  {font-size: 0.85em;}
 .wd h6  {font-size: 0.65em;}
 .wd p   {margin: 1em 0;}
-.wd pre {margin: 0.5em 0;}
-.wd blockquote {margin: 1.4em auto; width: 75%;}
+.wd pre {margin: var(--var-margin-default);}
+.wd blockquote {
+  margin: 1.4em auto;
+  width: 75%;
+}
 
 /* -- headers, footers e navs -- */
-.wd header, .wd footer {padding: 0.5em 2em;}
-.wd header > *,   .wd footer > *   {margin: 0.5em 0;}
-.wd header > nav, .wd footer > nav {margin-right: -2em; margin-left: -2em;}
-.wd header > *:first-child,   .wd footer > *:first-child   {margin-top: 0;}
-.wd header > nav:first-child, .wd footer > nav:first-child {margin-top: -0.5em;}
-.wd header > *:last-child,    .wd footer > *:last-child    {margin-bottom: 0;}
-.wd header > nav:last-child,  .wd footer > nav:last-child  {margin-bottom: -0.5em;}
+.wd header,
+.wd footer {
+  padding: 0.5em 2em;
+}
+.wd header > *,
+.wd footer > * {
+  margin: var(--var-margin-default);
+}
+.wd header > *:first-child,
+.wd footer > *:first-child { /* utilizar o valor de padding do pai */
+  margin-top: 0;
+}
+.wd header > *:last-child,
+.wd footer > *:last-child { /* utilizar o valor de padding do pai */
+  margin-bottom: 0;
+}
+.wd header > nav,
+.wd footer > nav { /* ignorar padding do pai */
+  margin-right: -2em;
+  margin-left: -2em;
+}
+.wd header > nav:first-child,
+.wd footer > nav:first-child { /* ignorar padding do pai */
+  margin-top: -0.5em;
+}
+.wd header > nav:last-child,
+.wd footer > nav:last-child { /* ignorar padding do pai */
+  margin-bottom: -0.5em;
+}
 
 /* -- Imagens -- */
-.wd figure, .wd picture {margin: 0.5em 0;}
-
+.wd figure,
+.wd picture {
+  margin: var(--var-margin-default);
+}
 .wd figure > img,
 .wd figure > a > img {
 	display: block;
@@ -216,7 +260,6 @@ script, style {
 	text-align: center;
 	max-width: 100%;
 }
-
 .wd figcaption {
 	font-size: smaller;
 	padding: 0.3em;
@@ -226,38 +269,54 @@ script, style {
 /* -- Listas -- */
 .wd ul, .wd ol {
 	list-style-position: inside;
-	margin: 0.5em 0;
+	margin: var(--var-margin-default);
 	padding: 0;
 }
-.wd ul ul, .wd ul ol, .wd ol ol, .wd ol ul {margin: 0;}
-.wd ul > li, .wd ol > li {padding: 0.2em 0.2em 0.2em 2em;}
+.wd ul ul, .wd ul ol,
+.wd ol ol, .wd ol ul {
+  margin: 0;
+}
+.wd ul > li,
+.wd ol > li {
+  padding: 0.2em 0.2em 0.2em 2em;
+}
 
-.wd dl {margin: 0.5em 0; padding: 0;}
-.wd dl > dt, .wd dl > dd {padding: 0.2em; margin: 0;}
-.wd dl > dt {font-weight: bold;}
-.wd dl > dd {margin-left: 2em;}
+.wd dl {
+  margin: var(--var-margin-default);
+  padding: 0;
+}
+.wd dl > dt,
+.wd dl > dd {
+  padding: 0.2em;
+  margin: 0;
+}
+.wd dl > dt {
+  font-weight: bold;
+}
+.wd dl > dd {
+  margin-left: 2em;
+}
 
 /* -- Tabelas -- */
 .wd table {
 	border-collapse: collapse;
 	border-spacing: 0;
-	font-family: Verdana,sans-serif;
-	margin-bottom: 0.5em;
-	margin-top: 0.5em;
-	margin-left: auto;
-	margin-right: auto;
+	font-family: var(--var-font-table);
+	margin: 0.5em auto;
 }
-
-.wd-table[border] {border-style: solid;}
-
+.wd-table[border] {
+  border-style: solid;
+}
 .wd table caption {
-	font-weight: bold;
-	font-size: larger;
 	padding: 0.3em;
+	font-weight: normal;
+	caption-side: bottom;
+	font-size: smaller;
+	padding: 0.2em;
 	text-align: center;
-	vertical-align: middle;
 }
-.wd table th, .wd table td {
+.wd table th,
+.wd table td {
 	font-size: smaller;
 	padding: 0.3em;
 	text-align: left;
@@ -273,13 +332,13 @@ script, style {
 /* -- Formulários (select input button label select textarea) -- */
 .wd form {
 	padding: 0;
-	margin: 0.5em 0;
+	margin: var(--var-margin-default);
 }
 
 .wd fieldset {
-	border: var(--var-border-small);
-	border-radius: 0.2em;
-	margin: 0.5em 0;
+	border:        var(--var-border-thin);
+	border-radius: var(--var-radius-default);
+	margin:        var(--var-margin-default);
 	padding: 0.5em;
 }
 .wd fieldset > legend {
@@ -287,60 +346,56 @@ script, style {
 }
 
 .wd button, .wd input, .wd label, .wd select, .wd textarea, .wd fieldset > legend {
-	font-family: Verdana, sans-serif;
-	font-size: 1em;
+	font-family: var(--var-font-form);
+	font-size:   var(--var-font-size);
+	line-height: var(--var-font-height);
+	height:      var(--var-height-form);
 	outline: inherit;
-	height: 2.625em;
 	padding: 0.5em;
-	line-height: 1.5;
 	vertical-align: middle;
 }
-
+/*------------------------------------------------------------------------------
+| campo simples: borda padrão
+| campo ativo:   borda azul
+| campo obrigatório: borda vermelha
+| campo inválido: borda vermelha e sombra
+\-----------------------------------------------------------------------------*/
 .wd input, .wd select, .wd textarea, .wd button {
-	color: #404040;
-	background-color: #f8f8ff;
-	border: var(--var-border-small) #b3b3b3;
-	border-radius: 0.2em;
-
+	color: var(--var-fg-form);
+	background-color: var(--var-bg-form);
+	border: var(--var-border-form);
+	border-radius: var(--var-radius-default);
 }
 .wd input:hover, .wd select:hover, .wd textarea:hover, .wd button:hover,
 .wd input:focus, .wd select:focus, .wd textarea:focus, .wd button:focus {
-	border: var(--var-border-small) #1e90ff;
+	border: var(--var-border-form-active);
 }
-.wd input:focus, .wd select:focus, .wd textarea:focus {
-	box-shadow: 0 0 0 1px #1e90ff;
-} 
 
+.wd input:required,        .wd select:required,        .wd textarea:required,
+.wd input[required],       .wd select[required],       .wd textarea[required],
 .wd input:required:hover,  .wd select:required:hover,  .wd textarea:required:hover,
 .wd input[required]:hover, .wd select[required]:hover, .wd textarea[required]:hover,
 .wd input:required:focus,  .wd select:required:focus,  .wd textarea:required:focus,
 .wd input[required]:focus, .wd select[required]:focus, .wd textarea[required]:focus {
-	border: var(--var-border-small) #f48aa0;
+	border: var(--var-border-form-required);
 }
-.wd input:required:focus,  .wd select:required:focus,  .wd textarea:required:focus,
-.wd input[required]:focus, .wd select[required]:focus, .wd textarea[required]:focus {
-	box-shadow: 0 0 0 1px #f48aa0;
+.wd input:out-of-range, .wd select:out-of-range, .wd textarea:out-of-range,
+.wd input:invalid,      .wd select:invalid,      .wd textarea:invalid {
+	border: var(--var-border-form-invalid);
+	box-shadow: var(--var-shadow-form-invalid);
 }
-.wd input:out-of-range,  .wd select:out-of-range,  .wd textarea:out-of-range,
-.wd input:invalid,  .wd select:invalid,  .wd textarea:invalid {
-	background-color: #e8e0f0 !important;
-	border: var(--var-border-small) #dc143c;
-	box-shadow: 0 0 0 1px #dc143c;
-	color: #663399 !important;
-}
+
 .wd input[type=radio], .wd input[type=checkbox] {
-	border: 0;
 	padding: 0;
+	box-shadow: none;
 }
-.wd input[type=range],       .wd input[type=file],
-.wd input[type=range]:focus, .wd input[type=file]:focus,
-.wd input[type=range]:hover, .wd input[type=file]:hover {
+.wd input[type=range],
+.wd input[type=range]:focus,
+.wd input[type=range]:hover {
 	border: none;
 	box-shadow: none;
 }
-.wd input[type=range]:required, .wd input[type=file][required] {
-	color: #dc143c;
-}
+
 .wd input[disabled], .wd select[disabled], .wd textarea[disabled],
 .wd input:disabled,  .wd select:disabled,  .wd textarea:disabled,
 .wd button:disabled, .wd button[disabled] {
@@ -348,9 +403,12 @@ script, style {
 	pointer-events: none;
 }
 
-.wd input[type=submit], .wd input[type=button], .wd input[type=reset],
-.wd input[color], .wd button {
-	background-color: #f2f2f2;
+.wd input[type="submit"],
+.wd input[type="button"],
+.wd input[type="reset"],
+.wd input[type="color"],
+.wd button {
+	background-color: var(--var-bg-button);
 	cursor: pointer;
 	padding-left: 2em;
 	padding-right: 2em;
@@ -358,25 +416,25 @@ script, style {
 	text-align: center;
 	white-space: pre nowrap;
 }
-.wd input[type=submit]:active, .wd input[type=button]:active, .wd input[type=reset]:active,
-.wd input[color]:active, .wd button:active {
-	background-color: #777777 !important;
-	color: #f2f2f2;
-	border-color: #777777;
+.wd input[type="submit"]:active,
+.wd input[type="button"]:active,
+.wd input[type="reset"]:active,
+.wd input[type="color"]:active,
+.wd button:active {
+	background-color: var(--var-bg-button-active) !important;
+	color: var(--var-fg-button-active);
+	border-color: var(--var-bg-button-active);
 }
-
-.wd input[type=color] {
+.wd input[type="color"] {
 	padding: 0.3em;
 }
 
 .wd select {
-	-webkit-appearance: none;
-	-moz-appearance: none;
 	appearance: none;
 	background-image: url("data:image/svg+xml;utf8,<svg fill='black' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
 	background-repeat: no-repeat;
-	background-position: right center;
-	padding-right: 25px;
+	background-position: left center;
+	padding-left: 25px;
 }
 
 /*============================================================================*/
@@ -552,7 +610,7 @@ script, style {
 
 .wd .wd-grid > *, .wd .wd-grid-line > *, .wd .wd-grid-blocks > * {
 	overflow: auto;
-	margin: var(--var-em-medium);
+	margin: var(--var-size-medium);
 	height: 10em;
 	flex: 1 1 1;
 }
@@ -755,7 +813,7 @@ script, style {
 
 /* -- Flyer -- */
 .wd .wd-flyer {padding: 0.5em;}
-.wd .wd-flyer > *             {margin: 0.5em 0;}
+.wd .wd-flyer > *             {margin: var(--var-margin-default);}
 .wd .wd-flyer > header, .wd .wd-flyer > footer, .wd .wd-flyer > nav {margin-left: -0.5em; margin-right: -0.5em;}
 .wd .wd-flyer > *:first-child {margin-top: 0;}
 .wd .wd-flyer > header:first-child, .wd .wd-flyer > footer:first-child, .wd .wd-flyer > nav:first-child {margin-top: -0.5em;}
@@ -851,7 +909,7 @@ script, style {
 	background-color: #E6E6FA !important;
 	border-radius: 0.2em;
 	color: #0073e6 !important;
-	font-family: monospace !important;
+	font-family: var(--var-font-code) !important;
 	font-size: 0.9em !important;
 	font-style: normal !important;
 	font-weight: normal !important;
@@ -1306,62 +1364,62 @@ script, style {
 .wd .wd-padding,        .wd .wd-padding-child > *,
 .wd .wd-padding-top,    .wd .wd-padding-top-child > *,
 .wd .wd-padding-height, .wd .wd-padding-height-child > * {
-	padding-top: var(--var-em-small) !important;
+	padding-top: var(--var-size-default) !important;
 }
 .wd .wd-xpadding,        .wd .wd-xpadding-child > *,
 .wd .wd-xpadding-top,    .wd .wd-xpadding-top-child > *,
 .wd .wd-xpadding-height, .wd .wd-xpadding-height-child > * {
-	padding-top: var(--var-em-medium) !important;
+	padding-top: var(--var-size-medium) !important;
 }
 .wd .wd-xxpadding,        .wd .wd-xxpadding-child > *,
 .wd .wd-xxpadding-top,    .wd .wd-xxpadding-top-child > *,
 .wd .wd-xxpadding-height, .wd .wd-xxpadding-height-child > * {
-	padding-top: var(--var-em-large) !important;
+	padding-top: var(--var-size-large) !important;
 }
 .wd .wd-padding,        .wd .wd-padding-child > *,
 .wd .wd-padding-bottom, .wd .wd-padding-bottom-child > *,
 .wd .wd-padding-height, .wd .wd-padding-height-child > * {
-	padding-bottom: var(--var-em-small) !important;
+	padding-bottom: var(--var-size-default) !important;
 }
 .wd .wd-xpadding,        .wd .wd-xpadding-child > *,
 .wd .wd-xpadding-bottom, .wd .wd-xpadding-bottom-child > *,
 .wd .wd-xpadding-height, .wd .wd-xpadding-height-child > * {
-	padding-bottom: var(--var-em-medium) !important;
+	padding-bottom: var(--var-size-medium) !important;
 }
 .wd .wd-xxpadding,        .wd .wd-xxpadding-child > *,
 .wd .wd-xxpadding-bottom, .wd .wd-xxpadding-bottom-child > *,
 .wd .wd-xxpadding-height, .wd .wd-xxpadding-height-child > * {
-	padding-bottom: var(--var-em-large) !important;
+	padding-bottom: var(--var-size-large) !important;
 }
 .wd .wd-padding,        .wd .wd-padding-child > *,
 .wd .wd-padding-left,   .wd .wd-padding-left-child > *,
 .wd .wd-padding-length, .wd .wd-padding-length-child > * {
-	padding-left: var(--var-em-small) !important;
+	padding-left: var(--var-size-default) !important;
 }
 .wd .wd-xpadding,        .wd .wd-xpadding-child > *,
 .wd .wd-xpadding-left,   .wd .wd-xpadding-left-child > *,
 .wd .wd-xpadding-length, .wd .wd-xpadding-length-child > * {
-	padding-left: var(--var-em-medium) !important;
+	padding-left: var(--var-size-medium) !important;
 }
 .wd .wd-xxpadding,        .wd .wd-xxpadding-child > *,
 .wd .wd-xxpadding-left,   .wd .wd-xxpadding-left-child > *,
 .wd .wd-xxpadding-length, .wd .wd-xxpadding-length-child > * {
-	padding-left: var(--var-em-large) !important;
+	padding-left: var(--var-size-large) !important;
 }
 .wd .wd-padding,        .wd .wd-padding-child > *,
 .wd .wd-padding-right,  .wd .wd-padding-right-child > *,
 .wd .wd-padding-length, .wd .wd-padding-length-child > * {
-	padding-right: var(--var-em-small) !important;
+	padding-right: var(--var-size-default) !important;
 }
 .wd .wd-xpadding,        .wd .wd-xpadding-child > *,
 .wd .wd-xpadding-right,  .wd .wd-xpadding-right-child > *,
 .wd .wd-xpadding-length, .wd .wd-xpadding-length-child > * {
-	padding-right: var(--var-em-medium) !important;
+	padding-right: var(--var-size-medium) !important;
 }
 .wd .wd-xxpadding,        .wd .wd-xxpadding-child > *,
 .wd .wd-xxpadding-right,  .wd .wd-xxpadding-right-child > *,
 .wd .wd-xxpadding-length, .wd .wd-xxpadding-length-child > * {
-	padding-right: var(--var-em-large) !important;
+	padding-right: var(--var-size-large) !important;
 }
 .wd .wd-padding-none, .wd .wd-padding-none-child > * {
 	padding: 0 !important;
@@ -1371,62 +1429,62 @@ script, style {
 .wd .wd-margin,        .wd .wd-margin-child > *,
 .wd .wd-margin-top,    .wd .wd-margin-top-child > *,
 .wd .wd-margin-height, .wd .wd-margin-height-child > * {
-	margin-top: var(--var-em-small) !important;
+	margin-top: var(--var-size-default) !important;
 }
 .wd .wd-xmargin,        .wd .wd-xmargin-child > *,
 .wd .wd-xmargin-top,    .wd .wd-xmargin-top-child > *,
 .wd .wd-xmargin-height, .wd .wd-xmargin-height-child > * {
-	margin-top: var(--var-em-medium) !important;
+	margin-top: var(--var-size-medium) !important;
 }
 .wd .wd-xxmargin,        .wd .wd-xxmargin-child > *,
 .wd .wd-xxmargin-top,    .wd .wd-xxmargin-top-child > *,
 .wd .wd-xxmargin-height, .wd .wd-xxmargin-height-child > * {
-	margin-top: var(--var-em-large) !important;
+	margin-top: var(--var-size-large) !important;
 }
 .wd .wd-margin,        .wd .wd-margin-child > *,
 .wd .wd-margin-bottom, .wd .wd-margin-bottom-child > *,
 .wd .wd-margin-height, .wd .wd-margin-height-child > * {
-	margin-bottom: var(--var-em-small) !important;
+	margin-bottom: var(--var-size-default) !important;
 }
 .wd .wd-xmargin,        .wd .wd-xmargin-child > *,
 .wd .wd-xmargin-bottom, .wd .wd-xmargin-bottom-child > *,
 .wd .wd-xmargin-height, .wd .wd-xmargin-height-child > * {
-	margin-bottom: var(--var-em-medium) !important;
+	margin-bottom: var(--var-size-medium) !important;
 }
 .wd .wd-xxmargin,        .wd .wd-xxmargin-child > *,
 .wd .wd-xxmargin-bottom, .wd .wd-xxmargin-bottom-child > *,
 .wd .wd-xxmargin-height, .wd .wd-xxmargin-height-child > * {
-	margin-bottom: var(--var-em-large) !important;
+	margin-bottom: var(--var-size-large) !important;
 }
 .wd .wd-margin,        .wd .wd-margin-child > *,
 .wd .wd-margin-left,   .wd .wd-margin-left-child > *,
 .wd .wd-margin-length, .wd .wd-margin-length-child > * {
-	margin-left: var(--var-em-small) !important;
+	margin-left: var(--var-size-default) !important;
 }
 .wd .wd-xmargin,        .wd .wd-xmargin-child > *,
 .wd .wd-xmargin-left,   .wd .wd-xmargin-left-child > *,
 .wd .wd-xmargin-length, .wd .wd-xmargin-length-child > * {
-	margin-left: var(--var-em-medium) !important;
+	margin-left: var(--var-size-medium) !important;
 }
 .wd .wd-xxmargin,        .wd .wd-xxmargin-child > *,
 .wd .wd-xxmargin-left,   .wd .wd-xxmargin-left-child > *,
 .wd .wd-xxmargin-length, .wd .wd-xxmargin-length-child > * {
-	margin-left: var(--var-em-large) !important;
+	margin-left: var(--var-size-large) !important;
 }
 .wd .wd-margin,        .wd .wd-margin-child > *,
 .wd .wd-margin-right,  .wd .wd-margin-right-child > *,
 .wd .wd-margin-length, .wd .wd-margin-length-child > * {
-	margin-right: var(--var-em-small) !important;
+	margin-right: var(--var-size-default) !important;
 }
 .wd .wd-xmargin,        .wd .wd-xmargin-child > *,
 .wd .wd-xmargin-right,  .wd .wd-xmargin-right-child > *,
 .wd .wd-xmargin-length, .wd .wd-xmargin-length-child > * {
-	margin-right: var(--var-em-medium) !important;
+	margin-right: var(--var-size-medium) !important;
 }
 .wd .wd-xxmargin,        .wd .wd-xxmargin-child > *,
 .wd .wd-xxmargin-right,  .wd .wd-xxmargin-right-child > *,
 .wd .wd-xxmargin-length, .wd .wd-xxmargin-length-child > * {
-	margin-right: var(--var-em-large) !important;
+	margin-right: var(--var-size-large) !important;
 }
 .wd .wd-margin-none, .wd .wd-margin-none-child > * {
 	margin: 0 !important;
@@ -1436,7 +1494,7 @@ script, style {
 .wd .wd-border,        .wd .wd-border-child > *,
 .wd .wd-border-top,    .wd .wd-border-top-child > *,
 .wd .wd-border-height, .wd .wd-border-height-child > * {
-	border-top: var(--var-border-small) !important;
+	border-top: var(--var-border-thin) !important;
 }
 .wd .wd-xborder,        .wd .wd-xborder-child > *,
 .wd .wd-xborder-top,    .wd .wd-xborder-top-child > *,
@@ -1446,12 +1504,12 @@ script, style {
 .wd .wd-xxborder,        .wd .wd-xxborder-child > *,
 .wd .wd-xxborder-top,    .wd .wd-xxborder-top-child > *,
 .wd .wd-xxborder-height, .wd .wd-xxborder-height-child > * {
-	border-top: var(--var-border-large) !important;
+	border-top: var(--var-border-thick) !important;
 }
 .wd .wd-border,        .wd .wd-border-child > *,
 .wd .wd-border-bottom, .wd .wd-border-bottom-child > *,
 .wd .wd-border-height, .wd .wd-border-height-child > * {
-	border-bottom: var(--var-border-small) !important;
+	border-bottom: var(--var-border-thin) !important;
 }
 .wd .wd-xborder,        .wd .wd-xborder-child > *,
 .wd .wd-xborder-bottom, .wd .wd-xborder-bottom-child > *,
@@ -1461,12 +1519,12 @@ script, style {
 .wd .wd-xxborder,        .wd .wd-xxborder-child > *,
 .wd .wd-xxborder-bottom, .wd .wd-xxborder-bottom-child > *,
 .wd .wd-xxborder-height, .wd .wd-xxborder-height-child > * {
-	border-bottom: var(--var-border-large) !important;
+	border-bottom: var(--var-border-thick) !important;
 }
 .wd .wd-border,        .wd .wd-border-child > *,
 .wd .wd-border-left,   .wd .wd-border-left-child > *,
 .wd .wd-border-length, .wd .wd-border-length-child > * {
-border-left: var(--var-border-small) !important;
+border-left: var(--var-border-thin) !important;
 }
 .wd .wd-xborder,        .wd .wd-xborder-child > *,
 .wd .wd-xborder-left,   .wd .wd-xborder-left-child > *,
@@ -1476,12 +1534,12 @@ border-left: var(--var-border-small) !important;
 .wd .wd-xxborder,        .wd .wd-xxborder-child > *,
 .wd .wd-xxborder-left,   .wd .wd-xxborder-left-child > *,
 .wd .wd-xxborder-length, .wd .wd-xxborder-length-child > * {
-	border-left: var(--var-border-large) !important;
+	border-left: var(--var-border-thick) !important;
 }
 .wd .wd-border,        .wd .wd-border-child > *,
 .wd .wd-border-right,  .wd .wd-border-right-child > *,
 .wd .wd-border-length, .wd .wd-border-length-child > * {
-	border-right: var(--var-border-small) !important;
+	border-right: var(--var-border-thin) !important;
 }
 .wd .wd-xborder,        .wd .wd-xborder-child > *,
 .wd .wd-xborder-right,  .wd .wd-xborder-right-child > *,
@@ -1491,7 +1549,7 @@ border-left: var(--var-border-small) !important;
 .wd .wd-xxborder,        .wd .wd-xxborder-child > *,
 .wd .wd-xxborder-right,  .wd .wd-xxborder-right-child > *,
 .wd .wd-xxborder-length, .wd .wd-xxborder-length-child > * {
-	border-right: var(--var-border-large) !important;
+	border-right: var(--var-border-thick) !important;
 }
 .wd .wd-border-box,  .wd .wd-border-box-child  > * {
 	border: 1px solid transparent !important;
@@ -1504,22 +1562,22 @@ border-left: var(--var-border-small) !important;
 .wd .wd-radius,      .wd .wd-radius-child > *,
 .wd .wd-radius-top,  .wd .wd-radius-top-child > *,
 .wd .wd-radius-left, .wd .wd-radius-left-child > * {
-	border-top-left-radius: var(--var-border-radius) !important;
+	border-top-left-radius: var(--var-radius-default) !important;
 }
 .wd .wd-radius,       .wd .wd-radius-child > *,
 .wd .wd-radius-top,   .wd .wd-radius-top-child > *,
 .wd .wd-radius-right, .wd .wd-radius-right-child > * {
-	border-top-right-radius: var(--var-border-radius) !important;
+	border-top-right-radius: var(--var-radius-default) !important;
 }
 .wd .wd-radius,        .wd .wd-radius-child > *,
 .wd .wd-radius-bottom, .wd .wd-radius-bottom-child > *,
 .wd .wd-radius-left,   .wd .wd-radius-left-child > * {
-	border-bottom-left-radius: var(--var-border-radius) !important;
+	border-bottom-left-radius: var(--var-radius-default) !important;
 }
 .wd .wd-radius,        .wd .wd-radius-child > *,
 .wd .wd-radius-bottom, .wd .wd-radius-bottom-child > *,
 .wd .wd-radius-right,  .wd .wd-radius-right-child > * {
-	border-bottom-right-radius: var(--var-border-radius) !important;
+	border-bottom-right-radius: var(--var-radius-default) !important;
 }
 .wd .wd-radius-none, .wd .wd-radius-none-child > * {
 	border-radius: 0 !important;
