@@ -4,31 +4,22 @@
 
 <div id="full" style="background-color: white;padding: 10px;">
 
-	<datalist id="list">
-		<option value="header">Header</option>
-		<option value="section">Section</option>
-		<option value="footer">Footer</option>
-		<option value="article">Article</option>
-	</datalist>
-
-
 	<form id="values" class="wd-row">
 	  <div class="wd-block-child wd-padding">
-		  <label title="Red" >Red/Green/Blue/Opacity: <b id="rgb" class="wd-i"></b></label>
-		  <input type="range" min="0" max="255" step="1"   value="127" id="r" oninput="colors();" />
-		  <input type="range" min="0" max="255" step="1"   value="127" id="g" oninput="colors();" />
-		  <input type="range" min="0" max="255" step="1"   value="127" id="b" oninput="colors();" />
-		  <input type="range" min="0" max="1"   step="0.1" value="1"   id="o" oninput="colors();" />
-	  </div>
-	  <div class="wd-block-child wd-padding">
-		  <label title="Color" >
-		    <input type="radio" name="s" value="color" onchange="colors();" />Foreground
-		  </label>
-	    <label title="BackgroundColor" >
-	      <input type="radio" name="s" value="background-color" checked="" onchange="colors();" />Background
-	    </label>
-	    <label for="t" title="Target" >Target:</label>
-		  <input type="text" id="t" placeholder="Target" list="list" />
+		  <label for="bgHeader">BG Header: <span id="cbgHeader"></span></label>
+		  <input type="color" id="bgHeader" value="#ffffff" oninput="colors();" />
+      <label for="bgContent">BG Content: <span id="cbgContent"></span></label>
+		  <input type="color" id="bgContent" value="#ffffff" oninput="colors();" />
+	    <label for="bgFooter">BG Footer: <span id="cbgFooter"></span></label>
+		  <input type="color" id="bgFooter" value="#ffffff" oninput="colors();" />
+    </div>
+    <div class="wd-block-child wd-padding">
+	    <label for="fgHeader">FG Header: <span id="cfgHeader"></span></label>
+			<input type="color" id="fgHeader" value="#000000" oninput="colors();" />
+			<label for="fgContent">FG Content: <span id="cfgContent"></span></label>
+      <input type="color" id="fgContent" value="#000000" oninput="colors();" />
+	    <label for="fgFooter">FG Footer: <span id="cfgFooter"></span></label>
+      <input type="color" id="fgFooter" value="#000000" oninput="colors();" />
 	  </div>
 	</form>
 
@@ -36,29 +27,36 @@
 
 	<div id="target"  style="margin: 20px;">
 		<article>
-			<header><h3>Header</h3></header>
-			<section style="padding: 10px;">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed turpis quam, rhoncus id tristique quis, pretium et nisi. Aenean feugiat leo id mi fermentum interdum. Donec sed magna mi. Curabitur lobortis mi at ultricies dapibus. Proin placerat orci a enim tempor pretium. Sed vel elementum erat. Donec quis nibh vel lorem hendrerit consequat eu tincidunt felis. Curabitur non ornare turpis, sit amet finibus nibh. Proin ipsum tortor, pharetra sit amet fermentum nec, ultricies in ipsum. Maecenas ultrices volutpat congue.</section>
-			<footer>Footer</footer>
+			<header id="Header"><h3>Header</h3></header>
+			<section style="padding: 10px;" id="Content">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed turpis quam, rhoncus id tristique quis, pretium et nisi. Aenean feugiat leo id mi fermentum interdum. Donec sed magna mi. Curabitur lobortis mi at ultricies dapibus. Proin placerat orci a enim tempor pretium. Sed vel elementum erat. Donec quis nibh vel lorem hendrerit consequat eu tincidunt felis. Curabitur non ornare turpis, sit amet finibus nibh. Proin ipsum tortor, pharetra sit amet fermentum nec, ultricies in ipsum. Maecenas ultrices volutpat congue.</section>
+			<footer id="Footer">Footer</footer>
 		</article>
 	</div>
 </div>
 
+
+
+
+
+
+
+
+
+
+
+
+
 <script>
 function colors() {
-	let t = "#target "+document.getElementById("t").value;
-	let q = document.querySelector(t);
-	if (q === null) return;
-  var color = [
-	  document.getElementById("r").value,
-	  document.getElementById("g").value,
-	  document.getElementById("b").value,
-	  document.getElementById("o").value
-  ];
-  let s = document.getElementsByName("s");
-	let style =  s[0].checked ? s[0].value : s[1].value;
-	let value = "rgba("+color.join(",")+")";
-  document.getElementById("rgb").textContent = value;
-	q.style[style] = value;
+	let id = ["Header", "Content", "Footer"];
+	for (let i = 0; i < id.length; i++) {
+		let bg = document.getElementById("bg"+id[i]).value;
+		let fg = document.getElementById("fg"+id[i]).value;
+		document.getElementById(id[i]).style.backgroundColor = bg;
+		document.getElementById(id[i]).style.color = fg;
+		document.getElementById("cbg"+id[i]).textContent = bg;
+		document.getElementById("cfg"+id[i]).textContent = fg;
+	}
 }
 colors();
 </script>

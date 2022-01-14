@@ -1,4 +1,4 @@
-<h3>Shadow</h3>
+<h3>Emphasize</h3>
 
 <nav>
   <span data-wd-nav="type{}${#fixed}" data-wd-click="">Fixed</span>
@@ -15,7 +15,7 @@
     <span data-wd-css="$${#target, #target *}&${#target}add{wd-cloud}">Cloud</span>
     <span data-wd-css="$${#target, #target *}&${#target}add{wd-opaque}">Opaque</span>
     <span data-wd-css="$${#target, #target *}&${#target}add{wd-upon}">Upon</span>
-    <span data-wd-css="$${#target, #target *}&${#target}add{wd-upon-toggle}">upon-toggle</span>
+    <span data-wd-css="$${#target, #target *}&${#target}add{wd-zebra}">Zebra</span>
   </nav>
   <nav id="enter">
     <span data-wd-css="$${#target, #target *}&${#target}add{wd-shadow-enter wd-border}">Shadow</span>
@@ -40,7 +40,6 @@
   </nav>
 </div>
 
-
 <div id="target">
 	<div>Line 1</div>
 	<div>Line 2</div>
@@ -48,3 +47,29 @@
   <div>Line 4</div>
   <div>Line 5</div>
 </div>
+
+<h3>Table</h3>
+
+<nav>
+  <span data-wd-css="${#tab > tbody}tgl{wd-zebra}">Zebra</span>
+  <span data-wd-css="${#tab > tbody}tgl{wd-upon-enter-child}">Upon</span>
+  <span data-wd-set="${#tab}border{1}">Border</span>
+  <span data-wd-set="${#tab}border{0}"><s>Border</s></span>
+</nav>
+
+<table id="tab">
+  <thead>
+    <tr><td>Col A</td><td>Col B</td><td>Col C</td></tr>
+  </thead>
+  <tbody>
+    <tr><td>Cell A1</td><td>Cell B1</td><td>Cell C1</td></tr>
+    <tr><td>Cell A2</td><td>Cell B2</td><td>Cell C2</td></tr>
+    <tr><td>Cell A3</td><td>Cell B3</td><td>Cell C3</td></tr>
+    <tr><td>Cell A4</td><td>Cell B4</td><td>Cell C4</td></tr>
+    <tr><td>Cell A5</td><td>Cell B5</td><td>Cell C5</td></tr>
+  </tbody>
+  <tfoot>
+    <tr><td>Foot A</td><td>Foot B</td><td>Foot C</td></tr>
+  </tfoot>
+</table>
+
