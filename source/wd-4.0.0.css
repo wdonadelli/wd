@@ -33,87 +33,92 @@ SOFTWARE.
 | BLOCO 1: constantes
 | BLOCO 2: normalização de elementos
 | BLOCO 3: estilizando elementos (wd class)
-| BLOCO 4: atributos de estrutura
-| BLOCO 5: boot
+| BLOCO 4: efeitos de uso interno
+| BLOCO 5: estilização de estruturas
 \-----------------------------------------------------------------------------*/
 
 /* == BLOCO 1 ================================================================*/
 
 :root {
- /* cores de fundo e de fonte */
-  --var-bg-grey-header: #888a85;
-  --var-fg-grey-header: #d3d7cf;
-  --var-bg-grey: #eeeeec;
-  --var-fg-grey: #555753;
+	/* cores de fundo e de fonte */
+	--var-bg-grey-header: #888a85;
+	--var-fg-grey-header: #d3d7cf;
+	--var-bg-grey: #eeeeec;
+	--var-fg-grey: #555753;
 
-  --var-bg-black-header: #2e3436;
-  --var-fg-black-header: #f3f3f3;
-  --var-bg-black: #888a85;
-  --var-fg-black: #282c2e;
+	--var-bg-black-header: #2e3436;
+	--var-fg-black-header: #f3f3f3;
+	--var-bg-black: #888a85;
+	--var-fg-black: #282c2e;
 
-  --var-bg-white-header: #e8e8e4;
-  --var-fg-white-header: #adadad;
-  --var-bg-white: #fcfcfc;
-  --var-fg-white: #babdb6;
+	--var-bg-white-header: #e8e8e4;
+	--var-fg-white-header: #adadad;
+	--var-bg-white: #fcfcfc;
+	--var-fg-white: #babdb6;
 
-  --var-bg-red-header: #aa0808;
-  --var-fg-red-header: #f3f3f3;
-  --var-bg-red: #fce7e7;
-  --var-fg-red: #a40000;
+	--var-bg-red-header: #aa0808;
+	--var-fg-red-header: #f3f3f3;
+	--var-bg-red: #fce7e7;
+	--var-fg-red: #a40000;
 
-  --var-bg-green-header: #4e9a06;
-  --var-fg-green-header: #f3f3f3;
-  --var-bg-green: #ccf6c8;
-  --var-fg-green: #418501;
+	--var-bg-green-header: #4e9a06;
+	--var-fg-green-header: #f3f3f3;
+	--var-bg-green: #ccf6c8;
+	--var-fg-green: #418501;
 
-  --var-bg-blue-header: #3465a4;
-  --var-fg-blue-header: #f3f3f3;
-  --var-bg-blue: #a3cbf7;
-  --var-fg-blue: #204a87;
+	--var-bg-blue-header: #3465a4;
+	--var-fg-blue-header: #f3f3f3;
+	--var-bg-blue: #a3cbf7;
+	--var-fg-blue: #204a87;
 
-  --var-bg-orange-header: #ce5c00;
-  --var-fg-orange-header: #eeeeec;
-  --var-bg-orange: #ffd69b;
-  --var-fg-orange: #c75900;
+	--var-bg-orange-header: #ce5c00;
+	--var-fg-orange-header: #eeeeec;
+	--var-bg-orange: #ffd69b;
+	--var-fg-orange: #c75900;
 
-  --var-bg-yellow-header: #ebd300;
-  --var-fg-yellow-header: #8f5902;
-  --var-bg-yellow: #f9f5d3;
-  --var-fg-yellow: #c4a000;
+	--var-bg-yellow-header: #ebd300;
+	--var-fg-yellow-header: #8f5902;
+	--var-bg-yellow: #f9f5d3;
+	--var-fg-yellow: #c4a000;
 
-  --var-bg-brown-header: #8f5902;
-  --var-fg-brown-header: #eeeeec;
-  --var-bg-brown: #efcf9e;
-  --var-fg-brown: #895400;
+	--var-bg-brown-header: #8f5902;
+	--var-fg-brown-header: #eeeeec;
+	--var-bg-brown: #efcf9e;
+	--var-fg-brown: #895400;
 
-  --var-bg-pink-header: #bc00a7;
-  --var-fg-pink-header: #f1c8ec;
-  --var-bg-pink: #f1c8ec;
-  --var-fg-pink: #a70094;
+	--var-bg-pink-header: #bc00a7;
+	--var-fg-pink-header: #f1c8ec;
+	--var-bg-pink: #f1c8ec;
+	--var-fg-pink: #a70094;
 
-  --var-bg-purple-header: #492b7a;
-  --var-fg-purple-header: #f3f3f3;
-  --var-bg-purple: #ccb2f6;
-  --var-fg-purple: #492b7a;
+	--var-bg-purple-header: #492b7a;
+	--var-fg-purple-header: #f3f3f3;
+	--var-bg-purple: #ccb2f6;
+	--var-fg-purple: #492b7a;
 
-  --var-bg-basic-header: #000000;
-  --var-fg-basic-header: #ffffff;
-  --var-bg-basic: #ffffff;
-  --var-fg-basic: #000000;
+	--var-bg-basic-header: #000000;
+	--var-fg-basic-header: #ffffff;
+	--var-bg-basic: #ffffff;
+	--var-fg-basic: #000000;
 
-	--var-bg-code: #e6e6fa;
-	--var-fg-code: #0073e6;
+	--var-bg-code: #eeeeec;
+	--var-fg-code: #2e3436;
+	--var-fg-code-reserved: #004d00;
+	--var-fg-code-return: #916a08;
+	--var-fg-code-values: #e01482;
+	--var-fg-code-comments: #4e3cc3;
+	--var-fg-code-line: #cccccc;
 
 	--var-fg-col-blue: #0050c5;
 	--var-fg-col-red: #fa3838;
 	--var-bg-col-green: #2c8759;
 	--var-bg-col-mark: #fdff87;
 
-  --var-bg-form: #f8f8ff;
-  --var-fg-form: #404040;
-  --var-bg-button: #f2f2f2;
-  --var-bg-button-active: #777777;
-  --var-fg-button-active: #f2f2f2;
+	--var-bg-form: #f8f8ff;
+	--var-fg-form: #404040;
+	--var-bg-button: #f2f2f2;
+	--var-bg-button-active: #777777;
+	--var-fg-button-active: #f2f2f2;
 
 	--var-fg-link:   #3baff7;
 
@@ -131,54 +136,71 @@ SOFTWARE.
 	--var-bg-tfoot: #ffffff;
 	--var-fg-tfoot: #000000;
 
- /* tamanhos relativos padrão */
+	/* tamanhos relativos padrão */
 	--var-size-default: 0.5em;
-	--var-size-medium: 1.0em;
-	--var-size-large: 2.0em;
-	--var-size-extra: 2.5em;
+	--var-size-medium:  1.0em;
+	--var-size-large:   2.0em;
+	--var-size-extra:   2.5em;
+	--var-size-flyer:   0.5em;
+	--var-size--flyer: -0.5em;
 
- /* bordas */
+
+	/* bordas */
 	--var-border-thin: thin solid;
 	--var-border-medium: medium solid;
 	--var-border-thick: thick solid;
-  --var-border-form: 1px solid #b3b3b3;
-  --var-border-form-active: 1px solid #1e90ff;
-  --var-border-form-required: 1px solid #f48aa0;
-  --var-border-form-invalid: 1px solid #dc143c;
+	--var-border-form: 1px solid #b3b3b3;
+	--var-border-form-active: 1px solid #1e90ff;
+	--var-border-form-required: 1px solid #f48aa0;
+	--var-border-form-invalid: 1px solid #dc143c;
 	--var-border-table: #888a85;
 	--var-radius-default: 0.2em;
 	--var-radius-square: 50%;
 
 
- /* sombras */
+	/* sombras */
 	--var-shadow-nav:  inset 0em -0.3em 0em 0em rgba(114, 159, 207, 1);
-  --var-shadow:            0.5em 0.5em 0em 0em rgba(136, 138, 133, 1);
-  --var-shadow-cloud:      0em 0em 1.4em 0.5em rgba(211, 215, 207, 0.8);
-  --var-shadow-upon: inset 0 0 0 0.1em #5c3566;
-  --var-shadow-form-invalid: inset 0 0 0 1px #dc143c;
+	--var-shadow:            0.5em 0.5em 0em 0em rgba(136, 138, 133, 1);
+	--var-shadow-cloud:      0em 0em 1.4em 0.5em rgba(211, 215, 207, 0.8);
+	--var-shadow-upon: inset 0 0 0 0.1em #5c3566;
+	--var-shadow-form-invalid: inset 0 0 0 1px #dc143c;
 
-  /* razão altura x comprimento */
-  --var-padd-top-ratio-square: 1;
-  --var-padd-top-ratio-portrait: calc(16/9);
-  --var-padd-top-ratio-landscape: calc(9/16);
+	/* razão altura x comprimento */
+	--var-padd-top-ratio-square: 1;
+	--var-padd-top-ratio-portrait: calc(16/9);
+	--var-padd-top-ratio-landscape: calc(9/16);
 
-  /* especificando fontes */
-  --var-font-default: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
-  --var-font-size: 16px;
-  --var-font-height: 1.5;
-  --var-font-table: Verdana,sans-serif;
-  --var-font-headers: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
-  --var-font-code: monospace;
-  --var-font-form: Verdana, sans-serif;
+	/* especificando fontes */
+	--var-font-default: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+	--var-font-size: 16px;
+	--var-font-height: 1.5;
+	--var-font-table: Verdana,sans-serif;
+	--var-font-headers: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+	--var-font-code: monospace;
+	--var-font-form: Verdana, sans-serif;
+	--var-font-report: "Times New Roman", Times, serif;
+	--var-font-report-h1: "Times New Roman", Times, serif;
+	--var-font-report-h2: "Times New Roman", Times, serif;
 
-  /* margem padrão */
-  --var-margin-default: 0.5em 0;
+	/* margem padrão */
+	--var-margin-default: 0.5em 0;
+	--var-margin-center:  0.5em auto;
 
-  /* altura dos campos de formulário */
-  /* line height x font size + paddingTop + paddingBottom + borda: 1.5*16 + 0.5*16 + 0.5*16 + 2 = 42 >> 42/16 = 2,625 */
-  --var-height-form: 42px;
+	/* altura dos campos de formulário */
+	/* line height x font size + paddingTop + paddingBottom + borda: 1.5*16 + 0.5*16 + 0.5*16 + 2 = 42 >> 42/16 = 2,625 */
+	--var-height-form: 42px;
+
+	/* interação com usuário */
+	--var-wd-table-name: "Table";
+	--var-wd-figure-name: "Figure";
+
+	/* z-index */
+	--var-zindex-1: 999;
+	--var-zindex-2: 888;
+	--var-zindex-3: 777;
+	--var-zindex-4: 666;
+	--var-zindex-5: 555;
 }
-
 
 /* == BLOCO 2 ================================================================*/
 
@@ -229,8 +251,7 @@ script, style {
 	font-size: var(--var-font-size);
 	line-height: var(--var-font-height);
 }
-
-/* -- Semântica textual -- */
+/* -- texto -- */
 .wd code {
 	background-color: var(--var-bg-code);
 	border-radius: var(--var-radius-default);
@@ -239,92 +260,77 @@ script, style {
 	font-size: 0.9em;
 	padding: 0 0.3em;
 }
-
 .wd a[href] {
 	color: var(--var-fg-link);
 	text-decoration: underline;
 }
-
-.wd hr {border: 1px solid #bfbfbf;}
-
-.wd summary {
-	cursor: pointer;
-	padding: 0.3em;
+.wd h1, .wd h2, .wd h3,
+.wd h4, .wd h5, .wd h6 {
+	font-family: var(--var-font-headers);
+	font-weight: bold;
+	margin: var(--var-margin-default);
 }
-
-/* -- Navegador -- */
+.wd h1  {font-size: 2.00em;}
+.wd h2  {font-size: 1.50em;}
+.wd h3  {font-size: 1.20em;}
+.wd h4  {font-size: 1.00em;}
+.wd h5  {font-size: 0.85em;}
+.wd h6  {font-size: 0.65em;}
+.wd p   {margin: 1em 0;}
+.wd pre {margin: var(--var-margin-default);}
+.wd blockquote {
+	margin: 1.4em auto;
+	width: 75%;
+}
+/* -- navegador -- */
 .wd nav {
- display: flex;
- flex-wrap: nowrap;
+	display: flex;
+	flex-wrap: nowrap;
 }
 .wd nav > *, .wd nav > a[href] {
 	color: inherit !important;
 	cursor: pointer;
 	margin: 0;
-	padding: 0.5em;
+	padding: var(--var-size-default);
 	text-decoration: none;
 }
 .wd nav > *:hover {
- box-shadow: var(--var-shadow-nav);
+	box-shadow: var(--var-shadow-nav);
 }
-
-/* -- Elementos de bloco -- */
-.wd details > details {margin-left: 1em;}
-
-/* -- Elementos de cabeçalho e texto -- */
-.wd h1, .wd h2, .wd h3, .wd h4, .wd h5, .wd h6 {
- font-family: var(--var-font-headers);
-	font-weight: bold;
-	margin: var(--var-margin-default);
-}
-.wd h1 {font-size: 2.00em;}
-.wd h2 {font-size: 1.50em;}
-.wd h3 {font-size: 1.20em;}
-.wd h4 {font-size: 1.00em;}
-.wd h5 {font-size: 0.85em;}
-.wd h6 {font-size: 0.65em;}
-.wd p {margin: 1em 0;}
-.wd pre {margin: var(--var-margin-default);}
-.wd blockquote {
- margin: 1.4em auto;
- width: 75%;
-}
-
-/* -- headers, footers e navs -- */
+/* -- cabeçalhos e rodapés -- */
 .wd header,
 .wd footer {
- padding: 0.5em 2em;
+	padding: 0.5em 2em;
 }
 .wd header > *,
 .wd footer > * {
- margin: var(--var-margin-default);
+	margin: var(--var-margin-default);
 }
 .wd header > *:first-child,
 .wd footer > *:first-child { /* utilizar o valor de padding do pai */
- margin-top: 0;
+	margin-top: 0;
 }
 .wd header > *:last-child,
 .wd footer > *:last-child { /* utilizar o valor de padding do pai */
- margin-bottom: 0;
+	margin-bottom: 0;
 }
 .wd header > nav,
 .wd footer > nav { /* ignorar padding do pai */
- margin-right: -2em;
- margin-left: -2em;
+	margin-right: -2em;
+	margin-left: -2em;
 }
 .wd header > nav:first-child,
 .wd footer > nav:first-child { /* ignorar padding do pai */
- margin-top: -0.5em;
+	margin-top: -0.5em;
 }
 .wd header > nav:last-child,
 .wd footer > nav:last-child { /* ignorar padding do pai */
- margin-bottom: -0.5em;
+	margin-bottom: -0.5em;
 }
-
 /* -- Imagens -- */
 .wd figure,
 .wd picture {
- margin: var(--var-margin-default);
+	margin: var(--var-margin-center);
 }
 .wd figure > img,
 .wd figure > a > img {
@@ -338,7 +344,6 @@ script, style {
 	padding: 0.3em;
 	text-align: center;
 }
-
 /* -- Listas -- */
 .wd ul, .wd ol {
 	list-style-position: inside;
@@ -347,36 +352,34 @@ script, style {
 }
 .wd ul ul, .wd ul ol,
 .wd ol ol, .wd ol ul {
- margin: 0;
+	margin: 0;
 }
 .wd ul > li,
 .wd ol > li {
- padding: 0.2em 0.2em 0.2em 2em;
+	padding: 0.2em 0.2em 0.2em 2em;
 }
-
 .wd dl {
- margin: var(--var-margin-default);
- padding: 0;
+margin: var(--var-margin-default);
+padding: 0;
 }
 .wd dl > dt,
 .wd dl > dd {
- padding: 0.2em;
- margin: 0;
+	padding: 0.2em;
+	margin: 0;
 }
 .wd dl > dt {
- font-weight: bold;
+	font-weight: bold;
 }
 .wd dl > dd {
- margin-left: 2em;
+	margin-left: 2em;
 }
-
 /* -- Tabelas -- */
 .wd table {
 	border-collapse: collapse;
 	border-spacing: 0;
 	border-color: var(--var-border-table);
 	font-family:  var(--var-font-table);
-	margin: 0.5em auto;
+	margin: var(--var-margin-center);
 }
 .wd-table[border] {
 	border-style: solid;
@@ -412,13 +415,11 @@ script, style {
 .wd table td {
 	vertical-align: top;
 }
-
-/* -- Formulários (select input button label select textarea) -- */
+/* -- Formulário -- */
 .wd form {
 	padding: 0;
 	margin: var(--var-margin-default);
 }
-
 .wd fieldset {
 	border: var(--var-border-thin);
 	border-radius: var(--var-radius-default);
@@ -428,7 +429,6 @@ script, style {
 .wd fieldset > legend {
 	padding: 0.3em;
 }
-
 .wd button, .wd input, .wd label, .wd select, .wd textarea, .wd fieldset > legend {
 	font-family: var(--var-font-form);
 	font-size: var(--var-font-size);
@@ -439,10 +439,10 @@ script, style {
 	vertical-align: middle;
 }
 /*------------------------------------------------------------------------------
-| campo simples: borda padrão
-| campo ativo: borda azul
+| campo simples:     borda padrão
+| campo ativo/hover: borda azul
 | campo obrigatório: borda vermelha
-| campo inválido: borda vermelha e sombra
+| campo inválido:    borda vermelha e sombra
 \-----------------------------------------------------------------------------*/
 .wd input, .wd select, .wd textarea, .wd button {
 	color: var(--var-fg-form);
@@ -454,22 +454,21 @@ script, style {
 .wd input:focus, .wd select:focus, .wd textarea:focus, .wd button:focus {
 	border: var(--var-border-form-active);
 }
-
-.wd input:required, .wd select:required, .wd textarea:required,
-.wd input[required], .wd select[required], .wd textarea[required],
-.wd input:required:hover, .wd select:required:hover, .wd textarea:required:hover,
+.wd input:required,        .wd select:required,        .wd textarea:required,
+.wd input[required],       .wd select[required],       .wd textarea[required],
+.wd input:required:hover,  .wd select:required:hover,  .wd textarea:required:hover,
 .wd input[required]:hover, .wd select[required]:hover, .wd textarea[required]:hover,
-.wd input:required:focus, .wd select:required:focus, .wd textarea:required:focus,
+.wd input:required:focus,  .wd select:required:focus,  .wd textarea:required:focus,
 .wd input[required]:focus, .wd select[required]:focus, .wd textarea[required]:focus {
 	border: var(--var-border-form-required);
 }
 .wd input:out-of-range, .wd select:out-of-range, .wd textarea:out-of-range,
-.wd input:invalid, .wd select:invalid, .wd textarea:invalid {
+.wd input:invalid,      .wd select:invalid,      .wd textarea:invalid {
 	border: var(--var-border-form-invalid);
 	box-shadow: var(--var-shadow-form-invalid);
 }
-
-.wd input[type=radio], .wd input[type=checkbox] {
+.wd input[type=radio],
+.wd input[type=checkbox] {
 	padding: 0;
 	box-shadow: none;
 }
@@ -479,14 +478,12 @@ script, style {
 	border: none;
 	box-shadow: none;
 }
-
 .wd input[disabled], .wd select[disabled], .wd textarea[disabled],
-.wd input:disabled, .wd select:disabled, .wd textarea:disabled,
+.wd input:disabled,  .wd select:disabled,  .wd textarea:disabled,
 .wd button:disabled, .wd button[disabled] {
 	opacity: 0.5;
 	pointer-events: none;
 }
-
 .wd input[type="submit"],
 .wd input[type="button"],
 .wd input[type="reset"],
@@ -512,7 +509,6 @@ script, style {
 .wd input[type="color"] {
 	padding: 0.3em;
 }
-
 .wd select {
 	appearance: none;
 	background-image: url("data:image/svg+xml;utf8,<svg fill='black' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
@@ -520,9 +516,19 @@ script, style {
 	background-position: left center;
 	padding-left: 25px;
 }
+/* -- outros -- */
+.wd hr {
+	border: var(--var-border-form);
+}
+.wd summary {
+	cursor: pointer;
+	padding: 0.3em;
+}
+.wd details > details {
+	margin-left: var(--var-size-medium);
+}
 
-/*============================================================================*/
-/* -- ESTILOS DE COMPONENTES -- */
+/* == BLOCO 4 ================================================================*/
 
 /* -- Efeitos (uso interno) -- */
 @keyframes wd-zoom-in {
@@ -562,14 +568,7 @@ script, style {
 	to {opacity: 1;}
 }
 
-	/***************************\
-	|	Níveis Z-INDEX |
-	|	Nível 1: 999 wd-form-msg |
-	|	Nível 2: 888 wd-modal |
-	|	Nível 3: 777 wd-window |
-	|	Nível 4: 666 wd-fixed |
-	|	Nível 5: 555 wd-tip |
-	\***************************/
+/* == BLOCO 5 ================================================================*/
 
 /* -- Blocos -- */
 .wd .wd-block, .wd .wd-block-child > * {
@@ -579,13 +578,12 @@ script, style {
 	margin-right: 0;
 	width: 100%;
 }
-
-/* -- Linhas x Colunas (tabela com containers) -- */
+/* -- Linhas x Colunas (tabela de containers) -- */
 .wd .wd-row {
- display: flex;
- flex-wrap: nowrap;
- align-items: stretch;
- width: 100%;
+	display: flex;
+	flex-wrap: nowrap;
+	align-items: stretch;
+	width: 100%;
 }
 .wd .wd-row > * {flex: 1;}
 .wd .wd-row > .wd-col-01 {flex: 1;}
@@ -600,151 +598,74 @@ script, style {
 .wd .wd-row > .wd-col-10 {flex: 10;}
 .wd .wd-row > .wd-col-11 {flex: 11;}
 .wd .wd-row > .wd-col-12 {flex: 12;}
-
 /* -- Formatações de colunas (table > row > col) -- */
-.wd .wd-col-center-01 > * > *:nth-child(1), .wd .wd-col-center-02 > * > *:nth-child(2),
-.wd .wd-col-center-03 > * > *:nth-child(3), .wd .wd-col-center-04 > * > *:nth-child(4),
-.wd .wd-col-center-05 > * > *:nth-child(5), .wd .wd-col-center-06 > * > *:nth-child(6),
-.wd .wd-col-center-07 > * > *:nth-child(7), .wd .wd-col-center-08 > * > *:nth-child(8),
-.wd .wd-col-center-09 > * > *:nth-child(9), .wd .wd-col-center-10 > * > *:nth-child(10),
+.wd .wd-col-center-01 > * > *:nth-child(1),  .wd .wd-col-center-02 > * > *:nth-child(2),
+.wd .wd-col-center-03 > * > *:nth-child(3),  .wd .wd-col-center-04 > * > *:nth-child(4),
+.wd .wd-col-center-05 > * > *:nth-child(5),  .wd .wd-col-center-06 > * > *:nth-child(6),
+.wd .wd-col-center-07 > * > *:nth-child(7),  .wd .wd-col-center-08 > * > *:nth-child(8),
+.wd .wd-col-center-09 > * > *:nth-child(9),  .wd .wd-col-center-10 > * > *:nth-child(10),
 .wd .wd-col-center-11 > * > *:nth-child(11), .wd .wd-col-center-12 > * > *:nth-child(12) {
- text-align: center;
+	text-align: center;
 }
-.wd .wd-col-right-01 > * > *:nth-child(1), .wd .wd-col-right-02 > * > *:nth-child(2),
-.wd .wd-col-right-03 > * > *:nth-child(3), .wd .wd-col-right-04 > * > *:nth-child(4),
-.wd .wd-col-right-05 > * > *:nth-child(5), .wd .wd-col-right-06 > * > *:nth-child(6),
-.wd .wd-col-right-07 > * > *:nth-child(7), .wd .wd-col-right-08 > * > *:nth-child(8),
-.wd .wd-col-right-09 > * > *:nth-child(9), .wd .wd-col-right-10 > * > *:nth-child(10),
+.wd .wd-col-right-01 > * > *:nth-child(1),  .wd .wd-col-right-02 > * > *:nth-child(2),
+.wd .wd-col-right-03 > * > *:nth-child(3),  .wd .wd-col-right-04 > * > *:nth-child(4),
+.wd .wd-col-right-05 > * > *:nth-child(5),  .wd .wd-col-right-06 > * > *:nth-child(6),
+.wd .wd-col-right-07 > * > *:nth-child(7),  .wd .wd-col-right-08 > * > *:nth-child(8),
+.wd .wd-col-right-09 > * > *:nth-child(9),  .wd .wd-col-right-10 > * > *:nth-child(10),
 .wd .wd-col-right-11 > * > *:nth-child(11), .wd .wd-col-right-12 > * > *:nth-child(12) {
- text-align: right;
+	text-align: right;
 }
-.wd .wd-col-left-01 > * > *:nth-child(1), .wd .wd-col-left-02 > * > *:nth-child(2),
-.wd .wd-col-left-03 > * > *:nth-child(3), .wd .wd-col-left-04 > * > *:nth-child(4),
-.wd .wd-col-left-05 > * > *:nth-child(5), .wd .wd-col-left-06 > * > *:nth-child(6),
-.wd .wd-col-left-07 > * > *:nth-child(7), .wd .wd-col-left-08 > * > *:nth-child(8),
-.wd .wd-col-left-09 > * > *:nth-child(9), .wd .wd-col-left-10 > * > *:nth-child(10),
+.wd .wd-col-left-01 > * > *:nth-child(1),  .wd .wd-col-left-02 > * > *:nth-child(2),
+.wd .wd-col-left-03 > * > *:nth-child(3),  .wd .wd-col-left-04 > * > *:nth-child(4),
+.wd .wd-col-left-05 > * > *:nth-child(5),  .wd .wd-col-left-06 > * > *:nth-child(6),
+.wd .wd-col-left-07 > * > *:nth-child(7),  .wd .wd-col-left-08 > * > *:nth-child(8),
+.wd .wd-col-left-09 > * > *:nth-child(9),  .wd .wd-col-left-10 > * > *:nth-child(10),
 .wd .wd-col-left-11 > * > *:nth-child(11), .wd .wd-col-left-12 > * > *:nth-child(12) {
- text-align: left;
+	text-align: left;
 }
-.wd .wd-col-blue-01 > * > *:nth-child(1), .wd .wd-col-blue-02 > * > *:nth-child(2),
-.wd .wd-col-blue-03 > * > *:nth-child(3), .wd .wd-col-blue-04 > * > *:nth-child(4),
-.wd .wd-col-blue-05 > * > *:nth-child(5), .wd .wd-col-blue-06 > * > *:nth-child(6),
-.wd .wd-col-blue-07 > * > *:nth-child(7), .wd .wd-col-blue-08 > * > *:nth-child(8),
-.wd .wd-col-blue-09 > * > *:nth-child(9), .wd .wd-col-blue-10 > * > *:nth-child(10),
+.wd .wd-col-blue-01 > * > *:nth-child(1),  .wd .wd-col-blue-02 > * > *:nth-child(2),
+.wd .wd-col-blue-03 > * > *:nth-child(3),  .wd .wd-col-blue-04 > * > *:nth-child(4),
+.wd .wd-col-blue-05 > * > *:nth-child(5),  .wd .wd-col-blue-06 > * > *:nth-child(6),
+.wd .wd-col-blue-07 > * > *:nth-child(7),  .wd .wd-col-blue-08 > * > *:nth-child(8),
+.wd .wd-col-blue-09 > * > *:nth-child(9),  .wd .wd-col-blue-10 > * > *:nth-child(10),
 .wd .wd-col-blue-11 > * > *:nth-child(11), .wd .wd-col-blue-12 > * > *:nth-child(12) {
- color: var(--var-fg-col-blue);
+	color: var(--var-fg-col-blue);
 }
-.wd .wd-col-red-01 > * > *:nth-child(1), .wd .wd-col-red-02 > * > *:nth-child(2),
-.wd .wd-col-red-03 > * > *:nth-child(3), .wd .wd-col-red-04 > * > *:nth-child(4),
-.wd .wd-col-red-05 > * > *:nth-child(5), .wd .wd-col-red-06 > * > *:nth-child(6),
-.wd .wd-col-red-07 > * > *:nth-child(7), .wd .wd-col-red-08 > * > *:nth-child(8),
-.wd .wd-col-red-09 > * > *:nth-child(9), .wd .wd-col-red-10 > * > *:nth-child(10),
+.wd .wd-col-red-01 > * > *:nth-child(1),  .wd .wd-col-red-02 > * > *:nth-child(2),
+.wd .wd-col-red-03 > * > *:nth-child(3),  .wd .wd-col-red-04 > * > *:nth-child(4),
+.wd .wd-col-red-05 > * > *:nth-child(5),  .wd .wd-col-red-06 > * > *:nth-child(6),
+.wd .wd-col-red-07 > * > *:nth-child(7),  .wd .wd-col-red-08 > * > *:nth-child(8),
+.wd .wd-col-red-09 > * > *:nth-child(9),  .wd .wd-col-red-10 > * > *:nth-child(10),
 .wd .wd-col-red-11 > * > *:nth-child(11), .wd .wd-col-red-12 > * > *:nth-child(12) {
- color: var(--var-fg-col-red);
+	color: var(--var-fg-col-red);
 }
-.wd .wd-col-green-01 > * > *:nth-child(1), .wd .wd-col-green-02 > * > *:nth-child(2),
-.wd .wd-col-green-03 > * > *:nth-child(3), .wd .wd-col-green-04 > * > *:nth-child(4),
-.wd .wd-col-green-05 > * > *:nth-child(5), .wd .wd-col-green-06 > * > *:nth-child(6),
-.wd .wd-col-green-07 > * > *:nth-child(7), .wd .wd-col-green-08 > * > *:nth-child(8),
-.wd .wd-col-green-09 > * > *:nth-child(9), .wd .wd-col-green-10 > * > *:nth-child(10),
+.wd .wd-col-green-01 > * > *:nth-child(1),  .wd .wd-col-green-02 > * > *:nth-child(2),
+.wd .wd-col-green-03 > * > *:nth-child(3),  .wd .wd-col-green-04 > * > *:nth-child(4),
+.wd .wd-col-green-05 > * > *:nth-child(5),  .wd .wd-col-green-06 > * > *:nth-child(6),
+.wd .wd-col-green-07 > * > *:nth-child(7),  .wd .wd-col-green-08 > * > *:nth-child(8),
+.wd .wd-col-green-09 > * > *:nth-child(9),  .wd .wd-col-green-10 > * > *:nth-child(10),
 .wd .wd-col-green-11 > * > *:nth-child(11), .wd .wd-col-green-12 > * > *:nth-child(12) {
- color: var(--var-fg-col-green);
+	color: var(--var-fg-col-green);
 }
-.wd .wd-col-mark-01 > * > *:nth-child(1), .wd .wd-col-mark-02 > * > *:nth-child(2),
-.wd .wd-col-mark-03 > * > *:nth-child(3), .wd .wd-col-mark-04 > * > *:nth-child(4),
-.wd .wd-col-mark-05 > * > *:nth-child(5), .wd .wd-col-mark-06 > * > *:nth-child(6),
-.wd .wd-col-mark-07 > * > *:nth-child(7), .wd .wd-col-mark-08 > * > *:nth-child(8),
-.wd .wd-col-mark-09 > * > *:nth-child(9), .wd .wd-col-mark-10 > * > *:nth-child(10),
+.wd .wd-col-mark-01 > * > *:nth-child(1),  .wd .wd-col-mark-02 > * > *:nth-child(2),
+.wd .wd-col-mark-03 > * > *:nth-child(3),  .wd .wd-col-mark-04 > * > *:nth-child(4),
+.wd .wd-col-mark-05 > * > *:nth-child(5),  .wd .wd-col-mark-06 > * > *:nth-child(6),
+.wd .wd-col-mark-07 > * > *:nth-child(7),  .wd .wd-col-mark-08 > * > *:nth-child(8),
+.wd .wd-col-mark-09 > * > *:nth-child(9),  .wd .wd-col-mark-10 > * > *:nth-child(10),
 .wd .wd-col-mark-11 > * > *:nth-child(11), .wd .wd-col-mark-12 > * > *:nth-child(12) {
- background-color: var(--var-bg-col-mark);
+	background-color: var(--var-bg-col-mark);
 }
-
-/* -- espalhar -- (spread) FIXME essa merda não funciona*/
-.wd .wd-grid, .wd .wd-grid-inline {
+/* -- espalhar -- */
+.wd .wd-spread {
 	display: flex;
 	justify-content: space-around;
 	flex-direction: row;
-}
-.wd .wd-grid {
 	flex-wrap: wrap;
 }
-.wd .wd-grid-line {
-	flex-wrap: nowrap;
-	overflow-x: auto;
-	overflow-y: hidden;
+/* -- coleção (containers em linha) TODO */
+.wd .wd-collection {
+
 }
-.wd .wd-grid > *, .wd .wd-grid-line > * {
-	overflow: auto;
-	flex: 1 1 1;
-}
-
-
-/*
-.wd .wd-grid-blocks {
-	flex-wrap: wrap;
-	flex-direction: column;
-}
-
-
-.wd .wd-grid-line::after {
- content: "";
- clear: both;
- display: table;
-}
-
-.wd .wd-grid > *, .wd .wd-grid-line > *, .wd .wd-grid-blocks > * {
-	overflow: auto;
-	margin: var(--var-size-medium);
-	height: 10em;
-	flex: 1 1 1;
-}
-.wd .wd-grid > *, .wd .wd-grid-line > *{
-	width: 10em;
-}
-.wd .wd-grid-blocks > * {
-	width: auto;
-}
-*/
-
-
-
-.wd .wd-grid.wd-grid-portrait > *,
-.wd .wd-grid-line.wd-grid-portrait > * {
-	width: 9em; height: 16em;
-}
-.wd .wd-grid.wd-grid-landscape > *,
-.wd .wd-grid-line.wd-grid-landscape > * {
-	width: 16em; height: 9em;
-}
-
-
-
-
-/*
-.wd .wd-grid, .wd .wd-hgrid, .wd .wd-vgrid, .wd .wd-sgrid {
-	display: block;
-	line-height: 1;
-	text-align: center;
-}
-.wd .wd-grid > *, .wd .wd-hgrid > *, .wd .wd-vgrid > *, .wd .wd-sgrid > * {
-	display: inline-block;
-	line-height: 1.5;
-	float: none;
-}
-.wd .wd-grid > * {
-	height: 3.5em;
-	overflow: hidden;
-	padding: 1em 0.5em;
-	white-space: nowrap;
-	width: 9em;
-	text-overflow: ellipsis;
-}
-.wd .wd-hgrid > * {height: 13em; overflow: auto; width: 18em;}
-.wd .wd-sgrid > * {height: 16em; overflow: auto; width: 16em;}
-.wd .wd-vgrid > * {height: 18em; overflow: auto; width: 13em;}
-
-
-
 /* -- blocos em linha infinita -- * /
 .wd .wd-line, .wd .wd-vline, .wd .wd-hline, .wd .wd-sline {
 	display: block;
@@ -765,10 +686,18 @@ script, style {
 .wd .wd-sline > * {height: 16em; overflow: auto; width: 16em;}
 .wd .wd-vline > * {height: 18em; overflow: auto; width: 13em;}
 */
-
-
-
-
+/* container em retrato */
+.wd .wd-portrait,
+.wd .wd-portrait-child > * {
+	height: 16em;
+	width: 9em;
+}
+/* container em paisagem */
+.wd .wd-landscape,
+.wd .wd-landscape-child > * {
+	height: 9em;
+	width: 16em;
+}
 
 /* -- Caixa de Dicas --FIXME (acho que isso não está bom) */
 /*.wd .wd-tip {position: relative;}
@@ -784,7 +713,7 @@ script, style {
 	position: absolute;
 	text-indent: 0;
 	width: 10em;
-	z-index: 555;
+	z-index: var(--var-zindex-4);
 }
 .wd-tip-hover-top, .wd-tip-click-top {bottom: 100%; left: 0;}
 .wd-tip-hover-right, .wd-tip-click-right {left: 100%; top: 0;}
@@ -799,9 +728,6 @@ script, style {
 	animation: wd-fade-in 0.5s;
 }
 */
-
-
-
 
 /* -- Janelas -- */
 .wd .wd-window,
@@ -828,19 +754,19 @@ script, style {
 .wd .wd-modal.wd-open > .wd-window-right,
 .wd .wd-modal.wd-open > .wd-window-top,
 .wd .wd-modal.wd-open > .wd-window-bottom {
- display: block;
+	display: block;
 }
 /*plano de fundo*/
 .wd .wd-modal {
 	animation: wd-fade-in 0.5s;
+	background-color: var(--var-bg-modal);
 	top: 0;
 	right: 0;
 	bottom: 0;
 	left: 0;
 	width: 100%;
 	height: 100%;
-	background-color: var(--var-bg-modal);
-	z-index: 888;
+	z-index: var(--var-zindex-1);
 }
 /*janelas de conteúdo*/
 .wd .wd-window,
@@ -851,7 +777,7 @@ script, style {
 .wd .wd-window-bottom {
 	background-color: var(--var-bg-window);
 	overflow: auto;
-	z-index: 777;
+	z-index: var(--var-zindex-2);
 	cursor: auto;
 }
 .wd .wd-modal > .wd-window,
@@ -910,156 +836,110 @@ script, style {
 	height: 100%;
 }
 .wd .wd-window-right {
- animation: wd-from-right 0.5s; right: 0;
+	animation: wd-from-right 0.5s; right: 0;
 }
 .wd .wd-window-left {
- animation: wd-from-left 0.5s; left: 0;
+	animation: wd-from-left 0.5s; left: 0;
 }
-
 /* -- Flyer -- */
-.wd .wd-flyer {
-  padding: 0.5em;
-}
-.wd .wd-flyer > * {
-  margin: var(--var-margin-default);
-}
+.wd .wd-flyer     {padding: var(--var-size-flyer);}
+.wd .wd-flyer > * {margin:  var(--var-size-flyer);}
 .wd .wd-flyer > header,
 .wd .wd-flyer > footer,
 .wd .wd-flyer > nav {
-  margin-left: -0.5em;
-  margin-right: -0.5em;
+	margin-left: var(--var-size--flyer);
+	margin-right: var(--var-size--flyer);
 }
-.wd .wd-flyer > *:first-child {
-  margin-top: 0;
-}
+.wd .wd-flyer > *:first-child {margin-top: 0;}
+.wd .wd-flyer > *:last-child  {margin-bottom: 0;}
 .wd .wd-flyer > header:first-child,
 .wd .wd-flyer > footer:first-child,
-.wd .wd-flyer > nav:first-child {
-  margin-top: -0.5em;
-}
-.wd .wd-flyer > *:last-child {
-  margin-bottom: 0;
-}
+.wd .wd-flyer > nav:first-child {margin-top: var(--var-size--flyer);}
 .wd .wd-flyer > header:last-child,
 .wd .wd-flyer > footer:last-child,
-.wd .wd-flyer > nav:last-child {
-  margin-bottom: -0.5em;
-}
+.wd .wd-flyer > nav:last-child {margin-bottom: var(--var-size--flyer);}
 
-/* -- Relatório -- */
 
-	/************************************************\
-	|					HIERARQUIA |
-	| Escalão primário: h1 > h2 > p > section > p |
-	| escalão secundário: ol |
-	\************************************************/
 
-.wd .wd-report {
-	font-size: 16px;
+
+/* -- Leitura -- */
+.wd .wd-read {
 	text-align: justify;
+	font-size: 18px
 }
-.wd .wd-report h1,
-.wd .wd-report h2 {
+/* Título e Subtítulo */
+.wd .wd-read h1,
+.wd .wd-read h2 {
 	margin-left: auto;
 	margin-right: auto;
 	text-align: center;
 }
-.wd .wd-report h1 {
-  font-variant: small-caps;
-}
-.wd .wd-report h2 {
-	font-family: "Times New Roman", Times, serif;
+.wd .wd-read h1 {font-variant: small-caps;}
+.wd .wd-read h2 {
+	font-family: var(--var-font-report-h2);
 	font-style: italic;
 	font-weight: normal;
 }
 @media screen and (min-width: 768px) { /* desktop */
-	.wd .wd-report h1 {width: 75%;}
-	.wd .wd-report h2 {width: 50%;}
+	.wd .wd-read h1 {width: 75%;}
+	.wd .wd-read h2 {width: 50%;}
 }
-.wd .wd-report p {
-	text-indent: 4em;
-	margin: 2em 0;
+/* parágrafos */
+.wd .wd-read p {
+  margin: 2em 0;
+  text-indent: 4em;
 }
-.wd .wd-report blockquote {
+.wd .wd-read blockquote {
 	font-size: smaller;
 	margin: 2em 0 2em auto;
 	width: 75%;
 }
-.wd .wd-report table {
-  width: 80%;
+/* tabelas, figuras, listas */
+.wd .wd-read table,
+.wd .wd-read figure {
+	width: 80%;
+	margin: 2em auto;
 }
-.wd .wd-report > ul > li,
-.wd .wd-report > ol > li {
-  padding-left: 4em;
+.wd .wd-read > ol,
+.wd .wd-read > ul {
+	margin: 2em auto;
+}
+.wd .wd-read > ul > li,
+.wd .wd-read > ol > li {padding-left: 4em;}
+/* -- itemização -- */
+.wd .wd-read    {counter-reset: chapter fig tab;}
+.wd .wd-read h3 {counter-reset: item;}
+.wd .wd-read h3:before {
+	counter-increment: chapter;
+	content: counter(chapter) ". ";
+}
+.wd .wd-read caption:before {
+	counter-increment: tab;
+	content: counter(tab) ". ";
+}
+.wd .wd-read figcaption:before {
+	counter-increment: fig;
+	content: counter(fig) ". ";
+}
+.wd .wd-read.wd-report p:before {
+	counter-increment: item;
+	content: counter(chapter) "." counter(item) ". ";
+	counter-reset: fig tab;
+}
+.wd .wd-read.wd-report caption:before {
+	content: counter(chapter) "." counter(item) "." counter(tab) ".";
+}
+.wd .wd-read.wd-report figcaption:before {
+	content: counter(chapter) "." counter(item) "." counter(fig) ".";
 }
 
-.wd .wd-report,
-.wd .wd-report h1,
-.wd .wd-report h2 {
-  counter-reset: chapter item subitem figure table;
-}
-.wd .wd-report h3 {
-  counter-reset: item subitem;
-}
-
-.wd .wd-report.wd-itemize    h3:before,
-.wd .wd-report.wd-subitemize h3:before { /* títulos */
-  counter-increment: chapter;
-  content: counter(chapter) ". ";
-}
-.wd .wd-report.wd-itemize    caption:before,
-.wd .wd-report.wd-subitemize caption:before { /* tabelas */
-  counter-increment: table;
-  content: counter(table) ": ";
-}
-.wd .wd-report.wd-itemize    figcaption:before,
-.wd .wd-report.wd-subitemize figcaption:before { /* figuras */
-  counter-increment: figure;
-  content: counter(figure) ": ";
-}
-.wd .wd-report.wd-subitemize p:before {
-  counter-increment: item;
-  content: counter(chapter) "." counter(item) ". ";
-}
-
-/*
-.wd .wd-report ul {list-style-type: disc;}
-.wd .wd-report ol {list-style-type: none;}
-.wd .wd-report ol ol, .wd .wd-report ol ul {margin: 0;}
-.wd .wd-report ul > li, .wd .wd-report ol > li {padding: 0.1em 0 0.1em 2em; margin: 0;}
-@media screen and (min-width: 768px) {
-	.wd .wd-report ul > li, .wd .wd-report ol > li {padding-left: 4em;}
-}
-.wd .wd-report ul ul > li, .wd .wd-report ul ol > li,
-.wd .wd-report ol ol > li, .wd .wd-report ol ul > li {padding-left: 1em;}
-@media screen and (min-width: 768px) {
-	.wd .wd-report ul ul > li, .wd .wd-report ul ol > li,
-	.wd .wd-report ol ol > li, .wd .wd-report ol ul > li {padding-left: 2em;}
-}
-*/
 
 
-/*chapter, figcaption, caption, ol, ol ol, ol ol ol*/
-/*
-.wd .wd-report {counter-reset: chapter item subitem subitem1 subitem2 fig tab;}
-.wd .wd-report h1 {counter-reset: chapter item subitem subitem1 subitem2 fig tab;}
-.wd .wd-report h2 {counter-reset: chapter item subitem subitem1 subitem2 fig tab;}
-.wd .wd-report h3 {counter-reset: item subitem subitem1 subitem2;}
-.wd .wd-report p {counter-reset: subitem subitem1 subitem2;}
-.wd .wd-report ol ol {counter-reset: subitem2;}
-.wd .wd-report ol {counter-reset: subitem1 subitem2;}
-.wd .wd-report caption:before {counter-increment: tab; content: attr(title) counter(tab) ": ";}
-.wd .wd-report figcaption:before {counter-increment: fig; content: attr(title) counter(fig) ": ";}
-.wd .wd-report ol li li li:before {counter-increment: subitem2; content: counter(subitem2) ". ";}
-.wd .wd-report ol li li:before {counter-increment: subitem1; content: counter(subitem1, lower-alpha) ") ";}
-.wd .wd-report ol li:before {counter-increment: subitem; content: counter(subitem, upper-roman) " - ";}
-.wd .wd-report h3:before {counter-increment: chapter;content: attr(title) counter(chapter) ". ";}
-.wd .wd-report.wd-itemize p {text-indent: 0;}
-.wd .wd-report.wd-itemize p:before {counter-increment: item; content: attr(title) counter(item) "."; margin-right: 2em;}
-@media screen and (min-width: 768px) {
-	.wd .wd-report.wd-itemize p:before {margin-right: 4em;}
-}
-*/
+
+
+
+
+
 
 
 
@@ -1070,161 +950,104 @@ script, style {
 
 /* -- código -- */
 .wd .wd-code {
-	background-color: #E6E6FA !important;
-	border-radius: 0.2em;
-	color: #0073e6 !important;
-	font-family: var(--var-font-code) !important;
-	font-size: 0.9em !important;
-	font-style: normal !important;
-	font-weight: normal !important;
-	overflow: auto !important;
-	white-space: pre !important;
+	background-color: var(--var-bg-code);
+	border-radius:    var(--var-radius-default);
+	color:            var(--var-fg-code);
+	font-family:      var(--var-font-code);
+	font-size: 0.9em;
+	font-style: normal;
+	font-weight: normal;
+	overflow: auto;
+	position: relative;
+	text-decoration: none;
+	counter-reset: line;
+	text-indent: 0;
 }
-
-/* palavras chaves */
-.wd .wd-code em {
-	color: #004d00 !important;
-	font-size: inherit !important;
-	font-style: normal !important;
-	font-weight: bold !important;
+.wd textarea.wd-code {
+	white-space: pre;
 }
-/* tags HTML */
-.wd .wd-code kbd {
-	color: inherit !important;
-	font-size: inherit !important;
-	font-style: normal !important;
-	font-weight: normal !important;
+.wd .wd-code * { /* apaga características padrões dos elementos */
+	background-color: inherit;
+	color: inherit;
+	font-style: inherit;
+	font-weight: inherit;
+	font-size: inherit;
+	text-decoration: inherit;
 }
-.wd .wd-code kbd:before {
-	content: "\003C" !important;
-	font-weight: bold !important;
+/* palavras reservadas */
+.wd .wd-code mark {
+	color: var(--var-fg-code-reserved);
+	font-weight: bold;
 }
-.wd .wd-code kbd:after {
-	content: "\003E" !important;
-	font-weight: bold !important;
+/* tags */
+.wd .wd-code code {
+	color: var(--var-fg-code-reserved);
+	font-weight: bold;
 }
-/* resultado na tela */
-.wd .wd-code samp, .wd .wd-code samp * {
-	color: #916a08 !important;
-	font-size: inherit !important;
-	font-style: normal !important;
-	font-weight: normal !important;
-	padding: 2px 0 !important;
-}
-.wd .wd-code samp:before {
-	content: "\21B3 " !important;
-}
+.wd .wd-code code > *    {font-weight: normal;}
+.wd .wd-code code:before {content: "\003C";} /* sinal de < */
+.wd .wd-code code:after  {content: "\003E";} /* sinal de > */
 /* strings e variáveis */
-.wd .wd-code q, .wd .wd-code var, .wd .wd-code q *, .wd .wd-code var * {
-	color: #ff1493 !important;
-	font-size: inherit !important;
-	font-style: normal !important;
-	font-weight: normal !important;
+.wd .wd-code var, .wd .wd-code var *,
+.wd .wd-code q,   .wd .wd-code q * {
+	color: var(--var-fg-code-values);
+	white-space: pre-wrap;
+}
+.wd .wd-code q:before {content: "\0022"; /* quotes */}
+.wd .wd-code q:after  {content: "\0022"; /* quotes */}
+/* retorno */
+.wd .wd-code samp, .wd .wd-code samp * {
+	color: var(--var-fg-code-return);
 }
 /* comentários */
-.wd .wd-code cite, .wd .wd-code cite * {
-	color: #4e3cc3 !important;
-	font-size: inherit !important;
-	font-style: italic !important;
-	font-weight: normal !important;
+.wd .wd-code s, .wd .wd-code s * {
+	color: var(--var-fg-code-comments);
 }
 /* linhas */
-.wd .wd-code {
-	counter-reset: line;
+.wd .wd-code > div,
+.wd .wd-code > section {
+	padding-left: var(--var-size-large);
 }
-.wd .wd-code > span:before {
-	background-color: #ffffff;
-	color: #cccccc;
+.wd .wd-code div {height: calc(1.5*0.9*16px)}
+.wd .wd-code div:before {
+	position: absolute;
+	display: block;
+	color: var(--var-fg-code-line);
 	content: counter(line);
 	counter-increment: line;
-	margin-right: 0.5em;
-	padding: 0 0.5em;
+	text-align: right;
+	width: var(--var-size-large);
+	left: 0;
+}
+/* indentação/escopo */
+.wd .wd-code > section div,
+.wd .wd-code > section section {
+	padding-left: var(--var-size-large);
 }
 
 /*============================================================================*/
 /*-- ESTILOS ESTRUTURAIS -- */
 
 /* -- Cabeçalho e Rodapés fixos -- */
-.wd body.wd-fixed > header, body.wd.wd-fixed > header,
-.wd body.wd-fixed > footer, body.wd.wd-fixed > footer {
+.wd body > .wd-header-fixed,
+.wd body > .wd-footer-fixed {
 	position: fixed;
 	left: 0;
 	right: 0;
 	width: 100%;
-	z-index: 666;
+	z-index: var(--var-zindex-3);
 }
-.wd body.wd-fixed > header, body.wd.wd-fixed > header {top: 0;}
-.wd body.wd-fixed > footer, body.wd.wd-fixed > footer {bottom: 0;}
-
+.wd body > .wd-header-fixed {top: 0;}
+.wd body > .wd-footer-fixed {bottom: 0;}
 @media print {
-	.wd body.wd-fixed > header, body.wd.wd-fixed > header,
-	.wd body.wd-fixed > footer, body.wd.wd-fixed > footer {
+	.wd body > .wd-header-fixed,
+	.wd body > .wd-footer-fixed {
 		position: relative;
-	}
-}
-
-/* -- corpo (main) centralizado -- */
-.wd body.wd-center > main, body.wd.wd-center > main {
-	margin-left: auto;
-	margin-right: auto;
-	width: 70%;
-}
-
-.wd body.wd-left > main, body.wd.wd-left > main {
-	margin-left: 0;
-	margin-right: auto;
-	width: 85%;
-}
-
-.wd body.wd-right > main, body.wd.wd-right > main {
-	margin-left: auto;
-	margin-right: 0;
-	width: 85%;
-}
-
-@media print {
-	.wd body.wd-center > main, body.wd.wd-center > main,
-	.wd body.wd-left > main, body.wd.wd-left > main
-	.wd body.wd-right > main, body.wd.wd-right > main {
-		margin: auto;
-		width: 100%;
 	}
 }
 
 /*============================================================================*/
 /*-- ESTILOS UTILITÁRIOS -- */
-
-/* -- atributos -- */
-.wd .wd-attr-cite:after {
-	content: " (" attr(cite) ")";
-}
-.wd q.wd-attr-cite:after {
-	content: "\201C" " (" attr(cite) ")";
-}
-.wd q.wd-attr-cite:before {
-	content: "\201D";
-}
-.wd blockquote.wd-attr-cite:after {
-	content: attr(cite);
-	font-style: italic;
-	display: block;
-	text-align: right;
-	opacity: 0.8;
-}
-.wd .wd-attr-href:after {
-	content: attr(href);
-	font-style: italic;
-	font-family: "Times New Roman", Times, serif;
-}
-.wd *[href^="mailto:"].wd-attr-href:after {
-	content: "\2039" attr(href) "\203A";
-	font-style: italic;
-	font-family: "Times New Roman", Times, serif;
-}
-.wd .wd-attr-title:after {
-	content: " (" attr(title) ")";
-	font-style: italic;
-}
 
 /* -- Localização -- */
 .wd .wd-place-n, .wd .wd-place-e, .wd .wd-place-s, .wd .wd-place-w,
@@ -1309,7 +1132,7 @@ script, style {
 /* -- Companheiro -- */
 .wd .wd-buddy-top, .wd .wd-buddy-bottom {
 	position: sticky !important;
-	z-index: 666 !important;
+	z-index: var(--var-zindex-3) !important;
 }
 .wd .wd-buddy-top {top: 0 !important;}
 .wd .wd-buddy-bottom {bottom: 0 !important;}
@@ -1812,24 +1635,24 @@ border-left: var(--var-border-thin) !important;
 	\---------------------------------------------------------------------------*/
 
 .wd .wd-shadow, .wd .wd-shadow-child > * {
- box-shadow: var(--var-shadow) !important;
+	box-shadow: var(--var-shadow) !important;
 }
 .wd .wd-shadow-none, .wd .wd-shadow-none-child > * {
- box-shadow: none !important;
+	box-shadow: none !important;
 }
 /*----------------------------------------------------------------------------*/
 .wd .wd-shadow-enter, .wd .wd-shadow-enter-child > * {
 	box-shadow: none !important;
 }
 .wd .wd-shadow-enter:hover, .wd .wd-shadow-enter-child > *:hover {
- box-shadow: var(--var-shadow) !important;
+	box-shadow: var(--var-shadow) !important;
 }
 /*----------------------------------------------------------------------------*/
 .wd .wd-shadow-leave, .wd .wd-shadow-leave-child > * {
- box-shadow: var(--var-shadow) !important;
+	box-shadow: var(--var-shadow) !important;
 }
 .wd .wd-shadow-leave:hover, .wd .wd-shadow-leave-child > *:hover {
- box-shadow: none !important;
+	box-shadow: none !important;
 }
 /*----------------------------------------------------------------------------*/
 .wd * > .wd-shadow-out, .wd *:hover > .wd-shadow-in {
@@ -1841,24 +1664,24 @@ border-left: var(--var-border-thin) !important;
 
 /* -- Nuvem ------------------------------------------------------------------*/
 .wd .wd-cloud, .wd .wd-cloud-child > * {
- box-shadow: var(--var-shadow-cloud) !important;
+	box-shadow: var(--var-shadow-cloud) !important;
 }
 .wd .wd-cloud-none, .wd .wd-cloud-none-child > * {
- box-shadow: none !important;
+	box-shadow: none !important;
 }
 /*----------------------------------------------------------------------------*/
 .wd .wd-cloud-enter, .wd .wd-cloud-enter-child > * {
 	box-shadow: none !important;
 }
 .wd .wd-cloud-enter:hover, .wd .wd-cloud-enter-child > *:hover {
- box-shadow: var(--var-shadow-cloud) !important;
+	box-shadow: var(--var-shadow-cloud) !important;
 }
 /*----------------------------------------------------------------------------*/
 .wd .wd-cloud-leave, .wd .wd-cloud-leave-child > * {
- box-shadow: var(--var-shadow-cloud) !important;
+	box-shadow: var(--var-shadow-cloud) !important;
 }
 .wd .wd-cloud-leave:hover, .wd .wd-cloud-leave-child > *:hover {
- box-shadow: none !important;
+	box-shadow: none !important;
 }
 /*----------------------------------------------------------------------------*/
 .wd * > .wd-cloud-out, .wd *:hover > .wd-cloud-in {
@@ -1870,24 +1693,24 @@ border-left: var(--var-border-thin) !important;
 
 /*-- opaco -------------------------------------------------------------------*/
 .wd .wd-opaque, .wd .wd-opaque-child > * {
- opacity: 0.5 !important;
+	opacity: 0.5 !important;
 }
 .wd .wd-opaque-none, .wd .wd-opaque-none-child > * {
- opacity: 1 !important;
+	opacity: 1 !important;
 }
 /*----------------------------------------------------------------------------*/
 .wd .wd-opaque-enter, .wd .wd-opaque-enter-child > * {
 	opacity: 1 !important;
 }
 .wd .wd-opaque-enter:hover, .wd .wd-opaque-enter-child > *:hover {
- opacity: 0.5 !important;
+	opacity: 0.5 !important;
 }
 /*----------------------------------------------------------------------------*/
 .wd .wd-opaque-leave, .wd .wd-opaque-leave-child > * {
- opacity: 0.5 !important;
+	opacity: 0.5 !important;
 }
 .wd .wd-opaque-leave:hover, .wd .wd-opaque-leave-child > *:hover {
- opacity: 1 !important;
+	opacity: 1 !important;
 }
 /*----------------------------------------------------------------------------*/
 .wd * > .wd-opaque-out, .wd *:hover > .wd-opaque-in {
@@ -1899,8 +1722,8 @@ border-left: var(--var-border-thin) !important;
 
 /* -- destaque ---------------------------------------------------------------*/
 .wd .wd-zebra > *:nth-child(even) {
-  background-color: var(--var-bg-zebra)  !important;
-  color:            var(--var-fg-zebra) !important;
+	background-color: var(--var-bg-zebra)  !important;
+	color:            var(--var-fg-zebra) !important;
 }
 .wd .wd-upon,             .wd .wd-upon-child > *,
 .wd .wd-upon-enter:hover, .wd .wd-upon-enter-child > *:hover {

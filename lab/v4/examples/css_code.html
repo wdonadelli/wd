@@ -1,22 +1,47 @@
-<h2>JavaScript Example</h2>
+<h3>JavaScript Example</h3>
 
-<pre class="wd-code wd-padding" onclick="showCode('#code1', false);" id="code1">
-<cite>//JavaScript function to calculate twice the value:</cite>
+<div class="wd-code wd-padding">
+	<div><s>//JavaScript function to calculate twice the value:</s></div>
+	<div><mark>function</mark> double(value) {</div>
+	<section>
+		<div><mark>var</mark> x = <var>2</var> * value;</div>
+		<div>console.log(</div>
+		<section>
+			<div><q>The double of </q> + value + <q> is </q> + x + <q>.</q></div>
+		</section>
+		<div>);</div>
+		<div><mark>return</mark> x;</div>
+	</section>
+	<div>}</div>
+	<div>double(<var>5</var>);</div>
+  <section>
+    <samp>Returns 10</samp>
+  </section>
+  <div>double(<var>-10</var>);</div>
+  <section>
+    <samp>Returns -20</samp>
+  </section>
+</div>
 
-<em>function</em> double(value) {
-	<em>var</em> x = <var>2</var> * value;
-	console.log(<q>The double of </q> + value + <q> is </q> + x + <q>.</q>);
-	<em>return</em> x;
-}
+<h3>HTML</h3>
 
-double(<var>5</var>);
-<samp>10</samp>
-</pre>
-
-<h2>HTML Example (numbered lines)</h2>
-
-<pre class="wd-code wd-padding" onclick="showCode('#code2', false);" id="code2">
-<span><cite><kbd>!--HTML Link--</kbd></cite></span>
-<span></span>
-<span><kbd>a <em>href</em>=<q>http://www.something.com</q></kbd>My Link<kbd>/a</kbd></span>
-</pre>
+<div class="wd-code wd-padding">
+	<div><s><code>!-- HTML Link and Table --</code></s></div>
+	<div class="wd-code-line"><code>a href=<q>http://www.something.com</q></code>My Link<code>/a</code></div>
+	<div></div>
+	<div><code>table border=<q>1</q></code></div>
+	<section>
+		<div><code>tbody</code></div>
+		<section>
+			<div><code>tr</code></div>
+			<section>
+				<div><code>td</code>#1<code>/td</code></div>
+				<div><code>td</code>#2<code>/td</code></div>
+				<div><code>td</code>#3<code>/td</code></div>
+			</section>
+			<div><code>/tr</code></div>
+		</section>
+		<div><code>/tbody</code></div>
+	</section>
+	<div><code>/table</code></div>
+</div>
