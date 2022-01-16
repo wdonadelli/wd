@@ -913,6 +913,7 @@ padding: 0;
 	counter-increment: chapter;
 	content: counter(chapter) ". ";
 }
+/* normal: chapter (h3) figure (figcaption) table (caption) */
 .wd .wd-read caption:before {
 	counter-increment: tab;
 	content: counter(tab) ". ";
@@ -921,33 +922,18 @@ padding: 0;
 	counter-increment: fig;
 	content: counter(fig) ". ";
 }
-.wd .wd-read.wd-report p:before {
+/* relatório: chapter (h3) [ figure (figcaption) table (caption) p : posteriores a h3 ] */
+.wd .wd-read.wd-report h3 ~ p:before {
 	counter-increment: item;
 	content: counter(chapter) "." counter(item) ". ";
 	counter-reset: fig tab;
 }
-.wd .wd-read.wd-report caption:before {
+.wd .wd-read.wd-report h3 ~ caption:before {
 	content: counter(chapter) "." counter(item) "." counter(tab) ".";
 }
-.wd .wd-read.wd-report figcaption:before {
+.wd .wd-read.wd-report h3 ~ figcaption:before {
 	content: counter(chapter) "." counter(item) "." counter(fig) ".";
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /* -- código -- */
 .wd .wd-code {
 	background-color: var(--var-bg-code);
@@ -958,6 +944,7 @@ padding: 0;
 	font-style: normal;
 	font-weight: normal;
 	overflow: auto;
+	padding: var(--var-size-default);
 	position: relative;
 	text-decoration: none;
 	counter-reset: line;
@@ -993,8 +980,12 @@ padding: 0;
 	color: var(--var-fg-code-values);
 	white-space: pre-wrap;
 }
-.wd .wd-code q:before {content: "\0022"; /* quotes */}
-.wd .wd-code q:after  {content: "\0022"; /* quotes */}
+.wd .wd-code q:before            {content: "\0022"; /* "" */}
+.wd .wd-code q:after             {content: "\0022"; /* "" */}
+.wd .wd-code q.wd-code-q1:before {content: "\0027"; /* '' */}
+.wd .wd-code q.wd-code-q1:after  {content: "\0027"; /* '' */}
+.wd .wd-code q.wd-code-q3:before {content: "\0022\0022\0022"; /* """ */}
+.wd .wd-code q.wd-code-q3:after  {content: "\0022\0022\0022"; /* """ */}
 /* retorno */
 .wd .wd-code samp, .wd .wd-code samp * {
 	color: var(--var-fg-code-return);
@@ -1008,7 +999,7 @@ padding: 0;
 .wd .wd-code > section {
 	padding-left: var(--var-size-large);
 }
-.wd .wd-code div {height: calc(1.5*0.9*16px)}
+.wd .wd-code div {min-height: calc(1.5*0.9*16px)}
 .wd .wd-code div:before {
 	position: absolute;
 	display: block;
@@ -1024,10 +1015,6 @@ padding: 0;
 .wd .wd-code > section section {
 	padding-left: var(--var-size-large);
 }
-
-/*============================================================================*/
-/*-- ESTILOS ESTRUTURAIS -- */
-
 /* -- Cabeçalho e Rodapés fixos -- */
 .wd body > .wd-header-fixed,
 .wd body > .wd-footer-fixed {
@@ -1045,6 +1032,22 @@ padding: 0;
 		position: relative;
 	}
 }
+/* -- grades padrão para área de trabalho -- */
+/* menus direita e esquerda + conteúdo central */
+.wd .wd-grid {
+
+}
+/* menu direita + conteúdo esquerda */
+.wd .wd-grid-right {
+
+}
+/* menu esquerda + conteúdo direita */
+.wd .wd-grid-left {
+
+}
+
+
+
 
 /*============================================================================*/
 /*-- ESTILOS UTILITÁRIOS -- */
