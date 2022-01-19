@@ -35,6 +35,7 @@ SOFTWARE.
 | BLOCO 3: estilizando elementos (wd class)
 | BLOCO 4: efeitos de uso interno
 | BLOCO 5: estilização de estruturas
+| BLOCO 6: estilização de características individuais
 \-----------------------------------------------------------------------------*/
 
 /* == BLOCO 1 ================================================================*/
@@ -664,7 +665,10 @@ padding: 0;
 }
 /* -- coleção (containers em linha) TODO */
 .wd .wd-collection {
-
+	display: flex;
+	justify-content: space-around;
+	flex-wrap: nowrap;
+	width: 100%;
 }
 /* -- blocos em linha infinita -- * /
 .wd .wd-line, .wd .wd-vline, .wd .wd-hline, .wd .wd-sline {
@@ -858,10 +862,6 @@ padding: 0;
 .wd .wd-flyer > header:last-child,
 .wd .wd-flyer > footer:last-child,
 .wd .wd-flyer > nav:last-child {margin-bottom: var(--var-size--flyer);}
-
-
-
-
 /* -- Leitura -- */
 .wd .wd-read {
 	text-align: justify;
@@ -1015,7 +1015,7 @@ padding: 0;
 .wd .wd-code > section section {
 	padding-left: var(--var-size-large);
 }
-/* -- Cabeçalho e Rodapés fixos -- */
+/* -- Cabeçalho e Rodapés (fixos e companheiros) -- */
 .wd body > .wd-header-fixed,
 .wd body > .wd-footer-fixed {
 	position: fixed;
@@ -1032,6 +1032,19 @@ padding: 0;
 		position: relative;
 	}
 }
+.wd .wd-buddy-top,
+.wd .wd-buddy-bottom {
+	position: sticky !important;
+	z-index: var(--var-zindex-3) !important;
+}
+.wd .wd-buddy-top    {top: 0 !important;}
+.wd .wd-buddy-bottom {bottom: 0 !important;}
+.wd .wd-flyer > .wd-buddy-top,
+.wd .wd-flyer > .wd-buddy-bottom { /* ajuste para filhos de flyer */
+	top: -0.5em !important;
+	bottom: -0.5em !important;
+}
+
 /* -- grades padrão para área de trabalho -- */
 /* menus direita e esquerda + conteúdo central */
 .wd .wd-grid {
@@ -1046,11 +1059,7 @@ padding: 0;
 
 }
 
-
-
-
-/*============================================================================*/
-/*-- ESTILOS UTILITÁRIOS -- */
+/* == BLOCO 6 ================================================================*/
 
 /* -- Localização -- */
 .wd .wd-place-n, .wd .wd-place-e, .wd .wd-place-s, .wd .wd-place-w,
@@ -1065,8 +1074,6 @@ padding: 0;
 .wd .wd-place-n {
 	top: 0 !important;
 	left: 50% !important;
-	-ms-transform: translate(-50%, 0) !important;
-	-webkit-transform: translate(-50%, 0) !important;
 	transform: translate(-50%, 0) !important;
 }
 .wd .wd-place-ne {
@@ -1076,8 +1083,6 @@ padding: 0;
 .wd .wd-place-e {
 	right: 0 !important;
 	top: 50% !important;
-	-ms-transform: translate(0, -50%) !important;
-	-webkit-transform: translate(0, -50%) !important;
 	transform: translate(0, -50%) !important;
 }
 .wd .wd-place-se {
@@ -1087,8 +1092,6 @@ padding: 0;
 .wd .wd-place-s {
 	bottom: 0 !important;
 	left: 50% !important;
-	-ms-transform: translate(-50%, 0) !important;
-	-webkit-transform: translate(-50%, 0) !important;
 	transform: translate(-50%, 0) !important;
 }
 .wd .wd-place-sw {
@@ -1098,22 +1101,17 @@ padding: 0;
 .wd .wd-place-w {
 	left: 0 !important;
 	top: 50% !important;
-	-ms-transform: translate(0, -50%) !important;
-	-webkit-transform: translate(0, -50%) !important;
 	transform: translate(0, -50%) !important;
 }
 .wd .wd-place-nw {
 	top: 0 !important;
 	left: 0 !important;
 }
-.wd .wd-place-ctr {
+.wd .wd-place-c {
 	top: 50% !important;
 	left: 50% !important;
-	-ms-transform: translate(-50%, -50%) !important;
-	-webkit-transform: translate(-50%, -50%) !important;
 	transform: translate(-50%, -50%) !important;
 }
-
 /* -- Textual --*/
 .wd .wd-plain, .wd .wd-plain-child > * {
 	font-style: normal !important;
@@ -1121,29 +1119,15 @@ padding: 0;
 	text-decoration: none !important;
 	background-color: transparent !important;
 }
-
-.wd .wd-b, .wd .wd-b-child > * {font-weight: bold !important;}
-.wd .wd-u, .wd .wd-u-child > * {text-decoration: underline !important;}
-.wd .wd-i, .wd .wd-i-child > * {font-style: italic !important;}
-.wd .wd-s, .wd .wd-s-child > * {text-decoration: line-through !important;}
-.wd .wd-mark, .wd .wd-mark-child > * {background-color: #ffff00 !important;}
-
-.wd .wd-b-none, .wd .wd-b-none-child > * {font-weight: normal !important;}
-.wd .wd-i-none, .wd .wd-i-none-child > * {font-style: normal !important;}
+.wd .wd-b,    .wd .wd-b-child > *    {font-weight: bold !important;}
+.wd .wd-u,    .wd .wd-u-child > *    {text-decoration: underline !important;}
+.wd .wd-i,    .wd .wd-i-child > *    {font-style: italic !important;}
+.wd .wd-s,    .wd .wd-s-child > *    {text-decoration: line-through !important;}
+.wd .wd-mark, .wd .wd-mark-child > * {background-color: var(--var-bg-col-mark) !important;}
+.wd .wd-b-none,    .wd .wd-b-none-child > *    {font-weight: normal !important;}
+.wd .wd-i-none,    .wd .wd-i-none-child > *    {font-style: normal !important;}
 .wd .wd-line-none, .wd .wd-line-none-child > * {text-decoration: none !important;}
 .wd .wd-mark-none, .wd .wd-mark-none-child > * {background-color: transparent !important;}
-/* -- Companheiro -- */
-.wd .wd-buddy-top, .wd .wd-buddy-bottom {
-	position: sticky !important;
-	z-index: var(--var-zindex-3) !important;
-}
-.wd .wd-buddy-top {top: 0 !important;}
-.wd .wd-buddy-bottom {bottom: 0 !important;}
-.wd .wd-flyer > .wd-buddy-top, .wd .wd-flyer > .wd-buddy-bottom {
-	top: -0.5em !important;
-	bottom: -0.5em !important;
-}
-
 /* -- cores (conteúdo e cabeçalhos) -- */
 .wd .wd-bg-black, .wd .wd-bg-black-child > * {
 	background-color: var(--var-bg-black);
@@ -1241,7 +1225,6 @@ padding: 0;
 	background-color: var(--var-bg-basic-header);
 	color:            var(--var-fg-basic-header);
 }
-
 /* -- cores (texto) -- */
 .wd .wd-fg-black,  .wd .wd-fg-black-child  > * {color: var(--var-fg-black)  !important;}
 .wd .wd-fg-white,  .wd .wd-fg-white-child  > * {color: var(--var-fg-white)  !important;}
@@ -1254,7 +1237,6 @@ padding: 0;
 .wd .wd-fg-brown,  .wd .wd-fg-brown-child  > * {color: var(--var-fg-brown)  !important;}
 .wd .wd-fg-pink,   .wd .wd-fg-pink-child   > * {color: var(--var-fg-pink)   !important;}
 .wd .wd-fg-purple, .wd .wd-fg-purple-child > * {color: var(--var-fg-purple) !important;}
-
 
 /* -- Wallpaper -- */
 .wd .wd-bg-image {
@@ -1281,7 +1263,6 @@ padding: 0;
 	background-attachment: scroll !important;
 	background-size: auto !important;
 }
-
 /* -- Tamanho de Texto -- */
 .wd .wd-size-xxsmall, .wd .wd-size-xxsmall-child > * {font-size: xx-small !important;}
 .wd .wd-size-xsmall,  .wd .wd-size-xsmall-child  > * {font-size: x-small  !important;}
@@ -1292,7 +1273,6 @@ padding: 0;
 .wd .wd-size-large,   .wd .wd-size-large-child   > * {font-size: large    !important;}
 .wd .wd-size-xlarge,  .wd .wd-size-xlarge-child  > * {font-size: x-large  !important;}
 .wd .wd-size-xxlarge, .wd .wd-size-xxlarge-child > * {font-size: xx-large !important;}
-
 /* -- Alinhamento de Texto -- */
 .wd .wd-align-left,    .wd .wd-align-left-child    > * {text-align:     left    !important;}
 .wd .wd-align-center,  .wd .wd-align-center-child  > * {text-align:     center  !important;}
@@ -1301,14 +1281,12 @@ padding: 0;
 .wd .wd-align-middle,  .wd .wd-align-middle-child  > * {vertical-align: middle  !important;}
 .wd .wd-align-top,     .wd .wd-align-top-child     > * {vertical-align: top     !important;}
 .wd .wd-align-bottom,  .wd .wd-align-bottom-child  > * {vertical-align: bottom  !important;}
-
 /*-- Tamanho da Caixa --*/
 .wd .wd-case-upper,  .wd .wd-case-upper-child  > * {text-transform: uppercase  !important;}
 .wd .wd-case-lower,  .wd .wd-case-lower-child  > * {text-transform: lowercase  !important;}
 .wd .wd-case-title,  .wd .wd-case-title-child  > * {text-transform: capitalize !important;}
 .wd .wd-case-caps,   .wd .wd-case-caps-child   > * {font-variant:   small-caps !important;}
 .wd .wd-case-normal, .wd .wd-case-normal-child > * {text-transform: none       !important;}
-
 /* -- padding -- */
 .wd .wd-padding,        .wd .wd-padding-child        > *,
 .wd .wd-padding-top,    .wd .wd-padding-top-child    > *,
@@ -1373,7 +1351,6 @@ padding: 0;
 .wd .wd-padding-none, .wd .wd-padding-none-child > * {
 	padding: 0 !important;
 }
-
 /* -- margin -- */
 .wd .wd-margin,        .wd .wd-margin-child        > *,
 .wd .wd-margin-top,    .wd .wd-margin-top-child    > *,
@@ -1438,7 +1415,6 @@ padding: 0;
 .wd .wd-margin-none, .wd .wd-margin-none-child > * {
 	margin: 0 !important;
 }
-
 /* -- border -- */
 .wd .wd-border,        .wd .wd-border-child        > *,
 .wd .wd-border-top,    .wd .wd-border-top-child    > *,
@@ -1506,7 +1482,6 @@ border-left: var(--var-border-thin) !important;
 .wd .wd-border-none, .wd .wd-border-none-child > * {
 	border: 0 !important;
 }
-
 /* -- Borda arredondada -- */
 .wd .wd-radius,      .wd .wd-radius-child      > *,
 .wd .wd-radius-top,  .wd .wd-radius-top-child  > *,
@@ -1531,98 +1506,106 @@ border-left: var(--var-border-thin) !important;
 .wd .wd-radius-none, .wd .wd-radius-none-child > * {
 	border-radius: 0 !important;
 }
+/*-- Ícones Matemática --*/
+.wd .wd-icon-plus:before     {content: "\2795" !important;}
+.wd .wd-icon-minus:before    {content: "\2796" !important;}
+.wd .wd-icon-times:before    {content: "\2716" !important;}
+.wd .wd-icon-divide:before   {content: "\2797" !important;}
+/*-- Ícones Mídias --*/
+.wd .wd-icon-play:before     {content: "\23EF" !important;}
+.wd .wd-icon-stop:before     {content: "\23F9" !important;}
+.wd .wd-icon-pause:before    {content: "\23F8" !important;}
+.wd .wd-icon-forward:before  {content: "\23ED" !important;}
+.wd .wd-icon-backward:before {content: "\23EE" !important;}
+.wd .wd-icon-rec:before      {content: "\23FA" !important;}
 
-/* -- "Ícones" -- */
-/*-- Matemática --*/
-.wd .wd-icon-plus:before {content: "\2795" !important;}
-.wd .wd-icon-minus:before {content: "\2796" !important;}
-.wd .wd-icon-times:before {content: "\2716" !important;}
-.wd .wd-icon-divide:before {content: "\2797" !important;}
-/*-- Mídias --*/
-.wd .wd-icon-play:before {content: "\25B6" !important;}
-.wd .wd-icon-stop:before {content: "\25FC" !important;}
-.wd .wd-icon-forward:before {content: "\23E9" !important;}
-.wd .wd-icon-backward:before {content: "\23EA" !important;}
-.wd .wd-icon-rec:before {content: "\25CF" !important;}
-.wd .wd-icon-music:before {content: "\1F3BC" !important;}
-.wd .wd-icon-video:before {content: "\1F4F9" !important;}
-.wd .wd-icon-image:before {content: "\1F304" !important;}
-.wd .wd-icon-www:before {content: "\1F30F" !important;}
-.wd .wd-icon-voice:before {content: "\1F3A4" !important;}
-.wd .wd-icon-news:before {content: "\1F4F0" !important;}
-/*-- Informativos --*/
-.wd .wd-icon-info:before {content: "\2139" !important;}
-.wd .wd-icon-warn:before {content: "\2757" !important;}
-.wd .wd-icon-doubt:before {content: "\2753" !important;}
-.wd .wd-icon-ok:before {content: "\2714" !important;}
-.wd .wd-icon-error:before {content: "\1F6AB" !important;}
-/*-- Ações --*/
-.wd .wd-icon-copy:before {content: "\1F4DD" !important;}
-.wd .wd-icon-cut:before {content: "\2702" !important;}
-.wd .wd-icon-paste:before {content: "\1F4CB" !important;}
-.wd .wd-icon-open:before {content: "\1F4C2" !important;}
-.wd .wd-icon-new:before {content: "\1F4C4" !important;}
-.wd .wd-icon-file:before {content: "\1F4C1" !important;}
-.wd .wd-icon-save:before {content: "\1F4BD" !important;}
-.wd .wd-icon-attach:before {content: "\1F4CE" !important;}
-.wd .wd-icon-search:before {content: "\1F50E" !important;}
+.wd .wd-icon-music:before    {content: "\1F3BC" !important;}
+.wd .wd-icon-video:before    {content: "\1F39E" !important;}
+.wd .wd-icon-image:before    {content: "\1F304" !important;}
+.wd .wd-icon-www:before      {content: "\1F30F" !important;}
+.wd .wd-icon-voice:before    {content: "\1F3A4" !important;}
+.wd .wd-icon-news:before     {content: "\1F4F0" !important;}
+/*-- Ícones Informativos --*/
+.wd .wd-icon-info:before     {content: "\2139" !important;}
+.wd .wd-icon-warn:before     {content: "\2757" !important;}
+.wd .wd-icon-doubt:before    {content: "\2753" !important;}
+.wd .wd-icon-ok:before       {content: "\2714" !important;}
+.wd .wd-icon-error:before    {content: "\26D4" !important;}
+/*-- Ícones Ações --*/
+.wd .wd-icon-copy:before     {content: "\1F4DD" !important;}
+.wd .wd-icon-cut:before      {content: "\2702" !important;}
+.wd .wd-icon-paste:before    {content: "\1F4CB" !important;}
+.wd .wd-icon-open:before     {content: "\1F4C2" !important;}
+.wd .wd-icon-new:before      {content: "\1F4C4" !important;}
+.wd .wd-icon-file:before     {content: "\1F5C4" !important;}
+.wd .wd-icon-trash:before    {content: "\1F5D1" !important;}
+.wd .wd-icon-save:before     {content: "\1F4BF" !important;}
+.wd .wd-icon-attach:before   {content: "\1F4CE" !important;}
+.wd .wd-icon-search:before   {content: "\1F50E" !important;}
 .wd .wd-icon-download:before {content: "\1F4E5" !important;}
-.wd .wd-icon-upload:before {content: "\1F4E4" !important;}
-.wd .wd-icon-link:before {content: "\1F517" !important;}
+.wd .wd-icon-upload:before   {content: "\1F4E4" !important;}
+.wd .wd-icon-link:before     {content: "\1F517" !important;}
 .wd .wd-icon-bookmark:before {content: "\1F516" !important;}
-.wd .wd-icon-bell:before {content: "\1F514" !important;}
-.wd .wd-icon-help:before {content: "\1F4A1" !important;}
-.wd .wd-icon-home:before {content: "\1F3E0" !important;}
-.wd .wd-icon-target:before {content: "\1F3C1" !important;}
-.wd .wd-icon-door:before {content: "\1F6AA" !important;}
-.wd .wd-icon-close:before {content: "\274C" !important;}
-.wd .wd-icon-reload:before {content: "\21BB" !important;}
-.wd .wd-icon-config:before {content: "\1F529" !important;}
-.wd .wd-icon-menu:before {content: "\2630" !important;}
-.wd .wd-icon-list:before {content: "\22EE" !important;}
-.wd .wd-icon-key:before {content: "\1F511" !important;}
+.wd .wd-icon-bell:before     {content: "\1F514" !important;}
+.wd .wd-icon-help:before     {content: "\1F56F" !important;}
+.wd .wd-icon-home:before     {content: "\1F3D8" !important;}
+.wd .wd-icon-target:before   {content: "\1F3AF" !important;}
+.wd .wd-icon-door:before     {content: "\1F6AA" !important;}
+.wd .wd-icon-cancel:before   {content: "\274C" !important;}
+.wd .wd-icon-close:before    {content: "\00D7" !important;}
+.wd .wd-icon-reload:before   {content: "\21BB" !important;}
+.wd .wd-icon-config:before   {content: "\1F527" !important;}
+.wd .wd-icon-menu:before     {content: "\2630" !important;}
+.wd .wd-icon-list:before     {content: "\22EE" !important;}
+.wd .wd-icon-key:before      {content: "\1F511" !important;}
 .wd .wd-icon-unlocked:before {content: "\1F513" !important;}
-.wd .wd-icon-locked:before {content: "\1F512" !important;}
-.wd .wd-icon-battery:before {content: "\1F50B" !important;}
-.wd .wd-icon-sound:before {content: "\1F50A" !important;}
-.wd .wd-icon-network:before {content: "\1F4F6" !important;}
-.wd .wd-icon-user:before {content: "\1F464" !important;}
-/*-- Gêneros --*/
-.wd .wd-icon-he:before {content: "\1F6B9" !important;}
-.wd .wd-icon-she:before {content: "\1F6BA" !important;}
-/*-- Setas --*/
-.wd .wd-icon-n:before {content: "\2191" !important;}
-.wd .wd-icon-ne:before {content: "\2197" !important;}
-.wd .wd-icon-e:before {content: "\2192" !important;}
-.wd .wd-icon-se:before {content: "\2198" !important;}
-.wd .wd-icon-s:before {content: "\2193" !important;}
-.wd .wd-icon-sw:before {content: "\2199" !important;}
-.wd .wd-icon-w:before {content: "\2190" !important;}
-.wd .wd-icon-nw:before {content: "\2196" !important;}
-
-.wd .wd-icon-soon:before {content: "\1F51C" !important;}
-.wd .wd-icon-back:before {content: "\1F519" !important;}
-.wd .wd-icon-top:before {content: "\1F51D" !important;}
-
-.wd .wd-icon-right:before {content: "\2771" !important;}
-.wd .wd-icon-left:before {content: "\2770" !important;}
-/*-- Dispositivos --*/
-.wd .wd-icon-email:before {content: "\1F4E7" !important;}
-.wd .wd-icon-mail:before {content: "\1F4EE" !important;}
-.wd .wd-icon-phone:before {content: "\1F4DE" !important;}
-.wd .wd-icon-mobile:before {content: "\1F4F1" !important;}
-.wd .wd-icon-clock:before {content: "\1F551" !important;}
-.wd .wd-icon-date:before {content: "\1F4C5" !important;}
-.wd .wd-icon-time:before {content: "\23F3" !important;}
-.wd .wd-icon-chart:before {content: "\1F4CA" !important;}
+.wd .wd-icon-locked:before   {content: "\1F512" !important;}
+.wd .wd-icon-battery:before  {content: "\1F50B" !important;}
+.wd .wd-icon-sound:before    {content: "\1F50A" !important;}
+.wd .wd-icon-silence:before  {content: "\1F507" !important;}
+.wd .wd-icon-network:before  {content: "\1F4F6" !important;}
+.wd .wd-icon-user:before     {content: "\1F464" !important;}
+.wd .wd-icon-users:before    {content: "\1F465" !important;}
+.wd .wd-icon-sogood:before   {content: "\1F499" !important;}
+.wd .wd-icon-good:before     {content: "\1F5A4" !important;}
+.wd .wd-icon-talk:before     {content: "\1F4AC" !important;}
+.wd .wd-icon-print:before    {content: "\1F5A8" !important;}
+.wd .wd-icon-fixed:before    {content: "\1F4CC" !important;}
+.wd .wd-icon-exit:before     {content: "\1F50C" !important;}
+/*-- Ícones Setas --*/
+.wd .wd-icon-n:before        {content: "\2191" !important;}
+.wd .wd-icon-ne:before       {content: "\2197" !important;}
+.wd .wd-icon-e:before        {content: "\2192" !important;}
+.wd .wd-icon-se:before       {content: "\2198" !important;}
+.wd .wd-icon-s:before        {content: "\2193" !important;}
+.wd .wd-icon-sw:before       {content: "\2199" !important;}
+.wd .wd-icon-w:before        {content: "\2190" !important;}
+.wd .wd-icon-nw:before       {content: "\2196" !important;}
+.wd .wd-icon-right:before    {content: "\2771" !important;}
+.wd .wd-icon-left:before     {content: "\2770" !important;}
+/*-- Ícones Dispositivos --*/
+.wd .wd-icon-email:before    {content: "\1F4E7" !important;}
+.wd .wd-icon-mail:before     {content: "\1F4E8" !important;}
+.wd .wd-icon-phone:before    {content: "\1F4DE" !important;}
+.wd .wd-icon-mobile:before   {content: "\1F4F1" !important;}
+.wd .wd-icon-clock:before    {content: "\1F551" !important;}
+.wd .wd-icon-date:before     {content: "\1F4C5" !important;}
+.wd .wd-icon-time:before     {content: "\23F0" !important;}
+.wd .wd-icon-radio:before    {content: "\1F4FB" !important;}
+.wd .wd-icon-tv:before       {content: "\1F4FA" !important;}
+.wd .wd-icon-cam:before      {content: "\1F4F7" !important;}
+.wd .wd-icon-computer:before {content: "\1F4BB" !important;}
+.wd .wd-icon-scale:before    {content: "\1F4CF" !important;}
+.wd .wd-icon-pen:before      {content: "\1F58B" !important;}
+/* -- outros -- */
+.wd .wd-icon-chart:before    {content: "\1F4CA" !important;}
 .wd .wd-icon-increase:before {content: "\1F4C8" !important;}
 .wd .wd-icon-decrease:before {content: "\1F4C9" !important;}
-.wd .wd-icon-money:before {content: "\1F4B0" !important;}
-.wd .wd-icon-radio:before {content: "\1F4FB" !important;}
-.wd .wd-icon-tv:before {content: "\1F4FA" !important;}
-.wd .wd-icon-cam:before {content: "\1F4F7" !important;}
-.wd .wd-icon-custom {height: 1em; width: 1em;}
-.wd a[class*="wd-icon-"] {text-decoration: none;}
+.wd .wd-icon-money:before    {content: "\1F4B0" !important;}
+.wd .wd-icon-weather:before  {content: "\1F326" !important;}
+
+.wd .wd-icon-custom          {height: 1em; width: 1em;}
+.wd a[class*="wd-icon-"]     {text-decoration: none;}
 
 /* -- sombra -- */
 
@@ -1722,8 +1705,7 @@ border-left: var(--var-border-thin) !important;
 .wd * > .wd-opaque-in, .wd *:hover > .wd-opaque-out {
 	opacity: 1 !important;
 }
-
-/* -- destaque ---------------------------------------------------------------*/
+/* -- destaque -- */
 .wd .wd-zebra > *:nth-child(even) {
 	background-color: var(--var-bg-zebra)  !important;
 	color:            var(--var-fg-zebra) !important;
@@ -1735,7 +1717,7 @@ border-left: var(--var-border-thin) !important;
 	box-shadow:       var(--var-shadow-upon) !important;
 }
 
-/* -- Exibir/Esconder --------------------------------------------------------*/
+/* -- Exibir/Esconder -- */
 .wd .wd-show {visibility: visible !important;}
 .wd .wd-hide {visibility: hidden !important;}
 
@@ -1749,11 +1731,9 @@ border-left: var(--var-border-thin) !important;
 	opacity: 1 !important;
 	visibility: visible !important;
 }
-
 .wd .wd-overlook {display: none !important;}
-
 @media print {
-	.wd .wd-hide-print {visibility: hidden !important;}
-	.wd .wd-show-print {visibility: visible !important;}
+	.wd .wd-hide-print     {visibility: hidden !important;}
+	.wd .wd-show-print     {visibility: visible !important;}
 	.wd .wd-overlook-print {display: none !important;}
 }
