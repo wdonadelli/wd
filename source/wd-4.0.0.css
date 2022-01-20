@@ -663,12 +663,18 @@ padding: 0;
 	flex-direction: row;
 	flex-wrap: wrap;
 }
+.wd .wd-spread > * {margin: var(--var-size-default);}
 /* -- coleção (containers em linha) TODO */
 .wd .wd-collection {
 	display: flex;
 	justify-content: space-around;
 	flex-wrap: nowrap;
-	width: 100%;
+	width: 100% !important;
+	overflow: auto;
+	width: 500px !important;
+}
+.wd .wd-collection > * {
+	margin: var(--var-size-default);
 }
 /* -- blocos em linha infinita -- * /
 .wd .wd-line, .wd .wd-vline, .wd .wd-hline, .wd .wd-sline {
@@ -690,17 +696,27 @@ padding: 0;
 .wd .wd-sline > * {height: 16em; overflow: auto; width: 16em;}
 .wd .wd-vline > * {height: 18em; overflow: auto; width: 13em;}
 */
+
+/* container quadrado */
+.wd .wd-square,
+.wd .wd-square-child > * {
+	height: 12em;
+	width:  12em;
+	overflow: auto;
+}
 /* container em retrato */
 .wd .wd-portrait,
 .wd .wd-portrait-child > * {
-	height: 16em;
-	width: 9em;
+	height: 12em;
+	width:   9em;
+	overflow: auto;
 }
 /* container em paisagem */
 .wd .wd-landscape,
 .wd .wd-landscape-child > * {
-	height: 9em;
-	width: 16em;
+	height:  9em;
+	width:  12em;
+	overflow: auto;
 }
 
 /* -- Caixa de Dicas --FIXME (acho que isso não está bom) */
@@ -1046,17 +1062,37 @@ padding: 0;
 }
 
 /* -- grades padrão para área de trabalho -- */
-/* menus direita e esquerda + conteúdo central */
+/* Phone */
 .wd .wd-grid {
-
+	display: grid;
+	grid-template-areas: 'left' 'main' 'right';
 }
-/* menu direita + conteúdo esquerda */
-.wd .wd-grid-right {
+.wd .wd-grid > .wd-grid-left  {grid-area: left;}
+.wd .wd-grid > .wd-grid-main  {grid-area: main;}
+.wd .wd-grid > .wd-grid-right {grid-area: right;}
+.wd .wd-grid.wd-grid-right > .wd-grid-left  {display: none;}
+.wd .wd-grid.wd-grid-left  > .wd-grid-right {display: none;}
 
+@media screen and (min-width: 600px) { /* tablet */
+	.wd .wd-grid {
+		grid-template-areas:
+			'left left left main main main main main main main main main'
+			'right right right right right right right right right right right right';
+	}
+	.wd .wd-grid.wd-grid-left {
+		grid-template-areas:
+			'left left left main main main main main main main main main';
+	}
+	.wd .wd-grid.wd-grid-right {
+		grid-template-areas:
+			'main main main main main main main main main right right right';
+	}
 }
-/* menu esquerda + conteúdo direita */
-.wd .wd-grid-left {
-
+@media screen and (min-width: 768px) { /* desktop */
+	.wd .wd-grid {
+		grid-template-areas:
+			'left left left main main main main main main right right right';
+	}
 }
 
 /* == BLOCO 6 ================================================================*/
@@ -1566,7 +1602,7 @@ border-left: var(--var-border-thin) !important;
 .wd .wd-icon-network:before  {content: "\1F4F6" !important;}
 .wd .wd-icon-user:before     {content: "\1F464" !important;}
 .wd .wd-icon-users:before    {content: "\1F465" !important;}
-.wd .wd-icon-sogood:before   {content: "\1F499" !important;}
+.wd .wd-icon-amazing:before  {content: "\1F499" !important;}
 .wd .wd-icon-good:before     {content: "\1F5A4" !important;}
 .wd .wd-icon-talk:before     {content: "\1F4AC" !important;}
 .wd .wd-icon-print:before    {content: "\1F5A8" !important;}
@@ -1583,7 +1619,7 @@ border-left: var(--var-border-thin) !important;
 .wd .wd-icon-nw:before       {content: "\2196" !important;}
 .wd .wd-icon-right:before    {content: "\2771" !important;}
 .wd .wd-icon-left:before     {content: "\2770" !important;}
-/*-- Ícones Dispositivos --*/
+/*-- Ícones Diversos --*/
 .wd .wd-icon-email:before    {content: "\1F4E7" !important;}
 .wd .wd-icon-mail:before     {content: "\1F4E8" !important;}
 .wd .wd-icon-phone:before    {content: "\1F4DE" !important;}
@@ -1597,13 +1633,12 @@ border-left: var(--var-border-thin) !important;
 .wd .wd-icon-computer:before {content: "\1F4BB" !important;}
 .wd .wd-icon-scale:before    {content: "\1F4CF" !important;}
 .wd .wd-icon-pen:before      {content: "\1F58B" !important;}
-/* -- outros -- */
+.wd .wd-icon-map:before      {content: "\1F5FA" !important;}
 .wd .wd-icon-chart:before    {content: "\1F4CA" !important;}
 .wd .wd-icon-increase:before {content: "\1F4C8" !important;}
 .wd .wd-icon-decrease:before {content: "\1F4C9" !important;}
 .wd .wd-icon-money:before    {content: "\1F4B0" !important;}
 .wd .wd-icon-weather:before  {content: "\1F326" !important;}
-
 .wd .wd-icon-custom          {height: 1em; width: 1em;}
 .wd a[class*="wd-icon-"]     {text-decoration: none;}
 
