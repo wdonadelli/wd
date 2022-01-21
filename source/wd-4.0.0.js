@@ -3298,6 +3298,7 @@ const wd = (function() {
 			for (let i in o) o[i] = (o[i] < 10 ? "0" : "") + o[i].toString();
 			return WD(o.h+":"+o.m+":"+o.s);
 		}},
+		lang: {get: function() {return wd_lang();}}
 	});
 
 /* == BLOCO 4 ================================================================*/

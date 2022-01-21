@@ -1,20 +1,14 @@
 <h3>Collect</h3>
 
 <nav>
-  <span data-wd-set="${#target}className{wd-border-child}" >None</span>
-  <span data-wd-set="${#target}className{wd-border-child wd-spread}" >Spread</span>
-	<span data-wd-set="${#target}className{wd-border-child wd-collection}" >Collection</span>
+  <span data-wd-css="${#target}del{wd-spread wd-collection}" >None</span>
+  <span data-wd-css="${#target}del{wd-collection}add{wd-spread}" >Spread</span>
+	<span data-wd-css="${#target}del{wd-spread}add{wd-collection}" >Collection</span>
 </nav>
 
-<nav>
-	<span data-wd-css="$${#target > *}del{wd-landscape wd-portrait wd-square}"   >None</span>
-	<span data-wd-css="$${#target > *}add{wd-square}del{wd-portrait wd-landscape}" >Square</span>
-	<span data-wd-css="$${#target > *}del{wd-landscape wd-square}add{wd-portrait}" >Portrait</span>
-  <span data-wd-css="$${#target > *}add{wd-landscape}del{wd-portrait wd-square}" >Landscape</span>
-</nav>
+<p>To use inline spreading, you must define a size for the container.</p>
 
-
-<div id="target" class="wd-border-child" >
+<div id="target" class="wd-border-child wd-bg-blue wd-bg-base-child" style="max-width: 40em;">
 	<div>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</div>
 	<div>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</div>
 	<div>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</div>

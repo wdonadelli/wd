@@ -97,10 +97,10 @@ SOFTWARE.
 	--var-bg-purple: #ccb2f6;
 	--var-fg-purple: #492b7a;
 
-	--var-bg-basic-header: #000000;
-	--var-fg-basic-header: #ffffff;
-	--var-bg-basic: #ffffff;
-	--var-fg-basic: #000000;
+	--var-bg-base-header: #000000;
+	--var-fg-base-header: #ffffff;
+	--var-bg-base: #ffffff;
+	--var-fg-base: #000000;
 
 	--var-bg-code: #eeeeec;
 	--var-fg-code: #2e3436;
@@ -126,8 +126,8 @@ SOFTWARE.
 	--var-bg-modal:  rgba(0, 0, 0, 0.8);
 	--var-bg-window: #ffffff;
 
-	--var-bg-upon: #fcfcfc;
-	--var-fg-upon: #5c3566;
+	--var-bg-upon: rgba(204, 204, 204, 0.7);
+	--var-fg-upon: #2e3436;
 
 	--var-bg-zebra: #eeeeec;
 	--var-fg-zebra: #2e3436;
@@ -145,7 +145,6 @@ SOFTWARE.
 	--var-size-flyer:   0.5em;
 	--var-size--flyer: -0.5em;
 
-
 	/* bordas */
 	--var-border-thin: thin solid;
 	--var-border-medium: medium solid;
@@ -158,12 +157,11 @@ SOFTWARE.
 	--var-radius-default: 0.2em;
 	--var-radius-square: 50%;
 
-
 	/* sombras */
 	--var-shadow-nav:  inset 0em -0.3em 0em 0em rgba(114, 159, 207, 1);
 	--var-shadow:            0.5em 0.5em 0em 0em rgba(136, 138, 133, 1);
 	--var-shadow-cloud:      0em 0em 1.4em 0.5em rgba(211, 215, 207, 0.8);
-	--var-shadow-upon: inset 0 0 0 0.1em #5c3566;
+	--var-shadow-upon: inset 0 0 0 2px #2e3436;
 	--var-shadow-form-invalid: inset 0 0 0 1px #dc143c;
 
 	/* razão altura x comprimento */
@@ -191,16 +189,18 @@ SOFTWARE.
 	/* line height x font size + paddingTop + paddingBottom + borda: 1.5*16 + 0.5*16 + 0.5*16 + 2 = 42 >> 42/16 = 2,625 */
 	--var-height-form: 42px;
 
-	/* interação com usuário */
-	--var-wd-table-name: "Table";
-	--var-wd-figure-name: "Figure";
-
 	/* z-index */
 	--var-zindex-1: 999;
 	--var-zindex-2: 888;
 	--var-zindex-3: 777;
 	--var-zindex-4: 666;
 	--var-zindex-5: 555;
+
+	/* others */
+	--var-wd-size-collection: 14em;
+	--var-wd-margin-collection: 1em;
+
+
 }
 
 /* == BLOCO 2 ================================================================*/
@@ -496,7 +496,7 @@ padding: 0;
 	padding-right: 2em;
 	text-decoration: none !important;
 	text-align: center;
-	white-space: pre nowrap;
+	white-space: nowrap;
 }
 .wd input[type="submit"]:active,
 .wd input[type="button"]:active,
@@ -587,15 +587,15 @@ padding: 0;
 	width: 100%;
 }
 .wd .wd-row > * {flex: 1;}
-.wd .wd-row > .wd-col-01 {flex: 1;}
-.wd .wd-row > .wd-col-02 {flex: 2;}
-.wd .wd-row > .wd-col-03 {flex: 3;}
-.wd .wd-row > .wd-col-04 {flex: 4;}
-.wd .wd-row > .wd-col-05 {flex: 5;}
-.wd .wd-row > .wd-col-06 {flex: 6;}
-.wd .wd-row > .wd-col-07 {flex: 7;}
-.wd .wd-row > .wd-col-08 {flex: 8;}
-.wd .wd-row > .wd-col-09 {flex: 9;}
+.wd .wd-row > .wd-col-01 {flex:  1;}
+.wd .wd-row > .wd-col-02 {flex:  2;}
+.wd .wd-row > .wd-col-03 {flex:  3;}
+.wd .wd-row > .wd-col-04 {flex:  4;}
+.wd .wd-row > .wd-col-05 {flex:  5;}
+.wd .wd-row > .wd-col-06 {flex:  6;}
+.wd .wd-row > .wd-col-07 {flex:  7;}
+.wd .wd-row > .wd-col-08 {flex:  8;}
+.wd .wd-row > .wd-col-09 {flex:  9;}
 .wd .wd-row > .wd-col-10 {flex: 10;}
 .wd .wd-row > .wd-col-11 {flex: 11;}
 .wd .wd-row > .wd-col-12 {flex: 12;}
@@ -656,70 +656,31 @@ padding: 0;
 .wd .wd-col-mark-11 > * > *:nth-child(11), .wd .wd-col-mark-12 > * > *:nth-child(12) {
 	background-color: var(--var-bg-col-mark);
 }
-/* -- espalhar -- */
+/* -- coleção -- */
 .wd .wd-spread {
 	display: flex;
 	justify-content: space-around;
 	flex-direction: row;
 	flex-wrap: wrap;
 }
-.wd .wd-spread > * {margin: var(--var-size-default);}
-/* -- coleção (containers em linha) TODO */
 .wd .wd-collection {
-	display: flex;
-	justify-content: space-around;
-	flex-wrap: nowrap;
-	width: 100% !important;
-	overflow: auto;
-	width: 500px !important;
-}
-.wd .wd-collection > * {
-	margin: var(--var-size-default);
-}
-/* -- blocos em linha infinita -- * /
-.wd .wd-line, .wd .wd-vline, .wd .wd-hline, .wd .wd-sline {
 	display: block;
-	line-height: 1;
-	overflow-x: auto;
-	overflow-y: hidden;
-	text-align: left;
+	overflow: auto;
 	white-space: nowrap;
 }
-.wd .wd-line > *, .wd .wd-vline > *, .wd .wd-hline > *, .wd .wd-sline > * {
+.wd .wd-collection > * {
 	display: inline-block;
-	float: none;
-	line-height: 1.5;
-	overflow: auto;
 	white-space: normal;
 }
-.wd .wd-hline > * {height: 13em; overflow: auto; width: 18em;}
-.wd .wd-sline > * {height: 16em; overflow: auto; width: 16em;}
-.wd .wd-vline > * {height: 18em; overflow: auto; width: 13em;}
-*/
-
-/* container quadrado */
-.wd .wd-square,
-.wd .wd-square-child > * {
-	height: 12em;
-	width:  12em;
+.wd .wd-collection > *,
+.wd .wd-spread > * {
+	height: var(--var-wd-size-collection);
+	margin: var(--var-wd-margin-collection);
 	overflow: auto;
-}
-/* container em retrato */
-.wd .wd-portrait,
-.wd .wd-portrait-child > * {
-	height: 12em;
-	width:   9em;
-	overflow: auto;
-}
-/* container em paisagem */
-.wd .wd-landscape,
-.wd .wd-landscape-child > * {
-	height:  9em;
-	width:  12em;
-	overflow: auto;
+	width: var(--var-wd-size-collection);
 }
 
-/* -- Caixa de Dicas --FIXME (acho que isso não está bom) */
+/* -- Caixa de Dicas --FIXME (transformar isso num menu de contexto) */
 /*.wd .wd-tip {position: relative;}
 
 .wd-tip-hover-top, .wd-tip-click-top,
@@ -1253,13 +1214,13 @@ padding: 0;
 	background-color: var(--var-bg-purple-header);
 	color:            var(--var-fg-purple-header);
 }
-.wd .wd-bg-basic, .wd .wd-bg-basic-child > * {
-	background-color: var(--var-bg-basic);
-	color:            var(--var-fg-basic);
+.wd .wd-bg-base, .wd .wd-bg-base-child > * {
+	background-color: var(--var-bg-base);
+	color:            var(--var-fg-base);
 }
-.wd header.wd-bg-basic, .wd .wd-bg-basic > header {
-	background-color: var(--var-bg-basic-header);
-	color:            var(--var-fg-basic-header);
+.wd header.wd-bg-base, .wd .wd-bg-base > header {
+	background-color: var(--var-bg-base-header);
+	color:            var(--var-fg-base-header);
 }
 /* -- cores (texto) -- */
 .wd .wd-fg-black,  .wd .wd-fg-black-child  > * {color: var(--var-fg-black)  !important;}
@@ -1542,6 +1503,23 @@ border-left: var(--var-border-thin) !important;
 .wd .wd-radius-none, .wd .wd-radius-none-child > * {
 	border-radius: 0 !important;
 }
+/* texto em colunas */
+.wd .wd-text-2col, .wd .wd-text-3col, .wd .wd-text-4col {
+	column-gap: var(--var-size-large);
+}
+.wd .wd-text-2col > h1,     .wd .wd-text-3col > h1,     .wd .wd-text-4col > h1,
+.wd .wd-text-2col > h2,     .wd .wd-text-3col > h2,     .wd .wd-text-4col > h2,
+.wd .wd-text-2col > h3,     .wd .wd-text-3col > h3,     .wd .wd-text-4col > h3,
+.wd .wd-text-2col > h4,     .wd .wd-text-3col > h4,     .wd .wd-text-4col > h4,
+.wd .wd-text-2col > h5,     .wd .wd-text-3col > h5,     .wd .wd-text-4col > h5,
+.wd .wd-text-2col > h6,     .wd .wd-text-3col > h6,     .wd .wd-text-4col > h6,
+.wd .wd-text-2col > table,  .wd .wd-text-3col > table,  .wd .wd-text-4col > table,
+.wd .wd-text-2col > figure, .wd .wd-text-3col > figure, .wd .wd-text-4col > figure {
+	column-span: all;
+}
+.wd .wd-text-2col {column-count: 2;}
+.wd .wd-text-3col {column-count: 3;}
+.wd .wd-text-4col {column-count: 4;}
 /*-- Ícones Matemática --*/
 .wd .wd-icon-plus:before     {content: "\2795" !important;}
 .wd .wd-icon-minus:before    {content: "\2796" !important;}
@@ -1751,7 +1729,6 @@ border-left: var(--var-border-thin) !important;
 	color:            var(--var-fg-upon) !important;
 	box-shadow:       var(--var-shadow-upon) !important;
 }
-
 /* -- Exibir/Esconder -- */
 .wd .wd-show {visibility: visible !important;}
 .wd .wd-hide {visibility: hidden !important;}
