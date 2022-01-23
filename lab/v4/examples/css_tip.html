@@ -1,16 +1,40 @@
-<h2>Tip</h2>
+<h3>Tip</h3>
 
-<div style="position: relative; height: 150px;">
+<nav>
+	<span data-wd-css="${#tip}">None</span>
+	<span data-wd-css="${#tip}&${#tip}add{wd-tip-hover}">Hover</span>
+	<span data-wd-css="${#tip}&${#tip}add{wd-tip-click}">Click</span>
+</nav>
+<nav>
+	<span data-wd-css="${#ctip}&${#ctip}add{wd-tip-top}">Top</span>
+	<span data-wd-css="${#ctip}&${#ctip}add{wd-tip-right}">Right</span>
+	<span data-wd-css="${#ctip}&${#ctip}add{wd-tip-bottom}">Bottom</span>
+	<span data-wd-css="${#ctip}&${#ctip}add{wd-tip-left}">Left</span>
+</nav>
 
-	<div class="wd-tip wd-place-ctr" id="box_tip">
-		<button type="button" data-wd-action="toggle-open{#box_tip}">Hover/Click</button>
-		<div id="tip" class="wd-tip-hover-bottom wd-bg-black">Hello!</div>
-	</div>
 
-</div>
+<p style="margin: 50px 0;">
+	<span>Text text text text text text text text text text</span>
+	<span id="tip">
+		<span data-wd-css="${#tip}tgl{wd-open}" style="background-color: #ccccff;">Hover/Click Me!</span>
+		<span id="ctip" style="background-color: #ccffcc;">Content of Tip</span>
+	</span>
+	<span>text text text text text text text text text text text.</span>
+</p>
 
-<p>Morbi est nulla, finibus ut rhoncus eget, tempor
-	<span class="wd-tip wd-align-center" >
-		<u data-wd-action="toggle-open{#box_tip2}" class="wd-fg-red">vitae</u>
-		<span id="tip2" class="wd-tip-hover-bottom wd-bg-black">life</span>
-	</span> felis. Integer efficitur et lectus ac porttitor. Cras suscipit libero felis, in posuere eros varius quis. Aliquam erat volutpat. Fusce tempus arcu in tellus hendrerit, a dapibus sem dignissim. Quisque mi libero, vehicula eget sem nec, molestie eleifend urna. In hac habitasse platea dictumst. Nulla rutrum rutrum facilisis.</p>
+
+
+<span id="ftip" class="wd-tip-click">
+	<button type="button" data-wd-css="${#ftip}tgl{wd-open}" class="wd-icon-menu"></button>
+	<ul
+		type="none"
+		class="wd-tip-right wd-bg-grey wd-upon-enter-child wd-border wd-radius"
+		data-wd-css="${#ftip}del{wd-open}"
+	>
+		<li>Option 1</li>
+		<li class="wd-border-bottom">Option 2</li>
+		<li>Option 3</li>
+		<li>Option 4</li>
+		<li>Option 5</li>
+	</ul>
+</span>
