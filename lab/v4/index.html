@@ -56,51 +56,58 @@ try {
 		</script>
 	</head>
 
-<body class="wd-flyer">
-
-	<header class="wd-bg-white">
-		<h2><span class="wd-icon-menu" data-wd-css="${#menu}tgl{wd-open}"></span> WD Web Library Lab</h2>
-	</header>
-
+<body>
 
 	<main>
-		<div data-wd-device="desktop{wd-row}">
-			<div class="wd-padding" >
-				<h4>Code</h4>
-				<form>
-					<div>
-						<textarea id="ie_code" style="height: 300px" class="wd-block wd-code"></textarea>
-					</div>
-					<div class="wd-row">
-						<div class="wd-block-child">
-							<button type="button" id="ie_apply" data-wd-device="desktop{wd-icon-copy}" title="Render changes."> Apply</button>
+
+		<article class="wd-flyer">
+
+			<header class="wd-bg-white">
+				<h2><span class="wd-icon-menu" data-wd-css="${#menu}tgl{wd-open}"></span> WD Web Library Lab</h2>
+			</header>
+
+			<section data-wd-device="desktop{wd-row}">
+
+				<div class="wd-padding" >
+					<h4>Code</h4>
+					<form>
+						<div>
+							<textarea id="ie_code" style="height: 300px" class="wd-block wd-code"></textarea>
 						</div>
-						<div class="wd-block-child">
-							<button type="button" id="ie_reset" data-wd-device="desktop{wd-icon-close}" title="Restore the original code."> Reset</button>
+						<div class="wd-row">
+							<div class="wd-block-child">
+								<button type="button" id="ie_apply" data-wd-device="desktop{wd-icon-copy}" title="Render changes."> Apply</button>
+							</div>
+							<div class="wd-block-child">
+								<button type="button" id="ie_reset" data-wd-device="desktop{wd-icon-close}" title="Restore the original code."> Reset</button>
+							</div>
+							<div class="wd-block-child">
+								<button type="button" id="ie_dom" data-wd-device="desktop{wd-icon-paste}" title="Get and paste the current DOM tree into the text area."> DOM</button>
+							</div>
 						</div>
-						<div class="wd-block-child">
-							<button type="button" id="ie_dom" data-wd-device="desktop{wd-icon-paste}" title="Get and paste the current DOM tree into the text area."> DOM</button>
-						</div>
-					</div>
-				</form>
-			</div>
-			<div id="ie_page" class="wd-padding"></div>
-		</div>
+					</form>
+				</div>
+
+				<div id="ie_page" class="wd-padding"></div>
+
+			</section>
+
+		</article>
+
 	</main>
 
-
-  <div class="wd-modal" id="menu">
-    <div class="wd-window-left wd-bg-white wd-padding">
-      <article class="wd-flyer">
-        <header>
-          <h4>Menu</h3>
-        </header>
-        <nav data-wd-repeat="path{menu.json}">
-          <div><a href="?page={{target}}">{{target}}</a></div>
-        </nav>
-      </article>
-    </div>
-  </div>
+	<div class="wd-modal" id="menu" data-wd-css="tgl{wd-open}">
+	  <div class="wd-window-left wd-bg-white wd-padding">
+	    <article class="wd-flyer">
+	      <header>
+	        <h4>Menu</h4	>
+	      </header>
+	      <div data-wd-repeat="path{menu.json}">
+	        <div><a href="?page={{target}}">{{target}}</a></div>
+	      </div>
+	    </article>
+	  </div>
+	</div>
 
 </body>
 </html>

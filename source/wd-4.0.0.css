@@ -763,6 +763,7 @@ padding: 0;
 	right: 0;
 	bottom: 0;
 	left: 0;
+	margin: 0;
 	width: 100%;
 	height: 100%;
 	z-index: var(--var-zindex-1);
@@ -1780,44 +1781,78 @@ border-left: var(--var-border-thin) !important;
 	.wd .wd-show-print     {visibility: visible !important;}
 	.wd .wd-overlook-print {display: none !important;}
 }
-
-
+/* -- Math experimental -- */
 .wd .wd-math {
 	background: #ffffff;
 	color: #000000;
 	font-family: cursive;
-	font-size: 2em;
+	font-size: 32px;
+	letter-spacing: 5px;
+	line-height: 1.2;
+	text-align: center;
 }
 .wd .wd-math * {
 	display: inline-block;
-	letter-spacing: 0.1em;
-	line-height: 1.2;
-	text-align: center;
 	vertical-align: middle;
 	padding: 0;
 	margin: 0;
 }
-.wd .wd-math sup {
-	font-size: 0.5em;
-	vertical-align: super;
-}
-.wd .wd-math sub {
-	font-size: 0.5em;
-	vertical-align: sub;
-}
-.wd .wd-math small {
-	font-size: 0.5em;
-}
-.wd .wd-math > div,
-.wd .wd-math section > * {
+/* diminuir espaço entre a letra e a altura da fonte */
+.wd .wd-math *:before,
+.wd .wd-math *:after {
+	content: "";
+	height: 0;
+	width: 0;
 	display: block;
 }
+.wd .wd-math *:before {margin-top: calc((1.2 - 1)*0.5em);}
+.wd .wd-math *:after  {margin-bottom: calc((1 - 1.2)*1em);}
 
-/* TODO teste */
-.wd .wd-math section > * {border: 0px solid black;}
 
 
-.wd .wd-math section.wd-math-over > *:first-child {border-bottom: medium solid black;}
-.wd .wd-math section.wd-math-limits > *:first-child {vertical-align: sub;}
-.wd .wd-math section.wd-math-limits > *:last-child {vertical-align: super;}
+/* linhas */
+.wd .wd-math > div {
+	display: block;
+	margin: var(--var-margin-default);
+}
+/* índices e subíndices */
+.wd .wd-math sup, .wd .wd-math sub {font-size: 0.5em;}
+.wd .wd-math sup {vertical-align: super;}
+.wd .wd-math sub {vertical-align: sub;}
+/* grupos inline */
+.wd .wd-math span {position: relative;}
+/* grupos inline: índices e subíndices */
+.wd .wd-math span > sub + sup,
+.wd .wd-math span > sup + sub {
+	position: absolute;
+	left: 0;
+}
+.wd .wd-math span > sub + sup {top: 0;}
+.wd .wd-math span > sup + sub {bottom: 0;}
+/* grupos em bloco */
+.wd .wd-math section {position: relative}
+.wd .wd-math section > * {
+	display: block;
+	vertical-align: middle;
+	border: 1px dotted;
+}
+/* grupos em bloco: divisão */
+.wd .wd-math section > div {
+	border-top: 1px solid black;
+	border-bottom: 1px solid black;
+}
+.wd .wd-math section > div:first-child {border-top: 0;}
+.wd .wd-math section > div:last-child  {border-bottom: 0;}
+/* altura */
+.wd .wd-math .wd-math-h2 {font-size: 2em;}
+.wd .wd-math .wd-math-h3 {font-size: 3em;}
+.wd .wd-math .wd-math-h4 {font-size: 4em;}
+.wd .wd-math .wd-math-h5 {font-size: 5em;}
+.wd .wd-math .wd-math-h6 {font-size: 6em;}
+
+
+
+
+
+
 
