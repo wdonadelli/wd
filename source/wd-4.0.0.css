@@ -123,7 +123,7 @@ SOFTWARE.
 
 	--var-fg-link:   #3baff7;
 
-	--var-bg-modal:  rgba(0, 0, 0, 0.8);
+	--var-bg-modal:  rgba(0, 0, 0, 0.2);
 	--var-bg-window: #ffffff;
 
 	--var-bg-upon: rgba(204, 204, 204, 0.7);
@@ -158,10 +158,12 @@ SOFTWARE.
 	--var-radius-square: 50%;
 
 	/* sombras */
-	--var-shadow-nav:  inset 0em -0.3em 0em 0em rgba(114, 159, 207, 1);
-	--var-shadow:            0.5em 0.5em 0em 0em rgba(136, 138, 133, 1);
-	--var-shadow-cloud:      0em 0em 1.4em 0.5em rgba(211, 215, 207, 0.8);
-	--var-shadow-upon: inset 0 0 0 2px #2e3436;
+	--var-shadow-nav:          inset 0 -0.3em 0 0 rgba(114, 159, 207, 1);
+	--var-shadow-nav-block:    inset 0.3em 0 0 0 rgba(114, 159, 207, 1);
+	--var-shadow-nav-spread:   0 0 0 0.3em rgba(114, 159, 207, 1);
+	--var-shadow:              0.5em 0.5em 0 0 rgba(136, 138, 133, 1);
+	--var-shadow-cloud:        0 0 1.4em 0.5em rgba(211, 215, 207, 0.8);
+	--var-shadow-upon:         inset 0 0 0 2px #2e3436;
 	--var-shadow-form-invalid: inset 0 0 0 1px #dc143c;
 
 	/* razão altura x comprimento */
@@ -199,8 +201,6 @@ SOFTWARE.
 	/* others */
 	--var-wd-size-collection: 14em;
 	--var-wd-margin-collection: 1em;
-
-
 }
 
 /* == BLOCO 2 ================================================================*/
@@ -282,7 +282,10 @@ script, style {
 .wd h5  {font-size: 0.85em;}
 .wd h6  {font-size: 0.65em;}
 .wd p   {margin: 1em 0;}
-.wd pre {margin: var(--var-margin-default);}
+.wd pre {
+	margin: var(--var-margin-default);
+	white-space: pre-wrap;
+}
 .wd blockquote {
 	margin: 1.4em auto;
 	width: 75%;
@@ -290,14 +293,19 @@ script, style {
 /* -- navegador -- */
 .wd nav {
 	display: flex;
-	flex-wrap: nowrap;
+	flex-direction: row;
+	flex-wrap: wrap;
 }
-.wd nav > *, .wd nav > a[href] {
-	color: inherit !important;
+.wd nav > * {
+	color: inherit;
 	cursor: pointer;
 	margin: 0;
 	padding: var(--var-size-default);
 	text-decoration: none;
+}
+.wd nav > a[href] {
+	color: inherit !important;
+	text-decoration: none !important;
 }
 .wd nav > *:hover {
 	box-shadow: var(--var-shadow-nav);
@@ -333,12 +341,9 @@ script, style {
 	margin-bottom: -0.5em;
 }
 /* -- Imagens -- */
-.wd figure,
-.wd picture {
-	margin: var(--var-margin-center);
-}
-.wd figure > img,
-.wd figure > a > img {
+.wd figure {margin: var(--var-margin-center);}
+.wd figure img,
+.wd figure picture {
 	display: block;
 	margin: auto;
 	text-align: center;
@@ -575,6 +580,32 @@ padding: 0;
 
 /* == BLOCO 5 ================================================================*/
 
+/* -- Navegador -- */
+.wd nav > *.wd-nav-right {
+	margin: auto 0 auto auto;
+}
+.wd nav.wd-nav-block {
+	flex-direction: column;
+}
+.wd nav.wd-nav-block > *:hover {
+	box-shadow: var(--var-shadow-nav-block);
+}
+.wd nav.wd-nav-block > * {
+	margin: 0;
+	width: 100%;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+	border-bottom-color: var(--var-border-table);
+}
+.wd nav.wd-nav-spread {
+	justify-content: space-around;
+}
+.wd nav.wd-nav-spread > * {
+	margin: var(--var-size-extra);
+}
+.wd nav.wd-nav-spread > *:hover {
+	box-shadow: var(--var-shadow-nav-spread);
+}
 /* -- Blocos -- */
 .wd .wd-block, .wd .wd-block-child > * {
 	display: block !important;
@@ -661,12 +692,6 @@ padding: 0;
 	background-color: var(--var-bg-col-mark);
 }
 /* -- coleção -- */
-.wd .wd-spread {
-	display: flex;
-	justify-content: space-around;
-	flex-direction: row;
-	flex-wrap: wrap;
-}
 .wd .wd-collection {
 	display: block;
 	overflow: auto;
@@ -676,8 +701,7 @@ padding: 0;
 	display: inline-block;
 	white-space: normal;
 }
-.wd .wd-collection > *,
-.wd .wd-spread > * {
+.wd .wd-collection > * {
 	height: var(--var-wd-size-collection);
 	margin: var(--var-wd-margin-collection);
 	overflow: auto;
@@ -1071,6 +1095,29 @@ padding: 0;
 			'left left left main main main main main main right right right';
 	}
 }
+/* -- container proporcionais (ratio) TODO -- */
+.wd .wd-portrait  {
+	padding-top: calc(1vw/1vh);
+	position: relative;
+}
+.wd .wd-landscape {
+	padding-top: calc(1vh/1vh);
+	position: relative;
+}
+
+.wd .wd-portrait > *,
+.wd .wd-landscape {
+	height: 100%;
+	width: 100%;
+	position: absolute;
+	top: 0;
+	left: 0;
+	bottom: 0;
+	right: 0;
+}
+
+/* https://gbksoft.com/blog/common-screen-sizes-for-responsive-web-design/ */
+/* https://gs.statcounter.com/ */
 
 /* == BLOCO 6 ================================================================*/
 

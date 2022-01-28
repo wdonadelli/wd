@@ -10,6 +10,7 @@
 	{"target": "css_grid"},
 	{"target": "css_icons"},
 	{"target": "css_math"},
+	{"target": "css_nav"},
 	{"target": "css_position"},
 	{"target": "css_reading"},
 	{"target": "css_shadow_factory"},

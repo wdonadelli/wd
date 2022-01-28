@@ -16,18 +16,27 @@
 		<link  href="../../source/wd-4.0.0.css" rel="stylesheet" />
 		<script>
 
-function err(e) {console.log(e)
-	document.getElementById("ie_code").value = e;
+function err(e) {
+	/* função para exibir erro */
+	console.log(e);
+	wd.$$("#ie_page, #ie_code").load("");
+	wd.$("#bmenu").item(0).click();
 }
 
 function loadExample() {
+	/* função para carregar página */
 	try {
-		var path = document.URL.replace("?page=", "examples/").replace(/\#(.+)?/g, "")+".html";
+		var url  = document.URL.split("/?page=");
+		if (url.length < 2) return err("Destination not specified.");
+		var file = url[1].replace(/\#(.+)?/g, "");
+		var path = url[0]+"/examples/"+file+".html";
+		if (file === "") return err("Blank destination.");
 		wd.$$("#ie_code, #ie_page").data({wdLoad: "path{"+path+"}"});
 	} catch(e) {err(e);}
 }
 
 function reloadExample() {
+	/* função para renderizar o conteúdo do código */
 	try {
 		var code = wd.$("#ie_code").item(0).value;
 		wd.$("#ie_page").load(code);
@@ -35,24 +44,27 @@ function reloadExample() {
 }
 
 function getDOM() {
+	/* função para obter o html da renderização atual */
 	try {
 		var code = wd.$("#ie_page").item(0).innerHTML;
 		wd.$("#ie_code").load(code);
 	} catch(e) {err(e);}
 }
 
-
-function buttons() {
-	wd.$("#ie_apply").addHandler({click: reloadExample});
-	wd.$("#ie_reset").addHandler({click: loadExample});
-	wd.$("#ie_dom").addHandler({click: getDOM});
-}
-
-try {
-	wd(window).addHandler({load: loadExample}).addHandler({load: buttons});
-} catch(e) {err(e);}
-
-
+/* carregando disparadores */
+wd(window).addHandler(
+	{
+		load: function() {
+			wd.$("#ie_apply").addHandler({click: reloadExample});
+			wd.$("#ie_reset").addHandler({click: loadExample});
+			wd.$("#ie_dom").addHandler({click: getDOM});
+		}
+	}
+).addHandler(
+	{
+		load: loadExample
+	}
+);
 		</script>
 	</head>
 
@@ -62,30 +74,42 @@ try {
 
 		<article class="wd-flyer">
 
-			<header class="wd-bg-white">
-				<h2><span class="wd-icon-menu" data-wd-css="${#menu}tgl{wd-open}"></span> WD Web Library Lab</h2>
+			<header class="wd-bg-black">
+				<h2>
+					<span class="wd-icon-menu" data-wd-css="${#menu}tgl{wd-open}" id="bmenu"></span>
+					<span>WD Web Library Lab</span>
+				</h2>
 			</header>
 
 			<section data-wd-device="desktop{wd-row}">
 
 				<div class="wd-padding" >
+
 					<h4>Code</h4>
+
 					<form>
+
 						<div>
 							<textarea id="ie_code" style="height: 300px" class="wd-block wd-code"></textarea>
 						</div>
+
 						<div class="wd-row">
 							<div class="wd-block-child">
 								<button type="button" id="ie_apply" data-wd-device="desktop{wd-icon-copy}" title="Render changes."> Apply</button>
 							</div>
+
 							<div class="wd-block-child">
 								<button type="button" id="ie_reset" data-wd-device="desktop{wd-icon-close}" title="Restore the original code."> Reset</button>
 							</div>
+
 							<div class="wd-block-child">
 								<button type="button" id="ie_dom" data-wd-device="desktop{wd-icon-paste}" title="Get and paste the current DOM tree into the text area."> DOM</button>
 							</div>
+
 						</div>
+
 					</form>
+
 				</div>
 
 				<div id="ie_page" class="wd-padding"></div>
@@ -97,14 +121,14 @@ try {
 	</main>
 
 	<div class="wd-modal" id="menu" data-wd-css="tgl{wd-open}">
-	  <div class="wd-window-left wd-bg-white wd-padding">
-	    <article class="wd-flyer">
+	  <div data-wd-device="desktop{wd-window-left}mobile{wd-window-full}"  style="min-width: 25%;">
+	    <article class="wd-flyer wd-bg-base">
 	      <header>
-	        <h4>Menu</h4	>
+	        <h4>Menu</h4>
 	      </header>
-	      <div data-wd-repeat="path{menu.json}">
-	        <div><a href="?page={{target}}">{{target}}</a></div>
-	      </div>
+	      <nav data-wd-repeat="path{menu.json}" class="wd-nav-block">
+	        <a href="?page={{target}}" title="{{target}}">{{target}}</a>
+	      </nav>
 	    </article>
 	  </div>
 	</div>

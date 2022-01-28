@@ -2367,7 +2367,7 @@ const wd = (function() {
 				this.padd   = {t: 0, r: 0, b: 0, l: 0}; /* espaço interno do gráfico (padding) */
 				this.legend = 0; /* contador de legenda */
 				this.box.className = ""; /* atributo class do container do gráfico */
-				wd_html_style(this.box, null); /* limpando estilos estilos */
+				wd_html_style(this.box, null); /* limpando atributo style */
 				this.box.style.backgroundColor = "#fafafa";
 				this.box.style.paddingTop = wd_num_str(this.ratio, true); /* proporção do container em relação à tela */
 				this.box.style.position   = "relative";
