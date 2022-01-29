@@ -1,9 +1,17 @@
 <h2>Reading</h2>
 
+<style>
+	/* Remove the comments to change the table and figure legend: */
+	:root {
+		/*--var-read-table:  "Tabela";*/
+		/*--var-read-figure: "Figura";*/
+	}
+</style>
+
 <nav>
 	<span data-wd-css="${#article}">Default</span>
 	<span data-wd-css="${#article}&${#article}add{wd-read}">Read</span>
-	<span data-wd-css="${#article}&${#article}add{wd-read wd-report}">Report</span>
+	<span data-wd-css="${#article}&${#article}add{wd-read wd-itemize}">Itemize</span>
 	<span data-wd-full="${#article}">Full</span>
 </nav>
 
@@ -13,6 +21,7 @@
 	<span data-wd-css="${#article}del{wd-text-2col}add{wd-text-3col}">Three Columns</span>
 </nav>
 
+<p>Set <code>--var-read-table</code> or <code>--var-read-figure</code>, within the scope of <code>:root</code> (CSS), to change the legend of tables and figures, respectively.</p>
 
 
 <article style="background-color: white; overflow: auto; padding: 0.5em" id="article">
@@ -23,7 +32,7 @@
 
 	<h3>Chapter A</h3>
 
-	<p>Pellentesque consequat bibendum mauris, sed blandit justo ultricies non. Maecenas feugiat sit amet erat vel vestibulum. Duis tincidunt purus sapien, ut venenatis lectus elementum at. Nam sodales interdum nibh a sodales. Sed non mi ac purus lacinia pellentesque. Donec vitae nibh semper, euismod elit vel, tempus urna. Mauris vel maximus elit. Phasellus fermentum sagittis rutrum.</p><p>Vestibulum dictum metus ut libero dictum, nec imperdiet arcu tempor. In at magna sodales, tincidunt nisl non, volutpat velit. Aliquam nec lectus lorem. Sed lobortis nec lacus quis lobortis. Vivamus a metus a sapien tincidunt fermentum sed et ipsum. Nulla facilisi. Ut faucibus mauris diam.</p>
+	<p>Pellentesque consequat <q>bibendum mauris</q>, sed blandit justo ultricies non. Maecenas feugiat sit amet erat vel vestibulum. Duis tincidunt purus sapien, ut venenatis lectus elementum at. Nam sodales interdum nibh a sodales. Sed non mi ac purus lacinia pellentesque. Donec vitae nibh semper, euismod elit vel, tempus urna. Mauris vel maximus elit. Phasellus fermentum sagittis rutrum.</p><p>Vestibulum dictum metus ut libero dictum, nec imperdiet arcu tempor. In at magna sodales, tincidunt nisl non, volutpat velit. Aliquam nec lectus lorem. Sed lobortis nec lacus quis lobortis. Vivamus a metus a sapien tincidunt fermentum sed et ipsum. Nulla facilisi. Ut faucibus mauris diam.</p>
 
 	<blockquote>Integer velit tortor, posuere eu mattis viverra, aliquam quis turpis. Nullam pellentesque nunc lacus. Nullam vestibulum tempor dapibus. Quisque rutrum urna a neque viverra blandit. Cras pellentesque felis nulla, vitae eleifend magna hendrerit in. Praesent tincidunt, metus eu dictum dictum, lacus nibh finibus augue, in fringilla ligula urna ut orci. Pellentesque sed massa ornare, aliquam arcu eu, luctus tellus. Integer in est tempus felis gravida feugiat.</blockquote>
 

@@ -199,6 +199,10 @@ SOFTWARE.
 	--var-zindex-5: 555;
 
 	/* others */
+	--var-read-table: "Table";
+	--var-read-figure: "Figure";
+
+
 	--var-wd-size-collection: 14em;
 	--var-wd-margin-collection: 1em;
 }
@@ -595,13 +599,13 @@ padding: 0;
 	width: 100%;
 	border-bottom-width: 1px;
 	border-bottom-style: solid;
-	border-bottom-color: var(--var-border-table);
+	border-bottom-color: var(--var-border-table) !important;
 }
 .wd nav.wd-nav-spread {
 	justify-content: space-around;
 }
 .wd nav.wd-nav-spread > * {
-	margin: var(--var-size-extra);
+	margin: var(--var-size-large);
 }
 .wd nav.wd-nav-spread > *:hover {
 	box-shadow: var(--var-shadow-nav-spread);
@@ -885,74 +889,103 @@ padding: 0;
 /* -- Leitura -- */
 .wd .wd-read {
 	text-align: justify;
-	font-size: 18px
+	font-size: 18px;
+	line-height: 1.6;
 }
 /* Título e Subtítulo */
-.wd .wd-read h1,
-.wd .wd-read h2 {
+.wd .wd-read > h1,
+.wd .wd-read > h2 {
 	margin-left: auto;
 	margin-right: auto;
 	text-align: center;
 }
-.wd .wd-read h1 {font-variant: small-caps;}
-.wd .wd-read h2 {
+.wd .wd-read > h1 {
+	font-variant: small-caps;
+}
+.wd .wd-read > h2 {
 	font-family: var(--var-font-report-h2);
 	font-style: italic;
 	font-weight: normal;
 }
 @media screen and (min-width: 768px) { /* desktop */
-	.wd .wd-read h1 {width: 75%;}
-	.wd .wd-read h2 {width: 50%;}
+	.wd .wd-read > h1 {width: 75%;}
+	.wd .wd-read > h2 {width: 50%;}
 }
 /* parágrafos */
-.wd .wd-read p {
+.wd .wd-read > p {
   margin: 2em 0;
   text-indent: 4em;
 }
-.wd .wd-read blockquote {
+.wd .wd-read > blockquote {
 	font-size: smaller;
 	margin: 2em 0 2em auto;
 	width: 75%;
 }
+.wd .wd-read q {
+	quotes: "\0022" "\0022";
+}
 /* tabelas, figuras, listas */
-.wd .wd-read table,
-.wd .wd-read figure {
+.wd .wd-read > table,
+.wd .wd-read > figure {
 	width: 80%;
 	margin: 2em auto;
+}
+.wd .wd-read > table caption,
+.wd .wd-read > figure figcaption {
+	font-style: italic;
+	font-size: smaller;
 }
 .wd .wd-read > ol,
 .wd .wd-read > ul {
 	margin: 2em auto;
 }
 .wd .wd-read > ul > li,
-.wd .wd-read > ol > li {padding-left: 4em;}
+.wd .wd-read > ol > li {
+	padding-left: 4em;
+}
 /* -- itemização -- */
-.wd .wd-read    {counter-reset: chapter fig tab;}
-.wd .wd-read h3 {counter-reset: item;}
-.wd .wd-read h3:before {
+.wd .wd-read      {
+	counter-reset: chapter fig tab;
+}
+.wd .wd-read > h3 {
+	counter-reset: item;
+}
+.wd .wd-read > h3:before {
 	counter-increment: chapter;
 	content: counter(chapter) ". ";
 }
 /* normal: chapter (h3) figure (figcaption) table (caption) */
-.wd .wd-read caption:before {
+.wd .wd-read > table caption:before {
 	counter-increment: tab;
-	content: counter(tab) ". ";
+	content: var(--var-read-table) " " counter(tab) ": ";
+	font-style: normal;
+	font-weight: bold;
 }
-.wd .wd-read figcaption:before {
+.wd .wd-read > figure figcaption:before {
 	counter-increment: fig;
-	content: counter(fig) ". ";
+	content: var(--var-read-figure) " " counter(fig) ": ";
+	font-style: normal;
+	font-weight: bold;
 }
+
 /* relatório: chapter (h3) [ figure (figcaption) table (caption) p : posteriores a h3 ] */
-.wd .wd-read.wd-report h3 ~ p:before {
+.wd .wd-read.wd-itemize > p {
+	text-indent: 0;
 	counter-increment: item;
-	content: counter(chapter) "." counter(item) ". ";
+}
+.wd .wd-read.wd-itemize > p:before {
+	margin-right: 4em;
+	content: counter(item) ".";
+}
+.wd .wd-read.wd-itemize > h3 ~ p:before {
+	content: counter(chapter) "." counter(item);
 	counter-reset: fig tab;
 }
-.wd .wd-read.wd-report h3 ~ caption:before {
-	content: counter(chapter) "." counter(item) "." counter(tab) ".";
+.wd .wd-read.wd-itemize > h3 ~ table caption:before {
+	content: var(--var-read-table) " " counter(chapter) "." counter(item) "." counter(tab) ": ";
 }
-.wd .wd-read.wd-report h3 ~ figcaption:before {
-	content: counter(chapter) "." counter(item) "." counter(fig) ".";
+.wd .wd-read.wd-itemize > h3 ~ figure figcaption:before {
+	content: var(--var-read-figure) " " counter(chapter) "." counter(item) "." counter(fig) ": ";
 }
 /* -- código -- */
 .wd .wd-code {
@@ -1095,27 +1128,69 @@ padding: 0;
 			'left left left main main main main main main right right right';
 	}
 }
-/* -- container proporcionais (ratio) TODO -- */
-.wd .wd-portrait  {
-	padding-top: calc(1vw/1vh);
-	position: relative;
-}
-.wd .wd-landscape {
-	padding-top: calc(1vh/1vh);
-	position: relative;
-}
+/* -- container proporcionais (ratio) -- */
 
-.wd .wd-portrait > *,
-.wd .wd-landscape {
-	height: 100%;
-	width: 100%;
-	position: absolute;
-	top: 0;
-	left: 0;
-	bottom: 0;
-	right: 0;
-}
+/* TODO colocar isso em ordem para usar o min-aspect-ratio */
 
+@media (aspect-ratio: 1/1) {
+  .wd .wd-ratio {aspect-ratio: 1 / 1;}
+}
+/* --  -- -- */
+@media (aspect-ratio: 2/1) {
+  .wd .wd-ratio {aspect-ratio: 2 / 1;}
+}
+@media (aspect-ratio: 1/2) {
+  .wd .wd-ratio {aspect-ratio: 1 / 2;}
+}
+/* --  -- -- */
+@media (aspect-ratio: 4/3) {
+  .wd .wd-ratio {aspect-ratio: 4 / 3;}
+}
+@media (aspect-ratio: 3/4) {
+  .wd .wd-ratio {aspect-ratio: 3 / 4;}
+}
+/* --  -- -- */
+@media (aspect-ratio: 8/5) {
+  .wd .wd-ratio {aspect-ratio: 8 / 5;}
+}
+@media (aspect-ratio: 5/8) {
+  .wd .wd-ratio {aspect-ratio: 5 / 8;}
+}
+/* --  -- -- */
+@media (aspect-ratio: 13/6) {
+  .wd .wd-ratio {aspect-ratio: 13 / 6;}
+}
+@media (aspect-ratio: 6/13) {
+  .wd .wd-ratio {aspect-ratio: 6 / 13;}
+}
+/* --  -- -- */
+@media (aspect-ratio: 16/9) {
+  .wd .wd-ratio {aspect-ratio: 16 / 9;}
+}
+@media (aspect-ratio: 9/16) {
+  .wd .wd-ratio {aspect-ratio: 9 / 16;}
+}
+/* --  -- -- */
+@media (aspect-ratio: 16/10) {
+  .wd .wd-ratio {aspect-ratio: 16 / 10;}
+}
+@media (aspect-ratio: 10/16) {
+  .wd .wd-ratio {aspect-ratio: 10 / 16;}
+}
+/* --  -- -- */
+@media (aspect-ratio: 19/9) {
+  .wd .wd-ratio {aspect-ratio: 19 / 9;}
+}
+@media (aspect-ratio: 9/19) {
+  .wd .wd-ratio {aspect-ratio: 9 / 19;}
+}
+/* --  -- -- */
+@media (aspect-ratio: 20/9) {
+  .wd .wd-ratio {aspect-ratio: 20 / 9;}
+}
+@media (aspect-ratio: 9/20) {
+  .wd .wd-ratio {aspect-ratio: 9 / 20;}
+}
 /* https://gbksoft.com/blog/common-screen-sizes-for-responsive-web-design/ */
 /* https://gs.statcounter.com/ */
 
