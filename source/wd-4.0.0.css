@@ -1129,70 +1129,87 @@ padding: 0;
 	}
 }
 /* -- container proporcionais (ratio) -- */
+.wd .wd-ratio-9-20 {aspect-ratio: 9 / 20;}
+.wd .wd-ratio-6-13 {aspect-ratio: 6 / 13;}
+.wd .wd-ratio-9-19 {aspect-ratio: 9 / 19;}
+.wd .wd-ratio-1-2  {aspect-ratio: 1 / 2;}
+.wd .wd-ratio-9-16 {aspect-ratio: 9 / 16;}
+.wd .wd-ratio-5-8  {aspect-ratio: 5 / 8;}
+.wd .wd-ratio-3-4  {aspect-ratio: 3 / 4;}
+.wd .wd-ratio-1-1  {aspect-ratio: 1 / 1;}
+.wd .wd-ratio-4-3  {aspect-ratio: 4 / 3;}
+.wd .wd-ratio-8-5  {aspect-ratio: 8 / 5;}
+.wd .wd-ratio-16-9 {aspect-ratio: 16 / 9;}
+.wd .wd-ratio-2-1  {aspect-ratio: 2 / 1;}
+.wd .wd-ratio-19-9 {aspect-ratio: 19 / 9;}
+.wd .wd-ratio-13-6 {aspect-ratio: 13 / 6;}
+.wd .wd-ratio-20-9 {aspect-ratio: 20 / 9;}
 
-/* TODO colocar isso em ordem para usar o min-aspect-ratio */
+.wd .wd-ratio,
+.wd .wd-ratio-h,
+.wd .wd-ratio-v {aspect-ratio: 1 / 1;}
 
-@media (aspect-ratio: 1/1) {
-  .wd .wd-ratio {aspect-ratio: 1 / 1;}
+@media (min-aspect-ratio: 9/20) {
+	.wd .wd-ratio, .wd .wd-ratio-v {aspect-ratio: 9 / 20;}
+	.wd .wd-ratio-h {aspect-ratio: 20 / 9;}
 }
-/* --  -- -- */
-@media (aspect-ratio: 2/1) {
-  .wd .wd-ratio {aspect-ratio: 2 / 1;}
+@media (min-aspect-ratio: 6/13) {
+	.wd .wd-ratio, .wd .wd-ratio-v {aspect-ratio: 6 / 13;}
+	.wd .wd-ratio-h {aspect-ratio: 13 / 6;}
 }
-@media (aspect-ratio: 1/2) {
-  .wd .wd-ratio {aspect-ratio: 1 / 2;}
+@media (min-aspect-ratio: 9/19) {
+	.wd .wd-ratio, .wd .wd-ratio-v {aspect-ratio: 9 / 19;}
+	.wd .wd-ratio-h {aspect-ratio: 19 / 9;}
 }
-/* --  -- -- */
-@media (aspect-ratio: 4/3) {
-  .wd .wd-ratio {aspect-ratio: 4 / 3;}
+@media (min-aspect-ratio: 1/2)  {
+	.wd .wd-ratio, .wd .wd-ratio-v {aspect-ratio: 1 / 2;}
+	.wd .wd-ratio-h {aspect-ratio: 2 / 1;}
 }
-@media (aspect-ratio: 3/4) {
-  .wd .wd-ratio {aspect-ratio: 3 / 4;}
+@media (min-aspect-ratio: 9/16) {
+	.wd .wd-ratio, .wd .wd-ratio-v {aspect-ratio: 9 / 16;}
+	.wd .wd-ratio-h {aspect-ratio: 16 / 9;}
 }
-/* --  -- -- */
-@media (aspect-ratio: 8/5) {
-  .wd .wd-ratio {aspect-ratio: 8 / 5;}
+@media (min-aspect-ratio: 5/8)  {
+	.wd .wd-ratio, .wd .wd-ratio-v {aspect-ratio: 5 / 8;}
+	.wd .wd-ratio-h {aspect-ratio: 8 / 5;}
 }
-@media (aspect-ratio: 5/8) {
-  .wd .wd-ratio {aspect-ratio: 5 / 8;}
+@media (min-aspect-ratio: 3/4)  {
+	.wd .wd-ratio, .wd .wd-ratio-v {aspect-ratio: 3 / 4;}
+	.wd .wd-ratio-h {aspect-ratio: 4 / 3;}
 }
-/* --  -- -- */
-@media (aspect-ratio: 13/6) {
-  .wd .wd-ratio {aspect-ratio: 13 / 6;}
+@media (min-aspect-ratio: 1/1)  {
+	.wd .wd-ratio,
+	.wd .wd-ratio-h,
+	.wd .wd-ratio-v {aspect-ratio: 1 / 1;}
 }
-@media (aspect-ratio: 6/13) {
-  .wd .wd-ratio {aspect-ratio: 6 / 13;}
+@media (min-aspect-ratio: 4/3)  {
+	.wd .wd-ratio, .wd .wd-ratio-h {aspect-ratio: 4 / 3;}
+	.wd .wd-ratio-v {aspect-ratio: 3 / 4;}
 }
-/* --  -- -- */
-@media (aspect-ratio: 16/9) {
-  .wd .wd-ratio {aspect-ratio: 16 / 9;}
+@media (min-aspect-ratio: 8/5)  {
+	.wd .wd-ratio, .wd .wd-ratio-h {aspect-ratio: 8 / 5;}
+	.wd .wd-ratio-v {aspect-ratio: 5 / 8;}
 }
-@media (aspect-ratio: 9/16) {
-  .wd .wd-ratio {aspect-ratio: 9 / 16;}
+@media (min-aspect-ratio: 16/9) {
+	.wd .wd-ratio, .wd .wd-ratio-h {aspect-ratio: 16 / 9;}
+	.wd .wd-ratio-v {aspect-ratio: 9 / 16;}
 }
-/* --  -- -- */
-@media (aspect-ratio: 16/10) {
-  .wd .wd-ratio {aspect-ratio: 16 / 10;}
+@media (min-aspect-ratio: 2/1)  {
+	.wd .wd-ratio, .wd .wd-ratio-h {aspect-ratio: 2 / 1;}
+	.wd .wd-ratio-v {aspect-ratio: 1 / 2;}
 }
-@media (aspect-ratio: 10/16) {
-  .wd .wd-ratio {aspect-ratio: 10 / 16;}
+@media (min-aspect-ratio: 19/9) {
+	.wd .wd-ratio, .wd .wd-ratio-h {aspect-ratio: 19 / 9;}
+	.wd .wd-ratio-v {aspect-ratio: 9 / 19;}
 }
-/* --  -- -- */
-@media (aspect-ratio: 19/9) {
-  .wd .wd-ratio {aspect-ratio: 19 / 9;}
+@media (min-aspect-ratio: 13/6) {
+	.wd .wd-ratio, .wd .wd-ratio-h {aspect-ratio: 13 / 6;}
+	.wd .wd-ratio-v {aspect-ratio: 6 / 13;}
 }
-@media (aspect-ratio: 9/19) {
-  .wd .wd-ratio {aspect-ratio: 9 / 19;}
+@media (min-aspect-ratio: 20/9) {
+	.wd .wd-ratio, .wd .wd-ratio-h {aspect-ratio: 20 / 9;}
+	.wd .wd-ratio-v {aspect-ratio: 9 / 20;}
 }
-/* --  -- -- */
-@media (aspect-ratio: 20/9) {
-  .wd .wd-ratio {aspect-ratio: 20 / 9;}
-}
-@media (aspect-ratio: 9/20) {
-  .wd .wd-ratio {aspect-ratio: 9 / 20;}
-}
-/* https://gbksoft.com/blog/common-screen-sizes-for-responsive-web-design/ */
-/* https://gs.statcounter.com/ */
 
 /* == BLOCO 6 ================================================================*/
 
@@ -1910,16 +1927,29 @@ border-left: var(--var-border-thin) !important;
 	font-family: cursive;
 	font-size: 32px;
 	letter-spacing: 5px;
-	line-height: 1.2;
+	line-height: 1	;
 	text-align: center;
 }
-.wd .wd-math * {
+/* elementos */
+.wd .wd-math > div * {
 	display: inline-block;
-	vertical-align: middle;
-	padding: 0;
 	margin: 0;
+	padding: 0;
+	position: relative;
+	vertical-align: middle;
 }
-/* diminuir espaço entre a letra e a altura da fonte */
+/* textos */
+.wd .wd-math q, .wd .wd-math blockquote {
+	font-family: var(--var-font-code);
+	font-size: 14px;
+}
+.wd .wd-math q {quotes: "" "";}
+.wd .wd-math blockquote {
+	display: block;
+	width: 100%;
+	margin: auto;
+}
+/* TODO diminuir espaço entre a letra e a altura da fonte * /
 .wd .wd-math *:before,
 .wd .wd-math *:after {
 	content: "";
@@ -1929,43 +1959,55 @@ border-left: var(--var-border-thin) !important;
 }
 .wd .wd-math *:before {margin-top: calc((1.2 - 1)*0.5em);}
 .wd .wd-math *:after  {margin-bottom: calc((1 - 1.2)*1em);}
+/*
 
 
-
-/* linhas */
-.wd .wd-math > div {
-	display: block;
-	margin: var(--var-margin-default);
-}
 /* índices e subíndices */
-.wd .wd-math sup, .wd .wd-math sub {font-size: 0.5em;}
+.wd .wd-math sup,
+.wd .wd-math sub {font-size: 0.5em;}
 .wd .wd-math sup {vertical-align: super;}
 .wd .wd-math sub {vertical-align: sub;}
-/* grupos inline */
-.wd .wd-math span {position: relative;}
-/* grupos inline: índices e subíndices */
-.wd .wd-math span > sub + sup,
-.wd .wd-math span > sup + sub {
+/* grupos */
+.wd .wd-math span {padding: 8px 8px 0 0;}
+.wd .wd-math span > sup {
+	display: block;
 	position: absolute;
-	left: 0;
+	top: 0;
+	right: 0;
 }
-.wd .wd-math span > sub + sup {top: 0;}
-.wd .wd-math span > sup + sub {bottom: 0;}
-/* grupos em bloco */
+.wd .wd-math span > sub {
+	position: absolute;
+	bottom: 0;
+	right: 0;
+}
+
+
+
+
+/*
+.wd .wd-math span > sub, .wd .wd-math span > sup {
+	position: absolute;
+	right: 0;
+}
+.wd .wd-math span > sup {top: 0;}
+.wd .wd-math span > sub {bottom: 0;}
+*/
+/* grupos em bloco * /
+
 .wd .wd-math section {position: relative}
 .wd .wd-math section > * {
 	display: block;
 	vertical-align: middle;
 	border: 1px dotted;
 }
-/* grupos em bloco: divisão */
+/* grupos em bloco: divisão * /
 .wd .wd-math section > div {
 	border-top: 1px solid black;
 	border-bottom: 1px solid black;
 }
 .wd .wd-math section > div:first-child {border-top: 0;}
 .wd .wd-math section > div:last-child  {border-bottom: 0;}
-/* altura */
+/* altura * /
 .wd .wd-math .wd-math-h2 {font-size: 2em;}
 .wd .wd-math .wd-math-h3 {font-size: 3em;}
 .wd .wd-math .wd-math-h4 {font-size: 4em;}
@@ -1976,5 +2018,5 @@ border-left: var(--var-border-thin) !important;
 
 
 
-
+*/
 
