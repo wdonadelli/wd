@@ -1922,101 +1922,56 @@ border-left: var(--var-border-thin) !important;
 }
 /* -- Math experimental -- */
 .wd .wd-math {
-	background: #ffffff;
-	color: #000000;
 	font-family: cursive;
-	font-size: 32px;
-	letter-spacing: 5px;
-	line-height: 1	;
+	font-size:      24px;
+	letter-spacing: 0.2em;
 	text-align: center;
+	line-height: 1;
+	word-spacing: 0.1em;
 }
 /* elementos */
-.wd .wd-math > div * {
-	display: inline-block;
-	margin: 0;
-	padding: 0;
-	position: relative;
-	vertical-align: middle;
+.wd .wd-math div {
+	display: flex;
+  align-items: center;
+  justify-content: center;
 }
-/* textos */
-.wd .wd-math q, .wd .wd-math blockquote {
-	font-family: var(--var-font-code);
-	font-size: 14px;
-}
-.wd .wd-math q {quotes: "" "";}
-.wd .wd-math blockquote {
-	display: block;
+.wd .wd-math > div,
+.wd .wd-math > blockquote {
 	width: 100%;
 	margin: auto;
+	min-height: calc(1.5 * 24px);
 }
-/* TODO diminuir espaço entre a letra e a altura da fonte * /
-.wd .wd-math *:before,
-.wd .wd-math *:after {
-	content: "";
-	height: 0;
-	width: 0;
-	display: block;
+.wd .wd-math sup {
+	font-size: 0.5em;
+	padding-left: 0.1em;
+	vertical-align: super;
 }
-.wd .wd-math *:before {margin-top: calc((1.2 - 1)*0.5em);}
-.wd .wd-math *:after  {margin-bottom: calc((1 - 1.2)*1em);}
-/*
-
-
-/* índices e subíndices */
-.wd .wd-math sup,
-.wd .wd-math sub {font-size: 0.5em;}
-.wd .wd-math sup {vertical-align: super;}
-.wd .wd-math sub {vertical-align: sub;}
+.wd .wd-math sub {
+	font-size: 0.5em;
+	vertical-align: sub;
+}
+.wd .wd-math q,
+.wd .wd-math blockquote {
+	font-family: var(--var-font-default);
+	font-size: 18px;
+}
+.wd .wd-math q {quotes: "" "";}
+.wd .wd-math > div * {outline: 1px dotted red;} /*FIXME*/
 /* grupos */
-.wd .wd-math span {padding: 8px 8px 0 0;}
-.wd .wd-math span > sup {
-	display: block;
-	position: absolute;
-	top: 0;
-	right: 0;
+.wd .wd-math .wd-math-index,
+.wd .wd-math .wd-math-limits {
+	display: grid;
+	align-content: space-around;
 }
-.wd .wd-math span > sub {
-	position: absolute;
-	bottom: 0;
-	right: 0;
-}
+.wd .wd-math .wd-math-index  > span,
+.wd .wd-math .wd-math-limits > span {grid-area: val;}
+.wd .wd-math .wd-math-index  > sup,
+.wd .wd-math .wd-math-limits > sup  {grid-area: sup;}
+.wd .wd-math .wd-math-index  > sub,
+.wd .wd-math .wd-math-limits > sub  {grid-area: sub;}
 
+.wd .wd-math .wd-math-index {grid-template-areas: 'val sup' 'val auto' 'val sub';}
+.wd .wd-math .wd-math-index > * {text-align: left;}
 
-
-
-/*
-.wd .wd-math span > sub, .wd .wd-math span > sup {
-	position: absolute;
-	right: 0;
-}
-.wd .wd-math span > sup {top: 0;}
-.wd .wd-math span > sub {bottom: 0;}
-*/
-/* grupos em bloco * /
-
-.wd .wd-math section {position: relative}
-.wd .wd-math section > * {
-	display: block;
-	vertical-align: middle;
-	border: 1px dotted;
-}
-/* grupos em bloco: divisão * /
-.wd .wd-math section > div {
-	border-top: 1px solid black;
-	border-bottom: 1px solid black;
-}
-.wd .wd-math section > div:first-child {border-top: 0;}
-.wd .wd-math section > div:last-child  {border-bottom: 0;}
-/* altura * /
-.wd .wd-math .wd-math-h2 {font-size: 2em;}
-.wd .wd-math .wd-math-h3 {font-size: 3em;}
-.wd .wd-math .wd-math-h4 {font-size: 4em;}
-.wd .wd-math .wd-math-h5 {font-size: 5em;}
-.wd .wd-math .wd-math-h6 {font-size: 6em;}
-
-
-
-
-
-*/
-
+.wd .wd-math .wd-math-limits {grid-template-areas: 'sup' 'val' 'sub';}
+.wd .wd-math .wd-math-limits > * {padding: 0;}
