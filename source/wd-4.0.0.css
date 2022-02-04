@@ -1921,57 +1921,92 @@ border-left: var(--var-border-thin) !important;
 	.wd .wd-overlook-print {display: none !important;}
 }
 /* -- Math experimental -- */
+/* definição geral */
 .wd .wd-math {
 	font-family: cursive;
 	font-size:      24px;
-	letter-spacing: 0.2em;
+	letter-spacing: 0.1em;
 	text-align: center;
 	line-height: 1;
-	word-spacing: 0.1em;
+	word-spacing: 0;
 }
-/* elementos */
-.wd .wd-math div {
-	display: flex;
-  align-items: center;
-  justify-content: center;
-}
+/* linhas/blocos */
 .wd .wd-math > div,
-.wd .wd-math > blockquote {
-	width: 100%;
+.wd .wd-math blockquote {
 	margin: auto;
 	min-height: calc(1.5 * 24px);
+	width: 100%;
 }
-.wd .wd-math sup {
-	font-size: 0.5em;
-	padding-left: 0.1em;
-	vertical-align: super;
-}
-.wd .wd-math sub {
-	font-size: 0.5em;
-	vertical-align: sub;
-}
+/* textos */
 .wd .wd-math q,
 .wd .wd-math blockquote {
 	font-family: var(--var-font-default);
 	font-size: 18px;
+	quotes: "" "";
 }
-.wd .wd-math q {quotes: "" "";}
-.wd .wd-math > div * {outline: 1px dotted red;} /*FIXME*/
-/* grupos */
-.wd .wd-math .wd-math-index,
-.wd .wd-math .wd-math-limits {
+/* Elementos */
+.wd .wd-math * {
+	display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1px;
+}
+/* elementos especiais */
+.wd .wd-math sup,
+.wd .wd-math sub {font-size: 0.5em;}
+.wd .wd-math sup {align-self: flex-start;}
+.wd .wd-math sub {align-self: flex-end;}
+.wd .wd-math var {font-size: 1em;}
+/* agrupador de bloco */
+.wd .wd-math section {
 	display: grid;
 	align-content: space-around;
 }
-.wd .wd-math .wd-math-index  > span,
-.wd .wd-math .wd-math-limits > span {grid-area: val;}
-.wd .wd-math .wd-math-index  > sup,
-.wd .wd-math .wd-math-limits > sup  {grid-area: sup;}
-.wd .wd-math .wd-math-index  > sub,
-.wd .wd-math .wd-math-limits > sub  {grid-area: sub;}
+/* blocos */
+.wd .wd-math section > var {grid-area: var;}
+.wd .wd-math section > sup {grid-area: sup;}
+.wd .wd-math section > sub {grid-area: sub;}
+.wd .wd-math section.wd-math-index {
+	grid-template-areas: 'var sup' 'var sub';
+}
+.wd .wd-math section.wd-math-limits {
+	grid-template-areas: 'sup' 'var' 'sub';
+}
+.wd .wd-math .wd-math-vector section {
+	grid-template-areas: 'sup' 'var';
+}
+.wd .wd-math .wd-math-vector {align-self: initial;}
 
-.wd .wd-math .wd-math-index {grid-template-areas: 'val sup' 'val auto' 'val sub';}
-.wd .wd-math .wd-math-index > * {text-align: left;}
 
-.wd .wd-math .wd-math-limits {grid-template-areas: 'sup' 'val' 'sub';}
-.wd .wd-math .wd-math-limits > * {padding: 0;}
+
+
+
+.wd .wd-math section.wd-math-fraction {
+	grid-template-areas: 'sup' 'sub';
+}
+.wd .wd-math section.wd-math-fraction > sub {
+	font-size: inherit;
+	box-shadow: inset 0 1px 0 0 black;
+}
+.wd .wd-math section.wd-math-fraction > sup {
+	font-size: inherit;
+	box-shadow: inset 0 -1px 0 0 black;
+}
+
+
+
+/*.wd .wd-math * {outline: 1px dotted purple;}//FIXME
+
+
+
+
+
+
+
+
+
+
+
+
+
+

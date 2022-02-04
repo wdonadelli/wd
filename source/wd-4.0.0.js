@@ -3637,6 +3637,9 @@ const wd = (function() {
 			linkedin: "https://www.linkedin.com/shareArticle?url="+url+"&title="+title,
 			reddit:   "https://reddit.com/submit?url="+url+"&title="+title,
 			evernote: "https://www.evernote.com/clip.action?url="+url+"&title="+title,
+			/*signal: "",
+			whatsapp: "",
+			telegram: "" TODO*/
 		}
 		if (social in link) {window.open(link[social]);}
 		return;
