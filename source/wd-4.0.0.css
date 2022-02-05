@@ -179,9 +179,11 @@ SOFTWARE.
 	--var-font-headers: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
 	--var-font-code: monospace;
 	--var-font-form: Verdana, sans-serif;
+	--var-font-math: serif;
 	--var-font-report: "Times New Roman", Times, serif;
 	--var-font-report-h1: "Times New Roman", Times, serif;
 	--var-font-report-h2: "Times New Roman", Times, serif;
+
 
 	/* margem padrão */
 	--var-margin-default: 0.5em 0;
@@ -266,8 +268,7 @@ script, style {
 	padding: 0 0.3em;
 }
 .wd var {
-	font-family: cursive;
-	font-size: 1.5em;
+	font-family: var(--var-font-math);
 }
 .wd a[href] {
 	color: var(--var-fg-link);
@@ -1921,66 +1922,8 @@ border-left: var(--var-border-thin) !important;
 	.wd .wd-overlook-print {display: none !important;}
 }
 /* -- Math experimental -- */
-/* definição geral */
-.wd .wd-math {
-	font-family: cursive;
-	font-size:      24px;
-	letter-spacing: 0.1em;
-	text-align: center;
-	line-height: 1;
-	word-spacing: 0;
-}
-/* linhas/blocos */
-.wd .wd-math > div,
-.wd .wd-math blockquote {
-	margin: auto;
-	min-height: calc(1.5 * 24px);
-	width: 100%;
-}
-/* textos */
-.wd .wd-math q,
-.wd .wd-math blockquote {
-	font-family: var(--var-font-default);
-	font-size: 18px;
-	quotes: "" "";
-}
-/* Elementos */
-.wd .wd-math * {
-	display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1px;
-}
-/* elementos especiais */
-.wd .wd-math sup,
-.wd .wd-math sub {font-size: 0.5em;}
-.wd .wd-math sup {align-self: flex-start;}
-.wd .wd-math sub {align-self: flex-end;}
-.wd .wd-math var {font-size: 1em;}
-/* agrupador de bloco */
-.wd .wd-math section {
-	display: grid;
-	align-content: space-around;
-}
-/* blocos */
-.wd .wd-math section > var {grid-area: var;}
-.wd .wd-math section > sup {grid-area: sup;}
-.wd .wd-math section > sub {grid-area: sub;}
-.wd .wd-math section.wd-math-index {
-	grid-template-areas: 'var sup' 'var sub';
-}
-.wd .wd-math section.wd-math-limits {
-	grid-template-areas: 'sup' 'var' 'sub';
-}
-.wd .wd-math .wd-math-vector section {
-	grid-template-areas: 'sup' 'var';
-}
-.wd .wd-math .wd-math-vector {align-self: initial;}
 
-
-
-
-
+/*
 .wd .wd-math section.wd-math-fraction {
 	grid-template-areas: 'sup' 'sub';
 }
@@ -1992,10 +1935,133 @@ border-left: var(--var-border-thin) !important;
 	font-size: inherit;
 	box-shadow: inset 0 -1px 0 0 black;
 }
+*/
+
+
+.wd .wd-math {text-align:  center; font-size: 40px}
+.wd .wd-math span {padding: 0 0.1em;}
+
+
+.wd .wd-math span,
+.wd .wd-math section > var,
+.wd .wd-math section > sup,
+.wd .wd-math section > sub {
+	font-family: var(--var-font-math);
+	font-style:  italic;
+	line-height: 1;
 
 
 
-/*.wd .wd-math * {outline: 1px dotted purple;}//FIXME
+  outline: 1px dotted grey;
+}
+
+.wd .wd-math > * {
+	display: block;
+	width: 100%;
+	margin: 5px 0;
+	padding: 0;
+}
+
+.wd .wd-math samp {
+	align-items: center;
+	display: flex;
+  justify-content: center;
+}
+
+.wd .wd-math .wd-math-text {
+	font-style: normal;
+}
+
+.wd .wd-math sup,
+.wd .wd-math sub {
+	font-size: 0.6em;
+	vertical-align: middle;
+}
+
+.wd .wd-math section {
+	display: grid;
+	justify-content: center;
+	align-content: center;
+}
+.wd .wd-math section > var {grid-area:  var;}
+.wd .wd-math section > sup {grid-area:  sup;}
+.wd .wd-math section > sub {grid-area:  sub;}
+
+.wd .wd-math .wd-math-sup > section {
+	grid-template-areas: '. sup' 'var .';
+	height: 2.2em;
+}
+.wd .wd-math .wd-math-sup > section > var {
+	padding-bottom: 0.7em;
+}
+.wd .wd-math .wd-math-sub > section {
+	grid-template-areas: 'var .' 'var sub'
+}
+.wd .wd-math .wd-math-indexes > section {
+	grid-template-areas: '. sup' 'var .' 'var sub';
+}
+.wd .wd-math .wd-math-indexes > section {
+	padding-bottom: 0.7em;
+}
+
+
+.wd .wd-math .wd-math-to > section {
+	grid-template-areas: 'sup' 'var';
+}
+.wd .wd-math .wd-math-to > section > var {
+	padding-bottom: 0.7em;
+}
+
+
+
+
+.wd .wd-math section > span.wd-math-pow  {
+	grid-area: pow;
+	text-align: left;
+	font-size: 0.6em;
+	margin-top: 0.6em;
+}
+.wd .wd-math section > span.wd-math-sub {
+	grid-area: sub;
+	text-align: left;
+	font-size: 0.6em;
+}
+.wd .wd-math section > span.wd-math-val  {
+	grid-area:  val;
+	font-size: inherit;
+}
+.wd .wd-math section > span.wd-math-to   {
+	grid-area:  to;
+	font-size: 0.6em;
+	margin-top: 0.6em;
+}
+.wd .wd-math section > span.wd-math-from {
+	grid-area: from;
+	font-size: 0.6em;
+	margin-bottom: 0.6em;
+}
+
+
+.wd .wd-math .wd-math-index > section {
+	grid-template-areas:
+	'to pow'
+	'val .'
+	'val sub'
+	'from .';
+}
+/* val deve ser o último */
+
+
+
+.wd .wd-math .wd-math-index > section > span.wd-math-pow ~ span.wd-math-from,
+.wd .wd-math .wd-math-index > section > span.wd-math-to  ~ span.wd-math-from {
+	margin-bottom: 0;
+}
+.wd .wd-math .wd-math-index > section > span.wd-math-from ~ span.wd-math-pow,
+.wd .wd-math .wd-math-index > section > span.wd-math-from ~ span.wd-math-to {
+	margin-top: 0;
+}
+
 
 
 
