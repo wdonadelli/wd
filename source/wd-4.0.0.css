@@ -110,11 +110,6 @@ SOFTWARE.
 	--var-fg-code-comments: #4e3cc3;
 	--var-fg-code-line: #cccccc;
 
-	--var-fg-col-blue: #0050c5;
-	--var-fg-col-red: #fa3838;
-	--var-bg-col-green: #2c8759;
-	--var-bg-col-mark: #fdff87;
-
 	--var-bg-form: #f8f8ff;
 	--var-fg-form: #404040;
 	--var-bg-button: #f2f2f2;
@@ -122,6 +117,7 @@ SOFTWARE.
 	--var-fg-button-active: #f2f2f2;
 
 	--var-fg-link:   #3baff7;
+	--var-bg-mark: #fdff87;
 
 	--var-bg-modal:  rgba(0, 0, 0, 0.2);
 	--var-bg-window: #ffffff;
@@ -670,7 +666,7 @@ padding: 0;
 .wd .wd-col-blue-07 > * > *:nth-child(7),  .wd .wd-col-blue-08 > * > *:nth-child(8),
 .wd .wd-col-blue-09 > * > *:nth-child(9),  .wd .wd-col-blue-10 > * > *:nth-child(10),
 .wd .wd-col-blue-11 > * > *:nth-child(11), .wd .wd-col-blue-12 > * > *:nth-child(12) {
-	color: var(--var-fg-col-blue);
+	color: var(--var-bg-blue-header);
 }
 .wd .wd-col-red-01 > * > *:nth-child(1),  .wd .wd-col-red-02 > * > *:nth-child(2),
 .wd .wd-col-red-03 > * > *:nth-child(3),  .wd .wd-col-red-04 > * > *:nth-child(4),
@@ -678,7 +674,7 @@ padding: 0;
 .wd .wd-col-red-07 > * > *:nth-child(7),  .wd .wd-col-red-08 > * > *:nth-child(8),
 .wd .wd-col-red-09 > * > *:nth-child(9),  .wd .wd-col-red-10 > * > *:nth-child(10),
 .wd .wd-col-red-11 > * > *:nth-child(11), .wd .wd-col-red-12 > * > *:nth-child(12) {
-	color: var(--var-fg-col-red);
+	color: var(--var-bg-red-header);
 }
 .wd .wd-col-green-01 > * > *:nth-child(1),  .wd .wd-col-green-02 > * > *:nth-child(2),
 .wd .wd-col-green-03 > * > *:nth-child(3),  .wd .wd-col-green-04 > * > *:nth-child(4),
@@ -686,7 +682,7 @@ padding: 0;
 .wd .wd-col-green-07 > * > *:nth-child(7),  .wd .wd-col-green-08 > * > *:nth-child(8),
 .wd .wd-col-green-09 > * > *:nth-child(9),  .wd .wd-col-green-10 > * > *:nth-child(10),
 .wd .wd-col-green-11 > * > *:nth-child(11), .wd .wd-col-green-12 > * > *:nth-child(12) {
-	color: var(--var-fg-col-green);
+	color: var(--var-bg-green-header);
 }
 .wd .wd-col-mark-01 > * > *:nth-child(1),  .wd .wd-col-mark-02 > * > *:nth-child(2),
 .wd .wd-col-mark-03 > * > *:nth-child(3),  .wd .wd-col-mark-04 > * > *:nth-child(4),
@@ -694,7 +690,7 @@ padding: 0;
 .wd .wd-col-mark-07 > * > *:nth-child(7),  .wd .wd-col-mark-08 > * > *:nth-child(8),
 .wd .wd-col-mark-09 > * > *:nth-child(9),  .wd .wd-col-mark-10 > * > *:nth-child(10),
 .wd .wd-col-mark-11 > * > *:nth-child(11), .wd .wd-col-mark-12 > * > *:nth-child(12) {
-	background-color: var(--var-bg-col-mark);
+	background-color: var(--var-bg-mark);
 }
 /* -- coleção -- */
 .wd .wd-collection {
@@ -1281,7 +1277,7 @@ padding: 0;
 .wd .wd-u,    .wd .wd-u-child > *    {text-decoration: underline !important;}
 .wd .wd-i,    .wd .wd-i-child > *    {font-style: italic !important;}
 .wd .wd-s,    .wd .wd-s-child > *    {text-decoration: line-through !important;}
-.wd .wd-mark, .wd .wd-mark-child > * {background-color: var(--var-bg-col-mark) !important;}
+.wd .wd-mark, .wd .wd-mark-child > * {background-color: var(--var-bg-mark) !important;}
 .wd .wd-b-none,    .wd .wd-b-none-child > *    {font-weight: normal !important;}
 .wd .wd-i-none,    .wd .wd-i-none-child > *    {font-style: normal !important;}
 .wd .wd-line-none, .wd .wd-line-none-child > * {text-decoration: none !important;}
@@ -1924,6 +1920,7 @@ border-left: var(--var-border-thin) !important;
 /* -- Math experimental -- */
 /* container */
 .wd .wd-math {
+	counter-reset: math;
 	background-color: var(--var-bg-base);
 	color: var(--var-fg-base);
 	display: block;
@@ -1951,15 +1948,21 @@ border-left: var(--var-border-thin) !important;
 .wd .wd-math > * {
 	display: block;
 	width: 100%;
-	margin: 5px 0;
+	margin: 2em 0;
 	padding: 0;
 }
-/* ajuste de síbolos */
-.wd .wd-math .wd-math-symbol {
-	font-size: 1.5em;
-	position: relative;
-	bottom: 0.1em;
+/* contador */
+.wd .wd-math .wd-math-counter:before {
+	counter-increment: math;
+	content: "(" counter(math) ")";
+	margin-right: 3em;
+	font-style: normal;
 }
+/* operadores */
+.wd .wd-math span.wd-math-ope {
+	font-size: 1.5em !important;
+}
+
 /* texto */
 .wd .wd-math .wd-math-text {
 	font-style: normal;
@@ -1970,117 +1973,83 @@ border-left: var(--var-border-thin) !important;
 	justify-content: center;
 	align-content: center;
 }
-/* ao redor */
-.wd .wd-math span.wd-math-around > section {
+/* potência e subíndice */
+.wd .wd-math span.wd-math-indexes > section {
 	grid-template-areas:
-	'tl  tc tr'
-	'mtl c  mtr'
-	'ml  c  mr'
-	'mbl c  mbr'
-	'bl  bc br';
-	padding: 0.6em 0;
+	'. sup'
+	'main .'
+	'main sub';
 }
-/* ao redor (fonte e posição) : top (left, center, right) */
-.wd .wd-math span.wd-math-around > section > span.wd-math-tl,
-.wd .wd-math span.wd-math-around > section > span.wd-math-tc,
-.wd .wd-math span.wd-math-around > section > span.wd-math-tr,
-.wd .wd-math span.wd-math-around > section > span.wd-math-pow,
-.wd .wd-math span.wd-math-around > section > span.wd-math-to {
+.wd .wd-math span.wd-math-indexes > section > sub {
 	font-size: 0.6em;
+	grid-area: sub;
+}
+.wd .wd-math span.wd-math-indexes > section > sup {
+	font-size: 0.6em;
+	grid-area: sup;
 	margin-top: -1em;
 }
-/* ao redor (fonte e posição): bottom (left, center, right) */
-.wd .wd-math span.wd-math-around > section > span.wd-math-bl,
-.wd .wd-math span.wd-math-around > section > span.wd-math-bc,
-.wd .wd-math span.wd-math-around > section > span.wd-math-br,
-.wd .wd-math span.wd-math-around > section > span.wd-math-from {
-	font-size:    0.6em;
+.wd .wd-math span.wd-math-indexes > section > span {
+	font-size: 1em;
+	grid-area: main;
+}
+/* limites */
+.wd .wd-math span.wd-math-limits > section {
+	grid-template-areas:
+	'sup'
+	'main'
+	'sub';
+}
+.wd .wd-math span.wd-math-limits > section > sub {
+	font-size: 0.6em;
+	grid-area: sub;
 	margin-bottom: -1em;
 }
-/* ao redor (fonte e posição): center */
-.wd .wd-math span.wd-math-around > section > span.wd-math-c {
-	margin: auto;
+.wd .wd-math span.wd-math-limits > section > sup {
+	font-size: 0.6em;
+	grid-area: sup;
+	margin-top: -1em;
+}
+.wd .wd-math span.wd-math-limits > section > span {
 	font-size: 1em;
+	grid-area: main;
+	font-style: normal;
 }
-/* ao redor (fonte): middle (left, right, top, bottom) */
-.wd .wd-math span.wd-math-around > section > span.wd-math-mtl,
-.wd .wd-math span.wd-math-around > section > span.wd-math-ml,
-.wd .wd-math span.wd-math-around > section > span.wd-math-mbl,
-.wd .wd-math span.wd-math-around > section > span.wd-math-mtr,
-.wd .wd-math span.wd-math-around > section > span.wd-math-mr,
-.wd .wd-math span.wd-math-around > section > span.wd-math-mbr,
-.wd .wd-math span.wd-math-around > section > span.wd-math-sub {
-	font-size:   0.6em;
-}
-/* ao redor (alinhamento): left */
-.wd .wd-math span.wd-math-around > section > span.wd-math-tl,
-.wd .wd-math span.wd-math-around > section > span.wd-math-bl,
-.wd .wd-math span.wd-math-around > section > span.wd-math-mtl,
-.wd .wd-math span.wd-math-around > section > span.wd-math-ml,
-.wd .wd-math span.wd-math-around > section > span.wd-math-mbl {
-	text-align: right;
-}
-/* ao redor (alinhamento): right */
-.wd .wd-math span.wd-math-around > section > span.wd-math-tr,
-.wd .wd-math span.wd-math-around > section > span.wd-math-br,
-.wd .wd-math span.wd-math-around > section > span.wd-math-mtr,
-.wd .wd-math span.wd-math-around > section > span.wd-math-mr,
-.wd .wd-math span.wd-math-around > section > span.wd-math-mbr,
-.wd .wd-math span.wd-math-around > section > span.wd-math-sub,
-.wd .wd-math span.wd-math-around > section > span.wd-math-pow {
-	text-align: left;
-}
-/* ao redor (alinhamento): center */
-.wd .wd-math span.wd-math-around > section > span.wd-math-tc,
-.wd .wd-math span.wd-math-around > section > span.wd-math-bc,
-.wd .wd-math span.wd-math-around > section > span.wd-math-c,
-.wd .wd-math span.wd-math-around > section > span.wd-math-from,
-.wd .wd-math span.wd-math-around > section > span.wd-math-to {
-	text-align: center;
-}
-/* ao redor (nomes) */
-.wd .wd-math span.wd-math-around > section > span.wd-math-tl   {grid-area: tl;}
-.wd .wd-math span.wd-math-around > section > span.wd-math-tc   {grid-area: tc;}
-.wd .wd-math span.wd-math-around > section > span.wd-math-tr   {grid-area: tr;}
-.wd .wd-math span.wd-math-around > section > span.wd-math-mtr  {grid-area: mtr;}
-.wd .wd-math span.wd-math-around > section > span.wd-math-mr   {grid-area: mr;}
-.wd .wd-math span.wd-math-around > section > span.wd-math-mbr  {grid-area: mbr;}
-.wd .wd-math span.wd-math-around > section > span.wd-math-br   {grid-area: br;}
-.wd .wd-math span.wd-math-around > section > span.wd-math-bc   {grid-area: bc;}
-.wd .wd-math span.wd-math-around > section > span.wd-math-bl   {grid-area: bl;}
-.wd .wd-math span.wd-math-around > section > span.wd-math-mbl  {grid-area: mbl;}
-.wd .wd-math span.wd-math-around > section > span.wd-math-ml   {grid-area: ml;}
-.wd .wd-math span.wd-math-around > section > span.wd-math-mtl  {grid-area: mtl;}
-.wd .wd-math span.wd-math-around > section > span.wd-math-c    {grid-area: c;}
-.wd .wd-math span.wd-math-around > section > span.wd-math-pow  {grid-area: tr;}
-.wd .wd-math span.wd-math-around > section > span.wd-math-sub  {grid-area: mbr;}
-.wd .wd-math span.wd-math-around > section > span.wd-math-from {grid-area: bc;}
-.wd .wd-math span.wd-math-around > section > span.wd-math-to   {grid-area: tc;}
-
-
-/* fração */
+/* Frações */
 .wd .wd-math span.wd-math-fraction > section {
 	grid-template-areas:
-	'num'
-	'den';
+	'sup'
+	'sub';
 }
-
-.wd .wd-math .wd-math-denominator .wd-math-fraction  {
-
-
-}
-
-
-
-
-.wd .wd-math span.wd-math-fraction > section > span.wd-math-numerator   {
-	box-shadow: inset 0 -1px 0 0 black;
-	grid-area: num;
-	text-align: center;
-}
-.wd .wd-math span.wd-math-fraction > section > span.wd-math-denominator {
+.wd .wd-math span.wd-math-fraction > section > sub {
 	box-shadow: inset 0 1px 0 0 black;
-	grid-area: den;
-	text-align: center;
+	font-size: 1em;
+	grid-area: sub;
+	padding-top: 0.3em;
+}
+.wd .wd-math span.wd-math-fraction > section > sup {
+	box-shadow: inset 0 -1px 0 0 black;
+	font-size: 1em;
+	grid-area: sup;
+	padding-bottom: 0.3em;
+}
+.wd .wd-math span.wd-math-fraction > section > sub span.wd-math-fraction {
+	margin-bottom: -1.6em;
+}
+.wd .wd-math span.wd-math-fraction > section > sup span.wd-math-fraction {
+	margin-top: -1.6em;
+}
+
+
+
+
+/* TODO */
+.wd .wd-math > *.wd-math-subfraction-sub > samp,
+.wd .wd-math > *.wd-math-subfraction     > samp {
+	padding-bottom: calc(1em + 0.3em + 0.3em + 1em);
+}
+.wd .wd-math > *.wd-math-subfraction-sup > samp,
+.wd .wd-math > *.wd-math-subfraction     > samp {
+	padding-top: calc(1em + 0.3em + 0.3em + 1em);
 }
 

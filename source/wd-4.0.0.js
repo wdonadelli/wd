@@ -1034,8 +1034,8 @@ const wd = (function() {
 				avalue = a.textContent === check[0] ? 0 : 1;
 				bvalue = avalue === 0 ? 1 : 0;
 			} else if (atype === "text") {
-				avalue = new WD(a).format("clear", "upper");
-				bvalue = new WD(b).format("clear", "upper");
+				avalue = wd_text_clear(a.toUpperCase());
+				bvalue = wd_text_clear(b.toUpperCase());
 			} else if (["number", "boolean", "date", "time"].indexOf(atype) >= 0) {
 				avalue = wd_vtype(a).value;
 				bvalue = wd_vtype(b).value;
