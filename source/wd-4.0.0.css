@@ -1930,13 +1930,14 @@ border-left: var(--var-border-thin) !important;
 }
 /* renderizador */
 .wd .wd-math samp {
-	align-items: center;
+	align-items: center;/*center; FIXME é só um teste*/
 	display: flex;
   justify-content: center;
-  position: relative;
+	padding: 0.6em 0;
+	font-size:   24px;
 }
 /* componentes */
-.wd .wd-math span {
+.wd .wd-math samp > span {
 	line-height: 1;
 	padding: 0 0.1em;
 	font-family: var(--var-font-math);
@@ -1958,11 +1959,6 @@ border-left: var(--var-border-thin) !important;
 	margin-right: 3em;
 	font-style: normal;
 }
-/* operadores */
-.wd .wd-math span.wd-math-ope {
-	font-size: 1.5em !important;
-}
-
 /* texto */
 .wd .wd-math .wd-math-text {
 	font-style: normal;
@@ -1976,22 +1972,31 @@ border-left: var(--var-border-thin) !important;
 /* potência e subíndice */
 .wd .wd-math span.wd-math-indexes > section {
 	grid-template-areas:
-	'. sup'
+	'head sup'
 	'main .'
 	'main sub';
+}
+.wd .wd-math span.wd-math-indexes > section > em {
+	font-size: 0.6em;
+	grid-area: head;
+	text-align: center;
+	margin-top: -1em;
 }
 .wd .wd-math span.wd-math-indexes > section > sub {
 	font-size: 0.6em;
 	grid-area: sub;
+	text-align: left;
 }
 .wd .wd-math span.wd-math-indexes > section > sup {
 	font-size: 0.6em;
 	grid-area: sup;
+	text-align: left;
 	margin-top: -1em;
 }
 .wd .wd-math span.wd-math-indexes > section > span {
 	font-size: 1em;
 	grid-area: main;
+	text-align: center;
 }
 /* limites */
 .wd .wd-math span.wd-math-limits > section {
@@ -2015,6 +2020,11 @@ border-left: var(--var-border-thin) !important;
 	grid-area: main;
 	font-style: normal;
 }
+.wd .wd-math span.wd-math-limits > section > em {
+	font-size: 1.5em;
+	grid-area: main;
+	font-style: normal;
+}
 /* Frações */
 .wd .wd-math span.wd-math-fraction > section {
 	grid-template-areas:
@@ -2025,31 +2035,33 @@ border-left: var(--var-border-thin) !important;
 	box-shadow: inset 0 1px 0 0 black;
 	font-size: 1em;
 	grid-area: sub;
-	padding-top: 0.3em;
 }
 .wd .wd-math span.wd-math-fraction > section > sup {
 	box-shadow: inset 0 -1px 0 0 black;
 	font-size: 1em;
 	grid-area: sup;
-	padding-bottom: 0.3em;
 }
-.wd .wd-math span.wd-math-fraction > section > sub span.wd-math-fraction {
-	margin-bottom: -1.6em;
+.wd .wd-math span.wd-math-fraction > section > sub.wd-math-subfraction {
+	margin-bottom: -2.2em;
 }
-.wd .wd-math span.wd-math-fraction > section > sup span.wd-math-fraction {
-	margin-top: -1.6em;
+.wd .wd-math span.wd-math-fraction > section > sup.wd-math-subfraction {
+	margin-top: -2.2em;
 }
 
-
-
-
-/* TODO */
-.wd .wd-math > *.wd-math-subfraction-sub > samp,
-.wd .wd-math > *.wd-math-subfraction     > samp {
-	padding-bottom: calc(1em + 0.3em + 0.3em + 1em);
+/* raiz */
+.wd .wd-math span.wd-math-root > section {
+	grid-template-areas:
+	'root main';
 }
-.wd .wd-math > *.wd-math-subfraction-sup > samp,
-.wd .wd-math > *.wd-math-subfraction     > samp {
-	padding-top: calc(1em + 0.3em + 0.3em + 1em);
+.wd .wd-math span.wd-math-root > section > span {
+	box-shadow: inset 0 2px 0 0 black;
+	font-size: 1em;
+	grid-area: main;
+
+}
+.wd .wd-math span.wd-math-root > section > sup,
+.wd .wd-math span.wd-math-root > section > sub {
+	font-size: 1em;
+	grid-area: root;
 }
 
