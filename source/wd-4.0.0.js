@@ -316,37 +316,35 @@ const wd = (function() {
 
 		/* Elementos da árvore DOM */
 		value = wd_dom(val);
-		if (value !== null) return {value: value, type: "dom"};
+		if (value !== null)
+			return {value: value, type: "dom"};
 
-		/* Outros tipos de valores */
-		let types = [/* to: typeof, ct: constructor, tp: type, ck: checagem */
-			{tp: "Number",   ck: !isNaN(val)},
-			{tp: "Array",    ck: Array.isArray(val)},
-			{tp: "Date",     ck: true},
-			{tp: "Boolean",  ck: true},
-			{tp: "Regexp",   ck: true},
-			{tp: "Function", ck: true},
-			{tp: "Object",   ck: (/^\{.*\}$/).test(JSON.stringify(val))},
-		];
+		/* Outros Elementos */
+		if (typeof val === "bigint" || ("BigInt" in window && val instanceof BigInt))
+			return {type: "unknown", value: val.valueOf()};
 
-		let vtype = {type: "unknown", value: val};
-		for (let i = 0; i < types.length; i++) {
-			if (!types[i].ck) continue;
-			if (typeof val === types[i].tp.toLowerCase())
-				vtype.type = types[i].tp.toLowerCase();
-			else if (types[i].tp in window && val instanceof window[types[i].tp])
-				vtype.type = types[i].tp.toLowerCase();
-			if (vtype.type !== "unknown") break;
-		}
+		if (typeof val === "number" || ("Number" in window && val instanceof Number))
+			return isNaN(val) ? {type: "unknown", value: val} : {type: "number", value: val.valueOf()};
 
-		if (vtype.type === "boolean" || vtype.type === "number")
-			vtype.value = vtype.value.valueOf();
-		else if (vtype.type === "array")
-			vtype.value = vtype.value.slice();
-		else if (vtype.type === "date")
-			vtype.value = wd_set_date(vtype.value);
+		if ("Array" in window && (("isArray" in Array && Array.isArray(val)) || val instanceof Array))
+			return {type: "array", value: val.slice()};
 
-		return vtype;
+		if ("Date" in window && val instanceof Date)
+			return {type: "date", value: wd_set_date(val)};
+
+		if ("RegExp" in window && val instanceof RegExp)
+			return {type: "regexp", value: val.valueOf()};
+
+		if (typeof val === "boolean" || ("Boolean" in window && val instanceof Boolean))
+			return {type: "boolean", value: val.valueOf()};
+
+		if (typeof val === "function" || ("Function" in window && val instanceof Function))
+			return {type: "function", value: val};
+
+		if (typeof val === "object" && (/^\{.*\}$/).test(JSON.stringify(val)))
+			return {type: "object", value: val};
+
+		return {type: "unknown", value: val};
 	}
 
 /*----------------------------------------------------------------------------*/
@@ -610,6 +608,31 @@ const wd = (function() {
 		let pow10  = Math.pow(10, i);
 		if (pow10 === 1) return 0;
 		return (value*pow10 - wd_integer(value)*pow10) / pow10;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_primes(limit, decimal) {/* retorna os números primos até um limite */
+		let primes = [2];
+		let count  = 2;
+		while (count < limit) {
+			count += 1;
+			let check = true;
+			for (var i = 0; i < primes.length; i++) {
+				if (count % primes[i] === 0) {
+					check = false;
+					break;
+				}
+			}
+			if (check) primes.push(count);
+		}
+		if (decimal === true) {
+			let pass = 10;
+			while ((limit / pass) >= 1) {
+				primes.push(pass);
+				pass = pass*10;
+			}
+		}
+		return primes
 	}
 
 /*----------------------------------------------------------------------------*/
@@ -2195,10 +2218,10 @@ const wd = (function() {
 		/* executando os comandos para a requisição */
 		let vpack = wd_vtype(pack);
 		/* se a requisição for do tipo GET */
-		if (method === "GET" && vpack.type === "text") {
-			let action = action.split("?");
-			action    += action.length > 1 ? vpack.value : "?" + vpack.value;
-			pack       = null;
+		if (method === "GET" && vpack.type === "text") {//FIXME definir melhor isso aqui
+			action  = action.split("?");
+			action += action.length > 1 ? "&" + vpack.value : "?" + vpack.value;
+			pack    = null;
 		}
 		/* tentar abrir a requisição */
 		try {
@@ -2760,6 +2783,8 @@ const wd = (function() {
 		},
 		send: { /* Efetua requisições */
 			value: function (action, callback, method, async) {
+			//FIXME colocar o método POST aqui também em pack, está estranho, sem lógica (conferir tudo aqui)
+
 				let pack = "value="+this.toString();
 				if (this.type === "dom") {
 					if (this.vform !== true) return null;
