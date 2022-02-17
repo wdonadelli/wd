@@ -612,18 +612,18 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	function wd_primes(limit, decimal) {/* retorna os números primos até um limite */
-		let primes = [2];
-		let count  = 2;
+		let primes = [2,3,5,7]; /* primeiros primos */
+		let count  = 11;        /* analisar a partir do 11 */
 		while (count < limit) {
-			count += 1;
 			let check = true;
-			for (var i = 0; i < primes.length; i++) {
+			for (var i = 1; i < primes.length; i++) { /* iniciar em 1 (os pares não serão verificados) */
 				if (count % primes[i] === 0) {
 					check = false;
 					break;
 				}
 			}
 			if (check) primes.push(count);
+			count += 2; /* analisar apenas ímpares */
 		}
 		if (decimal === true) {
 			let pass = 10;
@@ -2002,7 +2002,7 @@ const wd = (function() {
 /*----------------------------------------------------------------------------*/
 	function wd_html_form_submit(list, get) { /* obtém serialização de formulário */
 		list = wd_vtype(list).value;
-		let pkg = get === true ? [] : new FormData();
+		let pkg = get === true || !("FormData" in window) ? [] : new FormData();
 		for (let e = 0; e < list.length; e++) {
 			let data = wd_html_form_data(list[e]);
 			for (let i = 0; i < data.length; i++) {
@@ -2217,11 +2217,14 @@ const wd = (function() {
 		request.onreadystatechange = state_change;
 		/* executando os comandos para a requisição */
 		let vpack = wd_vtype(pack);
-		/* se a requisição for do tipo GET */
-		if (method === "GET" && vpack.type === "text") {//FIXME definir melhor isso aqui
-			action  = action.split("?");
-			action += action.length > 1 ? "&" + vpack.value : "?" + vpack.value;
-			pack    = null;
+
+		if (method === "GET" && vpack.type === "text") {
+			action = action.split("?");
+			if (action.length > 1)
+				action = action[0]+"?"+action[1]+"&"+vpack.value;
+			else
+				action = action[0]+"?"+vpack.value;
+			pack   = null;
 		}
 		/* tentar abrir a requisição */
 		try {
@@ -2783,15 +2786,26 @@ const wd = (function() {
 		},
 		send: { /* Efetua requisições */
 			value: function (action, callback, method, async) {
-			//FIXME colocar o método POST aqui também em pack, está estranho, sem lógica (conferir tudo aqui)
+				if (wd_vtype(method).type !== "text") method = "POST";
 
-				let pack = "value="+this.toString();
-				if (this.type === "dom") {
-					if (this.vform !== true) return null;
+				if (this.type === "dom" && this.vform !== true) return null;
+				let pack = {value: this.toString()};
+
+				if (this.type === "dom")
 					pack = this.form(method);
-				} else if (this.type === "number") {
-						pack = "value="+this.valueOf();
+				else if (this.type === "number")
+					pack.value = this.valueOf();
+
+				if (this.type !== "dom") {
+					if ("FormData" in window && method.toUpperCase() === "POST") {
+							var data = new FormData();
+							data.append("value", pack.value);
+							pack = data;
+					} else {
+						pack = "value="+pack.value;
+					}
 				}
+
 				return wd_request(action, pack, callback, method, async)
 			}
 		},
