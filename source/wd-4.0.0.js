@@ -965,7 +965,7 @@ const wd = (function() {
 	function wd_array_item(array, i) { /* retorna o índice especificado ou seu comprimento */
 		if (!wd_finite(i)) return array.length;
 		i = wd_integer(i);
-		i = i < 0 ? this._value.length + i : i;
+		i = i < 0 ? array.length + i : i;
 		return array[i];
 	}
 
@@ -1076,7 +1076,7 @@ const wd = (function() {
 		return {
 			get cmp()  {return wd_coord_compare(x, y, false);},
 			get rlin() {return wd_coord_rlin(x, y);},
-			get rexp() {return wd_coord_rlin(x, y);},
+			get rexp() {return wd_coord_rexp(x, y);},
 			get rgeo() {return wd_coord_rgeo(x, y);},
 			get rsum() {return wd_coord_rsum(x, y);},
 			get ravg() {return wd_coord_ravg(x, y);},
@@ -2788,14 +2788,17 @@ const wd = (function() {
 			value: function (action, callback, method, async) {
 				if (wd_vtype(method).type !== "text") method = "POST";
 
+				/* se for DOM mas com os formulários com pendência, não enviar */
 				if (this.type === "dom" && this.vform !== true) return null;
 				let pack = {value: this.toString()};
 
+				/* se for DOM ou Number, fazer diferente */
 				if (this.type === "dom")
 					pack = this.form(method);
 				else if (this.type === "number")
 					pack.value = this.valueOf();
 
+				/* organizar informação de acordo com o método */
 				if (this.type !== "dom") {
 					if ("FormData" in window && method.toUpperCase() === "POST") {
 							var data = new FormData();
