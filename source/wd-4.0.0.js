@@ -133,6 +133,8 @@ const wd = (function() {
 	};
 /*----------------------------------------------------------------------------*/
 	function wd_bytes(value) { /*calculadora de bytes*/
+		if (value === Infinity) return wd_num_str(value)+"B";
+		value = value < 0 ? 0 : wd_integer(value, true);
 		if (value >= Math.pow(1024,4)) return (value/Math.pow(1024,4)).toFixed(2)+"TB";
 		if (value >= Math.pow(1024,3)) return (value/Math.pow(1024,3)).toFixed(2)+"GB";
 		if (value >= Math.pow(1024,2)) return (value/Math.pow(1024,2)).toFixed(2)+"MB";
@@ -2937,8 +2939,8 @@ const wd = (function() {
 		int: { /* retorna a parte inteira */
 			get: function() {return wd_integer(this.valueOf());}
 		},
-		decimal: { /* retorna a parte decimal */
-			get: function() {return wd_decimal (this.valueOf());}
+		dec: { /* retorna a parte decimal */
+			get: function() {return wd_decimal(this.valueOf());}
 		},
 		abs: { /* retorna a parte decimal */
 			get: function() {return Math.abs(this.valueOf());}
