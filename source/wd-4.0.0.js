@@ -417,10 +417,10 @@ const wd = (function() {
 				mask.push(code[char]);
 				gaps.push(null);
 				only.push(code[char])
-			} else if ((/\w/).test(char)) { /*números, letras e sublinhado*/
+			} else if ((/\w/).test(char)) { /*números, letras e underline*/
 				mask.push(char === "_" ? "\\_" : char);
 				gaps.push(char);
-			} else if (char === "\\" && input[i+1] in re) { /*caracteres especiais*/
+			} else if (char === "\\" && input[i+1] in code) { /*caracteres especiais*/
 				mask.push(char+input[i+1]);
 				gaps.push(input[i+1]);
 				i++;
@@ -565,22 +565,19 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_apply_getters(object, args) { /* auto-aplica getter em objeto */
-		let obj   = object;
-		let type  = object.type;
-		let value = null;
+	function wd_apply_getters(obj, args) { /* auto-aplica getter em objeto */
+		let type   = obj.type; /* tipo do objeto original */
+		let value  = null;     /* valor a ser retornado */
+		let object = obj;
 
 		for (let i = 0; i < args.length; i++) {
-			let attr = args[i];
-			/* atributo existe? */
-			if (!(args[i] in obj)) continue;
-			let val   = obj[args[i]];
-			let vtype = wd_vtype(val);
-			/* o novo valor é do mesmo tipo que o original? */
+			/* continuar se o atributo não existir */
+			if (!(args[i] in object)) continue;
+			let vtype = wd_vtype(object[args[i]]);
+			/* continuar se o valor for diferente do tipo original */
 			if (vtype.type !== type) continue;
-			value = vtype.value;
-			/* recriando o objeto para não interferir no original */
-			obj = new object.constructor(value);
+			object = new object.constructor(vtype);
+			value  = vtype.value;
 		}
 		return value;
 	}
@@ -2893,7 +2890,7 @@ const wd = (function() {
 		caps: { /* retorna valor capitulado */
 			get: function() {return wd_text_caps(this.toString());}
 		},
-		toggle: { /* inverte caixa */
+		tgl: { /* inverte caixa */
 			get: function() {return wd_text_toggle(this.toString());}
 		},
 		clear: { /* remove acentos da string */
