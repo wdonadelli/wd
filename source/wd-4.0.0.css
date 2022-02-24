@@ -897,6 +897,8 @@ padding: 0;
 	text-align: center;
 }
 .wd .wd-read > h1 {
+	font-family: serif;/*FIXME será isso mesmo?*/
+	font-weight: normal;/*FIXME será isso mesmo?*/
 	font-variant: small-caps;
 }
 .wd .wd-read > h2 {
@@ -911,8 +913,12 @@ padding: 0;
 /* parágrafos */
 .wd .wd-read > p {
   margin: 2em 0;
-  text-indent: 4em;
 }
+.wd .wd-read > p:before {
+	margin-right: 4em;
+	content: "";
+}
+/* citações */
 .wd .wd-read > blockquote {
 	font-size: smaller;
 	margin: 2em 0 2em auto;
@@ -932,6 +938,11 @@ padding: 0;
 	font-style: italic;
 	font-size: smaller;
 }
+.wd .wd-read > table caption:before,
+.wd .wd-read > figure figcaption:before {
+	font-style: normal;
+	font-weight: bold;
+}
 .wd .wd-read > ol,
 .wd .wd-read > ul {
 	margin: 2em auto;
@@ -941,48 +952,33 @@ padding: 0;
 	padding-left: 4em;
 }
 /* -- itemização -- */
-.wd .wd-read      {
-	counter-reset: chapter fig tab;
-}
-.wd .wd-read > h3 {
-	counter-reset: item;
-}
+.wd .wd-read      {counter-reset: chapter fig tab item;}
+.wd .wd-read > h3 {counter-reset: item fig tab;}
+.wd .wd-read > h3                {counter-increment: chapter;}
+.wd .wd-read > p                 {counter-increment: item;}
+.wd .wd-read > table  caption    {counter-increment: tab;}
+.wd .wd-read > figure figcaption {counter-increment: fig;}
+
 .wd .wd-read > h3:before {
-	counter-increment: chapter;
 	content: counter(chapter) ". ";
 }
-/* normal: chapter (h3) figure (figcaption) table (caption) */
-.wd .wd-read > table caption:before {
-	counter-increment: tab;
+.wd .wd-read > table caption:before { /* antes um capítulo */
 	content: var(--var-read-table) " " counter(tab) ": ";
-	font-style: normal;
-	font-weight: bold;
 }
-.wd .wd-read > figure figcaption:before {
-	counter-increment: fig;
+.wd .wd-read > h3 ~ table caption:before { /* após um capítulo */
+	content: var(--var-read-table) " " counter(chapter) "-" counter(tab) ": ";
+}
+.wd .wd-read > figure figcaption:before { /* antes um capítulo */
 	content: var(--var-read-figure) " " counter(fig) ": ";
-	font-style: normal;
-	font-weight: bold;
 }
-
-/* relatório: chapter (h3) [ figure (figcaption) table (caption) p : posteriores a h3 ] */
-.wd .wd-read.wd-itemize > p {
-	text-indent: 0;
-	counter-increment: item;
+.wd .wd-read > h3 ~ figure figcaption:before { /* após um capítulo */
+	content: var(--var-read-figure) " " counter(chapter) "-" counter(fig) ": ";
 }
-.wd .wd-read.wd-itemize > p:before {
-	margin-right: 4em;
+.wd .wd-read.wd-itemize > p:before { /* antes um capítulo */
 	content: counter(item) ".";
 }
-.wd .wd-read.wd-itemize > h3 ~ p:before {
+.wd .wd-read.wd-itemize > h3 ~ p:before { /* após um capítulo */
 	content: counter(chapter) "." counter(item);
-	counter-reset: fig tab;
-}
-.wd .wd-read.wd-itemize > h3 ~ table caption:before {
-	content: var(--var-read-table) " " counter(chapter) "." counter(item) "." counter(tab) ": ";
-}
-.wd .wd-read.wd-itemize > h3 ~ figure figcaption:before {
-	content: var(--var-read-figure) " " counter(chapter) "." counter(item) "." counter(fig) ": ";
 }
 /* -- código -- */
 .wd .wd-code {

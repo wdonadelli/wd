@@ -56,11 +56,6 @@ const wd = (function() {
 	let wd_request_counter = 0;
 	/* Guarda o endereço do favicon padrão */
 	const wd_favicon = "https://wdonadelli.github.io/wd/image/favicon.ico"
-	/* guarda os números primos */
-	const wd_number_primes = [
-		2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71,
-		73, 79, 83, 89, 97
-	];
 	/* Guarda os estilos da biblioteca Selector Database */
 	const wd_js_css = [
 		{s: "@keyframes js-wd-fade-in",  d: ["from {opacity: 0;} to {opacity: 1;}"]},
@@ -611,9 +606,10 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	function wd_primes(limit, decimal) {/* retorna os números primos até um limite */
-		let primes = [2,3,5,7]; /* primeiros primos */
-		let count  = 11;        /* analisar a partir do 11 */
-		while (count < limit) {
+		let primes = [2];
+		let count  = 3;
+		let pow10  = 10;
+		while (count <= limit) {
 			let check = true;
 			for (var i = 1; i < primes.length; i++) { /* iniciar em 1 (os pares não serão verificados) */
 				if (count % primes[i] === 0) {
@@ -621,15 +617,15 @@ const wd = (function() {
 					break;
 				}
 			}
-			if (check) primes.push(count);
-			count += 2; /* analisar apenas ímpares */
-		}
-		if (decimal === true) {
-			let pass = 10;
-			while ((limit / pass) >= 1) {
-				primes.push(pass);
-				pass = pass*10;
+			/* incluir os múltiplos de 10 antes */
+			if (decimal === true && (count - 1) === pow10) {
+				primes.push(pow10);
+				pow10 = pow10*10;
 			}
+			/* se primo, incluir na lista */
+			if (check) primes.push(count);
+			/* ir para o próximo contador (analisar apenas ímpares) */
+			count += 2;
 		}
 		return primes
 	}
@@ -637,7 +633,7 @@ const wd = (function() {
 /*----------------------------------------------------------------------------*/
 	function wd_mdc(a, b) {
 		let div   = [];
-		let prime = wd_number_primes;
+		let prime = wd_primes(a < b ? a : b);
 		for (let i = 0; i < prime.length; i++) {
 			if (prime[i] > a || prime[i] > b) break;
 			while (a % prime[i] === 0 && b % prime[i] === 0) {
@@ -672,43 +668,69 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	function wd_num_frac(n) { /* representação em fração (2 casas) */
+		/* inteiros ou zero não têm parte fracionária, retornar string */
 		if (wd_num_test(n, ["integer", "zero"]))
 			return wd_integer(n).toFixed(0);
+		/* infinito também não tem parte fracionária, retornar string */
 		if (wd_num_test(n, ["infinity"]))
 			return wd_num_str(n);
 
+		/* capturar parte inteira e decimal */
 		let integer = wd_integer(n);
 		let decimal = wd_decimal(n);
 
-		let data  = {int: Math.abs(integer), num: 0, den: 1, error: 1};
-		let value = Math.abs(decimal);
-		let prime = wd_number_primes.slice();
-		prime.push(10);
-		prime.push(100);
+		/* FIXME se for informado um valor tipo 0,0001 (1/10000), a resposta vai dar zero se considerar apenas duas casas decimais */
+		let data  = {
+			int: Math.abs(integer), /* parte inteira (valor absoluto) */
+			mul: 1,                 /* multiplicador de 10 (melhorar precisão de números pequenos demais) */
+			val: Math.abs(decimal), /* valor a ser encontrado */
+			num: 0,                 /* numerador */
+			den: 1,                 /* denominador */
+			error: 1                /* erro: encontrar o menor valor */
+		};
 
+		/* deslocar números pequenos demais 0.0001 -> 0.1 (alterando provisoriamente o valor a ser encontrado) */
+		while((10*data.val) < 1) {
+			data.val = 10*data.val;
+			data.mul = 10*data.mul;
+		}
+
+		/* capturar números precisão de 3 dígitos */
+		let prime = wd_primes(1000, true);
+
+		/* testando valores em busca do menor erro */
 		for (let i = 0; i < prime.length; i++) {
-			let n = 0;
-			let d = prime[i];
+			let n = 0;        /* numerador */
+			let d = prime[i]; /* denominador */
+			let e = 1;        /* erro */
 			while (n < d) {
-				let err = Math.abs((n/d)-value)/value;
-				if (err < data.error) {
+				e = Math.abs((n/d)-data.val)/data.val; /* (final - inicial)/inicial */
+				if (e < data.error) {
 					data.den   = d;
 					data.num   = n;
-					data.error = err;
+					data.error = e;
 				}
+				/* parando se error for zero (melhor valor encontrado) : looping interno */
 				if (data.error === 0) break;
 				n++;
 			}
+			/* parando se error for zero (melhor valor encontrado) : looping externo */
 			if (data.error === 0) break;
 		}
 
+		/* voltar o valor provisório à realidade (den*mul) */
+		data.den = data.den * data.mul;
+
+		/* calculando o MDC em busca de simplificações */
 		let mdc = wd_mdc(data.num, data.den);
 		data.num = data.num/mdc;
 		data.den = data.den/mdc;
 
+		/* analisando parte inteira e denominador em caso de aproximação computacional equivocada */
 		if (data.num === 0 && data.int === 0) return "0";
 		if (data.num === 0 && data.int !== 0) return data.int.toFixed(0);
 
+		/* formatando a fração */
 		data.int = data.int === 0 ? "" : data.int.toFixed(0)+" ";
 		data.num = data.num.toFixed(0)+"/";
 		data.den = data.den.toFixed(0);
