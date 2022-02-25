@@ -657,11 +657,11 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_num_test(n, tests) {/* testa se o tipo de número se enquadra em alguma categoria */
+	function wd_num_test(n, checks) {/* testa se o tipo de número se enquadra em alguma categoria */
 		let type = wd_num_type(n);
-		for (let i = 0; i < tests.length; i++) {
-			if (tests[i] === type) return true;
-			if (tests[i] === type.substr(1, type.length)) return true;
+		for (let i = 0; i < checks.length; i++) {
+			if (checks[i] === type) return true;
+			if (checks[i] === type.substr(1, type.length)) return true;
 		}
 		return false;
 	}
