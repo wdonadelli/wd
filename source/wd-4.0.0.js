@@ -750,15 +750,16 @@ const wd = (function() {
 		width = wd_finite(width) ? wd_integer(width, true) : undefined;
 
 		let chars = {
-			"0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵",
-			"6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹", "+": "⁺", "-": "⁻"
+			"0": "\u2070", "1": "\u00B9", "2": "\u00B2", "3": "\u00B3",
+			"4": "\u2074", "5": "\u2075", "6": "\u2076", "7": "\u2077",
+			"8": "\u2078", "9": "\u2079", "+": "\u207A", "-": "\u207B"
 		};
 		let exp = n.toExponential(width).split(/[eE]/);
 		for (let i in chars) {
 			let re = (/[0-9]/).test(i) ? new RegExp(i, "g") : new RegExp("\\"+i, "g");
 			exp[1] = exp[1].replace(re, chars[i]);
 		}
-		return exp.join(" x 10");
+		return exp.join(" \u00D7 10");
 	}
 
 /*----------------------------------------------------------------------------*/
@@ -1503,15 +1504,15 @@ const wd = (function() {
 	function wd_html_form_value(elem) { /* retorna o valor do atributo value do campo de formulário */
 		let type = wd_html_form_type(elem);
 		if (type === null) return null;
-		let attr = wd_vtype(elem.value).value;
+		let attr = wd_vtype(elem.value);
 		if (type === "radio" || type === "checkbox")
-			return elem.checked ? attr : null;
+			return elem.checked ? attr.value : null;
 		if (type === "date")
-			return attr.type === "date" ? wd_date_iso(attr) : null;
+			return attr.type === "date" ? wd_date_iso(attr.value) : null;
 		if (type === "time")
-			return attr.type === "time" ? wd_time_iso(attr) : null;
+			return attr.type === "time" ? wd_time_iso(attr.value) : null;
 		if (type === "number" || type === "range")
-			return attr.type === "number" ? attr : null;
+			return attr.type === "number" ? attr.value : null;
 		if (type === "file")
 			return elem.files.length > 0 ? elem.files : null;
 		if (type === "select") {
@@ -1520,7 +1521,7 @@ const wd = (function() {
 				if (elem[i].selected) value.push(e[i].value);
 			return value.length === 0 ? null : value;
 		}
-		return attr;
+		return attr.value;
 	}
 
 /*----------------------------------------------------------------------------*/
