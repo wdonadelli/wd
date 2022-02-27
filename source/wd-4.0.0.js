@@ -1505,8 +1505,9 @@ const wd = (function() {
 		let type = wd_html_form_type(elem);
 		if (type === null) return null;
 		let attr = wd_vtype(elem.value);
+		/* a depender do tipo, enviar elem.value (padrão) ou attr.value (especial) */
 		if (type === "radio" || type === "checkbox")
-			return elem.checked ? attr.value : null;
+			return elem.checked ? elem.value : null;
 		if (type === "date")
 			return attr.type === "date" ? wd_date_iso(attr.value) : null;
 		if (type === "time")
@@ -1519,17 +1520,19 @@ const wd = (function() {
 			value = [];
 			for (let i = 0; i < elem.length; i++)
 				if (elem[i].selected) value.push(e[i].value);
-			return value.length === 0 ? null : value;
+			return value.length > 0 ? value : null;
 		}
-		return attr.value;
+		return elem.value;
 	}
 
 /*----------------------------------------------------------------------------*/
 	function wd_html_form_send(elem) { /* informa se os dados do campo de formulário podem ser enviados */
 		if (wd_html_form_name(elem)  === null) return false;
 		if (wd_html_form_value(elem) === null) return false;
-		let noSend = ["submit", "button", "reset", "image"]; /* não submeter botões */
-		return noSend.indexOf(wd_html_form_type(elem))>= 0 ? false : true;
+		/* não submeter botões */
+		let type = wd_html_form_type(elem);
+		let btn  = ["submit", "button", "reset", "image"];
+		return btn.indexOf(type) >= 0 ? false : true;
 	}
 
 /*----------------------------------------------------------------------------*/
@@ -2254,14 +2257,14 @@ const wd = (function() {
 		} catch(e) {
 			set_data("ERROR", true, 0, 0)
 			if (callback !== null) callback(data);
-			return null;
+			return;
 		}
 		/* se o método for POST */
 		if (method === "POST" && pack.type === "text")
 			request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 		/* enviar requisição */
 		request.send(pack);
-		return true;
+		return;
 	}
 
 /*----------------------------------------------------------------------------*/
