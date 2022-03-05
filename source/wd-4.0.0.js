@@ -1468,7 +1468,7 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_html_form(elem) { /* diz se o elemento é uma campo de formulário */
+	function wd_html_form(elem) { /* diz se o elemento é um campo de formulário */
 		let form = ["textarea", "select", "input"];
 		return form.indexOf(wd_html_tag(elem)) < 0 ? false : true;
 	}
@@ -2048,7 +2048,7 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_html_bros_index(elem) {
+	function wd_html_bros_index(elem) { /* obtem o índice (posição) do elemento em relação aos irmãos */
 		let bros = elem.parentElement.children;
 		for (let i = 0; i < bros.length; i++)
 			if (bros[i] === elem) return i;
@@ -2082,34 +2082,58 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	function wd_html_vform(elem, call) { /* verifica a validade do formulário */
-		if (!("setCustomValidity" in elem)) return null;
-		if (!("reportValidity" in elem))    return null;
-		if (!("checkValidity" in elem))     return null;
-		if (!("validity" in elem))          return null;
+		/* é elemento de formulário ? */
+		if (!wd_html_form_send(elem)) return false;
+		/* call é função? */
+		call = wd_vtype(call).type === "function" ? call : null;
+		/* navegador contempla validade de formulário? */
+		let hasValidityChecker = true;
+		if (!("setCustomValidity" in elem)) hasValidityChecker = false; else
+		if (!("reportValidity" in elem))    hasValidityChecker = false; else
+		if (!("checkValidity" in elem))     hasValidityChecker = false; else
+		if (!("validity" in elem))          hasValidityChecker = false;
+		/* se o navegador não contempla validade de formulário e existe uma função manual */
+		if (!hasValidityChecker) {
+			if (call !== null) return true; /* não há o que checar */
+			let msg = call(elem);
+			if (wd_vtype(msg).type !== "text") return true;
+			alert(msg); /* valor inadequado (com mensagem) */
+			return false;
+		}
 		/*--------------------------------------------------------------------------
+		| Regras para variávei id se o navegador contempla validade de formulário
+		|
 		| 100 válido   | padrão      | sem função
 		|  $  >> true
+		|
 		| 101 válido   | padrão      | com função
 		|  @  >> checar (válido: true; inválido: definir reportar false)
+		|
 		| 110 válido   | customizado | sem função (não existe)
 		|  *  >> limpar true
+		|
 		| 111 válido   | customizado | com função (não existe)
 		|  *  >> checar (válido: true; inválido: definir reportar false)
+		|
 		| 000 inválido | padrão      | sem função
 		|  #  >> reportar false
+		|
 		| 001 inválido | padrão      | com função
 		|  #  >> reportar false
+		|
 		| 010 inválido | customizado | sem função
 		|  #  >> reportar false
+		|
 		| 011 inválido | customizado | com função
 		|  @  >> checar (válido: limpar true; inválido: definir reportar false)
 		\--------------------------------------------------------------------------*/
-		let id = elem.checkValidity()      === true       ? "1" : "0";
-		id    += elem.validity.customError === true       ? "1" : "0";
-		id    += wd_vtype(call).type       === "function" ? "1" : "0";
+		let id = elem.checkValidity()      === true ? "1" : "0";
+		id    += elem.validity.customError === true ? "1" : "0";
+		id    += call                      !== null ? "1" : "0";
 		if (["000", "001", "010"].indexOf(id) >= 0) { /*#*/
 			elem.reportValidity();
-			if (wd_html_form_type(elem) === "file") elem.value = null; /* bug no firefox */
+			if (wd_html_form_type(elem) === "file") /* bug no firefox */
+				elem.value = null;
 			return false;
 		}
 		if (id === "101" || id === "011") { /*@*/
@@ -2117,7 +2141,8 @@ const wd = (function() {
 			if (wd_vtype(msg).type === "text") { /* valor inadequado */
 				elem.setCustomValidity(msg);
 				elem.reportValidity();
-				if (wd_html_form_type(elem) === "file") elem.value = null; /* bug no firefox */
+				if (wd_html_form_type(elem) === "file") /* bug no firefox */
+					elem.value = null;
 				return false;
 			}
 			if (id === "011") elem.setCustomValidity("");
@@ -2127,23 +2152,27 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_html_vform_array(array, call) {
+	function wd_html_vform_array(array) { /* verifica a validade de um conjunto de elementos */
+		let existsForm = false; //TODO
 		for (let i = 0; i < array.length; i++) {
+			/* ignorar os não formulários */
+			if (wd_html_form_send(array[i])) existsForm = true; //TODO
+			else continue; // TODO
+
 			let elem = array[i];
 			let func = null;
-			if ("wdVform" in elem.dataset) {
+			if ("wdVform" in elem.dataset) { /* verificação personalizada de formulário */
 				let test = wd_vtype(elem.dataset.wdVform).value;
 				if (wd_vtype(window[test]).type === "function")
 					func = window[test];
 			}
-			if (!wd_html_vform(elem, func))
-			 return false;
+			if (!wd_html_vform(elem, func)) return false;
 		}
-		return true;
+		return true; /* FIXME TODO validar um formulário sem informação de formulário? */
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_request(action, pack, callback, method, async) {
+	function wd_request(action, pack, callback, method, async) { /* executa requisições */
 		/* ajustes iniciais */
 		action = new String(action).toString();
 		if (pack === undefined) pack = null;
@@ -2257,14 +2286,14 @@ const wd = (function() {
 		} catch(e) {
 			set_data("ERROR", true, 0, 0)
 			if (callback !== null) callback(data);
-			return;
+			return false;
 		}
 		/* se o método for POST */
 		if (method === "POST" && pack.type === "text")
 			request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 		/* enviar requisição */
 		request.send(pack);
-		return;
+		return true;
 	}
 
 /*----------------------------------------------------------------------------*/
@@ -2814,7 +2843,7 @@ const wd = (function() {
 				if (wd_vtype(method).type !== "text") method = "POST";
 
 				/* se for DOM mas com os formulários com pendência, não enviar */
-				if (this.type === "dom" && this.vform !== true) return null;
+				if (this.type === "dom" && this.vform !== true) return false;
 				let pack = {value: this.toString()};
 
 				/* se for DOM ou Number, fazer diferente */
@@ -2834,7 +2863,7 @@ const wd = (function() {
 					}
 				}
 
-				return wd_request(action, pack, callback, method, async)
+				return wd_request(action, pack, callback, method, async);
 			}
 		},
 		signal: { /*renderizar mensagem*/
