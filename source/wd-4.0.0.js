@@ -2081,23 +2081,27 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_html_vform(elem, call) { /* verifica a validade do formulário */
-		/* é elemento de formulário ? */
-		if (!wd_html_form_send(elem)) return false;
+	function wd_html_vform(elem, call) { /* verifica a validade de um elemento de formulário */
+		/* Aqui não é avaliado se a informação pode ser enviada (request) */
 		/* call é função? */
 		call = wd_vtype(call).type === "function" ? call : null;
+
 		/* navegador contempla validade de formulário? */
 		let hasValidityChecker = true;
 		if (!("setCustomValidity" in elem)) hasValidityChecker = false; else
 		if (!("reportValidity" in elem))    hasValidityChecker = false; else
 		if (!("checkValidity" in elem))     hasValidityChecker = false; else
 		if (!("validity" in elem))          hasValidityChecker = false;
-		/* se o navegador não contempla validade de formulário e existe uma função manual */
+
+		/* se o navegador não contempla validade de formulário... */
 		if (!hasValidityChecker) {
-			if (call !== null) return true; /* não há o que checar */
+			/* não há função validadora, formulário aprovado. */
+			if (call === null) return true;
 			let msg = call(elem);
-			if (wd_vtype(msg).type !== "text") return true;
-			alert(msg); /* valor inadequado (com mensagem) */
+			/* se a validação retornar nulo, formulário aprovado */
+			if (msg === null || msg === undefined) return true;
+			/* caso contrário, formulário reprovado (com mensagem) */
+			alert(msg);
 			return false;
 		}
 		/*--------------------------------------------------------------------------
@@ -2138,7 +2142,8 @@ const wd = (function() {
 		}
 		if (id === "101" || id === "011") { /*@*/
 			let msg = call(elem);
-			if (wd_vtype(msg).type === "text") { /* valor inadequado */
+			/* se a função retornar diferente de nulo, formulário reprovado */
+			if (msg !== null && msg !== undefined) {
 				elem.setCustomValidity(msg);
 				elem.reportValidity();
 				if (wd_html_form_type(elem) === "file") /* bug no firefox */
@@ -2152,23 +2157,24 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_html_vform_array(array) { /* verifica a validade de um conjunto de elementos */
-		let existsForm = false; //TODO
+	function wd_html_vform_array(array) { /* verifica a validade de um conjunto (array) de formulários */
+		/* Aqui é verificado se a informação pode ser enviada (request) */
 		for (let i = 0; i < array.length; i++) {
-			/* ignorar os não formulários */
-			if (wd_html_form_send(array[i])) existsForm = true; //TODO
-			else continue; // TODO
+			/* ignorar os elementos de formulário não aptos ao envio */
+			if (!wd_html_form_send(array[i])) continue;
 
 			let elem = array[i];
 			let func = null;
-			if ("wdVform" in elem.dataset) { /* verificação personalizada de formulário */
+			/* verificação personalizada de formulário */
+			if ("wdVform" in elem.dataset) {
 				let test = wd_vtype(elem.dataset.wdVform).value;
 				if (wd_vtype(window[test]).type === "function")
 					func = window[test];
 			}
+			/* checando o elemento específico */
 			if (!wd_html_vform(elem, func)) return false;
 		}
-		return true; /* FIXME TODO validar um formulário sem informação de formulário? */
+		return true;
 	}
 
 /*----------------------------------------------------------------------------*/
@@ -2306,9 +2312,11 @@ const wd = (function() {
 		let ttl = document.createElement("STRONG");
 		/* fechar janela */
 		function close() {
+			/* tentar fechar a caixa de mensagem */
 			try {wd_signal_block.removeChild(box);} catch(e){}
+			/* tentar fechar o container de mensagens, se não houver filhos */
 			if (wd_signal_block.children.length === 0)
-				document.body.removeChild(wd_signal_block);
+				try{document.body.removeChild(wd_signal_block);}catch(e){}
 		}
 		/* definindo propriedades dos elementos */
 		box.appendChild(hdr);
@@ -3340,7 +3348,7 @@ const wd = (function() {
 		},
 		full: { /* deixa o elemento em tela cheia (só primeiro elemento) */
 			value: function(exit) {
-				return wd_html_full(this._value[0], exit);
+				wd_html_full(this._value[0], exit); return this;
 			}
 		},
 		form: { /* obtém serialização de formulário */
@@ -3594,7 +3602,7 @@ const wd = (function() {
 		let mask = data.model;
 		let func = "call" in data && data["call"] in window ? window[data["call"]] : null;
 		let msg  = "msg" in data ? data["msg"] : null;
-		/* obtendo o formato da máscara e função de checagem, se atalho */
+		/* obtendo o formato da máscara e função de checagem de atalho */
 		if (mask in shorts) {
 			func = shorts[data.model].func;
 			mask = shorts[data.model].mask;
@@ -3602,13 +3610,14 @@ const wd = (function() {
 		/* executando chamada e definindo valor casado ao conteúdo */
 		let value = WD(mask).mask(text, func);
 		if (value !== null) e[attr] = value;
-
+		/* validando formulário */
 		if (attr === "value") {
-			msg = wd_vtype(msg).type === "null" ? mask : msg;
+			msg = msg === null ? mask : msg;
+			/* ???? FIXME para que serve isso? */
 			if (e.value !== "" && value === null)
 				wd_html_vform(e, function () {return msg;})
 			else
-				wd_html_vform(e, function () {return "";})
+				wd_html_vform(e, function () {return null;})
 		}
 		return;
 	};
