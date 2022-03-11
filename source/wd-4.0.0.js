@@ -1850,34 +1850,41 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	function wd_html_filter(elem, search, chars) { /* exibe somente o elemento que contenha o texto casado */
+		if (search === null || search === undefined) return null;
+
+		/* remodelando a quantidade de caracteres */
 		chars = wd_finite(chars) && chars !== 0 ? wd_integer(chars) : 1;
 
-		/*definindo valor de busca*/
-		let vtype = wd_vtype(search);
-		if (search === null || search === undefined)
-			search = "";
-		else if (vtype.type === "text")
-			search = wd_text_clear(search).toUpperCase();
-		else if (vtype.type !== "regexp")
-			search = new String(search).toUpperCase();
+		/* definindo valor de busca */
+		let type = wd_vtype(search).type;
+		if (type !== "regexp") {/* definir string, limpar e por caixa alta */
+			search = new String(search);
+			search = wd_text_clear(search.toString()).toUpperCase();
+		}
 
+		/* looping pelos filhos */
 		let child = wd_vtype(elem.children).value;
 		for (let i = 0; i < child.length; i++) {
 			if (!("textContent" in child[i])) continue;
 
-			/* obtendo conteúdo do elemento */
-			let content = wd_text_clear(child[i].textContent).toUpperCase();
+			/* obtendo conteúdo do elemento (limpar, mas deixar maiúsculo apenas para texto) */
+			let content = wd_text_clear(child[i].textContent);
 
-			if (vtype.type === "regexp" && search.test(content))
-				return wd_html_nav(child[i]);
-
-			let found = content.indexOf(search) >= 0 ? true : false;
-			let width = search.length;
-			if (chars < 0) {
-				wd_html_nav(child[i], (found && width >= -chars) ? "show" :  "hide");
-			} else {
-				wd_html_nav(child[i], (!found && width >= chars) ? "hide" :  "show");
+			/* se for expressão regular */
+			if (type === "regexp") {
+				wd_html_nav(child[i], (search.test(content) ? "show" : "hide"));
+				continue;
 			}
+
+			/* se for texto, encontrou o fragmento? quantos caracteres? */
+			let found = content.toUpperCase().indexOf(search) >= 0 ? true : false;
+			let width = search.length;
+
+			/* definindo a exibição a partir da quantidade de caracteres */
+			if (chars < 0)
+				wd_html_nav(child[i], (found && width >= -chars) ? "show" :  "hide");
+			else
+				wd_html_nav(child[i], (!found && width >= chars) ? "hide" :  "show");
 		};
 		return;
 	}
