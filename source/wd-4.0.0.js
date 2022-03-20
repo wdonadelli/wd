@@ -1891,19 +1891,17 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	function wd_html_set(elem, attr, val) { /* define atributos/funcões no elemento */
-		let args = [];
-		for (let i = 2; i < arguments.length; i++)
-			args.push(arguments[i]);
 		if (wd_vtype(elem[attr]).type === "function")
-			return elem[attr].apply(elem, args);
+			return elem[attr](val);
 		/* representando um toggle com ? nos casos de booleano */
 		let get1 = elem[attr];
 		let get2 = elem.getAttribute(attr);
 		if (val === "?" && (get1 === true  || get2 === true )) val = false; else
 		if (val === "?" && (get1 === false || get2 === false)) val = true;
 		/* definindo valores */
-		if (attr in elem) /* nem todos os atributos são writables */
-			try {return elem[attr] = val;} catch(e) {}
+		if (attr in elem)
+			try {return elem[attr] = val;} catch(e) {} /* nem todos os atributos são writables */
+		/* se não for writable (se falhou na linha anterior */
 		return elem.setAttribute(attr, val);
 	}
 
@@ -3303,7 +3301,7 @@ const wd = (function() {
 				return this.run(wd_html_handler, events, true);
 			}
 		},
-		style: { /* remove disparadores */
+		style: { /* define ou remove estilo ao elemento */
 			value: function(styles) {
 				return this.run(wd_html_style, styles);
 			}
