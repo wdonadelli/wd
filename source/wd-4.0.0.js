@@ -4072,3 +4072,75 @@ const wd = (function() {
 
 	return WD;
 }());
+
+/*==============================================================================
+Atributos e Eventos
+
+loadProcedures()
+	> loadingProcedures()
+		> organizationProcedures()
+	> hashProccedures()
+
+wd_html_load(), wd_html_repeat()
+	> loadingProcedures()
+
+wd_html_data()
+	> settingProcedures()
+		- data-wd-load
+			> loadingProcedures()
+		- data-wd-repeat
+			> loadingProcedures()
+		- data-wd-sort
+		- data-wd-filter
+		- data-wd-mask
+		- data-wd-page
+		- data-wd-click
+		- data-wd-device
+		- data-wd-slide
+		- data-wd-chart
+		- data-wd-output
+
+window.onload > loadProcedures()
+	- preparar biblioteca
+	> loadingProcedures()
+		- data-wd-load
+		- data-wd-repeat
+		> organizationProcedures()
+			- data-wd-sort
+			- data-wd-filter
+			- data-wd-mask
+			- data-wd-page
+			- data-wd-check
+			- data-wd-slide
+			- data-wd-device
+			- data-wd-chart
+			- data-wd-output
+
+window.onhashchange > hashProcedures()
+	- eventos de linkagem
+
+window.onresize > scalingProcedures()
+	- data-wd-device
+
+document.onclick > clickProcedures()
+	- data-wd-send
+	- data-wd-tsort
+	- data-wd-data
+	- data-wd-edit
+	- data-wd-shared
+	- data-wd-set
+	- data-wd-css
+	- data-wd-nav
+	- data-wd-full
+	- navlink()
+	- data-wd-no-bubbles
+
+document.oninput > inputProcedures()
+	- data-wd-filter
+	- data-wd-output
+
+document.focusout > focusOutProcedures()
+	- data-wd-vform
+	- data-wd-mask
+
+==============================================================================*/
