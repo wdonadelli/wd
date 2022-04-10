@@ -3610,15 +3610,16 @@ const wd = (function() {
 		/* obtendo o formato da máscara e função de checagem de atalho */
 		if (mask in shorts) {
 			func = shorts[data.model].func;
-			mask = shorts[data.model].mask;
+			mask = shorts[data.model].mask;console.log(mask, shorts);
 		}
 		/* executando chamada e definindo valor casado ao conteúdo */
 		let value = WD(mask).mask(text, func);
 		if (value !== null) e[attr] = value;
-		/* validando formulário */
+		/* se for um campo de formulário, exibir mensagem de erro, se for o caso */
 		if (attr === "value") {
 			msg = msg === null ? mask : msg;
-			/* ???? FIXME para que serve isso? */
+			/* se o campo NÃO estiver vazio e a máscara NÃO casar: mostrar mensagem */
+			/* se o campo estiver vazio ou máscara casar: NÃO mostrar mensagem */
 			if (e.value !== "" && value === null)
 				wd_html_vform(e, function () {return msg;})
 			else
@@ -3797,12 +3798,12 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-	function data_wdNav(e) { /* Navegação: data-wd-nav=type{arg}${css}& */
+	function data_wdNav(e) { /* Navegação: data-wd-nav=action{arg}${css}& */
 		if (!("wdNav" in e.dataset)) return;
 		let data = wd_html_dataset_value(e, "wdNav");
 		for (let i = 0; i < data.length; i++) {
 			let target = wd_$$$(data[i]);
-			let value  = "type" in data[i] ? data[i].type : null;
+			let value  = "action" in data[i] ? data[i].action : null;
 			WD(target === null ? e : target).nav(value);
 		}
 		return;
@@ -4084,63 +4085,62 @@ loadProcedures()
 wd_html_load(), wd_html_repeat()
 	> loadingProcedures()
 
-wd_html_data()
+wd_html_data(), data-wd-data
 	> settingProcedures()
-		- data-wd-load
-			> loadingProcedures()
-		- data-wd-repeat
-			> loadingProcedures()
-		- data-wd-sort
-		- data-wd-filter
-		- data-wd-mask
-		- data-wd-page
+		- data-wd-chart
 		- data-wd-click
 		- data-wd-device
-		- data-wd-slide
-		- data-wd-chart
+		- data-wd-filter
+		- data-wd-load
+			> loadingProcedures()
+		- data-wd-mask
 		- data-wd-output
+		- data-wd-page
+		- data-wd-repeat
+			> loadingProcedures()
+		- data-wd-slide
+		- data-wd-sort
 
 window.onload > loadProcedures()
-	- preparar biblioteca
+	- [preparar biblioteca]
 	> loadingProcedures()
 		- data-wd-load
 		- data-wd-repeat
 		> organizationProcedures()
-			- data-wd-sort
+			- data-wd-chart
+			- data-wd-click
+			- data-wd-device
 			- data-wd-filter
 			- data-wd-mask
-			- data-wd-page
-			- data-wd-check
-			- data-wd-slide
-			- data-wd-device
-			- data-wd-chart
 			- data-wd-output
+			- data-wd-page
+			- data-wd-slide
+			- data-wd-sort
 
 window.onhashchange > hashProcedures()
-	- eventos de linkagem
+	- [eventos de linkagem]
 
 window.onresize > scalingProcedures()
 	- data-wd-device
 
 document.onclick > clickProcedures()
-	- data-wd-send
-	- data-wd-tsort
+	- data-wd-css
 	- data-wd-data
 	- data-wd-edit
-	- data-wd-shared
-	- data-wd-set
-	- data-wd-css
-	- data-wd-nav
 	- data-wd-full
-	- navlink()
+	- data-wd-nav
 	- data-wd-no-bubbles
+	- data-wd-send
+	- data-wd-set
+	- data-wd-shared
+	- data-wd-tsort
+	- navlink()
 
 document.oninput > inputProcedures()
 	- data-wd-filter
 	- data-wd-output
 
 document.focusout > focusOutProcedures()
-	- data-wd-vform
 	- data-wd-mask
-
+	- data-wd-vform
 ==============================================================================*/
