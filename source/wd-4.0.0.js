@@ -1501,6 +1501,20 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
+	//FIXME reavaliar esse negócio: wd_html_vform > wd_html_form_send > wd_html_form_value
+	/* <form>
+<select required>
+<option></option>
+<option>Luca</option>
+</select>
+<button type="submit">Loko</button>
+</form>
+
+vform não está funcionando com number:required, está pulando o campo porque retorna null quando vazio
+está considerando que não é um campo correto e está ignorando-o
+*/
+
+
 	function wd_html_form_value(elem) { /* retorna o valor do atributo value do campo de formulário */
 		let type = wd_html_form_type(elem);
 		if (type === null) return null;
@@ -1528,7 +1542,7 @@ const wd = (function() {
 /*----------------------------------------------------------------------------*/
 	function wd_html_form_send(elem) { /* informa se os dados do campo de formulário podem ser enviados */
 		if (wd_html_form_name(elem)  === null) return false;
-		if (wd_html_form_value(elem) === null) return false;
+		if (wd_html_form_value(elem) === null) return false; //FIXME será que isso é preciso?
 		/* não submeter botões */
 		let type = wd_html_form_type(elem);
 		let btn  = ["submit", "button", "reset", "image"];
@@ -2139,6 +2153,7 @@ const wd = (function() {
 		let id = elem.checkValidity()      === true ? "1" : "0";
 		id    += elem.validity.customError === true ? "1" : "0";
 		id    += call                      !== null ? "1" : "0";
+		console.log(elem, id);
 		if (["000", "001", "010"].indexOf(id) >= 0) { /*#*/
 			elem.reportValidity();
 			if (wd_html_form_type(elem) === "file") /* bug no firefox */
@@ -3523,7 +3538,7 @@ const wd = (function() {
 		if (!("wdSend" in e.dataset)) return;
 		let data = wd_html_dataset_value(e, "wdSend");
 		for (let i = 0; i < data.length; i++) {
-			let method = "method" in data[i] ? data.method[i] : "post";
+			let method = "method" in data[i] ? data[i].method : "post";
 			let file   = data[i].path;
 			let pack   = wd_$$$(data[i]);
 			let call   = window[data[i]["call"]];
