@@ -1468,21 +1468,29 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_html_form(elem) { /* diz se o elemento é um campo de formulário */
-		let form = ["textarea", "select", "input"];
+	function wd_html_form(elem) { /* diz se o elemento é um campo de formulário: verdadeiro ou falso */
+		let form = ["textarea", "select", "input", "button", "meter", "progress", "output"];
 		return form.indexOf(wd_html_tag(elem)) < 0 ? false : true;
-	}
+	} /* TODO definir o que é campo de formulário */
 
 /*----------------------------------------------------------------------------*/
-	function wd_html_form_type(elem) { /* retorna o tipo do campo de formulário */
-		if (!wd_html_form(elem) && wd_html_tag(elem) !== "button") return null;
-		let types = [
-			"button", "reset", "submit", "image", "color", "radio",
-			"checkbox", "date", "datetime", "datetime-local", "email",
-			"text", "search", "tel", "url", "month", "number", "password",
-			"range", "time", "week", "hidden", "file"
+	function wd_html_form_type(elem) { /* retorna o tipo do campo de formulário: tipo ou nulo */
+		if (!wd_html_form(elem)) return null; /* TODO definir os tipos de campos de formulário */
+		let tag = wd_html_tag(elem);
+
+		if (tag !== "input" && tag !== "button") return tag;
+
+		let types = [ /* input types */
+			/* bottons */   "button", "reset",    "submit", "image", "color",
+			/* options */   "radio",  "checkbox",
+			/* date/time */ "date",   "datetime", "month",  "week", "time", "datetime-local",
+			/* numbers */   "range",  "number",
+			/* files */     "file",
+			/* web */       "url",    "email",
+			/* special */   "tel",
+			/* text */      "text",   "search",   "password", "hidden"
 		];
-		if ("type" in elem.attributes) { /* tipo digitado */
+		if ("type" in elem.attributes) { /* tipo digitado (navegadores antigos) */
 			let type = elem.attributes.type.value.toLowerCase();
 			if (types.indexOf(type) >= 0) return type;
 		}
@@ -1490,14 +1498,26 @@ const wd = (function() {
 			let type = elem.type.toLowerCase();
 			if (types.indexOf(type) >= 0) return type;
 		}
-		return wd_html_tag(elem);
+
+		return tag === "button" ? tag : "text";
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_html_form_name(elem) { /* retorna o valor do atributo name do campo de formulário */
-		if (wd_html_form_type(elem) === null) return null;
-		let name = wd_vtype(elem.name);
-		return name.type === "text" ? name.value : null;
+	function wd_html_form_name(elem) { /* retorna name ou id do campo de formulário: valor ou null */
+		if (wd_html_form_type(elem) === null) return null;/* TODO definir as regras de nome de campos de formulário */
+		let name = null;
+		if ("name" in elem) /* formulários padrão */
+			name = elem.name;
+		else if ("name" in elem.attributes) /* outros formulários (progress, meter...) */
+			name = elem.attributes.name.value;
+		else /* pegar o valor de ID se não tiver name */
+			name = elem.id;
+		/* corta-se as pontas e espaços serão transformados em underlines */
+		name = name.toString().trim().replace(/\ +/, "_");
+		/* acentos serão removidos */
+		name = wd_text_clear(name);
+		/* precisa ter um caracterer ou dígito */
+		return (/[0-9a-zA-Z]/).test(name) ? name : null;
 	}
 
 /*----------------------------------------------------------------------------*/
@@ -1515,68 +1535,115 @@ está considerando que não é um campo correto e está ignorando-o
 */
 
 
-	function wd_html_form_value(elem) { /* retorna o valor do atributo value do campo de formulário */
+	function wd_html_form_value(elem) { /* retorna value do campo de formulário: valor, "" ou null (não submeter) */
 		let type = wd_html_form_type(elem);
 		if (type === null) return null;
-		let attr = wd_vtype(elem.value);
-		/* a depender do tipo, enviar elem.value (padrão) ou attr.value (especial) */
-		if (type === "radio" || type === "checkbox")
-			return elem.checked ? elem.value : null;
-		if (type === "date")
-			return attr.type === "date" ? wd_date_iso(attr.value) : null;
-		if (type === "time")
-			return attr.type === "time" ? wd_time_iso(attr.value) : null;
-		if (type === "number" || type === "range")
-			return attr.type === "number" ? attr.value : null;
-		if (type === "file")
-			return elem.files.length > 0 ? elem.files : null;
-		if (type === "select") {
-			value = [];
-			for (let i = 0; i < elem.length; i++)
-				if (elem[i].selected) value.push(e[i].value);
-			return value.length > 0 ? value : null;
+		/* checar se value está definido (atributo ou digitado) */
+		let val = null;
+		if ("value" in elem)
+			val = elem.value;
+		else if ("value" in elem.attributes)
+			val = elem.attributes.value.value;
+		else if (type === "output")
+			val = elem.textContent;
+		else
+			return null;
+		/* analisar os tipos de valores a retornar */
+		let attr = wd_vtype(val);
+		/* a depender do tipo, enviar o valor correspondente */
+		/* https://w3c.github.io/html-reference/datatypes.html */
+		if (type === "radio" || type === "checkbox") {
+			return elem.checked ? val : null;
 		}
-		return elem.value;
+		if (type === "date") {
+			return attr.type === "date" ? wd_date_iso(attr.value) : "";
+		}
+		if (type === "time") {
+			return attr.type === "time" ? wd_time_iso(attr.value) : "";
+		}
+		if (type === "week") {
+			let test = (/^[0-9]{4}\-W(0[1-9]|[1-4][0-9]|5[0-3])$/).test(val);
+			let year = wd_integer(val.split("-W")[0]);
+			return (!test || year < 1) ? "" : val;
+		}
+		if (type === "month") {
+			let test = (/^[0-9]{4}\-(0[1-9]|1[0-2])$/).test(val);
+			let year = wd_integer(val.split("-")[0]);
+			return (!test || year < 1) ? "" : val;
+		}
+		if (type === "datetime" || type === "datetime-local") {
+				let test = val.split("T");
+				let date = wd_vtype(test[0]);
+				let time = wd_vtype(test[1]);
+				if (date.type === "date" && time.type === "time")
+					return wd_date_iso(date.value)+"T"+wd_time_iso(time.value);
+				return "";
+		}
+		if (type === "number" || type === "range") {
+			return attr.type === "number" ? attr.value : "";
+		}
+		if (type === "meter" || type === "progress") {
+			return attr.type === "number" ? attr.value : "";
+		}
+		if (type === "file") {
+			return elem.files.length > 0 ? elem.files : "";
+		}
+		if (type === "select") {
+			let value = [];
+			for (let i = 0; i < elem.length; i++)
+				if (elem[i].selected)
+					value.push(e[i].value);
+			return value.length > 0 ? value : "";
+		}
+		return val;
 	}
 
 /*----------------------------------------------------------------------------*/
 	function wd_html_form_send(elem) { /* informa se os dados do campo de formulário podem ser enviados */
-		if (wd_html_form_name(elem)  === null) return false;
-		if (wd_html_form_value(elem) === null) return false; //FIXME será que isso é preciso?
-		/* não submeter botões */
 		let type = wd_html_form_type(elem);
-		let btn  = ["submit", "button", "reset", "image"];
-		return btn.indexOf(type) >= 0 ? false : true;
+		let name = wd_html_form_name(elem);
+		let val  = wd_html_form_value(elem);
+		if (type === null || name === null || val === null) return false;
+		let types = [
+			"submit", "button", "reset", "image",
+			"progress", "meter", "output" /*TODO estou em dúvida quanto ao não envio desses*/
+		];
+		return types.indexOf(type) >= 0 ? false : true;
 	}
 
 /*----------------------------------------------------------------------------*/
 	function wd_html_mask_attr(elem) { /* retorna o atributo para aplicação da máscara */
 		let tag = wd_html_tag(elem);
+		/* formulários com máscara no conteúdo textual */
 		if (tag === "button" || tag === "option") return "textContent";
+		/* formulários que podem receber máscara sem validação */
 		let value = [
-			"textarea", "button", "submit", "email", "text", "search",
-			"tel", "url"
+			"textarea", "button", "submit", "reset", "text", "search", "tel"
 		];
 		let type = wd_html_form_type(elem);
 		if (value.indexOf(type) >= 0) return "value";
+		/* elementos genéricos */
 		return "textContent" in elem ? "textContent" : null;
 	}
 
 /*----------------------------------------------------------------------------*/
 	function wd_html_load_attr(elem) { /* retorna o atributo para carregar HTML em forma de texto */
 		let tag = wd_html_tag(elem);
+		/* formulários com conteúdo textual que podem carregar dados externos */
 		if (tag === "button" || tag === "option") return "textContent";
+		/* formulários que podem carregar dados externos */
 		let value = [
 			"textarea", "button", "reset", "submit", "email", "text",
 			"search", "tel", "url", "hidden"
 		];
 		let type = wd_html_form_type(elem);
 		if (value.indexOf(type) >= 0) return "value";
+		/* elementos genéricos */
 		return "innerHTML" in elem ? "innerHTML" : "textContent";
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_html_form_data(elem) { /* retorna um array de objetos {NAME|GET|POST} com os dados para envio em requisições */
+	function wd_html_form_data(elem) { /* retorna um array de objetos {NAME|GET|POST} com dados para requisições */
 		let form  = [];
 		if (!wd_html_form_send(elem)) return form;
 		let name  = wd_html_form_name(elem);
@@ -1585,7 +1652,7 @@ está considerando que não é um campo correto e está ignorando-o
 		if (type === "file") {
 			for (let i = 0; i < value.length; i++)
 				form.push({
-					NAME: i === 0 ? name : name+"_"+i, /*atributo nome*/
+					NAME: name+"_"+i, /*atributo name (name_0, name_1, ...*/
 					GET:  encodeURIComponent(value[i].name), /*nome do arquivo*/
 					POST: value[i] /*dados do arquivo*/
 				});
@@ -1594,7 +1661,7 @@ está considerando que não é um campo correto e está ignorando-o
 		if (type === "select") {
 			for (let i = 0; i < value.length; i++)
 				form.push({
-					NAME: i === 0 ? name : name+"_"+i,
+					NAME: name+"_"+i,
 					GET:  encodeURIComponent(value[i]),
 					POST: value[i]
 				});
@@ -1609,7 +1676,8 @@ está considerando que não é um campo correto e está ignorando-o
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_html_dataset_value(elem, attr) { /* transforma o conteúdo em formato especial do dataset em um array de objetos */
+	function wd_html_dataset_value(elem, attr) { /* transforma o conteúdo dataset em um array de objetos */
+		/* a{B}c{D}&e{F} => [{a: B, c: D}, {e: F}] */
 		let list = [{}];
 		if (!(attr in elem.dataset)) return list;
 		let key    = 0;
@@ -2079,6 +2147,7 @@ está considerando que não é um campo correto e está ignorando-o
 		return {
 			tag: wd_html_tag(elem),
 			value: wd_html_form_value(elem),
+			name: wd_html_form_name(elem), /*TODO isso é novo*/
 			type: wd_html_form_type(elem),
 			text: elem.textContent,
 			className: wd_html_class(elem),
@@ -3193,7 +3262,7 @@ está considerando que não é um campo correto e está ignorando-o
 			get: function() {return wd_date_days(this.y, this.m, this.d);}
 		},
 		week: {/*semana cheia do ano*/
-			get: function(days, today) {return wd_date_week(this.days, this.today);}
+			get: function() {return wd_date_week(this.days, this.today);}
 		},
 		format: { /* formata saída string */
 			value: function(str) {
