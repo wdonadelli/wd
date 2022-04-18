@@ -1469,17 +1469,23 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	function wd_html_form(elem) { /* diz se o elemento é um campo de formulário: verdadeiro ou falso */
-		let form = ["textarea", "select", "input", "button", "meter", "progress", "output"];
+		let form = [
+			"textarea", "select", "input", "button",
+			"meter", "progress", "output", "option", "form"
+		];
 		return form.indexOf(wd_html_tag(elem)) < 0 ? false : true;
 	} /* TODO definir o que é campo de formulário */
 
 /*----------------------------------------------------------------------------*/
 	function wd_html_form_type(elem) { /* retorna o tipo do campo de formulário: tipo ou nulo */
-		if (!wd_html_form(elem)) return null; /* TODO definir os tipos de campos de formulário */
+		/* elementos genéricos */
+		if (!wd_html_form(elem))
+			return null; /* TODO definir os tipos de campos de formulário */
 		let tag = wd_html_tag(elem);
-
-		if (tag !== "input" && tag !== "button") return tag;
-
+		/* formlários que não possuem type */
+		if (tag !== "input" && tag !== "button")
+			return tag;
+		/* formulários que possuem type */
 		let types = [ /* input types */
 			/* bottons */   "button", "reset",    "submit", "image", "color",
 			/* options */   "radio",  "checkbox",
@@ -1499,12 +1505,15 @@ const wd = (function() {
 			if (types.indexOf(type) >= 0) return type;
 		}
 
-		return tag === "button" ? tag : "text";
+		return tag === "button" ? "button" : "text";
 	}
 
 /*----------------------------------------------------------------------------*/
 	function wd_html_form_name(elem) { /* retorna name ou id do campo de formulário: valor ou null */
-		if (wd_html_form_type(elem) === null) return null;/* TODO definir as regras de nome de campos de formulário */
+		/* elementos genéricos */
+		if (wd_html_form_type(elem) === null)
+			return null;/* TODO definir as regras de nome de campos de formulário */
+		/* formulários */
 		let name = null;
 		if ("name" in elem) /* formulários padrão */
 			name = elem.name;
@@ -1537,12 +1546,13 @@ está considerando que não é um campo correto e está ignorando-o
 
 	function wd_html_form_value(elem) { /* retorna value do campo de formulário: valor, "" ou null (não submeter) */
 		let type = wd_html_form_type(elem);
+		/* elementos genéricos */
 		if (type === null) return null;
 		/* checar se value está definido (atributo ou digitado) */
 		let val = null;
-		if ("value" in elem)
+		if ("value" in elem) /* atributo padrão */
 			val = elem.value;
-		else if ("value" in elem.attributes)
+		else if ("value" in elem.attributes) /* atributo digitado */
 			val = elem.attributes.value.value;
 		else if (type === "output")
 			val = elem.textContent;
@@ -1604,42 +1614,49 @@ está considerando que não é um campo correto e está ignorando-o
 		let name = wd_html_form_name(elem);
 		let val  = wd_html_form_value(elem);
 		if (type === null || name === null || val === null) return false;
+		/* elementos que não se pode submeter à requisição */
 		let types = [
 			"submit", "button", "reset", "image",
-			"progress", "meter", "output" /*TODO estou em dúvida quanto ao não envio desses*/
+			"progress", "meter", "output", "option", "form" /*TODO estou em dúvida quanto ao não envio desses*/
 		];
 		return types.indexOf(type) >= 0 ? false : true;
 	}
 
 /*----------------------------------------------------------------------------*/
 	function wd_html_mask_attr(elem) { /* retorna o atributo para aplicação da máscara */
-		let tag = wd_html_tag(elem);
-		/* formulários com máscara no conteúdo textual */
-		if (tag === "button" || tag === "option") return "textContent";
-		/* formulários que podem receber máscara sem validação */
-		let value = [
-			"textarea", "button", "submit", "reset", "text", "search", "tel"
-		];
+		let tag  = wd_html_tag(elem);
 		let type = wd_html_form_type(elem);
-		if (value.indexOf(type) >= 0) return "value";
 		/* elementos genéricos */
-		return "textContent" in elem ? "textContent" : null;
+		if (type === null)
+			return "textContent" in elem ? "textContent" : null;
+		/* formulários com máscara no conteúdo textual */
+		let text = ["button", "option"];
+		if (text.indexOf(tag) >= 0) return "textContent";
+		/* formulários com máscara no atributo value */
+		let value = ["textarea", "button", "submit", "reset", "text", "search", "tel"];
+		if (value.indexOf(type) >= 0) return "value";
+
+		return null;
 	}
 
 /*----------------------------------------------------------------------------*/
 	function wd_html_load_attr(elem) { /* retorna o atributo para carregar HTML em forma de texto */
-		let tag = wd_html_tag(elem);
-		/* formulários com conteúdo textual que podem carregar dados externos */
-		if (tag === "button" || tag === "option") return "textContent";
-		/* formulários que podem carregar dados externos */
+		let tag  = wd_html_tag(elem);
+		let type = wd_html_form_type(elem);
+		/* elementos genéricos */
+		if (type === null)
+			return "innerHTML" in elem ? "innerHTML" : "textContent";
+		/* formulários com carregamento no conteúdo textual */
+		let text = ["button", "option"];
+		if (text.indexOf(tag) >= 0) return "textContent";
+		/* formulários com carregamento no atributo value */
 		let value = [
 			"textarea", "button", "reset", "submit", "email", "text",
 			"search", "tel", "url", "hidden"
 		];
-		let type = wd_html_form_type(elem);
 		if (value.indexOf(type) >= 0) return "value";
-		/* elementos genéricos */
-		return "innerHTML" in elem ? "innerHTML" : "textContent";
+
+		return null;
 	}
 
 /*----------------------------------------------------------------------------*/
@@ -2168,27 +2185,41 @@ está considerando que não é um campo correto e está ignorando-o
 		return chart.plot(xlabel, ylabel, compare);
 	}
 
+
+/*TODO construir
+- função para verificar se o navegador tem validação de formulário
+- função para checar validade
+- função para alterar validade (válido/inválido)
+- função para plotar mensagem
+- na hora de enviar requisição wdSend/send:
+	- checar validade
+	- checar wdMask
+	- checar wdVform
+
+setCustomValidity (define uma mensagem personalizada)
+reportValidity (imprime a mensagem na tela [se não existir, chamar signal])
+checkValidity (verifica se o campo está válido [true = válido])
+validity (retorna um objeto ValidateState
+
+
 /*----------------------------------------------------------------------------*/
-	function wd_html_vform(elem, call) { /* verifica a validade de um elemento de formulário */
-		/* Aqui não é avaliado se a informação pode ser enviada (request) */
-		/* call é função? */
+	function wd_html_vform(elem, call) { /* verifica a validade de um elemento de formulário (true/false) */
 		call = wd_vtype(call).type === "function" ? call : null;
 
-		/* navegador contempla validade de formulário? */
+		/* se não for possível submeter o formulário, não avaliar FIXME será mesmo? */
+		//if (!wd_html_form_send(elem)) return true;
+		/* checar se o navegador suporta validade de formulário: */
 		let hasValidityChecker = true;
 		if (!("setCustomValidity" in elem)) hasValidityChecker = false; else
 		if (!("reportValidity" in elem))    hasValidityChecker = false; else
 		if (!("checkValidity" in elem))     hasValidityChecker = false; else
 		if (!("validity" in elem))          hasValidityChecker = false;
-
 		/* se o navegador não contempla validade de formulário... */
 		if (!hasValidityChecker) {
-			/* não há função validadora, formulário aprovado. */
-			if (call === null) return true;
-			let msg = call(elem);
-			/* se a validação retornar nulo, formulário aprovado */
+			let msg = call === null ? null : call(elem);
+			/* válido */
 			if (msg === null || msg === undefined) return true;
-			/* caso contrário, formulário reprovado (com mensagem) */
+			/* inválido */
 			alert(msg);
 			return false;
 		}
@@ -2222,7 +2253,6 @@ está considerando que não é um campo correto e está ignorando-o
 		let id = elem.checkValidity()      === true ? "1" : "0";
 		id    += elem.validity.customError === true ? "1" : "0";
 		id    += call                      !== null ? "1" : "0";
-		console.log(elem, id);
 		if (["000", "001", "010"].indexOf(id) >= 0) { /*#*/
 			elem.reportValidity();
 			if (wd_html_form_type(elem) === "file") /* bug no firefox */
@@ -2249,9 +2279,6 @@ está considerando que não é um campo correto e está ignorando-o
 	function wd_html_vform_array(array) { /* verifica a validade de um conjunto (array) de formulários */
 		/* Aqui é verificado se a informação pode ser enviada (request) */
 		for (let i = 0; i < array.length; i++) {
-			/* ignorar os elementos de formulário não aptos ao envio */
-			if (!wd_html_form_send(array[i])) continue;
-
 			let elem = array[i];
 			let func = null;
 			/* verificação personalizada de formulário */
@@ -3678,14 +3705,68 @@ está considerando que não é um campo correto e está ignorando-o
 		if (!("model" in data)) return;
 
 		let checks = { /* funções de checagem de atalhos */
-			date: function(x) {return WD(x).type === "date" ? true : false},
-			time: function(x) {return WD(x).type === "time" ? true : false},
+			date:  function(x) {return WD(x).type === "date" ? true : false},
+			time:  function(x) {return WD(x).type === "time" ? true : false},
+			month: function(x) {return WD(x+"-01").type === "date" ? true : false},
+			week:  function(x) {
+				let check = x.split("-W");
+				let y = wd_integer(check[0]);
+				let w = wd_integer(check[1]);
+				return (y < 1 || w < 1 || w > 53) ? false : true;
+			},
+			datetime:  function(x) {
+				let check = x.split("T");
+				let d = WD(check[0]).type;
+				let t = WD(check[1]).type;
+				return (d !== "date" || t !== "time") ? false : true;
+			}
 		};
 		let shorts = { /* atalhos */
-			"%DMY": {mask: "##/##/####", func: checks.date},
-			"%MDY": {mask: "##.##.####", func: checks.date},
-			"%YMD": {mask: "####-##-##", func: checks.date},
-			"%H":   {mask: "#:##?##:##?#:##:##?##:##:##", func: checks.time}
+			"%DMY": {
+				mask: "##/##/####",
+				func: checks.date,
+				msg:  "DD/MM/YYYY (20101996 > 20/10/1996)"
+			},
+			"%MDY": {
+				mask: "##.##.####",
+				func: checks.date,
+				msg:  "MM.DD.YYYY (10201996 > 10.20.1996)"
+			},
+			"%YMD": {
+				mask: "####-##-##",
+				func: checks.date,
+				msg: "YYYY-MM-DD (19961020 > 1996-10-20)"
+			},
+			"%H":    {
+				mask: "#:##?##:##?#:##:##?##:##:##",
+				func: checks.time,
+				msg:  "HH:MM:SS (2210 > 20:10, 21044 > 2:10:44)"
+			},
+			"%DMYT": {
+				mask: "##/##/####T##:##:##",
+				func: checks.datetime,
+				msg:  "DD/MM/YYYYTHH:MM:SS (20101996221044 > 20/10/1996T22:10:44)"
+			},
+			"%MDYT": {
+				mask: "##.##.####T##:##:##",
+				func: checks.datetime,
+				msg:  "MM.DD.YYYYTHH:MM:SS (10201996221044 > 10.20.1996T22:10:44)"
+			},
+			"%YMDT": {
+				mask: "####-##-##T##:##:##",
+				func: checks.datetime,
+				msg:  "YYYY-MM-DDTHH:MM:SS (19961020221044 > 1996-10-20T22:10:44)"
+			},
+			"%YM": {
+				mask: "####-##",
+				func: checks.month,
+				msg:  "YYYY-MM (199610 > 1996-10)"
+			},
+			"%YW": {
+				mask: "####-W##",
+				func: checks.week,
+				msg:  "YYYY-WW (199650 > 1996-W50)"
+			},
 		};
 		let text = e[attr];
 		let mask = data.model;
@@ -3694,13 +3775,16 @@ está considerando que não é um campo correto e está ignorando-o
 		/* obtendo o formato da máscara e função de checagem de atalho */
 		if (mask in shorts) {
 			func = shorts[data.model].func;
-			mask = shorts[data.model].mask;console.log(mask, shorts);
+			mask = shorts[data.model].mask;
+			msg  = shorts[data.model].msg;
 		}
-		/* executando chamada e definindo valor casado ao conteúdo */
+		/* análisando máscara */
 		let value = WD(mask).mask(text, func);
+		/* máscara casou */
 		if (value !== null) e[attr] = value;
-		/* se for um campo de formulário, exibir mensagem de erro, se for o caso */
-		if (attr === "value") {
+
+		/* se for um campo de formulário */
+		if (attr === "value") {console.log(e.value, value);
 			msg = msg === null ? mask : msg;
 			/* se o campo NÃO estiver vazio e a máscara NÃO casar: mostrar mensagem */
 			/* se o campo estiver vazio ou máscara casar: NÃO mostrar mensagem */
