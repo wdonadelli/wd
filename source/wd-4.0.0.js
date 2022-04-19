@@ -611,7 +611,7 @@ const wd = (function() {
 		let pow10  = 10;
 		while (count <= limit) {
 			let check = true;
-			for (var i = 1; i < primes.length; i++) { /* iniciar em 1 (os pares não serão verificados) */
+			for (let i = 1; i < primes.length; i++) { /* iniciar em 1 (os pares não serão verificados) */
 				if (count % primes[i] === 0) {
 					check = false;
 					break;
@@ -1468,65 +1468,119 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_html_form(elem) { /* diz se o elemento é um campo de formulário: verdadeiro ou falso */
-		let form = [
-			"textarea", "select", "input", "button",
-			"meter", "progress", "output", "option", "form"
-		];
-		return form.indexOf(wd_html_tag(elem)) < 0 ? false : true;
+	function wd_html_form(elem) { /* retorna se é campo de formulário (V/F) ou os dados de formulários */
+
+		let text  = "textContent";
+		let value = "value";
+		let inner = "InnerHTML";
+
+		let form = {
+			textarea: {
+				_type: false,
+				textarea: {send: true, load: value, mask: value}
+			},
+			select: {
+				_type: false,
+				select:   {send: true, load: inner, mask: null}
+			},
+			meter: {
+				_type: false,
+				meter:    {send: false, load: null, mask: null}
+			},
+			progress: {
+				_type: false,
+				progress: {send: false, load: null, mask: null}
+			},
+			output: {
+				_type: false,
+				output:   {send: false, load: text, mask: null}
+			},
+			option: {
+				_type: false,
+				option:   {send: false, load: text, mask: text}
+			},
+			form: {
+				_type: false,
+				form:     {send: false, load: inner, mask: null}
+			},
+			button: {
+				_type: true,
+				button:   {send: false, load: text, mask: text},
+				reset:    {send: false, load: text, mask: text},
+				submit:   {send: false, load: text, mask: text}
+			},
+			input: {
+				_type: true,
+				button:   {send: false, load: value, mask: value},
+				reset:    {send: false, load: value, mask: value},
+				submit:   {send: false, load: value, mask: value},
+				image:    {send: false, load: null,  mask: null},
+				color:    {send: true,  load: null,  mask: null},
+				radio:    {send: true,  load: null,  mask: null},
+				checkbox: {send: true,  load: null,  mask: null},
+				date:     {send: true,  load: null,  mask: null},
+				datetime: {send: true,  load: null,  mask: null},
+				month:    {send: true,  load: null,  mask: null},
+				week:     {send: true,  load: null,  mask: null},
+				time:     {send: true,  load: null,  mask: null},
+				"datetime-local": {send: true, load: null, mask: null},
+				range:    {send: true,  load: null,  mask: null},
+				number:   {send: true,  load: null,  mask: null},
+				file:     {send: true,  load: null,  mask: null},
+				url:      {send: true,  load: value, mask: null},
+				email:    {send: true,  load: value, mask: null},
+				tel:      {send: true,  load: value, mask: value},
+				text:     {send: true,  load: value, mask: value},
+				search:   {send: true,  load: value, mask: value},
+				password: {send: true,  load: null,  mask: null},
+				hidden:   {send: true,  load: value, mask: null}
+			}
+		};
+
+		if (elem === undefined) return form;
+		return wd_html_tag(elem) in form ? true : false;
 	} /* TODO definir o que é campo de formulário */
 
 /*----------------------------------------------------------------------------*/
-	function wd_html_form_type(elem) { /* retorna o tipo do campo de formulário: tipo ou nulo */
-		/* elementos genéricos */
-		if (!wd_html_form(elem))
-			return null; /* TODO definir os tipos de campos de formulário */
-		let tag = wd_html_tag(elem);
-		/* formlários que não possuem type */
-		if (tag !== "input" && tag !== "button")
-			return tag;
-		/* formulários que possuem type */
-		let types = [ /* input types */
-			/* bottons */   "button", "reset",    "submit", "image", "color",
-			/* options */   "radio",  "checkbox",
-			/* date/time */ "date",   "datetime", "month",  "week", "time", "datetime-local",
-			/* numbers */   "range",  "number",
-			/* files */     "file",
-			/* web */       "url",    "email",
-			/* special */   "tel",
-			/* text */      "text",   "search",   "password", "hidden"
-		];
-		if ("type" in elem.attributes) { /* tipo digitado (navegadores antigos) */
-			let type = elem.attributes.type.value.toLowerCase();
-			if (types.indexOf(type) >= 0) return type;
-		}
-		if ("type" in elem) { /* tipo definido */
-			let type = elem.type.toLowerCase();
-			if (types.indexOf(type) >= 0) return type;
-		}
+	function wd_html_form_type(elem) { /* retorna o tipo de formulário: tipo ou nulo */
+		/* se não for fomulário, retornar null */
+		if (!wd_html_form(elem)) return null;
+		/* se for formulário, verificar */
+		let tag  = wd_html_tag(elem);
+		let form =  wd_html_form()[tag];
+		/* se não possui tipo, retornar tag */
+		if (!form._type) return tag;
+		/* se possuir tipo, localizar e retornar tipo */
+		let atype = "type" in elem.attributes ? elem.attributes.type.value.toLowerCase() :  null;
+		let otype = "type" in elem ? elem.type.toLowerCase() : null;
+		if (atype in form) return atype; /* tipo digitado (navegadores antigos) */
+		if (otype in form) return otype; /* tipo definido pelo navegador */
 
-		return tag === "button" ? "button" : "text";
+		return null;
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_html_form_name(elem) { /* retorna name ou id do campo de formulário: valor ou null */
-		/* elementos genéricos */
-		if (wd_html_form_type(elem) === null)
-			return null;/* TODO definir as regras de nome de campos de formulário */
+	function wd_html_form_name(elem) { /* retorna nome do formulário: valor ou null */
+		/* se não for fomulário, retornar null */
+		if (!wd_html_form(elem)) return null;
 		/* formulários */
-		let name = null;
-		if ("name" in elem) /* formulários padrão */
-			name = elem.name;
-		else if ("name" in elem.attributes) /* outros formulários (progress, meter...) */
-			name = elem.attributes.name.value;
-		else /* pegar o valor de ID se não tiver name */
-			name = elem.id;
-		/* corta-se as pontas e espaços serão transformados em underlines */
-		name = name.toString().trim().replace(/\ +/, "_");
-		/* acentos serão removidos */
-		name = wd_text_clear(name);
-		/* precisa ter um caracterer ou dígito */
-		return (/[0-9a-zA-Z]/).test(name) ? name : null;
+		let name = {
+			obj: "name" in elem ? elem.name : null,
+			atr: "name" in elem.attributes ? elem.attributes.name.value : null,
+			id:  elem.id
+		};
+		/* padronizando name (sem espaços e sem acentos) */
+		for (let i in name) {
+			if (name[i] === null) continue;
+			name[i] = wd_text_clear(name[i].trim().replace(/\ +/, "_"));
+		}
+		/* checando existência de caracteres e retornando na ordem de prioridade */
+		let re = /[0-9a-zA-Z]/;
+		if (name.obj !== null && re.test(name.obj)) return name.obj;
+		if (name.atr !== null && re.test(name.atr)) return name.atr;
+		if (name.id  !== null && re.test(name.id))  return name.id;
+
+		return null;
 	}
 
 /*----------------------------------------------------------------------------*/
@@ -1544,9 +1598,11 @@ está considerando que não é um campo correto e está ignorando-o
 */
 
 
-	function wd_html_form_value(elem) { /* retorna value do campo de formulário: valor, "" ou null (não submeter) */
+	function wd_html_form_value(elem) { /* retorna o valor do formulário: valor, "" ou null (não submeter) */
+		/* se não for fomulário, retornar null */
+		if (!wd_html_form(elem)) return null;
+		/* formulário, capturar tipo */
 		let type = wd_html_form_type(elem);
-		/* elementos genéricos */
 		if (type === null) return null;
 		/* checar se value está definido (atributo ou digitado) */
 		let val = null;
@@ -1558,10 +1614,10 @@ está considerando que não é um campo correto e está ignorando-o
 			val = elem.textContent;
 		else
 			return null;
-		/* analisar os tipos de valores a retornar */
-		let attr = wd_vtype(val);
-		/* a depender do tipo, enviar o valor correspondente */
+		/* analisar os tipos e valores do formulário */
 		/* https://w3c.github.io/html-reference/datatypes.html */
+		let attr = wd_vtype(val);
+
 		if (type === "radio" || type === "checkbox") {
 			return elem.checked ? val : null;
 		}
@@ -1572,22 +1628,27 @@ está considerando que não é um campo correto e está ignorando-o
 			return attr.type === "time" ? wd_time_iso(attr.value) : "";
 		}
 		if (type === "week") {
-			let test = (/^[0-9]{4}\-W(0[1-9]|[1-4][0-9]|5[0-3])$/).test(val);
-			let year = wd_integer(val.split("-W")[0]);
-			return (!test || year < 1) ? "" : val;
+			if (!(/^[0-9]{4}\-W[0-9]{2}$/).test(val)) return "";
+			let test = val.split("-W");
+			let year = wd_integer(test[0]);
+			let week = wd_integer(test[1]);
+			return (year < 1 || week < 1 || week > 53) ? "" : val;
 		}
 		if (type === "month") {
-			let test = (/^[0-9]{4}\-(0[1-9]|1[0-2])$/).test(val);
-			let year = wd_integer(val.split("-")[0]);
-			return (!test || year < 1) ? "" : val;
+			if (!(/^[0-9]{4}\-[0-9]{2}$/).test(val)) return "";
+			let test = val.split("-");
+			let year  = wd_integer(test[0]);
+			let month = wd_integer(test[1]);
+			return (year < 1 || month < 1 || month > 12) ? "" : val;
 		}
 		if (type === "datetime" || type === "datetime-local") {
 				let test = val.split("T");
+				if (test.length < 2) return "";
 				let date = wd_vtype(test[0]);
 				let time = wd_vtype(test[1]);
-				if (date.type === "date" && time.type === "time")
-					return wd_date_iso(date.value)+"T"+wd_time_iso(time.value);
-				return "";
+				if (date.type !== "date" || time.type !== "time")
+					return "";
+				return wd_date_iso(date.value)+"T"+wd_time_iso(time.value);
 		}
 		if (type === "number" || type === "range") {
 			return attr.type === "number" ? attr.value : "";
@@ -1609,59 +1670,50 @@ está considerando que não é um campo correto e está ignorando-o
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_html_form_send(elem) { /* informa se os dados do campo de formulário podem ser enviados */
+	function wd_html_form_send(elem) { /* informa se o formulário pode ser enviado para requisição (V/F)*/
+		/* se não for fomulário, retornar falso */
+		if (!wd_html_form(elem)) return false;
+		/* se for formulário, analisar o tipo */
+		let tag  = wd_html_tag(elem);
 		let type = wd_html_form_type(elem);
-		let name = wd_html_form_name(elem);
-		let val  = wd_html_form_value(elem);
-		if (type === null || name === null || val === null) return false;
-		/* elementos que não se pode submeter à requisição */
-		let types = [
-			"submit", "button", "reset", "image",
-			"progress", "meter", "output", "option", "form" /*TODO estou em dúvida quanto ao não envio desses*/
-		];
-		return types.indexOf(type) >= 0 ? false : true;
+		let send = wd_html_form()[tag][type].send;
+		if (!send) return false;
+		/* analisar nome e valor */
+		let name  = wd_html_form_name(elem);
+		let value = wd_html_form_value(elem);
+		if (name === null || value === null) return false;
+
+		return true;
 	}
 
 /*----------------------------------------------------------------------------*/
 	function wd_html_mask_attr(elem) { /* retorna o atributo para aplicação da máscara */
+		/* se não for fomulário, retornar retornar padrão */
+		if (!wd_html_form(elem))
+			return "textContent" in elem ? "textContent" : null;
+		/* se for formulário, analisar o tipo e obter atributo */
 		let tag  = wd_html_tag(elem);
 		let type = wd_html_form_type(elem);
-		/* elementos genéricos */
-		if (type === null)
-			return "textContent" in elem ? "textContent" : null;
-		/* formulários com máscara no conteúdo textual */
-		let text = ["button", "option"];
-		if (text.indexOf(tag) >= 0) return "textContent";
-		/* formulários com máscara no atributo value */
-		let value = ["textarea", "button", "submit", "reset", "text", "search", "tel"];
-		if (value.indexOf(type) >= 0) return "value";
-
-		return null;
+		let mask = wd_html_form()[tag][type].mask;
+		return mask;
 	}
 
 /*----------------------------------------------------------------------------*/
 	function wd_html_load_attr(elem) { /* retorna o atributo para carregar HTML em forma de texto */
+		/* se não for fomulário, retornar retornar padrão */
+		if (!wd_html_form(elem))
+			return "innerHTML" in elem ? "innerHTML" : "textContent";
+		/* se for formulário, analisar o tipo e retornar atributo */
 		let tag  = wd_html_tag(elem);
 		let type = wd_html_form_type(elem);
-		/* elementos genéricos */
-		if (type === null)
-			return "innerHTML" in elem ? "innerHTML" : "textContent";
-		/* formulários com carregamento no conteúdo textual */
-		let text = ["button", "option"];
-		if (text.indexOf(tag) >= 0) return "textContent";
-		/* formulários com carregamento no atributo value */
-		let value = [
-			"textarea", "button", "reset", "submit", "email", "text",
-			"search", "tel", "url", "hidden"
-		];
-		if (value.indexOf(type) >= 0) return "value";
-
-		return null;
+		let load = wd_html_form()[tag][type].load;
+		return load === null ? "textContent" : load;
 	}
 
 /*----------------------------------------------------------------------------*/
 	function wd_html_form_data(elem) { /* retorna um array de objetos {NAME|GET|POST} com dados para requisições */
 		let form  = [];
+		/* se não for possível enviar, não obter dados */
 		if (!wd_html_form_send(elem)) return form;
 		let name  = wd_html_form_name(elem);
 		let value = wd_html_form_value(elem);
@@ -1693,7 +1745,7 @@ está considerando que não é um campo correto e está ignorando-o
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_html_dataset_value(elem, attr) { /* transforma o conteúdo dataset em um array de objetos */
+	function wd_html_dataset_value(elem, attr) { /* transforma o valor dataset em um array de objetos */
 		/* a{B}c{D}&e{F} => [{a: B, c: D}, {e: F}] */
 		let list = [{}];
 		if (!(attr in elem.dataset)) return list;
@@ -2185,7 +2237,7 @@ está considerando que não é um campo correto e está ignorando-o
 		return chart.plot(xlabel, ylabel, compare);
 	}
 
-
+/*----------------------------------------------------------------------------*/
 /*TODO construir
 - função para verificar se o navegador tem validação de formulário
 - função para checar validade
@@ -2979,7 +3031,7 @@ validity (retorna um objeto ValidateState
 				/* organizar informação de acordo com o método */
 				if (this.type !== "dom") {
 					if ("FormData" in window && method.toUpperCase() === "POST") {
-							var data = new FormData();
+							let data = new FormData();
 							data.append("value", pack.value);
 							pack = data;
 					} else {
