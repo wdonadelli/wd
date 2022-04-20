@@ -1687,30 +1687,6 @@ está considerando que não é um campo correto e está ignorando-o
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_html_mask_attr(elem) { /* retorna o atributo para aplicação da máscara */
-		/* se não for fomulário, retornar retornar padrão */
-		if (!wd_html_form(elem))
-			return "textContent" in elem ? "textContent" : null;
-		/* se for formulário, analisar o tipo e obter atributo */
-		let tag  = wd_html_tag(elem);
-		let type = wd_html_form_type(elem);
-		let mask = wd_html_form()[tag][type].mask;
-		return mask;
-	}
-
-/*----------------------------------------------------------------------------*/
-	function wd_html_load_attr(elem) { /* retorna o atributo para carregar HTML em forma de texto */
-		/* se não for fomulário, retornar retornar padrão */
-		if (!wd_html_form(elem))
-			return "innerHTML" in elem ? "innerHTML" : "textContent";
-		/* se for formulário, analisar o tipo e retornar atributo */
-		let tag  = wd_html_tag(elem);
-		let type = wd_html_form_type(elem);
-		let load = wd_html_form()[tag][type].load;
-		return load === null ? "textContent" : load;
-	}
-
-/*----------------------------------------------------------------------------*/
 	function wd_html_form_data(elem) { /* retorna um array de objetos {NAME|GET|POST} com dados para requisições */
 		let form  = [];
 		/* se não for possível enviar, não obter dados */
@@ -1742,6 +1718,189 @@ está considerando que não é um campo correto e está ignorando-o
 			POST: value
 		});
 		return form;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_html_form_submit(list, get) { /* obtém serialização de formulário */
+		list = wd_vtype(list).value;
+		let pkg = get === true || !("FormData" in window) ? [] : new FormData();
+		for (let e = 0; e < list.length; e++) {
+			let data = wd_html_form_data(list[e]);
+			for (let i = 0; i < data.length; i++) {
+				let name  = data[i].NAME;
+				let value = get === true ? data[i].GET : data[i].POST;
+
+				if (wd_vtype(value).type === "array") {
+					for (let j = 0; j < value.length; j++) {
+						if (get === true) pkg.push(name+"="+value[j]);
+						else pkg.append(name, value[j]);
+					}
+				} else {
+					if (get === true) pkg.push(name+"="+value);
+					else pkg.append(name, value);
+				}
+			}
+		}
+		return get === true ? pkg.join("&") : pkg;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_html_form_validity(elem, errmsg) { /* define mensagem de erro em formulário */
+		errmsg     = errmsg === undefined || errmsg === null ? "" : errmsg.toString().trim();
+		let valid  = errmsg === "" ? true : false;
+
+		/* definir mensagem de erro */
+		if ("setCustomValidity" in elem)
+			elem.setCustomValidity(errmsg);
+		/* checar validade */
+		if ("checkValidity" in elem)
+			valid = elem.checkValidity();
+		/* retornar verdadeiro se válido */
+		if (valid) return true;
+		/* imprimir erro e retornar falso, se inválido */
+		if ("reportValidity" in elem)
+			elem.reportValidity();
+		else
+			wd_signal("", errmsg);
+		/* bug no firefox */
+		if (wd_html_form_type(elem) === "file")
+			elem.value = null;
+
+		return false;
+	}
+
+/*----------------------------------------------------------------------------*/
+/*TODO construir
+- função para verificar se o navegador tem validação de formulário
+- função para checar validade
+- função para alterar validade (válido/inválido)
+- função para plotar mensagem
+- na hora de enviar requisição wdSend/send:
+	- checar validade
+	- checar wdMask
+	- checar wdVform
+
+setCustomValidity (define uma mensagem personalizada)
+reportValidity (imprime a mensagem na tela [se não existir, chamar signal])
+checkValidity (verifica se o campo está válido [true = válido])
+validity (retorna um objeto ValidateState
+
+
+/*----------------------------------------------------------------------------*/
+	function wd_html_vform(elem, call) { /* verifica a validade de um elemento de formulário (true/false) */
+		call = wd_vtype(call).type === "function" ? call : null;
+
+		/* se não for possível submeter o formulário, não avaliar FIXME será mesmo? */
+		//if (!wd_html_form_send(elem)) return true;
+		/* checar se o navegador suporta validade de formulário: */
+		let hasValidityChecker = true;
+		if (!("setCustomValidity" in elem)) hasValidityChecker = false; else
+
+		if (!("reportValidity" in elem))    hasValidityChecker = false; else
+		if (!("checkValidity" in elem))     hasValidityChecker = false; else
+		if (!("validity" in elem))          hasValidityChecker = false;
+		/* se o navegador não contempla validade de formulário... */
+		if (!hasValidityChecker) {
+			let msg = call === null ? null : call(elem);
+			/* válido */
+			if (msg === null || msg === undefined) return true;
+			/* inválido */
+			alert(msg);
+			return false;
+		}
+		/*--------------------------------------------------------------------------
+		| Regras para variávei id se o navegador contempla validade de formulário
+		|
+		| 100 válido   | padrão      | sem função
+		|  $  >> true
+		|
+		| 101 válido   | padrão      | com função
+		|  @  >> checar (válido: true; inválido: definir reportar false)
+		|
+		| 110 válido   | customizado | sem função (não existe)
+		|  *  >> limpar true
+		|
+		| 111 válido   | customizado | com função (não existe)
+		|  *  >> checar (válido: true; inválido: definir reportar false)
+		|
+		| 000 inválido | padrão      | sem função
+		|  #  >> reportar false
+		|
+		| 001 inválido | padrão      | com função
+		|  #  >> reportar false
+		|
+		| 010 inválido | customizado | sem função
+		|  #  >> reportar false
+		|
+		| 011 inválido | customizado | com função
+		|  @  >> checar (válido: limpar true; inválido: definir reportar false)
+		\--------------------------------------------------------------------------*/
+		let id = elem.checkValidity()      === true ? "1" : "0";
+		id    += elem.validity.customError === true ? "1" : "0";
+		id    += call                      !== null ? "1" : "0";
+		if (["000", "001", "010"].indexOf(id) >= 0) { /*#*/
+
+			elem.reportValidity();
+			if (wd_html_form_type(elem) === "file") /* bug no firefox */
+				elem.value = null;
+			return false;
+		}
+		if (id === "101" || id === "011") { /*@*/
+			let msg = call(elem);
+			/* se a função retornar diferente de nulo, formulário reprovado */
+			if (msg !== null && msg !== undefined) {
+				elem.setCustomValidity(msg);
+				elem.reportValidity();
+				if (wd_html_form_type(elem) === "file") /* bug no firefox */
+					elem.value = null;
+				return false;
+			}
+			if (id === "011") elem.setCustomValidity("");
+			return true;
+		}
+		return true; /*$*/
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_html_vform_array(array) { /* verifica a validade de um conjunto (array) de formulários */
+		/* Aqui é verificado se a informação pode ser enviada (request) */
+		for (let i = 0; i < array.length; i++) {
+			let elem = array[i];
+			let func = null;
+			/* verificação personalizada de formulário */
+			if ("wdVform" in elem.dataset) {
+				let test = wd_vtype(elem.dataset.wdVform).value;
+				if (wd_vtype(window[test]).type === "function")
+					func = window[test];
+			}
+			/* checando o elemento específico */
+			if (!wd_html_vform(elem, func)) return false;
+		}
+		return true;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_html_mask_attr(elem) { /* retorna o atributo para aplicação da máscara */
+		/* se não for fomulário, retornar retornar padrão */
+		if (!wd_html_form(elem))
+			return "textContent" in elem ? "textContent" : null;
+		/* se for formulário, analisar o tipo e obter atributo */
+		let tag  = wd_html_tag(elem);
+		let type = wd_html_form_type(elem);
+		let mask = wd_html_form()[tag][type].mask;
+		return mask;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_html_load_attr(elem) { /* retorna o atributo para carregar HTML em forma de texto */
+		/* se não for fomulário, retornar retornar padrão */
+		if (!wd_html_form(elem))
+			return "innerHTML" in elem ? "innerHTML" : "textContent";
+		/* se for formulário, analisar o tipo e retornar atributo */
+		let tag  = wd_html_tag(elem);
+		let type = wd_html_form_type(elem);
+		let load = wd_html_form()[tag][type].load;
+		return load === null ? "textContent" : load;
 	}
 
 /*----------------------------------------------------------------------------*/
@@ -2181,29 +2340,6 @@ está considerando que não é um campo correto e está ignorando-o
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_html_form_submit(list, get) { /* obtém serialização de formulário */
-		list = wd_vtype(list).value;
-		let pkg = get === true || !("FormData" in window) ? [] : new FormData();
-		for (let e = 0; e < list.length; e++) {
-			let data = wd_html_form_data(list[e]);
-			for (let i = 0; i < data.length; i++) {
-				let name  = data[i].NAME;
-				let value = get === true ? data[i].GET : data[i].POST;
-				if (wd_vtype(value).type === "array") {
-					for (let j = 0; j < value.length; j++) {
-						if (get === true) pkg.push(name+"="+value[j]);
-						else pkg.append(name, value[j]);
-					}
-				} else {
-					if (get === true) pkg.push(name+"="+value);
-					else pkg.append(name, value);
-				}
-			}
-		}
-		return get === true ? pkg.join("&") : pkg;
-	}
-
-/*----------------------------------------------------------------------------*/
 	function wd_html_bros_index(elem) { /* obtem o índice (posição) do elemento em relação aos irmãos */
 		let bros = elem.parentElement.children;
 		for (let i = 0; i < bros.length; i++)
@@ -2235,114 +2371,6 @@ está considerando que não é um campo correto e está ignorando-o
 			chart.add(data[i].x, data[i].y, data[i].label, data[i].type);
 		}
 		return chart.plot(xlabel, ylabel, compare);
-	}
-
-/*----------------------------------------------------------------------------*/
-/*TODO construir
-- função para verificar se o navegador tem validação de formulário
-- função para checar validade
-- função para alterar validade (válido/inválido)
-- função para plotar mensagem
-- na hora de enviar requisição wdSend/send:
-	- checar validade
-	- checar wdMask
-	- checar wdVform
-
-setCustomValidity (define uma mensagem personalizada)
-reportValidity (imprime a mensagem na tela [se não existir, chamar signal])
-checkValidity (verifica se o campo está válido [true = válido])
-validity (retorna um objeto ValidateState
-
-
-/*----------------------------------------------------------------------------*/
-	function wd_html_vform(elem, call) { /* verifica a validade de um elemento de formulário (true/false) */
-		call = wd_vtype(call).type === "function" ? call : null;
-
-		/* se não for possível submeter o formulário, não avaliar FIXME será mesmo? */
-		//if (!wd_html_form_send(elem)) return true;
-		/* checar se o navegador suporta validade de formulário: */
-		let hasValidityChecker = true;
-		if (!("setCustomValidity" in elem)) hasValidityChecker = false; else
-		if (!("reportValidity" in elem))    hasValidityChecker = false; else
-		if (!("checkValidity" in elem))     hasValidityChecker = false; else
-		if (!("validity" in elem))          hasValidityChecker = false;
-		/* se o navegador não contempla validade de formulário... */
-		if (!hasValidityChecker) {
-			let msg = call === null ? null : call(elem);
-			/* válido */
-			if (msg === null || msg === undefined) return true;
-			/* inválido */
-			alert(msg);
-			return false;
-		}
-		/*--------------------------------------------------------------------------
-		| Regras para variávei id se o navegador contempla validade de formulário
-		|
-		| 100 válido   | padrão      | sem função
-		|  $  >> true
-		|
-		| 101 válido   | padrão      | com função
-		|  @  >> checar (válido: true; inválido: definir reportar false)
-		|
-		| 110 válido   | customizado | sem função (não existe)
-		|  *  >> limpar true
-		|
-		| 111 válido   | customizado | com função (não existe)
-		|  *  >> checar (válido: true; inválido: definir reportar false)
-		|
-		| 000 inválido | padrão      | sem função
-		|  #  >> reportar false
-		|
-		| 001 inválido | padrão      | com função
-		|  #  >> reportar false
-		|
-		| 010 inválido | customizado | sem função
-		|  #  >> reportar false
-		|
-		| 011 inválido | customizado | com função
-		|  @  >> checar (válido: limpar true; inválido: definir reportar false)
-		\--------------------------------------------------------------------------*/
-		let id = elem.checkValidity()      === true ? "1" : "0";
-		id    += elem.validity.customError === true ? "1" : "0";
-		id    += call                      !== null ? "1" : "0";
-		if (["000", "001", "010"].indexOf(id) >= 0) { /*#*/
-			elem.reportValidity();
-			if (wd_html_form_type(elem) === "file") /* bug no firefox */
-				elem.value = null;
-			return false;
-		}
-		if (id === "101" || id === "011") { /*@*/
-			let msg = call(elem);
-			/* se a função retornar diferente de nulo, formulário reprovado */
-			if (msg !== null && msg !== undefined) {
-				elem.setCustomValidity(msg);
-				elem.reportValidity();
-				if (wd_html_form_type(elem) === "file") /* bug no firefox */
-					elem.value = null;
-				return false;
-			}
-			if (id === "011") elem.setCustomValidity("");
-			return true;
-		}
-		return true; /*$*/
-	}
-
-/*----------------------------------------------------------------------------*/
-	function wd_html_vform_array(array) { /* verifica a validade de um conjunto (array) de formulários */
-		/* Aqui é verificado se a informação pode ser enviada (request) */
-		for (let i = 0; i < array.length; i++) {
-			let elem = array[i];
-			let func = null;
-			/* verificação personalizada de formulário */
-			if ("wdVform" in elem.dataset) {
-				let test = wd_vtype(elem.dataset.wdVform).value;
-				if (wd_vtype(window[test]).type === "function")
-					func = window[test];
-			}
-			/* checando o elemento específico */
-			if (!wd_html_vform(elem, func)) return false;
-		}
-		return true;
 	}
 
 /*----------------------------------------------------------------------------*/
@@ -3836,14 +3864,16 @@ validity (retorna um objeto ValidateState
 		if (value !== null) e[attr] = value;
 
 		/* se for um campo de formulário */
-		if (attr === "value") {console.log(e.value, value);
+		if (attr === "value") {
 			msg = msg === null ? mask : msg;
 			/* se o campo NÃO estiver vazio e a máscara NÃO casar: mostrar mensagem */
 			/* se o campo estiver vazio ou máscara casar: NÃO mostrar mensagem */
 			if (e.value !== "" && value === null)
-				wd_html_vform(e, function () {return msg;})
+				wd_html_form_validity(e, msg);
+				//wd_html_vform(e, function () {return msg;})
 			else
-				wd_html_vform(e, function () {return null;})
+				wd_html_form_validity(e);
+				//wd_html_vform(e, function () {return null;})
 		}
 		return;
 	};
@@ -4055,7 +4085,13 @@ validity (retorna um objeto ValidateState
 /*----------------------------------------------------------------------------*/
 	function data_wdVform(e) { /* checa a validade de um formulário data-wd-vform="callback" */
 		if (!("wdVform" in e.dataset)) return;
-		return WD(e).vform;
+		let data = e.dataset.wdVform;
+		if (WD(window[data]).type === "function")
+			wd_html_form_validity(e, window[data](e));
+
+			console.log(window[data]);
+			
+		return;
 	}
 
 /*----------------------------------------------------------------------------*/
