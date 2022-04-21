@@ -1477,63 +1477,63 @@ const wd = (function() {
 		let form = {
 			textarea: {
 				_type: false,
-				textarea: {send: true, load: value, mask: value}
+				textarea: {send: true, load: value, mask: value, vform: true}
 			},
 			select: {
 				_type: false,
-				select:   {send: true, load: inner, mask: null}
+				select:   {send: true, load: inner, mask: null, vform: true}
 			},
 			meter: {
 				_type: false,
-				meter:    {send: false, load: null, mask: null}
+				meter:    {send: false, load: null, mask: null, vform: false}
 			},
 			progress: {
 				_type: false,
-				progress: {send: false, load: null, mask: null}
+				progress: {send: false, load: null, mask: null, vform: false}
 			},
 			output: {
 				_type: false,
-				output:   {send: false, load: text, mask: null}
+				output:   {send: false, load: text, mask: null, vform: false}
 			},
 			option: {
 				_type: false,
-				option:   {send: false, load: text, mask: text}
+				option:   {send: false, load: text, mask: text, vform: false}
 			},
 			form: {
 				_type: false,
-				form:     {send: false, load: inner, mask: null}
+				form:     {send: false, load: inner, mask: null, vform: false}
 			},
 			button: {
 				_type: true,
-				button:   {send: false, load: text, mask: text},
-				reset:    {send: false, load: text, mask: text},
-				submit:   {send: false, load: text, mask: text}
+				button:   {send: false, load: text, mask: text, vform: false},
+				reset:    {send: false, load: text, mask: text, vform: false},
+				submit:   {send: false, load: text, mask: text, vform: false}
 			},
 			input: {
 				_type: true,
-				button:   {send: false, load: value, mask: value},
-				reset:    {send: false, load: value, mask: value},
-				submit:   {send: false, load: value, mask: value},
-				image:    {send: false, load: null,  mask: null},
-				color:    {send: true,  load: null,  mask: null},
-				radio:    {send: true,  load: null,  mask: null},
-				checkbox: {send: true,  load: null,  mask: null},
-				date:     {send: true,  load: null,  mask: null},
-				datetime: {send: true,  load: null,  mask: null},
-				month:    {send: true,  load: null,  mask: null},
-				week:     {send: true,  load: null,  mask: null},
-				time:     {send: true,  load: null,  mask: null},
-				"datetime-local": {send: true, load: null, mask: null},
-				range:    {send: true,  load: null,  mask: null},
-				number:   {send: true,  load: null,  mask: null},
-				file:     {send: true,  load: null,  mask: null},
-				url:      {send: true,  load: value, mask: null},
-				email:    {send: true,  load: value, mask: null},
-				tel:      {send: true,  load: value, mask: value},
-				text:     {send: true,  load: value, mask: value},
-				search:   {send: true,  load: value, mask: value},
-				password: {send: true,  load: null,  mask: null},
-				hidden:   {send: true,  load: value, mask: null}
+				button:   {send: false, load: value, mask: value, vform: false},
+				reset:    {send: false, load: value, mask: value, vform: false},
+				submit:   {send: false, load: value, mask: value, vform: false},
+				image:    {send: false, load: null,  mask: null,  vform: false},
+				color:    {send: true,  load: null,  mask: null,  vform: false},
+				radio:    {send: true,  load: null,  mask: null,  vform: false},
+				checkbox: {send: true,  load: null,  mask: null,  vform: false},
+				date:     {send: true,  load: null,  mask: null,  vform: false},
+				datetime: {send: true,  load: null,  mask: null,  vform: false},
+				month:    {send: true,  load: null,  mask: null,  vform: false},
+				week:     {send: true,  load: null,  mask: null,  vform: false},
+				time:     {send: true,  load: null,  mask: null,  vform: false},
+				"datetime-local": {send: true, load: null, mask: null, vform: false},
+				range:    {send: true,  load: null,  mask: null,  vform: false},
+				number:   {send: true,  load: null,  mask: null,  vform: false},
+				file:     {send: true,  load: null,  mask: null,  vform: false},
+				url:      {send: true,  load: value, mask: null,  vform: false},
+				email:    {send: true,  load: value, mask: null,  vform: false},
+				tel:      {send: true,  load: value, mask: value, vform: false},
+				text:     {send: true,  load: value, mask: value, vform: false},
+				search:   {send: true,  load: value, mask: value, vform: false},
+				password: {send: true,  load: null,  mask: null,  vform: false},
+				hidden:   {send: true,  load: value, mask: null,  vform: false}
 			}
 		};
 
@@ -1547,7 +1547,7 @@ const wd = (function() {
 		if (!wd_html_form(elem)) return null;
 		/* se for formulário, verificar */
 		let tag  = wd_html_tag(elem);
-		let form =  wd_html_form()[tag];
+		let form = wd_html_form()[tag];
 		/* se não possui tipo, retornar tag */
 		if (!form._type) return tag;
 		/* se possuir tipo, localizar e retornar tipo */
@@ -1584,20 +1584,6 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	//FIXME reavaliar esse negócio: wd_html_vform > wd_html_form_send > wd_html_form_value
-	/* <form>
-<select required>
-<option></option>
-<option>Luca</option>
-</select>
-<button type="submit">Loko</button>
-</form>
-
-vform não está funcionando com number:required, está pulando o campo porque retorna null quando vazio
-está considerando que não é um campo correto e está ignorando-o
-*/
-
-
 	function wd_html_form_value(elem) { /* retorna o valor do formulário: valor, "" ou null (não submeter) */
 		/* se não for fomulário, retornar null */
 		if (!wd_html_form(elem)) return null;
@@ -1670,27 +1656,10 @@ está considerando que não é um campo correto e está ignorando-o
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_html_form_send(elem) { /* informa se o formulário pode ser enviado para requisição (V/F)*/
-		/* se não for fomulário, retornar falso */
-		if (!wd_html_form(elem)) return false;
-		/* se for formulário, analisar o tipo */
-		let tag  = wd_html_tag(elem);
-		let type = wd_html_form_type(elem);
-		let send = wd_html_form()[tag][type].send;
-		if (!send) return false;
-		/* analisar nome e valor */
-		let name  = wd_html_form_name(elem);
-		let value = wd_html_form_value(elem);
-		if (name === null || value === null) return false;
-
-		return true;
-	}
-
-/*----------------------------------------------------------------------------*/
 	function wd_html_form_data(elem) { /* retorna um array de objetos {NAME|GET|POST} com dados para requisições */
 		let form  = [];
 		/* se não for possível enviar, não obter dados */
-		if (!wd_html_form_send(elem)) return form;
+		if (!wd_html_attr(elem, "send")) return form;
 		let name  = wd_html_form_name(elem);
 		let value = wd_html_form_value(elem);
 		let type  = wd_html_form_type(elem);
@@ -1721,10 +1690,94 @@ está considerando que não é um campo correto e está ignorando-o
 	}
 
 /*----------------------------------------------------------------------------*/
+	function wd_html_form_set_validity(elem) { /* define se o formulário possui conteúdo inválido */
+		/* checar se elemento possui a ferramenta */
+		if (!("setCustomValidity" in elem)) return true;
+		/* 1º apagar qualquer erro personalizado existente */
+		elem.setCustomValidity("");
+		/* 2º checar validade da máscara */
+		if ("wdErrorMessageMask" in elem.dataset) {
+			elem.setCustomValidity(elem.dataset.wdErrorMessageMask);
+			return false;
+		}
+		/* 3º checar validade personalizada (vform) */
+		if ("wdErrorMessageVform" in elem.dataset) {
+			elem.setCustomValidity(elem.dataset.wdErrorMessageVform);
+			return false;
+		}
+		/* 4º checar validade padrão */
+		if (!("checkValidity" in elem)) return true;
+		return elem.checkValidity();
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_html_form_check_validity(elem) { /* checa validade do formulário antes do envio */
+		if (!("checkValidity" in elem)) return true;
+		/* checar máscara e verificação personalizada e padrão */
+		data_wdMask(elem);
+		data_wdVform(elem);
+		let check = elem.checkValidity();
+		if (check) return true;
+		if ("reportValidity" in elem) {
+			elem.reportValidity();
+		} else {
+			wd_signal("", elem.validationMessage);
+			elem.focus();
+		}
+		if (wd_html_form_type(elem) === "file") /* bug firefox */
+			elem.value = null;
+		return false;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_html_attr(elem, info) { /* informa dados subsidiários sobre os elementos HTML */
+		let tag = wd_html_tag(elem);
+		/* se for formulário */
+		if (wd_html_form(elem)) {
+			let form = wd_html_form();
+			let type = wd_html_form_type(elem);
+			let name = wd_html_form_name(elem);
+			/* abordagem diferenciada para send */
+			if (info === "send" && name === null)
+				form[tag][type].send = false;
+			if (info in form[tag][type])
+				return form[tag][type][info];
+			return null;
+		}
+		/* se não for formulário */
+		let text  = "textContent";
+		let inner = "innerHTML";
+		let html = {
+			mask: text  in elem ? text : null,
+			load: inner in elem ? inner : text,
+			send: false,
+		}
+		if (info in html) return html[info];
+		return null;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_html_vform(list) {
+		for (let i = 0; i < list.length; i++) {
+			let elem = list[i];
+			/* ignorar o que não vai enviar na requisição */
+			if (!wd_html_attr(elem, "send")) continue;
+			/*checar erro */
+			if (!wd_html_form_check_validity(elem)) return false;
+		}
+		return true;
+	}
+
+/*----------------------------------------------------------------------------*/
 	function wd_html_form_submit(list, get) { /* obtém serialização de formulário */
-		list = wd_vtype(list).value;
 		let pkg = get === true || !("FormData" in window) ? [] : new FormData();
+		/* não obter se o formulário tiver pendências */
+		if (!wd_html_vform(list)) return pkg;
+		/* obtendo dados da lista */
 		for (let e = 0; e < list.length; e++) {
+			/* ignorar o que não vai enviar na requisição */
+			if (!wd_html_attr(list[e], "send")) continue;
+			/* obtendo dados do elemento */
 			let data = wd_html_form_data(list[e]);
 			for (let i = 0; i < data.length; i++) {
 				let name  = data[i].NAME;
@@ -1744,164 +1797,8 @@ está considerando que não é um campo correto e está ignorando-o
 		return get === true ? pkg.join("&") : pkg;
 	}
 
-/*----------------------------------------------------------------------------*/
-	function wd_html_form_validity(elem, errmsg) { /* define mensagem de erro em formulário */
-		errmsg     = errmsg === undefined || errmsg === null ? "" : errmsg.toString().trim();
-		let valid  = errmsg === "" ? true : false;
-
-		/* definir mensagem de erro */
-		if ("setCustomValidity" in elem)
-			elem.setCustomValidity(errmsg);
-		/* checar validade */
-		if ("checkValidity" in elem)
-			valid = elem.checkValidity();
-		/* retornar verdadeiro se válido */
-		if (valid) return true;
-		/* imprimir erro e retornar falso, se inválido */
-		if ("reportValidity" in elem)
-			elem.reportValidity();
-		else
-			wd_signal("", errmsg);
-		/* bug no firefox */
-		if (wd_html_form_type(elem) === "file")
-			elem.value = null;
-
-		return false;
-	}
-
-/*----------------------------------------------------------------------------*/
-/*TODO construir
-- função para verificar se o navegador tem validação de formulário
-- função para checar validade
-- função para alterar validade (válido/inválido)
-- função para plotar mensagem
-- na hora de enviar requisição wdSend/send:
-	- checar validade
-	- checar wdMask
-	- checar wdVform
-
-setCustomValidity (define uma mensagem personalizada)
-reportValidity (imprime a mensagem na tela [se não existir, chamar signal])
-checkValidity (verifica se o campo está válido [true = válido])
-validity (retorna um objeto ValidateState
 
 
-/*----------------------------------------------------------------------------*/
-	function wd_html_vform(elem, call) { /* verifica a validade de um elemento de formulário (true/false) */
-		call = wd_vtype(call).type === "function" ? call : null;
-
-		/* se não for possível submeter o formulário, não avaliar FIXME será mesmo? */
-		//if (!wd_html_form_send(elem)) return true;
-		/* checar se o navegador suporta validade de formulário: */
-		let hasValidityChecker = true;
-		if (!("setCustomValidity" in elem)) hasValidityChecker = false; else
-
-		if (!("reportValidity" in elem))    hasValidityChecker = false; else
-		if (!("checkValidity" in elem))     hasValidityChecker = false; else
-		if (!("validity" in elem))          hasValidityChecker = false;
-		/* se o navegador não contempla validade de formulário... */
-		if (!hasValidityChecker) {
-			let msg = call === null ? null : call(elem);
-			/* válido */
-			if (msg === null || msg === undefined) return true;
-			/* inválido */
-			alert(msg);
-			return false;
-		}
-		/*--------------------------------------------------------------------------
-		| Regras para variávei id se o navegador contempla validade de formulário
-		|
-		| 100 válido   | padrão      | sem função
-		|  $  >> true
-		|
-		| 101 válido   | padrão      | com função
-		|  @  >> checar (válido: true; inválido: definir reportar false)
-		|
-		| 110 válido   | customizado | sem função (não existe)
-		|  *  >> limpar true
-		|
-		| 111 válido   | customizado | com função (não existe)
-		|  *  >> checar (válido: true; inválido: definir reportar false)
-		|
-		| 000 inválido | padrão      | sem função
-		|  #  >> reportar false
-		|
-		| 001 inválido | padrão      | com função
-		|  #  >> reportar false
-		|
-		| 010 inválido | customizado | sem função
-		|  #  >> reportar false
-		|
-		| 011 inválido | customizado | com função
-		|  @  >> checar (válido: limpar true; inválido: definir reportar false)
-		\--------------------------------------------------------------------------*/
-		let id = elem.checkValidity()      === true ? "1" : "0";
-		id    += elem.validity.customError === true ? "1" : "0";
-		id    += call                      !== null ? "1" : "0";
-		if (["000", "001", "010"].indexOf(id) >= 0) { /*#*/
-
-			elem.reportValidity();
-			if (wd_html_form_type(elem) === "file") /* bug no firefox */
-				elem.value = null;
-			return false;
-		}
-		if (id === "101" || id === "011") { /*@*/
-			let msg = call(elem);
-			/* se a função retornar diferente de nulo, formulário reprovado */
-			if (msg !== null && msg !== undefined) {
-				elem.setCustomValidity(msg);
-				elem.reportValidity();
-				if (wd_html_form_type(elem) === "file") /* bug no firefox */
-					elem.value = null;
-				return false;
-			}
-			if (id === "011") elem.setCustomValidity("");
-			return true;
-		}
-		return true; /*$*/
-	}
-
-/*----------------------------------------------------------------------------*/
-	function wd_html_vform_array(array) { /* verifica a validade de um conjunto (array) de formulários */
-		/* Aqui é verificado se a informação pode ser enviada (request) */
-		for (let i = 0; i < array.length; i++) {
-			let elem = array[i];
-			let func = null;
-			/* verificação personalizada de formulário */
-			if ("wdVform" in elem.dataset) {
-				let test = wd_vtype(elem.dataset.wdVform).value;
-				if (wd_vtype(window[test]).type === "function")
-					func = window[test];
-			}
-			/* checando o elemento específico */
-			if (!wd_html_vform(elem, func)) return false;
-		}
-		return true;
-	}
-
-/*----------------------------------------------------------------------------*/
-	function wd_html_mask_attr(elem) { /* retorna o atributo para aplicação da máscara */
-		/* se não for fomulário, retornar retornar padrão */
-		if (!wd_html_form(elem))
-			return "textContent" in elem ? "textContent" : null;
-		/* se for formulário, analisar o tipo e obter atributo */
-		let tag  = wd_html_tag(elem);
-		let type = wd_html_form_type(elem);
-		let mask = wd_html_form()[tag][type].mask;
-		return mask;
-	}
-
-/*----------------------------------------------------------------------------*/
-	function wd_html_load_attr(elem) { /* retorna o atributo para carregar HTML em forma de texto */
-		/* se não for fomulário, retornar retornar padrão */
-		if (!wd_html_form(elem))
-			return "innerHTML" in elem ? "innerHTML" : "textContent";
-		/* se for formulário, analisar o tipo e retornar atributo */
-		let tag  = wd_html_tag(elem);
-		let type = wd_html_form_type(elem);
-		let load = wd_html_form()[tag][type].load;
-		return load === null ? "textContent" : load;
-	}
 
 /*----------------------------------------------------------------------------*/
 	function wd_html_dataset_value(elem, attr) { /* transforma o valor dataset em um array de objetos */
@@ -2023,23 +1920,30 @@ validity (retorna um objeto ValidateState
 
 /*----------------------------------------------------------------------------*/
 	function wd_html_data(elem, obj) { /* define atributos dataset no elemento a partir de um objeto */
+		/* deletar todos os atributos */
 		if (obj === null) {
-			for (let i in elem.dataset)
-				delete elem.dataset[i];
-			return true;
+			let list = {};
+			for (let i in elem.dataset) list[i] = null;
+			return wd_html_data(elem, list);
 		}
+		/* checando argumento, se não for um objeto, retornar */
 		if (wd_vtype(obj).type !== "object") return null;
 
 		for (let i in obj) {
+			/* atributo precisa ser alfabético para transformar em camelCase */
 			if (wd_vtype(i).type !== "text") continue;
 			let key = wd_text_camel(i);
+			let val = obj[i];
 
-			if (obj[i] === null) {
+			/* definir atributo */
+			if (val !== null)
+				elem.dataset[key] = val;
+			/* apagar atributo */
+			else if (key in elem.dataset)
 				delete elem.dataset[key];
-			} else {
-				elem.dataset[key] = obj[i];
-				settingProcedures(elem, key);
-			}
+			else continue
+			/* executar verificação após definição */
+			settingProcedures(elem, key);
 		}
 		return;
 	}
@@ -2047,7 +1951,7 @@ validity (retorna um objeto ValidateState
 /*----------------------------------------------------------------------------*/
 	function wd_html_load(elem, text) { /* carrega um HTML (texto) no elemento */
 		text = text === undefined || text === null ? "" : new String(text).toString();
-		let attr = wd_html_load_attr(elem);
+		let attr = wd_html_attr(elem, "load");
 		elem[attr] = text;
 		if (attr === "innerHTML") {
 			let scripts = wd_vtype(wd_$$("script", elem)).value;
@@ -3046,7 +2950,7 @@ validity (retorna um objeto ValidateState
 			value: function (action, callback, method, async) {
 				if (wd_vtype(method).type !== "text") method = "POST";
 
-				/* se for DOM mas com os formulários com pendência, não enviar */
+				/* se for DOM mas com formulários com pendência, não enviar */
 				if (this.type === "dom" && this.vform !== true) return false;
 				let pack = {value: this.toString()};
 
@@ -3566,7 +3470,7 @@ validity (retorna um objeto ValidateState
 			get: function() {return wd_html_info(this._value[0]);}
 		},
 		vform: { /* checa a validade dos dados do formulário */
-			get: function() {return wd_html_vform_array(this._value);}
+			get: function() {return wd_html_vform(this._value);}
 		},
 	});
 
@@ -3776,13 +3680,11 @@ validity (retorna um objeto ValidateState
 
 /*----------------------------------------------------------------------------*/
 	function data_wdMask(e) { /* Máscara: data-wd-mask="model{mask}call{callback}msg{msg}" */
+		/* apagar mensagem de formulário inválido, se existir, para nova verificação */
+		if ("wdErrorMessageMask" in e.dataset) delete e.dataset.wdErrorMessageMask;
+		wd_html_form_set_validity(e);
+		/* retornar se não tiver nada para fazer */
 		if (!("wdMask" in e.dataset)) return;
-		/* obter o atributo de definição do conteúdo (text/value) */
-		let attr = wd_html_mask_attr(e);
-		if (attr === null) return;
-		/* obter dados do dataset */
-		let data = wd_html_dataset_value(e, "wdMask")[0];
-		if (!("model" in data)) return;
 
 		let checks = { /* funções de checagem de atalhos */
 			date:  function(x) {return WD(x).type === "date" ? true : false},
@@ -3805,77 +3707,79 @@ validity (retorna um objeto ValidateState
 			"%DMY": {
 				mask: "##/##/####",
 				func: checks.date,
-				msg:  "DD/MM/YYYY (20101996 > 20/10/1996)"
+				msg:  "DD/MM/YYYY (20/10/1996)"
 			},
 			"%MDY": {
 				mask: "##.##.####",
 				func: checks.date,
-				msg:  "MM.DD.YYYY (10201996 > 10.20.1996)"
+				msg:  "MM.DD.YYYY (10.20.1996)"
 			},
 			"%YMD": {
 				mask: "####-##-##",
 				func: checks.date,
-				msg: "YYYY-MM-DD (19961020 > 1996-10-20)"
+				msg: "YYYY-MM-DD (1996-10-20)"
 			},
 			"%H":    {
 				mask: "#:##?##:##?#:##:##?##:##:##",
 				func: checks.time,
-				msg:  "HH:MM:SS (2210 > 20:10, 21044 > 2:10:44)"
+				msg:  "HH:MM:SS (20:10, 2:10:44)"
 			},
 			"%DMYT": {
 				mask: "##/##/####T##:##:##",
 				func: checks.datetime,
-				msg:  "DD/MM/YYYYTHH:MM:SS (20101996221044 > 20/10/1996T22:10:44)"
+				msg:  "DD/MM/YYYYTHH:MM:SS (20/10/1996T22:10:44)"
 			},
 			"%MDYT": {
 				mask: "##.##.####T##:##:##",
 				func: checks.datetime,
-				msg:  "MM.DD.YYYYTHH:MM:SS (10201996221044 > 10.20.1996T22:10:44)"
+				msg:  "MM.DD.YYYYTHH:MM:SS (10.20.1996T22:10:44)"
 			},
 			"%YMDT": {
 				mask: "####-##-##T##:##:##",
 				func: checks.datetime,
-				msg:  "YYYY-MM-DDTHH:MM:SS (19961020221044 > 1996-10-20T22:10:44)"
+				msg:  "YYYY-MM-DDTHH:MM:SS (1996-10-20T22:10:44)"
 			},
 			"%YM": {
 				mask: "####-##",
 				func: checks.month,
-				msg:  "YYYY-MM (199610 > 1996-10)"
+				msg:  "YYYY-MM (1996-10)"
 			},
 			"%YW": {
 				mask: "####-W##",
 				func: checks.week,
-				msg:  "YYYY-WW (199650 > 1996-W50)"
+				msg:  "YYYY-WW (1996-W50)"
 			},
 		};
+
+		/* obter o atributo de definição (text/value) e dados de dataset */
+		let attr = wd_html_attr(e, "mask");
+		let data = wd_html_dataset_value(e, "wdMask")[0];
+		if (attr === null || !("model" in data)) return;
+		/* definir outras variáveis*/
 		let text = e[attr];
 		let mask = data.model;
 		let func = "call" in data && data["call"] in window ? window[data["call"]] : null;
 		let msg  = "msg" in data ? data["msg"] : null;
-		/* obtendo o formato da máscara e função de checagem de atalho */
+		/* obtendo dados de checagem de atalho, se for o caso */
 		if (mask in shorts) {
 			func = shorts[data.model].func;
 			mask = shorts[data.model].mask;
 			msg  = shorts[data.model].msg;
 		}
-		/* análisando máscara */
-		let value = WD(mask).mask(text, func);
-		/* máscara casou */
-		if (value !== null) e[attr] = value;
 
-		/* se for um campo de formulário */
-		if (attr === "value") {
-			msg = msg === null ? mask : msg;
-			/* se o campo NÃO estiver vazio e a máscara NÃO casar: mostrar mensagem */
-			/* se o campo estiver vazio ou máscara casar: NÃO mostrar mensagem */
-			if (e.value !== "" && value === null)
-				wd_html_form_validity(e, msg);
-				//wd_html_vform(e, function () {return msg;})
-			else
-				wd_html_form_validity(e);
-				//wd_html_vform(e, function () {return null;})
-		}
-		return;
+		/*-------------------------------------------------------------------------
+		| máscara casou: defini-la e retornar
+		| máscara não casou:
+		|  Não é fomulário enviável: retornar
+		|  Campo vazio: retornar
+		|  É formulário: definir validade
+		\-------------------------------------------------------------------------*/
+		let value = WD(mask).mask(text, func);
+		if (value !== null)   return e[attr] = value;
+		if (!wd_html_attr(e, "send")) return;
+		if (e.value === "")   return;
+		e.dataset.wdErrorMessageMask = msg === null ? mask : msg;
+		return wd_html_form_set_validity(e);
 	};
 
 /*----------------------------------------------------------------------------*/
@@ -4084,14 +3988,24 @@ validity (retorna um objeto ValidateState
 
 /*----------------------------------------------------------------------------*/
 	function data_wdVform(e) { /* checa a validade de um formulário data-wd-vform="callback" */
+		/* apagar mensagem de formulário inválido, se existir, para nova verificação */
+		if ("wdErrorMessageVform" in e.dataset) delete e.dataset.wdErrorMessageVform;
+		wd_html_form_set_validity(e);
+		/* retornar se não tiver nada para fazer */
 		if (!("wdVform" in e.dataset)) return;
+		/* obter dado do atributo e, se for função, obter o resultado */
 		let data = e.dataset.wdVform;
-		if (WD(window[data]).type === "function")
-			wd_html_form_validity(e, window[data](e));
-
-			console.log(window[data]);
-			
-		return;
+		if (WD(window[data]).type !== "function") return;
+		let value = window[data](e);
+		/*-------------------------------------------------------------------------
+		| se a resposta for nula ou indefinida: retornar
+		| se não for um formulário passível de envio: retornar
+		| se for um formulário passível de envio: avaliar validade
+		\-------------------------------------------------------------------------*/
+		if (value === null || value === undefined) return;
+		if (!wd_html_attr(e, "send")) return;
+		e.dataset.wdErrorMessageVform = value;
+		return wd_html_form_set_validity(e);
 	}
 
 /*----------------------------------------------------------------------------*/

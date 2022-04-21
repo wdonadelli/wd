@@ -19,14 +19,11 @@ function request(x) {
 </script>
 
 <form class="wd-block-child" id="form">
-	<!--input type="hidden" name="hidden" data-wd-vform="numbers" value="number" /-->
-  <label for="field1">Required field, but not verifiable when losing focus:</label>
+  <label for="field1">Required field:</label>
   <input type="text" name="field1" placeholder="I am a required field." required="" />
-  <label for="field2">Mandatory and verifiable field when losing focus:</label>
-  <input type="text" name="field2" placeholder="I am a required field." required="" data-wd-vform="" />
-  <label for="field3">Integer greater than 0 and less than 5:</label>
-  <input type="text" name="field3" placeholder="Try to disobey me." data-wd-vform="numbers" />
-  <label for="field4">Enter a file up to 100kB:</label>
-  <input type="file" name="field4" multiple=""  data-wd-vform="files" />
+  <label for="field2">Integer greater than 0 and less than 5:</label>
+  <input type="text" name="field2" placeholder="Try to disobey me." data-wd-vform="numbers" />
+  <label for="field3">Enter a file up to 100kB:</label>
+  <input type="file" name="field3" multiple=""  data-wd-vform="files" />
   <button type="button" data-wd-send="path{examples/target.php}$${#form input}call{request}">Send</button>
 </form>
