@@ -1477,63 +1477,63 @@ const wd = (function() {
 		let form = {
 			textarea: {
 				_type: false,
-				textarea: {send: true, load: value, mask: value, vform: true}
+				textarea: {send: true, load: value, mask: value}
 			},
 			select: {
 				_type: false,
-				select:   {send: true, load: inner, mask: null, vform: true}
+				select:   {send: true, load: inner, mask: null}
 			},
 			meter: {
 				_type: false,
-				meter:    {send: false, load: null, mask: null, vform: false}
+				meter:    {send: false, load: null, mask: null}
 			},
 			progress: {
 				_type: false,
-				progress: {send: false, load: null, mask: null, vform: false}
+				progress: {send: false, load: null, mask: null}
 			},
 			output: {
 				_type: false,
-				output:   {send: false, load: text, mask: null, vform: false}
+				output:   {send: false, load: text, mask: null}
 			},
 			option: {
 				_type: false,
-				option:   {send: false, load: text, mask: text, vform: false}
+				option:   {send: false, load: text, mask: text}
 			},
 			form: {
 				_type: false,
-				form:     {send: false, load: inner, mask: null, vform: false}
+				form:     {send: false, load: inner, mask: null}
 			},
 			button: {
 				_type: true,
-				button:   {send: false, load: text, mask: text, vform: false},
-				reset:    {send: false, load: text, mask: text, vform: false},
-				submit:   {send: false, load: text, mask: text, vform: false}
+				button:   {send: false, load: text, mask: text},
+				reset:    {send: false, load: text, mask: text},
+				submit:   {send: false, load: text, mask: text}
 			},
 			input: {
 				_type: true,
-				button:   {send: false, load: value, mask: value, vform: false},
-				reset:    {send: false, load: value, mask: value, vform: false},
-				submit:   {send: false, load: value, mask: value, vform: false},
-				image:    {send: false, load: null,  mask: null,  vform: false},
-				color:    {send: true,  load: null,  mask: null,  vform: false},
-				radio:    {send: true,  load: null,  mask: null,  vform: false},
-				checkbox: {send: true,  load: null,  mask: null,  vform: false},
-				date:     {send: true,  load: null,  mask: null,  vform: false},
-				datetime: {send: true,  load: null,  mask: null,  vform: false},
-				month:    {send: true,  load: null,  mask: null,  vform: false},
-				week:     {send: true,  load: null,  mask: null,  vform: false},
-				time:     {send: true,  load: null,  mask: null,  vform: false},
-				"datetime-local": {send: true, load: null, mask: null, vform: false},
-				range:    {send: true,  load: null,  mask: null,  vform: false},
-				number:   {send: true,  load: null,  mask: null,  vform: false},
-				file:     {send: true,  load: null,  mask: null,  vform: false},
-				url:      {send: true,  load: value, mask: null,  vform: false},
-				email:    {send: true,  load: value, mask: null,  vform: false},
-				tel:      {send: true,  load: value, mask: value, vform: false},
-				text:     {send: true,  load: value, mask: value, vform: false},
-				search:   {send: true,  load: value, mask: value, vform: false},
-				password: {send: true,  load: null,  mask: null,  vform: false},
-				hidden:   {send: true,  load: value, mask: null,  vform: false}
+				button:   {send: false, load: value, mask: value},
+				reset:    {send: false, load: value, mask: value},
+				submit:   {send: false, load: value, mask: value},
+				image:    {send: false, load: null,  mask: null},
+				color:    {send: true,  load: null,  mask: null},
+				radio:    {send: true,  load: null,  mask: null},
+				checkbox: {send: true,  load: null,  mask: null},
+				date:     {send: true,  load: null,  mask: null},
+				datetime: {send: true,  load: null,  mask: null},
+				month:    {send: true,  load: null,  mask: null},
+				week:     {send: true,  load: null,  mask: null},
+				time:     {send: true,  load: null,  mask: null},
+				"datetime-local": {send: true, load: null, mask: null},
+				range:    {send: true,  load: null,  mask: null},
+				number:   {send: true,  load: null,  mask: null},
+				file:     {send: true,  load: null,  mask: null},
+				url:      {send: true,  load: value, mask: null},
+				email:    {send: true,  load: value, mask: null},
+				tel:      {send: true,  load: value, mask: value},
+				text:     {send: true,  load: value, mask: value},
+				search:   {send: true,  load: value, mask: value},
+				password: {send: true,  load: null,  mask: null},
+				hidden:   {send: true,  load: value, mask: null}
 			}
 		};
 
