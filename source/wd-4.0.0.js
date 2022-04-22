@@ -1643,14 +1643,14 @@ const wd = (function() {
 			return attr.type === "number" ? attr.value : "";
 		}
 		if (type === "file") {
-			return elem.files.length > 0 ? elem.files : "";
+			return elem.files.length > 0 ? elem.files : [];
 		}
 		if (type === "select") {
 			let value = [];
 			for (let i = 0; i < elem.length; i++)
 				if (elem[i].selected)
-					value.push(e[i].value);
-			return value.length > 0 ? value : "";
+					value.push(elem[i].value);
+			return value.length > 0 ? value : [];
 		}
 		return val;
 	}
