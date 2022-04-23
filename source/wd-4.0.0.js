@@ -679,10 +679,10 @@ const wd = (function() {
 		let integer = wd_integer(n);
 		let decimal = wd_decimal(n);
 
-		/* FIXME se for informado um valor tipo 0,0001 (1/10000), a resposta vai dar zero se considerar apenas duas casas decimais */
+		/* números pequenos (e.g. 1/10000) retorna zero: ver deslocamento de casas decimais (abaixo) */
 		let data  = {
 			int: Math.abs(integer), /* parte inteira (valor absoluto) */
-			mul: 1,                 /* multiplicador de 10 (melhorar precisão de números pequenos demais) */
+			mul: 1,                 /* multiplicador de 10 (melhorar precisão de números demais pequenos) */
 			val: Math.abs(decimal), /* valor a ser encontrado */
 			num: 0,                 /* numerador */
 			den: 1,                 /* denominador */
@@ -1539,7 +1539,7 @@ const wd = (function() {
 
 		if (elem === undefined) return form;
 		return wd_html_tag(elem) in form ? true : false;
-	} /* TODO definir o que é campo de formulário */
+	}
 
 /*----------------------------------------------------------------------------*/
 	function wd_html_form_type(elem) { /* retorna o tipo de formulário: tipo ou nulo */
@@ -1772,7 +1772,7 @@ const wd = (function() {
 	function wd_html_form_submit(list, get) { /* obtém serialização de formulário */
 		let pkg = get === true || !("FormData" in window) ? [] : new FormData();
 		/* não obter se o formulário tiver pendências */
-		if (!wd_html_vform(list)) return pkg;
+		if (!wd_html_vform(list)) return get === true ? pkg.join("&") : pkg;
 		/* obtendo dados da lista */
 		for (let e = 0; e < list.length; e++) {
 			/* ignorar o que não vai enviar na requisição */
@@ -2256,7 +2256,7 @@ const wd = (function() {
 		return {
 			tag: wd_html_tag(elem),
 			value: wd_html_form_value(elem),
-			name: wd_html_form_name(elem), /*TODO isso é novo*/
+			name: wd_html_form_name(elem),
 			type: wd_html_form_type(elem),
 			text: elem.textContent,
 			className: wd_html_class(elem),
