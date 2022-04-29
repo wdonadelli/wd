@@ -3572,8 +3572,8 @@ const wd = (function() {
 		let target = WD(e);
 		let source = "path" in data ? "file" : "table";
 		/* obtendo dados das plotagens (por referência xref, yref, lref) */
-		let labels = data.labels.split(",");
-		let cols   = data.cols.split(",");
+		let labels = "labels" in data ? data.labels.split(",") : ["Title", "X axis", "Y axis"];
+		let cols   = "cols"   in data ? data.cols.split(",")   : [0, 1];
 		let input  = {
 			elem:   e,
 			title:  labels[0],
@@ -3590,7 +3590,7 @@ const wd = (function() {
 			let type = info.length === 2 ? info[1].trim() : null;
 			input.data.push({x: xref, y: yref, label: lref, type: type});
 		}
-		/* obtendo a matrix e executando */
+		/* obtendo a matriz e executando */
 		if (source === "file") {
 			let file   = data.path;
 			let method = data.method;
