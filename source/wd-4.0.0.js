@@ -1477,63 +1477,63 @@ const wd = (function() {
 		let form = {
 			textarea: {
 				_type: false,
-				textarea: {send: true, load: value, mask: value}
+				textarea: {send: true, load: value, mask: value, text: value}
 			},
 			select: {
 				_type: false,
-				select:   {send: true, load: inner, mask: null}
+				select:   {send: true, load: inner, mask: null, text: null}
 			},
 			meter: {
 				_type: false,
-				meter:    {send: false, load: null, mask: null}
+				meter:    {send: false, load: null, mask: null, text: null}
 			},
 			progress: {
 				_type: false,
-				progress: {send: false, load: null, mask: null}
+				progress: {send: false, load: null, mask: null, text: null}
 			},
 			output: {
 				_type: false,
-				output:   {send: false, load: text, mask: null}
+				output:   {send: false, load: text, mask: null, text: text}
 			},
 			option: {
 				_type: false,
-				option:   {send: false, load: text, mask: text}
+				option:   {send: false, load: text, mask: text, text: text}
 			},
 			form: {
 				_type: false,
-				form:     {send: false, load: inner, mask: null}
+				form:     {send: false, load: inner, mask: null, text: null}
 			},
 			button: {
 				_type: true,
-				button:   {send: false, load: text, mask: text},
-				reset:    {send: false, load: text, mask: text},
-				submit:   {send: false, load: text, mask: text}
+				button:   {send: false, load: text, mask: text, text: text},
+				reset:    {send: false, load: text, mask: text, text: text},
+				submit:   {send: false, load: text, mask: text, text: text}
 			},
 			input: {
 				_type: true,
-				button:   {send: false, load: value, mask: value},
-				reset:    {send: false, load: value, mask: value},
-				submit:   {send: false, load: value, mask: value},
-				image:    {send: false, load: null,  mask: null},
-				color:    {send: true,  load: null,  mask: null},
-				radio:    {send: true,  load: null,  mask: null},
-				checkbox: {send: true,  load: null,  mask: null},
-				date:     {send: true,  load: null,  mask: null},
-				datetime: {send: true,  load: null,  mask: null},
-				month:    {send: true,  load: null,  mask: null},
-				week:     {send: true,  load: null,  mask: null},
-				time:     {send: true,  load: null,  mask: null},
-				"datetime-local": {send: true, load: null, mask: null},
-				range:    {send: true,  load: null,  mask: null},
-				number:   {send: true,  load: null,  mask: null},
-				file:     {send: true,  load: null,  mask: null},
-				url:      {send: true,  load: value, mask: null},
-				email:    {send: true,  load: value, mask: null},
-				tel:      {send: true,  load: value, mask: value},
-				text:     {send: true,  load: value, mask: value},
-				search:   {send: true,  load: value, mask: value},
-				password: {send: true,  load: null,  mask: null},
-				hidden:   {send: true,  load: value, mask: null}
+				button:   {send: false, load: value, mask: value, text: value},
+				reset:    {send: false, load: value, mask: value, text: value},
+				submit:   {send: false, load: value, mask: value, text: value},
+				image:    {send: false, load: null,  mask: null,  text: null},
+				color:    {send: true,  load: null,  mask: null,  text: value},
+				radio:    {send: true,  load: null,  mask: null,  text: value},
+				checkbox: {send: true,  load: null,  mask: null,  text: value},
+				date:     {send: true,  load: null,  mask: null,  text: value},
+				datetime: {send: true,  load: null,  mask: null,  text: value},
+				month:    {send: true,  load: null,  mask: null,  text: value},
+				week:     {send: true,  load: null,  mask: null,  text: value},
+				time:     {send: true,  load: null,  mask: null,  text: value},
+				"datetime-local": {send: true, load: null, mask: null, text: value},
+				range:    {send: true,  load: null,  mask: null,  text: value},
+				number:   {send: true,  load: null,  mask: null,  text: value},
+				file:     {send: true,  load: null,  mask: null,  text: null},
+				url:      {send: true,  load: value, mask: null,  text: value},
+				email:    {send: true,  load: value, mask: null,  text: value},
+				tel:      {send: true,  load: value, mask: value, text: value},
+				text:     {send: true,  load: value, mask: value, text: value},
+				search:   {send: true,  load: value, mask: value, text: value},
+				password: {send: true,  load: null,  mask: null,  text: null},
+				hidden:   {send: true,  load: value, mask: null,  text: value}
 			}
 		};
 
@@ -1749,6 +1749,7 @@ const wd = (function() {
 		let inner = "innerHTML";
 		let html = {
 			mask: text  in elem ? text : null,
+			text: text  in elem ? text : inner,
 			load: inner in elem ? inner : text,
 			send: false,
 		}
@@ -2263,6 +2264,32 @@ const wd = (function() {
 			index: wd_html_bros_index(elem),
 			table: wd_html_table_array(elem)
 		}
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_url(name) { /* obtém o valores da URL */
+		/* obter somente o hash */
+		if (name === undefined || name === null)
+			return null;
+		if (typeof name !== "string" || name.trim() === "")
+			return null;
+		if (name === "*")
+			return document.URL;
+		if (name === ":")
+			return window.location.protocol.replace(/\:$/, "");
+		if (name === "@")
+			return window.location.host;
+		if (name === "$")
+			return window.location.hostname;
+		if (name === "/")
+			return window.location.pathname.replace(/^\//, "");
+		if (name === "#")
+			return window.location.hash.replace(/^\#/, "");
+		if (name === "?")
+			return window.location.search.replace(/^\?/, "");
+
+		let data = window.location.search.replace(/^\?/, "").split(name+"=");
+		return data.length < 2 ? null : decodeURIComponent(data[1].split("&")[0]);
 	}
 
 /*----------------------------------------------------------------------------*/
@@ -3495,6 +3522,8 @@ const wd = (function() {
 		version: {value: wd_version},
 		$:       {value: function(css, root) {return WD(wd_$(css, root));}},
 		$$:      {value: function(css, root) {return WD(wd_$$(css, root));}},
+		url:     {value: function(name) {return wd_url(name);}},
+		device:  {get:   function() {return wd_get_device();}},
 		today:   {get:   function() {return WD(new Date());}},
 		now: {get: function() {
 			let t = new Date();
@@ -3911,6 +3940,16 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
+	function data_wdUrl(e) { /* define o valor informado do url no elemento data-wd-url="#" */
+		if (!("wdUrl" in e.dataset)) return;
+		let data = e.dataset.wdUrl;
+		let val  = WD.url(data);
+		let attr = wd_html_attr(e, "text");
+		if (attr === null || val === null) return;
+		return e[attr] = val;
+	}
+
+/*----------------------------------------------------------------------------*/
 	function data_wdSet(e) { /* define attributos: data-wd-set=attr{value}${css}&... */
 		if (!("wdSet" in e.dataset)) return;
 		/*--------------------------------------------------------------------------
@@ -4130,6 +4169,7 @@ const wd = (function() {
 		WD.$$("[data-wd-slide]").run(data_wdSlide);
 		WD.$$("[data-wd-device]").run(data_wdDevice);
 		WD.$$("[data-wd-chart]").run(data_wdChart);
+		WD.$$("[data-wd-url]").run(data_wdUrl);
 		data_wdOutput(document, true);
 		return;
 	};
@@ -4148,6 +4188,7 @@ const wd = (function() {
 			case "wdSlide":   data_wdSlide(e);        break;
 			case "wdChart":   data_wdChart(e);        break;
 			case "wdOutput":  data_wdOutput(e, true); break;
+			case "wdUrl":     data_wdUrl(e, true);    break;
 		};
 		return;
 	};
@@ -4270,6 +4311,7 @@ wd_html_data(), data-wd-data
 			> loadingProcedures()
 		- data-wd-slide
 		- data-wd-sort
+		- data-wd-url
 
 window.onload > loadProcedures()
 	- [preparar biblioteca]
@@ -4286,6 +4328,7 @@ window.onload > loadProcedures()
 			- data-wd-page
 			- data-wd-slide
 			- data-wd-sort
+			- data-wd-url
 
 window.onhashchange > hashProcedures()
 	- [eventos de linkagem]

@@ -26,11 +26,10 @@ function err(e) {
 function loadExample() {
 	/* função para carregar página */
 	try {
-		var url  = document.URL.split("/?page=");
-		if (url.length < 2) return err("Destination not specified.");
-		var file = url[1].replace(/\#(.+)?/g, "");
-		var path = url[0]+"/examples/"+file+".html";
-		if (file === "") return err("Blank destination.");
+		var file  = wd.url("page");
+		if (file === undefined || file.trim() === "")
+			return wd("Use the menu to navigate!").signal("Destination not specified.");
+		var path = "examples/"+file.trim()+".html";
 		wd.$$("#ie_code, #ie_page").data({wdLoad: "path{"+path+"}"});
 	} catch(e) {err(e);}
 }

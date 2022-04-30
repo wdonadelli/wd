@@ -39,5 +39,6 @@
 	{"target": "data-wd-slide"},
 	{"target": "data-wd-sort"},
 	{"target": "data-wd-tsort"},
+	{"target": "data-wd-url"},
 	{"target": "data-wd-vform"}
 ]

@@ -688,6 +688,23 @@ padding: 0;
 .wd .wd-col-mark-11 > * > *:nth-child(11), .wd .wd-col-mark-12 > * > *:nth-child(12) {
 	background-color: var(--var-bg-mark);
 }
+.wd .wd-col-i-01 > * > *:nth-child(1),  .wd .wd-col-i-02 > * > *:nth-child(2),
+.wd .wd-col-i-03 > * > *:nth-child(3),  .wd .wd-col-i-04 > * > *:nth-child(4),
+.wd .wd-col-i-05 > * > *:nth-child(5),  .wd .wd-col-i-06 > * > *:nth-child(6),
+.wd .wd-col-i-07 > * > *:nth-child(7),  .wd .wd-col-i-08 > * > *:nth-child(8),
+.wd .wd-col-i-09 > * > *:nth-child(9),  .wd .wd-col-i-10 > * > *:nth-child(10),
+.wd .wd-col-i-11 > * > *:nth-child(11), .wd .wd-col-i-12 > * > *:nth-child(12) {
+	font-style: italic;
+}
+.wd .wd-col-b-01 > * > *:nth-child(1),  .wd .wd-col-b-02 > * > *:nth-child(2),
+.wd .wd-col-b-03 > * > *:nth-child(3),  .wd .wd-col-b-04 > * > *:nth-child(4),
+.wd .wd-col-b-05 > * > *:nth-child(5),  .wd .wd-col-b-06 > * > *:nth-child(6),
+.wd .wd-col-b-07 > * > *:nth-child(7),  .wd .wd-col-b-08 > * > *:nth-child(8),
+.wd .wd-col-b-09 > * > *:nth-child(9),  .wd .wd-col-b-10 > * > *:nth-child(10),
+.wd .wd-col-b-11 > * > *:nth-child(11), .wd .wd-col-b-12 > * > *:nth-child(12) {
+	font-weight: bold;
+}
+
 /* -- coleção -- */
 .wd .wd-collection {
 	display: block;
