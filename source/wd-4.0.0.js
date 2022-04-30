@@ -1613,14 +1613,14 @@ const wd = (function() {
 		if (type === "time") {
 			return attr.type === "time" ? wd_time_iso(attr.value) : "";
 		}
-		if (type === "week") {
+		if (type === "week") {//FIXME 00W-0000
 			if (!(/^[0-9]{4}\-W[0-9]{2}$/).test(val)) return "";
 			let test = val.split("-W");
 			let year = wd_integer(test[0]);
 			let week = wd_integer(test[1]);
 			return (year < 1 || week < 1 || week > 53) ? "" : val;
 		}
-		if (type === "month") {
+		if (type === "month") {//FIXME 00/0000
 			if (!(/^[0-9]{4}\-[0-9]{2}$/).test(val)) return "";
 			let test = val.split("-");
 			let year  = wd_integer(test[0]);
@@ -3768,12 +3768,12 @@ const wd = (function() {
 				func: checks.datetime,
 				msg:  "YYYY-MM-DDTHH:MM:SS (1996-10-20T22:10:44)"
 			},
-			"%YM": {
+			"%YM": {//FIXME MY
 				mask: "####-##",
 				func: checks.month,
 				msg:  "YYYY-MM (1996-10)"
 			},
-			"%YW": {
+			"%YW": { //FIXME WY
 				mask: "####-W##",
 				func: checks.week,
 				msg:  "YYYY-WW (1996-W50)"
@@ -3946,7 +3946,8 @@ const wd = (function() {
 		let val  = WD.url(data);
 		let attr = wd_html_attr(e, "text");
 		if (attr === null || val === null) return;
-		return e[attr] = val;
+		e[attr] = val;
+		return WD(e).data({wdUrl: null});
 	}
 
 /*----------------------------------------------------------------------------*/
