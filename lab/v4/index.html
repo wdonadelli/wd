@@ -27,7 +27,7 @@ function loadExample() {
 	/* função para carregar página */
 	try {
 		var file  = wd.url("page");
-		if (file === undefined || file.trim() === "")
+		if (file === null	 || file.trim() === "")
 			return wd("Use the menu to navigate!").signal("Destination not specified.");
 		var path = "examples/"+file.trim()+".html";
 		wd.$$("#ie_code, #ie_page").data({wdLoad: "path{"+path+"}"});

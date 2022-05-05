@@ -1481,11 +1481,11 @@ const wd = (function() {
 			},
 			select: {
 				_type: false,
-				select:   {send: true, load: inner, mask: null, text: null}
+				select: {send: true, load: inner, mask: null, text: null}
 			},
 			meter: {
 				_type: false,
-				meter:    {send: false, load: null, mask: null, text: null}
+				meter: {send: false, load: null, mask: null, text: null}
 			},
 			progress: {
 				_type: false,
@@ -1493,47 +1493,47 @@ const wd = (function() {
 			},
 			output: {
 				_type: false,
-				output:   {send: false, load: text, mask: null, text: text}
+				output: {send: false, load: text, mask: null, text: text}
 			},
 			option: {
 				_type: false,
-				option:   {send: false, load: text, mask: text, text: text}
+				option: {send: false, load: text, mask: text, text: text}
 			},
 			form: {
 				_type: false,
-				form:     {send: false, load: inner, mask: null, text: null}
+				form: {send: false, load: inner, mask: null, text: null}
 			},
 			button: {
 				_type: true,
-				button:   {send: false, load: text, mask: text, text: text},
-				reset:    {send: false, load: text, mask: text, text: text},
-				submit:   {send: false, load: text, mask: text, text: text}
+				button: {send: false, load: text, mask: text, text: text},
+				reset:  {send: false, load: text, mask: text, text: text},
+				submit: {send: false, load: text, mask: text, text: text}
 			},
 			input: {
 				_type: true,
 				button:   {send: false, load: value, mask: value, text: value},
 				reset:    {send: false, load: value, mask: value, text: value},
 				submit:   {send: false, load: value, mask: value, text: value},
-				image:    {send: false, load: null,  mask: null,  text: null},
-				color:    {send: true,  load: null,  mask: null,  text: value},
-				radio:    {send: true,  load: null,  mask: null,  text: value},
-				checkbox: {send: true,  load: null,  mask: null,  text: value},
-				date:     {send: true,  load: null,  mask: null,  text: value},
-				datetime: {send: true,  load: null,  mask: null,  text: value},
-				month:    {send: true,  load: null,  mask: null,  text: value},
-				week:     {send: true,  load: null,  mask: null,  text: value},
-				time:     {send: true,  load: null,  mask: null,  text: value},
-				"datetime-local": {send: true, load: null, mask: null, text: value},
-				range:    {send: true,  load: null,  mask: null,  text: value},
-				number:   {send: true,  load: null,  mask: null,  text: value},
-				file:     {send: true,  load: null,  mask: null,  text: null},
-				url:      {send: true,  load: value, mask: null,  text: value},
-				email:    {send: true,  load: value, mask: null,  text: value},
-				tel:      {send: true,  load: value, mask: value, text: value},
-				text:     {send: true,  load: value, mask: value, text: value},
-				search:   {send: true,  load: value, mask: value, text: value},
-				password: {send: true,  load: null,  mask: null,  text: null},
-				hidden:   {send: true,  load: value, mask: null,  text: value}
+				image:    {send: false, load: null, mask: null,   text: null},
+				color:    {send: true,  load: null, mask: null,   text: value},
+				radio:    {send: true,  load: null, mask: null,   text: value},
+				checkbox: {send: true,  load: null, mask: null,   text: value},
+				date:     {send: true,  load: null, mask: value,   text: value},
+				datetime: {send: true,  load: null, mask: null,   text: value},
+				month:    {send: true,  load: null, mask: null,   text: value},
+				week:     {send: true,  load: null, mask: value,   text: value},
+				time:     {send: true,  load: null, mask: null,   text: value},
+				range:    {send: true,  load: null, mask: null,   text: value},
+				number:   {send: true,  load: null, mask: null,   text: value},
+				file:     {send: true,  load: null, mask: null,   text: null},
+				url:      {send: true,  load: null, mask: null,   text: value},
+				email:    {send: true,  load: null, mask: null,   text: value},
+				tel:      {send: true,  load: null, mask: null,   text: value},
+				text:     {send: true,  load: null, mask: value,  text: value},
+				search:   {send: true,  load: null, mask: null,   text: value},
+				password: {send: true,  load: null, mask: null,   text: null},
+				hidden:   {send: true,  load: null, mask: null,   text: value},
+				"datetime-local": {send: true,  load: null, mask: null,   text: value},
 			}
 		};
 
@@ -1584,6 +1584,82 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
+	function wd_html_form_datetime(value, type) { /* checa o valor de input especiais e retorna valor padrão */
+		let types = {
+			week: {
+				default: {re: /^[0-9]{4}\-W[0-9]{2}$/,  cut: "-W", first: 0, last: 1},
+				special: {re: /^[0-9]{2}\,\ [0-9]{4}$/, cut: ", ", first: 1, last: 0}
+			},
+			month: {
+				default: {re: /^[0-9]{4}\-[0-9]{2}$/, cut: "-", first: 0, last: 1},
+				special: {re: /^[0-9]{2}\/[0-9]{4}$/, cut: "/", first: 1, last: 0}
+			},
+			datetime: {
+				default: {re: /.+/, cut: "T", first: 0, last: 1},
+				special: {re: /.+/, cut: " ", first: 0, last: 1}
+			}
+		};
+		let check = {
+			week: function(year, week) {
+				year = wd_integer(year);
+				week = wd_integer(week);
+				if (year < 1 || week < 1 || week > 53) return null;
+				return wd_num_fixed(year, 0, 4)+"-W"+wd_num_fixed(week, 0, 2);
+			},
+			month: function(year, month) {
+				year  = wd_integer(year);
+				month = wd_integer(month);
+				if (year < 1 || month < 1 || month > 12) return null;
+				return wd_num_fixed(year, 0, 4)+"-"+wd_num_fixed(month, 0, 2);
+			},
+			datetime: function(date, time) {
+				date = wd_vtype(date);
+				time = wd_vtype(time);
+				if (date.type !== "date" || time.type !== "time") return null;
+				return wd_date_iso(date.value)+"T"+wd_time_iso(time.value);
+			}
+		}
+
+		/* checando os tipos de valores */
+		let first = null, last = null;
+		for (let i in types[type]) {
+			let obj = types[type][i];
+			if (obj.re.test(value)) {
+				let cut = value.split(obj.cut);
+				if (cut.length === 2) {
+					first = cut[obj.first];
+					last  = cut[obj.last];
+					break;
+				}
+			}
+		}
+		if (first === null || last === null) return null;
+
+		/* checando validade */
+		return check[type](first, last);
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_html_form_auto_check(elem) {//FIXME isso vai vingar?
+		if (wd_html_tag(elem) !== "input") return false;
+		if (!("validity" in elem)) return false;
+		if (elem.validity.badInput === true) return true;
+		return false
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*----------------------------------------------------------------------------*/
 	function wd_html_form_value(elem) { /* retorna o valor do formulário: valor, "" ou null (não submeter) */
 		/* se não for fomulário, retornar null */
 		if (!wd_html_form(elem)) return null;
@@ -1613,28 +1689,17 @@ const wd = (function() {
 		if (type === "time") {
 			return attr.type === "time" ? wd_time_iso(attr.value) : "";
 		}
-		if (type === "week") {//FIXME 00W-0000
-			if (!(/^[0-9]{4}\-W[0-9]{2}$/).test(val)) return "";
-			let test = val.split("-W");
-			let year = wd_integer(test[0]);
-			let week = wd_integer(test[1]);
-			return (year < 1 || week < 1 || week > 53) ? "" : val;
+		if (type === "week") {
+			let check = wd_html_form_datetime(val, type);
+			return check === null ? "" : check;
 		}
-		if (type === "month") {//FIXME 00/0000
-			if (!(/^[0-9]{4}\-[0-9]{2}$/).test(val)) return "";
-			let test = val.split("-");
-			let year  = wd_integer(test[0]);
-			let month = wd_integer(test[1]);
-			return (year < 1 || month < 1 || month > 12) ? "" : val;
+		if (type === "month") {
+			let check = wd_html_form_datetime(val, type);
+			return check === null ? "" : check;
 		}
 		if (type === "datetime" || type === "datetime-local") {
-				let test = val.split("T");
-				if (test.length < 2) return "";
-				let date = wd_vtype(test[0]);
-				let time = wd_vtype(test[1]);
-				if (date.type !== "date" || time.type !== "time")
-					return "";
-				return wd_date_iso(date.value)+"T"+wd_time_iso(time.value);
+			let check = wd_html_form_datetime(val, "datetime");
+			return check === null ? "" : check;
 		}
 		if (type === "number" || type === "range") {
 			return attr.type === "number" ? attr.value : "";
@@ -3714,70 +3779,45 @@ const wd = (function() {
 		wd_html_form_set_validity(e);
 		/* retornar se não tiver nada para fazer */
 		if (!("wdMask" in e.dataset)) return;
+		/* checar se o navegador já identificou a entrada indevida. se sim não aplicar máscara */
+		if (wd_html_form_auto_check(e))
+			return;
 
 		let checks = { /* funções de checagem de atalhos */
-			date:  function(x) {return WD(x).type === "date" ? true : false},
-			time:  function(x) {return WD(x).type === "time" ? true : false},
-			month: function(x) {return WD(x+"-01").type === "date" ? true : false},
-			week:  function(x) {
-				let check = x.split("-W");
-				let y = wd_integer(check[0]);
-				let w = wd_integer(check[1]);
-				return (y < 1 || w < 1 || w > 53) ? false : true;
-			},
-			datetime:  function(x) {
-				let check = x.split("T");
-				let d = WD(check[0]).type;
-				let t = WD(check[1]).type;
-				return (d !== "date" || t !== "time") ? false : true;
-			}
+			date:     function(x) {return WD(x).type === "date" ? true : false;},
+			time:     function(x) {return WD(x).type === "time" ? true : false;},
+			month:    function(x) {return wd_html_form_datetime(x, "month") === null ? false : true;},
+			week:     function(x) {return wd_html_form_datetime(x, "week") === null ? false : true;},
+			datetime: function(x) {return wd_html_form_datetime(x, "datetime") === null ? false : true;}
 		};
+
+
+		//FIXME ver validity.badInput para verificar implantação de máscara padrão pelo browser
+
+
 		let shorts = { /* atalhos */
-			"%DMY": {
-				mask: "##/##/####",
+			"%DMY":  {
+				mask: "##/##/####?####\-##\-##",
 				func: checks.date,
 				msg:  "DD/MM/YYYY (20/10/1996)"
 			},
-			"%MDY": {
-				mask: "##.##.####",
-				func: checks.date,
-				msg:  "MM.DD.YYYY (10.20.1996)"
-			},
-			"%YMD": {
-				mask: "####-##-##",
-				func: checks.date,
-				msg: "YYYY-MM-DD (1996-10-20)"
-			},
-			"%H":    {
-				mask: "#:##?##:##?#:##:##?##:##:##",
-				func: checks.time,
-				msg:  "HH:MM:SS (20:10, 2:10:44)"
-			},
-			"%DMYT": {
-				mask: "##/##/####T##:##:##",
-				func: checks.datetime,
-				msg:  "DD/MM/YYYYTHH:MM:SS (20/10/1996T22:10:44)"
-			},
-			"%MDYT": {
-				mask: "##.##.####T##:##:##",
-				func: checks.datetime,
-				msg:  "MM.DD.YYYYTHH:MM:SS (10.20.1996T22:10:44)"
-			},
-			"%YMDT": {
-				mask: "####-##-##T##:##:##",
-				func: checks.datetime,
-				msg:  "YYYY-MM-DDTHH:MM:SS (1996-10-20T22:10:44)"
-			},
-			"%YM": {//FIXME MY
-				mask: "####-##",
-				func: checks.month,
-				msg:  "YYYY-MM (1996-10)"
-			},
-			"%YW": { //FIXME WY
-				mask: "####-W##",
-				func: checks.week,
-				msg:  "YYYY-WW (1996-W50)"
-			},
+			"%MDY":  {mask: "##.##.####", func: checks.date,  msg:  "MM.DD.YYYY (10.20.1996)"},
+			"%YMD":  {mask: "####-##-##", func: checks.date,  msg: "YYYY-MM-DD (1996-10-20)"},
+			"%YM":   {mask: "####-##",    func: checks.month, msg:  "YYYY-MM (1996-10)"},
+			"%MY":   {mask: "##/####",    func: checks.month, msg:  "MM/YYYY (10/1996)"},
+			"%YW":   {mask: "####-W##",   func: checks.week,  msg:  "YYYY-Www (1996-W50)"},
+			"%WY":   {mask: "##, ####",   func: checks.week,  msg:  "ww, YYYY (1996-W05)"},
+
+
+			"%H":    {mask: "#:##?##:##?#:##:##?##:##:##", func: checks.time, msg:  "HH:MM:SS (20:10, 2:10:44)"},
+
+
+
+
+			"%DMYT": {mask: "##/##/####T##:##:##", func: checks.datetime, msg:  "DD/MM/YYYYTHH:MM:SS (20/10/1996T22:10:44)"},
+			"%MDYT": {mask: "##.##.####T##:##:##", func: checks.datetime, msg:  "MM.DD.YYYYTHH:MM:SS (10.20.1996T22:10:44)"},
+			"%YMDT": {mask: "####-##-##T##:##:##", func: checks.datetime, msg:  "YYYY-MM-DDTHH:MM:SS (1996-10-20T22:10:44)"},
+
 		};
 
 		/* obter o atributo de definição (text/value) e dados de dataset */
