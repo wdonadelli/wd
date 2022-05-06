@@ -1720,6 +1720,309 @@ const wd = (function() {
 		return val;
 	}
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||*/
+	function WDform (elem) {
+		this.e = elem;
+	};
+	Object.defineProperties(WDform.prototype, {
+		data: {
+			value: {
+				textarea: {
+					textarea: {
+						send: true, load: "value", mask: "value", text: "value", value: null
+					}
+				},
+				select: {
+					select: {
+						send: true, load: "inner", mask: null, text: null,
+						value: function(elem) {
+							let value = [];
+							for (let i = 0; i < elem.length; i++)
+								if (elem[i].selected) value.push(elem[i].value);
+							return value;
+						}
+					}
+				},
+				meter: {
+					meter: {
+						send: false, load: null, mask: null, text: null, value: null
+					}
+				},
+				progress: {
+					progress: {
+						send: false, load: null, mask: null, text: null, value: null
+					}
+				},
+				output: {
+					output: {
+						send: false, load: "text", mask: null, text: "text", value: null
+					}
+				},
+				option: {
+					option: {
+						send: false, load: "text", mask: "text", text: "text", value: null
+					}
+				},
+				form: {
+					form: {
+						send: false, load: "inner", mask: null, text: null, value: null
+					}
+				},
+				button: {
+					button: {
+						send: false, load: "text", mask: "text", text: "text", value: null
+					},
+					reset:  {
+						send: false, load: "text", mask: "text", text: "text", value: null
+					},
+					submit: {
+						send: false, load: "text", mask: "text", text: "text", value: null
+					}
+				},
+				input: {
+					button: {
+						send: false, load: "value", mask: "value", text: "value", value: null
+					},
+					reset: {
+						send: false, load: "value", mask: "value", text: "value", value: null
+					},
+					submit: {
+						send: false, load: "value", mask: "value", text: "value", value: null
+					},
+					image: {
+						send: false, load: null, mask: null, text: null, value: null
+					},
+					color: {
+						send: true, load: null, mask: null, text: "value", value: null
+					},
+					radio: {
+						send: true, load: null, mask: null, text: "value",
+						value: function(elem) {return elem.checked ? elem.value : undefined;}
+					},
+					checkbox: {
+						send: true, load: null, mask: null, text: "value",
+						value: function(elem) {return elem.checked ? elem.value : undefined;}
+					},
+					date: {
+						send: true, load: null, mask: "value", text: "value",
+						value: function(elem) {
+							if (elem.value === "") return "";
+							let check = wd_vtype(elem.value);
+							return check.type === "date" ? wd_date_iso(check.value) : null;
+						}
+					},
+					datetime: {
+						send: true, load: null, mask: null, text: "value",
+						value: function(elem) {
+							if (elem.value === "") return "";
+							let date = wd_vtype(elem.value.substr(0, 10));
+							let time = wd_vtype(elem.value.substr(11));
+							let div  = elem.value.substr(10, 1);
+							if (!(/^[T\ ]$/i).test(div)) return null;
+							if (date.type === "date" && time.type === "time")
+									return wd_date_iso(date.value)+"T"+wd_time_iso(time.value)
+							return null
+						}
+					},
+					month:    {
+						send: true, load: null, mask: null, text: "value",
+						value: function(elem) {
+							if (elem.value === "") return "";
+							let month = null, year = null;
+							if ((/^[0-9]{4}\-[0-9]{2}$/).test(elem.value)) { /* YYYY-MM */
+								month = wd_integer(elem.value.substr(5, 2));
+								year  = wd_integer(elem.value.substr(0, 4));
+							} else if ((/^[0-9]{2}[\/\.][0-9]{4}$/).test(elem.value)) { /* MM/YYYY MM.YYYY */
+								month = wd_integer(elem.value.substr(0, 2));
+								year  = wd_integer(elem.value.substr(3, 4));
+							}
+							if (month === null || year === null) return null;
+							if (month < 1 || month > 12 || year < 1) return null
+							return wd_num_fixed(year, 0, 4)+"-"+wd_num_fixed(month, 0, 2);
+						}
+					},
+					week:     {
+						send: true, load: null, mask: "value", text: "value",
+						value: function(elem) {
+							if (elem.value === "") return "";
+							let week = null, year = null;
+							if ((/^[0-9]{4}\-W[0-9]{2}?$/i).test(elem.value)) { /* YYYY-Www */
+								week = wd_integer(elem.value.substr(6, 2));
+								year = wd_integer(elem.value.substr(0, 4));
+							} else if ((/^[0-9]{2}\,\ [0-9]{4}$/).test(elem.value)) { /* ww, YYYY */
+								week = wd_integer(elem.value.substr(0, 2));
+								year = wd_integer(elem.value.substr(4, 4));
+							}
+							if (week === null || year === null) return null;
+							if (week < 1 || week > 53 || year < 1) return null
+							return wd_num_fixed(year, 0, 4)+"-W"+wd_num_fixed(week, 0, 2)
+						}
+					},
+					time:     {
+						send: true, load: null, mask: null, text: "value",
+						value: function(elem) {
+							if (elem.value === "") return "";
+							let check = wd_vtype(elem.value);
+							return check.type === "time" ? wd_time_iso(check.value) : null;
+						}
+					},
+					range:    {
+						send: true, load: null, mask: null, text: "value",
+						value: function(elem) {
+							if (elem.value === "") return "";
+							return wd_vtype(elem.value).type === "number" ? elem.value : null;
+						}
+					},
+					number:   {
+						send: true, load: null, mask: null, text: "value",
+						value: function(elem) {
+							if (elem.value === "") return "";
+							return wd_vtype(elem.value).type === "number" ? elem.value : null;
+						}
+					},
+					file:     {
+						send: true, load: null, mask: null, text: null,
+						value: function(elem) {
+							return elem.files.length > 0 ? elem.files : [];
+						}
+					},
+					url:      {
+						send: true, load: null, mask: null, text: "value", value: null
+					},
+					email:    {
+						send: true, load: null, mask: null, text: "value", value: null
+					},
+					tel:      {
+						send: true, load: null, mask: null, text: "value", value: null
+					},
+					text:     {
+						send: true, load: null, mask: "value", text: "value", value: null
+					},
+					search:   {
+						send: true, load: null, mask: null, text: "value", value: null
+					},
+					password: {
+						send: true, load: null, mask: null, text: null, value: null
+					},
+					hidden:   {
+						send: true, load: null, mask: null, text: "value", value: null
+					},
+					"datetime-local": {
+						send: true, load: null, mask: null, text: "value",
+						value: function(elem) {
+							if (elem.value === "") return "";
+							let date = wd_vtype(elem.value.substr(0, 10));
+							let time = wd_vtype(elem.value.substr(11));
+							let div  = elem.value.substr(10, 1);
+							if (!(/^[T\ ]$/i).test(div)) return null;
+							if (date.type === "date" && time.type === "time")
+									return wd_date_iso(date.value)+"T"+wd_time_iso(time.value)
+							return null
+						}
+					},
+				}
+			}
+		},
+		tag: { /* retorna a tag do elemento (minúsculo) */
+			get: function () {return this.e.tagName.toLowerCase();}
+		},
+		form: { /* informar se é um formulário (boolean) */
+			get: function() {return this.tag in this.data ? true : false;}
+		},
+		type: { /* retorna o tipo do formulário ou null */
+			get: function() {
+				if (!this.form) return null;
+				/* verificar elemento sem tipo específico */
+				let types = 0;
+				for (let i in this.data[this.tag]) types++;
+				if (types === 1) return this.tag;
+				/* checar tipo específico (informado [atype] e considerado [otype]) */
+				let html = this.e.attributes; /* para formulários não implementados */
+				let elem = this.e; /* para formulários implantados */
+				let atype = "type" in html ? html.type.value.toLowerCase() : null;
+				let otype = "type" in elem ? elem.type.toLowerCase()       : null;
+				if (atype !== null && atype in this.data[this.tag]) return atype;
+				if (otype !== null && otype in this.data[this.tag]) return otype;
+				return null;
+			}
+		},
+		name: { /* retorna o valor do formulário name, id ou null */
+			get: function() {
+				if (!this.form) return null;
+				let value = {
+					name: "name" in this.e ? this.e.name : null,
+					id:     "id" in this.e ? this.e.id   : null
+				};
+				for (let i in value) { /* padronizando valor (sem espaços e sem acentos) */
+					if (value[i] === null) continue;
+					value[i] = wd_text_clear(value[i]).trim().replace(/\ +/, "_");
+					if (!(/^[0-9a-zA-Z\_\-]+$/).test(value[i])) value[i] = null;
+				}
+				return value.name === null ? value.id : value.name;
+			}
+		},
+		value: { /* retorna o valor do atributo value, null (se erro), undefined (não enviar) */
+			get: function() {
+				if (!this.form) return null;
+				let type = this.type;
+				if (type === null) return this.e.value;
+				let target = this.data[this.tag][type];
+				return target.value === null ? this.e.value : target.value(this.e);
+			}
+		},
+	});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /*----------------------------------------------------------------------------*/
 	function wd_html_form_data(elem) { /* retorna um array de objetos {NAME|GET|POST} com dados para requisições */
 		let form  = [];
@@ -3596,7 +3899,8 @@ const wd = (function() {
 			for (let i in o) o[i] = (o[i] < 10 ? "0" : "") + o[i].toString();
 			return WD(o.h+":"+o.m+":"+o.s);
 		}},
-		lang: {get: function() {return wd_lang();}}
+		lang: {get: function() {return wd_lang();}},
+		form: {value: function(e) {return new WDform(e)}}//FIXME apagar isso
 	});
 
 /* == BLOCO 4 ================================================================*/
