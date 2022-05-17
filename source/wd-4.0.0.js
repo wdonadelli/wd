@@ -847,7 +847,7 @@ const wd = (function() {
 /*----------------------------------------------------------------------------*/
 	function wd_time_iso(number) { /* transforma valor numérico em tempo no formato HH:MM:SS */
 		let obj = wd_number_time(number);
-		let time = wd_num_fixed(obj.h, 0, 0)+":";
+		let time = wd_num_fixed(obj.h, 0, 2)+":";
 		time    += wd_num_fixed(obj.m, 0, 2)+":";
 		time    += wd_num_fixed(obj.s, 0, 2);
 		return time;
@@ -2316,7 +2316,7 @@ const wd = (function() {
 					if (!(data[i].re.test(this.e.value))) continue;
 					let week = wd_integer(this.e.value.substr(data[i].w.i, data[i].w.e));
 					let year = wd_integer(this.e.value.substr(data[i].y.i, data[i].y.e));
-					if (week >= 1 && month <= 53 && year >= 1)
+					if (week >= 1 && week <= 53 && year >= 1)
 						return wd_num_fixed(year, 0, 4)+"-W"+wd_num_fixed(week, 0, 2);
 				}
 				return null;
@@ -2467,25 +2467,35 @@ const wd = (function() {
 				return config.value === null ? this.e.value : this[config.value];
 			}
 		},
-		send: { /* informa se o campo pode ser submetido (true/false) ou null se não contemplado*/
+		selfMasked: { /* informa se é um campo especial implementado pelo navegador */
 			get: function() {
-				return this.form ? this.config(this.type).send : null;
+				let atypes = [
+					"date", "time", "week", "month", "datetime", "datetime-local",
+					"number", "range", "url", "email"
+				];
+				let type = this.type;
+				if (atypes.indexOf(type) < 0) return false;
+				let attr = this.attr("type", true, false);
+				if (attr.elem === "text") return false;
+				return true;
 			}
+		},
+		getConfig: { /* obtem informações sobre a configuração do elemento */
+			value: function(attr) {
+				return this.form ? this.config(this.type)[attr] : null;
+			}
+		},
+		send: { /* informa se o campo pode ser submetido (true/false) ou null se não contemplado*/
+			get: function() {return this.getConfig("send");}
 		},
 		mask: { /* retorna o atributo que definirá a máscara ou null, se não contemplado */
-			get: function() {
-				return this.form ? this.config(this.type).mask : null;
-			}
+			get: function() {return this.getConfig("mask");}
 		},
 		text: { /* retorna o atributo que definirá o campo de texto ou null, se não contemplado */
-			get: function() {
-				return this.form ? this.config(this.type).text : null;
-			}
+			get: function() {return this.getConfig("text");}
 		},
 		load: { /* retorna o atributo que definirá o carregamento HTML ou null, se não contemplado */
-			get: function() {
-				return this.form ? this.config(this.type).load : null;
-			}
+			get: function() {return this.getConfig("load");}
 		},
 		data: { /* retorna um objeto com dados a submeter (GET e POST), vazio se não submeter, null se inválido */
 			get: function() {
@@ -3745,18 +3755,20 @@ const wd = (function() {
 		/* retornar se não tiver nada para fazer */
 		if (!("wdMask" in e.dataset)) return;
 
-		let shorts = { /* atalhos */
-			"%YMD":  {mask: "####-##-##",            msg: "YYYY-MM-DD (1996-10-20)"},
-			"%DMY":  {mask: "##/##/####?####-##-##", msg: "DD/MM/YYYY (20/10/1996)"},
-			"%MDY":  {mask: "##.##.####?####-##-##", msg: "MM.DD.YYYY (10.20.1996)"},
-			"%YM":   {mask: "####-##",               msg: "YYYY-MM (1996-10)"},
-			"%MY":   {mask: "##/####?####-##",       msg: "MM/YYYY (10/1996)"},
-			"%YW":   {mask: "####-W##",              msg: "YYYY-Www (1996-W50)"},
-			"%WY":   {mask: "##, ####?####-W##",     msg: "ww, YYYY (1996-W05)"},
-			"%H":    {mask: "#:##?##:##?#:##:##?##:##:##",  msg:  "HH:MM:SS (20:10, 2:10:44)"},
-			"%DMYT": {mask: "##/##/####T##:##:##",  msg:  "DD/MM/YYYYTHH:MM:SS (20/10/1996T22:10:44)"},
-			"%MDYT": {mask: "##.##.####T##:##:##",  msg:  "MM.DD.YYYYTHH:MM:SS (10.20.1996T22:10:44)"},
-			"%YMDT": {mask: "####-##-##T##:##:##",  msg:  "YYYY-MM-DDTHH:MM:SS (1996-10-20T22:10:44)"},
+		let shorts = { /* atalhos  FIXME */
+			YMD:  {mask: "####-##-##",         msg: "YYYY-MM-DD (1996-10-20)"},
+			DMY:  {mask: "##/##/####",         msg: "DD/MM/YYYY (20/10/1996)"},
+			MDY:  {mask: "##.##.####",         msg: "MM.DD.YYYY (10.20.1996)"},
+			YM:   {mask: "####-##",            msg: "YYYY-MM (1996-10)"},
+			MY:   {mask: "##/####",            msg: "MM/YYYY (10/1996)"},
+			YW:   {mask: "####-W##",           msg: "YYYY-Www (1996-W50)"},
+			WY:   {mask: "##, ####",           msg: "ww, YYYY (1996-W05)"},
+			HM:   {mask: "#:##?##:##",         msg: "HH:MM (2:09)"},
+			HMS:  {mask: "#:##:##?##:##:##",   msg: "HH:MM:SS (2:09:05)"},
+			AMPM: {mask: "#:## @@?##:## @@",   msg: "HH:MM AMPM (02:10 AM)"},
+			DMYT: {mask: "##/##/####T##:##:##",         msg: "DD/MM/YYYYTHH:MM:SS (20/10/1996T22:10:44)"},
+			MDYT: {mask: "##.##.####T##:##:##",         msg: "MM.DD.YYYYTHH:MM:SS (10.20.1996T22:10:44)"},
+			YMDT: {mask: "####-##-##T##:##:##",         msg: "YYYY-MM-DDTHH:MM:SS (1996-10-20T22:10:44)"},
 		};
 
 		/* obter o atributo da máscara e dados de dataset */
@@ -3793,7 +3805,7 @@ const wd = (function() {
 			if (text !== value)
 				e[attr] = value;
 		} else { /* máscara não casou */
-			if (test.value !== undefined && test.value !== "")
+			if (test.value !== undefined && test.value !== "" && !test.selfMasked)
 				e.dataset.wdErrorMessageMask = msg === null ? mask : msg;
 		}
 		return;

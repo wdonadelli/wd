@@ -5,12 +5,15 @@ function files(x) {
 	if (x.files.length === 0)     return null; /* desconsiderar se não for informado */
 	if (x.files.length !== 1)     return "Please enter only one file.";
 	if (x.files[0].size > 102400) return "File too big!"
+	return null;
 }
 function numbers(x) {
 	let value = wd(x.value);
-	if (value.type !== "number")  return "Enter a number!";
-	if (!value.test("integer"))   return "Enter an integer greater than 0!";
-	if (value <= 0 || value >= 5) return "Enter only numbers between 0 and 5!";
+	if (value.type !== "number") return "Enter a number!";
+	if (!value.test("integer"))  return "Enter an integer!";
+	if (value < 1)               return "Very small number!";
+	if (value > 9)               return "Very big number!";
+	return null;
 }
 function request(x) {
 	if (x.closed)
@@ -21,7 +24,7 @@ function request(x) {
 <form class="wd-block-child" id="form">
   <label for="field1">Required field:</label>
   <input type="text" name="field1" placeholder="I am a required field." required="" />
-  <label for="field2">Integer greater than 0 and less than 5:</label>
+  <label for="field2">0 &lt; Integer &gt; 10:</label>
   <input type="text" name="field2" placeholder="Try to disobey me." data-wd-vform="numbers" />
   <label for="field3">Enter a file up to 100kB:</label>
   <input type="file" name="field3" multiple=""  data-wd-vform="files" />
