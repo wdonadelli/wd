@@ -3755,21 +3755,70 @@ const wd = (function() {
 		/* retornar se não tiver nada para fazer */
 		if (!("wdMask" in e.dataset)) return;
 
+
+
 		let shorts = { /* atalhos  FIXME */
-			YMD:  {mask: "####-##-##",         msg: "YYYY-MM-DD (1996-10-20)"},
-			DMY:  {mask: "##/##/####",         msg: "DD/MM/YYYY (20/10/1996)"},
-			MDY:  {mask: "##.##.####",         msg: "MM.DD.YYYY (10.20.1996)"},
-			YM:   {mask: "####-##",            msg: "YYYY-MM (1996-10)"},
-			MY:   {mask: "##/####",            msg: "MM/YYYY (10/1996)"},
-			YW:   {mask: "####-W##",           msg: "YYYY-Www (1996-W50)"},
-			WY:   {mask: "##, ####",           msg: "ww, YYYY (1996-W05)"},
-			HM:   {mask: "#:##?##:##",         msg: "HH:MM (2:09)"},
-			HMS:  {mask: "#:##:##?##:##:##",   msg: "HH:MM:SS (2:09:05)"},
-			AMPM: {mask: "#:## @@?##:## @@",   msg: "HH:MM AMPM (02:10 AM)"},
-			DMYT: {mask: "##/##/####T##:##:##",         msg: "DD/MM/YYYYTHH:MM:SS (20/10/1996T22:10:44)"},
-			MDYT: {mask: "##.##.####T##:##:##",         msg: "MM.DD.YYYYTHH:MM:SS (10.20.1996T22:10:44)"},
-			YMDT: {mask: "####-##-##T##:##:##",         msg: "YYYY-MM-DDTHH:MM:SS (1996-10-20T22:10:44)"},
+			YMD: {
+				mask: "####-##-##",
+				msg:  "YYYY-MM-DD (1996-10-20)",
+			},
+			DMY: {
+				mask: "##/##/####",
+				msg:  "DD/MM/YYYY (20/10/1996)",
+			},
+			MDY: {
+				mask: "##.##.####",
+				msg:  "MM.DD.YYYY (10.20.1996)",
+			},
+			YM: {
+				mask: "####-##",
+				msg:  "YYYY-MM (1996-10)",
+			},
+			MY: {
+				mask: "##/####",
+				msg: "MM/YYYY (10/1996)",
+			},
+			YW:   {
+				mask: "####-W##",
+				msg: "YYYY-Www (1996-W50)",
+			},
+			WY: {
+				mask: "##, ####",
+				msg: "ww, YYYY (1996-W05)",
+			},
+			HMS: {
+				mask: "#:##?##:##?#:##:##?##:##:##",
+				msg: "HH:MM:SS (2:09)",
+			},
+			YMDHMS: {
+				mask: "%#:##?%##:##?%#:##:##?%##:##:##".replace(/\%/g, "####-##-##T"),
+				msg: "YYYY-MM-DDTHH:MM:SS (1996-10-20T2:10)",
+			},
+			DMYHMS: {
+				mask: "%#:##?%##:##?%#:##:##?%##:##:##".replace(/\%/g, "##/##/####T"),
+				msg: "DD/MM/YYYYTHH:MM:SS (20/10/1996T2:10)",
+			},
+			MDYHMS: {
+				mask: "%#:##?%##:##?%#:##:##?%##:##:##".replace(/\%/g, "##.##.####T"),
+				msg: "MM.DD.YYYYTHH:MM:SS (10.20.1996T2:10)",
+			},
+			YMD_HMS: {
+				mask: "%#:##?%##:##?%#:##:##?%##:##:##".replace(/\%/g, "####-##-## "),
+				msg: "YYYY-MM-DD HH:MM:SS (1996-10-20 2:10)",
+			},
+			DMY_HMS: {
+				mask: "%#:##?%##:##?%#:##:##?%##:##:##".replace(/\%/g, "##/##/#### "),
+				msg: "DD/MM/YYYY HH:MM:SS (20/10/1996 2:10)",
+			},
+			MDY_HMS: {
+				mask: "%#:##?%##:##?%#:##:##?%##:##:##".replace(/\%/g, "##.##.#### "),
+				msg: "MM.DD.YYYY HH:MM:SS (10.20.1996 2:10)",
+			},
+
+
 		};
+
+
 
 		/* obter o atributo da máscara e dados de dataset */
 		let test = new WDform(e);
