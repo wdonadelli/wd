@@ -3022,7 +3022,7 @@ const wd = (function() {
 				/* obtendo pacote de dados */
 				let pack;
 				if (this.type === "dom") {
-					pack = this.form(method);
+					pack = this.form(method.toUpperCase() === "GET" ? true: false);
 					if (pack === null) return false;
 				} else {
 					let value = this.type === "number" ? this.valueOf() : this.toString();
