@@ -2346,7 +2346,7 @@ const wd = (function() {
 				let value = [];
 				for (let i = 0; i < this.e.length; i++)
 					if (this.e[i].selected) value.push(this.e[i].value);
-				return value.length === 0 ? undefined : value;
+				return value.length > 0 ? value: undefined;
 			}
 		},
 		vcheck: { /* retorna o valor se checado, caso contrário não submeter, undefined */
@@ -2354,8 +2354,27 @@ const wd = (function() {
 				return this.e.checked ? this.e.value : undefined;
 			}
 		},
+		vemail: { /* retorna o valor do campo se casado, null, se não casar ou em branco */
+			get: function() {
+				let value = this.e.value.trim().replace(/\ +/g, "");
+				let attr  = this.attr("type", true, false);
+				let re    = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
+/* FIXME o que é (?:xxxx)?
+/^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+
+@
+[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
+*/
+
+
+				if (value === "" || attr.elem === "email") return value;
+				value = value.split(","); /* vários e-mails separados por vírgula */
+				for (let i = 0; i < value.length; i++)
+					if (!re.test(value[i])) return null;
+				return value.join(",");
+			}
+		},
 		attr: { /* obtem atributos do elemento e faz alterações especiais */
-			value: function(attr, lower, std) { /* retorna o valor do atributo */
+			value: function(attr, lower, std) {
 				let value = {
 					html: attr in this.e.attributes ? this.e.attributes[attr].value : null,
 					elem: attr in this.e            ? this.e[attr] : null,
@@ -2366,7 +2385,7 @@ const wd = (function() {
 						value[i] = value[i].toLowerCase();
 					if (std === true) {
 						value[i] = wd_text_clear(value[i]);
-						value[i] = value[i].trim().replace(/\ +/, "_");
+						value[i] = value[i].trim().replace(/\ +/g, "_");
 						if (!(/^[0-9a-zA-Z\_\-]+$/).test(value[i])) value[i] = null;
 					}
 				}
@@ -2420,7 +2439,7 @@ const wd = (function() {
 				data.input.number   = {send: T, load: N, mask: v, text:v, value: "vnumber"};
 				data.input.file     = {send: T, load: N, mask: N, text:N, value: "vfile"};
 				data.input.url      = {send: T, load: N, mask: v, text:v, value: N};
-				data.input.email    = {send: T, load: N, mask: v, text:v, value: N};
+				data.input.email    = {send: T, load: N, mask: v, text:v, value: "vemail"};
 				data.input.tel      = {send: T, load: N, mask: v, text:v, value: N};
 				data.input.text     = {send: T, load: N, mask: v, text:v, value: N};
 				data.input.search   = {send: T, load: N, mask: v, text:v, value: N};
@@ -2531,7 +2550,8 @@ const wd = (function() {
 				number: "[0-9]+ | .[0-9]+ | [0-9]+.[0-9]+",
 				date: "2010-11-23 | 23/11/2010 | 11.23.2010",
 				datetime: "2010-11-23T22:45 | 23/11/2010 22:45:50 | 11.23.2010 10:45 pm",
-				"datetime-local": "2010-11-23T22:45 | 23/11/2010 22:45:50 | 11.23.2010 10:45 pm"
+				"datetime-local": "2010-11-23T22:45 | 23/11/2010 22:45:50 | 11.23.2010 10:45 pm",
+				email: "email@mail.com",
 			}
 		},
 		validity: { /* registro de validade do campo de formulário */
