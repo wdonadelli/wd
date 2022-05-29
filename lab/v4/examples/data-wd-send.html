@@ -8,15 +8,25 @@ function fsend(x) {
 </script>
 
 <div id="input">
-	<label style="display: block; width: 100%">Name</label>
+	<label style="display: block; width: 100%">Text</label>
 	<input type="text" name="text"  style="display: block; width: 100%" />
 
 	<label style="display: block; width: 100%">
-		<input type="checkbox" name="box" />Confirm?
+		<input type="checkbox" name="box" />Checkbox
 	</label>
 
 	<label style="display: block; width: 100%">File</label>
 	<input type="file" name="file" multiple="" style="display: block; width: 100%" />
+
+	<label style="display: block; width: 100%">e-mail</label>
+	<input type="email" name="email" multiple="" style="display: block; width: 100%" />
+
+	<label style="display: block; width: 100%;">Select</label>
+	<select name="select" multiple="" style="display: block; width: 100%; margin-bottom: 5px;" >
+		<option value="Item 0">Item 0</option>
+		<option value="Item 1">Item 1</option>
+		<option value="Item 2">Item 2</option>
+	</select>
 
 	<button type="button" data-wd-send="path{examples/target.php}call{fsend}$${#input *}"  style="display: block; width: 100%"> Send</button>
 

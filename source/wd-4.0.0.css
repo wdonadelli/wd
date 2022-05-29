@@ -523,6 +523,10 @@ padding: 0;
 	background-position: left center;
 	padding-left: 25px;
 }
+.wd select[multiple] {
+	background-image: none;
+	padding-left: 0.5em;
+}
 /* -- outros -- */
 .wd hr {
 	border: var(--var-border-form);

@@ -116,7 +116,7 @@ const wd = (function() {
 /*----------------------------------------------------------------------------*/
 	function wd_lang() { /*Retorna o local: definido ou do navegador*/
 		let attr  = document.body.parentElement.attributes;
-		if ("lang" in attr) return attr.lang.value.replace(/\ /g, "");
+		if ("lang" in attr) return attr.lang.value.replace(/\s/g, "");
 		return navigator.language || navigator.browserLanguage || "en-US";
 	}
 
@@ -492,7 +492,7 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	function wd_no_spaces(txt, char) { /* Troca múltiplos espaço por um caracter*/
-		return txt.replace(/[\0- ]+/g, (char === undefined ? " " : char)).trim();
+		return txt.replace(/\s+/g, (char === undefined ? " " : char)).trim();
 	};
 
 /*----------------------------------------------------------------------------*/
@@ -515,7 +515,8 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	function wd_text_camel(value) { /* abc-def para abcDef */
-		let x = wd_text_clear(value).replace(/[^a-zA-Z0-9\.\_\:\-\ ]/g, "");
+		let x = wd_text_clear(value);
+		x = wd_no_spaces(x, " ").replace(/[^a-zA-Z0-9._: -]/g, "");
 
 		/* testando se já está no formato */
 		if ((/^[a-z0-9\.\_\:][a-zA-Z0-9\.\_\:]+$/).test(x)) return x;
@@ -537,7 +538,8 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	function wd_text_dash(value) { /*abcDef para abc-def*/
-		let x = wd_text_clear(value).replace(/[^a-zA-Z0-9\.\_\:\-\ ]/g, "");
+		let x = wd_text_clear(value);
+		x = wd_no_spaces(x, " ").replace(/[^a-zA-Z0-9._: -]/g, "");
 
 		/* testando se já está no formato */
 		if ((/^[a-z0-9\_\.\:]+((\-[a-z0-9\_\.\:]+)+)?$/).test(x)) return x;
@@ -2281,7 +2283,7 @@ const wd = (function() {
 				let date = wd_vtype(this.e.value.substr(0, 10));
 				let time = wd_vtype(this.e.value.substr(11));
 				let div  = this.e.value.substr(10, 1);
-				if (!(/^[T\ ]$/i).test(div)) return null; /* dateTtime | date time */
+				if (!(/^[T ]$/i).test(div)) return null; /* dateTtime | date time */
 				if (date.type === "date" && time.type === "time")
 						return wd_date_iso(date.value)+"T"+wd_time_iso(time.value)
 				return null
@@ -2338,7 +2340,9 @@ const wd = (function() {
 		},
 		vfile: { /* retorna valores do campo de arquivos, se vazio "" */
 			get: function() {
-				return this.e.files.length > 0 ? this.e.files : "";
+				if ("files" in this.e) return this.e.files;
+				let val = this.e.value.trim();
+				return val === "" ? [] : [{name: val}];
 			}
 		},
 		vselect: { /* retorna a lista das opções selecionadas, se vazio não submeter, undefined */
@@ -2346,7 +2350,7 @@ const wd = (function() {
 				let value = [];
 				for (let i = 0; i < this.e.length; i++)
 					if (this.e[i].selected) value.push(this.e[i].value);
-				return value.length > 0 ? value: undefined;
+				return value.length > 0 ? value : [];
 			}
 		},
 		vcheck: { /* retorna o valor se checado, caso contrário não submeter, undefined */
@@ -2354,23 +2358,34 @@ const wd = (function() {
 				return this.e.checked ? this.e.value : undefined;
 			}
 		},
-		vemail: { /* retorna o valor do campo se casado, null, se não casar ou em branco */
+		vemail: { /* retorna uma array de endereços de email, ou null se houver algum inválido*/
 			get: function() {
-				let value = this.e.value.trim().replace(/\ +/g, "");
-				let attr  = this.attr("type", true, false);
-				let re    = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
-/* FIXME o que é (?:xxxx)?
-/^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+
-@
-[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
-*/
-
-
-				if (value === "" || attr.elem === "email") return value;
-				value = value.split(","); /* vários e-mails separados por vírgula */
-				for (let i = 0; i < value.length; i++)
-					if (!re.test(value[i])) return null;
-				return value.join(",");
+				/* se vazio retornar lista vazia */
+				let mail = this.e.value.trim().replace(/(\s+)?\,(\s+)?/g, ",");
+				if (mail === "") return [];
+				/* se navegador contempla email, retornar o que ele decidir */
+				let list = mail.split(",");
+				let attr = this.attr("type", true, false);
+				if (attr.elem === "email") return list;
+				/* caso contrário, verificar lista de email... */
+				let re = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+				for (let i = 0; i < list.length; i++)
+					if (!re.test(list[i])) return null;
+				return list;
+			}
+		},
+		vurl: { /* retorna um url, ou null se inválido*/
+			get: function() {
+				let url = this.e.value.trim();
+				if (url === "") return "";
+				if (!("URL" in window)) return url;
+				try {
+					let check = new URL(url);
+					return check.toString();
+				} catch(e) {
+					return null;
+				}
+				return null;
 			}
 		},
 		attr: { /* obtem atributos do elemento e faz alterações especiais */
@@ -2385,7 +2400,7 @@ const wd = (function() {
 						value[i] = value[i].toLowerCase();
 					if (std === true) {
 						value[i] = wd_text_clear(value[i]);
-						value[i] = value[i].trim().replace(/\ +/g, "_");
+						value[i] = wd_no_spaces(value[i].trim(), "_");
 						if (!(/^[0-9a-zA-Z\_\-]+$/).test(value[i])) value[i] = null;
 					}
 				}
@@ -2438,7 +2453,7 @@ const wd = (function() {
 				data.input.range    = {send: T, load: N, mask: N, text:v, value: "vnumber"};
 				data.input.number   = {send: T, load: N, mask: v, text:v, value: "vnumber"};
 				data.input.file     = {send: T, load: N, mask: N, text:N, value: "vfile"};
-				data.input.url      = {send: T, load: N, mask: v, text:v, value: N};
+				data.input.url      = {send: T, load: N, mask: v, text:v, value: "vurl"};
 				data.input.email    = {send: T, load: N, mask: v, text:v, value: "vemail"};
 				data.input.tel      = {send: T, load: N, mask: v, text:v, value: N};
 				data.input.text     = {send: T, load: N, mask: v, text:v, value: N};
@@ -2527,12 +2542,28 @@ const wd = (function() {
 				if (value === undefined) return data; /* campos válidos mas sem valor a submeter */
 				if (name  === null)      return data; /* campos sem name, não considerar inválidos mas não submeter */
 
-				if ((type === "file" && value !== "") || type === "select") {
-					for (let i = 0; i < value.length; i++)
-						data[value.length > 1 ? name+"_"+i : name] = {
-							GET:  encodeURIComponent(type === "file" ? value[i].name : value[i]),
+				if (type === "select" || type === "email") {
+					data[name] = {
+						GET: encodeURIComponent(wd_json(value)),
+						POST: wd_json(value)
+					}
+					return data;
+				}
+				if (type === "file") {
+					data[name] = { /* quantidade de arquivos */
+						GET: encodeURIComponent(value.length),
+						POST: value.length
+					};
+					for (let i = 0; i < value.length; i++) {
+						let get  = {};
+						let info = ["name", "type", "size", "lastModified"];
+						for (let j = 0; j < info.length; j++)
+							if (info[j] in value[i]) get[info[j]] = value[i][info[j]];
+						data[name+"_"+i] = { /* arquivos individuais */
+							GET:  encodeURIComponent(wd_json(get)),
 							POST: value[i]
 						};
+					}
 					return data;
 				}
 				data[name] = {
@@ -2552,6 +2583,7 @@ const wd = (function() {
 				datetime: "2010-11-23T22:45 | 23/11/2010 22:45:50 | 11.23.2010 10:45 pm",
 				"datetime-local": "2010-11-23T22:45 | 23/11/2010 22:45:50 | 11.23.2010 10:45 pm",
 				email: "email@mail.com",
+				url: "http://address.com",
 			}
 		},
 		validity: { /* registro de validade do campo de formulário */
@@ -3775,41 +3807,15 @@ const wd = (function() {
 		/* retornar se não tiver nada para fazer */
 		if (!("wdMask" in e.dataset)) return;
 
-
-
-		let shorts = { /* atalhos  FIXME */
-			YMD: {
-				mask: "####-##-##",
-				msg:  "YYYY-MM-DD (1996-10-20)",
-			},
-			DMY: {
-				mask: "##/##/####",
-				msg:  "DD/MM/YYYY (20/10/1996)",
-			},
-			MDY: {
-				mask: "##.##.####",
-				msg:  "MM.DD.YYYY (10.20.1996)",
-			},
-			YM: {
-				mask: "####-##",
-				msg:  "YYYY-MM (1996-10)",
-			},
-			MY: {
-				mask: "##/####",
-				msg: "MM/YYYY (10/1996)",
-			},
-			YW:   {
-				mask: "####-W##",
-				msg: "YYYY-Www (1996-W50)",
-			},
-			WY: {
-				mask: "##, ####",
-				msg: "ww, YYYY (1996-W05)",
-			},
-			HMS: {
-				mask: "#:##?##:##?#:##:##?##:##:##",
-				msg: "HH:MM:SS (2:09)",
-			},
+		let shorts = {
+			YMD: {mask: "####-##-##", msg: "YYYY-MM-DD (1996-10-20)"},
+			DMY: {mask: "##/##/####", msg: "DD/MM/YYYY (20/10/1996)"},
+			MDY: {mask: "##.##.####", msg: "MM.DD.YYYY (10.20.1996)"},
+			YM:  {mask: "####-##",    msg: "YYYY-MM (1996-10)"},
+			MY:  {mask: "##/####",    msg: "MM/YYYY (10/1996)"},
+			YW:  {mask: "####-W##",   msg: "YYYY-Www (1996-W50)"},
+			WY:  {mask: "##, ####",   msg: "ww, YYYY (1996-W05)"},
+			HMS: {mask: "#:##?##:##?#:##:##?##:##:##", msg: "HH:MM:SS (2:09)"},
 			YMDHMS: {
 				mask: "%#:##?%##:##?%#:##:##?%##:##:##".replace(/\%/g, "####-##-##T"),
 				msg: "YYYY-MM-DDTHH:MM:SS (1996-10-20T2:10)",
