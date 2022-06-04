@@ -892,13 +892,6 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_date_first_day(search, year) { /* encontra o primeiro dia do ano (valor inteiro) */
-		let init = wd_set_date(null, 1, 1, year).getDay() + 1;
-		let diff = search < init ? search + 7 - init : search - init
-		return 1 + diff;
-	}
-
-/*----------------------------------------------------------------------------*/
 	function wd_date_locale(obj, value) { /* obtem o nome do atributo da data no local */
 		try {return obj.toLocaleString(wd_lang(), value);} catch(e) {}
 		return obj.toLocaleString(undefined, value);
@@ -912,12 +905,14 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	function wd_date_working(y, ref) { /* obtem os dias úteis a partir de uma referência */
-		let sat  = wd_date_first_day(7, y);
-		let sun  = wd_date_first_day(1, y);
-		let nSat = wd_integer((ref - sat)/7) + 1;
-		let nSun = wd_integer((ref - sun)/7) + 1;
-		let work = ref - (nSat + nSun)
-		return work < 0 ? 0 : work;
+		let init = wd_set_date(null, 1, 1, y).getDay()+1;
+		let work = 0;
+		for (let i = 0; i < ref; i++) {
+			if (init === 8) init = 1;         /* reestabelece o looping semanal */
+			if (init > 1 && init < 7) work++; /* se for dia útil, conta */
+			init++;
+		}
+		return work;
 	}
 
 /*----------------------------------------------------------------------------*/
@@ -3840,11 +3835,7 @@ const wd = (function() {
 				mask: "%#:##?%##:##?%#:##:##?%##:##:##".replace(/\%/g, "##.##.#### "),
 				msg: "MM.DD.YYYY HH:MM:SS (10.20.1996 2:10)",
 			},
-
-
 		};
-
-
 
 		/* obter o atributo da máscara e dados de dataset */
 		let test = new WDform(e);
