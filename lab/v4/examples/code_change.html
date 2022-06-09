@@ -1,0 +1,84 @@
+<h3>Code Change</h3>
+
+<script>
+const css = "../../source/wd-4.0.0.css";
+const js  = "../../source/wd-4.0.0.js";
+
+function getCssProperties(name) {
+	name = name.replace(".wd-", "");
+
+	let child = (/\-child$/).test(name) ? true : false;
+	if (child)
+		name = name.replace(/\-child$/, "");
+
+	let intensity = name.match(/^x+/);
+	if (intensity !== null) {
+		intensity = intensity[0];
+		name = name.replace(/^x+/, "");
+	}
+
+	let parameter = name.match(/(\-[a-z0-9]+)+/);
+	if (parameter !== null) {
+		parameter = parameter[0].replace(/^\-/, "");
+		name = name.replace(/(\-[a-z0-9]+)+/, "");
+	}
+	return {
+		name: name,
+		child: child,
+		intensity: intensity,
+		parameter: parameter,
+	};
+}
+
+
+
+function cssAttributes(type) {
+
+	wd().send(css, function(x) {
+
+		if (x.closed) {
+
+			let reName = /\.wd\-[a-z]+/g;
+			let reAttr = /\.wd(\-[a-z0-9]+)+/g;
+			let object = {};
+			let names  = wd(x.text.match(reName)).unique;
+			let attrs  = wd(x.text.match(reAttr)).unique;
+
+			for (let i = 0; i < attrs.length; i++) {
+				let value     = getCssProperties(attrs[i]);
+				let name      = value.name;
+				let parameter = value.parameter;
+				let intensity = value.intensity;
+				let child     = value.child;
+
+				if (!(name in object))
+					object[name] = {
+						child: child,
+						intensity: intensity === null ? [] : [intensity],
+						parameter: parameter === null ? [] : [parameter],
+					};
+
+				if (intensity !== null && object[name].intensity.indexOf(intensity) < 0)
+					object[name].intensity.push(intensity);
+
+				if (parameter !== null && object[name].parameter.indexOf(parameter) < 0)
+					object[name].parameter.push(parameter);
+
+				if (child)
+					object[name].child = true;
+			}
+
+			//document.getElementById("code_change").textContent = JSON.stringify(object);
+			console.log(object);
+		}
+	});
+}
+</script>
+
+
+<nav>
+	<span onclick="cssAttributes();">CSS</span>
+</nav>
+
+
+<pre id="code_change"></pre>
