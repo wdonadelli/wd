@@ -1,75 +1,68 @@
 <h3>Code Change</h3>
 
 <script>
-const css = "../../source/wd-4.0.0.css";
-const js  = "../../source/wd-4.0.0.js";
+const SourceCSS = "../../source/wd-4.0.0.css";
+const SourceJS  = "../../source/wd-4.0.0.js";
+const wikiCSS   = "WD-CSS-Properties";
 
-function getCssProperties(name) {
-	name = name.replace(".wd-", "");
+function getCssProperties(input) {
+	input = input.replace(".wd-", "wd-");
+	let name  = input.replace("wd-", "").replace(/(\-[a-z0-9]+)+/, "");
+	let child = (/\-child$/).test(input) ? true : false;
 
-	let child = (/\-child$/).test(name) ? true : false;
-	if (child)
-		name = name.replace(/\-child$/, "");
+	if (child) input = input.replace(/\-child$/, "");
+	input = input.replace(/\-[0-9][0-9]+/g, "##");
 
-	let intensity = name.match(/^x+/);
-	if (intensity !== null) {
-		intensity = intensity[0];
-		name = name.replace(/^x+/, "");
-	}
-
-	let parameter = name.match(/(\-[a-z0-9]+)+/);
-	if (parameter !== null) {
-		parameter = parameter[0].replace(/^\-/, "");
-		name = name.replace(/(\-[a-z0-9]+)+/, "");
-	}
 	return {
 		name: name,
-		child: child,
-		intensity: intensity,
-		parameter: parameter,
+		child: child ? "Yes" : "No",
+		css: input
 	};
 }
 
+function cssNameDescription(input) {
+	/* |name|description| */
+		return "|[wd-" + input + "](" + wikiCSS + "#" + input + ")||\n";
+}
 
+function cssParameterDescription(name, input) {
+	/*|CSS|Child|Obs|*/
+	let value = []
+	value.push("## " + name + "\n");
+	value.push("|Attribute|Child|Obs|");
+	value.push("|:-------:|:---:|:-:|");
+
+	for (let i in input)
+		value.push("|" + i + "|" + input[i] + "||")
+	value.push("\n");
+	return value.join("\n");
+}
 
 function cssAttributes(type) {
 
-	wd().send(css, function(x) {
+	wd().send(SourceCSS, function(x) {
 
 		if (x.closed) {
 
-			let reName = /\.wd\-[a-z]+/g;
-			let reAttr = /\.wd(\-[a-z0-9]+)+/g;
-			let object = {};
-			let names  = wd(x.text.match(reName)).unique;
-			let attrs  = wd(x.text.match(reAttr)).unique;
+			let re   = /\.wd(\-[a-z0-9]+)+/g;
+			let data = {};
+			let txt  = [];
+			let css  = wd(x.text.match(re)).unique;
 
-			for (let i = 0; i < attrs.length; i++) {
-				let value     = getCssProperties(attrs[i]);
-				let name      = value.name;
-				let parameter = value.parameter;
-				let intensity = value.intensity;
-				let child     = value.child;
-
-				if (!(name in object))
-					object[name] = {
-						child: child,
-						intensity: intensity === null ? [] : [intensity],
-						parameter: parameter === null ? [] : [parameter],
-					};
-
-				if (intensity !== null && object[name].intensity.indexOf(intensity) < 0)
-					object[name].intensity.push(intensity);
-
-				if (parameter !== null && object[name].parameter.indexOf(parameter) < 0)
-					object[name].parameter.push(parameter);
-
-				if (child)
-					object[name].child = true;
+			for (let i = 0; i < css.length; i++) {
+				let prop = getCssProperties(css[i]);
+				if (!(prop.name in data)) data[prop.name] = {};
+				data[prop.name][prop.css] = prop.child;
 			}
 
-			//document.getElementById("code_change").textContent = JSON.stringify(object);
-			console.log(object);
+			for (let i in data) {
+				switch(type) {
+					case "name": txt.push(cssNameDescription(i)); break;
+					case "prop": txt.push(cssParameterDescription(i, data[i])); break;
+				}
+			}
+
+			document.getElementById("code_change").textContent = txt.join("");console.log(data)
 		}
 	});
 }
@@ -77,7 +70,8 @@ function cssAttributes(type) {
 
 
 <nav>
-	<span onclick="cssAttributes();">CSS</span>
+	<span onclick="cssAttributes('name');">CSS Name</span>
+	<span onclick="cssAttributes('prop');">CSS Prop</span>
 </nav>
 
 

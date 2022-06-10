@@ -3413,6 +3413,9 @@ const wd = (function() {
 		sort: { /* ordena items */
 			get: function() {return wd_array_sort(this.valueOf());}
 		},
+		tidy: { /* remove itens repetidos e ordena TODO */
+			get: function() {return wd_array_sort(this.unique);}
+		},
 		item: { /* retorna o índice especificado ou seu comprimento */
 			value: function(i) {
 				return wd_array_item(this.valueOf(), i);
