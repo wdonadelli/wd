@@ -3413,7 +3413,7 @@ const wd = (function() {
 		sort: { /* ordena items */
 			get: function() {return wd_array_sort(this.valueOf());}
 		},
-		tidy: { /* remove itens repetidos e ordena TODO */
+		tidy: { /* remove itens repetidos e ordena */
 			get: function() {return wd_array_sort(this.unique);}
 		},
 		item: { /* retorna o índice especificado ou seu comprimento */
@@ -3617,8 +3617,7 @@ const wd = (function() {
 			for (let i in o) o[i] = (o[i] < 10 ? "0" : "") + o[i].toString();
 			return WD(o.h+":"+o.m+":"+o.s);
 		}},
-		lang: {get: function() {return wd_lang();}},
-		form: {value: function(e) {return new WDform(e)}}//FIXME apagar isso
+		lang: {get: function() {return wd_lang();}}
 	});
 
 /* == BLOCO 4 ================================================================*/

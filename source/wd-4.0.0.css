@@ -243,6 +243,10 @@ script, style {
 	display: none !important;
 }
 
+q {
+	quotes: "\201C" "\201D" "\2018" "\2019";
+}
+
 /* == BLOCO 3 ================================================================*/
 
 .wd {
@@ -635,77 +639,78 @@ padding: 0;
 .wd .wd-row > .wd-col-10 {flex: 10;}
 .wd .wd-row > .wd-col-11 {flex: 11;}
 .wd .wd-row > .wd-col-12 {flex: 12;}
+
 /* -- Formatações de colunas (table > row > col) -- */
-.wd .wd-col-center-01 > * > *:nth-child(1),  .wd .wd-col-center-02 > * > *:nth-child(2),
-.wd .wd-col-center-03 > * > *:nth-child(3),  .wd .wd-col-center-04 > * > *:nth-child(4),
-.wd .wd-col-center-05 > * > *:nth-child(5),  .wd .wd-col-center-06 > * > *:nth-child(6),
-.wd .wd-col-center-07 > * > *:nth-child(7),  .wd .wd-col-center-08 > * > *:nth-child(8),
-.wd .wd-col-center-09 > * > *:nth-child(9),  .wd .wd-col-center-10 > * > *:nth-child(10),
-.wd .wd-col-center-11 > * > *:nth-child(11), .wd .wd-col-center-12 > * > *:nth-child(12) {
+.wd .wd-setcol-center-01 > * > *:nth-child(1),  .wd .wd-setcol-center-02 > * > *:nth-child(2),
+.wd .wd-setcol-center-03 > * > *:nth-child(3),  .wd .wd-setcol-center-04 > * > *:nth-child(4),
+.wd .wd-setcol-center-05 > * > *:nth-child(5),  .wd .wd-setcol-center-06 > * > *:nth-child(6),
+.wd .wd-setcol-center-07 > * > *:nth-child(7),  .wd .wd-setcol-center-08 > * > *:nth-child(8),
+.wd .wd-setcol-center-09 > * > *:nth-child(9),  .wd .wd-setcol-center-10 > * > *:nth-child(10),
+.wd .wd-setcol-center-11 > * > *:nth-child(11), .wd .wd-setcol-center-12 > * > *:nth-child(12) {
 	text-align: center;
 }
-.wd .wd-col-right-01 > * > *:nth-child(1),  .wd .wd-col-right-02 > * > *:nth-child(2),
-.wd .wd-col-right-03 > * > *:nth-child(3),  .wd .wd-col-right-04 > * > *:nth-child(4),
-.wd .wd-col-right-05 > * > *:nth-child(5),  .wd .wd-col-right-06 > * > *:nth-child(6),
-.wd .wd-col-right-07 > * > *:nth-child(7),  .wd .wd-col-right-08 > * > *:nth-child(8),
-.wd .wd-col-right-09 > * > *:nth-child(9),  .wd .wd-col-right-10 > * > *:nth-child(10),
-.wd .wd-col-right-11 > * > *:nth-child(11), .wd .wd-col-right-12 > * > *:nth-child(12) {
+.wd .wd-setcol-right-01 > * > *:nth-child(1),  .wd .wd-setcol-right-02 > * > *:nth-child(2),
+.wd .wd-setcol-right-03 > * > *:nth-child(3),  .wd .wd-setcol-right-04 > * > *:nth-child(4),
+.wd .wd-setcol-right-05 > * > *:nth-child(5),  .wd .wd-setcol-right-06 > * > *:nth-child(6),
+.wd .wd-setcol-right-07 > * > *:nth-child(7),  .wd .wd-setcol-right-08 > * > *:nth-child(8),
+.wd .wd-setcol-right-09 > * > *:nth-child(9),  .wd .wd-setcol-right-10 > * > *:nth-child(10),
+.wd .wd-setcol-right-11 > * > *:nth-child(11), .wd .wd-setcol-right-12 > * > *:nth-child(12) {
 	text-align: right;
 }
-.wd .wd-col-left-01 > * > *:nth-child(1),  .wd .wd-col-left-02 > * > *:nth-child(2),
-.wd .wd-col-left-03 > * > *:nth-child(3),  .wd .wd-col-left-04 > * > *:nth-child(4),
-.wd .wd-col-left-05 > * > *:nth-child(5),  .wd .wd-col-left-06 > * > *:nth-child(6),
-.wd .wd-col-left-07 > * > *:nth-child(7),  .wd .wd-col-left-08 > * > *:nth-child(8),
-.wd .wd-col-left-09 > * > *:nth-child(9),  .wd .wd-col-left-10 > * > *:nth-child(10),
-.wd .wd-col-left-11 > * > *:nth-child(11), .wd .wd-col-left-12 > * > *:nth-child(12) {
+.wd .wd-setcol-left-01 > * > *:nth-child(1),  .wd .wd-setcol-left-02 > * > *:nth-child(2),
+.wd .wd-setcol-left-03 > * > *:nth-child(3),  .wd .wd-setcol-left-04 > * > *:nth-child(4),
+.wd .wd-setcol-left-05 > * > *:nth-child(5),  .wd .wd-setcol-left-06 > * > *:nth-child(6),
+.wd .wd-setcol-left-07 > * > *:nth-child(7),  .wd .wd-setcol-left-08 > * > *:nth-child(8),
+.wd .wd-setcol-left-09 > * > *:nth-child(9),  .wd .wd-setcol-left-10 > * > *:nth-child(10),
+.wd .wd-setcol-left-11 > * > *:nth-child(11), .wd .wd-setcol-left-12 > * > *:nth-child(12) {
 	text-align: left;
 }
-.wd .wd-col-blue-01 > * > *:nth-child(1),  .wd .wd-col-blue-02 > * > *:nth-child(2),
-.wd .wd-col-blue-03 > * > *:nth-child(3),  .wd .wd-col-blue-04 > * > *:nth-child(4),
-.wd .wd-col-blue-05 > * > *:nth-child(5),  .wd .wd-col-blue-06 > * > *:nth-child(6),
-.wd .wd-col-blue-07 > * > *:nth-child(7),  .wd .wd-col-blue-08 > * > *:nth-child(8),
-.wd .wd-col-blue-09 > * > *:nth-child(9),  .wd .wd-col-blue-10 > * > *:nth-child(10),
-.wd .wd-col-blue-11 > * > *:nth-child(11), .wd .wd-col-blue-12 > * > *:nth-child(12) {
+.wd .wd-setcol-blue-01 > * > *:nth-child(1),  .wd .wd-setcol-blue-02 > * > *:nth-child(2),
+.wd .wd-setcol-blue-03 > * > *:nth-child(3),  .wd .wd-setcol-blue-04 > * > *:nth-child(4),
+.wd .wd-setcol-blue-05 > * > *:nth-child(5),  .wd .wd-setcol-blue-06 > * > *:nth-child(6),
+.wd .wd-setcol-blue-07 > * > *:nth-child(7),  .wd .wd-setcol-blue-08 > * > *:nth-child(8),
+.wd .wd-setcol-blue-09 > * > *:nth-child(9),  .wd .wd-setcol-blue-10 > * > *:nth-child(10),
+.wd .wd-setcol-blue-11 > * > *:nth-child(11), .wd .wd-setcol-blue-12 > * > *:nth-child(12) {
 	color: var(--var-bg-blue-header);
 }
-.wd .wd-col-red-01 > * > *:nth-child(1),  .wd .wd-col-red-02 > * > *:nth-child(2),
-.wd .wd-col-red-03 > * > *:nth-child(3),  .wd .wd-col-red-04 > * > *:nth-child(4),
-.wd .wd-col-red-05 > * > *:nth-child(5),  .wd .wd-col-red-06 > * > *:nth-child(6),
-.wd .wd-col-red-07 > * > *:nth-child(7),  .wd .wd-col-red-08 > * > *:nth-child(8),
-.wd .wd-col-red-09 > * > *:nth-child(9),  .wd .wd-col-red-10 > * > *:nth-child(10),
-.wd .wd-col-red-11 > * > *:nth-child(11), .wd .wd-col-red-12 > * > *:nth-child(12) {
+.wd .wd-setcol-red-01 > * > *:nth-child(1),  .wd .wd-setcol-red-02 > * > *:nth-child(2),
+.wd .wd-setcol-red-03 > * > *:nth-child(3),  .wd .wd-setcol-red-04 > * > *:nth-child(4),
+.wd .wd-setcol-red-05 > * > *:nth-child(5),  .wd .wd-setcol-red-06 > * > *:nth-child(6),
+.wd .wd-setcol-red-07 > * > *:nth-child(7),  .wd .wd-setcol-red-08 > * > *:nth-child(8),
+.wd .wd-setcol-red-09 > * > *:nth-child(9),  .wd .wd-setcol-red-10 > * > *:nth-child(10),
+.wd .wd-setcol-red-11 > * > *:nth-child(11), .wd .wd-setcol-red-12 > * > *:nth-child(12) {
 	color: var(--var-bg-red-header);
 }
-.wd .wd-col-green-01 > * > *:nth-child(1),  .wd .wd-col-green-02 > * > *:nth-child(2),
-.wd .wd-col-green-03 > * > *:nth-child(3),  .wd .wd-col-green-04 > * > *:nth-child(4),
-.wd .wd-col-green-05 > * > *:nth-child(5),  .wd .wd-col-green-06 > * > *:nth-child(6),
-.wd .wd-col-green-07 > * > *:nth-child(7),  .wd .wd-col-green-08 > * > *:nth-child(8),
-.wd .wd-col-green-09 > * > *:nth-child(9),  .wd .wd-col-green-10 > * > *:nth-child(10),
-.wd .wd-col-green-11 > * > *:nth-child(11), .wd .wd-col-green-12 > * > *:nth-child(12) {
+.wd .wd-setcol-green-01 > * > *:nth-child(1),  .wd .wd-setcol-green-02 > * > *:nth-child(2),
+.wd .wd-setcol-green-03 > * > *:nth-child(3),  .wd .wd-setcol-green-04 > * > *:nth-child(4),
+.wd .wd-setcol-green-05 > * > *:nth-child(5),  .wd .wd-setcol-green-06 > * > *:nth-child(6),
+.wd .wd-setcol-green-07 > * > *:nth-child(7),  .wd .wd-setcol-green-08 > * > *:nth-child(8),
+.wd .wd-setcol-green-09 > * > *:nth-child(9),  .wd .wd-setcol-green-10 > * > *:nth-child(10),
+.wd .wd-setcol-green-11 > * > *:nth-child(11), .wd .wd-setcol-green-12 > * > *:nth-child(12) {
 	color: var(--var-bg-green-header);
 }
-.wd .wd-col-mark-01 > * > *:nth-child(1),  .wd .wd-col-mark-02 > * > *:nth-child(2),
-.wd .wd-col-mark-03 > * > *:nth-child(3),  .wd .wd-col-mark-04 > * > *:nth-child(4),
-.wd .wd-col-mark-05 > * > *:nth-child(5),  .wd .wd-col-mark-06 > * > *:nth-child(6),
-.wd .wd-col-mark-07 > * > *:nth-child(7),  .wd .wd-col-mark-08 > * > *:nth-child(8),
-.wd .wd-col-mark-09 > * > *:nth-child(9),  .wd .wd-col-mark-10 > * > *:nth-child(10),
-.wd .wd-col-mark-11 > * > *:nth-child(11), .wd .wd-col-mark-12 > * > *:nth-child(12) {
+.wd .wd-setcol-mark-01 > * > *:nth-child(1),  .wd .wd-setcol-mark-02 > * > *:nth-child(2),
+.wd .wd-setcol-mark-03 > * > *:nth-child(3),  .wd .wd-setcol-mark-04 > * > *:nth-child(4),
+.wd .wd-setcol-mark-05 > * > *:nth-child(5),  .wd .wd-setcol-mark-06 > * > *:nth-child(6),
+.wd .wd-setcol-mark-07 > * > *:nth-child(7),  .wd .wd-setcol-mark-08 > * > *:nth-child(8),
+.wd .wd-setcol-mark-09 > * > *:nth-child(9),  .wd .wd-setcol-mark-10 > * > *:nth-child(10),
+.wd .wd-setcol-mark-11 > * > *:nth-child(11), .wd .wd-setcol-mark-12 > * > *:nth-child(12) {
 	background-color: var(--var-bg-mark);
 }
-.wd .wd-col-i-01 > * > *:nth-child(1),  .wd .wd-col-i-02 > * > *:nth-child(2),
-.wd .wd-col-i-03 > * > *:nth-child(3),  .wd .wd-col-i-04 > * > *:nth-child(4),
-.wd .wd-col-i-05 > * > *:nth-child(5),  .wd .wd-col-i-06 > * > *:nth-child(6),
-.wd .wd-col-i-07 > * > *:nth-child(7),  .wd .wd-col-i-08 > * > *:nth-child(8),
-.wd .wd-col-i-09 > * > *:nth-child(9),  .wd .wd-col-i-10 > * > *:nth-child(10),
-.wd .wd-col-i-11 > * > *:nth-child(11), .wd .wd-col-i-12 > * > *:nth-child(12) {
+.wd .wd-setcol-i-01 > * > *:nth-child(1),  .wd .wd-setcol-i-02 > * > *:nth-child(2),
+.wd .wd-setcol-i-03 > * > *:nth-child(3),  .wd .wd-setcol-i-04 > * > *:nth-child(4),
+.wd .wd-setcol-i-05 > * > *:nth-child(5),  .wd .wd-setcol-i-06 > * > *:nth-child(6),
+.wd .wd-setcol-i-07 > * > *:nth-child(7),  .wd .wd-setcol-i-08 > * > *:nth-child(8),
+.wd .wd-setcol-i-09 > * > *:nth-child(9),  .wd .wd-setcol-i-10 > * > *:nth-child(10),
+.wd .wd-setcol-i-11 > * > *:nth-child(11), .wd .wd-setcol-i-12 > * > *:nth-child(12) {
 	font-style: italic;
 }
-.wd .wd-col-b-01 > * > *:nth-child(1),  .wd .wd-col-b-02 > * > *:nth-child(2),
-.wd .wd-col-b-03 > * > *:nth-child(3),  .wd .wd-col-b-04 > * > *:nth-child(4),
-.wd .wd-col-b-05 > * > *:nth-child(5),  .wd .wd-col-b-06 > * > *:nth-child(6),
-.wd .wd-col-b-07 > * > *:nth-child(7),  .wd .wd-col-b-08 > * > *:nth-child(8),
-.wd .wd-col-b-09 > * > *:nth-child(9),  .wd .wd-col-b-10 > * > *:nth-child(10),
-.wd .wd-col-b-11 > * > *:nth-child(11), .wd .wd-col-b-12 > * > *:nth-child(12) {
+.wd .wd-setcol-b-01 > * > *:nth-child(1),  .wd .wd-setcol-b-02 > * > *:nth-child(2),
+.wd .wd-setcol-b-03 > * > *:nth-child(3),  .wd .wd-setcol-b-04 > * > *:nth-child(4),
+.wd .wd-setcol-b-05 > * > *:nth-child(5),  .wd .wd-setcol-b-06 > * > *:nth-child(6),
+.wd .wd-setcol-b-07 > * > *:nth-child(7),  .wd .wd-setcol-b-08 > * > *:nth-child(8),
+.wd .wd-setcol-b-09 > * > *:nth-child(9),  .wd .wd-setcol-b-10 > * > *:nth-child(10),
+.wd .wd-setcol-b-11 > * > *:nth-child(11), .wd .wd-setcol-b-12 > * > *:nth-child(12) {
 	font-weight: bold;
 }
 
@@ -941,9 +946,6 @@ padding: 0;
 	margin: 2em 0 2em auto;
 	width: 75%;
 }
-.wd .wd-read q {
-	quotes: "\0022" "\0022";
-}
 /* tabelas, figuras, listas */
 .wd .wd-read > table,
 .wd .wd-read > figure {
@@ -1037,15 +1039,17 @@ padding: 0;
 .wd .wd-code code:after  {content: "\003E";} /* sinal de > */
 /* strings e variáveis */
 .wd .wd-code var, .wd .wd-code var *,
-.wd .wd-code q,   .wd .wd-code q * {
+.wd .wd-code kbd, .wd .wd-code kbd *,
+.wd .wd-code q,   .wd .wd-code q   * {
 	color: var(--var-fg-code-values);
 	white-space: pre-wrap;
 }
-.wd .wd-code q                {quotes: "\0022" "\0022" "\005C\0022" "\005C\0022";}
-.wd .wd-code q.wd-code-q1     {quotes: "\0027" "\0027";}
-.wd .wd-code q.wd-code-q1 > q {quotes: "\0022" "\0022";}
-.wd .wd-code q.wd-code-q3     {quotes: "\0022\0022\0022" "\0022\0022\0022";}
-.wd .wd-code q.wd-code-q3 > q {quotes: "\0022" "\0022";}
+.wd .wd-code q          {quotes: "\0022" "\0022" "\005C\0022" "\005C\0022";}
+.wd .wd-code kbd        {quotes: "\0027" "\0027" "\0022" "\0022";}
+.wd .wd-code kbd:before {content: open-quote;}
+.wd .wd-code kbd:after  {content: close-quote;}
+
+
 /* retorno */
 .wd .wd-code samp, .wd .wd-code samp * {
 	color: var(--var-fg-code-return);
@@ -1075,7 +1079,20 @@ padding: 0;
 .wd .wd-code > section section {
 	padding-left: var(--var-size-large);
 }
-/* -- Cabeçalho e Rodapés (fixos e companheiros) -- */
+/* -- Cabeçalho e Rodapés (fixos (body) e companheiros) -- */
+.wd .wd-header,
+.wd .wd-footer {
+	position: sticky !important;
+	z-index: var(--var-zindex-3) !important;
+}
+.wd .wd-header {top:    0 !important;}
+.wd .wd-footer {bottom: 0 !important;}
+.wd .wd-flyer > .wd-header,
+.wd .wd-flyer > .wd-footer { /* ajustes para filhos de flyer */
+	top:    -0.5em !important;
+	bottom: -0.5em !important;
+}
+
 .wd body > .wd-header-fixed,
 .wd body > .wd-footer-fixed {
 	position: fixed;
@@ -1092,19 +1109,6 @@ padding: 0;
 		position: relative;
 	}
 }
-.wd .wd-buddy-top,
-.wd .wd-buddy-bottom {
-	position: sticky !important;
-	z-index: var(--var-zindex-3) !important;
-}
-.wd .wd-buddy-top    {top: 0 !important;}
-.wd .wd-buddy-bottom {bottom: 0 !important;}
-.wd .wd-flyer > .wd-buddy-top,
-.wd .wd-flyer > .wd-buddy-bottom { /* ajuste para filhos de flyer */
-	top: -0.5em !important;
-	bottom: -0.5em !important;
-}
-
 /* -- grades padrão para área de trabalho -- */
 /* Phone */
 .wd .wd-grid {
@@ -1293,7 +1297,7 @@ padding: 0;
 .wd .wd-mark, .wd .wd-mark-child > * {background-color: var(--var-bg-mark) !important;}
 .wd .wd-b-none,    .wd .wd-b-none-child > *    {font-weight: normal !important;}
 .wd .wd-i-none,    .wd .wd-i-none-child > *    {font-style: normal !important;}
-.wd .wd-line-none, .wd .wd-line-none-child > * {text-decoration: none !important;}
+.wd .wd-u-none, .wd .wd-u-none-child > *       {text-decoration: none !important;}
 .wd .wd-mark-none, .wd .wd-mark-none-child > * {background-color: transparent !important;}
 /* -- cores (conteúdo e cabeçalhos) -- */
 .wd .wd-bg-black, .wd .wd-bg-black-child > * {
@@ -1406,25 +1410,25 @@ padding: 0;
 .wd .wd-fg-purple, .wd .wd-fg-purple-child > * {color: var(--var-fg-purple) !important;}
 
 /* -- Wallpaper -- */
-.wd .wd-bg-image {
+.wd .wd-wallpaper {
 	background-repeat: no-repeat !important;
 	background-position: center center !important;
 	background-attachment: scroll !important;
 	background-size: cover !important;
 }
-.wd .wd-bg-photo {
+.wd .wd-wallpaper-photo {
 	background-repeat: no-repeat !important;
 	background-position: center center !important;
 	background-attachment: scroll !important;
 	background-size: contain !important;
 }
-.wd .wd-bg-paper {
+.wd .wd-wallpaper-fixed {
 	background-repeat: no-repeat !important;
 	background-position: center center !important;
 	background-attachment: fixed !important;
 	background-size: cover !important;
 }
-.wd .wd-bg-figures {
+.wd .wd-wallpaper-repeat {
 	background-repeat: round !important;
 	background-position: center center !important;
 	background-attachment: scroll !important;
@@ -1674,22 +1678,22 @@ border-left: var(--var-border-thin) !important;
 	border-radius: 0 !important;
 }
 /* texto em colunas */
-.wd .wd-text-2col, .wd .wd-text-3col, .wd .wd-text-4col {
+.wd .wd-ctext, .wd .wd-xctext, .wd .wd-xxctext {
 	column-gap: var(--var-size-large);
 }
-.wd .wd-text-2col > h1,     .wd .wd-text-3col > h1,     .wd .wd-text-4col > h1,
-.wd .wd-text-2col > h2,     .wd .wd-text-3col > h2,     .wd .wd-text-4col > h2,
-.wd .wd-text-2col > h3,     .wd .wd-text-3col > h3,     .wd .wd-text-4col > h3,
-.wd .wd-text-2col > h4,     .wd .wd-text-3col > h4,     .wd .wd-text-4col > h4,
-.wd .wd-text-2col > h5,     .wd .wd-text-3col > h5,     .wd .wd-text-4col > h5,
-.wd .wd-text-2col > h6,     .wd .wd-text-3col > h6,     .wd .wd-text-4col > h6,
-.wd .wd-text-2col > table,  .wd .wd-text-3col > table,  .wd .wd-text-4col > table,
-.wd .wd-text-2col > figure, .wd .wd-text-3col > figure, .wd .wd-text-4col > figure {
+.wd .wd-ctext > h1,     .wd .wd-xctext > h1,     .wd .wd-xxctext > h1,
+.wd .wd-ctext > h2,     .wd .wd-xctext > h2,     .wd .wd-xxctext > h2,
+.wd .wd-ctext > h3,     .wd .wd-xctext > h3,     .wd .wd-xxctext > h3,
+.wd .wd-ctext > h4,     .wd .wd-xctext > h4,     .wd .wd-xxctext > h4,
+.wd .wd-ctext > h5,     .wd .wd-xctext > h5,     .wd .wd-xxctext > h5,
+.wd .wd-ctext > h6,     .wd .wd-xctext > h6,     .wd .wd-xxctext > h6,
+.wd .wd-ctext > table,  .wd .wd-xctext > table,  .wd .wd-xxctext > table,
+.wd .wd-ctext > figure, .wd .wd-xctext > figure, .wd .wd-xxctext > figure {
 	column-span: all;
 }
-.wd .wd-text-2col {column-count: 2;}
-.wd .wd-text-3col {column-count: 3;}
-.wd .wd-text-4col {column-count: 4;}
+.wd .wd-ctext   {column-count: 2;}
+.wd .wd-xctext  {column-count: 3;}
+.wd .wd-xxctext {column-count: 4;}
 /* -- posicionar textos no container -- */
 .wd .wd-text-float {display: flex;}
 .wd .wd-text-float > .wd-text-n  {margin: 0 auto auto auto;}

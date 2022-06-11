@@ -7,11 +7,10 @@ const wikiCSS   = "WD-CSS-Properties";
 
 function getCssProperties(input) {
 	input = input.replace(".wd-", "wd-");
-	let name  = input.replace("wd-", "").replace(/(\-[a-z0-9]+)+/, "");
+	let name  = input.replace(/^wd\-(x+)?/, "").replace(/(\-[a-z0-9]+)+/, "");
 	let child = (/\-child$/).test(input) ? true : false;
 
 	if (child) input = input.replace(/\-child$/, "");
-	input = input.replace(/\-[0-9][0-9]+/g, "##");
 
 	return {
 		name: name,
@@ -47,7 +46,7 @@ function cssAttributes(type) {
 			let re   = /\.wd(\-[a-z0-9]+)+/g;
 			let data = {};
 			let txt  = [];
-			let css  = wd(x.text.match(re)).unique;
+			let css  = wd(x.text.match(re)).tidy;
 
 			for (let i = 0; i < css.length; i++) {
 				let prop = getCssProperties(css[i]);
