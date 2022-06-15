@@ -193,8 +193,8 @@ SOFTWARE.
 	--var-zindex-5: 555;
 
 	/* others */
-	--var-read-table: "Table";
-	--var-read-figure: "Figure";
+	--var-itemize-table: "Table";
+	--var-itemize-figure: "Figure";
 
 
 	--var-wd-size-collection: 14em;
@@ -971,33 +971,32 @@ padding: 0;
 	padding-left: 4em;
 }
 /* -- itemização -- */
-.wd .wd-read      {counter-reset: chapter item fig tab;}
-.wd .wd-read > h3 {counter-reset: item fig tab;}
-.wd .wd-read > h3                {counter-increment: chapter;}
-.wd .wd-read > p                 {counter-increment: item;}
-.wd .wd-read > table  caption    {counter-increment: tab;}
-.wd .wd-read > figure figcaption {counter-increment: fig;}
+.wd .wd-itemize                       {counter-reset: chapter item fig tab;}
+.wd .wd-itemize > p                   {counter-increment: item;}
+.wd .wd-itemize > h3                  {counter-reset: item fig tab; counter-increment: chapter;}
+.wd .wd-itemize > table  > caption    {counter-increment: tab;}
+.wd .wd-itemize > figure > figcaption {counter-increment: fig;}
 
-.wd .wd-read > h3:before {
+.wd .wd-itemize > h3:before { /* capítulos */
 	content: counter(chapter) ". ";
 }
-.wd .wd-read > table caption:before { /* antes um capítulo */
-	content: var(--var-read-table) " " counter(tab) ": ";
+.wd .wd-itemize > table > caption:before { /* tabela antes de um capítulo */
+	content: var(--var-itemize-table) " " counter(tab) ": ";
 }
-.wd .wd-read > h3 ~ table caption:before { /* após um capítulo */
-	content: var(--var-read-table) " " counter(chapter) "-" counter(tab) ": ";
+.wd .wd-itemize > h3 ~ table > caption:before { /* tabela após um capítulo */
+	content: var(--var-itemize-table) " " counter(chapter) "-" counter(tab) ": ";
 }
-.wd .wd-read > figure figcaption:before { /* antes um capítulo */
-	content: var(--var-read-figure) " " counter(fig) ": ";
+.wd .wd-itemize > figure > figcaption:before { /* figura antes de um capítulo */
+	content: var(--var-itemize-figure) " " counter(fig) ": ";
 }
-.wd .wd-read > h3 ~ figure figcaption:before { /* após um capítulo */
-	content: var(--var-read-figure) " " counter(chapter) "-" counter(fig) ": ";
+.wd .wd-itemize > h3 ~ figure > figcaption:before { /* figura após um capítulo */
+	content: var(--var-itemize-figure) " " counter(chapter) "-" counter(fig) ": ";
 }
-.wd .wd-read.wd-itemize > p:before { /* antes um capítulo */
-	content: counter(item) ".";
+.wd .wd-itemize > p:before { /* antes um capítulo */
+	content: counter(item) ". ";
 }
-.wd .wd-read.wd-itemize > h3 ~ p:before { /* após um capítulo */
-	content: counter(chapter) "." counter(item);
+.wd .wd-itemize > h3 ~ p:before { /* após um capítulo */
+	content: counter(chapter) "." counter(item) " ";
 }
 /* -- código -- */
 .wd .wd-code {
@@ -1110,37 +1109,40 @@ padding: 0;
 	}
 }
 /* -- grades padrão para área de trabalho -- */
-/* Phone */
-.wd .wd-grid {
-	display: grid;
-	grid-template-areas: 'left' 'main' 'right';
-}
-.wd .wd-grid > .wd-grid-left  {grid-area: left;}
-.wd .wd-grid > .wd-grid-main  {grid-area: main;}
-.wd .wd-grid > .wd-grid-right {grid-area: right;}
-.wd .wd-grid.wd-grid-right > .wd-grid-left  {display: none;}
-.wd .wd-grid.wd-grid-left  > .wd-grid-right {display: none;}
+.wd .wd-grid,
+.wd .wd-grid-menu,
+.wd .wd-grid-side,
+.wd .wd-grid-both  {display: grid;}
+.wd .wd-grid      > .wd-grid-content-menu,
+.wd .wd-grid-menu > .wd-grid-content-menu,
+.wd .wd-grid-side > .wd-grid-content-menu,
+.wd .wd-grid-both > .wd-grid-content-menu {grid-area: menu;}
 
-@media screen and (min-width: 600px) { /* tablet */
-	.wd .wd-grid {
-		grid-template-areas:
-			'left left left main main main main main main main main main'
-			'right right right right right right right right right right right right';
-	}
-	.wd .wd-grid.wd-grid-left {
-		grid-template-areas:
-			'left left left main main main main main main main main main';
-	}
-	.wd .wd-grid.wd-grid-right {
-		grid-template-areas:
-			'main main main main main main main main main right right right';
-	}
+.wd .wd-grid      > .wd-grid-content-main,
+.wd .wd-grid-menu > .wd-grid-content-main,
+.wd .wd-grid-side > .wd-grid-content-main,
+.wd .wd-grid-both > .wd-grid-content-main {grid-area: main;}
+
+.wd .wd-grid      > .wd-grid-content-side,
+.wd .wd-grid-menu > .wd-grid-content-side,
+.wd .wd-grid-side > .wd-grid-content-side,
+.wd .wd-grid-both > .wd-grid-content-side {grid-area: side;}
+/* Phone: em pilha */
+.wd .wd-grid,
+.wd .wd-grid-menu,
+.wd .wd-grid-side,
+.wd .wd-grid-both {grid-template-areas: 'menu' 'main' 'side';}
+/* tablet: aside + main */
+@media screen and (min-width: 600px) {
+	.wd .wd-grid-menu {grid-template-areas: 'menu main main main' 'menu side side side';}
+	.wd .wd-grid-side {grid-template-areas: 'menu menu menu side' 'main main main side';}
+	.wd .wd-grid-both {grid-template-areas: 'menu main main main' 'side main main main';}
 }
-@media screen and (min-width: 768px) { /* desktop */
-	.wd .wd-grid {
-		grid-template-areas:
-			'left left left main main main main main main right right right';
-	}
+/* desktop: completo */
+@media screen and (min-width: 768px) {
+	.wd .wd-grid-menu {grid-template-areas: 'menu main main main' 'menu side side side';}
+	.wd .wd-grid-side {grid-template-areas: 'menu menu menu side' 'main main main side';}
+	.wd .wd-grid-both {grid-template-areas: 'menu main main side';}
 }
 /* -- container proporcionais (ratio) -- */
 .wd .wd-ratio-9-20 {aspect-ratio: 9 / 20;}
