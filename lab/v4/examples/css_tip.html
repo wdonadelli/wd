@@ -1,15 +1,16 @@
 <h3>Tip</h3>
 
-<nav>
-	<span data-wd-css="${#tip}">None</span>
-	<span data-wd-css="${#tip}&${#tip}add{wd-tip-hover}">Hover</span>
-	<span data-wd-css="${#tip}&${#tip}add{wd-tip-click}">Click</span>
-</nav>
-<nav>
-	<span data-wd-css="${#ctip}&${#ctip}add{wd-tip-top}">Top</span>
-	<span data-wd-css="${#ctip}&${#ctip}add{wd-tip-right}">Right</span>
-	<span data-wd-css="${#ctip}&${#ctip}add{wd-tip-bottom}">Bottom</span>
-	<span data-wd-css="${#ctip}&${#ctip}add{wd-tip-left}">Left</span>
+<nav data-wd-set="${#tip}className{wd-tip}">
+	<span data-wd-set="${#tip}className{}" data-wd-no-bubbles="" >None</span>
+	<span data-wd-set="${#ctip}className{wd-tip-hover-n}">N</span>
+	<span data-wd-set="${#ctip}className{wd-tip-hover-e}">E</span>
+	<span data-wd-set="${#ctip}className{wd-tip-hover-s}">S</span>
+	<span data-wd-set="${#ctip}className{wd-tip-hover-w}">W</span>
+	<span>&larr; hover | click &rarr;</span>
+	<span data-wd-set="${#ctip}className{wd-tip-click-n}">N</span>
+	<span data-wd-set="${#ctip}className{wd-tip-click-e}">E</span>
+	<span data-wd-set="${#ctip}className{wd-tip-click-s}">S</span>
+	<span data-wd-set="${#ctip}className{wd-tip-click-w}">W</span>
 </nav>
 
 
@@ -24,11 +25,11 @@
 
 
 
-<span id="ftip" class="wd-tip-click">
+<span id="ftip" class="wd-tip">
 	<button type="button" data-wd-css="${#ftip}tgl{wd-open}" class="wd-icon-menu"></button>
 	<ul
 		type="none"
-		class="wd-tip-right wd-bg-grey wd-upon-enter-child wd-border wd-radius"
+		class="wd-tip-click-e wd-bg-grey wd-upon-enter-child wd-border wd-radius"
 		data-wd-css="${#ftip}del{wd-open}"
 	>
 		<li>Option 1</li>

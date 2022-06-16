@@ -732,14 +732,15 @@ padding: 0;
 }
 
 /* -- Caixa de Dicas -- */
-.wd .wd-tip-hover, .wd .wd-tip-click {
+.wd .wd-tip {
 	position: relative;
 	display: inline-block;
 }
-.wd .wd-tip-hover > .wd-tip-top,    .wd .wd-tip-hover > .wd-tip-right,
-.wd .wd-tip-hover > .wd-tip-bottom, .wd .wd-tip-hover > .wd-tip-left,
-.wd .wd-tip-click > .wd-tip-top,    .wd .wd-tip-click > .wd-tip-right,
-.wd .wd-tip-click > .wd-tip-bottom, .wd .wd-tip-click > .wd-tip-left {
+
+.wd .wd-tip > .wd-tip-hover-n, .wd .wd-tip > .wd-tip-click-n,
+.wd .wd-tip > .wd-tip-hover-e, .wd .wd-tip > .wd-tip-click-e,
+.wd .wd-tip > .wd-tip-hover-s, .wd .wd-tip > .wd-tip-click-s,
+.wd .wd-tip > .wd-tip-hover-w, .wd .wd-tip > .wd-tip-click-w {
 	display: none !important;
 	position: absolute;
 	margin: 0;
@@ -748,30 +749,30 @@ padding: 0;
 	width: 10em;
 	z-index: var(--var-zindex-4);
 }
-.wd .wd-tip-hover > .wd-tip-top,
-.wd .wd-tip-click > .wd-tip-top {
+.wd .wd-tip > .wd-tip-hover-n,
+.wd .wd-tip > .wd-tip-click-n {
 	bottom: 100%;
 	left: 0;
 }
-.wd-tip-hover > .wd-tip-right,
-.wd-tip-click > .wd-tip-right {
+.wd .wd-tip > .wd-tip-hover-e,
+.wd .wd-tip > .wd-tip-click-e {
 	left: 100%;
 	top: 0;
 }
-.wd-tip-hover > .wd-tip-bottom,
-.wd-tip-click > .wd-tip-bottom {
+.wd .wd-tip > .wd-tip-hover-s,
+.wd .wd-tip > .wd-tip-click-s {
 	left: 0;
 	top: 100%;
 }
-.wd-tip-hover > .wd-tip-left,
-.wd-tip-click > .wd-tip-left {
+.wd .wd-tip > .wd-tip-hover-w,
+.wd .wd-tip > .wd-tip-click-w {
 	right: 100%;
 	top: 0;
 }
-.wd .wd-tip-hover:hover   > .wd-tip-top,    .wd .wd-tip-hover:hover   > .wd-tip-right,
-.wd .wd-tip-hover:hover   > .wd-tip-bottom, .wd .wd-tip-hover:hover   > .wd-tip-left,
-.wd .wd-tip-click.wd-open > .wd-tip-top,    .wd .wd-tip-click.wd-open > .wd-tip-right,
-.wd .wd-tip-click.wd-open > .wd-tip-bottom, .wd .wd-tip-click.wd-open > .wd-tip-left {
+.wd .wd-tip:hover > .wd-tip-hover-n, .wd .wd-tip.wd-open > .wd-tip-click-n,
+.wd .wd-tip:hover > .wd-tip-hover-e, .wd .wd-tip.wd-open > .wd-tip-click-e,
+.wd .wd-tip:hover > .wd-tip-hover-s, .wd .wd-tip.wd-open > .wd-tip-click-s,
+.wd .wd-tip:hover > .wd-tip-hover-w, .wd .wd-tip.wd-open > .wd-tip-click-w {
 	display: block !important;
 	animation: wd-fade-in 0.5s;
 }
@@ -1110,39 +1111,28 @@ padding: 0;
 }
 /* -- grades padrão para área de trabalho -- */
 .wd .wd-grid,
-.wd .wd-grid-menu,
-.wd .wd-grid-side,
-.wd .wd-grid-both  {display: grid;}
-.wd .wd-grid      > .wd-grid-content-menu,
-.wd .wd-grid-menu > .wd-grid-content-menu,
-.wd .wd-grid-side > .wd-grid-content-menu,
-.wd .wd-grid-both > .wd-grid-content-menu {grid-area: menu;}
-
-.wd .wd-grid      > .wd-grid-content-main,
-.wd .wd-grid-menu > .wd-grid-content-main,
-.wd .wd-grid-side > .wd-grid-content-main,
-.wd .wd-grid-both > .wd-grid-content-main {grid-area: main;}
-
-.wd .wd-grid      > .wd-grid-content-side,
-.wd .wd-grid-menu > .wd-grid-content-side,
-.wd .wd-grid-side > .wd-grid-content-side,
-.wd .wd-grid-both > .wd-grid-content-side {grid-area: side;}
-/* Phone: em pilha */
-.wd .wd-grid,
-.wd .wd-grid-menu,
-.wd .wd-grid-side,
-.wd .wd-grid-both {grid-template-areas: 'menu' 'main' 'side';}
-/* tablet: aside + main */
-@media screen and (min-width: 600px) {
-	.wd .wd-grid-menu {grid-template-areas: 'menu main main main' 'menu side side side';}
-	.wd .wd-grid-side {grid-template-areas: 'menu menu menu side' 'main main main side';}
-	.wd .wd-grid-both {grid-template-areas: 'menu main main main' 'side main main main';}
+.wd .wd-grid-all {display: grid;}
+.wd .wd-grid      > .wd-grid-menu,
+.wd .wd-grid-all > .wd-grid-menu {grid-area: menu;}
+.wd .wd-grid      > .wd-grid-main,
+.wd .wd-grid-all > .wd-grid-main {grid-area: main;}
+.wd .wd-grid      > .wd-grid-side,
+.wd .wd-grid-all > .wd-grid-side {grid-area: side;}
+/* Phone */
+.wd .wd-grid {
+	grid-template-areas:   'menu' 'main' 'side';
 }
-/* desktop: completo */
-@media screen and (min-width: 768px) {
-	.wd .wd-grid-menu {grid-template-areas: 'menu main main main' 'menu side side side';}
-	.wd .wd-grid-side {grid-template-areas: 'menu menu menu side' 'main main main side';}
-	.wd .wd-grid-both {grid-template-areas: 'menu main main side';}
+@media screen and (min-width: 600px) { /* tablet */
+	.wd .wd-grid {
+		grid-template-areas:   'menu main main main' 'menu side side side';
+		grid-template-columns: auto auto;
+	}
+}
+@media screen and (min-width: 768px) { /* desktop */
+	.wd .wd-grid {
+		grid-template-areas: 'menu main main side';
+		grid-template-columns: auto auto auto;
+	}
 }
 /* -- container proporcionais (ratio) -- */
 .wd .wd-ratio-9-20 {aspect-ratio: 9 / 20;}
