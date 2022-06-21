@@ -1432,11 +1432,11 @@ padding: 0;
 .wd .wd-align-top,     .wd .wd-align-top-child     > * {vertical-align: top     !important;}
 .wd .wd-align-bottom,  .wd .wd-align-bottom-child  > * {vertical-align: bottom  !important;}
 /*-- Tamanho da Caixa --*/
-.wd .wd-case-upper,  .wd .wd-case-upper-child  > * {text-transform: uppercase  !important;}
-.wd .wd-case-lower,  .wd .wd-case-lower-child  > * {text-transform: lowercase  !important;}
-.wd .wd-case-title,  .wd .wd-case-title-child  > * {text-transform: capitalize !important;}
-.wd .wd-case-caps,   .wd .wd-case-caps-child   > * {font-variant:   small-caps !important;}
-.wd .wd-case-normal, .wd .wd-case-normal-child > * {text-transform: none       !important;}
+.wd .wd-case-upper, .wd .wd-case-upper-child > * {text-transform: uppercase  !important;}
+.wd .wd-case-lower, .wd .wd-case-lower-child > * {text-transform: lowercase  !important;}
+.wd .wd-case-title, .wd .wd-case-title-child > * {text-transform: capitalize !important;}
+.wd .wd-case-caps,  .wd .wd-case-caps-child  > * {font-variant:   small-caps !important;}
+.wd .wd-case-none,  .wd .wd-case-none-child  > * {text-transform: none       !important;}
 /* -- padding -- */
 .wd .wd-padd,   .wd .wd-padd-child   > *,
 .wd .wd-padd-n, .wd .wd-padd-n-child > *,
@@ -1574,7 +1574,7 @@ padding: 0;
 .wd .wd-border-x,   .wd .wd-border-x-child   > *,
 .wd .wd-border-x-n, .wd .wd-border-x-n-child > *,
 .wd .wd-border-x-v, .wd .wd-border-x-v-child > * {
-	border-top: var(--var-size-medium) !important;
+	border-top: var(--var-border-medium) !important;
 }
 .wd .wd-border-xx,   .wd .wd-border-xx-child   > *,
 .wd .wd-border-xx-n, .wd .wd-border-xx-n-child > *,
@@ -1589,7 +1589,7 @@ padding: 0;
 .wd .wd-border-x,   .wd .wd-border-x-child   > *,
 .wd .wd-border-x-s, .wd .wd-border-x-s-child > *,
 .wd .wd-border-x-v, .wd .wd-border-x-v-child > * {
-	border-bottom: var(--var-size-medium) !important;
+	border-bottom: var(--var-border-medium) !important;
 }
 .wd .wd-border-xx,   .wd .wd-border-xx-child   > *,
 .wd .wd-border-xx-s, .wd .wd-border-xx-s-child > *,
@@ -1604,7 +1604,7 @@ padding: 0;
 .wd .wd-border-x,   .wd .wd-border-x-child   > *,
 .wd .wd-border-x-w, .wd .wd-border-x-w-child > *,
 .wd .wd-border-x-h, .wd .wd-border-x-h-child > * {
-	border-left: var(--var-size-medium) !important;
+	border-left: var(--var-border-medium) !important;
 }
 .wd .wd-border-xx,   .wd .wd-border-xx-child   > *,
 .wd .wd-border-xx-w, .wd .wd-border-xx-w-child > *,
@@ -1619,7 +1619,7 @@ padding: 0;
 .wd .wd-border-x,   .wd .wd-border-x-child   > *,
 .wd .wd-border-x-e, .wd .wd-border-x-e-child > *,
 .wd .wd-border-x-h, .wd .wd-border-x-h-child > * {
-	border-right: var(--var-size-medium) !important;
+	border-right: var(--var-border-medium) !important;
 }
 .wd .wd-border-xx,   .wd .wd-border-xx-child   > *,
 .wd .wd-border-xx-e, .wd .wd-border-xx-e-child > *,
