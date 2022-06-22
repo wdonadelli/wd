@@ -197,8 +197,8 @@ SOFTWARE.
 	--var-itemize-figure: "Figure";
 
 
-	--var-wd-size-collection: 14em;
-	--var-wd-margin-collection: 1em;
+	--var-wd-size-collection: 12em;
+	--var-wd-margin-collection: 0.5em;
 }
 
 /* == BLOCO 2 ================================================================*/
@@ -620,25 +620,25 @@ padding: 0;
 	width: 100%;
 }
 /* -- Linhas x Colunas (tabela de containers) -- */
-.wd .wd-row {
+.wd .wd-col {
 	display: flex;
 	flex-wrap: nowrap;
 	align-items: stretch;
 	width: 100%;
 }
-.wd .wd-row > * {flex: 1;}
-.wd .wd-row > .wd-col-01 {flex:  1;}
-.wd .wd-row > .wd-col-02 {flex:  2;}
-.wd .wd-row > .wd-col-03 {flex:  3;}
-.wd .wd-row > .wd-col-04 {flex:  4;}
-.wd .wd-row > .wd-col-05 {flex:  5;}
-.wd .wd-row > .wd-col-06 {flex:  6;}
-.wd .wd-row > .wd-col-07 {flex:  7;}
-.wd .wd-row > .wd-col-08 {flex:  8;}
-.wd .wd-row > .wd-col-09 {flex:  9;}
-.wd .wd-row > .wd-col-10 {flex: 10;}
-.wd .wd-row > .wd-col-11 {flex: 11;}
-.wd .wd-row > .wd-col-12 {flex: 12;}
+.wd .wd-col > * {flex: 1;}
+.wd .wd-col > .wd-col-01 {flex:  1;}
+.wd .wd-col > .wd-col-02 {flex:  2;}
+.wd .wd-col > .wd-col-03 {flex:  3;}
+.wd .wd-col > .wd-col-04 {flex:  4;}
+.wd .wd-col > .wd-col-05 {flex:  5;}
+.wd .wd-col > .wd-col-06 {flex:  6;}
+.wd .wd-col > .wd-col-07 {flex:  7;}
+.wd .wd-col > .wd-col-08 {flex:  8;}
+.wd .wd-col > .wd-col-09 {flex:  9;}
+.wd .wd-col > .wd-col-10 {flex: 10;}
+.wd .wd-col > .wd-col-11 {flex: 11;}
+.wd .wd-col > .wd-col-12 {flex: 12;}
 
 /* -- Formatações de colunas (table > row > col) -- */
 .wd .wd-table-center-01 > * > *:nth-child(1),  .wd .wd-table-center-02 > * > *:nth-child(2),
@@ -722,12 +722,10 @@ padding: 0;
 }
 .wd .wd-collection > * {
 	display: inline-block;
-	white-space: normal;
-}
-.wd .wd-collection > * {
 	height: var(--var-wd-size-collection);
 	margin: var(--var-wd-margin-collection);
 	overflow: auto;
+	white-space: normal;
 	width: var(--var-wd-size-collection);
 }
 
@@ -1023,6 +1021,7 @@ padding: 0;
 	color: inherit;
 	font: inherit;
 	text-decoration: inherit;
+	padding: 0;
 }
 /* palavras reservadas */
 .wd .wd-code mark {
