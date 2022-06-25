@@ -1666,7 +1666,8 @@ padding: 0;
 }
 .wd .wd-columns > h1,    .wd .wd-columns > h2, .wd .wd-columns > h3,
 .wd .wd-columns > h4,    .wd .wd-columns > h5, .wd .wd-columns > h6,
-.wd .wd-columns > table, .wd .wd-columns > figure {column-span: all;}
+.wd .wd-columns > table, .wd .wd-columns > figure,
+.wd .wd-columns > .wd-columns-none {column-span: all;}
 /*-- Ícones Matemática --*/
 .wd .wd-icon-plus:before     {content: "\2795" !important;}
 .wd .wd-icon-minus:before    {content: "\2796" !important;}
