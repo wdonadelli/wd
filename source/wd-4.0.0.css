@@ -195,10 +195,6 @@ SOFTWARE.
 	/* others */
 	--var-itemize-table: "Table";
 	--var-itemize-figure: "Figure";
-
-
-	--var-wd-size-collection: 12em;
-	--var-wd-margin-collection: 0.5em;
 }
 
 /* == BLOCO 2 ================================================================*/
@@ -550,6 +546,11 @@ padding: 0;
 	from {transform: scale(0); opacity: 0;}
 	to {transform: scale(1); opacity: 1;}
 }
+@keyframes wd-zoom-extra {
+	from {transform: scale(1);}
+	to {transform: scale(1.1);}
+}
+
 @keyframes wd-fade-in {
 	from {opacity: 0;}
 	to {opacity: 1;}
@@ -722,13 +723,19 @@ padding: 0;
 }
 .wd .wd-collection > * {
 	display: inline-block;
-	height: var(--var-wd-size-collection);
-	margin: var(--var-wd-margin-collection);
+	height: 12em;
+	margin: 1em 0.5em;
+	border-radius: var(--var-radius-default);
 	overflow: auto;
 	white-space: normal;
-	width: var(--var-wd-size-collection);
+	width: 12em;
 }
-
+.wd .wd-collection > *:first-child {margin-left:  1em;}
+.wd .wd-collection > *:last-child  {margin-right: 1em;}
+.wd .wd-collection > *:hover {
+	animation: wd-zoom-extra 0.5s;
+	transform: scale(1.1);
+}
 /* -- Caixa de Dicas -- */
 .wd .wd-tip {
 	position: relative;
