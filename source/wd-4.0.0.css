@@ -550,7 +550,10 @@ padding: 0;
 	from {transform: scale(1);}
 	to {transform: scale(1.1);}
 }
-
+@keyframes wd-zoom-back {
+	from {transform: scale(1.1);}
+	to {transform: scale(1);}
+}
 @keyframes wd-fade-in {
 	from {opacity: 0;}
 	to {opacity: 1;}
@@ -732,6 +735,10 @@ padding: 0;
 }
 .wd .wd-collection > *:first-child {margin-left:  1em;}
 .wd .wd-collection > *:last-child  {margin-right: 1em;}
+.wd .wd-collection > * {
+	animation: wd-zoom-back 0.5s;
+	transform: scale(1);
+}
 .wd .wd-collection > *:hover {
 	animation: wd-zoom-extra 0.5s;
 	transform: scale(1.1);
@@ -1282,7 +1289,7 @@ padding: 0;
 .wd .wd-i-none,   .wd .wd-i-none-child   > * {font-style: normal !important;}
 .wd .wd-u-none,   .wd .wd-u-none-child   > * {text-decoration: none !important;}
 .wd .wd-s-none,   .wd .wd-s-none-child   > * {text-decoration: none !important;}
-.wd .wd-hgl-none, .wd .wd-hgl-none-child > * {background-color: transparent !important;}
+.wd .wd-hgl-none, .wd .wd-hgl-none-child > * {background-color: initial !important;}
 
 /* -- cores (conteúdo e cabeçalhos) -- */
 .wd .wd-bg-black, .wd .wd-bg-black-child > * {
