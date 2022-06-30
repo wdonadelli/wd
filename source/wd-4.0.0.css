@@ -1274,23 +1274,11 @@ padding: 0;
 	transform: translate(-50%, -50%) !important;
 }
 /* -- Textual --*/
-.wd .wd-plain, .wd .wd-plain-child > * {
-	font-style: normal !important;
-	font-weight: normal !important;
-	text-decoration: none !important;
-	background-color: transparent !important;
-}
 .wd .wd-b,   .wd .wd-b-child   > * {font-weight: bold !important;}
 .wd .wd-u,   .wd .wd-u-child   > * {text-decoration: underline !important;}
 .wd .wd-i,   .wd .wd-i-child   > * {font-style: italic !important;}
 .wd .wd-s,   .wd .wd-s-child   > * {text-decoration: line-through !important;}
 .wd .wd-hgl, .wd .wd-hgl-child > * {background-color: var(--var-bg-hgl) !important;}
-.wd .wd-b-none,   .wd .wd-b-none-child   > * {font-weight: normal !important;}
-.wd .wd-i-none,   .wd .wd-i-none-child   > * {font-style: normal !important;}
-.wd .wd-u-none,   .wd .wd-u-none-child   > * {text-decoration: none !important;}
-.wd .wd-s-none,   .wd .wd-s-none-child   > * {text-decoration: none !important;}
-.wd .wd-hgl-none, .wd .wd-hgl-none-child > * {background-color: initial !important;}
-
 /* -- cores (conteúdo e cabeçalhos) -- */
 .wd .wd-bg-black, .wd .wd-bg-black-child > * {
 	background-color: var(--var-bg-black);
