@@ -753,6 +753,7 @@ padding: 0;
 .wd .wd-tip > .wd-tip-hover-e, .wd .wd-tip > .wd-tip-click-e,
 .wd .wd-tip > .wd-tip-hover-s, .wd .wd-tip > .wd-tip-click-s,
 .wd .wd-tip > .wd-tip-hover-w, .wd .wd-tip > .wd-tip-click-w {
+	border-radius: var(--var-radius-default);
 	display: none !important;
 	position: absolute;
 	margin: 0;
@@ -786,7 +787,7 @@ padding: 0;
 .wd .wd-tip:hover > .wd-tip-hover-s, .wd .wd-tip.wd-open > .wd-tip-click-s,
 .wd .wd-tip:hover > .wd-tip-hover-w, .wd .wd-tip.wd-open > .wd-tip-click-w {
 	display: block !important;
-	animation: wd-fade-in 0.5s;
+	animation: wd-zoom-in 0.5s;
 }
 /* -- Janelas -- */
 .wd .wd-window,
