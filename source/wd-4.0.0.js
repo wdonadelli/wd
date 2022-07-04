@@ -39,7 +39,7 @@ const wd = (function() {
 /* == BLOCO 1 ================================================================*/
 
 /*----------------------------------------------------------------------------*/
-	const wd_version = "v4.0.0 2022-01-01";
+	const wd_version = "v4.0.0 2022-07-08";
 	/* Guarda informação do dispositivo (desktop, mobile...) */
 	let wd_device_controller = null;
 	/* Guarda o intervalo de tempo para executar funções vinculadas aos eventos de tecla */
@@ -4003,7 +4003,7 @@ const wd = (function() {
 			evernote: "https://www.evernote.com/clip.action?url="+url+"&title="+title,
 			/*signal: "",
 			whatsapp: "",
-			telegram: "" TODO*/
+			telegram: "" FIXME*/
 		}
 		if (social in link) {window.open(link[social]);}
 		return;
