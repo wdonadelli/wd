@@ -115,8 +115,10 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	function wd_lang() { /*Retorna o local: definido ou do navegador*/
-		let attr  = document.body.parentElement.attributes;
-		if ("lang" in attr) return attr.lang.value.replace(/\s/g, "");
+		let attr = document.body.parentElement.attributes;
+		let lang = "lang" in attr ? attr.lang.value.replace(/\s/g, "") : null;
+		if (lang !== null && (/^[a-z]+((\-[a-z]+)?)$/i).test(lang))
+			return lang;
 		return navigator.language || navigator.browserLanguage || "en-US";
 	}
 
@@ -4116,6 +4118,40 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
+	function data_wdLang(e) { /* carrega HTML: data-wd-lang=path{file}method{get|post}${form} */
+		if (!("wdLang" in e.dataset)) return;
+		let data   = wd_html_dataset_value(e, "wdLang")[0];
+		let target = WD(e);
+		let method = data.method;
+		let file   = data.path;
+		let pack   = wd_$$$(data);
+		let exec   = WD(pack);
+		target.data({wdLang: null});
+		exec.send(file, function(x) {
+			if (x.closed) {
+				let json = x.json;
+				if (json === null) return;
+				let lang = wd_lang().toLowerCase().replace(/\-/g, "_");
+				let init = lang.split("_")[0];
+
+				for (let id in json) {
+					let elem = document.getElementById(id);
+					if (elem === null) continue;
+					let text = "";
+					if (lang in json[id])
+						text = json[id][lang];
+					else if (init in json[id])
+						text = json[id][init];
+					else if ("default" in json[id])
+						text = json[id]["default"];
+					elem.textContent = text;
+				}
+			}
+		}, method);
+		return;
+	};
+
+/*----------------------------------------------------------------------------*/
 	function navLink(e) { /* link ativo do navegador */
 		if (e.parentElement === null) return;
 		if (wd_html_tag(e.parentElement) !== "nav") return;
@@ -4238,6 +4274,7 @@ const wd = (function() {
 		WD.$$("[data-wd-device]").run(data_wdDevice);
 		WD.$$("[data-wd-chart]").run(data_wdChart);
 		WD.$$("[data-wd-url]").run(data_wdUrl);
+		WD.$$("[data-wd-lang]").run(data_wdLang);
 		data_wdOutput(document, true);
 		return;
 	};
@@ -4257,6 +4294,7 @@ const wd = (function() {
 			case "wdChart":   data_wdChart(e);        break;
 			case "wdOutput":  data_wdOutput(e, true); break;
 			case "wdUrl":     data_wdUrl(e, true);    break;
+			case "wdLang":    data_wdLang(e);         break;
 		};
 		return;
 	};
@@ -4370,6 +4408,7 @@ wd_html_data(), data-wd-data
 		- data-wd-click
 		- data-wd-device
 		- data-wd-filter
+		- data-wd-lang
 		- data-wd-load
 			> loadingProcedures()
 		- data-wd-mask
@@ -4397,6 +4436,7 @@ window.onload > loadProcedures()
 			- data-wd-slide
 			- data-wd-sort
 			- data-wd-url
+			- data-wd-lang
 
 window.onhashchange > hashProcedures()
 	- [eventos de linkagem]

@@ -116,8 +116,8 @@ SOFTWARE.
 	--var-bg-button-active: #777777;
 	--var-fg-button-active: #f2f2f2;
 
-	--var-fg-link:   #3baff7;
-	--var-bg-hgl: #fdff87;
+	--var-fg-link: #3baff7;
+	--var-bg-hgl:  #fdff87;
 
 	--var-bg-modal:  rgba(0, 0, 0, 0.2);
 	--var-bg-window: #ffffff;
@@ -158,7 +158,8 @@ SOFTWARE.
 	--var-shadow-nav-block:    inset 0.3em 0 0 0 rgba(114, 159, 207, 1);
 	--var-shadow-nav-spread:   0 0 0 0.3em rgba(114, 159, 207, 1);
 	--var-shadow:              0.5em 0.5em 0 0 rgba(136, 138, 133, 1);
-	--var-shadow-cloud:        0 0 1.4em 0.5em rgba(211, 215, 207, 0.8);
+	--var-cloud:               0 0 1.4em 0.5em rgba(211, 215, 207, 0.8);
+	--var-shadow-cloud:        0.5em 0.5em 0 0 rgba(136, 138, 133, 1), 0 0 1.4em 0.5em rgba(211, 215, 207, 0.8);
 	--var-shadow-upon:         inset 0 0 0 2px #2e3436;
 	--var-shadow-form-invalid: inset 0 0 0 1px #dc143c;
 
@@ -1276,10 +1277,22 @@ padding: 0;
 }
 /* -- Textual --*/
 .wd .wd-b,   .wd .wd-b-child   > * {font-weight: bold !important;}
-.wd .wd-u,   .wd .wd-u-child   > * {text-decoration: underline !important;}
+.wd .wd-b-none                     {font-weight: normal !important;}
 .wd .wd-i,   .wd .wd-i-child   > * {font-style: italic !important;}
-.wd .wd-s,   .wd .wd-s-child   > * {text-decoration: line-through !important;}
+.wd .wd-i-none                     {font-style: normal !important;}
 .wd .wd-hgl, .wd .wd-hgl-child > * {background-color: var(--var-bg-hgl) !important;}
+.wd .wd-hgl-none                   {background-color: transparent !important;}
+.wd .wd-s, .wd .wd-s-child > *     {text-decoration: line-through !important;}
+.wd .wd-u, .wd .wd-u-child > *     {text-decoration: underline !important;}
+.wd .wd-u.wd-s,
+.wd .wd-s-child.wd-u-child > *,
+.wd .wd-u-child > *.wd-s,
+.wd .wd-s-child > *.wd-u           {text-decoration: line-through underline !important;}
+.wd .wd-s-none, .wd .wd-u-none     {text-decoration: none !important;}
+.wd .wd-s-child > *.wd-u-none      {text-decoration: line-through !important;}
+.wd .wd-u-child > *.wd-s-none      {text-decoration: underline!important;}
+.wd .wd-s-none.wd-u-none           {text-decoration: none !important;}
+
 /* -- cores (conteúdo e cabeçalhos) -- */
 .wd .wd-bg-black, .wd .wd-bg-black-child > * {
 	background-color: var(--var-bg-black);
@@ -1438,230 +1451,140 @@ padding: 0;
 .wd .wd-case-lower, .wd .wd-case-lower-child > * {text-transform: lowercase  !important;}
 .wd .wd-case-title, .wd .wd-case-title-child > * {text-transform: capitalize !important;}
 .wd .wd-case-caps,  .wd .wd-case-caps-child  > * {font-variant:   small-caps !important;}
-.wd .wd-case-none,  .wd .wd-case-none-child  > * {text-transform: none       !important;}
+.wd .wd-case-none                                {text-transform: none       !important;}
 /* -- padding -- */
 .wd .wd-padd,   .wd .wd-padd-child   > *,
 .wd .wd-padd-n, .wd .wd-padd-n-child > *,
-.wd .wd-padd-v, .wd .wd-padd-v-child > * {
-	padding-top: var(--var-size-default) !important;
-}
+.wd .wd-padd-v, .wd .wd-padd-v-child > *       {padding-top: var(--var-size-default) !important;}
 .wd .wd-padd-x,   .wd .wd-padd-x-child   > *,
 .wd .wd-padd-x-n, .wd .wd-padd-x-n-child > *,
-.wd .wd-padd-x-v, .wd .wd-padd-x-v-child > * {
-	padding-top: var(--var-size-medium) !important;
-}
+.wd .wd-padd-x-v, .wd .wd-padd-x-v-child > *   {padding-top: var(--var-size-medium) !important;}
 .wd .wd-padd-xx,   .wd .wd-padd-xx-child   > *,
 .wd .wd-padd-xx-n, .wd .wd-padd-xx-n-child > *,
-.wd .wd-padd-xx-v, .wd .wd-padd-xx-v-child > * {
-	padding-top: var(--var-size-large) !important;
-}
+.wd .wd-padd-xx-v, .wd .wd-padd-xx-v-child > * {padding-top: var(--var-size-large) !important;}
 .wd .wd-padd,   .wd .wd-padd-child   > *,
 .wd .wd-padd-s, .wd .wd-padd-s-child > *,
-.wd .wd-padd-v, .wd .wd-padd-v-child > * {
-	padding-bottom: var(--var-size-default) !important;
-}
+.wd .wd-padd-v, .wd .wd-padd-v-child > *       {padding-bottom: var(--var-size-default) !important;}
 .wd .wd-padd-x,   .wd .wd-padd-x-child   > *,
 .wd .wd-padd-x-s, .wd .wd-padd-x-s-child > *,
-.wd .wd-padd-x-v, .wd .wd-padd-x-v-child > * {
-	padding-bottom: var(--var-size-medium) !important;
-}
+.wd .wd-padd-x-v, .wd .wd-padd-x-v-child > *   {padding-bottom: var(--var-size-medium) !important;}
 .wd .wd-padd-xx,   .wd .wd-padd-xx-child   > *,
 .wd .wd-padd-xx-s, .wd .wd-padd-xx-s-child > *,
-.wd .wd-padd-xx-v, .wd .wd-padd-xx-v-child > * {
-	padding-bottom: var(--var-size-large) !important;
-}
+.wd .wd-padd-xx-v, .wd .wd-padd-xx-v-child > * {padding-bottom: var(--var-size-large) !important;}
 .wd .wd-padd,   .wd .wd-padd-child   > *,
 .wd .wd-padd-w, .wd .wd-padd-w-child > *,
-.wd .wd-padd-h, .wd .wd-padd-h-child > * {
-	padding-left: var(--var-size-default) !important;
-}
+.wd .wd-padd-h, .wd .wd-padd-h-child > *       {padding-left: var(--var-size-default) !important;}
 .wd .wd-padd-x,   .wd .wd-padd-x-child   > *,
 .wd .wd-padd-x-w, .wd .wd-padd-x-w-child > *,
-.wd .wd-padd-x-h, .wd .wd-padd-x-h-child > * {
-	padding-left: var(--var-size-medium) !important;
-}
+.wd .wd-padd-x-h, .wd .wd-padd-x-h-child > *   {padding-left: var(--var-size-medium) !important;}
 .wd .wd-padd-xx,   .wd .wd-padd-xx-child   > *,
 .wd .wd-padd-xx-w, .wd .wd-padd-xx-w-child > *,
-.wd .wd-padd-xx-h, .wd .wd-padd-xx-h-child > * {
-	padding-left: var(--var-size-large) !important;
-}
+.wd .wd-padd-xx-h, .wd .wd-padd-xx-h-child > * {padding-left: var(--var-size-large) !important;}
 .wd .wd-padd,   .wd .wd-padd-child   > *,
 .wd .wd-padd-e, .wd .wd-padd-e-child > *,
-.wd .wd-padd-h, .wd .wd-padd-h-child > * {
-	padding-right: var(--var-size-default) !important;
-}
+.wd .wd-padd-h, .wd .wd-padd-h-child > *       {padding-right: var(--var-size-default) !important;}
 .wd .wd-padd-x,   .wd .wd-padd-x-child   > *,
 .wd .wd-padd-x-e, .wd .wd-padd-x-e-child > *,
-.wd .wd-padd-x-h, .wd .wd-padd-x-h-child > * {
-	padding-right: var(--var-size-medium) !important;
-}
+.wd .wd-padd-x-h, .wd .wd-padd-x-h-child > *   {padding-right: var(--var-size-medium) !important;}
 .wd .wd-padd-xx,   .wd .wd-padd-xx-child   > *,
 .wd .wd-padd-xx-e, .wd .wd-padd-xx-e-child > *,
-.wd .wd-padd-xx-h, .wd .wd-padd-xx-h-child > * {
-	padding-right: var(--var-size-large) !important;
-}
-.wd .wd-padd-none, .wd .wd-padd-none-child > * {
-	padding: 0 !important;
-}
+.wd .wd-padd-xx-h, .wd .wd-padd-xx-h-child > * {padding-right: var(--var-size-large) !important;}
+.wd .wd-padd-none {padding: 0 !important;}
 /* -- margin -- */
 .wd .wd-margin,   .wd .wd-margin-child   > *,
 .wd .wd-margin-n, .wd .wd-margin-n-child > *,
-.wd .wd-margin-v, .wd .wd-margin-v-child > * {
-	margin-top: var(--var-size-default) !important;
-}
+.wd .wd-margin-v, .wd .wd-margin-v-child > *       {margin-top: var(--var-size-default) !important;}
 .wd .wd-margin-x,   .wd .wd-margin-x-child   > *,
 .wd .wd-margin-x-n, .wd .wd-margin-x-n-child > *,
-.wd .wd-margin-x-v, .wd .wd-margin-x-v-child > * {
-	margin-top: var(--var-size-medium) !important;
-}
+.wd .wd-margin-x-v, .wd .wd-margin-x-v-child > *   {margin-top: var(--var-size-medium) !important;}
 .wd .wd-margin-xx,   .wd .wd-margin-xx-child   > *,
 .wd .wd-margin-xx-n, .wd .wd-margin-xx-n-child > *,
-.wd .wd-margin-xx-v, .wd .wd-margin-xx-v-child > * {
-	margin-top: var(--var-size-large) !important;
-}
+.wd .wd-margin-xx-v, .wd .wd-margin-xx-v-child > * {margin-top: var(--var-size-large) !important;}
 .wd .wd-margin,   .wd .wd-margin-child   > *,
 .wd .wd-margin-s, .wd .wd-margin-s-child > *,
-.wd .wd-margin-v, .wd .wd-margin-v-child > * {
-	margin-bottom: var(--var-size-default) !important;
-}
+.wd .wd-margin-v, .wd .wd-margin-v-child > *       {margin-bottom: var(--var-size-default) !important;}
 .wd .wd-margin-x,   .wd .wd-margin-x-child   > *,
 .wd .wd-margin-x-s, .wd .wd-margin-x-s-child > *,
-.wd .wd-margin-x-v, .wd .wd-margin-x-v-child > * {
-	margin-bottom: var(--var-size-medium) !important;
-}
+.wd .wd-margin-x-v, .wd .wd-margin-x-v-child > *   {margin-bottom: var(--var-size-medium) !important;}
 .wd .wd-margin-xx,   .wd .wd-margin-xx-child   > *,
 .wd .wd-margin-xx-s, .wd .wd-margin-xx-s-child > *,
-.wd .wd-margin-xx-v, .wd .wd-margin-xx-v-child > * {
-	margin-bottom: var(--var-size-large) !important;
-}
+.wd .wd-margin-xx-v, .wd .wd-margin-xx-v-child > * {margin-bottom: var(--var-size-large) !important;}
 .wd .wd-margin,   .wd .wd-margin-child   > *,
 .wd .wd-margin-w, .wd .wd-margin-w-child > *,
-.wd .wd-margin-h, .wd .wd-margin-h-child > * {
-	margin-left: var(--var-size-default) !important;
-}
+.wd .wd-margin-h, .wd .wd-margin-h-child > *       {margin-left: var(--var-size-default) !important;}
 .wd .wd-margin-x,   .wd .wd-margin-x-child   > *,
 .wd .wd-margin-x-w, .wd .wd-margin-x-w-child > *,
-.wd .wd-margin-x-h, .wd .wd-margin-x-h-child > * {
-	margin-left: var(--var-size-medium) !important;
-}
+.wd .wd-margin-x-h, .wd .wd-margin-x-h-child > *   {margin-left: var(--var-size-medium) !important;}
 .wd .wd-margin-xx,   .wd .wd-margin-xx-child   > *,
 .wd .wd-margin-xx-w, .wd .wd-margin-xx-w-child > *,
-.wd .wd-margin-xx-h, .wd .wd-margin-xx-h-child > * {
-	margin-left: var(--var-size-large) !important;
-}
+.wd .wd-margin-xx-h, .wd .wd-margin-xx-h-child > * {margin-left: var(--var-size-large) !important;}
 .wd .wd-margin,   .wd .wd-margin-child   > *,
 .wd .wd-margin-e, .wd .wd-margin-e-child > *,
-.wd .wd-margin-h, .wd .wd-margin-h-child > * {
-	margin-right: var(--var-size-default) !important;
-}
+.wd .wd-margin-h, .wd .wd-margin-h-child > *       {margin-right: var(--var-size-default) !important;}
 .wd .wd-margin-x,   .wd .wd-margin-x-child   > *,
 .wd .wd-margin-x-e, .wd .wd-margin-x-e-child > *,
-.wd .wd-margin-x-h, .wd .wd-margin-x-h-child > * {
-	margin-right: var(--var-size-medium) !important;
-}
+.wd .wd-margin-x-h, .wd .wd-margin-x-h-child > *   {margin-right: var(--var-size-medium) !important;}
 .wd .wd-margin-xx,   .wd .wd-margin-xx-child   > *,
 .wd .wd-margin-xx-e, .wd .wd-margin-xx-e-child > *,
-.wd .wd-margin-xx-h, .wd .wd-margin-xx-h-child > * {
-	margin-right: var(--var-size-large) !important;
-}
-.wd .wd-margin-none, .wd .wd-margin-none-child > * {
-	margin: 0 !important;
-}
+.wd .wd-margin-xx-h, .wd .wd-margin-xx-h-child > * {margin-right: var(--var-size-large) !important;}
+.wd .wd-margin-none {margin: 0 !important;}
 /* -- border -- */
 .wd .wd-border,   .wd .wd-border-child   > *,
 .wd .wd-border-n, .wd .wd-border-n-child > *,
-.wd .wd-border-v, .wd .wd-border-v-child > * {
-	border-top: var(--var-border-thin) !important;
-}
+.wd .wd-border-v, .wd .wd-border-v-child > *       {border-top: var(--var-border-thin) !important;}
 .wd .wd-border-x,   .wd .wd-border-x-child   > *,
 .wd .wd-border-x-n, .wd .wd-border-x-n-child > *,
-.wd .wd-border-x-v, .wd .wd-border-x-v-child > * {
-	border-top: var(--var-border-medium) !important;
-}
+.wd .wd-border-x-v, .wd .wd-border-x-v-child > *   {border-top: var(--var-border-medium) !important;}
 .wd .wd-border-xx,   .wd .wd-border-xx-child   > *,
 .wd .wd-border-xx-n, .wd .wd-border-xx-n-child > *,
-.wd .wd-border-xx-v, .wd .wd-border-xx-v-child > * {
-	border-top: var(--var-border-thick) !important;
-}
+.wd .wd-border-xx-v, .wd .wd-border-xx-v-child > * {border-top: var(--var-border-thick) !important;}
 .wd .wd-border,   .wd .wd-border-child   > *,
 .wd .wd-border-s, .wd .wd-border-s-child > *,
-.wd .wd-border-v, .wd .wd-border-v-child > * {
-	border-bottom: var(--var-border-thin) !important;
-}
+.wd .wd-border-v, .wd .wd-border-v-child > *       {border-bottom: var(--var-border-thin) !important;}
 .wd .wd-border-x,   .wd .wd-border-x-child   > *,
 .wd .wd-border-x-s, .wd .wd-border-x-s-child > *,
-.wd .wd-border-x-v, .wd .wd-border-x-v-child > * {
-	border-bottom: var(--var-border-medium) !important;
-}
+.wd .wd-border-x-v, .wd .wd-border-x-v-child > *   {border-bottom: var(--var-border-medium) !important;}
 .wd .wd-border-xx,   .wd .wd-border-xx-child   > *,
 .wd .wd-border-xx-s, .wd .wd-border-xx-s-child > *,
-.wd .wd-border-xx-v, .wd .wd-border-xx-v-child > * {
-	border-bottom: var(--var-border-thick) !important;
-}
+.wd .wd-border-xx-v, .wd .wd-border-xx-v-child > * {border-bottom: var(--var-border-thick) !important;}
 .wd .wd-border,   .wd .wd-border-child   > *,
 .wd .wd-border-w, .wd .wd-border-w-child > *,
-.wd .wd-border-h, .wd .wd-border-h-child > * {
-	border-left: var(--var-border-thin) !important;
-}
+.wd .wd-border-h, .wd .wd-border-h-child > *       {border-left: var(--var-border-thin) !important;}
 .wd .wd-border-x,   .wd .wd-border-x-child   > *,
 .wd .wd-border-x-w, .wd .wd-border-x-w-child > *,
-.wd .wd-border-x-h, .wd .wd-border-x-h-child > * {
-	border-left: var(--var-border-medium) !important;
-}
+.wd .wd-border-x-h, .wd .wd-border-x-h-child > *   {border-left: var(--var-border-medium) !important;}
 .wd .wd-border-xx,   .wd .wd-border-xx-child   > *,
 .wd .wd-border-xx-w, .wd .wd-border-xx-w-child > *,
-.wd .wd-border-xx-h, .wd .wd-border-xx-h-child > * {
-	border-left: var(--var-border-thick) !important;
-}
+.wd .wd-border-xx-h, .wd .wd-border-xx-h-child > * {border-left: var(--var-border-thick) !important;}
 .wd .wd-border,   .wd .wd-border-child   > *,
 .wd .wd-border-e, .wd .wd-border-e-child > *,
-.wd .wd-border-h, .wd .wd-border-h-child > * {
-	border-right: var(--var-border-thin) !important;
-}
+.wd .wd-border-h, .wd .wd-border-h-child > *       {border-right: var(--var-border-thin) !important;}
 .wd .wd-border-x,   .wd .wd-border-x-child   > *,
 .wd .wd-border-x-e, .wd .wd-border-x-e-child > *,
-.wd .wd-border-x-h, .wd .wd-border-x-h-child > * {
-	border-right: var(--var-border-medium) !important;
-}
+.wd .wd-border-x-h, .wd .wd-border-x-h-child > *   {border-right: var(--var-border-medium) !important;}
 .wd .wd-border-xx,   .wd .wd-border-xx-child   > *,
 .wd .wd-border-xx-e, .wd .wd-border-xx-e-child > *,
-.wd .wd-border-xx-h, .wd .wd-border-xx-h-child > * {
-	border-right: var(--var-border-thick) !important;
-}
-.wd .wd-border-unseen, .wd .wd-border-unseen-child > * {
-	border: 1px solid transparent !important;
-}
-.wd .wd-border-none, .wd .wd-border-none-child > * {
-	border: 0 !important;
-}
+.wd .wd-border-xx-h, .wd .wd-border-xx-h-child > * {border-right: var(--var-border-thick) !important;}
+.wd .wd-border-unseen, .wd .wd-border-unseen-child > * {border: 1px solid transparent !important;}
+.wd .wd-border-none {border: 0 !important;}
 /* -- Borda arredondada -- */
 .wd .wd-radius,    .wd .wd-radius-child    > *,
 .wd .wd-radius-nw, .wd .wd-radius-nw-child > *,
 .wd .wd-radius-n,  .wd .wd-radius-n-child  > *,
-.wd .wd-radius-w,  .wd .wd-radius-w-child  > * {
-	border-top-left-radius: var(--var-radius-default) !important;
-}
+.wd .wd-radius-w,  .wd .wd-radius-w-child  > * {border-top-left-radius: var(--var-radius-default) !important;}
 .wd .wd-radius,    .wd .wd-radius-child    > *,
 .wd .wd-radius-ne, .wd .wd-radius-ne-child > *,
 .wd .wd-radius-n,  .wd .wd-radius-n-child  > *,
-.wd .wd-radius-e,  .wd .wd-radius-e-child  > * {
-	border-top-right-radius: var(--var-radius-default) !important;
-}
+.wd .wd-radius-e,  .wd .wd-radius-e-child  > * {border-top-right-radius: var(--var-radius-default) !important;}
 .wd .wd-radius,    .wd .wd-radius-child    > *,
 .wd .wd-radius-sw, .wd .wd-radius-sw-child > *,
 .wd .wd-radius-s,  .wd .wd-radius-s-child  > *,
-.wd .wd-radius-w,  .wd .wd-radius-w-child  > * {
-	border-bottom-left-radius: var(--var-radius-default) !important;
-}
+.wd .wd-radius-w,  .wd .wd-radius-w-child  > * {border-bottom-left-radius: var(--var-radius-default) !important;}
 .wd .wd-radius,    .wd .wd-radius-child    > *,
 .wd .wd-radius-se, .wd .wd-radius-se-child > *,
 .wd .wd-radius-s,  .wd .wd-radius-s-child  > *,
-.wd .wd-radius-e,  .wd .wd-radius-e-child  > * {
-	border-bottom-right-radius: var(--var-radius-default) !important;
-}
-.wd .wd-radius-none, .wd .wd-radius-none-child > * {
-	border-radius: 0 !important;
-}
+.wd .wd-radius-e,  .wd .wd-radius-e-child  > * {border-bottom-right-radius: var(--var-radius-default) !important;}
+.wd .wd-radius-none {border-radius: 0 !important;}
 /* texto em colunas */
 .wd .wd-columns {
 	column-gap: var(--var-size-large);
@@ -1784,91 +1707,74 @@ padding: 0;
 	| shadow-out - aplica "shadow" ao tirar o mouse sobre o pai
 	\---------------------------------------------------------------------------*/
 
-.wd .wd-shadow, .wd .wd-shadow-child > * {
-	box-shadow: var(--var-shadow) !important;
-}
-.wd .wd-shadow-none, .wd .wd-shadow-none-child > * {
-	box-shadow: none !important;
-}
+/*-- Sombra ------------------------------------------------------------------*/
+.wd .wd-shadow,
+.wd .wd-shadow-child > *               {box-shadow: var(--var-shadow) !important;}
 /*----------------------------------------------------------------------------*/
-.wd .wd-shadow-enter, .wd .wd-shadow-enter-child > * {
-	box-shadow: none !important;
-}
-.wd .wd-shadow-enter:hover, .wd .wd-shadow-enter-child > *:hover {
-	box-shadow: var(--var-shadow) !important;
-}
+.wd .wd-shadow-enter,
+.wd .wd-shadow-enter-child > *         {box-shadow: none !important;}
+.wd .wd-shadow-enter:hover,
+.wd .wd-shadow-enter-child > *:hover   {box-shadow: var(--var-shadow) !important;}
 /*----------------------------------------------------------------------------*/
-.wd .wd-shadow-leave, .wd .wd-shadow-leave-child > * {
-	box-shadow: var(--var-shadow) !important;
-}
-.wd .wd-shadow-leave:hover, .wd .wd-shadow-leave-child > *:hover {
-	box-shadow: none !important;
-}
+.wd .wd-shadow-leave,
+.wd .wd-shadow-leave-child > *         {box-shadow: var(--var-shadow) !important;}
+.wd .wd-shadow-leave:hover,
+.wd .wd-shadow-leave-child > *:hover   {box-shadow: none !important;}
 /*----------------------------------------------------------------------------*/
-.wd * > .wd-shadow-out, .wd *:hover > .wd-shadow-in {
-	box-shadow: var(--var-shadow) !important;
-}
-.wd * > .wd-shadow-in, .wd *:hover > .wd-shadow-out {
-	box-shadow: none !important;
-}
+.wd * > .wd-shadow-out,
+.wd *:hover > .wd-shadow-in            {box-shadow: var(--var-shadow) !important;}
+.wd * > .wd-shadow-in,
+.wd *:hover > .wd-shadow-out           {box-shadow: none !important;}
 
 /* -- Nuvem ------------------------------------------------------------------*/
-.wd .wd-cloud, .wd .wd-cloud-child > * {
-	box-shadow: var(--var-shadow-cloud) !important;
-}
-.wd .wd-cloud-none, .wd .wd-cloud-none-child > * {
-	box-shadow: none !important;
-}
+.wd .wd-cloud,
+.wd .wd-cloud-child > *                {box-shadow: var(--var-cloud) !important;}
 /*----------------------------------------------------------------------------*/
-.wd .wd-cloud-enter, .wd .wd-cloud-enter-child > * {
-	box-shadow: none !important;
-}
-.wd .wd-cloud-enter:hover, .wd .wd-cloud-enter-child > *:hover {
-	box-shadow: var(--var-shadow-cloud) !important;
-}
+.wd .wd-cloud-enter,
+.wd .wd-cloud-enter-child > *          {box-shadow: none !important;}
+.wd .wd-cloud-enter:hover,
+.wd .wd-cloud-enter-child > *:hover    {box-shadow: var(--var-cloud) !important;}
 /*----------------------------------------------------------------------------*/
-.wd .wd-cloud-leave, .wd .wd-cloud-leave-child > * {
-	box-shadow: var(--var-shadow-cloud) !important;
-}
-.wd .wd-cloud-leave:hover, .wd .wd-cloud-leave-child > *:hover {
-	box-shadow: none !important;
-}
+.wd .wd-cloud-leave,
+.wd .wd-cloud-leave-child > *          {box-shadow: var(--var-cloud) !important;}
+.wd .wd-cloud-leave:hover,
+.wd .wd-cloud-leave-child > *:hover    {box-shadow: none !important;}
 /*----------------------------------------------------------------------------*/
-.wd * > .wd-cloud-out, .wd *:hover > .wd-cloud-in {
-	box-shadow: var(--var-shadow-cloud) !important;
-}
-.wd * > .wd-cloud-in, .wd *:hover > .wd-cloud-out {
-	box-shadow: none !important;
-}
+.wd * > .wd-cloud-out,
+.wd *:hover > .wd-cloud-in             {box-shadow: var(--var-cloud) !important;}
+.wd * > .wd-cloud-in,
+.wd *:hover > .wd-cloud-out            {box-shadow: none !important;}
+
+/*-- Nuvem/Sombra ------------------------------------------------------------*/
+.wd .wd-cloud.wd-shadow,
+.wd .wd-shadow-child.wd-cloud-child > *,
+.wd .wd-cloud-child  > *.wd-shadow,
+.wd .wd-shadow-child > *.wd-cloud      {box-shadow: var(--var-shadow-cloud) !important;}
+.wd .wd-shadow-none,
+.wd .wd-cloud-none                     {box-shadow: none !important;}
+.wd .wd-cloud-child > *.wd-shadow-none {box-shadow: var(--var-cloud) !important;}
+.wd .wd-shadow-child > *.wd-cloud-none {box-shadow: var(--var-shadow) !important;}
+.wd .wd-shadow-none.wd-cloud-none      {box-shadow: none !important;}
 
 /*-- opaco -------------------------------------------------------------------*/
-.wd .wd-opaque, .wd .wd-opaque-child > * {
-	opacity: 0.5 !important;
-}
-.wd .wd-opaque-none, .wd .wd-opaque-none-child > * {
-	opacity: 1 !important;
-}
+.wd .wd-opaque,
+.wd .wd-opaque-child > *             {opacity: 0.5 !important;}
 /*----------------------------------------------------------------------------*/
-.wd .wd-opaque-enter, .wd .wd-opaque-enter-child > * {
-	opacity: 1 !important;
-}
-.wd .wd-opaque-enter:hover, .wd .wd-opaque-enter-child > *:hover {
-	opacity: 0.5 !important;
-}
+.wd .wd-opaque-enter,
+.wd .wd-opaque-enter-child > *       {opacity: 1 !important;}
+.wd .wd-opaque-enter:hover,
+.wd .wd-opaque-enter-child > *:hover {opacity: 0.5 !important;}
 /*----------------------------------------------------------------------------*/
-.wd .wd-opaque-leave, .wd .wd-opaque-leave-child > * {
-	opacity: 0.5 !important;
-}
-.wd .wd-opaque-leave:hover, .wd .wd-opaque-leave-child > *:hover {
-	opacity: 1 !important;
-}
+.wd .wd-opaque-leave,
+.wd .wd-opaque-leave-child > *       {opacity: 0.5 !important;}
+.wd .wd-opaque-leave:hover,
+.wd .wd-opaque-leave-child > *:hover {opacity: 1 !important;}
 /*----------------------------------------------------------------------------*/
-.wd * > .wd-opaque-out, .wd *:hover > .wd-opaque-in {
-	opacity: 0.5 !important;
-}
-.wd * > .wd-opaque-in, .wd *:hover > .wd-opaque-out {
-	opacity: 1 !important;
-}
+.wd * > .wd-opaque-out,
+.wd *:hover > .wd-opaque-in          {opacity: 0.5 !important;}
+.wd * > .wd-opaque-in,
+.wd *:hover > .wd-opaque-out         {opacity: 1 !important;}
+.wd .wd-opaque-none                  {opacity: 1 !important;}
 /* -- destaque -- */
 .wd .wd-zebra > *:nth-child(even) {
 	background-color: var(--var-bg-zebra)  !important;

@@ -6,11 +6,16 @@
 
 <h4>Wallpaper</h4>
 
-<section class="wd-bg-wallpaper-black-child wd-align-center wd-size-xlarge wd-xmargin-child">
-	<article style="background-image: url(examples/image.png); height: 200px;" class="wd-wallpaper">wd-wallpaper</article>
-	<article style="background-image: url(examples/image.png); height: 200px;" class="wd-wallpaper-photo">wd-wallpaper-photo</article>
-	<article style="background-image: url(examples/image.png); height: 200px;" class="wd-wallpaper-fixed">wd-wallpaper-fixed</article>
-	<article style="background-image: url(examples/image.png); height: 200px;" class="wd-wallpaper-repeat">wd-wallpaper-repeat</article>
+<nav>
+	<span data-wd-set="${#bg}class{}textContent{}">None</span>
+	<span data-wd-set="${#bg}className{wd-wallpaper}textContent{Wallpaper}">wallpaper</span>
+	<span data-wd-set="${#bg}className{wd-wallpaper-photo}textContent{Wallpaper Photo}">Photo</span>
+	<span data-wd-set="${#bg}className{wd-wallpaper-fixed}textContent{Wallpaper Fixed}">Fixed</span>
+	<span data-wd-set="${#bg}className{wd-wallpaper-repeat}textContent{Wallpaper Repeat}">Repeat</span>
+</nav>
+
+<section class="wd-align-center wd-size-xlarge wd-fg-red" style="margin-bottom: 500px;">
+	<article id="bg" style="background-image: url(examples/image.png); height: 300px;"></article>
 </section>
 
 
