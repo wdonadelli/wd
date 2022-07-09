@@ -2346,7 +2346,8 @@ const wd = (function() {
 			get: function() {
 				let value = [];
 				for (let i = 0; i < this.e.length; i++)
-					if (this.e[i].selected) value.push(this.e[i].value);
+					if (this.e[i].selected)
+						value.push(this.e[i].value.replace(/\,/g, "").trim());
 				return value.length > 0 ? value : [];
 			}
 		},
@@ -2541,8 +2542,8 @@ const wd = (function() {
 
 				if (type === "select" || type === "email") {
 					data[name] = {
-						GET: encodeURIComponent(wd_json(value)),
-						POST: wd_json(value)
+						GET: encodeURIComponent(value.join(",")),
+						POST: value.join(",")
 					}
 					return data;
 				}
@@ -2564,8 +2565,8 @@ const wd = (function() {
 					return data;
 				}
 				data[name] = {
-					GET: encodeURIComponent(value),
-					POST: value
+					GET: encodeURIComponent(value.trim()),
+					POST: value.trim()
 				}
 				return data;
 			}
