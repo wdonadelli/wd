@@ -4004,7 +4004,7 @@ const wd = (function() {
 			evernote: "https://www.evernote.com/clip.action?url="+url+"&title="+title,
 			/*signal: "",
 			whatsapp: "",
-			telegram: "" FIXME*/
+			telegram: "" FIXME */
 		}
 		if (social in link) {window.open(link[social]);}
 		return;

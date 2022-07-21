@@ -42,45 +42,50 @@ SOFTWARE.
 
 :root {
 	/* cores de fundo e de fonte */
-	--var-bg-grey-header: #888a85;
-	--var-fg-grey-header: #d3d7cf;
-	--var-bg-grey: #eeeeec;
-	--var-fg-grey: #555753;
+	--var-bg-grey-header: rgb(200,200,200);
+	--var-fg-grey-header: rgb(20,20,20);
+	--var-bg-grey: rgb(150,150,150);
+	--var-fg-grey: rgb(20,20,20);
 
-	--var-bg-black-header: #2e3436;
-	--var-fg-black-header: #f3f3f3;
-	--var-bg-black: #888a85;
-	--var-fg-black: #282c2e;
+	--var-bg-black-header: rgb(70,70,70);
+	--var-fg-black-header: rgb(200,200,200);
+	--var-bg-black: rgb(30,30,30);
+	--var-fg-black: rgb(175,175,175);
 
-	--var-bg-white-header: #e8e8e4;
-	--var-fg-white-header: #adadad;
-	--var-bg-white: #fcfcfc;
-	--var-fg-white: #babdb6;
+	--var-bg-white-header: rgb(240,240,240);
+	--var-fg-white-header: rgb(30,30,30);
+	--var-bg-white: rgb(220,220,220);
+	--var-fg-white: rgb(30,30,30);
 
-	--var-bg-red-header: #aa0808;
-	--var-fg-red-header: #f3f3f3;
-	--var-bg-red: #fce7e7;
-	--var-fg-red: #a40000;
+	--var-bg-red-header: rgb(255,60,60);
+	--var-fg-red-header: rgb(255,255,255);
+	--var-bg-red: rgb(195,0,0);
+	--var-fg-red: rgb(255,255,255);
 
-	--var-bg-green-header: #4e9a06;
-	--var-fg-green-header: #f3f3f3;
-	--var-bg-green: #ccf6c8;
-	--var-fg-green: #418501;
+	--var-bg-green-header: rgb(40,200,40);
+	--var-fg-green-header: rgb(240,255,255);
+	--var-bg-green: rgb(0,140,0);
+	--var-fg-green: rgb(255,255,255);
 
-	--var-bg-blue-header: #3465a4;
-	--var-fg-blue-header: #f3f3f3;
-	--var-bg-blue: #a3cbf7;
-	--var-fg-blue: #204a87;
+	--var-bg-blue-header: rgb(60,160,255);
+	--var-fg-blue-header: rgb(255,255,255);
+	--var-bg-blue: rgb(0,100,255);
+	--var-fg-blue: rgb(230,230,255);
+
+
 
 	--var-bg-orange-header: #ce5c00;
 	--var-fg-orange-header: #eeeeec;
 	--var-bg-orange: #ffd69b;
 	--var-fg-orange: #c75900;
 
-	--var-bg-yellow-header: #ebd300;
-	--var-fg-yellow-header: #8f5902;
-	--var-bg-yellow: #f9f5d3;
-	--var-fg-yellow: #c4a000;
+	--var-bg-yellow-header: rgb(225,225,0);
+	--var-fg-yellow-header: rgb(30,10,0);
+	--var-bg-yellow: rgb(255,230,0);
+	--var-fg-yellow: rgb(40,20,0);
+
+
+
 
 	--var-bg-brown-header: #8f5902;
 	--var-fg-brown-header: #eeeeec;
@@ -92,15 +97,17 @@ SOFTWARE.
 	--var-bg-pink: #f1c8ec;
 	--var-fg-pink: #a70094;
 
-	--var-bg-purple-header: #492b7a;
-	--var-fg-purple-header: #f3f3f3;
-	--var-bg-purple: #ccb2f6;
-	--var-fg-purple: #492b7a;
+	--var-bg-purple-header: rgb(165,80,255);
+	--var-fg-purple-header: rgb(215,215,255);
+	--var-bg-purple: rgb(125,0,255);
+	--var-fg-purple: rgb(220,220,220);
 
-	--var-bg-base-header: #000000;
-	--var-fg-base-header: #ffffff;
-	--var-bg-base: #ffffff;
-	--var-fg-base: #000000;
+	--var-bg-base-header: rgb(40,40,40);
+	--var-fg-base-header: rgb(220,220,220);
+	--var-bg-base: rgb(250,250,250);
+	--var-fg-base: rgb(30,30,30);
+
+
 
 	--var-bg-code: #eeeeec;
 	--var-fg-code: #2e3436;
@@ -676,7 +683,7 @@ padding: 0;
 .wd .wd-table-blue-07 > * > *:nth-child(7),  .wd .wd-table-blue-08 > * > *:nth-child(8),
 .wd .wd-table-blue-09 > * > *:nth-child(9),  .wd .wd-table-blue-10 > * > *:nth-child(10),
 .wd .wd-table-blue-11 > * > *:nth-child(11), .wd .wd-table-blue-12 > * > *:nth-child(12) {
-	color: var(--var-bg-blue-header);
+	color: var(--var-bg-blue);
 }
 .wd .wd-table-red-01 > * > *:nth-child(1),  .wd .wd-table-red-02 > * > *:nth-child(2),
 .wd .wd-table-red-03 > * > *:nth-child(3),  .wd .wd-table-red-04 > * > *:nth-child(4),
@@ -684,7 +691,7 @@ padding: 0;
 .wd .wd-table-red-07 > * > *:nth-child(7),  .wd .wd-table-red-08 > * > *:nth-child(8),
 .wd .wd-table-red-09 > * > *:nth-child(9),  .wd .wd-table-red-10 > * > *:nth-child(10),
 .wd .wd-table-red-11 > * > *:nth-child(11), .wd .wd-table-red-12 > * > *:nth-child(12) {
-	color: var(--var-bg-red-header);
+	color: var(--var-bg-red);
 }
 .wd .wd-table-green-01 > * > *:nth-child(1),  .wd .wd-table-green-02 > * > *:nth-child(2),
 .wd .wd-table-green-03 > * > *:nth-child(3),  .wd .wd-table-green-04 > * > *:nth-child(4),
@@ -692,7 +699,7 @@ padding: 0;
 .wd .wd-table-green-07 > * > *:nth-child(7),  .wd .wd-table-green-08 > * > *:nth-child(8),
 .wd .wd-table-green-09 > * > *:nth-child(9),  .wd .wd-table-green-10 > * > *:nth-child(10),
 .wd .wd-table-green-11 > * > *:nth-child(11), .wd .wd-table-green-12 > * > *:nth-child(12) {
-	color: var(--var-bg-green-header);
+	color: var(--var-bg-green);
 }
 .wd .wd-table-hgl-01 > * > *:nth-child(1),  .wd .wd-table-hgl-02 > * > *:nth-child(2),
 .wd .wd-table-hgl-03 > * > *:nth-child(3),  .wd .wd-table-hgl-04 > * > *:nth-child(4),
@@ -1391,17 +1398,17 @@ padding: 0;
 	color:            var(--var-fg-base-header);
 }
 /* -- cores (texto) -- */
-.wd .wd-fg-black,  .wd .wd-fg-black-child  > * {color: var(--var-fg-black)  !important;}
-.wd .wd-fg-white,  .wd .wd-fg-white-child  > * {color: var(--var-fg-white)  !important;}
-.wd .wd-fg-grey,   .wd .wd-fg-grey-child   > * {color: var(--var-fg-grey)   !important;}
-.wd .wd-fg-red,    .wd .wd-fg-red-child    > * {color: var(--var-fg-red)    !important;}
-.wd .wd-fg-green,  .wd .wd-fg-green-child  > * {color: var(--var-fg-green)  !important;}
-.wd .wd-fg-blue,   .wd .wd-fg-blue-child   > * {color: var(--var-fg-blue)   !important;}
-.wd .wd-fg-yellow, .wd .wd-fg-yellow-child > * {color: var(--var-fg-yellow) !important;}
-.wd .wd-fg-orange, .wd .wd-fg-orange-child > * {color: var(--var-fg-orange) !important;}
-.wd .wd-fg-brown,  .wd .wd-fg-brown-child  > * {color: var(--var-fg-brown)  !important;}
-.wd .wd-fg-pink,   .wd .wd-fg-pink-child   > * {color: var(--var-fg-pink)   !important;}
-.wd .wd-fg-purple, .wd .wd-fg-purple-child > * {color: var(--var-fg-purple) !important;}
+.wd .wd-fg-black,  .wd .wd-fg-black-child  > * {color: var(--var-bg-black)  !important;}
+.wd .wd-fg-white,  .wd .wd-fg-white-child  > * {color: var(--var-bg-white)  !important;}
+.wd .wd-fg-grey,   .wd .wd-fg-grey-child   > * {color: var(--var-bg-grey)   !important;}
+.wd .wd-fg-red,    .wd .wd-fg-red-child    > * {color: var(--var-bg-red)    !important;}
+.wd .wd-fg-green,  .wd .wd-fg-green-child  > * {color: var(--var-bg-green)  !important;}
+.wd .wd-fg-blue,   .wd .wd-fg-blue-child   > * {color: var(--var-bg-blue)   !important;}
+.wd .wd-fg-yellow, .wd .wd-fg-yellow-child > * {color: var(--var-bg-yellow) !important;}
+.wd .wd-fg-orange, .wd .wd-fg-orange-child > * {color: var(--var-bg-orange) !important;}
+.wd .wd-fg-brown,  .wd .wd-fg-brown-child  > * {color: var(--var-bg-brown)  !important;}
+.wd .wd-fg-pink,   .wd .wd-fg-pink-child   > * {color: var(--var-bg-pink)   !important;}
+.wd .wd-fg-purple, .wd .wd-fg-purple-child > * {color: var(--var-bg-purple) !important;}
 
 /* -- Wallpaper -- */
 .wd .wd-wallpaper {
