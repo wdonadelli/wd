@@ -57,45 +57,40 @@ SOFTWARE.
 	--var-bg-white: rgb(220,220,220);
 	--var-fg-white: rgb(30,30,30);
 
-	--var-bg-red-header: rgb(255,60,60);
-	--var-fg-red-header: rgb(255,255,255);
-	--var-bg-red: rgb(195,0,0);
-	--var-fg-red: rgb(255,255,255);
+	--var-bg-red-header: rgb(200,0,0);
+	--var-fg-red-header: rgb(255,200,200);
+	--var-bg-red: rgb(150,0,0);
+	--var-fg-red: rgb(255,200,200);
 
-	--var-bg-green-header: rgb(40,200,40);
-	--var-fg-green-header: rgb(240,255,255);
-	--var-bg-green: rgb(0,140,0);
-	--var-fg-green: rgb(255,255,255);
+	--var-bg-green-header: rgb(80,200,95);
+	--var-fg-green-header: rgb(245,240,240);
+	--var-bg-green: rgb(60,140,65);
+	--var-fg-green: rgb(200,240,195);
 
 	--var-bg-blue-header: rgb(60,160,255);
 	--var-fg-blue-header: rgb(255,255,255);
 	--var-bg-blue: rgb(0,100,255);
 	--var-fg-blue: rgb(230,230,255);
 
+	--var-bg-orange-header: rgb(255,135,0);
+	--var-fg-orange-header: rgb(25,0,25);
+	--var-bg-orange: rgb(255,110,0);
+	--var-fg-orange: rgb(50,25,0);
 
+	--var-bg-yellow-header: rgb(255,220,0);
+	--var-fg-yellow-header: rgb(55,35,50);
+	--var-bg-yellow: rgb(225,180,0);
+	--var-fg-yellow: rgb(25,10,0);
 
-	--var-bg-orange-header: #ce5c00;
-	--var-fg-orange-header: #eeeeec;
-	--var-bg-orange: #ffd69b;
-	--var-fg-orange: #c75900;
+	--var-bg-brown-header: rgb(190,115,50);
+	--var-fg-brown-header: rgb(100,50,0);
+	--var-bg-brown: rgb(160,95,50);
+	--var-fg-brown: rgb(50,30,0);
 
-	--var-bg-yellow-header: rgb(225,225,0);
-	--var-fg-yellow-header: rgb(30,10,0);
-	--var-bg-yellow: rgb(255,230,0);
-	--var-fg-yellow: rgb(40,20,0);
-
-
-
-
-	--var-bg-brown-header: #8f5902;
-	--var-fg-brown-header: #eeeeec;
-	--var-bg-brown: #efcf9e;
-	--var-fg-brown: #895400;
-
-	--var-bg-pink-header: #bc00a7;
-	--var-fg-pink-header: #f1c8ec;
-	--var-bg-pink: #f1c8ec;
-	--var-fg-pink: #a70094;
+	--var-bg-pink-header: rgb(255,195,255);
+	--var-fg-pink-header: rgb(25,20,40);
+	--var-bg-pink: rgb(255,150,255);
+	--var-fg-pink: rgb(25,20,40);
 
 	--var-bg-purple-header: rgb(165,80,255);
 	--var-fg-purple-header: rgb(215,215,255);
@@ -104,8 +99,8 @@ SOFTWARE.
 
 	--var-bg-base-header: rgb(40,40,40);
 	--var-fg-base-header: rgb(220,220,220);
-	--var-bg-base: rgb(250,250,250);
-	--var-fg-base: rgb(30,30,30);
+	--var-bg-base: rgb(245,245,245);
+	--var-fg-base: rgb(40,40,40);
 
 
 
@@ -123,22 +118,22 @@ SOFTWARE.
 	--var-bg-button-active: #777777;
 	--var-fg-button-active: #f2f2f2;
 
-	--var-fg-link: #3baff7;
-	--var-bg-hgl:  #fdff87;
+	--var-fg-link: rgb(60, 170, 245);
+	--var-bg-hgl:  rgb(255,255,155);
 
-	--var-bg-modal:  rgba(0, 0, 0, 0.2);
-	--var-bg-window: #ffffff;
+	--var-bg-modal:  rgba(0,0,0,0.2);
+	--var-bg-window: rgb(250,250,250);
 
-	--var-bg-upon: rgba(204, 204, 204, 0.7);
-	--var-fg-upon: #2e3436;
+	--var-bg-upon: rgba(210,210,210,0.7);
+	--var-fg-upon: rgb(50,50,50);
 
-	--var-bg-zebra: #eeeeec;
-	--var-fg-zebra: #2e3436;
+	--var-bg-zebra: rgb(235,235,235);
+	--var-fg-zebra: rgb(50,50,50);
 
-	--var-bg-thead: #d3d7cf;
-	--var-fg-thead: #2e3436;
-	--var-bg-tfoot: #ffffff;
-	--var-fg-tfoot: #000000;
+	--var-bg-thead: rgb(210,210,210);
+	--var-fg-thead: rgb(50,50,50);
+	--var-bg-tfoot: rgb(245,245,245);
+	--var-fg-tfoot: rgb(50,50,50);
 
 	/* tamanhos relativos padrão */
 	--var-size-default: 0.5em;
@@ -156,7 +151,7 @@ SOFTWARE.
 	--var-border-form-active: 1px solid #1e90ff;
 	--var-border-form-required: 1px solid #f48aa0;
 	--var-border-form-invalid: 1px solid #dc143c;
-	--var-border-table: #888a85;
+	--var-border-table: rgb(225,225,225);
 	--var-radius-default: 0.2em;
 	--var-radius-square: 50%;
 
@@ -177,6 +172,7 @@ SOFTWARE.
 
 	/* especificando fontes */
 	--var-font-default: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+	--var-font-color: rgb(35,35,35);
 	--var-font-size: 16px;
 	--var-font-height: 1.5;
 	--var-font-table: Verdana,sans-serif;
@@ -254,6 +250,7 @@ q {
 /* == BLOCO 3 ================================================================*/
 
 .wd {
+	color: var(--var-font-color);
 	font-family: var(--var-font-default);
 	font-size: var(--var-font-size);
 	line-height: var(--var-font-height);
