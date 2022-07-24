@@ -1,0 +1,47 @@
+<h3>data-wd-set</h3>
+
+<nav>
+	<a href="#check" data-wd-set="checked{true}$${#check input}">All</a>
+	<a href="#check" data-wd-set="checked{false}$${#check input}">None</a>
+	<a href="#check" data-wd-set="checked{?}$${#check input}">Toggle</a>
+</nav>
+
+<form id="check">
+	<label>Item 1 <input type="checkbox" name="item1" /></label>
+	<label>Item 2 <input type="checkbox" name="item2" /></label>
+	<label>Item 3 <input type="checkbox" name="item3" /></label>
+</form>
+
+<hr>
+
+<nav>
+	<a href="#open" data-wd-set="open{true}${#open}">Open</a>
+	<a href="#open" data-wd-set="open{false}${#open}">Close</a>
+	<a href="#open" data-wd-set="open{?}${#open}">Toggle</a>
+	<a href="#open" data-wd-set="textContent{Hello!}${#open p}">Hello!</a>
+	<a href="#open" data-wd-set="textContent{Hi!}${#open p}">Hi!</a>
+</nav>
+
+<details id="open">
+	<summary>Open</summary>
+	<p>Opened!</p>
+</details>
+
+<hr>
+
+<input type="text" id="input" value="initial"/>
+<nav>
+	<a href="#input" data-wd-set="value{}${#input}">Empty</a>
+	<a href="#input" data-wd-set="value{Input}${#input}">Content</a>
+	<a href="#input" data-wd-set="disabled{?}${#input}">Disabled</a>
+	<a href="#input" data-wd-set="readOnly{?}${#input}">Read Only</a>
+</nav>
+
+<hr>
+
+<input type="text" id="any" value="Click in DOM"/>
+<nav>
+	<a href="#any" data-wd-set="data-any{}${#any}">Add data-any</a>
+	<a href="#any" data-wd-set="data-any{null}${#any}">Del data-any</a>
+	<a href="#any" data-wd-set="data-any{?}${#any}">Tgl data-any</a>
+</nav>

@@ -1,0 +1,38 @@
+<h3>Grid</h3>
+
+<nav>
+	<span data-wd-set="${#grid}className{}">None</span>
+	<span data-wd-set="${#grid}className{wd-grid}">Grid</span>
+</nav>
+
+<header class="wd-bg-black">
+	<span>Header (</span>
+	<span data-wd-device="mobile{wd-hidden}">Desktop</span>
+	<span data-wd-device="desktop{wd-hidden}phone{wd-hidden}">Tablet</span>
+	<span data-wd-device="desktop{wd-hidden}tablet{wd-hidden}">Phone</span>
+	<span>)</span>
+</header>
+
+<section id="grid">
+	<aside class="wd-grid-side" style="background-color: #ffc0c0;" >
+		<h4>Side</h4>
+		<p>Side content. Side content. Side content. Side content. Side content. Side content. Side content. Side content. Side content. Side content. Side content. Side content. Side content. Side content. Side content. Side content. Side content. Side content. Side content.</p>
+	</aside>
+	<aside class="wd-grid-menu" style="background-color: #c0ffc0;" >
+		<h4>Menu</h4>
+		<ul>
+			<li>Item 1</li>
+			<li>Item 2</li>
+			<li>Item 3</li>
+			<li>Item 4</li>
+		</ul>
+	</aside>
+	<article class="wd-grid-main" style="background-color: #c0c0ff;" >
+		<h4>Main</h4>
+		<p>Main content. Main content. Main content. Main content. Main content. Main content. Main content. Main content. Main content</p>
+		<p>Main content. Main content. Main content. Main content. Main content. Main content. Main content. Main content. Main content</p>
+		<p>Main content. Main content. Main content. Main content. Main content. Main content. Main content. Main content. Main content</p>
+	</article>
+</section>
+
+<footer class="wd-bg-brown">Footer</footer>

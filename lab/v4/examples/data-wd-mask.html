@@ -1,0 +1,88 @@
+<h3>data-wd-mask</h3>
+
+<h3>Models</h3>
+
+<table border="1">
+	<tbody>
+		<tr>
+			<th>Date</th>
+			<td data-wd-mask="model{YMD}" >20100216</td>
+			<td data-wd-mask="model{DMY}" >16022010</td>
+			<td data-wd-mask="model{MDY}" >02162010</td>
+			<td></td>
+		</tr>
+		<tr>
+			<th>Time</th>
+			<td data-wd-mask="model{HMS}" >210</td>
+			<td data-wd-mask="model{HMS}" >2210</td>
+			<td data-wd-mask="model{HMS}" >21040</td>
+			<td data-wd-mask="model{HMS}" >221040</td>
+		</tr>
+		<tr>
+			<th>Month</th>
+			<td data-wd-mask="model{YM}" >201002</td>
+			<td data-wd-mask="model{MY}" >022010</td>
+			<td></td>
+			<td></td>
+		</tr>
+		<tr>
+			<th>Week</th>
+			<td data-wd-mask="model{YW}" >201045</td>
+			<td data-wd-mask="model{WY}" >452010</td>
+			<td></td>
+			<td></td>
+		</tr>
+		<tr>
+			<th>dateTtime</th>
+			<td data-wd-mask="model{YMDHMS}" >20100216240</td>
+			<td data-wd-mask="model{DMYHMS}" >160220102240</td>
+			<td data-wd-mask="model{MDYHMS}" >0216201024053</td>
+			<td data-wd-mask="model{YMDHMS}" >20100216224053</td>
+		</tr>
+		<tr>
+			<th>date time</th>
+			<td data-wd-mask="model{YMD_HMS}" >20100216240</td>
+			<td data-wd-mask="model{DMY_HMS}" >160220102240</td>
+			<td data-wd-mask="model{MDY_HMS}" >0216201024053</td>
+			<td data-wd-mask="model{YMD_HMS}" >20100216224053</td>
+		</tr>
+
+		</tr>
+	</tbody>
+</table>
+
+<h3>Form</h3>
+
+<form class="wd-blockf">
+	<input type="text" data-wd-mask="model{YMD}" placeholder="YYYY-MM-DD" value="20100622"/>
+	<input type="text" data-wd-mask="model{HMS}" placeholder="Time" value="0000"/>
+</form>
+
+<script>
+	function age(x) {
+		return parseInt(x) < 18 ? false : true;
+	}
+</script>
+	
+<h3>Mask Validation</h3>
+
+<form class="wd-block">
+	<input type="text" data-wd-mask="model{##}call{age}msg{Age must be over 18 years old.}" placeholder="Age >= 18	"/>
+</form>
+
+<h3>Dynamic Mask</h3>
+
+<form class="wd-block">
+	<input type="text" id="mask" placeholder=""/>
+</form>
+
+<dl>
+	<dt>Using <code>data-wd-data</code>:</dt>
+	<dd><a href="#mask" data-wd-data="wdMask{model{DMY}}${#mask}">DMY</a></dd>
+	<dd><a href="#mask" data-wd-data="wdMask{model{MDY}}${#mask}">MDY</a></dd>
+	<dd><a href="#mask" data-wd-data="wdMask{model{YMD}}${#mask}">YMD</a></dd>
+	<dd><a href="#mask" data-wd-data="wdMask{model{HMS}}${#mask}">HMS</a></dd>
+	<dd><a href="#mask" data-wd-data="wdMask{model{## @@@ 20##}}${#mask}">## @@@ 20##</a></dd>
+	<dd><a href="#mask" data-wd-data="wdMask{model{(##) # ####-####?(##) ####-####}}${#mask}">(##) # ####-####?(##) ####-####</a></dd>
+	<dd><a href="#mask" data-wd-data="wdMask{model{###.###.###-##}}${#mask}">###.###.###-##</a></dd>
+</dl>

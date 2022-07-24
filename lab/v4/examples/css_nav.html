@@ -1,0 +1,39 @@
+<h3>Nav</h3>
+
+
+<h4>Style</h4>
+
+<nav>
+  <span data-wd-css="${#nav}">Default</span>
+	<span data-wd-set="${#nav}className{wd-nav-block}">Block</span>
+	<span data-wd-set="${#nav}className{wd-nav-spread}">Spread</span>
+</nav>
+
+<nav id="nav">
+	<span>Item 1</span>
+	<span>Item 2</span>
+	<span>Item 3</span>
+	<span>Item 4</span>
+	<span>Item 5</span>
+	<span>Item 6</span>
+	<span>Item 7</span>
+	<span>Item 8</span>
+	<span>Item 9</span>
+</nav>
+
+<h4>Right Position</h4>
+
+<nav>
+  <span data-wd-css="$${#nav2 > *}">Default</span>
+	<span data-wd-css="$${#nav2 > *}&${#item1}add{wd-nav-right}">Item 1 (all)</span>
+	<span data-wd-css="$${#nav2 > *}&${#item2}add{wd-nav-right}">Item 2</span>
+	<span data-wd-css="$${#nav2 > *}&${#item3}add{wd-nav-right}">Item 3</span>
+	<span data-wd-css="$${#nav2 > *}&${#item4}add{wd-nav-right}">Item 4</span>
+</nav>
+
+<nav id="nav2">
+	<span id="item1">Item 1</span>
+	<span id="item2">Item 2</span>
+	<span id="item3">Item 3</span>
+	<span id="item4">Item 4</span>
+</nav>

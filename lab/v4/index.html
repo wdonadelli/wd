@@ -1,0 +1,136 @@
+﻿<!DOCTYPE html>
+<html class="wd">
+
+	<head>
+		<title>-- WD Web Library Lab --</title>
+		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1"/>
+		<meta name="keywords" content="wd, stylesheet, attributes, tools, HTML, CSS, javaScript, library, queryselector, handbook, github, donadelli, wdonadelli" />
+		<meta name="author" content="Willian Donadelli"/>
+		<meta name="description" content="WD Web Library Lab" />
+		<meta name="rating" content="general" />
+		<!--<meta http-equiv="pragma" content="no-cache" />-->
+		<meta name="revisit-after" content="2 days" />
+		<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+		<script src="../../source/wd-4.0.0.js"></script>
+		<link  href="../../source/wd-4.0.0.css" rel="stylesheet" />
+		<script>
+
+function err(e) {
+	/* função para exibir erro */
+	console.log(e);
+	wd.$$("#ie_page, #ie_code").load("");
+	wd.$("#bmenu").item(0).click();
+}
+
+function loadExample() {
+	/* função para carregar página */
+	try {
+		var file  = wd.url("page");
+		if (file === null	 || file.trim() === "")
+			return wd("Use the menu to navigate!").signal("Destination not specified.");
+		var path = "examples/"+file.trim()+".html";
+		wd.$$("#ie_code, #ie_page").data({wdLoad: "path{"+path+"}"});
+	} catch(e) {err(e);}
+}
+
+function reloadExample() {
+	/* função para renderizar o conteúdo do código */
+	try {
+		var code = wd.$("#ie_code").item(0).value;
+		wd.$("#ie_page").load(code);
+	} catch(e) {err(e);}
+}
+
+function getDOM() {
+	/* função para obter o html da renderização atual */
+	try {
+		var code = wd.$("#ie_page").item(0).innerHTML;
+		wd.$("#ie_code").load(code);
+	} catch(e) {err(e);}
+}
+
+/* carregando disparadores */
+wd(window).addHandler(
+	{
+		load: function() {
+			wd.$("#ie_apply").addHandler({click: reloadExample});
+			wd.$("#ie_reset").addHandler({click: loadExample});
+			wd.$("#ie_dom").addHandler({click: getDOM});
+		}
+	}
+).addHandler(
+	{
+		load: loadExample
+	}
+);
+		</script>
+	</head>
+
+<body>
+
+	<main>
+
+		<article class="wd-flyer">
+
+			<header class="wd-bg-black">
+				<h2>
+					<span class="wd-icon-menu" data-wd-css="${#menu}tgl{wd-open}" id="bmenu"></span>
+					<span>WD Web Library Lab</span>
+				</h2>
+			</header>
+
+			<section data-wd-device="desktop{wd-col}">
+
+				<div class="wd-padd" >
+
+					<h3>Code</h3>
+
+					<form>
+
+						<div>
+							<textarea id="ie_code" style="height: 300px" class="wd-block wd-code"></textarea>
+						</div>
+
+						<div class="wd-col">
+							<div class="wd-block-child">
+								<button type="button" id="ie_apply" data-wd-device="desktop{wd-icon-copy}" title="Render changes."> Apply</button>
+							</div>
+
+							<div class="wd-block-child">
+								<button type="button" id="ie_reset" data-wd-device="desktop{wd-icon-close}" title="Restore the original code."> Reset</button>
+							</div>
+
+							<div class="wd-block-child">
+								<button type="button" id="ie_dom" data-wd-device="desktop{wd-icon-paste}" title="Get and paste the current DOM tree into the text area."> DOM</button>
+							</div>
+
+						</div>
+
+					</form>
+
+				</div>
+
+				<div id="ie_page" class="wd-padd"></div>
+
+			</section>
+
+		</article>
+
+	</main>
+
+	<div class="wd-modal" id="menu" data-wd-css="tgl{wd-open}">
+	  <div data-wd-device="desktop{wd-window-left}mobile{wd-window-full}"  style="min-width: 25%;">
+	    <article class="wd-flyer wd-bg-base">
+	      <header>
+	        <h4>Menu</h4>
+	      </header>
+	      <nav data-wd-repeat="path{menu.json}" class="wd-nav-block">
+	        <a href="?page={{target}}" title="{{target}}">{{target}}</a>
+	      </nav>
+	    </article>
+	  </div>
+	</div>
+
+</body>
+</html>
