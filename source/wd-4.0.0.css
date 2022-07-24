@@ -102,30 +102,30 @@ SOFTWARE.
 	--var-bg-base: rgb(245,245,245);
 	--var-fg-base: rgb(40,40,40);
 
+	--var-bg-code: rgb(238,238,236);
+	--var-fg-code: rgb(46,52,54);
+	--var-fg-code-reserved: rgb(0,77,0);
+	--var-fg-code-return: rgb(145,106,8);
+	--var-fg-code-values: rgb(224,20,130);
+	--var-fg-code-comments: rgb(78,60,195);
+	--var-fg-code-line: rgb(204,204,204);
 
-
-	--var-bg-code: #eeeeec;
-	--var-fg-code: #2e3436;
-	--var-fg-code-reserved: #004d00;
-	--var-fg-code-return: #916a08;
-	--var-fg-code-values: #e01482;
-	--var-fg-code-comments: #4e3cc3;
-	--var-fg-code-line: #cccccc;
-
-	--var-bg-form: #f8f8ff;
-	--var-fg-form: #404040;
-	--var-bg-button: #f2f2f2;
-	--var-bg-button-active: #777777;
-	--var-fg-button-active: #f2f2f2;
+	--var-bg-form: rgb(248,248,255);
+	--var-fg-form: rgb(64,64,64);
+	--var-bg-button: rgb(242,242,242);
+	--var-bg-button-active: rgb(119,119,119);
+	--var-fg-button-active: rgb(242,242,242);
 
 	--var-fg-link: rgb(60, 170, 245);
 	--var-bg-hgl:  rgb(255,255,155);
+	--var-fg-hgl:  rgb(20,20,20);
 
 	--var-bg-modal:  rgba(0,0,0,0.2);
 	--var-bg-window: rgb(250,250,250);
 
-	--var-bg-upon: rgba(210,210,210,0.7);
-	--var-fg-upon: rgb(50,50,50);
+	--var-bg-upon: rgb(0,128,128);
+	--var-bg-upon: rgba(0,128,128,0.7);
+	--var-fg-upon: rgb(250,250,250);
 
 	--var-bg-zebra: rgb(235,235,235);
 	--var-fg-zebra: rgb(50,50,50);
@@ -147,10 +147,10 @@ SOFTWARE.
 	--var-border-thin: thin solid;
 	--var-border-medium: medium solid;
 	--var-border-thick: thick solid;
-	--var-border-form: 1px solid #b3b3b3;
-	--var-border-form-active: 1px solid #1e90ff;
-	--var-border-form-required: 1px solid #f48aa0;
-	--var-border-form-invalid: 1px solid #dc143c;
+	--var-border-form: 1px solid rgb(179,179,179);
+	--var-border-form-active: 1px solid rgb(30,144,255);
+	--var-border-form-required: 1px solid rgb(244,138,160);
+	--var-border-form-invalid: 1px solid rgb(220,20,60);
 	--var-border-table: rgb(225,225,225);
 	--var-radius-default: 0.2em;
 	--var-radius-square: 50%;
@@ -162,8 +162,8 @@ SOFTWARE.
 	--var-shadow:              0.5em 0.5em 0 0 rgba(136, 138, 133, 1);
 	--var-cloud:               0 0 1.4em 0.5em rgba(211, 215, 207, 0.8);
 	--var-shadow-cloud:        0.5em 0.5em 0 0 rgba(136, 138, 133, 1), 0 0 1.4em 0.5em rgba(211, 215, 207, 0.8);
-	--var-shadow-upon:         inset 0 0 0 2px #2e3436;
-	--var-shadow-form-invalid: inset 0 0 0 1px #dc143c;
+	--var-shadow-upon:         inset 0 0 0 1px rgb(0,128,128);
+	--var-shadow-form-invalid: inset 0 0 0 1px rgb(220,20,60);
 
 	/* razão altura x comprimento */
 	--var-padd-top-ratio-square: 1;
@@ -186,7 +186,10 @@ SOFTWARE.
 	--var-margin-center:  0.5em auto;
 
 	/* altura dos campos de formulário */
-	/* line height x font size + paddingTop + paddingBottom + borda: 1.5*16 + 0.5*16 + 0.5*16 + 2 = 42 >> 42/16 = 2,625 */
+	/*----------------------------------------------------------------------------
+	| line height x font size + paddingTop + paddingBottom + borda =
+	| 1.5*16 + 0.5*16 + 0.5*16 + 2 = 42 >> 42/16 = 2,625
+	\---------------------------------------------------------------------------*/
 	--var-height-form: 42px;
 
 	/* z-index */
@@ -411,7 +414,7 @@ padding: 0;
 .wd table tfoot {
 	background-color: var(--var-bg-tfoot);
 	color:            var(--var-fg-tfoot);
-	border-top: 2px solid #000000;
+	border-top: thin dashed rgb(0,0,0);
 }
 .wd table th,
 .wd table td {
@@ -705,6 +708,7 @@ padding: 0;
 .wd .wd-table-hgl-09 > * > *:nth-child(9),  .wd .wd-table-hgl-10 > * > *:nth-child(10),
 .wd .wd-table-hgl-11 > * > *:nth-child(11), .wd .wd-table-hgl-12 > * > *:nth-child(12) {
 	background-color: var(--var-bg-hgl);
+	color:            var(--var-fg-hgl);
 }
 .wd .wd-table-i-01 > * > *:nth-child(1),  .wd .wd-table-i-02 > * > *:nth-child(2),
 .wd .wd-table-i-03 > * > *:nth-child(3),  .wd .wd-table-i-04 > * > *:nth-child(4),
@@ -1285,6 +1289,7 @@ padding: 0;
 .wd .wd-i,   .wd .wd-i-child   > * {font-style: italic !important;}
 .wd .wd-i-none                     {font-style: normal !important;}
 .wd .wd-hgl, .wd .wd-hgl-child > * {background-color: var(--var-bg-hgl) !important;}
+.wd .wd-hgl, .wd .wd-hgl-child > * {color: var(--var-fg-hgl) !important;}
 .wd .wd-hgl-none                   {background-color: transparent !important;}
 .wd .wd-s, .wd .wd-s-child > *     {text-decoration: line-through !important;}
 .wd .wd-u, .wd .wd-u-child > *     {text-decoration: underline !important;}
@@ -1784,12 +1789,14 @@ padding: 0;
 	background-color: var(--var-bg-zebra)  !important;
 	color:            var(--var-fg-zebra) !important;
 }
+
 .wd .wd-upon,             .wd .wd-upon-child > *,
 .wd .wd-upon-enter:hover, .wd .wd-upon-enter-child > *:hover {
 	background-color: var(--var-bg-upon) !important;
 	color:            var(--var-fg-upon) !important;
 	box-shadow:       var(--var-shadow-upon) !important;
 }
+
 /* -- Exibir/Esconder -- */
 .wd .wd-visible   {visibility: visible !important;}
 .wd .wd-invisible {visibility: hidden !important;}
@@ -1810,7 +1817,7 @@ padding: 0;
 	.wd .wd-visible-print   {visibility: visible !important;}
 	.wd .wd-hidden-print    {display: none !important;}
 }
-/* -- Math experimental -- */
+/* -- Math experimental TODO -- */
 /* container */
 .wd .wd-math {
 	counter-reset: math;
@@ -1823,7 +1830,7 @@ padding: 0;
 }
 /* renderizador */
 .wd .wd-math samp {
-	align-items: center;/*center; FIXME é só um teste*/
+	align-items: center;
 	display: flex;
   justify-content: center;
 	padding: 0.6em 0;

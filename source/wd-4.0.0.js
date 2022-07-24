@@ -3997,16 +3997,25 @@ const wd = (function() {
 		let title  = encodeURIComponent(document.title);
 		let social = e.dataset.wdShared.trim().toLowerCase();
 		let link   = {
+			/* https://developers.facebook.com/docs/workplace/sharing/share-dialog/#sharedialogvialink */
+			/* https://developers.facebook.com/docs/plugins/share-button/ */
 			facebook: "https://www.facebook.com/sharer.php?u="+url,
-			twitter:  "https://twitter.com/share?url="+url+"&text="+title+"&via=&hashtags=",
+			/* https://developer.twitter.com/en/docs/twitter-for-websites/tweet-button/guides/web-intent */
+			twitter:  "https://twitter.com/intent/tweet?url="+url+"&text="+title,
+			/**** https://www.coderstool.com/share-social-link-generator ****/
 			linkedin: "https://www.linkedin.com/shareArticle?url="+url+"&title="+title,
+			/* https://www.reddit.com/dev/api#POST_api_submit */
 			reddit:   "https://reddit.com/submit?url="+url+"&title="+title,
+			/**** https://www.coderstool.com/share-social-link-generator ****/
 			evernote: "https://www.evernote.com/clip.action?url="+url+"&title="+title,
-			/*signal: "",
-			whatsapp: "",
-			telegram: "" FIXME */
+			/* https://core.telegram.org/widgets/share */
+			telegram: "https://t.me/share/url?url="+url+"&text="+title,
+			/* https://faq.whatsapp.com/563219570998715/?locale=en_US */
+			whatsapp: "https://wa.me/?text="+url,
 		}
 		if (social in link) {window.open(link[social]);}
+		else if ("clipboard" in navigator) navigator.clipboard.writeText(document.URL);
+
 		return;
 	};
 
