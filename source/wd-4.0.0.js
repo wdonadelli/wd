@@ -4013,8 +4013,8 @@ const wd = (function() {
 			/* https://faq.whatsapp.com/563219570998715/?locale=en_US */
 			whatsapp: "https://wa.me/?text="+url,
 		}
-		if (social in link) {window.open(link[social]);}
 		if ("clipboard" in navigator) navigator.clipboard.writeText(document.URL);
+		if (social in link) {window.open(link[social]);}
 
 		return;
 	};
