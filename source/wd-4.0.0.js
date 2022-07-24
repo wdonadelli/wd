@@ -4014,7 +4014,7 @@ const wd = (function() {
 			whatsapp: "https://wa.me/?text="+url,
 		}
 		if (social in link) {window.open(link[social]);}
-		else if ("clipboard" in navigator) navigator.clipboard.writeText(document.URL);
+		if ("clipboard" in navigator) navigator.clipboard.writeText(document.URL);
 
 		return;
 	};
