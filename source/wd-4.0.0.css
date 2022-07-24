@@ -1291,6 +1291,7 @@ padding: 0;
 .wd .wd-hgl, .wd .wd-hgl-child > * {background-color: var(--var-bg-hgl) !important;}
 .wd .wd-hgl, .wd .wd-hgl-child > * {color: var(--var-fg-hgl) !important;}
 .wd .wd-hgl-none                   {background-color: transparent !important;}
+.wd .wd-hgl-none                   {color: inherit;}
 .wd .wd-s, .wd .wd-s-child > *     {text-decoration: line-through !important;}
 .wd .wd-u, .wd .wd-u-child > *     {text-decoration: underline !important;}
 .wd .wd-u.wd-s,

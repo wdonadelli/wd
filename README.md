@@ -8,7 +8,6 @@ The **Web Design** tool ([WD Style Sheet](https://github.com/wdonadelli/wd/wiki/
 
 ## Sources and Manuals
 
-- [Wiki (Current version)](https://github.com/wdonadelli/wd/wiki)
 - [Docs](https://wdonadelli.github.io/wd/docs/)
 - [Sources](https://wdonadelli.github.io/wd/v1/wd/source)
 - [Labs](https://wdonadelli.github.io/wd/lab/v3)
