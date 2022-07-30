@@ -100,7 +100,7 @@ const wd = (function() {
 			"animation-duration: 1.5s, 1.5s; animation-delay: 0s, 7.5s;",
 			"margin: 5px 0; position: relative; padding: 0; border-radius: 0.2em;",
 			"border: 1px solid rgba(0,0,0,0.6); box-shadow: 1px 1px 6px rgba(0,0,0,0.6);",
-			"background-color: rgba(255,255,255,1);"
+			"background-color: rgb(245,245,245); color: rgb(20,20,20);"
 		]},
 		{s: ".js-wd-signal-msg > header", d: [
 			"padding: 0.5em; border-radius: 0.2em 0.2em 0 0; position: relative;"
