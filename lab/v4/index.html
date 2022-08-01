@@ -30,7 +30,7 @@ function loadExample() {
 		if (file === null	 || file.trim() === "")
 			return wd("Use the menu to navigate!").signal("Destination not specified.");
 		var path = "examples/"+file.trim()+".html";
-		wd.$$("#ie_code, #ie_page").data({wdLoad: "path{"+path+"}"});
+		wd.$$("#ie_code, #ie_page").data({wdLoad: "path{"+path+"}method{GET}"});
 	} catch(e) {err(e);}
 }
 
@@ -67,13 +67,13 @@ wd(window).addHandler(
 		</script>
 	</head>
 
-<body>
+<body class="wd-bg-black">
 
 	<main>
 
-		<article class="wd-flyer">
+		<article class="wd-flyer wd-bg-black">
 
-			<header class="wd-bg-black">
+			<header class="wd-hidden-print">
 				<h2>
 					<span class="wd-icon-menu" data-wd-css="${#menu}tgl{wd-open}" id="bmenu"></span>
 					<span>WD Web Library Lab</span>
@@ -82,7 +82,7 @@ wd(window).addHandler(
 
 			<section data-wd-device="desktop{wd-col}">
 
-				<div class="wd-padd" >
+				<div class="wd-padd wd-hidden-print" >
 
 					<h3>Code</h3>
 
@@ -125,9 +125,12 @@ wd(window).addHandler(
 	      <header>
 	        <h4>Menu</h4>
 	      </header>
-	      <nav data-wd-repeat="path{menu.json}" class="wd-nav-block">
+	      <nav data-wd-repeat="path{menu.json}method{GET}" class="wd-nav-block">
 	        <a href="?page={{target}}" title="{{target}}">{{target}}</a>
 	      </nav>
+				<div class="wd-b wd-align-right">
+					<a href="https://github.com/wdonadelli/wd/wiki" target="_blank">Wiki</a>
+				</div>
 	    </article>
 	  </div>
 	</div>
