@@ -1,20 +1,12 @@
-# WD Web Libraries Handbook v3
+# WD Web Libraries Handbook (v3)
 
 This project consists of the distribution of two libraries for web application development.
 
-The **Web Development** tool consists of a library written in JavaScript whose purpose is to provide various tools to give dynamism and agility to the application in development. This tool is divided into two segments, one for creating JavaScript scripts ([WD JavaScript Tools](WD-JavaScript-Tools)) and another for defining actions using attributes of HTML elements ([WD Attributes Tools](WD-Attributes-Tools)).
+The **Web Development** tool consists of a library written in JavaScript whose purpose is to provide various tools to give dynamism and agility to the application in development. This tool is divided into two segments, one for creating JavaScript scripts ([WD JavaScript Tools](#wd-javascript-tools)) and another for defining actions using attributes of HTML elements ([WD Attributes Tools](#wd-attributes-tools)).
 
-The **Web Design** tool ([WD Style Sheet](WD-Style-Sheet)) consists of a library written in CSS whose purpose is to provide the styling of the developing application by means of basic class attributes.
+The **Web Design** tool ([WD Style Sheet](#wd-style-sheet)) consists of a library written in CSS whose purpose is to provide the styling of the developing application by means of basic class attributes.
 
 Some tools may not work as expected in older browsers.
-
-Links to the project:
-
-- [GitHub Page](https://github.com/wdonadelli/wd)
-- [License](https://github.com/wdonadelli/wd/blob/master/LICENSE)
-- [Javascript](https://wdonadelli.github.io/wd/source/wd-3.2.0.js)
-- [Style Sheet](https://wdonadelli.github.io/wd/source/wd-3.2.0.css)
-- [Lab](https://wdonadelli.github.io/wd/v3)
 
 ## Inspirational References
 
@@ -43,7 +35,7 @@ Among other inspiring and collaborative minds on the world wide web.
 - [WD JS Text Tools](#wd-js-text-tools)
 - [WD JS Time Tools](#wd-js-time-tools)
 
-**[WD Attributes Tools](WD-Attributes-Tools)**
+**[WD Attributes Tools](#wd-attributes-tools)**
 
 - [WD ATTR Action Tool](#wd-attr-action-tool)
 - [WD ATTR Click Tool](#wd-attr-click-tool)
@@ -63,7 +55,7 @@ Among other inspiring and collaborative minds on the world wide web.
 - [WD ATTR Sort Tool](#wd-attr-sort-tool)
 - [WD ATTR Sort Column Tool](#wd-attr-sort-column-tool)
 
-**[WD Style Sheet](WD-Style-Sheet)**
+**[WD Style Sheet](#wd-style-sheet)**
 
 - [WD CSS Components Style](#wd-css-components-style)
 - [WD CSS Utilities Style](#wd-css-utilities-style)
@@ -662,7 +654,7 @@ It is a method that returns the element contained in the element set from its nu
 item(index)
 ```
 
-`index`: (optional) It is a argument that indicates the element to return. The elements are organized as a list, each index in the list has a respective element. The operation of the method is similar to the method of the same name as the [WD JS Array Tools](wd-js-array-tools#item). The default value is zero.
+`index`: (optional) It is a argument that indicates the element to return. The elements are organized as a list, each index in the list has a respective element. The operation of the method is similar to the method of the same name as the [WD JS Array Tools](#item). The default value is zero.
 
 ### load
 
@@ -1105,27 +1097,27 @@ valueOf()
 
 # WD Attributes Tools
 
-The **WD Attributes Tools** consists of a JavaScript library that incorporates in the HTML code some tools of the [WD JS DOM Tools](WD-JS-DOM-Tools) object through attributes informed in the body of the elements.
+The **WD Attributes Tools** consists of a JavaScript library that incorporates in the HTML code some tools of the [WD JS DOM Tools](#wd-js-dom-tools) object through attributes informed in the body of the elements.
 
 The tool gives HTML more power by enabling dynamism in the code itself, reducing the demand for scripts.
 
 The following attributes are defined:
 
-- [WD ATTR Action Tool](WD-ATTR-Action-Tool)
-- [WD ATTR Click Tool](WD-ATTR-Click-Tool)
-- [WD ATTR Config Tool](WD-ATTR-Config-Tool)
-- [WD ATTR Data Tool](WD-ATTR-Data-Tool)
-- [WD ATTR Device Tool](WD-ATTR-Device-Tool)
-- [WD ATTR Edit Tool](WD-ATTR-Edit-Tool)
-- [WD ATTR File Tool](WD-ATTR-File-Tool)
-- [WD ATTR Filter Tool](WD-ATTR-Filter-Tool)
-- [WD ATTR Load Tool](WD-ATTR-Load-Tool)
-- [WD ATTR Mask Tool](WD-ATTR-Mask-Tool)
-- [WD ATTR Page Tool](WD-ATTR-Page-Tool)
-- [WD ATTR Repeat Tool](WD-ATTR-Repeat-Tool)
-- [WD ATTR Send Tool](WD-ATTR-Send-Tool)
-- [WD ATTR Sort Tool](WD-ATTR-Sort-Tool)
-- [WD ATTR Sort Column Tool](WD-ATTR-Sort-Column-Tool)
+- [WD ATTR Action Tool](#wd-attr-action-tool)
+- [WD ATTR Click Tool](#wd-attr-click-tool)
+- [WD ATTR Config Tool](#wd-attr-config-tool)
+- [WD ATTR Data Tool](#wd-attr-data-tool)
+- [WD ATTR Device Tool](#wd-attr-device-tool)
+- [WD ATTR Edit Tool](#wd-attr-edit-tool)
+- [WD ATTR File Tool](#wd-attr-file-tool)
+- [WD ATTR Filter Tool](#wd-attr-filter-tool)
+- [WD ATTR Load Tool](#wd-attr-load-tool)
+- [WD ATTR Mask Tool](#wd-attr-mask-tool)
+- [WD ATTR Page Tool](#wd-attr-page-tool)
+- [WD ATTR Repeat Tool](#wd-attr-repeat-tool)
+- [WD ATTR Send Tool](#wd-attr-send-tool)
+- [WD ATTR Sort Tool](#wd-attr-sort-tool)
+- [WD ATTR Sort Column Tool](#wd-attr-sort-column-tool)
 
 
 ## Attribute
@@ -1197,7 +1189,7 @@ The tools are executed when certain events occur, as shown below.
 
 ### Attribute change
 
-Event linked to changing the attribute value using the [data](WD-JS-DOM-Tools#data) method.
+Event linked to changing the attribute value using the [data](#data) method.
 
 ### Click event
 
@@ -2849,19 +2841,5 @@ After implementing changes in the names of the methods and attributes of the Jav
 With the change in the version, it was decided to deactivate features from the previous version in order to eliminate duplicates and simplify the tools.
 
 A new [manual](https://github.com/wdonadelli/wd/wiki) has been added to the GitHub wiki area as well as an area for demonstrating [examples](https://wdonadelli.github.io/wd/v3).
-
-If you want to view previous versions, the links below can be used:
-
-Links to version 2 (deprecated):
-
-- [Manual](https://wdonadelli.github.io/wd/docs/v2)
-- [Javascript](https://wdonadelli.github.io/wd/v2/wd/source/wd-2.1.4.js)
-- [Style Sheet](https://wdonadelli.github.io/wd/v2/wd/source/wd-2.0.4.css)
-
-Links to version 1 (deprecated):
-
-- [Manual](https://wdonadelli.github.io/wd/docs/v1/)
-- [Javascript](https://wdonadelli.github.io/wd/v1/wd/source/wd-1.3.2.js)
-- [Style Sheet](https://wdonadelli.github.io/wd/v1/wd/source/wd-1.3.2.css)
 
 _Willian Donadelli_ (<wdonadelli@gmail.com>), 2020-11-11

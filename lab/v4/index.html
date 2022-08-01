@@ -73,7 +73,7 @@ wd(window).addHandler(
 
 		<article class="wd-flyer wd-bg-black">
 
-			<header>
+			<header class="wd-hidden-print">
 				<h2>
 					<span class="wd-icon-menu" data-wd-css="${#menu}tgl{wd-open}" id="bmenu"></span>
 					<span>WD Web Library Lab</span>
@@ -82,7 +82,7 @@ wd(window).addHandler(
 
 			<section data-wd-device="desktop{wd-col}">
 
-				<div class="wd-padd" >
+				<div class="wd-padd wd-hidden-print" >
 
 					<h3>Code</h3>
 
@@ -128,6 +128,9 @@ wd(window).addHandler(
 	      <nav data-wd-repeat="path{menu.json}method{GET}" class="wd-nav-block">
 	        <a href="?page={{target}}" title="{{target}}">{{target}}</a>
 	      </nav>
+				<div class="wd-b wd-align-right">
+					<a href="https://github.com/wdonadelli/wd/wiki" target="_blank">Wiki</a>
+				</div>
 	    </article>
 	  </div>
 	</div>
