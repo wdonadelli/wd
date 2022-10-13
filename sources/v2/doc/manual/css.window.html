@@ -1,0 +1,90 @@
+<header class="wd-head">
+	<h2 class="wd-text-center">CSS: Window</h2>
+</header>
+
+<nav class="wd-nav">
+	<a href="#modal">Modal</a>
+	<a href="#window">Window</a>
+</nav>
+
+<p class="wd-p">It is a stylized container that displays a secondary window over the main window. It does not have the suffix <q>-child</q>.</p>
+
+<h3 id="modal">Modal</h3>
+
+<p class="wd-p">This is a background that covers the main document. It will open when it contains the <code>wd-open</code> class. See the <a href="#main" data-wd-data="wdClick{}${#data1}">dataWdAction</a> attribute.</p>
+
+<a href="##" data-wd-action="open{#eg1}" class="wd-button">Open Modal Window</a>
+
+<div class="wd-modal wd-text-white" id="eg1" data-wd-action="close{#eg1}">
+	<span class="wd-box-central">Click on background to close!</span>
+</div>
+
+<pre class="wd-code" id="eg2"></pre>
+
+<h3 id="window">Window</h3>
+
+<p class="wd-p">It will open when it contains the <code>wd-open</code> class. See the <a href="#main" data-wd-data="wdClick{}${#data1}">dataWdAction</a> attribute.</p>
+
+<a href="##" data-wd-action="open{#eg3}" class="wd-button">Open Window</a>
+
+<div class="wd-window wd-box-white" id="eg3">
+	<h3>Window</h3>
+	<p class="wd-p">Background colors are recommended.</p>
+	<span class="wd-box-ne wd-text-blue wd-padding" data-wd-action="close{#eg3}">Close</span>
+</div>
+
+<pre class="wd-code" id="eg4"></pre>
+
+<h4>Features</h4>
+
+<p class="wd-p">The window may have different characteristics. To do this, add the following classes together with the <code>wd-window</code> class to change the window's shape:</p>
+
+<div data-wd-action="close{#win1}" class="wd-padding wd-window wd-win-small wd-box-purple" id="win1">Click on window to close!</div>
+<div data-wd-action="close{#win2}" class="wd-padding wd-window wd-win-medium wd-box-green" id="win2">Click on window to close!</div>
+<div data-wd-action="close{#win3}" class="wd-padding wd-window wd-win-big wd-box-blue" id="win3">Click on window to close!</div>
+<div data-wd-action="close{#win4}" class="wd-padding wd-window wd-win-top wd-box-grey" id="win4">Click on window to close!</div>
+<div data-wd-action="close{#win5}" class="wd-padding wd-window wd-win-bottom wd-box-yellow" id="win5">Click on window to close!</div>
+<div data-wd-action="close{#win6}" class="wd-padding wd-window wd-win-left wd-box-orange" id="win6">Click on window to close!</div>
+<div data-wd-action="close{#win7}" class="wd-padding wd-window wd-win-right wd-box-brown" id="win7">Click on window to close!</div>
+<div data-wd-action="close{#win8}" class="wd-padding wd-window wd-win-note wd-box-pink" id="win8">Click on window to close!</div>
+
+<nav class="wd-nav wd-vertical">
+	<a href="##" data-wd-action="open{#win1}">wd-win-small</a>
+	<a href="##" data-wd-action="open{#win2}">wd-win-medium</a>
+	<a href="##" data-wd-action="open{#win3}">wd-win-big</a>
+	<a href="##" data-wd-action="open{#win4}">wd-win-top</a>
+	<a href="##" data-wd-action="open{#win5}">wd-win-bottom</a>
+	<a href="##" data-wd-action="open{#win6}">wd-win-left</a>
+	<a href="##" data-wd-action="open{#win7}">wd-win-right</a>
+	<a href="##" data-wd-action="open{#win8}">wd-win-note</a>
+</nav>
+
+<h4>With Modal Window</h4>
+
+<p class="wd-p">To open a window individually, the container must be contained in a modal window. The "wd-open" class must be entered in the modal window:</p>
+
+<a href="##" data-wd-action="open{#eg5}" class="wd-button">Open Modal Window</a>
+
+<div class="wd-modal wd-text-white" id="eg5" data-wd-action="close{#eg5}">
+	<div class="wd-window wd-win-big wd-flyer wd-radius wd-box-white">
+		<header class="wd-head wd-box-green wd-radius-top">
+			<h1>Window</h1>
+		</header>
+
+		<div class="wd-content ">A big window with background.</div>
+		
+		<a href="##" data-wd-action="close{#eg5}" class="wd-button wd-margin wd-box-se">Close</a>
+		
+	</div>
+</div>
+
+<pre class="wd-code" id="eg6"></pre>
+
+<script>
+var eg = {};
+eg["#eg2"] = getCode("#eg1", true);
+eg["#eg4"] = getCode("#eg3", true);
+eg["#eg6"] = getCode("#eg5", true);
+setText(eg);
+</script>
+

@@ -1,0 +1,91 @@
+<header class="wd-head">
+	<h2 class="wd-text-center">WDarray: size and location</h2>
+</header>
+
+<!---------------------------------------------------------------------------->
+<h3>WDarray.count</h3>
+
+<p class="wd-p">It is a method that returns the amount of times the information passed to the argument appears in the array.</p>
+
+<p class="wd-code wd-text-center">wd(array).count(arg)</p>
+
+<h4>Example</h4>
+<pre class="wd-code">
+<code>var</code> y = wd(<var id="eg1"></var>);
+y.count(<q>wd</q>);
+<samp id="eg2"></samp>
+y.count(<var>false</var>);
+<samp id="eg3"></samp>
+</pre>
+
+<!---------------------------------------------------------------------------->
+<h3>WDarray.inside</h3>
+
+<p class="wd-p">It is a method that returns true if the argument entered is contained in the array, otherwise returns false. There is a second optional argument which, if true, will return an array indicating the indexes in which the information appears within the array.</p>
+
+<p class="wd-code wd-text-center">wd(array).inside(arg [,show = false])</p>
+
+<h4>Example</h4>
+<pre class="wd-code"><cite>//Example continuation</cite>
+y.toString();
+<samp id="eg4"></samp>
+y.inside(<q>wd</q>);
+<samp id="eg5"></samp>
+y.inside(<q>DW</q>);
+<samp id="eg6"></samp>
+y.inside(<q>wd</q>, <var>true</var>);
+<samp id="eg7"></samp>
+</pre>
+
+<!---------------------------------------------------------------------------->
+<h3>WDarray.item</h3>
+
+<p class="wd-p">It is a method that returns the value of the index entered in the argument. the value of the argument corresponds to the index of the array. Negative numbers return values ​​from the end of the array. For example, <var>-1</var> returns the last item in the array and <var>-2</var> the penultimate.</p>
+
+<p class="wd-code wd-text-center">wd(array).item(index)</p>
+
+<h4>Example</h4>
+<pre class="wd-code"><cite>//Example continuation</cite>
+y.toString();
+<samp id="eg8"></samp>
+y.item(<var>2</var>);
+<samp id="eg9"></samp>
+y.item(<var>-1</var>);
+<samp id="eg10"></samp>
+y.item(<var>-3</var>);
+<samp id="eg11"></samp>
+</pre>
+
+<!---------------------------------------------------------------------------->
+<h3>WDarray.items</h3>
+
+<p class="wd-p">Is an attribute that returns the length of the array.</p>
+
+<p class="wd-code wd-text-center">wd(array).items</p>
+
+<h4>Example</h4>
+<pre class="wd-code"><cite>//Example continuation</cite>
+y.toString();
+<samp id="eg12"></samp>
+y.items;
+<samp id="eg13"></samp>
+</pre>
+
+<script>
+var y = wd(["wd", 100, "wd", true]);
+var eg = {};
+eg["#eg1"] = y.toString();
+eg["#eg2"] = y.count("wd");
+eg["#eg3"] = y.count(false);
+eg["#eg4"] = y.toString();
+eg["#eg5"] = y.inside("wd");
+eg["#eg6"] = y.inside("DW");
+eg["#eg7"] = wd(y.inside("wd", true)).toString();
+eg["#eg8"] = y.toString();
+eg["#eg9"] = y.item(2);
+eg["#eg10"] = y.item(-1);
+eg["#eg11"] = y.item(-3);
+eg["#eg12"] = y.toString();
+eg["#eg13"] = y.items;
+setText(eg);
+</script>
