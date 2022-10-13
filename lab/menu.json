@@ -1,5 +1,6 @@
 [
 	{"target": "css_base"},
+	{"target": "css_card"},
 	{"target": "css_code"},
 	{"target": "css_collect"},
 	{"target": "css_color_factory"},
