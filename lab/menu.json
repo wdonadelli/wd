@@ -1,6 +1,5 @@
 [
 	{"target": "css_base"},
-	{"target": "css_card"},
 	{"target": "css_code"},
 	{"target": "css_collect"},
 	{"target": "css_color_factory"},
@@ -14,6 +13,7 @@
 	{"target": "css_math"},
 	{"target": "css_nav"},
 	{"target": "css_position"},
+	{"target": "css_post"},
 	{"target": "css_ratio"},
 	{"target": "css_reading"},
 	{"target": "css_shadow_factory"},

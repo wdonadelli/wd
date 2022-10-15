@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ------------------------------------------------------------------------------*/
 
-/* wd.js (v4.0.0) | https://github.com/wdonadelli/wd */
+/* wd.js (v4.1.1) | https://github.com/wdonadelli/wd */
 
 /*------------------------------------------------------------------------------
 | Os estilos terão efeito na página se precedidos da classe wd. Caso contrário,
@@ -552,47 +552,55 @@ padding: 0;
 /* -- Efeitos (uso interno) -- */
 @keyframes wd-zoom-in {
 	from {transform: scale(0); opacity: 0;}
-	to {transform: scale(1); opacity: 1;}
+	to   {transform: scale(1); opacity: 1;}
 }
-@keyframes wd-zoom-extra {
-	from {transform: scale(1);}
-	to {transform: scale(1.1);}
+@keyframes wd-shrink {
+	from {transform: scale(1.0);}
+	to   {transform: scale(0.9);}
 }
-@keyframes wd-zoom-back {
-	from {transform: scale(1.1);}
-	to {transform: scale(1);}
+@keyframes wd-no-shrink {
+	from {transform: scale(0.9);}
+	to   {transform: scale(1.0);}
+}
+@keyframes wd-gray {
+	from {filter: grayscale(0);}
+	to   {filter: grayscale(1);}
+}
+@keyframes wd-no-gray {
+	from {filter: grayscale(1);}
+	to   {filter: grayscale(0);}
 }
 @keyframes wd-fade-in {
 	from {opacity: 0;}
-	to {opacity: 1;}
+	to   {opacity: 1;}
 }
 @keyframes wd-fade-out {
 	from {opacity: 1;}
-	to {opacity: 0;}
+	to   {opacity: 0;}
 }
 @keyframes wd-visible-in {
 	from {opacity: 0; visibility: hidden;}
-	to {opacity: 1; visibility: visible;}
+	to   {opacity: 1; visibility: visible;}
 }
 @keyframes wd-visible-out {
 	from {opacity: 1; visibility: visible;}
-	to {opacity: 0; visibility: hidden;}
+	to   {opacity: 0; visibility: hidden;}
 }
 @keyframes wd-from-top {
 	from {top: -100%; bottom: 200%; opacity: 0;}
-	to {opacity: 1;}
+	to   {opacity: 1;}
 }
 @keyframes wd-from-bottom {
 	from {top: 200%; bottom: -100%; opacity: 0;}
-	to {opacity: 1;}
+	to   {opacity: 1;}
 }
 @keyframes wd-from-left {
 	from {left: -100%; right: 200%; opacity: 0;}
-	to {opacity: 1;}
+	to   {opacity: 1;}
 }
 @keyframes wd-from-right {
 	from {left: 200%; right: -100%; opacity: 0;}
-	to {opacity: 1;}
+	to   {opacity: 1;}
 }
 
 /* == BLOCO 5 ================================================================*/
@@ -737,62 +745,108 @@ padding: 0;
 	white-space: nowrap;
 }
 .wd .wd-collection > * {
+	border-radius: var(--var-radius-default);
 	display: inline-block;
 	height: 12em;
-	margin: 1em 0.5em;
-	border-radius: var(--var-radius-default);
+	margin: 0;
 	overflow: auto;
 	white-space: normal;
 	width: 12em;
 }
-.wd .wd-collection > *:first-child {margin-left:  1em;}
-.wd .wd-collection > *:last-child  {margin-right: 1em;}
+.wd .wd-collection > *:first-child {margin-left:  0.5em;}
+.wd .wd-collection > *:last-child  {margin-right: 0.5em;}
 .wd .wd-collection > * {
-	animation: wd-zoom-back 0.5s;
-	transform: scale(1);
+	animation: wd-shrink 0.5s;
+	transform: scale(0.9);
 }
 .wd .wd-collection > *:hover {
-	animation: wd-zoom-extra 0.5s;
-	transform: scale(1.1);
+	animation: wd-no-shrink 0.5s;
+	transform: scale(1);
 }
 
 
-/* -- Card -- */
-/* TODO criar o card */
-.wd .wd-card {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* -- Post -- */
+.wd .wd-post, .wd .wd-post-input, .wd .wd-post-output {
 	display: grid;
 	border-radius: var(--var-radius-default);
-	border: var(--var-border-thin);
+	margin: var(--var-margin-default);
+	padding: var(--var-size-default);
 }
-.wd .wd-card > * {dborder: 1px solid red;}
-.wd .wd-card > a {
-	grid-area: link;
-	padding: 0.5em 1em;
-}
-.wd .wd-card > img {
+.wd .wd-post-input  {margin-right: var(--var-size-medium);}
+.wd .wd-post-output {margin-left:  var(--var-size-medium);}
+
+.wd .wd-post > img, .wd .wd-post-input > img, .wd .wd-post-output > img {
 	grid-area: img;
 	border-radius: var(--var-radius-square);
-	width: 5em;
-	height: 5em;
-	margin: auto 2em;
-
 }
-.wd .wd-card > header {
-	grid-area: head;
-	font-weight: bold;
-	padding: 0.5em 1em;
-}
-.wd .wd-card > p {
-	grid-area: text;
-	text-indent: 1.4em;
+.wd .wd-post > img {
+	border: var(--var-border-medium);
+	width:  12em;
+	height: 12em;
 	margin: auto;
-	padding: 0.5em 1em;
-
+}
+.wd .wd-post-input > img, .wd .wd-post-output > img {
+	border: var(--var-border-thin);
+	width:  3em;
+	height: 3em;
+	margin: 0 auto auto auto;
 }
 
-.wd .wd-card {
-	grid-template-areas: 'head img' 'text img' 'link img';
+.wd .wd-post > div, .wd .wd-post-input > div, .wd .wd-post-output > div {
+	grid-area: txt;
+	font-size: smaller;
+	font-style: italic;
+	text-align: left;
 }
+.wd .wd-post > div {text-align: center;}
+
+
+
+.wd .wd-post {
+	grid-template-areas: 'img' 'txt';
+	grid-template-rows: 14em auto;
+}
+.wd .wd-post-input {
+	grid-template-areas: 'img txt';
+	grid-template-columns: 4em auto;
+}
+.wd .wd-post-output {
+	grid-template-areas: 'txt img';
+	grid-template-columns: auto 4em;
+}
+
+@media screen and (min-width: 600px) { /* tablet */
+	.wd .wd-post > img {width:  14em; height: 14em;}
+	.wd .wd-post {grid-template-rows: 16em auto;}
+}
+@media screen and (min-width: 768px) { /* desktop */
+	.wd .wd-post > img {width: 16em; height: 16em;}
+	.wd .wd-post {grid-template-rows: 18em auto;}
+}
+
+
+
+
+
+
+
+
+
 
 
 /* -- Caixa de Dicas -- */
@@ -1184,6 +1238,7 @@ padding: 0;
 .wd .wd-grid > .wd-grid-menu {grid-area: menu;}
 .wd .wd-grid > .wd-grid-main {grid-area: main;}
 .wd .wd-grid > .wd-grid-side {grid-area: side;}
+
 /* Phone */
 .wd .wd-grid {grid-template-areas:   'menu' 'main' 'side';}
 @media screen and (min-width: 600px) { /* tablet */

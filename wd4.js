@@ -74,7 +74,7 @@ const wd = (function() {
 			"animation: js-wd-fade-in 0.1s;"
 		]},
 		{s: ".js-wd-progress-bar", d: [
-			"display: block; position: absolute; top: 0; left: 0; right: 0; margin: 0; width: 100%;"
+			"display: block; position: absolute; top: 0; left: 0; right: 0; margin: auto; width: 100%;"
 		]},
 		{s: "div.js-wd-progress-bar", d: ["height: 1em; background-color: #1e90ff;"]},
 		{s: ".js-wd-no-display", d: ["display: none;"]},
@@ -95,9 +95,9 @@ const wd = (function() {
 		{s: ".js-wd-plot", d: [
 			"height: 100%; width: 100%; position: absolute; top: 0; left: 0; bottom: 0; right: 0;"
 		]},
-		{s: ".js-wd-signal", d: [
-			"position: fixed; top: 0; right: 30%; left: 30%; width: 40%;",
-			"margin: 0; padding: 0; z-index: 999999;"
+		{s: ".js-wd-signal", d: [//FIXME caixa pequena para phone
+			"position: fixed; top: 0; right: 0.5em; left: 0.5em; width: auto;",
+			"margin: auto; padding: 0; z-index: 999999;"
 		]},
 		{s: ".js-wd-signal-msg", d: [
 			"animation-name: js-wd-fade-in, js-wd-fade-out;",
