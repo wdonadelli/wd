@@ -66,6 +66,8 @@ const wd = (function() {
 	const wd_js_css = [
 		{s: "@keyframes js-wd-fade-in",  d: ["from {opacity: 0;} to {opacity: 1;}"]},
 		{s: "@keyframes js-wd-fade-out", d: ["from {opacity: 1;} to {opacity: 0;}"]},
+		{s: "@keyframes js-wd-shrink-out", d: ["from {transform: scale(0);} to {transform: scale(1);}"]},
+		{s: "@keyframes js-wd-shrink-in",  d: ["from {transform: scale(1);} to {transform: scale(0);}"]},
 		{s: ".js-wd-modal", d: [
 			"display: block; width: 100%; height: 100%;",
 			"padding: 0.1em 0.5em; margin: 0; z-index: 999999;",
@@ -90,18 +92,19 @@ const wd = (function() {
 		{s: "[data-wd-repeat] > *, [data-wd-load] > *", d: [
 			"visibility: hidden;"
 		]},
-		{s: "[data-wd-slide] > * ", d: ["animation: js-wd-fade-in 1s;"]},
+		{s: "[data-wd-slide] > * ", d: ["animation: js-wd-fade-in 1s, js-wd-shrink-out 0.5s;"]},
 		{s: "nav > *.js-wd-nav-inactive", d: ["opacity: 0.5;"]},
 		{s: ".js-wd-plot", d: [
 			"height: 100%; width: 100%; position: absolute; top: 0; left: 0; bottom: 0; right: 0;"
 		]},
-		{s: ".js-wd-signal", d: [//FIXME caixa pequena para phone
+		{s: ".js-wd-signal", d: [
 			"position: fixed; top: 0; right: 0.5em; left: 0.5em; width: auto;",
 			"margin: auto; padding: 0; z-index: 999999;"
 		]},
+		{s: "@media screen and (min-width: 768px)", d: [".js-wd-signal {width: 40%;}",]},
 		{s: ".js-wd-signal-msg", d: [
-			"animation-name: js-wd-fade-in, js-wd-fade-out;",
-			"animation-duration: 1.5s, 1.5s; animation-delay: 0s, 7.5s;",
+			"animation-name: js-wd-shrink-out, js-wd-shrink-in;",
+			"animation-duration: 0.5s, 0.5s; animation-delay: 0s, 8.5s;",
 			"margin: 5px 0; position: relative; padding: 0; border-radius: 0.2em;",
 			"border: 1px solid rgba(0,0,0,0.6); box-shadow: 1px 1px 6px rgba(0,0,0,0.6);",
 			"background-color: rgb(245,245,245); color: rgb(20,20,20);"
@@ -4161,17 +4164,23 @@ const wd = (function() {
 				let lang = wd_lang().toLowerCase().replace(/\-/g, "_");
 				let init = lang.split("_")[0];
 
-				for (let id in json) {
-					let elem = document.getElementById(id);
-					if (elem === null) continue;
-					let text = "";
-					if (lang in json[id])
-						text = json[id][lang];
-					else if (init in json[id])
-						text = json[id][init];
-					else if ("default" in json[id])
-						text = json[id]["default"];
-					elem.textContent = text;
+				for (let css in json) { /* looping pelos identificadores css */
+					let text;
+					if (lang in json[css]) /* código completo (preferêncial) */
+						text = json[css][lang];
+					else if (init in json[css]) /* só primeiro termo do código (opção genérica) */
+						text = json[css][init];
+					else if ("*" in json[css]) /* valor principal (opção super-genérica) */
+						text = json[css]["*"];
+					else /* não mudar nada, se linguagem não localizada */
+						continue;
+
+					/* obtendo elementos e aplicando textContent */
+					let target = WD(wd_$$(css));
+					if (target.type !== "dom") continue;
+					target.run(function(y) {
+						y.textContent = text;
+					});
 				}
 			}
 		}, method);

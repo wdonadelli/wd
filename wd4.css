@@ -736,9 +736,6 @@ padding: 0;
 }
 
 /* -- coleção -- */
-
-/* FIXME fazer caixas de tamanhos diferentes */
-
 .wd .wd-collection {
 	display: block;
 	overflow: auto;
@@ -801,7 +798,6 @@ padding: 0;
 	margin: auto;
 }
 .wd .wd-post-input > img, .wd .wd-post-output > img {
-	border: var(--var-border-thin);
 	width:  3em;
 	height: 3em;
 	margin: 0 auto auto auto;
