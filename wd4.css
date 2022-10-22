@@ -426,6 +426,7 @@ padding: 0;
 .wd table th {
 	font-weight: bold;
 	vertical-align: middle;
+	background-color: var(--var-bg-thead);
 }
 .wd table td {
 	vertical-align: top;

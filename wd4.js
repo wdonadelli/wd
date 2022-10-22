@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ------------------------------------------------------------------------------*/
 
-/* wd.js (v4.0.1) | https://github.com/wdonadelli/wd */
+/* wd.js (v4.1.1) | https://github.com/wdonadelli/wd */
 
 "use strict";
 
@@ -1095,6 +1095,18 @@ const wd = (function() {
 		});
 
 		return array;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_array_csv(array) { /* transforma um array em dados CSV */
+		let data = [];
+
+		for (let i = 0; i < array.length; i++) {
+			let type = wd_vtype(array[i]).type;
+			data.push(type === "array" ? array[i].join("\t") : array[i])
+		}
+
+		return data.join("\n");
 	}
 
 /*----------------------------------------------------------------------------*/
@@ -3439,6 +3451,9 @@ const wd = (function() {
 		tidy: { /* remove itens repetidos e ordena */
 			get: function() {return wd_array_sort(this.unique);}
 		},
+		csv: { /* matriz para csv */
+			get: function() {return wd_array_csv(this.valueOf());}
+		},
 		item: { /* retorna o índice especificado ou seu comprimento */
 			value: function(i) {
 				return wd_array_item(this.valueOf(), i);
@@ -3634,6 +3649,8 @@ const wd = (function() {
 		url:     {value: function(name) {return wd_url(name);}},
 		device:  {get:   function() {return wd_get_device();}},
 		today:   {get:   function() {return WD(new Date());}},
+		//TODO fazer um copy to clipboard?
+
 		now: {get: function() {
 			let t = new Date();
 			let o = {h: t.getHours(), m: t.getMinutes(), s: t.getSeconds()};
