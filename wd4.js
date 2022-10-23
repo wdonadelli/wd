@@ -385,6 +385,15 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
+	function wd_copy(value) { /* copia o conteúdo da variável para a área de transferência */
+		navigator.clipboard.writeText(value).then(
+			function () {/* sucesso */},
+			function () {/* insucesso */}
+		);
+		return;
+	}
+
+/*----------------------------------------------------------------------------*/
 	function wd_text_caps(input) { /* captaliza string */
 		input = input.split("");
 		let empty = true;
@@ -1099,14 +1108,23 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	function wd_array_csv(array) { /* transforma um array em dados CSV */
-		let data = [];
+		let csv = [];
 
 		for (let i = 0; i < array.length; i++) {
-			let type = wd_vtype(array[i]).type;
-			data.push(type === "array" ? array[i].join("\t") : array[i])
+			let line = array[i];
+			let type = wd_vtype(line).type;
+
+			if (type === "array") {
+				for (let j = 0; j < line.length; j++)
+					line[j] = String(line[j]).replace(/\t/g, " ").replace(/\n/g, " ");
+			} else {
+				line = [String(line).replace(/\t/g, " ").replace(/\n/g, " ")];
+			}
+
+			csv.push(line.join("\t"));
 		}
 
-		return data.join("\n");
+		return csv.join("\n");
 	}
 
 /*----------------------------------------------------------------------------*/
@@ -3647,17 +3665,17 @@ const wd = (function() {
 		$:       {value: function(css, root) {return WD(wd_$(css, root));}},
 		$$:      {value: function(css, root) {return WD(wd_$$(css, root));}},
 		url:     {value: function(name) {return wd_url(name);}},
+		copy:    {value: function(text) {return wd_copy(text);}},
+		lang:    {get:   function() {return wd_lang();}},
 		device:  {get:   function() {return wd_get_device();}},
 		today:   {get:   function() {return WD(new Date());}},
-		//TODO fazer um copy to clipboard?
-
-		now: {get: function() {
+		now:     {get: function() {
 			let t = new Date();
 			let o = {h: t.getHours(), m: t.getMinutes(), s: t.getSeconds()};
 			for (let i in o) o[i] = (o[i] < 10 ? "0" : "") + o[i].toString();
 			return WD(o.h+":"+o.m+":"+o.s);
-		}},
-		lang: {get: function() {return wd_lang();}}
+		}}
+
 	});
 
 /* == BLOCO 4 ================================================================*/
