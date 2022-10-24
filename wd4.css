@@ -746,13 +746,13 @@ padding: 0;
 	border-radius: var(--var-radius-default);
 	display: inline-block;
 	height: 12em;
-	margin: 0;
+	margin: 0 !important;
 	overflow: auto;
 	white-space: normal;
 	width: 12em;
 }
-.wd .wd-collection > *:first-child {margin-left:  0.5em;}
-.wd .wd-collection > *:last-child  {margin-right: 0.5em;}
+.wd .wd-collection > *:first-child {margin-left:  0.5em !important;}
+.wd .wd-collection > *:last-child  {margin-right: 0.5em !important;}
 .wd .wd-collection > * {
 	animation: wd-shrink 0.5s;
 	transform: scale(0.9);
@@ -762,21 +762,31 @@ padding: 0;
 	transform: scale(1);
 }
 
+/* -- Caixas -- */
+.wd .wd-box,      .wd .wd-box-child      > *,
+.wd .wd-box-x,    .wd .wd-box-x-child    > *,
+.wd .wd-box-xx,   .wd .wd-box-xx-child   > *,
+.wd .wd-box-h,    .wd .wd-box-h-child    > *,
+.wd .wd-box-h-x,  .wd .wd-box-h-x-child  > *,
+.wd .wd-box-h-xx, .wd .wd-box-h-xx-child > *,
+.wd .wd-box-v,    .wd .wd-box-v-child    > *,
+.wd .wd-box-v-x,  .wd .wd-box-v-x-child  > *,
+.wd .wd-box-v-xx, .wd .wd-box-v-xx-child > * {
+	border-radius: var(--var-radius-default);
+	max-height: 100%;
+	max-width: 100%;
+	overflow: auto;
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+.wd .wd-box,      .wd .wd-box-child      > * {height: 12em; width: 12em;}
+.wd .wd-box-x,    .wd .wd-box-x-child    > * {height: 18em; width: 18em;}
+.wd .wd-box-xx,   .wd .wd-box-xx-child   > * {height: 24em; width: 24em;}
+.wd .wd-box-h,    .wd .wd-box-h-child    > * {height:  9em; width: 12em;}
+.wd .wd-box-h-x,  .wd .wd-box-h-x-child  > * {height: 12em; width: 18em;}
+.wd .wd-box-h-xx, .wd .wd-box-h-xx-child > * {height: 18em; width: 24em;}
+.wd .wd-box-v,    .wd .wd-box-v-child    > * {height: 12em; width:  9em;}
+.wd .wd-box-v-x,  .wd .wd-box-v-x-child  > * {height: 18em; width: 12em;}
+.wd .wd-box-v-xx, .wd .wd-box-v-xx-child > * {height: 24em; width: 18em;}
 
 /* -- Post -- */
 .wd .wd-post, .wd .wd-post-input, .wd .wd-post-output {
@@ -835,16 +845,6 @@ padding: 0;
 	.wd .wd-post > img {width: 16em; height: 16em;}
 	.wd .wd-post {grid-template-rows: 18em auto;}
 }
-
-
-
-
-
-
-
-
-
-
 
 /* -- Caixa de Dicas -- */
 .wd .wd-tip {
