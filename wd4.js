@@ -39,7 +39,7 @@ const wd = (function() {
 /* == BLOCO 1 ================================================================*/
 
 /*----------------------------------------------------------------------------*/
-	const wd_version = "v4.0.1 2022-07-08";
+	const wd_version = "v4.2.2 2022-??-??"; //FIXME
 	/* Guarda informação do dispositivo (desktop, mobile...) */
 	let wd_device_controller = null;
 	/* Guarda o intervalo de tempo para executar funções vinculadas aos eventos de tecla */
@@ -385,12 +385,14 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_copy(value) { /* copia o conteúdo da variável para a área de transferência */
+	function wd_copy(value) { /* copia o conteúdo da variável para a área de transferência FIXME */
+		if (value === undefined) value = "";
+		value = String(value).toString();
 		navigator.clipboard.writeText(value).then(
 			function () {/* sucesso */},
 			function () {/* insucesso */}
 		);
-		return;
+		return value;
 	}
 
 /*----------------------------------------------------------------------------*/
