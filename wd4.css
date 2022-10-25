@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ------------------------------------------------------------------------------*/
 
-/* wd.js (v4.1.1) | https://github.com/wdonadelli/wd */
+/* wd.css (v4.1.1) | https://github.com/wdonadelli/wd */
 
 /*------------------------------------------------------------------------------
 | Os estilos terão efeito na página se precedidos da classe wd. Caso contrário,
@@ -801,6 +801,7 @@ padding: 0;
 .wd .wd-post > img, .wd .wd-post-input > img, .wd .wd-post-output > img {
 	grid-area: img;
 	border-radius: var(--var-radius-square);
+	text-align: center;
 }
 .wd .wd-post > img {
 	border: var(--var-border-medium);
