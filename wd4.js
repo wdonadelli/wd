@@ -1677,13 +1677,12 @@ const wd = (function() {
 			let key = wd_text_camel(i);
 			let val = obj[i];
 
-			/* definir atributo */
-			if (val !== null)
+			if (val !== null) /* definir atributo */
 				elem.dataset[key] = val;
-			/* apagar atributo */
-			else if (key in elem.dataset)
+			else if (key in elem.dataset) /* apagar atributo */
 				delete elem.dataset[key];
 			else continue
+
 			/* executar verificação após definição */
 			settingProcedures(elem, key);
 		}
@@ -1709,8 +1708,7 @@ const wd = (function() {
 			}
 		}
 
-		/* registrar o fim do load e verificar demandas pós procedimento */
-		wd_load_counter = wd_load_counter <= 0 ? 0 : wd_load_counter-1;
+		/* checar demandas pós procedimento */
 		loadingProcedures();
 
 		return;
@@ -1721,10 +1719,13 @@ const wd = (function() {
 		if (wd_vtype(json).type !== "array") return null;
 
 		/*--------------------------------------------------------------------------
+		| -- DEFINIR O MODELO A SER REPETIDO --
 		| A) obter o conteúdo textual dos filhos
 		| B) se o conteúdo de A conter {{}}, armazená-lo em data-wd-repeat-model
 		| C) caso contrário, utilizar o conteúdo gravado de data-wd-repeat-model
-		| D) se nenhum dos dois for verdadeiro, não há modelo a ser repetido
+		| D) caso contrário, não há modelo a ser repetido: retornar
+		| E) corrigir a adequação dos atributos do DOM ( {{x}} para {{x}}="" )
+		| F) limpar elementos filhos para esconder modelo
 		\-------------------------------------------------------------------------*/
 		let html = elem.innerHTML; /*A*/
 		if (html.search(/\{\{.+\}\}/gi) >= 0) /*B*/
@@ -1733,30 +1734,30 @@ const wd = (function() {
 			html = elem.dataset.wdRepeatModel;
 		else return; /*D*/
 
-		/*--------------------------------------------------------------------------
-		| E) corrigir uma adequação dos atributos pelo DOM: de {{x}} para {{x}}=""
-		| F) criar uma lista que agrupará o os elementos em forma textual
-		| G) looping: array de objetos
-		| H) trocar {{attr}} pelo valor do atributo do objeto {attr: valor}
-		| I) adicionar conteúdo à lista F
-		| J) renderizar filhos do elemento com o agrupamento da lista
-		\-------------------------------------------------------------------------*/
-
 		html = html.split("}}=\"\"").join("}}"); /*E*/
-		let data = [""]; /*F*/
-		for (let i = 0; i < json.length; i++) { /*G*/
+		elem.innerHTML = ""; /*F*/
+
+		/*--------------------------------------------------------------------------
+		| -- DEFINIR NOVOS FILHOS A PARTIR DO MODELO E DA LISTA --
+		| G) criar uma lista que agrupará o os elementos em forma textual
+		| H) looping: array de objetos
+		| I) trocar {{attr}} pelo valor do atributo do objeto {attr: valor}
+		| J) adicionar conteúdo à lista F
+		| K) renderizar filhos do elemento com o agrupamento da lista
+		\-------------------------------------------------------------------------*/
+		let data = [""]; /*G*/
+		for (let i = 0; i < json.length; i++) { /*H*/
 			if (wd_vtype(json[i]).type !== "object") continue;
 			let inner = html;
-			for (let c in json[i]) /*H*/
+			for (let c in json[i]) /*I*/
 				inner = inner.split("{{"+c+"}}").join(json[i][c]);
-			data.push(inner); /*I*/
+			data.push(inner); /*J*/
 		}
-		elem.innerHTML = data.join(""); /*J*/
+		elem.innerHTML = data.join(""); /*K*/
 
-		/* registrar o fim do repeat e verificar demandas pós procedimento */
-		wd_repeat_counter = wd_repeat_counter <= 0 ? 0 : wd_repeat_counter-1;
+		/* checar demandas pós procedimento */
 		loadingProcedures();
-		return true;
+		return;
 	}
 
 /*----------------------------------------------------------------------------*/
@@ -1897,10 +1898,10 @@ const wd = (function() {
 		if (!wd_finite(page) && page !== "+" && page !== "-") page = 0;
 
 		/*--------------------------------------------------------------------------
-		| A) se size < 0  obter toda a amostra;
-		| B) se size < 1  obter uma fração da amostra
+		| A) se size  < 0  obter toda a amostra;
+		| B) se size  < 1  obter uma fração da amostra
 		| C) se size >= 1 obter a amostra (valor inteiro)
-		| D) se size = 0  size = 1 (limite mínimo de size)
+		| D) se size  = 0  size = 1 (limite mínimo de size)
 		--------------------------------------------------------------------------*/
 		if (size < 0) { /*A*/
 			page = 0;
@@ -3685,15 +3686,28 @@ const wd = (function() {
 /*----------------------------------------------------------------------------*/
 	function data_wdLoad(e) { /* carrega HTML: data-wd-load=path{file}method{get|post}${form} */
 		if (!("wdLoad" in e.dataset)) return;
+
+		/* obter dados do atributo */
 		let data   = wd_html_dataset_value(e, "wdLoad")[0];
 		let target = WD(e);
 		let method = data.method;
 		let file   = data.path;
 		let pack   = wd_$$$(data);
 		let exec   = WD(pack);
-		target.data({wdLoad: null});
+
+		/* abrir contagem */
+		wd_load_counter++;
+		/* limpar atributo para evitar repetições desnecessárias e limpar conteúdo */
+		target.data({wdLoad: null}).load("");
+		/* carregar arquivo e executar */
 		exec.send(file, function(x) {
-			if (x.closed) target.load(x.text);
+			if (x.closed) {
+				/* encerrar contagem */
+				wd_load_counter--;
+				/* executar */
+				target.load(x.text);
+				return;
+			}
 		}, method);
 		return;
 	};
@@ -3701,22 +3715,36 @@ const wd = (function() {
 /*----------------------------------------------------------------------------*/
 	function data_wdRepeat(e) { /* Repete modelo HTML: data-wd-repeat=path{file}method{get|post}${form} */
 		if (!("wdRepeat" in e.dataset)) return;
+
+		/* obter dados do atributo */
 		let data   = wd_html_dataset_value(e, "wdRepeat")[0];
 		let target = WD(e);
 		let method = data.method;
 		let file   = data.path;
 		let pack   = wd_$$$(data);
 		let exec   = WD(pack);
-		target.data({wdRepeat: null});
+
+		/* abrir contagem */
+		wd_repeat_counter++;
+		/* limpar atributo para evitar repetições desnecessárias e limpar conteúdo */
+		target.data({wdRepeat: null}).repeat([]);
+
+		/* carregar arquivo e executar */
 		exec.send(file, function(x) {
 			if (x.closed) {
 				let json = x.json;
 				let csv  = x.csv;
+				/* fechar contagem */
+				wd_repeat_counter--;
+
+				/* repetir na ordem de prioridade: JSON | CSV | VAZIO */
 				if (wd_vtype(json).type === "array")
-					return target.repeat(json);
-				if (wd_vtype(csv).type === "array")
-					return target.repeat(wd_matrix_object(x.csv));
-				return target.repeat([]);
+					target.repeat(json);
+				else if (wd_vtype(csv).type === "array")
+					target.repeat(wd_matrix_object(x.csv));
+				else
+					target.repeat([]);
+				return;
 			}
 		}, method);
 		return;
@@ -4314,24 +4342,22 @@ const wd = (function() {
 /*----------------------------------------------------------------------------*/
 	function loadingProcedures() { /* procedimento para carregamentos */
 
+		console.log("repeat: ", wd_repeat_counter, "load: ", wd_load_counter);
+
+
 		/* 1) processar repetições */
-		let repeat = WD.$("[data-wd-repeat]");
-		if (repeat.type === "dom") {
-			wd_repeat_counter++;
-			return repeat.run(data_wdRepeat);
-		}
+		WD.$$("[data-wd-repeat]").run(data_wdRepeat);
+		if (wd_repeat_counter > 0) return;
 
 		/* 2) processar carregamentos */
-		let load = WD.$("[data-wd-load]");
-		if (load.type === "dom") {
-			wd_load_counter++;
-			return load.run(data_wdLoad);
-		}
+		WD.$$("[data-wd-load]").run(data_wdLoad);
+		if (wd_load_counter > 0) return;
+
+		console.log("passou");
 
 		/* 3) se repetições e carregamentos terminarem, organizar */
-		if (wd_repeat_counter === 0 && wd_load_counter === 0) {
-			organizationProcedures();
-		}
+		organizationProcedures();
+
 		return;
 	};
 
