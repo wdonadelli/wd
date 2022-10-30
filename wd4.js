@@ -39,7 +39,7 @@ const wd = (function() {
 /* == BLOCO 1 ================================================================*/
 
 /*----------------------------------------------------------------------------*/
-	const wd_version = "v4.2.2 2022-??-??"; //FIXME
+	const wd_version = "v4.2.2 2022-10-27"; //FIXME
 	/* Guarda informação do dispositivo (desktop, mobile...) */
 	let wd_device_controller = null;
 	/* Guarda o intervalo de tempo para executar funções vinculadas aos eventos de tecla */
@@ -385,13 +385,17 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_copy(value) { /* copia o conteúdo da variável para a área de transferência FIXME */
-		if (value === undefined) value = "";
-		value = String(value).toString();
-		navigator.clipboard.writeText(value).then(
-			function () {/* sucesso */},
-			function () {/* insucesso */}
-		);
+	function wd_copy(value) { /* copia o conteúdo da variável para a área de transferência */
+		if (value === undefined || value === null) {
+			document.execCommand("copy");
+			console.log("Selection copied to clipboard.");
+		}
+		else if ("clipboard" in navigator && "writeText" in navigator.clipboard) {
+			navigator.clipboard.writeText(String(value).toString()).then(
+				function () {console.log("Data copied to the clipboard.");},
+				function () {console.log("Error copying to clipboard.");}
+			);
+		}
 		return value;
 	}
 
@@ -4342,9 +4346,6 @@ const wd = (function() {
 /*----------------------------------------------------------------------------*/
 	function loadingProcedures() { /* procedimento para carregamentos */
 
-		console.log("repeat: ", wd_repeat_counter, "load: ", wd_load_counter);
-
-
 		/* 1) processar repetições */
 		WD.$$("[data-wd-repeat]").run(data_wdRepeat);
 		if (wd_repeat_counter > 0) return;
@@ -4352,8 +4353,6 @@ const wd = (function() {
 		/* 2) processar carregamentos */
 		WD.$$("[data-wd-load]").run(data_wdLoad);
 		if (wd_load_counter > 0) return;
-
-		console.log("passou");
 
 		/* 3) se repetições e carregamentos terminarem, organizar */
 		organizationProcedures();

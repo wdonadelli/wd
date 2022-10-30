@@ -1026,8 +1026,6 @@ padding: 0;
 /* -- Leitura -- */
 .wd .wd-read {
 	font-family: sans-serif;
-	font-size: 18px;
-	line-height: 1.6;
 	text-align: justify;
 }
 /* Título e Subtítulo */
@@ -1051,9 +1049,6 @@ padding: 0;
 	.wd .wd-read > h2 {width: 50%;}
 }
 /* parágrafos */
-.wd .wd-read > p {
-  margin: 2em 0;
-}
 .wd .wd-read > p:before {
 	margin-right: 4em;
 	content: "";
