@@ -213,6 +213,14 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
+	function wd_str_now() { /* retorna o tempo atual em string */
+		let t = new Date();
+		let o = {h: t.getHours(), m: t.getMinutes(), s: t.getSeconds()};
+		for (let i in o) o[i] = (o[i] < 10 ? "0" : "") + o[i].toString();
+		return o.h+":"+o.m+":"+o.s;
+	}
+
+/*----------------------------------------------------------------------------*/
 	function wd_str_date (val) { /* obtém data em formato string */
 		let data = [
 			{re: /^[0-9]{4}\-[0-9]{2}\-[0-9]{2}$/, sym: "-", y: 0, m: 1, d: 2},
@@ -675,30 +683,20 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	function wd_num_type(n) { /* retorna o tipo de número */
-		if (n === 0)         return "zero";
-		let type = n < 0 ? "-" : "+";
-		if (Math.abs(n) === Infinity) return type+"infinity";
-		if (n === wd_integer(n))          return type+"integer";
-		return type+"real";
-	}
-
-/*----------------------------------------------------------------------------*/
-	function wd_num_test(n, checks) {/* testa se o tipo de número se enquadra em alguma categoria */
-		let type = wd_num_type(n);
-		for (let i = 0; i < checks.length; i++) {
-			if (checks[i] === type) return true;
-			if (checks[i] === type.substr(1, type.length)) return true;
-		}
-		return false;
+		let types = ["zero", "+infinity", "-infinity", "+integer", "-integer", "+float", "-float"];
+		for (let i = 0; i < types.length; i++)
+			if (wd_test(n, [types[i]]))
+				return types[i];
+		return "number";
 	}
 
 /*----------------------------------------------------------------------------*/
 	function wd_num_frac(n) { /* representação em fração (2 casas) */
 		/* inteiros ou zero não têm parte fracionária, retornar string */
-		if (wd_num_test(n, ["integer", "zero"]))
+		if (wd_test(n, ["integer", "zero"]))
 			return wd_integer(n).toFixed(0);
 		/* infinito também não tem parte fracionária, retornar string */
-		if (wd_num_test(n, ["infinity"]))
+		if (wd_test(n, ["infinity"]))
 			return wd_num_str(n);
 
 		/* capturar parte inteira e decimal */
@@ -771,7 +769,7 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	function wd_num_pow10(n, width) { /* transforma número em notação científica */
-		if (wd_num_test(n, ["infinity", "zero"])) return wd_num_str(n);
+		if (wd_test(n, ["infinity", "zero"])) return wd_num_str(n);
 
 		width = wd_finite(width) ? wd_integer(width, true) : undefined;
 
@@ -801,7 +799,7 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	function wd_num_fixed(n, ldec, lint) { /* fixa quantidade de dígitos (decimal e inteiro) */
-		if (wd_num_test(n, ["infinity"])) return wd_num_str(n);
+		if (wd_test(n, ["infinity"])) return wd_num_str(n);
 
 		lint = wd_finite(lint) ? wd_integer(lint, true) : 0;
 		ldec = wd_finite(ldec) ? wd_integer(ldec, true) : 0;
@@ -824,7 +822,7 @@ const wd = (function() {
 /*----------------------------------------------------------------------------*/
 	function wd_num_str(n, ratio) { /* Define a exibição de valores numéricos */
 		if (ratio === true) n = 100*n;
-		if (wd_num_test(n, ["infinity"]))
+		if (wd_test(n, ["infinity"]))
 			return (n < 0 ? "\u2212" : "\u002B")+"\u221E";
 
 		let end = ratio === true ? "\u0025" : "";
@@ -2240,6 +2238,63 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
+	function wd_test(input, list) { /* testa, em uma lista de possibilidades, se o valor casa em uma delas */
+		let x     = wd_vtype(input);
+		let check = [x.type];
+		/* deixando a lista toda em minúsculo */
+		for (let i = 0; i < list.length; i++)
+			list[i] = String(list[i]).toLowerCase();
+
+		/* testando valores especiais */
+		switch (x.type) {
+			case "boolean":
+				check.push(x.value === true ? "true" : "false")
+				break;
+
+			case "number":
+				let abs = Math.abs(x.value);
+
+				if (x.value > 0) check.push("+number");
+				if (x.value < 0) check.push("-number");
+				if (abs === 0) {
+					check.push("zero");
+				} else if (abs === Infinity) {
+					check.push("infinity");
+					check.push(x.value > 0 ? "+infinity" : "-infinity");
+				} else if (abs === wd_integer(abs)) {
+					check.push("integer");
+					check.push(x.value > 0 ? "+integer" : "-integer");
+				} else {
+					check.push("float");
+					check.push(x.value > 0 ? "+float" : "-float");
+				}
+				break;
+			case "text":
+				if (x.value === x.value.toUpperCase()) check.push("+text");
+				if (x.value === x.value.toLowerCase()) check.push("-text");
+				break;
+			case "time":
+				let now = wd_vtype(wd_str_now()).value;
+				if (x.value > now) check.push("+time");
+				if (x.value < now) check.push("-time");
+				break;
+			case "date":
+				let today = wd_set_date();
+				if (x.value > today) check.push("+date");
+				if (x.value < today) check.push("-date");
+				break;
+		}
+
+		/* testando as possibilidades válidas */
+		for (let i = 0; i < check.length; i++)
+			if (list.indexOf(check[i]) >= 0) return true;
+
+		/* se não casou, retornar false */
+		return false; //FIXME
+	}
+
+
+/*----------------------------------------------------------------------------*/
 	function wd_svg_create(type, attr) { /* cria elementos SVG genéricos com medidas relativas */
 		if (attr === undefined) attr = {};
 		/* Propriedades a serem definidas em porcentagem */
@@ -3110,6 +3165,28 @@ const wd = (function() {
 		type: { /* informa o tipo do argumento */
 			get: function() {return this._type;}
 		},
+		test: { /* testa se o tipo do valor se enquadra em alguma categoria */
+			value: function() {
+				/* obter origem dos dados a serem testados de acordo com o tipo */
+				let values = {
+					"boolean":   this.valueOf() === 0 ? false : true,
+					"dom":       this.type === "dom" ? document.createElement("div") : null,
+					"undefined": undefined,  "null":   null,
+					"function":  "valueOf",  "object": "valueOf",
+					"regexp":    "valueOf",  "array":  "valueOf",
+					"time":      "toString", "date":   "toString",
+					"number":    "valueOf",  "text":   "toString",
+					"unknown":   "valueOf"
+				};
+
+				/* obtendo valor do dado, se for uma função */
+				if (typeof values[this.type] === "string")
+					values[this.type] = this[values[this.type]]();
+
+				/* retornando o resulado do teste */
+				return wd_test(values[this.type], Array.prototype.slice.call(arguments));
+			}
+		},
 		valueOf: { /* método padrão */
 			value: function() {
 				try {return this._value.valueOf();} catch(e) {}
@@ -3290,11 +3367,6 @@ const wd = (function() {
 		str: { /* retorna string simplificada do número */
 			get: function() {return wd_num_str(this.valueOf());}
 		},
-		test: { /* testa se o tipo de número se enquadra em alguma categoria */
-			value: function() {
-				return wd_num_test(this.valueOf(), Array.prototype.slice.call(arguments));
-			}
-		},
 		round: { /* arredonda número para determinado tamanho */
 			value: function(width) {
 				return wd_num_round(this.valueOf(), width);
@@ -3317,7 +3389,7 @@ const wd = (function() {
 		},
 		toString: { /* método padrão */
 			value: function() {
-				return this.test("infinity") ? this.str : this.valueOf().toString();
+				return Math.abs(this.valueOf()) === Infinity ? this.str : this.valueOf().toString();
 			}
 		},
 	});
@@ -3676,13 +3748,7 @@ const wd = (function() {
 		lang:    {get:   function() {return wd_lang();}},
 		device:  {get:   function() {return wd_get_device();}},
 		today:   {get:   function() {return WD(new Date());}},
-		now:     {get: function() {
-			let t = new Date();
-			let o = {h: t.getHours(), m: t.getMinutes(), s: t.getSeconds()};
-			for (let i in o) o[i] = (o[i] < 10 ? "0" : "") + o[i].toString();
-			return WD(o.h+":"+o.m+":"+o.s);
-		}}
-
+		now:     {get:   function() {return WD(wd_str_now());}}
 	});
 
 /* == BLOCO 4 ================================================================*/

@@ -61,16 +61,49 @@ function cssAttributes(type) {
 				}
 			}
 
-			document.getElementById("code_change").textContent = txt.join("");console.log(data)
+			document.getElementById("code_change").textContent = txt.join("");
 		}
 	});
 }
+
+
+function jsFunctions(type) {
+
+	wd().send(SourceJS, function(x) {
+
+		if (x.closed) {
+			let re   = type === "o" ? /\n\tfunction [A-Z].+\(.+\)/g : /\n\tfunction .+\(.+\)/g;
+			//let data = {};
+			//let txt  = [];
+			let js  = wd(x.text.match(re)).tidy;
+
+
+
+
+																						console.log(js);
+
+
+			//document.getElementById("code_change").textContent = txt.join("");
+		}
+	});
+}
+
+
+
+
+
+
+
+
+
 </script>
 
 
 <nav>
 	<span onclick="cssAttributes('name');">CSS Name</span>
 	<span onclick="cssAttributes('prop');">CSS Prop</span>
+	<span onclick="jsFunctions('f');">JS function</span>
+	<span onclick="jsFunctions('o');">JS object</span>
 </nav>
 
 
