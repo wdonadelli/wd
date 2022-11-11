@@ -1,5 +1,3 @@
-<h3>Code Change</h3>
-
 <script>
 const SourceCSS = "../wd4.css";
 const SourceJS  = "../wd4.js";
@@ -48,7 +46,7 @@ function cssAttributes(type) {
 			let txt  = [];
 			let css  = wd(x.text.match(re)).tidy;
 
-			for (let i = 0; i < css.length; i++) {
+			for (let i = 0; i < css.length; i++) {//>
 				let prop = getCssProperties(css[i]);
 				if (!(prop.name in data)) data[prop.name] = {};
 				data[prop.name][prop.css] = prop.child;
@@ -73,17 +71,35 @@ function jsFunctions(type) {
 
 		if (x.closed) {
 			let re   = type === "o" ? /\n\tfunction [A-Z].+\(.+\)/g : /\n\tfunction .+\(.+\)/g;
-			//let data = {};
-			//let txt  = [];
+			let data = [];
+			let txt  = [type === "o" ? "## Objects\n" : "## Functions\n"];
 			let js  = wd(x.text.match(re)).tidy;
 
+			/* limpando e obtendo informações */
+			for (let i = 0; i < js.length; i++) { //>
+				js[i] = js[i].trim().replace(/^function(\ +)?/, "");
+				js[i] = js[i].split(")")[0].trim();
+				let name = js[i].split("(")[0].trim();
+				let args = js[i].split("(")[1].trim().split(",");
+				let func = js[i]+")";
 
+				for(let j = 0; j < args.length; j++) //>
+					args[j] = args[j].trim();
+				data.push({func: func, name: name, args: args});
+			}
 
+			/* construindo md */
+			for (let i = 0; i < data.length; i++) { //>
+					txt.push("### "+data[i].name+"\n");
+					txt.push("```js\n"+data[i].func+"\n```\n\n");
+					txt.push("#### Arguments\n");
+					txt.push("|Name|Type|Optional|Description|");
+					txt.push("|:--:|:--:|:-------|:----------|");
+					txt.push("|"+data[i].args.join("||No||\n")+"||No||\n");
+					txt.push("#### Returns\n\n");
+			}
 
-																						console.log(js);
-
-
-			//document.getElementById("code_change").textContent = txt.join("");
+			document.getElementById("code_change").textContent = txt.join("\n");
 		}
 	});
 }
@@ -99,6 +115,9 @@ function jsFunctions(type) {
 </script>
 
 
+
+
+<h3>Code Change</h3>
 <nav>
 	<span onclick="cssAttributes('name');">CSS Name</span>
 	<span onclick="cssAttributes('prop');">CSS Prop</span>

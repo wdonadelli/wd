@@ -314,9 +314,10 @@ const wd = (function() {
 
 		/* Valores em forma de string */
 		if (typeof val === "string" || val instanceof String) {
+			/* nulo/vazio */
 			val = val.trim();
 			if (val === "") return {type: "null", value: null};
-
+			/* tempo, data e número */
 			let mtds = {
 				"date": wd_str_date, "time": wd_str_time, "number": wd_str_number
 			};
@@ -324,7 +325,7 @@ const wd = (function() {
 				value = mtds[t](val);
 				if (value !== null) return {value: value, type: t}
 			}
-
+			/* padrão: texto */
 			return {type: "text", value: val.toString()};
 		}
 
@@ -334,30 +335,31 @@ const wd = (function() {
 			return {value: value, type: "dom"};
 
 		/* Outros Elementos */
+		/* BigInt */
 		if (typeof val === "bigint" || ("BigInt" in window && val instanceof BigInt))
 			return {type: "unknown", value: val.valueOf()};
-
+		/* Number e NaN */
 		if (typeof val === "number" || ("Number" in window && val instanceof Number))
 			return isNaN(val) ? {type: "unknown", value: val} : {type: "number", value: val.valueOf()};
-
+		/* array */
 		if ("Array" in window && (("isArray" in Array && Array.isArray(val)) || val instanceof Array))
 			return {type: "array", value: val.slice()};
-
+		/* data */
 		if ("Date" in window && val instanceof Date)
 			return {type: "date", value: wd_set_date(val)};
-
+		/* regexp */
 		if ("RegExp" in window && val instanceof RegExp)
 			return {type: "regexp", value: val.valueOf()};
-
+		/* boolean */
 		if (typeof val === "boolean" || ("Boolean" in window && val instanceof Boolean))
 			return {type: "boolean", value: val.valueOf()};
-
+		/* function */
 		if (typeof val === "function" || ("Function" in window && val instanceof Function))
 			return {type: "function", value: val};
-
+		/* object */
 		if (typeof val === "object" && (/^\{.*\}$/).test(JSON.stringify(val)))
 			return {type: "object", value: val};
-
+		/* desconhecido: não se encaixa nos anteriores */
 		return {type: "unknown", value: val};
 	}
 
@@ -2290,9 +2292,8 @@ const wd = (function() {
 			if (list.indexOf(check[i]) >= 0) return true;
 
 		/* se não casou, retornar false */
-		return false; //FIXME
+		return false;
 	}
-
 
 /*----------------------------------------------------------------------------*/
 	function wd_svg_create(type, attr) { /* cria elementos SVG genéricos com medidas relativas */
@@ -3156,7 +3157,8 @@ const wd = (function() {
 	function WDmain(input) {
 		Object.defineProperties(this, {
 			_value: {value: input.value, writable: true},
-			_type:  {value: input.type}
+			_type:  {value: input.type},
+			_input: {value: input.input}
 		});
 	}
 
@@ -3167,24 +3169,7 @@ const wd = (function() {
 		},
 		test: { /* testa se o tipo do valor se enquadra em alguma categoria */
 			value: function() {
-				/* obter origem dos dados a serem testados de acordo com o tipo */
-				let values = {
-					"boolean":   this.valueOf() === 0 ? false : true,
-					"dom":       this.type === "dom" ? document.createElement("div") : null,
-					"undefined": undefined,  "null":   null,
-					"function":  "valueOf",  "object": "valueOf",
-					"regexp":    "valueOf",  "array":  "valueOf",
-					"time":      "toString", "date":   "toString",
-					"number":    "valueOf",  "text":   "toString",
-					"unknown":   "valueOf"
-				};
-
-				/* obtendo valor do dado, se for uma função */
-				if (typeof values[this.type] === "string")
-					values[this.type] = this[values[this.type]]();
-
-				/* retornando o resulado do teste */
-				return wd_test(values[this.type], Array.prototype.slice.call(arguments));
+				return wd_test(this._input, Array.prototype.slice.call(arguments));
 			}
 		},
 		valueOf: { /* método padrão */
@@ -3724,7 +3709,11 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	function WD(input) { /* função de interface ao usuário */
+		/* obtendo o tipo e o valor resultando da entrada */
 		let vtype  = wd_vtype(input);
+		/* acrescentando o valor original aos dados */
+		vtype["input"] = input;
+		/* lista de objetos a serem chamados */
 		let object = {
 			"undefined": WDundefined, "null":     WDnull,
 			"boolean":   WDboolean,   "function": WDfunction,
@@ -3734,7 +3723,7 @@ const wd = (function() {
 			"number":    WDnumber,    "text":     WDtext,
 			"unknown":   WDmain
 		};
-
+		/* construindo e retornando o objeto específico */
 		return new object[vtype.type](vtype);
 	}
 
