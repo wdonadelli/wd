@@ -2250,7 +2250,7 @@ const wd = (function() {
 		/* testando valores especiais */
 		switch (x.type) {
 			case "boolean":
-				check.push(x.value === true ? "true" : "false")
+				check.push(x.value === true ? "+boolean" : "-boolean")
 				break;
 
 			case "number":
