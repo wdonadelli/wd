@@ -1157,28 +1157,28 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	function wd_coord_adjust(x, y, z) { /* retorna pares de coordenadas numéricas */
-	  let coord = {x: [], y: [], z: [], length: 0};
-    /* checando se argumentos são arrays (x é obrigatório) */
-    if (wd_vtype(x).type !== "array") return null;
-    if (wd_vtype(y).type !== "array") y = null;
-    if (wd_vtype(z).type !== "array") z = null;
+		let coord = {x: [], y: [], z: [], length: 0};
+		/* checando se argumentos são arrays (x é obrigatório) */
+		if (wd_vtype(x).type !== "array") return null;
+		if (wd_vtype(y).type !== "array") y = null;
+		if (wd_vtype(z).type !== "array") z = null;
 
 		/* verificando conteúdo (deve ser numérico */
 		let n = x.length;
 		if (y !== null && y.length < n) n = y.length;
 		if (z !== null && z.length < n) n = z.length;
 		for (let i = 0; i < n; i++) {
-		  let xtype = wd_vtype(x[i]);
-		  let ytype = y === null ? null : wd_vtype(y[i]);
-		  let ztype = z === null ? null : wd_vtype(z[i]);
-		  if (!wd_finite(xtype.value)) continue;
-		  if (y !== null && !wd_finite(ytype.value)) continue;
-		  if (z !== null && !wd_finite(ztype.value)) continue;
+			let xtype = wd_vtype(x[i]);
+			let ytype = y === null ? null : wd_vtype(y[i]);
+			let ztype = z === null ? null : wd_vtype(z[i]);
+			if (!wd_finite(xtype.value)) continue;
+			if (y !== null && !wd_finite(ytype.value)) continue;
+			if (z !== null && !wd_finite(ztype.value)) continue;
 
-      coord.x.push(xtype.value);
-      if (y !== null) coord.y.push(ytype.value);
-      if (z !== null) coord.z.push(ztype.value);
-      coord.length++;
+			coord.x.push(xtype.value);
+			if (y !== null) coord.y.push(ytype.value);
+			if (z !== null) coord.z.push(ztype.value);
+			coord.length++;
 		}
 
 		/* definindo valor final */
@@ -1460,7 +1460,7 @@ const wd = (function() {
 		for (let i = 0; i < x.length; i++) {
 			if (i > (y.length-1)) break;
 			let vtype = wd_vtype(y[i]);
-			if (vtype.type !== "number") continue
+			if (vtype.type !== "number") continue;
 			let name = new String(x[i]).trim();
 			if (name === "") name = "?";
 			if (!(name in data)) {

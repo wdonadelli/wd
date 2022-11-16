@@ -71,10 +71,10 @@ function jsFunctions(type) {
 
 		if (x.closed) {
 			let re   = {
-				o: {i: /\n\tfunction\ +[A-Z]\w+\((.+)?\)/g, t: "## Objects\n", r: /^function(\ +)?/, s: ")"},
-				f: {i: /\n\tfunction\ +\w+\((.+)?\)/g, t: "## Functions\n", r: /^function(\ +)?/, s: ")"},
-				c: {i: /\n\tconst\ +\w+\ +\=/g, t: "## Constants\n", r: /^const(\ +)?/, s: "="},
-				v: {i: /\n\tlet\ +\w+\ +\=/g, t: "## Variables\n", r: /^let(\ +)?/, s: "="}
+				o: {i: /\n\tfunction\ +[A-Z]\w+\((.+)?\)/g, t: "## Objects\n",   r: /^function(\ +)?/, s: ")"},
+				f: {i: /\n\tfunction\ +[a-z]\w+\((.+)?\)/g, t: "## Functions\n", r: /^function(\ +)?/, s: ")"},
+				c: {i: /\n\tconst\ +\w+\ +\=/g,             t: "## Constants\n", r: /^const(\ +)?/,    s: "="},
+				v: {i: /\n\tlet\ +\w+\ +\=/g,               t: "## Variables\n", r: /^let(\ +)?/,      s: "="}
 			}
 			let data = [];
 			let txt  = [];
