@@ -221,7 +221,7 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_str_date (val) { /* obtém data em formato string */
+	function wd_str_date(val) { /* obtém data em formato string */
 		let data = [
 			{re: /^[0-9]{4}\-[0-9]{2}\-[0-9]{2}$/, sym: "-", y: 0, m: 1, d: 2},
 			{re: /^[0-9]{2}\/[0-9]{2}\/[0-9]{4}$/, sym: "/", y: 2, m: 1, d: 0},
@@ -1433,8 +1433,9 @@ const wd = (function() {
 		let ends = wd_coord_limits(xcoord);
 		if (ends === null) return null;
 		delta = wd_vtype(delta).value;
-		if (!wd_finite(delta)) delta = (ends.max - ends.min)/xcoords.length;
+		if (!wd_finite(delta)) delta = (ends.max - ends.min)/xcoord.length;
 		delta = Math.abs(delta);
+		console.log(delta);
 
 		/* obtendo amostra */
 		let x = [];
@@ -2376,7 +2377,7 @@ const wd = (function() {
 /* == BLOCO 2 ================================================================*/
 
 /*----------------------------------------------------------------------------*/
-	function WDform (elem) { /* objeto para analisar campos de formulários */
+	function WDform(elem) { /* objeto para analisar campos de formulários */
 		this.e = elem;
 	};
 	Object.defineProperties(WDform.prototype, {
@@ -3737,7 +3738,8 @@ const wd = (function() {
 		lang:    {get:   function() {return wd_lang();}},
 		device:  {get:   function() {return wd_get_device();}},
 		today:   {get:   function() {return WD(new Date());}},
-		now:     {get:   function() {return WD(wd_str_now());}}
+		now:     {get:   function() {return WD(wd_str_now());}},
+		bomba: {value: wd_coord_sum}//FIXME apagar esse joça
 	});
 
 /* == BLOCO 4 ================================================================*/

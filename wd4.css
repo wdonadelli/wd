@@ -1232,7 +1232,7 @@ padding: 0;
 .wd .wd-grid > .wd-grid-main {grid-area: main;}
 .wd .wd-grid > .wd-grid-side {grid-area: side;}
 
-/* Phone */
+/* phone */
 .wd .wd-grid {grid-template-areas:   'menu' 'main' 'side';}
 @media screen and (min-width: 600px) { /* tablet */
 	.wd .wd-grid {grid-template-areas: 'menu main main main' 'menu side side side';}
