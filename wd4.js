@@ -415,6 +415,10 @@ const wd = (function() {
 			return true;
 		}
 
+		/* array e object: JSON */
+		if (data.type === "array" || data.type === "object")
+			value = wd_json(value);
+
 		/* copiar valor informado */
 		if ("clipboard" in navigator && "writeText" in navigator.clipboard) {
 			navigator.clipboard.writeText(value === null ? "" : value).then(
