@@ -396,17 +396,35 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	function wd_copy(value) { /* copia o conteúdo da variável para a área de transferência */
-		if (value === undefined || value === null) {
+		/* copiar o que está selecionado */
+		if (value === undefined && "execCommand" in document) {
 			document.execCommand("copy");
-			console.log("Selection copied to clipboard.");
+			return true;
 		}
-		else if ("clipboard" in navigator && "writeText" in navigator.clipboard) {
-			navigator.clipboard.writeText(String(value).toString()).then(
-				function () {console.log("Data copied to the clipboard.");},
-				function () {console.log("Error copying to clipboard.");}
+		/* copiar DOM: elemento ou tudo */
+		let data = wd_vtype(value);
+		if (data.type === "dom" && "execCommand" in document) {
+			let element = data.value.length > 0 ? data.value[0] : document.body;
+			let range   = document.createRange();
+			let select  = window.getSelection();
+			select.removeAllRanges();          /* limpar seleção existente */
+			range.selectNodeContents(element); /* pegar os nós do elemento */
+			select.addRange(range);            /* seleciona os nós do elemento */
+			document.execCommand("copy");      /* copia o texto selecionado */
+			select.removeAllRanges();          /* limpar seleção novamente */
+			return true;
+		}
+
+		/* copiar valor informado */
+		if ("clipboard" in navigator && "writeText" in navigator.clipboard) {
+			navigator.clipboard.writeText(value === null ? "" : value).then(
+				function () {/*sucesso*/},
+				function () {/*erro*/}
 			);
+			return true;
 		}
-		return value;
+
+		return false;
 	}
 
 /*----------------------------------------------------------------------------*/
