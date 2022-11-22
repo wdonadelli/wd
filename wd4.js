@@ -2211,23 +2211,30 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_read(elem, mode, call) { /* faz a leitura de arquivos FIXME: data_wdRead & read:*/
+	function wd_read(elem, call, mode) { /* faz a leitura de arquivos FIXME: data_wdRead & read:*/
 		/* testando argumentos */
 		let form = new WDform(elem);
 		if (form.type !== "file")    return null;
 		let arg = wd_vtype(call);
 		if (arg.type !== "function") return null;
-		let capture = {
-			text:   "readAsText",         url:    "readAsDataURL",
-			binary: "readAsBinaryString", buffer: "readAsArrayBuffer"
-		};
-		if (!(mode in capture))      return null;
 		let files = form.vfile;
 		if (files.length === 0)      return null;
 
 		/* lendo arquivos selecionados */
 		for (let i = 0; i < files.length; i++) {
-			let file   = files[i];
+			let file = files[i];
+			let mime = String(file.type).split("/")[0].toLowerCase();
+			let method = {
+				binary: "readAsBinaryString", buffer: "readAsArrayBuffer",
+				text:   "readAsText",         audio:  "readAsDataURL",
+				video:  "readAsDataURL",      image:  "readAsDataURL",
+				url:    "readAsDataURL"
+			};
+			/* definindo a informação a ser capturada se argumento é inadequado (binary - default) */
+			if (!(mode in method))
+				mode = mime in method ? mime : "binary";
+
+			/* construindo objeto e disparador ao carregar */
 			let reader = new FileReader();
 
 			reader.onload = function() {
@@ -2243,8 +2250,9 @@ const wd = (function() {
 					data:         result
 				});
 			}
-			/* efetuar a leitura da maneira especificada */
-			reader[capture[mode]](file);
+
+			/* capturando dados */
+			reader[method[mode]](file);
 		}
 
 		return true;
@@ -3763,8 +3771,8 @@ const wd = (function() {
 			}
 		},
 		read: { /* lê arquivos especificados em formulário (input:file) */
-			value: function(mode, call) {
-				return this.run(wd_read, mode, call);
+			value: function(call, mode) {
+				return this.run(wd_read, call, mode);
 			}
 		},
 		info: { /* devolve informações diversas sobre o primeiro elemento */
