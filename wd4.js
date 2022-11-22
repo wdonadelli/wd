@@ -2211,6 +2211,46 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
+	function wd_read(elem, mode, call) { /* faz a leitura de arquivos FIXME: data_wdRead & read:*/
+		/* testando argumentos */
+		let form = new WDform(elem);
+		if (form.type !== "file")    return null;
+		let arg = wd_vtype(call);
+		if (arg.type !== "function") return null;
+		let capture = {
+			text:   "readAsText",         url:    "readAsDataURL",
+			binary: "readAsBinaryString", buffer: "readAsArrayBuffer"
+		};
+		if (!(mode in capture))      return null;
+		let files = form.vfile;
+		if (files.length === 0)      return null;
+
+		/* lendo arquivos selecionados */
+		for (let i = 0; i < files.length; i++) {
+			let file   = files[i];
+			let reader = new FileReader();
+
+			reader.onload = function() {
+				let result = this.result;
+				call({
+					elem:         elem,
+					index:        i,
+					length:       files.length,
+					name:         file.name,
+					size:         file.size,
+					type:         file.type,
+					lastModified: file.lastModified,
+					data:         result
+				});
+			}
+			/* efetuar a leitura da maneira especificada */
+			reader[capture[mode]](file);
+		}
+
+		return true;
+	}
+
+/*----------------------------------------------------------------------------*/
 	function wd_signal(title, text) { /* exibe uma mensagem */
 		/* definindo elementos */
 		let box = document.createElement("ARTICLE");
@@ -2471,7 +2511,7 @@ const wd = (function() {
 				return check.type === "number" ? this.e.value.trim() : null;
 			}
 		},
-		vfile: { /* retorna valores do campo de arquivos, se vazio "" */
+		vfile: { /* retorna valores do campo de arquivos */
 			get: function() {
 				if ("files" in this.e) return this.e.files;
 				let val = this.e.value.trim();
@@ -3761,7 +3801,7 @@ const wd = (function() {
 		device:  {get:   function() {return wd_get_device();}},
 		today:   {get:   function() {return WD(new Date());}},
 		now:     {get:   function() {return WD(wd_str_now());}},
-		bomba: {value: wd_coord_sum}//FIXME apagar esse joça
+		bomba: {value: wd_read}//FIXME apagar esse joça
 	});
 
 /* == BLOCO 4 ================================================================*/
