@@ -3762,6 +3762,11 @@ const wd = (function() {
 				return wd_html_chart(this.item(0), data, title, xlabel, ylabel);
 			}
 		},
+		read: { /* lê arquivos especificados em formulário (input:file) */
+			value: function(mode, call) {
+				return this.run(wd_read, mode, call);
+			}
+		},
 		info: { /* devolve informações diversas sobre o primeiro elemento */
 			get: function() {return wd_html_info(this._value[0]);}
 		},
