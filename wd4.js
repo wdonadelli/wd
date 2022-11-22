@@ -2211,7 +2211,7 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_read(elem, call, mode) { /* faz a leitura de arquivos FIXME: data_wdRead & read:*/
+	function wd_read(elem, call, mode) { /* faz a leitura de arquivos */
 		/* testando argumentos */
 		let form = new WDform(elem);
 		if (form.type !== "file")    return null;
