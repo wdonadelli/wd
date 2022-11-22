@@ -2241,7 +2241,7 @@ const wd = (function() {
 				let result = this.result;
 				call({
 					elem:         elem,
-					index:        i,
+					item:         i,
 					length:       files.length,
 					name:         file.name,
 					size:         file.size,
