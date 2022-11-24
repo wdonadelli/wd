@@ -55,8 +55,8 @@ const wd = (function() {
 		modal:   null, /* HTML da janela modal */
 		bar:     null, /* HTML da barra de progresso */
 		counter:    0, /* contador de operações em aberto */
-		delay:    250, /* tempo de espera até fechar a janela modal (evitar piscadas */
-		time:      10, /* tempo para interagir com o documento */
+		delay:    250, /* tempo de espera até fechar a janela modal (evitar piscadas) */
+		time:       5, /* tempo para interagir com o documento */
 
 		_init: function() { /* método para efetuar a montagem do modal e barra de progress */
 			/* janela modal */
@@ -251,11 +251,11 @@ const wd = (function() {
 	function wd_bytes(value) { /*calculadora de bytes*/
 		if (value === Infinity) return wd_num_str(value)+"B";
 		value = value < 0 ? 0 : wd_integer(value, true);
-		if (value >= Math.pow(1024,4)) return (value/Math.pow(1024,4)).toFixed(2)+"TB";
-		if (value >= Math.pow(1024,3)) return (value/Math.pow(1024,3)).toFixed(2)+"GB";
-		if (value >= Math.pow(1024,2)) return (value/Math.pow(1024,2)).toFixed(2)+"MB";
-		if (value >= Math.pow(1024,1)) return (value/Math.pow(1024,1)).toFixed(2)+"kB";
-		return value+"B";
+		let scale = ["B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
+		for (let i = scale.length - 1; i >= 0; i--)
+			if (value >= Math.pow(1024,i))
+				return (value/Math.pow(1024,i)).toFixed(2)+scale[i];
+		return "0B";
 	}
 
 /*----------------------------------------------------------------------------*/
