@@ -39,29 +39,141 @@ const wd = (function() {
 /* == BLOCO 1 ================================================================*/
 
 /*----------------------------------------------------------------------------*/
+	/* guada a versão da biblioteca (JS + CSS) */
 	const wd_version = "v4.2.2 2022-10-27"; //FIXME
 	/* Guarda informação do dispositivo (desktop, mobile...) */
 	let wd_device_controller = null;
 	/* Guarda o intervalo de tempo para executar funções vinculadas aos eventos de tecla */
 	const wd_key_time_range = 500;
-	/* Guarda a barra de progresso das requisições */
-	const wd_request_progress = document.createElement(
-		"HTMLMeterElement" in window ? "METER" : (
-			"HTMLProgressElement" in window ? "PROGRESS" : "DIV"
-		)
-	);
-	/* Guarda o container da janela modal para requisições */
-	const wd_modal_window = document.createElement("DIV");
-	/* Guarda o container dos CSS da biblioteca */
-	const wd_style_block  = document.createElement("STYLE");
-	/* Guarda o container das mensagens */
-	const wd_signal_block = document.createElement("DIV");
-	/* Guarda o número requisições abertas */
-	let wd_request_counter = 0;
-	/* Guarda o número de repeat em aberto */
-	let wd_repeat_counter = 0;
-	/* Guarda o número de load em aberto */
-	let wd_load_counter = 0;
+	/* Controla a contagem de procedimentos */
+	const wd_counter_control = {
+		repeat: 0, /* repetições em processamento */
+		load:   0  /* carregamentos em processamento */
+	};
+	/* Controla a janela modal */
+	const wd_modal_control = {
+		modal:   null, /* HTML da janela modal */
+		bar:     null, /* HTML da barra de progresso */
+		counter:    0, /* contador de operações em aberto */
+		delay:    250, /* tempo de espera até fechar a janela modal (evitar piscadas */
+		time:      10, /* tempo para interagir com o documento */
+
+		_init: function() { /* método para efetuar a montagem do modal e barra de progress */
+			/* janela modal */
+			this.modal = document.createElement("DIV");
+			this.modal.className = "js-wd-modal";
+			/* barra de progresso */
+			if ("HTMLMeterElement" in window)
+				this.bar = document.createElement("METER");
+			else if ("HTMLProgressElement" in window)
+				this.bar = document.createElement("PROGRESS");
+			else
+				this.bar = document.createElement("DIV");
+			this.bar.className = "js-wd-progress-bar";
+			/* unindo os dois */
+			this.modal.appendChild(this.bar);
+			return;
+		},
+
+		start: function() { /* abre a janela modal */
+			if (this.modal === null) this._init();
+			if (this.counter === 0)
+				document.body.appendChild(this.modal);
+			this.counter++;
+			return this.counter;
+		},
+
+		end: function() {/* fecha a janela modal */
+			let object = this;
+			/* checar fechamento da janela após delay */
+			window.setTimeout(function () {
+				object.counter--;
+				if (object.counter < 1)
+					document.body.removeChild(object.modal);
+			}, this.delay);
+
+			return this.counter;
+		},
+
+		progress: function(x) { /* define o valor da barra de progresso */
+			let tag    = this.bar.tagName.toLowerCase();
+			let value  = tag === "div" ? wd_num_str(x, true) : x;
+			let object = this;
+			/* executar progresso após o tempo de interação com o documento */
+			window.setTimeout(function() {
+				if (tag === "div") /* sem progress ou meter (usa CSS width) */
+					object.bar.style.width = value;
+				else /* com progress ou meter */
+					object.bar.value = value;
+			}, this.time);
+			return;
+		}
+	};
+	/* controla a caixa de mensagens */
+	const wd_signal_control = {
+		main: null, /* elemento agrupador das mensagens */
+		time: 9000, /* tempo para fechamento automático da mensagem (igual ao CSS js-wd-signal-msg) */
+
+		_init: function() { /* efetua a montagem da caixa de mensagem */
+			this.main = document.createElement("DIV");
+			this.main.className = "js-wd-signal";
+			return;
+		},
+
+		_createBox: function() { /* retorna um objeto com os elementos da mensagem */
+			return {
+				box:     document.createElement("ARTICLE"),
+				header:  document.createElement("HEADER"),
+				message: document.createElement("SECTION"),
+				close:   document.createElement("SPAN"),
+				title:   document.createElement("STRONG")
+			};
+		},
+
+		_close: function(elem) { /* função para fechar caixa especificada no argumento */
+				try {this.main.removeChild(elem);} catch(e){}
+				if (this.main.children.length === 0)
+					try {document.body.removeChild(this.main);} catch(e){}
+				return;
+		},
+
+		_box: function() { /* monta e retorna a caixa de mensagem */
+			let msg = this._createBox();
+			msg.box.appendChild(msg.header);
+			msg.box.appendChild(msg.message);
+			msg.header.appendChild(msg.close);
+			msg.header.appendChild(msg.title);
+			msg.box.className = "js-wd-signal-msg";
+			msg.close.textContent = "\u00D7";
+			let object = this;
+			msg.close.onclick = function() { /* disparador para quando clicar no botão fechar */
+				object._close(msg.box);
+			}
+			return msg;
+		},
+
+		open: function(message, title) { /* abre uma mensagem */
+			/* criação do container principal, se inexistente */
+			if (this.main === null) this._init();
+			/* obtenção da caixa de mensagem */
+			let msg = this._box();
+			/* definição do título e da mensagem */
+			msg.message.textContent = message;
+			msg.title.textContent   = title === undefined ? " " : title;
+			/* exibindo caixa principal, se escondida */
+			if (this.main.children.length === 0)
+				document.body.appendChild(this.main);
+			/* renderizando mensagem */
+			this.main.insertAdjacentElement("afterbegin", msg.box);
+			/* definindo um prazo para fechamento automático da caixa */
+			let object = this;
+			window.setTimeout(function() {
+				object._close(msg.box)
+			}, this.time);
+
+			return;
+		}
+	}
 	/* Guarda os estilos da biblioteca Selector Database */
 	const wd_js_css = [
 		{s: "@keyframes js-wd-fade-in",  d: ["from {opacity: 0;} to {opacity: 1;}"]},
@@ -2121,35 +2233,13 @@ const wd = (function() {
 			get csv() {try {return wd_csv_array(this.text);} catch(e){return null;}},
 		}
 
-		/* funções auxiliares e disparadores */
-		function request_set(n) { /* controla o número de requisições e a janela modal */
-			if (n > 0) {
-				if (wd_request_counter === 0)
-					document.body.appendChild(wd_modal_window);
-				wd_request_counter++;
-			} else {
-				window.setTimeout(function () {
-					wd_request_counter--;
-					if (wd_request_counter < 1)
-						document.body.removeChild(wd_modal_window);
-				}, 250);
-			}
-			return wd_request_counter;
-		}
-
 		function set_data(status, closed, loaded, total) { /* disparador: define a variável data */
 			if (data.closed) return;
 			data.status = status;
 			data.closed = closed;
 			data.loaded = loaded;
 			data.total  = total;
-			/* barra de progresso */
-			window.setTimeout(function() {
-				if (wd_html_tag(wd_request_progress) === "div") /* sem progress ou meter */
-					wd_request_progress.style.width = wd_num_str(data.progress, true);
-				else /* com progress ou meter */
-					wd_request_progress.value = data.progress;
-			}, 10);
+			wd_modal_control.progress(data.progress);
 			if (status === "ABORTED") request.abort();
 			if (callback !== null)    callback(data);
 		}
@@ -2159,7 +2249,7 @@ const wd = (function() {
 			if (data.closed) return;
 			if (data.status === "UNSENT") {
 				data.status = "OPENED";
-				request_set(1);
+				wd_modal_control.start();
 			} else if (request.status === 404) {
 				data.status = "NOTFOUND";
 				data.closed = true;
@@ -2171,14 +2261,16 @@ const wd = (function() {
 				data.closed = true;
 				data.status = (request.status === 200 || request.status === 304) ? "DONE" : "ERROR";
 			}
-			if (callback !== null) callback(data);
-			if (data.closed) request_set(-1);
+			if (callback !== null)
+				callback(data);
+			if (data.closed)
+				wd_modal_control.end();
 		}
 
 		/* definindo disparador aos eventos */
-		request.onprogress = function(x) {set_data("LOADING", false, x.loaded, x.total);}
-		request.onerror    = function(x) {set_data("ERROR",   true, 0, 0);}
-		request.ontimeout  = function(x) {set_data("TIMEOUT", true, 0, 0);}
+		request.onprogress         = function(x) {set_data("LOADING", false, x.loaded, x.total);}
+		request.onerror            = function(x) {set_data("ERROR",   true, 0, 0);}
+		request.ontimeout          = function(x) {set_data("TIMEOUT", true, 0, 0);}
 		request.upload.onprogress  = function(x) {set_data("UPLOADING", false, x.loaded, x.total);}
 		request.upload.onabort     = request.onerror;
 		request.upload.ontimeout   = request.ontimeout;
@@ -2234,9 +2326,11 @@ const wd = (function() {
 			if (!(mode in method))
 				mode = mime in method ? mime : "binary";
 
-			/* construindo objeto e disparador ao carregar */
+			/* construindo objeto e chamando janela modal */
 			let reader = new FileReader();
+			wd_modal_control.start();
 
+			/* disparador para quando terminar o carregamento */
 			reader.onload = function() {
 				let result = this.result;
 				call({
@@ -2249,9 +2343,18 @@ const wd = (function() {
 					lastModified: file.lastModified,
 					data:         result
 				});
+				/* fechando janela modal correspondente */
+				wd_modal_control.end();
+				return;
 			}
 
-			/* capturando dados */
+			/* disparador para registrar o andamento do carregamento */
+			reader.onprogress = function(x) {
+				wd_modal_control.progress(x.loaded / x.total);
+				return;
+			}
+
+			/* capturando dados conforme especificado em mode */
 			reader[method[mode]](file);
 		}
 
@@ -2259,45 +2362,9 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_signal(title, text) { /* exibe uma mensagem */
-		/* definindo elementos */
-		let box = document.createElement("ARTICLE");
-		let hdr = document.createElement("HEADER");
-		let msg = document.createElement("SECTION");
-		let cls = document.createElement("SPAN");
-		let ttl = document.createElement("STRONG");
-		/* fechar janela */
-		function close() {
-			/* tentar fechar a caixa de mensagem */
-			try {wd_signal_block.removeChild(box);} catch(e){}
-			/* tentar fechar o container de mensagens, se não houver filhos */
-			if (wd_signal_block.children.length === 0)
-				try{document.body.removeChild(wd_signal_block);}catch(e){}
-		}
-		/* definindo propriedades dos elementos */
-		box.appendChild(hdr);
-		box.appendChild(msg);
-		hdr.appendChild(cls);
-		hdr.appendChild(ttl);
-		msg.innerHTML = text;
-		ttl.innerHTML = title === undefined ? "\u2139" : title;
-		cls.onclick   = close;
-		cls.innerHTML = "\u00D7";
-		box.className  = "js-wd-signal-msg";
-		/* abrindo container principal, se fechado */
-		if (wd_signal_block.children.length === 0)
-			document.body.appendChild(wd_signal_block);
-		/* adicionando caixa de mensagem */
-		wd_signal_block.insertAdjacentElement("afterbegin", box);
-		/* fechando após determinado intervalo de tempo */
-		window.setTimeout(close, 9000);
-		return;
-	}
-
-/*----------------------------------------------------------------------------*/
 	function wd_notify(title, msg) { /* exibe uma notificação, se permitido */
 		if (!("Notification" in window))
-			return wd_signal(title, msg);
+			return wd_signal_control.open(msg, title);
 		if (Notification.permission === "denied")
 			return null;
 		if (Notification.permission === "granted")
@@ -2823,10 +2890,10 @@ const wd = (function() {
 				if ("reportValidity" in this.e) {
 					this.e.reportValidity();
 				} else if ("validationMessage" in this.e) {
-					wd_signal("", this.e.validationMessage);
+					wd_signal_control.open(this.e.validationMessage, "");
 					elem.focus();
 				} else {
-					wd_signal("", this.e.dataset.wdErrorMessage);
+					wd_signal_control.open(this.e.dataset.wdErrorMessage, "");
 					elem.focus();
 				}
 				/* bug firefox */
@@ -3279,7 +3346,7 @@ const wd = (function() {
 		},
 		signal: { /*renderizar mensagem*/
 			value: function(title) {
-				wd_signal(title, this.toString());
+				wd_signal_control.open(this.toString(), title);
 				return this.type === "dom" ? this : null;
 			}
 		},
@@ -3814,7 +3881,7 @@ const wd = (function() {
 		device:  {get:   function() {return wd_get_device();}},
 		today:   {get:   function() {return WD(new Date());}},
 		now:     {get:   function() {return WD(wd_str_now());}},
-		bomba: {value: wd_read}//FIXME apagar esse joça
+		bomba: {value: wd_signal_control}//FIXME apagar esse joça
 	});
 
 /* == BLOCO 4 ================================================================*/
@@ -3832,14 +3899,14 @@ const wd = (function() {
 		let exec   = WD(pack);
 
 		/* abrir contagem */
-		wd_load_counter++;
+		wd_counter_control.load++;
 		/* limpar atributo para evitar repetições desnecessárias e limpar conteúdo */
 		target.data({wdLoad: null}).load("");
 		/* carregar arquivo e executar */
 		exec.send(file, function(x) {
 			if (x.closed) {
 				/* encerrar contagem */
-				wd_load_counter--;
+				wd_counter_control.load--;
 				/* executar */
 				target.load(x.text);
 				return;
@@ -3861,7 +3928,7 @@ const wd = (function() {
 		let exec   = WD(pack);
 
 		/* abrir contagem */
-		wd_repeat_counter++;
+		wd_counter_control.repeat++;
 		/* limpar atributo para evitar repetições desnecessárias e limpar conteúdo */
 		target.data({wdRepeat: null}).repeat([]);
 
@@ -3871,7 +3938,7 @@ const wd = (function() {
 				let json = x.json;
 				let csv  = x.csv;
 				/* fechar contagem */
-				wd_repeat_counter--;
+				wd_counter_control.repeat--;
 
 				/* repetir na ordem de prioridade: JSON | CSV | VAZIO */
 				if (wd_vtype(json).type === "array")
@@ -4401,19 +4468,8 @@ const wd = (function() {
 /* -- DISPARADORES -- */
 /*============================================================================*/
 	function loadProcedures(ev) {
-		/* definindo atributos das variáveis globais (BLOCO 1) */
 		/* capturando o dispositivo */
 		wd_device_controller = wd_get_device();
-		/* estilo da barra de progresso */
-		wd_request_progress.className = "js-wd-progress-bar";
-		/* estilo da janela modal */
-		wd_modal_window.className = "js-wd-modal";
-		/* adicionando barra de progresso à janela modal */
-		wd_modal_window.appendChild(wd_request_progress);
-		/* adicionando estilos da ferramenta ao cabeçalho */
-		document.head.appendChild(wd_style_block);
-		/* estilo da caixa de mensagens */
-		wd_signal_block.className = "js-wd-signal";
 
 		/* construindo CSS da biblioteca */
 		let css = [];
@@ -4425,7 +4481,9 @@ const wd = (function() {
 				value = value.replace(/\;/g, " !important;");
 			css.push(value);
 		}
-		wd_style_block.textContent = css.join("\n");
+		let style_block = document.createElement("STYLE");
+		style_block.textContent = css.join("\n");
+		document.head.appendChild(style_block);
 
 		/* aplicando carregamentos */
 		loadingProcedures();
@@ -4480,11 +4538,11 @@ const wd = (function() {
 
 		/* 1) processar repetições */
 		WD.$$("[data-wd-repeat]").run(data_wdRepeat);
-		if (wd_repeat_counter > 0) return;
+		if (wd_counter_control.repeat > 0) return;
 
 		/* 2) processar carregamentos */
 		WD.$$("[data-wd-load]").run(data_wdLoad);
-		if (wd_load_counter > 0) return;
+		if (wd_counter_control.load > 0) return;
 
 		/* 3) se repetições e carregamentos terminarem, organizar */
 		organizationProcedures();
