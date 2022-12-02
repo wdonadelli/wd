@@ -1083,6 +1083,15 @@ padding: 0;
 .wd .wd-read > ol > li {
 	padding-left: 4em;
 }
+.wd .wd-read > ol {
+	list-style-type: lower-alpha;
+}
+.wd .wd-read > ol > li > ol {
+	list-style-type: upper-roman;
+}
+
+/* FIXME: o tamanho da lista para o parágrafo es´ta muito grande */
+
 /* -- itemização -- */
 .wd .wd-itemize                       {counter-reset: chapter item fig tab;}
 .wd .wd-itemize > p                   {counter-increment: item;}
@@ -1223,6 +1232,7 @@ padding: 0;
 	}
 }
 /* -- grades padrão para área de trabalho -- */
+/* FIXME: como fazer para ter só duas colunas? */
 .wd .wd-grid {
 	display: grid;
 	height: 100%;

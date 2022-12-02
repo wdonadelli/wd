@@ -250,7 +250,7 @@ const wd = (function() {
 /*----------------------------------------------------------------------------*/
 	function wd_bytes(value) { /*calculadora de bytes*/
 		if (value === Infinity) return wd_num_str(value)+"B";
-		value = value < 0 ? 0 : wd_integer(value, true);
+		value = value < 1 ? 0 : wd_integer(value, true);
 		let scale = ["B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
 		for (let i = scale.length - 1; i >= 0; i--)
 			if (value >= Math.pow(1024,i))
