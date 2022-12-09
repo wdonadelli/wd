@@ -1834,19 +1834,41 @@ const wd = (function() {
 		/* obtendo o atributo para carregar o conteúdo HTML */
 		let test = new WDform(elem);
 		let attr = test.form && test.load !== null ? test.load : "innerHTML";
-		/* carregando conteúdo */
-		elem[attr] = text;
-		if (attr === "innerHTML") {
-			let scripts = wd_vtype(wd_$$("script", elem)).value;
+		/* carregando conteúdo de texto */
+		if (attr !== "innerHTML") {
+			elem[attr] = text;
+		} else {
+			/* carregando conteúdo HTML */
+			let temp = document.createElement("DIV");
+			temp.innerHTML = text;
+			/* innerHTML não executa script: capturar, clonr, eliminar e criar */
+			let scripts = wd_vtype(wd_$$("script", temp)).value;
+			let oldscr  = [];
+			let newscr  = [];
+			/* capturando e clonando-os (cloneNode não funciona) */
 			for (let i = 0; i < scripts.length; i++) {
-				let script = document.createElement("script");
-				let source = scripts[i].src.trim() === "" ? "text" : "src";
-				script[source] = scripts[i][source];
-				elem.removeChild(scripts[i]);
-				elem.appendChild(script);
+				let script = scripts[i];
+				let attrs  = script.attributes;
+				let clone  = document.createElement("SCRIPT");
+				clone.innerHTML = script.innerHTML;
+				/* clonando os atributos */
+				for (let j = 0; j < attrs.length; j++)
+					clone.setAttribute(attrs[j].name, attrs[j].value);
+				/* registrando-os para eliminação e apensação */
+				oldscr.push(script);
+				newscr.push(clone);
+				console.log(clone);
 			}
+			/* eliminando os scripts antigos */
+			for (let i = 0; i < oldscr.length; i++)
+				oldscr[i].remove();
+			/* definindo innerHTML sem os scripts e removendo elemento temporário */
+			elem.innerHTML = temp.innerHTML;
+			temp.remove();
+			/* adicionando os scripts */
+			for (let i = 0; i < newscr.length; i++)
+				elem.appendChild(newscr[i]);
 		}
-
 		/* checar demandas pós procedimento */
 		loadingProcedures();
 
