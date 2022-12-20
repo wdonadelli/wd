@@ -359,35 +359,36 @@ q {
 	padding: 0.3em;
 	text-align: center;
 }
-/* -- Listas -- */
+/* -- Listas FIXME -- */
 .wd ul, .wd ol {
-	list-style-position: inside;
 	margin: var(--var-margin-default);
-	padding: 0;
+	padding: 0 0 0 2em;
 }
 .wd ul ul, .wd ul ol,
 .wd ol ol, .wd ol ul {
 	margin: 0;
 }
-.wd ul > li,
-.wd ol > li {
-	padding: 0.2em 0.2em 0.2em 2em;
+.wd ul > li, .wd ol > li {
+	margin: 0;
+	padding: 0;
 }
 .wd dl {
-margin: var(--var-margin-default);
-padding: 0;
+	margin: var(--var-margin-default);
+	padding: 0;
 }
-.wd dl > dt,
-.wd dl > dd {
-	padding: 0.2em;
+.wd dl dl {
 	margin: 0;
 }
 .wd dl > dt {
 	font-weight: bold;
+	margin: 0;
+	padding: 0;
 }
 .wd dl > dd {
-	margin-left: 2em;
+	margin: 0 0 0 2em;
+	padding: 0;
 }
+
 /* -- Tabelas -- */
 .wd table {
 	border-collapse: collapse;
@@ -1077,20 +1078,13 @@ padding: 0;
 }
 .wd .wd-read > ol,
 .wd .wd-read > ul {
-	margin: 2em auto;
-}
-.wd .wd-read > ul > li,
-.wd .wd-read > ol > li {
+	margin: 1em 0;
 	padding-left: 4em;
 }
-.wd .wd-read > ol {
-	list-style-type: lower-alpha;
-}
-.wd .wd-read > ol > li > ol {
-	list-style-type: upper-roman;
+.wd .wd-read > dl {
+	margin: 1em 0;
 }
 
-/* FIXME: o tamanho da lista para o parágrafo es´ta muito grande */
 
 /* -- itemização -- */
 .wd .wd-itemize                       {counter-reset: chapter item fig tab;}
@@ -1098,6 +1092,13 @@ padding: 0;
 .wd .wd-itemize > h3                  {counter-reset: item fig tab; counter-increment: chapter;}
 .wd .wd-itemize > table  > caption    {counter-increment: tab;}
 .wd .wd-itemize > figure > figcaption {counter-increment: fig;}
+
+
+/* FIXME */
+.wd .wd-itemize > p {counter-reset: sub;}
+.wd .wd-itemize > p.wd-itemize {counter-increment: sub;}
+
+
 
 .wd .wd-itemize > h3:before { /* capítulos */
 	content: counter(chapter) ". ";
@@ -1120,6 +1121,12 @@ padding: 0;
 .wd .wd-itemize > h3 ~ p:before { /* após um capítulo */
 	content: counter(chapter) "." counter(item) " ";
 }
+
+.wd .wd-itemize > ol {list-style-type: lower-alpha}
+
+
+
+
 /* -- código -- */
 .wd .wd-code {
 	background-color: var(--var-bg-code);
