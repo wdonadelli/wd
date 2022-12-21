@@ -1092,13 +1092,12 @@ q {
 .wd .wd-itemize > h3                  {counter-reset: item fig tab; counter-increment: chapter;}
 .wd .wd-itemize > table  > caption    {counter-increment: tab;}
 .wd .wd-itemize > figure > figcaption {counter-increment: fig;}
+.wd .wd-itemize > p.wd-itemize-group  {counter-reset: subitem;}
+.wd .wd-itemize > p.wd-itemize-item   {counter-increment: subitem;}
+.wd .wd-itemize > ol                  {list-style-type: lower-alpha}
 
 
-/* FIXME */
-.wd .wd-itemize > p {counter-reset: sub;}
-.wd .wd-itemize > p.wd-itemize {counter-increment: sub;}
-
-
+/* FIXME esse negócio de colocar o capítulo antes do parágrafo e das tabelas/figuras é bom? */
 
 .wd .wd-itemize > h3:before { /* capítulos */
 	content: counter(chapter) ". ";
@@ -1121,8 +1120,13 @@ q {
 .wd .wd-itemize > h3 ~ p:before { /* após um capítulo */
 	content: counter(chapter) "." counter(item) " ";
 }
+.wd .wd-itemize > p.wd-itemize-group ~ p.wd-itemize-item:before { /* grupo de subitens, anterior a um capítulo */
+	content: counter(item) "." counter(subitem) " ";
+}
+.wd .wd-itemize > h3 ~ p.wd-itemize-group ~ p.wd-itemize-item:before { /* grupo de subitens, após um capítulo */
+	content: counter(chapter) "." counter(item) "." counter(subitem) " ";
+}
 
-.wd .wd-itemize > ol {list-style-type: lower-alpha}
 
 
 
