@@ -1068,68 +1068,105 @@ q {
 }
 .wd .wd-read > table caption,
 .wd .wd-read > figure figcaption {
-	font-style: italic;
 	font-size: smaller;
-}
-.wd .wd-read > table caption:before,
-.wd .wd-read > figure figcaption:before {
-	font-style: normal;
-	font-weight: bold;
 }
 .wd .wd-read > ol,
 .wd .wd-read > ul {
 	margin: 1em 0;
 	padding-left: 4em;
 }
+.wd .wd-read > ol {
+	list-style-type: lower-alpha;
+}
 .wd .wd-read > dl {
 	margin: 1em 0;
 }
-
-
-/* -- itemização -- */
-.wd .wd-itemize                       {counter-reset: chapter item fig tab;}
-.wd .wd-itemize > p                   {counter-increment: item;}
-.wd .wd-itemize > h3                  {counter-reset: item fig tab; counter-increment: chapter;}
-.wd .wd-itemize > table  > caption    {counter-increment: tab;}
-.wd .wd-itemize > figure > figcaption {counter-increment: fig;}
-.wd .wd-itemize > p.wd-itemize-group  {counter-reset: subitem;}
-.wd .wd-itemize > p.wd-itemize-item   {counter-increment: subitem;}
-.wd .wd-itemize > ol                  {list-style-type: lower-alpha}
-
-
-/* FIXME esse negócio de colocar o capítulo antes do parágrafo e das tabelas/figuras é bom? */
-
-.wd .wd-itemize > h3:before { /* capítulos */
-	content: counter(chapter) ". ";
+/* numeração */
+.wd .wd-read {
+	counter-reset: chapter3 figure1 table1;
 }
-.wd .wd-itemize > table > caption:before { /* tabela antes de um capítulo */
-	content: var(--var-itemize-table) " " counter(tab) ": ";
+/* numeração: capítulo */
+.wd .wd-read > h3 {
+	counter-increment: chapter3;
+	counter-reset:     chapter4;
 }
-.wd .wd-itemize > h3 ~ table > caption:before { /* tabela após um capítulo */
-	content: var(--var-itemize-table) " " counter(chapter) "-" counter(tab) ": ";
+.wd .wd-read > h3:before {
+	content: counter(chapter3) " ";
 }
-.wd .wd-itemize > figure > figcaption:before { /* figura antes de um capítulo */
-	content: var(--var-itemize-figure) " " counter(fig) ": ";
+/* numeração: subcapítulo */
+.wd .wd-read > h4 {
+	counter-increment: chapter4;
+	counter-reset:     chapter5;
 }
-.wd .wd-itemize > h3 ~ figure > figcaption:before { /* figura após um capítulo */
-	content: var(--var-itemize-figure) " " counter(chapter) "-" counter(fig) ": ";
+.wd .wd-read > h4:before {
+	content: counter(chapter3) "." counter(chapter4) " ";
 }
-.wd .wd-itemize > p:before { /* antes um capítulo */
-	content: counter(item) ". ";
+/* numeração: subsubcapítulo */
+.wd .wd-read > h5 {
+	counter-increment: chapter5;
 }
-.wd .wd-itemize > h3 ~ p:before { /* após um capítulo */
-	content: counter(chapter) "." counter(item) " ";
+.wd .wd-read > h5:before {
+	content: counter(chapter3) "." counter(chapter4) "." counter(chapter5) " ";
 }
-.wd .wd-itemize > p.wd-itemize-group ~ p.wd-itemize-item:before { /* grupo de subitens, anterior a um capítulo */
-	content: counter(item) "." counter(subitem) " ";
+/* numeração: tabela */
+.wd .wd-read > table > caption {
+	counter-increment: table1;
 }
-.wd .wd-itemize > h3 ~ p.wd-itemize-group ~ p.wd-itemize-item:before { /* grupo de subitens, após um capítulo */
-	content: counter(chapter) "." counter(item) "." counter(subitem) " ";
+.wd .wd-read > table > caption:before {
+	content: var(--var-itemize-table) " " counter(table1) " - ";
+	font-weight: bold;
+}
+/* numeração: figura */
+.wd .wd-read > figure > figcaption {
+	counter-increment: figure1;
+}
+.wd .wd-read > figure > figcaption:before {
+	content: var(--var-itemize-figure) " " counter(figure1) " - ";
+	font-weight: bold;
 }
 
-
-
-
+/* -- itemizar parágrafos -- */
+.wd .wd-itemize {
+	counter-reset: paragraph1;
+}
+/* numeração: parágrafo */
+.wd .wd-itemize > p {
+	counter-increment: paragraph1;
+}
+.wd .wd-itemize > p:before {
+	content: counter(paragraph1) ". ";
+}
+/* numeração: subparágrafo */
+.wd .wd-itemize > p.wd-itemize-group {
+	counter-reset: paragraph2;
+}
+.wd .wd-itemize > p.wd-itemize-item {
+	counter-increment: paragraph2;
+}
+.wd .wd-itemize > p.wd-itemize-group ~ p.wd-itemize-item:before {
+	content: counter(paragraph1) "." counter(paragraph2) ". ";
+}
+/* numeração: subsubparágtafos */
+.wd .wd-itemize > p.wd-itemize-subgroup {
+	counter-reset: paragraph3;
+}
+.wd .wd-itemize > p.wd-itemize-subitem {
+	counter-increment: paragraph3;
+}
+.wd .wd-itemize > p.wd-itemize-subgroup ~ p.wd-itemize-subitem:before {
+	content: counter(paragraph1) "." counter(paragraph2) "." counter(paragraph3) ". ";
+}
+.wd .wd-itemize-none,
+.wd .wd-itemize > *.wd-itemize-none,
+.wd .wd-read    > *.wd-itemize-none {
+	counter-increment: none !important;
+	counter-reset: none !important;
+}
+.wd .wd-itemize-none:before,
+.wd .wd-itemize > *.wd-itemize-none:before,
+.wd .wd-read    > *.wd-itemize-none:before {
+	content: "" !important;
+}
 
 /* -- código -- */
 .wd .wd-code {
