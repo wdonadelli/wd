@@ -100,108 +100,45 @@
 		<figcaption>Figure name</figcaption>
 	</figure>
 
-	<p>It is possible to change the label of tables (<code>caption</code>) and figures (<code>figcaption</code>) by configuring the attributes <code>--var-itemize-table</code> and <code>--var-itemize-figure</code> within the CSS scope <code>:root</code>. The default value is <q>Table </q> and <q>Figure </q>, with trailing space respectively.
+
+	<p>It is possible to change the label of tables (<code>caption</code>) and figures (<code>figcaption</code>) by configuring the attributes <code>--var-itemize-table</code> and <code>--var-itemize-figure</code> within the CSS scope <code>:root</code>. The default value is <q>Table </q> and <q>Figure </q>, with trailing space respectively.</p>
 
 	<h3>Paragraphs and Subdivisions</h3>
+
 
 	<p>To number paragraphs, use the <code>wd-itemize</code> class attribute on the parent element. They will be numbered in a single, ascending sequence from the beginning of the document.</p>
 
 	<p class="wd-itemize-none">This paragraph will not be numbered as it is using the <code>wd-itemize-none</code> class attribute.</p>
 
-	<p class="wd-itemize-group">This paragraph is configured with the <code>wd-itemize-group</code> attribute to have subitems:</p>
-
-	<p class="wd-itemize-item">This paragraph is configured with the <code>wd-itemize-item</code> attribute to be a sub-item of the paragraph configured with the <code>wd-itemize-group</code> attribute.</p>
-
-	<p class="wd-itemize-item">This paragraph is configured with the <code>wd-itemize-item</code> attribute to be a sub-item of the paragraph configured with the <code>wd-itemize-group</code> attribute.</p>
-
-	<p class="wd-itemize-item">This paragraph is configured with the <code>wd-itemize-item</code> attribute to be a sub-item of the paragraph configured with the <code>wd-itemize-group</code> attribute.</p>
-
-	<p>No more sub-items! Now let's look at a picture:</p>
-
-	<figure>
-		<img src="examples/image.png" alt="Puzzle" />
-		<figcaption>Figure name</figcaption>
-	</figure>
-
-	<p>Next we will see the same behavior after adding chapters.</p>
 
 
-	<h3>Paragraphs</h3>
 
-	<p>This block corresponds to a normal paragraph inserted after a chapter. In this case, its numbering will indicate the sequence of the chapter and the paragraph. In tests carried out, the paragraph sequence behaved differently in different browsers.</p>
 
-	<p>This block corresponds to a normal paragraph inserted after another paragraph, just to compare the spacing between them.</p>
 
-	<h3>Tables and Figures</h3>
 
-	<p>We present the first table:</p>
+	<p>This paragraph will have subitems:</p>
 
-	<table border="1">
-		<caption>Table name</caption>
-		<thead>
-			<tr><th>Col 1</th><th>Col 2</th><th>Col 3</th></tr>
-		</thead>
-		<tbody>
-			<tr><td>Cell 1</td><td>Cell 2</td><td>Cell 3</td></tr>
-			<tr><td>Cell 1</td><td>Cell 2</td><td>Cell 3</td></tr>
-			<tr><td>Cell 1</td><td>Cell 2</td><td>Cell 3</td></tr>
-		</tbody>
-	</table>
+	<p class="wd-itemize-item">This paragraph is configured with the <code>wd-itemize-item</code> CSS attribute.</p>
 
-	<p>We present the first figure:</p>
+	<p class="wd-itemize-item">This paragraph is configured with the <code>wd-itemize-item</code> CSS attribute.</p>
 
-	<figure>
-		<img src="examples/image.png" alt="Puzzle" />
-		<figcaption>Figure name</figcaption>
-	</figure>
+	<p>Returning to the normal paragraph, which will also have sub-items:</p>
 
-	<p>We present the second table:</p>
+	<p class="wd-itemize-item">This paragraph is configured with the <code>wd-itemize-item</code> CSS attribute.</p>
 
-		<table border="1">
-		<caption>Table name</caption>
-		<thead>
-			<tr><th>Col 1</th><th>Col 2</th><th>Col 3</th></tr>
-		</thead>
-		<tbody>
-			<tr><td>Cell 1</td><td>Cell 2</td><td>Cell 3</td></tr>
-			<tr><td>Cell 1</td><td>Cell 2</td><td>Cell 3</td></tr>
-			<tr><td>Cell 1</td><td>Cell 2</td><td>Cell 3</td></tr>
-		</tbody>
-	</table>
+	<p class="wd-itemize-subitem">This paragraph is configured with the <code>wd-itemize-subitem</code> CSS attribute.</p>
 
-	<p>We present the second figure:</p>
+	<p class="wd-itemize-subitem">This paragraph is configured with the <code>wd-itemize-subitem</code> CSS attribute.</p>
 
-	<figure>
-		<img src="examples/image.png" alt="Puzzle" />
-		<figcaption>Figure name</figcaption>
-	</figure>
+	<p class="wd-itemize-item">This paragraph is configured with the <code>wd-itemize-item</code> CSS attribute.</p>
 
-	<p>Enough of that!</p>
-
-	<h3>Second Level Paragraphs</h3>
-
-	<p class="wd-itemize-group">Top level paragraph:</p>
-
-	<p class="wd-itemize-item">Lower level paragraph.</p>
-
-	<p class="wd-itemize-item">Lower level paragraph. A figure between lower-level paragraphs:</p>
-
-	<figure>
-		<img src="examples/image.png" alt="Puzzle" />
-		<figcaption>Figure name</figcaption>
-	</figure>
-
-	<p class="wd-itemize-item">Lower level paragraph.</p>
+	<p class="wd-itemize-subitem">This paragraph is configured with the <code>wd-itemize-subitem</code> CSS attribute.</p>
 
 	<p>Returning to the normal paragraph.</p>
 
-	<h3>Lists and Subchapters</h3>
+	<h3>Lists</h3>
 
-	<p>It is possible to create subchapters using the HTML <code>H4-6</code> tags. These sections will not be numbered.</p>
-
-	<h4>Standard List</h4>
-
-	<p>Here's a list using the HTML <code>ul</code> tag:</p>
+	<h4>Unordered List</h4>
 
 	<ul>
 		<li>Item 1</li>
@@ -211,8 +148,6 @@
 	</ul>
 
 	<h4>Ordered List</h4>
-
-	<p>Here's a list using the HTML <code>ol</code> tag:</p>
 
 	<ol>
 		<li>Item 1</li>
