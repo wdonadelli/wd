@@ -359,7 +359,7 @@ q {
 	padding: 0.3em;
 	text-align: center;
 }
-/* -- Listas FIXME -- */
+/* -- Listas -- */
 .wd ul, .wd ol {
 	margin: var(--var-margin-default);
 	padding: 0 0 0 2em;
@@ -1086,7 +1086,7 @@ q {
 	counter-increment: chapter3;
 	counter-reset:     chapter4;
 }
-.wd .wd-read > h3:before {
+.wd .wd-read > h3::before {
 	content: counter(chapter3) " ";
 }
 /* numeração: subcapítulo */
@@ -1094,21 +1094,21 @@ q {
 	counter-increment: chapter4;
 	counter-reset:     chapter5;
 }
-.wd .wd-read > h4:before {
+.wd .wd-read > h4::before {
 	content: counter(chapter3) "." counter(chapter4) " ";
 }
 /* numeração: subsubcapítulo */
 .wd .wd-read > h5 {
 	counter-increment: chapter5;
 }
-.wd .wd-read > h5:before {
+.wd .wd-read > h5::before {
 	content: counter(chapter3) "." counter(chapter4) "." counter(chapter5) " ";
 }
 /* numeração: tabela */
 .wd .wd-read > table > caption {
 	counter-increment: table1;
 }
-.wd .wd-read > table > caption:before {
+.wd .wd-read > table > caption::before {
 	content: var(--var-itemize-table) " " counter(table1) " - ";
 	font-weight: bold;
 }
@@ -1116,64 +1116,64 @@ q {
 .wd .wd-read > figure > figcaption {
 	counter-increment: figure1;
 }
-.wd .wd-read > figure > figcaption:before {
+.wd .wd-read > figure > figcaption::before {
 	content: var(--var-itemize-figure) " " counter(figure1) " - ";
 	font-weight: bold;
 }
 
 /* -- itemizar parágrafos -- */
-.wd .wd-itemize > p:first-child {
+.wd .wd-itemize > p:first-of-type {
 	counter-increment: none;
 	counter-reset: p1 1;
 }
-.wd .wd-itemize > p + p,
-.wd .wd-itemize > p.wd-itemize-item + p,
-.wd .wd-itemize > p.wd-itemize-subitem + p {
+.wd .wd-itemize > p ~ p,
+.wd .wd-itemize > p.wd-itemize-item ~ p,
+.wd .wd-itemize > p.wd-itemize-subitem ~ p {
 	counter-increment: p1;
 	counter-reset: p2;
 }
-.wd .wd-itemize > p + p.wd-itemize-item {
+.wd .wd-itemize > p ~ p.wd-itemize-item {
 	counter-increment: none;
 	counter-reset: p2 1;
 }
-.wd .wd-itemize > p + p.wd-itemize-subitem {
+.wd .wd-itemize > p ~ p.wd-itemize-subitem {
 	counter-increment: none;
 	counter-reset: p2 1 p3 1;
 }
-.wd .wd-itemize > p.wd-itemize-item + p.wd-itemize-item {
+.wd .wd-itemize > p.wd-itemize-item ~ p.wd-itemize-item {
 	counter-increment: p2;
 	counter-reset: p3;
 }
-.wd .wd-itemize > p.wd-itemize-item + p.wd-itemize-subitem {
+.wd .wd-itemize > p.wd-itemize-item ~ p.wd-itemize-subitem {
 	counter-increment: none;
 	counter-reset: p3 1;
 }
-.wd .wd-itemize > p.wd-itemize-subitem + p.wd-itemize-subitem {
+.wd .wd-itemize > p.wd-itemize-subitem ~ p.wd-itemize-subitem {
 	counter-increment: p3;
 	counter-reset: none;
 }
-.wd .wd-itemize > p.wd-itemize-subitem + p.wd-itemize-item {
+.wd .wd-itemize > p.wd-itemize-subitem ~ p.wd-itemize-item {
 	counter-increment: p2;
 	counter-reset: p3;
 }
 /* numeração: vizualização */
-.wd .wd-itemize > p:before {
+.wd .wd-itemize > p::before {
 	content: counter(p1) ". ";
 }
-.wd .wd-itemize > p.wd-itemize-item:before {
+.wd .wd-itemize > p.wd-itemize-item::before {
 	content: counter(p1) "." counter(p2) ". ";
 }
-.wd .wd-itemize > p.wd-itemize-subitem:before {
+.wd .wd-itemize > p.wd-itemize-subitem::before {
 	content: counter(p1) "." counter(p2) "." counter(p3) ". ";
 }
 /* numeração: ignorar */
 .wd .wd-itemize-none,
-.wd .wd-itemize > p:only-child {
+.wd .wd-itemize > p:only-of-type {
 	counter-increment: none !important;
 	counter-reset: none !important;
 }
 .wd .wd-itemize-none:before,
-.wd .wd-itemize > p:only-child:before {
+.wd .wd-itemize > p:only-of-type::before {
 	content: "" !important;
 }
 
@@ -1290,22 +1290,81 @@ q {
 }
 /* -- grades padrão para área de trabalho -- */
 /* FIXME: como fazer para ter só duas colunas? */
-.wd .wd-grid {
+
+
+
+.wd .wd-grid,
+.wd .wd-grid-no-menu,
+.wd .wd-grid-no-side {
+	display: grid;
+	grid-template-columns: auto auto auto auto;
+	height: 100%;
+	width: 100%;
+}
+/* phone */
+.wd .wd-grid > .wd-grid-menu {grid-area: 1 / 1 / 1 / 4;}
+.wd .wd-grid > .wd-grid-main {grid-area: 2 / 1 / 2 / 4;}
+.wd .wd-grid > .wd-grid-side {grid-area: 3 / 1 / 3 / 4;}
+
+
+/* tablet */
+@media screen and (min-width: 600px) {
+	.wd .wd-grid > .wd-grid-menu {grid-area: 1 / 1 / 2 / 1;}
+	.wd .wd-grid > .wd-grid-main {grid-area: 1 / 2 / 1 / 4;}
+	.wd .wd-grid > .wd-grid-side {grid-area: 2 / 2 / 2 / 4;}
+}
+/* desktop */
+@media screen and (min-width: 768px) {
+	.wd .wd-grid > .wd-grid-menu {grid-area: 1 / 1 / 1 / 1;}
+	.wd .wd-grid > .wd-grid-main {grid-area: 1 / 2 / 1 / 3;}
+	.wd .wd-grid > .wd-grid-side {grid-area: 1 / 3 / 1 / 4;}
+}
+
+
+
+
+
+
+
+
+
+
+
+/*
+.wd .wd-grid,
+.wd .wd-grid-no-menu,
+.wd .wd-grid-no-side {
 	display: grid;
 	height: 100%;
 	width: 100%;
 }
-.wd .wd-grid > .wd-grid-menu {grid-area: menu;}
-.wd .wd-grid > .wd-grid-main {grid-area: main;}
-.wd .wd-grid > .wd-grid-side {grid-area: side;}
 
-/* phone */
-.wd .wd-grid {grid-template-areas:   'menu' 'main' 'side';}
-@media screen and (min-width: 600px) { /* tablet */
-	.wd .wd-grid {grid-template-areas: 'menu main main main' 'menu side side side';}
+/* containers * /
+.wd .wd-grid         > .wd-grid-main,
+.wd .wd-grid-no-menu > .wd-grid-main,
+.wd .wd-grid-no-side > .wd-grid-main {grid-area: main;}
+
+.wd .wd-grid         > .wd-grid-menu,
+.wd .wd-grid-no-side > .wd-grid-menu {grid-area: menu;}
+
+.wd .wd-grid         > .wd-grid-side,
+.wd .wd-grid-no-menu > .wd-grid-side {grid-area: side;}
+
+/* phone * /
+.wd .wd-grid         {grid-template-areas: 'menu' 'main' 'side';}
+.wd .wd-grid-no-menu {grid-template-areas: 'main' 'side';}
+.wd .wd-grid-no-side {grid-template-areas: 'menu' 'main';}
+/* tablet * /
+@media screen and (min-width: 600px) {
+	.wd .wd-grid         {grid-template-areas: 'menu main main main' 'menu side side side';}
+	.wd .wd-grid-no-menu {grid-template-areas: 'main main main' 'side';}
+	.wd .wd-grid-no-side {grid-template-areas: 'menu' 'main main main';}
 }
-@media screen and (min-width: 768px) { /* desktop */
-	.wd .wd-grid {grid-template-areas: 'menu main main side';}
+/* desktop * /
+@media screen and (min-width: 768px) {
+	.wd .wd-grid         {grid-template-areas: 'menu main main side';}
+	.wd .wd-grid-no-menu {grid-template-areas: 'main main main' 'side';}
+	.wd .wd-grid-no-side {grid-template-areas: 'menu' 'main main main';}
 }
 /* -- container proporcionais (ratio) -- */
 .wd .wd-ratio-9-20 {aspect-ratio: 9 / 20;}
