@@ -1122,51 +1122,58 @@ q {
 }
 
 /* -- itemizar parágrafos -- */
-.wd .wd-itemize {
-	counter-reset: paragraph1;
-}
-/* numeração: parágrafo */
-.wd .wd-itemize > p {
-	counter-increment: paragraph1;
-}
-.wd .wd-itemize > p:before {
-	content: counter(paragraph1) ". ";
-}
-/* numeração: subparágrafo */
-.wd .wd-itemize > p + p.wd-itemize-item {
-	counter-reset: paragraph2 1;
+.wd .wd-itemize > p:first-child {
 	counter-increment: none;
+	counter-reset: p1 1;
+}
+.wd .wd-itemize > p + p,
+.wd .wd-itemize > p.wd-itemize-item + p,
+.wd .wd-itemize > p.wd-itemize-subitem + p {
+	counter-increment: p1;
+	counter-reset: p2;
+}
+.wd .wd-itemize > p + p.wd-itemize-item {
+	counter-increment: none;
+	counter-reset: p2 1;
+}
+.wd .wd-itemize > p + p.wd-itemize-subitem {
+	counter-increment: none;
+	counter-reset: p2 1 p3 1;
 }
 .wd .wd-itemize > p.wd-itemize-item + p.wd-itemize-item {
-	counter-increment: paragraph2;
+	counter-increment: p2;
+	counter-reset: p3;
 }
-.wd .wd-itemize > p.wd-itemize-item:before {
-	content: counter(paragraph1) "." counter(paragraph2) ". ";
-}
-/* numeração: subsubparágrafos */
 .wd .wd-itemize > p.wd-itemize-item + p.wd-itemize-subitem {
-	counter-reset: paragraph3 1;
 	counter-increment: none;
+	counter-reset: p3 1;
 }
 .wd .wd-itemize > p.wd-itemize-subitem + p.wd-itemize-subitem {
-	counter-increment: paragraph3;
+	counter-increment: p3;
+	counter-reset: none;
 }
 .wd .wd-itemize > p.wd-itemize-subitem + p.wd-itemize-item {
-	counter-increment: paragraph2;
+	counter-increment: p2;
+	counter-reset: p3;
+}
+/* numeração: vizualização */
+.wd .wd-itemize > p:before {
+	content: counter(p1) ". ";
+}
+.wd .wd-itemize > p.wd-itemize-item:before {
+	content: counter(p1) "." counter(p2) ". ";
 }
 .wd .wd-itemize > p.wd-itemize-subitem:before {
-	content: counter(paragraph1) "." counter(paragraph2) "." counter(paragraph3) ". ";
+	content: counter(p1) "." counter(p2) "." counter(p3) ". ";
 }
 /* numeração: ignorar */
 .wd .wd-itemize-none,
-.wd .wd-itemize > *.wd-itemize-none,
-.wd .wd-read    > *.wd-itemize-none {
+.wd .wd-itemize > p:only-child {
 	counter-increment: none !important;
 	counter-reset: none !important;
 }
 .wd .wd-itemize-none:before,
-.wd .wd-itemize > *.wd-itemize-none:before,
-.wd .wd-read    > *.wd-itemize-none:before {
+.wd .wd-itemize > p:only-child:before {
 	content: "" !important;
 }
 
