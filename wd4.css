@@ -1289,35 +1289,53 @@ q {
 	}
 }
 /* -- grades padrão para área de trabalho -- */
-/* FIXME: como fazer para ter só duas colunas? */
-
-
-
 .wd .wd-grid,
-.wd .wd-grid-no-menu,
-.wd .wd-grid-no-side {
+.wd .wd-grid-top,
+.wd .wd-grid-bottom,
+.wd .wd-grid-left,
+.wd .wd-grid-right {
 	display: grid;
-	grid-template-columns: auto auto auto auto;
+	grid-template-columns: 20% auto auto 20%;
 	height: 100%;
-	width: 100%;
+	width: 100%
 }
-/* phone */
-.wd .wd-grid > .wd-grid-menu {grid-area: 1 / 1 / 1 / 4;}
-.wd .wd-grid > .wd-grid-main {grid-area: 2 / 1 / 2 / 4;}
-.wd .wd-grid > .wd-grid-side {grid-area: 3 / 1 / 3 / 4;}
 
+.wd .wd-grid        > .wd-grid-main,
+.wd .wd-grid-top    > .wd-grid-main,
+.wd .wd-grid-bottom > .wd-grid-main,
+.wd .wd-grid-left   > .wd-grid-main,
+.wd .wd-grid-right  > .wd-grid-main {
+	grid-area: main;
+}
+
+.wd .wd-grid        > .wd-grid-menu,
+.wd .wd-grid-top    > .wd-grid-menu,
+.wd .wd-grid-bottom > .wd-grid-menu,
+.wd .wd-grid-left   > .wd-grid-menu,
+.wd .wd-grid-right  > .wd-grid-menu {grid-area: menu;}
+
+.wd .wd-grid        > .wd-grid-side,
+.wd .wd-grid-top    > .wd-grid-side,
+.wd .wd-grid-bottom > .wd-grid-side,
+.wd .wd-grid-left   > .wd-grid-side,
+.wd .wd-grid-right  > .wd-grid-side {grid-area: side;}
+
+.wd .wd-grid-left   > .wd-grid-menu,
+.wd .wd-grid-right  > .wd-grid-side {display: none;}
+
+.wd .wd-grid        {grid-template-areas: 'menu menu menu menu' 'main main main main' 'side side side side';}
+.wd .wd-grid-top    {grid-template-areas: 'menu main main main' 'menu side side side';}
+.wd .wd-grid-bottom {grid-template-areas: 'menu menu menu side' 'main main main side';}
+.wd .wd-grid-left   {grid-template-areas: 'main main main side';}
+.wd .wd-grid-right  {grid-template-areas: 'menu main main main';}
 
 /* tablet */
 @media screen and (min-width: 600px) {
-	.wd .wd-grid > .wd-grid-menu {grid-area: 1 / 1 / 2 / 1;}
-	.wd .wd-grid > .wd-grid-main {grid-area: 1 / 2 / 1 / 4;}
-	.wd .wd-grid > .wd-grid-side {grid-area: 2 / 2 / 2 / 4;}
+	.wd .wd-grid {grid-template-areas: 'menu main main main' 'menu side side side';}
 }
 /* desktop */
 @media screen and (min-width: 768px) {
-	.wd .wd-grid > .wd-grid-menu {grid-area: 1 / 1 / 1 / 1;}
-	.wd .wd-grid > .wd-grid-main {grid-area: 1 / 2 / 1 / 3;}
-	.wd .wd-grid > .wd-grid-side {grid-area: 1 / 3 / 1 / 4;}
+	.wd .wd-grid {grid-template-areas: 'menu main main side';}
 }
 
 
