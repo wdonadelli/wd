@@ -1338,52 +1338,6 @@ q {
 	.wd .wd-grid {grid-template-areas: 'menu main main side';}
 }
 
-
-
-
-
-
-
-
-
-
-
-/*
-.wd .wd-grid,
-.wd .wd-grid-no-menu,
-.wd .wd-grid-no-side {
-	display: grid;
-	height: 100%;
-	width: 100%;
-}
-
-/* containers * /
-.wd .wd-grid         > .wd-grid-main,
-.wd .wd-grid-no-menu > .wd-grid-main,
-.wd .wd-grid-no-side > .wd-grid-main {grid-area: main;}
-
-.wd .wd-grid         > .wd-grid-menu,
-.wd .wd-grid-no-side > .wd-grid-menu {grid-area: menu;}
-
-.wd .wd-grid         > .wd-grid-side,
-.wd .wd-grid-no-menu > .wd-grid-side {grid-area: side;}
-
-/* phone * /
-.wd .wd-grid         {grid-template-areas: 'menu' 'main' 'side';}
-.wd .wd-grid-no-menu {grid-template-areas: 'main' 'side';}
-.wd .wd-grid-no-side {grid-template-areas: 'menu' 'main';}
-/* tablet * /
-@media screen and (min-width: 600px) {
-	.wd .wd-grid         {grid-template-areas: 'menu main main main' 'menu side side side';}
-	.wd .wd-grid-no-menu {grid-template-areas: 'main main main' 'side';}
-	.wd .wd-grid-no-side {grid-template-areas: 'menu' 'main main main';}
-}
-/* desktop * /
-@media screen and (min-width: 768px) {
-	.wd .wd-grid         {grid-template-areas: 'menu main main side';}
-	.wd .wd-grid-no-menu {grid-template-areas: 'main main main' 'side';}
-	.wd .wd-grid-no-side {grid-template-areas: 'menu' 'main main main';}
-}
 /* -- container proporcionais (ratio) -- */
 .wd .wd-ratio-9-20 {aspect-ratio: 9 / 20;}
 .wd .wd-ratio-6-13 {aspect-ratio: 6 / 13;}
