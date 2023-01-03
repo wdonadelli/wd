@@ -443,7 +443,7 @@ script, style {display: none !important;}
 .wd .wd-col-mark-09 > * > *:nth-child(9),  .wd .wd-col-mark-10 > * > *:nth-child(10),
 .wd .wd-col-mark-11 > * > *:nth-child(11), .wd .wd-col-mark-12 > * > *:nth-child(12) {background-color: #ffff00;}
 
-/* --  Caixa de Dicas --FIXME (acho que isso não está bom) */
+/* --  Caixa de Dicas -- (acho que isso não está bom) */
 .wd .wd-tip {position: relative;}
 
 .wd-tip-hover-top,    .wd-tip-click-top,

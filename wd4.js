@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 MIT License
 
-Copyright (c) 2022 Willian Donadelli <wdonadelli@gmail.com>
+Copyright (c) 2023 Willian Donadelli <wdonadelli@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ------------------------------------------------------------------------------*/
 
-/* wd.js (v4.0.0) | https://github.com/wdonadelli/wd */
+/* wd.js (v4.1.1) | https://github.com/wdonadelli/wd */
 
 "use strict";
 
@@ -39,27 +39,147 @@ const wd = (function() {
 /* == BLOCO 1 ================================================================*/
 
 /*----------------------------------------------------------------------------*/
-	const wd_version = "v4.0.0 2022-07-08";
+	/* guada a versão da biblioteca (JS + CSS) */
+	const wd_version = "v4.2.2 2023-01-03";
 	/* Guarda informação do dispositivo (desktop, mobile...) */
 	let wd_device_controller = null;
 	/* Guarda o intervalo de tempo para executar funções vinculadas aos eventos de tecla */
 	const wd_key_time_range = 500;
-	/* Guarda a barra de progresso das requisições */
-	const wd_request_progress = document.createElement("DIV");
-	/* Guarda o container da janela modal para requisições */
-	const wd_modal_window = document.createElement("DIV");
-	/* Guarda o container dos CSS da biblioteca */
-	const wd_style_block  = document.createElement("STYLE");
-	/* Guarda o container das mensagens */
-	const wd_signal_block = document.createElement("DIV");
-	/* Guarda o número requisições abertas */
-	let wd_request_counter = 0;
-	/* Guarda o endereço do favicon padrão */
-	const wd_favicon = "https://wdonadelli.github.io/wd/image/favicon.ico"
+	/* Controla a contagem de procedimentos */
+	const wd_counter_control = {
+		repeat: 0, /* repetições em processamento */
+		load:   0  /* carregamentos em processamento */
+	};
+	/* Controla a janela modal */
+	const wd_modal_control = {
+		modal:   null, /* HTML da janela modal */
+		bar:     null, /* HTML da barra de progresso */
+		counter:    0, /* contador de operações em aberto */
+		delay:    250, /* tempo de espera até fechar a janela modal (evitar piscadas) */
+		time:       5, /* tempo para interagir com o documento */
+
+		_init: function() { /* método para efetuar a montagem do modal e barra de progress */
+			/* janela modal */
+			this.modal = document.createElement("DIV");
+			this.modal.className = "js-wd-modal";
+			/* barra de progresso */
+			if ("HTMLMeterElement" in window)
+				this.bar = document.createElement("METER");
+			else if ("HTMLProgressElement" in window)
+				this.bar = document.createElement("PROGRESS");
+			else
+				this.bar = document.createElement("DIV");
+			this.bar.className = "js-wd-progress-bar";
+			/* unindo os dois */
+			this.modal.appendChild(this.bar);
+			return;
+		},
+
+		start: function() { /* abre a janela modal */
+			if (this.modal === null) this._init();
+			if (this.counter === 0)
+				document.body.appendChild(this.modal);
+			this.counter++;
+			return this.counter;
+		},
+
+		end: function() {/* fecha a janela modal */
+			let object = this;
+			/* checar fechamento da janela após delay */
+			window.setTimeout(function () {
+				object.counter--;
+				if (object.counter < 1)
+					document.body.removeChild(object.modal);
+			}, this.delay);
+
+			return this.counter;
+		},
+
+		progress: function(x) { /* define o valor da barra de progresso */
+			let tag    = this.bar.tagName.toLowerCase();
+			let value  = tag === "div" ? wd_num_str(x, true) : x;
+			let object = this;
+			/* executar progresso após o tempo de interação com o documento */
+			window.setTimeout(function() {
+				if (tag === "div") /* sem progress ou meter (usa CSS width) */
+					object.bar.style.width = value;
+				else /* com progress ou meter */
+					object.bar.value = value;
+			}, this.time);
+			return;
+		}
+	};
+	/* controla a caixa de mensagens */
+	const wd_signal_control = {
+		main: null, /* elemento agrupador das mensagens */
+		time: 9000, /* tempo para fechamento automático da mensagem (igual ao CSS js-wd-signal-msg) */
+
+		_init: function() { /* efetua a montagem da caixa de mensagem */
+			this.main = document.createElement("DIV");
+			this.main.className = "js-wd-signal";
+			return;
+		},
+
+		_createBox: function() { /* retorna um objeto com os elementos da mensagem */
+			return {
+				box:     document.createElement("ARTICLE"),
+				header:  document.createElement("HEADER"),
+				message: document.createElement("SECTION"),
+				close:   document.createElement("SPAN"),
+				title:   document.createElement("STRONG")
+			};
+		},
+
+		_close: function(elem) { /* função para fechar caixa especificada no argumento */
+				try {this.main.removeChild(elem);} catch(e){}
+				if (this.main.children.length === 0)
+					try {document.body.removeChild(this.main);} catch(e){}
+				return;
+		},
+
+		_box: function() { /* monta e retorna a caixa de mensagem */
+			let msg = this._createBox();
+			msg.box.appendChild(msg.header);
+			msg.box.appendChild(msg.message);
+			msg.header.appendChild(msg.close);
+			msg.header.appendChild(msg.title);
+			msg.box.className = "js-wd-signal-msg";
+			msg.close.textContent = "\u00D7";
+			let object = this;
+			msg.close.onclick = function() { /* disparador para quando clicar no botão fechar */
+				object._close(msg.box);
+			}
+			return msg;
+		},
+
+		open: function(message, title) { /* abre uma mensagem */
+			/* criação do container principal, se inexistente */
+			if (this.main === null) this._init();
+			/* obtenção da caixa de mensagem */
+			let msg = this._box();
+			/* definição do título e da mensagem */
+			msg.message.textContent = message;
+			msg.title.textContent   = title === undefined ? " " : title;
+			/* exibindo caixa principal, se escondida */
+			if (this.main.children.length === 0)
+				document.body.appendChild(this.main);
+			/* renderizando mensagem */
+			this.main.insertAdjacentElement("afterbegin", msg.box);
+			/* definindo um prazo para fechamento automático da caixa */
+			let object = this;
+			window.setTimeout(function() {
+				object._close(msg.box)
+			}, this.time);
+
+			return;
+		}
+	}
 	/* Guarda os estilos da biblioteca Selector Database */
 	const wd_js_css = [
 		{s: "@keyframes js-wd-fade-in",  d: ["from {opacity: 0;} to {opacity: 1;}"]},
 		{s: "@keyframes js-wd-fade-out", d: ["from {opacity: 1;} to {opacity: 0;}"]},
+		{s: "@keyframes js-wd-shrink-out", d: ["from {transform: scale(0);} to {transform: scale(1);}"]},
+		{s: "@keyframes js-wd-shrink-in",  d: ["from {transform: scale(1);} to {transform: scale(0);}"]},
 		{s: ".js-wd-modal", d: [
 			"display: block; width: 100%; height: 100%;",
 			"padding: 0.1em 0.5em; margin: 0; z-index: 999999;",
@@ -68,11 +188,9 @@ const wd = (function() {
 			"animation: js-wd-fade-in 0.1s;"
 		]},
 		{s: ".js-wd-progress-bar", d: [
-			"display: block; padding: 0.5em; margin: 0;",
-			"position: absolute; top: 0; left: 0;",
-			"background-color: #1e90ff; color: #ffffff;",
-			"text-align: right; font-size: 0.5em; font-weight: bold;"
+			"display: block; position: absolute; top: 0; left: 0; right: 0; margin: auto; width: 100%;"
 		]},
+		{s: "div.js-wd-progress-bar", d: ["height: 1em; background-color: #1e90ff;"]},
 		{s: ".js-wd-no-display", d: ["display: none;"]},
 		{s: "[data-wd-nav], [data-wd-send], [data-wd-tsort], [data-wd-data], [data-wd-full]", d: [
 			"cursor: pointer;"
@@ -86,18 +204,19 @@ const wd = (function() {
 		{s: "[data-wd-repeat] > *, [data-wd-load] > *", d: [
 			"visibility: hidden;"
 		]},
-		{s: "[data-wd-slide] > * ", d: ["animation: js-wd-fade-in 1s;"]},
+		{s: "[data-wd-slide] > * ", d: ["animation: js-wd-fade-in 1s, js-wd-shrink-out 0.5s;"]},
 		{s: "nav > *.js-wd-nav-inactive", d: ["opacity: 0.5;"]},
 		{s: ".js-wd-plot", d: [
 			"height: 100%; width: 100%; position: absolute; top: 0; left: 0; bottom: 0; right: 0;"
 		]},
 		{s: ".js-wd-signal", d: [
-			"position: fixed; top: 0; right: 30%; left: 30%; width: 40%;",
-			"margin: 0; padding: 0; z-index: 999999;"
+			"position: fixed; top: 0; right: 0.5em; left: 0.5em; width: auto;",
+			"margin: auto; padding: 0; z-index: 999999;"
 		]},
+		{s: "@media screen and (min-width: 768px)", d: [".js-wd-signal {width: 40%;}",]},
 		{s: ".js-wd-signal-msg", d: [
-			"animation-name: js-wd-fade-in, js-wd-fade-out;",
-			"animation-duration: 1.5s, 1.5s; animation-delay: 0s, 7.5s;",
+			"animation-name: js-wd-shrink-out, js-wd-shrink-in;",
+			"animation-duration: 0.5s, 0.5s; animation-delay: 0s, 8.5s;",
 			"margin: 5px 0; position: relative; padding: 0; border-radius: 0.2em;",
 			"border: 1px solid rgba(0,0,0,0.6); box-shadow: 1px 1px 6px rgba(0,0,0,0.6);",
 			"background-color: rgb(245,245,245); color: rgb(20,20,20);"
@@ -131,12 +250,12 @@ const wd = (function() {
 /*----------------------------------------------------------------------------*/
 	function wd_bytes(value) { /*calculadora de bytes*/
 		if (value === Infinity) return wd_num_str(value)+"B";
-		value = value < 0 ? 0 : wd_integer(value, true);
-		if (value >= Math.pow(1024,4)) return (value/Math.pow(1024,4)).toFixed(2)+"TB";
-		if (value >= Math.pow(1024,3)) return (value/Math.pow(1024,3)).toFixed(2)+"GB";
-		if (value >= Math.pow(1024,2)) return (value/Math.pow(1024,2)).toFixed(2)+"MB";
-		if (value >= Math.pow(1024,1)) return (value/Math.pow(1024,1)).toFixed(2)+"kB";
-		return value+"B";
+		value = value < 1 ? 0 : wd_integer(value, true);
+		let scale = ["B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
+		for (let i = scale.length - 1; i >= 0; i--)
+			if (value >= Math.pow(1024,i))
+				return (value/Math.pow(1024,i)).toFixed(2)+scale[i];
+		return "0B";
 	}
 
 /*----------------------------------------------------------------------------*/
@@ -206,7 +325,15 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_str_date (val) { /* obtém data em formato string */
+	function wd_str_now() { /* retorna o tempo atual em string */
+		let t = new Date();
+		let o = {h: t.getHours(), m: t.getMinutes(), s: t.getSeconds()};
+		for (let i in o) o[i] = (o[i] < 10 ? "0" : "") + o[i].toString();
+		return o.h+":"+o.m+":"+o.s;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_str_date(val) { /* obtém data em formato string */
 		let data = [
 			{re: /^[0-9]{4}\-[0-9]{2}\-[0-9]{2}$/, sym: "-", y: 0, m: 1, d: 2},
 			{re: /^[0-9]{2}\/[0-9]{2}\/[0-9]{4}$/, sym: "/", y: 2, m: 1, d: 0},
@@ -299,9 +426,10 @@ const wd = (function() {
 
 		/* Valores em forma de string */
 		if (typeof val === "string" || val instanceof String) {
+			/* nulo/vazio */
 			val = val.trim();
 			if (val === "") return {type: "null", value: null};
-
+			/* tempo, data e número */
 			let mtds = {
 				"date": wd_str_date, "time": wd_str_time, "number": wd_str_number
 			};
@@ -309,7 +437,7 @@ const wd = (function() {
 				value = mtds[t](val);
 				if (value !== null) return {value: value, type: t}
 			}
-
+			/* padrão: texto */
 			return {type: "text", value: val.toString()};
 		}
 
@@ -319,30 +447,31 @@ const wd = (function() {
 			return {value: value, type: "dom"};
 
 		/* Outros Elementos */
+		/* BigInt */
 		if (typeof val === "bigint" || ("BigInt" in window && val instanceof BigInt))
 			return {type: "unknown", value: val.valueOf()};
-
+		/* Number e NaN */
 		if (typeof val === "number" || ("Number" in window && val instanceof Number))
 			return isNaN(val) ? {type: "unknown", value: val} : {type: "number", value: val.valueOf()};
-
+		/* array */
 		if ("Array" in window && (("isArray" in Array && Array.isArray(val)) || val instanceof Array))
 			return {type: "array", value: val.slice()};
-
+		/* data */
 		if ("Date" in window && val instanceof Date)
 			return {type: "date", value: wd_set_date(val)};
-
+		/* regexp */
 		if ("RegExp" in window && val instanceof RegExp)
 			return {type: "regexp", value: val.valueOf()};
-
+		/* boolean */
 		if (typeof val === "boolean" || ("Boolean" in window && val instanceof Boolean))
 			return {type: "boolean", value: val.valueOf()};
-
+		/* function */
 		if (typeof val === "function" || ("Function" in window && val instanceof Function))
 			return {type: "function", value: val};
-
+		/* object */
 		if (typeof val === "object" && (/^\{.*\}$/).test(JSON.stringify(val)))
 			return {type: "object", value: val};
-
+		/* desconhecido: não se encaixa nos anteriores */
 		return {type: "unknown", value: val};
 	}
 
@@ -375,6 +504,43 @@ const wd = (function() {
 		one = one === null ? null : wd_$(one);
 		all = all === null ? null : wd_$$(all);
 		return all !== null ? all : one;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_copy(value) { /* copia o conteúdo da variável para a área de transferência */
+		/* copiar o que está selecionado */
+		if (value === undefined && "execCommand" in document) {
+			document.execCommand("copy");
+			return true;
+		}
+		/* copiar DOM: elemento ou tudo */
+		let data = wd_vtype(value);
+		if (data.type === "dom" && "execCommand" in document) {
+			let element = data.value.length > 0 ? data.value[0] : document.body;
+			let range   = document.createRange();
+			let select  = window.getSelection();
+			select.removeAllRanges();          /* limpar seleção existente */
+			range.selectNodeContents(element); /* pegar os nós do elemento */
+			select.addRange(range);            /* seleciona os nós do elemento */
+			document.execCommand("copy");      /* copia o texto selecionado */
+			select.removeAllRanges();          /* limpar seleção novamente */
+			return true;
+		}
+
+		/* array e object: JSON */
+		if (data.type === "array" || data.type === "object")
+			value = wd_json(value);
+
+		/* copiar valor informado */
+		if ("clipboard" in navigator && "writeText" in navigator.clipboard) {
+			navigator.clipboard.writeText(value === null ? "" : value).then(
+				function () {/*sucesso*/},
+				function () {/*erro*/}
+			);
+			return true;
+		}
+
+		return false;
 	}
 
 /*----------------------------------------------------------------------------*/
@@ -653,30 +819,20 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	function wd_num_type(n) { /* retorna o tipo de número */
-		if (n === 0)         return "zero";
-		let type = n < 0 ? "-" : "+";
-		if (Math.abs(n) === Infinity) return type+"infinity";
-		if (n === wd_integer(n))          return type+"integer";
-		return type+"real";
-	}
-
-/*----------------------------------------------------------------------------*/
-	function wd_num_test(n, checks) {/* testa se o tipo de número se enquadra em alguma categoria */
-		let type = wd_num_type(n);
-		for (let i = 0; i < checks.length; i++) {
-			if (checks[i] === type) return true;
-			if (checks[i] === type.substr(1, type.length)) return true;
-		}
-		return false;
+		let types = ["zero", "+infinity", "-infinity", "+integer", "-integer", "+float", "-float"];
+		for (let i = 0; i < types.length; i++)
+			if (wd_test(n, [types[i]]))
+				return types[i];
+		return "number";
 	}
 
 /*----------------------------------------------------------------------------*/
 	function wd_num_frac(n) { /* representação em fração (2 casas) */
 		/* inteiros ou zero não têm parte fracionária, retornar string */
-		if (wd_num_test(n, ["integer", "zero"]))
+		if (wd_test(n, ["integer", "zero"]))
 			return wd_integer(n).toFixed(0);
 		/* infinito também não tem parte fracionária, retornar string */
-		if (wd_num_test(n, ["infinity"]))
+		if (wd_test(n, ["infinity"]))
 			return wd_num_str(n);
 
 		/* capturar parte inteira e decimal */
@@ -749,7 +905,7 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	function wd_num_pow10(n, width) { /* transforma número em notação científica */
-		if (wd_num_test(n, ["infinity", "zero"])) return wd_num_str(n);
+		if (wd_test(n, ["infinity", "zero"])) return wd_num_str(n);
 
 		width = wd_finite(width) ? wd_integer(width, true) : undefined;
 
@@ -779,7 +935,7 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	function wd_num_fixed(n, ldec, lint) { /* fixa quantidade de dígitos (decimal e inteiro) */
-		if (wd_num_test(n, ["infinity"])) return wd_num_str(n);
+		if (wd_test(n, ["infinity"])) return wd_num_str(n);
 
 		lint = wd_finite(lint) ? wd_integer(lint, true) : 0;
 		ldec = wd_finite(ldec) ? wd_integer(ldec, true) : 0;
@@ -802,7 +958,7 @@ const wd = (function() {
 /*----------------------------------------------------------------------------*/
 	function wd_num_str(n, ratio) { /* Define a exibição de valores numéricos */
 		if (ratio === true) n = 100*n;
-		if (wd_num_test(n, ["infinity"]))
+		if (wd_test(n, ["infinity"]))
 			return (n < 0 ? "\u2212" : "\u002B")+"\u221E";
 
 		let end = ratio === true ? "\u0025" : "";
@@ -1091,6 +1247,27 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
+	function wd_array_csv(array) { /* transforma um array em dados CSV */
+		let csv = [];
+
+		for (let i = 0; i < array.length; i++) {
+			let line = array[i];
+			let type = wd_vtype(line).type;
+
+			if (type === "array") {
+				for (let j = 0; j < line.length; j++)
+					line[j] = String(line[j]).replace(/\t/g, " ").replace(/\n/g, " ");
+			} else {
+				line = [String(line).replace(/\t/g, " ").replace(/\n/g, " ")];
+			}
+
+			csv.push(line.join("\t"));
+		}
+
+		return csv.join("\n");
+	}
+
+/*----------------------------------------------------------------------------*/
 	function wd_matrix_data(matrix, x, y) { /* retorna dados estatísticos de uma matriz */
 		x = wd_matrix_cell(matrix, x);
 		y = wd_matrix_cell(matrix, y);
@@ -1114,28 +1291,28 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	function wd_coord_adjust(x, y, z) { /* retorna pares de coordenadas numéricas */
-	  let coord = {x: [], y: [], z: [], length: 0};
-    /* checando se argumentos são arrays (x é obrigatório) */
-    if (wd_vtype(x).type !== "array") return null;
-    if (wd_vtype(y).type !== "array") y = null;
-    if (wd_vtype(z).type !== "array") z = null;
+		let coord = {x: [], y: [], z: [], length: 0};
+		/* checando se argumentos são arrays (x é obrigatório) */
+		if (wd_vtype(x).type !== "array") return null;
+		if (wd_vtype(y).type !== "array") y = null;
+		if (wd_vtype(z).type !== "array") z = null;
 
 		/* verificando conteúdo (deve ser numérico */
 		let n = x.length;
 		if (y !== null && y.length < n) n = y.length;
 		if (z !== null && z.length < n) n = z.length;
 		for (let i = 0; i < n; i++) {
-		  let xtype = wd_vtype(x[i]);
-		  let ytype = y === null ? null : wd_vtype(y[i]);
-		  let ztype = z === null ? null : wd_vtype(z[i]);
-		  if (!wd_finite(xtype.value)) continue;
-		  if (y !== null && !wd_finite(ytype.value)) continue;
-		  if (z !== null && !wd_finite(ztype.value)) continue;
+			let xtype = wd_vtype(x[i]);
+			let ytype = y === null ? null : wd_vtype(y[i]);
+			let ztype = z === null ? null : wd_vtype(z[i]);
+			if (!wd_finite(xtype.value)) continue;
+			if (y !== null && !wd_finite(ytype.value)) continue;
+			if (z !== null && !wd_finite(ztype.value)) continue;
 
-      coord.x.push(xtype.value);
-      if (y !== null) coord.y.push(ytype.value);
-      if (z !== null) coord.z.push(ztype.value);
-      coord.length++;
+			coord.x.push(xtype.value);
+			if (y !== null) coord.y.push(ytype.value);
+			if (z !== null) coord.z.push(ztype.value);
+			coord.length++;
 		}
 
 		/* definindo valor final */
@@ -1390,8 +1567,9 @@ const wd = (function() {
 		let ends = wd_coord_limits(xcoord);
 		if (ends === null) return null;
 		delta = wd_vtype(delta).value;
-		if (!wd_finite(delta)) delta = (ends.max - ends.min)/xcoords.length;
+		if (!wd_finite(delta)) delta = (ends.max - ends.min)/xcoord.length;
 		delta = Math.abs(delta);
+		console.log(delta);
 
 		/* obtendo amostra */
 		let x = [];
@@ -1417,7 +1595,7 @@ const wd = (function() {
 		for (let i = 0; i < x.length; i++) {
 			if (i > (y.length-1)) break;
 			let vtype = wd_vtype(y[i]);
-			if (vtype.type !== "number") continue
+			if (vtype.type !== "number") continue;
 			let name = new String(x[i]).trim();
 			if (name === "") name = "?";
 			if (!(name in data)) {
@@ -1600,20 +1778,25 @@ const wd = (function() {
 		if (obj === null) return wd_html_class(elem, "");
 		if (wd_vtype(obj).type !== "object") return null;
 		let array = wd_no_spaces(wd_html_class(elem)).split(" ");
+		let old   = wd_array_sort(wd_array_unique(array)).join(" ");
 
 		for (let i in obj) {
 			let val = wd_vtype(obj[i]);
 			if (val.type !== "text") continue;
 			val = wd_no_spaces(val.value).split(" ");
 			if (i === "rpl" && val.length < 2) continue;
-
 			if (i === "add") array = wd_array_add(array, val); else
 			if (i === "del") array = wd_array_del(array, val); else
 			if (i === "tgl") array = wd_array_tgl(array, val); else
 			if (i === "rpl") array = wd_array_rpl(array, val[0], val[1]);
 		}
-		array = wd_array_sort(wd_array_unique(array)).join(" ");
-		return wd_html_class(elem, wd_no_spaces(array));
+
+		array = wd_no_spaces(wd_array_sort(wd_array_unique(array)).join(" "));
+
+		/* se o valor antigo for igual ao novo, não fazer nada */
+		if (array === old) return old;
+		/* caso contrário, redefinir */
+		return wd_html_class(elem, array);
 	}
 
 /*----------------------------------------------------------------------------*/
@@ -1633,13 +1816,12 @@ const wd = (function() {
 			let key = wd_text_camel(i);
 			let val = obj[i];
 
-			/* definir atributo */
-			if (val !== null)
+			if (val !== null) /* definir atributo */
 				elem.dataset[key] = val;
-			/* apagar atributo */
-			else if (key in elem.dataset)
+			else if (key in elem.dataset) /* apagar atributo */
 				delete elem.dataset[key];
 			else continue
+
 			/* executar verificação após definição */
 			settingProcedures(elem, key);
 		}
@@ -1652,19 +1834,44 @@ const wd = (function() {
 		/* obtendo o atributo para carregar o conteúdo HTML */
 		let test = new WDform(elem);
 		let attr = test.form && test.load !== null ? test.load : "innerHTML";
-		/* carregando conteúdo */
-		elem[attr] = text;
-		if (attr === "innerHTML") {
-			let scripts = wd_vtype(wd_$$("script", elem)).value;
+		/* carregando conteúdo de texto */
+		if (attr !== "innerHTML") {
+			elem[attr] = text;
+		} else {
+			/* carregando conteúdo HTML */
+			let temp = document.createElement("DIV");
+			temp.innerHTML = text;
+			/* innerHTML não executa script: capturar, clonr, eliminar e criar */
+			let scripts = wd_vtype(wd_$$("script", temp)).value;
+			let oldscr  = [];
+			let newscr  = [];
+			/* capturando e clonando-os (cloneNode não funciona) */
 			for (let i = 0; i < scripts.length; i++) {
-				let script = document.createElement("script");
-				let source = scripts[i].src.trim() === "" ? "text" : "src";
-				script[source] = scripts[i][source];
-				elem.removeChild(scripts[i]);
-				elem.appendChild(script);
+				let script = scripts[i];
+				let attrs  = script.attributes;
+				let clone  = document.createElement("SCRIPT");
+				clone.innerHTML = script.innerHTML;
+				/* clonando os atributos */
+				for (let j = 0; j < attrs.length; j++)
+					clone.setAttribute(attrs[j].name, attrs[j].value);
+				/* registrando-os para eliminação e apensação */
+				oldscr.push(script);
+				newscr.push(clone);
+				console.log(clone);
 			}
+			/* eliminando os scripts antigos */
+			for (let i = 0; i < oldscr.length; i++)
+				oldscr[i].remove();
+			/* definindo innerHTML sem os scripts e removendo elemento temporário */
+			elem.innerHTML = temp.innerHTML;
+			temp.remove();
+			/* adicionando os scripts */
+			for (let i = 0; i < newscr.length; i++)
+				elem.appendChild(newscr[i]);
 		}
+		/* checar demandas pós procedimento */
 		loadingProcedures();
+
 		return;
 	}
 
@@ -1673,10 +1880,13 @@ const wd = (function() {
 		if (wd_vtype(json).type !== "array") return null;
 
 		/*--------------------------------------------------------------------------
+		| -- DEFINIR O MODELO A SER REPETIDO --
 		| A) obter o conteúdo textual dos filhos
 		| B) se o conteúdo de A conter {{}}, armazená-lo em data-wd-repeat-model
 		| C) caso contrário, utilizar o conteúdo gravado de data-wd-repeat-model
-		| D) se nenhum dos dois for verdadeiro, não há modelo a ser repetido
+		| D) caso contrário, não há modelo a ser repetido: retornar
+		| E) corrigir a adequação dos atributos do DOM ( {{x}} para {{x}}="" )
+		| F) limpar elementos filhos para esconder modelo
 		\-------------------------------------------------------------------------*/
 		let html = elem.innerHTML; /*A*/
 		if (html.search(/\{\{.+\}\}/gi) >= 0) /*B*/
@@ -1685,26 +1895,30 @@ const wd = (function() {
 			html = elem.dataset.wdRepeatModel;
 		else return; /*D*/
 
-		/*--------------------------------------------------------------------------
-		| E) corrigir uma adequação dos atributos pelo DOM: de {{x}} para {{x}}=""
-		| F) criar uma lista que agrupará o os elementos em forma textual
-		| G) looping: array de objetos
-		| H) trocar {{attr}} pelo valor do atributo do objeto {attr: valor}
-		| I) adicionar conteúdo à lista F
-		| J) renderizar filhos do elemento com o agrupamento da lista
-		\-------------------------------------------------------------------------*/
 		html = html.split("}}=\"\"").join("}}"); /*E*/
-		let data = [""]; /*F*/
-		for (let i = 0; i < json.length; i++) { /*G*/
+		elem.innerHTML = ""; /*F*/
+
+		/*--------------------------------------------------------------------------
+		| -- DEFINIR NOVOS FILHOS A PARTIR DO MODELO E DA LISTA --
+		| G) criar uma lista que agrupará o os elementos em forma textual
+		| H) looping: array de objetos
+		| I) trocar {{attr}} pelo valor do atributo do objeto {attr: valor}
+		| J) adicionar conteúdo à lista F
+		| K) renderizar filhos do elemento com o agrupamento da lista
+		\-------------------------------------------------------------------------*/
+		let data = [""]; /*G*/
+		for (let i = 0; i < json.length; i++) { /*H*/
 			if (wd_vtype(json[i]).type !== "object") continue;
 			let inner = html;
-			for (let c in json[i]) /*H*/
+			for (let c in json[i]) /*I*/
 				inner = inner.split("{{"+c+"}}").join(json[i][c]);
-			data.push(inner); /*I*/
+			data.push(inner); /*J*/
 		}
-		elem.innerHTML = data.join(""); /*J*/
+		elem.innerHTML = data.join(""); /*K*/
+
+		/* checar demandas pós procedimento */
 		loadingProcedures();
-		return true;
+		return;
 	}
 
 /*----------------------------------------------------------------------------*/
@@ -1845,10 +2059,10 @@ const wd = (function() {
 		if (!wd_finite(page) && page !== "+" && page !== "-") page = 0;
 
 		/*--------------------------------------------------------------------------
-		| A) se size < 0  obter toda a amostra;
-		| B) se size < 1  obter uma fração da amostra
+		| A) se size  < 0  obter toda a amostra;
+		| B) se size  < 1  obter uma fração da amostra
 		| C) se size >= 1 obter a amostra (valor inteiro)
-		| D) se size = 0  size = 1 (limite mínimo de size)
+		| D) se size  = 0  size = 1 (limite mínimo de size)
 		--------------------------------------------------------------------------*/
 		if (size < 0) { /*A*/
 			page = 0;
@@ -2041,35 +2255,13 @@ const wd = (function() {
 			get csv() {try {return wd_csv_array(this.text);} catch(e){return null;}},
 		}
 
-		/* funções auxiliares e disparadores */
-		function request_set(n) { /* controla o número de requisições e a janela modal */
-			if (n > 0) {
-				if (wd_request_counter === 0)
-					document.body.appendChild(wd_modal_window);
-				wd_request_counter++;
-			} else {
-				window.setTimeout(function () {
-					wd_request_counter--;
-					if (wd_request_counter < 1)
-						document.body.removeChild(wd_modal_window);
-				}, 250);
-			}
-			return wd_request_counter;
-		}
-
 		function set_data(status, closed, loaded, total) { /* disparador: define a variável data */
 			if (data.closed) return;
 			data.status = status;
 			data.closed = closed;
 			data.loaded = loaded;
 			data.total  = total;
-			/* barra de progresso */
-			window.setTimeout(function() {
-				let value = wd_num_str(data.progress, true)
-				wd_request_progress.textContent = value;
-				wd_request_progress.style.width = value;
-			}, 10);
-
+			wd_modal_control.progress(data.progress);
 			if (status === "ABORTED") request.abort();
 			if (callback !== null)    callback(data);
 		}
@@ -2079,7 +2271,7 @@ const wd = (function() {
 			if (data.closed) return;
 			if (data.status === "UNSENT") {
 				data.status = "OPENED";
-				request_set(1);
+				wd_modal_control.start();
 			} else if (request.status === 404) {
 				data.status = "NOTFOUND";
 				data.closed = true;
@@ -2091,14 +2283,16 @@ const wd = (function() {
 				data.closed = true;
 				data.status = (request.status === 200 || request.status === 304) ? "DONE" : "ERROR";
 			}
-			if (callback !== null) callback(data);
-			if (data.closed) request_set(-1);
+			if (callback !== null)
+				callback(data);
+			if (data.closed)
+				wd_modal_control.end();
 		}
 
 		/* definindo disparador aos eventos */
-		request.onprogress = function(x) {set_data("LOADING", false, x.loaded, x.total);}
-		request.onerror    = function(x) {set_data("ERROR",   true, 0, 0);}
-		request.ontimeout  = function(x) {set_data("TIMEOUT", true, 0, 0);}
+		request.onprogress         = function(x) {set_data("LOADING", false, x.loaded, x.total);}
+		request.onerror            = function(x) {set_data("ERROR",   true, 0, 0);}
+		request.ontimeout          = function(x) {set_data("TIMEOUT", true, 0, 0);}
 		request.upload.onprogress  = function(x) {set_data("UPLOADING", false, x.loaded, x.total);}
 		request.upload.onabort     = request.onerror;
 		request.upload.ontimeout   = request.ontimeout;
@@ -2131,45 +2325,68 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_signal(title, text) { /* exibe uma mensagem */
-		/* definindo elementos */
-		let box = document.createElement("ARTICLE");
-		let hdr = document.createElement("HEADER");
-		let msg = document.createElement("SECTION");
-		let cls = document.createElement("SPAN");
-		let ttl = document.createElement("STRONG");
-		/* fechar janela */
-		function close() {
-			/* tentar fechar a caixa de mensagem */
-			try {wd_signal_block.removeChild(box);} catch(e){}
-			/* tentar fechar o container de mensagens, se não houver filhos */
-			if (wd_signal_block.children.length === 0)
-				try{document.body.removeChild(wd_signal_block);}catch(e){}
+	function wd_read(elem, call, mode) { /* faz a leitura de arquivos */
+		/* testando argumentos */
+		let form = new WDform(elem);
+		if (form.type !== "file")    return null;
+		let arg = wd_vtype(call);
+		if (arg.type !== "function") return null;
+		let files = form.vfile;
+		if (files.length === 0)      return null;
+
+		/* lendo arquivos selecionados */
+		for (let i = 0; i < files.length; i++) {
+			let file = files[i];
+			let mime = String(file.type).split("/")[0].toLowerCase();
+			let method = {
+				binary: "readAsBinaryString", buffer: "readAsArrayBuffer",
+				text:   "readAsText",         audio:  "readAsDataURL",
+				video:  "readAsDataURL",      image:  "readAsDataURL",
+				url:    "readAsDataURL"
+			};
+			/* definindo a informação a ser capturada se argumento é inadequado (binary - default) */
+			if (!(mode in method))
+				mode = mime in method ? mime : "binary";
+
+			/* construindo objeto e chamando janela modal */
+			let reader = new FileReader();
+			wd_modal_control.start();
+
+			/* disparador para quando terminar o carregamento */
+			reader.onload = function() {
+				let result = this.result;
+				call({
+					elem:         elem,
+					item:         i,
+					length:       files.length,
+					name:         file.name,
+					size:         file.size,
+					type:         file.type,
+					lastModified: file.lastModified,
+					data:         result
+				});
+				/* fechando janela modal correspondente */
+				wd_modal_control.end();
+				return;
+			}
+
+			/* disparador para registrar o andamento do carregamento */
+			reader.onprogress = function(x) {
+				wd_modal_control.progress(x.loaded / x.total);
+				return;
+			}
+
+			/* capturando dados conforme especificado em mode */
+			reader[method[mode]](file);
 		}
-		/* definindo propriedades dos elementos */
-		box.appendChild(hdr);
-		box.appendChild(msg);
-		hdr.appendChild(cls);
-		hdr.appendChild(ttl);
-		msg.innerHTML = text;
-		ttl.innerHTML = title === undefined ? "\u2139" : title;
-		cls.onclick   = close;
-		cls.innerHTML = "\u00D7";
-		box.className  = "js-wd-signal-msg";
-		/* abrindo container principal, se fechado */
-		if (wd_signal_block.children.length === 0)
-			document.body.appendChild(wd_signal_block);
-		/* adicionando caixa de mensagem */
-		wd_signal_block.insertAdjacentElement("afterbegin", box);
-		/* fechando após determinado intervalo de tempo */
-		window.setTimeout(close, 9000);
-		return;
+
+		return true;
 	}
 
 /*----------------------------------------------------------------------------*/
 	function wd_notify(title, msg) { /* exibe uma notificação, se permitido */
 		if (!("Notification" in window))
-			return wd_signal(title, msg);
+			return wd_signal_control.open(msg, title);
 		if (Notification.permission === "denied")
 			return null;
 		if (Notification.permission === "granted")
@@ -2180,6 +2397,62 @@ const wd = (function() {
 					new Notification(title, {body: msg});
 			});
 		return true;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_test(input, list) { /* testa, em uma lista de possibilidades, se o valor casa em uma delas */
+		let x     = wd_vtype(input);
+		let check = [x.type];
+		/* deixando a lista toda em minúsculo */
+		for (let i = 0; i < list.length; i++)
+			list[i] = String(list[i]).toLowerCase();
+
+		/* testando valores especiais */
+		switch (x.type) {
+			case "boolean":
+				check.push(x.value === true ? "+boolean" : "-boolean")
+				break;
+
+			case "number":
+				let abs = Math.abs(x.value);
+
+				if (x.value > 0) check.push("+number");
+				if (x.value < 0) check.push("-number");
+				if (abs === 0) {
+					check.push("zero");
+				} else if (abs === Infinity) {
+					check.push("infinity");
+					check.push(x.value > 0 ? "+infinity" : "-infinity");
+				} else if (abs === wd_integer(abs)) {
+					check.push("integer");
+					check.push(x.value > 0 ? "+integer" : "-integer");
+				} else {
+					check.push("float");
+					check.push(x.value > 0 ? "+float" : "-float");
+				}
+				break;
+			case "text":
+				if (x.value === x.value.toUpperCase()) check.push("+text");
+				if (x.value === x.value.toLowerCase()) check.push("-text");
+				break;
+			case "time":
+				let now = wd_vtype(wd_str_now()).value;
+				if (x.value > now) check.push("+time");
+				if (x.value < now) check.push("-time");
+				break;
+			case "date":
+				let today = wd_set_date();
+				if (x.value > today) check.push("+date");
+				if (x.value < today) check.push("-date");
+				break;
+		}
+
+		/* testando as possibilidades válidas */
+		for (let i = 0; i < check.length; i++)
+			if (list.indexOf(check[i]) >= 0) return true;
+
+		/* se não casou, retornar false */
+		return false;
 	}
 
 /*----------------------------------------------------------------------------*/
@@ -2263,7 +2536,7 @@ const wd = (function() {
 /* == BLOCO 2 ================================================================*/
 
 /*----------------------------------------------------------------------------*/
-	function WDform (elem) { /* objeto para analisar campos de formulários */
+	function WDform(elem) { /* objeto para analisar campos de formulários */
 		this.e = elem;
 	};
 	Object.defineProperties(WDform.prototype, {
@@ -2335,7 +2608,7 @@ const wd = (function() {
 				return check.type === "number" ? this.e.value.trim() : null;
 			}
 		},
-		vfile: { /* retorna valores do campo de arquivos, se vazio "" */
+		vfile: { /* retorna valores do campo de arquivos */
 			get: function() {
 				if ("files" in this.e) return this.e.files;
 				let val = this.e.value.trim();
@@ -2639,10 +2912,10 @@ const wd = (function() {
 				if ("reportValidity" in this.e) {
 					this.e.reportValidity();
 				} else if ("validationMessage" in this.e) {
-					wd_signal("", this.e.validationMessage);
+					wd_signal_control.open(this.e.validationMessage, "");
 					elem.focus();
 				} else {
-					wd_signal("", this.e.dataset.wdErrorMessage);
+					wd_signal_control.open(this.e.dataset.wdErrorMessage, "");
 					elem.focus();
 				}
 				/* bug firefox */
@@ -3044,7 +3317,8 @@ const wd = (function() {
 	function WDmain(input) {
 		Object.defineProperties(this, {
 			_value: {value: input.value, writable: true},
-			_type:  {value: input.type}
+			_type:  {value: input.type},
+			_input: {value: input.input}
 		});
 	}
 
@@ -3052,6 +3326,11 @@ const wd = (function() {
 		constructor: {value: WDmain},
 		type: { /* informa o tipo do argumento */
 			get: function() {return this._type;}
+		},
+		test: { /* testa se o tipo do valor se enquadra em alguma categoria */
+			value: function() {
+				return wd_test(this._input, Array.prototype.slice.call(arguments));
+			}
 		},
 		valueOf: { /* método padrão */
 			value: function() {
@@ -3089,7 +3368,7 @@ const wd = (function() {
 		},
 		signal: { /*renderizar mensagem*/
 			value: function(title) {
-				wd_signal(title, this.toString());
+				wd_signal_control.open(this.toString(), title);
 				return this.type === "dom" ? this : null;
 			}
 		},
@@ -3233,11 +3512,6 @@ const wd = (function() {
 		str: { /* retorna string simplificada do número */
 			get: function() {return wd_num_str(this.valueOf());}
 		},
-		test: { /* testa se o tipo de número se enquadra em alguma categoria */
-			value: function() {
-				return wd_num_test(this.valueOf(), Array.prototype.slice.call(arguments));
-			}
-		},
 		round: { /* arredonda número para determinado tamanho */
 			value: function(width) {
 				return wd_num_round(this.valueOf(), width);
@@ -3260,7 +3534,7 @@ const wd = (function() {
 		},
 		toString: { /* método padrão */
 			value: function() {
-				return this.test("infinity") ? this.str : this.valueOf().toString();
+				return Math.abs(this.valueOf()) === Infinity ? this.str : this.valueOf().toString();
 			}
 		},
 	});
@@ -3418,6 +3692,9 @@ const wd = (function() {
 		},
 		tidy: { /* remove itens repetidos e ordena */
 			get: function() {return wd_array_sort(this.unique);}
+		},
+		csv: { /* matriz para csv */
+			get: function() {return wd_array_csv(this.valueOf());}
 		},
 		item: { /* retorna o índice especificado ou seu comprimento */
 			value: function(i) {
@@ -3582,6 +3859,11 @@ const wd = (function() {
 				return wd_html_chart(this.item(0), data, title, xlabel, ylabel);
 			}
 		},
+		read: { /* lê arquivos especificados em formulário (input:file) */
+			value: function(call, mode) {
+				return this.run(wd_read, call, mode);
+			}
+		},
 		info: { /* devolve informações diversas sobre o primeiro elemento */
 			get: function() {return wd_html_info(this._value[0]);}
 		},
@@ -3592,7 +3874,11 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	function WD(input) { /* função de interface ao usuário */
+		/* obtendo o tipo e o valor resultando da entrada */
 		let vtype  = wd_vtype(input);
+		/* acrescentando o valor original aos dados */
+		vtype["input"] = input;
+		/* lista de objetos a serem chamados */
 		let object = {
 			"undefined": WDundefined, "null":     WDnull,
 			"boolean":   WDboolean,   "function": WDfunction,
@@ -3602,7 +3888,7 @@ const wd = (function() {
 			"number":    WDnumber,    "text":     WDtext,
 			"unknown":   WDmain
 		};
-
+		/* construindo e retornando o objeto específico */
 		return new object[vtype.type](vtype);
 	}
 
@@ -3612,15 +3898,12 @@ const wd = (function() {
 		$:       {value: function(css, root) {return WD(wd_$(css, root));}},
 		$$:      {value: function(css, root) {return WD(wd_$$(css, root));}},
 		url:     {value: function(name) {return wd_url(name);}},
+		copy:    {value: function(text) {return wd_copy(text);}},
+		lang:    {get:   function() {return wd_lang();}},
 		device:  {get:   function() {return wd_get_device();}},
 		today:   {get:   function() {return WD(new Date());}},
-		now: {get: function() {
-			let t = new Date();
-			let o = {h: t.getHours(), m: t.getMinutes(), s: t.getSeconds()};
-			for (let i in o) o[i] = (o[i] < 10 ? "0" : "") + o[i].toString();
-			return WD(o.h+":"+o.m+":"+o.s);
-		}},
-		lang: {get: function() {return wd_lang();}}
+		now:     {get:   function() {return WD(wd_str_now());}},
+		/*bomba: {value: wd_signal_control} //FIXME */
 	});
 
 /* == BLOCO 4 ================================================================*/
@@ -3628,15 +3911,28 @@ const wd = (function() {
 /*----------------------------------------------------------------------------*/
 	function data_wdLoad(e) { /* carrega HTML: data-wd-load=path{file}method{get|post}${form} */
 		if (!("wdLoad" in e.dataset)) return;
+
+		/* obter dados do atributo */
 		let data   = wd_html_dataset_value(e, "wdLoad")[0];
 		let target = WD(e);
 		let method = data.method;
 		let file   = data.path;
 		let pack   = wd_$$$(data);
 		let exec   = WD(pack);
-		target.data({wdLoad: null});
+
+		/* abrir contagem */
+		wd_counter_control.load++;
+		/* limpar atributo para evitar repetições desnecessárias e limpar conteúdo */
+		target.data({wdLoad: null}).load("");
+		/* carregar arquivo e executar */
 		exec.send(file, function(x) {
-			if (x.closed) target.load(x.text);
+			if (x.closed) {
+				/* encerrar contagem */
+				wd_counter_control.load--;
+				/* executar */
+				target.load(x.text);
+				return;
+			}
 		}, method);
 		return;
 	};
@@ -3644,22 +3940,36 @@ const wd = (function() {
 /*----------------------------------------------------------------------------*/
 	function data_wdRepeat(e) { /* Repete modelo HTML: data-wd-repeat=path{file}method{get|post}${form} */
 		if (!("wdRepeat" in e.dataset)) return;
+
+		/* obter dados do atributo */
 		let data   = wd_html_dataset_value(e, "wdRepeat")[0];
 		let target = WD(e);
 		let method = data.method;
 		let file   = data.path;
 		let pack   = wd_$$$(data);
 		let exec   = WD(pack);
-		target.data({wdRepeat: null});
+
+		/* abrir contagem */
+		wd_counter_control.repeat++;
+		/* limpar atributo para evitar repetições desnecessárias e limpar conteúdo */
+		target.data({wdRepeat: null}).repeat([]);
+
+		/* carregar arquivo e executar */
 		exec.send(file, function(x) {
 			if (x.closed) {
 				let json = x.json;
 				let csv  = x.csv;
+				/* fechar contagem */
+				wd_counter_control.repeat--;
+
+				/* repetir na ordem de prioridade: JSON | CSV | VAZIO */
 				if (wd_vtype(json).type === "array")
-					return target.repeat(json);
-				if (wd_vtype(csv).type === "array")
-					return target.repeat(wd_matrix_object(x.csv));
-				return target.repeat([]);
+					target.repeat(json);
+				else if (wd_vtype(csv).type === "array")
+					target.repeat(wd_matrix_object(x.csv));
+				else
+					target.repeat([]);
+				return;
 			}
 		}, method);
 		return;
@@ -4144,17 +4454,23 @@ const wd = (function() {
 				let lang = wd_lang().toLowerCase().replace(/\-/g, "_");
 				let init = lang.split("_")[0];
 
-				for (let id in json) {
-					let elem = document.getElementById(id);
-					if (elem === null) continue;
-					let text = "";
-					if (lang in json[id])
-						text = json[id][lang];
-					else if (init in json[id])
-						text = json[id][init];
-					else if ("default" in json[id])
-						text = json[id]["default"];
-					elem.textContent = text;
+				for (let css in json) { /* looping pelos identificadores css */
+					let text;
+					if (lang in json[css]) /* código completo (preferêncial) */
+						text = json[css][lang];
+					else if (init in json[css]) /* só primeiro termo do código (opção genérica) */
+						text = json[css][init];
+					else if ("*" in json[css]) /* valor principal (opção super-genérica) */
+						text = json[css]["*"];
+					else /* não mudar nada, se linguagem não localizada */
+						continue;
+
+					/* obtendo elementos e aplicando textContent */
+					let target = WD(wd_$$(css));
+					if (target.type !== "dom") continue;
+					target.run(function(y) {
+						y.textContent = text;
+					});
 				}
 			}
 		}, method);
@@ -4174,13 +4490,8 @@ const wd = (function() {
 /* -- DISPARADORES -- */
 /*============================================================================*/
 	function loadProcedures(ev) {
-		/* definindo atributos das variáveis globais (BLOCO 1) */
+		/* capturando o dispositivo */
 		wd_device_controller = wd_get_device();
-		wd_request_progress.className = "js-wd-progress-bar";
-		wd_modal_window.className = "js-wd-modal";
-		wd_modal_window.appendChild(wd_request_progress);
-		document.head.appendChild(wd_style_block);
-		wd_signal_block.className = "js-wd-signal";
 
 		/* construindo CSS da biblioteca */
 		let css = [];
@@ -4192,15 +4503,9 @@ const wd = (function() {
 				value = value.replace(/\;/g, " !important;");
 			css.push(value);
 		}
-		wd_style_block.textContent = css.join("\n");
-
-		/* definindo ícone padrão */
-		if (wd_$("link[rel=icon]") !== null) {
-			let favicon = document.createElement("LINK");
-			favicon.rel = "icon";
-			favicon.href = wd_favicon;;
-			document.head.appendChild(favicon);
-		}
+		let style_block = document.createElement("STYLE");
+		style_block.textContent = css.join("\n");
+		document.head.appendChild(style_block);
 
 		/* aplicando carregamentos */
 		loadingProcedures();
@@ -4252,13 +4557,18 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	function loadingProcedures() { /* procedimento para carregamentos */
-		let repeat = WD.$("[data-wd-repeat]");
-		if (repeat.type === "dom") repeat.run(data_wdRepeat);
 
-		let load = WD.$("[data-wd-load]");
-		if (load.type === "dom") load.run(data_wdLoad);
+		/* 1) processar repetições */
+		WD.$$("[data-wd-repeat]").run(data_wdRepeat);
+		if (wd_counter_control.repeat > 0) return;
 
+		/* 2) processar carregamentos */
+		WD.$$("[data-wd-load]").run(data_wdLoad);
+		if (wd_counter_control.load > 0) return;
+
+		/* 3) se repetições e carregamentos terminarem, organizar */
 		organizationProcedures();
+
 		return;
 	};
 

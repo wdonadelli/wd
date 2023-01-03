@@ -1,11 +1,17 @@
 <h3>Collect</h3>
 
 <nav>
-  <span data-wd-css="${#target}del{wd-spread wd-collection}" >None</span>
-	<span data-wd-css="${#target}del{wd-spread}add{wd-collection}" >Collection</span>
+	<span data-wd-css="${#target}tgl{wd-collection}"    >Collection</span>
+	<span data-wd-css="${#target}tgl{wd-box-x-child}"   >Square*</span>
+	<span data-wd-css="${#target}tgl{wd-box-xx-child}"  >Big Square*</span>
+	<span data-wd-css="${#target}tgl{wd-box-v-x-child}" >Vertical*</span>
+	<span data-wd-css="${#target}tgl{wd-box-h-x-child}" >Horizontal*</span>
+	<span data-wd-set="${#target}className{wd-bg-blue wd-bg-base-child}" >Clear</span>
 </nav>
 
-<p>You must define a size for the container.</p>
+<p>* See <code>wd-box</code>.</p>
+
+<p>You must define a size for the container:</p>
 
 <div id="target" class="wd-bg-blue wd-bg-base-child" style="max-width: 40em;">
 	<div>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</div>

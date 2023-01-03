@@ -6,23 +6,11 @@ The **Web Development** tool consists of a library written in JavaScript whose p
 
 The **Web Design** tool ([WD Style Sheet](https://github.com/wdonadelli/wd/wiki/WD-Style-Sheet)) consists of a library written in CSS whose purpose is to provide the styling of the developing application by means of basic class attributes.
 
-## Sources
+## Links
 
-- [v4 CSS](https://wdonadelli.github.io/wd/source/wd-4.0.0.css)
-- [v4 JS](https://wdonadelli.github.io/wd/source/wd-4.0.0.js)
-- [v3 CSS (discontinued)](https://wdonadelli.github.io/wd/source/wd-3.2.0.css)
-- [v3 JS (discontinued)](https://wdonadelli.github.io/wd/source/wd-3.2.0.js)
-- [v2 CSS (discontinued)](https://wdonadelli.github.io/wd/source/wd-2.0.4.css)
-- [v2 JS (discontinued)](https://wdonadelli.github.io/wd/source/wd-2.1.4.js)
-- [v1 CSS (discontinued)](https://wdonadelli.github.io/wd/source/wd-1.3.2.css)
-- [v1 JS (discontinued)](https://wdonadelli.github.io/wd/source/wd-1.3.2.js)
-
-## Documents
-
-- [v4](https://github.com/wdonadelli/wd/wiki)
-- [v3](https://wdonadelli.github.io/wd/docs/v3/)
-- [v2](https://wdonadelli.github.io/wd/docs/v2/)
-- [v1](https://wdonadelli.github.io/wd/docs/v1/)
+- <a href="https://wdonadelli.github.io/wd/wd4.css" download>Download CSS style sheets</a>
+- <a href="https://wdonadelli.github.io/wd/wd4.js" download>Download JavaScript file</a>
+- <a href="https://github.com/wdonadelli/wd/wiki" target="_blank">Wiki Page</a>
 
 ## Inspirational References
 
@@ -37,6 +25,3 @@ The **Web Design** tool ([WD Style Sheet](https://github.com/wdonadelli/wd/wiki/
 - STACKOVERFLOW, available at [https://stackoverflow.com/]().
 
 Among other inspiring and collaborative minds on the world wide web.
-
-_Willian Donadelli_ (<wdonadelli@gmail.com>)
-

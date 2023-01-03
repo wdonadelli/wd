@@ -1,17 +1,20 @@
 {
-	"id1": {
-		"default": "The identifier \"default\" was chosen.",
+	"#lang-id": {
+		"*": "The identifier default (*) was chosen.",
 		"pt": "Foi escolhida o identificador \"pt\".",
 		"pt_br": "Foi escolhida o identificador \"pt-BR\".",
 		"es": "Se eligió el identificador \"es\"."
 	},
-	"id2": {
-		"default": "Default value used.",
+	".lang-css": {
+		"*": "Default value used.",
 		"pt": "Português (Brasil/Portugal)",
 		"pt_br": "Português do Brasil",
 		"es": "Español"
 	},
-	"id3": {
+	"label": {
 		"pt_br": "Só existe em portugês do Brasil."
+	},
+	"#lang-id2": {
+		"xxxxxxx": "This will not be used by the available options."
 	}
 }

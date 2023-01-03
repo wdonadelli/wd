@@ -3678,7 +3678,7 @@ var wd = (function() {
 		return;
 	};
 
-	/*TODO experimental: Define um link de compartilhamento de redes sociais data-wd-shared=rede*/
+	/*experimental: Define um link de compartilhamento de redes sociais data-wd-shared=rede*/
 	function data_wdShared(e) {
 		var social, data, link, url, title;
 		data = new AttrHTML(e);
@@ -3980,7 +3980,7 @@ var wd = (function() {
 " *[data-wd-repeat] > *, *[data-wd-load] > * {visibility: hidden;}" +
 " *[data-wd-slide] > * {animation: js-wd-fade2 1s;}" +
 " .js-wd-box-message {color: #333333; background-color: #f8f8ff; border-style: solid; border-width: 1px;}" +
-" /*TODO Experimental*/" +
+" /* Experimental*/" +
 " *[data-wd-shared] {cursor: pointer; display: inline-block; width: 1em; height: 1em;}" +
 " *[data-wd-shared] {background-repeat: no-repeat; background-size: cover;}" +
 " *[data-wd-shared=\"facebook\"] {background-image: url('https://static.xx.fbcdn.net/rsrc.php/yo/r/iRmz9lCMBD2.ico');}" +
