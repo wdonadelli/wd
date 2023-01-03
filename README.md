@@ -8,8 +8,8 @@ The **Web Design** tool ([WD Style Sheet](https://github.com/wdonadelli/wd/wiki/
 
 ## Links
 
-- <a href="https://wdonadelli.github.io/wd/wd4.css" download>Download CSS style sheets</a>
-- <a href="https://wdonadelli.github.io/wd/wd4.js" download>Download JavaScript file</a>
+- <a href="https://wdonadelli.github.io/wd/wd4.css" download="wd4.css" >Download CSS style sheets</a>
+- <a href="https://wdonadelli.github.io/wd/wd4.js"  download="wd4.js" >Download JavaScript file</a>
 - <a href="https://github.com/wdonadelli/wd/wiki" target="_blank">Wiki Page</a>
 
 ## Inspirational References
