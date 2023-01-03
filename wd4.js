@@ -40,7 +40,7 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	/* guada a versão da biblioteca (JS + CSS) */
-	const wd_version = "v4.2.2 2022-10-27"; //FIXME
+	const wd_version = "v4.2.2 2023-01-03";
 	/* Guarda informação do dispositivo (desktop, mobile...) */
 	let wd_device_controller = null;
 	/* Guarda o intervalo de tempo para executar funções vinculadas aos eventos de tecla */
@@ -3903,7 +3903,7 @@ const wd = (function() {
 		device:  {get:   function() {return wd_get_device();}},
 		today:   {get:   function() {return WD(new Date());}},
 		now:     {get:   function() {return WD(wd_str_now());}},
-		bomba: {value: wd_signal_control}//FIXME apagar esse joça
+		/*bomba: {value: wd_signal_control} //FIXME */
 	});
 
 /* == BLOCO 4 ================================================================*/
