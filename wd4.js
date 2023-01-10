@@ -20,9 +20,9 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-------------------------------------------------------------------------------*/
 
-/* wd.js (v4.1.1) | https://github.com/wdonadelli/wd */
+https://github.com/wdonadelli/wd
+------------------------------------------------------------------------------*/
 
 "use strict";
 
@@ -40,7 +40,7 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	/* guada a versão da biblioteca (JS + CSS) */
-	const wd_version = "v4.2.2 2023-01-03";
+	const wd_version = "WD JS v4.2.2";
 	/* Guarda informação do dispositivo (desktop, mobile...) */
 	let wd_device_controller = null;
 	/* Guarda o intervalo de tempo para executar funções vinculadas aos eventos de tecla */
@@ -1569,7 +1569,6 @@ const wd = (function() {
 		delta = wd_vtype(delta).value;
 		if (!wd_finite(delta)) delta = (ends.max - ends.min)/xcoord.length;
 		delta = Math.abs(delta);
-		console.log(delta);
 
 		/* obtendo amostra */
 		let x = [];
@@ -1857,7 +1856,6 @@ const wd = (function() {
 				/* registrando-os para eliminação e apensação */
 				oldscr.push(script);
 				newscr.push(clone);
-				console.log(clone);
 			}
 			/* eliminando os scripts antigos */
 			for (let i = 0; i < oldscr.length; i++)
@@ -3902,8 +3900,7 @@ const wd = (function() {
 		lang:    {get:   function() {return wd_lang();}},
 		device:  {get:   function() {return wd_get_device();}},
 		today:   {get:   function() {return WD(new Date());}},
-		now:     {get:   function() {return WD(wd_str_now());}},
-		/*bomba: {value: wd_signal_control} //FIXME */
+		now:     {get:   function() {return WD(wd_str_now());}}
 	});
 
 /* == BLOCO 4 ================================================================*/

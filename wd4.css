@@ -20,9 +20,9 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-------------------------------------------------------------------------------*/
 
-/* wd.css (v4.1.1) | https://github.com/wdonadelli/wd */
+https://github.com/wdonadelli/wd
+------------------------------------------------------------------------------*/
 
 /*------------------------------------------------------------------------------
 | Os estilos terão efeito na página se precedidos da classe wd. Caso contrário,
@@ -41,6 +41,7 @@ SOFTWARE.
 /* == BLOCO 1 ================================================================*/
 
 :root {
+	--var-wd-version: "WD CSS v4.2.2";
 	/* cores de fundo e de fonte */
 	--var-bg-grey-header: rgb(200,200,200);
 	--var-fg-grey-header: rgb(20,20,20);
@@ -251,12 +252,16 @@ q {
 }
 
 /* == BLOCO 3 ================================================================*/
-
 .wd {
 	color: var(--var-font-color);
 	font-family: var(--var-font-default);
 	font-size: var(--var-font-size);
 	line-height: var(--var-font-height);
+}
+.wd .wd-version::before {
+	content: var(--var-wd-version);
+	font-family: var(--var-font-code);
+	font-size: 0.9em;
 }
 /* -- texto -- */
 .wd code {
@@ -1294,8 +1299,6 @@ q {
 .wd .wd-grid-right {
 	display: grid;
 	grid-template-columns: 20% auto 20%;
-	height: 100%;
-	width: 100%
 }
 
 .wd .wd-grid       > .wd-grid-main,
