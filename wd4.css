@@ -455,7 +455,7 @@ q {
 	font-family: var(--var-font-form);
 	font-size: var(--var-font-size);
 	line-height: var(--var-font-height);
-	height: var(--var-height-form);
+	min-height: var(--var-height-form);
 	outline: inherit;
 	padding: 0.5em;
 	vertical-align: middle;
@@ -646,7 +646,6 @@ q {
 /* -- Blocos -- */
 .wd .wd-block, .wd .wd-block-child > * {
 	display: block !important;
-	float: none !important;
 	margin-left: 0;
 	margin-right: 0;
 	width: 100%;
