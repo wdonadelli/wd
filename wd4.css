@@ -538,10 +538,15 @@ q {
 	background-position: left center;
 	padding-left: 25px;
 }
-.wd select[multiple] {
+.wd select[multiple], .wd select[size] {
 	background-image: none;
 	padding-left: 0.5em;
+
 }
+.wd select[size] {
+	height: initial;
+}
+
 /* -- outros -- */
 .wd hr {
 	border: var(--var-border-form);
