@@ -201,8 +201,11 @@ https://github.com/wdonadelli/wd
 	--var-zindex-5: 555;
 
 	/* others */
-	--var-itemize-table: "Table";
-	--var-itemize-figure: "Figure";
+	--var-itemize-table:   "Table";
+	--var-itemize-figure:  "Figure";
+	--var-itemize-audio:   "Audio";
+	--var-itemize-video:   "Video";
+	--var-itemize-picture: "Picture";
 }
 
 /* == BLOCO 2 ================================================================*/
@@ -1081,9 +1084,28 @@ q {
 .wd .wd-read > dl {
 	margin: 1em 0;
 }
+/* mídias */
+.wd .wd-read > audio,
+.wd .wd-read > video,
+.wd .wd-read > picture {
+	display: block;
+	max-width: 80%;
+	margin: 2em auto 0 auto;
+	text-align: center;
+}
+.wd .wd-read > audio   + span,
+.wd .wd-read > video   + span,
+.wd .wd-read > picture + span {
+	display: block;
+	font-size: smaller;
+	padding: 0.3em;
+	text-align: center;
+	margin-bottom: 2em;
+}
+
 /* numeração */
 .wd .wd-read {
-	counter-reset: chapter3 figure1 table1;
+	counter-reset: chapter3 figure1 table1 video1 audio1;
 }
 /* numeração: capítulo */
 .wd .wd-read > h3 {
@@ -1122,6 +1144,30 @@ q {
 }
 .wd .wd-read > figure > figcaption::before {
 	content: var(--var-itemize-figure) " " counter(figure1) " - ";
+	font-weight: bold;
+}
+/* numeração: audio */
+.wd .wd-read > audio + span {
+	counter-increment: audio1;
+}
+.wd .wd-read > audio + span::before {
+	content: var(--var-itemize-audio) " " counter(audio1) " - ";
+	font-weight: bold;
+}
+/* numeração: video */
+.wd .wd-read > video + span {
+	counter-increment: video1;
+}
+.wd .wd-read > video + span::before {
+	content: var(--var-itemize-video) " " counter(video1) " - ";
+	font-weight: bold;
+}
+/* numeração: picture */
+.wd .wd-read > picture + span {
+	counter-increment: picture1;
+}
+.wd .wd-read > picture + span::before {
+	content: var(--var-itemize-picture) " " counter(picture1) " - ";
 	font-weight: bold;
 }
 

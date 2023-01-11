@@ -3,8 +3,13 @@
 <style>
 	/* Remove the comments to change the table and figure legend: */
 	:root {
-		/*--var-itemize-table:  "Tabela";*/
-		/*--var-itemize-figure: "Figura";*/
+/*
+		--var-itemize-table:   "Tabela";
+		--var-itemize-figure:  "Figura";
+		--var-itemize-audio:   "Áudio";
+		--var-itemize-video:   "Vídeo";
+		--var-itemize-picture: "Foto";
+*/
 	}
 </style>
 
@@ -21,6 +26,7 @@
 	<h1>Article title</h1>
 
 	<h2>Article subtitle</h2>
+
 
 	<p>Use the <code>h1</code> and <code>h2</code> elements within the scope to construct the article title and subtitle, respectively.</p>
 
@@ -157,5 +163,26 @@
 	</ol>
 
 	<p>That's it for now!</p>
+
+	<h3>Media</h3>
+
+	<p>To create subtitles for the `audio`, `video` and `picture` elements, you must insert a `span` element right after the media element, considering that there is no specific element for this purpose:</p>
+
+	<audio controls>
+		<source src="none.ogg" type="audio/ogg" />
+	</audio>
+	<span>Audio example.</span>
+
+	<video controls>
+		<source src="none.ogg" type="video/ogg" />
+	</video>
+	<span>Video example.</span>
+
+	<picture >
+		<source srcset="examples/image.png" >
+		<img src="examples/image.png" >
+	</picture>
+	<span>Picture example.</span>
+
 
 </article>
