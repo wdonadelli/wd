@@ -1850,9 +1850,12 @@ q {
 	column-gap: var(--var-size-large);
 	column-count: 2;
 }
-.wd .wd-columns > h1,    .wd .wd-columns > h2, .wd .wd-columns > h3,
-.wd .wd-columns > h4,    .wd .wd-columns > h5, .wd .wd-columns > h6,
-.wd .wd-columns > table, .wd .wd-columns > figure,
+.wd .wd-columns > h1,      .wd .wd-columns > h2, .wd .wd-columns > h3,
+.wd .wd-columns > h4,      .wd .wd-columns > h5, .wd .wd-columns > h6,
+.wd .wd-columns > table,   .wd .wd-columns > figure,
+.wd .wd-columns > audio,   .wd .wd-columns > audio + span,
+.wd .wd-columns > video,   .wd .wd-columns > video + span,
+.wd .wd-columns > picture, .wd .wd-columns > picture + span,
 .wd .wd-columns > .wd-columns-none {column-span: all;}
 /*-- Ícones Matemática --*/
 .wd .wd-icon-plus:before     {content: "\2795" !important;}
