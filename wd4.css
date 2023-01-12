@@ -1846,17 +1846,23 @@ q {
 .wd .wd-radius-e,  .wd .wd-radius-e-child  > * {border-bottom-right-radius: var(--var-radius-default) !important;}
 .wd .wd-radius-none {border-radius: 0 !important;}
 /* texto em colunas */
-.wd .wd-columns {
+.wd .wd-columns,
+.wd .wd-columns-3,
+.wd .wd-columns-4 {
 	column-gap: var(--var-size-large);
-	column-count: 2;
 }
-.wd .wd-columns > h1,      .wd .wd-columns > h2, .wd .wd-columns > h3,
-.wd .wd-columns > h4,      .wd .wd-columns > h5, .wd .wd-columns > h6,
-.wd .wd-columns > table,   .wd .wd-columns > figure,
-.wd .wd-columns > audio,   .wd .wd-columns > audio + span,
-.wd .wd-columns > video,   .wd .wd-columns > video + span,
-.wd .wd-columns > picture, .wd .wd-columns > picture + span,
-.wd .wd-columns > .wd-columns-none {column-span: all;}
+.wd .wd-columns   {column-count: 2;}
+.wd .wd-columns-3 {column-count: 3;}
+.wd .wd-columns-4 {column-count: 4;}
+
+.wd .wd-columns   > h1, .wd .wd-columns-3 > h1, .wd .wd-columns-4 > h1,
+.wd .wd-columns   > h2, .wd .wd-columns-3 > h2, .wd .wd-columns-4 > h2,
+.wd .wd-columns   > h3, .wd .wd-columns-3 > h3, .wd .wd-columns-4 > h3,
+.wd .wd-columns   > .wd-columns-none,
+.wd .wd-columns-3 > .wd-columns-none,
+.wd .wd-columns-4 > .wd-columns-none {
+	column-span: all;
+}
 /*-- Ícones Matemática --*/
 .wd .wd-icon-plus:before     {content: "\2795" !important;}
 .wd .wd-icon-minus:before    {content: "\2796" !important;}
