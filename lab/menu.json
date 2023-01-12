@@ -28,6 +28,7 @@
 	{"target": "data-wd-edit"},
 	{"target": "data-wd-filter"},
 	{"target": "data-wd-full"},
+	{"target": "data-wd-jump"},
 	{"target": "data-wd-lang"},
 	{"target": "data-wd-load"},
 	{"target": "data-wd-mask"},

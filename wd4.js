@@ -192,7 +192,7 @@ const wd = (function() {
 		]},
 		{s: "div.js-wd-progress-bar", d: ["height: 1em; background-color: #1e90ff;"]},
 		{s: ".js-wd-no-display", d: ["display: none;"]},
-		{s: "[data-wd-nav], [data-wd-send], [data-wd-tsort], [data-wd-data], [data-wd-full]", d: [
+		{s: "[data-wd-nav], [data-wd-send], [data-wd-tsort], [data-wd-data], [data-wd-full], [data-wd-jump]", d: [
 			"cursor: pointer;"
 		]},
 		{s: "[data-wd-set], [data-wd-edit], [data-wd-shared], [data-wd-css], [data-wd-table]", d:[
@@ -1973,6 +1973,17 @@ const wd = (function() {
 		for (let i = 0; i < bros.length; i++)
 			wd_html_nav(bros[i], (bros[i] === elem ? "show": "hide"));
 		return true;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_html_jump(elem, parents) { /* transporta o elemento entre dois containers */
+		for (let i = 0; i < parents.length; i++) {
+			if (elem.parentElement === parents[i]) {
+				let item = (i + 1) >= (parents.length) ? 0 : (i + 1);
+				return parents[item].appendChild(elem);
+			}
+		}
+		return;
 	}
 
 /*----------------------------------------------------------------------------*/
@@ -3837,6 +3848,11 @@ const wd = (function() {
 				return this.run(wd_html_sort, order, col);
 			}
 		},
+		jump: { /* salta elementos entre seus pais (argumentos) */
+			value: function(list) {
+				return this.run(wd_html_jump, list);
+			}
+		},
 		full: { /* deixa o elemento em tela cheia (só primeiro elemento) */
 			value: function(exit) {
 				wd_html_full(this._value[0], exit); return this;
@@ -4393,6 +4409,17 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
+	function data_wdJump(e) { /* Saltos de pai: data-wd-jump=$${parents}*/
+		if (!("wdJump" in e.dataset)) return;
+		let data = wd_html_dataset_value(e, "wdJump")[0];
+		let target  = wd_$$$(data);
+		let parents = wd_vtype(target)
+		if (parents.type === "dom")
+			WD(e).jump(parents.value);
+		return;
+	};
+
+/*----------------------------------------------------------------------------*/
 	function data_wdOutput(e, load) { /* Atribui valor ao target: data-wd-output=${target}call{} */
 		let output = wd_$$("[data-wd-output]");
 		if (output === null) return;
@@ -4630,6 +4657,7 @@ const wd = (function() {
 			data_wdCss(elem);
 			data_wdNav(elem);
 			data_wdFull(elem);
+			data_wdJump(elem);
 			navLink(elem);
 			/* efeito bolha */
 			elem = "wdNoBubbles" in elem.dataset ? null : elem.parentElement;
@@ -4766,6 +4794,7 @@ document.onclick > clickProcedures()
 	- data-wd-data
 	- data-wd-edit
 	- data-wd-full
+	- data-wd-jump
 	- data-wd-nav
 	- data-wd-no-bubbles
 	- data-wd-send
