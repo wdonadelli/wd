@@ -1,10 +1,409 @@
 <h3>Math (Under construction)</h3>
 
+<!-- FIXME fórmulas matemáticas -->
+
+
 <style>
-	.see * {outline: 1px dotted royalblue;}
+/* -- Fórmulas -- */
+/* Container */
+.wd .wd-calc {
+	counter-increment: wdcalc;
+	margin: var(--var-margin-default);
+	padding: var(--var-size-default);
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	text-align:  center;
+	line-height: 1;
+	font-family: var(--var-font-math);
+	font-size:   20px;
+	font-style:  italic;
+}
+.wd .wd-calc::after {
+	content: "(" counter(wdcalc) ")";
+	margin-left: 2em;
+	font-style: normal;
+}
+
+/* conteúdo textual */
+.wd .wd-calc sup,
+	.wd .wd-calc sub {
+		font-size: 0.5em;
+}
+.wd .wd-calc .wd-calc-text {
+	font-style: normal;
+}
+.wd .wd-calc .wd-calc-symbol {
+	font-size: 1.5em !important;
+	/* correção da fonte que fica mais abaixo do que o texto normal */
+	margin-top: -0.1em;
+	padding-bottom: 0.1em;
+}
+/* agrupador circular */
+.wd .wd-calc .wd-calc-set {
+	display: grid;
+	grid-template-columns: auto auto auto;
+	grid-template-rows: 0.6em auto auto 0.6em;
+	justify-content: center;
+	align-content: center;
+	margin: 0 0.2em;
+}
+.wd .wd-calc .wd-calc-set > * {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	font-size: 0.5em;
+}
+.wd .wd-calc .wd-calc-set > .wd-calc-base {
+	grid-area: 2 / 2 / 4 / 3;
+	font-size: 1em;
+}
+.wd .wd-calc .wd-calc-set > .wd-calc-top {
+	grid-area: 1 / 2 / 2 / 3;
+}
+.wd .wd-calc .wd-calc-set > .wd-calc-down {
+	grid-area: 4 / 2 / 5 / 3;
+}
+.wd .wd-calc .wd-calc-set > .wd-calc-sup {
+	grid-area: 2 / 3 / 3 / 4;
+	justify-content: start;
+}
+.wd .wd-calc .wd-calc-set > .wd-calc-sub {
+	grid-area: 3 / 3 / 4 / 4;
+	justify-content: start;
+}
+.wd .wd-calc .wd-calc-set > .wd-calc-lsup {
+	grid-area: 2 / 1 / 3 / 2;
+	justify-content: end;
+}
+.wd .wd-calc .wd-calc-set > .wd-calc-lsub {
+	grid-area: 3 / 1 / 4 / 2;
+	justify-content: end;
+}
+/* fração */
+.wd .wd-calc .wd-calc-over {
+	display: grid;
+	grid-template-columns: auto;
+	grid-template-rows: 2.5em 2.5em;
+	justify-content: center;
+	align-content: center;
+	margin: 0 0.2em;
+}
+.wd .wd-calc .wd-calc-over > * {
+	display: flex;
+	justify-content: center;
+}
+.wd .wd-calc .wd-calc-over > .wd-calc-top {
+	grid-area: 1 / 1 / 2 / 2;
+	align-items: end;
+	border-bottom: 2px solid;
+}
+.wd .wd-calc .wd-calc-over > .wd-calc-down {
+	grid-area: 2 / 1 / 3 / 2;
+	align-items: start;
+}
+
+
+
 </style>
 
+<style id="show-border"></style>
+
+
+
 <p><a href="https://www.w3schools.com/charsets/ref_utf_math.asp" target="_blank">Symbols</a></p>
+
+
+<nav>
+	<span data-wd-set="${#show-border}textContent{* {outline: 1px solid red;}}">Border</span>
+	<span data-wd-set="${#show-border}textContent{}">Clear</span>
+</nav>
+
+<nav>
+	<a href="#set">set</a>
+	<a href="#text-symbol">text</a>
+	<a href="#text-over">over</a>
+</nav>
+
+
+
+
+<h5 id="set">wd-calc-set</h5>
+
+<div class="wd-calc" id="set">
+	<span class="wd-calc-set">
+		<span class="wd-calc-base">base</span>
+		<span class="wd-calc-top">top</span>
+		<span class="wd-calc-sup">sup</span>
+		<span class="wd-calc-sub">sub----</span>
+		<span class="wd-calc-down">down</span>
+		<span class="wd-calc-lsub">lsub</span>
+		<span class="wd-calc-lsup">lsup----</span>
+	</span>
+
+	<span> / </span>
+	<span>ax<sup>2</sup> = b<sub>0</sub></span>
+
+
+</div>
+
+
+<h5 id="text-symbol">wd-calc-symbol / wd-calc-text</h5>
+
+<div class="wd-calc" id="set">
+
+	<span class="wd-calc-set">
+		<span class="wd-calc-base wd-calc-symbol">&int;</span>
+		<span class="wd-calc-top">a</span>
+		<span class="wd-calc-down">b</span>
+	</span>
+	<span>f(x)dx =</span>
+
+
+	<span class="wd-calc-set">
+		<span class="wd-calc-base wd-calc-text">lim</span>
+		<span class="wd-calc-down">&Delta;x&rarr;0</span>
+	</span>
+
+	<span class="wd-calc-set">
+		<span class="wd-calc-base wd-calc-symbol">&sum;</span>
+		<span class="wd-calc-down">i=0</span>
+		<span class="wd-calc-top">n</span>
+	</span>
+
+	<span>f(</span>
+	<span class="wd-calc-set">
+		<span class="wd-calc-base">x</span>
+		<span class="wd-calc-sup">*</span>
+		<span class="wd-calc-sub">i</span>
+	</span>
+	<span>)&Delta;x</span>
+</div>
+
+<h5 id="text-over">wd-calc-over</h5>
+
+<div class="wd-calc" id="set">
+
+	<span class="wd-calc-over">
+		<span class="wd-calc-top">df(x)</span>
+		<span class="wd-calc-down">dx</span>
+	</span>
+	<span>=</span>
+
+	<span class="wd-calc-set">
+		<span class="wd-calc-base wd-calc-text">lim</span>
+		<span class="wd-calc-down">&Delta;x&rarr;0</span>
+	</span>
+
+	<span class="wd-calc-over">
+		<span class="wd-calc-top">f(x+&Delta;x) - f(x)</span>
+		<span class="wd-calc-down">&Delta;x</span>
+	</span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<style>
+
+
+/* container */
+.wd .wd-math {
+	counter-reset: math;
+	background-color: var(--var-bg-base);
+	color: var(--var-fg-base);
+	display: block;
+	margin: var(--var-margin-default);
+	padding: var(--var-size-default);
+	text-align:  center;
+}
+/* renderizador */
+.wd .wd-math samp {
+	align-items: center;
+	display: flex;
+  justify-content: center;
+	padding: 0.6em 0;
+	font-size:   24px;
+}
+/* componentes */
+.wd .wd-math samp > span {
+	line-height: 1;
+	padding: 0 0.1em;
+	font-family: var(--var-font-math);
+	font-size:   24px;
+	font-style:  italic;
+	text-align:  center;
+}
+/* linhas */
+.wd .wd-math > * {
+	display: block;
+	width: 100%;
+	margin: 2em 0;
+	padding: 0;
+}
+/* contador */
+.wd .wd-math .wd-math-counter:before {
+	counter-increment: math;
+	content: "(" counter(math) ")";
+	margin-right: 3em;
+	font-style: normal;
+}
+/* texto */
+.wd .wd-math .wd-math-text {
+	font-style: normal;
+}
+/* agrupador */
+.wd .wd-math section {
+	display: grid;
+	justify-content: center;
+	align-content: center;
+}
+/* potência e subíndice */
+.wd .wd-math span.wd-math-indexes > section {
+	grid-template-areas:
+	'head sup'
+	'main .'
+	'main sub';
+}
+.wd .wd-math span.wd-math-indexes > section > em {
+	font-size: 0.6em;
+	grid-area: head;
+	text-align: center;
+	margin-top: -1em;
+}
+.wd .wd-math span.wd-math-indexes > section > sub {
+	font-size: 0.6em;
+	grid-area: sub;
+	text-align: left;
+}
+.wd .wd-math span.wd-math-indexes > section > sup {
+	font-size: 0.6em;
+	grid-area: sup;
+	text-align: left;
+	margin-top: -1em;
+}
+.wd .wd-math span.wd-math-indexes > section > span {
+	font-size: 1em;
+	grid-area: main;
+	text-align: center;
+}
+/* limites */
+.wd .wd-math span.wd-math-limits > section {
+	grid-template-areas:
+	'sup'
+	'main'
+	'sub';
+}
+.wd .wd-math span.wd-math-limits > section > sub {
+	font-size: 0.6em;
+	grid-area: sub;
+	margin-bottom: -1em;
+}
+.wd .wd-math span.wd-math-limits > section > sup {
+	font-size: 0.6em;
+	grid-area: sup;
+	margin-top: -1em;
+}
+.wd .wd-math span.wd-math-limits > section > span {
+	font-size: 1em;
+	grid-area: main;
+	font-style: normal;
+}
+.wd .wd-math span.wd-math-limits > section > em {
+	font-size: 1.5em;
+	grid-area: main;
+	font-style: normal;
+}
+/* Frações */
+.wd .wd-math span.wd-math-fraction > section {
+	grid-template-areas:
+	'sup'
+	'sub';
+}
+.wd .wd-math span.wd-math-fraction > section > sub {
+	box-shadow: inset 0 1px 0 0 black;
+	font-size: 1em;
+	grid-area: sub;
+}
+.wd .wd-math span.wd-math-fraction > section > sup {
+	box-shadow: inset 0 -1px 0 0 black;
+	font-size: 1em;
+	grid-area: sup;
+}
+.wd .wd-math span.wd-math-fraction > section > sub.wd-math-subfraction {
+	margin-bottom: -2.2em;
+}
+.wd .wd-math span.wd-math-fraction > section > sup.wd-math-subfraction {
+	margin-top: -2.2em;
+}
+
+/* raiz */
+.wd .wd-math span.wd-math-root > section {
+	grid-template-areas:
+	'root main';
+}
+.wd .wd-math span.wd-math-root > section > span {
+	box-shadow: inset 0 2px 0 0 black;
+	font-size: 1em;
+	grid-area: main;
+
+}
+.wd .wd-math span.wd-math-root > section > sup,
+.wd .wd-math span.wd-math-root > section > sub {
+	font-size: 1em;
+	grid-area: root;
+}
+</style>
 
 <nav>
 	<a href="#indexes">Indexes</a>
