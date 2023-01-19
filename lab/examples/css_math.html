@@ -150,8 +150,36 @@
 	align-items: start;
 	font-size: 0.5em;
 }
+/* matriz */
+.wd .wd-math .wd-math-matrix,
+.wd .wd-math .wd-math-determinant {
+	display: table;
+	margin: 0 0.2em;
+}
+
+.wd .wd-math .wd-math-matrix {
+	border-style: none double;
+	border-width: 6px;
+}
+
+.wd .wd-math .wd-math-determinant {
+	border-style: none solid;
+	border-width: 2px;
+}
 
 
+
+.wd .wd-math .wd-math-matrix      > div,
+.wd .wd-math .wd-math-determinant > div {
+	display: table-row;
+}
+.wd .wd-math .wd-math-matrix      > div > span,
+.wd .wd-math .wd-math-determinant > div > span {
+	display: table-cell;
+	vertical-align: middle;
+	text-align: center;
+	padding: 0.5em;
+}
 
 
 
@@ -173,11 +201,9 @@
 <nav>
 	<a href="#math-set">set</a>
 	<a href="#math-area">area</a>
-	<a href="#math">Text</a>
+	<a href="#math">text</a>
+	<a href="#math-matrix">matrix</a>
 </nav>
-
-
-
 
 <h5 id="math-set">wd-math-set</h5>
 
@@ -321,3 +347,142 @@
 
 	</span>
 </div>
+
+</section>
+
+
+<h5 id="math-matrix">wd-math-matrix</h5>
+
+<section class="wd-math">
+	<span>M = </span>
+	<span class="wd-math-matrix">
+		<div>
+			<span>1-1</span>
+			<span>1-2</span>
+			<span>1-3</span>
+		</div>
+		<div>
+			<span>2-1</span>
+			<span>2-2</span>
+			<span>2-3</span>
+		</div>
+		<div>
+			<span>3-1</span>
+			<span>3-2</span>
+			<span>3-3</span>
+		</div>
+	</span>
+	<span>,  D = </span>
+	<span class="wd-math-determinant">
+		<div>
+			<span>1-1</span>
+			<span>1-2</span>
+			<span>1-3</span>
+		</div>
+		<div>
+			<span>2-1</span>
+			<span>2-2</span>
+			<span>2-3</span>
+		</div>
+		<div>
+			<span>3-1</span>
+			<span>3-2</span>
+			<span>3-3</span>
+		</div>
+	</span>
+</section>
+
+
+<section class="wd-math">
+	<span class="wd-math-set">
+		<span class="wd-math-base">r</span>
+		<span class="wd-math-upper">&rarr;</span>
+		<span class="wd-math-rbase"> = </span>
+	</span>
+
+	<span class="wd-math-matrix">
+		<div>
+			<span>
+				<span class="wd-math-set">
+					<span class="wd-math-base">r</span>
+					<span class="wd-math-rlower">x</span>
+				</span>
+			</span>
+			<span>
+				<span class="wd-math-set">
+					<span class="wd-math-base">r</span>
+					<span class="wd-math-rlower">y</span>
+				</span>
+			</span>
+			<span>
+				<span class="wd-math-set">
+					<span class="wd-math-base">r</span>
+					<span class="wd-math-rlower">z</span>
+				</span>
+			</span>
+		</div>
+	</span>
+
+	<span> &times; </span>
+
+	<span class="wd-math-matrix">
+		<div>
+			<span>
+				<span class="wd-math-set">
+					<span class="wd-math-base">i</span>
+					<span class="wd-math-upper">^</span>
+				</span>
+			</span>
+		</div>
+		<div>
+			<span>
+				<span class="wd-math-set">
+					<span class="wd-math-base">j</span>
+					<span class="wd-math-upper">^</span>
+				</span>
+			</span>
+		</div>
+		<div>
+			<span>
+				<span class="wd-math-set">
+					<span class="wd-math-base">k</span>
+					<span class="wd-math-upper">^</span>
+				</span>
+			</span>
+		</div>
+	</span>
+
+	<span> = </span>
+
+	<span class="wd-math-set">
+			<span class="wd-math-base">r</span>
+			<span class="wd-math-rlower">x</span>
+		</span>
+	<span class="wd-math-set">
+		<span class="wd-math-base">i</span>
+		<span class="wd-math-upper">^</span>
+	</span>
+	<span> &plus;</span>
+
+	<span class="wd-math-set">
+			<span class="wd-math-base">r</span>
+			<span class="wd-math-rlower">y</span>
+		</span>
+	<span class="wd-math-set">
+		<span class="wd-math-base">j</span>
+		<span class="wd-math-upper">^</span>
+	</span>
+	<span> &plus;</span>
+
+	<span class="wd-math-set">
+			<span class="wd-math-base">r</span>
+			<span class="wd-math-rlower">z</span>
+		</span>
+	<span class="wd-math-set">
+		<span class="wd-math-base">k</span>
+		<span class="wd-math-upper">^</span>
+	</span>
+
+
+</section>
+
