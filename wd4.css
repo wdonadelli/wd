@@ -1103,6 +1103,14 @@ q {
 	margin-bottom: 2em;
 }
 
+.wd .wd-read > math {
+	max-width: 80%;
+	margin: 2em auto;
+	text-align: center;
+	border: 1px solid;
+}
+
+
 /* numeração */
 .wd .wd-read {
 	counter-reset: chapter3 figure1 table1 video1 audio1;

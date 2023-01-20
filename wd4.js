@@ -402,6 +402,7 @@ const wd = (function() {
 			HTMLAllCollection: "doms",
 			HTMLOptionsCollection: "doms",
 			HTMLFormControlsCollection: "doms",
+			MathMLElement: "dom"
 		};
 
 		for (let i in data) {
