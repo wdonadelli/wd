@@ -615,6 +615,142 @@ q {
 
 /* == BLOCO 5 ================================================================*/
 
+/* -- Formulário -- */
+/* FIXME organizador de formulário: grade, bloco, coluna */
+/* padrão/phone: em bloco */
+.wd .wd-form,
+.wd .wd-form-grid,
+.wd .wd-form-row,
+.wd .wd-form-col {
+	display: grid;
+	grid-template-columns: auto;
+	grid-template-rows:    auto;
+	row-gap:    var(--var-size-default);
+	column-gap: var(--var-size-default);
+	padding:    var(--var-size-default);
+}
+.wd .wd-form      > label,
+.wd .wd-form-grid > label,
+.wd .wd-form-row  > label,
+.wd .wd-form-col  > label {
+	font-weight: bold;
+	height: auto;
+	padding: 0;
+	min-height: initial;
+}
+.wd .wd-form      > textarea,
+.wd .wd-form-grid > textarea,
+.wd .wd-form-row  > textarea,
+.wd .wd-form-col  > textarea {
+	min-height: 5em;
+}
+.wd .wd-form > label {
+	text-align: left;
+}
+@media screen and (min-width: 600px) { /* tablet/desktop */
+	/* row */
+	.wd .wd-form-row {
+		grid-template-columns: max-content auto;
+		grid-template-rows: auto;
+	}
+	.wd .wd-form-row > * {
+		grid-row: auto / auto;
+		grid-column: 2 / 3;
+	}
+	.wd .wd-form-row > button,
+	.wd .wd-form-row > input[type="submit"],
+	.wd .wd-form-row > input[type="button"],
+	.wd .wd-form-row > input[type="reset"],
+	.wd .wd-form-row > input[type="color"] {
+		grid-column: 1 / 3;
+	}
+	.wd .wd-form-row > label {
+		grid-row:    auto / auto;
+		grid-column:    1 / span 2;
+		text-align: left;
+	}
+	.wd .wd-form-row > label[for] {
+		grid-column:    1 / auto;
+		text-align: right;
+	}
+	/* col */
+	.wd .wd-form-col {
+		grid-template-columns: auto auto auto auto;
+		grid-template-rows: auto;
+	}
+	.wd .wd-form-col > * {
+		grid-row:    auto / auto;
+		grid-column: auto / auto;
+		margin-bottom: auto;
+	}
+	.wd .wd-form-col > button,
+	.wd .wd-form-col > input[type="submit"],
+	.wd .wd-form-col > input[type="button"],
+	.wd .wd-form-col > input[type="reset"],
+	.wd .wd-form-col > input[type="color"] {
+		grid-column: 1 / 5;
+	}
+	.wd .wd-form-col > label {
+		grid-column: auto / span 2;
+	}
+	.wd .wd-form-col > label[for] {
+		grid-column: auto / auto;
+	}
+
+	/* grid */
+	.wd .wd-form-grid {
+		grid-template-columns: auto auto auto;
+		grid-template-rows: repeat(500, auto);
+
+	}
+	.wd .wd-form-grid > * {
+		grid-row:    auto / auto;
+		grid-column: auto / auto;
+		margin-bottom: auto;
+	}
+	.wd .wd-form-grid > button,
+	.wd .wd-form-grid > input[type="submit"],
+	.wd .wd-form-grid > input[type="button"],
+	.wd .wd-form-grid > input[type="reset"],
+	.wd .wd-form-grid > input[type="color"] {
+		grid-column: 1 / 4;
+	}
+	.wd .wd-form-grid > label {
+		grid-row: auto / span 2;
+	}
+	.wd .wd-form-grid > label[for] {
+		grid-row: auto / span 1;
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* -- Navegador -- */
 .wd nav > *.wd-nav-right {
 	margin: auto 0 auto auto;

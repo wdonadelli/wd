@@ -4464,6 +4464,24 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	function data_wdLang(e) { /* carrega HTML: data-wd-lang=path{file}method{get|post}${form} */
+		/*
+		FIXME criar novo atributo wd-lang
+		fazer com que seja possível definir atributos HTML a partir do endereço onde ficarão os arquivos
+		data-wd-lang=path{dir}method{get|post}${form}
+		testar dir/pt-BR.json e dir/pt.json, se não achar, não fazer nada
+		arquivo
+
+		#tag1 {
+			"textContent": "texto da tag 1",
+			"title": "dica da tag 1"
+		}
+		#tag2 {
+			"textContent": "texto da tag 2",
+			"title": "dica da tag 2",
+			"value": "valor da tag 2"
+		}
+		*/
+
 		if (!("wdLang" in e.dataset)) return;
 		let data   = wd_html_dataset_value(e, "wdLang")[0];
 		let target = WD(e);

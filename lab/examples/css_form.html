@@ -1,0 +1,39 @@
+<h2>Form</h2>
+
+
+<div id="full" class="wd-bg-black">
+
+	<nav>
+		<span data-wd-set="${#form}className{}">None</span>
+		<span data-wd-set="${#form}className{wd-form}">Form</span>
+		<span data-wd-set="${#form}className{wd-form-row}">Row</span>
+		<span data-wd-set="${#form}className{wd-form-col}">Col</span>
+		<span data-wd-set="${#form}className{wd-form-grid}">Grid</span>
+		<span data-wd-full="${#full}">Full</span>
+	</nav>
+
+	<div id="form" style="border: 1px dotted;">
+
+		<label for="form1">Form 1</label>
+		<input type="text" id="form1" />
+
+		<label for="form2">Form 2</label>
+		<input type="time" id="form2" />
+
+		<label for="form3">Form 3</label>
+		<select id="form3">
+			<option value="">-- Select --</option>
+		</select>
+
+		<label for="form4">Form 4</label>
+		<textarea id="form4"></textarea>
+
+		<label><input type="checkbox" /> Check 1</label>
+		<label><input type="checkbox" /> Check 2</label>
+
+
+		<button type="button">OK</button>
+
+	</div>
+
+</div>
