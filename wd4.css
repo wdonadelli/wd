@@ -308,11 +308,12 @@ q {
 	display: flex;
 	flex-direction: row;
 	flex-wrap: wrap;
+	justify-content: start;
+	align-items: start;
 }
 .wd nav > * {
 	color: inherit;
 	cursor: pointer;
-	margin: 0;
 	padding: var(--var-size-default);
 	text-decoration: none;
 }
@@ -615,7 +616,7 @@ q {
 
 /* == BLOCO 5 ================================================================*/
 
-/* -- FIXME Formulário -- */
+/* -- Formulário -- */
 .wd .wd-form,
 .wd .wd-form-grid,
 .wd .wd-form-col {
@@ -647,6 +648,7 @@ q {
 	display: grid;
 	grid-template-columns: auto;
 	grid-template-rows:    auto auto;
+	align-content: start;
 }
 .wd .wd-form      > * > *,
 .wd .wd-form-grid > * > *,
@@ -698,45 +700,24 @@ q {
 		column-gap: var(--var-size-default);
 	}
 	.wd .wd-form-grid > * > * {
-		align-items: flex-start;
-		margin-bottom: auto;
-		/*align-items: start;
-		margin-bottom: auto; /* FIXME esse negócio não fica em cima */
-		*/
+		align-items: start;
 	}
-	.wd .wd-form-grid > *, .wd .wd-form-grid > * > * {border: thin solid}
-
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /* -- Navegador -- */
 .wd nav > *.wd-nav-right {
-	margin: auto 0 auto auto;
+	margin-left: auto;
 }
 .wd nav.wd-nav-block {
 	flex-direction: column;
+
+}
+.wd nav.wd-nav-block > * {
+	border-bottom: thin solid;
+	width: 100%;
 }
 .wd nav.wd-nav-block > *:hover {
 	box-shadow: var(--var-shadow-nav-block);
-}
-.wd nav.wd-nav-block > * {
-	margin: 0;
-	width: 100%;
-	border-bottom-width: 1px;
-	border-bottom-style: solid;
-	border-bottom-color: var(--var-border-table) !important;
 }
 .wd nav.wd-nav-spread {
 	justify-content: space-around;
@@ -758,10 +739,8 @@ q {
 .wd .wd-col {
 	display: flex;
 	flex-wrap: nowrap;
-	align-items: stretch;
-	width: 100%;
 }
-.wd .wd-col > * {flex: 1;}
+.wd .wd-col > *          {flex:  1;}
 .wd .wd-col > .wd-col-01 {flex:  1;}
 .wd .wd-col > .wd-col-02 {flex:  2;}
 .wd .wd-col > .wd-col-03 {flex:  3;}
@@ -902,7 +881,7 @@ q {
 .wd .wd-box-v-x,  .wd .wd-box-v-x-child  > * {height: 18em; width: 12em;}
 .wd .wd-box-v-xx, .wd .wd-box-v-xx-child > * {height: 24em; width: 18em;}
 
-/* -- Post -- */
+/* -- FIXME Post -- */
 .wd .wd-post, .wd .wd-post-input, .wd .wd-post-output {
 	display: grid;
 	border-radius: var(--var-radius-default);
