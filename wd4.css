@@ -882,62 +882,94 @@ q {
 .wd .wd-box-v-xx, .wd .wd-box-v-xx-child > * {height: 24em; width: 18em;}
 
 /* -- FIXME Post -- */
-.wd .wd-post, .wd .wd-post-input, .wd .wd-post-output {
+.wd .wd-post,
+.wd .wd-post-input,
+.wd .wd-post-output {
 	display: grid;
 	border-radius: var(--var-radius-default);
 	margin: var(--var-margin-default);
 	padding: var(--var-size-default);
 }
-.wd .wd-post-input  {margin-right: var(--var-size-medium);}
-.wd .wd-post-output {margin-left:  var(--var-size-medium);}
-
-.wd .wd-post > img, .wd .wd-post-input > img, .wd .wd-post-output > img {
-	grid-area: img;
-	border-radius: var(--var-radius-square);
+.wd .wd-post {
+	grid-template-columns: auto;
+	grid-template-rows: auto auto;
+	justify-content: center;
+	align-content: start;
+	row-gap: var(--var-size-default);
 	text-align: center;
+	font-style: italic;
+}
+.wd .wd-post > * {
+	grid-column: 1 / 2;
+	grid-row:    2 / 3;
 }
 .wd .wd-post > img {
+	grid-column: 1 / 2;
+	grid-row:    1 / 2;
 	border: var(--var-border-medium);
 	width:  12em;
 	height: 12em;
-	margin: auto;
 }
-.wd .wd-post-input > img, .wd .wd-post-output > img {
-	width:  3em;
-	height: 3em;
-	margin: 0 auto auto auto;
-}
-
-.wd .wd-post > div, .wd .wd-post-input > div, .wd .wd-post-output > div {
-	grid-area: txt;
-	font-size: smaller;
-	font-style: italic;
-	text-align: left;
-}
-.wd .wd-post > div {text-align: center;}
-
-
-
-.wd .wd-post {
-	grid-template-areas: 'img' 'txt';
-	grid-template-rows: 14em auto;
-}
-.wd .wd-post-input {
-	grid-template-areas: 'img txt';
-	grid-template-columns: 4em auto;
-}
+.wd .wd-post-input,
 .wd .wd-post-output {
-	grid-template-areas: 'txt img';
-	grid-template-columns: auto 4em;
+	grid-template-columns: auto auto;
+	grid-template-rows: auto;
+	column-gap: var(--var-size-medium);
+	text-align: left;
+	font-style: italic;
+	max-width: 75%;/*FIXME o que fazer aqui? */
+}
+.wd .wd-post-input  {
+	justify-content: end;
+	align-content: center;
+	margin-left: auto;
+	padding-left: var(--var-size-medium);
+}
+.wd .wd-post-input > * {
+	grid-column: 1 / 2;
+	grid-row:    1 / 2;
+}
+.wd .wd-post-input > img {
+	grid-column: 2 / 3;
+	grid-row:    1 / 2;
 }
 
+
+.wd .wd-post-output {
+	justify-content: start;
+	align-content: center;
+	margin-right: auto;
+	padding-right: var(--var-size-medium);
+}
+.wd .wd-post-output > * {
+	grid-column: 2 / 3;
+	grid-row:    1 / 2;
+}
+.wd .wd-post-output > img {
+	grid-column: 1 / 2;
+	grid-row:    1 / 2;
+}
+
+
+
+.wd .wd-post        > img,
+.wd .wd-post-input  > img,
+.wd .wd-post-output > img {
+	border-radius: var(--var-radius-square);
+	font-size:  medium;
+	font-style: normal;
+	text-align: center;
+}
+.wd .wd-post-input  > img,
+.wd .wd-post-output > img {
+	width:  var(--var-size-large);
+	height: var(--var-size-large);
+}
 @media screen and (min-width: 600px) { /* tablet */
 	.wd .wd-post > img {width:  14em; height: 14em;}
-	.wd .wd-post {grid-template-rows: 16em auto;}
 }
 @media screen and (min-width: 768px) { /* desktop */
 	.wd .wd-post > img {width: 16em; height: 16em;}
-	.wd .wd-post {grid-template-rows: 18em auto;}
 }
 
 /* -- Caixa de Dicas -- */
