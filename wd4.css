@@ -881,95 +881,85 @@ q {
 .wd .wd-box-v-x,  .wd .wd-box-v-x-child  > * {height: 18em; width: 12em;}
 .wd .wd-box-v-xx, .wd .wd-box-v-xx-child > * {height: 24em; width: 18em;}
 
-/* -- FIXME Post -- */
+/* -- Post -- */
 .wd .wd-post,
 .wd .wd-post-input,
 .wd .wd-post-output {
 	display: grid;
 	border-radius: var(--var-radius-default);
-	margin: var(--var-margin-default);
+	font-style: italic;
+	margin:  var(--var-margin-default);
 	padding: var(--var-size-default);
+}
+.wd .wd-post        > img,
+.wd .wd-post-input  > img,
+.wd .wd-post-output > img {
+	border-radius: var(--var-radius-square);
+	height: 1.5em;
+	width: 1.5em;
 }
 .wd .wd-post {
 	grid-template-columns: auto;
 	grid-template-rows: auto auto;
 	justify-content: center;
-	align-content: start;
-	row-gap: var(--var-size-default);
-	text-align: center;
-	font-style: italic;
+	row-gap:    var(--var-size-default);
 }
 .wd .wd-post > * {
-	grid-column: 1 / 2;
-	grid-row:    2 / 3;
+	grid-column:    1 / 2;
+	grid-row:    auto / auto;
+	display: block;
+	text-align: center;
 }
 .wd .wd-post > img {
 	grid-column: 1 / 2;
 	grid-row:    1 / 2;
 	border: var(--var-border-medium);
-	width:  12em;
 	height: 12em;
+	width:  12em;
+}
+@media screen and (min-width: 600px) { /* tablet */
+	.wd .wd-post > img {width: 14em; height: 14em;}
+}
+@media screen and (min-width: 768px) { /* desktop */
+	.wd .wd-post > img {width: 16em; height: 16em;}
 }
 .wd .wd-post-input,
 .wd .wd-post-output {
 	grid-template-columns: auto auto;
 	grid-template-rows: auto;
-	column-gap: var(--var-size-medium);
+	column-gap: var(--var-size-default);
 	text-align: left;
-	font-style: italic;
-	max-width: 75%;/*FIXME o que fazer aqui? */
+	max-width: 75%;
+	width: max-content;
+}
+.wd .wd-post-input  > *,
+.wd .wd-post-output > * {
+	display: block;
 }
 .wd .wd-post-input  {
 	justify-content: end;
-	align-content: center;
 	margin-left: auto;
-	padding-left: var(--var-size-medium);
 }
 .wd .wd-post-input > * {
 	grid-column: 1 / 2;
-	grid-row:    1 / 2;
+	grid-row:    auto / auto;
 }
 .wd .wd-post-input > img {
 	grid-column: 2 / 3;
 	grid-row:    1 / 2;
 }
 
-
-.wd .wd-post-output {
+.wd .wd-post-output  {
 	justify-content: start;
-	align-content: center;
 	margin-right: auto;
-	padding-right: var(--var-size-medium);
 }
 .wd .wd-post-output > * {
 	grid-column: 2 / 3;
-	grid-row:    1 / 2;
+	grid-row:    auto / auto;
 }
 .wd .wd-post-output > img {
 	grid-column: 1 / 2;
 	grid-row:    1 / 2;
-}
-
-
-
-.wd .wd-post        > img,
-.wd .wd-post-input  > img,
-.wd .wd-post-output > img {
-	border-radius: var(--var-radius-square);
-	font-size:  medium;
-	font-style: normal;
-	text-align: center;
-}
-.wd .wd-post-input  > img,
-.wd .wd-post-output > img {
-	width:  var(--var-size-large);
-	height: var(--var-size-large);
-}
-@media screen and (min-width: 600px) { /* tablet */
-	.wd .wd-post > img {width:  14em; height: 14em;}
-}
-@media screen and (min-width: 768px) { /* desktop */
-	.wd .wd-post > img {width: 16em; height: 16em;}
 }
 
 /* -- Caixa de Dicas -- */
