@@ -10,54 +10,81 @@
 <h3>Output/Input</h3>
 
 <style>
-	#talk > .wd-post-output {background-color: royalblue; color: white;}
-	#talk > .wd-post-input  {background-color: white; color: black;}
+	#talk > .wd-post-output > div {
+		background-color: royalblue;
+		color: white;
+	}
+	#talk > .wd-post-input > div {
+		background-color: darkred;
+		color: white;
+	}
+	#header {
+		background-color: green;
+		color: white;
+	}
+	#base {
+		background-color: white;
+	}
+
 </style>
 
+<section id="base">
 
-<div id="talk">
-
-	<article class="wd-post-input">
-		<div>Hi!</div>
+	<article class="wd-post-output" id="header">
+		<header>Flower</header>
 		<img src="examples/image.png"/>
 	</article>
 
-	<article class="wd-post-output">
-		<div>Hi!</div>
-		<img src="examples/image.png"/>
-	</article>
+	<div id="talk">
 
-	<article class="wd-post-input">
-		<div>Is everything OK?</div>
-		<img src="examples/image.png"/>
-	</article>
+		<article class="wd-post-input">
+			<div>Hi!</div>
+			<img src="examples/image.png"/>
+		</article>
 
-	<article class="wd-post-input">
-		<div>Already dined?</div>
-		<img src="examples/image.png"/>
-	</article>
+		<article class="wd-post-output">
+			<div>Hi!</div>
+			<img src="examples/image.png"/>
+		</article>
 
-	<article class="wd-post-output">
-		<div>Yes...</div>
-		<div>I've already had diner.</div>
-		<div>I've already washed the dishes.</div>
-		<div>I already brushed my teeth...</div>
-		<img src="examples/image.png"/>
-	</article>
+		<article class="wd-post-input">
+			<div>Is everything OK?</div>
+			<img src="examples/image.png"/>
+		</article>
 
-</div>
+		<article class="wd-post-input">
+			<div>Already dined?</div>
+			<img src="examples/image.png"/>
+		</article>
 
-<p>CSS added for coloring.</p>
+		<article class="wd-post-output">
+			<div>
+Yes...
+I've already had diner.
+I've already washed the dishes.
+I already brushed my teeth...
+		</div>
+			<img src="examples/image.png"/>
+		</article>
+
+	</div>
+
+</section>
+
+	<p>CSS added for coloring.</p>
 
 
 <h3>incremented</h3>
 
-<article class="wd-post-output wd-bg-green">
-	<span>Blue flower, <time>2015-02-14 15:45:52</time></span>
-	<div>I've already had diner.</div>
-	<div>I've already washed the dishes.</div>
-	<div>I already brushed my teeth...</div>
+<article class="wd-post-output wd-border wd-border-child">
+	<header>Blue flower, <time>2015-02-14 15:45:52</time></header>
+	<div>
+I've already had diner.
+I've already washed the dishes.
+I already brushed my teeth...
+	</div>
 	<img src="examples/image.png"/>
+</article>
 
 		<!--
 		<pre style="white-space: pre-line; font-family: sans-serif">Yes...
