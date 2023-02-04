@@ -124,7 +124,6 @@ https://github.com/wdonadelli/wd
 	--var-bg-modal:  rgba(0,0,0,0.2);
 	--var-bg-window: rgb(250,250,250);
 
-	--var-bg-upon: rgb(0,128,128);
 	--var-bg-upon: rgba(0,128,128,0.7);
 	--var-fg-upon: rgb(250,250,250);
 
@@ -886,21 +885,13 @@ q {
 /* -- Post -- */
 .wd .wd-post {
 	display: grid;
+	grid-template-columns: auto;
+	grid-template-rows:    auto auto auto auto;
+	justify-content: center;
+	align-content:   start;
+	row-gap: var(--var-size-default);
 	margin:  var(--var-margin-default);
 	padding: var(--var-size-default);
-}
-.wd .wd-post {
-	grid-template-columns: auto;
-	grid-template-rows: auto auto;
-	justify-content: center;
-	row-gap:    var(--var-size-default);
-}
-.wd .wd-post > div {
-	grid-column:    1 / 2;
-	grid-row:    auto / auto;
-	display: block;
-	border-radius: var(--var-radius-default);
-	font-style: italic;
 	text-align: center;
 }
 .wd .wd-post > img {
@@ -911,33 +902,40 @@ q {
 	height: 12em;
 	width:  12em;
 }
+.wd .wd-post > header {
+	grid-column: 1 / 2;
+	grid-row:    2 / 3;
+	font-size: larger;
+	font-weight: bold;
+	padding: initial;
+}
+.wd .wd-post > div {
+	grid-column: 1 / 2;
+	grid-row:    3 / 4;
+	font-style: italic;
+}
+.wd .wd-post > time {
+	grid-column: 1 / 2;
+	grid-row:    4 / 5;
+	font-size: smaller;
+	text-align: right;
+	font-weight: lighter;
+}
 @media screen and (min-width: 600px) { /* tablet */
 	.wd .wd-post > img {width: 14em; height: 14em;}
 }
 @media screen and (min-width: 768px) { /* desktop */
 	.wd .wd-post > img {width: 16em; height: 16em;}
 }
-
-
-
-
-.wd .wd-post-input,
-.wd .wd-post-output,
-.wd .wd-post-input > *,
-.wd .wd-post-output > * {bordder: thin dotted black;}
-
-
-
 .wd .wd-post-input,
 .wd .wd-post-output {
 	display: grid;
 	grid-template-columns: auto auto;
-	grid-template-rows: auto auto;
+	grid-template-rows: auto auto auto;
 	align-content: start;
 	column-gap: var(--var-size-default);
 	margin:  var(--var-margin-default);
 	padding: var(--var-size-default);
-	text-align: left;
 }
 .wd .wd-post-input  > img,
 .wd .wd-post-output > img {
@@ -945,35 +943,49 @@ q {
 	border-radius: var(--var-radius-square);
 	height: 2em;
 	width:  2em;
+	text-align: center;
 }
 .wd .wd-post-input  > header,
 .wd .wd-post-output > header {
 	grid-row: 1 / 2;
-	padding: 0;
-
+	font-weight: bold;
+	padding: initial;
 }
 .wd .wd-post-input  > div,
 .wd .wd-post-output > div {
 	grid-row: 2 / 3;
-	font-style: italic;
+	border-radius: 1em;
 	font-size: smaller;
-	padding: var(--var-size-default);
-	border-radius: var(--var-radius-default);
+	font-style: italic;
+	padding: 0.5em 1em;
+	text-align: left;
 }
-
-
-
-
-.wd .wd-post-input          {justify-content: end;}
-.wd .wd-post-input > img    {grid-column: 2 / 3;}
-.wd .wd-post-input > header {grid-column: 1 / 2;}
-.wd .wd-post-input > div    {grid-column: 1 / 2;}
-
-.wd .wd-post-output          {justify-content: start;}
-.wd .wd-post-output > img    {grid-column: 1 / 2;}
-.wd .wd-post-output > header {grid-column: 2 / 3;}
-.wd .wd-post-output > div    {grid-column: 2 / 3;}
-
+.wd .wd-post-input > div > img,     .wd .wd-post-output > div > img,
+.wd .wd-post-input > div > figure,  .wd .wd-post-output > div > figure,
+.wd .wd-post-input > div > audio,   .wd .wd-post-output > div > audio,
+.wd .wd-post-input > div > video,   .wd .wd-post-output > div > video,
+.wd .wd-post-input > div > picture, .wd .wd-post-output > div > picture {
+	display: block;
+	margin: auto;
+	max-width: 80%;
+}
+.wd .wd-post-input  > time,
+.wd .wd-post-output > time {
+	grid-row: 3 / 4;
+	font-size: small;
+	font-weight: lighter;
+	text-align: right;
+}
+.wd .wd-post-output          {justify-content: end;}
+.wd .wd-post-output > img    {grid-column: 2 / 3;}
+.wd .wd-post-output > header {grid-column: 1 / 2; text-align: right;}
+.wd .wd-post-output > div    {grid-column: 1 / 2;}
+.wd .wd-post-output > time   {grid-column: 1 / 2;}
+.wd .wd-post-input           {justify-content: start;}
+.wd .wd-post-input  > img    {grid-column: 1 / 2;}
+.wd .wd-post-input  > header {grid-column: 2 / 3; text-align: left;}
+.wd .wd-post-input  > div    {grid-column: 2 / 3;}
+.wd .wd-post-input  > time   {grid-column: 2 / 3;}
 
 /* -- Caixa de Dicas -- */
 .wd .wd-tip {
@@ -1151,6 +1163,7 @@ q {
 .wd .wd-flyer > header:last-child,
 .wd .wd-flyer > footer:last-child,
 .wd .wd-flyer > nav:last-child {margin-bottom: var(--var-size--flyer);}
+
 /* -- Leitura -- */
 .wd .wd-read {
 	font-family: sans-serif;
@@ -1167,10 +1180,10 @@ q {
 }
 .wd .wd-read > h1 {text-transform: uppercase;}
 .wd .wd-read > h2 {font-variant: small-caps;}
-.wd .wd-read > h3, .wd .wd-read > h4,
-.wd .wd-read > h5, .wd .wd-read > h6 {
-	font-family: sans-serif;
-}
+.wd .wd-read > h3,
+.wd .wd-read > h4,
+.wd .wd-read > h5,
+.wd .wd-read > h6 {font-family: sans-serif;}
 
 @media screen and (min-width: 768px) { /* desktop */
 	.wd .wd-read > h1 {width: 75%;}
@@ -1222,8 +1235,7 @@ q {
 	text-align: center;
 	margin-bottom: 2em;
 }
-
-.wd .wd-read > math {
+.wd .wd-read > math { /* FIXME: math não aceita css? */
 	max-width: 80%;
 	margin: 2em auto;
 	text-align: center;
@@ -1298,6 +1310,47 @@ q {
 	content: var(--var-itemize-picture) " " counter(picture1) " - ";
 	font-weight: bold;
 }
+
+.wd .wd-read > *.wd-read {
+	counter-reset: none;
+}
+.wd .wd-read > *.wd-read > h3 {
+	counter-reset: chapter4;
+
+
+}
+
+
+/* FIXME: como é que faz isso?
+<div class="wd-read">
+
+<h3>Título</h3>
+<p>Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo </p>
+<table><caption>tabela</caption></table>
+<h4>subtitulo</h4>
+
+<p>--------------------------------------------------------------</p>
+<div class="wd-read">
+<h4>subtitulo</h4>
+<p>Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo </p>
+<h3>Título</h3>
+<p>Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo </p>
+<h4>subtitulo</h4>
+<table><caption>tabela</caption></table>
+<p>Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo </p>
+</div>
+<p>--------------------------------------------------------------</p>
+
+<h4>subtitulo</h4>
+<h3>Título</h3>
+<p>Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo </p>
+<table><caption>tabela</caption></table>
+<p>Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo </p>
+</div>
+*/
+
+
+
 
 /* -- itemizar parágrafos -- */
 .wd .wd-itemize > p:first-of-type {
