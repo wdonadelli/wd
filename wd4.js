@@ -1830,6 +1830,12 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	function wd_html_load(elem, text) { /* carrega um HTML (texto) no elemento */
+
+	// FIXME: efetuar ajuste para usar o outerHTML para substituir o elemento no lugar de seu conteúdo
+
+
+
+
 		text = text === undefined || text === null ? "" : new String(text).toString();
 		/* obtendo o atributo para carregar o conteúdo HTML */
 		let test = new WDform(elem);

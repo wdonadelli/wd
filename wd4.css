@@ -124,8 +124,8 @@ https://github.com/wdonadelli/wd
 	--var-bg-modal:  rgba(0,0,0,0.2);
 	--var-bg-window: rgb(250,250,250);
 
-	--var-bg-upon: rgba(0,128,128,0.7);
-	--var-fg-upon: rgb(250,250,250);
+	--var-bg-upon: rgb(75, 121, 180);
+	--var-fg-upon: rgb(220, 228, 239);
 
 	--var-bg-zebra: rgb(235,235,235);
 	--var-fg-zebra: rgb(50,50,50);
@@ -152,17 +152,18 @@ https://github.com/wdonadelli/wd
 	--var-border-form-required: 1px solid rgb(244,138,160);
 	--var-border-form-invalid: 1px solid rgb(220,20,60);
 	--var-border-table: rgb(225,225,225);
+	--var-outline-upon: rgb(143, 191, 255) solid 2px;
 	--var-radius-default: 0.2em;
 	--var-radius-square: 50%;
+
 
 	/* sombras */
 	--var-shadow-nav:          inset 0 -0.3em 0 0 rgba(114, 159, 207, 1);
 	--var-shadow-nav-block:    inset 0.3em 0 0 0 rgba(114, 159, 207, 1);
 	--var-shadow-nav-spread:   0 0 0 0.3em rgba(114, 159, 207, 1);
-	--var-shadow:              0.5em 0.5em 0 0 rgba(136, 138, 133, 1);
-	--var-cloud:               0 0 1.4em 0.5em rgba(211, 215, 207, 0.8);
-	--var-shadow-cloud:        0.5em 0.5em 0 0 rgba(136, 138, 133, 1), 0 0 1.4em 0.5em rgba(211, 215, 207, 0.8);
-	--var-shadow-upon:         inset 0 0 0 1px rgb(0,128,128);
+	--var-shadow:              0.2em 0.2em 0 0 rgb(166, 166, 166);
+	--var-cloud:               0 0.1em 0.2em 0 rgb(166, 166, 166), 0 0.2em 1em 0 rgba(242, 242, 242,0.5);
+	--var-shadow-cloud:        0 0.1em 0.2em 0 rgb(166, 166, 166), 0 0.2em 1em 0 rgba(242, 242, 242,0.5), 0.2em 0.2em 0 0 rgb(166, 166, 166);
 	--var-shadow-form-invalid: inset 0 0 0 1px rgb(220,20,60);
 
 	/* razão altura x comprimento */
@@ -423,7 +424,7 @@ q {
 .wd table tfoot {
 	background-color: var(--var-bg-tfoot);
 	color:            var(--var-fg-tfoot);
-	border-top: thin dashed rgb(0,0,0);
+	border-top: thin dashed;
 }
 .wd table th,
 .wd table td {
@@ -1203,8 +1204,11 @@ q {
 /* tabelas, figuras, listas */
 .wd .wd-read > table,
 .wd .wd-read > figure {
-	width: 80%;
+	max-width: 80%;
 	margin: 2em auto;
+}
+.wd .wd-read > table {
+	min-width: 50%;
 }
 .wd .wd-read > ol,
 .wd .wd-read > ul {
@@ -1316,41 +1320,7 @@ q {
 }
 .wd .wd-read > *.wd-read > h3 {
 	counter-reset: chapter4;
-
-
 }
-
-
-/* FIXME: como é que faz isso?
-<div class="wd-read">
-
-<h3>Título</h3>
-<p>Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo </p>
-<table><caption>tabela</caption></table>
-<h4>subtitulo</h4>
-
-<p>--------------------------------------------------------------</p>
-<div class="wd-read">
-<h4>subtitulo</h4>
-<p>Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo </p>
-<h3>Título</h3>
-<p>Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo </p>
-<h4>subtitulo</h4>
-<table><caption>tabela</caption></table>
-<p>Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo </p>
-</div>
-<p>--------------------------------------------------------------</p>
-
-<h4>subtitulo</h4>
-<h3>Título</h3>
-<p>Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo </p>
-<table><caption>tabela</caption></table>
-<p>Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo Parágrafo </p>
-</div>
-*/
-
-
-
 
 /* -- itemizar parágrafos -- */
 .wd .wd-itemize > p:first-of-type {
@@ -2235,7 +2205,8 @@ q {
 .wd .wd-upon-enter:hover, .wd .wd-upon-enter-child > *:hover {
 	background-color: var(--var-bg-upon) !important;
 	color:            var(--var-fg-upon) !important;
-	box-shadow:       var(--var-shadow-upon) !important;
+	outline: var(--var-outline-upon);
+	border-radius: 0.2em !important;
 }
 
 /* -- Exibir/Esconder -- */
