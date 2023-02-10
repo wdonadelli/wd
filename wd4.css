@@ -289,11 +289,11 @@ q {
 	margin: var(--var-margin-default);
 }
 .wd h1  {font-size: 2.00em;}
-.wd h2  {font-size: 1.50em;}
-.wd h3  {font-size: 1.20em;}
-.wd h4  {font-size: 1.00em;}
-.wd h5  {font-size: 0.85em;}
-.wd h6  {font-size: 0.65em;}
+.wd h2  {font-size: 1.80em;}
+.wd h3  {font-size: 1.60em;}
+.wd h4  {font-size: 1.40em;}
+.wd h5  {font-size: 1.20em;}
+.wd h6  {font-size: 1.00em;}
 .wd p   {margin: 1em 0;}
 .wd pre {
 	margin: var(--var-margin-default);
@@ -389,11 +389,11 @@ q {
 	margin: 0;
 }
 .wd dl > dt {
-	font-weight: bold;
 	margin: 0;
 	padding: 0;
 }
 .wd dl > dd {
+	font-weight: lighter;
 	margin: 0 0 0 2em;
 	padding: 0;
 }

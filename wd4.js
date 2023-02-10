@@ -1829,51 +1829,61 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_html_load(elem, text) { /* carrega um HTML (texto) no elemento */
+	function wd_html_clone(elem) { //FIXME função adicionada /* clona elementos que o cloneNode não atende (scripts) */
+		let tag   = elem.tagName;
+		let attrs = elem.attributes;
+		let clone = document.createElement(tag);
+		/* definindo propriedades */
+		clone.innerHTML = elem.innerHTML
+		for (let i = 0; i < attrs.length; i++)
+			clone.setAttribute(attrs[i].name, attrs[i].value);
 
-	// FIXME: efetuar ajuste para usar o outerHTML para substituir o elemento no lugar de seu conteúdo
+		return clone;
+	}
 
+/*----------------------------------------------------------------------------*/
+	function wd_html_append(base, html, overlap) { //FIXME função adicionada /* adiciona/substitui elementos por texto em HTML */
+		let temp = overlap ===  true ? document.createElement("DIV") : base;
+		temp.innerHTML = html;
+		let scripts = wd_vtype(wd_$$("script", temp)).value;
 
+		/* sem scripts (se inner, já está pronto) */
+		if (scripts.length === 0) {
+			if (overlap === true) base.outerHTML = html;
+			return;
+		}
+		/* com scripts: clonar, adicionar o clone e remover o original */
+		for (let i = 0; i < scripts.length; i++) {
+			let script = scripts[i];
+			let clone  = wd_html_clone(script);
+			let parent = script.parentElement;
+			parent.insertBefore(clone, script);
+			script.remove();
+		}
+		/* se for outer, tem que adicionar ao lado da base e depois excluí-la */
+		if (overlap === true) {
+			let childs = wd_vtype(temp.children).value;
+			let parent = base.parentElement;
+			for (let i = 0; i < childs.length; i++) {
+				let child = childs[i];
+				parent.insertBefore(child, base);
+			}
+			base.remove();
+		}
+		return;
+	}
 
-
+/*----------------------------------------------------------------------------*/
+	function wd_html_load(elem, text, overlap) { /*FIXME função medificada /* carrega um HTML (texto) no elemento */
 		text = text === undefined || text === null ? "" : new String(text).toString();
 		/* obtendo o atributo para carregar o conteúdo HTML */
 		let test = new WDform(elem);
 		let attr = test.form && test.load !== null ? test.load : "innerHTML";
-		/* carregando conteúdo de texto */
-		if (attr !== "innerHTML") {
+		/* carregando conteúdo */
+		if (attr !== "innerHTML")
 			elem[attr] = text;
-		} else {
-			/* carregando conteúdo HTML */
-			let temp = document.createElement("DIV");
-			temp.innerHTML = text;
-			/* innerHTML não executa script: capturar, clonr, eliminar e criar */
-			let scripts = wd_vtype(wd_$$("script", temp)).value;
-			let oldscr  = [];
-			let newscr  = [];
-			/* capturando e clonando-os (cloneNode não funciona) */
-			for (let i = 0; i < scripts.length; i++) {
-				let script = scripts[i];
-				let attrs  = script.attributes;
-				let clone  = document.createElement("SCRIPT");
-				clone.innerHTML = script.innerHTML;
-				/* clonando os atributos */
-				for (let j = 0; j < attrs.length; j++)
-					clone.setAttribute(attrs[j].name, attrs[j].value);
-				/* registrando-os para eliminação e apensação */
-				oldscr.push(script);
-				newscr.push(clone);
-			}
-			/* eliminando os scripts antigos */
-			for (let i = 0; i < oldscr.length; i++)
-				oldscr[i].remove();
-			/* definindo innerHTML sem os scripts e removendo elemento temporário */
-			elem.innerHTML = temp.innerHTML;
-			temp.remove();
-			/* adicionando os scripts */
-			for (let i = 0; i < newscr.length; i++)
-				elem.appendChild(newscr[i]);
-		}
+		else
+			wd_html_append(elem, text, overlap);
 		/* checar demandas pós procedimento */
 		loadingProcedures();
 
@@ -3820,9 +3830,9 @@ const wd = (function() {
 				return this.run(wd_html_data, obj);
 			}
 		},
-		load: { /* carrega elementos HTML em forma de texto */
-			value: function(text) {
-				return this.run(wd_html_load, text);
+		load: { /* carrega elementos HTML em forma de texto FIXME método modificado*/
+			value: function(text, overlap) {
+				return this.run(wd_html_load, text, overlap);
 			}
 		},
 		repeat: {  /* clona elementos por array repetindo-os */
@@ -3929,16 +3939,17 @@ const wd = (function() {
 /* == BLOCO 4 ================================================================*/
 
 /*----------------------------------------------------------------------------*/
-	function data_wdLoad(e) { /* carrega HTML: data-wd-load=path{file}method{get|post}${form} */
+	function data_wdLoad(e) { /* carrega HTML: data-wd-load=path{file}method{get|post}${form}overlap{} FIXME atributo modificado*/
 		if (!("wdLoad" in e.dataset)) return;
 
 		/* obter dados do atributo */
-		let data   = wd_html_dataset_value(e, "wdLoad")[0];
-		let target = WD(e);
-		let method = data.method;
-		let file   = data.path;
-		let pack   = wd_$$$(data);
-		let exec   = WD(pack);
+		let data    = wd_html_dataset_value(e, "wdLoad")[0];
+		let target  = WD(e);
+		let method  = data.method;
+		let file    = data.path;
+		let pack    = wd_$$$(data);
+		let exec    = WD(pack);
+		let overlap = data.overlap === "true" ? true : false;
 
 		/* abrir contagem */
 		wd_counter_control.load++;
@@ -3950,7 +3961,7 @@ const wd = (function() {
 				/* encerrar contagem */
 				wd_counter_control.load--;
 				/* executar */
-				target.load(x.text);
+				target.load(x.text, overlap);
 				return;
 			}
 		}, method);
