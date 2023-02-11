@@ -1,0 +1,11 @@
+[
+	{
+		"$$": ".text",
+		"textContent": "Text content.",
+		"title": "Element title."
+	},
+	{
+		"$": "h4",
+		"textContent": "English Language"
+	}
+]

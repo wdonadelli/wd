@@ -1,0 +1,11 @@
+[
+	{
+		"$$": ".text",
+		"textContent": "Conteúdo do texto.",
+		"title": "Título do elemento."
+	},
+	{
+		"$": "h4",
+		"textContent": "Português de Brasil ou Portugal"
+	}
+]

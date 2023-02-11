@@ -74,19 +74,23 @@ wd(window).addHandler(
 		<article class="wd-flyer wd-bg-black">
 
 			<header class="wd-hidden-print">
-				<h2>
-					<span class="wd-icon-menu" data-wd-css="${#menu}tgl{wd-open}" id="bmenu"></span>
-					<span>WD Web Library Lab</span>
-				</h2>
+				<h2>WD Web Library Lab	</h2>
 			</header>
+
+			<nav class="wd-bg-white wd-header">
+				<span class="" data-wd-css="${#menu}tgl{wd-open}" id="bmenu">Menu</span>
+				<span class="" data-wd-css="${#side_code}tgl{wd-hidden}" >Code</span>
+				<span class="" data-wd-css="${html}tgl{wd}" >CSS</span>
+				<span class="" data-wd-css="$${body, main > article}tgl{wd-bg-black}" >Black</span>
+			</nav>
 
 			<section data-wd-device="desktop{wd-col}">
 
-				<div class="wd-padd wd-hidden-print" >
+				<div class="wd-padd wd-hidden-print wd-hidden" id="side_code">
 
 					<h3>Code</h3>
 
-					<form>
+					<form class="wd-form">
 
 						<div>
 							<textarea id="ie_code" style="height: 300px" class="wd-block wd-code"></textarea>

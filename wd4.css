@@ -883,7 +883,7 @@ q {
 .wd .wd-box-v-x,  .wd .wd-box-v-x-child  > * {height: 18em; width: 12em;}
 .wd .wd-box-v-xx, .wd .wd-box-v-xx-child > * {height: 24em; width: 18em;}
 
-/* -- Post -- */
+/* -- Post -- FIXME adicionado novos elementos */
 .wd .wd-post {
 	display: grid;
 	grid-template-columns: auto;
@@ -1156,14 +1156,24 @@ q {
 	margin-left: var(--var-size--flyer);
 	margin-right: var(--var-size--flyer);
 }
-.wd .wd-flyer > *:first-child {margin-top: 0;}
-.wd .wd-flyer > *:last-child  {margin-bottom: 0;}
+.wd .wd-flyer > *:first-child {
+	margin-top: 0;
+}
+.wd .wd-flyer > *:last-child {
+	margin-bottom: 0;
+}
 .wd .wd-flyer > header:first-child,
 .wd .wd-flyer > footer:first-child,
-.wd .wd-flyer > nav:first-child {margin-top: var(--var-size--flyer);}
+.wd .wd-flyer > nav:first-child,
+.wd .wd-flyer > header + nav,
+.wd .wd-flyer > nav + header {
+	margin-top: var(--var-size--flyer);
+}
 .wd .wd-flyer > header:last-child,
 .wd .wd-flyer > footer:last-child,
-.wd .wd-flyer > nav:last-child {margin-bottom: var(--var-size--flyer);}
+.wd .wd-flyer > nav:last-child {
+	margin-bottom: var(--var-size--flyer);
+}
 
 /* -- Leitura -- */
 .wd .wd-read {

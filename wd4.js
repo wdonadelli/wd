@@ -233,11 +233,15 @@ const wd = (function() {
 	];
 
 /*----------------------------------------------------------------------------*/
-	function wd_lang() { /*Retorna o local: definido ou do navegador*/
-		let attr = document.body.parentElement.attributes;
-		let lang = "lang" in attr ? attr.lang.value.replace(/\s/g, "") : null;
-		if (lang !== null && (/^[a-z]+((\-[a-z]+)?)$/i).test(lang))
-			return lang;
+	function wd_lang(elem) { /* Retorna o local: definido pelo DOM (elemento com efeito bolha) ou do navegador FIXME função alterada */
+		let node = wd_vtype(elem).type === "dom" ? elem : document.body;
+		while (node !== null && node !== undefined) {
+			if ("lang" in node.attributes) {
+				let value = node.attributes.lang.value.trim();
+				if (value !== "") return value;
+			}
+			node = node.parentElement;
+		}
 		return navigator.language || navigator.browserLanguage || "en-US";
 	}
 
@@ -495,15 +499,15 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_$$$(obj) { /* captura os valores de $ e $$ dentro de um objeto */
-		let one = "$" in obj  ? obj["$"].trim()  : null;
+	function wd_$$$(obj, root) { /* captura os valores de $ e $$ dentro de um objeto ($$ prioridade) FIXME: função alterada */
+		let one =  "$" in obj ? obj["$"].trim()  : null;
 		let all = "$$" in obj ? obj["$$"].trim() : null;
 		if (one === null && all === null) return null;
 		let words  = {"document": document, "window":  window};
 		if (one in words) return words[one];
 		if (all in words) return words[all];
-		one = one === null ? null : wd_$(one);
-		all = all === null ? null : wd_$$(all);
+		one = one === null ? null : wd_$(one, root);
+		all = all === null ? null : wd_$$(all, root);
 		return all !== null ? all : one;
 	}
 
@@ -2205,6 +2209,34 @@ const wd = (function() {
 			index: wd_html_bros_index(elem),
 			table: wd_html_table_array(elem)
 		}
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_html_translate(elem, json) { /* FIXME nova função carrega tradução vinculada a seletor CSS em arquivo JSON */
+		/* FORMATO DO JSON
+		[
+			{"$$": "CSS Selectors", "$":  "CSS Selector", "textContent": "Text", "title": "Title"},
+			...
+		]
+		*/
+		/* rodando itens do array do JSON */
+		for (let i = 0; i < json.length; i++) {
+			let attrs = json[i];
+			let check = wd_vtype(wd_$$$(attrs, elem));
+			if (check.type !== "dom") continue;
+			/* rodando alvos */
+			let list = check.value;
+			for (let l = 0; l < list.length; l++) {
+				let target = list[l];
+				/* rodando atributos */
+				for (let attr in attrs) {
+					if (attr === "$" || attr === "$$") continue;
+					let value = attrs[attr];
+					wd_html_set(target, attr, value);
+				}
+			}
+		}
+		return;
 	}
 
 /*----------------------------------------------------------------------------*/
@@ -4479,26 +4511,43 @@ const wd = (function() {
 		return;
 	}
 
+
+/*----------------------------------------------------------------------------*/
+	function data_wdTranslate(e) { /* carrega tradução: data-wd-translate=path{dir}method{get|post}${form} FIXME novo atributo */
+		if (!("wdTranslate" in e.dataset)) return;
+		let lang   = wd_lang(e);
+		let data   = wd_html_dataset_value(e, "wdTranslate")[0];
+		let target = WD(e); // TODO excluo o atributo ou deixo?
+		let method = data.method;
+		let dir    = data.path.replace(/\/$/, "");
+		let file1  = dir+"/"+(lang)+".json";
+		let file2  = dir+"/"+(lang.split("-")[0])+".json";
+		let pack   = wd_$$$(data);
+		let exec   = WD(pack);
+
+		/* tentativa de obter a língua específica */
+		exec.send(file1, function(x) {
+			if (x.closed) {
+				if (wd_vtype(x.json).type === "array") {
+					return wd_html_translate(e, x.json);
+				} else {
+					/* tentativa de obter apenas o país */
+					exec.send(file2, function(y) {
+						if (y.closed) {
+							if (wd_vtype(y.json).type === "array")
+								return wd_html_translate(e, y.json);
+						}
+					}, method);
+
+				}
+			}
+		}, method);
+		return;
+	}
+
+
 /*----------------------------------------------------------------------------*/
 	function data_wdLang(e) { /* carrega HTML: data-wd-lang=path{file}method{get|post}${form} */
-		/*
-		FIXME criar novo atributo wd-lang
-		fazer com que seja possível definir atributos HTML a partir do endereço onde ficarão os arquivos
-		data-wd-lang=path{dir}method{get|post}${form}
-		testar dir/pt-BR.json e dir/pt.json, se não achar, não fazer nada
-		arquivo
-
-		#tag1 {
-			"textContent": "texto da tag 1",
-			"title": "dica da tag 1"
-		}
-		#tag2 {
-			"textContent": "texto da tag 2",
-			"title": "dica da tag 2",
-			"value": "valor da tag 2"
-		}
-		*/
-
 		if (!("wdLang" in e.dataset)) return;
 		let data   = wd_html_dataset_value(e, "wdLang")[0];
 		let target = WD(e);
@@ -4655,6 +4704,7 @@ const wd = (function() {
 		WD.$$("[data-wd-chart]").run(data_wdChart);
 		WD.$$("[data-wd-url]").run(data_wdUrl);
 		WD.$$("[data-wd-lang]").run(data_wdLang);
+		WD.$$("[data-wd-translate]").run(data_wdTranslate);
 		data_wdOutput(document, true);
 		return;
 	};
@@ -4662,19 +4712,20 @@ const wd = (function() {
 /*----------------------------------------------------------------------------*/
 	function settingProcedures(e, attr) { /* procedimentos para dataset */
 		switch(attr) {
-			case "wdLoad":    loadingProcedures();    break;
-			case "wdRepeat":  loadingProcedures();    break;
-			case "wdSort":    data_wdSort(e);         break;
-			case "wdFilter":  data_wdFilter(e);       break;
-			case "wdMask":    data_wdMask(e);         break;
-			case "wdPage":    data_wdPage(e);         break;
-			case "wdClick":   data_wdClick(e);        break;
-			case "wdDevice":  data_wdDevice(e);       break;
-			case "wdSlide":   data_wdSlide(e);        break;
-			case "wdChart":   data_wdChart(e);        break;
-			case "wdOutput":  data_wdOutput(e, true); break;
-			case "wdUrl":     data_wdUrl(e, true);    break;
-			case "wdLang":    data_wdLang(e);         break;
+			case "wdLoad":      loadingProcedures();    break;
+			case "wdRepeat":    loadingProcedures();    break;
+			case "wdSort":      data_wdSort(e);         break;
+			case "wdFilter":    data_wdFilter(e);       break;
+			case "wdMask":      data_wdMask(e);         break;
+			case "wdPage":      data_wdPage(e);         break;
+			case "wdClick":     data_wdClick(e);        break;
+			case "wdDevice":    data_wdDevice(e);       break;
+			case "wdSlide":     data_wdSlide(e);        break;
+			case "wdChart":     data_wdChart(e);        break;
+			case "wdOutput":    data_wdOutput(e, true); break;
+			case "wdUrl":       data_wdUrl(e, true);    break;
+			case "wdLang":      data_wdLang(e);         break;
+			case "wdTranslate": data_wdTranslate(e);    break;
 		};
 		return;
 	};
