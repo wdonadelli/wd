@@ -2,10 +2,11 @@
 	{
 		"$$": ".text",
 		"textContent": "Conteúdo do texto.",
-		"title": "Título do elemento."
+		"title": "Atributo 'title' do contéudo textual."
 	},
 	{
 		"$": "h4",
-		"textContent": "Português do Brasil"
+		"textContent": "Português do Brasil",
+		"title": "Atributo 'title' do cabeçalho."
 	}
 ]

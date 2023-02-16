@@ -10,36 +10,21 @@
 	counter-increment: math;
 	margin: var(--var-margin-default);
 	padding: var(--var-size-default);
-	line-height: 1;
-	font-ddfamily: var(--var-font-math);
 	font-size:  18px;
-	font-style:  italic;
 	display: flex;
 	justify-content: center;
 	align-items: center;
-
 }
 .wd .wd-math::after {
 	content: "(" counter(math) ")";
-	font-style: normal;
 	margin-left: 2em;
-
-}
-/* conteúdo textual */
-.wd .wd-math sup,
-.wd .wd-math sub {
-		font-size: 0.5em;
 }
 .wd .wd-math em {
-	font-style: normal;
-}
-.wd .wd-math var {
+	font-family: var(--var-font-math);
 	font-size: 1.5em;
 	margin-top: -0.1em;
 	padding-bottom: 0.1em;
 }
-
-
 
 
 
@@ -189,7 +174,123 @@
 
 
 
+.m1 {
+	display: grid;
+	grid-template-columns: repeat(999999, minmax(0, auto));
+	grid-template-rows: auto auto auto auto;
+	justify-content: center;
+	align-items: center;
+	text-align: center;
+}
+.m1 > * {
+	grid-column: auto / auto;
+	margin: 0 0.1em;
+	padding: 0;
+}
+
+.m1 > span {
+	grid-row:    2 / 4;
+}
+
+.m1 > sup {
+	grid-row:    1 / 3;
+	font-size: inherit;
+	box-shadow: 0 1px 0 0;
+	margin-top: auto;
+}
+.m1 > sub {
+	grid-row:    3 / 5;
+	box-shadow: 0 -1px 0 0;
+	font-size: inherit;
+	margin-bottom: auto;
+}
+
+.m1.up, .m1.up .m1  {align-items: start;}
+.m1.down, .m1.down .m1 {align-items: end;}
+
+
+
 </style>
+
+
+
+
+
+<div class="m1 up">
+	<span><var>Y</var></span>
+	<span>=</span>
+	<span>2 &plus; </span>
+	<sub><var>x</var> &plus; 5</sub>
+	<sup>1</sup>
+	<span>=</span>
+	<span>2 &times; </span>
+	<sup><var>x</var> &plus; 5</sup>
+	<sub class="m1">
+		<span>1 &plus;</span>
+		<sup><var>a</var></sup>
+		<sub class="m1">
+				<span><var>x</var> &minus;</span>
+				<span>1 &plus;</span>
+				<sup><var>a</var></sup>
+				<sub><var>x</var> &minus; 5</sub>
+		</sub>
+	</sub>
+</div>
+
+<hr>
+
+<div class="m1 down">
+	<span><var>Y</var></span>
+	<span>=</span>
+
+	<span>2 &plus; </span>
+	<sub><var>x</var> &plus; 5</sub>
+	<sup>1</sup>
+	<span>=</span>
+
+	<span>2 &minus; </span>
+	<sub><var>x</var> &plus; 5</sub>
+
+	<sup class="m1">
+		<span>1 &plus;</span>
+		<sub><var>a</var></sub>
+		<sup class="m1">
+				<span><var>x</var> &minus;</span>
+				<span>1 &plus;</span>
+				<sub><var>a</var></sub>
+				<sup><var>x</var> &minus; 5</sup>
+		</sup>
+	</sup>
+</div>
+
+<hr>
+
+
+
+<div class="m1">
+	<span><var>y</var></span>
+	<span>=</span>
+	<sup>1</sup>
+	<sub>1!</sub>
+	<span>&plus;</span>
+	<sup>1</sup>
+	<sub>2!</sub>
+	<span>&plus;</span>
+	<sup>1</sup>
+	<sub>3!</sub>
+	<span>&plus;</span>
+	<sup>1</sup>
+	<sub>4!</sub>
+	<span>&plus;</span>
+	<span>...</span>
+</div>
+
+
+
+
+
+
+
 
 
 <p><a href="https://www.w3schools.com/charsets/ref_utf_math.asp" target="_blank">Symbols</a></p>
@@ -197,7 +298,7 @@
 <style id="show-border"></style>
 
 <nav>
-	<span data-wd-set="${#show-border}textContent{.wd-math * {outline: 1px dotted red;}}">Border</span>
+	<span data-wd-set="${#show-border}textContent{.wd-math *, .m1, .m1 * {outline: 1px dotted red;}}">Border</span>
 	<span data-wd-set="${#show-border}textContent{}">Clear</span>
 </nav>
 
@@ -226,21 +327,21 @@
 
 <section class="wd-math">
 	<span class="wd-math-set">
-		<span class="wd-math-base"><var>&int;</var></span>
-		<span class="wd-math-lower">a</span>
-		<span class="wd-math-upper">b</span>
-		<span class="wd-math-rbase">f(x)dx = </span>
+		<span class="wd-math-base"><em>&int;</em></span>
+		<span class="wd-math-lower"><var>a</var></span>
+		<span class="wd-math-upper"><var>b</var></span>
+		<span class="wd-math-rbase">f(<var>x</var>)d<var>x</var> = </span>
 	</span>
 
 	<span class="wd-math-set">
-		<span class="wd-math-base"><em>lim</em></span>
-		<span class="wd-math-lower">&Delta;x &rarr; 0</span>
+		<span class="wd-math-base">lim</span>
+		<span class="wd-math-lower">&Delta;<var>x</var> &rarr; 0</span>
 	</span>
 
 	<span class="wd-math-set">
-		<span class="wd-math-base"><var>&sum;</var></span>
-		<span class="wd-math-lower">i=0</span>
-		<span class="wd-math-upper">n</span>
+		<span class="wd-math-base"><em>&sum;</em></span>
+		<span class="wd-math-lower"><var>i</var>=0</span>
+		<span class="wd-math-upper"><var>n</var></span>
 		<span class="wd-math-rbase">
 			<span class="wd-math-set">
 				<span class="wd-math-base">f(x</span>

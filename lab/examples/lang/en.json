@@ -2,10 +2,11 @@
 	{
 		"$$": ".text",
 		"textContent": "Text content.",
-		"title": "Element title."
+		"title": "'Title' attribute of the textual content."
 	},
 	{
 		"$": "h4",
-		"textContent": "English Language"
+		"textContent": "English Language",
+		"title": "Header 'title' attribute."
 	}
 ]
