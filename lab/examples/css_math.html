@@ -6,6 +6,7 @@
 
 
 <style>
+/*
 .wd .wd-math {
 	counter-increment: math;
 	margin: var(--var-margin-default);
@@ -31,7 +32,7 @@
 .wd .wd-math .wd-math-area {
 	display: grid;
 	grid-template-columns: repeat(999999, minmax(0, auto));
-	grid-template-rows:    auto auto auto auto; /*repeat(999999, minmax(auto, auto));*/
+	grid-template-rows:    auto auto auto auto;
 }
 .wd .wd-math .wd-math-area > * {
 	display: flex;
@@ -62,7 +63,7 @@
 	padding: 0.1em 0.1em 0 0.1em;
 }
 
-	/* agrupador circular */
+
 .wd .wd-math .wd-math-set {
 	display: grid;
 	grid-template-columns: auto auto auto auto auto;
@@ -138,7 +139,7 @@
 	align-items: start;
 	font-size: 0.5em;
 }
-/* matriz */
+
 .wd .wd-math .wd-math-matrix,
 .wd .wd-math .wd-math-determinant {
 	display: table;
@@ -169,12 +170,22 @@
 	padding: 0.5em;
 }
 
+*/
 
 
 
-
-
-.m1 {
+/* container Principal */
+.wd .wd-math {
+	counter-increment: math;
+	margin: var(--var-margin-default);
+	padding: var(--var-size-default);
+	font-size: 18px;
+}
+.wd .wd-math::after { /* FIXME itemização */
+	content: "(" counter(math) ")";
+}
+/* linhas: central, superior e inferior */
+.wd .wd-math .wd-math-line {
 	display: grid;
 	grid-template-columns: repeat(999999, minmax(0, auto));
 	grid-template-rows: auto auto auto auto;
@@ -182,108 +193,244 @@
 	align-items: center;
 	text-align: center;
 }
-.m1 > * {
+.wd .wd-math .wd-math-line > * {
 	grid-column: auto / auto;
 	margin: 0 0.1em;
 	padding: 0;
 }
-
-.m1 > span {
+.wd .wd-math .wd-math-line > span {
 	grid-row:    2 / 4;
 }
-
-.m1 > sup {
+.wd .wd-math .wd-math-line > sup {
 	grid-row:    1 / 3;
 	font-size: inherit;
 	box-shadow: 0 1px 0 0;
 	margin-top: auto;
 }
-.m1 > sub {
+.wd .wd-math .wd-math-line > sub {
 	grid-row:    3 / 5;
 	box-shadow: 0 -1px 0 0;
 	font-size: inherit;
 	margin-bottom: auto;
 }
+/* ajuste de múltiplas linhas superior ou inferior */
+.wd .wd-math .wd-math-line.wd-math-upper,
+.wd .wd-math .wd-math-line.wd-math-upper .wd-math {align-items: start;}
+.wd .wd-math .wd-math-line.wd-math-lower,
+.wd .wd-math .wd-math-line.wd-math-lower .wd-math {align-items: end;}
+/* índices */
+.wd .wd-math .wd-math-index {
+	display: grid;
+	grid-template-columns: auto auto auto auto auto;
+	grid-template-rows:    auto auto auto auto;
+	justify-content: center;
+	align-items: center;
+	gap: 0;
+}
+.wd .wd-math .wd-math-index > .wd-math-c {
+	grid-column: 3 / 4;
+	grid-row:    2 / 4;
+	text-align: center;
+}
+.wd .wd-math .wd-math-index > .wd-math-n {
+	grid-column: 3 / 4;
+	grid-row:    1 / 2;
+	font-size: 0.5em;
+	text-align: center;
+}
+.wd .wd-math .wd-math-index > .wd-math-s {
+	grid-column: 3 / 4;
+	grid-row:    4 / 5;
+	font-size: 0.5em;
+	text-align: center;
+}
+.wd .wd-math .wd-math-index > .wd-math-w {
+	grid-column: 1 / 2;
+	grid-row:    2 / 4;
+	text-align: center;
+}
+.wd .wd-math .wd-math-index > .wd-math-e {
+	grid-column: 5 / 6;
+	grid-row:    2 / 4;
+	text-align: center;
+}
+.wd .wd-math .wd-math-index > .wd-math-ne {
+	grid-column: 4 / 5;
+	grid-row:    2 / 3;
+	font-size: 0.5em;
+	text-align: left;
+}
+.wd .wd-math .wd-math-index > .wd-math-se {
+	grid-column: 4 / 5;
+	grid-row:    3 / 4;
+	font-size: 0.5em;
+	text-align: left;
+}
+.wd .wd-math .wd-math-index > .wd-math-nw {
+	grid-column: 2 / 3;
+	grid-row:    2 / 3;
+	font-size: 0.5em;
+	text-align: right;
+}
+.wd .wd-math .wd-math-index > .wd-math-sw {
+	grid-column: 2 / 3;
+	grid-row:    3 / 4;
+	font-size: 0.5em;
+	text-align: right;
+}
 
-.m1.up, .m1.up .m1  {align-items: start;}
-.m1.down, .m1.down .m1 {align-items: end;}
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 </style>
 
 
+<h5 id="math-index">wd-math-index</h5>
+
+
+<section class="wd-math">
+	<div class="wd-math-line">
+		<span class="wd-math-index">
+			<span class="wd-math-c">c</span>
+			<span class="wd-math-n">n</span>
+			<span class="wd-math-s">s</span>
+			<span class="wd-math-e">e</span>
+			<span class="wd-math-w">w</span>
+			<span class="wd-math-ne">ne</span>
+			<span class="wd-math-nw">nw</span>
+			<span class="wd-math-se">se</span>
+			<span class="wd-math-sw">sw</span>
+		</span>
+	</div>
+</section>
+
+<section class="wd-math">
+	<div class="wd-math-line">
+		<span class="wd-math-index">
+			<span class="wd-math-c"><var>R</var></span>
+			<span class="wd-math-n"><var>&rarr;</var></span>
+			<span class="wd-math-ne">2</span>
+			<span class="wd-math-e wd-math-line">
+				<span>=</span>
+				<span class="wd-math-index">
+					<span class="wd-math-c"><var>R</var></span>
+					<span class="wd-math-se">1</span>
+					<span class="wd-math-ne">2</span>
+				</span>
+				<span>&plus;</span>
+				<span class="wd-math-index">
+					<span class="wd-math-c"><var>R</var></span>
+					<span class="wd-math-se">2</span>
+					<span class="wd-math-ne">2</span>
+				</span>
+				<span>&plus;</span>
+				<span class="wd-math-index">
+					<span class="wd-math-c"><var>R</var></span>
+					<span class="wd-math-se">3</span>
+					<span class="wd-math-ne">2</span>
+				</span>
+			</span>
+
+
+		</span>
+	</div>
+</section>
 
 
 
-<div class="m1 up">
-	<span><var>Y</var></span>
-	<span>=</span>
-	<span>2 &plus; </span>
-	<sub><var>x</var> &plus; 5</sub>
-	<sup>1</sup>
-	<span>=</span>
-	<span>2 &times; </span>
-	<sup><var>x</var> &plus; 5</sup>
-	<sub class="m1">
-		<span>1 &plus;</span>
-		<sup><var>a</var></sup>
-		<sub class="m1">
-				<span><var>x</var> &minus;</span>
-				<span>1 &plus;</span>
-				<sup><var>a</var></sup>
-				<sub><var>x</var> &minus; 5</sub>
+<h5 id="math-line">wd-math-line</h5>
+
+<section class="wd-math">
+	<div class="wd-math-line">
+		<span><var>y</var></span>
+		<span>=</span>
+		<sup>1</sup>
+		<sub>1!</sub>
+		<span>&plus;</span>
+		<sup>1</sup>
+		<sub>2!</sub>
+		<span>&plus;</span>
+		<sup>1</sup>
+		<sub>3!</sub>
+		<span>&plus;</span>
+		<sup>1</sup>
+		<sub>4!</sub>
+		<span>&plus;</span>
+		<span>...</span>
+	</div>
+</section>
+
+<h5 id="math-upper">wd-math-upper</h5>
+
+
+<section class="wd-math">
+	<div class="wd-math-line wd-math-upper">
+		<span><var>Y</var></span>
+		<span>=</span>
+		<span>2 &plus; </span>
+		<sub><var>x</var> &plus; 5</sub>
+		<sup>1</sup>
+		<span>=</span>
+		<span>2 &times; </span>
+		<sup><var>x</var> &plus; 5</sup>
+		<sub class="wd-math-line">
+			<span>1 &plus;</span>
+			<sup><var>a</var></sup>
+			<sub class="wd-math-line">
+					<span><var>x</var> &minus;</span>
+					<span>1 &plus;</span>
+					<sup><var>a</var></sup>
+					<sub><var>x</var> &minus; 5</sub>
+			</sub>
 		</sub>
-	</sub>
-</div>
+	</div>
+</section>
+
+
+<h5 id="math-lower">wd-math-lower</h5>
 
 <hr>
+<section class="wd-math">
+	<div class="wd-math-line wd-math-lower">
+		<span><var>Y</var></span>
+		<span>=</span>
 
-<div class="m1 down">
-	<span><var>Y</var></span>
-	<span>=</span>
+		<span>2 &plus; </span>
+		<sub><var>x</var> &plus; 5</sub>
+		<sup>1</sup>
+		<span>=</span>
 
-	<span>2 &plus; </span>
-	<sub><var>x</var> &plus; 5</sub>
-	<sup>1</sup>
-	<span>=</span>
+		<span>2 &minus; </span>
+		<sub><var>x</var> &plus; 5</sub>
 
-	<span>2 &minus; </span>
-	<sub><var>x</var> &plus; 5</sub>
-
-	<sup class="m1">
-		<span>1 &plus;</span>
-		<sub><var>a</var></sub>
-		<sup class="m1">
-				<span><var>x</var> &minus;</span>
-				<span>1 &plus;</span>
-				<sub><var>a</var></sub>
-				<sup><var>x</var> &minus; 5</sup>
+		<sup class="wd-math-line">
+			<span>1 &plus;</span>
+			<sub><var>a</var></sub>
+			<sup class="wd-math-line">
+					<span><var>x</var> &minus;</span>
+					<span>1 &plus;</span>
+					<sub><var>a</var></sub>
+					<sup><var>x</var> &minus; 5</sup>
+			</sup>
 		</sup>
-	</sup>
-</div>
-
+	</div>
+</section>
 <hr>
 
 
 
-<div class="m1">
-	<span><var>y</var></span>
-	<span>=</span>
-	<sup>1</sup>
-	<sub>1!</sub>
-	<span>&plus;</span>
-	<sup>1</sup>
-	<sub>2!</sub>
-	<span>&plus;</span>
-	<sup>1</sup>
-	<sub>3!</sub>
-	<span>&plus;</span>
-	<sup>1</sup>
-	<sub>4!</sub>
-	<span>&plus;</span>
-	<span>...</span>
-</div>
+
 
 
 
@@ -298,7 +445,7 @@
 <style id="show-border"></style>
 
 <nav>
-	<span data-wd-set="${#show-border}textContent{.wd-math *, .m1, .m1 * {outline: 1px dotted red;}}">Border</span>
+	<span data-wd-set="${#show-border}textContent{.wd-math *, .wd-math-line, .wd-math-line * {outline: 1px dotted red;}}">Border</span>
 	<span data-wd-set="${#show-border}textContent{}">Clear</span>
 </nav>
 
