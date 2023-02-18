@@ -233,7 +233,7 @@ const wd = (function() {
 	];
 
 /*----------------------------------------------------------------------------*/
-	function wd_lang(elem) { /* Retorna o local: definido pelo DOM (elemento com efeito bolha) ou do navegador FIXME função alterada */
+	function wd_lang(elem) { /* Retorna a linguagem definida (lang) a partir de um elemento (efeito bolha) ou do navegador*/
 		let node = wd_vtype(elem).type === "dom" ? elem : document.body;
 		while (node !== null && node !== undefined) {
 			if ("lang" in node.attributes) {
@@ -499,7 +499,7 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_$$$(obj, root) { /* captura os valores de $ e $$ dentro de um objeto ($$ prioridade) FIXME: função alterada */
+	function wd_$$$(obj, root) { /* captura os valores de $ e $$ dentro de um objeto ($$ prioridade) */
 		let one =  "$" in obj ? obj["$"].trim()  : null;
 		let all = "$$" in obj ? obj["$$"].trim() : null;
 		if (one === null && all === null) return null;
@@ -1833,7 +1833,7 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_html_clone(elem) { //FIXME função adicionada /* clona elementos que o cloneNode não atende (scripts) */
+	function wd_html_clone(elem) { /* clona elementos que o cloneNode não atende (scripts) */
 		let tag   = elem.tagName;
 		let attrs = elem.attributes;
 		let clone = document.createElement(tag);
@@ -1846,7 +1846,7 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_html_append(base, html, overlap) { //FIXME função adicionada /* adiciona/substitui elementos por texto em HTML */
+	function wd_html_append(base, html, overlap) { /* adiciona/substitui elementos por texto em HTML */
 		let temp = overlap ===  true ? document.createElement("DIV") : base;
 		temp.innerHTML = html;
 		let scripts = wd_vtype(wd_$$("script", temp)).value;
@@ -1878,7 +1878,7 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_html_load(elem, text, overlap) { /*FIXME função medificada /* carrega um HTML (texto) no elemento */
+	function wd_html_load(elem, text, overlap) { /* carrega um HTML (texto) no elemento */
 		text = text === undefined || text === null ? "" : new String(text).toString();
 		/* obtendo o atributo para carregar o conteúdo HTML */
 		let test = new WDform(elem);
@@ -2212,7 +2212,7 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_html_translate(elem, json) { /* FIXME nova função carrega tradução vinculada a seletor CSS em arquivo JSON */
+	function wd_html_translate(elem, json) { /* carrega tradução vinculada a seletor CSS em arquivo JSON */
 		/* FORMATO DO JSON
 		[
 			{"$$": "CSS Selectors", "$":  "CSS Selector", "textContent": "Text", "title": "Title"},
@@ -3862,7 +3862,7 @@ const wd = (function() {
 				return this.run(wd_html_data, obj);
 			}
 		},
-		load: { /* carrega elementos HTML em forma de texto FIXME método modificado*/
+		load: { /* carrega elementos HTML em forma de texto */
 			value: function(text, overlap) {
 				return this.run(wd_html_load, text, overlap);
 			}
@@ -3971,7 +3971,7 @@ const wd = (function() {
 /* == BLOCO 4 ================================================================*/
 
 /*----------------------------------------------------------------------------*/
-	function data_wdLoad(e) { /* carrega HTML: data-wd-load=path{file}method{get|post}${form}overlap{} FIXME atributo modificado*/
+	function data_wdLoad(e) { /* carrega HTML: data-wd-load=path{file}method{get|post}${form}overlap{} */
 		if (!("wdLoad" in e.dataset)) return;
 
 		/* obter dados do atributo */
@@ -4513,17 +4513,17 @@ const wd = (function() {
 
 
 /*----------------------------------------------------------------------------*/
-	function data_wdTranslate(e) { /* carrega tradução: data-wd-translate=path{dir}method{get|post}${form} FIXME novo atributo */
+	function data_wdTranslate(e) { /* carrega tradução: data-wd-translate=path{dir}method{get|post} */
 		if (!("wdTranslate" in e.dataset)) return;
-		let lang   = wd_lang(e);
+		let lang   = wd_lang(e).toLowerCase();
 		let data   = wd_html_dataset_value(e, "wdTranslate")[0];
-		let target = WD(e); // TODO excluo o atributo ou deixo?
+		let target = WD(e);
 		let method = data.method;
 		let dir    = data.path.replace(/\/$/, "");
 		let file1  = dir+"/"+(lang)+".json";
 		let file2  = dir+"/"+(lang.split("-")[0])+".json";
-		let pack   = wd_$$$(data);
-		let exec   = WD(pack);
+		let exec   = WD();
+		target.data({wdTranslate: null});
 
 		/* tentativa de obter a língua específica */
 		exec.send(file1, function(x) {
@@ -4531,7 +4531,7 @@ const wd = (function() {
 				if (wd_vtype(x.json).type === "array") {
 					return wd_html_translate(e, x.json);
 				} else {
-					/* tentativa de obter apenas o país */
+					/* tentativa de obter apenas a língua principal */
 					exec.send(file2, function(y) {
 						if (y.closed) {
 							if (wd_vtype(y.json).type === "array")

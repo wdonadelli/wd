@@ -237,12 +237,16 @@
 	grid-row:    1 / 2;
 	font-size: 0.5em;
 	text-align: center;
+	margin-bottom: -0.75em;
+	border: 1px dotted;
 }
 .wd .wd-math .wd-math-index > .wd-math-s {
 	grid-column: 3 / 4;
 	grid-row:    4 / 5;
 	font-size: 0.5em;
 	text-align: center;
+	margin-top: -0.75em;
+	border: 1px dotted;
 }
 .wd .wd-math .wd-math-index > .wd-math-w {
 	grid-column: 1 / 2;
@@ -283,17 +287,45 @@
 
 
 
+.v {
+	position: relative;
+	display: inline-block;
+	font-size: 18px;
+}
+.v > sup {
+	position: absolute;
+	top: -0.5em;
+	left: 0;
+	right: 0;
+	display: inline-block;
+	font-size: 0.5em;
+}
+.v > sub {
+	position: absolute;
+	bottom: -0.5em;
+	left: 0;
+	right: 0;
+	display: inline-block;
+	font-size: 0.5em;
+}
 
 
+.v > * {
+	text-align: center;
+	bordder: 1px dotted white;
 
-
-
-
-
+}
 
 
 
 </style>
+
+<span class="v">
+	<sub>-</sub>
+	<span class="wd-size-xxlarge">R</span>
+	<sup>&rarr;</sup>
+
+</span>
 
 
 <h5 id="math-index">wd-math-index</h5>
@@ -302,8 +334,8 @@
 <section class="wd-math">
 	<div class="wd-math-line">
 		<span class="wd-math-index">
-			<span class="wd-math-c">c</span>
-			<span class="wd-math-n">n</span>
+			<span class="wd-math-c">C</span>
+			<span class="wd-math-n">nossa, isso é muito difícil</span>
 			<span class="wd-math-s">s</span>
 			<span class="wd-math-e">e</span>
 			<span class="wd-math-w">w</span>
@@ -318,8 +350,9 @@
 <section class="wd-math">
 	<div class="wd-math-line">
 		<span class="wd-math-index">
-			<span class="wd-math-c"><var>R</var></span>
+			<span class="wd-math-c wd-size-xxlarge"><var>R</var></span>
 			<span class="wd-math-n"><var>&rarr;</var></span>
+			<span class="wd-math-se">0</span>
 			<span class="wd-math-ne">2</span>
 			<span class="wd-math-e wd-math-line">
 				<span>=</span>

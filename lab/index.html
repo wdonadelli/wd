@@ -82,6 +82,7 @@ wd(window).addHandler(
 				<span class="" data-wd-css="${#side_code}tgl{wd-hidden}" >Code</span>
 				<span class="" data-wd-css="${html}tgl{wd}" >CSS</span>
 				<span class="" data-wd-css="$${body, main > article}tgl{wd-bg-black}" >Black</span>
+				<a href="https://github.com/wdonadelli/wd/wiki" target="_blank">Wiki</a>
 			</nav>
 
 			<section data-wd-device="desktop{wd-col}">
@@ -124,18 +125,15 @@ wd(window).addHandler(
 	</main>
 
 	<div class="wd-modal" id="menu" data-wd-css="tgl{wd-open}">
-	  <div data-wd-device="desktop{wd-window-left}mobile{wd-window-full}"  style="min-width: 25%;">
-	    <article class="wd-flyer wd-bg-base">
-	      <header>
-	        <h4>Menu</h4>
-	      </header>
-	      <nav data-wd-repeat="path{menu.json}method{GET}" class="wd-nav-block">
-	        <a href="?page={{target}}" title="{{target}}">{{target}}</a>
-	      </nav>
-				<div class="wd-b wd-align-right">
-					<a href="https://github.com/wdonadelli/wd/wiki" target="_blank">Wiki</a>
-				</div>
-	    </article>
+  <div data-wd-device="desktop{wd-window-left}mobile{wd-window-full}"  style="min-width: 25%;">
+    <article class="wd-flyer wd-bg-base">
+     <header>
+      <h4>Menu</h4>
+     </header>
+     <nav data-wd-repeat="path{menu.json}method{GET}" class="wd-nav-block">
+       <a href="?page={{target}}" title="{{target}}">{{target}}</a>
+     </nav>
+    </article>
 	  </div>
 	</div>
 
