@@ -1249,14 +1249,32 @@ q {
 	text-align: center;
 	margin-bottom: 2em;
 }
-/* FIXME: math não aceita css?
-.wd .wd-read > math {
+.wd .wd-read > math[display=block] {
 	max-width: 80%;
 	margin: 2em auto;
 	text-align: center;
-	border: 1px solid;
 }
-*/
+
+/* impressão FIXME  wd-read-break: em teste */
+@media print {
+	/* quebra de página */
+	.wd .wd-read.wd-read-break > h1 + * {
+		page-break-before: always;
+	}
+	.wd .wd-read.wd-read-break > h1 + h2 {
+		page-break-before: initial;
+		page-break-after:  always;
+	}
+	.wd .wd-read.wd-read-break > h3 {
+		page-break-before: always;
+		margin-bottom: 2em;
+		margin-top: 2em;
+	}
+	/* posição */
+	.wd .wd-read.wd-read-break > h1 {
+		margin-top: 50%;
+	}
+}
 
 /* numeração */
 .wd .wd-read {
@@ -1325,13 +1343,15 @@ q {
 	content: var(--var-itemize-picture) " " counter(picture1) " - ";
 	font-weight: bold;
 }
+/* numeração: math */
+.wd .wd-read > math[display=block] {
+	counter-increment: math;
+}
+.wd .wd-read > math[display=block]::after {
+	content: "(" counter(math) ")";
+	margin-left: 2em;
+}
 
-.wd .wd-read > *.wd-read {
-	counter-reset: none;
-}
-.wd .wd-read > *.wd-read > h3 {
-	counter-reset: chapter4;
-}
 
 /* -- itemizar parágrafos -- */
 .wd .wd-itemize > p:first-of-type {

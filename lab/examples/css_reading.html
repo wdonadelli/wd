@@ -16,6 +16,7 @@
 <nav>
 	<span data-wd-css="${#article}">None</span>
 	<span data-wd-css="${#article}tgl{wd-read}">Read</span>
+	<span data-wd-css="${#article}tgl{wd-read-break}">Break</span>
 	<span data-wd-css="${#article}tgl{wd-itemize}">Itemize</span>
 	<span data-wd-css="${#article}tgl{wd-columns}">Columns</span>
 	<span data-wd-full="${#article}">Full</span>
@@ -178,9 +179,9 @@
 
 	<h3>Math</h3>
 
-	<p>When the <i>math</i> tag is used inside the <code>wd-read</code> container, the container will be numbered when the top-level tag receives the <code>display=<q>block</q></code> attribute:
+	<p>When the <i>math</i> tag is used inside the <code>wd-read</code> container, the container will be numbered and formatted when the top-level tag receives the <code>display=<q>block</q></code> attribute:</p>
 
-	<math display="block">
+	<math display="">
 
 		<mo>d</mo>
 		<mfrac>
