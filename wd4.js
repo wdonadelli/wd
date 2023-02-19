@@ -4461,7 +4461,7 @@ const wd = (function() {
 /*----------------------------------------------------------------------------*/
 	function data_wdJump(e) { /* Saltos de pai: data-wd-jump=$${parents}*/
 		if (!("wdJump" in e.dataset)) return;
-		let data = wd_html_dataset_value(e, "wdJump")[0];
+		let data    = wd_html_dataset_value(e, "wdJump")[0];
 		let target  = wd_$$$(data);
 		let parents = wd_vtype(target)
 		if (parents.type === "dom")
