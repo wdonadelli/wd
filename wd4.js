@@ -4513,40 +4513,41 @@ const wd = (function() {
 
 
 /*----------------------------------------------------------------------------*/
-	function data_wdTranslate(e) { /* carrega tradução: data-wd-translate=path{dir}method{get|post} */
+	function data_wdTranslate(e) { /* carrega tradução: data-wd-translate=path{dir}method{get|post}main{file name} */
 		if (!("wdTranslate" in e.dataset)) return;
 		let lang   = wd_lang(e).toLowerCase();
 		let data   = wd_html_dataset_value(e, "wdTranslate")[0];
-		let target = WD(e);
 		let method = data.method;
-		let dir    = data.path.replace(/\/$/, "");
-		let file1  = dir+"/"+(lang)+".json";
-		let file2  = dir+"/"+(lang.split("-")[0])+".json";
-		let exec   = WD();
-		target.data({wdTranslate: null});
+		let dir    = "path" in data ? data.path.replace(/\/$/, "") : null;
+		let main   = dir  !== null  ? ("main" in data ? data.main : null) : null;
+		let file1  = dir  !== null  ? dir+"/"+(lang)+".json" : null;
+		let file2  = dir  !== null  ? dir+"/"+(lang.split("-")[0])+".json" : null;
+		let file3  = main !== null  ? dir+"/"+main : null;
 
-		/* tentativa de obter a língua específica */
-		exec.send(file1, function(x) {
-			if (x.closed) {
-				if (wd_vtype(x.json).type === "array") {
-					return wd_html_translate(e, x.json);
-				} else {
-					/* tentativa de obter apenas a língua principal */
-					exec.send(file2, function(y) {
-						if (y.closed) {
-							if (wd_vtype(y.json).type === "array")
-								return wd_html_translate(e, y.json);
-						}
-					}, method);
+		function readTranslationFile(files, n) {
+			if (n >= files.length) return;
+			if (files[n] === null) return readTranslationFile(files, ++n);
 
+			WD().send(files[n], function(x) {
+				if (x.closed) {
+					if (wd_vtype(x.json).type === "array")
+						return wd_html_translate(e, x.json);
+					else
+						return readTranslationFile(files, ++n);
 				}
-			}
-		}, method);
+			}, method);
+			return;
+		}
+
+		/* executando */
+		WD(e).data({wdTranslate: null});
+		readTranslationFile([file1, file2, file3], 0);
+
 		return;
 	}
 
-
 /*----------------------------------------------------------------------------*/
+	/* FIXME v5: destruir data_wdLang (data_wdTranslate o substituirá por definitivo) */
 	function data_wdLang(e) { /* carrega HTML: data-wd-lang=path{file}method{get|post}${form} */
 		if (!("wdLang" in e.dataset)) return;
 		let data   = wd_html_dataset_value(e, "wdLang")[0];

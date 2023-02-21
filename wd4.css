@@ -105,11 +105,12 @@ https://github.com/wdonadelli/wd
 
 	--var-bg-code: rgb(238,238,236);
 	--var-fg-code: rgb(46,52,54);
-	--var-fg-code-reserved: rgb(0,77,0);
+	--var-fg-code-reserved: rgb(0, 153, 0);
 	--var-fg-code-return: rgb(145,106,8);
 	--var-fg-code-values: rgb(224,20,130);
 	--var-fg-code-comments: rgb(78,60,195);
 	--var-fg-code-line: rgb(204,204,204);
+	--var-fg-code-attr: rgb(0, 128, 255);
 
 	--var-bg-form: rgb(248,248,255);
 	--var-fg-form: rgb(64,64,64);
@@ -162,7 +163,7 @@ https://github.com/wdonadelli/wd
 	--var-shadow-nav-block:    inset 0.3em 0 0 0 rgba(114, 159, 207, 1);
 	--var-shadow-nav-spread:   0 0 0 0.3em rgba(114, 159, 207, 1);
 	--var-shadow:              0.2em 0.2em 0 0 rgb(166, 166, 166);
-	--var-cloud:               0 0.1em 0.2em 0 rgb(166, 166, 166), 0 0.2em 1em 0 rgba(242, 242, 242,0.5);
+	--var-cloud:               0 0.1em 0.2em 0 rgb(166, 166, 166), 0 0 1em 0 rgba(242, 242, 242,0.5);
 	--var-shadow-cloud:        0 0.1em 0.2em 0 rgb(166, 166, 166), 0 0.2em 1em 0 rgba(242, 242, 242,0.5), 0.2em 0.2em 0 0 rgb(166, 166, 166);
 	--var-shadow-form-invalid: inset 0 0 0 1px rgb(220,20,60);
 
@@ -178,7 +179,8 @@ https://github.com/wdonadelli/wd
 	--var-font-height: 1.5;
 	--var-font-table: Verdana,sans-serif;
 	--var-font-headers: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
-	--var-font-code: monospace;
+	--var-font-bcode: monospace;
+	--var-font-acode: "Courier New";
 	--var-font-form: Verdana, sans-serif;
 	--var-font-math: serif;
 
@@ -263,17 +265,11 @@ q {
 }
 .wd .wd-version::before {
 	content: var(--var-wd-version);
-	font-family: var(--var-font-code);
-	font-size: 0.9em;
+	font-family: var(--var-font-bcode);
 }
 /* -- texto -- */
 .wd code {
-	background-color: var(--var-bg-code);
-	border-radius: var(--var-radius-default);
-	color: var(--var-fg-code);
-	font-family: var(--var-font-code);
-	font-size: 0.9em;
-	padding: 0 0.3em;
+	font-family: var(--var-font-acode);
 }
 .wd var {
 	font-family: var(--var-font-math);
@@ -1352,7 +1348,6 @@ q {
 	margin-left: 2em;
 }
 
-
 /* -- itemizar parágrafos -- */
 .wd .wd-itemize > p:first-of-type {
 	counter-increment: none;
@@ -1410,11 +1405,19 @@ q {
 }
 
 /* -- código -- */
+/* FIXME v5: wd-code
+div: numera e define a linha (linha vai se comportar como pre para espaços)
+em: define palavras chaves
+var: define o valor da variável (aspas serão fornecidas por aspas usuais)
+samp: retornos para usuário
+s: comentários
+span: atributos e outros destaques
+*/
 .wd .wd-code {
 	background-color: var(--var-bg-code);
 	border-radius:    var(--var-radius-default);
 	color:            var(--var-fg-code);
-	font-family:      var(--var-font-code);
+	font-family:      var(--var-font-bcode);
 	font-size: 0.9em;
 	font-style: normal;
 	font-weight: normal;
@@ -1432,22 +1435,24 @@ q {
 	background-color: inherit;
 	color: inherit;
 	font: inherit;
-	text-decoration: inherit;
+	text-decoration: none;
 	padding: 0;
 }
 /* palavras reservadas */
 .wd .wd-code mark {
 	color: var(--var-fg-code-reserved);
-	font-weight: bold;
+}
+/* attributos */
+.wd .wd-code em {
+	color: var(--var-fg-code-attr);
 }
 /* tags */
 .wd .wd-code code {
 	color: var(--var-fg-code-reserved);
-	font-weight: bold;
 }
-.wd .wd-code code > *    {font-weight: normal;}
-.wd .wd-code code:before {content: "\003C";} /* sinal de < */
-.wd .wd-code code:after  {content: "\003E";} /* sinal de > */
+.wd .wd-code code:before {content: "\003C"; /* sinal de < */}
+.wd .wd-code code:after  {content: "\003E"; /* sinal de > */}
+
 /* strings e variáveis */
 .wd .wd-code var, .wd .wd-code var *,
 .wd .wd-code kbd, .wd .wd-code kbd *,
@@ -1455,12 +1460,12 @@ q {
 	color: var(--var-fg-code-values);
 	white-space: pre-wrap;
 }
-.wd .wd-code q          {quotes: "\0022" "\0022" "\005C\0022" "\005C\0022";}
-.wd .wd-code kbd        {quotes: "\0027" "\0027" "\0022" "\0022";}
+.wd .wd-code q          {quotes: "\0022" "\0022";}
+.wd .wd-code q > q      {quotes: "\005C\0022" "\005C\0022";}
+.wd .wd-code kbd        {quotes: "\0027" "\0027";}
 .wd .wd-code kbd:before {content: open-quote;}
 .wd .wd-code kbd:after  {content: close-quote;}
-
-
+.wd .wd-code kbd > kbd  {quotes: "\005C\0027" "\005C\0027";}
 /* retorno */
 .wd .wd-code samp, .wd .wd-code samp * {
 	color: var(--var-fg-code-return);
@@ -1490,6 +1495,7 @@ q {
 .wd .wd-code > section section {
 	padding-left: var(--var-size-large);
 }
+
 /* -- Cabeçalho e Rodapés (fixos (body) e companheiros) -- */
 .wd .wd-header,
 .wd .wd-footer {
