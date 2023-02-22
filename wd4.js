@@ -1235,8 +1235,6 @@ const wd = (function() {
 			if (aindex > bindex) return  1;
 			if (aindex < bindex) return -1;
 			if (atype === "dom") {/*atype === btype (tipos iguais)*/
-				/* FIXME v5: utilizar textContent (mais rápido) ou innerText (não pega elementos escondidos)
-				https://developer.mozilla.org/pt-BR/docs/Web/API/Node/textContent */
 				let check = wd_array_sort([a.textContent, b.textContent]);
 				avalue = a.textContent === check[0] ? 0 : 1;
 				bvalue = avalue === 0 ? 1 : 0;
@@ -1768,6 +1766,7 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	function wd_html_class(elem, value) { /* obtem/define o valor do atributo class */
+		/* FIXME v5: mudar de className para setAttribute("class", value) */
 		let val = elem.className;
 		if (value === undefined) { /* obter valor do atributo */
 			if (typeof val === "string") return val;
