@@ -20,9 +20,9 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-------------------------------------------------------------------------------*/
 
-/* wd.css (v4.1.1) | https://github.com/wdonadelli/wd */
+https://github.com/wdonadelli/wd
+------------------------------------------------------------------------------*/
 
 /*------------------------------------------------------------------------------
 | Os estilos terão efeito na página se precedidos da classe wd. Caso contrário,
@@ -41,6 +41,7 @@ SOFTWARE.
 /* == BLOCO 1 ================================================================*/
 
 :root {
+	--var-wd-version: "WD CSS v4.2.2";
 	/* cores de fundo e de fonte */
 	--var-bg-grey-header: rgb(200,200,200);
 	--var-fg-grey-header: rgb(20,20,20);
@@ -104,11 +105,12 @@ SOFTWARE.
 
 	--var-bg-code: rgb(238,238,236);
 	--var-fg-code: rgb(46,52,54);
-	--var-fg-code-reserved: rgb(0,77,0);
+	--var-fg-code-reserved: rgb(0, 153, 0);
 	--var-fg-code-return: rgb(145,106,8);
 	--var-fg-code-values: rgb(224,20,130);
 	--var-fg-code-comments: rgb(78,60,195);
 	--var-fg-code-line: rgb(204,204,204);
+	--var-fg-code-attr: rgb(0, 128, 255);
 
 	--var-bg-form: rgb(248,248,255);
 	--var-fg-form: rgb(64,64,64);
@@ -123,9 +125,8 @@ SOFTWARE.
 	--var-bg-modal:  rgba(0,0,0,0.2);
 	--var-bg-window: rgb(250,250,250);
 
-	--var-bg-upon: rgb(0,128,128);
-	--var-bg-upon: rgba(0,128,128,0.7);
-	--var-fg-upon: rgb(250,250,250);
+	--var-bg-upon: rgb(75, 121, 180);
+	--var-fg-upon: rgb(220, 228, 239);
 
 	--var-bg-zebra: rgb(235,235,235);
 	--var-fg-zebra: rgb(50,50,50);
@@ -152,17 +153,18 @@ SOFTWARE.
 	--var-border-form-required: 1px solid rgb(244,138,160);
 	--var-border-form-invalid: 1px solid rgb(220,20,60);
 	--var-border-table: rgb(225,225,225);
+	--var-outline-upon: rgb(143, 191, 255) solid 2px;
 	--var-radius-default: 0.2em;
 	--var-radius-square: 50%;
+
 
 	/* sombras */
 	--var-shadow-nav:          inset 0 -0.3em 0 0 rgba(114, 159, 207, 1);
 	--var-shadow-nav-block:    inset 0.3em 0 0 0 rgba(114, 159, 207, 1);
 	--var-shadow-nav-spread:   0 0 0 0.3em rgba(114, 159, 207, 1);
-	--var-shadow:              0.5em 0.5em 0 0 rgba(136, 138, 133, 1);
-	--var-cloud:               0 0 1.4em 0.5em rgba(211, 215, 207, 0.8);
-	--var-shadow-cloud:        0.5em 0.5em 0 0 rgba(136, 138, 133, 1), 0 0 1.4em 0.5em rgba(211, 215, 207, 0.8);
-	--var-shadow-upon:         inset 0 0 0 1px rgb(0,128,128);
+	--var-shadow:              0.2em 0.2em 0 0 rgb(166, 166, 166);
+	--var-cloud:               0 0.1em 0.2em 0 rgb(166, 166, 166), 0 0 1em 0 rgba(242, 242, 242,0.5);
+	--var-shadow-cloud:        0 0.1em 0.2em 0 rgb(166, 166, 166), 0 0.2em 1em 0 rgba(242, 242, 242,0.5), 0.2em 0.2em 0 0 rgb(166, 166, 166);
 	--var-shadow-form-invalid: inset 0 0 0 1px rgb(220,20,60);
 
 	/* razão altura x comprimento */
@@ -177,7 +179,8 @@ SOFTWARE.
 	--var-font-height: 1.5;
 	--var-font-table: Verdana,sans-serif;
 	--var-font-headers: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
-	--var-font-code: monospace;
+	--var-font-bcode: monospace;
+	--var-font-acode: "Courier New";
 	--var-font-form: Verdana, sans-serif;
 	--var-font-math: serif;
 
@@ -200,8 +203,11 @@ SOFTWARE.
 	--var-zindex-5: 555;
 
 	/* others */
-	--var-itemize-table: "Table";
-	--var-itemize-figure: "Figure";
+	--var-itemize-table:   "Table";
+	--var-itemize-figure:  "Figure";
+	--var-itemize-audio:   "Audio";
+	--var-itemize-video:   "Video";
+	--var-itemize-picture: "Picture";
 }
 
 /* == BLOCO 2 ================================================================*/
@@ -251,21 +257,19 @@ q {
 }
 
 /* == BLOCO 3 ================================================================*/
-
 .wd {
 	color: var(--var-font-color);
 	font-family: var(--var-font-default);
 	font-size: var(--var-font-size);
 	line-height: var(--var-font-height);
 }
+.wd .wd-version::before {
+	content: var(--var-wd-version);
+	font-family: var(--var-font-bcode);
+}
 /* -- texto -- */
 .wd code {
-	background-color: var(--var-bg-code);
-	border-radius: var(--var-radius-default);
-	color: var(--var-fg-code);
-	font-family: var(--var-font-code);
-	font-size: 0.9em;
-	padding: 0 0.3em;
+	font-family: var(--var-font-acode);
 }
 .wd var {
 	font-family: var(--var-font-math);
@@ -281,11 +285,11 @@ q {
 	margin: var(--var-margin-default);
 }
 .wd h1  {font-size: 2.00em;}
-.wd h2  {font-size: 1.50em;}
-.wd h3  {font-size: 1.20em;}
-.wd h4  {font-size: 1.00em;}
-.wd h5  {font-size: 0.85em;}
-.wd h6  {font-size: 0.65em;}
+.wd h2  {font-size: 1.80em;}
+.wd h3  {font-size: 1.60em;}
+.wd h4  {font-size: 1.40em;}
+.wd h5  {font-size: 1.20em;}
+.wd h6  {font-size: 1.00em;}
 .wd p   {margin: 1em 0;}
 .wd pre {
 	margin: var(--var-margin-default);
@@ -300,11 +304,12 @@ q {
 	display: flex;
 	flex-direction: row;
 	flex-wrap: wrap;
+	justify-content: start;
+	align-items: start;
 }
 .wd nav > * {
 	color: inherit;
 	cursor: pointer;
-	margin: 0;
 	padding: var(--var-size-default);
 	text-decoration: none;
 }
@@ -380,11 +385,11 @@ q {
 	margin: 0;
 }
 .wd dl > dt {
-	font-weight: bold;
 	margin: 0;
 	padding: 0;
 }
 .wd dl > dd {
+	font-weight: lighter;
 	margin: 0 0 0 2em;
 	padding: 0;
 }
@@ -415,7 +420,7 @@ q {
 .wd table tfoot {
 	background-color: var(--var-bg-tfoot);
 	color:            var(--var-fg-tfoot);
-	border-top: thin dashed rgb(0,0,0);
+	border-top: thin dashed;
 }
 .wd table th,
 .wd table td {
@@ -450,7 +455,7 @@ q {
 	font-family: var(--var-font-form);
 	font-size: var(--var-font-size);
 	line-height: var(--var-font-height);
-	height: var(--var-height-form);
+	min-height: var(--var-height-form);
 	outline: inherit;
 	padding: 0.5em;
 	vertical-align: middle;
@@ -533,7 +538,7 @@ q {
 	background-position: left center;
 	padding-left: 25px;
 }
-.wd select[multiple] {
+.wd select[multiple], .wd select[size] {
 	background-image: none;
 	padding-left: 0.5em;
 }
@@ -607,22 +612,108 @@ q {
 
 /* == BLOCO 5 ================================================================*/
 
+/* -- Formulário -- */
+.wd .wd-form,
+.wd .wd-form-grid,
+.wd .wd-form-col {
+	display: grid;
+	grid-template-columns: auto;
+	grid-template-rows:    auto;
+	row-gap:    var(--var-size-default);
+	padding:    var(--var-size-default);
+	margin:     var(--var-margin-default);
+}
+.wd .wd-form      label,
+.wd .wd-form-grid label,
+.wd .wd-form-col  label {
+	font-weight: bold;
+	font-size: 0.9em;
+	height: auto;
+	padding: 0;
+	min-height: initial;
+}
+.wd .wd-form      textarea,
+.wd .wd-form-grid textarea,
+.wd .wd-form-col  textarea {
+	min-height: 5em;
+}
+
+.wd .wd-form      > *,
+.wd .wd-form-grid > *,
+.wd .wd-form-col  > * {
+	display: grid;
+	grid-template-columns: auto;
+	grid-template-rows:    auto auto;
+	align-content: start;
+}
+.wd .wd-form      > * > *,
+.wd .wd-form-grid > * > *,
+.wd .wd-form-col  > * > * {
+	grid-row:    2 / 3;
+	grid-column: 1 / 2;
+	display:         flex;
+	align-items:     center;
+	justify-content: center;
+}
+.wd .wd-form      > * > label,
+.wd .wd-form-grid > * > label,
+.wd .wd-form-col  > * > label {
+	grid-row:    1 / 2;
+	justify-content: start;
+	align-items: start;
+}
+.wd .wd-form      > * > *:only-child,
+.wd .wd-form-grid > * > *:only-child,
+.wd .wd-form-col  > * > *:only-child {
+	grid-row:    1 / 3;
+	align-items: center;
+}
+
+
+@media screen and (min-width: 600px) { /* tablet/desktop */
+	/* row */
+	.wd .wd-form-col > * {
+		grid-template-columns: auto auto;
+		grid-template-columns: 1fr 3fr;
+		grid-template-rows:    auto;
+		column-gap: var(--var-size-default);
+	}
+	.wd .wd-form-col > * > * {
+		grid-row:    1 / 2;
+		grid-column: 2 / 3;
+	}
+	.wd .wd-form-col > * > *:only-child {
+		grid-column: 1 / 3;
+	}
+	.wd .wd-form-col > * > label {
+		grid-column: 1 / 2;
+	}
+
+	/* grid */
+	.wd .wd-form-grid {
+		grid-template-columns: auto auto auto;
+		grid-template-columns: 1fr 1fr 1fr;
+		column-gap: var(--var-size-default);
+	}
+	.wd .wd-form-grid > * > * {
+		align-items: start;
+	}
+}
+
 /* -- Navegador -- */
 .wd nav > *.wd-nav-right {
-	margin: auto 0 auto auto;
+	margin-left: auto;
 }
 .wd nav.wd-nav-block {
 	flex-direction: column;
+
+}
+.wd nav.wd-nav-block > * {
+	border-bottom: thin solid;
+	width: 100%;
 }
 .wd nav.wd-nav-block > *:hover {
 	box-shadow: var(--var-shadow-nav-block);
-}
-.wd nav.wd-nav-block > * {
-	margin: 0;
-	width: 100%;
-	border-bottom-width: 1px;
-	border-bottom-style: solid;
-	border-bottom-color: var(--var-border-table) !important;
 }
 .wd nav.wd-nav-spread {
 	justify-content: space-around;
@@ -636,7 +727,6 @@ q {
 /* -- Blocos -- */
 .wd .wd-block, .wd .wd-block-child > * {
 	display: block !important;
-	float: none !important;
 	margin-left: 0;
 	margin-right: 0;
 	width: 100%;
@@ -645,10 +735,9 @@ q {
 .wd .wd-col {
 	display: flex;
 	flex-wrap: nowrap;
-	align-items: stretch;
-	width: 100%;
+	max-width: 100%;
 }
-.wd .wd-col > * {flex: 1;}
+.wd .wd-col > *          {flex:  1;}
 .wd .wd-col > .wd-col-01 {flex:  1;}
 .wd .wd-col > .wd-col-02 {flex:  2;}
 .wd .wd-col > .wd-col-03 {flex:  3;}
@@ -661,6 +750,7 @@ q {
 .wd .wd-col > .wd-col-10 {flex: 10;}
 .wd .wd-col > .wd-col-11 {flex: 11;}
 .wd .wd-col > .wd-col-12 {flex: 12;}
+
 
 /* -- Formatações de colunas (table > row > col) -- */
 .wd .wd-table-center-01 > * > *:nth-child(1),  .wd .wd-table-center-02 > * > *:nth-child(2),
@@ -790,63 +880,109 @@ q {
 .wd .wd-box-v-xx, .wd .wd-box-v-xx-child > * {height: 24em; width: 18em;}
 
 /* -- Post -- */
-.wd .wd-post, .wd .wd-post-input, .wd .wd-post-output {
+.wd .wd-post {
 	display: grid;
-	border-radius: var(--var-radius-default);
-	margin: var(--var-margin-default);
+	grid-template-columns: auto;
+	grid-template-rows:    auto auto auto auto;
+	justify-content: center;
+	align-items:   start;
+	row-gap: var(--var-size-default);
+	margin:  var(--var-margin-default);
 	padding: var(--var-size-default);
-}
-.wd .wd-post-input  {margin-right: var(--var-size-medium);}
-.wd .wd-post-output {margin-left:  var(--var-size-medium);}
-
-.wd .wd-post > img, .wd .wd-post-input > img, .wd .wd-post-output > img {
-	grid-area: img;
-	border-radius: var(--var-radius-square);
 	text-align: center;
 }
 .wd .wd-post > img {
+	grid-column: 1 / 2;
+	grid-row:    1 / 2;
 	border: var(--var-border-medium);
-	width:  12em;
+	border-radius: var(--var-radius-square);
 	height: 12em;
-	margin: auto;
+	width:  12em;
 }
-.wd .wd-post-input > img, .wd .wd-post-output > img {
-	width:  3em;
-	height: 3em;
-	margin: 0 auto auto auto;
+.wd .wd-post > header {
+	grid-column: 1 / 2;
+	grid-row:    2 / 3;
+	font-size: larger;
+	font-weight: bold;
+	padding: initial;
 }
-
-.wd .wd-post > div, .wd .wd-post-input > div, .wd .wd-post-output > div {
-	grid-area: txt;
-	font-size: smaller;
+.wd .wd-post > div {
+	grid-column: 1 / 2;
+	grid-row:    3 / 4;
 	font-style: italic;
-	text-align: left;
 }
-.wd .wd-post > div {text-align: center;}
-
-
-
-.wd .wd-post {
-	grid-template-areas: 'img' 'txt';
-	grid-template-rows: 14em auto;
+.wd .wd-post > time {
+	grid-column: 1 / 2;
+	grid-row:    4 / 5;
+	font-size: smaller;
+	text-align: right;
+	font-weight: lighter;
 }
-.wd .wd-post-input {
-	grid-template-areas: 'img txt';
-	grid-template-columns: 4em auto;
-}
-.wd .wd-post-output {
-	grid-template-areas: 'txt img';
-	grid-template-columns: auto 4em;
-}
-
 @media screen and (min-width: 600px) { /* tablet */
-	.wd .wd-post > img {width:  14em; height: 14em;}
-	.wd .wd-post {grid-template-rows: 16em auto;}
+	.wd .wd-post > img {width: 14em; height: 14em;}
 }
 @media screen and (min-width: 768px) { /* desktop */
 	.wd .wd-post > img {width: 16em; height: 16em;}
-	.wd .wd-post {grid-template-rows: 18em auto;}
 }
+.wd .wd-post-input,
+.wd .wd-post-output {
+	display: grid;
+	grid-template-columns: auto auto;
+	grid-template-rows: auto auto auto;
+	align-content: start;
+	column-gap: var(--var-size-default);
+	margin:  var(--var-margin-default);
+	padding: var(--var-size-default);
+}
+.wd .wd-post-input  > img,
+.wd .wd-post-output > img {
+	grid-row: 1 / 3;
+	border-radius: var(--var-radius-square);
+	height: 2em;
+	width:  2em;
+	text-align: center;
+}
+.wd .wd-post-input  > header,
+.wd .wd-post-output > header {
+	grid-row: 1 / 2;
+	font-weight: bold;
+	padding: initial;
+}
+.wd .wd-post-input  > div,
+.wd .wd-post-output > div {
+	grid-row: 2 / 3;
+	border-radius: 1em;
+	font-size: smaller;
+	font-style: italic;
+	padding: 0.5em 1em;
+	text-align: left;
+}
+.wd .wd-post-input > div > img,     .wd .wd-post-output > div > img,
+.wd .wd-post-input > div > figure,  .wd .wd-post-output > div > figure,
+.wd .wd-post-input > div > audio,   .wd .wd-post-output > div > audio,
+.wd .wd-post-input > div > video,   .wd .wd-post-output > div > video,
+.wd .wd-post-input > div > picture, .wd .wd-post-output > div > picture {
+	display: block;
+	margin: auto;
+	max-width: 80%;
+}
+.wd .wd-post-input  > time,
+.wd .wd-post-output > time {
+	grid-row: 3 / 4;
+	font-size: small;
+	font-weight: lighter;
+	text-align: right;
+}
+.wd .wd-post-output          {justify-content: end;}
+.wd .wd-post-output > img    {grid-column: 2 / 3;}
+.wd .wd-post-output > header {grid-column: 1 / 2; text-align: right;}
+.wd .wd-post-output > div    {grid-column: 1 / 2;}
+.wd .wd-post-output > time   {grid-column: 1 / 2;}
+.wd .wd-post-input           {justify-content: start;}
+.wd .wd-post-input  > img    {grid-column: 1 / 2;}
+.wd .wd-post-input  > header {grid-column: 2 / 3; text-align: left;}
+.wd .wd-post-input  > div    {grid-column: 2 / 3;}
+.wd .wd-post-input  > time   {grid-column: 2 / 3;}
 
 /* -- Caixa de Dicas -- */
 .wd .wd-tip {
@@ -1016,14 +1152,25 @@ q {
 	margin-left: var(--var-size--flyer);
 	margin-right: var(--var-size--flyer);
 }
-.wd .wd-flyer > *:first-child {margin-top: 0;}
-.wd .wd-flyer > *:last-child  {margin-bottom: 0;}
+.wd .wd-flyer > *:first-child {
+	margin-top: 0;
+}
+.wd .wd-flyer > *:last-child {
+	margin-bottom: 0;
+}
 .wd .wd-flyer > header:first-child,
 .wd .wd-flyer > footer:first-child,
-.wd .wd-flyer > nav:first-child {margin-top: var(--var-size--flyer);}
+.wd .wd-flyer > nav:first-child,
+.wd .wd-flyer > header + nav,
+.wd .wd-flyer > nav + header {
+	margin-top: var(--var-size--flyer);
+}
 .wd .wd-flyer > header:last-child,
 .wd .wd-flyer > footer:last-child,
-.wd .wd-flyer > nav:last-child {margin-bottom: var(--var-size--flyer);}
+.wd .wd-flyer > nav:last-child {
+	margin-bottom: var(--var-size--flyer);
+}
+
 /* -- Leitura -- */
 .wd .wd-read {
 	font-family: sans-serif;
@@ -1040,10 +1187,10 @@ q {
 }
 .wd .wd-read > h1 {text-transform: uppercase;}
 .wd .wd-read > h2 {font-variant: small-caps;}
-.wd .wd-read > h3, .wd .wd-read > h4,
-.wd .wd-read > h5, .wd .wd-read > h6 {
-	font-family: sans-serif;
-}
+.wd .wd-read > h3,
+.wd .wd-read > h4,
+.wd .wd-read > h5,
+.wd .wd-read > h6 {font-family: sans-serif;}
 
 @media screen and (min-width: 768px) { /* desktop */
 	.wd .wd-read > h1 {width: 75%;}
@@ -1063,8 +1210,11 @@ q {
 /* tabelas, figuras, listas */
 .wd .wd-read > table,
 .wd .wd-read > figure {
-	width: 80%;
+	max-width: 80%;
 	margin: 2em auto;
+}
+.wd .wd-read > table {
+	min-width: 50%;
 }
 .wd .wd-read > ol,
 .wd .wd-read > ul {
@@ -1077,9 +1227,54 @@ q {
 .wd .wd-read > dl {
 	margin: 1em 0;
 }
+/* mídias */
+.wd .wd-read > audio,
+.wd .wd-read > video,
+.wd .wd-read > picture {
+	display: block;
+	max-width: 80%;
+	margin: 2em auto 0 auto;
+	text-align: center;
+}
+.wd .wd-read > audio   + span,
+.wd .wd-read > video   + span,
+.wd .wd-read > picture + span {
+	display: block;
+	font-size: smaller;
+	padding: 0.3em;
+	text-align: center;
+	margin-bottom: 2em;
+}
+.wd .wd-read > math[display=block] {
+	max-width: 80%;
+	margin: 2em auto;
+	text-align: center;
+}
+
+/* impressão FIXME  wd-read-break: em teste */
+@media print {
+	/* quebra de página */
+	.wd .wd-read.wd-read-break > h1 + * {
+		page-break-before: always;
+	}
+	.wd .wd-read.wd-read-break > h1 + h2 {
+		page-break-before: initial;
+		page-break-after:  always;
+	}
+	.wd .wd-read.wd-read-break > h3 {
+		page-break-before: always;
+		margin-bottom: 2em;
+		margin-top: 2em;
+	}
+	/* posição */
+	.wd .wd-read.wd-read-break > h1 {
+		margin-top: 50%;
+	}
+}
+
 /* numeração */
 .wd .wd-read {
-	counter-reset: chapter3 figure1 table1;
+	counter-reset: chapter3 figure1 table1 video1 audio1;
 }
 /* numeração: capítulo */
 .wd .wd-read > h3 {
@@ -1119,6 +1314,38 @@ q {
 .wd .wd-read > figure > figcaption::before {
 	content: var(--var-itemize-figure) " " counter(figure1) " - ";
 	font-weight: bold;
+}
+/* numeração: audio */
+.wd .wd-read > audio + span {
+	counter-increment: audio1;
+}
+.wd .wd-read > audio + span::before {
+	content: var(--var-itemize-audio) " " counter(audio1) " - ";
+	font-weight: bold;
+}
+/* numeração: video */
+.wd .wd-read > video + span {
+	counter-increment: video1;
+}
+.wd .wd-read > video + span::before {
+	content: var(--var-itemize-video) " " counter(video1) " - ";
+	font-weight: bold;
+}
+/* numeração: picture */
+.wd .wd-read > picture + span {
+	counter-increment: picture1;
+}
+.wd .wd-read > picture + span::before {
+	content: var(--var-itemize-picture) " " counter(picture1) " - ";
+	font-weight: bold;
+}
+/* numeração: math */
+.wd .wd-read > math[display=block] {
+	counter-increment: math;
+}
+.wd .wd-read > math[display=block]::after {
+	content: "(" counter(math) ")";
+	margin-left: 2em;
 }
 
 /* -- itemizar parágrafos -- */
@@ -1178,11 +1405,19 @@ q {
 }
 
 /* -- código -- */
+/* FIXME v5: wd-code
+div: numera e define a linha (linha vai se comportar como pre para espaços)
+em: define palavras chaves
+var: define o valor da variável (aspas serão fornecidas por aspas usuais)
+samp: retornos para usuário
+s: comentários
+span: atributos e outros destaques
+*/
 .wd .wd-code {
 	background-color: var(--var-bg-code);
 	border-radius:    var(--var-radius-default);
 	color:            var(--var-fg-code);
-	font-family:      var(--var-font-code);
+	font-family:      var(--var-font-bcode);
 	font-size: 0.9em;
 	font-style: normal;
 	font-weight: normal;
@@ -1200,22 +1435,24 @@ q {
 	background-color: inherit;
 	color: inherit;
 	font: inherit;
-	text-decoration: inherit;
+	text-decoration: none;
 	padding: 0;
 }
 /* palavras reservadas */
 .wd .wd-code mark {
 	color: var(--var-fg-code-reserved);
-	font-weight: bold;
+}
+/* attributos */
+.wd .wd-code em {
+	color: var(--var-fg-code-attr);
 }
 /* tags */
 .wd .wd-code code {
 	color: var(--var-fg-code-reserved);
-	font-weight: bold;
 }
-.wd .wd-code code > *    {font-weight: normal;}
-.wd .wd-code code:before {content: "\003C";} /* sinal de < */
-.wd .wd-code code:after  {content: "\003E";} /* sinal de > */
+.wd .wd-code code:before {content: "\003C"; /* sinal de < */}
+.wd .wd-code code:after  {content: "\003E"; /* sinal de > */}
+
 /* strings e variáveis */
 .wd .wd-code var, .wd .wd-code var *,
 .wd .wd-code kbd, .wd .wd-code kbd *,
@@ -1223,12 +1460,12 @@ q {
 	color: var(--var-fg-code-values);
 	white-space: pre-wrap;
 }
-.wd .wd-code q          {quotes: "\0022" "\0022" "\005C\0022" "\005C\0022";}
-.wd .wd-code kbd        {quotes: "\0027" "\0027" "\0022" "\0022";}
+.wd .wd-code q          {quotes: "\0022" "\0022";}
+.wd .wd-code q > q      {quotes: "\005C\0022" "\005C\0022";}
+.wd .wd-code kbd        {quotes: "\0027" "\0027";}
 .wd .wd-code kbd:before {content: open-quote;}
 .wd .wd-code kbd:after  {content: close-quote;}
-
-
+.wd .wd-code kbd > kbd  {quotes: "\005C\0027" "\005C\0027";}
 /* retorno */
 .wd .wd-code samp, .wd .wd-code samp * {
 	color: var(--var-fg-code-return);
@@ -1258,6 +1495,7 @@ q {
 .wd .wd-code > section section {
 	padding-left: var(--var-size-large);
 }
+
 /* -- Cabeçalho e Rodapés (fixos (body) e companheiros) -- */
 .wd .wd-header,
 .wd .wd-footer {
@@ -1294,8 +1532,6 @@ q {
 .wd .wd-grid-right {
 	display: grid;
 	grid-template-columns: 20% auto 20%;
-	height: 100%;
-	width: 100%
 }
 
 .wd .wd-grid       > .wd-grid-main,
@@ -1798,14 +2034,23 @@ q {
 .wd .wd-radius-e,  .wd .wd-radius-e-child  > * {border-bottom-right-radius: var(--var-radius-default) !important;}
 .wd .wd-radius-none {border-radius: 0 !important;}
 /* texto em colunas */
-.wd .wd-columns {
+.wd .wd-columns,
+.wd .wd-columns-3,
+.wd .wd-columns-4 {
 	column-gap: var(--var-size-large);
-	column-count: 2;
 }
-.wd .wd-columns > h1,    .wd .wd-columns > h2, .wd .wd-columns > h3,
-.wd .wd-columns > h4,    .wd .wd-columns > h5, .wd .wd-columns > h6,
-.wd .wd-columns > table, .wd .wd-columns > figure,
-.wd .wd-columns > .wd-columns-none {column-span: all;}
+.wd .wd-columns   {column-count: 2;}
+.wd .wd-columns-3 {column-count: 3;}
+.wd .wd-columns-4 {column-count: 4;}
+
+.wd .wd-columns   > h1, .wd .wd-columns-3 > h1, .wd .wd-columns-4 > h1,
+.wd .wd-columns   > h2, .wd .wd-columns-3 > h2, .wd .wd-columns-4 > h2,
+.wd .wd-columns   > h3, .wd .wd-columns-3 > h3, .wd .wd-columns-4 > h3,
+.wd .wd-columns   > .wd-columns-none,
+.wd .wd-columns-3 > .wd-columns-none,
+.wd .wd-columns-4 > .wd-columns-none {
+	column-span: all;
+}
 /*-- Ícones Matemática --*/
 .wd .wd-icon-plus:before     {content: "\2795" !important;}
 .wd .wd-icon-minus:before    {content: "\2796" !important;}
@@ -1997,7 +2242,8 @@ q {
 .wd .wd-upon-enter:hover, .wd .wd-upon-enter-child > *:hover {
 	background-color: var(--var-bg-upon) !important;
 	color:            var(--var-fg-upon) !important;
-	box-shadow:       var(--var-shadow-upon) !important;
+	outline: var(--var-outline-upon);
+	border-radius: 0.2em !important;
 }
 
 /* -- Exibir/Esconder -- */
@@ -2020,151 +2266,3 @@ q {
 	.wd .wd-visible-print   {visibility: visible !important;}
 	.wd .wd-hidden-print    {display: none !important;}
 }
-/* -- Math experimental TODO -- */
-/* container */
-.wd .wd-math {
-	counter-reset: math;
-	background-color: var(--var-bg-base);
-	color: var(--var-fg-base);
-	display: block;
-	margin: var(--var-margin-default);
-	padding: var(--var-size-default);
-	text-align:  center;
-}
-/* renderizador */
-.wd .wd-math samp {
-	align-items: center;
-	display: flex;
-  justify-content: center;
-	padding: 0.6em 0;
-	font-size:   24px;
-}
-/* componentes */
-.wd .wd-math samp > span {
-	line-height: 1;
-	padding: 0 0.1em;
-	font-family: var(--var-font-math);
-	font-size:   24px;
-	font-style:  italic;
-	text-align:  center;
-}
-/* linhas */
-.wd .wd-math > * {
-	display: block;
-	width: 100%;
-	margin: 2em 0;
-	padding: 0;
-}
-/* contador */
-.wd .wd-math .wd-math-counter:before {
-	counter-increment: math;
-	content: "(" counter(math) ")";
-	margin-right: 3em;
-	font-style: normal;
-}
-/* texto */
-.wd .wd-math .wd-math-text {
-	font-style: normal;
-}
-/* agrupador */
-.wd .wd-math section {
-	display: grid;
-	justify-content: center;
-	align-content: center;
-}
-/* potência e subíndice */
-.wd .wd-math span.wd-math-indexes > section {
-	grid-template-areas:
-	'head sup'
-	'main .'
-	'main sub';
-}
-.wd .wd-math span.wd-math-indexes > section > em {
-	font-size: 0.6em;
-	grid-area: head;
-	text-align: center;
-	margin-top: -1em;
-}
-.wd .wd-math span.wd-math-indexes > section > sub {
-	font-size: 0.6em;
-	grid-area: sub;
-	text-align: left;
-}
-.wd .wd-math span.wd-math-indexes > section > sup {
-	font-size: 0.6em;
-	grid-area: sup;
-	text-align: left;
-	margin-top: -1em;
-}
-.wd .wd-math span.wd-math-indexes > section > span {
-	font-size: 1em;
-	grid-area: main;
-	text-align: center;
-}
-/* limites */
-.wd .wd-math span.wd-math-limits > section {
-	grid-template-areas:
-	'sup'
-	'main'
-	'sub';
-}
-.wd .wd-math span.wd-math-limits > section > sub {
-	font-size: 0.6em;
-	grid-area: sub;
-	margin-bottom: -1em;
-}
-.wd .wd-math span.wd-math-limits > section > sup {
-	font-size: 0.6em;
-	grid-area: sup;
-	margin-top: -1em;
-}
-.wd .wd-math span.wd-math-limits > section > span {
-	font-size: 1em;
-	grid-area: main;
-	font-style: normal;
-}
-.wd .wd-math span.wd-math-limits > section > em {
-	font-size: 1.5em;
-	grid-area: main;
-	font-style: normal;
-}
-/* Frações */
-.wd .wd-math span.wd-math-fraction > section {
-	grid-template-areas:
-	'sup'
-	'sub';
-}
-.wd .wd-math span.wd-math-fraction > section > sub {
-	box-shadow: inset 0 1px 0 0 black;
-	font-size: 1em;
-	grid-area: sub;
-}
-.wd .wd-math span.wd-math-fraction > section > sup {
-	box-shadow: inset 0 -1px 0 0 black;
-	font-size: 1em;
-	grid-area: sup;
-}
-.wd .wd-math span.wd-math-fraction > section > sub.wd-math-subfraction {
-	margin-bottom: -2.2em;
-}
-.wd .wd-math span.wd-math-fraction > section > sup.wd-math-subfraction {
-	margin-top: -2.2em;
-}
-
-/* raiz */
-.wd .wd-math span.wd-math-root > section {
-	grid-template-areas:
-	'root main';
-}
-.wd .wd-math span.wd-math-root > section > span {
-	box-shadow: inset 0 2px 0 0 black;
-	font-size: 1em;
-	grid-area: main;
-
-}
-.wd .wd-math span.wd-math-root > section > sup,
-.wd .wd-math span.wd-math-root > section > sub {
-	font-size: 1em;
-	grid-area: root;
-}
-

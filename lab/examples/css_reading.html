@@ -3,14 +3,20 @@
 <style>
 	/* Remove the comments to change the table and figure legend: */
 	:root {
-		/*--var-itemize-table:  "Tabela";*/
-		/*--var-itemize-figure: "Figura";*/
+/*
+		--var-itemize-table:   "Tabela";
+		--var-itemize-figure:  "Figura";
+		--var-itemize-audio:   "Áudio";
+		--var-itemize-video:   "Vídeo";
+		--var-itemize-picture: "Foto";
+*/
 	}
 </style>
 
 <nav>
 	<span data-wd-css="${#article}">None</span>
 	<span data-wd-css="${#article}tgl{wd-read}">Read</span>
+	<span data-wd-css="${#article}tgl{wd-read-break}">Break</span>
 	<span data-wd-css="${#article}tgl{wd-itemize}">Itemize</span>
 	<span data-wd-css="${#article}tgl{wd-columns}">Columns</span>
 	<span data-wd-full="${#article}">Full</span>
@@ -21,6 +27,7 @@
 	<h1>Article title</h1>
 
 	<h2>Article subtitle</h2>
+
 
 	<p>Use the <code>h1</code> and <code>h2</code> elements within the scope to construct the article title and subtitle, respectively.</p>
 
@@ -110,12 +117,6 @@
 
 	<p class="wd-itemize-none">This paragraph will not be numbered as it is using the <code>wd-itemize-none</code> class attribute.</p>
 
-
-
-
-
-
-
 	<p>This paragraph will have subitems:</p>
 
 	<p class="wd-itemize-item">This paragraph is configured with the <code>wd-itemize-item</code> CSS attribute.</p>
@@ -156,6 +157,140 @@
 		<li>Item 4</li>
 	</ol>
 
-	<p>That's it for now!</p>
+	<h3>Media</h3>
+
+	<p>To create subtitles for the <code>audio</code>, <code>video</code> and <code>picture</code> elements, you must insert a <code>span</code> element right after the media element, considering that there is no specific element for this purpose:</p>
+
+	<audio controls="" >
+		<source src="none.ogg" type="audio/ogg" />
+	</audio>
+	<span>Audio example.</span>
+
+	<video controls="" >
+		<source src="none.ogg" type="video/ogg" />
+	</video>
+	<span>Video example.</span>
+
+	<picture>
+		<source srcset="examples/image.png" />
+		<img src="examples/image.png" />
+	</picture>
+	<span>Picture example.</span>
+
+	<h3>Math</h3>
+
+	<p>When the <i>math</i> tag is used inside the <code>wd-read</code> container, the container will be numbered and formatted when the top-level tag receives the <code>display=<q>block</q></code> attribute:</p>
+
+	<math display="">
+
+		<mo>d</mo>
+		<mfrac>
+			<mrow>
+				<mo>f</mo>
+				<mo>(</mo>
+				<mi>x</mi>
+				<mo>)</mo>
+			</mrow>
+			<mrow>
+				<mo>d</mo>
+				<mi>x</mi>
+			</mrow>
+		</mfrac>
+
+		<mo>=</mo>
+
+		<munderover>
+			<mo>lim</mo>
+			<mrow>
+				<mo>&Delta;</mo>
+				<mi>x</mi>
+				<mo>&rarr;</mo>
+				<mn>0</mn>
+			</mrow>
+			<mrow></mrow>
+		</munderover>
+
+		<mfrac>
+			<mrow>
+				<mo>f</mo>
+				<mo>(</mo>
+				<mrow>
+					<mi>x</mi>
+					<mo>+</mo>
+					<mo>&Delta;</mo>
+					<mi>x</mi>
+				</mrow>
+				<mo>)</mo>
+				<mo>-</mo>
+				<mo>f</mo>
+				<mo>(</mo>
+				<mi>x</mi>
+				<mo>)</mo>
+			</mrow>
+			<mrow>
+				<mo>&Delta;</mo>
+				<mi>x</mi>
+			</mrow>
+		</mfrac>
+
+	</math>
+
+
+	<math display="block">
+
+		<msubsup>
+			<mo>&int;</mo>
+			<mi>a</mi>
+			<mi>b</mi>
+		</msubsup>
+
+		<mo>f</mo>
+		<mo>(</mo>
+		<mi>x</mi>
+		<mo>)</mo>
+		<mo>d</mo>
+		<mi>x</mi>
+
+		<mo>=</mo>
+
+		<munderover>
+			<mo>lim</mo>
+			<mrow>
+				<mo>&Delta;</mo>
+				<mi>x</mi>
+				<mo>&rarr;</mo>
+				<mn>0</mn>
+			</mrow>
+			<mrow> </mrow>
+		</munderover>
+
+		<munderover>
+			<mo>&sum;</mo>
+			<mrow>
+				<mi>i</mi>
+				<mo>=</mo>
+				<mn>0</mn>
+			</mrow>
+			<mi>n</mi>
+		</munderover>
+
+		<mo>f</mo>
+		<mo>(</mo>
+		<msubsup>
+			<mi>x</mi>
+			<mi>i</mi>
+			<mo>*</mo>
+		</msubsup>
+		<mo>)</mo>
+		<mo>&Delta;</mo>
+		<mi>x</mi>
+
+	</math>
+
+
+
+
+
+
 
 </article>

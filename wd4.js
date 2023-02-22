@@ -20,9 +20,9 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-------------------------------------------------------------------------------*/
 
-/* wd.js (v4.1.1) | https://github.com/wdonadelli/wd */
+https://github.com/wdonadelli/wd
+------------------------------------------------------------------------------*/
 
 "use strict";
 
@@ -40,7 +40,7 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	/* guada a versão da biblioteca (JS + CSS) */
-	const wd_version = "v4.2.2 2023-01-03";
+	const wd_version = "WD JS v4.2.2";
 	/* Guarda informação do dispositivo (desktop, mobile...) */
 	let wd_device_controller = null;
 	/* Guarda o intervalo de tempo para executar funções vinculadas aos eventos de tecla */
@@ -192,7 +192,7 @@ const wd = (function() {
 		]},
 		{s: "div.js-wd-progress-bar", d: ["height: 1em; background-color: #1e90ff;"]},
 		{s: ".js-wd-no-display", d: ["display: none;"]},
-		{s: "[data-wd-nav], [data-wd-send], [data-wd-tsort], [data-wd-data], [data-wd-full]", d: [
+		{s: "[data-wd-nav], [data-wd-send], [data-wd-tsort], [data-wd-data], [data-wd-full], [data-wd-jump]", d: [
 			"cursor: pointer;"
 		]},
 		{s: "[data-wd-set], [data-wd-edit], [data-wd-shared], [data-wd-css], [data-wd-table]", d:[
@@ -233,11 +233,15 @@ const wd = (function() {
 	];
 
 /*----------------------------------------------------------------------------*/
-	function wd_lang() { /*Retorna o local: definido ou do navegador*/
-		let attr = document.body.parentElement.attributes;
-		let lang = "lang" in attr ? attr.lang.value.replace(/\s/g, "") : null;
-		if (lang !== null && (/^[a-z]+((\-[a-z]+)?)$/i).test(lang))
-			return lang;
+	function wd_lang(elem) { /* Retorna a linguagem definida (lang) a partir de um elemento (efeito bolha) ou do navegador*/
+		let node = wd_vtype(elem).type === "dom" ? elem : document.body;
+		while (node !== null && node !== undefined) {
+			if ("lang" in node.attributes) {
+				let value = node.attributes.lang.value.trim();
+				if (value !== "") return value;
+			}
+			node = node.parentElement;
+		}
 		return navigator.language || navigator.browserLanguage || "en-US";
 	}
 
@@ -402,6 +406,7 @@ const wd = (function() {
 			HTMLAllCollection: "doms",
 			HTMLOptionsCollection: "doms",
 			HTMLFormControlsCollection: "doms",
+			MathMLElement: "dom"
 		};
 
 		for (let i in data) {
@@ -494,15 +499,15 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_$$$(obj) { /* captura os valores de $ e $$ dentro de um objeto */
-		let one = "$" in obj  ? obj["$"].trim()  : null;
+	function wd_$$$(obj, root) { /* captura os valores de $ e $$ dentro de um objeto ($$ prioridade) */
+		let one =  "$" in obj ? obj["$"].trim()  : null;
 		let all = "$$" in obj ? obj["$$"].trim() : null;
 		if (one === null && all === null) return null;
 		let words  = {"document": document, "window":  window};
 		if (one in words) return words[one];
 		if (all in words) return words[all];
-		one = one === null ? null : wd_$(one);
-		all = all === null ? null : wd_$$(all);
+		one = one === null ? null : wd_$(one, root);
+		all = all === null ? null : wd_$$(all, root);
 		return all !== null ? all : one;
 	}
 
@@ -1569,7 +1574,6 @@ const wd = (function() {
 		delta = wd_vtype(delta).value;
 		if (!wd_finite(delta)) delta = (ends.max - ends.min)/xcoord.length;
 		delta = Math.abs(delta);
-		console.log(delta);
 
 		/* obtendo amostra */
 		let x = [];
@@ -1762,6 +1766,7 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	function wd_html_class(elem, value) { /* obtem/define o valor do atributo class */
+		/* FIXME v5: mudar de className para setAttribute("class", value) */
 		let val = elem.className;
 		if (value === undefined) { /* obter valor do atributo */
 			if (typeof val === "string") return val;
@@ -1829,46 +1834,61 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_html_load(elem, text) { /* carrega um HTML (texto) no elemento */
+	function wd_html_clone(elem) { /* clona elementos que o cloneNode não atende (scripts) */
+		let tag   = elem.tagName;
+		let attrs = elem.attributes;
+		let clone = document.createElement(tag);
+		/* definindo propriedades */
+		clone.innerHTML = elem.innerHTML
+		for (let i = 0; i < attrs.length; i++)
+			clone.setAttribute(attrs[i].name, attrs[i].value);
+
+		return clone;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_html_append(base, html, overlap) { /* adiciona/substitui elementos por texto em HTML */
+		let temp = overlap ===  true ? document.createElement("DIV") : base;
+		temp.innerHTML = html;
+		let scripts = wd_vtype(wd_$$("script", temp)).value;
+
+		/* sem scripts (se inner, já está pronto) */
+		if (scripts.length === 0) {
+			if (overlap === true) base.outerHTML = html;
+			return;
+		}
+		/* com scripts: clonar, adicionar o clone e remover o original */
+		for (let i = 0; i < scripts.length; i++) {
+			let script = scripts[i];
+			let clone  = wd_html_clone(script);
+			let parent = script.parentElement;
+			parent.insertBefore(clone, script);
+			script.remove();
+		}
+		/* se for outer, tem que adicionar ao lado da base e depois excluí-la */
+		if (overlap === true) {
+			let childs = wd_vtype(temp.children).value;
+			let parent = base.parentElement;
+			for (let i = 0; i < childs.length; i++) {
+				let child = childs[i];
+				parent.insertBefore(child, base);
+			}
+			base.remove();
+		}
+		return;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_html_load(elem, text, overlap) { /* carrega um HTML (texto) no elemento */
 		text = text === undefined || text === null ? "" : new String(text).toString();
 		/* obtendo o atributo para carregar o conteúdo HTML */
 		let test = new WDform(elem);
 		let attr = test.form && test.load !== null ? test.load : "innerHTML";
-		/* carregando conteúdo de texto */
-		if (attr !== "innerHTML") {
+		/* carregando conteúdo */
+		if (attr !== "innerHTML")
 			elem[attr] = text;
-		} else {
-			/* carregando conteúdo HTML */
-			let temp = document.createElement("DIV");
-			temp.innerHTML = text;
-			/* innerHTML não executa script: capturar, clonr, eliminar e criar */
-			let scripts = wd_vtype(wd_$$("script", temp)).value;
-			let oldscr  = [];
-			let newscr  = [];
-			/* capturando e clonando-os (cloneNode não funciona) */
-			for (let i = 0; i < scripts.length; i++) {
-				let script = scripts[i];
-				let attrs  = script.attributes;
-				let clone  = document.createElement("SCRIPT");
-				clone.innerHTML = script.innerHTML;
-				/* clonando os atributos */
-				for (let j = 0; j < attrs.length; j++)
-					clone.setAttribute(attrs[j].name, attrs[j].value);
-				/* registrando-os para eliminação e apensação */
-				oldscr.push(script);
-				newscr.push(clone);
-				console.log(clone);
-			}
-			/* eliminando os scripts antigos */
-			for (let i = 0; i < oldscr.length; i++)
-				oldscr[i].remove();
-			/* definindo innerHTML sem os scripts e removendo elemento temporário */
-			elem.innerHTML = temp.innerHTML;
-			temp.remove();
-			/* adicionando os scripts */
-			for (let i = 0; i < newscr.length; i++)
-				elem.appendChild(newscr[i]);
-		}
+		else
+			wd_html_append(elem, text, overlap);
 		/* checar demandas pós procedimento */
 		loadingProcedures();
 
@@ -1975,6 +1995,17 @@ const wd = (function() {
 		for (let i = 0; i < bros.length; i++)
 			wd_html_nav(bros[i], (bros[i] === elem ? "show": "hide"));
 		return true;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_html_jump(elem, parents) { /* transporta o elemento entre dois containers */
+		for (let i = 0; i < parents.length; i++) {
+			if (elem.parentElement === parents[i]) {
+				let item = (i + 1) >= (parents.length) ? 0 : (i + 1);
+				return parents[item].appendChild(elem);
+			}
+		}
+		return;
 	}
 
 /*----------------------------------------------------------------------------*/
@@ -2179,6 +2210,34 @@ const wd = (function() {
 			index: wd_html_bros_index(elem),
 			table: wd_html_table_array(elem)
 		}
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_html_translate(elem, json) { /* carrega tradução vinculada a seletor CSS em arquivo JSON */
+		/* FORMATO DO JSON
+		[
+			{"$$": "CSS Selectors", "$":  "CSS Selector", "textContent": "Text", "title": "Title"},
+			...
+		]
+		*/
+		/* rodando itens do array do JSON */
+		for (let i = 0; i < json.length; i++) {
+			let attrs = json[i];
+			let check = wd_vtype(wd_$$$(attrs, elem));
+			if (check.type !== "dom") continue;
+			/* rodando alvos */
+			let list = check.value;
+			for (let l = 0; l < list.length; l++) {
+				let target = list[l];
+				/* rodando atributos */
+				for (let attr in attrs) {
+					if (attr === "$" || attr === "$$") continue;
+					let value = attrs[attr];
+					wd_html_set(target, attr, value);
+				}
+			}
+		}
+		return;
 	}
 
 /*----------------------------------------------------------------------------*/
@@ -3805,8 +3864,8 @@ const wd = (function() {
 			}
 		},
 		load: { /* carrega elementos HTML em forma de texto */
-			value: function(text) {
-				return this.run(wd_html_load, text);
+			value: function(text, overlap) {
+				return this.run(wd_html_load, text, overlap);
 			}
 		},
 		repeat: {  /* clona elementos por array repetindo-os */
@@ -3837,6 +3896,11 @@ const wd = (function() {
 		sort: { /* ordena elementos filho pelo conteúdo */
 			value: function(order, col) {
 				return this.run(wd_html_sort, order, col);
+			}
+		},
+		jump: { /* salta elementos entre seus pais (argumentos) */
+			value: function(list) {
+				return this.run(wd_html_jump, list);
 			}
 		},
 		full: { /* deixa o elemento em tela cheia (só primeiro elemento) */
@@ -3902,23 +3966,23 @@ const wd = (function() {
 		lang:    {get:   function() {return wd_lang();}},
 		device:  {get:   function() {return wd_get_device();}},
 		today:   {get:   function() {return WD(new Date());}},
-		now:     {get:   function() {return WD(wd_str_now());}},
-		/*bomba: {value: wd_signal_control} //FIXME */
+		now:     {get:   function() {return WD(wd_str_now());}}
 	});
 
 /* == BLOCO 4 ================================================================*/
 
 /*----------------------------------------------------------------------------*/
-	function data_wdLoad(e) { /* carrega HTML: data-wd-load=path{file}method{get|post}${form} */
+	function data_wdLoad(e) { /* carrega HTML: data-wd-load=path{file}method{get|post}${form}overlap{} */
 		if (!("wdLoad" in e.dataset)) return;
 
 		/* obter dados do atributo */
-		let data   = wd_html_dataset_value(e, "wdLoad")[0];
-		let target = WD(e);
-		let method = data.method;
-		let file   = data.path;
-		let pack   = wd_$$$(data);
-		let exec   = WD(pack);
+		let data    = wd_html_dataset_value(e, "wdLoad")[0];
+		let target  = WD(e);
+		let method  = data.method;
+		let file    = data.path;
+		let pack    = wd_$$$(data);
+		let exec    = WD(pack);
+		let overlap = data.overlap === "true" ? true : false;
 
 		/* abrir contagem */
 		wd_counter_control.load++;
@@ -3930,7 +3994,7 @@ const wd = (function() {
 				/* encerrar contagem */
 				wd_counter_control.load--;
 				/* executar */
-				target.load(x.text);
+				target.load(x.text, overlap);
 				return;
 			}
 		}, method);
@@ -4396,6 +4460,17 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
+	function data_wdJump(e) { /* Saltos de pai: data-wd-jump=$${parents}*/
+		if (!("wdJump" in e.dataset)) return;
+		let data    = wd_html_dataset_value(e, "wdJump")[0];
+		let target  = wd_$$$(data);
+		let parents = wd_vtype(target)
+		if (parents.type === "dom")
+			WD(e).jump(parents.value);
+		return;
+	};
+
+/*----------------------------------------------------------------------------*/
 	function data_wdOutput(e, load) { /* Atribui valor ao target: data-wd-output=${target}call{} */
 		let output = wd_$$("[data-wd-output]");
 		if (output === null) return;
@@ -4437,7 +4512,43 @@ const wd = (function() {
 		return;
 	}
 
+
 /*----------------------------------------------------------------------------*/
+	function data_wdTranslate(e) { /* carrega tradução: data-wd-translate=path{dir}method{get|post}main{file name} */
+		if (!("wdTranslate" in e.dataset)) return;
+		let lang   = wd_lang(e).toLowerCase();
+		let data   = wd_html_dataset_value(e, "wdTranslate")[0];
+		let method = data.method;
+		let dir    = "path" in data ? data.path.replace(/\/$/, "") : null;
+		let main   = dir  !== null  ? ("main" in data ? data.main : null) : null;
+		let file1  = dir  !== null  ? dir+"/"+(lang)+".json" : null;
+		let file2  = dir  !== null  ? dir+"/"+(lang.split("-")[0])+".json" : null;
+		let file3  = main !== null  ? dir+"/"+main : null;
+
+		function readTranslationFile(files, n) {
+			if (n >= files.length) return;
+			if (files[n] === null) return readTranslationFile(files, ++n);
+
+			WD().send(files[n], function(x) {
+				if (x.closed) {
+					if (wd_vtype(x.json).type === "array")
+						return wd_html_translate(e, x.json);
+					else
+						return readTranslationFile(files, ++n);
+				}
+			}, method);
+			return;
+		}
+
+		/* executando */
+		WD(e).data({wdTranslate: null});
+		readTranslationFile([file1, file2, file3], 0);
+
+		return;
+	}
+
+/*----------------------------------------------------------------------------*/
+	/* FIXME v5: destruir data_wdLang (data_wdTranslate o substituirá por definitivo) */
 	function data_wdLang(e) { /* carrega HTML: data-wd-lang=path{file}method{get|post}${form} */
 		if (!("wdLang" in e.dataset)) return;
 		let data   = wd_html_dataset_value(e, "wdLang")[0];
@@ -4595,6 +4706,7 @@ const wd = (function() {
 		WD.$$("[data-wd-chart]").run(data_wdChart);
 		WD.$$("[data-wd-url]").run(data_wdUrl);
 		WD.$$("[data-wd-lang]").run(data_wdLang);
+		WD.$$("[data-wd-translate]").run(data_wdTranslate);
 		data_wdOutput(document, true);
 		return;
 	};
@@ -4602,19 +4714,20 @@ const wd = (function() {
 /*----------------------------------------------------------------------------*/
 	function settingProcedures(e, attr) { /* procedimentos para dataset */
 		switch(attr) {
-			case "wdLoad":    loadingProcedures();    break;
-			case "wdRepeat":  loadingProcedures();    break;
-			case "wdSort":    data_wdSort(e);         break;
-			case "wdFilter":  data_wdFilter(e);       break;
-			case "wdMask":    data_wdMask(e);         break;
-			case "wdPage":    data_wdPage(e);         break;
-			case "wdClick":   data_wdClick(e);        break;
-			case "wdDevice":  data_wdDevice(e);       break;
-			case "wdSlide":   data_wdSlide(e);        break;
-			case "wdChart":   data_wdChart(e);        break;
-			case "wdOutput":  data_wdOutput(e, true); break;
-			case "wdUrl":     data_wdUrl(e, true);    break;
-			case "wdLang":    data_wdLang(e);         break;
+			case "wdLoad":      loadingProcedures();    break;
+			case "wdRepeat":    loadingProcedures();    break;
+			case "wdSort":      data_wdSort(e);         break;
+			case "wdFilter":    data_wdFilter(e);       break;
+			case "wdMask":      data_wdMask(e);         break;
+			case "wdPage":      data_wdPage(e);         break;
+			case "wdClick":     data_wdClick(e);        break;
+			case "wdDevice":    data_wdDevice(e);       break;
+			case "wdSlide":     data_wdSlide(e);        break;
+			case "wdChart":     data_wdChart(e);        break;
+			case "wdOutput":    data_wdOutput(e, true); break;
+			case "wdUrl":       data_wdUrl(e, true);    break;
+			case "wdLang":      data_wdLang(e);         break;
+			case "wdTranslate": data_wdTranslate(e);    break;
 		};
 		return;
 	};
@@ -4633,6 +4746,7 @@ const wd = (function() {
 			data_wdCss(elem);
 			data_wdNav(elem);
 			data_wdFull(elem);
+			data_wdJump(elem);
 			navLink(elem);
 			/* efeito bolha */
 			elem = "wdNoBubbles" in elem.dataset ? null : elem.parentElement;
@@ -4769,6 +4883,7 @@ document.onclick > clickProcedures()
 	- data-wd-data
 	- data-wd-edit
 	- data-wd-full
+	- data-wd-jump
 	- data-wd-nav
 	- data-wd-no-bubbles
 	- data-wd-send

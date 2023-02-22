@@ -13,6 +13,7 @@
 		<meta name="revisit-after" content="2 days" />
 		<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
 		<script src="../wd4.js"></script>
+		<script src="../testv5.js"></script>
 		<link  href="../wd4.css" rel="stylesheet" />
 		<script>
 
@@ -74,19 +75,24 @@ wd(window).addHandler(
 		<article class="wd-flyer wd-bg-black">
 
 			<header class="wd-hidden-print">
-				<h2>
-					<span class="wd-icon-menu" data-wd-css="${#menu}tgl{wd-open}" id="bmenu"></span>
-					<span>WD Web Library Lab</span>
-				</h2>
+				<h2>WD Web Library Lab	</h2>
 			</header>
+
+			<nav class="wd-bg-white wd-header wd-hidden-print">
+				<span class="" data-wd-css="${#menu}tgl{wd-open}" id="bmenu">Menu</span>
+				<span class="" data-wd-css="${#side_code}tgl{wd-hidden}" >Code</span>
+				<span class="" data-wd-css="${html}tgl{wd}" >CSS</span>
+				<span class="" data-wd-css="$${body, main > article}tgl{wd-bg-black}" >Black</span>
+				<a href="https://github.com/wdonadelli/wd/wiki" target="_blank">Wiki</a>
+			</nav>
 
 			<section data-wd-device="desktop{wd-col}">
 
-				<div class="wd-padd wd-hidden-print" >
+				<div class="wd-padd wd-hidden-print wd-hidden" id="side_code">
 
 					<h3>Code</h3>
 
-					<form>
+					<form class="wd-form">
 
 						<div>
 							<textarea id="ie_code" style="height: 300px" class="wd-block wd-code"></textarea>
@@ -120,18 +126,15 @@ wd(window).addHandler(
 	</main>
 
 	<div class="wd-modal" id="menu" data-wd-css="tgl{wd-open}">
-	  <div data-wd-device="desktop{wd-window-left}mobile{wd-window-full}"  style="min-width: 25%;">
-	    <article class="wd-flyer wd-bg-base">
-	      <header>
-	        <h4>Menu</h4>
-	      </header>
-	      <nav data-wd-repeat="path{menu.json}method{GET}" class="wd-nav-block">
-	        <a href="?page={{target}}" title="{{target}}">{{target}}</a>
-	      </nav>
-				<div class="wd-b wd-align-right">
-					<a href="https://github.com/wdonadelli/wd/wiki" target="_blank">Wiki</a>
-				</div>
-	    </article>
+  <div data-wd-device="desktop{wd-window-left}mobile{wd-window-full}"  style="min-width: 25%;">
+    <article class="wd-flyer wd-bg-base">
+     <header>
+      <h4>Menu</h4>
+     </header>
+     <nav data-wd-repeat="path{menu.json}method{GET}" class="wd-nav-block">
+       <a href="?page={{target}}" title="{{target}}">{{target}}</a>
+     </nav>
+    </article>
 	  </div>
 	</div>
 

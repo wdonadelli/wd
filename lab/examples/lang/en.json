@@ -1,0 +1,12 @@
+[
+	{
+		"$$": ".text",
+		"textContent": "Text content.",
+		"title": "'Title' attribute of the textual content."
+	},
+	{
+		"$": "h4",
+		"textContent": "English Language",
+		"title": "Header 'title' attribute."
+	}
+]

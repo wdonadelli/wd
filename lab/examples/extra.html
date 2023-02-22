@@ -71,10 +71,30 @@ function jsFunctions(type) {
 
 		if (x.closed) {
 			let re   = {
-				o: {i: /\n\tfunction\ +[A-Z]\w+\((.+)?\)/g, t: "## Objects\n",   r: /^function(\ +)?/, s: ")"},
-				f: {i: /\n\tfunction\ +[a-z]\w+\((.+)?\)/g, t: "## Functions\n", r: /^function(\ +)?/, s: ")"},
-				c: {i: /\n\tconst\ +\w+\ +\=/g,             t: "## Constants\n", r: /^const(\ +)?/,    s: "="},
-				v: {i: /\n\tlet\ +\w+\ +\=/g,               t: "## Variables\n", r: /^let(\ +)?/,      s: "="}
+				o: { /* objetos */
+					i: /\n\tfunction\ +[A-Z][\w\$]+\((.+)?\)/g,
+					t: "<h3 id=\"Objects\" >Objects</h3>\n", /*## Objects\n",*/
+					r: /^function(\ +)?/,
+					s: ")"
+				},
+				f: { /* funções */
+					i: /\n\tfunction\ +[a-z][\w\$]+\((.+)?\)/g,
+					t: "<h3 id=\"Functions\" >Functions</h3>\n", /*## Functions\n",*/
+					r: /^function(\ +)?/,
+					s: ")"
+				},
+				c: { /* constantes */
+					i: /\n\tconst\ +[\w\$]+\ +\=/g,
+					t: "<h3 id=\"Constants\" >Constants</h3>\n", /*## Constants\n",*/
+					r: /^const(\ +)?/,
+					s: "="
+				},
+				v: { /* variáveis */
+					i: /\n\tlet\ +[\w\$]+\ +\=/g,
+					t: "<h3 id=\"Variables\" >Variables</h3>\n", /*## Variables\n",*/
+					r: /^let(\ +)?/,
+					s: "="
+				}
 			}
 			let data = [];
 			let txt  = [];
@@ -104,13 +124,26 @@ function jsFunctions(type) {
 			txt.push(re[type].t)
 
 			for (let i = 0; i < data.length; i++) { //>
-					txt.push("### "+data[i].name+"\n");
-					if (type === "o" || type === "f")
-						txt.push("```js\n"+data[i].func+"\n```\n");
+					txt.push("<h4 id=\""+data[i].name+"\" >"+data[i].name+"</h4>\n"); /*txt.push("### "+data[i].name+"\n");*/
+					if (type === "o" || type === "f") {
+						txt.push("<p>XXXX</p>\n");
+						txt.push("<h6>Return</h6>\n");
+						txt.push("<p>XXXX</p>\n");
+						txt.push("<h6>Characteristics</h6>\n");
+						txt.push("<div><code>"+data[i].func+"</code></div>\n");
+						/*txt.push("```js\n"+data[i].func+"\n```\n");*/
+					}
 					if (data[i].args.length > 0) {
-						txt.push("|Name|Type|Optional|Description|");
+						txt.push("<dl>");
+						txt.push(
+							"\t<dt><code>"+
+							data[i].args.join("</code></dt>\n\t<dd>XXXXXXXXXXXX</dd>\n\t<dt><code>")+
+							"</code></dt>\n\t<dd>XXXXXXXXXXXX</dd>"
+						);
+						txt.push("</dl>\n");
+						/*txt.push("|Name|Type|Optional|Description|");
 						txt.push("|:--:|:--:|:-------|:----------|");
-						txt.push("|"+data[i].args.join("||No||\n|")+"||No||\n\n\n");
+						txt.push("|"+data[i].args.join("||No||\n|")+"||No||\n\n\n");*/
 					}
 			}
 
