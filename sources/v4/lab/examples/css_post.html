@@ -1,0 +1,118 @@
+<h3>Post</h3>
+
+<nav>
+	<span data-wd-css="${#post}tgl{wd-border wd-border-child}">Border</span>
+	<span data-wd-full="${#post}">Full</span>
+</nav>
+
+<article id="post" class="wd-post">
+	<header>Flower</header>
+	<div>My post today is just that.</div>
+	<time>2015-02-14</time>
+	<img src="examples/image.png" data-wd-full="${#ie_page}"/>
+</article>
+
+<h3>Output/Input</h3>
+
+<nav>
+	<span data-wd-css="$${#basic > article}tgl{wd-border wd-border-child}">Border</span>
+	<span data-wd-full="${#basic}">Full</span>
+</nav>
+
+<div id="basic">
+
+	<article class="wd-post-output">
+		<header>Blue flower</header>
+		<div style="white-space: pre-line; font-family: sans-serif"
+			>I've already had diner.
+I've already washed the dishes.
+I already brushed my teeth...
+		</div>
+		<img src="examples/image.png"/>
+		<time><span class="wd-icon-ok"></span><span class="wd-icon-mail"></span> 15:45</time>
+	</article>
+
+	<article class="wd-post-input">
+		<header>Blue flower</header>
+		<div style="white-space: pre-line; font-family: sans-serif"
+			>I've already had diner.
+I've already washed the dishes.
+I already brushed my teeth...
+		</div>
+		<img src="examples/image.png"/>
+		<time>15:45</time>
+	</article>
+
+<h3>Example</h3>
+
+<nav>
+	<span data-wd-full="${#base}">Full</span>
+</nav>
+
+<style>
+	#talk > .wd-post-output > div {
+		background-color: royalblue;
+		color: white;
+	}
+	#talk > .wd-post-input > div {
+		background-color: darkred;
+		color: white;
+	}
+	#header {
+		background-color: green;
+		color: white;
+	}
+	#base {
+		background-color: white;
+	}
+
+</style>
+
+<section id="base">
+
+	<article class="wd-post-input" id="header">
+		<header>Flower</header>
+		<img src="examples/image.png"/>
+	</article>
+
+	<div id="talk">
+
+		<article class="wd-post-input">
+			<div>Hi!</div>
+			<img src="examples/image.png"/>
+		</article>
+
+		<article class="wd-post-output">
+			<div>
+				<span>Hi!</span>
+				<img src="examples/image.png"/>
+				<span>A flower for you...</span>
+			</div>
+			<img src="examples/image.png"/>
+		</article>
+
+		<article class="wd-post-input">
+			<div>Is everything OK?</div>
+			<img src="examples/image.png"/>
+		</article>
+
+		<article class="wd-post-input">
+			<div>Already dined?</div>
+			<img src="examples/image.png"/>
+		</article>
+
+		<article class="wd-post-output">
+			<div>
+				<div>Yes...</div>
+				<div>I've already had diner.</div>
+				<div>I've already washed the dishes.</div>
+				<div>I already brushed my teeth...</div>
+		</div>
+			<img src="examples/image.png"/>
+		</article>
+
+	</div>
+
+</section>
+
+	<p>CSS added for coloring.</p>

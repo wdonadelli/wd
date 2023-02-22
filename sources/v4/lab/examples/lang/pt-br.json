@@ -1,0 +1,12 @@
+[
+	{
+		"$$": ".text",
+		"textContent": "Conteúdo do texto.",
+		"title": "Atributo 'title' do contéudo textual."
+	},
+	{
+		"$": "h4",
+		"textContent": "Português do Brasil",
+		"title": "Atributo 'title' do cabeçalho."
+	}
+]

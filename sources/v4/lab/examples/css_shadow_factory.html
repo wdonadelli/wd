@@ -1,0 +1,54 @@
+<h3>Shadow Factory</h3>
+
+<button type="button" data-wd-full="${#full}" >FullScreen</button>
+
+<div id="full" style="background-color: white;padding: 10px;">
+
+
+
+	<form id="values" class="wd-row">
+	  <div class="wd-block-child wd-padding">
+		  <input type="range" min="-2" max="2" step="0.01" value="1" id="a1" oninput="shadows();" />
+		  <input type="range" min="-2" max="2" step="0.01" value="1" id="a2" oninput="shadows();" />
+		  <input type="range" min="0"  max="2" step="0.01" value="1" id="a3" oninput="shadows();" />
+	    <input type="range" min="0"  max="2" step="0.01" value="1" id="a4" oninput="shadows();" />
+	  </div>
+	  <div class="wd-block-child wd-padding">
+	    <label for="color" title="Color" >Color:</label>
+	    <input type="color" id="color" oninput="shadows();" />
+	    <label for="inset" title="Inset" >
+	      <input type="checkbox" id="inset" oninput="shadows();"/> inset
+	    </label>
+	    <label for="border" title="Border" >
+	      <input type="checkbox" id="border" oninput="shadows();"/> Border
+	    </label>
+	  </div>
+ 	</form>
+  <div id="shdw" ></div>
+	<hr>
+
+	<div id="target"  style="margin: 20px;">
+		<section style="padding: 10px;">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed turpis quam, rhoncus id tristique quis, pretium et nisi. Aenean feugiat leo id mi fermentum interdum. Donec sed magna mi. Curabitur lobortis mi at ultricies dapibus. Proin placerat orci a enim tempor pretium. Sed vel elementum erat. Donec quis nibh vel lorem hendrerit consequat eu tincidunt felis. Curabitur non ornare turpis, sit amet finibus nibh.</section>
+	</div>
+</div>
+
+<script>
+function shadows() {
+  var shadow = [
+    document.getElementById("inset").checked ? "inset" : "",
+	  document.getElementById("a1").value+"em",
+	  document.getElementById("a2").value+"em",
+	  document.getElementById("a3").value+"em",
+	  document.getElementById("a4").value+"em",
+    document.getElementById("color").value
+  ];
+	let value = shadow.join(" ");
+  document.getElementById("shdw").textContent = value;
+	document.getElementById("target").style.boxShadow = value;
+  if (document.getElementById("border").checked)
+    document.getElementById("target").style.border = "1px solid black";
+  else
+    document.getElementById("target").style.border = null;
+}
+shadows();
+</script>

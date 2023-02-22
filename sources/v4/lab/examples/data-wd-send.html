@@ -1,0 +1,128 @@
+<h3>data-wd-send</h3>
+
+<script>
+function fsend(x) {
+	if (x.closed)
+		document.getElementById("output").textContent = x.text;
+}
+</script>
+
+<div id="input">
+	<label style="display: block; width: 100%">Text</label>
+	<input type="text" name="text"  style="display: block; width: 100%" />
+
+	<div>
+		<label><input type="checkbox" name="box1" />Checkbox 1</label>
+		<label><input type="checkbox" name="box2" value="checked" />Checkbox 2</label>
+	</div>
+
+	<div>
+		<label><input type="radio" name="radio" value="radio1" />Radio 1</label>
+		<label><input type="radio" name="radio" value="radio2" />Radio 2</label>
+	</div>
+
+	<label style="display: block; width: 100%">File</label>
+	<input type="file" name="file" multiple="" style="display: block; width: 100%" />
+
+	<label style="display: block; width: 100%">e-mail</label>
+	<input type="email" name="email" multiple="" style="display: block; width: 100%" />
+
+	<label style="display: block; width: 100%;">Select</label>
+	<select name="select" multiple="" style="display: block; width: 100%; margin-bottom: 5px;" >
+		<option value="Item 0">Item 0</option>
+		<option value="Item 1">Item 1</option>
+		<option value="Item 2">Item 2</option>
+	</select>
+
+	<button type="button" style="display: block; width: 100%"
+		data-wd-send="path{examples/target.php}call{fsend}$${#input *}"
+	>POST</button>
+	<button type="button" style="display: block; width: 100%"
+		data-wd-send="path{examples/target.php}call{fsend}$${#input *}method{GET}"
+	>GET</button>
+
+
+
+	<label style="display: block; width: 100%">Output (php):</label>
+	<pre id="output" style="font-size: smaller; color: #FF0000;"></pre>	
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!--
+
+<h3>Submit Data Check (Test)</h3>
+
+<form class="wd-block-child">
+	<input type="hidden" name="page" va	lue="data-wd-send" />
+
+	<label>Options/Checks</label>
+	<div>
+		<label>C<input type="checkbox" name="checkbox" value="checkbox" /></label>
+	</div>
+	<div>
+ 		<label>A <input type="radio" name="radio" value="radioA" /></label>
+		<label>B <input type="radio" name="radio" value="radioB" /></label>
+	</div>
+
+	<label>Date/Time</label>
+	<input type="date"           name="date"           placeholder="date" />
+  <input type="datetime-local" name="datetime-local" placeholder="datetime-local" />
+  <input type="time"           name="time"           placeholder="time" />
+	<input type="month"          name="month"          placeholder="month" />
+	<input type="week"           name="week"           placeholder="week" />
+
+	<label>File <input type="file" name="file" placeholder="file" /></label>
+
+	<label>Text</label>
+	<input type="email"    name="email"    placeholder="email" />
+	<input type="hidden"   name="hidden"   placeholder="hidden" />
+  <input type="password" name="password" placeholder="password" />
+  <input type="search"   name="search"   placeholder="search" />
+  <input type="tel"      name="tel"      placeholder="tel" />
+  <input type="text"     name="text"     placeholder="text" />
+  <input type="url"      name="url"      placeholder="url" />
+
+	<label>Number</label>
+  <input type="number" name="number" placeholder="number" />
+  <input type="range"  name="range" />
+	<meter name="meter" value="10" >meter</meter>
+	<progress name="progress" value="10" >progress</progress>
+
+
+	<label>Buttons</label>
+  <input type="button" name="button" value="button" />
+  <input type="color"  name="color"  value="color" />
+  <input type="image"  name="image"  value="image" alt="Image" src="examples/image.png" width="48" height="48" />
+  <input type="reset"  name="reset"  value="reset" />
+  <input type="submit" name="submit" value="submit" />
+
+	<button type="button" name="button-button" value="button-button">button-button</button>
+	<button type="reset"  name="button-reset"  value="button-reset" >button-reset</button>
+	<button type="submit" name="button-submit" value="button-submit">button-submit</button>
+</form>
+-->

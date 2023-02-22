@@ -1,0 +1,82 @@
+<body>
+<h3>Code</h3>
+
+<h4>Inline</h4>
+
+<p>This is a <code>code</code> within a text.</p>
+
+
+<h4 onclick="wd.copy(wd.$('#js').item(0));">JavaScript Example</h4>
+
+<div class="wd-code" id="js">
+	<div><s>//JavaScript function to calculate twice the value:</s></div>
+	<div><mark>function</mark> double(value) {</div>
+	<section>
+		<div><mark>var</mark> x = <var>2</var> * value;</div>
+		<div>console.log(</div>
+		<section>
+			<div><q>The double of </q> + value + <q> is </q> + x + <q>.</q></div>
+		</section>
+		<div>);</div>
+		<div><mark>return</mark> x;</div>
+	</section>
+	<div>}</div>
+	<div>double(<var>5</var>);</div>
+  <section>
+    <samp>Returns 10</samp>
+  </section>
+  <div>double(<var>-10</var>);</div>
+  <section>
+    <samp>Returns -20</samp>
+  </section>
+	<div></div>
+	<section><s>/* Quotes Examples */</s></section>
+	<section>q(q)   = <q>quotes <q>inside</q> quotes</q>;</section>
+	<section>q(kbd)   = <q>quotes <kbd>inside</kbd> quotes</q>;</section>
+	<section>kbd(kbd) = <kbd>single (<kbd>inside</kbd>) quotes</kbd>;</section>
+	<section>kbd(q) = <kbd>single (<q>inside</q>) quotes</kbd>;</section>
+</div>
+
+<h4>HTML</h4>
+
+<div class="wd-code">
+	<div><s><code>!-- HTML Link and Table --</code></s></div>
+	<div><code>a href=<q>http://www.something.com</q></code>My Link<code>/a</code></div>
+	<div></div>
+	<div><code>table <em>border</em>=<q>1</q></code></div>
+	<section>
+		<div><code>tbody</code></div>
+		<section>
+			<div><code>tr</code></div>
+			<section>
+				<div><code>td</code>#1<code>/td</code></div>
+				<div><code>td</code>#2<code>/td</code></div>
+				<div><code>td</code>#3<code>/td</code></div>
+			</section>
+			<div><code>/tr</code></div>
+		</section>
+		<div><code>/tbody</code></div>
+	</section>
+	<div><code>/table</code></div>
+</div>
+
+
+<h4>JSON</h4>
+
+<div class="wd-code">
+	<div>{</div>
+		<section>
+			<div><q>name</q>: <q>Name</q>,</div>
+			<div><q>age</q>: <var>19</var>,</div>
+			<div><q>alien</q>: <var>true</var>,</div>
+			<div><q>code</q>: [</div>
+			<section>
+				<div><var>1235</var>,</div>
+				<div><var>4567</var>,</div>
+				<div><var>4567</var></div>
+			</section>
+			<div>]</div>
+	</section>
+	<div>}</div>
+</div>
+</body>	

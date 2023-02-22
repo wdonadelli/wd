@@ -1,0 +1,180 @@
+<script>
+const SourceCSS = "../wd4.css";
+const SourceJS  = "../wd4.js";
+const wikiCSS   = "WD-CSS-Style-Properties";
+
+function getCssProperties(input) {
+	input = input.replace(".wd-", "wd-");
+	let name  = input.replace(/^wd\-(x+)?/, "").replace(/(\-[a-z0-9]+)+/, "");
+	let child = (/\-child$/).test(input) ? true : false;
+
+	if (child) input = input.replace(/\-child$/, "");
+
+	return {
+		name: name,
+		child: child ? "Yes" : "No",
+		css: input
+	};
+}
+
+function cssNameDescription(input) {
+	/* |name|description| */
+		return "|[wd-" + input + "](" + wikiCSS + "#" + input + ")||\n";
+}
+
+function cssParameterDescription(name, input) {
+	/*|CSS|Child|Obs|*/
+	let value = []
+	value.push("## " + name + "\n");
+	value.push("|Attribute|Child|Obs|");
+	value.push("|:-------:|:---:|:-:|");
+
+	for (let i in input)
+		value.push("|" + i + "|" + input[i] + "||")
+	value.push("\n");
+	return value.join("\n");
+}
+
+function cssAttributes(type) {
+
+	wd().send(SourceCSS, function(x) {
+
+		if (x.closed) {
+
+			let re   = /\.wd(\-[a-z0-9]+)+/g;
+			let data = {};
+			let txt  = [];
+			let css  = wd(x.text.match(re)).tidy;
+
+			for (let i = 0; i < css.length; i++) {//>
+				let prop = getCssProperties(css[i]);
+				if (!(prop.name in data)) data[prop.name] = {};
+				data[prop.name][prop.css] = prop.child;
+			}
+
+			for (let i in data) {
+				switch(type) {
+					case "name": txt.push(cssNameDescription(i)); break;
+					case "prop": txt.push(cssParameterDescription(i, data[i])); break;
+				}
+			}
+
+			document.getElementById("code_change").textContent = txt.join("");
+		}
+	});
+}
+
+
+function jsFunctions(type) {
+
+	wd().send(SourceJS, function(x) {
+
+		if (x.closed) {
+			let re   = {
+				o: { /* objetos */
+					i: /\n\tfunction\ +[A-Z][\w\$]+\((.+)?\)/g,
+					t: "<h3 id=\"Objects\" >Objects</h3>\n", /*## Objects\n",*/
+					r: /^function(\ +)?/,
+					s: ")"
+				},
+				f: { /* funções */
+					i: /\n\tfunction\ +[a-z][\w\$]+\((.+)?\)/g,
+					t: "<h3 id=\"Functions\" >Functions</h3>\n", /*## Functions\n",*/
+					r: /^function(\ +)?/,
+					s: ")"
+				},
+				c: { /* constantes */
+					i: /\n\tconst\ +[\w\$]+\ +\=/g,
+					t: "<h3 id=\"Constants\" >Constants</h3>\n", /*## Constants\n",*/
+					r: /^const(\ +)?/,
+					s: "="
+				},
+				v: { /* variáveis */
+					i: /\n\tlet\ +[\w\$]+\ +\=/g,
+					t: "<h3 id=\"Variables\" >Variables</h3>\n", /*## Variables\n",*/
+					r: /^let(\ +)?/,
+					s: "="
+				}
+			}
+			let data = [];
+			let txt  = [];
+			let js   = wd(x.text.match(re[type].i)).tidy;
+
+			/* limpando e obtendo informações */
+			for (let i = 0; i < js.length; i++) { //>
+				js[i] = js[i].trim().replace(re[type].r, "");
+				js[i] = js[i].split(re[type].s)[0].trim();
+				let name = js[i];
+				let args = [];
+				let func = "";
+				if (type === "o" || type === "f") {
+					name = js[i].split("(")[0].trim();
+					args = js[i].split("(")[1].trim().split(",");
+					func = js[i]+")";
+					for (let j = 0; j < args.length; j++) //>
+						args[j] = args[j].trim();
+					if (args.length === 1 && args[0] === "")
+						args = [];
+				}
+
+				data.push({func: func, name: name, args: args});
+			}
+
+			/* construindo md */
+			txt.push(re[type].t)
+
+			for (let i = 0; i < data.length; i++) { //>
+					txt.push("<h4 id=\""+data[i].name+"\" >"+data[i].name+"</h4>\n"); /*txt.push("### "+data[i].name+"\n");*/
+					if (type === "o" || type === "f") {
+						txt.push("<p>XXXX</p>\n");
+						txt.push("<h6>Return</h6>\n");
+						txt.push("<p>XXXX</p>\n");
+						txt.push("<h6>Characteristics</h6>\n");
+						txt.push("<div><code>"+data[i].func+"</code></div>\n");
+						/*txt.push("```js\n"+data[i].func+"\n```\n");*/
+					}
+					if (data[i].args.length > 0) {
+						txt.push("<dl>");
+						txt.push(
+							"\t<dt><code>"+
+							data[i].args.join("</code></dt>\n\t<dd>XXXXXXXXXXXX</dd>\n\t<dt><code>")+
+							"</code></dt>\n\t<dd>XXXXXXXXXXXX</dd>"
+						);
+						txt.push("</dl>\n");
+						/*txt.push("|Name|Type|Optional|Description|");
+						txt.push("|:--:|:--:|:-------|:----------|");
+						txt.push("|"+data[i].args.join("||No||\n|")+"||No||\n\n\n");*/
+					}
+			}
+
+			document.getElementById("code_change").textContent = txt.join("\n");
+			wd.copy(txt.join("\n"));
+		}
+	});
+}
+
+
+
+
+
+
+
+
+
+</script>
+
+
+
+
+<h3>Code Change</h3>
+<nav>
+	<span onclick="cssAttributes('name');">CSS Name</span>
+	<span onclick="cssAttributes('prop');">CSS Prop</span>
+	<span onclick="jsFunctions('f');">JS Functions</span>
+	<span onclick="jsFunctions('o');">JS Objects</span>
+	<span onclick="jsFunctions('c');">JS Constants</span>
+	<span onclick="jsFunctions('v');">JS Variables</span>
+</nav>
+
+
+<pre id="code_change"></pre>

@@ -1,0 +1,18 @@
+<h3>data-wd-repeat</h3>
+
+<ol data-wd-repeat="path{examples/list1.json}" id="repeat" >
+	<li>{{name}}, age {{age}};</li>
+</ol>
+
+<fieldset>
+	<legend>List</legend>
+	<pre data-wd-load="path{examples/list1.json}" id="list" class="wd-code" ></pre>
+</fieldset>
+
+<dl>
+	<dt>Using <code>data-wd-data</code>:</dt>
+	<dd><a href="#repeat" data-wd-data="wdRepeat{path{examples/list1.json}}${#repeat}&wdLoad{path{examples/list1.json}}${#list}">JSON 1</a></dd>
+	<dd><a href="#repeat" data-wd-data="wdRepeat{path{examples/list2.json}}${#repeat}&wdLoad{path{examples/list2.json}}${#list}">JSON 2</a></dd>
+	<dd><a href="#repeat" data-wd-data="wdRepeat{path{examples/list1.csv}}${#repeat}&wdLoad{path{examples/list1.csv}}${#list}">CSV 1</a></dd>
+	<dd><a href="#repeat" data-wd-data="wdRepeat{path{examples/list2.csv}}${#repeat}&wdLoad{path{examples/list2.csv}}${#list}">CSV 2</a></dd>
+</dl>

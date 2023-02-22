@@ -1,0 +1,20 @@
+{
+	"#lang-id": {
+		"*": "The identifier default (*) was chosen.",
+		"pt": "Foi escolhida o identificador \"pt\".",
+		"pt_br": "Foi escolhida o identificador \"pt-BR\".",
+		"es": "Se eligió el identificador \"es\"."
+	},
+	".lang-css": {
+		"*": "Default value used.",
+		"pt": "Português (Brasil/Portugal)",
+		"pt_br": "Português do Brasil",
+		"es": "Español"
+	},
+	"label": {
+		"pt_br": "Só existe em portugês do Brasil."
+	},
+	"#lang-id2": {
+		"xxxxxxx": "This will not be used by the available options."
+	}
+}
