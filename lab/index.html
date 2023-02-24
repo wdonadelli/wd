@@ -15,109 +15,101 @@
 		<script src="../wd5.js"></script>
 		<link  href="../wd5.css" rel="stylesheet" />
 		<script>
-
-function err(e) {
-	/* função para exibir erro */
-	console.log(e);
-	wd.$$("#ie_page, #ie_code").load("");
-	wd.$("#bmenu").item(0).click();
+function color_screen() {
+	let time = wd.now.valueOf();
+	if (time >= (6*60) && time < (18*60))
+		wd.$$("body, main > article").css({add: "wd-bg-base"});
+	else
+		wd.$$("body, main > article").css({add: "wd-bg-black"});
+	return;
 }
 
-function loadExample() {
-	/* função para carregar página */
-	try {
-		var file  = wd.url("page");
-		if (file === null	 || file.trim() === "")
-			return wd("Use the menu to navigate!").signal("Destination not specified.");
-		var path = "examples/"+file.trim()+".html";
-		wd.$$("#ie_code, #ie_page").data({wdLoad: "path{"+path+"}method{GET}"});
-	} catch(e) {err(e);}
+let last_action = null;
+
+function set_action(action) {
+	last_action = action;
 }
 
-function reloadExample() {
-	/* função para renderizar o conteúdo do código */
-	try {
-		var code = wd.$("#ie_code").item(0).value;
-		wd.$("#ie_page").load(code);
-	} catch(e) {err(e);}
+function get_action() {
+	if (last_action !== null)
+		wd.$$("#html-block, #text_code").data({
+			wdLoad: "path{"+last_action+"}method{GET}"
+		});
 }
 
-function getDOM() {
-	/* função para obter o html da renderização atual */
-	try {
-		var code = wd.$("#ie_page").item(0).innerHTML;
-		wd.$("#ie_code").load(code);
-	} catch(e) {err(e);}
+function get_html() {
+	wd.$("#text_code").load(wd.$("#html-block").item(0).innerHTML);
 }
+
+function set_html() {
+	wd.$("#html-block").load(wd.$("#text_code").item(0).value);
+}
+
 
 /* carregando disparadores */
-wd(window).addHandler(
-	{
+wd(window).addHandler({
 		load: function() {
-			wd.$("#ie_apply").addHandler({click: reloadExample});
-			wd.$("#ie_reset").addHandler({click: loadExample});
-			wd.$("#ie_dom").addHandler({click: getDOM});
+			color_screen();
+
+			wd.$("#code_apply").addHandler({click: set_html});
+			wd.$("#code_reset").addHandler({click: get_action});
+			wd.$("#code_get").addHandler({click: get_html});
 		}
-	}
-).addHandler(
-	{
-		load: loadExample
-	}
-);
+	})
 		</script>
 	</head>
 
-<body class="wd-bg-black">
+<body>
 
 	<main>
 
-		<article class="wd-flyer wd-bg-black">
+		<article class="wd-flyer">
 
 			<header class="wd-hidden-print">
 				<h2>WD Web Library Lab	</h2>
 			</header>
 
-			<nav class="wd-bg-white wd-header wd-hidden-print">
+			<!-- Navegador -->
+			<nav class="wd-bg-grey wd-header wd-hidden-print">
 				<span class="" data-wd-css="${#menu}tgl{wd-open}" id="bmenu">Menu</span>
-				<span class="" data-wd-css="${#side_code}tgl{wd-hidden}" >Code</span>
+				<span class="" data-wd-css="${#code-block}tgl{wd-hidden}" >Code</span>
 				<span class="" data-wd-css="${html}tgl{wd}" >CSS</span>
-				<span class="" data-wd-css="$${body, main > article}tgl{wd-bg-black}" >Black</span>
-				<a href="../doc/JS_File_Guide.html" target="_blank">JS Guide</a>
+				<span class="" data-wd-css="$${body, main > article}tgl{wd-bg-black wd-bg-base}" >Screen</span>
+				<a href="../doc/" target="_blank">Doc</a>
 				<a href="https://github.com/wdonadelli/wd/wiki" target="_blank">Wiki</a>
 			</nav>
 
+			<!-- Tela Principal -->
 			<section data-wd-device="desktop{wd-col}">
 
-				<div class="wd-padd wd-hidden-print wd-hidden" id="side_code">
+				<!-- Lado Esquerdo -->
+				<div class="wd-padd wd-hidden-print wd-hidden" id="code-block">
 
-					<h3>Code</h3>
+					<div class="wd-form">
+						<div>
+							<label>Code</label>
+							<textarea id="text_code" style="height: 300px" class="wd-block wd-code"></textarea>
+						</div>
+					</div>
 
-					<form class="wd-form">
+					<div class="wd-form-grid">
+						<div>
+							<button type="button" id="code_apply" data-wd-device="desktop{wd-icon-copy}" > Apply</button>
+						</div>
 
 						<div>
-							<textarea id="ie_code" style="height: 300px" class="wd-block wd-code"></textarea>
+							<button type="button" id="code_reset" data-wd-device="desktop{wd-icon-close}" > Reset</button>
 						</div>
 
-						<div class="wd-col">
-							<div class="wd-block-child">
-								<button type="button" id="ie_apply" data-wd-device="desktop{wd-icon-copy}" title="Render changes."> Apply</button>
-							</div>
-
-							<div class="wd-block-child">
-								<button type="button" id="ie_reset" data-wd-device="desktop{wd-icon-close}" title="Restore the original code."> Reset</button>
-							</div>
-
-							<div class="wd-block-child">
-								<button type="button" id="ie_dom" data-wd-device="desktop{wd-icon-paste}" title="Get and paste the current DOM tree into the text area."> DOM</button>
-							</div>
-
+						<div>
+							<button type="button" id="code_get" data-wd-device="desktop{wd-icon-paste}" > Get</button>
 						</div>
-
-					</form>
+					</div>
 
 				</div>
 
-				<div id="ie_page" class="wd-padd"></div>
+				<!-- Lado Direito -->
+				<div id="html-block" class="wd-padd"></div>
 
 			</section>
 
@@ -125,17 +117,47 @@ wd(window).addHandler(
 
 	</main>
 
+
+
+	<!-- MENU -->
 	<div class="wd-modal" id="menu" data-wd-css="tgl{wd-open}">
-  <div data-wd-device="desktop{wd-window-left}mobile{wd-window-full}"  style="min-width: 25%;">
-    <article class="wd-flyer wd-bg-base">
-     <header>
-      <h4>Menu</h4>
-     </header>
-     <nav data-wd-repeat="path{menu.json}method{GET}" class="wd-nav-block">
-       <a href="?page={{target}}" title="{{target}}">{{target}}</a>
-     </nav>
-    </article>
-	  </div>
+		<div data-wd-device="desktop{wd-window-left}mobile{wd-window-full}" data-wd-no-bubbles="" style="width: 30%;">
+
+			<article class="wd-flyer wd-bg-base">
+
+				<header>
+     <h4>Menu</h4>
+    </header>
+
+				<nav class="wd-header wd-bg-white">
+					<span data-wd-click="" data-wd-nav="${#css_menu}">CSS</span>
+					<span data-wd-nav="${#data_menu}">Data</span>
+				</nav>
+
+				<section>
+
+					<div id="css_menu">
+						<nav data-wd-repeat="path{menu/css_menu.json}method{GET}" class="wd-nav-block">
+			    <span
+								data-wd-css="tgl{wd-open}${#menu}"
+								data-wd-data="wdLoad{path{css/{{target}}.html}method{GET}}$${#html-block, #text_code}"
+								onclick="set_action('css/{{target}}.html');"
+							>{{target}}</span>
+			  	</nav>
+					</div>
+
+					<div id="data_menu">
+						<nav data-wd-repeat="path{menu/data_menu.json}method{GET}" class="wd-nav-block">
+			    <span
+								data-wd-css="tgl{wd-open}${#menu}"
+								data-wd-data="wdLoad{path{data/{{target}}.html}method{GET}}$${#html-block, #text_code}"
+								onclick="set_action('data/{{target}}.html');"
+							>{{target}}</span>
+			  	</nav>
+					</div>
+				</section>
+   </article>
+	 </div>
 	</div>
 
 </body>

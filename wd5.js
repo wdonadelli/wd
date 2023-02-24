@@ -24,31 +24,33 @@ SOFTWARE.
 https://github.com/wdonadelli/wd
 ------------------------------------------------------------------------------*/
 
+/* Legenda: t título; c capítulo; n nome; d descrição; a atributo; * negrito */
+
 "use strict";
 
 const wd = (function() {
 
-/*------------------------------------------------------------------------------
-| BLOCO 1: atributos e funções globais
-| BLOCO 2: objetos especiais para atividades específicas
-| BLOCO 3: objetos de interface (acessíveis aos usuários)
-| BLOCO 4: funções de atributos HTML
-| BLOCO 5: boot
-\-----------------------------------------------------------------------------*/
+	/*t Variáveis e Constantes*/
 
-/* == BLOCO 1 ================================================================*/
-
-/*----------------------------------------------------------------------------*/
-	/* guada a versão da biblioteca (JS + CSS) */
+	/*n *const *str wd_version*/
+	/*d Constante registra a versão da biblioteca JS.*/
 	const wd_version = "WD JS v5.0.0";
-	/* Guarda informação do dispositivo (desktop, mobile...) */
+
+	/*n *let *str wd_device_controller*/
+	/*d Variável que registra o tamanho da tela ("desktop", "mobile", "tablet", "phone", null).*/
 	let wd_device_controller = null;
-	/* Guarda o intervalo de tempo para executar funções vinculadas aos eventos de tecla */
+
+	/*n *const *int wd_key_time_range*/
+	/*d Constante que registra o intervalo de tempo para eventos de digitação.*/
 	const wd_key_time_range = 500;
-	/* Controla a contagem de procedimentos */
+
+	/*n *const *struct wd_counter_control*/
+	/*d Estrutura que controla a contagem de procedimentos de carregamento de dados.*/
 	const wd_counter_control = {
-		repeat: 0, /* repetições em processamento */
-		load:   0  /* carregamentos em processamento */
+		/*a *int repeat*/ /*d Registra a quantidade de repetições em processamento.*/
+		repeat: 0,
+		/*a *int load*/   /*d Registra a quantidades carregamentos em processamento.*/
+		load:   0
 	};
 	/* Controla a janela modal */
 	const wd_modal_control = {
