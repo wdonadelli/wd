@@ -24,7 +24,7 @@ SOFTWARE.
 https://github.com/wdonadelli/wd
 ------------------------------------------------------------------------------*/
 
-/* Legenda: t título; c capítulo; n nome; d descrição; a atributo; * negrito */
+/* Legenda: t título; c capítulo; n nome; d descrição; a atributo; \b negrito; \i itálico; \u sublinhado */
 
 "use strict";
 
@@ -32,35 +32,42 @@ const wd = (function() {
 
 	/*t Variáveis e Constantes*/
 
-	/*n *const *str wd_version*/
-	/*d Constante registra a versão da biblioteca JS.*/
+	/*n \bconst \bstr wd_version*/
+	/*d \uConstante que registra a versão da biblioteca JS.*/
 	const wd_version = "WD JS v5.0.0";
 
-	/*n *let *str wd_device_controller*/
-	/*d Variável que registra o tamanho da tela ("desktop", "mobile", "tablet", "phone", null).*/
+	/*n \blet \bstr wd_device_controller*/
+	/*d \uVariável que registra o tamanho da tela ("desktop", "mobile", "tablet", "phone", null).*/
 	let wd_device_controller = null;
 
-	/*n *const *int wd_key_time_range*/
-	/*d Constante que registra o intervalo de tempo para eventos de digitação.*/
+	/*n \bconst \bint wd_key_time_range*/
+	/*d \uConstante que registra o intervalo de tempo para eventos de digitação.*/
 	const wd_key_time_range = 500;
 
-	/*n *const *struct wd_counter_control*/
-	/*d Estrutura que controla a contagem de procedimentos de carregamento de dados.*/
+	/*n \bconst \bstruct wd_counter_control*/
+	/*d \uConstante que controla a contagem de requisições por meio da seguinte \uestrutura:*/
+	/*a \bint repeat*/ /*d \uAtributo que registra as repetições.*/
+	/*a \bint load*/   /*d \uAtributo que registra os carregamentos.*/
 	const wd_counter_control = {
-		/*a *int repeat*/ /*d Registra a quantidade de repetições em processamento.*/
 		repeat: 0,
-		/*a *int load*/   /*d Registra a quantidades carregamentos em processamento.*/
 		load:   0
 	};
-	/* Controla a janela modal */
-	const wd_modal_control = {
-		modal:   null, /* HTML da janela modal */
-		bar:     null, /* HTML da barra de progresso */
-		counter:    0, /* contador de operações em aberto */
-		delay:    250, /* tempo de espera até fechar a janela modal (evitar piscadas) */
-		time:       5, /* tempo para interagir com o documento */
 
-		_init: function() { /* método para efetuar a montagem do modal e barra de progress */
+	/*n \bconst \bstruct wd_modal_control*/
+	/*d \uConstante que controla a janela modal por meio da seguinte \uestrutura:*/
+	const wd_modal_control = {
+		/*a \bnode modal*//*d \uAtributo que acomoda o container plano de fundo.*/
+		modal:   null,
+		/*a \bnode bar*//*d \uAtributo que acomoda a barra de progresso (\imeter, \iprogress ou \idiv).*/
+		bar:     null,
+		/*a \bint counter*//*d \uAtributo que registra as solicitações em aberto para controle da exibição.*/
+		counter:    0,
+		/*a \bint delay*//*d \uAtributo que registra o tempo (\ims) de espera para fechar a janela e evitar piscando.*/
+		delay:    250,
+		/*a \bint time*//*d \uAtributo que registra o tempo (\ims) de interação para atualização da barra de progresso.*/
+		time:       5,
+		/*a _init()*//*d \uMétodo que inicializa os atributos. Não há retorno definido.*/
+		_init: function() {
 			/* janela modal */
 			this.modal = document.createElement("DIV");
 			this.modal.className = "js-wd-modal";
@@ -76,7 +83,7 @@ const wd = (function() {
 			this.modal.appendChild(this.bar);
 			return;
 		},
-
+		/*a start()*//*d \uMétodo para solicitar a abertura da janela modal. Acresce \icounter e o retorna.*/
 		start: function() { /* abre a janela modal */
 			if (this.modal === null) this._init();
 			if (this.counter === 0)
@@ -84,8 +91,8 @@ const wd = (function() {
 			this.counter++;
 			return this.counter;
 		},
-
-		end: function() {/* fecha a janela modal */
+		/*a end()*//*d \uMétodo para solicitar o fechamento da janela modal. Decresce \icounter e o retorna.*/
+		end: function() {
 			let object = this;
 			/* checar fechamento da janela após delay */
 			window.setTimeout(function () {
@@ -96,8 +103,8 @@ const wd = (function() {
 
 			return this.counter;
 		},
-
-		progress: function(x) { /* define o valor da barra de progresso */
+		/*a progress(\bfloat x)*//*d \uMétodo para definir o valor da barra de progresso (0 a 1). Nôa há retorno definido*/
+		progress: function(x) {
 			let tag    = this.bar.tagName.toLowerCase();
 			let value  = tag === "div" ? wd_num_str(x, true) : x;
 			let object = this;
@@ -111,18 +118,22 @@ const wd = (function() {
 			return;
 		}
 	};
-	/* controla a caixa de mensagens */
-	const wd_signal_control = {
-		main: null, /* elemento agrupador das mensagens */
-		time: 9000, /* tempo para fechamento automático da mensagem (igual ao CSS js-wd-signal-msg) */
 
-		_init: function() { /* efetua a montagem da caixa de mensagem */
+	/*n \bconst \bstruct wd_signal_control*/
+	/*d \uConstante que controla a caixa de mensagens por meio da seguinte \uestrutura:*/
+	const wd_signal_control = {
+		/*a \bnode main*//*d \uAtributo que acomoda o container das caixas de mensagem.*/
+		main: null,
+		/*a \bint time*//*d \uAtributo que registra o tempo de duração da mensagem (ver \ijs-wd-signal-msg).*/
+		time: 9000,
+		/*a _init()*//*d \uMétodo que inicializa os atributos. Não há retorno definido.*/
+		_init: function() {
 			this.main = document.createElement("DIV");
 			this.main.className = "js-wd-signal";
 			return;
 		},
-
-		_createBox: function() { /* retorna um objeto com os elementos da mensagem */
+		/*a _createBox()*//*d \uMétodo que retorna os elementos para formar a caixa de mensagem.*/
+		_createBox: function() {
 			return {
 				box:     document.createElement("ARTICLE"),
 				header:  document.createElement("HEADER"),
