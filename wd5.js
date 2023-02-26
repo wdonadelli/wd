@@ -24,7 +24,7 @@ SOFTWARE.
 https://github.com/wdonadelli/wd
 ------------------------------------------------------------------------------*/
 
-/* Legenda: t título; c capítulo; n nome; d descrição; a atributo; \b negrito; \i itálico; \u sublinhado */
+/* Legenda: |^t título|^c capítulo|^0-9 nome|^0-9: descrição|\b negrito|\i itálico|\u sublinhado|\c code*/
 
 "use strict";
 
@@ -32,41 +32,41 @@ const wd = (function() {
 
 	/*t Variáveis e Constantes*/
 
-	/*n \bconst \bstr wd_version*/
-	/*d \uConstante que registra a versão da biblioteca JS.*/
+	/*0 \bconst \bstr wd_version*/
+	/*0: Versão da biblioteca JS.*/
 	const wd_version = "WD JS v5.0.0";
 
-	/*n \blet \bstr wd_device_controller*/
-	/*d \uVariável que registra o tamanho da tela ("desktop", "mobile", "tablet", "phone", null).*/
+	/*0 \blet \bstr wd_device_controller*/
+	/*0: Identifica o tamanho da tela (\idesktop, \imobile, \itablet, \iphone, \cnull).*/
 	let wd_device_controller = null;
 
-	/*n \bconst \bint wd_key_time_range*/
-	/*d \uConstante que registra o intervalo de tempo para eventos de digitação.*/
+	/*0 \bconst \bint wd_key_time_range*/
+	/*0: Intervalo de tempo (\ims) para aguardar eventos de digitação (\ioninput, \ionkeyup...).*/
 	const wd_key_time_range = 500;
 
-	/*n \bconst \bstruct wd_counter_control*/
-	/*d \uConstante que controla a contagem de requisições por meio da seguinte \uestrutura:*/
-	/*a \bint repeat*/ /*d \uAtributo que registra as repetições.*/
-	/*a \bint load*/   /*d \uAtributo que registra os carregamentos.*/
+	/*0 \bconst \bstruct wd_counter_control*/
+	/*0: Controla a contagem de requisições:*/
+	/*1 \bint repeat*//*1: Número de repetições em execução.*/
+	/*1 \bint load*//*1: Número de carregamentos em execução.*/
 	const wd_counter_control = {
 		repeat: 0,
 		load:   0
 	};
 
-	/*n \bconst \bstruct wd_modal_control*/
-	/*d \uConstante que controla a janela modal por meio da seguinte \uestrutura:*/
+	/*0 \bconst \bstruct wd_modal_control*/
+	/*0: Controla a janela modal:*/
 	const wd_modal_control = {
-		/*a \bnode modal*//*d \uAtributo que acomoda o container plano de fundo.*/
+		/*1 \bnode modal*//*1: Container do plano de fundo.*/
 		modal:   null,
-		/*a \bnode bar*//*d \uAtributo que acomoda a barra de progresso (\imeter, \iprogress ou \idiv).*/
+		/*1 \bnode bar*//*1: Barra de progresso (\imeter, \iprogress ou \idiv).*/
 		bar:     null,
-		/*a \bint counter*//*d \uAtributo que registra as solicitações em aberto para controle da exibição.*/
+		/*1 \bint counter*//*1: Número de solicitações em aberto (controlar exibição).*/
 		counter:    0,
-		/*a \bint delay*//*d \uAtributo que registra o tempo (\ims) de espera para fechar a janela e evitar piscando.*/
+		/*1 \bint delay*//*1: Tempo (\ims) de espera para fechar a janela e evitar tela piscando.*/
 		delay:    250,
-		/*a \bint time*//*d \uAtributo que registra o tempo (\ims) de interação para atualização da barra de progresso.*/
+		/*1 \bint time*//*1: Tempo (\ims) de interação para atualização da barra de progresso.*/
 		time:       5,
-		/*a _init()*//*d \uMétodo que inicializa os atributos. Não há retorno definido.*/
+		/*1 \bvoid _init()*//*1: \uInicializa os atributos.*/
 		_init: function() {
 			/* janela modal */
 			this.modal = document.createElement("DIV");
@@ -83,7 +83,7 @@ const wd = (function() {
 			this.modal.appendChild(this.bar);
 			return;
 		},
-		/*a start()*//*d \uMétodo para solicitar a abertura da janela modal. Acresce \icounter e o retorna.*/
+		/*1 \bint start()*//*1: Demanda a exibição da janela modal. Acresce \icounter e o \uretorna.*/
 		start: function() { /* abre a janela modal */
 			if (this.modal === null) this._init();
 			if (this.counter === 0)
@@ -91,7 +91,7 @@ const wd = (function() {
 			this.counter++;
 			return this.counter;
 		},
-		/*a end()*//*d \uMétodo para solicitar o fechamento da janela modal. Decresce \icounter e o retorna.*/
+		/*1 \bint end()*//*1: Demanda o fechamento da janela modal. Decresce \icounter e o \uretorna.*/
 		end: function() {
 			let object = this;
 			/* checar fechamento da janela após delay */
@@ -103,7 +103,8 @@ const wd = (function() {
 
 			return this.counter;
 		},
-		/*a progress(\bfloat x)*//*d \uMétodo para definir o valor da barra de progresso (0 a 1). Nôa há retorno definido*/
+		/*1 \bvoid progress(\bfloat x)*//*1: Define o valor da barra de progresso.*/
+		/*2: \cx - valor da barra de progresso, de 0 a 1.*/
 		progress: function(x) {
 			let tag    = this.bar.tagName.toLowerCase();
 			let value  = tag === "div" ? wd_num_str(x, true) : x;
@@ -119,38 +120,44 @@ const wd = (function() {
 		}
 	};
 
-	/*n \bconst \bstruct wd_signal_control*/
-	/*d \uConstante que controla a caixa de mensagens por meio da seguinte \uestrutura:*/
+	/*0 \bconst \bstruct wd_signal_control*/
+	/*0: Controla a caixa de mensagens:*/
 	const wd_signal_control = {
-		/*a \bnode main*//*d \uAtributo que acomoda o container das caixas de mensagem.*/
+		/*1 \bnode main*//*1: Container das caixas de mensagem.*/
 		main: null,
-		/*a \bint time*//*d \uAtributo que registra o tempo de duração da mensagem (ver \ijs-wd-signal-msg).*/
+		/*1 \bint time*//*1: Tempo de duração da mensagem (ver CSS \cjs-wd-signal-msg).*/
 		time: 9000,
-		/*a _init()*//*d \uMétodo que inicializa os atributos. Não há retorno definido.*/
+		/*1 \bvoid _init()*//*1: \uInicializa os atributos.*/
 		_init: function() {
 			this.main = document.createElement("DIV");
 			this.main.className = "js-wd-signal";
 			return;
 		},
-		/*a _createBox()*//*d \uMétodo que retorna os elementos para formar a caixa de mensagem.*/
+		/*1 \bstruct _createBox()*//*1: \uRetorna os elementos necessários para criar uma nova caixa de mensagem:*/
 		_createBox: function() {
 			return {
+				/*2 \bnode box*//*2: Caixa da mensagem.*/
 				box:     document.createElement("ARTICLE"),
+				/*2 \bnode header*//*2: Cabeçalho da mensagem.*/
 				header:  document.createElement("HEADER"),
+				/*2 \bnode message*//*2: Texto da mensagem.*/
 				message: document.createElement("SECTION"),
+				/*2 \bnode close*//*2: Botão de fechamento antecipado.*/
 				close:   document.createElement("SPAN"),
+				/*2 \bnode header*//*2: Texto do cabeçalho.*/
 				title:   document.createElement("STRONG")
 			};
 		},
-
-		_close: function(elem) { /* função para fechar caixa especificada no argumento */
+		/*1 \bvoid _close(\bnode elem)*//*1: Demanda o fechamento da caixa de mensagem (tempo ou ação).*/
+		/*2 \celem - caixa de mensagem a ser fechada.*/
+		_close: function(elem) {
 				try {this.main.removeChild(elem);} catch(e){}
 				if (this.main.children.length === 0)
 					try {document.body.removeChild(this.main);} catch(e){}
 				return;
 		},
-
-		_box: function() { /* monta e retorna a caixa de mensagem */
+		/*1 \bnode _box()*//*1: Criar uma nova caixa de mensagem e a \uretorna.*/
+		_box: function() {
 			let msg = this._createBox();
 			msg.box.appendChild(msg.header);
 			msg.box.appendChild(msg.message);
@@ -164,7 +171,8 @@ const wd = (function() {
 			}
 			return msg;
 		},
-
+		/*1 \bvoid open(\bstr message[, \bstr title)*//*1: Demanda a abertura de uma nova caixa de mensagem.*/
+		/*2: \cmessage - texto da mensagem.*//*2: \ctitle - texto do cabeçalho (optional: \bstr vazia).*/
 		open: function(message, title) { /* abre uma mensagem */
 			/* criação do container principal, se inexistente */
 			if (this.main === null) this._init();
@@ -188,6 +196,9 @@ const wd = (function() {
 		}
 	}
 	/* Guarda os estilos da biblioteca Selector Database */
+	/*0 \bconst \barray wd_js_css*/
+	/*0: Os itens da lista são estruturas cujos atributos (\bstr) definem os estilos utilizados pela biblioteca:*/
+	/*1: \cs - Seletor CSS.*//*1: \cd - estilos a ser aplicado ao seletor.*/
 	const wd_js_css = [
 		{s: "@keyframes js-wd-fade-in",  d: ["from {opacity: 0;} to {opacity: 1;}"]},
 		{s: "@keyframes js-wd-fade-out", d: ["from {opacity: 1;} to {opacity: 0;}"]},
@@ -244,6 +255,274 @@ const wd = (function() {
 			"padding: 0.5em; border-radius: 0 0 0.2em 0.2em;"
 		]},
 	];
+
+/*===========================================================================*/
+	/*t Funções*/
+/*===========================================================================*/
+	/*c Checagem de Valores e Objetos*/
+/*===========================================================================*/
+
+/*----------------------------------------------------------------------------*/
+	/*0 \bstruct|\bnull wd_check_str(\bvoid value)*/
+	/*0: Função que checa se o argumento é uma string. \uRetorna \cnull, se falso, ou a estrutura:*/
+	/*1 \bstr value*//*1: (\ivalue) Valor informado.*/
+	/*1 \bstruct _re*//*1: (\ivalue) Lista interna de formatos especiais de texto (data, tempo e número).*/
+	/*1 \bbool _test*//*1: (\igetter) Testa e retorna qual o formato especial casado em _\cre.*/
+	/*1 \bstr trim*//*1: (\igetter) Valor com extremidades aparadas.*/
+	/*1 \bstr clear*//*1: (\igetter) Valor sem espaços extras e extremidades aparadas.*/
+	/*1 \bstr upper*//*1: (\igetter) Valor em caixa alta*/
+	/*1 \bstr lower*//*1: (\igetter) Valor em caixa baixa.*/
+	/*1 \bstruct json*//*1: (\igetter) Converte JSON em notação javascript ou uma estrutura vazia, se inválido.*/
+	/*1 \bbool llNull*//*1: (\igetter) Testa se é uma string vazia.*/
+	/*1 \bbool llNum*//*1: (\igetter) Testa se a string está formatada como número, inclui porcentagem e fatorial.*/
+	/*1 \bbool llDate*//*1: (\igetter) Testa se a string está formatada como data (DD/MM/YYYY, MM.DD.YYYY ou YYY-MM-DD).*/
+	/*1 \bbool llTime*//*1: (\igetter) Testa se a string está formatada como tempo (HH:MM:SS HH:MM AM/PM).*/
+	function wd_check_str(value) {
+		if (typeof value === "string" || value instanceof String) {
+			return {
+				value: value.toString(),
+				_re: {
+					dateDMY: /^(0[1-9]|[12]\d|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/,
+					dateMDY: /^(0[1-9]|1[0-2])\.(0[1-9]|[12]\d|3[01])\.\d{4}$/,
+					dateYMD: /^\d{4}\-(0[1-9]|1[0-2])\-(0[1-9]|[12]\d|3[01])$/,
+					time24:  /^(0?\d|1\d|2[0-4])(\:[0-5]\d){1,2}$/,
+					time12:  /^(0?[1-9]|1[0-2])\:[0-5]\d\ ?[ap]m$/i,
+					numFact: /^(\ +)?\+?\d+\!(\ +)?$/,
+					number:  /^(\ +)?[+-]?(\d+|(\d+)?\.\d+)(e[+-]?\d+)?\%?(\ +)?$/i
+				},
+				get _test()  {
+					for (let i in this._re)
+						if (this._re[i].test(this.value)) return i;
+					return null;
+				},
+				get trim()   {return this.value.trim();},
+				get clear()  {return this.trim.replace(/\ +/g, " ");},
+				get length() {return this.value.length;},
+				get upper()  {return this.value.toUpperCase();},
+				get lower()  {return this.value.toLowerCase();},
+				get json()   {try {return JSON.parse(this.trim)} catch(e) {return {};}},
+				get test()   {for (let i in this._re) {}   },
+				get llNull() {return this.trim === "" ? true : false;},
+				get llNum()  {return ["numFact", "number"].indexOf(this._test) >= 0 ? true : false;},
+				get llDate() {return ["dateYMD", "dateDMY", "dateMDY"].indexOf(this._test) >= 0 ? true : false;},
+				get llTime() {return ["time24", "time12"].indexOf(this._test) >= 0 ? true : false;},
+			}
+		}
+		return null;
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+/*----------------------------------------------------------------------------*/
+	/*0 \bstruct|\bnull wd_check_time(\bstr value)*/
+	/*0: Função que recebe uma string no formato de tempo e \uretorna \cnull, se houver algum erro, ou a estrutura:*/
+	/*1 \bstr value*//*1: (\ivalue) Valor informado.*/
+	/*1 \bstr trim*//*1: (\ivalue) Valor com extremidades aparadas.*/
+	/*1 \bstr clear*//*1: (\igetter) Valor sem espaços extras e extremidades aparadas.*/
+	/*1 \bstr upper*//*1: (\igetter) Valor em caixa alta*/
+	/*1 \bstr lower*//*1: (\igetter) Valor em caixa baixa.*/
+	/*1 \bstruct json*//*3: (\igetter) Converte JSON em notação javascript ou uma estrutura vazia, se inválido.*/
+	function wd_check_time(value) {
+		return {
+			value: value,
+			get _time() {return this.value.replace(/[^0-9:]/, "").split(":");},
+			get _h()    {return new Number(this._time[0]).valueOf();},
+			get _m()    {return new Number(this._time[1]).valueOf();},
+			get _s()    {return this._time.length < 3 ? 0 : new Number(this._time[2]).valueOf();},
+			get clock() {return (/[AP]M$/i).test(this.value) ? 12 : 24;},
+			get am()    {return (this.clock === 24 && this._h < 12) ? true : (/AM$/i).test(this.value);},
+			get pm()    {return !this.am;},
+			get h()     {return this.clock === 24 ? this._h % 24 : (this.am ? this._h % 12 : (this._h+12) % 24);},
+			get m()     {return this._m % 60;},
+			get s()     {return this._s % 60;},
+
+
+			_toStr: function(x) {return (x === 0 ? "00" : (x < 10 ? "0" : ""))+(new String(this[x]).toString());},
+			get number() {return (60*60*this.h + 60*this.m + this.s) % (24*60*60);},
+			get string() {return [this._toStr("h"), this._toStr("m"), this._toStr("s")].join(":");}
+		};
+	}
+
+
+/*----------------------------------------------------------------------------*/
+	function wd_str_time(val) { /* obtém tempo a partir de uma string */
+		let data = [
+			{re: /^(0?[1-9]|1[0-2])\:[0-5][0-9]\ ?(am|pm)$/i, sym: "ampm"},
+			{re: /^(0?[0-9]|1[0-9]|2[0-4])(\:[0-5][0-9]){1,2}$/, sym: "time"},
+		];
+
+		let index = -1;
+		for (let i = 0; i < data.length; i++) {
+			if (data[i].re.test(val)) index = i;
+			if (index >= 0) break;
+		}
+		if (index < 0) return null;
+
+		let values = val.replace(/[^0-9\:]/g, "").split(":");
+		for (let i = 0; i < values.length; i++)
+			values[i] = new Number(values[i]).valueOf();
+
+		if ((/am$/i).test(val) && values[0] === 12) values[0] = 0;
+		if ((/pm$/i).test(val) && values[0] < 12)   values[0] = values[0] + 12;
+
+		return wd_time_number(values[0], values[1], values[2]);
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_time_number(h, m, s) { /*Converte tempo em número*/
+		let time = 0;
+		time += h * 3600;
+		time += m * 60;
+		time += s === undefined ? 0 : s;
+		return time % 86400;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_number_time(n) { /*Converte número em tempo (objeto{h,m,s})*/
+		let time = {};
+		n      = n < 0 ? (86400 + (n % 86400)) : (n % 86400);
+		time.h = (n - (n % 3600)) / 3600;
+		n      = n - (3600 * time.h);
+		time.m = (n - (n % 60)) / 60;
+		time.s = n - (60 * time.m);
+		return time;
+	}
+
+function wd_time_iso(number) { /* transforma valor numérico em tempo no formato HH:MM:SS */
+		let obj = wd_number_time(number);
+		let time = wd_num_fixed(obj.h, 0, 2)+":";
+		time    += wd_num_fixed(obj.m, 0, 2)+":";
+		time    += wd_num_fixed(obj.s, 0, 2);
+		return time;
+	}
+
+
+
+
+
+
+	/*1 \bstruct wd_check(\bvoid value, \bstr check...)*/
+	function wd_check(value) {/* retorna o tipo e o valor do objeto */
+		value;
+
+		/* Valores simples */
+		if (val === undefined)             return {type: "undefined", value: val};
+		if (val === null)                  return {type: "null", value: val};
+		if (val === true || val === false) return {type: "boolean", value: val};
+
+		/* Valores em forma de string */
+		if (typeof val === "string" || val instanceof String) {
+			/* nulo/vazio */
+			val = val.trim();
+			if (val === "") return {type: "null", value: null};
+			/* tempo, data e número */
+			let mtds = {
+				"date": wd_str_date, "time": wd_str_time, "number": wd_str_number
+			};
+			for (let t in mtds) {
+				value = mtds[t](val);
+				if (value !== null) return {value: value, type: t}
+			}
+			/* padrão: texto */
+			return {type: "text", value: val.toString()};
+		}
+
+		/* Elementos da árvore DOM */
+		value = wd_dom(val);
+		if (value !== null)
+			return {value: value, type: "dom"};
+
+		/* Outros Elementos */
+		/* BigInt */
+		if (typeof val === "bigint" || ("BigInt" in window && val instanceof BigInt))
+			return {type: "unknown", value: val.valueOf()};
+		/* Number e NaN */
+		if (typeof val === "number" || ("Number" in window && val instanceof Number))
+			return isNaN(val) ? {type: "unknown", value: val} : {type: "number", value: val.valueOf()};
+		/* array */
+		if ("Array" in window && (("isArray" in Array && Array.isArray(val)) || val instanceof Array))
+			return {type: "array", value: val.slice()};
+		/* data */
+		if ("Date" in window && val instanceof Date)
+			return {type: "date", value: wd_set_date(val)};
+		/* regexp */
+		if ("RegExp" in window && val instanceof RegExp)
+
+			return {type: "regexp", value: val.valueOf()};
+		/* boolean */
+		if (typeof val === "boolean" || ("Boolean" in window && val instanceof Boolean))
+			return {type: "boolean", value: val.valueOf()};
+		/* function */
+		if (typeof val === "function" || ("Function" in window && val instanceof Function))
+			return {type: "function", value: val};
+		/* object */
+		if (typeof val === "object" && (/^\{.*\}$/).test(JSON.stringify(val)))
+			return {type: "object", value: val};
+		/* desconhecido: não se encaixa nos anteriores */
+		return {type: "unknown", value: val};
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /*----------------------------------------------------------------------------*/
 	function wd_lang(elem) { /* Retorna a linguagem definida (lang) a partir de um elemento (efeito bolha) ou do navegador*/

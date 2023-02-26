@@ -15,28 +15,31 @@
 		<script src="../wd5.js"></script>
 		<style>
 			main > * {
-				display: block;
 				margin: 0.8em auto;
-			}
-			main > section {
-				font-family: monospace;
-				color: teal;
-				border-top: thin solid;
-			}
-			main > aside {
-				font-family: "Courier New";
-				padding-left: 3em;
-			}
-			main > aside   > b,
-			main > section > b {
-				color: royalblue;
 			}
 			main > article {
 				padding-left: 1em;
 			}
-			main > aside + article {
-				padding-left: 4em;
+			main > section {
+				font-family: "Courier New";
 			}
+			main > section.nivel0 {
+				font-family: monospace;
+				color: teal;
+				border-top: thin solid;
+				padding-top: 0.4em;
+			}
+			main > section.nivel0 {padding-left :  0em;}
+			main > article.nivel0 {padding-left :  1em;}
+			main > section.nivel1 {padding-left :  3em;}
+			main > article.nivel1 {padding-left :  4em;}
+			main > section.nivel2 {padding-left :  5em;}
+			main > article.nivel2 {padding-left :  6em;}
+			main > section.nivel3 {padding-left :  7em;}
+			main > article.nivel3 {padding-left :  8em;}
+			main > section.nivel4 {padding-left :  9em;}
+			main > article.nivel4 {padding-left : 10em;}
+			main > section > b    {color: royalblue;}
 		</style>
 
 		<script>
@@ -46,18 +49,9 @@
 			function manual(x) {
 				if (x === null || x === undefined)
 					return alert("Erro ao ler o arquivo!");
-			/*FIXME fazer por numeração os níveis
-				0 nome de nível 0 (principal)
-				1 nome de nível 1 (detalhamento secundário)
-				2 assim por diante
-				t título
-				c capítulo
-
-
-			*/
-				/* Legenda: t título; c capítulo; n nome; d descrição; a atributo; \b negrito; \i itálico; \u sublinhado*/
-				let tipos = {t: "h3", c: "h6", n: "section", d: "article", a: "aside"};
-				let busca = /\/\*[tcnda]\ .+?\*\//g;
+				/* Legenda: |^t título|^c capítulo|^0-9 nome|^0-9: descrição|\b negrito|\i itálico|\u sublinhado|\c code*/
+				let busca = /\/\*[0-9tc]\:?\ .+?\*\//g;
+				let tipos = {t: "h3", c: "h6", n: "section", d: "article"}
 				let lista = x.match(busca);
 				let main  = wd.$("main").item(0);
 				let nodes = [];
@@ -66,37 +60,35 @@
 					let temp = lista[i];
 					/* limpar caracteres de comentário */
 					temp = temp.replace(/^\/\*/, "").replace(/\*\/$/, "");
-					/* obter o tipo */
-					node.tipo = temp[0];
+					/* obter o nível e o HTML */
+					node.css  = "nivel"+temp[0];
+					if ((/^[0-9]\:\ /).test(temp)) node.html = tipos.d; else
+					if ((/^[0-9]\ /).test(temp))   node.html = tipos.n; else
+					if ((/^[A-z]\ /).test(temp))   node.html = tipos[temp[0]];
 					/* limpar tipo da informação */
-					temp = temp.replace(/^.\ /, "");
+					temp = temp.replace(/^[0-9A-z]\:?\ /, "");
 					/* atribuir formatações */
 					temp = temp.replace(/\\b([A-Za-z0-9_áéíóúÁÉÍÓÚàÀêÊõÕãÃ\çÇ-]+)/gi, "<b>$1</b>");
 					temp = temp.replace(/\\i([A-Za-z0-9_áéíóúÁÉÍÓÚàÀêÊõÕãÃ\çÇ-]+)/gi, "<i>$1</i>");
 					temp = temp.replace(/\\u([A-Za-z0-9_áéíóúÁÉÍÓÚàÀêÊõÕãÃ\çÇ-]+)/gi, "<u>$1</u>");
+					temp = temp.replace(/\\c([A-Za-z0-9_áéíóúÁÉÍÓÚàÀêÊõÕãÃ\çÇ-]+)/gi, "<code>$1</code>");
 					/* registrar informações */
 					node.texto = temp;
-					node.antes = i === 0 ? null : nodes[i-1];
 					nodes.push(node);
 				}
+				/* montando html */
 				for (let i = 0; i < nodes.length; i++) {//>
 					let node = nodes[i];
-					let html = document.createElement(tipos[node.tipo]);
+					let html = document.createElement(node.html);
 					html.innerHTML = node.texto;
-					if (node.tipo === "n")
+					html.className = node.css;
+					if (["section"].indexOf(node.html) >= 0)
 						html.id = node.texto.split(" ").reverse()[0];
-			 	if (node.tipo === "c" || node.tipo === "t")
+			 	else if (["h3", "h6"].indexOf(node.html) >= 0)
 						html.id = node.texto.toLowerCase().replace(/\ +/g, "_");
 					main.appendChild(html);
 				}
-
-				console.log(nodes);
-
-
-
 			}
-
-
 
 			function lerJS() {
 				wd().send(JS, function (x) {
