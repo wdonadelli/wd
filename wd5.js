@@ -263,8 +263,117 @@ const wd = (function() {
 /*===========================================================================*/
 
 /*----------------------------------------------------------------------------*/
+	/*0 \bstruct|\bnull wd_check_time24(\bstr value)*/
+	/*0: Função checa se a string está no formato de tempo 24h (HH:MM:SS) e \uretorna \cnull, se falso, ou a estrutura:*/
+	/*1 \bstr h*//*1: (\ivalue) Valor numérico da hora.*/
+	/*1 \bstr m*//*1: (\ivalue) Valor numérico do minuto.*/
+	/*1 \bstr s*//*1: (\ivalue) Valor numérico dos segundos.*/
+	/*1 \bstr _h*//*1: (\igetter) Valor textual da hora.*/
+	/*1 \bstr _m*//*1: (\igetter) Valor textual do minuto.*/
+	/*1 \bstr _s*//*1: (\igetter) Valor textual dos segundos.*/
+	/*1 \bstr value*//*1: (\igetter) Valor numérico do tempo.*/
+	/*1 \bstr value*//*1: (\igetter) Valor textual do tempo.*/
+	function wd_check_time24(value) {
+		let re = /^(0?\d|1\d|2[0-4])(\:[0-5]\d){1,2}$/;
+		if (!re.test(value)) return null;
+		let time = value.split(":");
+		let h = Number(time[0]);
+		let m = Number(time[1]);
+		let s = time.length < 3 ? 0 : Number(time[2]);
+		if (h < 0  || h > 24) return null;
+		if (m < 0  || h > 59) return null;
+		if (s < 0  || s > 59) return null;
+		return {
+			h: h === 24 ? 0 : h,
+			m: m,
+			s: s,
+			get _h() {return (this.h < 10 ? "0" : "")+String(this.h);},
+			get _m() {return (this.m < 10 ? "0" : "")+String(this.m);},
+			get _s() {return (this.s < 10 ? "0" : "")+String(this.s);},
+			get value()   {return (3600 * this.h) + (60 * this.m) + this.s;},
+			get string()  {return [this._h, this._m, this._s].join(":");}
+		}
+	}
+
+/*----------------------------------------------------------------------------*/
+	/*0 \bstruct|\bnull wd_check_time12(\bstr value)*/
+	/*0: Função checa se a string está no formato de tempo 12h (HH:MM AMPM) e \uretorna \cnull, se falso, ou o resultado de \cwd_check_time24:*/
+	function wd_check_time12(value) {
+		let re = /^(0?[1-9]|1[0-2])\:[0-5]\d\ ?[ap]m$/i;
+		if (!re.test(value)) return null;
+		let am = (/am$/i).test(value) ? true : false;
+		let time = value.replace(/[^0-9:]/g, "").split(":");
+		let h = Number(time[0]);
+		if (h < 1 || h > 12) return null;
+		//FIXME juntar time 12 e time 24 num só
+		h = am ? (h % 12) : (h === 12 ? 12 : ((12 + h ) % 24));
+		time[0] = new String(h).toString();
+		return wd_check_time24(time.join(":"));
+	}
+
+/*----------------------------------------------------------------------------*/
+	/*0 \bstruct|\bnull wd_check_number(\bvoid value)*/
+	/*0: Função checa se o valor informado é um valor numérico (exceto \iNaN) e \uretorna \cnull, se falso, ou a estrutura:*/
+	function wd_check_number(value) {
+		if ((typeof value === "number" || value instanceof Number) && !isNaN(value)) {
+			return {
+				value: value.valueOf(),
+				get abs()    {return this.value < 0 ? -this.value : this.value;},
+				get int()    {return this.finite ? (this.value < 0 ? Math.ceil(this.value) : Math.floor(this.value)) : this.value;},
+				get dec()    {return this.finite ? (this.value - this.int) : this.value;},
+				get finite() {return isFinite(this.value);},
+			}
+		}
+		return null;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_integer(n, abs) { /* retorna o inteiro do número ou seu valor absoluto */
+		let vtype = wd_vtype(n);
+		if (vtype.type !== "number") return null;
+		let val = abs === true ? Math.abs(vtype.value) : vtype.value;
+		return val < 0 ? Math.ceil(val) : Math.floor(val);
+	};
+
+/*----------------------------------------------------------------------------*/
+	function wd_decimal(value) {/* retorna o número de casas decimais */
+		if (!wd_finite(value)) return 0;
+		let i = 0;
+		while ((value * Math.pow(10, i)) % 1 !== 0) i++;
+		let pow10  = Math.pow(10, i);
+		if (pow10 === 1) return 0;
+		return (value*pow10 - wd_integer(value)*pow10) / pow10;
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+/*----------------------------------------------------------------------------*/
+	/*0 \bstruct|\bnull wd_check_number_str(\bstr value)*/
+	/*0: Função checa se a string está no formato numérico e \uretorna \cnull, se falso, ou o resultado de \cwd_check_number:*/
+	function wd_check_number_str(value) {
+		let re = /^(\+?\d+\!|[+-]?(\d+|(\d+)?\.\d+)(e[+-]?\d+)?\%?)$/i;
+		if (!re.test(value)) return null;
+		//FIXME fatorial e porcentagem
+
+
+
+		return wd_check_number(Number(value));
+	}
+
+
+
+/*----------------------------------------------------------------------------*/
 	/*0 \bstruct|\bnull wd_check_str(\bvoid value)*/
-	/*0: Função que checa se o argumento é uma string. \uRetorna \cnull, se falso, ou a estrutura:*/
+	/*0: Função checa se o argumento é uma string. \uRetorna \cnull, se falso, ou a estrutura:*/
 	/*1 \bstr value*//*1: (\ivalue) Valor informado.*/
 	/*1 \bstruct _re*//*1: (\ivalue) Lista interna de formatos especiais de texto (data, tempo e número).*/
 	/*1 \bbool _test*//*1: (\igetter) Testa e retorna qual o formato especial casado em _\cre.*/
@@ -273,10 +382,11 @@ const wd = (function() {
 	/*1 \bstr upper*//*1: (\igetter) Valor em caixa alta*/
 	/*1 \bstr lower*//*1: (\igetter) Valor em caixa baixa.*/
 	/*1 \bstruct json*//*1: (\igetter) Converte JSON em notação javascript ou uma estrutura vazia, se inválido.*/
-	/*1 \bbool llNull*//*1: (\igetter) Testa se é uma string vazia.*/
+	/*1 \bbool isNull*//*1: (\igetter) Testa se é uma string vazia.*/
 	/*1 \bbool llNum*//*1: (\igetter) Testa se a string está formatada como número, inclui porcentagem e fatorial.*/
 	/*1 \bbool llDate*//*1: (\igetter) Testa se a string está formatada como data (DD/MM/YYYY, MM.DD.YYYY ou YYY-MM-DD).*/
-	/*1 \bbool llTime*//*1: (\igetter) Testa se a string está formatada como tempo (HH:MM:SS HH:MM AM/PM).*/
+	/*1 \bnull|\bstruct time12*//*1: (\igetter) Retorna o resultado de \cwd_check_time12 para o valor informado.*/
+	/*1 \bnull|\bstruct time24*//*1: (\igetter) Retorna o resultado de \cwd_check_time24 para o valor informado.*/
 	function wd_check_str(value) {
 		if (typeof value === "string" || value instanceof String) {
 			return {
@@ -285,10 +395,7 @@ const wd = (function() {
 					dateDMY: /^(0[1-9]|[12]\d|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/,
 					dateMDY: /^(0[1-9]|1[0-2])\.(0[1-9]|[12]\d|3[01])\.\d{4}$/,
 					dateYMD: /^\d{4}\-(0[1-9]|1[0-2])\-(0[1-9]|[12]\d|3[01])$/,
-					time24:  /^(0?\d|1\d|2[0-4])(\:[0-5]\d){1,2}$/,
-					time12:  /^(0?[1-9]|1[0-2])\:[0-5]\d\ ?[ap]m$/i,
-					numFact: /^(\ +)?\+?\d+\!(\ +)?$/,
-					number:  /^(\ +)?[+-]?(\d+|(\d+)?\.\d+)(e[+-]?\d+)?\%?(\ +)?$/i
+					numFact: /^(\ +)?\+?\d+\!(\ +)?$/
 				},
 				get _test()  {
 					for (let i in this._re)
@@ -302,10 +409,11 @@ const wd = (function() {
 				get lower()  {return this.value.toLowerCase();},
 				get json()   {try {return JSON.parse(this.trim)} catch(e) {return {};}},
 				get test()   {for (let i in this._re) {}   },
-				get llNull() {return this.trim === "" ? true : false;},
-				get llNum()  {return ["numFact", "number"].indexOf(this._test) >= 0 ? true : false;},
+				get isNull() {return this.trim === "" ? true : false;},
+				get number() {return wd_check_number_str(this.trim);},
 				get llDate() {return ["dateYMD", "dateDMY", "dateMDY"].indexOf(this._test) >= 0 ? true : false;},
-				get llTime() {return ["time24", "time12"].indexOf(this._test) >= 0 ? true : false;},
+				get time12() {return wd_check_time12(this.trim);},
+				get time24() {return wd_check_time24(this.trim);},
 			}
 		}
 		return null;
@@ -321,36 +429,6 @@ const wd = (function() {
 
 
 
-
-/*----------------------------------------------------------------------------*/
-	/*0 \bstruct|\bnull wd_check_time(\bstr value)*/
-	/*0: Função que recebe uma string no formato de tempo e \uretorna \cnull, se houver algum erro, ou a estrutura:*/
-	/*1 \bstr value*//*1: (\ivalue) Valor informado.*/
-	/*1 \bstr trim*//*1: (\ivalue) Valor com extremidades aparadas.*/
-	/*1 \bstr clear*//*1: (\igetter) Valor sem espaços extras e extremidades aparadas.*/
-	/*1 \bstr upper*//*1: (\igetter) Valor em caixa alta*/
-	/*1 \bstr lower*//*1: (\igetter) Valor em caixa baixa.*/
-	/*1 \bstruct json*//*3: (\igetter) Converte JSON em notação javascript ou uma estrutura vazia, se inválido.*/
-	function wd_check_time(value) {
-		return {
-			value: value,
-			get _time() {return this.value.replace(/[^0-9:]/, "").split(":");},
-			get _h()    {return new Number(this._time[0]).valueOf();},
-			get _m()    {return new Number(this._time[1]).valueOf();},
-			get _s()    {return this._time.length < 3 ? 0 : new Number(this._time[2]).valueOf();},
-			get clock() {return (/[AP]M$/i).test(this.value) ? 12 : 24;},
-			get am()    {return (this.clock === 24 && this._h < 12) ? true : (/AM$/i).test(this.value);},
-			get pm()    {return !this.am;},
-			get h()     {return this.clock === 24 ? this._h % 24 : (this.am ? this._h % 12 : (this._h+12) % 24);},
-			get m()     {return this._m % 60;},
-			get s()     {return this._s % 60;},
-
-
-			_toStr: function(x) {return (x === 0 ? "00" : (x < 10 ? "0" : ""))+(new String(this[x]).toString());},
-			get number() {return (60*60*this.h + 60*this.m + this.s) % (24*60*60);},
-			get string() {return [this._toStr("h"), this._toStr("m"), this._toStr("s")].join(":");}
-		};
-	}
 
 
 /*----------------------------------------------------------------------------*/
@@ -4258,7 +4336,8 @@ function wd_time_iso(number) { /* transforma valor numérico em tempo no formato
 		lang:    {get:   function() {return wd_lang();}},
 		device:  {get:   function() {return wd_get_device();}},
 		today:   {get:   function() {return WD(new Date());}},
-		now:     {get:   function() {return WD(wd_str_now());}}
+		now:     {get:   function() {return WD(wd_str_now());}},
+		i: {value: function(x){return wd_check_str(x);}}
 	});
 
 /* == BLOCO 4 ================================================================*/
