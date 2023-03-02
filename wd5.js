@@ -259,91 +259,146 @@ const wd = (function() {
 /*===========================================================================*/
 	/*t Funções*/
 /*===========================================================================*/
-	/*c Checagem de Valores e Objetos*/
+	/*c Checagem de Valores */
 /*===========================================================================*/
 
 /*----------------------------------------------------------------------------*/
-	/*0 \bstruct|\bnull wd_check_time24(\bstr value)*/
-	/*0: Função checa se a string está no formato de tempo 24h (HH:MM:SS) e \uretorna \cnull, se falso, ou a estrutura:*/
-	/*1 \bstr h*//*1: (\ivalue) Valor numérico da hora.*/
-	/*1 \bstr m*//*1: (\ivalue) Valor numérico do minuto.*/
-	/*1 \bstr s*//*1: (\ivalue) Valor numérico dos segundos.*/
-	/*1 \bstr _h*//*1: (\igetter) Valor textual da hora.*/
-	/*1 \bstr _m*//*1: (\igetter) Valor textual do minuto.*/
-	/*1 \bstr _s*//*1: (\igetter) Valor textual dos segundos.*/
-	/*1 \bstr value*//*1: (\igetter) Valor numérico do tempo.*/
-	/*1 \bstr value*//*1: (\igetter) Valor textual do tempo.*/
-	function wd_check_time24(value) {
-		let re = /^(0?\d|1\d|2[0-4])(\:[0-5]\d){1,2}$/;
-		if (!re.test(value)) return null;
-		let time = value.split(":");
-		let h = Number(time[0]);
-		let m = Number(time[1]);
-		let s = time.length < 3 ? 0 : Number(time[2]);
-		if (h < 0  || h > 24) return null;
-		if (m < 0  || h > 59) return null;
-		if (s < 0  || s > 59) return null;
-		return {
-			h: h === 24 ? 0 : h,
-			m: m,
-			s: s,
-			get _h() {return (this.h < 10 ? "0" : "")+String(this.h);},
-			get _m() {return (this.m < 10 ? "0" : "")+String(this.m);},
-			get _s() {return (this.s < 10 ? "0" : "")+String(this.s);},
-			get value()   {return (3600 * this.h) + (60 * this.m) + this.s;},
-			get string()  {return [this._h, this._m, this._s].join(":");}
+	/*0 \bbool wd_isString(\bvoid value)*/
+	/*0: Checa se o argumento informado é do tipo \istring.*/
+	function wd_isString(value) {
+		return (typeof value === "string" || value instanceof String) ? true : false;
+	}
+
+/*----------------------------------------------------------------------------*/
+	/*0 \bbool wd_isNumber(\bvoid value)*/
+	/*0: Checa se o argumento informado é do tipo \inumber (exceto \iNaN).*/
+	function wd_isNumber(value) {
+		return (typeof value === "number" || value instanceof Number) ? !isNaN(value) : false;
+	}
+
+/*----------------------------------------------------------------------------*/
+	/*0 \bbool wd_isBoolean(\bvoid value)*/
+	/*0: Checa se o argumento informado é do tipo \iboolean.*/
+	function wd_isBoolean(value) {
+		return (typeof value === "boolean" || value instanceof Boolean) ? true : false;
+	}
+
+/*----------------------------------------------------------------------------*/
+	/*0 \bbool wd_isRegExp(\bvoid value)*/
+	/*0: Checa se o argumento informado é do tipo \iregexp.*/
+	function wd_isRegExp(value) {
+		return (value instanceof RegExp) ? true : false;
+	}
+
+/*----------------------------------------------------------------------------*/
+	/*0 \bbool wd_isDate(\bvoid value)*/
+	/*0: Checa se o argumento informado é do tipo \idate.*/
+	function wd_isDate(value) {
+		return (value instanceof Date) ? true : false;
+	}
+
+/*----------------------------------------------------------------------------*/
+	/*0 \bbool wd_isFunction(\bvoid value)*/
+	/*0: Checa se o argumento informado é do tipo \ifunction.*/
+	function wd_isFunction(value) {
+		return (typeof value === "function" || value instanceof Function) ? true : false;
+	}
+
+/*----------------------------------------------------------------------------*/
+	/*0 \bbool wd_isArray(\bvoid value)*/
+	/*0: Checa se o argumento informado é do tipo \iarray.*/
+	function wd_isArray(value) {
+		return (Array.isArray(value) || value instanceof Array) ? true : false;
+	}
+
+/*----------------------------------------------------------------------------*/
+	/*0 \bbool wd_isStruct(\bvoid value)*/
+	/*0: Checa se o argumento informado é do tipo \iobject primitivo (\bstruct).*/
+	function wd_isStruct(value) {
+		return typeof value === "object" && (/^\{.*\}$/).test(JSON.stringify(value)) ? true : false;
+	}
+
+/*----------------------------------------------------------------------------*/
+	/*0 \bbool wd_isNull(\bvoid value)*/
+	/*0: Checa se o argumento informado é do tipo \inull (a \istring vazia está nessa categoria).*/
+	function wd_isNull(value) {
+		return (value === null || (wd_isString(value) && value.trim() === "")) ? true : false;
+	}
+
+/*----------------------------------------------------------------------------*/
+	/*0 \bbool wd_isUndefined(\bvoid value)*/
+	/*0: Checa se o argumento informado é do tipo \iundefined.*/
+	function wd_isUndefined(value) {
+		return (value === undefined || typeof value === "undefined") ? true : false;
+	}
+
+//FIXME falta HTML, SVG e HTML Collection
+
+
+
+
+
+
+
+
+
+
+
+
+/*===========================================================================*/
+	/*c Obtenção de Valores*/
+/*===========================================================================*/
+
+
+
+/*----------------------------------------------------------------------------*/
+	/*0 \bnull|\bstruct wd_getStringTime(\bstr value)*/
+	/*0: Se a \istring informada não estiver no formato de tempo, 12 ou 24h (HH:MM AMPM ou HH:MM:SS), retorna \cnull, caso contrário, a estrutura:*/
+	/*1 \bint h*//*1: (\ivalue) Valor numérico da hora.*/
+	/*1 \bint m*//*1: (\ivalue) Valor numérico da minuto.*/
+	/*1 \bint s*//*1: (\ivalue) Valor numérico da segundo.*/
+	/*1 \bint time*//*1: (\ivalue) Quantidade total de segundos.*/
+	function wd_getStringTime(value) {
+		/* variáveis de teste */
+		if (!wd_isString(value) || wd_isNull(value)) return null;
+		let re12 = /^(0?[1-9]|1[0-2])\:[0-5]\d\ ?[ap]m$/i;
+		let re24 = /^(0?\d|1\d|2[0-4])(\:[0-5]\d){1,2}$/;
+		let h, m, s;
+		/* testando string, desmembrando-a e obtendo a hora de acordo com o tipo */
+		value = value.trim();
+		if (re12.test(value)) {
+			let am = (/am$/i).test(value) ? true : false;
+			value  = value.replace(/[^0-9:]/g, "").split(":");
+			h = Number(value[0]);
+			if (h < 1 || h > 12) return null;
+			h = am ? (h % 12) : (h === 12 ? 12 : ((12 + h ) % 24));
+		} else if (re24.test(value)) {
+			value = value.split(":");
+			h = Number(value[0]);
+		} else {
+			return null;
 		}
+		/* checando valores */
+		h = h % 24;
+		m = Number(value[1]);
+		s = Number(value.length === 3 ? value[2] : 0);
+		if (h > 24 || h < 0) return null;
+		if (m > 59 || m < 0) return null;
+		if (s > 59 || s < 0) return null;
+
+		return {h: h, m: m, s: s, time: (3600*h + 60*m + s)};
 	}
 
-/*----------------------------------------------------------------------------*/
-	/*0 \bstruct|\bnull wd_check_time12(\bstr value)*/
-	/*0: Função checa se a string está no formato de tempo 12h (HH:MM AMPM) e \uretorna \cnull, se falso, ou o resultado de \cwd_check_time24:*/
-	function wd_check_time12(value) {
-		let re = /^(0?[1-9]|1[0-2])\:[0-5]\d\ ?[ap]m$/i;
-		if (!re.test(value)) return null;
-		let am = (/am$/i).test(value) ? true : false;
-		let time = value.replace(/[^0-9:]/g, "").split(":");
-		let h = Number(time[0]);
-		if (h < 1 || h > 12) return null;
-		//FIXME juntar time 12 e time 24 num só
-		h = am ? (h % 12) : (h === 12 ? 12 : ((12 + h ) % 24));
-		time[0] = new String(h).toString();
-		return wd_check_time24(time.join(":"));
-	}
+//FIXME falta number e date
 
-/*----------------------------------------------------------------------------*/
-	/*0 \bstruct|\bnull wd_check_number(\bvoid value)*/
-	/*0: Função checa se o valor informado é um valor numérico (exceto \iNaN) e \uretorna \cnull, se falso, ou a estrutura:*/
-	function wd_check_number(value) {
-		if ((typeof value === "number" || value instanceof Number) && !isNaN(value)) {
-			return {
-				value: value.valueOf(),
-				get abs()    {return this.value < 0 ? -this.value : this.value;},
-				get int()    {return this.finite ? (this.value < 0 ? Math.ceil(this.value) : Math.floor(this.value)) : this.value;},
-				get dec()    {return this.finite ? (this.value - this.int) : this.value;},
-				get finite() {return isFinite(this.value);},
-			}
-		}
-		return null;
-	}
 
-/*----------------------------------------------------------------------------*/
-	function wd_integer(n, abs) { /* retorna o inteiro do número ou seu valor absoluto */
-		let vtype = wd_vtype(n);
-		if (vtype.type !== "number") return null;
-		let val = abs === true ? Math.abs(vtype.value) : vtype.value;
-		return val < 0 ? Math.ceil(val) : Math.floor(val);
-	};
 
-/*----------------------------------------------------------------------------*/
-	function wd_decimal(value) {/* retorna o número de casas decimais */
-		if (!wd_finite(value)) return 0;
-		let i = 0;
-		while ((value * Math.pow(10, i)) % 1 !== 0) i++;
-		let pow10  = Math.pow(10, i);
-		if (pow10 === 1) return 0;
-		return (value*pow10 - wd_integer(value)*pow10) / pow10;
-	}
+
+
+
+
+
+
 
 
 
