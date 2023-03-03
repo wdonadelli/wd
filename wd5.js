@@ -257,80 +257,116 @@ const wd = (function() {
 	];
 
 /*===========================================================================*/
-	/*t Funções*/
-/*===========================================================================*/
-	/*c Checagem de Valores */
+	/*t Checagem de Tipos e Valores */
 /*===========================================================================*/
 
-/*----------------------------------------------------------------------------*/
-	/*0 \bbool wd_isString(\bvoid value)*/
-	/*0: Checa se o argumento informado é do tipo \istring.*/
-	function wd_isString(value) {
-		return (typeof value === "string" || value instanceof String) ? true : false;
+	/*0 \bObject WDtype(\bvoid input)*/
+	/*0: Construtor que identifica o tipo do argumento e resgata seu valor primitivo.*/
+	/*1 input *//*1: Dado a ser examinado.*/
+	/*0: Métodos e atributos:*/
+	function WDtype(input) {
+		if (!(this instanceof WDtype)) return new WDtype(input)
+		this._input = input; /* valor original */
+		this._data  = null;  /* dados complementares */
+		this._type  = null;  /* tipo do valor de entrada */
+		this._value = null;  /* valor a ser considerado */
 	}
 
-/*----------------------------------------------------------------------------*/
-	/*0 \bbool wd_isNumber(\bvoid value)*/
-	/*0: Checa se o argumento informado é do tipo \inumber (exceto \iNaN).*/
-	function wd_isNumber(value) {
-		return (typeof value === "number" || value instanceof Number) ? !isNaN(value) : false;
-	}
+	Object.defineProperties(WDtype.prototype, {
+		constructor: {value: WDtype},
+		isString: {/*1 \bbool isString*//*1: (\igetter) Checa se o argumento é do tipo \istring.*/
+			get: function() {
+				return (typeof this._input === "string" || this._input instanceof String) ? true : false;
+			}
+		},
+		isNumber: {/*1 \bbool isNumber*//*1: (\igetter) Checa se o argumento é do tipo \inumber (exceto \iNaN).*/
+			get: function() {
+				return (typeof this._input === "number" || this._input instanceof Number) ? !isNaN(this._input) : false;
+			}
+		},
+		isBoolean: { /*1 \bbool isBoolean*//*1: (\igetter) Checa se o argumento é do tipo \iboolean.*/
+			get: function() {
+				return (typeof this._input === "boolean" || this._input instanceof Boolean) ? true : false;
+			}
+		},
+		isRegExp: { /*1 \bbool isRegExp*//*1: (\igetter) Checa se o argumento é do tipo \iregexp.*/
+			get: function() {
+				return (this._input instanceof RegExp) ? true : false;
+			}
+		},
+		isDate: { /*1 \bbool isDate*//*1: (\igetter) Checa se o argumento é do tipo \idate.*/
+			get: function() {
+				return (this._input instanceof Date) ? true : false;
+			}
+		},
+		isFunction: {/*1 \bbool isFunction*//*1: (\igetter) Checa se o argumento é do tipo \ifunction.*/
+			get: function() {
+				return (typeof this._input === "function" || this._input instanceof Function) ? true : false;
+			}
+		},
+		isArray: {/*1 \bbool isArray*//*1: (\igetter) Checa se o argumento é do tipo \iarray.*/
+			get: function() {
+				return (Array.isArray(this._input) || this._input instanceof Array) ? true : false;
+			}
+		},
+		isStruct: { /*1 \bbool isStruct*//*1: (\igetter) Checa se o argumento é do tipo \iobject primitivo (\bstruct).*/
+			get: function() {
+				return typeof this._input === "object" && (/^\{.*\}$/).test(JSON.stringify(this._input)) ? true : false;
+			}
+		},
+		isNull: {/*1 \bbool isNull*//*1: (\igetter) Checa se o argumento é do tipo \inull.*/
+			get: function () {
+				return this._input === null ? true : false;
+			}
+		},
+		isUndefined: {/*1 \bbool isUndefined*//*1: (\igetter) Checa se o argumento é do tipo \iundefined.*/
+			get: function() {
+				return (this._input === undefined || typeof this._input === "undefined") ? true : false;
+			}
+		},
+		type: {/*1 \bstr type*//*1: (\igetter) retorna o tipo do argumento*/
+			get: function() {
+				if (this.isNull)      return "null";
+				if (this.isUndefined) return "undefined";
+				if (this.isString)    return "string";
+				if (this.isNumber)    return "number";
+				if (this.isArray)     return "array";
+				if (this.isBoolean)   return "boolean";
+				if (this.isRegExp)    return "regexp";
+				if (this.isDate)      return "date";
+				if (this.isFunction)  return "function";
+				if (this.isStruct)    return "object";
+				return "unknow";
+			}
+		},
+		valueOf: {/*1 \bvoid valueOf()*//*1: retorna o valor do argumento.*/
+			value: function() {
+				switch(this.type) {
+					case "null":      return null;
+					case "undefined": return undefined;
+					case "string":    return this._input.trim();
+					case "number":    return this._input.valueOf();
+					case "array":     return this._input; //FIXME devolver cópia
+					case "boolean":   return this._input == true ? true :  false;
+					case "regexp":    return this._input; //FIXME devolver primitivo
+					case "date":      return this._input;
+					case "function":  return this._input;
+					case "object":    return this._input;
+				}
+				return this._input
+			}
+		}
+	});
 
-/*----------------------------------------------------------------------------*/
-	/*0 \bbool wd_isBoolean(\bvoid value)*/
-	/*0: Checa se o argumento informado é do tipo \iboolean.*/
-	function wd_isBoolean(value) {
-		return (typeof value === "boolean" || value instanceof Boolean) ? true : false;
-	}
 
-/*----------------------------------------------------------------------------*/
-	/*0 \bbool wd_isRegExp(\bvoid value)*/
-	/*0: Checa se o argumento informado é do tipo \iregexp.*/
-	function wd_isRegExp(value) {
-		return (value instanceof RegExp) ? true : false;
-	}
 
-/*----------------------------------------------------------------------------*/
-	/*0 \bbool wd_isDate(\bvoid value)*/
-	/*0: Checa se o argumento informado é do tipo \idate.*/
-	function wd_isDate(value) {
-		return (value instanceof Date) ? true : false;
-	}
 
-/*----------------------------------------------------------------------------*/
-	/*0 \bbool wd_isFunction(\bvoid value)*/
-	/*0: Checa se o argumento informado é do tipo \ifunction.*/
-	function wd_isFunction(value) {
-		return (typeof value === "function" || value instanceof Function) ? true : false;
-	}
 
-/*----------------------------------------------------------------------------*/
-	/*0 \bbool wd_isArray(\bvoid value)*/
-	/*0: Checa se o argumento informado é do tipo \iarray.*/
-	function wd_isArray(value) {
-		return (Array.isArray(value) || value instanceof Array) ? true : false;
-	}
 
-/*----------------------------------------------------------------------------*/
-	/*0 \bbool wd_isStruct(\bvoid value)*/
-	/*0: Checa se o argumento informado é do tipo \iobject primitivo (\bstruct).*/
-	function wd_isStruct(value) {
-		return typeof value === "object" && (/^\{.*\}$/).test(JSON.stringify(value)) ? true : false;
-	}
 
-/*----------------------------------------------------------------------------*/
-	/*0 \bbool wd_isNull(\bvoid value)*/
-	/*0: Checa se o argumento informado é do tipo \inull (a \istring vazia está nessa categoria).*/
-	function wd_isNull(value) {
-		return (value === null || (wd_isString(value) && value.trim() === "")) ? true : false;
-	}
 
-/*----------------------------------------------------------------------------*/
-	/*0 \bbool wd_isUndefined(\bvoid value)*/
-	/*0: Checa se o argumento informado é do tipo \iundefined.*/
-	function wd_isUndefined(value) {
-		return (value === undefined || typeof value === "undefined") ? true : false;
-	}
+
+
 
 //FIXME falta HTML, SVG e HTML Collection
 
