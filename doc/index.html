@@ -14,101 +14,69 @@
 		<link  href="../wd5.css" rel="stylesheet" />
 		<script src="../wd5.js"></script>
 		<style>
-			main > * {
-				margin: 0.8em auto;
-			}
-			main > article {
-				padding-left: 1em;
-			}
-			main > section {
-				font-family: "Courier New";
-			}
-			main > section.nivel0 {
-				font-family: monospace;
-				color: teal;
-				border-top: thin solid;
-				padding-top: 0.4em;
-			}
-			main > section.nivel0 {padding-left :  0em;}
-			main > article.nivel0 {padding-left :  1em;}
-			main > section.nivel1 {padding-left :  3em;}
-			main > article.nivel1 {padding-left :  4em;}
-			main > section.nivel2 {padding-left :  5em;}
-			main > article.nivel2 {padding-left :  6em;}
-			main > section.nivel3 {padding-left :  7em;}
-			main > article.nivel3 {padding-left :  8em;}
-			main > section.nivel4 {padding-left :  9em;}
-			main > article.nivel4 {padding-left : 10em;}
-			main > section > b    {color: royalblue;}
+			main {text-align: justify;}
+			pre {color: teal; border-radius: .3em; border: 1px solid; background-color: lightgrey; padding: 0.5em}
+			pre > b, code > b {color: royalblue;}
+			p {text-indent: 2em;}
+			dl {margin-left: 2em !important;}
+			dt {font-family: "Courier New"; color: darkred;}
+			var {color: DeepPink;}
 		</style>
 
 		<script>
-			const JS  = "../wd5.js";
-			const CSS = "../wd5.css";
+const JS  = "../wd5.js";
+const CSS = "../wd5.css";
+const tag = {
+/*:bloco de conteúdo:*/
+	H: "h3", h: "h4", p: "p", l: "dl", t: "dt", d: "dd", f: "pre",
+	c: "code", i: "i", b: "b", s: "s", u: "u", v: "var"
+};
 
-			function manual(x) {
-				if (x === null || x === undefined)
-					return alert("Erro ao ler o arquivo!");
-				/* Legenda: |^t título|^c capítulo|^0-9 nome|^0-9: descrição|\b negrito|\i itálico|\u sublinhado|\c code*/
-				let busca = /\/\*[0-9tc]\:?\ .+?\*\//g;
-				let tipos = {t: "h3", c: "h6", n: "section", d: "article"}
-				let lista = x.match(busca);
-				let main  = wd.$("main").item(0);
-				let nodes = [];
-				for (let i = 0; i < lista.length; i++) {//>
-					let node = {};
-					let temp = lista[i];
-					/* limpar caracteres de comentário */
-					temp = temp.replace(/^\/\*/, "").replace(/\*\/$/, "");
-					/* obter o nível e o HTML */
-					node.css  = "nivel"+temp[0];
-					if ((/^[0-9]\:\ /).test(temp)) node.html = tipos.d; else
-					if ((/^[0-9]\ /).test(temp))   node.html = tipos.n; else
-					if ((/^[A-z]\ /).test(temp))   node.html = tipos[temp[0]];
-					/* limpar tipo da informação */
-					temp = temp.replace(/^[0-9A-z]\:?\ /, "");
-					/* atribuir formatações */
-					temp = temp.replace(/\\b([A-Za-z0-9_áéíóúÁÉÍÓÚàÀêÊõÕãÃ\çÇ-]+)/gi, "<b>$1</b>");
-					temp = temp.replace(/\\i([A-Za-z0-9_áéíóúÁÉÍÓÚàÀêÊõÕãÃ\çÇ-]+)/gi, "<i>$1</i>");
-					temp = temp.replace(/\\u([A-Za-z0-9_áéíóúÁÉÍÓÚàÀêÊõÕãÃ\çÇ-]+)/gi, "<u>$1</u>");
-					temp = temp.replace(/\\c([A-Za-z0-9_áéíóúÁÉÍÓÚàÀêÊõÕãÃ\çÇ-]+)/gi, "<code>$1</code>");
-					/* registrar informações */
-					node.texto = temp;
-					nodes.push(node);
-				}
-				/* montando html */
-				for (let i = 0; i < nodes.length; i++) {//>
-					let node = nodes[i];
-					let html = document.createElement(node.html);
-					html.innerHTML = node.texto;
-					html.className = node.css;
-					if (["section"].indexOf(node.html) >= 0)
-						html.id = node.texto.split(" ").reverse()[0];
-			 	else if (["h3", "h6"].indexOf(node.html) >= 0)
-						html.id = node.texto.toLowerCase().replace(/\ +/g, "_");
-					main.appendChild(html);
-				}
-			}
 
-			function lerJS() {
-				wd().send(JS, function (x) {
-					if (x.closed)
-						manual(x.text);
-					return;
-				});
-			}
+function manual(x) {
+	if (x === null || x === undefined)
+		return alert("Erro ao ler o arquivo!");
+	let busca  = /\/\*\*.+?\*\//g;
+	let blocos = x.match(busca);
+	//let html   = blocos.join(" ").replace(/\/\*\*/g, "").replace(/\*\*\//g, "");
+	//for (let i in tag) {
+		//let re  = new RegExp(i+"{(.+?)}"+i, "g");
+		//html = html.replace(re, "<"+tag[i]+">$1</"+tag[i]+">");
+		//html = html.replace(re, "<"+tag[i]+">$1</"+tag[i]+">");
+	//}
+	let html = [];
+	for (let i = 0; i < blocos.length; i++) {
+		for (let j in tag) {
+			let re1  = new RegExp(j+"{", "g");
+			let re2  = new RegExp("}"+j, "g");
+			let re3  = /\/\*\*/g;
+			let re4  = /\*\//g;
+   blocos[i] = blocos[i].replace(re1, "<"+tag[j]+">");
+			blocos[i] = blocos[i].replace(re2, "</"+tag[j]+">");
+			blocos[i] = blocos[i].replace(re3, "");
+			blocos[i] = blocos[i].replace(re4, "");
+		}
+	}
+	console.log(blocos.join(""));
+	document.querySelector("main").innerHTML = blocos.join("")
+}
+
+function lerJS() {
+	wd().send(JS, function (x) {
+		if (x.closed)
+			manual(x.text);
+		return;
+	});
+}
+
+wd(window).addHandler({
+	load: function() {
+		lerJS();
 
 
 
-
-			wd(window).addHandler({
-				load: function() {
-					lerJS();
-
-
-
-				}
-			});
+	}
+});
 		</script>
 	</head>
 

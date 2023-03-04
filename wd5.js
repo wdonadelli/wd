@@ -24,49 +24,46 @@ SOFTWARE.
 https://github.com/wdonadelli/wd
 ------------------------------------------------------------------------------*/
 
-/* Legenda: |^t título|^c capítulo|^0-9 nome|^0-9: descrição|\b negrito|\i itálico|\u sublinhado|\c code*/
-
 "use strict";
 
 const wd = (function() {
 
-	/*t Variáveis e Constantes*/
+	/**H{Variáveis e Constantes}H*/
 
-	/*0 \bconst \bstr wd_version*/
-	/*0: Versão da biblioteca JS.*/
+	/**f{b{const string}b wd_version}f p{Guarda a versão da biblioteca.}p*/
 	const wd_version = "WD JS v5.0.0";
 
-	/*0 \blet \bstr wd_device_controller*/
-	/*0: Identifica o tamanho da tela (\idesktop, \imobile, \itablet, \iphone, \cnull).*/
+	/**f{b{let string}b wd_device_controller}f*/
+	/**p{Identifica o tamanho da tela (i{desktop}i, i{mobile}i, i{tablet}i, i{phone}i, c{null}c).}p*/
 	let wd_device_controller = null;
 
-	/*0 \bconst \bint wd_key_time_range*/
-	/*0: Intervalo de tempo (\ims) para aguardar eventos de digitação (\ioninput, \ionkeyup...).*/
+	/**f{b{const integer}b wd_key_time_range}f*/
+	/**p{Intervalo de tempo (i{ms}i) para aguardar eventos de digitação (i{oninput}i, i{onkeyup}i...).}p*/
 	const wd_key_time_range = 500;
 
-	/*0 \bconst \bstruct wd_counter_control*/
-	/*0: Controla a contagem de requisições:*/
-	/*1 \bint repeat*//*1: Número de repetições em execução.*/
-	/*1 \bint load*//*1: Número de carregamentos em execução.*/
+	/**f{b{const object}b wd_counter_control}f*/
+	/**p{Controla a contagem de requisições de conteúdos externos:}p l{*/
+	/**t{b{integer}b repeat}t d{Número de repetições em andamento.}d*/
+	/**t{b{integer}b load}t   d{Número de carregamentos em andamento.}d }l*/
 	const wd_counter_control = {
 		repeat: 0,
 		load:   0
 	};
 
-	/*0 \bconst \bstruct wd_modal_control*/
-	/*0: Controla a janela modal:*/
+	/**f{b{const object}b wd_modal_control}f*/
+	/**p{Controla a janela modal com a seguinte estrutura:}p l{*/
 	const wd_modal_control = {
-		/*1 \bnode modal*//*1: Container do plano de fundo.*/
-		modal:   null,
-		/*1 \bnode bar*//*1: Barra de progresso (\imeter, \iprogress ou \idiv).*/
-		bar:     null,
-		/*1 \bint counter*//*1: Número de solicitações em aberto (controlar exibição).*/
-		counter:    0,
-		/*1 \bint delay*//*1: Tempo (\ims) de espera para fechar a janela e evitar tela piscando.*/
-		delay:    250,
-		/*1 \bint time*//*1: Tempo (\ims) de interação para atualização da barra de progresso.*/
-		time:       5,
-		/*1 \bvoid _init()*//*1: \uInicializa os atributos.*/
+		/**t{b{node}b modal}t d{Container do plano de fundo.}d*/
+		modal: null,
+		/**t{b{node}b bar}t d{Barra de progresso (i{meter}i, i{progress}i ou i{div}i).}d*/
+		bar: null,
+		/**t{b{integer}b counter}t d{Número de solicitações em aberto (controla a exibição).}d*/
+		counter: 0,
+		/**t{b{integer}b delay}t d{Tempo (i{ms}i) de espera antes de fechar a janela (evitar piscadas).}d*/
+		delay: 250,
+		/**t{b{integer}b time}t d{Tempo (i{ms}i) de interação para atualização da barra de progresso.}d*/
+		time: 5,
+		/**t{b{void}b _init()}t d{Inicializa os atributos.}d*/
 		_init: function() {
 			/* janela modal */
 			this.modal = document.createElement("DIV");
@@ -83,7 +80,7 @@ const wd = (function() {
 			this.modal.appendChild(this.bar);
 			return;
 		},
-		/*1 \bint start()*//*1: Demanda a exibição da janela modal. Acresce \icounter e o \uretorna.*/
+		/**t{b{integer}b start()}t d{Demanda a abertura da janela modal, acresce i{counter}i e o retorna.}d*/
 		start: function() { /* abre a janela modal */
 			if (this.modal === null) this._init();
 			if (this.counter === 0)
@@ -91,7 +88,7 @@ const wd = (function() {
 			this.counter++;
 			return this.counter;
 		},
-		/*1 \bint end()*//*1: Demanda o fechamento da janela modal. Decresce \icounter e o \uretorna.*/
+		/**t{b{integer}b end()}t d{Demanda o fechamento da janela modal, decresce i{counter}i e o retorna.}d*/
 		end: function() {
 			let object = this;
 			/* checar fechamento da janela após delay */
@@ -103,8 +100,8 @@ const wd = (function() {
 
 			return this.counter;
 		},
-		/*1 \bvoid progress(\bfloat x)*//*1: Define o valor da barra de progresso.*/
-		/*2: \cx - valor da barra de progresso, de 0 a 1.*/
+		/**t{b{void}b progress(b{float}b x)}t d{Define o valor da barra de progresso.}d*/
+		/**d{c{x}c - Valor a ser definido para a barra de progresso, de 0 a 1.}d}l*/
 		progress: function(x) {
 			let tag    = this.bar.tagName.toLowerCase();
 			let value  = tag === "div" ? wd_num_str(x, true) : x;
@@ -120,43 +117,43 @@ const wd = (function() {
 		}
 	};
 
-	/*0 \bconst \bstruct wd_signal_control*/
-	/*0: Controla a caixa de mensagens:*/
+	/**f{b{const object}b wd_signal_control}f*/
+	/**p{Controla a caixa de mensagens:}p l{*/
 	const wd_signal_control = {
-		/*1 \bnode main*//*1: Container das caixas de mensagem.*/
+		/**t{b{node}b main}t d{Container das caixas de mensagem.}d*/
 		main: null,
-		/*1 \bint time*//*1: Tempo de duração da mensagem (ver CSS \cjs-wd-signal-msg).*/
+		/**t{b{integer}b time}t d{Tempo de duração da mensagem (ver CSS \cjs-wd-signal-msg).}d*/
 		time: 9000,
-		/*1 \bvoid _init()*//*1: \uInicializa os atributos.*/
+		/**t{b{void}b _init()}t d{Inicializa os atributos.}d*/
 		_init: function() {
 			this.main = document.createElement("DIV");
 			this.main.className = "js-wd-signal";
 			return;
 		},
-		/*1 \bstruct _createBox()*//*1: \uRetorna os elementos necessários para criar uma nova caixa de mensagem:*/
+		/**t{b{object}b _createBox()}t d{Retorna os elementos necessários para criar uma nova caixa de mensagem:}d*/
 		_createBox: function() {
 			return {
-				/*2 \bnode box*//*2: Caixa da mensagem.*/
+				/**d{l{t{b{node}b box}t d{Container da caixa de mensagem.}d*/
 				box:     document.createElement("ARTICLE"),
-				/*2 \bnode header*//*2: Cabeçalho da mensagem.*/
+				/**t{b{node}b header}t d{Cabeçalho da mensagem.}d*/
 				header:  document.createElement("HEADER"),
-				/*2 \bnode message*//*2: Texto da mensagem.*/
+				/**t{b{node}b message}t d{Texto da mensagem.}d*/
 				message: document.createElement("SECTION"),
-				/*2 \bnode close*//*2: Botão de fechamento antecipado.*/
+				/**t{b{node}b close}t d{Botão de fechamento antecipado da caixa.}d*/
 				close:   document.createElement("SPAN"),
-				/*2 \bnode header*//*2: Texto do cabeçalho.*/
+				/**t{b{node}b header}t d{Texto do cabeçalho.}d}l}d*/
 				title:   document.createElement("STRONG")
 			};
 		},
-		/*1 \bvoid _close(\bnode elem)*//*1: Demanda o fechamento da caixa de mensagem (tempo ou ação).*/
-		/*2 \celem - caixa de mensagem a ser fechada.*/
+		/**t{b{void}b _close(b{node}b elem)}t d{Demanda o fechamento da caixa de mensagem (tempo ou ação).}d*/
+		/**d{c{elem}c - caixa de mensagem a ser fechada.}d*/
 		_close: function(elem) {
 				try {this.main.removeChild(elem);} catch(e){}
 				if (this.main.children.length === 0)
 					try {document.body.removeChild(this.main);} catch(e){}
 				return;
 		},
-		/*1 \bnode _box()*//*1: Criar uma nova caixa de mensagem e a \uretorna.*/
+		/**t{b{node}b _box()}t d{Criar uma nova caixa de mensagem e a \uretorna.}d*/
 		_box: function() {
 			let msg = this._createBox();
 			msg.box.appendChild(msg.header);
@@ -171,8 +168,10 @@ const wd = (function() {
 			}
 			return msg;
 		},
-		/*1 \bvoid open(\bstr message[, \bstr title)*//*1: Demanda a abertura de uma nova caixa de mensagem.*/
-		/*2: \cmessage - texto da mensagem.*//*2: \ctitle - texto do cabeçalho (optional: \bstr vazia).*/
+		/**t{b{void}b open(b{string}b message, b{string}b title)}t*/
+		/**d{Demanda a abertura de uma nova caixa de mensagem:}d*/
+		/**d{c{message}c - texto da mensagem.}d*/
+		/**d{c{title}c - (opcional, v{""}v) texto do cabeçalho.}d}l*/
 		open: function(message, title) { /* abre uma mensagem */
 			/* criação do container principal, se inexistente */
 			if (this.main === null) this._init();
@@ -195,10 +194,11 @@ const wd = (function() {
 			return;
 		}
 	}
-	/* Guarda os estilos da biblioteca Selector Database */
-	/*0 \bconst \barray wd_js_css*/
-	/*0: Os itens da lista são estruturas cujos atributos (\bstr) definem os estilos utilizados pela biblioteca:*/
-	/*1: \cs - Seletor CSS.*//*1: \cd - estilos a ser aplicado ao seletor.*/
+	/**f{b{const array}b wd_js_css}f*/
+	/**p{Guarda os estilos da biblioteca Selector Database. */
+	/**Os itens da lista são objetos cujos atributos definem os estilos utilizados pela biblioteca:}p l{*/
+	/**t{b{string}b s}t d{Seletor CSS.}d*/
+	/**t{b{string}b d}t d{Estilos a ser aplicado ao seletor.}d}l*/
 	const wd_js_css = [
 		{s: "@keyframes js-wd-fade-in",  d: ["from {opacity: 0;} to {opacity: 1;}"]},
 		{s: "@keyframes js-wd-fade-out", d: ["from {opacity: 1;} to {opacity: 0;}"]},
@@ -257,103 +257,308 @@ const wd = (function() {
 	];
 
 /*===========================================================================*/
-	/*t Checagem de Tipos e Valores */
+	/**H{Checagem de Tipos e Valores}H*/
 /*===========================================================================*/
 
-	/*0 \bObject WDtype(\bvoid input)*/
-	/*0: Construtor que identifica o tipo do argumento e resgata seu valor primitivo.*/
-	/*1 input *//*1: Dado a ser examinado.*/
-	/*0: Métodos e atributos:*/
+	/**f{b{object}b WDtype(b{void}b input)}f*/
+	/**p{Construtor que identifica o tipo do argumento e resgata seu valor primitivo.}p*/
+	/**l{d{c{input}c - Dado a ser examinado.}d}l*/
+	/**Os atributos retornam \cnull se o argumento não corresponder ao tipo referenciado pelo atributo, exceto o atributo \inull.*/
+	/**Caso contrário, retornará um valor correspondente ao tipo do atributo, podendo sofrer adaptações para a biblioteca.*/
 	function WDtype(input) {
 		if (!(this instanceof WDtype)) return new WDtype(input)
 		this._input = input; /* valor original */
-		this._data  = null;  /* dados complementares */
 		this._type  = null;  /* tipo do valor de entrada */
 		this._value = null;  /* valor a ser considerado */
+		this._type = this.type;
 	}
 
 	Object.defineProperties(WDtype.prototype, {
 		constructor: {value: WDtype},
-		isString: {/*1 \bbool isString*//*1: (\igetter) Checa se o argumento é do tipo \istring.*/
-			get: function() {
-				return (typeof this._input === "string" || this._input instanceof String) ? true : false;
+		_re: { /* expressões regulares para testar valores em forma de String */
+			value: {
+				number:  /^(\+?\d+\!|[+-]?(\d+|(\d+)?\.\d+)(e[+-]?\d+)?\%?)$/i,
+				dateDMY: /^(0[1-9]|[12]\d|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/,
+				dateMDY: /^(0[1-9]|1[0-2])\.(0[1-9]|[12]\d|3[01])\.\d{4}$/,
+				dateYMD: /^\d{4}\-(0[1-9]|1[0-2])\-(0[1-9]|[12]\d|3[01])$/,
+				time12:  /^(0?[1-9]|1[0-2])\:[0-5]\d\ ?[ap]m$/i,
+				time24:  /^(0?\d|1\d|2[0-4])(\:[0-5]\d){1,2}$/
 			}
 		},
-		isNumber: {/*1 \bbool isNumber*//*1: (\igetter) Checa se o argumento é do tipo \inumber (exceto \iNaN).*/
+		/**\bstr|\bnull string*/
+		/**(\igetter) Retorna uma string aparada.*/
+		string: {
+
 			get: function() {
-				return (typeof this._input === "number" || this._input instanceof Number) ? !isNaN(this._input) : false;
+				if (typeof this._input === "string" || this._input instanceof String)
+					return this._input.trim();
+				return null;
 			}
 		},
-		isBoolean: { /*1 \bbool isBoolean*//*1: (\igetter) Checa se o argumento é do tipo \iboolean.*/
+		/**\bnumber|\bnull number*/
+		/**(\igetter) Retorna um número normal, fatorial ou percentual, exceto \cNaN.*/
+		number: {
 			get: function() {
-				return (typeof this._input === "boolean" || this._input instanceof Boolean) ? true : false;
+				if (typeof this._input === "number" || this._input instanceof Number) {
+					if (isNaN(this._input)) return null;
+					return this._input.valueOf();
+				}
+				/* Número em forma de String (normal, percentual e fatorial) */
+				let value = this.string;
+				if (value === null) return null;
+				if (this._re.number.test(value)) {
+					let end = value[value.length-1];
+					/* fatorial */
+					if (end === "!") {
+						value = Number(value.replace("!", ""));
+						let num = 1;
+						while (value > 1) num = num * value--;
+						this._input = num;
+						return this.number;
+					}
+					/* porcentagem */
+					if (end === "%") {
+						value = Number(value.replace("%", ""));
+						return value/100;
+					}
+					/* normal */
+					this._input = Number(value);
+					return this.number;
+				}
+
+				return null;
 			}
 		},
-		isRegExp: { /*1 \bbool isRegExp*//*1: (\igetter) Checa se o argumento é do tipo \iregexp.*/
+		/**\bbool|\bnull boolean*/
+		/**(\igetter) Retorna \ctrue ou \cfalse.*/
+		boolean: {
 			get: function() {
-				return (this._input instanceof RegExp) ? true : false;
+				if (typeof this._input === "boolean" || this._input instanceof Boolean)
+					return this._input.valueOf();
+				return null;
 			}
 		},
-		isDate: { /*1 \bbool isDate*//*1: (\igetter) Checa se o argumento é do tipo \idate.*/
+		/**\bregexp|\bnull regexp*/
+		/**(\igetter) Retorna a expressão regular.*/
+		regexp: {
 			get: function() {
-				return (this._input instanceof Date) ? true : false;
+				if (this._input instanceof RegExp)
+					return this._input.valueOf();
+				return null;
 			}
 		},
-		isFunction: {/*1 \bbool isFunction*//*1: (\igetter) Checa se o argumento é do tipo \ifunction.*/
+		/**\bdate|\bnull regexp*/
+		/**(\igetter) Retorna uma cópia de data (DD/MM/YYYY,  MM.DD.YYYY, YYYY-MM-DD) com valor fixado em 12h.*/
+		date: {
 			get: function() {
-				return (typeof this._input === "function" || this._input instanceof Function) ? true : false;
+				if (this._input instanceof Date) {
+					let date = new Date();
+					date.setFullYear(this._input.getFullYear());
+					date.setMonth(this._input.getMonth());
+					date.setDate(this._input.getDate());
+					date.setHours(12);
+					date.setMinutes(0);
+					date.setSeconds(0);
+					date.setMilliseconds(0);
+					return date;
+				}
+				/* Datas em forma de String */
+				let value = this.string;
+				if (value === null) return null;
+				let d, m, y;
+				if (this._re.dateDMY.test(value)) { /* DD/MM/YYYY */
+					let date = this._input.split("/");
+					d = date[0];
+					m = date[1];
+					y = date[2];
+				} else if (this._re.dateMDY.test(value)) { /* MM.DD.YYYY */
+					let date = this._input.split(".");
+					d = date[1];
+					m = date[0];
+					y = date[2];
+				} else if (this._re.dateYMD.test(value)) { /* YYYY-MM-DD */
+					let date = this._input.split("-");
+					d = date[2];
+					m = date[1];
+					y = date[0];
+				} else {
+					return null;
+				}
+				d = Number(d);
+				m = Number(m);
+				y = Number(y);
+				/* checando ano */
+				if (y < 1 || y > 9999) return null;
+				/* checando mês */
+				if (m < 1 || m > 12) return null;
+				/* checando dia */
+				let feb  = (y%400 === 0 || (y%4 === 0 && y%100 !== 0)) ?  29 : 28;
+				let days = [0, 31, feb, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+				if (d < 1 || d > days[m]) return null;
+				let date = new Date();
+				date.setFullYear(y);
+				date.setMonth(m-1);
+				date.setDate(d);
+				this._input = date;
+				return this.date;
 			}
 		},
-		isArray: {/*1 \bbool isArray*//*1: (\igetter) Checa se o argumento é do tipo \iarray.*/
+		/**\bfunction|\bnull function*/
+		/**(\igetter) Retorna a função.*/
+		function: {
 			get: function() {
-				return (Array.isArray(this._input) || this._input instanceof Array) ? true : false;
+				if (typeof this._input === "function" || this._input instanceof Function)
+					return this._input;
+				return null;
 			}
 		},
-		isStruct: { /*1 \bbool isStruct*//*1: (\igetter) Checa se o argumento é do tipo \iobject primitivo (\bstruct).*/
+		/**\barray|\bnull array*/
+		/**(\igetter) Retorna uma cópia do array.*/
+		array: {
+			get: function() {
+				if (Array.isArray(this._input) || this._input instanceof Array)
+					return this._input.slice();
+				return null
+			}
+		},
+		/**\bnull|\bundefined null*/
+		/**(\igetter) Retorna \inull se nulo ou string vazia e \cundefined, caso contrário.*/
+		null: {
+			get: function () {
+				return this._input === null || this.string ===  "" ? null : undefined;
+			}
+		},
+		/**\bundefined|\bnull undefined*/
+		/**(\igetter) Retorna um valor indefinido.*/
+		undefined: {
+			get: function() {
+				return (this._input === undefined || typeof this._input === "undefined") ? undefined : null;
+			}
+		},
+		/**\bstruct|\bnull time*/
+		/**(\igetter) Retorna uma estrutura com dados de tempo (HH:MM AMPM, HH:MM:SS): hora (\ih), minuto (\im) e segundo (\is).*/
+		time: {
+			get: function() {
+				let value = this.string;
+				if (value === null) return null;
+				let h, m, s;
+				if (this._re.time12.test(value)) { /* HH:MM AMPM */
+					let am   = value[value.length - 2].toUpperCase() === "A" ? true : false;
+					let time = value.replace(/[^0-9:]/g, "").split(":");
+					h = Number(time[0]);
+					if (h < 1 || h > 12) return null;
+					h = am ? (h % 12) : (h === 12 ? 12 : ((12 + h ) % 24));
+					m = Number(time[1]);
+					s = 0;
+				} else if (this._re.time24.test(value)) { /* HH:MM:SS */
+					let time = this._input.split(":");
+					h = Number(time[0]);
+					m = Number(time[1]);
+					s = time.length === 3 ? Number(date[2]) : 0;
+				} else {
+					return null;
+				}
+				h = h%24;
+				if (h < 0 || h > 24) return null;
+				if (m < 0 || m > 59) return null;
+				if (s < 0 || s > 59) return null;
+				return {h: h, m: m, s: s, valueOf: function() {return 3600*h+60*m+s}};
+			}
+		},
+		/**\bnode|\bnull node*/
+		/**(\igetter) Retorna o nó de elemento HTML em um array.*/
+		node: {
+			get: function() {
+				if (this._input === document || this._input === window)
+					return [this._input];
+				if ("HTMLElement" in window && this._input instanceof HTMLElement)
+					return [this._input];
+				if ("SVGElement" in window && this._input instanceof SVGElement)
+					return [this._input];
+				if ("MathMLElement" in window && this._input instanceof MathMLElement)
+					return [this._input];
+				return null;
+			}
+		},
+		/**\bnodes|\bnull nodes*/
+		/**(\igetter) Retorna os nós de elementos HTML em um array.*/
+		nodes: {
+			get: function() {
+				if (
+					"NodeList"                   in window && this._input instanceof NodeList ||
+					"HTMLCollection"             in window && this._input instanceof HTMLCollection ||
+					"HTMLAllCollection"          in window && this._input instanceof HTMLAllCollection ||
+					"HTMLOptionsCollection"      in window && this._input instanceof HTMLOptionsCollection ||
+					"HTMLFormControlsCollection" in window && this._input instanceof HTMLFormControlsCollection
+				) {
+					let value = [];
+					for (let i = 0; i < this._input.length; i++)
+						value.push(this._input[i]);
+					return value;
+				}
+				return null;
+			}
+		},
+
+
+
+
+
+		isStruct: { /**\bbool isStruct*//**(\igetter) Checa se o argumento é do tipo \iobject primitivo (\bstruct).*/
 			get: function() {
 				return typeof this._input === "object" && (/^\{.*\}$/).test(JSON.stringify(this._input)) ? true : false;
 			}
 		},
-		isNull: {/*1 \bbool isNull*//*1: (\igetter) Checa se o argumento é do tipo \inull.*/
-			get: function () {
-				return this._input === null ? true : false;
-			}
-		},
-		isUndefined: {/*1 \bbool isUndefined*//*1: (\igetter) Checa se o argumento é do tipo \iundefined.*/
+
+
+
+
+
+
+
+
+
+
+		type: {/**\bstr type*//**(\igetter) retorna o tipo do argumento*/
 			get: function() {
-				return (this._input === undefined || typeof this._input === "undefined") ? true : false;
-			}
-		},
-		type: {/*1 \bstr type*//*1: (\igetter) retorna o tipo do argumento*/
-			get: function() {
-				if (this.isNull)      return "null";
-				if (this.isUndefined) return "undefined";
-				if (this.isString)    return "string";
-				if (this.isNumber)    return "number";
-				if (this.isArray)     return "array";
-				if (this.isBoolean)   return "boolean";
-				if (this.isRegExp)    return "regexp";
-				if (this.isDate)      return "date";
-				if (this.isFunction)  return "function";
-				if (this.isStruct)    return "object";
-				return "unknow";
-			}
-		},
-		valueOf: {/*1 \bvoid valueOf()*//*1: retorna o valor do argumento.*/
-			value: function() {
-				switch(this.type) {
-					case "null":      return null;
-					case "undefined": return undefined;
-					case "string":    return this._input.trim();
-					case "number":    return this._input.valueOf();
-					case "array":     return this._input; //FIXME devolver cópia
-					case "boolean":   return this._input == true ? true :  false;
-					case "regexp":    return this._input; //FIXME devolver primitivo
-					case "date":      return this._input;
-					case "function":  return this._input;
-					case "object":    return this._input;
+				if (this._type !== null) return this._type;
+
+				/* tipos independentes */
+				let types = {
+					boolean:  "boolean", number: "number", date:  "date", time:   "time",
+					array:    "array",   node:   "node",   nodes: "node", regexp: "regexp",
+					function: "function"
+				};
+				for (let i in types) {
+					let value = this[i];
+					if (value !== (i === "null" ? undefined : null)) {
+						this._value = value;
+						this._type  = types[i];
+						return this.type;
+					}
 				}
-				return this._input
+				/* tipos dependentes */
+				let string = this.string;
+				let NULL   = this.null;
+				if (string !== null) {
+					this._value = NULL === null ? NULL   : string;
+					this._type  = NULL === null ? "null" : "text";
+					return this.type;
+				}
+				/* tipos indefinidos */
+				this._value = this._input;
+				this._type  = "unknow";
+				return this.type;
+			}
+		},
+
+
+
+
+
+		valueOf: {/**\bvoid valueOf()*//**retorna o valor do argumento.*/
+			value: function() {
+				return;
 			}
 		}
 	});
@@ -381,51 +586,6 @@ const wd = (function() {
 
 
 
-/*===========================================================================*/
-	/*c Obtenção de Valores*/
-/*===========================================================================*/
-
-
-
-/*----------------------------------------------------------------------------*/
-	/*0 \bnull|\bstruct wd_getStringTime(\bstr value)*/
-	/*0: Se a \istring informada não estiver no formato de tempo, 12 ou 24h (HH:MM AMPM ou HH:MM:SS), retorna \cnull, caso contrário, a estrutura:*/
-	/*1 \bint h*//*1: (\ivalue) Valor numérico da hora.*/
-	/*1 \bint m*//*1: (\ivalue) Valor numérico da minuto.*/
-	/*1 \bint s*//*1: (\ivalue) Valor numérico da segundo.*/
-	/*1 \bint time*//*1: (\ivalue) Quantidade total de segundos.*/
-	function wd_getStringTime(value) {
-		/* variáveis de teste */
-		if (!wd_isString(value) || wd_isNull(value)) return null;
-		let re12 = /^(0?[1-9]|1[0-2])\:[0-5]\d\ ?[ap]m$/i;
-		let re24 = /^(0?\d|1\d|2[0-4])(\:[0-5]\d){1,2}$/;
-		let h, m, s;
-		/* testando string, desmembrando-a e obtendo a hora de acordo com o tipo */
-		value = value.trim();
-		if (re12.test(value)) {
-			let am = (/am$/i).test(value) ? true : false;
-			value  = value.replace(/[^0-9:]/g, "").split(":");
-			h = Number(value[0]);
-			if (h < 1 || h > 12) return null;
-			h = am ? (h % 12) : (h === 12 ? 12 : ((12 + h ) % 24));
-		} else if (re24.test(value)) {
-			value = value.split(":");
-			h = Number(value[0]);
-		} else {
-			return null;
-		}
-		/* checando valores */
-		h = h % 24;
-		m = Number(value[1]);
-		s = Number(value.length === 3 ? value[2] : 0);
-		if (h > 24 || h < 0) return null;
-		if (m > 59 || m < 0) return null;
-		if (s > 59 || s < 0) return null;
-
-		return {h: h, m: m, s: s, time: (3600*h + 60*m + s)};
-	}
-
-//FIXME falta number e date
 
 
 
@@ -447,198 +607,10 @@ const wd = (function() {
 
 
 
-/*----------------------------------------------------------------------------*/
-	/*0 \bstruct|\bnull wd_check_number_str(\bstr value)*/
-	/*0: Função checa se a string está no formato numérico e \uretorna \cnull, se falso, ou o resultado de \cwd_check_number:*/
-	function wd_check_number_str(value) {
-		let re = /^(\+?\d+\!|[+-]?(\d+|(\d+)?\.\d+)(e[+-]?\d+)?\%?)$/i;
-		if (!re.test(value)) return null;
-		//FIXME fatorial e porcentagem
-
-
-
-		return wd_check_number(Number(value));
-	}
-
-
-
-/*----------------------------------------------------------------------------*/
-	/*0 \bstruct|\bnull wd_check_str(\bvoid value)*/
-	/*0: Função checa se o argumento é uma string. \uRetorna \cnull, se falso, ou a estrutura:*/
-	/*1 \bstr value*//*1: (\ivalue) Valor informado.*/
-	/*1 \bstruct _re*//*1: (\ivalue) Lista interna de formatos especiais de texto (data, tempo e número).*/
-	/*1 \bbool _test*//*1: (\igetter) Testa e retorna qual o formato especial casado em _\cre.*/
-	/*1 \bstr trim*//*1: (\igetter) Valor com extremidades aparadas.*/
-	/*1 \bstr clear*//*1: (\igetter) Valor sem espaços extras e extremidades aparadas.*/
-	/*1 \bstr upper*//*1: (\igetter) Valor em caixa alta*/
-	/*1 \bstr lower*//*1: (\igetter) Valor em caixa baixa.*/
-	/*1 \bstruct json*//*1: (\igetter) Converte JSON em notação javascript ou uma estrutura vazia, se inválido.*/
-	/*1 \bbool isNull*//*1: (\igetter) Testa se é uma string vazia.*/
-	/*1 \bbool llNum*//*1: (\igetter) Testa se a string está formatada como número, inclui porcentagem e fatorial.*/
-	/*1 \bbool llDate*//*1: (\igetter) Testa se a string está formatada como data (DD/MM/YYYY, MM.DD.YYYY ou YYY-MM-DD).*/
-	/*1 \bnull|\bstruct time12*//*1: (\igetter) Retorna o resultado de \cwd_check_time12 para o valor informado.*/
-	/*1 \bnull|\bstruct time24*//*1: (\igetter) Retorna o resultado de \cwd_check_time24 para o valor informado.*/
-	function wd_check_str(value) {
-		if (typeof value === "string" || value instanceof String) {
-			return {
-				value: value.toString(),
-				_re: {
-					dateDMY: /^(0[1-9]|[12]\d|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/,
-					dateMDY: /^(0[1-9]|1[0-2])\.(0[1-9]|[12]\d|3[01])\.\d{4}$/,
-					dateYMD: /^\d{4}\-(0[1-9]|1[0-2])\-(0[1-9]|[12]\d|3[01])$/,
-					numFact: /^(\ +)?\+?\d+\!(\ +)?$/
-				},
-				get _test()  {
-					for (let i in this._re)
-						if (this._re[i].test(this.value)) return i;
-					return null;
-				},
-				get trim()   {return this.value.trim();},
-				get clear()  {return this.trim.replace(/\ +/g, " ");},
-				get length() {return this.value.length;},
-				get upper()  {return this.value.toUpperCase();},
-				get lower()  {return this.value.toLowerCase();},
-				get json()   {try {return JSON.parse(this.trim)} catch(e) {return {};}},
-				get test()   {for (let i in this._re) {}   },
-				get isNull() {return this.trim === "" ? true : false;},
-				get number() {return wd_check_number_str(this.trim);},
-				get llDate() {return ["dateYMD", "dateDMY", "dateMDY"].indexOf(this._test) >= 0 ? true : false;},
-				get time12() {return wd_check_time12(this.trim);},
-				get time24() {return wd_check_time24(this.trim);},
-			}
-		}
-		return null;
-	}
 
 
 
 
-
-
-
-
-
-
-
-
-
-/*----------------------------------------------------------------------------*/
-	function wd_str_time(val) { /* obtém tempo a partir de uma string */
-		let data = [
-			{re: /^(0?[1-9]|1[0-2])\:[0-5][0-9]\ ?(am|pm)$/i, sym: "ampm"},
-			{re: /^(0?[0-9]|1[0-9]|2[0-4])(\:[0-5][0-9]){1,2}$/, sym: "time"},
-		];
-
-		let index = -1;
-		for (let i = 0; i < data.length; i++) {
-			if (data[i].re.test(val)) index = i;
-			if (index >= 0) break;
-		}
-		if (index < 0) return null;
-
-		let values = val.replace(/[^0-9\:]/g, "").split(":");
-		for (let i = 0; i < values.length; i++)
-			values[i] = new Number(values[i]).valueOf();
-
-		if ((/am$/i).test(val) && values[0] === 12) values[0] = 0;
-		if ((/pm$/i).test(val) && values[0] < 12)   values[0] = values[0] + 12;
-
-		return wd_time_number(values[0], values[1], values[2]);
-	}
-
-/*----------------------------------------------------------------------------*/
-	function wd_time_number(h, m, s) { /*Converte tempo em número*/
-		let time = 0;
-		time += h * 3600;
-		time += m * 60;
-		time += s === undefined ? 0 : s;
-		return time % 86400;
-	}
-
-/*----------------------------------------------------------------------------*/
-	function wd_number_time(n) { /*Converte número em tempo (objeto{h,m,s})*/
-		let time = {};
-		n      = n < 0 ? (86400 + (n % 86400)) : (n % 86400);
-		time.h = (n - (n % 3600)) / 3600;
-		n      = n - (3600 * time.h);
-		time.m = (n - (n % 60)) / 60;
-		time.s = n - (60 * time.m);
-		return time;
-	}
-
-function wd_time_iso(number) { /* transforma valor numérico em tempo no formato HH:MM:SS */
-		let obj = wd_number_time(number);
-		let time = wd_num_fixed(obj.h, 0, 2)+":";
-		time    += wd_num_fixed(obj.m, 0, 2)+":";
-		time    += wd_num_fixed(obj.s, 0, 2);
-		return time;
-	}
-
-
-
-
-
-
-	/*1 \bstruct wd_check(\bvoid value, \bstr check...)*/
-	function wd_check(value) {/* retorna o tipo e o valor do objeto */
-		value;
-
-		/* Valores simples */
-		if (val === undefined)             return {type: "undefined", value: val};
-		if (val === null)                  return {type: "null", value: val};
-		if (val === true || val === false) return {type: "boolean", value: val};
-
-		/* Valores em forma de string */
-		if (typeof val === "string" || val instanceof String) {
-			/* nulo/vazio */
-			val = val.trim();
-			if (val === "") return {type: "null", value: null};
-			/* tempo, data e número */
-			let mtds = {
-				"date": wd_str_date, "time": wd_str_time, "number": wd_str_number
-			};
-			for (let t in mtds) {
-				value = mtds[t](val);
-				if (value !== null) return {value: value, type: t}
-			}
-			/* padrão: texto */
-			return {type: "text", value: val.toString()};
-		}
-
-		/* Elementos da árvore DOM */
-		value = wd_dom(val);
-		if (value !== null)
-			return {value: value, type: "dom"};
-
-		/* Outros Elementos */
-		/* BigInt */
-		if (typeof val === "bigint" || ("BigInt" in window && val instanceof BigInt))
-			return {type: "unknown", value: val.valueOf()};
-		/* Number e NaN */
-		if (typeof val === "number" || ("Number" in window && val instanceof Number))
-			return isNaN(val) ? {type: "unknown", value: val} : {type: "number", value: val.valueOf()};
-		/* array */
-		if ("Array" in window && (("isArray" in Array && Array.isArray(val)) || val instanceof Array))
-			return {type: "array", value: val.slice()};
-		/* data */
-		if ("Date" in window && val instanceof Date)
-			return {type: "date", value: wd_set_date(val)};
-		/* regexp */
-		if ("RegExp" in window && val instanceof RegExp)
-
-			return {type: "regexp", value: val.valueOf()};
-		/* boolean */
-		if (typeof val === "boolean" || ("Boolean" in window && val instanceof Boolean))
-			return {type: "boolean", value: val.valueOf()};
-		/* function */
-		if (typeof val === "function" || ("Function" in window && val instanceof Function))
-			return {type: "function", value: val};
-		/* object */
-		if (typeof val === "object" && (/^\{.*\}$/).test(JSON.stringify(val)))
-			return {type: "object", value: val};
-		/* desconhecido: não se encaixa nos anteriores */
-		return {type: "unknown", value: val};
-	}
 
 
 
@@ -4428,7 +4400,7 @@ function wd_time_iso(number) { /* transforma valor numérico em tempo no formato
 		device:  {get:   function() {return wd_get_device();}},
 		today:   {get:   function() {return WD(new Date());}},
 		now:     {get:   function() {return WD(wd_str_now());}},
-		i: {value: function(x){return wd_check_str(x);}}
+		i: {value: function(x){return WDtype(x);}}
 	});
 
 /* == BLOCO 4 ================================================================*/
@@ -4838,11 +4810,11 @@ function wd_time_iso(number) { /* transforma valor numérico em tempo no formato
 			facebook: "https://www.facebook.com/sharer.php?u="+url,
 			/* https://developer.twitter.com/en/docs/twitter-for-websites/tweet-button/guides/web-intent */
 			twitter:  "https://twitter.com/intent/tweet?url="+url+"&text="+title,
-			/**** https://www.coderstool.com/share-social-link-generator ****/
+			/* https://www.coderstool.com/share-social-link-generator */
 			linkedin: "https://www.linkedin.com/shareArticle?url="+url+"&title="+title,
 			/* https://www.reddit.com/dev/api#POST_api_submit */
 			reddit:   "https://reddit.com/submit?url="+url+"&title="+title,
-			/**** https://www.coderstool.com/share-social-link-generator ****/
+			/* https://www.coderstool.com/share-social-link-generator */
 			evernote: "https://www.evernote.com/clip.action?url="+url+"&title="+title,
 			/* https://core.telegram.org/widgets/share */
 			telegram: "https://t.me/share/url?url="+url+"&text="+title,
