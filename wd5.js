@@ -261,16 +261,16 @@ const wd = (function() {
 /*===========================================================================*/
 
 	/**f{b{object}b WDtype(b{void}b input)}f*/
-	/**p{Construtor que identifica o tipo do argumento e resgata seu valor primitivo.}p*/
+	/**p{Construtor que identifica o tipo do argumento e extrai seu valor para uso da biblioteca.}p*/
+	/**p{Tipos de referência retornam valores de referência e tipos primitivos retornam valores primitivos.}p*/
 	/**l{d{c{input}c - Dado a ser examinado.}d}l*/
-	/**Os atributos retornam \cnull se o argumento não corresponder ao tipo referenciado pelo atributo, exceto o atributo \inull.*/
-	/**Caso contrário, retornará um valor correspondente ao tipo do atributo, podendo sofrer adaptações para a biblioteca.*/
+	/**p{Os atributos de tipo informam se o argumento corresponde ao nome do atributo.}p l{*/
 	function WDtype(input) {
 		if (!(this instanceof WDtype)) return new WDtype(input)
 		this._input = input; /* valor original */
 		this._type  = null;  /* tipo do valor de entrada */
 		this._value = null;  /* valor a ser considerado */
-		this._type = this.type;
+		this._init();        /* definir atributos próprios */
 	}
 
 	Object.defineProperties(WDtype.prototype, {
@@ -285,86 +285,95 @@ const wd = (function() {
 				time24:  /^(0?\d|1\d|2[0-4])(\:[0-5]\d){1,2}$/
 			}
 		},
-		/**\bstr|\bnull string*/
-		/**(\igetter) Retorna uma string aparada.*/
+		/**t{b{boolean}b string}t d{Checa se o argumento é uma string, exceto se enquadrar em outra categoria.}d*/
 		string: {
-
 			get: function() {
-				if (typeof this._input === "string" || this._input instanceof String)
-					return this._input.trim();
-				return null;
+				if (this._type !== null) return this._type === "string" ? true : false;
+				if (typeof this._input === "string" || this._input instanceof String) {
+					/* string não pode definir _type porque outras verificações dependem dele */
+					return true;
+				}
+				return false;
 			}
 		},
-		/**\bnumber|\bnull number*/
-		/**(\igetter) Retorna um número normal, fatorial ou percentual, exceto \cNaN.*/
+		/**t{b{boolean}b number}t d{Checa se o argumento é um número real. */
+		/**Aceita também número em forma de String: real, fatorial ou percentual.}d*/
 		number: {
 			get: function() {
+				if (this._type !== null) return this._type === "number" ? true : false;
+				/* número normal */
 				if (typeof this._input === "number" || this._input instanceof Number) {
-					if (isNaN(this._input)) return null;
-					return this._input.valueOf();
+					if (isNaN(this._input)) return false;
+					this._type  = "number";
+					this._value = this._input.valueOf();
+					return true
 				}
+				if (!this.string) return false;
 				/* Número em forma de String (normal, percentual e fatorial) */
-				let value = this.string;
-				if (value === null) return null;
+				let value = this._input.trim();
 				if (this._re.number.test(value)) {
 					let end = value[value.length-1];
-					/* fatorial */
-					if (end === "!") {
+					if (end === "!") { /* fatorial */
 						value = Number(value.replace("!", ""));
 						let num = 1;
 						while (value > 1) num = num * value--;
 						this._input = num;
 						return this.number;
 					}
-					/* porcentagem */
-					if (end === "%") {
+					if (end === "%") { /* porcentagem */
 						value = Number(value.replace("%", ""));
-						return value/100;
+						this._input = value/100;
+						return this.number;
 					}
 					/* normal */
 					this._input = Number(value);
 					return this.number;
 				}
 
-				return null;
+				return false;
 			}
 		},
-		/**\bbool|\bnull boolean*/
-		/**(\igetter) Retorna \ctrue ou \cfalse.*/
+		/**t{b{boolean}b boolean}t d{Checa se o argumento é um valor booleano.}d*/
 		boolean: {
 			get: function() {
-				if (typeof this._input === "boolean" || this._input instanceof Boolean)
-					return this._input.valueOf();
-				return null;
+				if (this._type !== null) return this._type === "boolean" ? true : false;
+				if (typeof this._input === "boolean" || this._input instanceof Boolean) {
+					this._type  = "boolean";
+					this._value = this._input.valueOf();
+					return true;
+				}
+				return false;
 			}
 		},
-		/**\bregexp|\bnull regexp*/
-		/**(\igetter) Retorna a expressão regular.*/
+		/**t{b{boolean}b regexp}t d{Checa se o argumento é uma expressão regular.}d*/
 		regexp: {
 			get: function() {
-				if (this._input instanceof RegExp)
-					return this._input.valueOf();
-				return null;
+				if (this._type !== null) return this._type === "regexp" ? true : false;
+				if (this._input instanceof RegExp) {
+					this._type  = "regexp";
+					this._value = this._input;
+					return true;
+				}
+				return false;
 			}
 		},
-		/**\bdate|\bnull regexp*/
-		/**(\igetter) Retorna uma cópia de data (DD/MM/YYYY,  MM.DD.YYYY, YYYY-MM-DD) com valor fixado em 12h.*/
+		/**t{b{boolean}b date}t d{Checa se o argumento é uma data. */
+		/**Aceita datas em String nos formatos: v{DD/MM/YYYY MM.DD.YYYY YYYY-MM-DD}v.}d*/
 		date: {
 			get: function() {
+				if (this._type !== null) return this._type === "date" ? true : false;
 				if (this._input instanceof Date) {
-					let date = new Date();
-					date.setFullYear(this._input.getFullYear());
-					date.setMonth(this._input.getMonth());
-					date.setDate(this._input.getDate());
-					date.setHours(12);
-					date.setMinutes(0);
-					date.setSeconds(0);
-					date.setMilliseconds(0);
-					return date;
+					this._type  = "date";
+					this._value = this._input;
+					this._value.setHours(12);
+					this._value.setMinutes(0);
+					this._value.setSeconds(0);
+					this._value.setMilliseconds(0);
+					return true;
 				}
+				if (!this.string) return false;
 				/* Datas em forma de String */
-				let value = this.string;
-				if (value === null) return null;
+				let value = this._input.trim();
 				let d, m, y;
 				if (this._re.dateDMY.test(value)) { /* DD/MM/YYYY */
 					let date = this._input.split("/");
@@ -382,19 +391,19 @@ const wd = (function() {
 					m = date[1];
 					y = date[0];
 				} else {
-					return null;
+					return false;
 				}
 				d = Number(d);
 				m = Number(m);
 				y = Number(y);
 				/* checando ano */
-				if (y < 1 || y > 9999) return null;
+				if (y < 1 || y > 9999) return false;
 				/* checando mês */
-				if (m < 1 || m > 12) return null;
+				if (m < 1 || m > 12) return false;
 				/* checando dia */
 				let feb  = (y%400 === 0 || (y%4 === 0 && y%100 !== 0)) ?  29 : 28;
 				let days = [0, 31, feb, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-				if (d < 1 || d > days[m]) return null;
+				if (d < 1 || d > days[m]) return false;
 				let date = new Date();
 				date.setFullYear(y);
 				date.setMonth(m-1);
@@ -403,50 +412,68 @@ const wd = (function() {
 				return this.date;
 			}
 		},
-		/**\bfunction|\bnull function*/
-		/**(\igetter) Retorna a função.*/
+		/**t{b{boolean}b function}t d{Checa se o argumento é uma função.}d*/
 		function: {
 			get: function() {
-				if (typeof this._input === "function" || this._input instanceof Function)
-					return this._input;
-				return null;
+				if (this._type !== null) return this._type === "function" ? true : false;
+				if (typeof this._input === "function" || this._input instanceof Function) {
+					this._type  = "function";
+					this._value = this._input;
+					return true;
+				}
+				return false;
 			}
 		},
-		/**\barray|\bnull array*/
-		/**(\igetter) Retorna uma cópia do array.*/
+		/**t{b{boolean}b array}t d{Checa se o argumento é um array.}d*/
 		array: {
 			get: function() {
-				if (Array.isArray(this._input) || this._input instanceof Array)
-					return this._input.slice();
-				return null
+				if (this._type !== null) return this._type === "array" ? true : false;
+				if (Array.isArray(this._input) || this._input instanceof Array) {
+					this._type  = "array";
+					this._value = this._input;
+					return true;
+				}
+				return false;
 			}
 		},
-		/**\bnull|\bundefined null*/
-		/**(\igetter) Retorna \inull se nulo ou string vazia e \cundefined, caso contrário.*/
+		/**t{b{boolean}b null}t d{Checa se o argumento é um valor nulo ou uma string vazia.}d*/
 		null: {
 			get: function () {
-				return this._input === null || this.string ===  "" ? null : undefined;
+				if (this._type !== null) return this._type === "null" ? true : false;
+				let str = this.string ? (this._input.trim() === "" ? true : false) : false;
+				if (this._input === null || str) {
+					this._type  = "null";
+					this._value = null;
+					return true;
+				}
+				return false;
 			}
 		},
-		/**\bundefined|\bnull undefined*/
-		/**(\igetter) Retorna um valor indefinido.*/
+		/**t{b{boolean}b undefined}t d{Checa se o argumento é um valor indefinido.}d*/
 		undefined: {
 			get: function() {
-				return (this._input === undefined || typeof this._input === "undefined") ? undefined : null;
+				if (this._type !== null) return this._type === "undefined" ? true : false;
+				if (this._input === undefined || typeof this._input === "undefined") {
+					this._type  = "undefined";
+					this._value = undefined;
+					return true;
+				}
+				return false;
 			}
 		},
-		/**\bstruct|\bnull time*/
-		/**(\igetter) Retorna uma estrutura com dados de tempo (HH:MM AMPM, HH:MM:SS): hora (\ih), minuto (\im) e segundo (\is).*/
+		/**t{b{boolean}b time}t d{Checa se o argumento é uma string que representa tempo. */
+		/**Aceita os formatos 24h (v{HH:MM:SS}v) 12h (v{HH:MM AMPM}v).}d*/
 		time: {
 			get: function() {
-				let value = this.string;
-				if (value === null) return null;
+				if (this._type !== null) return this._type === "time" ? true : false;
+				if (!this.string) return false;
+				let value = this._input.trim();
 				let h, m, s;
 				if (this._re.time12.test(value)) { /* HH:MM AMPM */
 					let am   = value[value.length - 2].toUpperCase() === "A" ? true : false;
 					let time = value.replace(/[^0-9:]/g, "").split(":");
 					h = Number(time[0]);
-					if (h < 1 || h > 12) return null;
+					if (h < 1 || h > 12) return false;
 					h = am ? (h % 12) : (h === 12 ? 12 : ((12 + h ) % 24));
 					m = Number(time[1]);
 					s = 0;
@@ -456,213 +483,118 @@ const wd = (function() {
 					m = Number(time[1]);
 					s = time.length === 3 ? Number(date[2]) : 0;
 				} else {
-					return null;
+					return false;
 				}
 				h = h%24;
-				if (h < 0 || h > 24) return null;
-				if (m < 0 || m > 59) return null;
-				if (s < 0 || s > 59) return null;
-				return {h: h, m: m, s: s, valueOf: function() {return 3600*h+60*m+s}};
+				if (h < 0 || h > 24) return false;
+				if (m < 0 || m > 59) return false;
+				if (s < 0 || s > 59) return false;
+				let ss = 3600*h+60*m+s;
+				this._type  = "time";
+				this._value = {h: h, m: m, s: s, valueOf: function() {return ss;}};
+				return true;
 			}
 		},
-		/**\bnode|\bnull node*/
-		/**(\igetter) Retorna o nó de elemento HTML em um array.*/
+		/**t{b{boolean}b node}t d{Checa se o argumento é uma nó de elemento HTML ou uma coleção desse.}d*/
 		node: {
 			get: function() {
-				if (this._input === document || this._input === window)
-					return [this._input];
-				if ("HTMLElement" in window && this._input instanceof HTMLElement)
-					return [this._input];
-				if ("SVGElement" in window && this._input instanceof SVGElement)
-					return [this._input];
-				if ("MathMLElement" in window && this._input instanceof MathMLElement)
-					return [this._input];
-				return null;
-			}
-		},
-		/**\bnodes|\bnull nodes*/
-		/**(\igetter) Retorna os nós de elementos HTML em um array.*/
-		nodes: {
-			get: function() {
-				if (
-					"NodeList"                   in window && this._input instanceof NodeList ||
-					"HTMLCollection"             in window && this._input instanceof HTMLCollection ||
-					"HTMLAllCollection"          in window && this._input instanceof HTMLAllCollection ||
-					"HTMLOptionsCollection"      in window && this._input instanceof HTMLOptionsCollection ||
-					"HTMLFormControlsCollection" in window && this._input instanceof HTMLFormControlsCollection
-				) {
-					let value = [];
-					for (let i = 0; i < this._input.length; i++)
-						value.push(this._input[i]);
-					return value;
+				if (this._type !== null) return this._type === "node" ? true : false;
+				/* 0: individual, 1: coletivo, outros: direto */
+				let nodes = {
+					window: window, document: document,
+					HTMLElement: 0, SVGElement: 0, MathMLElement: 0,
+					NodeList: 1, HTMLCollection: 1, HTMLAllCollection: 1,
+					HTMLOptionsCollection: 1, HTMLFormControlsCollection: 1
 				}
-				return null;
-			}
-		},
-
-
-
-
-
-		isStruct: { /**\bbool isStruct*//**(\igetter) Checa se o argumento é do tipo \iobject primitivo (\bstruct).*/
-			get: function() {
-				return typeof this._input === "object" && (/^\{.*\}$/).test(JSON.stringify(this._input)) ? true : false;
-			}
-		},
-
-
-
-
-
-
-
-
-
-
-		type: {/**\bstr type*//**(\igetter) retorna o tipo do argumento*/
-			get: function() {
-				if (this._type !== null) return this._type;
-
-				/* tipos independentes */
-				let types = {
-					boolean:  "boolean", number: "number", date:  "date", time:   "time",
-					array:    "array",   node:   "node",   nodes: "node", regexp: "regexp",
-					function: "function"
-				};
-				for (let i in types) {
-					let value = this[i];
-					if (value !== (i === "null" ? undefined : null)) {
-						this._value = value;
-						this._type  = types[i];
-						return this.type;
+				let html = [];
+				for (var obj in nodes) {
+					let ref = nodes[obj];
+					if (ref === 0 || ref === 1) {
+						if (obj in window && this._input instanceof window[obj]) {
+							this._type = "node";
+							if (ref === 0) {
+								html.push(this._input);
+							} else {
+								for (let i = 0; i < this._input.length; i++)
+									html.push(this._input[i]);
+							}
+						}
+					} else if (ref === this._input)  {
+						this._type = "node";
+						html.push(this._input);
+					}
+					if (this._type === "node") {
+						this._value = html;
+						return true;
 					}
 				}
-				/* tipos dependentes */
-				let string = this.string;
-				let NULL   = this.null;
-				if (string !== null) {
-					this._value = NULL === null ? NULL   : string;
-					this._type  = NULL === null ? "null" : "text";
-					return this.type;
-				}
-				/* tipos indefinidos */
-				this._value = this._input;
-				this._type  = "unknow";
-				return this.type;
+				return false;
 			}
 		},
+		/**t{b{boolean}b object}t d{Checa se o argumento é um objeto, exceto se enquadrado em outra categoria.}d */
+		object: {
+			get: function() {
+				if (this._type !== null) return this._type === "object" ? true : false;
+				if (this.string) return false;
+				if (typeof this._input === "object") {
+					this._type  = "object";
+					this._value = this._input;
+					return true;
+				}
+				return false;
+			}
+		},
+		/**t{b{void}b _init()}t d{Analisa o argumento e define os parâmetros iniciais do objeto.}d */
+		_init: {
+			value: function() {
+				if (this._type !== null) return;
 
-
-
-
-
+				/* tipos próprios */
+				let types = [
+					"null", "undefined", "boolean", "number", "date", "time", "array",
+					"node", "regexp", "function"
+				];
+				for (let i = 0; i < types.length; i++)
+					if (this[types[i]]) return;
+				/* tipos auxiliares, genéricos e desconhecidos */
+				if (this.string) {
+					this._type  = "string";
+					this._value = this._input.trim().replace(/\ +/g, " ");
+					return;
+				}
+				if (this.object) {
+					this._type  = "object";
+					this._value = this._input;
+					return;
+				}
+				this._value = this._input;
+				this._type  = "unknow";
+				return;
+			}
+		},
+		value: {
+			get: function() {
+				if (this._type === null) this._init();
+				return this._value;
+			}
+		},
+		type: {
+			get: function() {
+				if (this._type === null) this._init();
+				return this._type;
+			}
+		},
 		valueOf: {/**\bvoid valueOf()*//**retorna o valor do argumento.*/
 			value: function() {
-				return;
+				return this.value.valueOf();
 			}
 		}
 	});
 
 
+//FIXME ver data, mantem objeto ou {d,m,y}
 
-
-
-
-
-
-
-
-
-//FIXME falta HTML, SVG e HTML Collection
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+//FIXME a partir daqui começa a quebrar a biblioteca a cada mudança
 
 
 /*----------------------------------------------------------------------------*/
