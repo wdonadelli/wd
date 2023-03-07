@@ -262,9 +262,7 @@ const wd = (function() {
 
 	/**f{b{object}b WDtype(b{void}b input)}f*/
 	/**p{Construtor que identifica o tipo do argumento e extrai seu valor para uso da biblioteca.}p*/
-	/**p{Tipos de referência retornam valores de referência e tipos primitivos retornam valores primitivos.}p*/
-	/**l{d{c{input}c - Dado a ser examinado.}d}l*/
-	/**p{Os atributos de tipo informam se o argumento corresponde ao nome do atributo.}p l{*/
+	/**l{d{c{input}c - Dado a ser examinado.}d}l p{Possui a seguinte estrutura:}p l{*/
 	function WDtype(input) {
 		if (!(this instanceof WDtype)) return new WDtype(input)
 		this._input = input; /* valor original */
@@ -358,17 +356,44 @@ const wd = (function() {
 			}
 		},
 		/**t{b{boolean}b date}t d{Checa se o argumento é uma data. */
-		/**Aceita datas em String nos formatos: v{DD/MM/YYYY MM.DD.YYYY YYYY-MM-DD}v.}d*/
+		/**Aceita o construtor nativo c{Date}c e datas em String: v{DD/MM/YYYY MM.DD.YYYY YYYY-MM-DD}v.}d*/
 		date: {
 			get: function() {
 				if (this._type !== null) return this._type === "date" ? true : false;
 				if (this._input instanceof Date) {
+					/* fixar em meio dia para evitar horários de verão */
+					this._input.setHours(12);
+					this._input.setMinutes(0);
+					this._input.setSeconds(0);
+					this._input.setMilliseconds(0);
+					let input = this._input;
 					this._type  = "date";
-					this._value = this._input;
-					this._value.setHours(12);
-					this._value.setMinutes(0);
-					this._value.setSeconds(0);
-					this._value.setMilliseconds(0);
+					this._value = {
+						date: input,
+						get d() {return this.date.getDate();},
+						get m() {return this.date.getMonth()+1;},
+						get y() {return this.date.getFullYear();},
+						valueOf: function() { //FIXME não compensa colocar métodos em objetos simples
+							/* anos desde 0001 */
+							let delta = this.y - 1;
+							/* anos de 365 dias */
+							let d365 = 365*delta;
+							/* anos múltiplos de 4 (bissexto) */
+							let y4   = (delta - delta%4) / 4;
+							/* anos múltiplos de 100 (não bissexto) */
+							let y100 = (delta - delta%100) / 100;
+							/* anos múltiplos de 400 (bissexto) */
+							let y400 = (delta - delta%400) / 400;
+							/* dias do ano atual */
+							let len  = [null, 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
+							let days = len[this.m] + this.d;
+							/* bissexto acresce um dia se após fevereiro */
+							if (this.m > 2)
+								days += (this.y%400 === 0 || (this.y%4 === 0 && this.y%100 !== 0)) ?  1 : 0;
+							/* retornando dias desde 0001-01-01 */
+							return d365 + y4 -y100 + y400 + days;
+						}
+					};
 					return true;
 				}
 				if (!this.string) return false;
@@ -402,7 +427,7 @@ const wd = (function() {
 				if (m < 1 || m > 12) return false;
 				/* checando dia */
 				let feb  = (y%400 === 0 || (y%4 === 0 && y%100 !== 0)) ?  29 : 28;
-				let days = [0, 31, feb, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+				let days = [null, 31, feb, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 				if (d < 1 || d > days[m]) return false;
 				let date = new Date();
 				date.setFullYear(y);
@@ -491,11 +516,18 @@ const wd = (function() {
 				if (s < 0 || s > 59) return false;
 				let ss = 3600*h+60*m+s;
 				this._type  = "time";
-				this._value = {h: h, m: m, s: s, valueOf: function() {return ss;}};
+				this._value = {
+					h: h,
+					m: m,
+					s: s,
+					valueOf: function() { //FIXME não compensa colocar métodos em objetos simples
+						return 3600*this.h + 60*this.m + this.s;
+					}
+				};
 				return true;
 			}
 		},
-		/**t{b{boolean}b node}t d{Checa se o argumento é uma nó de elemento HTML ou uma coleção desse.}d*/
+		/**t{b{boolean}b node}t d{Checa se o argumento é um nó de u{elemento HTML}u ou uma coleção do respectivo tipo.}d*/
 		node: {
 			get: function() {
 				if (this._type !== null) return this._type === "node" ? true : false;
@@ -559,7 +591,7 @@ const wd = (function() {
 				/* tipos auxiliares, genéricos e desconhecidos */
 				if (this.string) {
 					this._type  = "string";
-					this._value = this._input.trim().replace(/\ +/g, " ");
+					this._value = this._input.toString();
 					return;
 				}
 				if (this.object) {
@@ -572,27 +604,36 @@ const wd = (function() {
 				return;
 			}
 		},
+		/**t{b{void}b value}t d{Retorna o valor do argumento para fins da biblioteca.}d */
+		/**d{Tipos de referência retornam valores de referência e tipos primitivos retornam valores primitivos, com exceções.}d*/
+		/**d{O tipo i{time}i retorna um objeto com a seguinte estrutura: l{*/
+		/**d{c{b{integer}b h}c - hora.}d d{c{b{integer}b m}c - minuto.}d d{c{b{integer}b s}c - segundo.}d*/
+		/**d{c{b{integer}b valueOf}c - quantidade total de segundos desde v{00h00}v.}d}l}d*/
+		/**d{O tipo i{date}i retorna um objeto com a seguinte estrutura: l{*/
+		/**d{c{b{integer}b h}c - dia.}d d{c{b{integer}b m}c - mês.}d d{c{b{integer}b y}c - ano.}d*/
+		/**d{c{b{object}b date}c - objeto i{Date}i associado (fixo em v{12h}v).}d*/
+		/**d{c{b{integer}b valueOf}c - quantidade total de dias desde v{0001-01-01}v.}d}l}d*/
 		value: {
 			get: function() {
 				if (this._type === null) this._init();
 				return this._value;
 			}
 		},
+		/**t{b{string}b type}t d{Retorna o tipo do argumento para uso da biblioteca.}d */
 		type: {
 			get: function() {
 				if (this._type === null) this._init();
 				return this._type;
 			}
 		},
-		valueOf: {/**\bvoid valueOf()*//**retorna o valor do argumento.*/
+		/**t{b{void}b valueOf}t d{Retorna o método i{valueOf}i do retorno do atributo i{value}i.}d}l*/
+		valueOf: {
 			value: function() {
 				return this.value.valueOf();
 			}
 		}
 	});
 
-
-//FIXME ver data, mantem objeto ou {d,m,y}
 
 //FIXME a partir daqui começa a quebrar a biblioteca a cada mudança
 
