@@ -260,19 +260,20 @@ const wd = (function() {
 	/**H{Checagem de Tipos e Valores}H*/
 /*===========================================================================*/
 
-	/**f{b{object}b WDtype(b{void}b input)}f*/
+	/**f{b{object}b _Type(b{void}b input)}f*/
 	/**p{Construtor que identifica o tipo do argumento e extrai seu valor para uso da biblioteca.}p*/
 	/**l{d{c{input}c - Dado a ser examinado.}d}l p{Possui a seguinte estrutura:}p l{*/
-	function WDtype(input) {
-		if (!(this instanceof WDtype)) return new WDtype(input)
+	function _Type(input) {
+		if (!(this instanceof _Type)) return new _Type(input)
 		this._input = input; /* valor original */
 		this._type  = null;  /* tipo do valor de entrada */
 		this._value = null;  /* valor a ser considerado */
 		this._init();        /* definir atributos próprios */
 	}
 
-	Object.defineProperties(WDtype.prototype, {
-		constructor: {value: WDtype},
+	Object.defineProperties(_Type.prototype, {
+		constructor: {value: _Type},
+		/**t{b{object}b _re}t d{Armazena as expressões regulares de conferência pelos diversos tipos.}d*/
 		_re: { /* expressões regulares para testar valores em forma de String */
 			value: {
 				number:  /^(\+?\d+\!|[+-]?(\d+|(\d+)?\.\d+)(e[+-]?\d+)?\%?)$/i,
@@ -633,6 +634,99 @@ const wd = (function() {
 			}
 		}
 	});
+
+/*===========================================================================*/
+	/**H{Objetos Auxiliares de Manipulação de Dados}H*/
+/*===========================================================================*/
+
+	/**h{Números}h*/
+	/**f{b{object}b _Number(b{number}b input)}f*/
+	/**p{Objeto interno para manipulação de números.}p*/
+	/**l{d{c{input}c - valor a ser gerenciado internamente pela biblioteca.}d}ll{*/
+	function _Number(input) {
+		if (!(this instanceof _Number)) return new _Number(input)
+		this._input = input; /* valor original */
+	}
+
+	Object.defineProperties(_Number.prototype, {
+		constructor: {value: _Number},
+		/** t{b{integer}b integer}t d{(getter) Retorna a parte inteira do número.}d*/
+		integer: {
+			get: function() {
+				if ("trunc" in Math) return Math.trunc(this);
+				return this < 0 ? Math.ceil(this) : Math.floor(this);
+			}
+		},
+		/** t{b{float}b float}t d{(getter) Retorna a parte decimal do número.}d*/
+		float: {
+			get: function() {
+				let exp = 1;
+				while ((this * exp)%1 !== 0) exp = 10*exp;
+				return (exp*this - exp*this.integer) / exp;
+			}
+		},
+		/** t{b{number}b fixed(b{integer}b n)}t d{Arredonda o número conforme especificado.}d*/
+		/**d{l{d{c{n}c - Número (maior ou igual a zero) de casas a arrendondar.}d}l}d*/
+		fixed: {
+			value: function(n) {
+				return Number(this.valueOf().toFixed(n));
+			}
+		},
+		notation: {
+ 			value: function(type, code) {
+ 				let types = {
+ 					local:         {style: "decimal",  notation: "standard",    display: "symbol"},
+ 					percent:       {style: "percent",  notation: "standard",    display: "symbol"},
+ 					unit:          {style: "unit",     notation: "standard",    display: "symbol"},
+ 					scientific:    {style: "decimal",  notation: "scientific",  display: "symbol"},
+ 					engineering:   {style: "decimal",  notation: "engineering", display: "symbol"},
+ 					compact:       {style: "decimal",  notation: "compact",     display: "symbol"},
+ 					currency:      {style: "currency", notation: "standard",    display: "symbol"},
+ 					shortCurrency: {style: "currency", notation: "standard",    display: "narrowSymbol"},
+ 					nameCurrency:  {style: "currency", notation: "standard",    display: "name"},
+ 					codeCurrency:  {style: "currency", notation: "standard",    display: "code"},
+ 				};
+ 				//https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/NumberFormat
+ 				//
+ 				type = type in types ? types[type] : types.local;
+				try {
+					return new Intl.NumberFormat(wd_lang(), {
+						style:           type.style,
+						notation:        type.notation,
+						currencyDisplay: type.display,
+						currency:        code
+					}).format(this.valueOf());
+				} catch(e) {}
+				//FIXME fazer as saídas antigas
+				return this.local;
+			}
+		},
+
+
+
+
+
+
+		valueOf: {
+			value: function() {return this._input;}
+		}
+
+	/**}l*/
+	});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 //FIXME a partir daqui começa a quebrar a biblioteca a cada mudança
@@ -4373,7 +4467,8 @@ const wd = (function() {
 		device:  {get:   function() {return wd_get_device();}},
 		today:   {get:   function() {return WD(new Date());}},
 		now:     {get:   function() {return WD(wd_str_now());}},
-		i: {value: function(x){return WDtype(x);}}
+		type: {value: function(x){return _Type(x);}},
+		number: {value: function(x){return _Number(x);}}
 	});
 
 /* == BLOCO 4 ================================================================*/
