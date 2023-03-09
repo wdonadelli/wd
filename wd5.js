@@ -262,7 +262,7 @@ const wd = (function() {
 
 	/**f{b{object}b _Type(b{void}b input)}f*/
 	/**p{Construtor que identifica o tipo do argumento e extrai seu valor para uso da biblioteca.}p*/
-	/**l{d{c{input}c - Dado a ser examinado.}d}l p{Possui a seguinte estrutura:}p l{*/
+	/**l{d{v{input}v - Dado a ser examinado.}d}l p{Possui a seguinte estrutura:}p l{*/
 	function _Type(input) {
 		if (!(this instanceof _Type)) return new _Type(input)
 		this._input = input; /* valor original */
@@ -636,13 +636,14 @@ const wd = (function() {
 	});
 
 /*===========================================================================*/
-	/**H{Objetos Auxiliares de Manipulação de Dados}H*/
+	/**H{Objetos Internos de Manipulação de Dados}H*/
 /*===========================================================================*/
 
 	/**h{Números}h*/
 	/**f{b{object}b _Number(b{number}b input)}f*/
 	/**p{Objeto interno para manipulação de números.}p*/
-	/**l{d{c{input}c - valor a ser gerenciado internamente pela biblioteca.}d}ll{*/
+	/**l{d{v{input}v - valor a ser gerenciado internamente pela biblioteca.}d}l*/
+	/**p{Métodos e atributos:}p l{*/
 	function _Number(input) {
 		if (!(this instanceof _Number)) return new _Number(input)
 		this._input = input; /* valor original */
@@ -650,14 +651,14 @@ const wd = (function() {
 
 	Object.defineProperties(_Number.prototype, {
 		constructor: {value: _Number},
-		/** t{b{integer}b integer}t d{(getter) Retorna a parte inteira do número.}d*/
+		/** t{b{integer}b integer}t d{Retorna a parte inteira do número.}d*/
 		integer: {
 			get: function() {
 				if ("trunc" in Math) return Math.trunc(this);
 				return this < 0 ? Math.ceil(this) : Math.floor(this);
 			}
 		},
-		/** t{b{float}b float}t d{(getter) Retorna a parte decimal do número.}d*/
+		/** t{b{float}b float}t d{Retorna a parte decimal do número.}d*/
 		float: {
 			get: function() {
 				let exp = 1;
@@ -665,56 +666,154 @@ const wd = (function() {
 				return (exp*this - exp*this.integer) / exp;
 			}
 		},
+		/** t{b{number}b abs}t d{Retorna o valor absoluto do número.}d*/
+		abs: {
+			get: function () {
+				return (this < 0 ? -1 : 1) * this.valueOf();
+			}
+		},
 		/** t{b{number}b fixed(b{integer}b n)}t d{Arredonda o número conforme especificado.}d*/
-		/**d{l{d{c{n}c - Número (maior ou igual a zero) de casas a arrendondar.}d}l}d*/
+		/**d{l{d{v{n}v - Número (v{&ge; 0}v) de casas decimais a arrendondar.}d}l}d*/
 		fixed: {
 			value: function(n) {
 				return Number(this.valueOf().toFixed(n));
 			}
 		},
+		/** t{b{string}b precision(b{integer}b n)}t d{Fixa a quantidade de dígitos significativos do número.}d*/
+		/**d{l{d{v{n}v - Número (v{&ge; 0}v) de digítos a formatar.}d}l}d*/
+		precision: {
+			value: function(n) {
+				return this.abs < 1 ? this.valueOf().toExponential(n-1) : this.valueOf().toPrecision(n);
+			}
+		},
+		/** t{b{number}b pow(b{number}b n)}t d{Aplica potenciação ao número.}d*/
+		/**d{l{d{v{n}v - Valor do expoente.}d}l}d*/
+		pow: {
+			value: function (n) {
+				try      {
+					let value = Math.pow(this.valueOf(), n);
+					return isNaN(value) ? null : value;
+				}
+				catch(e) {return null;}
+			}
+		},
+		/** t{b{string}b exp(b{integer}b n, b{boolean}b html)}t d{Aplica exponenciação de base 10 ao número.}d d{l{*/
+		/**d{v{n}v - Número (v{&ge; 0}v) de casas decimais.}d*/
+		/**d{v{html}v - Transforma o resultado em notação HTML.}d }l}d*/
+		exp: {
+			value: function(n, html) {
+				let value = this.valueOf().toExponential(n);
+				return html !== true ? value : value.replace(/e/i, " &times; 10<sup>")+"</sup>";
+			}
+		},
+		/**t{b{string}b notation(b{string}b lang, b{string}b type, b{string}b code)}t*/
+		/**d{Retorna o número de acordo com a linguagem e formatação. Retorna c{null}c se um erro ocorrer.}d d{l{*/
+		/**d{c{lang}c - Código da linguagem a ser aplicada.}d*/
+		/**d{c{type}c - Tipo da formatação:}d d{l{*/
+		/**d{v{"percent"}v - formatação percentual.}d*/
+		/**d{v{"unit"}v - unidade de medida.}d*/
+		/**d{v{"sci"}v - Notação científica.}d*/
+		/**d{v{"eng"}v - Notação de engenharia.}d*/
+		/**d{v{"compact"}v - Notação compacta.}d*/
+		/**d{v{"currency"}v - Notação monetária.}d*/
+		/**d{v{"ccy"}v - Notação monetária curta.}d*/
+		/**d{v{"tccy"}v - Notação monetária textual.}d }l}d*/
+		/**d{c{code}c - código da notação monetária ou da unidade de medida.}d }l}d*/
+		/*https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/NumberFormat*/
+		/*https://tc39.es/proposal-unified-intl-numberformat/section6/locales-currencies-tz_proposed_out.html#sec-issanctionedsimpleunitidentifier*/
 		notation: {
- 			value: function(type, code) {
+ 			value: function(lang, type, code) {
  				let types = {
- 					local:         {style: "decimal",  notation: "standard",    display: "symbol"},
- 					percent:       {style: "percent",  notation: "standard",    display: "symbol"},
- 					unit:          {style: "unit",     notation: "standard",    display: "symbol"},
- 					scientific:    {style: "decimal",  notation: "scientific",  display: "symbol"},
- 					engineering:   {style: "decimal",  notation: "engineering", display: "symbol"},
- 					compact:       {style: "decimal",  notation: "compact",     display: "symbol"},
- 					currency:      {style: "currency", notation: "standard",    display: "symbol"},
- 					shortCurrency: {style: "currency", notation: "standard",    display: "narrowSymbol"},
- 					nameCurrency:  {style: "currency", notation: "standard",    display: "name"},
- 					codeCurrency:  {style: "currency", notation: "standard",    display: "code"},
+ 					percent:  {style: "percent", notation: "standard"},
+ 					unit:     {style: "unit", unit: code},
+ 					sci:      {notation: "scientific"},
+ 					eng:      {notation: "engineering"},
+ 					compact:  {notation: "compact"},
+ 					currency: {style: "currency", currencyDisplay: "symbol",       currency: code},
+ 					ccy:      {style: "currency", currencyDisplay: "narrowSymbol", currency: code},
+ 					tccy:     {style: "currency", currencyDisplay: "name",         currency: code}
  				};
- 				//https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/NumberFormat
- 				//
- 				type = type in types ? types[type] : types.local;
-				try {
-					return new Intl.NumberFormat(wd_lang(), {
-						style:           type.style,
-						notation:        type.notation,
-						currencyDisplay: type.display,
-						currency:        code
-					}).format(this.valueOf());
-				} catch(e) {}
-				//FIXME fazer as saídas antigas
-				return this.local;
+ 				type = String(type).toLowerCase();
+ 				try {
+ 					return this.valueOf().toLocaleString(lang, (type in types ? types[type] : {}));
+ 				} catch(e) {
+ 					return null;
+ 				}
+			}
+		},
+		/**t{b{number}b valueOf()}t d{Retorna o próprio número.}d*/
+		valueOf: {
+			value: function() {return this._input;}
+		},
+		/**t{b{string}b toString()}t d{Retorna o método de mesmo nome para o número.}d }l*/
+		toString: {
+			value: function() {return this.valueOf().toString();}
+		}
+	});
+
+	/**h{String}h*/
+	/**f{b{object}b _String(b{string}b input)}f*/
+	/**p{Objeto interno para manipulação de strings.}p*/
+	/**l{d{v{input}v - valor a ser gerenciado internamente pela biblioteca.}d}l*/
+	/**p{Métodos e atributos:}p l{*/
+	function _String(input) {
+		if (!(this instanceof _String)) return new _String(input)
+		this._input = input; /* valor original */
+	}
+
+	Object.defineProperties(_String.prototype, {
+		constructor: {value: _String},
+		/** t{b{string}b upper}t d{Retorna o texto em caixa alta.}d*/
+		upper: {
+			get: function() {
+				return this._input.toUpperCase();
+			}
+		},
+		/** t{b{string}b lower}t d{Retorna o texto em caixa baixa.}d*/
+		lower: {
+			get: function() {
+				return this._input.toLowerCase();
+			}
+		},
+		/** t{b{string}b lower}t d{Retorna o texto captalizado.}d*/
+		caps: {
+			get: function() {
+				let value = this.lower.split(" ");
+				let i = -1;
+				while (++i < value.length)
+					value[i] = value[i].charAt(0).toUpperCase()+value[i].substr(1);
+				return value.join(" ");
+			}
+		},
+		tgl: {
+			get: function() {
+				let value = [];
+				let i = -1;
+				while (++i < this._input.length) {
+					let char  = this._input[i];
+					let upper = char.toUpperCase();
+					let lower = char.toLowerCase();
+					value.push(char === upper ? lower : upper);
+				}
+				return value.join("");
+			}
+		},
+		clear: {
+			get: function() {
+				return this.toString().replace(/\s+/g, " ");
 			}
 		},
 
 
 
-
-
-
-		valueOf: {
-			value: function() {return this._input;}
+		toString: {
+			value: function() {
+				return this._input.trim();
+			}
 		}
 
-	/**}l*/
+
 	});
-
-
 
 
 
@@ -4468,7 +4567,8 @@ const wd = (function() {
 		today:   {get:   function() {return WD(new Date());}},
 		now:     {get:   function() {return WD(wd_str_now());}},
 		type: {value: function(x){return _Type(x);}},
-		number: {value: function(x){return _Number(x);}}
+		number: {value: function(x){return _Number(x);}},
+		string: {value: function(x){return _String(x);}}
 	});
 
 /* == BLOCO 4 ================================================================*/
