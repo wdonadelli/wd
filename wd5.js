@@ -101,7 +101,7 @@ const wd = (function() {
 			return this.counter;
 		},
 		/**t{b{void}b progress(b{float}b x)}t d{Define o valor da barra de progresso.}d*/
-		/**d{c{x}c - Valor a ser definido para a barra de progresso, de 0 a 1.}d}l*/
+		/**d{v{x}v - Valor a ser definido para a barra de progresso, de 0 a 1.}d}l*/
 		progress: function(x) {
 			let tag    = this.bar.tagName.toLowerCase();
 			let value  = tag === "div" ? wd_num_str(x, true) : x;
@@ -146,7 +146,7 @@ const wd = (function() {
 			};
 		},
 		/**t{b{void}b _close(b{node}b elem)}t d{Demanda o fechamento da caixa de mensagem (tempo ou ação).}d*/
-		/**d{c{elem}c - caixa de mensagem a ser fechada.}d*/
+		/**d{v{elem}v - caixa de mensagem a ser fechada.}d*/
 		_close: function(elem) {
 				try {this.main.removeChild(elem);} catch(e){}
 				if (this.main.children.length === 0)
@@ -170,8 +170,8 @@ const wd = (function() {
 		},
 		/**t{b{void}b open(b{string}b message, b{string}b title)}t*/
 		/**d{Demanda a abertura de uma nova caixa de mensagem:}d*/
-		/**d{c{message}c - texto da mensagem.}d*/
-		/**d{c{title}c - (opcional, v{""}v) texto do cabeçalho.}d}l*/
+		/**d{v{message}v - texto da mensagem.}d*/
+		/**d{v{title}v - (opcional, v{""}v) texto do cabeçalho.}d}l*/
 		open: function(message, title) { /* abre uma mensagem */
 			/* criação do container principal, se inexistente */
 			if (this.main === null) this._init();
@@ -262,7 +262,8 @@ const wd = (function() {
 
 	/**f{b{object}b _Type(b{void}b input)}f*/
 	/**p{Construtor que identifica o tipo do argumento e extrai seu valor para uso da biblioteca.}p*/
-	/**l{d{v{input}v - Dado a ser examinado.}d}l p{Possui a seguinte estrutura:}p l{*/
+	/**l{d{v{input}v - Dado a ser examinado.}d}l*/
+	/**p{Métodos e atributos:}p l{*/
 	function _Type(input) {
 		if (!(this instanceof _Type)) return new _Type(input)
 		this._input = input; /* valor original */
@@ -356,8 +357,9 @@ const wd = (function() {
 				return false;
 			}
 		},
-		/**t{b{boolean}b date}t d{Checa se o argumento é uma data. */
-		/**Aceita o construtor nativo c{Date}c e datas em String: v{DD/MM/YYYY MM.DD.YYYY YYYY-MM-DD}v.}d*/
+		/**t{b{boolean}b date}t*/
+		/**d{Checa se o argumento é uma data.}d*/
+		/**d{Aceita o construtor nativo c{Date}c e datas em String: v{DD/MM/YYYY MM.DD.YYYY YYYY-MM-DD}v.}d*/
 		date: {
 			get: function() {
 				if (this._type !== null) return this._type === "date" ? true : false;
@@ -487,8 +489,9 @@ const wd = (function() {
 				return false;
 			}
 		},
-		/**t{b{boolean}b time}t d{Checa se o argumento é uma string que representa tempo. */
-		/**Aceita os formatos 24h (v{HH:MM:SS}v) 12h (v{HH:MM AMPM}v).}d*/
+		/**t{b{boolean}b time}t*/
+		/**d{Checa se o argumento é uma string que representa tempo.}d*/
+		/**d{Aceita os formato 24h (v{HH:MM:SS}v) e o de 12h (v{HH:MM AMPM}v).}d*/
 		time: {
 			get: function() {
 				if (this._type !== null) return this._type === "time" ? true : false;
@@ -651,6 +654,12 @@ const wd = (function() {
 
 	Object.defineProperties(_Number.prototype, {
 		constructor: {value: _Number},
+		/** t{b{boolean}b finite}t d{Informa se o número é finito.}d*/
+		finite: {
+			get: function() {
+				return (this.abs === Infinity || isNaN(this._input)) ? false : isFinite(this._input);
+			}
+		},
 		/** t{b{integer}b integer}t d{Retorna a parte inteira do número.}d*/
 		integer: {
 			get: function() {
@@ -661,9 +670,40 @@ const wd = (function() {
 		/** t{b{float}b float}t d{Retorna a parte decimal do número.}d*/
 		float: {
 			get: function() {
+				if (!this.finite) return this.valueOf();
 				let exp = 1;
 				while ((this * exp)%1 !== 0) exp = 10*exp;
 				return (exp*this - exp*this.integer) / exp;
+			}
+		},
+		primes: {
+			get: function() {
+				let list = [];
+				let i    = 2;
+				let end  = this.integer;
+				while (i < end) {
+					for ()
+
+				}
+
+
+
+
+			}
+		},
+
+		ref: {
+			get: function() {
+				let obj = this;
+				let ref = {
+					"integer": obj != 0 && obj.finite && obj == obj.integer ? true : false,
+					"float":   obj != 0 && obj.finite && obj == obj.float ? true : false,
+					"infinity": obj.abs == Infinity ? true : false,
+					"zero": obj == 0 ? true : false,
+					"real": true
+				};
+				for (let i in ref)
+					if (ref[i]) return (this < 0 ? "-" : "+")+i;
 			}
 		},
 		/** t{b{number}b abs}t d{Retorna o valor absoluto do número.}d*/
@@ -672,34 +712,34 @@ const wd = (function() {
 				return (this < 0 ? -1 : 1) * this.valueOf();
 			}
 		},
-		/** t{b{number}b fixed(b{integer}b n)}t d{Arredonda o número conforme especificado.}d*/
-		/**d{l{d{v{n}v - Número (v{&ge; 0}v) de casas decimais a arrendondar.}d}l}d*/
-		fixed: {
+		/**t{b{number}b round(b{integer}b n)}t d{Arredonda o número conforme especificado.}d*/
+		/**d{v{n}v - (v{&ge; 0}v) Número de casas decimais a arrendondar.}d*/
+		round: {
 			value: function(n) {
 				return Number(this.valueOf().toFixed(n));
 			}
 		},
 		/** t{b{string}b precision(b{integer}b n)}t d{Fixa a quantidade de dígitos significativos do número.}d*/
-		/**d{l{d{v{n}v - Número (v{&ge; 0}v) de digítos a formatar.}d}l}d*/
+		/**d{v{n}v - (v{&ge; 0}v) Número de digítos a formatar.}d*/
 		precision: {
 			value: function(n) {
 				return this.abs < 1 ? this.valueOf().toExponential(n-1) : this.valueOf().toPrecision(n);
 			}
 		},
-		/** t{b{number}b pow(b{number}b n)}t d{Aplica potenciação ao número.}d*/
-		/**d{l{d{v{n}v - Valor do expoente.}d}l}d*/
+		/** t{b{number}b pow(b{number}b n)}t d{Aplica potenciação ao número. Retorna c{null}c se ocorrer um erro.}d*/
+		/**d{v{n}v - Valor do expoente.}d*/
 		pow: {
 			value: function (n) {
-				try      {
+				try {
 					let value = Math.pow(this.valueOf(), n);
 					return isNaN(value) ? null : value;
 				}
 				catch(e) {return null;}
 			}
 		},
-		/** t{b{string}b exp(b{integer}b n, b{boolean}b html)}t d{Aplica exponenciação de base 10 ao número.}d d{l{*/
-		/**d{v{n}v - Número (v{&ge; 0}v) de casas decimais.}d*/
-		/**d{v{html}v - Transforma o resultado em notação HTML.}d }l}d*/
+		/** t{b{string}b exp(b{integer}b n, b{boolean}b html)}t d{Retorna exponenciação de base 10 ao número.}d*/
+		/**d{v{n}v - (v{&ge; 0}v) Número de casas decimais.}d*/
+		/**d{v{html}v - (opcional) Transforma o resultado em notação HTML.}d*/
 		exp: {
 			value: function(n, html) {
 				let value = this.valueOf().toExponential(n);
@@ -707,7 +747,7 @@ const wd = (function() {
 			}
 		},
 		/**t{b{string}b notation(b{string}b lang, b{string}b type, b{string}b code)}t*/
-		/**d{Retorna o número de acordo com a linguagem e formatação. Retorna c{null}c se um erro ocorrer.}d d{l{*/
+		/**d{Retorna o número de acordo com a linguagem e formatação. Retorna c{null}c se um erro ocorrer.}d*/
 		/**d{c{lang}c - Código da linguagem a ser aplicada.}d*/
 		/**d{c{type}c - Tipo da formatação:}d d{l{*/
 		/**d{v{"percent"}v - formatação percentual.}d*/
@@ -715,23 +755,23 @@ const wd = (function() {
 		/**d{v{"sci"}v - Notação científica.}d*/
 		/**d{v{"eng"}v - Notação de engenharia.}d*/
 		/**d{v{"compact"}v - Notação compacta.}d*/
-		/**d{v{"currency"}v - Notação monetária.}d*/
-		/**d{v{"ccy"}v - Notação monetária curta.}d*/
+		/**d{v{"ccy"}v - Notação monetária.}d*/
+		/**d{v{"sccy"}v - Notação monetária curta.}d*/
 		/**d{v{"tccy"}v - Notação monetária textual.}d }l}d*/
-		/**d{c{code}c - código da notação monetária ou da unidade de medida.}d }l}d*/
+		/**d{c{code}c - código da notação monetária ou da unidade de medida.}d*/
 		/*https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/NumberFormat*/
 		/*https://tc39.es/proposal-unified-intl-numberformat/section6/locales-currencies-tz_proposed_out.html#sec-issanctionedsimpleunitidentifier*/
 		notation: {
  			value: function(lang, type, code) {
  				let types = {
- 					percent:  {style: "percent", notation: "standard"},
- 					unit:     {style: "unit", unit: code},
- 					sci:      {notation: "scientific"},
- 					eng:      {notation: "engineering"},
- 					compact:  {notation: "compact"},
- 					currency: {style: "currency", currencyDisplay: "symbol",       currency: code},
- 					ccy:      {style: "currency", currencyDisplay: "narrowSymbol", currency: code},
- 					tccy:     {style: "currency", currencyDisplay: "name",         currency: code}
+ 					percent: {style: "percent", notation: "standard"},
+ 					unit:    {style: "unit", unit: code},
+ 					sci:     {notation: "scientific"},
+ 					eng:     {notation: "engineering"},
+ 					compact: {notation: "compact"},
+ 					ccy:     {style: "currency", currencyDisplay: "symbol",       currency: code},
+ 					sccy:    {style: "currency", currencyDisplay: "narrowSymbol", currency: code},
+ 					tccy:    {style: "currency", currencyDisplay: "name",         currency: code}
  				};
  				type = String(type).toLowerCase();
  				try {
@@ -739,6 +779,19 @@ const wd = (function() {
  				} catch(e) {
  					return null;
  				}
+			}
+		},
+		/**t{b{string}b bytes}t d{Retorna notação em bytes do número.}d*/
+		bytes: {
+			get: function() {
+				if (!this.finite) return this.toString()+" B";
+				let value = this < 1 ? 0 : this.integer;
+				let scale = ["B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
+				let i     = scale.length;
+				while (--i >= 0)
+					if (value >= Math.pow(1024,i))
+						return (value/Math.pow(1024,i)).toFixed(2)+" "+scale[i];
+				return value+" B";
 			}
 		},
 		/**t{b{number}b valueOf()}t d{Retorna o próprio número.}d*/
@@ -763,6 +816,14 @@ const wd = (function() {
 
 	Object.defineProperties(_String.prototype, {
 		constructor: {value: _String},
+		/** t{b{object}b _re}t d{Registra as expressões regulares do objeto.}d*/
+		_re: {
+			value: {
+				clean: /\s+/g,             /* limpa caracteres não imprimíveis */
+				clear: /[\u0300-\u036f]/g, /* para remover acentos */
+				dash:  /[a-zA-Z0-9._:-]/ /* caracteres válidos para atributos dash */
+			}
+		},
 		/** t{b{string}b upper}t d{Retorna o texto em caixa alta.}d*/
 		upper: {
 			get: function() {
@@ -775,16 +836,20 @@ const wd = (function() {
 				return this._input.toLowerCase();
 			}
 		},
-		/** t{b{string}b lower}t d{Retorna o texto captalizado.}d*/
+		/** t{b{string}b caps}t d{Retorna o texto captalizado.}d*/
 		caps: {
 			get: function() {
-				let value = this.lower.split(" ");
+				let value = this.lower;
+				let chars = [value[0].toUpperCase()];
 				let i = -1;
-				while (++i < value.length)
-					value[i] = value[i].charAt(0).toUpperCase()+value[i].substr(1);
-				return value.join(" ");
+				while (++i < (value.length - 1)) /* vai até o penúltimo */
+					chars.push(
+						(/\s/).test(value[i]) ? value[i+1].toUpperCase() : value[i+1]
+					);
+				return chars.join("");
 			}
 		},
+		/** t{b{string}b tgl}t d{Retorna o texto com caixas invertidas.}d*/
 		tgl: {
 			get: function() {
 				let value = [];
@@ -798,11 +863,48 @@ const wd = (function() {
 				return value.join("");
 			}
 		},
-		clear: {
+		/** t{b{string}b compact}t d{Retorna o texto sem espaços repetidos.}d*/
+		compact: {
 			get: function() {
-				return this.toString().replace(/\s+/g, " ");
+				return this._input.replace(this._re.clean, " ");
 			}
 		},
+		/** t{b{string}b chars}t d{Retorna caracteres sem acentuação.}d*/
+		chars: {
+			get: function() {
+				return this._input.normalize('NFD').replace(this._re.clear, "");
+			}
+		},
+		/** t{b{string}b clean}t d{Retorna o efeito de i{compat}i e i{chars}i.}d*/
+		clean: {
+			get: function() {
+				return this.chars.replace(this._re.clean, " ");
+			}
+		},
+		camel: {
+			get: function() {
+				let value = this.dash.split("-");
+				let i = 0;
+				while (++i < value.length)
+					value[i] = value[i].charAt(0).toUpperCase()+value[i].substr(1);
+				return value.join("");
+			}
+		},
+		dash: {
+			get: function() {
+				let value = this.clean.replace(/\ +/, "-").split("");
+				let i = -1;
+				while (++i < value.length) {
+					if (!this._re.dash.test(value[i])) /* eliminar caracteres não permitidos */
+						value[i] = "";
+					else if (/[A-Z]/.test(value[i])) /* adicionar traço antes de maiúsculas e inverter caixa */
+						value[i] = "-"+value[i].toLowerCase();
+				}
+				value = value.join("").replace(/\-+/g, "-");
+				return value.replace(/^\-+/, "").replace(/\-+$/, "");
+			}
+		},
+
 
 
 
