@@ -21,6 +21,7 @@
 			dl {margin-left: 2em !important;}
 			dt {font-family: "Courier New"; color: darkred;}
 			var {color: DarkSlateGrey;}
+			ul {margin-left: 2em;}
 		</style>
 
 		<script>
@@ -28,9 +29,31 @@ const JS  = "../wd5.js";
 const CSS = "../wd5.css";
 const tag = {
 /*:bloco de conteúdo:*/
-	H: "h3", h: "h4", p: "p", l: "dl", t: "dt", d: "dd", f: "pre",
-	c: "code", i: "i", b: "b", s: "s", u: "u", v: "var"
+	"1{": "<h1>",     "}1": "</h1>",  //Título 1
+	"2{": "<h2>",     "}2": "</h2>",  //Título 2
+	"3{": "<h3>",     "}3": "</h3>",  //Título 3
+	"4{": "<h4>",     "}4": "</h4>",  //Título 4
+	"5{": "<h5>",     "}5": "</h5>",  //Título 5
+	"6{": "<h6>",     "}6": "</h6>",  //Título 6
+	"p{": "<p>",      "}p": "</p>",   //Parágrafo
+	"c{": "<c>",      "}c": "</c>",   //Código
+	"i{": "<i>",      "}i": "</i>",   //Itálico
+	"b{": "<b>",      "}b": "</b>",   //Negrito
+	"s{": "<s>",      "}s": "</s>",   //Tachado
+	"u{": "<u>",      "}u": "</u>",   //Sublinhado
+	"v{": "<var>",    "}v": "</var>", //Variável
+	"l{": "<dl>",     "}l": "</dl>",  //Lista descritiva
+	"t{": "<dt>",     "}t": "</dt>",  //Item da lista descritiva
+	"d{": "<dd>",     "}d": "</dd>",  //Descrição do item da lista descritiva
+	"f{": "<pre>",    "}f": "</pre>", //Função
+	"L{": "<dd><dl>", "}L": "</dl></ud>",  //Lista secundária
+	"I{": "<li>",     "}I": "</li>",  //Item da lista
+
+
 };
+
+
+
 
 
 function manual(x) {
@@ -47,14 +70,12 @@ function manual(x) {
 	let html = [];
 	for (let i = 0; i < blocos.length; i++) {
 		for (let j in tag) {
-			let re1  = new RegExp(j+"{", "g");
-			let re2  = new RegExp("}"+j, "g");
-			let re3  = /\/\*\*/g;
-			let re4  = /\*\//g;
-   blocos[i] = blocos[i].replace(re1, "<"+tag[j]+">");
-			blocos[i] = blocos[i].replace(re2, "</"+tag[j]+">");
+			let re1  = new RegExp(j, "g");
+			let re2  = /\/\*\*/g;
+			let re3  = /\*\//g;
+   blocos[i] = blocos[i].replace(re1, tag[j]);
+			blocos[i] = blocos[i].replace(re2, "");
 			blocos[i] = blocos[i].replace(re3, "");
-			blocos[i] = blocos[i].replace(re4, "");
 		}
 	}
 	//console.log(blocos.join(""));

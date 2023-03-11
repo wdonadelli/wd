@@ -27,18 +27,20 @@ https://github.com/wdonadelli/wd
 "use strict";
 
 const wd = (function() {
+/*===========================================================================*/
+	/**3{Variáveis e Constantes}3*/
+/*===========================================================================*/
 
-	/**H{Variáveis e Constantes}H*/
-
-	/**f{b{const string}b wd_version}f p{Guarda a versão da biblioteca.}p*/
+	/**f{b{const string}b wd_version}f*/
+	/**p{Guarda a versão da biblioteca.}p*/
 	const wd_version = "WD JS v5.0.0";
 
 	/**f{b{let string}b wd_device_controller}f*/
-	/**p{Identifica o tamanho da tela (i{desktop}i, i{mobile}i, i{tablet}i, i{phone}i, c{null}c).}p*/
+	/**p{Identifica o tamanho da tela (v{desktop tablet phone}v), c{null}c se indefinido.}p*/
 	let wd_device_controller = null;
 
 	/**f{b{const integer}b wd_key_time_range}f*/
-	/**p{Intervalo de tempo (i{ms}i) para aguardar eventos de digitação (i{oninput}i, i{onkeyup}i...).}p*/
+	/**p{Intervalo (i{ms}i) entre eventos de digitação (i{oninput}i, i{onkeyup}i...).}p*/
 	const wd_key_time_range = 500;
 
 	/**f{b{const object}b wd_counter_control}f*/
@@ -57,11 +59,11 @@ const wd = (function() {
 		modal: null,
 		/**t{b{node}b bar}t d{Barra de progresso (i{meter}i, i{progress}i ou i{div}i).}d*/
 		bar: null,
-		/**t{b{integer}b counter}t d{Número de solicitações em aberto (controla a exibição).}d*/
+		/**t{b{integer}b counter}t d{Solicitações em aberto (controla a exibição).}d*/
 		counter: 0,
-		/**t{b{integer}b delay}t d{Tempo (i{ms}i) de espera antes de fechar a janela (evitar piscadas).}d*/
+		/**t{b{integer}b delay}t d{Atraso (i{ms}i) para fechar a janela (evitar piscadas).}d*/
 		delay: 250,
-		/**t{b{integer}b time}t d{Tempo (i{ms}i) de interação para atualização da barra de progresso.}d*/
+		/**t{b{integer}b time}t d{Intervalo (i{ms}i) para atualização da barra de progresso.}d*/
 		time: 5,
 		/**t{b{void}b _init()}t d{Inicializa os atributos.}d*/
 		_init: function() {
@@ -80,7 +82,8 @@ const wd = (function() {
 			this.modal.appendChild(this.bar);
 			return;
 		},
-		/**t{b{integer}b start()}t d{Demanda a abertura da janela modal, acresce i{counter}i e o retorna.}d*/
+		/**t{b{integer}b start()}t*/
+		/**d{Demanda à janela modal, acresce i{counter}i e o retorna.}d*/
 		start: function() { /* abre a janela modal */
 			if (this.modal === null) this._init();
 			if (this.counter === 0)
@@ -88,7 +91,8 @@ const wd = (function() {
 			this.counter++;
 			return this.counter;
 		},
-		/**t{b{integer}b end()}t d{Demanda o fechamento da janela modal, decresce i{counter}i e o retorna.}d*/
+		/**t{b{integer}b end()}t*/
+		/**d{Dispensa à janela modal, decresce i{counter}i e o retorna.}d*/
 		end: function() {
 			let object = this;
 			/* checar fechamento da janela após delay */
@@ -100,8 +104,9 @@ const wd = (function() {
 
 			return this.counter;
 		},
-		/**t{b{void}b progress(b{float}b x)}t d{Define o valor da barra de progresso.}d*/
-		/**d{v{x}v - Valor a ser definido para a barra de progresso, de 0 a 1.}d}l*/
+		/**t{b{void}b progress(b{float}b x)}t*/
+		/**d{Define o valor da barra de progresso.}d*/
+		/**d{v{x}v - Valor (0 a 1) da barra de progresso.}d }l*/
 		progress: function(x) {
 			let tag    = this.bar.tagName.toLowerCase();
 			let value  = tag === "div" ? wd_num_str(x, true) : x;
@@ -130,10 +135,10 @@ const wd = (function() {
 			this.main.className = "js-wd-signal";
 			return;
 		},
-		/**t{b{object}b _createBox()}t d{Retorna os elementos necessários para criar uma nova caixa de mensagem:}d*/
+		/**t{b{object}b _createBox()}t d{Cria e retorna os componentes nova caixa de mensagem:}d*/
 		_createBox: function() {
 			return {
-				/**d{l{t{b{node}b box}t d{Container da caixa de mensagem.}d*/
+				/**L{t{b{node}b box}t d{Container da caixa de mensagem.}d*/
 				box:     document.createElement("ARTICLE"),
 				/**t{b{node}b header}t d{Cabeçalho da mensagem.}d*/
 				header:  document.createElement("HEADER"),
@@ -141,11 +146,11 @@ const wd = (function() {
 				message: document.createElement("SECTION"),
 				/**t{b{node}b close}t d{Botão de fechamento antecipado da caixa.}d*/
 				close:   document.createElement("SPAN"),
-				/**t{b{node}b header}t d{Texto do cabeçalho.}d}l}d*/
+				/**t{b{node}b header}t d{Texto do cabeçalho.}d}L*/
 				title:   document.createElement("STRONG")
 			};
 		},
-		/**t{b{void}b _close(b{node}b elem)}t d{Demanda o fechamento da caixa de mensagem (tempo ou ação).}d*/
+		/**t{b{void}b _close(b{node}b elem)}t d{Demanda o fechamento da caixa de mensagem.}d*/
 		/**d{v{elem}v - caixa de mensagem a ser fechada.}d*/
 		_close: function(elem) {
 				try {this.main.removeChild(elem);} catch(e){}
@@ -153,7 +158,7 @@ const wd = (function() {
 					try {document.body.removeChild(this.main);} catch(e){}
 				return;
 		},
-		/**t{b{node}b _box()}t d{Criar uma nova caixa de mensagem e a \uretorna.}d*/
+		/**t{b{node}b _box()}t d{Contrói a caixa de mensagem e a retorna.}d*/
 		_box: function() {
 			let msg = this._createBox();
 			msg.box.appendChild(msg.header);
@@ -163,7 +168,7 @@ const wd = (function() {
 			msg.box.className = "js-wd-signal-msg";
 			msg.close.textContent = "\u00D7";
 			let object = this;
-			msg.close.onclick = function() { /* disparador para quando clicar no botão fechar */
+			msg.close.onclick = function() {
 				object._close(msg.box);
 			}
 			return msg;
@@ -171,7 +176,7 @@ const wd = (function() {
 		/**t{b{void}b open(b{string}b message, b{string}b title)}t*/
 		/**d{Demanda a abertura de uma nova caixa de mensagem:}d*/
 		/**d{v{message}v - texto da mensagem.}d*/
-		/**d{v{title}v - (opcional, v{""}v) texto do cabeçalho.}d}l*/
+		/**d{v{title}v - (opcional) texto do cabeçalho.}d}l*/
 		open: function(message, title) { /* abre uma mensagem */
 			/* criação do container principal, se inexistente */
 			if (this.main === null) this._init();
@@ -195,8 +200,8 @@ const wd = (function() {
 		}
 	}
 	/**f{b{const array}b wd_js_css}f*/
-	/**p{Guarda os estilos da biblioteca Selector Database. */
-	/**Os itens da lista são objetos cujos atributos definem os estilos utilizados pela biblioteca:}p l{*/
+	/**p{Guarda os estilos da biblioteca.}p*/
+	/**p{Os itens da lista são objetos cujos atributos definem os estilos:}p l{*/
 	/**t{b{string}b s}t d{Seletor CSS.}d*/
 	/**t{b{string}b d}t d{Estilos a ser aplicado ao seletor.}d}l*/
 	const wd_js_css = [
@@ -257,25 +262,25 @@ const wd = (function() {
 	];
 
 /*===========================================================================*/
-	/**H{Checagem de Tipos e Valores}H*/
+	/**3{Checagem de Tipos e Valores}3*/
 /*===========================================================================*/
 
-	/**f{b{object}b _Type(b{void}b input)}f*/
+	/**f{b{object}b __Type(b{void}b input)}f*/
 	/**p{Construtor que identifica o tipo do argumento e extrai seu valor para uso da biblioteca.}p*/
 	/**l{d{v{input}v - Dado a ser examinado.}d}l*/
-	/**p{Métodos e atributos:}p l{*/
-	function _Type(input) {
-		if (!(this instanceof _Type)) return new _Type(input)
+	function __Type(input) {
+		if (!(this instanceof __Type)) return new __Type(input)
 		this._input = input; /* valor original */
 		this._type  = null;  /* tipo do valor de entrada */
 		this._value = null;  /* valor a ser considerado */
 		this._init();        /* definir atributos próprios */
 	}
 
-	Object.defineProperties(_Type.prototype, {
-		constructor: {value: _Type},
-		/**t{b{object}b _re}t d{Armazena as expressões regulares de conferência pelos diversos tipos.}d*/
-		_re: { /* expressões regulares para testar valores em forma de String */
+	/**6{Métodos e atributos}6 l{*/
+	Object.defineProperties(__Type.prototype, {
+		constructor: {value: __Type},
+		/**t{b{object}b _re}t d{Armazena as expressões regulares dos tipos em forma de string.}d*/
+		_re: {
 			value: {
 				number:  /^(\+?\d+\!|[+-]?(\d+|(\d+)?\.\d+)(e[+-]?\d+)?\%?)$/i,
 				dateDMY: /^(0[1-9]|[12]\d|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/,
@@ -285,7 +290,7 @@ const wd = (function() {
 				time24:  /^(0?\d|1\d|2[0-4])(\:[0-5]\d){1,2}$/
 			}
 		},
-		/**t{b{boolean}b string}t d{Checa se o argumento é uma string, exceto se enquadrar em outra categoria.}d*/
+		/**t{b{boolean}b string}t d{Checa se o argumento é uma string.}d*/
 		string: {
 			get: function() {
 				if (this._type !== null) return this._type === "string" ? true : false;
@@ -296,8 +301,8 @@ const wd = (function() {
 				return false;
 			}
 		},
-		/**t{b{boolean}b number}t d{Checa se o argumento é um número real. */
-		/**Aceita também número em forma de String: real, fatorial ou percentual.}d*/
+		/**t{b{boolean}b number}t d{Checa se o argumento é um número real.}d */
+		/**d{Aceita números em forma de string: real, fatorial ou percentual.}d*/
 		number: {
 			get: function() {
 				if (this._type !== null) return this._type === "number" ? true : false;
@@ -358,25 +363,20 @@ const wd = (function() {
 			}
 		},
 		/**t{b{boolean}b date}t*/
-		/**d{Checa se o argumento é uma data.}d*/
-		/**d{Aceita o construtor nativo c{Date}c e datas em String: v{DD/MM/YYYY MM.DD.YYYY YYYY-MM-DD}v.}d*/
+		/**d{Checa se o argumento é uma data (construtor c{Date}c).}d*/
+		/**d{Aceita valores string nos formatos: v{DD/MM/YYYY MM.DD.YYYY YYYY-MM-DD}v.}d*/
 		date: {
 			get: function() {
 				if (this._type !== null) return this._type === "date" ? true : false;
 				if (this._input instanceof Date) {
 					/* fixar em meio dia para evitar horários de verão */
-					this._input.setHours(12);
-					this._input.setMinutes(0);
-					this._input.setSeconds(0);
-					this._input.setMilliseconds(0);
 					let input = this._input;
 					this._type  = "date";
 					this._value = {
-						date: input,
-						get d() {return this.date.getDate();},
-						get m() {return this.date.getMonth()+1;},
-						get y() {return this.date.getFullYear();},
-						valueOf: function() { //FIXME não compensa colocar métodos em objetos simples
+						d: input.getDate(),
+						m: input.getMonth()+1,
+						y: input.getFullYear(),
+						valueOf: function() {
 							/* anos desde 0001 */
 							let delta = this.y - 1;
 							/* anos de 365 dias */
@@ -392,7 +392,7 @@ const wd = (function() {
 							let days = len[this.m] + this.d;
 							/* bissexto acresce um dia se após fevereiro */
 							if (this.m > 2)
-								days += (this.y%400 === 0 || (this.y%4 === 0 && this.y%100 !== 0)) ?  1 : 0;
+								days += ((this.y%4 === 0 && this.y%100 !== 0) || this.y%400 === 0) ? 1 : 0;
 							/* retornando dias desde 0001-01-01 */
 							return d365 + y4 -y100 + y400 + days;
 						}
@@ -491,7 +491,7 @@ const wd = (function() {
 		},
 		/**t{b{boolean}b time}t*/
 		/**d{Checa se o argumento é uma string que representa tempo.}d*/
-		/**d{Aceita os formato 24h (v{HH:MM:SS}v) e o de 12h (v{HH:MM AMPM}v).}d*/
+		/**d{Aceita os formato 24h e 12h (v{HH:MM:SS HH:MM AMPM}v).}d*/
 		time: {
 			get: function() {
 				if (this._type !== null) return this._type === "time" ? true : false;
@@ -524,14 +524,14 @@ const wd = (function() {
 					h: h,
 					m: m,
 					s: s,
-					valueOf: function() { //FIXME não compensa colocar métodos em objetos simples
+					valueOf: function() {
 						return 3600*this.h + 60*this.m + this.s;
 					}
 				};
 				return true;
 			}
 		},
-		/**t{b{boolean}b node}t d{Checa se o argumento é um nó de u{elemento HTML}u ou uma coleção do respectivo tipo.}d*/
+		/**t{b{boolean}b node}t d{Checa se o argumento é um elemento HTML ou uma coleção desses.}d*/
 		node: {
 			get: function() {
 				if (this._type !== null) return this._type === "node" ? true : false;
@@ -567,7 +567,7 @@ const wd = (function() {
 				return false;
 			}
 		},
-		/**t{b{boolean}b object}t d{Checa se o argumento é um objeto, exceto se enquadrado em outra categoria.}d */
+		/**t{b{boolean}b object}t d{Checa se o argumento é um objeto diferente das demais categorias.}d */
 		object: {
 			get: function() {
 				if (this._type !== null) return this._type === "object" ? true : false;
@@ -609,14 +609,18 @@ const wd = (function() {
 			}
 		},
 		/**t{b{void}b value}t d{Retorna o valor do argumento para fins da biblioteca.}d */
-		/**d{Tipos de referência retornam valores de referência e tipos primitivos retornam valores primitivos, com exceções.}d*/
-		/**d{O tipo i{time}i retorna um objeto com a seguinte estrutura: l{*/
-		/**d{c{b{integer}b h}c - hora.}d d{c{b{integer}b m}c - minuto.}d d{c{b{integer}b s}c - segundo.}d*/
-		/**d{c{b{integer}b valueOf}c - quantidade total de segundos desde v{00h00}v.}d}l}d*/
-		/**d{O tipo i{date}i retorna um objeto com a seguinte estrutura: l{*/
-		/**d{c{b{integer}b h}c - dia.}d d{c{b{integer}b m}c - mês.}d d{c{b{integer}b y}c - ano.}d*/
-		/**d{c{b{object}b date}c - objeto i{Date}i associado (fixo em v{12h}v).}d*/
-		/**d{c{b{integer}b valueOf}c - quantidade total de dias desde v{0001-01-01}v.}d}l}d*/
+		/**d{Tipos de referência retornam valores de referência.}d*/
+		/**d{Tipos de primitivos retornam valores primitivos.}d*/
+		/**d{O tipo i{time}i retorna um objeto com a seguinte estrutura:}d*/
+		/**L{t{b{integer}b h}t d{Hora.}d*/
+		/**t{b{integer}b m}t d{Minuto.}d*/
+		/**t{b{integer}b s}t d{Segundo.}d*/
+		/**t{b{integer}b valueOf}t d{Quantidade total de segundos desde v{00h00}v.}d}L*/
+		/**d{O tipo i{date}i retorna um objeto com a seguinte estrutura:}d*/
+		/**L{t{b{integer}b h}t d{dia.}d*/
+		/**t{b{integer}b m}t d{mês.}d*/
+		/**t{b{integer}b y}t d{ano.}d*/
+		/**t{b{integer}b valueOf}t d{Quantidade total de dias desde v{0001-01-01}v.}d}L*/
 		value: {
 			get: function() {
 				if (this._type === null) this._init();
@@ -639,60 +643,181 @@ const wd = (function() {
 	});
 
 /*===========================================================================*/
-	/**H{Objetos Internos de Manipulação de Dados}H*/
+	/**3{Funções}3*/
 /*===========================================================================*/
+	/**4{Básicas}4*/
 
-	/**h{Números}h*/
+/*----------------------------------------------------------------------------*/
+	/**f{b{boolean}b __finite(b{void}b value)}f*/
+	/**p{Informa se o argumento é um número é finito.}p*/
+	/**l{d{v{value}v - Valor a ser verificado.}d}l*/
+	function __finite(value) {
+		let input = __Type(value);
+		if (input.type !== "number") return false;
+		if (isNaN(input.value) || Math.abs(input.value === Infinity)) return false;
+		return isFinite(input.value);
+	}
+/*----------------------------------------------------------------------------*/
+	/**f{b{integer}b __integer(b{void}b value)}f*/
+	/**p{Retorna a parte inteira do número ou c{null}c se ocorrer um erro.}p*/
+	/**l{d{v{value}v - Valor a ser verificado.}d}l*/
+	function __integer(value) {
+		let input = __Type(value);
+		if (input.type !== "number") return null;
+		if (!__finite(input.value)) return input.value;
+		return (input < 0 ? -1 : 1) * Math.floor(Math.abs(input.value));
+	}
+/*----------------------------------------------------------------------------*/
+	/**f{b{float}b __float(b{void}b value)}f*/
+	/**p{Retorna a parte decimal do número ou c{null}c se ocorrer um erro.}p*/
+	/**l{d{v{value}v - Valor a ser verificado.}d}l*/
+	function __float(value) {
+		let input = __Type(value);
+		if (input.type !== "number") return null;
+		if (!__finite(input.value)) return input.value;
+		let exp = 1;
+		while ((input * exp)%1 !== 0) exp = 10*exp;
+		return (exp*(input.value) - exp*__integer(input.value)) / exp;
+	}
+/*----------------------------------------------------------------------------*/
+	/**f{b{string}b __device()}f*/
+	/**p{Retorna o tipo de tela utilizada: v{"desktop" "tablet" "phone"}v.}p*/
+	function __device() {
+		if (window.innerWidth >= 768) return "desktop";
+		if (window.innerWidth >= 600) return "tablet";
+		return "phone";
+	};
+/*----------------------------------------------------------------------------*/
+	/**f{b{string}b __bytes(b{integer}b value)}f*/
+	/**p{Retorna a notação em bytes de um número inteiro ou v{"0 B"}v se ocorrer um erro.}p*/
+	/**l{d{v{value}v - Valor numérico em bytes.}d}l*/
+	function __bytes(value) {
+		let input = __Type(value);
+		if (!__finite(input.value)) return "0 B";
+		value = input < 1 ? 0 : __integer(input.value);
+		let scale = ["B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
+		let i     = scale.length;
+		while (--i >= 0)
+			if (value >= Math.pow(1024,i))
+				return (value/Math.pow(1024,i)).toFixed(2)+" "+scale[i];
+		return value+" B";
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*----------------------------------------------------------------------------*/
+	function wd_integer(n, abs) { /* retorna o inteiro do número ou seu valor absoluto */
+		let vtype = wd_vtype(n);
+		if (vtype.type !== "number") return null;
+		let val = abs === true ? Math.abs(vtype.value) : vtype.value;
+		return val < 0 ? Math.ceil(val) : Math.floor(val);
+	};
+
+
+
+	/**4{Númericas}4*/
+
+
+
+
+
+
+
+
+
+
+
+
+
 	/**f{b{object}b _Number(b{number}b input)}f*/
 	/**p{Objeto interno para manipulação de números.}p*/
 	/**l{d{v{input}v - valor a ser gerenciado internamente pela biblioteca.}d}l*/
-	/**p{Métodos e atributos:}p l{*/
 	function _Number(input) {
 		if (!(this instanceof _Number)) return new _Number(input)
-		this._input = input; /* valor original */
+		this._input = input;
 	}
 
+	/**6{Métodos e Atributos Estáticos}6 l{*/
+	Object.defineProperties(_Number, {
+		/**t{b{array}b primes(integer end}t d{Retorna uma lista de primos até o inteiro informado.}d*/
+		/**d{v{end}v - Inteiro (&ge; 0) de referência para o fim da lista*/
+		primes: {
+			value: function(end) {
+				if (end < 2) return [];
+				let list = [2];
+				let i    = 3;
+				while (i <= end) {
+					let isPrime = true;
+					let j = -1;
+					while (++j < list.length) {
+						if (i % list[j] === 0) {
+							isPrime = false;
+							break;
+						}
+					}
+					if (isPrime) list.push(i);
+					i += 2; /* não checar par */
+				}
+				return list;
+			}
+		},
+	});
+
+
+	/**6{Métodos e atributos}6 l{*/
 	Object.defineProperties(_Number.prototype, {
 		constructor: {value: _Number},
-		/** t{b{boolean}b finite}t d{Informa se o número é finito.}d*/
+		/** t{b{boolean}b finite}t*/
+		/**d{Informa se o número é finito.}d*/
 		finite: {
 			get: function() {
 				return (this.abs === Infinity || isNaN(this._input)) ? false : isFinite(this._input);
 			}
 		},
-		/** t{b{integer}b integer}t d{Retorna a parte inteira do número.}d*/
-		integer: {
+
+		/**t{b{boolean}b prime}t*/
+		/**d{Checa se o número é primo.}d*/
+		prime: {
 			get: function() {
-				if ("trunc" in Math) return Math.trunc(this);
-				return this < 0 ? Math.ceil(this) : Math.floor(this);
+				if (this < 2 || !this.finite || this.float !== 0) return false
+				let test = this.constructor.primes(this.valueOf());
+				return test[test.length - 1] === this.valueOf() ? true : false;
 			}
 		},
-		/** t{b{float}b float}t d{Retorna a parte decimal do número.}d*/
-		float: {
-			get: function() {
-				if (!this.finite) return this.valueOf();
-				let exp = 1;
-				while ((this * exp)%1 !== 0) exp = 10*exp;
-				return (exp*this - exp*this.integer) / exp;
-			}
-		},
-		primes: {
-			get: function() {
-				let list = [];
-				let i    = 2;
-				let end  = this.integer;
-				while (i < end) {
-					for ()
-
-				}
-
-
-
-
-			}
-		},
-
-		ref: {
+		/**t{b{string}b number}t*/
+		/**d{Retorna o tipo de número:}d*/
+		/**L{d{v{"&#8723;integer"}v}d d{v{"&#8723;float"}v}d d{v{"&#8723;infinity"}v}d*/
+		/**d{v{"&#8723;real"}v}d d{v{"zero"}v}d}L*/
+		number: {
 			get: function() {
 				let obj = this;
 				let ref = {
@@ -706,27 +831,31 @@ const wd = (function() {
 					if (ref[i]) return (this < 0 ? "-" : "+")+i;
 			}
 		},
-		/** t{b{number}b abs}t d{Retorna o valor absoluto do número.}d*/
+		/** t{b{number}b abs}t*/
+		/**d{Retorna o valor absoluto do número.}d*/
 		abs: {
 			get: function () {
 				return (this < 0 ? -1 : 1) * this.valueOf();
 			}
 		},
-		/**t{b{number}b round(b{integer}b n)}t d{Arredonda o número conforme especificado.}d*/
+		/**t{b{number}b round(b{integer}b n)}t*/
+		/**d{Arredonda o número conforme especificado.}d*/
 		/**d{v{n}v - (v{&ge; 0}v) Número de casas decimais a arrendondar.}d*/
 		round: {
 			value: function(n) {
 				return Number(this.valueOf().toFixed(n));
 			}
 		},
-		/** t{b{string}b precision(b{integer}b n)}t d{Fixa a quantidade de dígitos significativos do número.}d*/
+		/** t{b{string}b precision(b{integer}b n)}t*/
+		/**d{Fixa a quantidade de dígitos significativos do número.}d*/
 		/**d{v{n}v - (v{&ge; 0}v) Número de digítos a formatar.}d*/
 		precision: {
 			value: function(n) {
 				return this.abs < 1 ? this.valueOf().toExponential(n-1) : this.valueOf().toPrecision(n);
 			}
 		},
-		/** t{b{number}b pow(b{number}b n)}t d{Aplica potenciação ao número. Retorna c{null}c se ocorrer um erro.}d*/
+		/** t{b{number}b pow(b{number}b n)}t*/
+		/**d{Aplica potenciação ao número. Retorna c{null}c se ocorrer um erro.}d*/
 		/**d{v{n}v - Valor do expoente.}d*/
 		pow: {
 			value: function (n) {
@@ -737,7 +866,8 @@ const wd = (function() {
 				catch(e) {return null;}
 			}
 		},
-		/** t{b{string}b exp(b{integer}b n, b{boolean}b html)}t d{Retorna exponenciação de base 10 ao número.}d*/
+		/** t{b{string}b exp(b{integer}b n, b{boolean}b html)}t*/
+		/**d{Retorna exponenciação de base 10 ao número.}d*/
 		/**d{v{n}v - (v{&ge; 0}v) Número de casas decimais.}d*/
 		/**d{v{html}v - (opcional) Transforma o resultado em notação HTML.}d*/
 		exp: {
@@ -747,9 +877,9 @@ const wd = (function() {
 			}
 		},
 		/**t{b{string}b notation(b{string}b lang, b{string}b type, b{string}b code)}t*/
-		/**d{Retorna o número de acordo com a linguagem e formatação. Retorna c{null}c se um erro ocorrer.}d*/
-		/**d{c{lang}c - Código da linguagem a ser aplicada.}d*/
-		/**d{c{type}c - Tipo da formatação:}d d{l{*/
+		/**d{Retorna o número conforme linguagem e formatação ou c{null}c se um erro ocorrer.}d*/
+		/**d{v{lang}v - Código da linguagem a ser aplicada.}d*/
+		/**d{v{type}v - Tipo da formatação:}d d{l{*/
 		/**d{v{"percent"}v - formatação percentual.}d*/
 		/**d{v{"unit"}v - unidade de medida.}d*/
 		/**d{v{"sci"}v - Notação científica.}d*/
@@ -758,7 +888,7 @@ const wd = (function() {
 		/**d{v{"ccy"}v - Notação monetária.}d*/
 		/**d{v{"sccy"}v - Notação monetária curta.}d*/
 		/**d{v{"tccy"}v - Notação monetária textual.}d }l}d*/
-		/**d{c{code}c - código da notação monetária ou da unidade de medida.}d*/
+		/**d{v{code}v - código da notação monetária ou da unidade de medida.}d*/
 		/*https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/NumberFormat*/
 		/*https://tc39.es/proposal-unified-intl-numberformat/section6/locales-currencies-tz_proposed_out.html#sec-issanctionedsimpleunitidentifier*/
 		notation: {
@@ -781,34 +911,56 @@ const wd = (function() {
  				}
 			}
 		},
-		/**t{b{string}b bytes}t d{Retorna notação em bytes do número.}d*/
-		bytes: {
-			get: function() {
-				if (!this.finite) return this.toString()+" B";
-				let value = this < 1 ? 0 : this.integer;
-				let scale = ["B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
-				let i     = scale.length;
-				while (--i >= 0)
-					if (value >= Math.pow(1024,i))
-						return (value/Math.pow(1024,i)).toFixed(2)+" "+scale[i];
-				return value+" B";
+		/**t{b{number}b cut(integer n)}t*/
+		/**d{Define o corte de casas decimais, sem arrendondamento.}d*/
+		/**d{v{n}v - Número (v{&ge; 0}v) de casas decimais.}d*/
+		cut: {//FIXME para que isso?
+			value: function(int, flt) {
+				if (!this.finite) return this.toString();
+				let i  = (this < 0 ? -1 : 1)*this.integer;
+				let f  = (this < 0 ? -1 : 1)*this.float;
+				let ai = [];
+				let af = [];
+				while (f%1 !== 0) {
+
+
+
+
+				}
+
+
+
+
+				f = f.length > 1 ? f[1] : "0";
+				while (i.length < int) i = "0"+i;
+				while (f.length < flt) f = f+"0";
+				if (f.length > flt) f = f.substr(0, flt);
+				return (this < 0 ? "-" : "")+i+"."+f;
+
+
+				/*
+				let value = this.abs;
+				let i = -1;
+				while (++i < n) {
+					value = 10 * value;
+					if (value%1 === 0) {
+						n = i+1;
+						break;
+					}
+				}
+				let div = Math.pow(10,n);
+				return (this < 0 ? -1 : 1) * (Math.floor(value)/div);*/
 			}
 		},
-		/**t{b{number}b valueOf()}t d{Retorna o próprio número.}d*/
-		valueOf: {
-			value: function() {return this._input;}
-		},
-		/**t{b{string}b toString()}t d{Retorna o método de mesmo nome para o número.}d }l*/
-		toString: {
-			value: function() {return this.valueOf().toString();}
-		}
+
+
 	});
 
 	/**h{String}h*/
 	/**f{b{object}b _String(b{string}b input)}f*/
 	/**p{Objeto interno para manipulação de strings.}p*/
 	/**l{d{v{input}v - valor a ser gerenciado internamente pela biblioteca.}d}l*/
-	/**p{Métodos e atributos:}p l{*/
+	/**6{Métodos e atributos:}6 l{*/
 	function _String(input) {
 		if (!(this instanceof _String)) return new _String(input)
 		this._input = input; /* valor original */
@@ -946,22 +1098,7 @@ const wd = (function() {
 		return navigator.language || navigator.browserLanguage || "en-US";
 	}
 
-/*----------------------------------------------------------------------------*/
-	function wd_get_device() {/*tipo do dispositivo*/
-		if (window.innerWidth >= 768) return "desktop";
-		if (window.innerWidth >= 600) return "tablet";
-		return "phone";
-	};
-/*----------------------------------------------------------------------------*/
-	function wd_bytes(value) { /*calculadora de bytes*/
-		if (value === Infinity) return wd_num_str(value)+"B";
-		value = value < 1 ? 0 : wd_integer(value, true);
-		let scale = ["B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
-		for (let i = scale.length - 1; i >= 0; i--)
-			if (value >= Math.pow(1024,i))
-				return (value/Math.pow(1024,i)).toFixed(2)+scale[i];
-		return "0B";
-	}
+
 
 /*----------------------------------------------------------------------------*/
 	function wd_is_leap(y) { /*Retorna verdadeiro se o ano (y) for bissexto*/
@@ -1456,29 +1593,8 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_finite(n) {/* verifica se é um valor finito */
-		let vtype = wd_vtype(n);
-		if (vtype.type !== "number") return false;
-		return isFinite(vtype.value);
-	};
 
-/*----------------------------------------------------------------------------*/
-	function wd_integer(n, abs) { /* retorna o inteiro do número ou seu valor absoluto */
-		let vtype = wd_vtype(n);
-		if (vtype.type !== "number") return null;
-		let val = abs === true ? Math.abs(vtype.value) : vtype.value;
-		return val < 0 ? Math.ceil(val) : Math.floor(val);
-	};
 
-/*----------------------------------------------------------------------------*/
-	function wd_decimal(value) {/* retorna o número de casas decimais */
-		if (!wd_finite(value)) return 0;
-		let i = 0;
-		while ((value * Math.pow(10, i)) % 1 !== 0) i++;
-		let pow10  = Math.pow(10, i);
-		if (pow10 === 1) return 0;
-		return (value*pow10 - wd_integer(value)*pow10) / pow10;
-	}
 
 /*----------------------------------------------------------------------------*/
 	function wd_primes(limit, decimal) {/* retorna os números primos até um limite */
@@ -1543,7 +1659,7 @@ const wd = (function() {
 
 		/* capturar parte inteira e decimal */
 		let integer = wd_integer(n);
-		let decimal = wd_decimal(n);
+		let decimal = __float(n);
 
 		/* números pequenos (e.g. 1/10000) retorna zero: ver deslocamento de casas decimais (abaixo) */
 		let data  = {
@@ -1605,7 +1721,7 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	function wd_num_round(n, width) { /* arredonda número para determinado tamanho */
-		width = wd_finite(width) ? wd_integer(width, true) : 0;
+		width = __finite(width) ? wd_integer(width, true) : 0;
 		return new Number(n.toFixed(width)).valueOf();
 	}
 
@@ -1613,7 +1729,7 @@ const wd = (function() {
 	function wd_num_pow10(n, width) { /* transforma número em notação científica */
 		if (wd_test(n, ["infinity", "zero"])) return wd_num_str(n);
 
-		width = wd_finite(width) ? wd_integer(width, true) : undefined;
+		width = __finite(width) ? wd_integer(width, true) : undefined;
 
 		let chars = {
 			"0": "\u2070", "1": "\u00B9", "2": "\u00B2", "3": "\u00B3",
@@ -1643,12 +1759,12 @@ const wd = (function() {
 	function wd_num_fixed(n, ldec, lint) { /* fixa quantidade de dígitos (decimal e inteiro) */
 		if (wd_test(n, ["infinity"])) return wd_num_str(n);
 
-		lint = wd_finite(lint) ? wd_integer(lint, true) : 0;
-		ldec = wd_finite(ldec) ? wd_integer(ldec, true) : 0;
+		lint = __finite(lint) ? wd_integer(lint, true) : 0;
+		ldec = __finite(ldec) ? wd_integer(ldec, true) : 0;
 
 		let sign = n < 0 ? "-" : "";
 		let int  = Math.abs(wd_integer(n));
-		let dec  = Math.abs(wd_decimal(n));
+		let dec  = Math.abs(__float(n));
 
 		dec = dec.toFixed((ldec > 20 ? 20 : ldec));
 		if ((/^1/).test(dec)) int++;
@@ -1846,7 +1962,7 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	function wd_array_item(array, i) { /* retorna o índice especificado ou seu comprimento */
-		if (!wd_finite(i)) return array.length;
+		if (!__finite(i)) return array.length;
 		i = wd_integer(i);
 		i = i < 0 ? array.length + i : i;
 		return array[i];
@@ -2011,9 +2127,9 @@ const wd = (function() {
 			let xtype = wd_vtype(x[i]);
 			let ytype = y === null ? null : wd_vtype(y[i]);
 			let ztype = z === null ? null : wd_vtype(z[i]);
-			if (!wd_finite(xtype.value)) continue;
-			if (y !== null && !wd_finite(ytype.value)) continue;
-			if (z !== null && !wd_finite(ztype.value)) continue;
+			if (!__finite(xtype.value)) continue;
+			if (y !== null && !__finite(ytype.value)) continue;
+			if (z !== null && !__finite(ztype.value)) continue;
 
 			coord.x.push(xtype.value);
 			if (y !== null) coord.y.push(ytype.value);
@@ -2039,7 +2155,7 @@ const wd = (function() {
 			let vx = Math.pow(x[i],nx);
 			let vy = y === null ? 1 : Math.pow(y[i],ny);
 			let vz = z === null ? 1 : Math.pow(z[i],nz);
-			if (!wd_finite(vx) || !wd_finite(vy) || !wd_finite(vz)) continue;
+			if (!__finite(vx) || !__finite(vy) || !__finite(vz)) continue;
 			data.value += vx * vy * vz;
 			data.length++;
 		}
@@ -2054,7 +2170,7 @@ const wd = (function() {
 		let data = {value: 1, length: 0};
 		for (let i = 0; i < coord.length; i++) {
 			let vx = Math.pow(x[i], nx);
-			if (vx === 0 || !wd_finite(vx)) continue;
+			if (vx === 0 || !__finite(vx)) continue;
 			data.value = data.value * vx;
 			data.length++;
 		}
@@ -2105,7 +2221,7 @@ const wd = (function() {
 		if (coord === null) return null;
 
 		if (vref.type === "number") {
-			if (!wd_finite(vref.value)) return null;
+			if (!__finite(vref.value)) return null;
 			ref = vref.value;
 			x = coord.x;
 		} else if (vref.type === "array") {
@@ -2118,7 +2234,7 @@ const wd = (function() {
 		for (let i = 0; i < x.length; i++) {
 			let diff = x[i] - (vref.type === "array" ? ref[i] : ref);
 			let val = Math.pow(diff, 2);
-			if (!wd_finite(val)) continue;
+			if (!__finite(val)) continue;
 			data.value += val;
 			data.length++;
 		}
@@ -2154,7 +2270,7 @@ const wd = (function() {
 		let val  = null;
 		for (let i = 0; i < x.length; i++) {
 			try {val = f(x[i]);} catch(e) {}
-			data.push(wd_finite(val) ? val : null);
+			data.push(__finite(val) ? val : null);
 		}
 		return data;
 	}
@@ -2273,7 +2389,7 @@ const wd = (function() {
 		let ends = wd_coord_limits(xcoord);
 		if (ends === null) return null;
 		delta = wd_vtype(delta).value;
-		if (!wd_finite(delta)) delta = (ends.max - ends.min)/xcoord.length;
+		if (!__finite(delta)) delta = (ends.max - ends.min)/xcoord.length;
 		delta = Math.abs(delta);
 
 		/* obtendo amostra */
@@ -2675,8 +2791,8 @@ const wd = (function() {
 			let value = action.split(":");
 			let init = wd_vtype(value[0]).value;
 			let end  = wd_vtype(value[1]).value;
-			if (!wd_finite(init)) init = 0;
-			if (!wd_finite(end))  end  = child.length-1;
+			if (!__finite(init)) init = 0;
+			if (!__finite(end))  end  = child.length-1;
 			let show = end >= init ? true : false;
 			if (!show) {
 				let temp = init;
@@ -2714,7 +2830,7 @@ const wd = (function() {
 		if (search === null || search === undefined) return null;
 
 		/* remodelando a quantidade de caracteres */
-		chars = wd_finite(chars) && chars !== 0 ? wd_integer(chars) : 1;
+		chars = __finite(chars) && chars !== 0 ? wd_integer(chars) : 1;
 
 		/* definindo valor de busca */
 		let type = wd_vtype(search).type;
@@ -2787,8 +2903,8 @@ const wd = (function() {
 		if (lines.length === 0) return null;
 		page = wd_vtype(page).value;
 		size = wd_vtype(size).value;
-		if (!wd_finite(size)) size = -1;
-		if (!wd_finite(page) && page !== "+" && page !== "-") page = 0;
+		if (!__finite(size)) size = -1;
+		if (!__finite(page) && page !== "+" && page !== "-") page = 0;
 
 		/*--------------------------------------------------------------------------
 		| A) se size  < 0  obter toda a amostra;
@@ -2842,8 +2958,8 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	function wd_html_sort(elem, order, col) { /* ordena elementos filho pelo conteúdo */
-		order = wd_finite(order) ? wd_integer(order) : 1;
-		col   = wd_finite(col)   ? wd_integer(col, true) : null;
+		order = __finite(order) ? wd_integer(order) : 1;
+		col   = __finite(col)   ? wd_integer(col, true) : null;
 
 		let children = wd_vtype(elem.children).value;
 		let aux = [];
@@ -3233,7 +3349,7 @@ const wd = (function() {
 					elem.appendChild(info);
 				}
 			} else { /* atributos */
-				if (ref.indexOf(i) >= 0 && wd_finite(val))
+				if (ref.indexOf(i) >= 0 && __finite(val))
 					val = new String(val).toString()+"%";
 				elem.setAttribute(i, val);
 			}
@@ -3758,7 +3874,7 @@ const wd = (function() {
 		},
 		point: { /* Transforma coordanadas reais em relativas (%) */
 			value: function(x, y) {
-				if (!wd_finite(x) || !wd_finite(y)) return null;
+				if (!__finite(x) || !__finite(y)) return null;
 				x = x - this.xmin;
 				y = y - this.ymin;
 				let msrs = this.space;
@@ -4139,7 +4255,7 @@ const wd = (function() {
 			}
 		},
 		finite: { /* informa se é um número finito */
-			get: function() {return wd_finite(this._value);}
+			get: function() {return __finite(this._value);}
 		}
 	});
 
@@ -4255,7 +4371,7 @@ const wd = (function() {
 			get: function() {return wd_integer(this.valueOf());}
 		},
 		dec: { /* retorna a parte decimal */
-			get: function() {return wd_decimal(this.valueOf());}
+			get: function() {return __float(this.valueOf());}
 		},
 		abs: { /* retorna a parte decimal */
 			get: function() {return Math.abs(this.valueOf());}
@@ -4267,7 +4383,7 @@ const wd = (function() {
 			get: function () {return wd_num_frac(this.valueOf());}
 		},
 		byte: { /* retorna notação para bytes */
-			get: function () {return wd_bytes(this.valueOf());}
+			get: function () {return __bytes(this.valueOf());}
 		},
 		str: { /* retorna string simplificada do número */
 			get: function() {return wd_num_str(this.valueOf());}
@@ -4307,7 +4423,7 @@ const wd = (function() {
 		h: { /* define/obtem a hora */
 			get: function() {return wd_number_time(this.valueOf()).h;},
 			set: function(x) {
-				if (wd_finite(x))
+				if (__finite(x))
 					this._value = wd_time_number(wd_integer(x), this.m, this.s);
 			}
 		},
@@ -4318,7 +4434,7 @@ const wd = (function() {
 		m: { /* define/obtem o minuto */
 			get: function() {return wd_number_time(this.valueOf()).m;},
 			set: function(x) {
-				if (wd_finite(x))
+				if (__finite(x))
 					this._value = wd_time_number(this.h, wd_integer(x), this.s);
 			}
 		},
@@ -4329,7 +4445,7 @@ const wd = (function() {
 		s: { /* define/obtem o segundo */
 			get: function() {return wd_number_time(this.valueOf()).s;},
 			set: function(x) {
-				if (wd_finite(x))
+				if (__finite(x))
 					this._value = wd_time_number(this.h, this.m, wd_integer(x));
 			}
 		},
@@ -4359,21 +4475,21 @@ const wd = (function() {
 		y: { /* ano */
 			get: function() {return this._value.getFullYear();},
 			set: function(x) {
-				if (wd_finite(x) && x >= 0)
+				if (__finite(x) && x >= 0)
 					this._value = wd_set_date(this._value, undefined, undefined, wd_integer(x));
 			}
 		},
 		m: { /* mês */
 			get: function() {return this._value.getMonth() + 1;},
 			set: function(x) {
-				if (wd_finite(x))
+				if (__finite(x))
 					this._value = wd_set_date(this._value, undefined, wd_integer(x), undefined);
 			}
 		},
 		d: { /* dia */
 			get: function() {return this._value.getDate();},
 			set: function(x) {
-				if (wd_finite(x))
+				if (__finite(x))
 					this._value = wd_set_date(this._value, wd_integer(x), undefined, undefined);
 			}
 		},
@@ -4665,12 +4781,12 @@ const wd = (function() {
 		url:     {value: function(name) {return wd_url(name);}},
 		copy:    {value: function(text) {return wd_copy(text);}},
 		lang:    {get:   function() {return wd_lang();}},
-		device:  {get:   function() {return wd_get_device();}},
+		device:  {get:   function() {return __device();}},
 		today:   {get:   function() {return WD(new Date());}},
 		now:     {get:   function() {return WD(wd_str_now());}},
-		type: {value: function(x){return _Type(x);}},
-		number: {value: function(x){return _Number(x);}},
-		string: {value: function(x){return _String(x);}}
+		type:    {value: function(x){return __Type(x);}},
+		int: {value: function(x){return __integer(x);}},
+		float: {value: function(x){return __float(x);}}
 	});
 
 /* == BLOCO 4 ================================================================*/
@@ -5017,7 +5133,7 @@ const wd = (function() {
 		let mobile  = "mobile"  in data ? data.mobile  : "";
 		let tablet  = "tablet"  in data ? data.tablet  : "";
 		let phone   = "phone"   in data ? data.phone   : "";
-		let device  = wd_get_device();
+		let device  = __device();
 		if (device === "desktop")
 			return WD(e).css({del: phone}).css({del: tablet}).css({del: mobile}).css({add: desktop});
 		if (device === "tablet")
@@ -5049,7 +5165,7 @@ const wd = (function() {
 		| B) se não for um inteiro, definir 1s como padrão
 		\-------------------------------------------------------------------------*/
 		let value = e.dataset.wdSlide; /*A*/
-		let time  = wd_finite(value) ? wd_integer(value) : 1000; /*B*/
+		let time  = __finite(value) ? wd_integer(value) : 1000; /*B*/
 		/*--------------------------------------------------------------------------
 		| C) data-wd-slide-run informa se o slide foi executado: definir atividades
 		| D) se tempo < 0, exibir filho anterior, caso conctrário, o próximo
@@ -5306,7 +5422,7 @@ const wd = (function() {
 /*============================================================================*/
 	function loadProcedures(ev) {
 		/* capturando o dispositivo */
-		wd_device_controller = wd_get_device();
+		wd_device_controller = __device();
 
 		/* construindo CSS da biblioteca */
 		let css = [];
@@ -5389,7 +5505,7 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	function scalingProcedures(ev) { /* procedimentos para definir dispositivo e aplicar estilos */
-		let device = wd_get_device();
+		let device = __device();
 		if (device !== wd_device_controller) {
 			wd_device_controller = device;
 			WD.$$("[data-wd-device]").run(data_wdDevice);
