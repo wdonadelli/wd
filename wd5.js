@@ -338,6 +338,14 @@ const wd = (function() {
 				return false;
 			}
 		},
+		/**t{b{boolean}b finite}t d{Checa se o argumento é um número finito.}d*/
+		finite: {
+			get: function() {
+				if (this._type === null) this._init();
+				if (this.type !== "number") return false;
+				return isFinite(this.value);
+			}
+		},
 		/**t{b{boolean}b boolean}t d{Checa se o argumento é um valor booleano.}d*/
 		boolean: {
 			get: function() {
@@ -470,7 +478,7 @@ const wd = (function() {
 				if (this._type !== null) return this._type === "null" ? true : false;
 				let str = this.string ? (this._input.trim() === "" ? true : false) : false;
 				if (this._input === null || str) {
-					this._type  = "null";
+					this._type  = "null"; //FIXME string vazia como null mesmo?
 					this._value = null;
 					return true;
 				}
@@ -639,46 +647,27 @@ const wd = (function() {
 			value: function() {
 				return this.value.valueOf();
 			}
+		},
+		/**t{b{string}b toString}t d{Retorna o método i{toString()}i do retorno do atributo i{value}i.}d}l*/
+		toString: {
+			value: function() {
+				return this.value.toString();
+			}
 		}
 	});
 
 /*===========================================================================*/
 	/**3{Funções}3*/
 /*===========================================================================*/
-	/**4{Básicas}4*/
+
+
+	function __finite(value) { //FIXME substituir isso aqui no fim
+		let input = __Type(value);
+		return input.finite;
+	}
 
 /*----------------------------------------------------------------------------*/
-	/**f{b{boolean}b __finite(b{void}b value)}f*/
-	/**p{Informa se o argumento é um número é finito.}p*/
-	/**l{d{v{value}v - Valor a ser verificado.}d}l*/
-	function __finite(value) {
-		let input = __Type(value);
-		if (input.type !== "number") return false;
-		if (isNaN(input.value) || Math.abs(input.value === Infinity)) return false;
-		return isFinite(input.value);
-	}
-/*----------------------------------------------------------------------------*/
-	/**f{b{integer}b __integer(b{void}b value)}f*/
-	/**p{Retorna a parte inteira do número ou c{null}c se ocorrer um erro.}p*/
-	/**l{d{v{value}v - Valor a ser verificado.}d}l*/
-	function __integer(value) {
-		let input = __Type(value);
-		if (input.type !== "number") return null;
-		if (!__finite(input.value)) return input.value;
-		return (input < 0 ? -1 : 1) * Math.floor(Math.abs(input.value));
-	}
-/*----------------------------------------------------------------------------*/
-	/**f{b{float}b __float(b{void}b value)}f*/
-	/**p{Retorna a parte decimal do número ou c{null}c se ocorrer um erro.}p*/
-	/**l{d{v{value}v - Valor a ser verificado.}d}l*/
-	function __float(value) {
-		let input = __Type(value);
-		if (input.type !== "number") return null;
-		if (!__finite(input.value)) return input.value;
-		let exp = 1;
-		while ((input * exp)%1 !== 0) exp = 10*exp;
-		return (exp*(input.value) - exp*__integer(input.value)) / exp;
-	}
+	/**4{Internas}4*/
 /*----------------------------------------------------------------------------*/
 	/**f{b{string}b __device()}f*/
 	/**p{Retorna o tipo de tela utilizada: v{"desktop" "tablet" "phone"}v.}p*/
@@ -687,13 +676,39 @@ const wd = (function() {
 		if (window.innerWidth >= 600) return "tablet";
 		return "phone";
 	};
+
+
+/*----------------------------------------------------------------------------*/
+	/**4{Numéricas e Matemáticas}4*/
+/*----------------------------------------------------------------------------*/
+	/**f{b{integer}b __integer(b{number}b value)}f*/
+	/**p{Retorna a parte inteira do número ou c{null}c se outro tipo de dado.}p*/
+	/**l{d{v{value}v - Valor a ser verificado.}d}l*/
+	function __integer(value) {
+		let input = __Type(value);
+		if (input.type !== "number") return null;
+		if (!input.finite) return input.value;
+		return (input < 0 ? -1 : 1) * Math.floor(Math.abs(input.value));
+	}
+/*----------------------------------------------------------------------------*/
+	/**f{b{float}b __float(b{number}b value)}f*/
+	/**p{Retorna a parte decimal do número ou c{null}c se outro tipo de dado.}p*/
+	/**l{d{v{value}v - Valor a ser verificado.}d}l*/
+	function __float(value) {
+		let input = __Type(value);
+		if (input.type !== "number") return null;
+		if (!input.finite) return input.value;
+		let exp = 1;
+		while ((input * exp)%1 !== 0) exp = 10*exp;
+		return (exp*(input.value) - exp*__integer(input.value)) / exp;
+	}
 /*----------------------------------------------------------------------------*/
 	/**f{b{string}b __bytes(b{integer}b value)}f*/
 	/**p{Retorna a notação em bytes de um número inteiro ou v{"0 B"}v se ocorrer um erro.}p*/
 	/**l{d{v{value}v - Valor numérico em bytes.}d}l*/
 	function __bytes(value) {
 		let input = __Type(value);
-		if (!__finite(input.value)) return "0 B";
+		if (input.finite) return "0 B";
 		value = input < 1 ? 0 : __integer(input.value);
 		let scale = ["B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
 		let i     = scale.length;
@@ -702,9 +717,143 @@ const wd = (function() {
 				return (value/Math.pow(1024,i)).toFixed(2)+" "+scale[i];
 		return value+" B";
 	}
+/*----------------------------------------------------------------------------*/
+	/**f{b{string}b __primes(b{integer}b value)}f*/
+	/**p{Retorna uma lista com os números primos até o limite do argumento.}p*/
+	/**l{d{v{value}v - Inteiro maior que 1 que define o limite da lista.}d}l*/
+	function __primes(value) {
+		let input = __Type(value);
+		if (!input.finite || input < 2) return [];
+		let list = [2];
+		let i    = 3;
+		while (i <= input) {
+			let isPrime = true;
+			let j = 0; /* não checar o 2 */
+			while (++j < list.length) {
+				if (i % list[j] === 0) {
+					isPrime = false;
+					break;
+				}
+			}
+			if (isPrime) list.push(i);
+			i += 2; /* não checar par */
+		}
+		return list;
+	}
+/*----------------------------------------------------------------------------*/
+	/**f{b{boolean}b __prime(b{integer}b value)}f*/
+	/**p{Checa se o valor é um número primo.}p*/
+	/**l{d{v{value}v - Valor a ser checado.}d}l*/
+	function __prime(value) {
+		let input = __Type(value);
+		if (!input.finite || input < 2) return false;
+		if (__float(input.value) !== 0) return false;
+		let list = __primes(input.value);
+		return list[list.length - 1] === input.value ? true : false;
+	};
+
+/*----------------------------------------------------------------------------*/
+	/**f{b{integer}b __gcd(b{integer}b ...)}f*/
+	/**p{Retorna o máximo divisor comum dos argumentos ou 1 em caso de inconsistência.}p*/
+	function __gcd() {
+		/* analisando argumentos */
+		let input =  [];
+		let i     = -1;
+		while (++i < arguments.length) {
+			let data = __Type(arguments[i]);
+			if (!data.finite || __float(data.value) !== 0) return 1;
+			input.push(Math.abs(data.value));
+		}
+		if (input.length < 2)
+			return input.length === 1 ? input[0] : 1;
+		/* obtendo números primos */
+		let min    = Math.min.apply(null, input);
+		let primes = __primes(min);
+		if (primes.length === 0) return 1;
+		/* obtendo o mdc */
+		let mdc = 1;
+		i = 0;
+		/* looping pelos primos */
+		while (i < primes.length) {
+			let test = true;
+			let j    = -1;
+			/* checando se todos são divisíveis */
+			while(++j < input.length) {
+				if (input[j]%primes[i] !== 0)
+					test = false;
+				else
+					input[j] = input[j]/primes[i];
+			}
+			if (test)
+				mdc = mdc * primes[i];
+			else
+				i++;
+		}
+		return mdc;
+	}
+/*----------------------------------------------------------------------------*/
+	/**f{b{string}b __frac(b{number}b value)}f*/
+	/**p{Retorna a notação em fração do número ou v{"0"}v em caso de inconsistência.}p*/
+	/**l{d{v{value}v - Valor a ser checado.}d}l*/
+	/**p{Para evitar excesso de processamento, a precisão é limitada a 5 dígitos significativos.}p*/
+	function __frac(value) {
+		let input = __Type(value);
+		if (input.type !== "number") return "0";
+		if (!input.finite) return input.toString();
+		let int = Math.abs(__integer(input.value));
+		let flt = Math.abs(__float(input.value));
+		if (flt === 0) return int.toString();
+		let div = 1;
+		while((flt * div)%1 !== 0) div = 10*div;
+		let dnd = flt * div;
+		/* limitador (número de dígitos significativos nos decimais) */
+		let lim = 5;
+		let len = __integer(Math.log10(dnd)) + 1;
+		if (len > lim) {
+			let val = Math.pow(10, len - lim);
+			dnd = __integer(dnd/val);
+			div = div/val;
+		}
+		let gcd = __gcd(div, dnd);
+		/* imprimindo */
+		int = int === 0 ? "" : int.toString()+" ";
+		dnd = String(dnd/gcd);
+		div = String(div/gcd);
+		return (input < 0 ? "-" : "")+int+dnd+"/"+div;
+	}
 
 
 
+
+
+
+
+
+
+	function wd_primes(limit, decimal) {/* retorna os números primos até um limite */
+		let primes = [2]; //FIXME acabar com isso aqui, o decimal pode atrapalhar
+		let count  = 3;
+		let pow10  = 10;
+		while (count <= limit) {
+			let check = true;
+			for (let i = 1; i < primes.length; i++) { /* iniciar em 1 (os pares não serão verificados) */
+				if (count % primes[i] === 0) {
+					check = false;
+					break;
+				}
+			}
+			/* incluir os múltiplos de 10 antes */
+			if (decimal === true && (count - 1) === pow10) {
+				primes.push(pow10);
+				pow10 = pow10*10;
+			}
+			/* se primo, incluir na lista */
+			if (check) primes.push(count);
+			/* ir para o próximo contador (analisar apenas ímpares) */
+			count += 2;
+		}
+		return primes
+	}
 
 
 
@@ -736,7 +885,7 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	function wd_integer(n, abs) { /* retorna o inteiro do número ou seu valor absoluto */
-		let vtype = wd_vtype(n);
+		let vtype = wd_vtype(n); //FIXME substituir isso (o abs atrapalhou)
 		if (vtype.type !== "number") return null;
 		let val = abs === true ? Math.abs(vtype.value) : vtype.value;
 		return val < 0 ? Math.ceil(val) : Math.floor(val);
@@ -766,31 +915,6 @@ const wd = (function() {
 		this._input = input;
 	}
 
-	/**6{Métodos e Atributos Estáticos}6 l{*/
-	Object.defineProperties(_Number, {
-		/**t{b{array}b primes(integer end}t d{Retorna uma lista de primos até o inteiro informado.}d*/
-		/**d{v{end}v - Inteiro (&ge; 0) de referência para o fim da lista*/
-		primes: {
-			value: function(end) {
-				if (end < 2) return [];
-				let list = [2];
-				let i    = 3;
-				while (i <= end) {
-					let isPrime = true;
-					let j = -1;
-					while (++j < list.length) {
-						if (i % list[j] === 0) {
-							isPrime = false;
-							break;
-						}
-					}
-					if (isPrime) list.push(i);
-					i += 2; /* não checar par */
-				}
-				return list;
-			}
-		},
-	});
 
 
 	/**6{Métodos e atributos}6 l{*/
@@ -806,13 +930,7 @@ const wd = (function() {
 
 		/**t{b{boolean}b prime}t*/
 		/**d{Checa se o número é primo.}d*/
-		prime: {
-			get: function() {
-				if (this < 2 || !this.finite || this.float !== 0) return false
-				let test = this.constructor.primes(this.valueOf());
-				return test[test.length - 1] === this.valueOf() ? true : false;
-			}
-		},
+
 		/**t{b{string}b number}t*/
 		/**d{Retorna o tipo de número:}d*/
 		/**L{d{v{"&#8723;integer"}v}d d{v{"&#8723;float"}v}d d{v{"&#8723;infinity"}v}d*/
@@ -1592,52 +1710,9 @@ const wd = (function() {
 		return value;
 	}
 
-/*----------------------------------------------------------------------------*/
 
 
 
-/*----------------------------------------------------------------------------*/
-	function wd_primes(limit, decimal) {/* retorna os números primos até um limite */
-		let primes = [2];
-		let count  = 3;
-		let pow10  = 10;
-		while (count <= limit) {
-			let check = true;
-			for (let i = 1; i < primes.length; i++) { /* iniciar em 1 (os pares não serão verificados) */
-				if (count % primes[i] === 0) {
-					check = false;
-					break;
-				}
-			}
-			/* incluir os múltiplos de 10 antes */
-			if (decimal === true && (count - 1) === pow10) {
-				primes.push(pow10);
-				pow10 = pow10*10;
-			}
-			/* se primo, incluir na lista */
-			if (check) primes.push(count);
-			/* ir para o próximo contador (analisar apenas ímpares) */
-			count += 2;
-		}
-		return primes
-	}
-
-/*----------------------------------------------------------------------------*/
-	function wd_mdc(a, b) {
-		let div   = [];
-		let prime = wd_primes(a < b ? a : b);
-		for (let i = 0; i < prime.length; i++) {
-			if (prime[i] > a || prime[i] > b) break;
-			while (a % prime[i] === 0 && b % prime[i] === 0) {
-				div.push(prime[i]);
-				a = a/prime[i];
-				b = b/prime[i];
-			}
-		}
-		let mdc = 1;
-		for (let i = 0; i < div.length; i++) mdc = mdc * div[i];
-		return mdc;
-	}
 
 /*----------------------------------------------------------------------------*/
 	function wd_num_type(n) { /* retorna o tipo de número */
@@ -1646,77 +1721,6 @@ const wd = (function() {
 			if (wd_test(n, [types[i]]))
 				return types[i];
 		return "number";
-	}
-
-/*----------------------------------------------------------------------------*/
-	function wd_num_frac(n) { /* representação em fração (2 casas) */
-		/* inteiros ou zero não têm parte fracionária, retornar string */
-		if (wd_test(n, ["integer", "zero"]))
-			return wd_integer(n).toFixed(0);
-		/* infinito também não tem parte fracionária, retornar string */
-		if (wd_test(n, ["infinity"]))
-			return wd_num_str(n);
-
-		/* capturar parte inteira e decimal */
-		let integer = wd_integer(n);
-		let decimal = __float(n);
-
-		/* números pequenos (e.g. 1/10000) retorna zero: ver deslocamento de casas decimais (abaixo) */
-		let data  = {
-			int: Math.abs(integer), /* parte inteira (valor absoluto) */
-			mul: 1,                 /* multiplicador de 10 (melhorar precisão de números demais pequenos) */
-			val: Math.abs(decimal), /* valor a ser encontrado */
-			num: 0,                 /* numerador */
-			den: 1,                 /* denominador */
-			error: 1                /* erro: encontrar o menor valor */
-		};
-
-		/* deslocar números pequenos demais 0.0001 -> 0.1 (alterando provisoriamente o valor a ser encontrado) */
-		while((10*data.val) < 1) {
-			data.val = 10*data.val;
-			data.mul = 10*data.mul;
-		}
-
-		/* capturar números precisão de 3 dígitos */
-		let prime = wd_primes(1000, true);
-
-		/* testando valores em busca do menor erro */
-		for (let i = 0; i < prime.length; i++) {
-			let n = 0;        /* numerador */
-			let d = prime[i]; /* denominador */
-			let e = 1;        /* erro */
-			while (n < d) {
-				e = Math.abs((n/d)-data.val)/data.val; /* (final - inicial)/inicial */
-				if (e < data.error) {
-					data.den   = d;
-					data.num   = n;
-					data.error = e;
-				}
-				/* parando se error for zero (melhor valor encontrado) : looping interno */
-				if (data.error === 0) break;
-				n++;
-			}
-			/* parando se error for zero (melhor valor encontrado) : looping externo */
-			if (data.error === 0) break;
-		}
-
-		/* voltar o valor provisório à realidade (den*mul) */
-		data.den = data.den * data.mul;
-
-		/* calculando o MDC em busca de simplificações */
-		let mdc = wd_mdc(data.num, data.den);
-		data.num = data.num/mdc;
-		data.den = data.den/mdc;
-
-		/* analisando parte inteira e denominador em caso de aproximação computacional equivocada */
-		if (data.num === 0 && data.int === 0) return "0";
-		if (data.num === 0 && data.int !== 0) return data.int.toFixed(0);
-
-		/* formatando a fração */
-		data.int = data.int === 0 ? "" : data.int.toFixed(0)+" ";
-		data.num = data.num.toFixed(0)+"/";
-		data.den = data.den.toFixed(0);
-		return (n < 0 ? "-" : "")+data.int+data.num+data.den;
 	}
 
 /*----------------------------------------------------------------------------*/
@@ -4380,7 +4384,7 @@ const wd = (function() {
 			get: function() {return wd_num_type(this.valueOf());}
 		},
 		frac: { /* representação em fração (2 casas) */
-			get: function () {return wd_num_frac(this.valueOf());}
+			get: function () {return __frac(this.valueOf());}
 		},
 		byte: { /* retorna notação para bytes */
 			get: function () {return __bytes(this.valueOf());}
@@ -4785,8 +4789,9 @@ const wd = (function() {
 		today:   {get:   function() {return WD(new Date());}},
 		now:     {get:   function() {return WD(wd_str_now());}},
 		type:    {value: function(x){return __Type(x);}},
-		int: {value: function(x){return __integer(x);}},
-		float: {value: function(x){return __float(x);}}
+		i: 		{value: function(x){return __gcd.apply(null, Array.prototype.slice.call(arguments));}},
+		j: {value: function(x){return __frac(x);}},
+
 	});
 
 /* == BLOCO 4 ================================================================*/
