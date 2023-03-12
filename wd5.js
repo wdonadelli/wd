@@ -914,22 +914,8 @@ const wd = (function() {
 		if (!(this instanceof _Number)) return new _Number(input)
 		this._input = input;
 	}
-
-
-
 	/**6{Métodos e atributos}6 l{*/
 	Object.defineProperties(_Number.prototype, {
-		constructor: {value: _Number},
-		/** t{b{boolean}b finite}t*/
-		/**d{Informa se o número é finito.}d*/
-		finite: {
-			get: function() {
-				return (this.abs === Infinity || isNaN(this._input)) ? false : isFinite(this._input);
-			}
-		},
-
-		/**t{b{boolean}b prime}t*/
-		/**d{Checa se o número é primo.}d*/
 
 		/**t{b{string}b number}t*/
 		/**d{Retorna o tipo de número:}d*/
