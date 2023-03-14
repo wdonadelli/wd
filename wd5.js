@@ -776,46 +776,64 @@ const wd = (function() {
 		/* looping pelos primos */
 		while (i < primes.length) {
 			let test = true;
+			let stop = false;
+			/* checando se todos os argumentos são divisíveis pelo primo da vez */
 			let j    = -1;
-			/* checando se todos são divisíveis */
 			while(++j < input.length) {
-				if (input[j]%primes[i] !== 0)
-					test = false;
-				else
-					input[j] = input[j]/primes[i];
+				if (primes[i] > input[j])     stop = true;
+				if (input[j]%primes[i] !== 0)	test = false;
 			}
-			if (test)
+			/* se todos forem divisíveis, reprocessar argumentos e ajustar mdc ou chamar próximo primo */
+			if (test) {
+				let k = -1;
+				while(++k < input.length)
+					input[k] = input[k]/primes[i];
 				mdc = mdc * primes[i];
-			else
+			} else {
 				i++;
+			}
+			/* Primo maior que um dos argumentos: parar processamento */
+			if (stop) break;
 		}
 		return mdc;
 	}
 /*----------------------------------------------------------------------------*/
-	/**f{b{string}b __frac(b{number}b value)}f*/
+	/**f{b{string}b __frac(b{number}b value, b{integer}b limit)}f*/
 	/**p{Retorna a notação em fração do número ou v{"0"}v em caso de inconsistência.}p*/
 	/**l{d{v{value}v - Valor a ser checado.}d}l*/
-	/**p{Para evitar excesso de processamento, a precisão é limitada a 5 dígitos significativos.}p*/
-	function __frac(value) {
+	/**l{d{v{limit}v - (opcional, v{3, 1 &le; limit &le; 5}v) Limitador de casas decimais significativas.}d}l*/
+	function __frac(value, limit) {
 		let input = __Type(value);
 		if (input.type !== "number") return "0";
 		if (!input.finite) return input.toString();
 		let int = Math.abs(__integer(input.value));
 		let flt = Math.abs(__float(input.value));
 		if (flt === 0) return int.toString();
+		/* checando argumento limitador */
+		let min   = 1;
+		let max   = 5;//FIXME coloco um máximo mesmo?
+		let lim = (min+max)/2;
+		let check = __Type(limit);
+		if (check.finite && check.value !== lim)
+			lim = check < min ? min : (check > max ? max : __integer(check.value));
+		/* divisor, dividendo e números significativos */
 		let div = 1;
-		while((flt * div)%1 !== 0) div = 10*div;
 		let dnd = flt * div;
-		/* limitador (número de dígitos significativos nos decimais) */
-		let lim = 5;
-		let len = __integer(Math.log10(dnd)) + 1;
-		if (len > lim) {
-			let val = Math.pow(10, len - lim);
-			dnd = __integer(dnd/val);
-			div = div/val;
+		let len = 0;
+		while(dnd%1 !== 0) {
+			div = 10*div;
+			dnd = flt * div;
+			/* checando limites */
+			if (__integer(dnd) !== 0) {
+				len++;
+				if (len >= lim) {
+					dnd = __integer(dnd);
+					break;
+				}
+			}
 		}
+		/* obtendo o máximo divisor comum e a fração */
 		let gcd = __gcd(div, dnd);
-		/* imprimindo */
 		int = int === 0 ? "" : int.toString()+" ";
 		dnd = String(dnd/gcd);
 		div = String(div/gcd);
@@ -828,32 +846,6 @@ const wd = (function() {
 
 
 
-
-
-	function wd_primes(limit, decimal) {/* retorna os números primos até um limite */
-		let primes = [2]; //FIXME acabar com isso aqui, o decimal pode atrapalhar
-		let count  = 3;
-		let pow10  = 10;
-		while (count <= limit) {
-			let check = true;
-			for (let i = 1; i < primes.length; i++) { /* iniciar em 1 (os pares não serão verificados) */
-				if (count % primes[i] === 0) {
-					check = false;
-					break;
-				}
-			}
-			/* incluir os múltiplos de 10 antes */
-			if (decimal === true && (count - 1) === pow10) {
-				primes.push(pow10);
-				pow10 = pow10*10;
-			}
-			/* se primo, incluir na lista */
-			if (check) primes.push(count);
-			/* ir para o próximo contador (analisar apenas ímpares) */
-			count += 2;
-		}
-		return primes
-	}
 
 
 
@@ -4776,7 +4768,8 @@ const wd = (function() {
 		now:     {get:   function() {return WD(wd_str_now());}},
 		type:    {value: function(x){return __Type(x);}},
 		i: 		{value: function(x){return __gcd.apply(null, Array.prototype.slice.call(arguments));}},
-		j: {value: function(x){return __frac(x);}},
+		j: {value: function(x,y){return __frac(x,y);}},
+		k: {value: function(x){return __base10(x);}},
 
 	});
 
