@@ -782,6 +782,7 @@ const wd = (function() {
 			while(++j < input.length) {
 				if (primes[i] > input[j])     stop = true;
 				if (input[j]%primes[i] !== 0)	test = false;
+				if (stop || !test)            break;
 			}
 			/* se todos forem divisíveis, reprocessar argumentos e ajustar mdc ou chamar próximo primo */
 			if (test) {
@@ -799,9 +800,9 @@ const wd = (function() {
 	}
 /*----------------------------------------------------------------------------*/
 	/**f{b{string}b __frac(b{number}b value, b{integer}b limit)}f*/
-	/**p{Retorna a notação em fração do número ou v{"0"}v em caso de inconsistência.}p*/
-	/**l{d{v{value}v - Valor a ser checado.}d}l*/
-	/**l{d{v{limit}v - (opcional, v{3, 1 &le; limit &le; 5}v) Limitador de casas decimais significativas.}d}l*/
+	/**p{Retorna a notação em fração do número ou v{"0"}v em caso de inconsistência.}p l{*/
+	/**d{v{value}v - Valor a ser checado.}d*/
+	/**d{v{limit}v - (opcional, v{3, 1 &le; limit &le; 5}v) Limitador de casas decimais significativas.}d}l*/
 	function __frac(value, limit) {
 		let input = __Type(value);
 		if (input.type !== "number") return "0";
@@ -810,8 +811,8 @@ const wd = (function() {
 		let flt = Math.abs(__float(input.value));
 		if (flt === 0) return int.toString();
 		/* checando argumento limitador */
-		let min   = 1;
-		let max   = 5;//FIXME coloco um máximo mesmo?
+		let min = 1;
+		let max = 5;
 		let lim = (min+max)/2;
 		let check = __Type(limit);
 		if (check.finite && check.value !== lim)
@@ -839,20 +840,58 @@ const wd = (function() {
 		div = String(div/gcd);
 		return (input < 0 ? "-" : "")+int+dnd+"/"+div;
 	}
+/*----------------------------------------------------------------------------*/
+		/**f{b{string}b __number(b{number}b value)}f*/
+		/**p{Retorna o tipo de número: v{"&#8723;integer", "&#8723;float", "&#8723;infinity", "&#8723;real", "zero" e "not numeric"}v.}p*/
+		/**l{d{v{value}v - Valor a ser checado.}d}l*/
+		function __number(value) {
+			let input = __Type(value);
+			if (input.type !== "number")         return "not numeric";
+			let sign = input < 0 ? "-" : "+";
+			if (input == 0)                      return "zero";
+			if (!input.finite)                   return sign+"infinity";
+			if (input == __integer(input.value)) return sign+"integer";
+			if (input == __float(input.value))   return sign+"float";
+			return sign+"real";
+		}
+/*----------------------------------------------------------------------------*/
+		/**f{b{number}b __round(b{number}b value, b{integer}b n)}f*/
+		/**p{Arredonda o número conforme especificado ou v{0}v se valor inconsistente.}p l{*/
+		/**d{v{value}v - Valor a ser checado.}d*/
+		/**d{v{n}v - (v{&ge; 0}v) Número de casas decimais a arrendondar.}d}l*/
+		function __round(value, n) {
+			let input = __Type(value);
+			let digit = __Type(n);
+			if (input.type !== "number" || digit.type !== "number") return 0;
+			digit = digit < 0 ? 0 : __integer(digit.value);
+			return Number(input.valueOf().toFixed(digit));
+		}
+/*----------------------------------------------------------------------------*/
+		/**f{b{string}b __precision(b{number}b value, b{integer}b n)}f*/
+		/**p{Fixa a quantidade de dígitos significativos do número.}p l{*/
+		/**d{v{value}v - Valor a ser checado.}d*/
+		/**d{v{n}v - (v{&gt; 0}v) Número de dígitos a formatar.}d}l*/
+		function __precision(value, n) {
+			let input = __Type(value);
+			let digit = __Type(n);
+			if (input.type !== "number" || digit.type !== "number") return 0;
+			digit = digit < 1 ? 1 : __integer(digit.value);
+			input = input.value;
+			return Math.abs(input) < 1 ? input.toExponential(digit-1) : input.toPrecision(digit);
+		}
 
+//FIXME rever essas funções de números e separar formatação de matemática e ver o que fazer quando não for finito o número para definir um padrão
 
-
-
-
-
-
-
-
-
-
-
-
-
+		/** t{b{number}b pow(b{number}b n)}t*/
+		/**d{Aplica potenciação ao número. Retorna c{null}c se ocorrer um erro.}d*/
+		/**d{v{n}v - Valor do expoente.}d*/
+		function pow(value, n) {
+				try {
+					let value = Math.pow(this.valueOf(), n);
+					return isNaN(value) ? null : value;
+				}
+				catch(e) {return null;}
+		}
 
 
 
@@ -909,59 +948,7 @@ const wd = (function() {
 	/**6{Métodos e atributos}6 l{*/
 	Object.defineProperties(_Number.prototype, {
 
-		/**t{b{string}b number}t*/
-		/**d{Retorna o tipo de número:}d*/
-		/**L{d{v{"&#8723;integer"}v}d d{v{"&#8723;float"}v}d d{v{"&#8723;infinity"}v}d*/
-		/**d{v{"&#8723;real"}v}d d{v{"zero"}v}d}L*/
-		number: {
-			get: function() {
-				let obj = this;
-				let ref = {
-					"integer": obj != 0 && obj.finite && obj == obj.integer ? true : false,
-					"float":   obj != 0 && obj.finite && obj == obj.float ? true : false,
-					"infinity": obj.abs == Infinity ? true : false,
-					"zero": obj == 0 ? true : false,
-					"real": true
-				};
-				for (let i in ref)
-					if (ref[i]) return (this < 0 ? "-" : "+")+i;
-			}
-		},
-		/** t{b{number}b abs}t*/
-		/**d{Retorna o valor absoluto do número.}d*/
-		abs: {
-			get: function () {
-				return (this < 0 ? -1 : 1) * this.valueOf();
-			}
-		},
-		/**t{b{number}b round(b{integer}b n)}t*/
-		/**d{Arredonda o número conforme especificado.}d*/
-		/**d{v{n}v - (v{&ge; 0}v) Número de casas decimais a arrendondar.}d*/
-		round: {
-			value: function(n) {
-				return Number(this.valueOf().toFixed(n));
-			}
-		},
-		/** t{b{string}b precision(b{integer}b n)}t*/
-		/**d{Fixa a quantidade de dígitos significativos do número.}d*/
-		/**d{v{n}v - (v{&ge; 0}v) Número de digítos a formatar.}d*/
-		precision: {
-			value: function(n) {
-				return this.abs < 1 ? this.valueOf().toExponential(n-1) : this.valueOf().toPrecision(n);
-			}
-		},
-		/** t{b{number}b pow(b{number}b n)}t*/
-		/**d{Aplica potenciação ao número. Retorna c{null}c se ocorrer um erro.}d*/
-		/**d{v{n}v - Valor do expoente.}d*/
-		pow: {
-			value: function (n) {
-				try {
-					let value = Math.pow(this.valueOf(), n);
-					return isNaN(value) ? null : value;
-				}
-				catch(e) {return null;}
-			}
-		},
+
 		/** t{b{string}b exp(b{integer}b n, b{boolean}b html)}t*/
 		/**d{Retorna exponenciação de base 10 ao número.}d*/
 		/**d{v{n}v - (v{&ge; 0}v) Número de casas decimais.}d*/
@@ -1051,6 +1038,23 @@ const wd = (function() {
 
 
 	});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 	/**h{String}h*/
 	/**f{b{object}b _String(b{string}b input)}f*/
@@ -1692,20 +1696,6 @@ const wd = (function() {
 
 
 
-/*----------------------------------------------------------------------------*/
-	function wd_num_type(n) { /* retorna o tipo de número */
-		let types = ["zero", "+infinity", "-infinity", "+integer", "-integer", "+float", "-float"];
-		for (let i = 0; i < types.length; i++)
-			if (wd_test(n, [types[i]]))
-				return types[i];
-		return "number";
-	}
-
-/*----------------------------------------------------------------------------*/
-	function wd_num_round(n, width) { /* arredonda número para determinado tamanho */
-		width = __finite(width) ? wd_integer(width, true) : 0;
-		return new Number(n.toFixed(width)).valueOf();
-	}
 
 /*----------------------------------------------------------------------------*/
 	function wd_num_pow10(n, width) { /* transforma número em notação científica */
@@ -4359,7 +4349,7 @@ const wd = (function() {
 			get: function() {return Math.abs(this.valueOf());}
 		},
 		ntype: { /* retorna o tipo de número */
-			get: function() {return wd_num_type(this.valueOf());}
+			get: function() {return __number(this.valueOf());}
 		},
 		frac: { /* representação em fração (2 casas) */
 			get: function () {return __frac(this.valueOf());}
@@ -4372,7 +4362,7 @@ const wd = (function() {
 		},
 		round: { /* arredonda número para determinado tamanho */
 			value: function(width) {
-				return wd_num_round(this.valueOf(), width);
+				return __round(this.valueOf(), width);
 			}
 		},
 		pow10: { /* transforma número em notação científica */
@@ -4767,9 +4757,9 @@ const wd = (function() {
 		today:   {get:   function() {return WD(new Date());}},
 		now:     {get:   function() {return WD(wd_str_now());}},
 		type:    {value: function(x){return __Type(x);}},
-		i: 		{value: function(x){return __gcd.apply(null, Array.prototype.slice.call(arguments));}},
-		j: {value: function(x,y){return __frac(x,y);}},
-		k: {value: function(x){return __base10(x);}},
+		i: {value: function(x){return __gcd.apply(null, Array.prototype.slice.call(arguments));}},
+		j: {value: function(x,y){return __precision(x,y);}},
+		k: {value: function(x){return __number(x);}},
 
 	});
 
