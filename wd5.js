@@ -676,10 +676,71 @@ const wd = (function() {
 		if (window.innerWidth >= 600) return "tablet";
 		return "phone";
 	};
+/*----------------------------------------------------------------------------*/
+	/**f{b{node}b __$$(b{string}b selector, b{node}b root)}f*/
+	/**p{Retorna uma lista de elementos do tipo obtida em i{querySelectorAll}i, vazia em caso de erro.}p l{*/
+	/**d{v{selector}v - Seletor CSS para busca de elementos.}d*/
+	/**d{v{root}v - (opcional, i{document}i) Elemento base para busca.}d}l*/
+	function __$$(selector, root) {
+		let elem = null;
+		try {elem = root.querySelectorAll(selector);}
+		catch(e) {
+			try {elem = document.querySelectorAll(selector);}
+			catch(e) {}
+		}
+		let test = __Type(elem);
+		return test.type === "node" ? elem : document.querySelectorAll("#_._");
+	}
+/*----------------------------------------------------------------------------*/
+	/**f{b{node}b __$(b{string}b selector, b{node}b root)}f*/
+	/**p{Retorna um elemento do tipo obtido em i{querySelector}i ou o retorno de i{__$$}i em caso de erro.}p l{*/
+	/**d{v{selector}v - Seletor CSS para busca do elemento.}d*/
+	/**d{v{root}v - (opcional, i{document}i) Elemento base para busca.}d}l*/
+	function __$(selector, root) {
+		let elem = null;
+		try {elem = root.querySelector(selector);}
+		catch(e) {
+			try {elem = document.querySelector(selector);}
+			catch(e) {}
+		}
+		let test = __Type(elem);
+		return test.type === "node" ? elem : __$$(selector, root);
+	}
 
 
 /*----------------------------------------------------------------------------*/
-	/**4{Numéricas e Matemáticas}4*/
+	function __$$$(obj, root) {
+		let one =  "$" in obj ? String(obj[$]).trim()  : null;
+		let all = "$$" in obj ? String(obj[$$]).trim() : null;
+		let key = {"document": document, "window":  window};
+		if (one in key) return key[one];
+		if (all in key) return key[all];
+		if (one !== null && all !== null)
+			//FIXME
+
+
+
+	}
+
+
+	function wd_$$$(obj, root) { /* captura os valores de $ e $$ dentro de um objeto ($$ prioridade) */
+		let one =  "$" in obj ? obj["$"].trim()  : null;
+		let all = "$$" in obj ? obj["$$"].trim() : null;
+		if (one === null && all === null) return null;
+		let words  = {"document": document, "window":  window};
+		if (one in words) return words[one];
+		if (all in words) return words[all];
+		one = one === null ? null : __$(one, root);
+		all = all === null ? null : __$$(all, root);
+		return all !== null ? all : one;
+	}
+
+
+
+
+
+/*----------------------------------------------------------------------------*/
+	/**4{Matemáticas}4*/
 /*----------------------------------------------------------------------------*/
 	/**f{b{integer}b __integer(b{number}b value)}f*/
 	/**p{Retorna a parte inteira do número ou c{null}c se outro tipo de dado.}p*/
@@ -691,10 +752,10 @@ const wd = (function() {
 		return (input < 0 ? -1 : 1) * Math.floor(Math.abs(input.value));
 	}
 /*----------------------------------------------------------------------------*/
-	/**f{b{float}b __float(b{number}b value)}f*/
+	/**f{b{float}b __decimal(b{number}b value)}f*/
 	/**p{Retorna a parte decimal do número ou c{null}c se outro tipo de dado.}p*/
 	/**l{d{v{value}v - Valor a ser verificado.}d}l*/
-	function __float(value) {
+	function __decimal(value) {
 		let input = __Type(value);
 		if (input.type !== "number") return null;
 		if (!input.finite) return input.value;
@@ -703,24 +764,29 @@ const wd = (function() {
 		return (exp*(input.value) - exp*__integer(input.value)) / exp;
 	}
 /*----------------------------------------------------------------------------*/
-	/**f{b{string}b __bytes(b{integer}b value)}f*/
-	/**p{Retorna a notação em bytes de um número inteiro ou v{"0 B"}v se ocorrer um erro.}p*/
-	/**l{d{v{value}v - Valor numérico em bytes.}d}l*/
-	function __bytes(value) {
-		let input = __Type(value);
-		if (input.finite) return "0 B";
-		value = input < 1 ? 0 : __integer(input.value);
-		let scale = ["B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
-		let i     = scale.length;
-		while (--i >= 0)
-			if (value >= Math.pow(1024,i))
-				return (value/Math.pow(1024,i)).toFixed(2)+" "+scale[i];
-		return value+" B";
-	}
+		/**f{b{number}b __round(b{number}b value, b{integer}b n, b{boolean}b cut)}f*/
+		/**p{Arredonda o número conforme especificado ou c{null}c se outro tipo de dado.}p l{*/
+		/**d{v{value}v - Valor a ser checado.}d*/
+		/**d{v{n}v - (v{&ge; 0}v) Número de casas decimais a arrendondar.}d*/
+		/**d{v{cut}v - (opcional, c{false}c), Se verdadeiro, não arrendondará o valor.}d}l*/
+		function __round(value, n, cut) {
+			let input = __Type(value);
+			let digit = __Type(n);
+			if (input.type !== "number" || digit.type !== "number") return 0;
+			if (!input.finite) return input.value;
+			digit = digit < 0 ? 0 : __integer(digit.value);
+			if (cut === true) {
+				let i = -1;
+				let base = 1;
+				while (++i < n) base = 10*base;
+				return __integer(base*input.value)/base;
+			}
+			return Number(input.valueOf().toFixed(digit));
+		}
 /*----------------------------------------------------------------------------*/
 	/**f{b{string}b __primes(b{integer}b value)}f*/
 	/**p{Retorna uma lista com os números primos até o limite do argumento.}p*/
-	/**l{d{v{value}v - Inteiro maior que 1 que define o limite da lista.}d}l*/
+	/**l{d{v{value}v - (v{&infin; &gt; value &gt; 1}v) Define o limite da lista.}d}l*/
 	function __primes(value) {
 		let input = __Type(value);
 		if (!input.finite || input < 2) return [];
@@ -746,23 +812,24 @@ const wd = (function() {
 	/**l{d{v{value}v - Valor a ser checado.}d}l*/
 	function __prime(value) {
 		let input = __Type(value);
-		if (!input.finite || input < 2) return false;
-		if (__float(input.value) !== 0) return false;
+		if (!input.finite || input < 2 || __decimal(input.value) !== 0) return false;
 		let list = __primes(input.value);
 		return list[list.length - 1] === input.value ? true : false;
 	};
-
 /*----------------------------------------------------------------------------*/
 	/**f{b{integer}b __gcd(b{integer}b ...)}f*/
-	/**p{Retorna o máximo divisor comum dos argumentos ou 1 em caso de inconsistência.}p*/
+	/**p{Retorna o máximo divisor comum dos argumentos.}p*/
+	/**p{Os decimais dos números serão desconsiderados assim como valores infinitos.}p*/
 	function __gcd() {
 		/* analisando argumentos */
 		let input =  [];
 		let i     = -1;
 		while (++i < arguments.length) {
 			let data = __Type(arguments[i]);
-			if (!data.finite || __float(data.value) !== 0) return 1;
-			input.push(Math.abs(data.value));
+			if (!data.finite) continue;
+			let number = __integer(Math.abs(data.value));
+			if (number === 0 || number === 1) return number;
+			input.push(number);
 		}
 		if (input.length < 2)
 			return input.length === 1 ? input[0] : 1;
@@ -808,7 +875,7 @@ const wd = (function() {
 		if (input.type !== "number") return "0";
 		if (!input.finite) return input.toString();
 		let int = Math.abs(__integer(input.value));
-		let flt = Math.abs(__float(input.value));
+		let flt = Math.abs(__decimal(input.value));
 		if (flt === 0) return int.toString();
 		/* checando argumento limitador */
 		let min = 1;
@@ -840,6 +907,31 @@ const wd = (function() {
 		div = String(div/gcd);
 		return (input < 0 ? "-" : "")+int+dnd+"/"+div;
 	}
+
+
+
+
+
+
+
+/*----------------------------------------------------------------------------*/
+	/**4{Números}4*/
+/*----------------------------------------------------------------------------*/
+	/**f{b{string}b __bytes(b{integer}b value)}f*/
+	/**p{Retorna a notação em bytes de um número inteiro ou v{"0 B"}v se ocorrer um erro.}p*/
+	/**l{d{v{value}v - Valor numérico em bytes.}d}l*/
+	function __bytes(value) {
+		let input = __Type(value);
+		if (input.finite) return "0 B";
+		value = input < 1 ? 0 : __integer(input.value);
+		let scale = ["B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
+		let i     = scale.length;
+		while (--i >= 0)
+			if (value >= Math.pow(1024,i))
+				return (value/Math.pow(1024,i)).toFixed(2)+" "+scale[i];
+		return value+" B";
+	}
+
 /*----------------------------------------------------------------------------*/
 		/**f{b{string}b __number(b{number}b value)}f*/
 		/**p{Retorna o tipo de número: v{"&#8723;integer", "&#8723;float", "&#8723;infinity", "&#8723;real", "zero" e "not numeric"}v.}p*/
@@ -851,20 +943,8 @@ const wd = (function() {
 			if (input == 0)                      return "zero";
 			if (!input.finite)                   return sign+"infinity";
 			if (input == __integer(input.value)) return sign+"integer";
-			if (input == __float(input.value))   return sign+"float";
+			if (input == __decimal(input.value))   return sign+"float";
 			return sign+"real";
-		}
-/*----------------------------------------------------------------------------*/
-		/**f{b{number}b __round(b{number}b value, b{integer}b n)}f*/
-		/**p{Arredonda o número conforme especificado ou v{0}v se valor inconsistente.}p l{*/
-		/**d{v{value}v - Valor a ser checado.}d*/
-		/**d{v{n}v - (v{&ge; 0}v) Número de casas decimais a arrendondar.}d}l*/
-		function __round(value, n) {
-			let input = __Type(value);
-			let digit = __Type(n);
-			if (input.type !== "number" || digit.type !== "number") return 0;
-			digit = digit < 0 ? 0 : __integer(digit.value);
-			return Number(input.valueOf().toFixed(digit));
 		}
 /*----------------------------------------------------------------------------*/
 		/**f{b{string}b __precision(b{number}b value, b{integer}b n)}f*/
@@ -880,7 +960,7 @@ const wd = (function() {
 			return Math.abs(input) < 1 ? input.toExponential(digit-1) : input.toPrecision(digit);
 		}
 
-//FIXME rever essas funções de números e separar formatação de matemática e ver o que fazer quando não for finito o número para definir um padrão
+
 
 		/** t{b{number}b pow(b{number}b n)}t*/
 		/**d{Aplica potenciação ao número. Retorna c{null}c se ocorrer um erro.}d*/
@@ -1417,38 +1497,6 @@ const wd = (function() {
 		/* desconhecido: não se encaixa nos anteriores */
 		return {type: "unknown", value: val};
 	}
-
-/*----------------------------------------------------------------------------*/
-	function wd_$(selector, root) {/* retorna querySelector */
-		let elem = null;
-		try {elem = root.querySelector(selector);    } catch(e) {}
-		if (elem !== null) return elem;
-		try {elem = document.querySelector(selector);} catch(e) {}
-		return elem;
-	}
-
-/*----------------------------------------------------------------------------*/
-	function wd_$$(selector, root) {/* retorna querySelectorAll */
-		let elem = null;
-		try {elem = root.querySelectorAll(selector);    } catch(e) {}
-		if (elem !== null) return elem;
-		try {elem = document.querySelectorAll(selector);} catch(e) {}
-		return elem;
-	}
-
-/*----------------------------------------------------------------------------*/
-	function wd_$$$(obj, root) { /* captura os valores de $ e $$ dentro de um objeto ($$ prioridade) */
-		let one =  "$" in obj ? obj["$"].trim()  : null;
-		let all = "$$" in obj ? obj["$$"].trim() : null;
-		if (one === null && all === null) return null;
-		let words  = {"document": document, "window":  window};
-		if (one in words) return words[one];
-		if (all in words) return words[all];
-		one = one === null ? null : wd_$(one, root);
-		all = all === null ? null : wd_$$(all, root);
-		return all !== null ? all : one;
-	}
-
 /*----------------------------------------------------------------------------*/
 	function wd_copy(value) { /* copia o conteúdo da variável para a área de transferência */
 		/* copiar o que está selecionado */
@@ -1736,7 +1784,7 @@ const wd = (function() {
 
 		let sign = n < 0 ? "-" : "";
 		let int  = Math.abs(wd_integer(n));
-		let dec  = Math.abs(__float(n));
+		let dec  = Math.abs(__decimal(n));
 
 		dec = dec.toFixed((ldec > 20 ? 20 : ldec));
 		if ((/^1/).test(dec)) int++;
@@ -2639,7 +2687,7 @@ const wd = (function() {
 	function wd_html_append(base, html, overlap) { /* adiciona/substitui elementos por texto em HTML */
 		let temp = overlap ===  true ? document.createElement("DIV") : base;
 		temp.innerHTML = html;
-		let scripts = wd_vtype(wd_$$("script", temp)).value;
+		let scripts = wd_vtype(__$$("script", temp)).value;
 
 		/* sem scripts (se inner, já está pronto) */
 		if (scripts.length === 0) {
@@ -4343,7 +4391,7 @@ const wd = (function() {
 			get: function() {return wd_integer(this.valueOf());}
 		},
 		dec: { /* retorna a parte decimal */
-			get: function() {return __float(this.valueOf());}
+			get: function() {return __decimal(this.valueOf());}
 		},
 		abs: { /* retorna a parte decimal */
 			get: function() {return Math.abs(this.valueOf());}
@@ -4748,8 +4796,8 @@ const wd = (function() {
 	WD.constructor = WD;
 	Object.defineProperties(WD, {
 		version: {value: wd_version},
-		$:       {value: function(css, root) {return WD(wd_$(css, root));}},
-		$$:      {value: function(css, root) {return WD(wd_$$(css, root));}},
+		$:       {value: function(css, root) {return WD(__$(css, root));}},
+		$$:      {value: function(css, root) {return WD(__$$(css, root));}},
 		url:     {value: function(name) {return wd_url(name);}},
 		copy:    {value: function(text) {return wd_copy(text);}},
 		lang:    {get:   function() {return wd_lang();}},
@@ -4757,10 +4805,7 @@ const wd = (function() {
 		today:   {get:   function() {return WD(new Date());}},
 		now:     {get:   function() {return WD(wd_str_now());}},
 		type:    {value: function(x){return __Type(x);}},
-		i: {value: function(x){return __gcd.apply(null, Array.prototype.slice.call(arguments));}},
-		j: {value: function(x,y){return __precision(x,y);}},
-		k: {value: function(x){return __number(x);}},
-
+		test: {value: function(){return __gcd.apply(null, Array.prototype.slice.call(arguments));}},
 	});
 
 /* == BLOCO 4 ================================================================*/
@@ -5266,7 +5311,7 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	function data_wdOutput(e, load) { /* Atribui valor ao target: data-wd-output=${target}call{} */
-		let output = wd_$$("[data-wd-output]");
+		let output = __$$("[data-wd-output]");
 		if (output === null) return;
 		/* looping pelos elementos com data-wd-output no documento */
 		for (let i = 0; i < output.length; i++) {
@@ -5371,7 +5416,7 @@ const wd = (function() {
 						continue;
 
 					/* obtendo elementos e aplicando textContent */
-					let target = WD(wd_$$(css));
+					let target = WD(__$$(css));
 					if (target.type !== "dom") continue;
 					target.run(function(y) {
 						y.textContent = text;
@@ -5444,16 +5489,16 @@ const wd = (function() {
 		}
 
 		/* margem superior extra para headers */
-		let head = measures(wd_$("body > header"));
+		let head = measures(__$("body > header"));
 		if (head.position === "fixed")
 			document.body.style.marginTop = (head.top+head.height+head.marginBottom)+"px";
 		/* margem inferior extra para footers */
-		let foot = measures(wd_$("body > footer"));
+		let foot = measures(__$("body > footer"));
 		if (foot.position === "fixed")
 			document.body.style.marginBottom = (foot.bottom+foot.height+foot.marginTop)+"px";
 		/* mudar posicionamento em relação ao topo */
 		let body = measures(document.body);
-		let hash = measures(wd_$(window.location.hash));
+		let hash = measures(__$(window.location.hash));
 		if (hash.ok && head.position === "fixed")
 			window.scrollTo(0, hash.elem.offsetTop - body.marginTop);
 
