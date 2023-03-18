@@ -28,7 +28,7 @@ https://github.com/wdonadelli/wd
 
 const wd = (function() {
 /*===========================================================================*/
-	/**3{Variáveis e Constantes}3*/
+	/**3{Mecanismos de Controle}3*/
 /*===========================================================================*/
 
 	/**f{b{const string}b wd_version}f*/
@@ -260,6 +260,14 @@ const wd = (function() {
 			"padding: 0.5em; border-radius: 0 0 0.2em 0.2em;"
 		]},
 	];
+/*----------------------------------------------------------------------------*/
+	/**f{b{string}b __device()}f*/
+	/**p{Retorna o tipo de tela utilizada: v{"desktop" "tablet" "phone"}v.}p*/
+	function __device() {
+		if (window.innerWidth >= 768) return "desktop";
+		if (window.innerWidth >= 600) return "tablet";
+		return "phone";
+	};
 
 /*===========================================================================*/
 	/**3{Checagem de Tipos e Valores}3*/
@@ -657,7 +665,7 @@ const wd = (function() {
 	});
 
 /*===========================================================================*/
-	/**3{Funções}3*/
+	/**3{Ferramentas Numéricas}3*/
 /*===========================================================================*/
 
 
@@ -665,17 +673,7 @@ const wd = (function() {
 		let input = __Type(value);
 		return input.finite;
 	}
-
-/*----------------------------------------------------------------------------*/
-	/**4{Internas}4*/
-/*----------------------------------------------------------------------------*/
-	/**f{b{string}b __device()}f*/
-	/**p{Retorna o tipo de tela utilizada: v{"desktop" "tablet" "phone"}v.}p*/
-	function __device() {
-		if (window.innerWidth >= 768) return "desktop";
-		if (window.innerWidth >= 600) return "tablet";
-		return "phone";
-	};
+//FIXME tirar as funções $$ e $ para HTML
 /*----------------------------------------------------------------------------*/
 	/**f{b{node}b __$$(b{string}b selector, b{node}b root)}f*/
 	/**p{Retorna uma lista de elementos do tipo obtida em i{querySelectorAll}i, vazia em caso de erro.}p l{*/
@@ -706,39 +704,20 @@ const wd = (function() {
 		let test = __Type(elem);
 		return test.type === "node" ? elem : __$$(selector, root);
 	}
-
-
 /*----------------------------------------------------------------------------*/
+	/**f{b{node}b __$$$(b{object}b obj, b{node}b root)}f*/
+	/**p{Localiza em um objeto os atributos v{$}v e v{$$}v e utiliza seus valores como seletores CSS.}p*/
+	/**p{O atributo v{$$}v é prevalente sobre o v{$}v para fins de chamada das funções i{__$$}i ou i{__$}i, respectivamente.}p l{*/
+	/**d{v{obj}v - Objeto javascript contendo os atributos v{$}v ou v{$$}v.}d*/
+	/**d{v{root}v - (opcional, i{document}i) Elemento base para busca.}d}l*/
 	function __$$$(obj, root) {
-		let one =  "$" in obj ? String(obj[$]).trim()  : null;
-		let all = "$$" in obj ? String(obj[$$]).trim() : null;
+		let one =  "$" in obj ? String(obj["$"]).trim()  : null;
+		let all = "$$" in obj ? String(obj["$$"]).trim() : null;
 		let key = {"document": document, "window":  window};
-		if (one in key) return key[one];
-		if (all in key) return key[all];
-		if (one !== null && all !== null)
-			//FIXME
-
-
-
+		if (one !== null && one in key) one = key[one];
+		if (all !== null && all in key) all = key[all];
+		return all === null ? __$(one, root) : __$$(all, root);
 	}
-
-
-	function wd_$$$(obj, root) { /* captura os valores de $ e $$ dentro de um objeto ($$ prioridade) */
-		let one =  "$" in obj ? obj["$"].trim()  : null;
-		let all = "$$" in obj ? obj["$$"].trim() : null;
-		if (one === null && all === null) return null;
-		let words  = {"document": document, "window":  window};
-		if (one in words) return words[one];
-		if (all in words) return words[all];
-		one = one === null ? null : __$(one, root);
-		all = all === null ? null : __$$(all, root);
-		return all !== null ? all : one;
-	}
-
-
-
-
-
 /*----------------------------------------------------------------------------*/
 	/**4{Matemáticas}4*/
 /*----------------------------------------------------------------------------*/
@@ -764,18 +743,18 @@ const wd = (function() {
 		return (exp*(input.value) - exp*__integer(input.value)) / exp;
 	}
 /*----------------------------------------------------------------------------*/
-		/**f{b{number}b __round(b{number}b value, b{integer}b n, b{boolean}b cut)}f*/
-		/**p{Arredonda o número conforme especificado ou c{null}c se outro tipo de dado.}p l{*/
+		/**f{b{number}b __cut(b{number}b value, b{integer}b n, b{boolean}b cut)}f*/
+		/**p{Corta o número de casas decimais conforme especificado ou retorna c{null}c se não for número.}p l{*/
 		/**d{v{value}v - Valor a ser checado.}d*/
 		/**d{v{n}v - (v{&ge; 0}v) Número de casas decimais a arrendondar.}d*/
-		/**d{v{cut}v - (opcional, c{false}c), Se verdadeiro, não arrendondará o valor.}d}l*/
-		function __round(value, n, cut) {
+		/**d{v{round}v - (opcional, c{true}c), Se falso, não arrendondará o valor.}d}l*/
+		function __cut(value, n, round) {
 			let input = __Type(value);
-			let digit = __Type(n);
-			if (input.type !== "number" || digit.type !== "number") return 0;
+			if (input.type !== "number") return null;
 			if (!input.finite) return input.value;
-			digit = digit < 0 ? 0 : __integer(digit.value);
-			if (cut === true) {
+			let digit = __Type(n);
+			digit = !digit.finite || digit < 0 ? 0 : __integer(digit.value);
+			if (round === false) {
 				let i = -1;
 				let base = 1;
 				while (++i < n) base = 10*base;
@@ -866,6 +845,8 @@ const wd = (function() {
 		return mdc;
 	}
 /*----------------------------------------------------------------------------*/
+	/**4{Notação}4*/
+/*----------------------------------------------------------------------------*/
 	/**f{b{string}b __frac(b{number}b value, b{integer}b limit)}f*/
 	/**p{Retorna a notação em fração do número ou v{"0"}v em caso de inconsistência.}p l{*/
 	/**d{v{value}v - Valor a ser checado.}d*/
@@ -907,15 +888,6 @@ const wd = (function() {
 		div = String(div/gcd);
 		return (input < 0 ? "-" : "")+int+dnd+"/"+div;
 	}
-
-
-
-
-
-
-
-/*----------------------------------------------------------------------------*/
-	/**4{Números}4*/
 /*----------------------------------------------------------------------------*/
 	/**f{b{string}b __bytes(b{integer}b value)}f*/
 	/**p{Retorna a notação em bytes de um número inteiro ou v{"0 B"}v se ocorrer um erro.}p*/
@@ -931,51 +903,193 @@ const wd = (function() {
 				return (value/Math.pow(1024,i)).toFixed(2)+" "+scale[i];
 		return value+" B";
 	}
+/*----------------------------------------------------------------------------*/
+	/**f{b{string}b __number(b{number}b value)}f*/
+	/**p{Retorna o tipo de número: v{"&#8723;integer", "&#8723;float", "&#8723;infinity", "&#8723;real", "zero" e "not numeric"}v.}p*/
+	/**l{d{v{value}v - Valor a ser checado.}d}l*/
+	function __number(value) {
+		let input = __Type(value);
+		if (input.type !== "number")         return "not numeric";
+		let sign = input < 0 ? "-" : "+";
+		if (input == 0)                      return "zero";
+		if (!input.finite)                   return sign+"infinity";
+		if (input == __integer(input.value)) return sign+"integer";
+		if (input == __decimal(input.value))   return sign+"float";
+		return sign+"real";
+	}
+/*----------------------------------------------------------------------------*/
+	/**f{b{string}b __precision(b{number}b value, b{integer}b n)}f*/
+	/**p{Fixa a quantidade de dígitos significativos do número.}p l{*/
+	/**d{v{value}v - Valor a ser checado.}d*/
+	/**d{v{n}v - (v{&gt; 0}v) Número de dígitos a formatar.}d}l*/
+	function __precision(value, n) {
+		let input = __Type(value);
+		let digit = __Type(n);
+		if (input.type !== "number" || digit.type !== "number") return 0;
+		digit = digit < 1 ? 1 : __integer(digit.value);
+		input = input.value;
+		return Math.abs(input) < 1 ? input.toExponential(digit-1) : input.toPrecision(digit);
+	}
+/*----------------------------------------------------------------------------*/
+	/**f{b{string}b __notation(b{number}b value, b{string}b lang, b{string}b type, b{void}b code)}f*/
+	/**p{Retorna o número conforme linguagem e formatação ou c{null}c se um erro ocorrer a{https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/NumberFormat}a.}pl{*/
+	/**d{v{value}v - Valor a ser checado.}d*/
+	/**d{v{lang}v - Código da linguagem a ser aplicada.}d*/
+	/**d{v{type}v - Tipo da formatação:}d L{*/
+	/**d{v{"significant"}v - fixa número de dígitos significativos.}d*/
+	/**d{v{"decimal"}v - fixa número de casas decimais.}d*/
+	/**d{v{"integer"}v - fixa número de dígitos inteiros.}d*/
+	/**d{v{"percent"}v - transforma o número em notação percentual.}d*/
+	/**d{v{"unit"}v - define a unidade de medida.}d*/
+	/**d{v{"scientific"}v - notação científica.}d*/
+	/**d{v{"engineering"}v - notação de engenharia.}d*/
+	/**d{v{"compact"}v - notação compacta curta ou longa.}d*/
+	/**d{v{"currency"}v - Notação monetária.}d*/
+	/**d{v{"ccy"}v - Notação monetária curta.}d*/
+	/**d{v{"nameccy"}v - Notação monetária textual.}d }L*/
+	/**d{v{code}v - depende do tipo da formatação:}dL{*/
+	/**d{v{"significant"}v - quantidade de números significativos.}d*/
+	/**d{v{"decimal"}v - número de casas decimais.}d*/
+	/**d{v{"integer"}v - número de dígitos inteiros.}d*/
+	/**d{v{"percent"}v - número de casas decimais.}d*/
+	/**d{v{"unit"}v - nome da unidade de medida a{https://tc39.es/proposal-unified-intl-numberformat/section6/locales-currencies-tz_proposed_out.html#sec-issanctionedsimpleunitidentifier}a.}d*/
+	/**d{v{"scientific"}v - número de casas decimais.}d*/
+	/**d{v{"engineering"}v - número de casas decimais.}d*/
+	/**d{v{"compact"}v - Longa (v{"long"}v) ou curta (v{"short"}v).}d*/
+	/**d{v{"currency"}v - Código monetário a{https://www.six-group.com/en/products-services/financial-information/data-standards.html#scrollTo=currency-codes}a.}d*/
+	/**d{v{"ccy"}v - Código monetário.}d*/
+	/**d{v{"nameccy"}v - Código monetário.}d }L}l*/
+	function __notation(value, lang, type, code) {
+		let input = __Type(value);
+		if (input.type !== "number") return null;
+		if (!input.finite) return input.value.toString();
+		let types = {
+			significant: {minimumSignificantDigits: code, maximumSignificantDigits: code},
+			decimal:     {style: "decimal",  minimumFractionDigits: code, maximumFractionDigits: code},
+			integer:     {style: "decimal",  minimumIntegerDigits: code, },
+			percent:     {style: "percent",  minimumFractionDigits: code, maximumFractionDigits: code},
+			unit:        {style: "unit",     unit: code},
+			scientific:  {style: "decimal",  notation: "scientific", minimumFractionDigits: code, maximumFractionDigits: code},
+			engineering: {style: "decimal",  notation: "engineering", minimumFractionDigits: code, maximumFractionDigits: code},
+			compact:     {style: "decimal",  notation: "compact", compactDisplay: code === "short" ? code : "long"},
+			currency:    {style: "currency", currency: code, signDisplay: "exceptZero", currencyDisplay: "symbol"},
+			ccy:         {style: "currency", currency: code, signDisplay: "exceptZero", currencyDisplay: "narrowSymbol"},
+			nameccy:     {style: "currency", currency: code, signDisplay: "auto", currencyDisplay: "name"}
+		};
+		type = String(type).toLowerCase();
+		try {
+			return input.value.toLocaleString(lang, (type in types ? types[type] : {}));
+		} catch(e) {}
+		try {
+			input.value.toLocaleString(undefined, (type in types ? types[type] : {}));
+		} catch (e) {}
+		return input.value.toLocaleString();
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*===========================================================================*/
+	/**3{Ferramentas para Strings}3*/
+/*===========================================================================*/
+
 
 /*----------------------------------------------------------------------------*/
-		/**f{b{string}b __number(b{number}b value)}f*/
-		/**p{Retorna o tipo de número: v{"&#8723;integer", "&#8723;float", "&#8723;infinity", "&#8723;real", "zero" e "not numeric"}v.}p*/
-		/**l{d{v{value}v - Valor a ser checado.}d}l*/
-		function __number(value) {
-			let input = __Type(value);
-			if (input.type !== "number")         return "not numeric";
-			let sign = input < 0 ? "-" : "+";
-			if (input == 0)                      return "zero";
-			if (!input.finite)                   return sign+"infinity";
-			if (input == __integer(input.value)) return sign+"integer";
-			if (input == __decimal(input.value))   return sign+"float";
-			return sign+"real";
-		}
+	/**f{b{string}b __caseCapitalize(b{string}b value)}f*/
+	/**p{Retorna maiúsculo apenas a primeira letra de cada palavra ou c{null}c em caso de erro.}p l{*/
+	/**d{v{value}v - Valor a ser checado.}d}l*/
+	function __caseCapitalize(value) {
+		let input = __Type(value);
+		if (!input.string) return null;
+		value = value.toLowerCase();
+		let chars = [value[0].toUpperCase()];
+		let i = -1;
+		while (++i < (value.length - 1)) /* vai até o penúltimo */
+			chars.push(
+				(/\s/).test(value[i]) ? value[i+1].toUpperCase() : value[i+1]
+			);
+		return chars.join("");
+	}
 /*----------------------------------------------------------------------------*/
-		/**f{b{string}b __precision(b{number}b value, b{integer}b n)}f*/
-		/**p{Fixa a quantidade de dígitos significativos do número.}p l{*/
-		/**d{v{value}v - Valor a ser checado.}d*/
-		/**d{v{n}v - (v{&gt; 0}v) Número de dígitos a formatar.}d}l*/
-		function __precision(value, n) {
-			let input = __Type(value);
-			let digit = __Type(n);
-			if (input.type !== "number" || digit.type !== "number") return 0;
-			digit = digit < 1 ? 1 : __integer(digit.value);
-			input = input.value;
-			return Math.abs(input) < 1 ? input.toExponential(digit-1) : input.toPrecision(digit);
+	/**f{b{string}b __caseToggle(b{string}b value)}f*/
+	/**p{Retorna o inverso do valor de caixa do texto ou c{null}c em caso de erro.}p l{*/
+	/**d{v{value}v - Valor a ser checado.}d}l*/
+	function __caseToggle(value) {
+		let input = __Type(value);
+		if (!input.string) return null;
+		let list = [];
+		let i = -1;
+		while (++i < value.length) {
+			let char  = value[i];
+			let upper = char.toUpperCase();
+			let lower = char.toLowerCase();
+			list.push(char === upper ? lower : upper);
 		}
-
-
-
-		/** t{b{number}b pow(b{number}b n)}t*/
-		/**d{Aplica potenciação ao número. Retorna c{null}c se ocorrer um erro.}d*/
-		/**d{v{n}v - Valor do expoente.}d*/
-		function pow(value, n) {
-				try {
-					let value = Math.pow(this.valueOf(), n);
-					return isNaN(value) ? null : value;
-				}
-				catch(e) {return null;}
+		return list.join("");
+	}
+/*----------------------------------------------------------------------------*/
+	/**f{b{string}b __strClear(b{string}b value, b{boolean}b white, b{boolean}b accent)}f*/
+	/**p{Retorna a string limpa de espaços ou acentos, ou c{null}c em caso de erro.}p l{*/
+	/**d{v{value}v - Valor a ser checado.}d*/
+	/**d{v{white}v - (opcional, c{true}c) Se verdadeiro, remove espaços em branco em excesso.}d*/
+	/**d{v{accent}v -(opcional, c{true}c) Se verdadeiro, remove os acentos latinos.}d}l*/
+	function __strClear(value, white, accent) {
+		let input = __Type(value);
+		if (!input.string) return null;
+		if (white !== false)
+			value = value.replace(/\s+/g, " ").trim();
+		if (accent !== false)
+			value = value.normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+		return value;
+	}
+/*----------------------------------------------------------------------------*/
+	/**f{b{string}b __strDash(b{string}b value)}f*/
+	/**p{Retorna uma string identificadora no formato de v{traços}v ou c{null}c em caso de erro.}p l{*/
+	/**d{v{value}v - Valor a ser checado.}d}l*/
+	function __strDash(value) {
+		value = __strClear(value);
+		if (value === null) return value;
+		value = value.replace(/\ +/g, "-").split("");
+		let i = -1;
+		while (++i < value.length) {
+			if (!(/[a-zA-Z0-9._:-]/).test(value[i])) /* eliminar caracteres não permitidos */
+				value[i] = "";
+			else if (/[A-Z]/.test(value[i])) /* adicionar traço antes de maiúsculas e inverter caixa */
+				value[i] = "-"+value[i].toLowerCase();
 		}
-
-
-
-
+		value = value.join("").replace(/\-+/g, "-");
+		return value.replace(/^\-+/, "").replace(/\-+$/, "");
+	}
+/*----------------------------------------------------------------------------*/
+	/**f{b{string}b __strCamel(b{string}b value)}f*/
+	/**p{Retorna uma string identificadora no formato v{camelCase}v ou c{null}c em caso de erro.}p l{*/
+	/**d{v{value}v - Valor a ser checado.}d}l*/
+	function __strCamel(value) {
+		value = __strDash(value);
+		if (value === null) return value;
+		value = value.split("-");
+		let i = 0;
+		while (++i < value.length)
+			value[i] = value[i].charAt(0).toUpperCase()+value[i].substr(1);
+		return value.join("");
+	}
 
 
 
@@ -995,264 +1109,26 @@ const wd = (function() {
 
 
 /*----------------------------------------------------------------------------*/
-	function wd_integer(n, abs) { /* retorna o inteiro do número ou seu valor absoluto */
-		let vtype = wd_vtype(n); //FIXME substituir isso (o abs atrapalhou)
-		if (vtype.type !== "number") return null;
-		let val = abs === true ? Math.abs(vtype.value) : vtype.value;
-		return val < 0 ? Math.ceil(val) : Math.floor(val);
+	function wd_no_spaces(txt, char) { /* Troca múltiplos espaço por um caracter*/
+		return txt.replace(/\s+/g, (char === undefined ? " " : char)).trim();
 	};
+/*----------------------------------------------------------------------------*/
+	function wd_text_clear(value) { /* elimina acentos */
+		value = new String(value);
+		if ("normalize" in value)
+			return value.normalize('NFD').replace(/[\u0300-\u036f]/g, "");
 
+		let ascii = {
+			A: /[À-Å]/g, C: /[Ç]/g,   E: /[È-Ë]/g, I: /[Ì-Ï]/g,
+			N: /[Ñ]/g,   O: /[Ò-Ö]/g, U: /[Ù-Ü]/g, Y: /[ÝŸ]/g,
+			a: /[à-å]/g, c: /[ç]/g,   e: /[è-ë]/g, i: /[ì-ï]/g,
+			n: /[ñ]/g,   o: /[ò-ö]/g, u: /[ù-ü]/g, y: /[ýÿ]/g
+		};
+		for (let i in ascii)
+			value = value.replace(ascii[i], i);
 
-
-	/**4{Númericas}4*/
-
-
-
-
-
-
-
-
-
-
-
-
-
-	/**f{b{object}b _Number(b{number}b input)}f*/
-	/**p{Objeto interno para manipulação de números.}p*/
-	/**l{d{v{input}v - valor a ser gerenciado internamente pela biblioteca.}d}l*/
-	function _Number(input) {
-		if (!(this instanceof _Number)) return new _Number(input)
-		this._input = input;
+		return value;
 	}
-	/**6{Métodos e atributos}6 l{*/
-	Object.defineProperties(_Number.prototype, {
-
-
-		/** t{b{string}b exp(b{integer}b n, b{boolean}b html)}t*/
-		/**d{Retorna exponenciação de base 10 ao número.}d*/
-		/**d{v{n}v - (v{&ge; 0}v) Número de casas decimais.}d*/
-		/**d{v{html}v - (opcional) Transforma o resultado em notação HTML.}d*/
-		exp: {
-			value: function(n, html) {
-				let value = this.valueOf().toExponential(n);
-				return html !== true ? value : value.replace(/e/i, " &times; 10<sup>")+"</sup>";
-			}
-		},
-		/**t{b{string}b notation(b{string}b lang, b{string}b type, b{string}b code)}t*/
-		/**d{Retorna o número conforme linguagem e formatação ou c{null}c se um erro ocorrer.}d*/
-		/**d{v{lang}v - Código da linguagem a ser aplicada.}d*/
-		/**d{v{type}v - Tipo da formatação:}d d{l{*/
-		/**d{v{"percent"}v - formatação percentual.}d*/
-		/**d{v{"unit"}v - unidade de medida.}d*/
-		/**d{v{"sci"}v - Notação científica.}d*/
-		/**d{v{"eng"}v - Notação de engenharia.}d*/
-		/**d{v{"compact"}v - Notação compacta.}d*/
-		/**d{v{"ccy"}v - Notação monetária.}d*/
-		/**d{v{"sccy"}v - Notação monetária curta.}d*/
-		/**d{v{"tccy"}v - Notação monetária textual.}d }l}d*/
-		/**d{v{code}v - código da notação monetária ou da unidade de medida.}d*/
-		/*https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/NumberFormat*/
-		/*https://tc39.es/proposal-unified-intl-numberformat/section6/locales-currencies-tz_proposed_out.html#sec-issanctionedsimpleunitidentifier*/
-		notation: {
- 			value: function(lang, type, code) {
- 				let types = {
- 					percent: {style: "percent", notation: "standard"},
- 					unit:    {style: "unit", unit: code},
- 					sci:     {notation: "scientific"},
- 					eng:     {notation: "engineering"},
- 					compact: {notation: "compact"},
- 					ccy:     {style: "currency", currencyDisplay: "symbol",       currency: code},
- 					sccy:    {style: "currency", currencyDisplay: "narrowSymbol", currency: code},
- 					tccy:    {style: "currency", currencyDisplay: "name",         currency: code}
- 				};
- 				type = String(type).toLowerCase();
- 				try {
- 					return this.valueOf().toLocaleString(lang, (type in types ? types[type] : {}));
- 				} catch(e) {
- 					return null;
- 				}
-			}
-		},
-		/**t{b{number}b cut(integer n)}t*/
-		/**d{Define o corte de casas decimais, sem arrendondamento.}d*/
-		/**d{v{n}v - Número (v{&ge; 0}v) de casas decimais.}d*/
-		cut: {//FIXME para que isso?
-			value: function(int, flt) {
-				if (!this.finite) return this.toString();
-				let i  = (this < 0 ? -1 : 1)*this.integer;
-				let f  = (this < 0 ? -1 : 1)*this.float;
-				let ai = [];
-				let af = [];
-				while (f%1 !== 0) {
-
-
-
-
-				}
-
-
-
-
-				f = f.length > 1 ? f[1] : "0";
-				while (i.length < int) i = "0"+i;
-				while (f.length < flt) f = f+"0";
-				if (f.length > flt) f = f.substr(0, flt);
-				return (this < 0 ? "-" : "")+i+"."+f;
-
-
-				/*
-				let value = this.abs;
-				let i = -1;
-				while (++i < n) {
-					value = 10 * value;
-					if (value%1 === 0) {
-						n = i+1;
-						break;
-					}
-				}
-				let div = Math.pow(10,n);
-				return (this < 0 ? -1 : 1) * (Math.floor(value)/div);*/
-			}
-		},
-
-
-	});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	/**h{String}h*/
-	/**f{b{object}b _String(b{string}b input)}f*/
-	/**p{Objeto interno para manipulação de strings.}p*/
-	/**l{d{v{input}v - valor a ser gerenciado internamente pela biblioteca.}d}l*/
-	/**6{Métodos e atributos:}6 l{*/
-	function _String(input) {
-		if (!(this instanceof _String)) return new _String(input)
-		this._input = input; /* valor original */
-	}
-
-	Object.defineProperties(_String.prototype, {
-		constructor: {value: _String},
-		/** t{b{object}b _re}t d{Registra as expressões regulares do objeto.}d*/
-		_re: {
-			value: {
-				clean: /\s+/g,             /* limpa caracteres não imprimíveis */
-				clear: /[\u0300-\u036f]/g, /* para remover acentos */
-				dash:  /[a-zA-Z0-9._:-]/ /* caracteres válidos para atributos dash */
-			}
-		},
-		/** t{b{string}b upper}t d{Retorna o texto em caixa alta.}d*/
-		upper: {
-			get: function() {
-				return this._input.toUpperCase();
-			}
-		},
-		/** t{b{string}b lower}t d{Retorna o texto em caixa baixa.}d*/
-		lower: {
-			get: function() {
-				return this._input.toLowerCase();
-			}
-		},
-		/** t{b{string}b caps}t d{Retorna o texto captalizado.}d*/
-		caps: {
-			get: function() {
-				let value = this.lower;
-				let chars = [value[0].toUpperCase()];
-				let i = -1;
-				while (++i < (value.length - 1)) /* vai até o penúltimo */
-					chars.push(
-						(/\s/).test(value[i]) ? value[i+1].toUpperCase() : value[i+1]
-					);
-				return chars.join("");
-			}
-		},
-		/** t{b{string}b tgl}t d{Retorna o texto com caixas invertidas.}d*/
-		tgl: {
-			get: function() {
-				let value = [];
-				let i = -1;
-				while (++i < this._input.length) {
-					let char  = this._input[i];
-					let upper = char.toUpperCase();
-					let lower = char.toLowerCase();
-					value.push(char === upper ? lower : upper);
-				}
-				return value.join("");
-			}
-		},
-		/** t{b{string}b compact}t d{Retorna o texto sem espaços repetidos.}d*/
-		compact: {
-			get: function() {
-				return this._input.replace(this._re.clean, " ");
-			}
-		},
-		/** t{b{string}b chars}t d{Retorna caracteres sem acentuação.}d*/
-		chars: {
-			get: function() {
-				return this._input.normalize('NFD').replace(this._re.clear, "");
-			}
-		},
-		/** t{b{string}b clean}t d{Retorna o efeito de i{compat}i e i{chars}i.}d*/
-		clean: {
-			get: function() {
-				return this.chars.replace(this._re.clean, " ");
-			}
-		},
-		camel: {
-			get: function() {
-				let value = this.dash.split("-");
-				let i = 0;
-				while (++i < value.length)
-					value[i] = value[i].charAt(0).toUpperCase()+value[i].substr(1);
-				return value.join("");
-			}
-		},
-		dash: {
-			get: function() {
-				let value = this.clean.replace(/\ +/, "-").split("");
-				let i = -1;
-				while (++i < value.length) {
-					if (!this._re.dash.test(value[i])) /* eliminar caracteres não permitidos */
-						value[i] = "";
-					else if (/[A-Z]/.test(value[i])) /* adicionar traço antes de maiúsculas e inverter caixa */
-						value[i] = "-"+value[i].toLowerCase();
-				}
-				value = value.join("").replace(/\-+/g, "-");
-				return value.replace(/^\-+/, "").replace(/\-+$/, "");
-			}
-		},
-
-
-
-
-		toString: {
-			value: function() {
-				return this._input.trim();
-			}
-		}
-
-
-	});
-
-
-
-
-
 
 
 
@@ -1534,26 +1410,8 @@ const wd = (function() {
 		return false;
 	}
 
-/*----------------------------------------------------------------------------*/
-	function wd_text_caps(input) { /* captaliza string */
-		input = input.split("");
-		let empty = true;
-		for (let i = 0; i < input.length; i++) {
-			input[i] = empty ? input[i].toUpperCase() : input[i].toLowerCase();
-			empty    = input[i].trim() === "" ? true : false;
-		}
-		return input.join("");
-	}
 
-/*----------------------------------------------------------------------------*/
-	function wd_text_toggle(input) { /* altera caixa de string */
-		input = input.split("");
-		for (let i = 0; i < input.length; i++) {
-			let test = input[i].toUpperCase();
-			input[i] = input[i] === test ? input[i].toLowerCase() : test;
-		}
-		return input.join("");
-	}
+
 
 /*----------------------------------------------------------------------------*/
 	function wd_mask(input, check, callback) { /* aplica máscaras a strings */
@@ -1649,70 +1507,6 @@ const wd = (function() {
 		catch(e) {return ""}
 	}
 
-/*----------------------------------------------------------------------------*/
-	function wd_no_spaces(txt, char) { /* Troca múltiplos espaço por um caracter*/
-		return txt.replace(/\s+/g, (char === undefined ? " " : char)).trim();
-	};
-
-/*----------------------------------------------------------------------------*/
-	function wd_text_clear(value) { /* elimina acentos */
-		value = new String(value);
-		if ("normalize" in value)
-			return value.normalize('NFD').replace(/[\u0300-\u036f]/g, "");
-
-		let ascii = {
-			A: /[À-Å]/g, C: /[Ç]/g,   E: /[È-Ë]/g, I: /[Ì-Ï]/g,
-			N: /[Ñ]/g,   O: /[Ò-Ö]/g, U: /[Ù-Ü]/g, Y: /[ÝŸ]/g,
-			a: /[à-å]/g, c: /[ç]/g,   e: /[è-ë]/g, i: /[ì-ï]/g,
-			n: /[ñ]/g,   o: /[ò-ö]/g, u: /[ù-ü]/g, y: /[ýÿ]/g
-		};
-		for (let i in ascii)
-			value = value.replace(ascii[i], i);
-
-		return value;
-	}
-
-/*----------------------------------------------------------------------------*/
-	function wd_text_camel(value) { /* abc-def para abcDef */
-		let x = wd_text_clear(value);
-		x = wd_no_spaces(x, " ").replace(/[^a-zA-Z0-9._: -]/g, "");
-
-		/* testando se já está no formato */
-		if ((/^[a-z0-9\.\_\:][a-zA-Z0-9\.\_\:]+$/).test(x)) return x;
-
-		/* adequando string */
-		x = wd_no_spaces(value, "-").split("");
-		for (let i = 0; i < x.length; i++) {
-			if (x[i].toLowerCase() != x[i]) x[i] = "-"+x[i];
-			if (x[i-1] === "-") x[i] = x[i].toUpperCase();
-		}
-
-		x = x.join("").replace(/\-+/g, "-").replace(/^\-+/g, "");
-		x = x.split("-");
-		x[0] = x[0].toLowerCase();
-		x = x.join("").replace(/\-/g, "");
-
-		return x === "" ? null : x;
-	}
-
-/*----------------------------------------------------------------------------*/
-	function wd_text_dash(value) { /*abcDef para abc-def*/
-		let x = wd_text_clear(value);
-		x = wd_no_spaces(x, " ").replace(/[^a-zA-Z0-9._: -]/g, "");
-
-		/* testando se já está no formato */
-		if ((/^[a-z0-9\_\.\:]+((\-[a-z0-9\_\.\:]+)+)?$/).test(x)) return x;
-
-		/* adequando string */
-		x = wd_no_spaces(x, "-").split("");
-		for (let i = 1; i < x.length; i++)
-			x[i] = x[i].toLowerCase() == x[i] ? x[i] : "-"+x[i];
-
-		x = x.join("").toLowerCase().replace(/\-+/g, "-");
-		x = x.replace(/^\-+/g, "").replace(/\-+$/g, "");
-
-		return x === "" ? null : x;
-	}
 
 /*----------------------------------------------------------------------------*/
 	function wd_replace_all(input, search, change) { /* replaceAll simples */
@@ -1749,7 +1543,7 @@ const wd = (function() {
 	function wd_num_pow10(n, width) { /* transforma número em notação científica */
 		if (wd_test(n, ["infinity", "zero"])) return wd_num_str(n);
 
-		width = __finite(width) ? wd_integer(width, true) : undefined;
+		width = __finite(width) ? __integer(width, true) : undefined;
 
 		let chars = {
 			"0": "\u2070", "1": "\u00B9", "2": "\u00B2", "3": "\u00B3",
@@ -1779,11 +1573,11 @@ const wd = (function() {
 	function wd_num_fixed(n, ldec, lint) { /* fixa quantidade de dígitos (decimal e inteiro) */
 		if (wd_test(n, ["infinity"])) return wd_num_str(n);
 
-		lint = __finite(lint) ? wd_integer(lint, true) : 0;
-		ldec = __finite(ldec) ? wd_integer(ldec, true) : 0;
+		lint = __finite(lint) ? __integer(lint, true) : 0;
+		ldec = __finite(ldec) ? __integer(ldec, true) : 0;
 
 		let sign = n < 0 ? "-" : "";
-		let int  = Math.abs(wd_integer(n));
+		let int  = Math.abs(__integer(n));
 		let dec  = Math.abs(__decimal(n));
 
 		dec = dec.toFixed((ldec > 20 ? 20 : ldec));
@@ -1924,7 +1718,7 @@ const wd = (function() {
 /*----------------------------------------------------------------------------*/
 	function wd_date_week(days, today) { /* retorna a semana do ano (cheia) */
 		let ref = days - today + 1;
-		return (ref % 7 > 0 ? 1 : 0) + wd_integer(ref/7);
+		return (ref % 7 > 0 ? 1 : 0) + __integer(ref/7);
 	}
 
 /*----------------------------------------------------------------------------*/
@@ -1942,16 +1736,16 @@ const wd = (function() {
 		/* definindo parâmetros para captura da linha (0) e coluna (1) */
 		for (let i = 0; i < item.length; i++) {
 			if ((/^[0-9]+$/).test(cell[i])) { /* unico endereço */
-				item[i].i = wd_integer(cell[i]);
-				item[i].n = wd_integer(cell[i]);
+				item[i].i = __integer(cell[i]);
+				item[i].n = __integer(cell[i]);
 			} else if ((/^\-[0-9]+$/).test(cell[i])) { /* do início até o endereço */
-				item[i].n = wd_integer(cell[i].replace("-", ""));
+				item[i].n = __integer(cell[i].replace("-", ""));
 			} else if ((/^[0-9]+\-$/).test(cell[i])) { /* do endereço até o fim */
-				item[i].i = wd_integer(cell[i].replace("-", ""));
+				item[i].i = __integer(cell[i].replace("-", ""));
 			} else if ((/^[0-9]+\-[0-9]+$/).test(cell[i])) { /* do endereço inicial até o final */
 				let gap   = cell[i].split("-");
-				item[i].i = wd_integer(gap[0]);
-				item[i].n = wd_integer(gap[1]);
+				item[i].i = __integer(gap[0]);
+				item[i].n = __integer(gap[1]);
 			}
 		}
 
@@ -1983,7 +1777,7 @@ const wd = (function() {
 /*----------------------------------------------------------------------------*/
 	function wd_array_item(array, i) { /* retorna o índice especificado ou seu comprimento */
 		if (!__finite(i)) return array.length;
-		i = wd_integer(i);
+		i = __integer(i);
 		i = i < 0 ? array.length + i : i;
 		return array[i];
 	}
@@ -2076,8 +1870,8 @@ const wd = (function() {
 				avalue = a.textContent === check[0] ? 0 : 1;
 				bvalue = avalue === 0 ? 1 : 0;
 			} else if (atype === "text") {
-				avalue = wd_text_clear(a.toUpperCase());
-				bvalue = wd_text_clear(b.toUpperCase());
+				avalue = __strClear(a.toUpperCase());
+				bvalue = __strClear(b.toUpperCase());
 			} else if (["number", "boolean", "date", "time"].indexOf(atype) >= 0) {
 				avalue = wd_vtype(a).value;
 				bvalue = wd_vtype(b).value;
@@ -2597,7 +2391,7 @@ const wd = (function() {
 
 		if (wd_vtype(styles).type !== "object") return null;
 		for (let i in styles) /* definindo styles */
-			elem.style[wd_text_camel(i)] = styles[i];
+			elem.style[__strCamel(i)] = styles[i];
 		return true;
 	}
 
@@ -2655,7 +2449,7 @@ const wd = (function() {
 		for (let i in obj) {
 			/* atributo precisa ser alfabético para transformar em camelCase */
 			if (wd_vtype(i).type !== "text") continue;
-			let key = wd_text_camel(i);
+			let key = __strCamel(i);
 			let val = obj[i];
 
 			if (val !== null) /* definir atributo */
@@ -2850,13 +2644,13 @@ const wd = (function() {
 		if (search === null || search === undefined) return null;
 
 		/* remodelando a quantidade de caracteres */
-		chars = __finite(chars) && chars !== 0 ? wd_integer(chars) : 1;
+		chars = __finite(chars) && chars !== 0 ? __integer(chars) : 1;
 
 		/* definindo valor de busca */
 		let type = wd_vtype(search).type;
 		if (type !== "regexp") {/* definir string, limpar e por caixa alta */
 			search = new String(search);
-			search = wd_text_clear(search.toString()).toUpperCase();
+			search = __strClear(search.toString()).toUpperCase();
 		}
 
 		/* looping pelos filhos */
@@ -2865,7 +2659,7 @@ const wd = (function() {
 			if (!("textContent" in child[i])) continue;
 
 			/* obtendo conteúdo do elemento (limpar, mas deixar maiúsculo apenas para texto) */
-			let content = wd_text_clear(child[i].textContent);
+			let content = __strClear(child[i].textContent);
 
 			/* se for expressão regular */
 			if (type === "regexp") {
@@ -2936,12 +2730,12 @@ const wd = (function() {
 			page = 0;
 			size = lines.length;
 		} else {
-			size = wd_integer(size < 1 ? size*lines.length : size); /*BC*/
+			size = __integer(size < 1 ? size*lines.length : size); /*BC*/
 			if (size === 0) size = 1; /*D*/
 		}
 
 		function last() { /* informa a última página */
-			return wd_integer(lines.length/size + (lines.length % size === 0 ? -1 :0));
+			return __integer(lines.length/size + (lines.length % size === 0 ? -1 :0));
 		}
 
 		/*--------------------------------------------------------------------------
@@ -2966,20 +2760,20 @@ const wd = (function() {
 		if (page < 0 || size*page >= lines.length) /*AB*/
 			page = last();
 		else /* padrão */
-			page = wd_integer(page);
+			page = __integer(page);
 		let start = page*size;
 		let end   = start+size-1;
 		wd_html_nav(elem, ""+start+":"+end+"");
 		/* guardar informação da última página */
-		elem.dataset.wdCurrentPage = page+"/"+wd_integer(lines.length/size);
+		elem.dataset.wdCurrentPage = page+"/"+__integer(lines.length/size);
 		return;
 
 	}
 
 /*----------------------------------------------------------------------------*/
 	function wd_html_sort(elem, order, col) { /* ordena elementos filho pelo conteúdo */
-		order = __finite(order) ? wd_integer(order) : 1;
-		col   = __finite(col)   ? wd_integer(col, true) : null;
+		order = __finite(order) ? __integer(order) : 1;
+		col   = __finite(col)   ? __integer(col, true) : null;
 
 		let children = wd_vtype(elem.children).value;
 		let aux = [];
@@ -3060,7 +2854,7 @@ const wd = (function() {
 		/* rodando itens do array do JSON */
 		for (let i = 0; i < json.length; i++) {
 			let attrs = json[i];
-			let check = wd_vtype(wd_$$$(attrs, elem));
+			let check = wd_vtype(__$$$(attrs, elem));
 			if (check.type !== "dom") continue;
 			/* rodando alvos */
 			let list = check.value;
@@ -3319,7 +3113,7 @@ const wd = (function() {
 				} else if (abs === Infinity) {
 					check.push("infinity");
 					check.push(x.value > 0 ? "+infinity" : "-infinity");
-				} else if (abs === wd_integer(abs)) {
+				} else if (abs === __integer(abs)) {
 					check.push("integer");
 					check.push(x.value > 0 ? "+integer" : "-integer");
 				} else {
@@ -3465,8 +3259,8 @@ const wd = (function() {
 				];
 				for (let i = 0; i < data.length; i++) {
 					if (!(data[i].re.test(this.e.value))) continue;
-					let month = wd_integer(this.e.value.substr(data[i].m.i, data[i].m.e));
-					let year  = wd_integer(this.e.value.substr(data[i].y.i, data[i].y.e));
+					let month = __integer(this.e.value.substr(data[i].m.i, data[i].m.e));
+					let year  = __integer(this.e.value.substr(data[i].y.i, data[i].y.e));
 					if (month >= 1 && month <= 12 && year >= 1)
 						return wd_num_fixed(year, 0, 4)+"-"+wd_num_fixed(month, 0, 2);
 				}
@@ -3482,8 +3276,8 @@ const wd = (function() {
 				];
 				for (let i = 0; i < data.length; i++) {
 					if (!(data[i].re.test(this.e.value))) continue;
-					let week = wd_integer(this.e.value.substr(data[i].w.i, data[i].w.e));
-					let year = wd_integer(this.e.value.substr(data[i].y.i, data[i].y.e));
+					let week = __integer(this.e.value.substr(data[i].w.i, data[i].w.e));
+					let year = __integer(this.e.value.substr(data[i].y.i, data[i].y.e));
 					if (week >= 1 && week <= 53 && year >= 1)
 						return wd_num_fixed(year, 0, 4)+"-W"+wd_num_fixed(week, 0, 2);
 				}
@@ -3883,12 +3677,12 @@ const wd = (function() {
 				n--;
 				let swap  = ["100", "001", "010", "101", "011", "110"];
 				let index = n % swap.length;
-				let power = wd_integer(n/6) + 1;
+				let power = __integer(n/6) + 1;
 				let value = 255/power;
 				let onoff = swap[index].split("");
 				let color = [];
 				for (let i = 0; i < onoff.length; i++)
-					color.push(onoff[i] === "1" ? wd_integer(value) : 33);
+					color.push(onoff[i] === "1" ? __integer(value) : 33);
 				return "rgb("+color.join(",")+")";
 			}
 		},
@@ -4341,19 +4135,19 @@ const wd = (function() {
 			get: function() {return this.toString().toLowerCase();}
 		},
 		caps: { /* retorna valor capitulado */
-			get: function() {return wd_text_caps(this.toString());}
+			get: function() {return __caseCapitalize(this.toString());}
 		},
 		tgl: { /* inverte caixa */
-			get: function() {return wd_text_toggle(this.toString());}
+			get: function() {return __caseToggle(this.toString());}
 		},
 		clear: { /* remove acentos da string */
 			get: function() {return wd_text_clear(this.toString());}
 		},
 		camel: { /* transforma string para inicioMeioFim */
-			get: function() {return wd_text_camel(this.toString());}
+			get: function() {return __strCamel(this.toString());}
 		},
 		dash: { /* transforma string para inicio-meio-fim */
-			get: function() {return wd_text_dash(this.toString());}
+			get: function() {return __strDash(this.toString());}
 		},
 		csv: { /* CSV para Matriz */
 			get: function() {return wd_csv_array(this.toString());}
@@ -4388,7 +4182,7 @@ const wd = (function() {
 	WDnumber.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDnumber},
 		int: { /* retorna a parte inteira */
-			get: function() {return wd_integer(this.valueOf());}
+			get: function() {return __integer(this.valueOf());}
 		},
 		dec: { /* retorna a parte decimal */
 			get: function() {return __decimal(this.valueOf());}
@@ -4410,7 +4204,7 @@ const wd = (function() {
 		},
 		round: { /* arredonda número para determinado tamanho */
 			value: function(width) {
-				return __round(this.valueOf(), width);
+				return __cut(this.valueOf(), width);
 			}
 		},
 		pow10: { /* transforma número em notação científica */
@@ -4444,7 +4238,7 @@ const wd = (function() {
 			get: function() {return wd_number_time(this.valueOf()).h;},
 			set: function(x) {
 				if (__finite(x))
-					this._value = wd_time_number(wd_integer(x), this.m, this.s);
+					this._value = wd_time_number(__integer(x), this.m, this.s);
 			}
 		},
 		hour: {
@@ -4455,7 +4249,7 @@ const wd = (function() {
 			get: function() {return wd_number_time(this.valueOf()).m;},
 			set: function(x) {
 				if (__finite(x))
-					this._value = wd_time_number(this.h, wd_integer(x), this.s);
+					this._value = wd_time_number(this.h, __integer(x), this.s);
 			}
 		},
 		minute: {
@@ -4466,7 +4260,7 @@ const wd = (function() {
 			get: function() {return wd_number_time(this.valueOf()).s;},
 			set: function(x) {
 				if (__finite(x))
-					this._value = wd_time_number(this.h, this.m, wd_integer(x));
+					this._value = wd_time_number(this.h, this.m, __integer(x));
 			}
 		},
 		second: {
@@ -4496,21 +4290,21 @@ const wd = (function() {
 			get: function() {return this._value.getFullYear();},
 			set: function(x) {
 				if (__finite(x) && x >= 0)
-					this._value = wd_set_date(this._value, undefined, undefined, wd_integer(x));
+					this._value = wd_set_date(this._value, undefined, undefined, __integer(x));
 			}
 		},
 		m: { /* mês */
 			get: function() {return this._value.getMonth() + 1;},
 			set: function(x) {
 				if (__finite(x))
-					this._value = wd_set_date(this._value, undefined, wd_integer(x), undefined);
+					this._value = wd_set_date(this._value, undefined, __integer(x), undefined);
 			}
 		},
 		d: { /* dia */
 			get: function() {return this._value.getDate();},
 			set: function(x) {
 				if (__finite(x))
-					this._value = wd_set_date(this._value, wd_integer(x), undefined, undefined);
+					this._value = wd_set_date(this._value, __integer(x), undefined, undefined);
 			}
 		},
 		year: {
@@ -4570,7 +4364,7 @@ const wd = (function() {
 		},
 		valueOf: { /* método padrão */
 			value: function() {
-				return (this._value < 0 ? -1 : 0) + wd_integer(this._value/86400000);
+				return (this._value < 0 ? -1 : 0) + __integer(this._value/86400000);
 			}
 		},
 	});
@@ -4805,7 +4599,7 @@ const wd = (function() {
 		today:   {get:   function() {return WD(new Date());}},
 		now:     {get:   function() {return WD(wd_str_now());}},
 		type:    {value: function(x){return __Type(x);}},
-		test: {value: function(){return __gcd.apply(null, Array.prototype.slice.call(arguments));}},
+		test: {value: function(){return __strCamel.apply(null, Array.prototype.slice.call(arguments));}},
 	});
 
 /* == BLOCO 4 ================================================================*/
@@ -4819,7 +4613,7 @@ const wd = (function() {
 		let target  = WD(e);
 		let method  = data.method;
 		let file    = data.path;
-		let pack    = wd_$$$(data);
+		let pack    = __$$$(data);
 		let exec    = WD(pack);
 		let overlap = data.overlap === "true" ? true : false;
 
@@ -4849,7 +4643,7 @@ const wd = (function() {
 		let target = WD(e);
 		let method = data.method;
 		let file   = data.path;
-		let pack   = wd_$$$(data);
+		let pack   = __$$$(data);
 		let exec   = WD(pack);
 
 		/* abrir contagem */
@@ -4925,7 +4719,7 @@ const wd = (function() {
 		if (source === "file") {
 			let file   = data.path;
 			let method = data.method;
-			let pack   = wd_$$$(data);
+			let pack   = __$$$(data);
 			let exec   = WD(pack);
 			exec.send(file, function(x) {
 				if (x.closed) {
@@ -4934,7 +4728,7 @@ const wd = (function() {
 				}
 			}, method);
 		} else {
-			let table = WD(wd_$$$(data));
+			let table = WD(__$$$(data));
 			if (table.type !== "dom") return;
 			input.matrix = table.info.table;
 			buildChart(input);
@@ -4951,7 +4745,7 @@ const wd = (function() {
 		for (let i = 0; i < data.length; i++) {
 			let method = "method" in data[i] ? data[i].method : "post";
 			let file   = data[i].path;
-			let pack   = wd_$$$(data[i]);
+			let pack   = __$$$(data[i]);
 			let call   = window[data[i]["call"]];
 			let exec   = WD(pack);
 			exec.send(file, call, method);
@@ -5006,7 +4800,7 @@ const wd = (function() {
 		let data = wd_html_dataset_value(e, "wdFilter");
 		for (let i = 0; i < data.length; i++) {
 			let chars  = data[i].chars;
-			let target = wd_$$$(data[i]);
+			let target = __$$$(data[i]);
 			if (target !== null) WD(target).filter(search, chars);
 		}
 		return;
@@ -5116,7 +4910,7 @@ const wd = (function() {
 		if (!("wdData" in e.dataset)) return;
 		let data = wd_html_dataset_value(e, "wdData");
 		for (let i = 0; i < data.length; i++) {
-			let target = wd_$$$(data[i]);
+			let target = __$$$(data[i]);
 			delete data[i]["$"];
 			delete data[i]["$$"];
 			for (let j in data[i]) if (data[i][j] === "null") data[i][j] = null;
@@ -5167,7 +4961,7 @@ const wd = (function() {
 		if (!("wdFull" in e.dataset)) return;
 		let data   = wd_html_dataset_value(e, "wdFull")[0];
 		let exit   = "exit" in data ? true : false;
-		let target = wd_$$$(data);
+		let target = __$$$(data);
 		if (target === document || target === window)
 			target = document.documentElement;
 		else if (target === null)
@@ -5184,7 +4978,7 @@ const wd = (function() {
 		| B) se não for um inteiro, definir 1s como padrão
 		\-------------------------------------------------------------------------*/
 		let value = e.dataset.wdSlide; /*A*/
-		let time  = __finite(value) ? wd_integer(value) : 1000; /*B*/
+		let time  = __finite(value) ? __integer(value) : 1000; /*B*/
 		/*--------------------------------------------------------------------------
 		| C) data-wd-slide-run informa se o slide foi executado: definir atividades
 		| D) se tempo < 0, exibir filho anterior, caso conctrário, o próximo
@@ -5260,7 +5054,7 @@ const wd = (function() {
 		let data  = wd_html_dataset_value(e, "wdSet"); /*A*/
 		let words = {"null": null, "false": false, "true": true}; /*B*/
 		for (let i = 0; i < data.length; i++) { /*C*/
-			let target = wd_$$$(data[i]); /*D*/
+			let target = __$$$(data[i]); /*D*/
 			delete data[i]["$"]; /*D*/
 			delete data[i]["$$"]; /*D*/
 			for (let attr in data[i]) { /*E*/
@@ -5277,7 +5071,7 @@ const wd = (function() {
 		if (!("wdCss" in e.dataset)) return;
 		let data = wd_html_dataset_value(e, "wdCss");
 		for (let i = 0; i < data.length; i++) {
-			let target = wd_$$$(data[i]);
+			let target = __$$$(data[i]);
 			delete data[i]["$"];
 			delete data[i]["$$"];
 			if (JSON.stringify(data[i]) === "{}") data[i] = null;
@@ -5291,7 +5085,7 @@ const wd = (function() {
 		if (!("wdNav" in e.dataset)) return;
 		let data = wd_html_dataset_value(e, "wdNav");
 		for (let i = 0; i < data.length; i++) {
-			let target = wd_$$$(data[i]);
+			let target = __$$$(data[i]);
 			let value  = "action" in data[i] ? data[i].action : null;
 			WD(target === null ? e : target).nav(value);
 		}
@@ -5302,7 +5096,7 @@ const wd = (function() {
 	function data_wdJump(e) { /* Saltos de pai: data-wd-jump=$${parents}*/
 		if (!("wdJump" in e.dataset)) return;
 		let data    = wd_html_dataset_value(e, "wdJump")[0];
-		let target  = wd_$$$(data);
+		let target  = __$$$(data);
 		let parents = wd_vtype(target)
 		if (parents.type === "dom")
 			WD(e).jump(parents.value);
@@ -5317,7 +5111,7 @@ const wd = (function() {
 		for (let i = 0; i < output.length; i++) {
 			let elem   = output[i];
 			let data   = wd_html_dataset_value(elem, "wdOutput")[0];
-			let target = wd_$$$(data);
+			let target = __$$$(data);
 			if (!("call" in data) || WD(window[data["call"]]).type !== "function")
 				continue;
 			/* looping pelos elementos citados no atributo data-wd-output */
@@ -5394,7 +5188,7 @@ const wd = (function() {
 		let target = WD(e);
 		let method = data.method;
 		let file   = data.path;
-		let pack   = wd_$$$(data);
+		let pack   = __$$$(data);
 		let exec   = WD(pack);
 		target.data({wdLang: null});
 		exec.send(file, function(x) {
@@ -5482,8 +5276,8 @@ const wd = (function() {
 				position: obj.vstyle("position").toLowerCase(),
 			};
 			for (let i = 0; i < stl.length; i++) {
-				let val = obj.vstyle(wd_text_dash(stl[i]));
-				msr[i]  = wd_integer(val.replace(/[^0-9\.]/g, ""));
+				let val = obj.vstyle(__strDash(stl[i]));
+				msr[i]  = __integer(val.replace(/[^0-9\.]/g, ""));
 			}
 			return msr;
 		}
