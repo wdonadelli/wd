@@ -277,7 +277,7 @@ const wd = (function() {
 	/**p{Construtor que identifica o tipo do argumento e extrai seu valor para uso da biblioteca.}p*/
 	/**l{d{v{input}v - Dado a ser examinado.}d}l*/
 	function __Type(input) {
-		if (!(this instanceof __Type)) return new __Type(input)
+		if (!(this instanceof __Type)) return new __Type(input);
 		this._input = input; /* valor original */
 		this._type  = null;  /* tipo do valor de entrada */
 		this._value = null;  /* valor a ser considerado */
@@ -719,7 +719,7 @@ const wd = (function() {
 		return all === null ? __$(one, root) : __$$(all, root);
 	}
 /*----------------------------------------------------------------------------*/
-	/**4{Matemáticas}4*/
+	/**4{Matemática}4*/
 /*----------------------------------------------------------------------------*/
 	/**f{b{integer}b __integer(b{number}b value)}f*/
 	/**p{Retorna a parte inteira do número ou c{null}c se outro tipo de dado.}p*/
@@ -905,7 +905,7 @@ const wd = (function() {
 	}
 /*----------------------------------------------------------------------------*/
 	/**f{b{string}b __number(b{number}b value)}f*/
-	/**p{Retorna o tipo de número: v{"&#8723;integer", "&#8723;float", "&#8723;infinity", "&#8723;real", "zero" e "not numeric"}v.}p*/
+	/**p{Retorna o tipo de número: v{"&#177;integer", "&#00B1;float", "&#00B1;infinity", "&#00B1;real", "zero" e "not numeric"}v.}p*/
 	/**l{d{v{value}v - Valor a ser checado.}d}l*/
 	function __number(value) {
 		let input = __Type(value);
@@ -928,7 +928,7 @@ const wd = (function() {
 		if (input.type !== "number" || digit.type !== "number") return 0;
 		digit = digit < 1 ? 1 : __integer(digit.value);
 		input = input.value;
-		return Math.abs(input) < 1 ? input.toExponential(digit-1) : input.toPrecision(digit);
+		return Math.abs(input) < 1 && input !== 0 ? input.toExponential(digit-1) : input.toPrecision(digit);
 	}
 /*----------------------------------------------------------------------------*/
 	/**f{b{string}b __notation(b{number}b value, b{string}b lang, b{string}b type, b{void}b code)}f*/
@@ -985,6 +985,322 @@ const wd = (function() {
 		} catch (e) {}
 		return input.value.toLocaleString();
 	}
+/*----------------------------------------------------------------------------*/
+	/**4{Conjunto de Dados}4*/
+/*----------------------------------------------------------------------------*/
+	/**f{b{matrix}b __setFinite(b{array}b ...)}f*/
+	/**p{Analisa o conjunto de dados repassados e retorna uma matriz somente com os números finitos.}p*/
+	/**p{Itens não finitos prejudicarão os demais itens respectivos de outros conjuntos.}p
+	/**p{Retornará c{null}c em caso de matriz vazia.}p*/
+	function __setFinite() {
+		let dataset = []; /* capturas os argumentos válidos */
+		let errors  = []; /* captura os itens não finitos */
+		let limit   = Infinity; /* captura menor item dos argumentos com valor válido */
+		let i = -1;
+		while (++i < arguments.length) { /* lista de argumentos válidos */
+			let input = __Type(arguments[i]);
+			if (input.type !== "array" || arguments[i].length === 0) continue;
+			dataset.push(arguments[i]);
+		}
+		if (dataset.length === 0) return null;
+		i = -1;
+		while (++i < dataset.length) { /* navegar pelos argumentos válidos */
+			let len = 0;
+			let j = -1;
+			while (++j < dataset[i].length) { /* checar validade dos items do argumento */
+				let data = __Type(dataset[i][j]);
+				dataset[i][j] = data.finite ? data.value : null;
+				 /* registrar item não finito ou maior item válido */
+				if (!data.finite) {errors.push(j);} else {len = j+1};
+			}
+			limit = len < limit ? len : limit; /* registrar o menor item com valor válido */
+		}
+		if (limit === 0) return null;
+		/* obter a matrix */
+		let matrix = [];
+		i = -1;
+		while (++i < dataset.length) {
+			matrix.push([]);
+			let j = -1;
+			while (++j < limit) {
+				if (errors.indexOf(j) >= 0) continue;
+				matrix[i].push(dataset[i][j]);
+			}
+		}
+		return matrix;
+	}
+/*----------------------------------------------------------------------------*/
+	/**f{b{matrix}b __setFunction(b{array}b x, b{function}b f, b{booelan}b finite)}f*/
+	/**p{Retorna uma matriz com duas colunas formada pelos valores de v{x}v e do resultado de v{f(x)}v.}p l{*/
+	/**d{v{x}v - Conjunto de números base (coluna 0).}d*/
+	/**d{v{f}v - Função a ser operada sobre os valores de v{x}v (coluna 1).}d*/
+	/**d{v{finite}v - (opcional, c{true}c) Se verdadeiro, retornará uma matriz só com finitos, caso conctrário, todos os valores.}d}l*/
+	function __setFunction(x, f, finite) {
+		let check = __Type(x);
+		let input = __Type(f);
+		if (check.type !== "array" ||input.type !== "function") return null;
+		let y = [];
+		let i = -1;
+		while (++i < x.length) {
+			let item = __Type(x[i]);
+			if (item.finite) {
+				x[i] = item.value;
+				try {
+					let data = __Type(f(item.value));
+					y.push(data.finite ? data.value : null);
+				} catch(e) {
+					y.push(null);
+				}
+			} else {
+				x[i] = null;
+				y.push(null);
+			}
+		}
+		return finite === false ? [x,y] : __setFinite(x, y);
+	}
+/*----------------------------------------------------------------------------*/
+	/**f{b{object}b __leastSquares(b{array}b x, b{array}b y)}f*/
+	/**p{Retorna as constantes angular (v{a}v) e linear v{b}v do método dos mínimos quadrados (v{y=ax+b}v).}p l{*/
+	/**d{v{x}v - Conjunto de dados da coordenada horizontal.}d*/
+	/**d{v{y}v - Conjunto de dados da coordenada vertical.}d}l*/
+	function __leastSquares(x, y) {
+		let matrix = __setFinite(x, y);
+		if (matrix === null || matrix.length !== 2 || matrix[0].length < 2) return null;
+		x = matrix[0];
+		y = matrix[1];
+		let width = x.length;
+		let sumX  = 0;
+		let sumY  = 0;
+		let sumX2 = 0;
+		let sumXY = 0;
+		let i = -1;
+		while(++i < width) {
+			sumX  += x[i];
+			sumY  += y[i];
+			sumX2 += x[i]*x[i];
+			sumXY += x[i]*y[i];
+		}
+		let data = {};
+		data.a = ((width * sumXY) - (sumX * sumY)) / ((width * sumX2) - (sumX * sumX));
+		data.b = ((sumY) - (sumX * data.a)) / (width);
+		return data;
+	}
+/*----------------------------------------------------------------------------*/
+
+
+
+	function __stdDeviation(y1, y2) { /* retorna o desvio padrão entre listas ou uma referência */
+		let input1 = __Type(y1);
+		if (input1.type !== "array") return null;
+		let input2 = __Type(y2);
+		if (input2.finite) {
+			let data = __setFinite(y1);
+			if (data === null) return null;
+			y1 = data[0];
+			y2 = input2.value;
+		} else if (input2.type === "array") {
+			let data = __setFinite(y1, y2);
+			if (data === null) return null;
+			y1 = data[0];
+			y2 = data[1];
+		} else {
+			return null;
+		}
+		let items = [];
+		let i = -1;
+		while(++i < y1.length)
+			items.push(y1[i] - (input2.finite ? y2 : y2[i]));
+		return Math.hypot.apply(null, items) / Math.sqrt(items.length);
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+	function __Set2D(x, y) {
+		if (!(this instanceof __Set2D)) return new __Set2D(x, y);
+		let matrix = __setFinite(x, y);
+		if (matrix === null || matrix.length !== 2) throw "Inconsistent data set.";
+		if (matrix[0].length < 2) throw "Insufficient data set.";
+		Object.defineProperties(this, {
+			_x: {value: matrix[0]},
+			_y: {value: matrix[1]},
+			_fit: {value: {
+				points: {x: matrix[0], y: matrix[1]}
+			}}
+		});
+	}
+
+	Object.defineProperties(__Set2D.prototype, {
+		constructor: {value: __Set2D},
+		/**t{b{object}b _re}t d{Armazena as expressões regulares dos tipos em forma de string.}d*/
+		_deviation: {
+			value: function(fit) {
+				if (!(fit in this._fit)) return null;
+				let f = this._fit[fit].f;
+				let data = __setFunction(this._x, f);
+				if (data === null) return null;
+				let x  = data[0];
+				let y  = data[1];
+				let y1 = [];
+				let y2 = [];
+				let i = -1;
+				while (++i < x.length) {
+					let index = this._x.indexOf(x[i]);
+					y1.push(this._y[index]); /* valor original */
+					y2.push(y[i]); /* valor após aplicação da fórmula */
+				}
+				return __stdDeviation(y1, y2);
+			}
+		},
+		_math: {
+			value: function(fit) {
+				if (!(fit in this._fit)) return "";
+				let m = this._fit[fit].e;
+				m = m.replace("a", __precision(this._fit[fit].a, 3));
+				m = m.replace("b", __precision(this._fit[fit].b, 3));
+				if (this._fit[fit].d !== 0)
+					m = m+" \u00B1 ("+__precision(this._fit[fit].d, 3)+")";
+				return m;
+			}
+		},
+		linearRegression: {
+			get: function() {
+				if ("linear" in this._fit) return this._fit.linear;
+				let data = __leastSquares(this._x, this._y);
+				if (data === null) return null;
+				this._fit.linear = {};
+				this._fit.linear.e = "y = (a)x + (b)";
+				this._fit.linear.a = data.a;
+				this._fit.linear.b = data.b;
+				this._fit.linear.f = function(x) {return data.a*x + data.b;};
+				this._fit.linear.d = this._deviation("linear");
+				this._fit.linear.m = this._math("linear");
+				return this._fit.linear;
+			}
+		},
+		exponentialRegression: {//FIXME
+			get: function() {
+				if ("exponential" in this._fit) return this._fit.exponential;
+				let plan = __setFunction(this._y, Math.log, false)
+				if (plan === null) return null;
+				let data = __leastSquares(this._x, plan[1]);
+				if (data === null) return null;
+				this._fit.exponential = {};
+				this._fit.exponential.e = "y = (a)\u2107^(bx)";
+				this._fit.exponential.a = Math.exp(data.b);
+				this._fit.exponential.b = data.a;
+				this._fit.exponential.f = function(x) {return Math.exp(data.b)*Math.exp(data.a*x);};
+				this._fit.exponential.d = this._deviation("exponential");
+				this._fit.exponential.m = this._math("exponential");
+				return this._fit.exponential;
+			}
+		},
+		geometricRegression: {//FIXME
+			get: function() {
+				if ("geometric" in this._fit) return this._fit.geometric;
+				let planx = __setFunction(this._x, Math.log, false)
+				let plany = __setFunction(this._y, Math.log, false)
+				if (planx === null || plany === null) return null;
+				let data = __leastSquares(planx[1], plany[1]);
+				if (data === null) return null;
+				this._fit.geometric = {};
+				this._fit.geometric.e = "y = (a)x^(b)";
+				this._fit.geometric.a = Math.exp(data.b);
+				this._fit.geometric.b = data.a;
+				this._fit.geometric.f = function(x) {return Math.exp(data.b)*Math.pow(x, data.a);};
+				this._fit.geometric.d = this._deviation("geometric");
+				this._fit.geometric.m = this._math("geometric");
+				return this._fit.geometric;
+			}
+		},
+		bestFit: {
+			get: function() {
+				let attrs = {
+					linearRegression:      null,
+					exponentialRegression: null,
+					geometricRegression:   null
+				};
+				for (let i in attrs) attrs[i] = this[i];
+				let best = Infinity;
+				let type = null;
+				for (let i in attrs) {
+					if (attrs[i] !== null && attrs[i].d < best) {
+						best = attrs[i].d;
+						type = i;
+					}
+				}
+				return type;
+			}
+
+		}
+	});
+
+
+
+
+
+
+
+
+/*----------------------------------------------------------------------------*/
+	function wd_coord_rsum(x, y) { /* área embaixo da reta que une as coordenadas */
+		let coord = wd_coord_adjust(x, y);
+		if (coord === null) return null;
+		x = coord.x;
+		y = coord.y;
+		/* -- integral ax+b = (yf+yi)(xf-xi)/2 -- */
+		let int = 0;
+		for (let i = 0; i < (coord.length - 1); i++)
+			int += (y[i+1]+y[i])*(x[i+1]-x[i])/2;
+
+		let data = {};
+		data.e = "\u03A3y\u0394x \u2248 b";
+		data.a = 0;
+		data.b = int;
+		data.f = function(z) {
+			let i = 0;
+
+			let n = null;
+			while (n === null && ++i !== coord.length)
+
+				if (z <= x[i]) n = i;
+			if (n === null) n = coord.length-1;
+
+			let line = wd_coord_rlin([x[n-1], x[n]], [y[n-1], y[n]]);
+			return line === null ? null : line.f(z);
+
+		}
+
+		data.d = 0;
+		data.m = wd_coord_rmath(data.e, data.a, data.b, data.d);
+
+		return data;
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2056,29 +2372,6 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_coord_least_squares(x, y) { /* Método dos mínimos quadrados (obrigatório 2 coordenadas) */
-		let coord = wd_coord_adjust(x, y);
-		if (coord === null || coord.length < 2) return null;
-		x = coord.x;
-		y = coord.y;
-
-		let X  = wd_coord_sum(x, 1);
-		let Y  = wd_coord_sum(y, 1);
-		let X2 = wd_coord_sum(x, 2);
-		let XY = wd_coord_sum(x, 1, y, 1);
-		if ([X, Y, XY, X2].indexOf(null) >= 0) return null;
-		X  = X.value;
-		Y  = Y.value;
-		X2 = X2.value;
-		XY = XY.value;
-		let N    = coord.length;
-		let data = {};
-		data.a   = ((N * XY) - (X * Y)) / ((N * X2) - (X * X));
-		data.b   = ((Y) - (X * data.a)) / (N);
-		return data;
-	}
-
-/*----------------------------------------------------------------------------*/
 	function wd_coord_setter(x, f) { /* obtem uma nova coordenada mediante aplicação de uma função */
 		let data = [];
 		let val  = null;
@@ -2102,7 +2395,7 @@ const wd = (function() {
 		if (coord === null) return null;
 		x = coord.x;
 		y = coord.y;
-		let val = wd_coord_least_squares(x, y);
+		let val = __leastSquares(x, y);
 		if (val === null) return null;
 		let data = {};
 		data.e = "y = (a)x+(b)";
@@ -2120,7 +2413,7 @@ const wd = (function() {
 		if (coord === null) return null;
 		x = coord.x;
 		y = coord.y;
-		let val = wd_coord_least_squares(x, wd_coord_setter(y, Math.log));
+		let val = __leastSquares(x, wd_coord_setter(y, Math.log));
 		if (val === null) return null;
 		let data = {};
 		data.e = "y = (a)\u212F^(bx)";
@@ -2138,7 +2431,7 @@ const wd = (function() {
 		if (coord === null) return null;
 		x = coord.x;
 		y = coord.y;
-		let val = wd_coord_least_squares(
+		let val = __leastSquares(
 			wd_coord_setter(x, Math.log), wd_coord_setter(y, Math.log)
 		);
 		if (val === null) return null;
@@ -4599,7 +4892,7 @@ const wd = (function() {
 		today:   {get:   function() {return WD(new Date());}},
 		now:     {get:   function() {return WD(wd_str_now());}},
 		type:    {value: function(x){return __Type(x);}},
-		test: {value: function(){return __strCamel.apply(null, Array.prototype.slice.call(arguments));}},
+		test: {value: function(){return __Set2D.apply(null, Array.prototype.slice.call(arguments));}},
 	});
 
 /* == BLOCO 4 ================================================================*/
