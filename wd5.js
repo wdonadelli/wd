@@ -1030,6 +1030,41 @@ const wd = (function() {
 		return matrix;
 	}
 /*----------------------------------------------------------------------------*/
+		/**f{b{matrix}b __setSort(b{array}b ...)}f*/
+		/**p{Retorna uma matriz finita de v{n}v colunas ordenada com referência à primeira coluna/argumento.}p*/
+		/**p{Cada argumento (uma lista) representa uma coluna na matriz sequenciado conforme informado na função.}p*/
+		function __setSort() {
+			/* transformar os argumentos numa matrix só de números finitos */
+			let matrix = __setFinite.apply(null, arguments);
+			if (matrix === null) return null;
+			let list = [];
+			let i = -1;
+			/* transformar matrix em uma lista de objetos */
+			while (++i < matrix[0].length) {
+				list.push({});
+				let j = -1;
+				while (++j < matrix.length) {
+					let id = String(j);
+					list[i][id] = matrix[j][i];
+				}
+			}
+			/* ordenar objetos da lista pela primeira coluna da matrix */
+			list = list.sort(function(a, b) {
+				return a["0"] < b["0"] ? -1 : 1;
+			});
+			/* transformar a lista ordenada em matriz */
+			let sort = [];
+			for (let k in list[0]) sort.push([]);
+			i = -1;
+			while (++i < list.length) {
+				for (let k in list[i]) {
+					let id = String(k);
+					sort[id].push(list[i][k]);
+				}
+			}
+			return sort;
+		}
+/*----------------------------------------------------------------------------*/
 	/**f{b{matrix}b __setFunction(b{array}b x, b{function}b f, b{booelan}b finite)}f*/
 	/**p{Retorna uma matriz com duas colunas formada pelos valores de v{x}v e do resultado de v{f(x)}v.}p l{*/
 	/**d{v{x}v - Conjunto de números base (coluna 0).}d*/
@@ -1060,7 +1095,7 @@ const wd = (function() {
 	}
 /*----------------------------------------------------------------------------*/
 	/**f{b{object}b __leastSquares(b{array}b x, b{array}b y)}f*/
-	/**p{Retorna as constantes angular (v{a}v) e linear v{b}v do método dos mínimos quadrados (v{y=ax+b}v).}p l{*/
+	/**p{Retorna um objeto com as constantes angular (v{a}v) e linear (v{b}v) do método dos mínimos quadrados (v{y=ax+b}v).}p l{*/
 	/**d{v{x}v - Conjunto de dados da coordenada horizontal.}d*/
 	/**d{v{y}v - Conjunto de dados da coordenada vertical.}d}l*/
 	function __leastSquares(x, y) {
@@ -1086,10 +1121,11 @@ const wd = (function() {
 		return data;
 	}
 /*----------------------------------------------------------------------------*/
-
-
-
-	function __stdDeviation(y1, y2) { /* retorna o desvio padrão entre listas ou uma referência */
+	/**f{b{number}b __stdDeviation(b{array}b y1, b{array|number}b y2)}f*/
+	/**p{Retorna o desvio padrão entre dois conjuntos de dados ou um valor de referência, ou c{null}c em caso de insucesso.}p l{*/
+	/**d{v{y1}v - Conjunto de dados para avaliar.}d*/
+	/**d{v{y2}v - Conjunto de dados comparativo ou valor de referência.}d}l*/
+	function __stdDeviation(y1, y2) {
 		let input1 = __Type(y1);
 		if (input1.type !== "array") return null;
 		let input2 = __Type(y2);
@@ -1112,22 +1148,16 @@ const wd = (function() {
 			items.push(y1[i] - (input2.finite ? y2 : y2[i]));
 		return Math.hypot.apply(null, items) / Math.sqrt(items.length);
 	}
-
-
-
-
-
-
-
-
-
-
-
-
+/*----------------------------------------------------------------------------*/
+	/**f{b{object}b __Set2D(b{array}b x, b{array}b y)}f*/
+	/**p{Objeto para análise de conjuntos de dados em duas dimensões.}p l{*/
+	/**d{v{x}v - Conjunto de dados em v{x}v.}d*/
+	/**d{v{y}v - Conjunto de dados em v{y}v.}d*/
+	/**d{b{Métodos e Atributos}b:}dL{*/
 	function __Set2D(x, y) {
 		if (!(this instanceof __Set2D)) return new __Set2D(x, y);
-		let matrix = __setFinite(x, y);
-		if (matrix === null || matrix.length !== 2) throw "Inconsistent data set.";
+		let matrix = __setSort(x, y);
+		if (matrix === null || matrix.length < 2) throw "Inconsistent data set.";
 		if (matrix[0].length < 2) throw "Insufficient data set.";
 		Object.defineProperties(this, {
 			_x: {value: matrix[0]},
@@ -1140,7 +1170,9 @@ const wd = (function() {
 
 	Object.defineProperties(__Set2D.prototype, {
 		constructor: {value: __Set2D},
-		/**t{b{object}b _re}t d{Armazena as expressões regulares dos tipos em forma de string.}d*/
+		/**t{b{object}b _deviation(b{string}b fit)}t*/
+		/**d{Calcula o desvio padrão das regressões ou c{null}c em caso de insucesso.}d*/
+		/**d{v{fit}v - Nome do atributo da regressão.}d*/
 		_deviation: {
 			value: function(fit) {
 				if (!(fit in this._fit)) return null;
@@ -1160,6 +1192,9 @@ const wd = (function() {
 				return __stdDeviation(y1, y2);
 			}
 		},
+		/**t{b{string}b _math(b{string}b fit)}t*/
+		/**d{Retorna a expressão matemática visual da regressão, ou c{null}c em caso de insucesso.}d*/
+		/**d{v{fit}v - Nome do atributo da regressão.}d*/
 		_math: {
 			value: function(fit) {
 				if (!(fit in this._fit)) return "";
@@ -1171,12 +1206,22 @@ const wd = (function() {
 				return m;
 			}
 		},
+		/**t{b{object}b linearRegression}t*/
+		/**d{Os dados da regressão linear, ou c{null}c em caso de insucesso:}d L{*/
+		/**t{b{string}b n}t d{Nome da regressão.}d*/
+		/**t{b{string}b e}t d{Representação matemática da regressão.}d*/
+		/**t{b{number}b a}t d{Constante angular do método dos mínimos quadrados.}d*/
+		/**t{b{number}b b}t d{Constante linear do método dos mínimos quadrados.}d*/
+		/**t{b{function}b f}t d{Função Javascript da regressão.}d*/
+		/**t{b{number}b d}t d{Valor do desvio padrão.}d*/
+		/**t{b{string}b m}t d{Representação numérica da regressão.}d}L*/
 		linearRegression: {
 			get: function() {
 				if ("linear" in this._fit) return this._fit.linear;
 				let data = __leastSquares(this._x, this._y);
 				if (data === null) return null;
 				this._fit.linear = {};
+				this._fit.linear.n = "linear";
 				this._fit.linear.e = "y = (a)x + (b)";
 				this._fit.linear.a = data.a;
 				this._fit.linear.b = data.b;
@@ -1186,7 +1231,9 @@ const wd = (function() {
 				return this._fit.linear;
 			}
 		},
-		exponentialRegression: {//FIXME
+		/**t{b{object}b exponentialRegression}t*/
+		/**d{Os dados da regressão exponencial, ou c{null}c em caso de insucesso. Retorna um objeto como em v{linearRegression}v.}d*/
+		exponentialRegression: {
 			get: function() {
 				if ("exponential" in this._fit) return this._fit.exponential;
 				let plan = __setFunction(this._y, Math.log, false)
@@ -1194,6 +1241,7 @@ const wd = (function() {
 				let data = __leastSquares(this._x, plan[1]);
 				if (data === null) return null;
 				this._fit.exponential = {};
+				this._fit.exponential.e = "exponential";
 				this._fit.exponential.e = "y = (a)\u2107^(bx)";
 				this._fit.exponential.a = Math.exp(data.b);
 				this._fit.exponential.b = data.a;
@@ -1203,7 +1251,9 @@ const wd = (function() {
 				return this._fit.exponential;
 			}
 		},
-		geometricRegression: {//FIXME
+		/**t{b{object}b geometricRegression}t*/
+		/**d{Os dados da regressão geométrica, ou c{null}c em caso de insucesso. Retorna um objeto como em v{linearRegression}v.}d*/
+		geometricRegression: {
 			get: function() {
 				if ("geometric" in this._fit) return this._fit.geometric;
 				let planx = __setFunction(this._x, Math.log, false)
@@ -1212,6 +1262,7 @@ const wd = (function() {
 				let data = __leastSquares(planx[1], plany[1]);
 				if (data === null) return null;
 				this._fit.geometric = {};
+				this._fit.geometric.n = "geometric";
 				this._fit.geometric.e = "y = (a)x^(b)";
 				this._fit.geometric.a = Math.exp(data.b);
 				this._fit.geometric.b = data.a;
@@ -1221,6 +1272,8 @@ const wd = (function() {
 				return this._fit.geometric;
 			}
 		},
+		/**t{b{object}b bestFit}t*/
+		/**d{Retorna das dados da regressão com o menor valor de desvio padrão.}d}L}l*/
 		bestFit: {
 			get: function() {
 				let attrs = {
@@ -1237,14 +1290,14 @@ const wd = (function() {
 						type = i;
 					}
 				}
-				return type;
+				return this[type];
 			}
+		},
 
-		}
 	});
 
 
-
+//fixme colocar derivada, integral, equação da tangente no ponto, áreas
 
 
 
