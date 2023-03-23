@@ -1149,13 +1149,13 @@ const wd = (function() {
 		return Math.hypot.apply(null, items) / Math.sqrt(items.length);
 	}
 /*----------------------------------------------------------------------------*/
-	/**f{b{object}b __Set2D(b{array}b x, b{array}b y)}f*/
-	/**p{Objeto para análise de conjuntos de dados em duas dimensões.}p l{*/
+	/**f{b{object}b __Fit2D(b{array}b x, b{array}b y)}f*/
+	/**p{Objeto para análise de conjuntos de dados em duas dimensões com foco em ajuste de curvas.}p l{*/
 	/**d{v{x}v - Conjunto de dados em v{x}v.}d*/
 	/**d{v{y}v - Conjunto de dados em v{y}v.}d*/
 	/**d{b{Métodos e Atributos}b:}dL{*/
-	function __Set2D(x, y) {
-		if (!(this instanceof __Set2D)) return new __Set2D(x, y);
+	function __Fit2D(x, y) {
+		if (!(this instanceof __Fit2D)) return new __Fit2D(x, y);
 		let matrix = __setSort(x, y);
 		if (matrix === null || matrix.length < 2) throw "Inconsistent data set.";
 		if (matrix[0].length < 2) throw "Insufficient data set.";
@@ -1168,15 +1168,15 @@ const wd = (function() {
 		});
 	}
 
-	Object.defineProperties(__Set2D.prototype, {
-		constructor: {value: __Set2D},
+	Object.defineProperties(__Fit2D.prototype, {
+		constructor: {value: __Fit2D},
 		/**t{b{object}b _deviation(b{string}b fit)}t*/
 		/**d{Calcula o desvio padrão das regressões ou c{null}c em caso de insucesso.}d*/
 		/**d{v{fit}v - Nome do atributo da regressão.}d*/
 		_deviation: {
 			value: function(fit) {
 				if (!(fit in this._fit)) return null;
-				let f = this._fit[fit].f;
+				let f = this._fit[fit].function;
 				let data = __setFunction(this._x, f);
 				if (data === null) return null;
 				let x  = data[0];
@@ -1198,42 +1198,100 @@ const wd = (function() {
 		_math: {
 			value: function(fit) {
 				if (!(fit in this._fit)) return "";
-				let m = this._fit[fit].e;
+				let m = this._fit[fit].equation;
 				m = m.replace("a", __precision(this._fit[fit].a, 3));
 				m = m.replace("b", __precision(this._fit[fit].b, 3));
-				if (this._fit[fit].d !== 0)
-					m = m+" \u00B1 ("+__precision(this._fit[fit].d, 3)+")";
+				if (this._fit[fit].deviation !== 0)
+					m = m+" \u00B1 ("+__precision(this._fit[fit].deviation, 3)+")";
 				return m;
 			}
 		},
-		/**t{b{object}b linearRegression}t*/
+		/**t{b{number}b _integral(b{string}b fit)}t*/
+		/**d{Retorna a integral definida da função obtida pela regressão no intervalo de v{x}v informado, ou c{null}c em caso de insucesso.}d*/
+		/**d{v{fit}v - Nome do atributo da regressão.}d*/
+		_integral: {
+			value: function(fit) {
+				if (!(fit in this._fit)) return null;
+				let i = Math.min.apply(null, this._x);
+				let n = Math.max.apply(null, this._x);
+				let a = this._fit[fit].a;
+				let b = this._fit[fit].b;
+				try {
+					if (fit === "linear")
+						return ((a/2)*(Math.pow(n,2)-Math.pow(i,2)))+(b*(n-i));
+					if (fit === "geometric")
+						return (a/(b+1))*(Math.pow(n,(b+1))-Math.pow(i,(b+1)));
+					if (fit === "exponential")
+						return (a/b)*(Math.exp(b*i) - Math.exp(b*n));
+				} catch(e) {}
+				return null;
+			}
+		},
+		/**t{b{function}b _tangent(b{string}b fit)}t*/
+		/**d{Retorna a equação da reta tangente a determinado ponto v{x}v da função obtida pela regressão, ou c{null}c em caso de insucesso.}d*/
+		/**d{v{fit}v - Nome do atributo da regressão.}d*/
+		/**d{A função retornada aceita um argumento que representa a posição no eixo v{x}v.}d*/
+		_tangent: {
+			value: function(fit) {
+				if (!(fit in this._fit)) return null;
+				let a = this._fit[fit].a;
+				let b = this._fit[fit].b;
+				let f = this._fit[fit].function;
+				try {
+					if (fit === "geometric")
+						return function(x) {
+							let y = f(x);
+							let A = a*b*Math.pow(x, (b-1));
+							let B = y - A*x;
+							return function(X) {return A*X+B;}
+						}
+					if (fit === "exponential")
+						return function(x) {
+							let y = f(x);
+							let A = b*y;
+							let B = y - A*x;
+							return function(X) {return A*X+B;}
+						}
+					} catch(e) {}
+					return null;
+			}
+		},
+		/**t{b{object}b linear}t*/
 		/**d{Os dados da regressão linear, ou c{null}c em caso de insucesso:}d L{*/
-		/**t{b{string}b n}t d{Nome da regressão.}d*/
-		/**t{b{string}b e}t d{Representação matemática da regressão.}d*/
+		/**t{b{string}b type}t d{Nome da regressão.}d*/
+		/**t{b{string}b equation}t d{Representação matemática da equação da regressão.}d*/
 		/**t{b{number}b a}t d{Constante angular do método dos mínimos quadrados.}d*/
 		/**t{b{number}b b}t d{Constante linear do método dos mínimos quadrados.}d*/
-		/**t{b{function}b f}t d{Função Javascript da regressão.}d*/
-		/**t{b{number}b d}t d{Valor do desvio padrão.}d*/
-		/**t{b{string}b m}t d{Representação numérica da regressão.}d}L*/
-		linearRegression: {
+		/**t{b{function}b function}t d{Função Javascript da regressão.}d*/
+		/**t{b{number}b deviation}t d{Valor do desvio padrão.}d*/
+		/**t{b{string}b math}t d{Representação numérica da equação da regressão.}d*/
+		/**t{b{number}b integral}t d{Valor da integral obtida em v{function}v no intervalo v{x}v definido.}d*/
+		/**t{b{function}b tangent(b{number}b x)}t*/
+		/**d{Retorna a equação da reta tangente a determinado ponto v{x}v em relação à função obtida em v{function}v.}d*/
+		/**d{v{x}v - Ponto a ser definida a equação da reta.}d*/
+		/**d{A função retornada aceita um argumento que representa a posição no eixo v{x}v.}d*/
+		/**d{É nulo em caso de insucesso ou inexistente, situação encontrada na regressão linear.}d}L*/
+		linear: {
 			get: function() {
 				if ("linear" in this._fit) return this._fit.linear;
 				let data = __leastSquares(this._x, this._y);
 				if (data === null) return null;
 				this._fit.linear = {};
-				this._fit.linear.n = "linear";
-				this._fit.linear.e = "y = (a)x + (b)";
+				this._fit.linear.type = "linear";
+				this._fit.linear.equation = "y = (a)x + (b)";
 				this._fit.linear.a = data.a;
 				this._fit.linear.b = data.b;
-				this._fit.linear.f = function(x) {return data.a*x + data.b;};
-				this._fit.linear.d = this._deviation("linear");
-				this._fit.linear.m = this._math("linear");
+				this._fit.linear.function = function(x) {return data.a*x + data.b;};
+				this._fit.linear.deviation = this._deviation("linear");
+				this._fit.linear.math = this._math("linear");
+				this._fit.linear.integral = this._integral("linear");
+				this._fit.linear.tangent = this._tangent("linear");
 				return this._fit.linear;
 			}
 		},
-		/**t{b{object}b exponentialRegression}t*/
-		/**d{Os dados da regressão exponencial, ou c{null}c em caso de insucesso. Retorna um objeto como em v{linearRegression}v.}d*/
-		exponentialRegression: {
+		/**t{b{object}b exponential}t*/
+		/**d{Os dados da regressão exponencial, ou c{null}c em caso de insucesso. Retorna um objeto como em v{linear}v.}d*/
+		exponential: {
 			get: function() {
 				if ("exponential" in this._fit) return this._fit.exponential;
 				let plan = __setFunction(this._y, Math.log, false)
@@ -1241,19 +1299,21 @@ const wd = (function() {
 				let data = __leastSquares(this._x, plan[1]);
 				if (data === null) return null;
 				this._fit.exponential = {};
-				this._fit.exponential.e = "exponential";
-				this._fit.exponential.e = "y = (a)\u2107^(bx)";
+				this._fit.exponential.type = "exponential";
+				this._fit.exponential.equation = "y = (a)\u2107^(bx)";
 				this._fit.exponential.a = Math.exp(data.b);
 				this._fit.exponential.b = data.a;
-				this._fit.exponential.f = function(x) {return Math.exp(data.b)*Math.exp(data.a*x);};
-				this._fit.exponential.d = this._deviation("exponential");
-				this._fit.exponential.m = this._math("exponential");
+				this._fit.exponential.function = function(x) {return Math.exp(data.b)*Math.exp(data.a*x);};
+				this._fit.exponential.deviation = this._deviation("exponential");
+				this._fit.exponential.math = this._math("exponential");
+				this._fit.exponential.integral = this._integral("exponential");
+				this._fit.exponential.tangent = this._tangent("exponential");
 				return this._fit.exponential;
 			}
 		},
-		/**t{b{object}b geometricRegression}t*/
-		/**d{Os dados da regressão geométrica, ou c{null}c em caso de insucesso. Retorna um objeto como em v{linearRegression}v.}d*/
-		geometricRegression: {
+		/**t{b{object}b geometric}t*/
+		/**d{Os dados da regressão geométrica, ou c{null}c em caso de insucesso. Retorna um objeto como em v{linear}v.}d*/
+		geometric: {
 			get: function() {
 				if ("geometric" in this._fit) return this._fit.geometric;
 				let planx = __setFunction(this._x, Math.log, false)
@@ -1262,42 +1322,142 @@ const wd = (function() {
 				let data = __leastSquares(planx[1], plany[1]);
 				if (data === null) return null;
 				this._fit.geometric = {};
-				this._fit.geometric.n = "geometric";
-				this._fit.geometric.e = "y = (a)x^(b)";
+				this._fit.geometric.type = "geometric";
+				this._fit.geometric.equation = "y = (a)x^(b)";
 				this._fit.geometric.a = Math.exp(data.b);
 				this._fit.geometric.b = data.a;
-				this._fit.geometric.f = function(x) {return Math.exp(data.b)*Math.pow(x, data.a);};
-				this._fit.geometric.d = this._deviation("geometric");
-				this._fit.geometric.m = this._math("geometric");
+				this._fit.geometric.function = function(x) {return Math.exp(data.b)*Math.pow(x, data.a);};
+				this._fit.geometric.deviation = this._deviation("geometric");
+				this._fit.geometric.math = this._math("geometric");
+				this._fit.geometric.integral = this._integral("geometric");
+				this._fit.geometric.tangent = this._tangent("geometric");
 				return this._fit.geometric;
 			}
 		},
 		/**t{b{object}b bestFit}t*/
-		/**d{Retorna das dados da regressão com o menor valor de desvio padrão.}d}L}l*/
+		/**d{Retorna das dados da regressão com o menor valor de desvio padrão.}d*/
 		bestFit: {
 			get: function() {
 				let attrs = {
-					linearRegression:      null,
-					exponentialRegression: null,
-					geometricRegression:   null
+					linear:      null,
+					exponential: null,
+					geometric:   null
 				};
 				for (let i in attrs) attrs[i] = this[i];
 				let best = Infinity;
 				let type = null;
 				for (let i in attrs) {
-					if (attrs[i] !== null && attrs[i].d < best) {
-						best = attrs[i].d;
+					if (attrs[i] !== null && attrs[i].deviation < best) {
+						best = attrs[i].deviation;
 						type = i;
 					}
 				}
 				return this[type];
 			}
 		},
-
+		/**t{b{array}b x}t*/
+		/**d{Retorna valores do eixo x.}d*/
+		x: {get: function() {return this._x}},
+		/**t{b{array}b y}t*/
+		/**d{Retorna valores do eixo y.}d}L}l*/
+		y: {get: function() {return this._y}}
 	});
 
 
-//fixme colocar derivada, integral, equação da tangente no ponto, áreas
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	function __Plot2D(title, xName, yName) {
+		if (!(this instanceof __Plot2D)) return new __Plot2D(title, xName, yName);
+		Object.defineProperties(this, {
+			_title: {value: title},
+			_xName: {value: xName},
+			_yName: {value: yName},
+			_dataX: {value: null},
+			_dataY: {value: null},
+			_plot:  {value: []},
+			_color: {value: -1, writable: true}
+
+		});
+	}
+
+	Object.defineProperties(__Plot2D.prototype, {
+		constructor: {value: __Plot2D},
+		_screen: {value: {x: window.screen.width, y: window.screen.height}},
+		_xAxis:  {value: {min: 0.10, max: 0.95}},
+		_yAxis:  {value: {min: 0.10, max: 0.90}},
+		addDots: {
+			value: function(x, y, name, connected) {
+				let matrix = __setSort(x, y);
+				if (matrix === null || matrix[0].length < 2) return false;
+				let obj = this;
+				this._plot.push({
+					x: matrix[0],
+					y: matrix[1],
+					name: (name === null|| name === undefined) ? "" : String(name),
+					type: connected === true ? "line" : "dot",
+					color: ++obj._color
+				});
+				return true;
+      }
+		},
+		addCurve: {
+			value: function(xMin, xMax, func, name, deviation) {
+				let min = __Type(xMin);
+				let max = __Type(xMax);
+				let f   = __Type(func);
+				if (!min.finite || !max.finite || min == max || f.type !== "function") return false;
+				let obj = this;
+				this._plot.push({
+					x: min < max ? [min, max] : [max, min],
+					y: func,
+					name: (name === null|| name === undefined) ? "" : String(name),
+					type: deviation === true ? "dash" : "curve",
+					color: deviation === true ? obj._color : ++obj._color,
+				});
+				return true;
+      }
+		},
+		addFit: {
+			value: function(fit2d, name, type) {
+				if (!(fit2d instanceof __Fit2D)) return false;
+				let types = ["linear", "exponential", "geometric"];
+				if (types.indexOf(type) < 0) type = "bestFit";
+				let data = fit2d[type];
+				if (data === null) return false;
+				let x = fit2d.x;
+				let y = fit2d.y;
+				this.addDots(x, y, name);
+				this.addCurve(x[0], x[x.length - 1], data.function, data.math);
+				if (data.deviation !== 0) {
+					let upper = function(x) {return data.function(x)+data.deviation;}
+					let lower = function(x) {return data.function(x)-data.deviation;}
+					this.addCurve(x[0], x[x.length - 1], upper, null, true);
+					this.addCurve(x[0], x[x.length - 1], lower, null, true);
+				}
+				return true;
+      }
+		},
+	});
+
+
+
+
+
+
+
+
 
 
 
@@ -4945,7 +5105,8 @@ const wd = (function() {
 		today:   {get:   function() {return WD(new Date());}},
 		now:     {get:   function() {return WD(wd_str_now());}},
 		type:    {value: function(x){return __Type(x);}},
-		test: {value: function(){return __Set2D.apply(null, Array.prototype.slice.call(arguments));}},
+		fit: {value: function(){return __Fit2D.apply(null, Array.prototype.slice.call(arguments));}},
+		plot: {value: function(){return __Plot2D.apply(null, Array.prototype.slice.call(arguments));}},
 	});
 
 /* == BLOCO 4 ================================================================*/
