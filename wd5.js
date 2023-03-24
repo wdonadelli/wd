@@ -1377,58 +1377,117 @@ const wd = (function() {
 
 
 
-
-	function __Plot2D(title, xName, yName) {
-		if (!(this instanceof __Plot2D)) return new __Plot2D(title, xName, yName);
+	/**f{b{object}b __Data2D(b{string}b title, b{string}b xName, b{string}b yName)}f*/
+	/**p{Objeto para preparar dados para construção de gráfico 2D (v{x, y}v).}p l{*/
+	/**d{v{title}v - Título do gráfico.}d */
+	/**d{v{xName}v - Nome do eixo v{x}v.}d */
+	/**d{v{yName}v - Nome do eixo v{y}v.}d}l l{*/
+	function __Data2D(title, xName, yName) {
+		if (!(this instanceof __Data2D)) return new __Data2D(title, xName, yName);
 		Object.defineProperties(this, {
-			_title: {value: title},
-			_xName: {value: xName},
-			_yName: {value: yName},
-			_dataX: {value: null},
-			_dataY: {value: null},
-			_plot:  {value: []},
-			_color: {value: -1, writable: true}
+			_title: {value: String(title).trim()}, /* título do gráfico */
+			_xName: {value: String(xName).trim()}, /* nome do eixo x */
+			_yName: {value: String(yName).trim()}, /* nome do eixo y */
+			_x:     {value: {min: 0, max: 0}}, /* guarda o menor e o maior valor de x */
+			_y:     {value: {min: 0, max: 0}}, /* guarda o menor e o maior valor de y */
+			_color: {value: -1,   writable: true}, /* contador de cores */
+			_plot:  {value: []},                   /* registros das configurações de plotagem */
+			_data:  {value: null, writable: true}, /* registros para construção do gráfico */
 
 		});
 	}
 
-	Object.defineProperties(__Plot2D.prototype, {
-		constructor: {value: __Plot2D},
+	Object.defineProperties(__Data2D.prototype, {
+		constructor: {value: __Data2D},
+		/**t{b{object}b _screen}t d{Obtém o tamanho da tela da plotagem:}d L{*/
+		/**t{x}t d{Tamanho na horizontal.}d t{y}t d{Tamanho na vertical.}d }L */
 		_screen: {value: {x: window.screen.width, y: window.screen.height}},
-		_xAxis:  {value: {min: 0.10, max: 0.95}},
-		_yAxis:  {value: {min: 0.10, max: 0.90}},
+		/**t{b{object}b _xAxis}t d{Obtém a posição de ínicio e fim do eixo v{x}v em porcentagem:}d L{*/
+		/**t{min}t d{Início do eixo.}d t{max}t d{Fim do eixo.}d }L */
+		_xAxis:  {value: {min: 0.10, max: 0.95, get delta() {return this.max - this.min;}}},
+		/**t{b{object}b _xAxis}t d{Obtém a posição de ínicio e fim do eixo v{y}v em porcentagem:}d L{*/
+		/**t{min}t d{Início do eixo.}d t{max}t d{Fim do eixo.}d }L */
+		_yAxis:  {value: {min: 0.10, max: 0.90, get delta() {return this.max - this.min;}}},
+		/**t{b{number}b _xUnit}t d{Retorna a quantidade de unidades do eixo v{x}v.}d*/
+		_xUnit: {
+			get: function() {return this._screen.x * (this._xAxis.max - this._xAxis.min);}
+		},
+		/**t{b{number}b _yUnit}t d{Retorna a quantidade de unidades do eixo v{y}v.}d*/
+		_yUnit: {
+			get: function() {return this._screen.y * (this._yAxis.max - this._yAxis.min);}
+		},
+		/**t{b{number}b _xReal}t d{Retorna o comprimento do eixo v{x}v.}d*/
+		_xReal: {
+			get: function() {return this._x.max - this._x.min;}
+		},
+		/**t{b{number}b _yReal}t d{Retorna o comprimento do eixo v{y}v.}d*/
+		_yReal: {
+			get: function() {return this._y.max - this._y.min;}
+		},
+
+
+
+
+
+
+
+
+
+		/**t{b{void}b _add(b{array}b x, b{array|function}b y, b{string}b name, b{string}b type, b{boolean}b newColor)}t*/
+		/**d{Adiciona dados do gráfico ao v{_plot}v}d L{*/
+		/**d{v{x}v - Lista de valores para o eixo v{x}v.}d */
+		/**d{v{y}v - Lista de valores ou função (v{y = f(x)}v) para o eixo v{y}v.}d */
+		/**d{v{name}v - Nome da plotagem.}d */
+		/**d{v{type}v - Tipo da plotagem (v{"dot" "curve" "line"}v).}d */
+		/**d{v{newColor}v - Informa se a cor deve ser alterada com relação à plotagem anterior.}d }L*/
+		_add: {
+			value: function(x, y, name, type, newColor) {
+				let color = newColor === true ? ++this._color : this._color;
+				this._plot.push({
+					x: x,
+					y: y,
+					name: (name === null || name === undefined) ? "" : String(name).trim(),
+					type: type,
+					color: color
+				});
+				this._data = null;
+			}
+		},
+		/**t{b{void}b addDots(b{array}b x, b{array}b y, b{string}b name, b{boolean}b connected)}t*/
+		/**d{Adiciona dados do gráfico para um conjunto de valores (v{x, y}v).}d L{*/
+		/**d{v{x}v - Lista de valores para o eixo v{x}v.}d */
+		/**d{v{y}v - Lista de valores para o eixo v{y}v.}d */
+		/**d{v{name}v - Nome da plotagem.}d */
+		/**d{v{connected}v - (opcional, c{false}c) Se verdadeiro, cada conjunto de valores será ligado por uma linha.}d }L*/
 		addDots: {
 			value: function(x, y, name, connected) {
 				let matrix = __setSort(x, y);
 				if (matrix === null || matrix[0].length < 2) return false;
-				let obj = this;
-				this._plot.push({
-					x: matrix[0],
-					y: matrix[1],
-					name: (name === null|| name === undefined) ? "" : String(name),
-					type: connected === true ? "line" : "dot",
-					color: ++obj._color
-				});
+				this._add(matrix[0], matrix[1], name, (connected ===  true ? "line" : "dot"), true);
 				return true;
       }
 		},
+		/**t{b{void}b addCurve(b{number}b xMin, b{number}b xMax, b{function}b func, b{string}b name)}t*/
+		/**d{Adiciona dados do gráfico para um conjunto de valores (v{x, f(x)}v).}d L{*/
+		/**d{v{xMin}v - Valor inicial para o eixo v{x}v.}d */
+		/**d{v{xMax}v - Valor final para o eixo v{x}v.}d */
+		/**d{v{func}v - Função v{f(x)}v para obtenção do eixo v{y}v.}d*/
+		/**d{v{name}v - Nome da plotagem.}d }L*/
 		addCurve: {
-			value: function(xMin, xMax, func, name, deviation) {
+			value: function(xMin, xMax, func, name) {
 				let min = __Type(xMin);
 				let max = __Type(xMax);
 				let f   = __Type(func);
 				if (!min.finite || !max.finite || min == max || f.type !== "function") return false;
-				let obj = this;
-				this._plot.push({
-					x: min < max ? [min, max] : [max, min],
-					y: func,
-					name: (name === null|| name === undefined) ? "" : String(name),
-					type: deviation === true ? "dash" : "curve",
-					color: deviation === true ? obj._color : ++obj._color,
-				});
+				this._add((min < max ? [min, max] : [max, min]), func, name, "curve", true);
 				return true;
       }
 		},
+		/**t{b{void}b addFit(b{object}b fit2d, b{string}b name, b{string}b type)}t*/
+		/**d{Adiciona dados do gráfico referente a um processo de regressão obtido pelo objeto v{__Fit2D}v.}d L{*/
+		/**d{v{fit2d}v - Instância do objeto v{__Fit2D}v.}d */
+		/**d{v{name}v - Nome da plotagem.}d*/
+		/**d{v{type}v - (opcional, v{"bestFit"}v) Nome da regressão conforme objeto v{__Fit2D}v.}d }L*/
 		addFit: {
 			value: function(fit2d, name, type) {
 				if (!(fit2d instanceof __Fit2D)) return false;
@@ -1438,17 +1497,71 @@ const wd = (function() {
 				if (data === null) return false;
 				let x = fit2d.x;
 				let y = fit2d.y;
-				this.addDots(x, y, name);
-				this.addCurve(x[0], x[x.length - 1], data.function, data.math);
+				this._add(x, y, name, "dot", true);
+				this._add([x[0], x[x.length - 1]], data.function, data.math, "curve", true);
 				if (data.deviation !== 0) {
 					let upper = function(x) {return data.function(x)+data.deviation;}
 					let lower = function(x) {return data.function(x)-data.deviation;}
-					this.addCurve(x[0], x[x.length - 1], upper, null, true);
-					this.addCurve(x[0], x[x.length - 1], lower, null, true);
+					this._add([x[0], x[x.length - 1]], upper, "", "dot");
+					this._add([x[0], x[x.length - 1]], lower, "", "dot");
 				}
 				return true;
       }
 		},
+		make: {
+			value: function() {
+				if (this._data !== null) return this._data;
+				this._data = [];
+				this._makeReal();
+
+
+
+
+
+			}
+
+
+		},
+
+
+		_makeReal: {
+			value: function() {
+				/* obter os limites de x */
+				let x = [];
+				let i = -1;
+				while (++i < this._plot.length)
+					x = x.concat(this._plot[i].x);
+				this._x.min = Math.min.apply(null, x);
+				this._x.max = Math.max.apply(null, x);
+				/* obter lista de valores de x */
+				let delta = this._xReal / this._xUnit;
+				let value = this._x.min;
+				let xBase = [];
+				while (value < this._x.max) {
+					x.push(value);
+					value += delta;
+				}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			}
+		},
+
+
+
+		/**}l*/
 	});
 
 
@@ -5106,7 +5219,7 @@ const wd = (function() {
 		now:     {get:   function() {return WD(wd_str_now());}},
 		type:    {value: function(x){return __Type(x);}},
 		fit: {value: function(){return __Fit2D.apply(null, Array.prototype.slice.call(arguments));}},
-		plot: {value: function(){return __Plot2D.apply(null, Array.prototype.slice.call(arguments));}},
+		plot: {value: function(){return __Data2D.apply(null, Array.prototype.slice.call(arguments));}},
 	});
 
 /* == BLOCO 4 ================================================================*/
