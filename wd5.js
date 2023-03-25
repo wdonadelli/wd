@@ -1073,7 +1073,7 @@ const wd = (function() {
 	function __setFunction(x, f, finite) {
 		let check = __Type(x);
 		let input = __Type(f);
-		if (check.type !== "array" ||input.type !== "function") return null;
+		if (check.type !== "array" || input.type !== "function") return null;
 		let y = [];
 		let i = -1;
 		while (++i < x.length) {
@@ -1377,55 +1377,65 @@ const wd = (function() {
 
 
 
-	/**f{b{object}b __Data2D(b{string}b title, b{string}b xName, b{string}b yName)}f*/
+	/**f{b{object}b __Data2D(b{string}b title, b{string}b xLabel, b{string}b yLabel)}f*/
 	/**p{Objeto para preparar dados para construção de gráfico 2D (v{x, y}v).}p l{*/
 	/**d{v{title}v - Título do gráfico.}d */
-	/**d{v{xName}v - Nome do eixo v{x}v.}d */
-	/**d{v{yName}v - Nome do eixo v{y}v.}d}l l{*/
-	function __Data2D(title, xName, yName) {
-		if (!(this instanceof __Data2D)) return new __Data2D(title, xName, yName);
+	/**d{v{xLabel}v - Nome do eixo v{x}v.}d */
+	/**d{v{yLabel}v - Nome do eixo v{y}v.}d}l l{*/
+	function __Data2D(title, xLabel, yLabel) {
+		if (!(this instanceof __Data2D)) return new __Data2D(title, xLabel, yLabel);
 		Object.defineProperties(this, {
-			_title: {value: String(title).trim()}, /* título do gráfico */
-			_xName: {value: String(xName).trim()}, /* nome do eixo x */
-			_yName: {value: String(yName).trim()}, /* nome do eixo y */
-			_x:     {value: {min: 0, max: 0}}, /* guarda o menor e o maior valor de x */
-			_y:     {value: {min: 0, max: 0}}, /* guarda o menor e o maior valor de y */
-			_color: {value: -1,   writable: true}, /* contador de cores */
-			_plot:  {value: []},                   /* registros das configurações de plotagem */
-			_data:  {value: null, writable: true}, /* registros para construção do gráfico */
+			_title:  {value: String(title).trim()},  /* título do gráfico */
+			_yLabel: {value: String(xLabel).trim()}, /* nome do eixo x */
+			_yLabel: {value: String(yLabel).trim()}, /* nome do eixo y */
+			_x:      {value: [], writable: true},    /* lista com todos os valores de x */
+			_y:      {value: [], writable: true},    /* lista com todos os valores de y */
+			_color:  {value: -1, writable: true},    /* contador de cores */
+			_plot:   {value: []},                    /* registros das entrada de dados */
+			_data:   {value: 0, writable: true},     /* registros da construção do gráfico */
 
 		});
 	}
 
 	Object.defineProperties(__Data2D.prototype, {
 		constructor: {value: __Data2D},
-		/**t{b{object}b _screen}t d{Obtém o tamanho da tela da plotagem:}d L{*/
-		/**t{x}t d{Tamanho na horizontal.}d t{y}t d{Tamanho na vertical.}d }L */
-		_screen: {value: {x: window.screen.width, y: window.screen.height}},
-		/**t{b{object}b _xAxis}t d{Obtém a posição de ínicio e fim do eixo v{x}v em porcentagem:}d L{*/
-		/**t{min}t d{Início do eixo.}d t{max}t d{Fim do eixo.}d }L */
-		_xAxis:  {value: {min: 0.10, max: 0.95, get delta() {return this.max - this.min;}}},
-		/**t{b{object}b _xAxis}t d{Obtém a posição de ínicio e fim do eixo v{y}v em porcentagem:}d L{*/
-		/**t{min}t d{Início do eixo.}d t{max}t d{Fim do eixo.}d }L */
-		_yAxis:  {value: {min: 0.10, max: 0.90, get delta() {return this.max - this.min;}}},
-		/**t{b{number}b _xUnit}t d{Retorna a quantidade de unidades do eixo v{x}v.}d*/
-		_xUnit: {
-			get: function() {return this._screen.x * (this._xAxis.max - this._xAxis.min);}
-		},
-		/**t{b{number}b _yUnit}t d{Retorna a quantidade de unidades do eixo v{y}v.}d*/
-		_yUnit: {
-			get: function() {return this._screen.y * (this._yAxis.max - this._yAxis.min);}
-		},
-		/**t{b{number}b _xReal}t d{Retorna o comprimento do eixo v{x}v.}d*/
-		_xReal: {
-			get: function() {return this._x.max - this._x.min;}
-		},
-		/**t{b{number}b _yReal}t d{Retorna o comprimento do eixo v{y}v.}d*/
-		_yReal: {
-			get: function() {return this._y.max - this._y.min;}
-		},
+		/**t{b{number}b _gap}t d{Distância entre pixels. Quanto menor mais preciso e mais demorado.}d*/
+		_gap: {value: 3},
+		/**t{b{number}b _grid}t d{Dimensionamento da grade do gráfico.}d*/
+		_grid: {value: 5},
+		/**t{b{number}b _horizontal}t d{Medida horizontal da área do gráfico.}d*/
+		_horizontal: {value: Math.max(window.screen.width, window.screen.height)},
+		/**t{b{number}b _vertical}t d{Medida vertical da área do gráfico.}d*/
+		_vertical: {value: Math.min(window.screen.width, window.screen.height)},
+		/**t{b{object}b _position}t d{Registra a posição relativa da área de plotagem:}d L{*/
+		/**t{x1}t d{Início do eixo x.}d t{x2}t d{Fim do eixo x.}d t{y1}t d{Início do eixo y.}d t{y2}t d{Fim do eixo y.}d  }L */
+		_position: {value: {x1: 0.10, x2: 0.95, y1: 0.1, y2: 0.90}},
+		/**t{b{number}b _deltaX}t d{Medida do eixo v{x}v}d*/
+		_deltaX: {get: function() {return this._horizontal * (this._position.x2 - this._position.x1);}},
+		/**t{b{number}b _deltaY}t d{Medida do eixo v{y}v}d*/
+		_deltaY: {get: function() {return this._vertical * (this._position.y2 - this._position.y1);}},
+		/**t{b{number}b _xDelta}t d{Diferença entre o maior e o menor valor em v{x}v.}d*/
+		_xDelta: {get: function() {return this._x[this._x.length-1] - this._x[0];}},
+		/**t{b{number}b _yDelta}t d{Diferença entre o maior e o menor valor em v{y}v.}d*/
+		_yDelta: {get: function() {return this._y[this._y.length-1] - this._y[0];}},
 
 
+		_xTarget: {
+			value: function(x) {
+				let start = this._horizontal * this._position.x1;
+				let delta = ((this._deltaX/this._xDelta) * (x - this._x[0])) + start;
+				let point = 100*delta/this._horizontal;
+				return String(point)+"%";
+			}
+		},
+		_yTarget: {
+			value: function(y) {
+				let start = this._vertical * this._position.y1;
+				let delta = ((this._deltaY/this._yDelta) * (y - this._y[0])) + start;
+				let point = 100*delta/this._vertical;
+				return String(point)+"%";
+			}
+		},
 
 
 
@@ -1453,33 +1463,27 @@ const wd = (function() {
 				this._data = null;
 			}
 		},
-		/**t{b{void}b addDots(b{array}b x, b{array}b y, b{string}b name, b{boolean}b connected)}t*/
-		/**d{Adiciona dados do gráfico para um conjunto de valores (v{x, y}v).}d L{*/
+		/**t{b{void}b addDots(b{array}b x, b{array|function}b y, b{string}b name, b{boolean}b dots)}t*/
+		/**d{Adiciona dados para um conjunto de valores (v{x, y}v).}d L{*/
 		/**d{v{x}v - Lista de valores para o eixo v{x}v.}d */
-		/**d{v{y}v - Lista de valores para o eixo v{y}v.}d */
-		/**d{v{name}v - Nome da plotagem.}d */
-		/**d{v{connected}v - (opcional, c{false}c) Se verdadeiro, cada conjunto de valores será ligado por uma linha.}d }L*/
-		addDots: {
-			value: function(x, y, name, connected) {
-				let matrix = __setSort(x, y);
-				if (matrix === null || matrix[0].length < 2) return false;
-				this._add(matrix[0], matrix[1], name, (connected ===  true ? "line" : "dot"), true);
-				return true;
-      }
-		},
-		/**t{b{void}b addCurve(b{number}b xMin, b{number}b xMax, b{function}b func, b{string}b name)}t*/
-		/**d{Adiciona dados do gráfico para um conjunto de valores (v{x, f(x)}v).}d L{*/
-		/**d{v{xMin}v - Valor inicial para o eixo v{x}v.}d */
-		/**d{v{xMax}v - Valor final para o eixo v{x}v.}d */
-		/**d{v{func}v - Função v{f(x)}v para obtenção do eixo v{y}v.}d*/
-		/**d{v{name}v - Nome da plotagem.}d }L*/
-		addCurve: {
-			value: function(xMin, xMax, func, name) {
-				let min = __Type(xMin);
-				let max = __Type(xMax);
-				let f   = __Type(func);
-				if (!min.finite || !max.finite || min == max || f.type !== "function") return false;
-				this._add((min < max ? [min, max] : [max, min]), func, name, "curve", true);
+		/**d{v{y}v - Lista de valores ou função v{f(x)}v para o eixo v{y}v.}d */
+		/**d{v{name}v - Nome da plotagem.}d*/
+		/**d{v{dots}v - (Opcional, c{false}c) Se verdadeiro não haverá ligação entre os pontos.}d }L*/
+		add: {
+			value: function(x, y, name, dots) {
+				let ytype = __Type(y).type;
+				if (ytype === "array") {
+					let matrix = __setSort(x, y);
+					if (matrix === null || matrix[0].length < 2) return false;
+					y = matrix[1];
+					x = matrix[0];
+				} else if (ytype === "function") {
+					x = __setSort(x);
+					if (x === null || x[0].length < 2 )  return false;
+					if (x[0][0] === x[0][x[0].length-1]) return false;
+					x = x[0];
+				} else	{return false;}
+				this._add(x, y, name, (dots === true ? "dot" : "line"), true);
 				return true;
       }
 		},
@@ -1498,12 +1502,12 @@ const wd = (function() {
 				let x = fit2d.x;
 				let y = fit2d.y;
 				this._add(x, y, name, "dot", true);
-				this._add([x[0], x[x.length - 1]], data.function, data.math, "curve", true);
+				this._add([x[0], x[x.length - 1]], data.function, data.math, "line", true);
 				if (data.deviation !== 0) {
 					let upper = function(x) {return data.function(x)+data.deviation;}
 					let lower = function(x) {return data.function(x)-data.deviation;}
-					this._add([x[0], x[x.length - 1]], upper, "", "dot");
-					this._add([x[0], x[x.length - 1]], lower, "", "dot");
+					this._add([x[0], x[x.length - 1]], upper, "", "dash");
+					this._add([x[0], x[x.length - 1]], lower, "", "dash");
 				}
 				return true;
       }
@@ -1512,7 +1516,10 @@ const wd = (function() {
 			value: function() {
 				if (this._data !== null) return this._data;
 				this._data = [];
-				this._makeReal();
+				this._x = this._getX;
+				this._y = this._getY;
+				if (this._x === null || this._y === null) return null;
+
 
 
 
@@ -1522,45 +1529,54 @@ const wd = (function() {
 
 
 		},
-
-
-		_makeReal: {
-			value: function() {
-				/* obter os limites de x */
+		_getX: {
+			get: function() {
+				if (this._data === null) return this.make();
 				let x = [];
 				let i = -1;
 				while (++i < this._plot.length)
 					x = x.concat(this._plot[i].x);
-				this._x.min = Math.min.apply(null, x);
-				this._x.max = Math.max.apply(null, x);
-				/* obter lista de valores de x */
-				let delta = this._xReal / this._xUnit;
-				let value = this._x.min;
-				let xBase = [];
-				while (value < this._x.max) {
-					x.push(value);
-					value += delta;
-				}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+				let x1    = Math.min.apply(null, x);
+				let x2    = Math.max.apply(null, x);
+				if (x1 === x2) return null;
+				let list  = [];
+				let delta = this._gap * (x2 - x1) / (this._deltaX);
+				i = -1;
+				while ((x1 + (++i * delta)) <= x2)
+					list.push(x1 + (i * delta));
+				return list;
 			}
 		},
-
-
-
+		_getY: {
+			get: function() {
+				if (this._data === null) return this.make();
+				let y = [];
+				let i = -1;
+				while (++i < this._plot.length) {
+					let object = {
+						name:  this._plot[i].name,
+						type:  this._plot[i].type,
+						color: this._plot[i].color
+					};
+					let type = __Type(this._plot[i].y).type;
+					if (type === "array") {
+						object.x = this._plot[i].x;
+						object.y = this._plot[i].y;
+					} else if (type === "function") {
+						let matrix = __setFunction(this._x, this._plot[i].y);
+						if (matrix === null || matrix[0].length < 2) return null;
+						object.x = matrix[0];
+						object.y = matrix[1];
+					}
+					y.push(Math.min.apply(null, object.y));
+					y.push(Math.max.apply(null, object.y));
+					this._data.push(object);
+				}
+				let y1 = Math.min.apply(null, y);
+				let y2 = Math.max.apply(null, y);
+				return y1 !== y2 ? [y1, y2] : (y1 === 0 ? [-1, 1] : [y1-y1, y1+y1]);
+			}
+		},
 		/**}l*/
 	});
 
