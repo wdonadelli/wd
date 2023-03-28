@@ -989,8 +989,9 @@ const wd = (function() {
 	/**4{Conjunto de Dados}4*/
 /*----------------------------------------------------------------------------*/
 	/**f{b{matrix}b __setFinite(b{array}b ...)}f*/
-	/**p{Analisa o conjunto de dados repassados e retorna uma matriz somente com os números finitos.}p*/
-	/**p{Itens não finitos prejudicarão os demais itens respectivos de outros conjuntos.}p
+	/**p{Analisa a série de arrays informada e a transforma numa matriz de números finitos.}p*/
+	/**p{Cada array informado corresponderá a uma coluna da matriz, na ordem informada.}p*/
+	/**p{Linhas que contenham valores não finitos, em qualquer dos arrays, serão eliminadas na construção da matriz.}p*/
 	/**p{Retornará c{null}c em caso de matriz vazia.}p*/
 	function __setFinite() {
 		let dataset = []; /* capturas os argumentos válidos */
@@ -1030,43 +1031,69 @@ const wd = (function() {
 		return matrix;
 	}
 /*----------------------------------------------------------------------------*/
-		/**f{b{matrix}b __setSort(b{array}b ...)}f*/
-		/**p{Retorna uma matriz finita de v{n}v colunas ordenada com referência à primeira coluna/argumento.}p*/
-		/**p{Cada argumento (uma lista) representa uma coluna na matriz sequenciado conforme informado na função.}p*/
-		function __setSort() {
-			/* transformar os argumentos numa matrix só de números finitos */
-			let matrix = __setFinite.apply(null, arguments);
-			if (matrix === null) return null;
-			let list = [];
-			let i = -1;
-			/* transformar matrix em uma lista de objetos */
-			while (++i < matrix[0].length) {
-				list.push({});
-				let j = -1;
-				while (++j < matrix.length) {
-					let id = String(j);
-					list[i][id] = matrix[j][i];
-				}
+	/**f{b{matrix}b __setSort(b{array}b ...)}f*/
+	/**p{Analisa a série de arrays informada e a transforma numa matriz de números finitos ordenadas pela primeira coluna.}p*/
+	/**p{Cada array informado corresponderá a uma coluna da matriz, na ordem informada.}p*/
+	/**p{Linhas que contenham valores não finitos, em qualquer dos arrays, serão eliminadas na construção da matriz.}p*/
+	/**p{Retornará c{null}c em caso de matriz vazia.}p*/
+	function __setSort() {
+		/* transformar os argumentos numa matrix só de números finitos */
+		let matrix = __setFinite.apply(null, arguments);
+		if (matrix === null) return null;
+		let list = [];
+		let i = -1;
+		/* transformar matrix em uma lista de objetos */
+		while (++i < matrix[0].length) {
+			list.push({});
+			let j = -1;
+			while (++j < matrix.length) {
+				let id = String(j);
+				list[i][id] = matrix[j][i];
 			}
-			/* ordenar objetos da lista pela primeira coluna da matrix */
-			list = list.sort(function(a, b) {
-				return a["0"] < b["0"] ? -1 : 1;
-			});
-			/* transformar a lista ordenada em matriz */
-			let sort = [];
-			for (let k in list[0]) sort.push([]);
-			i = -1;
-			while (++i < list.length) {
-				for (let k in list[i]) {
-					let id = String(k);
-					sort[id].push(list[i][k]);
-				}
-			}
-			return sort;
 		}
+		/* ordenar objetos da lista pela primeira coluna da matrix */
+		list = list.sort(function(a, b) {
+			return a["0"] < b["0"] ? -1 : 1;
+		});
+		/* transformar a lista ordenada em matriz */
+		let sort = [];
+		for (let k in list[0]) sort.push([]);
+		i = -1;
+		while (++i < list.length) {
+			for (let k in list[i]) {
+				let id = String(k);
+				sort[id].push(list[i][k]);
+			}
+		}
+		return sort;
+	}
+
+
+
+
+
+
+
+
+/*----------------------------------------------------------------------------*/
+	/**f{b{matrix}b __setUnique(b{array}b ...)}f*/
+	/**p{Analisa a série de arrays informada e a transforma numa matriz de números finitos não repetidos.}p*/
+	/**p{A não repetição dos valores será observada apenas na primiera coluna da matriz.}p*/
+	/**p{Cada array informado corresponderá a uma coluna da matriz, na ordem informada.}p*/
+	/**p{Linhas que contenham valores não finitos, em qualquer dos arrays, serão eliminadas na construção da matriz.}p*/
+	/**p{Retornará c{null}c em caso de matriz vazia.}p*/
+	function __setUnique() {
+		/* transformar os argumentos numa matrix só de números finitos */
+		let matrix = __setFinite.apply(null, arguments);
+		if (matrix === null) return null;
+		matrix[0].forEach(function(v,i,a) {
+			if (a.indexOf(v) !== i) a[i] = null;
+		});
+		return __setFinite.apply(null, matrix);
+	}
 /*----------------------------------------------------------------------------*/
 	/**f{b{matrix}b __setFunction(b{array}b x, b{function}b f, b{booelan}b finite)}f*/
-	/**p{Retorna uma matriz com duas colunas formada pelos valores de v{x}v e do resultado de v{f(x)}v.}p l{*/
+	/**p{Retorna uma matriz de duas colunas formada pelos valores de v{x}v e do resultado de v{f(x)}v.}p l{*/
 	/**d{v{x}v - Conjunto de números base (coluna 0).}d*/
 	/**d{v{f}v - Função a ser operada sobre os valores de v{x}v (coluna 1).}d*/
 	/**d{v{finite}v - (opcional, c{true}c) Se verdadeiro, retornará uma matriz só com finitos, caso conctrário, todos os valores.}d}l*/
@@ -1156,9 +1183,10 @@ const wd = (function() {
 	/**d{b{Métodos e Atributos}b:}dL{*/
 	function __Fit2D(x, y) {
 		if (!(this instanceof __Fit2D)) return new __Fit2D(x, y);
-		let matrix = __setSort(x, y);
+		let matrix = __setUnique(x, y);
 		if (matrix === null || matrix.length < 2) throw "Inconsistent data set.";
 		if (matrix[0].length < 2) throw "Insufficient data set.";
+		matrix = __setSort(matrix[0], matrix[1]);
 		Object.defineProperties(this, {
 			_x: {value: matrix[0]},
 			_y: {value: matrix[1]},
@@ -1388,6 +1416,9 @@ const wd = (function() {
 			_title:  {value: String(title).trim()},  /* título do gráfico */
 			_yLabel: {value: String(xLabel).trim()}, /* nome do eixo x */
 			_yLabel: {value: String(yLabel).trim()}, /* nome do eixo y */
+			_Ends:   {value: {x: [], y: []}}, /* valores mínimo é máximo de x e y */
+
+
 			_x:      {value: [], writable: true},    /* lista com todos os valores de x */
 			_y:      {value: [], writable: true},    /* lista com todos os valores de y */
 			_color:  {value: -1, writable: true},    /* contador de cores */
@@ -1410,6 +1441,11 @@ const wd = (function() {
 		/**t{b{object}b _position}t d{Registra a posição relativa da área de plotagem:}d L{*/
 		/**t{x1}t d{Início do eixo x.}d t{x2}t d{Fim do eixo x.}d t{y1}t d{Início do eixo y.}d t{y2}t d{Fim do eixo y.}d  }L */
 		_position: {value: {x1: 0.10, x2: 0.95, y1: 0.1, y2: 0.90}},
+
+
+
+
+
 		/**t{b{number}b _deltaX}t d{Medida do eixo v{x}v}d*/
 		_deltaX: {get: function() {return this._horizontal * (this._position.x2 - this._position.x1);}},
 		/**t{b{number}b _deltaY}t d{Medida do eixo v{y}v}d*/
@@ -1439,6 +1475,39 @@ const wd = (function() {
 
 
 
+		_xEnds: {
+			value: function(x) {
+				let ends = this._Ends.x;
+				if (x === undefined)
+					return [Math.min.apply(null, ends), Math.max.apply(null, ends)];
+				ends.push(Math.min.apply(null, x), Math.max.apply(null, x));
+				return this._xEnds();
+			}
+		},
+		_yEnds: {
+			value: function(y) {
+				let ends = this._Ends.y;
+				if (y === undefined) {
+					let value = [Math.min.apply(null, ends), Math.max.apply(null, ends)];
+					if (value[0] === value[1])
+						return [value[0]-value[0], value[0]+value[0]]
+					return value;
+				}
+				ends.push(Math.min.apply(null, y), Math.max.apply(null, y));
+				return this._yEnds();
+			}
+		},
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1451,16 +1520,31 @@ const wd = (function() {
 		/**d{v{type}v - Tipo da plotagem (v{"dot" "curve" "line"}v).}d */
 		/**d{v{newColor}v - Informa se a cor deve ser alterada com relação à plotagem anterior.}d }L*/
 		_add: {
-			value: function(x, y, name, type, newColor) {
-				let color = newColor === true ? ++this._color : this._color;
-				this._plot.push({
-					x: x,
-					y: y,
-					name: (name === null || name === undefined) ? "" : String(name).trim(),
-					type: type,
-					color: color
-				});
+			value: function(x, y, name, type, color) {
+				name  = (name === null || name === undefined) ? "" : String(name).trim();
+				color = color === true ? ++this._color : this._color;
+				let yType = __Type(y).type;
+				if (yType === "array") {
+					let matrix = __setUnique(x, y);
+					if (matrix === null || matrix[0].length < 2) return false;
+					matrix = __setSort(matrix[0], matrix[1]);
+					this._xEnds(matrix[0]);
+					this._yEnds(matrix[1]);
+					x = matrix[0];
+					y = matrix[1];
+				} else if (yType === "function") {
+					let matrix = __setUnique(x);
+					if (matrix === null || matrix[0].length < 2) return false;
+					matrix = __setSort(matrix[0]);
+					this._xEnds(matrix[0]);
+					x = matrix[0];
+				} else {
+					return false;
+				}
+
+				this._plot.push({x: x, y: y, name: name, type: type, color: color});
 				this._data = null;
+				return true;
 			}
 		},
 		/**t{b{void}b addDots(b{array}b x, b{array|function}b y, b{string}b name, b{boolean}b dots)}t*/
@@ -1471,20 +1555,7 @@ const wd = (function() {
 		/**d{v{dots}v - (Opcional, c{false}c) Se verdadeiro não haverá ligação entre os pontos.}d }L*/
 		add: {
 			value: function(x, y, name, dots) {
-				let ytype = __Type(y).type;
-				if (ytype === "array") {
-					let matrix = __setSort(x, y);
-					if (matrix === null || matrix[0].length < 2) return false;
-					y = matrix[1];
-					x = matrix[0];
-				} else if (ytype === "function") {
-					x = __setSort(x);
-					if (x === null || x[0].length < 2 )  return false;
-					if (x[0][0] === x[0][x[0].length-1]) return false;
-					x = x[0];
-				} else	{return false;}
-				this._add(x, y, name, (dots === true ? "dot" : "line"), true);
-				return true;
+				return this._add(x, y, name, (dots === true ? "dot" : "line"), true);
       }
 		},
 		/**t{b{void}b addFit(b{object}b fit2d, b{string}b name, b{string}b type)}t*/
@@ -5236,6 +5307,7 @@ const wd = (function() {
 		type:    {value: function(x){return __Type(x);}},
 		fit: {value: function(){return __Fit2D.apply(null, Array.prototype.slice.call(arguments));}},
 		plot: {value: function(){return __Data2D.apply(null, Array.prototype.slice.call(arguments));}},
+		test: {value: function(){return __setUnique.apply(null, Array.prototype.slice.call(arguments));}},
 	});
 
 /* == BLOCO 4 ================================================================*/
