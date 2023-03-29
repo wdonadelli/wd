@@ -1390,21 +1390,7 @@ const wd = (function() {
 		/**d{Retorna valores do eixo y.}d}L}l*/
 		y: {get: function() {return this._y}}
 	});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	/**4{Plotagem de Dados}4	*/
 	/**f{b{object}b __Data2D(b{string}b title, b{string}b xLabel, b{string}b yLabel)}f*/
 	/**p{Objeto para preparar dados para construção de gráfico 2D (v{x, y}v).}p l{*/
 	/**d{v{title}v - Título do gráfico.}d */
@@ -1416,11 +1402,7 @@ const wd = (function() {
 			_title:  {value: String(title).trim()},  /* título do gráfico */
 			_yLabel: {value: String(xLabel).trim()}, /* nome do eixo x */
 			_yLabel: {value: String(yLabel).trim()}, /* nome do eixo y */
-			_Ends:   {value: {x: [], y: []}}, /* valores mínimo é máximo de x e y */
-
-
-			_x:      {value: [], writable: true},    /* lista com todos os valores de x */
-			_y:      {value: [], writable: true},    /* lista com todos os valores de y */
+			_Ends:   {value: {x: [], y: []}},        /* valores mínimo é máximo de x e y */
 			_color:  {value: -1, writable: true},    /* contador de cores */
 			_plot:   {value: []},                    /* registros das entrada de dados */
 			_data:   {value: 0, writable: true},     /* registros da construção do gráfico */
@@ -1441,40 +1423,43 @@ const wd = (function() {
 		/**t{b{object}b _position}t d{Registra a posição relativa da área de plotagem:}d L{*/
 		/**t{x1}t d{Início do eixo x.}d t{x2}t d{Fim do eixo x.}d t{y1}t d{Início do eixo y.}d t{y2}t d{Fim do eixo y.}d  }L */
 		_position: {value: {x1: 0.10, x2: 0.95, y1: 0.1, y2: 0.90}},
-
-
-
-
-
-		/**t{b{number}b _deltaX}t d{Medida do eixo v{x}v}d*/
-		_deltaX: {get: function() {return this._horizontal * (this._position.x2 - this._position.x1);}},
-		/**t{b{number}b _deltaY}t d{Medida do eixo v{y}v}d*/
-		_deltaY: {get: function() {return this._vertical * (this._position.y2 - this._position.y1);}},
-		/**t{b{number}b _xDelta}t d{Diferença entre o maior e o menor valor em v{x}v.}d*/
-		_xDelta: {get: function() {return this._x[this._x.length-1] - this._x[0];}},
-		/**t{b{number}b _yDelta}t d{Diferença entre o maior e o menor valor em v{y}v.}d*/
-		_yDelta: {get: function() {return this._y[this._y.length-1] - this._y[0];}},
-
-
+		/**t{b{number}b _width}t d{Comprimento do eixo v{x}v em pixels.}d*/
+		_width: {get: function() {return this._horizontal * (this._position.x2 - this._position.x1);}},
+		/**t{b{number}b _height}t d{Altura do eixo v{y}v em pixels.}d*/
+		_height: {get: function() {return this._vertical * (this._position.y2 - this._position.y1);}},
+		/**t{b{string}b _xTarget(b{number}b x)}t*/
+		/**d{Retorna o posicionamento relativo de determinado valor real do eixo v{x}v dentro da área de plotagem.}d L{*/
+		/**d{v{x}v - Valor real do eixo v{x}v.}d }L*/
 		_xTarget: {
 			value: function(x) {
-				let start = this._horizontal * this._position.x1;
-				let delta = ((this._deltaX/this._xDelta) * (x - this._x[0])) + start;
-				let point = 100*delta/this._horizontal;
-				return String(point)+"%";
+				let xn = this._xEnds();
+				let x1 = xn[0];
+				let x2 = xn[1];
+				let p1 = this._horizontal * this._position.x1;
+				let dp = this._width;
+				let dx = x2 - x1;
+				let p2 = ((dp/dx)*(x - x1)) + p1; /* dp/dx = (p2 - p1)/(x - x1) */
+				return String(100*p2/this._horizontal)+"%";
 			}
 		},
+		/**t{b{string}b _yTarget(b{number}b y)}t*/
+		/**d{Retorna o posicionamento relativo de determinado valor real do eixo v{x}v dentro da área de plotagem.}d L{*/
+		/**d{v{y}v - Valor real do eixo v{y}v.}d }L*/
 		_yTarget: {
 			value: function(y) {
-				let start = this._vertical * this._position.y1;
-				let delta = ((this._deltaY/this._yDelta) * (y - this._y[0])) + start;
-				let point = 100*delta/this._vertical;
-				return String(point)+"%";
+				let yn = this._yEnds();
+				let y1 = yn[0];
+				let y2 = yn[1];
+				let p1 = this._vertical * this._position.y1;
+				let dp = this._height;
+				let dy = y2 - y1;
+				let p2 = ((dp/dy)*(y - y1)) + p1; /* dp/dy = (p2 - p1)/(y - y1) */
+				return String(100*p2/this._vertical)+"%";
 			}
 		},
-
-
-
+		/**t{b{array}b _xEnds(b{array}b x)}t*/
+		/**d{Define e retorna os extremos mínimo (item 0) e máximo (item 1) do eixo v{x}v}d L{*/
+		/**d{v{x}v - (opcional) Lista de valores para compor o eixo v{x}v. Se não informado, apenas retorna os extremos.}d }L*/
 		_xEnds: {
 			value: function(x) {
 				let ends = this._Ends.x;
@@ -1484,6 +1469,9 @@ const wd = (function() {
 				return this._xEnds();
 			}
 		},
+		/**t{b{array}b _yEnds(b{array}b y)}t*/
+		/**d{Define e retorna os extremos mínimo (item 0) e máximo (item 1) do eixo v{y}v}d L{*/
+		/**d{v{x}v - (opcional) Lista de valores para compor o eixo v{y}v. Se não informado, apenas retorna os extremos.}d }L*/
 		_yEnds: {
 			value: function(y) {
 				let ends = this._Ends.y;
@@ -1497,21 +1485,44 @@ const wd = (function() {
 				return this._yEnds();
 			}
 		},
+		/**t{b{number}b _dx}t d{Retorna o menor intervalo em v{x}v}d*/
+		_dx: {
+			get: function() {
+				let x = this._xEnds();
+				return this._gap * (x[1] - x[0]) / (this._width);
+			}
+		},
 
 
+		_getFmatrix: {
+			value: function(x1, x2, f) {
+				let x  = [];
+				let dx = this._dx;
+				let i = -1;
+				while ((x1 + (++i * dx)) <= x2)
+					x.push(x1 + (i * dx));
+				let matrix = __setFunction(x, f);
+				if (matrix === null || matrix[0].length < 2) return null;
+				this._yEnds(matrix[1]);
+				return matrix;
+			}
+		},
 
-
-
-
-
-
-
-
-
-
-
-
-
+		_setFdata: {
+			value: function() {
+				let i = -1;
+				while (++i < this._plot.length) {
+					let y = this._plot[i].y;
+					let x = this._plot[i].x;
+					let f = __Type(y).type;
+					if (f !== "function") continue;
+					let matrix = this._getFmatrix(Math.min.apply(null, x), Math.max.apply(null, x), y);
+					if (matrix === null) return null;
+					this._plot[i].x = matrix[0];
+					this._plot[i].y = matrix[1];
+				}
+			}
+		},
 		/**t{b{void}b _add(b{array}b x, b{array|function}b y, b{string}b name, b{string}b type, b{boolean}b newColor)}t*/
 		/**d{Adiciona dados do gráfico ao v{_plot}v}d L{*/
 		/**d{v{x}v - Lista de valores para o eixo v{x}v.}d */
@@ -1564,14 +1575,15 @@ const wd = (function() {
 		/**d{v{name}v - Nome da plotagem.}d*/
 		/**d{v{type}v - (opcional, v{"bestFit"}v) Nome da regressão conforme objeto v{__Fit2D}v.}d }L*/
 		addFit: {
-			value: function(fit2d, name, type) {
-				if (!(fit2d instanceof __Fit2D)) return false;
+			value: function(x, y, name, type) {
+				let fit2d;
+				try {fit2d = __Fit2D(x, y);} catch(e) {return false;}
 				let types = ["linear", "exponential", "geometric"];
 				if (types.indexOf(type) < 0) type = "bestFit";
 				let data = fit2d[type];
 				if (data === null) return false;
-				let x = fit2d.x;
-				let y = fit2d.y;
+				x = fit2d.x;
+				y = fit2d.y;
 				this._add(x, y, name, "dot", true);
 				this._add([x[0], x[x.length - 1]], data.function, data.math, "line", true);
 				if (data.deviation !== 0) {
@@ -1583,71 +1595,17 @@ const wd = (function() {
 				return true;
       }
 		},
+
+
 		make: {
 			value: function() {
-				if (this._data !== null) return this._data;
-				this._data = [];
-				this._x = this._getX;
-				this._y = this._getY;
-				if (this._x === null || this._y === null) return null;
-
-
-
+				let test = this._setFdata();
 
 
 
 			}
+		}
 
-
-		},
-		_getX: {
-			get: function() {
-				if (this._data === null) return this.make();
-				let x = [];
-				let i = -1;
-				while (++i < this._plot.length)
-					x = x.concat(this._plot[i].x);
-				let x1    = Math.min.apply(null, x);
-				let x2    = Math.max.apply(null, x);
-				if (x1 === x2) return null;
-				let list  = [];
-				let delta = this._gap * (x2 - x1) / (this._deltaX);
-				i = -1;
-				while ((x1 + (++i * delta)) <= x2)
-					list.push(x1 + (i * delta));
-				return list;
-			}
-		},
-		_getY: {
-			get: function() {
-				if (this._data === null) return this.make();
-				let y = [];
-				let i = -1;
-				while (++i < this._plot.length) {
-					let object = {
-						name:  this._plot[i].name,
-						type:  this._plot[i].type,
-						color: this._plot[i].color
-					};
-					let type = __Type(this._plot[i].y).type;
-					if (type === "array") {
-						object.x = this._plot[i].x;
-						object.y = this._plot[i].y;
-					} else if (type === "function") {
-						let matrix = __setFunction(this._x, this._plot[i].y);
-						if (matrix === null || matrix[0].length < 2) return null;
-						object.x = matrix[0];
-						object.y = matrix[1];
-					}
-					y.push(Math.min.apply(null, object.y));
-					y.push(Math.max.apply(null, object.y));
-					this._data.push(object);
-				}
-				let y1 = Math.min.apply(null, y);
-				let y2 = Math.max.apply(null, y);
-				return y1 !== y2 ? [y1, y2] : (y1 === 0 ? [-1, 1] : [y1-y1, y1+y1]);
-			}
-		},
 		/**}l*/
 	});
 
