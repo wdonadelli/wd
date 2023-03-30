@@ -1406,14 +1406,13 @@ const wd = (function() {
 			_color:  {value: -1, writable: true},    /* contador de cores */
 			_plot:   {value: []},                    /* registros das entrada de dados */
 			_data:   {value: 0, writable: true},     /* registros da construção do gráfico */
-
 		});
 	}
 
 	Object.defineProperties(__Data2D.prototype, {
 		constructor: {value: __Data2D},
 		/**t{b{number}b _gap}t d{Distância entre pixels. Quanto menor mais preciso e mais demorado.}d*/
-		_gap: {value: 3},
+		_gap: {value: 5},
 		/**t{b{number}b _grid}t d{Dimensionamento da grade do gráfico.}d*/
 		_grid: {value: 5},
 		/**t{b{number}b _horizontal}t d{Medida horizontal da área do gráfico.}d*/
@@ -1454,7 +1453,7 @@ const wd = (function() {
 				let dp = this._height;
 				let dy = y2 - y1;
 				let p2 = ((dp/dy)*(y - y1)) + p1; /* dp/dy = (p2 - p1)/(y - y1) */
-				return String(100*p2/this._vertical)+"%";
+				return String(100*(1-p2/this._vertical))+"%";
 			}
 		},
 		/**t{b{array}b _xEnds(b{array}b x)}t*/
@@ -1563,10 +1562,10 @@ const wd = (function() {
 		/**d{v{x}v - Lista de valores para o eixo v{x}v.}d */
 		/**d{v{y}v - Lista de valores ou função v{f(x)}v para o eixo v{y}v.}d */
 		/**d{v{name}v - Nome da plotagem.}d*/
-		/**d{v{dots}v - (Opcional, c{false}c) Se verdadeiro não haverá ligação entre os pontos.}d }L*/
+		/**d{v{connect}v - (Opcional, c{false}c) Se verdadeiro haverá ligação entre os pontos.}d }L*/
 		add: {
-			value: function(x, y, name, dots) {
-				return this._add(x, y, name, (dots === true ? "dot" : "line"), true);
+			value: function(x, y, name, connect) {
+				return this._add(x, y, name, (connect === true ? "line:3px" : "circle:3px"), true);
       }
 		},
 		/**t{b{void}b addFit(b{object}b fit2d, b{string}b name, b{string}b type)}t*/
@@ -1584,24 +1583,39 @@ const wd = (function() {
 				if (data === null) return false;
 				x = fit2d.x;
 				y = fit2d.y;
-				this._add(x, y, name, "dot", true);
-				this._add([x[0], x[x.length - 1]], data.function, data.math, "line", true);
+				this._add(x, y, name, "circle:3px", true);
+				this._add([x[0], x[x.length - 1]], data.function, data.math, "line:3px", true);
 				if (data.deviation !== 0) {
 					let upper = function(x) {return data.function(x)+data.deviation;}
 					let lower = function(x) {return data.function(x)-data.deviation;}
-					this._add([x[0], x[x.length - 1]], upper, "", "dash");
-					this._add([x[0], x[x.length - 1]], lower, "", "dash");
+					this._add([x[0], x[x.length - 1]], upper, "", "circle:1px", true);
+					this._add([x[0], x[x.length - 1]], lower, "", "circle:1px");
 				}
 				return true;
       }
 		},
 
 
-		make: {
+		data: {
 			value: function() {
 				let test = this._setFdata();
+				if (test === null) return null;
+				/* clonar plot e adicionar legendas */
+				let plot = this._plot.slice();
+				plot.push({x: "50%", y: "5%", name: this._title, type: "text:h:n", color: -1});
+				plot.push({
+					x: String(100*(this._position.x1 + this._position.x2)/2)+"%",
+					y: String(100*(1-this._position.y1))+"%",
+					name: this._xLabel,
+					type: "text:h:n",
+					color: -1
+				});
 
 
+
+
+
+				return plot;
 
 			}
 		}
@@ -1613,7 +1627,198 @@ const wd = (function() {
 
 
 
+	function __Plot2D(title, xLabel, yLabel) {
+		if (!(this instanceof __Plot2D)) return new __Plot2D(title, xLabel, yLabel);
+		__Data2D.call(this, title, xLabel, yLabel);
+		Object.defineProperties(this, {
+			_svg: {value: document.createElementNS("http://www.w3.org/2000/svg", "svg")}
+		});
+		this._svg.setAttribute("width", "100%");
+		this._svg.setAttribute("height", "100%");// String(100*this._vertical/this._horizontal)+"%");
+		this._svg.style.border = "1px solid red";
+		// FIXME ???????
+	}
 
+	__Plot2D.prototype = Object.create(__Data2D.prototype, {
+		constructor: {value: __Plot2D},
+		_rgb: {
+			value: function(n) {
+				if (n < 0) return "#000000";
+				let rgb = ["1,0,0", "0,0,1", "0,1,0", "1,0,1", "0,1,1", "1,1,0"];
+				let pow = ["255", "200", "150", "100", "50"];
+				let i   = n%rgb.length;
+				let j   =  __integer(n/rgb.length)%pow.length;
+				let val = rgb[i].replace(/1/g, pow[j]);
+				return "rgb("+val+")";
+			}
+		},
+		_text: {
+			value: function(x, y, _text, _anchor, color) {
+				if (_text === undefined || _text === null || _text === "") return;
+				let text    = document.createElementNS("http://www.w3.org/2000/svg", "text");
+				let config  =
+
+				let vanchor = ["start", "middle", "end"];
+				let vbase   = ["auto", "middle", "hanging"];
+				let anchor  = {n: 1, ne: 2, e: 2, se: 2, s: 1, sw: 0, w: 0, nw: 0, c: 1};
+				let base    = {n: 2, ne: 2, e: 1, se: 0, s: 0, sw: 0, w: 1, nw: 2, c: 1};
+
+
+				let attr = {
+
+
+
+
+
+
+
+				}
+
+
+
+
+
+				point       = point in base ? point : "c" ;
+				return wd_svg_create("text", {
+					x: x, y: y,
+					fill: color,
+					"text-anchor": vanchor[anchor[point]],
+					"dominant-baseline": vbase[base[point]],
+					"font-size": "0.8em",
+					"font-family": "monospace",
+					"transform": vertical === true ? "rotate(270)" : "",
+					"font-weight": bold === true ? "bold" : "normal",
+					tspan: text,
+
+				};
+
+
+
+			}
+		},
+		_tip: {
+			value: function(tip, target) {
+				if (tip === undefined || tip === null) return;
+				let title = document.createElementNS("http://www.w3.org/2000/svg", "title");
+				title.textContent = tip;
+				target.appendChild(title);
+			}
+		},
+		_line: {
+			value: function(x1, y1, x2, y2, width, color, tip) {
+				let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+				let attr = {
+					x1: this._xTarget(x1),    y1: this._yTarget(y1),
+					x2: this._xTarget(x2),    y2: this._yTarget(y2),
+					stroke: this._rgb(color), "stroke-width": width
+				};
+				for (let i in attr) line.setAttribute(i, attr[i]);
+				this._tip(tip, line);
+				this._svg.appendChild(line);
+			}
+		},
+		_rect: {
+			value: function(x1, y1, x2, y2, color, tip) {
+				let line = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+				let attr = {
+					x: this._xTarget(Math.min(x1, x2)),
+					y: this._yTarget(Math.min(y1, y2)),
+					width:  this._xTarget(Math.max(x1, x2) - Math.min(x1, x2)),
+					height: this._yTarget(Math.max(y1, y2) - Math.min(y1, y2)),
+					fill: this._rgb(color), opacity: 0.9
+				};
+				for (let i in attr) line.setAttribute(i, attr[i]);
+				this._svg.appendChild(line);
+			}
+		},
+		_circle: {
+			value: function(cx, cy, r, color) {
+				let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+				let attr = {
+					cx: this._xTarget(cx), cy: this._yTarget(cy), r: r, fill: this._rgb(color)
+				};
+				for (let i in attr) circle.setAttribute(i, attr[i]);
+				this._svg.appendChild(circle);
+			}
+		},
+		plot: {
+			value: function() {
+				let plot = this.data();
+				if (plot === null) return null;
+				let i = -1;
+				while (++i < plot.length) {
+					let config = plot[i].type.split(":");
+					let type   = config[0];
+					let width  = config[1];
+
+					let color  = plot[i].color;
+					let x = plot[i].x;
+					let y = plot[i].y;
+					let j = -1;
+					while (++j < x.length) {
+						if (type === "circle"){
+							this._circle(x[j], y[j], width, color);
+						}
+						else if (type === "line") {
+							if (j === 0) continue;
+							let tip = "("+[x[j-1], y[j-1]].join(", ")+")\n("+[x[j], y[j]].join(", ")+")"
+							this._line(x[j-1], y[j-1], x[j], y[j], width, color, tip);
+
+						} else if (type === "text") {
+							this._text()
+
+
+
+
+						}
+					}
+				}
+
+				document.body.appendChild(this._svg);
+
+
+
+
+
+
+
+			}
+		}
+
+
+
+
+
+	});
+
+
+
+
+	function wd_svg_rect(x1, y1, x2, y2, title, color) { /* cria retângulos: coordenadas nos cantos opostos */
+		return wd_svg_create("rect", {
+			x:       x2 > x1 ? x1 : x2,
+			y:       y2 > y1 ? y1 : y2,
+			width:   x2 > x1 ? x2-x1 : x1-x2,
+			height:  y2 > y1 ? y2-y1 : y1-y2,
+			fill:    color,
+			title:   title,
+			opacity: 0.9,
+		});
+	}
+	function wd_svg_dots(cx, cy, r, title, color) { /* cria pontos: coordenada no centro */
+	 	return wd_svg_create("circle", {
+			cx: cx, cy: cy, r: r, fill: color, title: title
+		});
+	}
+	function wd_svg_line(x1, y1, x2, y2, width, title, color) { /* cria linhas: coordenadas no início e fim */
+		return wd_svg_create("line", {
+			x1: x1, y1: y1, x2: x2, y2: y2,
+			stroke: color,
+			"stroke-width":     width === 0 ? "1px" : width+"px",
+			"stroke-dasharray": width === 0 ? "1,5" : "0",
+			title: title
+		});
+	}
 
 
 
@@ -5264,7 +5469,7 @@ const wd = (function() {
 		now:     {get:   function() {return WD(wd_str_now());}},
 		type:    {value: function(x){return __Type(x);}},
 		fit: {value: function(){return __Fit2D.apply(null, Array.prototype.slice.call(arguments));}},
-		plot: {value: function(){return __Data2D.apply(null, Array.prototype.slice.call(arguments));}},
+		plot: {value: function(){return __Plot2D.apply(null, Array.prototype.slice.call(arguments));}},
 		test: {value: function(){return __setUnique.apply(null, Array.prototype.slice.call(arguments));}},
 	});
 
