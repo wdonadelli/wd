@@ -1400,12 +1400,12 @@ const wd = (function() {
 		if (!(this instanceof __Data2D)) return new __Data2D(title, xLabel, yLabel);
 		Object.defineProperties(this, {
 			_title:  {value: String(title).trim()},  /* título do gráfico */
-			_yLabel: {value: String(xLabel).trim()}, /* nome do eixo x */
+			_xLabel: {value: String(xLabel).trim()}, /* nome do eixo x */
 			_yLabel: {value: String(yLabel).trim()}, /* nome do eixo y */
 			_Ends:   {value: {x: [], y: []}},        /* valores mínimo é máximo de x e y */
 			_color:  {value: -1, writable: true},    /* contador de cores */
 			_plot:   {value: []},                    /* registros das entrada de dados */
-			_data:   {value: 0, writable: true},     /* registros da construção do gráfico */
+			_data:   {value: null, writable: true},  /* registros da construção do gráfico */
 		});
 	}
 
@@ -1491,8 +1491,11 @@ const wd = (function() {
 				return this._gap * (x[1] - x[0]) / (this._width);
 			}
 		},
-
-
+		/**t{b{matrix}b _getFmatrix(b{number}b x1, b{number}b x2, b{function}b f)}t*/
+		/**p{Retorna uma matriz com o conjunto de coordenadas (v{x, y}v) de uma função.}p L{*/
+		/**d{v{x1}v - Valor inicial para v{x}v}d*/
+		/**d{v{x2}v - Valor final para v{x}v}d*/
+		/**d{v{f}v - Função para obter v{y = f(x)}v}d }L*/
 		_getFmatrix: {
 			value: function(x1, x2, f) {
 				let x  = [];
@@ -1506,22 +1509,25 @@ const wd = (function() {
 				return matrix;
 			}
 		},
-
-		_setFdata: {
-			value: function() {
-				let i = -1;
-				while (++i < this._plot.length) {
-					let y = this._plot[i].y;
-					let x = this._plot[i].x;
-					let f = __Type(y).type;
-					if (f !== "function") continue;
-					let matrix = this._getFmatrix(Math.min.apply(null, x), Math.max.apply(null, x), y);
-					if (matrix === null) return null;
-					this._plot[i].x = matrix[0];
-					this._plot[i].y = matrix[1];
-				}
+		_relativeWidth: {
+			value: function(x1, x2) {
+				let min = this._xTarget(x1);
+				let max = this._xTarget(x2);
+				let rel = __Type(max).value - __Type(min).value;
+				return String(100*rel)+"%";
 			}
 		},
+		_relativeHeight: {
+			value: function(y1, y2) {
+				let min = this._yTarget(y1);
+				let max = this._yTarget(y2);
+				let rel = __Type(min).value - __Type(max).value;
+				return String(100*rel)+"%";
+			}
+		},
+
+
+
 		/**t{b{void}b _add(b{array}b x, b{array|function}b y, b{string}b name, b{string}b type, b{boolean}b newColor)}t*/
 		/**d{Adiciona dados do gráfico ao v{_plot}v}d L{*/
 		/**d{v{x}v - Lista de valores para o eixo v{x}v.}d */
@@ -1598,24 +1604,59 @@ const wd = (function() {
 
 		data: {
 			value: function() {
-				let test = this._setFdata();
-				if (test === null) return null;
-				/* clonar plot e adicionar legendas */
-				let plot = this._plot.slice();
-				plot.push({x: "50%", y: "5%", name: this._title, type: "text:h:n", color: -1});
-				plot.push({
-					x: String(100*(this._position.x1 + this._position.x2)/2)+"%",
-					y: String(100*(1-this._position.y1))+"%",
-					name: this._xLabel,
-					type: "text:h:n",
+				if (this._data !== null) return this._data;
+				/* clonar _plot em _data */
+				this._data = this._plot.slice();
+				/* alterar de função para conjunto de dados */
+				let i = -1;
+				while (++i < this._data.length) {
+					let f = __Type(this._data[i].y).type;
+					if (f !== "function") continue;
+					let y = this._data[i].y;
+					let x = this._data[i].x;
+					let matrix = this._getFmatrix(Math.min.apply(null, x), Math.max.apply(null, x), y);
+					if (matrix === null) return null;
+					this._data[i].x = matrix[0];
+					this._data[i].y = matrix[1];
+				}
+				/* adicionar legendas e linhas */
+				this._data.push(
+				{
+					x: "50%",
+					y: String(100*(1-this._position.y2)/2)+"%",
+					name: this._title,
+					type: "text:hc",
 					color: -1
-				});
+				},
+				{
+					x: String(100*(this._position.x1 + this._position.x2)/2)+"%",
+					y: String(100*(1+this._position.y2)/2)+"%",
+					name: this._xLabel,
+					type: "text:hc",
+					color: -1
+				},
+				{
+					x: "50%",
+					y: "50%",
+					name: this._yLabel,
+					type: "text:hc",
+					color: -1
+				},
+				{
+					x: this._xEnds(),
+					y: this._yEnds(),
+					type: "rect:2px",
+					color: -1
+				}
+			);
 
 
 
 
 
-				return plot;
+
+
+				return this._data;
 
 			}
 		}
@@ -1633,16 +1674,17 @@ const wd = (function() {
 		Object.defineProperties(this, {
 			_svg: {value: document.createElementNS("http://www.w3.org/2000/svg", "svg")}
 		});
-		this._svg.setAttribute("width", "100%");
-		this._svg.setAttribute("height", "100%");// String(100*this._vertical/this._horizontal)+"%");
+		this._svg.setAttribute("width", this._horizontal/2+"px");
+		this._svg.setAttribute("height", this._vertical/2+"px");
 		this._svg.style.border = "1px solid red";
-		// FIXME ???????
+
 	}
 
 	__Plot2D.prototype = Object.create(__Data2D.prototype, {
 		constructor: {value: __Plot2D},
 		_rgb: {
 			value: function(n) {
+				if (n === null || n === undefined) return "transparent";
 				if (n < 0) return "#000000";
 				let rgb = ["1,0,0", "0,0,1", "0,1,0", "1,0,1", "0,1,1", "1,1,0"];
 				let pow = ["255", "200", "150", "100", "50"];
@@ -1653,47 +1695,27 @@ const wd = (function() {
 			}
 		},
 		_text: {
-			value: function(x, y, _text, _anchor, color) {
-				if (_text === undefined || _text === null || _text === "") return;
-				let text    = document.createElementNS("http://www.w3.org/2000/svg", "text");
-				let config  =
-
+			value: function(x, y, text, point, color) {
+				if (text === undefined || text === null || text === "") return;
+				let content = document.createElementNS("http://www.w3.org/2000/svg", "text");
+				let tspan   = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
 				let vanchor = ["start", "middle", "end"];
 				let vbase   = ["auto", "middle", "hanging"];
 				let anchor  = {n: 1, ne: 2, e: 2, se: 2, s: 1, sw: 0, w: 0, nw: 0, c: 1};
 				let base    = {n: 2, ne: 2, e: 1, se: 0, s: 0, sw: 0, w: 1, nw: 2, c: 1};
-
-
 				let attr = {
-
-
-
-
-
-
-
-				}
-
-
-
-
-
-				point       = point in base ? point : "c" ;
-				return wd_svg_create("text", {
-					x: x, y: y,
-					fill: color,
-					"text-anchor": vanchor[anchor[point]],
-					"dominant-baseline": vbase[base[point]],
-					"font-size": "0.8em",
-					"font-family": "monospace",
-					"transform": vertical === true ? "rotate(270)" : "",
-					"font-weight": bold === true ? "bold" : "normal",
-					tspan: text,
-
+					x: x,
+					y: y,
+					fill: this._rgb(color),
+					"text-anchor": vanchor[anchor[point.substr(1)]],
+					"dominant-baseline": vbase[base[point.substr(1)]],
+					"font-family": "Courier New",
+					"transform": point[0] === "v" ? "rotate(270)" : "",
 				};
-
-
-
+				for (let i in attr) content.setAttribute(i, attr[i]);
+				tspan.textContent = text;
+				content.appendChild(tspan);
+				this._svg.appendChild(content);
 			}
 		},
 		_tip: {
@@ -1718,17 +1740,19 @@ const wd = (function() {
 			}
 		},
 		_rect: {
-			value: function(x1, y1, x2, y2, color, tip) {
-				let line = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+			value: function(x, y, width, color, tip) {
+				let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+				x = [Math.min.apply(null, x), Math.max.apply(null, x)];
+				y = [Math.min.apply(null, y), Math.max.apply(null, y)];
 				let attr = {
-					x: this._xTarget(Math.min(x1, x2)),
-					y: this._yTarget(Math.min(y1, y2)),
-					width:  this._xTarget(Math.max(x1, x2) - Math.min(x1, x2)),
-					height: this._yTarget(Math.max(y1, y2) - Math.min(y1, y2)),
-					fill: this._rgb(color), opacity: 0.9
-				};
-				for (let i in attr) line.setAttribute(i, attr[i]);
-				this._svg.appendChild(line);
+					x: this._xTarget(x[0]), y: this._yTarget(y[1]),
+					width:  this._relativeWidth(x[0], x[1]),
+					height: this._relativeHeight(y[0], y[1]),
+					fill: this._rgb(color), opacity: 0.9,
+					"stroke-width": width,
+				};console.log(attr);
+				for (let i in attr) rect.setAttribute(i, attr[i]);
+				this._svg.appendChild(rect);
 			}
 		},
 		_circle: {
@@ -1749,27 +1773,28 @@ const wd = (function() {
 				while (++i < plot.length) {
 					let config = plot[i].type.split(":");
 					let type   = config[0];
-					let width  = config[1];
-
+					let value  = config[1];
 					let color  = plot[i].color;
+					let name   = plot[i].name;
 					let x = plot[i].x;
 					let y = plot[i].y;
 					let j = -1;
 					while (++j < x.length) {
-						if (type === "circle"){
-							this._circle(x[j], y[j], width, color);
-						}
-						else if (type === "line") {
-							if (j === 0) continue;
-							let tip = "("+[x[j-1], y[j-1]].join(", ")+")\n("+[x[j], y[j]].join(", ")+")"
-							this._line(x[j-1], y[j-1], x[j], y[j], width, color, tip);
-
-						} else if (type === "text") {
-							this._text()
-
-
-
-
+						switch(type) {
+							case "circle":
+								this._circle(x[j], y[j], value, color);
+								break;
+							case "line":
+								if (j === 0) continue;
+								this._line(x[j-1], y[j-1], x[j], y[j], value, color);
+								break;
+							case "rect":
+								if (j !== 0) continue;
+								this._rect(x, y, value, color);
+								break;
+							case "text":
+								this._text(x, y, name, value, color);
+								break;
 						}
 					}
 				}
