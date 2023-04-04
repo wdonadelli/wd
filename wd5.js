@@ -905,7 +905,7 @@ const wd = (function() {
 	}
 /*----------------------------------------------------------------------------*/
 	/**f{b{string}b __number(b{number}b value)}f*/
-	/**p{Retorna o tipo de número: v{"&#177;integer", "&#00B1;float", "&#00B1;infinity", "&#00B1;real", "zero" e "not numeric"}v.}p*/
+	/**p{Retorna o tipo de número: v{"&#177;integer", "&#177;float", "&#177;infinity", "&#177;real", "zero" e "not numeric"}v.}p*/
 	/**l{d{v{value}v - Valor a ser checado.}d}l*/
 	function __number(value) {
 		let input = __Type(value);
@@ -1423,7 +1423,7 @@ const wd = (function() {
 		_vertical: {value: Math.min(window.screen.width, window.screen.height)},
 		/**t{b{object}b _position}t d{Registra a posição relativa da área de plotagem:}d L{*/
 		/**t{x1}t d{Início do eixo x.}d t{x2}t d{Fim do eixo x.}d t{y1}t d{Início do eixo y.}d t{y2}t d{Fim do eixo y.}d  }L */
-		_position: {value: {x1: 0.15, x2: 0.95, y1: 0.1, y2: 0.90}},
+		_position: {value: {x1: 0.12, x2: 0.95, y1: 0.05, y2: 0.90}},
 		/**t{b{number}b _width}t d{Comprimento do eixo v{x}v em pixels.}d*/
 		_width: {get: function() {return this._horizontal * (this._position.x2 - this._position.x1);}},
 		/**t{b{number}b _height}t d{Altura do eixo v{y}v em pixels.}d*/
@@ -1432,8 +1432,6 @@ const wd = (function() {
 		_p100: {
 			value: function(n) {return String(100*n)+"%";}
 		},
-
-
 		/**t{b{string}b _xTarget(b{number}b x)}t*/
 		/**d{Retorna o posicionamento relativo de determinado valor real do eixo v{x}v dentro da área de plotagem.}d L{*/
 		/**d{v{x}v - Valor real do eixo v{x}v.}d }L*/
@@ -1445,7 +1443,7 @@ const wd = (function() {
 				let p1 = this._horizontal * this._position.x1;
 				let dp = this._width;
 				let dx = x2 - x1;
-				let p2 = ((dp/dx)*(x - x1)) + p1; /* dp/dx = (p2 - p1)/(x - x1) */
+				let p2 = ((dp/dx)*(x - x1)) + p1; /* dp/dx = (p2 - p1)/(x2 - x1) = (p2 - p1)/(x - x1) */
 				return this._p100(p2/this._horizontal);
 			}
 		},
@@ -1457,11 +1455,11 @@ const wd = (function() {
 				let yn = this._yEnds();
 				let y1 = yn[0];
 				let y2 = yn[1];
-				let p1 = this._vertical * this._position.y1;
-				let dp = this._height;
+				let p1 = this._vertical * this._position.y2;
+				let dp = -this._height;
 				let dy = y2 - y1;
-				let p2 = ((dp/dy)*(y - y1)) + p1; /* dp/dy = (p2 - p1)/(y - y1) */
-				return this._p100(1-p2/this._vertical);
+				let p2 = ((dp/dy)*(y - y1)) + p1; /* dp/dy = (p1 - p2)/(y2 - y1) = (p - p2)/(y - y1) */
+				return this._p100(p2/this._vertical);
 			}
 		},
 		/**t{b{array}b _xEnds(b{array}b x)}t*/
@@ -1517,9 +1515,6 @@ const wd = (function() {
 				return matrix;
 			}
 		},
-
-
-
 		/**t{b{void}b _add(b{array}b x, b{array|function}b y, b{string}b name, b{string}b type, b{boolean}b newColor)}t*/
 		/**d{Adiciona dados do gráfico ao v{_plot}v}d L{*/
 		/**d{v{x}v - Lista de valores para o eixo v{x}v.}d */
@@ -1593,8 +1588,8 @@ const wd = (function() {
 				return true;
       }
 		},
-
-
+		/**t{b{void}b data()}t*/
+		/**d{Prepara os dados para renderização do gráfico.}d*/
 		data: {
 			value: function() {
 				if (this._data !== null) return this._data;
@@ -1616,7 +1611,8 @@ const wd = (function() {
 				let self   = this;
 				let middle = (this._position.y1 + this._position.y2)/2;
 				let center = (this._position.x1 + this._position.x2)/2;
-				let top    = (1 - self._position.y2)/2;
+				let top    = (self._position.y2+1)/2;
+				let bottom = (self._position.y1)/2;
 				let ratio  = this._vertical/this._horizontal;
 				let width  = this._position.x2 - this._position.x1;
 				let height = this._position.y2 - this._position.y1;
@@ -1625,8 +1621,8 @@ const wd = (function() {
 					name: self._title, type: "text:hc", color: -1
 				};
 				let xLabel = {
-					x: [self._p100(center)], y: [self._p100(1-10/self._vertical)],
-					name: self._xLabel, type: "text:hs", color: -1
+					x: [self._p100(center)], y: [self._p100(bottom)],
+					name: self._xLabel, type: "text:hc", color: -1
 				};
 				let yLabel = {
 					x: [self._p100(-ratio*middle)], y: [self._p100(10/self._horizontal)],
@@ -1674,27 +1670,6 @@ const wd = (function() {
 
 					this._data.push(hLine, vLine, xValue, yValue);
 				}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-				//wd_svg_label(-this.ratio*ref.cy, ref.l/4, ylabel, "n", true, clr, false)
-
-
-
-
-
-
 				return this._data;
 
 			}
@@ -1718,16 +1693,33 @@ const wd = (function() {
 		Object.defineProperties(this, {
 			_svg: {value: document.createElementNS("http://www.w3.org/2000/svg", "svg")}
 		});
+
+		if ("aspectRatio" in this._svg.style) {
+			//this._svg.style.aspectRatio = this._horizontal/this._vertical;
+		}
 		this._svg.setAttribute("width", this._horizontal/2+"px");
 		this._svg.setAttribute("height", this._vertical/2+"px");
-		this._svg.style.border = "1px solid red";
+		this._svg.style.border = "1px dotted red";
 
 	}
 
 	__Plot2D.prototype = Object.create(__Data2D.prototype, {
 		constructor: {value: __Plot2D},
-		/**t{b{string}b _rgb(b{number}b n)}t*/
-		/**d{Retorna a cor a ser utilizada pelo elemento SVG em RGB (30 opções).}d L{*/
+		_py: {
+			value: function(y, vertical){
+				if (String(y).substr(-1) === "%")
+					return y = this._p100(1 - __Type(y).value)
+				return this.yTarget(y)
+
+
+
+
+			}
+		},
+
+
+		/**t{b{string}b _rgb(b{integer}b n)}t*/
+		/**d{Retorna a cor em RGB definida por v{n}v para ser utilizada pelo elemento SVG.}d L{*/
 		/**d{v{n}v - Retorna transparente, se nulo ou indefinido, preto, se menor que zero, ou cor definida.}d }L*/
 		_rgb: {
 			value: function(n) {
@@ -1741,10 +1733,10 @@ const wd = (function() {
 				return "rgb("+val+")";
 			}
 		},
-		/**t{b{node}b _text(b{number}b x, b{number}b y, b{string}b text, b{string}b point, b{number}b color)}t*/
-		/**d{Retorna elemento para exibir texto em SVG.}d L{*/
-		/**d{v{x}v - Posição relativa em v{x}v.}d*/
-		/**d{v{y}v - Posição relativa em v{y}v.}d*/
+		/**t{b{node}b _text(b{string}b x, b{string}b y, b{string}b text, b{string}b point, b{number}b color)}t*/
+		/**d{Adiciona e retorna elemento SVG para texto.}d L{*/
+		/**d{v{x}v - Posição relativa (%) em v{x}v.}d*/
+		/**d{v{y}v - Posição relativa (%) em v{y}v.}d*/
 		/**d{v{text}v - Conteúdo textual.}d*/
 		/**d{v{point}v - Identifica o alinhamento e o ponto de ancoragem do texto.}d*/
 		/**d{Exemplos: v{hse}v horizontal-sudeste; v{vn}v vertical-norte.}d*/
@@ -1757,8 +1749,12 @@ const wd = (function() {
 				let vbase   = ["auto", "middle", "hanging"];
 				let anchor  = {n: 1, ne: 2, e: 2, se: 2, s: 1, sw: 0, w: 0, nw: 0, c: 1};
 				let base    = {n: 2, ne: 2, e: 1, se: 0, s: 0, sw: 0, w: 1, nw: 2, c: 1};
+				let ratio   = this._vertical/this._horizontal;
+				x = point[0] === "v" ? this._p100(__Type(y).value*ratio) : x;
+				y = point[0] === "v" ? this._p100(__Type(x).value/ratio) : this._p100(1 - __Type(y).value);
+
 				let attr = {
-					x: x, y: y, fill: color < 0 ? "#000000" : this._rgb(color),
+					x: x, y: y, fill: this._rgb(color),
 					"text-anchor":       vanchor[anchor[point.substr(1)]],
 					"dominant-baseline": vbase[base[point.substr(1)]],
 					"font-family":       "monospace",
@@ -1773,8 +1769,8 @@ const wd = (function() {
 			}
 		},
 		/**t{b{node}b _tip(b{string}b tip, b{node}b target}t*/
-		/**d{Retorna uma caixa de dicas ao elemento SVG.}d L{*/
-		/**d{v{tip}v - Valor textual da dica.}d* }L/*/
+		/**d{Retorna elemento SVG para dicas (i{title}i).}d L{*/
+		/**d{v{tip}v - Valor textual da dica.}d }L*/
 		_tip: {
 			value: function(tip) {
 				let title = document.createElementNS("http://www.w3.org/2000/svg", "title");
@@ -1782,10 +1778,10 @@ const wd = (function() {
 				return title;
 			}
 		},
-		/**t{b{node}b _line(b{array}b p1, b{array}b p2, b{string}b width, b{number}b color, b{string}b tip)}t*/
-		/**d{Retorna elemento para exibir texto em SVG.}d L{*/
-		/**d{v{px}v - Coordenadas (v{x1, y1}v) iniciais da linha (relativo (string) ou numérico).}d*/
-		/**d{v{py}v - Coordenadas (v{x2, y2}v) finais da linha (relativo (string) ou numérico).}d*/
+		/**t{b{node}b _line(b{array}b px, b{array}b py, b{string}b width, b{number}b color, b{string}b tip)}t*/
+		/**d{Adiciona e retorna elemento SVG para linha.}d L{*/
+		/**d{v{px}v - Coordenadas (v{x1, y1}v) iniciais da linha (relativo (%, string) ou numérico).}d*/
+		/**d{v{py}v - Coordenadas (v{x2, y2}v) finais da linha (relativo (%, string) ou numérico).}d*/
 		/**d{v{width}v - Espessura da linha em v{px}v.}d*/
 		/**d{v{color}v - Valor da cor da linha.}d*/
 		/**d{v{tip}v - (Opcional) Conteúdo textual da dica.}d }L*/
@@ -1806,6 +1802,8 @@ const wd = (function() {
 				return line;
 			}
 		},
+		/**t{b{node}b _dash(b{array}b px, b{array}b py, b{string}b width, b{number}b color, b{string}b tip)}t*/
+		/**d{Adiciona e retorna elemento SVG para linha tracejada, funciona como v{_line}v.}d*/
 		_dash: {
 			value: function(px, py, width, color, tip) {
 				let line = this._line(px, py, width, color, tip);
@@ -1813,13 +1811,10 @@ const wd = (function() {
 				return line;
 			}
 		},
-
-
-
 		/**t{b{node}b _border(b{array}b p1, b{array}b p2, b{string}b width, b{number}b color, b{string}b tip)}t*/
-		/**d{Retorna uma borda retangular em SVG.}d L{*/
-		/**d{v{px}v - Coordenadas da borda em v{x}v (relativo (string) ou numérico).}d*/
-		/**d{v{py}v - Coordenadas da borda em v{y}v (relativo (string) ou numérico).}d*/
+		/**d{Adiciona e retorna elemento SVG para retângulo sem preenchimento (apenas borda).}d L{*/
+		/**d{v{px}v - Coordenadas da borda em v{x}v (relativo (%, string) ou numérico).}d*/
+		/**d{v{py}v - Coordenadas da borda em v{y}v (relativo (%, string) ou numérico).}d*/
 		/**d{v{width}v - Espessura da linha em v{px}v.}d*/
 		/**d{v{color}v - Valor da cor da borda.}d*/
 		/**d{v{tip}v - (Opcional) Conteúdo textual da dica.}d }L*/
@@ -1844,8 +1839,8 @@ const wd = (function() {
 				return border;
 			}
 		},
-
-
+		/**t{b{node}b _rect(b{array}b p1, b{array}b p2, b{string}b width, b{number}b color, b{string}b tip)}t*/
+		/**d{Adiciona e retorna elemento SVG para retângulo com preenchimento, funciona como v{_border}v.}d*/
 		_rect: {
 			value: function(px, py, width, color, tip) {
 				let rect = this._border(px, py, "1px", color, tip);
@@ -1854,13 +1849,21 @@ const wd = (function() {
 				return rect;
 			}
 		},
+		/**t{b{node}b _circle(b{string}b cx, b{string}b cy, b{string}b r, b{number}b color, b{string}b tip)}t*/
+		/**d{Adiciona e retorna elemento SVG para retângulo sem preenchimento (apenas borda).}d L{*/
+		/**d{v{cx}v - Posição relativa (%) do centro do círculo em v{x}v.}d*/
+		/**d{v{cy}v - Posição relativa (%) do centro do círculo em v{y}v.}d*/
+		/**d{v{r}v - Tamanho relativo do raio do círculo.}d*/
+		/**d{v{color}v - Valor da cor do círculo.}d*/
+		/**d{v{tip}v - (Opcional) Conteúdo textual da dica.}d }L*/
 		_circle: {
-			value: function(cx, cy, r, color) {
+			value: function(cx, cy, r, color, tip) {
 				let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
 				let attr = {
-					cx: this._xTarget(cx), cy: this._yTarget(cy), r: r, fill: this._rgb(color)
+					cx: cx, cy: cy, r: r, fill: this._rgb(color)
 				};
 				for (let i in attr) circle.setAttribute(i, attr[i]);
+				if (tip !== undefined) circle.appendChild(this._tip(tip));
 				this._svg.appendChild(circle);
 				return circle;
 			}
