@@ -1421,13 +1421,10 @@ const wd = (function() {
 		_horizontal: {value: Math.max(window.screen.width, window.screen.height)},
 		/**t{b{number}b _vertical}t d{Medida vertical da área do gráfico.}d*/
 		_vertical: {value: Math.min(window.screen.width, window.screen.height)},
-		/**t{b{object}b _position}t d{Registra a posição relativa da área de plotagem:}d L{*/
+		/**t{b{object}b _area}t d{Registra a posição relativa da área de plotagem:}d L{*/
 		/**t{x1}t d{Início do eixo x.}d t{x2}t d{Fim do eixo x.}d t{y1}t d{Início do eixo y.}d t{y2}t d{Fim do eixo y.}d  }L */
-		_position: {value: {x1: 0.12, x2: 0.95, y1: 0.05, y2: 0.90}},
+		_area: {value: {x1: 0.12, x2: 0.95, y1: 0.08, y2: 0.92}},
 		/**t{b{number}b _width}t d{Comprimento do eixo v{x}v em pixels.}d*/
-		_width: {get: function() {return this._horizontal * (this._position.x2 - this._position.x1);}},
-		/**t{b{number}b _height}t d{Altura do eixo v{y}v em pixels.}d*/
-		_height: {get: function() {return this._vertical * (this._position.y2 - this._position.y1);}},
 
 		_p100: {
 			value: function(n) {return String(100*n)+"%";}
@@ -1437,14 +1434,20 @@ const wd = (function() {
 		/**d{v{x}v - Valor real do eixo v{x}v.}d }L*/
 		_xTarget: {
 			value: function(x) {
+				/* valores relativos (%) para posicionamento */
+				if (String(x).trim().substr(-1) === "%") return x;
+				/* valores numéricos somente para plotagem (dentro da área do gráfico) */
 				let xn = this._xEnds();
 				let x1 = xn[0];
 				let x2 = xn[1];
-				let p1 = this._horizontal * this._position.x1;
-				let dp = this._width;
 				let dx = x2 - x1;
-				let p2 = ((dp/dx)*(x - x1)) + p1; /* dp/dx = (p2 - p1)/(x2 - x1) = (p2 - p1)/(x - x1) */
-				return this._p100(p2/this._horizontal);
+				let p1 = this._horizontal * this._area.x1;
+				let p2 = this._horizontal * this._area.x2;
+				let dp = p2 - p1;
+				/* dp/dx = (p2 - p1)/(x2 - x1) = (p - p1)/(x - x1) */
+				/* p = dp/dx * (x - x1) + p1 */
+				let p = ((dp/dx)*(x - x1)) + p1;
+				return this._p100(p/this._horizontal);
 			}
 		},
 		/**t{b{string}b _yTarget(b{number}b y)}t*/
@@ -1452,14 +1455,22 @@ const wd = (function() {
 		/**d{v{y}v - Valor real do eixo v{y}v.}d }L*/
 		_yTarget: {
 			value: function(y) {
+				/* valores relativos (%) para posicionamento */
+				if (String(y).trim().substr(-1) === "%")
+					return this._p100(1 - __Type(y).value);
+
+				/* valores numéricos somente para plotagem (dentro da área do gráfico) */
 				let yn = this._yEnds();
 				let y1 = yn[0];
 				let y2 = yn[1];
-				let p1 = this._vertical * this._position.y2;
-				let dp = -this._height;
 				let dy = y2 - y1;
-				let p2 = ((dp/dy)*(y - y1)) + p1; /* dp/dy = (p1 - p2)/(y2 - y1) = (p - p2)/(y - y1) */
-				return this._p100(p2/this._vertical);
+				let p1 = this._vertical * this._area.y1;
+				let p2 = this._vertical * this._area.y2;
+				let dp = p2 - p1;
+				/* dp/dy = (p2 - p1)/(y2 - y1) = (p - p1)/(y - y1) */
+				/* p = dp/dy * (y - y1) + p1 */
+				let p = ((dp/dy)*(y - y1)) + p1;
+				return this._p100(1-p/this._vertical);
 			}
 		},
 		/**t{b{array}b _xEnds(b{array}b x)}t*/
@@ -1494,7 +1505,7 @@ const wd = (function() {
 		_dx: {
 			get: function() {
 				let x = this._xEnds();
-				return this._gap * (x[1] - x[0]) / (this._width);
+				return this._gap * (x[1] - x[0]) / (this._horizontal * (this._area.x2 - this._area.x1));
 			}
 		},
 		/**t{b{matrix}b _getFmatrix(b{number}b x1, b{number}b x2, b{function}b f)}t*/
@@ -1608,64 +1619,64 @@ const wd = (function() {
 					this._data[i].y = matrix[1];
 				}
 				/* adicionar textos e área */
-				let self   = this;
-				let middle = (this._position.y1 + this._position.y2)/2;
-				let center = (this._position.x1 + this._position.x2)/2;
-				let top    = (self._position.y2+1)/2;
-				let bottom = (self._position.y1)/2;
-				let ratio  = this._vertical/this._horizontal;
-				let width  = this._position.x2 - this._position.x1;
-				let height = this._position.y2 - this._position.y1;
 				let title  = {
-					x: [self._p100(center)], y: [self._p100(top)],
+					x: [this._p100((this._area.x1 + this._area.x2)/2)],
+					y: [this._p100((this._area.y2 + 1)/2)],
 					name: self._title, type: "text:hc", color: -1
 				};
 				let xLabel = {
-					x: [self._p100(center)], y: [self._p100(bottom)],
-					name: self._xLabel, type: "text:hc", color: -1
+					x: [this._p100((this._area.x1 + this._area.x2)/2)],
+					y: [this._p100(this._area.y1/2)],
+					name: this._xLabel, type: "text:hn", color: -1
 				};
-				let yLabel = {
-					x: [self._p100(-ratio*middle)], y: [self._p100(10/self._horizontal)],
-					name: self._yLabel, type: "text:vn", color: -1
+				let yLabel = {//FIXME
+					x: [this._p100(this._area.x1/2)],
+					y: [this._p100((this._area.y1 + this._area.y2)/2)],
+					name: this._yLabel, type: "text:vn", color: -1
 
 				};
 				let area = {
-					x: [self._p100(self._position.x1), self._p100(self._position.x2)],
-					y: [self._p100(self._position.y1), self._p100(self._position.y2)],
+					x: [this._p100(this._area.x1), this._p100(this._area.x2)],
+					y: [this._p100(this._area.y1), this._p100(this._area.y2)],
 					type: "border:1px", color: -1
 				}
 				this._data.push(title, xLabel, yLabel, area);
 				/* subdivisões e valores dos eixos */
 				i = -1;
 				while (++i < (this._grid+1)) {
-					let xLine = this._position.x1 + i*(width/this._grid);
-					let yLine = this._position.y1 + i*(height/this._grid);
-					/* linhas de grade */
-					let vLine = {x: [], y: [], type: "dash:1px", color: -1};
-					vLine.x.push(this._p100(xLine), this._p100(xLine));
-					vLine.y.push(this._p100(this._position.y1), this._p100(this._position.y2));
-					let hLine = {x: [], y: [], type: "dash:1px", color: -1};
-					hLine.x.push(this._p100(this._position.x1), this._p100(this._position.x2));
-					hLine.y.push(this._p100(yLine), this._p100(yLine));
+					let xLine = this._area.x1 + i*((this._area.x2 - this._area.x1)/this._grid);
+					let yLine = this._area.y1 + i*((this._area.y2 - this._area.y1)/this._grid);
+					/* linhas de grade vertical */
+					let vLine = {
+						x: [this._p100(xLine), this._p100(xLine)],
+						y: [this._p100(this._area.y1), this._p100(this._area.y2)],
+						type: "dash:1px", color: -1
+					};
+					/* linhas de grade horizontal */
+					let hLine = {
+						x: [this._p100(this._area.x1), this._p100(this._area.x2)],
+						y: [this._p100(yLine), this._p100(yLine)],
+						type: "dash:1px", color: -1
+					};
 					/* valores do eixo x */
 					let xends  = this._xEnds();
 					let xAnch  = i === 0 ? "hnw" : (i === this._grid ? "hne" : "hn");
 					let xValue = {
 						x: [this._p100(xLine)],
-						y: [this._p100(this._position.y2+5/self._vertical)],
+						y: [this._p100(this._area.y1 - 5/this._vertical)],
 						type: "text:"+xAnch,
 						color: -1,
 						name: __precision(xends[0]+i*((xends[1]-xends[0])/this._grid), 3)
 					};
 					/* valores do eixo y */
 					let yends = this._yEnds();
-					let yAnch = i === 0 ? "hne" : (i === this._grid ? "hse" : "he");
+					let yAnch = i === 0 ? "hse" : (i === this._grid ? "hne" : "he");
 					let yValue = {
-						x: [this._p100(this._position.x1-5/self._horizontal)],
+						x: [this._p100(this._area.x1 - 5/self._horizontal)],
 						y: [this._p100(yLine)],
 						type: "text:"+yAnch,
 						color: -1,
-						name: __precision(yends[1]-i*((yends[1]-yends[0])/this._grid), 3)
+						name: __precision(yends[0]+i*((yends[1]-yends[0])/this._grid), 3)
 					};
 
 					this._data.push(hLine, vLine, xValue, yValue);
@@ -1750,11 +1761,10 @@ const wd = (function() {
 				let anchor  = {n: 1, ne: 2, e: 2, se: 2, s: 1, sw: 0, w: 0, nw: 0, c: 1};
 				let base    = {n: 2, ne: 2, e: 1, se: 0, s: 0, sw: 0, w: 1, nw: 2, c: 1};
 				let ratio   = this._vertical/this._horizontal;
-				x = point[0] === "v" ? this._p100(__Type(y).value*ratio) : x;
-				y = point[0] === "v" ? this._p100(__Type(x).value/ratio) : this._p100(1 - __Type(y).value);
-
 				let attr = {
-					x: x, y: y, fill: this._rgb(color),
+					x: this._xTarget(x, point[0] === "v" ? true : false),
+					y: this._yTarget(y, point[0] === "v" ? true : false),
+					fill: this._rgb(color),
 					"text-anchor":       vanchor[anchor[point.substr(1)]],
 					"dominant-baseline": vbase[base[point.substr(1)]],
 					"font-family":       "monospace",
@@ -1788,13 +1798,10 @@ const wd = (function() {
 		_line: {
 			value: function(px, py, width, color, tip) {
 				let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-				let x1 = String(px[0]).substr(-1) === "%" ? px[0] : this._xTarget(px[0]);
-				let x2 = String(px[1]).substr(-1) === "%" ? px[1] : this._xTarget(px[1]);
-				let y1 = String(py[0]).substr(-1) === "%" ? py[0] : this._yTarget(py[0]);
-				let y2 = String(py[1]).substr(-1) === "%" ? py[1] : this._yTarget(py[1]);
 				let attr = {
-					x1: x1, y1: y1, x2: x2, y2: y2, stroke: this._rgb(color),
-					"stroke-width": width
+					x1: this._xTarget(px[0]), x2: this._xTarget(px[1]),
+					y1: this._yTarget(py[0]), y2: this._yTarget(py[1]),
+					stroke: this._rgb(color), "stroke-width": width
 				};
 				for (let i in attr) line.setAttribute(i, attr[i]);
 				if (tip !== undefined) line.appendChild(this._tip(tip));
@@ -1821,16 +1828,17 @@ const wd = (function() {
 		_border: {
 			value: function(px, py, width, color, tip) {
 				let border = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-				let x1 = String(px[0]).substr(-1) === "%" ? px[0] : this._xTarget(px[0]);
-				let x2 = String(px[1]).substr(-1) === "%" ? px[1] : this._xTarget(px[1]);
-				let y1 = String(py[0]).substr(-1) === "%" ? py[0] : this._yTarget(py[0]);
-				let y2 = String(py[1]).substr(-1) === "%" ? py[1] : this._yTarget(py[1]);
-				let x  = __Type(x1).value < __Type(x2).value ? x1 : x2;
-				let y  = __Type(y1).value < __Type(y2).value ? y1 : y2;
-				let w  = String((100 * Math.abs(__Type(x2).value - __Type(x1).value)))+"%";
-				let h  = String((100 * Math.abs(__Type(y2).value - __Type(y1).value)))+"%";
+				let x1   = this._xTarget(px[0]);
+				let x2   = this._xTarget(px[1]);
+				let y1   = this._yTarget(py[0]);
+				let y2   = this._yTarget(py[1]);
+				let self = this;
 				let attr = {
-					x: x, y: y, width: w, height: h, stroke: this._rgb(color),
+					x: __Type(x1).value < __Type(x2).value ? x1 : x2,
+					y: __Type(y1).value < __Type(y2).value ? y1 : y2,
+					width:  this._p100(Math.abs(__Type(x2).value - __Type(x1).value)),
+					height: this._p100(Math.abs(__Type(y2).value - __Type(y1).value)),
+					stroke: this._rgb(color),
 					"stroke-width": width, fill: "transparent"
 				};
 				for (let i in attr) border.setAttribute(i, attr[i]);
@@ -1860,7 +1868,9 @@ const wd = (function() {
 			value: function(cx, cy, r, color, tip) {
 				let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
 				let attr = {
-					cx: cx, cy: cy, r: r, fill: this._rgb(color)
+					cx: this._xTarget(cx),
+					cy: this._yTarget(cy),
+					r: r, fill: this._rgb(color)
 				};
 				for (let i in attr) circle.setAttribute(i, attr[i]);
 				if (tip !== undefined) circle.appendChild(this._tip(tip));
