@@ -1640,10 +1640,10 @@ const wd = (function() {
 	__Plot2D.prototype = Object.create(__Data2D.prototype, {
 		constructor: {value: __Plot2D},
 		_grid:   {value: 6},
-		/**t{b{number}b _xPoint(b{number}b x)}t*/
+		/**t{b{number}b _xp(b{number}b x)}t*/
 		/**d{Retorna o ponto de plotagem do eixo v{x}v no SVG.}d L{*/
 		/**d{v{x}v - Valor da coordenada v{x}v.}d }L*/
-		_xPoint: {
+		_xp: {
 			value: function (x) { /* dp/dx = (p2-p1)/(x2-x1) = (p-p1)/(x-x1) */
 				let p1 = this._xStart;
 				let p2 = p1 + this._xSize;
@@ -1654,10 +1654,10 @@ const wd = (function() {
 				return ((dp/dx)*(x - x1)) + p1;
       }
     },
-    /**t{b{number}b _yPoint(b{number}b x)}t*/
+    /**t{b{number}b _yp(b{number}b x)}t*/
 		/**d{Retorna o ponto de plotagem do eixo v{y}v no SVG.}d L{*/
 		/**d{v{y}v - Valor da coordenada v{y}v.}d }L*/
-    _yPoint: {
+    _yp: {
 			value: function (y) { /* dp/dy = (p2-p1)/(y2-y1) = (p-p1)/(y-y1) */
 				let p1 = this._yStart;
 				let p2 = p1 + this._ySize;
@@ -1668,29 +1668,112 @@ const wd = (function() {
 				return p1+p2-(((dp/dy)*(y - y1)) + p1);
       }
     },
-
-
-
-
-
-    /**t{b{string}b _points(b{array}b x, b{array}b y)}t*/
-		/**d{Retorna os conjuntos de plotagem v{x,y}v separados por espaço.}d L{*/
-		/**d{v{y}v - Valor da coordenada v{y}v.}d }L*/
-    _points: {
-    	value: function (x, y) {
-    		let points = [];
+		/**t{b{matrix}b _yx(b{array}b x, b{array}b y)t*/
+		/**d{Retorna os pontos de plotagem dos eixos v{x,y}v no SVG.}d L{*/
+		/**d{v{x}v - Valores da coordenada v{x}v (coluna 0), ver i{_xp}i.}d*/
+		/**d{v{x}v - Valores da coordenada v{y}v (coluna 1), ver i{_yp}i.}d }L*/
+		_xy: {
+			value: function(x, y) {
+				let xy = {x: [], y: []};
     		let i = -1;
     		while (++i < x.length) {
-    			let xn = this._xPoint(x[i]);
-    			let yn = this._yPoint(y[i]);
-    			points.push(xn+","+yn)
+    			xy.x.push(this._xp(x[i]));
+    			xy.y.push(this._yp(y[i]));
     		}
-    		return points.join(" ");
+    		return [xy.x, xy.y];
+			}
+		},
+		/**t{b{string}b _dline(b{array}b x, b{array}b y, b{boolean}b close)t*/
+		/**d{Retorna o caminho para construção de linhas conectadas por pontos.}d L{*/
+		/**d{v{x}v - Valores do eixo horizontal.}d*/
+		/**d{v{y}v - Valores do eixo vertical.}d*/
+		/**d{v{close}v - Informa se é uma figura de área fechada (retorna à origem).}d }L*/
+		_dline: {
+    	value: function (x, y, close) {
+    		let d = [];
+    		let i = -1;
+    		while (++i < x.length) {
+    			let path = [i === 0 ? "M" : "L", x[i], y[i]];
+    			d.push(path.join(" "));
+    			if (close === true && i === (x.length - 1)) d.push("Z");
+    		}
+    		return d.join(" ");
     	}
     },
+		/**t{b{node}b _lines(b{array}b x, b{array}b y, b{number}b stroke, b{boolean}b close, b{number}b color)}t*/
+		/**d{Retorna elemento SVG renderizado com linhas conectadas pelos pontos.}d L{*/
+		/**d{v{x}v - Coordenadas do eixo v{x}v.}d*/
+		/**d{v{y}v - Coordenadas do eixo v{y}v.}d*/
+		/**d{v{stroke}v - Espessura da linha que, se negativo, será tracejada.}d*/
+		/**d{v{close}v - Informa se é uma figura de área fechada.}d*/
+		/**d{v{color}v - Valor da cor da linha.}d }L*/
+		_lines: {
+			value: function(x, y, stroke, close, color) {
+				let path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+				let width = Math.abs(stroke);
+				let attr = {
+					"d": this._dline(x, y, close),
+					"fill": close === true && color >= 0 ? this._rgb(color) : "none",
+					"fill-opacity": close === true && width > 0 ? 0.7 : 1,
+					"stroke": this._rgb(color),
+					"stroke-width": width,
+					"stroke-dasharray": stroke < 0 ? "8,8" : "none"
+				};
+				for (let i in attr) path.setAttribute(i, attr[i]);
+				return path;
+			}
+		},
 
 
-		_sum: {
+
+		/**t{b{node}b _circle(b{number}b cx, b{number}b cy, b{number}b r, b{number}b color)}t*/
+		/**d{Retorna elemento SVG para circulos.}d L{*/
+		/**d{v{cx}v - Posição do centro do círculo em v{x}v.}d*/
+		/**d{v{cy}v - Posição do centro do círculo em v{y}v.}d*/
+		/**d{v{r}v - Tamanho do raio do círculo.}d*/
+		/**d{v{color}v - Valor da cor do círculo.}d }L*/
+
+
+		_circles: {//FATIAS sentido anti-horário FIXME
+			value: function(cx, cy, r, start, width, color) {
+				let path, attr;
+				if (width >= 360) {
+					path = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+					attr = {
+						cx: cx,
+						cy: cy,
+						r: r,
+						"fill": this._rgb(color),
+						"fill-opacity": 0.9
+					};
+				} else {
+					path   = document.createElementNS("http://www.w3.org/2000/svg", "path");
+					start  = 2*Math.PI*start/360;
+					width  = 2*Math.PI*width/360;
+					let x1 = cx + r*Math.cos(start);
+					let y1 = cy - r*Math.sin(start);
+					let x2 = cx + r*Math.cos(start + width);
+					let y2 = cy - r*Math.sin(start + width);
+					let lg = width > Math.PI ? 1 : 0;
+					let d  = ["M", cx, cy, "L", x1, y1, "A", r, r, 0, lg, 0, x2, y2, "Z"];
+					attr = {
+						"d": d.join(" "),
+						"fill": this._rgb(color),
+						"fill-opacity": 0.9
+					};
+				}
+				for (let i in attr) path.setAttribute(i, attr[i]);
+				return path;
+			}
+		},
+
+
+
+
+
+
+
+		_sum: {//FIXME tirar essa bosta daqui
     	value: function(x, y) {
 				let sum = 0;
 				let i = 0;
@@ -1740,63 +1823,30 @@ const wd = (function() {
 				let svg  = document.createElementNS("http://www.w3.org/2000/svg", "svg");
 				let attr = {
 					viewBox:"0 0 "+this._width+" "+this._height,
-					style: "border: 1px solid red"
+					style: "border: 1px solid red; background-color: #f0f0f0"
 				};
 				for (let i in attr) svg.setAttribute(i, attr[i]);
 				return svg;
 			}
 		},
-		/**t{b{node}b _line(b{string}b points, b{number}b width, b{number}b color)}t*/
-		/**d{Retorna elemento SVG para renderizar uma linha.}d L{*/
-		/**d{v{points}v - Conjunto de valores v{x,y}v para renderizar a linha.}d*/
-		/**d{v{width}v - Espessura da linha.}d*/
-		/**d{v{color}v - Valor da cor da linha.}d }L*/
-		_line: {
-			value: function(points, width, color) {
-				let line = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
-				let attr = {
-					points: points,
-					stroke: this._rgb(color),
-					"stroke-width": String(width),
-					fill: "none"
-				};
-				for (let i in attr) line.setAttribute(i, attr[i]);
-				return line;
-			}
-		},
-		/**t{b{node}b _poly(b{string}b points, b{number}b width, b{number}b color)}t*/
-		/**d{Retorna elemento SVG para renderizar um polígono.}d L{*/
-		/**d{v{points}v - Conjunto de valores v{x,y}v para renderizar a linha.}d*/
-		/**d{v{width}v - Espessura da linha.}d*/
-		/**d{v{color}v - Valor da cor da linha.}d }L*/
-		_poly: {
-			value: function(points, width, color) {
-				let polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-				let attr = {
-					points: points,
-					stroke: this._rgb(color),
-					"stroke-width": width,
-					fill: this._rgb(color, 0.5)
-				};
-				for (let i in attr) polygon.setAttribute(i, attr[i]);
-				return polygon;
-			}
-		},
 
 
 
 
 
 
-		/**t{b{node}b _dash(b{string}b points, b{number}b width, b{number}b color)}t*/
-		/**d{Retorna elemento SVG para linha tracejada, argumentos iguais à v{_line}v.}d*/
-		_dash: {
-			value: function(points, width, color) {
-				let line = this._line(points, width, color);
-				line.setAttribute("stroke-dasharray", "8,8");
-				return line;
-			}
-		},
+
+
+
+
+
+
+
+
+
+
+
+
 		/**t{b{node}b _tip(b{string}b text, b{node}b svg)}t*/
 		/**d{Retorna o elemento SVG com dica (i{title}i) adicionada.}d L{*/
 		/**d{v{text}v - Texto da dica.}d*/
@@ -1807,27 +1857,6 @@ const wd = (function() {
 				tip.textContent = text;
 				svg.appendChild(tip);
 				return svg;
-			}
-		},
-		/**t{b{node}b _circle(b{number}b cx, b{number}b cy, b{number}b r, b{number}b color)}t*/
-		/**d{Retorna elemento SVG para circulos.}d L{*/
-		/**d{v{cx}v - Posição do centro do círculo em v{x}v.}d*/
-		/**d{v{cy}v - Posição do centro do círculo em v{y}v.}d*/
-		/**d{v{r}v - Tamanho do raio do círculo.}d*/
-		/**d{v{color}v - Valor da cor do círculo.}d }L*/
-		_circle: {
-			value: function(cx, cy, r, width, color) {
-				let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-				let attr = {
-					cx: String(cx),
-					cy: String(cy),
-					r: String(r),
-					"stroke-width": width,
-					"stroke": this._rgb(color),
-					fill: this._rgb(color, 0.5)
-				};
-				for (let i in attr) circle.setAttribute(i, attr[i]);
-				return circle;
 			}
 		},
 		/**t{b{node}b _text(b{number}b x, b{number}b y, b{string}b text, b{string}b point, b{number}b color)}t*/
@@ -1875,19 +1904,15 @@ const wd = (function() {
 				svg.appendChild(this._text((x1+x2)/2, (this._height-5), this.xLabel, "hs", -1));
 				svg.appendChild(this._text(5, (y1+y2)/2, this.yLabel, "vn", -1));
 				/* grades e escala */
+				svg.appendChild(this._lines([x1, x2, x2, x1], [y1, y1, y2, y2], 2, true, -1));
 				let i = -1;
 				while (++i <= this._grid) {
 					/* grades */
 					let yn = y1 + i*((y2-y1)/this._grid);
 					let xn = x1 + i*((x2-x1)/this._grid);
-					let hLine = ([([x1, yn]).join(","), ([x2, yn]).join(",")]).join(" ");
-					let vLine = ([([xn, y1]).join(","), ([xn, y2]).join(",")]).join(" ");
-					if (i === 0 || i === this._grid) {
-						svg.appendChild(this._line(hLine, 2, -1));
-						svg.appendChild(this._line(vLine, 2, -1));
-					} else {
-						svg.appendChild(this._dash(hLine, 0.5, -1));
-						svg.appendChild(this._dash(vLine, 0.5, -1));
+					if (i > 0 && i < this._grid) {
+						svg.appendChild(this._lines([x1, x2], [yn, yn], -0.5, false, -1));
+						svg.appendChild(this._lines([xn, xn], [y1, y2], -0.5, false, -1));
 					}
 					/* escalas */
 					let sx = this._xMin + i*((this._xMax - this._xMin)/this._grid);
@@ -1941,28 +1966,50 @@ const wd = (function() {
 					let name  = plot[i].name;
 					let x     = plot[i].x;
 					let y     = plot[i].y;
+					let xy    = this._xy(x, y);
 					let tip;
+
 
 
 					switch(type) {
 						case "line":
-							svg.appendChild(this._line(this._points(x, y), 3, color));
+							svg.appendChild(this._lines(xy[0], xy[1], 3, false,color));
 							break;
 						case "dash":
-							svg.appendChild(this._dash(this._points(x, y), 1, color));
+							svg.appendChild(this._lines(xy[0], xy[1], -1, false,color));
 							break;
 						case "dots":
 							let j = -1;
 							while (++j < x.length)
-								svg.appendChild(this._circle(
-									this._xPoint(x[j]),
-									this._yPoint(y[j]),
+								svg.appendChild(this._circles(
+									this._xp(x[j]),
+									this._yp(y[j]),
+									4,
+									0,
+									360,
+									color
+								));
+
+
+								/*svg.appendChild(this._circle(
+									this._xp(x[j]),
+									this._yp(y[j]),
 									4,
 									1,
 									color
-								));
+								));*/
 							break;
 							case "area":
+								/* y0 = yn = 0, extremidades devem encostar no eixo x */
+								let ax = [xy[0][0]].concat(xy[0]);
+								let ay = [this._yp(0)].concat(xy[1]);
+								ax.push(xy[0][xy[0].length-1]);
+								ay.push(this._yp(0));
+								svg.appendChild(this._lines(ax, ay, 1, true, color));
+
+
+
+								/*
 								let sum = this._sum(x, y);
 								svg.appendChild(
 									this._tip(sum.sum, this._poly(sum.points, 1, color))
@@ -1970,6 +2017,7 @@ const wd = (function() {
 								svg.appendChild(
 									this._tip(sum.avg, this._dash(sum.lpoints, 2, color))
 								);
+								*/
 
 
 
