@@ -1168,16 +1168,21 @@ const wd = (function() {
 		return Math.hypot.apply(null, items) / Math.sqrt(items.length);
 	}
 /*----------------------------------------------------------------------------*/
-	/**f{b{object}b __Fit2D(b{array}b x, b{array}b y)}f*/
+	/**f{b{object}b __Fit2D(b{array}b x, b{array|function}b y)}f*/
 	/**p{Objeto para análise de conjuntos de dados em duas dimensões com foco em ajuste de curvas.}p l{*/
 	/**d{v{x}v - Conjunto de dados em v{x}v.}d*/
-	/**d{v{y}v - Conjunto de dados em v{y}v.}d*/
+	/**d{v{y}v - Conjunto de dados em v{y}v ou uma função v{f(x)}v que definirá tais valores.}d*/
 	/**d{b{Métodos e Atributos}b:}dL{*/
 	function __Fit2D(x, y) {
 		if (!(this instanceof __Fit2D)) return new __Fit2D(x, y);
+		if (__Type(y).type === "function") {
+			let data = __setFunction(x, y, true);
+			x = data[0];
+			y = data[1];
+		}
 		let matrix = __setUnique(x, y);
-		if (matrix === null || matrix.length < 2) throw "Inconsistent data set.";
-		if (matrix[0].length < 2) throw "Insufficient data set.";
+		if (matrix === null || matrix.length < 2) throw new TypeError("Inconsistent data set.");
+		if (matrix[0].length < 2) throw new Error("Insufficient data set.");
 		matrix = __setSort(matrix[0], matrix[1]);
 		Object.defineProperties(this, {
 			_x: {value: matrix[0]},
@@ -1375,11 +1380,42 @@ const wd = (function() {
 				return this[type];
 			}
 		},
-		/**t{b{array}b x}t*/
-		/**d{Retorna valores do eixo x.}d*/
+
+		/**t{b{object}b sum}t*/
+		/**d{Retorna um objeto com a soma da áreas formadas pelas linhas que ligam os pontos das coordenadas.}d L{*/
+		/**t{b{number}b valueOf()}t d{Retorna o valor da soma.}d*/
+		/**t{b{string}b toString()}t d{Retorna uma representação matemática do resultado.}d}L*/
+		sum: {
+    	get: function() {
+	  		let x   = this.x;
+    		let y   = this.y;
+    		let sum = 0;
+  			let i   = 0;
+				while (++i < x.length)
+					sum += (y[i]+y[i-1])*(x[i]-x[i-1])/2;
+				return {
+					valueOf:  function() {return sum;},
+					toString: function() {return "\u03A3y \u2248 "+__precision(sum, 3);}
+		  	};
+		  }
+    },
+    /**t{b{object}b avg}t*/
+		/**d{Retorna um objeto com o valor médio das coordenadas.}d L{*/
+		/**t{b{number}b valueOf()}t d{Retorna o valor médio.}d*/
+		/**t{b{string}b toString()}t d{Retorna uma representação matemática do resultado.}d}L*/
+    avg: {
+    	get: function() {
+    		let x   = this.x;
+    		let avg = this.sum/(x[x.length-1] - x[0]);
+    		return {
+					valueOf:  function() {return avg;},
+					toString: function() {return "\u03A3y/\u0394x \u2248 "+__precision(avg, 3);}
+		  	};
+    	}
+    },
+		/**t{b{array}b x} d{Retorna valores do eixo x.}d*/
 		x: {get: function() {return this._x}},
-		/**t{b{array}b y}t*/
-		/**d{Retorna valores do eixo y.}d}L}l*/
+		/**t{b{array}b y}t d{Retorna valores do eixo y.}d}L}l*/
 		y: {get: function() {return this._y}}
 	});
 /*----------------------------------------------------------------------------*/
@@ -1401,7 +1437,6 @@ const wd = (function() {
 			_yMin:   {value:+Infinity, writable: true}, /* menor valor em y */
 			_yMax:   {value:-Infinity, writable: true}, /* maior valor em x */
 			_color:  {value:-1,        writable: true}, /* controle de cores */
-			_error:  {value: "",       writable: true}, /* Última mensagem de erro */
 			_data:   {value:[],        writable: false} /* dados adicionados para plotagem */
 
 		});
@@ -1449,10 +1484,14 @@ const wd = (function() {
 		/**d{v{f}v - Função para obter v{y = f(x)}v}d }L*/
 		_curve: {
 			value: function(x, f) {
-				if (__Type(f).type !== "function") {
+				if (__Type(x).type !== "array") { /* para tipo ratio (x, y não são arrays) */
+					return [x, f];
+				}
+				if (__Type(f).type !== "function") { /* para coordenadas */
 					this._ends(x, f);
 					return [x, f];
 				}
+				/* para funções */
 				let xn = [];
 				let dx = (this._xMax - this._xMin)/this._xSize;
 				let x1 = Math.min.apply(null, x);
@@ -1475,10 +1514,6 @@ const wd = (function() {
 		/**d{v{color}v - Se verdadeiro, uma nova cor será definida para o conjunto de dados.}d }L*/
 		_add: {
 			value: function(x, y, name, type, color) {
-				if (__Type(x).type !== "array") {
-					this._error = "The x-axis must be a list of real numbers or a function.";
-					return false;
-				}
 				let matrix;
 				try {
 					switch(__Type(y).type) {
@@ -1499,18 +1534,12 @@ const wd = (function() {
 							x = matrix[0];
 							this._ends(x, null);
 							break;
-						default:
-							this._error = "The y-axis must be a list of real numbers or a function.";
-							return false;
 					}
-				} catch(e) {
-					this._error = "Insufficient plot data.";
-					return false;
 				}
+				catch(e) {return false;}
 				if (type === "area") this._ends(null, [0]);
 				color = color === true ? ++this._color : this._color;
 				this._data.push({x: x, y: y, name: name, type: type, color: color});
-				this._error = "";
 				return true;
 			}
 		},
@@ -1522,17 +1551,12 @@ const wd = (function() {
 		/**d{v{type}v - (opcional) Tipo do ajuste de curva.}d }L*/
 		_addFit: {
 			value: function(x, y, name, type) {
-				if (__Type(x).type !== "array" || __Type(y).type !== "array") {
-					this._error = "The x and y axes must be a list of real numbers.";
-					return false;
-				}
 				let data, fit;
 				try {
 					data = __Fit2D(x, y);
 					fit = data[type];
 					if (fit === null) throw "";
 				} catch(e) {
-					this._error = "There was an error fitting the curve, check your dataset.";
 					return false;
 				}
 				this._add(data.x, data.y, name, "dots", true);
@@ -1543,11 +1567,37 @@ const wd = (function() {
 					this._add(data.x, upper, "", "dash", false);
 					this._add(data.x, lower, "", "dash", false);
 				}
-				this._error = "";
 				return true;
       }
 		},
-
+		/**t{b{void}b _addRatio(b{array}b x, b{array}b y, b{string}b name)}t*/
+		/**d{Adiciona dados de um conjunto de valores para fins de comparação.}d L{*/
+		/**d{v{x}v - Valores para o eixo v{x}v (identificador da informação).}d */
+		/**d{v{y}v - Valores para o eixo v{y}v (valor da informação).}d */
+		/**d{v{name}v - Identificador do conjunto de dados.}d }L*/
+		_addRatio: {
+			value: function(x, y, name) {
+				if (__Type(y).type !== "array") return false;
+				let n = [];
+				let i = 0;
+				while (i < x.length && i < y.length)
+					n.push(i++);
+				let matrix = __setFinite(n, y);
+				if (matrix === null)
+					return false;
+				i = -1;
+				while (++i < matrix[0].length) {
+					let item = matrix[0][i];
+					this._data.push({
+						x: String(x[item]).trim(),
+						y: matrix[1][i],
+						name: name, type: "ratio",
+						color: null
+					});
+				}
+				return true;
+			}
+		},
 		/**t{b{string}b title}t d{Obtem ou define o título do gráfico.}d*/
 		title: {
 			get: function()  {return this._title;},
@@ -1563,10 +1613,6 @@ const wd = (function() {
 			get: function()  {return this._yLabel;},
 			set: function(x) {this._yLabel = x;}
 		},
-		/**t{b{string}b error}t d{Retorna a última mensagem de erro após falha ao adicionar dados.}d*/
-		error: {
-			get: function() {return this._error;}
-		},
 		/**t{b{void}b add(b{array}b x, b{array|function}b y, b{string}b name, b{string}b type)}t*/
 		/**d{Adiciona dados de um conjunto de valores (v{x, y}v) ou  (v{x, f(x)}v).}d L{*/
 		/**d{v{x}v - Valores para o eixo v{x}v.}d */
@@ -1576,6 +1622,8 @@ const wd = (function() {
 		/**d{Valor padrão de i{type}i é v{dots}v.}d }L*/
 		add: {
 			value: function(x, y, name, type) {
+				if (__Type(x).type !== "array") return false;
+				if ((["array", "function"]).indexOf(__Type(y).type) < 0) return false;
 				switch(type) {
 					case "fit":
 						return this._addFit(x, y, name, "fit");
@@ -1586,7 +1634,7 @@ const wd = (function() {
 					case "fit-geometric":
 						return this._addFit(x, y, name, "geometric");
 					case "ratio":
-						return this._addRatio(x, y);
+						return this._addRatio(x, y, name);
 					case "area":
 						return this._add(x, y, name, "area", true);
 					case "line":
@@ -1595,17 +1643,6 @@ const wd = (function() {
 				return this._add(x, y, name, (__Type(y).type === "function" ? "line" : "dots"), true);
       }
 		},
-
-
-
-
-
-
-
-
-
-
-
 		/**t{b{array}b data()}t*/
 		/**d{Prepara e retorna os dados para renderização do gráfico.}d }l*/
 		data: {
@@ -1622,10 +1659,6 @@ const wd = (function() {
 			}
 		}
 	});
-
-
-
-
 /*----------------------------------------------------------------------------*/
 	/**f{b{object}b __Plot2D(b{string}b title, b{string}b xLabel, b{string}b yLabel)}f*/
 	/**p{Ferramenta para renderizar o gráfico 2D (herda características de i{__Data2D}i).}p l{*/
@@ -1723,18 +1756,15 @@ const wd = (function() {
 				return path;
 			}
 		},
-
-
-
-		/**t{b{node}b _circle(b{number}b cx, b{number}b cy, b{number}b r, b{number}b color)}t*/
-		/**d{Retorna elemento SVG para circulos.}d L{*/
+		/**t{b{node}b _circles(b{number}b cx, b{number}b cy, b{number}b r, b{number}b start, b{number}b width, b{number}b color)}t*/
+		/**d{Retorna elemento SVG para circulos e semi-círculos.}d L{*/
 		/**d{v{cx}v - Posição do centro do círculo em v{x}v.}d*/
 		/**d{v{cy}v - Posição do centro do círculo em v{y}v.}d*/
 		/**d{v{r}v - Tamanho do raio do círculo.}d*/
+		/**d{v{start}v - Ângulo inicial do arco, em graus (v{0 = (x = r, y = 0)}v).}d*/
+		/**d{v{width}v - Variação angular, em graus (sentido anti-horário).}d*/
 		/**d{v{color}v - Valor da cor do círculo.}d }L*/
-
-
-		_circles: {//FATIAS sentido anti-horário FIXME
+		_circles: {
 			value: function(cx, cy, r, start, width, color) {
 				let path, attr;
 				if (width >= 360) {
@@ -1766,40 +1796,6 @@ const wd = (function() {
 				return path;
 			}
 		},
-
-
-
-
-
-
-
-		_sum: {//FIXME tirar essa bosta daqui
-    	value: function(x, y) {
-				let sum = 0;
-				let i = 0;
-				while (++i < x.length)
-					sum += (y[i]+y[i-1])*(x[i]-x[i-1])/2;
-				let avg = sum/(x[x.length-1] - x[0]);
-				let X  = [x[0]];
-				X = X.concat(x);
-				X.push(x[x.length-1], x[0]);
-				let Y  = [0];
-				Y = Y.concat(y);
-				Y.push(0, 0);
-
-				return {
-					sum:     "\u03A3y \u2248 "+__precision(sum, 3),
-					avg:     "\u03A3y/\u0394x \u2248 "+__precision(avg, 3),
-					points:  this._points(X, Y),
-					lpoints: this._points([x[0], x[x.length-1]], [avg, avg])
-		  	};
-		  }
-    },
-
-
-
-
-
 		/**t{b{string}b _rgb(b{integer}b n, b{number}b opacity)}t*/
 		/**d{Retorna a cor em RGB definida por v{n}v para ser utilizada pelo elemento SVG.}d L{*/
 		/**d{v{n}v - Retorna transparente, se nulo ou indefinido, preto, se menor que zero, ou cor definida.}d*/
@@ -1829,24 +1825,6 @@ const wd = (function() {
 				return svg;
 			}
 		},
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 		/**t{b{node}b _tip(b{string}b text, b{node}b svg)}t*/
 		/**d{Retorna o elemento SVG com dica (i{title}i) adicionada.}d L{*/
 		/**d{v{text}v - Texto da dica.}d*/
@@ -1892,7 +1870,9 @@ const wd = (function() {
 
 
 
-		_area: {
+
+
+		_area: {//FIXME
 			value: function(svg) {
 				/* pontos principais */
 				let x1 = this._xStart;
@@ -1967,64 +1947,42 @@ const wd = (function() {
 					let x     = plot[i].x;
 					let y     = plot[i].y;
 					let xy    = this._xy(x, y);
+					let X     = xy[0];
+					let Y     = xy[1];
 					let tip;
 
 
 
 					switch(type) {
 						case "line":
-							svg.appendChild(this._lines(xy[0], xy[1], 3, false,color));
+							svg.appendChild(this._lines(X, Y, 3, false,color));
 							break;
 						case "dash":
-							svg.appendChild(this._lines(xy[0], xy[1], -1, false,color));
+							svg.appendChild(this._lines(X, Y, -1, false,color));
 							break;
 						case "dots":
 							let j = -1;
 							while (++j < x.length)
-								svg.appendChild(this._circles(
-									this._xp(x[j]),
-									this._yp(y[j]),
-									4,
-									0,
-									360,
-									color
-								));
-
-
-								/*svg.appendChild(this._circle(
-									this._xp(x[j]),
-									this._yp(y[j]),
-									4,
-									1,
-									color
-								));*/
+								svg.appendChild(
+									this._circles(this._xp(x[j]), this._yp(y[j]), 4, 0, 360, color)
+								);
 							break;
-							case "area":
-								/* y0 = yn = 0, extremidades devem encostar no eixo x */
-								let ax = [xy[0][0]].concat(xy[0]);
-								let ay = [this._yp(0)].concat(xy[1]);
-								ax.push(xy[0][xy[0].length-1]);
-								ay.push(this._yp(0));
-								svg.appendChild(this._lines(ax, ay, 1, true, color));
-
-
-
-								/*
-								let sum = this._sum(x, y);
-								svg.appendChild(
-									this._tip(sum.sum, this._poly(sum.points, 1, color))
-								);
-								svg.appendChild(
-									this._tip(sum.avg, this._dash(sum.lpoints, 2, color))
-								);
-								*/
-
-
-
-
-
-
-
+						case "area":
+							/* y0 = yn = 0, extremidades devem encostar no eixo x */
+							let fit = __Fit2D(X, Y);
+							let ax  =        ([X[0]]).concat(X);
+							let ay  = ([this._yp(0)]).concat(Y);
+							ax.push(X[X.length-1]);
+							ay.push(this._yp(0));
+							svg.appendChild(this._lines(ax, ay, 1, true, color));
+							svg.appendChild(this._lines(
+								[X[0], X[X.length-1]],
+								[fit.avg.valueOf(), fit.avg.valueOf()],
+								-4,
+								false,
+								color
+							));
+							break
 					}
 				}
 				document.body.innerHTML = "";
