@@ -1579,19 +1579,18 @@ const wd = (function() {
 			value: function(x, y, name) {
 				if (__Type(y).type !== "array") return false;
 				let n = [];
-				let i = 0;
-				while (i < x.length && i < y.length)
-					n.push(i++);
+				while (n.length < x.length && n.length < y.length)
+					n.push(n.length);
 				let matrix = __setFinite(n, y);
-				if (matrix === null)
-					return false;
-				i = -1;
+				if (matrix === null) return false;
+				let i = -1;
 				while (++i < matrix[0].length) {
 					let item = matrix[0][i];
 					this._data.push({
 						x: String(x[item]).trim(),
 						y: matrix[1][i],
-						name: name, type: "ratio",
+						name: name,
+						type: "ratio",
 						color: null
 					});
 				}
@@ -1634,7 +1633,7 @@ const wd = (function() {
 					case "fit-geometric":
 						return this._addFit(x, y, name, "geometric");
 					case "ratio":
-						return this._addRatio(x, y, name);
+						return this._addRatio(x, y);
 					case "area":
 						return this._add(x, y, name, "area", true);
 					case "line":
@@ -1672,7 +1671,6 @@ const wd = (function() {
 
 	__Plot2D.prototype = Object.create(__Data2D.prototype, {
 		constructor: {value: __Plot2D},
-		_grid:   {value: 6},
 		/**t{b{number}b _xp(b{number}b x)}t*/
 		/**d{Retorna o ponto de plotagem do eixo v{x}v no SVG.}d L{*/
 		/**d{v{x}v - Valor da coordenada v{x}v.}d }L*/
@@ -1873,44 +1871,39 @@ const wd = (function() {
 
 
 		_area: {//FIXME
-			value: function(svg) {
+			value: function(svg, chart) {
 				/* pontos principais */
 				let x1 = this._xStart;
 				let x2 = x1 + this._xSize;
 				let y1 = this._yStart;
 				let y2 = y1 + this._ySize;
+
+
+
 				/* rótulos */
 				svg.appendChild(this._text((x1+x2)/2, y1/2, this.title, "hc", -1));
 				svg.appendChild(this._text((x1+x2)/2, (this._height-5), this.xLabel, "hs", -1));
 				svg.appendChild(this._text(5, (y1+y2)/2, this.yLabel, "vn", -1));
 				/* grades e escala */
+				let grid = 6;
 				svg.appendChild(this._lines([x1, x2, x2, x1], [y1, y1, y2, y2], 2, true, -1));
 				let i = -1;
-				while (++i <= this._grid) {
+				while (++i <= grid) {
 					/* grades */
-					let yn = y1 + i*((y2-y1)/this._grid);
-					let xn = x1 + i*((x2-x1)/this._grid);
-					if (i > 0 && i < this._grid) {
+					let yn = y1 + i*((y2-y1)/grid);
+					let xn = x1 + i*((x2-x1)/grid);
+					if (i > 0 && i < grid) {
 						svg.appendChild(this._lines([x1, x2], [yn, yn], -0.5, false, -1));
 						svg.appendChild(this._lines([xn, xn], [y1, y2], -0.5, false, -1));
 					}
 					/* escalas */
-					let sx = this._xMin + i*((this._xMax - this._xMin)/this._grid);
-					let sy = this._yMax - i*((this._yMax - this._yMin)/this._grid);
-					let px = i === 0 ? "hnw" : (i === this._grid ? "hne" : "hn");
-					let py = i === 0 ? "hne" : (i === this._grid ? "hse" : "he");
+					let sx = this._xMin + i*((this._xMax - this._xMin)/grid);
+					let sy = this._yMax - i*((this._yMax - this._yMin)/grid);
+					let px = i === 0 ? "hnw" : (i === grid ? "hne" : "hn");
+					let py = i === 0 ? "hne" : (i === grid ? "hse" : "he");
 					svg.appendChild(this._text(xn  , y2+3, __precision(sx, 3), px, -1));
 					svg.appendChild(this._text(x1-3, yn  , __precision(sy, 3), py, -1));
 				}
-
-
-
-
-
-
-
-
-
 			}
 		},
 
@@ -1927,19 +1920,70 @@ const wd = (function() {
 
 
 		plot: {
-			value: function() {
+			value: function(chart) {
 				let plot = this.data();
-				if (plot.length === 0) {
-					this._error = "There is no data for plotting.";
-					return null;
+				if (plot.length === 0) return null;
+				let svg = this._svg();
+				let i;
+				/* plotar gráfico relativos */
+				if (chart === "pie" || chart === "bar") {
+					let sum = 0;
+					let data = {};
+					i = -1;
+					while (++i < plot.length) {
+						if (plot[i].type !== "ratio") continue;
+						let col = plot[i].x;
+						let val = plot[i].y;
+						data[col] = col in data ? data[col]+val : val;
+						sum += val;
+					}
+
+
+
+					if (chart === "pie") {
+						let cx = this._width/2;
+						let cy = this._height/2;
+						let  r = this._height/4;
+						//svg.setAttribute("viewBox", "0 0 1000 1000");
+						let start = 0;
+						let color = 0;
+						for (let j in data) {
+							let width = data[j]/sum*360;
+							let rLabel = 15;
+							let xLabel = cx + (r+rLabel)*Math.cos(2*Math.PI*start/360);
+							let yLabel = cy - (r+rLabel)*Math.sin(2*Math.PI*start/360);
+							let label  = j+" ("+__precision(100*data[j]/sum, 3)+"%)";
+							let anchor = start < 90 ? "hsw" : (start < 180 ? "hse" : (start < 270 ? "hne" : "hnw"));
+							let pie    = this._circles(cx, cy, r, start, width, color);
+							svg.appendChild(this._tip(data[j]+" / "+sum, pie));
+							svg.appendChild(this._text(xLabel, yLabel, label, anchor, color));
+
+
+
+
+							color++;
+							start += width;
+						}
+
+
+
+
+
+
+
+					}
+
+
+					document.body.innerHTML = "";
+					document.body.appendChild(svg);
+					return;
 				}
-				/* preparar área */
-				let svg  = this._svg();
+
+
+
+				/* plotar dados coordenadas cartesiana */
 				this._area(svg);
-
-
-				/* plotar dados */
-				let i = -1;
+				i = -1;
 				while (++i < plot.length) {
 					let type  = plot[i].type;
 					let color = plot[i].color;
