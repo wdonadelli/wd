@@ -1927,50 +1927,61 @@ const wd = (function() {
 				let i;
 				/* plotar gráfico relativos */
 				if (chart === "pie" || chart === "bar") {
-					let sum = 0;
-					let data = {};
+					let color = 0;
+					let sum   = 0;
+					let data  = {};
+					let item  = 0;
 					i = -1;
 					while (++i < plot.length) {
 						if (plot[i].type !== "ratio") continue;
 						let col = plot[i].x;
 						let val = plot[i].y;
-						data[col] = col in data ? data[col]+val : val;
+						if (col in data) {
+							data[col] += val;
+						} else {
+							data[col] = val;
+							item++;
+						}
 						sum += val;
 					}
-
-
 
 					if (chart === "pie") {
 						let cx = this._width/2;
 						let cy = this._height/2;
-						let  r = this._height/4;
-						//svg.setAttribute("viewBox", "0 0 1000 1000");
-						let start = 0;
-						let color = 0;
+						let  r = this._height/3;
+						let start  = 0;
+
+						let rLabel = 15;
+						let info   = [
+							this._yLabel+" / "+this._xLabel+" = ",
+							__precision(sum, 3)+" / "+__precision(item, 3)+" = ",
+							__precision(sum/item, 3)
+						]
+						/* título e rótulos */
+						svg.appendChild(
+							this._text(this._width/2, this._height-5, info.join(""), "hs", -1)
+						);
+						svg.appendChild(
+							this._text(this._width/2, this._yStart, this._title, "hs", -1)
+						);
+						/* gráfico */
 						for (let j in data) {
-							let width = data[j]/sum*360;
-							let rLabel = 15;
-							let xLabel = cx + (r+rLabel)*Math.cos(2*Math.PI*start/360);
-							let yLabel = cy - (r+rLabel)*Math.sin(2*Math.PI*start/360);
-							let label  = j+" ("+__precision(100*data[j]/sum, 3)+"%)";
-							let anchor = start < 90 ? "hsw" : (start < 180 ? "hse" : (start < 270 ? "hne" : "hnw"));
-							let pie    = this._circles(cx, cy, r, start, width, color);
-							svg.appendChild(this._tip(data[j]+" / "+sum, pie));
-							svg.appendChild(this._text(xLabel, yLabel, label, anchor, color));
-
-
-
-
+							let width  = data[j]/sum*360;
+							let middle = (start+width/2);
+							let xLabel = cx + (r+rLabel)*Math.cos(2*Math.PI*middle/360);
+							let yLabel = cy - (r+rLabel)*Math.sin(2*Math.PI*middle/360);
+							let label  = j+": "+__precision(data[j], 3)+" ("+__precision(100*data[j]/sum, 3)+"%)";
+							let fixed  = middle%90 === 0 ? ["hw", "hs", "he", "hn"] : ["hsw", "hse", "hne", "hnw"];
+							let anchor = fixed[__integer(middle/90)];
+							svg.appendChild(
+								this._tip(label, this._circles(cx, cy, r, start, width, color))
+							);
+							svg.appendChild(
+								this._text(xLabel, yLabel, label, anchor, color)
+							);
 							color++;
 							start += width;
 						}
-
-
-
-
-
-
-
 					}
 
 
