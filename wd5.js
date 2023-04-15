@@ -1731,85 +1731,48 @@ const wd = (function() {
     		return d.join(" ");
     	}
     },
-		/**t{b{node}b _lines(b{array}b x, b{array}b y, b{number}b stroke, b{boolean}b close, b{number}b color)}t*/
-		/**d{Retorna elemento SVG renderizado com linhas conectadas pelos pontos.}d L{*/
-		/**d{v{x}v - Coordenadas do eixo v{x}v.}d*/
-		/**d{v{y}v - Coordenadas do eixo v{y}v.}d*/
-		/**d{v{stroke}v - Espessura da linha que, se negativo, será tracejada.}d*/
-		/**d{v{close}v - Informa se é uma figura de área fechada.}d*/
-		/**d{v{color}v - Valor da cor da linha.}d }L*/
-		_lines: {
-			value: function(x, y, stroke, close, color) {
-				let path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-				let width = Math.abs(stroke);
-				let attr = {
-					"d": this._dline(x, y, close),
-					"fill": close === true && color >= 0 ? this._rgb(color) : "none",
-					"fill-opacity": close === true && width > 0 ? 0.7 : 1,
-					"stroke": this._rgb(color),
-					"stroke-width": width,
-					"stroke-dasharray": stroke < 0 ? "8,8" : "none"
-				};
-				for (let i in attr) path.setAttribute(i, attr[i]);
-				return path;
-			}
-		},
-		/**t{b{node}b _circles(b{number}b cx, b{number}b cy, b{number}b r, b{number}b start, b{number}b width, b{number}b color)}t*/
-		/**d{Retorna elemento SVG para circulos e semi-círculos.}d L{*/
-		/**d{v{cx}v - Posição do centro do círculo em v{x}v.}d*/
-		/**d{v{cy}v - Posição do centro do círculo em v{y}v.}d*/
-		/**d{v{r}v - Tamanho do raio do círculo.}d*/
-		/**d{v{start}v - Ângulo inicial do arco, em graus (v{0 = (x = r, y = 0)}v).}d*/
-		/**d{v{width}v - Variação angular, em graus (sentido anti-horário).}d*/
-		/**d{v{color}v - Valor da cor do círculo.}d }L*/
-		_circles: {
-			value: function(cx, cy, r, start, width, color) {
-				let path, attr;
-				if (width >= 360) {
-					path = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-					attr = {
-						cx: cx,
-						cy: cy,
-						r: r,
-						"fill": this._rgb(color),
-						"fill-opacity": 0.9
-					};
-				} else {
-					path   = document.createElementNS("http://www.w3.org/2000/svg", "path");
-					start  = 2*Math.PI*start/360;
-					width  = 2*Math.PI*width/360;
-					let x1 = cx + r*Math.cos(start);
-					let y1 = cy - r*Math.sin(start);
-					let x2 = cx + r*Math.cos(start + width);
-					let y2 = cy - r*Math.sin(start + width);
-					let lg = width > Math.PI ? 1 : 0;
-					let d  = ["M", cx, cy, "L", x1, y1, "A", r, r, 0, lg, 0, x2, y2, "Z"];
-					attr = {
-						"d": d.join(" "),
-						"fill": this._rgb(color),
-						"fill-opacity": 0.9
-					};
-				}
-				for (let i in attr) path.setAttribute(i, attr[i]);
-				return path;
-			}
-		},
-		/**t{b{string}b _rgb(b{integer}b n, b{number}b opacity)}t*/
+   	/**t{b{string}b _rgb(b{integer}b n, b{number}b opacity)}t*/
 		/**d{Retorna a cor em RGB definida por v{n}v para ser utilizada pelo elemento SVG.}d L{*/
-		/**d{v{n}v - Retorna transparente, se nulo ou indefinido, preto, se menor que zero, ou cor definida.}d*/
-		/**d{v{opacity}v - Define o valor da opacidade da cor.}d }L*/
+		/**d{v{n}v - Retorna transparente, se nulo ou indefinido, preto, se menor que zero, ou cor definida.}d }L*/
 		_rgb: {
-			value: function(n, opacity) {
+			value: function(n) {
 				if (n === null || n === undefined) return "none";
-				opacity = opacity === undefined ? "1" : String(opacity);
-				if (n < 0) return "rgba(0,0,0,"+opacity+")";
+				if (n < 0) return "rgb(0,0,0)";
+				let	color = [0,0,0];
+				let div   = 2;
+				let delta = 255/div;
+				let max   = 255*3 - delta;
+				let level = __integer(n/3)+1;
+				let value = (level*delta)%max;
+				color[(n+0)%3]  = value;
+				if (color[(n+0)%3] > 255) {
+					color[(n+1)%3] = color[(n+0)%3] - 255;
+					color[(n+0)%3] = 255;
+				}
+				if (color[(n+1)%3] > 255) {
+					color[(n+2)%3] = color[(n+1)%3] - 255;
+					color[(n+1)%3] = 255;
+				}
+				console.log(n, delta, value, color);
+				return "rgb("+color.join(",")+")";
+
+
+
+
+
+
+
+
+/*
 				let rgb = ["1,0,0", "0,0,1", "0,1,0", "1,0,1", "0,1,1", "1,1,0"];
 				let pow = ["255", "200", "150", "100", "50"];
 				let i   = n%rgb.length;
 				let j   =  __integer(n/rgb.length)%pow.length;
-				let val = rgb[i].replace(/1/g, pow[j])+","+opacity;
+				let val = rgb[i].replace(/1/g, pow[j]);
 				return "rgb("+val+")";
+*/
 			}
+
 		},
 		/**t{b{node}b _line()}t d{Retorna elemento SVG.}d*/
 		_svg: {
@@ -1835,6 +1798,67 @@ const wd = (function() {
 				return svg;
 			}
 		},
+
+		/**t{b{node}b _lines(b{array}b x, b{array}b y, b{number}b stroke, b{boolean}b close, b{number}b color)}t*/
+		/**d{Retorna elemento SVG renderizado com linhas conectadas pelos pontos.}d L{*/
+		/**d{v{x}v - Coordenadas do eixo v{x}v.}d*/
+		/**d{v{y}v - Coordenadas do eixo v{y}v.}d*/
+		/**d{v{stroke}v - Espessura da linha que, se negativo, será tracejada.}d*/
+		/**d{v{close}v - Informa se é uma figura de área fechada.}d*/
+		/**d{v{color}v - Valor da cor da linha.}d }L*/
+		_lines: {
+			value: function(x, y, stroke, close, color) {
+				let path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+				let width = Math.abs(stroke);
+				let attr = {
+					"d": this._dline(x, y, close),
+					"fill": close === true && color >= 0 ? this._rgb(color) : "none",
+					"fill-opacity": close === true && width > 0 ? 0.6 : 1,
+					"stroke": this._rgb(color),
+					"stroke-width": width,
+					"stroke-dasharray": stroke < 0 ? "8,8" : "none",
+					"stroke-linecap": "round"
+				};
+				for (let i in attr) path.setAttribute(i, attr[i]);
+				return path;
+			}
+		},
+		/**t{b{node}b _circles(b{number}b cx, b{number}b cy, b{number}b r, b{number}b start, b{number}b width, b{number}b color)}t*/
+		/**d{Retorna elemento SVG para circulos e semi-círculos.}d L{*/
+		/**d{v{cx}v - Posição do centro do círculo em v{x}v.}d*/
+		/**d{v{cy}v - Posição do centro do círculo em v{y}v.}d*/
+		/**d{v{r}v - Tamanho do raio do círculo.}d*/
+		/**d{v{start}v - Ângulo inicial do arco, em graus (v{0 = (x = r, y = 0)}v).}d*/
+		/**d{v{width}v - Variação angular, em graus (sentido anti-horário).}d*/
+		/**d{v{color}v - Valor da cor do círculo.}d }L*/
+		_circles: {
+			value: function(cx, cy, r, start, width, color) {
+				let svg  = width >= 360 ? "circle" : "path";
+				let path = document.createElementNS("http://www.w3.org/2000/svg", svg);
+				let attr = {
+					"fill": this._rgb(color),
+					"fill-opacity": 0.8,
+					"stroke-width": 1,
+					"stroke": this._rgb(color)
+				};
+				if (width >= 360) {
+					attr.cx = cx;
+					attr.cy = cy;
+					attr.r  = r;
+				} else {
+					start  = 2*Math.PI*start/360;
+					width  = 2*Math.PI*width/360;
+					let x1 = cx + r*Math.cos(start);
+					let y1 = cy - r*Math.sin(start);
+					let x2 = cx + r*Math.cos(start + width);
+					let y2 = cy - r*Math.sin(start + width);
+					let lg = width > Math.PI ? 1 : 0;
+					attr.d = ["M", cx, cy, "L", x1, y1, "A", r, r, 0, lg, 0, x2, y2, "Z"].join(" ");
+				}
+				for (let i in attr) path.setAttribute(i, attr[i]);
+				return path;
+			}
+		},
 		/**t{b{node}b _text(b{number}b x, b{number}b y, b{string}b text, b{string}b point, b{number}b color)}t*/
 		/**d{Adiciona e retorna elemento SVG para texto.}d L{*/
 		/**d{v{x}v - Posição em v{x}v.}d*/
@@ -1858,7 +1882,9 @@ const wd = (function() {
 					"dominant-baseline": vbase[base[point.substr(1)]],
 					"font-family":       "monospace",
 					"font-size":         "1em",
-					"transform":         point[0] === "v" ? "rotate(270)" : ""
+					"transform":         point[0] === "v" ? "rotate(270)" : "",
+					"stroke": "black",
+					"stroke-width": 0.1,
 				};
 				for (let i in attr) content.setAttribute(i, attr[i]);
 				content.textContent = String(text).trim();
