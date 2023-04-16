@@ -1672,13 +1672,18 @@ const wd = (function() {
 	__Plot2D.prototype = Object.create(__Data2D.prototype, {
 		constructor: {value: __Plot2D},
 		/**t{b{number}b _xp(b{number}b x)}t*/
-		/**d{Retorna o ponto de plotagem do eixo v{x}v no SVG.}d L{*/
+		/**d{Retorna u{o ponto}u de plotagem do eixo v{x}v no SVG.}d L{*/
 		/**d{v{x}v - Valor da coordenada v{x}v.}d }L*/
 		_xp: {
 			value: function (x) { /* dp/dx = (p2-p1)/(x2-x1) = (p-p1)/(x-x1) */
 				let p1 = this._xStart;
 				let p2 = p1 + this._xSize;
 				let dp = p2 - p1;
+				if (this._xMin === this._xMax) {//FIXME tem que transformar xMin, xMax, yMin, yMax em getter/setter
+					let diff = this._xMin === 0 ? 1 : this._xMin;
+					this._xMin = this._xMin - diff;
+					this._xMax = this._xMax + diff;
+				}
 				let x1 = this._xMin;
 				let x2 = this._xMax;
 				let dx = x2 - x1;
@@ -1686,21 +1691,31 @@ const wd = (function() {
       }
     },
     /**t{b{number}b _yp(b{number}b x)}t*/
-		/**d{Retorna o ponto de plotagem do eixo v{y}v no SVG.}d L{*/
+		/**d{Retorna u{o ponto}u de plotagem do eixo v{y}v no SVG.}d L{*/
 		/**d{v{y}v - Valor da coordenada v{y}v.}d }L*/
     _yp: {
 			value: function (y) { /* dp/dy = (p2-p1)/(y2-y1) = (p-p1)/(y-y1) */
 				let p1 = this._yStart;
 				let p2 = p1 + this._ySize;
 				let dp = p2 - p1;
+				if (this._yMin === this._yMax) {
+					let diff = this._yMin === 0 ? 1 : this._yMin;
+					this._yMin = this._yMin - diff;
+					this._yMax = this._yMax + diff;
+				}
 				let y1 = this._yMin;
 				let y2 = this._yMax;
+				if (y1 === y2) {
+					let diff = 2*(y1 === 0 ? 1 : y1);
+					y1 = y1 - diff;
+					y2 = y1 + diff;
+				}
 				let dy = y2 - y1;
 				return p1+p2-(((dp/dy)*(y - y1)) + p1);
       }
     },
 		/**t{b{matrix}b _yx(b{array}b x, b{array}b y)t*/
-		/**d{Retorna os pontos de plotagem dos eixos v{x,y}v no SVG.}d L{*/
+		/**d{Retorna u{os pontos}u de plotagem dos eixos v{x,y}v no SVG.}d L{*/
 		/**d{v{x}v - Valores da coordenada v{x}v (coluna 0), ver i{_xp}i.}d*/
 		/**d{v{x}v - Valores da coordenada v{y}v (coluna 1), ver i{_yp}i.}d }L*/
 		_xy: {
@@ -1731,6 +1746,9 @@ const wd = (function() {
     		return d.join(" ");
     	}
     },
+
+
+    _palette: {value: []},
    	/**t{b{string}b _rgb(b{integer}b n, b{number}b opacity)}t*/
 		/**d{Retorna a cor em RGB definida por v{n}v para ser utilizada pelo elemento SVG.}d L{*/
 		/**d{v{n}v - Retorna transparente, se nulo ou indefinido, preto, se menor que zero, ou cor definida.}d }L*/
@@ -1738,41 +1756,37 @@ const wd = (function() {
 			value: function(n) {
 				if (n === null || n === undefined) return "none";
 				if (n < 0) return "rgb(0,0,0)";
-				let	color = [0,0,0];
-				let div   = 2;
-				let delta = 255/div;
-				let max   = 255*3 - delta;
-				let level = __integer(n/3)+1;
-				let value = (level*delta)%max;
-				color[(n+0)%3]  = value;
-				if (color[(n+0)%3] > 255) {
-					color[(n+1)%3] = color[(n+0)%3] - 255;
-					color[(n+0)%3] = 255;
+				/* definir paleta de cores, se ainda não definida */
+				if (this._palette.length === 0) {
+					let max   = 255;
+					let div   = 2.5;
+					let delta = max/div;
+					let error = [([max,max,max]).join(","), "0,0,0"]
+					let color;
+					let x = -1;
+					while (++x < div) { /* cor principal (decrescente) */
+						let y = -1;
+						while (++y < div) {
+							let z = -1;
+							while (++z < div) {
+								color = [
+									__integer(max-x*delta),
+									__integer(y*delta),
+									__integer(z*delta)
+								]; /* x é a cor redominante */
+								let i = -1;
+								while (++i < 3) { /* alternância de cor predominante */
+									let rgb = ([color[i%3], color[(i+1)%3], color[(i+2)%3]]).join(",");
+									if (this._palette.indexOf(rgb) < 0 && error.indexOf(rgb) < 0)
+										this._palette.push(rgb);
+								}
+							}
+						}
+					}
 				}
-				if (color[(n+1)%3] > 255) {
-					color[(n+2)%3] = color[(n+1)%3] - 255;
-					color[(n+1)%3] = 255;
-				}
-				console.log(n, delta, value, color);
-				return "rgb("+color.join(",")+")";
-
-
-
-
-
-
-
-
-/*
-				let rgb = ["1,0,0", "0,0,1", "0,1,0", "1,0,1", "0,1,1", "1,1,0"];
-				let pow = ["255", "200", "150", "100", "50"];
-				let i   = n%rgb.length;
-				let j   =  __integer(n/rgb.length)%pow.length;
-				let val = rgb[i].replace(/1/g, pow[j]);
-				return "rgb("+val+")";
-*/
+				let index = n%this._palette.length;
+				return "rgb("+this._palette[index]+")";
 			}
-
 		},
 		/**t{b{node}b _line()}t d{Retorna elemento SVG.}d*/
 		_svg: {
