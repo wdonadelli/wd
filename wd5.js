@@ -919,16 +919,23 @@ const wd = (function() {
 	}
 /*----------------------------------------------------------------------------*/
 	/**f{b{string}b __precision(b{number}b value, b{integer}b n)}f*/
-	/**p{Fixa a quantidade de dígitos significativos do número.}p l{*/
+	/**p{Fixa a quantidade de dígitos significativos do número. Retorna v{null}v se falhar.}p l{*/
 	/**d{v{value}v - Valor a ser checado.}d*/
 	/**d{v{n}v - (v{&gt; 0}v) Número de dígitos a formatar.}d}l*/
 	function __precision(value, n) {
 		let input = __Type(value);
 		let digit = __Type(n);
-		if (input.type !== "number" || digit.type !== "number") return 0;
-		digit = digit < 1 ? 1 : __integer(digit.value);
+		if (input.type !== "number") return null;
+		if (!__finite(digit.value) || digit.value < 1) return null;
+		digit = __integer(digit.value);
 		input = input.value;
-		return Math.abs(input) < 1 && input !== 0 ? input.toExponential(digit-1) : input.toPrecision(digit);
+		if (Math.abs(input) < 1 && input !== 0) {
+			return Math.abs(input) < Math.pow(10, -digit+1) ? input.toExponential(digit-1) : input.toFixed(digit-1);
+
+
+		} //FIXME tem que decidir o que quer aqui
+
+		return input.toPrecision(digit);
 	}
 /*----------------------------------------------------------------------------*/
 	/**f{b{string}b __notation(b{number}b value, b{string}b lang, b{string}b type, b{void}b code)}f*/
@@ -1429,15 +1436,17 @@ const wd = (function() {
 	function __Data2D(title, xLabel, yLabel) {
 		if (!(this instanceof __Data2D)) return new __Data2D(title, xLabel, yLabel);
 		Object.defineProperties(this, {
-			_title:  {value: title,    writable: true}, /* título do gráfico */
-			_xLabel: {value:xLabel,    writable: true}, /* nome do eixo x */
-			_yLabel: {value:yLabel,    writable: true}, /* nome do eixo y */
-			_xMin:   {value:+Infinity, writable: true}, /* menor valor em x */
-			_xMax:   {value:-Infinity, writable: true}, /* maior valor em x */
-			_yMin:   {value:+Infinity, writable: true}, /* menor valor em y */
-			_yMax:   {value:-Infinity, writable: true}, /* maior valor em x */
-			_color:  {value:-1,        writable: true}, /* controle de cores */
-			_data:   {value:[],        writable: false} /* dados adicionados para plotagem */
+			_title:  {value: title,    writable: true},     /* título do gráfico */
+			_xLabel: {value:xLabel,    writable: true},     /* nome do eixo x */
+			_yLabel: {value:yLabel,    writable: true},     /* nome do eixo y */
+			_lower:  {value: {x: +Infinity, y: +Infinity}}, /* menor valor de x,y */
+			_upper:  {value: {x: -Infinity, y: -Infinity}}, /* maior valor de x,y */
+			//_xMin:   {value:+Infinity, writable: true},     /* menor valor em x */
+			//_xMax:   {value:-Infinity, writable: true},     /* maior valor em x */
+			//_yMin:   {value:+Infinity, writable: true},     /* menor valor em y */
+			//_yMax:   {value:-Infinity, writable: true},     /* maior valor em x */
+			_color:  {value:-1,        writable: true},     /* controle de cores */
+			_data:   {value:[],        writable: false}     /* dados adicionados para plotagem */
 
 		});
 	}
@@ -1462,20 +1471,60 @@ const wd = (function() {
 		/**d{Define os limites superior e inferior dos eixos.}d L{*/
 		/**d{v{x}v - (opcional) Lista de valores para o eixo v{x}v.}d */
 		/**d{v{y}v - (opcional) Lista de valores para o eixo v{y}v.}d }L*/
-		_ends: {
+		/*_ends: {
 			value: function(x, y) {
-				if (__Type(x).type === "array") {
-					let min = Math.min.apply(null, x);
-					let max = Math.max.apply(null, x);
-					this._xMin = min < this._xMin ? min : this._xMin;
-					this._xMax = max > this._xMax ? max : this._xMax;
-				}
-				if (__Type(y).type === "array") {
-					let min = Math.min.apply(null, y);
-					let max = Math.max.apply(null, y);
-					this._yMin = min < this._yMin ? min : this._yMin;
-					this._yMax = max > this._yMax ? max : this._yMax;
-				}
+				this._xMin = x;
+				this._xMax = x;
+				this._yMin = y;
+				this._yMax = y;
+			}
+		},*/
+		/**t{b{number}b _xMin}t d{Obtém e define o limite inferior em v{x}v.}d*/
+		_xMin: {
+			get: function() {
+				if (this._lower.x === this._upper.x)
+					return this._lower.x === 0 ? -1 : this._lower.x*(1 - 0.5);
+				return this._lower.x;
+			},
+			set: function(n) {
+				let min = __Type(n).type === "array" ? Math.min.apply(null, n) : n;
+				this._lower.x = min < this._lower.x ? min : this._lower.x;
+			}
+		},
+		/**t{b{number}b _xMax}t d{Obtém e define o limite superior em v{x}v.}d*/
+		_xMax: {
+			get: function() {
+				if (this._lower.x === this._upper.x)
+					return this._upper.x === 0 ? 1 : this._upper.x*(1 + 0.5);
+				return this._upper.x;
+			},
+			set: function(n) {
+				let max = __Type(n).type === "array" ? Math.max.apply(null, n) : n;
+				this._upper.x = max > this._upper.x ? max : this._upper.x;
+			}
+		},
+		/**t{b{number}b _yMin}t d{Obtém e define o limite inferior em v{y}v.}d*/
+		_yMin: {
+			get: function() {
+				if (this._lower.y === this._upper.y)
+					return this._lower.y === 0 ? -1 : this._lower.y*(1 - 0.5);
+				return this._lower.y;
+			},
+			set: function(n) {
+				let min = __Type(n).type === "array" ? Math.min.apply(null, n) : n;
+				this._lower.y = min < this._lower.y ? min : this._lower.y;
+			}
+		},
+		/**t{b{number}b _yMax}t d{Obtém e define o limite superior em v{y}v.}d*/
+		_yMax: {
+			get: function() {
+				if (this._lower.y === this._upper.y)
+					return this._upper.y === 0 ? 1 : this._upper.y*(1 + 0.5);
+				return this._upper.y;
+			},
+			set: function(n) {
+				let max = __Type(n).type === "array" ? Math.max.apply(null, n) : n;
+				this._upper.y = max > this._upper.y ? max : this._upper.y;
 			}
 		},
 		/**t{b{matrix}b _curve(b{number}b x1, b{number}b x2, b{function}b f)}t*/
@@ -1487,8 +1536,11 @@ const wd = (function() {
 				if (__Type(x).type !== "array") { /* para tipo ratio (x, y não são arrays) */
 					return [x, f];
 				}
-				if (__Type(f).type !== "function") { /* para coordenadas */
-					this._ends(x, f);
+				if (__Type(f).type !== "function") { /* para coordenadas (x e y são arrays) */
+					this._xMin = x;
+					this._xMax = x;
+					this._yMin = f;
+					this._yMax = f;
 					return [x, f];
 				}
 				/* para funções */
@@ -1501,7 +1553,10 @@ const wd = (function() {
 					xn.push(x1 + (i * dx));
 				let matrix = __setFunction(xn, f);
 				if (matrix === null || matrix[0].length < 2) return null;
-				this._ends(matrix[0], matrix[1]);
+				this._xMin = matrix[0];
+				this._xMax = matrix[0];
+				this._yMin = matrix[1];
+				this._yMax = matrix[1];
 				return matrix;
 			}
 		},
@@ -1524,7 +1579,10 @@ const wd = (function() {
 							if (matrix[0].length < 2) return false;
 							x = matrix[0];
 							y = matrix[1];
-							this._ends(x, y);
+							this._xMin = x;
+							this._xMax = x;
+							this._yMin = y;
+							this._yMax = y;
 							break;
 						case "function":
 							matrix = __setUnique(x);
@@ -1532,12 +1590,16 @@ const wd = (function() {
 							matrix = __setSort(matrix[0]);
 							if (matrix[0].length < 2) return false;
 							x = matrix[0];
-							this._ends(x, null);
+							this._xMin = x;
+							this._xMax = x;
 							break;
 					}
 				}
 				catch(e) {return false;}
-				if (type === "area") this._ends(null, [0]);
+				if (type === "area") {
+					this._yMin = 0;
+					this._yMax = 0;
+				}
 				color = color === true ? ++this._color : this._color;
 				this._data.push({x: x, y: y, name: name, type: type, color: color});
 				return true;
@@ -1812,7 +1874,6 @@ const wd = (function() {
 				return svg;
 			}
 		},
-
 		/**t{b{node}b _lines(b{array}b x, b{array}b y, b{number}b stroke, b{boolean}b close, b{number}b color)}t*/
 		/**d{Retorna elemento SVG renderizado com linhas conectadas pelos pontos.}d L{*/
 		/**d{v{x}v - Coordenadas do eixo v{x}v.}d*/
@@ -1911,32 +1972,53 @@ const wd = (function() {
 
 
 		_area: {//FIXME
-			value: function(svg, chart) {
+			value: function(svg, _xlabel, _ylabel, _xgrid, _ygrid) {
+				if (_xgrid < 1) _xgrid = -1;
+				if (_ygrid < 1) _ygrid = -1;
 				/* pontos principais */
 				let x1 = this._xStart;
 				let x2 = x1 + this._xSize;
 				let y1 = this._yStart;
 				let y2 = y1 + this._ySize;
-
-
-
-				/* rótulos */
+				/* título e rótulos */
 				svg.appendChild(this._text((x1+x2)/2, y1/2, this.title, "hc", -1));
-				svg.appendChild(this._text((x1+x2)/2, (this._height-5), this.xLabel, "hs", -1));
-				svg.appendChild(this._text(5, (y1+y2)/2, this.yLabel, "vn", -1));
-				/* grades e escala */
-				let grid = 6;
+				svg.appendChild(this._text((x1+x2)/2, (this._height-5), _xlabel, "hs", -1));
+				svg.appendChild(this._text(5, (y1+y2)/2, _ylabel, "vn", -1));
+				/* grade principal */
 				svg.appendChild(this._lines([x1, x2, x2, x1], [y1, y1, y2, y2], 2, true, -1));
+				/* grade e escala horizontal */
 				let i = -1;
+				while (++i <= _xgrid) {
+					let yn = y1 + i*((y2-y1)/_xgrid);
+					let xn = x1 + i*((x2-x1)/_xgrid);
+					svg.appendChild(this._lines([xn, xn], [y1, y2], -0.5, false, -1));
+					let sx = this._xMin + i*((this._xMax - this._xMin)/_xgrid);
+					let px = i === 0 ? "hnw" : (i === _xgrid ? "hne" : "hn");
+					svg.appendChild(this._text(xn  , y2+3, __precision(sx, 3), px, -1));
+				}
+				/* grade e escala vertical */
+				i = -1;
+				while (++i <= _ygrid) {
+					let yn = y1 + i*((y2-y1)/_ygrid);
+					let xn = x1 + i*((x2-x1)/_ygrid);
+					svg.appendChild(this._lines([x1, x2], [yn, yn], -0.5, false, -1));
+					let sy = this._yMax - i*((this._yMax - this._yMin)/_ygrid);
+					let py = i === 0 ? "hne" : (i === _ygrid ? "hse" : "he");
+					svg.appendChild(this._text(x1-3, yn  , __precision(sy, 3), py, -1));
+				}
+
+
+
+/*
 				while (++i <= grid) {
-					/* grades */
-					let yn = y1 + i*((y2-y1)/grid);
-					let xn = x1 + i*((x2-x1)/grid);
+
+					let yn = y1 + i*((y2-y1)/_ygrid);
+					let xn = x1 + i*((x2-x1)/_xgrid);
 					if (i > 0 && i < grid) {
 						svg.appendChild(this._lines([x1, x2], [yn, yn], -0.5, false, -1));
 						svg.appendChild(this._lines([xn, xn], [y1, y2], -0.5, false, -1));
 					}
-					/* escalas */
+
 					let sx = this._xMin + i*((this._xMax - this._xMin)/grid);
 					let sy = this._yMax - i*((this._yMax - this._yMin)/grid);
 					let px = i === 0 ? "hnw" : (i === grid ? "hne" : "hn");
@@ -1944,6 +2026,10 @@ const wd = (function() {
 					svg.appendChild(this._text(xn  , y2+3, __precision(sx, 3), px, -1));
 					svg.appendChild(this._text(x1-3, yn  , __precision(sy, 3), py, -1));
 				}
+*/
+
+
+
 			}
 		},
 
@@ -2033,7 +2119,7 @@ const wd = (function() {
 
 
 				/* plotar dados coordenadas cartesiana */
-				this._area(svg);
+				this._area(svg, this.xLabel, this.yLabel, 10, 10);
 				i = -1;
 				while (++i < plot.length) {
 					let type  = plot[i].type;
