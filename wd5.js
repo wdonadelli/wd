@@ -2032,8 +2032,6 @@ const wd = (function() {
 					items: {},
 					add: function(item, val) {
 						item = String(item).replace(/\ +/g, " ").trim();
-
-
 						this.items[item] = item in this.items ? (this.items[item]+val) : val;
 					},
 					get list() {
@@ -2046,12 +2044,11 @@ const wd = (function() {
 						for (let i in this.items) n += this.items[i];
 						return n;
 					},
-					ratio: function(i) {return this.items[i]/this.sum;},
+					ratio: function(i) {return this.sum === 0 ? 0 : this.items[i]/this.sum;},
 					get len() {return this.list.length;},
 					get min() {return Math.min.apply(null, this.list.concat(0));},
 					get max() {return Math.max.apply(null, this.list.concat(0));},
 					get avg() {return this.sum/this.len;}
-
 				};
 				let i = -1;
 				while (++i < plot.length) {
