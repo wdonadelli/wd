@@ -1441,10 +1441,6 @@ const wd = (function() {
 			_yLabel: {value:yLabel,    writable: true},     /* nome do eixo y */
 			_lower:  {value: {x: +Infinity, y: +Infinity}}, /* menor valor de x,y */
 			_upper:  {value: {x: -Infinity, y: -Infinity}}, /* maior valor de x,y */
-			//_xMin:   {value:+Infinity, writable: true},     /* menor valor em x */
-			//_xMax:   {value:-Infinity, writable: true},     /* maior valor em x */
-			//_yMin:   {value:+Infinity, writable: true},     /* menor valor em y */
-			//_yMax:   {value:-Infinity, writable: true},     /* maior valor em x */
 			_color:  {value:-1,        writable: true},     /* controle de cores */
 			_data:   {value:[],        writable: false}     /* dados adicionados para plotagem */
 
@@ -1467,18 +1463,6 @@ const wd = (function() {
 		_yStart: {get: function() {return 0.05 * this._height;}},
 		/**t{b{number}b _ySize}t d{Comprimento do eixo v{y}v.}d*/
 		_ySize: {get: function() {return 0.85 * this._height}},
-		/**t{b{void}b _ends(b{array}b x, b{array}b y)}t*/
-		/**d{Define os limites superior e inferior dos eixos.}d L{*/
-		/**d{v{x}v - (opcional) Lista de valores para o eixo v{x}v.}d */
-		/**d{v{y}v - (opcional) Lista de valores para o eixo v{y}v.}d }L*/
-		/*_ends: {
-			value: function(x, y) {
-				this._xMin = x;
-				this._xMax = x;
-				this._yMin = y;
-				this._yMax = y;
-			}
-		},*/
 		/**t{b{number}b _xMin}t d{Obtém e define o limite inferior em v{x}v.}d*/
 		_xMin: {
 			get: function() {
@@ -2041,7 +2025,85 @@ const wd = (function() {
 
 
 
+		_rplot: {
+			value: function(svg, plot) {
+				/* gráficos relativos: setores ou barra */
+				let data  = {
+					items: {},
+					add: function(item, val) {
+						item = String(item).replace(/\ +/g, " ").trim();
 
+
+						this.items[item] = item in this.items ? (this.items[item]+val) : val;
+					},
+					get list() {
+						let n = [];
+						for (let i in this.items) n.push(this.items[i]);
+						return n;
+					},
+					get sum() {
+						let n = 0;
+						for (let i in this.items) n += this.items[i];
+						return n;
+					},
+					ratio: function(i) {return this.items[i]/this.sum;},
+					get len() {return this.list.length;},
+					get min() {return Math.min.apply(null, this.list.concat(0));},
+					get max() {return Math.max.apply(null, this.list.concat(0));},
+					get avg() {return this.sum/this.len;}
+
+				};
+				let i = -1;
+				while (++i < plot.length) {
+					if (plot[i].type === "ratio")
+						data.add(plot[i].x, plot[i].y)
+				}
+				/* setores */
+				if (data.min >= 0) {
+					let cx = this._width/2;
+					let cy = this._height/2;
+					let  r = this._height/3;
+					let start  = 0;
+					let rLabel = 15;
+					let info   = [
+						this._yLabel+" / "+this._xLabel+" = ",
+						__precision(sum, 3)+" / "+__precision(item, 3)+" = ",
+						__precision(sum/item, 3)
+					]
+					/* título e rótulos */
+					svg.appendChild(
+						this._text(this._width/2, this._height-5, info.join(""), "hs", -1)
+					);
+					svg.appendChild(
+						this._text(this._width/2, this._yStart, this._title, "hs", -1)
+					);
+					/* gráfico */
+					for (let j in data) {
+						let width  = data[j]/sum*360;
+						let middle = (start+width/2);
+						let xLabel = cx + (r+rLabel)*Math.cos(2*Math.PI*middle/360);
+						let yLabel = cy - (r+rLabel)*Math.sin(2*Math.PI*middle/360);
+						let label  = j+": "+__precision(data[j], 3)+" ("+__precision(100*data[j]/sum, 3)+"%)";
+						let fixed  = middle%90 === 0 ? ["hw", "hs", "he", "hn"] : ["hsw", "hse", "hne", "hnw"];
+						let anchor = fixed[__integer(middle/90)];
+						svg.appendChild(
+							this._tip(label, this._circles(cx, cy, r, start, width, color))
+						);
+						svg.appendChild(
+							this._text(xLabel, yLabel, label, anchor, color)
+						);
+						color++;
+						start += width;
+					}
+				}
+
+
+					document.body.innerHTML = "";
+					document.body.appendChild(svg);
+					return;
+				}
+
+		},
 
 
 
@@ -2050,77 +2112,11 @@ const wd = (function() {
 				let plot = this.data();
 				if (plot.length === 0) return null;
 				let svg = this._svg();
-				let i;
-				/* plotar gráfico relativos */
-				if (chart === "pie" || chart === "bar") {
-					let color = 0;
-					let sum   = 0;
-					let data  = {};
-					let item  = 0;
-					i = -1;
-					while (++i < plot.length) {
-						if (plot[i].type !== "ratio") continue;
-						let col = plot[i].x;
-						let val = plot[i].y;
-						if (col in data) {
-							data[col] += val;
-						} else {
-							data[col] = val;
-							item++;
-						}
-						sum += val;
-					}
-
-					if (chart === "pie") {
-						let cx = this._width/2;
-						let cy = this._height/2;
-						let  r = this._height/3;
-						let start  = 0;
-
-						let rLabel = 15;
-						let info   = [
-							this._yLabel+" / "+this._xLabel+" = ",
-							__precision(sum, 3)+" / "+__precision(item, 3)+" = ",
-							__precision(sum/item, 3)
-						]
-						/* título e rótulos */
-						svg.appendChild(
-							this._text(this._width/2, this._height-5, info.join(""), "hs", -1)
-						);
-						svg.appendChild(
-							this._text(this._width/2, this._yStart, this._title, "hs", -1)
-						);
-						/* gráfico */
-						for (let j in data) {
-							let width  = data[j]/sum*360;
-							let middle = (start+width/2);
-							let xLabel = cx + (r+rLabel)*Math.cos(2*Math.PI*middle/360);
-							let yLabel = cy - (r+rLabel)*Math.sin(2*Math.PI*middle/360);
-							let label  = j+": "+__precision(data[j], 3)+" ("+__precision(100*data[j]/sum, 3)+"%)";
-							let fixed  = middle%90 === 0 ? ["hw", "hs", "he", "hn"] : ["hsw", "hse", "hne", "hnw"];
-							let anchor = fixed[__integer(middle/90)];
-							svg.appendChild(
-								this._tip(label, this._circles(cx, cy, r, start, width, color))
-							);
-							svg.appendChild(
-								this._text(xLabel, yLabel, label, anchor, color)
-							);
-							color++;
-							start += width;
-						}
-					}
-
-
-					document.body.innerHTML = "";
-					document.body.appendChild(svg);
-					return;
-				}
-
-
+				if (chart === "ratio") return this._rplot(svg, plot);
 
 				/* plotar dados coordenadas cartesiana */
 				this._area(svg, this.xLabel, this.yLabel, 10, 10);
-				i = -1;
+				let i = -1;
 				while (++i < plot.length) {
 					let type  = plot[i].type;
 					let color = plot[i].color;
