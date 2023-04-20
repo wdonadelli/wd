@@ -997,90 +997,80 @@ const wd = (function() {
 /*----------------------------------------------------------------------------*/
 	/**f{b{matrix}b __setFinite(b{array}b ...)}f*/
 	/**p{Analisa a série de arrays informada e a transforma numa matriz de números finitos.}p*/
+	/**p{Apenas arrays com comprimento maior que zero serão apreciados na construção da matriz.}p*/
 	/**p{Cada array informado corresponderá a uma coluna da matriz, na ordem informada.}p*/
-	/**p{Linhas que contenham valores não finitos, em qualquer dos arrays, serão eliminadas na construção da matriz.}p*/
+	/**p{Linhas com valores não finitos serão eliminadas na construção da matriz em todas as colunas.}p*/
 	/**p{Retornará c{null}c em caso de matriz vazia.}p*/
 	function __setFinite() {
-		let dataset = []; /* capturas os argumentos válidos */
-		let errors  = []; /* captura os itens não finitos */
-		let limit   = Infinity; /* captura menor item dos argumentos com valor válido */
+		let dataset = [];       /* captura apenas os argumentos válidos (array com itens) */
+		let error   = [];       /* captura os itens não finitos de cada array */
+		let upper   = Infinity; /* captura o menor dentre os últimos itens válidos de cada array */
+		/* se o argumento é um array e contém itens, inserir em dataset */
 		let i = -1;
-		while (++i < arguments.length) { /* lista de argumentos válidos */
+		while (++i < arguments.length) {
 			let input = __Type(arguments[i]);
-			if (input.type !== "array" || arguments[i].length === 0) continue;
-			dataset.push(arguments[i]);
+			if (input.type === "array" && arguments[i].length > 0)
+				dataset.push(arguments[i]);
 		}
 		if (dataset.length === 0) return null;
+		/* se o item de cada array não é finito, registrá-lo para ser ignorado */
 		i = -1;
-		while (++i < dataset.length) { /* navegar pelos argumentos válidos */
-			let len = 0;
+		while (++i < dataset.length) {
+			let item = -1;
 			let j = -1;
-			while (++j < dataset[i].length) { /* checar validade dos items do argumento */
+			while (++j < dataset[i].length) {
 				let data = __Type(dataset[i][j]);
 				dataset[i][j] = data.finite ? data.value : null;
-				 /* registrar item não finito ou maior item válido */
-				if (!data.finite) {errors.push(j);} else {len = j+1};
+				if (!data.finite) {error.push(j);} else {item = j;}
 			}
-			limit = len < limit ? len : limit; /* registrar o menor item com valor válido */
+			/* se algum array não tiver finitos, não continuar */
+			if (item < 0) return null;
+			upper = item < upper ? item : upper;
 		}
-		if (limit === 0) return null;
-		/* obter a matrix */
+		/* se o maior item válido dentre os array é zero, cancelar */
+		if (upper < 0) return null;
+		/* se o item não estiver para ser ignorado, adicionar à matriz até o limite superior */
 		let matrix = [];
 		i = -1;
 		while (++i < dataset.length) {
 			matrix.push([]);
 			let j = -1;
-			while (++j < limit) {
-				if (errors.indexOf(j) >= 0) continue;
-				matrix[i].push(dataset[i][j]);
+			while (++j < (upper+1)) {
+				if (error.indexOf(j) < 0) matrix[i].push(dataset[i][j]);
 			}
 		}
+		if (matrix[0].length === 0) return null;
 		return matrix;
 	}
 /*----------------------------------------------------------------------------*/
 	/**f{b{matrix}b __setSort(b{array}b ...)}f*/
-	/**p{Analisa a série de arrays informada e a transforma numa matriz de números finitos ordenadas pela primeira coluna.}p*/
-	/**p{Cada array informado corresponderá a uma coluna da matriz, na ordem informada.}p*/
-	/**p{Linhas que contenham valores não finitos, em qualquer dos arrays, serão eliminadas na construção da matriz.}p*/
-	/**p{Retornará c{null}c em caso de matriz vazia.}p*/
+	/**p{Analisa a série de arrays informada e a transforma numa matriz de números finitos ordenada pela primeira coluna.}p*/
+	/**p{Quanto aos argumentos e retorno, observar i{__setFinite}i.}p */
 	function __setSort() {
-		/* transformar os argumentos numa matrix só de números finitos */
 		let matrix = __setFinite.apply(null, arguments);
 		if (matrix === null) return null;
-		let list = [];
+		/* obter a ordenação da primeira coluna */
+		let order = [];
 		let i = -1;
-		/* transformar matrix em uma lista de objetos */
-		while (++i < matrix[0].length) {
-			list.push({});
-			let j = -1;
-			while (++j < matrix.length) {
-				let id = String(j);
-				list[i][id] = matrix[j][i];
-			}
-		}
-		/* ordenar objetos da lista pela primeira coluna da matrix */
-		list = list.sort(function(a, b) {
-			return a["0"] < b["0"] ? -1 : 1;
-		});
-		/* transformar a lista ordenada em matriz */
+		while (++i < matrix[0].length)
+			order.push({item: i, value: matrix[0][i]});
+		order = order.sort(function (a, b) {return a.value < b.value ? -1 : 1;});
+		/* criar uma matriz odenada */
 		let sort = [];
-		for (let k in list[0]) sort.push([]);
 		i = -1;
-		while (++i < list.length) {
-			for (let k in list[i]) {
-				let id = String(k);
-				sort[id].push(list[i][k]);
-			}
+		while(++i < matrix.length) {
+			sort.push([]);
+			let j = -1;
+			while(++j < order.length)
+				sort[i].push(matrix[i][order[j].item]);
 		}
 		return sort;
 	}
 /*----------------------------------------------------------------------------*/
 	/**f{b{matrix}b __setUnique(b{array}b ...)}f*/
 	/**p{Analisa a série de arrays informada e a transforma numa matriz de números finitos não repetidos.}p*/
-	/**p{A não repetição dos valores será observada apenas na primiera coluna da matriz.}p*/
-	/**p{Cada array informado corresponderá a uma coluna da matriz, na ordem informada.}p*/
-	/**p{Linhas que contenham valores não finitos, em qualquer dos arrays, serão eliminadas na construção da matriz.}p*/
-	/**p{Retornará c{null}c em caso de matriz vazia.}p*/
+	/**p{A referência para a não repetição a primeira coluna da matriz.}p*/
+	/**p{Quanto aos argumentos e retorno, observar i{__setFinite}i.}p */
 	function __setUnique() {
 		/* transformar os argumentos numa matrix só de números finitos */
 		let matrix = __setFinite.apply(null, arguments);
@@ -1095,7 +1085,7 @@ const wd = (function() {
 	/**p{Retorna uma matriz de duas colunas formada pelos valores de v{x}v e do resultado de v{f(x)}v.}p l{*/
 	/**d{v{x}v - Conjunto de números base (coluna 0).}d*/
 	/**d{v{f}v - Função a ser operada sobre os valores de v{x}v (coluna 1).}d*/
-	/**d{v{finite}v - (opcional, c{true}c) Se verdadeiro, retornará uma matriz só com finitos, caso conctrário, todos os valores.}d}l*/
+	/**d{v{finite}v - (opcional) Se falso, a matriz retornará todos os valores obtidos, inclusive os não finitos como nulos.}d}l*/
 	function __setFunction(x, f, finite) {
 		let check = __Type(x);
 		let input = __Type(f);
@@ -1119,6 +1109,80 @@ const wd = (function() {
 		}
 		return finite === false ? [x,y] : __setFinite(x, y);
 	}
+/*----------------------------------------------------------------------------*/
+	function __setSum(x) {
+		x = __Type(x).type === "array" ? x : Array.prototype.slice.call(arguments);
+		let matrix = __setFinite(x);
+		if (matrix === null) return null;
+		let sum = 0;
+		let i = -1;
+		while (++i < matrix[0].length) sum += matrix[0][i];
+		return sum;
+	}
+/*----------------------------------------------------------------------------*/
+	function __setAvg(x) {
+		x = __Type(x).type === "array" ? x : Array.prototype.slice.call(arguments);
+		let matrix = __setFinite(x);
+		if (matrix === null) return null;
+		let sum = __setSum(matrix[0]);
+		return sum/matrix[0].length;
+	}
+/*----------------------------------------------------------------------------*/
+	function __setMed(x) {
+		x = __Type(x).type === "array" ? x : Array.prototype.slice.call(arguments);
+		let matrix = __setSort(x);
+		if (matrix === null) return null;
+		let y = matrix[0];
+		let l = matrix[0].length;
+		return l%2 === 0 ? (y[l/2]+y[(l/2)-1])/2 : y[(l-1)/2];
+	}
+
+/*----------------------------------------------------------------------------*/
+	function __setHarm(x) {
+		x = __Type(x).type === "array" ? x : Array.prototype.slice.call(arguments);
+		let matrix = __setFunction(x, function(y) {return 1/y;});
+		if (matrix === null) return null;
+		let y = __setSum(matrix[1]);
+		let l = matrix[1].length;
+		return y === 0 ? null : l/y;
+	}
+
+/*----------------------------------------------------------------------------*/
+//function wd_coord_med(x) __setMed(x)
+//function wd_coord_avg(x) __setAvg(x)
+//function wd_coord_harm(x) __setHarm(x)
+//function wd_coord_geo(x) __setGeo(x)
+
+
+
+  function __setGeo(x) { /* retorna a média geométrica */
+  	x = __Type(x).type === "array" ? x : Array.prototype.slice.call(arguments);
+		let matrix = __setFunction(x, function(y) {return 1/y;});
+		if (matrix === null) return null;
+
+
+		let geo = wd_coord_product(x, 1);
+		return (geo === null) ? null : Math.pow(geo.value, 1/geo.length);
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /*----------------------------------------------------------------------------*/
 	/**f{b{object}b __leastSquares(b{array}b x, b{array}b y)}f*/
 	/**p{Retorna um objeto com as constantes angular (v{a}v) e linear (v{b}v) do método dos mínimos quadrados (v{y=ax+b}v).}p l{*/
@@ -5838,6 +5902,7 @@ const wd = (function() {
 		today:   {get:   function() {return WD(new Date());}},
 		now:     {get:   function() {return WD(wd_str_now());}},
 		type:    {value: function(x){return __Type(x);}},
+		arr: {value: function(){return __setHarm.apply(null, Array.prototype.slice.call(arguments));}},
 		fit: {value: function(){return __Fit2D.apply(null, Array.prototype.slice.call(arguments));}},
 		plot: {value: function(){return __Plot2D.apply(null, Array.prototype.slice.call(arguments));}},
 		test: {value: function(){return __setUnique.apply(null, Array.prototype.slice.call(arguments));}},
