@@ -650,30 +650,632 @@ const wd = (function() {
 				return this._type;
 			}
 		},
-		/**t{b{void}b valueOf}t d{Retorna o método i{valueOf}i do retorno do atributo i{value}i.}d}l*/
+		/**t{b{void}b valueOf}t d{Retorna o método i{valueOf}i do retorno do atributo i{value}i.}d*/
 		valueOf: {
 			value: function() {
 				return this.value.valueOf();
 			}
 		},
-		/**t{b{string}b toString}t d{Retorna o método i{toString()}i do retorno do atributo i{value}i.}d}l*/
+		/**t{b{string}b toString}t d{Retorna o método i{toString()}i do retorno do atributo i{value}i.}d*/
 		toString: {
 			value: function() {
 				return this.value.toString();
 			}
 		}
+		/**}l*/
 	});
 
 /*===========================================================================*/
-	/**3{Ferramentas Numéricas}3*/
+	/**3{Números}3*/
 /*===========================================================================*/
 
+	/**f{b{object}b __Number(b{number}b input)}f*/
+	/**p{Construtor para manipulação de números.}p*/
+	/**l{d{v{input}v - Número.}d}l*/
+	function __Number(input) {
+		if (!(this instanceof __Number)) return new __Number(input);
+		let check = __Type(input);
+		if (check.type !== "number") throw new TypeError("__Number Error: "+input);
+		Object.defineProperties(this, {
+			_value: {value: check.value},
+			finite: {value: check.finite}
+		});
+	}
+	/**6{Métodos e atributos}6 l{*/
+	Object.defineProperties(__Number.prototype, {
+		constructor: {value: __Number},
+		/**t{b{boolean}b finite}t d{Retorna verdadeiro se for um número finito.}d*/
+		finite: {
+			get: function() {return this._finite;}
+		},
+		valueOf: {
+			value: function() {return this._value;}
+		},
+		toString: {
+			value: function() {
+				if (this.finite) return this.valueOf().toString();
+				return (this < 0 ? "-" : "+")+"\u221E";
+			}
+		},
+		/**t{b{number}b abs}t d{Retorna o valor absoluto do número.}d*/
+		abs: {
+			get: function() {return (this < 0 ? -1 : +1) * this.valueOf();}
+		},
+		/**t{b{integer}b int}t d{Retorna a parte inteira do número.}d*/
+		int: {
+			get: function() {
+				return (this.valueOf() < 0 ? -1 : 1) * Math.floor(Math.abs(this.valueOf()));
+			}
+		},
+		/**t{b{float}b dec}t d{Retorna a parte decimal do número.}d*/
+		dec: {
+			get: function() {
+				if (!this.finite) return this.valueOf();
+				let exp   = 1;
+				while ((this.valueOf() * exp)%1 !== 0) exp = 10*exp;
+				return (exp*this.valueOf() - exp*this.int) / exp;
+			}
+		},
+		/**t{b{number}b round(n)}t d{Arredonda o número conforme especificado.}d*/
+		/**L{d{v{n}v - (opcional) Quantidade de casas decimais (padrão v{3}v).}d}L*/
+		round: {
+			value: function(n) {
+				if (!this.finite) return this.valueOf();
+				n = __Number(__Type(n).finite ? n : 3);
+				n = n < 0 ? 0 : n.int;
+				return Number(this.valueOf().toFixed(n));
+			}
+		},
+		/**t{b{number}b cut(n)}t d{Corta o número de casas decimais conforme especificado (não arredonda).}d*/
+		/**L{d{v{n}v - (opcional) Quantidade de casas decimais (padrão v{3}v).}d}L*/
+		cut: {
+			value: function(n) {
+				if (!this.finite) return this.valueOf();
+				n = __Number(__Type(n).finite ? n : 3);
+				n = n < 0 ? 0 : n.int;
+				let base = 1;
+				let i = -1;
+				while (++i < n) base = 10*base;
+				let value = __Number(base*this.valueOf());
+				return value.int/base;
+			}
+		},
+		/**t{b{array}b primes}t d{Retorna uma lista com os números primos até o valor informado.}d*/
+		primes: {
+			get: function() {
+				if (!this.finite || this < 2) return [];
+				let list = [2];
+				let i    = 3;
+				while (i <= this.int) {
+					let isPrime = true;
+					let j = 0; /* não checar o 2 */
+					while (++j < list.length) {
+						if (i % list[j] === 0) {
+							isPrime = false;
+							break;
+						}
+					}
+					if (isPrime) list.push(i);
+					i += 2; /* não checar par */
+				}
+				return list;
+			}
+		},
+		/**t{b{boolean}b prime}t d{Retorna verdadeiro se o número for primo.}d*/
+		prime: {
+			get: function() {
+				if (this < 2 || !this.finite || this.dec !== 0) return false;
+				return this.primes.reverse()[0] === this.valueOf() ? true : false;
+			}
+		},
+		/**t{b{string}b frac(n)}t d{Retorna a notação em forma de fração.}d*/
+		/**L{d{v{n}v - (opcional) Limitador de precisão (padrão v{3}v).}d}L*/
+		frac: {
+			value: function(n) {
+				let int = Math.abs(this.int);
+				let dec = Math.abs(this.dec);
+				if (!this.finite || dec === 0) return this.toString();
+				/* checando argumento limitador */
+				n = __Number(__Type(n).finite ? n : 3);
+				if (n < 1) return this.int.toString();
+				n = n > 5 ? 5 : n.int;
+				/* divisor, dividendo e números significativos */
+				let div = 1;
+				let dnd = dec * div;
+				let len = 0;
+				while(dnd%1 !== 0) {
+					div = 10*div;
+					dnd = dec * div;
+					/* checando limites */
+					let check = __Number(dnd);
+					if (check.int !== 0) {
+						len++;
+						if (len >= n) {
+							dnd = check.int;
+							break;
+						}
+					}
+				}
+				/* obtendo o máximo divisor comum e a fração */
+				//FIXME tem que construir o GDC primeiro
+				let gcd = __gcd(div, dnd);
+				int = int === 0 ? "" : int.toString()+" ";
+				dnd = String(dnd/gcd);
+				div = String(div/gcd);
+				return (input < 0 ? "-" : "")+int+dnd+"/"+div;
+			}
+		},
+		/**t{b{string}b bytes}t d{Retorna a notação em bytes.}d*/
+		bytes: {
+			get: function() {
+				if (this < 1)     return "0 B";
+				if (!this.finite) return this.toString()+" B";
+				let scale = ["B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
+				let i     = scale.length;
+				while (--i >= 0)
+					if (this >= Math.pow(1024,i))
+						return (this.int/Math.pow(1024,i)).toFixed(2)+" "+scale[i];
+				return this.int+" B";
+			}
+		},
+		/**t{b{string}b real}t d{Retorna o tipo do número v{zero, infinity, integer, real}v.}d*/
+		real: {
+			get: function() {
+				if (this == 0)      return "zero";
+				if (!this.finite)   return "infinity";
+				if (this.dec === 0) return "integer";
+				return "real";
+			}
+		},
+		/**t{b{string}b precision(n)}t d{Fixa a quantidade de dígitos significativos.}d*/
+		/**L{d{v{n}v - (opcional) Quantidade dígitos (padrão v{3}v).}d}L*/
+		precision: {
+			value: function(n) {
+				n = __Number(__Type(n).finite ? n : 3);
+				n = n < 1 ? 1 : n.int;
+				//FIXME tem que descobrir o que quero com isso e arrumar essa porra
+				if (this.abs < 1 && this !== 0)
+					return this.valueOf()[this.abs < Math.pow(10,-n+1) ? "toExponential" : "toFixed"](n-1);
+				return this.valueOf().toPrecision(n);
+			}
+		},
+		/**t{b{string}b notation(b{number}b value, b{string}b lang, b{string}b type, b{void}b code)}t*/
+		/**d{Formata em determinada notação a{https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/NumberFormat}a.}d*/
+		/**L{*/
+		/**d{v{type}v - Tipo da formatação:}d L{*/
+		/**d{v{"significant"}v - fixa número de dígitos significativos.}d*/
+		/**d{v{"decimal"}v - fixa número de casas decimais.}d*/
+		/**d{v{"integer"}v - fixa número de dígitos inteiros.}d*/
+		/**d{v{"percent"}v - transforma o número em notação percentual.}d*/
+		/**d{v{"unit"}v - define a unidade de medida.}d*/
+		/**d{v{"scientific"}v - notação científica.}d*/
+		/**d{v{"engineering"}v - notação de engenharia.}d*/
+		/**d{v{"compact"}v - notação compacta curta ou longa.}d*/
+		/**d{v{"currency"}v - Notação monetária.}d*/
+		/**d{v{"ccy"}v - Notação monetária curta.}d*/
+		/**d{v{"nameccy"}v - Notação monetária textual.}d }L*/
+		/**d{v{code}v - depende do tipo da formatação:}d L{*/
+		/**d{v{"significant"}v - quantidade de números significativos.}d*/
+		/**d{v{"decimal"}v - número de casas decimais.}d*/
+		/**d{v{"integer"}v - número de dígitos inteiros.}d*/
+		/**d{v{"percent"}v - número de casas decimais.}d*/
+		/**d{v{"unit"}v - nome da unidade de medida a{https://tc39.es/proposal-unified-intl-numberformat/section6/locales-currencies-tz_proposed_out.html#sec-issanctionedsimpleunitidentifier}a.}d*/
+		/**d{v{"scientific"}v - número de casas decimais.}d*/
+		/**d{v{"engineering"}v - número de casas decimais.}d*/
+		/**d{v{"compact"}v - Longa (v{"long"}v) ou curta (v{"short"}v).}d*/
+		/**d{v{"currency"}v - Código monetário a{https://www.six-group.com/en/products-services/financial-information/data-standards.html#scrollTo=currency-codes}a.}d*/
+		/**d{v{"ccy"}v - Código monetário.}d*/
+		/**d{v{"nameccy"}v - Código monetário.}d }L*/
+		/**d{v{lang}v - (Opcional) Código da linguagem a ser aplicada.}d*/
+		/**}L*/
+		notation: {
+			value: function (type, code, lang) {
+				if (!this.finite) return this.toString();
+				lang = __Type(lang) !== "string" ? undefined : lang.trim();
+				let types = {
+					significant: {
+						minimumSignificantDigits: code,
+						maximumSignificantDigits: code
+					},
+					decimal: {
+						style: "decimal",
+						minimumFractionDigits: code,
+						maximumFractionDigits: code
+					},
+					integer: {
+						style: "decimal",
+						minimumIntegerDigits: code
+					},
+					percent: {
+						style: "percent",
+						minimumFractionDigits: code,
+						maximumFractionDigits: code
+					},
+					unit: {
+						style: "unit",
+						unit: code
+					},
+					scientific: {
+						style: "decimal",
+						notation: "scientific",
+						minimumFractionDigits: code,
+						maximumFractionDigits: code
+					},
+					engineering: {
+						style: "decimal",
+						notation: "engineering",
+						minimumFractionDigits: code,
+						maximumFractionDigits: code
+					},
+					compact: {
+						style: "decimal",
+						notation: "compact",
+						compactDisplay: code === "short" ? code : "long"
+					},
+					currency: {
+						style: "currency",
+						currency: code,
+						signDisplay: "exceptZero",
+						currencyDisplay: "symbol"
+					},
+					ccy: {
+						style: "currency",
+						currency: code,
+						signDisplay: "exceptZero",
+						currencyDisplay: "narrowSymbol"
+					},
+					nameccy: {
+						style: "currency",
+						currency: code,
+						signDisplay: "auto",
+						currencyDisplay: "name"
+					}
+				};
+				type = String(type).toLowerCase();
+				try {
+					return this.valueOf().toLocaleString(lang, (type in types ? types[type] : {}));
+				} catch(e) {
+					return this.valueOf().toLocaleString();
+				}
+			}
+		},
+	/**}l*/
+	});
 
-	function __finite(value) { //FIXME substituir isso aqui no fim
+/*===========================================================================*/
+	/**3{Textos}3*/
+/*===========================================================================*/
+
+	/**f{b{object}b __String(b{string}b input)}f*/
+	/**p{Construtor para manipulação de textos.}p*/
+	/**l{d{v{input}v - Texto.}d}l*/
+	function __String(input) {
+		if (!(this instanceof __String)) return new __String(input);
+		let check = __Type(input);
+		if (check.type !== "string") throw new TypeError("__String Error: "+input);
+		Object.defineProperties(this, {
+			_value: {value: check.value}
+		});
+	}
+	/**6{Métodos e atributos}6 l{*/
+	Object.defineProperties(__String.prototype, {
+		constructor: {value: __String},
+		valueOf: {
+			value: function() {return this._value;}
+		},
+		toString: {
+			value: function() {return this.clear(true, false);}
+		},
+		/**t{b{string}b length}t d{Retorna a quantidade de caracteres.}d*/
+		length: {
+			get: function() {return this.valueOf().length;}
+		},
+		/**t{b{string}b upper}t d{Retorna caixa alta.}d*/
+		upper: {
+			get: function() {return this.valueOf().toUpperCase();}
+		},
+		/**t{b{string}b lower}t d{Retorna caixa baixa.}d*/
+		lower: {
+			get: function() {return this.valueOf().toLowerCase();}
+		},
+		/**t{b{string}b toggle}t d{Inverte a caixa.}d*/
+		toggle: {
+			get: function() {
+				let list = [];
+				let i = -1;
+				while (++i < this.length) {
+					let char  = this.valueOf()[i];
+					let upper = char.toUpperCase();
+					let lower = char.toLowerCase();
+					list.push(char === upper ? lower : upper);
+				}
+				return list.join("");
+			}
+		},
+		/**t{b{string}b captalize}t d{Primeira letra de cada palavra, apenas, em caixa alta.}d*/
+		capitalize: {
+			get: function() {
+				let value = this.lower;
+				let chars = [this.upper[0]];
+				let i = -1;
+				while (++i < (value.length - 1)) /* vai até o penúltimo */
+					chars.push(
+						(/\s/).test(value[i]) ? value[i+1].toUpperCase() : value[i+1]
+					);
+				return chars.join("");
+			}
+		},
+		/**t{b{string}b clear(b{boolean}b white, b{boolean}b accent)}t d{Limpa espaços desnecessários ou acentos.}d L{*/
+		/**d{v{white}v - (opcional) Limpa espaços (padrão c{true}c).}d*/
+		/**d{v{accent}v - (opcional) Limpa acentos (padrão c{true}c).}d}L*/
+		clear: {
+			value: function(white, accent) {
+				let value = this.valueOf();
+				if (white !== false)
+					value = value.replace(/\s+/g, " ").trim();
+				if (accent !== false)
+					value = value.normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+				return value;
+			}
+		},
+		/**t{b{string}b dash}t d{Retorna uma string identificadora no formato de u{traços}u.}d*/
+		dash: {
+			get: function() {
+				let value = this.clear().replace(/\ +/g, "-").split("");
+				let i = -1;
+				while (++i < value.length) {
+					if (!(/[a-zA-Z0-9._:-]/).test(value[i])) /* eliminar caracteres não permitidos */
+						value[i] = "";
+					else if (/[A-Z]/.test(value[i])) /* adicionar traço antes de maiúsculas e inverter caixa */
+						value[i] = "-"+value[i].toLowerCase();
+				}
+				value = value.join("").replace(/\-+/g, "-");
+				return value.replace(/^\-+/, "").replace(/\-+$/, "");
+			}
+		},
+		/**t{b{string}b camel}t d{Retorna uma string identificadora no formato de u{camelCase}u.}d*/
+		camel: {
+			get: function() {
+				let value = this.dash.split("-");
+				let i = 0;
+				while (++i < value.length)
+					value[i] = value[i].charAt(0).toUpperCase()+value[i].substr(1);
+				return value.join("");
+			}
+		},
+	/**}l*/
+	});
+
+/*===========================================================================*/
+	/**3{Listas}3*/
+/*===========================================================================*/
+
+	/**f{b{object}b __Array(b{array}b input|b{void}b ...)}f*/
+	/**p{Construtor para manipulação de textos.}p*/
+	/**l{d{v{input}v - Array ou itens como argumentos.}d}l*/
+	function __Array(input) {
+		if (arguments.length === 0) throw new TypeError("__Array Error: "+input);
+		let check = __Type(input);
+		if (check.type !== "array") {
+			let list = [];
+			let i = -1;
+			while (++i < arguments.length) list.push(arguments[i]);
+			input = list;
+		}
+		if (!(this instanceof __Array))	return new __Array(input);
+		Object.defineProperties(this, {
+			_value: {value: input, writable: true}
+		});
+	}
+	/**6{Métodos e atributos}6 l{*/
+	Object.defineProperties(__Array.prototype, {
+		constructor: {value: __Array},
+		valueOf: {
+			value: function() {return this._value;}
+		},
+		toString: {
+			value: function() {return this._value;}
+		},
+		/**t{b{string}b length}t d{Retorna a quantidade de itens da lista.}d*/
+		length: {
+			get: function() {return this.valueOf().length;}
+		},
+		/**t{b{array}b add(b{void}b ...)}t d{Adiciona itens (argumentos) ao fim da lista e a retorna.}d*/
+		add: {
+			value: function() {
+				let i = -1;
+				while (++i < arguments.length)
+					this._value.push(arguments[i]);
+				return this.valueOf();
+			}
+		},
+		/**t{b{array}b top(b{void}b ...)}t d{Adiciona itens (argumentos) ao início da lista e a retorna.}d*/
+		top: {
+			value: function() {
+				let i = arguments.length;
+				while (--i >= 0)
+					this._value.unshift(arguments[i]);
+				return this.valueOf();
+			}
+		},
+		/**t{b{array}b concat(b{array}b list)}t d{Concatena a lista a atual (ao fim).}d L{*/
+		/**d{v{list}v - Lista a ser concatenada.}d}L*/
+		concat: {
+			value: function(list) {
+				if (__Type(list).type === "array")
+					this.add.apply(null, list);
+				return this.valueOf();
+			}
+		},
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*----------------------------------------------------------------------------*/
+	function wd_array_item(array, i) { /* retorna o índice especificado ou seu comprimento */
+		if (!__finite(i)) return array.length;
+		i = __integer(i);
+		i = i < 0 ? array.length + i : i;
+		return array[i];
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_array_check(array, values) { /* informa se o array contem os valores */
+		if (values.length === 0) return false;
+		for (let i = 0; i < values.length; i++)
+			if (array.indexOf(values[i]) < 0) return false;
+		return true;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_array_search(array, value) { /* procura item no array e retorna os índices localizados */
+		let index = [];
+		for (let i = 0; i < array.length; i++)
+			if (array[i] === value) index.push(i);
+		return index.length === 0 ? null : index;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_array_del(array, values) { /* retorna um array sem os valores informados */
+		let list = [];
+		for (let i = 0; i < array.length; i++)
+			if (values.indexOf(array[i]) < 0) list.push(array[i])
+		return list;
+	}
+
+
+/*----------------------------------------------------------------------------*/
+	function wd_array_tgl(array, values) { /* alterna a existência de valores do array */
+		for (let i = 0 ; i < values.length; i++) {
+			if (array.indexOf(values[i]) < 0)
+				array = wd_array_add(array, [values[i]]);
+			else
+				array = wd_array_del(array, [values[i]]);
+		}
+		return array;
+	}
+
+
+/*----------------------------------------------------------------------------*/
+	function wd_array_count(array, value) { /* retorna a quantidade de vezes que o item aparece */
+		let test = wd_array_search(array, value);
+		return test === null ? 0 : test.length;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_array_rpl(array, item, value) { /* muda os valores de determinado item */
+		let index = wd_array_search(array, item);
+		if (index === null) return array;
+		array = array.slice();
+		for (let i = 0; i < index.length; i++) array[index[i]] = value;
+		return array;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_array_unique(array) { /* remove itens repetidos */
+		return array.filter(function(v, i, a) {
+			return a.indexOf(v) == i;}
+		);
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_array_sort(array) { /* ordena items */
+
+
+		let order = [/*sequência de exibição por tipo*/
+			"number", "time", "date", "text", "boolean", "null", "dom",
+			"array", "object", "function", "regexp", "undefined", "unknown"
+		];
+
+		array = array.slice();
+		array.sort(function(a, b) {
+			let atype  = wd_vtype(a).type;
+			let btype  = wd_vtype(b).type;
+			let aindex = order.indexOf(atype);
+			let bindex = order.indexOf(btype);
+			let avalue = a;
+			let bvalue = b;
+
+			if (aindex > bindex) return  1;
+			if (aindex < bindex) return -1;
+			if (atype === "dom") {/*atype === btype (tipos iguais)*/
+				let check = wd_array_sort([a.textContent, b.textContent]);
+				avalue = a.textContent === check[0] ? 0 : 1;
+				bvalue = avalue === 0 ? 1 : 0;
+			} else if (atype === "text") {
+				avalue = __strClear(a.toUpperCase());
+				bvalue = __strClear(b.toUpperCase());
+
+			} else if (["number", "boolean", "date", "time"].indexOf(atype) >= 0) {
+				avalue = wd_vtype(a).value;
+				bvalue = wd_vtype(b).value;
+			}
+			return avalue > bvalue ? 1 : -1;
+		});
+
+		return array;
+	}
+
+/*----------------------------------------------------------------------------*/
+	function wd_array_csv(array) { /* transforma um array em dados CSV */
+		let csv = [];
+
+		for (let i = 0; i < array.length; i++) {
+			let line = array[i];
+			let type = wd_vtype(line).type;
+
+			if (type === "array") {
+				for (let j = 0; j < line.length; j++)
+					line[j] = String(line[j]).replace(/\t/g, " ").replace(/\n/g, " ");
+			} else {
+				line = [String(line).replace(/\t/g, " ").replace(/\n/g, " ")];
+			}
+
+
+			csv.push(line.join("\t"));
+		}
+
+		return csv.join("\n");
+	}
+
+
+
+
+
+
+
+
+
+	/**}l*/
+	});
+
+
+
+
+	//FIXME apagar após reestruturação
+	function __finite(value) {
 		let input = __Type(value);
 		return input.finite;
 	}
-//FIXME tirar as funções $$ e $ para HTML
+
+
+
+
+
+
+//FIXME fazer um objeto __$$ e __$ que herdará de __HTML
 /*----------------------------------------------------------------------------*/
 	/**f{b{node}b __$$(b{string}b selector, b{node}b root)}f*/
 	/**p{Retorna uma lista de elementos do tipo obtida em i{querySelectorAll}i, vazia em caso de erro.}p l{*/
@@ -2324,98 +2926,6 @@ const wd = (function() {
 
 
 
-
-
-
-
-
-
-
-
-/*===========================================================================*/
-	/**3{Ferramentas para Strings}3*/
-/*===========================================================================*/
-
-
-/*----------------------------------------------------------------------------*/
-	/**f{b{string}b __caseCapitalize(b{string}b value)}f*/
-	/**p{Retorna maiúsculo apenas a primeira letra de cada palavra ou c{null}c em caso de erro.}p l{*/
-	/**d{v{value}v - Valor a ser checado.}d}l*/
-	function __caseCapitalize(value) {
-		let input = __Type(value);
-		if (!input.string) return null;
-		value = value.toLowerCase();
-		let chars = [value[0].toUpperCase()];
-		let i = -1;
-		while (++i < (value.length - 1)) /* vai até o penúltimo */
-			chars.push(
-				(/\s/).test(value[i]) ? value[i+1].toUpperCase() : value[i+1]
-			);
-		return chars.join("");
-	}
-/*----------------------------------------------------------------------------*/
-	/**f{b{string}b __caseToggle(b{string}b value)}f*/
-	/**p{Retorna o inverso do valor de caixa do texto ou c{null}c em caso de erro.}p l{*/
-	/**d{v{value}v - Valor a ser checado.}d}l*/
-	function __caseToggle(value) {
-		let input = __Type(value);
-		if (!input.string) return null;
-		let list = [];
-		let i = -1;
-		while (++i < value.length) {
-			let char  = value[i];
-			let upper = char.toUpperCase();
-			let lower = char.toLowerCase();
-			list.push(char === upper ? lower : upper);
-		}
-		return list.join("");
-	}
-/*----------------------------------------------------------------------------*/
-	/**f{b{string}b __strClear(b{string}b value, b{boolean}b white, b{boolean}b accent)}f*/
-	/**p{Retorna a string limpa de espaços ou acentos, ou c{null}c em caso de erro.}p l{*/
-	/**d{v{value}v - Valor a ser checado.}d*/
-	/**d{v{white}v - (opcional, c{true}c) Se verdadeiro, remove espaços em branco em excesso.}d*/
-	/**d{v{accent}v -(opcional, c{true}c) Se verdadeiro, remove os acentos latinos.}d}l*/
-	function __strClear(value, white, accent) {
-		let input = __Type(value);
-		if (!input.string) return null;
-		if (white !== false)
-			value = value.replace(/\s+/g, " ").trim();
-		if (accent !== false)
-			value = value.normalize('NFD').replace(/[\u0300-\u036f]/g, "");
-		return value;
-	}
-/*----------------------------------------------------------------------------*/
-	/**f{b{string}b __strDash(b{string}b value)}f*/
-	/**p{Retorna uma string identificadora no formato de v{traços}v ou c{null}c em caso de erro.}p l{*/
-	/**d{v{value}v - Valor a ser checado.}d}l*/
-	function __strDash(value) {
-		value = __strClear(value);
-		if (value === null) return value;
-		value = value.replace(/\ +/g, "-").split("");
-		let i = -1;
-		while (++i < value.length) {
-			if (!(/[a-zA-Z0-9._:-]/).test(value[i])) /* eliminar caracteres não permitidos */
-				value[i] = "";
-			else if (/[A-Z]/.test(value[i])) /* adicionar traço antes de maiúsculas e inverter caixa */
-				value[i] = "-"+value[i].toLowerCase();
-		}
-		value = value.join("").replace(/\-+/g, "-");
-		return value.replace(/^\-+/, "").replace(/\-+$/, "");
-	}
-/*----------------------------------------------------------------------------*/
-	/**f{b{string}b __strCamel(b{string}b value)}f*/
-	/**p{Retorna uma string identificadora no formato v{camelCase}v ou c{null}c em caso de erro.}p l{*/
-	/**d{v{value}v - Valor a ser checado.}d}l*/
-	function __strCamel(value) {
-		value = __strDash(value);
-		if (value === null) return value;
-		value = value.split("-");
-		let i = 0;
-		while (++i < value.length)
-			value[i] = value[i].charAt(0).toUpperCase()+value[i].substr(1);
-		return value.join("");
-	}
 
 
 
@@ -5450,7 +5960,7 @@ const wd = (function() {
 			get: function() {return __strCamel(this.toString());}
 		},
 		dash: { /* transforma string para inicio-meio-fim */
-			get: function() {return __strDash(this.toString());}
+			get: function() {return __String(this.toString()).dash;}
 		},
 		csv: { /* CSV para Matriz */
 			get: function() {return wd_csv_array(this.toString());}
@@ -5902,6 +6412,10 @@ const wd = (function() {
 		today:   {get:   function() {return WD(new Date());}},
 		now:     {get:   function() {return WD(wd_str_now());}},
 		type:    {value: function(x){return __Type(x);}},
+
+		array: {value: function(){return __Array.apply(null, Array.prototype.slice.call(arguments));}},
+		number: {value: function(){return __Number.apply(null, Array.prototype.slice.call(arguments));}},
+		string: {value: function(){return __String.apply(null, Array.prototype.slice.call(arguments));}},
 		arr: {value: function(){return __setHarm.apply(null, Array.prototype.slice.call(arguments));}},
 		fit: {value: function(){return __Fit2D.apply(null, Array.prototype.slice.call(arguments));}},
 		plot: {value: function(){return __Plot2D.apply(null, Array.prototype.slice.call(arguments));}},
@@ -6582,7 +7096,7 @@ const wd = (function() {
 				position: obj.vstyle("position").toLowerCase(),
 			};
 			for (let i = 0; i < stl.length; i++) {
-				let val = obj.vstyle(__strDash(stl[i]));
+				let val = obj.vstyle(__String(stl[i]).dash);
 				msr[i]  = __integer(val.replace(/[^0-9\.]/g, ""));
 			}
 			return msr;
