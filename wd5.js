@@ -631,12 +631,12 @@ const wd = (function() {
 		/**L{t{b{integer}b h}t d{Hora.}d*/
 		/**t{b{integer}b m}t d{Minuto.}d*/
 		/**t{b{integer}b s}t d{Segundo.}d*/
-		/**t{b{integer}b valueOf}t d{Quantidade total de segundos desde v{00h00}v.}d}L*/
+		/**t{b{integer}b valueOf()}t d{Quantidade total de segundos desde v{00h00}v.}d}L*/
 		/**d{O tipo i{date}i retorna um objeto com a seguinte estrutura:}d*/
 		/**L{t{b{integer}b h}t d{dia.}d*/
 		/**t{b{integer}b m}t d{mês.}d*/
 		/**t{b{integer}b y}t d{ano.}d*/
-		/**t{b{integer}b valueOf}t d{Quantidade total de dias desde v{0001-01-01}v.}d}L*/
+		/**t{b{integer}b valueOf()}t d{Quantidade total de dias desde v{0001-01-01}v.}d}L*/
 		value: {
 			get: function() {
 				if (this._type === null) this._init();
@@ -650,13 +650,13 @@ const wd = (function() {
 				return this._type;
 			}
 		},
-		/**t{b{void}b valueOf}t d{Retorna o método i{valueOf}i do retorno do atributo i{value}i.}d*/
+		/**t{b{void}b valueOf()}t d{Retorna o método i{valueOf}i do retorno do atributo i{value}i.}d*/
 		valueOf: {
 			value: function() {
 				return this.value.valueOf();
 			}
 		},
-		/**t{b{string}b toString}t d{Retorna o método i{toString()}i do retorno do atributo i{value}i.}d*/
+		/**t{b{string}b toString()}t d{Retorna o método i{toString()}i do retorno do atributo i{value}i.}d*/
 		toString: {
 			value: function() {
 				return this.value.toString();
@@ -1053,15 +1053,15 @@ const wd = (function() {
 	/**f{b{object}b __Array(b{array}b input|b{void}b ...)}f*/
 	/**p{Construtor para manipulação de textos.}p*/
 	/**l{d{v{input}v - Array ou itens como argumentos.}d}l*/
-	function __Array(input) {
-		if (arguments.length === 0) throw new TypeError("__Array Error: "+input);
-		let check = __Type(input);
-		if (check.type !== "array") {
-			let list = [];
-			let i = -1;
-			while (++i < arguments.length) list.push(arguments[i]);
-			input = list;
-		}
+	function __Array() {
+		let input;
+		if (arguments.length === 0)
+			input = [];
+		else if (arguments.length > 1)
+			input = Array.prototype.slice.call(arguments)
+		else
+			input = __Type(arguments[0]).type === "array" ? arguments[0] : [arguments[0]];
+
 		if (!(this instanceof __Array))	return new __Array(input);
 		Object.defineProperties(this, {
 			_value: {value: input, writable: true}
@@ -1070,11 +1070,19 @@ const wd = (function() {
 	/**6{Métodos e atributos}6 l{*/
 	Object.defineProperties(__Array.prototype, {
 		constructor: {value: __Array},
+		/**t{b{void}b valueOf(b{integer}b n)}t d{Retorna a lista ou o seu item, se definido.}d*/
+		/**L{d{v{n}v - (Opicional) Identificador do item, se negativo, a referência inicia no fim da lista.}d}L*/
 		valueOf: {
-			value: function() {return this._value;}
+			value: function(n) {
+				if (n === undefined) return this._value;
+				n = __Type(n).type !== "number" ? null : __Number(n);
+				if (n === null) return this._value;
+				n = n < 0 ? this._value.length + n.int : n.int;
+				return this._value[n];
+			}
 		},
 		toString: {
-			value: function() {return this._value;}
+			value: function() {return JSON.stringify(this._value);}
 		},
 		/**t{b{string}b length}t d{Retorna a quantidade de itens da lista.}d*/
 		length: {
@@ -1107,6 +1115,154 @@ const wd = (function() {
 				return this.valueOf();
 			}
 		},
+		/**t{b{array}b only(b{string}b type, b{boolean}b keep)}t d{Retorna uma lista somente com os tipos de itens definidos.}d L{*/
+		/**d{v{type}v - Tipo do item a se manter na lista (ver argumentos de i{__Type}i.}d*/
+		/**d{v{keep}v - (opcional) Se verdadeiro, o item não casado será mantido com valor c{null}c (padrão c{false}c).}d}L*/
+		only: {
+			value: function(type, keep) {
+				let list = [];
+				let i = -1;
+				while (++i < this.length) {
+					let check = __Type(this.valueOf()[i]);
+					if (type in check && check[type] === true)
+						list.push(check.value);
+					else if (keep === true)
+						list.push(null);
+				}
+				return list;
+			}
+		},
+		/**t{b{number}b min}t d{Retorna o menor número finito da lista ou c{null}c em caso de inválido.}d*/
+		min: {
+			get: function() {
+				let list = this.only("finite");
+				return list.length === 0 ? null : Math.min.apply(null, list);
+			}
+		},
+		/**t{b{number}b max}t d{Retorna o maior número finito da lista ou c{null}c em caso de inválido.}d*/
+		max: {
+			get: function() {
+				let list = this.only("finite");
+				return list.length === 0 ? null : Math.max.apply(null, list);
+			}
+		},
+		/**t{b{number}b sum}t d{Retorna a soma dos números finitos da lista ou c{null}c em caso de inválido.}d*/
+		sum: {
+			get: function() {
+				let list = this.only("finite");
+				if (list.length === 0) return null;
+				let sum  = 0;
+				let i = -1;
+				while (++i < list.length) sum += list[i];
+				return sum;
+			}
+		},
+		/**t{b{number}b avg}t d{Retorna a média dos números finitos da lista ou c{null}c em caso de inválido.}d*/
+		avg: {
+			get: function() {
+				let list = this.only("finite");
+				return list.length === 0 ? null : this.sum/list.length;
+			}
+		},
+		/**t{b{number}b med}t d{Retorna a mediana dos números finitos da lista ou c{null}c em caso de inválido.}d*/
+		med: {
+			get: function() {
+				let list = this.only("finite");
+				if (list.length === 0) return null;
+				let y    = list.sort(function(a,b) {return a < b ? -1 : 1;});
+				let l    = list.length;
+				return l%2 === 0 ? (y[l/2]+y[(l/2)-1])/2 : y[(l-1)/2];
+			}
+		},
+		/**t{b{number}b harm}t d{Retorna a média harmônica dos números finitos da lista ou c{null}c em caso de inválido.}d*/
+		harm: {
+			get: function() {
+				let list = this.only("finite");
+				if (list.length === 0) return null;
+				let sum = 0;
+				let i = -1;
+				while (++i < list.length) {
+					if (list[i] === 0) return null;
+					sum += 1/list[i];
+				}
+				return list.length/sum;
+			}
+		},
+		/**t{b{number}b geo}t d{Retorna a média geométrica dos números finitos da lista ou c{null}c em caso de inválido.}d*/
+		geo: {
+			get: function() {
+				let list = this.only("finite");
+				if (list.length === 0) return null;
+				let mult = 1;
+				let i = -1;
+				while (++i < list.length) {
+					if (list[i] === 0) return null;
+					mult = mult*list[i];
+				}
+				if (mult < 0 && list.length%2 === 0) return null
+				return Math.pow(mult, 1/list.length);
+			}
+		},
+		/**t{b{array}b mode}t d{Retorna uma lista com a moda dos números finitos da lista ou c{null}c em caso de inválido.}d*/
+		mode: {
+			get: function() {
+				let list = this.only("finite");
+				if (list.length === 0) return null;
+				let val = [];
+				let len = [];
+				let i = -1;
+				while (++i < list.length) {
+					let index = val.indexOf(list[i]);
+					if (index < 0) {
+						val.push(list[i]);
+						len.push(1);
+					} else {
+						len[index]++;
+					}
+				}
+				let max  = Math.max.apply(null, len);
+				let mode = [];
+				i = -1;
+				while (++i < len.length)
+					if (len[i] === max) mode.push(val[i]);
+				return mode.length === len.length && len.length > 1 ? null : mode;
+			}
+		},
+		/**t{b{boolean}b check(b{void}b ...)}t d{Checa se os valores informados estão presentes na lista.}d*/
+		check: {
+			value: function() {
+				if (arguments.length === 0) return false;
+				let value = Array.prototype.slice.call(arguments);
+				let i = -1;
+				while (++i < value.length)
+					if (this.valueOf().indexOf(value[i]) < 0) return false;
+				return true;
+			}
+		},
+		/**t{b{array}b search(b{void}b value)}t d{Retorna uma lista com os índices onde o valor foi localizado.}d L{*/
+		/**d{v{value}v - Valor a ser localizado.}d}L*/
+		search: {
+			value: function(value) {
+				let index = [];
+				let i = -1;
+				while (++i < this.length)
+					if (this.valueOf()[i] === value) index.push(i);
+				return index;
+			}
+		},
+		/**t{b{array}b del(b{void}b ...)}t d{Retorna uma lista ignorando os valores informados.}d*/
+		del: {
+			value: function() {
+				if (arguments.length === 0) return this.valueOf();
+				let value = Array.prototype.slice.call(arguments);
+				let index = [];
+				let i = -1;
+				while (++i < this.length)
+					if (value.indexOf(this.valueOf()[i]) < 0)
+						index.push(this.valueOf(i));
+				return index;
+			}
+		},
 
 
 
@@ -1123,41 +1279,13 @@ const wd = (function() {
 
 
 
-/*----------------------------------------------------------------------------*/
-	function wd_array_item(array, i) { /* retorna o índice especificado ou seu comprimento */
-		if (!__finite(i)) return array.length;
-		i = __integer(i);
-		i = i < 0 ? array.length + i : i;
-		return array[i];
-	}
-
-/*----------------------------------------------------------------------------*/
-	function wd_array_check(array, values) { /* informa se o array contem os valores */
-		if (values.length === 0) return false;
-		for (let i = 0; i < values.length; i++)
-			if (array.indexOf(values[i]) < 0) return false;
-		return true;
-	}
-
-/*----------------------------------------------------------------------------*/
-	function wd_array_search(array, value) { /* procura item no array e retorna os índices localizados */
-		let index = [];
-		for (let i = 0; i < array.length; i++)
-			if (array[i] === value) index.push(i);
-		return index.length === 0 ? null : index;
-	}
-
-/*----------------------------------------------------------------------------*/
-	function wd_array_del(array, values) { /* retorna um array sem os valores informados */
-		let list = [];
-		for (let i = 0; i < array.length; i++)
-			if (values.indexOf(array[i]) < 0) list.push(array[i])
-		return list;
-	}
+/*
 
 
-/*----------------------------------------------------------------------------*/
-	function wd_array_tgl(array, values) { /* alterna a existência de valores do array */
+
+
+
+	function wd_array_tgl(array, values) { // alterna a existência de valores do array
 		for (let i = 0 ; i < values.length; i++) {
 			if (array.indexOf(values[i]) < 0)
 				array = wd_array_add(array, [values[i]]);
@@ -1168,14 +1296,13 @@ const wd = (function() {
 	}
 
 
-/*----------------------------------------------------------------------------*/
-	function wd_array_count(array, value) { /* retorna a quantidade de vezes que o item aparece */
+
+	function wd_array_count(array, value) { /* retorna a quantidade de vezes que o item aparece
 		let test = wd_array_search(array, value);
 		return test === null ? 0 : test.length;
 	}
 
-/*----------------------------------------------------------------------------*/
-	function wd_array_rpl(array, item, value) { /* muda os valores de determinado item */
+	function wd_array_rpl(array, item, value) { /* muda os valores de determinado item
 		let index = wd_array_search(array, item);
 		if (index === null) return array;
 		array = array.slice();
@@ -1183,18 +1310,16 @@ const wd = (function() {
 		return array;
 	}
 
-/*----------------------------------------------------------------------------*/
-	function wd_array_unique(array) { /* remove itens repetidos */
+	function wd_array_unique(array) { /* remove itens repetidos
 		return array.filter(function(v, i, a) {
 			return a.indexOf(v) == i;}
 		);
 	}
 
-/*----------------------------------------------------------------------------*/
-	function wd_array_sort(array) { /* ordena items */
+	function wd_array_sort(array) { // ordena items
 
 
-		let order = [/*sequência de exibição por tipo*/
+		let order = [//sequência de exibição por tipo
 			"number", "time", "date", "text", "boolean", "null", "dom",
 			"array", "object", "function", "regexp", "undefined", "unknown"
 		];
@@ -1210,7 +1335,7 @@ const wd = (function() {
 
 			if (aindex > bindex) return  1;
 			if (aindex < bindex) return -1;
-			if (atype === "dom") {/*atype === btype (tipos iguais)*/
+			if (atype === "dom") {//atype === btype (tipos iguais)
 				let check = wd_array_sort([a.textContent, b.textContent]);
 				avalue = a.textContent === check[0] ? 0 : 1;
 				bvalue = avalue === 0 ? 1 : 0;
@@ -1228,8 +1353,7 @@ const wd = (function() {
 		return array;
 	}
 
-/*----------------------------------------------------------------------------*/
-	function wd_array_csv(array) { /* transforma um array em dados CSV */
+	function wd_array_csv(array) { /* transforma um array em dados CSV
 		let csv = [];
 
 		for (let i = 0; i < array.length; i++) {
@@ -1253,7 +1377,7 @@ const wd = (function() {
 
 
 
-
+*/
 
 
 
@@ -1712,60 +1836,6 @@ const wd = (function() {
 		return finite === false ? [x,y] : __setFinite(x, y);
 	}
 /*----------------------------------------------------------------------------*/
-	function __setSum(x) {
-		x = __Type(x).type === "array" ? x : Array.prototype.slice.call(arguments);
-		let matrix = __setFinite(x);
-		if (matrix === null) return null;
-		let sum = 0;
-		let i = -1;
-		while (++i < matrix[0].length) sum += matrix[0][i];
-		return sum;
-	}
-/*----------------------------------------------------------------------------*/
-	function __setAvg(x) {
-		x = __Type(x).type === "array" ? x : Array.prototype.slice.call(arguments);
-		let matrix = __setFinite(x);
-		if (matrix === null) return null;
-		let sum = __setSum(matrix[0]);
-		return sum/matrix[0].length;
-	}
-/*----------------------------------------------------------------------------*/
-	function __setMed(x) {
-		x = __Type(x).type === "array" ? x : Array.prototype.slice.call(arguments);
-		let matrix = __setSort(x);
-		if (matrix === null) return null;
-		let y = matrix[0];
-		let l = matrix[0].length;
-		return l%2 === 0 ? (y[l/2]+y[(l/2)-1])/2 : y[(l-1)/2];
-	}
-
-/*----------------------------------------------------------------------------*/
-	function __setHarm(x) {
-		x = __Type(x).type === "array" ? x : Array.prototype.slice.call(arguments);
-		let matrix = __setFunction(x, function(y) {return 1/y;});
-		if (matrix === null) return null;
-		let y = __setSum(matrix[1]);
-		let l = matrix[1].length;
-		return y === 0 ? null : l/y;
-	}
-
-/*----------------------------------------------------------------------------*/
-//function wd_coord_med(x) __setMed(x)
-//function wd_coord_avg(x) __setAvg(x)
-//function wd_coord_harm(x) __setHarm(x)
-//function wd_coord_geo(x) __setGeo(x)
-
-
-
-  function __setGeo(x) { /* retorna a média geométrica */
-  	x = __Type(x).type === "array" ? x : Array.prototype.slice.call(arguments);
-		let matrix = __setFunction(x, function(y) {return 1/y;});
-		if (matrix === null) return null;
-
-
-		let geo = wd_coord_product(x, 1);
-		return (geo === null) ? null : Math.pow(geo.value, 1/geo.length);
-	}
 
 
 
