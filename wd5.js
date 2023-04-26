@@ -294,7 +294,7 @@ const wd = (function() {
 				dateDMY: /^(0[1-9]|[12]\d|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/,
 				dateMDY: /^(0[1-9]|1[0-2])\.(0[1-9]|[12]\d|3[01])\.\d{4}$/,
 				dateYMD: /^\d{4}\-(0[1-9]|1[0-2])\-(0[1-9]|[12]\d|3[01])$/,
-				time12:  /^(0?[1-9]|1[0-2])\:[0-5]\d\ ?[ap]m$/i,
+				time12:  /^(0?[1-9]|1[0-2])\:[0-5]\d(\:[0-5]\d)?\ ?[ap]m$/i,
 				time24:  /^(0?\d|1\d|2[0-4])(\:[0-5]\d){1,2}$/
 			}
 		},
@@ -521,12 +521,12 @@ const wd = (function() {
 					if (h < 1 || h > 12) return false;
 					h = am ? (h % 12) : (h === 12 ? 12 : ((12 + h ) % 24));
 					m = Number(time[1]);
-					s = 0;
+					s = time.length === 3 ? Number(time[2]) : 0;
 				} else if (this._re.time24.test(value)) { /* HH:MM:SS */
 					let time = this._input.split(":");
 					h = Number(time[0]);
 					m = Number(time[1]);
-					s = time.length === 3 ? Number(date[2]) : 0;
+					s = time.length === 3 ? Number(time[2]) : 0;
 				} else {
 					return false;
 				}
@@ -981,28 +981,21 @@ const wd = (function() {
 		/**t{b{string}b toggle}t d{Inverte a caixa.}d*/
 		toggle: {
 			get: function() {
-				let list = [];
-				let i = -1;
-				while (++i < this.length) {
-					let char  = this.valueOf()[i];
-					let upper = char.toUpperCase();
-					let lower = char.toLowerCase();
-					list.push(char === upper ? lower : upper);
-				}
+				let list = this._value.split("");
+				list.forEach(function(v,i,a) {
+					a[i] = v === v.toUpperCase() ? v.toLowerCase() : v.toUpperCase();
+				});
 				return list.join("");
 			}
 		},
 		/**t{b{string}b captalize}t d{Primeira letra de cada palavra, apenas, em caixa alta.}d*/
 		capitalize: {
 			get: function() {
-				let value = this.lower;
-				let chars = [this.upper[0]];
-				let i = -1;
-				while (++i < (value.length - 1)) /* vai até o penúltimo */
-					chars.push(
-						(/\s/).test(value[i]) ? value[i+1].toUpperCase() : value[i+1]
-					);
-				return chars.join("");
+				let list = this._value.split("");
+				list.forEach(function(v,i,a) {
+					a[i] = i === 0 || (/\s/).test(a[i-1]) ? v.toUpperCase() : v.toLowerCase();
+				});
+				return list.join("");
 			}
 		},
 		/**t{b{string}b clear(b{boolean}b white, b{boolean}b accent)}t d{Limpa espaços desnecessários ou acentos.}d L{*/
@@ -1052,7 +1045,7 @@ const wd = (function() {
 
 	/**f{b{object}b __Array(b{array}b input|b{void}b ...)}f*/
 	/**p{Construtor para manipulação de textos.}p*/
-	/**l{d{v{input}v - Array ou itens como argumentos.}d}l*/
+	/**l{d{v{input}v - Array ou cada argumento corresponderá a um item.}d}l*/
 	function __Array() {
 		let input;
 		if (arguments.length === 0)
@@ -1074,97 +1067,68 @@ const wd = (function() {
 		/**L{d{v{n}v - (Opicional) Identificador do item, se negativo, a referência inicia no fim da lista.}d}L*/
 		valueOf: {
 			value: function(n) {
-				if (n === undefined) return this._value;
-				n = __Type(n).type !== "number" ? null : __Number(n);
-				if (n === null) return this._value;
-				n = n < 0 ? this._value.length + n.int : n.int;
-				return this._value[n];
+				n = __Type(n).finite ? __Number(n) : null;
+				return n === null ? this._value : this._value[n < 0 ? this.length + n.int : n.int]
 			}
 		},
+		/**t{b{void}b toString()}t d{Retorna a lista em formato JSON.}d*/
 		toString: {
 			value: function() {return JSON.stringify(this._value);}
 		},
 		/**t{b{string}b length}t d{Retorna a quantidade de itens da lista.}d*/
 		length: {
-			get: function() {return this.valueOf().length;}
-		},
-		/**t{b{array}b add(b{void}b ...)}t d{Adiciona itens (argumentos) ao fim da lista e a retorna.}d*/
-		add: {
-			value: function() {
-				let i = -1;
-				while (++i < arguments.length)
-					this._value.push(arguments[i]);
-				return this.valueOf();
-			}
-		},
-		/**t{b{array}b top(b{void}b ...)}t d{Adiciona itens (argumentos) ao início da lista e a retorna.}d*/
-		top: {
-			value: function() {
-				let i = arguments.length;
-				while (--i >= 0)
-					this._value.unshift(arguments[i]);
-				return this.valueOf();
-			}
-		},
-		/**t{b{array}b concat(b{array}b list)}t d{Concatena a lista a atual (ao fim).}d L{*/
-		/**d{v{list}v - Lista a ser concatenada.}d}L*/
-		concat: {
-			value: function(list) {
-				if (__Type(list).type === "array")
-					this.add.apply(null, list);
-				return this.valueOf();
-			}
+			get: function() {return this._value.length;}
 		},
 		/**t{b{array}b only(b{string}b type, b{boolean}b keep)}t d{Retorna uma lista somente com os tipos de itens definidos.}d L{*/
 		/**d{v{type}v - Tipo do item a se manter na lista (ver argumentos de i{__Type}i.}d*/
 		/**d{v{keep}v - (opcional) Se verdadeiro, o item não casado será mantido com valor c{null}c (padrão c{false}c).}d}L*/
 		only: {
 			value: function(type, keep) {
-				let list = [];
+				let list   = [];
+				let change = ["finite", "number", "boolean"];
 				let i = -1;
 				while (++i < this.length) {
-					let check = __Type(this.valueOf()[i]);
+					let check = __Type(this._value[i]);
 					if (type in check && check[type] === true)
-						list.push(check.value);
+						list.push(change.indexOf(type) < 0 ? this._value[i] : check.valueOf());
 					else if (keep === true)
 						list.push(null);
 				}
 				return list;
 			}
 		},
-		/**t{b{number}b min}t d{Retorna o menor número finito da lista ou c{null}c em caso de inválido.}d*/
+		/**t{b{number}b min}t d{Retorna o menor número finito ou c{null}c em caso de inválido.}d*/
 		min: {
 			get: function() {
 				let list = this.only("finite");
 				return list.length === 0 ? null : Math.min.apply(null, list);
 			}
 		},
-		/**t{b{number}b max}t d{Retorna o maior número finito da lista ou c{null}c em caso de inválido.}d*/
+		/**t{b{number}b max}t d{Retorna o maior número finito ou c{null}c em caso de incoerência.}d*/
 		max: {
 			get: function() {
 				let list = this.only("finite");
 				return list.length === 0 ? null : Math.max.apply(null, list);
 			}
 		},
-		/**t{b{number}b sum}t d{Retorna a soma dos números finitos da lista ou c{null}c em caso de inválido.}d*/
+		/**t{b{number}b sum}t d{Retorna a soma dos números finitos ou c{null}c em caso de incoerência.}d*/
 		sum: {
 			get: function() {
 				let list = this.only("finite");
 				if (list.length === 0) return null;
 				let sum  = 0;
-				let i = -1;
-				while (++i < list.length) sum += list[i];
+				list.forEach(function(v,i,a) {sum += v;});
 				return sum;
 			}
 		},
-		/**t{b{number}b avg}t d{Retorna a média dos números finitos da lista ou c{null}c em caso de inválido.}d*/
+		/**t{b{number}b avg}t d{Retorna a média dos números finitos ou c{null}c em caso de incoerência.}d*/
 		avg: {
 			get: function() {
 				let list = this.only("finite");
 				return list.length === 0 ? null : this.sum/list.length;
 			}
 		},
-		/**t{b{number}b med}t d{Retorna a mediana dos números finitos da lista ou c{null}c em caso de inválido.}d*/
+		/**t{b{number}b med}t d{Retorna a mediana dos números finitos ou c{null}c em caso de incoerência.}d*/
 		med: {
 			get: function() {
 				let list = this.only("finite");
@@ -1174,69 +1138,105 @@ const wd = (function() {
 				return l%2 === 0 ? (y[l/2]+y[(l/2)-1])/2 : y[(l-1)/2];
 			}
 		},
-		/**t{b{number}b harm}t d{Retorna a média harmônica dos números finitos da lista ou c{null}c em caso de inválido.}d*/
+		/**t{b{number}b harm}t d{Retorna a média harmônica dos números finitos ou c{null}c em caso de incoerência (zeros são ignorados).}d*/
 		harm: {
 			get: function() {
 				let list = this.only("finite");
-				if (list.length === 0) return null;
-				let sum = 0;
-				let i = -1;
-				while (++i < list.length) {
-					if (list[i] === 0) return null;
-					sum += 1/list[i];
-				}
-				return list.length/sum;
+				let sum  = 0;
+				list.forEach(function (v,i,a) {sum += v === 0 ? 0 : 1/v;});
+				return list.length === 0 || sum === 0 ? null : list.length/sum;
 			}
 		},
-		/**t{b{number}b geo}t d{Retorna a média geométrica dos números finitos da lista ou c{null}c em caso de inválido.}d*/
+		/**t{b{number}b geo}t d{Retorna a média geométrica dos números finitos ou c{null}c em caso de incoerência (zeros são ignorados).}d*/
 		geo: {
 			get: function() {
 				let list = this.only("finite");
-				if (list.length === 0) return null;
-				let mult = 1;
-				let i = -1;
-				while (++i < list.length) {
-					if (list[i] === 0) return null;
-					mult = mult*list[i];
-				}
-				if (mult < 0 && list.length%2 === 0) return null
-				return Math.pow(mult, 1/list.length);
+				let mult = list.length === 0 ? -1 : 1;
+				list.forEach(function (v,i,a) {mult = mult * (v === 0 ? 1 : v);});
+				return mult < 0 && list.length%2 === 0 ? null : Math.pow(mult, 1/list.length);
 			}
 		},
-		/**t{b{array}b mode}t d{Retorna uma lista com a moda dos números finitos da lista ou c{null}c em caso de inválido.}d*/
+
+
+		/* obtendo o máximo divisor comum e a fração */
+		//FIXME tem que construir o GDC primeiro
+		gdc: {
+			get: function() {
+let input =  [];
+		let i     = -1;
+		while (++i < arguments.length) {
+			let data = __Type(arguments[i]);
+			if (!data.finite) continue;
+			let number = __integer(Math.abs(data.value));
+			if (number === 0 || number === 1) return number;
+			input.push(number);
+		}
+		if (input.length < 2)
+			return input.length === 1 ? input[0] : 1;
+		/* obtendo números primos */
+		let min    = Math.min.apply(null, input);
+		let primes = __primes(min);
+		if (primes.length === 0) return 1;
+		/* obtendo o mdc */
+		let mdc = 1;
+		i = 0;
+		/* looping pelos primos */
+		while (i < primes.length) {
+			let test = true;
+			let stop = false;
+			/* checando se todos os argumentos são divisíveis pelo primo da vez */
+			let j    = -1;
+			while(++j < input.length) {
+				if (primes[i] > input[j])     stop = true;
+				if (input[j]%primes[i] !== 0)	test = false;
+				if (stop || !test)            break;
+			}
+			/* se todos forem divisíveis, reprocessar argumentos e ajustar mdc ou chamar próximo primo */
+			if (test) {
+				let k = -1;
+				while(++k < input.length)
+					input[k] = input[k]/primes[i];
+				mdc = mdc * primes[i];
+			} else {
+				i++;
+			}
+			/* Primo maior que um dos argumentos: parar processamento */
+			if (stop) break;
+		}
+		return mdc;
+
+
+
+			}
+		},
+
+
+
+		/**t{b{array}b unique}t d{Retorna a lista sem valores repetidos.}d*/
+		unique: {
+			get: function(){
+				return this._value.filter(function(v,i,a) {return a.indexOf(v) === i;});
+			}
+		},
+		/**t{b{array}b mode}t d{Retorna uma lista com os valores da moda (valor mais encontrado).}d*/
 		mode: {
 			get: function() {
-				let list = this.only("finite");
-				if (list.length === 0) return null;
-				let val = [];
-				let len = [];
-				let i = -1;
-				while (++i < list.length) {
-					let index = val.indexOf(list[i]);
-					if (index < 0) {
-						val.push(list[i]);
-						len.push(1);
-					} else {
-						len[index]++;
-					}
-				}
-				let max  = Math.max.apply(null, len);
-				let mode = [];
-				i = -1;
-				while (++i < len.length)
-					if (len[i] === max) mode.push(val[i]);
-				return mode.length === len.length && len.length > 1 ? null : mode;
+				let items  = this.unique;
+				let amount = [];
+				items.forEach(function() {amount.push(0);})
+				this._value.forEach(function(v,i,a) {amount[items.indexOf(v)]++;});
+				let max = Math.max.apply(null, amount);
+				return items.filter(function(v,i,a) {return amount[i] === max;});
 			}
 		},
 		/**t{b{boolean}b check(b{void}b ...)}t d{Checa se os valores informados estão presentes na lista.}d*/
 		check: {
 			value: function() {
-				if (arguments.length === 0) return false;
 				let value = Array.prototype.slice.call(arguments);
-				let i = -1;
-				while (++i < value.length)
-					if (this.valueOf().indexOf(value[i]) < 0) return false;
-				return true;
+				let check = arguments.length === 0 ?  false : true;
+				let list  = this._value;
+				value.forEach(function(v,i,a) {if (list.indexOf(v) < 0) check = false;});
+				return check;
 			}
 		},
 		/**t{b{array}b search(b{void}b value)}t d{Retorna uma lista com os índices onde o valor foi localizado.}d L{*/
@@ -1244,141 +1244,149 @@ const wd = (function() {
 		search: {
 			value: function(value) {
 				let index = [];
-				let i = -1;
-				while (++i < this.length)
-					if (this.valueOf()[i] === value) index.push(i);
+				this._value.forEach(function (v,i,a){if (v === value) index.push(i);});
 				return index;
 			}
 		},
-		/**t{b{array}b del(b{void}b ...)}t d{Retorna uma lista ignorando os valores informados.}d*/
-		del: {
+		/**t{b{array}b hide(b{void}b ...)}t d{Retorna uma lista ignorando os valores informados.}d*/
+		hide: {
 			value: function() {
-				if (arguments.length === 0) return this.valueOf();
-				let value = Array.prototype.slice.call(arguments);
-				let index = [];
-				let i = -1;
-				while (++i < this.length)
-					if (value.indexOf(this.valueOf()[i]) < 0)
-						index.push(this.valueOf(i));
-				return index;
+				let hide = Array.prototype.slice.call(arguments);
+				return this._value.filter(function(v,i,a) {return hide.indexOf(v) < 0;});
 			}
 		},
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*
-
-
-
-
-
-	function wd_array_tgl(array, values) { // alterna a existência de valores do array
-		for (let i = 0 ; i < values.length; i++) {
-			if (array.indexOf(values[i]) < 0)
-				array = wd_array_add(array, [values[i]]);
-			else
-				array = wd_array_del(array, [values[i]]);
-		}
-		return array;
-	}
-
-
-
-	function wd_array_count(array, value) { /* retorna a quantidade de vezes que o item aparece
-		let test = wd_array_search(array, value);
-		return test === null ? 0 : test.length;
-	}
-
-	function wd_array_rpl(array, item, value) { /* muda os valores de determinado item
-		let index = wd_array_search(array, item);
-		if (index === null) return array;
-		array = array.slice();
-		for (let i = 0; i < index.length; i++) array[index[i]] = value;
-		return array;
-	}
-
-	function wd_array_unique(array) { /* remove itens repetidos
-		return array.filter(function(v, i, a) {
-			return a.indexOf(v) == i;}
-		);
-	}
-
-	function wd_array_sort(array) { // ordena items
-
-
-		let order = [//sequência de exibição por tipo
-			"number", "time", "date", "text", "boolean", "null", "dom",
-			"array", "object", "function", "regexp", "undefined", "unknown"
-		];
-
-		array = array.slice();
-		array.sort(function(a, b) {
-			let atype  = wd_vtype(a).type;
-			let btype  = wd_vtype(b).type;
-			let aindex = order.indexOf(atype);
-			let bindex = order.indexOf(btype);
-			let avalue = a;
-			let bvalue = b;
-
-			if (aindex > bindex) return  1;
-			if (aindex < bindex) return -1;
-			if (atype === "dom") {//atype === btype (tipos iguais)
-				let check = wd_array_sort([a.textContent, b.textContent]);
-				avalue = a.textContent === check[0] ? 0 : 1;
-				bvalue = avalue === 0 ? 1 : 0;
-			} else if (atype === "text") {
-				avalue = __strClear(a.toUpperCase());
-				bvalue = __strClear(b.toUpperCase());
-
-			} else if (["number", "boolean", "date", "time"].indexOf(atype) >= 0) {
-				avalue = wd_vtype(a).value;
-				bvalue = wd_vtype(b).value;
+		/**t{b{number}b count(b{void}b value)}t d{Retorna a quantidade de vezes que o valor parece na lista.}d L{*/
+		/**d{v{value}v - Valor a ser localizado.}d}L*/
+		count: {
+			value: function(value) {
+				return this.search(value).length;
 			}
-			return avalue > bvalue ? 1 : -1;
+		},
+		/**t{b{array}b sort}t d{Ordena a lista na sequencia: número, tempo , data, texto, demais tipos.}d*/
+		sort: {
+			get: function() {
+				let order = [
+					"number", "time", "date", "string", "boolean", "null", "node",
+					"array", "object", "function", "regexp", "undefined", "unknown"
+				];
+				let array = this._value.slice();
+				return array.sort(function(a, b) {
+					let atype  = __Type(a).type;
+					let btype  = __Type(b).type;
+
+					/* comparação entre tipos diferentes */
+					if (atype !== btype)
+						return order.indexOf(atype) > order.indexOf(btype) ? 1 : -1;
+					/* comparação entre tipos iguais */
+					let avalue = a;
+					let bvalue = b;
+					if (atype === "node") {
+						avalue = __String(a.textContent.toLowerCase()).clear();
+						bvalue = __String(b.textContent.toLowerCase()).clear();
+					} else if (atype === "string") {
+						avalue = __String(a.toLowerCase()).clear();
+						bvalue = __String(b.toLowerCase()).clear();
+					} else if (["number", "boolean", "date", "time"].indexOf(atype) >= 0) {
+						avalue = __Type(a).valueOf();
+						bvalue = __Type(b).valueOf();
+					}
+					return avalue > bvalue ? 1 : -1;
+				});
+			}
+		},
+		/**t{b{array}b order}t d{Retorna uma lista ordenada sem valores repetidos.}d*/
+		order: {
+			get: function() {
+				return __Array(this.unique).sort;
+			}
+		},
+		/**6{Métodos Modificadores da Lista}6*/
+		/**t{b{array}b add(b{void}b ...)}t d{Adiciona itens (argumentos) ao fim da lista e a retorna.}d*/
+		add: {
+			value: function() {
+				this._value.push.apply(this._value, arguments);
+				return this._value;
+			}
+		},
+		/**t{b{array}b addTop(b{void}b ...)}t d{Adiciona itens (argumentos) ao início da lista e a retorna.}d*/
+		addTop: {
+			value: function() {
+				this._value.unshift.apply(this._value, arguments);
+				return this._value;
+			}
+		},
+		/**t{b{array}b concat(b{void}b ...)}t d{Concatena listas.}d*/
+		concat: {
+			value: function() {
+				this._value = this._value.concat.apply(this._value, arguments);
+				return this._value;
+			}
+		},
+		/**t{b{array}b replace(b{void}b from, b{void}b to)}t d{Altera os valores da lista conforme especificado e a retorna.}d L{*/
+		/**d{v{from}v - Valor a ser alterado.}d*/
+		/**d{v{to}v - Valor a ser definido.}d}L*/
+		replace: {
+			value: function (from, to) {
+				this._value.forEach(function(v,i,a) {if (v === from) a[i] = to;});
+				return this._value;
+			}
+		},
+		/**t{b{array}b delete(b{void}b ...)}t d{Remove itens (argumentos) da lista e a retorna.}d*/
+		delete: {
+			value: function() {
+				let list = this.hide.apply(this, arguments);
+				while(this._value.length !== 0) this._value.pop();
+				this.add.apply(this, list);
+				return this._value;
+
+			}
+		},
+		/**t{b{array}b toggle(b{void}b ...)}t d{Remove, se existente, ou insere, se ausente, itens (argumentos) da lista e a retorna.}d*/
+		toggle: {
+			value: function() {
+				let tgl  = Array.prototype.slice.call(arguments);
+				let self = this;
+				tgl.forEach(function(v,i,a) {
+					if (self._value.indexOf(v) < 0) self.add(v); else self.del(v);
+				});
+				return this._value;
+			}
+		},
+	/**}l*/
+	});
+
+/*===========================================================================*/
+	/**3{Nós HTML}3*/
+/*===========================================================================*/
+
+	/**f{b{object}b __Node(b{array}b input|b{void}b ...)}f*/
+	/**p{Construtor para manipulação de nós  HTML}p*/
+	/**l{d{v{input}v - Array ou cada argumento corresponderá a um item.}d}l*/
+	function __Node() {
+		let input;
+		if (arguments.length === 0)
+			input = [];
+		else if (arguments.length > 1)
+			input = Array.prototype.slice.call(arguments)
+		else
+			input = __Type(arguments[0]).type === "array" ? arguments[0] : [arguments[0]];
+
+		if (!(this instanceof __Node))	return new __Node(input);
+		Object.defineProperties(this, {
+			_value: {value: input, writable: true}
 		});
-
-		return array;
 	}
-
-	function wd_array_csv(array) { /* transforma um array em dados CSV
-		let csv = [];
-
-		for (let i = 0; i < array.length; i++) {
-			let line = array[i];
-			let type = wd_vtype(line).type;
-
-			if (type === "array") {
-				for (let j = 0; j < line.length; j++)
-					line[j] = String(line[j]).replace(/\t/g, " ").replace(/\n/g, " ");
-			} else {
-				line = [String(line).replace(/\t/g, " ").replace(/\n/g, " ")];
+	/**6{Métodos e atributos}6 l{*/
+	Object.defineProperties(__Node.prototype, {
+		constructor: {value: __Node},
+		/**t{b{void}b valueOf(b{integer}b n)}t d{Retorna a lista ou o seu item, se definido.}d*/
+		/**L{d{v{n}v - (Opicional) Identificador do item, se negativo, a referência inicia no fim da lista.}d}L*/
+		valueOf: {
+			value: function(n) {
+				n = __Type(n).finite ? __Number(n) : null;
+				return n === null ? this._value : this._value[n < 0 ? this.length + n.int : n.int]
 			}
-
-
-			csv.push(line.join("\t"));
-		}
-
-		return csv.join("\n");
-	}
-
-
-
-
-*/
-
+		},
 
 
 
@@ -1387,14 +1395,11 @@ const wd = (function() {
 
 
 
-
-	//FIXME apagar após reestruturação
+//FIXME apagar após reestruturação
 	function __finite(value) {
 		let input = __Type(value);
 		return input.finite;
 	}
-
-
 
 
 
