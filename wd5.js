@@ -745,8 +745,9 @@ const wd = (function() {
 			get: function() {
 				if (!this.finite || this < 2) return [];
 				let list = [2];
+				let int  = this.int;
 				let i    = 3;
-				while (i <= this.int) {
+				while (i <= int) {
 					let isPrime = true;
 					let j = 0; /* não checar o 2 */
 					while (++j < list.length) {
@@ -797,12 +798,11 @@ const wd = (function() {
 					}
 				}
 				/* obtendo o máximo divisor comum e a fração */
-				//FIXME tem que construir o GDC primeiro
-				let gcd = __gcd(div, dnd);
+				let gcd = __Array(div, dnd).gcd;
 				int = int === 0 ? "" : int.toString()+" ";
 				dnd = String(dnd/gcd);
 				div = String(div/gcd);
-				return (input < 0 ? "-" : "")+int+dnd+"/"+div;
+				return (this._value < 0 ? "-" : "")+int+dnd+"/"+div;
 			}
 		},
 		/**t{b{string}b bytes}t d{Retorna a notação em bytes.}d*/
@@ -1097,21 +1097,33 @@ const wd = (function() {
 				return list;
 			}
 		},
-		/**t{b{number}b min}t d{Retorna o menor número finito ou c{null}c em caso de inválido.}d*/
+		/**t{b{array}b convert(b{function}b f, b{boolean}b finite)}t d{Retorna uma lista com o resultado de v{f(x)}v ou c{null}c se falhar.}d L{*/
+		/**d{v{f}v - Função a ser aplicada nos valores da lista.}d*/
+		/**d{v{finite}v - (opcional) Se verdadeiro, somente itens finitos serão utilizados (padrão c{false}c).}d}L*/
+		convert: {//FIXME
+			value: function(f, finite) {
+				let list = finite === false ? this._value.slice() : this.only("finite", true);
+				list.forEach(function(v,i,a){
+					try {a[i] = f(v);} catch(e) {a[i] = null;}
+				});
+				return list;
+			}
+		},
+		/**t{b{number}b min}t d{Retorna o menor finito ou c{null}c em caso de vazio.}d*/
 		min: {
 			get: function() {
 				let list = this.only("finite");
 				return list.length === 0 ? null : Math.min.apply(null, list);
 			}
 		},
-		/**t{b{number}b max}t d{Retorna o maior número finito ou c{null}c em caso de incoerência.}d*/
+		/**t{b{number}b max}t d{Retorna o maior finito ou c{null}c em caso de vazio.}d*/
 		max: {
 			get: function() {
 				let list = this.only("finite");
 				return list.length === 0 ? null : Math.max.apply(null, list);
 			}
 		},
-		/**t{b{number}b sum}t d{Retorna a soma dos números finitos ou c{null}c em caso de incoerência.}d*/
+		/**t{b{number}b sum}t d{Retorna a soma dos finitos ou c{null}c em caso de vazio.}d*/
 		sum: {
 			get: function() {
 				let list = this.only("finite");
@@ -1121,14 +1133,14 @@ const wd = (function() {
 				return sum;
 			}
 		},
-		/**t{b{number}b avg}t d{Retorna a média dos números finitos ou c{null}c em caso de incoerência.}d*/
+		/**t{b{number}b avg}t d{Retorna a média dos finitos ou c{null}c em caso de vazio.}d*/
 		avg: {
 			get: function() {
 				let list = this.only("finite");
 				return list.length === 0 ? null : this.sum/list.length;
 			}
 		},
-		/**t{b{number}b med}t d{Retorna a mediana dos números finitos ou c{null}c em caso de incoerência.}d*/
+		/**t{b{number}b med}t d{Retorna a mediana dos finitos ou c{null}c em caso de vazio.}d*/
 		med: {
 			get: function() {
 				let list = this.only("finite");
@@ -1138,7 +1150,7 @@ const wd = (function() {
 				return l%2 === 0 ? (y[l/2]+y[(l/2)-1])/2 : y[(l-1)/2];
 			}
 		},
-		/**t{b{number}b harm}t d{Retorna a média harmônica dos números finitos ou c{null}c em caso de incoerência (zeros são ignorados).}d*/
+		/**t{b{number}b harm}t d{Retorna a média harmônica dos finitos diferentes de zero ou c{null}c em caso de vazio.}d*/
 		harm: {
 			get: function() {
 				let list = this.only("finite");
@@ -1147,7 +1159,7 @@ const wd = (function() {
 				return list.length === 0 || sum === 0 ? null : list.length/sum;
 			}
 		},
-		/**t{b{number}b geo}t d{Retorna a média geométrica dos números finitos ou c{null}c em caso de incoerência (zeros são ignorados).}d*/
+		/**t{b{number}b geo}t d{Retorna a média geométrica do valor absoluto dos finitos diferentes de zero ou c{null}c em caso de vazio.}d*/
 		geo: {
 			get: function() {
 				let list = this.only("finite");
@@ -1156,62 +1168,44 @@ const wd = (function() {
 				return mult < 0 && list.length%2 === 0 ? null : Math.pow(mult, 1/list.length);
 			}
 		},
-
-
-		/* obtendo o máximo divisor comum e a fração */
-		//FIXME tem que construir o GDC primeiro
-		gdc: {
+		/**t{b{number}b gcd}t d{Retorna o máximo divisor comum do valor absoluto inteiro ou c{null}c em caso de vazio.}d*/
+		gcd: {
 			get: function() {
-let input =  [];
-		let i     = -1;
-		while (++i < arguments.length) {
-			let data = __Type(arguments[i]);
-			if (!data.finite) continue;
-			let number = __integer(Math.abs(data.value));
-			if (number === 0 || number === 1) return number;
-			input.push(number);
-		}
-		if (input.length < 2)
-			return input.length === 1 ? input[0] : 1;
-		/* obtendo números primos */
-		let min    = Math.min.apply(null, input);
-		let primes = __primes(min);
-		if (primes.length === 0) return 1;
-		/* obtendo o mdc */
-		let mdc = 1;
-		i = 0;
-		/* looping pelos primos */
-		while (i < primes.length) {
-			let test = true;
-			let stop = false;
-			/* checando se todos os argumentos são divisíveis pelo primo da vez */
-			let j    = -1;
-			while(++j < input.length) {
-				if (primes[i] > input[j])     stop = true;
-				if (input[j]%primes[i] !== 0)	test = false;
-				if (stop || !test)            break;
-			}
-			/* se todos forem divisíveis, reprocessar argumentos e ajustar mdc ou chamar próximo primo */
-			if (test) {
-				let k = -1;
-				while(++k < input.length)
-					input[k] = input[k]/primes[i];
-				mdc = mdc * primes[i];
-			} else {
-				i++;
-			}
-			/* Primo maior que um dos argumentos: parar processamento */
-			if (stop) break;
-		}
-		return mdc;
-
-
-
+				/* obtendo valores absolutos inteiros */
+				let input =  this.only("finite");
+				input.forEach(function(v,i,a) {a[i] = Math.floor(Math.abs(v));});
+				input = __Array(input).order;
+				if (input.length < 2) return input.length === 1 ? input[0] : null;
+				if (input.indexOf(0) >= 0) return 0;
+				if (input.indexOf(1) >= 0) return 1;
+				/* obtendo números primos */
+				let primes = __Number(Math.min.apply(null, input)).primes;
+				if (primes.length === 0) return 1;
+				/* obtendo o mdc */
+				let mdc = 1;
+				let i = 0;
+				/* looping pelos primos */
+				while (i < primes.length) {
+					let test = true;
+					let stop = false;
+					/* checando se todos os argumentos são divisíveis pelo primo da vez */
+					let j = -1;
+					while(++j < input.length) {
+						if (primes[i] > input[j])     stop = true;
+						if (input[j]%primes[i] !== 0)	test = false;
+						if (stop || !test)            break;
+					}
+					/* se todos forem divisíveis, reprocessar argumentos e ajustar mdc ou chamar próximo primo */
+					if (test) {
+						input.forEach(function(v,k,a) {a[k] = v/primes[i];});
+						mdc = mdc * primes[i];
+					} else {i++;}
+					/* Primo maior que um dos argumentos: parar processamento */
+					if (stop) break;
+				}
+				return mdc;
 			}
 		},
-
-
-
 		/**t{b{array}b unique}t d{Retorna a lista sem valores repetidos.}d*/
 		unique: {
 			get: function(){
