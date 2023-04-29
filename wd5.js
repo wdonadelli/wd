@@ -675,10 +675,9 @@ const wd = (function() {
 	function __Number(input) {
 		if (!(this instanceof __Number)) return new __Number(input);
 		let check = __Type(input);
-		if (check.type !== "number") throw new TypeError("__Number Error: "+input);
 		Object.defineProperties(this, {
-			_value: {value: check.value},
-			finite: {value: check.finite}
+			_value: {value: check.type !== "number" ? 0    : check.value},
+			finite: {value: check.type !== "number" ? true : check.finite}
 		});
 	}
 	/**6{Métodos e atributos}6 l{*/
@@ -818,8 +817,8 @@ const wd = (function() {
 				return this.int+" B";
 			}
 		},
-		/**t{b{string}b real}t d{Retorna o tipo do número v{zero, infinity, integer, real}v.}d*/
-		real: {
+		/**t{b{string}b type}t d{Retorna o tipo do número v{zero, infinity, integer, real}v.}d*/
+		type: {
 			get: function() {
 				if (this == 0)      return "zero";
 				if (!this.finite)   return "infinity";
@@ -1035,6 +1034,58 @@ const wd = (function() {
 				return value.join("");
 			}
 		},
+
+
+
+		/**t{b{void}b wdNotation}t d{Retorna o valor ou um objeto a partir de uma regra de notação.}d*/
+		/**d{c{"value" &rarr; value | "x{X}y{Y}" &rarr; [{x: X, y: Y}] | "x{X}&amp;y{Y}" &rarr; [{x: X}, {y: Y}]}c*/
+		wdNotation: {
+			get: function() {
+		/* a{B}c{D}&e{F} => [{a: B, c: D}, {e: F}] */
+				let list   = [{}];
+				let data   = this._value.trim();
+				let char   = data.split("");
+				let open   = 0;
+				let key    = 0;
+				let types  = {true: true, false: false, null: null, undefined: undefined};
+				let name   = [];
+				let value  = [];
+				let object = false;
+				char.forEach(function(v,i,a) {
+					if (v === "{" && open === 0) {
+						name  = name.join("").trim();
+						if (name === "") name = "#";
+						list[key][name] = undefined;
+						open++;
+						value = [];
+					} else if (v === "}" && open === 1) {
+						value = value.join("").trim();
+						if (value === "") value = undefined;
+						let check = __Type(value);
+						if      (check.type === "number") value = check.value;
+						else if (value in types)          value = types[value];
+						list[key][name] = value;
+						open--;
+						name   = [];
+						object = true;
+					} else if (v === "&" && open === 0) {
+						list.push({});
+						key++;
+					} else if (open === 0) {
+						name.push(v);
+					} else if (open > 0) {
+						if (v === "{" || v === "}") open += v === "{" ? +1 : -1;
+						value.push(v);
+					}
+				});
+				if (object) return list;
+				let check = __Type(data);
+				return check.type === "number" ? check.value : (data in types ? types[data] : data);
+			}
+		},
+
+
+
 	/**}l*/
 	});
 
@@ -1367,7 +1418,7 @@ const wd = (function() {
 	function __Node(input) {
 		if (!(this instanceof __Node))	return new __Node(input);
 		let check = __Type(input);
-		if (check.type !== "node") throw new TypeError("__Node Error: "+input);
+		if (check.type !== "node") input = document.body;
 		Object.defineProperties(this, {
 			_value: {value: input}
 		});
@@ -1385,11 +1436,11 @@ const wd = (function() {
 		tag: {
 			get: function() {return this._value.tagName.toLowerCase();}
 		},
-		/**t{b{void}b attr(b{string}b attr, b{void}b value)}t*/
+		/**t{b{void}b attribute(b{string}b attr, b{void}b value)}t*/
 		/**d{Retorna ou define um atributo HTML, retorna c{null}c se inexistente.}dL{*/
 		/**d{v{attr}v - Nome do atributo a ser definido ou retornado.}d*/
 		/**d{v{value}v - (Opcional) Valor do atributo. Se ausente, retornará o atributo, se nulo, apagará o atributo.}d}L*/
-		attr: {
+		attribute: {
 			value: function(attr, value) {
 				if (arguments.length === 0) return null;
 				attr = String(attr);
@@ -1399,7 +1450,7 @@ const wd = (function() {
 					this._value.removeAttribute(attr);
 				else
 					this._value.setAttribute(attr, value);
-				return this.attr(attr);
+				return this.attribute(attr);
 			}
 		},
 		/**t{b{void}b object(b{string}b attr, b{void}b ...)}t*/
@@ -1426,11 +1477,11 @@ const wd = (function() {
 		/**t{b{string}b css}t d{Retorna e organiza, se for o caso, o valor do atributo HTML i{class}i.}d*/
 		css: {
 			get: function() {
-				let css = this.attr("class");
+				let css = this.attribute("class");
 				if (css === null) return "";
 				let value = __String(css).clear().split(" ");
 				value = __Array(value).order.join(" ");
-				if (css !== value) this.attr("class", value);
+				if (css !== value) this.attribute("class", value);
 				return value;
 			}
 		},
@@ -1439,7 +1490,7 @@ const wd = (function() {
 			value: function() {
 				let css = this.css.split(" ");
 				css.push.apply(css, arguments);
-				this.attr("class", css.join(" "));
+				this.attribute("class", css.join(" "));
 				return this.css;
 			}
 		},
@@ -1449,7 +1500,7 @@ const wd = (function() {
 				let css  = this.css.split(" ");
 				let list = __Array(css);
 				list.delete.apply(list, arguments);
-				this.attr("class", list.order.join(" "));
+				this.attribute("class", list.order.join(" "));
 				return this.css;
 			}
 		},
@@ -1459,7 +1510,7 @@ const wd = (function() {
 				let css  = this.css.split(" ");
 				let list = __Array(css);
 				list.toggle.apply(list, arguments);
-				this.attr("class", list.order.join(" "));
+				this.attribute("class", list.order.join(" "));
 				return this.css;
 			}
 		},
@@ -1484,13 +1535,13 @@ const wd = (function() {
 						this._value.style[attr] = styles[i];
 					}
 				}
-				return this.attr("style");
+				return this.attribute("style");
 			}
 		},
 		/**t{b{string}b dataset(b{object}b data)}t d{Define o objeto i{dataset}i do elemento HTML e retorna seu valor.}d*/
 		/**L{d{v{data}v - Objeto contendo os atributos e seus valores. Se c{null}c, todos os atributos serão apagados.}d}L*/
 		dataset: {
-			value: function(data) {
+			value: function(data) {//FIXME se data for indefindo retornar tudo
 				if (data === null) {
 					let list = {};
 					for (let i in this._value.dataset) list[i] = null;
@@ -1509,8 +1560,9 @@ const wd = (function() {
 				return JSON.stringify(this._value.dataset);
 			}
 		},
-		/**t{b{void}b handler(b{object}b data)}t d{Define o objeto i{dataset}i do elemento HTML e retorna seu valor.}d*/
-		/**L{d{v{data}v - Objeto contendo os atributos e seus valores. Se c{null}c, todos os atributos serão apagados.}d}L*/
+		/**t{b{void}b handler(b{object}b events, b{boolean}b remove)}t d{Define ou remove disparadores ao elemento HTML.}d L{*/
+		/**d{v{events}v - Objeto contendo o evento (atributos) e seus disparadores (valores).}d*/
+		/**d{v{remove}v - (Opcional) Se verdadeiro, o disparador será removido do evento.}d}L*/
 		handler: {
 			value: function(events, remove) {
 				if (__Type(events).type === "object") {
@@ -1521,6 +1573,12 @@ const wd = (function() {
 						this._value[method](event, events[i], false);
 					}
 				}
+			}
+		},
+		wdDataset: {
+			value: function(attr) {
+				if (!(attr in this._value.dataset)) return null;
+				return __String(this._value.dataset[attr]).wdNotation;
 			}
 		},
 
