@@ -951,10 +951,9 @@ const wd = (function() {
 	/**l{d{v{input}v - Texto.}d}l*/
 	function __String(input) {
 		if (!(this instanceof __String)) return new __String(input);
-		let check = __Type(input);
-		if (check.type !== "string") throw new TypeError("__String Error: "+input);
+		if (__Type(input).type !== "string") input = String(input);
 		Object.defineProperties(this, {
-			_value: {value: check.value}
+			_value: {value: input}
 		});
 	}
 	/**6{Métodos e atributos}6 l{*/
@@ -1064,7 +1063,7 @@ const wd = (function() {
 	Object.defineProperties(__Array.prototype, {
 		constructor: {value: __Array},
 		/**t{b{void}b valueOf(b{integer}b n)}t d{Retorna a lista ou o seu item, se definido.}d*/
-		/**L{d{v{n}v - (Opicional) Identificador do item, se negativo, a referência inicia no fim da lista.}d}L*/
+		/**L{d{v{n}v - (Opcional) Identificador do item, se negativo, a referência inicia no fim da lista.}d}L*/
 		valueOf: {
 			value: function(n) {
 				n = __Type(n).finite ? __Number(n) : null;
@@ -1080,8 +1079,8 @@ const wd = (function() {
 			get: function() {return this._value.length;}
 		},
 		/**t{b{array}b only(b{string}b type, b{boolean}b keep)}t d{Retorna uma lista somente com os tipos de itens definidos.}d L{*/
-		/**d{v{type}v - Tipo do item a se manter na lista (ver argumentos de i{__Type}i.}d*/
-		/**d{v{keep}v - (opcional) Se verdadeiro, o item não casado será mantido com valor c{null}c (padrão c{false}c).}d}L*/
+		/**d{v{type}v - Tipo do item a se manter na lista (ver atributos de i{__Type}i.}d*/
+		/**d{v{keep}v - (opcional) Se verdadeiro, o item não casado com i{type}i será mantido com valor c{null}c (padrão c{false}c).}d}L*/
 		only: {
 			value: function(type, keep) {
 				let list   = [];
@@ -1099,12 +1098,20 @@ const wd = (function() {
 		},
 		/**t{b{array}b convert(b{function}b f, b{boolean}b finite)}t d{Retorna uma lista com o resultado de v{f(x)}v ou c{null}c se falhar.}d L{*/
 		/**d{v{f}v - Função a ser aplicada nos valores da lista.}d*/
-		/**d{v{finite}v - (opcional) Se verdadeiro, somente itens finitos serão utilizados (padrão c{false}c).}d}L*/
-		convert: {//FIXME
-			value: function(f, finite) {
-				let list = finite === false ? this._value.slice() : this.only("finite", true);
+		/**d{v{type}v - (opcional) Tipo dos itens na lista (ver atributos de i{__Type}i.}d}L*/
+		convert: {
+			value: function(f, type) {
+				if (__Type(f).type !== "function") return null;
+				let only = arguments.length < 2 ? false : true;
+				let list = only ? this.only(type, true) : this._value.slice();
 				list.forEach(function(v,i,a){
-					try {a[i] = f(v);} catch(e) {a[i] = null;}
+					try {
+						let value = f(v);
+						if (only)
+							a[i] = v === null || __Type(value)[type] !== true ? null : value;
+						else
+							a[i] = value
+					} catch(e) {a[i] = null;}
 				});
 				return list;
 			}
@@ -1226,8 +1233,9 @@ const wd = (function() {
 		/**t{b{boolean}b check(b{void}b ...)}t d{Checa se os valores informados estão presentes na lista.}d*/
 		check: {
 			value: function() {
+				if (arguments.length === 0) return false;
 				let value = Array.prototype.slice.call(arguments);
-				let check = arguments.length === 0 ?  false : true;
+				let check = true;
 				let list  = this._value;
 				value.forEach(function(v,i,a) {if (list.indexOf(v) < 0) check = false;});
 				return check;
@@ -1341,7 +1349,7 @@ const wd = (function() {
 				let tgl  = Array.prototype.slice.call(arguments);
 				let self = this;
 				tgl.forEach(function(v,i,a) {
-					if (self._value.indexOf(v) < 0) self.add(v); else self.del(v);
+					if (self._value.indexOf(v) < 0) self.add(v); else self.delete(v);
 				});
 				return this._value;
 			}
@@ -1356,31 +1364,184 @@ const wd = (function() {
 	/**f{b{object}b __Node(b{array}b input|b{void}b ...)}f*/
 	/**p{Construtor para manipulação de nós  HTML}p*/
 	/**l{d{v{input}v - Array ou cada argumento corresponderá a um item.}d}l*/
-	function __Node() {
-		let input;
-		if (arguments.length === 0)
-			input = [];
-		else if (arguments.length > 1)
-			input = Array.prototype.slice.call(arguments)
-		else
-			input = __Type(arguments[0]).type === "array" ? arguments[0] : [arguments[0]];
-
+	function __Node(input) {
 		if (!(this instanceof __Node))	return new __Node(input);
+		let check = __Type(input);
+		if (check.type !== "node") throw new TypeError("__Node Error: "+input);
 		Object.defineProperties(this, {
-			_value: {value: input, writable: true}
+			_value: {value: input}
 		});
 	}
 	/**6{Métodos e atributos}6 l{*/
 	Object.defineProperties(__Node.prototype, {
 		constructor: {value: __Node},
-		/**t{b{void}b valueOf(b{integer}b n)}t d{Retorna a lista ou o seu item, se definido.}d*/
-		/**L{d{v{n}v - (Opicional) Identificador do item, se negativo, a referência inicia no fim da lista.}d}L*/
 		valueOf: {
-			value: function(n) {
-				n = __Type(n).finite ? __Number(n) : null;
-				return n === null ? this._value : this._value[n < 0 ? this.length + n.int : n.int]
+			value: function() {return this._value.valueOf();}
+		},
+		toString: {
+			value: function() {return this._value.outerHTML;}
+		},
+		/**t{b{string}b tag}t d{Retorna o nome do elemento HTML.}d*/
+		tag: {
+			get: function() {return this._value.tagName.toLowerCase();}
+		},
+		/**t{b{void}b attr(b{string}b attr, b{void}b value)}t*/
+		/**d{Retorna ou define um atributo HTML, retorna c{null}c se inexistente.}dL{*/
+		/**d{v{attr}v - Nome do atributo a ser definido ou retornado.}d*/
+		/**d{v{value}v - (Opcional) Valor do atributo. Se ausente, retornará o atributo, se nulo, apagará o atributo.}d}L*/
+		attr: {
+			value: function(attr, value) {
+				if (arguments.length === 0) return null;
+				attr = String(attr);
+				if (arguments.length === 1)
+					return attr in this._value.attributes ? this._value.attributes[attr].value : null;
+				if (value === null)
+					this._value.removeAttribute(attr);
+				else
+					this._value.setAttribute(attr, value);
+				return this.attr(attr);
 			}
 		},
+		/**t{b{void}b object(b{string}b attr, b{void}b ...)}t*/
+		/**d{Retorna ou define um atributo ou método do objeto HTML, retorna c{null}c se inexistente.}d*/
+		/**L{d{v{attr}v - Nome do atributo ou função a ser definido ou retornado.}d*/
+		/**d{Os demais argumentos correspondem ao valor do atributo ou aos argumentos do método.}d}L*/
+		object: {
+			value: function(attr) {
+				if (arguments.length === 0) return null;
+				attr = String(attr);
+				if (!(attr in this._value)) return null;
+				let type = __Type(this._value[attr]).type;
+				if (arguments.length === 1)
+					return type === "function" ? this._value[attr]() : this._value[attr];
+				if (type !== "function") {
+					this._value[attr] = arguments[1];
+					return this.object(attr);
+				}
+				let args = Array.prototype.slice.call(arguments);
+				args.shift();
+				return this._value[attr].apply(this._value, args);
+			}
+		},
+		/**t{b{string}b css}t d{Retorna e organiza, se for o caso, o valor do atributo HTML i{class}i.}d*/
+		css: {
+			get: function() {
+				let css = this.attr("class");
+				if (css === null) return "";
+				let value = __String(css).clear().split(" ");
+				value = __Array(value).order.join(" ");
+				if (css !== value) this.attr("class", value);
+				return value;
+			}
+		},
+		/**t{b{string}b cssAdd(b{string}b ...)}t d{Adiciona atributos CSS (argumentos) ao elemento HTML.}d*/
+		cssAdd: {
+			value: function() {
+				let css = this.css.split(" ");
+				css.push.apply(css, arguments);
+				this.attr("class", css.join(" "));
+				return this.css;
+			}
+		},
+		/**t{b{string}b cssDelete(b{string}b ...)}t d{Remove atributos CSS (argumentos) do elemento HTML.}d*/
+		cssDelete: {
+			value: function() {
+				let css  = this.css.split(" ");
+				let list = __Array(css);
+				list.delete.apply(list, arguments);
+				this.attr("class", list.order.join(" "));
+				return this.css;
+			}
+		},
+		/**t{b{string}b cssToggle(b{string}b ...)}t d{Alterna atributos CSS (argumentos) no elemento HTML.}d*/
+		cssToggle: {
+			value: function() {
+				let css  = this.css.split(" ");
+				let list = __Array(css);
+				list.toggle.apply(list, arguments);
+				this.attr("class", list.order.join(" "));
+				return this.css;
+			}
+		},
+		/**t{b{boolean}b cssCheck(b{string}b ...)}t d{Checa a existência de atributos CSS (argumentos) no elemento HTML.}d*/
+		cssCheck: {
+			value: function() {
+				let css  = this.css.split(" ");
+				let list = __Array(css);
+				return list.check.apply(list, arguments);
+			}
+		},
+		/**t{b{string}b style(b{object}b styles)}t d{Define o atributo i{style}i do elemento HTML e retorna seu valor.}d*/
+		/**L{d{v{styles}v - Objeto contendo os estilos (atributo) e seu valor. Se c{null}c, todos os estilos serão apagados.}d}L*/
+		style: {
+			value: function(styles) {
+				if (styles === null) {
+					while (this._value.style.length > 0)
+						this._value.style[this._value.style[0]] = null;
+				} else if (__Type(styles).type === "object") {
+					for (let i in styles) {
+						let attr = __String(i).camel;
+						this._value.style[attr] = styles[i];
+					}
+				}
+				return this.attr("style");
+			}
+		},
+		/**t{b{string}b dataset(b{object}b data)}t d{Define o objeto i{dataset}i do elemento HTML e retorna seu valor.}d*/
+		/**L{d{v{data}v - Objeto contendo os atributos e seus valores. Se c{null}c, todos os atributos serão apagados.}d}L*/
+		dataset: {
+			value: function(data) {
+				if (data === null) {
+					let list = {};
+					for (let i in this._value.dataset) list[i] = null;
+					return this.dataset(list);
+				} else if (__Type(data).type === "object") {
+					for (let i in data) {
+						let attr  = __String(i).camel;
+						if (data[i] !== null)
+							this._value.dataset[attr] = data[i];
+						else if (attr in this._value.dataset)
+							delete this._value.dataset[attr];
+						/* FIXME executar verificação após definição */
+						settingProcedures(this._value, attr);
+					}
+				}
+				return JSON.stringify(this._value.dataset);
+			}
+		},
+		/**t{b{void}b handler(b{object}b data)}t d{Define o objeto i{dataset}i do elemento HTML e retorna seu valor.}d*/
+		/**L{d{v{data}v - Objeto contendo os atributos e seus valores. Se c{null}c, todos os atributos serão apagados.}d}L*/
+		handler: {
+			value: function(events, remove) {
+				if (__Type(events).type === "object") {
+					for (let i in events) {
+						if (__Type(events[i]).type !== "function") continue;
+						let event  = String(i).trim().toLowerCase().replace(/^on/, "");
+						let method = remove === true ? "removeEventListener" : "addEventListener";
+						this._value[method](event, events[i], false);
+					}
+				}
+			}
+		},
+
+
+
+
+
+
+
+
+		form: {
+			get: function() {
+				let tags = ["select", "textarea", "input", "button"];
+				if (tags.indexOf(this.tag) < 0) return null;
+
+
+
+
+
+			}
+		}
 
 
 
@@ -2398,7 +2559,7 @@ const wd = (function() {
 		/**d{v{x}v - Valores para o eixo v{x}v.}d */
 		/**d{v{y}v - Valores ou função v{f(x)}v para o eixo v{y}v.}d */
 		/**d{v{name}v - Identificador do conjunto de dados.}d*/
-		/**d{v{type}v - (Opicional) Tipo de plotagem: v{line fit fit-linear fit-exponential fit-geometric area ratio}v.}d*/
+		/**d{v{type}v - (Opcional) Tipo de plotagem: v{line fit fit-linear fit-exponential fit-geometric area ratio}v.}d*/
 		/**d{Valor padrão de i{type}i é v{dots}v.}d }L*/
 		add: {
 			value: function(x, y, name, type) {
@@ -6483,6 +6644,7 @@ const wd = (function() {
 		type:    {value: function(x){return __Type(x);}},
 
 		array: {value: function(){return __Array.apply(null, Array.prototype.slice.call(arguments));}},
+		node: {value: function(){return __Node.apply(null, Array.prototype.slice.call(arguments));}},
 		number: {value: function(){return __Number.apply(null, Array.prototype.slice.call(arguments));}},
 		string: {value: function(){return __String.apply(null, Array.prototype.slice.call(arguments));}},
 		arr: {value: function(){return __setHarm.apply(null, Array.prototype.slice.call(arguments));}},
