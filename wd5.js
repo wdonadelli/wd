@@ -301,7 +301,7 @@ const wd = (function() {
 		/**t{b{boolean}b string}t d{Checa se o argumento é uma string.}d*/
 		string: {
 			get: function() {
-				if (this._type !== null) return this._type === "string" ? true : false;
+				if (this.type !== null) return this.type === "string";
 				if (typeof this._input === "string" || this._input instanceof String) {
 					/* string não pode definir _type porque outras verificações dependem dele */
 					return true;
@@ -313,7 +313,7 @@ const wd = (function() {
 		/**d{Aceita números em forma de string: real, fatorial ou percentual.}d*/
 		number: {
 			get: function() {
-				if (this._type !== null) return this._type === "number" ? true : false;
+				if (this.type !== null) return this.type === "number";
 				/* número normal */
 				if (typeof this._input === "number" || this._input instanceof Number) {
 					if (isNaN(this._input)) return false;
@@ -349,15 +349,23 @@ const wd = (function() {
 		/**t{b{boolean}b finite}t d{Checa se o argumento é um número finito.}d*/
 		finite: {
 			get: function() {
-				if (this._type === null) this._init();
-				if (this.type !== "number") return false;
-				return isFinite(this.value);
+				return this.type === "number" ? isFinite(this.value) : false;
+			}
+		},
+		integer: {
+			get: function() {
+				return this.finite ? (this.value%1 === 0) : false;
+			}
+		},
+		decimal: {
+			get: function() {
+				return this.finite ? (this.value%1 !== 0) : false;
 			}
 		},
 		/**t{b{boolean}b boolean}t d{Checa se o argumento é um valor booleano.}d*/
 		boolean: {
 			get: function() {
-				if (this._type !== null) return this._type === "boolean" ? true : false;
+				if (this.type !== null) return this.type === "boolean";
 				if (typeof this._input === "boolean" || this._input instanceof Boolean) {
 					this._type  = "boolean";
 					this._value = this._input.valueOf();
@@ -369,7 +377,7 @@ const wd = (function() {
 		/**t{b{boolean}b regexp}t d{Checa se o argumento é uma expressão regular.}d*/
 		regexp: {
 			get: function() {
-				if (this._type !== null) return this._type === "regexp" ? true : false;
+				if (this.type !== null) return this.type === "regexp";
 				if (this._input instanceof RegExp) {
 					this._type  = "regexp";
 					this._value = this._input;
@@ -383,7 +391,7 @@ const wd = (function() {
 		/**d{Aceita valores string nos formatos: v{DD/MM/YYYY MM.DD.YYYY YYYY-MM-DD}v.}d*/
 		date: {
 			get: function() {
-				if (this._type !== null) return this._type === "date" ? true : false;
+				if (this.type !== null) return this.type === "date";
 				if (this._input instanceof Date) {
 					/* fixar em meio dia para evitar horários de verão */
 					let input = this._input;
@@ -459,7 +467,7 @@ const wd = (function() {
 		/**t{b{boolean}b function}t d{Checa se o argumento é uma função.}d*/
 		function: {
 			get: function() {
-				if (this._type !== null) return this._type === "function" ? true : false;
+				if (this.type !== null) return this.type === "function";
 				if (typeof this._input === "function" || this._input instanceof Function) {
 					this._type  = "function";
 					this._value = this._input;
@@ -471,7 +479,7 @@ const wd = (function() {
 		/**t{b{boolean}b array}t d{Checa se o argumento é um array.}d*/
 		array: {
 			get: function() {
-				if (this._type !== null) return this._type === "array" ? true : false;
+				if (this.type !== null) return this.type === "array";
 				if (Array.isArray(this._input) || this._input instanceof Array) {
 					this._type  = "array";
 					this._value = this._input;
@@ -483,7 +491,7 @@ const wd = (function() {
 		/**t{b{boolean}b null}t d{Checa se o argumento é um valor nulo ou uma string vazia.}d*/
 		null: {
 			get: function () {
-				if (this._type !== null) return this._type === "null" ? true : false;
+				if (this.type !== null) return this.type === "null";
 				let str = this.string ? (this._input.trim() === "" ? true : false) : false;
 				if (this._input === null || str) {
 					this._type  = "null"; //FIXME string vazia como null mesmo?
@@ -496,7 +504,7 @@ const wd = (function() {
 		/**t{b{boolean}b undefined}t d{Checa se o argumento é um valor indefinido.}d*/
 		undefined: {
 			get: function() {
-				if (this._type !== null) return this._type === "undefined" ? true : false;
+				if (this.type !== null) return this.type === "undefined";
 				if (this._input === undefined || typeof this._input === "undefined") {
 					this._type  = "undefined";
 					this._value = undefined;
@@ -510,7 +518,7 @@ const wd = (function() {
 		/**d{Aceita os formato 24h e 12h (v{HH:MM:SS HH:MM AMPM}v).}d*/
 		time: {
 			get: function() {
-				if (this._type !== null) return this._type === "time" ? true : false;
+				if (this.type !== null) return this.type === "time";
 				if (!this.string) return false;
 				let value = this._input.trim();
 				let h, m, s;
@@ -550,7 +558,7 @@ const wd = (function() {
 		/**t{b{boolean}b node}t d{Checa se o argumento é um elemento HTML ou uma coleção desses.}d*/
 		node: {
 			get: function() {
-				if (this._type !== null) return this._type === "node" ? true : false;
+				if (this.type !== null) return this.type === "node";
 				/* 0: individual, 1: coletivo, outros: direto */
 				let nodes = {
 					window: window, document: document,
@@ -586,7 +594,7 @@ const wd = (function() {
 		/**t{b{boolean}b object}t d{Checa se o argumento é um objeto diferente das demais categorias.}d */
 		object: {
 			get: function() {
-				if (this._type !== null) return this._type === "object" ? true : false;
+				if (this.type !== null) return this.type === "object";
 				if (this.string) return false;
 				if (typeof this._input === "object") {
 					this._type  = "object";
@@ -638,29 +646,19 @@ const wd = (function() {
 		/**t{b{integer}b y}t d{ano.}d*/
 		/**t{b{integer}b valueOf()}t d{Quantidade total de dias desde v{0001-01-01}v.}d}L*/
 		value: {
-			get: function() {
-				if (this._type === null) this._init();
-				return this._value;
-			}
+			get: function() {return this._value;}
 		},
 		/**t{b{string}b type}t d{Retorna o tipo do argumento para uso da biblioteca.}d */
 		type: {
-			get: function() {
-				if (this._type === null) this._init();
-				return this._type;
-			}
+			get: function() {return this._type;}
 		},
 		/**t{b{void}b valueOf()}t d{Retorna o método i{valueOf}i do retorno do atributo i{value}i.}d*/
 		valueOf: {
-			value: function() {
-				return this.value.valueOf();
-			}
+			value: function() {return this.value.valueOf();}
 		},
 		/**t{b{string}b toString()}t d{Retorna o método i{toString()}i do retorno do atributo i{value}i.}d*/
 		toString: {
-			value: function() {
-				return this.value.toString();
-			}
+			value: function() {return this.value.toString();}
 		}
 		/**}l*/
 	});
@@ -1553,7 +1551,7 @@ const wd = (function() {
 							this._value.dataset[attr] = data[i];
 						else if (attr in this._value.dataset)
 							delete this._value.dataset[attr];
-						/* FIXME executar verificação após definição */
+						/* FIXME MUITO IMPORTANTE executar verificação após definição */
 						settingProcedures(this._value, attr);
 					}
 				}
@@ -1575,10 +1573,123 @@ const wd = (function() {
 				}
 			}
 		},
-		wdDataset: {
+		/**t{b{string}b wdNotation(b{void}b attr)}t d{Retorna a notação de mesmo nome de i{__String}i presente em i{dataset}i.}d*/
+		/**L{d{v{attr}v - Valor do atributo de i{dataset}i que, se inexistente, retornará nulo.}d}L*/
+		wdNotation: {
 			value: function(attr) {
 				if (!(attr in this._value.dataset)) return null;
 				return __String(this._value.dataset[attr]).wdNotation;
+			}
+		},
+		value: {
+			value: function(input) { //FIXME isso está muito, mas muito ruim
+				let forms = ["select", "textarea", "input", "button"];
+				if (forms.indexOf(this.tag) < 0) return null;
+				let setme = arguments.length > 0;
+				let value = this._value.value;
+				switch(this.tag) {
+					case "select": {
+						let values   = [];
+						let multiple = this._value.multiple;
+						let length   = this._value.length;
+						let i = -1;
+						while (++i < length) {
+							let item = this._value[i];
+							if (!setme)
+								if (item.selected) values.push(item.value);
+							else if (multiple)
+								if (item.value === input) item.selected = true;
+							else
+								item.selected = item.value === input;
+						}
+						return set ? this.value() : values;
+					}
+					case "input": {
+						let atype = this.attribute("type");
+						let otype = this.object("type");
+						switch(type) {
+
+
+
+
+
+						}
+					}
+				}
+
+				if (setme) this._value.value = input;
+				return this._value.value;
+
+
+
+
+				/*let config = {send: 0, load: 1, mask: 2, text: 3, value: 4};
+				let f = false;
+				let t = true;
+				let n = null;
+				let h = "innerHTML";
+				let t = "textContent";
+				let v = "value";
+				let e = this._value;
+				data.meter    = {types: N, send: F, load: N, mask: N, text: N, value: N};
+				data.progress = {types: N, send: F, load: N, mask: N, text: N, value: N};
+				data.output   = {types: N, send: F, load: N, mask: N, text: N, value: N};
+				data.option   = {types: N, send: F, load: N, mask: t, text: t, value: N};
+				data.form     = {types: N, send: F, load: i, mask: N, text: N, value: N};
+				data.textarea = {types: N, send: T, load: v, mask: v, text: v, value: N};
+				data.select   = {types: N, send: T, load: i, mask: N, text: N, value: "vselect"};
+
+				data.button         = {types: T};
+				data.button.button  = {send: F, load: N, mask: t, text: t, value: N};
+				data.button.reset   = {send: F, load: N, mask: t, text: t, value: N};
+
+				data.button.submit  = {send: F, load: N, mask: t, text: t, value: N};
+				data.input          = {types: T};
+				data.input.button   = {send: F, load: N, mask: v, text:v, value: N};
+				data.input.reset    = {send: F, load: N, mask: v, text:v, value: N};
+				data.input.submit   = {send: F, load: N, mask: v, text:v, value: N};
+				data.input.image    = {send: F, load: N, mask: N, text:N, value: N};
+				data.input.color    = {send: T, load: N, mask: N, text:v, value: N};
+				data.input.radio    = {send: T, load: N, mask: N, text:N, value: "vcheck"};
+				data.input.checkbox = {send: T, load: N, mask: N, text:N, value: "vcheck"};
+				data.input.date     = {send: T, load: N, mask: v, text:v, value: "vdate"};
+				data.input.datetime = {send: T, load: N, mask: v, text:v, value: "vdatetime"};
+				data.input.month    = {send: T, load: N, mask: v, text:v, value: "vmonth"};
+				data.input.week     = {send: T, load: N, mask: v, text:v, value: "vweek"};
+				data.input.time     = {send: T, load: N, mask: v, text:v, value: "vtime"};
+				data.input.range    = {send: T, load: N, mask: N, text:v, value: "vnumber"};
+				data.input.number   = {send: T, load: N, mask: v, text:v, value: "vnumber"};
+				data.input.file     = {send: T, load: N, mask: N, text:N, value: "vfile"};
+				data.input.url      = {send: T, load: N, mask: v, text:v, value: "vurl"};
+				data.input.email    = {send: T, load: N, mask: v, text:v, value: "vemail"};
+				data.input.tel      = {send: T, load: N, mask: v, text:v, value: N};
+
+				data.input.text     = {send: T, load: N, mask: v, text:v, value: N};
+				data.input.search   = {send: T, load: N, mask: v, text:v, value: N};
+				data.input.password = {send: T, load: N, mask: N, text:N, value: N};
+				data.input.hidden   = {send: T, load: N, mask: N, text:v, value: N};
+				data.input["datetime-local"] = {send: T, load: N, mask: v, text:v, value: "vdatetime"};
+
+*/
+
+
+
+			}
+
+
+
+		},
+
+
+
+
+		value: {
+			value: function(input) {
+
+
+
+
+
 			}
 		},
 
@@ -1589,17 +1700,120 @@ const wd = (function() {
 
 
 
-		form: {
-			get: function() {
-				let tags = ["select", "textarea", "input", "button"];
-				if (tags.indexOf(this.tag) < 0) return null;
 
+
+
+
+
+
+
+
+
+
+
+		/**t{b{array}b _form_select}t d{Retorna uma lista das opções selecionadas ou nulo se não for um i{select}i.}d*/
+		_form_select: {
+			get: function() {
+				if (this.tag !== "select") return null;
+				let value = [];
+				let i = -1;
+				while (++i < this._value.length)
+					if (this._value[i].selected) value.push(this._value[i].value);
+				return value;
+			}
+		},
+		/**t{b{array}b _form_textarea}t d{Retorna o valor do campo ou nulo se não for um i{textarea}i.}d*/
+		_form_textarea: {
+			get: function() {
+				if (this.tag !== "textarea") return null;
+				return this._value.value;
+			}
+		},
+
+
+/*
+				let data = {}
+
+
+				data.meter    = {types: N, send: F, load: N, mask: N, text: N, value: N};
+				data.progress = {types: N, send: F, load: N, mask: N, text: N, value: N};
+				data.output   = {types: N, send: F, load: N, mask: N, text: N, value: N};
+				data.option   = {types: N, send: F, load: N, mask: t, text: t, value: N};
+
+				data.form     = {types: N, send: F, load: i, mask: N, text: N, value: N};
+				data.textarea = {types: N, send: T, load: v, mask: v, text: v, value: N};
+				data.select   = {types: N, send: T, load: i, mask: N, text: N, value: "vselect"};
+
+
+
+				select: [1,0,0],
+				button: false,
+				data.input.reset    = {send: F, load: N, mask: v, text:v, value: N};
+				data.input.submit   = {send: F, load: N, mask: v, text:v, value: N};
+				data.input.image    = {send: F, load: N, mask: N, text:N, value: N};
+				data.input.color    = {send: T, load: N, mask: N, text:v, value: N};
+				data.input.radio    = {send: T, load: N, mask: N, text:N, value: "vcheck"};
+				data.input.checkbox = {send: T, load: N, mask: N, text:N, value: "vcheck"};
+				data.input.date     = {send: T, load: N, mask: v, text:v, value: "vdate"};
+				data.input.datetime = {send: T, load: N, mask: v, text:v, value: "vdatetime"};
+				data.input.month    = {send: T, load: N, mask: v, text:v, value: "vmonth"};
+				data.input.week     = {send: T, load: N, mask: v, text:v, value: "vweek"};
+				data.input.time     = {send: T, load: N, mask: v, text:v, value: "vtime"};
+				data.input.range    = {send: T, load: N, mask: N, text:v, value: "vnumber"};
+				data.input.number   = {send: T, load: N, mask: v, text:v, value: "vnumber"};
+				data.input.file     = {send: T, load: N, mask: N, text:N, value: "vfile"};
+				data.input.url      = {send: T, load: N, mask: v, text:v, value: "vurl"};
+				data.input.email    = {send: T, load: N, mask: v, text:v, value: "vemail"};
+				data.input.tel      = {send: T, load: N, mask: v, text:v, value: N};
+				data.input.text     = {send: T, load: N, mask: v, text:v, value: N};
+				data.input.search   = {send: T, load: N, mask: v, text:v, value: N};
+				data.input.password = {send: T, load: N, mask: N, text:N, value: N};
+				data.input.hidden   = {send: T, load: N, mask: N, text:v, value: N};
+				data.input["datetime-local"] = {send: T, load:
 
 
 
 
 			}
-		}
+		},
+
+
+
+		_fdata: {
+			get: function() {
+				let forms = ["select", "textarea", "input"];
+				return forms.indexOf(this.tag) >= 0 ? true : false;
+			}
+		},
+		_ftype: {
+			get: function() {
+				if (!this.fdata) return null;
+				if (this.tag !== "input") return this.tag;
+				let atype = this.attribute("type").toLowerCase();
+				let otype = this.object("type").toLowerCase();
+
+
+
+			}
+		},
+
+
+
+
+
+/*
+
+
+
+		*/
+
+
+
+
+
+
+
+
 
 
 
