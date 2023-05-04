@@ -1407,12 +1407,175 @@ const wd = (function() {
 	});
 
 /*===========================================================================*/
+	/**3{Nós Formulários HTML}3*/
+/*===========================================================================*/
+
+	/**f{b{object}b __FNode(b{node}b input)}f*/
+	/**p{Construtor para manipulação de nós de formulários HTML}p*/
+	/**l{d{v{input}v - Formulário HTML.}d}l*/
+	function __FNode(input) {
+		if (!(this instanceof __FNode))	return new __FNode(input);
+		let check = __Type(input);
+		Object.defineProperties(this, {
+			_node:  {value: check.type === "node" ? input : null}
+		});
+	}
+	/**6{Métodos e atributos}6 l{*/
+	Object.defineProperties(__FNode.prototype, {
+		constructor: {value: __FNode},
+		/**t{b{string}b tag}t d{Retorna o nome do elemento HTML.}d*/
+		_tag: {
+			get: function() {return this._node !== null ? this._node.tagName.toLowerCase() : null;}
+		},
+		_value: {
+			get: function()  {return this._node.value;},
+			set: function(x) {this._node.value = x;}
+		},
+		_id: {
+			//FIXME para os tipos atendidos por _value, devolver _value e só trabalhar com os estranhos
+
+			get: function() {
+				switch(this._tag) {
+					case "input":  return "_input_"+this.type;
+					case "button": return "_button";
+				}
+				return this.type !== null ? "_"+this.type : null;
+			}
+		},
+		type: {
+			get: function() {
+				let tag = this._tag
+				if (tag === null) return null;
+				if (tag === "button" || tag === "input") {
+					let att = String(this._node.getAttribute("type")).toLowerCase();
+					let obj = String(this._node.type).toLowerCase();
+					return ("_"+tag+"_"+att) in this ? att : obj;
+				}
+				return ("_"+tag) in this ? tag : null;
+			}
+		},
+		value: {
+			get: function()  {return this._id === null ? null : this[this._id];},
+			set: function(x) {if (this._id !== null) {this[this._id] = x;}}
+		},
+		_select: {
+			get: function() {
+				let data = [];
+				let i = -1;
+				while (++i < this._node.length)
+					if (this._node[i].selected) data.push(this._node[i].value);
+				return data;
+			},
+			set: function(x) {
+				let data = __Type(x).type === "array" ? x : [x];
+				let i = -1;
+				while (++i < this._node.length)
+					this._node[i].selected = data.indexOf(this._node[i].value) >= 0;
+				return;
+			},
+		},
+		_textarea: {
+			get: function()  {return this._value;},
+			set: function(x) {return this._value = x;},
+		},
+		_button: {
+			get: function()  {return this._value;},
+			set: function(x) {return this._value = x;},
+		},
+		_input_text: {
+			get: function()  {return this._value;},
+			set: function(x) {return this._value = x;},
+		},
+		_input_search: arguments[0]._value,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+				/*let config = {send: 0, load: 1, mask: 2, text: 3, value: 4};
+				let f = false;
+				let t = true;
+				let n = null;
+				let h = "innerHTML";
+				let t = "textContent";
+				let v = "value";
+				let e = this._value;
+				data.meter    = {types: N, send: F, load: N, mask: N, text: N, value: N};
+				data.progress = {types: N, send: F, load: N, mask: N, text: N, value: N};
+				data.output   = {types: N, send: F, load: N, mask: N, text: N, value: N};
+				data.option   = {types: N, send: F, load: N, mask: t, text: t, value: N};
+				data.form     = {types: N, send: F, load: i, mask: N, text: N, value: N};
+*				data.textarea = {types: N, send: T, load: v, mask: v, text: v, value: N};
+				data.select   = {types: N, send: T, load: i, mask: N, text: N, value: "vselect"};
+
+*				data.button         = {types: T};
+*				data.button.button  = {send: F, load: N, mask: t, text: t, value: N};
+*				data.button.reset   = {send: F, load: N, mask: t, text: t, value: N};
+
+				data.button.submit  = {send: F, load: N, mask: t, text: t, value: N};
+
+				data.input          = {types: T};
+*				data.input.button   = {send: F, load: N, mask: v, text:v, value: N};
+*				data.input.reset    = {send: F, load: N, mask: v, text:v, value: N};
+*				data.input.submit   = {send: F, load: N, mask: v, text:v, value: N};
+*				data.input.image    = {send: F, load: N, mask: N, text:N, value: N};
+*				data.input.color    = {send: T, load: N, mask: N, text:v, value: N};
+				data.input.radio    = {send: T, load: N, mask: N, text:N, value: "vcheck"};
+				data.input.checkbox = {send: T, load: N, mask: N, text:N, value: "vcheck"};
+				data.input.date     = {send: T, load: N, mask: v, text:v, value: "vdate"};
+				data.input.datetime = {send: T, load: N, mask: v, text:v, value: "vdatetime"};
+				data.input.month    = {send: T, load: N, mask: v, text:v, value: "vmonth"};
+				data.input.week     = {send: T, load: N, mask: v, text:v, value: "vweek"};
+				data.input.time     = {send: T, load: N, mask: v, text:v, value: "vtime"};
+				data.input.range    = {send: T, load: N, mask: N, text:v, value: "vnumber"};
+				data.input.number   = {send: T, load: N, mask: v, text:v, value: "vnumber"};
+				data.input.file     = {send: T, load: N, mask: N, text:N, value: "vfile"};
+				data.input.url      = {send: T, load: N, mask: v, text:v, value: "vurl"};
+				data.input.email    = {send: T, load: N, mask: v, text:v, value: "vemail"};
+*				data.input.tel      = {send: T, load: N, mask: v, text:v, value: N};
+*				data.input.text     = {send: T, load: N, mask: v, text:v, value: N};
+*				data.input.search   = {send: T, load: N, mask: v, text:v, value: N};
+*				data.input.password = {send: T, load: N, mask: N, text:N, value: N};
+*				data.input.hidden   = {send: T, load: N, mask: N, text:v, value: N};
+
+				data.input["datetime-local"] = {send: T, load: N, mask: v, text:v, value: "vdatetime"};
+
+*/
+
+
+
+
+
+
+
+
+
+
+
+
+	});
+
+
+/*===========================================================================*/
 	/**3{Nós HTML}3*/
 /*===========================================================================*/
 
-	/**f{b{object}b __Node(b{array}b input|b{void}b ...)}f*/
+
+
+
+	/**f{b{object}b __Node(b{node}b input)}f*/
 	/**p{Construtor para manipulação de nós  HTML}p*/
-	/**l{d{v{input}v - Array ou cada argumento corresponderá a um item.}d}l*/
+	/**l{d{v{input}v - Elemento HTML.}d}l*/
 	function __Node(input) {
 		if (!(this instanceof __Node))	return new __Node(input);
 		let check = __Type(input);
@@ -1581,231 +1744,6 @@ const wd = (function() {
 				return __String(this._value.dataset[attr]).wdNotation;
 			}
 		},
-		value: {
-			value: function(input) { //FIXME isso está muito, mas muito ruim
-				let forms = ["select", "textarea", "input", "button"];
-				if (forms.indexOf(this.tag) < 0) return null;
-				let setme = arguments.length > 0;
-				let value = this._value.value;
-				switch(this.tag) {
-					case "select": {
-						let values   = [];
-						let multiple = this._value.multiple;
-						let length   = this._value.length;
-						let i = -1;
-						while (++i < length) {
-							let item = this._value[i];
-							if (!setme)
-								if (item.selected) values.push(item.value);
-							else if (multiple)
-								if (item.value === input) item.selected = true;
-							else
-								item.selected = item.value === input;
-						}
-						return set ? this.value() : values;
-					}
-					case "input": {
-						let atype = this.attribute("type");
-						let otype = this.object("type");
-						switch(type) {
-
-
-
-
-
-						}
-					}
-				}
-
-				if (setme) this._value.value = input;
-				return this._value.value;
-
-
-
-
-				/*let config = {send: 0, load: 1, mask: 2, text: 3, value: 4};
-				let f = false;
-				let t = true;
-				let n = null;
-				let h = "innerHTML";
-				let t = "textContent";
-				let v = "value";
-				let e = this._value;
-				data.meter    = {types: N, send: F, load: N, mask: N, text: N, value: N};
-				data.progress = {types: N, send: F, load: N, mask: N, text: N, value: N};
-				data.output   = {types: N, send: F, load: N, mask: N, text: N, value: N};
-				data.option   = {types: N, send: F, load: N, mask: t, text: t, value: N};
-				data.form     = {types: N, send: F, load: i, mask: N, text: N, value: N};
-				data.textarea = {types: N, send: T, load: v, mask: v, text: v, value: N};
-				data.select   = {types: N, send: T, load: i, mask: N, text: N, value: "vselect"};
-
-				data.button         = {types: T};
-				data.button.button  = {send: F, load: N, mask: t, text: t, value: N};
-				data.button.reset   = {send: F, load: N, mask: t, text: t, value: N};
-
-				data.button.submit  = {send: F, load: N, mask: t, text: t, value: N};
-				data.input          = {types: T};
-				data.input.button   = {send: F, load: N, mask: v, text:v, value: N};
-				data.input.reset    = {send: F, load: N, mask: v, text:v, value: N};
-				data.input.submit   = {send: F, load: N, mask: v, text:v, value: N};
-				data.input.image    = {send: F, load: N, mask: N, text:N, value: N};
-				data.input.color    = {send: T, load: N, mask: N, text:v, value: N};
-				data.input.radio    = {send: T, load: N, mask: N, text:N, value: "vcheck"};
-				data.input.checkbox = {send: T, load: N, mask: N, text:N, value: "vcheck"};
-				data.input.date     = {send: T, load: N, mask: v, text:v, value: "vdate"};
-				data.input.datetime = {send: T, load: N, mask: v, text:v, value: "vdatetime"};
-				data.input.month    = {send: T, load: N, mask: v, text:v, value: "vmonth"};
-				data.input.week     = {send: T, load: N, mask: v, text:v, value: "vweek"};
-				data.input.time     = {send: T, load: N, mask: v, text:v, value: "vtime"};
-				data.input.range    = {send: T, load: N, mask: N, text:v, value: "vnumber"};
-				data.input.number   = {send: T, load: N, mask: v, text:v, value: "vnumber"};
-				data.input.file     = {send: T, load: N, mask: N, text:N, value: "vfile"};
-				data.input.url      = {send: T, load: N, mask: v, text:v, value: "vurl"};
-				data.input.email    = {send: T, load: N, mask: v, text:v, value: "vemail"};
-				data.input.tel      = {send: T, load: N, mask: v, text:v, value: N};
-
-				data.input.text     = {send: T, load: N, mask: v, text:v, value: N};
-				data.input.search   = {send: T, load: N, mask: v, text:v, value: N};
-				data.input.password = {send: T, load: N, mask: N, text:N, value: N};
-				data.input.hidden   = {send: T, load: N, mask: N, text:v, value: N};
-				data.input["datetime-local"] = {send: T, load: N, mask: v, text:v, value: "vdatetime"};
-
-*/
-
-
-
-			}
-
-
-
-		},
-
-
-
-
-		value: {
-			value: function(input) {
-
-
-
-
-
-			}
-		},
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-		/**t{b{array}b _form_select}t d{Retorna uma lista das opções selecionadas ou nulo se não for um i{select}i.}d*/
-		_form_select: {
-			get: function() {
-				if (this.tag !== "select") return null;
-				let value = [];
-				let i = -1;
-				while (++i < this._value.length)
-					if (this._value[i].selected) value.push(this._value[i].value);
-				return value;
-			}
-		},
-		/**t{b{array}b _form_textarea}t d{Retorna o valor do campo ou nulo se não for um i{textarea}i.}d*/
-		_form_textarea: {
-			get: function() {
-				if (this.tag !== "textarea") return null;
-				return this._value.value;
-			}
-		},
-
-
-/*
-				let data = {}
-
-
-				data.meter    = {types: N, send: F, load: N, mask: N, text: N, value: N};
-				data.progress = {types: N, send: F, load: N, mask: N, text: N, value: N};
-				data.output   = {types: N, send: F, load: N, mask: N, text: N, value: N};
-				data.option   = {types: N, send: F, load: N, mask: t, text: t, value: N};
-
-				data.form     = {types: N, send: F, load: i, mask: N, text: N, value: N};
-				data.textarea = {types: N, send: T, load: v, mask: v, text: v, value: N};
-				data.select   = {types: N, send: T, load: i, mask: N, text: N, value: "vselect"};
-
-
-
-				select: [1,0,0],
-				button: false,
-				data.input.reset    = {send: F, load: N, mask: v, text:v, value: N};
-				data.input.submit   = {send: F, load: N, mask: v, text:v, value: N};
-				data.input.image    = {send: F, load: N, mask: N, text:N, value: N};
-				data.input.color    = {send: T, load: N, mask: N, text:v, value: N};
-				data.input.radio    = {send: T, load: N, mask: N, text:N, value: "vcheck"};
-				data.input.checkbox = {send: T, load: N, mask: N, text:N, value: "vcheck"};
-				data.input.date     = {send: T, load: N, mask: v, text:v, value: "vdate"};
-				data.input.datetime = {send: T, load: N, mask: v, text:v, value: "vdatetime"};
-				data.input.month    = {send: T, load: N, mask: v, text:v, value: "vmonth"};
-				data.input.week     = {send: T, load: N, mask: v, text:v, value: "vweek"};
-				data.input.time     = {send: T, load: N, mask: v, text:v, value: "vtime"};
-				data.input.range    = {send: T, load: N, mask: N, text:v, value: "vnumber"};
-				data.input.number   = {send: T, load: N, mask: v, text:v, value: "vnumber"};
-				data.input.file     = {send: T, load: N, mask: N, text:N, value: "vfile"};
-				data.input.url      = {send: T, load: N, mask: v, text:v, value: "vurl"};
-				data.input.email    = {send: T, load: N, mask: v, text:v, value: "vemail"};
-				data.input.tel      = {send: T, load: N, mask: v, text:v, value: N};
-				data.input.text     = {send: T, load: N, mask: v, text:v, value: N};
-				data.input.search   = {send: T, load: N, mask: v, text:v, value: N};
-				data.input.password = {send: T, load: N, mask: N, text:N, value: N};
-				data.input.hidden   = {send: T, load: N, mask: N, text:v, value: N};
-				data.input["datetime-local"] = {send: T, load:
-
-
-
-
-			}
-		},
-
-
-
-		_fdata: {
-			get: function() {
-				let forms = ["select", "textarea", "input"];
-				return forms.indexOf(this.tag) >= 0 ? true : false;
-			}
-		},
-		_ftype: {
-			get: function() {
-				if (!this.fdata) return null;
-				if (this.tag !== "input") return this.tag;
-				let atype = this.attribute("type").toLowerCase();
-				let otype = this.object("type").toLowerCase();
-
-
-
-			}
-		},
-
-
-
-
-
-/*
-
-
-
-		*/
 
 
 
@@ -6915,6 +6853,7 @@ const wd = (function() {
 		now:     {get:   function() {return WD(wd_str_now());}},
 		type:    {value: function(x){return __Type(x);}},
 
+		form: {value: function(){return __FNode.apply(null, Array.prototype.slice.call(arguments));}},
 		array: {value: function(){return __Array.apply(null, Array.prototype.slice.call(arguments));}},
 		node: {value: function(){return __Node.apply(null, Array.prototype.slice.call(arguments));}},
 		number: {value: function(){return __Number.apply(null, Array.prototype.slice.call(arguments));}},
