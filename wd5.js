@@ -303,10 +303,22 @@ const wd = (function() {
 			get: function() {
 				if (this.type !== null) return this.type === "string";
 				if (typeof this._input === "string" || this._input instanceof String) {
-					/* string não pode definir _type porque outras verificações dependem dele */
+					/* IMPORTANTE: string não pode definir _type porque outras verificações dependem dele */
 					return true;
 				}
 				return false;
+			}
+		},
+		/**t{b{boolean}b empty}t d{Checa se o argumento é uma string vazia.}d*/
+		empty: {
+			get: function() {
+				return (this.string && this.value.trim() === "");
+			}
+		},
+		/**t{b{boolean}b nonempty}t d{Checa se o argumento é uma string não vazia.}d*/
+		nonempty: {
+			get: function() {
+				return (this.string && this.value.trim() !== "");
 			}
 		},
 		/**t{b{boolean}b number}t d{Checa se o argumento é um número real.}d */
@@ -349,14 +361,16 @@ const wd = (function() {
 		/**t{b{boolean}b finite}t d{Checa se o argumento é um número finito.}d*/
 		finite: {
 			get: function() {
-				return this.type === "number" ? isFinite(this.value) : false;
+				return this.number ? isFinite(this.value) : false;
 			}
 		},
+		/**t{b{boolean}b integer}t d{Checa se o argumento é um número inteiro.}d*/
 		integer: {
 			get: function() {
 				return this.finite ? (this.value%1 === 0) : false;
 			}
 		},
+		/**t{b{boolean}b integer}t d{Checa se o argumento é um número decimal.}d*/
 		decimal: {
 			get: function() {
 				return this.finite ? (this.value%1 !== 0) : false;
@@ -499,9 +513,8 @@ const wd = (function() {
 		null: {
 			get: function () {
 				if (this.type !== null) return this.type === "null";
-				let str = this.string ? (this._input.trim() === "" ? true : false) : false;
-				if (this._input === null || str) {
-					this._type  = "null"; //FIXME string vazia como null mesmo?
+				if (this._input === null) {
+					this._type  = "null";
 					this._value = null;
 					return true;
 				}
@@ -667,15 +680,29 @@ const wd = (function() {
 			get: function() {return this._type;}
 		},
 		/**t{b{void}b valueOf()}t d{Retorna o método i{valueOf}i do retorno do atributo i{value}i.}d*/
+		/**d{Para c{null}c e c{undefined}c retorna seus respectivos valores.}d*/
 		valueOf: {
-			value: function() {return this.value.valueOf();}
+			value: function() {
+				return this.null || this.undefined ? this._value : this.value.valueOf();
+			}
 		},
 		/**t{b{string}b toString()}t d{Retorna o método i{toString()}i do retorno do atributo i{value}i.}d*/
+		/**d{Para c{null}c retorna uma string vazia e para c{undefined}c um ponto de interrogação.}d*/
 		toString: {
-			value: function() {return this.value.toString();}
+			value: function() {
+				if (this.null) return "";
+				if (this.undefined) return "?"
+				return this.value.toString();}
 		}
 		/**}l*/
 	});
+
+
+
+//FIXME apagar essas porcarias no fim
+function __strCamel(x) {return __String(x).camel;}
+function __strClear(x) {return __String(x).clear;}
+
 
 /*===========================================================================*/
 	/**3{Números}3*/
@@ -882,7 +909,7 @@ const wd = (function() {
 		notation: {
 			value: function (type, code, lang) {
 				if (!this.finite) return this.toString();
-				lang = __Type(lang) !== "string" ? undefined : lang.trim();
+				lang = __Type(lang).nonempty ? lang.trim() : undefined;
 				let types = {
 					significant: {
 						minimumSignificantDigits: code,
@@ -962,7 +989,7 @@ const wd = (function() {
 	/**l{d{v{input}v - Texto.}d}l*/
 	function __String(input) {
 		if (!(this instanceof __String)) return new __String(input);
-		if (__Type(input).type !== "string") input = String(input);
+		if (!__Type(input).string) input = String(input);
 		Object.defineProperties(this, {
 			_value: {value: input}
 		});
@@ -1074,8 +1101,8 @@ const wd = (function() {
 						value = value.join("").trim();
 						if (value === "") value = undefined;
 						let check = __Type(value);
-						if      (check.type === "number") value = check.value;
-						else if (value in types)          value = types[value];
+						if      (check.number)   value = check.value;
+						else if (value in types) value = types[value];
 						list[key][name] = value;
 						open--;
 						name   = [];
@@ -1092,7 +1119,7 @@ const wd = (function() {
 				});
 				if (object) return list;
 				let check = __Type(data);
-				return check.type === "number" ? check.value : (data in types ? types[data] : data);
+				return check.number ? check.value : (data in types ? types[data] : data);
 			}
 		},
 
@@ -1115,7 +1142,7 @@ const wd = (function() {
 		else if (arguments.length > 1)
 			input = Array.prototype.slice.call(arguments)
 		else
-			input = __Type(arguments[0]).type === "array" ? arguments[0] : [arguments[0]];
+			input = __Type(arguments[0]).array ? arguments[0] : [arguments[0]];
 
 		if (!(this instanceof __Array))	return new __Array(input);
 		Object.defineProperties(this, {
@@ -1164,7 +1191,7 @@ const wd = (function() {
 		/**d{v{type}v - (opcional) Tipo dos itens na lista (ver atributos de i{__Type}i.}d}L*/
 		convert: {
 			value: function(f, type) {
-				if (__Type(f).type !== "function") return null;
+				if (!__Type(f).function) return null;
 				let only = arguments.length < 2 ? false : true;
 				let list = only ? this.only(type, true) : this._value.slice();
 				list.forEach(function(v,i,a){
@@ -1336,24 +1363,23 @@ const wd = (function() {
 				];
 				let array = this._value.slice();
 				return array.sort(function(a, b) {
-					let atype  = __Type(a).type;
-					let btype  = __Type(b).type;
-
+					let A = __Type(a);
+					let B = __Type(b);
 					/* comparação entre tipos diferentes */
-					if (atype !== btype)
-						return order.indexOf(atype) > order.indexOf(btype) ? 1 : -1;
+					if (A.type !== B.type)
+						return order.indexOf(A.type) > order.indexOf(B.type) ? 1 : -1;
 					/* comparação entre tipos iguais */
 					let avalue = a;
 					let bvalue = b;
-					if (atype === "node") {
+					if (A.node) {
 						avalue = __String(a.textContent.toLowerCase()).clear();
 						bvalue = __String(b.textContent.toLowerCase()).clear();
-					} else if (atype === "string") {
+					} else if (A.string) {
 						avalue = __String(a.toLowerCase()).clear();
 						bvalue = __String(b.toLowerCase()).clear();
-					} else if (["number", "boolean", "date", "time"].indexOf(atype) >= 0) {
-						avalue = __Type(a).valueOf();
-						bvalue = __Type(b).valueOf();
+					} else if (["number", "boolean", "date", "time"].indexOf(A.type) >= 0) {
+						avalue = A.valueOf();
+						bvalue = B.valueOf();
 					}
 					return avalue > bvalue ? 1 : -1;
 				});
@@ -1431,20 +1457,27 @@ const wd = (function() {
 		if (!(this instanceof __FNode))	return new __FNode(input);
 		let check = __Type(input);
 		Object.defineProperties(this, {
-			_node:  {value: check.type === "node" ? input : null}
+			_node:  {value: check.node ? input : null}
 		});
 	}
 	/**6{Métodos e atributos}6 l{*/
 	Object.defineProperties(__FNode.prototype, {
 		constructor: {value: __FNode},
-		/**t{b{string}b tag}t d{Retorna o nome do elemento HTML.}d*/
+		/**t{b{string}b _tag}t d{Retorna o nome do elemento HTML.}d*/
 		_tag: {
 			get: function() {return this._node !== null ? this._node.tagName.toLowerCase() : null;}
 		},
+		/**t{b{string}b _text}t d{Retorna ou define o conteúdo textual do formulário HTML.}d*/
+		_text: {
+			get: function()  {return this._node.textContent;},
+			set: function(x) {this._node.textContent = x;}
+		},
+		/**t{b{void}b _value}t d{Retorna ou define o valor do formulário HTML.}d*/
 		_value: {
 			get: function()  {return this._node.value;},
 			set: function(x) {this._node.value = x;}
 		},
+		/**t{b{number|null}b _number}t d{Retorna ou define o valor numérico do formulário HTML.}d*/
 		_number: {
 			get: function()  {
 				let data = __Type(this._value);
@@ -1452,9 +1485,11 @@ const wd = (function() {
 			},
 			set: function(x) {
 				let data = __Type(x);
-				this._value = data.finite ? x : null;
+				if      (data.finite) this._value = data.valueOf();
+				else if (data.null)   this._value = null;
 			}
 		},
+		/**t{b{string|null}b _time}t d{Retorna ou define o valor temporal do formulário HTML.}d*/
 		_time: {
 			get: function()  {
 				let data = __Type(this._value);
@@ -1462,9 +1497,11 @@ const wd = (function() {
 			},
 			set: function(x) {
 				let data = __Type(x);
-				this._value = data.time ? data.toString() : null;
+				if      (data.time) this._value = data.toString();
+				else if (data.null) this._value = null;
 			}
 		},
+		/**t{b{string|null}b _date}t d{Retorna ou define o valor de data do formulário HTML.}d*/
 		_date: {
 			get: function()  {
 				let data = __Type(this._value);
@@ -1472,67 +1509,84 @@ const wd = (function() {
 			},
 			set: function(x) {
 				let data = __Type(x);
-				this._value = data.date ? data.toString() : null;
+				if      (data.date) this._value = data.toString();
+				else if (data.null) this._value = null;
 			}
 		},
-		_select: {
+		/**t{b{string|array}b _vcombo}t d{Retorna ou define o valor do formulário HTML i{combobox}i.}d*/
+		_vcombo: {
 			get: function() {
 				let data = [];
 				let i = -1;
 				while (++i < this._node.length)
 					if (this._node[i].selected) data.push(this._node[i].value);
-				return data;
+				return data.length > 1 ? data : data[0];
 			},
 			set: function(x) {
-				let data = __Type(x).type === "array" ? x : [x];
+				let data = __Type(x).array ? x : [x];
 				let i = -1;
 				while (++i < this._node.length)
 					this._node[i].selected = data.indexOf(this._node[i].value) >= 0;
 				return;
-			},
+			}
 		},
+		/**t{b{string|array}b _tcombo}t d{Retorna ou define o conteúdo textual do formulário HTML i{combobox}i.}d*/
+		_tcombo: {
+			get: function() {
+				let data = [];
+				let i = -1;
+				while (++i < this._node.length)
+					if (this._node[i].selected) data.push(this._node[i].textContent);
+				return data.length > 1 ? data : data[0];
+			},
+			set: function(x) {
+				let data = __Type(x).array ? x : [x];
+				let i = -1;
+				while (++i < this._node.length)
+					this._node[i].selected = data.indexOf(this._node[i].textContent) >= 0;
+				return;
+			}
+		},
+
 		_type: {
 			value: function(ref, value) {
-				let index = {send: 0, load: 1, mask: 2, text: 3, value: 4, type: 5};
 				let form  = {
-					input:    [null, null, null, null, null, {}],
-					button:   [null, null, null, null, null, {}],
-					select:   [true, null, null, "_tselect", "_vselect", null],
-					textarea: [true, "_value", "_value", "_value", "_value", null],
-					meter:    [false, null, null, null, "_number", null],
-					progress: [false, null, null, null, "_number", null],
-					option:   [false, "_text", "_text", "_text", "_value", null],
-					output:   [false, "_text", "_text", "_text", "_value", null]
-				};
-				form.button[index.type] = {
-					reset:  [false, "_text", "_text", "_text", "_value", null],
-					button: [false, "_text", "_text", "_text", "_value", null],
-					submit: [false, "_text", "_text", "_text", "_value", null]
-				};
-				form.input[index.type] = {
-					button:           [false, "_value", "_value", "_value", "_value", null],
-					reset:            [false, "_value", "_value", "_value", "_value", null],
-					submit:           [false, "_value", "_value", "_value", "_value", null],
-					image:            [false, null, null, null, null, null],
-					color:            [true, "_value", null, null, "_value", null],
-					radio:            [true, "_value", null, null, "_radio", null],
-					checkbox:         [true, "_value", null, null, "_checkbox", null],
-					date:             [true, "_date", "_date", "_date", "_date", null],
-					datetime:         [true, "_value", "_value", "_value", "_value", null],
-					month:            [true, "_value", "_value", "_value", "_value", null],
-					week:             [true, "_value", "_value", "_value", "_value", null],
-					time:             [true, "_time", "_time", "_time", "_time", null],
-					range:            [true, "_number", null, null, "_value", null],
-					number:           [true, "_number", null, "_number", "_number", null],
-					file:             [true, "_value", "_value", "_value", "_value", null],
-					url:              [true, "_value", "_value", "_value", "_value", null],
-					email:            [true, "_value", "_value", "_value", "_value", null],
-					tel:              [true, "_value", "_value", "_value", "_value", null],
-					text:             [true, "_value", "_value", "_value", "_value", null],
-					search:           [true, "_value", "_value", "_value", "_value", null],
-					password:         [true, "_value", "_value", "_value", "_value", null],
-					hidden:           [true, "_value", "_value", "_value", "_value", null],
-					"datetime-local": [true, "_value", "_value", "_value", "_value", null],
+					meter:    {value: "_number", text: "_number"},
+					progress: {value: "_number", text: "_number"},
+					option:   {value: "_value", text: "_text"},
+					output:   {value: "_value", text: "_text"},
+					select:   {value: "_vcombo", text: "_tcombo", send: "value"},
+					textarea: {value: "_value", text: "_value", send: "value"},
+					button:   {type: {
+						reset:  {value: "_value", text: "_text"},
+						button: {value: "_value", text: "_text"},
+						submit: {value: "_value", text: "_text"},
+					}},
+					input: {type: {
+						button:   {value: "_value", text: "_value"},
+						reset:    {value: "_value", text: "_value"},
+						submit:   {value: "_value", text: "_value"},
+						image:    {},
+						color:    {value: "_value", text: "_value", send: "value"},
+						radio:    {value: "_check", send: "value"},
+						checkbox: {value: "_check", send: "value"},
+						date:     {value: "_date", text: "_date", send: "value"},
+						datetime: {value: "_datetime", text: "_datetime", send: "value"},
+						month:    {value: "_month", text: "_month", send: "value"},
+						week:     {value: "_week", text: "_week", send: "value"},
+						time:     {value: "_time", text: "_time", send: "value"},
+						range:    {value: "_number", text: "_number", send: "value"},
+						number:   {value: "_number", text: "_number", send: "value"},
+						file:     {value: "_file", send: "value"},
+						url:      {value: "_url", text: "_url", send: "value"},
+						email:    {value: "_email", text: "_mail", send: "value"},
+						tel:      {value: "_value",  text: "_value", send: "value"},
+						text:     {value: "_value",  text: "_value", send: "value"},
+						search:   {value: "_value",  text: "_value", send: "value"},
+						password: {send: "_value"},
+						hidden:   {value: "_value",  text: "_value", send: "value"},
+						"datetime-local": {value: "_datetime", text: "_datetime", send: "value"},
+					}}
 				};
 				/* checar a tag */
 				let tag = this._tag;
@@ -1540,34 +1594,46 @@ const wd = (function() {
 				/* retornar o tipo */
 				if (arguments.length === 0) {
 					/* elemento sem tipo */
-					if (form[tag][index.type] === null) return tag;
+					if (!("type" in form[tag])) return tag;
 					/* elemento com tipo */
 					let att = String(this._node.getAttribute("type")).toLowerCase();
 					let obj = String(this._node.type).toLowerCase();
-					if (att in form[tag][index.type]) return tag+":"+att;
-					if (obj in form[tag][index.type]) return tag+":"+obj;
+					if (att in form[tag].type) return tag+":"+att;
+					if (obj in form[tag].type) return tag+":"+obj;
 					/* tipo não localizado */
 					return null;
 				}
 				/* checar valor de referência */
-				let type = this.type;
-				if (type === null || !(ref in index)) return null;
-				let path = type.split(":");
-				let attr = path.length > 1 ? form[tag][index.type][path[1]][index[ref]] : form[tag][index[ref]];
+				let type = this._type();
+				if (type === null) return null;
+				let atype = type.split(":");
+				let path  = atype.length > 1 ? form[tag].type[atype[1]] : form[tag];
+				if (!(ref in path)) return null;
+				let attr = path[ref];
 				if (!(attr in this)) return attr;
 				/* retorna valor de referência */
 				if (arguments.length < 2) return this[attr];
+				/* definir valor de referência */
 				this[attr] = value;
 				return;
 			}
 		},
+		/**t{b{string|null}b type}t d{Retorna o tipo do formulário HTML ou c{null}c se outro elemento.}d*/
+		/**d{Com atributo i{type}i: v{tag:type}v; Sem atributo i{type}i: v{tag}v.}d*/
 		type: {
 			get: function() {return this._type();}
 		},
+		/**t{b{void}b value}t d{Retorna ou define o valor do formulário HTML (valor depende do elemento).}d*/
 		value: {
 			get: function()  {return this._type("value");},
 			set: function(x) {return this._type("value", x);}
 		},
+		/**t{b{void}b text}t d{Retorna ou define o conteúdo textual do formulário HTML (valor depende do elemento).}d*/
+		text: {
+			get: function()  {return this._type("text");},
+			set: function(x) {return this._type("text", x);}
+		},
+
 
 
 
