@@ -278,7 +278,8 @@ const wd = (function() {
 	/**l{d{v{input}v - Dado a ser examinado.}d}l*/
 	function __Type(input) {
 		if (!(this instanceof __Type)) return new __Type(input);
-		this._input = input; /* valor original */
+		this._root  = input  /* valor original */
+		this._input = input; /* valor de referência */
 		this._type  = null;  /* tipo do valor de entrada */
 		this._value = null;  /* valor a ser considerado */
 		this._init();        /* definir atributos próprios */
@@ -295,30 +296,114 @@ const wd = (function() {
 				dateMDY: /^(0[1-9]|1[0-2])\.(0[1-9]|[12]\d|3[01])\.\d{4}$/,
 				dateYMD: /^\d{4}\-(0[1-9]|1[0-2])\-(0[1-9]|[12]\d|3[01])$/,
 				time12:  /^(0?[1-9]|1[0-2])\:[0-5]\d(\:[0-5]\d)?\ ?[ap]m$/i,
-				time24:  /^(0?\d|1\d|2[0-4])(\:[0-5]\d){1,2}$/
+				time24:  /^(0?\d|1\d|2[0-4])(\:[0-5]\d){1,2}$/,
+				email:   /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/,
+				monthYM: /^\d{4}\-(0[1-9]|1[0-2])$/,
+				monthMY: /^(0[1-9]|1[0-2])[./]\d{4}$/,
 			}
 		},
-		/**t{b{boolean}b string}t d{Checa se o argumento é uma string.}d*/
-		string: {
+		week: {
 			get: function() {
-				if (this.type !== null) return this.type === "string";
-				if (typeof this._input === "string" || this._input instanceof String) {
-					/* IMPORTANTE: string não pode definir _type porque outras verificações dependem dele */
+
+			}
+		}
+
+
+		/**t{b{boolean}b chars}t d{Checa se o argumento é um conjunto de caracteres.}d*/
+		chars: {
+			get: function() {
+				return (typeof this._root === "string" || this._root instanceof String);
+			}
+		},
+		/**t{b{boolean}b empty}t d{Checa se o argumento é um conjunto de caracteres não visualizáveis.}d*/
+		empty: {
+			get: function() {
+				return (this.chars && this._root.trim() === "");
+			}
+		},
+		/**t{b{boolean}b nonempty}t d{Checa se o argumento é um conjunto de caracteres visualizáveis.}d*/
+		nonempty: {
+			get: function() {
+				return (this.chars && this._root.trim() !== "");
+			}
+		},
+		email: {
+			get: function() {
+				if (!this.chars) return false;
+				let data = this._root.split(",")
+				let i = -1;
+				while (++i < data.length)
+					if (!this._re.email.test(data[i].trim())) return false;
+				return true;
+			}
+		},
+		url: {
+			get: function() {
+				if (!this.chars) return false;
+				try {
+					let url = new URL(this._root);
 					return true;
+				} catch(e) {
+					return false;
 				}
+			}
+		},
+		month: {
+			get: function() {
+				if (!this.chars) return false;
+				if (this._re.monthYM.test(this._root))
+					return this._root.substr(0,4) !== "0000";
+				if (this._re.monthMY.test(this._root))
+					return this._root.substr(3,4) !== "0000";
 				return false;
 			}
 		},
-		/**t{b{boolean}b empty}t d{Checa se o argumento é uma string vazia.}d*/
-		empty: {
+		week: {
 			get: function() {
-				return (this.string && this.value.trim() === "");
+				if (!this.chars) return false;
 			}
 		},
-		/**t{b{boolean}b nonempty}t d{Checa se o argumento é uma string não vazia.}d*/
-		nonempty: {
+
+/*
+
+let data = [
+					{re: /^[0-9]{4}\-W[0-9]{2}?$/i, w: {i: 6, e: 2}, y: {i: 0, e: 4}}, /* YYYY-Www
+					{re: /^[0-9]{2}\,\ [0-9]{4}$/,  w: {i: 0, e: 2}, y: {i: 4, e: 4}}, /* ww, YYYY
+				];
+
+
+
+*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		/**t{b{boolean}b string}t d{Checa se o argumento é uma string que não seja número, data ou tempo.}d*/
+		string: {
 			get: function() {
-				return (this.string && this.value.trim() !== "");
+				if (this.type !== null) return this.type === "string";
+				if (this.chars) {
+					this._type  = "string";
+					this._value = String(this._input);
+					return true;
+				}
+				return false;
 			}
 		},
 		/**t{b{boolean}b number}t d{Checa se o argumento é um número real.}d */
@@ -333,8 +418,8 @@ const wd = (function() {
 					this._value = this._input.valueOf();
 					return true
 				}
-				if (!this.string) return false;
 				/* Número em forma de String (normal, percentual e fatorial) */
+				if (!this.chars) return false;
 				let value = this._input.trim();
 				if (this._re.number.test(value)) {
 					let end = value[value.length-1];
@@ -444,8 +529,8 @@ const wd = (function() {
 					};
 					return true;
 				}
-				if (!this.string) return false;
 				/* Datas em forma de String */
+				if (!this.chars) return false;
 				let value = this._input.trim();
 				let d, m, y;
 				if (this._re.dateDMY.test(value)) { /* DD/MM/YYYY */
@@ -539,7 +624,7 @@ const wd = (function() {
 		time: {
 			get: function() {
 				if (this.type !== null) return this.type === "time";
-				if (!this.string) return false;
+				if (!this.chars) return false;
 				let value = this._input.trim();
 				let h, m, s;
 				if (this._re.time12.test(value)) { /* HH:MM AMPM */
@@ -635,25 +720,16 @@ const wd = (function() {
 		_init: {
 			value: function() {
 				if (this._type !== null) return;
-
-				/* tipos próprios */
+				/* IMPORTANTE: string precisa estar após number, date e time que podem ser strings também */
+				/* IMPORTANTE: object precisa ser o último, pois qualquer um pode ser um objeto */
 				let types = [
 					"null", "undefined", "boolean", "number", "date", "time", "array",
-					"node", "regexp", "function"
+					"node", "regexp", "function", "string", "object"
 				];
-				for (let i = 0; i < types.length; i++)
+				let i = -1;
+				while (++i < types.length)
 					if (this[types[i]]) return;
-				/* tipos auxiliares, genéricos e desconhecidos */
-				if (this.string) {
-					this._type  = "string";
-					this._value = this._input.toString();
-					return;
-				}
-				if (this.object) {
-					this._type  = "object";
-					this._value = this._input;
-					return;
-				}
+				/* se não se encaixar em nada: desconhecido */
 				this._value = this._input;
 				this._type  = "unknow";
 				return;
@@ -1374,12 +1450,12 @@ function __strClear(x) {return __String(x).clear;}
 					if (A.node) {
 						avalue = __String(a.textContent.toLowerCase()).clear();
 						bvalue = __String(b.textContent.toLowerCase()).clear();
-					} else if (A.string) {
-						avalue = __String(a.toLowerCase()).clear();
-						bvalue = __String(b.toLowerCase()).clear();
 					} else if (["number", "boolean", "date", "time"].indexOf(A.type) >= 0) {
 						avalue = A.valueOf();
 						bvalue = B.valueOf();
+					} else if (A.type === "string") {
+						avalue = __String(a.toLowerCase()).clear();
+						bvalue = __String(b.toLowerCase()).clear();
 					}
 					return avalue > bvalue ? 1 : -1;
 				});
@@ -1477,11 +1553,11 @@ function __strClear(x) {return __String(x).clear;}
 			get: function()  {return this._node.value;},
 			set: function(x) {this._node.value = x;}
 		},
-		/**t{b{number|null}b _number}t d{Retorna ou define o valor numérico do formulário HTML.}d*/
+		/**t{b{number|string}b _number}t d{Retorna ou define o valor numérico do formulário HTML.}d*/
 		_number: {
 			get: function()  {
 				let data = __Type(this._value);
-				return data.finite ? data.value : null;
+				return data.finite ? data.value : "";
 			},
 			set: function(x) {
 				let data = __Type(x);
@@ -1489,11 +1565,11 @@ function __strClear(x) {return __String(x).clear;}
 				else if (data.null)   this._value = null;
 			}
 		},
-		/**t{b{string|null}b _time}t d{Retorna ou define o valor temporal do formulário HTML.}d*/
+		/**t{b{string}b _time}t d{Retorna ou define o valor temporal do formulário HTML.}d*/
 		_time: {
 			get: function()  {
 				let data = __Type(this._value);
-				return data.time ? data.toString() : null;
+				return data.time ? data.toString() : "";
 			},
 			set: function(x) {
 				let data = __Type(x);
@@ -1501,11 +1577,11 @@ function __strClear(x) {return __String(x).clear;}
 				else if (data.null) this._value = null;
 			}
 		},
-		/**t{b{string|null}b _date}t d{Retorna ou define o valor de data do formulário HTML.}d*/
+		/**t{b{string}b _date}t d{Retorna ou define o valor de data do formulário HTML.}d*/
 		_date: {
 			get: function()  {
 				let data = __Type(this._value);
-				return data.date ? data.toString() : null;
+				return data.date ? data.toString() : "";
 			},
 			set: function(x) {
 				let data = __Type(x);
@@ -1514,13 +1590,14 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**t{b{string|array}b _vcombo}t d{Retorna ou define o valor do formulário HTML i{combobox}i.}d*/
+		/**d{Se informado um array e for múltiplo, serão selecionadas as opções correspondentes ao item.}d*/
 		_vcombo: {
 			get: function() {
 				let data = [];
 				let i = -1;
 				while (++i < this._node.length)
 					if (this._node[i].selected) data.push(this._node[i].value);
-				return data.length > 1 ? data : data[0];
+				return data.length < 2 ? data.join("") : data;
 			},
 			set: function(x) {
 				let data = __Type(x).array ? x : [x];
@@ -1531,13 +1608,14 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**t{b{string|array}b _tcombo}t d{Retorna ou define o conteúdo textual do formulário HTML i{combobox}i.}d*/
+		/**d{Se informado um array e for múltiplo, serão selecionadas as opções correspondentes ao item.}d*/
 		_tcombo: {
 			get: function() {
 				let data = [];
 				let i = -1;
 				while (++i < this._node.length)
 					if (this._node[i].selected) data.push(this._node[i].textContent);
-				return data.length > 1 ? data : data[0];
+				return data.length < 2 ? data.join("") : data;
 			},
 			set: function(x) {
 				let data = __Type(x).array ? x : [x];
@@ -1546,6 +1624,72 @@ function __strClear(x) {return __String(x).clear;}
 					this._node[i].selected = data.indexOf(this._node[i].textContent) >= 0;
 				return;
 			}
+		},
+		/**t{b{string|null}b __check}t d{Retorná o valor do formulário HTML (i{checkbox, radio}i) se checado ou c{null}c.}d*/
+		/**d{Se booleano, definirá a checagem; se nulo, inverterá a checagem; Se string, definirá o valor.}d*/
+		_check: {
+			get: function() {
+				return this._node.checked ? this._value : null;
+			},
+			set: function(x) {
+				if (x === null)
+					this._node.checked = !this._node.checked;
+				else if (__Type(x).boolean)
+					this._node.checked = x;
+				else
+					this._value = x;
+			}
+		},
+		_file: {
+			get: function() {
+				let data = [];
+				let i = -1;
+				while (++i < this._node.files.length) data.push(this._node.files[i]);
+				return data.length === 0 ? "" :  data;
+			},
+			set: function(x) {return;}
+
+/* FIXME importantíssimo
+se file ou select múltiplo, o nome tem que vir seguido de []
+não pode ser assim:
+	<input type="file" name="ARQUIVOS" multiple />
+tem que ser assim:
+	<input type="file" name="ARQUIVOS[]" multiple />
+Isso vale para qualquer backend?
+Como fazer isso como o objeto Form?
+Basta incluir o [] ao fim do nome?
+
+
+Para FormData function assim:
+<select name="ITENS" multiple>...
+
+let data = new FormData();
+data.append("ITEMS", value1);
+data.append("ITEMS", value2);
+...
+O método append não substitui o valor contido no atributo name, podendo ser vários.
+Já o método set substitui e o delete apaga.
+
+para conferir:
+for(var pair of a.entries()) {
+   console.log(pair[0]+ ', '+ pair[1]);
+}
+ou:
+let itens = a.entries();
+let item = itens.next(); retorna um objeto content {done: true|false, value: [name, value]}
+let name = item.value[0];
+let value = item.value[1];
+
+E para o método GET, como proceder?
+
+ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
+
+
+
+*/
+
+
+
 		},
 
 		_type: {
@@ -1630,13 +1774,41 @@ function __strClear(x) {return __String(x).clear;}
 		},
 		/**t{b{void}b text}t d{Retorna ou define o conteúdo textual do formulário HTML (valor depende do elemento).}d*/
 		text: {
-			get: function()  {return this._type("text");},
+			get: function()  {
+				let data = this._type("text");
+				return data === null ? "" : data;
+			},
 			set: function(x) {return this._type("text", x);}
 		},
-
-
-
-
+		name: {
+			get: function() {
+				if (this.type === null) return null;
+				let name = __Type(this._node.name);
+				let id   = __Type(this._node.id);
+				if (name.nonempty)
+					return this._node.name.trim().replace(/\[\]$/, "");
+				if (id.nonempty) {
+					this._node.name = this._node.id.trim();
+					return this.name;
+				}
+				return null;
+			},
+			set: function(x) {
+				x = String(x).trim();
+				if (this.type !== null && x !== "") this._node.name = x;
+			}
+		},
+		send: {
+			get: function() {
+				let name  = this.name;
+				let value = this.value;
+				let send  = this._type("send");console.log(send);
+				let pack  = {};
+				if (name === null || value === null || send === null) return null;
+				pack[name] = value;
+				return pack;
+			}
+		},
 	});
 
 
