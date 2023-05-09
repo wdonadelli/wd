@@ -292,23 +292,18 @@ const wd = (function() {
 		_re: {
 			value: {
 				number:  /^(\+?\d+\!|[+-]?(\d+|(\d+)?\.\d+)(e[+-]?\d+)?\%?)$/i,
+				date:    /^\d{4}\-(0[1-9]|1[0-2])\-(0[1-9]|[12]\d|3[01])$/,
+				time:    /^(0?\d|1\d|2[0-4])(\:[0-5]\d){1,2}$/,
+				month:   /^\d{4}\-(0[1-9]|1[0-2])$/,
+				week:    /^\d{4}\-W(0[1-9]|[1-4]\d|5[0-3])?$/i,
 				dateDMY: /^(0[1-9]|[12]\d|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/,
 				dateMDY: /^(0[1-9]|1[0-2])\.(0[1-9]|[12]\d|3[01])\.\d{4}$/,
-				dateYMD: /^\d{4}\-(0[1-9]|1[0-2])\-(0[1-9]|[12]\d|3[01])$/,
 				time12:  /^(0?[1-9]|1[0-2])\:[0-5]\d(\:[0-5]\d)?\ ?[ap]m$/i,
-				time24:  /^(0?\d|1\d|2[0-4])(\:[0-5]\d){1,2}$/,
+				monthMY: /^(0[1-9]|1[0-2])\/\d{4}$/,
+				weekWY:  /^(0[1-9]|[1-4]\d|5[0-3])\,\ \d{4}$/,
 				email:   /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/,
-				monthYM: /^\d{4}\-(0[1-9]|1[0-2])$/,
-				monthMY: /^(0[1-9]|1[0-2])[./]\d{4}$/,
 			}
 		},
-		week: {
-			get: function() {
-
-			}
-		}
-
-
 		/**t{b{boolean}b chars}t d{Checa se o argumento é um conjunto de caracteres.}d*/
 		chars: {
 			get: function() {
@@ -327,6 +322,7 @@ const wd = (function() {
 				return (this.chars && this._root.trim() !== "");
 			}
 		},
+		/**t{b{boolean}b email}t d{Checa se o argumento é um e-mail ou um conjunto desse tipo.}d*/
 		email: {
 			get: function() {
 				if (!this.chars) return false;
@@ -337,6 +333,7 @@ const wd = (function() {
 				return true;
 			}
 		},
+		/**t{b{boolean}b url}t d{Checa se o argumento é uma URL válida.}d*/
 		url: {
 			get: function() {
 				if (!this.chars) return false;
@@ -348,52 +345,37 @@ const wd = (function() {
 				}
 			}
 		},
+		/**t{b{boolean}b month}t d{Checa se o argumento está no formato de mês (v{YYYY-MM ou MM/YYYY}v).}d*/
 		month: {
 			get: function() {
 				if (!this.chars) return false;
-				if (this._re.monthYM.test(this._root))
+				if (this._re.month.test(this._root))
 					return this._root.substr(0,4) !== "0000";
 				if (this._re.monthMY.test(this._root))
 					return this._root.substr(3,4) !== "0000";
 				return false;
 			}
 		},
+		/**t{b{boolean}b month}t d{Checa se o argumento está no formato de semana (v{YYYY-Www ou ww, YYYY}v).}d*/
 		week: {
-			get: function() {
+			get: function() {//FIXME muito extenso isso aqui
 				if (!this.chars) return false;
+				let week, year;
+				if (this._re.week.test(this._root)) {
+					year = this._root.substr(0,4);
+					week = this._root.substr(6,2);
+				} else if (this._re.weekWY.test(this._root)) {
+					year = this._root.substr(4,4);
+					week = this._root.substr(0,2);
+				} else {
+					return false;
+				}
+				if (year === "0000") return false;
+				if (week !== "53") return true;
+				let date = __Type(year+"-01-01").value;
+				return (date.D === 2 || (date.D === 3 && date.l))
 			}
 		},
-
-/*
-
-let data = [
-					{re: /^[0-9]{4}\-W[0-9]{2}?$/i, w: {i: 6, e: 2}, y: {i: 0, e: 4}}, /* YYYY-Www
-					{re: /^[0-9]{2}\,\ [0-9]{4}$/,  w: {i: 0, e: 2}, y: {i: 4, e: 4}}, /* ww, YYYY
-				];
-
-
-
-*/
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 		/**t{b{boolean}b string}t d{Checa se o argumento é uma string que não seja número, data ou tempo.}d*/
 		string: {
 			get: function() {
@@ -495,10 +477,12 @@ let data = [
 					/* fixar em meio dia para evitar horários de verão */
 					let input = this._input;
 					this._type  = "date";
-					this._value = {
+					this._value = {//FIXME tem que definir melhor isso aqui, talvez value fique só no ISO YYYY-MM-DD
 						d: input.getDate(),
 						m: input.getMonth()+1,
 						y: input.getFullYear(),
+						get l() {return (this.y%400 === 0 || (this.y%4 === 0 && this.y%100 !== 0));},
+						D: input.getDay(),
 						valueOf: function() {
 							/* anos desde 0001 */
 							let delta = this.y - 1;
@@ -543,7 +527,7 @@ let data = [
 					d = date[1];
 					m = date[0];
 					y = date[2];
-				} else if (this._re.dateYMD.test(value)) { /* YYYY-MM-DD */
+				} else if (this._re.date.test(value)) { /* YYYY-MM-DD */
 					let date = this._input.split("-");
 					d = date[2];
 					m = date[1];
@@ -635,7 +619,7 @@ let data = [
 					h = am ? (h % 12) : (h === 12 ? 12 : ((12 + h ) % 24));
 					m = Number(time[1]);
 					s = time.length === 3 ? Number(time[2]) : 0;
-				} else if (this._re.time24.test(value)) { /* HH:MM:SS */
+				} else if (this._re.time.test(value)) { /* HH:MM:SS */
 					let time = this._input.split(":");
 					h = Number(time[0]);
 					m = Number(time[1]);
@@ -649,7 +633,7 @@ let data = [
 				if (s < 0 || s > 59) return false;
 				let ss = 3600*h+60*m+s;
 				this._type  = "time";
-				this._value = {
+				this._value = {//FIXME tem que definir melhor isso aqui, talvez value fique só no ISO HH:MM:SS
 					h: h,
 					m: m,
 					s: s,
@@ -768,7 +752,8 @@ let data = [
 			value: function() {
 				if (this.null) return "";
 				if (this.undefined) return "?"
-				return this.value.toString();}
+				return this.value.toString();
+			}
 		}
 		/**}l*/
 	});
