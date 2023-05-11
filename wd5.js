@@ -358,7 +358,7 @@ const wd = (function() {
 		},
 		/**t{b{boolean}b month}t d{Checa se o argumento está no formato de semana (v{YYYY-Www ou ww, YYYY}v).}d*/
 		week: {
-			get: function() {//FIXME muito extenso isso aqui
+			get: function() {//FIXME muito extenso isso aqui, simplificar 01-53/ano
 				if (!this.chars) return false;
 				let week, year;
 				if (this._re.week.test(this._root)) {
@@ -443,6 +443,24 @@ const wd = (function() {
 				return this.finite ? (this.value%1 !== 0) : false;
 			}
 		},
+		/**t{b{boolean}b positive}t d{Checa se o argumento é um número positivo.}d*/
+		positive: {
+			get: function() {
+				return this.number && this.value > 0;
+			}
+		},
+		/**t{b{boolean}b positive}t d{Checa se o argumento é um número negativo.}d*/
+		negative: {
+			get: function() {
+				return this.number && this.value < 0;
+			}
+		},
+		/**t{b{boolean}b positive}t d{Checa se o argumento é zero.}d*/
+		zero: {
+			get: function() {
+				return this.number && this.value === 0;
+			}
+		},
 		/**t{b{boolean}b boolean}t d{Checa se o argumento é um valor booleano.}d*/
 		boolean: {
 			get: function() {
@@ -476,41 +494,15 @@ const wd = (function() {
 				if (this._input instanceof Date) {
 					/* fixar em meio dia para evitar horários de verão */
 					let input = this._input;
+					let d = input.getDate();
+					let m = input.getMonth()+1;
+					let y = input.getFullYear();
 					this._type  = "date";
-					this._value = {//FIXME tem que definir melhor isso aqui, talvez value fique só no ISO YYYY-MM-DD
-						d: input.getDate(),
-						m: input.getMonth()+1,
-						y: input.getFullYear(),
-						get l() {return (this.y%400 === 0 || (this.y%4 === 0 && this.y%100 !== 0));},
-						D: input.getDay(),
-						valueOf: function() {
-							/* anos desde 0001 */
-							let delta = this.y - 1;
-							/* anos de 365 dias */
-							let d365 = 365*delta;
-							/* anos múltiplos de 4 (bissexto) */
-							let y4   = (delta - delta%4) / 4;
-							/* anos múltiplos de 100 (não bissexto) */
-							let y100 = (delta - delta%100) / 100;
-							/* anos múltiplos de 400 (bissexto) */
-							let y400 = (delta - delta%400) / 400;
-							/* dias do ano atual */
-							let len  = [null, 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
-							let days = len[this.m] + this.d;
-							/* bissexto acresce um dia se após fevereiro */
-							if (this.m > 2)
-								days += ((this.y%4 === 0 && this.y%100 !== 0) || this.y%400 === 0) ? 1 : 0;
-							/* retornando dias desde 0001-01-01 */
-							return d365 + y4 -y100 + y400 + days;
-						},
-						toString: function() {
-						return [
-							this.y < 10 ? "000"+this.y : (this.y < 100 ? "00"+this.y : (this.y < 1000 ? "0"+this.y : this.y)),
-							this.m < 10 ? "0"+this.m : this.m,
-							this.d < 10 ? "0"+this.d : this.d
-						].join("-");
-					}
-					};
+					this._value = [
+						String((y < 10 ? "000" : (y < 100 ? "00" : (y < 1000 ? "0" : "")))+y),
+						String((m < 10 ? "0" : "")+m),
+						String((d < 10 ? "0" : "")+d)
+					].join("-");
 					return true;
 				}
 				/* Datas em forma de String */
@@ -631,23 +623,13 @@ const wd = (function() {
 				if (h < 0 || h > 24) return false;
 				if (m < 0 || m > 59) return false;
 				if (s < 0 || s > 59) return false;
-				let ss = 3600*h+60*m+s;
+
 				this._type  = "time";
-				this._value = {//FIXME tem que definir melhor isso aqui, talvez value fique só no ISO HH:MM:SS
-					h: h,
-					m: m,
-					s: s,
-					valueOf: function() {
-						return 3600*this.h + 60*this.m + this.s;
-					},
-					toString: function() {
-						return [
-							this.h,
-							this.m < 10 ? "0"+this.m : this.m,
-							this.s < 10 ? "0"+this.s : this.s
-						].join(":");
-					}
-				};
+				this._value = [
+					String((h < 10 ? "0" : "")+h),
+					String((m < 10 ? "0" : "")+m),
+					String((s < 10 ? "0" : "")+s)
+				].join(":");
 				return true;
 			}
 		},
@@ -722,16 +704,6 @@ const wd = (function() {
 		/**t{b{void}b value}t d{Retorna o valor do argumento para fins da biblioteca.}d */
 		/**d{Tipos de referência retornam valores de referência.}d*/
 		/**d{Tipos de primitivos retornam valores primitivos.}d*/
-		/**d{O tipo i{time}i retorna um objeto com a seguinte estrutura:}d*/
-		/**L{t{b{integer}b h}t d{Hora.}d*/
-		/**t{b{integer}b m}t d{Minuto.}d*/
-		/**t{b{integer}b s}t d{Segundo.}d*/
-		/**t{b{integer}b valueOf()}t d{Quantidade total de segundos desde v{00h00}v.}d}L*/
-		/**d{O tipo i{date}i retorna um objeto com a seguinte estrutura:}d*/
-		/**L{t{b{integer}b h}t d{dia.}d*/
-		/**t{b{integer}b m}t d{mês.}d*/
-		/**t{b{integer}b y}t d{ano.}d*/
-		/**t{b{integer}b valueOf()}t d{Quantidade total de dias desde v{0001-01-01}v.}d}L*/
 		value: {
 			get: function() {return this._value;}
 		},
@@ -742,8 +714,11 @@ const wd = (function() {
 		/**t{b{void}b valueOf()}t d{Retorna o método i{valueOf}i do retorno do atributo i{value}i.}d*/
 		/**d{Para c{null}c e c{undefined}c retorna seus respectivos valores.}d*/
 		valueOf: {
+			//FIXME quando se compara dois tempos/datas iguais dá falso.
+			//FIXME em 10/05/2023 dá tudo falso quando se compara coisas iguais, isso me dará um problema imenso
+
 			value: function() {
-				return this.null || this.undefined ? this._value : this.value.valueOf();
+				return this.null || this.undefined ? this._value : this._value.valueOf();
 			}
 		},
 		/**t{b{string}b toString()}t d{Retorna o método i{toString()}i do retorno do atributo i{value}i.}d*/
@@ -770,7 +745,7 @@ function __strClear(x) {return __String(x).clear;}
 /*===========================================================================*/
 
 	/**f{b{object}b __Number(b{number}b input)}f*/
-	/**p{Construtor para manipulação de números.}p*/
+	/**p{Construtor para manipulação de números. Valor padrão é zero..}p*/
 	/**l{d{v{input}v - Número.}d}l*/
 	function __Number(input) {
 		if (!(this instanceof __Number)) return new __Number(input);
@@ -1188,6 +1163,210 @@ function __strClear(x) {return __String(x).clear;}
 
 	/**}l*/
 	});
+
+
+/*===========================================================================*/
+	/**3{Data}3*/
+/*===========================================================================*/
+
+	/**f{b{object}b __Date(b{date|string}b input)}f*/
+	/**p{Construtor para manipulação de datas.}p*/
+	/**l{d{v{input}v - Data em objeto ou string.}d}l*/
+	function __Date(input) {
+		if (!(this instanceof __Date)) return new __Date(input);
+		let check = __Type(input);
+		Object.defineProperties(this, {
+			_value:  {
+				value: check.date ? check.value : __Type(new Date()).value,
+				writable: true
+			},
+		});
+	}
+	/**6{Métodos e atributos}6 l{*/
+	Object.defineProperties(__Date.prototype, {
+		constructor: {value: __Date},
+		/**t{b{date}b _date}t d{Retorna ou define no formato de objeto padrão.}d*/
+		_date: {
+			get: function() {
+				return new Date(this.year, this.month-1, this.day, 12, 0, 0, 0);
+			},
+			set: function(x) {
+				let date = __Type(x);
+				if (date.date) this._value = date.value;
+			}
+		},
+		/**t{b{number}b day}t d{Define ou retorna o dia (v{1-31}v).}d*/
+		day: {
+			get: function() {
+				return __Type(this._value.split("-")[2]).value;
+			},
+			set: function(x) {
+				let data = __Type(x);
+				if (data.finite) {
+					let value = __Number(data.value);
+					let date  = this._date;
+					date.setDate(value.int);
+					this._date = date;
+				}
+			}
+		},
+		/**t{b{number}b month}t d{Define ou retorna o mês (v{1-12}v).}d*/
+		month: {
+			get: function() {
+				return __Type(this._value.split("-")[1]).value;
+			},
+			set: function(x) {
+				let data = __Type(x);
+				if (data.finite) {
+					let value = __Number(data.value);
+					let date  = this._date;
+					date.setMonth(value.int-1);
+					this._date = date;
+				}
+			}
+
+		},
+		/**t{b{number}b year}t d{Define ou retorna o ano (v{1-9999}v).}d*/
+		year: {
+			get: function() {
+				return __Type(this._value.split("-")[0]).value;
+			},
+			set: function(x) {
+				let data = __Type(x);
+				if (data.finite && data.value >= 1) {
+					let value = __Number(data.value);
+					let date  = this._date;
+					date.setFullYear(value.int);
+					this._date = date;
+				}
+			}
+		},
+		/**t{b{boolean}b leap}t d{Retorna se o ano é bissexto.}d*/
+		leap: {
+			get: function() {
+				let y = this.year;
+				return (y%400 === 0 || (y%4 === 0 && y%100 !== 0));
+			}
+		},
+		/**t{b{number}b week}t d{Retorna o dia da semana de Domingo à Sábado (v{1-7}v).}d*/
+		week: {
+			get: function() {
+				return this._date.getDay()+1;
+			}
+		},
+		/**t{b{number}b days}t d{Retorna o dia do ano (v{1-366}v).}d*/
+		days: {
+			get: function() {
+				let days  = [0,31,59,90,120,151,181,212,243,273,304,334,365];
+				let month = this.month;
+				return (this.leap && month > 2 ? 1 : 0) + days[month-1] + this.day;
+			}
+		},
+		/**t{b{number}b weeks}t d{Retorna o número da semana do ano v{1-53}v.}d*/
+		weeks: {
+			get: function() {
+				let date = __Date(this._value);
+				date.day   = 1;
+				date.month = 1;
+				let ref    = [1,0,-1,-2,-3,-4,-5];
+				let start  = ref[date.week-1];
+				/* an = ai + 7n; n = (an - a1)/7 */
+				return __Number((this.days - start)/7).int+1;
+			}
+		},
+		toString: {
+			value: function() {
+				return this._value;
+			}
+		},
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+{
+						get l() {return (this.y%400 === 0 || (this.y%4 === 0 && this.y%100 !== 0));},
+						D: input.getDay(),
+						valueOf: function() {
+							/* anos desde 0001 */
+							//let delta = this.y - 1;
+							/* anos de 365 dias */
+							//let d365 = 365*delta;
+							/* anos múltiplos de 4 (bissexto) */
+							//let y4   = (delta - delta%4) / 4;
+							/* anos múltiplos de 100 (não bissexto) */
+							//let y100 = (delta - delta%100) / 100;
+							/* anos múltiplos de 400 (bissexto) */
+							//let y400 = (delta - delta%400) / 400;
+							/* dias do ano atual */
+							//let len  = [null, 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
+							//let days = len[this.m] + this.d;
+							/* bissexto acresce um dia se após fevereiro */
+							//if (this.m > 2)
+								//days += ((this.y%4 === 0 && this.y%100 !== 0) || this.y%400 === 0) ? 1 : 0;
+							/* retornando dias desde 0001-01-01 */
+							//return d365 + y4 -y100 + y400 + days;
+						//},
+						//toString: function() {
+						//return [
+							//this.y < 10 ? "000"+this.y : (this.y < 100 ? "00"+this.y : (this.y < 1000 ? "0"+this.y : this.y)),
+							//this.m < 10 ? "0"+this.m : this.m,
+							//this.d < 10 ? "0"+this.d : this.d
+						//].join("-");
+					//}
+
+
+
+
+	/**}l*/
+	});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /*===========================================================================*/
 	/**3{Listas}3*/
@@ -7086,6 +7265,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 
 		form: {value: function(){return __FNode.apply(null, Array.prototype.slice.call(arguments));}},
 		array: {value: function(){return __Array.apply(null, Array.prototype.slice.call(arguments));}},
+		date: {value: function(){return __Date.apply(null, Array.prototype.slice.call(arguments));}},
 		node: {value: function(){return __Node.apply(null, Array.prototype.slice.call(arguments));}},
 		number: {value: function(){return __Number.apply(null, Array.prototype.slice.call(arguments));}},
 		string: {value: function(){return __String.apply(null, Array.prototype.slice.call(arguments));}},
