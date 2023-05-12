@@ -358,22 +358,14 @@ const wd = (function() {
 		},
 		/**t{b{boolean}b month}t d{Checa se o argumento está no formato de semana (v{YYYY-Www ou ww, YYYY}v).}d*/
 		week: {
-			get: function() {//FIXME muito extenso isso aqui, simplificar 01-53/ano
+			get: function() {
 				if (!this.chars) return false;
-				let week, year;
-				if (this._re.week.test(this._root)) {
+				let year = null;
+				if (this._re.week.test(this._root))
 					year = this._root.substr(0,4);
-					week = this._root.substr(6,2);
-				} else if (this._re.weekWY.test(this._root)) {
+				else if (this._re.weekWY.test(this._root))
 					year = this._root.substr(4,4);
-					week = this._root.substr(0,2);
-				} else {
-					return false;
-				}
-				if (year === "0000") return false;
-				if (week !== "53") return true;
-				let date = __Type(year+"-01-01").value;
-				return (date.D === 2 || (date.D === 3 && date.l))
+				return year !== null && year !== "0000";
 			}
 		},
 		/**t{b{boolean}b string}t d{Checa se o argumento é uma string que não seja número, data ou tempo.}d*/
@@ -497,6 +489,7 @@ const wd = (function() {
 					let d = input.getDate();
 					let m = input.getMonth()+1;
 					let y = input.getFullYear();
+					if (y > 9999 || y < 1) y = y < 1 ? 1 : 9999;
 					this._type  = "date";
 					this._value = [
 						String((y < 10 ? "000" : (y < 100 ? "00" : (y < 1000 ? "0" : "")))+y),
@@ -714,11 +707,8 @@ const wd = (function() {
 		/**t{b{void}b valueOf()}t d{Retorna o método i{valueOf}i do retorno do atributo i{value}i.}d*/
 		/**d{Para c{null}c e c{undefined}c retorna seus respectivos valores.}d*/
 		valueOf: {
-			//FIXME quando se compara dois tempos/datas iguais dá falso.
-			//FIXME em 10/05/2023 dá tudo falso quando se compara coisas iguais, isso me dará um problema imenso
-
 			value: function() {
-				return this.null || this.undefined ? this._value : this._value.valueOf();
+				return this.null || this.undefined ? this._value : (this.value).valueOf();
 			}
 		},
 		/**t{b{string}b toString()}t d{Retorna o método i{toString()}i do retorno do atributo i{value}i.}d*/
@@ -1233,7 +1223,7 @@ function __strClear(x) {return __String(x).clear;}
 			},
 			set: function(x) {
 				let data = __Type(x);
-				if (data.finite && data.value >= 1) {
+				if (data.finite) {
 					let value = __Number(data.value);
 					let date  = this._date;
 					date.setFullYear(value.int);
@@ -1262,16 +1252,58 @@ function __strClear(x) {return __String(x).clear;}
 				return (this.leap && month > 2 ? 1 : 0) + days[month-1] + this.day;
 			}
 		},
-		/**t{b{number}b weeks}t d{Retorna o número da semana do ano v{1-53}v.}d*/
+		/**t{b{number}b firstweekyear}t d{Retorna que dia iniciou o ano v{1-7}v.}d*/
+		firstweekyear: {
+			get: function() {
+				//FIXME testar:
+				let days = this.days;
+				let week = this.week;
+				while (--days > 0) {
+					week--;
+					if (week === 0) week = 7;
+				}
+				let test = (this.week - (this.days%7 - 1) + 7)%7;
+				if (test !== week) throw new Error("TEST: "+test+", WEEK: "+week);
+				return week;
+
+
+
+
+			}
+		},
+		/**t{b{number}b weeks}t d{Retorna a semana do ano v{1-54}v, independente do dia que inicia o ano.}d*/
 		weeks: {
 			get: function() {
-				let date = __Date(this._value);
-				date.day   = 1;
-				date.month = 1;
+				let week = this.firstweekyear;
 				let ref    = [1,0,-1,-2,-3,-4,-5];
-				let start  = ref[date.week-1];
+				let start  = ref[week-1];
 				/* an = ai + 7n; n = (an - a1)/7 */
 				return __Number((this.days - start)/7).int+1;
+			}
+		},
+		/**t{b{number}b nonworkingdays}t d{Retorna a quantidade de dias não úteis até o momento do ano.}d*/
+		nonworkingdays: {
+			get: function() {
+				let week   = this.firstweekyear;
+				let dayoff = 0;
+				let days   = -1;
+				while (++days < this.days)
+					if ((week+days)%7 === 1 || (week+days)%7 === 0)
+						dayoff++;
+				return dayoff;
+			}
+		},
+		/**t{b{number}b nonworkingdays}t d{Retorna a quantidade de dias úteis até o momento do ano.}d*/
+		workingdays: {
+			get: function() {
+				return this.days-this.nonworkingdays;
+			}
+		},
+		/**t{b{number}b maxinputweeks}t d{Retorna a quantidade de semanas do ano para fins do fomulátio HTML i{input:week}i (ver a{https://developer.mozilla.org/en-US/docs/Web/HTML/Date_and_time_formats#week_strings}a).}d*/
+		maxinputweeks: {
+			get: function() {
+				let week = this.firstweekyear;
+				return (week === 5 || (week === 4 && this.leap)) ? 53 : 52;
 			}
 		},
 		toString: {
@@ -1279,66 +1311,13 @@ function __strClear(x) {return __String(x).clear;}
 				return this._value;
 			}
 		},
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*
-{
-						get l() {return (this.y%400 === 0 || (this.y%4 === 0 && this.y%100 !== 0));},
-						D: input.getDay(),
-						valueOf: function() {
-							/* anos desde 0001 */
-							//let delta = this.y - 1;
-							/* anos de 365 dias */
-							//let d365 = 365*delta;
-							/* anos múltiplos de 4 (bissexto) */
-							//let y4   = (delta - delta%4) / 4;
-							/* anos múltiplos de 100 (não bissexto) */
-							//let y100 = (delta - delta%100) / 100;
-							/* anos múltiplos de 400 (bissexto) */
-							//let y400 = (delta - delta%400) / 400;
-							/* dias do ano atual */
-							//let len  = [null, 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
-							//let days = len[this.m] + this.d;
-							/* bissexto acresce um dia se após fevereiro */
-							//if (this.m > 2)
-								//days += ((this.y%4 === 0 && this.y%100 !== 0) || this.y%400 === 0) ? 1 : 0;
-							/* retornando dias desde 0001-01-01 */
-							//return d365 + y4 -y100 + y400 + days;
-						//},
-						//toString: function() {
-						//return [
-							//this.y < 10 ? "000"+this.y : (this.y < 100 ? "00"+this.y : (this.y < 1000 ? "0"+this.y : this.y)),
-							//this.m < 10 ? "0"+this.m : this.m,
-							//this.d < 10 ? "0"+this.d : this.d
-						//].join("-");
-					//}
-
-
-
-
+		/**t{b{number}b valueOf()}t d{Retorna a quantidade de dias projetado desde 01/01/0001.}d*/
+		valueOf: {
+			value: function() {
+				let y = this.year - 1;
+				return y*365 + Math.trunc(y/400) + Math.trunc(y/4) - Math.trunc(y/100) + this.days;
+			}
+		}
 	/**}l*/
 	});
 
