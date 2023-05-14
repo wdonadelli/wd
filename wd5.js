@@ -278,11 +278,13 @@ const wd = (function() {
 	/**l{d{v{input}v - Dado a ser examinado.}d}l*/
 	function __Type(input) {
 		if (!(this instanceof __Type)) return new __Type(input);
-		this._root  = input  /* valor original */
-		this._input = input; /* valor de referência */
-		this._type  = null;  /* tipo do valor de entrada */
-		this._value = null;  /* valor a ser considerado */
-		this._init();        /* definir atributos próprios */
+		Object.defineProperties(this, {
+			_root:  {value: input},                 /* valor original */
+			_input: {value: input, writable: true}, /* valor de referência */
+			_type:  {value:  null, writable: true}, /* tipo do valor de entrada */
+			_value: {value:  null, writable: true}, /* valor a ser considerado */
+		});
+		this._init(); /* definir atributos próprios */
 	}
 
 	/**6{Métodos e atributos}6 l{*/
@@ -292,15 +294,15 @@ const wd = (function() {
 		_re: {
 			value: {
 				number:  /^(\+?\d+\!|[+-]?(\d+|(\d+)?\.\d+)(e[+-]?\d+)?\%?)$/i,
-				date:    /^\d{4}\-(0[1-9]|1[0-2])\-(0[1-9]|[12]\d|3[01])$/,
+				date:    /^(000[1-9]|00[1-9]\d|0[1-9]\d\d|[1-9]\d\d\d)\-(0[1-9]|1[0-2])\-(0[1-9]|[12]\d|3[01])$/,
 				time:    /^(0?\d|1\d|2[0-4])(\:[0-5]\d){1,2}$/,
-				month:   /^\d{4}\-(0[1-9]|1[0-2])$/,
-				week:    /^\d{4}\-W(0[1-9]|[1-4]\d|5[0-3])?$/i,
-				dateDMY: /^(0[1-9]|[12]\d|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/,
-				dateMDY: /^(0[1-9]|1[0-2])\.(0[1-9]|[12]\d|3[01])\.\d{4}$/,
+				month:   /^(000[1-9]|00[1-9]\d|0[1-9]\d\d|[1-9]\d\d\d)\-(0[1-9]|1[0-2])$/,
+				week:    /^(000[1-9]|00[1-9]\d|0[1-9]\d\d|[1-9]\d\d\d)\-W(0[1-9]|[1-4]\d|5[0-3])?$/i,
+				dateDMY: /^(0[1-9]|[12]\d|3[01])\/(0[1-9]|1[0-2])\/(000[1-9]|00[1-9]\d|0[1-9]\d\d|[1-9]\d\d\d)$/,
+				dateMDY: /^(0[1-9]|1[0-2])\.(0[1-9]|[12]\d|3[01])\.(000[1-9]|00[1-9]\d|0[1-9]\d\d|[1-9]\d\d\d)$/,
 				time12:  /^(0?[1-9]|1[0-2])\:[0-5]\d(\:[0-5]\d)?\ ?[ap]m$/i,
-				monthMY: /^(0[1-9]|1[0-2])\/\d{4}$/,
-				weekWY:  /^(0[1-9]|[1-4]\d|5[0-3])\,\ \d{4}$/,
+				monthMY: /^(0[1-9]|1[0-2])[/.](000[1-9]|00[1-9]\d|0[1-9]\d\d|[1-9]\d\d\d)$/,
+				weekWY:  /^(0[1-9]|[1-4]\d|5[0-3])(\,)?\ (000[1-9]|00[1-9]\d|0[1-9]\d\d|[1-9]\d\d\d)$/,
 				email:   /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/,
 			}
 		},
@@ -345,39 +347,32 @@ const wd = (function() {
 				}
 			}
 		},
-		/**t{b{boolean}b month}t d{Checa se o argumento está no formato de mês (v{YYYY-MM ou MM/YYYY}v).}d*/
+		/**t{b{boolean}b month}t d{Checa se o argumento está no formato de mês (v{YYYY-MM MM/YYYY MM.YYYY}v).}d*/
 		month: {
 			get: function() {
 				if (!this.chars) return false;
-				if (this._re.month.test(this._root))
-					return this._root.substr(0,4) !== "0000";
-				if (this._re.monthMY.test(this._root))
-					return this._root.substr(3,4) !== "0000";
+				if (this._re.month.test(this._root))   return true;
+				if (this._re.monthMY.test(this._root)) return true;
 				return false;
 			}
 		},
-		/**t{b{boolean}b month}t d{Checa se o argumento está no formato de semana (v{YYYY-Www ou ww, YYYY}v).}d*/
+		/**t{b{boolean}b week}t d{Checa se o argumento está no formato de semana (v{YYYY-Www ww, YYYY ww YYYY}v).}d*/
 		week: {
 			get: function() {
 				if (!this.chars) return false;
-				let year = null;
-				if (this._re.week.test(this._root))
-					year = this._root.substr(0,4);
-				else if (this._re.weekWY.test(this._root))
-					year = this._root.substr(4,4);
-				return year !== null && year !== "0000";
+				if (this._re.week.test(this._root))   return true;
+				if (this._re.weekWY.test(this._root)) return true;
+				return false;
 			}
 		},
 		/**t{b{boolean}b string}t d{Checa se o argumento é uma string que não seja número, data ou tempo.}d*/
 		string: {
 			get: function() {
+				if (!this.chars) return false;
 				if (this.type !== null) return this.type === "string";
-				if (this.chars) {
-					this._type  = "string";
-					this._value = String(this._input);
-					return true;
-				}
-				return false;
+				this._type  = "string";
+				this._value = String(this._input);
+				return true;
 			}
 		},
 		/**t{b{boolean}b number}t d{Checa se o argumento é um número real.}d */
@@ -501,40 +496,33 @@ const wd = (function() {
 				/* Datas em forma de String */
 				if (!this.chars) return false;
 				let value = this._input.trim();
-				let d, m, y;
-				if (this._re.dateDMY.test(value)) { /* DD/MM/YYYY */
-					let date = this._input.split("/");
-					d = date[0];
-					m = date[1];
-					y = date[2];
+				let order = {
+					YMD: {y: 0, m: 1, d: 2},
+					DMY: {d: 0, m: 1, y: 2},
+					MDY: {m: 0, d: 1, y: 2}
+				}
+				let ref, data;
+				if (this._re.date.test(value)) { /* YYYY-MM-DD */
+					data = this._input.split("-");
+					ref  = order.YMD;
+				} else if (this._re.dateDMY.test(value)) { /* DD/MM/YYYY */
+					data = this._input.split("/");
+					ref  = order.DMY;
 				} else if (this._re.dateMDY.test(value)) { /* MM.DD.YYYY */
-					let date = this._input.split(".");
-					d = date[1];
-					m = date[0];
-					y = date[2];
-				} else if (this._re.date.test(value)) { /* YYYY-MM-DD */
-					let date = this._input.split("-");
-					d = date[2];
-					m = date[1];
-					y = date[0];
+					data = this._input.split(".");
+					ref  = order.MDY;
 				} else {
 					return false;
 				}
-				d = Number(d);
-				m = Number(m);
-				y = Number(y);
-				/* checando ano */
-				if (y < 1 || y > 9999) return false;
-				/* checando mês */
-				if (m < 1 || m > 12) return false;
+				let d = Number(data[ref.d]);
+				let m = Number(data[ref.m]);
+				let y = Number(data[ref.y]);
 				/* checando dia */
 				let feb  = (y%400 === 0 || (y%4 === 0 && y%100 !== 0)) ?  29 : 28;
-				let days = [null, 31, feb, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-				if (d < 1 || d > days[m]) return false;
-				let date = new Date();
+				let days = [31, feb, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+				if (d > days[m-1]) return false;
+				let date = new Date(y, m-1, d, 12, 0, 0, 0);
 				date.setFullYear(y);
-				date.setMonth(m-1);
-				date.setDate(d);
 				this._input = date;
 				return this.date;
 			}
@@ -592,8 +580,8 @@ const wd = (function() {
 		/**d{Aceita os formato 24h e 12h (v{HH:MM:SS HH:MM AMPM}v).}d*/
 		time: {
 			get: function() {
-				if (this.type !== null) return this.type === "time";
 				if (!this.chars) return false;
+				if (this.type !== null) return this.type === "time";
 				let value = this._input.trim();
 				let h, m, s;
 				if (this._re.time12.test(value)) { /* HH:MM AMPM */
@@ -1255,28 +1243,17 @@ function __strClear(x) {return __String(x).clear;}
 		/**t{b{number}b firstweekyear}t d{Retorna que dia iniciou o ano v{1-7}v.}d*/
 		firstweekyear: {
 			get: function() {
-				//FIXME testar:
-				let days = this.days;
-				let week = this.week;
-				while (--days > 0) {
-					week--;
-					if (week === 0) week = 7;
-				}
-				let test = (this.week - (this.days%7 - 1) + 7)%7;
-				if (test !== week) throw new Error("TEST: "+test+", WEEK: "+week);
-				return week;
-
-
-
-
+				/* (7 + hoje + (1º dia - hoje da 1ª semana))%7 */
+				let start = (7 + this.week + (1 - this.days%7))%7;
+				return start === 0 ? 7 : start;
 			}
 		},
-		/**t{b{number}b weeks}t d{Retorna a semana do ano v{1-54}v, independente do dia que inicia o ano.}d*/
+		/**t{b{number}b weeks}t d{Retorna a semana do ano v{1-54}v, independente do dia da semana inicial.}d*/
 		weeks: {
 			get: function() {
-				let week = this.firstweekyear;
-				let ref    = [1,0,-1,-2,-3,-4,-5];
-				let start  = ref[week-1];
+				let week  = this.firstweekyear;
+				let full  = [1,0,-1,-2,-3,-4,-5];
+				let start = full[week-1];
 				/* an = ai + 7n; n = (an - a1)/7 */
 				return __Number((this.days - start)/7).int+1;
 			}
@@ -1288,8 +1265,7 @@ function __strClear(x) {return __String(x).clear;}
 				let dayoff = 0;
 				let days   = -1;
 				while (++days < this.days)
-					if ((week+days)%7 === 1 || (week+days)%7 === 0)
-						dayoff++;
+					if ((week+days)%7 === 1 || (week+days)%7 === 0) dayoff++;
 				return dayoff;
 			}
 		},
@@ -1315,18 +1291,168 @@ function __strClear(x) {return __String(x).clear;}
 		valueOf: {
 			value: function() {
 				let y = this.year - 1;
-				return y*365 + Math.trunc(y/400) + Math.trunc(y/4) - Math.trunc(y/100) + this.days;
+				return y*365 + Math.floor(y/400) + Math.floor(y/4) - Math.floor(y/100) + this.days;
 			}
 		}
 	/**}l*/
 	});
 
+/*===========================================================================*/
+	/**3{Tempo}3*/
+/*===========================================================================*/
+
+	/**f{b{object}b __Time(b{date|string}b input)}f*/
+	/**p{Construtor para manipulação de datas.}p*/
+	/**l{d{v{input}v - Data em objeto ou string.}d}l*/
+	function __Time(input) {
+		if (!(this instanceof __Time)) return new __Time(input);
+		let check = __Type(input);
+		let value = check.time ? check.value.split(":") : null;
+		if (value === null) {
+			let time = new Date();
+			value = [time.getHours(), time.getMinutes(), time.getSeconds()];
+		}
+		value.forEach(function(v,i,a) {return a[i] = Number(v);})
+		Object.defineProperties(this, {
+			_h: {value: value[0], writable: true},
+			_m: {value: value[1], writable: true},
+			_s: {value: value[2], writable: true},
+			_n: {value:        0, writable: true},
+			_d: {value:        0, writable: true}
+		});
+	}
+	/**6{Métodos e atributos}6 l{*/
+	Object.defineProperties(__Time.prototype, {
+		constructor: {value: __Time},
+		_fix: {
+			value: function() {
+				if (this._s > 59) {
+					this._m += __Number(this._s/60).int;
+					this._s  = __Number(this._s%60).int;
+				}
+				if (this._s < 0) {
+					while (this._s < 0) {
+						this._m--;
+						this._s += 60;
+					}
+				}
+				if (this._m > 59) {
+					this._h += __Number(this._m/60).int;
+					this._m  = __Number(this._m%60).int;
+				}
+				if (this._m < 0) {
+					while (this._m < 0) {
+						this._h--;
+						this._m += 60;
+					}
+				}
+
+				return __Number(3600*this._h + 60*this._m + this._s).int;
+			}
+		},
+		day: {
+			get: function()  {return this._d},
+			set: function(x) {
+				let data = __Type(x);
+				if (!data.finite) return;
+				let num   = __Number(data.value);
+				this._d   = num.int;
+				if (num.dec !== 0)
+					this.hour = (num < 0 ? 24 : 0) + 24*num.dec;
+			}
+		},
+		/**t{b{number}b day}t d{Define ou retorna o dia (v{1-31}v).}d*/
+		hour: {
+			get: function()  {return this._h;},
+			set: function(x) {
+				let data = __Type(x);
+				if (!data.finite) return;
+				let val = data.value;
+				while (val < 0 || val >= 24) {
+					this.day += val < 0 ?  -1 :  +1;
+					val      += val < 0 ? +24 : -24;
+				}
+				let num = __Number(val);
+				this._h = num.int;
+				if (num.dec !== 0)
+					this.minute = (data.negative ? 60 : 0) + 60*num.dec;
+			}
+		},
+		minute: {
+			get: function()  {return this._m;},
+			set: function(x) {
+				let data = __Type(x);
+				if (!data.finite) return;
+				let val = data.value;
+				while (val < 0 || val >= 60) {
+					this.hour += val < 0 ?  -1 :  +1;
+					val       += val < 0 ? +60 : -60;
+				}
+				let num = __Number(val);
+				this._m = num.int;
+				if (num.dec !== 0)
+					this.second = (data.negative ? 60 : 0) + 60*num.dec;
+			}
+		},
+		second: {
+			get: function()  {return this._s;},
+			set: function(x) {
+				let data = __Type(x);
+				if (!data.finite) return;
+				let val = data.value;
+				while (val < 0 || val >= 60) {
+					this.minute += val < 0 ?  -1 :  +1;
+					val         += val < 0 ? +60 : -60;
+				}
+				this._s = val;
+			},
+		},
+		clock: {
+			get: function() {
+				let data = this.toString().split(":");
+				data.shift();
+				data[2] = __Number(data[2]).int;
+				data[2] = (data[2] < 10 ? "0" : "") + String(data[2]);
+
+				return data.join(":");
+			}
+		},
+		value: {
+			get: function() {
+				let h = 3600*this.hour;
+				let m = 60*this.minute;
+				let s = __Number(this.second).int;
+				return h+m+s;
+			}
+		},
+		toString: {
+			value: function() {
+				let h = this.hour;
+				let m = this.minute;
+				let s = this.second;
+				let d = this.day;
+				return [
+					String(d),
+					(h < 10 ? "0" : "")+String(h),
+					(m < 10 ? "0" : "")+String(m),
+					(s < 10 ? "0" : "")+String(s)
+				].join(":");
+			}
+		},
+		valueOf: {
+			value: function(full) {
+				let h = 3600*this.hour;
+				let m = 60*this.minute;
+				let s = this.second;
+				let d = 24*3600*this.day;
+				return h+m+s+d;
+			}
+		}
 
 
 
-
-
-
+	/**}l*/
+	});
 
 
 
@@ -7245,6 +7371,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		form: {value: function(){return __FNode.apply(null, Array.prototype.slice.call(arguments));}},
 		array: {value: function(){return __Array.apply(null, Array.prototype.slice.call(arguments));}},
 		date: {value: function(){return __Date.apply(null, Array.prototype.slice.call(arguments));}},
+		time: {value: function(){return __Time.apply(null, Array.prototype.slice.call(arguments));}},
 		node: {value: function(){return __Node.apply(null, Array.prototype.slice.call(arguments));}},
 		number: {value: function(){return __Number.apply(null, Array.prototype.slice.call(arguments));}},
 		string: {value: function(){return __String.apply(null, Array.prototype.slice.call(arguments));}},
