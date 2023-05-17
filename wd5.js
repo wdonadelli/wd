@@ -786,7 +786,7 @@ function __strClear(x) {return __String(x).clear;}
 		/**t{b{integer}b int}t d{Retorna a parte inteira do número.}d*/
 		int: {
 			get: function() {
-				return (this.valueOf() < 0 ? -1 : 1) * Math.floor(Math.abs(this.valueOf()));
+				return (this.valueOf() < 0 ? -1 : 1) * Math.trunc(Math.abs(this.valueOf()));
 			}
 		},
 		/**t{b{float}b dec}t d{Retorna a parte decimal do número.}d*/
@@ -1269,7 +1269,60 @@ function __strClear(x) {return __String(x).clear;}
 
 		value: {
 			get: function() {return [this._d, this._m, this._y].join("/")}
+		},
+
+		/**t{b{number}b valueOf()}t d{Retorna a quantidade de dias projetado desde 01/01/0001.}d*/
+		valueOf: {
+			value: function() {
+				if (this.year === 0) return this.days;
+				let year = Math.abs(this.year)-1;
+				let y365 = (this.year < 0 ? 365 : 366) + 365*year;
+				let y400 = Math.trunc(year/400);
+				let y004 = Math.trunc(year/4);
+				let y100 = Math.trunc(year/100);
+				let past = (this.year < 0 ? -1 : +1) * y365+y400+y004-y100;
+				return past + this.days;
+			}
+		},
+		toString: {
+			value: function() {
+				let y = Math.abs(this.year);
+				let m = this.month;
+				let d = this.day;
+				let date = [
+					(y < 10 ? "000" : (y < 100 ? "00" : "")) + String(y),
+					(m < 10 ? "0" : "") + String(m),
+					(d < 10 ? "0" : "") + String(d)
+				].join("-");
+				return (this.year < 0 ? "-" : "") + date;
+			}
+		},
+
+
+		teste: {
+			value: function() {
+				this.day   = 1;
+				this.month = 1;
+				this.year  = 1;
+				console.log(this.toString());
+				let n = this.valueOf();
+				let i = -1;
+				let t = 366*10000;
+				while (++i < t) {
+					this.day--;//TODO
+					let val = this.valueOf();
+					if (val !== (n-1)) throw Error(this.toString());//TODO
+					n = val
+				}
+				console.log(this.toString());
+				return "Sucesso";
+
+
+
+
+			}
 		}
+
 
 
 
@@ -1430,7 +1483,7 @@ function __strClear(x) {return __String(x).clear;}
 		valueOf: {
 			value: function() {
 				let y = this.year - 1;
-				return y*365 + Math.floor(y/400) + Math.floor(y/4) - Math.floor(y/100) + this.days;
+				return y*365 + Math.trunc(y/400) + Math.trunc(y/4) - Math.trunc(y/100) + this.days;
 			}
 		}
 	/**}l*/
@@ -1749,7 +1802,7 @@ function __strClear(x) {return __String(x).clear;}
 			get: function() {
 				/* obtendo valores absolutos inteiros */
 				let input =  this.only("finite");
-				input.forEach(function(v,i,a) {a[i] = Math.floor(Math.abs(v));});
+				input.forEach(function(v,i,a) {a[i] = Math.trunc(Math.abs(v));});
 				input = __Array(input).order;
 				if (input.length < 2) return input.length === 1 ? input[0] : null;
 				if (input.indexOf(0) >= 0) return 0;
@@ -2473,7 +2526,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		let input = __Type(value);
 		if (input.type !== "number") return null;
 		if (!input.finite) return input.value;
-		return (input < 0 ? -1 : 1) * Math.floor(Math.abs(input.value));
+		return (input < 0 ? -1 : 1) * Math.trunc(Math.abs(input.value));
 	}
 /*----------------------------------------------------------------------------*/
 	/**f{b{float}b __decimal(b{number}b value)}f*/
