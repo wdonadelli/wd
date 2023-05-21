@@ -516,7 +516,6 @@ const wd = (function() {
 				return false;
 			}
 		},
-
 		/**t{b{boolean}b date}t*/
 		/**d{Checa se o argumento é uma data em string nos formatos v{DD/MM/YYYY MM.DD.YYYY YYYY-MM-DD}v.}d*/
 		date: {
@@ -700,9 +699,11 @@ const wd = (function() {
 				if (this._type !== null) return;
 				/* IMPORTANTE: object precisa ser o último, pois qualquer um pode ser um objeto */
 				let types = [
-					"null", "undefined", "boolean", "number", "date", "time", "datetime",
-					"string" , "array", "node", "regexp", "function", "string", "object"
+					"null", "undefined", "boolean", "number", "datetime",
+					"array", "node", "regexp", "function", "object"
 				];
+				/* IMPORTANTE: na verificação de strings, o atributo string deve ser o último */
+				if (this.chars) types = ["number", "date", "time", "datetime", "string"];
 				let i = -1;
 				while (++i < types.length)
 					if (this[types[i]]) return;
@@ -1204,8 +1205,8 @@ function __strClear(x) {return __String(x).clear;}
 		_week: {
 			value: function(id) {
 				if (arguments.length === 0) id = this.valueOf();
-				/* 2023-05-17 (quarta-feira) = 739023 */
-				let value = 739023;
+				/* 2023-05-17 (quarta-feira) = 739022 */
+				let value = 739022;
 				let week  = 4;
 				let rest  = (id - value)%7;
 				let day   = (7 + week + rest)%7;
@@ -1277,12 +1278,12 @@ function __strClear(x) {return __String(x).clear;}
 				return (y%400 === 0 || (y%4 === 0 && y%100 !== 0));
 			}
 		},
-		/**t{b{integer}b days}t d{Retorna o dia do ano.}d*/
+		/**t{b{integer}b days}t d{Retorna a u{diferença}u, em dias, entre a data e o primeiro dia do ano.}d*/
 		days: {
 			get: function() {
-				let days  = [0,31,59,90,120,151,181,212,243,273,304,334,365];
-				let m = this.month;
-				return (this.leap && m > 2 ? 1 : 0) + days[m-1] + this.day;
+				let days = [0,31,59,90,120,151,181,212,243,273,304,334,365];
+				let leap = this.leap && this.month > 2 ? 1 : 0;
+				return days[this.month-1] + leap + this.day - 1;
 			}
 		},
 		/**t{b{integer}b week}t d{Retorna o dia da semana, sendo v{1}v domingo e v{7}v sábado.}d*/
@@ -1292,44 +1293,45 @@ function __strClear(x) {return __String(x).clear;}
 		/**t{b{integer}b firstweekyear}t d{Retorna que dia da semana que iniciou o ano.}d*/
 		firstweekyear: {
 			get: function() {
-				return this._week(this.valueOf() - this.days + 1);
+				return this._week(this.valueOf() - this.days);
 			}
 		},
-		/**t{b{integer}b weeks}t d{Retorna a semana do ano v{1-54}v, independente do dia da semana inicial.}d*/
+		/**t{b{integer}b weeks}t d{Retorna a semana do ano v{1-54}v.}d*/
 		weeks: {
 			get: function() {
-				let week  = this.firstweekyear;
-				let full  = [1,0,-1,-2,-3,-4,-5];
-				let start = full[week-1];
-				/* an = ai + 7n; n = (an - a1)/7 */
-				return Math.trunc((this.days - start)/7)+1;
+				let walk = 7 + this.firstweekyear - 1;
+				return Math.trunc((this.days + walk)/7);
 			}
 		},
-		/**t{b{integer}b nonworkingdays}t d{Retorna a quantidade de dias não úteis no ano até a data.}d*/
-		nonworkingdays: {
+		/**t{b{integer}b nonworkingdays}t d{Retorna a quantidade de dias não úteis no ano até a véspera da data.}d*/
+		nonworkingdays: {//FIXME até a data ou até a véspera?
 			get: function() {
-				let first = this.firstweekyear;
-				let today = this.week;
 				let weeks = this.weeks;
-				let day7  = weeks - (today === 7 ? 0 : 1);
-				let day1  = weeks - (first === 1 ? 0 : 1);
-				return day1 + day7;
+				let day1  = weeks - (this.firstweekyear === 1 ? 0 : 1);
+				let day7  = weeks - (this.week          === 7 ? 0 : 1);
+				return day1 + day7 - (!this.workingday ? 1 : 0);
 			}
 		},
-		/**t{b{integer}b nonworkingdays}t d{Retorna a quantidade de dias úteis no ano até a data.}d*/
+		/**t{b{integer}b nonworkingdays}t d{Retorna a quantidade de dias úteis no ano até a véspera da data.}d*/
 		workingdays: {
 			get: function() {
 				return this.days-this.nonworkingdays;
 			}
 		},
-		/**t{b{integer}b maxinputweeks}t d{Retorna a quantidade de semanas do ano para fins do fomulátio HTML i{input:week}i (ver a{https://developer.mozilla.org/en-US/docs/Web/HTML/Date_and_time_formats#week_strings}a).}d*/
+		/**t{b{boolean}b workingday}t d{Informa se a data é um dia útil.}d*/
+		workingday: {
+			get: function() {
+				return this.week !== 7 && this.week !== 1;
+			}
+		},
+		/**t{b{integer}b maxinputweeks}t d{Retorna a quantidade de semanas do ano para fins do fomulário HTML i{input:week}i (ver a{https://developer.mozilla.org/en-US/docs/Web/HTML/Date_and_time_formats#week_strings}a).}d*/
 		maxinputweeks: {
 			get: function() {
 				let week = this.firstweekyear;
 				return (week === 5 || (week === 4 && this.leap)) ? 53 : 52;
 			}
 		},
-		/**t{b{integer}b valueOf()}t d{Retorna o identificador da data sendo 01/01/0000 igual a 1.}d*/
+		/**t{b{integer}b valueOf()}t d{Retorna a u{diferença}u, em dias, entre a data e o dia 0000-01-01.}d*/
 		valueOf: {
 			value: function() {
 				if (this.year === 0) return this.days;
@@ -1338,9 +1340,9 @@ function __strClear(x) {return __String(x).clear;}
 				let y400 = Math.trunc(year/400);
 				let y004 = Math.trunc(year/4);
 				let y100 = Math.trunc(year/100);
-				let past = y365 + y400 + y004 - y100;
-				if (this.year > 0) return 366 + past + this.days;
-				return -past - (this.leap ? 366 : 365) + this.days;
+				let days = y365 + y400 + y004 - y100;
+				if (this.year > 0) return 366 + days + this.days;
+				return -(days + (this.leap ? 366 : 365) - this.days);
 			}
 		},
 		/**t{b{string}b toString()}t d{Retorna a data no formato v{YYYY-MM-DD}v.}d*/
@@ -1368,6 +1370,42 @@ function __strClear(x) {return __String(x).clear;}
 				this._change = __Type(x).function ? x : null;
 			}
 		},
+		/**t{b{string}b test(b{finite}b n)}t d{Testa valueOf, week, weeks e nonworkingdays.}d*/
+		/**L{d{v{n}v - Ano corresponde à extremidade inferior (padrão v{10}v).}d}L*/
+		test: {
+			value: function(n) {
+				this.day   = 1;
+				this.month = 1;
+				this.year  = n === undefined || !isFinite(n) ? -10 : -Math.trunc(n);
+				let end    = 2*366*Math.abs(this.year);
+				let i      = -1;
+				let nwork  = 0;
+				let weeks  = 0;
+				let year   = null;
+				console.log("start: "+this.toString());
+				while (++i < end) {
+					let week, value, _old, _new;
+					week   = this.week;
+					value  = this.valueOf();
+					if (year !== this.year) {
+						year  = this.year;
+						nwork = 0;
+						weeks = 0;
+					}
+					nwork += week === 1 || week === 7 ? 1 : 0;
+					weeks += week === 1 || this.days === 0 ? 1 : 0;
+					_old   = "old: "+this.toString()+" ["+week+"] ("+value+"), ";
+					if (nwork !== this.nonworkingdays) throw Error("NonWorking {calc: "+nwork+", attr: "+this.nonworkingdays+"} "+_old);
+					if (weeks !== this.weeks) throw Error("weeks {calc: "+weeks+", attr: "+this.weeks+"} "+_old);
+					this.day++;
+					_new  = "new: "+this.toString()+" ["+this.week+"] ("+this.valueOf()+") ";
+					if (this.valueOf() !== (value+1)) throw Error("valueOf() "+_old+_new);
+					if (this.week%7 !== (week+1)%7)   throw Error("week "+_old+_new);
+				}
+				console.log("end: "+this.toString());
+				return "Done";
+			}
+		}
 	/**}l*/
 	});
 
@@ -1598,7 +1636,7 @@ function __strClear(x) {return __String(x).clear;}
 		/**t{b{number}b valueOf()}t d{Retorna o identificador do data/tempo em segundos sendo 0000-01-01T00:00:00 igual a zero.}d*/
 		valueOf: {
 			value: function() {
-				let date = 24*3600*(this._date.valueOf() - 1);
+				let date = 24*3600*this._date.valueOf();
 				let time = this._time.valueOf() - 24*3600*this._time.day;
 				return date + time;
 			}
@@ -1864,7 +1902,7 @@ function __strClear(x) {return __String(x).clear;}
 		sort: {
 			get: function() {
 				let order = [
-					"number", "time", "date", "string", "boolean", "null", "node",
+					"number", "time", "date", "datetime", "string", "boolean", "null", "node",
 					"array", "object", "function", "regexp", "undefined", "unknown"
 				];
 				let array = this._value.slice();
@@ -1880,9 +1918,18 @@ function __strClear(x) {return __String(x).clear;}
 					if (A.node) {
 						avalue = __String(a.textContent.toLowerCase()).clear();
 						bvalue = __String(b.textContent.toLowerCase()).clear();
-					} else if (["number", "boolean", "date", "time"].indexOf(A.type) >= 0) {
+					} else if (A.number || A.boolean) {
 						avalue = A.valueOf();
 						bvalue = B.valueOf();
+					} else if (A.date) {
+						avalue = __Date(A.value).valueOf();
+						bvalue = __Date(B.value).valueOf();
+					} else if (A.time) {
+						avalue = __Time(A.value).valueOf();
+						bvalue = __Time(B.value).valueOf();
+					} else if (A.datetime) {
+						avalue = __DateTime(A.value).valueOf();
+						bvalue = __DateTime(B.value).valueOf();
 					} else if (A.type === "string") {
 						avalue = __String(a.toLowerCase()).clear();
 						bvalue = __String(b.toLowerCase()).clear();
