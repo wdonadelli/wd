@@ -284,25 +284,59 @@ const wd = (function() {
 			_type:  {value:  null, writable: true}, /* tipo do valor de entrada */
 			_value: {value:  null, writable: true}, /* valor a ser considerado */
 		});
-		this._init(); /* definir atributos próprios */
+		this._setMonths(); /* carregar meses */
+		this._init();      /* definir atributos próprios */
 	}
 
 	/**6{Métodos e atributos}6 l{*/
 	Object.defineProperties(__Type.prototype, {
 		constructor: {value: __Type},
+		/**t{b{object}b _months}t d{O atributo registra o mês numérico e uma lista dos respectivos nomes.}d*/
+		/**d{Os nomes podem ser longos ou curtos,  elocais e na língua inglesa.}d*/
+		_months: {value: {},},
+		/**t{b{void}b _setMonths()}t d{Inicia o objeto i{_months}i}d*/
+		_setMonths: {
+			value: function() {
+				if ("12" in this._months) return;
+				let date = new Date(1970, 0, 1, 12, 0, 0, 0);
+				let i    = 0;
+				while(++i < 13) {
+					date.setMonth(i-1);
+					this._months[i] = [
+						date.toLocaleDateString("en-US",   {month: 'long' }).toLowerCase().replace(".", ""),
+						date.toLocaleDateString(undefined, {month: 'long' }).toLowerCase().replace(".", ""),
+						date.toLocaleDateString("en-US",   {month: 'short'}).toLowerCase().replace(".", ""),
+						date.toLocaleDateString(undefined, {month: 'short'}).toLowerCase().replace(".", "")
+					];
+				}
+			}
+		},
+		/**t{b{string}b _getMonths(b{string}b x)}t d{Retorna o valor númerico do mês ou uma string vazia se não encontrado.}d*/
+		/**L{d{v{x}v - valor númerico, abreviado ou longo, local ou na língua inglesa do mês.}d}L*/
+		_getMonths: {
+			value: function(x) {
+				if ((/^(0?[1-9]|1[12])$/).test(x)) return x;
+				x = x.toLowerCase();
+				for (let i in this._months)
+					if (this._months[i].indexOf(x) >= 0) return i;
+				return "";
+			}
+		},
 		/**t{b{object}b _re}t d{Armazena as expressões regulares dos tipos em forma de string.}d*/
 		_re: {
 			value: {
 				number:  /^(\+?\d+\!|[+-]?(\d+|(\d+)?\.\d+)(e[+-]?\d+)?\%?)$/i,
-				date:    /^(000[1-9]|00[1-9]\d|0[1-9]\d\d|[1-9]\d\d\d)\-(0[1-9]|1[0-2])\-(0[1-9]|[12]\d|3[01])$/,
-				time:    /^(0?\d|1\d|2[0-4])(\:[0-5]\d){1,2}$/,
+				date:    /^\d{4}\-(0[1-9]|1[0-2])\-(0[1-9]|[12]\d|3[01])$/,
+				time:    /^(0?\d|1\d|2[0-4])\:[0-5]\d(\:[0-5]\d|\:[0-5]\d\.\d{1,3})?$/,
 				month:   /^(000[1-9]|00[1-9]\d|0[1-9]\d\d|[1-9]\d\d\d)\-(0[1-9]|1[0-2])$/,
 				week:    /^(000[1-9]|00[1-9]\d|0[1-9]\d\d|[1-9]\d\d\d)\-W(0[1-9]|[1-4]\d|5[0-3])?$/i,
-				dateDMY: /^(0[1-9]|[12]\d|3[01])\/(0[1-9]|1[0-2])\/(000[1-9]|00[1-9]\d|0[1-9]\d\d|[1-9]\d\d\d)$/,
-				dateMDY: /^(0[1-9]|1[0-2])\.(0[1-9]|[12]\d|3[01])\.(000[1-9]|00[1-9]\d|0[1-9]\d\d|[1-9]\d\d\d)$/,
-				time12:  /^(0?[1-9]|1[0-2])\:[0-5]\d(\:[0-5]\d)?\ ?[ap]m$/i,
-				monthMY: /^(0[1-9]|1[0-2])[/.](000[1-9]|00[1-9]\d|0[1-9]\d\d|[1-9]\d\d\d)$/,
-				weekWY:  /^(0[1-9]|[1-4]\d|5[0-3])\,\ (000[1-9]|00[1-9]\d|0[1-9]\d\d|[1-9]\d\d\d)$/,
+				dateDMY: /^(0[1-9]|[12]\d|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/,
+				dateMDY: /^(0[1-9]|1[0-2])\.(0[1-9]|[12]\d|3[01])\.\d{4}$/,
+				datedmy: /^(0?[1-9]|[12][0-9]|3[01])\ [^0-9]+\ \d{4}$/i,
+				datemdy: /^[^0-9]+\ (0?[1-9]|[12][0-9]|3[01])\ \d{4}$/i,
+				time12:  /^(0?[1-9]|1[0-2])\:[0-5]\d(\:[0-5]\d|\:[0-5]\d\.\d{1,3})?\ ?[ap]m$/i,
+				monthMY: /^(0[1-9]|1[0-2])[/.]\d{4}$/,
+				weekWY:  /^(0[1-9]|[1-4]\d|5[0-3])\,\ \d{4}$/,
 				email:   /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/,
 			}
 		},
@@ -487,7 +521,7 @@ const wd = (function() {
 					let y = input.getFullYear();
 					let H = input.getHours();
 					let M = input.getMinutes();
-					let S = input.getSeconds();
+					let S = input.getSeconds()+(input.getMilliseconds()/1000);
 					this._type  = "datetime";
 					let time = [
 						(H < 10 ? "0" : "") + String(H),
@@ -538,6 +572,16 @@ const wd = (function() {
 				} else if (this._re.dateMDY.test(value)) { /* MM.DD.YYYY */
 					data = this._input.split(".");
 					ref  = order.MDY;
+				} else if (this._re.datedmy.test(value)) { /* D MM YYYY | D #MM YYYY*/
+					data = this._input.split(" ");
+					ref  = order.DMY;
+					data[1] = this._getMonths(data[1]);
+					if (data[1] === "") return false;
+				} else if (this._re.datemdy.test(value)) { /* #MM D YYYY */
+					data = this._input.split(" ");
+					ref  = order.MDY;
+					data[0] = this._getMonths(data[0]);
+					if (data[0] === "") return false;
 				} else {
 					return false;
 				}
@@ -614,11 +658,10 @@ const wd = (function() {
 				if (!this.chars) return false;
 				let value = this._input.trim();
 				let h, m, s;
-				if (this._re.time12.test(value)) { /* HH:MM AMPM */
+				if (this._re.time12.test(value)) { /* HH:MM:SS.ss AMPM */
 					let am   = value[value.length - 2].toUpperCase() === "A" ? true : false;
-					let time = value.replace(/[^0-9:]/g, "").split(":");
+					let time = value.replace(/[^0-9:.]/g, "").split(":");
 					h = Number(time[0]);
-					if (h < 1 || h > 12) return false;
 					h = am ? (h % 12) : (h === 12 ? 12 : ((12 + h ) % 24));
 					m = Number(time[1]);
 					s = time.length === 3 ? Number(time[2]) : 0;
@@ -741,6 +784,12 @@ const wd = (function() {
 		}
 		/**}l*/
 	});
+
+
+
+
+
+
 
 
 
@@ -1193,6 +1242,13 @@ function __strClear(x) {return __String(x).clear;}
 	/**6{Métodos e atributos}6 l{*/
 	Object.defineProperties(__Date.prototype, {
 		constructor: {value: __Date},
+		//obj.toLocaleString(wd_lang(), value)
+
+
+
+
+
+
 		/**t{b{integer}b _ends}t d{Retorna o número de dias do mês.}d*/
 		_ends: {
 			get: function() {
@@ -1359,6 +1415,14 @@ function __strClear(x) {return __String(x).clear;}
 				return (this.year < 0 ? "-" : "") + date;
 			}
 		},
+		/**t{b{string}b toLocaleString()}t d{Retorna a data definida localmente pelo objeto i{Date}i.}d*/
+		toLocaleString: {
+			value: function() {
+				let date = new Date(2000, this.month-1, this.day, 12, 0, 0, 0);
+				date.setFullYear(this.year);
+				return date.toLocaleDateString();
+			}
+		},
 		/**t{b{function}b onchange()}t d{Define uma função a ser chamada após ocorrer mudança no dia, mês ou ano.}d*/
 		/**L{d{v{x}v - Função a ser chamada ou c{null}c para remover o método definido.}d}L*/
 		/**d{A função receberá um argumento em forma de objeto contendo os seguintes atributos:}d L{*/
@@ -1499,7 +1563,7 @@ function __strClear(x) {return __String(x).clear;}
 					this.minute += val < 0 ?  -1 :  +1;
 					val         += val < 0 ? +60 : -60;
 				}
-				this._s = val;
+				this._s = Number(val.toFixed(3));
 				info.new = this.second;
 				if (this._change !== null) this._change(info);
 			},
@@ -1515,37 +1579,40 @@ function __strClear(x) {return __String(x).clear;}
 				return data.join(":");
 			}
 		},
-		/**t{b{number}b value}t d{Retorna os segundos do tempo desconsiderando os avanços dos dias.}d*/
-		value: {
-			get: function() {
-				let h = 3600*this.hour;
-				let m = 60*this.minute;
-				let s = this.second;
-				return h+m+s;
-			}
-		},
-		/**t{b{string}b toString()}t d{Retorna o tempo e os dias no formato D:HH:MM:SS.}d*/
+		/**t{b{string}b toString(b{boolean}b day)}t d{Retorna o tempo e os dias no formato D:HH:MM:SS.}d*/
+		/**L{d{v{day}v - Se falso, desconsiderará os avaços dos dias.}d}L*/
 		toString: {
-			value: function() {
+			value: function(day) {
 				let h = this.hour;
 				let m = this.minute;
 				let s = this.second;
 				let d = this.day;
-				return [
+				let a = [
 					String(d),
 					(h < 10 ? "0" : "")+String(h),
 					(m < 10 ? "0" : "")+String(m),
 					(s < 10 ? "0" : "")+String(s)
-				].join(":");
+				];
+				if (day === false) a.shift();
+				return a.join(":");
 			}
 		},
-		/**t{b{number}b valueOf()}t d{Retorna os segundos do tempo considerando os avanços dos dias.}d*/
+		/**t{b{string}b toLocaleString()}t d{Retorna o tempo definido localmente pelo objeto i{Date}i.}d*/
+		toLocaleString: {
+			value: function() {
+				let date = new Date(2000, 0, 0, this.hour, this.minute, Math.trunc(this.second), 0);
+				date.setMilliseconds(1000*__Number(this.second).dec);
+				return date.toLocaleTimeString();
+			}
+		},
+		/**t{b{number}b valueOf(b{boolean}b day)}t d{Retorna os segundos do tempo considerando os avanços dos dias.}d*/
+		/**L{d{v{day}v - Se falso, desconsiderará os avaços dos dias no valor.}d}L*/
 		valueOf: {
-			value: function(full) {
+			value: function(day) {
 				let h = 3600*this.hour;
 				let m = 60*this.minute;
 				let s = this.second;
-				let d = 24*3600*this.day;
+				let d = day === false ? 0 : 24*3600*this.day;
 				return h+m+s+d;
 			}
 		},
@@ -1637,7 +1704,7 @@ function __strClear(x) {return __String(x).clear;}
 		valueOf: {
 			value: function() {
 				let date = 24*3600*this._date.valueOf();
-				let time = this._time.valueOf() - 24*3600*this._time.day;
+				let time = this._time.valueOf(false);
 				return date + time;
 			}
 		},
@@ -1645,32 +1712,22 @@ function __strClear(x) {return __String(x).clear;}
 		toString: {
 			value: function() {
 				let date = this._date.toString();
-				let time = this._time.toString().split(":");
-				return date+"T"+[time[1], time[2], time[3]].join(":");
+				let time = this._time.toString(false);
+				return date+"T"+time;
+			}
+		},
+		/**t{b{string}b toLocaleString()}t d{Retorna a data/tempo definido localmente pelo objeto i{Date}i.}d*/
+		toLocaleString: {
+			value: function() {
+				let date = new Date(2000, this.month-1, this.day, this.hour, this.minute, Math.trunc(this.second), 0);
+				date.setMilliseconds(1000*__Number(this.second).dec);
+				date.setFullYear(this.year);
+				return date.toLocaleString();
 			}
 		},
 
 	/**}l*/
 	});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /*===========================================================================*/
 	/**3{Listas}3*/
