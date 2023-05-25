@@ -1227,33 +1227,43 @@ function __strClear(x) {return __String(x).clear;}
 	/**f{b{object}b __Date(b{string}b input)}f*/
 	/**p{Construtor para manipulação de datas.}p*/
 	/**l{d{v{input}v - Data em objeto ou string.}d}l*/
+	/* IMPORTANTE: garantir a mudança para o mês definido */
+	/* Ex: 2000-01-31 não virar 2000-03-02 quando muda para o mês 02 */
+	/* IMPORTANTE: garantir continuidade do dia na mudança de mês e ano */
+	/* Ex: 2000-01-31 | 2000-02-29 | 2000-03-31 | 2000-04-30 | 2000-05-31 */
 	function __Date(input) {
 		if (!(this instanceof __Date)) return new __Date(input);
 		let check = __Type(input);
 		let date  = check.date ? check.value : __Type(new Date()).value.split("T")[0];
 		date = date.split("-");
+		let data = new Date( /* ano inicial precisa ser bissexto */
+			Date.UTC(2000, Number(date[1])-1, Number(date[2]), 0, 0, 0, 0)
+		);
+		data.setUTCFullYear(Number(date[0]));
 		Object.defineProperties(this, {
-			_y: {value: Number(date[0]), writable: true},
-			_m: {value: Number(date[1]), writable: true},
-			_d: {value: Number(date[2]), writable: true},
-			_change: {value: null, writable: true}
+			_value:  {value: data},                            /* objeto Date */
+			_change: {value: null, writable: true},            /* evento do disparador de alteração */
+			_day:    {value: Number(date[2]), writable: true}, /* registra o dia na alteração de mês */
 		});
 	}
 	/**6{Métodos e atributos}6 l{*/
 	Object.defineProperties(__Date.prototype, {
 		constructor: {value: __Date},
-		//obj.toLocaleString(wd_lang(), value)
-
-
-
-
-
-
-		/**t{b{integer}b _ends}t d{Retorna o número de dias do mês.}d*/
+		/**t{b{integer}b _zero}t d{Referencial para contagem dos dias (0000-01-01).}d*/
+		_zero: {
+			value: (function() {
+				let date = new Date(Date.UTC(1970,0,1,0,0,0,0));
+				date.setUTCFullYear(0);
+				return date;
+			}())
+		},
+		/**t{b{integer}b _ends(b{integer}b m)}t d{Retorna o número de dias do mês.}d*/
+		/**L{d{v{x}v - Mês de referência.}d}L*/
 		_ends: {
-			get: function() {
+			value: function(m) {
+				if (m === undefined) m = this.month;
 				let ends = [31, this.leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-				return ends[this.month-1];
+				return ends[m-1];
 			}
 		},
 		/**t{b{integer}b _week(b{integer}b x)}t d{Retorna o dia da semana v{1-7}v a partir do identificador do dia.}d*/
@@ -1271,60 +1281,61 @@ function __strClear(x) {return __String(x).clear;}
 		},
 		/**t{b{number}b year}t d{Retorna ou define o ano.}d*/
 		year: {
-			get: function() {return this._y;},
+			get: function()  {return this._value.getUTCFullYear();},
 			set: function(x) {
 				let data = __Type(x);
 				if (!data.finite) return;
-				let info = {id: "year", old: this.year, new: null};
-				let num  = __Number(data.value);
-				this._y  = num.int;
-				if (num.dec !== 0)
-					this.month = Math.abs(12*num.dec);
-				info.new = this.year;
-				if (this._change !== null) this._change(info);
+				let old   = this.year;
+				this._day = this._day > this.day ? this._day : this.day;
+				this._value.setUTCDate(1);
+				let num = __Number(data.value);
+				this._value.setUTCFullYear(num.int);
+				if (this._day > this._ends()) {
+					this._value.setUTCDate(this._ends());
+				} else {
+					this._value.setUTCDate(this._day);
+				}
+				if (data.decimal)
+					this.month = (data.negative ? 12 : 0) + 12*num.dec;
+				if (this._change !== null)
+					this._change({attr: "year", old: old, new: this.year});
 			}
 		},
 		/**t{b{number}b month}t d{Retorna ou define o mês.}d*/
 		month: {
-			get: function() {return this._m;},
+			get: function()  {return this._value.getUTCMonth()+1;},
 			set: function(x) {
 				let data = __Type(x);
 				if (!data.finite) return;
-				let info = {id: "month", old: this.month, new: null};
-				let val  = data.value;
-				while (val < 1 || val > 12) {
-					this.year += val < 1 ? -1 :  +1;
-					val       += val < 1 ? +12 : -12;
+				let old   = this.month;
+				this._day = this._day > this.day ? this._day : this.day;
+				this._value.setUTCDate(1);
+				let num = __Number(data.value);
+				this._value.setUTCMonth(num.int-1);
+				if (this._day > this._ends()) {
+					this._value.setUTCDate(this._ends());
+				} else {
+					this._value.setUTCDate(this._day);
 				}
-				let num = __Number(val);
-				this._m = num.int;
-				if (num.dec !== 0)
-					this.day = Math.abs(this._ends*num.dec);
-				info.new = this.month;
-				if (this._change !== null) this._change(info);
+				if (data.decimal) {
+					let ref  = this._ends(this.month);
+					this.day = (data.negative ? ref : 0) + ref*num.dec;
+				}
+				if (this._change !== null)
+					this._change({attr: "month", old: old, new: this.month});
 			}
 		},
 		/**t{b{number}b day}t d{Retorna ou define o dia.}d*/
 		day: {
-			get: function() {return this._d > this._ends ? this._ends : this._d;},
+			get: function() {return this._value.getUTCDate();},
 			set: function(x) {
 				let data = __Type(x);
 				if (!data.finite) return;
-				let info = {id: "day", old: this.day, new: null};
-				let val  = data.value;
-				while (val < 1 || val > this._ends) {
-					if (val < 1) {
-						this.month--;
-						val += this._ends;
-					} else {
-						val -= this._ends;
-						this.month++;
-					}
-				}
-				let num = __Number(val);
-				this._d = num.int;
-				info.new = this.day;
-				if (this._change !== null) this._change(info);
+				let old = this.day;
+				this._value.setUTCDate(Math.trunc(data.value));
+				this._day = this.day;
+				if (this._change !== null)
+					this._change({attr: "day", old: old, new: this.day});
 			}
 		},
 		/**t{b{boolean}b leap}t d{Retorna se o ano é bissexto.}d*/
@@ -1390,7 +1401,11 @@ function __strClear(x) {return __String(x).clear;}
 		/**t{b{integer}b valueOf()}t d{Retorna a u{diferença}u, em dias, entre a data e o dia 0000-01-01.}d*/
 		valueOf: {
 			value: function() {
-				if (this.year === 0) return this.days;
+				return (this._value - this._zero)/(24*3600*1000);
+
+
+
+				/*if (this.year === 0) return this.days;
 				let year = Math.abs(this.year)-1;
 				let y365 = 365*year;
 				let y400 = Math.trunc(year/400);
@@ -1398,7 +1413,7 @@ function __strClear(x) {return __String(x).clear;}
 				let y100 = Math.trunc(year/100);
 				let days = y365 + y400 + y004 - y100;
 				if (this.year > 0) return 366 + days + this.days;
-				return -(days + (this.leap ? 366 : 365) - this.days);
+				return -(days + (this.leap ? 366 : 365) - this.days);*/
 			}
 		},
 		/**t{b{string}b toString()}t d{Retorna a data no formato v{YYYY-MM-DD}v.}d*/
@@ -1485,11 +1500,15 @@ function __strClear(x) {return __String(x).clear;}
 		let check = __Type(input);
 		let time  = check.time ? check.value : __Type(new Date()).value.split("T")[1];
 		time = time.split(":");
+		let data = new Date(Date.UTC(
+			1970, 0, 1,
+			Number(time[0]),
+			Number(time[1]),
+			Math.trunc(Number(time[2])),
+			1000*__Number(time[2]).dec
+		));
 		Object.defineProperties(this, {
-			_h: {value: Number(time[0]), writable: true},
-			_m: {value: Number(time[1]), writable: true},
-			_s: {value: Number(time[2]), writable: true},
-			_d: {value: 0, writable: true},
+			_value:  {value: data},
 			_change: {value: null, writable: true}
 		});
 	}
@@ -1497,123 +1516,107 @@ function __strClear(x) {return __String(x).clear;}
 	Object.defineProperties(__Time.prototype, {
 		constructor: {value: __Time},
 		/**t{b{number}b day}t d{Define ou retorna os avanços dos dias com relação ao tempo inicial.}d*/
-		day: {
-			get: function()  {return this._d},
-			set: function(x) {
-				let data = __Type(x);
-				if (!data.finite) return;
-				let info = {id: "day", old: this.day, new: null};
-				let num  = __Number(data.value);
-				this._d  = num.int;
-				if (num.dec !== 0)
-					this.hour = (num < 0 ? 24 : 0) + 24*num.dec;
-				info.new = this.day;
-				if (this._change !== null) this._change(info);
-			}
+		_zero: {
+			value: new Date(Date.UTC(1970,0,1,0,0,0,0))
 		},
 		/**t{b{number}b hour}t d{Define ou retorna a hora.}d*/
 		hour: {
-			get: function()  {return this._h;},
+			get: function()  {return this._value.getUTCHours();},
 			set: function(x) {
 				let data = __Type(x);
 				if (!data.finite) return;
-				let info = {id: "hour", old: this.hour, new: null};
-				let val  = data.value;
-				while (val < 0 || val >= 24) {
-					this.day += val < 0 ?  -1 :  +1;
-					val      += val < 0 ? +24 : -24;
-				}
-				let num = __Number(val);
-				this._h = num.int;
+				let old = this.hour;
+				let num = __Number(data.value);
+				this._value.setUTCHours(num.int);
 				if (num.dec !== 0)
 					this.minute = (data.negative ? 60 : 0) + 60*num.dec;
-				info.new = this.hour;
-				if (this._change !== null) this._change(info);
+				if (this._change !== null)
+					this._change({attr: "hour", old: old, new: this.hour});
 			}
 		},
 		/**t{b{number}b minute}t d{Define ou retorna os minutos.}d*/
 		minute: {
-			get: function()  {return this._m;},
+			get: function()  {return this._value.getUTCMinutes();},
 			set: function(x) {
 				let data = __Type(x);
 				if (!data.finite) return;
-				let info = {id: "minute", old: this.minute, new: null};
-				let val = data.value;
-				while (val < 0 || val >= 60) {
-					this.hour += val < 0 ?  -1 :  +1;
-					val       += val < 0 ? +60 : -60;
-				}
-				let num = __Number(val);
-				this._m = num.int;
+				let old = this.minute;
+				let num = __Number(data.value);
+				this._value.setUTCMinutes(num.int);
 				if (num.dec !== 0)
 					this.second = (data.negative ? 60 : 0) + 60*num.dec;
-				info.new = this.minute;
-				if (this._change !== null) this._change(info);
+				if (this._change !== null)
+					this._change({attr: "minute", old: old, new: this.minute});
 			}
 		},
 		/**t{b{number}b second}t d{Define ou retorna os segundos.}d*/
 		second: {
-			get: function()  {return this._s;},
+			get: function()  {
+				return this._value.getUTCSeconds() + (this._value.getUTCMilliseconds()/1000);
+			},
 			set: function(x) {
 				let data = __Type(x);
 				if (!data.finite) return;
-				let info = {id: "second", old: this.second, new: null};
-				let val = data.value;
-				while (val < 0 || val >= 60) {
-					this.minute += val < 0 ?  -1 :  +1;
-					val         += val < 0 ? +60 : -60;
-				}
-				this._s = Number(val.toFixed(3));
-				info.new = this.second;
-				if (this._change !== null) this._change(info);
+				let old = this.second;
+				this._value.setUTCMilliseconds(0);
+				this._value.setUTCSeconds(0);
+				this._value.setUTCMilliseconds(Math.trunc(1000*data.value));
+				if (this._change !== null)
+					this._change({attr: "second", old: old, new: this.second});
 			},
 		},
-		/**t{b{string}b clock}t d{Retorna o tempo no formato HH:MM:SS.}d*/
-		clock: {
+		/**t{b{number}b value}t d{Retorna a representação dos segundos sem os avanços de dias.}d*/
+		value: {
 			get: function() {
-				let data = this.toString().split(":");
-				data.shift();
-				data[2] = __Number(data[2]).int;
-				data[2] = (data[2] < 10 ? "0" : "") + String(data[2]);
-
-				return data.join(":");
+				return 3600*this.hour + 60*this.minute + this.second;
 			}
 		},
-		/**t{b{string}b toString(b{boolean}b day)}t d{Retorna o tempo e os dias no formato D:HH:MM:SS.}d*/
-		/**L{d{v{day}v - Se falso, desconsiderará os avaços dos dias.}d}L*/
+		/**t{b{integer}b day}t d{Retorna o avanço dos dias em relação à hora inicial.}d*/
+		day: {
+			get: function() {
+				let ref = this.valueOf();
+				let day = 0;
+				while (ref < 0 || ref > (24*3600)) {
+					day += (ref < 0 ? -1 : +1);
+					ref += (ref < 0 ? +24 : -24)*3600;
+				}
+				return day;
+			}
+		},
+		/**t{b{string}b string}t d{Retorna o tempo no formato HH:MM:SS.sss.}d*/
+		string: {
+			get: function() {
+				return this.toString().replace(/^\d+\:/, "");
+			}
+		},
+		/**t{b{string}b toString()}t d{Retorna o tempo e os dias no formato D:HH:MM:SS.}d*/
 		toString: {
-			value: function(day) {
-				let h = this.hour;
-				let m = this.minute;
-				let s = this.second;
-				let d = this.day;
-				let a = [
-					String(d),
-					(h < 10 ? "0" : "")+String(h),
-					(m < 10 ? "0" : "")+String(m),
-					(s < 10 ? "0" : "")+String(s)
-				];
-				if (day === false) a.shift();
-				return a.join(":");
+			value: function() {
+				let date =  [this.day, this.hour, this.minute, this.second];
+				date.forEach(function (v,i,a){
+					a[i] = i === 0 ? String(v) : ((v < 10 ? "0" : "")+String(v));
+				});
+				return date.join(":");
 			}
 		},
 		/**t{b{string}b toLocaleString()}t d{Retorna o tempo definido localmente pelo objeto i{Date}i.}d*/
 		toLocaleString: {
 			value: function() {
-				let date = new Date(2000, 0, 0, this.hour, this.minute, Math.trunc(this.second), 0);
-				date.setMilliseconds(1000*__Number(this.second).dec);
+				let date = new Date(
+					1970, 0, 1,
+					this.hour,
+					this.minute,
+					Math.trunc(this.second),
+					1000*__Number(this.second).dec
+				);
 				return date.toLocaleTimeString();
 			}
 		},
-		/**t{b{number}b valueOf(b{boolean}b day)}t d{Retorna os segundos do tempo considerando os avanços dos dias.}d*/
-		/**L{d{v{day}v - Se falso, desconsiderará os avaços dos dias no valor.}d}L*/
+
+		/**t{b{integer}b valueOf()}t d{Retorna os segundos, com os avanços de dias, desde 00:00:00.}d*/
 		valueOf: {
-			value: function(day) {
-				let h = 3600*this.hour;
-				let m = 60*this.minute;
-				let s = this.second;
-				let d = day === false ? 0 : 24*3600*this.day;
-				return h+m+s+d;
+			value: function() {
+				return this._value.valueOf()/1000;
 			}
 		},
 		/**t{b{function}b onchange()}t d{Define uma função a ser chamada após ocorrer mudança no dia, hora, minuto ou segundo.}d*/
@@ -1624,11 +1627,29 @@ function __strClear(x) {return __String(x).clear;}
 		/**t{b{number}b new}t d{valor após a mudança.}d}L*/
 		onchange: {
 			set: function(x) {
+
 				this._change = __Type(x).function ? x : null;
 			}
 		},
 	/**}l*/
 	});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 /*===========================================================================*/
