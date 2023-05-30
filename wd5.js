@@ -1292,6 +1292,18 @@ function __strClear(x) {return __String(x).clear;}
 				return date;
 			}())
 		},
+		/**t{b{object}b _local}t d{Retorna uma cópia do data/tempo para fins de uso local.}d*/
+		_local: {
+			get: function() {
+				let date = new Date(
+					2000, this.month-1, this.day,
+					this.hour, this.minute,
+					Math.trunc(this.second), 1000*__Number(this.second).dec
+				);
+				date.setFullYear(this.year);
+				return date;
+			}
+		},
 		/**t{b{integer}b _ends(b{integer}b m)}t d{Retorna o número de dias do mês.}d*/
 		/**L{d{v{x}v - Mês de referência.}d}L*/
 		_ends: {
@@ -1506,21 +1518,40 @@ function __strClear(x) {return __String(x).clear;}
 		/**L{d{v{type}v - (opcional) Se i{time}i, retorna o tempo, se i{date}i, a data, caso contrário o data/tempo.}d}L*/
 		toLocaleString: {
 			value: function(type) {
-				let date = new Date(
-					2000, this.month-1, this.day,
-					this.hour, this.minute,
-					Math.trunc(this.second), 1000*__Number(this.second).dec
-				);
-				date.setFullYear(this.year);
+				let date = this._local;
 				if (type === "time") return date.toLocaleTimeString();
 				if (type === "date") return date.toLocaleDateString();
 				return date.toLocaleString();
 			}
 		},
-		/**t{b{function}b onchange()}t d{Define uma função a ser chamada após ocorrer mudança no dia, mês ou ano.}d*/
-		/**L{d{v{x}v - Função a ser chamada ou c{null}c para remover o método definido.}d}L*/
+		/**t{b{string}b string(b{string}b x)}t d{Recebe um texto preformatado substituindo seus parâmetros por valores.}d*/
+		/**L{d{v{x}v - Texto preformatado.}d}L*/
+		string: {
+			value: function(x) {
+				x = x === null || x === undefined ? "{WW}, {D} {MMMM} {YYYY} {h}:{mm}:{ss}" : String(x);
+				let str = this.toString().split(/[^0-9.]/);
+				let num = [this.year, this.month, this.day, this.hour, this.minute, this.second];
+				let loc = this._local;
+				num.forEach(function(v,i,a) {a[i] = String(v);});
+				let opt = {
+					Y: num[0], YYYY: str[0], M: num[1], MM: str[1], D: num[2], DD: str[2],
+					h: num[3],   hh: str[3], m: num[4], mm: str[4], s: num[5], ss: str[5], sss: this.valueOf(),
+					MMM:  loc.toLocaleDateString(undefined, {month:   "short"}),
+					MMMM: loc.toLocaleDateString(undefined, {month:   "long"}),
+					W:    loc.toLocaleDateString(undefined, {weekday: "short"}),
+					WW:   loc.toLocaleDateString(undefined, {weekday: "long"}),
+				}
+				for (let i in opt) {
+					let re = new RegExp("\\{"+i+"\\}", "g");
+					x = x.replace(re, opt[i]);
+				}
+				return x;
+			}
+		},
+		/**t{b{function}b onchange()}t d{Dispara uma função após ocorrer mudança nos parâmetros de data/tempo.}d*/
+		/**L{d{v{x}v - Define o função a ser disparada ou c{null}c para removê-la.}d}L*/
 		/**d{A função receberá um argumento em forma de objeto contendo os seguintes atributos:}d L{*/
-		/**t{b{string}b id}t d{valor alterado (v{year, month ou day}v).}d*/
+		/**t{b{string}b target}t d{valor alterado (v{year month day hour minute second}v).}d*/
 		/**t{b{number}b old}t d{valor antes da mudança.}d*/
 		/**t{b{number}b new}t d{valor após a mudança.}d}L*/
 		onchange: {
