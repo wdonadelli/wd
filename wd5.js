@@ -1436,52 +1436,56 @@ function __strClear(x) {return __String(x).clear;}
 				return days[this.month-1] + leap + this.day - 1;
 			}
 		},
-		/**t{b{integer}b week}t d{Retorna o dia da semana, sendo v{1}v domingo e v{7}v sábado.}d*/
-		week: {
+		/**t{b{integer}b dayYear}t d{Retorna o dia do ano.}d*/
+		dayYear: {
+			get: function() {return this.days+1;}
+		},
+		/**t{b{integer}b weekDay}t d{Retorna o dia da semana, sendo v{1}v domingo e v{7}v sábado.}d*/
+		weekDay: {
 			get: function() {
 				return this._value.getUTCDay()+1;
 			}
 		},
-		/**t{b{integer}b firstWeek}t d{Retorna que dia da semana que iniciou o ano.}d*/
-		firstWeek: {
+		/**t{b{integer}b firstWeekDay}t d{Retorna que dia da semana que iniciou o ano.}d*/
+		firstWeekDay: {
 			get: function() {
 				let date = new Date();
 				date.setTime(this._value.getTime() - 24*3600*1000*this.days);
 				return date.getUTCDay()+1;
 			}
 		},
-		/**t{b{integer}b weeks}t d{Retorna a semana do ano v{1-54}v.}d*/
-		weeks: {
+		/**t{b{integer}b week}t d{Retorna a semana do ano v{1-54}v.}d*/
+		week: {
 			get: function() {
-				let fullWeek = (this.firstWeek - 1) + 7;
+				let fullWeek = (this.firstWeekDay - 1) + 7;
 				return Math.trunc((this.days + fullWeek)/7);
 			}
 		},
-		/**t{b{integer}b nonworkingdays}t d{Retorna a quantidade de dias não úteis no ano até a véspera da data.}d*/
-		nonworkingdays: {
+		/**t{b{integer}b nonWorkingDays}t d{Retorna a quantidade de dias não úteis no ano até a véspera da data.}d*/
+		nonWorkingDays: {
 			get: function() {
-				let weeks = this.weeks;
-				let day1  = weeks - (this.firstWeek === 1 ? 0 : 1);
-				let day7  = weeks - (this.week      === 7 ? 0 : 1);
-				return day1 + day7 - (!this.workingday ? 1 : 0);
+				let week = this.week;
+				let day1 = week - (this.firstWeekDay === 1 ? 0 : 1);
+				let day7 = week - (this.weekDay      === 7 ? 0 : 1);
+				return day1 + day7 - (!this.workingDay ? 1 : 0);
 			}
 		},
-		/**t{b{integer}b nonworkingdays}t d{Retorna a quantidade de dias úteis no ano até a véspera da data.}d*/
-		workingdays: {
+		/**t{b{integer}b nonWorkingDays}t d{Retorna a quantidade de dias úteis no ano até a véspera da data.}d*/
+		workingDays: {
 			get: function() {
-				return this.days-this.nonworkingdays;
+				return this.days-this.nonWorkingDays;
 			}
 		},
-		/**t{b{boolean}b workingday}t d{Informa se a data é um dia útil.}d*/
-		workingday: {
+		/**t{b{boolean}b workingDay}t d{Informa se a data é um dia útil.}d*/
+		workingDay: {
 			get: function() {
-				return this.week !== 7 && this.week !== 1;
+				return this.weekDay !== 7 && this.weekDay !== 1;
 			}
 		},
 		/**t{b{integer}b maxinputweeks}t d{Retorna a quantidade de semanas do ano para fins do fomulário HTML i{input:week}i (ver a{https://developer.mozilla.org/en-US/docs/Web/HTML/Date_and_time_formats#week_strings}a).}d*/
 		maxinputweeks: {
 			get: function() {
-				let week = this.firstWeek;
+				let week = this.firstWeekDay;
 				return (week === 5 || (week === 4 && this.leap)) ? 53 : 52;
 			}
 		},
@@ -1524,27 +1528,51 @@ function __strClear(x) {return __String(x).clear;}
 				return date.toLocaleString();
 			}
 		},
-		/**t{b{string}b string(b{string}b x)}t d{Recebe um texto preformatado substituindo seus parâmetros por valores.}d*/
-		/**L{d{v{x}v - Texto preformatado.}d}L*/
+		/**t{b{string}b longMonth}t d{Retorna o nome do mês localmente.}d*/
+		longMonth: {
+			get: function() {
+				return this._local.toLocaleDateString(undefined, {month: "long"});
+			}
+		},
+		/**t{b{string}b shortMonth}t d{Retorna o nome abreviado do mês local.}d*/
+		shortMonth: {
+			get: function() {
+				return this._local.toLocaleDateString(undefined, {month: "short"});
+			}
+		},
+		/**t{b{string}b longWeekDay}t d{Retorna o dia da semana localmente.}d*/
+		longWeekDay: {
+			get: function() {
+				return this._local.toLocaleDateString(undefined, {weekday: "long"});
+			}
+		},
+		/**t{b{string}b shortWeekDay}t d{Retorna o dia da semana abreviado localmente.}d*/
+		shortWeekDay: {
+			get: function() {
+				return this._local.toLocaleDateString(undefined, {weekday: "short"});
+			}
+		},
+		/**t{b{string}b string(b{string}b x)}t d{Recebe um texto preformatado substituindo seus parâmetros por valores.}dL{*/
+		/**d{v{x}v - Texto preformatado cujo parâmetro s estão dentro de chaves i{{}}i:}d*/
+		/**d{v{YYYY}v: ano, v{MM}v: mês, v{DD}v: dia, v{hh}v: hora, v{mm}v: minuto, v{ss}v: segundo}d}L*/
+		/**d{Valor do parâmetro também pode ser um i{getter}i do objeto.}d*/
 		string: {
 			value: function(x) {
-				x = x === null || x === undefined ? "{WW}, {D} {MMMM} {YYYY} {h}:{mm}:{ss}" : String(x);
+				x = __Type(x).chars ? x: "{longWeekDay}, {DD} {longMonth} {YYYY} {hh}:{mm}:{ss}";
 				let str = this.toString().split(/[^0-9.]/);
-				let num = [this.year, this.month, this.day, this.hour, this.minute, this.second];
-				let loc = this._local;
-				num.forEach(function(v,i,a) {a[i] = String(v);});
+				let obj = this;
 				let opt = {
-					Y: num[0], YYYY: str[0], M: num[1], MM: str[1], D: num[2], DD: str[2],
-					h: num[3],   hh: str[3], m: num[4], mm: str[4], s: num[5], ss: str[5], sss: this.valueOf(),
-					MMM:  loc.toLocaleDateString(undefined, {month:   "short"}),
-					MMMM: loc.toLocaleDateString(undefined, {month:   "long"}),
-					W:    loc.toLocaleDateString(undefined, {weekday: "short"}),
-					WW:   loc.toLocaleDateString(undefined, {weekday: "long"}),
-				}
-				for (let i in opt) {
-					let re = new RegExp("\\{"+i+"\\}", "g");
-					x = x.replace(re, opt[i]);
-				}
+					YYYY: str[0], MM: str[1], DD: str[2], hh: str[3], mm: str[4], ss: str[5],
+				};
+				let data = x.match(/\{\w+\}/gi);
+				if (data === null) return x;
+				data.forEach(function(v,i,a){
+					let id = v.replace("{", "").replace("}", "");
+					if (id in opt && !__Type(opt[id]).function)
+						x = x.replace(v, opt[id]);
+					else if (id in obj && !__Type(obj[id]).function)
+						x = x.replace(v, obj[id]);
+				});
 				return x;
 			}
 		},
@@ -1604,25 +1632,28 @@ function __strClear(x) {return __String(x).clear;}
 		length: {
 			get: function() {return this._value.length;}
 		},
-		/**t{b{array}b only(b{string}b type, b{boolean}b keep)}t d{Retorna uma lista somente com os tipos de itens definidos.}d L{*/
-		/**d{v{type}v - Tipo do item a se manter na lista (ver atributos de i{__Type}i.}d*/
-		/**d{v{keep}v - (opcional) Se verdadeiro, o item não casado com i{type}i será mantido com valor c{null}c (padrão c{false}c).}d}L*/
+		/**t{b{array}b only(b{string}b type, b{boolean}b keep, b{boolean}b change)}t*/
+		/**d{Retorna uma lista somente com os tipos de itens definidos.}d L{*/
+		/**d{v{type}v - Tipo do item a ser mantido conforme ver atributos do objeto i{__Type}i.}d*/
+		/**d{v{keep}v - (opcional) Se verdadeiro, o item não casado será mantido com o valor c{null}c.}d*/
+		/**d{v{change}v - (opcional) Se verdadeiro, o item casado terá seu valor alterado conforme retorno do objeto i{__Type}i}d}L*/
+		//*d{O valor padrão de v{keep}v é c{false}c e de v{change}v é c{true}c.}d*/
 		only: {
-			value: function(type, keep) {
+			value: function(type, keep, change) {
 				let list   = [];
-				let change = ["finite", "number", "boolean"];
 				let i = -1;
 				while (++i < this.length) {
 					let check = __Type(this._value[i]);
-					if (type in check && check[type] === true)
-						list.push(change.indexOf(type) < 0 ? this._value[i] : check.valueOf());
+					if (check[type] === true)
+						list.push(change === false ? this._value[i] : check.valueOf());
 					else if (keep === true)
 						list.push(null);
 				}
 				return list;
 			}
 		},
-		/**t{b{array}b convert(b{function}b f, b{boolean}b finite)}t d{Retorna uma lista com o resultado de v{f(x)}v ou c{null}c se falhar.}d L{*/
+		/**t{b{array}b convert(b{function}b f, b{boolean}b finite)}t*/
+		/**d{Retorna uma lista com o resultado de v{f(x)}v ou c{null}c se falhar.}d L{*/
 		/**d{v{f}v - Função a ser aplicada nos valores da lista.}d*/
 		/**d{v{type}v - (opcional) Tipo dos itens na lista (ver atributos de i{__Type}i.}d}L*/
 		convert: {
@@ -1692,7 +1723,7 @@ function __strClear(x) {return __String(x).clear;}
 				return list.length === 0 || sum === 0 ? null : list.length/sum;
 			}
 		},
-		/**t{b{number}b geo}t d{Retorna a média geométrica do valor absoluto dos finitos diferentes de zero ou c{null}c em caso de vazio.}d*/
+		/**t{b{number}b geo}t d{Retorna a média geométrica dos absolutos finitos diferentes de zero ou c{null}c em caso de vazio.}d*/
 		geo: {
 			get: function() {
 				let list = this.only("finite");
@@ -1896,7 +1927,7 @@ function __strClear(x) {return __String(x).clear;}
 		if (!(this instanceof __FNode))	return new __FNode(input);
 		let check = __Type(input);
 		Object.defineProperties(this, {
-			_node:  {value: check.node ? input : null}
+			_node:  {value: check.node ? input : document.createElement("INPUT")}
 		});
 	}
 	/**6{Métodos e atributos}6 l{*/
@@ -1904,7 +1935,7 @@ function __strClear(x) {return __String(x).clear;}
 		constructor: {value: __FNode},
 		/**t{b{string}b _tag}t d{Retorna o nome do elemento HTML.}d*/
 		_tag: {
-			get: function() {return this._node !== null ? this._node.tagName.toLowerCase() : null;}
+			get: function() {return this._node.tagName.toLowerCase();}
 		},
 		/**t{b{string}b _text}t d{Retorna ou define o conteúdo textual do formulário HTML.}d*/
 		_text: {
@@ -1949,6 +1980,18 @@ function __strClear(x) {return __String(x).clear;}
 			set: function(x) {
 				let data = __Type(x);
 				if      (data.date) this._value = data.toString();
+				else if (data.null) this._value = null;
+			}
+		},
+		/**t{b{string}b _datetime}t d{Retorna ou define o valor de data/tempo do formulário HTML.}d*/
+		_datetime: {
+			get: function()  {
+				let data = __Type(this._value);
+				return data.datetime ? data.toString() : "";
+			},
+			set: function(x) {
+				let data = __Type(x);
+				if      (data.datetime) this._value = data.toString();
 				else if (data.null) this._value = null;
 			}
 		},
