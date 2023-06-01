@@ -539,7 +539,9 @@ const wd = (function() {
 				}
 				/* Data/Tempo em formato de string */
 				if (!this.chars) return false;
-				let dt = this._input.trim().replace(/(\ |\,\ |T)/i, "T").split("T");
+				let re = /([01]?\d|2[0-4]|0?[1-9]|1[0-2])\:/;
+				let dt = this._input.trim().replace(re, "|$1:");
+				dt = dt.replace(/[,Tt]/, "").split("|");
 				if (dt.length !== 2) return false;
 				let date = __Type(dt[0]);
 				let time = __Type(dt[1]);
@@ -1933,10 +1935,6 @@ function __strClear(x) {return __String(x).clear;}
 	/**6{Métodos e atributos}6 l{*/
 	Object.defineProperties(__FNode.prototype, {
 		constructor: {value: __FNode},
-		/**t{b{string}b _tag}t d{Retorna o nome do elemento HTML.}d*/
-		_tag: {
-			get: function() {return this._node.tagName.toLowerCase();}
-		},
 		/**t{b{string}b _text}t d{Retorna ou define o conteúdo textual do formulário HTML.}d*/
 		_text: {
 			get: function()  {return this._node.textContent;},
@@ -2097,10 +2095,10 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 
 
 		},
-
+		/**t{b{object}b _type}t d{Registra os parâmetros para cada tipo de formulário.}d*/
 		_type: {
-			value: function(ref, value) {
-				let form  = {
+			value: (function() {
+				return {
 					meter:    {value: "_number", text: "_number"},
 					progress: {value: "_number", text: "_number"},
 					option:   {value: "_value", text: "_text"},
@@ -2138,81 +2136,67 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 						"datetime-local": {value: "_datetime", text: "_datetime", send: "value"},
 					}}
 				};
-				/* checar a tag */
-				let tag = this._tag;
-				if (tag === null || !(tag in form)) return null;
-				/* retornar o tipo */
-				if (arguments.length === 0) {
-					/* elemento sem tipo */
-					if (!("type" in form[tag])) return tag;
-					/* elemento com tipo */
-					let att = String(this._node.getAttribute("type")).toLowerCase();
-					let obj = String(this._node.type).toLowerCase();
-					if (att in form[tag].type) return tag+":"+att;
-					if (obj in form[tag].type) return tag+":"+obj;
-					/* tipo não localizado */
-					return null;
-				}
-				/* checar valor de referência */
-				let type = this._type();
+			}())
+		},
+		/**t{b{object|null}b _ref}t d{Retorna os parâmetros do tipo de formulário em i{_type}i ou c{null}c se outro elemento.}d*/
+		_ref: {
+			get: function() {
+				let type = this.type;
 				if (type === null) return null;
-				let atype = type.split(":");
-				let path  = atype.length > 1 ? form[tag].type[atype[1]] : form[tag];
-				if (!(ref in path)) return null;
-				let attr = path[ref];
-				if (!(attr in this)) return attr;
-				/* retorna valor de referência */
-				if (arguments.length < 2) return this[attr];
-				/* definir valor de referência */
-				this[attr] = value;
-				return;
+				let ref = this._type[this.tag];
+				return "type" in ref ? ref.type[type] : ref;
 			}
 		},
+		/**t{b{string}b _tag}t d{Retorna o nome do elemento HTML.}d*/
+		tag: {
+			get: function() {return this._node.tagName.toLowerCase();}
+		},
 		/**t{b{string|null}b type}t d{Retorna o tipo do formulário HTML ou c{null}c se outro elemento.}d*/
-		/**d{Com atributo i{type}i: v{tag:type}v; Sem atributo i{type}i: v{tag}v.}d*/
 		type: {
-			get: function() {return this._type();}
+			get: function() {
+				let tag = this.tag;
+				if (!(tag in this._type)) return null;
+				let ref = this._type[this.tag];
+				if (!("type" in ref)) return this.tag;
+				let att = String(this._node.getAttribute("type")).toLowerCase();
+				let obj = String(this._node.type).toLowerCase();
+				return (att in ref.type ? att : (obj in ref.type ? obj : null));
+			}
 		},
 		/**t{b{void}b value}t d{Retorna ou define o valor do formulário HTML (valor depende do elemento).}d*/
 		value: {
-			get: function()  {return this._type("value");},
-			set: function(x) {return this._type("value", x);}
+			get: function()  {
+				if ("value" in this._ref) return this[this._ref.value];
+			},
+			set: function(x) {
+				if ("value" in this._ref) this[this._ref.value] = x;
+			}
 		},
 		/**t{b{void}b text}t d{Retorna ou define o conteúdo textual do formulário HTML (valor depende do elemento).}d*/
 		text: {
 			get: function()  {
-				let data = this._type("text");
-				return data === null ? "" : data;
+				if ("text" in this._ref) return this[this._ref.text];
 			},
-			set: function(x) {return this._type("text", x);}
+			set: function(x) {
+				if ("text" in this._ref) this[this._ref.text] = x;
+			}
 		},
 		name: {
 			get: function() {
 				if (this.type === null) return null;
-				let name = __Type(this._node.name);
-				let id   = __Type(this._node.id);
-				if (name.nonempty)
-					return this._node.name.trim().replace(/\[\]$/, "");
-				if (id.nonempty) {
-					this._node.name = this._node.id.trim();
-					return this.name;
-				}
+				if (__Type(this._node.name).nonempty) return this._node.name.trim();
+				if (__Type(this._node.id).nonempty)   return this._node.id.trim();
 				return null;
 			},
 			set: function(x) {
-				x = String(x).trim();
-				if (this.type !== null && x !== "") this._node.name = x;
+				this._node.name = x === null || x === undefined ? "" : String(x).trim();
 			}
 		},
 		send: {
 			get: function() {
-				let name  = this.name;
-				let value = this.value;
-				let send  = this._type("send");console.log(send);
-				let pack  = {};
-				if (name === null || value === null || send === null) return null;
-				pack[name] = value;
-				return pack;
+				if (!("send" in this._ref)) return null;
+				let pack = {name: this.name, value: this[this._ref.send]};
+				return (pack.name === null || pack.value === null) ? null : pack;
 			}
 		},
 	});
