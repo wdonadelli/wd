@@ -279,8 +279,7 @@ const wd = (function() {
 	function __Type(input) {
 		if (!(this instanceof __Type)) return new __Type(input);
 		Object.defineProperties(this, {
-			_root:  {value: input},                 /* valor original */
-			_input: {value: input, writable: true}, /* valor de referência */
+			_input: {value: input},                 /* valor de referência */
 			_type:  {value:  null, writable: true}, /* tipo do valor de entrada */
 			_value: {value:  null, writable: true}, /* valor a ser considerado */
 		});
@@ -328,42 +327,43 @@ const wd = (function() {
 			value: {
 				number:  /^(\+?\d+\!|[+-]?(\d+|(\d+)?\.\d+)(e[+-]?\d+)?\%?)$/i,
 				date:    /^\d{4}\-(0[1-9]|1[0-2])\-(0[1-9]|[12]\d|3[01])$/,
-				time:    /^([01]?\d|2[0-4])\:[0-5]\d(\:[0-5]\d(\.\d{1,3})?)?$/,
-				month:   /^(000[1-9]|00[1-9]\d|0[1-9]\d\d|[1-9]\d\d\d)\-(0[1-9]|1[0-2])$/,
-				week:    /^(000[1-9]|00[1-9]\d|0[1-9]\d\d|[1-9]\d\d\d)\-W(0[1-9]|[1-4]\d|5[0-3])?$/i,
 				dateDMY: /^(0[1-9]|[12]\d|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/,
 				dateMDY: /^(0[1-9]|1[0-2])\.(0[1-9]|[12]\d|3[01])\.\d{4}$/,
 				datedmy: /^(0?[1-9]|[12]\d|3[01])\ [^0-9]+\ \d{4}$/i,
 				datemdy: /^[^0-9]+\ (0?[1-9]|[12]\d|3[01])\ \d{4}$/i,
+				time:    /^([01]?\d|2[0-4])\:[0-5]\d(\:[0-5]\d(\.\d{1,3})?)?$/,
 				time12:  /^(0?[1-9]|1[0-2])\:[0-5]\d(\:[0-5]\d(\.\d{1,3})?)?\ ?[ap]m$/i,
-				monthMY: /^(0[1-9]|1[0-2])[/.]\d{4}$/,
-				weekWY:  /^(0[1-9]|[1-4]\d|5[0-3])\,\ \d{4}$/,
+				month:   /^\d{4}\-(0[1-9]|1[0-2])$/,
+				monthMY: /^(0[1-9]|1[0-2])[/-]\d{4}$/,
+				monthmy: /^[^0-9]+[/ -]\d{4}$/i,
+				week:    /^\d{4}\-W(0[1-9]|[1-4]\d|5[0-4])?$/i,
+				weekWY:  /^(0[1-9]|[1-4]\d|5[0-4])\,\ \d{4}$/,
 				email:   /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/,
 			}
 		},
 		/**t{b{boolean}b chars}t d{Checa se o argumento é um conjunto de caracteres.}d*/
 		chars: {
 			get: function() {
-				return (typeof this._root === "string" || this._root instanceof String);
+				return (typeof this._input === "string" || this._input instanceof String);
 			}
 		},
 		/**t{b{boolean}b empty}t d{Checa se o argumento é um conjunto de caracteres não visualizáveis.}d*/
 		empty: {
 			get: function() {
-				return (this.chars && this._root.trim() === "");
+				return (this.chars && this._input.trim() === "");
 			}
 		},
 		/**t{b{boolean}b nonempty}t d{Checa se o argumento é um conjunto de caracteres visualizáveis.}d*/
 		nonempty: {
 			get: function() {
-				return (this.chars && this._root.trim() !== "");
+				return (this.chars && this._input.trim() !== "");
 			}
 		},
 		/**t{b{boolean}b email}t d{Checa se o argumento é um e-mail ou um conjunto desse tipo.}d*/
 		email: {
 			get: function() {
 				if (!this.chars) return false;
-				let data = this._root.split(",")
+				let data = this._input.split(",")
 				let i = -1;
 				while (++i < data.length)
 					if (!this._re.email.test(data[i].trim())) return false;
@@ -375,28 +375,36 @@ const wd = (function() {
 			get: function() {
 				if (!this.chars) return false;
 				try {
-					let url = new URL(this._root);
+					let url = new URL(this._input.trim());
 					return true;
 				} catch(e) {
 					return false;
 				}
 			}
 		},
-		/**t{b{boolean}b month}t d{Checa se o argumento está no formato de mês (v{YYYY-MM MM/YYYY MM.YYYY}v).}d*/
+		/**t{b{boolean}b month}t d{Checa se o argumento está no formato de mês. Formatos aceitos:}dL{*/
+		/**d{v{YYYY-MM}v (padrão)}d d{v{MM/YYYY}v}d d{v{MM-YYYY}v}d d{v{MMM-YYYY}v}d d{v{MMM YYYY}v}d d{v{MMM/YYYY}v}d*/
+		/**d{v{MMMM-YYYY}v}d d{v{MMMM YYYY}v}d d{v{MMMM/YYYY}v}d}L*/
 		month: {
 			get: function() {
 				if (!this.chars) return false;
-				if (this._re.month.test(this._root))   return true;
-				if (this._re.monthMY.test(this._root)) return true;
+				let data = this._input.trim();
+				if (data.indexOf("  ") >= 0) return false;
+				if (this._re.month.test(data))   return true; /* YYYY-MM */
+				if (this._re.monthMY.test(data)) return true; /* MM/-YYYY */
+				if (this._re.monthmy.test(data)) /* MMMM- /YYYY */
+					return this._getMonths(data.split(/[/ -]/)[0]) !== 0;
 				return false;
 			}
 		},
-		/**t{b{boolean}b week}t d{Checa se o argumento está no formato de semana (v{YYYY-Www}v ou v{ww, YYYY}v).}d*/
+		/**t{b{boolean}b week}t d{Checa se o argumento está no formato de semana. Formatos aceitos:.}d*/
+		/**L{d{v{YYYY-Www}v (padrão)}dd{v{ww, YYYY}v}d}L*/
 		week: {
 			get: function() {
 				if (!this.chars) return false;
-				if (this._re.week.test(this._root))   return true;
-				if (this._re.weekWY.test(this._root)) return true;
+				let data = this._input.trim();
+				if (this._re.week.test(data))   return true;
+				if (this._re.weekWY.test(data)) return true;
 				return false;
 			}
 		},
@@ -511,7 +519,7 @@ const wd = (function() {
 		},
 		/**t{b{boolean}b datetime}t*/
 		/**d{Checa se o argumento é um conjunto data/tempo.}d*/
-		/**d{Enquadra-se o construtor c{Date}c e strings de data e tempo separados por u{virgula e espaço}u ou a letra T.}d*/
+		/**d{Enquadra-se o construtor c{Date}c e strings de data e tempo separados por espaço, virgula e espaço ou a letra T.}d*/
 		datetime: {
 			get: function() {
 				if (this.type !== null) return this.type === "datetime";
@@ -539,9 +547,10 @@ const wd = (function() {
 				}
 				/* Data/Tempo em formato de string */
 				if (!this.chars) return false;
-				let re = /([01]?\d|2[0-4]|0?[1-9]|1[0-2])\:/;
-				let dt = this._input.trim().replace(re, "|$1:");
-				dt = dt.replace(/[,Tt]/, "").split("|");
+				let dt = this._input.trim();
+				let re = /(\d\d)(T|\,\ |\ )(\d?\d\:)/i;
+				if (!re.test(dt)) return false;
+				dt = dt.replace(re, "$1T$3").split("T");
 				if (dt.length !== 2) return false;
 				let date = __Type(dt[0]);
 				let time = __Type(dt[1]);
@@ -552,34 +561,37 @@ const wd = (function() {
 			}
 		},
 		/**t{b{boolean}b date}t*/
-		/**d{Checa se o argumento é uma data em string nos formatos v{DD/MM/YYYY MM.DD.YYYY YYYY-MM-DD}v.}d*/
+		/**d{Checa se o argumento é uma data em string. Formatos aceitos:}dL{*/
+		/**d{v{YYYY-MM-DD}v (padrão)}d d{v{DD/MM/YYYY}v}d d{v{MM.DD.YYYY}v}d*/
+		/**d{v{D MMM YYYY}v}d d{v{MMM D YYYY}v}d d{v{D MMMM YYYY}v}d d{v{MMMM D	 YYYY}v}d}L*/
 		date: {
 			get: function() {
 				if (this.type !== null) return this.type === "date";
 				if (!this.chars) return false;
 				let value = this._input.trim();
+				if (value.indexOf("  ") >= 0) return false;
 				let order = {
 					YMD: {y: 0, m: 1, d: 2},
 					DMY: {d: 0, m: 1, y: 2},
 					MDY: {m: 0, d: 1, y: 2}
-				}
+				};
 				let ref, data;
 				if (this._re.date.test(value)) { /* YYYY-MM-DD */
-					data = this._input.split("-");
+					data = value.split("-");
 					ref  = order.YMD;
 				} else if (this._re.dateDMY.test(value)) { /* DD/MM/YYYY */
-					data = this._input.split("/");
+					data = value.split("/");
 					ref  = order.DMY;
 				} else if (this._re.dateMDY.test(value)) { /* MM.DD.YYYY */
-					data = this._input.split(".");
+					data = value.split(".");
 					ref  = order.MDY;
-				} else if (this._re.datedmy.test(value)) { /* D MM YYYY | D #MM YYYY*/
-					data = this._input.split(" ");
+				} else if (this._re.datedmy.test(value)) { /*D MMM YYYY D MMMM YYYY */
+					data = value.split(" ");
 					ref  = order.DMY;
 					data[1] = this._getMonths(data[1]);
 					if (data[1] === 0) return false;
-				} else if (this._re.datemdy.test(value)) { /* #MM D YYYY */
-					data = this._input.split(" ");
+				} else if (this._re.datemdy.test(value)) { /* MMM D YYYY MMMM D YYYY */
+					data = value.split(" ");
 					ref  = order.MDY;
 					data[0] = this._getMonths(data[0]);
 					if (data[0] === 0) return false;
@@ -651,23 +663,23 @@ const wd = (function() {
 			}
 		},
 		/**t{b{boolean}b time}t*/
-		/**d{Checa se o argumento é uma string que representa tempo.}d*/
-		/**d{Aceita os formato 24h e 12h (v{HH:MM:SS HH:MM AMPM}v).}d*/
+		/**d{Checa se o argumento é uma string que representa tempo. Formatos aceitos:}d*/
+		/**L{d{v{h24:mm:ss.sss}v (padrão)}d d{v{h12:mm:ss.sss AMPM}v}d}L*/
 		time: {
 			get: function() {
 				if (this.type !== null) return this.type === "time";
 				if (!this.chars) return false;
 				let value = this._input.trim();
 				let h, m, s;
-				if (this._re.time12.test(value)) { /* HH:MM:SS.sss AMPM */
+				if (this._re.time12.test(value)) { /* h12:mm:ss.sss AMPM */
 					let am   = value[value.length - 2].toUpperCase() === "A" ? true : false;
 					let time = value.replace(/[^0-9:.]/g, "").split(":");
 					h = Number(time[0]);
 					h = am ? (h % 12) : (h === 12 ? 12 : ((12 + h ) % 24));
 					m = Number(time[1]);
 					s = time.length === 3 ? Number(time[2]) : 0;
-				} else if (this._re.time.test(value)) { /* HH:MM:SS.sss */
-					let time = this._input.split(":");
+				} else if (this._re.time.test(value)) { /* h24:mm:ss.sss */
+					let time = value.split(":");
 					h = Number(time[0]);
 					m = Number(time[1]);
 					s = time.length === 3 ? Number(time[2]) : 0;
@@ -972,7 +984,7 @@ function __strClear(x) {return __String(x).clear;}
 				return this.valueOf().toPrecision(n);
 			}
 		},
-		/**t{b{string}b notation(b{number}b value, b{string}b lang, b{string}b type, b{void}b code)}t*/
+		/**t{b{string}b notation(b{string}b type, b{string}b code, b{string}b lang)}t*/
 		/**d{Formata em determinada notação a{https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/NumberFormat}a.}d*/
 		/**L{*/
 		/**d{v{type}v - Tipo da formatação:}d L{*/
@@ -1491,36 +1503,55 @@ function __strClear(x) {return __String(x).clear;}
 				return (week === 5 || (week === 4 && this.leap)) ? 53 : 52;
 			}
 		},
-		/**t{b{integer}b valueOf(b{boolean}b days)}t d{Retorna a u{diferença}u entre a data e o dia 0000-01-01.}d*/
-		/**L{d{v{days}v - Se verdadeiro, a diferença será em dias, caso contrário, em segundos}d}L*/
+		/**t{b{string}b DD}t d{Retorna o dia com dois dígitos.}d*/
+		DD: {
+			get: function() {return (this.day < 10 ? "0" : "")+String(this.day);}
+		},
+		/**t{b{string}b MM}t d{Retorna o mês com dois dígitos.}d*/
+		MM: {
+			get: function() {return (this.month < 10 ? "0" : "")+String(this.month);}
+		},
+		/**t{b{string}b YYYY}t d{Retorna o ano com quatro dígitos.}d*/
+		YYYY: {
+			get: function() {
+				let y = Math.abs(this.year);
+				let Y = (y < 10 ? "000" : (y < 100 ? "00" : (y < 1000 ? "0" : "")))+String(y);
+				return (this.year < 0 ? "-" : "")+Y;
+			}
+		},
+		/**t{b{string}b hh}t d{Retorna a hora com dois dígitos.}d*/
+		hh: {
+			get: function() {return (this.hour < 10 ? "0" : "")+String(this.hour);}
+		},
+		/**t{b{string}b mm}t d{Retorna o minuto com dois dígitos.}d*/
+		mm: {
+			get: function() {return (this.minute < 10 ? "0" : "")+String(this.minute);}
+		},
+		/**t{b{string}b ss}t d{Retorna o segundo com dois dígitos mais milésimos, se for o caso.}d*/
+		ss: {
+			get: function() {return (this.second < 10 ? "0" : "")+String(this.second);}
+		},
+		/**t{b{integer}b valueOf(b{boolean}b days)}t*/
+		/**d{Retorna a diferença, em segundos, entre o momento registrado e v{0000-01-01T00:00:00}v.}d*/
+		/**L{d{v{days}v - Se verdadeiro, a diferença será em dias}d}L*/
 		valueOf: {
 			value: function(days) {
 				let data = (this._value - this._zero)/1000;
 				return days === true ? Math.trunc(data/(24*3600)) : data;
 			}
 		},
-		/**t{b{string}b toString(b{string}b type)}t d{Retorna a data no formato v{YYYY-MM-DDThh:mm:ss.sss}v.}d*/
+		/**t{b{string}b toString(b{string}b type)}t d{Retorna o momento no formato v{YYYY-MM-DDThh:mm:ss.sss}v.}d*/
 		/**L{d{v{type}v - (opcional) Se i{time}i, retorna o tempo, se i{date}i, a data, caso contrário o data/tempo.}d}L*/
 		toString: {
 			value: function(type) {
-				let data = [
-					this.year, "-", this.month, "-",  this.day, "T",
-					this.hour, ":", this.minute, ":", this.second
-				];
-				data.forEach(function (v,i,a) {
-					if (i%1 !== 0) return;
-					if (i === 0)
-						a[i] = (v < 10 ? "000" : (v < 100 ? "00" : (v < 1000 ? "0" : "")))+String(v);
-					else
-						a[i] = (v < 10 ? "0" : "")+String(v);
-				});
-				data = data.join("");
-				if (type === "date") return data.split("T")[0];
-				if (type === "time") return data.split("T")[1];
-				return data;
+				let date = this.YYYY+"-"+this.MM+"-"+this.DD;
+				let time = this.hh+":"+this.mm+":"+this.ss;
+				if (type === "date") return date;
+				if (type === "time") return time;
+				return date+"T"+time;
 			}
 		},
-		/**t{b{string}b toLocaleString(b{string}b type)}t d{Retorna a data definida localmente pelo objeto i{Date}i.}d*/
+		/**t{b{string}b toLocaleString(b{string}b type)}t d{Retorna o momento definido localmente pelo objeto i{Date}i.}d*/
 		/**L{d{v{type}v - (opcional) Se i{time}i, retorna o tempo, se i{date}i, a data, caso contrário o data/tempo.}d}L*/
 		toLocaleString: {
 			value: function(type) {
@@ -1555,24 +1586,17 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**t{b{string}b string(b{string}b x)}t d{Recebe um texto preformatado substituindo seus parâmetros por valores.}dL{*/
-		/**d{v{x}v - Texto preformatado cujo parâmetro s estão dentro de chaves i{{}}i:}d*/
-		/**d{v{YYYY}v: ano, v{MM}v: mês, v{DD}v: dia, v{hh}v: hora, v{mm}v: minuto, v{ss}v: segundo}d}L*/
-		/**d{Valor do parâmetro também pode ser um i{getter}i do objeto.}d*/
+		/**d{v{x}v - Texto preformatado cujos parâmetros são informados entre chaves i{{parâmetro}}i:}d*/
+		/**d{O parâmetro corresponde ao nome de um atributo do objeto.}d}L*/
 		string: {
 			value: function(x) {
-				x = __Type(x).chars ? x: "{longWeekDay}, {DD} {longMonth} {YYYY} {hh}:{mm}:{ss}";
-				let str = this.toString().split(/[^0-9.]/);
-				let obj = this;
-				let opt = {
-					YYYY: str[0], MM: str[1], DD: str[2], hh: str[3], mm: str[4], ss: str[5],
-				};
+				x = __Type(x).chars ? x: "{longWeekDay}, {DD} {longMonth} {YYYY}, {hh}:{mm}:{ss}";
+				let obj  = this;
 				let data = x.match(/\{\w+\}/gi);
 				if (data === null) return x;
 				data.forEach(function(v,i,a){
 					let id = v.replace("{", "").replace("}", "");
-					if (id in opt && !__Type(opt[id]).function)
-						x = x.replace(v, opt[id]);
-					else if (id in obj && !__Type(obj[id]).function)
+					if (id in obj && !__Type(obj[id]).function)
 						x = x.replace(v, obj[id]);
 				});
 				return x;
@@ -2005,6 +2029,7 @@ function __strClear(x) {return __String(x).clear;}
 			},
 			set: function(x) {
 				let data = __Type(x).array ? x : [x];
+				data.forEach(function(v,i,a) {a[i] = String(v);});
 				let i = -1;
 				while (++i < this._node.length)
 					this._node[i].selected = data.indexOf(this._node[i].value) >= 0;
@@ -2023,6 +2048,7 @@ function __strClear(x) {return __String(x).clear;}
 			},
 			set: function(x) {
 				let data = __Type(x).array ? x : [x];
+				data.forEach(function(v,i,a) {a[i] = String(v);});
 				let i = -1;
 				while (++i < this._node.length)
 					this._node[i].selected = data.indexOf(this._node[i].textContent) >= 0;
@@ -2165,7 +2191,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		},
 		/**t{b{void}b value}t d{Retorna ou define o valor do formulário HTML (valor depende do elemento).}d*/
 		value: {
-			get: function()  {
+			get: function()  {//fixme _ref é nulo quando não for formulário
 				if ("value" in this._ref) return this[this._ref.value];
 			},
 			set: function(x) {
