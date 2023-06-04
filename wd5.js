@@ -1503,34 +1503,91 @@ function __strClear(x) {return __String(x).clear;}
 				return (week === 5 || (week === 4 && this.leap)) ? 53 : 52;
 			}
 		},
+		/**t{b{string}b D}t d{Retorna o dia}d*/
+		D: {
+			get: function() {return String(this.day);}
+		},
 		/**t{b{string}b DD}t d{Retorna o dia com dois dígitos.}d*/
 		DD: {
-			get: function() {return (this.day < 10 ? "0" : "")+String(this.day);}
+			get: function() {return ("0"+this.D).slice(-2);}
+		},
+		/**t{b{string}b DDD}t d{Retorna o nome abreviado do dia da semana do local.}d*/
+		DDD: {
+			get: function() {
+				return this._local.toLocaleDateString(undefined, {weekday: "short"});
+			}
+		},
+		/**t{b{string}b DDDD}t d{Retorna o nome do dia da semana do local.}d*/
+		DDDD: {
+			get: function() {
+				return this._local.toLocaleDateString(undefined, {weekday: "long"});
+			}
+		},
+		/**t{b{string}b M}t d{Retorna o mês.}d*/
+		M: {
+			get: function() {return String(this.month);}
 		},
 		/**t{b{string}b MM}t d{Retorna o mês com dois dígitos.}d*/
 		MM: {
-			get: function() {return (this.month < 10 ? "0" : "")+String(this.month);}
+			get: function() {return ("0"+this.M).slice(-2);}
+		},
+		/**t{b{string}b MMM}t d{Retorna o nome abreviado do mês do local.}d*/
+		MMM: {
+			get: function() {
+				return this._local.toLocaleDateString(undefined, {month: "short"});
+			}
+		},
+		/**t{b{string}b MMMM}t d{Retorna o nome do mês do local.}d*/
+		MMMM: {
+			get: function() {
+				return this._local.toLocaleDateString(undefined, {month: "long"});
+			}
+		},
+		/**t{b{string}b Y}t d{Retorna o ano.}d*/
+		Y: {
+			get: function() {return String(this.year);}
+		},
+		/**t{b{string}b YY}t d{Retorna o ano com dois dígitos.}d*/
+		YY: {
+			get: function() {return ("0"+this.Y).slice(-2);}
 		},
 		/**t{b{string}b YYYY}t d{Retorna o ano com quatro dígitos.}d*/
 		YYYY: {
-			get: function() {
-				let y = Math.abs(this.year);
-				let Y = (y < 10 ? "000" : (y < 100 ? "00" : (y < 1000 ? "0" : "")))+String(y);
-				return (this.year < 0 ? "-" : "")+Y;
-			}
+			get: function() {return ("000"+this.Y).slice(-4);}
+		},
+		/**t{b{string}b h}t d{Retorna a hora.}d*/
+		h: {
+			get: function() {return String(this.hour);}
 		},
 		/**t{b{string}b hh}t d{Retorna a hora com dois dígitos.}d*/
 		hh: {
-			get: function() {return (this.hour < 10 ? "0" : "")+String(this.hour);}
+			get: function() {("0"+this.h).slice(-2);}
+		},
+		/**t{b{string}b m}t d{Retorna minuto.}d*/
+		m: {
+			get: function() {return String(this.minute)}
 		},
 		/**t{b{string}b mm}t d{Retorna o minuto com dois dígitos.}d*/
 		mm: {
-			get: function() {return (this.minute < 10 ? "0" : "")+String(this.minute);}
+			get: function() {return ("0"+this.m).slice(-2);}
 		},
-		/**t{b{string}b ss}t d{Retorna o segundo com dois dígitos mais milésimos, se for o caso.}d*/
+		/**t{b{string}b s}t d{Retorna o segundo.}d*/
+		s: {
+			get: function() {return String(this.second);}
+		},
+		/**t{b{string}b ss}t d{Retorna o segundo com dois dígitos.}d*/
 		ss: {
-			get: function() {return (this.second < 10 ? "0" : "")+String(this.second);}
+			get: function() {return (this.second < 10 ? "0" : "")+this.s;}
 		},
+
+		//FIXME
+		/**t{b{string}b WW}t d{Retorna o dia da semana com dois dígitos.}d*/
+		WW: {
+			get: function() {return String(this.weekDay);}
+		},
+
+
+
 		/**t{b{integer}b valueOf(b{boolean}b days)}t*/
 		/**d{Retorna a diferença, em segundos, entre o momento registrado e v{0000-01-01T00:00:00}v.}d*/
 		/**L{d{v{days}v - Se verdadeiro, a diferença será em dias}d}L*/
@@ -1561,36 +1618,12 @@ function __strClear(x) {return __String(x).clear;}
 				return date.toLocaleString();
 			}
 		},
-		/**t{b{string}b longMonth}t d{Retorna o nome do mês localmente.}d*/
-		longMonth: {
-			get: function() {
-				return this._local.toLocaleDateString(undefined, {month: "long"});
-			}
-		},
-		/**t{b{string}b shortMonth}t d{Retorna o nome abreviado do mês local.}d*/
-		shortMonth: {
-			get: function() {
-				return this._local.toLocaleDateString(undefined, {month: "short"});
-			}
-		},
-		/**t{b{string}b longWeekDay}t d{Retorna o dia da semana localmente.}d*/
-		longWeekDay: {
-			get: function() {
-				return this._local.toLocaleDateString(undefined, {weekday: "long"});
-			}
-		},
-		/**t{b{string}b shortWeekDay}t d{Retorna o dia da semana abreviado localmente.}d*/
-		shortWeekDay: {
-			get: function() {
-				return this._local.toLocaleDateString(undefined, {weekday: "short"});
-			}
-		},
 		/**t{b{string}b string(b{string}b x)}t d{Recebe um texto preformatado substituindo seus parâmetros por valores.}dL{*/
 		/**d{v{x}v - Texto preformatado cujos parâmetros são informados entre chaves i{{parâmetro}}i:}d*/
 		/**d{O parâmetro corresponde ao nome de um atributo do objeto.}d}L*/
 		string: {
 			value: function(x) {
-				x = __Type(x).chars ? x: "{longWeekDay}, {DD} {longMonth} {YYYY}, {hh}:{mm}:{ss}";
+				x = __Type(x).chars ? x: "{DDD}, {D} {MMMM} {YYYY}, {h}:{mm}:{ss}";
 				let obj  = this;
 				let data = x.match(/\{\w+\}/gi);
 				if (data === null) return x;
