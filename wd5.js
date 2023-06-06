@@ -520,28 +520,29 @@ const wd = (function() {
 		/**t{b{boolean}b datetime}t*/
 		/**d{Checa se o argumento é um conjunto data/tempo.}d*/
 		/**d{Enquadra-se o construtor c{Date}c e strings de data e tempo separados por espaço, virgula e espaço ou a letra T.}d*/
+		/**d{Anos negativos serão definidos como zeros.}d*/
 		datetime: {
 			get: function() {
 				if (this.type !== null) return this.type === "datetime";
 				if (this._input instanceof Date) {
 					let input = this._input;
-					let d = input.getDate();
-					let m = input.getMonth()+1;
-					let y = input.getFullYear();
-					let H = input.getHours();
-					let M = input.getMinutes();
-					let S = input.getSeconds()+(input.getMilliseconds()/1000);
+					let D = input.getDate();
+					let M = input.getMonth()+1;
+					let Y = input.getFullYear();
+					let h = input.getHours();
+					let m = input.getMinutes();
+					let s = input.getSeconds()+(input.getMilliseconds()/1000);
 					this._type  = "datetime";
 					let time = [
-						(H < 10 ? "0" : "") + String(H),
-						(M < 10 ? "0" : "") + String(M),
-						(S < 10 ? "0" : "") + String(S)
+						("0"+String(h)).slice(-2),
+						("0"+String(m)).slice(-2),
+						(s < 10 ? "0" : "") + String(s)
 					].join(":");
 					let date = [
-						(y < 10 ? "000" : (y < 100 ? "00" : (y < 1000 ? "0" : ""))) + String(y),
-						(m < 10 ? "0" : "") + String(m),
-						(d < 10 ? "0" : "") + String(d)
-					].join("-")
+						("000"+String(Y < 0 ? 0 : Y)).slice(-4),
+						("0"+String(M)).slice(-2),
+						("0"+String(D)).slice(-2)
+					].join("-");
 					this._value = date+"T"+time;
 					return true;
 				}
@@ -1309,11 +1310,7 @@ function __strClear(x) {return __String(x).clear;}
 		/**t{b{object}b _local}t d{Retorna uma cópia do data/tempo para fins de uso local.}d*/
 		_local: {
 			get: function() {
-				let date = new Date(
-					2000, this.month-1, this.day,
-					this.hour, this.minute,
-					Math.trunc(this.second), 1000*__Number(this.second).dec
-				);
+				let date = new Date(2000, this.month-1, this.day,	12, 0, 0, 0);
 				date.setFullYear(this.year);
 				return date;
 			}
@@ -1496,10 +1493,16 @@ function __strClear(x) {return __String(x).clear;}
 				return this.weekDay !== 7 && this.weekDay !== 1;
 			}
 		},
-		/**t{b{integer}b maxinputweeks}t d{Retorna a quantidade de semanas do ano para fins do fomulário HTML i{input:week}i (ver a{https://developer.mozilla.org/en-US/docs/Web/HTML/Date_and_time_formats#week_strings}a).}d*/
-		maxinputweeks: {
+		/**t{b{integer}b stdWeek}t d{Retorna a semana do ano no padrão do fomulário HTML i{input:week}i (ver a{https://developer.mozilla.org/en-US/docs/Web/HTML/Date_and_time_formats#week_strings}a).}d*/
+		stdWeek: {//FIXME que chatice esse negócio de data
 			get: function() {
-				let week = this.firstWeekDay;
+				if (this.firstWeekDay <= 5) return this.week;
+				if (this.week > 1) return this.week - 1;
+				let year = this.year-1;
+				let date = new Date(Date.UTC(2000, 0, 1, 12, 0, 0, 0));
+				date.setUTCFullYear(this.year-1);
+				let week = date.getUTCDay()+1;
+				let leap = true;
 				return (week === 5 || (week === 4 && this.leap)) ? 53 : 52;
 			}
 		},
@@ -1545,7 +1548,7 @@ function __strClear(x) {return __String(x).clear;}
 		},
 		/**t{b{string}b Y}t d{Retorna o ano.}d*/
 		Y: {
-			get: function() {return String(this.year);}
+			get: function() {return String(this.year < 0 ? 0 : this.year);}
 		},
 		/**t{b{string}b YY}t d{Retorna o ano com dois dígitos.}d*/
 		YY: {
@@ -1561,7 +1564,7 @@ function __strClear(x) {return __String(x).clear;}
 		},
 		/**t{b{string}b hh}t d{Retorna a hora com dois dígitos.}d*/
 		hh: {
-			get: function() {("0"+this.h).slice(-2);}
+			get: function() {return ("0"+this.h).slice(-2);}
 		},
 		/**t{b{string}b m}t d{Retorna minuto.}d*/
 		m: {
@@ -1583,45 +1586,29 @@ function __strClear(x) {return __String(x).clear;}
 		//FIXME
 		/**t{b{string}b WW}t d{Retorna o dia da semana com dois dígitos.}d*/
 		WW: {
-			get: function() {return String(this.weekDay);}
+			get: function() {
+				return ("0"+String(this.week - (this.firstWeekDay <= 5 ? 0 : 1))).slice(-2);
+			}
 		},
 
 
 
-		/**t{b{integer}b valueOf(b{boolean}b days)}t*/
-		/**d{Retorna a diferença, em segundos, entre o momento registrado e v{0000-01-01T00:00:00}v.}d*/
-		/**L{d{v{days}v - Se verdadeiro, a diferença será em dias}d}L*/
+		/**t{b{integer}b valueOf()}td{Retorna os segundos desde v{0000-01-01T00:00:00}v.}d*/
 		valueOf: {
-			value: function(days) {
-				let data = (this._value - this._zero)/1000;
-				return days === true ? Math.trunc(data/(24*3600)) : data;
-			}
+			value: function() {return (this._value - this._zero)/1000;}
 		},
-		/**t{b{string}b toString(b{string}b type)}t d{Retorna o momento no formato v{YYYY-MM-DDThh:mm:ss.sss}v.}d*/
-		/**L{d{v{type}v - (opcional) Se i{time}i, retorna o tempo, se i{date}i, a data, caso contrário o data/tempo.}d}L*/
+		/**t{b{string}b toString()}t d{Retorna o momento no formato v{YYYY-MM-DDThh:mm:ss.sss}v.}d*/
 		toString: {
-			value: function(type) {
-				let date = this.YYYY+"-"+this.MM+"-"+this.DD;
-				let time = this.hh+":"+this.mm+":"+this.ss;
-				if (type === "date") return date;
-				if (type === "time") return time;
-				return date+"T"+time;
-			}
+			value: function() {return this.format("{YYYY}-{MM}-{DD}T{hh}:{mm}:{ss}");}
 		},
-		/**t{b{string}b toLocaleString(b{string}b type)}t d{Retorna o momento definido localmente pelo objeto i{Date}i.}d*/
-		/**L{d{v{type}v - (opcional) Se i{time}i, retorna o tempo, se i{date}i, a data, caso contrário o data/tempo.}d}L*/
-		toLocaleString: {
-			value: function(type) {
-				let date = this._local;
-				if (type === "time") return date.toLocaleTimeString();
-				if (type === "date") return date.toLocaleDateString();
-				return date.toLocaleString();
-			}
+		/**t{b{integer}b pastDays}td{Retorna os dias desde v{0000-01-01}v.}d*/
+		pastDays: {
+			get: function() {return Math.trunc(this.valueOf()/(24*3600));}
 		},
-		/**t{b{string}b string(b{string}b x)}t d{Recebe um texto preformatado substituindo seus parâmetros por valores.}dL{*/
+		/**t{b{string}b format(b{string}b x)}t d{Recebe um texto preformatado substituindo seus parâmetros por valores.}dL{*/
 		/**d{v{x}v - Texto preformatado cujos parâmetros são informados entre chaves i{{parâmetro}}i:}d*/
 		/**d{O parâmetro corresponde ao nome de um atributo do objeto.}d}L*/
-		string: {
+		format: {
 			value: function(x) {
 				x = __Type(x).chars ? x: "{DDD}, {D} {MMMM} {YYYY}, {h}:{mm}:{ss}";
 				let obj  = this;
