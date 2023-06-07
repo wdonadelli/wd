@@ -326,7 +326,7 @@ const wd = (function() {
 		_re: {
 			value: {
 				number:  /^(\+?\d+\!|[+-]?(\d+|(\d+)?\.\d+)(e[+-]?\d+)?\%?)$/i,
-				date:    /^\d{4}\-(0[1-9]|1[0-2])\-(0[1-9]|[12]\d|3[01])$/,
+				date:    /^\-?(\d{4}|[1-9]\d{3}\d+)\-(0[1-9]|1[0-2])\-(0[1-9]|[12]\d|3[01])$/,
 				dateDMY: /^(0[1-9]|[12]\d|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/,
 				dateMDY: /^(0[1-9]|1[0-2])\.(0[1-9]|[12]\d|3[01])\.\d{4}$/,
 				datedmy: /^(0?[1-9]|[12]\d|3[01])\ [^0-9]+\ \d{4}$/i,
@@ -539,7 +539,7 @@ const wd = (function() {
 						(s < 10 ? "0" : "") + String(s)
 					].join(":");
 					let date = [
-						("000"+String(Y < 0 ? 0 : Y)).slice(-4),
+						(Y < 0 ? "-" : "")+(Math.abs(Y) > 999 ? String(Math.abs(Y)) : ("000"+String(Math.abs(Y))).slice(-4)),
 						("0"+String(M)).slice(-2),
 						("0"+String(D)).slice(-2)
 					].join("-");
@@ -579,6 +579,10 @@ const wd = (function() {
 				let ref, data;
 				if (this._re.date.test(value)) { /* YYYY-MM-DD */
 					data = value.split("-");
+					if (data.length > 3) { /* data negativa */
+						data.shift();
+						data[0] = "-"+data[0];
+					}
 					ref  = order.YMD;
 				} else if (this._re.dateDMY.test(value)) { /* DD/MM/YYYY */
 					data = value.split("/");
@@ -608,9 +612,9 @@ const wd = (function() {
 				if (d > days[m-1]) return false;
 				this._type  = "date";
 				this._value = [
-					(y < 10 ? "000" : (y < 100 ? "00" : (y < 1000 ? "0" : ""))) + String(y),
-					(m < 10 ? "0" : "") + String(m),
-					(d < 10 ? "0" : "") + String(d)
+					data[ref.y],
+					data[ref.m],
+					("0"+data[ref.d]).slice(-2)
 				].join("-");
 				return true;
 			}
@@ -1258,34 +1262,56 @@ function __strClear(x) {return __String(x).clear;}
 				type = "datetime";
 				datetime = __Type(new Date()).value;
 		}
-		datetime = datetime.split("T");
-		let date = datetime[0].split("-");
-		let time = datetime[1].split(":");
-		let value = new Date(Date.UTC(
-			2000, /* IMPORTANTE: precisar ser um ano bissexto */
-			Number(date[1])-1,
-			Number(date[2]),
-			Number(time[0]),
-			Number(time[1]),
-			Math.trunc(Number(time[2])),
-			1000*__Number(time[2]).dec
-		));
-		value.setUTCFullYear(Number(date[0]));
+		datetime   = datetime.split("T");
+		let date   = datetime[0];
+		let time   = datetime[1];
+		let year   = Number(date.slice(0,-6));
+		let month  = Number(date.slice(-5,-3))-1;
+		let day    = Number(date.slice(-2));
+		let hour   = Number(time.slice(0,2));
+		let minute = Number(time.slice(3,5));
+		let second = Number(time.slice(6,8));
+		let millis = Number(time.slice(9) === "" ? 0 : time.slice(9));
+		let safe   = year < 0 ? -8.64e15 : +8.64e15;
+		/* IMPORTANTE: o ano inicial precisa ser bissexto */
+		let value = new Date(Date.UTC(2000, month, day, hour, minute, second, millis));
+		value.setUTCFullYear(year);
+
+
+
 		Object.defineProperties(this, {
-			_value:  {value: value},                           /* objeto Date */
-			_type:   {value: type},                            /* tipo de tempo de entrada */
-			_change: {value: null, writable: true},            /* evento do disparador de alteração */
-			_day:    {value: Number(date[2]), writable: true}, /* registra o dia na alteração de ano ou mês */
+			_value:  {value: value},                /* objeto Date */
+			_type:   {value: type},                 /* tipo de tempo de entrada */
+			_change: {value: null, writable: true}, /* evento do disparador de alteração */
+			_day:    {value: day,  writable: true}, /* registra o dia na alteração de ano ou mês */
+			_safe:   {value: safe, writable: true}  /* registro de segurança se extrapolar os limite */
 		});
+
+		/* checando os limites da data */
+		this._validity();
 	}
 	/**6{Métodos e atributos}6 l{*/
 	Object.defineProperties(__DateTime.prototype, {
 		constructor: {value: __DateTime},
+		/**t{b{void}b _validity()}t d{Checa os limites do objeto i{Date}i e impede sua alteração se ultrpassados (a{https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date#the_epoch_timestamps_and_invalid_date}a).*/
+		_validity: {
+			value: function() {
+				if (isNaN(this._value.getTime()))  {
+					this._value.setTime(this._safe);
+					this.toString()
+					console.warn(
+						"DateTime: Limit exceeded, request unfulfilled or limited ("+this.toString()+")."
+					);
+				}
+				this._safe = this._value.getTime();
+			}
+		},
 		/**t{b{void}b _trigger(b{object}b)}t d{Disparador de mudança de dados, obtém e checa valores.}d*/
 		/**d{Retorna um objeto (v{x}v) com os dados de tempo.}d*/
 		/**L{d{v{x}v - objeto com os dados de tempo. Se definido, checará alterações entre o argumento e os dados atuais.*/
 		_trigger: {
 			value: function (x) {
+				this._validity();
 				if (this._change === null) return;
 				let data = {year: 0, month: 0, day: 0, hour: 0, minute: 0, second: 0};
 				let type = __Type(x);
@@ -1548,15 +1574,21 @@ function __strClear(x) {return __String(x).clear;}
 		},
 		/**t{b{string}b Y}t d{Retorna o ano.}d*/
 		Y: {
-			get: function() {return String(this.year < 0 ? 0 : this.year);}
+			get: function() {return String(this.year);}
 		},
 		/**t{b{string}b YY}t d{Retorna o ano com dois dígitos.}d*/
 		YY: {
-			get: function() {return ("0"+this.Y).slice(-2);}
+			get: function() {
+				return (this.year < 0 ? "-" : "")+("0"+String(Math.abs(this.year))).slice(-2);
+			}
 		},
 		/**t{b{string}b YYYY}t d{Retorna o ano com quatro dígitos.}d*/
 		YYYY: {
-			get: function() {return ("000"+this.Y).slice(-4);}
+			get: function() {
+				if (this.year >= 0 && this.Y.length >= 4) return this.Y;
+				if (this.year < 0  && this.Y.length >= 5) return this.Y;
+				return (this.year < 0 ? "-" : "")+("000"+String(Math.abs(this.year))).slice(-4);
+			}
 		},
 		/**t{b{string}b h}t d{Retorna a hora.}d*/
 		h: {
