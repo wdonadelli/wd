@@ -613,7 +613,7 @@ const wd = (function() {
 				this._type  = "date";
 				this._value = [
 					data[ref.y],
-					data[ref.m],
+					("0"+data[ref.m]).slice(-2),
 					("0"+data[ref.d]).slice(-2)
 				].join("-");
 				return true;
@@ -1239,8 +1239,420 @@ function __strClear(x) {return __String(x).clear;}
 
 
 /*===========================================================================*/
-	/**3{Data e Tempo}3*/
-/*===========================================================================*/
+	/**
+	###Data e Tempo
+	```object __DateTime(string input)```
+	Construtor para manipulação de data/tempo.
+	O atributo `input` aceita valores do tipo data, tempo ou ambos. Se não informado, assumira o valor de data e tempo atuais.
+	O mês alterado será aquele definido, ou seja, 2001-01-31 não será alterado para 2000-03-02 ao se alterar o mês para 2.
+	O dia também será mantido nas alterações de meses: 2000-01-31 | 2000-02-29 | 2000-03-31 | 2000-04-30 | 2000-05-31.
+	**/
+	function __DateTime(input) {
+		if (!(this instanceof __DateTime)) return new __DateTime(input);
+		let check = __Type(input);
+		let type  = check.type;
+		let datetime, date, time;
+		switch(type) {
+			case "time":     datetime = "0000-01-01T"+check.value; break;
+			case "date":     datetime = check.value+"T00:00:00";   break;
+			case "datetime": datetime = check.value;               break;
+			default:
+				type = "datetime";
+				datetime = __Type(new Date()).value;
+		}
+		datetime = datetime.split("T");
+		date     = datetime[0];
+		time     = datetime[1];
+
+		Object.defineProperties(this, {
+			_Y: {value: Number(date.slice(0,-6)),  writable: true}, /* ano */
+			_M: {value: Number(date.slice(-5,-3)), writable: true}, /* mês */
+			_D: {value: Number(date.slice(-2)),    writable: true}, /* dia */
+			_h: {value: Number(time.slice(0,2)),   writable: true}, /* hora */
+			_m: {value: Number(time.slice(3,5)),   writable: true}, /* minutos */
+			_s: {value: Number(time.slice(6)),     writable: true}, /* segundos */
+			//_change: {value: null, writable: true}, /* disparador do evento alteração */
+			_change: {value: function(x){console.log(x);}}, //FIXME apagar isso
+		});
+	}
+
+	/**
+	####Métodos e Atributos
+	**/
+	Object.defineProperties(__DateTime.prototype, {
+		constructor: {value: __DateTime},
+		/**
+		``void trigger(string field, number value)``
+		Método interno que aciona o disparador nas mudanças dos parâmetros de data e tempo.
+		O atributo `field` identifica o parâmetro a ser analisado e o atributo `value` é utilizado para comparar com o valor do parâmetro atual que, se diferentes, provocará o disparador definido.
+		O disparador receberá um objeto com as chaves "target" (o objeto __DateTime), "field" (nome do parâmetro), "old" (valor a ser comparado) e "new" (valor atual).
+		**/
+		_trigger: {
+			value: function (field, value) {
+				if (this._change === null) return;
+				if (this[field] !== value)
+					return this._change({
+						target: this, field: field, old: value, new: this[field]
+					});
+			}
+		},
+		/**
+		``object _names``
+		Atributo interno que registra a lista com os nomes curtos e  longos de meses e dias da semana localmente, se possível.
+		A chave MMM registra a lista de meses curtos, MMMM de meses longos, DDD de dias curtos e DDDD de dias longos
+		**/
+		_names: {
+			value: (function() {
+				let data = {MMM: [], MMMM: [], DDD: [], DDDD: []};
+				let date = new Date(2012,0,1,12,0,0,0);
+				let week = new Date(2012,0,1,12,0,0,0);
+				for (let i = 0; i < 12; i++) {
+					date.setMonth(i);
+					data.MMM.push( date.toLocaleDateString(undefined, {month: "short"}));
+					data.MMMM.push(date.toLocaleDateString(undefined, {month: "long"}));
+					if (i > 0 && i < 8) {
+						week.setDate(i);
+						data.DDD.push( week.toLocaleDateString(undefined, {weekday: "short"}));
+						data.DDDD.push(week.toLocaleDateString(undefined, {weekday: "long"}));
+					}
+				}
+				return data;
+			}())
+		},
+		/**
+		``boolean _leap(integer y)``
+		Método interno que retorna se o ano é bissexto. O atributo opcional `y` corresponde ao ano e, se indefinido, assumirá o ano da data.
+		**/
+		_leap: {
+			value: function(y) {
+				y = Math.abs(y === undefined ? this.year : y);
+				return (y%400 === 0 || (y%4 === 0 && y%100 !== 0));
+			}
+		},
+		/**
+		``integer _maxDay(integer m, integer y)``
+		Método interno que retorna a quantidade de dias do mês.
+		O atributo opcional `m` corresponde ao mês e, se indefinido, assumirá o mês da data.
+		O atributo opcional `y` corresponde ao ano e, se indefinido, assumirá o ano da data.
+		**/
+		_maxDay: {
+			value: function(m, y) {
+				if (m === undefined) m = this.month;
+				if (y === undefined) y = this.year;
+				let fev = this._leap(y) ? 29 : 28;
+				let max = [31, fev, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+				return max[m%12-1];
+			}
+		},
+		/**
+		``integer year```
+		Define ou retorna o ano.
+		**/
+		year: {
+			get: function() {return this._Y;},
+			set: function(x) {
+				if (!__Type(x).finite) return;
+				let data  = this.year;
+				let value = __Number(x);
+				this._Y = value.int;
+				this._trigger("year", data);
+				if (value.dec !== 0)
+					this.month = (12*(value < 0 ? (1 - value.dec) : value.dec)).toFixed(3);
+				return;
+			}
+		},
+		/**
+		``integer month```
+		Define ou retorna o mês de 1 a 12 (janeiro a dezembro).
+		**/
+		month: {
+			get: function() {return this._M;},
+			set: function(x) {
+				if (!__Type(x).finite) return;
+				let data  = this.month;
+				let value = __Number(x);
+				let delta = value.int;
+				let upper = 0;
+				while (delta < 1 || delta > 12) {
+					upper += delta < 1 ? -1 : +1;
+					delta += delta < 1 ? +12 : -12;
+				}
+				this._M    = delta;
+				this.year += upper;
+				this._trigger("month", data);
+				if (value.dec !== 0)
+					this.day = this._maxDay()*(value < 0 ? (1 - value.dec) : value.dec).toFixed(3);
+				return;
+			}
+		},
+		/**
+		``integer day```
+		Define ou retorna o dia de 1 a 31.
+		**/
+		day: {
+			get: function() {return this._D > this._maxDay() ? this._maxDay() : this._D;},
+			set: function(x) {
+				if (!__Type(x).finite) return;
+				let data  = this.day;
+				let value = __Number(x);
+				let delta = value.int;
+				//let upper = 0;
+				while (delta < 1 || delta > this._maxDay()) {
+					delta += delta < 1 ? +this._maxDay() : -this._maxDay();
+					this.month += delta < 1 ? -1 : +1;
+
+					//upper += delta < 1 ? -1 : +1; FIXME datetime(0000-01-01) dt.day = 366 dt.day = 366 ????
+
+				}
+				this._D     = delta;
+				//this.month += upper;
+				this._trigger("day", data);
+				if (value.dec !== 0)
+					this.hour = 24*(value < 0 ? (1 - value.dec) : value.dec).toFixed(3);
+				return;
+			}
+		},
+		/**
+		``integer hour```
+		Define ou retorna a hora (0 a 23).
+		**/
+		hour: {
+			get: function() {return this._h;},
+			set: function(x) {
+				if (!__Type(x).finite) return;
+				let data  = this.hour;
+				let value = __Number(x);
+				let delta = value.int;
+				let upper = 0;
+				while (delta < 0 || delta > 23) {
+					upper += delta < 1 ? -1 : +1;
+					delta += delta < 1 ? +24 : -24;
+				}
+				this._h   = delta;
+				this.day += upper;
+				this._trigger("hour", data);
+				if (value.dec !== 0)
+					this.minute = 60*(value < 0 ? (1 - value.dec) : value.dec).toFixed(3);
+				return;
+			}
+		},
+		/**
+		``integer minute```
+		Define ou retorna o minuto de 0 a 59.
+		**/
+		minute: {
+			get: function() {return this._m;},
+			set: function(x) {
+				if (!__Type(x).finite) return;
+				let data  = this.minute;
+				let value = __Number(x);
+				let delta = value.int;
+				let upper = 0;
+				while (delta < 0 || delta > 59) {
+					upper += delta < 1 ? -1 : +1;
+					delta += delta < 1 ? +60 : -60;
+				}
+				this._m    = delta;
+				this.hour += upper;
+				this._trigger("minute", data);
+				if (value.dec !== 0)
+					this.second = 60*(value < 0 ? (1 - value.dec) : value.dec).toFixed(3);
+				return;
+			}
+		},
+		/**
+		``number minute```
+		Define ou retorna o segundo de 0 a 59.999.
+		**/
+		second: {
+			get: function() {return this._s;},
+			set: function(x) {
+				if (!__Type(x).finite) return;
+				let data  = this.second;
+				let delta = __Number(x).valueOf();
+				let upper = 0;
+				while (delta < 0 || delta > 59) {
+					upper += delta < 1 ? -1 : +1;
+					delta += delta < 1 ? +60 : -60;
+				}
+				this._s      = Number(delta.toFixed(3));
+				this.minute += upper;
+				this._trigger("second", data);
+				return;
+			}
+		},
+		/**
+		``boolean leap``
+		Informa se o ano é bissexto.
+		**/
+		leap: {get: function() {return this._leap();}},
+		/**
+		``integer dayYear``
+		Informa o dia do ano (1-366).
+		**/
+		dayYear: {
+			get: function() {
+				let days = [0,31,59,90,120,151,181,212,243,273,304,334,365];
+				let leap = this.leap && this.month > 2 ? 1 : 0;
+				return days[this.month-1] + leap + this.day;
+			}
+		},
+
+
+		Y:    {get: function() {return String(this.year);}},
+		YY:   {
+			get: function() {
+				return this.YYYY.replace(/\d+(\d\d)$/, "$1");
+			}
+		},
+		YYYY: {
+			get: function() {
+				let YYYY = String(Math.abs(this.year));
+				if (YYYY.length < 4) YYYY = ("000"+YYYY).slice(-4);
+				return (this.year < 0 ? "-" : "")+YYYY;
+			}
+		},
+		M:    {get: function() {return String(this.month);}},
+		MM:   {get: function() {return ("0"+this.M).slice(-2);}},
+		MMM:  {get: function() {return this._names.MMM[this.month-1];}},
+		MMMM: {get: function() {return this._names.MMMM[this.month-1];}},
+		D:    {get: function() {return String(this.day);}},
+		DD:   {get: function() {return ("0"+this.D).slice(-2);}},
+		DDD:  {get: function() {return this._names.DDD[this.weekDay-1];}},
+		DDDD: {get: function() {return this._names.DDDD[this.weekDay-1];}},
+		h:    {get: function() {return String(this.hour);}},
+		hh:   {get: function() {return ("0"+this.h).slice(-2);}},
+		m:    {get: function() {return String(this.minute);}},
+		mm:   {get: function() {return ("0"+this.m).slice(-2);}},
+		s:    {get: function() {return String(this.second);}},
+		ss:   {
+			get: function() {
+				return Math.trunc(this.second) < 10 ? ("0"+this.s) : this.s;
+			}
+		},
+
+
+
+
+
+		format: {
+			value: function(x) {
+				x = __Type(x).chars ? x: "{DDD}, {D} {MMMM} {YYYY}, {h}:{mm}:{ss}";
+				let obj  = this;
+				let data = x.match(/\{\w+\}/gi);
+				if (data === null) return x;
+				data.forEach(function(v,i,a){
+					let id = v.replace("{", "").replace("}", "");
+					if (id in obj && !__Type(obj[id]).function)
+						x = x.replace(v, obj[id]);
+				});
+				return x;
+			}
+		},
+		/**
+		``function onchange``
+		Define um disparador para ser chamado quando houver mudanças nos parâmetros de data e tempo.
+		Para remover o disparador, deve-se definir o valor como `null`.
+		**/
+		onchange: {
+			set: function(x) {
+				if (!__Type(x).function && x !== null) return;
+				this._change = x;
+			}
+		},
+		/**
+		``number timeOf()``
+		Retorna o tempo em segundos.
+		**/
+		timeOf: {
+			value: function() {
+				return 3600*this.hour + 60*this.minute + this.second;
+			}
+		},
+		/**
+		``string toTimeString()``
+		Retorna o tempo no formato hh:mm:ss.sss.
+		**/
+		toTimeString: {
+			value: function() {
+				return this.format("{hh}:{mm}:{ss}");
+      }
+		},
+		/**
+		``number dateOf()``
+		Retorna os dias desde 0000-01-01 (dia 1).
+		**/
+		dateOf: {
+			value: function() {
+				if (this.year === 0) return this.dayYear;
+				let year = Math.abs(this.year);
+				let y365 = 365*year;
+				let y400 = Math.trunc(year/400);
+				let y004 = Math.trunc(year/4);
+				let y100 = Math.trunc(year/100);
+				let days = y365 + y400 + y004 - y100;
+				if (this.year > 0) return 366 + days + this.dayYear;
+				return -(days + (this.leap ? 366 : 365) - this.dayYear);
+			}
+		},
+		/**
+		``string toDateString()``
+		Retorna a data no formato YYYY-MM-DD.
+		**/
+		toDateString: {
+			value: function() {
+				return this.format("{YYYY}-{MM}-{DD}");
+      }
+		},
+		/**
+		``string toString()``
+		Retorna a data e o tempo no formato YYYY-MM-DDThh:mm:ss.sss.
+		**/
+		toString: {
+			value: function() {
+				return this.toDateString()+"T"+this.toTimeString();
+      }
+		},
+
+
+
+
+
+	});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 	/**f{b{object}b __DateTime(b{string}b input)}f*/
 	/**p{Construtor para manipulação de data/tempo.}p*/
@@ -1249,8 +1661,8 @@ function __strClear(x) {return __String(x).clear;}
 	/* Ex: 2000-01-31 não virar 2000-03-02 quando muda para o mês 02 */
 	/* IMPORTANTE: garantir continuidade do dia na mudança de mês e ano */
 	/* Ex: 2000-01-31 | 2000-02-29 | 2000-03-31 | 2000-04-30 | 2000-05-31 */
-	function __DateTime(input) {
-		if (!(this instanceof __DateTime)) return new __DateTime(input);
+	function __DateTime2(input) {
+		if (!(this instanceof __DateTime2)) return new __DateTime2(input);
 		let check = __Type(input);
 		let type  = check.type;
 		let datetime;
@@ -1291,8 +1703,8 @@ function __strClear(x) {return __String(x).clear;}
 		this._validity();
 	}
 	/**6{Métodos e atributos}6 l{*/
-	Object.defineProperties(__DateTime.prototype, {
-		constructor: {value: __DateTime},
+	Object.defineProperties(__DateTime2.prototype, {
+		constructor: {value: __DateTime2},
 		/**t{b{void}b _validity()}t d{Checa os limites do objeto i{Date}i e impede sua alteração se ultrpassados (a{https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date#the_epoch_timestamps_and_invalid_date}a).*/
 		_validity: {
 			value: function() {
