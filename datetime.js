@@ -495,3 +495,478 @@
 
 	/**}l*/
 	});
+
+
+
+
+/*============================================================================*/
+/*============================================================================*/
+/*============================================================================*/
+/*============================================================================*/
+/*============================================================================*/
+/*============================================================================*/
+/*============================================================================*/
+/*============================================================================*/
+/*============================================================================*/
+/*============================================================================*/
+/*============================================================================*/
+/*============================================================================*/
+/*============================================================================*/
+/*============================================================================*/
+/*============================================================================*/
+/*============================================================================*/
+/*============================================================================*/
+/*============================================================================*/
+/*============================================================================*/
+/*============================================================================*/
+/*============================================================================*/
+/*============================================================================*/
+/*============================================================================*/
+/*============================================================================*/
+/*============================================================================*/
+/*============================================================================*/
+/*============================================================================*/
+/*============================================================================*/
+/*============================================================================*/
+/*============================================================================*/
+
+
+
+
+
+
+
+	/**
+	`/**
+	`object __DateTime(b{string}b input)`
+	Construtor para manipulação de data/tempo.}p*/
+	/**l{d{v{input}v - Objeto c{Date}c ou string em forma de data ou tempo, caso contrário assumirá valor atual.}d}l*/
+	/* IMPORTANTE: garantir a mudança para o mês definido */
+	/* Ex: 2000-01-31 não virar 2000-03-02 quando muda para o mês 02 */
+	/* IMPORTANTE: garantir continuidade do dia na mudança de mês e ano */
+	/* Ex: 2000-01-31 | 2000-02-29 | 2000-03-31 | 2000-04-30 | 2000-05-31 */
+	function __DateTime2(input) {
+		if (!(this instanceof __DateTime2)) return new __DateTime2(input);
+		let check = __Type(input);
+		let type  = check.type;
+		let datetime;
+		switch(type) {
+			case "time":     datetime = "0000-01-01T"+check.value; break;
+			case "date":     datetime = check.value+"T00:00:00";   break;
+			case "datetime": datetime = check.value;               break;
+			default:
+				type = "datetime";
+				datetime = __Type(new Date()).value;
+		}
+		datetime   = datetime.split("T");
+		let date   = datetime[0];
+		let time   = datetime[1];
+		let year   = Number(date.slice(0,-6));
+		let month  = Number(date.slice(-5,-3))-1;
+		let day    = Number(date.slice(-2));
+		let hour   = Number(time.slice(0,2));
+		let minute = Number(time.slice(3,5));
+		let second = Number(time.slice(6,8));
+		let millis = Number(time.slice(9) === "" ? 0 : time.slice(9));
+		let safe   = year < 0 ? -8.64e15 : +8.64e15;
+		/* IMPORTANTE: o ano inicial precisa ser bissexto */
+		let value = new Date(Date.UTC(2000, month, day, hour, minute, second, millis));
+		value.setUTCFullYear(year);
+
+
+
+		Object.defineProperties(this, {
+			_value:  {value: value},                /* objeto Date */
+			_type:   {value: type},                 /* tipo de tempo de entrada */
+			_change: {value: null, writable: true}, /* evento do disparador de alteração */
+			_day:    {value: day,  writable: true}, /* registra o dia na alteração de ano ou mês */
+			_safe:   {value: safe, writable: true}  /* registro de segurança se extrapolar os limite */
+		});
+
+		/* checando os limites da data */
+		this._validity();
+	}
+	/**6{Métodos e atributos}6 l{*/
+	Object.defineProperties(__DateTime2.prototype, {
+		constructor: {value: __DateTime2},
+		/**
+	`void  _validity()}t d{Checa os limites do objeto i{Date}i e impede sua alteração se ultrpassados (a{https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date#the_epoch_timestamps_and_invalid_date}a).*/
+		_validity: {
+			value: function() {
+				if (isNaN(this._value.getTime()))  {
+					this._value.setTime(this._safe);
+					this.toString()
+					console.warn(
+						"DateTime: Limit exceeded, request unfulfilled or limited ("+this.toString()+")."
+					);
+				}
+				this._safe = this._value.getTime();
+			}
+		},
+		/**
+	`void  _trigger(b{/**
+	`object)}t d{Disparador de mudança de dados, obtém e checa valores.
+		/**d{Retorna um objeto (v{x}v) com os dados de tempo.
+		/**L{d{v{x}v - objeto com os dados de tempo. Se definido, checará alterações entre o argumento e os dados atuais.*/
+		_trigger: {
+			value: function (x) {
+				this._validity();
+				if (this._change === null) return;
+				let data = {year: 0, month: 0, day: 0, hour: 0, minute: 0, second: 0};
+				let type = __Type(x);
+				for (let i in data) {
+					if (!type.object) {
+						data[i] = this[i];
+					} else if (x[i] !== this[i]) {
+						this._change({target: i, old: x[i], new: this[i]});
+					}
+				}
+				return data;
+			}
+		},
+		integer}b _zero}t d{Referencial para contagem dos dias (0000-01-01).
+		_zero: {
+			value: (function() {
+				let date = new Date(Date.UTC(1970,0,1,0,0,0,0));
+				date.setUTCFullYear(0);
+				return date;
+			}())
+		},
+		/**
+	`object _local}t d{Retorna uma cópia do data/tempo para fins de uso local.
+		_local: {
+			get: function() {
+				let date = new Date(2000, this.month-1, this.day,	12, 0, 0, 0);
+				date.setFullYear(this.year);
+				return date;
+			}
+		},
+		integer}b _ends(b{integer}b m)}t d{Retorna o número de dias do mês.
+		/**L{d{v{x}v - Mês de referência.}d}L*/
+		_ends: {
+			value: function(m) {
+				if (m === undefined) m = this.month;
+				let ends = [31, this.leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+				return ends[m-1];
+			}
+		},
+		number}b year}t d{Retorna ou define o ano.
+		year: {
+			get: function()  {return this._value.getUTCFullYear();},
+			set: function(x) {
+				let data = __Type(x);
+				if (!data.finite) return;
+				let trigger = this._trigger();
+				/* manter o dia nas mundanças de mês e ano */
+				this._day = this._day > this.day ? this._day : this.day;
+				this._value.setUTCDate(1);
+				/* mudar o ano */
+				let num = __Number(data.value);
+				this._value.setUTCFullYear(num.int);
+				/* definir novo dia se maior que o limite do mês, ou reestabelecer o anterior */
+				if (this._day > this._ends()) {
+					this._value.setUTCDate(this._ends());
+				} else {
+					this._value.setUTCDate(this._day);
+				}
+				this._trigger(trigger);
+				if (data.decimal)
+					this.month = (data.negative ? 12 : 0) + 12*num.dec;
+			}
+		},
+		number}b month}t d{Retorna ou define o mês.
+		month: {
+			get: function()  {return this._value.getUTCMonth()+1;},
+			set: function(x) {
+				let data = __Type(x);
+				if (!data.finite) return;
+				let trigger = this._trigger();
+				/* manter o dia nas mundanças de mês e ano */
+				this._day = this._day > this.day ? this._day : this.day;
+				this._value.setUTCDate(1);
+				/* definir o mês */
+				let num = __Number(data.value);
+				this._value.setUTCMonth(num.int-1);
+				/* definir novo dia se maior que o limite do mês, ou reestabelecer o anterior */
+				if (this._day > this._ends()) {
+					this._value.setUTCDate(this._ends());
+				} else {
+					this._value.setUTCDate(this._day);
+				}
+				this._trigger(trigger);
+				if (data.decimal) {
+					let ref  = this._ends(this.month);
+					this.day = (data.negative ? ref : 0) + ref*num.dec;
+				}
+			}
+		},
+		number}b day}t d{Retorna ou define o dia.
+		day: {
+			get: function() {return this._value.getUTCDate();},
+			set: function(x) {
+				let data = __Type(x);
+				if (!data.finite) return;
+				let trigger = this._trigger();
+				/* definir o dia */
+				this._value.setUTCDate(Math.trunc(data.value));
+				this._day = this.day;
+				this._trigger(trigger);
+				if (data.decimal)
+					this.hour = (data.negative ? 24 : 0) + 24*num.dec;
+			}
+		},
+		number}b hour}t d{Define ou retorna a hora.
+		hour: {
+			get: function()  {return this._value.getUTCHours();},
+			set: function(x) {
+				let data = __Type(x);
+				if (!data.finite) return;
+				let trigger = this._trigger();
+				let num = __Number(data.value);
+				this._value.setUTCHours(num.int);
+				this._trigger(trigger);
+				if (data.decimal)
+					this.minute = (data.negative ? 60 : 0) + 60*num.dec;
+			}
+		},
+		number}b minute}t d{Define ou retorna os minutos.
+		minute: {
+			get: function()  {return this._value.getUTCMinutes();},
+			set: function(x) {
+				let data = __Type(x);
+				if (!data.finite) return;
+				let trigger = this._trigger();
+				let num = __Number(data.value);
+				this._value.setUTCMinutes(num.int);
+				this._trigger(trigger);
+				if (data.decimal)
+					this.second = (data.negative ? 60 : 0) + 60*num.dec;
+			}
+		},
+		number}b second}t d{Define ou retorna os segundos.
+		second: {
+			get: function()  {
+				return this._value.getUTCSeconds() + (this._value.getUTCMilliseconds()/1000);
+			},
+			set: function(x) {
+				let data = __Type(x);
+				if (!data.finite) return;
+				let trigger = this._trigger();
+				let num = __Number(data.value);
+				this._value.setUTCMilliseconds(data.negative ? 0 : 1000*num.dec);
+				this._value.setUTCSeconds(data.negative ? 0 : num.int);
+				this._trigger(trigger);
+			}
+		},
+		boolean}b leap}t d{Retorna se o ano é bissexto.
+		leap: {
+			get: function() {
+				let y = Math.abs(this.year);
+				return (y%400 === 0 || (y%4 === 0 && y%100 !== 0));
+			}
+		},
+		integer}b days}t d{Retorna a u{diferença}u, em dias, entre a data e o primeiro dia do ano.
+		days: {
+			get: function() {
+				let days = [0,31,59,90,120,151,181,212,243,273,304,334,365];
+				let leap = this.leap && this.month > 2 ? 1 : 0;
+				return days[this.month-1] + leap + this.day - 1;
+			}
+		},
+		integer}b dayYear}t d{Retorna o dia do ano.
+		dayYear: {
+			get: function() {return this.days+1;}
+		},
+		integer}b weekDay}t d{Retorna o dia da semana, sendo v{1}v domingo e v{7}v sábado.
+		weekDay: {
+			get: function() {
+				return this._value.getUTCDay()+1;
+			}
+		},
+		integer}b firstWeekDay}t d{Retorna que dia da semana que iniciou o ano.
+		firstWeekDay: {
+			get: function() {
+				let date = new Date();
+				date.setTime(this._value.getTime() - 24*3600*1000*this.days);
+				return date.getUTCDay()+1;
+			}
+		},
+		integer}b week}t d{Retorna a semana do ano v{1-54}v.
+		week: {
+			get: function() {
+				let fullWeek = (this.firstWeekDay - 1) + 7;
+				return Math.trunc((this.days + fullWeek)/7);
+			}
+		},
+		integer}b nonWorkingDays}t d{Retorna a quantidade de dias não úteis no ano até a véspera da data.
+		nonWorkingDays: {
+			get: function() {
+				let week = this.week;
+				let day1 = week - (this.firstWeekDay === 1 ? 0 : 1);
+				let day7 = week - (this.weekDay      === 7 ? 0 : 1);
+				return day1 + day7 - (!this.workingDay ? 1 : 0);
+			}
+		},
+		integer}b nonWorkingDays}t d{Retorna a quantidade de dias úteis no ano até a véspera da data.
+		workingDays: {
+			get: function() {
+				return this.days-this.nonWorkingDays;
+			}
+		},
+		boolean}b workingDay}t d{Informa se a data é um dia útil.
+		workingDay: {
+			get: function() {
+				return this.weekDay !== 7 && this.weekDay !== 1;
+			}
+		},
+		integer}b stdWeek}t d{Retorna a semana do ano no padrão do fomulário HTML i{input:week}i (ver a{https://developer.mozilla.org/en-US/docs/Web/HTML/Date_and_time_formats#week_strings}a).
+		stdWeek: {//FIXME que chatice esse negócio de data
+			get: function() {
+				if (this.firstWeekDay <= 5) return this.week;
+				if (this.week > 1) return this.week - 1;
+				let year = this.year-1;
+				let date = new Date(Date.UTC(2000, 0, 1, 12, 0, 0, 0));
+				date.setUTCFullYear(this.year-1);
+				let week = date.getUTCDay()+1;
+				let leap = true;
+				return (week === 5 || (week === 4 && this.leap)) ? 53 : 52;
+			}
+		},
+		string}b D}t d{Retorna o dia
+		D: {
+			get: function() {return String(this.day);}
+		},
+		string}b DD}t d{Retorna o dia com dois dígitos.
+		DD: {
+			get: function() {return ("0"+this.D).slice(-2);}
+		},
+		string}b DDD}t d{Retorna o nome abreviado do dia da semana do local.
+		DDD: {
+			get: function() {
+				return this._local.toLocaleDateString(undefined, {weekday: "short"});
+			}
+		},
+		string}b DDDD}t d{Retorna o nome do dia da semana do local.
+		DDDD: {
+			get: function() {
+				return this._local.toLocaleDateString(undefined, {weekday: "long"});
+			}
+		},
+		string}b M}t d{Retorna o mês.
+		M: {
+			get: function() {return String(this.month);}
+		},
+		string}b MM}t d{Retorna o mês com dois dígitos.
+		MM: {
+			get: function() {return ("0"+this.M).slice(-2);}
+		},
+		string}b MMM}t d{Retorna o nome abreviado do mês do local.
+		MMM: {
+			get: function() {
+				return this._local.toLocaleDateString(undefined, {month: "short"});
+			}
+		},
+		string}b MMMM}t d{Retorna o nome do mês do local.
+		MMMM: {
+			get: function() {
+				return this._local.toLocaleDateString(undefined, {month: "long"});
+			}
+		},
+		string}b Y}t d{Retorna o ano.
+		Y: {
+			get: function() {return String(this.year);}
+		},
+		string}b YY}t d{Retorna o ano com dois dígitos.
+		YY: {
+			get: function() {
+				return (this.year < 0 ? "-" : "")+("0"+String(Math.abs(this.year))).slice(-2);
+			}
+		},
+		string}b YYYY}t d{Retorna o ano com quatro dígitos.
+		YYYY: {
+			get: function() {
+				if (this.year >= 0 && this.Y.length >= 4) return this.Y;
+				if (this.year < 0  && this.Y.length >= 5) return this.Y;
+				return (this.year < 0 ? "-" : "")+("000"+String(Math.abs(this.year))).slice(-4);
+			}
+		},
+		string}b h}t d{Retorna a hora.
+		h: {
+			get: function() {return String(this.hour);}
+		},
+		string}b hh}t d{Retorna a hora com dois dígitos.
+		hh: {
+			get: function() {return ("0"+this.h).slice(-2);}
+		},
+		string}b m}t d{Retorna minuto.
+		m: {
+			get: function() {return String(this.minute)}
+		},
+		string}b mm}t d{Retorna o minuto com dois dígitos.
+		mm: {
+			get: function() {return ("0"+this.m).slice(-2);}
+		},
+		string}b s}t d{Retorna o segundo.
+		s: {
+			get: function() {return String(this.second);}
+		},
+		string}b ss}t d{Retorna o segundo com dois dígitos.
+		ss: {
+			get: function() {return (this.second < 10 ? "0" : "")+this.s;}
+		},
+
+		//FIXME
+		string}b WW}t d{Retorna o dia da semana com dois dígitos.
+		WW: {
+			get: function() {
+				return ("0"+String(this.week - (this.firstWeekDay <= 5 ? 0 : 1))).slice(-2);
+			}
+		},
+
+
+
+		integer}b valueOf()}td{Retorna os segundos desde v{0000-01-01T00:00:00}v.
+		valueOf: {
+			value: function() {return (this._value - this._zero)/1000;}
+		},
+		string}b toString()}t d{Retorna o momento no formato v{YYYY-MM-DDThh:mm:ss.sss}v.
+		toString: {
+			value: function() {return this.format("{YYYY}-{MM}-{DD}T{hh}:{mm}:{ss}");}
+		},
+		integer}b pastDays}td{Retorna os dias desde v{0000-01-01}v.
+		pastDays: {
+			get: function() {return Math.trunc(this.valueOf()/(24*3600));}
+		},
+		string}b format(b{string}b x)}t d{Recebe um texto preformatado substituindo seus parâmetros por valores.}dL{*/
+		/**d{v{x}v - Texto preformatado cujos parâmetros são informados entre chaves i{{parâmetro}}i:
+		/**d{O parâmetro corresponde ao nome de um atributo do objeto.}d}L*/
+		format: {
+			value: function(x) {
+				x = __Type(x).chars ? x: "{DDD}, {D} {MMMM} {YYYY}, {h}:{mm}:{ss}";
+				let obj  = this;
+				let data = x.match(/\{\w+\}/gi);
+				if (data === null) return x;
+				data.forEach(function(v,i,a){
+					let id = v.replace("{", "").replace("}", "");
+					if (id in obj && !__Type(obj[id]).function)
+						x = x.replace(v, obj[id]);
+				});
+				return x;
+			}
+		},
+		function}b onchange()}t d{Dispara uma função após ocorrer mudança nos parâmetros de data/tempo.
+		/**L{d{v{x}v - Define o função a ser disparada ou c{null}c para removê-la.}d}L*/
+		/**d{A função receberá um argumento em forma de objeto contendo os seguintes atributos:}d L{*/
+		string}b target}t d{valor alterado (v{year month day hour minute second}v).
+		number}b old}t d{valor antes da mudança.
+		number}b new}t d{valor após a mudança.}d}L*/
+		onchange: {
+			set: function(x) {
+				if (!__Type(x).function && x !== null) return;
+				this._change = x;
+			}
+		},
+
+	});
+
+	

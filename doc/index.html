@@ -13,74 +13,56 @@
 		<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
 		<link  href="../wd5.css" rel="stylesheet" />
 		<script src="../wd5.js"></script>
-		<style>
-			main {text-align: justify;}
-			pre {color: teal; border-radius: .3em; border: 1px solid; background-color: lightgrey; padding: 0.5em}
-			pre > b, code > b, dt > b {color: royalblue;}
-			p {text-indent: 2em;}
-			dl {margin-left: 2em !important;}
-			dt {font-family: "Courier New"; color: darkred;}
-			var {color: DarkSlateGrey;}
-			ul {margin-left: 2em;}
-		</style>
-
 		<script>
 const JS  = "../wd5.js";
 const CSS = "../wd5.css";
-const tag = {
-/*:bloco de conteúdo:*/
-	"1{": "<h1>",     "}1": "</h1>",  //Título 1
-	"2{": "<h2>",     "}2": "</h2>",  //Título 2
-	"3{": "<h3>",     "}3": "</h3>",  //Título 3
-	"4{": "<h4>",     "}4": "</h4>",  //Título 4
-	"5{": "<h5>",     "}5": "</h5>",  //Título 5
-	"6{": "<h6>",     "}6": "</h6>",  //Título 6
-	"p{": "<p>",      "}p": "</p>",   //Parágrafo
-	"c{": "<c>",      "}c": "</c>",   //Código
-	"i{": "<i>",      "}i": "</i>",   //Itálico
-	"b{": "<b>",      "}b": "</b>",   //Negrito
-	"s{": "<s>",      "}s": "</s>",   //Tachado
-	"u{": "<u>",      "}u": "</u>",   //Sublinhado
-	"v{": "<var>",    "}v": "</var>", //Variável
-	"l{": "<dl>",     "}l": "</dl>",  //Lista descritiva
-	"t{": "<dt>",     "}t": "</dt>",  //Item da lista descritiva
-	"d{": "<dd>",     "}d": "</dd>",  //Descrição do item da lista descritiva
-	"f{": "<pre>",    "}f": "</pre>", //Função
-	"L{": "<dd><dl>", "}L": "</dl></ud>",  //Lista secundária
-	"I{": "<li>",     "}I": "</li>",  //Item da lista
-	"a{": "(<a target=\"_blank\" href=\"", "}a": "\">link</a>)",
+const tag = [ /* ordem: do mais para o menos específico */
+	{re: /^([^#`<-].+)$/,           rp: "<p>$1</p>"},
+	{re: /^\#\#\#\#\#\#([^#].+)$/, rp: "<h6>$1</h6>"},
+	{re: /^\#\#\#\#\#([^#].+)$/,   rp: "<h5>$1</h5>"},
+	{re: /^\#\#\#\#([^#].+)$/,     rp: "<h4>$1</h4>"},
+	{re: /^\#\#\#([^#].+)$/,       rp: "<h3>$1</h3>"},
+	{re: /^\#\#([^#].+)$/,         rp: "<h2>$1</h2>"},
+	{re: /^\#([^#].+)$/,           rp: "<h1>$1</h1>"},
+	{re: /^\`([^`]+)\`$/,          rp: "<pre class=\"wd-code\">$1</pre>"},
+	{re: /^\-\ ([^:]+)\:\ (.+)/,   rp: "<dl><dt>$1</dt><dd>$2</dd></dl>"},
+	{re: /^\-\ (.+)/,              rp: "<dl><dd>$1</dd></dl>"},
+	{re: /\`([^`]+)\`/g,           rp: "<code>$1</code>"},
+	//{re: /\"([^"]+)\"/g,           rp: "<q>$1</q>"},
+	//{re: /\_\_([^_]+)\_\_/g,       rp: "<b>$1</b>"},
+	//{re: /\_([^_]+)\_/g,           rp: "<i>$1</i>"},
+	{re: /\[\]\(([^()]+)\)/g,      rp: "<a href=\"$1\" target=\"_blank\">$1</a>"},
+];
 
-
-};
-
-
-
-
+function trocas(x) {
+	x = x.replace(/\ +/g, " ");
+	let i = -1;
+	while (++i < tag.length)
+		while (tag[i].re.test(x))
+			x = x.replace(tag[i].re, tag[i].rp);
+	return x;
+}
 
 function manual(x) {
-	if (x === null || x === undefined)
-		return alert("Erro ao ler o arquivo!");
-	let busca  = /\/\*\*.+?\*\//g;
-	let blocos = x.match(busca);
-	//let html   = blocos.join(" ").replace(/\/\*\*/g, "").replace(/\*\*\//g, "");
-	//for (let i in tag) {
-		//let re  = new RegExp(i+"{(.+?)}"+i, "g");
-		//html = html.replace(re, "<"+tag[i]+">$1</"+tag[i]+">");
-		//html = html.replace(re, "<"+tag[i]+">$1</"+tag[i]+">");
-	//}
-	let html = [];
-	for (let i = 0; i < blocos.length; i++) {
-		for (let j in tag) {
-			let re1  = new RegExp(j, "g");
-			let re2  = /\/\*\*/g;
-			let re3  = /\*\//g;
-   blocos[i] = blocos[i].replace(re1, tag[j]);
-			blocos[i] = blocos[i].replace(re2, "");
-			blocos[i] = blocos[i].replace(re3, "");
+	if (x === null || x === undefined) throw new Error("Leitura do arquivo.");
+	let html   = [];
+	let linhas = x.split("\n");
+	let aberto = false;
+	linhas.forEach(function(v,i,a) {
+		if (v.trim() === "/**") {
+			aberto = true;
+			a[i] = "";
+		} else if (v.trim() === "**/") {
+			aberto = false;
+			a[i] = "";
+		} else if (!aberto) {
+			a[i] = "";
+		} else {
+			a[i] = trocas(v.trim());
 		}
-	}
-	//console.log(blocos.join(""));
-	document.querySelector("main").innerHTML = blocos.join("")
+	});
+
+	document.querySelector("main").innerHTML = linhas.join("")
 }
 
 function lerJS() {
@@ -104,7 +86,7 @@ wd(window).addHandler({
 
 	<body class="wd-padd">
 
-		<main></main>
+		<main class="wd-read"></main>
 
 	</body>
 

@@ -1224,7 +1224,7 @@ q {
 	list-style-type: lower-alpha;
 }
 .wd .wd-read > dl {
-	margin: 1em 0;
+	margin: 1em 0 1em 4em;
 }
 /* mídias */
 .wd .wd-read > audio,
