@@ -13,6 +13,7 @@
 		<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
 		<link  href="../wd5.css" rel="stylesheet" />
 		<script src="../wd5.js"></script>
+		<style>pre {color: royalblue;}</style>
 		<script>
 const JS  = "../wd5.js";
 const CSS = "../wd5.css";
@@ -24,14 +25,14 @@ const tag = [ /* ordem: do mais para o menos específico */
 	{re: /^\#\#\#([^#].+)$/,       rp: "<h3>$1</h3>"},
 	{re: /^\#\#([^#].+)$/,         rp: "<h2>$1</h2>"},
 	{re: /^\#([^#].+)$/,           rp: "<h1>$1</h1>"},
-	{re: /^\`([^`]+)\`$/,          rp: "<pre class=\"wd-code\">$1</pre>"},
+	{re: /^\`([^`]+)\`$/,          rp: "<pre class=\"wd-cofffde\">$1</pre>"},
 	{re: /^\-\ ([^:]+)\:\ (.+)/,   rp: "<dl><dt>$1</dt><dd>$2</dd></dl>"},
 	{re: /^\-\ (.+)/,              rp: "<dl><dd>$1</dd></dl>"},
 	{re: /\`([^`]+)\`/g,           rp: "<code>$1</code>"},
 	//{re: /\"([^"]+)\"/g,           rp: "<q>$1</q>"},
 	//{re: /\_\_([^_]+)\_\_/g,       rp: "<b>$1</b>"},
 	//{re: /\_([^_]+)\_/g,           rp: "<i>$1</i>"},
-	{re: /\[\]\(([^()]+)\)/g,      rp: "<a href=\"$1\" target=\"_blank\">$1</a>"},
+	{re: /\[([^\]]+)\]\(([^()]+)\)/g,      rp: "<a href=\"$2\" target=\"_blank\">$1</a>"},
 ];
 
 function trocas(x) {
@@ -84,7 +85,7 @@ wd(window).addHandler({
 		</script>
 	</head>
 
-	<body class="wd-padd">
+	<body class="wd-padd wd-bg-black">
 
 		<main class="wd-read"></main>
 

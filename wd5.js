@@ -38,19 +38,95 @@ const wd = (function() {
 	Registra a versão da biblioteca.
 	**/
 	const __VERSION = "WD JS v5.0.0";
+/*----------------------------------------------------------------------------*/
 
+	let __device_controller = null;//FIXME substituir isso por __DEVICECONTROLLER
+
+	function __device() { //FIXME substituir isso por __DEVICECONTROLLER
+		if (window.innerWidth >= 768) return "desktop";
+		if (window.innerWidth >= 600) return "tablet";
+		return "phone";
+	};
+/*----------------------------------------------------------------------------*/
 	/**
-	`let string __device_controller`
-	Identifica o tamanho da tela (desktop, tablet ou phone) ou `null`, se indefinido.
+	`const object __DEVICECONTROLLER`
+	Controla as alterações da tela atribuida a um tipo de dispositivo e executa ações quando houver mudança neste dispositivo idealizado.
+	O objeto possui os seguintes métodos e atributos:
 	**/
-	let __device_controller = null;
-
+	const __DEVICECONTROLLER = {
+		/**
+		- `boolean _start`: Informar se o controlador já foi iniciado.
+		**/
+		_start: false,
+		/**
+		- `function _change`: Registra a função disparadora a ser executada quando alterar o tipo de dispositivo.
+		**/
+		_change: null,
+		/**
+		- `string _device`: Registra o tipo do dispositivo a partir do tamanho da tela em vigor.
+		**/
+		_device: null,
+		/**
+		- `integer screen`: Retorna o tamanho da tela.
+		**/
+		get screen() {return window.innerWidth;},
+		/**
+		- `string device`: Retorna o identificador da tela: desktop (&ge; 768px), tablet (&ge; 600px) ou phone (&lt; 600px).
+		**/
+		get device() {
+			let screen = this.screen;
+			if (screen >= 768) return "desktop";
+			if (screen >= 600) return "tablet";
+			return "phone";
+		},
+		/**
+		- `boolean mobile`: Informa se o tamanho da tela diz respeito a um dispositivo que não seja o desktop.
+		**/
+		get mobile() {return this._device !== "desktop";},
+		/**
+		- `void onchange`: Define a função disparadora a ser chamada durante as alterações de dispositivos (tamanho da tela).
+		- Assim que definido o diparador, o evento resize será estabelecido e será feita uma chamada ao disparador.
+		**/
+		set onchange(x) {
+			if (typeof x === "function" || x === null) {
+				this._change = x;
+				this._device = null;
+				this._trigger();
+			}
+			if (!this._start) {
+				let object = this;
+				window.addEventListener("resize", function(x) {return object._trigger();});
+				this._start = true;
+			}
+		},
+		/**
+		- `void _trigger()`: Chama a função disparadora quando houver mudança de dispositivo que receberá como argumento um objeto com os seguintes atributos:
+		- `object target` - O objeto __DEVICECONTROLLER.
+		- `integer width` - O tamanho da tela em px.
+		- `string device` - O nome do dispositivo correspondente à tela.
+		- `boolean mobile` - Informa se o dispositivo possui tela inferior a do desktop.
+		**/
+		_trigger: function() {
+			let device = this.device;
+			if (this._device === device) return;
+			this._device = device;
+			if (this._change === null) return;
+			this._change({
+				target: this,
+				width: this.screen,
+				device: device,
+				mobile: this.mobile
+			});
+			return;
+		},
+	};
+/*----------------------------------------------------------------------------*/
 	/**
 	`const integer __KEYTIMERANGE`
 	Registra o intervalo, em milisegUndos, entre eventos de digitação (oninput, onkeyup...).
 	**/
 	const __KEYTIMERANGE = 500;
-
+/*----------------------------------------------------------------------------*/
 	/**
 	`const object __COUNTERCONTROL`
 	Registra a contagem de requisições a arquivos externos com os seguntes atributos:
@@ -61,7 +137,7 @@ const wd = (function() {
 		repeat: 0,
 		load:   0
 	};
-
+/*----------------------------------------------------------------------------*/
 	/**
 	`const object __MODALCONTROL`
 	Controla a janela modal com a seguinte estrutura de métodos e atributos:
@@ -147,6 +223,7 @@ const wd = (function() {
 			return;
 		}
 	};
+/*----------------------------------------------------------------------------*/
 	/**
 	`const object __SIGNALCONTROL`
 	Controla a caixa de mensagens por meio dos seguintes métodos e atributos:
@@ -245,7 +322,8 @@ const wd = (function() {
 
 			return;
 		}
-	}
+	};
+/*----------------------------------------------------------------------------*/
 	/**
 	`const array __JSCSS`
 	Guarda os estilos da biblioteca. Cada item da lista contém um objeto que definem os estilos, conforme atributos:
@@ -308,28 +386,14 @@ const wd = (function() {
 			"padding: 0.5em; border-radius: 0 0 0.2em 0.2em;"
 		]},
 	];
-/*----------------------------------------------------------------------------*/
-	/**
-	`string}b __device()`
-	Retorna o tipo de tela utilizada: v{"desktop" "tablet" "phone"}v.}p
-	**/
-	function __device() {
-		if (window.innerWidth >= 768) return "desktop";
-		if (window.innerWidth >= 600) return "tablet";
-		return "phone";
-	};
-
 /*===========================================================================*/
 	/**
 	###Checagem de Tipos e Valores
+	`object __Type(void  input)`
+	Construtor com o objetivo de identificar o tipo de dado para uso e funcionamento da biblioteca.
+	O argumento `input` é o dado a ser examinado.
+	O objeto possui os seguintes métodos e atributos:
 	**/
-
-	/**
-	`object __Type(b{
-	`void  input)`
-	Construtor que identifica o tipo do argumento e extrai seu valor para uso da biblioteca.}p
-	l{d{v{input}v - Dado a ser examinado.}d}l
-	*/
 	function __Type(input) {
 		if (!(this instanceof __Type)) return new __Type(input);
 		Object.defineProperties(this, {
@@ -340,14 +404,10 @@ const wd = (function() {
 		this._init();      /* definir atributos próprios */
 	}
 
-	/**
-	####Métodos e atributos
-	**/
 	Object.defineProperties(__Type.prototype, {
 		constructor: {value: __Type},
 		/**
-		`object _months O atributo registra o mês numérico e uma lista dos respectivos nomes.
-		d{Os nomes podem ser longos ou curtos,  elocais e na língua inglesa.
+		- `array _months`: Registra a lista com os nomes dos meses, longos e curtos, da língua inglesa e local para fins de determinação da data.
 		**/
 		_months: {
 			value: (function() {
@@ -371,9 +431,7 @@ const wd = (function() {
 			})()
 		},
 		/**
-		integer}b _getMonths(string x) Retorna o valor númerico (1-12) do mês ou zero se não encontrado.
-		/**
-		L{d{v{x}v - valor abreviado ou longo no local ou na língua inglesa do mês.}d}L
+		- `integer _getMonths(string x)`: Retorna o valor númerico (1-12) do mês e zero se não encontrado. O argumento `x` deverá corresponder ao nome do mês curto ou longo na língua inglesa ou local.
 		**/
 		_getMonths: {
 			value: function(x) {
@@ -384,28 +442,28 @@ const wd = (function() {
 			}
 		},
 		/**
-		`object _re Armazena as expressões regulares dos tipos em forma de string.
+		- `object _re`: Armazena as expressões regulares correspondentes aos tipos de dados que são descritos como string.
 		**/
 		_re: {
 			value: {
 				number:  /^(\+?\d+\!|[+-]?(\d+|(\d+)?\.\d+)(e[+-]?\d+)?\%?)$/i,
-				date:    /^\-?(\d{4}|[1-9]\d{3}\d+)\-(0[1-9]|1[0-2])\-(0[1-9]|[12]\d|3[01])$/,
-				dateDMY: /^(0[1-9]|[12]\d|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/,
-				dateMDY: /^(0[1-9]|1[0-2])\.(0[1-9]|[12]\d|3[01])\.\d{4}$/,
-				datedmy: /^(0?[1-9]|[12]\d|3[01])\ [^0-9]+\ \d{4}$/i,
-				datemdy: /^[^0-9]+\ (0?[1-9]|[12]\d|3[01])\ \d{4}$/i,
+				date:    /^([-+]?\d{3}\d+)\-(0[1-9]|1[0-2])\-(0[1-9]|[12]\d|3[01])$/,
+				dateDMY: /^(0[1-9]|[12]\d|3[01])\/(0[1-9]|1[0-2])\/([-+]?\d{3}\d+)$/,
+				dateMDY: /^(0[1-9]|1[0-2])\.(0[1-9]|[12]\d|3[01])\.([-+]?\d{3}\d+)$/,
+				datedmy: /^(0?[1-9]|[12]\d|3[01])\ ([^0-9]+)\ ([-+]?\d{3}\d+)$/i,
+				datemdy: /^([^0-9]+)\ (0?[1-9]|[12]\d|3[01])\ ([-+]?\d{3}\d+)$/i,
 				time:    /^([01]?\d|2[0-4])\:[0-5]\d(\:[0-5]\d(\.\d{1,3})?)?$/,
 				time12:  /^(0?[1-9]|1[0-2])\:[0-5]\d(\:[0-5]\d(\.\d{1,3})?)?\ ?[ap]m$/i,
-				month:   /^\d{4}\-(0[1-9]|1[0-2])$/,
-				monthMY: /^(0[1-9]|1[0-2])[/-]\d{4}$/,
-				monthmy: /^[^0-9]+[/ -]\d{4}$/i,
-				week:    /^\d{4}\-W(0[1-9]|[1-4]\d|5[0-4])?$/i,
-				weekWY:  /^(0[1-9]|[1-4]\d|5[0-4])\,\ \d{4}$/,
+				month:   /^([-+]?\d{3}\d+)\-(0[1-9]|1[0-2])$/,
+				monthMY: /^(0[1-9]|1[0-2])\/([-+]?\d{3}\d+)$/,
+				monthmy: /^[^0-9]+[/ ]([-+]?\d{3}\d+)$/i,
+				week:    /^([-+]?\d{3}\d+)\-W(0[1-9]|[1-4]\d|5[0-4])?$/i,
+				weekWY:  /^(0[1-9]|[1-4]\d|5[0-4])\,\ ([-+]?\d{3}\d+)$/,
 				email:   /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/,
 			}
 		},
 		/**
-		boolean}b chars Checa se o argumento é um conjunto de caracteres.
+		- `boolean chars`: Checa se o argumento é um conjunto de caracteres (string).
 		**/
 		chars: {
 			get: function() {
@@ -413,7 +471,7 @@ const wd = (function() {
 			}
 		},
 		/**
-		boolean}b empty Checa se o argumento é um conjunto de caracteres não visualizáveis.
+		- `boolean empty`: Checa se o argumento é um conjunto de caracteres não visualizáveis (string vazia).
 		**/
 		empty: {
 			get: function() {
@@ -421,7 +479,7 @@ const wd = (function() {
 			}
 		},
 		/**
-		boolean}b nonempty Checa se o argumento é um conjunto de caracteres visualizáveis.
+		- `boolean nonempty`: Checa se o argumento é um conjunto de caracteres visualizáveis (string não vazia).
 		**/
 		nonempty: {
 			get: function() {
@@ -429,7 +487,7 @@ const wd = (function() {
 			}
 		},
 		/**
-		boolean}b email Checa se o argumento é um e-mail ou um conjunto desse tipo.
+		- `boolean email`: Checa se o argumento é um e-mail ou uma lista desse tipo.
 		**/
 		email: {
 			get: function() {
@@ -442,7 +500,7 @@ const wd = (function() {
 			}
 		},
 		/**
-		boolean}b url Checa se o argumento é uma URL válida.
+		- `boolean url`: Checa se o argumento é uma URL válida.
 		**/
 		url: {
 			get: function() {
@@ -456,9 +514,8 @@ const wd = (function() {
 			}
 		},
 		/**
-		boolean}b month Checa se o argumento está no formato de mês. Formatos aceitos:
-		YYYY-MM}v (padrão)}d d{v{MM/YYYY}v}d d{v{MM-YYYY}v}d d{v{MMM-YYYY}v}d d{v{MMM YYYY}v}d d{v{MMM/YYYY}v
-		MMMM-YYYY}v}d d{v{MMMM YYYY}v}d d{v{MMMM/YYYY}v}d}L
+		- `boolean month`: Checa se o argumento está no formato de mês. Os seguintes formatos são permitidos (ver `date`):
+		- `YYYY-MM (padrão), MM/YYYY, MMM/YYYY, MMMM/YYYY, MMM YYYY e MMMM YYYY`.
 		**/
 		month: {
 			get: function() {
@@ -466,15 +523,15 @@ const wd = (function() {
 				let data = this._input.trim();
 				if (data.indexOf("  ") >= 0) return false;
 				if (this._re.month.test(data))   return true; /* YYYY-MM */
-				if (this._re.monthMY.test(data)) return true; /* MM/-YYYY */
-				if (this._re.monthmy.test(data)) /* MMMM- /YYYY */
+				if (this._re.monthMY.test(data)) return true; /* MM/YYYY */
+				if (this._re.monthmy.test(data)) /* MMMM[ /]YYYY */
 					return this._getMonths(data.split(/[/ -]/)[0]) !== 0;
 				return false;
 			}
 		},
 		/**
-		boolean}b week Checa se o argumento está no formato de semana. Formatos aceitos:.
-		L{d{v{YYYY-Www}v (padrão)}dd{v{ww, YYYY}v}d}L
+		- `boolean week`: Checa se o argumento está no formato de semana.
+		- São aceitos os formatos `YYYY-wWW (padrão) e "WW, YYYY"`, onde `WW` é a semana com dois dígitos (01-54).
 		**/
 		week: {
 			get: function() {
@@ -486,7 +543,7 @@ const wd = (function() {
 			}
 		},
 		/**
-		boolean}b string Checa se o argumento é uma string que não seja número, data ou tempo.
+		- `boolean string`: Checa se o argumento é uma string, exceto se número, data ou tempo.
 		**/
 		string: {
 			get: function() {
@@ -498,8 +555,7 @@ const wd = (function() {
 			}
 		},
 		/**
-		boolean}b number Checa se o argumento é um número real.}d
-		d{Aceita números em forma de string: real, fatorial ou percentual.
+		- `boolean number`: Checa se o argumento é um número real (número ou string) ou uma representação de fatorial ou percentual (string).
 		**/
 		number: {
 			get: function() {
@@ -539,7 +595,7 @@ const wd = (function() {
 			}
 		},
 		/**
-		boolean}b finite Checa se o argumento é um número finito.
+		- `boolean finite`: Checa se o argumento é um número finito.
 		**/
 		finite: {
 			get: function() {
@@ -547,7 +603,7 @@ const wd = (function() {
 			}
 		},
 		/**
-		boolean}b integer Checa se o argumento é um número inteiro.
+		- `boolean integer`: Checa se o argumento é um número inteiro.
 		**/
 		integer: {
 			get: function() {
@@ -555,7 +611,7 @@ const wd = (function() {
 			}
 		},
 		/**
-		boolean}b integer Checa se o argumento é um número decimal.
+		- `boolean decimal`: Checa se o argumento é um número decimal.
 		**/
 		decimal: {
 			get: function() {
@@ -563,7 +619,7 @@ const wd = (function() {
 			}
 		},
 		/**
-		boolean}b positive Checa se o argumento é um número positivo.
+		- `boolean positive`: Checa se o argumento é um número positivo.
 		**/
 		positive: {
 			get: function() {
@@ -571,7 +627,7 @@ const wd = (function() {
 			}
 		},
 		/**
-		boolean}b positive Checa se o argumento é um número negativo.
+		- `boolean negative`: Checa se o argumento é um número negativo.
 		**/
 		negative: {
 			get: function() {
@@ -579,7 +635,7 @@ const wd = (function() {
 			}
 		},
 		/**
-		boolean}b positive Checa se o argumento é zero.
+		- `boolean zero`: Checa se o argumento é zero.
 		**/
 		zero: {
 			get: function() {
@@ -587,7 +643,7 @@ const wd = (function() {
 			}
 		},
 		/**
-		boolean}b boolean Checa se o argumento é um valor booleano.
+		- `boolean boolean`: Checa se o argumento é um valor booleano.
 		**/
 		boolean: {
 			get: function() {
@@ -601,7 +657,7 @@ const wd = (function() {
 			}
 		},
 		/**
-		boolean}b regexp Checa se o argumento é uma expressão regular.
+		- `boolean regexp`: Checa se o argumento é uma expressão regular.
 		**/
 		regexp: {
 			get: function() {
@@ -615,10 +671,8 @@ const wd = (function() {
 			}
 		},
 		/**
-		boolean}b datetime}
-		d{Checa se o argumento é um conjunto data/tempo.
-		d{Enquadra-se o construtor c{Date}c e strings de data e tempo separados por espaço, virgula e espaço ou a letra T.
-		d{Anos negativos serão definidos como zeros.
+		- `boolean datetime`: Checa se o argumento é um conjunto data/tempo.
+		- Enquadram-se nessa condição o construtor nativo `Date` e strings de data e tempo, nos termos da biblioteca, separados por espaço, virgula e espaço ou a letra T (ver atributos `date` e `time`).
 		**/
 		datetime: {
 			get: function() {
@@ -661,10 +715,15 @@ const wd = (function() {
 			}
 		},
 		/**
-		boolean}b date}t
-		d{Checa se o argumento é uma data em string. Formatos aceitos:}dL{
-		d{v{YYYY-MM-DD}v (padrão)}d d{v{DD/MM/YYYY}v}d d{v{MM.DD.YYYY}v
-		d{v{D MMM YYYY}v}d d{v{MMM D YYYY}v}d d{v{D MMMM YYYY}v}d d{v{MMMM D	 YYYY}v}d}L
+		- `boolean date`: Checa se o argumento é uma data em formato de string. Os seguintes formatos são permitidos:
+		- `YYYY-MM-DD (padrão), DD/MM/YYYY, MM.DD.YYYY, "D MMM YYYY", "MMM D YYYY", "D MMMM YYYY" e "MMMM D YYYY"`, onde:
+		- `YYYY` - ano, negativo ou positivo, com no mínimo quatro dígitos;
+		- `MM` - mês com dois dígitos (zero à esquerda se menor que 10);
+		- `MMM` - nome abreviado do mês na língua inglesa ou local (ignorando a caixa), conforme fornecido pelo objeto nativo `Date`;
+		- `MMMM` - nome do mês na língua inglesa ou local (ignorando a caixa), conforme fornecido pelo objeto nativo `Date`;
+		- `D` - dia com um ou dois dígitos (zero à esquerda se menor que 10); e
+		- `DD` - dia com dois dígitos.
+		- Anos negativos apresentam um sinal de &minus; o precedendo.
 		**/
 		date: {
 			get: function() {
@@ -711,9 +770,11 @@ const wd = (function() {
 				let feb  = (y%400 === 0 || (y%4 === 0 && y%100 !== 0)) ?  29 : 28;
 				let days = [31, feb, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 				if (d > days[m-1]) return false;
+				let Y    = Math.abs(y);
+				let YYYY = (y < 0 ? "-" : "") + (Y < 1000 ? ("000"+String(Y)).slice(-4) : String(Y));
 				this._type  = "date";
 				this._value = [
-					data[ref.y],
+					YYYY,
 					("0"+data[ref.m]).slice(-2),
 					("0"+data[ref.d]).slice(-2)
 				].join("-");
@@ -721,7 +782,7 @@ const wd = (function() {
 			}
 		},
 		/**
-		boolean}b function Checa se o argumento é uma função.
+		- `boolean function`: Checa se o argumento é uma função.
 		**/
 		function: {
 			get: function() {
@@ -735,7 +796,7 @@ const wd = (function() {
 			}
 		},
 		/**
-		boolean}b array Checa se o argumento é um array.
+		- `boolean array`: Checa se o argumento é um array.
 		**/
 		array: {
 			get: function() {
@@ -749,7 +810,7 @@ const wd = (function() {
 			}
 		},
 		/**
-		boolean}b null Checa se o argumento é um valor nulo ou uma string vazia.
+		- `boolean null`: Checa se o argumento é um valor nulo (`null`).
 		**/
 		null: {
 			get: function () {
@@ -763,7 +824,7 @@ const wd = (function() {
 			}
 		},
 		/**
-		boolean}b undefined Checa se o argumento é um valor indefinido.
+		- `boolean undefined`: Checa se o argumento é um valor indefinido (`undefined`).
 		**/
 		undefined: {
 			get: function() {
@@ -777,9 +838,14 @@ const wd = (function() {
 			}
 		},
 		/**
-		boolean}b time}t
-		d{Checa se o argumento é uma string que representa tempo. Formatos aceitos:
-		L{d{v{h24:mm:ss.sss}v (padrão)}d d{v{h12:mm:ss.sss AMPM}v}d}L
+		- `boolean time`: Checa se o argumento é uma string que representa uma unidade de tempo, sendo permitidos os formatos `h:mm:ss.sss` (padrão) e `h12:mm:ss.sss AMPM`, onde:
+		- `h` - hora com um ou dois dígitos (zero à esquerda se menor que 10);
+		- `hh` - hora com dois dígitos (zero à esquerda se menor que 10);
+		- `h12` - hora no formato de 12h, um ou dois dígitos (zero à esquerda se menor que 10);
+		- `mm` - minuto com dois dígitos;
+		- `ss` - segundos com dois dígitos;
+		- `.sss` - parte decimal dos segundos com até três dígitos; e
+		- `AMPM` - ante meridiem (`am`) ou post meridiem (`pm`), ignorando a caixa e precedido ou não de um espaço.
 		**/
 		time: {
 			get: function() {
@@ -817,7 +883,7 @@ const wd = (function() {
 			}
 		},
 		/**
-		boolean}b node Checa se o argumento é um elemento HTML ou uma coleção desses.
+		- `boolean node`: Checa se o argumento é um elemento HTML ou uma coleção desses (lista).
 		**/
 		node: {
 			get: function() {
@@ -855,7 +921,7 @@ const wd = (function() {
 			}
 		},
 		/**
-		boolean}b object Checa se o argumento é um objeto diferente das demais categorias.}d
+		- `boolean object`: Checa se o argumento é um objeto que não se enquadra nas demais categorias.
 		**/
 		object: {
 			get: function() {
@@ -870,7 +936,7 @@ const wd = (function() {
 			}
 		},
 		/**
-		`void  _init() Analisa o argumento e define os parâmetros iniciais do objeto.}d
+		- `void _init()`: Analisa o dado e define os parâmetros para execução dos demais atributos.
 		**/
 		_init: {
 			value: function() {
@@ -892,22 +958,20 @@ const wd = (function() {
 			}
 		},
 		/**
-		`void  value Retorna o valor do argumento para fins da biblioteca.}d
-		Tipos de referência retornam valores de referência.
-		Tipos de primitivos retornam valores primitivos.
+		- `void  value`: Retorna o valor do argumento para fins da biblioteca.
+		- Tipos de referência retornam valores de referência, tipos primitivos retornam valores primitivos e os tipos data e tempo retornam string nos formatos `YYYY-MM-DD` e `hh:mm:ss.sss`, respectivamente.
 		**/
 		value: {
 			get: function() {return this._value;}
 		},
 		/**
-		string}b type Retorna o tipo do argumento para uso da biblioteca.}d
+		- `string type`: Retorna o o nome do tipo do argumento para uso da biblioteca (conforme atributos).
 		**/
 		type: {
 			get: function() {return this._type;}
 		},
 		/**
-		`void  valueOf() Retorna o método i{valueOf}i do retorno do atributo i{value}i.
-		{Para c{null}c e c{undefined}c retorna seus respectivos valores.
+		- `void  valueOf()`: Retorna o método `valueOf` do retorno do atributo `value` e, se `null` ou `undefined`, seus respectivos valores.
 		**/
 		valueOf: {
 			value: function() {
@@ -915,8 +979,7 @@ const wd = (function() {
 			}
 		},
 		/**
-		string}b toString() Retorna o método i{toString()}i do retorno do atributo i{value}i.
-		d{Para c{null}c retorna uma string vazia e para c{undefined}c um ponto de interrogação.
+		- `string toString()`: Retorna o método `toString` do retorno do atributo `value`. Se `null` retorna uma string vazia e se `undefined` um ponto de interrogação.
 		**/
 		toString: {
 			value: function() {
@@ -927,26 +990,17 @@ const wd = (function() {
 		}
 
 	});
-
-
-
-
-
-
-
-
-
+/*============================================================================*/
 //FIXME apagar essas porcarias no fim
 function __strCamel(x) {return __String(x).camel;}
 function __strClear(x) {return __String(x).clear;}
-
-
-/*===========================================================================*/
+/*============================================================================*/
 	/**
 	###Números
-	`object __Number(b{number}b input)`
-	Construtor para manipulação de números. Valor padrão é zero..}p
-	l{d{v{input}v - Número.}d}l
+	`object __Number(number input=0)`
+	Construtor para manipulação de números.
+	O argumento `input` se refere ao número de entrada do construtor e, caso não seja um número, receberá o valor zero.
+	Possui os seguintes métodos e atributos:
 	**/
 	function __Number(input) {
 		if (!(this instanceof __Number)) return new __Number(input);
@@ -956,11 +1010,11 @@ function __strClear(x) {return __String(x).clear;}
 			_finite: {value: !check.number ? true : check.finite}
 		});
 	}
-	/**6{Métodos e atributos}6 l{*/
+
 	Object.defineProperties(__Number.prototype, {
 		constructor: {value: __Number},
 		/**
-		boolean}b finite Retorna verdadeiro se for um número finito.
+		- `boolean finite`: Checa se o número é finito.
 		**/
 		finite: {
 			get: function() {return this._finite;}
@@ -975,13 +1029,13 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		number}b abs Retorna o valor absoluto do número.
+		- `number abs`: Retorna o valor absoluto do número.
 		**/
 		abs: {
 			get: function() {return (this < 0 ? -1 : +1) * this.valueOf();}
 		},
 		/**
-		integer}b int Retorna a parte inteira do número.
+		- `integer int`: Retorna a parte inteira do número.
 		**/
 		int: {
 			get: function() {
@@ -989,7 +1043,7 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		float}b dec Retorna a parte decimal do número.
+		- `float dec`: Retorna a parte decimal do número.
 		**/
 		dec: {
 			get: function() {
@@ -1000,8 +1054,8 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		number}b round(n) Arredonda o número conforme especificado.
-		L{d{v{n}v - (opcional) Quantidade de casas decimais (padrão v{3}v).}d}L
+		- `number round(integer n=3)`: Arredonda o número conforme especificado.
+		- O argumento opcional `n` define a quantidade de casas decimais cujo padrão é três.
 		**/
 		round: {
 			value: function(n) {
@@ -1012,8 +1066,8 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		number}b cut(n) Corta o número de casas decimais conforme especificado (não arredonda).
-		{d{v{n}v - (opcional) Quantidade de casas decimais (padrão v{3}v).}d
+		- `number cut(integer n=3)`: Corta o número de casas decimais conforme especificado sem arrendondar.
+		- O argumento opcional `n` define a quantidade de casas decimais cujo padrão é três.
 		**/
 		cut: {
 			value: function(n) {
@@ -1028,7 +1082,7 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		array}b primes Retorna uma lista com os números primos até o valor informado.
+		- `array primes`: Retorna uma lista com os números primos até o valor do objeto.
 		**/
 		primes: {
 			get: function() {
@@ -1052,7 +1106,7 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		boolean}b prime Retorna verdadeiro se o número for primo.
+		- `boolean prime`: Checa se número é primo.
 		**/
 		prime: {
 			get: function() {
@@ -1061,8 +1115,8 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		string}b frac(n) Retorna a notação em forma de fração.
-		L{d{v{n}v - (opcional) Limitador de precisão (padrão v{3}v).}d}L
+		- `string frac(integer n=3)`: Retorna a notação numérica em forma de fração.
+		- O argumento opcional `n` define o limitador de precisão cujo padrão é três (valores maiores exigem mais processamento).
 		**/
 		frac: {
 			value: function(n) {
@@ -1099,7 +1153,7 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		string}b bytes Retorna a notação em bytes.
+		- `string bytes`: Retorna a notação em bytes (de B a YB).
 		**/
 		bytes: {
 			get: function() {
@@ -1114,7 +1168,7 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		string}b type Retorna o tipo do número v{zero, infinity, integer, real}v.
+		- `string type`: Retorna o tipo do número (zero, infinity, integer, real).
 		**/
 		type: {
 			get: function() {
@@ -1125,8 +1179,8 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		string}b precision(n) Fixa a quantidade de dígitos significativos.
-		L{d{v{n}v - (opcional) Quantidade dígitos (padrão v{3}v).}d}L
+		- `string precision(integer n=3)`: Fixa a quantidade de dígitos significativos.
+		- O argumento opcional `n`define a quantidade dígitos cujo padrão é três.
 		**/
 		precision: {
 			value: function(n) {
@@ -1139,33 +1193,32 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		string}b notation(string type, string code, string lang)}t
-		d{Formata em determinada notação a{https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/NumberFormat}a.
-		d{v{type}v - Tipo da formatação:}d L{
-		d{v{"significant"}v - fixa número de dígitos significativos.
-		d{v{"decimal"}v - fixa número de casas decimais.
-		d{v{"integer"}v - fixa número de dígitos inteiros.
-		d{v{"percent"}v - transforma o número em notação percentual.
-		d{v{"unit"}v - define a unidade de medida.
-		d{v{"scientific"}v - notação científica.
-		d{v{"engineering"}v - notação de engenharia.
-		d{v{"compact"}v - notação compacta curta ou longa.
-		d{v{"currency"}v - Notação monetária.
-		d{v{"ccy"}v - Notação monetária curta.
-		d{v{"nameccy"}v - Notação monetária textual.
-		d{v{code}v - depende do tipo da formatação:}d L{
-		d{v{"significant"}v - quantidade de números significativos.
-		d{v{"decimal"}v - número de casas decimais.
-		d{v{"integer"}v - número de dígitos inteiros.
-		d{v{"percent"}v - número de casas decimais.
-		d{v{"unit"}v - nome da unidade de medida a{https://tc39.es/proposal-unified-intl-numberformat/section6/locales-currencies-tz_proposed_out.html#sec-issanctionedsimpleunitidentifier}a.
-		d{v{"scientific"}v - número de casas decimais.
-		d{v{"engineering"}v - número de casas decimais.
-		d{v{"compact"}v - Longa (v{"long"}v) ou curta (v{"short"}v).
-		d{v{"currency"}v - Código monetário a{https://www.six-group.com/en/products-services/financial-information/data-standards.html#scrollTo=currency-codes}a.
-		d{v{"ccy"}v - Código monetário.
-		d{v{"nameccy"}v - Código monetário.
-		d{v{lang}v - (Opcional) Código da linguagem a ser aplicada.
+		- `string notation(string type, void code, string lang)`: Formata o número em determinada notação ([referência](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/NumberFormat)).
+		- O argumento `type` define o tipo da formatação:
+		- "significant" - fixa o número de dígitos significativos;
+		- "decimal" - fixa o número de casas decimais;
+		- "integer" - fixa o número de dígitos inteiros;
+		- "percent" - exibe em notação percentual;
+		- "unit" - exibe o número com unidade de medida;
+		- "scientific" - exibe em notação científica;
+		- "engineering" - exibe em notação de engenharia;
+		- "compact" - exibe em notação compacta na forma abreviada ou longa;
+		- "currency" - exibe em notação monetária;
+		- "ccy" - exibe em notação monetária curta; e
+		- "nameccy" - exibe em notação monetária textual.
+		- O argumento `code` depende do tipo da formatação em `type`:
+		- "significant" - quantidade de números significativos;
+		- "decimal" - número de casas decimais;
+		- "integer" - número de dígitos inteiros;
+		- "percent" - número de casas decimais;
+		- "unit" - nome da unidade de medida ([referência](https://tc39.es/proposal-unified-intl-numberformat/section6/locales-currencies-tz_proposed_out.html#sec-issanctionedsimpleunitidentifier));
+		- "scientific" - número de casas decimais;
+		- "engineering" - número de casas decimais;
+		- "compact" - Longa ("long") ou abreviada ("short");
+		- "currency" - Código monetário ([referência](https://www.six-group.com/en/products-services/financial-information/data-standards.html#scrollTo=currency-codes));
+		- "ccy" - Código monetário; e
+		- "nameccy" - Código monetário.
+		- O argumento opcional `lang` define o código da linguagem a ser aplicada.
 		**/
 		notation: {
 			value: function (type, code, lang) {
@@ -1233,22 +1286,23 @@ function __strClear(x) {return __String(x).clear;}
 				type = String(type).toLowerCase();
 				try {
 					return this.valueOf().toLocaleString(lang, (type in types ? types[type] : {}));
+				} catch(e) {}
+				try {
+					return this.valueOf().toLocaleString(undefined, (type in types ? types[type] : {}));
 				} catch(e) {
 					return this.valueOf().toLocaleString();
 				}
+				return this.toString()
 			}
 		},
 	});
-
 /*===========================================================================*/
 	/**
 	###Textos
-	**/
-
-	/**
 	`object __String(string input)`
 	Construtor para manipulação de textos.
-	l{d{v{input}v - Texto.}d}l
+	O argumento `input`define o texto a ser absorvido pelo construtor.
+	O objeto possui os seguintes métodos e atributos:
 	**/
 	function __String(input) {
 		if (!(this instanceof __String)) return new __String(input);
@@ -1257,9 +1311,7 @@ function __strClear(x) {return __String(x).clear;}
 			_value: {value: input}
 		});
 	}
-	/**
-	6{Métodos e atributos}6
-	**/
+
 	Object.defineProperties(__String.prototype, {
 		constructor: {value: __String},
 		valueOf: {
@@ -1269,25 +1321,25 @@ function __strClear(x) {return __String(x).clear;}
 			value: function() {return this.clear(true, false);}
 		},
 		/**
-		string}b length Retorna a quantidade de caracteres.
+		- `string length`: Retorna a quantidade de caracteres.
 		**/
 		length: {
 			get: function() {return this.valueOf().length;}
 		},
 		/**
-		string}b upper Retorna caixa alta.
+		- `string upper`: Retorna caixa alta.
 		**/
 		upper: {
 			get: function() {return this.valueOf().toUpperCase();}
 		},
 		/**
-		string}b lower Retorna caixa baixa.
+		- `string lower`: Retorna caixa baixa.
 		**/
 		lower: {
 			get: function() {return this.valueOf().toLowerCase();}
 		},
 		/**
-		string}b toggle Inverte a caixa.
+		- `string toggle`: Inverte a caixa.
 		**/
 		toggle: {
 			get: function() {
@@ -1299,7 +1351,7 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		string}b captalize Primeira letra de cada palavra, apenas, em caixa alta.
+		- `string captalize`: Primeira letra de cada palavra, apenas, em caixa alta.
 		**/
 		capitalize: {
 			get: function() {
@@ -1311,9 +1363,8 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		string}b clear(b{boolean}b white, b{boolean}b accent) Limpa espaços desnecessários ou acentos.}d L{
-		d{v{white}v - (opcional) Limpa espaços (padrão c{true}c).
-		v{accent}v - (opcional) Limpa acentos (padrão c{true}c).}d}L
+		- `string clear(boolean white=true, boolean accent=true)`: Limpa espaços desnecessários ou acentos.
+		- O argumento `white` define se limpará espeços extras enquanto que o argumento `accent` define a remoção dos acentos. Ambos são opcionais e tem como valor padrão verdadeiro.
 		**/
 		clear: {
 			value: function(white, accent) {
@@ -1326,7 +1377,7 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		string}b dash Retorna uma string identificadora no formato de u{traços}u.
+		- `string dash`: Retorna uma string identificadora no formato de traços.
 		**/
 		dash: {
 			get: function() {
@@ -1343,7 +1394,7 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		string}b camel Retorna uma string identificadora no formato de u{camelCase}u.
+		- `string camel`: Retorna uma string identificadora no formato de camelCase.
 		**/
 		camel: {
 			get: function() {
@@ -1355,12 +1406,14 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		`void  wdNotation Retorna o valor ou um objeto a partir de uma regra de notação.
-		c{"value" &rarr; value | "x{X}y{Y}" &rarr; [{x: X, y: Y}] | "x{X}&amp;y{Y}" &rarr; [{x: X}, {y: Y}]}c
+		- `void  wdNotation`: Retorna o valor ou um objeto a partir de uma regra de notação utilizada pela biblioteca:
+		- "valor" retorna `valor`;
+		- "x{X}y{Y}" retorna `[{x&colon; X, y&colon; Y}]`; e
+		- "x{X}&amp;y{Y}" retorna `[{x&colon; X}, {y&colon; Y}]`.
 		**/
 		wdNotation: {
 			get: function() {
-		/* a{B}c{D}&e{F} => [{a: B, c: D}, {e: F}] */
+			/* a{B}c{D}&e{F} => [{a: B, c: D}, {e: F}] IMPORTANTE: regexp não resolve */
 				let list   = [{}];
 				let data   = this._value.trim();
 				let char   = data.split("");
@@ -1399,8 +1452,7 @@ function __strClear(x) {return __String(x).clear;}
 				});
 				if (object) return list;
 				let check = __Type(data);
-				return check.number ? check.value : (data in types ? types[data] : data);
-			}
+				return check.number ? check.value : (data in types ? types[data] : data);*/			}
 		},
 	});
 
@@ -1409,9 +1461,8 @@ function __strClear(x) {return __String(x).clear;}
 	###Data e Tempo
 	`object __DateTime(string input)`
 	Construtor para manipulação de data/tempo.
-	O atributo `input` aceita valores do tipo data, tempo ou ambos. Se não informado, assumira o valor de data e tempo atuais.
-	O mês alterado será aquele definido, ou seja, 2001-01-31 não será alterado para 2000-03-02 ao se alterar o mês para 2.
-	O dia também será mantido nas alterações de meses: 2000-01-31 | 2000-02-29 | 2000-03-31 | 2000-04-30 | 2000-05-31.
+	O atributo `input` aceita valores do tipo data, tempo ou ambos de acordo com as regras da biblioteca. Se um dado diferente for informado, assumira o valor de data e tempo atuais.
+	O objeto possui os seguintes métodos e atributos:
 	**/
 	function __DateTime(input) {
 		if (!(this instanceof __DateTime)) return new __DateTime(input);
@@ -1443,16 +1494,13 @@ function __strClear(x) {return __String(x).clear;}
 			_change: {value: function(x){console.log(x);}}, //FIXME apagar isso
 		});
 	}
-	/**
-	####Métodos e Atributos
-	**/
+
+
 	Object.defineProperties(__DateTime.prototype, {
 		constructor: {value: __DateTime},
 		/**
-		`void trigger(string field, number value)`
-		Método interno que aciona o disparador nas mudanças dos parâmetros de data e tempo.
-		O atributo `field` identifica o parâmetro que solicitou a demanda.
-		O disparador receberá um objeto com as chaves "target" (o objeto __DateTime), "field" (nome do parâmetro), "old" (valor a ser comparado) e "new" (valor atual).
+		- `void _trigger(string field)`: Método que aciona o disparador nas mudanças dos parâmetros de data e tempo. O atributo `field` identifica o parâmetro que solicitou a demanda.
+		- O disparador receberá um objeto com as chaves `target` (o objeto `__DateTime`), `field` (nome do parâmetro alterado), `old` (valor a ser comparado) e `new` (valor atual).
 		**/
 		_trigger: {
 			value: function (field) {
@@ -1474,9 +1522,11 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		`object _names`
-		Atributo interno que registra a lista com os nomes curtos e  longos de meses e dias da semana localmente, se possível.
-		A chave MMM registra a lista de meses curtos, MMMM de meses longos, DDD de dias curtos e DDDD de dias longos
+		- `object _names`: Atributo que registra a lista com os nomes curtos e  longos de meses e dias da semana localmente, se implantado pelo objeto nativo `Date`. O objeto possui os seguintes atributos:
+		- `MMM` - lista de meses curtos (`[janeiro, ..., dezembro]`);
+		- `MMMM` - lista de meses longos (`[janeiro, ..., dezembro]`);
+		- `DDD` - lista de dias curtos (`[domingo, ..., sábado]`); e
+		- `DDDD` - lista de dias longos (`[domingo, ..., sábado]`).
 		**/
 		_names: {
 			value: (function() {
@@ -1497,8 +1547,7 @@ function __strClear(x) {return __String(x).clear;}
 			}())
 		},
 		/**
-		`boolean _leap(integer y)`
-		Método interno que retorna se o ano é bissexto. O atributo opcional `y` corresponde ao ano e, se indefinido, assumirá o ano da data.
+		- `boolean _leap(integer y)`: Método que retorna se o ano é bissexto. O atributo opcional `y` corresponde ao ano e, se indefinido, assumirá o ano da data.
 		**/
 		_leap: {
 			value: function(y) {
@@ -1507,10 +1556,8 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		`integer _maxDay(integer m, integer y)`
-		Método interno que retorna a quantidade de dias do mês.
-		O atributo opcional `m` corresponde ao mês e, se indefinido, assumirá o mês da data.
-		O atributo opcional `y` corresponde ao ano e, se indefinido, assumirá o ano da data.
+		- `integer _maxDay(integer m, integer y)`: Método que retorna a quantidade de dias do mês.
+		- O atributo opcional `m` corresponde ao mês e o atributo `y` ano. Ambos são opcionais e se não forem informados assumirão o mês o e ano da data, respectivamente.
 		**/
 		_maxDay: {
 			value: function(m, y) {
@@ -1522,8 +1569,7 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		`integer year`
-		Define ou retorna o ano.
+		- `integer year`: Define ou retorna o ano.
 		**/
 		year: {
 			get: function() {return this._Y;},
@@ -1541,8 +1587,8 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		`integer month`
-		Define ou retorna o mês de 1 a 12 (janeiro a dezembro).
+		- `integer month`: Define ou retorna o mês de 1 a 12 (janeiro a dezembro). O parâmetro será alterado para o valor definido, exceto quando extrapolar os limites.
+		- A data 2000-01-31 não será alterada para 2000-03-02 ao se alterar o mês para fevereiro.
 		**/
 		month: {
 			get: function() {return this._M;},
@@ -1564,8 +1610,8 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		`integer day`
-		Define ou retorna o dia de 1 a 31.
+		- `integer day`: Define ou retorna o dia de 1 a 31. O parâmetro será alterado para o valor definido, exceto quando extrapolar os limites.
+		- Quando o dia de um mês for maior que a quantidade de dias do mês alterado, o valor ficará limitado ao último dia. Ao acrescentar unidades de mês à data 2000-01-31, o resultado será 2000-02-29, 2000-03-31, 2000-04-30, 2000-05-31...
 		**/
 		day: {
 			get: function() {return this._D > this._maxDay() ? this._maxDay() : this._D;},
@@ -1592,8 +1638,7 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		`integer hour`
-		Define ou retorna a hora (0 a 23).
+		- `integer hour`: Define ou retorna a hora (0 a 23). O parâmetro será alterado para o valor definido, exceto quando extrapolar os limites.
 		**/
 		hour: {
 			get: function() {return this._h;},
@@ -1615,8 +1660,7 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		`integer minute`
-		Define ou retorna o minuto de 0 a 59.
+		- `integer minute`: Define ou retorna o minuto de 0 a 59. O parâmetro será alterado para o valor definido, exceto quando extrapolar os limites.
 		**/
 		minute: {
 			get: function() {return this._m;},
@@ -1638,8 +1682,7 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		`number minute`
-		Define ou retorna o segundo de 0 a 59.999.
+		- `number second`: Define ou retorna o segundo de 0 a 59.999. O parâmetro será alterado para o valor definido, exceto quando extrapolar o limites.
 		**/
 		second: {
 			get: function() {return this._s;},
@@ -1657,13 +1700,11 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		`boolean leap`
-		Informa se o ano é bissexto.
+		- `boolean leap`: Informa se o ano é bissexto.
 		**/
 		leap: {get: function() {return this._leap();}},
 		/**
-		`integer dayYear`
-		Informa o dia do ano (1-366).
+		- `integer dayYear`: Informa o dia do ano (1-366).
 		**/
 		dayYear: {
 			get: function() {
@@ -1725,9 +1766,7 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		`function onchange`
-		Define um disparador para ser chamado quando houver mudanças nos parâmetros de data e tempo.
-		Para remover o disparador, deve-se definir o valor como `null`.
+		- `function onchange`: 	Define um disparador para ser chamado quando houver mudanças nos parâmetros de data e tempo. Para removê-lo, deve-se definir com o valor `null`.
 		**/
 		onchange: {
 			set: function(x) {
@@ -1736,8 +1775,7 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		`number timeOf()`
-		Retorna o tempo em segundos.
+		- `number timeOf()`: Retorna o tempo em segundos.
 		**/
 		timeOf: {
 			value: function() {
@@ -1745,8 +1783,7 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		`string toTimeString()`
-		Retorna o tempo no formato hh:mm:ss.sss.
+		- `string toTimeString()`: Retorna o tempo no formato `hh:mm:ss.sss`.
 		**/
 		toTimeString: {
 			value: function() {
@@ -1754,8 +1791,7 @@ function __strClear(x) {return __String(x).clear;}
       }
 		},
 		/**
-		`number dateOf()`
-		Retorna os dias desde 0000-01-01 (dia 1).
+		- `number dateOf()`: Retorna os dias desde 0000-01-01 (dia 1).
 		**/
 		dateOf: {
 			value: function() {
@@ -1765,14 +1801,13 @@ function __strClear(x) {return __String(x).clear;}
 				let y400 = Math.trunc(year/400);
 				let y004 = Math.trunc(year/4);
 				let y100 = Math.trunc(year/100);
-				let days = y365 + y400 + y004 - y100;
+				let days = y365 + y400 + y004 - y100;//FIXME
 				if (this.year > 0) return 366 + days + this.dayYear;
 				return -(days + (this.leap ? 366 : 365) - this.dayYear);
 			}
 		},
 		/**
-		`string toDateString()`
-		Retorna a data no formato YYYY-MM-DD.
+		- `string toDateString()`: Retorna a data no formato `YYYY-MM-DD`.
 		**/
 		toDateString: {
 			value: function() {
@@ -1780,8 +1815,7 @@ function __strClear(x) {return __String(x).clear;}
       }
 		},
 		/**
-		`string toString()`
-		Retorna a data e o tempo no formato YYYY-MM-DDThh:mm:ss.sss.
+		- `string toString()`: Retorna a data e o tempo no formato `YYYY-MM-DDThh:mm:ss.sss`.
 		**/
 		toString: {
 			value: function() {
@@ -1838,7 +1872,7 @@ function __strClear(x) {return __String(x).clear;}
 			get: function() {return this._value.length;}
 		},
 		/**
-		array}b only(string type, b{boolean}b keep, b{boolean}b change)}t
+		array}b only(string type, b{- `boolean keep, b{- `boolean change)}t
 		{Retorna uma lista somente com os tipos de itens definidos.}d L{
 		d{v{type}v - Tipo do item a ser mantido conforme ver atributos do objeto i{__Type}i.
 		{v{keep}v - (opcional) Se verdadeiro, o item não casado será mantido com o valor c{null}c.
@@ -1860,7 +1894,7 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		array}b convert(b{function}b f, b{boolean}b finite)}t
+		array}b convert(b{function}b f, b{- `boolean finite)}t
 		Retorna uma lista com o resultado de v{f(x)}v ou c{null}c se falhar.}d L{
 		v{f}v - Função a ser aplicada nos valores da lista.
 		v{type}v - (opcional) Tipo dos itens na lista (ver atributos de i{__Type}i.}d}L
@@ -1883,7 +1917,7 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		number}b min Retorna o menor finito ou c{null}c em caso de vazio.
+		`number min Retorna o menor finito ou c{null}c em caso de vazio.
 		**/
 		min: {
 			get: function() {
@@ -1892,7 +1926,7 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		number}b max Retorna o maior finito ou c{null}c em caso de vazio.
+		`number max Retorna o maior finito ou c{null}c em caso de vazio.
 		**/
 		max: {
 			get: function() {
@@ -1901,7 +1935,7 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		number}b sum Retorna a soma dos finitos ou c{null}c em caso de vazio.
+		`number sum Retorna a soma dos finitos ou c{null}c em caso de vazio.
 		**/
 		sum: {
 			get: function() {
@@ -1913,7 +1947,7 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		number}b avg Retorna a média dos finitos ou c{null}c em caso de vazio.
+		`number avg Retorna a média dos finitos ou c{null}c em caso de vazio.
 		**/
 		avg: {
 			get: function() {
@@ -1922,7 +1956,7 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		number}b med Retorna a mediana dos finitos ou c{null}c em caso de vazio.
+		`number med Retorna a mediana dos finitos ou c{null}c em caso de vazio.
 		**/
 		med: {
 			get: function() {
@@ -1934,7 +1968,7 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		number}b harm Retorna a média harmônica dos finitos diferentes de zero ou c{null}c em caso de vazio.
+		`number harm Retorna a média harmônica dos finitos diferentes de zero ou c{null}c em caso de vazio.
 		**/
 		harm: {
 			get: function() {
@@ -1945,7 +1979,7 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		number}b geo Retorna a média geométrica dos absolutos finitos diferentes de zero ou c{null}c em caso de vazio.
+		`number geo Retorna a média geométrica dos absolutos finitos diferentes de zero ou c{null}c em caso de vazio.
 		**/
 		geo: {
 			get: function() {
@@ -1956,7 +1990,7 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		number}b gcd Retorna o máximo divisor comum do valor absoluto inteiro ou c{null}c em caso de vazio.
+		`number gcd Retorna o máximo divisor comum do valor absoluto inteiro ou c{null}c em caso de vazio.
 		**/
 		gcd: {
 			get: function() {
@@ -2017,7 +2051,7 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		boolean}b check(b{void  ...) Checa se os valores informados estão presentes na lista.
+		- `boolean check(b{void  ...) Checa se os valores informados estão presentes na lista.
 		**/
 		check: {
 			value: function() {
@@ -2052,7 +2086,7 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		number}b count(b{`void  value) Retorna a quantidade de vezes que o valor parece na lista.}d L{
+		`number count(b{`void  value) Retorna a quantidade de vezes que o valor parece na lista.}d L{
 		v{value}v - Valor a ser localizado.}d}L
 		**/
 		count: {
@@ -2616,7 +2650,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			}
 		},
 		/**
-		boolean}b cssCheck(string ...) Checa a existência de atributos CSS (argumentos) no elemento HTML.
+		- `boolean cssCheck(string ...) Checa a existência de atributos CSS (argumentos) no elemento HTML.
 		**/
 		cssCheck: {
 			value: function() {
@@ -2668,7 +2702,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			}
 		},
 		/**
-		`void  handler(object events, b{boolean}b remove) Define ou remove disparadores ao elemento HTML.}d L{
+		`void  handler(object events, b{- `boolean remove) Define ou remove disparadores ao elemento HTML.}d L{
 		v{events}v - Objeto contendo o evento (atributos) e seus disparadores (valores).
 		v{remove}v - (Opcional) Se verdadeiro, o disparador será removido do evento.
 		**/
@@ -2805,7 +2839,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 	}
 /*----------------------------------------------------------------------------*/
 		/**
-	`number}b __cut(b{number}b value, b{integer}b n, b{boolean}b cut)`
+	`number}b __cut(b{number}b value, b{integer}b n, b{- `boolean cut)`
 		Corta o número de casas decimais conforme especificado ou retorna c{null}c se não for número.
 		v{value}v - Valor a ser checado.
 		v{n}v - (v{&ge; 0}v) Número de casas decimais a arrendondar.
@@ -2851,7 +2885,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 	}
 /*----------------------------------------------------------------------------*/
 	/**
-	`boolean}b __prime(b{integer}b value)`
+	`- `boolean __prime(b{integer}b value)`
 	Checa se o valor é um número primo.
 	/**l{d{v{value}v - Valor a ser checado.
 	function __prime(value) {
@@ -3337,7 +3371,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			}
 		},
 		/**
-		number}b _integral(string fit)}t
+		`number _integral(string fit)}t
 		Retorna a integral definida da função obtida pela regressão no intervalo de v{x}v informado, ou c{null}c em caso de insucesso.
 		v{fit}v - Nome do atributo da regressão.
 		**/
@@ -3395,12 +3429,12 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		Os dados da regressão linear, ou c{null}c em caso de insucesso:}d L{
 		string}b type Nome da regressão.
 		string}b equation Representação matemática da equação da regressão.
-		number}b a Constante angular do método dos mínimos quadrados.
-		number}b b Constante linear do método dos mínimos quadrados.
+		`number a Constante angular do método dos mínimos quadrados.
+		`number b Constante linear do método dos mínimos quadrados.
 		function}b function Função Javascript da regressão.
-		number}b deviation Valor do desvio padrão.
+		`number deviation Valor do desvio padrão.
 		string}b math Representação numérica da equação da regressão.
-		number}b integral Valor da integral obtida em v{function}v no intervalo v{x}v definido.
+		`number integral Valor da integral obtida em v{function}v no intervalo v{x}v definido.
 		function}b tangent(b{number}b x)}t
 		Retorna a equação da reta tangente a determinado ponto v{x}v em relação à função obtida em v{function}v.
 		v{x}v - Ponto a ser definida a equação da reta.
@@ -3501,7 +3535,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		/**
 	`object sum}t
 		Retorna um objeto com a soma da áreas formadas pelas linhas que ligam os pontos das coordenadas.}d L{
-		number}b valueOf() Retorna o valor da soma.
+		`number valueOf() Retorna o valor da soma.
 		string}b toString() Retorna uma representação matemática do resultado.
 		**/
 		sum: {
@@ -3521,7 +3555,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
     /**
 	`object avg}t
 		Retorna um objeto com o valor médio das coordenadas.}d L{
-		number}b valueOf() Retorna o valor médio.
+		`number valueOf() Retorna o valor médio.
 		string}b toString() Retorna uma representação matemática do resultado.
 		**/
     avg: {
@@ -3572,31 +3606,31 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		_max: {value: Math.max(window.screen.width, window.screen.height)},
 		_min: {value: Math.min(window.screen.width, window.screen.height)},
 		/**
-		number}b _width Comprimento do gráfico.
+		`number _width Comprimento do gráfico.
 		**/
 		_width: {get: function() {return 1000;}},
 		/**
-		number}b _height Altura do gráfico.
+		`number _height Altura do gráfico.
 		**/
 		_height: {get: function() {return this._width*this._min/this._max;}},
 		/**
-		number}b _xStart Início do eixo v{x}v.
+		`number _xStart Início do eixo v{x}v.
 		**/
 		_xStart: {get: function() {return 0.10 * this._width;}},
 		/**
-		number}b _xSize Comprimento do eixo v{x}v.
+		`number _xSize Comprimento do eixo v{x}v.
 		**/
 		_xSize: {get: function() {return 0.85 * this._width}},
 		/**
-		number}b _yStart Início do eixo v{y}v.
+		`number _yStart Início do eixo v{y}v.
 		**/
 		_yStart: {get: function() {return 0.05 * this._height;}},
 		/**
-		number}b _ySize Comprimento do eixo v{y}v.
+		`number _ySize Comprimento do eixo v{y}v.
 		**/
 		_ySize: {get: function() {return 0.85 * this._height}},
 		/**
-		number}b _xMin Obtém e define o limite inferior em v{x}v.
+		`number _xMin Obtém e define o limite inferior em v{x}v.
 		**/
 		_xMin: {
 			get: function() {
@@ -3610,7 +3644,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			}
 		},
 		/**
-		number}b _xMax Obtém e define o limite superior em v{x}v.
+		`number _xMax Obtém e define o limite superior em v{x}v.
 		**/
 		_xMax: {
 			get: function() {
@@ -3624,7 +3658,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			}
 		},
 		/**
-		number}b _yMin Obtém e define o limite inferior em v{y}v.
+		`number _yMin Obtém e define o limite inferior em v{y}v.
 		**/
 		_yMin: {
 			get: function() {
@@ -3638,7 +3672,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			}
 		},
 		/**
-		number}b _yMax Obtém e define o limite superior em v{y}v.
+		`number _yMax Obtém e define o limite superior em v{y}v.
 		**/
 		_yMax: {
 			get: function() {
@@ -3687,7 +3721,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			}
 		},
 		/**
-	`void  _add(b{array}b x, b{array|function}b y, string name, string type, b{boolean}b color)}t
+	`void  _add(b{array}b x, b{array|function}b y, string name, string type, b{- `boolean color)}t
 		Registra informações do conjunto de dados.}d L{
 		v{x}v - Valores para o eixo v{x}v.}d
 		v{y}v - Valores ou função (v{y = f(x)}v) para o eixo v{y}v.}d
@@ -3878,7 +3912,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 	__Plot2D.prototype = Object.create(__Data2D.prototype, {
 		constructor: {value: __Plot2D},
 		/**
-		number}b _xp(b{number}b x)}t
+		`number _xp(b{number}b x)}t
 		Retorna u{o ponto}u de plotagem do eixo v{x}v no SVG.}d L{
 		v{x}v - Valor da coordenada v{x}v.
 		**/
@@ -3942,7 +3976,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			}
 		},
 		/**
-		string}b _dline(b{array}b x, b{array}b y, b{boolean}b close)t
+		string}b _dline(b{array}b x, b{array}b y, b{- `boolean close)t
 		Retorna o caminho para construção de linhas conectadas por pontos.}d L{
 		v{x}v - Valores do eixo horizontal.
 		v{y}v - Valores do eixo vertical.
@@ -4033,7 +4067,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			}
 		},
 		/**
-		`node _lines(b{array}b x, b{array}b y, b{number}b stroke, b{boolean}b close, b{number}b color)}t
+		`node _lines(b{array}b x, b{array}b y, b{number}b stroke, b{- `boolean close, b{number}b color)}t
 		Retorna elemento SVG renderizado com linhas conectadas pelos pontos.
 		v{x}v - Coordenadas do eixo v{x}v.
 		v{y}v - Coordenadas do eixo v{y}v.
@@ -7937,6 +7971,8 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		fit: {value: function(){return __Fit2D.apply(null, Array.prototype.slice.call(arguments));}},
 		plot: {value: function(){return __Plot2D.apply(null, Array.prototype.slice.call(arguments));}},
 		test: {value: function(){return __setUnique.apply(null, Array.prototype.slice.call(arguments));}},
+
+		device: {value: __DEVICECONTROLLER}
 	});
 
 /* == BLOCO 4 ================================================================*/
