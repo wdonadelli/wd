@@ -1452,7 +1452,8 @@ function __strClear(x) {return __String(x).clear;}
 				});
 				if (object) return list;
 				let check = __Type(data);
-				return check.number ? check.value : (data in types ? types[data] : data);*/			}
+				return check.number ? check.value : (data in types ? types[data] : data);
+			}
 		},
 	});
 
@@ -1488,10 +1489,10 @@ function __strClear(x) {return __String(x).clear;}
 			_h: {value: Number(time.slice(0,2)),   writable: true}, /* hora */
 			_m: {value: Number(time.slice(3,5)),   writable: true}, /* minutos */
 			_s: {value: Number(time.slice(6)),     writable: true}, /* segundos */
-			//_change: {value: null, writable: true}, /* disparador do evento alteração */
+			_change: {value: null, writable: true}, /* disparador do evento alteração */
 			_print: {value: null, writable: true}, /* retrato dos parâmetros */
 			_field: {value: null, writable: true}, /* parâmetro que chamou o disparador */
-			_change: {value: function(x){console.log(x);}}, //FIXME apagar isso
+			//_change: {value: function(x){console.log(x);}}, //FIXME apagar isso
 		});
 	}
 
@@ -1713,14 +1714,35 @@ function __strClear(x) {return __String(x).clear;}
 				return days[this.month-1] + leap + this.day;
 			}
 		},
+		/**
+		- `integer weekDay`: Informa o dia da semana a partir de domingo (1-7).
+		**/
+		weekDay: {
+			get: function() {
+				/* anos positivos: +0000-01-01, dia 1, é sábado (7) (crescente) */
+				/* anos negativos: -0001-12-31, dia 0, é sexta-feira (6) (decrescente) */
+				let table = this.year >= 0 ? [6, 7, 1, 2, 3, 4, 5] : [6, 5, 4, 3, 2, 1, 7];
+				return table[Math.abs(this.dateOf())%7];
+			}
+		},
 
 
+
+		/**
+		- `string Y`: Retorna o ano.
+		**/
 		Y:    {get: function() {return String(this.year);}},
+		/**
+		- `string YY`: Retorna o ano com os dois últimos dígitos.
+		**/
 		YY:   {
 			get: function() {
 				return this.YYYY.replace(/\d+(\d\d)$/, "$1");
 			}
 		},
+		/**
+		- `string YYYY`: Retorna o ano com pelo menos quatro dígitos.
+		**/
 		YYYY: {
 			get: function() {
 				let YYYY = String(Math.abs(this.year));
@@ -1728,29 +1750,69 @@ function __strClear(x) {return __String(x).clear;}
 				return (this.year < 0 ? "-" : "")+YYYY;
 			}
 		},
+		/**
+		- `string M`: Retorna o mês.
+		**/
 		M:    {get: function() {return String(this.month);}},
+		/**
+		- `string MM`: Retorna o mês com dois dígitos.
+		**/
 		MM:   {get: function() {return ("0"+this.M).slice(-2);}},
+		/**
+		- `string MMM`: Retorna o nome abreviado do mês.
+		**/
 		MMM:  {get: function() {return this._names.MMM[this.month-1];}},
+		/**
+		- `string MMMM`: Retorna o nome do mês.
+		**/
 		MMMM: {get: function() {return this._names.MMMM[this.month-1];}},
+		/**
+		- `string D`: Retorna o dia.
+		**/
 		D:    {get: function() {return String(this.day);}},
+		/**
+		- `string DD`: Retorna o dia com dois dígitos.
+		**/
 		DD:   {get: function() {return ("0"+this.D).slice(-2);}},
+		/**
+		- `string DDD`: Retorna o dia da semana abreviado.
+		**/
 		DDD:  {get: function() {return this._names.DDD[this.weekDay-1];}},
+		/**
+		- `string DDDD`: Retorna o dia da semana.
+		**/
 		DDDD: {get: function() {return this._names.DDDD[this.weekDay-1];}},
+		/**
+		- `string h`: Retorna a hora.
+		**/
 		h:    {get: function() {return String(this.hour);}},
+		/**
+		- `string hh`: Retorna o a hora com dois dígitos.
+		**/
 		hh:   {get: function() {return ("0"+this.h).slice(-2);}},
+		/**
+		- `string m`: Retorna o minuto.
+		**/
 		m:    {get: function() {return String(this.minute);}},
+		/**
+		- `string mm`: Retorna o minuto com dois dígitos.
+		**/
 		mm:   {get: function() {return ("0"+this.m).slice(-2);}},
+		/**
+		- `string s`: Retorna o segundo.
+		**/
 		s:    {get: function() {return String(this.second);}},
+		/**
+		- `string ss`: Retorna o segundo com dois dígitos.
+		**/
 		ss:   {
 			get: function() {
 				return Math.trunc(this.second) < 10 ? ("0"+this.s) : this.s;
 			}
 		},
-
-
-
-
-
+		/**
+		- `string format(string x)`: Retorna uma string pré-formatada com valores dos atributos sendo representados por atalhos que correspondem ao nome do respectivo atributo entre chaves `{nome}`. O argumento `x` deve conter as configurações da string a ser retornada.
+		**/
 		format: {
 			value: function(x) {
 				x = __Type(x).chars ? x: "{DDD}, {D} {MMMM} {YYYY}, {h}:{mm}:{ss}";
@@ -1775,7 +1837,7 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		- `number timeOf()`: Retorna o tempo em segundos.
+		- `integer timeOf()`: Retorna o tempo em segundos.
 		**/
 		timeOf: {
 			value: function() {
@@ -1791,10 +1853,11 @@ function __strClear(x) {return __String(x).clear;}
       }
 		},
 		/**
-		- `number dateOf()`: Retorna os dias desde 0000-01-01 (dia 1).
+		- `integer dateOf()`: Retorna os dias desde 0000-01-01 (dia 1).
 		**/
 		dateOf: {
 			value: function() {
+				/*
 				if (this.year === 0) return this.dayYear;
 				let year = Math.abs(this.year);
 				let y365 = 365*year;
@@ -1804,6 +1867,22 @@ function __strClear(x) {return __String(x).clear;}
 				let days = y365 + y400 + y004 - y100;//FIXME
 				if (this.year > 0) return 366 + days + this.dayYear;
 				return -(days + (this.leap ? 366 : 365) - this.dayYear);
+				*/
+
+
+				/* se o ano for zero: dias do ano corrente */
+				if (this.year === 0) return this.dayYear;
+				/* se o ano for diferente de zero, calcular dias de anos completos (ano - 1) */
+				let year = Math.abs(this.year) - 1;
+				let y365 = 365*year;
+				let y400 = Math.trunc(year/400);
+				let y004 = Math.trunc(year/4);
+				let y100 = Math.trunc(year/100);
+				let days = y365 + y400 + y004 - y100;
+				/* se o ano for positivo: dias do ano zero + dias de anos completos + dias do ano corrente */
+				if (this.year >= 0) return 366 + days + this.dayYear;
+				/* se o ano for negativo: dias de anos completos + (dias total do ano - dias do ano corrente) */
+				return -(days + ((this.leap ? 366 : 365) - this.dayYear));
 			}
 		},
 		/**
@@ -1822,6 +1901,20 @@ function __strClear(x) {return __String(x).clear;}
 				return this.toDateString()+"T"+this.toTimeString();
       }
 		},
+		test: {
+			value: function(x) {
+				if (x === undefined) x = 1000;
+				let dt = __DateTime("0000-01-01");
+				dt.year = -x;
+				let n  = dt.dateOf();
+				while (dt.year !== x || dt.month !== 12 || dt.day !== 31) {
+					dt.day++;
+					if (dt.dateOf() !== (n+1)) throw new Error(dt.toDateString()+", n:"+n+", dateOf: "+dt.dateOf());
+					n++;
+				}
+				return "Sucesso!"
+			}
+		}
 	});
 
 /*===========================================================================*/
