@@ -422,7 +422,7 @@ const wd = (function() {
 						let lang = data[type][i];
 						while(date.getFullYear() <= 1970) {
 							let info = date.toLocaleDateString(lang, {month: type});
-							months.push(info.toLowerCase().replace(".", ""));
+							months.push(info.toLowerCase());
 							date.setMonth(date.getMonth()+1);
 						}
 					}
@@ -1570,6 +1570,19 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
+		- `integer _weekDay(integer x)`: Retorna o dia da semana (1-7), de domingo à sábado tendo como referência o dia desde 0000-01-01.
+		- O atributo opcional `x` define o valor de referência do dia a ser analisado. Se não informado, assumirá o valor do método `dateOf`.
+		**/
+		_weekDay: {
+			value: function(x) {
+				/* dias positivos: +0000-01-01, dia 1, é sábado (7) (crescente) */
+				/* dias negativos: -0001-12-31, dia 0, é sexta-feira (6) (decrescente) */
+				if (x === undefined) x = this.dateOf();
+				let wday = x > 0 ? [6, 7, 1, 2, 3, 4, 5] : [6, 5, 4, 3, 2, 1, 7];
+				return wday[Math.abs(x)%7];
+			}
+		},
+		/**
 		- `integer year`: Define ou retorna o ano.
 		**/
 		year: {
@@ -1715,14 +1728,49 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		- `integer weekDay`: Informa o dia da semana a partir de domingo (1-7).
+		- `integer weekDay`: Retorna o dia da semana de domingo (1) à sábado (7).
 		**/
 		weekDay: {
+			get: function() { return this._weekDay();}
+		},
+		/**
+		- `integer week`: Retorna a semana do ano (1-54) a partir daquela que contém o primeiro dia do ano.
+		**/
+		week: {
 			get: function() {
-				/* anos positivos: +0000-01-01, dia 1, é sábado (7) (crescente) */
-				/* anos negativos: -0001-12-31, dia 0, é sexta-feira (6) (decrescente) */
-				let table = this.year >= 0 ? [6, 7, 1, 2, 3, 4, 5] : [6, 5, 4, 3, 2, 1, 7];
-				return table[Math.abs(this.dateOf())%7];
+				let start = this._weekDay(this.dateOf() - this.dayYear + 1);
+				let today = this.weekDay;
+				let day0  = 1 - (start - 1);
+				let dayn  = this.dayYear - (today - 1);
+				return 1+(dayn - day0)/7;
+			}
+		},
+		/**
+		- `integer week5`: Retorna a semana do ano (1-53) a partir da primeira quinta-feira do ano.
+		**/
+		week5: {
+			get: function() {
+				let start = this._weekDay(this.dateOf() - this.dayYear + 1);
+				let week  = this.week - (start <= 5 ? 0 : 1);
+				if (week === 0) {
+					let dt  = __DateTime("2000-12-31");
+					dt.year = this.year - 1;
+					week    = dt.week5;
+				}
+				return week;
+			}
+		},
+		nonworkingdays: {//FIXME até a data ou até a véspera?
+			get: function() {
+				let weeks = this.weeks;
+				let day1  = weeks - (this.firstweekyear === 1 ? 0 : 1);
+				let day7  = weeks - (this.week          === 7 ? 0 : 1);
+				return day1 + day7 - (!this.workingday ? 1 : 0);
+			}
+		},
+		workingdays: {
+			get: function() {
+				return this.days-this.nonworkingdays;
 			}
 		},
 
@@ -1782,6 +1830,22 @@ function __strClear(x) {return __String(x).clear;}
 		- `string DDDD`: Retorna o dia da semana.
 		**/
 		DDDD: {get: function() {return this._names.DDDD[this.weekDay-1];}},
+		/**
+		- `string W`: Retorna a semana do ano (atributo `week`).
+		**/
+		W:   {get: function() {return String(this.week);}},
+		/**
+		- `string WW`: Retorna a semana do ano com dois dígitos (atributo `week`).
+		**/
+		WW:   {get: function() {return ("0"+this.W).slice(-2);}},
+		/**
+		- `string W5`: Retorna a semana do ano (atributo `week5`).
+		**/
+		W5:   {get: function() {return String(this.week5);}},
+		/**
+		- `string WW5`: Retorna a semana do ano com dois dígitos (atributo `week5`).
+		**/
+		WW5:   {get: function() {return ("0"+this.W5).slice(-2);}},
 		/**
 		- `string h`: Retorna a hora.
 		**/
