@@ -1523,7 +1523,7 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		- `object _names`: Atributo que registra a lista com os nomes curtos e  longos de meses e dias da semana localmente, se implantado pelo objeto nativo `Date`. O objeto possui os seguintes atributos:
+		- `object _names`: Atributo que registra a lista com os nomes curtos e  longos de meses e dias da semana localmente, se implementado pelo objeto nativo `Date`. O objeto possui os seguintes atributos:
 		- `MMM` - lista de meses curtos (`[janeiro, ..., dezembro]`);
 		- `MMMM` - lista de meses longos (`[janeiro, ..., dezembro]`);
 		- `DDD` - lista de dias curtos (`[domingo, ..., sábado]`); e
@@ -1548,7 +1548,7 @@ function __strClear(x) {return __String(x).clear;}
 			}())
 		},
 		/**
-		- `boolean _leap(integer y)`: Método que retorna se o ano é bissexto. O atributo opcional `y` corresponde ao ano e, se indefinido, assumirá o ano da data.
+		- `boolean _leap(integer y=year)`: Método que retorna se o ano é bissexto. O atributo opcional `y` corresponde ao ano e, se indefinido, assumirá o ano da data.
 		**/
 		_leap: {
 			value: function(y) {
@@ -1557,7 +1557,7 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		- `integer _maxDay(integer m, integer y)`: Método que retorna a quantidade de dias do mês.
+		- `integer _maxDay(integer m=month, integer y=year)`: Método que retorna a quantidade de dias do mês.
 		- O atributo opcional `m` corresponde ao mês e o atributo `y` ano. Ambos são opcionais e se não forem informados assumirão o mês o e ano da data, respectivamente.
 		**/
 		_maxDay: {
@@ -1570,7 +1570,7 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		- `integer _weekDay(integer x)`: Retorna o dia da semana (1-7), de domingo à sábado tendo como referência o dia desde 0000-01-01.
+		- `integer _weekDay(integer x=dateOf())`: Retorna o dia da semana (1-7), de domingo à sábado tendo como referência o dia desde 0000-01-01.
 		- O atributo opcional `x` define o valor de referência do dia a ser analisado. Se não informado, assumirá o valor do método `dateOf`.
 		**/
 		_weekDay: {
@@ -1746,36 +1746,38 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		- `integer week5`: Retorna a semana do ano (1-53) a partir da primeira quinta-feira do ano.
+		- `boolean workingDay`: Retorna se é um dia útil.
 		**/
-		week5: {
+		workingDay: {
+			get: function() {return this.weekDay !== 1 && this.weekDay !== 7;}
+		},
+		/**
+		- `integer nonWorkingDays`: Retorna a quantidade de dias não úteis atá a data no ano.
+		**/
+		nonWorkingDays: {
 			get: function() {
 				let start = this._weekDay(this.dateOf() - this.dayYear + 1);
-				let week  = this.week - (start <= 5 ? 0 : 1);
-				if (week === 0) {
-					let dt  = __DateTime("2000-12-31");
-					dt.year = this.year - 1;
-					week    = dt.week5;
-				}
-				return week;
+				let today = this.weekDay;
+				let weeks = this.week;
+				let day1  = weeks - (start === 1 ? 0 : 1);
+				let day7  = weeks - (today === 7 ? 0 : 1);
+				return day1 + day7;
 			}
 		},
-		nonworkingdays: {//FIXME até a data ou até a véspera?
+		/**
+		- `integer width`: Retorna a quantidade de dias no mês.
+		**/
+		width: {
+			get: function() {return this._maxDay();}
+		},
+		/**
+		- `integer workingDays`: Retorna a quantidade de dias úteis atá a data no ano.
+		**/
+		workingDays: {
 			get: function() {
-				let weeks = this.weeks;
-				let day1  = weeks - (this.firstweekyear === 1 ? 0 : 1);
-				let day7  = weeks - (this.week          === 7 ? 0 : 1);
-				return day1 + day7 - (!this.workingday ? 1 : 0);
+				return this.dayYear - this.nonWorkingDays;
 			}
 		},
-		workingdays: {
-			get: function() {
-				return this.days-this.nonworkingdays;
-			}
-		},
-
-
-
 		/**
 		- `string Y`: Retorna o ano.
 		**/
@@ -1839,14 +1841,6 @@ function __strClear(x) {return __String(x).clear;}
 		**/
 		WW:   {get: function() {return ("0"+this.W).slice(-2);}},
 		/**
-		- `string W5`: Retorna a semana do ano (atributo `week5`).
-		**/
-		W5:   {get: function() {return String(this.week5);}},
-		/**
-		- `string WW5`: Retorna a semana do ano com dois dígitos (atributo `week5`).
-		**/
-		WW5:   {get: function() {return ("0"+this.W5).slice(-2);}},
-		/**
 		- `string h`: Retorna a hora.
 		**/
 		h:    {get: function() {return String(this.hour);}},
@@ -1875,11 +1869,34 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
+		- `string AMPM`: Retorna `AM` se a hora for anterior ao meio dia, caso contrário, `PM`.
+		**/
+		AMPM: {
+			get: function() {return this.hour < 12 ? "AM" : "PM";}
+		},
+		/**
+		- `string h12`: Retorna a hora no formato 12h.
+		**/
+		h12: {
+			get: function() {
+				return ("0" + String(this.hour - (this.hour < 13 ? 0 : 12))).slice(-2);
+			}
+		},
+		/**
+		- `integer maxWeekForm`: Retorna a quantidade de semanas do ano para fins do [fomulário HTML `week`](https://developer.mozilla.org/en-US/docs/Web/HTML/Date_and_time_formats#week_strings).
+		**/
+		maxWeekForm: {
+			get: function() {
+				let week = this._weekDay(this.dateOf() - this.dayYear + 1);
+				return (week === 5 || (week === 4 && this.leap)) ? 53 : 52;
+			}
+		},
+		/**
 		- `string format(string x)`: Retorna uma string pré-formatada com valores dos atributos sendo representados por atalhos que correspondem ao nome do respectivo atributo entre chaves `{nome}`. O argumento `x` deve conter as configurações da string a ser retornada.
 		**/
 		format: {
 			value: function(x) {
-				x = __Type(x).chars ? x: "{DDD}, {D} {MMMM} {YYYY}, {h}:{mm}:{ss}";
+				x = __Type(x).chars ? x: "{DDDD}, {D} {MMMM} {YYYY}, {h}:{mm}:{ss}";
 				let obj  = this;
 				let data = x.match(/\{\w+\}/gi);
 				if (data === null) return x;
@@ -1965,6 +1982,23 @@ function __strClear(x) {return __String(x).clear;}
 				return this.toDateString()+"T"+this.toTimeString();
       }
 		},
+		/**
+		- `integer valueOf()`: Retorna os segundos desde 0000-01-01T00:00:00.
+		**/
+		valueOf: {
+			value: function() {
+				let date = this.dateOf();
+				let time = this.timeOf();
+				if (date >= 1)
+					return 24*3600*(date-1)+time;
+				return 24*3600*date - (24*3600 - time);
+      }
+		},
+
+
+
+
+
 		test: {
 			value: function(x) {
 				if (x === undefined) x = 1000;
@@ -1984,10 +2018,10 @@ function __strClear(x) {return __String(x).clear;}
 /*===========================================================================*/
 	/**
 	###Listas
-	`object __Array(b{array}b input|b{/**
-	`void  ...)`
-	Construtor para manipulação de textos.}p
-	l{d{v{input}v - Array ou cada argumento corresponderá a um item.}d}l
+	`object __Array(array input|void  ...)`
+	Construtor para manipulação de textos.
+	O argumento não for informado, assumirá uma lista vazia; se for múltiplo, cada valor será considerado um item do array; se for um array, assumirá ele mesmo; caso contrário, o valor informado será o item do array.
+	O objeto possui os seguintes métodos e atributos:
 	**/
 	function __Array() {
 		let input;
@@ -2003,12 +2037,12 @@ function __strClear(x) {return __String(x).clear;}
 			_value: {value: input, writable: true}
 		});
 	}
-	/**6{Métodos e atributos}6 l{*/
+
 	Object.defineProperties(__Array.prototype, {
 		constructor: {value: __Array},
 		/**
-		`void  valueOf(b{integer}b n) Retorna a lista ou o seu item, se definido.
-		L{d{v{n}v - (Opcional) Identificador do item, se negativo, a referência inicia no fim da lista.}d}L
+		- `void  valueOf(integer item)`: Retorna o array definido.
+		- O argumento opcional `n`, se informado, fará com que o método retorne o respectivo item da lista. Se negativo, a referência inicia a partir do final da lista.
 		**/
 		valueOf: {
 			value: function(n) {
