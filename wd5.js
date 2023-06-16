@@ -2019,8 +2019,8 @@ function __strClear(x) {return __String(x).clear;}
 	/**
 	###Listas
 	`object __Array(array input|void  ...)`
-	Construtor para manipulação de textos.
-	O argumento não for informado, assumirá uma lista vazia; se for múltiplo, cada valor será considerado um item do array; se for um array, assumirá ele mesmo; caso contrário, o valor informado será o item do array.
+	Construtor para manipulação de listas (array).
+	Caso não seja informado argumento, seja atribuído uma lista vazia. Caso seja informado múltiplos argumentos, cada valor corresponderá a um item do array. Caso seja informado um array como argumento, esse será o valor considerado pelo objeto. Caso contrário, o valor informado será o item do array.
 	O objeto possui os seguintes métodos e atributos:
 	**/
 	function __Array() {
@@ -2041,8 +2041,8 @@ function __strClear(x) {return __String(x).clear;}
 	Object.defineProperties(__Array.prototype, {
 		constructor: {value: __Array},
 		/**
-		- `void  valueOf(integer item)`: Retorna o array definido.
-		- O argumento opcional `n`, se informado, fará com que o método retorne o respectivo item da lista. Se negativo, a referência inicia a partir do final da lista.
+		- `array|void  valueOf(integer n)`: Retorna o array definido ou um de seus itens.
+		- O argumento opcional `n` corresponde ao identificador do item do array. Se informado, fará com que o método retorne o respectivo item da lista. Se negativo, a referência será o final da lista (direção inversa).
 		**/
 		valueOf: {
 			value: function(n) {
@@ -2051,24 +2051,20 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		`void  toString() Retorna a lista em formato JSON.
+		- `string  toString()`: Retorna a lista em formato JSON.
 		**/
 		toString: {
 			value: function() {return JSON.stringify(this._value);}
 		},
 		/**
-		string}b length Retorna a quantidade de itens da lista.
+		- `integer length`: Retorna a quantidade de itens da lista.
 		**/
 		length: {
 			get: function() {return this._value.length;}
 		},
 		/**
-		array}b only(string type, b{- `boolean keep, b{- `boolean change)}t
-		{Retorna uma lista somente com os tipos de itens definidos.}d L{
-		d{v{type}v - Tipo do item a ser mantido conforme ver atributos do objeto i{__Type}i.
-		{v{keep}v - (opcional) Se verdadeiro, o item não casado será mantido com o valor c{null}c.
-		d{v{change}v - (opcional) Se verdadeiro, o item casado terá seu valor alterado conforme retorno do objeto i{__Type}i}d}L
-		d{O valor padrão de v{keep}v é c{false}c e de v{change}v é c{true}c.
+		- `array only(string type, boolean keep, boolean change)`: Retorna uma lista somente com os tipos de itens definidos.
+		- O argumento `type` define o tipo do item a ser mantido na lista (ver atributos do objeto `__Type`). O argumento opcional `keep`, se verdadeiro, manterá na lista o item não enquadrado no tipo definido com o valor `null`. O argumento opcional `change`, se verdadeiro, alterará o item casado para o valor (`valueOf`) do objeto `__Type`. Os valores padrão de `keep` e `change` são falso e verdadeiro, respectivamente.
 		**/
 		only: {
 			value: function(type, keep, change) {
@@ -2085,10 +2081,8 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		array}b convert(b{function}b f, b{- `boolean finite)}t
-		Retorna uma lista com o resultado de v{f(x)}v ou c{null}c se falhar.}d L{
-		v{f}v - Função a ser aplicada nos valores da lista.
-		v{type}v - (opcional) Tipo dos itens na lista (ver atributos de i{__Type}i.}d}L
+		- `array convert(function f, string type)`: Retorna uma lista com o resultado de `f(x)` ou `null` se algo falhar.
+		- O argumento `f` corresponde à função a ser aplicada aos itens da lista. A função receberá um argumento que corresponderá ao item da lista que será substituído pelo retorno da função. O argumento opcional `type`, se definido, retornará apenas os valores de `f(x)` que se enquadram no tipo definido (ver atributos do objeto `__Type`).
 		**/
 		convert: {
 			value: function(f, type) {
@@ -2108,7 +2102,7 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		`number min Retorna o menor finito ou c{null}c em caso de vazio.
+		- `number min`: Retorna o menor número finito do conjunto de items da lista ou `null` em caso de vazio.
 		**/
 		min: {
 			get: function() {
@@ -2117,7 +2111,7 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		`number max Retorna o maior finito ou c{null}c em caso de vazio.
+		- `number max`:  Retorna o maior número finito do conjunto de items da lista ou `null` em caso de vazio.
 		**/
 		max: {
 			get: function() {
@@ -2126,7 +2120,7 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		`number sum Retorna a soma dos finitos ou c{null}c em caso de vazio.
+		- `number sum`: Retorna a soma dos números finitos da lista ou `null` em caso de vazio.
 		**/
 		sum: {
 			get: function() {
@@ -2138,7 +2132,7 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		`number avg Retorna a média dos finitos ou c{null}c em caso de vazio.
+		- `number avg`: Retorna a média dos números finitos da lista ou `null` em caso de vazio.
 		**/
 		avg: {
 			get: function() {
@@ -2147,7 +2141,7 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		`number med Retorna a mediana dos finitos ou c{null}c em caso de vazio.
+		- `number med`: Retorna a mediana dos números finitos da lista ou `null` em caso de vazio.
 		**/
 		med: {
 			get: function() {
@@ -2159,7 +2153,7 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		`number harm Retorna a média harmônica dos finitos diferentes de zero ou c{null}c em caso de vazio.
+		- `number harm`: Retorna a média harmônica dos números finitos diferentes de zero da lista ou `null` em caso de vazio.
 		**/
 		harm: {
 			get: function() {
@@ -2170,7 +2164,7 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		`number geo Retorna a média geométrica dos absolutos finitos diferentes de zero ou c{null}c em caso de vazio.
+		- `number geo`: Retorna a média geométrica do valor absoluto dos números finitos diferentes de zero da lista ou `null` em caso de vazio.
 		**/
 		geo: {
 			get: function() {
@@ -2181,7 +2175,7 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		`number gcd Retorna o máximo divisor comum do valor absoluto inteiro ou c{null}c em caso de vazio.
+		- `number gcd`: Retorna o máximo divisor comum do valor absoluto dos números inteiros da lista ou `null` em caso de vazio.
 		**/
 		gcd: {
 			get: function() {
@@ -2221,7 +2215,7 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		array}b unique Retorna a lista sem valores repetidos.
+		- `array unique`: Retorna a lista sem valores repetidos.
 		**/
 		unique: {
 			get: function(){
@@ -2229,7 +2223,7 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		array}b mode Retorna uma lista com os valores da moda (valor mais encontrado).
+		- `array mode`: Retorna uma lista com os valores da moda (valores que mais se repetem).
 		**/
 		mode: {
 			get: function() {
@@ -2242,7 +2236,7 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		- `boolean check(b{void  ...) Checa se os valores informados estão presentes na lista.
+		- `boolean check(void  ...)`: Checa se os valores informados como argumento estão presentes na lista.
 		**/
 		check: {
 			value: function() {
@@ -2255,9 +2249,7 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		array}b search(b{
-		`void  value) Retorna uma lista com os índices onde o valor foi localizado.}d L{
-		v{value}v - Valor a ser localizado.}d}L
+		- `array search(void  value)`: Retorna uma lista com os índices onde o valor informado no argumento `value` foi localizado.
 		**/
 		search: {
 			value: function(value) {
@@ -2267,8 +2259,7 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		array}b hide(b{/**
-	`void  ...) Retorna uma lista ignorando os valores informados.
+		- `array hide(void  ...)`: Retorna uma lista ignorando os valores informados como argumento.
 		**/
 		hide: {
 			value: function() {
@@ -2277,8 +2268,7 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		`number count(b{`void  value) Retorna a quantidade de vezes que o valor parece na lista.}d L{
-		v{value}v - Valor a ser localizado.}d}L
+		- `number count(void  value)`: Retorna a quantidade de vezes que o valor informado no argumento `value` aparece na lista.
 		**/
 		count: {
 			value: function(value) {
@@ -2286,7 +2276,7 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		array}b sort Ordena a lista na sequencia: número, tempo, data, datatempo, texto, demais tipos.
+		- `array sort`: Ordena a lista na sequencia: número, tempo, data, datatempo, texto, booelano, nulo, nós, lista, objeto, função, expressão regular, indefinido e demais valores.
 		**/
 		sort: {
 			get: function() {
@@ -2322,7 +2312,7 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		array}b order Retorna uma lista ordenada sem valores repetidos.
+		- `array order`: Retorna uma lista ordenada sem valores repetidos.
 		**/
 		order: {
 			get: function() {
@@ -2330,8 +2320,7 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		6{Métodos Modificadores da Lista}6
-		array}b add(b{void  ...) Adiciona itens (argumentos) ao fim da lista e a retorna.
+		- `array add(void  ...)`: Adiciona itens (argumentos) ao fim da lista e a retorna.
 		**/
 		add: {
 			value: function() {
@@ -2340,7 +2329,7 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		array}b addTop(b{void  ...) Adiciona itens (argumentos) ao início da lista e a retorna.
+		- `array addTop(void  ...)`: Adiciona itens (argumentos) ao início da lista e a retorna.
 		**/
 		addTop: {
 			value: function() {
@@ -2349,7 +2338,7 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		array}b concat(b{void  ...) Concatena listas.
+		- `array concat(array|void ...)`: Concatena ou adiciona listas e itens (argumentos) à lista original.
 		**/
 		concat: {
 			value: function() {
@@ -2358,9 +2347,8 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		array}b replace(void  from, void  to) Altera os valores da lista conforme especificado e a retorna.}d
-		v{from}v - Valor a ser alterado.
-		v{to}v - Valor a ser definido.}d}L
+		- `array replace(void  from, void  to)`: Altera os valores da lista conforme especificado e a retorna.
+		- O argumento `from` definie o valor a ser encontrado e substituído na lista e o argumento `to` define seu novo valor.
 		**/
 		replace: {
 			value: function (from, to) {
@@ -2369,7 +2357,7 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		array}b delete(void  ...) Remove itens (argumentos) da lista e a retorna.
+		- `array delete(void ...)`: Remove itens (argumentos) da lista e a retorna.
 		**/
 		delete: {
 			value: function() {
@@ -2381,7 +2369,7 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		array}b toggle(void  ...) Remove, se existente, ou insere, se ausente, itens (argumentos) da lista e a retorna.
+		- `array toggle(void  ...)`: Remove, se existente, ou insere, se ausente, itens (argumentos) da lista e a retorna.
 		**/
 		toggle: {
 			value: function() {
@@ -2399,8 +2387,8 @@ function __strClear(x) {return __String(x).clear;}
 /*===========================================================================*/
 	/**
 	###Nós Formulários HTML
-	`object __FNode(b{node input)`
-	Construtor para manipulação de nós de formulários HTML}p
+	`object __FNode(node input)`
+	Construtor para manipulação de nós de formulários HTML
 	l{d{v{input}v - Formulário HTML.}d}l
 	**/
 	function __FNode(input) {
@@ -2526,7 +2514,7 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		string|null}b __check Retorná o valor do formulário HTML (i{checkbox, radio}i) se checado ou c{null}c.
+		string|null}b __check Retorná o valor do formulário HTML (i{checkbox, radio}i) se checado ou `null`.
 		Se booleano, definirá a checagem; se nulo, inverterá a checagem; Se string, definirá o valor.
 		**/
 		_check: {
@@ -2639,7 +2627,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			}())
 		},
 		/**
-		object|null}b _ref Retorna os parâmetros do tipo de formulário em i{_type}i ou c{null}c se outro elemento.
+		object|null}b _ref Retorna os parâmetros do tipo de formulário em i{_type}i ou `null` se outro elemento.
 		**/
 		_ref: {
 			get: function() {
@@ -2656,7 +2644,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			get: function() {return this._node.tagName.toLowerCase();}
 		},
 		/**
-		string|null}b type Retorna o tipo do formulário HTML ou c{null}c se outro elemento.
+		string|null}b type Retorna o tipo do formulário HTML ou `null` se outro elemento.
 		**/
 		type: {
 			get: function() {
@@ -2751,8 +2739,8 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			get: function() {return this._value.tagName.toLowerCase();}
 		},
 		/**
-		`void  attribute(string attr, b{void  value)}t
-		Retorna ou define um atributo HTML, retorna c{null}c se inexistente.}dL{
+		`void  attribute(string attr, void  value)}t
+		Retorna ou define um atributo HTML, retorna `null` se inexistente.}dL{
 		v{attr}v - Nome do atributo a ser definido ou retornado.
 		v{value}v - (Opcional) Valor do atributo. Se ausente, retornará o atributo, se nulo, apagará o atributo.}d}L
 		**/
@@ -2770,8 +2758,8 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			}
 		},
 		/**
-		`void  object(string attr, b{void  ...)}t
-		Retorna ou define um atributo ou método do objeto HTML, retorna c{null}c se inexistente.
+		`void  object(string attr, void  ...)}t
+		Retorna ou define um atributo ou método do objeto HTML, retorna `null` se inexistente.
 		attr}v - Nome do atributo ou função a ser definido ou retornado.
 		Os demais argumentos correspondem ao valor do atributo ou aos argumentos do método.}d}L
 		**/
@@ -2852,7 +2840,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		},
 		/**
 		string}b style(`object styles) Define o atributo i{style}i do elemento HTML e retorna seu valor.
-		styles}v - Objeto contendo os estilos (atributo) e seu valor. Se c{null}c, todos os estilos serão apagados.}d}L
+		styles}v - Objeto contendo os estilos (atributo) e seu valor. Se `null`, todos os estilos serão apagados.}d}L
 		**/
 		style: {
 			value: function(styles) {
@@ -2870,7 +2858,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		},
 		/**
 		string}b dataset(object data) Define o objeto i{dataset}i do elemento HTML e retorna seu valor.
-		/**L{d{v{data}v - Objeto contendo os atributos e seus valores. Se c{null}c, todos os atributos serão apagados.}d}L
+		/**L{d{v{data}v - Objeto contendo os atributos e seus valores. Se `null`, todos os atributos serão apagados.}d}L
 		**/
 		dataset: {
 			value: function(data) {//FIXME se data for indefindo retornar tudo
@@ -3005,7 +2993,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 /*----------------------------------------------------------------------------*/
 	/**
 	`integer}b __integer(b{number}b value)`
-	Retorna a parte inteira do número ou c{null}c se outro tipo de dado.}p
+	Retorna a parte inteira do número ou `null` se outro tipo de dado.}p
 	l{d{v{value}v - Valor a ser verificado.}d}l
 	**/
 	function __integer(value) {
@@ -3017,7 +3005,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 /*----------------------------------------------------------------------------*/
 	/**
 	`float}b __decimal(b{number}b value)`
-	Retorna a parte decimal do número ou c{null}c se outro tipo de dado.}p
+	Retorna a parte decimal do número ou `null` se outro tipo de dado.}p
 	l{d{v{value}v - Valor a ser verificado.}d}l
 	**/
 	function __decimal(value) {
@@ -3031,7 +3019,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 /*----------------------------------------------------------------------------*/
 		/**
 	`number}b __cut(b{number}b value, b{integer}b n, b{- `boolean cut)`
-		Corta o número de casas decimais conforme especificado ou retorna c{null}c se não for número.
+		Corta o número de casas decimais conforme especificado ou retorna `null` se não for número.
 		v{value}v - Valor a ser checado.
 		v{n}v - (v{&ge; 0}v) Número de casas decimais a arrendondar.
 		v{round}v - (opcional, c{true}c), Se falso, não arrendondará o valor.
@@ -3238,7 +3226,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 	/**
 	`string}b __notation(b{number}b value, string lang, string type, b{/**
 	`void  code)`
-	Retorna o número conforme linguagem e formatação ou c{null}c se um erro ocorrer a{https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/NumberFormat}a.}pl{
+	Retorna o número conforme linguagem e formatação ou `null` se um erro ocorrer a{https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/NumberFormat}a.}pl{
 	v{value}v - Valor a ser checado.
 	v{lang}v - Código da linguagem a ser aplicada.
 	v{type}v - Tipo da formatação:}d L{
@@ -3300,7 +3288,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 	Apenas arrays com comprimento maior que zero serão apreciados na construção da matriz.
 	Cada array informado corresponderá a uma coluna da matriz, na ordem informada.
 	Linhas com valores não finitos serão eliminadas na construção da matriz em todas as colunas.
-	Retornará c{null}c em caso de matriz vazia.
+	Retornará `null` em caso de matriz vazia.
 	**/
 	function __setFinite() {
 		let dataset = [];       /* captura apenas os argumentos válidos (array com itens) */
@@ -3465,7 +3453,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 /*----------------------------------------------------------------------------*/
 	/**
 	`number}b __stdDeviation(b{array}b y1, b{array|number}b y2)`
-	Retorna o desvio padrão entre dois conjuntos de dados ou um valor de referência, ou c{null}c em caso de insucesso.
+	Retorna o desvio padrão entre dois conjuntos de dados ou um valor de referência, ou `null` em caso de insucesso.
 	v{y1}v - Conjunto de dados para avaliar.
 	v{y2}v - Conjunto de dados comparativo ou valor de referência.
 	function __stdDeviation(y1, y2) {
@@ -3523,7 +3511,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		constructor: {value: __Fit2D},
 		/**
 	`object _deviation(string fit)}t
-		Calcula o desvio padrão das regressões ou c{null}c em caso de insucesso.
+		Calcula o desvio padrão das regressões ou `null` em caso de insucesso.
 		v{fit}v - Nome do atributo da regressão.
 		**/
 		_deviation: {
@@ -3547,7 +3535,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		},
 		/**
 		string}b _math(string fit)}t
-		Retorna a expressão matemática visual da regressão, ou c{null}c em caso de insucesso.
+		Retorna a expressão matemática visual da regressão, ou `null` em caso de insucesso.
 		v{fit}v - Nome do atributo da regressão.
 		**/
 		_math: {
@@ -3563,7 +3551,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		},
 		/**
 		`number _integral(string fit)}t
-		Retorna a integral definida da função obtida pela regressão no intervalo de v{x}v informado, ou c{null}c em caso de insucesso.
+		Retorna a integral definida da função obtida pela regressão no intervalo de v{x}v informado, ou `null` em caso de insucesso.
 		v{fit}v - Nome do atributo da regressão.
 		**/
 		_integral: {
@@ -3586,7 +3574,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		},
 		/**
 		function}b _tangent(string fit)}t
-		Retorna a equação da reta tangente a determinado ponto v{x}v da função obtida pela regressão, ou c{null}c em caso de insucesso.
+		Retorna a equação da reta tangente a determinado ponto v{x}v da função obtida pela regressão, ou `null` em caso de insucesso.
 		v{fit}v - Nome do atributo da regressão.
 		A função retornada aceita um argumento que representa a posição no eixo v{x}v.
 		**/
@@ -3617,7 +3605,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		},
 		/**
 	`object linear}t
-		Os dados da regressão linear, ou c{null}c em caso de insucesso:}d L{
+		Os dados da regressão linear, ou `null` em caso de insucesso:}d L{
 		string}b type Nome da regressão.
 		string}b equation Representação matemática da equação da regressão.
 		`number a Constante angular do método dos mínimos quadrados.
@@ -3652,7 +3640,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		},
 		/**
 	`object exponential}t
-		Os dados da regressão exponencial, ou c{null}c em caso de insucesso. Retorna um objeto como em v{linear}v.
+		Os dados da regressão exponencial, ou `null` em caso de insucesso. Retorna um objeto como em v{linear}v.
 		**/
 		exponential: {
 			get: function() {
@@ -3676,7 +3664,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		},
 		/**
 	`object geometric}t
-		Os dados da regressão geométrica, ou c{null}c em caso de insucesso. Retorna um objeto como em v{linear}v.
+		Os dados da regressão geométrica, ou `null` em caso de insucesso. Retorna um objeto como em v{linear}v.
 		**/
 		geometric: {
 			get: function() {
