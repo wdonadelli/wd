@@ -2384,39 +2384,39 @@ function __strClear(x) {return __String(x).clear;}
 
 	});
 
-/*===========================================================================*/
+/*============================================================================*/
 	/**
 	###Nós Formulários HTML
 	`object __FNode(node input)`
-	Construtor para manipulação de nós de formulários HTML
-	l{d{v{input}v - Formulário HTML.}d}l
+	Construtor para manipulação de nós HTML.
+	O argumento `input` deve ser um nó HTML simples (um elemento), caso contrário será atribuído um elemento `DIV`.
 	**/
 	function __FNode(input) {
 		if (!(this instanceof __FNode))	return new __FNode(input);
 		let check = __Type(input);
 		Object.defineProperties(this, {
-			_node:  {value: check.node ? input : document.createElement("INPUT")}
+			_node: {value: check.node ? check.value[0] : document.createElement("DIV")}
 		});
 	}
-	/**6{Métodos e atributos}6 l{*/
+
 	Object.defineProperties(__FNode.prototype, {
 		constructor: {value: __FNode},
 		/**
-		string}b _text Retorna ou define o conteúdo textual do formulário HTML.
+		- `string _text`: Retorna ou define o conteúdo textual do elemento (`textContent`).
 		**/
 		_text: {
 			get: function()  {return this._node.textContent;},
 			set: function(x) {this._node.textContent = x;}
 		},
 		/**
-		`void  _value Retorna ou define o valor do formulário HTML.
+		- `void _value`: Retorna ou define o valor do elemento HTML (`value`).
 		**/
 		_value: {
 			get: function()  {return this._node.value;},
 			set: function(x) {this._node.value = x;}
 		},
 		/**
-		number|string}b _number Retorna ou define o valor numérico do formulário HTML.
+		- `number _number`: Retorna ou define o valor numérico do formulário HTML.
 		**/
 		_number: {
 			get: function()  {
@@ -2430,7 +2430,7 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		string}b _time Retorna ou define o valor temporal do formulário HTML.
+		- `string _time`: Retorna ou define o valor temporal do formulário HTML.
 		**/
 		_time: {
 			get: function()  {
@@ -2439,12 +2439,15 @@ function __strClear(x) {return __String(x).clear;}
 			},
 			set: function(x) {
 				let data = __Type(x);
-				if      (data.time) this._value = data.toString();
-				else if (data.null) this._value = null;
+				if (data.time) {
+					this._value = data.toString();
+					if (this._time === data.toString()) return;
+				}
+				this._value = null;
 			}
 		},
 		/**
-		string}b _date Retorna ou define o valor de data do formulário HTML.
+		- `string _date`: Retorna ou define o valor de data do formulário HTML.
 		**/
 		_date: {
 			get: function()  {
@@ -2453,27 +2456,60 @@ function __strClear(x) {return __String(x).clear;}
 			},
 			set: function(x) {
 				let data = __Type(x);
-				if      (data.date) this._value = data.toString();
-				else if (data.null) this._value = null;
+				if (data.date) {
+					this._value = data.toString();
+					if (this._date === data.toString()) return;
+				}
+				this._value = null;
 			}
 		},
 		/**
-		string}b _datetime Retorna ou define o valor de data/tempo do formulário HTML.
+		- `string _datetime`: Retorna ou define o valor de data/tempo do formulário HTML.
 		**/
 		_datetime: {
 			get: function()  {
 				let data = __Type(this._value);
-				return data.datetime ? data.toString() : "";
+				if (data.time || data.datetime || data.date)
+					return __DateTime(data.toString()).toString()
+				return "";
 			},
 			set: function(x) {
 				let data = __Type(x);
-				if      (data.datetime) this._value = data.toString();
-				else if (data.null) this._value = null;
+				if (data.datetime || data.time || data.date) {
+					let dt = __DateTime(data.toString());
+					this._value = dt.toString();
+					if (this._datetime === dt.toString()) return;
+				}
+				this._value = null;
 			}
 		},
 		/**
-		string|array}b _vcombo Retorna ou define o valor do formulário HTML i{combobox}i.
-		Se informado um array e for múltiplo, serão selecionadas as opções correspondentes ao item.
+		- `string _week`: Retorna ou define o valor da semana do formulário HTML.
+		**/
+		_week: {
+			get: function()  {
+				let data = __Type(this._value);
+				if (!data.week) return "";
+				let info = data.toString().trim().replace(/[^0-9]+/, "|").split("|");
+				let year = info[0].length === 4 ? info[0] : info[1];
+				let week = info[0].length === 2 ? info[0] : info[1];
+				let maxw = __DateTime(year+"-01-01").maxWeekForm;
+				if (Number(week) < 0 || Number(week) > maxw) return "";
+				return year+"-W"+week;
+			},
+			set: function(x) {
+				let data = __Type(x);
+				if (data.week) {
+					this._value = data.toString();
+					this._value = this._week === "" ? null : this._week;
+					return;
+ 				}
+				this._value = null;
+			}
+		},
+		/**
+		- `string|array _vcombo`: Retorna ou define o valor do formulário HTML `select/combobox`.
+		- Se informado um array e o elemento aceitar múltiplos valores, serão selecionadas as opções cujo valor corresponde aos itens informados no array.
 		**/
 		_vcombo: {
 			get: function() {
@@ -2493,8 +2529,8 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		string|array}b _tcombo Retorna ou define o conteúdo textual do formulário HTML i{combobox}i.
-		Se informado um array e for múltiplo, serão selecionadas as opções correspondentes ao item.
+		- `string|array _tcombo`: Retorna ou define o conteúdo textual do formulário HTML `select/combobox`.
+		- Se informado um array e o elemento aceitar múltiplos valores, serão selecionadas as opções cujo conteúdo textual corresponde aos itens informados no array.
 		**/
 		_tcombo: {
 			get: function() {
@@ -2514,8 +2550,8 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		string|null}b __check Retorná o valor do formulário HTML (i{checkbox, radio}i) se checado ou `null`.
-		Se booleano, definirá a checagem; se nulo, inverterá a checagem; Se string, definirá o valor.
+		- `string|null|boolean _check`: Retorná o valor do formulário HTML `checkbox` ou `radio` se checado, caso contrário, `null`.
+		- Se o valor for booleano, definirá a checagem; se for nulo, inverterá a checagem; e, se for string, definirá o valor.
 		**/
 		_check: {
 			get: function() {
@@ -2530,6 +2566,11 @@ function __strClear(x) {return __String(x).clear;}
 					this._value = x;
 			}
 		},
+
+//FIXME faltam muitos tipo de formulários ainda: url, email, fone, month....
+
+
+
 		_file: {
 			get: function() {
 				let data = [];
@@ -2574,126 +2615,140 @@ E para o método GET, como proceder?
 
 ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 
-
-
 */
-
-
-
 		},
 		/**
-		`object _type Registra os parâmetros para cada tipo de formulário.
+		- `object _form`: Registra os parâmetros dos tipos de formulários HTML organizados pelo nome do elemento (`tag`).
+		- Os elementos que possuem tipos (`input` e `button`) terão a chave `type` para poder identificá-los. A chave `value` corresponde ao nome do método que alterará o valor do formulário. A chave `text` corresponde ao nome do método que definirá o conteúdo textual do formulário. A chave `send` corresponde ao nome do método que buscará o valor a ser submetido em requisições, se for o caso.
 		**/
-		_type: {
-			value: (function() {
-				return {
-					meter:    {value: "_number", text: "_number"},
-					progress: {value: "_number", text: "_number"},
-					option:   {value: "_value", text: "_text"},
-					output:   {value: "_value", text: "_text"},
-					select:   {value: "_vcombo", text: "_tcombo", send: "value"},
-					textarea: {value: "_value", text: "_value", send: "value"},
-					button:   {type: {
-						reset:  {value: "_value", text: "_text"},
-						button: {value: "_value", text: "_text"},
-						submit: {value: "_value", text: "_text"},
-					}},
-					input: {type: {
-						button:   {value: "_value", text: "_value"},
-						reset:    {value: "_value", text: "_value"},
-						submit:   {value: "_value", text: "_value"},
-						image:    {},
-						color:    {value: "_value", text: "_value", send: "value"},
-						radio:    {value: "_check", send: "value"},
-						checkbox: {value: "_check", send: "value"},
-						date:     {value: "_date", text: "_date", send: "value"},
-						datetime: {value: "_datetime", text: "_datetime", send: "value"},
-						month:    {value: "_month", text: "_month", send: "value"},
-						week:     {value: "_week", text: "_week", send: "value"},
-						time:     {value: "_time", text: "_time", send: "value"},
-						range:    {value: "_number", text: "_number", send: "value"},
-						number:   {value: "_number", text: "_number", send: "value"},
-						file:     {value: "_file", send: "value"},
-						url:      {value: "_url", text: "_url", send: "value"},
-						email:    {value: "_email", text: "_mail", send: "value"},
-						tel:      {value: "_value",  text: "_value", send: "value"},
-						text:     {value: "_value",  text: "_value", send: "value"},
-						search:   {value: "_value",  text: "_value", send: "value"},
-						password: {send: "_value"},
-						hidden:   {value: "_value",  text: "_value", send: "value"},
-						"datetime-local": {value: "_datetime", text: "_datetime", send: "value"},
-					}}
-				};
-			}())
-		},
-		/**
-		object|null}b _ref Retorna os parâmetros do tipo de formulário em i{_type}i ou `null` se outro elemento.
-		**/
-		_ref: {
-			get: function() {
-				let type = this.type;
-				if (type === null) return null;
-				let ref = this._type[this.tag];
-				return "type" in ref ? ref.type[type] : ref;
+		_form: {
+			value: {
+				meter:    {value: "_number", text: "_number"},
+				progress: {value: "_number", text: "_number"},
+				option:   {value: "_value",  text: "_text"},
+				output:   {value: "_value",  text: "_text"},
+				select:   {value: "_vcombo", text: "_tcombo", send: "value"},
+				textarea: {value: "_value",  text: "_value",  send: "value"},
+				button:   {type: {
+					reset:  {value: "_value", text: "_text"},
+					button: {value: "_value", text: "_text"},
+					submit: {value: "_value", text: "_text"},
+				}},
+				input: {type: {
+					button:   {value: "_value", text: "_value"},
+					reset:    {value: "_value", text: "_value"},
+					submit:   {value: "_value", text: "_value"},
+					image:    {},
+					color:    {value: "_value", text: "_value", send: "value"},
+					radio:    {value: "_check", send: "value"},
+					checkbox: {value: "_check", send: "value"},
+					date:     {value: "_date", text: "_date", send: "value"},
+					datetime: {value: "_datetime", text: "_datetime", send: "value"},
+					month:    {value: "_month", text: "_month", send: "value"},
+					week:     {value: "_week", text: "_week", send: "value"},
+					time:     {value: "_time", text: "_time", send: "value"},
+					range:    {value: "_number", text: "_number", send: "value"},
+					number:   {value: "_number", text: "_number", send: "value"},
+					file:     {value: "_file", send: "value"},
+					url:      {value: "_url", text: "_url", send: "value"},
+					email:    {value: "_email", text: "_mail", send: "value"},
+					tel:      {value: "_value",  text: "_value", send: "value"},
+					text:     {value: "_value",  text: "_value", send: "value"},
+					search:   {value: "_value",  text: "_value", send: "value"},
+					password: {send: "_value"},
+					hidden:   {value: "_value",  text: "_value", send: "value"},
+					"datetime-local": {value: "_datetime", text: "_datetime", send: "value"},
+				}}
 			}
 		},
 		/**
-		string}b _tag Retorna o nome do elemento HTML.
+		- `string|null _ftype`: Retorna o tipo de formulário HTML, em minúsculo, ou `null` se outro elemento.
+		**/
+		_ftype: {
+			get: function() {
+				if (!(this.tag in this._form)) return null;
+				if (!("type" in this._form[this.tag])) return this.tag;
+				let type = this._form[this.tag].type;
+				let att  = String(this._node.getAttribute("type")).toLowerCase();
+				let obj  = String(this._node.type).toLowerCase();
+				return (att in type ? att : (obj in type ? obj : null));
+			}
+		},
+		/**
+		- `object _fdata`: Retorna os parâmetros de formulário contidos em `_type` ou um objeto vazio se outro elemento.
+		**/
+		_fdata: {
+			get: function() {
+				let ftype = this._ftype;
+				if (ftype === null) return {};
+				if (this.tag === ftype) return this._form[ftype];
+				return this._form[this.tag].type[ftype];
+			}
+		},
+		/**
+		- `string _tag`: Retorna o nome, em minúsculo, do elemento HTML.
 		**/
 		tag: {
 			get: function() {return this._node.tagName.toLowerCase();}
 		},
 		/**
-		string|null}b type Retorna o tipo do formulário HTML ou `null` se outro elemento.
+		- `string type`: Retorna o atributo `type` do elemento HTML, se existente.
 		**/
 		type: {
 			get: function() {
-				let tag = this.tag;
-				if (!(tag in this._type)) return null;
-				let ref = this._type[this.tag];
-				if (!("type" in ref)) return this.tag;
-				let att = String(this._node.getAttribute("type")).toLowerCase();
-				let obj = String(this._node.type).toLowerCase();
-				return (att in ref.type ? att : (obj in ref.type ? obj : null));
+				let ftype = this._ftype;
+				return ftype !== null ? ftype : this._node.type;
 			}
 		},
 		/**
-		`void  value Retorna ou define o valor do formulário HTML (valor depende do elemento).
+		- `void value`: Retorna ou define o atributo `value` do elemento HTML, se existente. O valor retornado depende do elemento.
 		**/
 		value: {
-			get: function()  {//fixme _ref é nulo quando não for formulário
-				if ("value" in this._ref) return this[this._ref.value];
+			get: function()  {
+				let fdata = this._fdata;
+				return this[("value" in fdata ? fdata.value : "_value")];
 			},
 			set: function(x) {
-				if ("value" in this._ref) this[this._ref.value] = x;
+				if (!("value" in this._node)) return;
+				let fdata = this._fdata;
+				this[("value" in fdata ? fdata.value : "_value")] = x;
 			}
 		},
 		/**
-		`void  text Retorna ou define o conteúdo textual do formulário HTML (valor depende do elemento).
+		- `string text`: Retorna ou define o conteúdo textual do elemento HTML.
 		**/
 		text: {
 			get: function()  {
-				if ("text" in this._ref) return this[this._ref.text];
+				let fdata = this._fdata;
+				return this[("text" in fdata ? fdata.text : "_text")];
 			},
 			set: function(x) {
-				if ("text" in this._ref) this[this._ref.text] = x;
+				let fdata = this._fdata;
+				this[("text" in fdata ? fdata.text : "_text")] = x;
 			}
 		},
+		/**
+		- `string|null name`: Retorno o nome do elemento HTML. O retorno e a definição são definidos pelos atributos `name` ou `id`, nessa ordem. Se ambos forem vazios ou inexistentes, retornará `null`.
+		**/
 		name: {
 			get: function() {
-				if (this.type === null) return null;
-				if (__Type(this._node.name).nonempty) return this._node.name.trim();
-				if (__Type(this._node.id).nonempty)   return this._node.id.trim();
+				if ("name" in this._node && __Type(this._node.name).nonempty)
+					return this._node.name.trim();
+				if (__Type(this._node.id).nonempty)
+					return this._node.id.trim();
 				return null;
 			},
 			set: function(x) {
-				this._node.name = x === null || x === undefined ? "" : String(x).trim();
+				if ("name" in this._node)
+					this._node.name = x === null ? "" : String(x).trim();
+				else
+					this._node.id   = x === null ? "" : String(x).trim();
 			}
 		},
 		send: {
 			get: function() {
-				if (!("send" in this._ref)) return null;
-				let pack = {name: this.name, value: this[this._ref.send]};
+				if (!("send" in this._fdata)) return null;
+				let pack = {name: this.name, value: this[this._fdata.send]};
 				return (pack.name === null || pack.value === null) ? null : pack;
 			}
 		},
