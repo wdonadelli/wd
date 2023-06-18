@@ -2490,11 +2490,11 @@ function __strClear(x) {return __String(x).clear;}
 			get: function()  {
 				let data = __Type(this._value);
 				if (!data.week) return "";
-				let info = data.toString().trim().replace(/[^0-9]+/, "|").split("|");
-				let year = info[0].length === 4 ? info[0] : info[1];
-				let week = info[0].length === 2 ? info[0] : info[1];
-				let maxw = __DateTime(year+"-01-01").maxWeekForm;
-				if (Number(week) < 0 || Number(week) > maxw) return "";
+				let info = this._value.trim();
+				let year = info.match(/[+-]?\d\d\d\d+/)[0];
+				let week = info.match(data._re.week.test(info) ? /\d\d$/ : /^\d\d/)[0];
+				let maxi = __DateTime(year+"-01-01").maxWeekForm;
+				if (Number(week) > maxi) return "";
 				return year+"-W"+week;
 			},
 			set: function(x) {
@@ -2507,6 +2507,81 @@ function __strClear(x) {return __String(x).clear;}
 				this._value = null;
 			}
 		},
+		/**
+		- `string _month`: Retorna ou define o valor do mês do formulário HTML.
+		**/
+		_month: {
+			get: function()  {
+				let data = __Type(this._value);
+				if (!data.month) return "";
+				let info = this._value.trim();
+ 				if (data._re.month.test(info))
+ 					return info;
+ 				if (data._re.monthMY.test(info))
+ 					return info.replace(/^(\d\d)\/(.+)$/, "$2-$1");
+				info = info.split(/[ /]/);
+				return info[1]+"-"+("0"+String(data._getMonths(info[0]))).slice(-2);
+			},
+			set: function(x) {
+				let data = __Type(x);
+				if (data.month) {
+					this._value = data.toString();
+					this._value = this._month === "" ? null : this._month;
+					return;
+ 				}
+				this._value = null;
+			}
+		},
+		/**
+		- `string _url`: Retorna ou define o valor da URL do formulário HTML.
+		**/
+		_url: {
+			get: function()  {
+				let data = __Type(this._value);
+				return data.url ? this._value.trim() : "";
+			},
+			set: function(x) {
+				let data = __Type(x);
+				this._value = data.url ? x.trim() : null;
+			}
+		},
+		/**
+		- `string|array _email`: Retorna ou define o valor de e-mail do formulário HTML. Se o elemento tiver o atributo `multiple`, múltiplos endereços poderão ser definidos ou retornados por array.
+		**/
+		_email: {
+			get: function()  {
+				let data = __Type(this._value);
+				if (!data.email) return "";
+				let email = this._value.replace(/\ +/g, "").split(",");
+				if (this._node.multiple) return email;
+				return email.length > 1  ? "" : email.join("");
+			},
+			set: function(x) {
+				let data  = __Type(x);
+				if (data.array)
+					this._email = x.join(",");
+				else if (data.email && this._node.multiple)
+					this._value = x.replace(/\ +/g, "");
+				else if (data.email && !this._node.multiple)
+					this._value = x.split(",").length > 1 ? "" : x.replace(/\ +/g, "");
+				else
+					this._value = null;
+			}
+		},
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 		/**
 		- `string|array _vcombo`: Retorna ou define o valor do formulário HTML `select/combobox`.
 		- Se informado um array e o elemento aceitar múltiplos valores, serão selecionadas as opções cujo valor corresponde aos itens informados no array.
@@ -2566,6 +2641,7 @@ function __strClear(x) {return __String(x).clear;}
 					this._value = x;
 			}
 		},
+
 
 //FIXME faltam muitos tipo de formulários ainda: url, email, fone, month....
 
