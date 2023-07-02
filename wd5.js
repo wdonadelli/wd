@@ -1406,8 +1406,7 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		- `void  wdNotation`: Retorna o valor ou um objeto a partir de uma regra de notação utilizada pela biblioteca:
-		- "valor" retorna `valor`;
+		- `void  wdNotation`: Retorna o valor informado ou um array de objetos se o valor corresponder a regra de notação da biblioteca:
 		- "x{X}y{Y}" retorna `[{x&colon; X, y&colon; Y}]`; e
 		- "x{X}&amp;y{Y}" retorna `[{x&colon; X}, {y&colon; Y}]`.
 		**/
@@ -1994,22 +1993,31 @@ function __strClear(x) {return __String(x).clear;}
 				return 24*3600*date - (24*3600 - time);
       }
 		},
-
-
-
-
-
-		test: {
+		/**
+		- `string testDrive()`: checa a sequencialidade dos dias e dos dias da semana.
+		- O atributo opcional `x` define os anos de início e término da simulação. Seu valor padrão é 100.
+		**/
+		testDrive: {
 			value: function(x) {
-				if (x === undefined) x = 1000;
-				let dt = __DateTime("0000-01-01");
-				dt.year = -x;
-				let n  = dt.dateOf();
-				while (dt.year !== x || dt.month !== 12 || dt.day !== 31) {
-					dt.day++;
-					if (dt.dateOf() !== (n+1)) throw new Error(dt.toDateString()+", n:"+n+", dateOf: "+dt.dateOf());
-					n++;
+				/* https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date */
+				if (x === undefined) x = 100;
+				let min = __DateTime("0000-01-01");
+				let max = __DateTime("0000-12-31");
+				min.year = -Math.abs(x);
+				max.year = +Math.abs(x);
+				let i  = min.dateOf();
+				let w  = min.weekDay;
+				let ni = min.dateOf();
+				let nf = max.dateOf();
+				console.log(min.toDateString());
+				while (min <= max) {
+					if (i !== min.dateOf()) throw new Error("dateOf: "  + min.toString());
+					if (w !== min.weekDay)  throw new Error("weekDay: " + min.toString());
+					min.day++;
+					i++;
+					w = w === 7 ? 1 : (w+1);
 				}
+				console.log(min.toDateString());
 				return "Sucesso!"
 			}
 		}
@@ -2276,16 +2284,17 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		- `array sort`: Ordena a lista na sequencia: número, tempo, data, datatempo, texto, booelano, nulo, nós, lista, objeto, função, expressão regular, indefinido e demais valores.
+		- `array sort(boolean asc=true)`: Retorna a lista ordenada e organizada por grupos na seguinte sequência: número, tempo, data, datatempo, texto, booelano, nulo, nós, lista, objeto, função, expressão regular, indefinido e demais valores.
+		- O argumento opcional `asc` define a classificação da lista cujo valor padrão é ascendente. Se falso, a lista será invertida.
 		**/
 		sort: {
-			get: function() {
+			value: function(asc) {
 				let order = [
 					"number", "time", "date", "datetime", "string", "boolean", "null", "node",
 					"array", "object", "function", "regexp", "undefined", "unknown"
 				];
 				let array = this._value.slice();
-				return array.sort(function(a, b) {
+				array.sort(function(a, b) {
 					let A = __Type(a);
 					let B = __Type(b);
 					/* comparação entre tipos diferentes */
@@ -2295,8 +2304,8 @@ function __strClear(x) {return __String(x).clear;}
 					let avalue = a;
 					let bvalue = b;
 					if (A.node) {
-						avalue = __String(a.textContent.toLowerCase()).clear();
-						bvalue = __String(b.textContent.toLowerCase()).clear();
+						avalue = __String(a.textContent.toLowerCase()).clear().trim();
+						bvalue = __String(b.textContent.toLowerCase()).clear().trim();
 					} else if (A.number || A.boolean) {
 						avalue = A.valueOf();
 						bvalue = B.valueOf();
@@ -2304,19 +2313,32 @@ function __strClear(x) {return __String(x).clear;}
 						avalue = __DateTime(A.value).valueOf();
 						bvalue = __DateTime(B.value).valueOf();
 					} else if (A.type === "string") {
-						avalue = __String(a.toLowerCase()).clear();
-						bvalue = __String(b.toLowerCase()).clear();
+						avalue = __String(a.toLowerCase()).clear().trim();
+						bvalue = __String(b.toLowerCase()).clear().trim();
 					}
 					return avalue > bvalue ? 1 : -1;
 				});
+				return asc === false ? array.reverse() : array;
 			}
 		},
 		/**
-		- `array order`: Retorna uma lista ordenada sem valores repetidos.
+		- `array autoSort`: Retorna a lista ordenada de forma ascendente, mas se a lista já estiver nesta ordem, retornará seu inverso.
+		**/
+		autoSort: {
+			get: function() {
+				let sort = this.sort();
+				let i = -1;
+				while (++i < this.length)
+					if (sort[i] !== this._value[i]) return sort;
+				return sort.reverse();
+			}
+		},
+		/**
+		- `array order`: Retorna uma lista ordenada de forma crescente sem valores repetidos.
 		**/
 		order: {
 			get: function() {
-				return __Array(this.unique).sort;
+				return __Array(this.unique).sort();
 			}
 		},
 		/**
@@ -2425,8 +2447,11 @@ function __strClear(x) {return __String(x).clear;}
 			},
 			set: function(x) {
 				let data = __Type(x);
-				if      (data.finite) this._value = data.valueOf();
-				else if (data.null)   this._value = null;
+				if (data.finite) {
+					this._value = data.valueOf();
+				} else if (data.null) {
+					this._value = null;
+				}
 			}
 		},
 		/**
@@ -2440,10 +2465,13 @@ function __strClear(x) {return __String(x).clear;}
 			set: function(x) {
 				let data = __Type(x);
 				if (data.time) {
+					let old = this._value;
 					this._value = data.toString();
-					if (this._time === data.toString()) return;
+					/* teste de aceitabilidade do formulário */
+					if (this._time === "") this._value = old;
+				} else if (data.null) {
+					this._value = null;
 				}
-				this._value = null;
 			}
 		},
 		/**
@@ -2457,10 +2485,13 @@ function __strClear(x) {return __String(x).clear;}
 			set: function(x) {
 				let data = __Type(x);
 				if (data.date) {
+					let old = this._value;
 					this._value = data.toString();
-					if (this._date === data.toString()) return;
+					/* teste de aceitabilidade do formulário */
+					if (this._date === "") this._value = old;
+				} else if (data.null) {
+					this._value = null;
 				}
-				this._value = null;
 			}
 		},
 		/**
@@ -2469,18 +2500,22 @@ function __strClear(x) {return __String(x).clear;}
 		_datetime: {
 			get: function()  {
 				let data = __Type(this._value);
-				if (data.time || data.datetime || data.date)
-					return __DateTime(data.toString()).toString()
+				if (data.time || data.datetime || data.date) {
+					return __DateTime(data.toString()).toString();
+				}
 				return "";
 			},
 			set: function(x) {
 				let data = __Type(x);
 				if (data.datetime || data.time || data.date) {
 					let dt = __DateTime(data.toString());
+					let old = this._value;
 					this._value = dt.toString();
-					if (this._datetime === dt.toString()) return;
+					/* teste de aceitabilidade do formulário */
+					if (this._datetime === "") this._value = old;
+				} else if (data.null) {
+					this._value = null;
 				}
-				this._value = null;
 			}
 		},
 		/**
@@ -2490,21 +2525,23 @@ function __strClear(x) {return __String(x).clear;}
 			get: function()  {
 				let data = __Type(this._value);
 				if (!data.week) return "";
-				let info = this._value.trim();
-				let year = info.match(/[+-]?\d\d\d\d+/)[0];
-				let week = info.match(data._re.week.test(info) ? /\d\d$/ : /^\d\d/)[0];
+				let info = this._value.trim().replace(/(\,\ |-W)/i, "|").split("|");
+				let year = info[0].length >= 4 ? info[0] : info[1];
+				let week = info[0].length >= 4 ? info[1] : info[0];
 				let maxi = __DateTime(year+"-01-01").maxWeekForm;
 				if (Number(week) > maxi) return "";
-				return year+"-W"+week;
+				return year.replace("+", "")+"-W"+week;
 			},
 			set: function(x) {
 				let data = __Type(x);
 				if (data.week) {
+					this.old = this._value;
 					this._value = data.toString();
-					this._value = this._week === "" ? null : this._week;
-					return;
- 				}
-				this._value = null;
+					/* teste de aceitabilidade do formulário */
+					if (this._week === "") this._value = old;
+ 				} else if (data.null) {
+					this._value = null;
+				}
 			}
 		},
 		/**
@@ -2525,11 +2562,13 @@ function __strClear(x) {return __String(x).clear;}
 			set: function(x) {
 				let data = __Type(x);
 				if (data.month) {
+					let old = this._value;
 					this._value = data.toString();
-					this._value = this._month === "" ? null : this._month;
-					return;
- 				}
-				this._value = null;
+					/* teste de aceitabilidade do formulário */
+					if (this._month === "") this._value = old;
+ 				} else if (data.null) {
+					this._value = null;
+				}
 			}
 		},
 		/**
@@ -2542,69 +2581,72 @@ function __strClear(x) {return __String(x).clear;}
 			},
 			set: function(x) {
 				let data = __Type(x);
-				this._value = data.url ? x.trim() : null;
+				if (data.url) {
+					this._value = x.trim();
+				} else if (data.null) {
+					this._value = null;
+				}
 			}
 		},
 		/**
-		- `string|array _email`: Retorna ou define o valor de e-mail do formulário HTML. Se o elemento tiver o atributo `multiple`, múltiplos endereços poderão ser definidos ou retornados por array.
+		- `string|array _email`: Retorna ou define o valor de e-mail do formulário HTML. Se o elemento tiver o atributo `multiple`, múltiplos endereços serão definidos ou obtidos por array.
 		**/
 		_email: {
 			get: function()  {
 				let data = __Type(this._value);
 				if (!data.email) return "";
 				let email = this._value.replace(/\ +/g, "").split(",");
-				if (this._node.multiple) return email;
-				return email.length > 1  ? "" : email.join("");
+				return this._node.multiple ? email : (email.length > 1 ? "" : email[0]);
 			},
 			set: function(x) {
 				let data  = __Type(x);
-				if (data.array)
+				if (data.array) {
 					this._email = x.join(",");
-				else if (data.email && this._node.multiple)
-					this._value = x.replace(/\ +/g, "");
-				else if (data.email && !this._node.multiple)
-					this._value = x.split(",").length > 1 ? "" : x.replace(/\ +/g, "");
-				else
+				} else if (data.email) {
+					let old = this._value;
+					x = x.replace(/\ +/g, "").split(",");
+					this._value = this._node.multiple ? x.join(",") : (x.length > 1 ? old : x[0]);
+				} else if (data.null) {
 					this._value = null;
+				}
 			}
 		},
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 		/**
-		- `string|array _vcombo`: Retorna ou define o valor do formulário HTML `select/combobox`.
-		- Se informado um array e o elemento aceitar múltiplos valores, serão selecionadas as opções cujo valor corresponde aos itens informados no array.
+		- `string|array _vcombo`: Retorna ou define o valor do formulário HTML de caixa de combinação (`select`).
+		- Se o elemento possuir o atributo `multiple`, o valor retornará e poderá ser definido por uma lista de opções contidas no combo. Caso contrário, apenas um valor simples será aceito.
 		**/
 		_vcombo: {
 			get: function() {
+				if (!this._node.multiple) return this._value;
 				let data = [];
 				let i = -1;
 				while (++i < this._node.length)
 					if (this._node[i].selected) data.push(this._node[i].value);
-				return data.length < 2 ? data.join("") : data;
+				return data.length === 0 ? "" : data;
 			},
 			set: function(x) {
-				let data = __Type(x).array ? x : [x];
-				data.forEach(function(v,i,a) {a[i] = String(v);});
-				let i = -1;
-				while (++i < this._node.length)
-					this._node[i].selected = data.indexOf(this._node[i].value) >= 0;
-				return;
+				let data = __Type(x);
+				if (data.null) {
+					this._value = null;
+				} else if (data.array && this._node.multiple) {
+					x.forEach(function(v,i,a) {a[i] = String(v);});
+					let i = -1;
+					while (++i < this._node.length)
+						this._node[i].selected = x.indexOf(this._node[i].value) >= 0;
+				} else if (!data.array) {
+					let old = this._vcombo;
+					x = String(x);
+					this._value = x;
+					if (this._value !== x) this._vcombo = old;
+				}
 			}
 		},
+
+
+
+
 		/**
-		- `string|array _tcombo`: Retorna ou define o conteúdo textual do formulário HTML `select/combobox`.
+		- `string|array _tcombo`: Retorna ou define o conteúdo textual do formulário HTML de caixa de combinação (`select`).
 		- Se informado um array e o elemento aceitar múltiplos valores, serão selecionadas as opções cujo conteúdo textual corresponde aos itens informados no array.
 		**/
 		_tcombo: {
@@ -2624,6 +2666,21 @@ function __strClear(x) {return __String(x).clear;}
 				return;
 			}
 		},
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 		/**
 		- `string|null|boolean _check`: Retorná o valor do formulário HTML `checkbox` ou `radio` se checado, caso contrário, `null`.
 		- Se o valor for booleano, definirá a checagem; se for nulo, inverterá a checagem; e, se for string, definirá o valor.
