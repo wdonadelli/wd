@@ -2447,15 +2447,11 @@ function __strClear(x) {return __String(x).clear;}
 			},
 			set: function(x) {
 				let data = __Type(x);
-				if (data.finite) {
-					this._value = data.valueOf();
-				} else if (data.null) {
-					this._value = null;
-				}
+				this._value = data.finite ? data.valueOf() : null;
 			}
 		},
 		/**
-		- `string _time`: Retorna ou define o valor temporal do formulário HTML.
+		- `string _time`: Retorna ou define o valor temporal do formulário HTML (hora:minuto).
 		**/
 		_time: {
 			get: function()  {
@@ -2465,17 +2461,15 @@ function __strClear(x) {return __String(x).clear;}
 			set: function(x) {
 				let data = __Type(x);
 				if (data.time) {
-					let old = this._value;
-					this._value = data.toString();
-					/* teste de aceitabilidade do formulário */
-					if (this._time === "") this._value = old;
-				} else if (data.null) {
+					let dt = __DateTime(x);
+					this._value = dt.format("{hh}:{mm}")
+				} else {
 					this._value = null;
 				}
 			}
 		},
 		/**
-		- `string _date`: Retorna ou define o valor de data do formulário HTML.
+		- `string _date`: Retorna ou define o valor de data do formulário HTML (ano &gt; 0).
 		**/
 		_date: {
 			get: function()  {
@@ -2485,17 +2479,15 @@ function __strClear(x) {return __String(x).clear;}
 			set: function(x) {
 				let data = __Type(x);
 				if (data.date) {
-					let old = this._value;
-					this._value = data.toString();
-					/* teste de aceitabilidade do formulário */
-					if (this._date === "") this._value = old;
-				} else if (data.null) {
+					let dt = __DateTime(x);
+					this._value = dt.year < 1 ? null : dt.toDateString();
+				} else {
 					this._value = null;
 				}
 			}
 		},
 		/**
-		- `string _datetime`: Retorna ou define o valor de data/tempo do formulário HTML.
+		- `string _datetime`: Retorna ou define o valor de data/tempo do formulário HTML (hora:minuto, ano &gt; 0).
 		**/
 		_datetime: {
 			get: function()  {
@@ -2508,12 +2500,11 @@ function __strClear(x) {return __String(x).clear;}
 			set: function(x) {
 				let data = __Type(x);
 				if (data.datetime || data.time || data.date) {
-					let dt = __DateTime(data.toString());
-					let old = this._value;
-					this._value = dt.toString();
-					/* teste de aceitabilidade do formulário */
-					if (this._datetime === "") this._value = old;
-				} else if (data.null) {
+					let now = __DateTime();
+					let str = data.time ? now.toDateString()+"T"+data.value : data.value;
+					let dt  = __DateTime(str);
+					this._value = dt.year < 1 ? null : dt.format("{YYYY}-{MM}-{DD}T{hh}:{mm}");
+				} else {
 					this._value = null;
 				}
 			}
@@ -2535,11 +2526,10 @@ function __strClear(x) {return __String(x).clear;}
 			set: function(x) {
 				let data = __Type(x);
 				if (data.week) {
-					this.old = this._value;
 					this._value = data.toString();
-					/* teste de aceitabilidade do formulário */
-					if (this._week === "") this._value = old;
- 				} else if (data.null) {
+					let week = this._week;
+					this._value = week === "" ? null : week;
+ 				} else {
 					this._value = null;
 				}
 			}
@@ -2562,11 +2552,10 @@ function __strClear(x) {return __String(x).clear;}
 			set: function(x) {
 				let data = __Type(x);
 				if (data.month) {
-					let old = this._value;
 					this._value = data.toString();
-					/* teste de aceitabilidade do formulário */
-					if (this._month === "") this._value = old;
- 				} else if (data.null) {
+					let month = this._month;
+					this._value = month === "" ? null : month;
+ 				} else {
 					this._value = null;
 				}
 			}
@@ -2581,11 +2570,7 @@ function __strClear(x) {return __String(x).clear;}
 			},
 			set: function(x) {
 				let data = __Type(x);
-				if (data.url) {
-					this._value = x.trim();
-				} else if (data.null) {
-					this._value = null;
-				}
+				this._value = data.url ? x.trim() : null;
 			}
 		},
 		/**
@@ -2596,16 +2581,15 @@ function __strClear(x) {return __String(x).clear;}
 				let data = __Type(this._value);
 				if (!data.email) return "";
 				let email = this._value.replace(/\ +/g, "").split(",");
-				return this._node.multiple ? email : (email.length > 1 ? "" : email[0]);
+				return this._node.multiple ? email : (email.length === 1 ? email[0] : "");
 			},
 			set: function(x) {
 				let data  = __Type(x);
 				if (data.array) {
 					this._email = x.join(",");
 				} else if (data.email) {
-					let old = this._value;
 					x = x.replace(/\ +/g, "").split(",");
-					this._value = this._node.multiple ? x.join(",") : (x.length > 1 ? old : x[0]);
+					this._value = this._node.multiple ? x.join(",") : (x.length === 1 ? x[0] : null);
 				} else if (data.null) {
 					this._value = null;
 				}
@@ -2613,105 +2597,116 @@ function __strClear(x) {return __String(x).clear;}
 		},
 		/**
 		- `string|array _vcombo`: Retorna ou define o valor do formulário HTML de caixa de combinação (`select`).
-		- Se o elemento possuir o atributo `multiple`, o valor retornará e poderá ser definido por uma lista de opções contidas no combo. Caso contrário, apenas um valor simples será aceito.
+		- Se o elemento possuir o atributo `multiple`, o retorno e a definição se realizará por lista de valores. Caso contrário, por valor simples.
 		**/
 		_vcombo: {
 			get: function() {
 				if (!this._node.multiple) return this._value;
 				let data = [];
-				let i = -1;
+				let i    = -1;
 				while (++i < this._node.length)
-					if (this._node[i].selected) data.push(this._node[i].value);
+					if (this._node[i].selected)
+						data.push(this._node[i].value);
 				return data.length === 0 ? "" : data;
 			},
 			set: function(x) {
 				let data = __Type(x);
 				if (data.null) {
 					this._value = null;
-				} else if (data.array && this._node.multiple) {
+				} else if (!this._node.multiple) {
+					this._value = String(x);
+				} else {
+					if (!data.array) x = [x];
 					x.forEach(function(v,i,a) {a[i] = String(v);});
 					let i = -1;
 					while (++i < this._node.length)
 						this._node[i].selected = x.indexOf(this._node[i].value) >= 0;
-				} else if (!data.array) {
-					let old = this._vcombo;
-					x = String(x);
-					this._value = x;
-					if (this._value !== x) this._vcombo = old;
 				}
 			}
 		},
-
-
-
-
 		/**
 		- `string|array _tcombo`: Retorna ou define o conteúdo textual do formulário HTML de caixa de combinação (`select`).
-		- Se informado um array e o elemento aceitar múltiplos valores, serão selecionadas as opções cujo conteúdo textual corresponde aos itens informados no array.
+		- Se o elemento possuir o atributo `multiple`, o retorno e a definição se realizará por lista de conteúdos textuais. Caso contrário, por valor simples.
 		**/
 		_tcombo: {
 			get: function() {
-				let data = [];
-				let i = -1;
+				let text = [];
+				let i    = -1;
 				while (++i < this._node.length)
-					if (this._node[i].selected) data.push(this._node[i].textContent);
-				return data.length < 2 ? data.join("") : data;
+					if (this._node[i].selected)
+						text.push(this._node[i].textContent);
+				return text.length === 0 ? "" : (this._node.multiple ? text : text[0]);
 			},
 			set: function(x) {
-				let data = __Type(x).array ? x : [x];
-				data.forEach(function(v,i,a) {a[i] = String(v);});
-				let i = -1;
-				while (++i < this._node.length)
-					this._node[i].selected = data.indexOf(this._node[i].textContent) >= 0;
-				return;
+				let data = __Type(x);
+				if (data.null) {
+					this._value = null;
+				} else if (!this._node.multiple && data.array) {
+					this._value = null;
+				} else {
+					if (!data.array) x = [x];
+					x.forEach(function(v,i,a) {a[i] = String(v);});
+					let i = -1;
+					while (++i < this._node.length)
+						this._node[i].selected = x.indexOf(this._node[i].textContent) >= 0;
+				}
 			}
 		},
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 		/**
-		- `string|null|boolean _check`: Retorná o valor do formulário HTML `checkbox` ou `radio` se checado, caso contrário, `null`.
-		- Se o valor for booleano, definirá a checagem; se for nulo, inverterá a checagem; e, se for string, definirá o valor.
+		- `string|null|boolean _check`: Retorna ou define o valor do formulário HTML `checkbox` ou `radio`.
+		- Se o campo estiver checado, retornará o seu valor, caso contrário, retornará `null`.
+		- Se for definido um booleano, definirá a checagem; se for nulo, inverterá a checagem; e, se for string, definirá o valor.
 		**/
 		_check: {
 			get: function() {
 				return this._node.checked ? this._value : null;
 			},
 			set: function(x) {
-				if (x === null)
+				let data = __Type(x);
+				if (data.null)
 					this._node.checked = !this._node.checked;
-				else if (__Type(x).boolean)
+				else if (data.boolean)
 					this._node.checked = x;
 				else
-					this._value = x;
+					this._value = String(x);
 			}
 		},
-
-
-//FIXME faltam muitos tipo de formulários ainda: url, email, fone, month....
-
-
-
+		/**
+		- `string _tel`: Retorna ou define o valor do formulário HTML `tel`.
+		- Para ser válido, o valor deverá conter pelo menos um número.
+		**/
+		_tel: {
+			get: function() {
+				return (/\d/).test(this._value) ? this._value : "";
+			},
+			set: function(x) {
+				let data = __Type(x);
+				if (data.null) {
+					this._value = null;
+				} else {
+					x = String(x);
+					this._value = (/\d/).test(x) ? x : null;
+				}
+			}
+		},
+		/**
+		- `object|array _file`: Retorna ou define como nulo o valor do formulário HTML `file`.
+		**/
 		_file: {
 			get: function() {
+				if (this._node.files.length === 0)
+					return "";
+				if (!this._node.multiple)
+					return this._node.files[0];
 				let data = [];
 				let i = -1;
-				while (++i < this._node.files.length) data.push(this._node.files[i]);
-				return data.length === 0 ? "" :  data;
+				while (++i < this._node.files.length)
+					data.push(this._node.files[i]);
+				return data;
 			},
-			set: function(x) {return;}
+			set: function(x) {
+				this._value = null;
+			}
 
 /* FIXME importantíssimo
 se file ou select múltiplo, o nome tem que vir seguido de []
@@ -2785,7 +2780,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					file:     {value: "_file", send: "value"},
 					url:      {value: "_url", text: "_url", send: "value"},
 					email:    {value: "_email", text: "_mail", send: "value"},
-					tel:      {value: "_value",  text: "_value", send: "value"},
+					tel:      {value: "_tel",  text: "_tel", send: "value"},
 					text:     {value: "_value",  text: "_value", send: "value"},
 					search:   {value: "_value",  text: "_value", send: "value"},
 					password: {send: "_value"},
@@ -2819,7 +2814,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			}
 		},
 		/**
-		- `string _tag`: Retorna o nome, em minúsculo, do elemento HTML.
+		- `string tag`: Retorna o nome, em minúsculo, do elemento HTML.
 		**/
 		tag: {
 			get: function() {return this._node.tagName.toLowerCase();}
@@ -2878,6 +2873,10 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					this._node.id   = x === null ? "" : String(x).trim();
 			}
 		},
+		/**
+		- `object|null send`: retorna um objeto contendo os atributos `name` (nome ou identificador do campo) e `value` (valor do campo).
+		- Retornará `null` se o campo não enviar dados em requisições, se o nome do campo não estiver definido ou se seu valor for nulo.
+		**/
 		send: {
 			get: function() {
 				if (!("send" in this._fdata)) return null;
@@ -2885,35 +2884,12 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return (pack.name === null || pack.value === null) ? null : pack;
 			}
 		},
-	});
-
-
-/*===========================================================================*/
-	/**
-	###Nós HTML
-	**/
 
 
 
 
-	/**
-	`/**
-	`object __Node(b{/**
-	`node input)`
-	Construtor para manipulação de nós  HTML
-	l{d{v{input}v - Elemento HTML.
-	**/
-	function __Node(input) {
-		if (!(this instanceof __Node))	return new __Node(input);
-		let check = __Type(input);
-		if (check.type !== "node") input = document.body;
-		Object.defineProperties(this, {
-			_value: {value: input}
-		});
-	}
-	/**6{Métodos e atributos}6 l{*/
-	Object.defineProperties(__Node.prototype, {
-		constructor: {value: __Node},
+
+		//FIXME arrumar daqui pra frente
 		valueOf: {
 			value: function() {return this._value.valueOf();}
 		},
