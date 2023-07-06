@@ -2897,51 +2897,38 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			value: function() {return this._value.outerHTML;}
 		},
 		/**
-		string}b tag Retorna o nome do elemento HTML.
-		**/
-		tag: {
-			get: function() {return this._value.tagName.toLowerCase();}
-		},
-		/**
-		`void  attribute(string attr, void  value)}t
-		Retorna ou define um atributo HTML, retorna `null` se inexistente.}dL{
-		v{attr}v - Nome do atributo a ser definido ou retornado.
-		v{value}v - (Opcional) Valor do atributo. Se ausente, retornará o atributo, se nulo, apagará o atributo.}d}L
+		- `void  attribute(string attr, void  value)`: Define ou retorna um atributo HTML (retorna `null` se inexistente).
+		- O argumento `attr` define o nome do atributo e o argumento `value`, se informado, o seu valor.
+		- Se `value` não for informado, a função retornará o valor correspondente e caso for `null`, o atributo será removido.
 		**/
 		attribute: {
 			value: function(attr, value) {
 				if (arguments.length === 0) return null;
-				attr = String(attr);
-				if (arguments.length === 1)
-					return attr in this._value.attributes ? this._value.attributes[attr].value : null;
-				if (value === null)
-					this._value.removeAttribute(attr);
-				else
-					this._value.setAttribute(attr, value);
-				return this.attribute(attr);
+				if (arguments.length === 1) return this._node.getAttribute(String(attr));
+				if (value === null) this._node.removeAttribute(String(attr));
+				else                this._node.setAttribute(String(attr), value);
+				return value;
 			}
 		},
 		/**
-		`void  object(string attr, void  ...)}t
-		Retorna ou define um atributo ou método do objeto HTML, retorna `null` se inexistente.
-		attr}v - Nome do atributo ou função a ser definido ou retornado.
-		Os demais argumentos correspondem ao valor do atributo ou aos argumentos do método.}d}L
+		- `void  object(string attr, void  ...)`: Define ou retorna um atributo ou método do objeto HTML, retorna `null` se inexistente.
+		- O argumento `attr` define o nome do atributo e os demais seus valores (poderá ser mais que um no caso de função com mais de um argumento).
+		- Se for informado apenas um atributo, a função retornará seu valor.
 		**/
 		object: {
 			value: function(attr) {
 				if (arguments.length === 0) return null;
-				attr = String(attr);
-				if (!(attr in this._value)) return null;
-				let type = __Type(this._value[attr]).type;
+				if (!(attr in this._node))  return null;
+				let type = __Type(this._node[attr]).type;
 				if (arguments.length === 1)
-					return type === "function" ? this._value[attr]() : this._value[attr];
+					return type === "function" ? this._node[attr]() : this._node[attr];
 				if (type !== "function") {
-					this._value[attr] = arguments[1];
+					this._node[attr] = arguments[1];
 					return this.object(attr);
 				}
 				let args = Array.prototype.slice.call(arguments);
 				args.shift();
-				return this._value[attr].apply(this._value, args);
+				return this._node[attr].apply(this._node, args);
 			}
 		},
 		/**
@@ -2951,10 +2938,46 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			get: function() {
 				let css = this.attribute("class");
 				if (css === null) return "";
-				let value = __String(css).clear().split(" ");
-				value = __Array(value).order.join(" ");
+				css = css.replace(/\ +/g, " ").trim().split(" ");
+				return __Array(css).order.join(" ");
+			},
+			set: function(x) {
+				let css  = __String(x).wdNotation;
+				let type = __Type(css);
+				if (type.chars) {
+					css = css.replace(/\ +/g, " ").trim().split(" ");
+					css = __Array(css).order.join(" ");
+					this.attribute("class", css);
+					return;
+				}
+				let value = __Array(this.css.split(" "));
+				//rpl, tgl, add, del,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+				/*
+				let css =
+				if (css === null) return "";
+
 				if (css !== value) this.attribute("class", value);
 				return value;
+				*/
 			}
 		},
 		/**
