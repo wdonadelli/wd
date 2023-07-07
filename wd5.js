@@ -2322,9 +2322,9 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		- `array autoSort`: Retorna a lista ordenada de forma ascendente, mas se a lista já estiver nesta ordem, retornará seu inverso.
+		- `array reverse`: Retorna a lista ordenada de forma ascendente, mas se a lista já estiver nesta ordem, retornará seu inverso.
 		**/
-		autoSort: {
+		reverse: {
 			get: function() {
 				let sort = this.sort();
 				let i = -1;
@@ -2351,11 +2351,23 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		- `array addTop(void  ...)`: Adiciona itens (argumentos) ao início da lista e a retorna.
+		- `array jump(void  ...)`: Adiciona itens (argumentos) ao início da lista e a retorna.
 		**/
-		addTop: {
+		jump: {
 			value: function() {
 				this._value.unshift.apply(this._value, arguments);
+				return this._value;
+			}
+		},
+		/**
+		- `array put(void  ...)`: Adiciona itens (argumentos) não existentes ao fim da lista e a retorna.
+		**/
+		put: {
+			value: function() {
+				let i = -1;
+				while (++i < arguments.length)
+					if (!this.check(arguments[i]))
+						this.add(arguments[i]);
 				return this._value;
 			}
 		},
@@ -2897,26 +2909,82 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			value: function() {return this._value.outerHTML;}
 		},
 		/**
-		- `void  attribute(string attr, void  value)`: Define ou retorna um atributo HTML (retorna `null` se inexistente).
-		- O argumento `attr` define o nome do atributo e o argumento `value`, se informado, o seu valor.
-		- Se `value` não for informado, a função retornará o valor correspondente e caso for `null`, o atributo será removido.
+		- `void attribute(string|object x)`: Define ou retorna um atributo HTML.
+		- Se o argumento for uma string simples, será retornado seu valor, mas, se inexistente, retornará `null`.
+		- Se o argumento for um string no formato `wdNotation` (objeto `__String`), será analisado como objeto.
+		- Se o argumento for um objeto, cada par nome/valor corresponderá ao equivalente em atributos HTML.
+		- Se o valor do argumento for `null`, o atributo será removido.
 		**/
 		attribute: {
-			value: function(attr, value) {
-				if (arguments.length === 0) return null;
-				if (arguments.length === 1) return this._node.getAttribute(String(attr));
-				if (value === null) this._node.removeAttribute(String(attr));
-				else                this._node.setAttribute(String(attr), value);
-				return value;
+			value: function(x) {
+				let data = __Type(x);
+				if (data.chars) {
+					x = x.trim();
+					let wd    = __String(x).wdNotation;
+					let check = __Type(wd[0]);
+					if (check.object) return this.attribute(wd[0]);
+					return this._node.getAttribute(x);
+				}
+				if (data.object) {
+					for (let attr in x) {
+						let val = x[attr];
+						if (val === null) this._node.removeAttribute(attr);
+						else              this._node.setAttribute(attr, val);
+					}
+					return x;
+				}
+				return null;
 			}
 		},
+
+
 		/**
-		- `void  object(string attr, void  ...)`: Define ou retorna um atributo ou método do objeto HTML, retorna `null` se inexistente.
-		- O argumento `attr` define o nome do atributo e os demais seus valores (poderá ser mais que um no caso de função com mais de um argumento).
-		- Se for informado apenas um atributo, a função retornará seu valor.
+		- `void object(string|object x)`: Define ou retorna um atributo HTML.
+		- Se o argumento for uma string simples, será retornado seu valor, mas, se inexistente, retornará `null`.
+		- Se o argumento for um string no formato `wdNotation` (objeto `__String`), será analisado como objeto.
+		- se o argumento for um objeto, cada par nome/valor corresponderá ao equivalente em atributos HTML.
 		**/
 		object: {
-			value: function(attr) {
+			value: function(x) {
+				let data = __Type(x);
+				if (data.chars) {
+					x = x.trim();
+					let wd    = __String(x).wdNotation;
+					let check = __Type(wd[0]);
+					if (check.object) return this.object(wd[0]);
+					if (!(x in this._node)) return null;
+					let name = __Type(this._node[x]);
+					return name.type === "function" ? this._node[	x]() : this._node[x];
+				}
+				if (data.object) {
+					for (let i in x) {
+						let toggle = i[0] === "!";
+						let attr   = i.replace("!", "");
+						let val    = x[attr];
+						let check  = __Type(this._node[attr]);
+						let test   = __Type(val);
+						if (check.type === "function") {
+							this._node[attr].apply(this._node, (test.type === "array" ? val : [val]));
+						} else {//FIXME
+
+
+
+						}
+
+
+
+
+						if (val === null)
+							this._node.removeAttribute(attr);
+						else
+							this._node.setAttribute(attr, val);
+					}
+					return x;
+				}
+				return null;
+
+
+				/*
 				if (arguments.length === 0) return null;
 				if (!(attr in this._node))  return null;
 				let type = __Type(this._node[attr]).type;
@@ -2929,12 +2997,71 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				let args = Array.prototype.slice.call(arguments);
 				args.shift();
 				return this._node[attr].apply(this._node, args);
+				*/
+
+
+
+
 			}
 		},
+
+
+
+
+
+
+
 		/**
-		string}b css Retorna e organiza, se for o caso, o valor do atributo HTML i{class}i.
+		- `string css(string|object x)`: Define ou retorna o valor do atributo HTML `class`.
+		- Se o argumento for uma string simples, definirá o valor do atributo.
+		- Se o argumento for um string no formato `wdNotation` (objeto `__String`), será analisado como objeto.
+		- se o argumento for um objeto, o nome do atributo corresponderá a uma operação e seu valor aos atributos css.
+		- A separação entre atributos css é feita por espaços.
+		- O atributo `val` definirá o valor de `class`, ou seja, se ele estiver definido, as demais operações serão ignoradas.
+		- O atributo `rpl` fará uma permuta de atributos css, se o primeiro existir, será substituído pelo segundo.
+		- O atributo `add` adiciona, o `del` remove e o `tgl` alterna atributos css.
 		**/
 		css: {
+			value: function(x) {
+				if (arguments.length === 0) {
+					let css = this.attribute("class");
+					if (css === null) return "";
+					css = __Array(css.replace(/\ +/g, " ").trim().split(" "));
+					return css.order.join(" ");
+				}
+				/* se for string, verificar se é wdNotation (object) ou css simples */
+				let data = __Type(x);
+				if (data.chars) {
+					x = x.trim();
+					let wd    = __String(x).wdNotation;
+					let check = __Type(wd[0]);
+
+					if (check.object) return this.css(wd[0]);
+
+					this.attribute({class: x});
+					let css = this.css();
+					this.attribute({class: css});
+					return css;
+				}
+				if (data.object) {
+					let list = __Array(this.css().split(" "));
+					if ("val" in x) return this.list(x.val);
+					if ("rpl" in x) list.replace.apply(list, x.rpl.split(" "));
+					if ("tgl" in x) list.toggle.apply(list, x.tgl.split(" "));
+					if ("add" in x) list.put.apply(list, x.add.split(" "));
+					if ("del" in x) list.delete.apply(list, x.del.split(" "));
+					return this.css(list.order.join(" "));
+				}
+				return this.css();
+			}
+		},
+
+
+
+
+
+
+		css1: {
 			get: function() {
 				let css = this.attribute("class");
 				if (css === null) return "";
@@ -2951,7 +3078,8 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					return;
 				}
 				let value = __Array(this.css.split(" "));
-				//rpl, tgl, add, del,
+				//rpl, tgl, add, del, val
+
 
 
 
