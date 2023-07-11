@@ -1406,9 +1406,42 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		- `void  wdNotation`: Retorna o valor informado ou um array de objetos se o valor corresponder a regra de notação da biblioteca:
-		- "x{X}y{Y}" retorna `[{x&colon; X, y&colon; Y}]`; e
-		- "x{X}&amp;y{Y}" retorna `[{x&colon; X}, {y&colon; Y}]`.
+		- `void  wdValue (void x)`: Transforma o valor recebido e retorna o valor correspondente para fins do método `wdNotation`.
+		- O argumento `x` recebe o valor a ser transformado.
+		**/
+		wdValue: {
+			value: function(x) {//console.log(x);
+				let types = {true: true, false: false, null: null, undefined: undefined};
+				let check = __Type(x);
+				let array = /^\[(.+)\]$/;
+				let regex = /^\/(.+)\/(g|i|gi|ig)?$/;
+				if (check.chars) {x = x.trim();}
+
+				if (check.array) {
+					let self = this;
+					x.forEach(function(v,i,a) {a[i] = self.wdValue(v);});
+					return x;
+				}
+				if (regex.test(x)) {
+					x = x.split("/");
+					return new RegExp(x[1], x[2]);
+				}
+				if (x in types)    return types[x];
+				if (x === "[]")    return [];
+				if (array.test(x)) return this.wdValue(x.replace(array, "$1").split(","));
+				if (check.number)  return check.value;
+
+				return x;
+			}
+		},
+		/**
+		- `void  wdNotation`: Retorna o valor informado ou um array de objetos se a string seguir notação específica.
+		- As seguintes strings serão transformadas em valores primitivos correspondentes: undefined, true, false e null.
+		- String com extremidades contendo "[" e "]" será transformada em um array unidimensional com itens separados por víngulas.
+		- String com extremidades contendo "/" e "/" será transformada em uma expressão regular (aceita complementos "g" e "i").
+		- A notação para objeto (conjunto nome/valor) deve ser feita na forma `nome{valor}`. Grupos de objetos são separados pelo caractere &amp;. Exemplos:
+		- "x{X}y{Y}" &rarrow; `[{x&colon; X, y&colon; Y}]`; "x{X}&amp;y{Y}" &rarrow; `[{x&colon; X}, {y&colon; Y}]`.
+		- A notação é limitada, só funcionando nos casos acima tratados.
 		**/
 		wdNotation: {
 			get: function() {
@@ -1418,40 +1451,34 @@ function __strClear(x) {return __String(x).clear;}
 				let char   = data.split("");
 				let open   = 0;
 				let key    = 0;
-				let types  = {true: true, false: false, null: null, undefined: undefined};
 				let name   = [];
 				let value  = [];
 				let object = false;
+				let self   = this;
 				char.forEach(function(v,i,a) {
-					if (v === "{" && open === 0) {
+					if (v === "{" && open === 0) { /* define nome */
 						name  = name.join("").trim();
 						if (name === "") name = "#";
 						list[key][name] = undefined;
 						open++;
 						value = [];
-					} else if (v === "}" && open === 1) {
-						value = value.join("").trim();
-						if (value === "") value = undefined;
-						let check = __Type(value);
-						if      (check.number)   value = check.value;
-						else if (value in types) value = types[value];
-						list[key][name] = value;
+					} else if (v === "}" && open === 1) { /* define valor */
+						value = value.join("");
+						list[key][name] = self.wdValue(value);
 						open--;
 						name   = [];
 						object = true;
-					} else if (v === "&" && open === 0) {
+					} else if (v === "&" && open === 0) { /* quebra grupo */
 						list.push({});
 						key++;
-					} else if (open === 0) {
+					} else if (open === 0) { /* captura nome */
 						name.push(v);
-					} else if (open > 0) {
+					} else if (open > 0) { /* captura valor */
 						if (v === "{" || v === "}") open += v === "{" ? +1 : -1;
 						value.push(v);
 					}
 				});
-				if (object) return list;
-				let check = __Type(data);
-				return check.number ? check.value : (data in types ? types[data] : data);
+				return object ? list : this.wdValue(data);
 			}
 		},
 	});
@@ -2952,13 +2979,18 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					let wd    = __String(x).wdNotation;
 					let check = __Type(wd[0]);
 					if (check.object) return this.object(wd[0]);
-					if (!(x in this._node)) return null;
-					let name = __Type(this._node[x]);
-					return name.type === "function" ? this._node[	x]() : this._node[x];
+					if (!(x in this._node)) return undefined;
+					let attr = __Type(this._node[x]);
+					return attr.type === "function" ? this._node[x]() : this._node[x];
 				}
 				if (data.object) {
-					for (let i in x) {
-						let toggle = i[0] === "!";
+					for (let attr in x) {
+						let toggle = attr === "!"+attr;
+
+
+
+
+
 						let attr   = i.replace("!", "");
 						let val    = x[attr];
 						let check  = __Type(this._node[attr]);
@@ -3012,32 +3044,24 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 
 
 		/**
-		- `string css(string|object x)`: Define ou retorna o valor do atributo HTML `class`.
-		- Se o argumento for uma string simples, definirá o valor do atributo.
-		- Se o argumento for um string no formato `wdNotation` (objeto `__String`), será analisado como objeto.
-		- se o argumento for um objeto, o nome do atributo corresponderá a uma operação e seu valor aos atributos css.
-		- A separação entre atributos css é feita por espaços.
-		- O atributo `val` definirá o valor de `class`, ou seja, se ele estiver definido, as demais operações serão ignoradas.
-		- O atributo `rpl` fará uma permuta de atributos css, se o primeiro existir, será substituído pelo segundo.
-		- O atributo `add` adiciona, o `del` remove e o `tgl` alterna atributos css.
+		- `string css(string|object x)`: Define e retorna o valor do atributo HTML `class`.
+		- O tipo do valor do argumento `x` determinará a forma de definir o `class`. Se inexistente, retornará o valor de `class`.
+		- Strings simples definirá o valor do atributo conforme estilos informados (separados por espaço).
+		- Strings no formato `wdNotation` será analisado como objeto.
+		- Se Objeto, cada atributo corresponderá a uma operação e seu respectivo valor aos estilos envolvidos.
+		- O atributo `val` define `class` e, se existente, outras operações serão ignoradas.
+		- O atributo `rpl` fará uma permuta de estilos, se o primeiro existir, será substituído pelo segundo.
+		- Os atributos `add`, `del` e `tgl` adiciona, remove e alterna estilos respectivamente.
 		**/
 		css: {
 			value: function(x) {
-				if (arguments.length === 0) {
-					let css = this.attribute("class");
-					if (css === null) return "";
-					css = __Array(css.replace(/\ +/g, " ").trim().split(" "));
-					return css.order.join(" ");
-				}
-				/* se for string, verificar se é wdNotation (object) ou css simples */
 				let data = __Type(x);
+
 				if (data.chars) {
 					x = x.trim();
 					let wd    = __String(x).wdNotation;
 					let check = __Type(wd[0]);
-
 					if (check.object) return this.css(wd[0]);
-
 					this.attribute({class: x});
 					let css = this.css();
 					this.attribute({class: css});
@@ -3045,14 +3069,17 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				}
 				if (data.object) {
 					let list = __Array(this.css().split(" "));
-					if ("val" in x) return this.list(x.val);
+					if ("val" in x) return this.css(x.val);
 					if ("rpl" in x) list.replace.apply(list, x.rpl.split(" "));
 					if ("tgl" in x) list.toggle.apply(list, x.tgl.split(" "));
 					if ("add" in x) list.put.apply(list, x.add.split(" "));
 					if ("del" in x) list.delete.apply(list, x.del.split(" "));
 					return this.css(list.order.join(" "));
 				}
-				return this.css();
+				let css = this.attribute("class");
+				if (css === null) return "";
+				css = __Array(css.replace(/\s+/g, " ").trim().split(" "));
+				return css.order.join(" ");
 			}
 		},
 
