@@ -2936,31 +2936,35 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			value: function() {return this._value.outerHTML;}
 		},
 		/**
-		- `void attribute(string|object x)`: Define ou retorna um atributo HTML.
-		- Se o argumento for uma string simples, será retornado seu valor, mas, se inexistente, retornará `null`.
-		- Se o argumento for um string no formato `wdNotation` (objeto `__String`), será analisado como objeto.
-		- Se o argumento for um objeto, cada par nome/valor corresponderá ao equivalente em atributos HTML.
-		- Se o valor do argumento for `null`, o atributo será removido.
+		- `object attribute`: Retorna ou define atributos do elemento HTML.
+		- Ao retornar, um objeto contendo os atributos HTML e seus valores será apresentado.
+		- Ao definir, se `null`, todos atributos serão excluídos. Se for um objeto, cada par nome/valor representará o nome do atributo HTML e seu respectivo valor, inclusive `null`, caso deseje excluí-lo.
 		**/
 		attribute: {
-			value: function(x) {
+			get: function() {
+				let attr = this._node.attributes;
+				let data = {};
+				for (var i in attr) {
+					let value = this._node.getAttribute(attr[i].name);
+					if (value !== null)
+						data[attr[i].name] = value;
+				}
+				return data;
+			},
+			set: function(x) {
 				let data = __Type(x);
-				if (data.chars) {
-					x = x.trim();
-					let wd    = __String(x).wdNotation;
-					let check = __Type(wd[0]);
-					if (check.object) return this.attribute(wd[0]);
-					return this._node.getAttribute(x);
+				if (data.null) {
+					let attr = this.attribute;
+					for (let i in attr) attr[i] = null;
+					this.attribute = attr;
+					return;
 				}
-				if (data.object) {
-					for (let attr in x) {
-						let val = x[attr];
-						if (val === null) this._node.removeAttribute(attr);
-						else              this._node.setAttribute(attr, val);
-					}
-					return x;
+				if (!data.object) return;
+				for (let i in x) {
+					if (x[i] === null) this._node.removeAttribute(i);
+					else               this._node.setAttribute(i, x[i]);
 				}
-				return null;
+				return;
 			}
 		},
 
@@ -2972,24 +2976,26 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		- se o argumento for um objeto, cada par nome/valor corresponderá ao equivalente em atributos HTML.
 		**/
 		object: {
-			value: function(x) {
-				let data = __Type(x);
-				if (data.chars) {
-					x = x.trim();
-					let wd    = __String(x).wdNotation;
+			value: function(attr1, attr2) {
+				let data1 = __Type(attr1);
+				let data2 = __Type(attr2);
+				let node  = this._node;
+
+
+
+
+				if (data1.chars) {
+					let wd    = __String(attr).wdNotation;
 					let check = __Type(wd[0]);
-					if (check.object) return this.object(wd[0]);
-					if (!(x in this._node)) return undefined;
-					let attr = __Type(this._node[x]);
-					return attr.type === "function" ? this._node[x]() : this._node[x];
+					if (check.object)    return this.object(wd[0], attr2);
+					if (!(attr in node)) return undefined;
+					let value = node[attr];
+					let test  = __Type(value);
+					return test.function ? value() : value;
 				}
-				if (data.object) {
-					for (let attr in x) {
+				if (data1.object) {
+					for (let i in attr1) {
 						let toggle = attr === "!"+attr;
-
-
-
-
 
 						let attr   = i.replace("!", "");
 						let val    = x[attr];
@@ -3044,142 +3050,48 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 
 
 		/**
-		- `string css(string|object x)`: Define e retorna o valor do atributo HTML `class`.
-		- O tipo do valor do argumento `x` determinará a forma de definir o `class`. Se inexistente, retornará o valor de `class`.
-		- Strings simples definirá o valor do atributo conforme estilos informados (separados por espaço).
-		- Strings no formato `wdNotation` será analisado como objeto.
-		- Se Objeto, cada atributo corresponderá a uma operação e seu respectivo valor aos estilos envolvidos.
-		- O atributo `val` define `class` e, se existente, outras operações serão ignoradas.
-		- O atributo `rpl` fará uma permuta de estilos, se o primeiro existir, será substituído pelo segundo.
-		- Os atributos `add`, `del` e `tgl` adiciona, remove e alterna estilos respectivamente.
+		- `string css`: Retorna ou define o valor do atributo HTML `class`.
+		- Se o valor for uma strings, os estilos (separados por espaços), serão definidos conforme especificado.
+		- Se o valor for `null`, o atributo `class` será removido do elemento.
+		- Se for um objeto, o nome do atributo corresponderá a uma operação e seu valor aos estilos envolvidos:
+		- `set` (definir); `rpl` (permutar); `add` (adicionar); `del` (apagar); e `tgl` (altenar).
 		**/
 		css: {
-			value: function(x) {
-				let data = __Type(x);
-
-				if (data.chars) {
-					x = x.trim();
-					let wd    = __String(x).wdNotation;
-					let check = __Type(wd[0]);
-					if (check.object) return this.css(wd[0]);
-					this.attribute({class: x});
-					let css = this.css();
-					this.attribute({class: css});
-					return css;
-				}
-				if (data.object) {
-					let list = __Array(this.css().split(" "));
-					if ("val" in x) return this.css(x.val);
-					if ("rpl" in x) list.replace.apply(list, x.rpl.split(" "));
-					if ("tgl" in x) list.toggle.apply(list, x.tgl.split(" "));
-					if ("add" in x) list.put.apply(list, x.add.split(" "));
-					if ("del" in x) list.delete.apply(list, x.del.split(" "));
-					return this.css(list.order.join(" "));
-				}
-				let css = this.attribute("class");
-				if (css === null) return "";
-				css = __Array(css.replace(/\s+/g, " ").trim().split(" "));
-				return css.order.join(" ");
-			}
-		},
-
-
-
-
-
-
-		css1: {
 			get: function() {
-				let css = this.attribute("class");
-				if (css === null) return "";
-				css = css.replace(/\ +/g, " ").trim().split(" ");
-				return __Array(css).order.join(" ");
+				let css   = this._node.getAttribute("class");
+				let array = css === null ? [] : css.replace(/\s+/g, " ").trim().split(" ");
+				let value = __Array(array).order.join(" ");
+				if (value !== css)
+					this._node.setAttribute("class", value);
+				return value;
 			},
 			set: function(x) {
-				let css  = __String(x).wdNotation;
-				let type = __Type(css);
-				if (type.chars) {
-					css = css.replace(/\ +/g, " ").trim().split(" ");
-					css = __Array(css).order.join(" ");
-					this.attribute("class", css);
+				let data = __Type(x);
+				if (data.chars) {
+					this._node.setAttribute("class", x);
 					return;
 				}
-				let value = __Array(this.css.split(" "));
-				//rpl, tgl, add, del, val
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-				/*
-				let css =
-				if (css === null) return "";
-
-				if (css !== value) this.attribute("class", value);
-				return value;
-				*/
+				if (data.object) {
+					let css = __Array(this.css.split(" "));
+					if ("set" in x) {
+						this.css = x["set"];
+						delete x["set"];
+						this.css = x;
+						return;
+					}
+					if ("rpl" in x) css.replace.apply(css, x.rpl.split(" "));
+					if ("tgl" in x) css.toggle.apply(css, x.tgl.split(" "));
+					if ("add" in x) css.put.apply(css, x.add.split(" "));
+					if ("del" in x) css.delete.apply(css, x.del.split(" "));
+					this.css = css.order.join(" ");
+					return;
+				}
+				if (data.null)
+					this._node.removeAttribute("class");
 			}
 		},
-		/**
-		string}b cssAdd(string ...) Adiciona atributos CSS (argumentos) ao elemento HTML.
-		**/
-		cssAdd: {
-			value: function() {
-				let css = this.css.split(" ");
-				css.push.apply(css, arguments);
-				this.attribute("class", css.join(" "));
-				return this.css;
-			}
-		},
-		/**
-		string}b cssDelete(string ...) Remove atributos CSS (argumentos) do elemento HTML.
-		**/
-		cssDelete: {
-			value: function() {
-				let css  = this.css.split(" ");
-				let list = __Array(css);
-				list.delete.apply(list, arguments);
-				this.attribute("class", list.order.join(" "));
-				return this.css;
-			}
-		},
-		/**
-		string}b cssToggle(string ...) Alterna atributos CSS (argumentos) no elemento HTML.
-		**/
-		cssToggle: {
-			value: function() {
-				let css  = this.css.split(" ");
-				let list = __Array(css);
-				list.toggle.apply(list, arguments);
-				this.attribute("class", list.order.join(" "));
-				return this.css;
-			}
-		},
-		/**
-		- `boolean cssCheck(string ...) Checa a existência de atributos CSS (argumentos) no elemento HTML.
-		**/
-		cssCheck: {
-			value: function() {
-				let css  = this.css.split(" ");
-				let list = __Array(css);
-				return list.check.apply(list, arguments);
-			}
-		},
+
+
 		/**
 		string}b style(`object styles) Define o atributo i{style}i do elemento HTML e retorna seu valor.
 		styles}v - Objeto contendo os estilos (atributo) e seu valor. Se `null`, todos os estilos serão apagados.}d}L
