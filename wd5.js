@@ -407,7 +407,7 @@ const wd = (function() {
 	Object.defineProperties(__Type.prototype, {
 		constructor: {value: __Type},
 		/**
-		- `array _months`: Registra a lista com os nomes dos meses, longos e curtos, da língua inglesa e local para fins de determinação da data.
+		- `array _months`: Registra a lista de nomes dos meses (longos e curtos) na língua inglesa e local para determinar data.
 		**/
 		_months: {
 			value: (function() {
@@ -896,7 +896,7 @@ const wd = (function() {
 					HTMLOptionsCollection: 1, HTMLFormControlsCollection: 1
 				}
 				let html = [];
-				for (var obj in nodes) {
+				for (let obj in nodes) {
 					let ref = nodes[obj];
 					if (ref === 0 || ref === 1) {
 						if (obj in window && this._input instanceof window[obj]) {
@@ -942,12 +942,13 @@ const wd = (function() {
 			value: function() {
 				if (this._type !== null) return;
 				/* IMPORTANTE: object precisa ser o último, pois qualquer um pode ser um objeto */
-				let types = [
+				/* IMPORTANTE: na verificação de strings, o atributo string deve ser o último */
+				let types = this.chars ? [
+					"number", "date", "time", "datetime", "string"
+				] : [
 					"null", "undefined", "boolean", "number", "datetime",
 					"array", "node", "regexp", "function", "object"
 				];
-				/* IMPORTANTE: na verificação de strings, o atributo string deve ser o último */
-				if (this.chars) types = ["number", "date", "time", "datetime", "string"];
 				let i = -1;
 				while (++i < types.length)
 					if (this[types[i]]) return;
@@ -2923,250 +2924,205 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return (pack.name === null || pack.value === null) ? null : pack;
 			}
 		},
-
-
-
-
-
-		//FIXME arrumar daqui pra frente
-		valueOf: {
-			value: function() {return this._value.valueOf();}
-		},
-		toString: {
-			value: function() {return this._value.outerHTML;}
-		},
 		/**
-		- `object attribute`: Retorna ou define atributos do elemento HTML.
-		- Ao retornar, um objeto contendo os atributos HTML e seus valores será apresentado.
-		- Ao definir, se `null`, todos atributos serão excluídos. Se for um objeto, cada par nome/valor representará o nome do atributo HTML e seu respectivo valor, inclusive `null`, caso deseje excluí-lo.
+		- `object attribute(null|object x)`: Retorna um objeto contendo os atributos HTMl do elemento e define seus valores.
+		- Se o argumento `x` for `null`, todos os atributos HTML do elemento serão removidos.
+		- Se o argumento `x` for um objeto, o nome e o valor de cada atributo definirão o atributo HTMl de mesmo nome e seu valor, inclusive `null`, caso o objetivo seja removê-lo.
 		**/
 		attribute: {
-			get: function() {
-				let attr = this._node.attributes;
-				let data = {};
-				for (var i in attr) {
-					let value = this._node.getAttribute(attr[i].name);
-					if (value !== null)
-						data[attr[i].name] = value;
+			value: function(x) {
+				if (arguments.length === 0) {
+					let attr = this._node.attributes;
+					let data = {};
+					for (let i in attr) {
+						let value = this._node.getAttribute(attr[i].name);
+						if (value !== null) data[attr[i].name] = value;
+					}
+					return data;
 				}
-				return data;
-			},
-			set: function(x) {
 				let data = __Type(x);
 				if (data.null) {
-					let attr = this.attribute;
-					for (let i in attr) attr[i] = null;
-					this.attribute = attr;
-					return;
-				}
-				if (!data.object) return;
-				for (let i in x) {
-					if (x[i] === null) this._node.removeAttribute(i);
-					else               this._node.setAttribute(i, x[i]);
-				}
-				return;
-			}
-		},
-
-
-		/**
-		- `void object(string|object x)`: Define ou retorna um atributo HTML.
-		- Se o argumento for uma string simples, será retornado seu valor, mas, se inexistente, retornará `null`.
-		- Se o argumento for um string no formato `wdNotation` (objeto `__String`), será analisado como objeto.
-		- se o argumento for um objeto, cada par nome/valor corresponderá ao equivalente em atributos HTML.
-		**/
-		object: {
-			value: function(attr1, attr2) {
-				let data1 = __Type(attr1);
-				let data2 = __Type(attr2);
-				let node  = this._node;
-
-
-
-
-				if (data1.chars) {
-					let wd    = __String(attr).wdNotation;
-					let check = __Type(wd[0]);
-					if (check.object)    return this.object(wd[0], attr2);
-					if (!(attr in node)) return undefined;
-					let value = node[attr];
-					let test  = __Type(value);
-					return test.function ? value() : value;
-				}
-				if (data1.object) {
-					for (let i in attr1) {
-						let toggle = attr === "!"+attr;
-
-						let attr   = i.replace("!", "");
-						let val    = x[attr];
-						let check  = __Type(this._node[attr]);
-						let test   = __Type(val);
-						if (check.type === "function") {
-							this._node[attr].apply(this._node, (test.type === "array" ? val : [val]));
-						} else {//FIXME
-
-
-
-						}
-
-
-
-
-						if (val === null)
-							this._node.removeAttribute(attr);
+					let attr = this.attribute();
+					for (let i in attr)
+						attr[i] = null;
+					this.attribute(attr);
+				} else if (data.object) {
+					for (let i in x) {
+						if (x[i] === null)
+							this._node.removeAttribute(i);
 						else
-							this._node.setAttribute(attr, val);
+							this._node.setAttribute(i, x[i]);
 					}
-					return x;
 				}
-				return null;
-
-
-				/*
-				if (arguments.length === 0) return null;
-				if (!(attr in this._node))  return null;
-				let type = __Type(this._node[attr]).type;
-				if (arguments.length === 1)
-					return type === "function" ? this._node[attr]() : this._node[attr];
-				if (type !== "function") {
-					this._node[attr] = arguments[1];
-					return this.object(attr);
+				return this.attribute();
+			}
+		},
+		/**
+		- `object style(null|object x)`: Retorna um objeto contendo os estilos definidos em `style` e define seus valores.
+		- Se o argumento `x` for `null`, todos os estilos contidos em `style` serão removidos.
+		- Se o argumento `x` for um objeto, o nome e o valor de cada atributo definirão o nome do estilo e seu valor, inclusive `null`, caso o objetivo seja removê-lo.
+		**/
+		style: {
+			value: function(x) {
+				if (arguments.length === 0) {
+					let data = {};
+					let i    = -1;
+					while (++i < this._node.style.length) {
+						let attr = this._node.style[i];
+						let name = __String(attr).camel;
+						data[name] = this._node.style[attr];
+					}
+					return data;
 				}
-				let args = Array.prototype.slice.call(arguments);
-				args.shift();
-				return this._node[attr].apply(this._node, args);
-				*/
-
-
-
-
+				let data = __Type(x);
+				if (data.null) {
+					let attr = this.style();
+					for (let i in attr)
+						this._node.style[i] = null;
+				} else if (data.object) {
+					for (let i in x) {
+						let name = __String(i).camel;
+						this._node.style[name] = x[i];
+					}
+				}
+				return this.style();
+			}
+		},
+		/**
+		- `object dataset(null|object x)`: Retorna um objeto contendo os dados definidos em `dataset` e define seus valores.
+		- Se o argumento `x` for `null`, todos os dados contidos em `dataset` serão removidos.
+		- Se o argumento `x` for um objeto, o nome e o valor de cada atributo definirão o nome do estilo e seu valor, inclusive `null`, caso o objetivo seja removê-lo.
+		**/
+		dataset: {
+			value: function(x) {
+				if (arguments.length === 0) {
+					let data = {};
+					for (let i in this._node.dataset)
+						data[i] = this._node.dataset[i];
+					return data;
+				};
+				let data = __Type(x);
+				if (data.null) {
+					let attr = this.dataset();
+					for (let i in attr) {
+						delete this._node.dataset[i];
+						/* IMPORTANTE: após cada definição, checar procedimentos */
+						settingProcedures(this._node, i);
+					}
+				} else if (data.object) {
+					for (let i in x) {
+						let name = __String(i).camel;
+						if (x[i] !== null)
+							this._node.dataset[name] = x[i];
+						else if (name in this._node.dataset)
+							delete this._node.dataset[name];
+						/* IMPORTANTE: após cada definição, checar procedimentos */
+						settingProcedures(this._node, name);
+					}
+				}
+				return this.dataset();
 			}
 		},
 
-
-
-
-
-
-
 		/**
-		- `string css`: Retorna ou define o valor do atributo HTML `class`.
-		- Se o valor for uma strings, os estilos (separados por espaços), serão definidos conforme especificado.
-		- Se o valor for `null`, o atributo `class` será removido do elemento.
-		- Se for um objeto, o nome do atributo corresponderá a uma operação e seu valor aos estilos envolvidos:
-		- `set` (definir); `rpl` (permutar); `add` (adicionar); `del` (apagar); e `tgl` (altenar).
+		- `array css(string|null|object x)`: Retorna a lista de estilos css definidos no atributo HTML `class` e define seus valores.
+		- Se o argumento `x` for uma string, os estilos, separados por espaço, serão definidos conforme especificados.
+		- Se o argumento `x` for `null`, o atributo HTML `class` será removido do elemento.
+		- Se o argumento `x` for um objeto, o nome do atributo corresponderá a uma operação e seu valor (string) aos estilos associados. `set` define estilos; `rpl` permuta estilos; `add` adiciona estilos; `del` apaga estilos; e `tgl` alterna estilos.
 		**/
 		css: {
-			get: function() {
-				let css   = this._node.getAttribute("class");
-				let array = css === null ? [] : css.replace(/\s+/g, " ").trim().split(" ");
-				let value = __Array(array).order.join(" ");
-				if (value !== css)
-					this._node.setAttribute("class", value);
-				return value;
-			},
-			set: function(x) {
+			value: function(x) {
+				if (arguments.length === 0) {
+					let css   = this._node.getAttribute("class");
+					let array = css === null ? [] : css.replace(/\s+/g, " ").trim().split(" ");
+					let value = __Array(array).order;
+					this._node.setAttribute("class", value.join(" "));
+					return value;
+				}
 				let data = __Type(x);
 				if (data.chars) {
 					this._node.setAttribute("class", x);
-					return;
-				}
-				if (data.object) {
-					let css = __Array(this.css.split(" "));
+				} else if (data.null) {
+					this._node.removeAttribute("class");
+				} else if (data.object) {
+					let css = __Array(this.css());
 					if ("set" in x) {
-						this.css = x["set"];
+						this._node.setAttribute("class", x["set"]);
 						delete x["set"];
-						this.css = x;
-						return;
+						return this.css(x);
 					}
 					if ("rpl" in x) css.replace.apply(css, x.rpl.split(" "));
 					if ("tgl" in x) css.toggle.apply(css, x.tgl.split(" "));
 					if ("add" in x) css.put.apply(css, x.add.split(" "));
 					if ("del" in x) css.delete.apply(css, x.del.split(" "));
-					this.css = css.order.join(" ");
-					return;
+					this._node.setAttribute("class", css.order.join(" "));
 				}
-				if (data.null)
-					this._node.removeAttribute("class");
+				return this.css();
 			}
 		},
+		/**FIXME transformar em método!!!!!!!!!!!!!!!!!!!!!
 
-
-		/**
-		string}b style(`object styles) Define o atributo i{style}i do elemento HTML e retorna seu valor.
-		styles}v - Objeto contendo os estilos (atributo) e seu valor. Se `null`, todos os estilos serão apagados.}d}L
+		- `object object`: Define o valor dos atributos ou métodos do elemento.
+		- Cada par nome/valor do objeto definido representará o nome e o respectivo valor atributo ou método do objeto.
+		- Caso não exista o atributo ou método especificado, nada ocorrerá.
+		- Caso o nome se refira a um método, para definir múltiplos argumentos, deverá ser utilizado um array como valor.
+		- Caso o nome do atributo seja igual ao seu valor precedido do caractere "!" e esse seja boleano, o inverso do valor será definido: `{checked: "!checked"}`.
+		- Caso contrário, o valor do atributo ou argumento do método será o valor definido.
 		**/
-		style: {
-			value: function(styles) {
-				if (styles === null) {
-					while (this._value.style.length > 0)
-						this._value.style[this._value.style[0]] = null;
-				} else if (__Type(styles).type === "object") {
-					for (let i in styles) {
-						let attr = __String(i).camel;
-						this._value.style[attr] = styles[i];
-					}
+		object: {
+			set: function(x) {
+				let data = __Type(x);
+				if (!data.object) return;
+				for (let i in x) {
+					if (!(i in this._node)) continue;
+					let toggle = x[i] === "!"+i;
+					let attr   = this._node[i];
+					let acheck = __Type(attr);
+					let vcheck = __Type(x[i]);
+					if (acheck.function && vcheck.array)
+						this._node[i].apply(this._node, x[i]);
+					else if (acheck.function)
+							this._node[i](x[i]);
+					else if (toggle && acheck.boolean)
+						this._node[i] = !this._node[i];
+					else
+						this._node[i] = x[i];
 				}
-				return this.attribute("style");
+				return;
 			}
 		},
 		/**
-		string}b dataset(object data) Define o objeto i{dataset}i do elemento HTML e retorna seu valor.
-		/**L{d{v{data}v - Objeto contendo os atributos e seus valores. Se `null`, todos os atributos serão apagados.}d}L
-		**/
-		dataset: {
-			value: function(data) {//FIXME se data for indefindo retornar tudo
-				if (data === null) {
-					let list = {};
-					for (let i in this._value.dataset) list[i] = null;
-					return this.dataset(list);
-				} else if (__Type(data).type === "object") {
-					for (let i in data) {
-						let attr  = __String(i).camel;
-						if (data[i] !== null)
-							this._value.dataset[attr] = data[i];
-						else if (attr in this._value.dataset)
-							delete this._value.dataset[attr];
-						/* FIXME MUITO IMPORTANTE executar verificação após definição */
-						settingProcedures(this._value, attr);
-					}
-				}
-				return JSON.stringify(this._value.dataset);
-			}
-		},
-		/**
-		`void  handler(object events, b{- `boolean remove) Define ou remove disparadores ao elemento HTML.}d L{
-		v{events}v - Objeto contendo o evento (atributos) e seus disparadores (valores).
-		v{remove}v - (Opcional) Se verdadeiro, o disparador será removido do evento.
+		- `object  handler`: Define ou remove disparadores ao elemento HTML.
+		- Cada conjunto nome/valor do objeto definido representará o evento e o método, ou a lista de métodos, a ser disparado.
+		- O nome do evento pode ou não começar com o prefixo "on".
+		- Se o evento começar com o caractere "!", será feita a remoção do disparador.
 		**/
 		handler: {
-			value: function(events, remove) {
-				if (__Type(events).type === "object") {
-					for (let i in events) {
-						if (__Type(events[i]).type !== "function") continue;
-						let event  = String(i).trim().toLowerCase().replace(/^on/, "");
-						let method = remove === true ? "removeEventListener" : "addEventListener";
-						this._value[method](event, events[i], false);
+			set: function(x) {
+				let data = __Type(x);
+				if (!data.object) return;
+				for (let i in x) {
+					let check = __Type(x[i]);
+					if (!check.array && !check.function) continue;
+					let value  = check.array ? x[i] : [x[i]];
+					let name   = String(i).toLowerCase().replace(/\s+/g, "");
+					let remove = (/^\!/).test(name);
+					let event  = name.replace(/^\!?(on)?/, "");
+					console.log(name, remove, event);
+					let j      = -1;
+					while (++j < value.length) {
+						let method = value[j];
+						let test   = __Type(method);
+						if (!test.function) continue;
+						if (remove)
+							this._node.removeEventListener(event, method, false);
+						else
+							this._node.addEventListener(event, method, false);
 					}
 				}
+				return;
 			}
 		},
-		/**
-		string}b wdNotation(void  attr) Retorna a notação de mesmo nome de i{__String}i presente em i{dataset}i.
-		attr}v - Valor do atributo de i{dataset}i que, se inexistente, retornará nulo.
-		**/
-		wdNotation: {
-			value: function(attr) {
-				if (!(attr in this._value.dataset)) return null;
-				return __String(this._value.dataset[attr]).wdNotation;
-			}
-		},
-
-
-
-
-
-
 
 
 
@@ -7149,7 +7105,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					html: attr in this.e.attributes ? this.e.attributes[attr].value : null,
 					elem: attr in this.e            ? this.e[attr] : null,
 				};
-				for (var i in value) {
+				for (let i in value) {
 					if (value[i] === null) continue;
 					if (lower === true)
 						value[i] = value[i].toLowerCase();
