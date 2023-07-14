@@ -3225,59 +3225,6 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 
 
 
-/*----------------------------------------------------------------------------*/
-	function wd_html_repeat(elem, json) { /* clona elementos por array repetindo-os */
-		if (wd_vtype(json).type !== "array") return null;
-
-		/*--------------------------------------------------------------------------
-		| -- DEFINIR O MODELO A SER REPETIDO --
-		| A) obter o conteúdo textual dos filhos
-		| B) se o conteúdo de A conter {{}}, armazená-lo em data-wd-repeat-model
-		| C) caso contrário, utilizar o conteúdo gravado de data-wd-repeat-model
-		| D) caso contrário, não há modelo a ser repetido: retornar
-		| E) corrigir a adequação dos atributos do DOM ( {{x}} para {{x}}="" )
-		| F) limpar elementos filhos para esconder modelo
-		\-------------------------------------------------------------------------*/
-		let html = elem.innerHTML; /*A*/
-		if (html.search(/\{\{.+\}\}/gi) >= 0) /*B*/
-			elem.dataset.wdRepeatModel = html;
-		else if ("wdRepeatModel" in elem.dataset) /*C*/
-			html = elem.dataset.wdRepeatModel;
-		else return; /*D*/
-
-
-		html = html.split("}}=\"\"").join("}}"); /*E*/
-		elem.innerHTML = ""; /*F*/
-
-		/*--------------------------------------------------------------------------
-		| -- DEFINIR NOVOS FILHOS A PARTIR DO MODELO E DA LISTA --
-		| G) criar uma lista que agrupará o os elementos em forma textual
-		| H) looping: array de objetos
-		| I) trocar {{attr}} pelo valor do atributo do objeto {attr: valor}
-		| J) adicionar conteúdo à lista F
-		| K) renderizar filhos do elemento com o agrupamento da lista
-		\-------------------------------------------------------------------------*/
-		let data = [""]; /*G*/
-		for (let i = 0; i < json.length; i++) { /*H*/
-			if (wd_vtype(json[i]).type !== "object") continue;
-			let inner = html;
-			for (let c in json[i]) /*I*/
-				inner = inner.split("{{"+c+"}}").join(json[i][c]);
-			data.push(inner); /*J*/
-		}
-		elem.innerHTML = data.join(""); /*K*/
-
-
-		/* checar demandas pós procedimento */
-		loadingProcedures();
-		return;
-	}
-
-
-
-
-
-
 
 
 
