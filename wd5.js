@@ -2449,20 +2449,20 @@ function __strClear(x) {return __String(x).clear;}
 /*============================================================================*/
 	/**
 	###Nós Formulários HTML
-	`object __FNode(node input)`
+	`object __Node(node input)`
 	Construtor para manipulação de nós HTML.
 	O argumento `input` deve ser um nó HTML simples (um elemento), caso contrário será atribuído um elemento `DIV`.
 	**/
-	function __FNode(input) {
-		if (!(this instanceof __FNode))	return new __FNode(input);
+	function __Node(input) {
+		if (!(this instanceof __Node))	return new __Node(input);
 		let check = __Type(input);
 		Object.defineProperties(this, {
 			_node: {value: check.node ? check.value[0] : document.createElement("DIV")}
 		});
 	}
 
-	Object.defineProperties(__FNode.prototype, {
-		constructor: {value: __FNode},
+	Object.defineProperties(__Node.prototype, {
+		constructor: {value: __Node},
 		/**
 		- `string _text`: Retorna ou define o conteúdo textual do elemento (`textContent`).
 		**/
@@ -2807,39 +2807,26 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					reset:    {value: "_value", text: "_value"},
 					submit:   {value: "_value", text: "_value"},
 					image:    {},
-					color:    {value: "_value", text: "_value", send: "value"},
-					radio:    {value: "_check", send: "value"},
-					checkbox: {value: "_check", send: "value"},
-					date:     {value: "_date", text: "_date", send: "value"},
+					color:    {value: "_value",    text: "_value",    send: "value"},
+					radio:    {value: "_check",    send: "value"},
+					checkbox: {value: "_check",    send: "value"},
+					date:     {value: "_date",     text: "_date",     send: "value"},
 					datetime: {value: "_datetime", text: "_datetime", send: "value"},
-					month:    {value: "_month", text: "_month", send: "value"},
-					week:     {value: "_week", text: "_week", send: "value"},
-					time:     {value: "_time", text: "_time", send: "value"},
-					range:    {value: "_number", text: "_number", send: "value"},
-					number:   {value: "_number", text: "_number", send: "value"},
-					file:     {value: "_file", send: "value"},
-					url:      {value: "_url", text: "_url", send: "value"},
-					email:    {value: "_email", text: "_mail", send: "value"},
-					tel:      {value: "_tel",  text: "_tel", send: "value"},
-					text:     {value: "_value",  text: "_value", send: "value"},
-					search:   {value: "_value",  text: "_value", send: "value"},
+					month:    {value: "_month",    text: "_month",    send: "value"},
+					week:     {value: "_week",     text: "_week",     send: "value"},
+					time:     {value: "_time",     text: "_time",     send: "value"},
+					range:    {value: "_number",   text: "_number",   send: "value"},
+					number:   {value: "_number",   text: "_number",   send: "value"},
+					file:     {value: "_file",     send: "value"},
+					url:      {value: "_url",      text: "_url",      send: "value"},
+					email:    {value: "_email",    text: "_mail",     send: "value"},
+					tel:      {value: "_tel",      text: "_tel",      send: "value"},
+					text:     {value: "_value",    text: "_value",    send: "value"},
+					search:   {value: "_value",    text: "_value",    send: "value"},
 					password: {send: "_value"},
-					hidden:   {value: "_value",  text: "_value", send: "value"},
+					hidden:   {value: "_value",    text: "_value",    send: "value"},
 					"datetime-local": {value: "_datetime", text: "_datetime", send: "value"},
 				}}
-			}
-		},
-		/**
-		- `string|null _ftype`: Retorna o tipo de formulário HTML, em minúsculo, ou `null` se outro elemento.
-		**/
-		_ftype: {
-			get: function() {
-				if (!(this.tag in this._form)) return null;
-				if (!("type" in this._form[this.tag])) return this.tag;
-				let type = this._form[this.tag].type;
-				let att  = String(this._node.getAttribute("type")).toLowerCase();
-				let obj  = String(this._node.type).toLowerCase();
-				return (att in type ? att : (obj in type ? obj : null));
 			}
 		},
 		/**
@@ -2847,10 +2834,10 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		**/
 		_fdata: {
 			get: function() {
-				let ftype = this._ftype;
-				if (ftype === null) return {};
-				if (this.tag === ftype) return this._form[ftype];
-				return this._form[this.tag].type[ftype];
+				let type = this.type;
+				if (type === "")     return {};
+				if (this.tag === type) return this._form[type]
+				return this._form[this.tag].type[type];
 			}
 		},
 		/**
@@ -2860,12 +2847,16 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			get: function() {return this._node.tagName.toLowerCase();}
 		},
 		/**
-		- `string type`: Retorna o atributo `type` do elemento HTML, se existente.
+		- `string type`: Retorna o tipo de formulário HTML em minúsculo ou vazio se outro elemento.
 		**/
 		type: {
 			get: function() {
-				let ftype = this._ftype;
-				return ftype !== null ? ftype : this._node.type;
+				if (!(this.tag in this._form)) return "";
+				if (!("type" in this._form[this.tag])) return this.tag;
+				let type = this._form[this.tag].type;
+				let att  = String(this._node.getAttribute("type")).toLowerCase();
+				let obj  = String(this._node.type).toLowerCase();
+				return (att in type ? att : (obj in type ? obj : ""));
 			}
 		},
 		/**
@@ -2893,6 +2884,18 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			set: function(x) {
 				let fdata = this._fdata;
 				this[("text" in fdata ? fdata.text : "_text")] = x;
+			}
+		},
+		/**
+		- `string inner`: Retorna ou define o conteúdo interno do elemento HTML.
+		**/
+		inner: {
+			get: function() {
+				return this.type === "" ? this._node.innerHTML : this.text;
+			},
+			set: function(x) {
+				if (this.type === "") this._node.innerHTML = x;
+				else this.text = x;
 			}
 		},
 		/**
@@ -3060,17 +3063,17 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return this.css();
 			}
 		},
-		/**FIXME transformar em método!!!!!!!!!!!!!!!!!!!!!
-
-		- `object object`: Define o valor dos atributos ou métodos do elemento.
-		- Cada par nome/valor do objeto definido representará o nome e o respectivo valor atributo ou método do objeto.
+		/**
+		- `void object(object x)`: Define atributos ou executa métodos presentes no objeto HTML.
+		- Cada conjunto nome/valor informado no argumento `x` representará o nome do atributo ou método e seu valor ou argumento.
 		- Caso não exista o atributo ou método especificado, nada ocorrerá.
 		- Caso o nome se refira a um método, para definir múltiplos argumentos, deverá ser utilizado um array como valor.
-		- Caso o nome do atributo seja igual ao seu valor precedido do caractere "!" e esse seja boleano, o inverso do valor será definido: `{checked: "!checked"}`.
+		- Caso o atributo seja boleano e igual ao seu nome precedido do caractere "!", o inverso do valor será definido.
 		- Caso contrário, o valor do atributo ou argumento do método será o valor definido.
 		**/
 		object: {
-			set: function(x) {
+			value: function(x) {
+				if (arguments.length === 0) return;
 				let data = __Type(x);
 				if (!data.object) return;
 				for (let i in x) {
@@ -3082,7 +3085,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					if (acheck.function && vcheck.array)
 						this._node[i].apply(this._node, x[i]);
 					else if (acheck.function)
-							this._node[i](x[i]);
+						this._node[i](x[i]);
 					else if (toggle && acheck.boolean)
 						this._node[i] = !this._node[i];
 					else
@@ -3092,13 +3095,14 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			}
 		},
 		/**
-		- `object  handler`: Define ou remove disparadores ao elemento HTML.
-		- Cada conjunto nome/valor do objeto definido representará o evento e o método, ou a lista de métodos, a ser disparado.
+		- `void  handler(object x)`: Define ou remove disparadores ao elemento HTML.
+		- Cada conjunto nome/valor informado no argumento `x` representará o evento e o método, ou a lista de métodos, a ser disparado.
 		- O nome do evento pode ou não começar com o prefixo "on".
 		- Se o evento começar com o caractere "!", será feita a remoção do disparador.
+		- Para definir múltiplos métodos ao evento, esses deverão ser informados em um array.
 		**/
 		handler: {
-			set: function(x) {
+			value: function(x) {
 				let data = __Type(x);
 				if (!data.object) return;
 				for (let i in x) {
@@ -3108,7 +3112,6 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					let name   = String(i).toLowerCase().replace(/\s+/g, "");
 					let remove = (/^\!/).test(name);
 					let event  = name.replace(/^\!?(on)?/, "");
-					console.log(name, remove, event);
 					let j      = -1;
 					while (++j < value.length) {
 						let method = value[j];
@@ -3123,13 +3126,183 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return;
 			}
 		},
-
-
-
-
-
+		/**
+		- `node clone(boolean childs=true)`: Retorna um clone do objeto.
+		- Se o argumento opcional `childs` for falso, os elementos filhos não serão clonados.
+		**/
+		clone: {
+			value: function(childs) {
+				let special = ["script"];
+				if (special.indexOf(this.tag) < 0)
+					return this._node.cloneNode(childs !== false);
+				let attrs = this.attribute();
+				let clone = document.createElement(this.tag);
+				for (let i in attrs)
+					clone.setAttribute(i, attrs[i]);
+				clone.innerHTML = this._node.innerHTML
+				return clone;
+			}
+		},
+		/**
+		- `void load(string html="", boolean overlap=false)`: Carrega um conteúdo HTML no elemento ou o substitui.
+		- O argumento `html` é o texto em formato HTML a ser carregado ou a substituir o elemento definido.
+		- O argumento opcional `overlap`, se verdadeiro, irá substituir o elemento pelo conteúdo de `html`.
+		**/
+		load: {
+			value: function(html, overlap) {
+				/* definir elemento */
+				let elem    = overlap === true ? document.createElement("DIV") : this._node;
+				let node    = __Node(elem);
+				node.inner  = html === undefined ? "" : String(html);
+				/* redefinir elementos scripts para fazer rodar */
+				let scripts = __Type(__$$("script", elem)).value;
+				let i = -1;
+				while (++i < scripts.length) {
+					let script = scripts[i];
+					let parent = script.parentElement;
+					let clone  = __Node(script).clone();
+					parent.insertBefore(clone, script);
+					script.remove();
+				}
+				/* substituindo o nó pelo conteúdo, se for o caso */
+				if (overlap === true) {
+					let base   = this._node;
+					let parent = base.parentElement;
+					let childs = __Type(elem.children).value;
+					let i = -1;
+					while(++i < childs.length)
+						parent.insertBefore(childs[i], base);
+					base.remove();
+				}
+				/* IMPORTANTE: checar elemento após carregamento */
+				loadingProcedures();
+				return;
+			}
+		},
+		repeat: {
+			value: function(list) {
+				let data = __Type(list);
+				if (!data.array) return;
+				/* 1) obter o conteúdo interno */
+				/* 2) se o conteúdo contiver o formato {{}}, armazená-lo em data-wd-repeat-model */
+				/* 3) se não contiver o formato, recuperar o modelo em data-wd-repeat-model */
+				/* 4) se não existir, retornar */
+				let html = this.inner;
+				if ((/\{\{.+\}\}/g).test(html))
+					this._node.dataset.wdRepeatModel = html;
+				else if ("wdRepeatModel" in this._node.dataset)
+					html = this._node.dataset.wdRepeatModel;
+				else return;
+				/* 5) adequar os atributos do DOM ( {{x}} para {{x}}="" ) */
+				/* 6) limpar conteúdo interno */
+				html = html.split("}}=\"\"").join("}}");
+				this.inner = "";
+				/* 7) Criar lista de filhos */
+				/* 8) executar looping */
+				/* 9) substituir atributos entre chaves duplas por valores e adicionar */
+				let childs = [""];
+				let i = -1;
+				while (++i < list.length) {
+					let check = __Type(list[i]);
+					if (!check.object) continue;
+					let inner = html;
+					for (let j in list[i])
+						inner = inner.split("{{"+j+"}}").join(list[i][j]);
+					childs.push(inner);
+				}
+				/* 10) definir filhos */
+				this.inner = childs.join("\n");
+				/* IMPORTANTE: checar elemento após carregamento */
+				loadingProcedures();
+				return;
+			}
+		},
 
 	});
+
+
+
+
+
+
+/*----------------------------------------------------------------------------*/
+	function wd_html_repeat(elem, json) { /* clona elementos por array repetindo-os */
+		if (wd_vtype(json).type !== "array") return null;
+
+		/*--------------------------------------------------------------------------
+		| -- DEFINIR O MODELO A SER REPETIDO --
+		| A) obter o conteúdo textual dos filhos
+		| B) se o conteúdo de A conter {{}}, armazená-lo em data-wd-repeat-model
+		| C) caso contrário, utilizar o conteúdo gravado de data-wd-repeat-model
+		| D) caso contrário, não há modelo a ser repetido: retornar
+		| E) corrigir a adequação dos atributos do DOM ( {{x}} para {{x}}="" )
+		| F) limpar elementos filhos para esconder modelo
+		\-------------------------------------------------------------------------*/
+		let html = elem.innerHTML; /*A*/
+		if (html.search(/\{\{.+\}\}/gi) >= 0) /*B*/
+			elem.dataset.wdRepeatModel = html;
+		else if ("wdRepeatModel" in elem.dataset) /*C*/
+			html = elem.dataset.wdRepeatModel;
+		else return; /*D*/
+
+
+		html = html.split("}}=\"\"").join("}}"); /*E*/
+		elem.innerHTML = ""; /*F*/
+
+		/*--------------------------------------------------------------------------
+		| -- DEFINIR NOVOS FILHOS A PARTIR DO MODELO E DA LISTA --
+		| G) criar uma lista que agrupará o os elementos em forma textual
+		| H) looping: array de objetos
+		| I) trocar {{attr}} pelo valor do atributo do objeto {attr: valor}
+		| J) adicionar conteúdo à lista F
+		| K) renderizar filhos do elemento com o agrupamento da lista
+		\-------------------------------------------------------------------------*/
+		let data = [""]; /*G*/
+		for (let i = 0; i < json.length; i++) { /*H*/
+			if (wd_vtype(json[i]).type !== "object") continue;
+			let inner = html;
+			for (let c in json[i]) /*I*/
+				inner = inner.split("{{"+c+"}}").join(json[i][c]);
+			data.push(inner); /*J*/
+		}
+		elem.innerHTML = data.join(""); /*K*/
+
+
+		/* checar demandas pós procedimento */
+		loadingProcedures();
+		return;
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3196,6 +3369,17 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		if (all !== null && all in key) all = key[all];
 		return all === null ? __$(one, root) : __$$(all, root);
 	}
+
+
+
+
+
+
+
+
+
+
+
 /*----------------------------------------------------------------------------*/
 	/**
 	4{Matemática}
@@ -8350,7 +8534,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		now:     {get:   function() {return WD(wd_str_now());}},
 		type:    {value: function(x){return __Type(x);}},
 
-		form: {value: function(){return __FNode.apply(null, Array.prototype.slice.call(arguments));}},
+		form: {value: function(){return __Node.apply(null, Array.prototype.slice.call(arguments));}},
 		array: {value: function(){return __Array.apply(null, Array.prototype.slice.call(arguments));}},
 		datetime: {value: function(){return __DateTime.apply(null, Array.prototype.slice.call(arguments));}},
 		node: {value: function(){return __Node.apply(null, Array.prototype.slice.call(arguments));}},
