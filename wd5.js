@@ -1377,6 +1377,64 @@ function __strClear(x) {return __String(x).clear;}
 				return value;
 			}
 		},
+
+		mask: {
+			value: function(model, method) {
+				let input = this._value;
+				let code  = {"#": /\d/, "@": /\D/, "*": /./};
+				let nline = "\n"+String(Date.now())+"\n";
+				let mask, test, c;
+				model = String(model).replace(/([^\\])\?/, "$1"+nline).split(nline);
+
+				let m = -1;
+				while (++m < model.length) {
+					c    = 0;
+					test = true;
+					mask = String(model[m]).split("");
+					mask.forEach(function(v,i,a) {
+						if (!test) return;
+						if (v === "\\") {
+							if (i < (a.length-1) && a[i+1] in code) {
+								c      = c + (input[c] === a[i+1] ? 1 : 0);
+								a[i]   = a[i+1];
+								a[i+1] = null;
+							} else {
+								c = c + (input[c] === a[i] ? 1 : 0);
+							}
+						} else if (v === null) {
+							a[i] = "";
+						} else if (v in code) {
+							test = code[v].test(input[c]);
+							a[i] = test ? input[c] : v;
+							c = c + (test ? 1 : 0);
+						} else {
+							c = c + (v === input[c] ? 1 : 0);
+						}
+					});
+					test = test && c === input.length;
+					if (test) break;
+
+				}
+
+				console.log(mask.join(""), test);
+
+
+
+
+
+
+
+
+
+
+
+			}
+		},
+
+
+
+
+
 		/**
 		- `string dash`: Retorna uma string identificadora no formato de traços.
 		**/
