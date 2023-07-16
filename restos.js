@@ -63,18 +63,7 @@ function __finite(value) {
 	}
 
 
-/*----------------------------------------------------------------------------*/
-	function wd_lang(elem) { /* Retorna a linguagem definida (lang) a partir de um elemento (efeito bolha) ou do navegador*/
-		let node = wd_vtype(elem).type === "dom" ? elem : document.body;
-		while (node !== null && node !== undefined) {
-			if ("lang" in node.attributes) {
-				let value = node.attributes.lang.value.trim();
-				if (value !== "") return value;
-			}
-			node = node.parentElement;
-		}
-		return navigator.language || navigator.browserLanguage || "en-US";
-	}
+
 
 /*----------------------------------------------------------------------------*/
 	function wd_copy(value) { /* copia o conteúdo da variável para a área de transferência */
@@ -515,76 +504,6 @@ function __finite(value) {
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_html_handler(elem, events, remove) { /* define ou remove disparadores */
-		if (wd_vtype(elem).type !== "dom") return null;
-		let action = remove === true ? "removeEventListener" : "addEventListener";
-		for (let ev in events) {
-			let method = events[ev];
-			if (wd_vtype(method).type !== "function") continue;
-			let event  = ev.toLowerCase().replace(/^on/, "");
-			elem[action](event, method, false);
-		}
-		return true;
-	}
-
-
-/*----------------------------------------------------------------------------*/
-	function wd_html_nav(elem, action) { /* define exibições e inibições de elementos */
-		action = new String(action).toLowerCase();
-
-		if (action === "show")   return wd_html_css(elem, {del: "js-wd-no-display"});
-		if (action === "hide")   return wd_html_css(elem, {add: "js-wd-no-display"});
-		if (action === "toggle") return wd_html_css(elem, {tgl: "js-wd-no-display"});
-		if (action === "prev" || action === "next") {
-			let child = wd_vtype(elem.children).value;
-			if (child.length === 0) return null;
-			if (child.length === 1) return wd_html_nav(child[0], "toggle");
-			let first = +Infinity;
-			let last  = -Infinity;
-			/* Procurando pelos filhos visíveis */
-			for (let i = 0; i < child.length; i++) {
-				let css  = wd_html_class(child[i]).split(" ");
-				let show = css.indexOf("js-wd-no-display") < 0 ? true : false;
-				if (show && i < first) first = i;
-				if (show && i > last ) last  = i;
-			}
-			if (first === +Infinity) first = 0;
-			if (last === +Infinity ) last  = child.length-1;
-			/* definindo os próximos a serem exibidos */
-			let next = last >= (child.length-1) ? 0 : last+1;
-			let prev = first <= 0 ? child.length-1 : first-1;
-			return wd_html_nav(child[action === "prev" ? prev : next]);
-		}
-		if ((/^[0-9]+\:[0-9]+$/).test(action)) {
-			let child = wd_vtype(elem.children).value;
-			if (child.length === 0) return null;
-			let value = action.split(":");
-			let init = wd_vtype(value[0]).value;
-			let end  = wd_vtype(value[1]).value;
-			if (!__finite(init)) init = 0;
-			if (!__finite(end))  end  = child.length-1;
-			let show = end >= init ? true : false;
-			if (!show) {
-				let temp = init;
-				init = end;
-				end  = temp;
-			}
-			for (let i = 0; i < child.length; i++) {
-				if (i >= init && i <= end)
-					wd_html_nav(child[i], (show ? "show" : "hide"));
-				else
-					wd_html_nav(child[i], (show ? "hide" : "show"));
-			}
-			return true;
-		}
-		/*default*/
-		let bros = elem.parentElement.children;
-		for (let i = 0; i < bros.length; i++)
-			wd_html_nav(bros[i], (bros[i] === elem ? "show": "hide"));
-		return true;
-	}
-
-/*----------------------------------------------------------------------------*/
 	function wd_html_jump(elem, parents) { /* transporta o elemento entre dois containers */
 		for (let i = 0; i < parents.length; i++) {
 			if (elem.parentElement === parents[i]) {
@@ -761,13 +680,6 @@ function __finite(value) {
 		return data;
 	}
 
-/*----------------------------------------------------------------------------*/
-	function wd_html_bros_index(elem) { /* obtem o índice (posição) do elemento em relação aos irmãos */
-		let bros = elem.parentElement.children;
-		for (let i = 0; i < bros.length; i++)
-			if (bros[i] === elem) return i;
-		return 0;
-	}
 
 
 /*----------------------------------------------------------------------------*/

@@ -460,6 +460,7 @@ const wd = (function() {
 				week:    /^([-+]?\d{3}\d+)\-W(0[1-9]|[1-4]\d|5[0-4])?$/i,
 				weekWY:  /^(0[1-9]|[1-4]\d|5[0-4])\,\ ([-+]?\d{3}\d+)$/,
 				email:   /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/,
+				lang:    /^[a-z]{2,3}(\-[A-Z][a-z]{3})?(\-([A-Z]{2}|[0-9]{3}))?$/,
 			}
 		},
 		/**
@@ -484,6 +485,14 @@ const wd = (function() {
 		nonempty: {
 			get: function() {
 				return (this.chars && this._input.trim() !== "");
+			}
+		},
+		/**
+		- `boolean lang`: Checa se o argumento está no [formato de linguagem](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/lang).
+		**/
+		lang: {
+			get: function() {
+				return (this.chars && this._re.lang.test(this._input.trim()));
 			}
 		},
 		/**
@@ -1377,14 +1386,19 @@ function __strClear(x) {return __String(x).clear;}
 				return value;
 			}
 		},
-
+		/**
+		/**
+		- `string mask(string model, function method)`: Checa se a string casa com o formato de máscara definido e a retorna no formato especificado. Caso não case, uma string vazia será retornada.
+		- O argumento `model` define o modelo da máscara onde `#` exige um dígito; `@` exige um não dígito; `*` exige um valor qualquer; `?` separa modelos alternativos caso o anterior não case; e `'` fixa o caractere seguinte sem checar se casa. Exemplos - `##/##/####` (data, casa `01234567` e `01/23/4567`), `(##) # ####-####?(##) ####-####` (telefone, casa `01234567890` e `0123456789`)
+		- O argumento opcional `method` define uma função a ser aplicada quando a máscara casa. A função receberá a string formatada como argumento para efetuar checagens mais específicas como, por exemplo, checar se a data informada é válida. A função deverá retornar uma string como resultado e, se falhar, preferencialmente, ser vazia.
+		**/
 		mask: {
 			value: function(model, method) {
 				let input = this._value;
 				let code  = {"#": /\d/, "@": /\D/, "*": /./};
 				let nline = "\n"+String(Date.now())+"\n";
 				let mask, test, c;
-				model = String(model).replace(/([^\\])\?/, "$1"+nline).split(nline);
+				model = String(model).replace(/([^'])\?/, "$1"+nline).split(nline);
 
 				let m = -1;
 				while (++m < model.length) {
@@ -1393,48 +1407,28 @@ function __strClear(x) {return __String(x).clear;}
 					mask = String(model[m]).split("");
 					mask.forEach(function(v,i,a) {
 						if (!test) return;
-						if (v === "\\") {
-							if (i < (a.length-1) && a[i+1] in code) {
-								c      = c + (input[c] === a[i+1] ? 1 : 0);
-								a[i]   = a[i+1];
-								a[i+1] = null;
-							} else {
-								c = c + (input[c] === a[i] ? 1 : 0);
-							}
+						if (v === "'" && i < (a.length-1)) {
+							a[i]   = a[i+1];
+							a[i+1] = null;
 						} else if (v === null) {
 							a[i] = "";
 						} else if (v in code) {
 							test = code[v].test(input[c]);
 							a[i] = test ? input[c] : v;
-							c = c + (test ? 1 : 0);
+							c    = c + (test ? 1 : 0);
 						} else {
 							c = c + (v === input[c] ? 1 : 0);
 						}
 					});
 					test = test && c === input.length;
 					if (test) break;
-
 				}
-
-				console.log(mask.join(""), test);
-
-
-
-
-
-
-
-
-
-
-
+				if (!test) return "";
+				let check = __Type(method);
+				if (check.function) return method(mask.join(""));
+				return mask.join("");
 			}
 		},
-
-
-
-
-
 		/**
 		- `string dash`: Retorna uma string identificadora no formato de traços.
 		**/
@@ -2598,10 +2592,19 @@ function __strClear(x) {return __String(x).clear;}
 			set: function(x) {
 				let data = __Type(x);
 				if (data.datetime || data.time || data.date) {
-					let now = __DateTime();
-					let str = data.time ? now.toDateString()+"T"+data.value : data.value;
-					let dt  = __DateTime(str);
-					this._value = dt.year < 1 ? null : dt.format("{YYYY}-{MM}-{DD}T{hh}:{mm}");
+					let now  = __DateTime();
+					let date = now.toDateString();
+					let time = now.toTimeString();
+					let str  = data.value;
+					if (data.time || data.date)
+						str = data.time ? date+"T"+data.value : data.value+"T"+time;
+					let dt = __DateTime(str);
+					if (this.type === "datetime")
+						this._value = dt.toString();
+					else if (dt.year > 0)
+						this._value = dt.format("{YYYY}-{MM}-{DD}T{hh}:{mm}");
+					else
+						this._value = null;
 				} else {
 					this._value = null;
 				}
@@ -3089,7 +3092,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		- `array css(string|null|object x)`: Retorna a lista de estilos css definidos no atributo HTML `class` e define seus valores.
 		- Se o argumento `x` for uma string, os estilos, separados por espaço, serão definidos conforme especificados.
 		- Se o argumento `x` for `null`, o atributo HTML `class` será removido do elemento.
-		- Se o argumento `x` for um objeto, o nome do atributo corresponderá a uma operação e seu valor (string) aos estilos associados. `set` define estilos; `rpl` permuta estilos; `add` adiciona estilos; `del` apaga estilos; e `tgl` alterna estilos.
+		- Se o argumento `x` for um objeto, o nome do atributo corresponderá a uma operação e seu valor (string) aos estilos associados. `set` define estilos; `replace` permuta estilos; `add` adiciona estilos; `delete` apaga estilos; e `toggle` alterna estilos.
 		**/
 		css: {
 			value: function(x) {
@@ -3112,10 +3115,10 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 						delete x["set"];
 						return this.css(x);
 					}
-					if ("rpl" in x) css.replace.apply(css, x.rpl.split(" "));
-					if ("tgl" in x) css.toggle.apply(css, x.tgl.split(" "));
-					if ("add" in x) css.put.apply(css, x.add.split(" "));
-					if ("del" in x) css.delete.apply(css, x.del.split(" "));
+					if ("replace" in x) css.replace.apply(css, x.replace.split(" "));
+					if ("toggle" in x)  css.toggle.apply(css, x.toggle.split(" "));
+					if ("add" in x)     css.put.apply(css, x.add.split(" "));
+					if ("delete" in x)  css.delete.apply(css, x.delete.split(" "));
 					this._node.setAttribute("class", css.order.join(" "));
 				}
 				return this.css();
@@ -3182,6 +3185,22 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					}
 				}
 				return;
+			}
+		},
+		/**
+		- `string lang`: Retorna a linguagem do elemento ou seus pais (atributo `lang`) ou a do navegador ou ainda `en-US` como padrão.
+		**/
+		lang: {
+			get: function() {
+				let node = this._node;
+				while (node !== null) {
+					let lang = ("lang" in node.attributes) ? node.attributes.lang.value : null;
+					let test = __Type(lang);
+					if (test.lang) return lang.trim();
+					node = node.parentElement;
+					continue;
+				}
+				return navigator.language || navigator.browserLanguage || "en-US";
 			}
 		},
 		/**
@@ -3275,6 +3294,112 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return;
 			}
 		},
+
+
+
+		/**
+		- `boolean show`: Retorna se o elemento está visível nos termos da biblioteca e define sua exibição, exceto se houver estilo predominante que impeça o comportamento.
+		**/
+		show: {
+			get: function() {
+				return this.css().indexOf("js-wd-no-display") < 0;
+			},
+			set: function(x) {
+				this.css(x === false ? {add: "js-wd-no-display"} : {delete: "js-wd-no-display"});
+			}
+		},
+		/**
+		- `void nav(integer init=-Infinity, integer end=+Infinity)`: Define quais elementos filhos serão exibidos.
+		- Os argumentos `init` e `end` definem os índices do primeiro e do último filho a ser exibido, respectivamente.
+		- Se `end` for maior que `init` ocorrerá a inversão da exibição.
+		- Para exibir o primeiro filho, os dois agumentos devem ser zeros; Para exibir o último filho, `init` deve ser zero e `end` um valor negativo; Para exibir somente um filho, deve-se `init` deve ser seu índice e ser igual a `end`. Para exibir todos, basta não informar argumentos.
+		**/
+		nav: {
+			value: function(init, end) {
+				//FIXME colocar next (>> ou ++) e prev (<< ou --) aqui dentro
+
+
+				init = __Type(init);
+				end  = __Type(end);
+				init = init.number ? init.value : -Infinity;
+				end  = end.number  ? end.value  : +Infinity;
+				let child  = __Type(this._node.children).value;
+				if (init > end) {
+					let aux = init;
+					init = end;
+					end  = aux;
+					child.reverse();
+				}
+				child.forEach(function(v,i,a){
+					let node  = __Node(v);
+					node.show = (i >= init && i <= end);
+				});
+			}
+		},
+		/**
+		- `void next()`: Exibe o próximo filho.
+		**/
+		next: {
+			value: function() {
+				let child  = __Type(this._node.children).value;
+				let last   = child.length - 1;
+				let hidden =  0;
+				let shown  = -1;
+				let i = -1;
+				child.forEach(function(v,i,a){
+					let show = __Node(v).show;
+					if (shown < 0 && show) shown  = i;
+					hidden = hidden + (!show ? 1 : 0);
+				});
+				if (hidden === 0)   return this.nav(0, 0);
+				if (shown < 0)      return this.nav(0, 0);
+				if (shown === last) return this.nav(0, 0);
+				return this.nav(shown+1, shown+1);
+			}
+		},
+		/**
+		- `void next()`: Exibe o filho anterior.
+		**/
+		prev: {
+			value: function() {
+				let child  = __Type(this._node.children).value;
+				let last   = child.length - 1;
+				let hidden =  0;
+				let shown  = -1;
+				let i = -1;
+				child.forEach(function(v,i,a){
+					let show = __Node(v).show;
+					if (shown < 0 && show) shown  = i;
+					hidden = hidden + (!show ? 1 : 0);
+				});
+				if (hidden === 0) return this.nav(0, -1);
+				if (shown < 0)    return this.nav(0, -1);
+				if (shown === 0)  return this.nav(0, -1);
+				return this.nav(shown-1, shown-1);
+			}
+		},
+
+
+
+
+
+		brothers: {
+			get: function() {
+				let parent = this._node.parentElement;
+				return parent === null ? [] : __Type(parent.children).value;
+			}
+		},
+		index: {
+			get: function() {
+				let brothers = this.brothers;
+				let i = -1;
+				while (++i < brothers.length)
+					if (brothers[i] === this._node) return i;
+				return 0;
+			}
+		},
+
+
 
 	});
 
@@ -3657,17 +3782,63 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		if (input.type !== "number") return null;
 		if (!input.finite) return input.value.toString();
 		let types = {
-			significant: {minimumSignificantDigits: code, maximumSignificantDigits: code},
-			decimal:     {style: "decimal",  minimumFractionDigits: code, maximumFractionDigits: code},
-			integer:     {style: "decimal",  minimumIntegerDigits: code, },
-			percent:     {style: "percent",  minimumFractionDigits: code, maximumFractionDigits: code},
-			unit:        {style: "unit",     unit: code},
-			scientific:  {style: "decimal",  notation: "scientific", minimumFractionDigits: code, maximumFractionDigits: code},
-			engineering: {style: "decimal",  notation: "engineering", minimumFractionDigits: code, maximumFractionDigits: code},
-			compact:     {style: "decimal",  notation: "compact", compactDisplay: code === "short" ? code : "long"},
-			currency:    {style: "currency", currency: code, signDisplay: "exceptZero", currencyDisplay: "symbol"},
-			ccy:         {style: "currency", currency: code, signDisplay: "exceptZero", currencyDisplay: "narrowSymbol"},
-			nameccy:     {style: "currency", currency: code, signDisplay: "auto", currencyDisplay: "name"}
+			significant: {
+				minimumSignificantDigits: code,
+				maximumSignificantDigits: code
+			},
+			decimal: {
+				style: "decimal",
+				minimumFractionDigits: code,
+				maximumFractionDigits: code
+			},
+			integer: {
+				style: "decimal",
+				minimumIntegerDigits: code,
+			},
+			percent: {
+				style: "percent",
+				minimumFractionDigits: code,
+				maximumFractionDigits: code
+			},
+			unit: {
+				style: "unit",
+				unit: code
+			},
+			scientific: {
+				style: "decimal",
+				notation: "scientific",
+				minimumFractionDigits: code,
+				maximumFractionDigits: code
+			},
+			engineering: {
+				style: "decimal",
+				notation: "engineering",
+				minimumFractionDigits: code,
+				maximumFractionDigits: code
+			},
+			compact: {
+				style: "decimal",
+				notation: "compact",
+				compactDisplay: code === "short" ? code : "long"
+			},
+			currency: {
+				style: "currency",
+				currency: code,
+				signDisplay: "exceptZero",
+				currencyDisplay: "symbol"
+			},
+			ccy: {
+				style: "currency",
+				currency: code,
+				signDisplay: "exceptZero",
+				currencyDisplay: "narrowSymbol"
+			},
+			nameccy: {
+				style: "currency",
+				currency: code,
+				signDisplay: "auto",
+				currencyDisplay: "name"
+			}
 		};
 		type = String(type).toLowerCase();
 		try {
