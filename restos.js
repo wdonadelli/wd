@@ -503,16 +503,7 @@ function __finite(value) {
 		return true;
 	}
 
-/*----------------------------------------------------------------------------*/
-	function wd_html_jump(elem, parents) { /* transporta o elemento entre dois containers */
-		for (let i = 0; i < parents.length; i++) {
-			if (elem.parentElement === parents[i]) {
-				let item = (i + 1) >= (parents.length) ? 0 : (i + 1);
-				return parents[item].appendChild(elem);
-			}
-		}
-		return;
-	}
+
 
 /*----------------------------------------------------------------------------*/
 	function wd_html_filter(elem, search, chars) { /* exibe somente o elemento que contenha o texto casado */

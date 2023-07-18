@@ -3312,13 +3312,9 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		- `void nav(integer init=-Infinity, integer end=+Infinity)`: Define quais elementos filhos serão exibidos.
 		- Os argumentos `init` e `end` definem os índices do primeiro e do último filho a ser exibido, respectivamente.
 		- Se `end` for maior que `init` ocorrerá a inversão da exibição.
-		- Para exibir o primeiro filho, os dois agumentos devem ser zeros; Para exibir o último filho, `init` deve ser zero e `end` um valor negativo; Para exibir somente um filho, deve-se `init` deve ser seu índice e ser igual a `end`. Para exibir todos, basta não informar argumentos.
 		**/
 		nav: {
 			value: function(init, end) {
-				//FIXME colocar next (>> ou ++) e prev (<< ou --) aqui dentro
-
-
 				init = __Type(init);
 				end  = __Type(end);
 				init = init.number ? init.value : -Infinity;
@@ -3337,10 +3333,18 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			}
 		},
 		/**
-		- `void next()`: Exibe o próximo filho.
+		- `void walk(integer n=1)`: Exibe elementos filhos avançando ou retrocedendo.
+		- O argumento `n` indica o intervalo a avançar (positivo) ou retorceder (negativo).
 		**/
-		next: {
-			value: function() {
+		walk: {
+			value: function(n) {
+				let data = __Type(n);
+				if (!data.finite || data.zero) return this.walk(1);
+				let loop = Math.abs(data.value);
+				while (loop > 1) {
+					loop--;
+					this.walk(data.negative ? -1 : 1);
+				}
 				let child  = __Type(this._node.children).value;
 				let last   = child.length - 1;
 				let hidden =  0;
@@ -3351,53 +3355,107 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					if (shown < 0 && show) shown  = i;
 					hidden = hidden + (!show ? 1 : 0);
 				});
-				if (hidden === 0)   return this.nav(0, 0);
-				if (shown < 0)      return this.nav(0, 0);
-				if (shown === last) return this.nav(0, 0);
-				return this.nav(shown+1, shown+1);
+				if (data.positive) {
+					if (hidden === 0)   return this.nav(0, 0);
+					if (shown < 0)      return this.nav(0, 0);
+					if (shown === last) return this.nav(0, 0);
+					return this.nav(shown+1, shown+1);
+				}
+				if (data.negative) {
+					if (hidden === 0) return this.nav(0, -1);
+					if (shown < 0)    return this.nav(0, -1);
+					if (shown === 0)  return this.nav(0, -1);
+					return this.nav(shown-1, shown-1);
+				}
+				return;
 			}
 		},
 		/**
-		- `void next()`: Exibe o filho anterior.
+		- `integer index`: Retorna o índice do elemento com relação ao elemento pai.
 		**/
-		prev: {
-			value: function() {
-				let child  = __Type(this._node.children).value;
-				let last   = child.length - 1;
-				let hidden =  0;
-				let shown  = -1;
-				let i = -1;
-				child.forEach(function(v,i,a){
-					let show = __Node(v).show;
-					if (shown < 0 && show) shown  = i;
-					hidden = hidden + (!show ? 1 : 0);
-				});
-				if (hidden === 0) return this.nav(0, -1);
-				if (shown < 0)    return this.nav(0, -1);
-				if (shown === 0)  return this.nav(0, -1);
-				return this.nav(shown-1, shown-1);
-			}
-		},
-
-
-
-
-
-		brothers: {
-			get: function() {
-				let parent = this._node.parentElement;
-				return parent === null ? [] : __Type(parent.children).value;
-			}
-		},
 		index: {
 			get: function() {
-				let brothers = this.brothers;
+				let parent   = this._node.parentElement;
+				let brothers = parent === null ? [] : __Type(parent.children).value;
 				let i = -1;
 				while (++i < brothers.length)
 					if (brothers[i] === this._node) return i;
 				return 0;
 			}
 		},
+		/**
+		- `void only()`: exibe o elemento e omite seus elementos irmãos.
+		**/
+		only: {
+			value: function() {
+				let index = this.index;
+				let node = __Node(this._node.parentElement);
+				return node.nav(index, index);
+			}
+		},
+		/**
+		- `void display(string act)`: Promove ações de exibição de elementos.
+		- O argumento `act` define as ações de exibição a serem executadas ao elemento ou seus filhos.
+		- Quanto ao elemento, `show` exibe, `hide` esconde, `toggle` alterna a exibição e `only` esconde os irmãos.
+		- Quanto aos elementos filhos, `all` exibe todos, `none` escode todos, `first` exibe apenas o primeiro e `last` exibe apenas o último.
+		- Se for um número inteiro positivo precedido de `&plus;&plus;` ou `&minus;&minus;`, exibirá apenas um elemento filho avançando ou retrocedendo, respectivamente, entre os irmãos no intervalo especificado.
+		- Se for dois números inteiros separados pelo caractere `:`, exibirá os elementos filhos no intervalo de indices especificados respectivamente pelos dois números. Se o primeiro número for maior que o segundo, exibição inversa ocorrerá.
+		**/
+		display: {
+			value: function(act) {
+				act = String(act).trim();
+				switch (act) {
+					case "show":
+						this.show = true;
+						return;
+					case "hide":
+						this.show = false;
+						return;
+					case "toggle":
+						this.show = !this.show;
+						return;
+					case "only":
+						return this.only();
+					case "all":
+						return this.nav();
+					case "none":
+						return this.nav(-1, -1);
+					case "last":
+						return this.nav(0, -1);
+					case "first":
+						return this.nav(0, 0);
+				};
+				if ((/^(\+\+|\-\-)\d+$/).test(act)) {
+					act = __Type(act.substr(1)).value;
+					return this.walk(act);
+				}
+				if ((/^[+-]?\d+\:[+-]?\d+$/).test(act)) {
+					act = act.split(":")
+					return this.nav(act[0], act[1]);
+				}
+				return;
+			}
+		},
+		/**
+		- `void jump(array list)`: O elemento será transferido, na ordem definida, como filho na lista de elementos pais a cada chamada do método.
+		- O argumento `list` é um array de elementos que servirá como pai para o elemento especificado.
+		**/
+		jump: {
+			value: function(list) {
+				let check = __Type(list);
+				list = check.array ? list : [list];
+				let index = list.indexOf(this._node.parentElement) + 1;
+				let node  = list[index%list.length];
+				let data  = __Type(node);
+				if (data.node)
+					node.appendChild(this._node);
+			}
+		},
+
+
+
+
+
 
 
 
