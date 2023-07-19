@@ -562,64 +562,7 @@ function __finite(value) {
 		return null;
 	}
 
-/*----------------------------------------------------------------------------*/
-	function wd_html_page(elem, page, size) { /* exibe determinados grupos de elementos filhos */
-		let lines = wd_vtype(elem.children).value;
-		if (lines.length === 0) return null;
-		page = wd_vtype(page).value;
-		size = wd_vtype(size).value;
-		if (!__finite(size)) size = -1;
-		if (!__finite(page) && page !== "+" && page !== "-") page = 0;
 
-		/*--------------------------------------------------------------------------
-		| A) se size  < 0  obter toda a amostra;
-		| B) se size  < 1  obter uma fração da amostra
-		| C) se size >= 1 obter a amostra (valor inteiro)
-		| D) se size  = 0  size = 1 (limite mínimo de size)
-		--------------------------------------------------------------------------*/
-		if (size < 0) { /*A*/
-			page = 0;
-			size = lines.length;
-		} else {
-			size = __integer(size < 1 ? size*lines.length : size); /*BC*/
-			if (size === 0) size = 1; /*D*/
-		}
-
-		function last() { /* informa a última página */
-			return __integer(lines.length/size + (lines.length % size === 0 ? -1 :0));
-		}
-
-		/*--------------------------------------------------------------------------
-		| A) se page < 0           exibir a última página;
-		| B) se size*page >= lines exibir a última página;
-		| C) se page = +     exibir a próxima página;
-		| D) se page = -     exibir a página anterior;
-		| se size < 1 e amostra = 0, amostra = 1 (limite mínimo de size)
-		| caso contrário, obter a amostra (inteiro)
-		--------------------------------------------------------------------------*/
-
-		/* próxima página e página anterior */
-		if (page === "+" || page === "-") /*CD*/ {
-			let current = elem.dataset.wdCurrentPage;
-			let npage   = current === undefined ? 0 : wd_vtype(current.split("/")[0]);
-			npage = (npage.type !== "number" || npage.value < 0) ? 0 : npage.value;
-			npage = page === "+" ? npage+1 : npage-1;
-			return wd_html_page(elem, (npage < 0 ? 0 : npage), size);
-		}
-
-		/* análise numérica */
-		if (page < 0 || size*page >= lines.length) /*AB*/
-			page = last();
-		else /* padrão */
-			page = __integer(page);
-		let start = page*size;
-		let end   = start+size-1;
-		wd_html_nav(elem, ""+start+":"+end+"");
-		/* guardar informação da última página */
-		elem.dataset.wdCurrentPage = page+"/"+__integer(lines.length/size);
-		return;
-
-	}
 
 /*----------------------------------------------------------------------------*/
 	function wd_html_sort(elem, order, col) { /* ordena elementos filho pelo conteúdo */
