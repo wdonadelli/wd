@@ -612,6 +612,15 @@ const wd = (function() {
 			}
 		},
 		/**
+		- `boolean infinite`: Checa se o argumento é um número infinito.
+		**/
+		infinite: {
+			get: function() {
+				return this.number ? !this.finite : false;
+			}
+		},
+
+		/**
 		- `boolean integer`: Checa se o argumento é um número inteiro.
 		**/
 		integer: {
@@ -3347,6 +3356,12 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		**/
 		nav: {
 			value: function(init, end) {
+				if (arguments.length === 1) {
+					end = init;//FIXME
+
+				}
+
+
 				init = __Type(init);
 				end  = __Type(end);
 				init = init.number ? init.value : -Infinity;
@@ -3415,102 +3430,48 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			}
 		},
 		/**
-		- `void page(number page=0, number size, boolean width=true)`: define a exibição de um grupo de elementos filhos de determinado tamanho.
+		- `void page(number page=0, integer size, boolean width=true)`: define a exibição de um grupo de elementos filhos de determinado tamanho.
 		- O argumento `page` define o grupo a ser exibido que, se negativo, retornará o último grupo.
-		- O argumento `size` define o tamanho do grupo ou a quantidade de grupos.
-		- O argumento `width`, se verdadeiro, tratará o valor de `size` como tamanho do grupo e, se falso, considerará como a quantidade de grupos.
+		- O argumento `size` (inteiro maior que zero) define o tamanho do grupo ou a quantidade de grupos.
+		- O argumento `width` tratará o valor de `size` como tamanho do grupo, se verdadeiro, ou como a quantidade de grupos, se falso.
 		**/
+		//FIXME complementar descrição dos argumentos
 		page: {
-		//FIXME arrumar o width
 			value: function (page, size, width) {
 				let data1 = __Type(page);
 				let data2 = __Type(size);
 				let data  = this.child;
 				let child = data.list;
-				page = !data1.number ?            0 : data1.value;
-				size = !data2.number ? child.length : data2.value;
-				page = Math.trunc(Math.abs(page));
-				size = Math.trunc(Math.abs(size));
-				let stop = child.length - child.length % size;
+				/* sem filhos, retornar */
+				if (child.length === 0) return;
+				/* size deve ser um inteiro maior que zero */
+				size = (!data2.finite || data2.value < 1) ? child.length : data2.value;
+				/* se size representar a quantidade de páginas */
+				size = width === false ? Math.ceil(child.length / size) : Math.trunc(size);
+				/* page deve ser um número */
+				page = !data1.number ? 0 : data1.value;
+				/* se page for infinito: próximo ou anterior */
+				if (data1.infinite) {
+					if (data.first !== null) {
+						let item  = data1.negative ? data.first - 1 : data.last + 1;
+						page = Math.trunc(item/size);
+					} else {
+						page = 0;
+					}
+				} else {
+					page = Math.trunc(Math.abs(page));
+				}
+				/* definindo intervalo de exibição, limitando na última página */
 				let init = page * size;
 				let end  = init + size - 1;
-				if (init > stop || data1.negative)
-					return this.nav(stop, Infinity);
+				let last = size * Math.trunc(child.length/size);
+				let stop = last === child.length ? (last - size) : last;
+
+				if (init > stop || (data1.finite && data1.negative))
+					return this.nav(stop, child.length);
 				return this.nav(init, end);
-
-
-
-
-
-
-
-
-
-
-		/*
-		let lines = wd_vtype(elem.children).value;
-		if (lines.length === 0) return null;
-		page = wd_vtype(page).value;
-		size = wd_vtype(size).value;
-		if (!__finite(size)) size = -1;
-		if (!__finite(page) && page !== "+" && page !== "-") page = 0;
-
-		/*--------------------------------------------------------------------------
-		| A) se size  < 0  obter toda a amostra;
-		| B) se size  < 1  obter uma fração da amostra
-		| C) se size >= 1 obter a amostra (valor inteiro)
-		| D) se size  = 0  size = 1 (limite mínimo de size)
-		--------------------------------------------------------------------------*/
-		/*if (size < 0) { /*A* /
-			page = 0;
-			size = lines.length;
-		} else {
-			size = __integer(size < 1 ? size*lines.length : size); /*BC* /
-			if (size === 0) size = 1; /*D* /
-		}
-
-		function last() { /* informa a última página * /
-			return __integer(lines.length/size + (lines.length % size === 0 ? -1 :0));
-		}
-
-		/*--------------------------------------------------------------------------
-		| A) se page < 0           exibir a última página;
-		| B) se size*page >= lines exibir a última página;
-		| C) se page = +     exibir a próxima página;
-		| D) se page = -     exibir a página anterior;
-		| se size < 1 e amostra = 0, amostra = 1 (limite mínimo de size)
-		| caso contrário, obter a amostra (inteiro)
-		--------------------------------------------------------------------------*/
-
-		/* próxima página e página anterior * /
-		if (page === "+" || page === "-") /*CD* / {
-			let current = elem.dataset.wdCurrentPage;
-			let npage   = current === undefined ? 0 : wd_vtype(current.split("/")[0]);
-			npage = (npage.type !== "number" || npage.value < 0) ? 0 : npage.value;
-			npage = page === "+" ? npage+1 : npage-1;
-			return wd_html_page(elem, (npage < 0 ? 0 : npage), size);
-		}
-
-		/* análise numérica * /
-		if (page < 0 || size*page >= lines.length) /*AB* /
-			page = last();
-		else /* padrão * /
-			page = __integer(page);
-		let start = page*size;
-		let end   = start+size-1;
-		wd_html_nav(elem, ""+start+":"+end+"");
-		/* guardar informação da última página * /
-		elem.dataset.wdCurrentPage = page+"/"+__integer(lines.length/size);
-		return;
-		*/
-		}
-	},
-
-
-
-
-
-
+			}
+		},
 		/**
 		- `void display(string act)`: Promove ações de exibição de elementos.
 		- O argumento `act` define as ações de exibição a serem executadas ao elemento ou seus filhos.
@@ -3522,35 +3483,56 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		display: {
 			value: function(act) {
 				act = String(act).trim();
-				switch (act) {
-					case "show":
-						this.show = true;
-						return;
-					case "hide":
-						this.show = false;
-						return;
-					case "toggle":
-						this.show = !this.show;
-						return;
-					case "only":
-						return this.only();
-					case "all":
-						return this.nav();
-					case "none":
-						return this.nav(-1, -1);
-					case "last":
-						return this.nav(0, -1);
-					case "first":
-						return this.nav(0, 0);
-				};
+				if ((/^[a-z]+$/).test(act)) {
+					switch (act) {
+						case "show":
+							this.show = true;
+							return;
+						case "hide":
+							this.show = false;
+							return;
+						case "toggle":
+							this.show = !this.show;
+							return;
+						case "only":
+							return this.only();
+						case "all":
+							return this.nav();
+						case "none":
+							return this.nav(-1, -1);
+						case "last":
+							return this.nav(0, -1);
+						case "first":
+							return this.nav(0, 0);
+						case "next":
+							return this.walk(1);
+						case "prev":
+							return this.walk(-1);
+						default:
+							return;
+					};
+				}
+				if ((/^\d+$/).test(act)) {
+					return this.nav(act, act);
+				}
+				if ((/^[+-]?\d+\-[+-]?\d+$/).test(act)) {
+					act = act.split("-")
+					return this.nav(act[0], act[1]);
+				}
 				if ((/^(\+\+|\-\-)\d+$/).test(act)) {
 					act = __Type(act.substr(1)).value;
 					return this.walk(act);
 				}
-				if ((/^[+-]?\d+\-[+-]?\d+$/).test(act)) {
-					act = act.split(":")
-					return this.nav(act[0], act[1]);
+				if ((/^(first|last|next|prev|[1-9](\d+)?)[:/][1-9](\d+)?$/).test(act)) {
+					let width = (/\:/).test(act);
+					let data  = act.split(width ? ":" : "/");
+					let init  = {first: 0, last: -1, next: +Infinity, prev: -Infinity};
+					let page  = data[0] in init ? init[data[0]] : (__Type(data[0]).value - 1);
+					let size  = data[1];
+					return this.page(page, size, width);
 				}
+
+
 				return;
 			}
 		},
