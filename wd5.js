@@ -2139,12 +2139,23 @@ function __strClear(x) {return __String(x).clear;}
 		constructor: {value: __Array},
 		/**
 		- `array|void  valueOf(integer n)`: Retorna o array definido ou um de seus itens.
-		- O argumento opcional `n` corresponde ao identificador do item do array. Se informado, fará com que o método retorne o respectivo item da lista. Se negativo, a referência será o final da lista (direção inversa).
+		- O argumento opcional `n` corresponde ao índice da lista que se comporta conforme o retorno do método `index`.
 		**/
 		valueOf: {
 			value: function(n) {
-				n = __Type(n).finite ? __Number(n) : null;
-				return n === null ? this._value : this._value[n < 0 ? this.length + n.int : n.int]
+				if (arguments.length === 0) return this._value;
+				return this._value[this.index(n)];
+			}
+		},
+		/**
+		- `integer index(integer n=0)`: Retorna o índice do array, dentro de seu comprimento, como se repetidas listas estivessem lado a lado.
+		- O argumento `n` define o valor do índice. Tendo como exemplo um array de três elementos, o conjunto de (`n`, `index`) teria como resultado  {..., (-7, 2), (-6, 0), (-5, 1), (-4, 2), (-3, 0), (-2, 1), (-1, 2), (0, 0), (1, 1), (2, 2), (3, 0), (4, 1), (5, 2), (6, 0), (7, 1), ...}.
+		**/
+		index: {
+			value: function(n) {
+				let data = __Type(n);
+				n = data.finite ? Math.trunc(data.value) : 0;
+				return (Math.abs(n)*this.length + n)%this.length;
 			}
 		},
 		/**
@@ -3304,42 +3315,6 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			}
 		},
 		/**
-		- `object child`: Retorna informações sobre a exibição, nos moldes da biblioteca, dos elementos filhos.
-		- O atributo `list` retorna um array com os elementos filhos;
-		- O atributo `show` retorna um array contendo os índices dos elementos em exibição;
-		- O atributo `hide` retorna um array contendo os índices dos elementos escondidos;
-		- O atributo `first` retorna o índice do primeiro elemento exibido ou `null`, se nenhum;
-		- O atributo `last` retorna o índice do último elemento exibido ou `null`, se nenhum; e
-		- O atributo `gap` informa se os elementos exibidos possuem interrupções.
-		**/
-		child: {
-			get: function() {
-				let data = {
-					list:   __Type(this._node.children).value,
-					show:     [],
-					hide:     [],
-					first:  null,
-					last:   null,
-					gap:   false,
-				};
-				data.list.forEach(function(v,i,a){
-					let css = v.className.split(" ");
-					if (css.indexOf("js-wd-no-display") < 0) {
-						data.show.push(i);
-						if (data.first === null) {
-							data.first = i;
-						} else if (!data.gap) {
-							data.gap = i === (data.last + 1);
-						}
-						data.last = i;
-					} else {
-						data.hide.push(i);
-					}
-				});
-				return data;
-			}
-		},
-		/**
 		- `boolean show`: Retorna se o elemento está visível nos termos da biblioteca e define sua exibição, exceto se houver estilo predominante que impeça o comportamento.
 		**/
 		show: {
@@ -3351,61 +3326,59 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			}
 		},
 		/**
-		- `void nav(number init=-Infinity, number end=+Infinity)`: Define quais elementos filhos serão exibidos.
-		- Os argumentos `init` e `end` definem os índices do primeiro e do último filho a ser exibido, respectivamente. Se `end` for maior que `init` ocorrerá a inversão da exibição.
+		- `void nav(number init=-Infinity, number last=+Infinity)`: Define o intervalo de nós filhos a ser exibidos.
+		- Os argumentos `init` e `last` definem os índices do primeiro e do último nó, respectivamente. Se `end` for maior que `init`, ocorrerá a inversão da exibição.
 		**/
 		nav: {
-			value: function(init, end) {
-				if (arguments.length === 1) {
-					end = init;//FIXME
-
-				}
-
-
+			value: function(init, last) {
+				let child = __Type(this._node.children).value;
+				if (child.length === 0) return;
 				init = __Type(init);
-				end  = __Type(end);
+				last  = __Type(last);
 				init = init.number ? init.value : -Infinity;
-				end  = end.number  ? end.value  : +Infinity;
-				let child  = this.child.list;
-				if (init > end) {
+				last = last.number ? last.value : +Infinity;
+				if (init > last) {
 					let aux = init;
-					init = end;
-					end  = aux;
+					init = last;
+					last = aux;
 					child.reverse();
 				}
 				child.forEach(function(v,i,a){
 					let node  = __Node(v);
-					node.show = (i >= init && i <= end);
+					node.show = (i >= init && i <= last);
 				});
 			}
 		},
 		/**
-		- `void walk(integer n=1)`: Exibe elementos filhos avançando ou retrocedendo.
+		- `void walk(integer n=1)`: Exibe um determinado nó filho avançando ou retrocedendo entre os nós irmãos.
 		- O argumento `n` indica o intervalo a avançar (positivo) ou a retroceder (negativo).
 		**/
 		walk: {
 			value: function(n) {
-				let data = __Type(n);
-				if (!data.number || data.zero || !data.finite)
-					return this.walk(1);
-				/* para intervalo maior que 1, repetir até zerar */
-				let loop = Math.abs(data.value);
-				while (loop > 1) {
-					this.walk(data.negative ? -1 : 1);
-					loop--;
+				let data  = __Type(n);
+				let child = __Type(this._node.children).value;
+				let width = child.length;
+				let init  = -1;
+				let last  = -1;
+				let size  =  0;
+				if (width === 0 || data.zero) return;
+				n = data.finite ? Math.trunc(data.value) : (data.negative ? -1 : +1);
+				/* capturando o primeiro e o último nó visível */
+				child.forEach(function(v,i,a) {
+					let show = v.className.indexOf("js-wd-no-display") < 0;
+					if (show) {
+						size++;
+						if (init < 0) init = i;
+						last = i;
+					}
+				});
+				/* todos os nós visíveis ou invisíveis */
+				if (size === 0 || size === width) {
+					init = 0;
+					last = width - 1;
 				}
-				let info = this.child;
-				/* se todos ou nenhum visível, exibir o primeiro ou o último */
-				if (info.show.length === 0 || info.hide.length === 0)
-					return this.nav(0, data.negative ? -1 : 0);
-				let next = info.first + (data.negative ? -1 : +1);
-				/* se o retrocesso for anterior ao primeiro item, definir o último */
-				if (data.negative && next < 0)
-					next = info.list.length - 1;
-				/* se o avanço for posterior ao último item, definir o primeiro */
-				else if (data.positive && next >= info.list.length)
-					next = 0;
-				return this.nav(next, next);
+				let index = __Array(child).index((n < 0 ? init : last) + n);
+				return this.nav(index, index);
 			}
 		},
 		/**
@@ -3420,9 +3393,9 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			}
 		},
 		/**
-		- `void only()`: exibe o elemento e omite seus elementos irmãos.
+		- `void alone()`: exibe o elemento e omite seus elementos irmãos.
 		**/
-		only: {
+		alone: {
 			value: function() {
 				let index = this.index;
 				let node  = __Node(this._node.parentElement);
@@ -3433,24 +3406,70 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		- `void page(number page=0, integer size, boolean width=true)`: define a exibição de um grupo de elementos filhos de determinado tamanho.
 		- O argumento `page` define o grupo a ser exibido que, se negativo, retornará o último grupo.
 		- O argumento `size` (inteiro maior que zero) define o tamanho do grupo ou a quantidade de grupos.
-		- O argumento `width` tratará o valor de `size` como tamanho do grupo, se verdadeiro, ou como a quantidade de grupos, se falso.
+		- O argumento `width` (largura da página) tratará o valor de `size` como tamanho do grupo, se verdadeiro, ou como a quantidade de grupos, se falso.
 		**/
 		//FIXME complementar descrição dos argumentos
 		page: {
-			value: function (page, size, width) {
-				let data1 = __Type(page);
-				let data2 = __Type(size);
-				let data  = this.child;
-				let child = data.list;
-				/* sem filhos, retornar */
+			value: function (index, total, width) {
+				let data1  = __Type(index);
+				let data2  = __Type(total);
+				let child  = __Type(this._node.children).value;
+				let length = child.length;
+				let init   = -1;
+				let last   = -1;
+				let size   =  0;
+				let pages  = [];
+				let count  = -1;
 				if (child.length === 0) return;
-				/* size deve ser um inteiro maior que zero */
-				size = (!data2.finite || data2.value < 1) ? child.length : data2.value;
-				/* se size representar a quantidade de páginas */
-				size = width === false ? Math.ceil(child.length / size) : Math.trunc(size);
-				/* page deve ser um número */
+				total = (!data2.finite || data2.value < 1) ? length : data2.value;
+				total = width === true ? Math.trunc(total) : Math.ceil(child.length / total);
+				index = !data1.number ? 0 : data1.value;
+				child.forEach(function(v,i,a) {
+					let show = v.className.indexOf("js-wd-no-display") < 0;
+					if (show) {
+						size++;
+						if (init < 0) init = i;
+						last = i;
+					}
+					/* separar índices dos nós em grupos */
+					if (i%total === 0) {
+						pages.push([]);
+						count++;
+					}
+					pages[count].push(i);
+				});
+				if (data1.finite) {
+					let i = __Array(pages).index(index);
+					let a = pages[i][0];
+					let b = pages[i][pages[i].length - 1];
+					return this.nav(a, b);
+
+
+
+
+
+				}
+
+
+
+
+
+
+console.log(pages);
+
+
+
+
+
+
+
+
+				/* sem filhos, retornar * /
+				if (child.length === 0) return;
+
+				/* page deve ser um número * /
 				page = !data1.number ? 0 : data1.value;
-				/* se page for infinito: próximo ou anterior */
+				/* se page for infinito: próximo ou anterior * /
 				if (data1.infinite) {
 					if (data.first !== null) {
 						let item  = data1.negative ? data.first - 1 : data.last + 1;
@@ -3461,7 +3480,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				} else {
 					page = Math.trunc(Math.abs(page));
 				}
-				/* definindo intervalo de exibição, limitando na última página */
+				/* definindo intervalo de exibição, limitando na última página * /
 				let init = page * size;
 				let end  = init + size - 1;
 				let last = size * Math.trunc(child.length/size);
@@ -3469,7 +3488,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 
 				if (init > stop || (data1.finite && data1.negative))
 					return this.nav(stop, child.length);
-				return this.nav(init, end);
+				return this.nav(init, end);*/
 			}
 		},
 		/**
@@ -3494,8 +3513,8 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 						case "toggle":
 							this.show = !this.show;
 							return;
-						case "only":
-							return this.only();
+						case "alone":
+							return this.alone();
 						case "all":
 							return this.nav();
 						case "none":
