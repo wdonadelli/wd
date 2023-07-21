@@ -3438,17 +3438,14 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					}
 					pages[count].push(i);
 				});
+				let array = __Array(pages);
 				if (data1.finite) {
-					let i = __Array(pages).index(index);
+					let i = array.index(index);
 					let a = pages[i][0];
 					let b = pages[i][pages[i].length - 1];
 					return this.nav(a, b);
-
-
-
-
-
 				}
+
 
 
 
