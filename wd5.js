@@ -3393,22 +3393,27 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			}
 		},
 		/**
-		- `void alone()`: exibe o elemento e omite seus elementos irmãos.
+		- `void alone(boolean x=true)`: exibe o elemento e omite seus elementos irmãos.
+		- O argumento `x`, se falso, inverterá a exibição padrão, escondendo apenas o nó.
 		**/
 		alone: {
-			value: function() {
+			value: function(x) {
 				let index = this.index;
 				let node  = __Node(this._node.parentElement);
+				if (x === false) {
+					node.nav();
+					this.show = false;
+					return;
+				}
 				return node.nav(index, index);
 			}
 		},
 		/**
-		- `void page(number page=0, integer size, boolean width=true)`: define a exibição de um grupo de elementos filhos de determinado tamanho.
-		- O argumento `page` define o grupo a ser exibido que, se negativo, retornará o último grupo.
-		- O argumento `size` (inteiro maior que zero) define o tamanho do grupo ou a quantidade de grupos.
-		- O argumento `width` (largura da página) tratará o valor de `size` como tamanho do grupo, se verdadeiro, ou como a quantidade de grupos, se falso.
+		- `void page(number index=0, integer total, boolean width=false)`: Divide os nós filhos em grupos exibindo apenas aqueles do grupo definido.
+		- O argumento `index` define o índice de cada grupo limitados ao primeiro e último grupo. Se for igual a &minus;1, retornará o último grupo. Os valores `+Infinity` e `-Infinity` avançam ou retrocedem para o grupo seguinte ou anterior, respectivamente.
+		- O argumento `total` é um inteiro positivo que define a quantidade de nós em cada grupo ou a quantidade de grupos (padrão).
+		- O argumento `width` define o valor de `total` como quantidade de grupos, se falso, ou como quantidade de nós por grupo, se verdadeiro.
 		**/
-		//FIXME complementar descrição dos argumentos
 		page: {
 			value: function (index, total, width) {
 				let data1  = __Type(index);
@@ -3417,118 +3422,128 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				let length = child.length;
 				let init   = -1;
 				let last   = -1;
-				let size   =  0;
 				let pages  = [];
 				let count  = -1;
 				if (child.length === 0) return;
-				total = (!data2.finite || data2.value < 1) ? length : data2.value;
-				total = width === true ? Math.trunc(total) : Math.ceil(child.length / total);
-				index = !data1.number ? 0 : data1.value;
+				total = (!data2.finite || data2.value < 1) ? length : Math.trunc(data2.value);
+				total = width === true ? total : Math.ceil(child.length / total);
+				index = !data1.number ? 0 : data1.infinite ? data1.value : Math.trunc(data1.value);
 				child.forEach(function(v,i,a) {
-					let show = v.className.indexOf("js-wd-no-display") < 0;
-					if (show) {
-						size++;
-						if (init < 0) init = i;
-						last = i;
-					}
 					/* separar índices dos nós em grupos */
 					if (i%total === 0) {
 						pages.push([]);
 						count++;
 					}
 					pages[count].push(i);
-				});
-				let array = __Array(pages);
-				if (data1.finite) {
-					let i = array.index(index);
-					let a = pages[i][0];
-					let b = pages[i][pages[i].length - 1];
-					return this.nav(a, b);
-				}
-
-
-
-
-
-
-
-console.log(pages);
-
-
-
-
-
-
-
-
-				/* sem filhos, retornar * /
-				if (child.length === 0) return;
-
-				/* page deve ser um número * /
-				page = !data1.number ? 0 : data1.value;
-				/* se page for infinito: próximo ou anterior * /
-				if (data1.infinite) {
-					if (data.first !== null) {
-						let item  = data1.negative ? data.first - 1 : data.last + 1;
-						page = Math.trunc(item/size);
-					} else {
-						page = 0;
+					/* obtendo o primeiro e o último nó visível */
+					let show = v.className.indexOf("js-wd-no-display") < 0;
+					if (show) {
+						if (init < 0) init = count;
+						last = count;
 					}
+				});
+				/* definindo o índice do grupo */
+				let array = __Array(pages);
+				if (index === +Infinity) {
+					let ref = last + 1;
+					index = array.index(ref >= pages.length ? (pages.length - 1) : ref);
+				} else if (index === -Infinity) {
+					let ref = init - 1;
+					index = array.index(ref < 0 ? 0 : ref);
 				} else {
-					page = Math.trunc(Math.abs(page));
-				}
-				/* definindo intervalo de exibição, limitando na última página * /
-				let init = page * size;
-				let end  = init + size - 1;
-				let last = size * Math.trunc(child.length/size);
-				let stop = last === child.length ? (last - size) : last;
+					let ref = index >= pages.length ? (pages.length - 1) : (index < -1 ? -1 : index);
 
-				if (init > stop || (data1.finite && data1.negative))
-					return this.nav(stop, child.length);
-				return this.nav(init, end);*/
+					index = array.index(ref);
+					console.log(ref, pages, index);
+				}
+				/* definindo os limites */
+				if (index < 0 || index >= pages.length)
+					index = index < 0 ? 0 : (pages.length - 1);
+				let a = pages[index][0];
+				let b = pages[index][pages[index].length - 1];
+				return this.nav(a, b);
+			}
+		},
+
+		filter: {
+			value: function(search, chars) {
+				let data1 = __Type(search);
+				let data2 = __Type(chars);
+				let child = __Type(this._node.children).value;
+				if (data1.null || data1.undefined) return this.nav();
+				search = data1.regexp ? search : String(search).toUpperCase().trim();
+				chars  = data2.finite ? Math.trunc(chars) : 0;
+				if (search === "") return;
+				child.forEach(function(v,i,a) {
+					let node  = __Node(v);
+					let value = data1.regexp ? node.text : node.text.toUpperCase();
+					let text  = data1.regexp ?     value :__String(value).clear()
+					if (data1.regexp)
+						node.show = search.test(text);
+					else if (search.length >= Math.abs(chars))
+						node.show = text.indexOf(search) >= 0;
+					else
+						node.show = chars >= 0;
+					console.log(node.text, "\n", search, "\n", text);
+				});
 			}
 		},
 		/**
 		- `void display(string act)`: Promove ações de exibição de elementos.
-		- O argumento `act` define as ações de exibição a serem executadas ao elemento ou seus filhos.
-		- Quanto ao elemento, `show` exibe, `hide` esconde, `toggle` alterna a exibição e `only` esconde os irmãos.
-		- Quanto aos elementos filhos, `all` exibe todos, `none` escode todos, `first` exibe apenas o primeiro e `last` exibe apenas o último.
-		- Se for um número inteiro positivo precedido de `&plus;&plus;` ou `&minus;&minus;`, exibirá apenas um elemento filho avançando ou retrocedendo, respectivamente, entre os irmãos no intervalo especificado.
-		- Se for dois números inteiros separados pelo caractere `-`, exibirá os elementos filhos no intervalo de indices especificados respectivamente pelos dois números. Se o primeiro número for maior que o segundo, exibição inversa ocorrerá.
+		- O argumento `act` define as ações de exibição a serem executadas ao elemento ou seus filhos:
+		######Ações do nó:
+		- `show` exibe o nó;
+		- `hide` esconde o nó;
+		- `toggle` alterna a exibição do nó;
+		- `alone` exibe o nó e esconde os irmãos;
+		- `absent` esconde o nó e exibe os irmãos;
+		- `all` exibe o nó e irmãos; e
+		- `none` esconde o nó e irmãos.
+		######Ações aos filhos do nó:
+		- `*` exibe todos os filhos;
+		- `^` esconde todos os filhos;
+		- `X` exibe o nó detentor do índice `X` (zero é o primeiro &minus;1 é o último) ilimitado;FIXME
+		- `X-Y` define o intervalo de nós a exibir, invertendo a exibição na ordem decrescente;
+		- `&gt;` exibe o próximo nó;
+		- `&lt;` exibe o nó anterior;
+		- `&gt;X` avança para o nó adiante na distância `X` informada; e
+		- `&lt;X` retorna para o nó atrás na distância `X` informada.
+		######Ações aos filhos do nó organizados em grupos:
+		- `X/Y` Exibe o grupo de índice `X` (1 é o primeiro 0 é o último) num total de `Y` grupos;
+		- `X:Y` Exibe o grupo de índice `X` (1 é o primeiro 0 é o último) de `Y`elementos;
+		- `&gt;/Y` Avança para o próximo grupo de um total de `Y` grupos;
+		- `&lt;/Y` Retrocede para o grupo anterior de num total de `Y` grupos;
+		 - `&gt;:Y` Avança para o próximo grupo composto de `Y` elementos; e
+		- `&lt;:Y` Retrocede para o grupo anterior composto de `Y` elementos.
+		######Ações aos filhos do nó por busca de informações:
+		- `/regexp/gi` Exibe todos os filhos que casam com a expressão regular; e
+		- `"string"X` Exibe os elementos que casam com a string informada. O inteiro `X` é opcional e define a quantidade de caracteres mínimos para efetuar a busca que, se negativo, esconderá todos os filhos enquanto não casar a quantidade de caracteres e que, se positivo, exibira todos os filhos. 
 		**/
 		display: {
 			value: function(act) {
 				act = String(act).trim();
-				if ((/^[a-z]+$/).test(act)) {
+				let node = __Node(this._node.parentElement);
+
+				if ((/^([a-z]+|[\*\^<>])$/).test(act)) {
 					switch (act) {
-						case "show":
-							this.show = true;
-							return;
-						case "hide":
-							this.show = false;
-							return;
-						case "toggle":
-							this.show = !this.show;
-							return;
-						case "alone":
-							return this.alone();
-						case "all":
-							return this.nav();
-						case "none":
-							return this.nav(-1, -1);
-						case "last":
-							return this.nav(0, -1);
-						case "first":
-							return this.nav(0, 0);
-						case "next":
-							return this.walk(1);
-						case "prev":
-							return this.walk(-1);
-						default:
-							return;
+						case "show":   return (this.show = true);
+						case "hide":   return (this.show = false);
+						case "toggle": return (this.show = !this.show);
+						case "alone":  return this.alone();
+						case "absent": return this.alone(false);
+						case "all":    return node.nav();
+						case "none":   return node.nav(-1, -1);
+						case "*":      return this.nav();
+						case "^":      return this.nav(-1, -1);
+						case ">":      return this.walk(1);
+						case "<":      return this.walk(-1);
+						default:       return;
 					};
 				}
-				if ((/^\d+$/).test(act)) {
+				if (act )
+
+
+				if ((/^[+-]?\d+$/).test(act)) {
 					return this.nav(act, act);
 				}
 				if ((/^[+-]?\d+\-[+-]?\d+$/).test(act)) {

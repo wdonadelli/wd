@@ -503,50 +503,6 @@ function __finite(value) {
 		return true;
 	}
 
-
-
-/*----------------------------------------------------------------------------*/
-	function wd_html_filter(elem, search, chars) { /* exibe somente o elemento que contenha o texto casado */
-		if (search === null || search === undefined) return null;
-
-		/* remodelando a quantidade de caracteres */
-		chars = __finite(chars) && chars !== 0 ? __integer(chars) : 1;
-
-		/* definindo valor de busca */
-		let type = wd_vtype(search).type;
-		if (type !== "regexp") {/* definir string, limpar e por caixa alta */
-			search = new String(search);
-			search = __strClear(search.toString()).toUpperCase();
-		}
-
-		/* looping pelos filhos */
-		let child = wd_vtype(elem.children).value;
-		for (let i = 0; i < child.length; i++) {
-			if (!("textContent" in child[i])) continue;
-
-			/* obtendo conteúdo do elemento (limpar, mas deixar maiúsculo apenas para texto) */
-			let content = __strClear(child[i].textContent);
-
-			/* se for expressão regular */
-			if (type === "regexp") {
-				wd_html_nav(child[i], (search.test(content) ? "show" : "hide"));
-				continue;
-			}
-
-			/* se for texto, encontrou o fragmento? quantos caracteres? */
-			let found = content.toUpperCase().indexOf(search) >= 0 ? true : false;
-			let width = search.length;
-
-			/* definindo a exibição a partir da quantidade de caracteres */
-			if (chars < 0)
-				wd_html_nav(child[i], (found && width >= -chars) ? "show" :  "hide");
-			else
-				wd_html_nav(child[i], (!found && width >= chars) ? "hide" :  "show");
-		};
-		return;
-	}
-
-
 /*----------------------------------------------------------------------------*/
 	function wd_html_full(elem, exit) { /* deixa o elemento em tela cheia */
 		let action = {
