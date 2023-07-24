@@ -3333,19 +3333,20 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			value: function(init, last) {
 				let child = __Type(this._node.children).value;
 				if (child.length === 0) return;
-				init = __Type(init);
-				last  = __Type(last);
-				init = init.number ? init.value : -Infinity;
-				last = last.number ? last.value : +Infinity;
+				let data1 = __Type(init);
+				let data2 = __Type(last);
+				let order = true;
+				init = data1.number ? data1.value : -Infinity;
+				last = data2.number ? data2.value : +Infinity;
 				if (init > last) {
 					let aux = init;
 					init = last;
 					last = aux;
-					child.reverse();
+					order = false;
 				}
 				child.forEach(function(v,i,a){
 					let node  = __Node(v);
-					node.show = (i >= init && i <= last);
+					node.show = order ? (i >= init && i <= last) : (i < init || i > last);
 				});
 			}
 		},
@@ -3425,7 +3426,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				let pages  = [];
 				let count  = -1;
 				if (child.length === 0) return;
-				total = (!data2.finite || data2.value < 1) ? length : Math.trunc(data2.value);
+				total = (!data2.finite || data2.value <= 1) ? length : Math.trunc(data2.value);
 				total = width === true ? total : Math.ceil(child.length / total);
 				index = !data1.number ? 0 : data1.infinite ? data1.value : Math.trunc(data1.value);
 				child.forEach(function(v,i,a) {
@@ -3452,9 +3453,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					index = array.index(ref < 0 ? 0 : ref);
 				} else {
 					let ref = index >= pages.length ? (pages.length - 1) : (index < -1 ? -1 : index);
-
 					index = array.index(ref);
-					console.log(ref, pages, index);
 				}
 				/* definindo os limites */
 				if (index < 0 || index >= pages.length)
@@ -3464,7 +3463,11 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return this.nav(a, b);
 			}
 		},
-
+		/**
+		- `void filter(string|regexp search, integer chars=1)`: Exibe os nós filhos que casam com o valor definido.
+		- O argumento `search` é o valor a ser encontrado, podendo ser uma string ou uma expressão regular.
+		- O argumento `chars` terá efeito quando `search` for uma string e indica o número de caracteres mínimo a ser informado em `search`. Quando não casado, se positivo, exibirá todos os nós, caso contrário os esconderá.
+		**/
 		filter: {
 			value: function(search, chars) {
 				let data1 = __Type(search);
@@ -3484,7 +3487,6 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 						node.show = text.indexOf(search) >= 0;
 					else
 						node.show = chars >= 0;
-					console.log(node.text, "\n", search, "\n", text);
 				});
 			}
 		},
@@ -3501,13 +3503,15 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		- `none` esconde o nó e irmãos.
 		######Ações aos filhos do nó:
 		- `*` exibe todos os filhos;
-		- `^` esconde todos os filhos;
-		- `X` exibe o nó detentor do índice `X` (zero é o primeiro &minus;1 é o último) ilimitado;FIXME
-		- `X-Y` define o intervalo de nós a exibir, invertendo a exibição na ordem decrescente;
+		- `!` esconde todos os filhos;
+		- `X` exibe o nó detentor do índice `X`;
+		- `X,Y` exibe os nós entre o índices opcionais `X` e `Y` (inclusive). Invertendo a ordem, inverte-se a exibição;
 		- `&gt;` exibe o próximo nó;
 		- `&lt;` exibe o nó anterior;
-		- `&gt;X` avança para o nó adiante na distância `X` informada; e
-		- `&lt;X` retorna para o nó atrás na distância `X` informada.
+		- `&gt;&gt;` exibe o último nó;
+		- `&lt;&lt;` exibe o primeiro nó;
+		- `&gt;X` exibe o nó no intervalo `X` afrente; e
+		- `&lt;X` exibe o nó no intervalo `X` atrás.
 		######Ações aos filhos do nó organizados em grupos:
 		- `X/Y` Exibe o grupo de índice `X` (1 é o primeiro 0 é o último) num total de `Y` grupos;
 		- `X:Y` Exibe o grupo de índice `X` (1 é o primeiro 0 é o último) de `Y`elementos;
@@ -3524,7 +3528,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				act = String(act).trim();
 				let node = __Node(this._node.parentElement);
 
-				if ((/^([a-z]+|[\*\^<>])$/).test(act)) {
+				if ((/^([a-z]+|[*!<>]|\<\<|\>\>)$/).test(act)) {
 					switch (act) {
 						case "show":   return (this.show = true);
 						case "hide":   return (this.show = false);
@@ -3534,34 +3538,44 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 						case "all":    return node.nav();
 						case "none":   return node.nav(-1, -1);
 						case "*":      return this.nav();
-						case "^":      return this.nav(-1, -1);
+						case "!":      return this.nav(-1, -1);
 						case ">":      return this.walk(1);
 						case "<":      return this.walk(-1);
+						case ">>":     return this.page(-1, 1);
+						case "<<":     return this.page(0, 1);
 						default:       return;
 					};
 				}
-				if (act )
-
-
 				if ((/^[+-]?\d+$/).test(act)) {
 					return this.nav(act, act);
 				}
-				if ((/^[+-]?\d+\-[+-]?\d+$/).test(act)) {
-					act = act.split("-")
+				if ((/^([+-]?\d+)?\,([+-]?\d+)?$/).test(act)) {
+					act = act.split(",");
 					return this.nav(act[0], act[1]);
 				}
-				if ((/^(\+\+|\-\-)\d+$/).test(act)) {
-					act = __Type(act.substr(1)).value;
-					return this.walk(act);
-				}
-				if ((/^(first|last|next|prev|[1-9](\d+)?)[:/][1-9](\d+)?$/).test(act)) {
+				if ((/^(\>|\<|\d+)[:/][1-9](\d+)?$/).test(act)) {
 					let width = (/\:/).test(act);
 					let data  = act.split(width ? ":" : "/");
-					let init  = {first: 0, last: -1, next: +Infinity, prev: -Infinity};
-					let page  = data[0] in init ? init[data[0]] : (__Type(data[0]).value - 1);
-					let size  = data[1];
-					return this.page(page, size, width);
+					switch(data[0]) {
+						case ">": data[0] = +Infinity; break;
+						case "<": data[0] = -Infinity; break;
+						default:  data[0] = __Type(data[0]).value - 1;
+					}
+					return this.page(data[0], data[1], width);
 				}
+				if ((/^\/.+\/(g|i|gi|ig)?/).test(act)) {
+					act = act.substr(1).split("/");
+					act = new RegExp(act[0], act[1]);
+					this.filter(act);
+				}
+				if ((/^\'.+\'([+-]?[1-9](\d+)?)?$/).test(act)) {//FIXME
+					act = act.substr(1).split("/");
+					act = new RegExp(act[0], act[1]);
+					this.filter(act);
+				}
+
+
+
 
 
 				return;
