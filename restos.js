@@ -519,30 +519,6 @@ function __finite(value) {
 	}
 
 
-
-/*----------------------------------------------------------------------------*/
-	function wd_html_sort(elem, order, col) { /* ordena elementos filho pelo conteúdo */
-		order = __finite(order) ? __integer(order) : 1;
-		col   = __finite(col)   ? __integer(col, true) : null;
-
-		let children = wd_vtype(elem.children).value;
-		let aux = [];
-
-		for (let i = 0; i < children.length; i++) {
-			if (col === null)
-				aux.push(children[i]);
-			else if (children[i].children[col] !== undefined)
-				aux.push(children[i].children[col]);
-		}
-
-		let sort = wd_array_sort(aux);
-		if (order < 0) sort = sort.reverse();
-		for (let i = 0; i < sort.length; i++)
-			elem.appendChild(col === null ? sort[i] : sort[i].parentElement);
-
-		return true;
-	}
-
 /*----------------------------------------------------------------------------*/
 	function wd_html_style_get(elem, css) { /* devolve o valor do estilo especificado */
 		let style = window.getComputedStyle(elem, null);

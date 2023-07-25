@@ -2384,8 +2384,8 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		- `array sort(boolean asc=true)`: Retorna a lista ordenada e organizada por grupos na seguinte sequência: número, tempo, data, datatempo, texto, booelano, nulo, nós, lista, objeto, função, expressão regular, indefinido e demais valores.
-		- O argumento opcional `asc` define a classificação da lista cujo valor padrão é ascendente. Se falso, a lista será invertida.
+		- `array sort(boolean asc)`: Retorna a lista ordenada e organizada por grupos na seguinte sequência: número, tempo, data, datatempo, texto, booelano, nulo, nós, lista, objeto, função, expressão regular, indefinido e demais valores.
+		- O argumento opcional `asc` define a classificação da lista. Se verdadeiro, ascendente; se falso, descendente; e, se omitido, inverterá a ordenação atual com prevalência da ordem ascendente.
 		**/
 		sort: {
 			value: function(asc) {
@@ -2393,7 +2393,9 @@ function __strClear(x) {return __String(x).clear;}
 					"number", "time", "date", "datetime", "string", "boolean", "null", "node",
 					"array", "object", "function", "regexp", "undefined", "unknown"
 				];
+				let data  = __Type(asc);
 				let array = this._value.slice();
+				asc = data.boolean ? data.value : null;
 				array.sort(function(a, b) {
 					let A = __Type(a);
 					let B = __Type(b);
@@ -2404,33 +2406,29 @@ function __strClear(x) {return __String(x).clear;}
 					let avalue = a;
 					let bvalue = b;
 					if (A.node) {
-						avalue = __String(a.textContent.toLowerCase()).clear().trim();
-						bvalue = __String(b.textContent.toLowerCase()).clear().trim();
-					} else if (A.number || A.boolean) {
+						let node1 = __Node(a).text;
+						let node2 = __Node(b).text;
+						let array = __Array(node1, node2).sort(true);
+						return array[1] === node1 ? 1 : -1;
+					}
+					if (A.number || A.boolean) {
 						avalue = A.valueOf();
 						bvalue = B.valueOf();
 					} else if (A.date || A.time || A.datetime) {
 						avalue = __DateTime(A.value).valueOf();
 						bvalue = __DateTime(B.value).valueOf();
-					} else if (A.type === "string") {
+					} else if (A.string) {
 						avalue = __String(a.toLowerCase()).clear().trim();
 						bvalue = __String(b.toLowerCase()).clear().trim();
 					}
 					return avalue > bvalue ? 1 : -1;
 				});
-				return asc === false ? array.reverse() : array;
-			}
-		},
-		/**
-		- `array reverse`: Retorna a lista ordenada de forma ascendente, mas se a lista já estiver nesta ordem, retornará seu inverso.
-		**/
-		reverse: {
-			get: function() {
-				let sort = this.sort();
+				if (asc === true)  return array;
+				if (asc === false) return array.reverse();
 				let i = -1;
-				while (++i < this.length)
-					if (sort[i] !== this._value[i]) return sort;
-				return sort.reverse();
+				while (++i < array.length)
+					if (array[i] !== this._value[i]) return array;
+				return array.reverse();
 			}
 		},
 		/**
@@ -3491,6 +3489,39 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			}
 		},
 		/**
+		- `void sort(booelan asc, integer ref)`: Ordena os elementos filhos.
+		- O argumento opcional `asc` define a classificação. Se verdadeiro, será ascendente; se falso, descendente; e, se indefindo ou não boleano, será o inverso da classificação atual.
+		- O argumento opcional `ref` permite definir um nó neto como parâmetro de ordenação indicando seu índice (útil para ordenação de colunas de uma tabela).
+		**/
+		sort: {
+			value: function(asc, ref) {
+				let data1 = __Type(asc);
+				let data2 = __Type(ref);
+				let child = __Type(this._node.children).value;
+				let array = __Array(child);
+				ref = data2.integer && data2 >= 0 ? data2.value : null;
+				if (ref !== null) {
+					let list = [];
+					child.forEach(function(v,i,a){
+						let children = v.children;
+						if (ref < children.length)
+							list.push(children[ref]);
+					});
+					array = __Array(list);
+				}
+				let order = array.sort(asc);
+				let node  = this._node;
+				let init, last;
+				order.forEach(function(v,i,a){
+						init = i === 0 ? v : init;
+						last = v;
+						node.appendChild(ref === null ? v : v.parentElement);
+				});
+				let rank = __Array(init, last).sort(true);
+				return rank[0] === init;
+			}
+		},
+		/**
 		- `void display(string act)`: Promove ações de exibição de elementos.
 		- O argumento `act` define as ações de exibição a serem executadas ao elemento ou seus filhos:
 		######Ações do nó:
@@ -3514,11 +3545,18 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		- `&lt;X` exibe o nó no intervalo `X` atrás.
 		######Ações aos filhos do nó organizados em grupos:
 		- `X/Y` Exibe o grupo de índice `X` (1 é o primeiro 0 é o último) num total de `Y` grupos;
-		- `X:Y` Exibe o grupo de índice `X` (1 é o primeiro 0 é o último) de `Y`elementos;
+		- `X:Y` Exibe o grupo de índice `X` (1 é o primeiro 0 é o último) divididos em grupos de `Y` nós;
 		- `&gt;/Y` Avança para o próximo grupo de um total de `Y` grupos;
 		- `&lt;/Y` Retrocede para o grupo anterior de num total de `Y` grupos;
-		 - `&gt;:Y` Avança para o próximo grupo composto de `Y` elementos; e
-		- `&lt;:Y` Retrocede para o grupo anterior composto de `Y` elementos.
+		 - `&gt;:Y` Avança para o próximo grupo composto de `Y` nós; e
+		- `&lt;:Y` Retrocede para o grupo anterior composto de `Y` nós.
+		######Ações aos filhos do nó para classificação:
+		- `-&gt;` Classifica em ordem crescente;
+		- `&lt;-` Classifica em ordem decrescente;
+		- `&lt;-&gt;` Classifica na ordem inversa;
+		- `-&gt;X` Classifica em ordem crescente com parâmetro no nó neto de índice `X`;
+		- `X&lt;-` Classifica em ordem decrescente com parâmetro no nó neto de índice `X`; e
+		- `&lt;X&gt;` Classifica em ordem inversa com parâmetro no nó neto de índice `X`.
 		######Ações aos filhos do nó por busca de informações:
 		- `/regexp/gi` Exibe todos os filhos que casam com a expressão regular; e
 		- `"string"X` Exibe os elementos que casam com a string informada. O inteiro `X` é opcional e define a quantidade de caracteres mínimos para efetuar a busca que, se negativo, esconderá todos os filhos enquanto não casar a quantidade de caracteres e que, se positivo, exibira todos os filhos. 
@@ -3528,7 +3566,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				act = String(act).trim();
 				let node = __Node(this._node.parentElement);
 
-				if ((/^([a-z]+|[*!<>]|\<\<|\>\>)$/).test(act)) {
+				if ((/^([a-z]+|[*!<>]|\<\<|\>\>|\-\>|\<\-|\<\-\>)$/).test(act)) {
 					switch (act) {
 						case "show":   return (this.show = true);
 						case "hide":   return (this.show = false);
@@ -3543,6 +3581,9 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 						case "<":      return this.walk(-1);
 						case ">>":     return this.page(-1, 1);
 						case "<<":     return this.page(0, 1);
+						case "->":     return this.sort(true);
+						case "<-":     return this.sort(false);
+						case "<->":    return this.sort();
 						default:       return;
 					};
 				}
@@ -3563,11 +3604,23 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					}
 					return this.page(data[0], data[1], width);
 				}
+				if ((/^(\-\>\d+|\d+\<\-|\<\d+\>)$/).test(act)) {
+					let ref = act.replace(/\D/g, "");
+					let asc  = act[0] === "-" ? true : (act[0] === "<" ? null : false);
+					return this.sort(asc, ref);//FIXME como saber em que ordem ficou?
+				}
+
+
 				if ((/^\/.+\/(g|i|gi|ig)?/).test(act)) {
 					act = act.substr(1).split("/");
 					act = new RegExp(act[0], act[1]);
 					this.filter(act);
 				}
+
+
+
+
+
 				if ((/^\'.+\'([+-]?[1-9](\d+)?)?$/).test(act)) {//FIXME
 					act = act.substr(1).split("/");
 					act = new RegExp(act[0], act[1]);
