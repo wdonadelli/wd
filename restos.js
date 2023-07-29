@@ -504,28 +504,6 @@ function __finite(value) {
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_html_full(elem, exit) { /* deixa o elemento em tela cheia */
-		let action = {
-			open: ["requestFullscreen", "webkitRequestFullscreen", "msRequestFullscreen"],
-			exit: ["exitFullscreen", "webkitExitFullscreen", "msExitFullscreen"]
-		};
-		let full   = exit === true ? action.exit : action.open;
-		let target = exit === true ? document : elem;
-		for (let i = 0; i < full.length; i++) {
-			if (full[i] in target)
-				try {return target[full[i]]();} catch(e) {}
-		}
-		return null;
-	}
-
-
-/*----------------------------------------------------------------------------*/
-	function wd_html_style_get(elem, css) { /* devolve o valor do estilo especificado */
-		let style = window.getComputedStyle(elem, null);
-		return css in style ? style.getPropertyValue(css) : null;
-	}
-
-/*----------------------------------------------------------------------------*/
 	function wd_html_table_array(elem) { /* transforma os dados de uma tabela (table) em matriz */
 		let tag = wd_html_tag(elem);
 		if (["tfoot", "tbody", "thead", "table"].indexOf(tag) < 0) return null;

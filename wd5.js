@@ -3533,8 +3533,8 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		- `all` exibe o nó e irmãos; e
 		- `none` esconde o nó e irmãos.
 		######Ações aos filhos do nó:
-		- `*` exibe todos os filhos;
-		- `!` esconde todos os filhos;
+		- `+` exibe todos os filhos;
+		- `-` esconde todos os filhos;
 		- `X` exibe o nó detentor do índice `X`;
 		- `X,Y` exibe os nós entre o índices opcionais `X` e `Y` (inclusive). Invertendo a ordem, inverte-se a exibição;
 		- `&gt;` exibe o próximo nó;
@@ -3544,7 +3544,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		- `&gt;X` exibe o nó no intervalo `X` afrente; e
 		- `&lt;X` exibe o nó no intervalo `X` atrás.
 		######Ações aos filhos do nó organizados em grupos:
-		- `X/Y` Exibe o grupo de índice `X` (1 é o primeiro 0 é o último) num total de `Y` grupos;
+		- `X/Y` Exibe o grupo de índice `X` (1 é o primeiro 0 é o último) num total de `Y` grupos (se possível);
 		- `X:Y` Exibe o grupo de índice `X` (1 é o primeiro 0 é o último) divididos em grupos de `Y` nós;
 		- `&gt;/Y` Avança para o próximo grupo de um total de `Y` grupos;
 		- `&lt;/Y` Retrocede para o grupo anterior de num total de `Y` grupos;
@@ -3566,17 +3566,20 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				act = String(act).trim();
 				let node = __Node(this._node.parentElement);
 
-				if ((/^([a-z]+|[*!<>]|\<\<|\>\>|\-\>|\<\-|\<\-\>)$/).test(act)) {
-					switch (act) {
-						case "show":   return (this.show = true);
-						case "hide":   return (this.show = false);
-						case "toggle": return (this.show = !this.show);
-						case "alone":  return this.alone();
-						case "absent": return this.alone(false);
-						case "all":    return node.nav();
-						case "none":   return node.nav(-1, -1);
-						case "*":      return this.nav();
-						case "!":      return this.nav(-1, -1);
+				if ((/^([a-z]+|[<>+-]|\<\<|\>\>|\-\>|\<\-|\<\-\>)$/).test(act)) {
+					switch (act) {//FIXME não dá pra usar palavras, vai confundir com pesquisa de texto
+						case "show":   return (this.show = true);//*
+						case "hide":   return (this.show = false);//.
+						case "toggle": return (this.show = !this.show);//?
+						case "alone":  return this.alone();//.*.
+						case "absent": return this.alone(false);//*.*
+						case "all":    return node.nav();//***
+						case "none":   return node.nav(-1, -1);//...
+
+
+
+						case "+":      return this.nav();
+						case "-":      return this.nav(-1, -1);
 						case ">":      return this.walk(1);
 						case "<":      return this.walk(-1);
 						case ">>":     return this.page(-1, 1);
@@ -3587,7 +3590,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 						default:       return;
 					};
 				}
-				if ((/^[+-]?\d+$/).test(act)) {
+				if ((/^\d+$/).test(act)) {
 					return this.nav(act, act);
 				}
 				if ((/^([+-]?\d+)?\,([+-]?\d+)?$/).test(act)) {
@@ -3649,14 +3652,46 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					node.appendChild(this._node);
 			}
 		},
+		/**
+		- `boolean full()`: Alterna a exibição do nó em tela cheia e retorna verdadeiro se efetivada essa exibição.
+		**/
+		full: {
+			value: function() {
+				let action = {
+					open: ["requestFullscreen", "webkitRequestFullscreen", "msRequestFullscreen"],
+					exit: ["exitFullscreen", "webkitExitFullscreen", "msExitFullscreen"]
+				};
+				let target = document.fullscreenElement;
+				let full   = target !== this._node;
+				let node   = full ? this._node : document;
+				let method = full ? action.open : action.exit;
+				let i = -1;
+				while (++i < method.length) {
+					if (method[i] in node) {
+						try {
+							node[method[i]]();
+							return full;
+						} catch(e) {}
+					}
+				}
+				return false;
+			}
+		},
+		/**
+		- `object styles`: Retorna um objeto contendo os estilos e seus valores computados ao elemento.
+		**/
+		styles: {
+			get: function() {
+				let object = {};
+				let styles = window.getComputedStyle(this._node, null);
+				for (let i in styles) {
+					if ((/\d+/).test(i)) continue;
+					object[i] = styles.getPropertyValue(i);
 
-
-
-
-
-
-
-
+				}
+				return object;
+			}
+		},
 	});
 
 
