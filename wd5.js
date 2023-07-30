@@ -389,7 +389,7 @@ const wd = (function() {
 /*===========================================================================*/
 	/**
 	###Checagem de Tipos e Valores
-	`object __Type(void  input)`
+	`constructor __Type(void  input)`
 	Construtor com o objetivo de identificar o tipo de dado para uso e funcionamento da biblioteca.
 	O argumento `input` é o dado a ser examinado.
 	O objeto possui os seguintes métodos e atributos:
@@ -1016,7 +1016,7 @@ function __strClear(x) {return __String(x).clear;}
 /*============================================================================*/
 	/**
 	###Números
-	`object __Number(number input=0)`
+	`constructor __Number(number input=0)`
 	Construtor para manipulação de números.
 	O argumento `input` se refere ao número de entrada do construtor e, caso não seja um número, receberá o valor zero.
 	Possui os seguintes métodos e atributos:
@@ -1318,7 +1318,7 @@ function __strClear(x) {return __String(x).clear;}
 /*===========================================================================*/
 	/**
 	###Textos
-	`object __String(string input)`
+	`constructor __String(string input)`
 	Construtor para manipulação de textos.
 	O argumento `input`define o texto a ser absorvido pelo construtor.
 	O objeto possui os seguintes métodos e atributos:
@@ -1548,7 +1548,7 @@ function __strClear(x) {return __String(x).clear;}
 /*===========================================================================*/
 	/**
 	###Data e Tempo
-	`object __DateTime(string input)`
+	`constructor __DateTime(string input)`
 	Construtor para manipulação de data/tempo.
 	O atributo `input` aceita valores do tipo data, tempo ou ambos de acordo com as regras da biblioteca. Se um dado diferente for informado, assumira o valor de data e tempo atuais.
 	O objeto possui os seguintes métodos e atributos:
@@ -2115,7 +2115,7 @@ function __strClear(x) {return __String(x).clear;}
 /*===========================================================================*/
 	/**
 	###Listas
-	`object __Array(array input|void  ...)`
+	`constructor __Array(array input|void  ...)`
 	Construtor para manipulação de listas (array).
 	Caso não seja informado argumento, seja atribuído uma lista vazia. Caso seja informado múltiplos argumentos, cada valor corresponderá a um item do array. Caso seja informado um array como argumento, esse será o valor considerado pelo objeto. Caso contrário, o valor informado será o item do array.
 	O objeto possui os seguintes métodos e atributos:
@@ -2519,7 +2519,7 @@ function __strClear(x) {return __String(x).clear;}
 /*============================================================================*/
 	/**
 	###Nós Formulários HTML
-	`object __Node(node input)`
+	`constructor __Node(node input)`
 	Construtor para manipulação de nós HTML.
 	O argumento `input` deve ser um nó HTML simples (um elemento), caso contrário será atribuído um elemento `DIV`.
 	**/
@@ -3702,6 +3702,367 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 
 
 
+	/*============================================================================*/
+	/**
+	###Requisições
+	`constructor __Request(node input)`
+	Construtor para requisições HTML.
+	O argumento `input` deve ser um nó HTML simples (um elemento), caso contrário será atribuído um elemento `DIV`.
+	**/
+	function __Request(input) {
+		if (!(this instanceof __Request))	return new __Request(input);
+		input = String(input).trim();
+		let check = __Type(input);
+
+		Object.defineProperties(this, {
+			_target:  {value: check.nonempty ? input : null},
+			_request: {value: null, writable: true},
+			_submit:  {value: null, writable: true},
+			_async:   {value: true, writable: true},
+			_done:    {value: false, writable: true},
+			_state:   {value: "?", writable: true},
+			_start:   {value: 0, writable: true},
+			_time:    {value: 0, writable: true},
+			_size:    {value: 0, writable: true},
+			_loaded:  {value: 0, writable: true}
+		});
+		this._setMethods();
+	}
+
+	Object.defineProperties(__Request.prototype, {
+		constructor: {value: __Request},
+		/**
+		- `boolean async`: Define ou retorna o tipo requisição, síncrona ou assíncrona.
+		**/
+		async: {
+			set: function(x) {
+				let check = __Type(x);
+				if (type.boolean) this._async = check.value;
+			},
+			get: function() {return this._async;}
+		},
+		/**
+		- `null|function onsubmit`: Define um disparador a ser chamado ao executar a requisição.
+		- A função a ser chamada receberá o objeto como argumento e será chamado a cada mudança de estado. Para excluir o disparador, deve-se defini-lo como `null`.
+		**/
+		onsubmit: {
+			set: function(x) {
+				if (!__Type(x).function && x !== null) return;
+				this._submit = x;
+			},
+			get: function() {return this._submit;}
+		},
+		/**
+		-`boolean done`: Retorna verdadeiro se a requisição estiver terminada.
+		**/
+		done: {
+			get: function() {return this._done;}
+		},
+		/**
+		-`string target`: Retorna o alvo da requisição.
+		**/
+		target: {
+			get: function() {return this._target;}
+		},
+		/**
+		-`object request`: Retorna o objeto `XMLHttpRequest` da requisição.
+		**/
+		request: {
+			get: function() {return this._request;}
+		},
+		/**
+		-`integer time`: Retorna o tempo de execução da requisição em milisegundos.
+		**/
+		time: {
+			get: function() {return this._time - this._start;}
+		},
+		/**
+		-`string state`: Retorna o estado da requisição//FIXME
+		**/
+		state: {
+			get: function() {return this._state;}
+		},
+		/**
+		-`integer size`: Retorna o tamanho total da requisição (envio ou retorno) em bytes.
+		**/
+		size: {
+			get: function() {return this._size;}
+		},
+		/**
+		-`integer loaded`: Retorna o tamanho parcial da requisição em bytes.
+		**/
+		loaded: {
+			get: function() {return this._size;}
+		},
+		/**
+		-`number progress`: Retorna o progresso da requisição (de 0 a 1).
+		**/
+		progress: {
+			get: function() {return this._size === 0 ? 1 : this._loaded/this._size;}
+		},
+		/**
+		-`string print`: Retorna uma string contendo informações da requisição.
+		**/
+		print: {
+			get: function() {
+				let print = [
+					this._target,
+					this._state,
+					__Number(this.loaded).bytes+"/"+__Number(this.size).bytes,
+					__Number(this.progress).notation("percent")
+				];
+				return print.join(" | ");
+			}
+		},
+		/**
+		- `void abort()`: aborta a requisição;
+		**/
+		abort: {
+			value: function() {this._request.abort();}
+		},
+		/**
+		- `null|string text`: Retorna o resultado da requisição em forma de texto ou `null`se indefinido.
+		**/
+		text: {
+			get: function() {
+				if (!this.done) return null;
+				try {return this.request.responseText;} catch(e) {return null;}
+			}
+		},
+		/**
+		- `null|object xml`: Retorna o resultado da requisição em forma de XML ou `null` se indefinido.
+		**/
+		xml: {
+			get: function() {
+				if (!this.done) return null;
+				try {return this.request.responseXML;} catch(e) {return null;}
+			}
+		},
+		/**
+		- `null|object json`: Retorna o resultado da requisição em forma de objeto ou `null` se formato diverso de JSON.
+		**/
+		json: {
+			get: function() {
+				let text = this.text;
+				if (text === null) return null;
+				try {return JSON.parse(text);} catch(e) {return null;}
+			}
+		},
+		/**
+		- `null|object csv`: Retorna o resultado da requisição em forma de matriz ou `null` se formato diverso de CSV FIXME.
+		**/
+		csv: {
+			get: function() {
+				let text = this.text;
+				if (text === null) return null;
+				try {return JSON.parse(text);} catch(e) {return null;}
+			}
+		},
+		/**
+		- `_setMethods()`: Define os métodos dos eventos da requisição.
+		**/
+		_setMethods: {
+			value: function() {
+				if (this.request !== null) return;
+				this._request = new XMLHttpRequest();
+				let events = {
+					abort: true, error: true, load: false, loadend: true, loadstart: false,
+					progress: false, timeout: true
+				};
+				let self = this;
+
+				for (let i in events) {
+					this._request["on"+i] = function(x) {
+						if (self.done) {
+							console.log("passou por aqui");
+							__MODALCONTROL.end();//FIXME
+							return;
+						}
+						self._state  = x.type;
+						self._time   = new Date().valueOf();
+						self._size   = "total"  in x ? x.total  : 0;
+						self._loaded = "loaded" in x ? x.loaded : 0;
+						self._done   = events[i];
+						__MODALCONTROL.progress(self.progress);
+						if (self._submit !== null) self._submit(self);
+						return;
+					}
+					this._request.upload["on"+i] = this._request["on"+i];
+				}
+
+				this._request.onreadystatechange = function (x) {
+					if (self.done) return;
+					let status = self.request.status;
+					let rstate = self.request.readyState;
+					if (status === 404) {
+						self._state = "not found";
+						self._done = true;
+						if (self._submit !== null) self._submit(self);
+						return;
+					}
+					switch(rstate) {
+						case 1:  self._state = "opened"; break;
+						case 2:  self._state = "headers received"; break;
+						case 3:  self._state = "loading"; break;
+						case 4:  self._state = "done"; break;
+						default: self._state = "unsent";
+					}
+					//if (rstate === 4 && (status === 200 || status === 304))
+						//self._state = "ok";
+					if (self._submit !== null) self._submit(self);
+					return;
+				}
+			}
+		},
+		GET: {
+			value: function(data) {
+				let check  = __Type(data);
+				let action = this._target.replace(/\#.+$/, "");
+				if (check.nonempty) {
+					data   = String(data).trim();
+					action = action.indexOf("?") < 0 ? action+"?"+data : action+"&"+data;
+				}
+				try {
+					this._request.onreadystatechange();
+					this._request.open("GET", action, this._async);
+					__MODALCONTROL.start();
+				} catch(e) {return false;}
+				this._start = new Date().valueOf();
+				this._done  = false;
+				this._request.send(null);
+				return true;
+			}
+		},
+		POST: {
+			value: function(data) {
+				let check = __Type(data);
+				data = String(data).trim().replace(/\#.+$/, "");
+				try {
+					this._request.onreadystatechange();
+					this._request.open("POST", this._target, this._async);
+					__MODALCONTROL.start();
+				} catch(e) {return false;}
+				this._start = new Date().valueOf();
+				this._done  = false;
+				this._state = "sent";
+				if (check.nonempty)
+					this._request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+				this._request.send(pack);
+				return true;
+			}
+		},
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	});
+
+function wd_request(action, pack, callback, method, async) { /* executa requisições */
+		/* ajustes iniciais */
+		action = new String(action).toString();
+		if (pack === undefined) pack = null;
+		if (wd_vtype(callback).type !== "function") callback = null;
+		method = method === undefined || method === null ? "POST" : method.toUpperCase();
+		async  = async !== false ?  true : false;
+
+		/* Chamando requisição e iniciando o tempo */
+		let request = new XMLHttpRequest();
+		let start   = new Date().valueOf();
+
+		/* conjunto de dados a ser repassado para a função */
+		let data = {
+			request: request,  /* registra o objeto para requisições */
+			closed:  false,    /* indica o término da requisição */
+			status:  "UNSENT", /* UNSENT|OPENED|HEADERS|LOADING|UPLOADING|DONE|NOTFOUND|ABORTED|ERROR|TIMEOUT */
+			total:   0,        /* registra o tamanho total do arquivo */
+			loaded:  0,        /* registra o tamanho carregado na requisição */
+			/* método para abortar */
+			abort: function() {return set_data("ABORTED", true, 0, 0);},
+			/* tempo decorrido desde o início da chamada (milisegundos)*/
+			get time() {return (new Date()).valueOf() - start;},
+			/* registra o andamento da requisição */
+			get progress() {return this.total > 0 ? this.loaded/this.total : 1;},
+			/* registra o conteúdo textual da requisição */
+			get text() {try {return this.request.responseText;} catch(e){return null;}},
+			/* registra o XML da requisição */
+			get xml() {try {return this.request.responseXML;} catch(e){return null;}},
+			/* registra o JSON da requisição */
+			get json() {try {return wd_json(this.text);} catch(e){return null;}},
+			/* transforma um arquivo CSV em ARRAY */
+			get csv() {try {return wd_csv_array(this.text);} catch(e){return null;}},
+		}
+
+
+		function state_change(x) { /* disparador: mudança de estado */
+			if (request.readyState < 1) return;
+			if (data.closed) return;
+			if (data.status === "UNSENT") {
+				data.status = "OPENED";
+				__MODALCONTROL.start();
+			} else if (request.status === 404) {
+				data.status = "NOTFOUND";
+				data.closed = true;
+			} else if (request.readyState === 2) {
+				data.status = "HEADERS";
+			} else if (request.readyState === 3) {
+				data.status = "LOADING";
+			} else if (request.readyState === 4) {
+				data.closed = true;
+				data.status = (request.status === 200 || request.status === 304) ? "DONE" : "ERROR";
+			}
+			if (callback !== null)
+				callback(data);
+			if (data.closed)
+				__MODALCONTROL.end();
+		}
+
+		/* definindo disparador aos eventos */
+		request.onprogress         = function(x) {set_data("LOADING", false, x.loaded, x.total);}
+		request.onerror            = function(x) {set_data("ERROR",   true, 0, 0);}
+		request.ontimeout          = function(x) {set_data("TIMEOUT", true, 0, 0);}
+		request.upload.onprogress  = function(x) {set_data("UPLOADING", false, x.loaded, x.total);}
+		request.upload.onabort     = request.onerror;
+		request.upload.ontimeout   = request.ontimeout;
+		request.onreadystatechange = state_change;
+		/* executando os comandos para a requisição */
+		let vpack = wd_vtype(pack);
+
+		if (method === "GET" && vpack.type === "text") {
+			action = action.split("?");
+			if (action.length > 1)
+				action = action[0]+"?"+action[1]+"&"+vpack.value;
+			else
+				action = action[0]+"?"+vpack.value;
+			pack   = null;
+		}
+		/* tentar abrir a requisição */
+		try {
+			request.open(method, action, async);
+		} catch(e) {
+			set_data("ERROR", true, 0, 0)
+			if (callback !== null) callback(data);
+			return false;
+		}
+		/* se o método for POST */
+		if (method === "POST" && pack.type === "text")
+			request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+		/* enviar requisição */
+		request.send(pack);
+		return true;
+	}
+
+
 
 
 
@@ -4285,7 +4646,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 /*----------------------------------------------------------------------------*/
 	/**
 	`/**
-	`object __leastSquares(b{array}b x, b{array}b y)`
+	`constructor __leastSquares(b{array}b x, b{array}b y)`
 	Retorna um objeto com as constantes angular (v{a}v) e linear (v{b}v) do método dos mínimos quadrados (v{y=ax+b}v).
 	v{x}v - Conjunto de dados da coordenada horizontal.
 	v{y}v - Conjunto de dados da coordenada vertical.
@@ -4343,7 +4704,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 /*----------------------------------------------------------------------------*/
 	/**
 	`/**
-	`object __Fit2D(b{array}b x, b{array|function}b y)`
+	`constructor __Fit2D(b{array}b x, b{array|function}b y)`
 	Objeto para análise de conjuntos de dados em duas dimensões com foco em ajuste de curvas.
 	v{x}v - Conjunto de dados em v{x}v.
 	v{y}v - Conjunto de dados em v{y}v ou uma função v{f(x)}v que definirá tais valores.
@@ -4621,7 +4982,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 	/**4{Plotagem de Dados}4	*/
 /*----------------------------------------------------------------------------*/
 	/**
-	`object __Data2D(string title, string xLabel, string yLabel)`
+	`constructor __Data2D(string title, string xLabel, string yLabel)`
 	Objeto para preparar dados para construção de gráfico 2D (v{x, y}v).
 	v{title}v - Título do gráfico.}d
 	v{xLabel}v - Nome do eixo v{x}v.}d
@@ -4938,7 +5299,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 	});
 /*----------------------------------------------------------------------------*/
 	/**
-	`object __Plot2D(string title, string xLabel, string yLabel)`
+	`constructor __Plot2D(string title, string xLabel, string yLabel)`
 	Ferramenta para renderizar o gráfico 2D (herda características de i{__Data2D}i).
 	v{title}v - Título do gráfico.}d
 	v{xLabel}v - Nome do eixo v{x}v.}d
@@ -9011,6 +9372,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		fit: {value: function(){return __Fit2D.apply(null, Array.prototype.slice.call(arguments));}},
 		plot: {value: function(){return __Plot2D.apply(null, Array.prototype.slice.call(arguments));}},
 		test: {value: function(){return __setUnique.apply(null, Array.prototype.slice.call(arguments));}},
+		send: {value: function(){return __Request.apply(null, Array.prototype.slice.call(arguments));}},
 
 		device: {value: __DEVICECONTROLLER}
 	});
