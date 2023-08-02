@@ -145,35 +145,28 @@ const wd = (function() {
 	const __MODALCONTROL = {
 		/**
 		- `node modal`: Plano de fundo;
-		**/
-		modal: null,
-		/**
 		- `node bar`: Barra de progresso (meter, progress ou div);
-		**/
-		bar: null,
-		/**
 		- `integer counter`: Solicitações em aberto (controla a exibição), fecha se zero;
-		**/
-		counter: 0,
-		/**
 		- `integer delay`: Tempo de segurança, em milisegundos, para decidir sobre o fechamento da janela (evitar piscadas);
-		**/
-		delay: 250,
-		/**
 		- `integer time`: Intervalo, em milisegundos, de atualização da barra de progresso;
 		**/
+		modal: null,
+		bar: null,
+		counter: 0,
+		delay: 250,
 		time: 5,
 		/**
 		- `void _init()`: Inicializa os atributos.
 		**/
 		_init: function() {
+			if (this.modal !== null) return;
 			/* janela modal */
 			this.modal = document.createElement("DIV");
 			this.modal.className = "js-wd-modal";
 			/* barra de progresso */
-			if ("HTMLMeterElement" in window)
+			if ("HTMLMeterElement1" in window)
 				this.bar = document.createElement("METER");
-			else if ("HTMLProgressElement" in window)
+			else if ("HTMLProgressElement1" in window)
 				this.bar = document.createElement("PROGRESS");
 			else
 				this.bar = document.createElement("DIV");
@@ -186,7 +179,7 @@ const wd = (function() {
 		- `integer start()`: Solicita a janela modal, acresce counter e retorna seu valor.
 		**/
 		start: function() { /* abre a janela modal */
-			if (this.modal === null) this._init();
+			this._init();
 			if (this.counter === 0)
 				document.body.appendChild(this.modal);
 			this.counter++;
@@ -3715,7 +3708,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		let check = __Type(input);
 
 		Object.defineProperties(this, {
-			_target:  {value: check.nonempty ? input : null},
+			_target:   {value: check.nonempty ? input : null},
 			_request: {value: null, writable: true},
 			_submit:  {value: null, writable: true},
 			_async:   {value: true, writable: true},
@@ -3724,7 +3717,8 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			_start:   {value: 0, writable: true},
 			_time:    {value: 0, writable: true},
 			_size:    {value: 0, writable: true},
-			_loaded:  {value: 0, writable: true}
+			_loaded:  {value: 0, writable: true},
+			_found:   {value: true, writable: true}
 		});
 		this._setMethods();
 	}
@@ -3806,10 +3800,11 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		print: {
 			get: function() {
 				let print = [
-					this._target,
+					this.request.responseURL === "" ? this._target : this.request.responseURL,
 					this._state,
 					__Number(this.loaded).bytes+"/"+__Number(this.size).bytes,
-					__Number(this.progress).notation("percent")
+					__Number(this.progress).notation("percent"),
+					this.time/1000+"s"
 				];
 				return print.join(" | ");
 			}
@@ -3819,6 +3814,14 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		**/
 		abort: {
 			value: function() {this._request.abort();}
+		},
+		/**
+		- `boolean notFound`: Informa se o arquivo não foi encontrado após a requisição.
+		**/
+		notFound: {
+			get: function() {
+				return this.request.status === 404;
+			}
 		},
 		/**
 		- `null|string text`: Retorna o resultado da requisição em forma de texto ou `null`se indefinido.
@@ -3866,18 +3869,13 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				if (this.request !== null) return;
 				this._request = new XMLHttpRequest();
 				let events = {
-					abort: true, error: true, load: false, loadend: true, loadstart: false,
-					progress: false, timeout: true
+					abort: false, error: false, load: false, loadend: true, loadstart: false,
+					progress: false, timeout: false
 				};
 				let self = this;
 
 				for (let i in events) {
 					this._request["on"+i] = function(x) {
-						if (self.done) {
-							console.log("passou por aqui");
-							__MODALCONTROL.end();//FIXME
-							return;
-						}
 						self._state  = x.type;
 						self._time   = new Date().valueOf();
 						self._size   = "total"  in x ? x.total  : 0;
@@ -3885,32 +3883,20 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 						self._done   = events[i];
 						__MODALCONTROL.progress(self.progress);
 						if (self._submit !== null) self._submit(self);
-						return;
+						if (self.done) __MODALCONTROL.end();
 					}
 					this._request.upload["on"+i] = this._request["on"+i];
 				}
 
 				this._request.onreadystatechange = function (x) {
-					if (self.done) return;
-					let status = self.request.status;
-					let rstate = self.request.readyState;
-					if (status === 404) {
-						self._state = "not found";
-						self._done = true;
-						if (self._submit !== null) self._submit(self);
-						return;
-					}
-					switch(rstate) {
+					switch(self.request.readyState) {
 						case 1:  self._state = "opened"; break;
 						case 2:  self._state = "headers received"; break;
 						case 3:  self._state = "loading"; break;
 						case 4:  self._state = "done"; break;
 						default: self._state = "unsent";
 					}
-					//if (rstate === 4 && (status === 200 || status === 304))
-						//self._state = "ok";
 					if (self._submit !== null) self._submit(self);
-					return;
 				}
 			}
 		},
@@ -3923,14 +3909,13 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					action = action.indexOf("?") < 0 ? action+"?"+data : action+"&"+data;
 				}
 				try {
-					this._request.onreadystatechange();
 					this._request.open("GET", action, this._async);
 					__MODALCONTROL.start();
 				} catch(e) {return false;}
 				this._start = new Date().valueOf();
 				this._done  = false;
+				this._notfound = false;
 				this._request.send(null);
-				return true;
 			}
 		},
 		POST: {
@@ -3938,17 +3923,15 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				let check = __Type(data);
 				data = String(data).trim().replace(/\#.+$/, "");
 				try {
-					this._request.onreadystatechange();
 					this._request.open("POST", this._target, this._async);
 					__MODALCONTROL.start();
 				} catch(e) {return false;}
 				this._start = new Date().valueOf();
 				this._done  = false;
-				this._state = "sent";
+				this._notfound = false;
 				if (check.nonempty)
 					this._request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 				this._request.send(pack);
-				return true;
 			}
 		},
 
