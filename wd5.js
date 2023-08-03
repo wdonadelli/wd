@@ -3906,7 +3906,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 						self._done   = events[i];
 						__MODALCONTROL.progress(self.progress);
 						if (self._submit !== null) self._submit(self);
-						//if (self.done) __MODALCONTROL.end();
+						if (self.done) __MODALCONTROL.end();
 					}
 					this._request.upload["on"+i] = this._request["on"+i];
 				}
@@ -3939,10 +3939,10 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				}
 				try {
 					this._reset();
-					this._request.open("GET", action, this._async);
+					this.request.open("GET", action, this._async);
 					__MODALCONTROL.start();
 				} catch(e) {return false;}
-				this._request.send(null);
+				this.request.send(null);
 			}
 		},
 		POST: {
@@ -3951,12 +3951,12 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				data = String(data).trim().replace(/\#.+$/, "");
 				try {
 					this._reset();
-					this._request.open("POST", this._target, this._async);
+					this.request.open("POST", this._target, this._async);
 					__MODALCONTROL.start();
 				} catch(e) {return false;}
 				if (check.nonempty)
-					this._request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-				this._request.send(data);
+					this.request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+				this.request.send(data);
 			}
 		},
 
