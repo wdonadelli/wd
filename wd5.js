@@ -3698,9 +3698,9 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 	/*============================================================================*/
 	/**
 	###Requisições
-	`constructor __Request(node input)`
-	Construtor para requisições HTML.
-	O argumento `input` deve ser um nó HTML simples (um elemento), caso contrário será atribuído um elemento `DIV`.
+	`constructor __Request(string input)`
+	Construtor para requisições Web.
+	O argumento `input` deve ser o endereço do alvo a ser requisitado.
 	**/
 	function __Request(input) {
 		if (!(this instanceof __Request))	return new __Request(input);
@@ -3726,7 +3726,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 	Object.defineProperties(__Request.prototype, {
 		constructor: {value: __Request},
 		/**
-		- `boolean async`: Define ou retorna o tipo requisição, síncrona ou assíncrona.
+		- `boolean async`: Define e retorna o tipo requisição, síncrona ou assíncrona.
 		**/
 		async: {
 			set: function(x) {
@@ -3736,7 +3736,21 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			get: function() {return this._async;}
 		},
 		/**
-		- `null|function onsubmit`: Define um disparador a ser chamado ao executar a requisição.
+		- `number maxtime`: Define e retorna o tempo máximo de requisição em segundos. Se diferente de finito positivo, ficará desabilitado.
+		**/
+		maxtime: {
+			get: function() {return this.request.timeout/1000;},
+			set: function(x) {
+				let data = __Type(x);
+				if (data.finite && data.positive)
+					this.request.timeout = Math.trunc(Math.abs(1000*data.value));
+				else
+					this.request.timeout = 0;
+
+			}
+		},
+		/**
+		- `null|function onsubmit`: Define e retorna o disparador a ser chamado ao executar a requisição.
 		- A função a ser chamada receberá o objeto como argumento e será chamado a cada mudança de estado. Para excluir o disparador, deve-se defini-lo como `null`.
 		**/
 		onsubmit: {
@@ -3816,11 +3830,19 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			value: function() {this._request.abort();}
 		},
 		/**
-		- `boolean notFound`: Informa se o arquivo não foi encontrado após a requisição.
+		- `boolean notfound`: Informa se o arquivo não foi encontrado após a requisição.
 		**/
-		notFound: {
+		notfound: {
 			get: function() {
 				return this.request.status === 404;
+			}
+		},
+		/**
+		- `boolean timeout`: Informa se o tempo de carregamento expirou.
+		**/
+		timeout: {
+			get: function() {
+				return this.request.timeout === 0 ? false : this.request.timeout <= this.time;
 			}
 		},
 		/**
@@ -3872,34 +3894,41 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					abort: false, error: false, load: false, loadend: true, loadstart: false,
 					progress: false, timeout: false
 				};
-				let self = this;
+				let state = ["unsent", "opened", "headers", "loading", "done"];
+				let self  = this;
 
 				for (let i in events) {
 					this._request["on"+i] = function(x) {
-						self._state  = x.type;
+						self._state  = [state[self.request.readyState], x.type].join("/");
 						self._time   = new Date().valueOf();
 						self._size   = "total"  in x ? x.total  : 0;
 						self._loaded = "loaded" in x ? x.loaded : 0;
 						self._done   = events[i];
 						__MODALCONTROL.progress(self.progress);
 						if (self._submit !== null) self._submit(self);
-						if (self.done) __MODALCONTROL.end();
+						//if (self.done) __MODALCONTROL.end();
 					}
 					this._request.upload["on"+i] = this._request["on"+i];
 				}
 
 				this._request.onreadystatechange = function (x) {
-					switch(self.request.readyState) {
-						case 1:  self._state = "opened"; break;
-						case 2:  self._state = "headers received"; break;
-						case 3:  self._state = "loading"; break;
-						case 4:  self._state = "done"; break;
-						default: self._state = "unsent";
-					}
+					self._state = state[self.request.readyState];
 					if (self._submit !== null) self._submit(self);
 				}
 			}
 		},
+		/**
+		- `void _reset()`: Reinicia valores para a requisição;
+		**/
+		_reset: {
+			value: function() {
+				this._time  = new Date().valueOf();
+				this._start = this._time;
+				this._done  = false;
+				this._notfound = false;
+			}
+		},
+		
 		GET: {
 			value: function(data) {
 				let check  = __Type(data);
@@ -3909,12 +3938,10 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					action = action.indexOf("?") < 0 ? action+"?"+data : action+"&"+data;
 				}
 				try {
+					this._reset();
 					this._request.open("GET", action, this._async);
 					__MODALCONTROL.start();
 				} catch(e) {return false;}
-				this._start = new Date().valueOf();
-				this._done  = false;
-				this._notfound = false;
 				this._request.send(null);
 			}
 		},
@@ -3923,15 +3950,13 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				let check = __Type(data);
 				data = String(data).trim().replace(/\#.+$/, "");
 				try {
+					this._reset();
 					this._request.open("POST", this._target, this._async);
 					__MODALCONTROL.start();
 				} catch(e) {return false;}
-				this._start = new Date().valueOf();
-				this._done  = false;
-				this._notfound = false;
 				if (check.nonempty)
 					this._request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-				this._request.send(pack);
+				this._request.send(data);
 			}
 		},
 
