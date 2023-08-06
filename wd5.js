@@ -1461,8 +1461,8 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
-		- `matrix csv(string spacer="\t")`: Retorna uma matriz a partir de uma string no formato [CSV](https://www.rfc-editor.org/rfc/rfc4180).
-		- O argumento opcional `space` define o caractere que separa as colunas.
+		- `matrix csv(string div="\t")`: Retorna uma matriz a partir de uma string no formato [CSV](https://www.rfc-editor.org/rfc/rfc4180).
+		- O argumento opcional `div` define o caractere que separa as colunas.
 		**/
 		csv: {
 			value: function(div) {
@@ -1480,27 +1480,16 @@ function __strClear(x) {return __String(x).clear;}
 					line  = txt.indexOf(quote ? "\"\n"   : "\n");
 					add   = (line < 0 ? Infinity : line) < (cell < 0 ? Infinity : cell);
 					cut   = quote ? (add ? "\"\n" : "\""+div) : (add ? "\n" : div);
-
-
-					txt = txt.split(cut);
-					val = quote ? txt[0].replace(/^\"/, "") : txt[0];
+					txt   = txt.split(cut);
+					val   = quote ? txt[0].replace(/^\"/, "") : txt[0];
+					col.push(val);
 					txt.shift();
 					txt = txt.join(cut);
-					col.push(val)
-
-					console.log({add: add, cell: cell, line: line, cut: cut, val: val, txt: txt});
-
 					if (add && txt !== "") table.push([]);
-
  				}
  				return table;
-
-
-
 			}
 		},
-
-
 		/**
 		- `void  wdValue (void x)`: Transforma o valor recebido e retorna o valor correspondente para fins do método `wdNotation`.
 		- O argumento `x` recebe o valor a ser transformado.
