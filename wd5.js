@@ -1461,6 +1461,47 @@ function __strClear(x) {return __String(x).clear;}
 			}
 		},
 		/**
+		- `matrix csv(string spacer="\t")`: Retorna uma matriz a partir de uma string no formato [CSV](https://www.rfc-editor.org/rfc/rfc4180).
+		- O argumento opcional `space` define o caractere que separa as colunas.
+		**/
+		csv: {
+			value: function(div) {
+				div = arguments.length === 0 ? "\t" : String(div);
+				let txt  = String(this._value)+"\n";
+				if (txt.indexOf("\n") < 0) return [[txt]];
+
+				let table = [[]];
+
+				while (txt.indexOf(div) >= 0 || txt.indexOf("\n") >= 0) {
+					let add, cut, val, quote, cell, line, col;
+					col   = table[table.length - 1];
+					quote = (/^\"/).test(txt);
+					cell  = txt.indexOf(quote ? "\""+div : div);
+					line  = txt.indexOf(quote ? "\"\n"   : "\n");
+					add   = (line < 0 ? Infinity : line) < (cell < 0 ? Infinity : cell);
+					cut   = quote ? (add ? "\"\n" : "\""+div) : (add ? "\n" : div);
+
+
+					txt = txt.split(cut);
+					val = quote ? txt[0].replace(/^\"/, "") : txt[0];
+					txt.shift();
+					txt = txt.join(cut);
+					col.push(val)
+
+					console.log({add: add, cell: cell, line: line, cut: cut, val: val, txt: txt});
+
+					if (add && txt !== "") table.push([]);
+
+ 				}
+ 				return table;
+
+
+
+			}
+		},
+
+
+		/**
 		- `void  wdValue (void x)`: Transforma o valor recebido e retorna o valor correspondente para fins do método `wdNotation`.
 		- O argumento `x` recebe o valor a ser transformado.
 		**/
@@ -3736,7 +3777,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			get: function() {return this._async;}
 		},
 		/**
-		- `number maxtime`: Define e retorna o tempo máximo de requisição em segundos. Se diferente de finito positivo, ficará desabilitado.
+		- `number maxtime`: Define e retorna o tempo máximo (finito positivo) de requisição em segundos.
 		**/
 		maxtime: {
 			get: function() {return this.request.timeout/1000;},
@@ -3785,7 +3826,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			get: function() {return this._time - this._start;}
 		},
 		/**
-		-`string state`: Retorna o estado da requisição//FIXME
+		-`string state`: Retorna o estado da requisição: `opened`, `headers`, `loading`, `closing`, `done`, `abort`, `timeout` ou `error`.
 		**/
 		state: {
 			get: function() {return this._state;}
@@ -3814,8 +3855,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		print: {
 			get: function() {
 				let print = [
-					this.request.responseURL === "" ? this._target : this.request.responseURL,
-					this._state,
+					this.state,
 					__Number(this.loaded).bytes+"/"+__Number(this.size).bytes,
 					__Number(this.progress).notation("percent"),
 					this.time/1000+"s"
@@ -3827,23 +3867,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		- `void abort()`: aborta a requisição;
 		**/
 		abort: {
-			value: function() {this._request.abort();}
-		},
-		/**
-		- `boolean notfound`: Informa se o arquivo não foi encontrado após a requisição.
-		**/
-		notfound: {
-			get: function() {
-				return this.request.status === 404;
-			}
-		},
-		/**
-		- `boolean timeout`: Informa se o tempo de carregamento expirou.
-		**/
-		timeout: {
-			get: function() {
-				return this.request.timeout === 0 ? false : this.request.timeout <= this.time;
-			}
+			value: function() {this.request.abort();}
 		},
 		/**
 		- `null|string text`: Retorna o resultado da requisição em forma de texto ou `null`se indefinido.
@@ -3889,32 +3913,51 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		_setMethods: {
 			value: function() {
 				if (this.request !== null) return;
+
 				this._request = new XMLHttpRequest();
-				let events = {
-					abort: false, error: false, load: false, loadend: true, loadstart: false,
-					progress: false, timeout: false
-				};
-				let state = ["unsent", "opened", "headers", "loading", "done"];
-				let self  = this;
 
-				for (let i in events) {
-					this._request["on"+i] = function(x) {
-						self._state  = [state[self.request.readyState], x.type].join("/");
-						self._time   = new Date().valueOf();
-						self._size   = "total"  in x ? x.total  : 0;
-						self._loaded = "loaded" in x ? x.loaded : 0;
-						self._done   = events[i];
-						__MODALCONTROL.progress(self.progress);
-						if (self._submit !== null) self._submit(self);
-						if (self.done) __MODALCONTROL.end();
+				let self   = this;
+				let method = function(x) {
+					if (self.done) return;
+					self._time   = new Date().valueOf();
+					self._size   = "total"  in x ? x.total  : 0;
+					self._loaded = "loaded" in x ? x.loaded : 0;
+					__MODALCONTROL.progress(self.progress);
+
+					let type   = x.type;
+					let state  = self.request.readyState;
+					let status = self.request.status;
+					let errors = ["abort", "timeout", "error"];
+
+					if (status === 404) {
+						self._done  = true;
+						self._state = "notfound";
+					} else if (errors.indexOf(type) >= 0) {
+						self._done  = true;
+						self._state = type;
+					} else if (state === 4 && type === "loadend") {
+						self._done  = true;
+						self._state = "done";
+					} else {
+						let states  = ["unsent", "opened", "headers", "loading", "closing"];
+						self._state = states[state];
 					}
-					this._request.upload["on"+i] = this._request["on"+i];
-				}
 
-				this._request.onreadystatechange = function (x) {
-					self._state = state[self.request.readyState];
+					if (self.done) __MODALCONTROL.end();
 					if (self._submit !== null) self._submit(self);
 				}
+
+				let events = ["onabort", "onerror", "onload", "onloadend", "onloadstart",
+				"onprogress", "ontimeout", "onreadystatechange"];
+				let i = -1;
+				while (++i < events.length) {
+					let event = events[i];
+					if (event in this.request)
+						this.request[event] = method;
+					if (event in this.request.upload)
+						this.request.upload[event] = method;
+				}
+
 			}
 		},
 		/**
@@ -3928,7 +3971,10 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				this._notfound = false;
 			}
 		},
-		
+		/**
+		- `void GET(void data)`: Envia uma requisição com o método `GET`.
+		- O argumento `data` diz respeito aos dados a serem enviados na requisição.
+		**/
 		GET: {
 			value: function(data) {
 				let check  = __Type(data);
@@ -3939,136 +3985,31 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				}
 				try {
 					this._reset();
-					this.request.open("GET", action, this._async);
 					__MODALCONTROL.start();
+					this.request.open("GET", action, this._async);
 				} catch(e) {return false;}
 				this.request.send(null);
 			}
 		},
+		/**
+		- `void POST(void data)`: Envia uma requisição com o método `POST`.
+		- O argumento `data` diz respeito aos dados a serem enviados na requisição.
+		**/
 		POST: {
 			value: function(data) {
 				let check = __Type(data);
 				data = String(data).trim().replace(/\#.+$/, "");
 				try {
 					this._reset();
-					this.request.open("POST", this._target, this._async);
 					__MODALCONTROL.start();
+					this.request.open("POST", this._target, this._async);
 				} catch(e) {return false;}
 				if (check.nonempty)
 					this.request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 				this.request.send(data);
 			}
 		},
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 	});
-
-function wd_request(action, pack, callback, method, async) { /* executa requisições */
-		/* ajustes iniciais */
-		action = new String(action).toString();
-		if (pack === undefined) pack = null;
-		if (wd_vtype(callback).type !== "function") callback = null;
-		method = method === undefined || method === null ? "POST" : method.toUpperCase();
-		async  = async !== false ?  true : false;
-
-		/* Chamando requisição e iniciando o tempo */
-		let request = new XMLHttpRequest();
-		let start   = new Date().valueOf();
-
-		/* conjunto de dados a ser repassado para a função */
-		let data = {
-			request: request,  /* registra o objeto para requisições */
-			closed:  false,    /* indica o término da requisição */
-			status:  "UNSENT", /* UNSENT|OPENED|HEADERS|LOADING|UPLOADING|DONE|NOTFOUND|ABORTED|ERROR|TIMEOUT */
-			total:   0,        /* registra o tamanho total do arquivo */
-			loaded:  0,        /* registra o tamanho carregado na requisição */
-			/* método para abortar */
-			abort: function() {return set_data("ABORTED", true, 0, 0);},
-			/* tempo decorrido desde o início da chamada (milisegundos)*/
-			get time() {return (new Date()).valueOf() - start;},
-			/* registra o andamento da requisição */
-			get progress() {return this.total > 0 ? this.loaded/this.total : 1;},
-			/* registra o conteúdo textual da requisição */
-			get text() {try {return this.request.responseText;} catch(e){return null;}},
-			/* registra o XML da requisição */
-			get xml() {try {return this.request.responseXML;} catch(e){return null;}},
-			/* registra o JSON da requisição */
-			get json() {try {return wd_json(this.text);} catch(e){return null;}},
-			/* transforma um arquivo CSV em ARRAY */
-			get csv() {try {return wd_csv_array(this.text);} catch(e){return null;}},
-		}
-
-
-		function state_change(x) { /* disparador: mudança de estado */
-			if (request.readyState < 1) return;
-			if (data.closed) return;
-			if (data.status === "UNSENT") {
-				data.status = "OPENED";
-				__MODALCONTROL.start();
-			} else if (request.status === 404) {
-				data.status = "NOTFOUND";
-				data.closed = true;
-			} else if (request.readyState === 2) {
-				data.status = "HEADERS";
-			} else if (request.readyState === 3) {
-				data.status = "LOADING";
-			} else if (request.readyState === 4) {
-				data.closed = true;
-				data.status = (request.status === 200 || request.status === 304) ? "DONE" : "ERROR";
-			}
-			if (callback !== null)
-				callback(data);
-			if (data.closed)
-				__MODALCONTROL.end();
-		}
-
-		/* definindo disparador aos eventos */
-		request.onprogress         = function(x) {set_data("LOADING", false, x.loaded, x.total);}
-		request.onerror            = function(x) {set_data("ERROR",   true, 0, 0);}
-		request.ontimeout          = function(x) {set_data("TIMEOUT", true, 0, 0);}
-		request.upload.onprogress  = function(x) {set_data("UPLOADING", false, x.loaded, x.total);}
-		request.upload.onabort     = request.onerror;
-		request.upload.ontimeout   = request.ontimeout;
-		request.onreadystatechange = state_change;
-		/* executando os comandos para a requisição */
-		let vpack = wd_vtype(pack);
-
-		if (method === "GET" && vpack.type === "text") {
-			action = action.split("?");
-			if (action.length > 1)
-				action = action[0]+"?"+action[1]+"&"+vpack.value;
-			else
-				action = action[0]+"?"+vpack.value;
-			pack   = null;
-		}
-		/* tentar abrir a requisição */
-		try {
-			request.open(method, action, async);
-		} catch(e) {
-			set_data("ERROR", true, 0, 0)
-			if (callback !== null) callback(data);
-			return false;
-		}
-		/* se o método for POST */
-		if (method === "POST" && pack.type === "text")
-			request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-		/* enviar requisição */
-		request.send(pack);
-		return true;
-	}
 
 
 
