@@ -947,6 +947,36 @@ const wd = (function() {
 			}
 		},
 		/**
+		- `boolean file`: Checa se o argumento é do tipo `File` proveniente de `FileList`.
+		**/
+		file: {
+			get: function() {
+				if (this.type !== null) return this.type === "file";
+				if (typeof this._input !== "object") return false;
+				if (this._input.constructor.name === "File") {
+					this._type  = "file";
+					this._value = this._input;
+					return true;
+				}
+				return false;
+			}
+		},
+		/**
+		- `boolean files`: Checa se o argumento é do tipo `FileList` não vazio.
+		**/
+		files: {
+			get: function() {
+				if (this.type !== null) return this.type === "files";
+				if (typeof this._input !== "object") return false;
+				if (this._input.constructor.name === "FileList") {
+					this._type  = "files";
+					this._value = this._input;
+					return true;
+				}
+				return false;
+			}
+		},
+		/**
 		- `void _init()`: Analisa o dado e define os parâmetros para execução dos demais atributos.
 		**/
 		_init: {
@@ -958,7 +988,7 @@ const wd = (function() {
 					"number", "date", "time", "datetime", "string"
 				] : [
 					"null", "undefined", "boolean", "number", "datetime",
-					"array", "node", "regexp", "function", "object"
+					"array", "node", "regexp", "function", "file", "files", "object"
 				];
 				let i = -1;
 				while (++i < types.length)
@@ -1002,10 +1032,6 @@ const wd = (function() {
 		}
 
 	});
-/*============================================================================*/
-//FIXME apagar essas porcarias no fim
-function __strCamel(x) {return __String(x).camel;}
-function __strClear(x) {return __String(x).clear;}
 /*============================================================================*/
 	/**
 	###Números
@@ -1462,16 +1488,15 @@ function __strClear(x) {return __String(x).clear;}
 		},
 		/**
 		- `matrix csv(string div="\t")`: Retorna uma matriz a partir de uma string no formato [CSV](https://www.rfc-editor.org/rfc/rfc4180).
-		- O argumento opcional `div` define o caractere que separa as colunas.
+		- O argumento opcional `div` define o caractere que separa as colunas. Linhas são divididas por uma quadra de linha (`\n`).
+		- Se a célula contiver o caractere divisor de coluna ou linha, ela deverá estar cercada por aspas duplas.
 		**/
 		csv: {
 			value: function(div) {
-				div = arguments.length === 0 ? "\t" : String(div);
-				let txt  = String(this._value)+"\n";
-				if (txt.indexOf("\n") < 0) return [[txt]];
-
+				div = div === undefined ? "\t" : String(div);
+				let txt = this._value;
+				if (txt[txt.length - 1] !== "\n") txt = txt+"\n";
 				let table = [[]];
-
 				while (txt.indexOf(div) >= 0 || txt.indexOf("\n") >= 0) {
 					let add, cut, val, quote, cell, line, col;
 					col   = table[table.length - 1];
@@ -2541,7 +2566,7 @@ function __strClear(x) {return __String(x).clear;}
 
 /*============================================================================*/
 	/**
-	###Nós Formulários HTML
+	###Nós HTML
 	`constructor __Node(node input)`
 	Construtor para manipulação de nós HTML.
 	O argumento `input` deve ser um nó HTML simples (um elemento), caso contrário será atribuído um elemento `DIV`.
@@ -3719,69 +3744,207 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 
 
 
-
-
-
-
-
-
-	/*============================================================================*/
 	/**
-	###Requisições
+	`constructor __Query(string selector, node root=document)`
+	Construtor para obter elementos HTML.
+	O argumento `selector` é um seletor CSS que identifica os elementos HTML, e o argumento opcional `root` define o elemento raiz da busca.
+	**/
+	function __Query(selector, root) {
+		if (!(this instanceof __Query))	return new __Query(selector, root);
+		selector = String(selector).trim();
+		let check = __Type(root);
+		Object.defineProperties(this, {
+			_css:  {value: selector},
+			_root: {value: check.node ? check.value[0] : document},
+		});
+	}
+
+	Object.defineProperties(__Query.prototype, {
+		constructor: {value: __Query},
+		/**
+		- `$$`: retorna uma lista de nós (`NodeList`).
+		**/
+		$$: {
+			get: function() {
+				let elem = null;
+				try {elem = this._root.querySelectorAll(this._css);} catch(e) {}
+				return __Type(elem).node ? elem : document.querySelectorAll("#_._");
+			}
+		},
+		/**
+		- `$`: retorna um nó específico ou lista de nós (`NodeList`) vazia.
+		**/
+		$: {
+			get: function() {
+				let elem = null;
+				try {elem = this._root.querySelector(this._css);} catch(e) {}
+				return __Type(elem).node ? elem : this.$$;
+			}
+		}
+	});
+
+/*----------------------------------------------------------------------------*/
+	/**
+	FIXME o que fazer com isso?
+	`node __$$$(object obj, node root)`
+	Localiza em um objeto os atributos v{$}v e v{$$}v e utiliza seus valores como seletores CSS.}p
+	O atributo v{$$}v é prevalente sobre o v{$}v para fins de chamada das funções i{__$$}i ou i{__$}i,
+ respectivamente.
+	v{obj}v - Objeto javascript contendo os atributos v{$}v ou v{$$}v.
+	v{root}v - (opcional, i{document}i) Elemento base para busca.}d}l
+	**/
+	function __$$$(obj, root) {
+		let one =  "$" in obj ? String(obj["$"]).trim()  : null;
+		let all = "$$" in obj ? String(obj["$$"]).trim() : null;
+		let key = {"document": document, "window":  window};
+		if (one !== null && one in key) one = key[one];
+		if (all !== null && all in key) all = key[all];
+		return all === null ? __$(one, root) : __$$(all, root);
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*============================================================================*/
+	/**
+	###Requisições e Arquivos
 	`constructor __Request(string input)`
-	Construtor para requisições Web.
+	Construtor para [requisições Web](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest) ou leituras de [arquivo](https://developer.mozilla.org/en-US/docs/Web/API/FileReader).
 	O argumento `input` deve ser o endereço do alvo a ser requisitado.
 	**/
-	function __Request(input) {
-		if (!(this instanceof __Request))	return new __Request(input);
-		input = String(input).trim();
+	function __Request(input, method) {
+		if (!(this instanceof __Request))	return new __Request(input, method);
 		let check = __Type(input);
+		let test  = __Type(method);
+		let request, type, source;
 
+		/* identificar se é um endereço de arquivo ou um arquivo */
+		if (check.files && input.length > 0) {
+			input   = input[0];
+			request = new FileReader();
+			source  = "file";
+		} else if (check.file) {
+			request = new FileReader();
+			source    = "file";
+		} else if (check.nonempty) {
+			input   = String(input).trim();
+			request = new XMLHttpRequest();
+			source  = "path";
+		} else {
+			input   = null;
+			request = null;
+			source  = null;
+		}
+
+		/* definir atributos internos */
 		Object.defineProperties(this, {
-			_target:   {value: check.nonempty ? input : null},
-			_request: {value: null, writable: true},
-			_submit:  {value: null, writable: true},
-			_async:   {value: true, writable: true},
+			_target:  {value: input},
+			_source:  {value: source},
+			_request: {value: request},
+			_submit:  {value: test.function ? method : null, writable: true},
 			_done:    {value: false, writable: true},
 			_state:   {value: "?", writable: true},
 			_start:   {value: 0, writable: true},
 			_time:    {value: 0, writable: true},
+			_maxtime: {value: 0, writable: true},
 			_size:    {value: 0, writable: true},
 			_loaded:  {value: 0, writable: true},
-			_found:   {value: true, writable: true}
 		});
-		this._setMethods();
+
+		/* definir métodos e eventos */
+		let self    = this;
+		let trigger = function(x) {
+			if (self.done) return;
+
+			/* definindo valores do objeto */
+			self._time   = new Date().valueOf();
+			self._size   = "total"  in x ? x.total  : 0;
+			self._loaded = "loaded" in x ? x.loaded : 0;
+			__MODALCONTROL.progress(self.progress);
+
+			/* obtendo valores do evento */
+			let source = self._source;
+			let type   = x.type;
+			let state  = self.request.readyState;
+			let errors = ["abort", "timeout", "error"];
+			let states, status;
+			if (source === "file") {
+				states = ["empty", "loading", "closing"];
+				status = null;
+			} else if (source === "path") {
+				status = self.request.status;
+				states = ["unsent", "opened", "headers", "loading", "closing"];
+			}
+
+			/* analisar progresso da requisição */
+			if (status === 404) {
+				self._done  = true;
+				self._state = "notfound";
+			} else if (errors.indexOf(type) >= 0) {
+				self._done  = true;
+				self._state = type;
+			} else if (source === "file" && self.maxtime > 0 && self.time > self.maxtime) {
+				self._done  = true;
+				self._state = "timeout";
+			} else if (source === "path" && state === 4 && type === "loadend") {
+				self._done  = true;
+				self._state = "done";
+			} else if (source === "file" && state === 2 && type === "loadend") {
+				self._done  = true;
+				self._state = "done";
+			} else {
+				self._state = states[state];
+			}
+
+			/* checando ações */
+			if (self.done) __MODALCONTROL.end();
+			if (self._submit !== null) self._submit(self);
+		}
+
+		let events = ["onabort", "onerror", "onload", "onloadend", "onloadstart",
+		"onprogress", "ontimeout", "onreadystatechange"];
+		let i = -1;
+		while (++i < events.length) {
+			let event = events[i];
+			if (event in this.request)
+				this.request[event] = trigger;
+			if ("upload" in this.request && event in this.request.upload)
+				this.request.upload[event] = trigger;
+		}
 	}
 
 	Object.defineProperties(__Request.prototype, {
 		constructor: {value: __Request},
 		/**
-		- `boolean async`: Define e retorna o tipo requisição, síncrona ou assíncrona.
-		**/
-		async: {
-			set: function(x) {
-				let check = __Type(x);
-				if (type.boolean) this._async = check.value;
-			},
-			get: function() {return this._async;}
-		},
-		/**
-		- `number maxtime`: Define e retorna o tempo máximo (finito positivo) de requisição em segundos.
+		- `number maxtime`: Define e retorna o tempo máximo de requisição em milisegundos.
 		**/
 		maxtime: {
-			get: function() {return this.request.timeout/1000;},
+			get: function() {return this._maxtime;},
 			set: function(x) {
 				let data = __Type(x);
 				if (data.finite && data.positive)
-					this.request.timeout = Math.trunc(Math.abs(1000*data.value));
+					this._maxtime = Math.trunc(Math.abs(data.value));
 				else
-					this.request.timeout = 0;
-
+					this._maxtime = 0;
 			}
 		},
 		/**
-		- `null|function onsubmit`: Define e retorna o disparador a ser chamado ao executar a requisição.
-		- A função a ser chamada receberá o objeto como argumento e será chamado a cada mudança de estado. Para excluir o disparador, deve-se defini-lo como `null`.
+		- `function onsubmit`: Define e retorna o disparador a ser chamado ao executar a requisição.
+		- A função receberá o objeto como argumento e será chamado a cada mudança de estado. Para excluir o disparador, deve-se defini-lo como `null`.
 		**/
 		onsubmit: {
 			set: function(x) {
@@ -3803,7 +3966,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			get: function() {return this._target;}
 		},
 		/**
-		-`object request`: Retorna o objeto `XMLHttpRequest` da requisição.
+		-`object request`: Retorna o objeto `XMLHttpRequest` ou `FileReader` da requisição.
 		**/
 		request: {
 			get: function() {return this._request;}
@@ -3830,7 +3993,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		-`integer loaded`: Retorna o tamanho parcial da requisição em bytes.
 		**/
 		loaded: {
-			get: function() {return this._size;}
+			get: function() {return this._loaded;}
 		},
 		/**
 		-`number progress`: Retorna o progresso da requisição (de 0 a 1).
@@ -3839,10 +4002,10 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			get: function() {return this._size === 0 ? 1 : this._loaded/this._size;}
 		},
 		/**
-		-`string print`: Retorna uma string contendo informações da requisição.
+		-`string print()`: Retorna uma string contendo informações da requisição.
 		**/
 		print: {
-			get: function() {
+			value: function() {
 				let print = [
 					this.state,
 					__Number(this.loaded).bytes+"/"+__Number(this.size).bytes,
@@ -3859,41 +4022,39 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			value: function() {this.request.abort();}
 		},
 		/**
-		- `null|string text`: Retorna o resultado da requisição em forma de texto ou `null`se indefinido.
+		- `string text()`: Retorna o resultado da requisição em forma de texto ou `null` se indefinido.
 		**/
 		text: {
-			get: function() {
+			value: function() {
 				if (!this.done) return null;
 				try {return this.request.responseText;} catch(e) {return null;}
 			}
 		},
 		/**
-		- `null|object xml`: Retorna o resultado da requisição em forma de XML ou `null` se indefinido.
+		- `object xml()`: Retorna o resultado da requisição em forma de XML ou `null` se indefinido.
 		**/
 		xml: {
-			get: function() {
+			value: function() {
 				if (!this.done) return null;
 				try {return this.request.responseXML;} catch(e) {return null;}
 			}
 		},
 		/**
-		- `null|object json`: Retorna o resultado da requisição em forma de objeto ou `null` se formato diverso de JSON.
+		- `object json()`: Retorna o resultado da requisição em forma de objeto, se em formato JSON, ou `null` se indefinido.
 		**/
 		json: {
-			get: function() {
-				let text = this.text;
-				if (text === null) return null;
-				try {return JSON.parse(text);} catch(e) {return null;}
+			value: function() {
+				if (this.text() === null) return null;
+				try {return JSON.parse(this.text());} catch(e) {return null;}
 			}
 		},
 		/**
-		- `null|object csv`: Retorna o resultado da requisição em forma de matriz ou `null` se formato diverso de CSV FIXME.
+		- `matrix csv(string div=\t)`: Retorna o resultado da requisição em forma de matriz ou `null` se indefinido O argumento `div` define o delimitador de coluna.
 		**/
 		csv: {
-			get: function() {
-				let text = this.text;
-				if (text === null) return null;
-				try {return JSON.parse(text);} catch(e) {return null;}
+			value: function(div) {
+				if (this.text() === null) return null;
+				try {return __String(this.text()).csv(div);} catch(e) {return null;}
 			}
 		},
 		/**
@@ -3958,6 +4119,8 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				this._start = this._time;
 				this._done  = false;
 				this._notfound = false;
+				if (this._source === "path")
+					this.request.timeout = this.maxtime;
 			}
 		},
 		/**
@@ -3966,6 +4129,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		**/
 		GET: {
 			value: function(data) {
+				if (this._source !== "path") return null;
 				let check  = __Type(data);
 				let action = this._target.replace(/\#.+$/, "");
 				if (check.nonempty) {
@@ -3975,8 +4139,8 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				try {
 					this._reset();
 					__MODALCONTROL.start();
-					this.request.open("GET", action, this._async);
-				} catch(e) {return false;}
+					this.request.open("GET", action, true);
+				} catch(e) {return null;}
 				this.request.send(null);
 			}
 		},
@@ -3986,459 +4150,120 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		**/
 		POST: {
 			value: function(data) {
+				if (this._source !== "path") return null;
 				let check = __Type(data);
 				data = String(data).trim().replace(/\#.+$/, "");
 				try {
 					this._reset();
 					__MODALCONTROL.start();
-					this.request.open("POST", this._target, this._async);
-				} catch(e) {return false;}
+					this.request.open("POST", this._target, true);
+				} catch(e) {return null;}
 				if (check.nonempty)
 					this.request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 				this.request.send(data);
 			}
 		},
+
+
+		read: {
+			value: function(readAs) {
+				if (this._source !== "file") return null;
+				let mode = {
+					binary: "readAsBinaryString", buffer: "readAsArrayBuffer",
+					text:   "readAsText",         audio:  "readAsDataURL",
+					video:  "readAsDataURL",      image:  "readAsDataURL",
+					url:    "readAsDataURL"
+				};
+
+				let mime = String(this.target.type).split("/")[0].toLowerCase();
+				if (!(mime in mode)) mime = "binary";
+				let type = readAs in mode ? mode[readAs] : mode[mime];
+				try {
+					this._reset();
+					__MODALCONTROL.start();
+					this.request[type](this.target);
+				} catch(e) {return null;}
+			}
+		}
+		
 	});
 
+	function wd_read(elem, call, mode) { /* faz a leitura de arquivos */
+		/* testando argumentos */
+		let form = new WDform(elem);
+		if (form.type !== "file")    return null;
+		let arg = wd_vtype(call);
+		if (arg.type !== "function") return null;
+		let files = form.vfile;
+		if (files.length === 0)      return null;
 
+		/* lendo arquivos selecionados */
+		for (let i = 0; i < files.length; i++) {
+			let file = files[i];
+			let mime = String(file.type).split("/")[0].toLowerCase();
+			let method = {
+				binary: "readAsBinaryString", buffer: "readAsArrayBuffer",
+				text:   "readAsText",         audio:  "readAsDataURL",
+				video:  "readAsDataURL",      image:  "readAsDataURL",
+				url:    "readAsDataURL"
+			};
+			/* definindo a informação a ser capturada se argumento é inadequado (binary - default) */
+			if (!(mode in method))
+				mode = mime in method ? mime : "binary";
 
+			/* construindo objeto e chamando janela modal */
+			let reader = new FileReader();
+			__MODALCONTROL.start();
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//FIXME apagar após reestruturação
-	function __finite(value) {
-		let input = __Type(value);
-		return input.finite;
-	}
-
-
-
-
-//FIXME fazer um objeto __$$ e __$ que herdará de __HTML
-/*----------------------------------------------------------------------------*/
-	/**
-	`node __$$(string selector, b{
-	`node root)`
-	Retorna uma lista de elementos do tipo obtida em i{querySelectorAll}i, vazia em caso de erro.
-	v{selector}v - Seletor CSS para busca de elementos.
-	v{root}v - (opcional, i{document}i) Elemento base para busca.}d}l
-	**/
-	function __$$(selector, root) {
-		let elem = null;
-		try {elem = root.querySelectorAll(selector);}
-		catch(e) {
-			try {elem = document.querySelectorAll(selector);}
-			catch(e) {}
-		}
-		let test = __Type(elem);
-		return test.type === "node" ? elem : document.querySelectorAll("#_._");
-	}
-/*----------------------------------------------------------------------------*/
-	/**
-	`node __$(string selector, b{
-	`node root)`
-	Retorna um elemento do tipo obtido em i{querySelector}i ou o retorno de i{__$$}i em caso de erro.
-	v{selector}v - Seletor CSS para busca do elemento.
-	v{root}v - (opcional, i{document}i) Elemento base para busca.}d}l
-	**/
-	function __$(selector, root) {
-		let elem = null;
-		try {elem = root.querySelector(selector);}
-		catch(e) {
-			try {elem = document.querySelector(selector);}
-			catch(e) {}
-		}
-		let test = __Type(elem);
-		return test.type === "node" ? elem : __$$(selector, root);
-	}
-/*----------------------------------------------------------------------------*/
-	/**
-	`node __$$$(object obj, node root)`
-	Localiza em um objeto os atributos v{$}v e v{$$}v e utiliza seus valores como seletores CSS.}p
-	O atributo v{$$}v é prevalente sobre o v{$}v para fins de chamada das funções i{__$$}i ou i{__$}i,
- respectivamente.
-	v{obj}v - Objeto javascript contendo os atributos v{$}v ou v{$$}v.
-	v{root}v - (opcional, i{document}i) Elemento base para busca.}d}l
-	**/
-	function __$$$(obj, root) {
-		let one =  "$" in obj ? String(obj["$"]).trim()  : null;
-		let all = "$$" in obj ? String(obj["$$"]).trim() : null;
-		let key = {"document": document, "window":  window};
-		if (one !== null && one in key) one = key[one];
-		if (all !== null && all in key) all = key[all];
-		return all === null ? __$(one, root) : __$$(all, root);
-	}
-
-
-
-
-
-
-
-
-
-
-
-/*----------------------------------------------------------------------------*/
-	/**
-	4{Matemática}
-	4*/
-/*----------------------------------------------------------------------------*/
-	/**
-	`integer}b __integer(b{number}b value)`
-	Retorna a parte inteira do número ou `null` se outro tipo de dado.}p
-	l{d{v{value}v - Valor a ser verificado.}d}l
-	**/
-	function __integer(value) {
-		let input = __Type(value);
-		if (input.type !== "number") return null;
-		if (!input.finite) return input.value;
-		return (input < 0 ? -1 : 1) * Math.trunc(Math.abs(input.value));
-	}
-/*----------------------------------------------------------------------------*/
-	/**
-	`float}b __decimal(b{number}b value)`
-	Retorna a parte decimal do número ou `null` se outro tipo de dado.}p
-	l{d{v{value}v - Valor a ser verificado.}d}l
-	**/
-	function __decimal(value) {
-		let input = __Type(value);
-		if (input.type !== "number") return null;
-		if (!input.finite) return input.value;
-		let exp = 1;
-		while ((input * exp)%1 !== 0) exp = 10*exp;
-		return (exp*(input.value) - exp*__integer(input.value)) / exp;
-	}
-/*----------------------------------------------------------------------------*/
-		/**
-	`number}b __cut(b{number}b value, b{integer}b n, b{- `boolean cut)`
-		Corta o número de casas decimais conforme especificado ou retorna `null` se não for número.
-		v{value}v - Valor a ser checado.
-		v{n}v - (v{&ge; 0}v) Número de casas decimais a arrendondar.
-		v{round}v - (opcional, c{true}c), Se falso, não arrendondará o valor.
-		function __cut(value, n, round) {
-			let input = __Type(value);
-			if (input.type !== "number") return null;
-			if (!input.finite) return input.value;
-			let digit = __Type(n);
-			digit = !digit.finite || digit < 0 ? 0 : __integer(digit.value);
-			if (round === false) {
-				let i = -1;
-				let base = 1;
-				while (++i < n) base = 10*base;
-				return __integer(base*input.value)/base;
+			/* disparador para quando terminar o carregamento */
+			reader.onload = function() {
+				let result = this.result;
+				call({
+					elem:         elem,
+					item:         i,
+					length:       files.length,
+					name:         file.name,
+					size:         file.size,
+					type:         file.type,
+					lastModified: file.lastModified,
+					data:         result
+				});
+				/* fechando janela modal correspondente */
+				__MODALCONTROL.end();
+				return;
 			}
-			return Number(input.valueOf().toFixed(digit));
-		}
-/*----------------------------------------------------------------------------*/
-	/**
-	`string}b __primes(b{integer}b value)`
-	Retorna uma lista com os números primos até o limite do argumento.
-	/**l{d{v{value}v - (v{&infin; &gt; value &gt; 1}v) Define o limite da lista.
-	**/
-	function __primes(value) {
-		let input = __Type(value);
-		if (!input.finite || input < 2) return [];
-		let list = [2];
-		let i    = 3;
-		while (i <= input) {
-			let isPrime = true;
-			let j = 0; /* não checar o 2 */
-			while (++j < list.length) {
-				if (i % list[j] === 0) {
-					isPrime = false;
-					break;
-				}
+
+			/* disparador para registrar o andamento do carregamento */
+			reader.onprogress = function(x) {
+				__MODALCONTROL.progress(x.loaded / x.total);
+				return;
 			}
-			if (isPrime) list.push(i);
-			i += 2; /* não checar par */
+
+			/* capturando dados conforme especificado em mode */
+			reader[method[mode]](file);
 		}
-		return list;
+
+		return true;
 	}
-/*----------------------------------------------------------------------------*/
-	/**
-	`- `boolean __prime(b{integer}b value)`
-	Checa se o valor é um número primo.
-	/**l{d{v{value}v - Valor a ser checado.
-	function __prime(value) {
-		let input = __Type(value);
-		if (!input.finite || input < 2 || __decimal(input.value) !== 0) return false;
-		let list = __primes(input.value);
-		return list[list.length - 1] === input.value ? true : false;
-	};
-/*----------------------------------------------------------------------------*/
-	/**
-	`integer}b __gcd(b{integer}b ...)`
-	Retorna o máximo divisor comum dos argumentos.}p
-	Os decimais dos números serão desconsiderados assim como valores infinitos.
-	**/
-	function __gcd() {
-		/* analisando argumentos */
-		let input =  [];
-		let i     = -1;
-		while (++i < arguments.length) {
-			let data = __Type(arguments[i]);
-			if (!data.finite) continue;
-			let number = __integer(Math.abs(data.value));
-			if (number === 0 || number === 1) return number;
-			input.push(number);
-		}
-		if (input.length < 2)
-			return input.length === 1 ? input[0] : 1;
-		/* obtendo números primos */
-		let min    = Math.min.apply(null, input);
-		let primes = __primes(min);
-		if (primes.length === 0) return 1;
-		/* obtendo o mdc */
-		let mdc = 1;
-		i = 0;
-		/* looping pelos primos */
-		while (i < primes.length) {
-			let test = true;
-			let stop = false;
-			/* checando se todos os argumentos são divisíveis pelo primo da vez */
-			let j    = -1;
-			while(++j < input.length) {
-				if (primes[i] > input[j])     stop = true;
-				if (input[j]%primes[i] !== 0)	test = false;
-				if (stop || !test)            break;
-			}
-			/* se todos forem divisíveis, reprocessar argumentos e ajustar mdc ou chamar próximo primo */
-			if (test) {
-				let k = -1;
-				while(++k < input.length)
-					input[k] = input[k]/primes[i];
-				mdc = mdc * primes[i];
-			} else {
-				i++;
-			}
-			/* Primo maior que um dos argumentos: parar processamento */
-			if (stop) break;
-		}
-		return mdc;
-	}
-/*----------------------------------------------------------------------------*/
-	/**4{Notação}4*/
-/*----------------------------------------------------------------------------*/
-	/**
-	`string}b __frac(b{number}b value, b{integer}b limit)`
-	Retorna a notação em fração do número ou v{"0"}v em caso de inconsistência.
-	v{value}v - Valor a ser checado.
-	v{limit}v - (opcional, v{3, 1 &le; limit &le; 5}v) Limitador de casas decimais significativas.
-	**/
-	function __frac(value, limit) {
-		let input = __Type(value);
-		if (input.type !== "number") return "0";
-		if (!input.finite) return input.toString();
-		let int = Math.abs(__integer(input.value));
-		let flt = Math.abs(__decimal(input.value));
-		if (flt === 0) return int.toString();
-		/* checando argumento limitador */
-		let min = 1;
-		let max = 5;
-		let lim = (min+max)/2;
-		let check = __Type(limit);
-		if (check.finite && check.value !== lim)
-			lim = check < min ? min : (check > max ? max : __integer(check.value));
-		/* divisor, dividendo e números significativos */
-		let div = 1;
-		let dnd = flt * div;
-		let len = 0;
-		while(dnd%1 !== 0) {
-			div = 10*div;
-			dnd = flt * div;
-			/* checando limites */
-			if (__integer(dnd) !== 0) {
-				len++;
-				if (len >= lim) {
-					dnd = __integer(dnd);
-					break;
-				}
-			}
-		}
-		/* obtendo o máximo divisor comum e a fração */
-		let gcd = __gcd(div, dnd);
-		int = int === 0 ? "" : int.toString()+" ";
-		dnd = String(dnd/gcd);
-		div = String(div/gcd);
-		return (input < 0 ? "-" : "")+int+dnd+"/"+div;
-	}
-/*----------------------------------------------------------------------------*/
-	/**
-	`string}b __bytes(b{integer}b value)`
-	Retorna a notação em bytes de um número inteiro ou v{"0 B"}v se ocorrer um erro.
-	/**l{d{v{value}v - Valor numérico em bytes.
-	function __bytes(value) {
-		let input = __Type(value);
-		if (input.finite) return "0 B";
-		value = input < 1 ? 0 : __integer(input.value);
-		let scale = ["B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
-		let i     = scale.length;
-		while (--i >= 0)
-			if (value >= Math.pow(1024,i))
-				return (value/Math.pow(1024,i)).toFixed(2)+" "+scale[i];
-		return value+" B";
-	}
-/*----------------------------------------------------------------------------*/
-	/**
-	`string}b __number(b{number}b value)`
-	Retorna o tipo de número: v{"&#177;integer", "&#177;float", "&#177;infinity", "&#177;real", "zero" e "not numeric"}v.
-	/**l{d{v{value}v - Valor a ser checado.
-	function __number(value) {
-		let input = __Type(value);
-		if (input.type !== "number")         return "not numeric";
-		let sign = input < 0 ? "-" : "+";
-		if (input == 0)                      return "zero";
-		if (!input.finite)                   return sign+"infinity";
-		if (input == __integer(input.value)) return sign+"integer";
-		if (input == __decimal(input.value))   return sign+"float";
-		return sign+"real";
-	}
-/*----------------------------------------------------------------------------*/
-	/**
-	`string}b __precision(b{number}b value, b{integer}b n)`
-	Fixa a quantidade de dígitos significativos do número. Retorna v{null}v se falhar.
-	v{value}v - Valor a ser checado.
-	v{n}v - (v{&gt; 0}v) Número de dígitos a formatar.
-	function __precision(value, n) {
-		let input = __Type(value);
-		let digit = __Type(n);
-		if (input.type !== "number") return null;
-		if (!__finite(digit.value) || digit.value < 1) return null;
-		digit = __integer(digit.value);
-		input = input.value;
-		if (Math.abs(input) < 1 && input !== 0) {
-			return Math.abs(input) < Math.pow(10, -digit+1) ? input.toExponential(digit-1) : input.toFixed(digit-1);
 
 
-		} //FIXME tem que decidir o que quer aqui
 
-		return input.toPrecision(digit);
-	}
-/*----------------------------------------------------------------------------*/
-	/**
-	`string}b __notation(b{number}b value, string lang, string type, b{/**
-	`void  code)`
-	Retorna o número conforme linguagem e formatação ou `null` se um erro ocorrer a{https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/NumberFormat}a.}pl{
-	v{value}v - Valor a ser checado.
-	v{lang}v - Código da linguagem a ser aplicada.
-	v{type}v - Tipo da formatação:}d L{
-	v{"significant"}v - fixa número de dígitos significativos.
-	v{"decimal"}v - fixa número de casas decimais.
-	v{"integer"}v - fixa número de dígitos inteiros.
-	v{"percent"}v - transforma o número em notação percentual.
-	v{"unit"}v - define a unidade de medida.
-	v{"scientific"}v - notação científica.
-	v{"engineering"}v - notação de engenharia.
-	v{"compact"}v - notação compacta curta ou longa.
-	v{"currency"}v - Notação monetária.
-	v{"ccy"}v - Notação monetária curta.
-	v{"nameccy"}v - Notação monetária textual.
-	v{code}v - depende do tipo da formatação:}dL{
-	v{"significant"}v - quantidade de números significativos.
-	v{"decimal"}v - número de casas decimais.
-	v{"integer"}v - número de dígitos inteiros.
-	v{"percent"}v - número de casas decimais.
-	v{"unit"}v - nome da unidade de medida a{https://tc39.es/proposal-unified-intl-numberformat/section6/locales-currencies-tz_proposed_out.html#sec-issanctionedsimpleunitidentifier}a.
-	v{"scientific"}v - número de casas decimais.
-	v{"engineering"}v - número de casas decimais.
-	v{"compact"}v - Longa (v{"long"}v) ou curta (v{"short"}v).
-	v{"currency"}v - Código monetário a{https://www.six-group.com/en/products-services/financial-information/data-standards.html#scrollTo=currency-codes}a.
-	v{"ccy"}v - Código monetário.
-	v{"nameccy"}v - Código monetário.}d }L}l*/
-	function __notation(value, lang, type, code) {
-		let input = __Type(value);
-		if (input.type !== "number") return null;
-		if (!input.finite) return input.value.toString();
-		let types = {
-			significant: {
-				minimumSignificantDigits: code,
-				maximumSignificantDigits: code
-			},
-			decimal: {
-				style: "decimal",
-				minimumFractionDigits: code,
-				maximumFractionDigits: code
-			},
-			integer: {
-				style: "decimal",
-				minimumIntegerDigits: code,
-			},
-			percent: {
-				style: "percent",
-				minimumFractionDigits: code,
-				maximumFractionDigits: code
-			},
-			unit: {
-				style: "unit",
-				unit: code
-			},
-			scientific: {
-				style: "decimal",
-				notation: "scientific",
-				minimumFractionDigits: code,
-				maximumFractionDigits: code
-			},
-			engineering: {
-				style: "decimal",
-				notation: "engineering",
-				minimumFractionDigits: code,
-				maximumFractionDigits: code
-			},
-			compact: {
-				style: "decimal",
-				notation: "compact",
-				compactDisplay: code === "short" ? code : "long"
-			},
-			currency: {
-				style: "currency",
-				currency: code,
-				signDisplay: "exceptZero",
-				currencyDisplay: "symbol"
-			},
-			ccy: {
-				style: "currency",
-				currency: code,
-				signDisplay: "exceptZero",
-				currencyDisplay: "narrowSymbol"
-			},
-			nameccy: {
-				style: "currency",
-				currency: code,
-				signDisplay: "auto",
-				currencyDisplay: "name"
-			}
-		};
-		type = String(type).toLowerCase();
-		try {
-			return input.value.toLocaleString(lang, (type in types ? types[type] : {}));
-		} catch(e) {}
-		try {
-			input.value.toLocaleString(undefined, (type in types ? types[type] : {}));
-		} catch (e) {}
-		return input.value.toLocaleString();
-	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /*----------------------------------------------------------------------------*/
 	/**4{Conjunto de Dados}4*/
 /*----------------------------------------------------------------------------*/
@@ -4537,7 +4362,9 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 	Retorna uma matriz de duas colunas formada pelos valores de v{x}v e do resultado de v{f(x)}v.
 	v{x}v - Conjunto de números base (coluna 0).
 	v{f}v - Função a ser operada sobre os valores de v{x}v (coluna 1).
-	v{finite}v - (opcional) Se falso, a matriz retornará todos os valores obtidos, inclusive os não finitos como nulos.
+	v{finite}v - (opcional) Se falso, a matriz retornará todos os valores obtidos, inclusive os não
+ finitos como nulos.
+ */
 	function __setFunction(x, f, finite) {
 		let check = __Type(x);
 		let input = __Type(f);
@@ -4562,32 +4389,13 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		return finite === false ? [x,y] : __setFinite(x, y);
 	}
 /*----------------------------------------------------------------------------*/
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*----------------------------------------------------------------------------*/
 	/**
 	`/**
 	`constructor __leastSquares(b{array}b x, b{array}b y)`
 	Retorna um objeto com as constantes angular (v{a}v) e linear (v{b}v) do método dos mínimos quadrados (v{y=ax+b}v).
 	v{x}v - Conjunto de dados da coordenada horizontal.
 	v{y}v - Conjunto de dados da coordenada vertical.
+	*/
 	function __leastSquares(x, y) {
 		let matrix = __setFinite(x, y);
 		if (matrix === null || matrix.length !== 2 || matrix[0].length < 2) return null;
@@ -4616,6 +4424,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 	Retorna o desvio padrão entre dois conjuntos de dados ou um valor de referência, ou `null` em caso de insucesso.
 	v{y1}v - Conjunto de dados para avaliar.
 	v{y2}v - Conjunto de dados comparativo ou valor de referência.
+	**/
 	function __stdDeviation(y1, y2) {
 		let input1 = __Type(y1);
 		if (input1.type !== "array") return null;
@@ -5831,27 +5640,6 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 
 
 
-/*----------------------------------------------------------------------------*/
-	function wd_no_spaces(txt, char) { /* Troca múltiplos espaço por um caracter*/
-		return txt.replace(/\s+/g, (char === undefined ? " " : char)).trim();
-	};
-/*----------------------------------------------------------------------------*/
-	function wd_text_clear(value) { /* elimina acentos */
-		value = new String(value);
-		if ("normalize" in value)
-			return value.normalize('NFD').replace(/[\u0300-\u036f]/g, "");
-
-		let ascii = {
-			A: /[À-Å]/g, C: /[Ç]/g,   E: /[È-Ë]/g, I: /[Ì-Ï]/g,
-			N: /[Ñ]/g,   O: /[Ò-Ö]/g, U: /[Ù-Ü]/g, Y: /[ÝŸ]/g,
-			a: /[à-å]/g, c: /[ç]/g,   e: /[è-ë]/g, i: /[ì-ï]/g,
-			n: /[ñ]/g,   o: /[ò-ö]/g, u: /[ù-ü]/g, y: /[ýÿ]/g
-		};
-		for (let i in ascii)
-			value = value.replace(ascii[i], i);
-
-		return value;
-	}
 
 
 
@@ -7715,63 +7503,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 	}
 
 /*----------------------------------------------------------------------------*/
-	function wd_read(elem, call, mode) { /* faz a leitura de arquivos */
-		/* testando argumentos */
-		let form = new WDform(elem);
-		if (form.type !== "file")    return null;
-		let arg = wd_vtype(call);
-		if (arg.type !== "function") return null;
-		let files = form.vfile;
-		if (files.length === 0)      return null;
-
-		/* lendo arquivos selecionados */
-		for (let i = 0; i < files.length; i++) {
-			let file = files[i];
-			let mime = String(file.type).split("/")[0].toLowerCase();
-			let method = {
-				binary: "readAsBinaryString", buffer: "readAsArrayBuffer",
-				text:   "readAsText",         audio:  "readAsDataURL",
-				video:  "readAsDataURL",      image:  "readAsDataURL",
-				url:    "readAsDataURL"
-			};
-			/* definindo a informação a ser capturada se argumento é inadequado (binary - default) */
-			if (!(mode in method))
-				mode = mime in method ? mime : "binary";
-
-			/* construindo objeto e chamando janela modal */
-			let reader = new FileReader();
-			__MODALCONTROL.start();
-
-			/* disparador para quando terminar o carregamento */
-			reader.onload = function() {
-				let result = this.result;
-				call({
-					elem:         elem,
-					item:         i,
-					length:       files.length,
-					name:         file.name,
-					size:         file.size,
-					type:         file.type,
-					lastModified: file.lastModified,
-					data:         result
-				});
-				/* fechando janela modal correspondente */
-				__MODALCONTROL.end();
-				return;
-			}
-
-			/* disparador para registrar o andamento do carregamento */
-			reader.onprogress = function(x) {
-				__MODALCONTROL.progress(x.loaded / x.total);
-				return;
-			}
-
-			/* capturando dados conforme especificado em mode */
-			reader[method[mode]](file);
-		}
-
-		return true;
-	}
+	
 
 /*----------------------------------------------------------------------------*/
 	function wd_notify(title, msg) { /* exibe uma notificação, se permitido */
@@ -8701,6 +8433,335 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		},
 	});
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//FIXME TRASH apagar após reestruturação
+	function __strCamel(x) {return __String(x).camel;}
+	function __strClear(x) {return __String(x).clear;}
+	function __$$(selector, root) {
+		let elem = null;
+		try {elem = root.querySelectorAll(selector);}
+		catch(e) {
+			try {elem = document.querySelectorAll(selector);}
+			catch(e) {}
+		}
+		let test = __Type(elem);
+		return test.type === "node" ? elem : document.querySelectorAll("#_._");
+	}
+	function __$(selector, root) {
+		let elem = null;
+		try {elem = root.querySelector(selector);}
+		catch(e) {
+			try {elem = document.querySelector(selector);}
+			catch(e) {}
+		}
+		let test = __Type(elem);
+		return test.type === "node" ? elem : __$$(selector, root);
+	}
+
+	function __finite(value) {
+		let input = __Type(value);
+		return input.finite;
+	}
+	function __integer(value) {
+		let input = __Type(value);
+		if (input.type !== "number") return null;
+		if (!input.finite) return input.value;
+		return (input < 0 ? -1 : 1) * Math.trunc(Math.abs(input.value));
+	}
+	function __decimal(value) {
+		let input = __Type(value);
+		if (input.type !== "number") return null;
+		if (!input.finite) return input.value;
+		let exp = 1;
+		while ((input * exp)%1 !== 0) exp = 10*exp;
+		return (exp*(input.value) - exp*__integer(input.value)) / exp;
+	}
+	function __cut(value, n, round) {
+		let input = __Type(value);
+		if (input.type !== "number") return null;
+		if (!input.finite) return input.value;
+		let digit = __Type(n);
+		digit = !digit.finite || digit < 0 ? 0 : __integer(digit.value);
+
+		if (round === false) {
+			let i = -1;
+			let base = 1;
+			while (++i < n) base = 10*base;
+			return __integer(base*input.value)/base;
+		}
+		return Number(input.valueOf().toFixed(digit));
+	}
+	function __primes(value) {
+		let input = __Type(value);
+		if (!input.finite || input < 2) return [];
+		let list = [2];
+		let i    = 3;
+		while (i <= input) {
+			let isPrime = true;
+			let j = 0; /* não checar o 2 */
+			while (++j < list.length) {
+				if (i % list[j] === 0) {
+					isPrime = false;
+					break;
+				}
+			}
+			if (isPrime) list.push(i);
+			i += 2; /* não checar par */
+		}
+		return list;
+	}
+	function __prime(value) {
+		let input = __Type(value);
+		if (!input.finite || input < 2 || __decimal(input.value) !== 0) return false;
+		let list = __primes(input.value);
+		return list[list.length - 1] === input.value ? true : false;
+	};
+	function __gcd() {
+		/* analisando argumentos */
+		let input =  [];
+		let i     = -1;
+		while (++i < arguments.length) {
+			let data = __Type(arguments[i]);
+			if (!data.finite) continue;
+			let number = __integer(Math.abs(data.value));
+			if (number === 0 || number === 1) return number;
+			input.push(number);
+		}
+		if (input.length < 2)
+			return input.length === 1 ? input[0] : 1;
+		/* obtendo números primos */
+		let min    = Math.min.apply(null, input);
+		let primes = __primes(min);
+		if (primes.length === 0) return 1;
+		/* obtendo o mdc */
+		let mdc = 1;
+		i = 0;
+		/* looping pelos primos */
+		while (i < primes.length) {
+			let test = true;
+			let stop = false;
+
+			/* checando se todos os argumentos são divisíveis pelo primo da vez */
+			let j    = -1;
+			while(++j < input.length) {
+				if (primes[i] > input[j])     stop = true;
+				if (input[j]%primes[i] !== 0)	test = false;
+				if (stop || !test)            break;
+			}
+			/* se todos forem divisíveis, reprocessar argumentos e ajustar mdc ou chamar próximo primo */
+			if (test) {
+				let k = -1;
+				while(++k < input.length)
+					input[k] = input[k]/primes[i];
+				mdc = mdc * primes[i];
+			} else {
+				i++;
+			}
+			/* Primo maior que um dos argumentos: parar processamento */
+			if (stop) break;
+		}
+		return mdc;
+	}
+	function __frac(value, limit) {
+		let input = __Type(value);
+		if (input.type !== "number") return "0";
+		if (!input.finite) return input.toString();
+		let int = Math.abs(__integer(input.value));
+		let flt = Math.abs(__decimal(input.value));
+		if (flt === 0) return int.toString();
+		/* checando argumento limitador */
+		let min = 1;
+		let max = 5;
+		let lim = (min+max)/2;
+		let check = __Type(limit);
+		if (check.finite && check.value !== lim)
+			lim = check < min ? min : (check > max ? max : __integer(check.value));
+		/* divisor, dividendo e números significativos */
+		let div = 1;
+		let dnd = flt * div;
+		let len = 0;
+		while(dnd%1 !== 0) {
+			div = 10*div;
+			dnd = flt * div;
+			/* checando limites */
+			if (__integer(dnd) !== 0) {
+				len++;
+				if (len >= lim) {
+					dnd = __integer(dnd);
+					break;
+				}
+			}
+		}
+		/* obtendo o máximo divisor comum e a fração */
+		let gcd = __gcd(div, dnd);
+		int = int === 0 ? "" : int.toString()+" ";
+		dnd = String(dnd/gcd);
+
+		div = String(div/gcd);
+		return (input < 0 ? "-" : "")+int+dnd+"/"+div;
+	}
+	function __bytes(value) {
+		let input = __Type(value);
+		if (input.finite) return "0 B";
+		value = input < 1 ? 0 : __integer(input.value);
+		let scale = ["B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
+		let i     = scale.length;
+		while (--i >= 0)
+			if (value >= Math.pow(1024,i))
+				return (value/Math.pow(1024,i)).toFixed(2)+" "+scale[i];
+		return value+" B";
+	}
+	function __number(value) {
+		let input = __Type(value);
+		if (input.type !== "number")         return "not numeric";
+		let sign = input < 0 ? "-" : "+";
+		if (input == 0)                      return "zero";
+		if (!input.finite)                   return sign+"infinity";
+		if (input == __integer(input.value)) return sign+"integer";
+		if (input == __decimal(input.value))   return sign+"float";
+		return sign+"real";
+	}
+	function __precision(value, n) {
+		let input = __Type(value);
+		let digit = __Type(n);
+		if (input.type !== "number") return null;
+		if (!__finite(digit.value) || digit.value < 1) return null;
+		digit = __integer(digit.value);
+		input = input.value;
+		if (Math.abs(input) < 1 && input !== 0) {
+			return Math.abs(input) < Math.pow(10, -digit+1) ? input.toExponential(digit-1) : input.toFixed(digit-1);
+		} //FIXME tem que decidir o que quer aqui
+		return input.toPrecision(digit);
+	}
+	function __notation(value, lang, type, code) {
+		let input = __Type(value);
+		if (input.type !== "number") return null;
+		if (!input.finite) return input.value.toString();
+
+		let types = {
+			significant: {
+				minimumSignificantDigits: code,
+				maximumSignificantDigits: code
+			},
+			decimal: {
+				style: "decimal",
+				minimumFractionDigits: code,
+				maximumFractionDigits: code
+			},
+			integer: {
+				style: "decimal",
+				minimumIntegerDigits: code,
+			},
+			percent: {
+				style: "percent",
+				minimumFractionDigits: code,
+				maximumFractionDigits: code
+			},
+			unit: {
+				style: "unit",
+				unit: code
+			},
+			scientific: {
+				style: "decimal",
+				notation: "scientific",
+				minimumFractionDigits: code,
+				maximumFractionDigits: code
+			},
+			engineering: {
+				style: "decimal",
+				notation: "engineering",
+				minimumFractionDigits: code,
+				maximumFractionDigits: code
+			},
+			compact: {
+				style: "decimal",
+				notation: "compact",
+				compactDisplay: code === "short" ? code : "long"
+			},
+			currency: {
+				style: "currency",
+				currency: code,
+				signDisplay: "exceptZero",
+				currencyDisplay: "symbol"
+			},
+			ccy: {
+				style: "currency",
+				currency: code,
+				signDisplay: "exceptZero",
+				currencyDisplay: "narrowSymbol"
+			},
+			nameccy: {
+				style: "currency",
+				currency: code,
+				signDisplay: "auto",
+				currencyDisplay: "name"
+			}
+
+		};
+		type = String(type).toLowerCase();
+		try {
+			return input.value.toLocaleString(lang, (type in types ? types[type] : {}));
+		} catch(e) {}
+		try {
+			input.value.toLocaleString(undefined, (type in types ? types[type] : {}));
+		} catch (e) {}
+		return input.value.toLocaleString();
+	}
+	function wd_no_spaces(txt, char) { /* Troca múltiplos espaço por um caracter*/
+		return txt.replace(/\s+/g, (char === undefined ? " " : char)).trim();
+	};
+	function wd_text_clear(value) { /* elimina acentos */
+		value = new String(value);
+		if ("normalize" in value)
+			return value.normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+
+		let ascii = {
+			A: /[À-Å]/g, C: /[Ç]/g,   E: /[È-Ë]/g, I: /[Ì-Ï]/g,
+			N: /[Ñ]/g,   O: /[Ò-Ö]/g, U: /[Ù-Ü]/g, Y: /[ÝŸ]/g,
+			a: /[à-å]/g, c: /[ç]/g,   e: /[è-ë]/g, i: /[ì-ï]/g,
+			n: /[ñ]/g,   o: /[ò-ö]/g, u: /[ù-ü]/g, y: /[ýÿ]/g
+		};
+		for (let i in ascii)
+			value = value.replace(ascii[i], i);
+
+		return value;
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* == BLOCO 3 ================================================================*/
 
 /*----------------------------------------------------------------------------*/
@@ -9311,6 +9372,8 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		plot: {value: function(){return __Plot2D.apply(null, Array.prototype.slice.call(arguments));}},
 		test: {value: function(){return __setUnique.apply(null, Array.prototype.slice.call(arguments));}},
 		send: {value: function(){return __Request.apply(null, Array.prototype.slice.call(arguments));}},
+		query: {value: function(){return __Query.apply(null, Array.prototype.slice.call(arguments));}},
+		file: {value: function(){return __File.apply(null, Array.prototype.slice.call(arguments));}},
 
 		device: {value: __DEVICECONTROLLER}
 	});

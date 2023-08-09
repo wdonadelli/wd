@@ -6,44 +6,6 @@ function __finite(value) {
 	return input.finite;
 }
 
-
-//FIXME fazer um objeto __$$ e __$ que herdará de __HTML
-/*----------------------------------------------------------------------------*/
-	/**
-	`node __$$(string selector, b{
-	`node root)`
-	Retorna uma lista de elementos do tipo obtida em i{querySelectorAll}i, vazia em caso de erro.
-	v{selector}v - Seletor CSS para busca de elementos.
-	v{root}v - (opcional, i{document}i) Elemento base para busca.}d}l
-	**/
-	function __$$(selector, root) {
-		let elem = null;
-		try {elem = root.querySelectorAll(selector);}
-		catch(e) {
-			try {elem = document.querySelectorAll(selector);}
-			catch(e) {}
-		}
-		let test = __Type(elem);
-		return test.type === "node" ? elem : document.querySelectorAll("#_._");
-	}
-/*----------------------------------------------------------------------------*/
-	/**
-	`node __$(string selector, b{
-	`node root)`
-	Retorna um elemento do tipo obtido em i{querySelector}i ou o retorno de i{__$$}i em caso de erro.
-	v{selector}v - Seletor CSS para busca do elemento.
-	v{root}v - (opcional, i{document}i) Elemento base para busca.}d}l
-	**/
-	function __$(selector, root) {
-		let elem = null;
-		try {elem = root.querySelector(selector);}
-		catch(e) {
-			try {elem = document.querySelector(selector);}
-			catch(e) {}
-		}
-		let test = __Type(elem);
-		return test.type === "node" ? elem : __$$(selector, root);
-	}
 /*----------------------------------------------------------------------------*/
 	/**
 	`node __$$$(object obj, node root)`
@@ -592,67 +554,6 @@ function __finite(value) {
 		return chart.plot(xlabel, ylabel, compare);
 	}
 
-/*----------------------------------------------------------------------------*/
-
-
-/*----------------------------------------------------------------------------*/
-	function wd_read(elem, call, mode) { /* faz a leitura de arquivos */
-		/* testando argumentos */
-		let form = new WDform(elem);
-		if (form.type !== "file")    return null;
-		let arg = wd_vtype(call);
-		if (arg.type !== "function") return null;
-		let files = form.vfile;
-		if (files.length === 0)      return null;
-
-		/* lendo arquivos selecionados */
-		for (let i = 0; i < files.length; i++) {
-			let file = files[i];
-			let mime = String(file.type).split("/")[0].toLowerCase();
-			let method = {
-				binary: "readAsBinaryString", buffer: "readAsArrayBuffer",
-				text:   "readAsText",         audio:  "readAsDataURL",
-				video:  "readAsDataURL",      image:  "readAsDataURL",
-				url:    "readAsDataURL"
-			};
-			/* definindo a informação a ser capturada se argumento é inadequado (binary - default) */
-			if (!(mode in method))
-				mode = mime in method ? mime : "binary";
-
-			/* construindo objeto e chamando janela modal */
-			let reader = new FileReader();
-			__MODALCONTROL.start();
-
-			/* disparador para quando terminar o carregamento */
-			reader.onload = function() {
-				let result = this.result;
-				call({
-					elem:         elem,
-					item:         i,
-					length:       files.length,
-					name:         file.name,
-					size:         file.size,
-					type:         file.type,
-					lastModified: file.lastModified,
-					data:         result
-				});
-				/* fechando janela modal correspondente */
-				__MODALCONTROL.end();
-				return;
-			}
-
-			/* disparador para registrar o andamento do carregamento */
-			reader.onprogress = function(x) {
-				__MODALCONTROL.progress(x.loaded / x.total);
-				return;
-			}
-
-			/* capturando dados conforme especificado em mode */
-			reader[method[mode]](file);
-		}
-
-		return true;
-	}
 
 /*----------------------------------------------------------------------------*/
 	function wd_notify(title, msg) { /* exibe uma notificação, se permitido */
