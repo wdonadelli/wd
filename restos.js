@@ -64,34 +64,6 @@ function __finite(value) {
 		return false;
 	}
 
-/*----------------------------------------------------------------------------*/
-
-	function wd_csv_array(input) {/* CSV para Array */
-		let data = [];
-		let rows = input.trim().split("\n");
-		for (let r = 0; r < rows.length; r++) {
-			data.push([]);
-			let cols = rows[r].split("\t")
-			for (let c = 0; c < cols.length; c++) {
-				let value = cols[c];
-				if ((/^\"(.+)?\"$/).test(value)) /* limpar aspas desnecessárias */
-					value = value.replace(/^\"/, "").replace(/\"$/, "");
-				data[r].push(value);
-			}
-		}
-		return data;
-	}
-
-/*----------------------------------------------------------------------------*/
-	function wd_json(input) { /* se texto, retornar um objeto, se outra coisa, retorna um JSON */
-		if (input === null || input === undefined) return {};
-		if (wd_vtype(input).type === "text") {
-			try      {return JSON.parse(input.toString());}
-			catch(e) {return {};}
-		}
-		try      {return JSON.stringify(input)}
-		catch(e) {return ""}
-	}
 
 
 /*----------------------------------------------------------------------------*/
@@ -196,11 +168,6 @@ function __finite(value) {
 		return data;
 	}
 
-/*----------------------------------------------------------------------------*/
-	function wd_array_count(array, value) { /* retorna a quantidade de vezes que o item aparece */
-		let test = wd_array_search(array, value);
-		return test === null ? 0 : test.length;
-	}
 
 /*----------------------------------------------------------------------------*/
 	function wd_array_csv(array) { /* transforma um array em dados CSV */

@@ -1487,24 +1487,26 @@ const wd = (function() {
 			}
 		},
 		/**
-		- `matrix csv(string div="\t")`: Retorna uma matriz a partir de uma string no formato [CSV](https://www.rfc-editor.org/rfc/rfc4180).
-		- O argumento opcional `div` define o caractere que separa as colunas. Linhas são divididas por uma quadra de linha (`\n`).
+		- `matrix csv(string td="\t", string tr="\n")`: Retorna uma matriz a partir de uma string no formato [CSV](https://www.rfc-editor.org/rfc/rfc4180).
+		- O argumento opcional `td` define o caractere que separa as colunas.
+		- O argumento opcional `tr` define o caractere que separa as linhas.
 		- Se a célula contiver o caractere divisor de coluna ou linha, ela deverá estar cercada por aspas duplas.
 		**/
 		csv: {
-			value: function(div) {
-				div = div === undefined ? "\t" : String(div);
+			value: function(td, tr) {
+				td = td === undefined ? "\t" : String(td);
+				tr = tr === undefined ? "\n" : String(tr);
 				let txt = this._value;
-				if (txt[txt.length - 1] !== "\n") txt = txt+"\n";
+				if (txt[txt.length - 1] !== tr) txt = txt+tr;
 				let table = [[]];
-				while (txt.indexOf(div) >= 0 || txt.indexOf("\n") >= 0) {
+				while (txt.indexOf(td) >= 0 || txt.indexOf(tr) >= 0) {
 					let add, cut, val, quote, cell, line, col;
 					col   = table[table.length - 1];
 					quote = (/^\"/).test(txt);
-					cell  = txt.indexOf(quote ? "\""+div : div);
-					line  = txt.indexOf(quote ? "\"\n"   : "\n");
+					cell  = txt.indexOf(quote ? "\""+td : td);
+					line  = txt.indexOf(quote ? "\""+tr : tr);
 					add   = (line < 0 ? Infinity : line) < (cell < 0 ? Infinity : cell);
-					cut   = quote ? (add ? "\"\n" : "\""+div) : (add ? "\n" : div);
+					cut   = (quote ? "\"" : "")+(add ? tr : td);
 					txt   = txt.split(cut);
 					val   = quote ? txt[0].replace(/^\"/, "") : txt[0];
 					col.push(val);
@@ -3830,7 +3832,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		if (!(this instanceof __Request))	return new __Request(input, method);
 		let check = __Type(input);
 		let test  = __Type(method);
-		let request, type, source;
+		let request, source;
 
 		/* identificar se é um endereço de arquivo ou um arquivo */
 		if (check.files && input.length > 0) {
@@ -3857,7 +3859,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			_request: {value: request},
 			_submit:  {value: test.function ? method : null, writable: true},
 			_done:    {value: false, writable: true},
-			_state:   {value: "?", writable: true},
+			_state:   {value: "", writable: true},
 			_start:   {value: 0, writable: true},
 			_time:    {value: 0, writable: true},
 			_maxtime: {value: 0, writable: true},
@@ -3879,14 +3881,14 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			/* obtendo valores do evento */
 			let source = self._source;
 			let type   = x.type;
-			let state  = self.request.readyState;
+			let state  = self._request.readyState;
 			let errors = ["abort", "timeout", "error"];
 			let states, status;
 			if (source === "file") {
 				states = ["empty", "loading", "closing"];
 				status = null;
 			} else if (source === "path") {
-				status = self.request.status;
+				status = self._request.status;
 				states = ["unsent", "opened", "headers", "loading", "closing"];
 			}
 
@@ -3920,10 +3922,10 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		let i = -1;
 		while (++i < events.length) {
 			let event = events[i];
-			if (event in this.request)
-				this.request[event] = trigger;
-			if ("upload" in this.request && event in this.request.upload)
-				this.request.upload[event] = trigger;
+			if (event in this._request)
+				this._request[event] = trigger;
+			if ("upload" in this._request && event in this._request.upload)
+				this._request.upload[event] = trigger;
 		}
 	}
 
@@ -3963,7 +3965,9 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		-`string target`: Retorna o alvo da requisição.
 		**/
 		target: {
-			get: function() {return this._target;}
+			get: function() {
+				return this._source === "file" ? this._target.name : this._target;
+			}
 		},
 		/**
 		-`object request`: Retorna o objeto `XMLHttpRequest` ou `FileReader` da requisição.
@@ -4019,95 +4023,39 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		- `void abort()`: aborta a requisição;
 		**/
 		abort: {
-			value: function() {this.request.abort();}
+			value: function() {this._request.abort();}
 		},
 		/**
-		- `string text()`: Retorna o resultado da requisição em forma de texto ou `null` se indefinido.
+		- `void content(string type, string td=\t,string tr=\n)`: Retorna o conteúdo da requisição ou `null` se indefinido ou com erro.
+		- O argumento opcional `type`, define o tipo do retorno a partir do conteúdo da requisição, podendo ser `text`, `xml`, `html`, `xhtml`, `svg`, `json` e `csv`.
+		- No caso de retorno `csv`, os argumentos opcionais `td` e `tr` definem os caracteres que separam as colunas e as linhas, respectivamente.//FIXME md5 checksum hex
 		**/
-		text: {
-			value: function() {
-				if (!this.done) return null;
-				try {return this.request.responseText;} catch(e) {return null;}
-			}
-		},
-		/**
-		- `object xml()`: Retorna o resultado da requisição em forma de XML ou `null` se indefinido.
-		**/
-		xml: {
-			value: function() {
-				if (!this.done) return null;
-				try {return this.request.responseXML;} catch(e) {return null;}
-			}
-		},
-		/**
-		- `object json()`: Retorna o resultado da requisição em forma de objeto, se em formato JSON, ou `null` se indefinido.
-		**/
-		json: {
-			value: function() {
-				if (this.text() === null) return null;
-				try {return JSON.parse(this.text());} catch(e) {return null;}
-			}
-		},
-		/**
-		- `matrix csv(string div=\t)`: Retorna o resultado da requisição em forma de matriz ou `null` se indefinido O argumento `div` define o delimitador de coluna.
-		**/
-		csv: {
-			value: function(div) {
-				if (this.text() === null) return null;
-				try {return __String(this.text()).csv(div);} catch(e) {return null;}
-			}
-		},
-		/**
-		- `_setMethods()`: Define os métodos dos eventos da requisição.
-		**/
-		_setMethods: {
-			value: function() {
-				if (this.request !== null) return;
+		content: {
+			value: function(type) {
+				if (!this.done || this._source === null) return null;
+				let value = this._request[(this._source === "path" ? "responseText" : "result")];
+				try {
+					let paser = new DOMParser();
+					let chars = __Type(value).chars;
 
-				this._request = new XMLHttpRequest();
-
-				let self   = this;
-				let method = function(x) {
-					if (self.done) return;
-					self._time   = new Date().valueOf();
-					self._size   = "total"  in x ? x.total  : 0;
-					self._loaded = "loaded" in x ? x.loaded : 0;
-					__MODALCONTROL.progress(self.progress);
-
-					let type   = x.type;
-					let state  = self.request.readyState;
-					let status = self.request.status;
-					let errors = ["abort", "timeout", "error"];
-
-					if (status === 404) {
-						self._done  = true;
-						self._state = "notfound";
-					} else if (errors.indexOf(type) >= 0) {
-						self._done  = true;
-						self._state = type;
-					} else if (state === 4 && type === "loadend") {
-						self._done  = true;
-						self._state = "done";
-					} else {
-						let states  = ["unsent", "opened", "headers", "loading", "closing"];
-						self._state = states[state];
+					switch(type) {
+						case "text":
+							return chars ? value : null;
+						case  "xml":
+							return chars ? paser.parseFromString(value, "application/xml") : null;
+						case "html":
+							return chars ? paser.parseFromString(value, "text/html") : null;
+						case "xhtml":
+							return chars ? paser.parseFromString(value, "application/xhtml+xml") : null;
+						case "svg":
+							return chars ? paser.parseFromString(value, "image/svg+xml") : null;
+						case "json":
+							return chars ? JSON.parse(value) : null;
+						case "csv":
+							return chars ? __String(value).csv() : null;
 					}
-
-					if (self.done) __MODALCONTROL.end();
-					if (self._submit !== null) self._submit(self);
-				}
-
-				let events = ["onabort", "onerror", "onload", "onloadend", "onloadstart",
-				"onprogress", "ontimeout", "onreadystatechange"];
-				let i = -1;
-				while (++i < events.length) {
-					let event = events[i];
-					if (event in this.request)
-						this.request[event] = method;
-					if (event in this.request.upload)
-						this.request.upload[event] = method;
-				}
-
+					return this._source === "path" ? this._request.response : value;
+				} catch(e) {return null;}
 			}
 		},
 		/**
@@ -4120,12 +4068,12 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				this._done  = false;
 				this._notfound = false;
 				if (this._source === "path")
-					this.request.timeout = this.maxtime;
+					this._request.timeout = this.maxtime;
 			}
 		},
 		/**
 		- `void GET(void data)`: Envia uma requisição com o método `GET`.
-		- O argumento `data` diz respeito aos dados a serem enviados na requisição.
+		- O argumento opcional `data` diz respeito aos dados a serem enviados na requisição.
 		**/
 		GET: {
 			value: function(data) {
@@ -4139,14 +4087,14 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				try {
 					this._reset();
 					__MODALCONTROL.start();
-					this.request.open("GET", action, true);
+					this._request.open("GET", action, true);
 				} catch(e) {return null;}
-				this.request.send(null);
+				this._request.send(null);
 			}
 		},
 		/**
 		- `void POST(void data)`: Envia uma requisição com o método `POST`.
-		- O argumento `data` diz respeito aos dados a serem enviados na requisição.
+		- O argumento opcional `data` diz respeito aos dados a serem enviados na requisição.
 		**/
 		POST: {
 			value: function(data) {
@@ -4156,15 +4104,17 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				try {
 					this._reset();
 					__MODALCONTROL.start();
-					this.request.open("POST", this._target, true);
+					this._request.open("POST", this._target, true);
 				} catch(e) {return null;}
 				if (check.nonempty)
-					this.request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-				this.request.send(data);
+					this._request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+				this._request.send(data);
 			}
 		},
-
-
+		/**
+		- `void read(string readAs)`: Lê o conteúdo de um arquivo (objeto `File`).
+		- O argumento opcional `readAs` define o modo de leitura, que pode ser: `binary`, `text` ou `buffer`. Se omitido, será atribído de acordo com o tipo do arquivo ou `binary`.
+		**/
 		read: {
 			value: function(readAs) {
 				if (this._source !== "file") return null;
@@ -4175,13 +4125,13 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					url:    "readAsDataURL"
 				};
 
-				let mime = String(this.target.type).split("/")[0].toLowerCase();
+				let mime = String(this._target.type).split("/")[0].toLowerCase();
 				if (!(mime in mode)) mime = "binary";
 				let type = readAs in mode ? mode[readAs] : mode[mime];
 				try {
 					this._reset();
 					__MODALCONTROL.start();
-					this.request[type](this.target);
+					this._request[type](this._target);
 				} catch(e) {return null;}
 			}
 		}
