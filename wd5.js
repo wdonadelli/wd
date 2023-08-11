@@ -3744,8 +3744,6 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		},
 	});
 
-
-
 	/**
 	`constructor __Query(string selector, node root=document)`
 	Construtor para obter elementos HTML.
@@ -4072,48 +4070,41 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			}
 		},
 		/**
-		- `void GET(void data)`: Envia uma requisição com o método `GET`.
-		- O argumento opcional `data` diz respeito aos dados a serem enviados na requisição.
+		- `void send(void data, string method="POST")`: Envia uma requisição web.
+		- Os argumentos opcionais `data` e `method` definem o pacote de dados a ser enviado e o tipo do envio, `GET`ou `POST`, respectivamente.
 		**/
-		GET: {
-			value: function(data) {
+		send: {
+			value: function(data, method) {
 				if (this._source !== "path") return null;
 				let check  = __Type(data);
 				let action = this._target.replace(/\#.+$/, "");
-				if (check.nonempty) {
-					data   = String(data).trim();
-					action = action.indexOf("?") < 0 ? action+"?"+data : action+"&"+data;
+				method = String(method).trim().toUpperCase();
+				if (method === "GET") {
+					try {
+						if (check.nonempty) {
+							data   = String(data).trim();
+							action = action.indexOf("?") < 0 ? action+"?"+data : action+"&"+data;
+						}
+						this._reset();
+						__MODALCONTROL.start();
+						this._request.open("GET", action, true);
+						this._request.send(null);
+					} catch(e) {return null;}
+				} else {
+					try {
+						this._reset();
+						__MODALCONTROL.start();
+						this._request.open("POST", this._target, true);
+						if (check.nonempty)
+							this._request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+						this._request.send(data);
+					} catch(e) {return null;}
 				}
-				try {
-					this._reset();
-					__MODALCONTROL.start();
-					this._request.open("GET", action, true);
-				} catch(e) {return null;}
-				this._request.send(null);
-			}
-		},
-		/**
-		- `void POST(void data)`: Envia uma requisição com o método `POST`.
-		- O argumento opcional `data` diz respeito aos dados a serem enviados na requisição.
-		**/
-		POST: {
-			value: function(data) {
-				if (this._source !== "path") return null;
-				let check = __Type(data);
-				data = String(data).trim().replace(/\#.+$/, "");
-				try {
-					this._reset();
-					__MODALCONTROL.start();
-					this._request.open("POST", this._target, true);
-				} catch(e) {return null;}
-				if (check.nonempty)
-					this._request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-				this._request.send(data);
 			}
 		},
 		/**
 		- `void read(string readAs)`: Lê o conteúdo de um arquivo (objeto `File`).
-		- O argumento opcional `readAs` define o modo de leitura, que pode ser: `binary`, `text` ou `buffer`. Se omitido, será atribído de acordo com o tipo do arquivo ou `binary`.
+		- O argumento opcional `readAs` define o modo de leitura, que pode ser `binary`, `text` ou `buffer`. Se omitido, será atribído de acordo com o tipo do arquivo ou `binary`.
 		**/
 		read: {
 			value: function(readAs) {
@@ -4138,74 +4129,135 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		
 	});
 
-	function wd_read(elem, call, mode) { /* faz a leitura de arquivos */
-		/* testando argumentos */
-		let form = new WDform(elem);
-		if (form.type !== "file")    return null;
-		let arg = wd_vtype(call);
-		if (arg.type !== "function") return null;
-		let files = form.vfile;
-		if (files.length === 0)      return null;
+/*============================================================================*/
+	/**
+	`constructor __SVG(string selector, node root=document)`
+	Construtor para obter elementos HTML.
+	O argumento `selector` é um seletor CSS que identifica os elementos HTML, e o argumento opcional `root` define o elemento raiz da busca.
+	**/
+	function __SVG(width, height, xmin, ymin) {
+		if (!(this instanceof __SVG))	return new __SVG(width, height, xmin, ymin);
+		let svg  = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+		let vbox = [xmin, ymin, width, height];
+		let main = [0, 0, 100, 100];
+		vbox.forEach(function (v,i,a) {
+			let check = __Type(v);
+			a[i] = check.finite ? Math.abs(check.value) : main[i];
+		});
+		svg.setAttribute("viewBox", vbox.join(" "));
+		Object.defineProperties(this, {
+			_svg:  {value: svg},
+			_last: {value: svg, writable: true}
+		});
 
-		/* lendo arquivos selecionados */
-		for (let i = 0; i < files.length; i++) {
-			let file = files[i];
-			let mime = String(file.type).split("/")[0].toLowerCase();
-			let method = {
-				binary: "readAsBinaryString", buffer: "readAsArrayBuffer",
-				text:   "readAsText",         audio:  "readAsDataURL",
-				video:  "readAsDataURL",      image:  "readAsDataURL",
-				url:    "readAsDataURL"
-			};
-			/* definindo a informação a ser capturada se argumento é inadequado (binary - default) */
-			if (!(mode in method))
-				mode = mime in method ? mime : "binary";
+		//FIXME apagar isso depois de pronto
+		let x = document.getElementById("html-block");
+		x.innerHTML = "";
+		x.appendChild(svg);
+		x.style.width =  "auto";
+		x.style.margin =  "0 40% 0 40%";
 
-			/* construindo objeto e chamando janela modal */
-			let reader = new FileReader();
-			__MODALCONTROL.start();
 
-			/* disparador para quando terminar o carregamento */
-			reader.onload = function() {
-				let result = this.result;
-				call({
-					elem:         elem,
-					item:         i,
-					length:       files.length,
-					name:         file.name,
-					size:         file.size,
-					type:         file.type,
-					lastModified: file.lastModified,
-					data:         result
-				});
-				/* fechando janela modal correspondente */
-				__MODALCONTROL.end();
-				return;
-			}
 
-			/* disparador para registrar o andamento do carregamento */
-			reader.onprogress = function(x) {
-				__MODALCONTROL.progress(x.loaded / x.total);
-				return;
-			}
-
-			/* capturando dados conforme especificado em mode */
-			reader[method[mode]](file);
-		}
-
-		return true;
 	}
 
+	Object.defineProperties(__SVG.prototype, {
+		constructor: {value: __SVG},
+		last: {
+			get: function()  {return this._last;},
+			set: function(svg) {
+				this._svg.appendChild(svg);
+				this._last = svg;
+			}
+		},
+		attribute: {
+			value: function(attr) {
+				for (let i in attr) this.last.setAttribute(i, attr[i]);
+				return this;
+			}
+		},
+		tip: {
+			value: function(value) {
+				let svg = document.createElementNS("http://www.w3.org/2000/svg", "title");
+				svg.textContent = value;
+				this.last.appendChild(svg);
+				return this;
+			}
+		},
+		lines: {
+			value: function(x, y, close) {
+				let svg = document.createElementNS("http://www.w3.org/2000/svg", "path");
+				x.forEach(function(v,i,a) {
+					a[i] = [(i === 0 ? "M" : "L"), v, y[i]].join(" ");
+				});
+				if (close === true) x.push("Z");
+				this.last = svg;
+				return this.attribute({d: x.join(" ")});
+			}
+		},
+		circle: {
+			value: function(cx, cy, r) {
+				let svg = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+				this.last = svg;
+				return this.attribute({cx: cx, cy: cy, r: r});
 
+			}
+		},
+		semicircle: {
+			value: function(cx, cy, r, start, width) {//FIXME quanto width é negativo, o lance é diferente
+				if (Math.abs(width) >= 360) return this.circle(cx, cy, r);
+				let svg = document.createElementNS("http://www.w3.org/2000/svg", "path");
+				start  = 2*Math.PI*start/360;
+				width  = 2*Math.PI*width/360;
+				let x1 = cx + r*Math.cos(start);
+				let y1 = cy - r*Math.sin(start);
+				let x2 = cx + r*Math.cos(start + width);
+				let y2 = cy - r*Math.sin(start + width);
+				let lg = width > Math.PI ? 1 : 0;
+				let  d = ["M", cx, cy, "L", x1, y1, "A", r, r, 0, lg, 0, x2, y2, "Z"];
+				this.last = svg;
+				return this.attribute({d: d.join(" ")});
+			}
+		},
+		rect: {
+			value: function(x, y, width, height) {
+				let svg   = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+				this.last = svg;
+				return this.attribute({x: x, y: y, width: width, height: height});
 
-
-
-
-
-
-
-
-
+			}
+		},
+		path: {
+			value: function(path) {
+				let svg = document.createElementNS("http://www.w3.org/2000/svg", "path");
+				this.last = svg;
+				return this.attribute({d: path});
+			}
+		},
+		text: {
+			value: function(x, y, text, point) {
+				let svg     = document.createElementNS("http://www.w3.org/2000/svg", "text");
+				let vanchor = ["start", "middle", "end"];
+				let vbase   = ["auto", "middle", "hanging"];
+				let anchor  = {n: 1, ne: 2, e: 2, se: 2, s: 1, sw: 0, w: 0, nw: 0, c: 1};
+				let base    = {n: 2, ne: 2, e: 1, se: 0, s: 0, sw: 0, w: 1, nw: 2, c: 1};
+				let attr    = {
+					x: point[0] === "v" ? -y : x,
+					y: point[0] === "v" ? x : y,
+					"text-anchor":       vanchor[anchor[point.substr(1)]],
+					"dominant-baseline": vbase[base[point.substr(1)]],
+					"transform":         point[0] === "v" ? "rotate(270)" : "",
+				};
+				svg.textContent = String(text).trim();
+				this.last = svg;
+				return this.attribute(attr);
+			}
+		},
+		curve: {
+			value: function() {}
+		
+		}
+	});
 
 
 
@@ -9323,7 +9375,8 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		test: {value: function(){return __setUnique.apply(null, Array.prototype.slice.call(arguments));}},
 		send: {value: function(){return __Request.apply(null, Array.prototype.slice.call(arguments));}},
 		query: {value: function(){return __Query.apply(null, Array.prototype.slice.call(arguments));}},
-		file: {value: function(){return __File.apply(null, Array.prototype.slice.call(arguments));}},
+		svg: {value: function(){return __SVG.apply(null, Array.prototype.slice.call(arguments));}},
+		
 
 		device: {value: __DEVICECONTROLLER}
 	});
