@@ -3802,23 +3802,6 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		return all === null ? __$(one, root) : __$$(all, root);
 	}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /*============================================================================*/
 	/**
 	###Requisições e Arquivos
@@ -4131,12 +4114,13 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 
 /*============================================================================*/
 	/**
-	`constructor __SVG(string selector, node root=document)`
-	Construtor para obter elementos HTML.
-	O argumento `selector` é um seletor CSS que identifica os elementos HTML, e o argumento opcional `root` define o elemento raiz da busca.
+		###Figuras
+	`constructor __SVG(number width=100, number height=100, number xmin=0, number ymin=0)`
+	Construtor de imagens SVG.
+	Os argumentos são opcionais e estão relacionados ao atributo [`viewBox`](https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/viewBox) do elemento SVG.
 	**/
 	function __SVG(width, height, xmin, ymin) {
-		if (!(this instanceof __SVG))	return new __SVG(width, height, xmin, ymin);
+		if (!(this instanceof __SVG)) return new __SVG(width, height, xmin, ymin);
 		let svg  = document.createElementNS("http://www.w3.org/2000/svg", "svg");
 		let vbox = [xmin, ymin, width, height];
 		let main = [0, 0, 100, 100];
@@ -4163,6 +4147,9 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 
 	Object.defineProperties(__SVG.prototype, {
 		constructor: {value: __SVG},
+		/**
+		-`node last`: Define ou retorna o último nó adicionado ao SVG.
+		**/
 		last: {
 			get: function()  {return this._last;},
 			set: function(svg) {
@@ -4170,13 +4157,21 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				this._last = svg;
 			}
 		},
+		/**
+		- `object attribute(object attr)`: Define os atributos do último elemento adicionado e retorna o próprio objeto.
+		- O argumento `attr` é um objeto cujas chaves representam o valor do atributo e seu respectivo valores.
+		**/
 		attribute: {
 			value: function(attr) {
 				for (let i in attr) this.last.setAttribute(i, attr[i]);
 				return this;
 			}
 		},
-		tip: {
+		/**
+		- `object title(string value)`: Define um título (dica) ao último elemento adicionado e retorna o próprio objeto.
+		- O argumento `value` é o texto da dica.
+		**/
+		title: {
 			value: function(value) {
 				let svg = document.createElementNS("http://www.w3.org/2000/svg", "title");
 				svg.textContent = value;
@@ -4184,6 +4179,10 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return this;
 			}
 		},
+		/**
+		- `object lines(array x, array y, boolean close=false)`: Define diversos segmentos de reta a partir de um conjunto de coordenadas e retorna o próprio objeto.
+		- Os argumentos `x` e `y` são as coordenadas (x,y) e o argumento `close` indica se o último ponto deve voltar à origem.
+		**/
 		lines: {
 			value: function(x, y, close) {
 				let svg = document.createElementNS("http://www.w3.org/2000/svg", "path");
@@ -4195,6 +4194,10 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return this.attribute({d: x.join(" ")});
 			}
 		},
+		/**
+		- `object circle(number cx, number cy, number r)`: Define um círculo e retorna o próprio objeto.
+		- Os argumentos `cx`, `cy` e `r` são o centro em x e y e o raio, respectivamente.
+		**/
 		circle: {
 			value: function(cx, cy, r) {
 				let svg = document.createElementNS("http://www.w3.org/2000/svg", "circle");
@@ -4203,6 +4206,10 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 
 			}
 		},
+		/**
+		- `object semicircle(number cx, number cy, number r, number start, number width)`: Define um semicírculo e retorna o próprio objeto.
+		- Os argumentos `cx`, `cy` e `r` são o centro em x e y e o raio, respectivamente. Os argumentos `start` e `width` indicam o ângulo inicial e seu tamanho, respectivamente.
+		**/
 		semicircle: {
 			value: function(cx, cy, r, start, width) {//FIXME quanto width é negativo, o lance é diferente
 				if (Math.abs(width) >= 360) return this.circle(cx, cy, r);
@@ -4219,6 +4226,10 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return this.attribute({d: d.join(" ")});
 			}
 		},
+		/**
+		- `object rect(number x, number y, number width, number height)`: Define um retângulo e retorna o próprio objeto.
+		- Os argumentos `x` e `y` definem o ponto de partida da figura e os argumentos `width` e `height` definem o comprimento e a altura do retângulo, respectivamente.
+		**/
 		rect: {
 			value: function(x, y, width, height) {
 				let svg   = document.createElementNS("http://www.w3.org/2000/svg", "rect");
@@ -4227,6 +4238,10 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 
 			}
 		},
+		/**
+		- `object path(string path)`: Define um nó SVG a partir de uma sequência de comandos e retorna o próprio objeto.
+		- O argumento `path` define os comandos.
+		**/
 		path: {
 			value: function(path) {
 				let svg = document.createElementNS("http://www.w3.org/2000/svg", "path");
@@ -4234,6 +4249,10 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return this.attribute({d: path});
 			}
 		},
+		/**
+		- `object text(number x, number y, string text, string point)`: Define um SVG textual e retorna o próprio objeto.
+		- Os argumentos `x` e `y` definem o ponto de referência do texto. O argumento `text` define o valor do texto e o argumento `point` define a âncora da referência que começa com `v` (vertical) ou `h` (horizontal) seguida da inicial dos pontos cardeais (`n`, `s`, `w`, `l`, etc...).
+		**/
 		text: {
 			value: function(x, y, text, point) {
 				let svg     = document.createElementNS("http://www.w3.org/2000/svg", "text");
@@ -4253,11 +4272,105 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return this.attribute(attr);
 			}
 		},
-		curve: {
-			value: function() {}
-		
-		}
+		/**
+		- `object ellipse(number cx, number cy, number rx, number ry)`: Define uma elípse e retorna o próprio objeto.
+		- Os argumentos `cx`, `cy`, `rx` e `ry` definem o centro de referência em x e y e os raios de x e y, respectivamente.
+		**/
+		ellipse: {
+			value: function(cx, cy, rx, ry) {
+				let svg = document.createElementNS("http://www.w3.org/2000/svg", "ellipse");
+				this.last = svg;
+				return this.attribute({cx: cx, cy: cy, rx: rx, ry: ry});
+			}
+		},
 	});
+
+
+
+/*============================================================================*/
+	/**
+	###Análise de Dados
+	`constructor __Data2D(array x, array y)`
+	Análise de dados em duas dimensões.
+	Os argumentos `x` e `y` são as coordendas dos conjunto de dados.
+	**/
+	function __Data2D(x, y) {
+		if (!(this instanceof __Data2D)) return new __Data2D(x, y);
+		let data = this.fix(x, y);
+		Object.defineProperties(this, {
+			_x:   {value: data.x},
+			_y:   {value: data.y},
+			_fit: {},
+		});
+	}
+
+	Object.defineProperties(__Data2D.prototype, {
+		constructor: {value: __Data2D},
+		/**
+		- `object fix(array x, array, y)`: Ajusta os valores de `x` e `y`(argumentos) e retorna um objeto (chaves x, y) com o resultado.
+		**/
+		fix: {
+			value: function(x, y) {
+				let data = [];
+				/* só finitos */
+				x.forEach(function(v,i,a){
+					let X = __Type(x[i]);
+					let Y = __Type(y[i]);
+					if (!Y.finite)
+						return;
+					if (X.finite)
+						data.push({x: X.value, y: Y.value});
+					else if (X.date || X.time || X.datetime)
+						data.push({x: __DateTime(X.value).valueOf(), y: Y.value});
+				});
+				/* ordenando x */
+				data.sort(function(a, b) {
+					return a.x > b.x;
+				});
+				/* retornando valores */
+				let fix = {x: [], y: []};
+				let i   = -1;
+				while (++i < data.length) {
+					fix.x.push(data[i].x);
+					fix.y.push(data[i].y);
+				}
+				return fix;
+			}
+		},
+		/**
+		- `object leastSquares(array x, array, y)`: Aplica o método dos mínimos quadrados ao conjunto (x,y) e retorna um objeto contendo a constante linear.
+		**/
+		leastSquares: {
+			value: function (x, y) {
+				let width = x.length;
+				let sumX  = 0;
+				let sumY  = 0;
+				let sumX2 = 0;
+				let sumXY = 0;
+				let i = -1;
+				while(++i < width) {
+					sumX  += x[i];
+					sumY  += y[i];
+					sumX2 += x[i]*x[i];
+					sumXY += x[i]*y[i];
+				}
+				let data = {};
+				data.a = ((width * sumXY) - (sumX * sumY)) / ((width * sumX2) - (sumX * sumX));
+				data.b = ((sumY) - (sumX * data.a)) / (width);
+				return data;
+			}
+		},
+
+
+
+
+
+
+
+
+
+	});
+
 
 
 
@@ -4451,8 +4564,16 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		return Math.hypot.apply(null, items) / Math.sqrt(items.length);
 	}
 /*----------------------------------------------------------------------------*/
+
+
+
+
+
+
+
+
+
 	/**
-	`/**
 	`constructor __Fit2D(b{array}b x, b{array|function}b y)`
 	Objeto para análise de conjuntos de dados em duas dimensões com foco em ajuste de curvas.
 	v{x}v - Conjunto de dados em v{x}v.
@@ -4731,14 +4852,14 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 	/**4{Plotagem de Dados}4	*/
 /*----------------------------------------------------------------------------*/
 	/**
-	`constructor __Data2D(string title, string xLabel, string yLabel)`
+	`constructor __Table2Desquecido(string title, string xLabel, string yLabel)`
 	Objeto para preparar dados para construção de gráfico 2D (v{x, y}v).
 	v{title}v - Título do gráfico.}d
 	v{xLabel}v - Nome do eixo v{x}v.}d
 	v{yLabel}v - Nome do eixo v{y}v.}d}l l{
 	**/
-	function __Data2D(title, xLabel, yLabel) {
-		if (!(this instanceof __Data2D)) return new __Data2D(title, xLabel, yLabel);
+	function __Table2Desquecido(title, xLabel, yLabel) {
+		if (!(this instanceof __Table2Desquecido)) return new __Table2Desquecido(title, xLabel, yLabel);
 		Object.defineProperties(this, {
 			_title:  {value: title,    writable: true},     /* título do gráfico */
 			_xLabel: {value:xLabel,    writable: true},     /* nome do eixo x */
@@ -4751,8 +4872,8 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		});
 	}
 
-	Object.defineProperties(__Data2D.prototype, {
-		constructor: {value: __Data2D},
+	Object.defineProperties(__Table2Desquecido.prototype, {
+		constructor: {value: __Table2Desquecido},
 		_max: {value: Math.max(window.screen.width, window.screen.height)},
 		_min: {value: Math.min(window.screen.width, window.screen.height)},
 		/**
@@ -5049,17 +5170,17 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 /*----------------------------------------------------------------------------*/
 	/**
 	`constructor __Plot2D(string title, string xLabel, string yLabel)`
-	Ferramenta para renderizar o gráfico 2D (herda características de i{__Data2D}i).
+	Ferramenta para renderizar o gráfico 2D (herda características de i{__Table2Desquecido}i).
 	v{title}v - Título do gráfico.}d
 	v{xLabel}v - Nome do eixo v{x}v.}d
 	v{yLabel}v - Nome do eixo v{y}v.}d}l l{
 	**/
 	function __Plot2D(title, xLabel, yLabel) {
 		if (!(this instanceof __Plot2D)) return new __Plot2D(title, xLabel, yLabel);
-		__Data2D.call(this, title, xLabel, yLabel);
+		__Table2Desquecido.call(this, title, xLabel, yLabel);
 	}
 
-	__Plot2D.prototype = Object.create(__Data2D.prototype, {
+	__Plot2D.prototype = Object.create(__Table2Desquecido.prototype, {
 		constructor: {value: __Plot2D},
 		/**
 		`number _xp(b{number}b x)}t
@@ -9370,12 +9491,13 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		number: {value: function(){return __Number.apply(null, Array.prototype.slice.call(arguments));}},
 		string: {value: function(){return __String.apply(null, Array.prototype.slice.call(arguments));}},
 		arr: {value: function(){return __setHarm.apply(null, Array.prototype.slice.call(arguments));}},
-		fit: {value: function(){return __Fit2D.apply(null, Array.prototype.slice.call(arguments));}},
+		data2D: {value: function(){return __Data2D.apply(null, Array.prototype.slice.call(arguments));}},
 		plot: {value: function(){return __Plot2D.apply(null, Array.prototype.slice.call(arguments));}},
 		test: {value: function(){return __setUnique.apply(null, Array.prototype.slice.call(arguments));}},
 		send: {value: function(){return __Request.apply(null, Array.prototype.slice.call(arguments));}},
 		query: {value: function(){return __Query.apply(null, Array.prototype.slice.call(arguments));}},
 		svg: {value: function(){return __SVG.apply(null, Array.prototype.slice.call(arguments));}},
+		matrix: {value: function(){return __Table.apply(null, Array.prototype.slice.call(arguments));}},
 		
 
 		device: {value: __DEVICECONTROLLER}
