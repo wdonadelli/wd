@@ -2221,8 +2221,8 @@ const wd = (function() {
 			get: function() {return this._value.length;}
 		},
 		/**
-		- `array only(string type, boolean keep, boolean change)`: Retorna uma lista somente com os tipos de itens definidos.
-		- O argumento `type` define o tipo do item a ser mantido na lista (ver atributos do objeto `__Type`). O argumento opcional `keep`, se verdadeiro, manterá na lista o item não enquadrado no tipo definido com o valor `null`. O argumento opcional `change`, se verdadeiro, alterará o item casado para o valor (`valueOf`) do objeto `__Type`. Os valores padrão de `keep` e `change` são falso e verdadeiro, respectivamente.
+		- `array only(string type, boolean keep=false, boolean change=true)`: Retorna uma lista somente com os tipos de itens definidos.
+		- O argumento `type` define o tipo do item a ser mantido na lista (ver atributos do objeto `__Type`). O argumento opcional `keep`, se verdadeiro, manterá na lista o item não enquadrado no tipo definido com o valor `null`. O argumento opcional `change`, se verdadeiro, alterará o item casado para o valor (`valueOf`) do objeto `__Type`.
 		**/
 		only: {
 			value: function(type, keep, change) {
@@ -2240,21 +2240,23 @@ const wd = (function() {
 		},
 		/**
 		- `array convert(function f, string type)`: Retorna uma lista com o resultado de `f(x)` ou `null` se algo falhar.
-		- O argumento `f` corresponde à função a ser aplicada aos itens da lista. A função receberá um argumento que corresponderá ao item da lista que será substituído pelo retorno da função. O argumento opcional `type`, se definido, retornará apenas os valores de `f(x)` que se enquadram no tipo definido (ver atributos do objeto `__Type`).
+		- O argumento `f` corresponde à função a ser aplicada aos itens da lista. O item da lista será o argumento da função cujo retorno substituirá o valor do item. O argumento opcional `type` informa o tipo do resultado esperado de acordo com o método `__Type` que, se diferente, devolverá um valor nulo.
 		**/
 		convert: {
 			value: function(f, type) {
 				if (!__Type(f).function) return null;
-				let only = arguments.length < 2 ? false : true;
-				let list = only ? this.only(type, true) : this._value.slice();
-				list.forEach(function(v,i,a){
+				let list = this._value.slice();
+				list.forEach(function(v,i,a) {
 					try {
 						let value = f(v);
-						if (only)
-							a[i] = v === null || __Type(value)[type] !== true ? null : value;
+						let check = __Type(value);
+						if (__Type(type).chars && type in check)
+							a[i] = check[type] ? check.value : null;
 						else
-							a[i] = value
-					} catch(e) {a[i] = null;}
+							a[i] = value;
+					} catch(e) {
+						a[i] = null;
+					}
 				});
 				return list;
 			}
@@ -4290,58 +4292,91 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 /*============================================================================*/
 	/**
 	###Análise de Dados
-	`constructor __Data2D(array x, array y)`
+	`constructor __Data2D(array x, number|array|function y, number|array|function z)`
 	Análise de dados em duas dimensões.
-	Os argumentos `x` e `y` são as coordendas dos conjunto de dados.
+	O argumento `x` corresponde aos valores referenciais e o argumento `y` corresponde ao valor respectivo e  pode ser uma lista de valores, uma constante ou uma função. No caso de função, `y` receberá o valor de `y(x)`.
 	**/
 	function __Data2D(x, y) {
 		if (!(this instanceof __Data2D)) return new __Data2D(x, y);
-		let data = this.fix(x, y);
+
+
+		/* avaliando X */
+		let xtest = __Type(x);
+		if (!xtest.array) x = [];
+		x = __Array(x).convert(function(n) {
+			let check = __Type(n);
+			if (check.finite)
+				return check.value;
+			if (check.date || check.time || check.datetime)
+				return __DateTime(check.value).valueOf();
+			return null;
+		}, "finite");
+
+		/* avaliando Y */
+		let ytest = __Type(y);
+		if (ytest.array)
+			y = __Array(y).only("finite", true);
+		else if (ytest.finite)
+			y = __Array(x).convert(function(n) {return ytest.value;}, "finite");
+		else if (ytest.function)
+			y = __Array(x).convert(y, "finite");
+		else
+			y = [];
+
+		/* igualando conjunto */
+		let less = y.length < x.length ? y : x;
+		let data = [];
+		less.forEach(function(v,i,a) {
+			if (x[i] === null || y[i] === null) return;
+			data.push({x: x[i], y: y[i]});
+		});
+
+		/* ordenando em x */
+		data.sort(function(a, b) {return a.x > b.x;});
+
+		/* retornando valores */
+		x     = [];
+		y     = [];
+		let i = -1;
+		while (++i < data.length) {
+			x.push(data[i].x);
+			y.push(data[i].y);
+		}
 		Object.defineProperties(this, {
-			_x:   {value: data.x},
-			_y:   {value: data.y},
-			_fit: {},
+			_x:   {value: x},
+			_y:   {value: y},
 		});
 	}
 
 	Object.defineProperties(__Data2D.prototype, {
 		constructor: {value: __Data2D},
 		/**
-		- `object fix(array x, array, y)`: Ajusta os valores de `x` e `y`(argumentos) e retorna um objeto (chaves x, y) com o resultado.
+		- `array x`: Retorna os valores do argumento `x` ajustado.
 		**/
-		fix: {
-			value: function(x, y) {
-				let data = [];
-				/* só finitos */
-				x.forEach(function(v,i,a){
-					let X = __Type(x[i]);
-					let Y = __Type(y[i]);
-					if (!Y.finite)
-						return;
-					if (X.finite)
-						data.push({x: X.value, y: Y.value});
-					else if (X.date || X.time || X.datetime)
-						data.push({x: __DateTime(X.value).valueOf(), y: Y.value});
-				});
-				/* ordenando x */
-				data.sort(function(a, b) {
-					return a.x > b.x;
-				});
-				/* retornando valores */
-				let fix = {x: [], y: []};
-				let i   = -1;
-				while (++i < data.length) {
-					fix.x.push(data[i].x);
-					fix.y.push(data[i].y);
-				}
-				return fix;
-			}
+		x: {
+			get: function() {return this._x;}
+		} ,
+		/**
+		- `array y`: Retorna os valores do argumento `y` ajustado.
+		**/
+		y: {
+			get: function() {return this._y;}
 		},
 		/**
-		- `object leastSquares(array x, array, y)`: Aplica o método dos mínimos quadrados ao conjunto (x,y) e retorna um objeto contendo a constante linear.
+		- `boolean error`: Se o conjunto tiver menos que um par de valores, retornará verdadeiro.
+		**/
+		error: {
+			get: function() {return this._y.length < 2 || this._x.length < 2;}
+		},
+		/**
+		- `object leastSquares`: Aplica o método dos mínimos quadrados ao conjunto de dados e retorna objeto contendo o coeficiente angular `a` e o linear `b` de `y = ax + b`.
 		**/
 		leastSquares: {
-			value: function (x, y) {
+			get: function () {
+				if (this.error) return {a: 0, b: 0};
+				if ("_leastSquares" in this) return this._leastSquares;
+				let x     = this.x;
+				let y     = this.y;
 				let width = x.length;
 				let sumX  = 0;
 				let sumY  = 0;
@@ -4357,17 +4392,94 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				let data = {};
 				data.a = ((width * sumXY) - (sumX * sumY)) / ((width * sumX2) - (sumX * sumX));
 				data.b = ((sumY) - (sumX * data.a)) / (width);
-				return data;
+				this._leastSquares = data;
+				return this.leastSquares;
 			}
 		},
-
-
-
-
-
-
-
-
+		/**
+		- `object standardDeviation`: Retorna o desvio padrão entre o conjunto de dados.
+		**/
+		standardDeviation: {
+			get: function() {
+				if (this.error) return Infinity;
+				if ("_standardDeviation" in this) return this._standardDeviation;
+				let data = [];
+				let i    = -1;
+				while(++i < this.x.length)
+					data.push(this.x[i] - this.y[i]);
+				this._standardDeviation = Math.hypot.apply(null, data) / Math.sqrt(data.length);
+				return this.standardDeviation;
+			}
+		},
+		linearFit: {
+			get: function() {
+				if (this.error) return null;
+				if ("_linearFit" in this) return this._linearFit;
+				let sqrs = this.leastSquares;
+				let a    = sqrs.a;
+				let b    = sqrs.b;
+				let func = function(x) {return a*x + b;}
+				let devi = __Data2D(this.y, __Array(this.x).convert(func, "finite")).standardDeviation;
+				let math = "y = (a)x + (b)";
+				let show = math.replace("a", a).replace("b", b);
+				this._linearFit = {
+					t: "linear", a: a, b: b, f: func, d: devi, m: math, s: show};
+				return this.linearFit;
+			}
+		},
+		geometricFit: {
+			get: function() {
+				if (this.error) return null;
+				if ("_geometricFit" in this) return this._geometricFit;
+				let x    = __Array(this.x).convert(Math.log, "finite");
+				let y    = __Array(this.y).convert(Math.log, "finite");
+				let data = __Data2D(x, y);
+				if (data.error) return null;//FIXME
+				let sqrs = data.leastSquares;
+				let a    = Math.exp(sqrs.b);
+				let b    = sqrs.a;
+				let func = function(x) {return a*Math.pow(x, b);}
+				let devi = __Data2D(this.y, __Array(this.x).convert(func, "finite")).standardDeviation;
+				let math = "y = (a)x^(b)";
+				let show = math.replace("a", a).replace("b", b);
+				this._geometricFit = {
+					t: "geometric", a: a, b: b, f: func, d: devi, m: math, s: show
+				};
+				return this.geometricFit;
+			}
+		},
+		exponentialFit: {
+			get: function() {
+				if (this.error) return null;
+				if ("_exponentialFit" in this) return this._exponentialFit;
+				let y    = __Array(this.y).convert(Math.log, "finite");
+				let data = __Data2D(this.x, y);
+				if (data.error) return null;//FIXME
+				let sqrs = data.leastSquares;console.log(data.x, data.y);
+				let a    = Math.exp(sqrs.b);
+				let b    = sqrs.a;
+				let func = function(x) {return a*Math.exp(b*x);}
+				let devi = __Data2D(this.y, __Array(this.x).convert(func)).standardDeviation;
+				let math = "y = (a)exp(bx)";
+				let show = math.replace("a", a).replace("b", b);
+				this._exponentialFit = {
+					t: "exponential", a: a, b: b, f: func, d: devi, m: math, s: show
+				};
+				return this.exponentialFit;
+			}
+		},
+		bestFit: {
+			get: function() {
+				let lin = this.linearFit;
+				let geo = this.geometricFit;
+				let exp = this.exponentialFit;
+				lin = lin === null ? Infinity : lin.d;
+				geo = geo === null ? Infinity : geo.d;
+				exp = exp === null ? Infinity : exp.d;
+				if (lin < geo && lin < exp) return this.linearFit;
+				return geo < exp ? this.geometricFit : this.exponentialFit;
+			}
+		}
 
 	});
 
