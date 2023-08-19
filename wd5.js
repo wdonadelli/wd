@@ -1609,12 +1609,45 @@ const wd = (function() {
 		let type  = check.type;
 		let datetime, date, time;
 		switch(type) {
-			case "time":     datetime = "0000-01-01T"+check.value; break;
-			case "date":     datetime = check.value+"T00:00:00";   break;
-			case "datetime": datetime = check.value;               break;
-			default:
+			case "time":     {datetime = "0000-01-01T"+check.value; break;}
+			case "date":     {datetime = check.value+"T00:00:00";   break;}
+			case "datetime": {datetime = check.value;               break;}
+			case "number":   {
+				if (check.finite) {
+					let val  = check.value;
+					let dt   = __DateTime("0000-01-01T00:00");
+					let value = {
+						s: {check: 60,              div: 1},
+						m: {check: 60*60,           div: 60},
+						h: {check: 24*60*60,        div: 60*60},
+						D: {check: 365*24*60*60,    div: 24*60*60},
+						M: {check: 12*365*24*60*60, div: 365*24*60*60},
+						Y: {check: Infinity,        div: 12*365*24*60*60},
+					};//FIXME número decimal negativo tá com problema
+
+					while (dt.valueOf() !== val) {
+						let diff = val - dt.valueOf();
+						if (Math.abs(diff) < value.s.check)
+							dt.second = diff/value.s.div;
+						else if (Math.abs(diff) < value.m.check)
+							dt.minute += Math.trunc(diff/value.m.div);
+						else if (Math.abs(diff) < value.h.check)
+							dt.hour += Math.trunc(diff/value.h.div);
+						else if (Math.abs(diff) < value.D.check)
+							dt.day += Math.trunc(diff/value.D.div);
+						else if (Math.abs(diff) < value.M.check)
+							dt.month += Math.trunc(diff/value.M.div);
+						else
+							dt.year += Math.trunc(diff/value.Y.div);
+					}
+					datetime   = dt.toString();
+					break;
+				}
+			}
+			default: {
 				type = "datetime";
 				datetime = __Type(new Date()).value;
+			}
 		}
 		datetime = datetime.split("T");
 		date     = datetime[0];
@@ -4411,6 +4444,10 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return this.standardDeviation;
 			}
 		},
+		/**
+		- `object linearFit`: Retorna um objeto contendo os dados da regressão linear ou `null` em caso de erro.
+		- O objeto retornado possui as chaves `t` (tipo/nome da regressão); `a` e `b` (coeficientes da regressão); `f` (função da regressão); `d`: (desvio padrão), `m` (representação visual da regressão); e `s` (igual a `m` mas exibindo os coeficientes).
+		**/
 		linearFit: {
 			get: function() {
 				if (this.error) return null;
@@ -4420,66 +4457,172 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				let b    = sqrs.b;
 				let func = function(x) {return a*x + b;}
 				let devi = __Data2D(this.y, __Array(this.x).convert(func, "finite")).standardDeviation;
-				let math = "y = (a)x + (b)";
+				let math = "y = a x + (b)";
 				let show = math.replace("a", a).replace("b", b);
 				this._linearFit = {
 					t: "linear", a: a, b: b, f: func, d: devi, m: math, s: show};
-				return this.linearFit;
+				return this._linearFit;
 			}
 		},
+		/**
+		- `object geometricFit`: Retorna um objeto contendo os dados da regressão geométrica ou `null` em caso de erro.
+		- O objeto retornado possui as mesmas caractrísticas de `linearFit`. 
+		**/
 		geometricFit: {
 			get: function() {
 				if (this.error) return null;
 				if ("_geometricFit" in this) return this._geometricFit;
-				let x    = __Array(this.x).convert(Math.log, "finite");
-				let y    = __Array(this.y).convert(Math.log, "finite");
-				let data = __Data2D(x, y);
-				if (data.error) return null;//FIXME
+				let data = __Data2D(
+					__Array(this.x).convert(Math.log, "finite"),
+					__Array(this.y).convert(Math.log, "finite")
+				);
+				if (data.error) {
+					this._geometricFit = null;
+					return null;
+				}
 				let sqrs = data.leastSquares;
 				let a    = Math.exp(sqrs.b);
 				let b    = sqrs.a;
 				let func = function(x) {return a*Math.pow(x, b);}
 				let devi = __Data2D(this.y, __Array(this.x).convert(func, "finite")).standardDeviation;
-				let math = "y = (a)x^(b)";
+				let math = "y = a x^(b)";
 				let show = math.replace("a", a).replace("b", b);
 				this._geometricFit = {
 					t: "geometric", a: a, b: b, f: func, d: devi, m: math, s: show
 				};
-				return this.geometricFit;
+				return this._geometricFit;
 			}
 		},
+		/**
+		- `object exponentialFit`: Retorna um objeto contendo os dados da regressão exponencial ou `null` em caso de erro.
+		- O objeto retornado possui as mesmas caractrísticas de `linearFit`. 
+		**/
 		exponentialFit: {
 			get: function() {
 				if (this.error) return null;
 				if ("_exponentialFit" in this) return this._exponentialFit;
-				let y    = __Array(this.y).convert(Math.log, "finite");
-				let data = __Data2D(this.x, y);
-				if (data.error) return null;//FIXME
-				let sqrs = data.leastSquares;console.log(data.x, data.y);
+				let data = __Data2D(
+					this.x,
+					__Array(this.y).convert(Math.log, "finite")
+				);
+				if (data.error) {
+					this._exponentialFit = null;
+					return null;
+				}
+				let sqrs = data.leastSquares;
 				let a    = Math.exp(sqrs.b);
 				let b    = sqrs.a;
 				let func = function(x) {return a*Math.exp(b*x);}
 				let devi = __Data2D(this.y, __Array(this.x).convert(func)).standardDeviation;
-				let math = "y = (a)exp(bx)";
+				let math = "y = a exp(b x)";
 				let show = math.replace("a", a).replace("b", b);
 				this._exponentialFit = {
 					t: "exponential", a: a, b: b, f: func, d: devi, m: math, s: show
 				};
-				return this.exponentialFit;
+				return this._exponentialFit;
 			}
 		},
-		bestFit: {
+		/**
+		- `object logarithmicFit`: Retorna um objeto contendo os dados da regressão logarítmica ou `null` em caso de erro.
+		- O objeto retornado possui as mesmas caractrísticas de `linearFit`.
+		**/
+		logarithmicFit: {
 			get: function() {
-				let lin = this.linearFit;
-				let geo = this.geometricFit;
-				let exp = this.exponentialFit;
-				lin = lin === null ? Infinity : lin.d;
-				geo = geo === null ? Infinity : geo.d;
-				exp = exp === null ? Infinity : exp.d;
-				if (lin < geo && lin < exp) return this.linearFit;
-				return geo < exp ? this.geometricFit : this.exponentialFit;
+				if (this.error) return null;
+				if ("_logarithmicFit" in this) return this._logarithmicFit;
+				let data = __Data2D(
+					this.x,
+					__Array(this.y).convert(Math.exp, "finite")
+				);
+				if (data.error || data.geometricFit === null) {
+					this._logarithmicFit = null;
+					return null;
+				}
+				let sqrs = data.geometricFit;
+				let a    = sqrs.b;
+				let b    = Math.pow(sqrs.a, 1/sqrs.b);
+				let func = function(x) {return a*Math.log(b*x);}
+				let devi = __Data2D(this.y, __Array(this.x).convert(func)).standardDeviation;
+				let math = "y = a ln(b x)";
+				let show = math.replace("a", a).replace("b", b);
+				this._logarithmicFit = {
+					t: "logarithmic", a: a, b: b, f: func, d: devi, m: math, s: show
+				};
+				return this._logarithmicFit;
 			}
-		}
+		},
+		/**
+		- `object bestDeviation`: Retorna o objeto contendo os dados da regressão com o menor valor de desvio padrão.
+		**/
+		bestDeviation: {
+			get: function() {
+				if (this.error) return null;
+				if ("_bestDeviation" in this) return this._bestDeviation;
+				let fit = [
+					"linearFit", "geometricFit", "exponentialFit", "logarithmicFit"
+				];
+				let best = {value: Infinity, name: null};
+				let i = -1;
+				while (++i < fit.length) {
+					let id = fit[i];
+					if (this[id] !== null && this[id].d < best.value) {
+						 best.value = this[id].d;
+						 best.name  = id;
+					}
+				}
+				this._bestDeviation = best.name === null ? null : this[best.name];
+				return this._bestDeviation;
+			}
+		},
+		/**
+		- `number area`: Retorna a soma da área entre a reta que liga as coordenadas e o eixo `y` em zero ou `null` em caso de falha.
+		**/
+		area: {
+    	get: function() {
+	    	if (this.error) return null;
+				if ("_area" in this) return this._area;
+				let x    = this.x;
+				let y    = this.y;
+				let area = 0;
+				let i    = 0;
+				while (++i < x.length)
+					area += (y[i]+y[i-1])*(x[i]-x[i-1])/2;
+				this._area = area;
+				return this._area;
+		  }
+    },
+    /**
+		- `number average`: Retorna a média do valor obtido com o atributo `area` ou `null` em caso de falha.
+		**/
+    average: {
+    	get: function() {
+    		if (this.area === null) return null;
+    		if ("_average" in this) return this._average;
+    		let data = __Array(this.x);
+    		let div  = data.max - data.min;
+    		this._average = div === 0 ? null : this.area / div;
+    		return this._average;
+    	}
+    },
+
+    datetime: {
+    	get: function() {
+    		if (this.error === null) return null;
+    		if ("_datetime" in this) return this._datetime;
+
+    		let dt   = __DateTime("0000-01-01T00:00");
+    		let data = {time: [], date: [], datetime: []};
+    		let i    = -1;
+    		while(++i < this.x.length) {
+    			dt.second += this.x[i] - dt.valueOf();
+    			data.time.push(dt.toTimeString());
+    			data.date.push(dt.toDateString());
+    			data.datetime.push(dt.toString());
+    		}
+    		this._datetime = data;
+    		return this._datetime;
+    	}
+    }
 
 	});
 
