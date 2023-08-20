@@ -1616,29 +1616,26 @@ const wd = (function() {
 				if (check.finite) {
 					let val  = check.value;
 					let dt   = __DateTime("0000-01-01T00:00");
-					let value = {
-						s: {check: 60,              div: 1},
-						m: {check: 60*60,           div: 60},
-						h: {check: 24*60*60,        div: 60*60},
-						D: {check: 365*24*60*60,    div: 24*60*60},
-						M: {check: 12*365*24*60*60, div: 365*24*60*60},
-						Y: {check: Infinity,        div: 12*365*24*60*60},
-					};//FIXME número decimal negativo tá com problema
-
+				//FIXME número decimal negativo tá com problema
 					while (dt.valueOf() !== val) {
 						let diff = val - dt.valueOf();
-						if (Math.abs(diff) < value.s.check)
-							dt.second = diff/value.s.div;
-						else if (Math.abs(diff) < value.m.check)
-							dt.minute += Math.trunc(diff/value.m.div);
-						else if (Math.abs(diff) < value.h.check)
-							dt.hour += Math.trunc(diff/value.h.div);
-						else if (Math.abs(diff) < value.D.check)
-							dt.day += Math.trunc(diff/value.D.div);
-						else if (Math.abs(diff) < value.M.check)
-							dt.month += Math.trunc(diff/value.M.div);
+						let mod  = Math.abs(diff);
+						console.log({a: val, b: dt.valueOf(), c: diff, d: mod, p:__Number(mod/Math.abs(val)).notation("percent", 5)});
+
+						if (mod < 1)
+							dt.second += diff
+						else if (mod < 60)
+							dt.second += Math.trunc(diff);
+						else if (mod < (60*60))
+							dt.minute += Math.trunc(diff/60);
+						else if (mod < (24*60*60))
+							dt.hour += Math.trunc(diff/(60*60));
+						else if (mod < (30*24*60*60))
+							dt.day += Math.trunc(diff/(24*60*60));
+						else if (mod < (12*30*24*60*60))
+							dt.month += Math.trunc(diff/(30*24*60*60));
 						else
-							dt.year += Math.trunc(diff/value.Y.div);
+							dt.year += Math.trunc(diff/(12*30*24*60*60));
 					}
 					datetime   = dt.toString();
 					break;
@@ -1759,16 +1756,16 @@ const wd = (function() {
 		year: {
 			get: function() {return this._Y;},
 			set: function(x) {
-				if (!__Type(x).finite) return;
+				let check = __Type(x);
+				if (!check.finite || check.value === this.year) return;
 				this._trigger("year");
-				let val = __Number(x);
+				let val = __Number(check.value);
 				let int = val.int;
 				let dec = val.dec;
 				this._Y = int;
 				if (dec !== 0)
 					this.month = (val < 0 ? 12 : 0) + 12*dec;
-				this._trigger("year");
-				return;
+				return this._trigger("year");
 			}
 		},
 		/**
@@ -1778,20 +1775,18 @@ const wd = (function() {
 		month: {
 			get: function() {return this._M;},
 			set: function(x) {
-				if (!__Type(x).finite) return;
+				let check = __Type(x);
+				if (!check.finite || check.value === this.month) return;
 				this._trigger("month");
-				let val = __Number(x);
+				let val = __Number(check.value);
 				let int = val.int;
 				let dec = val.dec;
-				while (int < 1 || int > 12) { /* IMPORTANTE: definir o ano antes do valor */
-					this.year += int < 1 ?  -1 :  +1;
-					int       += int < 1 ? +12 : -12;
-				}
-				this._M = int;
+				let gap = Math.trunc(int < 1 ? (int-12)/12 : (int-1)/12);
+				if (gap !== 0) this.year += gap;
+				this._M    = __Array(12,1,2,3,4,5,6,7,8,9,10,11).valueOf(int);
 				if (dec !== 0)
 					this.day = (val < 0 ? this._maxDay() : 0) + this._maxDay()*dec;
-				this._trigger("month");
-				return;
+				return this._trigger("month");
 			}
 		},
 		/**
@@ -1801,9 +1796,10 @@ const wd = (function() {
 		day: {
 			get: function() {return this._D > this._maxDay() ? this._maxDay() : this._D;},
 			set: function(x) {
-				if (!__Type(x).finite) return;
+				let check = __Type(x);
+				if (!check.finite || check.value === this.day) return;
 				this._trigger("day");
-				let val = __Number(x);
+				let val = __Number(check.value);
 				let int = val.int;
 				let dec = val.dec;
 				while (int < 1 || int > this._maxDay()) { /* IMPORTANTE: definir o mês antes do valor e max por último */
@@ -1828,16 +1824,15 @@ const wd = (function() {
 		hour: {
 			get: function() {return this._h;},
 			set: function(x) {
-				if (!__Type(x).finite) return;
+				let check = __Type(x);
+				if (!check.finite || check.value === this.hour) return;
 				this._trigger("hour");
-				let val = __Number(x);
+				let val = __Number(check.value);
 				let int = val.int;
 				let dec = val.dec;
-				while (int < 0 || int > 23) {/* IMPORTANTE: definir o dia antes do valor */
-					this.day += int < 1 ?  -1 :  +1;
-					int      += int < 1 ? +24 : -24;
-				}
-				this._h = int;
+				let gap = Math.trunc(int < 0 ? (int-23)/24 : (int-0)/24);
+				if (gap !== 0) this.day += gap;
+				this._h = __Array(Array(24)).index(int);
 				if (dec !== 0)
 					this.minute = (val < 0 ? 60 : 0) + 60*dec;
 				this._trigger("hour");
@@ -1850,16 +1845,15 @@ const wd = (function() {
 		minute: {
 			get: function() {return this._m;},
 			set: function(x) {
-				if (!__Type(x).finite) return;
+				let check = __Type(x);
+				if (!check.finite || check.value === this.minute) return;
 				this._trigger("minute");
-				let val = __Number(x);
+				let val = __Number(check.value);
 				let int = val.int;
 				let dec = val.dec;
-				while (int < 0 || int > 59) { /* IMPORTANTE: definir a hora antes do valor */
-					this.hour += int < 1 ?  -1 :  +1;
-					int       += int < 1 ? +60 : -60;
-				}
-				this._m = int;
+				let gap = Math.trunc(int < 0 ? (int-59)/60 : (int-0)/60);
+				if (gap !== 0) this.hour += gap;
+				this._m = __Array(Array(60)).index(int);
 				if (dec !== 0)
 					this.second = (val < 0 ? 60 : 0) + 60*dec;
 				this._trigger("minute");
@@ -1872,9 +1866,21 @@ const wd = (function() {
 		second: {
 			get: function() {return this._s;},
 			set: function(x) {
-				if (!__Type(x).finite) return;
+				let check = __Type(x);
+				if (!check.finite || check.value === this.second) return;
 				this._trigger("second");
-				let val = __Number(x).valueOf();
+
+				let val = __Number(check.value);
+				let int = val.int;
+				let dec = val.dec;
+				let gap = Math.trunc(int < 0 ? (int-59)/60 : (int-0)/60);
+				if (gap !== 0) this.minute += gap;
+				this._s = __Array(Array(60)).index(int);
+
+
+
+
+				let val = check.value;
 				while (val < 0 || val > 59) { /* IMPORTANTE: definir o minuto antes do valor */
 					this.minute += val < 1 ?  -1 :  +1;
 					val         += val < 1 ? +60 : -60;
