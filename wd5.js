@@ -1759,12 +1759,10 @@ const wd = (function() {
 				let check = __Type(x);
 				if (!check.finite || check.value === this.year) return;
 				this._trigger("year");
-				let val = __Number(check.value);
-				let int = val.int;
-				let dec = val.dec;
-				this._Y = int;
-				if (dec !== 0)
-					this.month = (val < 0 ? 12 : 0) + 12*dec;
+				let val    = __Number(check.value);
+				let dec    = val.dec;
+				this._Y    = val.int;
+				this.month = dec === 0 ? this.month : ((val < 0 ? 12 : 0) + 12*dec);
 				return this._trigger("year");
 			}
 		},
@@ -1778,14 +1776,14 @@ const wd = (function() {
 				let check = __Type(x);
 				if (!check.finite || check.value === this.month) return;
 				this._trigger("month");
-				let val = __Number(check.value);
-				let int = val.int;
-				let dec = val.dec;
-				let gap = Math.trunc(int < 1 ? (int-12)/12 : (int-1)/12);
-				if (gap !== 0) this.year += gap;
-				this._M    = __Array(12,1,2,3,4,5,6,7,8,9,10,11).valueOf(int);
-				if (dec !== 0)
-					this.day = (val < 0 ? this._maxDay() : 0) + this._maxDay()*dec;
+				let val    = __Number(check.value);
+				let int    = val.int;
+				let dec    = val.dec;
+				this._M    = (int%12 <= 0 ? 12 : 0) + int%12;
+				this.year += Math.trunc(int < 1 ? (int-12)/12 : (int-1)/12);
+				let max    = this._maxDay();
+				this.day   = dec === 0 ? this.day : ((val < 0 ? max : 0) + max*dec);
+				console.table({val: val, int: int, dec: dec, y: this._Y, m: this._M, d: dec === 0 ? this.day : ((val < 0 ? max : 0) + max*dec), max: max});
 				return this._trigger("month");
 			}
 		},
@@ -1818,6 +1816,33 @@ const wd = (function() {
 				return;
 			}
 		},
+
+
+		_timeAllocation: {
+			value: function(value, type) {
+				let config = {
+					s: {ref: 60, below: 0}, m: {ref: 60, below: 60}, h: {ref: 24, below: 60}
+				};
+				let data = config[type];
+				let num  = __Number(value);
+				let val  = num.valueOf();
+				let int  = num.int;
+				let dec  = num.dec;
+				let rest = (data.below === 0 ? val : int)%data.ref;
+				let full = Math.trunc((data.below === 0 ? int : val)/data.ref);
+				let frac = (dec < 0 ? data.below : 0) + (data.below * dec);
+				return {
+					value: rest < 0 ? (data.ref+rest) : rest,
+					above: val < 0 && rest !== 0 ? (full-1) : (full),
+					below: frac
+				};
+			}
+		},
+
+
+
+
+
 		/**
 		- `integer hour`: Define ou retorna a hora (0 a 23). O parâmetro será alterado para o valor definido, exceto quando extrapolar os limites.
 		**/
@@ -1827,16 +1852,11 @@ const wd = (function() {
 				let check = __Type(x);
 				if (!check.finite || check.value === this.hour) return;
 				this._trigger("hour");
-				let val = __Number(check.value);
-				let int = val.int;
-				let dec = val.dec;
-				let gap = Math.trunc(int < 0 ? (int-23)/24 : (int-0)/24);
-				if (gap !== 0) this.day += gap;
-				this._h = __Array(Array(24)).index(int);
-				if (dec !== 0)
-					this.minute = (val < 0 ? 60 : 0) + 60*dec;
-				this._trigger("hour");
-				return;
+				let data    = this._timeAllocation(check.value, "h");
+				this._h     = data.value;
+				this.day   += data.above;
+				this.minute = data.below !== 0 ? data.below : this.minute;
+				return this._trigger("hour");
 			}
 		},
 		/**
@@ -1848,16 +1868,11 @@ const wd = (function() {
 				let check = __Type(x);
 				if (!check.finite || check.value === this.minute) return;
 				this._trigger("minute");
-				let val = __Number(check.value);
-				let int = val.int;
-				let dec = val.dec;
-				let gap = Math.trunc(int < 0 ? (int-59)/60 : (int-0)/60);
-				if (gap !== 0) this.hour += gap;
-				this._m = __Array(Array(60)).index(int);
-				if (dec !== 0)
-					this.second = (val < 0 ? 60 : 0) + 60*dec;
-				this._trigger("minute");
-				return;
+				let data    = this._timeAllocation(check.value, "m");
+				this._m     = data.value;
+				this.hour  += data.above;
+				this.second = data.below !== 0 ? data.below : this.second;
+				return this._trigger("minute");
 			}
 		},
 		/**
@@ -1869,25 +1884,10 @@ const wd = (function() {
 				let check = __Type(x);
 				if (!check.finite || check.value === this.second) return;
 				this._trigger("second");
-
-				let val = __Number(check.value);
-				let int = val.int;
-				let dec = val.dec;
-				let gap = Math.trunc(int < 0 ? (int-59)/60 : (int-0)/60);
-				if (gap !== 0) this.minute += gap;
-				this._s = __Array(Array(60)).index(int);
-
-
-
-
-				let val = check.value;
-				while (val < 0 || val > 59) { /* IMPORTANTE: definir o minuto antes do valor */
-					this.minute += val < 1 ?  -1 :  +1;
-					val         += val < 1 ? +60 : -60;
-				}
-				this._s = Number(val.toFixed(3));
-				this._trigger("second");
-				return;
+				let data     = this._timeAllocation(check.value, "s");
+				this._s      = Number(data.value.toFixed(3));
+				this.minute += data.above;
+				return this._trigger("second");
 			}
 		},
 		/**
@@ -2036,7 +2036,7 @@ const wd = (function() {
 		/**
 		- `string s`: Retorna o segundo.
 		**/
-		s:    {get: function() {return String(this.second);}},
+		s:    {get: function() {return (this.second).toFixed(3);}},
 		/**
 		- `string ss`: Retorna o segundo com dois dígitos.
 		**/
