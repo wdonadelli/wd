@@ -1614,30 +1614,9 @@ const wd = (function() {
 			case "datetime": {datetime = check.value;               break;}
 			case "number":   {
 				if (check.finite) {
-					let val  = check.value;
-					let dt   = __DateTime("0000-01-01T00:00");
-				//FIXME número decimal negativo tá com problema
-					while (dt.valueOf() !== val) {
-						let diff = val - dt.valueOf();
-						let mod  = Math.abs(diff);
-						console.log({a: val, b: dt.valueOf(), c: diff, d: mod, p:__Number(mod/Math.abs(val)).notation("percent", 5)});
-
-						if (mod < 1)
-							dt.second += diff
-						else if (mod < 60)
-							dt.second += Math.trunc(diff);
-						else if (mod < (60*60))
-							dt.minute += Math.trunc(diff/60);
-						else if (mod < (24*60*60))
-							dt.hour += Math.trunc(diff/(60*60));
-						else if (mod < (30*24*60*60))
-							dt.day += Math.trunc(diff/(24*60*60));
-						else if (mod < (12*30*24*60*60))
-							dt.month += Math.trunc(diff/(30*24*60*60));
-						else
-							dt.year += Math.trunc(diff/(12*30*24*60*60));
-					}
-					datetime   = dt.toString();
+					let dt    = __DateTime("0000-01-01T00:00:00");
+					dt.second = check.value;
+					datetime  = dt.toString();
 					break;
 				}
 			}
@@ -1762,13 +1741,13 @@ const wd = (function() {
 				let val    = __Number(check.value);
 				let dec    = val.dec;
 				this._Y    = val.int;
-				this.month = dec === 0 ? this.month : ((val < 0 ? 12 : 0) + 12*dec);
+				this.month = dec === 0 ? this.month : 12*dec;
 				return this._trigger("year");
 			}
 		},
 		/**
 		- `integer month`: Define ou retorna o mês de 1 a 12 (janeiro a dezembro). O parâmetro será alterado para o valor definido, exceto quando extrapolar os limites.
-		- A data 2000-01-31 não será alterada para 2000-03-02 ao se alterar o mês para fevereiro.
+		- Ao alterar o mês de 2000-01-31 para fevereiro, a data definida será 2000-02-28 e não 2000-03-02.
 		**/
 		month: {
 			get: function() {return this._M;},
@@ -1779,11 +1758,10 @@ const wd = (function() {
 				let val    = __Number(check.value);
 				let int    = val.int;
 				let dec    = val.dec;
-				this._M    = (int%12 <= 0 ? 12 : 0) + int%12;
+				this._M    = int%12 <= 0 ? (int%12+12) : (int%12);
 				this.year += Math.trunc(int < 1 ? (int-12)/12 : (int-1)/12);
-				let max    = this._maxDay();
-				this.day   = dec === 0 ? this.day : ((val < 0 ? max : 0) + max*dec);
-				console.table({val: val, int: int, dec: dec, y: this._Y, m: this._M, d: dec === 0 ? this.day : ((val < 0 ? max : 0) + max*dec), max: max});
+				/* IMPORTANTE: a definição do dia tem que ser o último por causa de maxDay */
+				this.day   = dec === 0 ? this.day : dec*this._maxDay();
 				return this._trigger("month");
 			}
 		},
@@ -1797,23 +1775,31 @@ const wd = (function() {
 				let check = __Type(x);
 				if (!check.finite || check.value === this.day) return;
 				this._trigger("day");
-				let val = __Number(check.value);
-				let int = val.int;
-				let dec = val.dec;
-				while (int < 1 || int > this._maxDay()) { /* IMPORTANTE: definir o mês antes do valor e max por último */
-					if (int < 1) {
-						this.month--;
-						int += +this._maxDay();
-					} else {
-						int += -this._maxDay();
-						this.month++;
+				let val     = __Number(check.value);
+				let int     = val.int;
+				let dec     = val.dec;
+				if (int >= 1 && int <= this._maxDay()) {
+					this._D = int;
+				} else {
+					/* IMPORTANTE: o dia, além dos limites, é definido por aproximação (ano e mês). Após, aproxima-se dia a dia. */
+					this._D     = int < 1 ? 1 : this._maxDay();
+					let delta   = int - this._D;
+					let future  = this.dateOf() + delta;
+					this.year  += Math.trunc((future - this.dateOf())/365);
+					this.month += Math.trunc((future - this.dateOf())/30);
+					while (this.dateOf() !== future) {
+						this._D += this.dateOf() < future ? +1 : -1;
+						if (this._D > this._maxDay()) {
+							this._D = 1;
+							this.month++;
+						} else if (this._D < 1) {
+							this.month--;
+							this._D = this._maxDay();
+						}
 					}
 				}
-				this._D = int;
-				if (dec !== 0)
-					this.hour = (val < 0 ? 24 : 0) + 24*dec;
-				this._trigger("day");
-				return;
+				this.hour = dec === 0 ? this.hour : 24*dec;
+				return this._trigger("day");
 			}
 		},
 
