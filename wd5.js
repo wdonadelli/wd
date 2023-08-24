@@ -26,9 +26,13 @@ https://github.com/wdonadelli/wd
 
 "use strict";
 
-
 const wd = (function() {
 	/**
+	###`merda(x)`
+
+	|willian||:Donadelli:||Lindo|
+
+
 	#Biblioteca JavaScript
 	##Documentação para Manutenção
 
@@ -1598,9 +1602,12 @@ const wd = (function() {
 /*===========================================================================*/
 	/**
 	###Data e Tempo
-	`constructor __DateTime(string input)`
+	`constructor __DateTime(string|number input)`
 	Construtor para manipulação de data/tempo.
-	O atributo `input` aceita valores do tipo data, tempo ou ambos de acordo com as regras da biblioteca. Se um dado diferente for informado, assumira o valor de data e tempo atuais.
+	O atributo `input` aceita valores do tipo data, tempo ou data/tempo nos parâmetros da biblioteca.
+	Aceita-se também um valor numérico que corresponde ao número de segundos desde 0000-01-01T00:00:00.0000 (segundo 0).
+	Aceita-se também um objeto contendo a definição de data/tempo (chaves `year`,`month`, `day`, `hour`, `minute`, `second`) que, se omitidas ou não numéricas, assumirão o valor inicial (zero ou um).
+	Caso contrário, assumirá o valor de data e tempo atuais.
 	O objeto possui os seguintes métodos e atributos:
 	**/
 	function __DateTime(input) {
@@ -1619,6 +1626,16 @@ const wd = (function() {
 					datetime  = dt.toString();
 					break;
 				}
+			}
+			case "object": {
+				let keys = {year: 0, month: 1, day: 1, hour: 0, minute: 0, second: 0};
+				let dt   = __DateTime(0);
+				for (let i in keys) {
+					let test = __Type(i in input ? input[i] : keys[i]);
+					dt[i]    = test.finite ? test.value : keys[i];
+				}
+				datetime = dt.toString();
+				break;
 			}
 			default: {
 				type = "datetime";
@@ -1642,7 +1659,6 @@ const wd = (function() {
 			//_change: {value: function(x){console.log(x);}}, //FIXME apagar isso
 		});
 	}
-
 
 	Object.defineProperties(__DateTime.prototype, {
 		constructor: {value: __DateTime},
@@ -1738,10 +1754,11 @@ const wd = (function() {
 				let check = __Type(x);
 				if (!check.finite || check.value === this.year) return;
 				this._trigger("year");
-				let val    = __Number(check.value);
-				let dec    = val.dec;
-				this._Y    = val.int;
-				this.month = dec === 0 ? this.month : 12*dec;
+				let val = __Number(check.value);
+				let int = val.int;
+				let dec = Math.abs(val.dec);
+				this._Y = int;
+				if (dec !== 0) this.month = 12*dec;
 				return this._trigger("year");
 			}
 		},
@@ -1757,11 +1774,10 @@ const wd = (function() {
 				this._trigger("month");
 				let val    = __Number(check.value);
 				let int    = val.int;
-				let dec    = val.dec;
+				let dec    = Math.abs(val.dec);
 				this._M    = int%12 <= 0 ? (int%12+12) : (int%12);
 				this.year += Math.trunc(int < 1 ? (int-12)/12 : (int-1)/12);
-				/* IMPORTANTE: a definição do dia tem que ser o último por causa de maxDay */
-				this.day   = dec === 0 ? this.day : dec*this._maxDay();
+				if (dec !== 0) this.day = dec*this._maxDay();
 				return this._trigger("month");
 			}
 		},
@@ -1777,58 +1793,33 @@ const wd = (function() {
 				this._trigger("day");
 				let val     = __Number(check.value);
 				let int     = val.int;
-				let dec     = val.dec;
+				let dec     = Math.abs(val.dec);
 				if (int >= 1 && int <= this._maxDay()) {
 					this._D = int;
 				} else {
-					/* IMPORTANTE: o dia, além dos limites, é definido por aproximação (ano e mês). Após, aproxima-se dia a dia. */
 					this._D     = int < 1 ? 1 : this._maxDay();
 					let delta   = int - this._D;
 					let future  = this.dateOf() + delta;
+					/* aproximação anual */
 					this.year  += Math.trunc((future - this.dateOf())/365);
+					/* aproximação mensal */
 					this.month += Math.trunc((future - this.dateOf())/30);
+					/* aproximação diária */
 					while (this.dateOf() !== future) {
 						this._D += this.dateOf() < future ? +1 : -1;
-						if (this._D > this._maxDay()) {
+						if (this._D > this._maxDay()) { /* IMPORTANTE: definir dia antes do mês */
 							this._D = 1;
 							this.month++;
-						} else if (this._D < 1) {
+						} else if (this._D < 1) { /* IMPORTANTE: definir mês antes do dia */
 							this.month--;
 							this._D = this._maxDay();
 						}
 					}
 				}
-				this.hour = dec === 0 ? this.hour : 24*dec;
+				if (dec !== 0) this.hour = 24*dec;
 				return this._trigger("day");
 			}
 		},
-
-
-		_timeAllocation: {
-			value: function(value, type) {
-				let config = {
-					s: {ref: 60, below: 0}, m: {ref: 60, below: 60}, h: {ref: 24, below: 60}
-				};
-				let data = config[type];
-				let num  = __Number(value);
-				let val  = num.valueOf();
-				let int  = num.int;
-				let dec  = num.dec;
-				let rest = (data.below === 0 ? val : int)%data.ref;
-				let full = Math.trunc((data.below === 0 ? int : val)/data.ref);
-				let frac = (dec < 0 ? data.below : 0) + (data.below * dec);
-				return {
-					value: rest < 0 ? (data.ref+rest) : rest,
-					above: val < 0 && rest !== 0 ? (full-1) : (full),
-					below: frac
-				};
-			}
-		},
-
-
-
-
-
 		/**
 		- `integer hour`: Define ou retorna a hora (0 a 23). O parâmetro será alterado para o valor definido, exceto quando extrapolar os limites.
 		**/
@@ -1838,10 +1829,12 @@ const wd = (function() {
 				let check = __Type(x);
 				if (!check.finite || check.value === this.hour) return;
 				this._trigger("hour");
-				let data    = this._timeAllocation(check.value, "h");
-				this._h     = data.value;
-				this.day   += data.above;
-				this.minute = data.below !== 0 ? data.below : this.minute;
+				let val     = __Number(check.value);
+				let int     = val.int;
+				let dec     = Math.abs(val.dec);
+				this._h     = (int%24 < 0 ? 24 : 0) + int%24;
+				this.day   += Math.trunc(int/24) + (val < 0 && int%24 !== 0 ? -1 : 0);
+				if (dec !== 0) this.minute = 60*dec;
 				return this._trigger("hour");
 			}
 		},
@@ -1854,10 +1847,12 @@ const wd = (function() {
 				let check = __Type(x);
 				if (!check.finite || check.value === this.minute) return;
 				this._trigger("minute");
-				let data    = this._timeAllocation(check.value, "m");
-				this._m     = data.value;
-				this.hour  += data.above;
-				this.second = data.below !== 0 ? data.below : this.second;
+				let val    = __Number(check.value);
+				let int    = val.int;
+				let dec    = Math.abs(val.dec);
+				this._m    = (int%60 < 0 ? 60 : 0) + int%60;
+				this.hour += Math.trunc(int/60) + (val < 0 && int%60 !== 0 ? -1 : 0);
+				if (dec !== 0) this.second = 60*dec;
 				return this._trigger("minute");
 			}
 		},
@@ -1870,9 +1865,11 @@ const wd = (function() {
 				let check = __Type(x);
 				if (!check.finite || check.value === this.second) return;
 				this._trigger("second");
-				let data     = this._timeAllocation(check.value, "s");
-				this._s      = Number(data.value.toFixed(3));
-				this.minute += data.above;
+				let val      = __Number(check.value);
+				let int      = val.int;
+				let dec      = Math.abs(val.dec);
+				this._s      = (int%60 < 0 ? 60 : 0) + int%60 + dec;
+				this.minute += Math.trunc(int/60) + (val < 0 && int%60 !== 0 ? -1 : 0);
 				return this._trigger("second");
 			}
 		},
@@ -2101,19 +2098,6 @@ const wd = (function() {
 		**/
 		dateOf: {
 			value: function() {
-				/*
-				if (this.year === 0) return this.dayYear;
-				let year = Math.abs(this.year);
-				let y365 = 365*year;
-				let y400 = Math.trunc(year/400);
-				let y004 = Math.trunc(year/4);
-				let y100 = Math.trunc(year/100);
-				let days = y365 + y400 + y004 - y100;//FIXME
-				if (this.year > 0) return 366 + days + this.dayYear;
-				return -(days + (this.leap ? 366 : 365) - this.dayYear);
-				*/
-
-
 				/* se o ano for zero: dias do ano corrente */
 				if (this.year === 0) return this.dayYear;
 				/* se o ano for diferente de zero, calcular dias de anos completos (ano - 1) */
@@ -2158,30 +2142,28 @@ const wd = (function() {
       }
 		},
 		/**
-		- `string testDrive()`: checa a sequencialidade dos dias e dos dias da semana.
-		- O atributo opcional `x` define os anos de início e término da simulação. Seu valor padrão é 100.
+		- `string testDrive(x=100)`: checa a sequencialidade dos dias e dos dias da semana.
+		- O atributo opcional `x` define o parâmetro da simulação (negativo para positivo) em anos de início e término da simulação.
 		**/
 		testDrive: {
 			value: function(x) {
 				/* https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date */
-				if (x === undefined) x = 100;
-				let min = __DateTime("0000-01-01");
-				let max = __DateTime("0000-12-31");
-				min.year = -Math.abs(x);
-				max.year = +Math.abs(x);
-				let i  = min.dateOf();
-				let w  = min.weekDay;
-				let ni = min.dateOf();
-				let nf = max.dateOf();
-				console.log(min.toDateString());
-				while (min <= max) {
+				x = (x === undefined ? 100 : Math.abs(x))*365*24*3600;
+				let min = __DateTime(-x);
+				let max = __DateTime(+x);
+				let i   = min.dateOf();
+				let w   = min.weekDay;
+				let ni  = min.dateOf();
+				let nf  = max.dateOf();
+				console.log({min: min.toDateString(), max: max.toDateString()});
+				while (min < max) {
 					if (i !== min.dateOf()) throw new Error("dateOf: "  + min.toString());
 					if (w !== min.weekDay)  throw new Error("weekDay: " + min.toString());
 					min.day++;
 					i++;
 					w = w === 7 ? 1 : (w+1);
 				}
-				console.log(min.toDateString());
+				console.log({min: min.toDateString(), max: max.toDateString()});
 				return "Sucesso!"
 			}
 		}
@@ -4596,17 +4578,17 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
     		return this._average;
     	}
     },
-
+    /**
+    - `object datetime`: retorna um objeto com as informações de data, tempo e data/tempo (chaves `date`, `time` e `datetime`) dos valores do eixo `x`.
+		**/
     datetime: {
     	get: function() {
-    		if (this.error === null) return null;
+    		if (this.error) return null;
     		if ("_datetime" in this) return this._datetime;
-
-    		let dt   = __DateTime("0000-01-01T00:00");
     		let data = {time: [], date: [], datetime: []};
     		let i    = -1;
     		while(++i < this.x.length) {
-    			dt.second += this.x[i] - dt.valueOf();
+    			let dt = __DateTime(this.x[i]);
     			data.time.push(dt.toTimeString());
     			data.date.push(dt.toDateString());
     			data.datetime.push(dt.toString());
@@ -4615,7 +4597,6 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
     		return this._datetime;
     	}
     }
-
 	});
 
 
