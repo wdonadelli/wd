@@ -27,20 +27,13 @@ https://github.com/wdonadelli/wd
 "use strict";
 
 const wd = (function() {
-	/**
-	###`merda(x)`
+	/**#Biblioteca JavaScript**/
+	/**##Documentação para Manutenção**/
 
-	|willian||:Donadelli:||Lindo|
+	/**###Mecanismos de Controle**/
 
-
-	#Biblioteca JavaScript
-	##Documentação para Manutenção
-
-	###Mecanismos de Controle
-
-	`const string __VERSION`
-	Registra a versão da biblioteca.
-	**/
+	/**```**const** ''string'' __VERSION```**/
+	/**Registra a versão da biblioteca.**/
 	const __VERSION = "WD JS v5.0.0";
 /*----------------------------------------------------------------------------*/
 
@@ -52,45 +45,36 @@ const wd = (function() {
 		return "phone";
 	};
 /*----------------------------------------------------------------------------*/
-	/**
-	`const object __DEVICECONTROLLER`
-	Controla as alterações da tela atribuida a um tipo de dispositivo e executa ações quando houver mudança neste dispositivo idealizado.
-	O objeto possui os seguintes métodos e atributos:
-	**/
+	/**```**const** ''object'' __DEVICECONTROLLER```**/
+	/**Controla as alterações da tela atribuida a um tipo de dispositivo e executa ações quando houver mudança neste dispositivo idealizado.**/
+	/**{**/
+
 	const __DEVICECONTROLLER = {
-		/**
-		- `boolean _start`: Informar se o controlador já foi iniciado.
-		**/
+		/**- `''boolean'' _start`: Informar se o controlador já foi iniciado.**/
 		_start: false,
-		/**
-		- `function _change`: Registra a função disparadora a ser executada quando alterar o tipo de dispositivo.
-		**/
+		/**- `''function'' _change`: Registra a função disparadora de alteração do tipo de dispositivo.**/
 		_change: null,
-		/**
-		- `string _device`: Registra o tipo do dispositivo a partir do tamanho da tela em vigor.
-		**/
+		/**- `''string'' _device`: Registra o tipo do dispositivo a partir do tamanho da tela em vigor.**/
 		_device: null,
-		/**
-		- `integer screen`: Retorna o tamanho da tela.
+		/**- `''integer'' screen`: Retorna o tamanho da tela.
 		**/
 		get screen() {return window.innerWidth;},
-		/**
-		- `string device`: Retorna o identificador da tela: desktop (&ge; 768px), tablet (&ge; 600px) ou phone (&lt; 600px).
-		**/
+		/**- `''string'' device`: Retorna o identificador da tela:**/
+		/**-[
+		|**Identificador**|**Tamanho da Tela**|
+		|desktop|&ge; 768px|
+		|tablet|&ge; 600px|
+		|phone|&lt; 600px|
+		]-**/
 		get device() {
 			let screen = this.screen;
 			if (screen >= 768) return "desktop";
 			if (screen >= 600) return "tablet";
 			return "phone";
 		},
-		/**
-		- `boolean mobile`: Informa se o tamanho da tela diz respeito a um dispositivo que não seja o desktop.
-		**/
+		/**- `''boolean'' mobile`: Informa se dispositivo não é do tamanho desktop.**/
 		get mobile() {return this._device !== "desktop";},
-		/**
-		- `void onchange`: Define a função disparadora a ser chamada durante as alterações de dispositivos (tamanho da tela).
-		- Assim que definido o diparador, o evento resize será estabelecido e será feita uma chamada ao disparador.
-		**/
+		/**- `''void'' onchange`: Define a função disparadora de alteração de dispositivo (tamanho da tela). Quando definido, o evento ''resize'' será provocado e uma chamada será executada.**/
 		set onchange(x) {
 			if (typeof x === "function" || x === null) {
 				this._change = x;
@@ -104,12 +88,14 @@ const wd = (function() {
 			}
 		},
 		/**
-		- `void _trigger()`: Chama a função disparadora quando houver mudança de dispositivo que receberá como argumento um objeto com os seguintes atributos:
-		- `object target` - O objeto __DEVICECONTROLLER.
-		- `integer width` - O tamanho da tela em px.
-		- `string device` - O nome do dispositivo correspondente à tela.
-		- `boolean mobile` - Informa se o dispositivo possui tela inferior a do desktop.
-		**/
+		- `''void'' _trigger()`: Executa a função disparadora quando provocado (alteração de tela) enviando um objeto como argumento com as seguintes características:**/
+		/**-[
+		|**Nome**|**Valor**|
+		|`''object'' target`|O objeto `__DEVICECONTROLLER`.|
+		|`''integer'' width`|O tamanho da tela em px.|
+		|`''string'' device`|O nome do dispositivo correspondente à tela.|
+		|`''boolean'' mobile`|Informa se o dispositivo possui tela inferior ao desktop.|
+		]-**/
 		_trigger: function() {
 			let device = this.device;
 			if (this._device === device) return;
@@ -123,45 +109,39 @@ const wd = (function() {
 			});
 			return;
 		},
+		/**}**/
 	};
 /*----------------------------------------------------------------------------*/
-	/**
-	`const integer __KEYTIMERANGE`
-	Registra o intervalo, em milisegUndos, entre eventos de digitação (oninput, onkeyup...).
-	**/
+	/**```**const** ''integer'' __KEYTIMERANGE```**/
+	/**Registra o intervalo, em milisegundos, entre eventos de digitação (oninput, onkeyup...).**/
 	const __KEYTIMERANGE = 500;
 /*----------------------------------------------------------------------------*/
-	/**
-	`const object __COUNTERCONTROL`
-	Registra a contagem de requisições a arquivos externos com os seguntes atributos:
-	- `integer repeat`: Número de manipulações de repetição.
-	- `integer load`: Número de manipulações de carregamentos.
-	**/
+	/**```**const** ''object'' __COUNTERCONTROL```**/
+	/**Registra a contagem de requisições a arquivos externos e possui os seguintes atributos:**/
+	/**{
+	- `''integer'' repeat`: Número de manipulações de repetição.
+	- `''integer'' load`: Número de manipulações de carregamentos.
+	}**/
 	const __COUNTERCONTROL = {
 		repeat: 0,
 		load:   0
 	};
 /*----------------------------------------------------------------------------*/
-	/**
-	`const object __MODALCONTROL`
-	Controla a janela modal com a seguinte estrutura de métodos e atributos:
-	**/
+	/**```**const** ''object'' __MODALCONTROL```**/
+	/**Controla a janela modal. Possui a seguinte estrutura de métodos e atributos:**/
 	const __MODALCONTROL = {
-		/**
-		- `node modal`: Plano de fundo;
-		- `node bar`: Barra de progresso (meter, progress ou div);
-		- `integer counter`: Solicitações em aberto (controla a exibição), fecha se zero;
-		- `integer delay`: Tempo de segurança, em milisegundos, para decidir sobre o fechamento da janela (evitar piscadas);
-		- `integer time`: Intervalo, em milisegundos, de atualização da barra de progresso;
-		**/
+		/**{
+		- `''node'' modal`: Plano de fundo;
+		- `''node'' bar`: Barra de progresso (meter, progress ou div);
+		- `''integer'' counter`: Solicitações em aberto (controla a exibição), fecha se zero;
+		- `''integer'' delay`: Tempo de segurança, em milisegundos, para decidir sobre o fechamento da janela (evitar piscadas);
+		- `''integer'' time`: Intervalo, em milisegundos, de atualização da barra de progresso;**/
 		modal: null,
 		bar: null,
 		counter: 0,
 		delay: 250,
 		time: 5,
-		/**
-		- `void _init()`: Inicializa os atributos.
-		**/
+		/**- `''void'' _init()`: Inicializa os atributos.**/
 		_init: function() {
 			if (this.modal !== null) return;
 			/* janela modal */
@@ -179,9 +159,7 @@ const wd = (function() {
 			this.modal.appendChild(this.bar);
 			return;
 		},
-		/**
-		- `integer start()`: Solicita a janela modal, acresce counter e retorna seu valor.
-		**/
+		/**- `''integer'' start()`: Solicita a janela modal, acresce `counter` e retorna seu valor.**/
 		start: function() { /* abre a janela modal */
 			this._init();
 			if (this.counter === 0)
@@ -189,9 +167,7 @@ const wd = (function() {
 			this.counter++;
 			return this.counter;
 		},
-		/**
-		- `integer end()`: Dispensa à janela modal, decresce counter e retorna seu valor.
-		**/
+		/**- `''integer'' end()`: Dispensa à janela modal, decresce counter e retorna seu valor.**/
 		end: function() {
 			let object = this;
 			/* checar fechamento da janela após delay */
@@ -203,9 +179,7 @@ const wd = (function() {
 
 			return this.counter;
 		},
-		/**
-		- `void progress(float x)`: Define o valor da barra de progresso por meio do argumento `x` (0 a 1).
-		**/
+		/**- `''void'' progress(''number'' x)`: Define o valor da barra de progresso (0 a 1) por meio do argumento `x`.**/
 		progress: function(x) {
 			let tag    = this.bar.tagName.toLowerCase();
 			let value  = tag === "div" ? wd_num_str(x, true) : x;
@@ -219,68 +193,49 @@ const wd = (function() {
 			}, this.time);
 			return;
 		}
+		/**}**/
 	};
 /*----------------------------------------------------------------------------*/
-	/**
-	`const object __SIGNALCONTROL`
-	Controla a caixa de mensagens por meio dos seguintes métodos e atributos:
-	**/
+	/**```**const** ''object'' __SIGNALCONTROL```**/
+	/**Controla a caixa de mensagens. Possui os seguintes métodos e atributos:**/
+	/**{**/
 	const __SIGNALCONTROL = {
-		/**
-		- `node main`: Container das caixas de mensagem.
-		**/
+		/**- `''node'' main`: Container das caixas de mensagem.**/
 		main: null,
-		/**
-		- `integer time`: Tempo de duração da mensagem (ver CSS `js-wd-signal-msg`).
-		**/
+		/**- `''integer'' time`: Tempo de duração da mensagem (ver CSS `js-wd-signal-msg`).**/
 		time: 9000,
-		/**
-		- `void  _init()`: Inicializa os atributos.
-		**/
+		/**- `''void'' _init()`: Inicializa os atributos.**/
 		_init: function() {
 			this.main = document.createElement("DIV");
 			this.main.className = "js-wd-signal";
 			return;
 		},
-		/**
-		- `object _createBox()`: Método interno que cria e retorna os componentes de uma nova caixa de mensagem definidos pelos seguintes atributos:
-		**/
+		/**- `''object'' _createBox()`: Método interno que cria e retorna um objeto com os componentes de uma nova caixa de mensagem:**/
 		_createBox: function() {
+			/**-[
+			|**Nome**|**Valor**|
+			|`''node'' box`|Container da caixa de mensagem.|
+			|`''node'' header`|Cabeçalho da mensagem.|
+			|`''node'' message`|Texto da mensagem.|
+			|`''node'' close`|Botão de fechamento antecipado da caixa.|
+			|`''node'' title`|Texto do cabeçalho.|
+			]-**/
 			return {
-				/**
-				- `node box` - Container da caixa de mensagem.
-				**/
 				box:     document.createElement("ARTICLE"),
-				/**
-				- `node header` - Cabeçalho da mensagem.
-				**/
 				header: document.createElement("HEADER"),
-				/**
-				- `node message` - Texto da mensagem.
-				**/
 				message: document.createElement("SECTION"),
-				/**
-				- `node close` - Botão de fechamento antecipado da caixa.
-				**/
 				close: document.createElement("SPAN"),
-				/**
-				- `node title` - Texto do cabeçalho.
-				**/
 				title: document.createElement("STRONG")
 			};
 		},
-		/**
-		- `void _close(node elem)`: Demanda o fechamento da caixa de mensagem cujo argumento `elem` indica a caixa específica a ser fechada.
-		**/
+		/**- `''void'' _close(''node'' elem)`: Demanda o fechamento da caixa de mensagem. O argumento `elem` indica a caixa a fechar.**/
 		_close: function(elem) {
 				try {this.main.removeChild(elem);} catch(e){}
 				if (this.main.children.length === 0)
 					try {document.body.removeChild(this.main);} catch(e){}
 				return;
 		},
-		/**
-		- `node _box()`: Constrói a caixa de mensagem e a retorna.
-		**/
+		/**- `node _box()`: Constrói a caixa de mensagem e a retorna.**/
 		_box: function() {
 			let msg = this._createBox();
 			msg.box.appendChild(msg.header);
@@ -295,10 +250,9 @@ const wd = (function() {
 			}
 			return msg;
 		},
-		/**
-		- `void open(string message, string title)`: Demanda a abertura de uma nova caixa de mensagem. O argumento `message` define o texto da mensagem e o argumento opcional `title` define seu título.
-		**/
-		open: function(message, title) { /* abre uma mensagem */
+		/**- `''void'' open(''string'' message, ''string'' title=" ")`: Demanda a abertura de uma nova caixa de mensagem.**/
+		/**- O argumento `message` define o texto da mensagem e o argumento `title` define seu título.**/
+		open: function(message, title) {
 			/* criação do container principal, se inexistente */
 			if (this.main === null) this._init();
 			/* obtenção da caixa de mensagem */
@@ -316,17 +270,17 @@ const wd = (function() {
 			window.setTimeout(function() {
 				object._close(msg.box)
 			}, this.time);
-
 			return;
 		}
+		/**}**/
 	};
 /*----------------------------------------------------------------------------*/
-	/**
-	`const array __JSCSS`
-	Guarda os estilos da biblioteca. Cada item da lista contém um objeto que definem os estilos, conforme atributos:
-	- `string s` - Seletor CSS.
-	- `string d` - Estilos a serem aplicados ao seletor.
-	**/
+	/**```**const** ''array'' __JSCSS```**/
+	/**Guarda os estilos da biblioteca. Cada item da lista é um objeto que define os estilos:**/
+	/**{
+	- `''string'' s`: Seletor CSS.
+	- `''string'' d`: Estilos a serem aplicados ao seletor.
+	}**/
 	const __JSCSS = [
 		{s: "@keyframes js-wd-fade-in",  d: ["from {opacity: 0;} to {opacity: 1;}"]},
 		{s: "@keyframes js-wd-fade-out", d: ["from {opacity: 1;} to {opacity: 0;}"]},
