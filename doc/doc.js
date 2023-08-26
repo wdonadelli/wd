@@ -10,16 +10,20 @@ const tag1 = [
 	{re: /^\#\#\#([^#].+)$/,          rp: "<h3>$1</h3>"},
 	{re: /^\#\#([^#].+)$/,            rp: "<h2>$1</h2>"},
 	{re: /^\#([^#].+)$/,              rp: "<h1>$1</h1>"},
-	/* Lista */
+	/* Lista (abertura e fechamento) */
 	{re: /^\{$/,                      rp: "<dl>"},
 	{re: /^\}$/,                      rp: "</dl>"},
-	{re: /^\-\ ([^:]+)\:$/,           rp: "\t<dt>$1</dt>"},
-	{re: /^\-\ ([^:]+)\:\ (.+)$/,     rp: "\t<dt>$1</dt>\n\t<dd>$2</dd>"},
-	{re: /^\-\ ([^:]+)$/,             rp: "\t<dd>$1</dd>"},
-	/* Tabela em Lista */
-	{re: /^\-\[$/,                    rp: "\t<dd>\n<table border=\"1\">\n\t<tbody>"},
-	{re: /^\]\-$/,                    rp: "\t</tbody>\n</table>\n\t</dd>"},
-	/* Tabela */
+	/* SubLista (abertura e fechamento) */
+	{re: /^\-\ \{$/,                  rp: "<dd><dl>"},
+	{re: /^\-\ \}$/,                  rp: "</dl></dd>"},
+	/* Tabela em Lista (abertura e fechamento) */
+	{re: /^\-\ \[$/,                  rp: "\t<dt>\n<table border=\"1\">\n\t<tbody>"},
+	{re: /^\-\ \]$/,                  rp: "\t</tbody>\n</table>\n\t</dt>"},
+	/* Itens da Lista  */
+	{re: /^\-\ ([^:]+)\:$/,              rp: "\t<dt>$1</dt>"},
+	{re: /^\-\ ([^:]+)\:\ (.+)$/,        rp: "\t<dt>$1</dt>\n\t<dd>$2</dd>"},
+	{re: /^\-\ (.+)$/,                rp: "\t<dd>$1</dd>"},
+	/* Tabela (abertura e fechamento) */
 	{re: /^\[$/,                      rp: "<table border=\"1\">\n\t<tbody>"},
 	{re: /^\]$/,                      rp: "\t</tbody>\n</table>"},
 	{re: /^\|(.+)/,                   rp: "\t\t<tr><td>$1"},
@@ -116,7 +120,7 @@ function manual(x) {
 
 	});
 	line = line.join("\n").replace(/\n+/g, "\n");
-	if (!code) line = trocas(line, tag2);
+	//if (!code) line = trocas(line, tag2);
 	console.log(line);
 	html.innerHTML = line;
 	document.querySelector("main").appendChild(html);
