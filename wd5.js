@@ -27,13 +27,13 @@ https://github.com/wdonadelli/wd
 "use strict";
 
 const wd = (function() {
-	/**#Biblioteca JavaScript**/
-	/**##Documentação para Manutenção**/
+	/**# Biblioteca JavaScript
+	## Documentação para Manutenção
 
-	/**###Mecanismos de Controle**/
+	### Mecanismos de Controle
 
-	/**```**const** ''string'' __VERSION```**/
-	/**Registra a versão da biblioteca.**/
+	```**const** ''string'' __VERSION```
+	Registra a versão da biblioteca.**/
 	const __VERSION = "WD JS v5.0.0";
 /*----------------------------------------------------------------------------*/
 
@@ -44,10 +44,11 @@ const wd = (function() {
 		if (window.innerWidth >= 600) return "tablet";
 		return "phone";
 	};
+
 /*----------------------------------------------------------------------------*/
-	/**```**const** ''object'' __DEVICECONTROLLER```**/
-	/**Controla as alterações da tela atribuida a um tipo de dispositivo e executa ações quando houver mudança neste dispositivo idealizado:**/
-	/**{**/
+	/**```**const** ''object'' __DEVICECONTROLLER```
+	Controla as alterações da tela atribuida a um tipo de dispositivo e executa ações quando houver mudança neste dispositivo idealizado:
+	{**/
 
 	const __DEVICECONTROLLER = {
 		/**- `''boolean'' _start`: Informar se o controlador já foi iniciado.**/
@@ -58,13 +59,13 @@ const wd = (function() {
 		_device: null,
 		/**- `''integer'' screen`: Retorna o tamanho da tela.**/
 		get screen() {return window.innerWidth;},
-		/**- `''string'' device`: Retorna o identificador da tela:**/
-		/**- [
-		|**Identificador**|**Tamanho da Tela**|
-		|desktop|&ge; 768px|
-		|tablet|&ge; 600px|
-		|phone|&lt; 600px|
-		- ]**/
+		/**- `''string'' device`: Retorna o identificador da tela:
+		- {
+			[Identificador|Tamanho da Tela|
+			|desktop|&ge; 768px|
+			|tablet|&ge; 600px|
+			|phone|&lt; 600px]
+		- }**/
 		get device() {
 			let screen = this.screen;
 			if (screen >= 768) return "desktop";
@@ -88,11 +89,14 @@ const wd = (function() {
 		},
 		/**- `''void'' _trigger()`: Executa a função disparadora quando provocado (alteração de tela) enviando um objeto como argumento com as seguintes características:
 		- {
-			- `''object'' target`: O objeto `__DEVICECONTROLLER`.
-			- `''integer'' width`: O tamanho da tela em px.
-			- `''string'' device`: O nome do dispositivo correspondente à tela.
-			- `''boolean'' mobile`: Informa se o dispositivo possui tela inferior ao desktop.
-		- }**/
+				{
+					- `''object'' target`: O objeto `__DEVICECONTROLLER`.
+					- `''integer'' width`: O tamanho da tela em px.
+					- `''string'' device`: O nome do dispositivo correspondente à tela.
+					- `''boolean'' mobile`: Informa se o dispositivo possui tela inferior ao desktop.
+				}
+		- }
+		}**/
 		_trigger: function() {
 			let device = this.device;
 			if (this._device === device) return;
@@ -106,33 +110,32 @@ const wd = (function() {
 			});
 			return;
 		},
-		/**}**/
 	};
 /*----------------------------------------------------------------------------*/
-	/**```**const** ''integer'' __KEYTIMERANGE```**/
-	/**Registra o intervalo, em milisegundos, entre eventos de digitação (oninput, onkeyup...).**/
+	/**```**const** ''integer'' __KEYTIMERANGE```
+	Registra o intervalo, em milisegundos, entre eventos de digitação (oninput, onkeyup...).**/
 	const __KEYTIMERANGE = 500;
 /*----------------------------------------------------------------------------*/
-	/**```**const** ''object'' __COUNTERCONTROL```**/
-	/**Registra a contagem de requisições:**/
-	/**{
-	- `''integer'' repeat`: Número de manipulações de repetição.
-	- `''integer'' load`: Número de manipulações de carregamentos.
+	/**```**const** ''object'' __COUNTERCONTROL```
+	Registra a contagem de requisições:
+	{
+		- `''integer'' repeat`: Número de manipulações de repetição.
+		- `''integer'' load`: Número de manipulações de carregamentos.
 	}**/
 	const __COUNTERCONTROL = {
 		repeat: 0,
 		load:   0
 	};
 /*----------------------------------------------------------------------------*/
-	/**```**const** ''object'' __MODALCONTROL```**/
-	/**Controla a janela modal:**/
+	/**```**const** ''object'' __MODALCONTROL```
+	Controla a janela modal:**/
 	const __MODALCONTROL = {
 		/**{
-		- `''node'' modal`: Plano de fundo;
-		- `''node'' bar`: Barra de progresso (meter, progress ou div);
-		- `''integer'' counter`: Solicitações em aberto (controla a exibição), fecha se zero;
-		- `''integer'' delay`: Tempo de segurança, em milisegundos, para decidir sobre o fechamento da janela (evitar piscadas);
-		- `''integer'' time`: Intervalo, em milisegundos, de atualização da barra de progresso;**/
+			- `''node'' modal`: Plano de fundo;
+			- `''node'' bar`: Barra de progresso (meter, progress ou div);
+			- `''integer'' counter`: Solicitações em aberto (controla a exibição), fecha se zero;
+			- `''integer'' delay`: Tempo de segurança, em milisegundos, para decidir sobre o fechamento da janela (evitar piscadas);
+			- `''integer'' time`: Intervalo, em milisegundos, de atualização da barra de progresso;**/
 		modal: null,
 		bar: null,
 		counter: 0,
@@ -176,7 +179,7 @@ const wd = (function() {
 
 			return this.counter;
 		},
-		/**- `''void'' progress(''number'' x)`: Define o valor da barra de progresso (0 a 1) por meio do argumento `x`.**/
+		/**- `''void'' progress(''number'' x)`: Define o valor da barra de progresso (0 a 1) por meio do argumento `x`.}**/
 		progress: function(x) {
 			let tag    = this.bar.tagName.toLowerCase();
 			let value  = tag === "div" ? wd_num_str(x, true) : x;
@@ -190,12 +193,11 @@ const wd = (function() {
 			}, this.time);
 			return;
 		}
-		/**}**/
 	};
 /*----------------------------------------------------------------------------*/
-	/**```**const** ''object'' __SIGNALCONTROL```**/
-	/**Controla a caixa de mensagens:**/
-	/**{**/
+	/**```**const** ''object'' __SIGNALCONTROL```
+	Controla a caixa de mensagens:
+	{**/
 	const __SIGNALCONTROL = {
 		/**- `''node'' main`: Container das caixas de mensagem.**/
 		main: null,
@@ -209,11 +211,11 @@ const wd = (function() {
 		},
 		/**- `''object'' _createBox()`: Método interno que cria e retorna um objeto com os componentes de uma nova caixa de mensagem:
 		- {
-				- `''node'' box`: Container da caixa de mensagem.
+				{- `''node'' box`: Container da caixa de mensagem.
 				- `''node'' header`: Cabeçalho da mensagem.
 				- `''node'' message`: Texto da mensagem.
 				- `''node'' close`: Botão de fechamento antecipado da caixa.
-				- `''node'' title`: Texto do cabeçalho.
+				- `''node'' title`: Texto do cabeçalho.}
 			- }**/
 		_createBox: function() {
 			return {
@@ -247,7 +249,7 @@ const wd = (function() {
 			return msg;
 		},
 		/**- `''void'' open(''string'' message, ''string'' title=" ")`: Demanda a abertura de uma nova caixa de mensagem.**/
-		/**- O argumento `message` define o texto da mensagem e o argumento `title` define seu título.**/
+		/**- O argumento `message` define o texto da mensagem e o argumento `title` define seu título.}**/
 		open: function(message, title) {
 			/* criação do container principal, se inexistente */
 			if (this.main === null) this._init();
@@ -268,14 +270,13 @@ const wd = (function() {
 			}, this.time);
 			return;
 		}
-		/**}**/
 	};
 /*----------------------------------------------------------------------------*/
-	/**```**const** ''array'' __JSCSS```**/
-	/**Guarda os estilos da biblioteca. Cada item da lista é um objeto que define os estilos:**/
-	/**{
-	- `''string'' s`: Seletor CSS.
-	- `''string'' d`: Estilos a serem aplicados ao seletor.
+	/**```**const** ''array'' __JSCSS```
+	Guarda os estilos da biblioteca. Cada item da lista é um objeto que define os estilos:
+	{
+		- `''string'' s`: Seletor CSS.
+		- `''string'' d`: Estilos a serem aplicados ao seletor.
 	}**/
 	const __JSCSS = [
 		{s: "@keyframes js-wd-fade-in",  d: ["from {opacity: 0;} to {opacity: 1;}"]},
@@ -334,9 +335,9 @@ const wd = (function() {
 		]},
 	];
 /*===========================================================================*/
-	/**###Checagem de Tipos e Valores**/
-	/**```**constructor** ''object'' __Type(''any''  input)```**/
-	/**Construtor para identificação do tipo de dado informado informado no argumento `input`:
+	/**###Checagem de Tipos e Valores
+	```**constructor** ''object'' __Type(''any''  input)```
+	Construtor para identificação do tipo de dado informado informado no argumento `input`:
 	{**/
 	function __Type(input) {
 		if (!(this instanceof __Type)) return new __Type(input);
@@ -345,7 +346,7 @@ const wd = (function() {
 			_type:  {value:  null, writable: true}, /* tipo do valor de entrada */
 			_value: {value:  null, writable: true}, /* valor a ser considerado */
 		});
-		this._init();      /* definir atributos próprios */
+		this._init(); /* definir atributos próprios */
 	}
 
 	Object.defineProperties(__Type.prototype, {
@@ -448,7 +449,17 @@ const wd = (function() {
 				}
 			}
 		},
-		/**- `''boolean'' month`: Checa se o argumento está no formato de mês (ver atributo date): `YYYY-MM` (padrão), `MM/YYYY`, `MMM/YYYY`, `MMMM/YYYY`, `MMM YYYY` e `MMMM YYYY`.**/
+		/**- `''boolean'' month`: Checa se o argumento está no formato de mês (ver atributo date):
+		- {
+			(
+				* `YYYY-MM` padrão
+				* `MM/YYYY`
+				* `MMM/YYYY`
+				* `MMMM/YYYY`
+				* `MMM YYYY`
+				* `MMMM YYYY`
+			)
+		- }**/
 		month: {
 			get: function() {
 				if (!this.chars) return false;

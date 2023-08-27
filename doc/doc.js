@@ -1,52 +1,3 @@
-/* alterações preliminares odenadas do mais para o menos específico */
-const tag1 = [
-	/* Blocos de Texto */
-	{re: /^([^\[\]\#\`\<\|\-].+)$/,            rp: "<p>$1</p>"},
-	{re: /^\`\`\`([^`]+)\`\`\`$/,     rp: "<pre>$1</pre>"},
-	/* Blocos de Títulos */
-	{re: /^\#\#\#\#\#\#([^#].+)$/,    rp: "<h6>$1</h6>"},
-	{re: /^\#\#\#\#\#([^#].+)$/,      rp: "<h5>$1</h5>"},
-	{re: /^\#\#\#\#([^#].+)$/,        rp: "<h4>$1</h4>"},
-	{re: /^\#\#\#([^#].+)$/,          rp: "<h3>$1</h3>"},
-	{re: /^\#\#([^#].+)$/,            rp: "<h2>$1</h2>"},
-	{re: /^\#([^#].+)$/,              rp: "<h1>$1</h1>"},
-	/* Lista (abertura e fechamento) */
-	{re: /^\{$/,                      rp: "<dl>"},
-	{re: /^\}$/,                      rp: "</dl>"},
-	/* SubLista (abertura e fechamento) */
-	{re: /^\-\ \{$/,                  rp: "<dd><dl>"},
-	{re: /^\-\ \}$/,                  rp: "</dl></dd>"},
-	/* Tabela em Lista (abertura e fechamento) */
-	{re: /^\-\ \[$/,                  rp: "\t<dt>\n<table border=\"1\">\n\t<tbody>"},
-	{re: /^\-\ \]$/,                  rp: "\t</tbody>\n</table>\n\t</dt>"},
-	/* Itens da Lista  */
-	{re: /^\-\ ([^:]+)\:$/,              rp: "\t<dt>$1</dt>"},
-	{re: /^\-\ ([^:]+)\:\ (.+)$/,        rp: "\t<dt>$1</dt>\n\t<dd>$2</dd>"},
-	{re: /^\-\ (.+)$/,                rp: "\t<dd>$1</dd>"},
-	/* Tabela (abertura e fechamento) */
-	{re: /^\[$/,                      rp: "<table border=\"1\">\n\t<tbody>"},
-	{re: /^\]$/,                      rp: "\t</tbody>\n</table>"},
-	{re: /^\|(.+)/,                   rp: "\t\t<tr><td>$1"},
-	{re: /(.+)\|$/,                   rp: "$1</td></tr>"},
-	{re: /([^|]+)\|([^|]+)/,          rp: "$1</td><td>$2"},
-	/* Textos */
-	{re: /\`([^`]+)\`/g,              rp: "<code>$1</code>"},
-	{re: /\*\*([^*][^*]+)\*\*/,       rp: "<b>$1</b>"},
-	{re: /\'\'([^'][^']+)\'\'/,       rp: "<i>$1</i>"},
-	{re: /\_\_([^_][^_]+)\_\_/,       rp: "<u>$1</u>"},
-	{re: /\[([^\]]+)\]\(([^()]+)\)/g, rp: "<a href=\"$2\" target=\"_blank\">$1</a>"},
-];
-
-/* alterações secundárias */
-const tag2 = [
-	/* Tabela */
-//	{re: /([^t][^r][^>]\n)(\<tr\>.+\n)/g, rp: "$1<table><tbody>$2"},
-	//{re: /.+(\<\/tr\>\n)([^<][^t][^r])/g, rp: "$1</tbody></table>$2"},
-	/* listas */
-	{re: /([^d][^dt][^>]\n)(\<d[dh]\>.+\n)/g, rp: "$1<dl>$2"},
-	{re: /.+(\<\/d[dt]\>\n)([^<][^d][^dt])/g, rp: "$1</dl>$2"},
-];
-
 /* informa o arquivo a ser pesquisado e se é para obter o código ou os comentários */
 function alvo() {
 	let url  = window.location.toString();
@@ -58,22 +9,95 @@ function alvo() {
 	};
 }
 
-/* limpa a linha (abertura e fechamento de comentários) */
-function limpar(x) {
-	return x.replace("/**", "").replace("**/", "").trim();
-}
-
-/* transforma as notações em HTML */
-function trocas(x, tag) {
-	x = limpar(x);
+/* transforma as notações em HTML (formatação de texto) */
+function emlinha(x) {
+	let inline = [
+		{re: /\`([^`]+)\`/g,              rp: "<code>$1</code>"},
+		{re: /\*\*([^*][^*]+)\*\*/,       rp: "<b>$1</b>"},
+		{re: /\'\'([^'][^']+)\'\'/,       rp: "<i>$1</i>"},
+		{re: /\_\_([^_][^_]+)\_\_/,       rp: "<u>$1</u>"},
+		{re: /\[([^\]]+)\]\(([^()]+)\)/g, rp: "<a href=\"$2\" target=\"_blank\">$1</a>"},
+	];
 	let i = -1;
-	while (++i < tag.length)
-		while (tag[i].re.test(x))
-			x = x.replace(tag[i].re, tag[i].rp);
+	while (++i < inline.length) {
+		let re = inline[i].re;
+		let rp = inline[i].rp;
+		while (re.test(x)) {
+			x = x.replace(re, rp);
+		}
+	}
 	return x;
 }
 
-/* Retornos:
+/* transforma as notações em HTML (blocos) */
+function blocos(x) {
+	x = x.replace("/**", "").replace("**/", "").replace(/\ +/, " ").trim();
+
+	let re;
+	let a    = x[0];
+	let z    = x[x.length - 1];
+	let tags = {
+		empty:  {re: "",    rp: ""},
+		table1: {re: "[",   rp: "<table border=\"1\">"},
+		table2: {re: "]",   rp: "</table>"},
+		ul1:    {re: "(",   rp: "<ul>"},
+		ul2:    {re: ")",   rp: "</ul>"},
+		ulul1:  {re: "* (", rp: "\t<li>\n\t\t<ul>"},
+		ulul2:  {re: "* )", rp: "\t\t</ul>\n\t</li>"},
+		dl1:    {re: "{",   rp: "<dl>"},
+		dl2:    {re: "}",   rp: "</dl>"},
+		dd1:    {re: "- {", rp: "\t<dd>"},
+		dd2:    {re: "- }", rp: "\t</dd>"},
+		li:     {re: /^\*\ (.+)$/,            rp: "\t<li>$1</li>"},
+		dt:     {re: /^\-\ ([^:]+)\:$/,       rp: "\t<dt>$1</dt>"},
+		dd:     {re: /^\-\ ([^:]+)$/,         rp: "\t<dd>$1</dd>"},
+		dtdl:   {re: /^\-\ ([^:]+)\:\ (.+)$/, rp: "\t<dt>$1</dt>\n\t<dd>$2</dd>"},
+		pre:    {re: /^\`\`\`([^`]+)\`\`\`$/, rp: "<pre>$1</pre>"},
+	};
+
+	for (let i in tags) {
+		let re = tags[i].re;
+		let rp = tags[i].rp;
+		let string = typeof re === "string";
+		if (string && x === re)    return rp;
+		if (!string && re.test(x)) return x.replace(re, rp);
+	}
+
+	/* Título */
+	re = /^\#+\ (.+)$/;
+	if (re.test(x)) {
+		let id = wd(x).camel;
+		let hn = "h"+x.split(" ")[0].length;
+		let el = "<"+hn+" id=\""+id+"\" >$1</"+hn+">";
+		return x.replace(re, el);
+	}
+
+	/* Tabelas */
+	re = /^(\||\[)(.+)?(\||\])$/;
+	if (re.test(x)) {
+		let col = x.slice(1, x.length-1);
+		if (a === "[" && z === "|")
+			col = "<th>"+col.replace(/\|/g, "</th><th>")+"</th>"
+		else
+			col = "<td>"+col.replace(/\|/g, "</td><td>")+"</td>"
+		let row = "\t\t<tr>"+col+"</tr>";
+
+		if (a === "[" && z === "]")
+			return "<table border=\"1\">\n\t<tbody>\n"+row+"\n\t</tbody>\n</table>";
+		if (a === "[" && z === "|")
+			return "<table border=\"1\">\n\t<thead>\n"+row+"\n\t</thead>\n\t<tbody>";
+		if (a === "|" && z === "]")
+			return row+"\n\t</tbody>\n</table>";
+		if (a === "|" && z === "|")
+			return row;
+	}
+
+	/* Parágrafos */
+	return "<p>"+x+"</p>";
+}
+
+/* Retorna o andamento dos comentários abertos com \/\*\* e fechados com \*\*\/
+	Retornos:
 	 0 - Bloco que abre e fecha
 	+1 - Abertura de bloco
 	+2 - Fechamento de bloco
@@ -96,7 +120,6 @@ function manual(x) {
 	let open = false;
 	html.className = "wd-read";
 
-
 	line.forEach(function(v,i,a) {
 		/* checar abertura de comentários */
 		let test = comentario(v);
@@ -111,7 +134,7 @@ function manual(x) {
 
 		/* obter apenas os comentários */
 		if (open || test >= 0)
-			a[i] = trocas(v, tag1);
+			a[i] = emlinha(blocos(v));
 		else
 			a[i] = "";
 
@@ -120,20 +143,13 @@ function manual(x) {
 
 	});
 	line = line.join("\n").replace(/\n+/g, "\n");
-	//if (!code) line = trocas(line, tag2);
 	console.log(line);
 	html.innerHTML = line;
 	document.querySelector("main").appendChild(html);
 	return
 }
 
-
-
-
-
-
-
-
+/* disparador de onload */
 function ler() {
 	wd().send(alvo().file, function (x) {
 		if (x.closed)
