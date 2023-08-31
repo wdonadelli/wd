@@ -69,6 +69,8 @@ function blocos(x) {
 		let id = wd(x).camel;
 		let hn = "h"+x.split(" ")[0].length;
 		let el = "<"+hn+" id=\""+id+"\" >$1</"+hn+">";
+		if (hn === "h1" || hn === "h2")
+			document.title += " | "+x.replace(re, "$1")
 		return x.replace(re, el);
 	}
 
@@ -119,6 +121,7 @@ function manual(x) {
 	let line = x.split("\n");
 	let open = false;
 	html.className = "wd-read";
+	document.title = alvo().file.replace(/\/([^/]+)$/, "$1");
 
 	line.forEach(function(v,i,a) {
 		/* checar abertura de comentários */
