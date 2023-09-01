@@ -1,3 +1,555 @@
+/*----------------------------------------------------------------------------*/
+	/**
+	`**constructor** ''object'' __Plot2D(string title, string xLabel, string yLabel)`
+	Ferramenta para renderizar o gráfico 2D (herda características de i{__Table2Desquecido}i).
+	v{title}v - Título do gráfico.}d
+	v{xLabel}v - Nome do eixo v{x}v.}d
+	v{yLabel}v - Nome do eixo v{y}v.}d}l l{
+	**/
+	function __Plot2Dd(title, xLabel, yLabel) {
+		if (!(this instanceof __Plot2D)) return new __Plot2Dd(title, xLabel, yLabel);
+		__Table2Desqueciddo.call(this, title, xLabel, yLabel);
+	}
+
+	__Plot2D.prototype = Object.create(__Table2Desquecido.prototype, {
+		constructor: {value: __Plot2D},
+		/**`number _xp(b{number}b x)}t
+		Retorna u{o ponto}u de plotagem do eixo v{x}v no SVG.}d L{
+		v{x}v - Valor da coordenada v{x}v.**/
+		_xp: {
+			value: function (x) { /* dp/dx = (p2-p1)/(x2-x1) = (p-p1)/(x-x1) */
+				let p1 = this._xStart;
+				let p2 = p1 + this._xSize;
+				let dp = p2 - p1;
+				if (this._xMin === this._xMax) {//FIXME tem que transformar xMin, xMax, yMin, yMax em getter/setter
+					let diff = this._xMin === 0 ? 1 : this._xMin;
+					this._xMin = this._xMin - diff;
+					this._xMax = this._xMax + diff;
+				}
+				let x1 = this._xMin;
+				let x2 = this._xMax;
+				let dx = x2 - x1;
+				return ((dp/dx)*(x - x1)) + p1;
+      }
+    },
+    /**
+    number}b _yp(b{number}b x)}t
+		Retorna u{o ponto}u de plotagem do eixo v{y}v no SVG.}d L{
+		v{y}v - Valor da coordenada v{y}v.**/
+    _yp: {
+			value: function (y) { /* dp/dy = (p2-p1)/(y2-y1) = (p-p1)/(y-y1) */
+				let p1 = this._yStart;
+				let p2 = p1 + this._ySize;
+				let dp = p2 - p1;
+				if (this._yMin === this._yMax) {
+					let diff = this._yMin === 0 ? 1 : this._yMin;
+					this._yMin = this._yMin - diff;
+					this._yMax = this._yMax + diff;
+				}
+				let y1 = this._yMin;
+				let y2 = this._yMax;
+				if (y1 === y2) {
+					let diff = 2*(y1 === 0 ? 1 : y1);
+					y1 = y1 - diff;
+					y2 = y1 + diff;
+				}
+				let dy = y2 - y1;
+				return p1+p2-(((dp/dy)*(y - y1)) + p1);
+      }
+    },
+    /**matrix}b _yx(b{array}b x, b{array}b y)t
+		Retorna u{os pontos}u de plotagem dos eixos v{x,y}v no SVG.}d L{
+		v{x}v - Valores da coordenada v{x}v (coluna 0), ver i{_xp}i.
+		v{x}v - Valores da coordenada v{y}v (coluna 1), ver i{_yp}i.**/
+		_xy: {
+			value: function(x, y) {
+				let xy = {x: [], y: []};
+    		let i = -1;
+    		while (++i < x.length) {
+    			xy.x.push(this._xp(x[i]));
+    			xy.y.push(this._yp(y[i]));
+    		}
+    		return [xy.x, xy.y];
+			}
+		},
+		/**string}b _dline(b{array}b x, b{array}b y, b{- `boolean close)t
+		Retorna o caminho para construção de linhas conectadas por pontos.}d L{
+		v{x}v - Valores do eixo horizontal.
+		v{y}v - Valores do eixo vertical.
+		v{close}v - Informa se é uma figura de área fechada (retorna à origem).**/
+		_dline: {
+    	value: function (x, y, close) {
+    		let d = [];
+    		let i = -1;
+    		while (++i < x.length) {
+    			let path = [i === 0 ? "M" : "L", x[i], y[i]];
+    			d.push(path.join(" "));
+    			if (close === true && i === (x.length - 1)) d.push("Z");
+    		}
+    		return d.join(" ");
+    	}
+    },
+
+
+    _palette: {value: []},
+    /**
+   	string}b _rgb(b{integer}b n, b{number}b opacity)}t
+		Retorna a cor em RGB definida por v{n}v para ser utilizada pelo elemento SVG.}d L{
+		v{n}v - Retorna transparente, se nulo ou indefinido, preto, se menor que zero, ou cor definida.**/
+		_rgb: {
+			value: function(n) {
+				if (n === null || n === undefined) return "none";
+				if (n < 0) return "rgb(0,0,0)";
+				/* definir paleta de cores, se ainda não definida */
+				if (this._palette.length === 0) {
+					let max   = 255;
+					let div   = 2.5;
+					let delta = max/div;
+					let error = [([max,max,max]).join(","), "0,0,0"]
+					let color;
+					let x = -1;
+					while (++x < div) { /* cor principal (decrescente) */
+						let y = -1;
+						while (++y < div) {
+							let z = -1;
+							while (++z < div) {
+								color = [
+									__integer(max-x*delta),
+									__integer(y*delta),
+									__integer(z*delta)
+								]; /* x é a cor redominante */
+								let i = -1;
+								while (++i < 3) { /* alternância de cor predominante */
+									let rgb = ([color[i%3], color[(i+1)%3], color[(i+2)%3]]).join(",");
+									if (this._palette.indexOf(rgb) < 0 && error.indexOf(rgb) < 0)
+										this._palette.push(rgb);
+								}
+							}
+						}
+					}
+				}
+				let index = n%this._palette.length;
+				return "rgb("+this._palette[index]+")";
+			}
+		},
+		/**
+	`node _line() Retorna elemento SVG.
+	**/
+		_svg: {
+			value: function() {
+				let svg  = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+				let attr = {
+					viewBox:"0 0 "+this._width+" "+this._height,
+					style: "border: 1px solid red; background-color: #f0f0f0"
+				};
+				for (let i in attr) svg.setAttribute(i, attr[i]);
+				return svg;
+			}
+		},
+		/**`node _tip(string text, node svg)}t
+		Retorna o elemento SVG com dica (i{title}i) adicionada.}d L{
+		v{text}v - Texto da dica.
+		v{svg}v - Elemento svg a ter adicionado dica.**/
+		_tip: {
+			value: function(text, svg) {
+				let tip = document.createElementNS("http://www.w3.org/2000/svg", "title");
+				tip.textContent = text;
+				svg.appendChild(tip);
+				return svg;
+			}
+		},
+		/**`node _lines(b{array}b x, b{array}b y, b{number}b stroke, b{- `boolean close, b{number}b color)}t
+		Retorna elemento SVG renderizado com linhas conectadas pelos pontos.
+		v{x}v - Coordenadas do eixo v{x}v.
+		v{y}v - Coordenadas do eixo v{y}v.
+		v{stroke}v - Espessura da linha que, se negativo, será tracejada.
+		v{close}v - Informa se é uma figura de área fechada.
+		v{color}v - Valor da cor da linha.**/
+		_lines: {
+			value: function(x, y, stroke, close, color) {
+				let path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+				let width = Math.abs(stroke);
+				let attr = {
+					"d": this._dline(x, y, close),
+					"fill": close === true && color >= 0 ? this._rgb(color) : "none",
+					"fill-opacity": close === true && width > 0 ? 0.6 : 1,
+					"stroke": this._rgb(color),
+					"stroke-width": width,
+					"stroke-dasharray": stroke < 0 ? "8,8" : "none",
+					"stroke-linecap": "round"
+				};
+				for (let i in attr) path.setAttribute(i, attr[i]);
+				return path;
+			}
+		},
+		/**`node _circles(b{number}b cx, b{number}b cy, b{number}b r, b{number}b start, b{number}b width, b{number}b color)}
+		Retorna elemento SVG para circulos e semi-círculos.}d L{
+		v{cx}v - Posição do centro do círculo em v{x}v.
+		v{cy}v - Posição do centro do círculo em v{y}v.
+		v{r}v - Tamanho do raio do círculo.
+		v{start}v - Ângulo inicial do arco, em graus (v{0 = (x = r, y = 0)}v).
+		v{width}v - Variação angular, em graus (sentido anti-horário).
+		v{color}v - Valor da cor do círculo.**/
+		_circles: {
+			value: function(cx, cy, r, start, width, color) {
+				let svg  = width >= 360 ? "circle" : "path";
+				let path = document.createElementNS("http://www.w3.org/2000/svg", svg);
+				let attr = {
+					"fill": this._rgb(color),
+					"fill-opacity": 0.8,
+					"stroke-width": 1,
+					"stroke": this._rgb(color)
+				};
+				if (width >= 360) {
+					attr.cx = cx;
+					attr.cy = cy;
+					attr.r  = r;
+				} else {
+					start  = 2*Math.PI*start/360;
+					width  = 2*Math.PI*width/360;
+					let x1 = cx + r*Math.cos(start);
+					let y1 = cy - r*Math.sin(start);
+					let x2 = cx + r*Math.cos(start + width);
+					let y2 = cy - r*Math.sin(start + width);
+					let lg = width > Math.PI ? 1 : 0;
+					attr.d = ["M", cx, cy, "L", x1, y1, "A", r, r, 0, lg, 0, x2, y2, "Z"].join(" ");
+				}
+				for (let i in attr) path.setAttribute(i, attr[i]);
+				return path;
+			}
+		},
+		/**`node _text(b{number}b x, b{number}b y, string text, string point, b{number}b color)
+		Adiciona e retorna elemento SVG para texto.}d L{
+		v{x}v - Posição em v{x}v.
+		v{y}v - Posição em v{y}v.
+		v{text}v - Conteúdo textual.
+		v{point}v - Identifica o alinhamento e o ponto de ancoragem do texto.
+		Exemplos: v{hse}v horizontal-sudeste; v{vn}v vertical-norte.
+		v{color}v - Valor da cor do texto.**/
+		_text: {
+			value: function(x, y, text, point, color) {
+				let content = document.createElementNS("http://www.w3.org/2000/svg", "text");
+				let vanchor = ["start", "middle", "end"];
+				let vbase   = ["auto", "middle", "hanging"];
+				let anchor  = {n: 1, ne: 2, e: 2, se: 2, s: 1, sw: 0, w: 0, nw: 0, c: 1};
+				let base    = {n: 2, ne: 2, e: 1, se: 0, s: 0, sw: 0, w: 1, nw: 2, c: 1};
+				let attr = {
+					x: point[0] === "v" ? -y : x,
+					y: point[0] === "v" ? x : y,
+					fill: this._rgb(color),
+					"text-anchor":       vanchor[anchor[point.substr(1)]],
+					"dominant-baseline": vbase[base[point.substr(1)]],
+					"font-family":       "monospace",
+					"font-size":         "1em",
+					"transform":         point[0] === "v" ? "rotate(270)" : "",
+					"stroke": "black",
+					"stroke-width": 0.1,
+				};
+				for (let i in attr) content.setAttribute(i, attr[i]);
+				content.textContent = String(text).trim();
+				return content;
+			}
+		},
+
+
+
+
+
+		_area: {//FIXME
+			value: function(svg, _xlabel, _ylabel, _xgrid, _ygrid) {
+				if (_xgrid < 1) _xgrid = -1;
+				if (_ygrid < 1) _ygrid = -1;
+				/* pontos principais */
+				let x1 = this._xStart;
+				let x2 = x1 + this._xSize;
+				let y1 = this._yStart;
+				let y2 = y1 + this._ySize;
+				/* título e rótulos */
+				svg.appendChild(this._text((x1+x2)/2, y1/2, this.title, "hc", -1));
+				svg.appendChild(this._text((x1+x2)/2, (this._height-5), _xlabel, "hs", -1));
+				svg.appendChild(this._text(5, (y1+y2)/2, _ylabel, "vn", -1));
+				/* grade principal */
+				svg.appendChild(this._lines([x1, x2, x2, x1], [y1, y1, y2, y2], 2, true, -1));
+				/* grade e escala horizontal */
+				let i = -1;
+				while (++i <= _xgrid) {
+					let yn = y1 + i*((y2-y1)/_xgrid);
+					let xn = x1 + i*((x2-x1)/_xgrid);
+					svg.appendChild(this._lines([xn, xn], [y1, y2], -0.5, false, -1));
+					let sx = this._xMin + i*((this._xMax - this._xMin)/_xgrid);
+					let px = i === 0 ? "hnw" : (i === _xgrid ? "hne" : "hn");
+					svg.appendChild(this._text(xn  , y2+3, __precision(sx, 3), px, -1));
+				}
+				/* grade e escala vertical */
+				i = -1;
+				while (++i <= _ygrid) {
+					let yn = y1 + i*((y2-y1)/_ygrid);
+					let xn = x1 + i*((x2-x1)/_ygrid);
+					svg.appendChild(this._lines([x1, x2], [yn, yn], -0.5, false, -1));
+					let sy = this._yMax - i*((this._yMax - this._yMin)/_ygrid);
+					let py = i === 0 ? "hne" : (i === _ygrid ? "hse" : "he");
+					svg.appendChild(this._text(x1-3, yn  , __precision(sy, 3), py, -1));
+				}
+
+
+
+/*
+				while (++i <= grid) {
+
+					let yn = y1 + i*((y2-y1)/_ygrid);
+					let xn = x1 + i*((x2-x1)/_xgrid);
+					if (i > 0 && i < grid) {
+						svg.appendChild(this._lines([x1, x2], [yn, yn], -0.5, false, -1));
+						svg.appendChild(this._lines([xn, xn], [y1, y2], -0.5, false, -1));
+					}
+
+					let sx = this._xMin + i*((this._xMax - this._xMin)/grid);
+					let sy = this._yMax - i*((this._yMax - this._yMin)/grid);
+					let px = i === 0 ? "hnw" : (i === grid ? "hne" : "hn");
+					let py = i === 0 ? "hne" : (i === grid ? "hse" : "he");
+					svg.appendChild(this._text(xn  , y2+3, __precision(sx, 3), px, -1));
+					svg.appendChild(this._text(x1-3, yn  , __precision(sy, 3), py, -1));
+				}
+*/
+
+
+
+			}
+		},
+
+
+
+
+
+
+
+
+
+		_rplot: {
+			value: function(svg, plot) {
+				/* gráficos relativos: setores ou barra */
+				let data  = {
+					items: {},
+					add: function(item, val) {
+						item = String(item).replace(/\ +/g, " ").trim();
+						this.items[item] = item in this.items ? (this.items[item]+val) : val;
+					},
+					get list() {
+						let n = [];
+						for (let i in this.items) n.push(this.items[i]);
+						return n;
+					},
+					get sum() {
+						let n = 0;
+						for (let i in this.items) n += this.items[i];
+						return n;
+					},
+					ratio: function(i) {return this.sum === 0 ? 0 : this.items[i]/this.sum;},
+					get len() {return this.list.length;},
+					get min() {return Math.min.apply(null, this.list.concat(0));},
+					get max() {return Math.max.apply(null, this.list.concat(0));},
+					get avg() {return this.sum/this.len;}
+				};
+				let i = -1;
+				while (++i < plot.length) {
+					if (plot[i].type === "ratio")
+						data.add(plot[i].x, plot[i].y)
+				}
+				/* setores */
+				if (data.min >= 0) {
+					let cx = this._width/2;
+					let cy = this._height/2;
+					let  r = this._height/3;
+					let start  = 0;
+					let rLabel = 15;
+					let info   = [
+						this._yLabel+" / "+this._xLabel+" = ",
+						__precision(sum, 3)+" / "+__precision(item, 3)+" = ",
+						__precision(sum/item, 3)
+					]
+					/* título e rótulos */
+					svg.appendChild(
+						this._text(this._width/2, this._height-5, info.join(""), "hs", -1)
+					);
+					svg.appendChild(
+						this._text(this._width/2, this._yStart, this._title, "hs", -1)
+					);
+					/* gráfico */
+					for (let j in data) {
+						let width  = data[j]/sum*360;
+						let middle = (start+width/2);
+						let xLabel = cx + (r+rLabel)*Math.cos(2*Math.PI*middle/360);
+						let yLabel = cy - (r+rLabel)*Math.sin(2*Math.PI*middle/360);
+						let label  = j+": "+__precision(data[j], 3)+" ("+__precision(100*data[j]/sum, 3)+"%)";
+						let fixed  = middle%90 === 0 ? ["hw", "hs", "he", "hn"] : ["hsw", "hse", "hne", "hnw"];
+						let anchor = fixed[__integer(middle/90)];
+						svg.appendChild(
+							this._tip(label, this._circles(cx, cy, r, start, width, color))
+						);
+						svg.appendChild(
+							this._text(xLabel, yLabel, label, anchor, color)
+						);
+						color++;
+						start += width;
+					}
+				}
+
+
+					document.body.innerHTML = "";
+					document.body.appendChild(svg);
+					return;
+				}
+
+		},
+
+
+
+		plot: {
+			value: function(chart) {
+				let plot = this.data();
+				if (plot.length === 0) return null;
+				let svg = this._svg();
+				if (chart === "ratio") return this._rplot(svg, plot);
+
+				/* plotar dados coordenadas cartesiana */
+				this._area(svg, this.xLabel, this.yLabel, 10, 10);
+				let i = -1;
+				while (++i < plot.length) {
+					let type  = plot[i].type;
+					let color = plot[i].color;
+					let name  = plot[i].name;
+					let x     = plot[i].x;
+					let y     = plot[i].y;
+					let xy    = this._xy(x, y);
+					let X     = xy[0];
+					let Y     = xy[1];
+					let tip;
+
+
+
+					switch(type) {
+						case "line":
+							svg.appendChild(this._lines(X, Y, 3, false,color));
+							break;
+						case "dash":
+							svg.appendChild(this._lines(X, Y, -1, false,color));
+							break;
+						case "dots":
+							let j = -1;
+							while (++j < x.length)
+								svg.appendChild(
+									this._circles(this._xp(x[j]), this._yp(y[j]), 4, 0, 360, color)
+								);
+							break;
+						case "area":
+							/* y0 = yn = 0, extremidades devem encostar no eixo x */
+							let fit = __Fit2D(X, Y);
+							let ax  =        ([X[0]]).concat(X);
+							let ay  = ([this._yp(0)]).concat(Y);
+							ax.push(X[X.length-1]);
+							ay.push(this._yp(0));
+							svg.appendChild(this._lines(ax, ay, 1, true, color));
+							svg.appendChild(this._lines(
+								[X[0], X[X.length-1]],
+								[fit.avg.valueOf(), fit.avg.valueOf()],
+								-4,
+								false,
+								color
+							));
+							break
+					}
+				}
+				document.body.innerHTML = "";
+				document.body.appendChild(svg);
+
+
+
+
+
+
+
+			}
+		}
+
+
+
+
+
+	});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 //FIXME apagar essas porcarias no fim
 function __strCamel(x) {return __String(x).camel;}
 function __strClear(x) {return __String(x).clear;}

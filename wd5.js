@@ -95,8 +95,7 @@ const wd = (function() {
 					- `''string'' device`: O nome do dispositivo correspondente à tela.
 					- `''boolean'' mobile`: Informa se o dispositivo possui tela inferior ao desktop.
 				}
-		- }
-		}**/
+		- }**/
 		_trigger: function() {
 			let device = this.device;
 			if (this._device === device) return;
@@ -110,6 +109,7 @@ const wd = (function() {
 			});
 			return;
 		},
+		/**}**/
 	};
 /*----------------------------------------------------------------------------*/
 	/**```**const** ''integer'' __KEYTIMERANGE```
@@ -926,8 +926,7 @@ const wd = (function() {
 				return this.null || this.undefined ? this._value : (this.value).valueOf();
 			}
 		},
-		/**- `''string'' toString()`: Retorna o método `toString` do retorno do atributo `value`. Se `null` retorna uma string vazia e se `undefined` um ponto de interrogação.
-		}**/
+		/**- `''string'' toString()`: Retorna o método `toString` do retorno do atributo `value`. Se `null` retorna uma string vazia e se `undefined` um ponto de interrogação.**/
 		toString: {
 			value: function() {
 				if (this.null) return "";
@@ -935,6 +934,7 @@ const wd = (function() {
 				return this.value.toString();
 			}
 		}
+		/**}**/
 	});
 /*============================================================================*/
 	/**### Números
@@ -1124,8 +1124,7 @@ const wd = (function() {
 			|`currency2`|Exibe em notação monetária curta|Código monetário|
 			|`currency3`|Exibe em notação monetária textual|Código monetário|
 			|`currency4`|Exibe código no lugar da notação monetária|Código monetário]
-		- }
-		}**/
+		- }**/
 		notation: {
 			value: function (type, code, lang) {
 				if (!this.finite) return this.toString();
@@ -1197,6 +1196,7 @@ const wd = (function() {
 				return this.toString()
 			}
 		},
+		/**}**/
 	});
 /*===========================================================================*/
 	/**### Textos
@@ -1407,8 +1407,7 @@ const wd = (function() {
 		|"nome1{valor1}nome2{valor2}"|Retorna um array de objetos com múltiplos atributos|`[{nome1: valor1, nome2: valor2}]`|
 		|"nome1{valor1}&amp;nome2{valor2}"|Retorna um array de objetos cujos itens são separados pelo caracteres &amp;|`[{nome1: valor1}, {nome2: valor2}]`]
 		- }
-		- A notação é limitada, só funcionando nos casos acima tratados.
-		}**/
+		- A notação é limitada, só funcionando nos casos acima tratados.**/
 		wdNotation: {
 			get: function() {
 			/* a{B}c{D}&e{F} => [{a: B, c: D}, {e: F}] IMPORTANTE: regexp não resolve */
@@ -1447,6 +1446,7 @@ const wd = (function() {
 				return object ? list : this.wdValue(data);
 			}
 		},
+		/**}**/
 	});
 
 /*===========================================================================*/
@@ -2259,8 +2259,7 @@ const wd = (function() {
 
 			}
 		},
-		/**- `''array'' toggle(void  ...)`: Remove, se existente, ou insere, se ausente, itens (argumentos) da lista e a retorna.
-		}**/
+		/**- `''array'' toggle(void  ...)`: Remove, se existente, ou insere, se ausente, itens (argumentos) da lista e a retorna.**/
 		toggle: {
 			value: function() {
 				let tgl  = Array.prototype.slice.call(arguments);
@@ -2271,6 +2270,7 @@ const wd = (function() {
 				return this._value;
 			}
 		},
+		/**}**/
 	});
 
 /*============================================================================*/
@@ -3857,6 +3857,8 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 	});
 /*============================================================================*/
 	/**### Análise de Dados
+
+	#### Análise Quantitativa
 	```**constructor** ''object'' __Data2D(''array'' x, ''any'' y)```
 	Análise de dados em duas dimensões.
 	O argumento `x` corresponde a uma lista de valores (array) de referência que aceita valores numéricos, de tempo, data e data/tempo, conforme regras da biblioteca.
@@ -3865,8 +3867,6 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 	{**/
 	function __Data2D(x, y) {
 		if (!(this instanceof __Data2D)) return new __Data2D(x, y);
-
-
 		/* avaliando X */
 		let xtest = __Type(x);
 		if (!xtest.array) x = [];
@@ -3979,8 +3979,8 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				let b    = sqrs.b;
 				let func = function(x) {return a*x + b;}
 				let devi = __Data2D(this.y, __Array(this.x).convert(func, "finite")).standardDeviation;
-				let math = "y = a x + (b)";
-				let show = math.replace("a", a).replace("b", b);
+				let math = "y = a x + (b) ± d";
+				let show = math.replace("a", a).replace("b", b).replace("d", devi);
 				this._linearFit = {
 					t: "linear", a: a, b: b, f: func, d: devi, m: math, s: show};
 				return this._linearFit;
@@ -4005,8 +4005,8 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				let b    = sqrs.a;
 				let func = function(x) {return a*Math.pow(x, b);}
 				let devi = __Data2D(this.y, __Array(this.x).convert(func, "finite")).standardDeviation;
-				let math = "y = a x^(b)";
-				let show = math.replace("a", a).replace("b", b);
+				let math = "y = a x^(b) ± d";
+				let show = math.replace("a", a).replace("b", b).replace("d", devi);
 				this._geometricFit = {
 					t: "geometric", a: a, b: b, f: func, d: devi, m: math, s: show
 				};
@@ -4032,8 +4032,8 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				let b    = sqrs.a;
 				let func = function(x) {return a*Math.exp(b*x);}
 				let devi = __Data2D(this.y, __Array(this.x).convert(func)).standardDeviation;
-				let math = "y = a exp(b x)";
-				let show = math.replace("a", a).replace("b", b);
+				let math = "y = a exp(b x) ± d";
+				let show = math.replace("a", a).replace("b", b).replace("d", devi);
 				this._exponentialFit = {
 					t: "exponential", a: a, b: b, f: func, d: devi, m: math, s: show
 				};
@@ -4059,8 +4059,8 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				let b    = Math.pow(sqrs.a, 1/sqrs.b);
 				let func = function(x) {return a*Math.log(b*x);}
 				let devi = __Data2D(this.y, __Array(this.x).convert(func)).standardDeviation;
-				let math = "y = a ln(b x)";
-				let show = math.replace("a", a).replace("b", b);
+				let math = "y = a ln(b x) ± d";
+				let show = math.replace("a", a).replace("b", b).replace("d", devi);
 				this._logarithmicFit = {
 					t: "logarithmic", a: a, b: b, f: func, d: devi, m: math, s: show
 				};
@@ -4134,6 +4134,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
     }
     /**}**/
 	});
+/*============================================================================*/
 
 
 
@@ -4143,484 +4144,233 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 
 
 
-/*----------------------------------------------------------------------------*/
-	/**4{Conjunto de Dados}4*/
-/*----------------------------------------------------------------------------*/
-	/**
-	`matrix}b __setFinite(b{array}b ...)`
-	Analisa a série de arrays informada e a transforma numa matriz de números finitos.
-	Apenas arrays com comprimento maior que zero serão apreciados na construção da matriz.
-	Cada array informado corresponderá a uma coluna da matriz, na ordem informada.
-	Linhas com valores não finitos serão eliminadas na construção da matriz em todas as colunas.
-	Retornará `null` em caso de matriz vazia.
-	**/
-	function __setFinite() {
-		let dataset = [];       /* captura apenas os argumentos válidos (array com itens) */
-		let error   = [];       /* captura os itens não finitos de cada array */
-		let upper   = Infinity; /* captura o menor dentre os últimos itens válidos de cada array */
-		/* se o argumento é um array e contém itens, inserir em dataset */
-		let i = -1;
-		while (++i < arguments.length) {
-			let input = __Type(arguments[i]);
-			if (input.type === "array" && arguments[i].length > 0)
-				dataset.push(arguments[i]);
-		}
-		if (dataset.length === 0) return null;
-		/* se o item de cada array não é finito, registrá-lo para ser ignorado */
-		i = -1;
-		while (++i < dataset.length) {
-			let item = -1;
-			let j = -1;
-			while (++j < dataset[i].length) {
-				let data = __Type(dataset[i][j]);
-				dataset[i][j] = data.finite ? data.value : null;
-				if (!data.finite) {error.push(j);} else {item = j;}
-			}
-			/* se algum array não tiver finitos, não continuar */
-			if (item < 0) return null;
-			upper = item < upper ? item : upper;
-		}
-		/* se o maior item válido dentre os array é zero, cancelar */
-		if (upper < 0) return null;
-		/* se o item não estiver para ser ignorado, adicionar à matriz até o limite superior */
-		let matrix = [];
-		i = -1;
-		while (++i < dataset.length) {
-			matrix.push([]);
-			let j = -1;
-			while (++j < (upper+1)) {
-				if (error.indexOf(j) < 0) matrix[i].push(dataset[i][j]);
-			}
-		}
-		if (matrix[0].length === 0) return null;
-		return matrix;
-	}
-/*----------------------------------------------------------------------------*/
-	/**
-	`matrix}b __setSort(b{array}b ...)`
-	Analisa a série de arrays informada e a transforma numa matriz de números finitos ordenada pela primeira coluna.
-	Quanto aos argumentos e retorno, observar i{__setFinite}i.}p */
-	function __setSort() {
-		let matrix = __setFinite.apply(null, arguments);
-		if (matrix === null) return null;
-		/* obter a ordenação da primeira coluna */
-		let order = [];
-		let i = -1;
-		while (++i < matrix[0].length)
-			order.push({item: i, value: matrix[0][i]});
-		order = order.sort(function (a, b) {return a.value < b.value ? -1 : 1;});
-		/* criar uma matriz odenada */
-		let sort = [];
-		i = -1;
-		while(++i < matrix.length) {
-			sort.push([]);
-			let j = -1;
-			while(++j < order.length)
-				sort[i].push(matrix[i][order[j].item]);
-		}
-		return sort;
-	}
-/*----------------------------------------------------------------------------*/
-	/**
-	`matrix}b __setUnique(b{array}b ...)`
-	Analisa a série de arrays informada e a transforma numa matriz de números finitos não repetidos.
-	A referência para a não repetição a primeira coluna da matriz.
-	Quanto aos argumentos e retorno, observar i{__setFinite}i.}p */
-	function __setUnique() {
-		/* transformar os argumentos numa matrix só de números finitos */
-		let matrix = __setFinite.apply(null, arguments);
-		if (matrix === null) return null;
-		matrix[0].forEach(function(v,i,a) {
-			if (a.indexOf(v) !== i) a[i] = null;
-		});
-		return __setFinite.apply(null, matrix);
-	}
-/*----------------------------------------------------------------------------*/
-	/**
-	`matrix}b __setFunction(b{array}b x, b{function}b f, b{booelan}b finite)`
-	Retorna uma matriz de duas colunas formada pelos valores de v{x}v e do resultado de v{f(x)}v.
-	v{x}v - Conjunto de números base (coluna 0).
-	v{f}v - Função a ser operada sobre os valores de v{x}v (coluna 1).
-	v{finite}v - (opcional) Se falso, a matriz retornará todos os valores obtidos, inclusive os não
- finitos como nulos.
- */
-	function __setFunction(x, f, finite) {
-		let check = __Type(x);
-		let input = __Type(f);
-		if (check.type !== "array" || input.type !== "function") return null;
-		let y = [];
-		let i = -1;
-		while (++i < x.length) {
-			let item = __Type(x[i]);
-			if (item.finite) {
-				x[i] = item.value;
-				try {
-					let data = __Type(f(item.value));
-					y.push(data.finite ? data.value : null);
-				} catch(e) {
-					y.push(null);
-				}
-			} else {
-				x[i] = null;
-				y.push(null);
-			}
-		}
-		return finite === false ? [x,y] : __setFinite(x, y);
-	}
-/*----------------------------------------------------------------------------*/
-	/**
-	`/**
-	`**constructor** ''object'' __leastSquares(b{array}b x, b{array}b y)`
-	Retorna um objeto com as constantes angular (v{a}v) e linear (v{b}v) do método dos mínimos quadrados (v{y=ax+b}v).
-	v{x}v - Conjunto de dados da coordenada horizontal.
-	v{y}v - Conjunto de dados da coordenada vertical.
-	*/
-	function __leastSquares(x, y) {
-		let matrix = __setFinite(x, y);
-		if (matrix === null || matrix.length !== 2 || matrix[0].length < 2) return null;
-		x = matrix[0];
-		y = matrix[1];
-		let width = x.length;
-		let sumX  = 0;
-		let sumY  = 0;
-		let sumX2 = 0;
-		let sumXY = 0;
-		let i = -1;
-		while(++i < width) {
-			sumX  += x[i];
-			sumY  += y[i];
-			sumX2 += x[i]*x[i];
-			sumXY += x[i]*y[i];
-		}
-		let data = {};
-		data.a = ((width * sumXY) - (sumX * sumY)) / ((width * sumX2) - (sumX * sumX));
-		data.b = ((sumY) - (sumX * data.a)) / (width);
-		return data;
-	}
-/*----------------------------------------------------------------------------*/
-	/**
-	`number}b __stdDeviation(b{array}b y1, b{array|number}b y2)`
-	Retorna o desvio padrão entre dois conjuntos de dados ou um valor de referência, ou `null` em caso de insucesso.
-	v{y1}v - Conjunto de dados para avaliar.
-	v{y2}v - Conjunto de dados comparativo ou valor de referência.
-	**/
-	function __stdDeviation(y1, y2) {
-		let input1 = __Type(y1);
-		if (input1.type !== "array") return null;
-		let input2 = __Type(y2);
-		if (input2.finite) {
-			let data = __setFinite(y1);
-			if (data === null) return null;
-			y1 = data[0];
-			y2 = input2.value;
-		} else if (input2.type === "array") {
-			let data = __setFinite(y1, y2);
-			if (data === null) return null;
-			y1 = data[0];
-			y2 = data[1];
-		} else {
-			return null;
-		}
-		let items = [];
-		let i = -1;
-		while(++i < y1.length)
-			items.push(y1[i] - (input2.finite ? y2 : y2[i]));
-		return Math.hypot.apply(null, items) / Math.sqrt(items.length);
-	}
-/*----------------------------------------------------------------------------*/
 
 
 
 
-
-
-
-
-
-	/**
-	`**constructor** ''object'' __Fit2D(b{array}b x, b{array|function}b y)`
-	Objeto para análise de conjuntos de dados em duas dimensões com foco em ajuste de curvas.
-	v{x}v - Conjunto de dados em v{x}v.
-	v{y}v - Conjunto de dados em v{y}v ou uma função v{f(x)}v que definirá tais valores.
-	b{Métodos e Atributos}b:}dL{*/
-	function __Fit2D(x, y) {
-		if (!(this instanceof __Fit2D)) return new __Fit2D(x, y);
-		if (__Type(y).type === "function") {
-			let data = __setFunction(x, y, true);
-			x = data[0];
-			y = data[1];
-		}
-		let matrix = __setUnique(x, y);
-		if (matrix === null || matrix.length < 2) throw new TypeError("Inconsistent data set.");
-		if (matrix[0].length < 2) throw new Error("Insufficient data set.");
-		matrix = __setSort(matrix[0], matrix[1]);
+	/**#### Análise Gráfica
+	```**constructor** ''object'' __Plot2D(''boolean'' ratio=false)```
+	Objeto para preparar dados para construção de gráfico 2D.
+	O argumento `ratio`, se falso, define que o gráfico será de coordenadas no plano cartesiano e, se verdadeiro, será de grandezas proporcionais (circular ou colunas)
+	{**/
+	function __Plot2D(ratio) {
+		if (!(this instanceof __Plot2D)) return new __Plot2D(ratio);
 		Object.defineProperties(this, {
-			_x: {value: matrix[0]},
-			_y: {value: matrix[1]},
-			_fit: {value: {
-				points: {x: matrix[0], y: matrix[1]}
-			}}
+			_ratio:  {value: ratio === true},               /* tipo do gráfico */
+			_title:  {value: "Title",   writable: true},    /* título do gráfico */
+			_xLabel: {value: "X Label", writable: true},    /* nome do eixo x */
+			_yLabel: {value: "Y Label", writable: true},    /* nome do eixo y */
+			_color:  {value: -1,        writable: true},    /* controle de cores */
+			_data:   {value: []},                           /* dados adicionados para plotagem */
+			_min:    {value: {x: +Infinity, y: +Infinity}}, /* menor valor de x,y */
+			_max:    {value: {x: -Infinity, y: -Infinity}}, /* maior valor de x,y */
 		});
 	}
 
-	Object.defineProperties(__Fit2D.prototype, {
-		constructor: {value: __Fit2D},
-		/**
-	`object _deviation(string fit)}t
-		Calcula o desvio padrão das regressões ou `null` em caso de insucesso.
-		v{fit}v - Nome do atributo da regressão.**/
-		_deviation: {
-			value: function(fit) {
-				if (!(fit in this._fit)) return null;
-				let f = this._fit[fit].function;
-				let data = __setFunction(this._x, f);
-				if (data === null) return null;
-				let x  = data[0];
-				let y  = data[1];
-				let y1 = [];
-				let y2 = [];
-				let i = -1;
-				while (++i < x.length) {
-					let index = this._x.indexOf(x[i]);
-					y1.push(this._y[index]); /* valor original */
-					y2.push(y[i]); /* valor após aplicação da fórmula */
-				}
-				return __stdDeviation(y1, y2);
-			}
+	Object.defineProperties(__Plot2D.prototype, {
+		constructor: {value: __Plot2D},
+		/**- `''number'' _xMax`: Define ou retorna o maior valor da coordenada `x`.**/
+		_xMax: {
+			get: function()  {return this._max.x;},
+			set: function(x) {if (x > this._max.x) this._max.x = x;}
 		},
-		/**string}b _math(string fit)}t
-		Retorna a expressão matemática visual da regressão, ou `null` em caso de insucesso.
-		v{fit}v - Nome do atributo da regressão.**/
-		_math: {
-			value: function(fit) {
-				if (!(fit in this._fit)) return "";
-				let m = this._fit[fit].equation;
-				m = m.replace("a", __precision(this._fit[fit].a, 3));
-				m = m.replace("b", __precision(this._fit[fit].b, 3));
-				if (this._fit[fit].deviation !== 0)
-					m = m+" \u00B1 ("+__precision(this._fit[fit].deviation, 3)+")";
-				return m;
-			}
+		/**- `''number'' _yMax`: Define ou retorna o maior valor da coordenada `y`.**/
+		_yMax: {
+			get: function()  {return this._max.y;},
+			set: function(y) {if (y > this._max.y) this._max.y = y;}
 		},
-		/**`number _integral(string fit)}t
-		Retorna a integral definida da função obtida pela regressão no intervalo de v{x}v informado, ou `null` em caso de insucesso.
-		v{fit}v - Nome do atributo da regressão.**/
-		_integral: {
-			value: function(fit) {
-				if (!(fit in this._fit)) return null;
-				let i = Math.min.apply(null, this._x);
-				let n = Math.max.apply(null, this._x);
-				let a = this._fit[fit].a;
-				let b = this._fit[fit].b;
-				try {
-					if (fit === "linear")
-						return ((a/2)*(Math.pow(n,2)-Math.pow(i,2)))+(b*(n-i));
-					if (fit === "geometric")
-						return (a/(b+1))*(Math.pow(n,(b+1))-Math.pow(i,(b+1)));
-					if (fit === "exponential")
-						return (a/b)*(Math.exp(b*i) - Math.exp(b*n));
-				} catch(e) {}
-				return null;
-			}
+		/**- `''number'' _xMin`: Define ou retorna menor valor da coordenada `x`.**/
+		_xMin: {
+			get: function()  {return this._min.x;},
+			set: function(x) {if (x < this._min.x) this._min.x = x;}
 		},
-		/**function}b _tangent(string fit)}t
-		Retorna a equação da reta tangente a determinado ponto v{x}v da função obtida pela regressão, ou `null` em caso de insucesso.
-		v{fit}v - Nome do atributo da regressão.
-		A função retornada aceita um argumento que representa a posição no eixo v{x}v.**/
-		_tangent: {
-			value: function(fit) {
-				if (!(fit in this._fit)) return null;
-				let a = this._fit[fit].a;
-				let b = this._fit[fit].b;
-				let f = this._fit[fit].function;
-				try {
-					if (fit === "geometric")
-						return function(x) {
-							let y = f(x);
-							let A = a*b*Math.pow(x, (b-1));
-							let B = y - A*x;
-							return function(X) {return A*X+B;}
+		/**- `''number'' _xMin`: Define ou retorna menor valor da coordenada `y`.**/
+		_yMin: {
+			get: function()  {return this._min.y;},
+			set: function(y) {if (y < this._min.y) this._min.y = y;}
+		},
+
+
+
+
+
+		/**- `''string'' xLabel`: Define ou retorna o valor do rótulo do eixo x.**/
+		xLabel: {
+			get: function()  {return this._xLabel;},
+			set: function(x) {this._xLabel = String(x);}
+		},
+		/**- `''string'' yLabel`: Define ou retorna o valor do rótulo do eixo y.**/
+		yLabel: {
+			get: function()  {return this._yLabel;},
+			set: function(x) {this._yLabel = String(x);}
+		},
+		/**- `''string'' title`: Define ou retorna o valor do título do gráfico.**/
+		title: {
+			get: function()  {return this._title;},
+			set: function(x) {this._title = String(x);}
+		},
+		/**- `''boolean'' add(''array'' x, ''any'' y, ''string'' name, ''string'' option)`: Adiciona dados para plotagem e retorna falso se algum dado falhar.
+		- O argumento `x` deve ser uma lista de valores numéricos ou de data/tempo, se o gráfico for de plano cartesiano, ou uma lista de identificadores no caso de gráfico proporcional. No caso de gráfico proporcional, aceita-se um objeto com os identificadores e seus respectivos valores como atributos.
+		- O argumento `y` pode ser uma função, uma constante ou uma lista de valores numéricos, no caso de gráfico cartesiano, ou uma lista de valores correspondentes aos identificadores no caso de gráfico proporcional. No caso de gráfico proporcional, se `x` for um objeto, `y` será ignorado.
+		- O argumento `name` é utilizado para identificar o gráfico no caso de plano cartesiano.
+		- O argumento `option` é opcional e direcionado para o gráfico de plano cartesiano com valores de `x`e `y` como array. Seus valores podem ser:
+		- {
+		(
+		* linearFit;
+		* geometricFit;
+		* logarithmicFit;
+		* exponentialFit;
+		* bestDeviation;
+		* average;
+		* area;
+		* line;
+		)
+		- }**/
+		add: {
+			value: function(x, y, name, option) {
+				let xdata = __Type(x);
+				let ydata = __Type(y);
+				/* gráfico proporcional --------------------------------------------- */
+				/* objeto ----------------------------------------------------------- */
+				if (this._ratio) {
+					if (this._data.length === 0) this._data.push({});
+					let data = this._data[0];
+					if (xdata.object) {
+						for (let name in x) {
+							let check = __Type(x[name]);
+							if (!check.finite) continue;
+							data[name] = check.value + (name in data ? data[name] : 0);
 						}
-					if (fit === "exponential")
-						return function(x) {
-							let y = f(x);
-							let A = b*y;
-							let B = y - A*x;
-							return function(X) {return A*X+B;}
-						}
-					} catch(e) {}
-					return null;
-			}
-		},
-		/**
-	`object linear}t
-		Os dados da regressão linear, ou `null` em caso de insucesso:}d L{
-		string}b type Nome da regressão.
-		string}b equation Representação matemática da equação da regressão.
-		`number a Constante angular do método dos mínimos quadrados.
-		`number b Constante linear do método dos mínimos quadrados.
-		function}b function Função Javascript da regressão.
-		`number deviation Valor do desvio padrão.
-		string}b math Representação numérica da equação da regressão.
-		`number integral Valor da integral obtida em v{function}v no intervalo v{x}v definido.
-		function}b tangent(b{number}b x)}t
-		Retorna a equação da reta tangente a determinado ponto v{x}v em relação à função obtida em v{function}v.
-		v{x}v - Ponto a ser definida a equação da reta.
-		A função retornada aceita um argumento que representa a posição no eixo v{x}v.
-		É nulo em caso de insucesso ou inexistente, situação encontrada na regressão linear.}d}L**/
-		linear: {
-			get: function() {
-				if ("linear" in this._fit) return this._fit.linear;
-				let data = __leastSquares(this._x, this._y);
-				if (data === null) return null;
-				this._fit.linear = {};
-				this._fit.linear.type = "linear";
-				this._fit.linear.equation = "y = (a)x + (b)";
-				this._fit.linear.a = data.a;
-				this._fit.linear.b = data.b;
-				this._fit.linear.function = function(x) {return data.a*x + data.b;};
-				this._fit.linear.deviation = this._deviation("linear");
-				this._fit.linear.math = this._math("linear");
-				this._fit.linear.integral = this._integral("linear");
-				this._fit.linear.tangent = this._tangent("linear");
-				return this._fit.linear;
-			}
-		},
-		/**
-	`object exponential}t
-		Os dados da regressão exponencial, ou `null` em caso de insucesso. Retorna um objeto como em v{linear}v.**/
-		exponential: {
-			get: function() {
-				if ("exponential" in this._fit) return this._fit.exponential;
-				let plan = __setFunction(this._y, Math.log, false)
-				if (plan === null) return null;
-				let data = __leastSquares(this._x, plan[1]);
-				if (data === null) return null;
-				this._fit.exponential = {};
-				this._fit.exponential.type = "exponential";
-				this._fit.exponential.equation = "y = (a)\u2107^(bx)";
-				this._fit.exponential.a = Math.exp(data.b);
-				this._fit.exponential.b = data.a;
-				this._fit.exponential.function = function(x) {return Math.exp(data.b)*Math.exp(data.a*x);};
-				this._fit.exponential.deviation = this._deviation("exponential");
-				this._fit.exponential.math = this._math("exponential");
-				this._fit.exponential.integral = this._integral("exponential");
-				this._fit.exponential.tangent = this._tangent("exponential");
-				return this._fit.exponential;
-			}
-		},
-		/**
-	`object geometric}t
-		Os dados da regressão geométrica, ou `null` em caso de insucesso. Retorna um objeto como em v{linear}v.**/
-		geometric: {
-			get: function() {
-				if ("geometric" in this._fit) return this._fit.geometric;
-				let planx = __setFunction(this._x, Math.log, false)
-				let plany = __setFunction(this._y, Math.log, false)
-				if (planx === null || plany === null) return null;
-				let data = __leastSquares(planx[1], plany[1]);
-				if (data === null) return null;
-				this._fit.geometric = {};
-				this._fit.geometric.type = "geometric";
-				this._fit.geometric.equation = "y = (a)x^(b)";
-				this._fit.geometric.a = Math.exp(data.b);
-				this._fit.geometric.b = data.a;
-				this._fit.geometric.function = function(x) {return Math.exp(data.b)*Math.pow(x, data.a);};
-				this._fit.geometric.deviation = this._deviation("geometric");
-				this._fit.geometric.math = this._math("geometric");
-				this._fit.geometric.integral = this._integral("geometric");
-				this._fit.geometric.tangent = this._tangent("geometric");
-				return this._fit.geometric;
-			}
-		},
-		/**
-	`object fit
-		Retorna das dados da regressão com o menor valor de desvio padrão.**/
-		fit: {
-			get: function() {
-				let attrs = {
-					linear:      null,
-					exponential: null,
-					geometric:   null
-				};
-				for (let i in attrs) attrs[i] = this[i];
-				let best = Infinity;
-				let type = null;
-				for (let i in attrs) {
-					if (attrs[i] !== null && attrs[i].deviation < best) {
-						best = attrs[i].deviation;
-						type = i;
+						return true;
 					}
+					if (!xdata.array || !ydata.array) return false;
+					/* array ---------------------------------------------------------- */
+					let i   = -1;
+					let obj = {};
+					while (++i < x.length) {
+						if (i >= y.length) break;
+						obj[String(x[i])] = y[i];
+					}
+					return this.add(obj);
 				}
-				return this[type];
+				/* gráfico cartesiano ----------------------------------------------- */
+				option   = String(option);
+				let data = __Data2D(x, y);
+				if (data.error) return false;
+				/* definindo previamente os limites superiores e inferiore */
+				let xLimit = __Array(data.x);
+				let yLimit = ydata.array ? __Array(data.y) : null;
+				this._xMin = xLimit.min;
+				this._xMax = xLimit.max;
+				if (yLimit !== null) {
+					this._yMin = yLimit.min;
+					this._yMax = yLimit.max;
+				}
+				/* Y é função ------------------------------------------------------- */
+				if (ydata.function) {
+					let types = ["area", "average"]
+					this._data.push({
+						x:     [xLimit.min, xLimit.max],
+						y:     y,
+						name:  String(name),
+						f:     true,
+						type:  types.indexOf(option) >= 0 ? option : "line",
+						color: ++this._color
+					});
+					return true;
+				}
+				/* Y é constante ---------------------------------------------------- */
+				if (ydata.finite) {
+					this._data.push({
+						x:     [xLimit.min, xLimit.max],
+						y:     [y, y],
+						name:  String(name),
+						f:     false,
+						type:  "line",
+						color: ++this._color
+					});
+					return true;
+				}
+				/* Y é array -------------------------------------------------------- */
+				if (ydata.array) {
+					this._data.push({
+						x:     data.x,
+						y:     data.y,
+						name:  String(name),
+						f:     false,
+						type:  option === "line" ? option : "dot",
+						color: ++this._color
+					});
+					/* com opção ------------------------------------------------------ */
+					if (option in data) {
+						let fit = data[option];
+						if (fit === null) return false;
+						/* média -------------------------------------------------------- */
+						if (option === "average") {
+							let delta = __Data2D(data.x, fit).standardDeviation;
+							this._data.push({
+								x:     [xLimit.min, xLimit.max],
+								y:     [fit, fit],
+								name:  String(name)+", μ ≈ "+fit+", σ = ±"+delta,
+								f:     false,
+								type:  "line",
+								color: ++this._color
+							});
+							return true;
+						}
+						/* área --------------------------------------------------------- */
+						if (option === "area") {
+							this._data.push({
+								x:     data.x,
+								y:     data.y,
+								name:  String(name)+", ∑ ≈ "+fit,
+								f:     false,
+								type:  "area",
+								color: this._color
+							});
+							return true;
+						}
+						/* regressões --------------------------------------------------- */
+						if (!(/^([a-z]+Fit|bestDeviation)$/).test(option)) return false;
+						this._data.push({
+								x:     [xLimit.min, xLimit.max],
+								y:     fit.f,
+								name:  String(name)+", "+fit.s,
+								f:     true,
+								type:  "line",
+								color: ++this._color
+						});
+						if (fit.d === 0) return true;
+						this._data.push({
+								x:     [xLimit.min, xLimit.max],
+								y:     function(x) {return fit.f(x)+f.d;},
+								name:  null,
+								f:     true,
+								type:  "dash",
+								color: this._color
+						});
+						this._data.push({
+								x:     [xLimit.min, xLimit.max],
+								y:     function(x) {return fit.f(x)-f.d;},
+								name:  null,
+								f:     true,
+								type:  "dash",
+								color: this._color
+						});
+						return true;
+					}
+					return true;
+				}
+				return false;
 			}
 		},
 
-		/**
-	`object sum}t
-		Retorna um objeto com a soma da áreas formadas pelas linhas que ligam os pontos das coordenadas.}d L{
-		`number valueOf() Retorna o valor da soma.
-		string}b toString() Retorna uma representação matemática do resultado.**/
-		sum: {
-    	get: function() {
-	  		let x   = this.x;
-    		let y   = this.y;
-    		let sum = 0;
-  			let i   = 0;
-				while (++i < x.length)
-					sum += (y[i]+y[i-1])*(x[i]-x[i-1])/2;
-				return {
-					valueOf:  function() {return sum;},
-					toString: function() {return "\u03A3y \u2248 "+__precision(sum, 3);}
-		  	};
-		  }
-    },
-    /**
-	`object avg}t
-		Retorna um objeto com o valor médio das coordenadas.}d L{
-		`number valueOf() Retorna o valor médio.
-		string}b toString() Retorna uma representação matemática do resultado.**/
-    avg: {
-    	get: function() {
-    		let x   = this.x;
-    		let avg = this.sum/(x[x.length-1] - x[0]);
-    		return {
-					valueOf:  function() {return avg;},
-					toString: function() {return "\u03A3y/\u0394x \u2248 "+__precision(avg, 3);}
-		  	};
-    	}
-    },
-    /**array}b x} d{Retorna valores do eixo x.**/
-		x: {get: function() {return this._x}},
-		/**array}b y Retorna valores do eixo y.**/
-		y: {get: function() {return this._y}}
-	});
-/*----------------------------------------------------------------------------*/
-	/**4{Plotagem de Dados}4	*/
-/*----------------------------------------------------------------------------*/
-	/**
-	`**constructor** ''object'' __Table2Desquecido(string title, string xLabel, string yLabel)`
-	Objeto para preparar dados para construção de gráfico 2D (v{x, y}v).
-	v{title}v - Título do gráfico.}d
-	v{xLabel}v - Nome do eixo v{x}v.}d
-	v{yLabel}v - Nome do eixo v{y}v.}d}l l{
-	**/
-	function __Table2Desquecido(title, xLabel, yLabel) {
-		if (!(this instanceof __Table2Desquecido)) return new __Table2Desquecido(title, xLabel, yLabel);
-		Object.defineProperties(this, {
-			_title:  {value: title,    writable: true},     /* título do gráfico */
-			_xLabel: {value:xLabel,    writable: true},     /* nome do eixo x */
-			_yLabel: {value:yLabel,    writable: true},     /* nome do eixo y */
-			_lower:  {value: {x: +Infinity, y: +Infinity}}, /* menor valor de x,y */
-			_upper:  {value: {x: -Infinity, y: -Infinity}}, /* maior valor de x,y */
-			_color:  {value:-1,        writable: true},     /* controle de cores */
-			_data:   {value:[],        writable: false}     /* dados adicionados para plotagem */
 
-		});
-	}
 
-	Object.defineProperties(__Table2Desquecido.prototype, {
-		constructor: {value: __Table2Desquecido},
+
+
+
+
 		_max: {value: Math.max(window.screen.width, window.screen.height)},
 		_min: {value: Math.min(window.screen.width, window.screen.height)},
 		/**`number _width Comprimento do gráfico.**/
@@ -4636,53 +4386,6 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		/**`number _ySize Comprimento do eixo v{y}v.**/
 		_ySize: {get: function() {return 0.85 * this._height}},
 		/**`number _xMin Obtém e define o limite inferior em v{x}v.**/
-		_xMin: {
-			get: function() {
-				if (this._lower.x === this._upper.x)
-					return this._lower.x === 0 ? -1 : this._lower.x*(1 - 0.5);
-				return this._lower.x;
-			},
-			set: function(n) {
-				let min = __Type(n).type === "array" ? Math.min.apply(null, n) : n;
-				this._lower.x = min < this._lower.x ? min : this._lower.x;
-			}
-		},
-		/**`number _xMax Obtém e define o limite superior em v{x}v.**/
-		_xMax: {
-			get: function() {
-				if (this._lower.x === this._upper.x)
-					return this._upper.x === 0 ? 1 : this._upper.x*(1 + 0.5);
-				return this._upper.x;
-			},
-			set: function(n) {
-				let max = __Type(n).type === "array" ? Math.max.apply(null, n) : n;
-				this._upper.x = max > this._upper.x ? max : this._upper.x;
-			}
-		},
-		/**`number _yMin Obtém e define o limite inferior em v{y}v.**/
-		_yMin: {
-			get: function() {
-				if (this._lower.y === this._upper.y)
-					return this._lower.y === 0 ? -1 : this._lower.y*(1 - 0.5);
-				return this._lower.y;
-			},
-			set: function(n) {
-				let min = __Type(n).type === "array" ? Math.min.apply(null, n) : n;
-				this._lower.y = min < this._lower.y ? min : this._lower.y;
-			}
-		},
-		/**`number _yMax Obtém e define o limite superior em v{y}v.**/
-		_yMax: {
-			get: function() {
-				if (this._lower.y === this._upper.y)
-					return this._upper.y === 0 ? 1 : this._upper.y*(1 + 0.5);
-				return this._upper.y;
-			},
-			set: function(n) {
-				let max = __Type(n).type === "array" ? Math.max.apply(null, n) : n;
-				this._upper.y = max > this._upper.y ? max : this._upper.y;
-			}
-		},
 		/**matrix}b _curve(b{number}b x1, b{number}b x2, b{function}b f)}t
 		Retorna uma matriz com o conjunto de coordenadas (v{x, f(x)}v.
 		v{x}v - Valores para o eixo v{x}v
@@ -4817,21 +4520,6 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return true;
 			}
 		},
-		/**string}b title Obtem ou define o título do gráfico.**/
-		title: {
-			get: function()  {return this._title;},
-			set: function(x) {this._title = x;}
-		},
-		/**string}b xLabel Obtem ou define o rótulo do eixo v{x}v.**/
-		xLabel: {
-			get: function()  {return this._xLabel;},
-			set: function(x) {this._xLabel = x;}
-		},
-		/**string}b yLabel Obtem ou define o rótulo do eixo v{y}v.**/
-		yLabel: {
-			get: function()  {return this._yLabel;},
-			set: function(x) {this._yLabel = x;}
-		},
 		/**
 	`void  add(b{array}b x, b{array|function}b y, string name, string type)}t
 		Adiciona dados de um conjunto de valores (v{x, y}v) ou  (v{x, f(x)}v).}d L
@@ -4840,7 +4528,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		v{name}v - Identificador do conjunto de dados.
 		v{type}v - (Opcional) Tipo de plotagem: v{line fit fit-linear fit-exponential fit-geometric area ratio}v.
 		Valor padrão de i{type}i é v{dots}v.**/
-		add: {
+		ssadd: {
 			value: function(x, y, name, type) {
 				if (__Type(x).type !== "array") return false;
 				if ((["array", "function"]).indexOf(__Type(y).type) < 0) return false;
@@ -4879,485 +4567,6 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			}
 		}
 	});
-/*----------------------------------------------------------------------------*/
-	/**
-	`**constructor** ''object'' __Plot2D(string title, string xLabel, string yLabel)`
-	Ferramenta para renderizar o gráfico 2D (herda características de i{__Table2Desquecido}i).
-	v{title}v - Título do gráfico.}d
-	v{xLabel}v - Nome do eixo v{x}v.}d
-	v{yLabel}v - Nome do eixo v{y}v.}d}l l{
-	**/
-	function __Plot2D(title, xLabel, yLabel) {
-		if (!(this instanceof __Plot2D)) return new __Plot2D(title, xLabel, yLabel);
-		__Table2Desquecido.call(this, title, xLabel, yLabel);
-	}
-
-	__Plot2D.prototype = Object.create(__Table2Desquecido.prototype, {
-		constructor: {value: __Plot2D},
-		/**`number _xp(b{number}b x)}t
-		Retorna u{o ponto}u de plotagem do eixo v{x}v no SVG.}d L{
-		v{x}v - Valor da coordenada v{x}v.**/
-		_xp: {
-			value: function (x) { /* dp/dx = (p2-p1)/(x2-x1) = (p-p1)/(x-x1) */
-				let p1 = this._xStart;
-				let p2 = p1 + this._xSize;
-				let dp = p2 - p1;
-				if (this._xMin === this._xMax) {//FIXME tem que transformar xMin, xMax, yMin, yMax em getter/setter
-					let diff = this._xMin === 0 ? 1 : this._xMin;
-					this._xMin = this._xMin - diff;
-					this._xMax = this._xMax + diff;
-				}
-				let x1 = this._xMin;
-				let x2 = this._xMax;
-				let dx = x2 - x1;
-				return ((dp/dx)*(x - x1)) + p1;
-      }
-    },
-    /**
-    number}b _yp(b{number}b x)}t
-		Retorna u{o ponto}u de plotagem do eixo v{y}v no SVG.}d L{
-		v{y}v - Valor da coordenada v{y}v.**/
-    _yp: {
-			value: function (y) { /* dp/dy = (p2-p1)/(y2-y1) = (p-p1)/(y-y1) */
-				let p1 = this._yStart;
-				let p2 = p1 + this._ySize;
-				let dp = p2 - p1;
-				if (this._yMin === this._yMax) {
-					let diff = this._yMin === 0 ? 1 : this._yMin;
-					this._yMin = this._yMin - diff;
-					this._yMax = this._yMax + diff;
-				}
-				let y1 = this._yMin;
-				let y2 = this._yMax;
-				if (y1 === y2) {
-					let diff = 2*(y1 === 0 ? 1 : y1);
-					y1 = y1 - diff;
-					y2 = y1 + diff;
-				}
-				let dy = y2 - y1;
-				return p1+p2-(((dp/dy)*(y - y1)) + p1);
-      }
-    },
-    /**matrix}b _yx(b{array}b x, b{array}b y)t
-		Retorna u{os pontos}u de plotagem dos eixos v{x,y}v no SVG.}d L{
-		v{x}v - Valores da coordenada v{x}v (coluna 0), ver i{_xp}i.
-		v{x}v - Valores da coordenada v{y}v (coluna 1), ver i{_yp}i.**/
-		_xy: {
-			value: function(x, y) {
-				let xy = {x: [], y: []};
-    		let i = -1;
-    		while (++i < x.length) {
-    			xy.x.push(this._xp(x[i]));
-    			xy.y.push(this._yp(y[i]));
-    		}
-    		return [xy.x, xy.y];
-			}
-		},
-		/**string}b _dline(b{array}b x, b{array}b y, b{- `boolean close)t
-		Retorna o caminho para construção de linhas conectadas por pontos.}d L{
-		v{x}v - Valores do eixo horizontal.
-		v{y}v - Valores do eixo vertical.
-		v{close}v - Informa se é uma figura de área fechada (retorna à origem).**/
-		_dline: {
-    	value: function (x, y, close) {
-    		let d = [];
-    		let i = -1;
-    		while (++i < x.length) {
-    			let path = [i === 0 ? "M" : "L", x[i], y[i]];
-    			d.push(path.join(" "));
-    			if (close === true && i === (x.length - 1)) d.push("Z");
-    		}
-    		return d.join(" ");
-    	}
-    },
-
-
-    _palette: {value: []},
-    /**
-   	string}b _rgb(b{integer}b n, b{number}b opacity)}t
-		Retorna a cor em RGB definida por v{n}v para ser utilizada pelo elemento SVG.}d L{
-		v{n}v - Retorna transparente, se nulo ou indefinido, preto, se menor que zero, ou cor definida.**/
-		_rgb: {
-			value: function(n) {
-				if (n === null || n === undefined) return "none";
-				if (n < 0) return "rgb(0,0,0)";
-				/* definir paleta de cores, se ainda não definida */
-				if (this._palette.length === 0) {
-					let max   = 255;
-					let div   = 2.5;
-					let delta = max/div;
-					let error = [([max,max,max]).join(","), "0,0,0"]
-					let color;
-					let x = -1;
-					while (++x < div) { /* cor principal (decrescente) */
-						let y = -1;
-						while (++y < div) {
-							let z = -1;
-							while (++z < div) {
-								color = [
-									__integer(max-x*delta),
-									__integer(y*delta),
-									__integer(z*delta)
-								]; /* x é a cor redominante */
-								let i = -1;
-								while (++i < 3) { /* alternância de cor predominante */
-									let rgb = ([color[i%3], color[(i+1)%3], color[(i+2)%3]]).join(",");
-									if (this._palette.indexOf(rgb) < 0 && error.indexOf(rgb) < 0)
-										this._palette.push(rgb);
-								}
-							}
-						}
-					}
-				}
-				let index = n%this._palette.length;
-				return "rgb("+this._palette[index]+")";
-			}
-		},
-		/**
-	`node _line() Retorna elemento SVG.
-	**/
-		_svg: {
-			value: function() {
-				let svg  = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-				let attr = {
-					viewBox:"0 0 "+this._width+" "+this._height,
-					style: "border: 1px solid red; background-color: #f0f0f0"
-				};
-				for (let i in attr) svg.setAttribute(i, attr[i]);
-				return svg;
-			}
-		},
-		/**`node _tip(string text, node svg)}t
-		Retorna o elemento SVG com dica (i{title}i) adicionada.}d L{
-		v{text}v - Texto da dica.
-		v{svg}v - Elemento svg a ter adicionado dica.**/
-		_tip: {
-			value: function(text, svg) {
-				let tip = document.createElementNS("http://www.w3.org/2000/svg", "title");
-				tip.textContent = text;
-				svg.appendChild(tip);
-				return svg;
-			}
-		},
-		/**`node _lines(b{array}b x, b{array}b y, b{number}b stroke, b{- `boolean close, b{number}b color)}t
-		Retorna elemento SVG renderizado com linhas conectadas pelos pontos.
-		v{x}v - Coordenadas do eixo v{x}v.
-		v{y}v - Coordenadas do eixo v{y}v.
-		v{stroke}v - Espessura da linha que, se negativo, será tracejada.
-		v{close}v - Informa se é uma figura de área fechada.
-		v{color}v - Valor da cor da linha.**/
-		_lines: {
-			value: function(x, y, stroke, close, color) {
-				let path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-				let width = Math.abs(stroke);
-				let attr = {
-					"d": this._dline(x, y, close),
-					"fill": close === true && color >= 0 ? this._rgb(color) : "none",
-					"fill-opacity": close === true && width > 0 ? 0.6 : 1,
-					"stroke": this._rgb(color),
-					"stroke-width": width,
-					"stroke-dasharray": stroke < 0 ? "8,8" : "none",
-					"stroke-linecap": "round"
-				};
-				for (let i in attr) path.setAttribute(i, attr[i]);
-				return path;
-			}
-		},
-		/**`node _circles(b{number}b cx, b{number}b cy, b{number}b r, b{number}b start, b{number}b width, b{number}b color)}
-		Retorna elemento SVG para circulos e semi-círculos.}d L{
-		v{cx}v - Posição do centro do círculo em v{x}v.
-		v{cy}v - Posição do centro do círculo em v{y}v.
-		v{r}v - Tamanho do raio do círculo.
-		v{start}v - Ângulo inicial do arco, em graus (v{0 = (x = r, y = 0)}v).
-		v{width}v - Variação angular, em graus (sentido anti-horário).
-		v{color}v - Valor da cor do círculo.**/
-		_circles: {
-			value: function(cx, cy, r, start, width, color) {
-				let svg  = width >= 360 ? "circle" : "path";
-				let path = document.createElementNS("http://www.w3.org/2000/svg", svg);
-				let attr = {
-					"fill": this._rgb(color),
-					"fill-opacity": 0.8,
-					"stroke-width": 1,
-					"stroke": this._rgb(color)
-				};
-				if (width >= 360) {
-					attr.cx = cx;
-					attr.cy = cy;
-					attr.r  = r;
-				} else {
-					start  = 2*Math.PI*start/360;
-					width  = 2*Math.PI*width/360;
-					let x1 = cx + r*Math.cos(start);
-					let y1 = cy - r*Math.sin(start);
-					let x2 = cx + r*Math.cos(start + width);
-					let y2 = cy - r*Math.sin(start + width);
-					let lg = width > Math.PI ? 1 : 0;
-					attr.d = ["M", cx, cy, "L", x1, y1, "A", r, r, 0, lg, 0, x2, y2, "Z"].join(" ");
-				}
-				for (let i in attr) path.setAttribute(i, attr[i]);
-				return path;
-			}
-		},
-		/**`node _text(b{number}b x, b{number}b y, string text, string point, b{number}b color)
-		Adiciona e retorna elemento SVG para texto.}d L{
-		v{x}v - Posição em v{x}v.
-		v{y}v - Posição em v{y}v.
-		v{text}v - Conteúdo textual.
-		v{point}v - Identifica o alinhamento e o ponto de ancoragem do texto.
-		Exemplos: v{hse}v horizontal-sudeste; v{vn}v vertical-norte.
-		v{color}v - Valor da cor do texto.**/
-		_text: {
-			value: function(x, y, text, point, color) {
-				let content = document.createElementNS("http://www.w3.org/2000/svg", "text");
-				let vanchor = ["start", "middle", "end"];
-				let vbase   = ["auto", "middle", "hanging"];
-				let anchor  = {n: 1, ne: 2, e: 2, se: 2, s: 1, sw: 0, w: 0, nw: 0, c: 1};
-				let base    = {n: 2, ne: 2, e: 1, se: 0, s: 0, sw: 0, w: 1, nw: 2, c: 1};
-				let attr = {
-					x: point[0] === "v" ? -y : x,
-					y: point[0] === "v" ? x : y,
-					fill: this._rgb(color),
-					"text-anchor":       vanchor[anchor[point.substr(1)]],
-					"dominant-baseline": vbase[base[point.substr(1)]],
-					"font-family":       "monospace",
-					"font-size":         "1em",
-					"transform":         point[0] === "v" ? "rotate(270)" : "",
-					"stroke": "black",
-					"stroke-width": 0.1,
-				};
-				for (let i in attr) content.setAttribute(i, attr[i]);
-				content.textContent = String(text).trim();
-				return content;
-			}
-		},
-
-
-
-
-
-		_area: {//FIXME
-			value: function(svg, _xlabel, _ylabel, _xgrid, _ygrid) {
-				if (_xgrid < 1) _xgrid = -1;
-				if (_ygrid < 1) _ygrid = -1;
-				/* pontos principais */
-				let x1 = this._xStart;
-				let x2 = x1 + this._xSize;
-				let y1 = this._yStart;
-				let y2 = y1 + this._ySize;
-				/* título e rótulos */
-				svg.appendChild(this._text((x1+x2)/2, y1/2, this.title, "hc", -1));
-				svg.appendChild(this._text((x1+x2)/2, (this._height-5), _xlabel, "hs", -1));
-				svg.appendChild(this._text(5, (y1+y2)/2, _ylabel, "vn", -1));
-				/* grade principal */
-				svg.appendChild(this._lines([x1, x2, x2, x1], [y1, y1, y2, y2], 2, true, -1));
-				/* grade e escala horizontal */
-				let i = -1;
-				while (++i <= _xgrid) {
-					let yn = y1 + i*((y2-y1)/_xgrid);
-					let xn = x1 + i*((x2-x1)/_xgrid);
-					svg.appendChild(this._lines([xn, xn], [y1, y2], -0.5, false, -1));
-					let sx = this._xMin + i*((this._xMax - this._xMin)/_xgrid);
-					let px = i === 0 ? "hnw" : (i === _xgrid ? "hne" : "hn");
-					svg.appendChild(this._text(xn  , y2+3, __precision(sx, 3), px, -1));
-				}
-				/* grade e escala vertical */
-				i = -1;
-				while (++i <= _ygrid) {
-					let yn = y1 + i*((y2-y1)/_ygrid);
-					let xn = x1 + i*((x2-x1)/_ygrid);
-					svg.appendChild(this._lines([x1, x2], [yn, yn], -0.5, false, -1));
-					let sy = this._yMax - i*((this._yMax - this._yMin)/_ygrid);
-					let py = i === 0 ? "hne" : (i === _ygrid ? "hse" : "he");
-					svg.appendChild(this._text(x1-3, yn  , __precision(sy, 3), py, -1));
-				}
-
-
-
-/*
-				while (++i <= grid) {
-
-					let yn = y1 + i*((y2-y1)/_ygrid);
-					let xn = x1 + i*((x2-x1)/_xgrid);
-					if (i > 0 && i < grid) {
-						svg.appendChild(this._lines([x1, x2], [yn, yn], -0.5, false, -1));
-						svg.appendChild(this._lines([xn, xn], [y1, y2], -0.5, false, -1));
-					}
-
-					let sx = this._xMin + i*((this._xMax - this._xMin)/grid);
-					let sy = this._yMax - i*((this._yMax - this._yMin)/grid);
-					let px = i === 0 ? "hnw" : (i === grid ? "hne" : "hn");
-					let py = i === 0 ? "hne" : (i === grid ? "hse" : "he");
-					svg.appendChild(this._text(xn  , y2+3, __precision(sx, 3), px, -1));
-					svg.appendChild(this._text(x1-3, yn  , __precision(sy, 3), py, -1));
-				}
-*/
-
-
-
-			}
-		},
-
-
-
-
-
-
-
-
-
-		_rplot: {
-			value: function(svg, plot) {
-				/* gráficos relativos: setores ou barra */
-				let data  = {
-					items: {},
-					add: function(item, val) {
-						item = String(item).replace(/\ +/g, " ").trim();
-						this.items[item] = item in this.items ? (this.items[item]+val) : val;
-					},
-					get list() {
-						let n = [];
-						for (let i in this.items) n.push(this.items[i]);
-						return n;
-					},
-					get sum() {
-						let n = 0;
-						for (let i in this.items) n += this.items[i];
-						return n;
-					},
-					ratio: function(i) {return this.sum === 0 ? 0 : this.items[i]/this.sum;},
-					get len() {return this.list.length;},
-					get min() {return Math.min.apply(null, this.list.concat(0));},
-					get max() {return Math.max.apply(null, this.list.concat(0));},
-					get avg() {return this.sum/this.len;}
-				};
-				let i = -1;
-				while (++i < plot.length) {
-					if (plot[i].type === "ratio")
-						data.add(plot[i].x, plot[i].y)
-				}
-				/* setores */
-				if (data.min >= 0) {
-					let cx = this._width/2;
-					let cy = this._height/2;
-					let  r = this._height/3;
-					let start  = 0;
-					let rLabel = 15;
-					let info   = [
-						this._yLabel+" / "+this._xLabel+" = ",
-						__precision(sum, 3)+" / "+__precision(item, 3)+" = ",
-						__precision(sum/item, 3)
-					]
-					/* título e rótulos */
-					svg.appendChild(
-						this._text(this._width/2, this._height-5, info.join(""), "hs", -1)
-					);
-					svg.appendChild(
-						this._text(this._width/2, this._yStart, this._title, "hs", -1)
-					);
-					/* gráfico */
-					for (let j in data) {
-						let width  = data[j]/sum*360;
-						let middle = (start+width/2);
-						let xLabel = cx + (r+rLabel)*Math.cos(2*Math.PI*middle/360);
-						let yLabel = cy - (r+rLabel)*Math.sin(2*Math.PI*middle/360);
-						let label  = j+": "+__precision(data[j], 3)+" ("+__precision(100*data[j]/sum, 3)+"%)";
-						let fixed  = middle%90 === 0 ? ["hw", "hs", "he", "hn"] : ["hsw", "hse", "hne", "hnw"];
-						let anchor = fixed[__integer(middle/90)];
-						svg.appendChild(
-							this._tip(label, this._circles(cx, cy, r, start, width, color))
-						);
-						svg.appendChild(
-							this._text(xLabel, yLabel, label, anchor, color)
-						);
-						color++;
-						start += width;
-					}
-				}
-
-
-					document.body.innerHTML = "";
-					document.body.appendChild(svg);
-					return;
-				}
-
-		},
-
-
-
-		plot: {
-			value: function(chart) {
-				let plot = this.data();
-				if (plot.length === 0) return null;
-				let svg = this._svg();
-				if (chart === "ratio") return this._rplot(svg, plot);
-
-				/* plotar dados coordenadas cartesiana */
-				this._area(svg, this.xLabel, this.yLabel, 10, 10);
-				let i = -1;
-				while (++i < plot.length) {
-					let type  = plot[i].type;
-					let color = plot[i].color;
-					let name  = plot[i].name;
-					let x     = plot[i].x;
-					let y     = plot[i].y;
-					let xy    = this._xy(x, y);
-					let X     = xy[0];
-					let Y     = xy[1];
-					let tip;
-
-
-
-					switch(type) {
-						case "line":
-							svg.appendChild(this._lines(X, Y, 3, false,color));
-							break;
-						case "dash":
-							svg.appendChild(this._lines(X, Y, -1, false,color));
-							break;
-						case "dots":
-							let j = -1;
-							while (++j < x.length)
-								svg.appendChild(
-									this._circles(this._xp(x[j]), this._yp(y[j]), 4, 0, 360, color)
-								);
-							break;
-						case "area":
-							/* y0 = yn = 0, extremidades devem encostar no eixo x */
-							let fit = __Fit2D(X, Y);
-							let ax  =        ([X[0]]).concat(X);
-							let ay  = ([this._yp(0)]).concat(Y);
-							ax.push(X[X.length-1]);
-							ay.push(this._yp(0));
-							svg.appendChild(this._lines(ax, ay, 1, true, color));
-							svg.appendChild(this._lines(
-								[X[0], X[X.length-1]],
-								[fit.avg.valueOf(), fit.avg.valueOf()],
-								-4,
-								false,
-								color
-							));
-							break
-					}
-				}
-				document.body.innerHTML = "";
-				document.body.appendChild(svg);
-
-
-
-
-
-
-
-			}
-		}
-
-
-
-
-
-	});
-
 
 
 
