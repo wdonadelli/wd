@@ -3760,17 +3760,18 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return this;
 			}
 		},
-		/**- `''object'' lines(array x, array y, boolean close=false)`: Define diversos segmentos de reta a partir de um conjunto de coordenadas e retorna o próprio objeto.
+		/**- `''object'' lines(''array'' x, ''array'' y, ''boolean'' close=false)`: Define diversos segmentos de reta a partir de um conjunto de coordenadas e retorna o próprio objeto.
 		- Os argumentos `x` e `y` são as coordenadas (x,y) e o argumento `close` indica se o último ponto deve voltar à origem.**/
 		lines: {
 			value: function(x, y, close) {
 				let svg = document.createElementNS("http://www.w3.org/2000/svg", "path");
-				x.forEach(function(v,i,a) {
+				let line = x.slice();
+				line.forEach(function(v,i,a) {
 					a[i] = [(i === 0 ? "M" : "L"), v, y[i]].join(" ");
 				});
 				if (close === true) x.push("Z");
 				this.last = svg;
-				return this.attribute({d: x.join(" ")});
+				return this.attribute({d: line.join(" ")});
 			}
 		},
 		/**- `''object'' circle(number cx, number cy, number r)`: Define um círculo e retorna o próprio objeto.
@@ -4164,10 +4165,12 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			_title:  {value: "Title",   writable: true},    /* título do gráfico */
 			_xLabel: {value: "X Label", writable: true},    /* nome do eixo x */
 			_yLabel: {value: "Y Label", writable: true},    /* nome do eixo y */
+			_xAxis:  {value: "number",  writable: true},    /* tipo de dado do eixo x */
 			_color:  {value: -1,        writable: true},    /* controle de cores */
 			_data:   {value: []},                           /* dados adicionados para plotagem */
 			_min:    {value: {x: +Infinity, y: +Infinity}}, /* menor valor de x,y */
 			_max:    {value: {x: -Infinity, y: -Infinity}}, /* maior valor de x,y */
+
 		});
 	}
 
@@ -4232,12 +4235,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return x;
 			}
 		},
-
-
-
-
-		/**
-		- `''object'' _cfg`: Registra as configurações do gráfico:
+		/**- `''object'' _cfg`: Registra as configurações do gráfico:
 		- {
 				{
 					- `''number'' vertical`: registra o menor tamanho da tela do dispositivo como referência.
@@ -4262,15 +4260,10 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					- `''number'' bottom`: A metade do espaço inferior.
 					- `''number'' left`: A metade do espaço esquerdo.
 					- `''number'' right`: A metade do espaço direito.
-					- `''number'' xPoint`: Distância entre um ponto e outro no eixo `x`.
-					- `''number'' yPoint`: Distância entre um ponto e outro no eixo `y`.
 					- `''number'' padding`: Retorna o espaçamento definido.
 					- `''array'' colors`: Lista de cores.
-
 				}
-		- }
-
-		**/
+		- }**/
 		_cfg: {
 			value: {
 				vertical:   Math.min(window.screen.width, window.screen.height),
@@ -4294,9 +4287,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				get top()     {return this.yStart/2;},
 				get bottom()  {return this.yClose + (this.height - this.yClose)/2;},
 				get left()    {return this.xStart/2;},
-				get right()   {return this.xClose + (this.width - this.xclose)/2;},
-				get xPoint()  {return this.xSize/(this.points-1);},
-				get yPoint()  {return this.ySize/(this.points-1);},
+				get right()   {return this.xClose + (this.width - this.xClose)/2;},
 				get padding() {return this.padd*this.width;},
 				colors: [
 					"darkred",   "indigo",          "navy",           "teal",
@@ -4305,77 +4296,155 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					"orangered", "blueviolet",      "cyan",           "limegreen",
 					"dimgray"
 				],
+				_svg:      {style: "background-color: Ivory; margin: 20%"},
+				_title:    {fill: "black", "font-weight": "bold", "font-size": "1.5em"},
+				_label:    {fill: "black"},
+				_area:     {stroke: "black", fill: "none", "stroke-width": 2, "stroke-linecap": "round"},
+				_line:     {fill: "none", "stroke-width": 3, "stroke-linecap": "round"},
+				_subtitle: {"stroke-width": 2, "fill-opacity": 1, "stroke-opacity": 0.1},
+				_subdiv:   {stroke: "grey", "stroke-width": 0.5, "stroke-dasharray": "8,8", "stroke-linecap": "round"},
+			}
+		},
+		/**- `''void'' _plan()`: Constrói a área do gráfico cartesiano.**/
+		_plan: {
+			value: function(svg) {
+				svg.text( /* título */
+					this._cfg.xMiddle,
+					this._cfg.top,
+					this.title,
+					"hc"
+				).attribute(this._cfg._title).text( /* rótulo do eixo x */
+					this._cfg.xMiddle,
+					this._cfg.height-this._cfg.padding,
+					this.xLabel,
+					"hs"
+				).attribute(this._cfg._label).text( /* rótulo do eixo y */
+					this._cfg.padding,
+					this._cfg.yMiddle,
+					this.yLabel,
+					"vn"
+				).attribute(this._cfg._label).rect( /* área do gráfico */
+					this._cfg.xStart,
+					this._cfg.yStart,
+					this._cfg.xSize,
+					this._cfg.ySize
+				).attribute(this._cfg._area);
+
+ 				/* subdivisões e escala */
+				let div = {
+					scale: {
+						x:  this._xMin,
+						y:  this._yMin,
+						dx: (this._xMax - this._xMin)/(this._cfg.points - 1),
+						dy: (this._yMax - this._yMin)/(this._cfg.points - 1),
+					},
+					point: {
+						x:  this._cfg.xStart,
+						y:  this._cfg.yClose, /* (invertido) */
+						dx: this._cfg.xSize/(this._cfg.points - 1),
+						dy: this._cfg.ySize/(this._cfg.points - 1),
+					},
+					padd: {
+						x: this._cfg.xStart - this._cfg.padding,
+						y: this._cfg.yClose + this._cfg.padding,
+					},
+					horizontal: [this._cfg.xStart, this._cfg.xClose],
+					vertical:   [this._cfg.yStart, this._cfg.yClose],
+					next: function() {
+						this.scale.x += this.scale.dx;
+						this.scale.y += this.scale.dy;
+						this.point.x += this.point.dx;
+						this.point.y -= this.point.dy; /* (invertido) */
+					}
+				};
+				let i = -1;
+				let p = this._cfg.points;
+
+				while (++i < p) {
+					if (i > 0 && i < p) {
+						svg.lines( /* subdivisões horizontais */
+							div.horizontal,
+							[div.point.y, div.point.y]
+						).attribute(this._cfg._subdiv)
+						.lines( /* subdivisões verticais */
+							[div.point.x, div.point.x],
+							div.vertical
+						).attribute(this._cfg._subdiv);
+					}
 
 
+					//FIXME verificar como exibir a escala (quantidade de caracteres)
+					let print = function(value, type) {
+						switch(type) {
+							case "date":
+								return __DateTime(value).toDateString();
+							case "time":
+								return __DateTime(value).toTimeString();
+							case "datetime":
+								return __DateTime(value).format("{YY}-{MM}-{DD} {hh}:{mm}");
+						}
+						let abs = Math.abs(value);
+						let num = __Number(value);
+						if (abs === 0)
+							return num.notation("decimal", 2);
+						if (abs > 100000 || abs < 1/100000)
+							return num.notation("scientific", 1);
 
+						return value;
 
+					}
 
-				osvg: {style: "background-color: Ivory; margin: 20%"},
-				otitle: {fill: "royalblue", "font-weight": "bold", "font-size": "1.5em"},
-				olabel: {fill: "red"},
-				oarea: {stroke: "black", fill: "none", "stroke-width": 2, "stroke-linecap": "round"},
-				opoint: {stroke: "grey", "stroke-width": 1, "stroke-dasharray": "8,8", "stroke-linecap": "round"},
-				oline: {fill: "none", "stroke-width": 3, "stroke-linecap": "round"}
-
-
-
-
-
+					svg.text( /* escala eixo x */
+						div.point.x,
+						div.padd.y,
+						print(div.scale.x, this.xAxis),
+						(i === 0 ? "hnw" : (i < (p - 1) ? "hn" : "hne"))
+					).attribute(this._cfg._label)
+					.title(div.scale.x)
+					.text( /* escala eixo y */
+						div.padd.x,
+						div.point.y,
+						print(div.scale.y),
+						(i === 0 ? "hse" : (i < (p - 1) ? "he" : "hne"))
+					).attribute(this._cfg._label)
+					.title(div.scale.y);
+					div.next();
+				}
 			}
 		},
 
+		_subtitle: {
+			value: function(svg, text, color) {
+				if (text === null) return;
+				let colors = __Array(this._cfg.colors);
+				let side   = 2*this._cfg.padding;
+				let space  = 2*this._cfg.padding;
+				let x      = this._cfg.right - this._cfg.padding;
+				let y      = this._cfg.yStart + side + color * (side + space);
+				let ncolor = colors.valueOf(color);
 
+				svg.rect(x, y, side, side)
+				.attribute({fill: ncolor, stroke: ncolor, style: "cursor: pointer;"})
+				.attribute(this._cfg._subtitle)
+				.title(text);
+			
+			
+			
+			
+			}
+		},
 
 
 
 		plot: {
 			value: function() {
 				if (this._data.length === 0) return null;
-				let data  = this._data.slice();
-				let color = __Array(this._cfg.colors);
+				let data   = this._data.slice();
+				let colors = __Array(this._cfg.colors);
+
 				/* definindo a área do gráfico -------------------------------------- */
 				let svg = __SVG(this._cfg.width, this._cfg.height);
-				svg.attribute(this._cfg.osvg)
-
-				/* definindo título ------------------------------------------------- */
-				svg.text(
-					this._ratio ? this._cfg.width/2 : this._cfg.xMiddle,
-					this._cfg.padding,
-					this.title,
-					"hn"
-				).attribute(this._cfg.otitle);
-
-				/* definindo rótulos e plano cartesiano ----------------------------- */
-				if (!this._ratio) {
-					svg.text(
-						this._cfg.xMiddle,
-						this._cfg.height-this._cfg.padding,
-						this.xLabel,
-						"hs"
-					).attribute(this._cfg.olabel).text(
-						this._cfg.padding,
-						this._cfg.yMiddle,
-						this.yLabel,
-						"vn"
-					).attribute(this._cfg.olabel).rect(
-						this._cfg.xStart,
-						this._cfg.yStart,
-						this._cfg.xSize,
-						this._cfg.ySize
-					).attribute(this._cfg.oarea)
-					let i = 0;
-					while (++i < (this._cfg.points-1)) {
-						let dx = i*this._cfg.xPoint;
-						let dy = i*this._cfg.yPoint;
-						svg.lines(
-							[this._cfg.xStart, this._cfg.xClose],
-							[this._cfg.yStart+dy, this._cfg.yStart+dy]
-						).attribute(this._cfg.opoint).lines(
-							[this._cfg.xStart+dx, this._cfg.xStart+dx],
-							[this._cfg.yStart, this._cfg.yClose]
-						).attribute(this._cfg.opoint);
-					}
-				}
+				svg.attribute(this._cfg._svg)
 
 				/* redefinindo funções para array ----------------------------------- */
 				if (!this._ratio) {
@@ -4397,20 +4466,26 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				if (!this._ratio) {
 					let i = -1;
 					while(++i < data.length) {
-						let x    = data[i].x;
-						let y    = data[i].y;
-						let self = this;
+						let x     = data[i].x;
+						let y     = data[i].y;
+						let name  = data[i].name;
+						let color = data[i].color;
+						let self  = this;
+						this._subtitle(svg, name, color)
+						
 						x.forEach(function(v,i,a){a[i] = self._xScale(v);});
 						y.forEach(function(v,i,a){a[i] = self._yScale(v);});
-						console.log(x, y, data[i].type)
 
 						if (data[i].type === "line") {
 							svg.lines(x, y)
-							.attribute(this._cfg.oline)
-							.attribute({stroke: color.valueOf(data[i].color)});
+							.attribute(this._cfg._line)
+							.attribute({stroke: colors.valueOf(color)});
 						}
 					}
 				}
+				this._plan(svg);
+				
+				
 				return svg.svg();
 			}
 		},
@@ -4443,6 +4518,25 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			get: function()  {return this._title;},
 			set: function(x) {this._title = String(x);}
 		},
+		/**- `''string'' xAxis`: Define ou retorna o tipo de dado do eixo `x`:
+		- {
+			(
+				* number
+				* date
+				* time
+				* datetime
+			)
+		- }**/
+		xAxis: {
+			get: function()  {return this._xAxis;},
+			set: function(x) {
+				let values  = ["number", "date", "time", "datetime"];
+				this._xAxis = values.indexOf(x) >= 0 ? x : "number";
+			}
+		},
+		
+		
+		
 		/**- `''boolean'' add(''array'' x, ''any'' y, ''string'' name, ''string'' option)`: Adiciona dados para plotagem e retorna falso se algum dado falhar.
 		- O argumento `x` deve ser uma lista de valores numéricos ou de data/tempo, se o gráfico for de plano cartesiano, ou uma lista de identificadores no caso de gráfico proporcional. No caso de gráfico proporcional, aceita-se um objeto com os identificadores e seus respectivos valores como atributos.
 		- O argumento `y` pode ser uma função, uma constante ou uma lista de valores numéricos, no caso de gráfico cartesiano, ou uma lista de valores correspondentes aos identificadores no caso de gráfico proporcional. No caso de gráfico proporcional, se `x` for um objeto, `y` será ignorado.
