@@ -1,55 +1,71 @@
+/**# Marcação para Manual em Código Fonte
+Esse é um parágrafo.
+>isso é um código
+>tá lígado?
+>	bah
+* loko1
+* loko2
+* loko3
+** loko4
+
+- atributo: valor
+* lista
+* lista
+- atributo 2: valor
+
+**/
+
 function Manual(texto) {
 		if (!(this instanceof Manual)) return new Manual(texto);
 		Object.defineProperties(this, {
-			_linhas: {value: texto.split("\n")},
-			_aberto: {value: false,  writable: true}, /* indica se deve capturar o manual */
+			_linhas: {value: texto.split("\n")},      /* lista com as linhas do código fonte */
+			_aberto: {value: false,  writable: true}, /* indica se o espaço de marcação foi aberto */
 			_hash:   {value: null,   writable: true}, /* indica se o comentário se faz por # */
-			_linha:  {value: null,   writable: true}, /* define a linha atual */
-			_item:   {value: 0,      writable: true}, /* define o item atual */
-			_bloco:  {value: null,   writable: true}, /* registra o último bloco aberto */
-			_menu:   {value: [],     writable: true}, /* registra os títulos */
+			_linha:  {value: null,   writable: true}, /* linha individual do código fonte */
+			_item:   {value: 0,      writable: true}, /* índice da linha individual do código fonte */
 			_codigo: {value: [],     writable: true}, /* registra o código fonte */
+			_menu:   {value: document.createElement("UL")},   /* registra os títulos */
 			_manual: {value: document.createElement("MAIN")}, /* registra o manual */
-
+			_caixa:  {value: null,   writable: true}  /* registra o último container incluído ainda não fechado */
 		});
-		this._bloco = this._manual;
+		this.caixa = this._manual;
 		this.analisar();
 	}
 
 	Object.defineProperties(Manual.prototype, {
 		constructor: {value: Manual},
-		/**- `''boolean'' protocolar()`: informa se é devido o registro do manual.**/
+		/**- `''boolean'' protocolar()`: informa se á área do manual está aberta.**/
 		protocolar: {
 			value: function() {
 				this._linha = this._linhas[this._item];
-				if ((/^(\#\{|\/\*\*)/).test(this._linha.trim()))
+				if ((/^(\#\{|\/\*\*|\<\!\-\-\{)/).test(this._linha.trim()))
 					this._aberto = true;
 				if (this._hash === null)
 					this._hash = (/^\#\{/).test(this._linha.trim());
 				return this._aberto;
 			}
 		},
-		/**- `''void'' despachar()`: Despacha para a próxima linha.**/
+		/**- `''void'' despachar()`: Despacha para a próxima linha do código fonte.**/
 		despachar: {
 			value: function() {
-				if ((/(\#\}|\*\*\/)$/).test(this._linha.trim()))
+				if ((/(\#\}|\*\*\/|\}\-\-\>)$/).test(this._linha.trim()))
 					this._aberto = false;
 				this._item++;
 			}
 		},
-		/**- `''void'' despachar()`: Análisa o conteúdo da fonte.**/
+		/**- `''void'' analisar()`: Análisa a marcação de cada linha do código fonte.**/
 		analisar: {
 			value: function() {
 				while (this._item < this._linhas.length) {
 
-					/* capturar como código de programação ---------------------------- */
+					/* protocolo negado: capturar como código de programação ---------- */
 					if (!this.protocolar()) {
 						this._codigo.push(this._linha);
 						this.despachar();
 						continue;
 					}
 
-					/* Preparar para captura do manual -------------------------------- */
+					/* Protocolo aberto: capturar dados do manual --------------------- */
 					let linha = this._linha.trim();
 					if (this._hash) {
 						if ((/\#\}$/).test(linha))
@@ -59,7 +75,8 @@ function Manual(texto) {
 						else
 							linha = linha.replace(/^\#/, "");
 					} else {
-						linha = linha.replace(/^\/\*\*/, "").replace(/\*\*\/$/, "");
+						linha = linha.replace(/^(\/\*\*|\<\!\-\-\{)/, "");
+						linha = linha.replace(/(\*\*\/|\}\-\-\>)$/, "");
 					}
 
 					this.bloco(linha.trim());
@@ -68,12 +85,13 @@ function Manual(texto) {
 			}
 		},
 		/**- `''void'' bloco(''string'' linha)`: Define o bloco a partir da configuração da linha.
-		|Inicia com|Subníveis|Descrição|
-		|"# "|Sim, até 6|Títulos|
-		|"- "|Sim, até 3|Listas descritivas|
-		|"* "|Sim, até 3|Listas|
-		|"|"|Não|Tabela|
-		|"% "|Não|Código|**/
+		|Início|Espaço|Subníveis|Descrição do Bloco|
+		|#|Sim|6|Títulos|
+		|-|Sim|3|Listas descritivas|
+		|*|Sim|3|Listas|
+		|\\|Não|0|Tabela|
+		|>|Não|0|Código|
+		||Não|0|Parágrafo|**/
 		bloco: {
 			value: function(linha) {
 				if ((/^\#+\ /).test(linha))
@@ -82,13 +100,13 @@ function Manual(texto) {
 					return this.dl(linha);
 				if ((/^\*+\ /).test(linha))
 					return this.ul(linha);
-				if ((/^\|([^|]+\|)+/).test(linha))
+				if ((/^\|/).test(linha))
 					return this.table(linha);
-				if ((/^\%/).test(linha))
+				if ((/^\>/).test(linha))
 					return this.pre(linha);
 				if (linha !== "")
-					return this.p(this.linha);
-				this._bloco = this._manual;
+					return this.p(linha);
+				this.caixa = this._manual;
 			}
 		},
 		/**- `''string'' emLinha(''string'' linha)`: Define os elementos em linha e retorna o HTML.
@@ -120,96 +138,198 @@ function Manual(texto) {
 				return linha;
 			}
 		},
-		/**- `''object'' dados`: Retorna um objeto contendo os elementos:
-		-- `''node'' bloco`: Retorna o bloco aberto.
-		-- `''node'' filho`: Retorna o último filho do bloco aberto.**/
-		dados: {
+		/**- `''object'' caixa`: Retorna um objeto contendo informações sobre o último container adicionado ou define o último container:
+		-- `''node'' bloco`: último bloco adicionado.
+		-- `''string'' tag`: tag do último bloco adicionado.
+		-- `''node'' filho`: último filho do último bloco adicionado.**/
+		caixa: {
 			get: function() {
+				let bloco = this._caixa;
+				let filho = bloco.children;
 				return {
-					bloco: this._bloco,
-					get filho() {
-						let filhos = this.bloco.children;
-						return filhos.lenght > 0 ? filhos[filhos.length - 1] : null;
-					},
-					get tagBloco() {
-						return this.bloco === null ? "" : this.bloco.tagName.toLowerCase();
-					},
-					get tagFilho() {
-						return this.filho === null ? "" : this.filho.tagName.toLowerCase();
-					}
+					bloco: bloco,
+					filho: filho === 0 ? null : filho[filho.length - 1],
+					tag:   bloco.tagName.toLowerCase(),
 				};
-			}
+			},
+			set: function(x) {this._caixa = x;}
 		},
-		/**- `''void'' p(''string'' linha)`: Define o bloco de parágrafo e adiciona ao principal.**/
+		/**- `''void'' p(''string'' linha)`: Define um parágrafo ao manual a partir da configuração do argumento `linha`.**/
 		p: {
 			value: function(linha) {
 				let p = document.createElement("P");
 				p.innerHTML = this.emLinha(linha.trim());
 				this._manual.appendChild(p);
-				this._bloco = this._manual;
+				this.caixa = this._manual;
 			}
 		},
-		/**- `''void'' h(''string'' linha)`: Define o bloco de títulos e adiciona ao principal.**/
+		/**- `''void'' h(''string'' linha)`: Define um título ao manual a partir da configuração do argumento `linha`.**/
 		h: {
 			value: function(linha) {
-				let h  = linha.trim().split(" ");
-				let n  = h[0].length;
-				let hn = document.createElement("H"+n);
-				h.shift();
-				hn.id = wd(h.join(" ")).camel;
-				hn.innerHTML = this.emLinha(h.join(" "));
+				linha = linha.trim().split(" ");
+				let n = linha[0].trim().length;
+				linha.shift();
+				let txt  = linha.join(" ").trim();
+				let htm  = this.emLinha(txt);
+				let id   = wd(txt).camel;
+				let link = document.createElement("A");
+				let item = document.createElement("LI");
+				let hn   = document.createElement("H"+n);
+
+				link.href      = "#"+id;
+				link.innerHTML = htm;
+				item.className = "nivel-"+n;
+				hn.id          = id;
+				hn.innerHTML   = htm;
+
+				item.appendChild(link);
+				this._menu.appendChild(item);
 				this._manual.appendChild(hn);
-				this._bloco = this._manual;
+				this.caixa = this._manual;
 			}
 		},
-		/**- `''void'' pre(''string'' linha)`: Define o bloco de código e adiciona ao elemento anterior.**/
+		/**- `''void'' pre(''string'' linha)`: Define um bloco de código ao manual a partir da configuração do argumento `linha`.**/
 		pre: {
 			value: function(linha) {
-				/* remove a configuração da linha */
-				linha = linha.replace("%", "");
-				/* se o último filho é pre, apenas adicionar a linha */
-				if (this.dados.tagFilho === "pre") {
-					this.dados.filho.textContent += "\n"+linha;
+				/* remove configuração da linha */
+				linha = linha.replace(">", "");
+				let caixa = this.caixa;
+				/* se o pre é o último container */
+				if (caixa.tag === "pre") {
+					caixa.bloco.innerHTML += "\n"+this.emLinha(linha);
 					return;
 				}
-				/* criar elemento pre */
+				/* se pre não é o último container */
 				let pre = document.createElement("PRE");
-				pre.textContent = linha;
-				this.dados.bloco.appendChild(pre);
+				/* se estiver dentro de uma lista descritiva, respeitar a identação */
+				if (caixa.tag === "dl") {
+					let dd  = document.createElement("DD");
+					dd.className = caixa.filho === null ? "nivel-1" : caixa.filho.className;
+					dd.appendChild(pre);
+					caixa.bloco.appendChild(dd);
+				} else {
+					caixa.bloco.appendChild(pre);
+				}
+				/* adicionar o pre como último container e reprocessar */
+				pre.innerHTML = this.emLinha(linha);
+				this.caixa = pre;
 				return;
 			}
 		},
-
-		/**- `''void'' table(''string'' linha)`: Define a tabela e adiciona ao elemento anterior.**/
+		/**- `''void'' ul(''string'' linha)`: Define uma lista ao manual a partir da configuração do argumento `linha`.**/
+		ul: {
+			value: function(linha) {
+				/* remove a configuração da linha */
+				linha = linha.split(" ");
+				let n = linha[0].trim().length;
+				linha.shift();
+				let txt   = linha.join(" ").trim();
+				let inner = this.emLinha(txt);
+				let li    = document.createElement("LI");
+				li.innerHTML = inner;
+				li.className = "nivel-"+n;
+				let caixa = this.caixa;
+				/* se ul é o último container */
+				if (caixa.tag === "ul") {
+					caixa.bloco.appendChild(li);
+					return;
+				}
+				let ul = document.createElement("UL");
+				/* se estiver dentro de uma lista descritiva, respeitar a identação */
+				if (caixa.tag === "dl") {
+					let dd  = document.createElement("DD");
+					dd.className = caixa.filho === null ? "nivel-1" : caixa.filho.className;
+					dd.appendChild(ul);
+					caixa.bloco.appendChild(dd);
+				} else {
+					this._manual.appendChild(ul);
+				}
+				this.caixa = ul;
+				return;
+			}
+		},
+		/**- `''void'' table(''string'' linha)`: Define uma tabela ao manual a partir da configuração do argumento `linha`.**/
 		table: {
 			value: function(linha) {
 				/* remove a configuração da linha */
 				linha = this.emLinha(linha.replace(/^\|/, "").replace(/\|$/, "")).split("|");
-				/* se o último filho é table, apenas adicionar a linha */
-				if (this.dados.tagFilho === "table") {
-					let tr = document.createElement("TR");
-					tr.innerHTML = "<td>"+linha.join("</td><td>")+"</td>";
-					this.dados.filho.tBodies[0].appendChild(tr);
+				let caixa = this.caixa;
+				let row   = document.createElement("TR");
+				let i     = -1;
+				while (++i < linha.length) {
+					let col = document.createElement(caixa.tag === "table" ? "TD" : "TH");
+					col.innerHTML = this.emLinha(linha[i]);
+					row.appendChild(col);
+				}
+				/* se table é o último container */
+				if (caixa.tag === "table") {
+					caixa.bloco.tBodies[0].appendChild(row);
 					return;
 				}
-				/* criar elemento table */
 				let table = document.createElement("TABLE");
 				let thead = document.createElement("THEAD");
 				let tbody = document.createElement("TBODY");
-				let tr    = document.createElement("TR");
-				tr.innerHTML = "<th>"+linha.join("</th><th>")+"</th>";
-				thead.appendChild(tr);
+				/* se estiver dentro de uma lista descritiva, respeitar a identação */
+				if (caixa.tag === "dl") {
+					let dd  = document.createElement("DD");
+					dd.className = caixa.filho === null ? "nivel-1" : caixa.filho.className;
+					dd.appendChild(table);
+					caixa.bloco.appendChild(dd);
+				} else {
+					this._manual.appendChild(table);
+				}
+				table.border = 1;
+				thead.appendChild(row);
 				table.appendChild(thead);
 				table.appendChild(tbody);
-				this.dados.bloco.appendChild(table);
+				this.caixa = table;
 				return;
 			}
 		},
 
-		/**- `''void'' dl(''string'' linha)`: Define a lista descritiva e adiciona ao elemento anterior.**/
+
+
+
+
+
+
+		/**- `''void'' dl(''string'' linha)`: Define uma lista descritiva ao manual a partir da configuração do argumento `linha`.**/
 		dl: {
 			value: function(linha) {
-
+				/* remove a configuração da linha */
+				linha = linha.split(" ");
+				let n = linha[0].trim().length;
+				linha.shift();
+				let val = linha.join(" ").trim();
+				let atr = null;
+				let div = val.split(":");
+				if (div.length > 1) {
+					atr = div[0].trim();
+					div.shift();
+					div = div.join(":").trim()
+					val = div === "" ? null : div;
+				}
+				let dt = atr === null ? null : document.createElement("DT");
+				let dd = val === null ? null : document.createElement("DD");
+				if (dt !== null) {
+					dt.innerHTML = this.emLinha(atr);
+					dt.className = "nivel-"+n;
+				}
+				if (dd !== null) {
+					dd.innerHTML = this.emLinha(val);
+					dd.className = "nivel-"+n;
+				}
+				let caixa = this.caixa;
+				/* se dl não for o último container */
+				if (caixa.tag !== "dl") {
+					let dl = document.createElement("DL");
+					this._manual.appendChild(dl);
+					this.caixa = dl;
+					caixa = this.caixa;
+				}
+				if (dt !== null) caixa.bloco.appendChild(dt);
+				if (dd !== null) caixa.bloco.appendChild(dd);
+				return;
 			}
 		},
 

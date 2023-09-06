@@ -174,7 +174,7 @@ const wd = (function() {
 			window.setTimeout(function () {
 				object.counter--;
 				if (object.counter < 1)
-					document.body.removeChild(object.modal);
+					document.body.removeChild(object.modal); //FIXME no load está dando errado
 			}, this.delay);
 
 			return this.counter;
