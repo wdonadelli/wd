@@ -1,159 +1,315 @@
-/**# Marcação para Manual em Código Fonte
-Esse é um parágrafo.
-[loko1
-loko2
-loko3
-loko4]
+/**
+# Comentários Informativos
+## Construindo um Manual a Partir do Código Fonte
 
-[menu]
+Trata-se de ''script'' elaborado em JavaScript com o propósito de transformar comentários presentes no código fonte em informações sobre o próprio código.
 
-### título
+A proposta é construir determinado material sobre o código durante a sua construção utilizando para isso caracteres especiais que definirão qual comentário capturar e como ele será formatado.
+
+### Dos Comentários
+
+Para cada linguagem há um determinado caractere que define a abertura ou o fechamento do comentário.
+
+Para diferenciar um comentário a ser capturado para construção do documento de outro a ser utilizado somente para fins da programação, os caracteres que definem o comentário sofrerá uma pequena modificação.
+
+Segue abaixo os tipos de comentários e suas modificações para os fins do presente ''script'':
+
+|Padrão|Abertura|Encerramento|
+|&sol;&ast;comentário&ast;&sol;|&sol;&ast;&ast;|&ast;&ast;&sol;|
+|&lt;&excl;&dash;&dash;comentário&dash;&dash;&gt;|&lt;&excl;&dash;&dash;&dash;|&dash;&dash;&dash;&gt;|
+|&num;comentário|&num;&num;|Não há|
+|&dash;&dash;comentário|&dash;&dash;&dash;|Não há|
+
+A coluna "Padrão" apresenta o modelo de comentário de determinada linguagem. As colunas "Abertura" e "Encerramento" definem a modificação necessário no caractere de comentário para delimitar o início e fim do conteúdo a fazer parte do documento.
+
+A leitura será realizada linha a linha do código fonte. Na linguagem oque possuir bloco de comentários, após a abertura da captura, enquanto não forem informados os caracteres de encerramento, a linha será continuará a ser capturada.
+
+Para as linguagens que não contém bloco de  comentários, cada linha deverá conter os caracters de abertura.
+
+### Da Formatação
+
+A ferramenta também utiliza uma notação específica para definir elementos de blocos e em linha, semelhante ao que ''Markdown'' apresenta, economizando caracteres.
+
+### Dos Elementos em Linha
+
+Os seguintes atalhos são utilizados para especificar elementos em linha:
+
+|Estrutura|HTML|Renderização|
+|&bprime;&bprime;code&bprime;&bprime;|&lt;code&gt;code&lt;/code&gt;|``code``|
+|&ast;&ast;strong&ast;&ast;|&lt;strong&gt;strong&lt;/strong&gt;|**strong**|
+|&apos;&apos;em&apos;&apos;|&lt;em&gt;em&lt;/em&gt;|''em''|
+|&lowbar;&lowbar;u&lowbar;&lowbar;|&lt;u&gt;u&lt;/u&gt;|__u__|
+|&lsqb;link&rsqb;&lt;alvo&gt;|&lt;a href="alvo" target="_blank" &gt;link&lt;/a&gt;|[link]<#alvo>|
+
+Com excessão do elemento ``a``, todos são compostos por duplos caracteres inseridos antes e após o que se pretende formatar.
+
+No caso de ``a``, o conteúdo do ''link'' é opcional: ``&lsqb;&rsqb;&lt;&num;alvo&gt;`` gera []<#alvo>.
+
+"$ &"
+"$ Para nomear uma função em ''JavaScript'', basta escrever seu nome __logo após__ a paravra chave ``function``, separados por **espaço** (veja mais em []<https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Functions>)."
+
+O fragmento acima geraria a seguinte visualização:
+
+"Para nomear uma função em ''JavaScript'', basta escrever seu nome __logo após__ a paravra chave ``function``, separados por **espaço** (veja mais em []<https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Functions>)."
+
+### Do Bloco de Citação
+
+O bloco de citação inicia e termina com o caractere &quot;.
+
+"$ &"
+"$ "Esse é um bloco de citação longa. Use **aspas duplas** para delimitar seu conteúdo.""
+
+O fragmento acima geraria a seguinte visualização:
+
+"Esse é um bloco de citação longa. Use **aspas duplas** para delimitar seu conteúdo."
+
+### Do Bloco de Código
+
+O bloco de código inicia com o caractere &dollar; seguido de um espaço em branco, sendo que cada linha do bloco deverá iniciar com esse caracteres.
+
+Na primeira linha do bloco, deverão ser informadas as palavras que merecem destaque na linguagem.
+
+"&dollar; let function return<br/>&dollar; let dobro = function(x) {<br/>&dollar; &nbsp;&nbsp;&nbsp;&nbsp;return 2*x;<br/>&dollar; }"
+
+O fragmento acima geraria a seguinte visualização:
+
+$ let function return
+$ let dobro = function(x) {
+$     return 2*x;
+$ }
+
+### Da Listagem
+
+Os itens da lista são informados inserindo o caractere &dash; seguido de um espaço em branco no início da linha.
+
+Para informar subitens, deverá ser acrescido um novo caracteres &dash; ao lado do primeiro.
+
+"$ '"
+"$ - Item 1"
+"$ - Item 2"
+"$ -- Item 2.1"
+"$ -- Item 2.2"
+"$ - Item 3"
+
+O fragmento acima geraria a seguinte visualização:
+
+- Item 1
+- Item 2
+-- Item 2.1
+-- Item 2.2
+- Item 3
+
+
+
+
+
+
+
+
+### Da Listagem de Definição
+
+Os itens da lista são informados inserindo o caractere &dash; seguido de um espaço em branco no início da linha.
+
+Para informar subitens, deverá ser acrescido um novo caracteres &dash; ao lado do primeiro.
+
+"$ '"
+"$ - Item 1"
+"$ - Item 2"
+"$ -- Item 2.1"
+"$ -- Item 2.2"
+"$ - Item 3"
+
+O fragmento acima geraria a seguinte visualização:
+
+- Item 1
+- Item 2
+-- Item 2.1
+-- Item 2.2
+- Item 3
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+###### Menu
+
+@menu
+
+### O Construtor
+
+$ string
+$ Manual(string texto)
+
+O argumento ``texto`` recebe o texto do código fonte a ser analisado.
+
 
 **/
-
 function Manual(texto) {
 		if (!(this instanceof Manual)) return new Manual(texto);
 		Object.defineProperties(this, {
-			_linhas: {value: texto.split("\n")},      /* lista com as linhas do código fonte */
-			_aberto: {value: false,  writable: true}, /* indica se o espaço de marcação foi aberto */
-			_tipo:   {value: null,   writable: true}, /* Registra o tipo de comentário */
-			_linha:  {value: null,   writable: true}, /* linha individual do código fonte */
-			_item:   {value: 0,      writable: true}, /* índice da linha individual do código fonte */
-			_codigo: {value: [],     writable: true}, /* registra o código fonte */
-			_bloco:  {value: null,   writable: true}, /* registra o bloco aberto */
+			_linhas: {value: texto.split("\n")     },         /* lista com as linhas do código fonte */
+			_linha:  {value: null,   writable: true},         /* linha individual do código fonte */
+			_item:   {value: 0,      writable: true},         /* índice da linha individual do código fonte */
+
+			_tipo:   {value: null,   writable: true},         /* Registra o tipo de comentário # /* <! */
+			_tag:    {value: false,  writable: true},         /* indica se a tag de marcação está aberta */
+
+			_fonte:  {value: [],     writable: true},         /* registra o código fonte */
+			_manual: {value: document.createElement("MAIN")}, /* registra a raiz do manual */
+			_aberto: {value: null,   writable: true},         /* registra o último elemento aberto */
 			_menu:   {value: document.createElement("UL")},   /* registra os títulos para menu */
-			_raiz:   {value: document.createElement("MAIN")}, /* registra a raiz do manual */
 
 		});
-		this._bloco = this._raiz;
+
+		/* definindo o tipo de comentário */
+		let i = -1;
+		while (++i < this._linhas.length) {
+			let linha = this._linhas[i].trim();
+			if ((/^\#/).test(linha))   this._tipo = "hash";
+			if ((/^\-\-/).test(linha)) this._tipo = "sql";
+			if ((/^\<\!/).test(linha)) this._tipo = "html";
+			if ((/^\/\*/).test(linha)) this._tipo = "main";
+			if ((/^\/\//).test(linha)) this._tipo = "main";
+			if (this._tipo !== null)   break;
+		}
+		if (this._tipo === null)
+			this.erro("Modelo de comentário não identificado.");
+		/* definindo o bloco principal */
+		this._aberto = this._manual;
+		/* executando a montagem do manual */
 		this.executar();
 	}
 
 	Object.defineProperties(Manual.prototype, {
 		constructor: {value: Manual},
-		_re: {
+		/**. `''objeto'' _tags`: Registra as tags de abertura e encerramento dos comentários que devem ser capturados para construção do manual:
+		**/
+		_tags: {
 			value: {
-				abrir: {
-					hash:  /^\#\$/,
-					html:  /^\<\!\-\-\-/,
-					outro: /^\/\*\*/
-				},
-				fechar: {
-					hash:  /^\#\$/,
-					html:  /\-\-\-\>$/,
-					outro: /\*\*\/$/
-				}
+				hash: {abrir: /^(\s+)?\#\(/,       fechar: /.$/     },
+				sql:  {abrir: /^(\s+)?\-\-\-/,     fechar: /.$/   },
+				html: {abrir: /^(\s+)?\<\!\-\-\-/, fechar: /\-\-\-\>(\s+)?$/ },
+				main: {abrir: /^(\s+)?\/\*\*/,     fechar: /\*\*\/(\s+)?$/   },
 			}
  		},
- 		_containers: {
- 			value: [
- 				{html: "pre",        abrir: /^\`\`\`/,  fechar: /\`\`\`$/  },
- 				{html: "blockquote", abrir: /^\"\"\"/,  fechar: /\"\"\"$/  },
-	 			{html: "ul",         abrir: /^\(/,      fechar: /\)$/      },
-	 			{html: "dl",         abrir: /^\{/,      fechar: /\}$/      },
-	 			{html: "h",          abrir: /^\#+\ /,   fechar: /^\#+\ /   },
-	 			{html: "table",      abrir: /^\[.+\|$/, fechar: /^\|.+\]$/ },
-	 			{html: "menu",       abrir: /^\@menu$/, fechar: /^\@menu$/ }
- 			]
+		/*. (`''html'' caixa`: Define e retorna o último container informado.**/
+		caixa: {
+			get: function()  {return this._aberto;},
+			set: function(x) {this._aberto = x;}
+		},
+		/*. (`''node'' tagCaixa`: Retorna a tag (maiúsculo) do último container informado.**/
+		tagCaixa: {
+			get: function() {return this.caixa.tagName.toUpperCase();}
 
-
-
- 			/*
- 			value: {
- 				abrir: {
-	 				pre:        /^\`\`\`/,
-	 				blockquote: /^\"\"\"/,
-	 				ul:         /^\(/,
-	 				dl:         /^\{/,
-	 				h:          /^\#+\ /,
-	 				table:      /^\[.+\|$/,
-	 				menu:       /^\@menu$/,
- 				},
- 				fechar: {
-	 				pre:        /^\`\`\`$/,
-	 				blockquote: /\"\"\"$/,
-	 				ul:         /\)$/,
-	 				dl:         /\}$/,
-	 				h:          /^\#+\ /,
-	 				table:      /^\|.+\]$/,
-	 				menu:       /^\@menu$/,
-	 			}
- 			}*/
- 		},
-
-		/**{`''boolean'' protocolar()`: informa se á área do manual está aberta.**/
-		protocolar: {
-			value: function() {
-				this._linha = this._linhas[this._item];
-
-				/* checando o tipo de comentário, se indefinido */
-				if (this._tipo === null) {
-					for (let i in this._re.abrir) {
-						let tipo = this._re.abrir[i];
-						if (tipo.test(this._linha)) {
-							this._tipo = i;
-							break;
-						}
-					}
+		},
+		/*. (`''integer'' nivel`: Retorna o número de elementos de mesmo tipo do último container.**/
+		nivel: {
+			get: function() {
+				let i   = 0;
+				let tag = this.tagCaixa;
+				let pai = this.caixa.parentElement;
+				let avo = pai === null ? null : pai.parentElement;
+				while (avo !== null && avo.tagName.toUpperCase() === tag) {
+					pai = avo.parentElement;
+					avo = pai === null ? null : pai.parentElement;
+					i++;
 				}
-				/* verificando se é comentário de abertura */
-				let linha = this._linha.trim();
-				let re    = this._tipo === null ? null : this._re.abrir[this._tipo];
-				if (re !== null && re.test(linha))
-					this._aberto = true;
-
-				return this._aberto;
+				return i;
 			}
 		},
-		/**`''void'' despachar()`: Despacha para a próxima linha do código fonte.**/
-		despachar: {
-			value: function() {
-				let linha = this._linha.trim();
-				let re    = this._tipo === null ? null : this._re.fechar[this._tipo];
-
-				if (re === null || re.test(linha))
-					this._aberto = false
-
-				this._item++;
+		/*. `''string'' ultimo`: Retorna o último filho do último container informado, ou `null` se inexistente.**/
+		ultimo: {
+			get: function() {
+				let filhos = this.caixa.children;
+				if (filhos.length === 0) return null;
+				return filhos[filhos.length - 1];
 			}
 		},
-		/**''string'' `html(''string'' inner, ''no'' elem)`: A partir da informação enviada pelo argumento `inner`, transforma-se conteúdo textual codificado em HTML. Se o argumento `elem` for informado, o HTML será definido no elemento correspodente. Retorna o conteúdo HTML. Os seguintes códigos são aceitos:
-		|Entre|Descrição|
-		|`|Código|
-		|**|Negrito|
-		|''|Itálico|
-		|__|Sublinhado|
-		|[](link)|Link|
-		|[texto](link)|Link com texto|**/
+		/*. (`''string'' tagUltimo`: Retorna a tag (maiúsculo) do último filho do último container informado, ou `null` se inexistente.**/
+		tagUltimo: {
+			get: function() {
+				let ultimo = this.ultimo;
+				return ultimo === null ? null : ultimo.tagName.toUpperCase();
+			}
+		},
+		/**`''string'' texto(''string'' valor, ''string'' chaves)`: Retorna o HTML a ser aplicado quando se tratar de código fonte. O argumento `valor` é o conteúdo do código e o argumento opcional `chaves` é as palavras chaves separadas por espaços em branco.**/
+		texto: {
+			value: function(valor, chaves) {
+				chaves = chaves === undefined ? [] : chaves.replace(/\s+/g, " ").trim().split(" ");
+				/* substituir & por &amp; */
+				valor = valor.replace(/\&/g, "&amp;")
+				/* substituir ` por &bprime; */
+				valor = valor.replace(/\`/g, "&bprime;");
+				/* substituir < por &lr; e > por &gt; */
+				valor = valor.replace(/\</g, "&lt;").replace(/\>/g, "&gt;");
+				/* substituir o conteúdo entre aspas por var */
+				valor = valor.replace(/\"([^\"]+)\"/, "\"<var>$1</var>\"");
+				/* substituir palavras chaves por negrito: começo, fim, só e no meio */
+				if (chaves === undefined) return valor;
+
+				for (let i = 0; i < chaves.length; i++) {
+					let chave  = chaves[i].trim();
+					let antes  = "([^A-Za-z_\"])";
+					let depois = "([^A-Za-z0-9_\"])";
+					let regex1 = new RegExp("^("+chave+")"+depois);
+					let regex3 = new RegExp(antes+"("+chave+")$");
+					let regex4 = new RegExp("^("+chave+")$");
+					let regex2 = new RegExp(antes+"("+chave+")"+depois, "g");
+					valor      = valor.replace(regex1, "<b>$1</b>$2");
+					valor      = valor.replace(regex2, "$1<b>$2</b>$3");
+					valor      = valor.replace(regex3, "$1<b>$2</b>");
+					valor      = valor.replace(regex4, "<b>$1</b>");
+				}
+				return valor;
+			}
+		},
+		/**. `''string'' html(''string'' valor)`: Recebe o conteúdo codificado no argumento `inner`, transforma em HTML e o retorna.
+		**/
 		html: {
-			value: function(inner, elem) {
-				let inline = [
-					{re: /\`([^`]+)\`/g,              rp: "<code>$1</code>"},
-					{re: /\*\*([^*][^*]+)\*\*/,       rp: "<b>$1</b>"},
-					{re: /\'\'([^'][^']+)\'\'/,       rp: "<i>$1</i>"},
-					{re: /\_\_([^_][^_]+)\_\_/,       rp: "<u>$1</u>"},
-					{re: /\[([^\]]+)\]\(([^()]+)\)/g, rp: "<a href=\"$2\" target=\"_blank\">$1</a>"},
-					{re: /\[\]\(([^()]+)\)/g,         rp: "<a href=\"$1\" target=\"_blank\">$1</a>"},
-				];
+			value: function(valor) {
+				let destaques = [
+	 				{re: /\`([^`]+)\`/,              rp: "<code>$1</code>"},
+					{re: /\*\*([^*][^*]+)\*\*/,      rp: "<strong>$1</strong>"},
+					{re: /\'\'([^'][^']+)\'\'/,      rp: "<em>$1</em>"},
+					{re: /\_\_([^_][^_]+)\_\_/,      rp: "<u>$1</u>"},
+					{re: /\[([^\]]+)\]\<([^<>]+)\>/, rp: "<a href=\"$2\" target=\"_blank\">$1</a>"},
+					{re: /\[\]\<([^<>]+)\>/,         rp: "<a href=\"$1\" target=\"_blank\">$1</a>"}
+	 			];
+
 				let i = -1;
-				while (++i < inline.length) {
-					let re = inline[i].re;
-					let rp = inline[i].rp;
-					while (re.test(inner)) {
-						inner = inner.replace(re, rp);
+				while (++i < destaques.length) {
+					let re  = destaques[i].re;
+					let rp  = destaques[i].rp;
+					let tag = destaques[i].tag;
+					while (re.test(valor)) {
+						if (tag === "code") {
+							let base  = valor.match()[1];
+							let code  = this.codigos(base);
+							let velho = "`"+base+"`";
+							let novo  = "`"+code+"`";
+							valor     = valor.replace(base, code);
+						}
+						valor = valor.replace(re, rp);
 					}
 				}
-				if (elem !== undefined && elem !== null)
-					elem.innerHTML += inner;
-				return inner;
+				return valor;
 			}
 		},
 		/**`''no'' criar(''string'' tag, ''string'' texto): Cria o elemento HTML especicado no argumento `tag` e o retorna com o conteúdo especificado no argumento `texto`.**/
 		criar: {
 			value: function(tag, texto) {
-				let html = document.createElement(tag);
+				let html = document.createElement(tag.toLowerCase());
 				if (typeof texto === "string")
-					this.html(texto, html);
+					html.innerHTML = this.html(texto);
 				return html;
 			}
 		},
@@ -164,314 +320,265 @@ function Manual(texto) {
 				//if (mensagem) throw new Error(erro);
 			}
 		},
+		/**`''boolean'' protocolar()`: informa se está aberta a tag de comentário.**/
+		protocolar: {
+			value: function() {
+				let linha   = this._linha.trim();
+				let abrir   = this._tags[this._tipo].abrir;
+				if (abrir.test(linha)) this._tag = true;
+				return this._tag;
+			}
+		},
+		/**`''void'' despachar()`: Despacha para a próxima linha do código fonte.**/
+		despachar: {
+			value: function() {
+				let linha  = this._linha.trim();
+				let fechar = this._tags[this._tipo].fechar;
+				if (fechar.test(linha)) this._tag = false;
+				this._item++;
+			}
+		},
+		/**. `''boolean'' P(''string'' linha)`: Retorna verdadeiro se for `linha` for diferente de vazio. Caso contrário, adicionará uma parágrafo ao último elemento aberto e retronará verdadeiro.**/
+		P: {
+			value: function(linha) {
+				if (linha.trim() === "") return false;
+				let novo = this.criar("P", linha.trim());
+				this.caixa.appendChild(novo);
+				return true;
+			}
+		},
+		/**. `''boolean'' H(''string'' linha)`: Retorna verdadeiro se for um bloco de cabeçalho, caso contrário, retorna falso.
+		. O bloco de cabeçalho inicia com o caractere `&num;` seguido de espeaço em `linha` e será adicionada somente na árvore principal, tendo subníveis.**/
+		H: {
+			value: function(linha) {
+				let id = /^(\#+)\s/;
+				if (!id.test(linha.trim())) return false;
 
-		/**`''void'' análise(''string'' texto): Analisa cada linha (argumento `texto`) do arquivo para definir o elemento e sua alocação no manual a partir das seguintes marcações:
-		|Marcação|Pai|Descrição|
-		|[menu]|Raiz|Lista com os títulos informados para fins de montagem de menu|
+				let valor  = linha.trim().replace(id, "").trim();
+				let nivel  = linha.trim().split(/\s/)[0].length;
+				let titulo = this.criar("H"+nivel, valor);
+				let ID     = wd(valor).camel;
+				titulo.id  = ID;
+				if (nivel === 3) {
+					let link = this.criar("A", valor);
+					let item = this.criar("LI");
+					link.href = "#"+ID;
+					item.appendChild(link);
+					this._menu.appendChild(item);
+				}
+				this._manual.appendChild(titulo);
+				return true;
+			}
+		},
+		/**. `''boolean'' MENU(''string'' linha)`: Retorna verdadeiro se for um bloco de menu, caso contrário, retorna falso.
+		. O bloco de cabeçalho inicia __e__ termina com os caracteres `&commat;menu` em `linha` e será adicionada somente na árvore principal.**/
+		MENU: {
+			value: function(linha) {
+				let id = /^\@menu$/;
+				if (!id.test(linha.trim())) return false;
+				this._manual.appendChild(this._menu);
+				return true;
+			}
+		},
+
+
+
+
+
+
+
+
+
+
+
+
+		/**. `''boolean'' BLOCKQUOTE(''string'' linha)`: Retorna verdadeiro se for um bloco de citação, caso contrário, retorna falso.
+		. O bloco de citação inicia __e__ encerra com o caractere `&quot;` em `linha`.
+		. O bloco aceita blocos internos.
 		**/
-		analisar: {
-			value: function (texto) {
-				let elem = this._bloco;                /* container aberto */
-				let nome     = elem.tagName.toLowerCase(); /* tag do container aberto */
-				let html     = null;                       /* nome da tag */
-				let abrir    = null;                       /* se for para abrir container */
-				let fechar   = null;                       /* se for para fechar container */
-				let reAbrir  = null;                       /* expressão regular casada para abrir */
-				let reFechar = null;                       /* expressão regular casada para fechar */
-				for (let i = 0; i < this._containers.length; i++) {
-					let teste = this._containers[i];
-					let valor = texto.trim();
-					abrir    = teste.abrir.test(valor)  ? true : null;
-					fechar   = teste.fechar.test(valor) ? true : null;
-					reAbrir  = abrir  ? teste.abrir  : null;
-					reFechar = fechar ? teste.fechar : null;
-					html     = (abrir || fechar) ? teste.html : null;
-					if (html !== null) break;
+		BLOCKQUOTE: {
+			value: function(linha) {
+				let id = /^\"(.+)\"$/;
+				if (!id.test(linha.trim())) return false;
+
+				let valor = linha.trim().replace(id, "$1");
+				let caixa = this.caixa;
+				if (this.tagUltimo === "BLOCKQUOTE") {
+					this.caixa = this.ultimo;
+				} else {
+					let novo = this.criar("BLOCKQUOTE");
+					caixa.appendChild(novo);
+					this.caixa = novo;
 				}
-
-				let acao;//FIXME apagar isso depois
-
-				/*====================================================================*/
-				/* -- CODIGO -- */
-				/* Se aberto, pode aceitar qualquer coisa, exceto a tag de fechamento */
-
-				if (nome !== "pre" && html === "pre" && abrir === true) {
-					let pre = this.criar("PRE");
-					pre.dataset.espaco = texto.split(/\S/)[0];
-					pre.dataset.chaves = texto.trim().replace(reAbrir, "");
-					elem.appendChild(pre);
-					this._bloco = pre;
-					return;
+				this.analisar(valor);
+				this.caixa = caixa;
+				return true;
+			}
+		},
+		/**. `''boolean'' PRE(''string'' linha)`: Retorna verdadeiro se for um bloco de código, caso contrário, retorna falso.
+		. O bloco de código inicia com o caractere `&dollar;` seguido de espaço em `linha`.
+		. Na primeira linha do bloco, após `&gt;`, deverão ser informadas as palavras chaves da linguagem separadas por espaço.**/
+		PRE: {
+			value: function(linha) {
+				let id = /^\$\s/;
+				if (!id.test(linha.trim())) return false;
+				let valor = linha.trim().replace(id, "");
+				if (this.tagUltimo === "PRE") {
+					let codigo = this.texto(valor, this.ultimo.dataset.chaves);
+					let quebra = this.ultimo.innerHTML === "" ? "" : "\n";
+					this.ultimo.innerHTML += quebra+codigo;
+				} else {
+					let novo = this.criar("PRE");
+					novo.dataset.chaves = valor.replace(/\s+/, " ").trim();
+					this.caixa.appendChild(novo);
 				}
+				return true;
+			}
+		},
+		/**. `''boolean'' TABLE(''string'' linha)`: Retorna verdadeiro se for bloco de tabela, caso contrário, retorna falso.
+		. O bloco de tabela inicia, encerra e divide colunas com o caractere `&vert;` em `linha`.**/
+		TABLE: {
+			value: function(linha) {
+				let id = /^\|(.+)\|$/;
+				if (!id.test(linha.trim())) return false;
 
-				if (nome === "pre" && html !== "pre" && fechar !== true ) {
-					let chaves = elem.dataset.chaves.trim().replace(/\s+/g, " ").split(" ");
-					let espaco = new RegExp("^"+elem.dataset.espaco);
-					let valor  = texto.replace(espaco, "");
-					valor = valor.replace(/\&/g, "\&amp\;")
-					valor = valor.replace(/\</g, "\&lt\;").replace(/\>/g, "\&gt\;");
-					valor = valor.replace(/\"([^\"]+)\"/, "\"<var>$1</var>\"");
+				let valor  = linha.trim().replace(id, "$1").split("|");
+				let celula = this.tagUltimo === "TABLE" ? "TD" : "TH";
+				let tr     = this.criar("TR");
+				let caixa  = this.caixa;
 
-					for (let i = 0; i < chaves.length; i++) {
-						let regex1 = new RegExp("^("+chaves[i].trim()+")(\\W)");
-						let regex2 = new RegExp("(\\W)("+chaves[i].trim()+")(\\W)", "g");
-						let regex3 = new RegExp("(\\W)("+chaves[i].trim()+")$");
-						let regex4 = new RegExp("^("+chaves[i].trim()+")$");
-						console.log(chaves[i].trim(),regex1, regex2)
-						valor = valor.replace(regex1, "<b>$1</b>$2");
-						valor = valor.replace(regex2, "$1<b>$2</b>$3");
-						valor = valor.replace(regex3, "$1<b>$2</b>");
-						valor = valor.replace(regex4, "<b>$1</b>");
-					}
-					elem.innerHTML += valor+"\n";
-					return;
-				}
+				console.log(this.tagUltimo);
 
-				if (nome === "pre" && html === "pre") {
-					if (fechar === true) {
-						let valor = texto.trimEnd().replace(reFechar, "");
-						this.analisar(valor);
-						this._bloco = elem.parentElement;
-						return;
-					}
-					if (fechar === false) {
-						let valor = texto.trimStart().replace(reAbrir, "");
-						this._bloco = elem.parentElement;
-						this.analisar(valor);
-						return;
+				if (this.tagUltimo === "DL") {
+					this.caixa = this.ultimo;
+					while (this.caixa.children.length !== 0) {
+						let index  = this.caixa.children.length - 1;
+						this.caixa = this.caixa.children[index];
 					}
 				}
-
-
-				/*====================================================================*/
-				/* -- CITAÇÃO -- */
-				/* Se aberto, executa qualquer elemento, exceto se for para fechar */
-
-				if (html === "blockquote" && abrir === true) {
-					let quote = this.criar("BLOCKQUOTE");
-					let valor = texto.trim().replace(reAbrir, "");
-					elem.appendChild(quote);
-					this._bloco = quote;
-					this.analisar (valor);
-					return;
+				if (this.tagUltimo === "TABLE") {
+					this.caixa = this.ultimo.tBodies[0];
+				} else {
+					let novo = this.criar("TABLE");
+					let head = this.criar("THEAD");
+					let body = this.criar("TBODY");
+					caixa.appendChild(novo);
+					novo.appendChild(head);
+					novo.appendChild(body);
+					novo.border = 1;
+					this.caixa = head;
 				}
 
-				if (html === "blockquote" && fechar === true) {
-					let valor = texto.trim().replace(reFechar, "");
-					this.analisar (valor);
-					this._bloco = elem.parentElement;
-					return;
+				for (let i = 0; i < valor.length; i++) {
+					let texto = this.criar(celula, valor[i]);
+					tr.appendChild(texto);
 				}
-
-				if (nome === "blockquote") {
-					if (texto.trim() === "") return;
-					let p = this.criar("P", texto.trim());
-					elem.appendChild(p);
-					return;
-				}
+				this.caixa.appendChild(tr);
+				this.caixa = caixa;
+				return true;
+			}
+		},
 
 
+		/**. `''boolean'' UL(''string'' linha)`: Retorna verdadeiro se for uma lista, caso contrário, retorna falso.
+		. O bloco de código inicia com o caractere `&dash;` em `linha` e possui subníveis.**/
+		UL: {
+			value: function(linha) {
+				let id = /^(\-+)\s/;
+				if (!id.test(linha.trim())) return false;
 
+				let valor = linha.trim().replace(id, "").trim();
+				let nivel = linha.trim().split(/\s/)[0].length - 1;
+				let caixa = this.caixa;
+				let item  = this.criar("LI");
+				let span  = this.criar("SPAN", valor);
+				item.appendChild(span);
 
-
-
-
-
-
-				/*====================================================================*/
-				/* -- MENU -- */
-				if (texto.trim() === "@menu") {
-					let titulo = this.criar("H3", "Menu");
-					this._raiz.appendChild(titulo)
-					this._raiz.appendChild(this._menu);
-					this._bloco = this._raiz;
-					return;
-				}
-
-				/*====================================================================*/
-				/* -- TABELA (abertura) -- */
-				if ((/^\[.+\|$/).test(texto.trim())) {
-					let valor = texto.replace(/^\[/, "|").trim();
-					let table = this.criar("TABLE");
-					this._bloco = table;
-					return this.analisar(valor);
-				}
-
-				/* -- TABELA (fechamento) -- */
-				if ((/^\|.+\]$/).test(texto.trim())) {
-					let valor = texto.replace(/\]$/, "|").trim();
-					this.analisar(valor);
-					this._bloco = bloco.parentElement;
-				}
-
-				/* -- TABELA (intermediário) -- */
-				if ((/^\|.+\|$/).test(texto.trim())) {
-					if (nome !== "table")
-						return this.analisar(texto.trim().replace(/^\|/, "["));
-
-					let colunas = texto.trim().replace(/^\|/, "").replace(/\|$/, "").split("|");
-					let tr      = this.criar("TR");
-					for (let i = 0; i < colunas.length; i++) {
-						let valor  = colunas[i].trim();
-						let celula = this.criar(bloco.tHead === null ? "TH" : "TD", valor);
-						tr.appendChild(celula);
-					}
-					if (bloco.tHead === null) {
-						let thead = this.criar("THEAD");
-						thead.appendChild(tr)
-						bloco.appendChild(thead);
-						return;
-					}
-					if (bloco.tBodies.length === 0) {
-						let tbody = this.criar("TBODY");
-						bloco.appendChild(tbody);
-					}
-					bloco.tBodies[0].appendChild(tr)
-					return;
-				}
-
-				/*====================================================================*/
-				/* -- LISTA (abertura) -- */
-				if ((/^\(/).test(texto.trim())) {
-
-					let valor = texto.trim().replace(/^\(/, "").trim();
-					let ul    = criar("UL");
-					/* -- pode haver listas secundárias -- */
-					if (nome === "ul") {
-						let li = this.criar("LI");
-						li.appendChild(ul);
-						bloco.appendChild(li);
-					} else {
-						bloco.appendChild(ul);
-					}
-					this._bloco = ul;
-					if (valor !== "") this.analisar(valor);
-					return;
-				}
-
-				/* -- LISTA (fechamento) -- */
-				if ((/\)$/).test(texto.trim())) {
-					if (nome !== "ul")
-						this.erro("Fechamanto de lista sem sua abertura");
-					let valor = texto.trim().replace(/\)$/, "").trim();
-					if (valor !== "") this.analisar(valor);
-					this._bloco = bloco.parentElement;
-					/* pode haver listas secundárias dentro de LI */
-					if (this._bloco.tagName.toLowerCase() === "LI")
-						this._bloco = this._bloco.parentElement;
-					return;
-				}
-
-				/*====================================================================*/
-				/* -- LISTA DESCRITIVAS (abertura) -- */
-				if ((/^\{/).test(texto.trim())) {console.log(this._linha);
-
-					let valor = texto.trim().replace(/^\{/, "").trim();
-					let dl    = this.criar("DL");
-					/* -- pode haver listas secundárias -- */
-					if (nome === "dl") {
-						let dd = this.criar("DD");
-						dd.appendChild(dl);
-						bloco.appendChild(dd);
-					} else {
-						bloco.appendChild(dl);
-					}
-					this._bloco = dl;
-					if (valor !== "") this.analisar(valor);
-					return;
-				}
-
-				/* -- LISTA DESCRITIVAS (fechamento) -- */
-				if ((/\}$/).test(texto.trim())) {
-					if (nome !== "dl")
-						this.erro("Fechamanto de lista descritiva sem sua abertura");
-					let valor = texto.trim().replace(/\}$/, "").trim();
-					if (valor !== "") this.analisar(valor);
-					this._bloco = elem.parentElement;
-					/* pode haver listas secundárias dentro de DD */
-					if (this._bloco.tagName.toLowerCase() === "DD")
-						this._bloco = this._bloco.parentElement;
-					return;
-				}
-
-					/*====================================================================*/
-				/* -- TÍTULOS (abertura) -- */
-				if ((/^\#+\ /).test(texto.trim())) {
-					let nivel = texto.trim().split(" ")[0].length;
-					let valor = texto.trim().replace(/^\#+\ /, "").trim();
-					let id    = wd(valor).camel;
-					let hn    = this.criar("H"+nivel, valor);
-
-					hn.id = id;
-					this._raiz.appendChild(hn);
-					this._bloco = this._raiz;
-
-					if (nivel > 2) {
-						let a  = this.criar("A", valor);
-						let li = this.criar("LI");
-						a.href = "#"+id;
-						li.className = "nivel-"+nivel;
-						li.appendChild(a);
-						this._menu.appendChild(li);
-					}
-					return;
-				}
-
-				/*====================================================================*/
-				/* -- DIVERSOS -- */
-				switch(nome+"123") {
-					case "pre": {
-						bloco.textContent += texto;
-						break;
-					}
-					case "ul": {
-						let li = this.criar("LI", texto.trim());
-						bloco.appendChild(li);
-						break;
-					}
-					case "blockquote": {
-						let p = this.criar("P", texto.trim());
-						bloco.appendChild(p);
-						break;
-					}
-					case "pre": {
-						bloco.textContent += texto;
-						break;
-					}
-					case "dl": {
-						let div = texto.trim().split(":");
-
-						if (div.length < 2) {/* -- apenas descrição -- */
-							let p      = this.criar("P", texto.trim());
-							let filhos = bloco.children;
-							let ultimo =  filhos[quantidade.length - 1];
-							if (ultimo.tagName.toLowerCase() === "dd") {
-								ultimo.appendChild(p);
-							} else {
-								let dd = this.criar("DD");
-								dd.appendChild(p)
-								bloco.appendChild(dd);
-							}
-						}	else { /* -- Com título -- */
-							let dt = this.criar("DT", div[0].trim());
-							bloco.appendChild(dt);
-							div.shift();
-							let descricao = div.join(":").trim();
-							if (descricao !== "") {
-								let p  = this.criar("P", descricao);
-								let dd = this.criar("DD");
-								dd.appendChild(p)
-								bloco.appendChild(dd);
-							}
+				if (this.tagUltimo === "UL") {
+					this.caixa = this.ultimo;//ul
+					while (nivel > this.nivel) {
+						this.caixa = this.ultimo;
+						/* checar se tem um UL dentro do último LI */
+						if (this.tagUltimo === "UL") {
+							this.caixa = this.ultimo;//ul
+						} else {
+							nivel = -1;
+							let novo = this.criar("UL");
+							this.caixa.appendChild(novo);
+							this.caixa = novo;
 						}
-						break;
 					}
-					default: {
-						let p = this.criar("P", texto.trim());
-						//bloco.appendChild(p);
-						break;
-					}
+					this.caixa.appendChild(item)
+					this.caixa = caixa;
+				} else {
+					/* se o último elemento não for um UL, criá-lo */
+					let novo = this.criar("UL");
+					this.caixa.appendChild(novo);
+					novo.appendChild(item);
 				}
+				return true;
+			}
+		},
+
+
+		/**. `''boolean'' DL(''string'' linha)`: Retorna verdadeiro se for uma lista de definição, caso contrário, retorna falso.
+		. O bloco de código inicia com o caractere `&period;` em `linha` e possui subníveis.**/
+		DL: {
+			value: function(linha) {
+				let id = /^(\.+)\s/;
+				if (!id.test(linha.trim())) return false;
+
+				let re    = /^([^:]+)\: (.+)$/;
+				let valor = linha.trim().replace(id, "").trim();
+				let nivel = linha.trim().split(/\s/)[0].length - 1;
+				let caixa = this.caixa;
+				let dt    = null;
+				let dd    = this.criar("DD", valor);
+				if (re.test(valor)) {
+					dt = this.criar("DT", valor.replace(re, "$1"));
+					dd = this.criar("DD", valor.replace(re, "$2"));
+				}
+
+				if (this.tagUltimo === "DL") {
+					this.caixa = this.ultimo;
+					while (nivel > this.nivel) {
+						this.caixa = this.ultimo;
+						/* checar se tem um DL dentro do último DD */
+						if (this.tagUltimo === "DL") {
+							this.caixa = this.ultimo;//ul
+						} else {
+							nivel = -1;
+							let novo = this.criar("DL");
+							this.caixa.appendChild(novo);
+							this.caixa = novo;
+						}
+					}
+					if (dt !== null)
+						this.caixa.appendChild(dt);
+					this.caixa.appendChild(dd);
+					this.caixa = caixa;
+				} else {
+					/* se o último elemento não for um UL, criá-lo */
+					let novo = this.criar("DL");
+					this.caixa.appendChild(novo);
+					if (dt !== null)
+						novo.appendChild(dt);
+					novo.appendChild(dd);
+				}
+				return true;
+			}
+		},
+		/**. `''void'' analisar(''string'' linha): Analisa a marcação de cada `linha` do arquivo para identificar blocos.**/
+		analisar: {
+			value: function (linha) {
+				if (this.PRE(linha))        return;
+				if (this.BLOCKQUOTE(linha)) return;
+				if (this.UL(linha))         return;
+				if (this.DL(linha))         return;
+				if (this.TABLE(linha))      return;
+				if (this.H(linha))          return;
+				if (this.MENU(linha))       return;
+				this.P(linha);
 				return;
 			}
 		},
@@ -479,26 +586,25 @@ function Manual(texto) {
 		executar: {
 			value: function() {
 				while (this._item < this._linhas.length) {
+					this._linha = this._linhas[this._item];
 
 					/* protocolo negado: capturar como código de programação ---------- */
 					if (!this.protocolar()) {
-						this._codigo.push(this._linha);
-						this.despachar();
-						continue;
+						this._fonte.push(this._linha);
 					}
-
 					/* Protocolo aberto: capturar dados do manual --------------------- */
-					let abrir  = this._re.abrir[this._tipo];
-					let fechar = this._re.fechar[this._tipo];
-					let linha  = this._linha.replace(abrir, "").replace(fechar, "");
-					this.analisar(linha);
-
+					else {
+						let abrir  = this._tags[this._tipo].abrir;
+						let fechar = this._tags[this._tipo].fechar;
+						let linha  = this._linha.replace(abrir, "").replace(fechar, "");
+						this.analisar(linha);
+					}
 					this.despachar();
 				}
 			}
 		},
-		/**`''string'' codigo`: Retorna o código fonte.**/
-		codigo: {
+		/**`''string'' fonte`: Retorna o código fonte.**/
+		fonte: {
 			get: function() {
 				return this._codigo.join("\n").replace(/\n+/g, "\n");
 			}
@@ -506,7 +612,7 @@ function Manual(texto) {
 		/**`''node'' manual`: Retorna o manual.}**/
 		manual: {
 			get: function() {
-				return this._raiz;
+				return this._manual;
 			}
 		}
 	});
@@ -530,9 +636,12 @@ wd(window).addHandler({
 				let man = new Manual(x.text);
 				if (alvo().code) {
 					document.querySelector("#DOC").content = "text/plan; charset=UTF-8";
-					document.body.textContent = man.codigo;
+					document.body.className = "";
+					document.body.textContent = man.fonte;
 				} else {
+					document.body.className = "wd";
 					document.body.appendChild(man.manual);
+					man.manual.className = "wd-read";
 				}
 			}
 			return;
