@@ -1,18 +1,24 @@
 /**
 # Comentários Informativos
-## Construindo um Manual a Partir do Código Fonte
+## O Guia no Código Fonte
 
-Trata-se de ''script'' elaborado em JavaScript com o propósito de transformar comentários presentes no código fonte em informações sobre o próprio código.
+@menu
 
-A proposta é construir determinado material sobre o código durante a sua construção utilizando para isso caracteres especiais que definirão qual comentário capturar e como ele será formatado.
+Trata-se de um ''script'' escrito em JavaScript com o propósito de transformar comentários inseridos no código em um documento de texto a respeito do próprio código, reaproveitando informações.
+
+Ao construir o código fonte, é recomendável que seja realizado comentários esclarecendo sobre as funcionalidades, objetivos e especifidades de cada construção interna criada para fazer com que seu código alcance sue propósito. Tal atitute possibilita mecanismos facilitadores para promover futuras manutenções e direcionar como a ferramenta funciona.
+
+Às vezes, faz-se necessário a contrução de um manual ou guia para orientar o uso da ferramenta. Se o código estiver bem comentado, bastaria reaproveitar essas informações para a criação desse guia. O objetivo, portanto, seria capturar esses comentários e transformá-los em material de leitura, dispensando a escrita de material extra, sendo essa a proposta deste ''script''.
+
+Para cuprir tal, se faz necessário estabelecer caracteres especiais para diferenciar os comentários a serem reaproveitados no guia daqueles detalhamentos específicos de determinado local do código e também para estabelecer formatações que possibilitem organizar o material a ser construído.
 
 ### Dos Comentários
 
-Para cada linguagem há um determinado caractere que define a abertura ou o fechamento do comentário.
+Cada linguagem possui caracteres especiais para definir a abertura ou o fechamento de comentários no código.
 
-Para diferenciar um comentário a ser capturado para construção do documento de outro a ser utilizado somente para fins da programação, os caracteres que definem o comentário sofrerá uma pequena modificação.
+Para diferenciar um comentário de um ponto específico do código daquele a ser capturado para construção do documento, os caracteres que definem o comentário na linguagem devem sofrer uma pequena modificação.
 
-Segue abaixo os tipos de comentários e suas modificações para os fins do presente ''script'':
+Seguem abaixo os tipos de comentários e suas modificações para os fins do presente ''script'':
 
 |Padrão|Abertura|Encerramento|
 |&sol;&ast;comentário&ast;&sol;|&sol;&ast;&ast;|&ast;&ast;&sol;|
@@ -20,17 +26,17 @@ Segue abaixo os tipos de comentários e suas modificações para os fins do pres
 |&num;comentário|&num;&num;|Não há|
 |&dash;&dash;comentário|&dash;&dash;&dash;|Não há|
 
-A coluna "Padrão" apresenta o modelo de comentário de determinada linguagem. As colunas "Abertura" e "Encerramento" definem a modificação necessário no caractere de comentário para delimitar o início e fim do conteúdo a fazer parte do documento.
+A coluna ''Padrão'' apresenta o modelo de comentário de determinada linguagem. As colunas ''Abertura'' e ''Encerramento'' definem a modificação necessária para delimitar o início e fim do conteúdo a ser capturado.
 
-A leitura será realizada linha a linha do código fonte. Na linguagem oque possuir bloco de comentários, após a abertura da captura, enquanto não forem informados os caracteres de encerramento, a linha será continuará a ser capturada.
+O ''script'' realizará a análise por linha do código fonte. Na linguagem oque possuir bloco de comentários, após a abertura da captura, enquanto não forem informados os caracteres de encerramento, a linha será continuará a ser capturada.
 
-Para as linguagens que não contém bloco de  comentários, cada linha deverá conter os caracters de abertura.
+Para as linguagens que não contém bloco de comentários, cada linha a ser capturada deverá conter os caracters de abertura.
 
-### Da Formatação
+Os caracteres de abertura e encerramento, se existente, deverão estar, respectivamente, no início e no fim da linha.
 
-A ferramenta também utiliza uma notação específica para definir elementos de blocos e em linha, semelhante ao que ''Markdown'' apresenta, economizando caracteres.
+### Dos Elementos Textuais e de Blocos
 
-### Dos Elementos em Linha
+A ferramenta utiliza uma notação específica para definir elementos de blocos e em linha, semelhante ao que ''Markdown'' disponibiliza, para economizar caracteres na escrita.
 
 Os seguintes atalhos são utilizados para especificar elementos em linha:
 
@@ -41,55 +47,62 @@ Os seguintes atalhos são utilizados para especificar elementos em linha:
 |&lowbar;&lowbar;u&lowbar;&lowbar;|&lt;u&gt;u&lt;/u&gt;|__u__|
 |&lsqb;link&rsqb;&lt;alvo&gt;|&lt;a href="alvo" target="_blank" &gt;link&lt;/a&gt;|[link]<#alvo>|
 
-Com excessão do elemento ``a``, todos são compostos por duplos caracteres inseridos antes e após o que se pretende formatar.
+Com excessão do elemento de ''hiperlink'', todos são compostos por duplos caracteres inseridos antes e após ao trecho que se pretende formatar.
 
-No caso de ``a``, o conteúdo do ''link'' é opcional: ``&lsqb;&rsqb;&lt;&num;alvo&gt;`` gera []<#alvo>.
+No caso do elemento de ''hiperlink'', o conteúdo de ''link'' é opcional e, se não informado, exibirá seu endereço (''alvo'').
 
-"$ &"
-"$ Para nomear uma função em ''JavaScript'', basta escrever seu nome __logo após__ a paravra chave ``function``, separados por **espaço** (veja mais em []<https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Functions>)."
+$
+$ Para nomear uma função em ''JavaScript'', basta escrever seu nome __logo após__ a paravra chave ``function``, separados por **espaço** (veja mais em []<https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Functions>).
 
 O fragmento acima geraria a seguinte visualização:
 
-"Para nomear uma função em ''JavaScript'', basta escrever seu nome __logo após__ a paravra chave ``function``, separados por **espaço** (veja mais em []<https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Functions>)."
+Para nomear uma função em ''JavaScript'', basta escrever seu nome __logo após__ a paravra chave ``function``, separados por **espaço** (veja mais em []<https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Functions>).
+
+Os elementos de bloco são definidos a partir de caracteres especiais informados no início de cada linha seguido de seu conteúdo, podendo haver, em alguns casos, a necessidade de inserir um espaço em branco antes do conteúdo.
 
 ### Do Bloco de Citação
 
-O bloco de citação inicia e termina com o caractere &quot;.
+O bloco de citação deve iniciar e terminar com o caractere &quot;.
 
-"$ &"
-"$ "Esse é um bloco de citação longa. Use **aspas duplas** para delimitar seu conteúdo.""
+$
+$"Esse é um bloco de citação longa. Utilize **aspas duplas** para delimitar seu conteúdo."
 
 O fragmento acima geraria a seguinte visualização:
 
-"Esse é um bloco de citação longa. Use **aspas duplas** para delimitar seu conteúdo."
+"Esse é um bloco de citação longa. Utilize **aspas duplas** para delimitar seu conteúdo."
 
 ### Do Bloco de Código
 
-O bloco de código inicia com o caractere &dollar; seguido de um espaço em branco, sendo que cada linha do bloco deverá iniciar com esse caracteres.
+O bloco de código deve iniciar com o caractere &dollar;, seguido de seu conteúdo, para cada linha do código.
 
-Na primeira linha do bloco, deverão ser informadas as palavras que merecem destaque na linguagem.
+A primeira linha do código deverá ser utilizada para definir as palavras chaves a serem destacadas, não sendo renderizado seu conteúdo.
 
-"&dollar; let function return<br/>&dollar; let dobro = function(x) {<br/>&dollar; &nbsp;&nbsp;&nbsp;&nbsp;return 2*x;<br/>&dollar; }"
+$
+$$let function return
+$$let dobro = function(x) {
+$$	return 2*x;
+$$}
+
 
 O fragmento acima geraria a seguinte visualização:
 
-$ let function return
-$ let dobro = function(x) {
-$     return 2*x;
-$ }
+$let function return
+$let dobro = function(x) {
+$	return 2*x;
+$}
 
 ### Da Listagem
 
-Os itens da lista são informados inserindo o caractere &dash; seguido de um espaço em branco no início da linha.
+Os itens da lista são informados inserindo o caractere &dash; no início da linha seguido de um espaço em brando e seu conteúdo.
 
 Para informar subitens, deverá ser acrescido um novo caracteres &dash; ao lado do primeiro.
 
-"$ '"
-"$ - Item 1"
-"$ - Item 2"
-"$ -- Item 2.1"
-"$ -- Item 2.2"
-"$ - Item 3"
+$
+$- Item 1
+$- Item 2
+$-- Item 2.1
+$-- Item 2.2
+$- Item 3
 
 O fragmento acima geraria a seguinte visualização:
 
@@ -142,7 +155,7 @@ O fragmento acima geraria a seguinte visualização:
 
 ###### Menu
 
-@menu
+
 
 ### O Construtor
 
@@ -244,8 +257,9 @@ function Manual(texto) {
 		/**`''string'' texto(''string'' valor, ''string'' chaves)`: Retorna o HTML a ser aplicado quando se tratar de código fonte. O argumento `valor` é o conteúdo do código e o argumento opcional `chaves` é as palavras chaves separadas por espaços em branco.**/
 		texto: {
 			value: function(valor, chaves) {
-				chaves = chaves === undefined ? [] : chaves.replace(/\s+/g, " ").trim().split(" ");
-				/* substituir & por &amp; */
+				chaves = chaves === undefined ? "" : chaves.replace(/\s+/g, " ").trim();
+				chaves = chaves === "" ? [] : chaves.split(" ");
+				/* substituir & por &amp; */ console.log(chaves);
 				valor = valor.replace(/\&/g, "&amp;")
 				/* substituir ` por &bprime; */
 				valor = valor.replace(/\`/g, "&bprime;");
@@ -257,7 +271,7 @@ function Manual(texto) {
 				if (chaves === undefined) return valor;
 
 				for (let i = 0; i < chaves.length; i++) {
-					let chave  = chaves[i].trim();
+					let chave  = chaves[i].trim().replace(/(\W)/g, "\\$1");
 					let antes  = "([^A-Za-z_\"])";
 					let depois = "([^A-Za-z0-9_\"])";
 					let regex1 = new RegExp("^("+chave+")"+depois);
@@ -420,7 +434,7 @@ function Manual(texto) {
 		. Na primeira linha do bloco, após `&gt;`, deverão ser informadas as palavras chaves da linguagem separadas por espaço.**/
 		PRE: {
 			value: function(linha) {
-				let id = /^\$\s/;
+				let id = /^\$/;
 				if (!id.test(linha.trim())) return false;
 				let valor = linha.trim().replace(id, "");
 				if (this.tagUltimo === "PRE") {
@@ -430,6 +444,7 @@ function Manual(texto) {
 				} else {
 					let novo = this.criar("PRE");
 					novo.dataset.chaves = valor.replace(/\s+/, " ").trim();
+					novo.className = "wd-code";//FIXME
 					this.caixa.appendChild(novo);
 				}
 				return true;
