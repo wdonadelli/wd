@@ -93,7 +93,7 @@ $}
 
 ### Da Listagem
 
-Os itens da lista são informados inserindo o caractere &dash; no início da linha seguido de um espaço em brando e seu conteúdo.
+Os itens da lista devem iniciar com o caractere &dash; no início da linha seguido de um espaço em branco e seu conteúdo.
 
 Para informar subitens, deverá ser acrescido um novo caracteres &dash; ao lado do primeiro.
 
@@ -112,60 +112,92 @@ O fragmento acima geraria a seguinte visualização:
 -- Item 2.2
 - Item 3
 
+### Da Lista de Descrição
+
+Os itens da lista são informados inserindo o caractere &period; seguido de um espaço em branco no início da linha.
+
+Para informar subitens, deverá ser acrescido um novo caracteres &period; ao lado do primeiro.
+
+Para criar um conjunto ''nome/valor'' na lista de descrição, fazendo referência a um objeto JavaScript (``{nome: valor}``), deve-se separar o conteúdo com o caractere &colon; seguido de um espaço em branco. O valor inserido antes do caractere será definido como ''nome'' e o conteúdo posterior será o ''valor''. Se não houver conteúdo posterior, será definido como ''valor''.
+
+$
+$. **Nome 1**: ''Valor 1.1''
+$. ''Valor 1.2''
+$. **Nome 2**: ''Valor 2.1''
+$.. **Nome 2.1**: ''Valor 2.1.1''
+$.. ''Valor 2.1.2''
+$. **Nome 3**: ''Valor 3.1''
+
+O fragmento acima, cujo nome está em negrito e o valor em itálico por conveniência, geraria a seguinte visualização:
+
+. **Nome 1**: ''Valor 1.1''
+. ''Valor 1.2''
+. **Nome 2**: ''Valor 2.1''
+.. **Nome 2.1**: ''Valor 2.1.1''
+.. ''Valor 2.1.2''
+. **Nome 3**: ''Valor 3.1''
 
 
+### Da Tabela
 
+Para definir uma linha de tabela e suas colunas, utiliza-se o caractere &verbar;. A linha deve iniciar e terminar com o caracteres..
 
+A primeira linha será tratada como linha de título.
 
-
-
-### Da Listagem de Definição
-
-Os itens da lista são informados inserindo o caractere &dash; seguido de um espaço em branco no início da linha.
-
-Para informar subitens, deverá ser acrescido um novo caracteres &dash; ao lado do primeiro.
-
-"$ '"
-"$ - Item 1"
-"$ - Item 2"
-"$ -- Item 2.1"
-"$ -- Item 2.2"
-"$ - Item 3"
+$
+$|Coluna 1|Coluna 2|Coluna 3|
+$|Célula 1.1|Célula 1.2|Célula 1.3|
+$|Célula 2.1|Célula 2.2|Célula 2.3|
+$|Célula 3.1|Célula 3.2|Célula 3.3|
 
 O fragmento acima geraria a seguinte visualização:
 
-- Item 1
-- Item 2
--- Item 2.1
--- Item 2.2
-- Item 3
+|Coluna 1|Coluna 2|Coluna 3|
+|Célula 1.1|Célula 1.2|Célula 1.3|
+|Célula 2.1|Célula 2.2|Célula 2.3|
+|Célula 3.1|Célula 3.2|Célula 3.3|
 
 
+### Dos Títulos/Capítulos
+
+Os títulos/capítulos são definidos incluindo o caractere &num; no início da linha, seguido de um espaço em branco e o título.
+
+A quantidade de caracteres indica a hierarquia do título, quanto menor o número de caracteres, maior a hierarquia:
+
+|Quantidade de &num;|Nível|
+|1|Título|
+|2|Sub Título|
+|3|Capítulo (nivel 1)|
+|4|Capítulo (nivel 2)|
+|5|Capítulo (nivel 3)|
+|6|Capítulo (nivel 4)|
 
 
+### Do Menu
+
+É possível inserir um menu ao documento incluindo uma linha com o termo ''&commat;menu''.
+
+O menu gerará uma listagem com os links para os capítulos de nível primário.
+
+### Do Parágrafo
+
+Se nenhuma das situações de bloco forem encontradas, a linha será considerada como um parágrafo simples.
 
 
+### Da Manutenção do Ferramenta
 
+A partir de agora, será tratada a questão do código da ferramenta para fins de manutenção.
 
+#### Do Construtor
 
+O construtor é definido da seguinte forma:
 
+$string
+$Manual(string texto)
 
+Onde o argumento ``texto`` recebe o conteúdo do código fonte a ser analisado.
 
-
-
-###### Menu
-
-
-
-### O Construtor
-
-$ string
-$ Manual(string texto)
-
-O argumento ``texto`` recebe o texto do código fonte a ser analisado.
-
-
-**/
+#### Dos Métodos e Atributos**/
 function Manual(texto) {
 		if (!(this instanceof Manual)) return new Manual(texto);
 		Object.defineProperties(this, {
@@ -204,7 +236,7 @@ function Manual(texto) {
 
 	Object.defineProperties(Manual.prototype, {
 		constructor: {value: Manual},
-		/**. `''objeto'' _tags`: Registra as tags de abertura e encerramento dos comentários que devem ser capturados para construção do manual:
+		/**. ``''objeto'' _tags``: Registra as tags de abertura e encerramento dos comentários.
 		**/
 		_tags: {
 			value: {
@@ -214,17 +246,17 @@ function Manual(texto) {
 				main: {abrir: /^(\s+)?\/\*\*/,     fechar: /\*\*\/(\s+)?$/   },
 			}
  		},
-		/*. (`''html'' caixa`: Define e retorna o último container informado.**/
+		/**. ``''html'' caixa``: Define ou retorna o elemento HTML aberto para fins de decidir onde inserir determinados blocos.**/
 		caixa: {
 			get: function()  {return this._aberto;},
 			set: function(x) {this._aberto = x;}
 		},
-		/*. (`''node'' tagCaixa`: Retorna a tag (maiúsculo) do último container informado.**/
+		/**. ``''string'' tagCaixa``: Retorna a ''tag'', em maiúsculo, do elemento retornado em ``caixa``.**/
 		tagCaixa: {
 			get: function() {return this.caixa.tagName.toUpperCase();}
 
 		},
-		/*. (`''integer'' nivel`: Retorna o número de elementos de mesmo tipo do último container.**/
+		/**. ``''integer'' nivel``: Retorna o número de elementos de mesmo tipo de ``caixa``, a partir de zero, do mais interno para o externo.**/
 		nivel: {
 			get: function() {
 				let i   = 0;
@@ -239,7 +271,7 @@ function Manual(texto) {
 				return i;
 			}
 		},
-		/*. `''string'' ultimo`: Retorna o último filho do último container informado, ou `null` se inexistente.**/
+		/**. ``''string'' ultimo``: Retorna o último filho de ``caixa``, ou ``null`` se inexistente.**/
 		ultimo: {
 			get: function() {
 				let filhos = this.caixa.children;
@@ -247,14 +279,15 @@ function Manual(texto) {
 				return filhos[filhos.length - 1];
 			}
 		},
-		/*. (`''string'' tagUltimo`: Retorna a tag (maiúsculo) do último filho do último container informado, ou `null` se inexistente.**/
+		/**. ``''string'' tagUltimo``: Retorna a ''tag'', em maiúsculo, do elemento retornado em ``ultimo``, ou ``null`` se inexistente.**/
 		tagUltimo: {
 			get: function() {
 				let ultimo = this.ultimo;
 				return ultimo === null ? null : ultimo.tagName.toUpperCase();
 			}
 		},
-		/**`''string'' texto(''string'' valor, ''string'' chaves)`: Retorna o HTML a ser aplicado quando se tratar de código fonte. O argumento `valor` é o conteúdo do código e o argumento opcional `chaves` é as palavras chaves separadas por espaços em branco.**/
+		/**. ``''string'' texto(''string'' valor, ''string'' chaves)``: Retorna o código HTML a ser aplicado para fins do bloco de código (ver método ``PRE``).
+		. O argumento `valor` é o conteúdo da linha linha e o argumento opcional `chaves` é as palavras chaves definidas.**/
 		texto: {
 			value: function(valor, chaves) {
 				chaves = chaves === undefined ? "" : chaves.replace(/\s+/g, " ").trim();
@@ -286,12 +319,12 @@ function Manual(texto) {
 				return valor;
 			}
 		},
-		/**. `''string'' html(''string'' valor)`: Recebe o conteúdo codificado no argumento `inner`, transforma em HTML e o retorna.
-		**/
+		/**. ``''string'' html(''string'' valor)``: Retorna o código HTML a ser aplicado para fins de formatação em linha.
+		. O argumento valor é o conteúdo da linha.**/
 		html: {
 			value: function(valor) {
 				let destaques = [
-	 				{re: /\`([^`]+)\`/,              rp: "<code>$1</code>"},
+	 				{re: /\`\`([^`]+)\`\`/,              rp: "<code>$1</code>"},
 					{re: /\*\*([^*][^*]+)\*\*/,      rp: "<strong>$1</strong>"},
 					{re: /\'\'([^'][^']+)\'\'/,      rp: "<em>$1</em>"},
 					{re: /\_\_([^_][^_]+)\_\_/,      rp: "<u>$1</u>"},
@@ -318,7 +351,8 @@ function Manual(texto) {
 				return valor;
 			}
 		},
-		/**`''no'' criar(''string'' tag, ''string'' texto): Cria o elemento HTML especicado no argumento `tag` e o retorna com o conteúdo especificado no argumento `texto`.**/
+		/**. ``''html'' criar(''string'' tag, ''string'' texto)``: Retorna o elemento HTML especicado no argumento ``tag``.
+		 . O argumento opcional ``texto`` tem o propósito de definir o HTML ao elemento criado chamando e aplicando o resultado do método ``html``.**/
 		criar: {
 			value: function(tag, texto) {
 				let html = document.createElement(tag.toLowerCase());
@@ -327,14 +361,14 @@ function Manual(texto) {
 				return html;
 			}
 		},
-		/**`''void'' erro(''string'' mensagem): Retorna uma mensagem de erro conforme argumento `mensagem`.**/
+		/**. ``''void'' erro(''string'' mensagem)``: Método que força um erro com a mensagem definida no argumento.**/
 		erro: {
 			value: function(mensagem) {
 				let erro = "Erro: "+mensagem+" (linha "+this._item+")\n\t"+this._linha;
 				//if (mensagem) throw new Error(erro);
 			}
 		},
-		/**`''boolean'' protocolar()`: informa se está aberta a tag de comentário.**/
+		/**. ``''boolean'' protocolar()``: Retorna verdadeiro se a captura de comentário está aberta para a linha.**/
 		protocolar: {
 			value: function() {
 				let linha   = this._linha.trim();
@@ -343,7 +377,7 @@ function Manual(texto) {
 				return this._tag;
 			}
 		},
-		/**`''void'' despachar()`: Despacha para a próxima linha do código fonte.**/
+		/**. ``''void'' despachar()``: Análisa o fechamento da captura do comentário e despacha para a próxima linha do código fonte.**/
 		despachar: {
 			value: function() {
 				let linha  = this._linha.trim();
@@ -352,7 +386,7 @@ function Manual(texto) {
 				this._item++;
 			}
 		},
-		/**. `''boolean'' P(''string'' linha)`: Retorna verdadeiro se for `linha` for diferente de vazio. Caso contrário, adicionará uma parágrafo ao último elemento aberto e retronará verdadeiro.**/
+		/**. ``''boolean'' P(''string'' linha)``: Retorna verdadeiro se a ``linha`` for diferente de vazio, adicionando um parágrafo ao último elemento retornado pelo atributo ``caixa``.**/
 		P: {
 			value: function(linha) {
 				if (linha.trim() === "") return false;
@@ -499,7 +533,7 @@ function Manual(texto) {
 		. O bloco de código inicia com o caractere `&dash;` em `linha` e possui subníveis.**/
 		UL: {
 			value: function(linha) {
-				let id = /^(\-+)\s/;
+				let id = /^(\-+)\s?/;
 				if (!id.test(linha.trim())) return false;
 
 				let valor = linha.trim().replace(id, "").trim();
