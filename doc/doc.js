@@ -2,8 +2,6 @@
 # Comentários Informativos
 ## O Guia no Código Fonte
 
-@menu
-
 Trata-se de um ''script'' escrito em JavaScript com o propósito de transformar comentários inseridos no código em um documento de texto a respeito do próprio código, reaproveitando informações.
 
 Ao construir o código fonte, é recomendável que seja realizado comentários esclarecendo sobre as funcionalidades, objetivos e especifidades de cada construção interna criada para fazer com que seu código alcance sue propósito. Tal atitute possibilita mecanismos facilitadores para promover futuras manutenções e direcionar como a ferramenta funciona.
@@ -11,6 +9,10 @@ Ao construir o código fonte, é recomendável que seja realizado comentários e
 Às vezes, faz-se necessário a contrução de um manual ou guia para orientar o uso da ferramenta. Se o código estiver bem comentado, bastaria reaproveitar essas informações para a criação desse guia. O objetivo, portanto, seria capturar esses comentários e transformá-los em material de leitura, dispensando a escrita de material extra, sendo essa a proposta deste ''script''.
 
 Para cuprir tal, se faz necessário estabelecer caracteres especiais para diferenciar os comentários a serem reaproveitados no guia daqueles detalhamentos específicos de determinado local do código e também para estabelecer formatações que possibilitem organizar o material a ser construído.
+
+###### Menu
+@menu
+
 
 ### Dos Comentários
 
@@ -292,7 +294,7 @@ function Manual(texto) {
 			value: function(valor, chaves) {
 				chaves = chaves === undefined ? "" : chaves.replace(/\s+/g, " ").trim();
 				chaves = chaves === "" ? [] : chaves.split(" ");
-				/* substituir & por &amp; */ console.log(chaves);
+				/* substituir & por &amp; */
 				valor = valor.replace(/\&/g, "&amp;")
 				/* substituir ` por &bprime; */
 				valor = valor.replace(/\`/g, "&bprime;");
@@ -324,12 +326,14 @@ function Manual(texto) {
 		html: {
 			value: function(valor) {
 				let destaques = [
-	 				{re: /\`\`([^`]+)\`\`/,              rp: "<code>$1</code>"},
+	 				{re: /\`\`([^`]+)\`\`/,          rp: "<code>$1</code>"},
 					{re: /\*\*([^*][^*]+)\*\*/,      rp: "<strong>$1</strong>"},
 					{re: /\'\'([^'][^']+)\'\'/,      rp: "<em>$1</em>"},
 					{re: /\_\_([^_][^_]+)\_\_/,      rp: "<u>$1</u>"},
 					{re: /\[([^\]]+)\]\<([^<>]+)\>/, rp: "<a href=\"$2\" target=\"_blank\">$1</a>"},
-					{re: /\[\]\<([^<>]+)\>/,         rp: "<a href=\"$1\" target=\"_blank\">$1</a>"}
+					{re: /\[\]\<([^<>]+)\>/,         rp: "<a href=\"$1\" target=\"_blank\">$1</a>"},
+					{re: /\(([^\)]+)\)\<([^<>]+)\>/, rp: "<figure><img src=\"$2\" alt=\"$1\" /></figure>"},
+					{re: /\(\)\<([^<>]+)\>/,         rp: "<figure><img src=\"$1\" /></figure>"}
 	 			];
 
 				let i = -1;
@@ -395,8 +399,7 @@ function Manual(texto) {
 				return true;
 			}
 		},
-		/**. `''boolean'' H(''string'' linha)`: Retorna verdadeiro se for um bloco de cabeçalho, caso contrário, retorna falso.
-		. O bloco de cabeçalho inicia com o caractere `&num;` seguido de espeaço em `linha` e será adicionada somente na árvore principal, tendo subníveis.**/
+		/**. ``''boolean'' H(''string'' linha)``: Retorna verdadeiro se ``linha`` for um bloco de cabeçalho, adicionado um título ou capítulo à árvore principal.**/
 		H: {
 			value: function(linha) {
 				let id = /^(\#+)\s/;
@@ -415,35 +418,21 @@ function Manual(texto) {
 					this._menu.appendChild(item);
 				}
 				this._manual.appendChild(titulo);
+				this.caixa = this._manual;
 				return true;
 			}
 		},
-		/**. `''boolean'' MENU(''string'' linha)`: Retorna verdadeiro se for um bloco de menu, caso contrário, retorna falso.
-		. O bloco de cabeçalho inicia __e__ termina com os caracteres `&commat;menu` em `linha` e será adicionada somente na árvore principal.**/
+		/**. ``''boolean'' MENU(''string'' linha)``: Retorna verdadeiro se ``linha`` for um bloco de menu, adicionando uma lista de capítulos à árvore principal**/
 		MENU: {
 			value: function(linha) {
 				let id = /^\@menu$/;
 				if (!id.test(linha.trim())) return false;
 				this._manual.appendChild(this._menu);
+				this.caixa = this._manual;
 				return true;
 			}
 		},
-
-
-
-
-
-
-
-
-
-
-
-
-		/**. `''boolean'' BLOCKQUOTE(''string'' linha)`: Retorna verdadeiro se for um bloco de citação, caso contrário, retorna falso.
-		. O bloco de citação inicia __e__ encerra com o caractere `&quot;` em `linha`.
-		. O bloco aceita blocos internos.
-		**/
+		/**. ``''boolean'' BLOCKQUOTE(''string'' linha)``: Retorna verdadeiro se ``linha`` for um bloco de citação, adicionando uma citação ao elemento retornado pelo atributo ``caixa``.**/
 		BLOCKQUOTE: {
 			value: function(linha) {
 				let id = /^\"(.+)\"$/;
@@ -463,9 +452,7 @@ function Manual(texto) {
 				return true;
 			}
 		},
-		/**. `''boolean'' PRE(''string'' linha)`: Retorna verdadeiro se for um bloco de código, caso contrário, retorna falso.
-		. O bloco de código inicia com o caractere `&dollar;` seguido de espaço em `linha`.
-		. Na primeira linha do bloco, após `&gt;`, deverão ser informadas as palavras chaves da linguagem separadas por espaço.**/
+		/**. ``''boolean'' PRE(''string'' linha)``: Retorna verdadeiro se ``linha`` for um bloco de código, adicionando um bloco específico ao elemento retornado pelo atributo ``caixa``.**/
 		PRE: {
 			value: function(linha) {
 				let id = /^\$/;
@@ -484,8 +471,7 @@ function Manual(texto) {
 				return true;
 			}
 		},
-		/**. `''boolean'' TABLE(''string'' linha)`: Retorna verdadeiro se for bloco de tabela, caso contrário, retorna falso.
-		. O bloco de tabela inicia, encerra e divide colunas com o caractere `&vert;` em `linha`.**/
+		/**. `''boolean'' TABLE(''string'' linha)`: Retorna verdadeiro se ``linha`` for um bloco de tabela, adicionando uma linha de tabela ao elemento retornado pelo atributo ``caixa``.**/
 		TABLE: {
 			value: function(linha) {
 				let id = /^\|(.+)\|$/;
@@ -496,9 +482,7 @@ function Manual(texto) {
 				let tr     = this.criar("TR");
 				let caixa  = this.caixa;
 
-				console.log(this.tagUltimo);
-
-				if (this.tagUltimo === "DL") {
+				if (this.tagUltimo === "DL") {//FIXME
 					this.caixa = this.ultimo;
 					while (this.caixa.children.length !== 0) {
 						let index  = this.caixa.children.length - 1;
@@ -527,10 +511,7 @@ function Manual(texto) {
 				return true;
 			}
 		},
-
-
-		/**. `''boolean'' UL(''string'' linha)`: Retorna verdadeiro se for uma lista, caso contrário, retorna falso.
-		. O bloco de código inicia com o caractere `&dash;` em `linha` e possui subníveis.**/
+		/**. ``''boolean'' UL(''string'' linha)``: Retorna verdadeiro se ``linha`` for um bloco de listagem, adicionando um item ao elemento retornado pelo atributo ``caixa``.**/
 		UL: {
 			value: function(linha) {
 				let id = /^(\-+)\s?/;
@@ -568,10 +549,7 @@ function Manual(texto) {
 				return true;
 			}
 		},
-
-
-		/**. `''boolean'' DL(''string'' linha)`: Retorna verdadeiro se for uma lista de definição, caso contrário, retorna falso.
-		. O bloco de código inicia com o caractere `&period;` em `linha` e possui subníveis.**/
+		/**. ``''boolean'' DL(''string'' linha)``: Retorna verdadeiro se ``linha`` for um bloco de lista de descrição, adicionando um título ou uma descrição ao elemento retornado pelo atributo ``caixa``.**/
 		DL: {
 			value: function(linha) {
 				let id = /^(\.+)\s/;
@@ -617,7 +595,7 @@ function Manual(texto) {
 				return true;
 			}
 		},
-		/**. `''void'' analisar(''string'' linha): Analisa a marcação de cada `linha` do arquivo para identificar blocos.**/
+		/**. ``''void'' analisar(''string'' linha)``: Analisa a marcação de cada `linha` do arquivo, identificar o bloco e manda executar.**/
 		analisar: {
 			value: function (linha) {
 				if (this.PRE(linha))        return;
@@ -631,7 +609,7 @@ function Manual(texto) {
 				return;
 			}
 		},
-		/**`''void'' executar()`: Decide sobre sobre encaminhamento da análise de cada linha.**/
+		/**. ``''void'' executar()``: Decide sobre sobre encaminhamento da análise de cada linha.**/
 		executar: {
 			value: function() {
 				while (this._item < this._linhas.length) {
@@ -652,13 +630,13 @@ function Manual(texto) {
 				}
 			}
 		},
-		/**`''string'' fonte`: Retorna o código fonte.**/
+		/**. ``''string'' fonte``: Retorna o código fonte sem comentários de captura.**/
 		fonte: {
 			get: function() {
-				return this._codigo.join("\n").replace(/\n+/g, "\n");
+				return this._fonte.join("\n").replace(/\n+/g, "\n");
 			}
 		},
-		/**`''node'' manual`: Retorna o manual.}**/
+		/**. ``''node'' manual``: Retorna o HTML do manual.**/
 		manual: {
 			get: function() {
 				return this._manual;
@@ -678,19 +656,31 @@ function alvo() {
 	};
 }
 
+
+function codigo(conteudo) {
+	document.querySelector("#DOC").content = "text/plan; charset=UTF-8";
+	document.querySelector("html").className = "";
+	document.body.textContent = conteudo;
+}
+
+function manual(conteudo) {
+	document.querySelector("#DOC").content = "text/html; charset=UTF-8";
+	document.querySelector("html").className = "wd";
+	document.body.appendChild(conteudo);
+	conteudo.className = "wd-read";
+}
+
+
 wd(window).addHandler({
 	load: function() {
 		wd().send(alvo().file, function (x) {
-			if (x.closed) { //FIXME mudar após atualização de wd
-				let man = new Manual(x.text);
-				if (alvo().code) {
-					document.querySelector("#DOC").content = "text/plan; charset=UTF-8";
-					document.body.className = "";
-					document.body.textContent = man.fonte;
-				} else {
-					document.body.className = "wd";
-					document.body.appendChild(man.manual);
-					man.manual.className = "wd-read";
+			if (x.closed) {
+				try {
+					let objeto = new Manual(x.text);
+					if (alvo().code) codigo(objeto.fonte);
+					else             manual(objeto.manual);
+				} catch(e) {
+					alert(e);
 				}
 			}
 			return;
