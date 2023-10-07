@@ -30,9 +30,11 @@ const wd = (function() {
 	/**# Biblioteca JavaScript
 	## Documentação para Manutenção
 
+	@menu
+
 	### Mecanismos de Controle
 
-	```**const** ''string'' __VERSION```
+	###### ``**const** ''string'' __VERSION``
 	Registra a versão da biblioteca.**/
 	const __VERSION = "WD JS v5.0.0";
 /*----------------------------------------------------------------------------*/
@@ -46,35 +48,32 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-	/**```**const** ''object'' __DEVICECONTROLLER```
-	Controla as alterações da tela atribuida a um tipo de dispositivo e executa ações quando houver mudança neste dispositivo idealizado:
-	{**/
-
-	const __DEVICECONTROLLER = {
-		/**- `''boolean'' _start`: Informar se o controlador já foi iniciado.**/
-		_start: false,
-		/**- `''function'' _change`: Registra a função disparadora de alteração do tipo de dispositivo.**/
-		_change: null,
-		/**- `''string'' _device`: Registra o tipo do dispositivo a partir do tamanho da tela em vigor.**/
-		_device: null,
-		/**- `''integer'' screen`: Retorna o tamanho da tela.**/
-		get screen() {return window.innerWidth;},
-		/**- `''string'' device`: Retorna o identificador da tela:
-		- {
-			[Identificador|Tamanho da Tela|
+	/**###### ``**const** ''object'' __DEVICECONTROLLER``
+	Controla as alterações da tela atribuida a um tipo de dispositivo e executa ações quando houver mudança neste dispositivo idealizado.
+	. ``''boolean'' _start``: Informar se o controlador já foi iniciado.
+	. ``''function'' _change``: Registra a função disparadora de alteração do tipo de dispositivo.
+	. ``''string'' _device``: Registra o tipo do dispositivo a partir do tamanho da tela em vigor.
+	. ``''integer'' screen``: Retorna o tamanho da tela.
+	. ``''string'' device``: Retorna o identificador da tela:
+			|Identificador|Tamanho da Tela|
 			|desktop|&ge; 768px|
 			|tablet|&ge; 600px|
-			|phone|&lt; 600px]
-		- }**/
+			|phone|&lt; 600px|
+	**/
+	const __DEVICECONTROLLER = {
+		_start: false,
+		_change: null,
+		_device: null,
+		get screen() {return window.innerWidth;},
 		get device() {
 			let screen = this.screen;
 			if (screen >= 768) return "desktop";
 			if (screen >= 600) return "tablet";
 			return "phone";
 		},
-		/**- `''boolean'' mobile`: Informa se dispositivo não é do tamanho desktop.**/
+		/**. ``''boolean'' mobile``: Informa se dispositivo não é do tamanho desktop.**/
 		get mobile() {return this._device !== "desktop";},
-		/**- `''void'' onchange`: Define a função disparadora de alteração de dispositivo (tamanho da tela). Quando definido, o evento ''resize'' será provocado e uma chamada será executada.**/
+		/**. ``''void'' onchange``: Define a função disparadora de alteração de dispositivo (tamanho da tela). Quando definido, o evento ''resize'' será provocado e uma chamada será executada.**/
 		set onchange(x) {
 			if (typeof x === "function" || x === null) {
 				this._change = x;
@@ -87,15 +86,11 @@ const wd = (function() {
 				this._start = true;
 			}
 		},
-		/**- `''void'' _trigger()`: Executa a função disparadora quando provocado (alteração de tela) enviando um objeto como argumento com as seguintes características:
-		- {
-				{
-					- `''object'' target`: O objeto `__DEVICECONTROLLER`.
-					- `''integer'' width`: O tamanho da tela em px.
-					- `''string'' device`: O nome do dispositivo correspondente à tela.
-					- `''boolean'' mobile`: Informa se o dispositivo possui tela inferior ao desktop.
-				}
-		- }**/
+		/**. ``''void'' _trigger()``: Executa a função disparadora quando provocado (alteração de tela) enviando um objeto como argumento com as seguintes características:
+		.. ``''object'' target``: O objeto ``__DEVICECONTROLLER``.
+		.. ``''integer'' width``: O tamanho da tela em px.
+		.. ``''string'' device``: O nome do dispositivo correspondente à tela.
+		.. ``''boolean'' mobile``: Informa se o dispositivo possui tela inferior ao desktop.**/
 		_trigger: function() {
 			let device = this.device;
 			if (this._device === device) return;
@@ -109,39 +104,35 @@ const wd = (function() {
 			});
 			return;
 		},
-		/**}**/
 	};
 /*----------------------------------------------------------------------------*/
-	/**```**const** ''integer'' __KEYTIMERANGE```
+	/**###### ``**const** ''integer'' __KEYTIMERANGE``
 	Registra o intervalo, em milisegundos, entre eventos de digitação (oninput, onkeyup...).**/
 	const __KEYTIMERANGE = 500;
 /*----------------------------------------------------------------------------*/
-	/**```**const** ''object'' __COUNTERCONTROL```
+	/**###### ``**const** ''object'' __COUNTERCONTROL``
 	Registra a contagem de requisições:
-	{
-		- `''integer'' repeat`: Número de manipulações de repetição.
-		- `''integer'' load`: Número de manipulações de carregamentos.
-	}**/
+	. ``''integer'' repeat``: Número de manipulações de repetição.
+	. ``''integer'' load``: Número de manipulações de carregamentos.**/
 	const __COUNTERCONTROL = {
 		repeat: 0,
 		load:   0
 	};
 /*----------------------------------------------------------------------------*/
-	/**```**const** ''object'' __MODALCONTROL```
-	Controla a janela modal:**/
+	/**###### ``**const** ''object'' __MODALCONTROL``
+	Controla a janela modal.
+	. ``''node'' modal``: Plano de fundo.
+	. ``''node'' bar``: Barra de progresso (meter, progress ou div).
+	. ``''integer'' counter``: Solicitações em aberto (controla a exibição), fecha se zero.
+	. ``''integer'' delay``: Tempo de segurança, em milisegundos, para decidir sobre o fechamento da janela (evitar piscadas).
+	. ``''integer'' time``: Intervalo, em milisegundos, de atualização da barra de progresso.**/
 	const __MODALCONTROL = {
-		/**{
-			- `''node'' modal`: Plano de fundo;
-			- `''node'' bar`: Barra de progresso (meter, progress ou div);
-			- `''integer'' counter`: Solicitações em aberto (controla a exibição), fecha se zero;
-			- `''integer'' delay`: Tempo de segurança, em milisegundos, para decidir sobre o fechamento da janela (evitar piscadas);
-			- `''integer'' time`: Intervalo, em milisegundos, de atualização da barra de progresso;**/
 		modal: null,
 		bar: null,
 		counter: 0,
 		delay: 250,
 		time: 5,
-		/**- `''void'' _init()`: Inicializa os atributos.**/
+		/**. ``''void'' _init()``: Inicializa os atributos.**/
 		_init: function() {
 			if (this.modal !== null) return;
 			/* janela modal */
@@ -159,7 +150,7 @@ const wd = (function() {
 			this.modal.appendChild(this.bar);
 			return;
 		},
-		/**- `''integer'' start()`: Solicita a janela modal, acresce `counter` e retorna seu valor.**/
+		/**. ``''integer'' start()``: Solicita a janela modal, acresce ``counter`` e retorna seu valor.**/
 		start: function() { /* abre a janela modal */
 			this._init();
 			if (this.counter === 0)
@@ -167,7 +158,7 @@ const wd = (function() {
 			this.counter++;
 			return this.counter;
 		},
-		/**- `''integer'' end()`: Dispensa à janela modal, decresce counter e retorna seu valor.**/
+		/**. ``''integer'' end()``: Dispensa à janela modal, decresce counter e retorna seu valor.**/
 		end: function() {
 			let object = this;
 			/* checar fechamento da janela após delay */
@@ -179,8 +170,7 @@ const wd = (function() {
 
 			return this.counter;
 		},
-		/**- `''void'' progress(''number'' x)`: Define o valor da barra de progresso (0 a 1) por meio do argumento `x`.
-		}**/
+		/**. ``''void'' progress(''number'' x)``: Define o valor da barra de progresso (0 a 1) por meio do argumento `x`.**/
 		progress: function(x) {
 			let tag    = this.bar.tagName.toLowerCase();
 			let value  = tag === "div" ? wd_num_str(x, true) : x;
@@ -196,30 +186,25 @@ const wd = (function() {
 		}
 	};
 /*----------------------------------------------------------------------------*/
-	/**```**const** ''object'' __SIGNALCONTROL```
-	Controla a caixa de mensagens:
-	{**/
+	/**###### ``**const** ''object'' __SIGNALCONTROL``
+	Controla a caixa de mensagens.
+	. ``''node'' main``: Container das caixas de mensagem.
+	. ``''integer'' time``: Tempo de duração da mensagem (ver CSS ``js-wd-signal-msg``).**/
 	const __SIGNALCONTROL = {
-		/**- `''node'' main`: Container das caixas de mensagem.**/
 		main: null,
-		/**- `''integer'' time`: Tempo de duração da mensagem (ver CSS `js-wd-signal-msg`).**/
 		time: 9000,
-		/**- `''void'' _init()`: Inicializa os atributos.**/
+		/**. ``''void'' _init()``: Inicializa os atributos.**/
 		_init: function() {
 			this.main = document.createElement("DIV");
 			this.main.className = "js-wd-signal";
 			return;
 		},
-		/**- `''object'' _createBox()`: Método interno que cria e retorna um objeto com os componentes de uma nova caixa de mensagem:
-		- {
-				{
-					- `''node'' box`: Container da caixa de mensagem.
-					- `''node'' header`: Cabeçalho da mensagem.
-					- `''node'' message`: Texto da mensagem.
-					- `''node'' close`: Botão de fechamento antecipado da caixa.
-					- `''node'' title`: Texto do cabeçalho.
-				}
-		- }**/
+		/**. ``''object'' _createBox()``: Método interno que cria e retorna um objeto com os componentes de uma nova caixa de mensagem.
+		.. ``''node'' box``: Container da caixa de mensagem.
+		.. ``''node'' header``: Cabeçalho da mensagem.
+		.. ``''node'' message``: Texto da mensagem.
+		.. ``''node'' close``: Botão de fechamento antecipado da caixa.
+		.. ``''node'' title``: Texto do cabeçalho.**/
 		_createBox: function() {
 			return {
 				box:     document.createElement("ARTICLE"),
@@ -229,14 +214,14 @@ const wd = (function() {
 				title: document.createElement("STRONG")
 			};
 		},
-		/**- `''void'' _close(''node'' elem)`: Demanda o fechamento da caixa de mensagem, onde o argumento `elem` indica a caixa (nó) a fechar.**/
+		/**. ``''void'' _close(''node'' elem)``: Demanda o fechamento da caixa de mensagem, onde o argumento ``elem`` indica a caixa (nó) a fechar.**/
 		_close: function(elem) {
 				try {this.main.removeChild(elem);} catch(e){}
 				if (this.main.children.length === 0)
 					try {document.body.removeChild(this.main);} catch(e){}
 				return;
 		},
-		/**- `node _box()`: Constrói a caixa de mensagem e a retorna.**/
+		/**. ``node _box()``: Constrói a caixa de mensagem e a retorna.**/
 		_box: function() {
 			let msg = this._createBox();
 			msg.box.appendChild(msg.header);
@@ -251,9 +236,8 @@ const wd = (function() {
 			}
 			return msg;
 		},
-		/**- `''void'' open(''string'' message, ''string'' title=" ")`: Demanda a abertura de uma nova caixa de mensagem.**/
-		/**- O argumento `message` define o texto da mensagem e o argumento `title` define seu título.
-		}**/
+		/**. ``''void'' open(''string'' message, ''string'' title=" ")``: Demanda a abertura de uma nova caixa de mensagem.
+		. O argumento ``message`` define o texto da mensagem e o argumento ``title`` define seu título.**/
 		open: function(message, title) {
 			/* criação do container principal, se inexistente */
 			if (this.main === null) this._init();
@@ -276,12 +260,10 @@ const wd = (function() {
 		}
 	};
 /*----------------------------------------------------------------------------*/
-	/**```**const** ''array'' __JSCSS```
+	/**###### ``**const** ''array'' __JSCSS``
 	Guarda os estilos da biblioteca. Cada item da lista é um objeto que define os estilos:
-	{
-		- `''string'' s`: Seletor CSS.
-		- `''string'' d`: Estilos a serem aplicados ao seletor.
-	}**/
+	. ``''string'' s``: Seletor CSS.
+	. ``''string'' d``: Estilos a serem aplicados ao seletor.**/
 	const __JSCSS = [
 		{s: "@keyframes js-wd-fade-in",  d: ["from {opacity: 0;} to {opacity: 1;}"]},
 		{s: "@keyframes js-wd-fade-out", d: ["from {opacity: 1;} to {opacity: 0;}"]},
@@ -340,9 +322,8 @@ const wd = (function() {
 	];
 /*===========================================================================*/
 	/**### Checagem de Tipos e Valores
-	```**constructor** ''object'' __Type(''any''  input)```
-	Construtor para identificação do tipo de dado informado informado no argumento `input`:
-	{**/
+	###### ``**constructor** ''object'' __Type(''any''  input)``
+	Construtor para identificação do tipo de dado informado informado no argumento ``input``.**/
 	function __Type(input) {
 		if (!(this instanceof __Type)) return new __Type(input);
 		Object.defineProperties(this, {
@@ -355,7 +336,7 @@ const wd = (function() {
 
 	Object.defineProperties(__Type.prototype, {
 		constructor: {value: __Type},
-		/**- `''array'' _months`: Registra a lista de nomes dos meses (longos e curtos) na língua inglesa e local para determinar a data.**/
+		/**. ``''array'' _months``: Registra a lista de nomes dos meses (longos e curtos) na língua inglesa e local para determinar a data.**/
 		_months: {
 			value: (function() {
 				let months = [];
@@ -377,7 +358,7 @@ const wd = (function() {
 				return months;
 			})()
 		},
-		/**- `''integer'' _getMonths(''string'' x)`: Retorna o valor númerico (1-12) do mês e zero se não encontrado. O argumento `x` deverá corresponder ao nome do mês (curto ou longo) na língua inglesa ou local.**/
+		/**. ``''integer'' _getMonths(''string'' x)``: Retorna o valor númerico (1-12) do mês e zero se não encontrado. O argumento `x` deverá corresponder ao nome do mês (curto ou longo) na língua inglesa ou local.**/
 		_getMonths: {
 			value: function(x) {
 				x = String(x).toLowerCase();
@@ -386,7 +367,7 @@ const wd = (function() {
 				return item%12+1;
 			}
 		},
-		/**- `''object'' _re`: Armazena as expressões regulares dos de dados descritos em string.**/
+		/**. ``''object'' _re``: Armazena as expressões regulares dos de dados descritos em string.**/
 		_re: {
 			value: {
 				number:  /^(\+?\d+\!|[+-]?(\d+|(\d+)?\.\d+)(e[+-]?\d+)?\%?)$/i,
@@ -406,31 +387,31 @@ const wd = (function() {
 				lang:    /^[a-z]{2,3}(\-[A-Z][a-z]{3})?(\-([A-Z]{2}|[0-9]{3}))?$/,
 			}
 		},
-		/**- `''boolean'' chars`: Checa se o argumento é um conjunto de caracteres (string).**/
+		/**. ``''boolean'' chars``: Checa se o argumento é um conjunto de caracteres (string).**/
 		chars: {
 			get: function() {
 				return (typeof this._input === "string" || this._input instanceof String);
 			}
 		},
-		/**- `''boolean'' empty`: Checa se o argumento é um conjunto de caracteres não visualizáveis (string vazia).**/
+		/**. ``''boolean'' empty``: Checa se o argumento é um conjunto de caracteres não visualizáveis (string vazia).**/
 		empty: {
 			get: function() {
 				return (this.chars && this._input.trim() === "");
 			}
 		},
-		/**- `''boolean'' nonempty`: Checa se o argumento é um conjunto de caracteres visualizáveis (string não vazia).**/
+		/**. ``''boolean'' nonempty``: Checa se o argumento é um conjunto de caracteres visualizáveis (string não vazia).**/
 		nonempty: {
 			get: function() {
 				return (this.chars && this._input.trim() !== "");
 			}
 		},
-		/**- `''boolean'' lang`: Checa se o argumento está no [formato de linguagem](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/lang).**/
+		/**. ``''boolean'' lang``: Checa se o argumento está no [formato de linguagem](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/lang).**/
 		lang: {
 			get: function() {
 				return (this.chars && this._re.lang.test(this._input.trim()));
 			}
 		},
-		/**- `''boolean'' email`: Checa se o argumento é um e-mail ou uma lista desse tipo.**/
+		/**. ``''boolean'' email``: Checa se o argumento é um e-mail ou uma lista desse tipo.**/
 		email: {
 			get: function() {
 				if (!this.chars) return false;
@@ -441,7 +422,7 @@ const wd = (function() {
 				return true;
 			}
 		},
-		/**- `''boolean'' url`: Checa se o argumento é uma URL válida.**/
+		/**. ``''boolean'' url``: Checa se o argumento é uma URL válida.**/
 		url: {
 			get: function() {
 				if (!this.chars) return false;
@@ -453,17 +434,13 @@ const wd = (function() {
 				}
 			}
 		},
-		/**- `''boolean'' month`: Checa se o argumento está no formato de mês (ver atributo date):
-		- {
-			(
-				* `YYYY-MM` padrão
-				* `MM/YYYY`
-				* `MMM/YYYY`
-				* `MMMM/YYYY`
-				* `MMM YYYY`
-				* `MMMM YYYY`
-			)
-		- }**/
+		/**. ``''boolean'' month``: Checa se o argumento está no formato de mês (ver atributo date):
+		- ``YYYY-MM`` (padrão)
+		- ``MM/YYYY``
+		- ``MMM/YYYY``
+		- ``MMMM/YYYY``
+		- ``MMM YYYY``
+		- ``MMMM YYYY``**/
 		month: {
 			get: function() {
 				if (!this.chars) return false;
@@ -476,7 +453,7 @@ const wd = (function() {
 				return false;
 			}
 		},
-		/**- `''boolean'' week`: Checa se o argumento está no formato de semana: `YYYY-wWW` (padrão) e `WW, YYYY`. O valor de `WW` é a semana com dois dígitos (01-54).**/
+		/**. ``''boolean'' week``: Checa se o argumento está no formato de semana: `YYYY-wWW` (padrão) e `WW, YYYY`. O valor de `WW` é a semana com dois dígitos (01-54).**/
 		week: {
 			get: function() {
 				if (!this.chars) return false;
@@ -486,7 +463,7 @@ const wd = (function() {
 				return false;
 			}
 		},
-		/**- `''boolean'' string`: Checa se o argumento é uma string diferente de número, data e tempo.**/
+		/**. ``''boolean'' string``: Checa se o argumento é uma string diferente de número, data e tempo.**/
 		string: {
 			get: function() {
 				if (this.type !== null) return this.type === "string";
@@ -496,7 +473,7 @@ const wd = (function() {
 				return true;
 			}
 		},
-		/**- `''boolean'' number`: Checa se o argumento é um número real (número ou string) ou uma representação de fatorial (string) ou percentual (string).**/
+		/**. ``''boolean'' number``: Checa se o argumento é um número real (número ou string) ou uma representação de fatorial (string) ou percentual (string).**/
 		number: {
 			get: function() {
 				if (this.type !== null) return this.type === "number";
@@ -534,49 +511,49 @@ const wd = (function() {
 				return false;
 			}
 		},
-		/**- `''boolean'' finite`: Checa se o argumento é um número finito.**/
+		/**. ``''boolean'' finite``: Checa se o argumento é um número finito.**/
 		finite: {
 			get: function() {
 				return this.number ? isFinite(this.value) : false;
 			}
 		},
-		/**- `''boolean'' infinite`: Checa se o argumento é um número infinito.**/
+		/**. ``''boolean'' infinite``: Checa se o argumento é um número infinito.**/
 		infinite: {
 			get: function() {
 				return this.number ? !this.finite : false;
 			}
 		},
-		/**- `''boolean'' integer`: Checa se o argumento é um número inteiro.**/
+		/**. ``''boolean'' integer``: Checa se o argumento é um número inteiro.**/
 		integer: {
 			get: function() {
 				return this.finite ? (this.value%1 === 0) : false;
 			}
 		},
-		/**- `''boolean'' decimal`: Checa se o argumento é um número decimal.**/
+		/**. ``''boolean'' decimal``: Checa se o argumento é um número decimal.**/
 		decimal: {
 			get: function() {
 				return this.finite ? (this.value%1 !== 0) : false;
 			}
 		},
-		/**- `''boolean'' positive`: Checa se o argumento é um número positivo.**/
+		/**. ``''boolean'' positive``: Checa se o argumento é um número positivo.**/
 		positive: {
 			get: function() {
 				return this.number && this.value > 0;
 			}
 		},
-		/**- `''boolean'' negative`: Checa se o argumento é um número negativo.**/
+		/**. ``''boolean'' negative``: Checa se o argumento é um número negativo.**/
 		negative: {
 			get: function() {
 				return this.number && this.value < 0;
 			}
 		},
-		/**- `''boolean'' zero`: Checa se o argumento é zero.**/
+		/**. ``''boolean'' zero``: Checa se o argumento é zero.**/
 		zero: {
 			get: function() {
 				return this.number && this.value === 0;
 			}
 		},
-		/**- `''boolean'' boolean`: Checa se o argumento é um valor booleano.**/
+		/**. ``''boolean'' boolean``: Checa se o argumento é um valor booleano.**/
 		boolean: {
 			get: function() {
 				if (this.type !== null) return this.type === "boolean";
@@ -588,7 +565,7 @@ const wd = (function() {
 				return false;
 			}
 		},
-		/**- `''boolean'' regexp`: Checa se o argumento é uma expressão regular.**/
+		/**. ``''boolean'' regexp``: Checa se o argumento é uma expressão regular.**/
 		regexp: {
 			get: function() {
 				if (this.type !== null) return this.type === "regexp";
@@ -600,8 +577,8 @@ const wd = (function() {
 				return false;
 			}
 		},
-		/**- `''boolean'' datetime`: Checa se o argumento é um conjunto data/tempo.
-		- Enquadram-se nessa condição o construtor nativo `Date` e strings em formato de data e tempo, nos termos da biblioteca, separados por espaço, virgula e espaço ou a letra T (ver atributos `date` e `time`).**/
+		/**. ``''boolean'' datetime``: Checa se o argumento é um conjunto data/tempo.
+		. Enquadram-se nessa condição o construtor nativo ``Date`` e strings em formato de data e tempo, nos termos da biblioteca, separados por espaço, virgula e espaço ou a letra T (ver atributos ``date`` e ``time``).**/
 		datetime: {
 			get: function() {
 				if (this.type !== null) return this.type === "datetime";
@@ -642,25 +619,21 @@ const wd = (function() {
 				return true;
 			}
 		},
-		/**- `''boolean'' date`: Checa se o argumento é uma data em formato de string:
-		- {
-			(
-				* `YYYY-MM-DD` (padrão);
-				* `DD/MM/YYYY`;
-				* `MM.DD.YYYY`;
-				* `D MMM YYYY`;
-				* `MMM D YYYY`;
-				* `D MMMM YYYY`; e
-				* `MMMM D YYYY`.
-			)
-			[**Formato**|**Valor**|**Descrição**|
-			|`YYYY`|Ano|Negativo ou positivo, com, no mínimo, quatro dígitos|
-			|`MM`|Mês|Dois dígitos (zero à esquerda se menor que 10)|
-			|`MMM`|Mês abreviado|Língua inglesa ou local (ignorando a caixa), conforme objeto nativo `Date`|
-			|`MMMM`|Mês longo|Língua inglesa ou local (ignorando a caixa), conforme objeto nativo `Date`|
-			|`D`|Dia|Um ou dois dígitos (zero à esquerda se menor que 10)|
-			|`DD`|Dia|Dois dígitos.]
-		- }**/
+		/**. ``''boolean'' date``: Checa se o argumento é uma data em formato de string:
+		- ``YYYY-MM-DD`` (padrão);
+		- ``DD/MM/YYYY``;
+		- ``MM.DD.YYYY``;
+		- ``D MMM YYYY``;
+		- ``MMM D YYYY``;
+		- ``D MMMM YYYY``; e
+		- ``MMMM D YYYY``.
+		|Formato|Valor|Descrição|
+		|``YYYY``|Ano|Negativo ou positivo, com, no mínimo, quatro dígitos|
+		|``MM``|Mês|Dois dígitos (zero à esquerda se menor que 10)|
+		|``MMM``|Mês abreviado|Língua inglesa ou local (ignorando a caixa), conforme objeto nativo `Date`|
+		|``MMMM``|Mês longo|Língua inglesa ou local (ignorando a caixa), conforme objeto nativo `Date`|
+		|``D``|Dia|Um ou dois dígitos (zero à esquerda se menor que 10)|
+		|``DD``|Dia|Dois dígitos.|**/
 		date: {
 			get: function() {
 				if (this.type !== null) return this.type === "date";
@@ -717,7 +690,7 @@ const wd = (function() {
 				return true;
 			}
 		},
-		/**- `''boolean'' function`: Checa se o argumento é uma função.**/
+		/**. ``''boolean'' function``: Checa se o argumento é uma função.**/
 		function: {
 			get: function() {
 				if (this.type !== null) return this.type === "function";
@@ -729,7 +702,7 @@ const wd = (function() {
 				return false;
 			}
 		},
-		/**- `''boolean'' array`: Checa se o argumento é um array.**/
+		/**. ``''boolean'' array``: Checa se o argumento é um array.**/
 		array: {
 			get: function() {
 				if (this.type !== null) return this.type === "array";
@@ -741,7 +714,7 @@ const wd = (function() {
 				return false;
 			}
 		},
-		/**- `''boolean'' null`: Checa se o argumento é um valor nulo (`null`).**/
+		/**. ``''boolean'' null``: Checa se o argumento é um valor nulo (``null``).**/
 		null: {
 			get: function () {
 				if (this.type !== null) return this.type === "null";
@@ -753,7 +726,7 @@ const wd = (function() {
 				return false;
 			}
 		},
-		/**- `''boolean'' undefined`: Checa se o argumento é um valor indefinido (`undefined`).**/
+		/**. ``''boolean'' undefined``: Checa se o argumento é um valor indefinido (``undefined``).**/
 		undefined: {
 			get: function() {
 				if (this.type !== null) return this.type === "undefined";
@@ -765,21 +738,17 @@ const wd = (function() {
 				return false;
 			}
 		},
-		/**- `''boolean'' time`: Checa se o argumento é uma string que representa uma unidade de tempo:
-		- {
-			(
-				* `h:mm:ss.sss` (padrão); e
-				* `h12:mm:ss.sss AMPM`.
-			)
-			[**Formato**|**Valor**|**Descrição**|
-			|`h`|Hora|Um ou dois dígitos (zero à esquerda se menor que 10)|
-			|`hh`|Hora|Dois dígitos (zero à esquerda se menor que 10)|
-			|`h12`|Hora|Formato de 12h com um ou dois dígitos (zero à esquerda se menor que 10)|
-			|`mm`|Minuto| com dois dígitos|
-			|`ss`|Segundos|Dois dígitos|
-			|`sss`|Decimal dos segundos|Até três dígitos|
-			|`AMPM`|Ante meridiem (`am`) ou Post meridiem (`pm`)|Ignora a caixa e pode ser precedido ou não de um espaço.]
-		- }**/
+		/**. ``''boolean'' time``: Checa se o argumento é uma string que representa uma unidade de tempo:
+		- `h:mm:ss.sss` (padrão); e
+		- `h12:mm:ss.sss AMPM`.
+		|Formato|Valor|Descrição|
+		|``h``|Hora|Um ou dois dígitos (zero à esquerda se menor que 10)|
+		|``hh``|Hora|Dois dígitos (zero à esquerda se menor que 10)|
+		|``h12``|Hora|Formato de 12h com um ou dois dígitos (zero à esquerda se menor que 10)|
+		|``mm``|Minuto| com dois dígitos|
+		|``ss``|Segundos|Dois dígitos|
+		|``sss``|Decimal dos segundos|Até três dígitos|
+		|``AMPM``|Ante meridiem (`am`) ou Post meridiem (`pm`)|Ignora a caixa e pode ser precedido ou não de um espaço.|**/
 		time: {
 			get: function() {
 				if (this.type !== null) return this.type === "time";
@@ -815,7 +784,7 @@ const wd = (function() {
 				return true;
 			}
 		},
-		/**- `''boolean'' node`: Checa se o argumento é um elemento HTML ou uma coleção desses (lista).**/
+		/**. ``''boolean'' node``: Checa se o argumento é um elemento HTML ou uma coleção desses (lista).**/
 		node: {
 			get: function() {
 				if (this.type !== null) return this.type === "node";
@@ -851,7 +820,7 @@ const wd = (function() {
 				return false;
 			}
 		},
-		/**- `''boolean'' object`: Checa se o argumento é um objeto que não se enquadra nas demais categorias.**/
+		/**. ``''boolean'' object``: Checa se o argumento é um objeto que não se enquadra nas demais categorias.**/
 		object: {
 			get: function() {
 				if (this.type !== null) return this.type === "object";
@@ -864,7 +833,7 @@ const wd = (function() {
 				return false;
 			}
 		},
-		/**- `''boolean'' file`: Checa se o argumento é do tipo `File` proveniente de `FileList`.**/
+		/**. ``''boolean'' file``: Checa se o argumento é do tipo ``File`` proveniente de ``FileList``.**/
 		file: {
 			get: function() {
 				if (this.type !== null) return this.type === "file";
@@ -877,7 +846,7 @@ const wd = (function() {
 				return false;
 			}
 		},
-		/**- `''boolean'' files`: Checa se o argumento é do tipo `FileList` não vazio.**/
+		/**. ``''boolean'' files``: Checa se o argumento é do tipo ``FileList`` não vazio.**/
 		files: {
 			get: function() {
 				if (this.type !== null) return this.type === "files";
@@ -890,7 +859,7 @@ const wd = (function() {
 				return false;
 			}
 		},
-		/**- `''void'' _init()`: Analisa o dado e define os parâmetros para execução dos demais atributos.**/
+		/**. ``''void'' _init()``: Analisa o dado e define os parâmetros para execução dos demais atributos.**/
 		_init: {
 			value: function() {
 				if (this._type !== null) return;
@@ -911,22 +880,22 @@ const wd = (function() {
 				return;
 			}
 		},
-		/**- `''any''  value`: Retorna o valor do argumento nos parâmetos da biblioteca.
-		- Tipos de referência, primitivos, data e tempo retornam valores de referência, valores primitivos e strings no formato `YYYY-MM-DD` e `hh:mm:ss.sss`, respectivamente.**/
+		/**. ``''any''  value``: Retorna o valor do argumento nos parâmetos da biblioteca.
+		. Tipos de referência, primitivos, data e tempo retornam valores de referência, valores primitivos e strings no formato ``YYYY-MM-DD`` e ``hh:mm:ss.sss``, respectivamente.**/
 		value: {
 			get: function() {return this._value;}
 		},
-		/**- `''string'' type`: Retorna o tipo do argumento verificado (conforme atributos).**/
+		/**. ``''string'' type``: Retorna o tipo do argumento verificado (conforme atributos).**/
 		type: {
 			get: function() {return this._type;}
 		},
-		/**- `''void''  valueOf()`: Retorna o método `valueOf` do retorno do atributo `value` e, se `null` ou `undefined`, seus respectivos valores.**/
+		/**. ``''void''  valueOf()``: Retorna o método `valueOf` do retorno do atributo `value` e, se `null` ou `undefined`, seus respectivos valores.**/
 		valueOf: {
 			value: function() {
 				return this.null || this.undefined ? this._value : (this.value).valueOf();
 			}
 		},
-		/**- `''string'' toString()`: Retorna o método `toString` do retorno do atributo `value`. Se `null` retorna uma string vazia e se `undefined` um ponto de interrogação.**/
+		/**. ``''string'' toString()``: Retorna o método `toString` do retorno do atributo `value`. Se `null` retorna uma string vazia e se `undefined` um ponto de interrogação.**/
 		toString: {
 			value: function() {
 				if (this.null) return "";
@@ -934,13 +903,11 @@ const wd = (function() {
 				return this.value.toString();
 			}
 		}
-		/**}**/
 	});
 /*============================================================================*/
 	/**### Números
-	```**constructor** ''object'' __Number(number input=0)```
-	Construtor para manipulação de números. O argumento `input` se refere ao número de entrada do construtor:
-	{**/
+	###### ``**constructor** ''object'' __Number(number input=0)``
+	Construtor para manipulação de números. O argumento `input` se refere ao número de entrada do construtor.**/
 	function __Number(input) {
 		if (!(this instanceof __Number)) return new __Number(input);
 		let check = __Type(input);
@@ -952,32 +919,32 @@ const wd = (function() {
 
 	Object.defineProperties(__Number.prototype, {
 		constructor: {value: __Number},
-		/**- `''boolean'' finite`: Checa se o número é finito.**/
+		/**. ``''boolean'' finite``: Checa se o número é finito.**/
 		finite: {
 			get: function() {return this._finite;}
 		},
-		/**- `''number'' valueOf()`: Retorna o valor numérico.**/
+		/**. ``''number'' valueOf()``: Retorna o valor numérico.**/
 		valueOf: {
 			value: function() {return this._value;}
 		},
-		/**- `''number'' toString()`: Retorna o valor em forma de string.**/
+		/**. ``''number'' toString()``: Retorna o valor em forma de string.**/
 		toString: {
 			value: function() {
 				if (this.finite) return this.valueOf().toString();
 				return (this < 0 ? "-" : "+")+"\u221E";
 			}
 		},
-		/**- `''number'' abs`: Retorna o valor absoluto do número.**/
+		/**. ``''number'' abs``: Retorna o valor absoluto do número.**/
 		abs: {
 			get: function() {return Math.abs(this.valueOf());}
 		},
-		/**- `''integer'' int`: Retorna a parte inteira do número.**/
+		/**. ``''integer'' int``: Retorna a parte inteira do número.**/
 		int: {
 			get: function() {
 				return Math.trunc(this.valueOf());
 			}
 		},
-		/**- `''float'' dec`: Retorna a parte decimal do número.**/
+		/**. ``''float'' dec``: Retorna a parte decimal do número.**/
 		dec: {
 			get: function() {
 				if (!this.finite) return this.valueOf();
@@ -986,7 +953,7 @@ const wd = (function() {
 				return (exp*this.valueOf() - exp*this.int) / exp;
 			}
 		},
-		/**- `''number'' round(''integer'' n=3)`: Arredonda o número conforme especificado. O argumento `n` define a quantidade de casas decimais.**/
+		/**. ``''number'' round(''integer'' n=3)``: Arredonda o número conforme especificado. O argumento `n` define a quantidade de casas decimais.**/
 		round: {
 			value: function(n) {
 				if (!this.finite) return this.valueOf();
@@ -995,7 +962,7 @@ const wd = (function() {
 				return Number(this.valueOf().toFixed(n));
 			}
 		},
-		/**- `''number'' cut(''integer'' n=3)`: Corta o número de casas decimais conforme especificado sem arrendondar. O argumento opcional `n` define a quantidade de casas decimais.**/
+		/**. ``''number'' cut(''integer'' n=3)``: Corta o número de casas decimais conforme especificado sem arrendondar. O argumento opcional `n` define a quantidade de casas decimais.**/
 		cut: {
 			value: function(n) {
 				if (!this.finite) return this.valueOf();
@@ -1008,7 +975,7 @@ const wd = (function() {
 				return value.int/base;
 			}
 		},
-		/**- `''array'' primes`: Retorna uma lista com os números primos até o valor do objeto.**/
+		/**. ``''array'' primes``: Retorna uma lista com os números primos até o valor do objeto.**/
 		primes: {
 			get: function() {
 				if (!this.finite || this < 2) return [];
@@ -1030,14 +997,14 @@ const wd = (function() {
 				return list;
 			}
 		},
-		/**- `''boolean'' prime`: Checa se número é primo.**/
+		/**. ``''boolean'' prime``: Checa se número é primo.**/
 		prime: {
 			get: function() {
 				if (this < 2 || !this.finite || this.dec !== 0) return false;
 				return this.primes.reverse()[0] === this.valueOf() ? true : false;
 			}
 		},
-		/**- `''string'' frac(''integer'' n=3)`: Retorna a notação numérica em forma de fração. O argumento `n` define o limitador de precisão (valores maiores exigem mais processamento).**/
+		/**. ``''string'' frac(''integer'' n=3)``: Retorna a notação numérica em forma de fração. O argumento ``n`` define o limitador de precisão (valores maiores exigem mais processamento).**/
 		frac: {
 			value: function(n) {
 				let int = Math.abs(this.int);
@@ -1072,7 +1039,7 @@ const wd = (function() {
 				return (this._value < 0 ? "-" : "")+int+dnd+"/"+div;
 			}
 		},
-		/**- `''string'' bytes`: Retorna a notação em bytes (de B a YB).**/
+		/**. ``''string'' bytes``: Retorna a notação em bytes (de ''B'' a ''YB'').**/
 		bytes: {
 			get: function() {
 				if (this < 1)     return "0 B";
@@ -1085,7 +1052,7 @@ const wd = (function() {
 				return this.int+" B";
 			}
 		},
-		/**- `''string'' type`: Retorna o tipo do número (zero, infinity, integer, real).**/
+		/**. ``''string'' type``: Retorna o tipo do número (zero, infinity, integer, real).**/
 		type: {
 			get: function() {
 				if (this == 0)      return "zero";
@@ -1094,8 +1061,8 @@ const wd = (function() {
 				return "real";
 			}
 		},
-		/**- `''string'' precision(''integer'' n=3)`: Fixa a quantidade de dígitos significativos.
-		- O argumento opcional `n` define a quantidade dígitos cujo padrão é três.**/
+		/**. ``''string'' precision(''integer'' n=3)``: Fixa a quantidade de dígitos significativos.
+		. O argumento opcional `n` define a quantidade dígitos cujo padrão é três.**/
 		precision: {
 			value: function(n) {
 				n = __Number(__Type(n).finite ? n : 3);
@@ -1106,25 +1073,23 @@ const wd = (function() {
 				return this.valueOf().toPrecision(n);
 			}
 		},
-		/**- `''string'' notation(''string'' type, ''any'' code, ''string'' lang)`: Formata o número em determinada notação ([referência](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/NumberFormat)).
-		- O argumento opcional `lang` define o código da linguagem a ser aplicada.
-		- O argumento `type` define o tipo da formatação e o argumento `code` dependerá da notação escolhida, podendo ser um número inteiro, uma string ou não ter efeito.
-		- {
-			[**type**|**Descrição**|**code**|
-			|`significant`|Fixa o número de dígitos significativos|Quantidade de significativos|
-			|`decimal`|Fixa o número de casas decimais|Número de casas decimais|
-			|`integer`|Fixa o número de dígitos inteiros|Número de dígitos inteiros|
-			|`percent`|Exibe em notação percentual|Número de casas decimais|
-			|`unit`|Exibe o número com unidade de medida|Unidade de medida ([referência](https://tc39.es/proposal-unified-intl-numberformat/section6/locales-currencies-tz_proposed_out.html#sec-issanctionedsimpleunitidentifier))|
-			|`scientific`|Exibe em notação científica|Número de casas decimais|
-			|`engineering`|Exibe em notação de engenharia|Número de casas decimais|
-			|`compact1`|Exibe em notação compacta na forma longa|Sem efeito|
-			|`compact2`|Exibe em notação compacta na forma abreviada|Sem efeito|
-			|`currency1`|Exibe em notação monetária|Código monetário ([referência](https://www.six-group.com/en/products-services/financial-information/data-standards.html#scrollTo=currency-codes))|
-			|`currency2`|Exibe em notação monetária curta|Código monetário|
-			|`currency3`|Exibe em notação monetária textual|Código monetário|
-			|`currency4`|Exibe código no lugar da notação monetária|Código monetário]
-		- }**/
+		/**. ``''string'' notation(''string'' type, ''any'' code, ''string'' lang)``: Formata o número em determinada notação ([referência]<https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/NumberFormat>).
+		. O argumento opcional `lang` define o código da linguagem a ser aplicada.
+		. O argumento `type` define o tipo da formatação e o argumento `code` dependerá da notação escolhida, podendo ser um número inteiro, uma string ou não ter efeito.
+		|type|Descrição|code|
+		|``significant``|Fixa o número de dígitos significativos|Quantidade de significativos|
+		|``decimal``|Fixa o número de casas decimais|Número de casas decimais|
+		|``integer``|Fixa o número de dígitos inteiros|Número de dígitos inteiros|
+		|``percent``|Exibe em notação percentual|Número de casas decimais|
+		|``unit``|Exibe o número com unidade de medida|Unidade de medida ([referência]<https://tc39.es/proposal-unified-intl-numberformat/section6/locales-currencies-tz_proposed_out.html#sec-issanctionedsimpleunitidentifier>)|
+		|``scientific``|Exibe em notação científica|Número de casas decimais|
+		|``engineering``|Exibe em notação de engenharia|Número de casas decimais|
+		|``compact1``|Exibe em notação compacta na forma longa|Sem efeito|
+		|``compact2``|Exibe em notação compacta na forma abreviada|Sem efeito|
+		|``currency1``|Exibe em notação monetária|Código monetário ([referência]<https://www.six-group.com/en/products-services/financial-information/data-standards.html#scrollTo=currency-codes>)|
+		|``currency2``|Exibe em notação monetária curta|Código monetário|
+		|``currency3``|Exibe em notação monetária textual|Código monetário|
+		|``currency4``|Exibe código no lugar da notação monetária|Código monetário|**/
 		notation: {
 			value: function (type, code, lang) {
 				if (!this.finite) return this.toString();
@@ -1196,13 +1161,11 @@ const wd = (function() {
 				return this.toString()
 			}
 		},
-		/**}**/
 	});
 /*===========================================================================*/
 	/**### Textos
-	```**constructor** ''object'' __String(''string'' input)```
-	Construtor para manipulação de textos. O argumento `input` define o texto de entrada:
-	{**/
+	###### ``**constructor** ''object'' __String(''string'' input)``
+	Construtor para manipulação de textos. O argumento `input` define o texto de entrada.**/
 	function __String(input) {
 		if (!(this instanceof __String)) return new __String(input);
 		if (!__Type(input).string) input = String(input);
@@ -1219,19 +1182,19 @@ const wd = (function() {
 		toString: {
 			value: function() {return this.clear(true, false);}
 		},
-		/**- `''string'' length`: Retorna a quantidade de caracteres.**/
+		/**. ``''string'' length``: Retorna a quantidade de caracteres.**/
 		length: {
 			get: function() {return this.valueOf().length;}
 		},
-		/**- `''string'' upper`: Retorna caixa alta.**/
+		/**. ``''string'' upper``: Retorna caixa alta.**/
 		upper: {
 			get: function() {return this.valueOf().toUpperCase();}
 		},
-		/**- `''string'' lower`: Retorna caixa baixa.**/
+		/**. ``''string'' lower``: Retorna caixa baixa.**/
 		lower: {
 			get: function() {return this.valueOf().toLowerCase();}
 		},
-		/**- `''string'' toggle`: Inverte a caixa.**/
+		/**. ``''string'' toggle``: Inverte a caixa.**/
 		toggle: {
 			get: function() {
 				let list = this._value.split("");
@@ -1241,7 +1204,7 @@ const wd = (function() {
 				return list.join("");
 			}
 		},
-		/**- `''string'' captalize`: Primeira letra de cada palavra, apenas, em caixa alta.**/
+		/**. ``''string'' captalize``: Primeira letra de cada palavra, apenas, em caixa alta.**/
 		capitalize: {
 			get: function() {
 				let list = this._value.split("");
@@ -1251,7 +1214,7 @@ const wd = (function() {
 				return list.join("");
 			}
 		},
-		/**- `''string'' clear(''boolean'' white=true, ''boolean'' accent=true)`: Limpa espaços desnecessários ou acentos. O argumento `white` define a limpeza de espaços extras e o argumento `accent` define a remoção dos acentos.**/
+		/**. ``''string'' clear(''boolean'' white=true, ''boolean'' accent=true)``: Limpa espaços desnecessários ou acentos. O argumento `white` define a limpeza de espaços extras e o argumento `accent` define a remoção dos acentos.**/
 		clear: {
 			value: function(white, accent) {
 				let value = this.valueOf();
@@ -1262,7 +1225,7 @@ const wd = (function() {
 				return value;
 			}
 		},
-		/**- `''string'' mask(''string'' model, ''function'' method)`: Checa se a string casa com o formato de máscara definido e a retorna adequada aos parâmetros especificados. Caso não case, uma string vazia será retornada.
+		/**. ``''string'' mask(''string'' model, ''function'' method)``: Checa se a string casa com o formato de máscara definido e a retorna adequada aos parâmetros especificados. Caso não case, uma string vazia será retornada.
 		- O argumento `model` define o modelo da máscara conforme caracteres abaixo.
 		- {
 				[**Caractere**|**Descrição**|
@@ -1316,7 +1279,7 @@ const wd = (function() {
 				return mask.join("");
 			}
 		},
-		/**- `''string'' dash`: Retorna uma string identificadora no formato de traços.**/
+		/**. ``''string'' dash``: Retorna uma string identificadora no formato de traços.**/
 		dash: {
 			get: function() {
 				let value = this.clear().replace(/\ +/g, "-").split("");
@@ -1331,7 +1294,7 @@ const wd = (function() {
 				return value.replace(/^\-+/, "").replace(/\-+$/, "");
 			}
 		},
-		/**- `''string'' camel`: Retorna uma string identificadora no formato de camelCase.**/
+		/**. ``''string'' camel``: Retorna uma string identificadora no formato de camelCase.**/
 		camel: {
 			get: function() {
 				let value = this.dash.split("-");
@@ -1341,7 +1304,7 @@ const wd = (function() {
 				return value.join("");
 			}
 		},
-		/**- `''matrix'' csv(''string'' td="\t", ''string'' tr="\n")`: Retorna uma matriz (array) a partir de uma string no formato [CSV](https://www.rfc-editor.org/rfc/rfc4180).
+		/**. ``''matrix'' csv(''string'' td="\t", ''string'' tr="\n")``: Retorna uma matriz (array) a partir de uma string no formato [CSV](https://www.rfc-editor.org/rfc/rfc4180).
 		- Os argumentos `td` e `tr` definem os caracteres que separam as colunas e as linhas, respectivamente. Se o valor da célula contiver o caractere divisor de coluna ou linha, esse deverá estar cercado por aspas duplas.**/
 		csv: {
 			value: function(td, tr) {
@@ -1368,7 +1331,7 @@ const wd = (function() {
  				return table;
 			}
 		},
-		/**- `''any'' wdValue(''any'' x)`: Recebe o valor do argumento `x` e o retorna adequado à necessidade do método `wdNotation`.**/
+		/**. ``''any'' wdValue(''any'' x)``: Recebe o valor do argumento `x` e o retorna adequado à necessidade do método `wdNotation`.**/
 		wdValue: {
 			value: function(x) {//console.log(x);
 				let types = {true: true, false: false, null: null, undefined: undefined};
@@ -1394,7 +1357,7 @@ const wd = (function() {
 				return x;
 			}
 		},
-		/**- `''any'' wdNotation`: Retorna o valor informado ou um array de objetos a partir de uma notação particular da biblioteca:
+		/**. ``''any'' wdNotation``: Retorna o valor informado ou um array de objetos a partir de uma notação particular da biblioteca:
 		- {
 		[**Entrada**|**Descrição**|**Exemplo**|
 		|"undefined"|Retorna o valor primitivo `undefined`| |
@@ -1451,7 +1414,7 @@ const wd = (function() {
 
 /*===========================================================================*/
 	/**### Data e Tempo
-	```**constructor** ''object'' __DateTime(''any'' input)```
+	``**constructor** ''object'' __DateTime(''any'' input)``
 	Construtor para manipulação de data/tempo. O atributo `input` aceita valores do tipo:
 	(
 		* Data, tempo ou data/tempo nos parâmetros da biblioteca;
@@ -1512,13 +1475,13 @@ const wd = (function() {
 
 	Object.defineProperties(__DateTime.prototype, {
 		constructor: {value: __DateTime},
-		/**- `''void'' _trigger(''string'' field)`: Método que aciona o disparador nas mudanças dos parâmetros de data e tempo. O atributo `field` identifica o parâmetro que solicita a demanda.
+		/**. ``''void'' _trigger(''string'' field)``: Método que aciona o disparador nas mudanças dos parâmetros de data e tempo. O atributo `field` identifica o parâmetro que solicita a demanda.
 		- O disparador receberá como argumento um objeto com as seguintes chaves.
 		- {
-		- `''object'' target`: O objeto `__DateTime`.
-		- `''string'' field`: Nome do parâmetro alterado.
-		- `''number'' old`: Valor anterior do campo.
-		- `''number'' new`: Valor atual do campo.
+		. ``''object'' target``: O objeto `__DateTime`.
+		. ``''string'' field``: Nome do parâmetro alterado.
+		. ``''number'' old``: Valor anterior do campo.
+		. ``''number'' new``: Valor atual do campo.
 		- }**/
 		_trigger: {
 			value: function (field) {
@@ -1539,12 +1502,12 @@ const wd = (function() {
 				return;
 			}
 		},
-		/**- `''object'' _names`: Atributo que registra a lista com os nomes curtos e longos de meses e dias da semana localmente a partir do objeto nativo `Date`.
+		/**. ``''object'' _names``: Atributo que registra a lista com os nomes curtos e longos de meses e dias da semana localmente a partir do objeto nativo `Date`.
 		- {
-		- `MMM`: lista de meses curtos (Janeiro a Dezembro);
-		- `MMMM`: lista de meses longos (Janeiro a Dezembro);
-		- `DDD`: lista de dias curtos (Domingo a Sábado);
-		- `DDDD`: lista de dias longos (Domingo a Sábado).
+		. ``MMM``: lista de meses curtos (Janeiro a Dezembro);
+		. ``MMMM``: lista de meses longos (Janeiro a Dezembro);
+		. ``DDD``: lista de dias curtos (Domingo a Sábado);
+		. ``DDDD``: lista de dias longos (Domingo a Sábado).
 		- }**/
 		_names: {
 			value: (function() {
@@ -1564,14 +1527,14 @@ const wd = (function() {
 				return data;
 			}())
 		},
-		/**- `''boolean'' _leap(''integer'' y=year)`: Método que retorna se o ano é bissexto. O atributo `y` define o ano que, se indefinido, assumirá o ano registrado pelo objeto.**/
+		/**. ``''boolean'' _leap(''integer'' y=year)``: Método que retorna se o ano é bissexto. O atributo `y` define o ano que, se indefinido, assumirá o ano registrado pelo objeto.**/
 		_leap: {
 			value: function(y) {
 				y = Math.abs(y === undefined ? this.year : y);
 				return (y%400 === 0 || (y%4 === 0 && y%100 !== 0));
 			}
 		},
-		/**- `''integer'' _maxDay(''integer'' m=month, ''integer'' y=year)`: Método que retorna a quantidade de dias do mês.
+		/**. ``''integer'' _maxDay(''integer'' m=month, ''integer'' y=year)``: Método que retorna a quantidade de dias do mês.
 		- Os atributos `m` e `y` correspondem ao mês e ao ano e que, se indefinidos, assumirão o mês o e ano registrados pelo objeto, respectivamente.**/
 		_maxDay: {
 			value: function(m, y) {
@@ -1582,7 +1545,7 @@ const wd = (function() {
 				return max[m-1];
 			}
 		},
-		/**- `''integer'' _weekDay(''integer'' x=dateOf())`: Retorna o dia da semana (1-7), de domingo à sábado, tendo como referência o dia desde 0000-01-01.
+		/**. ``''integer'' _weekDay(''integer'' x=dateOf())``: Retorna o dia da semana (1-7), de domingo à sábado, tendo como referência o dia desde 0000-01-01.
 		- O atributo opcional `x` define o valor de referência do dia a ser analisado que, se indefinido, assumirá o valor do método `dateOf`.**/
 		_weekDay: {
 			value: function(x) {
@@ -1593,7 +1556,7 @@ const wd = (function() {
 				return wday[Math.abs(x)%7];
 			}
 		},
-		/**- `''integer'' year`: Define ou retorna o ano.**/
+		/**. ``''integer'' year``: Define ou retorna o ano.**/
 		year: {
 			get: function() {return this._Y;},
 			set: function(x) {
@@ -1608,7 +1571,7 @@ const wd = (function() {
 				return this._trigger("year");
 			}
 		},
-		/**- `''integer'' month`: Define ou retorna o mês de 1 a 12 (janeiro a dezembro). O parâmetro será alterado para o valor definido, exceto quando extrapolar os limites. (**Observação**: ao alterar o mês de 2000-01-31 para fevereiro, a data definida será 2000-02-29 e não 2000-03-02)**/
+		/**. ``''integer'' month``: Define ou retorna o mês de 1 a 12 (janeiro a dezembro). O parâmetro será alterado para o valor definido, exceto quando extrapolar os limites. (**Observação**: ao alterar o mês de 2000-01-31 para fevereiro, a data definida será 2000-02-29 e não 2000-03-02)**/
 		month: {
 			get: function() {return this._M;},
 			set: function(x) {
@@ -1624,7 +1587,7 @@ const wd = (function() {
 				return this._trigger("month");
 			}
 		},
-		/**- `''integer'' day`: Define ou retorna o dia de 1 a 31. O parâmetro será alterado para o valor definido, exceto quando extrapolar os limites. (**Observação**: Quando o dia de um mês for maior que a quantidade de dias do mês alterado, o valor ficará limitado ao último dia e, ao acrescentar unidades de mês à data 2000-01-31, por exemplo, o resultado será 2000-02-29, 2000-03-31, 2000-04-30, 2000-05-31...**/
+		/**. ``''integer'' day``: Define ou retorna o dia de 1 a 31. O parâmetro será alterado para o valor definido, exceto quando extrapolar os limites. (**Observação**: Quando o dia de um mês for maior que a quantidade de dias do mês alterado, o valor ficará limitado ao último dia e, ao acrescentar unidades de mês à data 2000-01-31, por exemplo, o resultado será 2000-02-29, 2000-03-31, 2000-04-30, 2000-05-31...**/
 		day: {
 			get: function() {return this._D > this._maxDay() ? this._maxDay() : this._D;},
 			set: function(x) {
@@ -1660,7 +1623,7 @@ const wd = (function() {
 				return this._trigger("day");
 			}
 		},
-		/**- `''integer'' hour`: Define ou retorna a hora (0 a 23). O parâmetro será alterado para o valor definido, exceto quando extrapolar os limites.**/
+		/**. ``''integer'' hour``: Define ou retorna a hora (0 a 23). O parâmetro será alterado para o valor definido, exceto quando extrapolar os limites.**/
 		hour: {
 			get: function() {return this._h;},
 			set: function(x) {
@@ -1676,7 +1639,7 @@ const wd = (function() {
 				return this._trigger("hour");
 			}
 		},
-		/**- `''integer'' minute`: Define ou retorna o minuto de 0 a 59. O parâmetro será alterado para o valor definido, exceto quando extrapolar os limites.**/
+		/**. ``''integer'' minute``: Define ou retorna o minuto de 0 a 59. O parâmetro será alterado para o valor definido, exceto quando extrapolar os limites.**/
 		minute: {
 			get: function() {return this._m;},
 			set: function(x) {
@@ -1692,7 +1655,7 @@ const wd = (function() {
 				return this._trigger("minute");
 			}
 		},
-		/**- `''number'' second`: Define ou retorna o segundo de 0 a 59.999. O parâmetro será alterado para o valor definido, exceto quando extrapolar o limites.**/
+		/**. ``''number'' second``: Define ou retorna o segundo de 0 a 59.999. O parâmetro será alterado para o valor definido, exceto quando extrapolar o limites.**/
 		second: {
 			get: function() {return this._s;},
 			set: function(x) {
@@ -1707,9 +1670,9 @@ const wd = (function() {
 				return this._trigger("second");
 			}
 		},
-		/**- `''boolean'' leap`: Informa se o ano definido é bissexto.**/
+		/**. ``''boolean'' leap``: Informa se o ano definido é bissexto.**/
 		leap: {get: function() {return this._leap();}},
-		/**- `''integer'' dayYear`: Informa o dia do ano (1-366).**/
+		/**. ``''integer'' dayYear``: Informa o dia do ano (1-366).**/
 		dayYear: {
 			get: function() {
 				let days = [0,31,59,90,120,151,181,212,243,273,304,334,365];
@@ -1717,11 +1680,11 @@ const wd = (function() {
 				return days[this.month-1] + leap + this.day;
 			}
 		},
-		/**- `''integer'' weekDay`: Retorna o dia da semana de domingo (1) à sábado (7).**/
+		/**. ``''integer'' weekDay``: Retorna o dia da semana de domingo (1) à sábado (7).**/
 		weekDay: {
 			get: function() { return this._weekDay();}
 		},
-		/**- `''integer'' week`: Retorna a semana do ano (1-54) a partir de seu primeiro dia.**/
+		/**. ``''integer'' week``: Retorna a semana do ano (1-54) a partir de seu primeiro dia.**/
 		week: {
 			get: function() {
 				let start = this._weekDay(this.dateOf() - this.dayYear + 1);
@@ -1731,11 +1694,11 @@ const wd = (function() {
 				return 1+(dayn - day0)/7;
 			}
 		},
-		/**- `''boolean'' workingDay`: Retorna se é um dia útil.**/
+		/**. ``''boolean'' workingDay``: Retorna se é um dia útil.**/
 		workingDay: {
 			get: function() {return this.weekDay !== 1 && this.weekDay !== 7;}
 		},
-		/**- `''integer'' nonWorkingDays`: Retorna a quantidade de dias não úteis atá a data no ano.**/
+		/**. ``''integer'' nonWorkingDays``: Retorna a quantidade de dias não úteis atá a data no ano.**/
 		nonWorkingDays: {
 			get: function() {
 				let start = this._weekDay(this.dateOf() - this.dayYear + 1);
@@ -1746,25 +1709,25 @@ const wd = (function() {
 				return day1 + day7;
 			}
 		},
-		/**- `''integer'' width`: Retorna a quantidade de dias no mês.**/
+		/**. ``''integer'' width``: Retorna a quantidade de dias no mês.**/
 		width: {
 			get: function() {return this._maxDay();}
 		},
-		/**- `''integer'' workingDays`: Retorna a quantidade de dias úteis atá a data no ano.**/
+		/**. ``''integer'' workingDays``: Retorna a quantidade de dias úteis atá a data no ano.**/
 		workingDays: {
 			get: function() {
 				return this.dayYear - this.nonWorkingDays;
 			}
 		},
-		/**- `''string'' Y`: Retorna o ano.**/
+		/**. ``''string'' Y``: Retorna o ano.**/
 		Y:    {get: function() {return String(this.year);}},
-		/**- `''string'' YY`: Retorna o ano com os dois últimos dígitos.**/
+		/**. ``''string'' YY``: Retorna o ano com os dois últimos dígitos.**/
 		YY:   {
 			get: function() {
 				return this.YYYY.replace(/\d+(\d\d)$/, "$1");
 			}
 		},
-		/**- `''string'' YYYY`: Retorna o ano com pelo menos quatro dígitos.**/
+		/**. ``''string'' YYYY``: Retorna o ano com pelo menos quatro dígitos.**/
 		YYYY: {
 			get: function() {
 				let YYYY = String(Math.abs(this.year));
@@ -1772,60 +1735,60 @@ const wd = (function() {
 				return (this.year < 0 ? "-" : "")+YYYY;
 			}
 		},
-		/**- `''string'' M`: Retorna o mês.**/
+		/**. ``''string'' M``: Retorna o mês.**/
 		M:    {get: function() {return String(this.month);}},
-		/**- `''string'' MM`: Retorna o mês com dois dígitos.**/
+		/**. ``''string'' MM``: Retorna o mês com dois dígitos.**/
 		MM:   {get: function() {return ("0"+this.M).slice(-2);}},
-		/**- `''string'' MMM`: Retorna o nome abreviado do mês.**/
+		/**. ``''string'' MMM``: Retorna o nome abreviado do mês.**/
 		MMM:  {get: function() {return this._names.MMM[this.month-1];}},
-		/**- `''string'' MMMM`: Retorna o nome do mês.**/
+		/**. ``''string'' MMMM``: Retorna o nome do mês.**/
 		MMMM: {get: function() {return this._names.MMMM[this.month-1];}},
-		/**- `''string'' D`: Retorna o dia.**/
+		/**. ``''string'' D``: Retorna o dia.**/
 		D:    {get: function() {return String(this.day);}},
-		/**- `''string'' DD`: Retorna o dia com dois dígitos.**/
+		/**. ``''string'' DD``: Retorna o dia com dois dígitos.**/
 		DD:   {get: function() {return ("0"+this.D).slice(-2);}},
-		/**- `''string'' DDD`: Retorna o dia da semana abreviado.**/
+		/**. ``''string'' DDD``: Retorna o dia da semana abreviado.**/
 		DDD:  {get: function() {return this._names.DDD[this.weekDay-1];}},
-		/**- `''string'' DDDD`: Retorna o dia da semana.**/
+		/**. ``''string'' DDDD``: Retorna o dia da semana.**/
 		DDDD: {get: function() {return this._names.DDDD[this.weekDay-1];}},
-		/**- `''string'' W`: Retorna a semana do ano (atributo `week`).**/
+		/**. ``''string'' W``: Retorna a semana do ano (atributo `week`).**/
 		W:   {get: function() {return String(this.week);}},
-		/**- `''string'' WW`: Retorna a semana do ano com dois dígitos (atributo `week`).**/
+		/**. ``''string'' WW``: Retorna a semana do ano com dois dígitos (atributo `week`).**/
 		WW:   {get: function() {return ("0"+this.W).slice(-2);}},
-		/**- `''string'' h`: Retorna a hora.**/
+		/**. ``''string'' h``: Retorna a hora.**/
 		h:    {get: function() {return String(this.hour);}},
-		/**- `''string'' hh`: Retorna o a hora com dois dígitos.**/
+		/**. ``''string'' hh``: Retorna o a hora com dois dígitos.**/
 		hh:   {get: function() {return ("0"+this.h).slice(-2);}},
-		/**- `''string'' m`: Retorna o minuto.**/
+		/**. ``''string'' m``: Retorna o minuto.**/
 		m:    {get: function() {return String(this.minute);}},
-		/**- `''string'' mm`: Retorna o minuto com dois dígitos.**/
+		/**. ``''string'' mm``: Retorna o minuto com dois dígitos.**/
 		mm:   {get: function() {return ("0"+this.m).slice(-2);}},
-		/**- `''string'' s`: Retorna o segundo.**/
+		/**. ``''string'' s``: Retorna o segundo.**/
 		s:    {get: function() {return (this.second).toFixed(3);}},
-		/**- `''string'' ss`: Retorna o segundo com dois dígitos.**/
+		/**. ``''string'' ss``: Retorna o segundo com dois dígitos.**/
 		ss:   {
 			get: function() {
 				return Math.trunc(this.second) < 10 ? ("0"+this.s) : this.s;
 			}
 		},
-		/**- `''string'' AMPM`: Retorna `AM` se a hora for anterior ao meio dia, caso contrário, `PM`.**/
+		/**. ``''string'' AMPM``: Retorna `AM` se a hora for anterior ao meio dia, caso contrário, `PM`.**/
 		AMPM: {
 			get: function() {return this.hour < 12 ? "AM" : "PM";}
 		},
-		/**- `''string'' h12`: Retorna a hora no formato 12h.**/
+		/**. ``''string'' h12``: Retorna a hora no formato 12h.**/
 		h12: {
 			get: function() {
 				return ("0" + String(this.hour - (this.hour < 13 ? 0 : 12))).slice(-2);
 			}
 		},
-		/**- `''integer'' maxWeekForm`: Retorna a quantidade de semanas do ano para fins do [fomulário HTML `week`](https://developer.mozilla.org/en-US/docs/Web/HTML/Date_and_time_formats#week_strings).**/
+		/**. ``''integer'' maxWeekForm``: Retorna a quantidade de semanas do ano para fins do [fomulário HTML `week`](https://developer.mozilla.org/en-US/docs/Web/HTML/Date_and_time_formats#week_strings).**/
 		maxWeekForm: {
 			get: function() {
 				let week = this._weekDay(this.dateOf() - this.dayYear + 1);
 				return (week === 5 || (week === 4 && this.leap)) ? 53 : 52;
 			}
 		},
-		/**- `''string'' format(''string'' x)`: Retorna uma string pré-formatada com valores dos atributos sendo representados por atalhos correspondentes ao nome do respectivo atributo entre chaves `{nome}`. O argumento `x` deve conter as configurações da string a ser retornada (**Exemplo**: `{DD}/{MM}/{YYYY}` returna a data no formato `DD/MM/YYYY`).**/
+		/**. ``''string'' format(''string'' x)``: Retorna uma string pré-formatada com valores dos atributos sendo representados por atalhos correspondentes ao nome do respectivo atributo entre chaves `{nome}`. O argumento `x` deve conter as configurações da string a ser retornada (**Exemplo**: `{DD}/{MM}/{YYYY}` returna a data no formato `DD/MM/YYYY`).**/
 		format: {
 			value: function(x) {
 				x = __Type(x).chars ? x: "{DDDD}, {D} {MMMM} {YYYY}, {h}:{mm}:{ss}";
@@ -1840,26 +1803,26 @@ const wd = (function() {
 				return x;
 			}
 		},
-		/**- `''function'' onchange`: Define um disparador para ser chamado quando houver mudanças nos parâmetros de data e tempo. Para removê-lo, deve-se definí-lo com o valor `null`.**/
+		/**. ``''function'' onchange``: Define um disparador para ser chamado quando houver mudanças nos parâmetros de data e tempo. Para removê-lo, deve-se definí-lo com o valor `null`.**/
 		onchange: {
 			set: function(x) {
 				if (!__Type(x).function && x !== null) return;
 				this._change = x;
 			}
 		},
-		/**- `''integer'' timeOf()`: Retorna o tempo em segundos.**/
+		/**. ``''integer'' timeOf()``: Retorna o tempo em segundos.**/
 		timeOf: {
 			value: function() {
 				return 3600*this.hour + 60*this.minute + this.second;
 			}
 		},
-		/**- `''string'' toTimeString()`: Retorna o tempo no formato `hh:mm:ss.sss`.**/
+		/**. ``''string'' toTimeString()``: Retorna o tempo no formato `hh:mm:ss.sss`.**/
 		toTimeString: {
 			value: function() {
 				return this.format("{hh}:{mm}:{ss}");
       }
 		},
-		/**- `''integer'' dateOf()`: Retorna os dias desde 0000-01-01 (dia 1).**/
+		/**. ``''integer'' dateOf()``: Retorna os dias desde 0000-01-01 (dia 1).**/
 		dateOf: {
 			value: function() {
 				/* se o ano for zero: dias do ano corrente */
@@ -1877,19 +1840,19 @@ const wd = (function() {
 				return -(days + ((this.leap ? 366 : 365) - this.dayYear));
 			}
 		},
-		/**- `''string'' toDateString()`: Retorna a data no formato `YYYY-MM-DD`.**/
+		/**. ``''string'' toDateString()``: Retorna a data no formato `YYYY-MM-DD`.**/
 		toDateString: {
 			value: function() {
 				return this.format("{YYYY}-{MM}-{DD}");
       }
 		},
-		/**- `''string'' toString()`: Retorna a data e o tempo no formato `YYYY-MM-DDThh:mm:ss.sss`.**/
+		/**. ``''string'' toString()``: Retorna a data e o tempo no formato `YYYY-MM-DDThh:mm:ss.sss`.**/
 		toString: {
 			value: function() {
 				return this.toDateString()+"T"+this.toTimeString();
       }
 		},
-		/**- `''integer'' valueOf()`: Retorna os segundos desde 0000-01-01T00:00:00.**/
+		/**. ``''integer'' valueOf()``: Retorna os segundos desde 0000-01-01T00:00:00.**/
 		valueOf: {
 			value: function() {
 				let date = this.dateOf();
@@ -1899,7 +1862,7 @@ const wd = (function() {
 				return 24*3600*date - (24*3600 - time);
       }
 		},
-		/**- `''string'' testDrive(''integer'' x=100)`: checa a sequencialidade dos dias e dos dias da semana. O atributo `x` define o o ciclo da simulação em anos, do negativo ao positivo (dobra).**/
+		/**. ``''string'' testDrive(''integer'' x=100)``: checa a sequencialidade dos dias e dos dias da semana. O atributo `x` define o o ciclo da simulação em anos, do negativo ao positivo (dobra).**/
 		testDrive: {
 			value: function(x) {
 				/* https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date */
@@ -1927,7 +1890,7 @@ const wd = (function() {
 
 /*===========================================================================*/
 	/**### Listas
-	```**constructor** ''object'' __Array(array input|void  ...)```
+	``**constructor** ''object'' __Array(array input|void  ...)``
 	Construtor para manipulação de listas (array).
 	Caso não seja informado argumento, seja atribuído uma lista vazia. Caso seja informado múltiplos argumentos, cada valor corresponderá a um item do array. Caso seja informado um array como argumento, esse será o valor considerado pelo objeto. Caso contrário, o valor informado será o item do array.
 	{**/
@@ -1948,7 +1911,7 @@ const wd = (function() {
 
 	Object.defineProperties(__Array.prototype, {
 		constructor: {value: __Array},
-		/**- `array|void  valueOf(integer n)`: Retorna o array definido ou um de seus itens.
+		/**. ``array|void  valueOf(integer n)``: Retorna o array definido ou um de seus itens.
 		- O argumento opcional `n` corresponde ao índice da lista que se comporta conforme o retorno do método `index`.**/
 		valueOf: {
 			value: function(n) {
@@ -1956,7 +1919,7 @@ const wd = (function() {
 				return this._value[this.index(n)];
 			}
 		},
-		/**- `''integer'' index(integer n=0)`: Retorna o índice do array, dentro de seu comprimento, como se repetidas listas estivessem lado a lado.
+		/**. ``''integer'' index(integer n=0)``: Retorna o índice do array, dentro de seu comprimento, como se repetidas listas estivessem lado a lado.
 		- O argumento `n` define o valor do índice. Tendo como exemplo um array de três elementos, o conjunto de (`n`, `index`) teria como resultado  ''{..., (-7, 2), (-6, 0), (-5, 1), (-4, 2), (-3, 0), (-2, 1), (-1, 2), (0, 0), (1, 1), (2, 2), (3, 0), (4, 1), (5, 2), (6, 0), (7, 1), ...}''.**/
 		index: {
 			value: function(n) {
@@ -1965,15 +1928,15 @@ const wd = (function() {
 				return (Math.abs(n)*this.length + n)%this.length;
 			}
 		},
-		/**- `''string''  toString()`: Retorna a lista em formato JSON.**/
+		/**. ``''string''  toString()``: Retorna a lista em formato JSON.**/
 		toString: {
 			value: function() {return JSON.stringify(this._value);}
 		},
-		/**- `''integer'' length`: Retorna a quantidade de itens da lista.**/
+		/**. ``''integer'' length``: Retorna a quantidade de itens da lista.**/
 		length: {
 			get: function() {return this._value.length;}
 		},
-		/**- `''array'' only(string type, boolean keep=false, boolean change=true)`: Retorna uma lista somente com os tipos de itens definidos.
+		/**. ``''array'' only(string type, boolean keep=false, boolean change=true)``: Retorna uma lista somente com os tipos de itens definidos.
 		- O argumento `type` define o tipo do item a ser mantido na lista (ver atributos do objeto `__Type`).
 		- O argumento `keep`, se verdadeiro, manterá na lista o item não enquadrado no tipo definido com o valor `null`.
 		- O argumento `change`, se verdadeiro, alterará o item casado para o valor (`valueOf`) do objeto `__Type`.**/
@@ -1991,7 +1954,7 @@ const wd = (function() {
 				return list;
 			}
 		},
-		/**- `''array'' convert(function f, string type)`: Retorna uma lista com o resultado de `f(x)` ou `null` se algo falhar.
+		/**. ``''array'' convert(function f, string type)``: Retorna uma lista com o resultado de `f(x)` ou `null` se algo falhar.
 		- O argumento `f` corresponde à função a ser aplicada aos itens da lista. O item da lista será o argumento da função cujo retorno substituirá o valor do item. O argumento opcional `type` informa o tipo do resultado esperado de acordo com o método `__Type` que, se diferente, devolverá um valor nulo.**/
 		convert: {
 			value: function(f, type) {
@@ -2012,21 +1975,21 @@ const wd = (function() {
 				return list;
 			}
 		},
-		/**- `''number'' min`: Retorna o menor número finito do conjunto de items da lista ou `null` em caso de vazio.**/
+		/**. ``''number'' min``: Retorna o menor número finito do conjunto de items da lista ou `null` em caso de vazio.**/
 		min: {
 			get: function() {
 				let list = this.only("finite");
 				return list.length === 0 ? null : Math.min.apply(null, list);
 			}
 		},
-		/**- `''number'' max`:  Retorna o maior número finito do conjunto de items da lista ou `null` em caso de vazio.**/
+		/**. ``''number'' max``:  Retorna o maior número finito do conjunto de items da lista ou `null` em caso de vazio.**/
 		max: {
 			get: function() {
 				let list = this.only("finite");
 				return list.length === 0 ? null : Math.max.apply(null, list);
 			}
 		},
-		/**- `''number'' sum`: Retorna a soma dos números finitos da lista ou `null` em caso de vazio.**/
+		/**. ``''number'' sum``: Retorna a soma dos números finitos da lista ou `null` em caso de vazio.**/
 		sum: {
 			get: function() {
 				let list = this.only("finite");
@@ -2036,14 +1999,14 @@ const wd = (function() {
 				return sum;
 			}
 		},
-		/**- `''number'' avg`: Retorna a média dos números finitos da lista ou `null` em caso de vazio.**/
+		/**. ``''number'' avg``: Retorna a média dos números finitos da lista ou `null` em caso de vazio.**/
 		avg: {
 			get: function() {
 				let list = this.only("finite");
 				return list.length === 0 ? null : this.sum/list.length;
 			}
 		},
-		/**- `''number'' med`: Retorna a mediana dos números finitos da lista ou `null` em caso de vazio.**/
+		/**. ``''number'' med``: Retorna a mediana dos números finitos da lista ou `null` em caso de vazio.**/
 		med: {
 			get: function() {
 				let list = this.only("finite");
@@ -2053,7 +2016,7 @@ const wd = (function() {
 				return l%2 === 0 ? (y[l/2]+y[(l/2)-1])/2 : y[(l-1)/2];
 			}
 		},
-		/**- `''number'' harm`: Retorna a média harmônica dos números finitos diferentes de zero da lista ou `null` em caso de vazio.**/
+		/**. ``''number'' harm``: Retorna a média harmônica dos números finitos diferentes de zero da lista ou `null` em caso de vazio.**/
 		harm: {
 			get: function() {
 				let list = this.only("finite");
@@ -2062,7 +2025,7 @@ const wd = (function() {
 				return list.length === 0 || sum === 0 ? null : list.length/sum;
 			}
 		},
-		/**- `''number'' geo`: Retorna a média geométrica do valor absoluto dos números finitos diferentes de zero da lista ou `null` em caso de vazio.**/
+		/**. ``''number'' geo``: Retorna a média geométrica do valor absoluto dos números finitos diferentes de zero da lista ou `null` em caso de vazio.**/
 		geo: {
 			get: function() {
 				let list = this.only("finite");
@@ -2071,7 +2034,7 @@ const wd = (function() {
 				return mult < 0 && list.length%2 === 0 ? null : Math.pow(mult, 1/list.length);
 			}
 		},
-		/**- `''number'' gcd`: Retorna o máximo divisor comum do valor absoluto dos números inteiros da lista ou `null` em caso de vazio.**/
+		/**. ``''number'' gcd``: Retorna o máximo divisor comum do valor absoluto dos números inteiros da lista ou `null` em caso de vazio.**/
 		gcd: {
 			get: function() {
 				/* obtendo valores absolutos inteiros */
@@ -2109,13 +2072,13 @@ const wd = (function() {
 				return mdc;
 			}
 		},
-		/**- `''array'' unique`: Retorna a lista sem valores repetidos.**/
+		/**. ``''array'' unique``: Retorna a lista sem valores repetidos.**/
 		unique: {
 			get: function(){
 				return this._value.filter(function(v,i,a) {return a.indexOf(v) === i;});
 			}
 		},
-		/**- `''array'' mode`: Retorna uma lista com os valores da moda (valores que mais se repetem).**/
+		/**. ``''array'' mode``: Retorna uma lista com os valores da moda (valores que mais se repetem).**/
 		mode: {
 			get: function() {
 				let items  = this.unique;
@@ -2126,7 +2089,7 @@ const wd = (function() {
 				return items.filter(function(v,i,a) {return amount[i] === max;});
 			}
 		},
-		/**- `''boolean'' check(void  ...)`: Checa se os valores informados como argumento estão presentes na lista.**/
+		/**. ``''boolean'' check(void  ...)``: Checa se os valores informados como argumento estão presentes na lista.**/
 		check: {
 			value: function() {
 				if (arguments.length === 0) return false;
@@ -2137,7 +2100,7 @@ const wd = (function() {
 				return check;
 			}
 		},
-		/**- `''array'' search(void  value)`: Retorna uma lista com os índices onde o valor informado no argumento `value` foi localizado.**/
+		/**. ``''array'' search(void  value)``: Retorna uma lista com os índices onde o valor informado no argumento `value` foi localizado.**/
 		search: {
 			value: function(value) {
 				let index = [];
@@ -2145,20 +2108,20 @@ const wd = (function() {
 				return index;
 			}
 		},
-		/**- `''array'' hide(void  ...)`: Retorna uma lista ignorando os valores informados como argumento.**/
+		/**. ``''array'' hide(void  ...)``: Retorna uma lista ignorando os valores informados como argumento.**/
 		hide: {
 			value: function() {
 				let hide = Array.prototype.slice.call(arguments);
 				return this._value.filter(function(v,i,a) {return hide.indexOf(v) < 0;});
 			}
 		},
-		/**- `''number'' count(void  value)`: Retorna a quantidade de vezes que o valor informado no argumento `value` aparece na lista.**/
+		/**. ``''number'' count(void  value)``: Retorna a quantidade de vezes que o valor informado no argumento `value` aparece na lista.**/
 		count: {
 			value: function(value) {
 				return this.search(value).length;
 			}
 		},
-		/**- `''array'' sort(boolean asc)`: Retorna a lista ordenada e organizada por grupos na seguinte sequência: número, tempo, data, datatempo, texto, booelano, nulo, nós, lista, objeto, função, expressão regular, indefinido e demais valores.
+		/**. ``''array'' sort(boolean asc)``: Retorna a lista ordenada e organizada por grupos na seguinte sequência: número, tempo, data, datatempo, texto, booelano, nulo, nós, lista, objeto, função, expressão regular, indefinido e demais valores.
 		- O argumento opcional `asc` define a classificação da lista. Se verdadeiro, ascendente; se falso, descendente; e, se omitido, inverterá a ordenação atual com prevalência da ordem ascendente.**/
 		sort: {
 			value: function(asc) {
@@ -2204,27 +2167,27 @@ const wd = (function() {
 				return array.reverse();
 			}
 		},
-		/**- `''array'' order`: Retorna uma lista ordenada de forma crescente sem valores repetidos.**/
+		/**. ``''array'' order``: Retorna uma lista ordenada de forma crescente sem valores repetidos.**/
 		order: {
 			get: function() {
 				return __Array(this.unique).sort();
 			}
 		},
-		/**- `''array'' add(void  ...)`: Adiciona itens (argumentos) ao fim da lista e a retorna.**/
+		/**. ``''array'' add(void  ...)``: Adiciona itens (argumentos) ao fim da lista e a retorna.**/
 		add: {
 			value: function() {
 				this._value.push.apply(this._value, arguments);
 				return this._value;
 			}
 		},
-		/**- `''array'' jump(void  ...)`: Adiciona itens (argumentos) ao início da lista e a retorna.**/
+		/**. ``''array'' jump(void  ...)``: Adiciona itens (argumentos) ao início da lista e a retorna.**/
 		jump: {
 			value: function() {
 				this._value.unshift.apply(this._value, arguments);
 				return this._value;
 			}
 		},
-		/**- `''array'' put(void  ...)`: Adiciona itens (argumentos) não existentes ao fim da lista e a retorna.**/
+		/**. ``''array'' put(void  ...)``: Adiciona itens (argumentos) não existentes ao fim da lista e a retorna.**/
 		put: {
 			value: function() {
 				let i = -1;
@@ -2234,14 +2197,14 @@ const wd = (function() {
 				return this._value;
 			}
 		},
-		/**- `''array'' concat(array|void ...)`: Concatena ou adiciona listas e itens (argumentos) à lista original.**/
+		/**. ``''array'' concat(array|void ...)``: Concatena ou adiciona listas e itens (argumentos) à lista original.**/
 		concat: {
 			value: function() {
 				this._value = this._value.concat.apply(this._value, arguments);
 				return this._value;
 			}
 		},
-		/**- `''array'' replace(void  from, void  to)`: Altera os valores da lista conforme especificado e a retorna.
+		/**. ``''array'' replace(void  from, void  to)``: Altera os valores da lista conforme especificado e a retorna.
 		- O argumento `from` definie o valor a ser encontrado e substituído na lista e o argumento `to` define seu novo valor.**/
 		replace: {
 			value: function (from, to) {
@@ -2249,7 +2212,7 @@ const wd = (function() {
 				return this._value;
 			}
 		},
-		/**- `''array'' delete(void ...)`: Remove itens (argumentos) da lista e a retorna.**/
+		/**. ``''array'' delete(void ...)``: Remove itens (argumentos) da lista e a retorna.**/
 		delete: {
 			value: function() {
 				let list = this.hide.apply(this, arguments);
@@ -2259,7 +2222,7 @@ const wd = (function() {
 
 			}
 		},
-		/**- `''array'' toggle(void  ...)`: Remove, se existente, ou insere, se ausente, itens (argumentos) da lista e a retorna.**/
+		/**. ``''array'' toggle(void  ...)``: Remove, se existente, ou insere, se ausente, itens (argumentos) da lista e a retorna.**/
 		toggle: {
 			value: function() {
 				let tgl  = Array.prototype.slice.call(arguments);
@@ -2275,7 +2238,7 @@ const wd = (function() {
 
 /*============================================================================*/
 	/**### Nós HTML
-	```**constructor** ''object'' __Node(node input)```
+	``**constructor** ''object'' __Node(node input)``
 	Construtor para manipulação de nós HTML.
 	O argumento `input` deve ser um nó HTML simples (um elemento), caso contrário será atribuído um elemento `DIV`.
 	{**/
@@ -2289,17 +2252,17 @@ const wd = (function() {
 
 	Object.defineProperties(__Node.prototype, {
 		constructor: {value: __Node},
-		/**- `''string'' _text`: Retorna ou define o conteúdo textual do elemento (`textContent`).**/
+		/**. ``''string'' _text``: Retorna ou define o conteúdo textual do elemento (`textContent`).**/
 		_text: {
 			get: function()  {return this._node.textContent;},
 			set: function(x) {this._node.textContent = x;}
 		},
-		/**- `''any'' _value`: Retorna ou define o valor do elemento HTML (`value`).**/
+		/**. ``''any'' _value``: Retorna ou define o valor do elemento HTML (`value`).**/
 		_value: {
 			get: function()  {return this._node.value;},
 			set: function(x) {this._node.value = x;}
 		},
-		/**- `''number'' _number`: Retorna ou define o valor numérico do formulário HTML.**/
+		/**. ``''number'' _number``: Retorna ou define o valor numérico do formulário HTML.**/
 		_number: {
 			get: function()  {
 				let data = __Type(this._value);
@@ -2310,7 +2273,7 @@ const wd = (function() {
 				this._value = data.finite ? data.valueOf() : null;
 			}
 		},
-		/**- `''string'' _time`: Retorna ou define o valor temporal do formulário HTML (hora:minuto).**/
+		/**. ``''string'' _time``: Retorna ou define o valor temporal do formulário HTML (hora:minuto).**/
 		_time: {
 			get: function()  {
 				let data = __Type(this._value);
@@ -2326,7 +2289,7 @@ const wd = (function() {
 				}
 			}
 		},
-		/**- `''string'' _date`: Retorna ou define o valor de data do formulário HTML (ano &gt; 0).**/
+		/**. ``''string'' _date``: Retorna ou define o valor de data do formulário HTML (ano &gt; 0).**/
 		_date: {
 			get: function()  {
 				let data = __Type(this._value);
@@ -2342,7 +2305,7 @@ const wd = (function() {
 				}
 			}
 		},
-		/**- `''string'' _datetime`: Retorna ou define o valor de data/tempo do formulário HTML (hora:minuto, ano &gt; 0).**/
+		/**. ``''string'' _datetime``: Retorna ou define o valor de data/tempo do formulário HTML (hora:minuto, ano &gt; 0).**/
 		_datetime: {
 			get: function()  {
 				let data = __Type(this._value);
@@ -2372,7 +2335,7 @@ const wd = (function() {
 				}
 			}
 		},
-		/**- `''string'' _week`: Retorna ou define o valor da semana do formulário HTML.**/
+		/**. ``''string'' _week``: Retorna ou define o valor da semana do formulário HTML.**/
 		_week: {
 			get: function()  {
 				let data = __Type(this._value);
@@ -2395,7 +2358,7 @@ const wd = (function() {
 				}
 			}
 		},
-		/**- `''string'' _month`: Retorna ou define o valor do mês do formulário HTML.**/
+		/**. ``''string'' _month``: Retorna ou define o valor do mês do formulário HTML.**/
 		_month: {
 			get: function()  {
 				let data = __Type(this._value);
@@ -2419,7 +2382,7 @@ const wd = (function() {
 				}
 			}
 		},
-		/**- `''string'' _url`: Retorna ou define o valor da URL do formulário HTML.**/
+		/**. ``''string'' _url``: Retorna ou define o valor da URL do formulário HTML.**/
 		_url: {
 			get: function()  {
 				let data = __Type(this._value);
@@ -2430,7 +2393,7 @@ const wd = (function() {
 				this._value = data.url ? x.trim() : null;
 			}
 		},
-		/**- `''string'' _email`: Retorna ou define o valor de e-mail do formulário HTML.
+		/**. ``''string'' _email``: Retorna ou define o valor de e-mail do formulário HTML.
 			- Se o elemento tiver o atributo `multiple`, múltiplos endereços serão definidos ou obtidos por array. Caso contrário por uma string.**/
 		_email: {
 			get: function()  {
@@ -2451,7 +2414,7 @@ const wd = (function() {
 				}
 			}
 		},
-		/**- `''string'' _vcombo`: Retorna ou define o valor do formulário HTML de caixa de combinação (`select`).
+		/**. ``''string'' _vcombo``: Retorna ou define o valor do formulário HTML de caixa de combinação (`select`).
 		- Se o elemento possuir o atributo `multiple`, o retorno e a definição se realizará por lista de valores. Caso contrário, por valor simples.**/
 		_vcombo: {
 			get: function() {
@@ -2478,7 +2441,7 @@ const wd = (function() {
 				}
 			}
 		},
-		/**- `''string'' _tcombo`: Retorna ou define o conteúdo textual do formulário HTML de caixa de combinação (`select`).
+		/**. ``''string'' _tcombo``: Retorna ou define o conteúdo textual do formulário HTML de caixa de combinação (`select`).
 		- Se o elemento possuir o atributo `multiple`, o retorno e a definição se realizará por lista de conteúdos textuais. Caso contrário, por valor simples.**/
 		_tcombo: {
 			get: function() {
@@ -2504,7 +2467,7 @@ const wd = (function() {
 				}
 			}
 		},
-		/**- `''boolean'' _check`: Retorna ou define o valor do formulário HTML `checkbox` ou `radio`.
+		/**. ``''boolean'' _check``: Retorna ou define o valor do formulário HTML `checkbox` ou `radio`.
 		(
 			* Se o campo estiver checado, retornará o seu valor, caso contrário, retornará `null`.
 			* Se for definido um booleano, definirá a checagem;
@@ -2525,7 +2488,7 @@ const wd = (function() {
 					this._value = String(x);
 			}
 		},
-		/**- `''string'' _tel`: Retorna ou define o valor do formulário HTML `tel`.
+		/**. ``''string'' _tel``: Retorna ou define o valor do formulário HTML `tel`.
 		- Para ser válido, o valor deverá conter pelo menos um número.**/
 		_tel: {
 			get: function() {
@@ -2541,7 +2504,7 @@ const wd = (function() {
 				}
 			}
 		},
-		/**- `''object'' _file`: Retorna ou define (apenas `null`) o valor do formulário HTML `file`:
+		/**. ``''object'' _file``: Retorna ou define (apenas `null`) o valor do formulário HTML `file`:
 		(
 			* Se o comprimento for zero, retornar uma string vazia;
 			* Se apenas um arquivo selecionado, retornará um objeto `File`; e
@@ -2600,7 +2563,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 
 */
 		},
-		/**- `''object'' _form`: Registra os parâmetros dos tipos de formulários HTML organizados pelo nome do elemento (`tag`).
+		/**. ``''object'' _form``: Registra os parâmetros dos tipos de formulários HTML organizados pelo nome do elemento (`tag`).
 		- Os elementos que possuem tipos (`input` e `button`) terão a chave `type` para poder identificá-los. A chave `value` corresponde ao nome do método que alterará o valor do formulário. A chave `text` corresponde ao nome do método que definirá o conteúdo textual do formulário. A chave `send` corresponde ao nome do método que buscará o valor a ser submetido em requisições, se for o caso.**/
 		_form: {
 			value: {
@@ -2642,7 +2605,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				}}
 			}
 		},
-		/**- `''object'' _fdata`: Retorna os parâmetros de formulário contidos em `_type` ou um objeto vazio se outro elemento.**/
+		/**. ``''object'' _fdata``: Retorna os parâmetros de formulário contidos em `_type` ou um objeto vazio se outro elemento.**/
 		_fdata: {
 			get: function() {
 				let type = this.type;
@@ -2651,11 +2614,11 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return this._form[this.tag].type[type];
 			}
 		},
-		/**- `''string'' tag`: Retorna o nome, em minúsculo, do elemento HTML.**/
+		/**. ``''string'' tag``: Retorna o nome, em minúsculo, do elemento HTML.**/
 		tag: {
 			get: function() {return this._node.tagName.toLowerCase();}
 		},
-		/**- `''string'' type`: Retorna o tipo de formulário HTML em minúsculo ou vazio se outro elemento.**/
+		/**. ``''string'' type``: Retorna o tipo de formulário HTML em minúsculo ou vazio se outro elemento.**/
 		type: {
 			get: function() {
 				if (!(this.tag in this._form)) return "";
@@ -2666,7 +2629,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return (att in type ? att : (obj in type ? obj : ""));
 			}
 		},
-		/**- `''any'' value`: Retorna ou define o atributo `value` do elemento HTML, se existente. O valor retornado depende do elemento.**/
+		/**. ``''any'' value``: Retorna ou define o atributo `value` do elemento HTML, se existente. O valor retornado depende do elemento.**/
 		value: {
 			get: function()  {
 				let fdata = this._fdata;
@@ -2678,7 +2641,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				this[("value" in fdata ? fdata.value : "_value")] = x;
 			}
 		},
-		/**- `''string'' text`: Retorna ou define o conteúdo textual do elemento HTML.**/
+		/**. ``''string'' text``: Retorna ou define o conteúdo textual do elemento HTML.**/
 		text: {
 			get: function()  {
 				let fdata = this._fdata;
@@ -2689,7 +2652,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				this[("text" in fdata ? fdata.text : "_text")] = x;
 			}
 		},
-		/**- `''string'' inner`: Retorna ou define o conteúdo interno do elemento HTML.**/
+		/**. ``''string'' inner``: Retorna ou define o conteúdo interno do elemento HTML.**/
 		inner: {
 			get: function() {
 				return this.type === "" ? this._node.innerHTML : this.text;
@@ -2699,7 +2662,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				else this.text = x;
 			}
 		},
-		/**- `''string'' name`: Retorno o nome do elemento HTML.
+		/**. ``''string'' name``: Retorno o nome do elemento HTML.
 		- O retorno e a definição são definidos pelos atributos `name` ou `id`, nessa ordem. Se ambos forem vazios ou inexistentes, retornará `null`.**/
 		name: {
 			get: function() {
@@ -2716,7 +2679,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					this._node.id   = x === null ? "" : String(x).trim();
 			}
 		},
-		/**- `''object'' send`: retorna um objeto contendo os atributos `name` (nome ou identificador do campo) e `value` (valor do campo).
+		/**. ``''object'' send``: retorna um objeto contendo os atributos `name` (nome ou identificador do campo) e `value` (valor do campo).
 		- Retornará `null` se o campo não enviar dados em requisições, se o nome do campo não estiver definido ou se seu valor for nulo.**/
 		send: {
 			get: function() {
@@ -2725,7 +2688,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return (pack.name === null || pack.value === null) ? null : pack;
 			}
 		},
-		/**- `''object'' attribute(null|object x)`: Retorna um objeto contendo os atributos HTMl do elemento e define seus valores.
+		/**. ``''object'' attribute(null|object x)``: Retorna um objeto contendo os atributos HTMl do elemento e define seus valores.
 		- Se o argumento `x` for `null`, todos os atributos HTML do elemento serão removidos.
 		- Se o argumento `x` for um objeto, o nome e o valor de cada atributo definirão o atributo HTMl de mesmo nome e seu valor, inclusive `null`, caso o objetivo seja removê-lo.**/
 		attribute: {
@@ -2756,7 +2719,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return this.attribute();
 			}
 		},
-		/**- `''object'' style(null|object x)`: Retorna um objeto contendo os estilos definidos em `style` e define seus valores.
+		/**. ``''object'' style(null|object x)``: Retorna um objeto contendo os estilos definidos em `style` e define seus valores.
 		- Se o argumento `x` for `null`, todos os estilos contidos em `style` serão removidos.
 		- Se o argumento `x` for um objeto, o nome e o valor de cada atributo definirão o nome do estilo e seu valor, inclusive `null`, caso o objetivo seja removê-lo.**/
 		style: {
@@ -2785,7 +2748,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return this.style();
 			}
 		},
-		/**- `''object'' dataset(''object'' x)`: Retorna um objeto contendo os dados definidos em `dataset` e define seus valores.
+		/**. ``''object'' dataset(''object'' x)``: Retorna um objeto contendo os dados definidos em `dataset` e define seus valores.
 		- Se o argumento `x` for `null`, todos os dados contidos em `dataset` serão removidos.
 		- Se o argumento `x` for um objeto, o nome e o valor de cada atributo definirão o nome do estilo e seu valor, inclusive `null`, caso o objetivo seja removê-lo.**/
 		dataset: {
@@ -2819,7 +2782,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			}
 		},
 
-		/**- `''array'' css(''object'' x)`: Retorna a lista de estilos css definidos no atributo HTML `class` e define seus valores:
+		/**. ``''array'' css(''object'' x)``: Retorna a lista de estilos css definidos no atributo HTML `class` e define seus valores:
 		(
 		* Se o argumento `x` for uma string, os estilos, separados por espaço, serão definidos conforme especificados.
 		* Se o argumento `x` for `null`, o atributo HTML `class` será removido do elemento.
@@ -2855,7 +2818,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return this.css();
 			}
 		},
-		/**- `''void'' object(''object'' x)`: Define atributos ou executa métodos presentes no objeto HTML.
+		/**. ``''void'' object(''object'' x)``: Define atributos ou executa métodos presentes no objeto HTML.
 		- Cada conjunto nome/valor informado no argumento `x` representará o nome do atributo ou método e seu valor ou argumento.
 		- Caso não exista o atributo ou método especificado, nada ocorrerá.
 		- Caso o nome se refira a um método, para definir múltiplos argumentos, deverá ser utilizado um array como valor.
@@ -2884,7 +2847,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return;
 			}
 		},
-		/**- `''void''  handler(''object'' x)`: Define ou remove disparadores ao elemento HTML.
+		/**. ``''void''  handler(''object'' x)``: Define ou remove disparadores ao elemento HTML.
 		- Cada conjunto nome/valor informado no argumento `x` representará o evento e o método, ou a lista de métodos, a ser disparado.
 		- O nome do evento pode ou não começar com o prefixo "on".
 		- Se o evento começar com o caractere "!", será feita a remoção do disparador.
@@ -2914,7 +2877,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return;
 			}
 		},
-		/**- `''string'' lang`: Retorna a linguagem do elemento ou seus pais (atributo `lang`) ou a do navegador ou ainda `en-US` como padrão.**/
+		/**. ``''string'' lang``: Retorna a linguagem do elemento ou seus pais (atributo `lang`) ou a do navegador ou ainda `en-US` como padrão.**/
 		lang: {
 			get: function() {
 				let node = this._node;
@@ -2928,7 +2891,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return navigator.language || navigator.browserLanguage || "en-US";
 			}
 		},
-		/**- `node clone(boolean childs=true)`: Retorna um clone do objeto.
+		/**. ``node clone(boolean childs=true)``: Retorna um clone do objeto.
 		- Se o argumento opcional `childs` for falso, os elementos filhos não serão clonados.**/
 		clone: {
 			value: function(childs) {
@@ -2943,7 +2906,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return clone;
 			}
 		},
-		/**- `''void'' load(string html="", boolean overlap=false)`: Carrega um conteúdo HTML no elemento ou o substitui.
+		/**. ``''void'' load(string html="", boolean overlap=false)``: Carrega um conteúdo HTML no elemento ou o substitui.
 		- O argumento `html` é o texto em formato HTML a ser carregado ou a substituir o elemento definido.
 		- O argumento opcional `overlap`, se verdadeiro, irá substituir o elemento pelo conteúdo de `html`.**/
 		load: {
@@ -3015,7 +2978,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return;
 			}
 		},
-		/**- `''boolean'' show`: Retorna se o elemento está visível nos termos da biblioteca e define sua exibição, exceto se houver estilo predominante que impeça o comportamento.**/
+		/**. ``''boolean'' show``: Retorna se o elemento está visível nos termos da biblioteca e define sua exibição, exceto se houver estilo predominante que impeça o comportamento.**/
 		show: {
 			get: function() {
 				return this.css().indexOf("js-wd-no-display") < 0;
@@ -3024,7 +2987,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				this.css(x === false ? {add: "js-wd-no-display"} : {delete: "js-wd-no-display"});
 			}
 		},
-		/**- `''void'' nav(number init=-Infinity, number last=+Infinity)`: Define o intervalo de nós filhos a ser exibidos.
+		/**. ``''void'' nav(number init=-Infinity, number last=+Infinity)``: Define o intervalo de nós filhos a ser exibidos.
 		- Os argumentos `init` e `last` definem os índices do primeiro e do último nó, respectivamente. Se `end` for maior que `init`, ocorrerá a inversão da exibição.**/
 		nav: {
 			value: function(init, last) {
@@ -3047,7 +3010,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				});
 			}
 		},
-		/**- `''void'' walk(integer n=1)`: Exibe um determinado nó filho avançando ou retrocedendo entre os nós irmãos.
+		/**. ``''void'' walk(integer n=1)``: Exibe um determinado nó filho avançando ou retrocedendo entre os nós irmãos.
 		- O argumento `n` indica o intervalo a avançar (positivo) ou a retroceder (negativo).**/
 		walk: {
 			value: function(n) {
@@ -3077,7 +3040,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return this.nav(index, index);
 			}
 		},
-		/**- `''integer'' index`: Retorna o índice do elemento com relação a seus irmãos.**/
+		/**. ``''integer'' index``: Retorna o índice do elemento com relação a seus irmãos.**/
 		index: {
 			get: function() {
 				let parent = this._node.parentElement;
@@ -3086,7 +3049,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return child.indexOf(this._node);
 			}
 		},
-		/**- `''void'' alone(boolean x=true)`: exibe o elemento e omite seus elementos irmãos.
+		/**. ``''void'' alone(boolean x=true)``: exibe o elemento e omite seus elementos irmãos.
 		- O argumento `x`, se falso, inverterá a exibição padrão, escondendo apenas o nó.**/
 		alone: {
 			value: function(x) {
@@ -3100,7 +3063,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return node.nav(index, index);
 			}
 		},
-		/**- `''void'' page(number index=0, integer total, boolean width=false)`: Divide os nós filhos em grupos exibindo apenas aqueles do grupo definido.
+		/**. ``''void'' page(number index=0, integer total, boolean width=false)``: Divide os nós filhos em grupos exibindo apenas aqueles do grupo definido.
 		- O argumento `index` define o índice de cada grupo limitados ao primeiro e último grupo. Se for igual a &minus;1, retornará o último grupo. Os valores `+Infinity` e `-Infinity` avançam ou retrocedem para o grupo seguinte ou anterior, respectivamente.
 		- O argumento `total` é um inteiro positivo que define a quantidade de nós em cada grupo ou a quantidade de grupos (padrão).
 		- O argumento `width` define o valor de `total` como quantidade de grupos, se falso, ou como quantidade de nós por grupo, se verdadeiro.**/
@@ -3152,7 +3115,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return this.nav(a, b);
 			}
 		},
-		/**- `''void'' filter(string|regexp search, integer chars=1)`: Exibe os nós filhos que casam com o valor definido.
+		/**. ``''void'' filter(string|regexp search, integer chars=1)``: Exibe os nós filhos que casam com o valor definido.
 		- O argumento `search` é o valor a ser encontrado, podendo ser uma string ou uma expressão regular.
 		- O argumento `chars` terá efeito quando `search` for uma string e indica o número de caracteres mínimo a ser informado em `search`. Quando não casado, se positivo, exibirá todos os nós, caso contrário os esconderá.**/
 		filter: {
@@ -3177,7 +3140,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				});
 			}
 		},
-		/**- `''void'' sort(booelan asc, integer ref)`: Ordena os elementos filhos.
+		/**. ``''void'' sort(booelan asc, integer ref)``: Ordena os elementos filhos.
 		- O argumento opcional `asc` define a classificação. Se verdadeiro, será ascendente; se falso, descendente; e, se indefindo ou não boleano, será o inverso da classificação atual.
 		- O argumento opcional `ref` permite definir um nó neto como parâmetro de ordenação indicando seu índice (útil para ordenação de colunas de uma tabela).**/
 		sort: {
@@ -3208,7 +3171,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return rank[0] === init;
 			}
 		},
-		/**- `''void'' display(string act)`: Promove ações de exibição de elementos.
+		/**. ``''void'' display(string act)``: Promove ações de exibição de elementos.
 		- O argumento `act` define as ações de exibição a serem executadas ao elemento ou seus filhos:
 		- {
 		[Alvo|Ação|Código|Descrição|
@@ -3320,7 +3283,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return;
 			}
 		},
-		/**- `''void'' jump(array list)`: O elemento será transferido, na ordem definida, como filho na lista de elementos pais a cada chamada do método.
+		/**. ``''void'' jump(array list)``: O elemento será transferido, na ordem definida, como filho na lista de elementos pais a cada chamada do método.
 		- O argumento `list` é um array de elementos que servirá como pai para o elemento especificado.**/
 		jump: {
 			value: function(list) {
@@ -3333,7 +3296,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					node.appendChild(this._node);
 			}
 		},
-		/**- `''boolean'' full()`: Alterna a exibição do nó em tela cheia e retorna verdadeiro se efetivada essa exibição.**/
+		/**. ``''boolean'' full()``: Alterna a exibição do nó em tela cheia e retorna verdadeiro se efetivada essa exibição.**/
 		full: {
 			value: function() {
 				let action = {
@@ -3356,7 +3319,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return false;
 			}
 		},
-		/**- `''object'' styles`: Retorna um objeto contendo os estilos e seus valores computados ao elemento.**/
+		/**. ``''object'' styles``: Retorna um objeto contendo os estilos e seus valores computados ao elemento.**/
 		styles: {
 			get: function() {
 				let object = {};
@@ -3388,7 +3351,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 
 	Object.defineProperties(__Query.prototype, {
 		constructor: {value: __Query},
-		/**- `$$`: retorna uma lista de nós (`NodeList`).**/
+		/**. ``$$``: retorna uma lista de nós (`NodeList`).**/
 		$$: {
 			get: function() {
 				let elem = null;
@@ -3396,7 +3359,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return __Type(elem).node ? elem : document.querySelectorAll("#_._");
 			}
 		},
-		/**- `$`: retorna um nó específico ou lista de nós (`NodeList`) vazia.**/
+		/**. ``$``: retorna um nó específico ou lista de nós (`NodeList`) vazia.**/
 		$: {
 			get: function() {
 				let elem = null;
@@ -3410,7 +3373,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 /*----------------------------------------------------------------------------*/
 	/**
 	FIXME o que fazer com isso?
-	```node __$$$(object obj, node root)```
+	``node __$$$(object obj, node root)``
 	Localiza em um objeto os atributos v{$}v e v{$$}v e utiliza seus valores como seletores CSS.}p
 	O atributo v{$$}v é prevalente sobre o v{$}v para fins de chamada das funções i{__$$}i ou i{__$}i,
  respectivamente.
@@ -3428,7 +3391,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 
 /*============================================================================*/
 	/**### Requisições e Arquivos
-	```**constructor** ''object'' __Request(string input)```
+	``**constructor** ''object'' __Request(string input)``
 	Construtor para [requisições Web](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest) ou leituras de [arquivo](https://developer.mozilla.org/en-US/docs/Web/API/FileReader). O argumento `input` deve ser o endereço do alvo a ser requisitado.
 	{**/
 	function __Request(input, method) {
@@ -3534,7 +3497,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 
 	Object.defineProperties(__Request.prototype, {
 		constructor: {value: __Request},
-		/**- `''number'' maxtime`: Define e retorna o tempo máximo de requisição em milisegundos.**/
+		/**. ``''number'' maxtime``: Define e retorna o tempo máximo de requisição em milisegundos.**/
 		maxtime: {
 			get: function() {return this._maxtime;},
 			set: function(x) {
@@ -3545,7 +3508,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					this._maxtime = 0;
 			}
 		},
-		/**- `function onsubmit`: Define e retorna o disparador a ser chamado ao executar a requisição.
+		/**. ``function onsubmit``: Define e retorna o disparador a ser chamado ao executar a requisição.
 		- A função receberá o objeto como argumento e será chamado a cada mudança de estado. Para excluir o disparador, deve-se defini-lo como `null`.**/
 		onsubmit: {
 			set: function(x) {
@@ -3554,41 +3517,41 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			},
 			get: function() {return this._submit;}
 		},
-		/**- `''boolean'' done`: Retorna verdadeiro se a requisição estiver terminada.**/
+		/**. ``''boolean'' done``: Retorna verdadeiro se a requisição estiver terminada.**/
 		done: {
 			get: function() {return this._done;}
 		},
-		/**- `''string'' target`: Retorna o alvo da requisição.**/
+		/**. ``''string'' target``: Retorna o alvo da requisição.**/
 		target: {
 			get: function() {
 				return this._source === "file" ? this._target.name : this._target;
 			}
 		},
-		/**- `''object'' request`: Retorna o objeto `XMLHttpRequest` ou `FileReader` da requisição.**/
+		/**. ``''object'' request``: Retorna o objeto `XMLHttpRequest` ou `FileReader` da requisição.**/
 		request: {
 			get: function() {return this._request;}
 		},
-		/**-`integer time`: Retorna o tempo de execução da requisição em milisegundos.**/
+		/**-`integer time``: Retorna o tempo de execução da requisição em milisegundos.**/
 		time: {
 			get: function() {return this._time - this._start;}
 		},
-		/**- `''string'' state`: Retorna o estado da requisição: `opened`, `headers`, `loading`, `closing`, `done`, `abort`, `timeout` ou `error`.**/
+		/**. ``''string'' state``: Retorna o estado da requisição: `opened`, `headers`, `loading`, `closing`, `done`, `abort`, `timeout` ou `error`.**/
 		state: {
 			get: function() {return this._state;}
 		},
-		/**- `''integer'' size`: Retorna o tamanho total da requisição (envio ou retorno) em bytes.**/
+		/**. ``''integer'' size``: Retorna o tamanho total da requisição (envio ou retorno) em bytes.**/
 		size: {
 			get: function() {return this._size;}
 		},
-		/**- `''integer'' loaded`: Retorna o tamanho parcial da requisição em bytes.**/
+		/**. ``''integer'' loaded``: Retorna o tamanho parcial da requisição em bytes.**/
 		loaded: {
 			get: function() {return this._loaded;}
 		},
-		/**- `''number'' progress`: Retorna o progresso da requisição (de 0 a 1).**/
+		/**. ``''number'' progress``: Retorna o progresso da requisição (de 0 a 1).**/
 		progress: {
 			get: function() {return this._size === 0 ? 1 : this._loaded/this._size;}
 		},
-		/**- `''string'' print()`: Retorna uma string contendo informações da requisição.**/
+		/**. ``''string'' print()``: Retorna uma string contendo informações da requisição.**/
 		print: {
 			value: function() {
 				let print = [
@@ -3600,11 +3563,11 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return print.join(" | ");
 			}
 		},
-		/**- `''void'' abort()`: aborta a requisição;**/
+		/**. ``''void'' abort()``: aborta a requisição;**/
 		abort: {
 			value: function() {this._request.abort();}
 		},
-		/**- `''void'' content(string type, string td=\t,string tr=\n)`: Retorna o conteúdo da requisição ou `null` se indefinido ou com erro.
+		/**. ``''void'' content(string type, string td=\t,string tr=\n)``: Retorna o conteúdo da requisição ou `null` se indefinido ou com erro.
 		- O argumento opcional `type`, define o tipo do retorno a partir do conteúdo da requisição, podendo ser `text`, `xml`, `html`, `xhtml`, `svg`, `json` e `csv`.
 		- No caso de retorno `csv`, os argumentos opcionais `td` e `tr` definem os caracteres que separam as colunas e as linhas, respectivamente.//FIXME md5 checksum hex**/
 		content: {
@@ -3635,7 +3598,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				} catch(e) {return null;}
 			}
 		},
-		/**- `''void'' _reset()`: Reinicia valores para a requisição;**/
+		/**. ``''void'' _reset()``: Reinicia valores para a requisição;**/
 		_reset: {
 			value: function() {
 				this._time  = new Date().valueOf();
@@ -3646,7 +3609,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					this._request.timeout = this.maxtime;
 			}
 		},
-		/**- `''void'' send(void data, string method="POST")`: Envia uma requisição web.
+		/**. ``''void'' send(void data, string method="POST")``: Envia uma requisição web.
 		- Os argumentos opcionais `data` e `method` definem o pacote de dados a ser enviado e o tipo do envio, `GET`ou `POST`, respectivamente.**/
 		send: {
 			value: function(data, method) {
@@ -3677,7 +3640,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				}
 			}
 		},
-		/**- `''void'' read(string readAs)`: Lê o conteúdo de um arquivo (objeto `File`).
+		/**. ``''void'' read(string readAs)``: Lê o conteúdo de um arquivo (objeto `File`).
 		- O argumento opcional `readAs` define o modo de leitura, que pode ser `binary`, `text` ou `buffer`. Se omitido, será atribído de acordo com o tipo do arquivo ou `binary`.**/
 		read: {
 			value: function(readAs) {
@@ -3705,7 +3668,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 
 /*============================================================================*/
 	/**### Figuras
-	```**constructor** ''object'' __SVG(''number'' width=100, ''number'' height=100, ''number'' xmin=0, ''number'' ymin=0)```
+	``**constructor** ''object'' __SVG(''number'' width=100, ''number'' height=100, ''number'' xmin=0, ''number'' ymin=0)``
 	Construtor de imagens SVG.
 	Os argumentos são opcionais e estão relacionados ao atributo [`viewBox`](https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/viewBox) do elemento SVG.
 	{**/
@@ -3734,7 +3697,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 
 	Object.defineProperties(__SVG.prototype, {
 		constructor: {value: __SVG},
-		/**- `''node'' last`: Define ou retorna o último nó adicionado ao SVG.**/
+		/**. ``''node'' last``: Define ou retorna o último nó adicionado ao SVG.**/
 		last: {
 			get: function()  {return this._last;},
 			set: function(svg) {
@@ -3742,7 +3705,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				this._last = svg;
 			}
 		},
-		/**- `''object'' attribute(object attr)`: Define os atributos do último elemento adicionado e retorna o próprio objeto.
+		/**. ``''object'' attribute(object attr)``: Define os atributos do último elemento adicionado e retorna o próprio objeto.
 		- O argumento `attr` é um objeto cujas chaves representam o valor do atributo e seu respectivo valores.**/
 		attribute: {
 			value: function(attr) {
@@ -3750,7 +3713,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return this;
 			}
 		},
-		/**- `''object'' title(string value)`: Define um título (dica) ao último elemento adicionado e retorna o próprio objeto.
+		/**. ``''object'' title(string value)``: Define um título (dica) ao último elemento adicionado e retorna o próprio objeto.
 		- O argumento `value` é o texto da dica.**/
 		title: {
 			value: function(value) {
@@ -3760,7 +3723,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return this;
 			}
 		},
-		/**- `''object'' lines(''array'' x, ''array'' y, ''boolean'' close=false)`: Define diversos segmentos de reta a partir de um conjunto de coordenadas e retorna o próprio objeto.
+		/**. ``''object'' lines(''array'' x, ''array'' y, ''boolean'' close=false)``: Define diversos segmentos de reta a partir de um conjunto de coordenadas e retorna o próprio objeto.
 		- Os argumentos `x` e `y` são as coordenadas (x,y) e o argumento `close` indica se o último ponto deve voltar à origem.**/
 		lines: {
 			value: function(x, y, close) {
@@ -3774,7 +3737,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return this.attribute({d: line.join(" ")});
 			}
 		},
-		/**- `''object'' circle(number cx, number cy, number r)`: Define um círculo e retorna o próprio objeto.
+		/**. ``''object'' circle(number cx, number cy, number r)``: Define um círculo e retorna o próprio objeto.
 		- Os argumentos `cx`, `cy` e `r` são o centro em x e y e o raio, respectivamente.**/
 		circle: {
 			value: function(cx, cy, r) {
@@ -3784,7 +3747,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 
 			}
 		},
-		/**- `''object'' semicircle(number cx, number cy, number r, number start, number width)`: Define um semicírculo e retorna o próprio objeto.
+		/**. ``''object'' semicircle(number cx, number cy, number r, number start, number width)``: Define um semicírculo e retorna o próprio objeto.
 		- Os argumentos `cx`, `cy` e `r` são o centro em x e y e o raio, respectivamente. Os argumentos `start` e `width` indicam o ângulo inicial e seu tamanho, respectivamente.**/
 		semicircle: {
 			value: function(cx, cy, r, start, width) {//FIXME quanto width é negativo, o lance é diferente
@@ -3802,7 +3765,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return this.attribute({d: d.join(" ")});
 			}
 		},
-		/**- `''object'' rect(number x, number y, number width, number height)`: Define um retângulo e retorna o próprio objeto.
+		/**. ``''object'' rect(number x, number y, number width, number height)``: Define um retângulo e retorna o próprio objeto.
 		- Os argumentos `x` e `y` definem o ponto de partida da figura e os argumentos `width` e `height` definem o comprimento e a altura do retângulo, respectivamente.**/
 		rect: {
 			value: function(x, y, width, height) {
@@ -3812,7 +3775,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 
 			}
 		},
-		/**- `''object'' path(string path)`: Define um nó SVG a partir de uma sequência de comandos e retorna o próprio objeto.
+		/**. ``''object'' path(string path)``: Define um nó SVG a partir de uma sequência de comandos e retorna o próprio objeto.
 		- O argumento `path` define os comandos.**/
 		path: {
 			value: function(path) {
@@ -3821,7 +3784,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return this.attribute({d: path});
 			}
 		},
-		/**- `''object'' text(number x, number y, string text, string point)`: Define um SVG textual e retorna o próprio objeto.
+		/**. ``''object'' text(number x, number y, string text, string point)``: Define um SVG textual e retorna o próprio objeto.
 		- Os argumentos `x` e `y` definem o ponto de referência do texto. O argumento `text` define o valor do texto e o argumento `point` define a âncora da referência que começa com `v` (vertical) ou `h` (horizontal) seguida da inicial dos pontos cardeais (`n`, `s`, `w`, `l`, `c`, etc...).**/
 		text: {
 			value: function(x, y, text, point) {
@@ -3842,7 +3805,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return this.attribute(attr);
 			}
 		},
-		/**- `''object'' ellipse(number cx, number cy, number rx, number ry)`: Define uma elípse e retorna o próprio objeto.
+		/**. ``''object'' ellipse(number cx, number cy, number rx, number ry)``: Define uma elípse e retorna o próprio objeto.
 		- Os argumentos `cx`, `cy`, `rx` e `ry` definem o centro de referência em x e y e os raios de x e y, respectivamente.**/
 		ellipse: {
 			value: function(cx, cy, rx, ry) {
@@ -3851,7 +3814,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return this.attribute({cx: cx, cy: cy, rx: rx, ry: ry});
 			}
 		},
-		/**- `''node'' svg()`: Retorna o elemento SVG.**/
+		/**. ``''node'' svg()``: Retorna o elemento SVG.**/
 		svg: {
 			value: function() {return this._svg;}
 		},
@@ -3864,7 +3827,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 	/**### Análise de Dados
 
 	#### Análise Quantitativa
-	```**constructor** ''object'' __Data2D(''array'' x, ''any'' y)```
+	``**constructor** ''object'' __Data2D(''array'' x, ''any'' y)``
 	Análise de dados em duas dimensões.
 	O argumento `x` corresponde a uma lista de valores (array) de referência que aceita valores numéricos, de tempo, data e data/tempo, conforme regras da biblioteca.
 	O argumento `y` é a resposta em função de `x`, podendo ser uma lista de valores numéricos (array), uma constante numérica ou uma função. No caso de função, `y` receberá o valor de `y(x)`.
@@ -3922,19 +3885,19 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 
 	Object.defineProperties(__Data2D.prototype, {
 		constructor: {value: __Data2D},
-		/**- `''array'' x`: Retorna os valores do argumento `x` ajustado.**/
+		/**. ``''array'' x``: Retorna os valores do argumento `x` ajustado.**/
 		x: {
 			get: function() {return this._x;}
 		} ,
-		/**- `''array'' y`: Retorna os valores do argumento `y` ajustado.**/
+		/**. ``''array'' y``: Retorna os valores do argumento `y` ajustado.**/
 		y: {
 			get: function() {return this._y;}
 		},
-		/**- `''boolean'' error`: Se o conjunto tiver menos que um par de valores, retornará verdadeiro.**/
+		/**. ``''boolean'' error``: Se o conjunto tiver menos que um par de valores, retornará verdadeiro.**/
 		error: {
 			get: function() {return this._y.length < 2 || this._x.length < 2;}
 		},
-		/**- `''object'' leastSquares`: Aplica o método dos mínimos quadrados ao conjunto de dados e retorna objeto contendo o coeficiente angular `a` e o linear `b` de `y = ax + b`.**/
+		/**. ``''object'' leastSquares``: Aplica o método dos mínimos quadrados ao conjunto de dados e retorna objeto contendo o coeficiente angular `a` e o linear `b` de `y = ax + b`.**/
 		leastSquares: {
 			get: function () {
 				if (this.error) return {a: 0, b: 0};
@@ -3960,7 +3923,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return this.leastSquares;
 			}
 		},
-		/**- `''object'' standardDeviation`: Retorna o desvio padrão entre o conjunto de dados.**/
+		/**. ``''object'' standardDeviation``: Retorna o desvio padrão entre o conjunto de dados.**/
 		standardDeviation: {
 			get: function() {
 				if (this.error) return Infinity;
@@ -3973,8 +3936,8 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return this.standardDeviation;
 			}
 		},
-		/**- `''object'' linearFit`: Retorna um objeto contendo os dados da regressão linear ou `null` em caso de erro.
-		- O objeto retornado possui as chaves `t` (tipo/nome da regressão); `a` e `b` (coeficientes da regressão); `f` (função da regressão); `d`: (desvio padrão), `m` (representação visual da regressão); e `s` (igual a `m` mas exibindo os coeficientes).**/
+		/**. ``''object'' linearFit``: Retorna um objeto contendo os dados da regressão linear ou `null` em caso de erro.
+		- O objeto retornado possui as chaves `t` (tipo/nome da regressão); `a` e `b` (coeficientes da regressão); `f` (função da regressão); `d``: (desvio padrão), `m` (representação visual da regressão); e `s` (igual a `m` mas exibindo os coeficientes).**/
 		linearFit: {
 			get: function() {
 				if (this.error) return null;
@@ -3991,7 +3954,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return this._linearFit;
 			}
 		},
-		/**- `''object'' geometricFit`: Retorna um objeto contendo os dados da regressão geométrica ou `null` em caso de erro.
+		/**. ``''object'' geometricFit``: Retorna um objeto contendo os dados da regressão geométrica ou `null` em caso de erro.
 		- O objeto retornado possui as mesmas caractrísticas de `linearFit`. **/
 		geometricFit: {
 			get: function() {
@@ -4018,7 +3981,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return this._geometricFit;
 			}
 		},
-		/**- `''object'' exponentialFit`: Retorna um objeto contendo os dados da regressão exponencial ou `null` em caso de erro.
+		/**. ``''object'' exponentialFit``: Retorna um objeto contendo os dados da regressão exponencial ou `null` em caso de erro.
 		- O objeto retornado possui as mesmas caractrísticas de `linearFit`. **/
 		exponentialFit: {
 			get: function() {
@@ -4045,7 +4008,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return this._exponentialFit;
 			}
 		},
-		/**- `''object'' logarithmicFit`: Retorna um objeto contendo os dados da regressão logarítmica ou `null` em caso de erro.
+		/**. ``''object'' logarithmicFit``: Retorna um objeto contendo os dados da regressão logarítmica ou `null` em caso de erro.
 		- O objeto retornado possui as mesmas caractrísticas de `linearFit`.**/
 		logarithmicFit: {
 			get: function() {
@@ -4072,7 +4035,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return this._logarithmicFit;
 			}
 		},
-		/**- `''object'' bestDeviation`: Retorna o objeto contendo os dados da regressão com o menor valor de desvio padrão.**/
+		/**. ``''object'' bestDeviation``: Retorna o objeto contendo os dados da regressão com o menor valor de desvio padrão.**/
 		bestDeviation: {
 			get: function() {
 				if (this.error) return null;
@@ -4093,7 +4056,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return this._bestDeviation;
 			}
 		},
-		/**- `''number'' area`: Retorna a soma da área entre a reta que liga as coordenadas e o eixo `y` em zero ou `null` em caso de falha.**/
+		/**. ``''number'' area``: Retorna a soma da área entre a reta que liga as coordenadas e o eixo `y` em zero ou `null` em caso de falha.**/
 		area: {
     	get: function() {
 	    	if (this.error) return null;
@@ -4108,7 +4071,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return this._area;
 		  }
     },
-    /**- `''number'' average`: Retorna a média do valor obtido com o atributo `area` ou `null` em caso de falha.**/
+    /**. ``''number'' average``: Retorna a média do valor obtido com o atributo `area` ou `null` em caso de falha.**/
     average: {
     	get: function() {
     		if (this.area === null) return null;
@@ -4120,7 +4083,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
     	}
     },
     /**
-    - `''object'' datetime`: retorna um objeto com as informações de data, tempo e data/tempo (chaves `date`, `time` e `datetime`) dos valores do eixo `x`.**/
+    . ``''object'' datetime``: retorna um objeto com as informações de data, tempo e data/tempo (chaves `date`, `time` e `datetime`) dos valores do eixo `x`.**/
     datetime: {
     	get: function() {
     		if (this.error) return null;
@@ -4154,7 +4117,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 
 
 	/**#### Análise Gráfica
-	```**constructor** ''object'' __Plot2D(''boolean'' ratio=false)```
+	``**constructor** ''object'' __Plot2D(''boolean'' ratio=false)``
 	Objeto para preparar dados para construção de gráfico 2D.
 	O argumento `ratio`, se falso, define que o gráfico será de coordenadas no plano cartesiano e, se verdadeiro, será de grandezas proporcionais (circular ou colunas)
 	{**/
@@ -4176,27 +4139,27 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 
 	Object.defineProperties(__Plot2D.prototype, {
 		constructor: {value: __Plot2D},
-		/**- `''number'' _xMax`: Define ou retorna o maior valor da coordenada `x`.**/
+		/**. ``''number'' _xMax``: Define ou retorna o maior valor da coordenada `x`.**/
 		_xMax: {
 			get: function()  {return this._max.x;},
 			set: function(x) {if (x > this._max.x) this._max.x = x;}
 		},
-		/**- `''number'' _yMax`: Define ou retorna o maior valor da coordenada `y`.**/
+		/**. ``''number'' _yMax``: Define ou retorna o maior valor da coordenada `y`.**/
 		_yMax: {
 			get: function()  {return this._max.y;},
 			set: function(y) {if (y > this._max.y) this._max.y = y;}
 		},
-		/**- `''number'' _xMin`: Define ou retorna menor valor da coordenada `x`.**/
+		/**. ``''number'' _xMin``: Define ou retorna menor valor da coordenada `x`.**/
 		_xMin: {
 			get: function()  {return this._min.x;},
 			set: function(x) {if (x < this._min.x) this._min.x = x;}
 		},
-		/**- `''number'' _xMin`: Define ou retorna menor valor da coordenada `y`.**/
+		/**. ``''number'' _xMin``: Define ou retorna menor valor da coordenada `y`.**/
 		_yMin: {
 			get: function()  {return this._min.y;},
 			set: function(y) {if (y < this._min.y) this._min.y = y;}
 		},
-		/**- `''number'' _xScale`: Transforma a coordenada horizontal de real para gráfica.**/
+		/**. ``''number'' _xScale``: Transforma a coordenada horizontal de real para gráfica.**/
 		_xScale: {
 			value: function(x) {
 				let dx = this._xMax - this._xMin;
@@ -4205,7 +4168,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return X;
 			}
 		},
-		/**- `''number'' _yScale`: Transforma a coordenada vertical de real para gráfica.**/
+		/**. ``''number'' _yScale``: Transforma a coordenada vertical de real para gráfica.**/
 		_yScale: {
 			value: function(y) {
 				let dy = this._yMax - this._yMin;
@@ -4214,13 +4177,13 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return Y;
 			}
 		},
-		/**- `''number'' _dx`: Retorna o menor valor real de `x`.**/
+		/**. ``''number'' _dx``: Retorna o menor valor real de `x`.**/
 		_dx: {
 			get: function() {
 				return Math.abs(this._xMax - this._xMin)/this._cfg.xSize;
 			}
 		},
-		/**- `''array'' _xSpace: Retorna uma lista contendo todos os valores possíveis de `x`**/
+		/**. ``''array'' _xSpace: Retorna uma lista contendo todos os valores possíveis de `x`**/
 		_xSpace: {
 			get: function() {
 				let x   = [this._xMin];
@@ -4235,33 +4198,33 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return x;
 			}
 		},
-		/**- `''object'' _cfg`: Registra as configurações do gráfico:
+		/**. ``''object'' _cfg``: Registra as configurações do gráfico:
 		- {
 				{
-					- `''number'' vertical`: registra o menor tamanho da tela do dispositivo como referência.
-					- `''number'' horizontal`: registra o maior tamanho da tela do dispositivo como referência.
-					- `''number'' xInit`: Registra o início do eixo `x` (horizontal) em porcentagem.
-					- `''number'' xEnd`: Registra o fim do eixo `x` (horizontal) em porcentagem.
-					- `''number'' yInit`: Registra o início do eixo `y` (vertical) em porcentagem.
-					- `''number'' yEnd`: Registra o fim do eixo `y` (vertical) em porcentagem.
-					- `''number'' points`: Número de pontos no gráfico.
-					- `''number'' padd`: Define um valor para espaçamento relativo.
-					- `''number'' width`: Registra o tamanho referencial horizontal do gráfico.
-					- `''number'' height`: Registra o tamanho referencial vertical do gráfico (proporcional à tela e ao tamanho).
-					- `''number'' xStart`: Coordenada horizontal da origem do gráfico.
-					- `''number'' xSize`: Tamanho do eixo `x`.
-					- `''number'' xMiddle`: Metade do eixo `x`.
-					- `''number'' xClose`: Fim do eixo `x`.
-					- `''number'' yStart`: Coordenada vertical da origem do gráfico.
-					- `''number'' ySize`: Tamanho do eixo `y`.
-					- `''number'' yMiddle`: Metade do eixo `y`.
-					- `''number'' yClose`: Fim do eixo `y`.
-					- `''number'' top`: A metade do espaço superior.
-					- `''number'' bottom`: A metade do espaço inferior.
-					- `''number'' left`: A metade do espaço esquerdo.
-					- `''number'' right`: A metade do espaço direito.
-					- `''number'' padding`: Retorna o espaçamento definido.
-					- `''array'' colors`: Lista de cores.
+					. ``''number'' vertical``: registra o menor tamanho da tela do dispositivo como referência.
+					. ``''number'' horizontal``: registra o maior tamanho da tela do dispositivo como referência.
+					. ``''number'' xInit``: Registra o início do eixo `x` (horizontal) em porcentagem.
+					. ``''number'' xEnd``: Registra o fim do eixo `x` (horizontal) em porcentagem.
+					. ``''number'' yInit``: Registra o início do eixo `y` (vertical) em porcentagem.
+					. ``''number'' yEnd``: Registra o fim do eixo `y` (vertical) em porcentagem.
+					. ``''number'' points``: Número de pontos no gráfico.
+					. ``''number'' padd``: Define um valor para espaçamento relativo.
+					. ``''number'' width``: Registra o tamanho referencial horizontal do gráfico.
+					. ``''number'' height``: Registra o tamanho referencial vertical do gráfico (proporcional à tela e ao tamanho).
+					. ``''number'' xStart``: Coordenada horizontal da origem do gráfico.
+					. ``''number'' xSize``: Tamanho do eixo `x`.
+					. ``''number'' xMiddle``: Metade do eixo `x`.
+					. ``''number'' xClose``: Fim do eixo `x`.
+					. ``''number'' yStart``: Coordenada vertical da origem do gráfico.
+					. ``''number'' ySize``: Tamanho do eixo `y`.
+					. ``''number'' yMiddle``: Metade do eixo `y`.
+					. ``''number'' yClose``: Fim do eixo `y`.
+					. ``''number'' top``: A metade do espaço superior.
+					. ``''number'' bottom``: A metade do espaço inferior.
+					. ``''number'' left``: A metade do espaço esquerdo.
+					. ``''number'' right``: A metade do espaço direito.
+					. ``''number'' padding``: Retorna o espaçamento definido.
+					. ``''array'' colors``: Lista de cores.
 				}
 		- }**/
 		_cfg: {
@@ -4305,7 +4268,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				_subdiv:   {stroke: "grey", "stroke-width": 0.5, "stroke-dasharray": "8,8", "stroke-linecap": "round"},
 			}
 		},
-		/**- `''void'' _plan()`: Constrói a área do gráfico cartesiano.**/
+		/**. ``''void'' _plan()``: Constrói a área do gráfico cartesiano.**/
 		_plan: {
 			value: function(svg) {
 				svg.text( /* título */
@@ -4503,22 +4466,22 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 
 
 
-		/**- `''string'' xLabel`: Define ou retorna o valor do rótulo do eixo x.**/
+		/**. ``''string'' xLabel``: Define ou retorna o valor do rótulo do eixo x.**/
 		xLabel: {
 			get: function()  {return this._xLabel;},
 			set: function(x) {this._xLabel = String(x);}
 		},
-		/**- `''string'' yLabel`: Define ou retorna o valor do rótulo do eixo y.**/
+		/**. ``''string'' yLabel``: Define ou retorna o valor do rótulo do eixo y.**/
 		yLabel: {
 			get: function()  {return this._yLabel;},
 			set: function(x) {this._yLabel = String(x);}
 		},
-		/**- `''string'' title`: Define ou retorna o valor do título do gráfico.**/
+		/**. ``''string'' title``: Define ou retorna o valor do título do gráfico.**/
 		title: {
 			get: function()  {return this._title;},
 			set: function(x) {this._title = String(x);}
 		},
-		/**- `''string'' xAxis`: Define ou retorna o tipo de dado do eixo `x`:
+		/**. ``''string'' xAxis``: Define ou retorna o tipo de dado do eixo `x`:
 		- {
 			(
 				* number
@@ -4537,7 +4500,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		
 		
 		
-		/**- `''boolean'' add(''array'' x, ''any'' y, ''string'' name, ''string'' option)`: Adiciona dados para plotagem e retorna falso se algum dado falhar.
+		/**. ``''boolean'' add(''array'' x, ''any'' y, ''string'' name, ''string'' option)``: Adiciona dados para plotagem e retorna falso se algum dado falhar.
 		- O argumento `x` deve ser uma lista de valores numéricos ou de data/tempo, se o gráfico for de plano cartesiano, ou uma lista de identificadores no caso de gráfico proporcional. No caso de gráfico proporcional, aceita-se um objeto com os identificadores e seus respectivos valores como atributos.
 		- O argumento `y` pode ser uma função, uma constante ou uma lista de valores numéricos, no caso de gráfico cartesiano, ou uma lista de valores correspondentes aos identificadores no caso de gráfico proporcional. No caso de gráfico proporcional, se `x` for um objeto, `y` será ignorado.
 		- O argumento `name` é utilizado para identificar o gráfico no caso de plano cartesiano.
