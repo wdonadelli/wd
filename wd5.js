@@ -4004,11 +4004,11 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return this._logarithmicFit;
 			}
 		},
-		/**. ``''object'' bestDeviation``: Retorna o objeto contendo os dados da regressão com o menor valor de desvio padrão.**/
-		bestDeviation: {
+		/**. ``''object'' minDeviation``: Retorna o objeto contendo os dados da regressão com o menor valor de desvio padrão.**/
+		minDeviation: {
 			get: function() {
 				if (this.error) return null;
-				if ("_bestDeviation" in this) return this._bestDeviation;
+				if ("_minDeviation" in this) return this._minDeviation;
 				let fit = [
 					"linearFit", "geometricFit", "exponentialFit", "logarithmicFit"
 				];
@@ -4021,8 +4021,8 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 						 best.name  = id;
 					}
 				}
-				this._bestDeviation = best.name === null ? null : this[best.name];
-				return this._bestDeviation;
+				this._minDeviation = best.name === null ? null : this[best.name];
+				return this._minDeviation;
 			}
 		},
 		/**. ``''number'' area``: Retorna a soma da área entre a reta que liga as coordenadas e o eixo ``y`` em zero ou ``null`` em caso de falha.**/
@@ -4222,10 +4222,15 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				_title:    {fill: "black", "font-weight": "bold", "font-size": "1.5em"},
 				_label:    {fill: "black"},
 				_area:     {stroke: "black", fill: "none", "stroke-width": 2, "stroke-linecap": "round"},
-				_line:     {fill: "none", "stroke-width": 3, "stroke-linecap": "round"},
-				_dash:     {fill: "none", "stroke-width": 1, "stroke-linecap": "round", "stroke-dasharray": "5,5"},
+				_internal: {stroke: "grey", "stroke-width": 0.5, "stroke-dasharray": "6,6", "stroke-linecap": "round"},
 				_subtitle: {"stroke-width": 2, "fill-opacity": 1, "stroke-opacity": 0.1},
-				_subdiv:   {stroke: "grey", "stroke-width": 0.5, "stroke-dasharray": "8,8", "stroke-linecap": "round"},
+
+
+				_line:     {fill: "none", "stroke-width": 3, "stroke-linecap": "round"},
+				_sum:      {"fill-opacity": 0.5, "stroke-width": 3, "stroke-linecap": "round"},
+				_dash:     {fill: "none", "stroke-width": 1, "stroke-linecap": "round", "stroke-dasharray": "5,5"},
+
+
 			}
 		},
 		/**. ``''void'' _plan()``: Constrói a área do gráfico cartesiano.**/
@@ -4288,11 +4293,11 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 						svg.lines( /* subdivisões horizontais */
 							div.horizontal,
 							[div.point.y, div.point.y]
-						).attribute(this._cfg._subdiv)
+						).attribute(this._cfg._internal)
 						.lines( /* subdivisões verticais */
 							[div.point.x, div.point.x],
 							div.vertical
-						).attribute(this._cfg._subdiv);
+						).attribute(this._cfg._internal);
 					}
 
 
@@ -4375,7 +4380,6 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					let x = this._xSpace;
 					while(++i < data.length) {
 						if (!data[i].f) continue;
-						console.log("aqui:", x[0], data[i].y(x[0]));
 						let list = __Data2D(x, data[i].y);
 						if (list === null) return false;
 						data[i].x = list.x;
@@ -4390,8 +4394,8 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				if (!this._ratio) {
 					let i = -1;
 					while(++i < data.length) {
-						let x     = data[i].x;
-						let y     = data[i].y;
+						let x     = data[i].x.slice();
+						let y     = data[i].y.slice();
 						let name  = data[i].name;
 						let color = data[i].color;
 						let self  = this;
@@ -4400,24 +4404,62 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 						x.forEach(function(v,i,a){a[i] = self._xScale(v);});
 						y.forEach(function(v,i,a){a[i] = self._yScale(v);});
 
-						if (data[i].type === "line") {
+						if (data[i].type === "line" || data[i].type === "line_dots") {
 							svg.lines(x, y)
 							.attribute(this._cfg._line)
 							.attribute({stroke: colors.valueOf(color)});
 						}
-						else if (data[i].type === "dash") {
+						if (data[i].type === "dash") {
 							console.log(x, y);
 							svg.lines(x, y)
 							.attribute(this._cfg._dash)
 							.attribute({stroke: colors.valueOf(color)});
 						}
-						else if (data[i].type === "dot") {
+						if (data[i].type === "dots" || data[i].type === "line_dots") {
 							let j = -1;
 							while(++j < x.length) {
 								svg.circle(x[j], y[j], 5)
-								.attribute({stroke: colors.valueOf(color)});
+								.attribute({stroke: colors.valueOf(color), fill: colors.valueOf(color)});
 							}
 						}
+						if (data[i].type === "sum") {
+							//FIXME calcular soma
+							x.unshift(x[0]);
+							x.push(x[x.length - 1]);
+							y.unshift(self._yScale(0));
+							y.push(self._yScale(0));
+							svg.lines(x, y, true)
+							.attribute(this._cfg._sum)
+							.attribute({stroke: colors.valueOf(color), fill: colors.valueOf(color)});
+						}
+						if (data[i].type === "avg") {
+							//FIXME calcular a média
+							let fit = __Data2D(data[i].x, data[i].y);
+							console.log("message: ", data[i].y);
+
+
+
+							let avg = fit.average;
+							let xi  = this._xScale(this._xMin);
+							let xn  = this._xScale(this._xMax);
+							let ya  = this._yScale(avg);
+
+
+
+
+							svg.lines(x, y)
+							.attribute(this._cfg._dash)
+							.attribute({stroke: colors.valueOf(color)});
+
+							svg.lines([xi, xn], [ya, ya])
+							.attribute(this._cfg._line)
+							.attribute({stroke: colors.valueOf(color)});
+
+
+
+						}
+
+
 
 
 					}
@@ -4475,7 +4517,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		|geometricFit|Traça a regressão geométrica.|
 		|logarithmicFit|Traça a regressão logarítmica.|
 		|exponentialFit|Traça a regressão exponencial.|
-		|bestDeviation|Traça a a regressão com o menor valor de desvio padrão.|
+		|minDeviation|Traça a a regressão com o menor valor de desvio padrão.|
 		|average|Traça o valor médio.|
 		|area|Traça a área.|
 		|line|Traça uma linha.|**/
@@ -4483,8 +4525,12 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			value: function(x, y, name, option) {
 				let xdata = __Type(x);
 				let ydata = __Type(y);
-				/* gráfico proporcional --------------------------------------------- */
-				/* objeto ----------------------------------------------------------- */
+
+				/*----------------------------------------------------------------------
+					gráfico proporcional
+				----------------------------------------------------------------------*/
+
+				/* objeto ----------------------------------------------------------  */
 				if (this._ratio) {
 					if (this._data.length === 0) this._data.push({});
 					let data = this._data[0];
@@ -4506,10 +4552,26 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					}
 					return this.add(obj);
 				}
-				/* gráfico cartesiano ----------------------------------------------- */
-				option   = String(option);
-				let data = __Data2D(x, y);
+
+				/*----------------------------------------------------------------------
+					gráfico cartesiano
+				----------------------------------------------------------------------*/
+
+				/* checando dados */
+				let data  = __Data2D(x, y);
 				if (data.error) return false;
+				/* defindo curvas */
+				option    = String(option).trim();
+				let types = {
+					function: {sum: "sum", avg: "avg", line: "line", default: "line"},
+					finite:   {default: "line"},
+					array:    {sum: "sum", avg: "avg", line: "line", line_dots: "line_dots", default: "dots"},
+					fit:      {
+						linear:    "linearFit",    exponential: "exponentialFit",
+						geometric: "geometricFit", logarithmic: "logarithmicFit",
+						minimum:   "minDeviation"
+					}
+				};
 				/* definindo previamente os limites superiores e inferiores */
 				let xLimit = __Array(data.x);
 				let yLimit = ydata.array ? __Array(data.y) : null;
@@ -4519,72 +4581,54 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					this._yMin = yLimit.min;
 					this._yMax = yLimit.max;
 				}
+				/* definindo limites superiores e inferiores no caso de área */
+				if (option === "sum") {
+					this._xMin = 0;
+					this._xMax = 0;
+				}
+
 				/* Y é função ------------------------------------------------------- */
 				if (ydata.function) {
-					let types = ["area", "average"]
+					let curve = types.function;
 					this._data.push({
 						x:     [xLimit.min, xLimit.max],
 						y:     y,
 						name:  String(name),
 						f:     true,
-						type:  types.indexOf(option) >= 0 ? option : "line",
+						type:  option in curve ? curve[option] : curve.default,
 						color: ++this._color
 					});
 					return true;
 				}
 				/* Y é constante ---------------------------------------------------- */
 				if (ydata.finite) {
+					let curve = types.finite;
 					this._data.push({
 						x:     [xLimit.min, xLimit.max],
 						y:     [y, y],
 						name:  String(name),
 						f:     false,
-						type:  "line",
+						type:  option in curve ? curve[option] : curve.default,
 						color: ++this._color
 					});
 					return true;
 				}
 				/* Y é array -------------------------------------------------------- */
 				if (ydata.array) {
+					let curve = types.array;
 					this._data.push({
 						x:     data.x,
 						y:     data.y,
 						name:  String(name),
 						f:     false,
-						type:  option === "line" ? option : "dot",
+						type:  option in curve ? curve[option] : curve.default,
 						color: ++this._color
 					});
-					/* com opção ------------------------------------------------------ */
-					if (option in data) {
-						let fit = data[option];
+					/* regressões ----------------------------------------------------- */
+					if (option in types.fit) {
+						let fit = data[types.fit[option]];
 						if (fit === null) return false;
-						/* média -------------------------------------------------------- */
-						if (option === "average") {
-							let delta = __Data2D(data.x, fit).standardDeviation;
-							this._data.push({
-								x:     [xLimit.min, xLimit.max],
-								y:     [fit, fit],
-								name:  String(name)+", μ ≈ "+fit+", σ = ±"+delta,
-								f:     false,
-								type:  "line",
-								color: ++this._color
-							});
-							return true;
-						}
-						/* área --------------------------------------------------------- */
-						if (option === "area") {
-							this._data.push({
-								x:     data.x,
-								y:     data.y,
-								name:  String(name)+", ∑ ≈ "+fit,
-								f:     false,
-								type:  "area",
-								color: this._color
-							});
-							return true;
-						}
-						/* regressões --------------------------------------------------- */
-						if (!(/^([a-z]+Fit|bestDeviation)$/).test(option)) return false;
+						/* função principal */
 						this._data.push({
 								x:     [xLimit.min, xLimit.max],
 								y:     fit.f,
@@ -4593,6 +4637,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 								type:  "line",
 								color: ++this._color
 						});
+						/* desvio padrão */
 						if (fit.d === 0) return true;
 						this._data.push({
 								x:     [xLimit.min, xLimit.max],
@@ -4610,13 +4655,62 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 								type:  "dash",
 								color: this._color
 						});
-						return true;
 					}
+					return true;
+				}
+			}
+		},
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+					/* com opção ------------------------------------------------------
+					if (option in data) {
+						let fit = data[option];
+						if (fit === null) return false;
+
+						if (option === "average") {
+							let delta = __Data2D(data.x, fit).standardDeviation;
+							this._data.push({
+								x:     [xLimit.min, xLimit.max],
+								y:     [fit, fit],
+								name:  String(name)+", μ ≈ "+fit+", σ = ±"+delta,
+								f:     false,
+								type:  "line",
+								color: ++this._color
+							});
+							return true;
+						}
+
+						if (option === "area") {
+							this._data.push({
+								x:     data.x,
+								y:     data.y,
+								name:  String(name)+", ∑ ≈ "+fit,
+								f:     false,
+								type:  "area",
+								color: this._color
+							});
+							return true;
+						}
 					return true;
 				}
 				return false;
 			}
-		},
+		}, */
 
 
 
