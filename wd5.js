@@ -3759,7 +3759,12 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			}
 		},
 		/**. ``''object'' text(number x, number y, string text, string point)``: Define um SVG textual e retorna o próprio objeto.
-		. Os argumentos ``x`` e ``y`` definem o ponto de referência do texto. O argumento ``text`` define o valor do texto e o argumento ``point`` define a âncora da referência que começa com ``v`` (vertical) ou ``h`` (horizontal) seguida da inicial dos pontos cardeais (``n``, ``s``, ``w``, ``l``, ``c``, etc...).**/
+		. Os argumentos ``x``, ``y`` e ``text`` definem os pontos de referência (''x'', ''y'') e o valor do texto, respectivamente.
+		. O argumento ``point`` define a âncora da referência, composta por dois grupos. O primeiro grupo define o posicionamento, ``v`` para vertical ou ``h``. O segundo grupo define o ponto cardeal:
+		||Esquerda/Oeste|Centro|Direita/Leste|
+		|**Topo/Norte**|nw|n|ne|
+		|**Meio**|w|c|e|
+		|**Baixo/Sul**|sw|s|se|**/
 		text: {
 			value: function(x, y, text, point) {
 				let svg     = document.createElementNS("http://www.w3.org/2000/svg", "text");
@@ -3786,6 +3791,27 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				let svg = document.createElementNS("http://www.w3.org/2000/svg", "ellipse");
 				this.last = svg;
 				return this.attribute({cx: cx, cy: cy, rx: rx, ry: ry});
+			}
+		},
+		/**. ``''object'' frame(number x, number y, string text, string point)``: Funciona semelhante ao método ``text``, mas aceita quebra de linha e tabulação no início de cada linha. A primeira linha receberá uma formatação destacada, como um título.**/
+		frame: {
+			value: function(x, y, text, point) {
+				this.text(x, y, "", point);
+				let line = String(text).split("\n");
+				let i = -1;
+				while (++i < line.length) {
+					let span  = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+					let style = {
+						x: line[i][0] === "\t" ? "1em" : "0",
+						dy: i === 0 ? "0" : "1em",
+						"font-weight": i === 0 ? "bold" : "normal"
+					};
+					span.textContent = line[i].trim();
+					for (let j in style)
+						span.setAttribute(j, style[j]);
+					this.last.appendChild(span);
+				}
+				return this;
 			}
 		},
 		/**. ``''node'' svg()``: Retorna o elemento SVG.**/
@@ -3916,8 +3942,8 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				let b    = sqrs.b;
 				let func = function(x) {return a*x + b;}
 				let devi = __Data2D(this.y, __Array(this.x).convert(func, "finite")).standardDeviation;
-				let math = "y = a x + (b) ± d";
-				let show = math.replace("a", a).replace("b", b).replace("d", devi);
+				let math = "y = a x + (b) ± σ";
+				let show = math.replace("a", a).replace("b", b).replace("σ", devi);
 				this._linearFit = {
 					t: "linear", a: a, b: b, f: func, d: devi, m: math, s: show};
 				return this._linearFit;
@@ -3942,8 +3968,8 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				let b    = sqrs.a;
 				let func = function(x) {return a*Math.pow(x, b);}
 				let devi = __Data2D(this.y, __Array(this.x).convert(func, "finite")).standardDeviation;
-				let math = "y = a x^(b) ± d";
-				let show = math.replace("a", a).replace("b", b).replace("d", devi);
+				let math = "y = a x^(b) ± σ";
+				let show = math.replace("a", a).replace("b", b).replace("σ", devi);
 				this._geometricFit = {
 					t: "geometric", a: a, b: b, f: func, d: devi, m: math, s: show
 				};
@@ -3969,8 +3995,8 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				let b    = sqrs.a;
 				let func = function(x) {return a*Math.exp(b*x);}
 				let devi = __Data2D(this.y, __Array(this.x).convert(func)).standardDeviation;
-				let math = "y = a exp(b x) ± d";
-				let show = math.replace("a", a).replace("b", b).replace("d", devi);
+				let math = "y = a exp(b x) ± σ";
+				let show = math.replace("a", a).replace("b", b).replace("σ", devi);
 				this._exponentialFit = {
 					t: "exponential", a: a, b: b, f: func, d: devi, m: math, s: show
 				};
@@ -3996,8 +4022,8 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				let b    = Math.pow(sqrs.a, 1/sqrs.b);
 				let func = function(x) {return a*Math.log(b*x);}
 				let devi = __Data2D(this.y, __Array(this.x).convert(func)).standardDeviation;
-				let math = "y = a ln(b x) ± d";
-				let show = math.replace("a", a).replace("b", b).replace("d", devi);
+				let math = "y = a ln(b x) ± σ";
+				let show = math.replace("a", a).replace("b", b).replace("σ", devi);
 				this._logarithmicFit = {
 					t: "logarithmic", a: a, b: b, f: func, d: devi, m: math, s: show
 				};
@@ -4355,6 +4381,10 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				.attribute({fill: ncolor, stroke: ncolor, style: "cursor: pointer;"})
 				.attribute(this._cfg._subtitle)
 				.title(text);
+
+
+				svg.frame(x, y, text, "hnw").attribute({});
+				console.log(svg.last);
 			
 			
 			
@@ -4628,11 +4658,15 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					if (option in types.fit) {
 						let fit = data[types.fit[option]];
 						if (fit === null) return false;
+						let subtitle = [
+							String(name), "--------", fit.m, "a: "+fit.a, "b: "+fit.b, "σ: "+fit.d
+						];
+
 						/* função principal */
 						this._data.push({
 								x:     [xLimit.min, xLimit.max],
 								y:     fit.f,
-								name:  String(name)+", "+fit.s,
+								name:  subtitle.join("\n"),
 								f:     true,
 								type:  "line",
 								color: ++this._color
