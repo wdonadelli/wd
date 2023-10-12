@@ -3802,8 +3802,8 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				while (++i < line.length) {
 					let span  = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
 					let style = {
-						x: line[i][0] === "\t" ? "1em" : "0",
-						dy: i === 0 ? "0" : "1em",
+						x:  i === 0 ? x : x+4,
+						dy: i === 0 ? "0" : "1.5em",
 						"font-weight": i === 0 ? "bold" : "normal"
 					};
 					span.textContent = line[i].trim();
@@ -4249,9 +4249,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				_label:    {fill: "black"},
 				_area:     {stroke: "black", fill: "none", "stroke-width": 2, "stroke-linecap": "round"},
 				_internal: {stroke: "grey", "stroke-width": 0.5, "stroke-dasharray": "6,6", "stroke-linecap": "round"},
-				_subtitle: {"stroke-width": 2, "fill-opacity": 1, "stroke-opacity": 0.1},
-
-
+				_subtitle: {"stroke-width": 1, "stroke": "black", style: "cursor: help"},
 				_line:     {fill: "none", "stroke-width": 3, "stroke-linecap": "round"},
 				_sum:      {"fill-opacity": 0.5, "stroke-width": 3, "stroke-linecap": "round"},
 				_dash:     {fill: "none", "stroke-width": 1, "stroke-linecap": "round", "stroke-dasharray": "5,5"},
@@ -4378,17 +4376,12 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				let ncolor = colors.valueOf(color);
 
 				svg.rect(x, y, side, side)
-				.attribute({fill: ncolor, stroke: ncolor, style: "cursor: pointer;"})
+				.attribute({fill: ncolor})
 				.attribute(this._cfg._subtitle)
 				.title(text);
-
-
-				svg.frame(x, y, text, "hnw").attribute({});
-				console.log(svg.last);
-			
-			
-			
-			
+				svg.text(this._cfg.right,y-2,text.split("\n")[0], "hs")
+				.title(text.split("\n")[0])
+				.attribute({fill: ncolor, "font-size": "small"});
 			}
 		},
 
@@ -4402,7 +4395,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 
 				/* definindo a área do gráfico -------------------------------------- */
 				let svg = __SVG(this._cfg.width, this._cfg.height);
-				svg.attribute(this._cfg._svg)
+				svg.attribute(this._cfg._svg).attribute({style: "border: 1px solid black;margin: 5em;"})
 
 				/* redefinindo funções para array ----------------------------------- */
 				if (!this._ratio) {
@@ -4424,79 +4417,73 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				if (!this._ratio) {
 					let i = -1;
 					while(++i < data.length) {
+						/* obtendo dados da plotagem */
 						let x     = data[i].x.slice();
 						let y     = data[i].y.slice();
 						let name  = data[i].name;
 						let color = data[i].color;
 						let self  = this;
-						this._subtitle(svg, name, color)
-						
+						/* transformação de coordenadas reais para virtuais */
 						x.forEach(function(v,i,a){a[i] = self._xScale(v);});
 						y.forEach(function(v,i,a){a[i] = self._yScale(v);});
-
-						if (data[i].type === "line" || data[i].type === "line_dots") {
+						/* plotando de acordo com o tipo de curva */
+						if (data[i].type === "line" || data[i].type === "link") {
 							svg.lines(x, y)
 							.attribute(this._cfg._line)
-							.attribute({stroke: colors.valueOf(color)});
+							.attribute({stroke: colors.valueOf(color)})
+							this._subtitle(svg, name, color);
 						}
 						if (data[i].type === "dash") {
 							console.log(x, y);
 							svg.lines(x, y)
 							.attribute(this._cfg._dash)
 							.attribute({stroke: colors.valueOf(color)});
+							this._subtitle(svg, name, color);
 						}
-						if (data[i].type === "dots" || data[i].type === "line_dots") {
+						if (data[i].type === "dots" || data[i].type === "link") {
 							let j = -1;
 							while(++j < x.length) {
-								svg.circle(x[j], y[j], 5)
-								.attribute({stroke: colors.valueOf(color), fill: colors.valueOf(color)});
+								svg.circle(x[j], y[j], 3)
+								.attribute({fill: colors.valueOf(color)})
+								.title("("+data[i].x[j]+", "+data[i].y[j]+")");
 							}
+							this._subtitle(svg, name, color);
 						}
 						if (data[i].type === "sum") {
-							//FIXME calcular soma
+							let fit = __Data2D(data[i].x, data[i].y);
+							name   += "\n∑ yΔx ≈ "+fit.area;
 							x.unshift(x[0]);
 							x.push(x[x.length - 1]);
 							y.unshift(self._yScale(0));
 							y.push(self._yScale(0));
 							svg.lines(x, y, true)
 							.attribute(this._cfg._sum)
-							.attribute({stroke: colors.valueOf(color), fill: colors.valueOf(color)});
+							.attribute({stroke: colors.valueOf(color), fill: colors.valueOf(color)})
+							.title(name);
+							this._subtitle(svg, name, color);
 						}
 						if (data[i].type === "avg") {
-							//FIXME calcular a média
 							let fit = __Data2D(data[i].x, data[i].y);
-							console.log("message: ", data[i].y);
-
-
-
 							let avg = fit.average;
 							let xi  = this._xScale(this._xMin);
 							let xn  = this._xScale(this._xMax);
 							let ya  = this._yScale(avg);
 
-
-
-
 							svg.lines(x, y)
 							.attribute(this._cfg._dash)
-							.attribute({stroke: colors.valueOf(color)});
+							.attribute({stroke: colors.valueOf(color)})
+							.title(name);
 
+							name += "\n(∑ yΔx)/ΔX ≈ "+avg;
 							svg.lines([xi, xn], [ya, ya])
 							.attribute(this._cfg._line)
-							.attribute({stroke: colors.valueOf(color)});
-
-
-
+							.attribute({stroke: colors.valueOf(color)})
+							.title(name);
+							this._subtitle(svg, name, color);
 						}
-
-
-
-
 					}
 				}
 				this._plan(svg);
-				
-				
 				return svg.svg();
 			}
 		},
@@ -4595,7 +4582,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				let types = {
 					function: {sum: "sum", avg: "avg", line: "line", default: "line"},
 					finite:   {default: "line"},
-					array:    {sum: "sum", avg: "avg", line: "line", line_dots: "line_dots", default: "dots"},
+					array:    {sum: "sum", avg: "avg", line: "line", link: "link", default: "link"},
 					fit:      {
 						linear:    "linearFit",    exponential: "exponentialFit",
 						geometric: "geometricFit", logarithmic: "logarithmicFit",
@@ -4649,7 +4636,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					this._data.push({
 						x:     data.x,
 						y:     data.y,
-						name:  String(name),
+						name:  String(name).trim(),
 						f:     false,
 						type:  option in curve ? curve[option] : curve.default,
 						color: ++this._color
@@ -4658,18 +4645,20 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					if (option in types.fit) {
 						let fit = data[types.fit[option]];
 						if (fit === null) return false;
-						let subtitle = [
-							String(name), "--------", fit.m, "a: "+fit.a, "b: "+fit.b, "σ: "+fit.d
-						];
+						let target = this._data.length - 1;
+						this._data[target].name += [
+							"\n", fit.m, "a = "+fit.a, "b = "+fit.b, "σ = "+fit.d
+						].join("\n");
+						this._data[target].type = "dots";
 
 						/* função principal */
 						this._data.push({
 								x:     [xLimit.min, xLimit.max],
 								y:     fit.f,
-								name:  subtitle.join("\n"),
+								name:  null,
 								f:     true,
 								type:  "line",
-								color: ++this._color
+								color: this._color
 						});
 						/* desvio padrão */
 						if (fit.d === 0) return true;
@@ -4745,6 +4734,27 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return false;
 			}
 		}, */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
