@@ -4260,22 +4260,26 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		/**. ``''void'' _plan()``: Constrói a área do gráfico cartesiano.**/
 		_plan: {
 			value: function(svg) {
-				svg.text( /* título */
+				svg
+				.text( /* título */
 					this._cfg.xMiddle,
 					this._cfg.top,
 					this.title,
 					"hc"
-				).attribute(this._cfg._title).text( /* rótulo do eixo x */
+				).attribute(this._cfg._title)
+				.text( /* rótulo do eixo x */
 					this._cfg.xMiddle,
 					this._cfg.height-this._cfg.padding,
 					this.xLabel,
 					"hs"
-				).attribute(this._cfg._label).text( /* rótulo do eixo y */
+				).attribute(this._cfg._label)
+				.text( /* rótulo do eixo y */
 					this._cfg.padding,
 					this._cfg.yMiddle,
 					this.yLabel,
 					"vn"
-				).attribute(this._cfg._label).rect( /* área do gráfico */
+				).attribute(this._cfg._label)
+				.rect( /* área do gráfico */
 					this._cfg.xStart,
 					this._cfg.yStart,
 					this._cfg.xSize,
@@ -4488,15 +4492,19 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				else {
 					/* checando condições */
 					let minus = false;
+					let plus  = false;
+					let zero  = true;
 					let count = 0;
 					let total = 0;
 					for (let i in data[0]) {
 						let value = data[0][i];
 						count++;
 						total += value;
-						if (value < 0) minus = true;
+						if (value < 0)   minus = true;
+						if (value > 0)   plus  = true;
+						if (value !== 0) zero  = false;
 					}
-					if (total === 0 || count === 0) return false;
+					if (count === 0 || zero) return false;
 					/* calculando proporções e definindo limites */
 					this._xMin = 0;
 					this._xMax = count;
@@ -4506,18 +4514,18 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					for (let i in data[0]) {
 						let value = data[0][i];
 						pieces.push({
-							value: value,
+							value:  value,
 							_value: __Number(value).notation(),
-							ratio: value/total,
-							_ratio: __Number(value/total).notation("percent", 2),
+							ratio:  total === 0 ? null : value/total,
+							_ratio: total === 0 ? null : __Number(value/total).notation("percent", 2),
 							name: i
 						});
 						this._yMin = value;
 						this._yMax = value;
 					}
-					/* gráfico de pizza */
 
-					if (!minus) {
+					/* gráfico de pizza ------------------------------------------------*/
+					if (minus !== plus && total !== 0) {
 						svg.text(this._cfg.xMiddle, this._cfg.top, this.title, "hc")
 						.attribute(this._cfg._title);
 						let start = 0;
@@ -4550,61 +4558,58 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 							/* iterando */
 							start += width;
 						}
-						svg.text(this._cfg.right,  this._cfg.bottom, this.xLabel+": "+count, "he");
-						svg.text(this._cfg.left, this._cfg.bottom, this.yLabel+": "+__Number(total).notation(), "hw");
-
-
-
-
-
-
-
-
-
-
-
+						svg
+						.text(
+							this._cfg.right,
+							this._cfg.height-this._cfg.padding,
+							this.xLabel+": "+count,
+							"hse"
+						)
+						.text(
+							this._cfg.left,
+							this._cfg.height-this._cfg.padding,
+							this.yLabel+": "+__Number(total).notation(),
+							"hsw"
+						);
 					}
 
+					/* gráfico de barras -----------------------------------------------*/
+					else {
+						let width = this._cfg.xSize / count;
+						let i = -1;
+						while (++i < pieces.length) {
+							let item  = pieces[i];
+							let color = colors.valueOf(i);
+							let x     = this._xScale(i);
+							let y     = this._yScale(item.value >= 0 ? item.value : 0);
+							let w     = width;
+							let h     = Math.abs(this._yScale(item.value) - this._yScale(0));
+							/* barra */
+							svg.rect(x, y, w, h)
+							.attribute({fill: color})
+							.title(item.name+" ("+item._value+")");
+							/* legenda */
+							svg.text(
+								x + width/2,
+								item.value >= 0 ? (y+h+5) : (y-5),
+								item.name,
+								item.value >= 0 ? "hn" : "hs"
+							)
+							.attribute({fill: color});
 
 
+						}
+
+						svg.lines(
+							[this._cfg.xStart, this._cfg.xClose],
+							[this._yScale(0), this._yScale(0)]
+						)
+						.attribute({fill: "None", "stroke": "black"});
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+						//this._plan(svg);
+					}
 				}
-
-
-
-
-
-
-
 				return svg.svg();
 			}
 		},
@@ -4811,70 +4816,6 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 
 
 
-
-		/**``number _xMin Obtém e define o limite inferior em v{x}v.**/
-		/**matrix}b _curve(b{number}b x1, b{number}b x2, b{function}b f)}t
-		Retorna uma matriz com o conjunto de coordenadas (v{x, f(x)}v.
-		v{x}v - Valores para o eixo v{x}v
-		v{f}v - Função para obter v{y = f(x)}v**/
-		_curve: {
-			value: function(x, f) {
-				if (__Type(x).type !== "array") { /* para tipo ratio (x, y não são arrays) */
-					return [x, f];
-				}
-				if (__Type(f).type !== "function") { /* para coordenadas (x e y são arrays) */
-					this._xMin = x;
-					this._xMax = x;
-					this._yMin = f;
-					this._yMax = f;
-					return [x, f];
-				}
-				/* para funções */
-				let xn = [];
-				let dx = (this._xMax - this._xMin)/this._xSize;
-				let x1 = Math.min.apply(null, x);
-				let x2 = Math.max.apply(null, x);
-				let i = -1;
-				while ((x1 + (++i * dx)) <= x2)
-					xn.push(x1 + (i * dx));
-				let matrix = __setFunction(xn, f);
-				if (matrix === null || matrix[0].length < 2) return null;
-				this._xMin = matrix[0];
-				this._xMax = matrix[0];
-				this._yMin = matrix[1];
-				this._yMax = matrix[1];
-				return matrix;
-			}
-		},
-		/**
-		/**
-	``void  _addFit(b{array}b x, b{array}b y, string name, string type)}t
-		Adiciona dados de um conjunto de valores para fins de ajuste de curva (ver i{__Fit2D}i).}d L{
-		v{x}v - Valores para o eixo v{x}v.}d
-		v{y}v - Valores para o eixo v{y}v.}d
-		v{name}v - Identificador do conjunto de dados.
-		v{type}v - (opcional) Tipo do ajuste de curva.**/
-		_addFit: {
-			value: function(x, y, name, type) {
-				let data, fit;
-				try {
-					data = __Fit2D(x, y);
-					fit = data[type];
-					if (fit === null) throw "";
-				} catch(e) {
-					return false;
-				}
-				this._add(data.x, data.y, name, "dots", true);
-				this._add(data.x, fit.function, fit.math, "line", true);
-				if (fit.deviation !== 0) {
-					let upper = function(x) {return fit.function(x)+fit.deviation;}
-					let lower = function(x) {return fit.function(x)-fit.deviation;}
-					this._add(data.x, upper, "", "dash", false);
-					this._add(data.x, lower, "", "dash", false);
-				}
-				return true;
-      }
-		},
 	});
 
 
