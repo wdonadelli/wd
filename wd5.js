@@ -4482,8 +4482,129 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 							this._subtitle(svg, name, color);
 						}
 					}
+					this._plan(svg);
 				}
-				this._plan(svg);
+				/* plotando gráfico proporcional ------------------------------------ */
+				else {
+					/* checando condições */
+					let minus = false;
+					let count = 0;
+					let total = 0;
+					for (let i in data[0]) {
+						let value = data[0][i];
+						count++;
+						total += value;
+						if (value < 0) minus = true;
+					}
+					if (total === 0 || count === 0) return false;
+					/* calculando proporções e definindo limites */
+					this._xMin = 0;
+					this._xMax = count;
+					this._yMin = 0;
+					this._yMax = 0;
+					let pieces = [];
+					for (let i in data[0]) {
+						let value = data[0][i];
+						pieces.push({
+							value: value,
+							_value: __Number(value).notation(),
+							ratio: value/total,
+							_ratio: __Number(value/total).notation("percent", 2),
+							name: i
+						});
+						this._yMin = value;
+						this._yMax = value;
+					}
+					/* gráfico de pizza */
+
+					if (!minus) {
+						svg.text(this._cfg.xMiddle, this._cfg.top, this.title, "hc")
+						.attribute(this._cfg._title);
+						let start = 0;
+						let width = 0;
+						let i = -1;
+						while (++i < pieces.length) {
+							let item   = pieces[i];
+							let title  = item.name+"\n"+this.yLabel+": "+item._value;
+							let color  = colors.valueOf(i);
+							let r      = this._cfg.ySize/2;
+							let cx     = this._cfg.xMiddle;
+							let cy     = this._cfg.yMiddle + this._cfg.top;
+							width = 360*item.ratio;
+							/* pedaço da pizza */
+							svg.semicircle(cx, cy, r, start, width)
+							.attribute({fill: color})
+							.title(title);
+							/* legenda */
+							let m = start + width/2;
+							let x = cx + (r + 5)*Math.cos(2*Math.PI*m/360);
+							let y = cy - (r + 5)*Math.sin(2*Math.PI*m/360);
+							let p;
+							if      (m <  90) p = m ===   0 ? "hw" : "hsw";
+							else if (m < 180) p = m ===  90 ? "hs" : "hse";
+							else if (m < 270) p = m === 180 ? "he" : "hne";
+							else if (m < 360) p = m === 270 ? "hn" : "hnw";
+							svg.text(x, y, item.name+" ("+item._ratio+")", p)
+							.attribute({fill: color})
+							.title(title);
+							/* iterando */
+							start += width;
+						}
+						svg.text(this._cfg.right,  this._cfg.bottom, this.xLabel+": "+count, "he");
+						svg.text(this._cfg.left, this._cfg.bottom, this.yLabel+": "+__Number(total).notation(), "hw");
+
+
+
+
+
+
+
+
+
+
+
+					}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+				}
+
+
+
+
+
+
+
 				return svg.svg();
 			}
 		},
@@ -4546,11 +4667,11 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				/*----------------------------------------------------------------------
 					gráfico proporcional
 				----------------------------------------------------------------------*/
-
-				/* objeto ----------------------------------------------------------  */
 				if (this._ratio) {
 					if (this._data.length === 0) this._data.push({});
 					let data = this._data[0];
+
+					/* objeto ----------------------------------------------------------  */
 					if (xdata.object) {
 						for (let name in x) {
 							let check = __Type(x[name]);
@@ -4559,237 +4680,133 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 						}
 						return true;
 					}
-					if (!xdata.array || !ydata.array) return false;
 					/* array ---------------------------------------------------------- */
-					let i   = -1;
-					let obj = {};
-					while (++i < x.length) {
-						if (i >= y.length) break;
-						obj[String(x[i])] = y[i];
+					else if (xdata.array && ydata.array) {
+						let i   = -1;
+						let obj = {};
+						while (++i < x.length) {
+							if (i >= y.length) break;
+							obj[String(x[i])] = y[i];
+						}
+						return this.add(obj);
 					}
-					return this.add(obj);
+					return false;
 				}
-
 				/*----------------------------------------------------------------------
 					gráfico cartesiano
 				----------------------------------------------------------------------*/
-
-				/* checando dados */
-				let data  = __Data2D(x, y);
-				if (data.error) return false;
-				/* defindo curvas */
-				option    = String(option).trim();
-				let types = {
-					function: {sum: "sum", avg: "avg", line: "line", default: "line"},
-					finite:   {default: "line"},
-					array:    {sum: "sum", avg: "avg", line: "line", link: "link", default: "link"},
-					fit:      {
-						linear:    "linearFit",    exponential: "exponentialFit",
-						geometric: "geometricFit", logarithmic: "logarithmicFit",
-						minimum:   "minDeviation"
-					}
-				};
-				/* definindo previamente os limites superiores e inferiores */
-				let xLimit = __Array(data.x);
-				let yLimit = ydata.array ? __Array(data.y) : null;
-				this._xMin = xLimit.min;
-				this._xMax = xLimit.max;
-				if (yLimit !== null) {
-					this._yMin = yLimit.min;
-					this._yMax = yLimit.max;
-				}
-				/* definindo limites superiores e inferiores no caso de área */
-				if (option === "sum") {
-					this._xMin = 0;
-					this._xMax = 0;
-				}
-
-				/* Y é função ------------------------------------------------------- */
-				if (ydata.function) {
-					let curve = types.function;
-					this._data.push({
-						x:     [xLimit.min, xLimit.max],
-						y:     y,
-						name:  String(name),
-						f:     true,
-						type:  option in curve ? curve[option] : curve.default,
-						color: ++this._color
-					});
-					return true;
-				}
-				/* Y é constante ---------------------------------------------------- */
-				if (ydata.finite) {
-					let curve = types.finite;
-					this._data.push({
-						x:     [xLimit.min, xLimit.max],
-						y:     [y, y],
-						name:  String(name),
-						f:     false,
-						type:  option in curve ? curve[option] : curve.default,
-						color: ++this._color
-					});
-					return true;
-				}
-				/* Y é array -------------------------------------------------------- */
-				if (ydata.array) {
-					let curve = types.array;
-					this._data.push({
-						x:     data.x,
-						y:     data.y,
-						name:  String(name).trim(),
-						f:     false,
-						type:  option in curve ? curve[option] : curve.default,
-						color: ++this._color
-					});
-					/* regressões ----------------------------------------------------- */
-					if (option in types.fit) {
-						let fit = data[types.fit[option]];
-						if (fit === null) return false;
-						let target = this._data.length - 1;
-						this._data[target].name += [
-							"\n", fit.m, "a = "+fit.a, "b = "+fit.b, "σ = "+fit.d
-						].join("\n");
-						this._data[target].type = "dots";
-
-						/* função principal */
-						this._data.push({
-								x:     [xLimit.min, xLimit.max],
-								y:     fit.f,
-								name:  null,
-								f:     true,
-								type:  "line",
-								color: this._color
-						});
-						/* desvio padrão */
-						if (fit.d === 0) return true;
-						this._data.push({
-								x:     [xLimit.min, xLimit.max],
-								y:     function(x) {return fit.f(x)+fit.d;},
-								name:  null,
-								f:     true,
-								type:  "dash",
-								color: this._color
-						});
-						this._data.push({
-								x:     [xLimit.min, xLimit.max],
-								y:     function(x) {return fit.f(x)-fit.d;},
-								name:  null,
-								f:     true,
-								type:  "dash",
-								color: this._color
-						});
-					}
-					return true;
-				}
-			}
-		},
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-					/* com opção ------------------------------------------------------
-					if (option in data) {
-						let fit = data[option];
-						if (fit === null) return false;
-
-						if (option === "average") {
-							let delta = __Data2D(data.x, fit).standardDeviation;
-							this._data.push({
-								x:     [xLimit.min, xLimit.max],
-								y:     [fit, fit],
-								name:  String(name)+", μ ≈ "+fit+", σ = ±"+delta,
-								f:     false,
-								type:  "line",
-								color: ++this._color
-							});
-							return true;
+				else {
+					/* checando dados */
+					let data  = __Data2D(x, y);
+					if (data.error) return false;
+					/* defindo curvas */
+					option    = String(option).trim();
+					let types = {
+						function: {sum: "sum", avg: "avg", line: "line", main: "line"},
+						finite:   {main: "line"},
+						array:    {sum: "sum", avg: "avg", line: "line", link: "link", main: "link"},
+						fit:      {
+							linear:    "linearFit",    exponential: "exponentialFit",
+							geometric: "geometricFit", logarithmic: "logarithmicFit",
+							minimum:   "minDeviation"
 						}
+					};
+					/* definindo previamente os limites superiores e inferiores */
+					let xLimit = __Array(data.x);
+					let yLimit = ydata.array ? __Array(data.y) : null;
+					this._xMin = xLimit.min;
+					this._xMax = xLimit.max;
+					if (yLimit !== null) {
+						this._yMin = yLimit.min;
+						this._yMax = yLimit.max;
+					}
+					/* definindo limites superiores e inferiores no caso de área */
+					if (option === "sum") {
+						this._xMin = 0;
+						this._xMax = 0;
+					}
 
-						if (option === "area") {
+					/* Y é função ------------------------------------------------------- */
+					if (ydata.function) {
+						let curve = types.function;
+						this._data.push({
+							x:     [xLimit.min, xLimit.max],
+							y:     y,
+							name:  String(name),
+							f:     true,
+							type:  option in curve ? curve[option] : curve.main,
+							color: ++this._color
+						});
+						return true;
+					}
+					/* Y é constante ---------------------------------------------------- */
+					else if (ydata.finite) {
+						let curve = types.finite;
+						this._data.push({
+							x:     [xLimit.min, xLimit.max],
+							y:     [y, y],
+							name:  String(name),
+							f:     false,
+							type:  option in curve ? curve[option] : curve.main,
+							color: ++this._color
+						});
+						return true;
+					}
+					/* Y é array -------------------------------------------------------- */
+					else if (ydata.array) {
+						let curve = types.array;
+						this._data.push({
+							x:     data.x,
+							y:     data.y,
+							name:  String(name).trim(),
+							f:     false,
+							type:  option in curve ? curve[option] : curve.main,
+							color: ++this._color
+						});
+						/* regressões ----------------------------------------------------- */
+						if (option in types.fit) {
+							let fit = data[types.fit[option]];
+							if (fit === null) return false;
+							let target = this._data.length - 1;
+							this._data[target].name += [
+								"\n", fit.m, "a = "+fit.a, "b = "+fit.b, "σ = "+fit.d
+							].join("\n");
+							this._data[target].type = "dots";
+
+							/* função principal */
 							this._data.push({
-								x:     data.x,
-								y:     data.y,
-								name:  String(name)+", ∑ ≈ "+fit,
-								f:     false,
-								type:  "area",
-								color: this._color
+									x:     [xLimit.min, xLimit.max],
+									y:     fit.f,
+									name:  null,
+									f:     true,
+									type:  "line",
+									color: this._color
 							});
-							return true;
+							/* desvio padrão */
+							if (fit.d === 0) return true;
+							this._data.push({
+									x:     [xLimit.min, xLimit.max],
+									y:     function(x) {return fit.f(x)+fit.d;},
+									name:  null,
+									f:     true,
+									type:  "dash",
+									color: this._color
+							});
+							this._data.push({
+									x:     [xLimit.min, xLimit.max],
+									y:     function(x) {return fit.f(x)-fit.d;},
+									name:  null,
+									f:     true,
+									type:  "dash",
+									color: this._color
+							});
 						}
-					return true;
+						return true;
+					}
 				}
 				return false;
 			}
-		}, */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+		},
 
 
 
