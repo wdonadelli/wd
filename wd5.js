@@ -4552,8 +4552,9 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 							else if (m < 180) p = m ===  90 ? "hs" : "hse";
 							else if (m < 270) p = m === 180 ? "he" : "hne";
 							else if (m < 360) p = m === 270 ? "hn" : "hnw";
+							else p = "hw";
 							svg.text(x, y, item.name+" ("+item._ratio+")", p)
-							.attribute({fill: color})
+							.attribute({fill: color, "stroke-linecap": "round"})
 							.title(title);
 							/* iterando */
 							start += width;
@@ -4601,10 +4602,31 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 						}
 
 						svg.lines(
-							[this._cfg.xStart, this._cfg.xClose],
+							[this._cfg.left, this._cfg.right],
 							[this._yScale(0), this._yScale(0)]
 						)
-						.attribute({fill: "None", "stroke": "black"});
+						.attribute({fill: "None", "stroke": "black", "stroke-width": 3, "stroke-linecap": "round"})
+						//.text(this._cfg.left, this._cfg.bottom, this.xLabel, "hnw")
+						//.text(this._cfg.left, this._cfg.bottom, this.yLabel, "vsw");
+
+
+
+						svg
+						.text(this._cfg.xMiddle, this._cfg.top, this.title, "hc")
+						.attribute(this._cfg._title)
+						.text(
+							this._cfg.right,
+							this._cfg.height-this._cfg.padding,
+							this.xLabel+": "+count,
+							"hse"
+						)
+						.text(
+							this._cfg.left,
+							this._cfg.height-this._cfg.padding,
+							this.yLabel+": "+__Number(total).notation(),
+							"hsw"
+						);
+
 
 
 						//this._plan(svg);
