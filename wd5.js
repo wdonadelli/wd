@@ -4188,16 +4188,16 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			}
 		},
 		/**. ``''object'' _cfg``: Registra as configurações do gráfico:
-		.. ``''number'' vertical``: registra o menor tamanho da tela do dispositivo como referência.
-		.. ``''number'' horizontal``: registra o maior tamanho da tela do dispositivo como referência.
-		.. ``''number'' xInit``: Registra o início do eixo ``x`` (horizontal) em porcentagem.
-		.. ``''number'' xEnd``: Registra o fim do eixo ``x`` (horizontal) em porcentagem.
-		.. ``''number'' yInit``: Registra o início do eixo ``y`` (vertical) em porcentagem.
-		.. ``''number'' yEnd``: Registra o fim do eixo ``y`` (vertical) em porcentagem.
-		.. ``''number'' points``: Número de pontos no gráfico.
-		.. ``''number'' padd``: Define um valor para espaçamento relativo.
-		.. ``''number'' width``: Registra o tamanho referencial horizontal do gráfico.
-		.. ``''number'' height``: Registra o tamanho referencial vertical do gráfico (proporcional à tela e ao tamanho).
+		.. ``''number'' vertical``: registra o menor tamanho da tela do dispositivo.
+		.. ``''number'' horizontal``: registra o maior tamanho da tela do dispositivo.
+		.. ``''number'' xInit``: Registra o início do eixo horizontal ``x`` (porcentagem).
+		.. ``''number'' xEnd``: Registra o fim do eixo horizontal ``x`` (porcentagem).
+		.. ``''number'' yInit``: Registra o início do eixo vertical ``y`` (porcentagem).
+		.. ``''number'' yEnd``: Registra o fim do eixo vertical ``y`` (porcentagem).
+		.. ``''number'' points``: Número de divisões dos eixos no gráfico.
+		.. ``''number'' padd``: Define um valor para espaçamento relativo (porcentagem).
+		.. ``''number'' width``: Define a dimensão horizontal do gráfico.
+		.. ``''number'' height``: Retorna a dimensão vertical do gráfico proporcional à ``width``.
 		.. ``''number'' xStart``: Coordenada horizontal da origem do gráfico.
 		.. ``''number'' xSize``: Tamanho do eixo ``x``.
 		.. ``''number'' xMiddle``: Metade do eixo ``x``.
@@ -4211,7 +4211,21 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		.. ``''number'' left``: A metade do espaço esquerdo.
 		.. ``''number'' right``: A metade do espaço direito.
 		.. ``''number'' padding``: Retorna o espaçamento definido.
-		.. ``''array'' colors``: Lista de cores.**/
+		.. ``''array'' colors``: Lista de cores.
+		.. ``''object'' attr_svg``: atributos do gráfico.
+		.. ``''object'' attr_title``: atributos do título do gráfico.
+		.. ``''object'' attr_label``: atributos dos rótulos do gráfico.
+		.. ``''object'' attr_area``: atributos da área de plotagem.
+		.. ``''object'' attr_axes``: atributos dos eixos secundários do gráfico.
+		.. ``''object'' attr_tname``: atributos da legenda do gráfico (textual).
+		.. ``''object'' attr_vname``: atributos da legenda do gráfico (visual).
+		.. ``''object'' curve_line``: atributos da curva em linha.
+		.. ``''object'' curve_sum``: atributos da curva de área.
+		.. ``''object'' curve_dash``: atributos da curva de traços.
+
+
+
+		**/
 		_cfg: {
 			value: {
 				vertical:   Math.min(window.screen.width, window.screen.height),
@@ -4244,17 +4258,16 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					"orangered", "blueviolet",      "cyan",           "limegreen",
 					"dimgray"
 				],
-				_svg:      {style: "background-color: Ivory; margin: 20%"},
-				_title:    {fill: "black", "font-weight": "bold", "font-size": "1.5em"},
-				_label:    {fill: "black"},
-				_area:     {stroke: "black", fill: "none", "stroke-width": 2, "stroke-linecap": "round"},
-				_internal: {stroke: "grey", "stroke-width": 0.5, "stroke-dasharray": "6,6", "stroke-linecap": "round"},
-				_subtitle: {"stroke-width": 1, "stroke": "black", style: "cursor: help"},
-				_line:     {fill: "none", "stroke-width": 3, "stroke-linecap": "round"},
-				_sum:      {"fill-opacity": 0.5, "stroke-width": 3, "stroke-linecap": "round"},
-				_dash:     {fill: "none", "stroke-width": 1, "stroke-linecap": "round", "stroke-dasharray": "5,5"},
-
-
+				attr_svg:   {style: "background-color: Ivory; margin: 20%"},
+				attr_title: {fill: "black", "font-weight": "bold", "font-size": "1.5em"},
+				attr_label: {fill: "black"},
+				attr_area:  {stroke: "black", fill: "none", "stroke-width": 2, "stroke-linecap": "round"},
+				attr_axes:  {stroke: "grey", "stroke-width": 0.5, "stroke-dasharray": "6,6", "stroke-linecap": "round"},
+				attr_tname: {stroke: "white", fill: "white", "font-size": "0.8em"},
+				attr_vname: {"stroke-width": "1.5em", "stroke-linecap": "round"},
+				curve_line: {fill: "none", "stroke-width": 3, "stroke-linecap": "round"},
+				curve_sum:  {"fill-opacity": 0.5, "stroke-width": 3, "stroke-linecap": "round"},
+				curve_dash: {fill: "none", "stroke-width": 1, "stroke-linecap": "round", "stroke-dasharray": "5,5"},
 			}
 		},
 		/**. ``''void'' _plan()``: Constrói a área do gráfico cartesiano.**/
@@ -4266,25 +4279,25 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					this._cfg.top,
 					this.title,
 					"hc"
-				).attribute(this._cfg._title)
+				).attribute(this._cfg.attr_title)
 				.text( /* rótulo do eixo x */
 					this._cfg.xMiddle,
 					this._cfg.height-this._cfg.padding,
 					this.xLabel,
 					"hs"
-				).attribute(this._cfg._label)
+				).attribute(this._cfg.attr_label)
 				.text( /* rótulo do eixo y */
 					this._cfg.padding,
 					this._cfg.yMiddle,
 					this.yLabel,
 					"vn"
-				).attribute(this._cfg._label)
+				).attribute(this._cfg.attr_label)
 				.rect( /* área do gráfico */
 					this._cfg.xStart,
 					this._cfg.yStart,
 					this._cfg.xSize,
 					this._cfg.ySize
-				).attribute(this._cfg._area);
+				).attribute(this._cfg.attr_area);
 
  				/* subdivisões e escala */
 				let div = {
@@ -4321,11 +4334,11 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 						svg.lines( /* subdivisões horizontais */
 							div.horizontal,
 							[div.point.y, div.point.y]
-						).attribute(this._cfg._internal)
+						).attribute(this._cfg.attr_axes)
 						.lines( /* subdivisões verticais */
 							[div.point.x, div.point.x],
 							div.vertical
-						).attribute(this._cfg._internal);
+						).attribute(this._cfg.attr_axes);
 					}
 
 
@@ -4355,42 +4368,49 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 						div.padd.y,
 						print(div.scale.x, this.xAxis),
 						(i === 0 ? "hnw" : (i < (p - 1) ? "hn" : "hne"))
-					).attribute(this._cfg._label)
+					).attribute(this._cfg.attr_label)
 					.title(div.scale.x)
 					.text( /* escala eixo y */
 						div.padd.x,
 						div.point.y,
 						print(div.scale.y),
 						(i === 0 ? "hse" : (i < (p - 1) ? "he" : "hne"))
-					).attribute(this._cfg._label)
+					).attribute(this._cfg.attr_label)
 					.title(div.scale.y);
 					div.next();
 				}
 			}
 		},
-
-		_subtitle: {
+		/**. ``''void'' _legend(''node'' svg, ''string'' text, ''number'' color)``: Constrói a legenda do gráfico.
+		. O argumento ``svg`` é o elemento SVG onde o gŕafico está sendo construído. O argumento ``text`` é o conteúdo da primeiro linha da legenda que, se for ``null``, retornará a função ignorando a legenda. O argumento ``color`` define a cor da legenda.**/
+		_legend: {
 			value: function(svg, text, color) {
 				if (text === null) return;
 				let colors = __Array(this._cfg.colors);
+				let ncolor = colors.valueOf(color);
+
+
+
 				let side   = 2*this._cfg.padding;
 				let space  = 2*this._cfg.padding;
 				let x      = this._cfg.right - this._cfg.padding;
 				let y      = this._cfg.yStart + side + color * (side + space);
-				let ncolor = colors.valueOf(color);
 
-				svg.rect(x, y, side, side)
-				.attribute({fill: ncolor})
-				.attribute(this._cfg._subtitle)
+
+				let x1 = this._cfg.xClose + 2*this._cfg.padding;
+				let x2 = this._cfg.width;
+
+				svg.lines([x1, x2], [y, y])
+				.attribute(this._cfg.attr_vname)
+				.attribute({stroke: ncolor})
+				.title(text)
+				.text(x1, y, text.split("\n")[0], "hw")
+				.attribute(this._cfg.attr_tname)
 				.title(text);
-				svg.text(this._cfg.right,y-2,text.split("\n")[0], "hs")
-				.title(text.split("\n")[0])
-				.attribute({fill: ncolor, "font-size": "small"});
+
 			}
 		},
-
-
-
+		/**. ``''node'' plot()``: Constrói o gráfico e o retorna (elemento SVG).**/
 		plot: {
 			value: function() {
 				if (this._data.length === 0) return null;
@@ -4399,7 +4419,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 
 				/* definindo a área do gráfico -------------------------------------- */
 				let svg = __SVG(this._cfg.width, this._cfg.height);
-				svg.attribute(this._cfg._svg).attribute({style: "border: 1px solid black;margin: 5em;"})
+				svg.attribute(this._cfg.attr_svg).attribute({style: "border: 1px solid black;margin: 5em;"})
 
 				/* redefinindo funções para array ----------------------------------- */
 				if (!this._ratio) {
@@ -4433,16 +4453,16 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 						/* plotando de acordo com o tipo de curva */
 						if (data[i].type === "line" || data[i].type === "link") {
 							svg.lines(x, y)
-							.attribute(this._cfg._line)
+							.attribute(this._cfg.curve_line)
 							.attribute({stroke: colors.valueOf(color)})
-							this._subtitle(svg, name, color);
+							this._legend(svg, name, color);
 						}
 						if (data[i].type === "dash") {
 							console.log(x, y);
 							svg.lines(x, y)
-							.attribute(this._cfg._dash)
+							.attribute(this._cfg.curve_dash)
 							.attribute({stroke: colors.valueOf(color)});
-							this._subtitle(svg, name, color);
+							this._legend(svg, name, color);
 						}
 						if (data[i].type === "dots" || data[i].type === "link") {
 							let j = -1;
@@ -4451,7 +4471,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 								.attribute({fill: colors.valueOf(color)})
 								.title("("+data[i].x[j]+", "+data[i].y[j]+")");
 							}
-							this._subtitle(svg, name, color);
+							this._legend(svg, name, color);
 						}
 						if (data[i].type === "sum") {
 							let fit = __Data2D(data[i].x, data[i].y);
@@ -4461,10 +4481,10 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 							y.unshift(self._yScale(0));
 							y.push(self._yScale(0));
 							svg.lines(x, y, true)
-							.attribute(this._cfg._sum)
+							.attribute(this._cfg.curve_sum)
 							.attribute({stroke: colors.valueOf(color), fill: colors.valueOf(color)})
 							.title(name);
-							this._subtitle(svg, name, color);
+							this._legend(svg, name, color);
 						}
 						if (data[i].type === "avg") {
 							let fit = __Data2D(data[i].x, data[i].y);
@@ -4474,16 +4494,16 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 							let ya  = this._yScale(avg);
 
 							svg.lines(x, y)
-							.attribute(this._cfg._dash)
+							.attribute(this._cfg.curve_dash)
 							.attribute({stroke: colors.valueOf(color)})
 							.title(name);
 
 							name += "\n(∑ yΔx)/ΔX ≈ "+avg;
 							svg.lines([xi, xn], [ya, ya])
-							.attribute(this._cfg._line)
+							.attribute(this._cfg.curve_line)
 							.attribute({stroke: colors.valueOf(color)})
 							.title(name);
-							this._subtitle(svg, name, color);
+							this._legend(svg, name, color);
 						}
 					}
 					this._plan(svg);
@@ -4527,7 +4547,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					/* gráfico de pizza ------------------------------------------------*/
 					if (minus !== plus && total !== 0) {
 						svg.text(this._cfg.xMiddle, this._cfg.top, this.title, "hc")
-						.attribute(this._cfg._title);
+						.attribute(this._cfg.attr_title);
 						let start = 0;
 						let width = 0;
 						let i = -1;
@@ -4613,7 +4633,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 
 						svg
 						.text(this._cfg.xMiddle, this._cfg.top, this.title, "hc")
-						.attribute(this._cfg._title)
+						.attribute(this._cfg.attr_title)
 						.text(
 							this._cfg.right,
 							this._cfg.height-this._cfg.padding,
