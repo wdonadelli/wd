@@ -1159,6 +1159,22 @@ const wd = (function() {
 				return this.toString()
 			}
 		},
+
+		/**. ``''number'' e``: Retorna o expoente do número em base 10.**/
+		e: {
+			get: function() {
+				if (!this.finite)         return 0;
+				if (this.valueOf() === 0) return Infinity;
+				let value = this.abs;
+				let n = 0;
+				while (value < 1 || value >= 10) {
+					n    += value < 1 ? -1 : +1;
+					value = value * (value < 1 ? 10 : 1/10);
+				}
+				return n;
+			}
+		}
+
 	});
 /*===========================================================================*/
 	/**### Textos
@@ -4252,19 +4268,19 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				get right()   {return this.xClose + (this.width - this.xClose)/2;},
 				get padding() {return this.padd*this.width;},
 				colors: [
-					"darkred",   "indigo",          "navy",           "teal",
-					"crimson",   "mediumslateblue", "dodgerblue",     "yellowgreen",
-					"deeppink",  "purple",          "cornflowerblue", "darkgreen",
-					"orangered", "blueviolet",      "cyan",           "limegreen",
+					"darkred",   "navy",           "indigo",          "teal",
+					"crimson",   "dodgerblue",     "mediumslateblue", "yellowgreen",
+					"deeppink",  "cornflowerblue", "purple",          "darkgreen",
+					"orangered", "cyan",           "blueviolet",      "limegreen",
 					"dimgray"
 				],
-				attr_svg:   {style: "background-color: Ivory; margin: 20%"},
-				attr_title: {fill: "black", "font-weight": "bold", "font-size": "1.5em"},
-				attr_label: {fill: "black"},
-				attr_area:  {stroke: "black", fill: "none", "stroke-width": 2, "stroke-linecap": "round"},
-				attr_axes:  {stroke: "grey", "stroke-width": 0.5, "stroke-dasharray": "6,6", "stroke-linecap": "round"},
-				attr_tname: {stroke: "white", fill: "white", "font-size": "0.8em"},
-				attr_vname: {"stroke-width": "1.5em", "stroke-linecap": "round"},
+				attr_svg:   {style: "background-color: #ffffe6; margin: 0 20em;"},
+				attr_title: {fill: "#262626", "font-weight": "bold", "font-size": "1.5em"},
+				attr_label: {fill: "#262626"},
+				attr_area:  {stroke: "#262626", fill: "None", "stroke-width": 2, "stroke-linecap": "round"},
+				attr_axes:  {stroke: "#778899", "stroke-width": 0.5, "stroke-dasharray": "6,6", "stroke-linecap": "round"},
+				attr_vname: {"stroke-width": 0},
+				attr_tname: {fill: "WhiteSmoke", "font-style": "italic"},
 				curve_line: {fill: "none", "stroke-width": 3, "stroke-linecap": "round"},
 				curve_sum:  {"fill-opacity": 0.5, "stroke-width": 3, "stroke-linecap": "round"},
 				curve_dash: {fill: "none", "stroke-width": 1, "stroke-linecap": "round", "stroke-dasharray": "5,5"},
@@ -4282,7 +4298,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				).attribute(this._cfg.attr_title)
 				.text( /* rótulo do eixo x */
 					this._cfg.xMiddle,
-					this._cfg.height-this._cfg.padding,
+					this._cfg.height - this._cfg.padding,
 					this.xLabel,
 					"hs"
 				).attribute(this._cfg.attr_label)
@@ -4301,24 +4317,25 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 
  				/* subdivisões e escala */
 				let div = {
-					scale: {
+					scale: { /* Escala real */
 						x:  this._xMin,
 						y:  this._yMin,
 						dx: (this._xMax - this._xMin)/(this._cfg.points - 1),
 						dy: (this._yMax - this._yMin)/(this._cfg.points - 1),
 					},
-					point: {
+					point: { /* Coordenadas no gráfico */
 						x:  this._cfg.xStart,
 						y:  this._cfg.yClose, /* (invertido) */
 						dx: this._cfg.xSize/(this._cfg.points - 1),
 						dy: this._cfg.ySize/(this._cfg.points - 1),
 					},
-					padd: {
+					padd: { /* Espacamento entre escala e eixo */
 						x: this._cfg.xStart - this._cfg.padding,
 						y: this._cfg.yClose + this._cfg.padding,
 					},
 					horizontal: [this._cfg.xStart, this._cfg.xClose],
 					vertical:   [this._cfg.yStart, this._cfg.yClose],
+					max: {x: this._xMax, y: this.yxMax},
 					next: function() {
 						this.scale.x += this.scale.dx;
 						this.scale.y += this.scale.dy;
@@ -4330,50 +4347,28 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				let p = this._cfg.points;
 
 				while (++i < p) {
+					/* subdivisões */
 					if (i > 0 && i < p) {
-						svg.lines( /* subdivisões horizontais */
+						svg.lines( /* horizontais */
 							div.horizontal,
 							[div.point.y, div.point.y]
 						).attribute(this._cfg.attr_axes)
-						.lines( /* subdivisões verticais */
+						.lines( /* verticais */
 							[div.point.x, div.point.x],
 							div.vertical
 						).attribute(this._cfg.attr_axes);
 					}
-
-
-					//FIXME verificar como exibir a escala (quantidade de caracteres)
-					let print = function(value, type) {
-						switch(type) {
-							case "date":
-								return __DateTime(value).toDateString();
-							case "time":
-								return __DateTime(value).toTimeString();
-							case "datetime":
-								return __DateTime(value).format("{YY}-{MM}-{DD} {hh}:{mm}");
-						}
-						let abs = Math.abs(value);
-						let num = __Number(value);
-						if (abs === 0)
-							return num.notation("decimal", 2);
-						if (abs > 100000 || abs < 1/100000)
-							return num.notation("scientific", 1);
-
-						return value;
-
-					}
-
 					svg.text( /* escala eixo x */
 						div.point.x,
 						div.padd.y,
-						print(div.scale.x, this.xAxis),
+						this._values(div.scale.x, div.scale.dx, this.xAxis),
 						(i === 0 ? "hnw" : (i < (p - 1) ? "hn" : "hne"))
 					).attribute(this._cfg.attr_label)
 					.title(div.scale.x)
 					.text( /* escala eixo y */
 						div.padd.x,
 						div.point.y,
-						print(div.scale.y),
+						this._values(div.scale.y, div.scale.dy),
 						(i === 0 ? "hse" : (i < (p - 1) ? "he" : "hne"))
 					).attribute(this._cfg.attr_label)
 					.title(div.scale.y);
@@ -4381,6 +4376,41 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				}
 			}
 		},
+
+
+		_values: {
+			value: function(value, delta, type) {
+				switch(type) {
+					case "date":
+						return __DateTime(value).toDateString();
+					case "time":
+						return __DateTime(value).toTimeString();
+					case "datetime":
+						return __DateTime(value).format("{YY}-{MM}-{DD} {hh}:{mm}");
+				}
+				let num = __Number(value);
+				let v   = Math.abs(value);
+				let d   = Math.abs(delta);
+
+				if (v === 0    ) return num.notation("decimal", 0);
+				if (v >= 1e100 ) return num.notation("scientific", 0);
+				if (v >= 1e10  ) return num.notation("scientific", 1);
+				if (v >= 1e3   ) return num.notation("scientific", 2);
+				if (v <= 1e-100) return num.notation("scientific", 0);
+				if (v <= 1e-10 ) return num.notation("scientific", 1);
+				if (v <= 1e-3  ) return num.notation("scientific", 2);
+				if (v >= 1e2   ) return num.notation("decimal", 0);
+				if (v >= 1e1   ) return num.notation("decimal", 1);
+				if (v >= 1e0   ) return num.notation("decimal", 2);
+				if (v <= 1e-2  ) return num.notation("decimal", 0);
+				if (v <= 1e-1  ) return num.notation("decimal", 1);
+				if (v <= 1e0   ) return num.notation("decimal", 2);
+				return num.notation("scientific", 2);
+			}
+		},
+
+
+
 		/**. ``''void'' _legend(''node'' svg, ''string'' text, ''number'' color)``: Constrói a legenda do gráfico.
 		. O argumento ``svg`` é o elemento SVG onde o gŕafico está sendo construído. O argumento ``text`` é o conteúdo da primeiro linha da legenda que, se for ``null``, retornará a função ignorando a legenda. O argumento ``color`` define a cor da legenda.**/
 		_legend: {
@@ -4388,23 +4418,22 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				if (text === null) return;
 				let colors = __Array(this._cfg.colors);
 				let ncolor = colors.valueOf(color);
+				let padd   = this._cfg.padding;
+				let delta  = 25;
+				let base   = this._cfg.yStart + (1 + color) * (padd + delta);
+				let x1     = this._cfg.xClose + padd;
+				let x2     = x1 + padd;
+				let x3     = this._cfg.width;
+				let y1     = base;
+				let y2     = y1 - delta;
+				let y3     = (y1 + y2)/2;
 
-
-
-				let side   = 2*this._cfg.padding;
-				let space  = 2*this._cfg.padding;
-				let x      = this._cfg.right - this._cfg.padding;
-				let y      = this._cfg.yStart + side + color * (side + space);
-
-
-				let x1 = this._cfg.xClose + 2*this._cfg.padding;
-				let x2 = this._cfg.width;
-
-				svg.lines([x1, x2], [y, y])
+				//
+				svg.lines([x1, x2, x3, x3], [y1, y2, y2, y1], true)
 				.attribute(this._cfg.attr_vname)
-				.attribute({stroke: ncolor})
+				.attribute({fill: ncolor, stroke: ncolor})
 				.title(text)
-				.text(x1, y, text.split("\n")[0], "hw")
+				.text(x2, y3, text.split("\n")[0], "hw")
 				.attribute(this._cfg.attr_tname)
 				.title(text);
 
@@ -4419,7 +4448,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 
 				/* definindo a área do gráfico -------------------------------------- */
 				let svg = __SVG(this._cfg.width, this._cfg.height);
-				svg.attribute(this._cfg.attr_svg).attribute({style: "border: 1px solid black;margin: 5em;"})
+				svg.attribute(this._cfg.attr_svg);
 
 				/* redefinindo funções para array ----------------------------------- */
 				if (!this._ratio) {
@@ -4454,7 +4483,8 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 						if (data[i].type === "line" || data[i].type === "link") {
 							svg.lines(x, y)
 							.attribute(this._cfg.curve_line)
-							.attribute({stroke: colors.valueOf(color)})
+							.attribute({stroke: colors.valueOf(color)});
+							if (name !== null) svg.title(name);
 							this._legend(svg, name, color);
 						}
 						if (data[i].type === "dash") {
@@ -4469,7 +4499,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 							while(++j < x.length) {
 								svg.circle(x[j], y[j], 3)
 								.attribute({fill: colors.valueOf(color)})
-								.title("("+data[i].x[j]+", "+data[i].y[j]+")");
+								.title((name === null ? "" : name+"\n")+"("+data[i].x[j]+", "+data[i].y[j]+")");
 							}
 							this._legend(svg, name, color);
 						}
@@ -4692,10 +4722,10 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				this._xAxis = values.indexOf(x) >= 0 ? x : "number";
 			}
 		},
-		/**. ``''boolean'' add(''array'' x, ''any'' y, ''string'' name, ''string'' option)``: Adiciona dados para plotagem e retorna falso se não for possível processar a solicitação.
+		/**. ``''boolean'' add(''array'' x, ''any'' y, ''string'' label, ''string'' option)``: Adiciona dados para plotagem e retorna falso se não for possível processar a solicitação.
 		. O argumento ``x`` pode ser uma lista de valores (numéricos ou data/tempo), uma lista de identificadores (numérico ou string), ou um objeto. No caso de plotagem no __plano cartesiano__, o argumento deve ser uma lista de valores e uma lista de identificadores ou um objeto no caso de gráfico proporcional. No caso de objeto, os atributos serão os identificadores e seus valores definirão o argumento ``y``.
 		. O argumento ``y`` pode ser uma __função__, uma __constante__ ou uma lista de __valores numéricos__ no caso de gráfico cartesiano. No caso de gráfico proporcional, uma lista de valores correspondentes aos identificadores informados em ``x``. No caso de gráfico proporcional, se ``x`` for um objeto, ``y`` será ignorado.
-		. O argumento ``name`` é utilizado para identificar o gráfico no caso de plano cartesiano.
+		. O argumento ``label`` é utilizado para identificar o gráfico no caso de plano cartesiano.
 		. O argumento ``option`` é opcional e direcionado para o gráfico de plano cartesiano com valores de ``x`` e ``y`` como array. Seus valores podem ser:
 		|Valor|Descrição|
 		|linearFit|Traça a regressão linear.|
@@ -4707,7 +4737,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		|area|Traça a área.|
 		|line|Traça uma linha.|**/
 		add: {
-			value: function(x, y, name, option) {
+			value: function(x, y, label, option) {
 				let xdata = __Type(x);
 				let ydata = __Type(y);
 
@@ -4779,7 +4809,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 						this._data.push({
 							x:     [xLimit.min, xLimit.max],
 							y:     y,
-							name:  String(name),
+							name:  String(label),
 							f:     true,
 							type:  option in curve ? curve[option] : curve.main,
 							color: ++this._color
@@ -4792,7 +4822,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 						this._data.push({
 							x:     [xLimit.min, xLimit.max],
 							y:     [y, y],
-							name:  String(name),
+							name:  String(label),
 							f:     false,
 							type:  option in curve ? curve[option] : curve.main,
 							color: ++this._color
@@ -4805,7 +4835,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 						this._data.push({
 							x:     data.x,
 							y:     data.y,
-							name:  String(name).trim(),
+							name:  String(label).trim(),
 							f:     false,
 							type:  option in curve ? curve[option] : curve.main,
 							color: ++this._color
