@@ -4146,23 +4146,47 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		constructor: {value: __Plot2D},
 		/**. ``''number'' _xMax``: Define ou retorna o maior valor da coordenada ``x``.**/
 		_xMax: {
-			get: function()  {return this._max.x;},
-			set: function(x) {if (x > this._max.x) this._max.x = x;}
+			get: function()  {
+				let min = this._min.x;
+				let max = this._max.x;
+				return max + (min === max ? (max === 0 ? 1 : max/2) : 0);
+			},
+			set: function(x) {
+				if (x > this._max.x) this._max.x = x;
+			}
 		},
 		/**. ``''number'' _yMax``: Define ou retorna o maior valor da coordenada ``y``.**/
 		_yMax: {
-			get: function()  {return this._max.y;},
-			set: function(y) {if (y > this._max.y) this._max.y = y;}
+			get: function()  {
+				let min = this._min.y;
+				let max = this._max.y;
+				return max + (min === max ? (max === 0 ? 1 : max/2) : 0);
+			},
+			set: function(y) {
+				if (y > this._max.y) this._max.y = y;
+			}
 		},
 		/**. ``''number'' _xMin``: Define ou retorna menor valor da coordenada ``x``.**/
 		_xMin: {
-			get: function()  {return this._min.x;},
-			set: function(x) {if (x < this._min.x) this._min.x = x;}
+			get: function()  {
+				let min = this._min.x;
+				let max = this._max.x;
+				return min - (min === max ? (min === 0 ? 1 : min/2) : 0);
+			},
+			set: function(x) {
+				if (x < this._min.x) this._min.x = x;
+			}
 		},
 		/**. ``''number'' _xMin``: Define ou retorna menor valor da coordenada ``y``.**/
 		_yMin: {
-			get: function()  {return this._min.y;},
-			set: function(y) {if (y < this._min.y) this._min.y = y;}
+			get: function()  {
+				let min = this._min.y;
+				let max = this._max.y;
+				return min - (min === max ? (min === 0 ? 1 : min/2) : 0);
+			},
+			set: function(y) {
+				if (y < this._min.y) this._min.y = y;
+			}
 		},
 		/**. ``''number'' _xScale``: Transforma a coordenada horizontal de real para gráfica.**/
 		_xScale: {
@@ -4251,7 +4275,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				yInit:      0.10,
 				yEnd:       0.85,
 				points:     5.00,
-				padd:       0.01,
+				padd:       0.005,
 				width:      1000,
 				get height()  {return this.width * (this.vertical / this.horizontal);},
 				get xStart()  {return this.xInit * this.width;},
@@ -4361,14 +4385,15 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					svg.text( /* escala eixo x */
 						div.point.x,
 						div.padd.y,
-						this._values(div.scale.x, div.scale.dx, this.xAxis),
+						this._values(div.scale.x, this.xAxis),
 						(i === 0 ? "hnw" : (i < (p - 1) ? "hn" : "hne"))
 					).attribute(this._cfg.attr_label)
+					.attribute(this.xAxis === "datetime" ? {"font-size": "small"} : {})
 					.title(div.scale.x)
 					.text( /* escala eixo y */
 						div.padd.x,
 						div.point.y,
-						this._values(div.scale.y, div.scale.dy),
+						this._values(div.scale.y),
 						(i === 0 ? "hse" : (i < (p - 1) ? "he" : "hne"))
 					).attribute(this._cfg.attr_label)
 					.title(div.scale.y);
@@ -4376,41 +4401,33 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				}
 			}
 		},
-
-
+		/**. ``''string'' _values(''number'' value, ''string'' type)``: Formata e retorna o valor a ser exibido nos eixos.
+		. O argumento ``value`` corresponde ao valor numérico a ser formatado. O argumento opcional ``type`` diz respeito ao tipo de informação (''number'', ''time'', ''date'' ou ''datetime'').**/
 		_values: {
-			value: function(value, delta, type) {
+			value: function(value, type) {
 				switch(type) {
 					case "date":
 						return __DateTime(value).toDateString();
 					case "time":
 						return __DateTime(value).toTimeString();
 					case "datetime":
-						return __DateTime(value).format("{YY}-{MM}-{DD} {hh}:{mm}");
+						return __DateTime(value).format("{YYYY}-{MM}-{DD} {hh}:{mm}");
 				}
-				let num = __Number(value);
-				let v   = Math.abs(value);
-				let d   = Math.abs(delta);
+				let n = __Number(value);
+				let e = n.e;
 
-				if (v === 0    ) return num.notation("decimal", 0);
-				if (v >= 1e100 ) return num.notation("scientific", 0);
-				if (v >= 1e10  ) return num.notation("scientific", 1);
-				if (v >= 1e3   ) return num.notation("scientific", 2);
-				if (v <= 1e-100) return num.notation("scientific", 0);
-				if (v <= 1e-10 ) return num.notation("scientific", 1);
-				if (v <= 1e-3  ) return num.notation("scientific", 2);
-				if (v >= 1e2   ) return num.notation("decimal", 0);
-				if (v >= 1e1   ) return num.notation("decimal", 1);
-				if (v >= 1e0   ) return num.notation("decimal", 2);
-				if (v <= 1e-2  ) return num.notation("decimal", 0);
-				if (v <= 1e-1  ) return num.notation("decimal", 1);
-				if (v <= 1e0   ) return num.notation("decimal", 2);
-				return num.notation("scientific", 2);
+				if (n ==    0) return n.notation("decimal", 0);
+				if (e >=  100) return n.notation("scientific", 0);
+				if (e >=   10) return n.notation("scientific", 1);
+				if (e >=    3) return n.notation("scientific", 2);
+				if (e >=    2) return n.notation("decimal", 1);
+				if (e >=    1) return n.notation("decimal", 2);
+				if (e <= -100) return n.notation("scientific", 0);
+				if (e <=  -10) return n.notation("scientific", 1);
+				if (e <    -1) return n.notation("scientific", 2);
+				return n.notation("decimal", 2);
 			}
 		},
-
-
-
 		/**. ``''void'' _legend(''node'' svg, ''string'' text, ''number'' color)``: Constrói a legenda do gráfico.
 		. O argumento ``svg`` é o elemento SVG onde o gŕafico está sendo construído. O argumento ``text`` é o conteúdo da primeiro linha da legenda que, se for ``null``, retornará a função ignorando a legenda. O argumento ``color`` define a cor da legenda.**/
 		_legend: {
@@ -4428,15 +4445,13 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				let y2     = y1 - delta;
 				let y3     = (y1 + y2)/2;
 
-				//
-				svg.lines([x1, x2, x3, x3], [y1, y2, y2, y1], true)
+				svg.lines([x1, x2, x3, x3], [y1, y2, y2, y1], true) /* fundo colorido */
 				.attribute(this._cfg.attr_vname)
 				.attribute({fill: ncolor, stroke: ncolor})
 				.title(text)
-				.text(x2, y3, text.split("\n")[0], "hw")
+				.text(x2+padd, y3, text.split("\n")[0], "hw") /* legenda */
 				.attribute(this._cfg.attr_tname)
 				.title(text);
-
 			}
 		},
 		/**. ``''node'' plot()``: Constrói o gráfico e o retorna (elemento SVG).**/
@@ -4505,14 +4520,27 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 						}
 						if (data[i].type === "sum") {
 							let fit = __Data2D(data[i].x, data[i].y);
-							name   += "\n∑ yΔx ≈ "+fit.area;
+							let sum = fit.area;
+							let min = Math.min.apply(null, fit.y);
+							let max = Math.max.apply(null, fit.y);
+							let big = Math.abs(max) >= Math.abs(min) ? max : min;
+							let ind = fit.y.indexOf(big);
+							let ym  = this._yScale(big/2);
+							let xm  = this._xScale(fit.x[ind]);
+							let pm  = xm <= this._cfg.xStart ? "hw" : (xm >= this._cfg.xClose ? "he" : "hc");
+							xm     += pm === "hw" ? 5 : (pm === "he" ? -5 : 0);
+							name   += "\n∑ yΔx ≈ " + sum;
 							x.unshift(x[0]);
 							x.push(x[x.length - 1]);
 							y.unshift(self._yScale(0));
 							y.push(self._yScale(0));
-							svg.lines(x, y, true)
+							svg.lines(x, y, true) /* área */
 							.attribute(this._cfg.curve_sum)
 							.attribute({stroke: colors.valueOf(color), fill: colors.valueOf(color)})
+							.title(name)
+							.text(xm, ym, this._values(sum), pm) /* valor numérico */
+							.attribute(this._cfg.attr_tname)
+							.attribute({fill: colors.valueOf(color)})
 							.title(name);
 							this._legend(svg, name, color);
 						}
@@ -4522,16 +4550,19 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 							let xi  = this._xScale(this._xMin);
 							let xn  = this._xScale(this._xMax);
 							let ya  = this._yScale(avg);
+							name   += "\n(∑ yΔx)/ΔX ≈ "+avg;
 
-							svg.lines(x, y)
+							svg.lines(x, y) /* Curva normal */
 							.attribute(this._cfg.curve_dash)
 							.attribute({stroke: colors.valueOf(color)})
-							.title(name);
-
-							name += "\n(∑ yΔx)/ΔX ≈ "+avg;
-							svg.lines([xi, xn], [ya, ya])
+							.title(name)
+							.lines([xi, xn], [ya, ya]) /* Linha média */
 							.attribute(this._cfg.curve_line)
 							.attribute({stroke: colors.valueOf(color)})
+							.title(name)
+							.text(x[0]+5, ya-5, this._values(avg), "hsw") /* valor numérico */
+							.attribute(this._cfg.attr_tname)
+							.attribute({fill: colors.valueOf(color)})
 							.title(name);
 							this._legend(svg, name, color);
 						}
@@ -4638,48 +4669,39 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 							/* barra */
 							svg.rect(x, y, w, h)
 							.attribute({fill: color})
-							.title(item.name+" ("+item._value+")");
+							.title(item.name+"\n"+this.yLabel+": "+item._value+"");
 							/* legenda */
 							svg.text(
 								x + width/2,
 								item.value >= 0 ? (y+h+5) : (y-5),
-								item.name,
+								this._values(item.value),
 								item.value >= 0 ? "hn" : "hs"
 							)
 							.attribute({fill: color});
-
-
+							this._legend(svg, item.name, i);
 						}
-
-						svg.lines(
+						svg.lines( /* linha central */
 							[this._cfg.left, this._cfg.right],
 							[this._yScale(0), this._yScale(0)]
-						)
-						.attribute({fill: "None", "stroke": "black", "stroke-width": 3, "stroke-linecap": "round"})
-						//.text(this._cfg.left, this._cfg.bottom, this.xLabel, "hnw")
-						//.text(this._cfg.left, this._cfg.bottom, this.yLabel, "vsw");
-
-
-
-						svg
-						.text(this._cfg.xMiddle, this._cfg.top, this.title, "hc")
-						.attribute(this._cfg.attr_title)
-						.text(
+						).attribute(this._cfg.attr_area)
+						.text( /* título */
+							this._cfg.xMiddle,
+							this._cfg.top,
+							this.title,
+							"hc"
+						).attribute(this._cfg.attr_title)
+						.text( /* Rótulo da quantidade de elementos */
 							this._cfg.right,
 							this._cfg.height-this._cfg.padding,
 							this.xLabel+": "+count,
 							"hse"
-						)
-						.text(
+						).attribute(this._cfg.attr_label)
+						.text( /* Rótulo da soma de valores */
 							this._cfg.left,
 							this._cfg.height-this._cfg.padding,
 							this.yLabel+": "+__Number(total).notation(),
 							"hsw"
-						);
-
-
-
-						//this._plan(svg);
+						).attribute(this._cfg.attr_label);
 					}
 				}
 				return svg.svg();
@@ -4799,8 +4821,8 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					}
 					/* definindo limites superiores e inferiores no caso de área */
 					if (option === "sum") {
-						this._xMin = 0;
-						this._xMax = 0;
+						this._yMin = 0;
+						this._yMax = 0;
 					}
 
 					/* Y é função ------------------------------------------------------- */
@@ -4822,7 +4844,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 						this._data.push({
 							x:     [xLimit.min, xLimit.max],
 							y:     [y, y],
-							name:  String(label),
+							name:  String(label).trim(),
 							f:     false,
 							type:  option in curve ? curve[option] : curve.main,
 							color: ++this._color
