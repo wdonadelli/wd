@@ -4177,7 +4177,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				if (x < this._min.x) this._min.x = x;
 			}
 		},
-		/**. ``''number'' _xMin``: Define ou retorna menor valor da coordenada ``y``.**/
+		/**. ``''number'' _yMin``: Define ou retorna menor valor da coordenada ``y``.**/
 		_yMin: {
 			get: function()  {
 				let min = this._min.y;
@@ -4209,7 +4209,8 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		/**. ``''number'' _dx``: Retorna o menor valor real de ``x``.**/
 		_dx: {
 			get: function() {
-				return Math.abs(this._xMax - this._xMin)/this._cfg.xSize;
+				let width = this._cfg.width + (this._cfg.width%2 === 0 ? 1 : 0);
+				return Math.abs(this._xMax - this._xMin)/width;
 			}
 		},
 		/**. ``''array'' _xSpace``: Retorna uma lista contendo todos os valores possíveis de ``x``**/
@@ -4261,11 +4262,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		.. ``''object'' attr_vname``: atributos da legenda do gráfico (visual).
 		.. ``''object'' curve_line``: atributos da curva em linha.
 		.. ``''object'' curve_sum``: atributos da curva de área.
-		.. ``''object'' curve_dash``: atributos da curva de traços.
-
-
-
-		**/
+		.. ``''object'' curve_dash``: atributos da curva de traços.**/
 		_cfg: {
 			value: {
 				vertical:   Math.min(window.screen.width, window.screen.height),
@@ -4472,7 +4469,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					while(++i < data.length) {
 						if (!data[i].f) continue;
 						let list = __Data2D(x, data[i].y);
-						if (list === null) return false;
+						if (list.error) return false;
 						data[i].x = list.x;
 						data[i].y = list.y;
 						let yList = __Array(data[i].y);
@@ -4512,7 +4509,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 						if (data[i].type === "dots" || data[i].type === "link") {
 							let j = -1;
 							while(++j < x.length) {
-								svg.circle(x[j], y[j], 3)
+								svg.circle(x[j], y[j], 4)
 								.attribute({fill: colors.valueOf(color)})
 								.title((name === null ? "" : name+"\n")+"("+data[i].x[j]+", "+data[i].y[j]+")");
 							}
@@ -4707,20 +4704,6 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return svg.svg();
 			}
 		},
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 		/**. ``''string'' xLabel``: Define ou retorna o valor do rótulo do eixo x.**/
 		xLabel: {
 			get: function()  {return this._xLabel;},
@@ -4745,19 +4728,24 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			}
 		},
 		/**. ``''boolean'' add(''array'' x, ''any'' y, ''string'' label, ''string'' option)``: Adiciona dados para plotagem e retorna falso se não for possível processar a solicitação.
-		. O argumento ``x`` pode ser uma lista de valores (numéricos ou data/tempo), uma lista de identificadores (numérico ou string), ou um objeto. No caso de plotagem no __plano cartesiano__, o argumento deve ser uma lista de valores e uma lista de identificadores ou um objeto no caso de gráfico proporcional. No caso de objeto, os atributos serão os identificadores e seus valores definirão o argumento ``y``.
-		. O argumento ``y`` pode ser uma __função__, uma __constante__ ou uma lista de __valores numéricos__ no caso de gráfico cartesiano. No caso de gráfico proporcional, uma lista de valores correspondentes aos identificadores informados em ``x``. No caso de gráfico proporcional, se ``x`` for um objeto, ``y`` será ignorado.
+		. Os argumentos ``x`` e ``y`` representam a abscissa (eixo horizontal) e a ordenada (eixo vertical), respectivamente. Seus valores dependem do tipo de gráfico.
+		. No caso de plotagem no __plano cartesiano__, o valor de ``x`` deverá ser uma lista de valores numéricos ou de data/tempo. Já o valor de ``y`` poderá ser uma __função__ que retorna um valor numérico finito; uma __lista__ de valores finitos; ou uma __constante numérica__ finita.
+		. No caso de plotagem de __gráfico de proporcionalidade__ (circular ou de barras), o valor de ``x`` poderá ser uma lista de identificadores (numéricos ou string) e ``y`` uma lista de valores numéricos correspondentes aos identificadores definidos em ``x``.
+		. O valor de ``x`` também poderá ser um objeto, cujos atributos definirão os identificadores, tornado o valor de ``y`` desnecessário.
+		. No caso de gráfico de proporcionalidade, o comportamento padrão é exibir uma gráfico circular, mas se existir valores positivos e negativos para os identificadores, um gráfico de barras será exibido.
 		. O argumento ``label`` é utilizado para identificar o gráfico no caso de plano cartesiano.
-		. O argumento ``option`` é opcional e direcionado para o gráfico de plano cartesiano com valores de ``x`` e ``y`` como array. Seus valores podem ser:
+		. O argumento ``option`` é opcional e direcionado para o gráfico de plano cartesiano com valores de ``x`` e ``y`` como array. Seus valores podem ser (todos retornam valores aproximados):
 		|Valor|Descrição|
-		|linearFit|Traça a regressão linear.|
-		|geometricFit|Traça a regressão geométrica.|
-		|logarithmicFit|Traça a regressão logarítmica.|
-		|exponentialFit|Traça a regressão exponencial.|
-		|minDeviation|Traça a a regressão com o menor valor de desvio padrão.|
-		|average|Traça o valor médio.|
-		|area|Traça a área.|
-		|line|Traça uma linha.|**/
+		|linear|Traça a regressão linear.|
+		|geometric|Traça a regressão geométrica.|
+		|logarithmic|Traça a regressão logarítmica.|
+		|exponential|Traça a regressão exponencial.|
+		|minimum|Traça a regressão com o menor valor de desvio padrão.|
+		|avg|Traça o valor médio da curva.|
+		|sum|Traça a área sob a curva.|
+		|line|Traça uma linha ligando os pontos da curva.|
+		|link|Traça uma linha ligando os pontos demarcados da curva.|
+		|dots|Traça os pontos demarcados.|**/
 		add: {
 			value: function(x, y, label, option) {
 				let xdata = __Type(x);
@@ -4795,30 +4783,19 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					gráfico cartesiano
 				----------------------------------------------------------------------*/
 				else {
-					/* checando dados */
-					let data  = __Data2D(x, y);
-					if (data.error) return false;
-					/* defindo curvas */
+					/* checando dados e definindo tipos de curvas */
+					if (!xdata.array) return false;
 					option    = String(option).trim();
 					let types = {
 						function: {sum: "sum", avg: "avg", line: "line", main: "line"},
 						finite:   {main: "line"},
-						array:    {sum: "sum", avg: "avg", line: "line", link: "link", main: "link"},
+						array:    {sum: "sum", avg: "avg", line: "line", link: "link", dots: "dots", main: "link"},
 						fit:      {
 							linear:    "linearFit",    exponential: "exponentialFit",
 							geometric: "geometricFit", logarithmic: "logarithmicFit",
 							minimum:   "minDeviation"
 						}
 					};
-					/* definindo previamente os limites superiores e inferiores */
-					let xLimit = __Array(data.x);
-					let yLimit = ydata.array ? __Array(data.y) : null;
-					this._xMin = xLimit.min;
-					this._xMax = xLimit.max;
-					if (yLimit !== null) {
-						this._yMin = yLimit.min;
-						this._yMax = yLimit.max;
-					}
 					/* definindo limites superiores e inferiores no caso de área */
 					if (option === "sum") {
 						this._yMin = 0;
@@ -4828,8 +4805,16 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					/* Y é função ------------------------------------------------------- */
 					if (ydata.function) {
 						let curve = types.function;
+						let data  = __Data2D(x, x);
+						if (data.error) return false;
+						let limit = {
+							min: Math.min.apply(null, data.x),
+							max: Math.max.apply(null, data.x)
+						};
+						this._xMin = limit.min;
+						this._xMax = limit.max;
 						this._data.push({
-							x:     [xLimit.min, xLimit.max],
+							x:     [limit.min, limit.max],
 							y:     y,
 							name:  String(label),
 							f:     true,
@@ -4841,9 +4826,19 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					/* Y é constante ---------------------------------------------------- */
 					else if (ydata.finite) {
 						let curve = types.finite;
+						let data  = __Data2D(x, y);
+						if (data.error) return false;
+						let limit = {
+							min: Math.min.apply(null, data.x),
+							max: Math.max.apply(null, data.x)
+						};
+						this._xMin = limit.min;
+						this._xMax = limit.max;
+						this._yMin = ydata.value;
+						this._yMax = ydata.value;
 						this._data.push({
-							x:     [xLimit.min, xLimit.max],
-							y:     [y, y],
+							x:     [limit.min, limit.max],
+							y:     [ydata.value, ydata.value],
 							name:  String(label).trim(),
 							f:     false,
 							type:  option in curve ? curve[option] : curve.main,
@@ -4854,6 +4849,20 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					/* Y é array -------------------------------------------------------- */
 					else if (ydata.array) {
 						let curve = types.array;
+						let data  = __Data2D(x, y);
+						if (data.error) return false;
+						let xlimit = {
+							min: Math.min.apply(null, data.x),
+							max: Math.max.apply(null, data.x)
+						};
+						let ylimit = {
+							min: Math.min.apply(null, data.y),
+							max: Math.max.apply(null, data.y)
+						};
+						this._xMin = xlimit.min;
+						this._xMax = xlimit.max;
+						this._yMin = ylimit.min;
+						this._yMax = ylimit.max;
 						this._data.push({
 							x:     data.x,
 							y:     data.y,
@@ -4874,7 +4883,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 
 							/* função principal */
 							this._data.push({
-									x:     [xLimit.min, xLimit.max],
+									x:     [xlimit.min, xlimit.max],
 									y:     fit.f,
 									name:  null,
 									f:     true,
@@ -4884,7 +4893,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 							/* desvio padrão */
 							if (fit.d === 0) return true;
 							this._data.push({
-									x:     [xLimit.min, xLimit.max],
+									x:     [xlimit.min, xlimit.max],
 									y:     function(x) {return fit.f(x)+fit.d;},
 									name:  null,
 									f:     true,
@@ -4892,7 +4901,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 									color: this._color
 							});
 							this._data.push({
-									x:     [xLimit.min, xLimit.max],
+									x:     [xlimit.min, xlimit.max],
 									y:     function(x) {return fit.f(x)-fit.d;},
 									name:  null,
 									f:     true,
