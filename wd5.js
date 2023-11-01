@@ -4298,7 +4298,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				attr_svg:   {style: "background-color: #ffffe6; margin: 0 20em;"},
 				attr_title: {fill: "#262626", "font-weight": "bold", "font-size": "1.5em"},
 				attr_label: {fill: "#262626"},
-				attr_area:  {stroke: "#262626", fill: "None", "stroke-width": 2, "stroke-linecap": "round"},
+				attr_area:  {stroke: "#262626", fill: "None", "stroke-width": 2},
 				attr_axes:  {stroke: "#778899", "stroke-width": 0.5, "stroke-dasharray": "6,6", "stroke-linecap": "round"},
 				attr_vname: {"stroke-width": 0},
 				attr_tname: {fill: "WhiteSmoke", "font-style": "italic"},
@@ -4337,14 +4337,81 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				).attribute(this._cfg.attr_area);
 
  				/* subdivisões e escala */
+
+ 				/* a testar */
+ 				let x = {min: this._xMin, max: this._xMax, start: this._cfg.xStart, close: this._cfg.xClose};
+ 				let y = {min: this._yMin, max: this._yMax, start: this._cfg.yStart, close: this._cfg.yClose};
+
+
+ 				/* âncora da escala em x */
+ 				let xref  = Array(this._cfg.points);
+				xref.forEach(function(v,i,a) {
+ 					let end = a.length - 1;
+ 					if      (i === 0)    a[i] = "hnw";
+ 					else if (i === end) a[i] = "hne";
+ 					else                 a[i] = "hn";
+ 				});
+ 				/* âncora da escala em y */
+ 				let yref  = Array(this._cfg.points);
+				yref.forEach(function(v,i,a) {
+ 					let end = a.length - 1;
+ 					if      (i === 0)   a[i] = "hse";
+ 					else if (i === end) a[i] = "hne";
+ 					else                a[i] = "he";
+ 				});
+ 				/* posição no gráfico em x */
+ 				let xplot = Array(this._cfg.points);
+				xplot.forEach(function(v,i,a) {
+ 					let len = a.length;
+ 					let end = len - 1;
+ 					let mid = len / 2;
+ 					if      (i === 0  ) a[i] = x.start;
+ 					else if (i === end) a[i] = x.close;
+ 					else if (i === mid) a[i] = (x.start + x.close) / 2 ;
+ 					else                a[i] = a[i-1] + ((x.close - x.start) / len);
+ 				});
+ 				/* posição no gráfico em y */
+ 				let yplot = Array(this._cfg.points);
+				yplot.forEach(function(v,i,a) {
+ 					let len = a.length;
+ 					let end = len - 1;
+ 					let mid = len / 2;
+ 					if      (i === 0  ) a[i] = y.start;
+ 					else if (i === end) a[i] = y.close;
+ 					else if (i === mid) a[i] = (y.start + y.close) / 2 ;
+ 					else                a[i] = a[i-1] - ((y.close - y.start) / len);
+ 				});
+ 				/* rótulos no gráfico em x */
+				xplot.forEach(function(v,i,a) {
+ 					let len = a.length;
+ 					let end = len - 1;
+ 					let mid = len / 2;
+ 					if      (i === 0  ) a[i] = x.min;
+ 					else if (i === end) a[i] = x.max;
+ 					else if (i === mid) a[i] = (x.max + x.min) / 2 ;
+ 					else                a[i] = a[i-1] + ((x.min - x.max) / len);
+ 				});
+
+
+
+ 				let xreal = Array(this._cfg.points);
+ 				let xreal = Array(this._cfg.points);
+
+
+
+
+
+
+
+ 				/* testado */
 				let div = {
-					scale: { /* Escala real */
+					scale: { /* Coordenada real */
 						x:  this._xMin,
 						y:  this._yMin,
 						dx: (this._xMax - this._xMin)/(this._cfg.points - 1),
 						dy: (this._yMax - this._yMin)/(this._cfg.points - 1),
 					},
-					point: { /* Coordenadas no gráfico */
+					point: { /* Coordenadas gráfica */
 						x:  this._cfg.xStart,
 						y:  this._cfg.yClose, /* (invertido) */
 						dx: this._cfg.xSize/(this._cfg.points - 1),
@@ -4356,12 +4423,22 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					},
 					horizontal: [this._cfg.xStart, this._cfg.xClose],
 					vertical:   [this._cfg.yStart, this._cfg.yClose],
-					max: {x: this._xMax, y: this.yxMax},
+					line: 0,
+					lines: this._cfg.points,
+					max: {x: this._xMax, y: this._yMax, X: this._cfg.xClose, Y: this._cfg.yStart},
+					get xref() {
+						return this.line === 0 ? "hnw" : (this.line >= this.lines - 1 ? "hne" : "hn");
+					},
+					get yref() {
+						return this.line === 0 ? "hse" : (this.line >= this.lines - 1 ? "hne" : "he");
+					},
 					next: function() {
-						this.scale.x += this.scale.dx;
-						this.scale.y += this.scale.dy;
-						this.point.x += this.point.dx;
-						this.point.y -= this.point.dy; /* (invertido) */
+						this.line++;
+						let max      = this.line >= this.lines - 1;
+						this.scale.x = max ? this.max.x : this.scale.x + this.scale.dx;
+						this.scale.y = max ? this.max.y : this.scale.y + this.scale.dy;
+						this.point.x = max ? this.max.X : this.point.x + this.point.dx;
+						this.point.y = max ? this.max.Y : this.point.y - this.point.dy; /* (invertido) */
 					}
 				};
 				let i = -1;
@@ -4370,28 +4447,31 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				while (++i < p) {
 					/* subdivisões */
 					if (i > 0 && i < p) {
-						svg.lines( /* horizontais */
+
+						svg.lines( /* -- horizontais -- */
 							div.horizontal,
 							[div.point.y, div.point.y]
 						).attribute(this._cfg.attr_axes)
-						.lines( /* verticais */
+						.lines( /* -- verticais -- */
 							[div.point.x, div.point.x],
 							div.vertical
 						).attribute(this._cfg.attr_axes);
 					}
-					svg.text( /* escala eixo x */
+					svg.text( /* -- escala eixo x -- */
 						div.point.x,
 						div.padd.y,
 						this._values(div.scale.x, this.xAxis),
-						(i === 0 ? "hnw" : (i < (p - 1) ? "hn" : "hne"))
+						div.xref
+						//(i === 0 ? "hnw" : (i < (p - 1) ? "hn" : "hne"))
 					).attribute(this._cfg.attr_label)
 					.attribute(this.xAxis === "datetime" ? {"font-size": "small"} : {})
 					.title(div.scale.x)
-					.text( /* escala eixo y */
+					.text( /* -- escala eixo y -- */
 						div.padd.x,
 						div.point.y,
 						this._values(div.scale.y),
-						(i === 0 ? "hse" : (i < (p - 1) ? "he" : "hne"))
+						div.yref
+						//(i === 0 ? "hse" : (i < (p - 1) ? "he" : "hne"))
 					).attribute(this._cfg.attr_label)
 					.title(div.scale.y);
 					div.next();
@@ -4525,7 +4605,10 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 							let ym  = this._yScale(big/2);
 							let xm  = this._xScale(fit.x[ind]);
 							let pm  = xm <= this._cfg.xStart ? "hw" : (xm >= this._cfg.xClose ? "he" : "hc");
+							console.log(this._cfg.xStart, xm, pm);
 							xm     += pm === "hw" ? 5 : (pm === "he" ? -5 : 0);
+							console.log(this._cfg.xStart, xm, pm);
+
 							name   += "\n∑ yΔx ≈ " + sum;
 							x.unshift(x[0]);
 							x.push(x[x.length - 1]);
@@ -4915,10 +4998,6 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return false;
 			}
 		},
-
-
-
-
 	});
 
 
