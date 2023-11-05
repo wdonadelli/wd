@@ -3587,7 +3587,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				} catch(e) {return null;}
 			}
 		},
-		/**. ``''void'' _reset()``: Reinicia valores para a requisição;**/
+		/**. ``''void'' _reset()``: Reinicia valores para a requisição.**/
 		_reset: {
 			value: function() {
 				this._time  = new Date().valueOf();
@@ -3658,7 +3658,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 	###### ``**constructor** ''object'' __SVG(''number'' width=100, ''number'' height=100, ''number'' xmin=0, ''number'' ymin=0)``
 	Construtor de imagens SVG.
 	Os argumentos são opcionais e estão relacionados ao atributo [``viewBox``]<https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/viewBox> do elemento SVG.
-	{**/
+	**/
 	function __SVG(width, height, xmin, ymin) {
 		if (!(this instanceof __SVG)) return new __SVG(width, height, xmin, ymin);
 		let svg  = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -5556,329 +5556,60 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		return test.type === "node" ? elem : __$$(selector, root);
 	}
 
-	function __finite(value) {
-		let input = __Type(value);
-		return input.finite;
-	}
-	function __integer(value) {
-		let input = __Type(value);
-		if (input.type !== "number") return null;
-		if (!input.finite) return input.value;
-		return (input < 0 ? -1 : 1) * Math.trunc(Math.abs(input.value));
-	}
-	function __decimal(value) {
-		let input = __Type(value);
-		if (input.type !== "number") return null;
-		if (!input.finite) return input.value;
-		let exp = 1;
-		while ((input * exp)%1 !== 0) exp = 10*exp;
-		return (exp*(input.value) - exp*__integer(input.value)) / exp;
-	}
-	function __cut(value, n, round) {
-		let input = __Type(value);
-		if (input.type !== "number") return null;
-		if (!input.finite) return input.value;
-		let digit = __Type(n);
-		digit = !digit.finite || digit < 0 ? 0 : __integer(digit.value);
 
-		if (round === false) {
-			let i = -1;
-			let base = 1;
-			while (++i < n) base = 10*base;
-			return __integer(base*input.value)/base;
-		}
-		return Number(input.valueOf().toFixed(digit));
-	}
-	function __primes(value) {
-		let input = __Type(value);
-		if (!input.finite || input < 2) return [];
-		let list = [2];
-		let i    = 3;
-		while (i <= input) {
-			let isPrime = true;
-			let j = 0; /* não checar o 2 */
-			while (++j < list.length) {
-				if (i % list[j] === 0) {
-					isPrime = false;
-					break;
-				}
-			}
-			if (isPrime) list.push(i);
-			i += 2; /* não checar par */
-		}
-		return list;
-	}
-	function __prime(value) {
-		let input = __Type(value);
-		if (!input.finite || input < 2 || __decimal(input.value) !== 0) return false;
-		let list = __primes(input.value);
-		return list[list.length - 1] === input.value ? true : false;
-	};
-	function __gcd() {
-		/* analisando argumentos */
-		let input =  [];
-		let i     = -1;
-		while (++i < arguments.length) {
-			let data = __Type(arguments[i]);
-			if (!data.finite) continue;
-			let number = __integer(Math.abs(data.value));
-			if (number === 0 || number === 1) return number;
-			input.push(number);
-		}
-		if (input.length < 2)
-			return input.length === 1 ? input[0] : 1;
-		/* obtendo números primos */
-		let min    = Math.min.apply(null, input);
-		let primes = __primes(min);
-		if (primes.length === 0) return 1;
-		/* obtendo o mdc */
-		let mdc = 1;
-		i = 0;
-		/* looping pelos primos */
-		while (i < primes.length) {
-			let test = true;
-			let stop = false;
-
-			/* checando se todos os argumentos são divisíveis pelo primo da vez */
-			let j    = -1;
-			while(++j < input.length) {
-				if (primes[i] > input[j])     stop = true;
-				if (input[j]%primes[i] !== 0)	test = false;
-				if (stop || !test)            break;
-			}
-			/* se todos forem divisíveis, reprocessar argumentos e ajustar mdc ou chamar próximo primo */
-			if (test) {
-				let k = -1;
-				while(++k < input.length)
-					input[k] = input[k]/primes[i];
-				mdc = mdc * primes[i];
-			} else {
-				i++;
-			}
-			/* Primo maior que um dos argumentos: parar processamento */
-			if (stop) break;
-		}
-		return mdc;
-	}
-	function __frac(value, limit) {
-		let input = __Type(value);
-		if (input.type !== "number") return "0";
-		if (!input.finite) return input.toString();
-		let int = Math.abs(__integer(input.value));
-		let flt = Math.abs(__decimal(input.value));
-		if (flt === 0) return int.toString();
-		/* checando argumento limitador */
-		let min = 1;
-		let max = 5;
-		let lim = (min+max)/2;
-		let check = __Type(limit);
-		if (check.finite && check.value !== lim)
-			lim = check < min ? min : (check > max ? max : __integer(check.value));
-		/* divisor, dividendo e números significativos */
-		let div = 1;
-		let dnd = flt * div;
-		let len = 0;
-		while(dnd%1 !== 0) {
-			div = 10*div;
-			dnd = flt * div;
-			/* checando limites */
-			if (__integer(dnd) !== 0) {
-				len++;
-				if (len >= lim) {
-					dnd = __integer(dnd);
-					break;
-				}
-			}
-		}
-		/* obtendo o máximo divisor comum e a fração */
-		let gcd = __gcd(div, dnd);
-		int = int === 0 ? "" : int.toString()+" ";
-		dnd = String(dnd/gcd);
-
-		div = String(div/gcd);
-		return (input < 0 ? "-" : "")+int+dnd+"/"+div;
-	}
-	function __bytes(value) {
-		let input = __Type(value);
-		if (input.finite) return "0 B";
-		value = input < 1 ? 0 : __integer(input.value);
-		let scale = ["B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
-		let i     = scale.length;
-		while (--i >= 0)
-			if (value >= Math.pow(1024,i))
-				return (value/Math.pow(1024,i)).toFixed(2)+" "+scale[i];
-		return value+" B";
-	}
-	function __number(value) {
-		let input = __Type(value);
-		if (input.type !== "number")         return "not numeric";
-		let sign = input < 0 ? "-" : "+";
-		if (input == 0)                      return "zero";
-		if (!input.finite)                   return sign+"infinity";
-		if (input == __integer(input.value)) return sign+"integer";
-		if (input == __decimal(input.value))   return sign+"float";
-		return sign+"real";
-	}
-	function __precision(value, n) {
-		let input = __Type(value);
-		let digit = __Type(n);
-		if (input.type !== "number") return null;
-		if (!__finite(digit.value) || digit.value < 1) return null;
-		digit = __integer(digit.value);
-		input = input.value;
-		if (Math.abs(input) < 1 && input !== 0) {
-			return Math.abs(input) < Math.pow(10, -digit+1) ? input.toExponential(digit-1) : input.toFixed(digit-1);
-		} //FIXME tem que decidir o que quer aqui
-		return input.toPrecision(digit);
-	}
-	function __notation(value, lang, type, code) {
-		let input = __Type(value);
-		if (input.type !== "number") return null;
-		if (!input.finite) return input.value.toString();
-
-		let types = {
-			significant: {
-				minimumSignificantDigits: code,
-				maximumSignificantDigits: code
-			},
-			decimal: {
-				style: "decimal",
-				minimumFractionDigits: code,
-				maximumFractionDigits: code
-			},
-			integer: {
-				style: "decimal",
-				minimumIntegerDigits: code,
-			},
-			percent: {
-				style: "percent",
-				minimumFractionDigits: code,
-				maximumFractionDigits: code
-			},
-			unit: {
-				style: "unit",
-				unit: code
-			},
-			scientific: {
-				style: "decimal",
-				notation: "scientific",
-				minimumFractionDigits: code,
-				maximumFractionDigits: code
-			},
-			engineering: {
-				style: "decimal",
-				notation: "engineering",
-				minimumFractionDigits: code,
-				maximumFractionDigits: code
-			},
-			compact: {
-				style: "decimal",
-				notation: "compact",
-				compactDisplay: code === "short" ? code : "long"
-			},
-			currency: {
-				style: "currency",
-				currency: code,
-				signDisplay: "exceptZero",
-				currencyDisplay: "symbol"
-			},
-			ccy: {
-				style: "currency",
-				currency: code,
-				signDisplay: "exceptZero",
-				currencyDisplay: "narrowSymbol"
-			},
-			nameccy: {
-				style: "currency",
-				currency: code,
-				signDisplay: "auto",
-				currencyDisplay: "name"
-			}
-
-		};
-		type = String(type).toLowerCase();
-		try {
-			return input.value.toLocaleString(lang, (type in types ? types[type] : {}));
-		} catch(e) {}
-		try {
-			input.value.toLocaleString(undefined, (type in types ? types[type] : {}));
-		} catch (e) {}
-		return input.value.toLocaleString();
-	}
-	function wd_no_spaces(txt, char) { /* Troca múltiplos espaço por um caracter*/
-		return txt.replace(/\s+/g, (char === undefined ? " " : char)).trim();
-	};
-	function wd_text_clear(value) { /* elimina acentos */
-		value = new String(value);
-		if ("normalize" in value)
-			return value.normalize('NFD').replace(/[\u0300-\u036f]/g, "");
-
-		let ascii = {
-			A: /[À-Å]/g, C: /[Ç]/g,   E: /[È-Ë]/g, I: /[Ì-Ï]/g,
-			N: /[Ñ]/g,   O: /[Ò-Ö]/g, U: /[Ù-Ü]/g, Y: /[ÝŸ]/g,
-			a: /[à-å]/g, c: /[ç]/g,   e: /[è-ë]/g, i: /[ì-ï]/g,
-			n: /[ñ]/g,   o: /[ò-ö]/g, u: /[ù-ü]/g, y: /[ýÿ]/g
-		};
-		for (let i in ascii)
-			value = value.replace(ascii[i], i);
-
-		return value;
-	}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* == BLOCO 3 ================================================================*/
 
 /*----------------------------------------------------------------------------*/
-	function WDmain(input) {
+	/**### Interface do Usuário
+	Trata-se de construtores e funções para interface com o usuário na manipulação de dados.
+
+	#### WDmain
+	###### ``**constructor** ''object'' WDmain(''any''  input, ''object'' main)``
+	Construtor genérico para manipulação de dados cujos construtores específicos herdarão seu comportamento.
+	O argumento ``input`` se refere ao dado informado pelo usuário e o argumento ``main`` corresponde à instância de ``__Type``, cuja alimentação será realizada pela função ``WD``.**/
+	function WDmain(input, main) {
 		Object.defineProperties(this, {
-			_value: {value: input.value, writable: true},
-			_type:  {value: input.type},
-			_input: {value: input.input}
+			_input: {value: input},
+			_main:  {value: main},
 		});
 	}
 
 	Object.defineProperties(WDmain.prototype, {
 		constructor: {value: WDmain},
-		type: { /* informa o tipo do argumento */
-			get: function() {return this._type;}
+		/**. ``''string'' type``: Retorna o tipo do dado.**/
+		type: {
+			get: function() {return this._main.type;}
 		},
-		test: { /* testa se o tipo do valor se enquadra em alguma categoria */
-			value: function() {
-				return wd_test(this._input, Array.prototype.slice.call(arguments));
+		/**. ``''boolean'' test(''string'' type)``: Retorna verdadeiro se o argumento ``type`` corresponder ao tipo de dado (ver ``__Type``).**/
+		test: {
+			value: function(type) {
+				return this._main[type] === true;
 			}
 		},
-		valueOf: { /* método padrão */
+		/**. ``''any'' valueOf()``: Retorna o valor do dado (ver ``__Type``).**/
+		valueOf: {
 			value: function() {
-				try {return this._value.valueOf();} catch(e) {}
-				return new Number(this._value).valueOf();
+				return this._main.valueOf();
 			}
 		},
-		toString: { /* método padrão */
+		/**. ``''string'' toString()``: Retorna o valor textual do dado (ver ``__Type``).**/
+		toString: {
 			value: function() {
-				try {return this._value.toString();} catch(e) {}
-				return new String(this._value).toString();
+				return this._main.toString();
 			}
 		},
-		send: { /* Efetua requisições */
-			value: function (action, callback, method, async) {
+		/**. ``''void'' data()``: Efetua requisições e leitura de dados (ver ``__Request``).
+
+FIXME pensar um jeito de bom de fazer sendo e read
+
+
+		**/
+		data: {
+			value: function (action, callback, method, time) {
+				let data = new Request(this._input, callback);
+				data.maxtime = time;
+				if (data.read(method))
+
+
 				if (wd_vtype(method).type !== "text") method = "POST";
 
 				/* obtendo pacote de dados */
@@ -6293,10 +6024,10 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 	});
 
 /*----------------------------------------------------------------------------*/
-	function WDdom(input) {WDmain.call(this, input);}
+	function WDnode(input) {WDmain.call(this, input);}
 
-	WDdom.prototype = Object.create(WDmain.prototype, {
-		constructor: {value: WDdom},
+	WDnode.prototype = Object.create(WDmain.prototype, {
+		constructor: {value: WDnode},
 		valueOf: { /* método padrão */
 			value: function() {
 				return this._value.slice();
@@ -6411,23 +6142,21 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 	});
 
 /*----------------------------------------------------------------------------*/
-	function WD(input) { /* função de interface ao usuário */
-		/* obtendo o tipo e o valor resultando da entrada */
-		let vtype  = wd_vtype(input);
-		/* acrescentando o valor original aos dados */
-		vtype["input"] = input;
-		/* lista de objetos a serem chamados */
-		let object = {
-			"undefined": WDundefined, "null":     WDnull,
-			"boolean":   WDboolean,   "function": WDfunction,
-			"object":    WDobject,    "regexp":   WDregexp,
-			"array":     WDarray,     "dom":      WDdom,
-			"time":      WDtime,      "date":     WDdate,
-			"number":    WDnumber,    "text":     WDtext,
-			"unknown":   WDmain
-		};
-		/* construindo e retornando o objeto específico */
-		return new object[vtype.type](vtype);
+	/**### Função Mestre
+	###### ``''object'' WD(''any'' input)``
+	Função principal, única de acesso ao usuário, com o objetivo de chamar os construtores correspondentes ao valor informado no argumento ``input``.**/
+	function WD(input) {
+		let main = __Type(input);
+		switch(main.type) {
+			case "number":   return new WDnumber(input, main);
+			case "array":    return new WDarray(input, main);
+			case "date":     return new WDdatetime(input, main);
+			case "time":     return new WDdatetime(input, main);
+			case "datetime": return new WDdatetime(input, main);
+			case "node":     return new WDnode(input, main);
+			case "string":   return new WDstring(input, main);
+		}
+		return new WDmain(input, main);
 	}
 
 	WD.constructor = WD;
