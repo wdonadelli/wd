@@ -887,18 +887,25 @@ const wd = (function() {
 		type: {
 			get: function() {return this._type;}
 		},
-		/**. ``''void''  valueOf()``: Retorna o método ``valueOf`` do retorno do atributo ``value`` e, se ``null`` ou ``undefined``, seus respectivos valores.**/
+		/**. ``''void''  valueOf()``: Retorna o método ``valueOf`` do retorno do atributo ``value``, exceto para os tipos ''null'' (retorna ``0``), ''undefined'' (retorna ``Infinity``) e ''boolean'' (retorna ``1`` se verdadeiro e ``0`` se falso).**/
 		valueOf: {
 			value: function() {
-				return this.null || this.undefined ? this._value : (this.value).valueOf();
+				if (this.null)      return 0;
+				if (this.undefined) return Infinity;
+				if (this.boolean)   return this.value ? 1 : 0;
+				return (this.value).valueOf();
 			}
 		},
-		/**. ``''string'' toString()``: Retorna o método ``toString`` do retorno do atributo ``value``. Se ``null`` retorna uma string vazia e se ``undefined`` um ponto de interrogação.**/
+		/**. ``''string'' toString()``: Retorna o método ``toString`` do retorno do atributo ``value``, exceto para os tipos ''null'' (retorna uma string vazia), ''undefined'' (retorna ``?``), ''boolean'' (retorna ``true`` se verdadeiro e ``false`` se falso), ''regexp'' (.**/
 		toString: {
 			value: function() {
-				if (this.null) return "";
-				if (this.undefined) return "?"
-				return this.value.toString();
+				if (this.null)      return "";
+				if (this.undefined) return "?";
+				if (this.boolean)   return this.value ? "true" : "false";
+				if (this.regexp)    return this.value.source;
+				if (this.object)    return JSON.stringify(this.value);
+				if (this.array)     return JSON.stringify(this.value);
+				return (this.value).toString();
 			}
 		}
 	});
@@ -5563,13 +5570,13 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 	Trata-se de construtores e funções para interface com o usuário na manipulação de dados.
 
 	#### WDmain
-	###### ``**constructor** ''object'' WDmain(''any''  input, ''object'' main)``
+	###### ``**constructor** ''object'' WDmain(''any''  input, ''object'' data)``
 	Construtor genérico para manipulação de dados cujos construtores específicos herdarão seu comportamento.
-	O argumento ``input`` se refere ao dado informado pelo usuário e o argumento ``main`` corresponde à instância de ``__Type``, cuja alimentação será realizada pela função ``WD``.**/
-	function WDmain(input, main) {
+	O argumento ``input`` se refere ao dado informado pelo usuário e o argumento ``data`` corresponde à instância de ``__Type``, cuja alimentação será realizada pela função ``WD``.**/
+	function WDmain(input, data) {
 		Object.defineProperties(this, {
 			_input: {value: input},
-			_main:  {value: main},
+			_data:  {value: data},
 		});
 	}
 
@@ -5577,24 +5584,42 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		constructor: {value: WDmain},
 		/**. ``''string'' type``: Retorna o tipo do dado.**/
 		type: {
-			get: function() {return this._main.type;}
+			get: function() {return this._data.type;}
 		},
-		/**. ``''boolean'' test(''string'' type)``: Retorna verdadeiro se o argumento ``type`` corresponder ao tipo de dado (ver ``__Type``).**/
-		test: {
+		/**. ``''boolean'' is(''string'' type)``: Retorna verdadeiro se o argumento ``type`` corresponder ao tipo de dado (ver ``__Type``).**/
+		is: {
 			value: function(type) {
-				return this._main[type] === true;
+				return arguments.length === 0 ? false : (this._data[type] === true);
+			}
+		},
+		/**. ``''boolean'' or(''string'' type...)``: Retorna verdadeiro se algum dos tipos informados no argumento ``type`` corresponder ao tipo de dado.**/
+		or: {
+			value: function() {
+				var i = -1;
+				while (++i < arguments.length)
+					if (this.is(arguments[i])) return true;
+				return false;
+			}
+		},
+		/**. ``''boolean'' and(''string'' type...)``: Retorna verdadeiro se todos os tipos informados no argumento ``type`` corresponder ao tipo de dado.**/
+		and: {
+			value: function() {
+				var i = -1;
+				while (++i < arguments.length)
+					if (!this.is(arguments[i])) return false;
+				return true;
 			}
 		},
 		/**. ``''any'' valueOf()``: Retorna o valor do dado (ver ``__Type``).**/
 		valueOf: {
 			value: function() {
-				return this._main.valueOf();
+				return this._data.valueOf();
 			}
 		},
 		/**. ``''string'' toString()``: Retorna o valor textual do dado (ver ``__Type``).**/
 		toString: {
 			value: function() {
-				return this._main.toString();
+				return this._data.toString();
 			}
 		},
 		/**. ``''void'' data()``: Efetua requisições e leitura de dados (ver ``__Request``).
@@ -5630,118 +5655,93 @@ FIXME pensar um jeito de bom de fazer sendo e read
 				return wd_request(action, pack, callback, method, async);
 			}
 		},
-		signal: { /*renderizar mensagem*/
+		/**. ``''void'' signal(''string'' title)``: Renderiza uma mensagem.**/
+		signal: {
 			value: function(title) {
 				__SIGNALCONTROL.open(this.toString(), title);
 				return this.type === "dom" ? this : null;
 			}
 		},
+		/**. ``''void'' signal(''string'' title)``: Renderiza uma mensagem.**/
 		notify: { /*renderizar notificação*/
 			value: function(title) {
 				wd_notify(title, this.toString());
 				return this.type === "dom" ? this : null;
 			}
-		},
-		finite: { /* informa se é um número finito */
-			get: function() {return __finite(this._value);}
 		}
 	});
 
 /*----------------------------------------------------------------------------*/
-	function WDundefined(input) {WDmain.call(this, input);}
+	/**#### WDstring
+	###### ``**constructor** ''object'' WDstring(''any''  input, ''object'' data)``
+	Construtor genérico para manipulação de strings. Os argumentos ``input`` e ``data`` se referem aos argumento de ``WDmain``**/
+	function WDstring(input, data) {
+		WDmain.call(this, input, data);
+		Object.defineProperties(this, {
+			_main: {value: new __String(data.value)},
+		});
+	}
 
-	WDundefined.prototype = Object.create(WDmain.prototype, {
-		constructor: {value: WDundefined},
-		valueOf:     {value: function() {return Infinity;}},
-		toString:    {value: function() {return "?";}}
-	});
-
-/*----------------------------------------------------------------------------*/
-	function WDnull(input) {WDmain.call(this, input);}
-
-	WDnull.prototype = Object.create(WDmain.prototype, {
-		constructor: {value: WDnull},
-		valueOf:     {value: function() {return 0;}},
-		toString:    {value: function() {return "";}}
-	});
-
-/*----------------------------------------------------------------------------*/
-	function WDboolean(input) {WDmain.call(this, input);}
-
-	WDboolean.prototype = Object.create(WDmain.prototype, {
-		constructor: {value: WDboolean},
-		valueOf:     {value: function() {return this._value ? 1 : 0;}},
-		toString:    {value: function() {return this._value ? "True" : "False";}}
-	});
-
-/*----------------------------------------------------------------------------*/
-	function WDfunction(input) {WDmain.call(this, input);}
-
-	WDfunction.prototype = Object.create(WDmain.prototype, {
-		constructor: {value: WDfunction},
-	});
-
-/*----------------------------------------------------------------------------*/
-	function WDobject(input) {WDmain.call(this, input);}
-
-	WDobject.prototype = Object.create(WDmain.prototype, {
-		constructor: {value: WDobject},
-		toString:    {value: function() {return wd_json(this._value);}}
-	});
-
-/*----------------------------------------------------------------------------*/
-	function WDregexp(input) {WDmain.call(this, input);}
-
-	WDregexp.prototype = Object.create(WDmain.prototype, {
-		constructor: {value: WDregexp},
-		toString:    {value: function() {return this._value.source;}}
-	});
-
-/*----------------------------------------------------------------------------*/
-	function WDtext(input) {WDmain.call(this, input);}
-
-	WDtext.prototype = Object.create(WDmain.prototype, {
-		constructor: {value: WDtext},
-		upper: { /* retorna valor em caixa alta */
-			get: function() {return this.toString().toUpperCase();}
+	WDstring.prototype = Object.create(WDmain.prototype, {
+		constructor: {value: WDstring},
+		/**. ``''string'' upper``: Retorna caixa alta.**/
+		upper: {
+			get: function() {return this._main.upper;}
 		},
-		lower: { /* retorna valor em caixa baixa */
-			get: function() {return this.toString().toLowerCase();}
+		/**. ``''string'' lower``: Retorna caixa baixa.**/
+		lower: {
+			get: function() {return this._main.lower;}
 		},
-		caps: { /* retorna valor capitulado */
-			get: function() {return __caseCapitalize(this.toString());}
+		/**. ``''string'' capitalize``: Retorna a primeira letra de cada palavra em caixa alta.**/
+		capitalize: {
+			get: function() {return this._main.capitalize;}
 		},
-		tgl: { /* inverte caixa */
-			get: function() {return __caseToggle(this.toString());}
+		/**. ``''string'' toggle``: Inverte a caixa.**/
+		toggle: {
+			get: function() {return this._main.toggle;}
 		},
-		clear: { /* remove acentos da string */
-			get: function() {return wd_text_clear(this.toString());}
+		/**. ``''string'' camel``: Transforma a string em camelCase.**/
+		camel: {
+			get: function() {return this._main.camel;}
 		},
-		camel: { /* transforma string para inicioMeioFim */
-			get: function() {return __strCamel(this.toString());}
+		/**. ``''string'' dash``: Divide a string em traços.**/
+		dash: {
+			get: function() {return this._main.dash;}
 		},
-		dash: { /* transforma string para inicio-meio-fim */
-			get: function() {return __String(this.toString()).dash;}
+		/**. ``''string'' clear``: Remove acentos.**/
+		clear: {
+			get: function() {return this._main.clear(false, true);}
 		},
-		csv: { /* CSV para Matriz */
-			get: function() {return wd_csv_array(this.toString());}
+		/**. ``''string'' trim``: Remove espaços excedentes.**/
+		trim: {
+			get: function() {return this._main.clear(true, false);}
 		},
-		trim: { /* remove múltiplos espaços */
-			get: function() {return wd_no_spaces(this.toString());}
+		/**. ``''array'' csv``: Retorna string em CSV para array.**/
+		csv: {
+			get: function() {return this._main.csv;}
 		},
-		json: { /* JSON para Object */
-			get: function() {return wd_json(this.toString());}
+		/**. ``''any'' json``: Retorna notação em JSON para valor em Javascript ou ``null`` se inválido.**/
+		json: {
+			get: function() {try{return JSON.parse(this._input);} catch(e) {return null;}}
 		},
-		rpl: { /* replaceAll simples (só texto) */
-			value: function(search, change) {
-				return wd_replace_all(this.toString(), search, change);
-			}
-		},
+
+
+
+
+		//FIXME: que tal deixar isso no genérico?
 		mask: { /* máscaras temáticas */
 			value: function(check, callback) {
 				return wd_multiple_masks(this.toString(), check, callback);
 			}
 		},
+
+		//FIXME: precisa disso?
+		rpl: { /* replaceAll simples (só texto) */
+			value: function(search, change) {
+				return wd_replace_all(this.toString(), search, change);
+			}
+		},
+
 		format: { /*aplica atributos múltiplos*/
 			value: function() {
 				return wd_apply_getters(this, Array.prototype.slice.call(arguments));
@@ -5751,50 +5751,132 @@ FIXME pensar um jeito de bom de fazer sendo e read
 	});
 
 /*----------------------------------------------------------------------------*/
-	function WDnumber(input) {WDmain.call(this, input);}
+	/**#### WDnumber
+	###### ``**constructor** ''object'' WDnumber(''any''  input, ''object'' data)``
+	Construtor genérico para manipulação de números. Os argumentos ``input`` e ``data`` se referem aos argumento de ``WDmain``**/
+	function WDnumber(input, data) {
+		WDmain.call(this, input, data);
+		Object.defineProperties(this, {
+			_main: {value: new __Number(data.value)},
+			_unit: {value: null, writable: true},
+			_currency: {value: null, writable: true},
+			_digits: {value: 2, writable: true}
+		});
+	}
 
 	WDnumber.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDnumber},
-		int: { /* retorna a parte inteira */
-			get: function() {return __integer(this.valueOf());}
+		/**. ``''string'' unitCode``: Retorna e define a unidade de medida.**/
+		unitCode: {
+			get: function()  {return this._unit;},
+			set: function(x) {this._unit = String(x).trim();}
 		},
-		dec: { /* retorna a parte decimal */
-			get: function() {return __decimal(this.valueOf());}
+		/**. ``''integer'' digits``: Retorna e define a quantidade de dígitos (inteiro ou decimais).**/
+		digits: {
+			get: function()  {return this._digits;},
+			set: function(x) {
+				let check = __Type(x);
+				if (check.integer && !check.negative && check.finite)
+					this._digits = check.value;
+			}
 		},
-		abs: { /* retorna a parte decimal */
-			get: function() {return Math.abs(this.valueOf());}
+		/**. ``''string'' unitCurrency``: Retorna e define a unidade monetária.**/
+		unitCurrency: {
+			get: function()  {return this._currency;},
+			set: function(x) {this._currency = String(x).trim();}
 		},
+		/**. ``''integer'' int``: Retorna a parte inteira.**/
+		int: {
+			get: function() {return this._main.int;}
+		},
+		/**. ``''number'' dec``: Retorna a parte decimal.**/
+		dec: {
+			get: function() {return this._main.dec;}
+		},
+		/**. ``''number'' abs``: Retorna o valor absoluto.**/
+		abs: {
+			get: function() {return this._main.abs;}
+		},
+		/**. ``''string'' bytes``: Retorna o valor em bytes.**/
+		bytes: {
+			get: function() {return this._main.bytes;}
+		},
+		/**. ``''boolean'' prime``: Informa se o número é primo.**/
+		prime: {
+			get: function() {return this._main.bytes;}
+		},
+		/**. ``''array'' primes``: Retorna uma lista de primos até o número.**/
+		primes: {
+			get: function() {return this._main.bytes;}
+		},
+		/**. ``''string'' significant: Retorna o número com a quantidade de dígitos significativos definida.**/
+		significat: {
+			get: function() {return this._main.notation("significant", this.digits);}
+		},
+		/**. ``''string'' decimal: Retorna o número com a quantidade de casas decimais definida.**/
+		decimal: {
+			get: function() {return this._main.notation("decimal", this.digits);}
+		},
+		/**. ``''string'' integer: Retorna o número com a quantidade de dígitos inteiros definida.**/
+		integer: {
+			get: function() {return this._main.notation("integer", this.digits);}
+		},
+		/**. ``''string'' percent: Retorna o número em notação percentual com a quantidade de casas decimais definida.**/
+		percent: {
+			get: function() {return this._main.notation("percent", this.digits);}
+		},
+		/**. ``''string'' unit: Retorna o número com a unidade de medida definida.**/
+		unit: {
+			get: function() {return this._main.notation("unit", this.unitCode);}
+		},
+		/**. ``''string'' scientific: Retorna o número em notação científica com a quantidade de casas decimais definida.**/
+		scientific: {
+			get: function() {return this._main.notation("scientific", this.digits);}
+		},
+		/**. ``''string'' engineering: Retorna o número em notação de engenharia com a quantidade de casas decimais definida.**/
+		engineering: {
+			get: function() {return this._main.notation("engineering", this.digits);}
+		},
+		/**. ``''string'' compact: Retorna o número em notação compacta longa.**/
+		compact: {
+			get: function() {return this._main.notation("compact1", null);}
+		},
+		/**. ``''string'' compact: Retorna o número em notação compacta curta.**/
+		shortCompact: {
+			get: function() {return this._main.notation("compact2", null);}
+		},
+		/**. ``''string'' currency: Retorna o número em notação monetária.**/
+		currency: {
+			get: function() {return this._main.notation("currency1", this.unitCurrency);}
+		},
+		/**. ``''string'' shortCurrency: Retorna o número em notação monetária curta.**/
+		shortCurrency: {
+			get: function() {return this._main.notation("currency2", this.unitCurrency);}
+		},
+		/**. ``''string'' longCurrency: Retorna o número em notação monetária longa.**/
+		longCurrency: {
+			get: function() {return this._main.notation("currency3", this.unitCurrency);}
+		},
+		/**. ``''number'' round: Retorna o número arredondando-o pela quantidade de casas decimais definida.**/
+		round: {
+			get: function() {return this._main.round(this.digits);}
+		},
+		/**. ``''number'' cut: Retorna o número cortando-o pela quantidade de casas decimais definida.**/
+		cut: {
+			get: function() {return this._main.cut(this.digits);}
+		},
+		/**. ``''string'' frac: Retorna o número em forma de fração aproximado pela quantidade de casas decimais definida.**/
+		frac: {
+			get: function() {return this._main.frac(this.digits);}
+		},
+
+
+
+
+
+		//FIXME o que eu faço com isso?
 		ntype: { /* retorna o tipo de número */
 			get: function() {return __number(this.valueOf());}
-		},
-		frac: { /* representação em fração (2 casas) */
-			get: function () {return __frac(this.valueOf());}
-		},
-		byte: { /* retorna notação para bytes */
-			get: function () {return __bytes(this.valueOf());}
-		},
-		str: { /* retorna string simplificada do número */
-			get: function() {return wd_num_str(this.valueOf());}
-		},
-		round: { /* arredonda número para determinado tamanho */
-			value: function(width) {
-				return __cut(this.valueOf(), width);
-			}
-		},
-		pow10: { /* transforma número em notação científica */
-			value: function(width) {
-				return wd_num_pow10(this.valueOf(), width);
-			}
-		},
-		locale: { /* notação numérica local */
-			value: function(currency) {
-				return wd_num_local(this.valueOf(), currency);
-			}
-		},
-		fixed: { /* fixa quantidade de dígitos (int e dec) */
-			value: function(ldec, lint) {
-				return wd_num_fixed(this.valueOf(), ldec, lint);
-			}
 		},
 		toString: { /* método padrão */
 			value: function() {
@@ -5804,95 +5886,83 @@ FIXME pensar um jeito de bom de fazer sendo e read
 	});
 
 /*----------------------------------------------------------------------------*/
-	function WDtime(input) {WDmain.call(this, input);}
+	/**#### WDdatetime
+	###### ``**constructor** ''object'' WDdatetime(''any''  input, ''object'' data)``
+	Construtor genérico para manipulação de tempo. Os argumentos ``input`` e ``data`` se referem aos argumento de ``WDmain``**/
+	function WDdatetime(input, data) {
+		WDmain.call(this, input, data);
+		Object.defineProperties(this, {
+			_main: {value: new __DateTime(data.value)},
+		});
+	}
 
-	WDtime.prototype = Object.create(WDmain.prototype, {
-		constructor: {value: WDtime},
-		h: { /* define/obtem a hora */
-			get: function() {return wd_number_time(this.valueOf()).h;},
+	WDdatetime.prototype = Object.create(WDmain.prototype, {
+		constructor: {value: WDdatetime},
+		/**. ``''integer'' year``: Define e retorna o ano.**/
+		year: {
+			get: function()  {
+				return this.type === "time" ? undefined : this._main.year;
+			},
 			set: function(x) {
-				if (__finite(x))
-					this._value = wd_time_number(__integer(x), this.m, this.s);
+				if (this.type !== "time") this._main.year = x;
 			}
 		},
+		/**. ``''integer'' month``: Define e retorna o mês.**/
+		month: {
+			get: function()  {
+				return this.type === "time" ? undefined : this._main.month;
+			},
+			set: function(x) {
+				if (this.type !== "time") this._main.month = x;
+			}
+		},
+		/**. ``''integer'' day``: Define e retorna o dia.**/
+		day: {
+			get: function()  {
+				return this.type === "time" ? undefined : this._main.day;
+			},
+			set: function(x) {
+				if (this.type !== "time") this._main.day = x;
+			}
+		},
+		/**. ``''integer'' hour``: Define e retorna a hora.**/
 		hour: {
-			get: function()  {return this.h;},
-			set: function(x) {return this.h = x;}
-		},
-		m: { /* define/obtem o minuto */
-			get: function() {return wd_number_time(this.valueOf()).m;},
+			get: function()  {
+				return this.type === "date" ? undefined : this._main.hour;
+			},
 			set: function(x) {
-				if (__finite(x))
-					this._value = wd_time_number(this.h, __integer(x), this.s);
+				if (this.type !== "date") this._main.hour = x;
 			}
 		},
+		/**. ``''integer'' minute``: Define e retorna o minuot.**/
 		minute: {
-			get: function()  {return this.m;},
-			set: function(x) {return this.m = x;}
-		},
-		s: { /* define/obtem o segundo */
-			get: function() {return wd_number_time(this.valueOf()).s;},
+			get: function()  {
+				return this.type === "date" ? undefined : this._main.minute;
+			},
 			set: function(x) {
-				if (__finite(x))
-					this._value = wd_time_number(this.h, this.m, __integer(x));
+				if (this.type !== "date") this._main.minute = x;
 			}
 		},
+		/**. ``''number'' second``: Define e retorna o segundo.**/
 		second: {
-			get: function()  {return this.s;},
-			set: function(x) {return this.s = x;}
+			get: function()  {
+				return this.type === "date" ? undefined : this._main.second;
+			},
+			set: function(x) {
+				if (this.type !== "date") this._main.second = x;
+			}
 		},
+
+
+
+
+
+
 		h12: { /* Retorna a hora no formato ampm */
 			get: function() {return wd_time_ampm(this.h, this.m);},
 		},
-		format: { /* formata saída string */
-			value: function(str) {
-				return wd_time_format(this, str);
-			}
-		},
-		toString: { /* método padrão */
-			value: function() {return wd_time_iso(this.valueOf());}
-		}
 
-	});
 
-/*----------------------------------------------------------------------------*/
-	function WDdate(input) {WDmain.call(this, input);}
-
-	WDdate.prototype = Object.create(WDmain.prototype, {
-		constructor: {value: WDdate},
-		y: { /* ano */
-			get: function() {return this._value.getFullYear();},
-			set: function(x) {
-				if (__finite(x) && x >= 0)
-					this._value = wd_set_date(this._value, undefined, undefined, __integer(x));
-			}
-		},
-		m: { /* mês */
-			get: function() {return this._value.getMonth() + 1;},
-			set: function(x) {
-				if (__finite(x))
-					this._value = wd_set_date(this._value, undefined, __integer(x), undefined);
-			}
-		},
-		d: { /* dia */
-			get: function() {return this._value.getDate();},
-			set: function(x) {
-				if (__finite(x))
-					this._value = wd_set_date(this._value, __integer(x), undefined, undefined);
-			}
-		},
-		year: {
-			get: function()  {return this.y;},
-			set: function(x) {return this.y = x;}
-		},
-		month: {
-			get: function()  {return this.m;},
-			set: function(x) {return this.m = x;}
-		},
-		day: {
-			get: function()  {return this.d;},
-			set: function(x) {return this.d = x;}
-		},
 		length: {/*dias no ano*/
 			get: function() {return wd_is_leap(this.y) ? 366 : 365;}
 		},
@@ -6045,7 +6115,7 @@ FIXME pensar um jeito de bom de fazer sendo e read
 		},
 		addHandler: { /* adiciona disparadores */
 			value: function(events) {
-				return this.run(wd_html_handler, events);
+				//return this.run(wd_html_handler, events);
 			}
 		},
 		delHandler: { /* remove disparadores */
@@ -6146,17 +6216,17 @@ FIXME pensar um jeito de bom de fazer sendo e read
 	###### ``''object'' WD(''any'' input)``
 	Função principal, única de acesso ao usuário, com o objetivo de chamar os construtores correspondentes ao valor informado no argumento ``input``.**/
 	function WD(input) {
-		let main = __Type(input);
-		switch(main.type) {
-			case "number":   return new WDnumber(input, main);
-			case "array":    return new WDarray(input, main);
-			case "date":     return new WDdatetime(input, main);
-			case "time":     return new WDdatetime(input, main);
-			case "datetime": return new WDdatetime(input, main);
-			case "node":     return new WDnode(input, main);
-			case "string":   return new WDstring(input, main);
+		let data = __Type(input);
+		switch(data.type) {
+			case "number":   return new WDnumber(input, data);
+			case "array":    return new WDarray(input, data);
+			case "date":     return new WDdatetime(input, data);
+			case "time":     return new WDdatetime(input, data);
+			case "datetime": return new WDdatetime(input, data);
+			case "node":     return new WDnode(input, data);
+			case "string":   return new WDstring(input, data);
 		}
-		return new WDmain(input, main);
+		return new WDmain(input, data);
 	}
 
 	WD.constructor = WD;
@@ -6986,27 +7056,27 @@ FIXME pensar um jeito de bom de fazer sendo e read
 /*----------------------------------------------------------------------------*/
 	function inputProcedures(ev, relay) { /* procedimentos de formulário e contenteditable */
 		/*--------------------------------------------------------------------------
-		| A) após cada digitação/alteração, definir wdTimeKey com o tempo atual
+		| A) após cada digitação/alteração, definir WDdatetimeKey com o tempo atual
 		| B) chamar novamente a função após um intervalo de tempo
 		\-------------------------------------------------------------------------*/
 		let now = (new Date()).valueOf();
 		if (relay !== true) {
-			ev.target.dataset.wdTimeKey = now; /*A*/
+			ev.target.dataset.WDdatetimeKey = now; /*A*/
 			window.setTimeout(function() { /*B*/
 				inputProcedures(ev, true);
 			}, __KEYTIMERANGE);
 			return;
 		}
 		/*--------------------------------------------------------------------------
-		| C) se wdTimeKey está difinido, checar o intervalo desde a última alteração
+		| C) se WDdatetimeKey está difinido, checar o intervalo desde a última alteração
 		| D) se agora for >= tempo definido+intervalo:
 		| E) apagar atributo e
 		| F) executar
 		\-------------------------------------------------------------------------*/
-		if ("wdTimeKey" in ev.target.dataset) { /*C*/
-			let time = new Number(ev.target.dataset.wdTimeKey).valueOf();
+		if ("WDdatetimeKey" in ev.target.dataset) { /*C*/
+			let time = new Number(ev.target.dataset.WDdatetimeKey).valueOf();
 			if (now >= (time+__KEYTIMERANGE)) { /*D*/
-				delete ev.target.dataset.wdTimeKey; /*E*/
+				delete ev.target.dataset.WDdatetimeKey; /*E*/
 				/*F*/
 				data_wdFilter(ev.target);
 				data_wdOutput(ev.target);
