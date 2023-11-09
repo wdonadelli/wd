@@ -934,9 +934,10 @@ const wd = (function() {
 		},
 		/**. ``''number'' toString()``: Retorna o valor em forma de string.**/
 		toString: {
-			value: function() {
-				if (this.finite) return this.valueOf().toString();
-				return (this < 0 ? "-" : "+")+"\u221E";
+			value: function(lang) {
+				if (__Type(lang).lang && "toLocaleString" in Number)
+					return this._value.toLocaleString(lang);
+				return this.finite ? this._value.toString() : (this < 0 ? "-" : "+")+"\u221E";
 			}
 		},
 		/**. ``''number'' abs``: Retorna o valor absoluto do número.**/
@@ -1181,7 +1182,6 @@ const wd = (function() {
 				return n;
 			}
 		}
-
 	});
 /*===========================================================================*/
 	/**### Textos
@@ -5757,33 +5757,37 @@ FIXME pensar um jeito de bom de fazer sendo e read
 	function WDnumber(input, data) {
 		WDmain.call(this, input, data);
 		Object.defineProperties(this, {
-			_main: {value: new __Number(data.value)},
-			_unit: {value: null, writable: true},
-			_currency: {value: null, writable: true},
-			_digits: {value: 2, writable: true}
+			_main:        {value: new __Number(data.value)},
+			_measurement: {value: null, writable: true},
+			_monetary:    {value: null, writable: true},
+			_digits:      {value: 2, writable: true},
 		});
 	}
 
 	WDnumber.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDnumber},
-		/**. ``''string'' unitCode``: Retorna e define a unidade de medida.**/
-		unitCode: {
-			get: function()  {return this._unit;},
-			set: function(x) {this._unit = String(x).trim();}
-		},
-		/**. ``''integer'' digits``: Retorna e define a quantidade de dígitos (inteiro ou decimais).**/
+		/**. ``''object'' decDigits(''integer'' n)``: Fixa a quantidade de dígitos (argumento ``n``) para referência aos atributos e retorna o próprio objeto.**/
 		digits: {
-			get: function()  {return this._digits;},
-			set: function(x) {
-				let check = __Type(x);
+			value: function(n) {
+				let check = __Type(n);
 				if (check.integer && !check.negative && check.finite)
 					this._digits = check.value;
+				return this;
 			}
 		},
-		/**. ``''string'' unitCurrency``: Retorna e define a unidade monetária.**/
-		unitCurrency: {
-			get: function()  {return this._currency;},
-			set: function(x) {this._currency = String(x).trim();}
+		/**. ``''object'' monetary(''string'' n)``: Fixa o código monetário (argumento ``n``) para referência aos atributos e retorna o próprio objeto.**/
+		monetary: {
+			value: function(n) {
+				this._monetary = String(n).trim();
+				return this;
+			},
+		},
+		/**. ``''object'' measurement(''string'' n)``: Fixa o nome da unidade de medida (argumento ``n``) para referência aos atributos e retorna o próprio objeto.**/
+		measurement: {
+			value: function(n) {
+				this._measurement = String(n).trim();
+				return this;
+			}
 		},
 		/**. ``''integer'' int``: Retorna a parte inteira.**/
 		int: {
@@ -5803,39 +5807,39 @@ FIXME pensar um jeito de bom de fazer sendo e read
 		},
 		/**. ``''boolean'' prime``: Informa se o número é primo.**/
 		prime: {
-			get: function() {return this._main.bytes;}
+			get: function() {return this._main.prime;}
 		},
 		/**. ``''array'' primes``: Retorna uma lista de primos até o número.**/
 		primes: {
-			get: function() {return this._main.bytes;}
+			get: function() {return this._main.primes;}
 		},
 		/**. ``''string'' significant: Retorna o número com a quantidade de dígitos significativos definida.**/
 		significat: {
-			get: function() {return this._main.notation("significant", this.digits);}
+			get: function() {return this._main.notation("significant", this._digits);}
 		},
 		/**. ``''string'' decimal: Retorna o número com a quantidade de casas decimais definida.**/
 		decimal: {
-			get: function() {return this._main.notation("decimal", this.digits);}
+			get: function() {return this._main.notation("decimal", this._digits);}
 		},
 		/**. ``''string'' integer: Retorna o número com a quantidade de dígitos inteiros definida.**/
 		integer: {
-			get: function() {return this._main.notation("integer", this.digits);}
+			get: function() {return this._main.notation("integer", this._digits);}
 		},
 		/**. ``''string'' percent: Retorna o número em notação percentual com a quantidade de casas decimais definida.**/
 		percent: {
-			get: function() {return this._main.notation("percent", this.digits);}
+			get: function() {return this._main.notation("percent", this._digits);}
 		},
 		/**. ``''string'' unit: Retorna o número com a unidade de medida definida.**/
 		unit: {
-			get: function() {return this._main.notation("unit", this.unitCode);}
+			get: function() {return this._main.notation("unit", this._measurement);}
 		},
 		/**. ``''string'' scientific: Retorna o número em notação científica com a quantidade de casas decimais definida.**/
 		scientific: {
-			get: function() {return this._main.notation("scientific", this.digits);}
+			get: function() {return this._main.notation("scientific", this._digits);}
 		},
 		/**. ``''string'' engineering: Retorna o número em notação de engenharia com a quantidade de casas decimais definida.**/
 		engineering: {
-			get: function() {return this._main.notation("engineering", this.digits);}
+			get: function() {return this._main.notation("engineering", this._digits);}
 		},
 		/**. ``''string'' compact: Retorna o número em notação compacta longa.**/
 		compact: {
@@ -5847,27 +5851,34 @@ FIXME pensar um jeito de bom de fazer sendo e read
 		},
 		/**. ``''string'' currency: Retorna o número em notação monetária.**/
 		currency: {
-			get: function() {return this._main.notation("currency1", this.unitCurrency);}
+			get: function() {return this._main.notation("currency1", this._monetary);}
 		},
 		/**. ``''string'' shortCurrency: Retorna o número em notação monetária curta.**/
 		shortCurrency: {
-			get: function() {return this._main.notation("currency2", this.unitCurrency);}
+			get: function() {return this._main.notation("currency2", this._monetary);}
 		},
 		/**. ``''string'' longCurrency: Retorna o número em notação monetária longa.**/
 		longCurrency: {
-			get: function() {return this._main.notation("currency3", this.unitCurrency);}
+			get: function() {return this._main.notation("currency3", this._monetary);}
 		},
 		/**. ``''number'' round: Retorna o número arredondando-o pela quantidade de casas decimais definida.**/
 		round: {
-			get: function() {return this._main.round(this.digits);}
+			get: function() {return this._main.round(this._digits);}
 		},
 		/**. ``''number'' cut: Retorna o número cortando-o pela quantidade de casas decimais definida.**/
 		cut: {
-			get: function() {return this._main.cut(this.digits);}
+			get: function() {return this._main.cut(this._digits);}
 		},
 		/**. ``''string'' frac: Retorna o número em forma de fração aproximado pela quantidade de casas decimais definida.**/
 		frac: {
-			get: function() {return this._main.frac(this.digits);}
+			get: function() {return this._main.frac(this._digits);}
+		},
+
+
+		toString: {
+			value: function(locale) {//FIXME: trocar pt-br por lang
+				return this._main.toString(locale === true ? "pt-BR" : undefined);
+			}
 		},
 
 
@@ -5878,11 +5889,8 @@ FIXME pensar um jeito de bom de fazer sendo e read
 		ntype: { /* retorna o tipo de número */
 			get: function() {return __number(this.valueOf());}
 		},
-		toString: { /* método padrão */
-			value: function() {
-				return Math.abs(this.valueOf()) === Infinity ? this.str : this.valueOf().toString();
-			}
-		},
+
+
 	});
 
 /*----------------------------------------------------------------------------*/
