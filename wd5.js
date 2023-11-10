@@ -5875,22 +5875,13 @@ FIXME pensar um jeito de bom de fazer sendo e read
 		},
 
 
+
+		//FIXME: trocar pt-br por lang
 		toString: {
-			value: function(locale) {//FIXME: trocar pt-br por lang
+			value: function(locale) {
 				return this._main.toString(locale === true ? "pt-BR" : undefined);
 			}
 		},
-
-
-
-
-
-		//FIXME o que eu faço com isso?
-		ntype: { /* retorna o tipo de número */
-			get: function() {return __number(this.valueOf());}
-		},
-
-
 	});
 
 /*----------------------------------------------------------------------------*/
@@ -5960,81 +5951,197 @@ FIXME pensar um jeito de bom de fazer sendo e read
 				if (this.type !== "date") this._main.second = x;
 			}
 		},
-
-
-
-
-
-
-		h12: { /* Retorna a hora no formato ampm */
-			get: function() {return wd_time_ampm(this.h, this.m);},
+		/**. ``''integer'' h12``: Retorna a hora no formato 12h (1-12).**/
+		h12: {
+			get: function() {
+				return this.type !== "date" ? this._main.h12 : undefined;
+			},
 		},
-
-
-		length: {/*dias no ano*/
-			get: function() {return wd_is_leap(this.y) ? 366 : 365;}
+		/**. ``''boolean'' leap``: Informa se a data é ano bissexto.**/
+		leap: {
+			get: function() {
+				return this.type !== "time" ? this._main.leap : undefined;
+			}
 		},
-		shortMonth: { /* mês abreviado */
-			get: function() {return wd_date_locale(this._value, {month: "short"});}
+		/**. ``''integer'' dayYear``: Retorna o dia do ano (1-365).**/
+		dayYear: {
+			get: function() {
+				return this.type !== "time" ? this._main.dayYear : undefined;
+			}
 		},
-		longMonth: { /* nome do mês */
-			get: function() {return wd_date_locale(this._value, {month: "long"});}
+		/**. ``''integer'' weekDay``: Retorna o dia da semana (1-7).**/
+		weekDay: {
+			get: function() {
+				return this.type !== "time" ? this._main.weekDay : undefined;
+			}
 		},
-		shortDay: { /* dia abreviado */
-			get: function() {return wd_date_locale(this._value, {weekday: "short"});}
+		/**. ``''integer'' week``: Retorna a semana do ano (1-54).**/
+		week: {
+			get: function() {
+				return this.type !== "time" ? this._main.week : undefined;
+			}
 		},
-		longDay: { /* nome do dia */
-			get: function() {return wd_date_locale(this._value, {weekday: "long"});}
+		/**. ``''boolean'' workingDay``: Informa se o dia é útil.**/
+		workingDay: {
+			get: function() {
+				return this.type !== "time" ? this._main.workingDay : undefined;
+			}
 		},
-		today: { /* dia da semana [1-7] */
-			get: function() {return this._value.getDay() + 1;}
+		/**. ``''integer'' workingDays``: Retorna a quantidade de dias úteis até a data.**/
+		workingDays: {
+			get: function() {
+				return this.type !== "time" ? this._main.workingDays : undefined;
+			}
 		},
-		size: { /* quantidade de dias no mês */
-			get: function() {return wd_date_size(this.m, this.y);}
+		/**. ``''integer'' nonWorkingDays``: Retorna a quantidade de dias não úteis até a data.**/
+		nonWorkingDays: {
+			get: function() {
+				return this.type !== "time" ? this._main.nonWorkingDays : undefined;
+			}
 		},
-		workingYear: { /* dias úteis no ano */
-			get: function() { return wd_date_working(this.y, this.length);}
+		/**. ``''integer'' width``: Retorna a quantidade de dias do mês (28-31).**/
+		width: {
+			get: function() {
+				return this.type !== "time" ? this._main.width : undefined;
+			}
 		},
-		working: { /* dias úteis até o momento */
-			get: function() { return wd_date_working(this.y, this.days);}
-		},
-		days: { /*dias transcorridos no ano*/
-			get: function() {return wd_date_days(this.y, this.m, this.d);}
-		},
-		week: {/*semana cheia do ano*/
-			get: function() {return wd_date_week(this.days, this.today);}
-		},
-		format: { /* formata saída string */
+		/**. ``''string'' format(''string'' str)``: Pre-formata data/tempo a partir de codificação específica.**/
+		format: {
 			value: function(str) {
-				return wd_date_format(this, str);
+				return this._main.format(str);
 			}
 		},
-		toString: { /* método padrão */
+		/**. ``''string'' toString()``: Retorna uma string nos formatos de data ou tempo.**/
+		toString: {
 			value: function() {
-				return wd_date_iso(this._value);
+				if (this.type === "time") return this._main.toTimeString();
+				if (this.type === "date") return this._main.toDateString();
+				return this._main.toString();
 			}
 		},
-		valueOf: { /* método padrão */
+		/**. ``''number'' valueOf()``: Retorna a quantidade de segundos ou dias desde a origem (0000-01-01).**/
+		valueOf: {
 			value: function() {
-				return (this._value < 0 ? -1 : 0) + __integer(this._value/86400000);
+				if (this.type === "time") return this._main.timeOf();
+				if (this.type === "date") return this._main.dateOf();
+				return this._main.valueOf();
 			}
 		},
 	});
 
 /*----------------------------------------------------------------------------*/
-	function WDarray(input) {WDmain.call(this, input);}
+	/**#### WDarray
+	###### ``**constructor** ''object'' WDarray(''any''  input, ''object'' data)``
+	Construtor genérico para manipulação de tempo. Os argumentos ``input`` e ``data`` se referem aos argumento de ``WDmain``**/
+	function WDarray(input, data) {
+		WDmain.call(this, input, data);
+		Object.defineProperties(this, {
+			_main: {value: new __Array(data.value)},
+		});
+	}
 
 	WDarray.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDarray},
-		unique: { /* remove itens repetidos */
-			get: function() {return wd_array_unique(this.valueOf());}
+		/**. ``''number'' min``: Retorna o menor número finito da lista ou ``null``.**/
+		min: {
+			get: function() {return this._main.min;}
 		},
-		sort: { /* ordena items */
-			get: function() {return wd_array_sort(this.valueOf());}
+		/**. ``''number'' max``: Retorna o maior número finito da lista ou ``null``.**/
+		max: {
+			get: function() {return this._main.max;}
 		},
-		tidy: { /* remove itens repetidos e ordena */
-			get: function() {return wd_array_sort(this.unique);}
+		/**. ``''number'' sum``: Retorna a soma dos números finitos da lista ou ``null``.**/
+		sum: {
+			get: function() {return this._main.sum;}
 		},
+		/**. ``''number'' avg``: Retorna a média dos números finitos da lista ou ``null``.**/
+		avg: {
+			get: function() {return this._main.avg;}
+		},
+		/**. ``''number'' med``: Retorna a mediana dos números finitos da lista ou ``null``.**/
+		med: {
+			get: function() {return this._main.med;}
+		},
+		/**. ``''number'' harm``: Retorna a média harmônica dos números finitos da lista ou ``null``.**/
+		harm: {
+			get: function() {return this._main.harm;}
+		},
+		/**. ``''number'' geo``: Retorna a média geométrica dos números finitos da lista ou ``null``.**/
+		geo: {
+			get: function() {return this._main.geo;}
+		},
+		/**. ``''number'' gcd``: Retorna máximo divisor comum dos números finitos da lista ou ``null``.**/
+		gcd: {
+			get: function() {return this._main.gcd;}
+		},
+		/**. ``''array'' mode``: Retorna uma lista com os items mais recorrents da lista.**/
+		mode: {
+			get: function() {return this._main.mode;}
+		},
+		/**. ``''array'' unique``: Retorna a lista sem valores repetidos.**/
+		unique: {
+			get: function() {return this._main.unique;}
+		},
+		/**. ``''array'' asc``: Retorna a lista ordenada de forma ascentende.**/
+		asc: {
+			get: function() {return this._main.sort(true);}
+		},
+		/**. ``''array'' desc``: Retorna a lista ordenada de forma descendente.**/
+		desc: {
+			get: function() {return this._main.sort(false);}
+		},
+		/**. ``''array'' sort``: Retorna a lista com ordem inversa ou forma ascendente, se desordenada.**/
+		sort: {
+			get: function() {return this._main.sort();}
+		},
+		/**. ``''array'' order``: Retorna a lista ordenada de forma ascendente sem repetições.**/
+		order: {
+			get: function() {return this._main.order;}
+		},
+		/**. ``''array'' add(''any'' ...)``: Adicina itens ao fim da lista e a retorna.**/
+		add: {
+			value: function() {return this._main.add.apply(this._main, arguments);}
+		},
+		/**. ``''array'' jump(''any'' ...)``: Adicina itens ao início da lista e a retorna.**/
+		jump: {
+			value: function() {return this._main.jump.apply(this._main, arguments);}
+		},
+		/**. ``''array'' put(''any'' ...)``: Adicina itens, se inexistentes, ao fim da lista e a retorna.**/
+		put: {
+			value: function() {return this._main.put.apply(this._main, arguments);}
+		},
+		/**. ``''array'' concat(''any'' ...)``: Concatena itens ou arrays ao fim da lista e a retorna.**/
+		concat: {
+			value: function() {return this._main.concat.apply(this._main, arguments);}
+		},
+		/**. ``''array'' delete(''any'' ...)``: Remove da lista todas as ocorrências dos itens especificados e a retorna.**/
+		delete: {
+			value: function() {return this._main.delete.apply(this._main, arguments);}
+		},
+		/**. ``''array'' toggle(''any'' ...)``: Alterna a existência dos itens especificados na lista e a retorna.**/
+		toggle: {
+			value: function() {return this._main.toggle.apply(this._main, arguments);}
+		},
+		/**. ``''array'' replace(''any'' from, ''any'' to)``: Altera todas as ocorrências (``from``) pelo novo valor (``to``) e retorna a lista modificada.**/
+		replace: {
+			value: function(from, to) {return this._main.replace(from, to);}
+		},
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 		csv: { /* matriz para csv */
 			get: function() {return wd_array_csv(this.valueOf());}
 		},
@@ -6053,29 +6160,9 @@ FIXME pensar um jeito de bom de fazer sendo e read
 				return wd_array_search(this.valueOf(), value);
 			}
 		},
-		del: { /* retorna um array sem os valores informados */
-			value: function() {
-				return wd_array_del(this.valueOf(), Array.prototype.slice.call(arguments));
-			}
-		},
-		add: { /* adiciona items ao array */
-			value: function() {
-				return wd_array_add(this.valueOf(), Array.prototype.slice.call(arguments));
-			}
-		},
-		tgl: { /* alterna a existência de valores do array */
-			value: function() {
-				return wd_array_tgl(this.valueOf(), Array.prototype.slice.call(arguments));
-			}
-		},
 		count: { /* retorna a quantidade de vezes que o item aparece */
 			value: function(value) {
 				return wd_array_count(this.valueOf(), value);
-			}
-		},
-		rpl: { /* muda os valores de determinado item */
-			value: function(item, value) {
-				return wd_array_rpl(this.valueOf(), item, value);
 			}
 		},
 		cell: { /* retorna uma lista de valores a partir de endereços de uma matriz do tipo linha:coluna */
@@ -6083,11 +6170,14 @@ FIXME pensar um jeito de bom de fazer sendo e read
 				return wd_array_cells(this.valueOf(), Array.prototype.slice.call(arguments));
 			}
 		},
-		data: { /* obtem dados estatísticos a partir dos itens de uma matriz */
-			value: function(x, y) {
-				return wd_matrix_data(this.valueOf(), x, y);
-			}
-		},
+
+
+
+
+
+
+
+
 		toString: { /* método padrão */
 			value: function() {
 				return wd_json(this.valueOf());
