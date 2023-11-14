@@ -259,6 +259,178 @@ const wd = (function() {
 			return;
 		}
 	};
+
+/*----------------------------------------------------------------------------*/
+	/**###### ``**const** ''object'' __LANG``
+	Controla a linguagem local da biblioteca.**/
+	const __LANG = {
+		_re: /^[a-z]{2,3}(\-[A-Z][a-z]{3})?(\-([A-Z]{2}|[0-9]{3}))?$/,
+		_user: null,
+		_date: null,
+
+
+		//FIXME fazer monetary
+
+
+		/**. ``''boolean'' test(''string'' x)``: Testa se o argumento ``x`` está no [formato de linguagem](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/lang).**/
+		test: function(x) {
+			return this._re.test(String(x).trim());
+		},
+		/**. ``''string'' test(''node'' node)``: Retorna a linguagem definida no elemento HTML ``node`` (atributo ''lang'') ou em seu elemento superior. Se não encontrado, retorna ``null``.**/
+		node: function(node) {
+			if (typeof node !== "object") return null;
+			while ("parentElement" in node && "attributes" in node) {
+				if ("lang" in node.attributes) {
+					let value = node.attributes.lang.value.trim();
+					if (this.test(value)) return value;
+				}
+				node = node.parentElement;
+				if (node === null || node === undefined) return null;
+			}
+			return null;
+		},
+		/**. ``''string'' nav``: Retorna a linguagem definida pelo navegador ou ''en-US''.**/
+		nav: navigator.language || navigator.browserLanguage || "en-US",
+		/**. ``''string'' html``: Retorna a linguagem definida no elemento ''body'' ou ''html''.**/
+		get html() {return this.node(document.body);},
+		/**. ``''string'' user``: Define ou retorna a linguagem definida pelo usuário.**/
+		get user()  {
+			return this._user;
+		},
+		set user(x) {
+			if      (x === null)   this._user = null;
+			else if (this.test(x)) this._user = String(x).trim();
+		},
+		/**. ``''string'' main``: Retorna a linguagem definida pelo usuário, no HTML ou pela navegador.**/
+		get main() {
+			if (this.user !== null) return this.user;
+			if (this.html !== null) return this.html;
+			return this.nav;
+		},
+		/**. ``''object'' date``: Retorna um objeto contendo os nomes dos meses e dos dias da semana, na versão longa e curta da linguagem retornada em ``main``.**/
+		get date() {
+			let lang = this.main;
+			if (this._date !== null && this._date.lang === lang) return this._date;
+			let date = new Date(1970, 0, 1, 12, 0, 0, 0);
+			let data = {
+				lang:  lang,
+				month: {long: Array(12), short: Array(12)},
+				week:  {long:  Array(7), short:  Array(7)}
+			};
+			let month = -1;
+			while (++month < 12) {
+				date.setMonth(month);
+				let index = date.getMonth();
+				data.month.long[index]  = String(date.toLocaleDateString(lang, {month: "long"})).trim();
+				data.month.short[index] = String(date.toLocaleDateString(lang, {month: "short"})).trim();
+			}
+			let day = 0;
+			while (++day < 8) {
+				date.setDate(day);
+				let index = date.getDay();
+				data.week.long[index]  = String(date.toLocaleDateString(lang, {weekday: "long"})).trim();
+				data.week.short[index] = String(date.toLocaleDateString(lang, {weekday: "short"})).trim();
+			}
+			this._date = data;
+			return data;
+		},
+		/**. ``''integer'' month(''string'' name)``: Retorna o número do mês (1-12), a partir de seu ``nome`` (ignorando caixa), considerando a linguagem retornada em ``main``. Retorna zero se não localizado.**/
+		month: function (name) {
+			let date  = this.date;
+			let name1 = String(name).trim();
+			let name2 = name1.toUpperCase();
+			let name3 = name1.toLowerCase();
+			let i = -1;
+			while (++i < date.month.long.length) {
+				let long  = date.month.long[i];
+				let short = date.month.short[i];
+				if (
+					name1 === long               || name1 === short ||
+					name2 === long.toLowerCase() || name2 === short.toLowerCase() ||
+					name3 === long.toLowerCase() || name3 === short.toLowerCase()
+				) return i+1;
+			}
+			return 0;
+		},
+		/**. ``''integer'' week(''string'' name)``: Retorna o número do dia da semana (1-7 [domingo-sábado]), a partir de seu ``nome`` (ignorando caixa), considerando a linguagem retornada em ``main``. Retorna zero se não localizado.**/
+		week: function (name) {
+			let date  = this.date;
+			let name1 = String(name).trim();
+			let name2 = name1.toUpperCase();
+			let name3 = name1.toLowerCase();
+			let i = -1;
+			while (++i < date.week.long.length) {
+				let long  = date.week.long[i];
+				let short = date.week.short[i];
+				if (
+					name1 === long               || name1 === short ||
+					name2 === long.toLowerCase() || name2 === short.toLowerCase() ||
+					name3 === long.toLowerCase() || name3 === short.toLowerCase()
+				) return i+1;
+			}
+			return 0;
+		},
+		/**. ``''string'' MMM(''integer'' value)``: Retorna o mês abreviado a partir do seu número (``value`` [1-12]).**/
+		MMM:  function(value) {return this.date.month.short[value-1];},
+		/**. ``''string'' MMM(''integer'' value)``: Retorna o mês a partir do seu número (``value`` [1-12]).**/
+		MMMM: function(value) {return this.date.month.long[value-1];},
+		/**. ``''string'' MMM(''integer'' value)``: Retorna o dia da semana abreviado a partir do seu número (``value`` [1-7]).**/
+		DDD:  function(value) {return this.date.week.short[value-1];},
+		/**. ``''string'' MMM(''integer'' value)``: Retorna o dia da semana a partir do seu número (``value`` [1-7]).**/
+		DDDD: function(value) {return this.date.week.long[value-1];},
+	};
+
+
+/*----------------------------------------------------------------------------*/
+	/**###### ``**const** ''object'' __TYPE``
+	Registra as expressões regulares para identificação de tipos em string.**/
+	const __TYPE = {
+		number: {
+			main: /^(\+?\d+\!|[+-]?(\d+|(\d+)?\.\d+)(e[+-]?\d+)?\%?)$/i,
+		},
+		date: {
+			main: /^([-+]?\d{3}\d+)\-(0[1-9]|1[0-2])\-(0[1-9]|[12]\d|3[01])$/,
+			DMY:  /^(0[1-9]|[12]\d|3[01])\/(0[1-9]|1[0-2])\/([-+]?\d{3}\d+)$/,
+			MDY:  /^(0[1-9]|1[0-2])\.(0[1-9]|[12]\d|3[01])\.([-+]?\d{3}\d+)$/,
+			dmy:  /^(0?[1-9]|[12]\d|3[01])\ ([^0-9]+)\ ([-+]?\d{3}\d+)$/i,
+			mdy:  /^([^0-9]+)\ (0?[1-9]|[12]\d|3[01])\ ([-+]?\d{3}\d+)$/i,
+		},
+		time: {
+			main: /^([01]?\d|2[0-4])\:[0-5]\d(\:[0-5]\d(\.\d{1,3})?)?[zZ]?$/,
+			h12:  /^(0?[1-9]|1[0-2])\:[0-5]\d(\:[0-5]\d(\.\d{1,3})?)?\ ?[ap]m$/i,
+		},
+		month: {
+			main: /^([-+]?\d{3}\d+)\-(0[1-9]|1[0-2])$/,
+			MY:   /^(0[1-9]|1[0-2])\/([-+]?\d{3}\d+)$/,
+			my:   /^[^0-9]+[/ ]([-+]?\d{3}\d+)$/i,
+		},
+		week: {
+			main: /^([-+]?\d{3}\d+)\-W(0[1-9]|[1-4]\d|5[0-4])?$/i,
+			WY:   /^(0[1-9]|[1-4]\d|5[0-4])\,\ ([-+]?\d{3}\d+)$/,
+		},
+		email: {
+			main: /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/,
+		},
+		test: function(x) {
+			for (let i in this) {
+				if (i === "test") continue;
+				for (let j in this[i]) {
+					if (this[i][j].test(x))
+						return {group: i, subgroup: j};
+				}
+			}
+			return null;
+		}
+	};
+
+
+
+
+
+
+
+
+
 /*----------------------------------------------------------------------------*/
 	/**###### ``**const** ''array'' __JSCSS``
 	Guarda os estilos da biblioteca. Cada item da lista é um objeto que define os estilos:
@@ -327,47 +499,35 @@ const wd = (function() {
 	function __Type(input) {
 		if (!(this instanceof __Type)) return new __Type(input);
 		Object.defineProperties(this, {
-			_input: {value: input},                 /* valor de referência */
-			_type:  {value:  null, writable: true}, /* tipo do valor de entrada */
-			_value: {value:  null, writable: true}, /* valor a ser considerado */
+			_input:    {value: input},                 /* valor de referência */
+			_type:     {value:  null, writable: true}, /* tipo do valor de entrada */
+			_value:    {value:  null, writable: true}, /* valor a ser considerado */
+			_toString: {value:  null, writable: true}, /* referência para string */
+			_valueOf:  {value:  null, writable: true}, /* referência para valueOf */
 		});
-		this._init(); /* definir atributos próprios */
+
+		/* definir atributos próprios */
+		/* IMPORTANTE: na verificação de strings, o atributo string deve ser o último */
+		let strings = ["number", "date", "time", "datetime", "string"];
+		/* IMPORTANTE: object precisa ser o último, pois qualquer um pode ser um objeto */
+		let objects = [
+			"null", "undefined", "boolean", "number", "datetime",
+			"array", "node", "regexp", "function", "file", "files", "object"
+		];
+		let types = this.chars ? strings : objects;
+		let i = -1;
+		while (++i < types.length)
+			if (this[types[i]]) return;
+		/* se não se encaixar em nada: desconhecido */
+		this._value    = input;
+		this._type     = "unknow";
+		this._toString = "toString" in input ? input.toString() : String(input);
+		this._valueOf  = "valueOf"  in input ? input.valueOf()  : input;
 	}
 
 	Object.defineProperties(__Type.prototype, {
 		constructor: {value: __Type},
-		/**. ``''array'' _months``: Registra a lista de nomes dos meses (longos e curtos) na língua inglesa e local para determinar a data.**/
-		_months: {
-			value: (function() {
-				let months = [];
-				let data   = {
-					long:  [undefined, "en"],
-					short: [undefined, "en"]
-				};
-				for (let type in data) {
-					for (let i = 0; i < data[type].length; i++) {
-						let date = new Date(1970, 0, 1, 12, 0, 0, 0);
-						let lang = data[type][i];
-						while(date.getFullYear() <= 1970) {
-							let info = date.toLocaleDateString(lang, {month: type});
-							months.push(info.toLowerCase());
-							date.setMonth(date.getMonth()+1);
-						}
-					}
-				}
-				return months;
-			})()
-		},
-		/**. ``''integer'' _getMonths(''string'' x)``: Retorna o valor númerico (1-12) do mês e zero se não encontrado. O argumento ``x`` deverá corresponder ao nome do mês (curto ou longo) na língua inglesa ou local.**/
-		_getMonths: {
-			value: function(x) {
-				x = String(x).toLowerCase();
-				let item = this._months.indexOf(x);
-				if (item < 0) return 0;
-				return item%12+1;
-			}
-		},
-		/**. ``''object'' _re``: Armazena as expressões regulares dos de dados descritos em string.**/
+		/**FIXME acabar com isso . ``''object'' _re``: Armazena as expressões regulares dos de dados descritos em string.**/
 		_re: {
 			value: {
 				number:  /^(\+?\d+\!|[+-]?(\d+|(\d+)?\.\d+)(e[+-]?\d+)?\%?)$/i,
@@ -384,7 +544,6 @@ const wd = (function() {
 				week:    /^([-+]?\d{3}\d+)\-W(0[1-9]|[1-4]\d|5[0-4])?$/i,
 				weekWY:  /^(0[1-9]|[1-4]\d|5[0-4])\,\ ([-+]?\d{3}\d+)$/,
 				email:   /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/,
-				lang:    /^[a-z]{2,3}(\-[A-Z][a-z]{3})?(\-([A-Z]{2}|[0-9]{3}))?$/,
 			}
 		},
 		/**. ``''boolean'' chars``: Checa se o argumento é um conjunto de caracteres (string).**/
@@ -408,7 +567,7 @@ const wd = (function() {
 		/**. ``''boolean'' lang``: Checa se o argumento está no [formato de linguagem](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/lang).**/
 		lang: {
 			get: function() {
-				return (this.chars && this._re.lang.test(this._input.trim()));
+				return (this.chars && __LANG.test(this._input));
 			}
 		},
 		/**. ``''boolean'' email``: Checa se o argumento é um e-mail ou uma lista desse tipo.**/
@@ -449,7 +608,7 @@ const wd = (function() {
 				if (this._re.month.test(data))   return true; /* YYYY-MM */
 				if (this._re.monthMY.test(data)) return true; /* MM/YYYY */
 				if (this._re.monthmy.test(data)) /* MMMM[ /]YYYY */
-					return this._getMonths(data.split(/[/ -]/)[0]) !== 0;
+					return __LANG.month(data.split(/[/ -]/)[0]) > 0;
 				return false;
 			}
 		},
@@ -662,13 +821,13 @@ const wd = (function() {
 				} else if (this._re.datedmy.test(value)) { /*D MMM YYYY D MMMM YYYY */
 					data = value.split(" ");
 					ref  = order.DMY;
-					data[1] = this._getMonths(data[1]);
-					if (data[1] === 0) return false;
+					data[1] = __LANG.month(data[1]);
+					if (data[1] < 1) return false;
 				} else if (this._re.datemdy.test(value)) { /* MMM D YYYY MMMM D YYYY */
 					data = value.split(" ");
 					ref  = order.MDY;
-					data[0] = this._getMonths(data[0]);
-					if (data[0] === 0) return false;
+					data[0] = __LANG.month(data[0]);
+					if (data[0] < 1) return false;
 				} else {
 					return false;
 				}
@@ -887,16 +1046,17 @@ const wd = (function() {
 		type: {
 			get: function() {return this._type;}
 		},
-		/**. ``''void''  valueOf()``: Retorna o método ``valueOf`` do retorno do atributo ``value``, exceto para os tipos ''null'' (retorna ``0``), ''undefined'' (retorna ``Infinity``) e ''boolean'' (retorna ``1`` se verdadeiro e ``0`` se falso).**/
+		/**FIXME . ``''void''  valueOf()``: Retorna o método ``valueOf`` do retorno do atributo ``value``, exceto para os tipos ''null'' (retorna ``0``), ''undefined'' (retorna ``Infinity``) e ''boolean'' (retorna ``1`` se verdadeiro e ``0`` se falso).**/
 		valueOf: {
 			value: function() {
 				if (this.null)      return 0;
 				if (this.undefined) return Infinity;
 				if (this.boolean)   return this.value ? 1 : 0;
+				if (this.node)      return this.value.slice();
 				return (this.value).valueOf();
 			}
 		},
-		/**. ``''string'' toString()``: Retorna o método ``toString`` do retorno do atributo ``value``, exceto para os tipos ''null'' (retorna uma string vazia), ''undefined'' (retorna ``?``), ''boolean'' (retorna ``true`` se verdadeiro e ``false`` se falso), ''regexp'' (.**/
+		/**FIXME . ``''string'' toString()``: Retorna o método ``toString`` do retorno do atributo ``value``, exceto para os tipos ''null'' (retorna uma string vazia), ''undefined'' (retorna ``?``), ''boolean'' (retorna ``true`` se verdadeiro e ``false`` se falso), ''regexp'' (.**/
 		toString: {
 			value: function() {
 				if (this.null)      return "";
@@ -934,10 +1094,14 @@ const wd = (function() {
 		},
 		/**. ``''number'' toString()``: Retorna o valor em forma de string.**/
 		toString: {
-			value: function(lang) {
-				if (__Type(lang).lang && "toLocaleString" in Number)
-					return this._value.toLocaleString(lang);
+			value: function() {
 				return this.finite ? this._value.toString() : (this < 0 ? "-" : "+")+"\u221E";
+			}
+		},
+		/**. ``''string'' toString()``: Retorna o valor em forma de string de acordo com a linguagem definida.**/
+		toLocaleString: {
+			value: function() {
+				return this._value.toLocaleString(__LANG.main);
 			}
 		},
 		/**. ``''number'' abs``: Retorna o valor absoluto do número.**/
@@ -1079,8 +1243,7 @@ const wd = (function() {
 				return this.valueOf().toPrecision(n);
 			}
 		},
-		/**. ``''string'' notation(''string'' type, ''any'' code, ''string'' lang)``: Formata o número em determinada notação ([referência]<https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/NumberFormat>).
-		. O argumento opcional ``lang`` define o código da linguagem a ser aplicada.
+		/**. ``''string'' notation(''string'' type, ''any'' code)``: Formata o número em determinada notação ([referência]<https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/NumberFormat>).
 		. O argumento ``type`` define o tipo da formatação e o argumento ``code`` dependerá da notação escolhida, podendo ser um número inteiro, uma string ou não ter efeito.
 		|type|Descrição|code|
 		|``significant``|Fixa o número de dígitos significativos|Quantidade de significativos|
@@ -1097,10 +1260,9 @@ const wd = (function() {
 		|``currency3``|Exibe em notação monetária textual|Código monetário|
 		|``currency4``|Exibe código no lugar da notação monetária|Código monetário|**/
 		notation: {
-			value: function (type, code, lang) {
+			value: function (type, code) {
 				if (!this.finite) return this.toString();
 				type      = String(type).toLowerCase();
-				lang      = __Type(lang).lang ? lang.trim() : undefined;
 				let attr  = type.replace(/\d+/, "");
 				let types = {
 					significant: {
@@ -1157,7 +1319,7 @@ const wd = (function() {
 				};
 
 				try {
-					return this.valueOf().toLocaleString(lang, (attr in types ? types[attr] : {}));
+					return this.valueOf().toLocaleString(__LANG.main, (attr in types ? types[attr] : {}));
 				} catch(e) {}
 				try {
 					return this.valueOf().toLocaleString(undefined, (attr in types ? types[attr] : {}));
@@ -1510,29 +1672,6 @@ const wd = (function() {
 				return;
 			}
 		},
-		/**. ``''object'' _names``: Atributo que registra a lista com os nomes curtos e longos de meses e dias da semana localmente a partir do objeto nativo ``Date``.
-		.. ``MMM``: lista de meses curtos (Janeiro a Dezembro);
-		.. ``MMMM``: lista de meses longos (Janeiro a Dezembro);
-		.. ``DDD``: lista de dias curtos (Domingo a Sábado);
-		.. ``DDDD``: lista de dias longos (Domingo a Sábado).**/
-		_names: {
-			value: (function() {
-				let data = {MMM: [], MMMM: [], DDD: [], DDDD: []};
-				let date = new Date(2012,0,1,12,0,0,0);
-				let week = new Date(2012,0,1,12,0,0,0);
-				for (let i = 0; i < 12; i++) {
-					date.setMonth(i);
-					data.MMM.push( date.toLocaleDateString(undefined, {month: "short"}));
-					data.MMMM.push(date.toLocaleDateString(undefined, {month: "long"}));
-					if (i > 0 && i < 8) {
-						week.setDate(i);
-						data.DDD.push( week.toLocaleDateString(undefined, {weekday: "short"}));
-						data.DDDD.push(week.toLocaleDateString(undefined, {weekday: "long"}));
-					}
-				}
-				return data;
-			}())
-		},
 		/**. ``''boolean'' _leap(''integer'' y=year)``: Método que retorna se o ano é bissexto. O atributo ``y`` define o ano que, se indefinido, assumirá o ano registrado pelo objeto.**/
 		_leap: {
 			value: function(y) {
@@ -1746,17 +1885,17 @@ const wd = (function() {
 		/**. ``''string'' MM``: Retorna o mês com dois dígitos.**/
 		MM:   {get: function() {return ("0"+this.M).slice(-2);}},
 		/**. ``''string'' MMM``: Retorna o nome abreviado do mês.**/
-		MMM:  {get: function() {return this._names.MMM[this.month-1];}},
+		MMM:  {get: function() {return __LANG.MMM(this.month);}},
 		/**. ``''string'' MMMM``: Retorna o nome do mês.**/
-		MMMM: {get: function() {return this._names.MMMM[this.month-1];}},
+		MMMM: {get: function() {return __LANG.MMMM(this.month);}},
 		/**. ``''string'' D``: Retorna o dia.**/
 		D:    {get: function() {return String(this.day);}},
 		/**. ``''string'' DD``: Retorna o dia com dois dígitos.**/
 		DD:   {get: function() {return ("0"+this.D).slice(-2);}},
 		/**. ``''string'' DDD``: Retorna o dia da semana abreviado.**/
-		DDD:  {get: function() {return this._names.DDD[this.weekDay-1];}},
+		DDD:  {get: function() {return __LANG.DDD(this.weekDay);}},
 		/**. ``''string'' DDDD``: Retorna o dia da semana.**/
-		DDDD: {get: function() {return this._names.DDDD[this.weekDay-1];}},
+		DDDD: {get: function() {return __LANG.DDDD(this.weekDay);}},
 		/**. ``''string'' W``: Retorna a semana do ano (atributo ``week``).**/
 		W:   {get: function() {return String(this.week);}},
 		/**. ``''string'' WW``: Retorna a semana do ano com dois dígitos (atributo ``week``).**/
@@ -1932,10 +2071,6 @@ const wd = (function() {
 				n = data.finite ? Math.trunc(data.value) : 0;
 				return (Math.abs(n)*this.length + n)%this.length;
 			}
-		},
-		/**. ``''string''  toString()``: Retorna a lista em formato JSON.**/
-		toString: {
-			value: function() {return JSON.stringify(this._value);}
 		},
 		/**. ``''integer'' length``: Retorna a quantidade de itens da lista.**/
 		length: {
@@ -2372,7 +2507,7 @@ const wd = (function() {
  				if (data._re.monthMY.test(info))
  					return info.replace(/^(\d\d)\/(.+)$/, "$2-$1");
 				info = info.split(/[ /]/);
-				return info[1]+"-"+("0"+String(data._getMonths(info[0]))).slice(-2);
+				return info[1]+"-"+("0"+String(__LANG.month(info[0]))).slice(-2);
 			},
 			set: function(x) {
 				let data = __Type(x);
@@ -2881,20 +3016,6 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					}
 				}
 				return;
-			}
-		},
-		/**. ``''string'' lang``: Retorna a linguagem do elemento ou seus pais (atributo ``lang``) ou a do navegador ou ainda ``en-US`` como padrão.**/
-		lang: {
-			get: function() {
-				let node = this._node;
-				while (node !== null) {
-					let lang = ("lang" in node.attributes) ? node.attributes.lang.value : null;
-					let test = __Type(lang);
-					if (test.lang) return lang.trim();
-					node = node.parentElement;
-					continue;
-				}
-				return navigator.language || navigator.browserLanguage || "en-US";
 			}
 		},
 		/**. ``node clone(boolean childs=true)``: Retorna um clone do objeto.
@@ -4931,21 +5052,10 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 
 
 
-//FIXME a partir daqui começa a quebrar a biblioteca a cada mudança
 
 
-/*----------------------------------------------------------------------------*/
-	function wd_lang(elem) { /* Retorna a linguagem definida (lang) a partir de um elemento (efeito bolha) ou do navegador*/
-		let node = wd_vtype(elem).type === "dom" ? elem : document.body;
-		while (node !== null && node !== undefined) {
-			if ("lang" in node.attributes) {
-				let value = node.attributes.lang.value.trim();
-				if (value !== "") return value;
-			}
-			node = node.parentElement;
-		}
-		return navigator.language || navigator.browserLanguage || "en-US";
-	}
+
+
 
 
 /*----------------------------------------------------------------------------*/
@@ -5586,6 +5696,19 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		type: {
 			get: function() {return this._data.type;}
 		},
+		/**. ``''object'' lang(''string'' local)``: Define a linguagem no argumento ``local`` e retorna o próprio objeto.**/
+		lang: {
+			value: function(local) {
+				__LANG.user = local;
+				return this;
+			}
+		},
+		//FIXME fazer monetary igual a lang
+
+
+
+
+
 		/**. ``''boolean'' is(''string'' type)``: Retorna verdadeiro se o argumento ``type`` corresponder ao tipo de dado (ver ``__Type``).**/
 		is: {
 			value: function(type) {
@@ -5876,10 +5999,14 @@ FIXME pensar um jeito de bom de fazer sendo e read
 
 
 
-		//FIXME: trocar pt-br por lang
-		toString: {
+		toString: {//FIXME descrição
+			value: function() {
+				return this._main.toString();
+			}
+		},
+		toString: {//FIXME descrição
 			value: function(locale) {
-				return this._main.toString(locale === true ? "pt-BR" : undefined);
+				return this._main.toLocaleString();
 			}
 		},
 	});
@@ -6126,91 +6253,70 @@ FIXME pensar um jeito de bom de fazer sendo e read
 		replace: {
 			value: function(from, to) {return this._main.replace(from, to);}
 		},
+		/**. ``''array'' search(''any'' value)``: Retorna uma lista com os índices em que o argumento ``value`` aparece.**/
+		search: {
+			value: function(value) {return this._main.search(value);}
+		},
+		/**. ``''any'' item(''integer'' index)``: Retorna o item especificado no argumento ``index`` considerando uma lista circular.**/
+		item: {
+			value: function(index) {return this._main.valueOf(__Type(index).number ? index : 0);}
+		},
+		/**. ``''string'' toString()``: Retorna a lista em forma de JSON.**/
+		toString: {
+			value: function() {return JSON.stringify(this._data.value);}
+		},
+		/**. ``''array'' valueOf()``: Retorna uma cópia da lista.**/
+		valueOf: {
+			value: function() {return this._value.slice();}
+		},
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+		//FIXME
 		csv: { /* matriz para csv */
 			get: function() {return wd_array_csv(this.valueOf());}
-		},
-		item: { /* retorna o índice especificado ou seu comprimento */
-			value: function(i) {
-				return wd_array_item(this.valueOf(), i);
-			}
-		},
-		check: { /* informa se o array contem os valores */
-			value: function() {
-				return wd_array_check(this.valueOf(), Array.prototype.slice.call(arguments));
-			}
-		},
-		search: { /* procura item no array e retorna os índices localizados */
-			value: function(value) {
-				return wd_array_search(this.valueOf(), value);
-			}
-		},
-		count: { /* retorna a quantidade de vezes que o item aparece */
-			value: function(value) {
-				return wd_array_count(this.valueOf(), value);
-			}
 		},
 		cell: { /* retorna uma lista de valores a partir de endereços de uma matriz do tipo linha:coluna */
 			value: function() {
 				return wd_array_cells(this.valueOf(), Array.prototype.slice.call(arguments));
 			}
 		},
-
-
-
-
-
-
-
-
-		toString: { /* método padrão */
-			value: function() {
-				return wd_json(this.valueOf());
-			}
-		},
-		valueOf: { /* método padrão */
-			value: function() {
-				return this._value.slice();
-			}
-		}
-
 	});
 
 /*----------------------------------------------------------------------------*/
-	function WDnode(input) {WDmain.call(this, input);}
+	/**#### WDnode
+	###### ``**constructor** ''object'' WDnode(''any''  input, ''object'' data)``
+	Construtor genérico para manipulação de nós HTML. Os argumentos ``input`` e ``data`` se referem aos argumento de ``WDmain``**/
+	function WDnode(input, data) {
+		WDmain.call(this, input, data);
+		/*Object.defineProperties(this, {
+			_main: {value: new __Array(data.value)},
+		});*/
+	}
 
 	WDnode.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDnode},
+		/**. ``''array'' valueOf()``: Retorna uma cópia da lista contendo os nós HTML.**/
 		valueOf: { /* método padrão */
-			value: function() {
-				return this._value.slice();
+			value: function() {return this._data.value.slice();}
+		},
+
+		/**. ``''void'' forEach(''function'' callback)``: Executa looping nos nós HTML, informando-os no argumento ``callback`` que receberá dois argumento: o nó HTML e sua sequência numérica na lista.**/
+		forEach: {
+			value: function(callback) {
+				if (!__Type(callback).function) return;
+				this._data.value.forEach(function(v,i,a) {callback(v,i);});
 			}
 		},
-		item: { /* retorna o item ou quantidade */
-			value: function(i) {
-				return wd_array_item(this.valueOf(), i);
+		style: {
+			value: function(value) {
+				this._data.value.forEach(function(v,i,a) {
+					let node = __Node(v);
+					node.style(value);
+				});
 			}
 		},
-		run: { /* executa um job nos elementos */
-			value: function(method) {
-				wd_dom_run.apply(this, arguments); return this;
-			}
-		},
+
+
+
 		addHandler: { /* adiciona disparadores */
 			value: function(events) {
 				//return this.run(wd_html_handler, events);
@@ -6219,11 +6325,6 @@ FIXME pensar um jeito de bom de fazer sendo e read
 		delHandler: { /* remove disparadores */
 			value: function(events) {
 				return this.run(wd_html_handler, events, true);
-			}
-		},
-		style: { /* define ou remove estilo ao elemento */
-			value: function(styles) {
-				return this.run(wd_html_style, styles);
 			}
 		},
 		css: { /* manipula atributo class */
@@ -6286,11 +6387,6 @@ FIXME pensar um jeito de bom de fazer sendo e read
 				return wd_html_dform(this._value, get);
 			}
 		},
-		vstyle: { /* devolve o valor do estilo especificado (só primeiro elemento) */
-			value: function(css) {
-				return wd_html_style_get(this._value[0], css);
-			}
-		},
 		chart: { /* desenha gráfico de linhas e colunas */
 			value: function(data, title, xlabel, ylabel) {
 				return wd_html_chart(this.item(0), data, title, xlabel, ylabel);
@@ -6334,7 +6430,6 @@ FIXME pensar um jeito de bom de fazer sendo e read
 		$$:      {value: function(css, root) {return WD(__$$(css, root));}},
 		url:     {value: function(name) {return wd_url(name);}},
 		copy:    {value: function(text) {return wd_copy(text);}},
-		lang:    {get:   function() {return wd_lang();}},
 		device:  {get:   function() {return __device();}},
 		today:   {get:   function() {return WD(new Date());}},
 		now:     {get:   function() {return WD(wd_str_now());}},
@@ -6354,6 +6449,8 @@ FIXME pensar um jeito de bom de fazer sendo e read
 		query: {value: function(){return __Query.apply(null, Array.prototype.slice.call(arguments));}},
 		svg: {value: function(){return __SVG.apply(null, Array.prototype.slice.call(arguments));}},
 		matrix: {value: function(){return __Table.apply(null, Array.prototype.slice.call(arguments));}},
+		LANG: {value: __LANG},
+		TYPE: {value: __TYPE},
 		
 
 		device: {value: __DEVICECONTROLLER}
@@ -6902,82 +6999,6 @@ FIXME pensar um jeito de bom de fazer sendo e read
 		return;
 	}
 
-
-/*----------------------------------------------------------------------------*/
-	function data_wdTranslate(e) { /* carrega tradução: data-wd-translate=path{dir}method{get|post}main{file name} */
-		if (!("wdTranslate" in e.dataset)) return;
-		let lang   = wd_lang(e).toLowerCase();
-		let data   = wd_html_dataset_value(e, "wdTranslate")[0];
-		let method = data.method;
-		let dir    = "path" in data ? data.path.replace(/\/$/, "") : null;
-		let main   = dir  !== null  ? ("main" in data ? data.main : null) : null;
-		let file1  = dir  !== null  ? dir+"/"+(lang)+".json" : null;
-		let file2  = dir  !== null  ? dir+"/"+(lang.split("-")[0])+".json" : null;
-		let file3  = main !== null  ? dir+"/"+main : null;
-
-		function readTranslationFile(files, n) {
-			if (n >= files.length) return;
-			if (files[n] === null) return readTranslationFile(files, ++n);
-
-			WD().send(files[n], function(x) {
-				if (x.closed) {
-					if (wd_vtype(x.json).type === "array")
-						return wd_html_translate(e, x.json);
-					else
-						return readTranslationFile(files, ++n);
-				}
-			}, method);
-			return;
-		}
-
-		/* executando */
-		WD(e).data({wdTranslate: null});
-		readTranslationFile([file1, file2, file3], 0);
-
-		return;
-	}
-
-/*----------------------------------------------------------------------------*/
-	/* FIXME v5: destruir data_wdLang (data_wdTranslate o substituirá por definitivo) */
-	function data_wdLang(e) { /* carrega HTML: data-wd-lang=path{file}method{get|post}${form} */
-		if (!("wdLang" in e.dataset)) return;
-		let data   = wd_html_dataset_value(e, "wdLang")[0];
-		let target = WD(e);
-		let method = data.method;
-		let file   = data.path;
-		let pack   = __$$$(data);
-		let exec   = WD(pack);
-		target.data({wdLang: null});
-		exec.send(file, function(x) {
-			if (x.closed) {
-				let json = x.json;
-				if (json === null) return;
-				let lang = wd_lang().toLowerCase().replace(/\-/g, "_");
-				let init = lang.split("_")[0];
-
-				for (let css in json) { /* looping pelos identificadores css */
-					let text;
-					if (lang in json[css]) /* código completo (preferêncial) */
-						text = json[css][lang];
-					else if (init in json[css]) /* só primeiro termo do código (opção genérica) */
-						text = json[css][init];
-					else if ("*" in json[css]) /* valor principal (opção super-genérica) */
-						text = json[css]["*"];
-					else /* não mudar nada, se linguagem não localizada */
-						continue;
-
-					/* obtendo elementos e aplicando textContent */
-					let target = WD(__$$(css));
-					if (target.type !== "dom") continue;
-					target.run(function(y) {
-						y.textContent = text;
-					});
-				}
-			}
-		}, method);
-		return;
-	};
-
 /*----------------------------------------------------------------------------*/
 	function navLink(e) { /* link ativo do navegador */
 		if (e.parentElement === null) return;
@@ -7095,8 +7116,6 @@ FIXME pensar um jeito de bom de fazer sendo e read
 		WD.$$("[data-wd-device]").run(data_wdDevice);
 		WD.$$("[data-wd-chart]").run(data_wdChart);
 		WD.$$("[data-wd-url]").run(data_wdUrl);
-		WD.$$("[data-wd-lang]").run(data_wdLang);
-		WD.$$("[data-wd-translate]").run(data_wdTranslate);
 		data_wdOutput(document, true);
 		return;
 	};
@@ -7116,8 +7135,6 @@ FIXME pensar um jeito de bom de fazer sendo e read
 			case "wdChart":     data_wdChart(e);        break;
 			case "wdOutput":    data_wdOutput(e, true); break;
 			case "wdUrl":       data_wdUrl(e, true);    break;
-			case "wdLang":      data_wdLang(e);         break;
-			case "wdTranslate": data_wdTranslate(e);    break;
 		};
 		return;
 	};
@@ -7232,7 +7249,6 @@ wd_html_data(), data-wd-data
 		- data-wd-click
 		- data-wd-device
 		- data-wd-filter
-		- data-wd-lang
 		- data-wd-load
 			> loadingProcedures()
 		- data-wd-mask
@@ -7260,7 +7276,6 @@ window.onload > loadProcedures()
 			- data-wd-slide
 			- data-wd-sort
 			- data-wd-url
-			- data-wd-lang
 
 window.onhashchange > hashProcedures()
 	- [eventos de linkagem]
