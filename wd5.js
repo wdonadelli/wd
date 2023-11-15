@@ -276,12 +276,12 @@ const wd = (function() {
 		test: function(x) {
 			return this._re.test(String(x).trim());
 		},
-		/**. ``''string'' test(''node'' node)``: Retorna a linguagem definida no elemento HTML ``node`` (atributo ''lang'') ou em seu elemento superior. Se não encontrado, retorna ``null``.**/
+		/**. ``''string'' node(''node'' node)``: Retorna a linguagem definida no elemento HTML ``node`` (atributo ''lang'') ou em seu elemento superior. Se não encontrado, retorna ``null``.**/
 		node: function(node) {
 			if (typeof node !== "object") return null;
 			while ("parentElement" in node && "attributes" in node) {
 				if ("lang" in node.attributes) {
-					let value = node.attributes.lang.value.trim();
+					let value = String(node.attributes.lang.value).trim();
 					if (this.test(value)) return value;
 				}
 				node = node.parentElement;
@@ -289,28 +289,23 @@ const wd = (function() {
 			}
 			return null;
 		},
-		/**. ``''string'' nav``: Retorna a linguagem definida pelo navegador ou ''en-US''.**/
-		nav: navigator.language || navigator.browserLanguage || "en-US",
-		/**. ``''string'' html``: Retorna a linguagem definida no elemento ''body'' ou ''html''.**/
+		/**. ``''string'' nav``: Retorna a linguagem definida pelo navegador ou ``null``.**/
+		get nav() {return navigator.language || navigator.browserLanguage || null;},
+		/**. ``''string'' html``: Retorna a linguagem definida no elemento ''body'' ou ''html'' ou ``null``, se não definida.**/
 		get html() {return this.node(document.body);},
 		/**. ``''string'' user``: Define ou retorna a linguagem definida pelo usuário.**/
-		get user()  {
-			return this._user;
-		},
+		get user()  {return this._user;},
 		set user(x) {
-			if      (x === null)   this._user = null;
-			else if (this.test(x)) this._user = String(x).trim();
+			if (x === null || this.test(x))
+				this._user = x === null ? null : String(x).trim();
 		},
 		/**. ``''string'' main``: Retorna a linguagem definida pelo usuário, no HTML ou pela navegador.**/
-		get main() {
-			if (this.user !== null) return this.user;
-			if (this.html !== null) return this.html;
-			return this.nav;
-		},
+		get main() {return this.user || this. html || this.nav || "en-US";},
 		/**. ``''object'' date``: Retorna um objeto contendo os nomes dos meses e dos dias da semana, na versão longa e curta da linguagem retornada em ``main``.**/
 		get date() {
 			let lang = this.main;
 			if (this._date !== null && this._date.lang === lang) return this._date;
+			/* definir */
 			let date = new Date(1970, 0, 1, 12, 0, 0, 0);
 			let data = {
 				lang:  lang,
@@ -321,15 +316,15 @@ const wd = (function() {
 			while (++month < 12) {
 				date.setMonth(month);
 				let index = date.getMonth();
-				data.month.long[index]  = String(date.toLocaleDateString(lang, {month: "long"})).trim();
-				data.month.short[index] = String(date.toLocaleDateString(lang, {month: "short"})).trim();
+				data.month.long[index]  = date.toLocaleDateString(lang, {month: "long"}).trim();
+				data.month.short[index] = date.toLocaleDateString(lang, {month: "short"}).trim();
 			}
 			let day = 0;
 			while (++day < 8) {
 				date.setDate(day);
 				let index = date.getDay();
-				data.week.long[index]  = String(date.toLocaleDateString(lang, {weekday: "long"})).trim();
-				data.week.short[index] = String(date.toLocaleDateString(lang, {weekday: "short"})).trim();
+				data.week.long[index]  = date.toLocaleDateString(lang, {weekday: "long"}).trim();
+				data.week.short[index] = date.toLocaleDateString(lang, {weekday: "short"}).trim();
 			}
 			this._date = data;
 			return data;
@@ -379,16 +374,6 @@ const wd = (function() {
 		/**. ``''string'' MMM(''integer'' value)``: Retorna o dia da semana a partir do seu número (``value`` [1-7]).**/
 		DDDD: function(value) {return this.date.week.long[value-1];},
 	};
-
-
-
-
-
-
-
-
-
-
 
 /*----------------------------------------------------------------------------*/
 	/**###### ``**const** ''array'' __JSCSS``
@@ -452,13 +437,6 @@ const wd = (function() {
 		]},
 	];
 
-
-
-
-
-
-
-
 /*----------------------------------------------------------------------------*/
 	/**###### ``**const** ''object'' __TYPE``
 	Registra as expressões regulares para identificação de modelos genéricos de string.
@@ -475,6 +453,7 @@ const wd = (function() {
 	|date|MMMMDYYYY|março 1 2010|
 	|time|hmmss|6:05:05.0001 (modelo de 24h)|
 	|time|AMPM|1:05:05.0001 AM (modelo de 12h)|
+	|time|PM|1:05:05.0001 pm (modelo de 12h)|
 	|month|YYYYMM|2010-03|
 	|month|MMYYYY|03/2010|
 	|month|MMMMYYYY|março/2010 ou março 2010|
@@ -485,10 +464,9 @@ const wd = (function() {
 	- **ATENÇÃO!** O nome do mês depende da linguagem, pode ser curto e ignora caixas;
 	- **ATENÇÃO!** O nome do mês deve ser igual ao retornado pelo objeto nativo ``Date``;
 	- O ano pode ser negativo;
-	- Os segundos e milissegundos são opcionais; e
-	- Os espaços em branco são espaços simples.
-	FIXME fazer as descrições
-	**/
+	- Os segundos e milissegundos são opcionais;
+	- AM e PM têm caixa ignorada; e
+	- Os espaços em branco são espaços simples.**/
 
 	const __TYPE = {
 		number: {
@@ -507,7 +485,8 @@ const wd = (function() {
 		},
 		time: {
 			hmmss: /^([01]?\d|2[0-4])\:[0-5]\d(\:[0-5]\d(\.\d{1,3})?)?$/,
-			AMPM:  /^(0?[1-9]|1[0-2])\:[0-5]\d(\:[0-5]\d(\.\d{1,3})?)?\ ?[ap]m$/i,
+			AM:    /^(0?[1-9]|1[0-2])\:[0-5]\d(\:[0-5]\d(\.\d{1,3})?)?\ ?am$/i,
+			PM:    /^(0?[1-9]|1[0-2])\:[0-5]\d(\:[0-5]\d(\.\d{1,3})?)?\ ?pm$/i,
 		},
 		month: {
 			YYYYMM:   /^([-+]?\d{3}\d+)\-(0[1-9]|1[0-2])$/,
@@ -521,20 +500,19 @@ const wd = (function() {
 		email: {
 			email: /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/,
 		},
-		/**. ``''object'' test(''any'' x)``: Testa se o valor passado em ``x`` encaixa em alguma expressão regular retornando um objeto contendo os atributos ``group`` e ``subgroup``.**/
+		/**. ``''object'' test(''any'' x)``: Testa se o valor passado em ``x`` encaixa em alguma expressão regular retornando um objeto contendo os atributos ``group``, ``subgroup`` e ``value``.**/
 		test: function(x) {
 			x = String(x).trim();
 			for (let i in this) {
 				if (i === "test") continue;
 				for (let j in this[i]) {
 					if (this[i][j].test(x))
-						return {group: i, subgroup: j};
+						return {group: i, subgroup: j, value: x};
 				}
 			}
-			return {group: null, subgroup: null};
+			return {group: null, subgroup: null, value: x};
 		}
 	};
-
 
 /*===========================================================================*/
 	/**### Checagem de Tipos e Valores
@@ -543,57 +521,56 @@ const wd = (function() {
 	function __Type(input) {
 		if (!(this instanceof __Type)) return new __Type(input);
 		Object.defineProperties(this, {
-			_input:    {value: input},                 /* valor de referência */
-			_type:     {value:  null, writable: true}, /* tipo do valor de entrada */
-			_value:    {value:  null, writable: true}, /* valor a ser considerado */
-			_toString: {value:  null, writable: true}, /* referência para string */
-			_valueOf:  {value:  null, writable: true}, /* referência para valueOf */
+			_input:    {value: input},                /* valor de referência */
+			_type:     {value: null, writable: true}, /* tipo do valor de entrada */
+			_value:    {value: null, writable: true}, /* valor a ser considerado */
+			_toString: {value: null, writable: true}, /* referência para string */
+			_valueOf:  {value: null, writable: true}, /* referência para valueOf */
+			_test:     {value: __TYPE.test(input)},   /* testa o casamento de expressões regulares */
 		});
 
-		/* definir atributos próprios */
-		/* IMPORTANTE: na verificação de strings, o atributo string deve ser o último */
+		/* IMPORTANTE: o atributo string deve ser o último */
 		let strings = ["number", "date", "time", "datetime", "string"];
-		/* IMPORTANTE: object precisa ser o último, pois qualquer um pode ser um objeto */
+		/* IMPORTANTE: object deve ser o último (qualquer um pode ser um objeto) */
 		let objects = [
 			"null", "undefined", "boolean", "number", "datetime",
-			"array", "node", "regexp", "function", "file", "files", "object"
+			"array", "node", "regexp", "function", "object"
 		];
+		/*-- Checagem do tipo --*/
 		let types = this.chars ? strings : objects;
+		let group = this._test.group;
+		if (types.indexOf(group) >= 0 && this[group]) return;
+		/*-- Checando cada possibilidade --*/
 		let i = -1;
 		while (++i < types.length)
-			if (this[types[i]]) return;
-		/* se não se encaixar em nada: desconhecido */
+			if (types[i] !== group && this[types[i]]) return;
+		/*-- Não se encaixa em nada conhecido --*/
 		this._value    = input;
 		this._type     = "unknow";
 		this._toString = "toString" in input ? input.toString() : String(input);
 		this._valueOf  = "valueOf"  in input ? input.valueOf()  : input;
 	}
+	Object.defineProperties(__Type, {
+		/**. ``''string'' __Type.zeros(''integer'' value, ''integer'' lenght)``: Fixa o tamanho do inteiro ``value`` na quantidade definida em ``length`` completando com zeros à esquerda.**/
+		zeros: {
+			value: function(value, length) {
+				value   = Math.trunc(Number(value));
+				let str = value < 0 ? "-" : "";
+				let abs = Math.abs(value);
+				if (abs === 0) return String("0").repeat(length);
+				let i = 0;
+				while (++i < length) {
+					let pow10 = Math.pow(10, i);
+					let zeros = String("0").repeat(length - i);
+					if (abs < pow10) return str+zeros+abs;
+				}
+				return str+String(abs);
+			}
+		},
+	});
 
 	Object.defineProperties(__Type.prototype, {
 		constructor: {value: __Type},
-		/**FIXME acabar com isso . ``''object'' _re``: Armazena as expressões regulares dos de dados descritos em string.**/
-		_re: {
-			value: {
-				number:  /^(\+?\d+\!|[+-]?(\d+|(\d+)?\.\d+)(e[+-]?\d+)?\%?)$/i,
-				date:    /^([-+]?\d{3}\d+)\-(0[1-9]|1[0-2])\-(0[1-9]|[12]\d|3[01])$/,
-				dateDMY: /^(0[1-9]|[12]\d|3[01])\/(0[1-9]|1[0-2])\/([-+]?\d{3}\d+)$/,
-				dateMDY: /^(0[1-9]|1[0-2])\.(0[1-9]|[12]\d|3[01])\.([-+]?\d{3}\d+)$/,
-				datedmy: /^(0?[1-9]|[12]\d|3[01])\ ([^0-9]+)\ ([-+]?\d{3}\d+)$/i,
-				datemdy: /^([^0-9]+)\ (0?[1-9]|[12]\d|3[01])\ ([-+]?\d{3}\d+)$/i,
-				time:    /^([01]?\d|2[0-4])\:[0-5]\d(\:[0-5]\d(\.\d{1,3})?)?[zZ]?$/,
-				time12:  /^(0?[1-9]|1[0-2])\:[0-5]\d(\:[0-5]\d(\.\d{1,3})?)?\ ?[ap]m$/i,
-				month:   /^([-+]?\d{3}\d+)\-(0[1-9]|1[0-2])$/,
-				monthMY: /^(0[1-9]|1[0-2])\/([-+]?\d{3}\d+)$/,
-				monthmy: /^[^0-9]+[/ ]([-+]?\d{3}\d+)$/i,
-				week:    /^([-+]?\d{3}\d+)\-W(0[1-9]|[1-4]\d|5[0-4])?$/i,
-				weekWY:  /^(0[1-9]|[1-4]\d|5[0-4])\,\ ([-+]?\d{3}\d+)$/,
-				email:   /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/,
-			}
-		},
-
-
-
-
 		/**. ``''boolean'' chars``: Checa se o argumento é um conjunto de caracteres (string).**/
 		chars: {
 			get: function() {
@@ -684,7 +661,7 @@ const wd = (function() {
 		number: {
 			get: function() {
 				if (this.type !== null) return this.type === "number";
-				/* número normal */
+				/*-- Número --*/
 				if (typeof this._input === "number" || this._input instanceof Number) {
 					if (isNaN(this._input)) return false;
 					this._type     = "number";
@@ -693,12 +670,10 @@ const wd = (function() {
 					this._toString = isFinite(this._value) ? String(this._value) : (this._value < 0 ? "-∞" : "+∞");
 					return true;
 				}
-				/*-- Número em forma de String --*/
-				if (!this.chars) return false;
-				let value = this._input.trim();
-				let test  = __TYPE.test(value);
-				if (test.group !== "number") return false;
-				switch(test.subgroup) {
+				/*-- String --*/
+				if (!this.chars || this._test.group !== "number") return false;
+				let value = this._test.value;
+				switch(this._test.subgroup) {
 					case "factorial": {
 						let mult = Number(value.replace("!", ""));
 						value = 1;
@@ -805,44 +780,21 @@ const wd = (function() {
 				if (this._input instanceof Date) {
 					let input = this._input;
 					let number = {
-						D: input.getDate(),
-						M: input.getMonth()+1,
-						Y: input.getFullYear(),
-						h: input.getHours(),
-						m: input.getMinutes(),
-						s: input.getSeconds(),
+						D: input.getDate(),  M: input.getMonth()+1, Y: input.getFullYear(),
+						h: input.getHours(), m: input.getMinutes(), s: input.getSeconds(),
 						l: input.getMilliseconds()
 					};
 					let text = {};
-
 					for (let i in number) {
 						let value = number[i];
 						switch(i) {
-							case "Y": {
-								let y = Math.abs(value);
-								text[i] = value < 0 ? "-" : "";
-								if      (y ===    0) text[i] += "0000";
-								else if (y <     10) text[i] += "000"+String(y);
-								else if (y <    100) text[i] += "00"+String(y);
-								else if (y <   1000) text[i] += "0"+String(y);
-								else                 text[i] += String(y);
-								break;
-							}
-							case "l": {
-								if      (value ===   0) text[i] = ".000";
-								else if (value <    10) text[i] = ".00"+String(value);
-								else if (value <   100) text[i] = ".0"+String(value);
-								else                    text[i] = "."+String(value).substr(0,3);
-								break
-							}
-							default: {
-								text[i] = (value < 10 ? "0" : "")+String(value);
-							}
+							case "Y": text[i] = __Type.zeros(value, 4); break;
+							case "l": text[i] = __Type.zeros(value, 3).substr(0,3); break;
+							default:  text[i] = __Type.zeros(value, 2).substr(0,2);
 						}
 					}
-					let time = [text.h, text.m, text.s+text.l].join(":");
+					let time = [text.h, text.m, text.s+"."+text.l].join(":");
 					let date = [text.Y, text.M, text.D].join("-");
-
 					this._type     = "datetime";
 					this._value    = date+"T"+time;
 					this._valueOf  = this._value;
@@ -870,121 +822,43 @@ const wd = (function() {
 		date: {
 			get: function() {
 				if (this.type !== null) return this.type === "date";
-				if (!this.chars) return false;
-				let value = this._input.trim();
-				let test  = __TYPE.test(value);
-				if (test.group !== "date") return false;
+				if (!this.chars || this._test.group !== "date") return false;
+				let value = this._test.value;
 				let date = {};
-				switch(test.subgroup) {
-					case "YYYYMMDD": {
-						let data = value.split("-");
-						date = {y: data[0], m: data[1], d: data[2]};
-						break;
-					}
-					case "DDMMYYYY": {
-						let data = value.split("/");
-						date = {d: data[0], m: data[1], y: data[2]};
-						break;
-					}
-					case "MMDDYYYY": {
-						let data = value.split(".");
-						date = {m: data[0], d: data[1], y: data[2]};
-						break;
-					}
-					case "DMMMMYYYY": {
-						date.d = value.replace(/^(\d\d?)\ .+\ \d\d\d\d+$/, "$1");
-						date.m = value.replace(/^\d\d?\ (.+)\ \d\d\d\d+$/, "$1");
-						date.y = value.replace(/^\d\d?\ .+\ (\d\d\d\d+)$/, "$1");
-						if (data.m !== data.m.trim()) return false;
-						data.m = __LANG.month(data.m);
-						if (data.m < 1) return false;
-						break;
-					}
-					case "MMMMDYYYY": {
-						date.d = value.replace(/^.+\ (\d\d?)\ \d\d\d\d+$/, "$1");
-						date.m = value.replace(/^(.+)\ \d\d?\ \d\d\d\d+$/, "$1");
-						date.y = value.replace(/^.+\ \d\d?\ (\d\d\d\d+)$/, "$1");
-						if (data.m !== data.m.trim()) return false;
-						data.m = __LANG.month(data.m);
-						if (data.m < 1) return false;
-						break;
-					}
+				let type = {
+					YYYYMMDD:  {split: "-", ymd: [0,1,2]},
+					DDMMYYYY:  {split: "/", ymd: [2,1,0]},
+					MMDDYYYY:  {split: ".", ymd: [2,0,1]},
+					DMMMMYYYY: {replace: __TYPE.date.DMMMMYYYY, ymd: ["$3", "$2", "$1"]},
+					MMMMDYYYY: {replace: __TYPE.date.MMMMDYYYY, ymd: ["$3", "$1", "$2"]}
 				}
+				let cfg = type[this._test.subgroup];
+				if ("split" in cfg) {
+					let data = value.split(cfg.split);
+					date.y = data[cfg.ymd[0]];
+					date.m = data[cfg.ymd[1]];
+					date.d = data[cfg.ymd[2]];
+				} else if ("replace" in cfg) {
+					date.y = value.replace(cfg.replace, cfg.ymd[0]);
+					date.m = value.replace(cfg.replace, cfg.ymd[1]);
+					date.d = value.replace(cfg.replace, cfg.ymd[2]);
+					if (date.m !== date.m.trim()) return false;
+					date.m = __LANG.month(date.m);
+					if (date.m < 1) return false;
+				} else {return false;}
+
 				/* checando dados da data */
-				let d = Number(data[date.d]);
-				let m = Number(data[date.m]);
-				let y = Number(data[date.y]);
+				let d = Number(date.d);
+				let m = Number(date.m);
+				let y = Number(date.y);
 				/* checando dia */
 				let feb  = (y%400 === 0 || (y%4 === 0 && y%100 !== 0)) ?  29 : 28;
 				let days = [31, feb, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 				if (d > days[m-1]) return false;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-				if (value.indexOf("  ") >= 0) return false;
-				let order = {
-					YMD: {y: 0, m: 1, d: 2},
-					DMY: {d: 0, m: 1, y: 2},
-					MDY: {m: 0, d: 1, y: 2}
-				};
-				let ref, data;
-				if (this._re.date.test(value)) { /* YYYY-MM-DD */
-					data = value.split("-");
-					if (data.length > 3) { /* data negativa */
-						data.shift();
-						data[0] = "-"+data[0];
-					}
-					ref  = order.YMD;
-				} else if (this._re.dateDMY.test(value)) { /* DD/MM/YYYY */
-					data = value.split("/");
-					ref  = order.DMY;
-				} else if (this._re.dateMDY.test(value)) { /* MM.DD.YYYY */
-					data = value.split(".");
-					ref  = order.MDY;
-				} else if (this._re.datedmy.test(value)) { /*D MMM YYYY D MMMM YYYY */
-					data = value.split(" ");
-					ref  = order.DMY;
-					data[1] = __LANG.month(data[1]);
-					if (data[1] < 1) return false;
-				} else if (this._re.datemdy.test(value)) { /* MMM D YYYY MMMM D YYYY */
-					data = value.split(" ");
-					ref  = order.MDY;
-					data[0] = __LANG.month(data[0]);
-					if (data[0] < 1) return false;
-				} else {
-					return false;
-				}
-				let d = Number(data[ref.d]);
-				let m = Number(data[ref.m]);
-				let y = Number(data[ref.y]);
-				/* checando dia */
-				let feb  = (y%400 === 0 || (y%4 === 0 && y%100 !== 0)) ?  29 : 28;
-				let days = [31, feb, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-				if (d > days[m-1]) return false;
-
-
-
-
-				let Y    = Math.abs(y);
-				let YYYY = (y < 0 ? "-" : "") + (Y < 1000 ? ("000"+String(Y)).slice(-4) : String(Y));
-				this._type  = "date";
-				this._value = [
-					YYYY,
-					("0"+data[ref.m]).slice(-2),
-					("0"+data[ref.d]).slice(-2)
-				].join("-");
+				this._type     = "date";
+				this._value    = [__Type.zeros(y, 4), __Type.zeros(m, 2), __Type.zeros(d, 2)].join("-");
+				this._valueOf  = this._value;
+				this._toString = this._value;
 				return true;
 			}
 		},
@@ -993,8 +867,10 @@ const wd = (function() {
 			get: function() {
 				if (this.type !== null) return this.type === "function";
 				if (typeof this._input === "function" || this._input instanceof Function) {
-					this._type  = "function";
-					this._value = this._input;
+					this._type     = "function";
+					this._value    = this._input;
+					this._valueOf  = "valueOf" in this._value ? this._value.valueOf() : this._value;
+					this._toString = "toString" in this._value ? this._value.toString() : this._value;
 					return true;
 				}
 				return false;
@@ -1005,8 +881,10 @@ const wd = (function() {
 			get: function() {
 				if (this.type !== null) return this.type === "array";
 				if (Array.isArray(this._input) || this._input instanceof Array) {
-					this._type  = "array";
-					this._value = this._input;
+					this._type     = "array";
+					this._value    = this._input;
+					this._valueOf  = "valueOf" in this._value ? this._value.valueOf() : this._value;
+					this._toString = JSON.stringify(this._value);
 					return true;
 				}
 				return false;
@@ -1017,8 +895,10 @@ const wd = (function() {
 			get: function () {
 				if (this.type !== null) return this.type === "null";
 				if (this._input === null) {
-					this._type  = "null";
-					this._value = null;
+					this._type     = "null";
+					this._value    = null;
+					this._valueOf  = 0;
+					this._toString = "";
 					return true;
 				}
 				return false;
@@ -1029,54 +909,38 @@ const wd = (function() {
 			get: function() {
 				if (this.type !== null) return this.type === "undefined";
 				if (this._input === undefined || typeof this._input === "undefined") {
-					this._type  = "undefined";
-					this._value = undefined;
+					this._type     = "undefined";
+					this._value    = undefined;
+					this._valueOf  = Infinity;
+					this._toString = "?";
 					return true;
 				}
 				return false;
 			}
 		},
-		/**. ``''boolean'' time``: Checa se o argumento é uma string que representa uma unidade de tempo: ``h:mm:ss.sss`` (padrão) e ``h12:mm:ss.sss AMPM``.
-		|Formato|Valor|Descrição|
-		|``h``|Hora|Um ou dois dígitos (zero à esquerda se menor que 10)|
-		|``hh``|Hora|Dois dígitos (zero à esquerda se menor que 10)|
-		|``h12``|Hora|Formato de 12h com um ou dois dígitos (zero à esquerda se menor que 10)|
-		|``mm``|Minuto| com dois dígitos|
-		|``ss``|Segundos|Dois dígitos|
-		|``sss``|Decimal dos segundos|Até três dígitos|
-		|``AMPM``|Ante meridiem (``am``) ou Post meridiem (``pm``)|Ignora a caixa e pode ser precedido ou não de um espaço.|**/
+		/**. ``''boolean'' time``: Checa se o argumento é uma string que representa uma unidade de tempo.**/
 		time: {
 			get: function() {
 				if (this.type !== null) return this.type === "time";
-				if (!this.chars) return false;
-				let value = this._input.trim().replace(/[zZ]$/, "");
-				let h, m, s;
-				if (this._re.time12.test(value)) { /* h12:mm:ss.sss AMPM */
-					let am   = value[value.length - 2].toUpperCase() === "A" ? true : false;
-					let time = value.replace(/[^0-9:.]/g, "").split(":");
-					h = Number(time[0]);
-					h = am ? (h % 12) : (h === 12 ? 12 : ((12 + h ) % 24));
-					m = Number(time[1]);
-					s = time.length === 3 ? Number(time[2]) : 0;
-				} else if (this._re.time.test(value)) { /* h24:mm:ss.sss */
-					let time = value.split(":");
-					h = Number(time[0]);
-					m = Number(time[1]);
-					s = time.length === 3 ? Number(time[2]) : 0;
-				} else {
-					return false;
-				}
-				h = h%24;
-				if (h < 0 || h > 24) return false;
-				if (m < 0 || m > 59) return false;
-				if (s < 0 || s > 59.999) return false;
-
-				this._type  = "time";
-				this._value = [
-					String((h < 10 ? "0" : "")+h),
-					String((m < 10 ? "0" : "")+m),
-					String((s < 10 ? "0" : "")+s)
-				].join(":");
+				if (!this.chars || this._test.group !== "time") return false;
+				let value = this._test.value.replace(/[^0-9:.]/g, "");
+				let data  = value.replace(".", ":").split(":");
+				let time  = {
+					h: Number(data[0]),
+					m: Number(data[1]),
+					s: data.length > 2 ? Number(data[2]) : 0,
+					l: data.length > 3 ? Number(data[3]) : 0
+				};
+				if (this._test.subgroup === "AM")
+					time.h = time.h%12;
+				else if (this._test.subgroup === "PM")
+					time.h = time.h === 12 ? 12 : ((12 + time.h ) % 24);
+				for (let i in time)
+					time[i] = __Type.zeros(time[i], (i === "l" ? 3 : 2));
+				this._type     = "time";
+				this._value    = [time.h, time.m, time.s+"."+time.l].join(":");
+				this._valueOf  = this._value;
+				this._toString = this._value;
 				return true;
 			}
 		},
@@ -1084,36 +948,36 @@ const wd = (function() {
 		node: {
 			get: function() {
 				if (this.type !== null) return this.type === "node";
-				/* 0: individual, 1: coletivo, outros: direto */
-				let nodes = {
-					window: window, document: document,
-					HTMLElement: 0, SVGElement: 0, MathMLElement: 0,
-					NodeList: 1, HTMLCollection: 1, HTMLAllCollection: 1,
-					HTMLOptionsCollection: 1, HTMLFormControlsCollection: 1
-				}
-				let html = [];
-				for (let obj in nodes) {
-					let ref = nodes[obj];
-					if (ref === 0 || ref === 1) {
-						if (obj in window && this._input instanceof window[obj]) {
-							this._type = "node";
-							if (ref === 0) {
-								html.push(this._input);
-							} else {
-								for (let i = 0; i < this._input.length; i++)
-									html.push(this._input[i]);
-							}
+				let html  = null;
+				let node  = this._input;
+				if (node === window || node === document) {
+					html = [node];
+				} else {
+					let nodes = { /* 0: individual, 1: lista */
+						HTMLElement: 0,
+						SVGElement: 0,
+						MathMLElement: 0,
+						NodeList: 1,
+						HTMLCollection: 1,
+						HTMLAllCollection: 1,
+						HTMLOptionsCollection: 1,
+						HTMLFormControlsCollection: 1
+					};
+					for (let HTML in nodes) {
+						if (HTML in window && node instanceof window[HTML]) {
+							if (nodes[HTML] === 0) node = [node];
+							html = [];
+							let i = -1;
+							while (++i < node.length) html.push(node[i]);
 						}
-					} else if (ref === this._input)  {
-						this._type = "node";
-						html.push(this._input);
-					}
-					if (this._type === "node") {
-						this._value = html;
-						return true;
 					}
 				}
-				return false;
+				if (html === null) return false;
+				this._type     = "node";
+				this._value    = html;
+				this._valueOf  = this._value.slice();
+				this._toString = this._value;
+				return true;
 			}
 		},
 		/**. ``''boolean'' object``: Checa se o argumento é um objeto que não se enquadra nas demais categorias.**/
@@ -1122,89 +986,49 @@ const wd = (function() {
 				if (this.type !== null) return this.type === "object";
 				if (this.string) return false;
 				if (typeof this._input === "object") {
-					this._type  = "object";
-					this._value = this._input;
+					this._type     = "object";
+					this._value    = this._input;
+					this._valueOf  = this._value;
+					this._toString = JSON.stringify(this._value);
 					return true;
 				}
 				return false;
 			}
 		},
-		/**. ``''boolean'' file``: Checa se o argumento é do tipo ``File`` proveniente de ``FileList``.**/
+		/**. ``''boolean'' file``: Checa se o argumento é do tipo ``File`` ou ``FileList``.**/
 		file: {
 			get: function() {
 				if (this.type !== null) return this.type === "file";
 				if (typeof this._input !== "object") return false;
-				if (this._input.constructor.name === "File") {
-					this._type  = "file";
-					this._value = this._input;
+				let ctor = this._input.constructor.name;
+				if (ctor === "File" || ctor === "FileList") {
+					this._type     = "file";
+					this._value    = this._input;
+					this._valueOf  = this._value;
+					this._toString = this._value;
 					return true;
 				}
 				return false;
 			}
 		},
-		/**. ``''boolean'' files``: Checa se o argumento é do tipo ``FileList`` não vazio.**/
-		files: {
-			get: function() {
-				if (this.type !== null) return this.type === "files";
-				if (typeof this._input !== "object") return false;
-				if (this._input.constructor.name === "FileList") {
-					this._type  = "files";
-					this._value = this._input;
-					return true;
-				}
-				return false;
-			}
-		},
-		/**. ``''void'' _init()``: Analisa o dado e define os parâmetros para execução dos demais atributos.**/
-		_init: {
-			value: function() {
-				if (this._type !== null) return;
-				/* IMPORTANTE: object precisa ser o último, pois qualquer um pode ser um objeto */
-				/* IMPORTANTE: na verificação de strings, o atributo string deve ser o último */
-				let types = this.chars ? [
-					"number", "date", "time", "datetime", "string"
-				] : [
-					"null", "undefined", "boolean", "number", "datetime",
-					"array", "node", "regexp", "function", "file", "files", "object"
-				];
-				let i = -1;
-				while (++i < types.length)
-					if (this[types[i]]) return;
-				/* se não se encaixar em nada: desconhecido */
-				this._value = this._input;
-				this._type  = "unknow";
-				return;
-			}
-		},
-		/**. ``''any''  value``: Retorna o valor do argumento nos parâmetos da biblioteca.
-		. Tipos de referência, primitivos, data e tempo retornam valores de referência, valores primitivos e strings no formato ``YYYY-MM-DD`` e ``hh:mm:ss.sss``, respectivamente.**/
-		value: {
-			get: function() {return this._value;}
-		},
-		/**. ``''string'' type``: Retorna o tipo do argumento verificado (conforme atributos).**/
+		/**. ``''string'' type``: Retorna o tipo do argumento verificado (number, date, time, datetime, string, null, undefined, boolean, array, node, regexp, function, object).**/
 		type: {
 			get: function() {return this._type;}
 		},
-		/**FIXME . ``''void''  valueOf()``: Retorna o método ``valueOf`` do retorno do atributo ``value``, exceto para os tipos ''null'' (retorna ``0``), ''undefined'' (retorna ``Infinity``) e ''boolean'' (retorna ``1`` se verdadeiro e ``0`` se falso).**/
+		/**. ``''any''  value``: Retorna o valor do argumento de acordo com o atributo ``type``. Tipos de referência, primitivos e data/tempo retornam valores de referência, primitivos e strings, respectivamente.**/
+		value: {
+			get: function() {return this._value;}
+		},
+		/**. ``''void''  valueOf()``: Método padrão.**/
 		valueOf: {
 			value: function() {
-				if (this.null)      return 0;
-				if (this.undefined) return Infinity;
-				if (this.boolean)   return this.value ? 1 : 0;
-				if (this.node)      return this.value.slice();
-				return (this.value).valueOf();
+				return this._valueOf;
 			}
 		},
-		/**FIXME . ``''string'' toString()``: Retorna o método ``toString`` do retorno do atributo ``value``, exceto para os tipos ''null'' (retorna uma string vazia), ''undefined'' (retorna ``?``), ''boolean'' (retorna ``true`` se verdadeiro e ``false`` se falso), ''regexp'' (.**/
+		/**. ``''string'' toString()``: Método padrão.**/
 		toString: {
 			value: function() {
-				if (this.null)      return "";
-				if (this.undefined) return "?";
-				if (this.boolean)   return this.value ? "true" : "false";
-				if (this.regexp)    return this.value.source;
-				if (this.object)    return JSON.stringify(this.value);
-				if (this.array)     return JSON.stringify(this.value);
-				return (this.value).toString();
+				return this._toString;
 			}
 		}
 	});
@@ -1234,7 +1058,7 @@ const wd = (function() {
 		/**. ``''number'' toString()``: Retorna o valor em forma de string.**/
 		toString: {
 			value: function() {
-				return this.finite ? this._value.toString() : (this < 0 ? "-" : "+")+"\u221E";
+				return this.finite ? this._value.toString() : (this < 0 ? "-∞" : "+∞");
 			}
 		},
 		/**. ``''string'' toString()``: Retorna o valor em forma de string de acordo com a linguagem definida.**/
