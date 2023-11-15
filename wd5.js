@@ -381,47 +381,6 @@ const wd = (function() {
 	};
 
 
-/*----------------------------------------------------------------------------*/
-	/**###### ``**const** ''object'' __TYPE``
-	Registra as expressões regulares para identificação de tipos em string.**/
-	const __TYPE = {
-		number: {
-			main: /^(\+?\d+\!|[+-]?(\d+|(\d+)?\.\d+)(e[+-]?\d+)?\%?)$/i,
-		},
-		date: {
-			main: /^([-+]?\d{3}\d+)\-(0[1-9]|1[0-2])\-(0[1-9]|[12]\d|3[01])$/,
-			DMY:  /^(0[1-9]|[12]\d|3[01])\/(0[1-9]|1[0-2])\/([-+]?\d{3}\d+)$/,
-			MDY:  /^(0[1-9]|1[0-2])\.(0[1-9]|[12]\d|3[01])\.([-+]?\d{3}\d+)$/,
-			dmy:  /^(0?[1-9]|[12]\d|3[01])\ ([^0-9]+)\ ([-+]?\d{3}\d+)$/i,
-			mdy:  /^([^0-9]+)\ (0?[1-9]|[12]\d|3[01])\ ([-+]?\d{3}\d+)$/i,
-		},
-		time: {
-			main: /^([01]?\d|2[0-4])\:[0-5]\d(\:[0-5]\d(\.\d{1,3})?)?[zZ]?$/,
-			h12:  /^(0?[1-9]|1[0-2])\:[0-5]\d(\:[0-5]\d(\.\d{1,3})?)?\ ?[ap]m$/i,
-		},
-		month: {
-			main: /^([-+]?\d{3}\d+)\-(0[1-9]|1[0-2])$/,
-			MY:   /^(0[1-9]|1[0-2])\/([-+]?\d{3}\d+)$/,
-			my:   /^[^0-9]+[/ ]([-+]?\d{3}\d+)$/i,
-		},
-		week: {
-			main: /^([-+]?\d{3}\d+)\-W(0[1-9]|[1-4]\d|5[0-4])?$/i,
-			WY:   /^(0[1-9]|[1-4]\d|5[0-4])\,\ ([-+]?\d{3}\d+)$/,
-		},
-		email: {
-			main: /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/,
-		},
-		test: function(x) {
-			for (let i in this) {
-				if (i === "test") continue;
-				for (let j in this[i]) {
-					if (this[i][j].test(x))
-						return {group: i, subgroup: j};
-				}
-			}
-			return null;
-		}
-	};
 
 
 
@@ -492,6 +451,91 @@ const wd = (function() {
 			"padding: 0.5em; border-radius: 0 0 0.2em 0.2em;"
 		]},
 	];
+
+
+
+
+
+
+
+
+/*----------------------------------------------------------------------------*/
+	/**###### ``**const** ''object'' __TYPE``
+	Registra as expressões regulares para identificação de modelos genéricos de string.
+	|Grupo|Subgrupo|Exemplo|
+	|number|integer|10e12|
+	|number|decimal|+.15e12|
+	|number|factorial|3! (apenas inteiro positivo)|
+	|number|percentage|10%|
+	|number|infinity|-∞|
+	|date|YYYYMMDD|2010-03-01|
+	|date|DDMMYYYY|01/03/2010|
+	|date|MMDDYYYY|03.01.2010|
+	|date|DMMMMYYYY|1 março 2010|
+	|date|MMMMDYYYY|março 1 2010|
+	|time|hmmss|6:05:05.0001 (modelo de 24h)|
+	|time|AMPM|1:05:05.0001 AM (modelo de 12h)|
+	|month|YYYYMM|2010-03|
+	|month|MMYYYY|03/2010|
+	|month|MMMMYYYY|março/2010 ou março 2010|
+	|week|YYYYWW|2010W-01 (semana de 01-54)|
+	|week|WWYYYY|01, 2010 (semana de 01-54)|
+	|email|email|Um endereço de e-mail|
+	O valores acima apresentam as seguintes características:
+	- **ATENÇÃO!** O nome do mês depende da linguagem, pode ser curto e ignora caixas;
+	- **ATENÇÃO!** O nome do mês deve ser igual ao retornado pelo objeto nativo ``Date``;
+	- O ano pode ser negativo;
+	- Os segundos e milissegundos são opcionais; e
+	- Os espaços em branco são espaços simples.
+	FIXME fazer as descrições
+	**/
+
+	const __TYPE = {
+		number: {
+			integer:    /^[+-]?\d+(e[+-]?\d+)?$/i,
+			decimal:    /^[+-]?(\d+)?\.\d+(e[+-]?\d+)?$/i,
+			percentage: /^[+-]?(\d+|(\d+)?\.\d+)(e[+-]?\d+)?\%$/i,
+			factorial:  /^\+?\d+\!$/,
+			infinity:   /^[+-]?\∞$/,
+		},
+		date: {
+			YYYYMMDD:  /^([-+]?\d{3}\d+)\-(0[1-9]|1[0-2])\-(0[1-9]|[12]\d|3[01])$/,
+			DDMMYYYY:  /^(0[1-9]|[12]\d|3[01])\/(0[1-9]|1[0-2])\/([-+]?\d{3}\d+)$/,
+			MMDDYYYY:  /^(0[1-9]|1[0-2])\.(0[1-9]|[12]\d|3[01])\.([-+]?\d{3}\d+)$/,
+			DMMMMYYYY: /^(0?[1-9]|[12]\d|3[01])\ ([^0-9]+)\ ([-+]?\d{3}\d+)$/i,
+			MMMMDYYYY: /^([^0-9]+)\ (0?[1-9]|[12]\d|3[01])\ ([-+]?\d{3}\d+)$/i,
+		},
+		time: {
+			hmmss: /^([01]?\d|2[0-4])\:[0-5]\d(\:[0-5]\d(\.\d{1,3})?)?$/,
+			AMPM:  /^(0?[1-9]|1[0-2])\:[0-5]\d(\:[0-5]\d(\.\d{1,3})?)?\ ?[ap]m$/i,
+		},
+		month: {
+			YYYYMM:   /^([-+]?\d{3}\d+)\-(0[1-9]|1[0-2])$/,
+			MMYYYY:   /^(0[1-9]|1[0-2])\/([-+]?\d{3}\d+)$/,
+			MMMMYYYY: /^[^0-9]+[/ ]([-+]?\d{3}\d+)$/i,
+		},
+		week: {
+			YYYYWW: /^([-+]?\d{3}\d+)\-W(0[1-9]|[1-4]\d|5[0-4])?$/i,
+			WWYYYY: /^(0[1-9]|[1-4]\d|5[0-4])\,\ ([-+]?\d{3}\d+)$/,
+		},
+		email: {
+			email: /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/,
+		},
+		/**. ``''object'' test(''any'' x)``: Testa se o valor passado em ``x`` encaixa em alguma expressão regular retornando um objeto contendo os atributos ``group`` e ``subgroup``.**/
+		test: function(x) {
+			x = String(x).trim();
+			for (let i in this) {
+				if (i === "test") continue;
+				for (let j in this[i]) {
+					if (this[i][j].test(x))
+						return {group: i, subgroup: j};
+				}
+			}
+			return {group: null, subgroup: null};
+		}
+	};
+
+
 /*===========================================================================*/
 	/**### Checagem de Tipos e Valores
 	###### ``**constructor** ''object'' __Type(''any''  input)``
@@ -546,6 +590,10 @@ const wd = (function() {
 				email:   /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/,
 			}
 		},
+
+
+
+
 		/**. ``''boolean'' chars``: Checa se o argumento é um conjunto de caracteres (string).**/
 		chars: {
 			get: function() {
@@ -564,7 +612,7 @@ const wd = (function() {
 				return (this.chars && this._input.trim() !== "");
 			}
 		},
-		/**. ``''boolean'' lang``: Checa se o argumento está no [formato de linguagem](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/lang).**/
+		/**. ``''boolean'' lang``: Checa se o argumento está no formato de linguagem.**/
 		lang: {
 			get: function() {
 				return (this.chars && __LANG.test(this._input));
@@ -577,7 +625,7 @@ const wd = (function() {
 				let data = this._input.split(",")
 				let i = -1;
 				while (++i < data.length)
-					if (!this._re.email.test(data[i].trim())) return false;
+					if (!__TYPE.email.email.test(data[i].trim())) return false;
 				return true;
 			}
 		},
@@ -593,78 +641,88 @@ const wd = (function() {
 				}
 			}
 		},
-		/**. ``''boolean'' month``: Checa se o argumento está no formato de mês (ver atributo date):
-		- ``YYYY-MM`` (padrão)
-		- ``MM/YYYY``
-		- ``MMM/YYYY``
-		- ``MMMM/YYYY``
-		- ``MMM YYYY``
-		- ``MMMM YYYY``**/
+		/**. ``''boolean'' month``: Checa se o argumento está no formato de mês:**/
 		month: {
 			get: function() {
 				if (!this.chars) return false;
 				let data = this._input.trim();
-				if (data.indexOf("  ") >= 0) return false;
-				if (this._re.month.test(data))   return true; /* YYYY-MM */
-				if (this._re.monthMY.test(data)) return true; /* MM/YYYY */
-				if (this._re.monthmy.test(data)) /* MMMM[ /]YYYY */
-					return __LANG.month(data.split(/[/ -]/)[0]) > 0;
+				if (__TYPE.month.YYYYMM.test(data)) return true;
+				if (__TYPE.month.MMYYYY.test(data)) return true;
+				if (__TYPE.month.MMMMYYYY.test(data)) {
+					let re    = /^([^0-9]+)[/ ][+-]?\d+$/;
+					let month = data.replace(re, "$1");
+					console.log(data, month);
+					if (month.trim() !== month) return false;
+					return __LANG.month(month) > 0;
+				}
 				return false;
 			}
 		},
-		/**. ``''boolean'' week``: Checa se o argumento está no formato de semana: ``YYYY-wWW`` (padrão) e ``WW, YYYY``. O valor de ``WW`` é a semana com dois dígitos (01-54).**/
+		/**. ``''boolean'' week``: Checa se o argumento está no formato de semana.**/
 		week: {
 			get: function() {
 				if (!this.chars) return false;
 				let data = this._input.trim();
-				if (this._re.week.test(data))   return true;
-				if (this._re.weekWY.test(data)) return true;
+				if (__TYPE.week.YYYYWW.test(data)) return true;
+				if (__TYPE.week.WWYYYY.test(data)) return true;
 				return false;
 			}
 		},
-		/**. ``''boolean'' string``: Checa se o argumento é uma string diferente de número, data e tempo.**/
+		/**. ``''boolean'' string``: Checa se o argumento é uma string diferente de número ou data/tempo.**/
 		string: {
 			get: function() {
 				if (this.type !== null) return this.type === "string";
 				if (!this.chars) return false;
-				this._type  = "string";
-				this._value = String(this._input);
+				this._type     = "string";
+				this._value    = String(this._input);
+				this._valueOf  = this._value;
+				this._toString = this._value;
 				return true;
 			}
 		},
-		/**. ``''boolean'' number``: Checa se o argumento é um número real (número ou string) ou uma representação de fatorial (string) ou percentual (string).**/
+		/**. ``''boolean'' number``: Checa se o argumento é um número real, fatorial (string) ou percentual (string).**/
 		number: {
 			get: function() {
 				if (this.type !== null) return this.type === "number";
 				/* número normal */
 				if (typeof this._input === "number" || this._input instanceof Number) {
 					if (isNaN(this._input)) return false;
-					this._type  = "number";
-					this._value = this._input.valueOf();
-					return true
+					this._type     = "number";
+					this._value    = this._input.valueOf();
+					this._valueOf  = this._value;
+					this._toString = isFinite(this._value) ? String(this._value) : (this._value < 0 ? "-∞" : "+∞");
+					return true;
 				}
-				/* Número em forma de String (normal, percentual e fatorial) */
+				/*-- Número em forma de String --*/
 				if (!this.chars) return false;
 				let value = this._input.trim();
-				if (!this._re.number.test(value)) return false;
-				switch(value[value.length-1]) { /* analisar o último caractere */
-					case "!": { /* fatorial */
+				let test  = __TYPE.test(value);
+				if (test.group !== "number") return false;
+				switch(test.subgroup) {
+					case "factorial": {
 						let mult = Number(value.replace("!", ""));
 						value = 1;
 						while (mult > 1) value = value * mult--;
 						break;
 					}
-					case "%": { /* percentagem */
+					case "percentage": {
 						value = Number(value.replace("%", ""))/100;
 						break;
 					}
-					default: { /* normal */
+					case "infinity": {
+						value = value[0] === "-" ? -Infinity : +Infinity
+						break;
+					}
+					default: {
 						value = Number(value);
 					}
 				}
-				if (typeof value === "number" && !isNaN(value)) {
-					this._type  = "number";
-					this._value = value;
+				let check = __Type(value);
+				if (check.number) {
+					this._type     = check._type;
+					this._value    = check._value;
+					this._valueOf  = check._valueOf;
+					this._toString = check._toString;
 					return true;
 				}
 				return false;
@@ -717,8 +775,10 @@ const wd = (function() {
 			get: function() {
 				if (this.type !== null) return this.type === "boolean";
 				if (typeof this._input === "boolean" || this._input instanceof Boolean) {
-					this._type  = "boolean";
-					this._value = this._input.valueOf();
+					this._type     = "boolean";
+					this._value    = this._input.valueOf();
+					this._valueOf  = this._value === true ? 1 : 0;
+					this._toString = this._value === true ? "true" : "false";
 					return true;
 				}
 				return false;
@@ -731,39 +791,65 @@ const wd = (function() {
 				if (this._input instanceof RegExp) {
 					this._type  = "regexp";
 					this._value = this._input;
+					this._valueOf  = this._value.valueOf();
+					this._toString = this._value.source;
 					return true;
 				}
 				return false;
 			}
 		},
-		/**. ``''boolean'' datetime``: Checa se o argumento é um conjunto data/tempo.
-		. Enquadram-se nessa condição o construtor nativo ``Date`` e strings em formato de data e tempo, nos termos da biblioteca, separados por espaço, virgula e espaço ou a letra T (ver atributos ``date`` e ``time``).**/
+		/**. ``''boolean'' datetime``: Checa se o argumento é um conjunto data/tempo. Enquadram-se nessa condição o construtor nativo ``Date`` e strings em formato de data e tempo, nos termos da biblioteca, separados por espaço, virgula e espaço ou a letra T.**/
 		datetime: {
 			get: function() {
 				if (this.type !== null) return this.type === "datetime";
 				if (this._input instanceof Date) {
 					let input = this._input;
-					let D = input.getDate();
-					let M = input.getMonth()+1;
-					let Y = input.getFullYear();
-					let h = input.getHours();
-					let m = input.getMinutes();
-					let s = input.getSeconds()+(input.getMilliseconds()/1000);
-					this._type  = "datetime";
-					let time = [
-						("0"+String(h)).slice(-2),
-						("0"+String(m)).slice(-2),
-						(s < 10 ? "0" : "") + String(s)
-					].join(":");
-					let date = [
-						(Y < 0 ? "-" : "")+(Math.abs(Y) > 999 ? String(Math.abs(Y)) : ("000"+String(Math.abs(Y))).slice(-4)),
-						("0"+String(M)).slice(-2),
-						("0"+String(D)).slice(-2)
-					].join("-");
-					this._value = date+"T"+time;
+					let number = {
+						D: input.getDate(),
+						M: input.getMonth()+1,
+						Y: input.getFullYear(),
+						h: input.getHours(),
+						m: input.getMinutes(),
+						s: input.getSeconds(),
+						l: input.getMilliseconds()
+					};
+					let text = {};
+
+					for (let i in number) {
+						let value = number[i];
+						switch(i) {
+							case "Y": {
+								let y = Math.abs(value);
+								text[i] = value < 0 ? "-" : "";
+								if      (y ===    0) text[i] += "0000";
+								else if (y <     10) text[i] += "000"+String(y);
+								else if (y <    100) text[i] += "00"+String(y);
+								else if (y <   1000) text[i] += "0"+String(y);
+								else                 text[i] += String(y);
+								break;
+							}
+							case "l": {
+								if      (value ===   0) text[i] = ".000";
+								else if (value <    10) text[i] = ".00"+String(value);
+								else if (value <   100) text[i] = ".0"+String(value);
+								else                    text[i] = "."+String(value).substr(0,3);
+								break
+							}
+							default: {
+								text[i] = (value < 10 ? "0" : "")+String(value);
+							}
+						}
+					}
+					let time = [text.h, text.m, text.s+text.l].join(":");
+					let date = [text.Y, text.M, text.D].join("-");
+
+					this._type     = "datetime";
+					this._value    = date+"T"+time;
+					this._valueOf  = this._value;
+					this._toString = this._value;
 					return true;
 				}
-				/* Data/Tempo em formato de string */
+				/*-- Data/Tempo em formato de string --*/
 				if (!this.chars) return false;
 				let dt = this._input.trim();
 				let re = /(\d\d)(T|\,\ |\ )(\d?\d\:)/i;
@@ -773,31 +859,80 @@ const wd = (function() {
 				let date = __Type(dt[0]);
 				let time = __Type(dt[1]);
 				if (!date.date || !time.time) return false;
-				this._type  = "datetime";
-				this._value = date.value+"T"+time.value;
+				this._type     = "datetime";
+				this._value    = date.value+"T"+time.value;
+				this._valueOf  = this._value;
+				this._toString = this._value;
 				return true;
 			}
 		},
-		/**. ``''boolean'' date``: Checa se o argumento é uma data em formato de string:
-		- ``YYYY-MM-DD`` (padrão);
-		- ``DD/MM/YYYY``;
-		- ``MM.DD.YYYY``;
-		- ``D MMM YYYY``;
-		- ``MMM D YYYY``;
-		- ``D MMMM YYYY``; e
-		- ``MMMM D YYYY``.
-		|Formato|Valor|Descrição|
-		|``YYYY``|Ano|Negativo ou positivo, com, no mínimo, quatro dígitos|
-		|``MM``|Mês|Dois dígitos (zero à esquerda se menor que 10)|
-		|``MMM``|Mês abreviado|Língua inglesa ou local (ignorando a caixa), conforme objeto nativo ``Date``|
-		|``MMMM``|Mês longo|Língua inglesa ou local (ignorando a caixa), conforme objeto nativo ``Date``|
-		|``D``|Dia|Um ou dois dígitos (zero à esquerda se menor que 10)|
-		|``DD``|Dia|Dois dígitos.|**/
+		/**. ``''boolean'' date``: Checa se o argumento é uma data em formato de string.**/
 		date: {
 			get: function() {
 				if (this.type !== null) return this.type === "date";
 				if (!this.chars) return false;
 				let value = this._input.trim();
+				let test  = __TYPE.test(value);
+				if (test.group !== "date") return false;
+				let date = {};
+				switch(test.subgroup) {
+					case "YYYYMMDD": {
+						let data = value.split("-");
+						date = {y: data[0], m: data[1], d: data[2]};
+						break;
+					}
+					case "DDMMYYYY": {
+						let data = value.split("/");
+						date = {d: data[0], m: data[1], y: data[2]};
+						break;
+					}
+					case "MMDDYYYY": {
+						let data = value.split(".");
+						date = {m: data[0], d: data[1], y: data[2]};
+						break;
+					}
+					case "DMMMMYYYY": {
+						date.d = value.replace(/^(\d\d?)\ .+\ \d\d\d\d+$/, "$1");
+						date.m = value.replace(/^\d\d?\ (.+)\ \d\d\d\d+$/, "$1");
+						date.y = value.replace(/^\d\d?\ .+\ (\d\d\d\d+)$/, "$1");
+						if (data.m !== data.m.trim()) return false;
+						data.m = __LANG.month(data.m);
+						if (data.m < 1) return false;
+						break;
+					}
+					case "MMMMDYYYY": {
+						date.d = value.replace(/^.+\ (\d\d?)\ \d\d\d\d+$/, "$1");
+						date.m = value.replace(/^(.+)\ \d\d?\ \d\d\d\d+$/, "$1");
+						date.y = value.replace(/^.+\ \d\d?\ (\d\d\d\d+)$/, "$1");
+						if (data.m !== data.m.trim()) return false;
+						data.m = __LANG.month(data.m);
+						if (data.m < 1) return false;
+						break;
+					}
+				}
+				/* checando dados da data */
+				let d = Number(data[date.d]);
+				let m = Number(data[date.m]);
+				let y = Number(data[date.y]);
+				/* checando dia */
+				let feb  = (y%400 === 0 || (y%4 === 0 && y%100 !== 0)) ?  29 : 28;
+				let days = [31, feb, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+				if (d > days[m-1]) return false;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 				if (value.indexOf("  ") >= 0) return false;
 				let order = {
 					YMD: {y: 0, m: 1, d: 2},
@@ -838,6 +973,10 @@ const wd = (function() {
 				let feb  = (y%400 === 0 || (y%4 === 0 && y%100 !== 0)) ?  29 : 28;
 				let days = [31, feb, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 				if (d > days[m-1]) return false;
+
+
+
+
 				let Y    = Math.abs(y);
 				let YYYY = (y < 0 ? "-" : "") + (Y < 1000 ? ("000"+String(Y)).slice(-4) : String(Y));
 				this._type  = "date";
