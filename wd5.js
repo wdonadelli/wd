@@ -2339,8 +2339,189 @@ const wd = (function() {
 	});
 
 /*============================================================================*/
-	/**### Nós HTML
-	###### ``**constructor** ''object'' __Node(node input)``
+	/**### Nós HTML**/
+	function __FNode(input) {
+		if (!(this instanceof __FNode))	return new __FNode(input);
+		let check = __Type(input);
+		let node  = check.node ? check.value[0] : null;
+		if (node === null || !(node.tagName.toLowerCase() in this._types))
+			return new __FNode(document.createElement("INPUT"));
+		let tag  = node.tagName.toLowerCase()
+		let type = tag;
+		let cfg  = this._types[type];
+		if ("subtype" in cfg) {
+			let type1 = node.getAttribute("type");
+			let type2 = node.type;
+			console.log(cfg, type1, type2);
+			type = (type1 !== null && type1 in cfg.subtype ? type1 : type2).toLowerCase();
+			cfg  = cfg.subtype[type];
+		}
+		Object.defineProperties(this, {
+			_node: {value: node},
+			_tag:  {value: tag},
+			_type: {value: type},
+			_cfg:  {value: cfg},
+		});
+	}
+
+	Object.defineProperties(__FNode.prototype, {
+		constructor: {value: __FNode},
+		_types: {
+			value: {
+				meter:    {value: "number", text: "number", send: 0},
+				progress: {value: "number", text: "number", send: 0},
+				option:   {value: "value",  text: "text",   send: 0},
+				output:   {value: "value",  text: "text",   send: 0},
+				select:   {value: "combo",  text: "combo",  send: 1},
+				textarea: {value: "value",  text: "value",  send: 1},
+				button:   {
+					subtype: {
+						reset:  {value: "value", text: "text", send: 0},
+						button: {value: "value", text: "text", send: 0},
+						submit: {value: "value", text: "text", send: 0},
+					}
+				},
+				input: {
+					subtype: {
+						button:   {value: "value",    text: "value",    send: 0},
+						reset:    {value: "value",    text: "value",    send: 0},
+						submit:   {value: "value",    text: "value",    send: 0},
+						image:    {value: null,       text: null,       send: 0},
+						color:    {value: "value",    text: "value",    send: 1},
+						radio:    {value: "check",    text: null,       send: 1},
+						checkbox: {value: "check",    text: null,       send: 1},
+						date:     {value: "date",     text: "date",     send: 1},
+						datetime: {value: "datetime", text: "datetime", send: 1},
+						month:    {value: "month",    text: "month",    send: 1},
+						week:     {value: "week",     text: "week",     send: 1},
+						time:     {value: "time",     text: "time",     send: 1},
+						range:    {value: "number",   text: "number",   send: 1},
+						number:   {value: "number",   text: "number",   send: 1},
+						file:     {value: "file",     text: null,       send: 1},
+						url:      {value: "url",      text: "url",      send: 1},
+						email:    {value: "email",    text: "mail",     send: 1},
+						tel:      {value: "tel",      text: "tel",      send: 1},
+						text:     {value: "value",    text: "value",    send: 1},
+						search:   {value: "value",    text: "value",    send: 1},
+						password: {value: "value",    text: "value",    send: 1},
+						hidden:   {value: "value",    text: "value",    send: 1},
+						"datetime-local": {value: "datetime", text: "datetime", send: 1},
+					}
+				}
+			}
+		},
+		value: {
+			set: function(x) {
+				let check = __Type(x);
+				switch(this._cfg) {
+					case null: {
+						return;
+					}
+					case "number": {
+						this._node.value = check.finite ? check.value : null;
+						return;
+					}
+					case "combo": {
+						if (data.null) {
+							this._node = null;
+						} else if (!this._node.multiple) {
+							this._value = String(x);
+						} else {
+							if (!check.array) x = [x];
+							x.forEach(function(v,i,a) {a[i] = String(v);});
+							let i = -1;
+							while (++i < this._node.length)
+								this._node[i].selected = x.indexOf(this._node[i].value) >= 0;
+						}
+						return;
+					}
+					case "check": {
+						if (check.null)
+							this._node.checked = !this._node.checked;
+						else if (check.boolean)
+							this._node.checked = x;
+						else
+							this._value = String(x);
+						return;
+					}
+					case "date": {//FIXME tem que ver o ano negativo e o limite de 0001-01-01
+						if (!check.date) {
+							this._node.value = null;
+						} else if (Number(check.value))
+							return
+
+
+						this._node.value = check.date ? check.value : null;
+						return;
+					}
+					case "time": {
+						this._node.value = check.time ? check.value.substr(0,5) : null;
+						return;
+					}
+					case "datetime": {
+						if (!check.datetime)
+							this._node.value = null;
+						else if (this._type === "datetime")
+							this._node.value = check.value;
+						else
+							this._node.value = check.value.substr(0,16);
+						return;
+					}
+					case "week": {
+						if (!check.week)
+							this._node.value = null;
+						else if (check._test.subgroup === "YYYYWW")
+							this._node = x.trim().replace(/[+-]/g, "");
+						else if (check._test.subgroup === "WWYYYY")
+							this._node = x.replace(__TYPE.week.WWYYYY, "$2-W$1");
+						return;
+					}
+					case "month": {
+						if (!check.month)
+							this._node.value = null;
+						else if (check._test.subgroup === "YYYYMM")
+							this._node = x.trim();
+						else if (check._test.subgroup === "MMYYYY")
+							this._node = x.replace(__TYPE.month.MMYYYY, "$2-$1");
+						else if (check._test.subgroup === "MMMMYYYY")
+							return
+
+
+
+
+
+
+						return;
+					}
+
+
+
+
+					default: {
+						this._node.value = String(x);
+					}
+				}
+			},
+			get: function() {
+
+
+
+
+
+
+
+	});
+
+
+
+
+
+
+
+
+
+
+	/**###### ``**constructor** ''object'' __Node(node input)``
 	Construtor para manipulação de nós HTML.
 	O argumento ``input`` deve ser um nó HTML simples (um elemento), caso contrário será atribuído um elemento ``DIV``.**/
 	function __Node(input) {
@@ -3481,7 +3662,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		let request, source;
 
 		/* identificar se é um endereço de arquivo ou um arquivo */
-		if (check.files && input.length > 0) {
+		if (check.files && input.length > 0) {//FIXME eu tirei files e deixei só file
 			input   = input[0];
 			request = new FileReader();
 			source  = "file";
@@ -6398,7 +6579,7 @@ FIXME pensar um jeito de bom de fazer sendo e read
 		now:     {get:   function() {return WD(wd_str_now());}},
 		type:    {value: function(x){return __Type(x);}},
 
-		form: {value: function(){return __Node.apply(null, Array.prototype.slice.call(arguments));}},
+		form: {value: function(){return __FNode.apply(null, Array.prototype.slice.call(arguments));}},
 		array: {value: function(){return __Array.apply(null, Array.prototype.slice.call(arguments));}},
 		datetime: {value: function(){return __DateTime.apply(null, Array.prototype.slice.call(arguments));}},
 		node: {value: function(){return __Node.apply(null, Array.prototype.slice.call(arguments));}},
