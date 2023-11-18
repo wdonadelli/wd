@@ -484,14 +484,14 @@ const wd = (function() {
 			MMMMDYYYY: /^([^0-9]+)\ (0?[1-9]|[12]\d|3[01])\ ([-+]?\d{3}\d+)$/i,
 		},
 		time: {
-			hmmss: /^([01]?\d|2[0-4])\:[0-5]\d(\:[0-5]\d(\.\d{1,3})?)?$/,
-			AM:    /^(0?[1-9]|1[0-2])\:[0-5]\d(\:[0-5]\d(\.\d{1,3})?)?\ ?am$/i,
-			PM:    /^(0?[1-9]|1[0-2])\:[0-5]\d(\:[0-5]\d(\.\d{1,3})?)?\ ?pm$/i,
+			hmmss: /^([01]?\d|2[0-4])\:([0-5]\d)(\:[0-5]\d(\.\d{1,3})?)?$/,
+			AM:    /^(0?[1-9]|1[0-2])\:([0-5]\d)(\:[0-5]\d(\.\d{1,3})?)?\ ?am$/i,
+			PM:    /^(0?[1-9]|1[0-2])\:([0-5]\d)(\:[0-5]\d(\.\d{1,3})?)?\ ?pm$/i,
 		},
 		month: {
 			YYYYMM:   /^([-+]?\d{3}\d+)\-(0[1-9]|1[0-2])$/,
 			MMYYYY:   /^(0[1-9]|1[0-2])\/([-+]?\d{3}\d+)$/,
-			MMMMYYYY: /^[^0-9]+[/ ]([-+]?\d{3}\d+)$/i,
+			MMMMYYYY: /^([^0-9]+)[/ ]([-+]?\d{3}\d+)$/i,
 		},
 		week: {
 			YYYYWW: /^([-+]?\d{3}\d+)\-W(0[1-9]|[1-4]\d|5[0-4])?$/i,
@@ -626,11 +626,8 @@ const wd = (function() {
 				if (__TYPE.month.YYYYMM.test(data)) return true;
 				if (__TYPE.month.MMYYYY.test(data)) return true;
 				if (__TYPE.month.MMMMYYYY.test(data)) {
-					let re    = /^([^0-9]+)[/ ][+-]?\d+$/;
-					let month = data.replace(re, "$1");
-					console.log(data, month);
-					if (month.trim() !== month) return false;
-					return __LANG.month(month) > 0;
+					let month = data.replace(__TYPE.month.MMMMYYYY, "$1");
+					if (month.trim() === month) return __LANG.month(month) > 0;
 				}
 				return false;
 			}
@@ -1828,49 +1825,39 @@ const wd = (function() {
 			}
 		},
 		/**. ``''string'' Y``: Retorna o ano.**/
-		Y:    {get: function() {return String(this.year);}},
+		Y:    {get: function() {return __Type.zeros(this.year, 1);}},
 		/**. ``''string'' YY``: Retorna o ano com os dois últimos dígitos.**/
-		YY:   {
-			get: function() {
-				return this.YYYY.replace(/\d+(\d\d)$/, "$1");
-			}
-		},
+		YY:   {get: function() {return this.YYYY.replace(/\d+(\d\d)$/, "$1");}},
 		/**. ``''string'' YYYY``: Retorna o ano com pelo menos quatro dígitos.**/
-		YYYY: {
-			get: function() {
-				let YYYY = String(Math.abs(this.year));
-				if (YYYY.length < 4) YYYY = ("000"+YYYY).slice(-4);
-				return (this.year < 0 ? "-" : "")+YYYY;
-			}
-		},
+		YYYY: {get: function() {return __Type.zeros(this.year, 4);}},
 		/**. ``''string'' M``: Retorna o mês.**/
-		M:    {get: function() {return String(this.month);}},
+		M:    {get: function() {return __Type.zeros(this.month, 1);}},
 		/**. ``''string'' MM``: Retorna o mês com dois dígitos.**/
-		MM:   {get: function() {return ("0"+this.M).slice(-2);}},
+		MM:   {get: function() {return __Type.zeros(this.month, 2);}},
 		/**. ``''string'' MMM``: Retorna o nome abreviado do mês.**/
 		MMM:  {get: function() {return __LANG.MMM(this.month);}},
 		/**. ``''string'' MMMM``: Retorna o nome do mês.**/
 		MMMM: {get: function() {return __LANG.MMMM(this.month);}},
 		/**. ``''string'' D``: Retorna o dia.**/
-		D:    {get: function() {return String(this.day);}},
+		D:    {get: function() {return __Type.zeros(this.day, 1);}},
 		/**. ``''string'' DD``: Retorna o dia com dois dígitos.**/
-		DD:   {get: function() {return ("0"+this.D).slice(-2);}},
+		DD:   {get: function() {return __Type.zeros(this.day, 2);}},
 		/**. ``''string'' DDD``: Retorna o dia da semana abreviado.**/
 		DDD:  {get: function() {return __LANG.DDD(this.weekDay);}},
 		/**. ``''string'' DDDD``: Retorna o dia da semana.**/
 		DDDD: {get: function() {return __LANG.DDDD(this.weekDay);}},
 		/**. ``''string'' W``: Retorna a semana do ano (atributo ``week``).**/
-		W:   {get: function() {return String(this.week);}},
+		W:   {get: function() {return __Type.zeros(this.week, 1);}},
 		/**. ``''string'' WW``: Retorna a semana do ano com dois dígitos (atributo ``week``).**/
-		WW:   {get: function() {return ("0"+this.W).slice(-2);}},
+		WW:   {get: function() {return __Type.zeros(this.week, 2);}},
 		/**. ``''string'' h``: Retorna a hora.**/
-		h:    {get: function() {return String(this.hour);}},
+		h:    {get: function() {return __Type.zeros(this.hour, 1);}},
 		/**. ``''string'' hh``: Retorna o a hora com dois dígitos.**/
-		hh:   {get: function() {return ("0"+this.h).slice(-2);}},
+		hh:   {get: function() {return __Type.zeros(this.hour, 2);}},
 		/**. ``''string'' m``: Retorna o minuto.**/
-		m:    {get: function() {return String(this.minute);}},
+		m:    {get: function() {return __Type.zeros(this.minute, 1);}},
 		/**. ``''string'' mm``: Retorna o minuto com dois dígitos.**/
-		mm:   {get: function() {return ("0"+this.m).slice(-2);}},
+		mm:   {get: function() {return __Type.zeros(this.minute, 2);}},
 		/**. ``''string'' s``: Retorna o segundo.**/
 		s:    {get: function() {return (this.second).toFixed(3);}},
 		/**. ``''string'' ss``: Retorna o segundo com dois dígitos.**/
@@ -2344,19 +2331,17 @@ const wd = (function() {
 		if (!(this instanceof __FNode))	return new __FNode(input);
 		let check = __Type(input);
 		let node  = check.node ? check.value[0] : null;
-		if (node === null || !(node.tagName.toLowerCase() in this._types))
-			return new __FNode(document.createElement("INPUT"));
-		let tag  = node.tagName.toLowerCase()
-		let type = tag;
-		let cfg  = this._types[type];
-		if ("subtype" in cfg) {
+		let tag   = node === null ? null : node.tagName.toLowerCase();
+		let type  = tag;
+		let cfg   = (type !== null && type in this._types) ? this._types[type] : null;
+		if (cfg !== null && "subtype" in cfg) {
 			let type1 = node.getAttribute("type");
 			let type2 = node.type;
-			console.log(cfg, type1, type2);
 			type = (type1 !== null && type1 in cfg.subtype ? type1 : type2).toLowerCase();
 			cfg  = cfg.subtype[type];
 		}
 		Object.defineProperties(this, {
+			_form: {value: cfg !== null},
 			_node: {value: node},
 			_tag:  {value: tag},
 			_type: {value: type},
@@ -2366,140 +2351,284 @@ const wd = (function() {
 
 	Object.defineProperties(__FNode.prototype, {
 		constructor: {value: __FNode},
+		/**. ``''object'' _types``: Contém a configuração para nós de formulários.**/
 		_types: {
 			value: {
-				meter:    {value: "number", text: "number", send: 0},
-				progress: {value: "number", text: "number", send: 0},
-				option:   {value: "value",  text: "text",   send: 0},
-				output:   {value: "value",  text: "text",   send: 0},
-				select:   {value: "combo",  text: "combo",  send: 1},
-				textarea: {value: "value",  text: "value",  send: 1},
+				meter:    {value: "number", text: "value", send: 0},
+				progress: {value: "number", text: "value", send: 0},
+				option:   {value: "value",  text: "text",  send: 0},
+				output:   {value: "value",  text: "text",  send: 0},
+				select:   {value: "combo",  text: "combo", send: 1},
+				textarea: {value: "value",  text: "value", send: 1},
 				button:   {
 					subtype: {
-						reset:  {value: "value", text: "text", send: 0},
-						button: {value: "value", text: "text", send: 0},
-						submit: {value: "value", text: "text", send: 0},
+						reset:  {value: "value", text: "inner", send: 0},
+						button: {value: "value", text: "inner", send: 0},
+						submit: {value: "value", text: "inner", send: 0},
 					}
 				},
 				input: {
 					subtype: {
-						button:   {value: "value",    text: "value",    send: 0},
-						reset:    {value: "value",    text: "value",    send: 0},
-						submit:   {value: "value",    text: "value",    send: 0},
-						image:    {value: null,       text: null,       send: 0},
-						color:    {value: "value",    text: "value",    send: 1},
-						radio:    {value: "check",    text: null,       send: 1},
-						checkbox: {value: "check",    text: null,       send: 1},
-						date:     {value: "date",     text: "date",     send: 1},
-						datetime: {value: "datetime", text: "datetime", send: 1},
-						month:    {value: "month",    text: "month",    send: 1},
-						week:     {value: "week",     text: "week",     send: 1},
-						time:     {value: "time",     text: "time",     send: 1},
-						range:    {value: "number",   text: "number",   send: 1},
-						number:   {value: "number",   text: "number",   send: 1},
-						file:     {value: "file",     text: null,       send: 1},
-						url:      {value: "url",      text: "url",      send: 1},
-						email:    {value: "email",    text: "mail",     send: 1},
-						tel:      {value: "tel",      text: "tel",      send: 1},
-						text:     {value: "value",    text: "value",    send: 1},
-						search:   {value: "value",    text: "value",    send: 1},
-						password: {value: "value",    text: "value",    send: 1},
-						hidden:   {value: "value",    text: "value",    send: 1},
-						"datetime-local": {value: "datetime", text: "datetime", send: 1},
+						button:           {value: "value",     text: "value", send: 0},
+						reset:            {value: "value",     text: "value", send: 0},
+						submit:           {value: "value",     text: "value", send: 0},
+						image:            {value: null,        text: null,    send: 0},
+						color:            {value: "value",     text: null,    send: 1},
+						radio:            {value: "check",     text: null,    send: 1},
+						checkbox:         {value: "check",     text: null,    send: 1},
+						date:             {value: "date",      text: "value", send: 1},
+						datetime:         {value: "date/time", text: "value", send: 1},
+						month:            {value: "month",     text: "value", send: 1},
+						week:             {value: "week",      text: "value", send: 1},
+						time:             {value: "time",      text: "value", send: 1},
+						range:            {value: "number",    text: "value", send: 1},
+						number:           {value: "number",    text: "value", send: 1},
+						file:             {value: "file",      text: null,    send: 1},
+						url:              {value: "url",       text: "value", send: 1},
+						email:            {value: "email",     text: "value", send: 1},
+						tel:              {value: "value",     text: "value", send: 1},
+						text:             {value: "value",     text: "value", send: 1},
+						search:           {value: "value",     text: "value", send: 1},
+						password:         {value: "value",     text: "value", send: 1},
+						hidden:           {value: "value",     text: "value", send: 1},
+						"datetime-local": {value: "datetime",  text: "value", send: 1},
 					}
 				}
 			}
 		},
+		/**. ``''boolean'' form``: Informar se o nó é um formulário.**/
+		form: {get: function() {return this._form;}},
+		/**. ``''node'' node``: Retorna o nó HTML.**/
+		node: {get: function() {return this._node;}},
+		/**. ``''string'' type``: Retorna o tipo de nó de formulário ou o atributo ``tag``.**/
+		type: {get: function() {return this._type;}},
+		/**. ``''string'' tag``: Retorna o a tag do nó.**/
+		tag:  {get: function() {return this._tag;}},
+		/**. ``''object'' cfg``: Retorna a configuração do nó de formulário ou ``null``.**/
+		cfg:  {get: function() {return this._cfg;}},
+		/**. ``''any'' value``: Define ou retorna o valor do nó de formulário, ou indefinido.**/
 		value: {
 			set: function(x) {
+				if (!this.form) return undefined;
 				let check = __Type(x);
-				switch(this._cfg) {
-					case null: {
+				switch(this.cfg.value) {
+					case null: return;
+					case "value": {
+						this.node.value = String(x);
 						return;
 					}
 					case "number": {
-						this._node.value = check.finite ? check.value : null;
+						this.node.value = check.finite ? check.value : null;
 						return;
 					}
 					case "combo": {
-						if (data.null) {
-							this._node = null;
-						} else if (!this._node.multiple) {
-							this._value = String(x);
+						if (check.null) {
+							this.node.value = null;
+						} else if (!this.node.multiple) {
+							this.node.value = String(x);
 						} else {
 							if (!check.array) x = [x];
 							x.forEach(function(v,i,a) {a[i] = String(v);});
 							let i = -1;
-							while (++i < this._node.length)
-								this._node[i].selected = x.indexOf(this._node[i].value) >= 0;
+							while (++i < this.node.length)
+								this.node[i].selected = x.indexOf(this.node[i].value) >= 0;
 						}
 						return;
 					}
 					case "check": {
-						if (check.null)
-							this._node.checked = !this._node.checked;
-						else if (check.boolean)
-							this._node.checked = x;
-						else
-							this._value = String(x);
+						if         (check.null) this.node.checked = !this.node.checked;
+						else if (check.boolean) this.node.checked = x;
+						else                    this.node.value = String(x);
 						return;
 					}
-					case "date": {//FIXME tem que ver o ano negativo e o limite de 0001-01-01
+					case "date": {
 						if (!check.date) {
-							this._node.value = null;
-						} else if (Number(check.value))
-							return
-
-
-						this._node.value = check.date ? check.value : null;
+							this.node.value = null;
+						} else {
+							let dt = new __DateTime(check.value);
+							this.node.value = dt.year < 1 ? "0001-01-01" : dt.toDateString();
+						}
 						return;
 					}
 					case "time": {
-						this._node.value = check.time ? check.value.substr(0,5) : null;
+						if (!check.time) {
+							this.node.value = null;
+						} else {
+							let dt = new __DateTime(check.value);
+							this.node.value = dt.format("{hh}:{mm}");
+						}
 						return;
 					}
 					case "datetime": {
-						if (!check.datetime)
-							this._node.value = null;
-						else if (this._type === "datetime")
-							this._node.value = check.value;
+						if (!check.datetime) {
+							this.node.value = null;
+						} else {
+							let dt = new __DateTime(check.value);
+							this.node.value = dt.format(dt.year < 1 ? "0001-01-01T00:00" : "{YYYY}-{MM}-{DD}T{hh}:{mm}");
+						}
+						return;
+					}
+					case "date/time": {
+						if (check.time)
+							this.node.value = new __DateTime(check.value).toTimeString();
+						else if (check.date)
+							this.node.value = new __DateTime(check.value).toDateString();
+						else if (check.datetime)
+							this.node.value = new __DateTime(check.value).toString();
 						else
-							this._node.value = check.value.substr(0,16);
+							this.node.value = null;
 						return;
 					}
 					case "week": {
-						if (!check.week)
-							this._node.value = null;
-						else if (check._test.subgroup === "YYYYWW")
-							this._node = x.trim().replace(/[+-]/g, "");
-						else if (check._test.subgroup === "WWYYYY")
-							this._node = x.replace(__TYPE.week.WWYYYY, "$2-W$1");
+						if (!check.week) {
+							this.node.value = null;
+						} else {
+							let data = {
+								WWYYYY: {year: "$2", week: "$1", re: __TYPE.week.WWYYYY},
+								YYYYWW: {year: "$1", week: "$2", re: __TYPE.week.YYYYWW},
+							};
+							let type = data[check._test.subgroup];
+							let year = x.trim().replace(type.re, type.year);
+							let week = x.trim().replace(type.re, type.week);
+							let maxw = new __DateTime(year+"-01-01").maxWeekForm;
+							if (Number(year) < 1 || Number(week) > maxw)
+								this.node.value = null;
+							else
+								this.node.value = __Type.zeros(year, 4)+"-W"+__Type.zeros(week, 2);
+						}
 						return;
 					}
 					case "month": {
-						if (!check.month)
-							this._node.value = null;
-						else if (check._test.subgroup === "YYYYMM")
-							this._node = x.trim();
-						else if (check._test.subgroup === "MMYYYY")
-							this._node = x.replace(__TYPE.month.MMYYYY, "$2-$1");
-						else if (check._test.subgroup === "MMMMYYYY")
-							return
-
-
-
-
-
-
+						if (!check.month) {
+							this.node.value = null;
+						} else {
+							let data = {
+								MMYYYY:   {year: "$2", month: "$1", re: __TYPE.month.MMYYYY, txt: false},
+								YYYYMM:   {year: "$1", month: "$2", re: __TYPE.month.YYYYMM, txt: false},
+								MMMMYYYY: {year: "$2", month: "$1", re: __TYPE.month.MMMMYYYY, txt: true},
+							};
+							let type  = data[check._test.subgroup];
+							let year  = x.trim().replace(type.re, type.year);
+							let month = x.trim().replace(type.re, type.month);
+							if (type.txt) month = __LANG.month(month);
+							if (Number(year) < 1 || Number(month) < 1)
+								this.node.value = null;
+							else
+								this.node.value = __Type.zeros(year, 4)+"-"+__Type.zeros(month, 2);
+						}
 						return;
 					}
-
-
-
-
-					default: {
-						this._node.value = String(x);
+					case "file": {
+						this.node.value = null;
 					}
+					case "url": {
+						this.node.value = check.url ? x.trim() : null;
+						return;
+					}
+					case "email": {
+						if (check.array) {
+							x.forEach(function(v,i,a) {a[i] = String(v).trim()});
+							this.value = x.join(",");
+						} else if (check.email) {
+							x = x.replace(/\s/g, "");
+							this.node.value = this.node.multiple ? x : x.split(",")[0];
+						} else {
+							this.node.value = null;
+						}
+						return;
+					}
+					default: this.node.value = String(x);
+				}
+			},
+			get: function() {
+				if (!this.form) return undefined;
+				let value = this.node.value;
+				let check = __Type(value);
+				let clone = this.node.cloneNode();
+				let fnode = __FNode(clone);
+				try {fnode.value = value;} catch(e) {fnode.value = null;}
+				switch(this._cfg.value) {
+					case null:       return value;
+					case "value":    return value;
+					case "url":      return value;
+					case "check":    return this.node.checked ? value : null;
+					case "number":   return check.finite   ? check.value : "";
+					case "date":     return check.date     ? fnode.node.value : "";
+					case "time":     return check.time     ? fnode.node.value : "";
+					case "datetime": return check.datetime ? fnode.node.value : "";
+					case "week":     return check.week     ? fnode.node.value : "";
+					case "month":    return check.month    ? fnode.node.value : "";
+					case "date/time": {
+						if (check.time)
+							return new __DateTime(check.value).toTimeString();
+						else if (check.date)
+							return new __DateTime(check.value).toDateString();
+						else if (check.datetime)
+							return new __DateTime(check.value).toString();
+						return "";
+					}
+					case "combo": {
+						if (!this.node.multiple) return value;
+						let data = [];
+						let i    = -1;
+						while (++i < this.node.length)
+							if (this.node[i].selected)
+								data.push(this.node[i].value);
+						return data.length === 0 ? "" : (data.length === 1 ? data[0] : data);
+					}
+					case "email": {
+						if (!check.email)        return "";
+						if (!this.node.multiple) return fnode.node.value
+						let data = fnode.node.value.split(",");
+						return data.length < 2 ? data[0] : data;
+					}
+					case "file": {
+						if (this.node.files.length === 0) return "";
+						if (!this.node.multiple)          return this.node.files[0];
+						let data = [];
+						let i = -1;
+						while (++i < this.node.files.length)
+							data.push(this.node.files[i]);
+						return data.length === 1 ? data[0] : data;
+					}
+					default: return value;
+				}
+			}
+		},
+		/**. ``''string'' text``: Define ou retorna o valor textual do nó de formulário ou indefinido.**/
+		text: {
+			set: function(x) {
+				if (!this.form) return undefined;
+				let check = __Type(x);
+				switch(this.cfg.text) {
+					case null: return;
+					case "value": {
+						this.value = x;
+						return;
+					}
+					case "text": {
+						this.node.textContent = x;
+						return;
+					}
+					case "inner": {
+						this.node.innerHTML = x;
+						return;
+					}
+					case "combo": {//FIXME PAREI AQUI
+						if (check.null) {
+							this.node.value = null;
+						} else if (!this.node.multiple) {
+							this.node.value = String(x);
+						} else {
+							if (!check.array) x = [x];
+							x.forEach(function(v,i,a) {a[i] = String(v);});
+							let i = -1;
+							while (++i < this.node.length)
+								this.node[i].selected = x.indexOf(this.node[i].value) >= 0;
+						}
+						return;
+					}
+					default: this.node.textContent = x;
 				}
 			},
 			get: function() {
@@ -2507,6 +2636,35 @@ const wd = (function() {
 
 
 
+
+			}
+
+
+		},
+
+
+
+
+
+
+
+
+
+		/**. ``''string'' name``: Define ou retorna o nome do formulário ou indefinido se inexistente ``name`` ou ``id``.**/
+		name: {
+			get: function() {
+				if (!this.form) return undefined;
+				let name = __Type(this.node.name);
+				let id   = __Type(this.node.id);
+				if (name.nonempty) return this.node.name.trim();
+				if (id.nonempty)   return this.node.id.trim();
+				return undefined;
+			},
+			set: function(x) {
+				if (!this.form) return;
+				this.node.name = __Type(x).nonempty ? String(x).trim() : "";
+			}
+		}
 
 
 
@@ -2526,283 +2684,11 @@ const wd = (function() {
 	O argumento ``input`` deve ser um nó HTML simples (um elemento), caso contrário será atribuído um elemento ``DIV``.**/
 	function __Node(input) {
 		if (!(this instanceof __Node))	return new __Node(input);
-		let check = __Type(input);
-		Object.defineProperties(this, {
-			_node: {value: check.node ? check.value[0] : document.createElement("DIV")}
-		});
+		__FNode.call(this, input);
 	}
 
 	Object.defineProperties(__Node.prototype, {
 		constructor: {value: __Node},
-		/**. ``''string'' _text``: Retorna ou define o conteúdo textual do elemento (``textContent``).**/
-		_text: {
-			get: function()  {return this._node.textContent;},
-			set: function(x) {this._node.textContent = x;}
-		},
-		/**. ``''any'' _value``: Retorna ou define o valor do elemento HTML (``value``).**/
-		_value: {
-			get: function()  {return this._node.value;},
-			set: function(x) {this._node.value = x;}
-		},
-		/**. ``''number'' _number``: Retorna ou define o valor numérico do formulário HTML.**/
-		_number: {
-			get: function()  {
-				let data = __Type(this._value);
-				return data.finite ? data.value : "";
-			},
-			set: function(x) {
-				let data = __Type(x);
-				this._value = data.finite ? data.valueOf() : null;
-			}
-		},
-		/**. ``''string'' _time``: Retorna ou define o valor temporal do formulário HTML (hora:minuto).**/
-		_time: {
-			get: function()  {
-				let data = __Type(this._value);
-				return data.time ? data.toString() : "";
-			},
-			set: function(x) {
-				let data = __Type(x);
-				if (data.time) {
-					let dt = __DateTime(x);
-					this._value = dt.format("{hh}:{mm}")
-				} else {
-					this._value = null;
-				}
-			}
-		},
-		/**. ``''string'' _date``: Retorna ou define o valor de data do formulário HTML (ano &gt; 0).**/
-		_date: {
-			get: function()  {
-				let data = __Type(this._value);
-				return data.date ? data.toString() : "";
-			},
-			set: function(x) {
-				let data = __Type(x);
-				if (data.date) {
-					let dt = __DateTime(x);
-					this._value = dt.year < 1 ? null : dt.toDateString();
-				} else {
-					this._value = null;
-				}
-			}
-		},
-		/**. ``''string'' _datetime``: Retorna ou define o valor de data/tempo do formulário HTML (hora:minuto, ano &gt; 0).**/
-		_datetime: {
-			get: function()  {
-				let data = __Type(this._value);
-				if (data.time || data.datetime || data.date) {
-					return __DateTime(data.toString()).toString();
-				}
-				return "";
-			},
-			set: function(x) {
-				let data = __Type(x);
-				if (data.datetime || data.time || data.date) {
-					let now  = __DateTime();
-					let date = now.toDateString();
-					let time = now.toTimeString();
-					let str  = data.value;
-					if (data.time || data.date)
-						str = data.time ? date+"T"+data.value : data.value+"T"+time;
-					let dt = __DateTime(str);
-					if (this.type === "datetime")
-						this._value = dt.toString();
-					else if (dt.year > 0)
-						this._value = dt.format("{YYYY}-{MM}-{DD}T{hh}:{mm}");
-					else
-						this._value = null;
-				} else {
-					this._value = null;
-				}
-			}
-		},
-		/**. ``''string'' _week``: Retorna ou define o valor da semana do formulário HTML.**/
-		_week: {
-			get: function()  {
-				let data = __Type(this._value);
-				if (!data.week) return "";
-				let info = this._value.trim().replace(/(\,\ |-W)/i, "|").split("|");
-				let year = info[0].length >= 4 ? info[0] : info[1];
-				let week = info[0].length >= 4 ? info[1] : info[0];
-				let maxi = __DateTime(year+"-01-01").maxWeekForm;
-				if (Number(week) > maxi) return "";
-				return year.replace("+", "")+"-W"+week;
-			},
-			set: function(x) {
-				let data = __Type(x);
-				if (data.week) {
-					this._value = data.toString();
-					let week = this._week;
-					this._value = week === "" ? null : week;
- 				} else {
-					this._value = null;
-				}
-			}
-		},
-		/**. ``''string'' _month``: Retorna ou define o valor do mês do formulário HTML.**/
-		_month: {
-			get: function()  {
-				let data = __Type(this._value);
-				if (!data.month) return "";
-				let info = this._value.trim();
- 				if (data._re.month.test(info))
- 					return info;
- 				if (data._re.monthMY.test(info))
- 					return info.replace(/^(\d\d)\/(.+)$/, "$2-$1");
-				info = info.split(/[ /]/);
-				return info[1]+"-"+("0"+String(__LANG.month(info[0]))).slice(-2);
-			},
-			set: function(x) {
-				let data = __Type(x);
-				if (data.month) {
-					this._value = data.toString();
-					let month = this._month;
-					this._value = month === "" ? null : month;
- 				} else {
-					this._value = null;
-				}
-			}
-		},
-		/**. ``''string'' _url``: Retorna ou define o valor da URL do formulário HTML.**/
-		_url: {
-			get: function()  {
-				let data = __Type(this._value);
-				return data.url ? this._value.trim() : "";
-			},
-			set: function(x) {
-				let data = __Type(x);
-				this._value = data.url ? x.trim() : null;
-			}
-		},
-		/**. ``''string'' _email``: Retorna ou define o valor de e-mail do formulário HTML.
-			. Se o elemento tiver o atributo ``multiple``, múltiplos endereços serão definidos ou obtidos por array. Caso contrário por uma string.**/
-		_email: {
-			get: function()  {
-				let data = __Type(this._value);
-				if (!data.email) return "";
-				let email = this._value.replace(/\ +/g, "").split(",");
-				return this._node.multiple ? email : (email.length === 1 ? email[0] : "");
-			},
-			set: function(x) {
-				let data  = __Type(x);
-				if (data.array) {
-					this._email = x.join(",");
-				} else if (data.email) {
-					x = x.replace(/\ +/g, "").split(",");
-					this._value = this._node.multiple ? x.join(",") : (x.length === 1 ? x[0] : null);
-				} else if (data.null) {
-					this._value = null;
-				}
-			}
-		},
-		/**. ``''string'' _vcombo``: Retorna ou define o valor do formulário HTML de caixa de combinação (``select``).
-		. Se o elemento possuir o atributo ``multiple``, o retorno e a definição se realizará por lista de valores. Caso contrário, por valor simples.**/
-		_vcombo: {
-			get: function() {
-				if (!this._node.multiple) return this._value;
-				let data = [];
-				let i    = -1;
-				while (++i < this._node.length)
-					if (this._node[i].selected)
-						data.push(this._node[i].value);
-				return data.length === 0 ? "" : data;
-			},
-			set: function(x) {
-				let data = __Type(x);
-				if (data.null) {
-					this._value = null;
-				} else if (!this._node.multiple) {
-					this._value = String(x);
-				} else {
-					if (!data.array) x = [x];
-					x.forEach(function(v,i,a) {a[i] = String(v);});
-					let i = -1;
-					while (++i < this._node.length)
-						this._node[i].selected = x.indexOf(this._node[i].value) >= 0;
-				}
-			}
-		},
-		/**. ``''string'' _tcombo``: Retorna ou define o conteúdo textual do formulário HTML de caixa de combinação (``select``).
-		. Se o elemento possuir o atributo ``multiple``, o retorno e a definição se realizará por lista de conteúdos textuais. Caso contrário, por valor simples.**/
-		_tcombo: {
-			get: function() {
-				let text = [];
-				let i    = -1;
-				while (++i < this._node.length)
-					if (this._node[i].selected)
-						text.push(this._node[i].textContent);
-				return text.length === 0 ? "" : (this._node.multiple ? text : text[0]);
-			},
-			set: function(x) {
-				let data = __Type(x);
-				if (data.null) {
-					this._value = null;
-				} else if (!this._node.multiple && data.array) {
-					this._value = null;
-				} else {
-					if (!data.array) x = [x];
-					x.forEach(function(v,i,a) {a[i] = String(v);});
-					let i = -1;
-					while (++i < this._node.length)
-						this._node[i].selected = x.indexOf(this._node[i].textContent) >= 0;
-				}
-			}
-		},
-		/**. ``''boolean'' _check``: Retorna ou define o valor do formulário HTML ``checkbox`` ou ``radio``.
-		. Se o campo estiver checado, retornará o seu valor, caso contrário, retornará ``null``.
-		. Se for definido um booleano, definirá a checagem;
-		. se for nulo, inverterá a checagem; e
-		. se for string, definirá o valor.**/
-		_check: {
-			get: function() {
-				return this._node.checked ? this._value : null;
-			},
-			set: function(x) {
-				let data = __Type(x);
-				if (data.null)
-					this._node.checked = !this._node.checked;
-				else if (data.boolean)
-					this._node.checked = x;
-				else
-					this._value = String(x);
-			}
-		},
-		/**. ``''string'' _tel``: Retorna ou define o valor do formulário HTML ``tel``.
-		- Para ser válido, o valor deverá conter pelo menos um número.**/
-		_tel: {
-			get: function() {
-				return (/\d/).test(this._value) ? this._value : "";
-			},
-			set: function(x) {
-				let data = __Type(x);
-				if (data.null) {
-					this._value = null;
-				} else {
-					x = String(x);
-					this._value = (/\d/).test(x) ? x : null;
-				}
-			}
-		},
-		/**. ``''object'' _file``: Retorna ou define (apenas ``null``) o valor do formulário HTML ``file``:
-		- Se o comprimento for zero, retornar uma string vazia;
-		- Se apenas um arquivo selecionado, retornará um objeto ``File``; e
-		- Se mais de um arquivo selecionado, retronará um array.**/
-		_file: {
-			get: function() {
-				if (this._node.files.length === 0)
-					return "";
-				if (!this._node.multiple)
-					return this._node.files[0];
-				let data = [];
-				let i = -1;
-				while (++i < this._node.files.length)
-					data.push(this._node.files[i]);
-				return data;
-			},
-			set: function(x) {
-				this._value = null;
-			}
 
 /* FIXME importantíssimo
 se file ou select múltiplo, o nome tem que vir seguido de []
@@ -2840,133 +2726,10 @@ E para o método GET, como proceder?
 ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 
 */
-		},
-		/**. ``''object'' _form``: Registra os parâmetros dos tipos de formulários HTML organizados pelo nome do elemento (``tag``).
-		. Os elementos que possuem tipos (``input`` e ``button``) terão a chave ``type`` para poder identificá-los. A chave ``value`` corresponde ao nome do método que alterará o valor do formulário.
-		. A chave ``text`` corresponde ao nome do método que definirá o conteúdo textual do formulário. A chave ``send`` corresponde ao nome do método que buscará o valor a ser submetido em requisições, se for o caso.**/
-		_form: {
-			value: {
-				meter:    {value: "_number", text: "_number"},
-				progress: {value: "_number", text: "_number"},
-				option:   {value: "_value",  text: "_text"},
-				output:   {value: "_value",  text: "_text"},
-				select:   {value: "_vcombo", text: "_tcombo", send: "value"},
-				textarea: {value: "_value",  text: "_value",  send: "value"},
-				button:   {type: {
-					reset:  {value: "_value", text: "_text"},
-					button: {value: "_value", text: "_text"},
-					submit: {value: "_value", text: "_text"},
-				}},
-				input: {type: {
-					button:   {value: "_value", text: "_value"},
-					reset:    {value: "_value", text: "_value"},
-					submit:   {value: "_value", text: "_value"},
-					image:    {},
-					color:    {value: "_value",    text: "_value",    send: "value"},
-					radio:    {value: "_check",    send: "value"},
-					checkbox: {value: "_check",    send: "value"},
-					date:     {value: "_date",     text: "_date",     send: "value"},
-					datetime: {value: "_datetime", text: "_datetime", send: "value"},
-					month:    {value: "_month",    text: "_month",    send: "value"},
-					week:     {value: "_week",     text: "_week",     send: "value"},
-					time:     {value: "_time",     text: "_time",     send: "value"},
-					range:    {value: "_number",   text: "_number",   send: "value"},
-					number:   {value: "_number",   text: "_number",   send: "value"},
-					file:     {value: "_file",     send: "value"},
-					url:      {value: "_url",      text: "_url",      send: "value"},
-					email:    {value: "_email",    text: "_mail",     send: "value"},
-					tel:      {value: "_tel",      text: "_tel",      send: "value"},
-					text:     {value: "_value",    text: "_value",    send: "value"},
-					search:   {value: "_value",    text: "_value",    send: "value"},
-					password: {send: "_value"},
-					hidden:   {value: "_value",    text: "_value",    send: "value"},
-					"datetime-local": {value: "_datetime", text: "_datetime", send: "value"},
-				}}
-			}
-		},
-		/**. ``''object'' _fdata``: Retorna os parâmetros de formulário contidos em ``_type`` ou um objeto vazio se outro elemento.**/
-		_fdata: {
-			get: function() {
-				let type = this.type;
-				if (type === "")     return {};
-				if (this.tag === type) return this._form[type]
-				return this._form[this.tag].type[type];
-			}
-		},
-		/**. ``''string'' tag``: Retorna o nome, em minúsculo, do elemento HTML.**/
-		tag: {
-			get: function() {return this._node.tagName.toLowerCase();}
-		},
-		/**. ``''string'' type``: Retorna o tipo de formulário HTML em minúsculo ou vazio se outro elemento.**/
-		type: {
-			get: function() {
-				if (!(this.tag in this._form)) return "";
-				if (!("type" in this._form[this.tag])) return this.tag;
-				let type = this._form[this.tag].type;
-				let att  = String(this._node.getAttribute("type")).toLowerCase();
-				let obj  = String(this._node.type).toLowerCase();
-				return (att in type ? att : (obj in type ? obj : ""));
-			}
-		},
-		/**. ``''any'' value``: Retorna ou define o atributo ``value`` do elemento HTML, se existente. O valor retornado depende do elemento.**/
-		value: {
-			get: function()  {
-				let fdata = this._fdata;
-				return this[("value" in fdata ? fdata.value : "_value")];
-			},
-			set: function(x) {
-				if (!("value" in this._node)) return;
-				let fdata = this._fdata;
-				this[("value" in fdata ? fdata.value : "_value")] = x;
-			}
-		},
-		/**. ``''string'' text``: Retorna ou define o conteúdo textual do elemento HTML.**/
-		text: {
-			get: function()  {
-				let fdata = this._fdata;
-				return this[("text" in fdata ? fdata.text : "_text")];
-			},
-			set: function(x) {
-				let fdata = this._fdata;
-				this[("text" in fdata ? fdata.text : "_text")] = x;
-			}
-		},
-		/**. ``''string'' inner``: Retorna ou define o conteúdo interno do elemento HTML.**/
-		inner: {
-			get: function() {
-				return this.type === "" ? this._node.innerHTML : this.text;
-			},
-			set: function(x) {
-				if (this.type === "") this._node.innerHTML = x;
-				else this.text = x;
-			}
-		},
-		/**. ``''string'' name``: Retorno o nome do elemento HTML.
-		. O retorno e a definição são definidos pelos atributos ``name`` ou ``id``, nessa ordem. Se ambos forem vazios ou inexistentes, retornará ``null``.**/
-		name: {
-			get: function() {
-				if ("name" in this._node && __Type(this._node.name).nonempty)
-					return this._node.name.trim();
-				if (__Type(this._node.id).nonempty)
-					return this._node.id.trim();
-				return null;
-			},
-			set: function(x) {
-				if ("name" in this._node)
-					this._node.name = x === null ? "" : String(x).trim();
-				else
-					this._node.id   = x === null ? "" : String(x).trim();
-			}
-		},
-		/**. ``''object'' send``: retorna um objeto contendo os atributos ``name`` (nome ou identificador do campo) e ``value`` (valor do campo).
-		. Retornará ``null`` se o campo não enviar dados em requisições, se o nome do campo não estiver definido ou se seu valor for nulo.**/
-		send: {
-			get: function() {
-				if (!("send" in this._fdata)) return null;
-				let pack = {name: this.name, value: this[this._fdata.send]};
-				return (pack.name === null || pack.value === null) ? null : pack;
-			}
-		},
+
+
+
+
 		/**. ``''object'' attribute(null|object x)``: Retorna um objeto contendo os atributos HTMl do elemento e define seus valores.
 		. Se o argumento ``x`` for ``null``, todos os atributos HTML do elemento serão removidos.
 		. Se o argumento ``x`` for um objeto, o nome e o valor de cada atributo definirão o atributo HTMl de mesmo nome e seu valor, inclusive ``null``, caso o objetivo seja removê-lo.**/
