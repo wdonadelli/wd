@@ -500,14 +500,14 @@ const wd = (function() {
 		email: {
 			email: /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/,
 		},
-		/**. ``''object'' test(''any'' x)``: Testa se o valor passado em ``x`` encaixa em alguma expressão regular retornando um objeto contendo os atributos ``group``, ``subgroup`` e ``value``.**/
+		/**. ``''object'' test(''any'' x)``: Testa se o valor passado em ``x`` encaixa em alguma expressão regular retornando um objeto contendo os atributos ``group``, ``subgroup`` e ``value`` e ``regexp.**/
 		test: function(x) {
 			x = String(x).trim();
 			for (let i in this) {
 				if (i === "test") continue;
 				for (let j in this[i]) {
 					if (this[i][j].test(x))
-						return {group: i, subgroup: j, value: x};
+						return {group: i, subgroup: j, value: x, regexp: this[i][j]};
 				}
 			}
 			return {group: null, subgroup: null, value: x};
@@ -621,25 +621,20 @@ const wd = (function() {
 		/**. ``''boolean'' month``: Checa se o argumento está no formato de mês:**/
 		month: {
 			get: function() {
-				if (!this.chars) return false;
-				let data = this._input.trim();
-				if (__TYPE.month.YYYYMM.test(data)) return true;
-				if (__TYPE.month.MMYYYY.test(data)) return true;
-				if (__TYPE.month.MMMMYYYY.test(data)) {
-					let month = data.replace(__TYPE.month.MMMMYYYY, "$1");
+				if (!this.chars)                  return false;
+				if (this._test.group !== "month") return false;
+				if (this._test.subgroup === "MMMMYYYY") {
+					let month = this._input.trim().replace(this._test.regexp, "$1");
 					if (month.trim() === month) return __LANG.month(month) > 0;
 				}
-				return false;
+				return true;
 			}
 		},
 		/**. ``''boolean'' week``: Checa se o argumento está no formato de semana.**/
 		week: {
 			get: function() {
 				if (!this.chars) return false;
-				let data = this._input.trim();
-				if (__TYPE.week.YYYYWW.test(data)) return true;
-				if (__TYPE.week.WWYYYY.test(data)) return true;
-				return false;
+				return this._test.group === "week";
 			}
 		},
 		/**. ``''boolean'' string``: Checa se o argumento é uma string diferente de número ou data/tempo.**/
@@ -826,8 +821,8 @@ const wd = (function() {
 					YYYYMMDD:  {split: "-", ymd: [0,1,2]},
 					DDMMYYYY:  {split: "/", ymd: [2,1,0]},
 					MMDDYYYY:  {split: ".", ymd: [2,0,1]},
-					DMMMMYYYY: {replace: __TYPE.date.DMMMMYYYY, ymd: ["$3", "$2", "$1"]},
-					MMMMDYYYY: {replace: __TYPE.date.MMMMDYYYY, ymd: ["$3", "$1", "$2"]}
+					DMMMMYYYY: {replace: this._test.regexp, ymd: ["$3", "$2", "$1"]},
+					MMMMDYYYY: {replace: this._test.regexp, ymd: ["$3", "$1", "$2"]}
 				}
 				let cfg = type[this._test.subgroup];
 				if ("split" in cfg) {
@@ -926,7 +921,7 @@ const wd = (function() {
 					h: Number(data[0]),
 					m: Number(data[1]),
 					s: data.length > 2 ? Number(data[2]) : 0,
-					l: data.length > 3 ? Number(data[3]) : 0
+					l: data.length > 3 ? 1000*Number("0."+data[3]) : 0
 				};
 				if (this._test.subgroup === "AM")
 					time.h = time.h%12;
@@ -1583,7 +1578,6 @@ const wd = (function() {
 				break;
 			}
 			default: {
-				type = "datetime";
 				datetime = __Type(new Date()).value;
 			}
 		}
@@ -2403,18 +2397,16 @@ const wd = (function() {
 		/**. ``''string'' type``: Retorna o tipo de nó de formulário ou o atributo ``tag``.**/
 		type: {get: function() {return this._type;}},
 		/**. ``''string'' tag``: Retorna o a tag do nó.**/
-		tag:  {get: function() {return this._tag;}},
-		/**. ``''object'' cfg``: Retorna a configuração do nó de formulário ou ``null``.**/
-		cfg:  {get: function() {return this._cfg;}},
-		/**. ``''any'' value``: Define ou retorna o valor do nó de formulário, ou indefinido.**/
-		value: {
+		tag: {get: function() {return this._tag;}},
+		/**. ``''any'' _value``: Define ou retorna o valor do nó de formulário, ou indefinido.**/
+		_value: {
 			set: function(x) {
 				if (!this.form) return undefined;
 				let check = __Type(x);
-				switch(this.cfg.value) {
+				switch(this._cfg.value) {
 					case null: return;
 					case "value": {
-						this.node.value = String(x);
+						this.node.value = x;
 						return;
 					}
 					case "number": {
@@ -2422,16 +2414,13 @@ const wd = (function() {
 						return;
 					}
 					case "combo": {
-						if (check.null) {
-							this.node.value = null;
-						} else if (!this.node.multiple) {
-							this.node.value = String(x);
-						} else {
-							if (!check.array) x = [x];
-							x.forEach(function(v,i,a) {a[i] = String(v);});
-							let i = -1;
-							while (++i < this.node.length)
-								this.node[i].selected = x.indexOf(this.node[i].value) >= 0;
+						if (check.null) this.node.value = null;
+						x = this.node.multiple ? (check.array ? x : [x]) : [x];
+						x.forEach(function(v,i,a) {a[i] = String(v);});
+						let i = -1;
+						while (++i < this.node.length) {
+							let value = this.node[i].value;
+							this.node[i].selected = x.indexOf(value) >= 0;
 						}
 						return;
 					}
@@ -2503,8 +2492,8 @@ const wd = (function() {
 							this.node.value = null;
 						} else {
 							let data = {
-								MMYYYY:   {year: "$2", month: "$1", re: __TYPE.month.MMYYYY, txt: false},
-								YYYYMM:   {year: "$1", month: "$2", re: __TYPE.month.YYYYMM, txt: false},
+								MMYYYY:   {year: "$2", month: "$1", re: __TYPE.month.MMYYYY,   txt: false},
+								YYYYMM:   {year: "$1", month: "$2", re: __TYPE.month.YYYYMM,   txt: false},
 								MMMMYYYY: {year: "$2", month: "$1", re: __TYPE.month.MMMMYYYY, txt: true},
 							};
 							let type  = data[check._test.subgroup];
@@ -2520,6 +2509,7 @@ const wd = (function() {
 					}
 					case "file": {
 						this.node.value = null;
+						return;
 					}
 					case "url": {
 						this.node.value = check.url ? x.trim() : null;
@@ -2537,7 +2527,7 @@ const wd = (function() {
 						}
 						return;
 					}
-					default: this.node.value = String(x);
+					default: this.node.value = x;
 				}
 			},
 			get: function() {
@@ -2595,15 +2585,15 @@ const wd = (function() {
 				}
 			}
 		},
-		/**. ``''string'' text``: Define ou retorna o valor textual do nó de formulário ou indefinido.**/
-		text: {
+		/**. ``''string'' _text``: Define ou retorna o valor textual do nó de formulário ou indefinido.**/
+		_text: {
 			set: function(x) {
 				if (!this.form) return undefined;
 				let check = __Type(x);
-				switch(this.cfg.text) {
+				switch(this._cfg.text) {
 					case null: return;
 					case "value": {
-						this.value = x;
+						this._value = x;
 						return;
 					}
 					case "text": {
@@ -2611,20 +2601,18 @@ const wd = (function() {
 						return;
 					}
 					case "inner": {
-						this.node.innerHTML = x;
+						let html = /\<\w+([^>]+)?\>/;
+						this.node[html.test(x) ? "innerHTML" : "textContent"] = x;
 						return;
 					}
-					case "combo": {//FIXME PAREI AQUI
-						if (check.null) {
-							this.node.value = null;
-						} else if (!this.node.multiple) {
-							this.node.value = String(x);
-						} else {
-							if (!check.array) x = [x];
-							x.forEach(function(v,i,a) {a[i] = String(v);});
-							let i = -1;
-							while (++i < this.node.length)
-								this.node[i].selected = x.indexOf(this.node[i].value) >= 0;
+					case "combo": {
+						if (check.null) this.node.value = null;
+						x = this.node.multiple ? (check.array ? x : [x]) : [x];
+						x.forEach(function(v,i,a) {a[i] = String(v);});
+						let i = -1;
+						while (++i < this.node.length) {
+							let text = this.node[i].textContent;
+							this.node[i].selected = x.indexOf(text) >= 0;
 						}
 						return;
 					}
@@ -2632,42 +2620,53 @@ const wd = (function() {
 				}
 			},
 			get: function() {
-
-
-
-
-
-			}
-
-
-		},
-
-
-
-
-
-
-
-
-
-		/**. ``''string'' name``: Define ou retorna o nome do formulário ou indefinido se inexistente ``name`` ou ``id``.**/
-		name: {
-			get: function() {
 				if (!this.form) return undefined;
+				switch(this._cfg.text) {
+					case null: return;
+					case "value": return this._value;
+					case "text":  return this.node.textContent;
+					case "inner": return this.node.textContent;
+					case "combo": {
+						let items = [];
+						let i = -1;
+						while (++i < this.node.length)
+							if (this.node[i].selected)
+								items.push(this.node[i].textContent);
+						if (items.length === 0) return "";
+						if (items.length === 1) return items[0];
+						return this.node.multiple ? items : items[0];
+					}
+					default: return this.node.value;
+				}
+			}
+		},
+		/**. ``''string'' _name``: Define ou retorna o nome do formulário ou nulo se inexistente ``name`` ou ``id``.**/
+		_name: {
+			get: function() {
+				if (!this.form) return null;
 				let name = __Type(this.node.name);
 				let id   = __Type(this.node.id);
 				if (name.nonempty) return this.node.name.trim();
 				if (id.nonempty)   return this.node.id.trim();
-				return undefined;
+				return null;
 			},
 			set: function(x) {
 				if (!this.form) return;
 				this.node.name = __Type(x).nonempty ? String(x).trim() : "";
 			}
+		},
+		/**. ``''object'' submit``: Retorna o dado do formulário para submissão ou nulo se for campo de envio de dados.**/
+		submit: {
+			get: function() {
+				if (!this.form || this._cfg.send !== 1) return null;
+				let value = this._value;
+				let name  = this._name;
+				if (value === null || name === null) return null;
+				let data = {};
+				data[name] = value;
+				return data;
+			}
 		}
-
-
-
 	});
 
 
@@ -2687,7 +2686,7 @@ const wd = (function() {
 		__FNode.call(this, input);
 	}
 
-	Object.defineProperties(__Node.prototype, {
+	__Node.prototype = Object.create(__FNode.prototype, {
 		constructor: {value: __Node},
 
 /* FIXME importantíssimo
@@ -2726,182 +2725,143 @@ E para o método GET, como proceder?
 ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 
 */
-
-
-
-
-		/**. ``''object'' attribute(null|object x)``: Retorna um objeto contendo os atributos HTMl do elemento e define seus valores.
-		. Se o argumento ``x`` for ``null``, todos os atributos HTML do elemento serão removidos.
-		. Se o argumento ``x`` for um objeto, o nome e o valor de cada atributo definirão o atributo HTMl de mesmo nome e seu valor, inclusive ``null``, caso o objetivo seja removê-lo.**/
-		attribute: {
-			value: function(x) {
-				if (arguments.length === 0) {
-					let attr = this._node.attributes;
-					let data = {};
-					for (let i in attr) {
-						let value = this._node.getAttribute(attr[i].name);
-						if (value !== null) data[attr[i].name] = value;
+		attr: {
+			value: function (name, value) {
+				name = String(name).trim();
+				/*-- obter --*/
+				if (arguments.length === 1) {
+					/* específicos de formulários */
+					if (this.form) {
+						switch(name) {
+								case "value": return this._value;
+								case "text":  return this._text;
+								case "name":  return this._name;
+						}
 					}
-					return data;
-				}
-				let data = __Type(x);
-				if (data.null) {
-					let attr = this.attribute();
-					for (let i in attr)
-						attr[i] = null;
-					this.attribute(attr);
-				} else if (data.object) {
-					for (let i in x) {
-						if (x[i] === null)
-							this._node.removeAttribute(i);
-						else
-							this._node.setAttribute(i, x[i]);
+					/* demais atributos do objeto */
+					switch(name) {
+						case "style":   return this._style;
+						case "class":   return this._class;
+						case "dataset": return this._dataset;
 					}
+					/* demais atributos */
+					if (name in this.node) return this.node.name;
+					return this.node.getAttribute(name);
 				}
-				return this.attribute();
+				/*-- definir --*/
+				else {
+					/* específicos de formulários */
+					if (this.form) {
+						switch(name) {
+								case "value": this._value = value; return this.attr(name);
+								case "text":  this._text  = value; return this.attr(name);
+								case "name":  this._name  = value; return this.attr(name);
+						}
+					}
+					/* demais atributos do objeto */
+					switch(name) {
+						case "style":   this._style   = value; return this.attr(name);
+						case "class":   this._class   = value; return this.attr(name);
+						case "dataset": this._dataset = value; return this.attr(name);
+					}
+					/* disparadores */
+					if ((/^\!?on\w+/).test(name) && name.replace("!", "") in this.node) {
+						let obj = {};
+						obj[name] = value;
+						this._handler = obj;
+						return;
+					}
+					/* objetos não específicos */
+					if (name in this.node) {
+						let testAttr  = __Type(this.node[name]);
+						let testValue = __Type(value);
+						if (testAttr.function) {
+							if (testValue.array)
+								this.node[name].apply(this.node, value);
+						}
+						else if (testAttr.boolean) {
+							if (testValue.boolean)
+								this.node[name] = value;
+							else if (testValue.null)
+								this.node[name] = !this.node[name];
+						}
+						else {
+							this.node[name] = value;
+						}
+						return;
+					}
+					/*atributos HTML */
+					if (value === null)
+						this.node.removeAttribute(name);
+					else
+						this.node.setAttribute(name, value);
+					return;
+				}
 			}
 		},
-		/**. ``''object'' style(null|object x)``: Retorna um objeto contendo os estilos definidos em ``style`` e define seus valores.
-		. Se o argumento ``x`` for ``null``, todos os estilos contidos em ``style`` serão removidos.
-		. Se o argumento ``x`` for um objeto, o nome e o valor de cada atributo definirão o nome do estilo e seu valor, inclusive ``null``, caso o objetivo seja removê-lo.**/
-		style: {
-			value: function(x) {
-				if (arguments.length === 0) {
-					let data = {};
-					let i    = -1;
-					while (++i < this._node.style.length) {
-						let attr = this._node.style[i];
-						let name = __String(attr).camel;
-						data[name] = this._node.style[attr];
-					}
-					return data;
+
+		/**. ``''object'' _style``: Define e retorna o valor do atributo ``style`` por meio de um objeto. Valor nulo excluí o atributo, valor textual define o atributo HTML e valor em objeto define o par nome-valor.**/
+		_style: {
+			get: function() {
+				let data = {};
+				let i    = -1;
+				while (++i < this.node.style.length) {
+					let attr = this.node.style[i];
+					let name = __String(attr).camel;
+					data[name] = this.node.style[attr];
 				}
+				return data;
+			},
+			set: function(x) {
 				let data = __Type(x);
 				if (data.null) {
-					let attr = this.style();
+					let attr = this._style;
 					for (let i in attr)
 						this._node.style[i] = null;
-				} else if (data.object) {
+					this.node.removeAttribute("style");
+				}
+				else if (data.chars) {
+					this.node.setAttribute("style", x);
+				}
+				else if (data.object) {
 					for (let i in x) {
 						let name = __String(i).camel;
-						this._node.style[name] = x[i];
+						this.node.style[name] = x[i];
 					}
 				}
-				return this.style();
 			}
 		},
-		/**. ``''object'' dataset(''object'' x)``: Retorna um objeto contendo os dados definidos em ``dataset`` e define seus valores.
-		. Se o argumento ``x`` for ``null``, todos os dados contidos em ``dataset`` serão removidos.
-		. Se o argumento ``x`` for um objeto, o nome e o valor de cada atributo definirão o nome do estilo e seu valor, inclusive ``null``, caso o objetivo seja removê-lo.**/
-		dataset: {
-			value: function(x) {
-				if (arguments.length === 0) {
-					let data = {};
-					for (let i in this._node.dataset)
-						data[i] = this._node.dataset[i];
-					return data;
-				};
-				let data = __Type(x);
-				if (data.null) {
-					let attr = this.dataset();
-					for (let i in attr) {
-						delete this._node.dataset[i];
-						/* IMPORTANTE: após cada definição, checar procedimentos */
-						settingProcedures(this._node, i);
-					}
-				} else if (data.object) {
-					for (let i in x) {
-						let name = __String(i).camel;
-						if (x[i] !== null)
-							this._node.dataset[name] = x[i];
-						else if (name in this._node.dataset)
-							delete this._node.dataset[name];
-						/* IMPORTANTE: após cada definição, checar procedimentos */
-						settingProcedures(this._node, name);
-					}
-				}
-				return this.dataset();
-			}
-		},
-
-		/**. ``''array'' css(''object'' x)``: Retorna a lista de estilos css definidos no atributo HTML ``class`` e define seus valores:
-		|Tipo do Argumento|Resultado|
-		|string|Os estilos, separados por espaço, serão definidos conforme especificados.|
-		|``null``|O atributo HTML ``class`` será removido do elemento.|
-		|objeto|O nome do atributo corresponderá a uma operação e seu valor (string) aos estilos associados.|
-		. No caso de objeto, o comportamento é definido pelas seguintes chaves:
-		|Chave|Comportamento|
-		|``set``|define estilos.|
-		|``replace``|Permuta estilos.|
-		|``add``|Adiciona estilos.|
-		|``delete``|Apaga estilos.|
-		|``toggle``|Alterna estilos.|**/
-		css: {
-			value: function(x) {
-				if (arguments.length === 0) {
-					let css   = this._node.getAttribute("class");
-					let array = css === null ? [] : css.replace(/\s+/g, " ").trim().split(" ");
-					let value = __Array(array).order;
-					this._node.setAttribute("class", value.join(" "));
-					return value;
-				}
+		/**. ``''array'' _class``: Define e retorna o valor do atributo ``class`` por meio de um array. Valor nulo excluí o atributo, valor textual define o atributo HTML e valor em objeto define ações ''replace'', ''toggle'', ''add'' e  ''remove''.**/
+		_class: {
+			get: function() {
+				let css   = this.node.getAttribute("class");
+				let array = css === null ? [] : css.replace(/\s+/g, " ").trim().split(" ");
+				let value = __Array(array).order;
+				this.node.setAttribute("class", value.join(" "));
+				return value;
+			},
+			set: function(x) {
 				let data = __Type(x);
 				if (data.chars) {
-					this._node.setAttribute("class", x);
-				} else if (data.null) {
-					this._node.removeAttribute("class");
-				} else if (data.object) {
-					let css = __Array(this.css());
-					if ("set" in x) {
-						this._node.setAttribute("class", x["set"]);
-						delete x["set"];
-						return this.css(x);
-					}
+					this.node.setAttribute("class", x);
+				}
+				else if (data.null) {
+					this.node.removeAttribute("class");
+				}
+				else if (data.object) {
+					let css = __Array(this._class);
 					if ("replace" in x) css.replace.apply(css, x.replace.split(" "));
 					if ("toggle" in x)  css.toggle.apply(css, x.toggle.split(" "));
 					if ("add" in x)     css.put.apply(css, x.add.split(" "));
-					if ("delete" in x)  css.delete.apply(css, x.delete.split(" "));
+					if ("remove" in x)  css.delete.apply(css, x.delete.split(" "));
 					this._node.setAttribute("class", css.order.join(" "));
 				}
-				return this.css();
 			}
 		},
-		/**. ``''void'' object(''object'' x)``: Define atributos ou executa métodos presentes no objeto HTML.
-		. Cada conjunto nome/valor informado no argumento ``x`` representará o nome do atributo ou método e seu valor ou argumento.
-		. Caso não exista o atributo ou método especificado, nada ocorrerá.
-		. Caso o nome se refira a um método, para definir múltiplos argumentos, deverá ser utilizado um array como valor.
-		. Caso o atributo seja boleano e igual ao seu nome precedido do caractere "!", o inverso do valor será definido.
-		. Caso contrário, o valor do atributo ou argumento do método será o valor definido.**/
-		object: {
-			value: function(x) {
-				if (arguments.length === 0) return;
-				let data = __Type(x);
-				if (!data.object) return;
-				for (let i in x) {
-					if (!(i in this._node)) continue;
-					let toggle = x[i] === "!"+i;
-					let attr   = this._node[i];
-					let acheck = __Type(attr);
-					let vcheck = __Type(x[i]);
-					if (acheck.function && vcheck.array)
-						this._node[i].apply(this._node, x[i]);
-					else if (acheck.function)
-						this._node[i](x[i]);
-					else if (toggle && acheck.boolean)
-						this._node[i] = !this._node[i];
-					else
-						this._node[i] = x[i];
-				}
-				return;
-			}
-		},
-		/**. ``''void''  handler(''object'' x)``: Define ou remove disparadores ao elemento HTML.
-		. Cada conjunto nome/valor informado no argumento ``x`` representará o evento e o método, ou a lista de métodos, a ser disparado.
-		. O nome do evento pode ou não começar com o prefixo "on".
-		. Se o evento começar com o caractere "!", será feita a remoção do disparador.
-		. Para definir múltiplos métodos ao evento, esses deverão ser informados em um array.**/
-		handler: {
-			value: function(x) {
+
+		/**. ``''void''  _handler``: Define ou remove disparadores ao elemento HTML. O valor deve ser um objeto cujos atributos são os eventos e os valores métodos disparadores ou uma lista deles. Para remover o disparador, o nome do atributo deve conter o caracteres ! no início.**/
+		_handler: {
+			set: function(x) {
 				let data = __Type(x);
 				if (!data.object) return;
 				for (let i in x) {
@@ -2922,9 +2882,53 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 							this._node.addEventListener(event, method, false);
 					}
 				}
-				return;
 			}
 		},
+		/**. ``''object'' _dataset``: Define e retorna os valores do atributo ``dataset``. Valor nulo excluí o atributo e valor em objeto define seus pares nome-valor.**/
+		_dataset: {
+			get: function() {
+				let data = {};
+				for (let i in this.node.dataset)
+					data[i] = this.node.dataset[i];
+				return data;
+			},
+			set: function(x) {
+				let data  = __Type(x);
+				let wdLib = []
+				if (data.null) {
+					let attr = this._dataset;
+					for (let i in attr) {
+						wdLib.push(i);
+						delete this._node.dataset[i];
+					}
+				}
+				else if (data.object) {
+					for (let i in x) {
+						wdLib.push(i);
+						let name = __String(i).camel;
+						if (x[i] !== null)
+							this.node.dataset[name] = x[i];
+						else if (name in this.node.dataset)
+							delete this.node.dataset[name];
+					}
+				}
+				/* IMPORTANTE: cada definição, se for da biblioteca, deverá ser checada */
+				let wd = __Array(wdLib).order;
+				let i  = -1;
+				while (++i < wd.length) {
+					if ((/^wd[A-Z]\w+/).test(i))
+						settingProcedures(this.node, wd[i]);
+				}
+			}
+		},
+
+
+
+
+
+
+
+
 		/**. ``node clone(boolean childs=true)``: Retorna um clone do objeto.
 		. Se o argumento opcional ``childs`` for falso, os elementos filhos não serão clonados.**/
 		clone: {
