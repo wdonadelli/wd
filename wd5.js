@@ -120,142 +120,170 @@ const wd = (function() {
 	};
 /*----------------------------------------------------------------------------*/
 	/**###### ``**const** ''object'' __MODALCONTROL``
-	Controla a janela modal.
-	. ``''node'' modal``: Plano de fundo.
-	. ``''node'' bar``: Barra de progresso (meter, progress ou div).
-	. ``''integer'' counter``: Solicitações em aberto (controla a exibição), fecha se zero.
-	. ``''integer'' delay``: Tempo de segurança, em milisegundos, para decidir sobre o fechamento da janela (evitar piscadas).
-	. ``''integer'' time``: Intervalo, em milisegundos, de atualização da barra de progresso.**/
+	Controla a janela modal.**/
 	const __MODALCONTROL = {
-		modal: null,
-		bar: null,
+		/**. ``''integer'' counter``: Solicitações em aberto (controla a exibição), fecha se zero.**/
 		counter: 0,
+		/**. ``''integer'' delay``: Tempo de segurança, em milisegundos, para decidir sobre o fechamento da janela (evitar piscadas).**/
 		delay: 250,
+		/**. ``''integer'' time``: Intervalo, em milisegundos, de atualização da barra de progresso.**/
 		time: 5,
-		/**. ``''void'' _init()``: Inicializa os atributos.**/
-		_init: function() {
-			if (this.modal !== null) return;
+		/**. ``''node'' modal``: Plano de fundo.**/
+		modal: (function() {
+			/* Estilos */
+			let styles = {
+				modal: {
+					display: "block", width: "100%", height: "100%",
+					padding: "0.1em 0.5em", margin: "0", zIndex: "999999",
+					position: "fixed", top: "0", right: "0", bottom: "0", left: "0",
+					cursor: "progress", backgroundColor: "rgba(0,0,0,0.4)",
+					animation: "js-wd-fade-in 0.1s",
+				},
+				bar: {
+					display: "block", margin: "5px 5px auto auto", width: "25%",
+					position: "absolute", top: "0", left: "0", right: "0",
+				},
+			};
 			/* janela modal */
-			this.modal = document.createElement("DIV");
-			this.modal.className = "js-wd-modal";
+			let modal = document.createElement("DIV");
+			for (let i in styles.modal) modal.style[i] = styles.modal[i];
 			/* barra de progresso */
-			if ("HTMLMeterElement1" in window)
-				this.bar = document.createElement("METER");
-			else if ("HTMLProgressElement1" in window)
-				this.bar = document.createElement("PROGRESS");
-			else
-				this.bar = document.createElement("DIV");
-			this.bar.className = "js-wd-progress-bar";
+			let tag = "DIV";
+			if      ("HTMLMeterElement"    in window) tag = "METER";
+			else if ("HTMLProgressElement" in window) tag = "PROGRESS";
+			let bar = document.createElement(tag);
+			for (let i in styles.bar) bar.style[i] = styles.bar[i];
 			/* unindo os dois */
-			this.modal.appendChild(this.bar);
-			return;
-		},
+			modal.appendChild(bar);
+			return modal;
+		})(),
 		/**. ``''integer'' start()``: Solicita a janela modal, acresce ``counter`` e retorna seu valor.**/
-		start: function() { /* abre a janela modal */
-			this._init();
-			if (this.counter === 0)
-				document.body.appendChild(this.modal);
+		start: function() {
+			if (this.counter === 0) document.body.appendChild(this.modal);
 			this.counter++;
 			return this.counter;
 		},
 		/**. ``''integer'' end()``: Dispensa à janela modal, decresce counter e retorna seu valor.**/
 		end: function() {
-			let object = this;
-			/* checar fechamento da janela após delay */
-			window.setTimeout(function () {
-				object.counter--;
-				if (object.counter < 1)
-					document.body.removeChild(object.modal); //FIXME no load está dando errado
-			}, this.delay);
-
+			if (this.counter > 0) {
+				this.counter--;
+				/* checar fechamento da janela após delay */
+				if (this.counter === 0) {
+					let modal = this.modal;
+					window.setTimeout(function () {
+						if (modal.parentElement !== null) document.body.removeChild(modal);
+					}, this.delay);
+				}
+			}
 			return this.counter;
 		},
 		/**. ``''void'' progress(''number'' x)``: Define o valor da barra de progresso (0 a 1) por meio do argumento ``x``.**/
 		progress: function(x) {
-			let tag    = this.bar.tagName.toLowerCase();
-			let value  = tag === "div" ? wd_num_str(x, true) : x;
-			let object = this;
+			x = x > 1 ? 1 : (x < 0 ? 0 : x);
+			let bar    = this.modal.firstChild;
+			let tag    = bar.tagName.toLowerCase();
 			/* executar progresso após o tempo de interação com o documento */
 			window.setTimeout(function() {
-				if (tag === "div") /* sem progress ou meter (usa CSS width) */
-					object.bar.style.width = value;
-				else /* com progress ou meter */
-					object.bar.value = value;
+				if (tag !== "div") bar.value       = x;
+				else               bar.style.width = String(100*x)+"%";
 			}, this.time);
 			return;
 		}
 	};
 /*----------------------------------------------------------------------------*/
 	/**###### ``**const** ''object'' __SIGNALCONTROL``
-	Controla a caixa de mensagens.
-	. ``''node'' main``: Container das caixas de mensagem.
-	. ``''integer'' time``: Tempo de duração da mensagem (ver CSS ``js-wd-signal-msg``).**/
+	Controla a caixa de mensagens.**/
 	const __SIGNALCONTROL = {
-		main: null,
+		/**. ``''integer'' time``: Tempo de duração da mensagem (ver CSS ``js-wd-signal-msg``).**/
 		time: 9000,
-		/**. ``''void'' _init()``: Inicializa os atributos.**/
-		_init: function() {
-			this.main = document.createElement("DIV");
-			this.main.className = "js-wd-signal";
-			return;
-		},
-		/**. ``''object'' _createBox()``: Método interno que cria e retorna um objeto com os componentes de uma nova caixa de mensagem.
-		.. ``''node'' box``: Container da caixa de mensagem.
-		.. ``''node'' header``: Cabeçalho da mensagem.
-		.. ``''node'' message``: Texto da mensagem.
-		.. ``''node'' close``: Botão de fechamento antecipado da caixa.
-		.. ``''node'' title``: Texto do cabeçalho.**/
-		_createBox: function() {
-			return {
-				box:     document.createElement("ARTICLE"),
-				header: document.createElement("HEADER"),
-				message: document.createElement("SECTION"),
-				close: document.createElement("SPAN"),
-				title: document.createElement("STRONG")
+		/**. ``''node'' main``: Container das caixas de mensagem.**/
+		main: (function() {
+			let css = {
+				position: "fixed", top: "0", right: "0.5em", left: "0.5em",
+				width: "auto", margin: "auto", padding: "0", zIndex: "999999"
 			};
-		},
-		/**. ``''void'' _close(''node'' elem)``: Demanda o fechamento da caixa de mensagem, onde o argumento ``elem`` indica a caixa (nó) a fechar.**/
-		_close: function(elem) {
-				try {this.main.removeChild(elem);} catch(e){}
-				if (this.main.children.length === 0)
-					try {document.body.removeChild(this.main);} catch(e){}
-				return;
-		},
-		/**. ``node _box()``: Constrói a caixa de mensagem e a retorna.**/
-		_box: function() {
-			let msg = this._createBox();
-			msg.box.appendChild(msg.header);
-			msg.box.appendChild(msg.message);
-			msg.header.appendChild(msg.close);
-			msg.header.appendChild(msg.title);
-			msg.box.className = "js-wd-signal-msg";
-			msg.close.textContent = "\u00D7";
-			let object = this;
-			msg.close.onclick = function() {
-				object._close(msg.box);
-			}
-			return msg;
-		},
+			let main = document.createElement("DIV");
+			for (let i in css) main.style[i] = css[i];
+			return main;
+		})(),
+		/**. ``''node'' box``: Gabarito de caixa de mensagem.**/
+		box: (function() {
+			let css = {
+				box: {
+					animationName: "js-wd-shrink-out, js-wd-shrink-in",
+					animationDuration: "0.5s, 0.5s", animationDelay: "0s, 8.5s",
+					margin: "0.5em auto 0 auto", position: "relative", borderRadius: "0.2em",
+					border: "1px solid rgba(0,0,0,0.6)", boxShadow: "1px 1px 6px rgba(0,0,0,0.6)",
+					backgroundColor: "rgb(245,245,245)", color: "rgb(20,20,20)"
+				},
+				header: {
+					borderRadius: "0.2em 0.2em 0 0", position: "relative", padding: "0"
+				},
+				title: {
+					position: "relative", margin: "0 1.5em 0 0", padding: "0.5em" //FIXME
+				},
+				close: {
+					position: "absolute", top: "2px", right: "2px", lineHeight: "1", cursor: "pointer", margin: "0"
+				},
+				message: {
+					margin: "0.5em 1.5em 0.5em 0.5em",
+				}
+			};
+			let className = {
+				box:     "js-wd-msg-box",
+				header:  "js-wd-msg-header",
+				message: "js-wd-msg-message",
+				close:   "js-wd-msg-close",
+				title:   "js-wd-msg-title"
+			};
+			let html = {
+				box:     document.createElement("ARTICLE"),
+				header:  document.createElement("HEADER"),
+				message: document.createElement("P"),
+				close:   document.createElement("SPAN"),
+				title:   document.createElement("H5")
+			};
+			/* definindo estilos */
+			for (let i in css)
+				for (let j in css[i])
+					html[i].style[j] = css[i][j];
+			/* definindo identificadores */
+			for (let i in className)
+				html[i].className = className[i];
+			/* montando a caixa de mensagem */
+			html.box.appendChild(html.header);
+			html.box.appendChild(html.message);
+			html.header.appendChild(html.close);
+			html.header.appendChild(html.title);
+			/* definindo o botão fechar */
+			html.close.textContent = "\u00D7";
+			return html.box;
+		})(),
 		/**. ``''void'' open(''string'' message, ''string'' title=" ")``: Demanda a abertura de uma nova caixa de mensagem.
 		. O argumento ``message`` define o texto da mensagem e o argumento ``title`` define seu título.**/
 		open: function(message, title) {
-			/* criação do container principal, se inexistente */
-			if (this.main === null) this._init();
-			/* obtenção da caixa de mensagem */
-			let msg = this._box();
-			/* definição do título e da mensagem */
-			msg.message.textContent = message;
-			msg.title.textContent   = title === undefined ? " " : title;
-			/* exibindo caixa principal, se escondida */
+			/* clonando uma nova caixa */
+			let main     = this.main;
+			let hbox     = this.box.cloneNode(true);
+			let htitle   = hbox.querySelector(".js-wd-msg-title");
+			let hclose   = hbox.querySelector(".js-wd-msg-close");
+			let hmessage = hbox.querySelector(".js-wd-msg-message");
+			htitle.textContent   = arguments.length < 2 ? "" : title;
+			hmessage.textContent = message;
+			hclose.onclick       = function(elem) {
+				let box = elem.target.parentElement.parentElement;
+				try {main.removeChild(box);} catch(e) {}
+				if (main.parentElement !== null && main.children.length === 0)
+					document.body.removeChild(main);
+				return;
+			}
+			window.setTimeout(function() {hclose.click();}, this.time);
+			let width = __DEVICECONTROLLER.device === "desktop" ? "40%" : "auto";
+			this.main.style.width = width;
+
 			if (this.main.children.length === 0)
 				document.body.appendChild(this.main);
-			/* renderizando mensagem */
-			this.main.insertAdjacentElement("afterbegin", msg.box);
-			/* definindo um prazo para fechamento automático da caixa */
-			let object = this;
-			window.setTimeout(function() {
-				object._close(msg.box)
-			}, this.time);
+			this.main.insertAdjacentElement("afterbegin", hbox);
 			return;
 		}
 	};
@@ -267,11 +295,7 @@ const wd = (function() {
 		_re: /^[a-z]{2,3}(\-[A-Z][a-z]{3})?(\-([A-Z]{2}|[0-9]{3}))?$/,
 		_user: null,
 		_date: null,
-
-
 		//FIXME fazer monetary
-
-
 		/**. ``''boolean'' test(''string'' x)``: Testa se o argumento ``x`` está no [formato de linguagem](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/lang).**/
 		test: function(x) {
 			return this._re.test(String(x).trim());
@@ -385,16 +409,6 @@ const wd = (function() {
 		{s: "@keyframes js-wd-fade-out", d: ["from {opacity: 1;} to {opacity: 0;}"]},
 		{s: "@keyframes js-wd-shrink-out", d: ["from {transform: scale(0);} to {transform: scale(1);}"]},
 		{s: "@keyframes js-wd-shrink-in",  d: ["from {transform: scale(1);} to {transform: scale(0);}"]},
-		{s: ".js-wd-modal", d: [
-			"display: block; width: 100%; height: 100%;",
-			"padding: 0.1em 0.5em; margin: 0; z-index: 999999;",
-			"position: fixed; top: 0; right: 0; bottom: 0; left: 0;",
-			"cursor: progress; background-color: rgba(0,0,0,0.4);",
-			"animation: js-wd-fade-in 0.1s;"
-		]},
-		{s: ".js-wd-progress-bar", d: [
-			"display: block; position: absolute; top: 0; left: 0; right: 0; margin: auto; width: 100%;"
-		]},
 		{s: "div.js-wd-progress-bar", d: ["height: 1em; background-color: #1e90ff;"]},
 		{s: ".js-wd-no-display", d: ["display: none;"]},
 		{s: "[data-wd-nav], [data-wd-send], [data-wd-tsort], [data-wd-data], [data-wd-full], [data-wd-jump]", d: [
@@ -413,27 +427,6 @@ const wd = (function() {
 		{s: "nav > *.js-wd-nav-inactive", d: ["opacity: 0.5;"]},
 		{s: ".js-wd-plot", d: [
 			"height: 100%; width: 100%; position: absolute; top: 0; left: 0; bottom: 0; right: 0;"
-		]},
-		{s: ".js-wd-signal", d: [
-			"position: fixed; top: 0; right: 0.5em; left: 0.5em; width: auto;",
-			"margin: auto; padding: 0; z-index: 999999;"
-		]},
-		{s: "@media screen and (min-width: 768px)", d: [".js-wd-signal {width: 40%;}",]},
-		{s: ".js-wd-signal-msg", d: [
-			"animation-name: js-wd-shrink-out, js-wd-shrink-in;",
-			"animation-duration: 0.5s, 0.5s; animation-delay: 0s, 8.5s;",
-			"margin: 5px 0; position: relative; padding: 0; border-radius: 0.2em;",
-			"border: 1px solid rgba(0,0,0,0.6); box-shadow: 1px 1px 6px rgba(0,0,0,0.6);",
-			"background-color: rgb(245,245,245); color: rgb(20,20,20);"
-		]},
-		{s: ".js-wd-signal-msg > header", d: [
-			"padding: 0.5em; border-radius: 0.2em 0.2em 0 0; position: relative;"
-		]},
-		{s: ".js-wd-signal-msg > header > span", d: [
-			"position: absolute; top: 0.5em; right: 0.5em; line-height: 1; cursor: pointer;"
-		]},
-		{s: ".js-wd-signal-msg > section", d: [
-			"padding: 0.5em; border-radius: 0 0 0.2em 0.2em;"
 		]},
 	];
 
@@ -987,20 +980,18 @@ const wd = (function() {
 				return false;
 			}
 		},
-		/**. ``''boolean'' file``: Checa se o argumento é do tipo ``File`` ou ``FileList``.**/
+		/**. ``''boolean'' file``: Checa se o argumento é do tipo ``File``.**/
 		file: {
 			get: function() {
-				if (this.type !== null) return this.type === "file";
 				if (typeof this._input !== "object") return false;
-				let ctor = this._input.constructor.name;
-				if (ctor === "File" || ctor === "FileList") {
-					this._type     = "file";
-					this._value    = this._input;
-					this._valueOf  = this._value;
-					this._toString = this._value;
-					return true;
-				}
-				return false;
+				return this._input.constructor.name === "File";
+			}
+		},
+		/**. ``''boolean'' files``: Checa se o argumento é do tipo ``FileList``.**/
+		files: {
+			get: function() {
+				if (typeof this._input !== "object") return false;
+				return this._input.constructor.name === "FileList";
 			}
 		},
 		/**. ``''string'' type``: Retorna o tipo do argumento verificado (number, date, time, datetime, string, null, undefined, boolean, array, node, regexp, function, object).**/
@@ -2320,7 +2311,63 @@ const wd = (function() {
 	});
 
 /*============================================================================*/
-	/**### Nós HTML**/
+	/**### Nós HTML
+	#### Pesquisa por Elementos
+	###### ``**constructor** ''object'' __Query(''string'' css, ''node'' root=document)``
+	Construtor para obter elementos HTML. O argumento ``css`` é um seletor CSS válido e o argumento opcional ``root`` define o elemento raiz da busca.	**/
+	function __Query(css, root) {
+		if (!(this instanceof __Query))	return new __Query(css, root);
+		let check = __Type(root);
+		Object.defineProperties(this, {
+			_css:  {value: String(css).trim()},
+			_root: {value: check.node ? check.value[0] : document},
+		});
+	}
+
+	Object.defineProperties(__Query.prototype, {
+		constructor: {value: __Query},
+		/**. ``''object'' $$``: retorna uma lista de nós (``NodeList``).**/
+		$$: {
+			get: function() {
+				let elem = null;
+				try {elem = this._root.querySelectorAll(this._css);} catch(e) {}
+				return __Type(elem).node ? elem : document.querySelectorAll("#_._");
+			}
+		},
+		/**. ``''object'' $``: retorna um nó específico ou lista de nós (``NodeList``) vazia.**/
+		$: {
+			get: function() {
+				let elem = null;
+				try {elem = this._root.querySelector(this._css);} catch(e) {}
+				return __Type(elem).node ? elem : this.$$;
+			}
+		}
+	});
+
+/*----------------------------------------------------------------------------*/
+	/**
+	FIXME o que fazer com isso? coloar dentro de __Node?
+	``node __$$$(object obj, node root)``
+	Localiza em um objeto os atributos v{$}v e v{$$}v e utiliza seus valores como seletores CSS.}p
+	O atributo v{$$}v é prevalente sobre o v{$}v para fins de chamada das funções i{__$$}i ou i{__$}i,
+ respectivamente.
+	v{obj}v - Objeto javascript contendo os atributos v{$}v ou v{$$}v.
+	v{root}v - (opcional, i{document}i) Elemento base para busca.}d}l
+	**/
+	function __$$$(obj, root) {
+
+		let one =  "$" in obj ? String(obj["$"]).trim()  : null;
+		let all = "$$" in obj ? String(obj["$$"]).trim() : null;
+		let key = {"document": document, "window":  window};
+		if (one !== null && one in key) one = key[one];
+		if (all !== null && all in key) all = key[all];
+		return all === null ? __$(one, root) : __$$(all, root);
+	}
+
+/*----------------------------------------------------------------------------*/
+	/**#### Formulários HTML
+	###### ``**constructor** ''object'' __FNode(''node'' input)``
+	Construtor para gerir formulários HTML. O argumento ``node`` é o campo de formulário.**/
 	function __FNode(input) {
 		if (!(this instanceof __FNode))	return new __FNode(input);
 		let check = __Type(input);
@@ -2669,15 +2716,7 @@ const wd = (function() {
 		}
 	});
 
-
-
-
-
-
-
-
-
-
+/*----------------------------------------------------------------------------*/
 	/**###### ``**constructor** ''object'' __Node(node input)``
 	Construtor para manipulação de nós HTML.
 	O argumento ``input`` deve ser um nó HTML simples (um elemento), caso contrário será atribuído um elemento ``DIV``.**/
@@ -2725,8 +2764,18 @@ E para o método GET, como proceder?
 ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 
 */
-		attr: {
+		/**. ``''any'' attribute(''string'' name, ''any'' value)``: Define e retorna valores de atributos dos elementos HTML. Os argumentos ``name`` e ``value`` são, respectivamente, o nome e o valor do atributo. Se ``value`` for omitido, retornará o valor de ``name``. Se ``name`` for omitido, retornará um objeto com os nome e valores dos atributos.**/
+		attribute: {
 			value: function (name, value) {
+				if (this.node === null) return;
+				if (arguments.length === 0) {
+					let attr = this.node.attributes;
+					let data = {};
+					let i = -1;
+					while(++i < attr.length)
+						data[attr[i].name] = attr[i].value;
+					return data;
+				}
 				name = String(name).trim();
 				/*-- obter --*/
 				if (arguments.length === 1) {
@@ -2803,6 +2852,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		/**. ``''object'' _style``: Define e retorna o valor do atributo ``style`` por meio de um objeto. Valor nulo excluí o atributo, valor textual define o atributo HTML e valor em objeto define o par nome-valor.**/
 		_style: {
 			get: function() {
+				if (this.node === null) return;
 				let data = {};
 				let i    = -1;
 				while (++i < this.node.style.length) {
@@ -2813,6 +2863,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return data;
 			},
 			set: function(x) {
+				if (this.node === null) return;
 				let data = __Type(x);
 				if (data.null) {
 					let attr = this._style;
@@ -2834,6 +2885,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		/**. ``''array'' _class``: Define e retorna o valor do atributo ``class`` por meio de um array. Valor nulo excluí o atributo, valor textual define o atributo HTML e valor em objeto define ações ''replace'', ''toggle'', ''add'' e  ''remove''.**/
 		_class: {
 			get: function() {
+				if (this.node === null) return;
 				let css   = this.node.getAttribute("class");
 				let array = css === null ? [] : css.replace(/\s+/g, " ").trim().split(" ");
 				let value = __Array(array).order;
@@ -2841,6 +2893,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return value;
 			},
 			set: function(x) {
+				if (this.node === null) return;
 				let data = __Type(x);
 				if (data.chars) {
 					this.node.setAttribute("class", x);
@@ -2862,6 +2915,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		/**. ``''void''  _handler``: Define ou remove disparadores ao elemento HTML. O valor deve ser um objeto cujos atributos são os eventos e os valores métodos disparadores ou uma lista deles. Para remover o disparador, o nome do atributo deve conter o caracteres ! no início.**/
 		_handler: {
 			set: function(x) {
+				if (this.node === null) return;
 				let data = __Type(x);
 				if (!data.object) return;
 				for (let i in x) {
@@ -2887,12 +2941,14 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		/**. ``''object'' _dataset``: Define e retorna os valores do atributo ``dataset``. Valor nulo excluí o atributo e valor em objeto define seus pares nome-valor.**/
 		_dataset: {
 			get: function() {
+				if (this.node === null) return;
 				let data = {};
 				for (let i in this.node.dataset)
 					data[i] = this.node.dataset[i];
 				return data;
 			},
 			set: function(x) {
+				if (this.node === null) return;
 				let data  = __Type(x);
 				let wdLib = []
 				if (data.null) {
@@ -2921,88 +2977,90 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				}
 			}
 		},
-
-
-
-
-
-
-
-
-		/**. ``node clone(boolean childs=true)``: Retorna um clone do objeto.
-		. Se o argumento opcional ``childs`` for falso, os elementos filhos não serão clonados.**/
+		/**. ``''node'' clone(boolean childs=true)``: Retorna um clone do objeto. Se o argumento opcional ``childs`` for falso, os elementos filhos não serão clonados.**/
 		clone: {
 			value: function(childs) {
+				if (this.node === null) return;
 				let special = ["script"];
 				if (special.indexOf(this.tag) < 0)
-					return this._node.cloneNode(childs !== false);
+					return this.node.cloneNode(childs !== false);
 				let attrs = this.attribute();
 				let clone = document.createElement(this.tag);
 				for (let i in attrs)
 					clone.setAttribute(i, attrs[i]);
-				clone.innerHTML = this._node.innerHTML
+				clone.innerHTML = this.node.innerHTML
 				return clone;
 			}
 		},
-		/**. ``''void'' load(string html="", boolean overlap=false)``: Carrega um conteúdo HTML no elemento ou o substitui.
-		. O argumento ``html`` é o texto em formato HTML a ser carregado ou a substituir o elemento definido.
-		. O argumento opcional ``overlap``, se verdadeiro, irá substituir o elemento pelo conteúdo de ``html``.**/
+		/**. ``''void'' load(''string'' html="", ''boolean'' overlap=false, ''boolean'' scripts=false)``: Carrega um conteúdo HTML no elemento ou o substitui.
+		. O argumento ``html`` deve conter o código HTML a ser carregado. O argumento opcional ``overlap``, se verdadeiro, irá substituir o elemento pelo conteúdo de ``html``. O argumento ``scripts``, se verdadeiro, executará elementos scripts existentes.**/
 		load: {
-			value: function(html, overlap) {
+			value: function(html, overlap, scripts) {
+				if (this.node === null) return;
 				/* definir elemento */
-				let elem    = overlap === true ? document.createElement("DIV") : this._node;
-				let node    = __Node(elem);
-				node.inner  = html === undefined ? "" : String(html);
-				/* redefinir elementos scripts para fazer rodar */
-				let scripts = __Type(__$$("script", elem)).value;
-				let i = -1;
-				while (++i < scripts.length) {
-					let script = scripts[i];
-					let parent = script.parentElement;
-					let clone  = __Node(script).clone();
-					parent.insertBefore(clone, script);
-					script.remove();
+				let elem = overlap === true ? document.createElement("DIV") : this.node;
+				elem.innerHTML = html === undefined ? "" : String(html);
+				/* rodando scripts, se for o caso (por padrão não roda por motivo de segurança) */
+				if (scripts === true) {
+					let scripts = __Type(__Query("script", elem).$$).value;
+					let i = -1;
+					while (++i < scripts.length) {
+						let script = scripts[i];
+						let parent = script.parentElement;
+						let clone  = __Node(script).clone();
+						parent.insertBefore(clone, script);
+						script.remove();
+					}
 				}
 				/* substituindo o nó pelo conteúdo, se for o caso */
 				if (overlap === true) {
-					let base   = this._node;
-					let parent = base.parentElement;
+					let parent = this.node.parentElement;
 					let childs = __Type(elem.children).value;
+					console.log(parent, childs);
 					let i = -1;
 					while(++i < childs.length)
-						parent.insertBefore(childs[i], base);
-					base.remove();
+						parent.insertBefore(childs[i], this.node);
+					this.node.remove();
 				}
-				/* IMPORTANTE: checar elemento após carregamento */
 				loadingProcedures();
 				return;
 			}
 		},
-		//FIXME falta a descrição do método
+
+
+
+
+
+		/**. ``''void'' repeat(''array'' list)``: Clona os filhos do elemento repetindo-os de acordo com as informações repassadas pelo array de objetos em ``list``.
+		. O elemento filho que contiver o nome do atributo do obejto entre duas chaves (''{{nome}}'') terá o fragmento substituídos pelo valor do atributo do objeto correspondente.**/
 		repeat: {
 			value: function(list) {
+				if (this.node === null) return;
 				let data = __Type(list);
 				if (!data.array) return;
 				/* 1) obter o conteúdo interno */
 				/* 2) se o conteúdo contiver o formato {{}}, armazená-lo em data-wd-repeat-model */
 				/* 3) se não contiver o formato, recuperar o modelo em data-wd-repeat-model */
 				/* 4) se não existir, retornar */
-				let html = this.inner;
-				if ((/\{\{.+\}\}/g).test(html))
-					this._node.dataset.wdRepeatModel = html;
-				else if ("wdRepeatModel" in this._node.dataset)
-					html = this._node.dataset.wdRepeatModel;
+				let re   = /\{\{([^}]+)\}\}/
+				let html = this.node.innerHTML;
+				if (re.test(html))
+					this.node.dataset.wdRepeatModel = html;
+				else if ("wdRepeatModel" in this.node.dataset)
+					html = this.node.dataset.wdRepeatModel;
 				else return;
 				/* 5) adequar os atributos do DOM ( {{x}} para {{x}}="" ) */
 				/* 6) limpar conteúdo interno */
 				html = html.split("}}=\"\"").join("}}");
-				this.inner = "";
+				this.node.innerHTML = "";
 				/* 7) Criar lista de filhos */
 				/* 8) executar looping */
 				/* 9) substituir atributos entre chaves duplas por valores e adicionar */
 				let childs = [""];
 				let i = -1;
+				__MODALCONTROL.start();
 				while (++i < list.length) {
+					__MODALCONTROL.progress((i+1)/list.length);
 					let check = __Type(list[i]);
 					if (!check.object) continue;
 					let inner = html;
@@ -3011,12 +3069,16 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					childs.push(inner);
 				}
 				/* 10) definir filhos */
-				this.inner = childs.join("\n");
+				this.node.innerHTML = childs.join("\n");
+				__MODALCONTROL.end();
 				/* IMPORTANTE: checar elemento após carregamento */
-				loadingProcedures();
+				//loadingProcedures();
 				return;
 			}
 		},
+
+
+
 		/**. ``''boolean'' show``: Retorna se o elemento está visível nos termos da biblioteca e define sua exibição, exceto se houver estilo predominante que impeça o comportamento.**/
 		show: {
 			get: function() {
@@ -3030,7 +3092,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		. Os argumentos ``init`` e ``last`` definem os índices do primeiro e do último nó, respectivamente. Se ``end`` for maior que ``init``, ocorrerá a inversão da exibição.**/
 		nav: {
 			value: function(init, last) {
-				let child = __Type(this._node.children).value;
+				let child = __Type(this.node.children).value;
 				if (child.length === 0) return;
 				let data1 = __Type(init);
 				let data2 = __Type(last);
@@ -3054,7 +3116,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		walk: {
 			value: function(n) {
 				let data  = __Type(n);
-				let child = __Type(this._node.children).value;
+				let child = __Type(this.node.children).value;
 				let width = child.length;
 				let init  = -1;
 				let last  = -1;
@@ -3082,10 +3144,10 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		/**. ``''integer'' index``: Retorna o índice do elemento com relação a seus irmãos.**/
 		index: {
 			get: function() {
-				let parent = this._node.parentElement;
+				let parent = this.node.parentElement;
 				if (parent === null) return 0;
 				let child = __Type(parent.children).value;
-				return child.indexOf(this._node);
+				return child.indexOf(this.node);
 			}
 		},
 		/**. ``''void'' alone(boolean x=true)``: exibe o elemento e omite seus elementos irmãos.
@@ -3093,7 +3155,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		alone: {
 			value: function(x) {
 				let index = this.index;
-				let node  = __Node(this._node.parentElement);
+				let node  = __Node(this.node.parentElement);
 				if (x === false) {
 					node.nav();
 					this.show = false;
@@ -3110,7 +3172,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			value: function (index, total, width) {
 				let data1  = __Type(index);
 				let data2  = __Type(total);
-				let child  = __Type(this._node.children).value;
+				let child  = __Type(this.node.children).value;
 				let length = child.length;
 				let init   = -1;
 				let last   = -1;
@@ -3161,7 +3223,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			value: function(search, chars) {
 				let data1 = __Type(search);
 				let data2 = __Type(chars);
-				let child = __Type(this._node.children).value;
+				let child = __Type(this.node.children).value;
 				if (data1.null || data1.undefined) return this.nav();
 				search = data1.regexp ? search : String(search).toUpperCase().trim();
 				chars  = data2.finite ? Math.trunc(chars) : 0;
@@ -3186,7 +3248,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			value: function(asc, ref) {
 				let data1 = __Type(asc);
 				let data2 = __Type(ref);
-				let child = __Type(this._node.children).value;
+				let child = __Type(this.node.children).value;
 				let array = __Array(child);
 				ref = data2.integer && data2 >= 0 ? data2.value : null;
 				if (ref !== null) {
@@ -3199,7 +3261,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					array = __Array(list);
 				}
 				let order = array.sort(asc);
-				let node  = this._node;
+				let node  = this.node;
 				let init, last;
 				order.forEach(function(v,i,a){
 						init = i === 0 ? v : init;
@@ -3363,64 +3425,10 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 
 
 
-	/**FIXME
-	#### Pesquisa por Elementos
-	###### ``**constructor** ''object'' __Query(string selector, node root=document)``
-	Construtor para obter elementos HTML.
-	O argumento ``selector`` é um seletor CSS que identifica os elementos HTML, e o argumento opcional ``root`` define o elemento raiz da busca.	**/
-	function __Query(selector, root) {
-		if (!(this instanceof __Query))	return new __Query(selector, root);
-		selector = String(selector).trim();
-		let check = __Type(root);
-		Object.defineProperties(this, {
-			_css:  {value: selector},
-			_root: {value: check.node ? check.value[0] : document},
-		});
-	}
-
-	Object.defineProperties(__Query.prototype, {
-		constructor: {value: __Query},
-		/**. ``$$``: retorna uma lista de nós (``NodeList``).**/
-		$$: {
-			get: function() {
-				let elem = null;
-				try {elem = this._root.querySelectorAll(this._css);} catch(e) {}
-				return __Type(elem).node ? elem : document.querySelectorAll("#_._");
-			}
-		},
-		/**. ``$``: retorna um nó específico ou lista de nós (``NodeList``) vazia.**/
-		$: {
-			get: function() {
-				let elem = null;
-				try {elem = this._root.querySelector(this._css);} catch(e) {}
-				return __Type(elem).node ? elem : this.$$;
-			}
-		}
-	});
-
-/*----------------------------------------------------------------------------*/
-	/**
-	FIXME o que fazer com isso?
-	``node __$$$(object obj, node root)``
-	Localiza em um objeto os atributos v{$}v e v{$$}v e utiliza seus valores como seletores CSS.}p
-	O atributo v{$$}v é prevalente sobre o v{$}v para fins de chamada das funções i{__$$}i ou i{__$}i,
- respectivamente.
-	v{obj}v - Objeto javascript contendo os atributos v{$}v ou v{$$}v.
-	v{root}v - (opcional, i{document}i) Elemento base para busca.}d}l
-	**/
-	function __$$$(obj, root) {
-		let one =  "$" in obj ? String(obj["$"]).trim()  : null;
-		let all = "$$" in obj ? String(obj["$$"]).trim() : null;
-		let key = {"document": document, "window":  window};
-		if (one !== null && one in key) one = key[one];
-		if (all !== null && all in key) all = key[all];
-		return all === null ? __$(one, root) : __$$(all, root);
-	}
-
 /*============================================================================*/
 	/**### Requisições e Arquivos
 	``**constructor** ''object'' __Request(string input)``
-	Construtor para [requisições Web](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest) ou leituras de [arquivo](https://developer.mozilla.org/en-US/docs/Web/API/FileReader). O argumento ``input`` deve ser o endereço do alvo a ser requisitado.
+	Construtor para [requisições Web](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest) ou leituras de [arquivos](https://developer.mozilla.org/en-US/docs/Web/API/FileReader). O argumento ``input`` deve ser o endereço do alvo a ser requisitado.
 	{**/
 	function __Request(input, method) {
 		if (!(this instanceof __Request))	return new __Request(input, method);
@@ -3429,7 +3437,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		let request, source;
 
 		/* identificar se é um endereço de arquivo ou um arquivo */
-		if (check.files && input.length > 0) {//FIXME eu tirei files e deixei só file
+		if (check.files && input.length > 0) {
 			input   = input[0];
 			request = new FileReader();
 			source  = "file";
@@ -3464,6 +3472,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		/* definir métodos e eventos */
 		let self    = this;
 		let trigger = function(x) {
+			/* não retornar desnecessariamente quando finalizado */
 			if (self.done) return;
 
 			/* definindo valores do objeto */
@@ -3508,7 +3517,21 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 
 			/* checando ações */
 			if (self.done) __MODALCONTROL.end();
-			if (self._submit !== null) self._submit(self);
+			if (self._submit !== null) {
+				let data = {
+					done:     self.done,
+					target:   self.target,
+					time:     self.time,
+					state:    self.state,
+					size:     self.size,
+					loaded:   self.loaded,
+					progress: self.progress,
+					print:    self.print,
+					abort:    self.abort,
+					content:  self.content
+				};
+				self._submit(data);
+			}
 		}
 
 		let events = ["onabort", "onerror", "onload", "onloadend", "onloadstart",
@@ -3536,8 +3559,8 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					this._maxtime = 0;
 			}
 		},
-		/**. ``function onsubmit``: Define e retorna o disparador a ser chamado ao executar a requisição.
-		. A função receberá o objeto como argumento e será chamado a cada mudança de estado. Para excluir o disparador, deve-se defini-lo como ``null``.**/
+		/**. ``function onsubmit``: Define e retorna o disparador a ser chamado a cada mudança de estado da requisição. Para excluí-lo, deve-se defini-lo como nulo.
+		. A função receberá um objeto com os atributos/métodos ''done, time, state, size, loaded, progress, print(), abort(), content()''.**/
 		onsubmit: {
 			set: function(x) {
 				if (!__Type(x).function && x !== null) return;
@@ -3583,12 +3606,11 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		print: {
 			value: function() {
 				let print = [
-					this.state,
-					__Number(this.loaded).bytes+"/"+__Number(this.size).bytes,
-					__Number(this.progress).notation("percent"),
-					this.time/1000+"s"
+					this.target,
+					this.state+" ("+this.time/1000+"s"+")",
+					__Number(this.loaded).bytes+"/"+__Number(this.size).bytes+" ("+__Number(this.progress).notation("percent")+")"
 				];
-				return print.join(" | ");
+				return print.join("\n");
 			}
 		},
 		/**. ``''void'' abort()``: aborta a requisição;**/
@@ -6362,9 +6384,9 @@ FIXME pensar um jeito de bom de fazer sendo e read
 		matrix: {value: function(){return __Table.apply(null, Array.prototype.slice.call(arguments));}},
 		LANG: {value: __LANG},
 		TYPE: {value: __TYPE},
-		
-
-		device: {value: __DEVICECONTROLLER}
+		MODAL: {value: __MODALCONTROL},
+		DEVICE: {value: __DEVICECONTROLLER},
+		SIGNAL: {value: __SIGNALCONTROL},
 	});
 
 /* == BLOCO 4 ================================================================*/
@@ -6992,11 +7014,11 @@ FIXME pensar um jeito de bom de fazer sendo e read
 	function loadingProcedures() { /* procedimento para carregamentos */
 
 		/* 1) processar repetições */
-		WD.$$("[data-wd-repeat]").run(data_wdRepeat);
+		WD.$$("[data-wd-repeat]").forEach(data_wdRepeat);
 		if (__COUNTERCONTROL.repeat > 0) return;
 
 		/* 2) processar carregamentos */
-		WD.$$("[data-wd-load]").run(data_wdLoad);
+		WD.$$("[data-wd-load]").forEach(data_wdLoad);
 		if (__COUNTERCONTROL.load > 0) return;
 
 		/* 3) se repetições e carregamentos terminarem, organizar */
@@ -7010,7 +7032,7 @@ FIXME pensar um jeito de bom de fazer sendo e read
 		let device = __device();
 		if (device !== __device_controller) {
 			__device_controller = device;
-			WD.$$("[data-wd-device]").run(data_wdDevice);
+			WD.$$("[data-wd-device]").forEach(data_wdDevice);
 		}
 		hashProcedures();
 		return;
@@ -7018,15 +7040,15 @@ FIXME pensar um jeito de bom de fazer sendo e read
 
 /*----------------------------------------------------------------------------*/
 	function organizationProcedures() { /* procedimento PÓS carregamentos */
-		WD.$$("[data-wd-sort]").run(data_wdSort);
-		WD.$$("[data-wd-filter]").run(data_wdFilter);
-		WD.$$("[data-wd-mask]").run(data_wdMask);
-		WD.$$("[data-wd-page]").run(data_wdPage);
-		WD.$$("[data-wd-click]").run(data_wdClick);
-		WD.$$("[data-wd-slide]").run(data_wdSlide);
-		WD.$$("[data-wd-device]").run(data_wdDevice);
-		WD.$$("[data-wd-chart]").run(data_wdChart);
-		WD.$$("[data-wd-url]").run(data_wdUrl);
+		WD.$$("[data-wd-sort]").forEach(data_wdSort);
+		WD.$$("[data-wd-filter]").forEach(data_wdFilter);
+		WD.$$("[data-wd-mask]").forEach(data_wdMask);
+		WD.$$("[data-wd-page]").forEach(data_wdPage);
+		WD.$$("[data-wd-click]").forEach(data_wdClick);
+		WD.$$("[data-wd-slide]").forEach(data_wdSlide);
+		WD.$$("[data-wd-device]").forEach(data_wdDevice);
+		WD.$$("[data-wd-chart]").forEach(data_wdChart);
+		WD.$$("[data-wd-url]").forEach(data_wdUrl);
 		data_wdOutput(document, true);
 		return;
 	};
