@@ -38,6 +38,10 @@ const wd = (function() {
 	Registra a versão da biblioteca.**/
 	const __VERSION = "WD JS v5.0.0";
 /*----------------------------------------------------------------------------*/
+	/**###### ``**const** ''boolean'' __UNDERMAINTENANCE``
+	Se verdadeiro, libera métodos de teste em WD para efetuar testes.**/
+	const __UNDERMAINTENANCE = true;
+/*----------------------------------------------------------------------------*/
 
 	let __device_controller = null;//FIXME substituir isso por __DEVICECONTROLLER
 
@@ -60,6 +64,7 @@ const wd = (function() {
 			|tablet|&ge; 600px|
 			|phone|&lt; 600px|
 	**/
+	console.log(window.innerWidth);
 	const __DEVICECONTROLLER = {
 		_start: false,
 		_change: null,
@@ -72,7 +77,7 @@ const wd = (function() {
 			return "phone";
 		},
 		/**. ``''boolean'' mobile``: Informa se dispositivo não é do tamanho desktop.**/
-		get mobile() {return this._device !== "desktop";},
+		get mobile() {return this.device !== "desktop";},
 		/**. ``''void'' onchange``: Define a função disparadora de alteração de dispositivo (tamanho da tela). Quando definido, o evento ''resize'' será provocado e uma chamada será executada.**/
 		set onchange(x) {
 			if (typeof x === "function" || x === null) {
@@ -259,16 +264,16 @@ const wd = (function() {
 			html.close.textContent = "\u00D7";
 			return html.box;
 		})(),
-		/**. ``''void'' open(''string'' message, ''string'' title=" ")``: Demanda a abertura de uma nova caixa de mensagem.
-		. O argumento ``message`` define o texto da mensagem e o argumento ``title`` define seu título.**/
+		/**. ``''void'' open(''string'' message, ''string'' title=" ")``: Demanda a abertura de uma nova caixa de mensagem. O argumento ``message`` define o texto da mensagem e o argumento ``title`` define seu título.**/
 		open: function(message, title) {
+			if (title === undefined || title === null|| arguments.length < 2) title = "";
 			/* clonando uma nova caixa */
 			let main     = this.main;
 			let hbox     = this.box.cloneNode(true);
 			let htitle   = hbox.querySelector(".js-wd-msg-title");
 			let hclose   = hbox.querySelector(".js-wd-msg-close");
 			let hmessage = hbox.querySelector(".js-wd-msg-message");
-			htitle.textContent   = arguments.length < 2 ? "" : title;
+			htitle.textContent   = title;
 			hmessage.textContent = message;
 			hclose.onclick       = function(elem) {
 				let box = elem.target.parentElement.parentElement;
@@ -284,6 +289,27 @@ const wd = (function() {
 			if (this.main.children.length === 0)
 				document.body.appendChild(this.main);
 			this.main.insertAdjacentElement("afterbegin", hbox);
+			return;
+		},
+		/**. ``''void'' notify(''string'' message, ''string'' title=" ")``: Demanda a abertura de uma [notificação](https://developer.mozilla.org/en-US/docs/Web/API/Notification/Notification). O argumento ``message`` define o texto da mensagem e o argumento ``title`` define seu título.**/
+		notify: function(message, title) {
+			if (title === undefined || title === null|| arguments.length < 2) title = "";
+			let options = {
+				body: message,
+				lang: __LANG.main,
+				vibrate: [200, 100, 200],
+			};
+			if (!("Notification" in window))
+				return __SIGNALCONTROL.open(message, title);
+			if (Notification.permission === "denied")
+				return null;
+			if (Notification.permission === "granted")
+				new Notification(title, options);
+			else
+				Notification.requestPermission().then(function(x) {
+					if (x === "granted")
+						new Notification(title, options);
+				});
 			return;
 		}
 	};
@@ -405,30 +431,29 @@ const wd = (function() {
 	. ``''string'' s``: Seletor CSS.
 	. ``''string'' d``: Estilos a serem aplicados ao seletor.**/
 	const __JSCSS = [
-		{s: "@keyframes js-wd-fade-in",  d: ["from {opacity: 0;} to {opacity: 1;}"]},
-		{s: "@keyframes js-wd-fade-out", d: ["from {opacity: 1;} to {opacity: 0;}"]},
-		{s: "@keyframes js-wd-shrink-out", d: ["from {transform: scale(0);} to {transform: scale(1);}"]},
-		{s: "@keyframes js-wd-shrink-in",  d: ["from {transform: scale(1);} to {transform: scale(0);}"]},
-		{s: "div.js-wd-progress-bar", d: ["height: 1em; background-color: #1e90ff;"]},
-		{s: ".js-wd-no-display", d: ["display: none;"]},
-		{s: "[data-wd-nav], [data-wd-send], [data-wd-tsort], [data-wd-data], [data-wd-full], [data-wd-jump]", d: [
-			"cursor: pointer;"
-		]},
-		{s: "[data-wd-set], [data-wd-edit], [data-wd-shared], [data-wd-css], [data-wd-table]", d:[
-			"cursor: pointer;"
-		]},
-		{s: "[data-wd-tsort]:before", d: ["content: \"\\2195 \";"]},
-		{s: "[data-wd-tsort=\"-1\"]:before", d: ["content: \"\\2191 \";"]},
-		{s: "[data-wd-tsort=\"+1\"]:before", d: ["content: \"\\2193 \";"]},
-		{s: "[data-wd-repeat] > *, [data-wd-load] > *", d: [
-			"visibility: hidden;"
-		]},
-		{s: "[data-wd-slide] > * ", d: ["animation: js-wd-fade-in 1s, js-wd-shrink-out 0.5s;"]},
-		{s: "nav > *.js-wd-nav-inactive", d: ["opacity: 0.5;"]},
-		{s: ".js-wd-plot", d: [
-			"height: 100%; width: 100%; position: absolute; top: 0; left: 0; bottom: 0; right: 0;"
-		]},
+		"@keyframes js-wd-fade-in    {from {opacity: 0 !important;} to {opacity: 1 !important;}}",
+		"@keyframes js-wd-fade-out   {from {opacity: 1 !important;} to {opacity: 0 !important;}}",
+		"@keyframes js-wd-shrink-out {from {transform: scale(0) !important;} to {transform: scale(1) !important;}}",
+		"@keyframes js-wd-shrink-in  {from {transform: scale(1) !important;} to {transform: scale(0) !important;}}",
+		"div.js-wd-progress-bar {height: 1em; background-color: #1e90ff;}",
+		".js-wd-no-display {display: none !important;}",
+		"[data-wd-nav], [data-wd-send], [data-wd-tsort], [data-wd-data], [data-wd-full], [data-wd-jump] {cursor: pointer;}",
+		"[data-wd-set], [data-wd-edit], [data-wd-shared], [data-wd-css], [data-wd-table] {cursor: pointer;}",
+		"[data-wd-tsort]:before {content: \"\\2195 \";}",
+		"[data-wd-tsort=\"-1\"]:before {content: \"\\2191 \";}",
+		"[data-wd-tsort=\"+1\"]:before {content: \"\\2193 \";}",
+		"[data-wd-repeat] > *, [data-wd-load] > * {visibility: hidden;}",
+		"[data-wd-slide] > * {animation: js-wd-fade-in 1s, js-wd-shrink-out 0.5s;}",
+		"nav > *.js-wd-nav-inactive {opacity: 0.5;}",
+		".js-wd-plot {height: 100%; width: 100%; position: absolute; top: 0; left: 0; bottom: 0; right: 0;}"
 	];
+	__JSCSS.forEach(function(v,i,a) {
+		a[i] = v.replace(/\s+/, " ").replace(/^([^{]+)\{(.+)\}$/, "$1 {\n\t$2\n}\n");
+	});
+	//FIXME apagar isso aqui em baixo
+	let a = document.createElement("STYLE");
+	a.textContent = __JSCSS.join("");
+	document.head.appendChild(a);
 
 /*----------------------------------------------------------------------------*/
 	/**###### ``**const** ''object'' __TYPE``
@@ -1429,11 +1454,11 @@ const wd = (function() {
 			}
 		},
 		/**. ``''matrix'' csv(''string'' td="\t", ''string'' tr="\n")``: Retorna uma matriz (array) a partir de uma string no formato [CSV]<https://www.rfc-editor.org/rfc/rfc4180>.
-		. Os argumentos ``td`` e ``tr`` definem os caracteres que separam as colunas e as linhas, respectivamente. Se o valor da célula contiver o caractere divisor de coluna ou linha, esse deverá estar cercado por aspas duplas.**/
+		. Os argumentos ``td`` e ``tr`` definem os caracteres que separam as colunas e as linhas, respectivamente. Se o valor da célula contiver o caractere divisor de coluna ou linha, a célula deverá estar cercada por aspas duplas.**/
 		csv: {
 			value: function(td, tr) {
-				td = td === undefined ? "\t" : String(td);
-				tr = tr === undefined ? "\n" : String(tr);
+				td = !__Type(td).chars ? "\t" : td;
+				tr = !__Type(tr).chars ? "\n" : tr;
 				let txt = this._value;
 				if (txt[txt.length - 1] !== tr) txt = txt+tr;
 				let table = [[]];
@@ -2702,6 +2727,68 @@ const wd = (function() {
 				this.node.name = __Type(x).nonempty ? String(x).trim() : "";
 			}
 		},
+
+
+
+		//FIXME reportValidity é o método mais recente
+		validity: {
+			set: function(msg) {
+				if (!this.form || this._cfg.send !== 1) return;
+				if (!__Type(msg).nonempty) msg = "";
+				/* marcação auxiliar e marcação nativa */
+				this.node.dataset.wdCustomValidity = msg;
+				if ("setCustomValidity" in this.node)
+					this.node.setCustomValidity(msg);
+				return this.validity;
+			},
+			get: function() {
+				/* se não for formulário de envio, retornar verdadeiro */
+				if (!this.form || this._cfg.send !== 1) return true;
+				if ("wdCustomValidity" in this.node.dataset)
+					this.node.dataset.wdCustomValidity = "";
+				/* checando a validade */
+				let validity;
+				if ("checkValidity" in this.node)
+					validity = this.node.checkValidity();
+				else
+					validity = this.node.dataset.wdCustomValidity === "";
+				/* Imprimindo a mensagem, se inválido */
+				if (validity) return true;
+				if ("reportValidity" in this.node) {
+					this.node.reportValidity();
+				} else if ("validationMessage" in this.node) {
+					__SIGNALCONTROL.notify(this.node.validationMessage, "");
+					this.node.focus();
+				} else {
+					__SIGNALCONTROL.notify(this.node.dataset.wdCustomValidity, "");
+					this.node.focus();
+				}
+				return false;
+			}
+		},
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 		/**. ``''object'' submit``: Retorna o dado do formulário para submissão ou nulo se for campo de envio de dados.**/
 		submit: {
 			get: function() {
@@ -2743,7 +2830,7 @@ Para FormData function assim:
 <select name="ITENS" multiple>...
 
 let data = new FormData();
-data.append("ITEMS", value1);
+data.append("ITEMS", value1);__Node
 data.append("ITEMS", value2);
 ...
 O método append não substitui o valor contido no atributo name, podendo ser vários.
@@ -2773,7 +2860,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					let data = {};
 					let i = -1;
 					while(++i < attr.length)
-						data[attr[i].name] = attr[i].value;
+						data[attr[i].name] = attr[i].value;__Node
 					return data;
 				}
 				name = String(name).trim();
@@ -2789,9 +2876,10 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					}
 					/* demais atributos do objeto */
 					switch(name) {
-						case "style":   return this._style;
-						case "class":   return this._class;
-						case "dataset": return this._dataset;
+						case "style":     return this._style;
+						case "class":     return this._class;
+						case "className": return this._class;
+						case "dataset":   return this._dataset;
 					}
 					/* demais atributos */
 					if (name in this.node) return this.node.name;
@@ -2809,9 +2897,10 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					}
 					/* demais atributos do objeto */
 					switch(name) {
-						case "style":   this._style   = value; return this.attr(name);
-						case "class":   this._class   = value; return this.attr(name);
-						case "dataset": this._dataset = value; return this.attr(name);
+						case "style":     this._style   = value; return this.attr(name);
+						case "class":     this._class   = value; return this.attr(name);
+						case "className": this._class   = value; return this.attr(name);
+						case "dataset":   this._dataset = value; return this.attr(name);
 					}
 					/* disparadores */
 					if ((/^\!?on\w+/).test(name) && name.replace("!", "") in this.node) {
@@ -2848,7 +2937,6 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				}
 			}
 		},
-
 		/**. ``''object'' _style``: Define e retorna o valor do atributo ``style`` por meio de um objeto. Valor nulo excluí o atributo, valor textual define o atributo HTML e valor em objeto define o par nome-valor.**/
 		_style: {
 			get: function() {
@@ -2882,7 +2970,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				}
 			}
 		},
-		/**. ``''array'' _class``: Define e retorna o valor do atributo ``class`` por meio de um array. Valor nulo excluí o atributo, valor textual define o atributo HTML e valor em objeto define ações ''replace'', ''toggle'', ''add'' e  ''remove''.**/
+		/**. ``''array'' _class``: Define e retorna o valor do atributo ``class`` por meio de um array. Valor nulo excluí o atributo, valor textual define o atributo HTML e valor em objeto define ações ''replace'', ''toggle'', ''add'' e  ''delete''.**/
 		_class: {
 			get: function() {
 				if (this.node === null) return;
@@ -2906,7 +2994,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					if ("replace" in x) css.replace.apply(css, x.replace.split(" "));
 					if ("toggle" in x)  css.toggle.apply(css, x.toggle.split(" "));
 					if ("add" in x)     css.put.apply(css, x.add.split(" "));
-					if ("remove" in x)  css.delete.apply(css, x.delete.split(" "));
+					if ("delete" in x)  css.delete.apply(css, x.delete.split(" "));
 					this._node.setAttribute("class", css.order.join(" "));
 				}
 			}
@@ -2982,8 +3070,10 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			value: function(childs) {
 				if (this.node === null) return;
 				let special = ["script"];
+				/* se não for um script */
 				if (special.indexOf(this.tag) < 0)
 					return this.node.cloneNode(childs !== false);
+				/* se for um script */
 				let attrs = this.attribute();
 				let clone = document.createElement(this.tag);
 				for (let i in attrs)
@@ -2992,16 +3082,16 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return clone;
 			}
 		},
-		/**. ``''void'' load(''string'' html="", ''boolean'' overlap=false, ''boolean'' scripts=false)``: Carrega um conteúdo HTML no elemento ou o substitui.
-		. O argumento ``html`` deve conter o código HTML a ser carregado. O argumento opcional ``overlap``, se verdadeiro, irá substituir o elemento pelo conteúdo de ``html``. O argumento ``scripts``, se verdadeiro, executará elementos scripts existentes.**/
+		/**. ``''void'' load(''string'' html="", ''boolean'' overlap=false, ''boolean'' run=false)``: Carrega um conteúdo HTML no elemento ou o substitui.
+		. O argumento ``html`` deve conter o código HTML a ser carregado; O argumento opcional ``overlap``, se verdadeiro, irá substituir o elemento pelo conteúdo de ``html``; e O argumento ``run``, se verdadeiro, executará elementos scripts existentes.**/
 		load: {
-			value: function(html, overlap, scripts) {
+			value: function(html, overlap, run) {
 				if (this.node === null) return;
 				/* definir elemento */
 				let elem = overlap === true ? document.createElement("DIV") : this.node;
 				elem.innerHTML = html === undefined ? "" : String(html);
 				/* rodando scripts, se for o caso (por padrão não roda por motivo de segurança) */
-				if (scripts === true) {
+				if (run === true) {
 					let scripts = __Type(__Query("script", elem).$$).value;
 					let i = -1;
 					while (++i < scripts.length) {
@@ -3026,11 +3116,6 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return;
 			}
 		},
-
-
-
-
-
 		/**. ``''void'' repeat(''array'' list)``: Clona os filhos do elemento repetindo-os de acordo com as informações repassadas pelo array de objetos em ``list``.
 		. O elemento filho que contiver o nome do atributo do obejto entre duas chaves (''{{nome}}'') terá o fragmento substituídos pelo valor do atributo do objeto correspondente.**/
 		repeat: {
@@ -3072,42 +3157,32 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				this.node.innerHTML = childs.join("\n");
 				__MODALCONTROL.end();
 				/* IMPORTANTE: checar elemento após carregamento */
-				//loadingProcedures();
+				loadingProcedures();
 				return;
 			}
 		},
-
-
-
-		/**. ``''boolean'' show``: Retorna se o elemento está visível nos termos da biblioteca e define sua exibição, exceto se houver estilo predominante que impeça o comportamento.**/
+		/**. ``''boolean'' show``: Retorna e define a visibilidade do elemento nos termos da biblioteca.**/
 		show: {
 			get: function() {
-				return this.css().indexOf("js-wd-no-display") < 0;
+				return this._class.indexOf("js-wd-no-display") < 0;
 			},
 			set: function(x) {
-				this.css(x === false ? {add: "js-wd-no-display"} : {delete: "js-wd-no-display"});
+				this._class = x === false ? {add: "js-wd-no-display"} : {delete: "js-wd-no-display"}
 			}
 		},
-		/**. ``''void'' nav(number init=-Infinity, number last=+Infinity)``: Define o intervalo de nós filhos a ser exibidos.
-		. Os argumentos ``init`` e ``last`` definem os índices do primeiro e do último nó, respectivamente. Se ``end`` for maior que ``init``, ocorrerá a inversão da exibição.**/
-		nav: {
-			value: function(init, last) {
+		/**. ``''void'' nav(''number'' init, ''number'' last, ''boolean'' reverse)``: Define o intervalo de nós filhos a ser exibido. Os argumentos ``init``, ``last`` e ``reverse`` definem, respectivamente, o índice de início, de fim e se a exibição deve ser inverter.**/
+		nav: {//FIXME parei aqui TODO: fazer como substring ou substr?
+			value: function(init, last, reverse) {
+				if (this.node === null || this.node.children.length === 0) return;
 				let child = __Type(this.node.children).value;
-				if (child.length === 0) return;
 				let data1 = __Type(init);
 				let data2 = __Type(last);
 				let order = true;
 				init = data1.number ? data1.value : -Infinity;
 				last = data2.number ? data2.value : +Infinity;
-				if (init > last) {
-					let aux = init;
-					init = last;
-					last = aux;
-					order = false;
-				}
 				child.forEach(function(v,i,a){
 					let node  = __Node(v);
-					node.show = order ? (i >= init && i <= last) : (i < init || i > last);
+					node.show = i >= init && i <= last ? (reverse !== true) : (reverse === true);
 				});
 			}
 		},
@@ -3428,15 +3503,15 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 /*============================================================================*/
 	/**### Requisições e Arquivos
 	``**constructor** ''object'' __Request(string input)``
-	Construtor para [requisições Web](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest) ou leituras de [arquivos](https://developer.mozilla.org/en-US/docs/Web/API/FileReader). O argumento ``input`` deve ser o endereço do alvo a ser requisitado.
-	{**/
+	Construtor para [requisições Web](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest) ou leituras de [arquivos](https://developer.mozilla.org/en-US/docs/Web/API/FileReader). Os argumentos ``input`` e ``method`` são, respectivamente, o alvo a ser requisitado ou lido e a função a ser chamada a cada mudança de estado.**/
 	function __Request(input, method) {
 		if (!(this instanceof __Request))	return new __Request(input, method);
+		/*-- analisando argumentos --*/
+		if (!__Type(method).function) method = null;
 		let check = __Type(input);
-		let test  = __Type(method);
+		/*-- definindo variáveis --*/
 		let request, source;
-
-		/* identificar se é um endereço de arquivo ou um arquivo */
+		/*-- checando o alvo e obtendo o leitor adequado --*/
 		if (check.files && input.length > 0) {
 			input   = input[0];
 			request = new FileReader();
@@ -3454,37 +3529,44 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			source  = null;
 		}
 
-		/* definir atributos internos */
+		/*-- definindo atributos do objeto --*/
 		Object.defineProperties(this, {
-			_target:  {value: input},
-			_source:  {value: source},
-			_request: {value: request},
-			_submit:  {value: test.function ? method : null, writable: true},
-			_done:    {value: false, writable: true},
-			_state:   {value: "", writable: true},
-			_start:   {value: 0, writable: true},
-			_time:    {value: 0, writable: true},
-			_maxtime: {value: 0, writable: true},
-			_size:    {value: 0, writable: true},
-			_loaded:  {value: 0, writable: true},
+			_target:   {value: input},
+			_source:   {value: source},
+			_request:  {value: request},
+			_onchange: {value: method, writable: true},
+			_done:     {value: false,  writable: true},
+			_state:    {value: "",     writable: true},
+			_start:    {value: 0,      writable: true},
+			_time:     {value: 0,      writable: true},
+			_maxtime:  {value: 0,      writable: true},
+			_size:     {value: 0,      writable: true},
+			_loaded:   {value: 0,      writable: true},
+			_progress: {value: 0,      writable: true},
+			_async:    {value: true,   writable: true},
+			_user:     {value: null,   writable: true},
+			_password: {value: null,   writable: true},
 		});
 
-		/* definir métodos e eventos */
+		/*-- definir disparador nativo e o vinculando aos eventos do leitor --*/
 		let self    = this;
 		let trigger = function(x) {
-			/* não retornar desnecessariamente quando finalizado */
-			if (self.done) return;
+			/*-- motivo: não executar o disparador depois do encerramento --*/
+			if (self._done) return;
 
-			/* definindo valores do objeto */
-			self._time   = new Date().valueOf();
-			self._size   = "total"  in x ? x.total  : 0;
-			self._loaded = "loaded" in x ? x.loaded : 0;
-			__MODALCONTROL.progress(self.progress);
+			/*-- definir os valores temporais do leitor aos atributos do objeto */
+			self._time     = new Date().valueOf();
+			self._size     = "total"  in x ? x.total  : 0;
+			self._loaded   = "loaded" in x ? x.loaded : 0;
+			self._progress = self._size === 0 ? 1 : self._loaded/self._size;
+			__MODALCONTROL.progress(self._progress);
 
-			/* obtendo valores do evento */
+			/*-- obter valores do evento (argumento do disparador nativo) --*/
 			let source = self._source;
 			let type   = x.type;
 			let state  = self._request.readyState;
+
+			/*-- definir estados do progresso --*/
 			let errors = ["abort", "timeout", "error"];
 			let states, status;
 			if (source === "file") {
@@ -3495,7 +3577,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				states = ["unsent", "opened", "headers", "loading", "closing"];
 			}
 
-			/* analisar progresso da requisição */
+			/*-- analisar progresso da requisição --*/
 			if (status === 404) {
 				self._done  = true;
 				self._state = "notfound";
@@ -3515,25 +3597,43 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				self._state = states[state];
 			}
 
-			/* checando ações */
-			if (self.done) __MODALCONTROL.end();
-			if (self._submit !== null) {
-				let data = {
-					done:     self.done,
-					target:   self.target,
-					time:     self.time,
-					state:    self.state,
-					size:     self.size,
-					loaded:   self.loaded,
-					progress: self.progress,
-					print:    self.print,
-					abort:    self.abort,
-					content:  self.content
-				};
-				self._submit(data);
+			/*-- encerrar barra de progresso, se processo finalizado --*/
+			if (self._done) __MODALCONTROL.end();
+
+			/*-- chamar o disparador definido pelo usuário --*/
+			if (self.onchange !== null) {
+				/*-- melhorando a visualização dos cabeçalhos --*/
+				let headers = self._source === "path" ? self._request.getAllResponseHeaders() : null;
+				if (__Type(headers).nonempty) {
+					let list = headers.split(/[\r\n]+/g);
+					headers = {};
+					list.forEach(function(v,i,a){
+						let name  = v.split(":")[0].trim();
+						let value = v.replace(/^[^:]+\:(.+)$/, "$1").trim();
+						headers[name] = value;
+					});
+				} else {
+					headers = null;
+				}
+				/*-- definindo content --*/
+				let content = self.constructor.prototype._content;
+				/*-- chamar o disparador do usuário --*/
+				self.onchange({
+					done:     self._done,
+					time:     self._time - self._start,
+					state:    self._state,
+					size:     self._size,
+					loaded:   self._loaded,
+					progress: self._progress,
+					headers:  headers,
+					abort:    self._request.abort,
+					content:  function() {return content.apply(self, arguments);},
+					self: self
+				});
 			}
 		}
 
+		/*-- atribuir o disparador nativos a todos os eventos do leitor --*/
 		let events = ["onabort", "onerror", "onload", "onloadend", "onloadstart",
 		"onprogress", "ontimeout", "onreadystatechange"];
 		let i = -1;
@@ -3548,81 +3648,22 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 
 	Object.defineProperties(__Request.prototype, {
 		constructor: {value: __Request},
-		/**. ``''number'' maxtime``: Define e retorna o tempo máximo de requisição em milisegundos.**/
-		maxtime: {
-			get: function() {return this._maxtime;},
-			set: function(x) {
-				let data = __Type(x);
-				if (data.finite && data.positive)
-					this._maxtime = Math.trunc(Math.abs(data.value));
-				else
-					this._maxtime = 0;
-			}
-		},
-		/**. ``function onsubmit``: Define e retorna o disparador a ser chamado a cada mudança de estado da requisição. Para excluí-lo, deve-se defini-lo como nulo.
-		. A função receberá um objeto com os atributos/métodos ''done, time, state, size, loaded, progress, print(), abort(), content()''.**/
-		onsubmit: {
-			set: function(x) {
-				if (!__Type(x).function && x !== null) return;
-				this._submit = x;
-			},
-			get: function() {return this._submit;}
-		},
-		/**. ``''boolean'' done``: Retorna verdadeiro se a requisição estiver terminada.**/
-		done: {
-			get: function() {return this._done;}
-		},
-		/**. ``''string'' target``: Retorna o alvo da requisição.**/
-		target: {
-			get: function() {
-				return this._source === "file" ? this._target.name : this._target;
-			}
-		},
-		/**. ``''object'' request``: Retorna o objeto ``XMLHttpRequest`` ou ``FileReader`` da requisição.**/
-		request: {
-			get: function() {return this._request;}
-		},
-		/**-``integer time``: Retorna o tempo de execução da requisição em milisegundos.**/
-		time: {
-			get: function() {return this._time - this._start;}
-		},
-		/**. ``''string'' state``: Retorna o estado da requisição: ``opened``, ``headers``, ``loading``, ``closing``, ``done``, ``abort``, ``timeout`` ou ``error``.**/
-		state: {
-			get: function() {return this._state;}
-		},
-		/**. ``''integer'' size``: Retorna o tamanho total da requisição (envio ou retorno) em bytes.**/
-		size: {
-			get: function() {return this._size;}
-		},
-		/**. ``''integer'' loaded``: Retorna o tamanho parcial da requisição em bytes.**/
-		loaded: {
-			get: function() {return this._loaded;}
-		},
-		/**. ``''number'' progress``: Retorna o progresso da requisição (de 0 a 1).**/
-		progress: {
-			get: function() {return this._size === 0 ? 1 : this._loaded/this._size;}
-		},
-		/**. ``''string'' print()``: Retorna uma string contendo informações da requisição.**/
-		print: {
+		/**. ``''void'' _reset()``: Reinicia valores para a requisição.**/
+		_reset: {
 			value: function() {
-				let print = [
-					this.target,
-					this.state+" ("+this.time/1000+"s"+")",
-					__Number(this.loaded).bytes+"/"+__Number(this.size).bytes+" ("+__Number(this.progress).notation("percent")+")"
-				];
-				return print.join("\n");
+				this._time     = new Date().valueOf();
+				this._start    = this._time;
+				this._done     = false;
+				this._notfound = false;
+				if (this._source === "path")
+					this._request.timeout = this.maxtime;
 			}
 		},
-		/**. ``''void'' abort()``: aborta a requisição;**/
-		abort: {
-			value: function() {this._request.abort();}
-		},
-		/**. ``''void'' content(string type, string td=\t,string tr=\n)``: Retorna o conteúdo da requisição ou ``null`` se indefinido ou com erro.
-		. O argumento opcional ``type``, define o tipo do retorno a partir do conteúdo da requisição, podendo ser ``text``, ``xml``, ``html``, ``xhtml``, ``svg``, ``json`` e ``csv``.
-		. No caso de retorno ``csv``, os argumentos opcionais ``td`` e ``tr`` definem os caracteres que separam as colunas e as linhas, respectivamente.//FIXME md5 checksum hex**/
-		content: {
+		/**. ``''void'' _content(''string'' type)``: Retorna o conteúdo da requisição ou ``null`` se indefinido ou com erro.
+		. O argumento opcional ``type``, define o tipo do retorno a partir do conteúdo da requisição, podendo ser ``text``, ``xml``, ``html``, ``xhtml``, ``svg``, ``json`` e ``csv``.**/
+		_content: {
 			value: function(type) {
-				if (!this.done || this._source === null) return null;
+				if (!this._done || this._source === null) return null;
 				let value = this._request[(this._source === "path" ? "responseText" : "result")];
 				try {
 					let paser = new DOMParser();
@@ -3648,50 +3689,108 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				} catch(e) {return null;}
 			}
 		},
-		/**. ``''void'' _reset()``: Reinicia valores para a requisição.**/
-		_reset: {
-			value: function() {
-				this._time  = new Date().valueOf();
-				this._start = this._time;
-				this._done  = false;
-				this._notfound = false;
-				if (this._source === "path")
-					this._request.timeout = this.maxtime;
+		/**. ``''number'' maxtime``: Define e retorna o tempo máximo de requisição em milisegundos.**/
+		maxtime: {
+			get: function() {
+				let data = __Type(this._maxtime);
+				return data.finite && data >= 0 ? data.value : 0;
+			},
+			set: function(x) {
+				let data = __Type(x);
+				this._maxtime = data.finite && data >= 0 ?  Math.trunc(data.value) : 0;
 			}
 		},
-		/**. ``''void'' send(void data, string method="POST")``: Envia uma requisição web.
-		. Os argumentos opcionais ``data`` e ``method`` definem o pacote de dados a ser enviado e o tipo do envio, ``GET``ou ``POST``, respectivamente.**/
+		/**. ``''boolean'' async``: Define e retorna se a requisição será assíncrona.**/
+		async: {
+			get: function() {
+				let data = __Type(this._async);
+				return data.boolean ? data.value : true;
+			},
+			set: function(x) {
+				let data = __Type(x);
+				this._async = data.boolean ? data.value : true;
+			}
+		},
+		/**. ``''string'' user``: Define e retorna o usuário da requisição ou nulo se indefinido.**/
+		user: {
+			get: function() {
+				let data = __Type(this._user);
+				return data.nonempty ? this._user.trim() : null;
+			},
+			set: function(x) {
+				let data = __Type(x);
+				this._user = data.nonempty ? x.trim() : null;
+			}
+		},
+		/**. ``''string'' password``: Define e retorna a senha da requisição ou nulo se indefinida.**/
+		password: {
+			get: function() {
+				let data = __Type(this._password);
+				return data.nonempty ? this._password : null;
+			},
+			set: function(x) {
+				let data = __Type(x);
+				this._password = data.nonempty ? x : null;
+			}
+		},
+		/**. ``function onchange``: Define e retorna o disparador a ser chamado a cada mudança de estado da requisição ou nulo, se indefinido. O disparador receberá um objeto como argumento contendo os atributos/métodos ''done, time, state, size, loaded, progress, headers, abort() e content()''.**/
+		onchange: {
+			get: function() {
+				let data = __Type(this._onchange);
+				return data.function ? this._onchange : null;
+			},
+			set: function(x) {
+				let data = __Type(x);
+				this._onchange = data.function ? x : null;
+			}
+		},
+		/**. ``''string'' target``: Retorna o alvo da requisição.**/
+		target: {
+			get: function() {
+				return this._source === "file" ? this._target.name : this._target;
+			}
+		},
+		/**. ``''void'' send(void data, string method="POST")``: Envia uma requisição web. Os argumentos ``method`` e ``data`` definem, respectivamente, método HTTP de envio e a informação a ser enviada ao destino.**/
 		send: {
-			value: function(data, method) {
-				if (this._source !== "path") return null;
+			value: function(method, data) {
+				if (this._source !== "path") return;
+				method = __Type(method).nonempty ? method.trim().toUpperCase() : "POST";
 				let check  = __Type(data);
-				let action = this._target.replace(/\#.+$/, "");
-				method = String(method).trim().toUpperCase();
-				if (method === "GET") {
-					try {
-						if (check.nonempty) {
-							data   = String(data).trim();
-							action = action.indexOf("?") < 0 ? action+"?"+data : action+"&"+data;
+				let action = this.target.replace(/\#.+$/, "");
+				/* iniciando processo */
+				this._reset();
+				__MODALCONTROL.start();
+				/* tentando enviar */
+				try {
+					switch(method) {
+						case "GET": {
+							if (check.nonempty) {
+								data   = String(data).trim();
+								action = action.indexOf("?") < 0 ? action+"?"+data : action+"&"+data;
+							}
+							this._request.open("GET", action, this.async, this.user, this.password);
+							this._request.send(null);
+							break;
 						}
-						this._reset();
-						__MODALCONTROL.start();
-						this._request.open("GET", action, true);
-						this._request.send(null);
-					} catch(e) {return null;}
-				} else {
-					try {
-						this._reset();
-						__MODALCONTROL.start();
-						this._request.open("POST", this._target, true);
-						if (check.nonempty)
-							this._request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-						this._request.send(data);
-					} catch(e) {return null;}
+						case "POST": {
+							this._request.open("POST", this.target, this.async, this.user, this.password);
+							if (check.nonempty)
+								this._request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+							this._request.send(data);
+							break;
+						}
+						default: {
+							this._request.open(method, this.target, this.async, this.user, this.password);
+							this._request.send(data);
+						}
+					}
+				} catch(e) {
+					__MODALCONTROL.end();
 				}
+				return;
 			}
 		},
-		/**. ``''void'' read(string readAs)``: Lê o conteúdo de um arquivo (objeto ``File``).
-		. O argumento opcional ``readAs`` define o modo de leitura, que pode ser ``binary``, ``text`` ou ``buffer``. Se omitido, será atribído de acordo com o tipo do arquivo ou ``binary``.**/
+		/**. ``''void'' read(string readAs)``: Lê o conteúdo de um arquivo (objeto ``File``). O argumento opcional ``readAs`` define o modo de leitura, que pode ser ''binary, text ou buffer''. Se omitido, será atribído de acordo com o tipo do arquivo ou ``binary``.**/
 		read: {
 			value: function(readAs) {
 				if (this._source !== "file") return null;
@@ -5027,21 +5126,6 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 
 		return false;
 	}
-
-
-
-/*----------------------------------------------------------------------------*/
-	function wd_json(input) { /* se texto, retornar um objeto, se outra coisa, retorna um JSON */
-		if (input === null || input === undefined) return {};
-		if (wd_vtype(input).type === "text") {
-			try      {return JSON.parse(input.toString());}
-			catch(e) {return {};}
-		}
-		try      {return JSON.stringify(input)}
-		catch(e) {return ""}
-	}
-
-
 /*----------------------------------------------------------------------------*/
 	function wd_apply_getters(obj, args) { /* auto-aplica getter em objeto */
 		let type   = obj.type; /* tipo do objeto original */
@@ -5058,27 +5142,6 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			value  = vtype.value;
 		}
 		return value;
-	}
-
-/*----------------------------------------------------------------------------*/
-	function wd_html_full(elem, exit) { /* deixa o elemento em tela cheia */
-		let action = {
-			open: ["requestFullscreen", "webkitRequestFullscreen", "msRequestFullscreen"],
-			exit: ["exitFullscreen", "webkitExitFullscreen", "msExitFullscreen"]
-		};
-		let full   = exit === true ? action.exit : action.open;
-		let target = exit === true ? document : elem;
-		for (let i = 0; i < full.length; i++) {
-			if (full[i] in target)
-				try {return target[full[i]]();} catch(e) {}
-		}
-		return null;
-	}
-
-/*----------------------------------------------------------------------------*/
-	function wd_html_style_get(elem, css) { /* devolve o valor do estilo especificado */
-		let style = window.getComputedStyle(elem, null);
-		return css in style ? style.getPropertyValue(css) : null;
 	}
 
 /*----------------------------------------------------------------------------*/
@@ -5102,40 +5165,6 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		return data;
 	}
 
-/*----------------------------------------------------------------------------*/
-	function wd_html_bros_index(elem) { /* obtem o índice (posição) do elemento em relação aos irmãos */
-		let bros = elem.parentElement.children;
-		for (let i = 0; i < bros.length; i++)
-			if (bros[i] === elem) return i;
-		return 0;
-	}
-/*----------------------------------------------------------------------------*/
-	function wd_html_translate(elem, json) { /* carrega tradução vinculada a seletor CSS em arquivo JSON */
-		/* FORMATO DO JSON
-		[
-			{"$$": "CSS Selectors", "$":  "CSS Selector", "textContent": "Text", "title": "Title"},
-			...
-		]
-		*/
-		/* rodando itens do array do JSON */
-		for (let i = 0; i < json.length; i++) {
-			let attrs = json[i];
-			let check = wd_vtype(__$$$(attrs, elem));
-			if (check.type !== "dom") continue;
-			/* rodando alvos */
-			let list = check.value;
-			for (let l = 0; l < list.length; l++) {
-				let target = list[l];
-				/* rodando atributos */
-				for (let attr in attrs) {
-					if (attr === "$" || attr === "$$") continue;
-					let value = attrs[attr];
-					wd_html_set(target, attr, value);
-				}
-			}
-		}
-		return;
-	}
 
 /*----------------------------------------------------------------------------*/
 	function wd_url(name) { /* obtém o valores da URL */
@@ -5164,414 +5193,10 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 	}
 
 
-/*----------------------------------------------------------------------------*/
-	function wd_notify(title, msg) { /* exibe uma notificação, se permitido */
-		if (!("Notification" in window))
-			return __SIGNALCONTROL.open(msg, title);
-		if (Notification.permission === "denied")
-			return null;
-		if (Notification.permission === "granted")
-			new Notification(title, {body: msg});
-		else
-			Notification.requestPermission().then(function(x) {
-				if (x === "granted")
-					new Notification(title, {body: msg});
-			});
-		return true;
-	}
+
 
 /* == BLOCO 2 ================================================================*/
 
-/*----------------------------------------------------------------------------*/
-	function WDform(elem) { /* objeto para analisar campos de formulários */
-		this.e = elem;
-	};
-	Object.defineProperties(WDform.prototype, {
-		vdate: { /* valida e formata campo de data, se vazio "", se inválido null */
-			get: function() {
-				if (this.e.value === "") return "";
-				let check = wd_vtype(this.e.value);
-				return check.type === "date" ? wd_date_iso(check.value) : null;
-			}
-		},
-		vdatetime: { /* valida e formata campo de data e tempo, se vazio "", se inválido null */
-			get: function() {
-				if (this.e.value === "") return "";
-				let date = wd_vtype(this.e.value.substr(0, 10));
-				let time = wd_vtype(this.e.value.substr(11));
-				let div  = this.e.value.substr(10, 1);
-				if (!(/^[T ]$/i).test(div)) return null; /* dateTtime | date time */
-				if (date.type === "date" && time.type === "time")
-						return wd_date_iso(date.value)+"T"+wd_time_iso(time.value)
-				return null
-			}
-		},
-		vmonth: { /* valida e formata campo de mês, se vazio "", se inválido null*/
-			get: function() {
-				if (this.e.value === "") return "";
-				let data = [
-					{re: /^[0-9]{4}\-[0-9]{2}$/, m: {i: 5, e: 2}, y: {i: 0, e: 4}}, /* YYYY-MM */
-					{re: /^[0-9]{2}\/[0-9]{4}$/, m: {i: 0, e: 2}, y: {i: 3, e: 4}}, /* MM/YYYY */
-					{re: /^[0-9]{2}\.[0-9]{4}$/, m: {i: 0, e: 2}, y: {i: 3, e: 4}}  /* MM.YYYY */
-				];
-				for (let i = 0; i < data.length; i++) {
-					if (!(data[i].re.test(this.e.value))) continue;
-					let month = __integer(this.e.value.substr(data[i].m.i, data[i].m.e));
-					let year  = __integer(this.e.value.substr(data[i].y.i, data[i].y.e));
-					if (month >= 1 && month <= 12 && year >= 1)
-						return wd_num_fixed(year, 0, 4)+"-"+wd_num_fixed(month, 0, 2);
-				}
-				return null;
-			}
-		},
-		vweek: { /* valida e formata campo de semana, se vazio "", se inválido null */
-			get: function() {
-				if (this.e.value === "") return "";
-				let data = [
-					{re: /^[0-9]{4}\-W[0-9]{2}?$/i, w: {i: 6, e: 2}, y: {i: 0, e: 4}}, /* YYYY-Www */
-					{re: /^[0-9]{2}\,\ [0-9]{4}$/,  w: {i: 0, e: 2}, y: {i: 4, e: 4}}, /* ww, YYYY */
-				];
-				for (let i = 0; i < data.length; i++) {
-					if (!(data[i].re.test(this.e.value))) continue;
-					let week = __integer(this.e.value.substr(data[i].w.i, data[i].w.e));
-					let year = __integer(this.e.value.substr(data[i].y.i, data[i].y.e));
-					if (week >= 1 && week <= 53 && year >= 1)
-						return wd_num_fixed(year, 0, 4)+"-W"+wd_num_fixed(week, 0, 2);
-				}
-				return null;
-			}
-		},
-		vtime: { /* valida e formata campo de tempo, se vazio "", se inválido null */
-			get: function() {
-				if (this.e.value === "") return "";
-				let check = wd_vtype(this.e.value);
-				return check.type === "time" ? wd_time_iso(check.value) : null;
-			}
-		},
-		vnumber: { /* valida e formata campo numérico, se vazio "", se inválido null */
-		get: function() {
-				if (this.e.value === "") return "";
-				let check = wd_vtype(this.e.value);
-				return check.type === "number" ? this.e.value.trim() : null;
-			}
-		},
-		vfile: { /* retorna valores do campo de arquivos */
-			get: function() {
-				if ("files" in this.e) return this.e.files;
-				let val = this.e.value.trim();
-				return val === "" ? [] : [{name: val}];
-			}
-		},
-		vselect: { /* retorna a lista das opções selecionadas, se vazio não submeter, undefined */
-			get: function() {
-				let value = [];
-				for (let i = 0; i < this.e.length; i++)
-					if (this.e[i].selected)
-						value.push(this.e[i].value.replace(/\,/g, "").trim());
-				return value.length > 0 ? value : [];
-			}
-		},
-		vcheck: { /* retorna o valor se checado, caso contrário não submeter, undefined */
-			get: function() {
-				return this.e.checked ? this.e.value : undefined;
-			}
-		},
-		vemail: { /* retorna uma array de endereços de email, ou null se houver algum inválido*/
-			get: function() {
-				/* se vazio retornar lista vazia */
-				let mail = this.e.value.trim().replace(/(\s+)?\,(\s+)?/g, ",");
-				if (mail === "") return [];
-				/* se navegador contempla email, retornar o que ele decidir */
-				let list = mail.split(",");
-				let attr = this.attr("type", true, false);
-				if (attr.elem === "email") return list;
-				/* caso contrário, verificar lista de email... */
-				let re = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
-				for (let i = 0; i < list.length; i++)
-					if (!re.test(list[i])) return null;
-				return list;
-			}
-		},
-		vurl: { /* retorna um url, ou null se inválido*/
-			get: function() {
-				let url = this.e.value.trim();
-				if (url === "") return "";
-				if (!("URL" in window)) return url;
-				try {
-					let check = new URL(url);
-					return check.toString();
-				} catch(e) {
-					return null;
-				}
-				return null;
-			}
-		},
-		attr: { /* obtem atributos do elemento e faz alterações especiais */
-			value: function(attr, lower, std) {
-				let value = {
-					html: attr in this.e.attributes ? this.e.attributes[attr].value : null,
-					elem: attr in this.e            ? this.e[attr] : null,
-				};
-				for (let i in value) {
-					if (value[i] === null) continue;
-					if (lower === true)
-						value[i] = value[i].toLowerCase();
-					if (std === true) {
-						value[i] = wd_text_clear(value[i]);
-						value[i] = wd_no_spaces(value[i].trim(), "_");
-						if (!(/^[0-9a-zA-Z\_\-]+$/).test(value[i])) value[i] = null;
-					}
-				}
-				return value;
-			}
-		},
-		config: { /* agrupa e retorna as informações dos formulários */
-			/*-------------------------------------------------------------------------
-			| configuração do atributo data (se ausente, não aceita mecanismo)
-			| send:  informa se o elemento pode submeter (true/false)
-			| load:  nome do atributo a receber HTML ou null
-			| mask:  nome do atributo a receber máscara ou null
-			| text:  nome do atributo a receber conteúdo de texto ou null
-			| value: nome da função validadora, null se não possui função
-			\-------------------------------------------------------------------------*/
-			value: function(type) {
-				let T = true;
-				let F = false;
-				let N = null;
-				let t = "textContent";
-				let v = "value";
-				let i = "innerHTML";
-
-				let data = {}
-				data.meter    = {types: N, send: F, load: N, mask: N, text: N, value: N};
-				data.progress = {types: N, send: F, load: N, mask: N, text: N, value: N};
-				data.output   = {types: N, send: F, load: N, mask: N, text: N, value: N};
-				data.option   = {types: N, send: F, load: N, mask: t, text: t, value: N};
-				data.form     = {types: N, send: F, load: i, mask: N, text: N, value: N};
-				data.textarea = {types: N, send: T, load: v, mask: v, text: v, value: N};
-				data.select   = {types: N, send: T, load: i, mask: N, text: N, value: "vselect"};
-
-				data.button         = {types: T};
-				data.button.button  = {send: F, load: N, mask: t, text: t, value: N};
-				data.button.reset   = {send: F, load: N, mask: t, text: t, value: N};
-				data.button.submit  = {send: F, load: N, mask: t, text: t, value: N};
-				data.input          = {types: T};
-				data.input.button   = {send: F, load: N, mask: v, text:v, value: N};
-				data.input.reset    = {send: F, load: N, mask: v, text:v, value: N};
-				data.input.submit   = {send: F, load: N, mask: v, text:v, value: N};
-				data.input.image    = {send: F, load: N, mask: N, text:N, value: N};
-				data.input.color    = {send: T, load: N, mask: N, text:v, value: N};
-				data.input.radio    = {send: T, load: N, mask: N, text:N, value: "vcheck"};
-				data.input.checkbox = {send: T, load: N, mask: N, text:N, value: "vcheck"};
-				data.input.date     = {send: T, load: N, mask: v, text:v, value: "vdate"};
-				data.input.datetime = {send: T, load: N, mask: v, text:v, value: "vdatetime"};
-				data.input.month    = {send: T, load: N, mask: v, text:v, value: "vmonth"};
-				data.input.week     = {send: T, load: N, mask: v, text:v, value: "vweek"};
-				data.input.time     = {send: T, load: N, mask: v, text:v, value: "vtime"};
-				data.input.range    = {send: T, load: N, mask: N, text:v, value: "vnumber"};
-				data.input.number   = {send: T, load: N, mask: v, text:v, value: "vnumber"};
-				data.input.file     = {send: T, load: N, mask: N, text:N, value: "vfile"};
-				data.input.url      = {send: T, load: N, mask: v, text:v, value: "vurl"};
-				data.input.email    = {send: T, load: N, mask: v, text:v, value: "vemail"};
-				data.input.tel      = {send: T, load: N, mask: v, text:v, value: N};
-				data.input.text     = {send: T, load: N, mask: v, text:v, value: N};
-				data.input.search   = {send: T, load: N, mask: v, text:v, value: N};
-				data.input.password = {send: T, load: N, mask: N, text:N, value: N};
-				data.input.hidden   = {send: T, load: N, mask: N, text:v, value: N};
-				data.input["datetime-local"] = {send: T, load: N, mask: v, text:v, value: "vdatetime"};
-
-				if (!(this.tag in data)) return null;
-				let config = data[this.tag];
-				if (type === undefined || type === null || config.types === null) return config;
-				return type in config ? config[type] : null;
-			}
-		},
-		tag: { /* retorna a tag do elemento (minúsculo) */
-			get: function () {return wd_html_tag(this.e);}
-		},
-		form: { /* informar se é um formulário (boolean) */
-			get: function() {return this.config() !== null ? true : false;}
-		},
-		type: { /* retorna o tipo do formulário ou null, se não estiver definido */
-			get: function() {
-				if (!this.form) return null;
-				let config = this.config();
-				if (config.types === null) return this.tag;
-				let attr = this.attr("type", true, false);
-				if (this.config(attr.html) !== null) return attr.html;
-				if (this.config(attr.elem) !== null) return attr.elem;
-				return null;
-			}
-		},
-		name: { /* retorna o valor do formulário name, id ou null (se não for informado nenhum) */
-			get: function() {
-				if (!this.form) return null;
-				let name = this.attr("name", false, true);
-				let id   = this.attr("id", false, true);
-				return name.elem !== null ? name.elem : id.elem;
-			}
-		},
-		value: { /* retorna o valor do atributo value, null (se erro), undefined (não enviar) */
-			get: function() {
-				if (!this.form) return undefined;
-				let config = this.config(this.type);
-				if (config === null) return undefined;
-				return config.value === null ? this.e.value : this[config.value];
-			}
-		},
-		selfMasked: { /* informa se é um campo especial implementado pelo navegador */
-			get: function() {
-				let atypes = [
-					"date", "time", "week", "month", "datetime", "datetime-local",
-					"number", "range", "url", "email"
-				];
-				let type = this.type;
-				if (atypes.indexOf(type) < 0) return false;
-				let attr = this.attr("type", true, false);
-				if (attr.elem === "text") return false;
-				return true;
-			}
-		},
-		getConfig: { /* obtem informações sobre a configuração do elemento */
-			value: function(attr) {
-				return this.form ? this.config(this.type)[attr] : null;
-			}
-		},
-		send: { /* informa se o campo pode ser submetido (true/false) ou null se não contemplado*/
-			get: function() {return this.getConfig("send");}
-		},
-		mask: { /* retorna o atributo que definirá a máscara ou null, se não contemplado */
-			get: function() {return this.getConfig("mask");}
-		},
-		text: { /* retorna o atributo que definirá o campo de texto ou null, se não contemplado */
-			get: function() {return this.getConfig("text");}
-		},
-		load: { /* retorna o atributo que definirá o carregamento HTML ou null, se não contemplado */
-			get: function() {return this.getConfig("load");}
-		},
-		data: { /* retorna um objeto com dados a submeter (GET e POST), vazio se não submeter, null se inválido */
-			get: function() {
-				let data  = {};
-				let value = this.value;
-				let name  = this.name;
-				let type  = this.type;
-				if (value === null)      return null; /* valor inválido, acusar erro */
-				if (this.send !== true)  return data; /* campos que não podem submeter, não considerar inválidos */
-				if (value === undefined) return data; /* campos válidos mas sem valor a submeter */
-				if (name  === null)      return data; /* campos sem name, não considerar inválidos mas não submeter */
-
-				if (type === "select" || type === "email") {
-					data[name] = {
-						GET: encodeURIComponent(value.join(",")),
-						POST: value.join(",")
-					}
-					return data;
-				}
-				if (type === "file") {
-					data[name] = { /* quantidade de arquivos */
-						GET: encodeURIComponent(value.length),
-						POST: value.length
-					};
-					for (let i = 0; i < value.length; i++) {
-						let get  = {};
-						let info = ["name", "type", "size", "lastModified"];
-						for (let j = 0; j < info.length; j++)
-							if (info[j] in value[i]) get[info[j]] = value[i][info[j]];
-						data[name+"_"+i] = { /* arquivos individuais */
-							GET:  encodeURIComponent(wd_json(get)),
-							POST: value[i]
-						};
-					}
-					return data;
-				}
-				data[name] = {
-					GET: encodeURIComponent(value.trim()),
-					POST: value.trim()
-				}
-				return data;
-			}
-		},
-		msgErrorValue: {
-			value: {
-				month: "2010-11 | 11/2010 | 11.2010",
-				time: "3:45 | 22:45:50 | 10:45 am | 1:45pm",
-				week: "2010-W05 | 05, 2010",
-				number: "[0-9]+ | .[0-9]+ | [0-9]+.[0-9]+",
-				date: "2010-11-23 | 23/11/2010 | 11.23.2010",
-				datetime: "2010-11-23T22:45 | 23/11/2010 22:45:50 | 11.23.2010 10:45 pm",
-				"datetime-local": "2010-11-23T22:45 | 23/11/2010 22:45:50 | 11.23.2010 10:45 pm",
-				email: "email@mail.com",
-				url: "http://address.com",
-			}
-		},
-		validity: { /* registro de validade do campo de formulário */
-			set: function(msg) { /* define a mensagem de erro do formulário */
-				/* apagar a mensagem de erro alternativa, se existir */
-				if ("wdErrorMessage" in this.e.dataset)
-					delete this.e.dataset.wdErrorMessage;
-				/* definindo mensagem de erro, se existente, para aguardar envio */
-				if ("setCustomValidity" in this.e)
-					this.e.setCustomValidity(msg === null ?  "" : msg);
-				else if (msg !== null)
-					this.e.dataset.wdErrorMessage = msg;
-				return;
-			},
-			get: function() { /* informar se o campo do formulário é válido (true/false) */
-				/* apagar todas mensagens de erro para checagem */
-				this.validity = null;
-				/* 1º se não for formulário, retornar como válido */
-				if (!this.form) return true;
-				/* 2º checar validade padrão, se existente */
-				if ("checkValidity" in this.e && this.e.checkValidity() === false)
-					return false;
-				/* 3º sem validade padrão, verificar se o campo é inválido */
-				if (this.data === null) {
-					let type = this.type;
-					this.validity = type in this.msgErrorValue ? this.msgErrorValue[type] : "?";
-					return false;
-				}
-				/* 4º verificar se a máscara está errada (mask) */
-				if ("wdErrorMessageMask" in this.e.dataset) {
-					this.validity = this.e.dataset.wdErrorMessageMask;
-					return false;
-				}
-				/* 5º verificar se a checagem personalizada (vform) é inválida */
-				if ("wdErrorMessageVform" in this.e.dataset) {
-					this.validity = this.e.dataset.wdErrorMessageVform;
-					return false;
-				}
-				return true;
-			}
-		},
-		checkValidity: {
-			value: function() {
-				return this.validity;
-			}
-		},
-		submit: { /* avaliar e reportar erro do formulário (se for o caso), returna true/false */
-			value: function() {
-				/* aplicando ferramentas da biblioteca para checagem */
-				data_wdMask(this.e);
-				data_wdVform(this.e);
-				/* checar se o formulário é válido */
-				if (this.validity) return true;
-				/* reportar mensagem e retornar */
-				if ("reportValidity" in this.e) {
-					this.e.reportValidity();
-				} else if ("validationMessage" in this.e) {
-					__SIGNALCONTROL.open(this.e.validationMessage, "");
-					elem.focus();
-				} else {
-					__SIGNALCONTROL.open(this.e.dataset.wdErrorMessage, "");
-					elem.focus();
-				}
-				/* bug firefox */
-				if (this.type === "file") this.e.value = null;
-
-				return false;
-			}
-		}
-	});
 
 
 
@@ -5721,7 +5346,7 @@ FIXME pensar um jeito de bom de fazer sendo e read
 		/**. ``''void'' signal(''string'' title)``: Renderiza uma mensagem.**/
 		notify: { /*renderizar notificação*/
 			value: function(title) {
-				wd_notify(title, this.toString());
+				__SIGNALCONTROL.notify(this.toString(), title);
 				return this.type === "dom" ? this : null;
 			}
 		}
@@ -6366,28 +5991,30 @@ FIXME pensar um jeito de bom de fazer sendo e read
 		device:  {get:   function() {return __device();}},
 		today:   {get:   function() {return WD(new Date());}},
 		now:     {get:   function() {return WD(wd_str_now());}},
-		type:    {value: function(x){return __Type(x);}},
-
-		form: {value: function(){return __FNode.apply(null, Array.prototype.slice.call(arguments));}},
-		array: {value: function(){return __Array.apply(null, Array.prototype.slice.call(arguments));}},
-		datetime: {value: function(){return __DateTime.apply(null, Array.prototype.slice.call(arguments));}},
-		node: {value: function(){return __Node.apply(null, Array.prototype.slice.call(arguments));}},
-		number: {value: function(){return __Number.apply(null, Array.prototype.slice.call(arguments));}},
-		string: {value: function(){return __String.apply(null, Array.prototype.slice.call(arguments));}},
-		arr: {value: function(){return __setHarm.apply(null, Array.prototype.slice.call(arguments));}},
-		data2D: {value: function(){return __Data2D.apply(null, Array.prototype.slice.call(arguments));}},
-		plot: {value: function(){return __Plot2D.apply(null, Array.prototype.slice.call(arguments));}},
-		test: {value: function(){return __setUnique.apply(null, Array.prototype.slice.call(arguments));}},
-		send: {value: function(){return __Request.apply(null, Array.prototype.slice.call(arguments));}},
-		query: {value: function(){return __Query.apply(null, Array.prototype.slice.call(arguments));}},
-		svg: {value: function(){return __SVG.apply(null, Array.prototype.slice.call(arguments));}},
-		matrix: {value: function(){return __Table.apply(null, Array.prototype.slice.call(arguments));}},
-		LANG: {value: __LANG},
-		TYPE: {value: __TYPE},
-		MODAL: {value: __MODALCONTROL},
-		DEVICE: {value: __DEVICECONTROLLER},
-		SIGNAL: {value: __SIGNALCONTROL},
 	});
+
+	if (__UNDERMAINTENANCE) {
+		Object.defineProperties(WD, {
+			type:     {value: function(x){return __Typeapply(null, Array.prototype.slice.call(arguments));}},
+			array:    {value: function(){return __Array.apply(null, Array.prototype.slice.call(arguments));}},
+			datetime: {value: function(){return __DateTime.apply(null, Array.prototype.slice.call(arguments));}},
+			fnode:    {value: function(){return __FNode.apply(null, Array.prototype.slice.call(arguments));}},
+			node:     {value: function(){return __Node.apply(null, Array.prototype.slice.call(arguments));}},
+			number:   {value: function(){return __Number.apply(null, Array.prototype.slice.call(arguments));}},
+			string:   {value: function(){return __String.apply(null, Array.prototype.slice.call(arguments));}},
+			data2D:   {value: function(){return __Data2D.apply(null, Array.prototype.slice.call(arguments));}},
+			plot:     {value: function(){return __Plot2D.apply(null, Array.prototype.slice.call(arguments));}},
+			request:  {value: function(){return __Request.apply(null, Array.prototype.slice.call(arguments));}},
+			query:    {value: function(){return __Query.apply(null, Array.prototype.slice.call(arguments));}},
+			svg:      {value: function(){return __SVG.apply(null, Array.prototype.slice.call(arguments));}},
+			matrix:   {value: function(){return __Table.apply(null, Array.prototype.slice.call(arguments));}},
+			LANG:     {value: __LANG},
+			TYPE:     {value: __TYPE},
+			MODAL:    {value: __MODALCONTROL},
+			DEVICE:   {value: __DEVICECONTROLLER},
+			SIGNAL:   {value: __SIGNALCONTROL},
+		});
+	}
 
 /* == BLOCO 4 ================================================================*/
 
@@ -6949,18 +6576,9 @@ FIXME pensar um jeito de bom de fazer sendo e read
 		__device_controller = __device();
 
 		/* construindo CSS da biblioteca */
-		let css = [];
-		for(let i = 0; i < __JSCSS.length; i++) {
-			let selector = __JSCSS[i].s;
-			let dataset  = __JSCSS[i].d;
-			let value = selector+" {\n\t"+dataset.join("\n\t")+"\n}\n";
-			if (!(/^\@keyframes/).test(value))
-				value = value.replace(/\;/g, " !important;");
-			css.push(value);
-		}
-		let style_block = document.createElement("STYLE");
-		style_block.textContent = css.join("\n");
-		document.head.appendChild(style_block);
+		let style = document.createElement("STYLE");
+		style.textContent = __JSCSS.join("");
+		document.head.appendChild(style);
 
 		/* aplicando carregamentos */
 		loadingProcedures();
