@@ -42,72 +42,55 @@ const wd = (function() {
 	Se verdadeiro, libera métodos de teste em WD para efetuar testes.**/
 	const __UNDERMAINTENANCE = true;
 /*----------------------------------------------------------------------------*/
-
-	let __device_controller = null;//FIXME substituir isso por __DEVICECONTROLLER
-
-	function __device() { //FIXME substituir isso por __DEVICECONTROLLER
-		if (window.innerWidth >= 768) return "desktop";
-		if (window.innerWidth >= 600) return "tablet";
-		return "phone";
-	};
-
-/*----------------------------------------------------------------------------*/
 	/**###### ``**const** ''object'' __DEVICECONTROLLER``
-	Controla as alterações da tela atribuida a um tipo de dispositivo e executa ações quando houver mudança neste dispositivo idealizado.
-	. ``''boolean'' _start``: Informar se o controlador já foi iniciado.
-	. ``''function'' _change``: Registra a função disparadora de alteração do tipo de dispositivo.
-	. ``''string'' _device``: Registra o tipo do dispositivo a partir do tamanho da tela em vigor.
-	. ``''integer'' screen``: Retorna o tamanho da tela.
-	. ``''string'' device``: Retorna o identificador da tela:
-			|Identificador|Tamanho da Tela|
-			|desktop|&ge; 768px|
-			|tablet|&ge; 600px|
-			|phone|&lt; 600px|
-	**/
+	Controla as alterações da tela atribuida a um tipo de dispositivo e executa ações quando houver mudança neste dispositivo idealizado.**/
 	console.log(window.innerWidth);
 	const __DEVICECONTROLLER = {
+		/**. ``''boolean'' _start``: Informar se o controlador já foi iniciado.**/
 		_start: false,
+		/**. ``''function'' _change``: Registra a função disparadora de alteração do tipo de dispositivo.**/
 		_change: null,
+		/**. ``''string'' _device``: Registra o tipo de do dispositivo a partir do tamanho da tela em vigor.**/
 		_device: null,
-		get screen() {return window.innerWidth;},
+		/**. ``''integer'' width``: Retorna o tamanho da tela.**/
+		get width() {return window.innerWidth;},
+		/**. ``''string'' device``: Retorna o tipo de dispositivo - desktop (&ge; 768px) tablet (&ge; 600px) ou phone (&lt; 600px)**/
 		get device() {
-			let screen = this.screen;
-			if (screen >= 768) return "desktop";
-			if (screen >= 600) return "tablet";
+			let width = this.width;
+			if (width >= 768) return "desktop";
+			if (width >= 600) return "tablet";
 			return "phone";
 		},
 		/**. ``''boolean'' mobile``: Informa se dispositivo não é do tamanho desktop.**/
 		get mobile() {return this.device !== "desktop";},
-		/**. ``''void'' onchange``: Define a função disparadora de alteração de dispositivo (tamanho da tela). Quando definido, o evento ''resize'' será provocado e uma chamada será executada.**/
+		/**. ``''void'' onchange``: Define a função disparadora do evento de mudança de tipo de dispositivo.**/
 		set onchange(x) {
-			if (typeof x === "function" || x === null) {
-				this._change = x;
-				this._device = null;
-				this._trigger();
-			}
+			this._change = typeof x === "function" ? x : null;
+			this._device = null;
+			this.trigger(null);
+			/*-- o evento resize será definido quando a função disparadora for informada pela primeira vez --*/
 			if (!this._start) {
 				let object = this;
-				window.addEventListener("resize", function(x) {return object._trigger();});
+				window.addEventListener("resize", function(ev) {return object.trigger(ev);});
 				this._start = true;
 			}
 		},
-		/**. ``''void'' _trigger()``: Executa a função disparadora quando provocado (alteração de tela) enviando um objeto como argumento com as seguintes características:
-		.. ``''object'' target``: O objeto ``__DEVICECONTROLLER``.
-		.. ``''integer'' width``: O tamanho da tela em px.
-		.. ``''string'' device``: O nome do dispositivo correspondente à tela.
-		.. ``''boolean'' mobile``: Informa se o dispositivo possui tela inferior ao desktop.**/
-		_trigger: function() {
+		/**. ``''void'' trigger()``: Chama a função disparadora injetando como argumento os atributos do objeto e do evento resize.**/
+		trigger: function(ev) {
+			/*-- checar alteração de dispositivo --*/
 			let device = this.device;
 			if (this._device === device) return;
 			this._device = device;
-			if (this._change === null) return;
-			this._change({
-				target: this,
-				width: this.screen,
-				device: device,
-				mobile: this.mobile
-			});
-			return;
+			/*-- chamar função disparadora --*/
+			if (typeof this._change === "function")
+				this._change({
+					event:   ev,
+					target:  this,
+					width:   this.width,
+					device:  device,
+					mobile:  this.mobile,
+					trigger: this.trigger,
+				});
 		},
 	};
 /*----------------------------------------------------------------------------*/
@@ -205,102 +188,104 @@ const wd = (function() {
 		main: (function() {
 			let css = {
 				position: "fixed", top: "0", right: "0.5em", left: "0.5em",
-				width: "auto", margin: "auto", padding: "0", zIndex: "999999"
+				width: "auto", margin: "auto", padding: "0", zIndex: "999999",
+				overflow: "auto", maxHeight: "100%"
 			};
 			let main = document.createElement("DIV");
 			for (let i in css) main.style[i] = css[i];
 			return main;
 		})(),
-		/**. ``''node'' box``: Gabarito de caixa de mensagem.**/
-		box: (function() {
-			let css = {
-				box: {
-					animationName: "js-wd-shrink-out, js-wd-shrink-in",
-					animationDuration: "0.5s, 0.5s", animationDelay: "0s, 8.5s",
-					margin: "0.5em auto 0 auto", position: "relative", borderRadius: "0.2em",
-					border: "1px solid rgba(0,0,0,0.6)", boxShadow: "1px 1px 6px rgba(0,0,0,0.6)",
-					backgroundColor: "rgb(245,245,245)", color: "rgb(20,20,20)"
-				},
-				header: {
-					borderRadius: "0.2em 0.2em 0 0", position: "relative", padding: "0"
+		/**. ``''node'' model``: Gabarito de caixa de mensagem.**/
+		model: (function() {
+			let html = {
+				message: {
+					elem: document.createElement("DIV"),
+					className: "js-wd-signal-message",
+					style: {
+						//animationName: "js-wd-shrink-out, js-wd-shrink-in",
+						//animationDuration: "0.5s, 0.5s", animationDelay: "0s, 8.5s",
+						position: "relative", margin: "0.5em auto 0 auto", padding: "0",
+						backgroundColor: "rgb(50,50,50)", color: "rgb(230,230,230)",
+						borderRadius: "0.5em", border: "1px solid rgba(0,0,0,0.6)",
+						boxShadow: "1px 1px 6px rgba(0,0,0,0.6)",
+					},
 				},
 				title: {
-					position: "relative", margin: "0 1.5em 0 0", padding: "0.5em" //FIXME
+					elem: document.createElement("HEADER"),
+					className: "js-wd-signal-title",
+					style: {
+						borderRadius: "0.5em 0.5em 0 0", padding: "0", margin: "0.5em",
+						fontWeight: "bold"
+					}
+				},
+				body: {
+					elem: document.createElement("P"),
+					className: "js-wd-signal-body",
+					style: {
+						margin: "0.5em", padding: "0", borderRadius: "0 0 0.5em 0.5em"
+					}
 				},
 				close: {
-					position: "absolute", top: "2px", right: "2px", lineHeight: "1", cursor: "pointer", margin: "0"
-				},
-				message: {
-					margin: "0.5em 1.5em 0.5em 0.5em",
+					elem: document.createElement("SPAN"),
+					className: "js-wd-signal-close",
+					style: {
+						position: "absolute", top: "0.25em", right: "0.25em",
+						lineHeight: "1", cursor: "pointer", margin: "0", zIndex: "5"
+					}
 				}
 			};
-			let className = {
-				box:     "js-wd-msg-box",
-				header:  "js-wd-msg-header",
-				message: "js-wd-msg-message",
-				close:   "js-wd-msg-close",
-				title:   "js-wd-msg-title"
-			};
-			let html = {
-				box:     document.createElement("ARTICLE"),
-				header:  document.createElement("HEADER"),
-				message: document.createElement("P"),
-				close:   document.createElement("SPAN"),
-				title:   document.createElement("H5")
-			};
-			/* definindo estilos */
-			for (let i in css)
-				for (let j in css[i])
-					html[i].style[j] = css[i][j];
-			/* definindo identificadores */
-			for (let i in className)
-				html[i].className = className[i];
+			/* definindo elementos */
+			for (let i in html) {
+				html[i].elem.className = html[i].className;
+				for (let j in html[i].style)
+					html[i].elem.style[j] = html[i].style[j];
+			}
 			/* montando a caixa de mensagem */
-			html.box.appendChild(html.header);
-			html.box.appendChild(html.message);
-			html.header.appendChild(html.close);
-			html.header.appendChild(html.title);
-			/* definindo o botão fechar */
-			html.close.textContent = "\u00D7";
-			return html.box;
+			html.message.elem.appendChild(html.title.elem);
+			html.message.elem.appendChild(html.body.elem);
+			html.message.elem.appendChild(html.close.elem);
+			html.close.elem.textContent = "\u00D7";
+			return html.message.elem;
 		})(),
-		/**. ``''void'' open(''string'' message, ''string'' title=" ")``: Demanda a abertura de uma nova caixa de mensagem. O argumento ``message`` define o texto da mensagem e o argumento ``title`` define seu título.**/
-		open: function(message, title) {
-			if (title === undefined || title === null|| arguments.length < 2) title = "";
+		/**. ``''void'' open(''string'' body, ''string'' title=" ")``: Demanda a abertura de uma nova caixa de mensagem. O argumento ``message`` define o texto da mensagem e o argumento ``title`` define seu título.**/
+		open: function(body, title) {
+			if (title === undefined || title === null) title = "";
+			if (body  === undefined || body  === null) body  = "";
 			/* clonando uma nova caixa */
-			let main     = this.main;
-			let hbox     = this.box.cloneNode(true);
-			let htitle   = hbox.querySelector(".js-wd-msg-title");
-			let hclose   = hbox.querySelector(".js-wd-msg-close");
-			let hmessage = hbox.querySelector(".js-wd-msg-message");
-			htitle.textContent   = title;
-			hmessage.textContent = message;
-			hclose.onclick       = function(elem) {
-				let box = elem.target.parentElement.parentElement;
-				try {main.removeChild(box);} catch(e) {}
+			let width = __DEVICECONTROLLER.device === "desktop" ? "40%" : "auto";
+			let main  = this.main;
+			let model = this.model.cloneNode(true);
+			/* definindo valores */
+			main.style.width = width;
+			model.querySelector(".js-wd-signal-title").textContent = title;
+			model.querySelector(".js-wd-signal-body").textContent  = body;
+			model.querySelector(".js-wd-signal-close").onclick     = function(ev) {
+				try {main.removeChild(model);} catch(e) {}
 				if (main.parentElement !== null && main.children.length === 0)
 					document.body.removeChild(main);
 				return;
 			}
-			window.setTimeout(function() {hclose.click();}, this.time);
-			let width = __DEVICECONTROLLER.device === "desktop" ? "40%" : "auto";
-			this.main.style.width = width;
-
-			if (this.main.children.length === 0)
-				document.body.appendChild(this.main);
-			this.main.insertAdjacentElement("afterbegin", hbox);
+			/* rendenrizando */
+			if (main.children.length === 0)
+				document.body.appendChild(main);
+			main.insertAdjacentElement("afterbegin", model);
+			/* definindo fechamento automático */
+			window.setTimeout(function() {
+				model.querySelector(".js-wd-signal-close").click();
+			}, this.time);
 			return;
 		},
-		/**. ``''void'' notify(''string'' message, ''string'' title=" ")``: Demanda a abertura de uma [notificação](https://developer.mozilla.org/en-US/docs/Web/API/Notification/Notification). O argumento ``message`` define o texto da mensagem e o argumento ``title`` define seu título.**/
-		notify: function(message, title) {
-			if (title === undefined || title === null|| arguments.length < 2) title = "";
+		/**. ``''void'' notify(''string'' body, ''string'' title=" ")``: Demanda a abertura de uma [notificação](https://developer.mozilla.org/en-US/docs/Web/API/Notification/Notification). O argumento ``message`` define o texto da mensagem e o argumento ``title`` define seu título.**/
+		notify: function(body, title) {
+			if (title === undefined || title === null)  title = "";
+			if (body  === undefined  || body  === null) body  = "";
 			let options = {
-				body: message,
+				body: body,
 				lang: __LANG.main,
 				vibrate: [200, 100, 200],
 			};
 			if (!("Notification" in window))
-				return __SIGNALCONTROL.open(message, title);
+				return this.open(body, title);
 			if (Notification.permission === "denied")
 				return null;
 			if (Notification.permission === "granted")
@@ -435,7 +420,6 @@ const wd = (function() {
 		"@keyframes js-wd-fade-out   {from {opacity: 1 !important;} to {opacity: 0 !important;}}",
 		"@keyframes js-wd-shrink-out {from {transform: scale(0) !important;} to {transform: scale(1) !important;}}",
 		"@keyframes js-wd-shrink-in  {from {transform: scale(1) !important;} to {transform: scale(0) !important;}}",
-		"div.js-wd-progress-bar {height: 1em; background-color: #1e90ff;}",
 		".js-wd-no-display {display: none !important;}",
 		"[data-wd-nav], [data-wd-send], [data-wd-tsort], [data-wd-data], [data-wd-full], [data-wd-jump] {cursor: pointer;}",
 		"[data-wd-set], [data-wd-edit], [data-wd-shared], [data-wd-css], [data-wd-table] {cursor: pointer;}",
@@ -452,7 +436,7 @@ const wd = (function() {
 	});
 	//FIXME apagar isso aqui em baixo
 	let a = document.createElement("STYLE");
-	a.textContent = __JSCSS.join("");
+	a.innerHTML = __JSCSS.join("");
 	document.head.appendChild(a);
 
 /*----------------------------------------------------------------------------*/
@@ -2312,8 +2296,8 @@ const wd = (function() {
 				return this._value;
 			}
 		},
-		/**. ``''array'' delete(void ...)``: Remove itens (argumentos) da lista e a retorna.**/
-		delete: {
+		/**. ``''array'' remove(void ...)``: Remove itens (argumentos) da lista e a retorna.**/
+		remove: {
 			value: function() {
 				let list = this.hide.apply(this, arguments);
 				while(this._value.length !== 0) this._value.pop();
@@ -2328,7 +2312,7 @@ const wd = (function() {
 				let tgl  = Array.prototype.slice.call(arguments);
 				let self = this;
 				tgl.forEach(function(v,i,a) {
-					if (self._value.indexOf(v) < 0) self.add(v); else self.delete(v);
+					if (self._value.indexOf(v) < 0) self.add(v); else self.remove(v);
 				});
 				return this._value;
 			}
@@ -2970,7 +2954,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				}
 			}
 		},
-		/**. ``''array'' _class``: Define e retorna o valor do atributo ``class`` por meio de um array. Valor nulo excluí o atributo, valor textual define o atributo HTML e valor em objeto define ações ''replace'', ''toggle'', ''add'' e  ''delete''.**/
+		/**. ``''array'' _class``: Define e retorna o valor do atributo ``class`` por meio de um array. Valor nulo excluí o atributo, valor textual define o atributo HTML e valor em objeto define ações ''replace'', ''toggle'', ''add'' e  ''remove''.**/
 		_class: {
 			get: function() {
 				if (this.node === null) return;
@@ -2994,12 +2978,11 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					if ("replace" in x) css.replace.apply(css, x.replace.split(" "));
 					if ("toggle" in x)  css.toggle.apply(css, x.toggle.split(" "));
 					if ("add" in x)     css.put.apply(css, x.add.split(" "));
-					if ("delete" in x)  css.delete.apply(css, x.delete.split(" "));
+					if ("remove" in x)  css.remove.apply(css, x.remove.split(" "));
 					this._node.setAttribute("class", css.order.join(" "));
 				}
 			}
 		},
-
 		/**. ``''void''  _handler``: Define ou remove disparadores ao elemento HTML. O valor deve ser um objeto cujos atributos são os eventos e os valores métodos disparadores ou uma lista deles. Para remover o disparador, o nome do atributo deve conter o caracteres ! no início.**/
 		_handler: {
 			set: function(x) {
@@ -3167,82 +3150,97 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return this._class.indexOf("js-wd-no-display") < 0;
 			},
 			set: function(x) {
-				this._class = x === false ? {add: "js-wd-no-display"} : {delete: "js-wd-no-display"}
+				this._class = x === false ? {add: "js-wd-no-display"} : {remove: "js-wd-no-display"}
 			}
 		},
-		/**. ``''void'' nav(''number'' init, ''number'' last, ''boolean'' reverse)``: Define o intervalo de nós filhos a ser exibido. Os argumentos ``init``, ``last`` e ``reverse`` definem, respectivamente, o índice de início, de fim e se a exibição deve ser inverter.**/
-		nav: {//FIXME parei aqui TODO: fazer como substring ou substr?
-			value: function(init, last, reverse) {
-				if (this.node === null || this.node.children.length === 0) return;
+		/**. ``''void'' only(''boolean'' bros=false)``: Exibe apenas o nós entre seus irmão. Se ``bros`` for verdadeiro, inverterá o resultado.**/
+		only: {
+			value: function(bros) {
+				let nodes = __Type(this.node.parentElement.children).value;
+				nodes.forEach (function(v,i,a){
+					let node = __Node(v);
+					node.show = bros === true;
+				});
+				this.show = bros !== true;
+			}
+		},
+
+		//FIXME TODO substituir substr(start, length) por substring(start, end) ver https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Global_Objects/String/substring#a_diferen%C3%A7a_entre_substring_e_substr
+
+
+		/**. ``''void'' child(''number'' init, ''number'' last)``: Define o intervalo de nós filhos a ser exibido entre o índice inicial (``init``) e final (``last``).**/
+		child: {
+			value: function (init, last) {
+				if (this.node === null) return;
 				let child = __Type(this.node.children).value;
 				let data1 = __Type(init);
 				let data2 = __Type(last);
-				let order = true;
 				init = data1.number ? data1.value : -Infinity;
 				last = data2.number ? data2.value : +Infinity;
-				child.forEach(function(v,i,a){
-					let node  = __Node(v);
-					node.show = i >= init && i <= last ? (reverse !== true) : (reverse === true);
+				child.forEach(function(v,i,a) {
+					let node = __Node(v);
+					node.show = i >= init && i <= last;
 				});
 			}
 		},
+
+
+		groups: {
+			value: function(child) {
+				if (this.node === null) return;
+				let target = child === true ? this.node : this.node.parentElement;
+				let nodes  = __Type(target.children).value;
+				let groups = [];
+				let data   = {init: null, end: null};
+				nodes.forEach(function(v,i,a) {
+					let show = v.className.indexOf("js-wd-no-display") < 0;
+					if (show) {
+						if (data.init === null) data.init = i;
+						data.end  = i;
+						if (i === (a.length - 1))
+							groups.push({init: data.init, end: data.end});
+					} else if (data.init !== null) {
+						groups.push({init: data.init, end: data.end});
+						data.init  = null;
+						data.end   = null;
+					}
+				});
+				return groups;
+			}
+		},
+
+
+
+
+
+
+
+
+
+
+
+
 		/**. ``''void'' walk(integer n=1)``: Exibe um determinado nó filho avançando ou retrocedendo entre os nós irmãos.
 		. O argumento ``n`` indica o intervalo a avançar (positivo) ou a retroceder (negativo).**/
 		walk: {
 			value: function(n) {
-				let data  = __Type(n);
-				let child = __Type(this.node.children).value;
-				let width = child.length;
-				let init  = -1;
-				let last  = -1;
-				let size  =  0;
-				if (width === 0 || data.zero) return;
-				n = data.finite ? Math.trunc(data.value) : (data.negative ? -1 : +1);
-				/* capturando o primeiro e o último nó visível */
-				child.forEach(function(v,i,a) {
-					let show = v.className.indexOf("js-wd-no-display") < 0;
-					if (show) {
-						size++;
-						if (init < 0) init = i;
-						last = i;
-					}
-				});
-				/* todos os nós visíveis ou invisíveis */
-				if (size === 0 || size === width) {
-					init = 0;
-					last = width - 1;
-				}
-				let index = __Array(child).index((n < 0 ? init : last) + n);
-				return this.nav(index, index);
-			}
-		},
-		/**. ``''integer'' index``: Retorna o índice do elemento com relação a seus irmãos.**/
-		index: {
-			get: function() {
-				let parent = this.node.parentElement;
-				if (parent === null) return 0;
-				let child = __Type(parent.children).value;
-				return child.indexOf(this.node);
-			}
-		},
-		/**. ``''void'' alone(boolean x=true)``: exibe o elemento e omite seus elementos irmãos.
-		. O argumento ``x``, se falso, inverterá a exibição padrão, escondendo apenas o nó.**/
-		alone: {
-			value: function(x) {
-				let index = this.index;
-				let node  = __Node(this.node.parentElement);
-				if (x === false) {
-					node.nav();
-					this.show = false;
-					return;
-				}
-				return node.nav(index, index);
+				let data = __Type(n);
+				if (this.node === null || !data.finite) return;
+				let childs = this.node.children.length;
+				let delta  = Math.trunc(data.value);
+				let groups = this.groups(true);
+				let active = groups.length === 0 ? 0 : groups[0].init;
+				if (delta >= 0)
+					active = groups.length === 0 ? -1 : groups[groups.length - 1].end;
+				let next   = (active + delta)%childs;
+				if (next < 0) next = childs + next;
+				this.child(next, next);
 			}
 		},
 		/**. ``''void'' page(number index=0, integer total, boolean width=false)``: Divide os nós filhos em grupos exibindo apenas aqueles do grupo definido.
 		. O argumento ``index`` define o índice de cada grupo limitados ao primeiro e último grupo. Se for igual a &minus;1, retornará o último grupo. Os valores ``+Infinity`` e ``-Infinity`` avançam ou retrocedem para o grupo seguinte ou anterior, respectivamente.
 		. O argumento ``total`` é um inteiro positivo que define a quantidade de nós em cada grupo ou a quantidade de grupos (padrão).
-		. O argumento ``width`` define o valor de ``total`` como quantidade de grupos, se falso, ou como quantidade de nós por grupo, se verdadeiro.**/
+		. O argumento ``width`` define o valor de ``total`` como quantidade de grupos, se falso, ou como quantidade de nós por grupo, se verdadeiro.   FIXME troca argumentos por 1/5 (página 1 de 5) ou 1:5 (página 1 de tamanho 5) ++/5 -1/5 --/5**/
 		page: {
 			value: function (index, total, width) {
 				let data1  = __Type(index);
@@ -5799,9 +5797,9 @@ FIXME pensar um jeito de bom de fazer sendo e read
 		concat: {
 			value: function() {return this._main.concat.apply(this._main, arguments);}
 		},
-		/**. ``''array'' delete(''any'' ...)``: Remove da lista todas as ocorrências dos itens especificados e a retorna.**/
-		delete: {
-			value: function() {return this._main.delete.apply(this._main, arguments);}
+		/**. ``''array'' remove(''any'' ...)``: Remove da lista todas as ocorrências dos itens especificados e a retorna.**/
+		remove: {
+			value: function() {return this._main.remove.apply(this._main, arguments);}
 		},
 		/**. ``''array'' toggle(''any'' ...)``: Alterna a existência dos itens especificados na lista e a retorna.**/
 		toggle: {
@@ -5988,7 +5986,7 @@ FIXME pensar um jeito de bom de fazer sendo e read
 		$$:      {value: function(css, root) {return WD(__$$(css, root));}},
 		url:     {value: function(name) {return wd_url(name);}},
 		copy:    {value: function(text) {return wd_copy(text);}},
-		device:  {get:   function() {return __device();}},
+		device:  {get:   function() {return __DEVICECONTROLLER.device;}},
 		today:   {get:   function() {return WD(new Date());}},
 		now:     {get:   function() {return WD(wd_str_now());}},
 	});
@@ -6360,7 +6358,7 @@ FIXME pensar um jeito de bom de fazer sendo e read
 		let mobile  = "mobile"  in data ? data.mobile  : "";
 		let tablet  = "tablet"  in data ? data.tablet  : "";
 		let phone   = "phone"   in data ? data.phone   : "";
-		let device  = __device();
+		let device  = __DEVICECONTROLLER.device;
 		if (device === "desktop")
 			return WD(e).css({del: phone}).css({del: tablet}).css({del: mobile}).css({add: desktop});
 		if (device === "tablet")
@@ -6572,8 +6570,10 @@ FIXME pensar um jeito de bom de fazer sendo e read
 /* -- DISPARADORES -- */
 /*============================================================================*/
 	function loadProcedures(ev) {
-		/* capturando o dispositivo */
-		__device_controller = __device();
+		/* vinculando disparador de mudança de dispositivo */
+		__DEVICECONTROLLER.onchange = function(x) {
+			WD.$$("[data-wd-device]").forEach(data_wdDevice);
+		}
 
 		/* construindo CSS da biblioteca */
 		let style = document.createElement("STYLE");
@@ -6647,12 +6647,7 @@ FIXME pensar um jeito de bom de fazer sendo e read
 
 /*----------------------------------------------------------------------------*/
 	function scalingProcedures(ev) { /* procedimentos para definir dispositivo e aplicar estilos */
-		let device = __device();
-		if (device !== __device_controller) {
-			__device_controller = device;
-			WD.$$("[data-wd-device]").forEach(data_wdDevice);
-		}
-		hashProcedures();
+		hashProcedures();//FIXME para que serve isso na ordem do script?
 		return;
 	};
 
