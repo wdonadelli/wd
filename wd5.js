@@ -3183,8 +3183,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				});
 			}
 		},
-
-
+		/**. ``''array'' groups(''boolean'' child)``: Retorna uma lista de objetos contendo os intervalos (atributos ``init`` e ``end``) dos elementos visíveis. Se o argumento ``child`` for verdadeiro, a análise será dentre os filhos, caso contrário, entre elemento e seus irmãos.**/
 		groups: {
 			value: function(child) {
 				if (this.node === null) return;
@@ -3208,26 +3207,13 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return groups;
 			}
 		},
-
-
-
-
-
-
-
-
-
-
-
-
-		/**. ``''void'' walk(integer n=1)``: Exibe um determinado nó filho avançando ou retrocedendo entre os nós irmãos.
-		. O argumento ``n`` indica o intervalo a avançar (positivo) ou a retroceder (negativo).**/
+		/**. ``''void'' walk(integer n=1)``: Exibe um determinado nó filho avançando ou retrocedendo entre os nós irmãos. O argumento ``n`` indica o intervalo a avançar (positivo) ou a retroceder (negativo).**/
 		walk: {
 			value: function(n) {
-				let data = __Type(n);
-				if (this.node === null || !data.finite) return;
+				if (this.node === null) return;
+				let data   = __Type(n);
 				let childs = this.node.children.length;
-				let delta  = Math.trunc(data.value);
+				let delta  = data.finite ? Math.trunc(data.value) : 1;
 				let groups = this.groups(true);
 				let active = groups.length === 0 ? 0 : groups[0].init;
 				if (delta >= 0)
@@ -3237,6 +3223,40 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				this.child(next, next);
 			}
 		},
+		pages: {
+			value: function(index, width) {
+				if (this.node === null || this.node.children === 0) return;
+				let data1 = __Type(index);
+				let data2 = __Type(width);
+				let child = this.node.children;
+				let paper = [];
+				let group = this.groups;
+				/* definindo o tamanho da página */
+				if      (!data2.finite)        width = child.length;
+				else if (data2 > child.length) width = child.length;
+				else if (data2 <= 0)           width = 1;
+				else if	(data2 < 1)            width = data2.value * child.length;
+				else                           width = data2.value;
+				width = width < 1 ? 1 : Math.trunc(width);
+				/* definindo os intevalos de página */
+				let pages = Math.trunc(child.length / width) + (child.length%width === 0 ? 0 : 1);
+
+
+
+
+
+
+
+
+
+
+			}
+		},
+
+
+
+
+
 		/**. ``''void'' page(number index=0, integer total, boolean width=false)``: Divide os nós filhos em grupos exibindo apenas aqueles do grupo definido.
 		. O argumento ``index`` define o índice de cada grupo limitados ao primeiro e último grupo. Se for igual a &minus;1, retornará o último grupo. Os valores ``+Infinity`` e ``-Infinity`` avançam ou retrocedem para o grupo seguinte ou anterior, respectivamente.
 		. O argumento ``total`` é um inteiro positivo que define a quantidade de nós em cada grupo ou a quantidade de grupos (padrão).
