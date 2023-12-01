@@ -429,7 +429,13 @@ const wd = (function() {
 		"[data-wd-repeat] > *, [data-wd-load] > * {visibility: hidden;}",
 		"[data-wd-slide] > * {animation: js-wd-fade-in 1s, js-wd-shrink-out 0.5s;}",
 		"nav > *.js-wd-nav-inactive {opacity: 0.5;}",
-		".js-wd-plot {height: 100%; width: 100%; position: absolute; top: 0; left: 0; bottom: 0; right: 0;}"
+		".js-wd-plot {height: 100%; width: 100%; position: absolute; top: 0; left: 0; bottom: 0; right: 0;}",
+		"/* testes */",
+		"*::backdrop {background-color: white;}",
+		"*:where(Library) {background-color: yellow;}"
+//TODO interessante https://developer.mozilla.org/en-US/docs/Web/CSS/::file-selector-button
+
+
 	];
 	__JSCSS.forEach(function(v,i,a) {
 		a[i] = v.replace(/\s+/, " ").replace(/^([^{]+)\{(.+)\}$/, "$1 {\n\t$2\n}\n");
@@ -549,8 +555,10 @@ const wd = (function() {
 		/*-- Não se encaixa em nada conhecido --*/
 		this._value    = input;
 		this._type     = "unknow";
-		this._toString = "toString" in input ? input.toString() : String(input);
-		this._valueOf  = "valueOf"  in input ? input.valueOf()  : input;
+		this._toString = String(input);
+		this._valueOf  = Number(input);
+		//FIXME construir um tipo BigInt e NaN?
+
 	}
 	Object.defineProperties(__Type, {
 		/**. ``''string'' __Type.zeros(''integer'' value, ''integer'' lenght)``: Fixa o tamanho do inteiro ``value`` na quantidade definida em ``length`` completando com zeros à esquerda.**/
@@ -3168,8 +3176,8 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		//FIXME TODO substituir substr(start, length) por substring(start, end) ver https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Global_Objects/String/substring#a_diferen%C3%A7a_entre_substring_e_substr
 
 
-		/**. ``''void'' child(''number'' init, ''number'' last)``: Define o intervalo de nós filhos a ser exibido entre o índice inicial (``init``) e final (``last``).**/
-		child: {
+		/**. ``''void'' childs(''number'' init, ''number'' last)``: Define o intervalo de nós filhos a ser exibido entre o índice inicial (``init``) e final (``last``).**/
+		childs: {
 			value: function (init, last) {
 				if (this.node === null) return;
 				let child = __Type(this.node.children).value;
@@ -3183,25 +3191,25 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				});
 			}
 		},
-		/**. ``''array'' groups(''boolean'' child)``: Retorna uma lista de objetos contendo os intervalos (atributos ``init`` e ``end``) dos elementos visíveis. Se o argumento ``child`` for verdadeiro, a análise será dentre os filhos, caso contrário, entre elemento e seus irmãos.**/
+		/**. ``''array'' groups(''boolean'' child)``: Retorna uma lista de objetos contendo os intervalos (atributos ``init`` e ``last``) dos elementos visíveis. Se o argumento ``child`` for verdadeiro, a análise será dentre os filhos, caso contrário, entre elemento e seus irmãos.**/
 		groups: {
 			value: function(child) {
 				if (this.node === null) return;
 				let target = child === true ? this.node : this.node.parentElement;
 				let nodes  = __Type(target.children).value;
 				let groups = [];
-				let data   = {init: null, end: null};
+				let data   = {init: null, last: null};
 				nodes.forEach(function(v,i,a) {
 					let show = v.className.indexOf("js-wd-no-display") < 0;
 					if (show) {
 						if (data.init === null) data.init = i;
-						data.end  = i;
+						data.last  = i;
 						if (i === (a.length - 1))
-							groups.push({init: data.init, end: data.end});
+							groups.push({init: data.init, last: data.last});
 					} else if (data.init !== null) {
-						groups.push({init: data.init, end: data.end});
+						groups.push({init: data.init, last: data.last});
 						data.init  = null;
-						data.end   = null;
+						data.last   = null;
 					}
 				});
 				return groups;
@@ -3217,101 +3225,62 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				let groups = this.groups(true);
 				let active = groups.length === 0 ? 0 : groups[0].init;
 				if (delta >= 0)
-					active = groups.length === 0 ? -1 : groups[groups.length - 1].end;
+					active = groups.length === 0 ? -1 : groups[groups.length - 1].last;
 				let next   = (active + delta)%childs;
 				if (next < 0) next = childs + next;
-				this.child(next, next);
+				this.childs(next, next);
 			}
 		},
+		/**. ``''void'' pages(number index, number width)``: Agrupa os nós filhos em grupos de certo comprimento.
+		. O argumento ``index`` define o índice do grupo a ser exibido limitado ao primeiro (0) e ao último (-1). Se valores infinitos forem informados, os grupos avançarão (+) ou retrocederão (-) uma unidade.
+		. O argumento ``width`` é um número finito positivo que define o comprimento dos grupos, pode ser um número não inteiro.**/
 		pages: {
 			value: function(index, width) {
-				if (this.node === null || this.node.children === 0) return;
-				let data1 = __Type(index);
-				let data2 = __Type(width);
-				let child = this.node.children;
-				let paper = [];
-				let group = this.groups;
+				let length = this.node === null ? 0 : this.node.children.length;
+				if (length === 0) return;
+				if (length === 1) return this.childs(0,0);
 				/* definindo o tamanho da página */
-				if      (!data2.finite)        width = child.length;
-				else if (data2 > child.length) width = child.length;
-				else if (data2 <= 0)           width = 1;
-				else if	(data2 < 1)            width = data2.value * child.length;
-				else                           width = data2.value;
-				width = width < 1 ? 1 : Math.trunc(width);
-				/* definindo os intevalos de página */
-				let pages = Math.trunc(child.length / width) + (child.length%width === 0 ? 0 : 1);
-
-
-
-
-
-
-
-
-
-
-			}
-		},
-
-
-
-
-
-		/**. ``''void'' page(number index=0, integer total, boolean width=false)``: Divide os nós filhos em grupos exibindo apenas aqueles do grupo definido.
-		. O argumento ``index`` define o índice de cada grupo limitados ao primeiro e último grupo. Se for igual a &minus;1, retornará o último grupo. Os valores ``+Infinity`` e ``-Infinity`` avançam ou retrocedem para o grupo seguinte ou anterior, respectivamente.
-		. O argumento ``total`` é um inteiro positivo que define a quantidade de nós em cada grupo ou a quantidade de grupos (padrão).
-		. O argumento ``width`` define o valor de ``total`` como quantidade de grupos, se falso, ou como quantidade de nós por grupo, se verdadeiro.   FIXME troca argumentos por 1/5 (página 1 de 5) ou 1:5 (página 1 de tamanho 5) ++/5 -1/5 --/5**/
-		page: {
-			value: function (index, total, width) {
-				let data1  = __Type(index);
-				let data2  = __Type(total);
-				let child  = __Type(this.node.children).value;
-				let length = child.length;
-				let init   = -1;
-				let last   = -1;
-				let pages  = [];
-				let count  = -1;
-				if (child.length === 0) return;
-				total = (!data2.finite || data2.value <= 1) ? length : Math.trunc(data2.value);
-				total = width === true ? total : Math.ceil(child.length / total);
-				index = !data1.number ? 0 : data1.infinite ? data1.value : Math.trunc(data1.value);
-				child.forEach(function(v,i,a) {
-					/* separar índices dos nós em grupos */
-					if (i%total === 0) {
-						pages.push([]);
-						count++;
-					}
-					pages[count].push(i);
-					/* obtendo o primeiro e o último nó visível */
-					let show = v.className.indexOf("js-wd-no-display") < 0;
-					if (show) {
-						if (init < 0) init = count;
-						last = count;
-					}
-				});
-				/* definindo o índice do grupo */
-				let array = __Array(pages);
-				if (index === +Infinity) {
-					let ref = last + 1;
-					index = array.index(ref >= pages.length ? (pages.length - 1) : ref);
-				} else if (index === -Infinity) {
-					let ref = init - 1;
-					index = array.index(ref < 0 ? 0 : ref);
-				} else {
-					let ref = index >= pages.length ? (pages.length - 1) : (index < -1 ? -1 : index);
-					index = array.index(ref);
+				let check1 = __Type(width);
+				width = !check1.finite || check1 <= 0 || check1 > length ? length : check1.value;
+				if (width < 1) width = Math.round(width * length);
+				width = Math.trunc(width) < 1 ? 1 : Math.trunc(width);
+				/* definindo a quantidade de páginas */
+				let pages = Math.trunc(Math.abs(length/width)) + (length%width === 0 ? 0 : 1);
+				/* definindo a página */
+				let check2 = __Type(index);
+				index = check2.number ? Math.trunc(check2.value) : 0;
+				/* páginas certas */
+				if (check2.finite) {
+					let page = index < 0 ? (pages - 1) : (index > (pages - 1) ? (pages - 1) : index);
+					let init = page * width;
+					let last = init + width - 1;
+					this.childs(init, last);
+					return;
 				}
-				/* definindo os limites */
-				if (index < 0 || index >= pages.length)
-					index = index < 0 ? 0 : (pages.length - 1);
-				let a = pages[index][0];
-				let b = pages[index][pages[index].length - 1];
-				return this.nav(a, b);
+				/* caminhar nas páginas */
+				let groups = this.groups(true);
+				/* sem uma sequência única de elementos visíveis, exibir a primeira página */
+				if (groups.length < 1 || groups.length > 1)
+					return this.pages(0, width);
+				let init = groups[0].init;
+				let last = groups[0].last;
+				/* se todos os elementos estiverem visíveis, exibir a primeira página */
+				if (init === 0 && last === (length - 1))
+					return this.pages(0, width);
+				/* se o primeiro elemento visível não for o início de uma página, exibir a primeira página */
+				if (init % width !== 0)
+					return this.pages(0, width);
+				/* caso contrário, retornar a página seguinte ou anterior */
+				let page = init / width + (index < 0 ? -1 : +1);
+				if (page < 0) page = 0;
+				return this.pages(page, width);
 			}
 		},
 		/**. ``''void'' filter(string|regexp search, integer chars=1)``: Exibe os nós filhos que casam com o valor definido.
 		. O argumento ``search`` é o valor a ser encontrado, podendo ser uma string ou uma expressão regular.
 		. O argumento ``chars`` terá efeito quando ``search`` for uma string e indica o número de caracteres mínimo a ser informado em ``search``. Quando não casado, se positivo, exibirá todos os nós, caso contrário os esconderá.**/
+
+		//FIXME parei aqui será que eu consigo fazer o destaque?
 		filter: {
 			value: function(search, chars) {
 				let data1 = __Type(search);
@@ -3479,8 +3448,10 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			}
 		},
 		/**. ``''boolean'' full()``: Alterna a exibição do nó em tela cheia e retorna verdadeiro se efetivada essa exibição.**/
+		//TODO interessante: https://developer.mozilla.org/en-US/docs/Web/CSS/::backdrop    https://developer.mozilla.org/en-US/docs/Web/CSS/:fullscreen
+
 		full: {
-			value: function() {
+			value: function(color /*será?????*/) {
 				let action = {
 					open: ["requestFullscreen", "webkitRequestFullscreen", "msRequestFullscreen"],
 					exit: ["exitFullscreen", "webkitExitFullscreen", "msExitFullscreen"]
@@ -6013,7 +5984,7 @@ FIXME pensar um jeito de bom de fazer sendo e read
 
 	if (__UNDERMAINTENANCE) {
 		Object.defineProperties(WD, {
-			type:     {value: function(x){return __Typeapply(null, Array.prototype.slice.call(arguments));}},
+			type:     {value: function(x){return __Type.apply(null, Array.prototype.slice.call(arguments));}},
 			array:    {value: function(){return __Array.apply(null, Array.prototype.slice.call(arguments));}},
 			datetime: {value: function(){return __DateTime.apply(null, Array.prototype.slice.call(arguments));}},
 			fnode:    {value: function(){return __FNode.apply(null, Array.prototype.slice.call(arguments));}},
