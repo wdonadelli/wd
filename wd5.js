@@ -432,7 +432,7 @@ const wd = (function() {
 		".js-wd-plot {height: 100%; width: 100%; position: absolute; top: 0; left: 0; bottom: 0; right: 0;}",
 		"/* testes */",
 		"*::backdrop {background-color: white;}",
-		"*:where(Library) {background-color: yellow;}"
+		".js-wd-mark {background-color: yellowgreen;}"
 //TODO interessante https://developer.mozilla.org/en-US/docs/Web/CSS/::file-selector-button
 
 
@@ -2804,6 +2804,7 @@ const wd = (function() {
 		__FNode.call(this, input);
 	}
 
+
 	__Node.prototype = Object.create(__FNode.prototype, {
 		constructor: {value: __Node},
 
@@ -3073,37 +3074,34 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return clone;
 			}
 		},
-		/**. ``''void'' load(''string'' html="", ''boolean'' overlap=false, ''boolean'' run=false)``: Carrega um conteúdo HTML no elemento ou o substitui.
-		. O argumento ``html`` deve conter o código HTML a ser carregado; O argumento opcional ``overlap``, se verdadeiro, irá substituir o elemento pelo conteúdo de ``html``; e O argumento ``run``, se verdadeiro, executará elementos scripts existentes.**/
+		/**. ``''void'' load(''string'' html="", ''boolean'' replace=false, ''boolean'' run=false)``: Carrega um conteúdo HTML no elemento ou o substitui.
+		. O argumento ``html`` deve conter o código HTML a ser carregado; O argumento opcional ``replace``, se verdadeiro, irá substituir o elemento pelo conteúdo de ``html``; e O argumento ``run``, se verdadeiro, executará elementos scripts existentes.**/
 		load: {
-			value: function(html, overlap, run) {
+			value: function(html, replace, run) {
 				if (this.node === null) return;
 				/* definir elemento */
-				let elem = overlap === true ? document.createElement("DIV") : this.node;
-				elem.innerHTML = html === undefined ? "" : String(html);
+				let elem = replace === true ? document.createElement("DIV") : this.node;
+				elem.innerHTML = html === undefined || html === null ? "" : String(html);
 				/* rodando scripts, se for o caso (por padrão não roda por motivo de segurança) */
 				if (run === true) {
 					let scripts = __Type(__Query("script", elem).$$).value;
-					let i = -1;
-					while (++i < scripts.length) {
-						let script = scripts[i];
-						let parent = script.parentElement;
-						let clone  = __Node(script).clone();
-						parent.insertBefore(clone, script);
-						script.remove();
-					}
+					scripts.forEach(function (v,i,a) {
+						let parent = v.parentElement;
+						let clone  = __Node(v).clone();
+						parent.insertBefore(clone, v);
+						v.remove();
+					});
 				}
 				/* substituindo o nó pelo conteúdo, se for o caso */
-				if (overlap === true) {
-					let parent = this.node.parentElement;
+				if (replace === true) {
 					let childs = __Type(elem.children).value;
-					console.log(parent, childs);
-					let i = -1;
-					while(++i < childs.length)
-						parent.insertBefore(childs[i], this.node);
+					let node   = this.node;
+					childs.forEach(function(v,i,a) {
+						node.parentElement.insertBefore(v, node);
+					});
 					this.node.remove();
 				}
-				loadingProcedures();
+				//FIXME loadingProcedures();
 				return;
 			}
 		},
@@ -3133,22 +3131,21 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				/* 8) executar looping */
 				/* 9) substituir atributos entre chaves duplas por valores e adicionar */
 				let childs = [""];
-				let i = -1;
 				__MODALCONTROL.start();
-				while (++i < list.length) {
-					__MODALCONTROL.progress((i+1)/list.length);
-					let check = __Type(list[i]);
-					if (!check.object) continue;
-					let inner = html;
-					for (let j in list[i])
-						inner = inner.split("{{"+j+"}}").join(list[i][j]);
-					childs.push(inner);
-				}
+				list.forEach(function (v,i,a) {
+					__MODALCONTROL.progress((i+1)/a.length);
+					if (__Type(v).object) {
+						let inner = html;
+						for (let j in v)
+							inner = inner.split("{{"+j+"}}").join(v[j]);
+						childs.push(inner);
+					}
+				});
 				/* 10) definir filhos */
 				this.node.innerHTML = childs.join("\n");
 				__MODALCONTROL.end();
 				/* IMPORTANTE: checar elemento após carregamento */
-				loadingProcedures();
+				//FIXME loadingProcedures();
 				return;
 			}
 		},
@@ -3165,7 +3162,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		only: {
 			value: function(bros) {
 				let nodes = __Type(this.node.parentElement.children).value;
-				nodes.forEach (function(v,i,a){
+				nodes.forEach (function(v,i,a) {
 					let node = __Node(v);
 					node.show = bros === true;
 				});
@@ -3237,8 +3234,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		pages: {
 			value: function(index, width) {
 				let length = this.node === null ? 0 : this.node.children.length;
-				if (length === 0) return;
-				if (length === 1) return this.childs(0,0);
+				if (length < 2) return this.childs(0,0);
 				/* definindo o tamanho da página */
 				let check1 = __Type(width);
 				width = !check1.finite || check1 <= 0 || check1 > length ? length : check1.value;
@@ -3276,11 +3272,117 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return this.pages(page, width);
 			}
 		},
+
+		removeMark: {
+			value: function(selector, start, end) {
+
+
+
+			}
+		},
+
+		mark: {
+			value: function (tag, css, remove, start, end) {
+				if (this.node === null) return;
+				tag = String(tag).trim();
+				css = __Type(css).nonempty ? css.trim() : "";
+				/*-- remover elementos (substituir por span), se for o caso --*/
+				if (remove === true) {
+					let selector = tag + (css === "" ? "" : "."+css);
+					let child    = __Type(this.node.querySelectorAll(selector)).value;
+					child.forEach(function (v,i,a) {
+						let span = document.createElement("span");
+						span.innerHTML = v.innerHTML;
+						v.parentElement.replaceChild(span, v);
+					});
+				}
+
+
+				let init = __Type(start);
+				let last  = __Type(end);
+				if (!init.number || !last.number || init >= last) return;
+
+				let inner = this.node.innerHTML.split("");
+				let index = -1;
+				let open  = false;
+				inner.forEach(function (v,i,a) {
+					if (index > last.value) return;
+					if (v === "<") {
+						open = true;
+						return;
+					}
+					else if (open && v === ">") {
+						open = false;
+						return;
+					}
+					else if (!open) {
+						index++;
+					} else {
+						return;
+					}
+					console.log(v, i, index);
+
+					if (index === init.value)
+						a[i] = "<"+tag+" class=\""+css+"\">"+v;
+					else if (index === last.value)
+						a[i] = v+"</"+tag+">";
+				});
+				this.node.innerHTML = inner.join("");
+				return this.node.innerHTML;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+				/*let mark  = /\<mark(\ +)?class\=\"js\-wd\-mark\"(\ +)?\>/gi;
+				let div   = document.createElement("DIV");
+				/*-- remover os marcadores existentes e redefinir o nó --* /
+				div.innerHTML = inner.replace(mark, "");
+				inner = div.innerHTML;
+				this.node.innerHTML = inner;
+				/*-- localizar expressão no nó --*/
+
+
+				/*-- se houver marcador, removê-los --* /
+				if (search.test(inner)) {
+					//let mark = /\<mark([^>]+)?\>/gi;
+					let list = inner.split(search);
+					console.log(inner, "\n\n", 	list);
+				}*/
+
+
+
+
+
+
+
+
+			}
+		},
+
+
+
+
+
+
 		/**. ``''void'' filter(string|regexp search, integer chars=1)``: Exibe os nós filhos que casam com o valor definido.
 		. O argumento ``search`` é o valor a ser encontrado, podendo ser uma string ou uma expressão regular.
 		. O argumento ``chars`` terá efeito quando ``search`` for uma string e indica o número de caracteres mínimo a ser informado em ``search``. Quando não casado, se positivo, exibirá todos os nós, caso contrário os esconderá.**/
 
 		//FIXME parei aqui será que eu consigo fazer o destaque?
+		//TODO fazer um atributo data-wd-mark para destacar textos digitados. O textContent digitado será obtido, aplicar-se-á os detaques e será devolvido no innerHTML durante a digitação >:o
 		filter: {
 			value: function(search, chars) {
 				let data1 = __Type(search);
