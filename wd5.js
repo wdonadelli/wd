@@ -432,7 +432,7 @@ const wd = (function() {
 		".js-wd-plot {height: 100%; width: 100%; position: absolute; top: 0; left: 0; bottom: 0; right: 0;}",
 		"/* testes */",
 		"*::backdrop {background-color: white;}",
-		".js-wd-mark {background-color: yellowgreen;}"
+		"mark-wdfilter {background-color: rgba(154,205,50,0.7); display: inline; border-radius: 0.2em;}"
 //TODO interessante https://developer.mozilla.org/en-US/docs/Web/CSS/::file-selector-button
 
 
@@ -3215,9 +3215,10 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		/**. ``''void'' walk(integer n=1)``: Exibe um determinado nó filho avançando ou retrocedendo entre os nós irmãos. O argumento ``n`` indica o intervalo a avançar (positivo) ou a retroceder (negativo).**/
 		walk: {
 			value: function(n) {
-				if (this.node === null) return;
+				if (this.node === null || this.node.childElementCount < 2)
+					return this.childs(0, 0);
 				let data   = __Type(n);
-				let childs = this.node.children.length;
+				let childs = this.node.childElementCount;
 				let delta  = data.finite ? Math.trunc(data.value) : 1;
 				let groups = this.groups(true);
 				let active = groups.length === 0 ? 0 : groups[0].init;
@@ -3233,9 +3234,10 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		. O argumento ``width`` é um número finito positivo que define o comprimento dos grupos, pode ser um número não inteiro.**/
 		pages: {
 			value: function(index, width) {
-				let length = this.node === null ? 0 : this.node.children.length;
-				if (length < 2) return this.childs(0,0);
+				if (this.node === null || this.node.childElementCount < 2)
+					return this.childs(0,0);
 				/* definindo o tamanho da página */
+				let length = this.node.childElementCount;
 				let check1 = __Type(width);
 				width = !check1.finite || check1 <= 0 || check1 > length ? length : check1.value;
 				if (width < 1) width = Math.round(width * length);
@@ -3273,17 +3275,12 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			}
 		},
 
+
+		//TODO isso é interessante para talvez deixar mais profissional outros métodos
 		removeMark: {
 			value: function(selector, start, end) {
 
-
-
-			}
-		},
-
-		mark: {
-			value: function (tag, css, remove, start, end) {
-				if (this.node === null) return;
+			if (this.node === null) return;
 				tag = String(tag).trim();
 				css = __Type(css).nonempty ? css.trim() : "";
 				/*-- remover elementos (substituir por span), se for o caso --*/
@@ -3293,25 +3290,39 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					child.forEach(function (v,i,a) {
 						let span = document.createElement("span");
 						span.innerHTML = v.innerHTML;
-						v.parentElement.replaceChild(span, v);
+						v.parentElement.replaceChild(span, v); //TODO Essa é a parte interessante
 					});
 				}
+			//TODO interessante também https://developer.mozilla.org/en-US/docs/Web/API/Element/replaceWith aceita texto mas não html
+			}
+		},
 
 
+
+
+
+
+
+		/** .``''void'' insertTag(''string'' tag, ''integer'' start, ''integer'' end)``: Insere uma ``tag`` HTML entre os índices ``start`` e ``end`` do conteúdo textual. Método destrutivo, não utilizar se houver conteúdo editável no nó.**/
+		insertTag: {
+			value: function(tag, start, end) {
+				if (this.node === null) return;
 				let init = __Type(start);
-				let last  = __Type(end);
-				if (!init.number || !last.number || init >= last) return;
+				let last = __Type(end);
+				tag  = String(tag).trim().toLowerCase().replace(/[^a-z\-]/gi, "");
+				init = init.finite ? Math.trunc(init.value) : 0;
+				last = last.finite ? Math.trunc(last.value) : this.node.textContent.length;
+				if (init > last) return;
 
 				let inner = this.node.innerHTML.split("");
 				let index = -1;
 				let open  = false;
 				inner.forEach(function (v,i,a) {
-					if (index > last.value) return;
+					if (index > last) return;
 					if (v === "<") {
 						open = true;
 						return;
-					}
-					else if (open && v === ">") {
+					} else if (open && v === ">") {
 						open = false;
 						return;
 					}
@@ -3320,60 +3331,43 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					} else {
 						return;
 					}
-					console.log(v, i, index);
-
-					if (index === init.value)
-						a[i] = "<"+tag+" class=\""+css+"\">"+v;
-					else if (index === last.value)
-						a[i] = v+"</"+tag+">";
+					if (index === init && index === last)
+						a[i] = "<"+tag+">"+v+"</"+tag+">";
+					else if (index === init || index === last)
+						a[i] = index === init ? "<"+tag+">"+v : v+"</"+tag+">";
 				});
 				this.node.innerHTML = inner.join("");
 				return this.node.innerHTML;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-				/*let mark  = /\<mark(\ +)?class\=\"js\-wd\-mark\"(\ +)?\>/gi;
-				let div   = document.createElement("DIV");
-				/*-- remover os marcadores existentes e redefinir o nó --* /
-				div.innerHTML = inner.replace(mark, "");
-				inner = div.innerHTML;
-				this.node.innerHTML = inner;
-				/*-- localizar expressão no nó --*/
-
-
-				/*-- se houver marcador, removê-los --* /
-				if (search.test(inner)) {
-					//let mark = /\<mark([^>]+)?\>/gi;
-					let list = inner.split(search);
-					console.log(inner, "\n\n", 	list);
-				}*/
-
-
-
-
-
-
-
-
 			}
 		},
 
 
-
+		/** .``''object'' textMatch(''regexp|string'' search)``: Localiza dentro do conteúdo textual do nó os índices de início e fim de ``search`` em um objeto contendo os atributos ``init`` e ``last``, retorna ou nulo caso não encontre.**/
+		textMatch: {
+			value: function(search) {
+				if (this.node === null) return null;
+				let check = __Type(search);
+				if (check.regexp) {
+					let text = this.node.innerText;
+					//let list = search.exec(text); FIXME
+					let list = text.match(search);
+					console.log(search, text, list);
+					return list === null ? null : this.textMatch(list[0]);
+				} else if (check.nonempty) {
+					let text = this.node.textContent.toLowerCase();
+					let find = search.trim().toLowerCase();
+					find = find.replace(/([^0-9a-zA-Z ])/gi, "\\$1");
+					find = find.replace(/\s+/gi, "\\s+");
+					let regexp = new RegExp(find, "gi");
+					let match  = text.match(regexp);
+					if (match === null) return null;
+					let init = text.search(regexp);
+					let last = init + match[0].length - 1;
+					return {init: init, last: last};
+				}
+				return null;
+			}
+		},
 
 
 
@@ -3384,27 +3378,56 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		//FIXME parei aqui será que eu consigo fazer o destaque?
 		//TODO fazer um atributo data-wd-mark para destacar textos digitados. O textContent digitado será obtido, aplicar-se-á os detaques e será devolvido no innerHTML durante a digitação >:o
 		filter: {
-			value: function(search, chars) {
-				let data1 = __Type(search);
-				let data2 = __Type(chars);
+			value: function(search, width) {
+				if (this.node === null || this.node.childElementCount === 0) return;
+				let data  = __Type(search);
+				let check = __Type(width);
 				let child = __Type(this.node.children).value;
-				if (data1.null || data1.undefined) return this.nav();
-				search = data1.regexp ? search : String(search).toUpperCase().trim();
-				chars  = data2.finite ? Math.trunc(chars) : 0;
-				if (search === "") return;
-				child.forEach(function(v,i,a) {
-					let node  = __Node(v);
-					let value = data1.regexp ? node.text : node.text.toUpperCase();
-					let text  = data1.regexp ?     value :__String(value).clear()
-					if (data1.regexp)
-						node.show = search.test(text);
-					else if (search.length >= Math.abs(chars))
-						node.show = text.indexOf(search) >= 0;
-					else
-						node.show = chars >= 0;
+				width = check.finite ? Math.trunc(check.value) : 0;
+				child.forEach(function (v,i,a) {
+					let node = __Node(v);
+					/*-- retornando o nó para sua forma original, se for o caso --*/
+					if ("wdFilterInner" in v.dataset) {
+						v.innerHTML = v.dataset.wdFilterInner;
+						delete v.dataset.wdFilterInner;
+					}
+					/*-- se não houver pesquisa a fazer, exibir todos FIXME string vazia, exibe todas ou faz restrição? --*/
+					if (!data.regexp && !data.chars) {
+						node.show = true;
+						return;
+					}
+					/*-- se houver restrição de caracteres, avaliar --*/
+					if (data.chars && width !== 0) {
+						let len1 = search.length;
+						let len2 = width > 0 ? width : -width;
+						if (len1 < len2) {
+							node.show = width > 0;
+							return;
+						}
+					}
+					/*-- verificar se casa a informação --*/
+					let index = node.textMatch(search);
+					if (index === null) {
+						node.show = false;
+					} else {
+						v.dataset.wdFilterInner = v.innerHTML;
+						node.show = true;
+						node.insertTag("mark-wdfilter", index.init, index.last);
+					}
 				});
+				return;
 			}
 		},
+
+
+
+
+
+
+
+
+
+
 		/**. ``''void'' sort(booelan asc, integer ref)``: Ordena os elementos filhos.
 		. O argumento opcional ``asc`` define a classificação. Se verdadeiro, será ascendente; se falso, descendente; e, se indefindo ou não boleano, será o inverso da classificação atual.
 		. O argumento opcional ``ref`` permite definir um nó neto como parâmetro de ordenação indicando seu índice (útil para ordenação de colunas de uma tabela).**/
