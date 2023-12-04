@@ -3368,44 +3368,46 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return null;
 			}
 		},
-
-
-
-		/**. ``''void'' filter(string|regexp search, integer chars=1)``: Exibe os nós filhos que casam com o valor definido.
-		. O argumento ``search`` é o valor a ser encontrado, podendo ser uma string ou uma expressão regular.
-		. O argumento ``chars`` terá efeito quando ``search`` for uma string e indica o número de caracteres mínimo a ser informado em ``search``. Quando não casado, se positivo, exibirá todos os nós, caso contrário os esconderá.**/
-
-		//FIXME parei aqui será que eu consigo fazer o destaque?
-		//TODO fazer um atributo data-wd-mark para destacar textos digitados. O textContent digitado será obtido, aplicar-se-á os detaques e será devolvido no innerHTML durante a digitação >:o
+		/**. ``''void'' filter(''string|regexp'' search, ''integer'' width)``: Exibe os nós filhos que casam com o valor definido em ``search``. O argumento ``width`` indica o número mínimo de caracteres a ser informado em ``search`` (string). Quando ``search`'for menor que o valor absoluto de ``width``, nenhum elemento será exibido, se negativo, ou todos, se positivo.**/
 		filter: {
 			value: function(search, width) {
 				if (this.node === null || this.node.childElementCount === 0) return;
 				let data  = __Type(search);
 				let check = __Type(width);
 				let child = __Type(this.node.children).value;
+				/*-- avaliando search (string ou regexp) --*/
+				if (data.null || data.undefined)
+					search = "";
+				else if (!data.regexp && !data.chars)
+					search = String(search).trim();
+				else if (data.chars)
+					search = search.trim();
+				/*-- avaliando width (inteiro) quando search for uma string --*/
 				width = check.finite ? Math.trunc(check.value) : 0;
+				let limit = true;
+				if (width !== 0 && !data.regexp) {
+					let len1 = search.length;
+					let len2 = width < 0 ? -width : +width;
+					if (len1 < len2) limit = false;
+				}
+				/*-- looping sobre os filhos --*/
 				child.forEach(function (v,i,a) {
 					let node = __Node(v);
-					/*-- retornando o nó para sua forma original, se for o caso --*/
+					/*-- retornando o nó para sua forma original (sem destaque), se for o caso --*/
 					if ("wdFilterInner" in v.dataset) {
 						v.innerHTML = v.dataset.wdFilterInner;
 						delete v.dataset.wdFilterInner;
 					}
-					/*-- se não houver pesquisa a fazer, exibir todos FIXME string vazia, exibe todas ou faz restrição? --*/
-					if (!data.regexp && !data.chars) {
+					/*-- verificando limite de caracteres --*/
+					if (!limit) {
+						node.show = width < 0 ? false : true;
+						return;
+					}
+					if (search === "" && width === 0) {
 						node.show = true;
 						return;
 					}
-					/*-- se houver restrição de caracteres, avaliar --*/
-					if (data.chars && width !== 0) {
-						let len1 = search.length;
-						let len2 = width > 0 ? width : -width;
-						if (len1 < len2) {
-							node.show = width > 0;
-							return;
-						}
-					}
-					/*-- verificar se casa a informação --*/
+					/*-- casamento da busca --*/
 					let index = node.textMatch(search);
 					if (index === null) {
 						node.show = false;
