@@ -2218,8 +2218,8 @@ const wd = (function() {
 		sort: {
 			value: function(asc) {
 				let order = [
-					"number", "time", "date", "datetime", "string", "boolean", "null", "node",
-					"array", "object", "function", "regexp", "undefined", "unknown"
+					"boolean", "number", "time", "date", "datetime", "string", "null", "node",
+					"array", "object", "function", "regexp", "unknown", "undefined"
 				];
 				let data  = __Type(asc);
 				let array = this._value.slice();
@@ -2228,16 +2228,20 @@ const wd = (function() {
 					let A = __Type(a);
 					let B = __Type(b);
 					/* comparação entre tipos diferentes */
-					if (A.type !== B.type)
-						return order.indexOf(A.type) > order.indexOf(B.type) ? 1 : -1;
+					if (A.type !== B.type) {
+						let typeA = order.indexOf(A.type);
+						let typeB = order.indexOf(B.type);
+						return typeA < typeB ? -1 : (typeA > typeB ? 1 : 0);
+					}
 					/* comparação entre tipos iguais */
 					let avalue = a;
 					let bvalue = b;
 					if (A.node) {
 						let node1 = a.textContent;
 						let node2 = b.textContent;
+						if (node1 === node2) return 0;
 						let array = __Array(node1, node2).sort(true);
-						return array[1] === node1 ? 1 : -1;
+						return array[0] === node1 ? -1 : 1;
 					}
 					if (A.number || A.boolean) {
 						avalue = A.valueOf();
@@ -2246,10 +2250,11 @@ const wd = (function() {
 						avalue = __DateTime(A.value).valueOf();
 						bvalue = __DateTime(B.value).valueOf();
 					} else if (A.string) {
+						if (A.empty || B.empty) return A.empty ? 1 : -1;
 						avalue = __String(a.toLowerCase()).clear().trim();
 						bvalue = __String(b.toLowerCase()).clear().trim();
 					}
-					return avalue > bvalue ? 1 : -1;
+					return avalue < bvalue ? -1 : (avalue > bvalue ? 1 : 0);
 				});
 				/* com asc definido */
 				if (asc === true)  return array;
@@ -3432,8 +3437,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 
 
 
-		/**. ``''void'' sort(''boolean'' asc, ''integer'' col...)``: Ordena os elementos filhos. O argumento opcional ``asc`` define a classificação. Se verdadeiro, será ascendente; se falso, descendente; e, se não boleano, será o inverso da classificação vigente.
-		. O argumento opcional ``col`` permite definir nós netos como parâmetros para a ordenação. Seu valor absoluto corresponde a seu índice que, se positivo, definirá ordenação ascendente e, se negativo, descendente.**/
+		/**. ``''void'' sort(''boolean'' asc)``: Ordena os elementos filhos. O argumento opcional ``asc`` define a classificação. Se verdadeiro, será ascendente; se falso, descendente; e, se não boleano, será o inverso da classificação vigente.**/
 		sort: {
 			value: function(asc) {
 				if (this.node === null || this.node.childElementCount === 0) return;
@@ -3444,16 +3448,22 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return;
 			}
 		},
-
-
-
-		sortTable: {
+		/**. ``''void'' sortCol(''integer'' order...)``: Ordena os nós filhos com referência aos nós netos, ordenando colunas de tabelas.
+		. Os argumentos ``order`` definem a sequência de prioridade na classificação, com a indicação do número da coluna (a partir de 1, da esquerda para a direita). Se indicador da coluna for positivo, sua ordem será ascendente, caso contrário, descendente.**/
+		sortCol: {
 			value: function() {
 				if (this.node === null || this.node.childElementCount === 0) return;
-				if (arguments.length === 0) return this.sort();
-				let args  = arguments;
-				let child = __Type(this.node.children).value;
+				/*-- acertando argumentos --*/
+				let args = [];
+				let j = -1;
+				while (++j < arguments.length) {
+					let check = __Type(arguments[j]);
+					if (!check.finite || Math.trunc(check.value) === 0) continue;
+					args.push(Math.trunc(check.value));
+				}
+				if (args.length === 0) return this.sort();
 				/*-- iniciando ordenação --*/
+				let child = __Type(this.node.children).value;
 				child.sort(function(a, b) {
 					/*-- definindo variáveis --*/
 					let maxA  = a.childElementCount - 1;
@@ -3461,12 +3471,10 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					/*-- looping pelas regras de ordenação (argumentos) --*/
 					let i = -1;
 					while (++i < args.length) {
-						/*-- checando se o argumento é um valor válido (finito diferente de zero) --*/
-						let check = __Type(args[i]);
-						if (!check.finite || Math.trunc(check.value) === 0) continue;
-						/*-- checar se o valor do índice está dentro da quantidade de filhos --*/
-						let value = Math.trunc(check.value);
+						/*-- obtendo ordenação (value) e coluna (index) --*/
+						let value = args[i];
 						let index = Math.abs(value) - 1;
+						/*-- checar se o valor do índice está dentro da quantidade de filhos --*/
 						if (index > maxA && index > maxB) continue;
 						/*-- se válido, checar se valores são diferentes --*/
 						let textA = index > maxA ? "" : a.children[index].textContent.toLowerCase();
@@ -3477,16 +3485,16 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 						if (typeA.value === typeB.value) continue;
 						/*-- caso contrário, definir ordenamento --*/
 						let sort = __Array(typeA.value, typeB.value).sort(value >= 0);
-						console.log({maxA: maxA, maxB: maxB, value: value, index: index, A: typeA.value, B: typeB.value, sort: sort[1], return: sort[1] === typeA.value ? 1 : -1 });
+						console.log({maxA: maxA, maxB: maxB, value: value, index: index, A: typeA.value, B: typeB.value, sort: sort[0], return: sort[1] === typeA.value ? 1 : -1 });
 
-
-
-
-						return sort[1] === typeA.value ? 1 : -1;
+						return sort[0] === typeA.value ? -1 : +1;
 					}
 					/*-- se não atender os requisitos, retornar o valor padrão --*/
-					return 1;
+					return 0;
 				});
+				/*-- reordenando filhos --*/
+				let node = this.node;
+				child.forEach(function(v,i,a) {node.appendChild(v);});
 			}
 		},
 
