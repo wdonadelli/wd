@@ -791,8 +791,8 @@ const wd = (function() {
 						let value = number[i];
 						switch(i) {
 							case "Y": text[i] = __Type.zeros(value, 4); break;
-							case "l": text[i] = __Type.zeros(value, 3).substr(0,3); break;
-							default:  text[i] = __Type.zeros(value, 2).substr(0,2);
+							case "l": text[i] = __Type.zeros(value, 3).substring(0,3); break;
+							default:  text[i] = __Type.zeros(value, 2).substring(0,2);
 						}
 					}
 					let time = [text.h, text.m, text.s+"."+text.l].join(":");
@@ -1420,28 +1420,31 @@ const wd = (function() {
 				return mask.join("");
 			}
 		},
-		/**. ``''string'' dash``: Retorna uma string identificadora no formato de traços.**/
+		/**. ``''string'' dash``: Retorna uma string identificadora no formato de traços (alfabetos latinos).**/
 		dash: {
 			get: function() {
 				let value = this.clear().replace(/\ +/g, "-").split("");
-				let i = -1;
-				while (++i < value.length) {
-					if (!(/[a-zA-Z0-9._:-]/).test(value[i])) /* eliminar caracteres não permitidos */
-						value[i] = "";
-					else if (/[A-Z]/.test(value[i])) /* adicionar traço antes de maiúsculas e inverter caixa */
-						value[i] = "-"+value[i].toLowerCase();
-				}
+				value.forEach(function (v,i,a) {
+					/* eliminar caracteres não permitidos */
+					if (!(/[a-zA-Z0-9._:-]/).test(v)) a[i] = "";
+					/* adicionar traço antes de maiúsculas e inverter caixa */
+					else if (/[A-Z]/.test(v)) a[i] = "-"+v.toLowerCase();
+				});
 				value = value.join("").replace(/\-+/g, "-");
 				return value.replace(/^\-+/, "").replace(/\-+$/, "");
 			}
 		},
-		/**. ``''string'' camel``: Retorna uma string identificadora no formato de camelCase.**/
+		/**. ``''string'' camel``: Retorna uma string identificadora no formato de camelCase (alfabetos latinos).**/
 		camel: {
 			get: function() {
 				let value = this.dash.split("-");
-				let i = 0;
-				while (++i < value.length)
-					value[i] = value[i].charAt(0).toUpperCase()+value[i].substr(1);
+				value.forEach(function (v,i,a) {
+					if (i !== 0) {
+						let dot = v.split("");
+						dot[0] = dot[0].toUpperCase();
+						a[i] = dot.join("");
+					}
+				});
 				return value.join("");
 			}
 		},
@@ -3176,10 +3179,6 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				this.show = bros !== true;
 			}
 		},
-
-		//FIXME TODO substituir substr(start, length) por substring(start, end) ver https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Global_Objects/String/substring#a_diferen%C3%A7a_entre_substring_e_substr
-
-
 		/**. ``''void'' childs(''number'' init, ''number'' last)``: Define o intervalo de nós filhos a ser exibido entre o índice inicial (``init``) e final (``last``).**/
 		childs: {
 			value: function (init, last) {
@@ -3283,6 +3282,9 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		},
 
 
+
+
+
 		//TODO isso é interessante para talvez deixar mais profissional outros métodos
 		removeMark: {
 			value: function(selector, start, end) {
@@ -3303,8 +3305,6 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			//TODO interessante também https://developer.mozilla.org/en-US/docs/Web/API/Element/replaceWith aceita texto mas não html
 			}
 		},
-
-
 
 
 
@@ -3347,8 +3347,6 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return this.node.innerHTML;
 			}
 		},
-
-
 		/** .``''object'' textMatch(''regexp|string'' search)``: Localiza dentro do conteúdo textual do nó os índices de início e fim de ``search`` em um objeto contendo os atributos ``init`` e ``last``, retorna ou nulo caso não encontre.**/
 		textMatch: {
 			value: function(search) {
@@ -3427,16 +3425,6 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return;
 			}
 		},
-
-
-
-
-
-
-
-
-
-
 		/**. ``''void'' sort(''boolean'' asc)``: Ordena os elementos filhos. O argumento opcional ``asc`` define a classificação. Se verdadeiro, será ascendente; se falso, descendente; e, se não boleano, será o inverso da classificação vigente.**/
 		sort: {
 			value: function(asc) {
@@ -3448,9 +3436,9 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return;
 			}
 		},
-		/**. ``''void'' sortCol(''integer'' order...)``: Ordena os nós filhos com referência aos nós netos, ordenando colunas de tabelas.
+		/**. ``''void'' tsort(''integer'' order...)``: Ordena os nós filhos com referência aos nós netos, ordenando colunas de tabelas.
 		. Os argumentos ``order`` definem a sequência de prioridade na classificação, com a indicação do número da coluna (a partir de 1, da esquerda para a direita). Se indicador da coluna for positivo, sua ordem será ascendente, caso contrário, descendente.**/
-		sortCol: {
+		tsort: {
 			value: function() {
 				if (this.node === null || this.node.childElementCount === 0) return;
 				/*-- acertando argumentos --*/
@@ -3497,135 +3485,28 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				child.forEach(function(v,i,a) {node.appendChild(v);});
 			}
 		},
-
-
-
-
-		/**. ``''void'' display(string act)``: Promove ações de exibição de elementos.
-		. O argumento ``act`` define as ações de exibição a serem executadas ao elemento ou seus filhos:
-		|Alvo|Ação|Código|Descrição|
-		|Nó|Exibição|show|exibe o nó|
-		|Nó|Exibição|hide|esconde o nó|
-		|Nó|Exibição|toggle|alterna a exibição do nó|
-		|Nó|Exibição|alone|exibe o nó e esconde os irmãos|
-		|Nó|Exibição|absent|esconde o nó e exibe os irmãos|
-		|Nó|Exibição|all|exibe o nó e irmãos|
-		|Nó|Exibição|none|esconde o nó e irmãos|
-		|Filhos|Exibição|+|exibe todos os filhos|
-		|Filhos|Exibição|-|esconde todos os filhos|
-		|Filhos|Exibição|X|exibe o nó detentor do índice ``X``|
-		|Filhos|Exibição|X,Y|exibe os nós entre o índices opcionais ``X`` e ``Y`` (inclusive). Invertendo a ordem, inverte-se a exibição|
-		|Filhos|Exibição|&gt;|exibe o próximo nó|
-		|Filhos|Exibição|&lt;|exibe o nó anterior|
-		|Filhos|Exibição|&gt;&gt;|exibe o último nó|
-		|Filhos|Exibição|&lt;&lt;|exibe o primeiro nó|
-		|Filhos|Exibição|&gt;X|exibe o nó no intervalo ``X`` afrente|
-		|Filhos|Exibição|&lt;X|exibe o nó no intervalo ``X`` atrás|
-		|Filhos|Agrupamento|X/Y|Exibe o grupo de índice ``X`` (1 é o primeiro 0 é o último) num total de ``Y`` grupos (se possível)|
-		|Filhos|Agrupamento|X:Y|Exibe o grupo de índice ``X`` (1 é o primeiro 0 é o último) divididos em grupos de ``Y`` nós|
-		|Filhos|Agrupamento|&gt;/Y|Avança para o próximo grupo de um total de ``Y`` grupos|
-		|Filhos|Agrupamento|&lt;/Y|Retrocede para o grupo anterior de num total de ``Y`` grupos|
-		|Filhos|Agrupamento|&gt;:Y|Avança para o próximo grupo composto de ``Y`` nós|
-		|Filhos|Agrupamento|&lt;:Y|Retrocede para o grupo anterior composto de ``Y`` nós|
-		|Filhos|Classificação|-&gt;|Classifica em ordem crescente|
-		|Filhos|Classificação|&lt;-|Classifica em ordem decrescente|
-		|Filhos|Classificação|&lt;-&gt;|Classifica na ordem inversa|
-		|Filhos|Classificação|-&gt;X|Classifica em ordem crescente com parâmetro no nó neto de índice ``X``|
-		|Filhos|Classificação|X&lt;-|Classifica em ordem decrescente com parâmetro no nó neto de índice ``X``|
-		|Filhos|Classificação|&lt;X&gt;|Classifica em ordem inversa com parâmetro no nó neto de índice ``X``|
-		|Filhos|Busca|/regexp/gi|Exibe todos os filhos que casam com a expressão regular|
-		|Filhos|Busca|"string"X|Exibe os elementos que casam com a string informada. O inteiro ``X`` é opcional e define a quantidade de caracteres mínimos para efetuar a busca que, se negativo, esconderá todos os filhos enquanto não casar a quantidade de caracteres e que, se positivo, exibira todos os filhos.|**/
-		display: {
-			value: function(act) {
-				act = String(act).trim();
-				let node = __Node(this._node.parentElement);
-
-				if ((/^([a-z]+|[<>+-]|\<\<|\>\>|\-\>|\<\-|\<\-\>)$/).test(act)) {
-					switch (act) {//FIXME não dá pra usar palavras, vai confundir com pesquisa de texto
-						case "show":   return (this.show = true);//*
-						case "hide":   return (this.show = false);//.
-						case "toggle": return (this.show = !this.show);//?
-						case "alone":  return this.alone();//.*.
-						case "absent": return this.alone(false);//*.*
-						case "all":    return node.nav();//***
-						case "none":   return node.nav(-1, -1);//...
-
-						case "+":      return this.nav();
-						case "-":      return this.nav(-1, -1);
-						case ">":      return this.walk(1);
-						case "<":      return this.walk(-1);
-						case ">>":     return this.page(-1, 1);
-						case "<<":     return this.page(0, 1);
-						case "->":     return this.sort(true);
-						case "<-":     return this.sort(false);
-						case "<->":    return this.sort();
-						default:       return;
-					};
-				}
-				if ((/^\d+$/).test(act)) {
-					return this.nav(act, act);
-				}
-				if ((/^([+-]?\d+)?\,([+-]?\d+)?$/).test(act)) {
-					act = act.split(",");
-					return this.nav(act[0], act[1]);
-				}
-				if ((/^(\>|\<|\d+)[:/][1-9](\d+)?$/).test(act)) {
-					let width = (/\:/).test(act);
-					let data  = act.split(width ? ":" : "/");
-					switch(data[0]) {
-						case ">": data[0] = +Infinity; break;
-						case "<": data[0] = -Infinity; break;
-						default:  data[0] = __Type(data[0]).value - 1;
-					}
-					return this.page(data[0], data[1], width);
-				}
-				if ((/^(\-\>\d+|\d+\<\-|\<\d+\>)$/).test(act)) {
-					let ref = act.replace(/\D/g, "");
-					let asc  = act[0] === "-" ? true : (act[0] === "<" ? null : false);
-					return this.sort(asc, ref);//FIXME como saber em que ordem ficou?
-				}
-
-
-				if ((/^\/.+\/(g|i|gi|ig)?/).test(act)) {
-					act = act.substr(1).split("/");
-					act = new RegExp(act[0], act[1]);
-					this.filter(act);
-				}
-
-				if ((/^\'.+\'([+-]?[1-9](\d+)?)?$/).test(act)) {//FIXME
-					act = act.substr(1).split("/");
-					act = new RegExp(act[0], act[1]);
-					this.filter(act);
-				}
-
-				return;
-			}
-		},
-		/**. ``''void'' jump(array list)``: O elemento será transferido, na ordem definida, como filho na lista de elementos pais a cada chamada do método.
-		. O argumento ``list`` é um array de elementos que servirá como pai para o elemento especificado.**/
+		/**. ``''void'' jump(''array'' list)``: O nó será adicionado aos elementos na ordem definida em ``list`` a cada chamada do método. O argumento ``list`` é um array de elementos que servirá como pai para o elemento especificado.**/
 		jump: {
 			value: function(list) {
 				let check = __Type(list);
 				list = check.array ? list : [list];
-				let index = list.indexOf(this._node.parentElement) + 1;
+				let index = list.indexOf(this.node.parentElement) + 1;
 				let node  = list[index%list.length];
 				let data  = __Type(node);
-				if (data.node)
-					node.appendChild(this._node);
+				if (__Type(node).node) node.appendChild(this.node);
 			}
 		},
 		/**. ``''boolean'' full()``: Alterna a exibição do nó em tela cheia e retorna verdadeiro se efetivada essa exibição.**/
 		//TODO interessante: https://developer.mozilla.org/en-US/docs/Web/CSS/::backdrop    https://developer.mozilla.org/en-US/docs/Web/CSS/:fullscreen
-
 		full: {
-			value: function(color /*será?????*/) {
+			value: function() {
 				let action = {
 					open: ["requestFullscreen", "webkitRequestFullscreen", "msRequestFullscreen"],
 					exit: ["exitFullscreen", "webkitExitFullscreen", "msExitFullscreen"]
 				};
 				let target = document.fullscreenElement;
-				let full   = target !== this._node;
-				let node   = full ? this._node : document;
+				let full   = target !== this.node;
+				let node   = full ? this.node : document;
 				let method = full ? action.open : action.exit;
 				let i = -1;
 				while (++i < method.length) {
@@ -3647,13 +3528,11 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				for (let i in styles) {
 					if ((/\d+/).test(i)) continue;
 					object[i] = styles.getPropertyValue(i);
-
 				}
 				return object;
 			}
 		},
 	});
-
 
 
 /*============================================================================*/
@@ -4107,8 +3986,8 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				let attr    = {
 					x: point[0] === "v" ? -y : x,
 					y: point[0] === "v" ? x : y,
-					"text-anchor":       vanchor[anchor[point.substr(1)]],
-					"dominant-baseline": vbase[base[point.substr(1)]],
+					"text-anchor":       vanchor[anchor[point.substring(1)]],
+					"dominant-baseline": vbase[base[point.substring(1)]],
 					"transform":         point[0] === "v" ? "rotate(270)" : "",
 				};
 				svg.textContent = String(text).trim();
@@ -4429,16 +4308,8 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
     }
 	});
 /*============================================================================*/
-
-
-
-
-
-
-
-
-
 	/**#### Análise Gráfica
+
 	###### ``**constructor** ''object'' __Plot2D(''boolean'' ratio=false)``
 	Objeto para preparar dados para construção de gráfico 2D.
 	O argumento ``ratio``, se falso, define que o gráfico será de coordenadas no plano cartesiano e, se verdadeiro, será de grandezas proporcionais (circular ou colunas)**/
@@ -6363,9 +6234,9 @@ FIXME pensar um jeito de bom de fazer sendo e read
 
 		/* se for informada uma expressão regular */
 		if ((/^\/.+\/$/).test(search))
-			search = new RegExp(search.substr(1, (search.length - 2)));
+			search = new RegExp(search.substring(1, (search.length - 1)));
 		else if ((/^\/.+\/i$/).test(search))
-			search = new RegExp(search.substr(1, (search.length - 3)), "i");
+			search = new RegExp(search.substring(1, (search.length - 2)), "i");
 		/* localizar */
 		let data = wd_html_dataset_value(e, "wdFilter");
 		for (let i = 0; i < data.length; i++) {
