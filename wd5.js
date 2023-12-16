@@ -2732,74 +2732,58 @@ const wd = (function() {
 
 
 
-		//FIXME reportValidity é o método mais recente
+		/**. ``''string'' validity``: Define ou retorna a mensagem de erro do formulário.**/
 		validity: {
 			set: function(msg) {
-				if (!this.form || this._cfg.send !== 1) return;
+				if (!this.form || this._cfg.send !== 1) return undefined;
 				if (!__Type(msg).nonempty) msg = "";
-				/* marcação auxiliar e marcação nativa */
-				this.node.dataset.wdCustomValidity = msg;
 				if ("setCustomValidity" in this.node)
 					this.node.setCustomValidity(msg);
-				return this.validity;
+				else
+					this.node.dataset.wdCustomValidity = msg;
 			},
 			get: function() {
-				/* se não for formulário de envio, retornar verdadeiro */
-				if (!this.form || this._cfg.send !== 1) return true;
-				if ("wdCustomValidity" in this.node.dataset)
-					this.node.dataset.wdCustomValidity = "";
+				if (!this.form || this._cfg.send !== 1) return "";
 				/* checando a validade */
-				let validity;
+				let validity = true;
 				if ("checkValidity" in this.node)
 					validity = this.node.checkValidity();
-				else
+				else if ("wdCustomValidity" in this.node.dataset)
 					validity = this.node.dataset.wdCustomValidity === "";
-				/* Imprimindo a mensagem, se inválido */
-				if (validity) return true;
-				if ("reportValidity" in this.node) {
-					this.node.reportValidity();
-				} else if ("validationMessage" in this.node) {
-					__SIGNALCONTROL.notify(this.node.validationMessage, "");
-					this.node.focus();
-				} else {
-					__SIGNALCONTROL.notify(this.node.dataset.wdCustomValidity, "");
-					this.node.focus();
-				}
-				return false;
+				/* Retornando a mensagem*/
+				if (validity) return "";
+				if ("validationMessage" in this.node)
+					return this.node.validationMessage;
+				if ("wdCustomValidity" in this.node.dataset)
+					return this.node.dataset.wdCustomValidity
+				return "?";
 			}
 		},
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-		/**. ``''object'' submit``: Retorna o dado do formulário para submissão ou nulo se for campo de envio de dados.**/
+		/**. ``''object'' submit``: Retorna os dado do formulário para submissão ou nulo se não for campo de envio de dados. O objeto retornado possui as informações do nome (``name``), do valor (``value``), da validade (``validity``) e da mensagem de erro (``message``) do campo de formulário. Se inválido o valor, será exibida uma mensagem.**/
 		submit: {
 			get: function() {
 				if (!this.form || this._cfg.send !== 1) return null;
 				let value = this._value;
 				let name  = this._name;
+				let valid = this.validity;
 				if (value === null || name === null) return null;
-				let data = {};
-				data[name] = value;
+				let data = {
+					name: name,
+					value: value,
+					validity: valid === "",
+					message: valid
+				};
+				if (!data.validity) {
+					if ("reportValidity" in this.node)
+						this.node.reportValidity();
+					else if ("validationMessage" in this.node)
+						__SIGNALCONTROL.notify(this.node.validationMessage, "");
+					else if ("wdCustomValidity" in this.node.dataset)
+						__SIGNALCONTROL.notify(this.node.dataset.wdCustomValidity, "");
+					else
+						__SIGNALCONTROL.notify("Invalid value for form type!", "");
+					this.node.focus();
+				}
 				return data;
 			}
 		}
@@ -3168,15 +3152,16 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				this._class = x === false ? {add: "js-wd-no-display"} : {remove: "js-wd-no-display"}
 			}
 		},
-		/**. ``''void'' only(''boolean'' bros=false)``: Exibe apenas o nós entre seus irmão. Se ``bros`` for verdadeiro, inverterá o resultado.**/
+		/**. ``''void'' only(''boolean'' reverse)``: Exibe o nó e esconde os irmãos. Se ``reverse`` for verdadeiro, inverte o resultado.**/
 		only: {
-			value: function(bros) {
+			value: function(reverse) {
+				if (this.node === null) return;
+				let node  = this.node;
 				let nodes = __Type(this.node.parentElement.children).value;
-				nodes.forEach (function(v,i,a) {
-					let node = __Node(v);
-					node.show = bros === true;
+				nodes.forEach(function(v,i,a) {
+					let data = __Node(v);
+					data.show = v === node ? (reverse !== true) : (reverse === true);
 				});
-				this.show = bros !== true;
 			}
 		},
 		/**. ``''void'' childs(''number'' init, ''number'' last)``: Define o intervalo de nós filhos a ser exibido entre o índice inicial (``init``) e final (``last``).**/
