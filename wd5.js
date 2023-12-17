@@ -2802,42 +2802,6 @@ const wd = (function() {
 	__Node.prototype = Object.create(__FNode.prototype, {
 		constructor: {value: __Node},
 
-/* FIXME importantíssimo
-se file ou select múltiplo, o nome tem que vir seguido de []
-não pode ser assim:
-	<input type="file" name="ARQUIVOS" multiple />
-tem que ser assim:
-	<input type="file" name="ARQUIVOS[]" multiple />
-Isso vale para qualquer backend?
-Como fazer isso como o objeto Form?
-Basta incluir o [] ao fim do nome?
-
-
-Para FormData function assim:
-<select name="ITENS" multiple>...
-
-let data = new FormData();
-data.append("ITEMS", value1);__Node
-data.append("ITEMS", value2);
-...
-O método append não substitui o valor contido no atributo name, podendo ser vários.
-Já o método set substitui e o delete apaga.
-
-para conferir:
-for(var pair of a.entries()) {
-   console.log(pair[0]+ ', '+ pair[1]);
-}
-ou:
-let itens = a.entries();
-let item = itens.next(); retorna um objeto content {done: true|false, value: [name, value]}
-let name = item.value[0];
-let value = item.value[1];
-
-E para o método GET, como proceder?
-
-ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
-
-*/
 		/**. ``''any'' attribute(''string'' name, ''any'' value)``: Define e retorna valores de atributos dos elementos HTML. Os argumentos ``name`` e ``value`` são, respectivamente, o nome e o valor do atributo. Se ``value`` for omitido, retornará o valor de ``name``. Se ``name`` for omitido, retornará um objeto com os nome e valores dos atributos.**/
 		attribute: {
 			value: function (name, value) {
@@ -3152,7 +3116,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				this._class = x === false ? {add: "js-wd-no-display"} : {remove: "js-wd-no-display"}
 			}
 		},
-		/**. ``''void'' only(''boolean'' reverse)``: Exibe o nó e esconde os irmãos. Se ``reverse`` for verdadeiro, inverte o resultado.**/
+		/**. ``''void'' only(''boolean'' reverse)``: Exibe o nó e esconde os irmãos. Se ``reverse`` for verdadeiro, inverte-se o resultado.**/
 		only: {
 			value: function(reverse) {
 				if (this.node === null) return;
@@ -3522,56 +3486,56 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 
 /*============================================================================*/
 	/**### Requisições e Arquivos
-	``**constructor** ''object'' __Request(string input)``
-	Construtor para [requisições Web](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest) ou leituras de [arquivos](https://developer.mozilla.org/en-US/docs/Web/API/FileReader). Os argumentos ``input`` e ``method`` são, respectivamente, o alvo a ser requisitado ou lido e a função a ser chamada a cada mudança de estado.**/
-	function __Request(input, method) {
-		if (!(this instanceof __Request))	return new __Request(input, method);
-		/*-- analisando argumentos --*/
-		if (!__Type(method).function) method = null;
-		let check = __Type(input);
+	``**constructor** ''object'' __Request(''any'' target)``
+	Construtor para [requisições Web](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest) ou leituras de [arquivos](https://developer.mozilla.org/en-US/docs/Web/API/FileReader). O argumento ``target` é o alvo a ser requisitado ou lido, pode ser um endereço, um arquivo ou uma lista de arquivos (só o primeiro será considerado).**/
+	function __Request(target) {
+		if (!(this instanceof __Request))	return new __Request(target);
+		/*-- analisando argumento --*/
+		let check = __Type(target);
 		/*-- definindo variáveis --*/
 		let request, source;
 		/*-- checando o alvo e obtendo o leitor adequado --*/
-		if (check.files && input.length > 0) {
-			input   = input[0];
+		if (check.files && target.length > 0) {
+			target  = target[0];
 			request = new FileReader();
 			source  = "file";
 		} else if (check.file) {
 			request = new FileReader();
-			source    = "file";
+			source  = "file";
 		} else if (check.nonempty) {
-			input   = String(input).trim();
+			target  = String(target).trim();
 			request = new XMLHttpRequest();
 			source  = "path";
 		} else {
-			input   = null;
+			target  = null;
 			request = null;
 			source  = null;
 		}
 
 		/*-- definindo atributos do objeto --*/
 		Object.defineProperties(this, {
-			_target:   {value: input},
+			_target:   {value: target},
 			_source:   {value: source},
 			_request:  {value: request},
-			_onchange: {value: method, writable: true},
-			_done:     {value: false,  writable: true},
-			_state:    {value: "",     writable: true},
-			_start:    {value: 0,      writable: true},
-			_time:     {value: 0,      writable: true},
-			_maxtime:  {value: 0,      writable: true},
-			_size:     {value: 0,      writable: true},
-			_loaded:   {value: 0,      writable: true},
-			_progress: {value: 0,      writable: true},
-			_async:    {value: true,   writable: true},
-			_user:     {value: null,   writable: true},
-			_password: {value: null,   writable: true},
+			_onchange: {value: null,  writable: true},
+			_done:     {value: false, writable: true},
+			_state:    {value: "",    writable: true},
+			_start:    {value: 0,     writable: true},
+			_time:     {value: 0,     writable: true},
+			_maxtime:  {value: 0,     writable: true},
+			_size:     {value: 0,     writable: true},
+			_loaded:   {value: 0,     writable: true},
+			_progress: {value: 0,     writable: true},
+			_async:    {value: true,  writable: true},
+			_user:     {value: null,  writable: true},
+			_password: {value: null,  writable: true},
+			_method:   {value: null,  writable: true},
 		});
 
 		/*-- definir disparador nativo e o vinculando aos eventos do leitor --*/
 		let self    = this;
 		let trigger = function(x) {
-			/*-- motivo: não executar o disparador depois do encerramento --*/
+			/*-- motivo: não retornar o disparador depois do encerramento --*/
 			if (self._done) return;
 
 			/*-- definir os valores temporais do leitor aos atributos do objeto */
@@ -3593,8 +3557,8 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				states = ["empty", "loading", "closing"];
 				status = null;
 			} else if (source === "path") {
-				status = self._request.status;
 				states = ["unsent", "opened", "headers", "loading", "closing"];
+				status = self._request.status;
 			}
 
 			/*-- analisar progresso da requisição --*/
@@ -3604,9 +3568,10 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			} else if (errors.indexOf(type) >= 0) {
 				self._done  = true;
 				self._state = type;
-			} else if (source === "file" && self.maxtime > 0 && self.time > self.maxtime) {
+			} else if (source === "file" && self.maxtime > 0 && self._time > self.maxtime) {
 				self._done  = true;
 				self._state = "timeout";
+				self._request.abort();
 			} else if (source === "path" && state === 4 && type === "loadend") {
 				self._done  = true;
 				self._state = "done";
@@ -3616,9 +3581,6 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			} else {
 				self._state = states[state];
 			}
-
-			/*-- encerrar barra de progresso, se processo finalizado --*/
-			if (self._done) __MODALCONTROL.end();
 
 			/*-- chamar o disparador definido pelo usuário --*/
 			if (self.onchange !== null) {
@@ -3646,24 +3608,25 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					loaded:   self._loaded,
 					progress: self._progress,
 					headers:  headers,
-					abort:    self._request.abort,
+					abort:    function() {self._request.abort();},
 					content:  function() {return content.apply(self, arguments);},
 					self: self
 				});
 			}
+
+			/*-- encerrar barra de progresso, se processo finalizado --*/
+			if (self._done) __MODALCONTROL.end();
 		}
 
 		/*-- atribuir o disparador nativos a todos os eventos do leitor --*/
 		let events = ["onabort", "onerror", "onload", "onloadend", "onloadstart",
 		"onprogress", "ontimeout", "onreadystatechange"];
-		let i = -1;
-		while (++i < events.length) {
-			let event = events[i];
-			if (event in this._request)
-				this._request[event] = trigger;
-			if ("upload" in this._request && event in this._request.upload)
-				this._request.upload[event] = trigger;
-		}
+		events.forEach(function(v,i,a) {
+			if (v in self._request)
+				self._request[v] = trigger;
+			if ("upload" in self._request && v in self._request.upload)
+				self._request.upload[v] = trigger;
+		});
 	}
 
 	Object.defineProperties(__Request.prototype, {
@@ -3753,6 +3716,17 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				this._password = data.nonempty ? x : null;
 			}
 		},
+		/**. ``''string'' method``: Define e retorna a forma de leitura (binary, text, url ou buffer) ou o método HTTP de envio (POST, GET).**/
+		method: {
+			get: function() {
+				let data = __Type(this._method);
+				return data.nonempty ? this._method.toUpperCase().trim() : null;
+			},
+			set: function(x) {
+				let data = __Type(x);
+				this._method = data.nonempty ? x : null;
+			}
+		},
 		/**. ``function onchange``: Define e retorna o disparador a ser chamado a cada mudança de estado da requisição ou nulo, se indefinido. O disparador receberá um objeto como argumento contendo os atributos/métodos ''done, time, state, size, loaded, progress, headers, abort() e content()''.**/
 		onchange: {
 			get: function() {
@@ -3770,33 +3744,97 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return this._source === "file" ? this._target.name : this._target;
 			}
 		},
-		/**. ``''void'' send(void data, string method="POST")``: Envia uma requisição web. Os argumentos ``method`` e ``data`` definem, respectivamente, método HTTP de envio e a informação a ser enviada ao destino.**/
+		/**. ``''void'' send(void data)``: Envia uma requisição web. O ``data`` a informação a ser enviada ao destino.**/
 		send: {
-			value: function(method, data) {
+			value: function(data) {
 				if (this._source !== "path") return;
-				method = __Type(method).nonempty ? method.trim().toUpperCase() : "POST";
+				let method = this.method === null ? "POST" : this.method;
 				let check  = __Type(data);
-				let action = this.target.replace(/\#.+$/, "");
+				let action = this.target.replace(/\#.+$/, "").trim();
+				action = action.replace(/\?+$/, "");
 				/* iniciando processo */
 				this._reset();
 				__MODALCONTROL.start();
+
+
+				/* FIXME importantíssimo
+se file ou select múltiplo, o nome tem que vir seguido de []
+não pode ser assim:
+	<input type="file" name="ARQUIVOS" multiple />
+tem que ser assim:
+	<input type="file" name="ARQUIVOS[]" multiple />
+Isso vale para qualquer backend?
+Como fazer isso como o objeto Form?
+Basta incluir o [] ao fim do nome?
+
+
+Para FormData function assim:
+<select name="ITENS" multiple>...
+
+
+let data = new FormData();
+data.append("ITEMS", value1);__Node
+data.append("ITEMS", value2);
+...
+O método append não substitui o valor contido no atributo name, podendo ser vários.
+Já o método set substitui e o delete apaga.
+
+para conferir:
+for(var pair of a.entries()) {
+   console.log(pair[0]+ ', '+ pair[1]);
+}
+ou:
+let itens = a.entries();
+let item = itens.next(); retorna um objeto content {done: true|false, value: [name, value]}
+let name = item.value[0];
+let value = item.value[1];
+
+E para o método GET, como proceder?
+
+ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
+
+*/
+
+
+				/* acertando o pacote FIXME continuar a implementação e depois acertar o texto*/
+				let pack = method === "POST" ? new FormData() : [];
+				if (check.object) {
+					for (let name in data) {
+						let value = data[name];
+						let scan  = __Type(value);
+						if (scan.array) {
+							value.forEach(function(v,i,a) {
+								if (method === "POST") pack.append(name, JSON.stringify(v));
+								else                   pack.push(name+"[]="+JSON.stringify(v));
+							});
+						} else {
+							if (method === "POST") pack.set(name, JSON.stringify(value));
+							else                   pack.push(name+"="+JSON.stringify(value));
+						}
+					}
+				} else if (!check.undefined) {
+					if (method === "POST") pack.set("_DATA_", JSON.stringify(data));
+					else                   pack.push("_DATA_="+JSON.stringify(data));
+				}
+				if (method !== "POST") {
+					pack   = pack.join("&");
+					action = action+(action.indexOf("?") < 0 ? "?" : "&")+pack;
+				}
+
+
+
 				/* tentando enviar */
 				try {
 					switch(method) {
 						case "GET": {
-							if (check.nonempty) {
-								data   = String(data).trim();
-								action = action.indexOf("?") < 0 ? action+"?"+data : action+"&"+data;
-							}
 							this._request.open("GET", action, this.async, this.user, this.password);
 							this._request.send(null);
 							break;
 						}
 						case "POST": {
 							this._request.open("POST", this.target, this.async, this.user, this.password);
-							if (check.nonempty)
-								this._request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-							this._request.send(data);
+							this._request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+							this._request.send(pack);
 							break;
 						}
 						default: {
@@ -3810,20 +3848,20 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return;
 			}
 		},
-		/**. ``''void'' read(string readAs)``: Lê o conteúdo de um arquivo (objeto ``File``). O argumento opcional ``readAs`` define o modo de leitura, que pode ser ''binary, text ou buffer''. Se omitido, será atribído de acordo com o tipo do arquivo ou ``binary``.**/
+		/**. ``''void'' read()``: Lê o conteúdo de um arquivo (objeto ``File``).**/
 		read: {
-			value: function(readAs) {
+			value: function() {
 				if (this._source !== "file") return null;
 				let mode = {
-					binary: "readAsBinaryString", buffer: "readAsArrayBuffer",
-					text:   "readAsText",         audio:  "readAsDataURL",
-					video:  "readAsDataURL",      image:  "readAsDataURL",
-					url:    "readAsDataURL"
+					BINARY: "readAsBinaryString", BUFFER: "readAsArrayBuffer",
+					TEXT:   "readAsText",         AUDIO:  "readAsDataURL",
+					VIDEO:  "readAsDataURL",      IMAGE:  "readAsDataURL",
+					URL:    "readAsDataURL"
 				};
 
-				let mime = String(this._target.type).split("/")[0].toLowerCase();
-				if (!(mime in mode)) mime = "binary";
-				let type = readAs in mode ? mode[readAs] : mode[mime];
+				let mime = String(this._target.type).split("/")[0].toUpperCase();
+				if (!(mime in mode)) mime = "BINARY";
+				let type = this.method in mode ? mode[this.method] : mode[mime];
 				try {
 					this._reset();
 					__MODALCONTROL.start();
@@ -5138,23 +5176,6 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 
 		return false;
 	}
-/*----------------------------------------------------------------------------*/
-	function wd_apply_getters(obj, args) { /* auto-aplica getter em objeto */
-		let type   = obj.type; /* tipo do objeto original */
-		let value  = null;     /* valor a ser retornado */
-		let object = obj;
-
-		for (let i = 0; i < args.length; i++) {
-			/* continuar se o atributo não existir */
-			if (!(args[i] in object)) continue;
-			let vtype = wd_vtype(object[args[i]]);
-			/* continuar se o valor for diferente do tipo original */
-			if (vtype.type !== type) continue;
-			object = new object.constructor(vtype);
-			value  = vtype.value;
-		}
-		return value;
-	}
 
 /*----------------------------------------------------------------------------*/
 	function wd_html_table_array(elem) { /* transforma os dados de uma tabela (table) em matriz */
@@ -5315,39 +5336,72 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				return this._data.toString();
 			}
 		},
+		/**. ``''string'' mask(''string'' mask, ''function'' callback)``: Retorna o valor o valor formatado por uma máscara. O argumento ``mask`` define o formato da máscara e o argumento opcional ``callback`` o método que irá avaliar o retorno da máscara. Se a máscara não casa, será retornado nulo.**/
+		mask: {
+			value: function(mask, callback) {
+				return new __String(this._input).mask(mask, callback)
+			}
+		},
+
+
+
 		/**. ``''void'' data()``: Efetua requisições e leitura de dados (ver ``__Request``).
 
 FIXME pensar um jeito de bom de fazer sendo e read
 
 
 		**/
-		data: {
-			value: function (action, callback, method, time) {
-				let data = new Request(this._input, callback);
-				data.maxtime = time;
-				if (data.read(method))
-
-
-				if (wd_vtype(method).type !== "text") method = "POST";
-
-				/* obtendo pacote de dados */
-				let pack;
-				if (this.type === "dom") {
-					pack = this.form(method.toUpperCase() === "GET" ? true: false);
-					if (pack === null) return false;
-				} else {
-					let value = this.type === "number" ? this.valueOf() : this.toString();
-					if ("FormData" in window && method.toUpperCase() === "POST") {
-						pack = new FormData();
-						pack.append("value", value);
-					} else {
-						pack = "value="+value;
-					}
+		/**. ``''void'' read(''functions'' onchange, ''string'' method, ''integer'' maxtime)``: Lê arquivos. O argumento ``callback`` é o método a ser chamado a cada mudança de estado; o argumento opcional ``method`` define a forma de ler o arquivo; e o argumento opcional ``maxtime`` define o tempo máximo para leitura. (ver ``__Request.read``) FIXME acertar isso**/
+		read: {
+			value: function(options) {
+				let request = new __Request(target);
+				if (__Type(options).object) {
+					let opt = ["maxtime", "method", "onchange"];
+					opt.forEach(function(v,i,a) {
+						if (v in options) request[v] = options[v];
+					});
 				}
-
-				return wd_request(action, pack, callback, method, async);
+				let data = __Type(this._input);
+				let pack = [];
+				if (data.file) {
+					pack.push(this._input);
+				} else if (data.files) {
+					let i = -1;
+					while(++i < this._input.length)
+						pack.push(this._input[i]);
+				} else if (this.type === "node") {
+					pack = this.files;
+				}
+				pack.forEach(function (v,i,a){
+					let request = new __Request(v);
+					request.onchange = onchange;
+					request.maxtime  = maxtime;
+					request.read(readAs);
+				});
 			}
 		},
+
+
+
+		send: {
+			value: function (target, options) {
+				let request = new __Request(target);
+				if (__Type(options).object) {
+					let opt = ["maxtime", "async", "user", "password", "method", "onchange"];
+					opt.forEach(function(v,i,a) {
+						if (v in options) request[v] = options[v];
+					});
+				}
+				let pack = this.type === "node" ? this.submit : this.valueOf();
+				request.send(pack);
+			}
+		},
+
+
+
+
+
+
 		/**. ``''void'' signal(''string'' title)``: Renderiza uma mensagem.**/
 		signal: {
 			value: function(title) {
@@ -5409,6 +5463,10 @@ FIXME pensar um jeito de bom de fazer sendo e read
 		trim: {
 			get: function() {return this._main.clear(true, false);}
 		},
+		/**. ``''string'' clean``: Remove acentos e espaços excedentes.**/
+		clean: {
+			get: function() {return this._main.clear();}
+		},
 		/**. ``''array'' csv``: Retorna string em CSV para array.**/
 		csv: {
 			get: function() {return this._main.csv;}
@@ -5417,30 +5475,6 @@ FIXME pensar um jeito de bom de fazer sendo e read
 		json: {
 			get: function() {try{return JSON.parse(this._input);} catch(e) {return null;}}
 		},
-
-
-
-
-		//FIXME: que tal deixar isso no genérico?
-		mask: { /* máscaras temáticas */
-			value: function(check, callback) {
-				return wd_multiple_masks(this.toString(), check, callback);
-			}
-		},
-
-		//FIXME: precisa disso?
-		rpl: { /* replaceAll simples (só texto) */
-			value: function(search, change) {
-				return wd_replace_all(this.toString(), search, change);
-			}
-		},
-
-		format: { /*aplica atributos múltiplos*/
-			value: function() {
-				return wd_apply_getters(this, Array.prototype.slice.call(arguments));
-			}
-		},
-
 	});
 
 /*----------------------------------------------------------------------------*/
@@ -5837,7 +5871,7 @@ FIXME pensar um jeito de bom de fazer sendo e read
 		},
 		/**. ``''array'' valueOf()``: Retorna uma cópia da lista.**/
 		valueOf: {
-			value: function() {return this._value.slice();}
+			value: function() {return this._main.valueOf().slice();}
 		},
 
 		//FIXME
@@ -5876,6 +5910,28 @@ FIXME pensar um jeito de bom de fazer sendo e read
 				this._data.value.forEach(function(v,i,a) {callback(v,i);});
 			}
 		},
+		/**. ``''array'' files``: Retorna uma lista com todos os arquivos selecionados pelo campo de formulário.**/
+		files: {
+			get: function() {
+				let pack = [];
+				this.forEach(function(v,i) {
+					let node = __Node(v);
+					if (node.type === "file" && v.files.length > 0) {
+						let i = -1;
+						while(++i < v.files.length) pack.push(v.files[i]);
+					}
+				});
+				return pack;
+			}
+		},
+
+
+
+
+
+
+
+
 		style: {
 			value: function(value) {
 				this._data.value.forEach(function(v,i,a) {
@@ -5960,11 +6016,6 @@ FIXME pensar um jeito de bom de fazer sendo e read
 		chart: { /* desenha gráfico de linhas e colunas */
 			value: function(data, title, xlabel, ylabel) {
 				return wd_html_chart(this.item(0), data, title, xlabel, ylabel);
-			}
-		},
-		read: { /* lê arquivos especificados em formulário (input:file) */
-			value: function(call, mode) {
-				return this.run(wd_read, call, mode);
 			}
 		},
 		info: { /* devolve informações diversas sobre o primeiro elemento */
