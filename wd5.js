@@ -3514,103 +3514,139 @@ const wd = (function() {
 
 		/*-- definindo atributos do objeto --*/
 		Object.defineProperties(this, {
-			_target:   {value: target},
-			_source:   {value: source},
-			_request:  {value: request},
-			_onchange: {value: null,  writable: true},
-			_done:     {value: false, writable: true},
+			_target:   {value: target},  /* alvo da requisição: file ou path */
+			_source:   {value: source},  /* tipo do alvo: path ou file */
+			_request:  {value: request}, /* objeto leitor */
+			_onchange: {value: null,  writable: true}, /* disparador de mudança */
+			_done:     {value: false, writable: true}, /* informa o encerramento da requisição */
+			_maxtime:  {value: 0,     writable: true}, /* tempo máxima da requisição */
+			_async:    {value: true,  writable: true}, /* leitura síncrona ou assíncrona */
+			_user:     {value: null,  writable: true}, /* usuário */
+			_password: {value: null,  writable: true}, /* senha */
+			_method:   {value: null,  writable: true}, /* método de envio ou leitura */
+			_start:    {value: 0,     writable: true}, /* tempo de início da requisição */
+
+
+			/* apagar esses e deixar somente dentro do disparador nativo */
 			_state:    {value: "",    writable: true},
-			_start:    {value: 0,     writable: true},
 			_time:     {value: 0,     writable: true},
-			_maxtime:  {value: 0,     writable: true},
 			_size:     {value: 0,     writable: true},
 			_loaded:   {value: 0,     writable: true},
 			_progress: {value: 0,     writable: true},
-			_async:    {value: true,  writable: true},
-			_user:     {value: null,  writable: true},
-			_password: {value: null,  writable: true},
-			_method:   {value: null,  writable: true},
+
+
 		});
 
-		/*-- definir disparador nativo e o vinculando aos eventos do leitor --*/
+		/*-- definir disparador nativo e vinculá-lo aos eventos do objeto leitor --*/
 		let self    = this;
-		let trigger = function(x) {
-			/*-- motivo: não retornar o disparador depois do encerramento --*/
-			if (self._done) return;
+		let trigger = function(event) {
+			/*-- Não retornar o disparador depois do encerramento ou se não identificado o alvo --*/
+			if (self._done || self._target === null) return;
 
-			/*-- definir os valores temporais do leitor aos atributos do objeto */
-			self._time     = new Date().valueOf();
-			self._size     = "total"  in x ? x.total  : 0;
-			self._loaded   = "loaded" in x ? x.loaded : 0;
-			self._progress = self._size === 0 ? 1 : self._loaded/self._size;
-			__MODALCONTROL.progress(self._progress);
+			/*-- definir variáveis do disparador --*/
+			let time      = new Date().valueOf() - self._start;
+			let source    = self._source;
+			let request   = self._request;
+			let stateCode = request.readyState;
+			let status    = request.status;
+			let maxtime   = self.maxtime;
+			let type      = event.type;
+			let size      = "total"  in event ? event.total  : 0;
+			let loaded    = "loaded" in event ? event.loaded : 0;
+			let progress  = size === 0 ? 1 : loaded/size;
+			let states    = {
+				file:   ["empty", "loading", "done"],
+				path:   ["unsent", "opened", "headers", "loading", "done"],
+				errors: ["abort", "timeout", "error"]
+			};
+			__MODALCONTROL.progress(progress);
 
-			/*-- obter valores do evento (argumento do disparador nativo) --*/
-			let source = self._source;
-			let type   = x.type;
-			let state  = self._request.readyState;
+			/*-- analisar o estado da requisição --*/
+			let state = states[source][stateCode];
 
-			/*-- definir estados do progresso --*/
-			let errors = ["abort", "timeout", "error"];
-			let states, status;
-			if (source === "file") {
-				states = ["empty", "loading", "closing"];
-				status = null;
-			} else if (source === "path") {
-				states = ["unsent", "opened", "headers", "loading", "closing"];
-				status = self._request.status;
-			}
-
-			/*-- analisar progresso da requisição --*/
 			if (status === 404) {
-				self._done  = true;
-				self._state = "notfound";
-			} else if (errors.indexOf(type) >= 0) {
-				self._done  = true;
-				self._state = type;
-			} else if (source === "file" && self.maxtime > 0 && self._time > self.maxtime) {
-				self._done  = true;
-				self._state = "timeout";
-				self._request.abort();
-			} else if (source === "path" && state === 4 && type === "loadend") {
-				self._done  = true;
-				self._state = "done";
-			} else if (source === "file" && state === 2 && type === "loadend") {
-				self._done  = true;
-				self._state = "done";
+				self._done = true;
+				state = "notfound";
+			} else if (states.errors.indexOf(type) >= 0) {
+				self._done = true;
+				state = type;
+			} else if (source === "file" && maxtime > 0 && time > maxtime) {
+				request.abort();
+				self._done = true;
+				state = "timeout";
 			} else {
-				self._state = states[state];
+				self._done = state === "done";
 			}
 
-			/*-- chamar o disparador definido pelo usuário --*/
-			if (self.onchange !== null) {
-				/*-- melhorando a visualização dos cabeçalhos --*/
-				let headers = self._source === "path" ? self._request.getAllResponseHeaders() : null;
+			/*-- Obter cabeçalhos --*/
+			let headers = null;
+			if ("getAllResponseHeaders" in request) {
+				headers = request.getAllResponseHeaders();
 				if (__Type(headers).nonempty) {
 					let list = headers.split(/[\r\n]+/g);
 					headers = {};
-					list.forEach(function(v,i,a){
+					list.forEach(function(v,i,a) {
 						let name  = v.split(":")[0].trim();
 						let value = v.replace(/^[^:]+\:(.+)$/, "$1").trim();
 						headers[name] = value;
 					});
-				} else {
-					headers = null;
 				}
-				/*-- definindo content --*/
-				let content = self.constructor.prototype._content;
+			}
+
+			/*-- obter resultado --*/
+			//let response = self._done ? request[(source === "path" ? "responseText" : "result")] : null;
+			let response = self._done ? (request.responseText || request.result) : null;
+			let paser    = new DOMParser();
+
+
+			/*-- chamar o disparador definido pelo usuário --*/
+			if (self.onchange !== null) {
 				/*-- chamar o disparador do usuário --*/
 				self.onchange({
 					done:     self._done,
-					time:     self._time - self._start,
-					state:    self._state,
-					size:     self._size,
-					loaded:   self._loaded,
-					progress: self._progress,
+					time:     time,
+					state:    state,
+					size:     size,
+					loaded:   loaded,
+					progress: progress,
 					headers:  headers,
 					abort:    function() {self._request.abort();},
-					content:  function() {return content.apply(self, arguments);},
-					self: self
+					response: {
+						get value() {return response;},
+						get text()  {
+							return __Type(this.value).chars ? this.value : null;
+						},
+						get xml()  {
+							if (this.text === null) return null;
+							try {return paser.parseFromString(this.text, "application/xml");}
+							catch(e) {return null;}
+						},
+						get html()  {
+							if (this.text === null) return null;
+							try {return paser.parseFromString(this.text, "text/html");}
+							catch(e) {return null;}
+						},
+						get xhtml()  {
+							if (this.text === null) return null;
+							try {return paser.parseFromString(this.text, "application/xhtml+xml");}
+							catch(e) {return null;}
+						},
+						get svg()  {
+							if (this.text === null) return null;
+							try {return paser.parseFromString(this.text, "image/svg+xmll");}
+							catch(e) {return null;}
+						},
+						get json()  {
+							if (this.text === null) return null;
+							try {return JSON.parse(this.text);}
+							catch(e) {return null;}
+						},
+						get csv()  {
+							if (this.text === null) return null;
+							try {return __String(this.text).csv();}
+							catch(e) {return null;}
+						},
+					}
 				});
 			}
 
@@ -3631,47 +3667,6 @@ const wd = (function() {
 
 	Object.defineProperties(__Request.prototype, {
 		constructor: {value: __Request},
-		/**. ``''void'' _reset()``: Reinicia valores para a requisição.**/
-		_reset: {
-			value: function() {
-				this._time     = new Date().valueOf();
-				this._start    = this._time;
-				this._done     = false;
-				this._notfound = false;
-				if (this._source === "path")
-					this._request.timeout = this.maxtime;
-			}
-		},
-		/**. ``''void'' _content(''string'' type)``: Retorna o conteúdo da requisição ou ``null`` se indefinido ou com erro.
-		. O argumento opcional ``type``, define o tipo do retorno a partir do conteúdo da requisição, podendo ser ``text``, ``xml``, ``html``, ``xhtml``, ``svg``, ``json`` e ``csv``.**/
-		_content: {
-			value: function(type) {
-				if (!this._done || this._source === null) return null;
-				let value = this._request[(this._source === "path" ? "responseText" : "result")];
-				try {
-					let paser = new DOMParser();
-					let chars = __Type(value).chars;
-
-					switch(type) {
-						case "text":
-							return chars ? value : null;
-						case  "xml":
-							return chars ? paser.parseFromString(value, "application/xml") : null;
-						case "html":
-							return chars ? paser.parseFromString(value, "text/html") : null;
-						case "xhtml":
-							return chars ? paser.parseFromString(value, "application/xhtml+xml") : null;
-						case "svg":
-							return chars ? paser.parseFromString(value, "image/svg+xml") : null;
-						case "json":
-							return chars ? JSON.parse(value) : null;
-						case "csv":
-							return chars ? __String(value).csv() : null;
-					}
-					return this._source === "path" ? this._request.response : value;
-				} catch(e) {return null;}
-			}
-		},
 		/**. ``''number'' maxtime``: Define e retorna o tempo máximo de requisição em milisegundos.**/
 		maxtime: {
 			get: function() {
@@ -3753,7 +3748,9 @@ const wd = (function() {
 				let action = this.target.replace(/\#.+$/, "").trim();
 				action = action.replace(/\?+$/, "");
 				/* iniciando processo */
-				this._reset();
+				this._start = new Date().valueOf();
+				this._done  = false;
+				this._request.timeout = this.maxtime;
 				__MODALCONTROL.start();
 
 
@@ -3863,7 +3860,8 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				if (!(mime in mode)) mime = "BINARY";
 				let type = this.method in mode ? mode[this.method] : mode[mime];
 				try {
-					this._reset();
+					this._start = new Date().valueOf();
+					this._done  = false;
 					__MODALCONTROL.start();
 					this._request[type](this._target);
 				} catch(e) {return null;}
