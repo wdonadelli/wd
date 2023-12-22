@@ -3481,6 +3481,125 @@ const wd = (function() {
 				return object;
 			}
 		},
+
+
+		submit: {
+			value: function() {
+
+
+				/* FIXME importantíssimo
+se file ou select múltiplo, o nome tem que vir seguido de []
+não pode ser assim:
+	<input type="file" name="ARQUIVOS" multiple />
+tem que ser assim:
+	<input type="file" name="ARQUIVOS[]" multiple />
+Isso vale para qualquer backend?
+Como fazer isso como o objeto Form?
+Basta incluir o [] ao fim do nome?
+
+
+Para FormData function assim:
+<select name="ITENS" multiple>...
+
+
+let data = new FormData();
+data.append("ITEMS", value1);__Node
+data.append("ITEMS", value2);
+...
+O método append não substitui o valor contido no atributo name, podendo ser vários.
+Já o método set substitui e o delete apaga.
+
+para conferir:
+for(var pair of a.entries()) {
+   console.log(pair[0]+ ', '+ pair[1]);
+}
+ou:
+let itens = a.entries();
+let item = itens.next(); retorna um objeto content {done: true|false, value: [name, value]}
+let name = item.value[0];
+let value = item.value[1];
+
+E para o método GET, como proceder?
+
+ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
+
+*/
+
+
+				/* acertando o pacote FIXME continuar a implementação e depois acertar o texto*/
+				let pack = method === "POST" ? new FormData() : [];
+				if (check.object) {
+					for (let name in data) {
+						let value = data[name];
+						let scan  = __Type(value);
+						if (scan.array) {
+							value.forEach(function(v,i,a) {
+								if (method === "POST") pack.append(name, JSON.stringify(v));
+								else                   pack.push(name+"[]="+JSON.stringify(v));
+							});
+
+						} else {
+							if (method === "POST") pack.set(name, JSON.stringify(value));
+							else                   pack.push(name+"="+JSON.stringify(value));
+						}
+					}
+				} else if (!check.undefined) {
+					if (method === "POST") pack.set("_DATA_", JSON.stringify(data));
+					else                   pack.push("_DATA_="+JSON.stringify(data));
+				}
+				if (method !== "POST") {
+					pack   = pack.join("&");
+					action = action+(action.indexOf("?") < 0 ? "?" : "&")+pack;
+				}
+
+
+
+
+				try {
+					switch(method) {
+						case "GET": {
+							this._request.open("GET", action, this.async, this.user, this.password);
+							this._request.send(null);
+							break;
+						}
+						case "POST": {
+							this._request.open("POST", this.target, this.async, this.user, this.password);
+							this._request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+							this._request.send(pack);
+							break;
+						}
+						default: {
+							this._request.open(method, this.target, this.async, this.user, this.password);
+							this._request.send(data);
+						}
+					}
+				} catch(e) {
+					__MODALCONTROL.end();
+				}
+				return;
+
+
+
+
+
+
+
+			}
+
+		}
+
+
+
+
+
+
+
+
+
+
+
+
+
 	});
 
 
@@ -3518,23 +3637,15 @@ const wd = (function() {
 			_source:   {value: source},  /* tipo do alvo: path ou file */
 			_request:  {value: request}, /* objeto leitor */
 			_onchange: {value: null,  writable: true}, /* disparador de mudança */
+			_ondone:   {value: null,  writable: true}, /* disparador de término */
 			_done:     {value: false, writable: true}, /* informa o encerramento da requisição */
 			_maxtime:  {value: 0,     writable: true}, /* tempo máxima da requisição */
 			_async:    {value: true,  writable: true}, /* leitura síncrona ou assíncrona */
 			_user:     {value: null,  writable: true}, /* usuário */
 			_password: {value: null,  writable: true}, /* senha */
 			_method:   {value: null,  writable: true}, /* método de envio ou leitura */
+			_header:   {value: null,  writable: true}, /* cabeçalhos de envio */
 			_start:    {value: 0,     writable: true}, /* tempo de início da requisição */
-
-
-			/* apagar esses e deixar somente dentro do disparador nativo */
-			_state:    {value: "",    writable: true},
-			_time:     {value: 0,     writable: true},
-			_size:     {value: 0,     writable: true},
-			_loaded:   {value: 0,     writable: true},
-			_progress: {value: 0,     writable: true},
-
-
 		});
 
 		/*-- definir disparador nativo e vinculá-lo aos eventos do objeto leitor --*/
@@ -3592,71 +3703,61 @@ const wd = (function() {
 					});
 				}
 			}
-
 			/*-- obter resultado --*/
-			//let response = self._done ? request[(source === "path" ? "responseText" : "result")] : null;
-			let response = self._done ? (request.responseText || request.result) : null;
-			let paser    = new DOMParser();
+			let argument = {
+				done:    self._done,
+				time:    time,
+				state:   state,
+				size:    size,
+				loaded:  loaded,
+				headers: headers,
+				abort:   function() {if (!this.done) request.abort();},
+				get response() {
+					return this.done ? (request.response || request.result) : null;
+				},
+				get text() {
+					return __Type(this.response).chars ? this.response : null;
+				},
+				get html() {
+					if (this.text === null) return null;
+					try {
+						let parse = new DOMParser();
+						return parse.parseFromString(this.text, "text/html");
+					} catch(e) {}
+					return null;
+				},
+				get xml() {
+					if (this.text === null) return null;
+					try {
+						let parse = new DOMParser();
+						return parse.parseFromString(this.text, "application/xml");
+					} catch(e) {}
+					return null;
+				},
+				get json() {
+					if (this.text === null) return null;
+					try {return JSON.parse(this.text);} catch(e) {}
+					return null;
+				},
+				get csv() {
+					if (this.text === null) return null;
+					try {return __String(this.text).csv();} catch(e) {}
+					return null;
+				}
+			};
 
-
-			/*-- chamar o disparador definido pelo usuário --*/
-			if (self.onchange !== null) {
-				/*-- chamar o disparador do usuário --*/
-				self.onchange({
-					done:     self._done,
-					time:     time,
-					state:    state,
-					size:     size,
-					loaded:   loaded,
-					progress: progress,
-					headers:  headers,
-					abort:    function() {self._request.abort();},
-					response: {
-						get value() {return response;},
-						get text()  {
-							return __Type(this.value).chars ? this.value : null;
-						},
-						get xml()  {
-							if (this.text === null) return null;
-							try {return paser.parseFromString(this.text, "application/xml");}
-							catch(e) {return null;}
-						},
-						get html()  {
-							if (this.text === null) return null;
-							try {return paser.parseFromString(this.text, "text/html");}
-							catch(e) {return null;}
-						},
-						get xhtml()  {
-							if (this.text === null) return null;
-							try {return paser.parseFromString(this.text, "application/xhtml+xml");}
-							catch(e) {return null;}
-						},
-						get svg()  {
-							if (this.text === null) return null;
-							try {return paser.parseFromString(this.text, "image/svg+xmll");}
-							catch(e) {return null;}
-						},
-						get json()  {
-							if (this.text === null) return null;
-							try {return JSON.parse(this.text);}
-							catch(e) {return null;}
-						},
-						get csv()  {
-							if (this.text === null) return null;
-							try {return __String(this.text).csv();}
-							catch(e) {return null;}
-						},
-					}
-				});
-			}
-
+			/*-- chamar disparadores definidos pelo usuário --*/
+			if (self.onchange !== null) self.onchange(argument);
+			if (self._done && self.ondone !== null) self.ondone(argument);
 			/*-- encerrar barra de progresso, se processo finalizado --*/
 			if (self._done) __MODALCONTROL.end();
 		}
 
 		/*-- atribuir o disparador nativos a todos os eventos do leitor --*/
-		let events = ["onabort", "onerror", "onload", "onloadend", "onloadstart",
-		"onprogress", "ontimeout", "onreadystatechange"];
+		let events = [
+			"onabort", "onerror", "onload", "onloadend", "onloadstart",
+			"onprogress", "ontimeout", "onreadystatechange"
+		];
 		events.forEach(function(v,i,a) {
 			if (v in self._request)
 				self._request[v] = trigger;
@@ -3669,176 +3770,71 @@ const wd = (function() {
 		constructor: {value: __Request},
 		/**. ``''number'' maxtime``: Define e retorna o tempo máximo de requisição em milisegundos.**/
 		maxtime: {
-			get: function() {
-				let data = __Type(this._maxtime);
-				return data.finite && data >= 0 ? data.value : 0;
-			},
-			set: function(x) {
-				let data = __Type(x);
-				this._maxtime = data.finite && data >= 0 ?  Math.trunc(data.value) : 0;
-			}
+			set: function(x) {this._maxtime = __Type(x).positive ? Math.trunc(x) : 0;},
+			get: function()  {return this._maxtime > 0 ? this._maxtime : 0;},
 		},
 		/**. ``''boolean'' async``: Define e retorna se a requisição será assíncrona.**/
 		async: {
-			get: function() {
-				let data = __Type(this._async);
-				return data.boolean ? data.value : true;
-			},
-			set: function(x) {
-				let data = __Type(x);
-				this._async = data.boolean ? data.value : true;
-			}
+			set: function(x) {this._async = x === false ? false : true;},
+			get: function()  {return this._async === false ? false : true;}
 		},
 		/**. ``''string'' user``: Define e retorna o usuário da requisição ou nulo se indefinido.**/
 		user: {
-			get: function() {
-				let data = __Type(this._user);
-				return data.nonempty ? this._user.trim() : null;
-			},
-			set: function(x) {
-				let data = __Type(x);
-				this._user = data.nonempty ? x.trim() : null;
-			}
+			set: function(x) {this._user = x === null ? null : String(x);},
+			get: function()  {return this._user === null ? null : String(this._user);},
 		},
 		/**. ``''string'' password``: Define e retorna a senha da requisição ou nulo se indefinida.**/
 		password: {
-			get: function() {
-				let data = __Type(this._password);
-				return data.nonempty ? this._password : null;
-			},
-			set: function(x) {
-				let data = __Type(x);
-				this._password = data.nonempty ? x : null;
-			}
+			set: function(x) {this._password = x === null ? null : String(x);},
+			get: function()  {return this._password === null ? null : String(this._password);},
+
 		},
-		/**. ``''string'' method``: Define e retorna a forma de leitura (binary, text, url ou buffer) ou o método HTTP de envio (POST, GET).**/
+		/**. ``''string'' method``: Define e retorna a forma de leitura (binary, text, url ou buffer) ou o método HTTP de envio (POST, GET...).**/
 		method: {
-			get: function() {
-				let data = __Type(this._method);
-				return data.nonempty ? this._method.toUpperCase().trim() : null;
-			},
-			set: function(x) {
-				let data = __Type(x);
-				this._method = data.nonempty ? x : null;
-			}
+			set: function(x) {this._method = x === null ? null : String(x).toUpperCase().trim();},
+			get: function()  {return this._method === null ? null : this._method;},
 		},
-		/**. ``function onchange``: Define e retorna o disparador a ser chamado a cada mudança de estado da requisição ou nulo, se indefinido. O disparador receberá um objeto como argumento contendo os atributos/métodos ''done, time, state, size, loaded, progress, headers, abort() e content()''.**/
+		/**. ``''object'' header``: Define e retorna os cabeçalhos em forma de objeto contendo nome/valor.**/
+		header: {
+			set: function(x) {this._header = __Type(x).object ? x : null;},
+			get: function()  {return this._header === null ? null : this._header;},
+		},
+		/**. ``function onchange``: Define e retorna o disparador a ser chamado a cada mudança de estado da requisição ou nulo, se indefinido. O disparador receberá um objeto como argumento contendo os atributos/métodos ''done, time, state, size, loaded, headers, abort(), response, text, html, xml, json e csv''.**/
 		onchange: {
-			get: function() {
-				let data = __Type(this._onchange);
-				return data.function ? this._onchange : null;
-			},
-			set: function(x) {
-				let data = __Type(x);
-				this._onchange = data.function ? x : null;
-			}
-		},
+			set: function(x) {this._onchange = __Type(x).function ? x : null;},
+			get: function()  {return this._onchange === null ? null : this._onchange;},
+ 		},
+ 		/**. ``function ondone``: Como ``onchange``, mas será disparada somente no fim do procedimento.**/
+ 		ondone: {
+			set: function(x) {this._ondone = __Type(x).function ? x : null;},
+			get: function()  {return this._ondone === null ?  null : this._ondone;},
+ 		},
 		/**. ``''string'' target``: Retorna o alvo da requisição.**/
 		target: {
-			get: function() {
-				return this._source === "file" ? this._target.name : this._target;
-			}
+			get: function() {return this._source === "file" ? this._target.name : this._target;}
 		},
 		/**. ``''void'' send(void data)``: Envia uma requisição web. O ``data`` a informação a ser enviada ao destino.**/
 		send: {
 			value: function(data) {
 				if (this._source !== "path") return;
-				let method = this.method === null ? "POST" : this.method;
-				let check  = __Type(data);
-				let action = this.target.replace(/\#.+$/, "").trim();
-				action = action.replace(/\?+$/, "");
+				let methods = ["CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT", "TRACE"];
+				let method  = methods.indexOf(this.method) >= 0 ? this.method : "POST";
+				let header  = this.header;
 				/* iniciando processo */
 				this._start = new Date().valueOf();
 				this._done  = false;
 				this._request.timeout = this.maxtime;
 				__MODALCONTROL.start();
 
-
-				/* FIXME importantíssimo
-se file ou select múltiplo, o nome tem que vir seguido de []
-não pode ser assim:
-	<input type="file" name="ARQUIVOS" multiple />
-tem que ser assim:
-	<input type="file" name="ARQUIVOS[]" multiple />
-Isso vale para qualquer backend?
-Como fazer isso como o objeto Form?
-Basta incluir o [] ao fim do nome?
-
-
-Para FormData function assim:
-<select name="ITENS" multiple>...
-
-
-let data = new FormData();
-data.append("ITEMS", value1);__Node
-data.append("ITEMS", value2);
-...
-O método append não substitui o valor contido no atributo name, podendo ser vários.
-Já o método set substitui e o delete apaga.
-
-para conferir:
-for(var pair of a.entries()) {
-   console.log(pair[0]+ ', '+ pair[1]);
-}
-ou:
-let itens = a.entries();
-let item = itens.next(); retorna um objeto content {done: true|false, value: [name, value]}
-let name = item.value[0];
-let value = item.value[1];
-
-E para o método GET, como proceder?
-
-ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
-
-*/
-
-
-				/* acertando o pacote FIXME continuar a implementação e depois acertar o texto*/
-				let pack = method === "POST" ? new FormData() : [];
-				if (check.object) {
-					for (let name in data) {
-						let value = data[name];
-						let scan  = __Type(value);
-						if (scan.array) {
-							value.forEach(function(v,i,a) {
-								if (method === "POST") pack.append(name, JSON.stringify(v));
-								else                   pack.push(name+"[]="+JSON.stringify(v));
-							});
-						} else {
-							if (method === "POST") pack.set(name, JSON.stringify(value));
-							else                   pack.push(name+"="+JSON.stringify(value));
-						}
-					}
-				} else if (!check.undefined) {
-					if (method === "POST") pack.set("_DATA_", JSON.stringify(data));
-					else                   pack.push("_DATA_="+JSON.stringify(data));
-				}
-				if (method !== "POST") {
-					pack   = pack.join("&");
-					action = action+(action.indexOf("?") < 0 ? "?" : "&")+pack;
-				}
-
-
-
 				/* tentando enviar */
 				try {
-					switch(method) {
-						case "GET": {
-							this._request.open("GET", action, this.async, this.user, this.password);
-							this._request.send(null);
-							break;
-						}
-						case "POST": {
-							this._request.open("POST", this.target, this.async, this.user, this.password);
-							this._request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-							this._request.send(pack);
-							break;
-						}
-						default: {
-							this._request.open(method, this.target, this.async, this.user, this.password);
-							this._request.send(data);
-						}
+					console.log(method, this.target, this.async, this.user, this.password, data, header);
+					this._request.open(method, this.target, this.async, this.user, this.password);
+					if (header !== null) {
+						for (let name in header)
+							this._request.setRequestHeader(String(name), String(header[name]));
 					}
+					this._request.send(data);
 				} catch(e) {
 					__MODALCONTROL.end();
 				}
@@ -3857,14 +3853,17 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				};
 
 				let mime = String(this._target.type).split("/")[0].toUpperCase();
-				if (!(mime in mode)) mime = "BINARY";
+				if (!(mime in mode)) mime = "BUFFER";
 				let type = this.method in mode ? mode[this.method] : mode[mime];
 				try {
 					this._start = new Date().valueOf();
 					this._done  = false;
 					__MODALCONTROL.start();
 					this._request[type](this._target);
-				} catch(e) {return null;}
+				} catch(e) {
+					__MODALCONTROL.end();
+				}
+				return;
 			}
 		}
 	});
