@@ -3481,125 +3481,6 @@ const wd = (function() {
 				return object;
 			}
 		},
-
-
-		submit: {
-			value: function() {
-
-
-				/* FIXME importantíssimo
-se file ou select múltiplo, o nome tem que vir seguido de []
-não pode ser assim:
-	<input type="file" name="ARQUIVOS" multiple />
-tem que ser assim:
-	<input type="file" name="ARQUIVOS[]" multiple />
-Isso vale para qualquer backend?
-Como fazer isso como o objeto Form?
-Basta incluir o [] ao fim do nome?
-
-
-Para FormData function assim:
-<select name="ITENS" multiple>...
-
-
-let data = new FormData();
-data.append("ITEMS", value1);__Node
-data.append("ITEMS", value2);
-...
-O método append não substitui o valor contido no atributo name, podendo ser vários.
-Já o método set substitui e o delete apaga.
-
-para conferir:
-for(var pair of a.entries()) {
-   console.log(pair[0]+ ', '+ pair[1]);
-}
-ou:
-let itens = a.entries();
-let item = itens.next(); retorna um objeto content {done: true|false, value: [name, value]}
-let name = item.value[0];
-let value = item.value[1];
-
-E para o método GET, como proceder?
-
-ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
-
-*/
-
-
-				/* acertando o pacote FIXME continuar a implementação e depois acertar o texto*/
-				let pack = method === "POST" ? new FormData() : [];
-				if (check.object) {
-					for (let name in data) {
-						let value = data[name];
-						let scan  = __Type(value);
-						if (scan.array) {
-							value.forEach(function(v,i,a) {
-								if (method === "POST") pack.append(name, JSON.stringify(v));
-								else                   pack.push(name+"[]="+JSON.stringify(v));
-							});
-
-						} else {
-							if (method === "POST") pack.set(name, JSON.stringify(value));
-							else                   pack.push(name+"="+JSON.stringify(value));
-						}
-					}
-				} else if (!check.undefined) {
-					if (method === "POST") pack.set("_DATA_", JSON.stringify(data));
-					else                   pack.push("_DATA_="+JSON.stringify(data));
-				}
-				if (method !== "POST") {
-					pack   = pack.join("&");
-					action = action+(action.indexOf("?") < 0 ? "?" : "&")+pack;
-				}
-
-
-
-
-				try {
-					switch(method) {
-						case "GET": {
-							this._request.open("GET", action, this.async, this.user, this.password);
-							this._request.send(null);
-							break;
-						}
-						case "POST": {
-							this._request.open("POST", this.target, this.async, this.user, this.password);
-							this._request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-							this._request.send(pack);
-							break;
-						}
-						default: {
-							this._request.open(method, this.target, this.async, this.user, this.password);
-							this._request.send(data);
-						}
-					}
-				} catch(e) {
-					__MODALCONTROL.end();
-				}
-				return;
-
-
-
-
-
-
-
-			}
-
-		}
-
-
-
-
-
-
-
-
-
-
-
-
-
 	});
 
 
@@ -3809,10 +3690,6 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			set: function(x) {this._ondone = __Type(x).function ? x : null;},
 			get: function()  {return this._ondone === null ?  null : this._ondone;},
  		},
-		/**. ``''string'' target``: Retorna o alvo da requisição.**/
-		target: {
-			get: function() {return this._source === "file" ? this._target.name : this._target;}
-		},
 		/**. ``''void'' send(void data)``: Envia uma requisição web. O ``data`` a informação a ser enviada ao destino.**/
 		send: {
 			value: function(data) {
@@ -3820,16 +3697,22 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				let methods = ["CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT", "TRACE"];
 				let method  = methods.indexOf(this.method) >= 0 ? this.method : "POST";
 				let header  = this.header;
+				let target  = this._target;
+				/* para GET e HEAD, que data é nulo */
+				if (method === "GET" || method === "HEAD") {
+					target  = target.replace(/\#.+$/, "").replace(/\?+(\s+)?$/);
+					if (data !== null && data !== undefined)
+						target += (target.indexOf("?") >= 0 ? "" : "?") + String(data);
+					data = null;
+				}
 				/* iniciando processo */
 				this._start = new Date().valueOf();
 				this._done  = false;
 				this._request.timeout = this.maxtime;
 				__MODALCONTROL.start();
-
 				/* tentando enviar */
 				try {
-					console.log(method, this.target, this.async, this.user, this.password, data, header);
-					this._request.open(method, this.target, this.async, this.user, this.password);
+					this._request.open(method, target, this.async, this.user, this.password);
 					if (header !== null) {
 						for (let name in header)
 							this._request.setRequestHeader(String(name), String(header[name]));
@@ -5353,7 +5236,7 @@ FIXME pensar um jeito de bom de fazer sendo e read
 			value: function(options) {
 				let request = new __Request(target);
 				if (__Type(options).object) {
-					let opt = ["maxtime", "method", "onchange"];
+					let opt = ["maxtime", "method", "onchange", "ondone"];
 					opt.forEach(function(v,i,a) {
 						if (v in options) request[v] = options[v];
 					});
@@ -5382,14 +5265,31 @@ FIXME pensar um jeito de bom de fazer sendo e read
 
 		send: {
 			value: function (target, options) {
+				/* abrindo requisição e definindo parâmetros */
 				let request = new __Request(target);
 				if (__Type(options).object) {
-					let opt = ["maxtime", "async", "user", "password", "method", "onchange"];
+					let opt = [
+						"maxtime", "async", "user", "password",
+						"header", "method", "onchange", "ondone"
+					];
 					opt.forEach(function(v,i,a) {
 						if (v in options) request[v] = options[v];
 					});
 				}
-				let pack = this.type === "node" ? this.submit : this.valueOf();
+				/* obtendo o pacote a ser enviado */
+				let pack = this.toString();
+				switch(this.type) {
+					case "node": {
+						let submit = this.submit;
+						if (submit === null) return;
+						if (request.method === "GET" || request.method === "HEAD")
+							pack = submit.GET;
+						else
+							pack = submit.POST;
+						break;
+					}
+				}
+				/* enviando o pacote */
 				request.send(pack);
 			}
 		},
@@ -5921,6 +5821,99 @@ FIXME pensar um jeito de bom de fazer sendo e read
 				return pack;
 			}
 		},
+
+/* FIXME importantíssimo
+se file ou select múltiplo, o nome tem que vir seguido de []
+não pode ser assim:
+	<input type="file" name="ARQUIVOS" multiple />
+tem que ser assim:
+	<input type="file" name="ARQUIVOS[]" multiple />
+Isso vale para qualquer backend?
+Como fazer isso como o objeto Form?
+Basta incluir o [] ao fim do nome?
+
+
+Para FormData function assim:
+<select name="ITENS" multiple>...
+
+
+let data = new FormData();
+data.append("ITEMS", value1);__Node
+data.append("ITEMS", value2);
+...
+O método append não substitui o valor contido no atributo name, podendo ser vários.
+Já o método set substitui e o delete apaga.
+
+para conferir:
+for(var pair of a.entries()) {
+   console.log(pair[0]+ ', '+ pair[1]);
+}
+ou:
+let itens = a.entries();
+let item = itens.next(); retorna um objeto content {done: true|false, value: [name, value]}
+let name = item.value[0];
+let value = item.value[1];
+
+E para o método GET, como proceder?
+
+ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
+
+*/
+
+
+
+
+		submit: {
+			get: function() {
+				/* função que retorna um array com os parâmetros da submissão */
+				let packer = function (name, value) {
+					let check = __Type(value);
+					let data  = [];
+					if (check.array) {
+						value.forEach(function(v,i,a) {data.push(packer(name+"[]", v)[0]);});
+						return data;
+					}
+					data.push({
+						name: name,
+						value: value,
+						uri: encodeURIComponent(check.file ? value.name : value)
+					});
+					return data;
+				}
+				/* verificando se há formulário válido a enviar */
+				let data  = [];
+				let error = false;
+				this.forEach(function(v,i) {
+					if (error) return;
+					let node = __Node(v);
+					let form = node.submit;
+					if (form === null) return;
+					if (!form.validity)
+						error = true;
+					else
+						data.push(form);
+				});
+				if (data.length === 0 || error) return null;
+				/* obtendo o conjunto de dados */
+				let dataset = [];
+				data.forEach(function(v,i,a) {
+					let form = packer(v.name, v.value);
+					form.forEach(function(item) {dataset.push(item);});
+				});
+				/* definindo retorno */
+				let POST = new FormData();
+				let GET  = [];
+				dataset.forEach(function (v,i,a) {
+					GET.push(v.name+"="+v.uri);
+					POST.append(v.name, v.value);
+				});
+				return {POST: POST, GET: GET.join("&")};
+			}
+		},
+
+
+
+
 
 
 
