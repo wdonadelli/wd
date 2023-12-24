@@ -542,7 +542,7 @@ const wd = (function() {
 		/* IMPORTANTE: object deve ser o último (qualquer um pode ser um objeto) */
 		let objects = [
 			"null", "undefined", "boolean", "number", "datetime",
-			"array", "node", "regexp", "function", "object"
+			"array", "node", "regexp", "function", "file", "object"
 		];
 		/*-- Checagem do tipo --*/
 		let types = this.chars ? strings : objects;
@@ -982,11 +982,40 @@ const wd = (function() {
 				return true;
 			}
 		},
+		/**. ``''boolean'' file``: Checa se o argumento é do tipo ``File``, ``FileList`` ou ``Blob``.**/
+		file: {
+			get: function() {
+				if (this.type !== null) return this.type === "file";
+				let files = { /* 0: individual, 1: lista */
+					File: 0,
+					FileList: 1,
+					Blob: 0
+				};
+				let file = null;
+				for (let name in files) {
+					if (name in window && this._input instanceof window[name]) {
+						file = [];
+						if (files[name] === 0) {
+							file.push(this._input);
+						} else {
+							let i = -1;
+							while (++i < this._input.length)
+								file.push(this._input[i]);
+						}
+					}
+				}
+				if (file === null) return false;
+				this._type     = "file";
+				this._value    = file;
+				this._valueOf  = this._value.slice();
+				this._toString = this._value;
+				return true;
+			}
+		},
 		/**. ``''boolean'' object``: Checa se o argumento é um objeto que não se enquadra nas demais categorias.**/
 		object: {
 			get: function() {
 				if (this.type !== null) return this.type === "object";
-				if (this.string) return false;
 				if (typeof this._input === "object") {
 					this._type     = "object";
 					this._value    = this._input;
@@ -997,20 +1026,7 @@ const wd = (function() {
 				return false;
 			}
 		},
-		/**. ``''boolean'' file``: Checa se o argumento é do tipo ``File``.**/
-		file: {
-			get: function() {
-				if (typeof this._input !== "object") return false;
-				return this._input.constructor.name === "File";
-			}
-		},
-		/**. ``''boolean'' files``: Checa se o argumento é do tipo ``FileList``.**/
-		files: {
-			get: function() {
-				if (typeof this._input !== "object") return false;
-				return this._input.constructor.name === "FileList";
-			}
-		},
+
 		/**. ``''string'' type``: Retorna o tipo do argumento verificado (number, date, time, datetime, string, null, undefined, boolean, array, node, regexp, function, object).**/
 		type: {
 			get: function() {return this._type;}
@@ -2393,6 +2409,143 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	/**#### Formulários HTML
+	###### ``**constructor** ''object'' __URL(''string'' input)``
+	Construtor para gerir parâmetros de envio de requisição. O argumento ``input`` é o destino da requisição. Se vazio, observará o URL visitado.**/
+	function __URL(input) {
+		if (!(this instanceof __URL))	return new __URL(input);
+		if (input === undefined || input === null || String(input).trim() === "")
+			input = document.URL;
+		input = String(input).split("#");
+		let target = input[0].trim().replace(/\?+$/, "").trim();
+		let hash   = input.length > 1 ? "#"+input[1].trim() :  "";
+		Object.defineProperties(this, {
+			_target: {value: target},
+			_hash:   {value: hash},
+			_data:   {value: []},
+		});
+	}
+
+	Object.defineProperties(__URL.prototype, {
+		constructor: {value: __URL},
+		/**. ``''void'' append(''string'' name, ''any'' value)``: Apensa um conjunto de dados ``name/value``. Se ``value`` for um array, ``name`` receberá um par de colchetes ao fim da string. Se ``value`` for um objeto, ``name`` receberá ao fim da string o nome do atributo.**/
+		append: {
+			value: function(name, value) {
+				name = String(name);
+				let check = __Type(value);
+				let self  = this;
+				switch(check.type) {
+					case "array": {
+						value.forEach(function (v,i,a) {
+							self.append(name+(a.length > 1 ? "[]" : ""), v);
+						});
+						break;
+					}
+					case "object": {
+						for (let i in value) this.append(name+"."+i, value[i]);
+						break;
+					}
+					default: {
+						this._data.push({name: name, value: value, type: check.type});
+					}
+				}
+			}
+		},
+		/**. ``''void'' remove(''string'' name)``: Remove todos os conjuntos de dados identificados por ``name``.**/
+		remove: {
+			value: function(name) {
+				name = String(name);
+				this._data.forEach(function(v,i,a) {
+					if (v !== null && v.name === name)
+						a[i] = null;
+				});
+			}
+		},
+		/**. ``''void'' add(''string'' name, ''any'' value)``: Como ``append``, mas substitui o conjunto.**/
+		add: {
+			value: function(name, value) {
+				this.remove(name);
+				this.append(name, value);
+			}
+		},
+		/**. ``''array'' values(''string'' name)``: Retorna uma lista de valores identificados por ``name``.**/
+		values: {
+			values: function(name) {
+				name = String(name);
+				let list = [];
+				this._data.forEach(function(v,i,a) {
+					if (v !== null && v.name === name)
+						list.push(v.value);
+				});
+				return list;
+			}
+		},
+		/**. ``''string'' search``: Retorna o parâmetro de busca com os dados adicionados como string.**/
+		search: {
+			get: function() {
+				let list = [];
+				this._data.forEach(function(v,i,a) {
+					if (v !== null) {
+						let name  = v.name;
+						let value = v.type === "file" ? v.value.name : String(v.value);
+						list.push(name+"="+encodeURIComponent(value));
+					}
+				});
+				return list.join("&").trim();
+			}
+		},
+		/**. ``''object'' form``: Retorna o parâmetro de busca com os dados adicionados com o objeto ``FormData``.**/
+		form: {
+			get: function() {
+				if (!("FormData" in window)) return null;
+				let list = new FormData();
+				this._data.forEach(function(v,i,a) {
+					if (v !== null) list.append(v.name, v.value);
+				});
+				return list;
+			}
+		},
+		/**. ``''string'' target``: Retorna a URL com o parâmetro de busca sem a parte do hash.**/
+		target: {
+			get: function() {
+				let search = this.search;
+				let hash   = this._hash;
+				let split  = this._target.indexOf("?") >= 0 ? "&" : "?";
+				return [
+					this._target,
+					search === "" ? "" : split+search,
+					hash === "" ? "" : hash
+				].join("");
+			}
+		},
+		/**. ``''object'' url``: Retorna dados da URL.**/
+		url: {
+			get: function() {
+				try {
+					let data = {};
+					let url = new URL(this.target);
+					for (let i in url) {
+						let check = __Type(url[i]);
+						if (check.chars) data[i] = url[i];
+					}
+					return data;
+				} catch(e) {
+					return null;
+				}
+			}
+		},
+		/**. ``''void'' forEach(''function'' x)``: Chama ``x`` para cada item do conjunto, informando o valor o nome como argumentos.**/
+		forEach: {
+			value: function(x) {
+				if (!__Type(x).function) return;
+				this._data.forEach(function(v,i,a) {
+					if (v !== null) x(v.value, v.name);
+				});
+			}
+		}
+	});
+
+/*----------------------------------------------------------------------------*/
+	/**#### Formulários HTML
 	###### ``**constructor** ''object'' __FNode(''node'' input)``
 	Construtor para gerir formulários HTML. O argumento ``node`` é o campo de formulário.**/
 	function __FNode(input) {
@@ -3486,30 +3639,24 @@ const wd = (function() {
 
 /*============================================================================*/
 	/**### Requisições e Arquivos
-	``**constructor** ''object'' __Request(''any'' target)``
-	Construtor para [requisições Web](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest) ou leituras de [arquivos](https://developer.mozilla.org/en-US/docs/Web/API/FileReader). O argumento ``target` é o alvo a ser requisitado ou lido, pode ser um endereço, um arquivo ou uma lista de arquivos (só o primeiro será considerado).**/
-	function __Request(target) {
-		if (!(this instanceof __Request))	return new __Request(target);
+	``**constructor** ''object'' __Request(''any'' input)``
+	Construtor para [requisições Web](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest) ou leituras de [arquivos](https://developer.mozilla.org/en-US/docs/Web/API/FileReader). O argumento ``input` é o alvo a ser requisitado ou lido, pode ser um endereço (string), um arquivo ou uma lista de arquivos (só o primeiro item será lido).**/
+	function __Request(input) {
+		if (!(this instanceof __Request))	return new __Request(input);
 		/*-- analisando argumento --*/
-		let check = __Type(target);
-		/*-- definindo variáveis --*/
-		let request, source;
+		let check   = __Type(input);
+		let request = null;
+		let source  = null;
+		let target  = null;
 		/*-- checando o alvo e obtendo o leitor adequado --*/
-		if (check.files && target.length > 0) {
-			target  = target[0];
-			request = new FileReader();
-			source  = "file";
-		} else if (check.file) {
+		if (check.file && check.value.length > 0) {
+			target  = check.value[0];
 			request = new FileReader();
 			source  = "file";
 		} else if (check.nonempty) {
-			target  = String(target).trim();
+			target  = String(input).trim();
 			request = new XMLHttpRequest();
 			source  = "path";
-		} else {
-			target  = null;
-			request = null;
-			source  = null;
 		}
 
 		/*-- definindo atributos do objeto --*/
@@ -3551,6 +3698,11 @@ const wd = (function() {
 				path:   ["unsent", "opened", "headers", "loading", "done"],
 				errors: ["abort", "timeout", "error"]
 			};
+			/*-- definindo o progresso --*/
+			if (source === "path" && stateCode !== 3)
+				progress = stateCode < 3 ? 0 : 1;
+			else if (source === "file" && stateCode !== 1)
+				progress = stateCode < 1 ? 0 : 1;
 			__MODALCONTROL.progress(progress);
 
 			/*-- analisar o estado da requisição --*/
@@ -3594,7 +3746,8 @@ const wd = (function() {
 				headers: headers,
 				abort:   function() {if (!this.done) request.abort();},
 				get response() {
-					return this.done ? (request.response || request.result) : null;
+					if (!this.done) return null;
+					return source === "path" ? request.response : request.result;
 				},
 				get text() {
 					return __Type(this.response).chars ? this.response : null;
@@ -3628,7 +3781,7 @@ const wd = (function() {
 			};
 
 			/*-- chamar disparadores definidos pelo usuário --*/
-			if (self.onchange !== null) self.onchange(argument);
+			if (self.onchange !== null)             self.onchange(argument);
 			if (self._done && self.ondone !== null) self.ondone(argument);
 			/*-- encerrar barra de progresso, se processo finalizado --*/
 			if (self._done) __MODALCONTROL.end();
@@ -3698,13 +3851,6 @@ const wd = (function() {
 				let method  = methods.indexOf(this.method) >= 0 ? this.method : "POST";
 				let header  = this.header;
 				let target  = this._target;
-				/* para GET e HEAD, que data é nulo */
-				if (method === "GET" || method === "HEAD") {
-					target  = target.replace(/\#.+$/, "").replace(/\?+(\s+)?$/);
-					if (data !== null && data !== undefined)
-						target += (target.indexOf("?") >= 0 ? "" : "?") + String(data);
-					data = null;
-				}
 				/* iniciando processo */
 				this._start = new Date().valueOf();
 				this._done  = false;
@@ -3728,16 +3874,24 @@ const wd = (function() {
 		read: {
 			value: function() {
 				if (this._source !== "file") return null;
-				let mode = {
-					BINARY: "readAsBinaryString", BUFFER: "readAsArrayBuffer",
-					TEXT:   "readAsText",         AUDIO:  "readAsDataURL",
-					VIDEO:  "readAsDataURL",      IMAGE:  "readAsDataURL",
-					URL:    "readAsDataURL"
+				let modeMime = {
+					TEXT:  "readAsText",    URL:   "readAsDataURL",
+					AUDIO: "readAsDataURL", VIDEO: "readAsDataURL", IMAGE: "readAsDataURL"
 				};
-
+				let modeUser = {
+					READASBINARYSTRING: "readAsBinaryString",
+					READASARRAYBUFFER:  "readAsArrayBuffer",
+					READASTEXT:         "readAsText",
+					READASDATAURL:      "readAsDataURL"
+				};
+				/* definindo o modo da leitura */
 				let mime = String(this._target.type).split("/")[0].toUpperCase();
-				if (!(mime in mode)) mime = "BUFFER";
-				let type = this.method in mode ? mode[this.method] : mode[mime];
+				let type = "readAsArrayBuffer";
+				if (this.method in modeUser)
+					type = modeUser[this.method];
+				else if (this.method in modeMime)
+					type = modeMime[this.method];
+				/* tentando ler */
 				try {
 					this._start = new Date().valueOf();
 					this._done  = false;
@@ -5079,42 +5233,7 @@ const wd = (function() {
 	}
 
 
-/*----------------------------------------------------------------------------*/
-	function wd_url(name) { /* obtém o valores da URL */
-		/* obter somente o hash */
-		if (name === undefined || name === null)
-			return null;
-		if (typeof name !== "string" || name.trim() === "")
-			return null;
-		if (name === "*")
-			return document.URL;
-		if (name === ":")
-			return window.location.protocol.replace(/\:$/, "");
-		if (name === "@")
-			return window.location.host;
-		if (name === "$")
-			return window.location.hostname;
-		if (name === "/")
-			return window.location.pathname.replace(/^\//, "");
-		if (name === "#")
-			return window.location.hash.replace(/^\#/, "");
-		if (name === "?")
-			return window.location.search.replace(/^\?/, "");
-
-		let data = window.location.search.replace(/^\?/, "").split(name+"=");
-		return data.length < 2 ? null : decodeURIComponent(data[1].split("&")[0]);
-	}
-
-
-
-
 /* == BLOCO 2 ================================================================*/
-
-
-
-
-
-
 
 
 
@@ -5263,8 +5382,35 @@ FIXME pensar um jeito de bom de fazer sendo e read
 
 
 
-		send: {
+		send: {//FIXME mudar o value de select email file (multiplos) para array mesmo que o __URL vai definir como deve ser
 			value: function (target, options) {
+				/* obtendo o pacote */
+				let check   = __Type(options);
+				let url     = __URL(target);
+				let GETHEAD = false;
+				if (check.object && "method" in options) {
+					let method = String(options.method).toUpperCase().trim();
+					GETHEAD = method === "GET" || method === "HEAD";
+				}
+
+				let pack  = this.valueOf();
+				switch(this.type) {
+					case "node": {
+						let submit = this.submit;
+						if (submit === null) return;
+						submit.forEach(function (v,i,a) {url.append(v.name, v.value);});
+						pack = GETHEAD ? null : url.form;
+						if (GETHEAD) target = url.target;
+						break;
+					}
+					case "file": {
+
+
+
+
+
+					}
+				}
 				/* abrindo requisição e definindo parâmetros */
 				let request = new __Request(target);
 				if (__Type(options).object) {
@@ -5276,20 +5422,6 @@ FIXME pensar um jeito de bom de fazer sendo e read
 						if (v in options) request[v] = options[v];
 					});
 				}
-				/* obtendo o pacote a ser enviado */
-				let pack = this.toString();
-				switch(this.type) {
-					case "node": {
-						let submit = this.submit;
-						if (submit === null) return;
-						if (request.method === "GET" || request.method === "HEAD")
-							pack = submit.GET;
-						else
-							pack = submit.POST;
-						break;
-					}
-				}
-				/* enviando o pacote */
 				request.send(pack);
 			}
 		},
@@ -5865,22 +5997,6 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 
 		submit: {
 			get: function() {
-				/* função que retorna um array com os parâmetros da submissão */
-				let packer = function (name, value) {
-					let check = __Type(value);
-					let data  = [];
-					if (check.array) {
-						value.forEach(function(v,i,a) {data.push(packer(name+"[]", v)[0]);});
-						return data;
-					}
-					data.push({
-						name: name,
-						value: value,
-						uri: encodeURIComponent(check.file ? value.name : value)
-					});
-					return data;
-				}
-				/* verificando se há formulário válido a enviar */
 				let data  = [];
 				let error = false;
 				this.forEach(function(v,i) {
@@ -5891,23 +6007,10 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					if (!form.validity)
 						error = true;
 					else
-						data.push(form);
+						data.push({name: form.name, value: form.value});
 				});
 				if (data.length === 0 || error) return null;
-				/* obtendo o conjunto de dados */
-				let dataset = [];
-				data.forEach(function(v,i,a) {
-					let form = packer(v.name, v.value);
-					form.forEach(function(item) {dataset.push(item);});
-				});
-				/* definindo retorno */
-				let POST = new FormData();
-				let GET  = [];
-				dataset.forEach(function (v,i,a) {
-					GET.push(v.name+"="+v.uri);
-					POST.append(v.name, v.value);
-				});
-				return {POST: POST, GET: GET.join("&")};
+				return data;
 			}
 		},
 
@@ -6039,7 +6142,6 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		version: {value: __VERSION},
 		$:       {value: function(css, root) {return WD(__$(css, root));}},
 		$$:      {value: function(css, root) {return WD(__$$(css, root));}},
-		url:     {value: function(name) {return wd_url(name);}},
 		copy:    {value: function(text) {return wd_copy(text);}},
 		device:  {get:   function() {return __DEVICECONTROLLER.device;}},
 		today:   {get:   function() {return WD(new Date());}},
@@ -6061,6 +6163,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 			query:    {value: function(){return __Query.apply(null, Array.prototype.slice.call(arguments));}},
 			svg:      {value: function(){return __SVG.apply(null, Array.prototype.slice.call(arguments));}},
 			matrix:   {value: function(){return __Table.apply(null, Array.prototype.slice.call(arguments));}},
+			url:      {value: function(){return __URL.apply(null, Array.prototype.slice.call(arguments));}},
 			LANG:     {value: __LANG},
 			TYPE:     {value: __TYPE},
 			MODAL:    {value: __MODALCONTROL},
