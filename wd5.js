@@ -3675,6 +3675,7 @@ const wd = (function() {
 			_header:   {value: null,  writable: true}, /* cabeçalhos de envio */
 			_start:    {value: 0,     writable: true}, /* tempo de início da requisição */
 		});
+		if (source === null) return;
 
 		/*-- definir disparador nativo e vinculá-lo aos eventos do objeto leitor --*/
 		let self    = this;
@@ -3804,34 +3805,67 @@ const wd = (function() {
 		constructor: {value: __Request},
 		/**. ``''number'' maxtime``: Define e retorna o tempo máximo de requisição em milisegundos.**/
 		maxtime: {
-			set: function(x) {this._maxtime = __Type(x).positive ? Math.trunc(x) : 0;},
-			get: function()  {return this._maxtime > 0 ? this._maxtime : 0;},
+			set: function(x) {this._maxtime = x;},
+			get: function()  {
+				return __Type(this._maxtime).positive ? Math.trunc(this._maxtime) : 0;
+			},
 		},
 		/**. ``''boolean'' async``: Define e retorna se a requisição será assíncrona.**/
 		async: {
-			set: function(x) {this._async = x === false ? false : true;},
+			set: function(x) {this._async = x;},
 			get: function()  {return this._async === false ? false : true;}
 		},
 		/**. ``''string'' user``: Define e retorna o usuário da requisição ou nulo se indefinido.**/
 		user: {
-			set: function(x) {this._user = x === null ? null : String(x);},
-			get: function()  {return this._user === null ? null : String(this._user);},
+			set: function(x) {this._user = x;},
+			get: function()  {
+				let check = __Type(this._user);
+				return check.undefined || check.null ? null : String(this._user);
+			}
 		},
 		/**. ``''string'' password``: Define e retorna a senha da requisição ou nulo se indefinida.**/
 		password: {
-			set: function(x) {this._password = x === null ? null : String(x);},
-			get: function()  {return this._password === null ? null : String(this._password);},
-
+			set: function(x) {this._password = x;},
+			get: function()  {
+				let check = __Type(this._password);
+				return check.undefined || check.null ? null : String(this._password);
+			}
 		},
-		/**. ``''string'' method``: Define e retorna a forma de leitura (binary, text, url ou buffer) ou o método HTTP de envio (POST, GET...).**/
+		/**. ``''string'' method``: Define e retorna a forma de leitura ou da requisição. Se for requisição HTTP, aceita-se CONNECT, DELETE, GET, HEAD, OPTIONS, PATCH ou POST (padrão). Se for leitura de arquivo, aceita-se readAsBinaryString, readAsText, readAsDataURL ou readAsArrayBuffer, o valor padrão depende do MimeType do arquivo.**/
 		method: {
-			set: function(x) {this._method = x === null ? null : String(x).toUpperCase().trim();},
-			get: function()  {return this._method === null ? null : this._method;},
+			set: function(x) {this._method = x;},
+			get: function()  {
+				let value = String(this._method).toUpperCase().trim();
+				switch(this._source) {
+					case "path": {
+						let methodHTTP = [
+							"CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST",
+							"PUT", "TRACE"
+						];
+						return methodHTTP.indexOf(value) >= 0 ? value : "POST";
+					}
+					case "file": {
+						let methodRead = {
+							READASBINARYSTRING: "readAsBinaryString", READASTEXT:    "readAsText",
+							READASARRAYBUFFER: "readAsArrayBuffer",   READASDATAURL: "readAsDataURL"
+						};
+						if (value in method) return methodRead[value];
+
+						let mime = String(this._target.type).split("/")[0].toUpperCase();
+						let methodMime = {
+							TEXT:  "readAsText",    URL:   "readAsDataURL",
+							AUDIO: "readAsDataURL", VIDEO: "readAsDataURL", IMAGE: "readAsDataURL"
+						};
+						return mime in methodMime ? methodMime[mime] : "readAsArrayBuffer";
+					}
+				}
+				return null;
+			},
 		},
 		/**. ``''object'' header``: Define e retorna os cabeçalhos em forma de objeto contendo nome/valor.**/
 		header: {
-			set: function(x) {this._header = __Type(x).object ? x : null;},
-			get: function()  {return this._header === null ? null : this._header;},
+			set: function(x) {this._header = x;},
+			get: function()  {return __Type(this._header).object ? this._header : {};},
 		},
 		/**. ``function onchange``: Define e retorna o disparador a ser chamado a cada mudança de estado da requisição ou nulo, se indefinido. O disparador receberá um objeto como argumento contendo os atributos/métodos ''done, time, state, size, loaded, headers, abort(), response, text, html, xml, json e csv''.**/
 		onchange: {
@@ -3847,8 +3881,7 @@ const wd = (function() {
 		send: {
 			value: function(data) {
 				if (this._source !== "path") return;
-				let methods = ["CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT", "TRACE"];
-				let method  = methods.indexOf(this.method) >= 0 ? this.method : "POST";
+				let method  = this.method;
 				let header  = this.header;
 				let target  = this._target;
 				/* iniciando processo */
@@ -3874,29 +3907,13 @@ const wd = (function() {
 		read: {
 			value: function() {
 				if (this._source !== "file") return null;
-				let modeMime = {
-					TEXT:  "readAsText",    URL:   "readAsDataURL",
-					AUDIO: "readAsDataURL", VIDEO: "readAsDataURL", IMAGE: "readAsDataURL"
-				};
-				let modeUser = {
-					READASBINARYSTRING: "readAsBinaryString",
-					READASARRAYBUFFER:  "readAsArrayBuffer",
-					READASTEXT:         "readAsText",
-					READASDATAURL:      "readAsDataURL"
-				};
-				/* definindo o modo da leitura */
-				let mime = String(this._target.type).split("/")[0].toUpperCase();
-				let type = "readAsArrayBuffer";
-				if (this.method in modeUser)
-					type = modeUser[this.method];
-				else if (this.method in modeMime)
-					type = modeMime[this.method];
+				let method = this.method;
 				/* tentando ler */
 				try {
 					this._start = new Date().valueOf();
 					this._done  = false;
 					__MODALCONTROL.start();
-					this._request[type](this._target);
+					this._request[method](this._target);
 				} catch(e) {
 					__MODALCONTROL.end();
 				}
@@ -5384,7 +5401,7 @@ FIXME pensar um jeito de bom de fazer sendo e read
 
 		send: {//FIXME mudar o value de select email file (multiplos) para array mesmo que o __URL vai definir como deve ser
 			value: function (target, options) {
-				/* obtendo o pacote */
+				/* definindo dados iniciais */
 				let check   = __Type(options);
 				let url     = __URL(target);
 				let GETHEAD = false;
@@ -5392,27 +5409,35 @@ FIXME pensar um jeito de bom de fazer sendo e read
 					let method = String(options.method).toUpperCase().trim();
 					GETHEAD = method === "GET" || method === "HEAD";
 				}
-
-				let pack  = this.valueOf();
+				/* capturando dados */
 				switch(this.type) {
 					case "node": {
 						let submit = this.submit;
 						if (submit === null) return;
 						submit.forEach(function (v,i,a) {url.append(v.name, v.value);});
-						pack = GETHEAD ? null : url.form;
-						if (GETHEAD) target = url.target;
+						break;
+					}
+					case "object": {
+						for (let i in this._input) url.append(i, this._input[i]);
+						break;
+					}
+					case "array": {
+						this.valueOf().forEach(function(v,i,a) {url.append(i, v);});
 						break;
 					}
 					case "file": {
-
-
-
-
-
+						url.append(this.type, this.valueOf());
+						break;
+					}
+					default: {
+						url.append(this.type, this.toString());
 					}
 				}
-				/* abrindo requisição e definindo parâmetros */
-				let request = new __Request(target);
+				/* manipulando argumentos para os métodos HEAD e GET */
+				let pack = GETHEAD ? null : url.form;
+
+				/* abrindo requisição, definindo parâmetros e enviando */
+				let request = new __Request(GETHEAD ? url.target : target);
 				if (__Type(options).object) {
 					let opt = [
 						"maxtime", "async", "user", "password",
@@ -5422,7 +5447,7 @@ FIXME pensar um jeito de bom de fazer sendo e read
 						if (v in options) request[v] = options[v];
 					});
 				}
-				request.send(pack);
+				request.send(GETHEAD ? null : url.form);
 			}
 		},
 
@@ -5637,7 +5662,7 @@ FIXME pensar um jeito de bom de fazer sendo e read
 				return this._main.toString();
 			}
 		},
-		toString: {//FIXME descrição
+		toLocaleString: {//FIXME descrição
 			value: function(locale) {
 				return this._main.toLocaleString();
 			}
