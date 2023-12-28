@@ -747,6 +747,18 @@ const wd = (function() {
 				return this.number && this.value === 0;
 			}
 		},
+		/**. ``''boolean'' xml``: Checa se o argumento é documento XML.**/
+		xml: {
+			get: function() {
+				return this.node && this.value[0] instanceof XMLDocument;
+			}
+		},
+		/**. ``''boolean'' html``: Checa se o argumento é documento XML.**/
+		html: {
+			get: function() {
+				return this.node && this.value[0] instanceof HTMLDocument;
+			}
+		},
 		/**. ``''boolean'' boolean``: Checa se o argumento é um valor booleano.**/
 		boolean: {
 			get: function() {
@@ -946,16 +958,18 @@ const wd = (function() {
 				return true;
 			}
 		},
-		/**. ``''boolean'' node``: Checa se o argumento é um elemento HTML ou uma coleção desses (lista).**/
+		/**. ``''boolean'' node``: Checa se o argumento é um elemento/document HTML/XML, ou uma coleção desses.**/
 		node: {
 			get: function() {
 				if (this.type !== null) return this.type === "node";
 				let html  = null;
 				let node  = this._input;
-				if (node === window || node === document) {
+				if (node === window) {
 					html = [node];
 				} else {
 					let nodes = { /* 0: individual, 1: lista */
+						XMLDocument: 0,
+						HTMLDocument: 0,
 						HTMLElement: 0,
 						SVGElement: 0,
 						MathMLElement: 0,
@@ -1464,15 +1478,16 @@ const wd = (function() {
 				return value.join("");
 			}
 		},
-		/**. ``''matrix'' csv(''string'' td="\t", ''string'' tr="\n")``: Retorna uma matriz (array) a partir de uma string no formato [CSV]<https://www.rfc-editor.org/rfc/rfc4180>.
-		. Os argumentos ``td`` e ``tr`` definem os caracteres que separam as colunas e as linhas, respectivamente. Se o valor da célula contiver o caractere divisor de coluna ou linha, a célula deverá estar cercada por aspas duplas.**/
+		/**. ``''matrix'' csv``: Retorna uma matriz (array) a partir de uma string no formato [CSV]<https://www.rfc-editor.org/rfc/rfc4180> cujas colunas sejam separadas por "\t" e linhas por "\n". Se o valor da célula contiver o caractere divisor de coluna ou linha, a célula deverá estar cercada por aspas duplas.**/
 		csv: {
-			value: function(td, tr) {
-				td = !__Type(td).chars ? "\t" : td;
-				tr = !__Type(tr).chars ? "\n" : tr;
-				let txt = this._value;
-				if (txt[txt.length - 1] !== tr) txt = txt+tr;
+			get: function() {
+				/* definindo variáveis */
+				let td    = "\t";
+				let tr    = "\n";
+				let txt   = this._value;
 				let table = [[]];
+				/* o último caractere precisar ser uma quebra de linha */
+				if (txt[txt.length - 1] !== tr) txt = txt+tr;
 				while (txt.indexOf(td) >= 0 || txt.indexOf(tr) >= 0) {
 					let add, cut, val, quote, cell, line, col;
 					col   = table[table.length - 1];
@@ -1489,6 +1504,30 @@ const wd = (function() {
 					if (add && txt !== "") table.push([]);
  				}
  				return table;
+			}
+		},
+		/**. ``''node'' html``: Retorna um documento HTML caso o conteúdo da string esteja nesse formato, ou nulo.**/
+		html: {
+			get: function() {
+				try {
+					let parse = new DOMParser();
+					return parse.parseFromString(this._value, "text/html");
+				} catch(e) {return null;}
+			}
+		},
+		/**. ``''node'' xml``: Retorna um documento XML caso o conteúdo da string esteja nesse formato, ou nulo.**/
+		xml: {
+			get: function() {
+				try {
+					let parse = new DOMParser();
+					return parse.parseFromString(this._value, "application/xml");
+				} catch(e) {return null;}
+			}
+		},
+		/**. ``''any'' json``: Retorna notação em Javascript caso o conteúdo da string esteja no formato JSON, ou nulo.**/
+		json: {
+			get: function() {
+				try {return JSON.parse(this._value);} catch(e) {return null;}
 			}
 		},
 		/**. ``''any'' wdValue(''any'' x)``: Recebe o valor do argumento ``x`` e o retorna adequado à necessidade do método ``wdNotation``.**/
@@ -3725,7 +3764,7 @@ const wd = (function() {
 
 			/*-- Obter cabeçalhos --*/
 			let headers = null;
-			if ("getAllResponseHeaders" in request) {
+			if (self._done && "getAllResponseHeaders" in request) {
 				headers = request.getAllResponseHeaders();
 				if (__Type(headers).nonempty) {
 					let list = headers.split(/[\r\n]+/g);
@@ -3738,6 +3777,9 @@ const wd = (function() {
 				}
 			}
 			/*-- obter resultado --*/
+			let response = null;
+			if (self._done)
+				response = request[source === "path" ? "response" : "result"];
 			let argument = {
 				done:    self._done,
 				time:    time,
@@ -3746,39 +3788,12 @@ const wd = (function() {
 				loaded:  loaded,
 				headers: headers,
 				abort:   function() {if (!this.done) request.abort();},
-				get response() {
-					if (!this.done) return null;
-					return source === "path" ? request.response : request.result;
-				},
-				get text() {
-					return __Type(this.response).chars ? this.response : null;
-				},
-				get html() {
-					if (this.text === null) return null;
-					try {
-						let parse = new DOMParser();
-						return parse.parseFromString(this.text, "text/html");
-					} catch(e) {}
-					return null;
-				},
-				get xml() {
-					if (this.text === null) return null;
-					try {
-						let parse = new DOMParser();
-						return parse.parseFromString(this.text, "application/xml");
-					} catch(e) {}
-					return null;
-				},
-				get json() {
-					if (this.text === null) return null;
-					try {return JSON.parse(this.text);} catch(e) {}
-					return null;
-				},
-				get csv() {
-					if (this.text === null) return null;
-					try {return __String(this.text).csv();} catch(e) {}
-					return null;
-				}
+				get response() {return response;},
+				get text() {return __Type(response).chars ? this.response : null;},
+				get html() {return this.text === null ? null : __String(this.text).html;},
+				get xml()  {return this.text === null ? null : __String(this.text).xml;},
+				get json() {return this.text === null ? null : __String(this.text).json;},
+				get csv()  {return this.text === null ? null : __String(this.text).csv;}
 			};
 
 			/*-- chamar disparadores definidos pelo usuário --*/
@@ -3869,13 +3884,13 @@ const wd = (function() {
 		},
 		/**. ``function onchange``: Define e retorna o disparador a ser chamado a cada mudança de estado da requisição ou nulo, se indefinido. O disparador receberá um objeto como argumento contendo os atributos/métodos ''done, time, state, size, loaded, headers, abort(), response, text, html, xml, json e csv''.**/
 		onchange: {
-			set: function(x) {this._onchange = __Type(x).function ? x : null;},
-			get: function()  {return this._onchange === null ? null : this._onchange;},
+			set: function(x) {this._onchange = x;},
+			get: function()  {return __Type(this._onchange).function ? this._onchange : null;},
  		},
  		/**. ``function ondone``: Como ``onchange``, mas será disparada somente no fim do procedimento.**/
  		ondone: {
-			set: function(x) {this._ondone = __Type(x).function ? x : null;},
-			get: function()  {return this._ondone === null ?  null : this._ondone;},
+			set: function(x) {this._ondone = x;},
+			get: function()  {return __Type(this._ondone).function ? this._ondone : null;},
  		},
 		/**. ``''void'' send(void data)``: Envia uma requisição web. O ``data`` a informação a ser enviada ao destino.**/
 		send: {
@@ -3907,13 +3922,11 @@ const wd = (function() {
 		read: {
 			value: function() {
 				if (this._source !== "file") return null;
-				let method = this.method;
-				/* tentando ler */
 				try {
 					this._start = new Date().valueOf();
 					this._done  = false;
 					__MODALCONTROL.start();
-					this._request[method](this._target);
+					this._request[this.method](this._target);
 				} catch(e) {
 					__MODALCONTROL.end();
 				}
@@ -5412,6 +5425,10 @@ FIXME pensar um jeito de bom de fazer sendo e read
 				/* capturando dados */
 				switch(this.type) {
 					case "node": {
+
+
+						//FIXME esse negócio de document
+						if (this.document) break;
 						let submit = this.submit;
 						if (submit === null) return;
 						submit.forEach(function (v,i,a) {url.append(v.name, v.value);});
@@ -5433,11 +5450,18 @@ FIXME pensar um jeito de bom de fazer sendo e read
 						url.append(this.type, this.toString());
 					}
 				}
-				/* manipulando argumentos para os métodos HEAD e GET */
-				let pack = GETHEAD ? null : url.form;
-
+				/* definindo o pacote de envio */
+				let pack = null;
+				if (GETHEAD) {
+					target = url.target;
+				} else {
+					if (this.type === "node" && this.document)
+						pack = this._data.value[0];
+					else
+						pack = url.form;
+				}
 				/* abrindo requisição, definindo parâmetros e enviando */
-				let request = new __Request(GETHEAD ? url.target : target);
+				let request = new __Request(target);
 				if (__Type(options).object) {
 					let opt = [
 						"maxtime", "async", "user", "password",
@@ -5447,7 +5471,7 @@ FIXME pensar um jeito de bom de fazer sendo e read
 						if (v in options) request[v] = options[v];
 					});
 				}
-				request.send(GETHEAD ? null : url.form);
+				request.send(pack);
 			}
 		},
 
@@ -5523,11 +5547,19 @@ FIXME pensar um jeito de bom de fazer sendo e read
 		},
 		/**. ``''array'' csv``: Retorna string em CSV para array.**/
 		csv: {
-			get: function() {return this._main.csv;}
+			get: function() {return this._main.csv;},
 		},
-		/**. ``''any'' json``: Retorna notação em JSON para valor em Javascript ou ``null`` se inválido.**/
+		/**. ``''any'' json``: Retorna notação em JSON para valor em Javascript ou nulo se inválido.**/
 		json: {
-			get: function() {try{return JSON.parse(this._input);} catch(e) {return null;}}
+			get: function() {return this._main.json;},
+		},
+		/**. ``''node'' html``: Retorna notação em HTML para documento correspondente ou nulo se inválido.**/
+		html: {
+			get: function() {return this._main.html;},
+		},
+		/**. ``''node'' xml``: Retorna notação em XML para documento correspondente ou nulo se inválido.**/
+		xml: {
+			get: function() {return this._main.xml;},
 		},
 	});
 
@@ -5956,12 +5988,17 @@ FIXME pensar um jeito de bom de fazer sendo e read
 		valueOf: { /* método padrão */
 			value: function() {return this._data.value.slice();}
 		},
-
 		/**. ``''void'' forEach(''function'' callback)``: Executa looping nos nós HTML, informando-os no argumento ``callback`` que receberá dois argumento: o nó HTML e sua sequência numérica na lista.**/
 		forEach: {
 			value: function(callback) {
 				if (!__Type(callback).function) return;
 				this._data.value.forEach(function(v,i,a) {callback(v,i);});
+			}
+		},
+		/**. ``''booelena'' document``: Informa se o elemento é um document HTML/XML ou um objeto window.**/
+		document: {
+			get: function() {
+				return this._data.xml || this._data.html || this._data.value[0] === window;
 			}
 		},
 		/**. ``''array'' files``: Retorna uma lista com todos os arquivos selecionados pelo campo de formulário.**/
@@ -5970,7 +6007,7 @@ FIXME pensar um jeito de bom de fazer sendo e read
 				let pack = [];
 				this.forEach(function(v,i) {
 					let node = __Node(v);
-					if (node.type === "file" && v.files.length > 0) {
+					if (node.type === "file") {
 						let i = -1;
 						while(++i < v.files.length) pack.push(v.files[i]);
 					}
@@ -5978,6 +6015,10 @@ FIXME pensar um jeito de bom de fazer sendo e read
 				return pack;
 			}
 		},
+
+
+
+
 
 /* FIXME importantíssimo
 se file ou select múltiplo, o nome tem que vir seguido de []
