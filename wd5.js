@@ -605,15 +605,11 @@ const wd = (function() {
 				return (this.chars && __LANG.test(this._input));
 			}
 		},
-		/**. ``''boolean'' email``: Checa se o argumento é um e-mail ou uma lista desse tipo.**/
+		/**. ``''boolean'' email``: Checa se o argumento é um e-mail.**/
 		email: {
 			get: function() {
 				if (!this.chars) return false;
-				let data = this._input.split(",")
-				let i = -1;
-				while (++i < data.length)
-					if (!__TYPE.email.email.test(data[i].trim())) return false;
-				return true;
+				return __TYPE.email.email.test(this._input.trim());
 			}
 		},
 		/**. ``''boolean'' url``: Checa se o argumento é uma URL válida.**/
@@ -2664,45 +2660,58 @@ const wd = (function() {
 		type: {get: function() {return this._type;}},
 		/**. ``''string'' tag``: Retorna o a tag do nó.**/
 		tag: {get: function() {return this._tag;}},
-		/**. ``''any'' _value``: Define ou retorna o valor do nó de formulário, ou indefinido.**/
+		/**. ``''any'' _value``: Define ou retorna o valor do nó de formulário, ou indefinido se não for um formulário de submissão de dados.**/
 		_value: {
 			set: function(x) {
 				if (!this.form) return undefined;
 				let check = __Type(x);
 				switch(this._cfg.value) {
 					case null: return;
-					case "value": {
+					case "value": { /* valor simples */
 						this.node.value = x;
 						return;
 					}
-					case "number": {
+					case "number": { /* valor finito */
 						this.node.value = check.finite ? check.value : null;
 						return;
 					}
-					case "combo": {
-						if (check.null) this.node.value = null;
-						x = this.node.multiple ? (check.array ? x : [x]) : [x];
-						x.forEach(function(v,i,a) {a[i] = String(v);});
-						let i = -1;
-						while (++i < this.node.length) {
-							let value = this.node[i].value;
-							this.node[i].selected = x.indexOf(value) >= 0;
+					case "combo": { /* select */
+						if (check.array) {
+							if (x.length < 1) {
+								this.node.value = null;
+								return;
+							}
+							if (!this.node.multiple && x.length > 1) {
+								this.node.value = null;
+								return;
+							}
+							x.forEach(function(v,i,a) {a[i] = String(v);});
+							let i = -1;
+							while (++i < this.node.length) {
+								let value = this.node[i].value;
+								this.node[i].selected = x.indexOf(value) >= 0;
+							}
+							return;
 						}
+						this.node.value = x;
 						return;
 					}
 					case "check": {
-						if         (check.null) this.node.checked = !this.node.checked;
+						if      (check.null)    this.node.checked = !this.node.checked;
 						else if (check.boolean) this.node.checked = x;
 						else                    this.node.value = String(x);
 						return;
 					}
-					case "date": {
-						if (!check.date) {
-							this.node.value = null;
-						} else {
-							let dt = new __DateTime(check.value);
-							this.node.value = dt.year < 1 ? "0001-01-01" : dt.toDateString();
+					case "date": {//FIXME ver limites
+						if (check.date) {
+							let date = check.value;
+							let year = Number(date.split("-")[0]);
+							if (year < 1 || year > 275760)
+								date = year < 1 ? "0001-01-01" : "limite";
+							this.node.value = date;
+							return;
 						}
+						this.node.value = null;
 						return;
 					}
 					case "time": {
@@ -2724,14 +2733,8 @@ const wd = (function() {
 						return;
 					}
 					case "date/time": {
-						if (check.time)
-							this.node.value = new __DateTime(check.value).toTimeString();
-						else if (check.date)
-							this.node.value = new __DateTime(check.value).toDateString();
-						else if (check.datetime)
-							this.node.value = new __DateTime(check.value).toString();
-						else
-							this.node.value = null;
+						let types = ["date", "time", "datetime"];
+						this.node.value = types.indexOf(check.type) < 0 ? null : check.value;
 						return;
 					}
 					case "week": {
@@ -2782,15 +2785,34 @@ const wd = (function() {
 						return;
 					}
 					case "email": {
-						if (check.array) {
-							x.forEach(function(v,i,a) {a[i] = String(v).trim()});
-							this.value = x.join(",");
-						} else if (check.email) {
-							x = x.replace(/\s/g, "");
-							this.node.value = this.node.multiple ? x : x.split(",")[0];
-						} else {
-							this.node.value = null;
+						if (check.email) { /* definir e-mail simples */
+							this.node.value = x.trim();
+							return;
 						}
+						if (check.chars) { /* se string, transformar em array para testar */
+							this._value = x.split(",");
+							return;
+						}
+						if (check.array) { /* se array, checar cada item e analisar multiplicidade */
+							let test = true;
+							x.forEach(function(v,i,a) {
+								if (!test) return;
+								test = __Type(v).email;
+								if (test) a[i] = v.trim();
+							});
+							if (!test || x.length < 1) {
+								this.node.value = null;
+								return;
+							}
+							if (!this.node.multiple && x.length > 1) {
+								this.node.value = null;
+								return;
+							}
+							this.node.value = x.join(",");
+							return;
+						}
+						/* valor padrão */
+						this.node.value = null;
 						return;
 					}
 					default: this.node.value = x;
@@ -2815,37 +2837,36 @@ const wd = (function() {
 					case "week":     return check.week     ? fnode.node.value : "";
 					case "month":    return check.month    ? fnode.node.value : "";
 					case "date/time": {
-						if (check.time)
-							return new __DateTime(check.value).toTimeString();
-						else if (check.date)
-							return new __DateTime(check.value).toDateString();
-						else if (check.datetime)
-							return new __DateTime(check.value).toString();
-						return "";
+						let types = ["date", "time", "datetime"];console.log();
+						return types.indexOf(check.type) < 0 ? "" : check.value;
 					}
 					case "combo": {
-						if (!this.node.multiple) return value;
-						let data = [];
+						let list = [];
 						let i    = -1;
-						while (++i < this.node.length)
-							if (this.node[i].selected)
-								data.push(this.node[i].value);
-						return data.length === 0 ? "" : (data.length === 1 ? data[0] : data);
+						while (++i < this.node.length) {
+							if (this.node[i].selected) list.push(this.node[i].value);
+						}
+						if (!this.node.multiple && list.length > 1) return [];
+						return list;
 					}
 					case "email": {
-						if (!check.email)        return "";
-						if (!this.node.multiple) return fnode.node.value
-						let data = fnode.node.value.split(",");
-						return data.length < 2 ? data[0] : data;
+						if (!check.nonempty) return [];
+						let list = value.split(",");
+						let test = true;
+						list.forEach(function(v,i,a) {
+							if (!test) return;
+							test = __Type(v).email;
+							if (test) a[i] = v.trim();
+						});
+						if (!test || list.length < 1) return [];
+						if (!this.node.multiple && list.length > 1) return [];
+						return list;
 					}
 					case "file": {
-						if (this.node.files.length === 0) return "";
-						if (!this.node.multiple)          return this.node.files[0];
-						let data = [];
-						let i = -1;
-						while (++i < this.node.files.length)
-							data.push(this.node.files[i]);
-						return data.length === 1 ? data[0] : data;
+						let files = this.node.files;
+						if (files.length === 0) return [];
+						if (!this.node.multiple && files.length > 1) return [];
+						return Array.prototype.slice.call(files);
 					}
 					default: return value;
 				}
