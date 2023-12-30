@@ -945,6 +945,8 @@ const wd = (function() {
 					time.h = time.h%12;
 				else if (this._test.subgroup === "PM")
 					time.h = time.h === 12 ? 12 : ((12 + time.h ) % 24);
+				else
+					time.h = time.h % 24;
 				for (let i in time)
 					time[i] = __Type.zeros(time[i], (i === "l" ? 3 : 2));
 				this._type     = "time";
@@ -2424,7 +2426,7 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	/**
-	FIXME o que fazer com isso? coloar dentro de __Node?
+	FIXME o que fazer com isso? colocar dentro de __Node?
 	``node __$$$(object obj, node root)``
 	Localiza em um objeto os atributos v{$}v e v{$$}v e utiliza seus valores como seletores CSS.}p
 	O atributo v{$$}v é prevalente sobre o v{$}v para fins de chamada das funções i{__$$}i ou i{__$}i,
@@ -2445,7 +2447,7 @@ const wd = (function() {
 /*----------------------------------------------------------------------------*/
 	/**#### Formulários HTML
 	###### ``**constructor** ''object'' __URL(''string'' input)``
-	Construtor para gerir parâmetros de envio de requisição. O argumento ``input`` é o destino da requisição. Se vazio, observará o URL visitado.**/
+	Construtor para gerir parâmetros de envio de requisição. O argumento ``input`` é o destino da requisição. Se vazio, observará o URL em vigor. Alguns métodos retornar o próprio objeto**/
 	function __URL(input) {
 		if (!(this instanceof __URL))	return new __URL(input);
 		if (input === undefined || input === null || String(input).trim() === "")
@@ -2457,22 +2459,24 @@ const wd = (function() {
 			_target: {value: target},
 			_hash:   {value: hash},
 			_data:   {value: []},
+			_id:     {value: {}},
 		});
 	}
 
 	Object.defineProperties(__URL.prototype, {
 		constructor: {value: __URL},
-		/**. ``''void'' append(''string'' name, ''any'' value)``: Apensa um conjunto de dados ``name/value``. Se ``value`` for um array, ``name`` receberá um par de colchetes ao fim da string. Se ``value`` for um objeto, ``name`` receberá ao fim da string o nome do atributo.**/
+		/**. ``''self'' append(''string'' name, ''any'' value)``: Apensa um conjunto de dados ``name/value``. Se ``value`` for um array, ``name`` receberá um par de colchetes ao fim da string. Se ``value`` for um objeto, ``name`` receberá ao fim da string o nome do atributo.**/
 		append: {
 			value: function(name, value) {
-				name = String(name);
+				name = String(name).replace(/\[\]$/, "");
 				let check = __Type(value);
 				let self  = this;
 				switch(check.type) {
 					case "array": {
-						value.forEach(function (v,i,a) {
-							self.append(name+(a.length > 1 ? "[]" : ""), v);
-						});
+						if (value.length === 0)
+							self.append(name, "");
+						else
+							value.forEach(function (v,i,a) {self.append(name, v);});
 						break;
 					}
 					case "object": {
@@ -2480,26 +2484,34 @@ const wd = (function() {
 						break;
 					}
 					default: {
+						if (name in this._id) this._id[name]++;
+						else this._id[name] = 1;
 						this._data.push({name: name, value: value, type: check.type});
 					}
 				}
+				return this;
 			}
 		},
-		/**. ``''void'' remove(''string'' name)``: Remove todos os conjuntos de dados identificados por ``name``.**/
+		/**. ``''self'' remove(''string'' name)``: Remove todos os conjuntos de dados identificados por ``name``.**/
 		remove: {
 			value: function(name) {
 				name = String(name);
-				this._data.forEach(function(v,i,a) {
-					if (v !== null && v.name === name)
-						a[i] = null;
-				});
+				if (name in this._id) {
+					this._data.forEach(function(v,i,a) {
+						if (v !== null && v.name === name)
+							a[i] = null;
+					});
+					delete this._id[name];
+				}
+				return this;
 			}
 		},
-		/**. ``''void'' add(''string'' name, ''any'' value)``: Como ``append``, mas substitui o conjunto.**/
+		/**. ``''self'' add(''string'' name, ''any'' value)``: Como ``append``, mas substitui o conjunto.**/
 		add: {
 			value: function(name, value) {
 				this.remove(name);
 				this.append(name, value);
+				return this;
 			}
 		},
 		/**. ``''array'' values(''string'' name)``: Retorna uma lista de valores identificados por ``name``.**/
@@ -2507,20 +2519,22 @@ const wd = (function() {
 			values: function(name) {
 				name = String(name);
 				let list = [];
-				this._data.forEach(function(v,i,a) {
-					if (v !== null && v.name === name)
-						list.push(v.value);
-				});
+				if (name in this._id) {
+					this._data.forEach(function(v,i,a) {
+						if (v !== null && v.name === name) list.push(v.value);
+					});
+				}
 				return list;
 			}
 		},
-		/**. ``''string'' search``: Retorna o parâmetro de busca com os dados adicionados como string.**/
+		/**. ``''string'' search``: Retorna o parâmetro de busca em forma de string.**/
 		search: {
 			get: function() {
 				let list = [];
+				let self = this;
 				this._data.forEach(function(v,i,a) {
 					if (v !== null) {
-						let name  = v.name;
+						let name  = v.name + (self._id[v.name] > 1 ? "[]" : "");
 						let value = v.type === "file" ? v.value.name : String(v.value);
 						list.push(name+"="+encodeURIComponent(value));
 					}
@@ -2528,13 +2542,17 @@ const wd = (function() {
 				return list.join("&").trim();
 			}
 		},
-		/**. ``''object'' form``: Retorna o parâmetro de busca com os dados adicionados com o objeto ``FormData``.**/
+		/**. ``''object'' form``: Retorna o parâmetro de buscapor meio do objeto ``FormData``.**/
 		form: {
 			get: function() {
 				if (!("FormData" in window)) return null;
 				let list = new FormData();
+				let self = this;
 				this._data.forEach(function(v,i,a) {
-					if (v !== null) list.append(v.name, v.value);
+					if (v !== null) {
+						let name  = v.name + (self._id[v.name] > 1 ? "[]" : "");
+						list.append(name, v.value);
+					}
 				});
 				return list;
 			}
@@ -2568,13 +2586,14 @@ const wd = (function() {
 				}
 			}
 		},
-		/**. ``''void'' forEach(''function'' x)``: Chama ``x`` para cada item do conjunto, informando o valor o nome como argumentos.**/
+		/**. ``''self'' forEach(''function'' x)``: Chama ``x`` para cada item do conjunto, informando o valor o nome como argumentos.**/
 		forEach: {
 			value: function(x) {
 				if (!__Type(x).function) return;
 				this._data.forEach(function(v,i,a) {
 					if (v !== null) x(v.value, v.name);
 				});
+				return this;
 			}
 		}
 	});
@@ -2589,7 +2608,50 @@ const wd = (function() {
 		let node  = check.node ? check.value[0] : null;
 		let tag   = node === null ? null : node.tagName.toLowerCase();
 		let type  = tag;
-		let cfg   = (type !== null && type in this._types) ? this._types[type] : null;
+		let types = {
+			meter:    {value: "number", text: "value", send: 0},
+			progress: {value: "number", text: "value", send: 0},
+			option:   {value: "value",  text: "text",  send: 0},
+			output:   {value: "value",  text: "text",  send: 0},
+			select:   {value: "combo",  text: "combo", send: 1},
+			textarea: {value: "value",  text: "value", send: 1},
+			button:   {
+				subtype: {
+					reset:  {value: "value", text: "inner", send: 0},
+					button: {value: "value", text: "inner", send: 0},
+					submit: {value: "value", text: "inner", send: 0},
+				}
+			},
+			input: {
+				subtype: {
+					button:           {value: "value",     text: "value", send: 0},
+					reset:            {value: "value",     text: "value", send: 0},
+					submit:           {value: "value",     text: "value", send: 0},
+					image:            {value: null,        text: null,    send: 0},
+					color:            {value: "value",     text: null,    send: 1},
+					radio:            {value: "check",     text: null,    send: 1},
+					checkbox:         {value: "check",     text: null,    send: 1},
+					date:             {value: "date",      text: "value", send: 1},
+					datetime:         {value: "date|time", text: "value", send: 1},
+					month:            {value: "month",     text: "value", send: 1},
+					week:             {value: "week",      text: "value", send: 1},
+					time:             {value: "time",      text: "value", send: 1},
+					range:            {value: "number",    text: "value", send: 1},
+					number:           {value: "number",    text: "value", send: 1},
+					file:             {value: "file",      text: null,    send: 1},
+					url:              {value: "url",       text: "value", send: 1},
+					email:            {value: "email",     text: "value", send: 1},
+					tel:              {value: "value",     text: "value", send: 1},
+					text:             {value: "value",     text: "value", send: 1},
+					search:           {value: "value",     text: "value", send: 1},
+					password:         {value: "value",     text: "value", send: 1},
+					hidden:           {value: "value",     text: "value", send: 1},
+					"datetime-local": {value: "datetime",  text: "value", send: 1},
+				}
+			}
+		};
+		/* obtendo os valores do objeto */
+		let cfg   = (type !== null && type in types) ? types[type] : null;
 		if (cfg !== null && "subtype" in cfg) {
 			let type1 = node.getAttribute("type");
 			let type2 = node.type;
@@ -2597,61 +2659,23 @@ const wd = (function() {
 			cfg  = cfg.subtype[type];
 		}
 		Object.defineProperties(this, {
-			_form: {value: cfg !== null},
-			_node: {value: node},
-			_tag:  {value: tag},
-			_type: {value: type},
-			_cfg:  {value: cfg},
+			_form:   {value: cfg !== null},
+			_node:   {value: node},
+			_tag:    {value: tag},
+			_type:   {value: type},
+			_cfg:    {value: cfg},
+			_picker: {value: (function() { /* testa se há máscara nativa */
+				if (cfg === null) return false;
+				let clone   = node.cloneNode();
+				let invalid = "A1!@#$%¨&*()+";
+				clone.value = invalid;
+				return clone.value !== invalid;
+			})()}
 		});
 	}
 
 	Object.defineProperties(__FNode.prototype, {
 		constructor: {value: __FNode},
-		/**. ``''object'' _types``: Contém a configuração para nós de formulários.**/
-		_types: {
-			value: {
-				meter:    {value: "number", text: "value", send: 0},
-				progress: {value: "number", text: "value", send: 0},
-				option:   {value: "value",  text: "text",  send: 0},
-				output:   {value: "value",  text: "text",  send: 0},
-				select:   {value: "combo",  text: "combo", send: 1},
-				textarea: {value: "value",  text: "value", send: 1},
-				button:   {
-					subtype: {
-						reset:  {value: "value", text: "inner", send: 0},
-						button: {value: "value", text: "inner", send: 0},
-						submit: {value: "value", text: "inner", send: 0},
-					}
-				},
-				input: {
-					subtype: {
-						button:           {value: "value",     text: "value", send: 0},
-						reset:            {value: "value",     text: "value", send: 0},
-						submit:           {value: "value",     text: "value", send: 0},
-						image:            {value: null,        text: null,    send: 0},
-						color:            {value: "value",     text: null,    send: 1},
-						radio:            {value: "check",     text: null,    send: 1},
-						checkbox:         {value: "check",     text: null,    send: 1},
-						date:             {value: "date",      text: "value", send: 1},
-						datetime:         {value: "date/time", text: "value", send: 1},
-						month:            {value: "month",     text: "value", send: 1},
-						week:             {value: "week",      text: "value", send: 1},
-						time:             {value: "time",      text: "value", send: 1},
-						range:            {value: "number",    text: "value", send: 1},
-						number:           {value: "number",    text: "value", send: 1},
-						file:             {value: "file",      text: null,    send: 1},
-						url:              {value: "url",       text: "value", send: 1},
-						email:            {value: "email",     text: "value", send: 1},
-						tel:              {value: "value",     text: "value", send: 1},
-						text:             {value: "value",     text: "value", send: 1},
-						search:           {value: "value",     text: "value", send: 1},
-						password:         {value: "value",     text: "value", send: 1},
-						hidden:           {value: "value",     text: "value", send: 1},
-						"datetime-local": {value: "datetime",  text: "value", send: 1},
-					}
-				}
-			}
-		},
 		/**. ``''boolean'' form``: Informar se o nó é um formulário.**/
 		form: {get: function() {return this._form;}},
 		/**. ``''node'' node``: Retorna o nó HTML.**/
@@ -2660,10 +2684,12 @@ const wd = (function() {
 		type: {get: function() {return this._type;}},
 		/**. ``''string'' tag``: Retorna o a tag do nó.**/
 		tag: {get: function() {return this._tag;}},
-		/**. ``''any'' _value``: Define ou retorna o valor do nó de formulário, ou indefinido se não for um formulário de submissão de dados.**/
+		/**. ``''boolean'' picker``: Testa se o campo de fomulário possui máscara nativa implementada.**/
+		picker: {get: function() {return this._picker;}},
+		/**. ``''any'' _value``: Define e retorna o valor do nó de formulário.**/
 		_value: {
 			set: function(x) {
-				if (!this.form) return undefined;
+				if (!this.form) return;
 				let check = __Type(x);
 				switch(this._cfg.value) {
 					case null: return;
@@ -2671,76 +2697,64 @@ const wd = (function() {
 						this.node.value = x;
 						return;
 					}
-					case "number": { /* valor finito */
+					case "number": { /* número finito */
 						this.node.value = check.finite ? check.value : null;
 						return;
 					}
 					case "combo": { /* select */
 						if (check.array) {
-							if (x.length < 1) {
-								this.node.value = null;
-								return;
-							}
-							if (!this.node.multiple && x.length > 1) {
-								this.node.value = null;
-								return;
-							}
 							x.forEach(function(v,i,a) {a[i] = String(v);});
-							let i = -1;
+							let ok = false;
+							let i  = -1;
 							while (++i < this.node.length) {
+								if (!this.node.multiple && ok) return;
 								let value = this.node[i].value;
 								this.node[i].selected = x.indexOf(value) >= 0;
+								ok = this.node[i].selected;
 							}
 							return;
 						}
-						this.node.value = x;
+						this.node.value = String(x);
 						return;
 					}
-					case "check": {
+					case "check": { /* checkbox e radio */
 						if      (check.null)    this.node.checked = !this.node.checked;
 						else if (check.boolean) this.node.checked = x;
 						else                    this.node.value = String(x);
 						return;
 					}
-					case "date": {//FIXME ver limites
+					case "date": { /* datas */
 						if (check.date) {
-							let date = check.value;
-							let year = Number(date.split("-")[0]);
-							if (year < 1 || year > 275760)
-								date = year < 1 ? "0001-01-01" : "limite";
-							this.node.value = date;
+							this.node.value = check.value;
+							if (this.node.value === "") this.node.value = null;
 							return;
 						}
 						this.node.value = null;
 						return;
 					}
 					case "time": {
-						if (!check.time) {
-							this.node.value = null;
-						} else {
-							let dt = new __DateTime(check.value);
-							this.node.value = dt.format("{hh}:{mm}");
-						}
+						this.node.value = check.time ? check.value.substring(0,5) :  null;
 						return;
 					}
 					case "datetime": {
-						if (!check.datetime) {
-							this.node.value = null;
-						} else {
-							let dt = new __DateTime(check.value);
-							this.node.value = dt.format(dt.year < 1 ? "0001-01-01T00:00" : "{YYYY}-{MM}-{DD}T{hh}:{mm}");
+						if (check.datetime) {
+							let data = check.value.split("T");
+							let date = data[0];
+							let time = data[1].substring(0,5);console.log(date+"T"+time);
+							this.node.value = date+"T"+time;
+							if (this.node.value === "") this.node.value = null;
+							return;
 						}
+						this.node.value = null;
 						return;
 					}
-					case "date/time": {
+					case "date|time": {
 						let types = ["date", "time", "datetime"];
 						this.node.value = types.indexOf(check.type) < 0 ? null : check.value;
 						return;
 					}
 					case "week": {
-						if (!check.week) {
-							this.node.value = null;
-						} else {
+						if (check.week) {
 							let data = {
 								WWYYYY: {year: "$2", week: "$1", re: __TYPE.week.WWYYYY},
 								YYYYWW: {year: "$1", week: "$2", re: __TYPE.week.YYYYWW},
@@ -2753,13 +2767,13 @@ const wd = (function() {
 								this.node.value = null;
 							else
 								this.node.value = __Type.zeros(year, 4)+"-W"+__Type.zeros(week, 2);
+							return;
 						}
+						this.node.value = null;
 						return;
 					}
 					case "month": {
-						if (!check.month) {
-							this.node.value = null;
-						} else {
+						if (check.month) {
 							let data = {
 								MMYYYY:   {year: "$2", month: "$1", re: __TYPE.month.MMYYYY,   txt: false},
 								YYYYMM:   {year: "$1", month: "$2", re: __TYPE.month.YYYYMM,   txt: false},
@@ -2773,7 +2787,9 @@ const wd = (function() {
 								this.node.value = null;
 							else
 								this.node.value = __Type.zeros(year, 4)+"-"+__Type.zeros(month, 2);
+							return;
 						}
+						this.node.value = null;
 						return;
 					}
 					case "file": {
@@ -2824,19 +2840,23 @@ const wd = (function() {
 				let check = __Type(value);
 				let clone = this.node.cloneNode();
 				let fnode = __FNode(clone);
-				try {fnode.value = value;} catch(e) {fnode.value = null;}
+				try {fnode._value = value;} catch(e) {fnode._value = null;}
+				//FIXME como retornar os valores? pense melhor sobre os campo com máscaras nativas
+
+
+
 				switch(this._cfg.value) {
-					case null:       return value;
+					case null:       return undefined;
 					case "value":    return value;
-					case "url":      return value;
+					case "url":      return check.url ? value.trim() : "";
 					case "check":    return this.node.checked ? value : null;
 					case "number":   return check.finite   ? check.value : "";
-					case "date":     return check.date     ? fnode.node.value : "";
-					case "time":     return check.time     ? fnode.node.value : "";
-					case "datetime": return check.datetime ? fnode.node.value : "";
-					case "week":     return check.week     ? fnode.node.value : "";
-					case "month":    return check.month    ? fnode.node.value : "";
-					case "date/time": {
+					case "date":     return check.date     ? check.value : "";
+					case "time":     return check.time     ? check.value : "";
+					case "datetime": return check.datetime ? check.value : "";
+					case "week":     return check.week     ? fnode.node._value : "";
+					case "month":    return check.month    ? fnode.node._value : "";
+					case "date|time": {
 						let types = ["date", "time", "datetime"];console.log();
 						return types.indexOf(check.type) < 0 ? "" : check.value;
 					}
@@ -2844,10 +2864,10 @@ const wd = (function() {
 						let list = [];
 						let i    = -1;
 						while (++i < this.node.length) {
-							if (this.node[i].selected) list.push(this.node[i].value);
+							if (this.node[i].selected)
+								list.push(this.node[i].value);
 						}
-						if (!this.node.multiple && list.length > 1) return [];
-						return list;
+						return !this.node.multiple && list.length > 1 ? [list[0]] : list;
 					}
 					case "email": {
 						if (!check.nonempty) return [];
@@ -2858,13 +2878,12 @@ const wd = (function() {
 							test = __Type(v).email;
 							if (test) a[i] = v.trim();
 						});
-						if (!test || list.length < 1) return [];
+						if (!test) return [];
 						if (!this.node.multiple && list.length > 1) return [];
 						return list;
 					}
 					case "file": {
 						let files = this.node.files;
-						if (files.length === 0) return [];
 						if (!this.node.multiple && files.length > 1) return [];
 						return Array.prototype.slice.call(files);
 					}
