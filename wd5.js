@@ -2607,72 +2607,96 @@ const wd = (function() {
 		let check = __Type(input);
 		let node  = check.node ? check.value[0] : null;
 		let tag   = node === null ? null : node.tagName.toLowerCase();
-		let type  = tag;
-		let types = {
-			meter:    {value: "number", text: "value", send: 0},
-			progress: {value: "number", text: "value", send: 0},
-			option:   {value: "value",  text: "text",  send: 0},
-			output:   {value: "value",  text: "text",  send: 0},
-			select:   {value: "combo",  text: "combo", send: 1},
-			textarea: {value: "value",  text: "value", send: 1},
+		let type  = null;
+		let form  = false;
+		let cfg   = null;
+		let fwork = false;
+		let fmask = false;
+		let forms = {
+			meter:    {value: "value", text: "value", send: 0, check: null},
+			progress: {value: "value", text: "value", send: 0, check: null},
+			option:   {value: "value", text:  "text", send: 0, check: null},
+			output:   {value: "value", text:  "text", send: 0, check: null},
+			select:   {value: "combo", text: "combo", send: 1, check: null},
+			textarea: {value: "value", text: "value", send: 1, check: null},
 			button:   {
-				subtype: {
-					reset:  {value: "value", text: "inner", send: 0},
-					button: {value: "value", text: "inner", send: 0},
-					submit: {value: "value", text: "inner", send: 0},
+				type: {
+					reset:  {value: "value", text: "inner", send: 0, check: null},
+					button: {value: "value", text: "inner", send: 0, check: null},
+					submit: {value: "value", text: "inner", send: 0, check: null},
 				}
 			},
 			input: {
-				subtype: {
-					button:           {value: "value",     text: "value", send: 0},
-					reset:            {value: "value",     text: "value", send: 0},
-					submit:           {value: "value",     text: "value", send: 0},
-					image:            {value: null,        text: null,    send: 0},
-					color:            {value: "value",     text: null,    send: 1},
-					radio:            {value: "check",     text: null,    send: 1},
-					checkbox:         {value: "check",     text: null,    send: 1},
-					date:             {value: "date",      text: "value", send: 1},
-					datetime:         {value: "date|time", text: "value", send: 1},
-					month:            {value: "month",     text: "value", send: 1},
-					week:             {value: "week",      text: "value", send: 1},
-					time:             {value: "time",      text: "value", send: 1},
-					range:            {value: "number",    text: "value", send: 1},
-					number:           {value: "number",    text: "value", send: 1},
-					file:             {value: "file",      text: null,    send: 1},
-					url:              {value: "url",       text: "value", send: 1},
-					email:            {value: "email",     text: "value", send: 1},
-					tel:              {value: "value",     text: "value", send: 1},
-					text:             {value: "value",     text: "value", send: 1},
-					search:           {value: "value",     text: "value", send: 1},
-					password:         {value: "value",     text: "value", send: 1},
-					hidden:           {value: "value",     text: "value", send: 1},
-					"datetime-local": {value: "datetime",  text: "value", send: 1},
+				type: {
+					button:           {value: "value", text: "value", send: 0, check:        null},
+					reset:            {value: "value", text: "value", send: 0, check:        null},
+					submit:           {value: "value", text: "value", send: 0, check:        null},
+					image:            {value: "value", text: "value", send: 0, check:        null},
+					color:            {value: "value", text:    null, send: 1, check:        null},
+					radio:            {value: "check", text:    null, send: 1, check:        null},
+					checkbox:         {value: "check", text:    null, send: 1, check:        null},
+					date:             {value: "value", text: "value", send: 1, check:      "date"},
+					datetime:         {value: "value", text: "value", send: 1, check: "date|time"},
+					month:            {value: "value", text: "value", send: 1, check:     "month"},
+					week:             {value: "value", text: "value", send: 1, check:      "week"},
+					time:             {value: "value", text: "value", send: 1, check:      "time"},
+					range:            {value: "value", text: "value", send: 1, check:    "number"},
+					number:           {value: "value", text: "value", send: 1, check:    "number"},
+					file:             {value:  "file", text:    null, send: 1, check:        null},
+					url:              {value: "value", text: "value", send: 1, check:       "url"},
+					email:            {value: "email", text: "value", send: 1, check:     "email"},
+					tel:              {value: "value", text: "value", send: 1, check:        null},
+					text:             {value: "value", text: "value", send: 1, check:        null},
+					search:           {value: "value", text: "value", send: 1, check:        null},
+					password:         {value: "value", text: "value", send: 1, check:        null},
+					hidden:           {value: "value", text: "value", send: 1, check:        null},
+					"datetime-local": {value: "value", text: "value", send: 1, check:  "datetime"},
 				}
 			}
 		};
-		/* obtendo os valores do objeto */
-		let cfg   = (type !== null && type in types) ? types[type] : null;
-		if (cfg !== null && "subtype" in cfg) {
-			let type1 = node.getAttribute("type");
-			let type2 = node.type;
-			type = (type1 !== null && type1 in cfg.subtype ? type1 : type2).toLowerCase();
-			cfg  = cfg.subtype[type];
+		/* obtendo informações de formulário */
+		if (tag in forms) {
+			/* é formulário */
+			form  = true;
+			cfg   = forms[tag];
+			type  = tag;
+			fwork = true;
+			fmask = (function() {
+				try {
+					let clone   = node.cloneNode();
+					let invalid = "A1!@#$%¨&*()+";
+					clone.value = invalid;
+					return clone.value !== invalid;
+				} catch(e) {
+					return false;
+				}
+			})();
+			if ("type" in cfg) {
+				/* é um formulário com tipo especificado */
+				let type1 = String(node.getAttribute("type")).toLowerCase();
+				let type2 = String(node.type).toLowerCase();
+				type  = type1 in cfg.type ? type1 : type2;
+				cfg   = cfg.type[type];
+				fwork = type1 === type2;
+			}
 		}
 		Object.defineProperties(this, {
-			_form:   {value: cfg !== null},
-			_node:   {value: node},
-			_tag:    {value: tag},
-			_type:   {value: type},
-			_cfg:    {value: cfg},
-			_picker: {value: (function() { /* testa se há máscara nativa */
-				if (cfg === null) return false;
-				let clone   = node.cloneNode();
-				let invalid = "A1!@#$%¨&*()+";
-				clone.value = invalid;
-				return clone.value !== invalid;
-			})()}
+			_form:  {value:  form}, /* informa se é um formulário */
+			_node:  {value:  node}, /* registra o nó */
+			_tag:   {value:   tag}, /* registra a tag do nó */
+			_type:  {value:  type}, /* registra o tipo de formulário ou nulo */
+			_cfg:   {value:   cfg}, /* registra a configuração do formulário ou nulo */
+			_fwork: {value: fwork}, /* registra se o formulário está implementado */
+			_fmask: {value: fmask}, /* registra se o formulário possui máscara nativa */
 		});
 	}
+
+
+
+
+
+
+
 
 	Object.defineProperties(__FNode.prototype, {
 		constructor: {value: __FNode},
@@ -2685,8 +2709,97 @@ const wd = (function() {
 		/**. ``''string'' tag``: Retorna o a tag do nó.**/
 		tag: {get: function() {return this._tag;}},
 		/**. ``''boolean'' picker``: Testa se o campo de fomulário possui máscara nativa implementada.**/
-		picker: {get: function() {return this._picker;}},
-		/**. ``''any'' _value``: Define e retorna o valor do nó de formulário.**/
+
+		/**. ``''any'' value(''any'' x)``: Define e retorna o valor do formulário. Se o formulário aceita múltiplos valores, o valor retornado será uma lista.**/
+		value: {
+			value: function(x) {
+				if (!this.form) return;
+				let check  = __Type(x);
+				let setter = !check.undefined;
+				switch(this._cfg.value) {
+					case "combo": {
+						if (!check.array) x = check.null ? [] : [x];
+						x.forEach(function(v,i,a) {a[i] = String(v);});
+						let items = [];
+						let i  = -1;
+						while (++i < this.node.length) {
+							if (setter) {
+								let value = this.node[i].value;
+								this.node[i].selected = x.indexOf(value) >= 0;
+							}
+							if (this.node[i].selected) items.push(this.node[i].value);
+						}
+						return items;
+					}
+					case "email": {
+						if (!check.array) x = check.null ? [] : String(x).split(",");
+						if (setter) this.node.value = String(x);
+						let data  = this.node.value.trim();
+						let items = data === "" ? [] : data.split(",");
+						items.forEach(function(v,i,a) {a[i] = String(v).trim();});
+						return items;
+					}
+					case "file": {
+						if (check.null) this.node.value = null;
+						let files = this.node.files;
+						return Array.prototype.slice.call(files);
+					}
+					case "check": {
+						if (setter) {
+							if (check.boolean)   this.node.checked = check.value;
+							else if (check.null) this.node.checked = !this.node.checked;
+							else                 this.node.value   = String(x);
+						}
+						return this.node.checked ? this.node.value : null;
+					}
+					case "value": {
+						if (setter) this.node.value = x;
+						return this.node.value;
+					}
+				}
+			}
+		},
+		/**. ``''any'' value(''any'' x)``: Define e retorna o texto do formulário. Se o formulário aceita múltiplos valores, o valor retornado será uma lista.**/
+		text: {
+			value: function(x) {
+				if (!this.form) return;
+				let check  = __Type(x);
+				let setter = !check.undefined;
+				switch(this._cfg.text) {
+					case "value": return this.value(x);
+					case "text": {
+						if (setter) this.node.textContent = __String(x).clear(true, false);
+						return this.node.textContent;
+					}
+					case "inner": {
+						if (setter) this.node.innerHTML = __String(x).clear(true, false);
+						return this.node.innerHTML;
+					}
+					case "combo": {
+						if (!check.array) x = check.null ? [] : [x];
+						x.forEach(function(v,i,a) {a[i] = __String(v).clear(true, false);});
+						let items = [];
+						let i  = -1;
+						while (++i < this.node.length) {
+							if (setter) {
+								let value = __String(this.node[i].textContent).clear(true, false);
+								this.node[i].selected = x.indexOf(value) >= 0;
+							}
+							if (this.node[i].selected)
+								items.push(__String(this.node[i].textContent).clear(true, false));
+						}
+						return items;
+					}
+				}
+			}
+		},
+
+
+
+
+
+
+
 		_value: {
 			set: function(x) {
 				if (!this.form) return;
