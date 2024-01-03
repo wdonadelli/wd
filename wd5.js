@@ -1,28 +1,27 @@
-/*------------------------------------------------------------------------------
-MIT License
-
-Copyright (c) 2023 Willian Donadelli <wdonadelli@gmail.com>
-
-Permission is hereby granted, fr_ee of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-https://github.com/wdonadelli/wd
-------------------------------------------------------------------------------*/
+/* wd5.js https://github.com/wdonadelli/wd
+ *
+ * Copyright 2023-2024 Willian Donadelli <wdonadelli@github.com>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ * SPDX-License-Identifier: MIT
+ */
 
 "use strict";
 
@@ -2793,274 +2792,8 @@ const wd = (function() {
 				}
 			}
 		},
-
-
-
-
-
-
-
-		_value: {
-			set: function(x) {
-				if (!this.form) return;
-				let check = __Type(x);
-				switch(this._cfg.value) {
-					case null: return;
-					case "value": { /* valor simples */
-						this.node.value = x;
-						return;
-					}
-					case "number": { /* número finito */
-						this.node.value = check.finite ? check.value : null;
-						return;
-					}
-					case "combo": { /* select */
-						if (check.array) {
-							x.forEach(function(v,i,a) {a[i] = String(v);});
-							let ok = false;
-							let i  = -1;
-							while (++i < this.node.length) {
-								if (!this.node.multiple && ok) return;
-								let value = this.node[i].value;
-								this.node[i].selected = x.indexOf(value) >= 0;
-								ok = this.node[i].selected;
-							}
-							return;
-						}
-						this.node.value = String(x);
-						return;
-					}
-					case "check": { /* checkbox e radio */
-						if      (check.null)    this.node.checked = !this.node.checked;
-						else if (check.boolean) this.node.checked = x;
-						else                    this.node.value = String(x);
-						return;
-					}
-					case "date": { /* datas */
-						if (check.date) {
-							this.node.value = check.value;
-							if (this.node.value === "") this.node.value = null;
-							return;
-						}
-						this.node.value = null;
-						return;
-					}
-					case "time": {
-						this.node.value = check.time ? check.value.substring(0,5) :  null;
-						return;
-					}
-					case "datetime": {
-						if (check.datetime) {
-							let data = check.value.split("T");
-							let date = data[0];
-							let time = data[1].substring(0,5);console.log(date+"T"+time);
-							this.node.value = date+"T"+time;
-							if (this.node.value === "") this.node.value = null;
-							return;
-						}
-						this.node.value = null;
-						return;
-					}
-					case "date|time": {
-						let types = ["date", "time", "datetime"];
-						this.node.value = types.indexOf(check.type) < 0 ? null : check.value;
-						return;
-					}
-					case "week": {
-						if (check.week) {
-							let data = {
-								WWYYYY: {year: "$2", week: "$1", re: __TYPE.week.WWYYYY},
-								YYYYWW: {year: "$1", week: "$2", re: __TYPE.week.YYYYWW},
-							};
-							let type = data[check._test.subgroup];
-							let year = x.trim().replace(type.re, type.year);
-							let week = x.trim().replace(type.re, type.week);
-							let maxw = new __DateTime(year+"-01-01").maxWeekForm;
-							if (Number(year) < 1 || Number(week) > maxw)
-								this.node.value = null;
-							else
-								this.node.value = __Type.zeros(year, 4)+"-W"+__Type.zeros(week, 2);
-							return;
-						}
-						this.node.value = null;
-						return;
-					}
-					case "month": {
-						if (check.month) {
-							let data = {
-								MMYYYY:   {year: "$2", month: "$1", re: __TYPE.month.MMYYYY,   txt: false},
-								YYYYMM:   {year: "$1", month: "$2", re: __TYPE.month.YYYYMM,   txt: false},
-								MMMMYYYY: {year: "$2", month: "$1", re: __TYPE.month.MMMMYYYY, txt: true},
-							};
-							let type  = data[check._test.subgroup];
-							let year  = x.trim().replace(type.re, type.year);
-							let month = x.trim().replace(type.re, type.month);
-							if (type.txt) month = __LANG.month(month);
-							if (Number(year) < 1 || Number(month) < 1)
-								this.node.value = null;
-							else
-								this.node.value = __Type.zeros(year, 4)+"-"+__Type.zeros(month, 2);
-							return;
-						}
-						this.node.value = null;
-						return;
-					}
-					case "file": {
-						this.node.value = null;
-						return;
-					}
-					case "url": {
-						this.node.value = check.url ? x.trim() : null;
-						return;
-					}
-					case "email": {
-						if (check.email) { /* definir e-mail simples */
-							this.node.value = x.trim();
-							return;
-						}
-						if (check.chars) { /* se string, transformar em array para testar */
-							this._value = x.split(",");
-							return;
-						}
-						if (check.array) { /* se array, checar cada item e analisar multiplicidade */
-							let test = true;
-							x.forEach(function(v,i,a) {
-								if (!test) return;
-								test = __Type(v).email;
-								if (test) a[i] = v.trim();
-							});
-							if (!test || x.length < 1) {
-								this.node.value = null;
-								return;
-							}
-							if (!this.node.multiple && x.length > 1) {
-								this.node.value = null;
-								return;
-							}
-							this.node.value = x.join(",");
-							return;
-						}
-						/* valor padrão */
-						this.node.value = null;
-						return;
-					}
-					default: this.node.value = x;
-				}
-			},
-			get: function() {
-				if (!this.form) return undefined;
-				let value = this.node.value;
-				let check = __Type(value);
-				let clone = this.node.cloneNode();
-				let fnode = __FNode(clone);
-				try {fnode._value = value;} catch(e) {fnode._value = null;}
-				//FIXME como retornar os valores? pense melhor sobre os campo com máscaras nativas
-
-
-
-				switch(this._cfg.value) {
-					case null:       return undefined;
-					case "value":    return value;
-					case "url":      return check.url ? value.trim() : "";
-					case "check":    return this.node.checked ? value : null;
-					case "number":   return check.finite   ? check.value : "";
-					case "date":     return check.date     ? check.value : "";
-					case "time":     return check.time     ? check.value : "";
-					case "datetime": return check.datetime ? check.value : "";
-					case "week":     return check.week     ? fnode.node._value : "";
-					case "month":    return check.month    ? fnode.node._value : "";
-					case "date|time": {
-						let types = ["date", "time", "datetime"];console.log();
-						return types.indexOf(check.type) < 0 ? "" : check.value;
-					}
-					case "combo": {
-						let list = [];
-						let i    = -1;
-						while (++i < this.node.length) {
-							if (this.node[i].selected)
-								list.push(this.node[i].value);
-						}
-						return !this.node.multiple && list.length > 1 ? [list[0]] : list;
-					}
-					case "email": {
-						if (!check.nonempty) return [];
-						let list = value.split(",");
-						let test = true;
-						list.forEach(function(v,i,a) {
-							if (!test) return;
-							test = __Type(v).email;
-							if (test) a[i] = v.trim();
-						});
-						if (!test) return [];
-						if (!this.node.multiple && list.length > 1) return [];
-						return list;
-					}
-					case "file": {
-						let files = this.node.files;
-						if (!this.node.multiple && files.length > 1) return [];
-						return Array.prototype.slice.call(files);
-					}
-					default: return value;
-				}
-			}
-		},
-		/**. ``''string'' _text``: Define ou retorna o valor textual do nó de formulário ou indefinido.**/
-		_text: {
-			set: function(x) {
-				if (!this.form) return undefined;
-				let check = __Type(x);
-				switch(this._cfg.text) {
-					case null: return;
-					case "value": {
-						this._value = x;
-						return;
-					}
-					case "text": {
-						this.node.textContent = x;
-						return;
-					}
-					case "inner": {
-						let html = /\<\w+([^>]+)?\>/;
-						this.node[html.test(x) ? "innerHTML" : "textContent"] = x;
-						return;
-					}
-					case "combo": {
-						if (check.null) this.node.value = null;
-						x = this.node.multiple ? (check.array ? x : [x]) : [x];
-						x.forEach(function(v,i,a) {a[i] = String(v);});
-						let i = -1;
-						while (++i < this.node.length) {
-							let text = this.node[i].textContent;
-							this.node[i].selected = x.indexOf(text) >= 0;
-						}
-						return;
-					}
-					default: this.node.textContent = x;
-				}
-			},
-			get: function() {
-				if (!this.form) return undefined;
-				switch(this._cfg.text) {
-					case null: return;
-					case "value": return this._value;
-					case "text":  return this.node.textContent;
-					case "inner": return this.node.textContent;
-					case "combo": {
-						let items = [];
-						let i = -1;
-						while (++i < this.node.length)
-							if (this.node[i].selected)
-								items.push(this.node[i].textContent);
-						if (items.length === 0) return "";
-						if (items.length === 1) return items[0];
-						return this.node.multiple ? items : items[0];
-					}
-					default: return this.node.value;
-				}
-			}
-		},
-		/**. ``''string'' _name``: Define ou retorna o nome do formulário ou nulo se inexistente ``name`` ou ``id``.**/
-		_name: {
+		/**. ``''string'' name``: Define ou retorna o nome do formulário ou nulo se inexistente ``name`` ou ``id``.**/
+		name: {
 			get: function() {
 				if (!this.form) return null;
 				let name = __Type(this.node.name);
@@ -3074,14 +2807,11 @@ const wd = (function() {
 				this.node.name = __Type(x).nonempty ? String(x).trim() : "";
 			}
 		},
-
-
-
 		/**. ``''string'' validity``: Define ou retorna a mensagem de erro do formulário.**/
 		validity: {
 			set: function(msg) {
 				if (!this.form || this._cfg.send !== 1) return undefined;
-				if (!__Type(msg).nonempty) msg = "";
+				msg = String(msg).trim();
 				if ("setCustomValidity" in this.node)
 					this.node.setCustomValidity(msg);
 				else
@@ -3089,8 +2819,8 @@ const wd = (function() {
 			},
 			get: function() {
 				if (!this.form || this._cfg.send !== 1) return "";
-				/* checando a validade */
 				let validity = true;
+				/* checando a validade */
 				if ("checkValidity" in this.node)
 					validity = this.node.checkValidity();
 				else if ("wdCustomValidity" in this.node.dataset)
@@ -3108,16 +2838,113 @@ const wd = (function() {
 		submit: {
 			get: function() {
 				if (!this.form || this._cfg.send !== 1) return null;
-				let value = this._value;
-				let name  = this._name;
-				let valid = this.validity;
+				let value = this.value();
+				let name  = this.name;
+				let valid = this.validity.trim();
 				if (value === null || name === null) return null;
+				/* checar validade para formulário não implementado ou sem máscara */
+				if (!this._fmask || !this._fwork) {
+					let check = __Type(value);
+					if (valid === "" && (check.nonempty || check.array)) {
+						switch(this._cfg.check) {
+							case "date": {
+								if (check.date) value = check.date;
+								else valid = "Invalid date value.";
+								break;
+							}
+							case "time": {
+								if (check.time) value = check.time;
+								else valid = "Invalid time value.";
+								break;
+							}
+							case "datetime": {
+								if (check.datetime) value = check.datetime;
+								else valid = "Invalid date/time value.";
+								break;
+							}
+							case "date|time": {
+								if (check.date || check.time || check.datetime) value = check.value;
+								else valid = "Invalid date or time value.";
+								console.log("Passei aqui");
+								break;
+							}
+							case "number": {
+								if (check.finite) value = check.finite;
+								else valid = "Invalid numeric value.";
+								break;
+							}
+							case "url": {
+								if (check.url) value = value.trim();
+								else valid = "Invalid URL value.";
+								break;
+							}
+							case "email": {
+								if (this.node.multiple !== true && value.length > 1) {
+									valid = "Multiple values not allowed.";
+									break;
+								}
+								let email = true;
+								value.forEach(function(v,i,a) {
+									if (!email) return;
+									let test = __Type(v).email;
+								});
+								if (!email) valid = "Invalid email value."
+								break;
+							}
+							case "file":	 {
+								if (this.node.multiple !== true && value.length > 1)
+									valid = "Multiple values not allowed.";
+								break;
+							}
+							case "combo": {
+								if (this.node.multiple !== true && value.length > 1)
+									valid = "Multiple values not allowed.";
+								break;
+							}
+							case "week": {
+								if (!check.week) {
+									valid = "Invalid week value."
+									break;
+								}
+								let data = {
+									WWYYYY: {year: "$2", week: "$1", re: __TYPE.week.WWYYYY},
+									YYYYWW: {year: "$1", week: "$2", re: __TYPE.week.YYYYWW},
+								};
+								let type = data[check._test.subgroup];
+								let year = x.trim().replace(type.re, type.year);
+								let week = x.trim().replace(type.re, type.week);
+								value    = __Type.zeros(year, 4)+"-W"+__Type.zeros(week, 2);
+								break;
+							}
+							case "month": {
+								if (!check.month) {
+									valid = "Invalid month value."
+									break;
+								}
+								let data = {
+									MMYYYY:   {year: "$2", month: "$1", re: __TYPE.month.MMYYYY,   txt: false},
+									YYYYMM:   {year: "$1", month: "$2", re: __TYPE.month.YYYYMM,   txt: false},
+									MMMMYYYY: {year: "$2", month: "$1", re: __TYPE.month.MMMMYYYY, txt: true},
+								};
+								let type  = data[check._test.subgroup];
+								let year  = x.trim().replace(type.re, type.year);
+								let month = x.trim().replace(type.re, type.month);
+								if (type.txt) month = __LANG.month(month);
+								value     = __Type.zeros(year, 4)+"-"+__Type.zeros(month, 2);
+								break;
+							}
+						}
+
+						//FIXME tenho que descobrir como fazer pra limpar a mensagem personalizada ou ficará eternamente apontando-a
+						if (valid !== "") this.validity = valid;
+					}
+				}
+				console.log(this._cfg);
+				/* definindo valor de retorno */
 				let data = {
-					name: name,
-					value: value,
-					validity: valid === "",
-					message: valid
+					name: name, value: value, validity: valid === "", message: valid
 				};
+				/* definindo interrupção da operação, caso o valor seja inválido */
 				if (!data.validity) {
 					if ("reportValidity" in this.node)
 						this.node.reportValidity();
@@ -3165,17 +2992,17 @@ const wd = (function() {
 					/* específicos de formulários */
 					if (this.form) {
 						switch(name) {
-								case "value": return this._value;
-								case "text":  return this._text;
-								case "name":  return this._name;
+								case "value":       return this.value();
+								case "textContent": return this.text();
+								case "name":        return this.name;
 						}
 					}
 					/* demais atributos do objeto */
 					switch(name) {
-						case "style":     return this._style;
-						case "class":     return this._class;
-						case "className": return this._class;
-						case "dataset":   return this._dataset;
+						case "style":     return this.style;
+						case "class":     return this.class;
+						case "className": return this.class;
+						case "dataset":   return this.dataset;
 					}
 					/* demais atributos */
 					if (name in this.node) return this.node[name];
@@ -3186,23 +3013,23 @@ const wd = (function() {
 					/* específicos de formulários */
 					if (this.form) {
 						switch(name) {
-								case "value": this._value = value; return this.attr(name);
-								case "text":  this._text  = value; return this.attr(name);
-								case "name":  this._name  = value; return this.attr(name);
+								case "value":       this.value(value); return this.attr(name);
+								case "textContent": this.text(value);  return this.attr(name);
+								case "name":        this.name = value; return this.attr(name);
 						}
 					}
 					/* demais atributos do objeto */
 					switch(name) {
-						case "style":     this._style   = value; return this.attr(name);
-						case "class":     this._class   = value; return this.attr(name);
-						case "className": this._class   = value; return this.attr(name);
-						case "dataset":   this._dataset = value; return this.attr(name);
+						case "style":     this.style   = value; return this.attr(name);
+						case "class":     this.class   = value; return this.attr(name);
+						case "className": this.class   = value; return this.attr(name);
+						case "dataset":   this.dataset = value; return this.attr(name);
 					}
 					/* disparadores */
 					if ((/^\!?on\w+/).test(name) && name.replace("!", "") in this.node) {
 						let obj = {};
 						obj[name] = value;
-						this._handler = obj;
+						this.handler = obj;
 						return;
 					}
 					/* objetos não específicos */
@@ -3233,8 +3060,8 @@ const wd = (function() {
 				}
 			}
 		},
-		/**. ``''object'' _style``: Define e retorna o valor do atributo ``style`` por meio de um objeto. Valor nulo excluí o atributo, valor textual define o atributo HTML e valor em objeto define o par nome-valor.**/
-		_style: {
+		/**. ``''object'' style``: Define e retorna o valor do atributo ``style`` por meio de um objeto. Valor nulo excluí o atributo, valor textual define o atributo HTML e valor em objeto define o par nome-valor.**/
+		style: {
 			get: function() {
 				if (this.node === null) return;
 				let data = {};
@@ -3266,8 +3093,8 @@ const wd = (function() {
 				}
 			}
 		},
-		/**. ``''array'' _class``: Define e retorna o valor do atributo ``class`` por meio de um array. Valor nulo excluí o atributo, valor textual define o atributo HTML e valor em objeto define ações ''replace'', ''toggle'', ''add'' e  ''remove''.**/
-		_class: {
+		/**. ``''array'' class``: Define e retorna o valor do atributo ``class`` por meio de um array. Valor nulo excluí o atributo, valor textual define o atributo HTML e valor em objeto define ações ''replace'', ''toggle'', ''add'' e  ''remove''.**/
+		class: {
 			get: function() {
 				if (this.node === null) return;
 				let css   = this.node.getAttribute("class");
@@ -3295,8 +3122,8 @@ const wd = (function() {
 				}
 			}
 		},
-		/**. ``''void''  _handler``: Define ou remove disparadores ao elemento HTML. O valor deve ser um objeto cujos atributos são os eventos e os valores métodos disparadores ou uma lista deles. Para remover o disparador, o nome do atributo deve conter o caracteres ! no início.**/
-		_handler: {
+		/**. ``''void''  handler``: Define ou remove disparadores ao elemento HTML. O valor deve ser um objeto cujos atributos são os eventos e os valores métodos disparadores ou uma lista deles. Para remover o disparador, o nome do atributo deve conter o caracteres ! no início.**/
+		handler: {
 			set: function(x) {
 				if (this.node === null) return;
 				let data = __Type(x);
@@ -3321,8 +3148,8 @@ const wd = (function() {
 				}
 			}
 		},
-		/**. ``''object'' _dataset``: Define e retorna os valores do atributo ``dataset``. Valor nulo excluí o atributo e valor em objeto define seus pares nome-valor.**/
-		_dataset: {
+		/**. ``''object'' dataset``: Define e retorna os valores do atributo ``dataset``. Valor nulo excluí o atributo e valor em objeto define seus pares nome-valor.**/
+		dataset: {
 			get: function() {
 				if (this.node === null) return;
 				let data = {};
