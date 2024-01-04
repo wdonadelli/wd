@@ -2838,6 +2838,7 @@ const wd = (function() {
 		submit: {
 			get: function() {
 				if (!this.form || this._cfg.send !== 1) return null;
+				this.validity = "";
 				let value = this.value();
 				let name  = this.name;
 				let valid = this.validity.trim();
@@ -2911,8 +2912,13 @@ const wd = (function() {
 									YYYYWW: {year: "$1", week: "$2", re: __TYPE.week.YYYYWW},
 								};
 								let type = data[check._test.subgroup];
-								let year = x.trim().replace(type.re, type.year);
-								let week = x.trim().replace(type.re, type.week);
+								let year = value.replace(type.re, type.year);
+								let week = value.replace(type.re, type.week);
+								let wmax = __DateTime(__Type.zeros(year, 4)+"-01-01").maxWeekForm;
+								if (Number(week) > wmax) {
+									valid = "Invalid week value."
+									break;
+								}
 								value    = __Type.zeros(year, 4)+"-W"+__Type.zeros(week, 2);
 								break;
 							}
@@ -2927,19 +2933,24 @@ const wd = (function() {
 									MMMMYYYY: {year: "$2", month: "$1", re: __TYPE.month.MMMMYYYY, txt: true},
 								};
 								let type  = data[check._test.subgroup];
-								let year  = x.trim().replace(type.re, type.year);
-								let month = x.trim().replace(type.re, type.month);
+								let year  = value.replace(type.re, type.year);
+								let month = value.replace(type.re, type.month);
 								if (type.txt) month = __LANG.month(month);
 								value     = __Type.zeros(year, 4)+"-"+__Type.zeros(month, 2);
 								break;
 							}
 						}
-
-						//FIXME tenho que descobrir como fazer pra limpar a mensagem personalizada ou ficará eternamente apontando-a
 						if (valid !== "") this.validity = valid;
 					}
 				}
-				console.log(this._cfg);
+				/* checando verificação personalizada */
+				if (valid === "" && "wdValidity" in this.node.dataset) {
+					if (this.node.dataset.wdValidity in window) {
+						let test = __Type(window[this.node.dataset.wdValidity]);
+						if (test.function) valid = test.value(value);
+						if (valid !== "") this.validity = valid;
+					}
+				}
 				/* definindo valor de retorno */
 				let data = {
 					name: name, value: value, validity: valid === "", message: valid
