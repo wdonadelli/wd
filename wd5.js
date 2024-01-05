@@ -1500,6 +1500,15 @@ const wd = (function() {
 					txt = txt.join(cut);
 					if (add && txt !== "") table.push([]);
  				}
+ 				/* igualando número de colunas de todas as linhas */
+ 				let max = 0;
+ 				table.forEach(function(v,i,a) {
+ 					if (v.length > max) max = v.length;
+ 				});
+ 				table.forEach(function(v,i,a) {
+ 					while (v.length < max) v.push("");
+ 				});
+				/* retornando */
  				return table;
 			}
 		},
@@ -2605,7 +2614,7 @@ const wd = (function() {
 		if (!(this instanceof __FNode))	return new __FNode(input);
 		let check = __Type(input);
 		let node  = check.node ? check.value[0] : null;
-		let tag   = node === null ? null : node.tagName.toLowerCase();
+		let tag   = null;
 		let type  = null;
 		let form  = false;
 		let cfg   = null;
@@ -2653,6 +2662,13 @@ const wd = (function() {
 				}
 			}
 		};
+		/* identificando o tipo de node */
+		if (node !== null) {
+			if (check.html || check.xml || input === window)
+				tag = node.constructor.name.toLowerCase();
+			else
+				tag = node.tagName.toLowerCase();
+		}
 		/* obtendo informações de formulário */
 		if (tag in forms) {
 			/* é formulário */
@@ -2690,13 +2706,6 @@ const wd = (function() {
 		});
 	}
 
-
-
-
-
-
-
-
 	Object.defineProperties(__FNode.prototype, {
 		constructor: {value: __FNode},
 		/**. ``''boolean'' form``: Informar se o nó é um formulário.**/
@@ -2705,7 +2714,7 @@ const wd = (function() {
 		node: {get: function() {return this._node;}},
 		/**. ``''string'' type``: Retorna o tipo de nó de formulário ou o atributo ``tag``.**/
 		type: {get: function() {return this._type;}},
-		/**. ``''string'' tag``: Retorna o a tag do nó.**/
+		/**. ``''string'' tag``: Retorna o a tag do nó em letra minúscula.**/
 		tag: {get: function() {return this._tag;}},
 		/**. ``''boolean'' picker``: Testa se o campo de fomulário possui máscara nativa implementada.**/
 
@@ -3088,9 +3097,9 @@ const wd = (function() {
 				if (this.node === null) return;
 				let data = __Type(x);
 				if (data.null) {
-					let attr = this._style;
+					let attr = this.style;
 					for (let i in attr)
-						this._node.style[i] = null;
+						this.node.style[i] = null;
 					this.node.removeAttribute("style");
 				}
 				else if (data.chars) {
@@ -3124,12 +3133,12 @@ const wd = (function() {
 					this.node.removeAttribute("class");
 				}
 				else if (data.object) {
-					let css = __Array(this._class);
+					let css = __Array(this.class);
 					if ("replace" in x) css.replace.apply(css, x.replace.split(" "));
 					if ("toggle" in x)  css.toggle.apply(css, x.toggle.split(" "));
 					if ("add" in x)     css.put.apply(css, x.add.split(" "));
 					if ("remove" in x)  css.remove.apply(css, x.remove.split(" "));
-					this._node.setAttribute("class", css.order.join(" "));
+					this.node.setAttribute("class", css.order.join(" "));
 				}
 			}
 		},
@@ -3152,9 +3161,9 @@ const wd = (function() {
 						let test   = __Type(method);
 						if (!test.function) continue;
 						if (remove)
-							this._node.removeEventListener(event, method, false);
+							this.node.removeEventListener(event, method, false);
 						else
-							this._node.addEventListener(event, method, false);
+							this.node.addEventListener(event, method, false);
 					}
 				}
 			}
@@ -3173,10 +3182,10 @@ const wd = (function() {
 				let data  = __Type(x);
 				let wdLib = []
 				if (data.null) {
-					let attr = this._dataset;
+					let attr = this.dataset;
 					for (let i in attr) {
 						wdLib.push(i);
-						delete this._node.dataset[i];
+						delete this.node.dataset[i];
 					}
 				}
 				else if (data.object) {
@@ -3293,10 +3302,10 @@ const wd = (function() {
 		/**. ``''boolean'' show``: Retorna e define a visibilidade do elemento nos termos da biblioteca.**/
 		show: {
 			get: function() {
-				return this._class.indexOf("js-wd-no-display") < 0;
+				return this.class.indexOf("js-wd-no-display") < 0;
 			},
 			set: function(x) {
-				this._class = x === false ? {add: "js-wd-no-display"} : {remove: "js-wd-no-display"}
+				this.class = x === false ? {add: "js-wd-no-display"} : {remove: "js-wd-no-display"}
 			}
 		},
 		/**. ``''void'' only(''boolean'' reverse)``: Exibe o nó e esconde os irmãos. Se ``reverse`` for verdadeiro, inverte-se o resultado.**/
@@ -3486,9 +3495,7 @@ const wd = (function() {
 				let check = __Type(search);
 				if (check.regexp) {
 					let text = this.node.innerText;
-					//let list = search.exec(text); FIXME
 					let list = text.match(search);
-					console.log(search, text, list);
 					return list === null ? null : this.textMatch(list[0]);
 				} else if (check.nonempty) {
 					let text = this.node.textContent.toLowerCase();
@@ -3656,7 +3663,7 @@ const wd = (function() {
 		styles: {
 			get: function() {
 				let object = {};
-				let styles = window.getComputedStyle(this._node, null);
+				let styles = window.getComputedStyle(this.node, null);
 				for (let i in styles) {
 					if ((/\d+/).test(i)) continue;
 					object[i] = styles.getPropertyValue(i);
@@ -3946,16 +3953,6 @@ const wd = (function() {
 			_svg:  {value: svg},
 			_last: {value: svg, writable: true}
 		});
-
-		//FIXME apagar isso depois de pronto
-		//let x = document.getElementById("html-block");
-		let x = document.body;
-		x.className = "";
-		x.style = null;
-		x.innerHTML = "";
-		x.appendChild(svg);
-		//x.style.width =  "auto";
-		//x.style.margin =  "0 40% 0 40%";
 	}
 
 	Object.defineProperties(__SVG.prototype, {
@@ -3968,16 +3965,14 @@ const wd = (function() {
 				this._last = svg;
 			}
 		},
-		/**. ``''object'' attribute(object attr)``: Define os atributos do último elemento adicionado e retorna o próprio objeto.
-		- O argumento ``attr`` é um objeto cujas chaves representam o valor do atributo e seu respectivo valores.**/
+		/**. ``''self'' attribute(''object'' attr)``: Define os atributos do último elemento adicionado. O argumento ``attr`` é um objeto cujas chaves representam o valor do atributo e seu respectivo valores.**/
 		attribute: {
 			value: function(attr) {
 				for (let i in attr) this.last.setAttribute(i, attr[i]);
 				return this;
 			}
 		},
-		/**. ``''object'' title(string value)``: Define um título (dica) ao último elemento adicionado e retorna o próprio objeto.
-		- O argumento ``value`` é o texto da dica.**/
+		/**. ``''self'' title(''string'' value)``: Define um título (dica) ao último elemento adicionado. O argumento ``value`` é o texto da dica.**/
 		title: {
 			value: function(value) {
 				let svg = document.createElementNS("http://www.w3.org/2000/svg", "title");
@@ -3986,8 +3981,7 @@ const wd = (function() {
 				return this;
 			}
 		},
-		/**. ``''object'' lines(''array'' x, ''array'' y, ''boolean'' close=false)``: Define diversos segmentos de reta a partir de um conjunto de coordenadas e retorna o próprio objeto.
-		. Os argumentos ``x`` e ``y`` são as coordenadas (x,y) e o argumento ``close`` indica se o último ponto deve voltar à origem.**/
+		/**. ``''self'' lines(''array'' x, ''array'' y, ''boolean'' close=false)``: Define diversos segmentos de reta a partir de um conjunto de coordenadas. Os argumentos ``x`` e ``y`` são as coordenadas (x,y) e o argumento ``close`` indica se o último ponto deve voltar à origem.**/
 		lines: {
 			value: function(x, y, close) {
 				let svg = document.createElementNS("http://www.w3.org/2000/svg", "path");
@@ -4000,8 +3994,7 @@ const wd = (function() {
 				return this.attribute({d: line.join(" ")});
 			}
 		},
-		/**. ``''object'' circle(number cx, number cy, number r)``: Define um círculo e retorna o próprio objeto.
-		. Os argumentos ``cx``, ``cy`` e ``r`` são o centro em x e y e o raio, respectivamente.**/
+		/**. ``''self'' circle(''number'' cx, ''number'' cy, ''number'' r)``: Define um círculo. Os argumentos ``cx``, ``cy`` e ``r`` são o centro em x e y e o raio, respectivamente.**/
 		circle: {
 			value: function(cx, cy, r) {
 				let svg = document.createElementNS("http://www.w3.org/2000/svg", "circle");
@@ -4010,14 +4003,17 @@ const wd = (function() {
 
 			}
 		},
-		/**. ``''object'' semicircle(number cx, number cy, number r, number start, number width)``: Define um semicírculo e retorna o próprio objeto.
-		. Os argumentos ``cx``, ``cy`` e ``r`` são o centro em x e y e o raio, respectivamente. Os argumentos ``start`` e ``width`` indicam o ângulo inicial e seu tamanho, respectivamente.**/
+		/**. ``''self'' semicircle(''number'' cx, ''number'' cy, ''number'' r, ''number'' start, ''number'' width)``: Define um semicírculo. Os argumentos ``cx``, ``cy`` e ``r`` são o centro em x e y e o raio, respectivamente. Os argumentos ``start`` e ``width`` indicam o ângulo inicial e seu tamanho em graus, respectivamente.**/
 		semicircle: {
-			value: function(cx, cy, r, start, width) {//FIXME quanto width é negativo, o lance é diferente
+			value: function(cx, cy, r, start, width) {
 				if (Math.abs(width) >= 360) return this.circle(cx, cy, r);
 				let svg = document.createElementNS("http://www.w3.org/2000/svg", "path");
 				start  = 2*Math.PI*start/360;
 				width  = 2*Math.PI*width/360;
+				if (width < 0) {
+					start += width;
+					width  = Math.abs(width);
+				}
 				let x1 = cx + r*Math.cos(start);
 				let y1 = cy - r*Math.sin(start);
 				let x2 = cx + r*Math.cos(start + width);
@@ -4028,8 +4024,7 @@ const wd = (function() {
 				return this.attribute({d: d.join(" ")});
 			}
 		},
-		/**. ``''object'' rect(number x, number y, number width, number height)``: Define um retângulo e retorna o próprio objeto.
-		. Os argumentos ``x`` e ``y`` definem o ponto de partida da figura e os argumentos ``width`` e ``height`` definem o comprimento e a altura do retângulo, respectivamente.**/
+		/**. ``''self'' rect(''number'' x, ''number'' y, ''number'' width, ''number'' height)``: Define um retângulo. Os argumentos ``x`` e ``y`` definem o ponto de partida da figura e os argumentos ``width`` e ``height`` definem o comprimento e a altura do retângulo, respectivamente.**/
 		rect: {
 			value: function(x, y, width, height) {
 				let svg   = document.createElementNS("http://www.w3.org/2000/svg", "rect");
@@ -4038,8 +4033,7 @@ const wd = (function() {
 
 			}
 		},
-		/**. ``''object'' path(string path)``: Define um nó SVG a partir de uma sequência de comandos e retorna o próprio objeto.
-		. O argumento ``path`` define os comandos.**/
+		/**. ``''self'' path(''string'' path)``: Define um nó SVG a partir de uma sequência de comandos. O argumento ``path`` define os comandos.**/
 		path: {
 			value: function(path) {
 				let svg = document.createElementNS("http://www.w3.org/2000/svg", "path");
@@ -4047,9 +4041,7 @@ const wd = (function() {
 				return this.attribute({d: path});
 			}
 		},
-		/**. ``''object'' text(number x, number y, string text, string point)``: Define um SVG textual e retorna o próprio objeto.
-		. Os argumentos ``x``, ``y`` e ``text`` definem os pontos de referência (''x'', ''y'') e o valor do texto, respectivamente.
-		. O argumento ``point`` define a âncora da referência, composta por dois grupos. O primeiro grupo define o posicionamento, ``v`` para vertical ou ``h``. O segundo grupo define o ponto cardeal:
+		/**. ``''self'' text(''number'' x, ''number'' y, ''string'' text, ''string'' point)``: Define um SVG textual. Os argumentos ``x``, ``y`` e ``text`` definem os pontos de referência (''x'', ''y'') e o valor do texto, respectivamente. O argumento ``point`` define a âncora da referência, composta por dois grupos. O primeiro grupo define o posicionamento, ``v`` para vertical ou ``h``. O segundo grupo define o ponto cardeal:
 		||Esquerda/Oeste|Centro|Direita/Leste|
 		|**Topo/Norte**|nw|n|ne|
 		|**Meio**|w|c|e|
@@ -4073,8 +4065,7 @@ const wd = (function() {
 				return this.attribute(attr);
 			}
 		},
-		/**. ``''object'' ellipse(number cx, number cy, number rx, number ry)``: Define uma elípse e retorna o próprio objeto.
-		. Os argumentos ``cx``, ``cy``, ``rx`` e ``ry`` definem o centro de referência em x e y e os raios de x e y, respectivamente.**/
+		/**. ``''self'' ellipse(''number'' cx, ''number'' cy, ''number'' rx, ''number'' ry)``: Define uma elípse.Os argumentos ``cx``, ``cy``, ``rx`` e ``ry`` definem o centro de referência em x e y e os raios de x e y, respectivamente.**/
 		ellipse: {
 			value: function(cx, cy, rx, ry) {
 				let svg = document.createElementNS("http://www.w3.org/2000/svg", "ellipse");
@@ -4082,7 +4073,7 @@ const wd = (function() {
 				return this.attribute({cx: cx, cy: cy, rx: rx, ry: ry});
 			}
 		},
-		/**. ``''object'' frame(number x, number y, string text, string point)``: Funciona semelhante ao método ``text``, mas aceita quebra de linha e tabulação no início de cada linha. A primeira linha receberá uma formatação destacada, como um título.**/
+		/**. ``''self'' frame(''number'' x, ''number'' y, ''string'' text, ''string'' point)``: Funciona semelhante ao método ``text``, mas aceita quebra de linha e tabulação no início de cada linha. A primeira linha receberá uma formatação destacada, como um título.**/
 		frame: {
 			value: function(x, y, text, point) {
 				this.text(x, y, "", point);
@@ -4103,10 +4094,14 @@ const wd = (function() {
 				return this;
 			}
 		},
-		/**. ``''node'' svg()``: Retorna o elemento SVG.**/
+		/**. ``''node'' svg(''node'' append)``: Retorna o elemento SVG. O argumento opcional ``append`` irá receber o elemento SVG.**/
 		svg: {
-			value: function() {return this._svg;}
+			value: function(append) {
+				if (__Type(append).node) append.appendChild(this._svg);
+				return this._svg;
+			}
 		},
+
 	});
 /*============================================================================*/
 	/**### Análise de Dados
