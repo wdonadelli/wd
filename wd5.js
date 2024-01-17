@@ -302,9 +302,10 @@ const wd = (function() {
 	/**###### ``**const** ''object'' __LANG``
 	Controla a linguagem local da biblioteca.**/
 	const __LANG = {
-		_re: /^[a-z]{2,3}(\-[A-Z][a-z]{3})?(\-([A-Z]{2}|[0-9]{3}))?$/,
-		_user: null,
-		_date: null,
+		_re:       /^[a-z]{2,3}(\-[A-Z][a-z]{3})?(\-([A-Z]{2}|[0-9]{3}))?$/,
+		_user:     null,
+		_date:     null,
+		_currency: "",
 		//FIXME fazer monetary
 		/**. ``''boolean'' test(''string'' x)``: Testa se o argumento ``x`` está no [formato de linguagem](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/lang).**/
 		test: function(x) {
@@ -323,16 +324,16 @@ const wd = (function() {
 			}
 			return null;
 		},
+		/**. ``''string'' currency``: Define ou retorna a o código monetário definido pelo usuário.**/
+		get currency()  {return this._currency;},
+		set currency(x) {this._currency = String(x).trim();},
 		/**. ``''string'' nav``: Retorna a linguagem definida pelo navegador ou ``null``.**/
 		get nav() {return navigator.language || navigator.browserLanguage || null;},
 		/**. ``''string'' html``: Retorna a linguagem definida no elemento ''body'' ou ''html'' ou ``null``, se não definida.**/
 		get html() {return this.node(document.body);},
 		/**. ``''string'' user``: Define ou retorna a linguagem definida pelo usuário.**/
 		get user()  {return this._user;},
-		set user(x) {
-			if (x === null || this.test(x))
-				this._user = x === null ? null : String(x).trim();
-		},
+		set user(x) {this._user = this.test(String(x).trim()) ? String(x).trim() : null;},
 		/**. ``''string'' main``: Retorna a linguagem definida pelo usuário, no HTML ou pela navegador.**/
 		get main() {return this.user || this. html || this.nav || "en-US";},
 		/**. ``''object'' date``: Retorna um objeto contendo os nomes dos meses e dos dias da semana, na versão longa e curta da linguagem retornada em ``main``.**/
@@ -556,8 +557,6 @@ const wd = (function() {
 		this._type     = "unknow";
 		this._toString = String(input);
 		this._valueOf  = Number(input);
-		//FIXME construir um tipo BigInt e NaN?
-
 	}
 	Object.defineProperties(__Type, {
 		/**. ``''string'' __Type.zeros(''integer'' value, ''integer'' lenght)``: Fixa o tamanho do inteiro ``value`` na quantidade definida em ``length`` completando com zeros à esquerda.**/
@@ -1138,7 +1137,7 @@ const wd = (function() {
 		/**. ``''array'' primes``: Retorna uma lista com os números primos até o valor do objeto.**/
 		primes: {
 			get: function() {
-				if (!this.finite || this < 2) return [];
+				if (!this.finite || this.valueOf() < 2) return [];
 				let list = [2];
 				let int  = this.int;
 				let i    = 3;
@@ -1160,7 +1159,7 @@ const wd = (function() {
 		/**. ``''boolean'' prime``: Checa se número é primo.**/
 		prime: {
 			get: function() {
-				if (this < 2 || !this.finite || this.dec !== 0) return false;
+				if (this.valueOf() < 2 || !this.finite || this.dec !== 0) return false;
 				return this.primes.reverse()[0] === this.valueOf() ? true : false;
 			}
 		},
@@ -1202,8 +1201,8 @@ const wd = (function() {
 		/**. ``''string'' bytes``: Retorna a notação em bytes (de ''B'' a ''YB'').**/
 		bytes: {
 			get: function() {
-				if (this < 1)     return "0 B";
-				if (!this.finite) return this.toString()+" B";
+				if (this.valueOf() < 1) return "0 B";
+				if (!this.finite)       return this.toString()+" B";
 				let scale = ["B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
 				let i     = scale.length;
 				while (--i >= 0)
@@ -1215,21 +1214,21 @@ const wd = (function() {
 		/**. ``''string'' type``: Retorna o tipo do número (zero, infinity, integer, real).**/
 		type: {
 			get: function() {
-				if (this == 0)      return "zero";
-				if (!this.finite)   return "infinity";
-				if (this.dec === 0) return "integer";
+				if (this.valueOf() === 0) return "zero";
+				if (!this.finite)         return "infinity";
+				if (this.dec === 0)       return "integer";
 				return "real";
 			}
 		},
-		/**. ``''string'' precision(''integer'' n=3)``: Fixa a quantidade de dígitos significativos.
-		. O argumento opcional ``n`` define a quantidade dígitos cujo padrão é três.**/
+		/**. ``''string'' precision(''integer'' n=3)``: Fixa a quantidade de dígitos numéricos (argumento ``n``) a exibir.**/
 		precision: {
 			value: function(n) {
-				n = __Number(__Type(n).finite ? n : 3);
-				n = n < 1 ? 1 : n.int;
-				//FIXME tem que descobrir o que quero com isso e arrumar essa porra
-				if (this.abs < 1 && this !== 0)
-					return this.valueOf()[this.abs < Math.pow(10,-n+1) ? "toExponential" : "toFixed"](n-1);
+				let check = __Type(n);
+				let abs   = this.abs;
+				n = Math.trunc(check.finite ? check.value : 3);
+				if (n < 1) n = 1;
+				if (abs < 1 && abs !== 0)
+					return this.valueOf()[abs < Math.pow(10,-n+1) ? "toExponential" : "toFixed"](n-1);
 				return this.valueOf().toPrecision(n);
 			}
 		},
@@ -1307,7 +1306,6 @@ const wd = (function() {
 						)
 					}
 				};
-
 				try {
 					return this.valueOf().toLocaleString(__LANG.main, (attr in types ? types[attr] : {}));
 				} catch(e) {}
@@ -1319,7 +1317,6 @@ const wd = (function() {
 				return this.toString()
 			}
 		},
-
 		/**. ``''number'' e``: Retorna o expoente do número em base 10.**/
 		e: {
 			get: function() {
@@ -1665,9 +1662,8 @@ const wd = (function() {
 			_m: {value: Number(time.slice(3,5)),   writable: true}, /* minutos */
 			_s: {value: Number(time.slice(6)),     writable: true}, /* segundos */
 			_change: {value: null, writable: true}, /* disparador do evento alteração */
-			_print: {value: null, writable: true}, /* retrato dos parâmetros */
-			_field: {value: null, writable: true}, /* parâmetro que chamou o disparador */
-			//_change: {value: function(x){console.log(x);}}, //FIXME apagar isso
+			_print:  {value: null, writable: true}, /* retrato dos parâmetros */
+			_field:  {value: null, writable: true}, /* parâmetro que chamou o disparador */
 		});
 	}
 
@@ -2407,14 +2403,40 @@ const wd = (function() {
 		if (!(this instanceof __Query))	return new __Query(css, root);
 		let check = __Type(root);
 		Object.defineProperties(this, {
-			_css:  {value: String(css).trim()},
+			_css:  {value: css === undefined || css === null ? "" : String(css).trim()},
 			_root: {value: check.node ? check.value[0] : document},
 		});
 	}
 
+	Object.defineProperties(__Query, {
+
+		/**. ``''array'' __Query.$$$(''object'' data)``: retorna uma lista de nós (``NodeList``) ou um nó específico a partir do seletor CSS inserido nos atributos ``$`` (nó único) ou ``$$`` (nó múltiplo) do argumento ``data``. Aceita-se como elemento as strings "document" e "window" que correspondem aos objetos de mesmo nome. Quando os dois atributos são informados, o atributo ``$`` não é utilizado. Os dois atributos serão deletados do objeto original.**/
+		$$$: {
+			value: function(data) {
+				if (!__Type(data).object) return __Query().$;
+				let one = null;
+				let all = null;
+				let key = {"document": document, "window":  window};
+				let re  = /^(\s+)?(document|window)(\s+)?$/;
+				if ("$" in data) {
+					one = data["$"];
+					delete data["$"];
+				}
+				if ("$$" in data) {
+					all = data["$$"];
+					delete data["$$"];
+				}
+				if (re.test(one)) return key[one.trim()];
+				if (re.test(all)) return key[all.trim()];
+				return all === null ? __Query(one).$ : __Query(all).$$;
+			}
+		},
+	});
+
+
 	Object.defineProperties(__Query.prototype, {
 		constructor: {value: __Query},
-		/**. ``''object'' $$``: retorna uma lista de nós (``NodeList``).**/
+		/**. ``''array'' $$``: retorna uma lista de nós (``NodeList``).**/
 		$$: {
 			get: function() {
 				let elem = null;
@@ -2422,35 +2444,19 @@ const wd = (function() {
 				return __Type(elem).node ? elem : document.querySelectorAll("#_._");
 			}
 		},
-		/**. ``''object'' $``: retorna um nó específico ou lista de nós (``NodeList``) vazia.**/
+		/**. ``''array'' $``: retorna um nó específico ou lista de nós (``NodeList``) vazia.**/
 		$: {
 			get: function() {
 				let elem = null;
 				try {elem = this._root.querySelector(this._css);} catch(e) {}
 				return __Type(elem).node ? elem : this.$$;
 			}
-		}
+		},
+
+
+
+
 	});
-
-/*----------------------------------------------------------------------------*/
-	/**
-	FIXME o que fazer com isso? colocar dentro de __Node?
-	``node __$$$(object obj, node root)``
-	Localiza em um objeto os atributos v{$}v e v{$$}v e utiliza seus valores como seletores CSS.}p
-	O atributo v{$$}v é prevalente sobre o v{$}v para fins de chamada das funções i{__$$}i ou i{__$}i,
- respectivamente.
-	v{obj}v - Objeto javascript contendo os atributos v{$}v ou v{$$}v.
-	v{root}v - (opcional, i{document}i) Elemento base para busca.}d}l
-	**/
-	function __$$$(obj, root) {
-
-		let one =  "$" in obj ? String(obj["$"]).trim()  : null;
-		let all = "$$" in obj ? String(obj["$$"]).trim() : null;
-		let key = {"document": document, "window":  window};
-		if (one !== null && one in key) one = key[one];
-		if (all !== null && all in key) all = key[all];
-		return all === null ? __$(one, root) : __$$(all, root);
-	}
 
 /*----------------------------------------------------------------------------*/
 	/**#### Formulários HTML
@@ -3920,6 +3926,28 @@ const wd = (function() {
 		read: {
 			value: function() {
 				if (this._source !== "file") return null;
+				//TODO ou esse método abaixo, ou fazer com que o valor só retorne após concluída, criar uma função para trabalhar junto com o disparador já existente utilizar o evento ondone (não, vai constinuar assícrono, o síncrono tem que esperar
+				//TODO https://developer.mozilla.org/en-US/docs/Web/API/FileReaderSync/FileReaderSync
+				//TODO pelo jeito não funciona
+				if (!this.async) {
+					try {
+						let sync    = new FileReaderSync();
+						this._start = new Date().valueOf();
+						this._done  = false;
+						__MODALCONTROL.start();
+						__MODALCONTROL.progress(0.5);
+						sync[this.method](this._target);
+						this._done  = true;
+						__MODALCONTROL.progress(1);
+						__MODALCONTROL.end()
+						return;
+					} catch(e) {
+						__MODALCONTROL.end();
+					}
+				}
+
+
+
 				try {
 					this._start = new Date().valueOf();
 					this._done  = false;
@@ -5251,36 +5279,6 @@ const wd = (function() {
 
 /* == BLOCO 2 ================================================================*/
 
-
-
-
-
-//FIXME TRASH apagar após reestruturação
-	function __strCamel(x) {return __String(x).camel;}
-	function __strClear(x) {return __String(x).clear;}
-	function __$$(selector, root) {
-		let elem = null;
-		try {elem = root.querySelectorAll(selector);}
-		catch(e) {
-			try {elem = document.querySelectorAll(selector);}
-			catch(e) {}
-		}
-		let test = __Type(elem);
-		return test.type === "node" ? elem : document.querySelectorAll("#_._");
-	}
-	function __$(selector, root) {
-		let elem = null;
-		try {elem = root.querySelector(selector);}
-		catch(e) {
-			try {elem = document.querySelector(selector);}
-			catch(e) {}
-		}
-		let test = __Type(elem);
-		return test.type === "node" ? elem : __$$(selector, root);
-	}
-
-
-
 /*----------------------------------------------------------------------------*/
 	/**### Interface do Usuário
 	Trata-se de construtores e funções para interface com o usuário na manipulação de dados.
@@ -5302,7 +5300,7 @@ const wd = (function() {
 		type: {
 			get: function() {return this._data.type;}
 		},
-		/**. ``''object'' lang(''string'' local)``: Define a linguagem no argumento ``local`` e retorna o próprio objeto.**/
+		/**. ``''self'' lang(''string'' local)``: Define a linguagem no argumento ``local`` e retorna o próprio objeto.**/
 		lang: {
 			value: function(local) {
 				__LANG.user = local;
@@ -6192,8 +6190,8 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 	WD.constructor = WD;
 	Object.defineProperties(WD, {
 		version: {value: __VERSION},
-		$:       {value: function(css, root) {return WD(__$(css, root));}},
-		$$:      {value: function(css, root) {return WD(__$$(css, root));}},
+		$:       {value: function(css, root) {return WD(__Query(css, root).$);}},
+		$$:      {value: function(css, root) {return WD(__Query(css, root).$$);}},
 		copy:    {value: function(text) {return wd_copy(text);}},
 		device:  {get:   function() {return __DEVICECONTROLLER.device;}},
 		today:   {get:   function() {return WD(new Date());}},
@@ -6235,7 +6233,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		let target  = WD(e);
 		let method  = data.method;
 		let file    = data.path;
-		let pack    = __$$$(data);
+		let pack    = __Query.$$$(data);
 		let exec    = WD(pack);
 		let overlap = data.overlap === "true" ? true : false;
 
@@ -6265,7 +6263,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		let target = WD(e);
 		let method = data.method;
 		let file   = data.path;
-		let pack   = __$$$(data);
+		let pack   = __Query.$$$(data);
 		let exec   = WD(pack);
 
 		/* abrir contagem */
@@ -6341,7 +6339,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		if (source === "file") {
 			let file   = data.path;
 			let method = data.method;
-			let pack   = __$$$(data);
+			let pack   = __Query.$$$(data);
 			let exec   = WD(pack);
 			exec.send(file, function(x) {
 				if (x.closed) {
@@ -6350,7 +6348,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				}
 			}, method);
 		} else {
-			let table = WD(__$$$(data));
+			let table = WD(__Query.$$$(data));
 			if (table.type !== "dom") return;
 			input.matrix = table.info.table;
 			buildChart(input);
@@ -6367,7 +6365,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		for (let i = 0; i < data.length; i++) {
 			let method = "method" in data[i] ? data[i].method : "post";
 			let file   = data[i].path;
-			let pack   = __$$$(data[i]);
+			let pack   = __Query.$$$(data[i]);
 			let call   = window[data[i]["call"]];
 			let exec   = WD(pack);
 			exec.send(file, call, method);
@@ -6422,7 +6420,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		let data = wd_html_dataset_value(e, "wdFilter");
 		for (let i = 0; i < data.length; i++) {
 			let chars  = data[i].chars;
-			let target = __$$$(data[i]);
+			let target = __Query.$$$(data[i]);
 			if (target !== null) WD(target).filter(search, chars);
 		}
 		return;
@@ -6532,7 +6530,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		if (!("wdData" in e.dataset)) return;
 		let data = wd_html_dataset_value(e, "wdData");
 		for (let i = 0; i < data.length; i++) {
-			let target = __$$$(data[i]);
+			let target = __Query.$$$(data[i]);
 			delete data[i]["$"];
 			delete data[i]["$$"];
 			for (let j in data[i]) if (data[i][j] === "null") data[i][j] = null;
@@ -6583,7 +6581,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		if (!("wdFull" in e.dataset)) return;
 		let data   = wd_html_dataset_value(e, "wdFull")[0];
 		let exit   = "exit" in data ? true : false;
-		let target = __$$$(data);
+		let target = __Query.$$$(data);
 		if (target === document || target === window)
 			target = document.documentElement;
 		else if (target === null)
@@ -6676,7 +6674,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		let data  = wd_html_dataset_value(e, "wdSet"); /*A*/
 		let words = {"null": null, "false": false, "true": true}; /*B*/
 		for (let i = 0; i < data.length; i++) { /*C*/
-			let target = __$$$(data[i]); /*D*/
+			let target = __Query.$$$(data[i]); /*D*/
 			delete data[i]["$"]; /*D*/
 			delete data[i]["$$"]; /*D*/
 			for (let attr in data[i]) { /*E*/
@@ -6693,7 +6691,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		if (!("wdCss" in e.dataset)) return;
 		let data = wd_html_dataset_value(e, "wdCss");
 		for (let i = 0; i < data.length; i++) {
-			let target = __$$$(data[i]);
+			let target = __Query.$$$(data[i]);
 			delete data[i]["$"];
 			delete data[i]["$$"];
 			if (JSON.stringify(data[i]) === "{}") data[i] = null;
@@ -6707,7 +6705,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		if (!("wdNav" in e.dataset)) return;
 		let data = wd_html_dataset_value(e, "wdNav");
 		for (let i = 0; i < data.length; i++) {
-			let target = __$$$(data[i]);
+			let target = __Query.$$$(data[i]);
 			let value  = "action" in data[i] ? data[i].action : null;
 			WD(target === null ? e : target).nav(value);
 		}
@@ -6718,7 +6716,7 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 	function data_wdJump(e) { /* Saltos de pai: data-wd-jump=$${parents}*/
 		if (!("wdJump" in e.dataset)) return;
 		let data    = wd_html_dataset_value(e, "wdJump")[0];
-		let target  = __$$$(data);
+		let target  = __Query.$$$(data);
 		let parents = wd_vtype(target)
 		if (parents.type === "dom")
 			WD(e).jump(parents.value);
@@ -6727,13 +6725,13 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 
 /*----------------------------------------------------------------------------*/
 	function data_wdOutput(e, load) { /* Atribui valor ao target: data-wd-output=${target}call{} */
-		let output = __$$("[data-wd-output]");
+		let output = __Query("[data-wd-output]").$$;
 		if (output === null) return;
 		/* looping pelos elementos com data-wd-output no documento */
 		for (let i = 0; i < output.length; i++) {
 			let elem   = output[i];
 			let data   = wd_html_dataset_value(elem, "wdOutput")[0];
-			let target = __$$$(data);
+			let target = __Query.$$$(data);
 			if (!("call" in data) || WD(window[data["call"]]).type !== "function")
 				continue;
 			/* looping pelos elementos citados no atributo data-wd-output */
@@ -6822,16 +6820,16 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		}
 
 		/* margem superior extra para headers */
-		let head = measures(__$("body > header"));
+		let head = measures(__Query("body > header").$);
 		if (head.position === "fixed")
 			document.body.style.marginTop = (head.top+head.height+head.marginBottom)+"px";
 		/* margem inferior extra para footers */
-		let foot = measures(__$("body > footer"));
+		let foot = measures(__Query("body > footer").$);
 		if (foot.position === "fixed")
 			document.body.style.marginBottom = (foot.bottom+foot.height+foot.marginTop)+"px";
 		/* mudar posicionamento em relação ao topo */
 		let body = measures(document.body);
-		let hash = measures(__$(window.location.hash));
+		let hash = measures(__Query(window.location.hash).$);
 		if (hash.ok && head.position === "fixed")
 			window.scrollTo(0, hash.elem.offsetTop - body.marginTop);
 
