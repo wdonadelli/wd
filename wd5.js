@@ -3039,17 +3039,17 @@ const wd = (function() {
 					/* específicos de formulários */
 					if (this.form) {
 						switch(name) {
-								case "value":       this.value(value); return this.attr(name);
-								case "textContent": this.text(value);  return this.attr(name);
-								case "name":        this.name = value; return this.attr(name);
+								case "value":       this.value(value); return this.attribute(name);
+								case "textContent": this.text(value);  return this.attribute(name);
+								case "name":        this.name = value; return this.attribute(name);
 						}
 					}
 					/* demais atributos do objeto */
 					switch(name) {
-						case "style":     this.style   = value; return this.attr(name);
-						case "class":     this.class   = value; return this.attr(name);
-						case "className": this.class   = value; return this.attr(name);
-						case "dataset":   this.dataset = value; return this.attr(name);
+						case "style":     this.style   = value; return this.attribute(name);
+						case "class":     this.class   = value; return this.attribute(name);
+						case "className": this.class   = value; return this.attribute(name);
+						case "dataset":   this.dataset = value; return this.attribute(name);
 					}
 					/* disparadores */
 					if ((/^\!?on\w+/).test(name) && name.replace("!", "") in this.node) {
@@ -3148,7 +3148,7 @@ const wd = (function() {
 				}
 			}
 		},
-		/**. ``''void''  handler``: Define ou remove disparadores ao elemento HTML. O valor deve ser um objeto cujos atributos são os eventos e os valores métodos disparadores ou uma lista deles. Para remover o disparador, o nome do atributo deve conter o caracteres ! no início.**/
+		/**. ``''void''  handler``: Define ou remove disparadores ao elemento HTML. O valor deve ser um objeto cujos atributos e valores são os eventos e métodos disparadores ou uma lista deles, respectivamente. Para remover o disparador, o nome do atributo deve conter o caracteres ! no início.**/
 		handler: {
 			set: function(x) {
 				if (this.node === null) return;
@@ -3230,8 +3230,7 @@ const wd = (function() {
 				return clone;
 			}
 		},
-		/**. ``''void'' load(''string'' html="", ''boolean'' replace=false, ''boolean'' run=false)``: Carrega um conteúdo HTML no elemento ou o substitui.
-		. O argumento ``html`` deve conter o código HTML a ser carregado; O argumento opcional ``replace``, se verdadeiro, irá substituir o elemento pelo conteúdo de ``html``; e O argumento ``run``, se verdadeiro, executará elementos scripts existentes.**/
+		/**. ``''void'' load(''string'' html="", ''boolean'' replace=false, ''boolean'' run=false)``: Carrega um conteúdo HTML no elemento ou o substitui. O argumento ``html`` deve conter o código HTML a ser carregado; O argumento opcional ``replace``, se verdadeiro, irá substituir o elemento pelo conteúdo de ``html``; e O argumento ``run``, se verdadeiro, executará elementos scripts existentes.**/
 		load: {
 			value: function(html, replace, run) {
 				if (this.node === null) return;
@@ -3257,12 +3256,11 @@ const wd = (function() {
 					});
 					this.node.remove();
 				}
-				//FIXME loadingProcedures();
+				loadingProcedures();
 				return;
 			}
 		},
-		/**. ``''void'' repeat(''array'' list)``: Clona os filhos do elemento repetindo-os de acordo com as informações repassadas pelo array de objetos em ``list``.
-		. O elemento filho que contiver o nome do atributo do obejto entre duas chaves (''{{nome}}'') terá o fragmento substituídos pelo valor do atributo do objeto correspondente.**/
+		/**. ``''void'' repeat(''array'' list)``: Clona os filhos do elemento repetindo-os de acordo com as informações repassadas pelo array de objetos em ``list``. O elemento filho que contiver o nome do atributo do obejto entre duas chaves (''{{nome}}'') terá o fragmento substituídos pelo valor do atributo do objeto correspondente.**/
 		repeat: {
 			value: function(list) {
 				if (this.node === null) return;
@@ -3301,7 +3299,7 @@ const wd = (function() {
 				this.node.innerHTML = childs.join("\n");
 				__MODALCONTROL.end();
 				/* IMPORTANTE: checar elemento após carregamento */
-				//FIXME loadingProcedures();
+				loadingProcedures();
 				return;
 			}
 		},
@@ -3581,8 +3579,7 @@ const wd = (function() {
 				return;
 			}
 		},
-		/**. ``''void'' tsort(''integer'' order...)``: Ordena os nós filhos com referência aos nós netos, ordenando colunas de tabelas.
-		. Os argumentos ``order`` definem a sequência de prioridade na classificação, com a indicação do número da coluna (a partir de 1, da esquerda para a direita). Se indicador da coluna for positivo, sua ordem será ascendente, caso contrário, descendente.**/
+		/**. ``''void'' tsort(''integer'' order...)``: Ordena os nós filhos com referência aos nós netos, ordenando colunas de tabelas. Os argumentos ``order`` definem a sequência de prioridade na classificação, com a indicação do número da coluna (a partir de 1, da esquerda para a direita). Se indicador da coluna for positivo, sua ordem será ascendente, caso contrário, descendente.**/
 		tsort: {
 			value: function() {
 				if (this.node === null || this.node.childElementCount === 0) return;
@@ -3829,7 +3826,7 @@ const wd = (function() {
 				return __Type(this._maxtime).positive ? Math.trunc(this._maxtime) : 0;
 			},
 		},
-		/**. ``''boolean'' async``: Define e retorna se a requisição será assíncrona.**/
+		/**. ``''boolean'' async``: Define e retorna se a requisição será assíncrona (apenas para envio de dados).**/
 		async: {
 			set: function(x) {this._async = x;},
 			get: function()  {return this._async === false ? false : true;}
@@ -3868,7 +3865,7 @@ const wd = (function() {
 							READASBINARYSTRING: "readAsBinaryString", READASTEXT:    "readAsText",
 							READASARRAYBUFFER: "readAsArrayBuffer",   READASDATAURL: "readAsDataURL"
 						};
-						if (value in method) return methodRead[value];
+						if (value in methodRead) return methodRead[value];
 
 						let mime = String(this._target.type).split("/")[0].toUpperCase();
 						let methodMime = {
@@ -3926,36 +3923,12 @@ const wd = (function() {
 		read: {
 			value: function() {
 				if (this._source !== "file") return null;
-				//TODO ou esse método abaixo, ou fazer com que o valor só retorne após concluída, criar uma função para trabalhar junto com o disparador já existente utilizar o evento ondone (não, vai constinuar assícrono, o síncrono tem que esperar
-				//TODO https://developer.mozilla.org/en-US/docs/Web/API/FileReaderSync/FileReaderSync
-				//TODO pelo jeito não funciona
-				if (!this.async) {
-					try {
-						let sync    = new FileReaderSync();
-						this._start = new Date().valueOf();
-						this._done  = false;
-						__MODALCONTROL.start();
-						__MODALCONTROL.progress(0.5);
-						sync[this.method](this._target);
-						this._done  = true;
-						__MODALCONTROL.progress(1);
-						__MODALCONTROL.end()
-						return;
-					} catch(e) {
-						__MODALCONTROL.end();
-					}
-				}
-
-
-
-				try {
-					this._start = new Date().valueOf();
-					this._done  = false;
-					__MODALCONTROL.start();
-					this._request[this.method](this._target);
-				} catch(e) {
-					__MODALCONTROL.end();
-				}
+				/* iniciando processo */
+				this._start = new Date().valueOf();
+				this._done  = false;
+				__MODALCONTROL.start();
+				try      {this._request[this.method](this._target);}
+				catch(e) {__MODALCONTROL.end();}
 				return;
 			}
 		}
@@ -5204,20 +5177,6 @@ const wd = (function() {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /*----------------------------------------------------------------------------*/
 	function wd_copy(value) { /* copia o conteúdo da variável para a área de transferência */
 		/* copiar o que está selecionado */
@@ -5275,6 +5234,18 @@ const wd = (function() {
 		}
 		return data;
 	}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 /* == BLOCO 2 ================================================================*/
@@ -5355,66 +5326,45 @@ const wd = (function() {
 				return new __String(this._input).mask(mask, callback)
 			}
 		},
-
-
-
-		/**. ``''void'' data()``: Efetua requisições e leitura de dados (ver ``__Request``).
-
-FIXME pensar um jeito de bom de fazer sendo e read
-
-
-		**/
-		/**. ``''void'' read(''functions'' onchange, ''string'' method, ''integer'' maxtime)``: Lê arquivos. O argumento ``callback`` é o método a ser chamado a cada mudança de estado; o argumento opcional ``method`` define a forma de ler o arquivo; e o argumento opcional ``maxtime`` define o tempo máximo para leitura. (ver ``__Request.read``) FIXME acertar isso**/
+		/**. ``''self'' read(''object'' options)``: Lê arquivos. O argumento ``options`` é um objeto que define os atributos da requisição (maxtime, method, onchange e ondone). (ver ``__Request.read``)**/
 		read: {
 			value: function(options) {
-				let request = new __Request(target);
-				if (__Type(options).object) {
-					let opt = ["maxtime", "method", "onchange", "ondone"];
-					opt.forEach(function(v,i,a) {
-						if (v in options) request[v] = options[v];
-					});
-				}
+				let opt  = {maxtime: 0, method: null, onchange: null, ondone: null};
 				let data = __Type(this._input);
 				let pack = [];
-				if (data.file) {
-					pack.push(this._input);
-				} else if (data.files) {
-					let i = -1;
-					while(++i < this._input.length)
-						pack.push(this._input[i]);
-				} else if (this.type === "node") {
-					pack = this.files;
+				/* obtendo lista de arquivos a depender do tipo */
+				if (this.type === "node") pack = this.files;
+				else if (data.file)       pack = this._data.value;
+				if (pack.length === 0)    return this;
+				/* acertando opções */
+				if (__Type(options).object) {
+					for (let i in opt)
+						if (i in options) opt[i] = options[i];
 				}
+				/* executando leituras */
 				pack.forEach(function (v,i,a){
 					let request = new __Request(v);
-					request.onchange = onchange;
-					request.maxtime  = maxtime;
-					request.read(readAs);
+					for (let i in opt) request[i] = opt[i];
+					request.read();
 				});
+				return this;
 			}
 		},
-
-
-
-		send: {//FIXME mudar o value de select email file (multiplos) para array mesmo que o __URL vai definir como deve ser
+		/**. ``''self'' send(''string'' target, ''object'' options)``: Lê arquivos. O argumento ``target``é o alvo da requisição e o argumento ``options`` é um objeto que define os atributos da requisição (maxtime, user, password, header, method, onchange e ondone). (ver ``__Request.send``)**/
+		send: {
 			value: function (target, options) {
-				/* definindo dados iniciais */
-				let check   = __Type(options);
-				let url     = __URL(target);
-				let GETHEAD = false;
-				if (check.object && "method" in options) {
-					let method = String(options.method).toUpperCase().trim();
-					GETHEAD = method === "GET" || method === "HEAD";
-				}
-				/* capturando dados */
+				let url = __URL(target);
+				let opt = {
+					maxtime:    0, user:     null, password: null, header:  {},
+					method:  null, onchange: null, ondone:   null
+				};
+
+				/* obtendo dados para envio */
 				switch(this.type) {
 					case "node": {
-
-
-						//FIXME esse negócio de document
-						if (this.document) break;
 						let submit = this.submit;
-						if (submit === null) return;
+						/* não enviar se não houver dados no caso de nó HTML */
+						if (submit === null) return this;
 						submit.forEach(function (v,i,a) {url.append(v.name, v.value);});
 						break;
 					}
@@ -5423,47 +5373,36 @@ FIXME pensar um jeito de bom de fazer sendo e read
 						break;
 					}
 					case "array": {
-						this.valueOf().forEach(function(v,i,a) {url.append(i, v);});
+						this._data.value.forEach(function(v,i,a) {url.append(i, v);});
 						break;
 					}
 					case "file": {
-						url.append(this.type, this.valueOf());
+						url.append(this.type, this._data.value);
+						break;
+					}
+					case "number": {
+						url.append(this.type, this._data.value);
 						break;
 					}
 					default: {
 						url.append(this.type, this.toString());
 					}
 				}
-				/* definindo o pacote de envio */
-				let pack = null;
-				if (GETHEAD) {
-					target = url.target;
-				} else {
-					if (this.type === "node" && this.document)
-						pack = this._data.value[0];
-					else
-						pack = url.form;
-				}
-				/* abrindo requisição, definindo parâmetros e enviando */
-				let request = new __Request(target);
+				/* acertando opções */
 				if (__Type(options).object) {
-					let opt = [
-						"maxtime", "async", "user", "password",
-						"header", "method", "onchange", "ondone"
-					];
-					opt.forEach(function(v,i,a) {
-						if (v in options) request[v] = options[v];
-					});
+					for (let i in opt)
+						if (i in options) opt[i] = options[i];
 				}
+				/* checando o tipo de requisição */
+				let method = String(opt.method).toUpperCase().trim();
+				let head   = method === "GET" || method === "HEAD";
+				let pack   = head ? null : url.form;
+				/* abrindo requisição, definindo parâmetros e enviando */
+				let request = new __Request(head ? url.target : target);
+				for (let i in opt) request[i] = opt[i];
 				request.send(pack);
 			}
 		},
-
-
-
-
-
-
 		/**. ``''void'' signal(''string'' title)``: Renderiza uma mensagem.**/
 		signal: {
 			value: function(title) {
@@ -5972,14 +5911,15 @@ FIXME pensar um jeito de bom de fazer sendo e read
 		valueOf: { /* método padrão */
 			value: function() {return this._data.value.slice();}
 		},
-		/**. ``''void'' forEach(''function'' callback)``: Executa looping nos nós HTML, informando-os no argumento ``callback`` que receberá dois argumento: o nó HTML e sua sequência numérica na lista.**/
+		/**. ``''self'' forEach(''function'' callback)``: Executa looping nos nós HTML, informando-os no argumento ``callback`` que receberá dois argumento: o nó HTML e sua sequência numérica na lista.**/
 		forEach: {
 			value: function(callback) {
 				if (!__Type(callback).function) return;
 				this._data.value.forEach(function(v,i,a) {callback(v,i);});
+				return this;
 			}
 		},
-		/**. ``''booelena'' document``: Informa se o elemento é um document HTML/XML ou um objeto window.**/
+		/**. ``''boolean'' document``: Informa se o elemento é um document HTML/XML ou um objeto window.**/
 		document: {
 			get: function() {
 				return this._data.xml || this._data.html || this._data.value[0] === window;
@@ -5999,52 +5939,7 @@ FIXME pensar um jeito de bom de fazer sendo e read
 				return pack;
 			}
 		},
-
-
-
-
-
-/* FIXME importantíssimo
-se file ou select múltiplo, o nome tem que vir seguido de []
-não pode ser assim:
-	<input type="file" name="ARQUIVOS" multiple />
-tem que ser assim:
-	<input type="file" name="ARQUIVOS[]" multiple />
-Isso vale para qualquer backend?
-Como fazer isso como o objeto Form?
-Basta incluir o [] ao fim do nome?
-
-
-Para FormData function assim:
-<select name="ITENS" multiple>...
-
-
-let data = new FormData();
-data.append("ITEMS", value1);__Node
-data.append("ITEMS", value2);
-...
-O método append não substitui o valor contido no atributo name, podendo ser vários.
-Já o método set substitui e o delete apaga.
-
-para conferir:
-for(var pair of a.entries()) {
-   console.log(pair[0]+ ', '+ pair[1]);
-}
-ou:
-let itens = a.entries();
-let item = itens.next(); retorna um objeto content {done: true|false, value: [name, value]}
-let name = item.value[0];
-let value = item.value[1];
-
-E para o método GET, como proceder?
-
-ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
-
-*/
-
-
-
-
+		/**. ``''array'' submit``: Retorna uma lista de objetos contendo o nome e o valor dos campos de formulários. Se houver algum campo com erro, retornará nulo.**/
 		submit: {
 			get: function() {
 				let data  = [];
@@ -6059,63 +5954,53 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 					else
 						data.push({name: form.name, value: form.value});
 				});
-				if (data.length === 0 || error) return null;
-				return data;
+				return error ? null : data;
 			}
 		},
-
-
-
-
-
-
-
-
-
-
-
-
-		style: {
-			value: function(value) {
-				this._data.value.forEach(function(v,i,a) {
+		/**. ``''self'' load(''string'' html, ''boolean'' replace)``: Insere o código HTML contido em ``html`` no elemento. Se ``replace`` for verdadeiro, substituirá o elemento pelo código (**scripts serão executados**!).**/
+		load: {
+			value: function(html, replace) {
+				this.forEach(function(v,i) {__Node(v).load(html, replace, true);});
+				return this;
+			}
+		},
+		/**. ``''self'' repeat(''array'' list)``: Repete elementos a partir de um modelo substituindo os valores entre chaves duplos ({{nome}}) pelos valores dos itens (objetos) do argumento ``list``.**/
+		load: {
+			repeat: function(list) {
+				this.forEach(function(v,i) {__Node(v).repeat(list);});
+				return this;
+			}
+		},
+		/**. ``''self'' set(''object'' values)``: Define os atributos especificados em ``values`` com seus respectivos valores (ver __Node.atrribute).**/
+		set: {
+			value: function(values) {
+				if (!__Type(values).object) return this;
+				this.forEach(function(v,i) {
 					let node = __Node(v);
-					node.style(value);
+					for (let i in values) node.attribute(i, values[i]);
 				});
+				return this;
 			}
 		},
 
 
 
-		addHandler: { /* adiciona disparadores */
-			value: function(events) {
-				//return this.run(wd_html_handler, events);
-			}
-		},
-		delHandler: { /* remove disparadores */
-			value: function(events) {
-				return this.run(wd_html_handler, events, true);
-			}
-		},
-		css: { /* manipula atributo class */
-			value: function(obj) {
-				return this.run(wd_html_css, obj);
-			}
-		},
-		data: { /* manipula atributo dataset */
-			value: function(obj) {
-				return this.run(wd_html_data, obj);
-			}
-		},
-		load: { /* carrega elementos HTML em forma de texto */
-			value: function(text, overlap) {
-				return this.run(wd_html_load, text, overlap);
-			}
-		},
-		repeat: {  /* clona elementos por array repetindo-os */
-			value: function(json) {
-				return this.run(wd_html_repeat, json);
-			}
-		},
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 		nav: {  /* define exibições e inibições de elementos */
 			value: function(action) {
 				return this.run(wd_html_nav, action);
@@ -6124,11 +6009,6 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 		filter: {  /* exibe somente o elemento que contenha o texto casado */
 			value: function(search, chars) {
 				return this.run(wd_html_filter, search, chars);
-			}
-		},
-		set: {  /* define atributos/funcões no elemento */
-			value: function(attr, val) {
-				return this.run(wd_html_set, attr, val);
 			}
 		},
 		page: {  /* exibe determinados grupos de elementos filhos */
@@ -6151,21 +6031,10 @@ ITEMS[]=value1&ITEMS[]=value2&ITEMS[]=value3
 				wd_html_full(this._value[0], exit); return this;
 			}
 		},
-		form: { /* obtém serialização de formulário */
-			value: function(get) {
-				return wd_html_dform(this._value, get);
-			}
-		},
 		chart: { /* desenha gráfico de linhas e colunas */
 			value: function(data, title, xlabel, ylabel) {
 				return wd_html_chart(this.item(0), data, title, xlabel, ylabel);
 			}
-		},
-		info: { /* devolve informações diversas sobre o primeiro elemento */
-			get: function() {return wd_html_info(this._value[0]);}
-		},
-		vform: { /* checa a validade dos dados do formulário */
-			get: function() {return wd_html_vform(this._value);}
 		},
 	});
 
