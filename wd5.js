@@ -3000,22 +3000,27 @@ const wd = (function() {
 	__Node.prototype = Object.create(__FNode.prototype, {
 		constructor: {value: __Node},
 
-		/**. ``''any'' attribute(''string'' name, ''any'' value)``: Define e retorna valores de atributos dos elementos HTML. Os argumentos ``name`` e ``value`` são, respectivamente, o nome e o valor do atributo. Se ``value`` for omitido, retornará o valor de ``name``. Se ``name`` for omitido, retornará um objeto com os nome e valores dos atributos.**/
+		/**. ``''any'' attribute(''string'' name, ''any'' value)``: Define e retorna valores de atributos dos elementos HTML. Os argumentos ``name`` e ``value`` são, respectivamente, o nome e o valor do atributo. Se ``value`` for omitido, retornará o valor de ``name``. Se ``name`` for omitido, retornará um objeto com os nome e valores dos atributos HTML.**/
 		attribute: {
 			value: function (name, value) {
 				if (this.node === null) return;
-				if (arguments.length === 0) {
-					let attr = this.node.attributes;
+				/*-- LISTAR E RETORNAR ATRIBUTOS --*/
+				if (!__Type(name).nonempty) {
 					let data = {};
-					let i = -1;
-					while(++i < attr.length)
-						data[attr[i].name] = attr[i].value;__Node
+					if ("attributes" in this.node) {
+						let attr = this.node.attributes;
+						let i = -1;
+						while(++i < attr.length)
+							data[attr[i].name] = attr[i].value;__Node;
+					} else {
+						for (let i in this.node) data[i] = this.node[i];
+					}
 					return data;
 				}
 				name = String(name).trim();
-				/*-- obter --*/
+				/*-- OBTER ATRIBUTO --*/
 				if (arguments.length === 1) {
-					/* específicos de formulários */
+					/*-- ATRIBUTOS DE FORMULÁRIO -- */
 					if (this.form) {
 						switch(name) {
 								case "value":       return this.value();
@@ -3023,20 +3028,22 @@ const wd = (function() {
 								case "name":        return this.name;
 						}
 					}
-					/* demais atributos do objeto */
+					/*-- ATRIBUTOS ESPECÍFICOS --*/
 					switch(name) {
 						case "style":     return this.style;
 						case "class":     return this.class;
 						case "className": return this.class;
 						case "dataset":   return this.dataset;
 					}
-					/* demais atributos */
-					if (name in this.node) return this.node[name];
-					return this.node.getAttribute(name);
+					/*-- OUTROS ATRIBUTOS --*/
+					if ("getAttribute" in this.node)
+						return this.node.getAttribute(name);
+					else
+						return this.node[name];
 				}
-				/*-- definir --*/
+				/*-- DEFINIR ATRIBUTOS --*/
 				else {
-					/* específicos de formulários */
+					/*-- ATRIBUTOS DE FORMULÁRIO -- */
 					if (this.form) {
 						switch(name) {
 								case "value":       this.value(value); return this.attribute(name);
@@ -3044,44 +3051,53 @@ const wd = (function() {
 								case "name":        this.name = value; return this.attribute(name);
 						}
 					}
-					/* demais atributos do objeto */
+					/*-- ATRIBUTOS ESPECÍFICOS --*/
 					switch(name) {
 						case "style":     this.style   = value; return this.attribute(name);
 						case "class":     this.class   = value; return this.attribute(name);
 						case "className": this.class   = value; return this.attribute(name);
 						case "dataset":   this.dataset = value; return this.attribute(name);
 					}
-					/* disparadores */
-					if ((/^\!?on\w+/).test(name) && name.replace("!", "") in this.node) {
+					/*-- ATRIBUTOS DE DISPARADORES --*/
+					if ((/^\!?on\w+/).test(name)) {
 						let obj = {};
-						obj[name] = value;
+						obj[name.toLowerCase()] = value;
 						this.handler = obj;
 						return;
 					}
-					/* objetos não específicos */
+					/*-- ATRIBUTOS CONHECIDOS --*/
 					if (name in this.node) {
 						let testAttr  = __Type(this.node[name]);
 						let testValue = __Type(value);
-						if (testAttr.function) {
-							if (testValue.array)
-								this.node[name].apply(this.node, value);
+						/*-- MÉTODOS --*/
+						if (testAttr.function && testValue.array) {
+							this.node[name].apply(this.node, value);
 						}
-						else if (testAttr.boolean) {
-							if (testValue.boolean)
-								this.node[name] = value;
-							else if (testValue.null)
-								this.node[name] = !this.node[name];
+						/*-- BOLEANOS --*/
+						else if (testAttr.boolean && (testValue.boolean || value === "!")) {
+							this.node[name] = testValue.boolean ? value : !this.node[name];
 						}
+						/*-- OUTROS --*/
 						else {
 							this.node[name] = value;
 						}
-						return;
+						return this.attribute(name);
 					}
-					/*atributos HTML */
-					if (value === null)
-						this.node.removeAttribute(name);
-					else
-						this.node.setAttribute(name, value);
+					/*-- ATRIBUTOS DESCONHECIDOS --*/
+					if (value === null) {
+						/*-- APAGAR --*/ //FIXME hum, é preciso definir bem esse negócio, null é para apagar o atributo?
+						if ("removeAttribute" in this.node)
+							this.node.removeAttribute(name);
+						else
+							delete this.node[name];
+					}
+					/*-- DEFINIR --*/
+					else {
+						if ("setAttribute" in this.node)
+							this.node.setAttribute(name, value);
+						else
+							this.node[name] = value;
+					}
 					return;
 				}
 			}
@@ -3363,7 +3379,7 @@ const wd = (function() {
 				return groups;
 			}
 		},
-		/**. ``''void'' walk(integer n=1)``: Exibe um determinado nó filho avançando ou retrocedendo entre os nós irmãos. O argumento ``n`` indica o intervalo a avançar (positivo) ou a retroceder (negativo).**/
+		/**. ``''void'' walk(''integer'' n=1)``: Exibe um determinado nó filho avançando ou retrocedendo entre os nós irmãos. O argumento ``n`` indica o intervalo a avançar (positivo) ou a retroceder (negativo).**/
 		walk: {
 			value: function(n) {
 				if (this.node === null || this.node.childElementCount < 2)
@@ -3380,7 +3396,7 @@ const wd = (function() {
 				this.childs(next, next);
 			}
 		},
-		/**. ``''void'' pages(number index, number width)``: Agrupa os nós filhos em grupos de certo comprimento.
+		/**. ``''void'' pages(''number'' index, ''number'' width)``: Agrupa os nós filhos em grupos de certo comprimento.
 		. O argumento ``index`` define o índice do grupo a ser exibido limitado ao primeiro (0) e ao último (-1). Se valores infinitos forem informados, os grupos avançarão (+) ou retrocederão (-) uma unidade.
 		. O argumento ``width`` é um número finito positivo que define o comprimento dos grupos, pode ser um número não inteiro.**/
 		pages: {
@@ -3615,8 +3631,6 @@ const wd = (function() {
 						if (typeA.value === typeB.value) continue;
 						/*-- caso contrário, definir ordenamento --*/
 						let sort = __Array(typeA.value, typeB.value).sort(value >= 0);
-						console.log({maxA: maxA, maxB: maxB, value: value, index: index, A: typeA.value, B: typeB.value, sort: sort[0], return: sort[1] === typeA.value ? 1 : -1 });
-
 						return sort[0] === typeA.value ? -1 : +1;
 					}
 					/*-- se não atender os requisitos, retornar o valor padrão --*/
@@ -5983,6 +5997,17 @@ const wd = (function() {
 			}
 		},
 
+		full: {
+			value: function() {
+				this.forEach(function(v,i) {
+					let node = __Node(v);
+					for (let i in values) node.full();
+				});
+				return this;
+			}
+
+		},
+
 
 
 
@@ -6026,11 +6051,7 @@ const wd = (function() {
 				return this.run(wd_html_jump, list);
 			}
 		},
-		full: { /* deixa o elemento em tela cheia (só primeiro elemento) */
-			value: function(exit) {
-				wd_html_full(this._value[0], exit); return this;
-			}
-		},
+
 		chart: { /* desenha gráfico de linhas e colunas */
 			value: function(data, title, xlabel, ylabel) {
 				return wd_html_chart(this.item(0), data, title, xlabel, ylabel);
@@ -6430,7 +6451,7 @@ const wd = (function() {
 /*----------------------------------------------------------------------------*/
 	function data_wdDevice(e) { /* Estilo widescreen: data-wd-device=desktop{css}tablet{css}phone{css}mobile{css} */
 		if (!("wdDevice" in e.dataset)) return;
-		let data = wd_html_dataset_value(e, "wdDevice")[0];
+		let data    = wd_html_dataset_value(e, "wdDevice")[0];
 		let desktop = "desktop" in data ? data.desktop : "";
 		let mobile  = "mobile"  in data ? data.mobile  : "";
 		let tablet  = "tablet"  in data ? data.tablet  : "";
@@ -6838,18 +6859,19 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-	WD(window).addHandler({ /* Definindo eventos window */
-		load: loadProcedures,
-		resize: scalingProcedures,
-		hashchange: hashProcedures,
+	WD(window).set({ /* Definindo eventos window */
+		onload: loadProcedures,
+		onresize: scalingProcedures,
+		onhashchange: hashProcedures,
 	});
 
-	WD(document).addHandler({ /* Definindo eventos document */
-		click:    clickProcedures,
-		input:    inputProcedures,
-		focusout: focusoutProcedures,
-/*		keyup:    keyboardProcedures, desligado na versão 4 */
-/*		change:   changeProcedures, desligado na versão 4 */
+
+	WD(document).set({ /* Definindo eventos document */
+		onclick:    clickProcedures,
+		oninput:    inputProcedures,
+		onfocusout: focusoutProcedures,
+/*		onkeyup:    keyboardProcedures, desligado na versão 4 */
+/*		onchange:   changeProcedures, desligado na versão 4 */
 	});
 
 	return WD;
