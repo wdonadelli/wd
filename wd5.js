@@ -2620,6 +2620,7 @@ const wd = (function() {
 		if (!(this instanceof __FNode))	return new __FNode(input);
 		let check = __Type(input);
 		let node  = check.node ? check.value[0] : null;
+		let elem  = node !== null;
 		let tag   = null;
 		let type  = null;
 		let form  = false;
@@ -2670,10 +2671,12 @@ const wd = (function() {
 		};
 		/* identificando o tipo de node */
 		if (node !== null) {
-			if (check.html || check.xml || input === window)
-				tag = node.constructor.name.toLowerCase();
-			else
+			if (check.html || check.xml || input === window) {
+				tag  = node.constructor.name.toLowerCase();
+				elem = false;
+			} else {
 				tag = node.tagName.toLowerCase();
+			}
 		}
 		/* obtendo informações de formulário */
 		if (tag in forms) {
@@ -2704,6 +2707,7 @@ const wd = (function() {
 		Object.defineProperties(this, {
 			_form:  {value:  form}, /* informa se é um formulário */
 			_node:  {value:  node}, /* registra o nó */
+			_elem:  {value:  elem}, /* registra se o nó é HTML */
 			_tag:   {value:   tag}, /* registra a tag do nó */
 			_type:  {value:  type}, /* registra o tipo de formulário ou nulo */
 			_cfg:   {value:   cfg}, /* registra a configuração do formulário ou nulo */
@@ -2807,7 +2811,7 @@ const wd = (function() {
 				}
 			}
 		},
-		/**. ``''string'' name``: Define ou retorna o nome do formulário ou nulo se inexistente ``name`` ou ``id``.**/
+		/**. ``''string'' name``: Define ou retorna o nome do formulário ou nulo se inexistentes ``name`` ou ``id``.**/
 		name: {
 			get: function() {
 				if (!this.form) return null;
@@ -2825,28 +2829,14 @@ const wd = (function() {
 		/**. ``''string'' validity``: Define ou retorna a mensagem de erro do formulário.**/
 		validity: {
 			set: function(msg) {
-				if (!this.form || this._cfg.send !== 1) return undefined;
-				msg = String(msg).trim();
-				if ("setCustomValidity" in this.node)
-					this.node.setCustomValidity(msg);
-				else
-					this.node.dataset.wdCustomValidity = msg;
+				if (!this.form || this._cfg.send !== 1) return;
+				let meg = __TYpe(msg).nonempty ? msg.trim() : "";
+				this.node.setCustomValidity(msg);
 			},
 			get: function() {
 				if (!this.form || this._cfg.send !== 1) return "";
-				let validity = true;
-				/* checando a validade */
-				if ("checkValidity" in this.node)
-					validity = this.node.checkValidity();
-				else if ("wdCustomValidity" in this.node.dataset)
-					validity = this.node.dataset.wdCustomValidity === "";
-				/* Retornando a mensagem*/
-				if (validity) return "";
-				if ("validationMessage" in this.node)
-					return this.node.validationMessage;
-				if ("wdCustomValidity" in this.node.dataset)
-					return this.node.dataset.wdCustomValidity
-				return "?";
+				let validity = this.node.checkValidity();
+				return validity ? "" : this.node.validationMessage.trim();
 			}
 		},
 		/**. ``''object'' submit``: Retorna os dado do formulário para submissão ou nulo se não for campo de envio de dados. O objeto retornado possui as informações do nome (``name``), do valor (``value``), da validade (``validity``) e da mensagem de erro (``message``) do campo de formulário. Se inválido o valor, será exibida uma mensagem.**/
@@ -2854,11 +2844,11 @@ const wd = (function() {
 			get: function() {
 				if (!this.form || this._cfg.send !== 1) return null;
 				this.validity = "";
-				let value = this.value();
-				let name  = this.name;
-				let valid = this.validity.trim();
+				let value     = this.value();
+				let name      = this.name;
+				let valid     = this.validity;
 				if (value === null || name === null) return null;
-				/* checar validade para formulário não implementado ou sem máscara */
+				/*-- checar validade para formulário não implementado ou sem máscara --*/
 				if (!this._fmask || !this._fwork) {
 					let check = __Type(value);
 					if (valid === "" && (check.nonempty || check.array)) {
@@ -2958,29 +2948,30 @@ const wd = (function() {
 						if (valid !== "") this.validity = valid;
 					}
 				}
-				/* checando verificação personalizada */
+				/*-- se não encontrado erro, checar verificação personalizada (data-wd-validity) --*/
 				if (valid === "" && "wdValidity" in this.node.dataset) {
-					if (this.node.dataset.wdValidity in window) {
-						let test = __Type(window[this.node.dataset.wdValidity]);
-						if (test.function) valid = test.value(value);
-						if (valid !== "") this.validity = valid;
+					let func = this.node.dataset.wdValidity
+					if (func in window && __Type(window[func]).function) {
+						let error = window[func](value);
+						if (__Type(error).nonempty) {
+							valid = error.trim();
+							this.validity = valid;
+						}
 					}
 				}
-				/* definindo valor de retorno */
+				/*-- definindo valor de retorno --*/
 				let data = {
 					name: name, value: value, validity: valid === "", message: valid
 				};
-				/* definindo interrupção da operação, caso o valor seja inválido */
+				/*-- exibindo mensagem de erro caso o valor seja inválido --*/
 				if (!data.validity) {
-					if ("reportValidity" in this.node)
+					if ("reportValidity" in this.node) {
 						this.node.reportValidity();
-					else if ("validationMessage" in this.node)
+					} else {
 						__SIGNALCONTROL.notify(this.node.validationMessage, "");
-					else if ("wdCustomValidity" in this.node.dataset)
-						__SIGNALCONTROL.notify(this.node.dataset.wdCustomValidity, "");
-					else
-						__SIGNALCONTROL.notify("Invalid value for form type!", "");
-					this.node.focus();
+						this.node.focus();
+						this.node.select();
+					}
 				}
 				return data;
 			}
@@ -2996,14 +2987,14 @@ const wd = (function() {
 		__FNode.call(this, input);
 	}
 
-
 	__Node.prototype = Object.create(__FNode.prototype, {
 		constructor: {value: __Node},
 
 		/**. ``''any'' attribute(''string'' name, ''any'' value)``: Define e retorna valores de atributos dos elementos HTML. Os argumentos ``name`` e ``value`` são, respectivamente, o nome e o valor do atributo. Se ``value`` for omitido, retornará o valor de ``name``. Se ``name`` for omitido, retornará um objeto com os nome e valores dos atributos HTML.**/
 		attribute: {
 			value: function (name, value) {
-				if (this.node === null) return;
+				if (this._elem === null) return; //FIXME this._elem
+
 				/*-- LISTAR E RETORNAR ATRIBUTOS --*/
 				if (!__Type(name).nonempty) {
 					let data = {};
@@ -3105,7 +3096,7 @@ const wd = (function() {
 		/**. ``''object'' style``: Define e retorna o valor do atributo ``style`` por meio de um objeto. Valor nulo excluí o atributo, valor textual define o atributo HTML e valor em objeto define o par nome-valor.**/
 		style: {
 			get: function() {
-				if (this.node === null) return;
+				if (!this._elem) return {};
 				let data = {};
 				let i    = -1;
 				while (++i < this.node.style.length) {
@@ -3116,12 +3107,11 @@ const wd = (function() {
 				return data;
 			},
 			set: function(x) {
-				if (this.node === null) return;
+				if (!this._elem) return;
 				let data = __Type(x);
 				if (data.null) {
 					let attr = this.style;
-					for (let i in attr)
-						this.node.style[i] = null;
+					for (let i in attr) this.node.style[i] = null;
 					this.node.removeAttribute("style");
 				}
 				else if (data.chars) {
@@ -3138,7 +3128,7 @@ const wd = (function() {
 		/**. ``''array'' class``: Define e retorna o valor do atributo ``class`` por meio de um array. Valor nulo excluí o atributo, valor textual define o atributo HTML e valor em objeto define ações ''replace'', ''toggle'', ''add'' e  ''remove''.**/
 		class: {
 			get: function() {
-				if (this.node === null) return;
+				if (!this._elem) return [];
 				let css   = this.node.getAttribute("class");
 				let array = css === null ? [] : css.replace(/\s+/g, " ").trim().split(" ");
 				let value = __Array(array).order;
@@ -3146,7 +3136,7 @@ const wd = (function() {
 				return value;
 			},
 			set: function(x) {
-				if (this.node === null) return;
+				if (!this._elem) return;
 				let data = __Type(x);
 				if (data.chars) {
 					this.node.setAttribute("class", x);
@@ -3193,14 +3183,14 @@ const wd = (function() {
 		/**. ``''object'' dataset``: Define e retorna os valores do atributo ``dataset``. Valor nulo excluí o atributo e valor em objeto define seus pares nome-valor.**/
 		dataset: {
 			get: function() {
-				if (this.node === null) return;
+				if (!this._elem) return {};
 				let data = {};
 				for (let i in this.node.dataset)
 					data[i] = this.node.dataset[i];
 				return data;
 			},
 			set: function(x) {
-				if (this.node === null) return;
+				if (!this._elem) return;
 				let data  = __Type(x);
 				let wdLib = []
 				if (data.null) {
@@ -3232,7 +3222,7 @@ const wd = (function() {
 		/**. ``''node'' clone(boolean childs=true)``: Retorna um clone do objeto. Se o argumento opcional ``childs`` for falso, os elementos filhos não serão clonados.**/
 		clone: {
 			value: function(childs) {
-				if (this.node === null) return;
+				if (!this._elem) return null;
 				let special = ["script"];
 				/* se não for um script */
 				if (special.indexOf(this.tag) < 0)
@@ -3249,7 +3239,7 @@ const wd = (function() {
 		/**. ``''void'' load(''string'' html="", ''boolean'' replace=false, ''boolean'' run=false)``: Carrega um conteúdo HTML no elemento ou o substitui. O argumento ``html`` deve conter o código HTML a ser carregado; O argumento opcional ``replace``, se verdadeiro, irá substituir o elemento pelo conteúdo de ``html``; e O argumento ``run``, se verdadeiro, executará elementos scripts existentes.**/
 		load: {
 			value: function(html, replace, run) {
-				if (this.node === null) return;
+				if (!this._elem) return;
 				/* definir elemento */
 				let elem = replace === true ? document.createElement("DIV") : this.node;
 				elem.innerHTML = html === undefined || html === null ? "" : String(html);
@@ -3272,14 +3262,14 @@ const wd = (function() {
 					});
 					this.node.remove();
 				}
-				loadingProcedures();
-				return;
+				/* IMPORTANTE: checar elemento após carregamento */
+				return loadingProcedures();
 			}
 		},
 		/**. ``''void'' repeat(''array'' list)``: Clona os filhos do elemento repetindo-os de acordo com as informações repassadas pelo array de objetos em ``list``. O elemento filho que contiver o nome do atributo do obejto entre duas chaves (''{{nome}}'') terá o fragmento substituídos pelo valor do atributo do objeto correspondente.**/
 		repeat: {
 			value: function(list) {
-				if (this.node === null) return;
+				if (!this._elem) return;
 				let data = __Type(list);
 				if (!data.array) return;
 				/* 1) obter o conteúdo interno */
@@ -3314,9 +3304,8 @@ const wd = (function() {
 				/* 10) definir filhos */
 				this.node.innerHTML = childs.join("\n");
 				__MODALCONTROL.end();
-				/* IMPORTANTE: checar elemento após carregamento */
-				loadingProcedures();
-				return;
+				/* IMPORTANTE: checar elementos após carregamento */
+				return loadingProcedures();
 			}
 		},
 		/**. ``''boolean'' show``: Retorna e define a visibilidade do elemento nos termos da biblioteca.**/
@@ -3331,7 +3320,7 @@ const wd = (function() {
 		/**. ``''void'' only(''boolean'' reverse)``: Exibe o nó e esconde os irmãos. Se ``reverse`` for verdadeiro, inverte-se o resultado.**/
 		only: {
 			value: function(reverse) {
-				if (this.node === null) return;
+				if (!this._elem) return;
 				let node  = this.node;
 				let nodes = __Type(this.node.parentElement.children).value;
 				nodes.forEach(function(v,i,a) {
@@ -3343,7 +3332,7 @@ const wd = (function() {
 		/**. ``''void'' childs(''number'' init, ''number'' last)``: Define o intervalo de nós filhos a ser exibido entre o índice inicial (``init``) e final (``last``).**/
 		childs: {
 			value: function (init, last) {
-				if (this.node === null) return;
+				if (!this._elem) return;
 				let child = __Type(this.node.children).value;
 				let data1 = __Type(init);
 				let data2 = __Type(last);
@@ -3358,7 +3347,7 @@ const wd = (function() {
 		/**. ``''array'' groups(''boolean'' child)``: Retorna uma lista de objetos contendo os intervalos (atributos ``init`` e ``last``) dos elementos visíveis. Se o argumento ``child`` for verdadeiro, a análise será dentre os filhos, caso contrário, entre elemento e seus irmãos.**/
 		groups: {
 			value: function(child) {
-				if (this.node === null) return;
+				if (!this._elem) return;
 				let target = child === true ? this.node : this.node.parentElement;
 				let nodes  = __Type(target.children).value;
 				let groups = [];
@@ -3382,8 +3371,8 @@ const wd = (function() {
 		/**. ``''void'' walk(''integer'' n=1)``: Exibe um determinado nó filho avançando ou retrocedendo entre os nós irmãos. O argumento ``n`` indica o intervalo a avançar (positivo) ou a retroceder (negativo).**/
 		walk: {
 			value: function(n) {
-				if (this.node === null || this.node.childElementCount < 2)
-					return this.childs(0, 0);
+				if (!this._elem) return;
+				if (this.node.childElementCount < 2) return this.childs(0, 0);
 				let data   = __Type(n);
 				let childs = this.node.childElementCount;
 				let delta  = data.finite ? Math.trunc(data.value) : 1;
@@ -3401,8 +3390,8 @@ const wd = (function() {
 		. O argumento ``width`` é um número finito positivo que define o comprimento dos grupos, pode ser um número não inteiro.**/
 		pages: {
 			value: function(index, width) {
-				if (this.node === null || this.node.childElementCount < 2)
-					return this.childs(0,0);
+				if (!this._elem) return;
+				if (this.node.childElementCount < 2) return this.childs(0,0);
 				/* definindo o tamanho da página */
 				let length = this.node.childElementCount;
 				let check1 = __Type(width);
@@ -3450,7 +3439,7 @@ const wd = (function() {
 		removeMark: {
 			value: function(selector, start, end) {
 
-			if (this.node === null) return;
+				if (!this._elem) return;
 				tag = String(tag).trim();
 				css = __Type(css).nonempty ? css.trim() : "";
 				/*-- remover elementos (substituir por span), se for o caso --*/
@@ -3474,7 +3463,7 @@ const wd = (function() {
 		/** .``''void'' insertTag(''string'' tag, ''integer'' start, ''integer'' end)``: Insere uma ``tag`` HTML entre os índices ``start`` e ``end`` do conteúdo textual. Método destrutivo, não utilizar se houver conteúdo editável no nó.**/
 		insertTag: {
 			value: function(tag, start, end) {
-				if (this.node === null) return;
+				if (!this._elem) return;
 				let init = __Type(start);
 				let last = __Type(end);
 				tag  = String(tag).trim().toLowerCase().replace(/[^a-z\-]/gi, "");
@@ -3511,7 +3500,7 @@ const wd = (function() {
 		/** .``''object'' textMatch(''regexp|string'' search)``: Localiza dentro do conteúdo textual do nó os índices de início e fim de ``search`` em um objeto contendo os atributos ``init`` e ``last``, retorna ou nulo caso não encontre.**/
 		textMatch: {
 			value: function(search) {
-				if (this.node === null) return null;
+				if (!this._elem) return;
 				let check = __Type(search);
 				if (check.regexp) {
 					let text = this.node.innerText;
@@ -3535,7 +3524,8 @@ const wd = (function() {
 		/**. ``''void'' filter(''string|regexp'' search, ''integer'' width)``: Exibe os nós filhos que casam com o valor definido em ``search``. O argumento ``width`` indica o número mínimo de caracteres a ser informado em ``search`` (string). Quando ``search`'for menor que o valor absoluto de ``width``, nenhum elemento será exibido, se negativo, ou todos, se positivo.**/
 		filter: {
 			value: function(search, width) {
-				if (this.node === null || this.node.childElementCount === 0) return;
+				if (!this._elem) return;
+				if (this.node.childElementCount === 0) return;
 				let data  = __Type(search);
 				let check = __Type(width);
 				let child = __Type(this.node.children).value;
@@ -3587,7 +3577,8 @@ const wd = (function() {
 		/**. ``''void'' sort(''boolean'' asc)``: Ordena os elementos filhos. O argumento opcional ``asc`` define a classificação. Se verdadeiro, será ascendente; se falso, descendente; e, se não boleano, será o inverso da classificação vigente.**/
 		sort: {
 			value: function(asc) {
-				if (this.node === null || this.node.childElementCount === 0) return;
+				if (!this._elem) return;
+				if (this.node.childElementCount === 0) return;
 				let node  = this.node;
 				let child = __Type(this.node.children).value;
 				let sort  = __Array(child).sort(asc);
@@ -3598,7 +3589,8 @@ const wd = (function() {
 		/**. ``''void'' tsort(''integer'' order...)``: Ordena os nós filhos com referência aos nós netos, ordenando colunas de tabelas. Os argumentos ``order`` definem a sequência de prioridade na classificação, com a indicação do número da coluna (a partir de 1, da esquerda para a direita). Se indicador da coluna for positivo, sua ordem será ascendente, caso contrário, descendente.**/
 		tsort: {
 			value: function() {
-				if (this.node === null || this.node.childElementCount === 0) return;
+				if (!this._elem) return;
+				if (this.node.childElementCount === 0) return;
 				/*-- acertando argumentos --*/
 				let args = [];
 				let j = -1;
@@ -3644,6 +3636,7 @@ const wd = (function() {
 		/**. ``''void'' jump(''array'' list)``: O nó será adicionado aos elementos na ordem definida em ``list`` a cada chamada do método. O argumento ``list`` é um array de elementos que servirá como pai para o elemento especificado.**/
 		jump: {
 			value: function(list) {
+				if (!this._elem) return;
 				let check = __Type(list);
 				list = check.array ? list : [list];
 				let index = list.indexOf(this.node.parentElement) + 1;
@@ -3656,6 +3649,7 @@ const wd = (function() {
 		//TODO interessante: https://developer.mozilla.org/en-US/docs/Web/CSS/::backdrop    https://developer.mozilla.org/en-US/docs/Web/CSS/:fullscreen
 		full: {
 			value: function() {
+				if (!this._elem) return;
 				let action = {
 					open: ["requestFullscreen", "webkitRequestFullscreen", "msRequestFullscreen"],
 					exit: ["exitFullscreen", "webkitExitFullscreen", "msExitFullscreen"]
@@ -3679,6 +3673,7 @@ const wd = (function() {
 		/**. ``''object'' styles``: Retorna um objeto contendo os estilos e seus valores computados ao elemento.**/
 		styles: {
 			get: function() {
+				if (!this._elem) return;
 				let object = {};
 				let styles = window.getComputedStyle(this.node, null);
 				for (let i in styles) {
