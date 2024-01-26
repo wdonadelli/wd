@@ -2993,7 +2993,7 @@ const wd = (function() {
 		/**. ``''any'' attribute(''string'' name, ''any'' value)``: Define e retorna valores de atributos dos elementos HTML. Os argumentos ``name`` e ``value`` são, respectivamente, o nome e o valor do atributo. Se ``value`` for omitido, retornará o valor de ``name``. Se ``name`` for omitido, retornará um objeto com os nome e valores dos atributos HTML.**/
 		attribute: {
 			value: function (name, value) {
-				if (this._elem === null) return; //FIXME this._elem
+				//FIXME if (this._elem === null) return;
 
 				/*-- LISTAR E RETORNAR ATRIBUTOS --*/
 				if (!__Type(name).nonempty) {
@@ -3311,9 +3311,11 @@ const wd = (function() {
 		/**. ``''boolean'' show``: Retorna e define a visibilidade do elemento nos termos da biblioteca.**/
 		show: {
 			get: function() {
+				if (!this._elem) return true;
 				return this.class.indexOf("js-wd-no-display") < 0;
 			},
 			set: function(x) {
+				if (!this._elem) return;
 				this.class = x === false ? {add: "js-wd-no-display"} : {remove: "js-wd-no-display"}
 			}
 		},
@@ -3347,7 +3349,7 @@ const wd = (function() {
 		/**. ``''array'' groups(''boolean'' child)``: Retorna uma lista de objetos contendo os intervalos (atributos ``init`` e ``last``) dos elementos visíveis. Se o argumento ``child`` for verdadeiro, a análise será dentre os filhos, caso contrário, entre elemento e seus irmãos.**/
 		groups: {
 			value: function(child) {
-				if (!this._elem) return;
+				if (!this._elem) return [];
 				let target = child === true ? this.node : this.node.parentElement;
 				let nodes  = __Type(target.children).value;
 				let groups = [];
@@ -3645,29 +3647,26 @@ const wd = (function() {
 				if (__Type(node).node) node.appendChild(this.node);
 			}
 		},
-		/**. ``''boolean'' full()``: Alterna a exibição do nó em tela cheia e retorna verdadeiro se efetivada essa exibição.**/
+		/**. ``''void'' full()``: Alterna a exibição do nó em tela cheia.**/
 		//TODO interessante: https://developer.mozilla.org/en-US/docs/Web/CSS/::backdrop    https://developer.mozilla.org/en-US/docs/Web/CSS/:fullscreen
 		full: {
 			value: function() {
 				if (!this._elem) return;
-				let action = {
-					open: ["requestFullscreen", "webkitRequestFullscreen", "msRequestFullscreen"],
-					exit: ["exitFullscreen", "webkitExitFullscreen", "msExitFullscreen"]
-				};
-				let target = document.fullscreenElement;
-				let full   = target !== this.node;
-				let node   = full ? this.node : document;
-				let method = full ? action.open : action.exit;
-				let i = -1;
-				while (++i < method.length) {
-					if (method[i] in node) {
+				let open = ["requestFullscreen", "webkitRequestFullscreen", "msRequestFullscreen"];
+				let exit = ["exitFullscreen",    "webkitExitFullscreen",    "msExitFullscreen"]
+				let full = document.fullscreenElement;
+				let node = full === this.node ? document : this.node;
+				let act  = full === this.node ?     exit :      open;
+				let done = false;
+				act.forEach(function(v,i,a) {
+					if (!done && v in node) {
 						try {
-							node[method[i]]();
-							return full;
+							node[v]();
+							done = true;
 						} catch(e) {}
 					}
-				}
-				return false;
+				});
+				return;
 			}
 		},
 		/**. ``''object'' styles``: Retorna um objeto contendo os estilos e seus valores computados ao elemento.**/
@@ -6084,6 +6083,7 @@ const wd = (function() {
 	});
 
 	if (__UNDERMAINTENANCE) {
+		console.log("WD JS Library: The maintenance module is on.");
 		Object.defineProperties(WD, {
 			type:     {value: function(x){return __Type.apply(null, Array.prototype.slice.call(arguments));}},
 			array:    {value: function(){return __Array.apply(null, Array.prototype.slice.call(arguments));}},
@@ -6653,7 +6653,7 @@ const wd = (function() {
 /*----------------------------------------------------------------------------*/
 	function navLink(e) { /* link ativo do navegador */
 		if (e.parentElement === null) return;
-		if (wd_html_tag(e.parentElement) !== "nav") return;
+		if (e.parentElement.tagName.toLowerCase() !== "nav") return;
 		WD(e.parentElement.children).css({add: "js-wd-nav-inactive"});
 		WD(e).css({del: "js-wd-nav-inactive"});
 		return;
