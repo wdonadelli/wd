@@ -2993,25 +2993,26 @@ const wd = (function() {
 		/**. ``''any'' attribute(''string'' name, ''any'' value)``: Define e retorna valores de atributos dos elementos HTML. Os argumentos ``name`` e ``value`` são, respectivamente, o nome e o valor do atributo. Se ``value`` for omitido, retornará o valor de ``name``. Se ``name`` for omitido, retornará um objeto com os nome e valores dos atributos HTML.**/
 		attribute: {
 			value: function (name, value) {
-				//FIXME if (this._elem === null) return;
+				if (this._node === null) return;
 
-				/*-- LISTAR E RETORNAR ATRIBUTOS --*/
+				/*-- RETORNAR LISTA DE ATRIBUTOS --*/
 				if (!__Type(name).nonempty) {
 					let data = {};
 					if ("attributes" in this.node) {
 						let attr = this.node.attributes;
 						let i = -1;
 						while(++i < attr.length)
-							data[attr[i].name] = attr[i].value;__Node;
+							data[attr[i].name] = attr[i].value;
 					} else {
-						for (let i in this.node) data[i] = this.node[i];
+						for (let i in this.node)
+							data[i] = this.node[i];
 					}
 					return data;
 				}
-				name = String(name).trim();
-				/*-- OBTER ATRIBUTO --*/
+				/*-- RETORNAR ATRIBUTO --*/
+				name = name.trim();
 				if (arguments.length === 1) {
-					/*-- ATRIBUTOS DE FORMULÁRIO -- */
+					/*-- ATRIBUTO DE FORMULÁRIO -- */
 					if (this.form) {
 						switch(name) {
 								case "value":       return this.value();
@@ -3019,22 +3020,26 @@ const wd = (function() {
 								case "name":        return this.name;
 						}
 					}
-					/*-- ATRIBUTOS ESPECÍFICOS --*/
-					switch(name) {
-						case "style":     return this.style;
-						case "class":     return this.class;
-						case "className": return this.class;
-						case "dataset":   return this.dataset;
+					/*-- ATRIBUTO COM COMPORTAMENTO ESPECIAL --*/
+					if (this._elem) {
+						switch(name) {
+							case "style":     return this.style;
+							case "class":     return this.class;
+							case "className": return this.class;
+							case "dataset":   return this.dataset;
+						}
 					}
-					/*-- OUTROS ATRIBUTOS --*/
-					if ("getAttribute" in this.node)
+					/*-- ATRIBUTO DE OBJETO --*/
+					if (name in this.node) return this.node[name];
+					/*-- ATRIBUTOS DE ELEMENTO HTML --*/
+					if (this._elem && "getAttribute" in this.node)
 						return this.node.getAttribute(name);
-					else
-						return this.node[name];
+					/*-- NÃO LOCALIZADO --*/
+					return undefined;
 				}
-				/*-- DEFINIR ATRIBUTOS --*/
+				/*-- DEFINIR ATRIBUTO --*/
 				else {
-					/*-- ATRIBUTOS DE FORMULÁRIO -- */
+					/*-- ATRIBUTO DE FORMULÁRIO -- */
 					if (this.form) {
 						switch(name) {
 								case "value":       this.value(value); return this.attribute(name);
@@ -3042,54 +3047,55 @@ const wd = (function() {
 								case "name":        this.name = value; return this.attribute(name);
 						}
 					}
-					/*-- ATRIBUTOS ESPECÍFICOS --*/
-					switch(name) {
-						case "style":     this.style   = value; return this.attribute(name);
-						case "class":     this.class   = value; return this.attribute(name);
-						case "className": this.class   = value; return this.attribute(name);
-						case "dataset":   this.dataset = value; return this.attribute(name);
+					/*-- ATRIBUTO COM COMPORTAMENTO ESPECIAL --*/
+					if (this._elem) {
+						switch(name) {
+							case "style":     this.style   = value; return this.attribute(name);
+							case "class":     this.class   = value; return this.attribute(name);
+							case "className": this.class   = value; return this.attribute(name);
+							case "dataset":   this.dataset = value; return this.attribute(name);
+						}
 					}
-					/*-- ATRIBUTOS DE DISPARADORES --*/
-					if ((/^\!?on\w+/).test(name)) {
-						let obj = {};
-						obj[name.toLowerCase()] = value;
-						this.handler = obj;
-						return;
+					if (name === "addEventListener" || name === "removeEventListener") {
+						if (__Type(value).array && __Type(value[1]).nonempty && value[1].trim() in window)
+							value[1] = window[value[1].trim()];
 					}
-					/*-- ATRIBUTOS CONHECIDOS --*/
+					/*-- ATRIBUTO ESPECIAL (DISPARADORES) --*/
+					if ((/^ON\w+$/).test(name)) {
+						let event   = name.replace("ON", "");
+						let list    = {};
+						list[event] = value;
+						this.handler(list);
+						return list;
+					}
+					/*-- ATRIBUTO DE OBJETO --*/
 					if (name in this.node) {
 						let testAttr  = __Type(this.node[name]);
 						let testValue = __Type(value);
-						/*-- MÉTODOS --*/
-						if (testAttr.function && testValue.array) {
-							this.node[name].apply(this.node, value);
-						}
-						/*-- BOLEANOS --*/
-						else if (testAttr.boolean && (testValue.boolean || value === "!")) {
+						/*-- MÉTODO --*/
+						if (testAttr.function && testValue.array)
+							return this.node[name].apply(this.node, value);
+						/*-- ATRIBUTO --*/
+						if (testAttr.boolean && (testValue.boolean || value === "!"))
 							this.node[name] = testValue.boolean ? value : !this.node[name];
-						}
-						/*-- OUTROS --*/
-						else {
+						else
 							this.node[name] = value;
-						}
 						return this.attribute(name);
 					}
-					/*-- ATRIBUTOS DESCONHECIDOS --*/
-					if (value === null) {
-						/*-- APAGAR --*/ //FIXME hum, é preciso definir bem esse negócio, null é para apagar o atributo?
-						if ("removeAttribute" in this.node)
+					/*-- ATRIBUTO HTML --*/
+					if (this._elem) {
+						if (value === null)
 							this.node.removeAttribute(name);
 						else
-							delete this.node[name];
-					}
-					/*-- DEFINIR --*/
-					else {
-						if ("setAttribute" in this.node)
 							this.node.setAttribute(name, value);
-						else
-							this.node[name] = value;
+						return this.attribute(name);
 					}
-					return;
+					/*-- ATRIBUTO NÃO HTML --*/
+					if (value === null)
+						delete this.node[name];
+					else
+						this.node[name] = value;
+					return this.attribute(name);
 				}
 			}
 		},
@@ -3154,28 +3160,25 @@ const wd = (function() {
 				}
 			}
 		},
-		/**. ``''void''  handler``: Define ou remove disparadores ao elemento HTML. O valor deve ser um objeto cujos atributos e valores são os eventos e métodos disparadores ou uma lista deles, respectivamente. Para remover o disparador, o nome do atributo deve conter o caracteres ! no início.**/
+		/**. ``''void''  handler(''object'' list, ''boolean'' remove)``: Define ou remove disparadores ao elemento. O argumento ``list`` é um objeto cujo atributo e valor correspondem ao nome do evento e seu respectivo método disparador, uma lista deles ou o seu nome (string), desde que esteja no escopo de ``window``. Para remover o disparador, o atributo ``remove`` deve ser verdadeiro.**/
 		handler: {
-			set: function(x) {
+			value: function(list, remove) {
 				if (this.node === null) return;
-				let data = __Type(x);
+				let data = __Type(list);
 				if (!data.object) return;
-				for (let i in x) {
-					let check = __Type(x[i]);
-					if (!check.array && !check.function) continue;
-					let value  = check.array ? x[i] : [x[i]];
-					let name   = String(i).toLowerCase().replace(/\s+/g, "");
-					let remove = (/^\!/).test(name);
-					let event  = name.replace(/^\!?(on)?/, "");
-					let j      = -1;
-					while (++j < value.length) {
-						let method = value[j];
-						let test   = __Type(method);
-						if (!test.function) continue;
-						if (remove)
-							this.node.removeEventListener(event, method, false);
-						else
-							this.node.addEventListener(event, method, false);
+				for (let i in list) {
+					let methods = __Type(list[i]).array ? list[i] : [list[i]];
+					let event   = String(i).trim().replace(/^(on)?/i, "");
+					let j = -1;
+					while (++j < methods.length) {
+						let method = methods[j];
+						if (__Type(method).nonempty) method = window[method.trim()];
+						if (__Type(method).function) {
+							if (remove === true)
+								this.node.removeEventListener(event, method, false);
+							else
+								this.node.addEventListener(event, method, false);
+						}
 					}
 				}
 			}
@@ -5991,6 +5994,20 @@ const wd = (function() {
 			}
 		},
 
+
+		/**. ``''self'' handler(''object'' values, remove)``: Define os atributos especificados em ``values`` com seus respectivos valores (ver __Node.handler).**/
+		handler: {
+			value: function(values, remove) {
+				this.forEach(function(v,i) {
+					let node = __Node(v).handler(values, remove);
+				});
+				return this;
+			}
+		},
+
+
+
+
 		full: {
 			value: function() {
 				this.forEach(function(v,i) {
@@ -6855,18 +6872,18 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	WD(window).set({ /* Definindo eventos window */
-		onload: loadProcedures,
-		onresize: scalingProcedures,
-		onhashchange: hashProcedures,
+		ONload: loadProcedures,
+		ONresize: scalingProcedures,
+		ONhashchange: hashProcedures,
 	});
 
 
 	WD(document).set({ /* Definindo eventos document */
-		onclick:    clickProcedures,
-		oninput:    inputProcedures,
-		onfocusout: focusoutProcedures,
-/*		onkeyup:    keyboardProcedures, desligado na versão 4 */
-/*		onchange:   changeProcedures, desligado na versão 4 */
+		ONclick:    clickProcedures,
+		ONinput:    inputProcedures,
+		ONfocusout: focusoutProcedures,
+/*		ONkeyup:    keyboardProcedures, desligado na versão 4 */
+/*		ONchange:   changeProcedures, desligado na versão 4 */
 	});
 
 	return WD;
