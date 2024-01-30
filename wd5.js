@@ -2994,8 +2994,7 @@ const wd = (function() {
 		attribute: {
 			value: function (name, value) {
 				if (this._node === null) return;
-
-				/*-- RETORNAR LISTA DE ATRIBUTOS --*/
+				/*-- RETORNAR LISTA DE ATRIBUTOS -------------------------------------*/
 				if (!__Type(name).nonempty) {
 					let data = {};
 					if ("attributes" in this.node) {
@@ -3009,10 +3008,10 @@ const wd = (function() {
 					}
 					return data;
 				}
-				/*-- RETORNAR ATRIBUTO --*/
+				/*-- RETORNAR ATRIBUTO -----------------------------------------------*/
 				name = name.trim();
 				if (arguments.length === 1) {
-					/*-- ATRIBUTO DE FORMULÁRIO -- */
+					/*-- atributo de formulário -- */
 					if (this.form) {
 						switch(name) {
 								case "value":       return this.value();
@@ -3020,7 +3019,7 @@ const wd = (function() {
 								case "name":        return this.name;
 						}
 					}
-					/*-- ATRIBUTO COM COMPORTAMENTO ESPECIAL --*/
+					/*-- atributo com comportamento especial --*/
 					if (this._elem) {
 						switch(name) {
 							case "style":     return this.style;
@@ -3029,7 +3028,7 @@ const wd = (function() {
 							case "dataset":   return this.dataset;
 						}
 					}
-					/*-- ATRIBUTO DE OBJETO --*/
+					/*-- atributo de objeto --*/
 					if (name in this.node) return this.node[name];
 					/*-- ATRIBUTOS DE ELEMENTO HTML --*/
 					if (this._elem && "getAttribute" in this.node)
@@ -3037,9 +3036,9 @@ const wd = (function() {
 					/*-- NÃO LOCALIZADO --*/
 					return undefined;
 				}
-				/*-- DEFINIR ATRIBUTO --*/
+				/*-- DEFINIR ATRIBUTO ------------------------------------------------*/
 				else {
-					/*-- ATRIBUTO DE FORMULÁRIO -- */
+					/*-- atributo de formulário HTML -- */
 					if (this.form) {
 						switch(name) {
 								case "value":       this.value(value); return this.attribute(name);
@@ -3047,7 +3046,7 @@ const wd = (function() {
 								case "name":        this.name = value; return this.attribute(name);
 						}
 					}
-					/*-- ATRIBUTO COM COMPORTAMENTO ESPECIAL --*/
+					/*-- atributo HTML com comportamento especial --*/
 					if (this._elem) {
 						switch(name) {
 							case "style":     this.style   = value; return this.attribute(name);
@@ -3056,33 +3055,26 @@ const wd = (function() {
 							case "dataset":   this.dataset = value; return this.attribute(name);
 						}
 					}
-					if (name === "addEventListener" || name === "removeEventListener") {
-						if (__Type(value).array && __Type(value[1]).nonempty && value[1].trim() in window)
-							value[1] = window[value[1].trim()];
+					/*-- método com comportamento especial --*/
+					switch(name) {
+						case "addEventListener":    return this.handler(value, false);
+						case "removeEventListener": return this.handler(value, true);
 					}
-					/*-- ATRIBUTO ESPECIAL (DISPARADORES) --*/
-					if ((/^ON\w+$/).test(name)) {
-						let event   = name.replace("ON", "");
-						let list    = {};
-						list[event] = value;
-						this.handler(list);
-						return list;
-					}
-					/*-- ATRIBUTO DE OBJETO --*/
+					/*-- atributo de objeto --*/
 					if (name in this.node) {
 						let testAttr  = __Type(this.node[name]);
 						let testValue = __Type(value);
-						/*-- MÉTODO --*/
+						/*-- método --*/
 						if (testAttr.function && testValue.array)
 							return this.node[name].apply(this.node, value);
-						/*-- ATRIBUTO --*/
+						/*-- attributo booleano e não booelano --*/
 						if (testAttr.boolean && (testValue.boolean || value === "!"))
 							this.node[name] = testValue.boolean ? value : !this.node[name];
 						else
 							this.node[name] = value;
 						return this.attribute(name);
 					}
-					/*-- ATRIBUTO HTML --*/
+					/*-- atributo html --*/
 					if (this._elem) {
 						if (value === null)
 							this.node.removeAttribute(name);
@@ -3090,7 +3082,7 @@ const wd = (function() {
 							this.node.setAttribute(name, value);
 						return this.attribute(name);
 					}
-					/*-- ATRIBUTO NÃO HTML --*/
+					/*-- atributo não html --*/
 					if (value === null)
 						delete this.node[name];
 					else
@@ -3160,25 +3152,28 @@ const wd = (function() {
 				}
 			}
 		},
-		/**. ``''void''  handler(''object'' list, ''boolean'' remove)``: Define ou remove disparadores ao elemento. O argumento ``list`` é um objeto cujo atributo e valor correspondem ao nome do evento e seu respectivo método disparador, uma lista deles ou o seu nome (string), desde que esteja no escopo de ``window``. Para remover o disparador, o atributo ``remove`` deve ser verdadeiro.**/
+		/**. ``''void''  handler(''any'' list, ''boolean'' remove=false, ''boolean'' capture=false)``: Define ou remove disparadores ao elemento. O argumento ``list`` pode ser um objeto ou uma lista. Se for uma lista, cada item da lista corresponderá, respectivamente, ao nome do evento, a função disparadora e o argumento ``useCapture`` dos métoso ''addEventListener'' e ''removeEventListener''. Se for um objeto, o atributo corresponderá ao nome do evento e seu valor a função disparadora ou uma lista de funções. A função disparadora, se estiver dentro do escopo de ``window``, poderá ser uma string com seu respectivo nome. O argumento opcional ``remove``, se verdadeiro, executará a remoção da função disparadora. O argumento opcional ``capture`` determina o valor do argumento ``useCapture`` dos métodos nativos.**/
 		handler: {
-			value: function(list, remove) {
+			value: function(list, remove, capture) {
 				if (this.node === null) return;
 				let data = __Type(list);
+				if (data.array) {
+					let object = {};
+					object[list[0]] = list[1];
+					return this.handler(object, remove, list[2]);
+				}
 				if (!data.object) return;
+				capture = capture === true;
+				remove  = remove  === true;
 				for (let i in list) {
-					let methods = __Type(list[i]).array ? list[i] : [list[i]];
 					let event   = String(i).trim().replace(/^(on)?/i, "");
-					let j = -1;
-					while (++j < methods.length) {
-						let method = methods[j];
+					let methods = __Type(list[i]).array ? list[i] : [list[i]];
+					let attr    = (remove ? "remove" : "add")+"EventListener";
+					let item    = -1;
+					while (++item < methods.length) {
+						let method = methods[item];
 						if (__Type(method).nonempty) method = window[method.trim()];
-						if (__Type(method).function) {
-							if (remove === true)
-								this.node.removeEventListener(event, method, false);
-							else
-								this.node.addEventListener(event, method, false);
-						}
+						if (__Type(method).function) this.node[attr](event, method, capture);
 					}
 				}
 			}
@@ -6872,18 +6867,19 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	WD(window).set({ /* Definindo eventos window */
-		ONload: loadProcedures,
-		ONresize: scalingProcedures,
-		ONhashchange: hashProcedures,
+		addEventListener: {
+			load: loadProcedures,
+			resize: scalingProcedures,
+			hashchange: hashProcedures,
+		}
 	});
 
-
 	WD(document).set({ /* Definindo eventos document */
-		ONclick:    clickProcedures,
-		ONinput:    inputProcedures,
-		ONfocusout: focusoutProcedures,
-/*		ONkeyup:    keyboardProcedures, desligado na versão 4 */
-/*		ONchange:   changeProcedures, desligado na versão 4 */
+		addEventListener: {
+			click:    clickProcedures,
+			input:    inputProcedures,
+			focusout: focusoutProcedures,
+		}
 	});
 
 	return WD;
