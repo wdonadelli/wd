@@ -3145,9 +3145,9 @@ const wd = (function() {
 				else if (data.object) {
 					let css = __Array(this.class);
 					if ("replace" in x) css.replace.apply(css, x.replace.split(" "));
-					if ("toggle" in x)  css.toggle.apply(css, x.toggle.split(" "));
-					if ("add" in x)     css.put.apply(css, x.add.split(" "));
-					if ("remove" in x)  css.remove.apply(css, x.remove.split(" "));
+					if ("toggle"  in x) css.toggle.apply(css, x.toggle.split(" "));
+					if ("add"     in x) css.put.apply(css, x.add.split(" "));
+					if ("remove"  in x) css.remove.apply(css, x.remove.split(" "));
 					this.node.setAttribute("class", css.order.join(" "));
 				}
 			}
@@ -3649,21 +3649,20 @@ const wd = (function() {
 		//TODO interessante: https://developer.mozilla.org/en-US/docs/Web/CSS/::backdrop    https://developer.mozilla.org/en-US/docs/Web/CSS/:fullscreen
 		full: {
 			value: function() {
-				if (!this._elem) return;
-				let open = ["requestFullscreen", "webkitRequestFullscreen", "msRequestFullscreen"];
-				let exit = ["exitFullscreen",    "webkitExitFullscreen",    "msExitFullscreen"]
+				if (this.node === null) return;
+				let attr = {
+					open: ["requestFullscreen", "webkitRequestFullscreen", "msRequestFullscreen"],
+					exit: ["exitFullscreen",    "webkitExitFullscreen",    "msExitFullscreen"]
+				};
 				let full = document.fullscreenElement;
-				let node = full === this.node ? document : this.node;
-				let act  = full === this.node ?     exit :      open;
-				let done = false;
-				act.forEach(function(v,i,a) {
-					if (!done && v in node) {
-						try {
-							node[v]();
-							done = true;
-						} catch(e) {}
-					}
-				});
+				let node = this._elem ? this.node : document.documentElement;
+				let act  = full === node ? "exit" : "open";
+				if (act === "exit") node = document;
+				let i = -1;
+				while (++i < attr[act].length) {
+					if (attr[act][i] in node)
+						try {return node[attr[act][i]]();} catch(e) {}
+				}
 				return;
 			}
 		},
@@ -6458,18 +6457,23 @@ const wd = (function() {
 /*----------------------------------------------------------------------------*/
 	function data_wdDevice(e) { /* Estilo widescreen: data-wd-device=desktop{css}tablet{css}phone{css}mobile{css} */
 		if (!("wdDevice" in e.dataset)) return;
-		let data    = wd_html_dataset_value(e, "wdDevice")[0];
-		let desktop = "desktop" in data ? data.desktop : "";
-		let mobile  = "mobile"  in data ? data.mobile  : "";
-		let tablet  = "tablet"  in data ? data.tablet  : "";
-		let phone   = "phone"   in data ? data.phone   : "";
-		let device  = __DEVICECONTROLLER.device;
-		if (device === "desktop")
-			return WD(e).css({del: phone}).css({del: tablet}).css({del: mobile}).css({add: desktop});
-		if (device === "tablet")
-			return WD(e).css({del: desktop}).css({del: phone}).css({add: mobile}).css({add: tablet});
-		if (device === "phone")
-			return WD(e).css({del: desktop}).css({del: tablet}).css({add: mobile}).css({add: phone});
+		let query  = WD(e);
+		let data   = __String(e.dataset.wdDevice).wdNotation[0];
+		let device = __DEVICECONTROLLER.device;
+		let types  = {
+			desktop: {phone: 0, tablet: 0, mobile: 0, desktop: 1},
+			tablet:  {phone: 0, tablet: 1, mobile: 1, desktop: 0},
+			phone:   {phone: 1, tablet: 0, mobile: 1, desktop: 0},
+		};
+		if (device in types) {
+			let type = types[device];
+			/* removendo css dos dispositivos incompatíveis */
+			for (let i in type)
+				if (i in data && type[i] === 0) query.set({class: {remove: data[i]}});
+			/* adicionando css dos dispositivos compatíveis */
+			for (let i in type)
+				if (i in data && type[i] === 1) query.set({class: {add: data[i]}});
+		}
 		return;
 	};
 
