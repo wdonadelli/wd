@@ -522,7 +522,7 @@ const wd = (function() {
 		}
 	};
 
-/*===========================================================================*/
+/*============================================================================*/
 	/**### Checagem de Tipos e Valores
 	###### ``**constructor** ''object'' __Type(''any''  input)``
 	Construtor para identificação do tipo de dado informado informado no argumento ``input``.**/
@@ -2410,9 +2410,9 @@ const wd = (function() {
 
 	Object.defineProperties(__Query, {
 
-		/**. ``''array'' __Query.$$$(''object'' data)``: retorna uma lista de nós (``NodeList``) ou um nó específico a partir do seletor CSS inserido nos atributos ``$`` (nó único) ou ``$$`` (nó múltiplo) do argumento ``data``. Aceita-se como elemento as strings "document" e "window" que correspondem aos objetos de mesmo nome. Quando os dois atributos são informados, o atributo ``$`` não é utilizado. Os dois atributos serão deletados do objeto original.**/
+		/**. ``''array'' __Query.$$$(''object'' data, ''boolean'' unique)``: retorna uma lista de nós (``NodeList``) ou um nó específico a partir do seletor CSS inserido nos atributos de nome ``$`` (nó único) ou ``$$`` (nó múltiplo) do argumento ``data``. Aceita-se como elemento as strings "document" e "window" que correspondem aos objetos/documentos de mesmo nome. Quando os dois atributos são informados, o atributo ``$`` não é utilizado. Os dois atributos serão deletados do objeto original. O argumento ``unique``, se verdadeiro, forçará o retorno de um único elemento.**/
 		$$$: {
-			value: function(data) {
+			value: function(data, unique) {
 				if (!__Type(data).object) return __Query().$;
 				let one = null;
 				let all = null;
@@ -2428,7 +2428,8 @@ const wd = (function() {
 				}
 				if (re.test(one)) return key[one.trim()];
 				if (re.test(all)) return key[all.trim()];
-				return all === null ? __Query(one).$ : __Query(all).$$;
+				let list = all === null ? __Query(one).$ : __Query(all).$$;
+				return (all !== null && unique === true && list.length > 0) ? list[0] : list;
 			}
 		},
 	});
@@ -3212,7 +3213,7 @@ const wd = (function() {
 				let wd = __Array(wdLib).order;
 				let i  = -1;
 				while (++i < wd.length) {
-					if ((/^wd[A-Z]\w+/).test(i))
+					if ((/^wd[A-Z]\w+/).test(wd[i]))
 						settingProcedures(this.node, wd[i]);
 				}
 			}
@@ -5963,7 +5964,7 @@ const wd = (function() {
 			}
 		},
 		/**. ``''self'' load(''string'' html, ''boolean'' replace)``: Insere o código HTML contido em ``html`` no elemento. Se ``replace`` for verdadeiro, substituirá o elemento pelo código (**scripts serão executados**!).**/
-		load: {
+		load: {//FIXME inserir o argumento rum para decidir se roda script?
 			value: function(html, replace) {
 				this.forEach(function(v,i) {__Node(v).load(html, replace, true);});
 				return this;
@@ -6118,64 +6119,56 @@ const wd = (function() {
 		});
 	}
 
-/* == BLOCO 4 ================================================================*/
-
-/*----------------------------------------------------------------------------*/
-	function data_wdLoad(e) { /* carrega HTML: data-wd-load=path{file}method{get|post}${form}overlap{} */
+/*============================================================================*/
+/**#### Atributos dataset
+	###### ``**function** ''void'' data_wdLoad(''node''  e)``
+	Função vinculada ao atributo HTML ``data-wd-load`` cujo objetivo é carregar arquivo HTML utilizando as ferramentas ``WDnode.load`` e ``WD.send``. Possui múltiplos atributos e grupo único:
+	|Nome|Descrição|Obrigatório|
+	|path|Caminho para o arquivo HTML externo a ser carregado|Sim|
+	|replace|''true' ou ''false'', ver WDnode.load|Não|
+	|run|''true'' ou ''false'', ver WDnode.load|Não|
+	|method|Tipo de requisição HTTP, ver WD.send|Não|
+	|$ ou $$|Seletor(es) CSS do formulário com os parâmetros da requição|Não|**/
+	function data_wdLoad(e) {
 		if (!("wdLoad" in e.dataset)) return;
-
-		/* obter dados do atributo */
-		let data    = wd_html_dataset_value(e, "wdLoad")[0];
-		let target  = WD(e);
-		let method  = data.method;
-		let file    = data.path;
-		let pack    = __Query.$$$(data);
-		let exec    = WD(pack);
-		let overlap = data.overlap === "true" ? true : false;
-
-		/* abrir contagem */
-		__COUNTERCONTROL.load++;
-		/* limpar atributo para evitar repetições desnecessárias e limpar conteúdo */
-		target.data({wdLoad: null}).load("");
-		/* carregar arquivo e executar */
-		exec.send(file, function(x) {
-			if (x.closed) {
-				/* encerrar contagem */
-				__COUNTERCONTROL.load--;
-				/* executar */
-				target.load(x.text, overlap);
-				return;
-			}
-		}, method);
-		return;
+		let data   = __String(e.dataset.wdLoad).wdNotation[0];
+		let query  = __Query.$$$(data);
+		let target = WD(e);
+		target.set({dataset: {wdLoad: null}}).load("");
+		WD(query).send(data.path, {
+			method: data.method,
+			ondone: function(x) {target.load(x.text, data.replace, data.run);}
+		});
 	};
 
 /*----------------------------------------------------------------------------*/
+	/**###### ``**function** ''void'' data_wdRepeat(''node''  e)``
+	Função vinculada ao atributo HTML ``data-wd-repeat`` cujo objetivo é clonar elementos filhos a partir de parâmentros contidos em um arquivo JSON ou CSV utilizando as ferramentas ``WDnode.repeat`` e ``WD.send``. Possui múltiplos atributos e grupo único:
+	|Nome|Descrição|Obrigatório|
+	|path|Caminho para o arquivo JSON ou CSV a ser carregado|Sim|
+	|method|Tipo de requisição HTTP, ver WD.send|Não|
+	|$ ou $$|Seletor(es) CSS do formulário com os parâmetros da requição|Não|**/
 	function data_wdRepeat(e) { /* Repete modelo HTML: data-wd-repeat=path{file}method{get|post}${form} */
 		if (!("wdRepeat" in e.dataset)) return;
 
-		/* obter dados do atributo */
-		let data   = wd_html_dataset_value(e, "wdRepeat")[0];
+		let data   = __String(e.dataset.wdRepeat).wdNotation[0];
+		let query  = __Query.$$$(data);
 		let target = WD(e);
-		let method = data.method;
-		let file   = data.path;
-		let pack   = __Query.$$$(data);
-		let exec   = WD(pack);
+		target.set({dataset: {wdRepeat: null}}).repeat([]);
+		WD(query).send(data.path, {
+			method: data.method,
+			ondone: function(x) {
+				target.repeat(x.json);
+				//FIXME inserir possibilidade de CSV
+			}
+		});
 
-		/* abrir contagem */
-		__COUNTERCONTROL.repeat++;
-		/* limpar atributo para evitar repetições desnecessárias e limpar conteúdo */
-		target.data({wdRepeat: null}).repeat([]);
-
-		/* carregar arquivo e executar */
+		/* carregar arquivo e executar
 		exec.send(file, function(x) {
 			if (x.closed) {
 				let json = x.json;
 				let csv  = x.csv;
-				/* fechar contagem */
-				__COUNTERCONTROL.repeat--;
 
-				/* repetir na ordem de prioridade: JSON | CSV | VAZIO */
 				if (wd_vtype(json).type === "array")
 					target.repeat(json);
 				else if (wd_vtype(csv).type === "array")
@@ -6185,7 +6178,7 @@ const wd = (function() {
 				return;
 			}
 		}, method);
-		return;
+		return;*/
 	};
 
 /*----------------------------------------------------------------------------*/
@@ -6604,7 +6597,7 @@ const wd = (function() {
 /*----------------------------------------------------------------------------*/
 	function data_wdNav(e) { /* Navegação: data-wd-nav=action{arg}${css}& */
 		if (!("wdNav" in e.dataset)) return;
-		let data = wd_html_dataset_value(e, "wdNav");
+		let data = __String(e.dataset.wdNav).wdNotation;//wd_html_dataset_value(e, "wdNav");
 		for (let i = 0; i < data.length; i++) {
 			let target = __Query.$$$(data[i]);
 			let value  = "action" in data[i] ? data[i].action : null;
