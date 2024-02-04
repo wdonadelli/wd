@@ -3682,6 +3682,219 @@ const wd = (function() {
 		},
 	});
 
+/*----------------------------------------------------------------------------*/
+
+	/**#### Tabela
+	###### ``**constructor** ''object'' __Table()``
+	Construtor para obter dados de tabela e matrizes.**/
+	function __Table(head, foot, caption) {
+		if (!(this instanceof __Table))	return new __Table(head, foot, caption);
+		let check1 = __Type(head);
+		let check2 = __Type(foot);
+		Object.defineProperties(this, {
+			_head:    {value: check1.finite ? check1.value : -1},
+			_foot:    {value: check2.finite ? check2.value : -1},
+			_caption: {value: caption !== null && caption !== undefined ? String(caption).trim() : ""},
+			_matrix:  {value: null, writable: true},
+			_table:   {value: null, writable: true},
+			_csv:     {value: null, writable: true},
+		});
+	}
+
+	Object.defineProperties(__Table.prototype, {
+		constructor: {value: __Table},
+		/**. ``''array'' matrix``: Retorna ou define uma matriz a partir de um vetor de duas dimensões.**/
+		matrix: {
+			set: function(input) {
+				if (!__Type(input).array) return;
+				let matrix = input.slice();
+				let count  = 0;
+				let i = -1;
+				while(++i < matrix.length) {
+					if (!__Type(matrix[i]).array) return;
+					if (matrix[i].length > count) count = matrix[i].length;
+					matrix[i].forEach(function(v,i,a) {a[i] = String(v);});
+				}
+				/* acertando quantidade de colunas */
+				matrix.forEach(function(v,i,a) {
+					while (v.length < count) a[i].push("");
+				});
+				/* redefinindo dados */
+				this._matrix = matrix;
+				this._table  = null;
+				this._csv    = null;
+				return;
+			},
+			get: function() {
+				return this._matrix === null ? [] : this._matrix;
+			}
+		},
+		/**. /**. ``''node'' table``: Define ou retorna uma matriz a partir de um elemento HTML ``table``.**/
+		table: {
+			set: function(input) {
+				if (!__Type(input).node) return;
+				let nodes  = ["table", "thead", "tbody", "tfoot"];
+				let tag    = input.tagName.toLowerCase();
+				let matrix = [];
+				if (nodes.indexOf(tag) < 0) return;
+				if (tag === "table") {
+					let childs = input.children;
+					let i = -1;
+					while (++i < childs.length) {
+						let object = __Table(this._head, this._foot, this._caption);
+						object.table = childs[i];
+						let vector = object.matrix;
+						let j = -1;
+						while (++j < vector.length) matrix.push(vector[j]);
+					}
+				} else {
+					let tr  = input.children;
+					let i   = -1;
+					while (++i < tr.length) {
+						let row = [];
+						let td  = tr[i].children;
+						let j   = -1;
+						while (++j < td.length) {
+							row.push(td[j].textContent);
+						}
+						matrix.push(row);
+					}
+				}
+				/* redefinindo dados */
+				this.matrix = matrix;
+				return;
+			},
+			get: function() {
+				if (this._table !== null) return this._table.cloneNode(true);
+				let table   = document.createElement("TABLE");
+				let thead   = document.createElement("THEAD");
+				let tbody   = document.createElement("TBODY");
+				let tfoot   = document.createElement("TFOOT");
+				let caption = document.createElement("CAPTION");
+				let length  = this.matrix.length;
+				let head    = this._head;
+				let foot    = this._foot;
+				let title   = this._caption;
+				let i = -1;
+				while (++i < length) {
+					let row = this.matrix[i];
+					let tr  = document.createElement("TR");
+					let j   = -1;
+					while (++j < row.length) {
+						let td = document.createElement(i < head ? "TH" : "TD");
+						td.textContent = row[j];
+						tr.appendChild(td);
+					}
+					if (i < head)
+						thead.appendChild(tr);
+					else if (i >= (length - foot))
+						tfoot.appendChild(tr);
+					else
+						tbody.appendChild(tr);
+				}
+				caption.textContent = title;
+				table.appendChild(caption);
+				table.appendChild(thead);
+				table.appendChild(tbody);
+				table.appendChild(tfoot);
+				this._table = table;
+				return this._table;
+			}
+		},
+		/**. ``''string'' csv``: Define ou retorna uma matriz pelo formato CSV.**/
+		csv: {
+			set: function(input) {
+				/* redefinindo dados */
+				this.matrix = __String(input).csv;
+				return;
+			},
+			get: function() {
+				if (this._csv !== null) return this._csv;
+				let csv = [];
+				let i   = -1;
+				while (++i < this.matrix.length) {
+					let line = [];
+					let row  = this.matrix[i];
+					let j = -1;
+					while (++j < row.length) {
+						let text = row[j];
+						if ((/(\t|\n)/).test(text)) text = "\""+text+"\"";
+						line.push(text);
+					}
+					csv.push(line.join("\t"))
+				}
+				this._csv = csv.join("\n");
+				return this._csv;
+			}
+		},
+		cell: {
+			value: function(area) {
+				let cell = {
+					area: String(area).trim(),
+					ref: {row: 0, col: 1},
+					axes: function() {
+						let re1 = /^(\d+\-?|\d+\-\d+|\-\d+)\:?$/;
+						let re2 = /^\:(\d+\-?|\d+\-\d+|\-\d+)$/
+						let re3 = /^(\d+\-?|\d+\-\d+|\-\d+)\:(\d+\-?|\d+\-\d+|\-\d+)$/;
+						if (re1.test(this.area)) return "10";
+						if (re2.test(this.area)) return "01";
+						if (re3.test(this.area)) return "11";
+						return "00";
+					},
+					limit: function(axis) {//FIXME essa porra tá errada
+						let item = this.ref[axis];
+						let data = this.area.split(":")[item].trim();
+						if ((/^\d+$/).test(data))      return "100";
+						if ((/^\d+\-$/).test(data))    return "110";
+						if ((/^\d+\-\d+$/).test(data)) return "111";
+						if ((/^\-\d+$/).test(data))    return "011";
+						return "000";
+					},
+					delta: function(axis) {
+						let item = this.ref[axis];
+						let axes = this.axes();
+						if (axes[item] === "0") return {a: -Infinity, b: +Infinity};
+						let value = this.area.split(":")[item].trim().split("-");
+						let limit = this.limit(axis);
+						switch(limit) {
+							case "100": return {a: Number(value[0]), b: Number(value[0])};
+							case "110": return {a: Number(value[0]), b:        +Infinity};
+							case "111": return {a: Number(value[0]), b: Number(value[1])};
+							case "011": return {a:        -Infinity, b: Number(value[1])};
+						}
+						return {a: -Infinity, b: +Infinity};
+					}
+				};
+				let data = [];
+				let row  = cell.delta("row");
+				let col  = cell.delta("col");
+				console.log({row: row, col: col, XY: cell.axes(), ROW: cell.limit("row"), COL: cell.limit("col")})
+				let l = -1;
+				while(++l < this.matrix.length) {
+					if (l < row.a || l > row.b) continue;
+					let c = -1;
+					while(++c < this.matrix[l].length) {
+						if (c < col.a || c > col.b) continue;
+						data.push(this.matrix[l][c]);
+					}
+				}
+				return data;
+			}
+		}
+
+
+
+	});
+
+
+
+
+
+
+
+
+
+
 
 /*============================================================================*/
 	/**### Requisições e Arquivos
@@ -5220,31 +5433,6 @@ const wd = (function() {
 		return false;
 	}
 
-/*----------------------------------------------------------------------------*/
-	function wd_html_table_array(elem) { /* transforma os dados de uma tabela (table) em matriz */
-		let tag = wd_html_tag(elem);
-		if (["tfoot", "tbody", "thead", "table"].indexOf(tag) < 0) return null;
-		let data = [];
-		let rows = elem.rows;
-		for (let row = 0; row < rows.length; row++) {
-			let cols = wd_vtype(rows[row].children).value;
-			if (data[row] === undefined) data.push([]);
-			for (let col = 0; col < cols.length; col++) {
-				if (data[row][col] === undefined) data[row].push([]);
-				let val = wd_vtype(cols[col].textContent);
-				if (val.type === "time") val = wd_time_iso(val.value); else
-				if (val.type === "date") val = wd_date_iso(val.value);
-				else val = val.value;
-				data[row][col] = val;
-			}
-		}
-		return data;
-	}
-
-
-
-
-
 
 
 
@@ -5971,8 +6159,8 @@ const wd = (function() {
 			}
 		},
 		/**. ``''self'' repeat(''array'' list)``: Repete elementos a partir de um modelo substituindo os valores entre chaves duplos ({{nome}}) pelos valores dos itens (objetos) do argumento ``list``.**/
-		load: {
-			repeat: function(list) {
+		repeat: {
+			value: function(list) {
 				this.forEach(function(v,i) {__Node(v).repeat(list);});
 				return this;
 			}
@@ -6109,7 +6297,7 @@ const wd = (function() {
 			request:  {value: function(){return __Request.apply(null, Array.prototype.slice.call(arguments));}},
 			query:    {value: function(){return __Query.apply(null, Array.prototype.slice.call(arguments));}},
 			svg:      {value: function(){return __SVG.apply(null, Array.prototype.slice.call(arguments));}},
-			matrix:   {value: function(){return __Table.apply(null, Array.prototype.slice.call(arguments));}},
+			table:    {value: function(){return __Table.apply(null, Array.prototype.slice.call(arguments));}},
 			url:      {value: function(){return __URL.apply(null, Array.prototype.slice.call(arguments));}},
 			LANG:     {value: __LANG},
 			TYPE:     {value: __TYPE},
