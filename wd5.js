@@ -3685,7 +3685,7 @@ const wd = (function() {
 /*----------------------------------------------------------------------------*/
 
 	/**#### Tabela
-	###### ``**constructor** ''object'' __Table(''integer'' head, ''integer'' foot, ''string'' caption)``
+	###### ``**constructor** ''object'' __Table(''boolean'' head, ''boolean'' foot)``
 	Construtor para obter dados de tabela e matrizes.**/
 	function __Table(head, foot) {
 		if (!(this instanceof __Table))	return new __Table(head, foot);
@@ -3703,58 +3703,71 @@ const wd = (function() {
 		table.appendChild(tfoot);
 
 		Object.defineProperties(this, {
-			_head:  {value: check1.finite ? check1.value : 0},
-			_foot:  {value: check2.finite ? check2.value : 0},
+			_head:  {value: check1.boolean ? check1.value : true},
+			_foot:  {value: check2.boolean ? check2.value : false},
 			_table: {value: table},
 		});
 	}
 
 	Object.defineProperties(__Table.prototype, {
 		constructor: {value: __Table},
-		clear: {
-			value: function() {
-				while (this._table.tHead.childElementCount > 0)
-					this._table.tHead.removeChild(this._table.tHead.children[0]);
-				while (this._table.tBodies[0].childElementCount > 0)
-					this._table.tBodies[0].removeChild(this._table.tBodies[0].children[0]);
-				while (this._table.tFoot.childElementCount > 0)
-					this._table.tFoot.removeChild(this._table.tFoot.children[0]);
+
+		/**. ``''array'' grid``: Retorna um array de duas dimensões contendo as células da tabela.**/
+		grid: {
+			get: function() {
+				let tags = ["tbody", "thead", "tfoot"];
+				let grid = [];
+				let tabs = Array.prototype.slice.call(this._table.children);
+				tabs.forEach(function (tab,t,at) {
+					if (tags.indexOf(tab.tagName.toLowerCase()) < 0) return;
+					let rows = Array.prototype.slice.call(tab.children);
+					rows.forEach(function(row,r,ar) {
+						let cols = Array.prototype.slice.call(row.children);
+						grid.push(cols);
+					});
+				});
+				return grid;
 			}
 		},
+		/**. ``''void'' clear()``: Remove dados da tabela.**/
+		clear: {
+			value: function() {
+				let tabs = Array.prototype.slice.call(this._table.children);
+				tabs.forEach(function (tab,t,at) {
+					let rows = Array.prototype.slice.call(tab.children);
+					rows.forEach(function(row,r,ar) {
+						row.parentElement.removeChild(row);
+					});
+				});
+				this.caption = "";
+			}
+		},
+		/**. ``''integer'' cols``: Retorna a quantidade de colunas da tabela.**/
+		cols: {
+			get: function() {return this.grid[0].length;}
+		},
+		/**. ``''integer'' rows``: Retorna a quantidade de linhas da tabela.**/
+		rows: {
+			get: function() {return this.grid.length;}
+		},
+		/**. ``''string'' caption``: Define ou retorna o valor do título da tabela.**/
 		caption: {
 			get: function()  {return this._table.caption.textContent;},
 			set: function(x) {this._table.caption.textContent = String(x);}
 		},
-
-
-
-
-
-		/**. ``''array'' matrix(''array'' input)``: Se o argumento ``input`` for uma matriz de duas domensões, seus valores definirão a tabela, caso contrário retornará a matriz já definida.**/
+		/**. ``''array'' matrix(''array'' input)``: Define e retorna os dados da tabela a partir de um array (``input`` é opcional).**/
 		matrix: {
 			value: function(input) {
 				/*-- retornar a matriz --*/
 				if (!__Type(input).array) {
-					/* subtabelas */
-					let rows   = [];
-					let tables = Array.prototype.slice.call(this._table.children);
-					tables.forEach(function(table,t,at) {
-						let tag  = table.tagName.toLowerCase();
-						let tags = ["thead", "tbody", "tfoot"]
-						if (tags.indexOf(tag) < 0) return;
-						let tr = Array.prototype.slice.call(table.children);
-						tr.forEach(function(v,i,a) {rows.push(v);});
-					});
-					/*-- linhas/colunas --*/
-					let matrix = [];
-					rows.forEach(function(row,r,ar) {
-						let cols = Array.prototype.slice.call(row.children);
-						cols.forEach(function(v,i,a) {a[i] = v.textContent;})
-						matrix.push(cols);
+					let matrix = this.grid.slice();
+					matrix.forEach(function(row,r,ar) {
+						row.forEach(function(col,c,ac) {
+							ac[c] = col.textContent;
+						});
 					});
 					return matrix;
 				}
-
 				/*-- definir a tabela --*/
 				let matrix = input.slice();
 				let count  = 0;
@@ -3767,19 +3780,19 @@ const wd = (function() {
 				matrix.forEach(function(v,i,a) {
 					while (v.length < count) a[i].push("");
 				});
-				/* agrupando nós da tabela (IMPORTANTE o clear, serve para todos) */
+				/* definindo nova tabela */
 				this.clear();
 				let self = this;
-				matrix.forEach(function(row,i,a) {
+				matrix.forEach(function(row,r,ar) {
 					let tr = document.createElement("TR");
-					if (i < self._head)
+					if (r === 0 && self._head)
 						self._table.tHead.appendChild(tr);
-					else if (i >= (a.length - self._foot))
+					else if (r === (ar.length - 1) && self._foot)
 						self._table.tFoot.appendChild(tr);
 					else
 						self._table.tBodies[0].appendChild(tr);
-					row.forEach(function(col,j,b) {
-						let cell = document.createElement(i < self._head ? "TH" : "TD");
+					row.forEach(function(col,c,ac) {
+						let cell = document.createElement((r === 0 && self._head) ? "TH" : "TD");
 						cell.textContent = col;
 						tr.appendChild(cell);
 					});
@@ -3787,8 +3800,8 @@ const wd = (function() {
 				return this.matrix();
 			},
 		},
-		/**. ``''node'' table(''node'' input)``: Se o argumento ``input`` for um nó de tabela ou seus subgrupos, seus valores definirão a tabela, caso contrário retornará a tabela já definida.**/
-		table: {
+		/**. ``''node'' html(''node'' input)``: Define e retorna os dados da tabela a partir de uma tabela HTML (``input`` é opcional).**/
+		html: {
 			value: function(input) {
 				/*-- retornar a tabela --*/
 				if (!__Type(input).node) return this._table;
@@ -3802,7 +3815,9 @@ const wd = (function() {
 						let childs = Array.prototype.slice.call(input.children);
 						let object = __Table(this._head, this._foot);
 						childs.forEach(function (v,i,a) {
-							object.table(v);
+							let node = v.tagName.toLowerCase();
+							if (nodes.indexOf(node) < 0) return;
+							object.html(v);
 							let vector = object.matrix();
 							vector.forEach(function(r,j,b) {matrix.push(r);});
 						});
@@ -3814,25 +3829,20 @@ const wd = (function() {
 						break;
 					}
 					default: {
-						let tr = input.children;
-						let i  = -1;
-						while (++i < tr.length) {
-							let row = [];
-							let td  = tr[i].children;
-							let j   = -1;
-							while (++j < td.length) {
-								row.push(td[j].textContent);
-							}
-							matrix.push(row);
-						}
+						let rows = Array.prototype.slice.call(input.children);
+						rows.forEach(function(row,r,ar) {
+							let cols = Array.prototype.slice.call(row.children);
+							cols.forEach(function(col,c,ac) {ac[c] = col.textContent;});
+							matrix.push(cols);
+						});
 					}
 				}
 				/* redefinindo dados */
 				this.matrix(matrix);
-				return this.table();
+				return this.html();
 			}
 		},
-		/**. ``''string'' csv(''string'' input)``: Se o argumento ``input`` for uma string no formato CSV, seus valores definirão a tabela, caso contrário retornará os dados existente em CSV.**/
+		/**. ``''string'' csv(''string'' input)``: Define e retorna os dados da tabela a partir do formato CSV (``input`` é opcional).**/
 		csv: {
 			value: function(input) {
 				/*-- retornando CSV --*/
@@ -3851,89 +3861,9 @@ const wd = (function() {
 				return this.csv();
 			}
 		},
-		cols: {
-			get: function() {return this.matrix()[0].length;}
-		},
-		rows: {
-			get: function() {return this.matrix().length;}
-		},
-
-
-		/**
-		- Número indica a linha ou coluna (a partir de zero);
-		- Asterisco corresponde a qualquer linha ou coluna;
-		- Vírgula é o separador de linha e coluna;
-		- Dois pontos é o separador entre a célula inicial e final; e
-		- Ponto e vírgula é o separador de células
-
-		|Código|Descrição|
-		|1,2|Célula contida na linha 1 e coluna 2|
-		|1,2:1,4|Conjunto de células da coluna 2 a 4 da linha 1|
-		|1,*|Todas as células da linha 1|
-		|*,0|Todas as células da coluna 0|
-		|1,2;2,3|Células da linha 1 coluna 2 e linha 2 coluna 3|
-
-
-		**/
-		cell: {
-			value: function(point, value) {
-				let data = String(point).split(";");
-				let list = [];
-				/*-- múltiplos grupos --*/
-				if (data.length > 1) {
-					let self = this;
-					data.forEach(function(v,i,a) {
-						let subList = self.cell(v);
-						subList.forEach(function (x,y,z) {list.push(x);});
-					});
-					return list;
-				}
-				/*-- único grupo --*/
-				data   = data.join("").replace(/\s+/g, "");
-				let re = /^([0-9]+|\*)\,([0-9]+|\*)(\:([0-9]+|\*)\,([0-9]+|\*))?$/;
-				if (!re.test(data)) return list;
-				let limit  = data.split(":");
-				let init   = limit[0].split(",");
-				let end    = (limit.length > 1 ? limit[1] : limit[0]).split(",");
-				let row1   = init[0] === "*" ? init[0] : Number(init[0]);
-				let col1   = init[1] === "*" ? init[1] : Number(init[1]);
-				let row2   =  end[0] === "*" ?  end[0] : Number( end[0]);
-				let col2   =  end[1] === "*" ?  end[1] : Number( end[1]);
-				/*-- subtabelas --*/
-				let rows   = [];
-				let tables = Array.prototype.slice.call(this._table.children);
-				tables.forEach(function(table,t,at) {
-					let tag  = table.tagName.toLowerCase();
-					let tags = ["thead", "tbody", "tfoot"]
-					if (tags.indexOf(tag) < 0) return;
-					let tr = Array.prototype.slice.call(table.children);
-					tr.forEach(function(v,i,a) {rows.push(v);});
-				});
-				/*-- linhas/colunas --*/
-				let cell = [];
-				rows.forEach(function(row,r,ar) {
-					if (r < row1 && row1 !== "*") return;
-					if (r > row2 && row2 !== "*") return;
-					let cols = Array.prototype.slice.call(row.children);
-					cols.forEach(function(col,c,ac) {
-						if (c < col1 && col1 !== "*") return;
-						if (c > col2 && col2 !== "*") return;
-						cell.push(value === true ? col.textContent : {col: c, row: r, cell: col});
-					});
-				});
-				return cell;
-			}
-		},
-		plot: {
-			value: function(x, y, title) {
-
-
-
-
-			}
-		},
+		/**. ``''array'' json``: Retorna uma lista de objetos. Os atributos de cada objeto correspondem aos valores da primeira linha da tabela. Os valores desses atributos correspondem à respectiva coluna da tabela das demais linhas. Cada linha corresponde a um item da lista.**/
 		json: {
-			value: function() {
+			get: function() {
 				let matrix = this.matrix();
 				let data = [];
 				matrix.forEach(function(row,r,ar) {
@@ -3944,7 +3874,84 @@ const wd = (function() {
 				});
 				return data;
 			}
-		}
+		},
+		
+
+
+		/** FIXME colocar a descrição
+		- Número indica a linha ou coluna da célula (a partir de zero);
+		- Ponto representa o número da última linha ou coluna;
+		- Asterisco corresponde a qualquer número de linha ou coluna;
+		- Vírgula é o separador de linha e coluna (linha,coluna);
+		- Dois pontos é o separador entre a célula inicial e final; e
+		- Ponto e vírgula é o separador de grupos de células.
+
+		|Código|Descrição|
+		|1,2|Célula contida na linha 1 e coluna 2|
+		|.,2|Célula localizada na última linha da coluna 2|
+		|1,.|Célula localizada na última coluna da linha 1|
+		|*,2|Qualquer linha da coluna 2|
+		|1,*|Qualquer coluna da linha 1|
+		|1,3:2,4|Todas as células contidas entre as linhas 1 e 2 e colunas 3 e 4|
+		|1,*|Todas as células da linha 1|
+		|*,0|Todas as células da coluna 0|
+		|1,2;2,3|Células da linha 1 coluna 2 e linha 2 coluna 3|
+
+
+		**/
+		cell: {
+			value: function(area, value) {
+				let data = String(area).split(";");
+				let cell = [];
+				/*-- múltiplos grupos --*/
+				if (data.length > 1) {
+					let self = this;
+					data.forEach(function(v,i,a) {
+						let subList = self.cell(v, value);
+						subList.forEach(function (x,y,z) {cell.push(x);});
+					});
+					return cell;
+				}
+				/*-- checando parâmetro --*/
+				data   = data.join("").replace(/\s+/g, "");
+				let re = /^(\d+|[*.])\,(\d+|[*.])(\:(\d+|[*.])\,(\d+|[*.]))?$/;
+				if (!re.test(data)) data = "*,*";
+				let gap  = data.split(":");
+				let init = gap[0].split(",");
+				let end  = (gap.length > 1 ? gap[1] : gap[0]).split(",");
+				let drow = {init: init[0], end: end[0]};
+				let dcol = {init: init[1], end: end[1]};
+				for (let i in drow) {
+					if (drow[i] !== "*")
+						drow[i] = drow[i] === "." ? (this.rows - 1) : Number(drow[i]);
+				}
+				for (let i in dcol) {
+					if (dcol[i] !== "*")
+						dcol[i] = dcol[i] === "." ? (this.cols - 1) : Number(dcol[i]);
+				}
+				/*-- capturando células definidas --*/
+				let grid = value === true ? this.matrix() : this.grid;
+				grid.forEach(function(row,r,ar) {
+					if (drow.init !== "*" && r < drow.init) return;
+					if (drow.end  !== "*" && r > drow.end ) return;
+					row.forEach(function(col,c,ac) {
+						if (dcol.init !== "*" && c < dcol.init) return;
+						if (dcol.end  !== "*" && c > dcol.end ) return;
+						cell.push(value === true ? col : {col: c, row: r, cell: col});
+					});
+				});
+				return cell;
+			}
+		},
+		plot: {
+			value: function() {
+
+
+
+
+			}
+		},
+		
 	});
 
 
