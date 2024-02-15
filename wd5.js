@@ -3915,7 +3915,7 @@ const wd = (function() {
 				/*-- checando parâmetro --*/
 				data   = data.join("").replace(/\s+/g, "");
 				let re = /^(\d+|[*.])\,(\d+|[*.])(\:(\d+|[*.])\,(\d+|[*.]))?$/;
-				if (!re.test(data)) data = "*,*";
+				if (!re.test(data)) return cell;
 				let gap  = data.split(":");
 				let init = gap[0].split(",");
 				let end  = (gap.length > 1 ? gap[1] : gap[0]).split(",");
@@ -3944,11 +3944,26 @@ const wd = (function() {
 			}
 		},
 		plot: {
-			value: function() {
-
-
-
-
+			value: function(options) {
+				//(x, y, label, option)
+				if (!__Type(options).object) return null;
+				let chart = __Plot2D(options.ratio);
+				if ("xLabel" in options) chart.xLabel = options.xLabel;
+				if ("yLabel" in options) chart.yLabel = options.yLabel;
+				if ("title"  in options) chart.title  = options.title;
+				if ("cols"   in options) {
+					let cols = options.cols.split(";");
+					let i = -1;
+					while (++i < cols.length) {
+						let data = cols[i].replace(/\s+/, "").split(":");
+						let x = this.cell("1,"+data[0]+":.,"+data[0], true);
+						let y = this.cell("1,"+data[1]+":.,"+data[1], true);
+						let l = this.cell("0,"+data[1], true);
+						let o = data[2];
+						chart.add(x, y, l, o);
+					}
+				}
+				return chart.plot();
 			}
 		},
 		
