@@ -5269,17 +5269,17 @@ const wd = (function() {
 		/**. ``''string'' xLabel``: Define ou retorna o valor do rótulo do eixo x.**/
 		xLabel: {
 			get: function()  {return this._xLabel;},
-			set: function(x) {this._xLabel = String(x);}
+			set: function(x) {this._xLabel = x === null || x === undefined ? "X Label" : String(x);}
 		},
 		/**. ``''string'' yLabel``: Define ou retorna o valor do rótulo do eixo y.**/
 		yLabel: {
 			get: function()  {return this._yLabel;},
-			set: function(x) {this._yLabel = String(x);}
+			set: function(x) {this._yLabel = x === null || x === undefined ? "Y Label" : String(x);}
 		},
 		/**. ``''string'' title``: Define ou retorna o valor do título do gráfico.**/
 		title: {
 			get: function()  {return this._title;},
-			set: function(x) {this._title = String(x);}
+			set: function(x) {this._title = x === null || x === undefined ? "Title" : String(x);}
 		},
 		/**. ``''string'' xAxis``: Define ou retorna o tipo de dado do eixo ``x``: ''number'', ''date'', ''time'' ou ''datetime''**/
 		xAxis: {
@@ -5312,7 +5312,7 @@ const wd = (function() {
 			value: function(x, y, label, option) {
 				let xdata = __Type(x);
 				let ydata = __Type(y);
-				label = String(label).trim();
+				label = label === null || label === undefined ? "Label ?" : String(label).trim();
 
 				/*----------------------------------------------------------------------
 					gráfico proporcional
@@ -5637,7 +5637,7 @@ const wd = (function() {
 				return this;
 			}
 		},
-		/**. ``''self'' send(''string'' target, ''object'' options)``: Lê arquivos. O argumento ``target``é o alvo da requisição e o argumento ``options`` é um objeto que define os atributos da requisição (maxtime, user, password, header, method, onchange e ondone). (ver ``__Request.send``)**/
+		/**. ``''self'' send(''string'' target, ''object'' options)``: Lê arquivos. O argumento ``target`` é o alvo da requisição e o argumento ``options`` é um objeto que define os atributos da requisição (maxtime, user, password, header, method, onchange e ondone). (ver ``__Request.send``)**/
 		send: {
 			value: function (target, options) {
 				let url = __URL(target);
@@ -5650,7 +5650,7 @@ const wd = (function() {
 				switch(this.type) {
 					case "node": {
 						let submit = this.submit;
-						/* não enviar se não houver dados no caso de nó HTML */
+						/* não requisitar se não houver dados para nó HTML (erro no formulário) */
 						if (submit === null) return this;
 						submit.forEach(function (v,i,a) {url.append(v.name, v.value);});
 						break;
@@ -5688,22 +5688,50 @@ const wd = (function() {
 				let request = new __Request(head ? url.target : target);
 				for (let i in opt) request[i] = opt[i];
 				request.send(pack);
+				return this;
 			}
 		},
-		/**. ``''void'' signal(''string'' title)``: Renderiza uma mensagem.**/
+		/**. ``''self'' signal(''string'' title)``: Renderiza uma mensagem.**/
 		signal: {
 			value: function(title) {
 				__SIGNALCONTROL.open(this.toString(), title);
-				return this.type === "dom" ? this : null;
+				return this;
 			}
 		},
-		/**. ``''void'' signal(''string'' title)``: Renderiza uma mensagem.**/
+		/**. ``''self'' signal(''string'' title)``: Renderiza uma notificação. Se o tipo de dado for **/
 		notify: { /*renderizar notificação*/
 			value: function(title) {
 				__SIGNALCONTROL.notify(this.toString(), title);
-				return this.type === "dom" ? this : null;
+				return this;
 			}
-		}
+		},
+
+
+
+		chart: {
+			value: function(options) {
+				let table = __Table();
+				switch(this.type) {
+					case "string": {
+						plot.matrix(this.csv);
+						break;
+					}
+					case "array": {
+						plot.matrix(this._value);
+						break;
+					}
+					case "node": {
+						let table = null;
+						this.forEach(function (v,i) {
+							if (plot.rows !== 0) return;
+							plot.table(v)
+						});
+						break;
+					}
+				}
+				return table.plot(options);
+			}
+		},
 	});
 
 /*----------------------------------------------------------------------------*/
@@ -6458,8 +6486,11 @@ const wd = (function() {
 	Função vinculada ao atributo HTML ``data-wd-chart`` cujo objetivo é criar um gráfico 2D a partir de uma tabela, um arquivo CSV ou parâmetros de dados como filho do elemento possuidor do atributo. Possui múltiplos atributos e grupo único:
 	|Nome|Descrição|Obrigatório|
 	|path|Caminho para o arquivo CSV a ser carregado|Não|
-	|$|Seletor CSS da tabela HTML (será ignorado se path for informado)|Não|
+	|table|Seletor CSS que indica a tabela de dados (será ignorado se path for informado)|Não|
+	|$ ou $$|Seletor(es) CSS do formulário com os parâmetros da requição|Não|
 	|method|Tipo de requisição HTTP, ver WD.send (se path for informado)|Não|
+
+
 
 	Para informar funções nos parâmetros, deverá ser informado seu nome e a função deve estar dentro do escopo principal (window) utilizando as palavras chaves ``var`` ou ``function``.
 
@@ -6497,11 +6528,11 @@ const wd = (function() {
 
 
 
-		/*Função para  capturar dados da plotagem */
+		/*Função para  capturar dados da plotagem * /
 		let buildChart = function(input) {
 			let cell = WD(input.matrix);
 			if (cell.type !== "array") return;
-			/* obtendo os valores da matriz */
+			/* obtendo os valores da matriz * /
 			for (let i = 0; i < input.data.length; i++) {
 				input.data[i].x     = cell.cell(input.data[i].x);
 				input.data[i].y     = cell.cell(input.data[i].y);
@@ -6509,11 +6540,11 @@ const wd = (function() {
 			}
 			return WD(input.elem).chart(input.data, input.title, input.xlabel, input.ylabel);
 		}
-		/* obtendo informações sobre a fonte de dados */
+		/* obtendo informações sobre a fonte de dados * /
 		let data   = wd_html_dataset_value(e, "wdChart")[0];
 		let target = WD(e);
 		let source = "path" in data ? "file" : "table";
-		/* obtendo dados das plotagens (por referência xref, yref, lref) */
+		/* obtendo dados das plotagens (por referência xref, yref, lref) * /
 		let labels = "labels" in data ? data.labels.split(",") : ["Title", "X axis", "Y axis"];
 		let cols   = "cols"   in data ? data.cols.split(",")   : [0, 1];
 		let input  = {
@@ -6525,14 +6556,14 @@ const wd = (function() {
 			matrix: null,
 		};
 		let xref   = "1-:"+cols[0].replace(/[^0-9]/g, "");
-		for (let i = 1; i < cols.length; i++) { /* looping começa a partir de 1 (colunas em y) */
+		for (let i = 1; i < cols.length; i++) { /* looping começa a partir de 1 (colunas em y) * /
 			let info = cols[i].split(":");
 			let yref = "1-:"+info[0].replace(/[^0-9]/g, "");
 			let lref = "0:"+info[0].replace(/[^0-9]/g, "");
 			let type = info.length === 2 ? info[1].trim() : null;
 			input.data.push({x: xref, y: yref, label: lref, type: type});
 		}
-		/* obtendo a matriz e executando */
+		/* obtendo a matriz e executando * /
 		if (source === "file") {
 			let file   = data.path;
 			let method = data.method;
@@ -6551,6 +6582,11 @@ const wd = (function() {
 			buildChart(input);
 		}
 		/* limpando atributo */
+
+
+
+
+
 		target.data({wdChart: null});
 		return;
 	}
