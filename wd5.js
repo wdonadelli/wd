@@ -3943,25 +3943,35 @@ const wd = (function() {
 				return cell;
 			}
 		},
+
+
+
+
 		plot: {
 			value: function(options) {
 				//(x, y, label, option)
 				if (!__Type(options).object) return null;
+				let self  = this;
 				let chart = __Plot2D(options.ratio);
 				if ("xLabel" in options) chart.xLabel = options.xLabel;
 				if ("yLabel" in options) chart.yLabel = options.yLabel;
 				if ("title"  in options) chart.title  = options.title;
-				if ("cols"   in options) {
-					let cols = options.cols.split(";");
-					let i = -1;
-					while (++i < cols.length) {
-						let data = cols[i].replace(/\s+/, "").split(":");
-						let x = this.cell("1,"+data[0]+":.,"+data[0], true);
-						let y = this.cell("1,"+data[1]+":.,"+data[1], true);
-						let l = this.cell("0,"+data[1], true);
-						let o = data[2];
-						chart.add(x, y, l, o);
-					}
+				if ("xAxis"  in options) chart.xAxis  = options.xAxis;
+				if ("table"  in options && __Type(options.table).array) {
+					options.table.forEach(function(v,i,a) {
+						if (!__Type(v).object) return;
+						let x     = self.cell("1,"+v.x+":.,"+v.x, true);
+						let y     = self.cell("1,"+v.y+":.,"+v.y, true);
+						let label = "label" in v ? v.label : self.cell("0,"+v.y, true);
+						let fit   = v.fit;
+						chart.add(x, y, label, fit);
+					});
+				}
+				if ("data"  in options && __Type(options.data).array) {
+					options.data.forEach(function(v,i,a) {
+						if (__Type(v).object)
+							chart.add(v.x, v.y, v.label, v.fit);
+					});
 				}
 				return chart.plot();
 			}
@@ -6419,7 +6429,7 @@ const wd = (function() {
 	|path|Caminho para o arquivo JSON ou CSV a ser carregado|Sim|
 	|method|Tipo de requisição HTTP, ver WD.send|Não|
 	|$ ou $$|Seletor(es) CSS do formulário com os parâmetros da requição|Não|**/
-	function data_wdRepeat(e) { /* Repete modelo HTML: data-wd-repeat=path{file}method{get|post}${form} */
+	function data_wdRepeat(e) {
 		if (!("wdRepeat" in e.dataset)) return;
 
 		let data   = __String(e.dataset.wdRepeat).wdNotation[0];
@@ -6429,36 +6439,63 @@ const wd = (function() {
 		WD(query).send(data.path, {
 			method: data.method,
 			ondone: function(x) {
-				target.repeat(x.json);
-				//FIXME inserir possibilidade de CSV
+				let json  = x.json;
+				if (__type(json).array) {
+					return target.repeat(x.json);
+				}
+				let csv = x.csv;
+				if (__type(csv).array) {
+					let table = __Table();
+					table.matrix(csv);
+					return target.repeat(table.json);
+				}
 			}
 		});
-
-		/* carregar arquivo e executar
-		exec.send(file, function(x) {
-			if (x.closed) {
-				let json = x.json;
-				let csv  = x.csv;
-
-				if (wd_vtype(json).type === "array")
-					target.repeat(json);
-				else if (wd_vtype(csv).type === "array")
-					target.repeat(wd_matrix_object(x.csv));
-				else
-					target.repeat([]);
-				return;
-			}
-		}, method);
-		return;*/
 	};
 
 /*----------------------------------------------------------------------------*/
-	function data_wdChart(e) { /* define um gráfico data-wd-chart="..." */
-		/*--------------------------------------------------------------------------
-		| tabela:  ${table}cols{x,y1:type1,y2:type2...}labels{title,x,y}
-		| arquivo: path{file}method{...}${form}cols{x,y1:type1,y2:type2...}labels{title,x,y}
-		\-------------------------------------------------------------------------*/
+	/**###### ``**function** ''void'' data_wdChart(''node''  e)``
+	Função vinculada ao atributo HTML ``data-wd-chart`` cujo objetivo é criar um gráfico 2D a partir de uma tabela, um arquivo CSV ou parâmetros de dados como filho do elemento possuidor do atributo. Possui múltiplos atributos e grupo único:
+	|Nome|Descrição|Obrigatório|
+	|path|Caminho para o arquivo CSV a ser carregado|Não|
+	|$|Seletor CSS da tabela HTML (será ignorado se path for informado)|Não|
+	|method|Tipo de requisição HTTP, ver WD.send (se path for informado)|Não|
+
+	Para informar funções nos parâmetros, deverá ser informado seu nome e a função deve estar dentro do escopo principal (window) utilizando as palavras chaves ``var`` ou ``function``.
+
+	**/
+	function data_wdChart(e) {
 		if (!("wdChart" in e.dataset)) return;
+
+		let data   = __String(e.dataset.wdChart).wdNotation[0];
+		let query  = __Query.$$$(data);
+		let target = WD(e);
+		target.set({dataset: {wdChart: null}});
+
+		/* acertando atributos complexos */
+		let attrs = ["table", "data"];
+		let i = -1;
+		while (++i < attrs.length) {
+			let attr = attrs[i];
+			if (attr in data) {
+				let j = -1;
+				while (++j < data[attr].length) {
+					data[attr][j] = __String(data[attr][j]).wdNotation[0];
+					if (attr === "data" && data[attr][j].y in window) {
+						if (__Type(window[data[attr][j].y]).function)
+							data[attr][j].y = window[data[attr][j].y];
+					}
+				}
+			}
+		}
+		/* plotando gráfico */
+		let plot = __Table();
+
+
+
+
+
+
 
 		/*Função para  capturar dados da plotagem */
 		let buildChart = function(input) {
