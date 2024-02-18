@@ -5713,18 +5713,18 @@ const wd = (function() {
 				let table = __Table();
 				switch(this.type) {
 					case "string": {
-						plot.matrix(this.csv);
+						table.matrix(this.csv);
 						break;
 					}
 					case "array": {
-						plot.matrix(this._value);
+						table.matrix(this._input);
 						break;
 					}
 					case "node": {
 						let table = null;
 						this.forEach(function (v,i) {
-							if (plot.rows !== 0) return;
-							plot.table(v)
+							if (table.rows !== 0) return;
+							table.table(v)
 						});
 						break;
 					}
@@ -6469,7 +6469,7 @@ const wd = (function() {
 			ondone: function(x) {
 				let json  = x.json;
 				if (__type(json).array) {
-					return target.repeat(x.json);
+					return target.repeat(json);
 				}
 				let csv = x.csv;
 				if (__type(csv).array) {
@@ -6503,7 +6503,7 @@ const wd = (function() {
 		let target = WD(e);
 		target.set({dataset: {wdChart: null}});
 
-		/* acertando atributos complexos */
+		/* acertando nomes de funções para funções */
 		let attrs = ["table", "data"];
 		let i = -1;
 		while (++i < attrs.length) {
@@ -6519,75 +6519,26 @@ const wd = (function() {
 				}
 			}
 		}
+
 		/* plotando gráfico */
-		let plot = __Table();
-
-
-
-
-
-
-
-		/*Função para  capturar dados da plotagem * /
-		let buildChart = function(input) {
-			let cell = WD(input.matrix);
-			if (cell.type !== "array") return;
-			/* obtendo os valores da matriz * /
-			for (let i = 0; i < input.data.length; i++) {
-				input.data[i].x     = cell.cell(input.data[i].x);
-				input.data[i].y     = cell.cell(input.data[i].y);
-				input.data[i].label = cell.cell(input.data[i].label)[0];
-			}
-			return WD(input.elem).chart(input.data, input.title, input.xlabel, input.ylabel);
-		}
-		/* obtendo informações sobre a fonte de dados * /
-		let data   = wd_html_dataset_value(e, "wdChart")[0];
-		let target = WD(e);
-		let source = "path" in data ? "file" : "table";
-		/* obtendo dados das plotagens (por referência xref, yref, lref) * /
-		let labels = "labels" in data ? data.labels.split(",") : ["Title", "X axis", "Y axis"];
-		let cols   = "cols"   in data ? data.cols.split(",")   : [0, 1];
-		let input  = {
-			elem:   e,
-			title:  labels[0],
-			xlabel: labels[1],
-			ylabel: labels[2],
-			data:   [],
-			matrix: null,
-		};
-		let xref   = "1-:"+cols[0].replace(/[^0-9]/g, "");
-		for (let i = 1; i < cols.length; i++) { /* looping começa a partir de 1 (colunas em y) * /
-			let info = cols[i].split(":");
-			let yref = "1-:"+info[0].replace(/[^0-9]/g, "");
-			let lref = "0:"+info[0].replace(/[^0-9]/g, "");
-			let type = info.length === 2 ? info[1].trim() : null;
-			input.data.push({x: xref, y: yref, label: lref, type: type});
-		}
-		/* obtendo a matriz e executando * /
-		if (source === "file") {
-			let file   = data.path;
-			let method = data.method;
-			let pack   = __Query.$$$(data);
-			let exec   = WD(pack);
-			exec.send(file, function(x) {
-				if (x.closed) {
-					input.matrix = x.csv;
-					return buildChart(input);
+		if ("path" in data) {
+			let path = data.path;
+			delete data.path;
+			WD(query).send(path, {
+				method: data.method,
+				ondone: function(x) {
+					let csv   = x.csv;
+					if (__type(csv).array)
+						return e.appendChild(WD(csv).chart(data));
+					let json  = x.json;
+					if (__type(json).array)
+						return e.appendChild(WD(table).chart(data));
+					return e.appendChild(WD().chart(data));
 				}
-			}, method);
-		} else {
-			let table = WD(__Query.$$$(data));
-			if (table.type !== "dom") return;
-			input.matrix = table.info.table;
-			buildChart(input);
+			});
+			return;
 		}
-		/* limpando atributo */
-
-
-
-
-
-		target.data({wdChart: null});
+		e.appendChild(WD(query).chart(data));
 		return;
 	}
 
