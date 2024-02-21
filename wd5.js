@@ -2831,7 +2831,7 @@ const wd = (function() {
 		validity: {
 			set: function(msg) {
 				if (!this.form || this._cfg.send !== 1) return;
-				let meg = __TYpe(msg).nonempty ? msg.trim() : "";
+				let meg = __Type(msg).nonempty ? msg.trim() : "";
 				this.node.setCustomValidity(msg);
 			},
 			get: function() {
@@ -3386,9 +3386,7 @@ const wd = (function() {
 				this.childs(next, next);
 			}
 		},
-		/**. ``''void'' pages(''number'' index, ''number'' width)``: Agrupa os nós filhos em grupos de certo comprimento.
-		. O argumento ``index`` define o índice do grupo a ser exibido limitado ao primeiro (0) e ao último (-1). Se valores infinitos forem informados, os grupos avançarão (+) ou retrocederão (-) uma unidade.
-		. O argumento ``width`` é um número finito positivo que define o comprimento dos grupos, pode ser um número não inteiro.**/
+		/**. ``''void'' pages(''number'' index, ''number'' width)``: Agrupa os nós filhos em grupos de certo comprimento. O argumento ``index`` define o índice do grupo a ser exibido limitado ao primeiro (0) e ao último (-1). Se valores infinitos forem informados, os grupos avançarão (+) ou retrocederão (-) uma unidade. O argumento ``width`` é um número finito positivo que define o comprimento dos grupos, pode ser um número não inteiro.**/
 		pages: {
 			value: function(index, width) {
 				if (!this._elem) return;
@@ -3600,6 +3598,8 @@ const wd = (function() {
 					if (!check.finite || Math.trunc(check.value) === 0) continue;
 					args.push(Math.trunc(check.value));
 				}
+				console.log(args);
+
 				if (args.length === 0) return this.sort();
 				/*-- iniciando ordenação --*/
 				let child = __Type(this.node.children).value;
@@ -3634,12 +3634,13 @@ const wd = (function() {
 				child.forEach(function(v,i,a) {node.appendChild(v);});
 			}
 		},
-		/**. ``''void'' jump(''array'' list)``: O nó será adicionado aos elementos na ordem definida em ``list`` a cada chamada do método. O argumento ``list`` é um array de elementos que servirá como pai para o elemento especificado.**/
+		/**. ``''void'' jump(''node'' list)``: O nó será adicionado aos elementos na ordem definida em ``list`` a cada chamada do método. O argumento ``list`` é uma lista de nós que comodará o elemento.**/
 		jump: {
 			value: function(list) {
 				if (!this._elem) return;
 				let check = __Type(list);
-				list = check.array ? list : [list];
+				if (!check.node) return;
+				list = check.value;
 				let index = list.indexOf(this.node.parentElement) + 1;
 				let node  = list[index%list.length];
 				let data  = __Type(node);
@@ -6234,13 +6235,7 @@ const wd = (function() {
 				return this;
 			}
 		},
-		/**. ``''boolean'' document``: Informa se o elemento é um document HTML/XML ou um objeto window.**/
-		document: {
-			get: function() {
-				return this._data.xml || this._data.html || this._data.value[0] === window;
-			}
-		},
-		/**. ``''array'' files``: Retorna uma lista com todos os arquivos selecionados pelo campo de formulário.**/
+		/**. ``''array'' files``: Retorna uma lista com os arquivos selecionados nos campos de formulário.**/
 		files: {
 			get: function() {
 				let pack = [];
@@ -6272,14 +6267,14 @@ const wd = (function() {
 				return error ? null : data;
 			}
 		},
-		/**. ``''self'' load(''string'' html, ''boolean'' replace)``: Insere o código HTML contido em ``html`` no elemento. Se ``replace`` for verdadeiro, substituirá o elemento pelo código (**scripts serão executados**!).**/
-		load: {//FIXME inserir o argumento rum para decidir se roda script?
-			value: function(html, replace) {
-				this.forEach(function(v,i) {__Node(v).load(html, replace, true);});
+		/**. ``''self'' load(''string'' html, ''boolean'' replace, ''boolean'' run)``: Insere o código HTML contido em ``html`` no elemento. Se ``replace`` for verdadeiro, substituirá o elemento pelo código. Se ``run``for verdadeiro, rodará scripts.**/
+		load: {
+			value: function(html, replace, run) {
+				this.forEach(function(v,i) {__Node(v).load(html, replace, run);});
 				return this;
 			}
 		},
-		/**. ``''self'' repeat(''array'' list)``: Repete elementos a partir de um modelo substituindo os valores entre chaves duplos ({{nome}}) pelos valores dos itens (objetos) do argumento ``list``.**/
+		/**. ``''self'' repeat(''array'' list)``: Repete elementos a partir de um modelo. ``list`` é uma lista de objetos cujo valor do atributo substituirá o respectivo valor entre do modelo que será informado em chaves duplas ({{atributo}}).**/
 		repeat: {
 			value: function(list) {
 				this.forEach(function(v,i) {__Node(v).repeat(list);});
@@ -6297,79 +6292,101 @@ const wd = (function() {
 				return this;
 			}
 		},
-
-
-		/**. ``''self'' handler(''object'' values, remove)``: Define os atributos especificados em ``values`` com seus respectivos valores (ver __Node.handler).**/
-		handler: {
-			value: function(values, remove) {
-				this.forEach(function(v,i) {
-					let node = __Node(v).handler(values, remove);
-				});
-				return this;
-			}
-		},
-
-
-
-
-		full: {
-			value: function() {
+		nav: {  /* define exibições e inibições de elementos */
+			value: function(action, data1, data2) {
+				let check1 = __Type(data1);
+				let check2 = __Type(data2);
+				let args   = Array.prototype.slice.call(arguments);
 				this.forEach(function(v,i) {
 					let node = __Node(v);
-					for (let i in values) node.full();
+					switch(action) {
+						/*-- aplicado ao elemento --*/
+						case "show": {
+							node.show = true;
+							break;
+						}
+						case "hide": {
+							node.show = false;
+							break;
+						}
+						case "toogle": {
+							node.show = !node.show;
+							break;
+						}
+						case "jump": {
+							node.jump(data1);
+							break;
+						}
+						case "alone": {
+							node.only();
+							break;
+						}
+						case "brothers": {
+							node.only(true);
+							break;
+						}
+						case "all": {
+							node.only(true);
+							node.show = true;
+							break;
+						}
+						case "fullScreen": {
+							node.full();
+							break;
+						}
+						/*-- aplicado aos filhos do elemento --*/
+						case "nextChild": {
+							node.walk(1);
+							break;
+						}
+						case "previousChild": {
+							node.walk(-1);
+							break;
+						}
+						case "walkChild": {
+							node.walk(data1);
+							break;
+						}
+						case "children": {
+							node.childs(data1, data2);
+							break;
+						}
+						case "page": {
+							node.pages(data1, data2);
+							break;
+						}
+						case "nextPage": {
+							node.pages(+Infinity, data1);
+							break;
+						}
+						case "previusPage": {
+							node.pages(-Infinity, data1);
+							break;
+						}
+						case "firstPage": {
+							node.pages(0, data1);
+							break;
+						}
+						case "lastPage": {
+							node.pages(-1, data1);
+							break;
+						}
+						case "filter": {
+							node.filter(data1, data2);
+							break;
+						}
+						case "sort": {
+							if (!check1.finite) {
+								node.sort(data1);
+							} else {
+								args.shift();
+								node.tsort.apply(node, args);
+							}
+							break;
+						}
+					}
 				});
 				return this;
-			}
-
-		},
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-		nav: {  /* define exibições e inibições de elementos */
-			value: function(action) {
-				return this.run(wd_html_nav, action);
-			}
-		},
-		filter: {  /* exibe somente o elemento que contenha o texto casado */
-			value: function(search, chars) {
-				return this.run(wd_html_filter, search, chars);
-			}
-		},
-		page: {  /* exibe determinados grupos de elementos filhos */
-			value: function(page, size) {
-				return this.run(wd_html_page, page, size);
-			}
-		},
-		sort: { /* ordena elementos filho pelo conteúdo */
-			value: function(order, col) {
-				return this.run(wd_html_sort, order, col);
-			}
-		},
-		jump: { /* salta elementos entre seus pais (argumentos) */
-			value: function(list) {
-				return this.run(wd_html_jump, list);
-			}
-		},
-
-		chart: { /* desenha gráfico de linhas e colunas */
-			value: function(data, title, xlabel, ylabel) {
-				return wd_html_chart(this.item(0), data, title, xlabel, ylabel);
 			}
 		},
 	});
@@ -6483,18 +6500,12 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	/**###### ``**function** ''void'' data_wdChart(''node''  e)``
-	Função vinculada ao atributo HTML ``data-wd-chart`` cujo objetivo é criar um gráfico 2D a partir de uma tabela, um arquivo CSV ou parâmetros de dados como filho do elemento possuidor do atributo. Possui múltiplos atributos e grupo único:
+	Função vinculada ao atributo HTML ``data-wd-chart`` cujo objetivo é criar um gráfico 2D a partir de uma tabela, um arquivo CSV ou parâmetros de dados como filho do elemento possuidor do atributo. Possui múltiplos atributos e grupo único. Para definir funções nos parâmetros, deverá ser informado seu nome e a função deve estar dentro do escopo principal (window) utilizando as palavras chaves ``var`` ou ``function``:
 	|Nome|Descrição|Obrigatório|
 	|path|Caminho para o arquivo CSV a ser carregado|Não|
 	|table|Seletor CSS que indica a tabela de dados (será ignorado se path for informado)|Não|
 	|$ ou $$|Seletor(es) CSS do formulário com os parâmetros da requição|Não|
-	|method|Tipo de requisição HTTP, ver WD.send (se path for informado)|Não|
-
-
-
-	Para informar funções nos parâmetros, deverá ser informado seu nome e a função deve estar dentro do escopo principal (window) utilizando as palavras chaves ``var`` ou ``function``.
-
-	**/
+	|method|Tipo de requisição HTTP, ver WD.send (se path for informado)|Não|**/
 	function data_wdChart(e) {
 		if (!("wdChart" in e.dataset)) return;
 
@@ -6543,19 +6554,34 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	function data_wdSend(e) { /* Requisições: data-wd-send=path{file}method{get|post}${form}call{name}& */
+	/**###### ``**function** ''void'' data_wdSend(''node''  e)``
+	Função vinculada ao atributo HTML ``data-wd-send`` cujo objetivo é efetuar requisições web utilizando a ferramenta ``WDnode.repeat``. Possui múltiplos atributos e grupos. Os atributos possuem os mesmo valores do argumento ``options`` de WD.send acrescidos dos abaixo relacionados. Para definir funções nos parâmetros, deverá ser informado seu nome e a função deve estar dentro do escopo principal (window) utilizando as palavras chaves ``var`` ou ``function``:
+	|Nome|Descrição|Obrigatório|
+	|path|Caminho para o arquivo a enviar a requisição|Sim|
+	|method|Tipo de requisição HTTP, ver WD.send|Não|
+	|$ ou $$|Seletor(es) CSS do formulário com os parâmetros da requição|Não|**/
+	function data_wdSend(e) {
 		if (!("wdSend" in e.dataset)) return;
-		let data = wd_html_dataset_value(e, "wdSend");
-		for (let i = 0; i < data.length; i++) {
-			let method = "method" in data[i] ? data[i].method : "post";
-			let file   = data[i].path;
-			let pack   = __Query.$$$(data[i]);
-			let call   = window[data[i]["call"]];
-			let exec   = WD(pack);
-			exec.send(file, call, method);
-		}
+		let data   = __String(e.dataset.wdSend).wdNotation;
+		data.forEach(function (v,i,a) {
+			let query  = __Query.$$$(v);
+			let target = WD(query);
+			target.send(v.path, v);
+		});
 		return;
 	};
+
+
+
+
+
+
+
+
+
+
+
+
 
 /*----------------------------------------------------------------------------*/
 	function data_wdSort(e) { /* Ordenar HTML: data-wd-sort="order{±1}col{>0?}" */
@@ -6766,7 +6792,7 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-	function data_wdFull(e) { /* Estilo fullscreen: data-wd-full=exit{}${} */
+	function data_wdFullScreen(e) { /* Estilo fullscreen: data-wd-full=exit{}${} */
 		if (!("wdFull" in e.dataset)) return;
 		let data   = wd_html_dataset_value(e, "wdFull")[0];
 		let exit   = "exit" in data ? true : false;
@@ -7095,7 +7121,7 @@ const wd = (function() {
 			data_wdSet(elem);
 			data_wdCss(elem);
 			data_wdNav(elem);
-			data_wdFull(elem);
+			data_wdFullScreen(elem);
 			data_wdJump(elem);
 			navLink(elem);
 			/* efeito bolha */
