@@ -6293,97 +6293,86 @@ const wd = (function() {
 			}
 		},
 		nav: {  /* define exibições e inibições de elementos */
-			value: function(action, data1, data2) {
-				let check1 = __Type(data1);
-				let check2 = __Type(data2);
-				let args   = Array.prototype.slice.call(arguments);
+			value: function(action, data) {
+				action = String(action).toLowerCase().replace(/\s+/g, "");
+				data = String(data);
+				let check = __Type(data);
+				let self = this;
+
 				this.forEach(function(v,i) {
 					let node = __Node(v);
 					switch(action) {
-						/*-- aplicado ao elemento --*/
-						case "show": {
-							node.show = true;
-							break;
-						}
-						case "hide": {
-							node.show = false;
-							break;
-						}
-						case "toogle": {
-							node.show = !node.show;
-							break;
-						}
-						case "jump": {
-							node.jump(data1);
-							break;
-						}
-						case "alone": {
-							node.only();
-							break;
-						}
-						case "brothers": {
-							node.only(true);
-							break;
-						}
-						case "all": {
-							node.only(true);
-							node.show = true;
-							break;
-						}
-						case "fullScreen": {
-							node.full();
+						/*-- aplicado ao elemento e irmãos --*/
+						case "me": {
+							switch(data) {
+								case "show":   {node.show = true;                   break;}
+								case "hide":   {node.show = false;                  break;}
+								case "toggle": {node.show = !node.show;             break;}
+								case "alone":  {node.only();                        break;}
+								case "behind": {node.only(true);                    break;}
+								case "full":   {node.full();                        break;}
+								case "all":    {node.only(true); node.show = true;  break;}
+								case "none":   {node.only();     node.show = false; break;}
+							}
 							break;
 						}
 						/*-- aplicado aos filhos do elemento --*/
-						case "nextChild": {
-							node.walk(1);
-							break;
-						}
-						case "previousChild": {
-							node.walk(-1);
-							break;
-						}
-						case "walkChild": {
-							node.walk(data1);
-							break;
-						}
 						case "children": {
-							node.childs(data1, data2);
+							let value = data.split("-");
+							if ((/^[+-]?\d+$/).test(data))
+								node.walk(Number(data));
+							else if ((/^(\d+|\*)\-(\d+|\*)$/).test(data))
+								node.childs(value[0], value[1]);
 							break;
 						}
+						/*-- aplicado ao grupo de filhos do elemento --*/
 						case "page": {
-							node.pages(data1, data2);
+							if (!(/^([+-]?\d+|\*)\:\d+$/).test(data)) break;
+							let value = data.split(":");
+							let sign  = data[0];
+							let walk  = sign === "+" || sign === "-" ? Number(value[0]) : null;
+							let index = sign === "*" ? -1 : Number(value[0]);
+							let width = Number(value[1]);
+							if (walk === null) {
+								node.pages(index, width);
+							} else if (walk !== 0) {
+								node.pages((Infinity * walk), width);
+								walk += walk > 0 ? -1 : +1;
+								self.nav("page", sign+String(Math.abs(walk))+":"+String(width));
+							}
 							break;
 						}
-						case "nextPage": {
-							node.pages(+Infinity, data1);
+
+
+						/*-- aplicado a grupos de elementos tipo tabela --*/
+						case "sort": {
+							if ((/^[+-]\d+$/).test(data))
+								node.sort(Number(data) > 0);
+							else if ((/^\d+((\s\d+)+)?/).test(data)) //FIXME precisa ter sinais
+								node.tsort.apply(node, data.split(/\s/));
 							break;
 						}
-						case "previusPage": {
-							node.pages(-Infinity, data1);
-							break;
-						}
-						case "firstPage": {
-							node.pages(0, data1);
-							break;
-						}
-						case "lastPage": {
-							node.pages(-1, data1);
-							break;
-						}
+
+
+
+
+
 						case "filter": {
 							node.filter(data1, data2);
 							break;
 						}
-						case "sort": {
-							if (!check1.finite) {
-								node.sort(data1);
-							} else {
-								args.shift();
-								node.tsort.apply(node, args);
-							}
+						case "jump": {//FIXME inserir no rol do "me"
+							node.jump(data);
 							break;
 						}
+
+
+
+
+
+
+
+
 					}
 				});
 				return this;
