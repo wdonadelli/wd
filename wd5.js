@@ -3598,8 +3598,6 @@ const wd = (function() {
 					if (!check.finite || Math.trunc(check.value) === 0) continue;
 					args.push(Math.trunc(check.value));
 				}
-				console.log(args);
-
 				if (args.length === 0) return this.sort();
 				/*-- iniciando ordenação --*/
 				let child = __Type(this.node.children).value;
@@ -6292,6 +6290,81 @@ const wd = (function() {
 				return this;
 			}
 		},
+		/**. ``''self'' display(''string'' action)``: Define a exibição do elemento ou seus irmãos. O argumento ``action`` define a ação a ser executada:
+		|Ação|Descrição|
+		|show|Exibe o elemento.|
+		|hide|Esconde o elemento.|
+		|toggle|Alterna a exibição do elemento.|
+		|ahead|Exibe o elemento e esconde os irmãos.|
+		|behind|Exibe os irmãos e esconde o elemento.|
+		|full|Exibe o elemento em tela cheia.|
+		|all|Exibe o elemento e seus irmãos.|
+		|none|Esconde o elemento e seus irmãos.|**/
+		display: {
+			value: function(action) {
+				action = String(action).toLowerCase().replace(/\s+/g, "");
+				this.forEach(function(v,i) {
+					let node = __Node(v);
+					switch(action) {
+						case "show":   {node.show = true;                   break;}
+						case "hide":   {node.show = false;                  break;}
+						case "toggle": {node.show = !node.show;             break;}
+						case "ahead":  {node.only();                        break;}
+						case "behind": {node.only(true);                    break;}
+						case "full":   {node.full();                        break;}
+						case "all":    {node.only(true); node.show = true;  break;}
+						case "none":   {node.only();     node.show = false; break;}
+					}
+				});
+				return this;
+			}
+		},
+		/**. ``''self'' order(''string'' action)``: Organiza a exibição dos elementos filhos. O argumento ``action`` define a forma de organização:
+		- Um número inteiro positivo ''n'' exibe o elemento que está ''n'' posições adiante do elemento atual (ciclo infinito);
+		- Um número inteiro negativo ''n'' exibe o elemento que está ''n'' posições atrás do elemento atual (ciclo infinito);
+		- Numeros inteiros não negativos separados por traço (''-'') definem o intervalos de elementos a serem exibidos. Utilize o caractere * para designar o último elemento;
+		- Números separados pelo caractere '':'' organizam a exibição dos elementos em grupos de determinada quantidade. O número após o separador define a quantidade de elementos de cada grupo, devendo ser um número positivo. O número antes do separador define o grupo a ser exibido, devendo ser um número inteiro maior ou igual a zero sem sinal (utilize o caractere ''*'' para designar o último grupo). Para avançar ou retroceder nos grupos, adicione os sinais ''&plus;'' ou ''&minus;'' ao início do argumento, o número informado definirá o intervalo a avançar;
+		- Para ordenar os elementos em ordem crescente ou decrescente, utilize os atalhos "ASC" e "DESC", respectivamente;
+		- Para ordernar colunas de tabelas, organizados da forma como ocorre em ``tbody``, informe números inteiros diferentes de zero entre colchetes e separados por vírgula (''[1,-2,+3]''). Os números correspondem às colunas da tabela (a partir de 1), o sinal indica a ordenação (positivo para crescente e negativo para decrescente) e a ordem informada define a prioridade da ordenação.**/
+		order: {
+			value: function(action) {
+				action   = String(action).toLowerCase().replace(/\s+/g, "");
+				let self = this;
+				this.forEach(function(v,i) {
+					let node = __Node(v);
+					if ((/^[+-]?\d+$/).test(action)) {
+						node.walk(Number(action));
+					} else if ((/^(\+?\d+|\*)\-(\+?\d+|\*)$/).test(action)) {
+						//FIXME se eu quiser exibir só o último elemento (*-*)?
+						let value = action.split("-");
+						node.childs(value[0], value[1]);
+					} else if ((/^([+-]?\d+|\*)\:\d+(\.\d+)?$/).test(action)) {
+						let value = action.split(":");
+						let sign  = action[0];
+						let walk  = sign === "+" || sign === "-" ? Number(value[0]) : null;
+						let index = sign === "*" ? -1 : Number(value[0]);
+						let width = Number(value[1]);
+						if (walk === null) {
+							node.pages(index, width);
+						} else if (walk !== 0) {
+							node.pages((Infinity * walk), width);
+							walk += walk > 0 ? -1 : +1;
+							self.order("page", sign+String(Math.abs(walk))+":"+String(width));
+						}
+					} else if (action === "asc" || action === "desc") {
+						node.sort(action === "asc");
+					} else if ((/^\[[+-]?\d+((\,[+-]?\d+)+)?\]$/).test(action)) {
+						let value = action.replace("[", "").replace("]", "").split(/\s/);
+						console.log(value);
+						node.tsort.apply(node, value);
+					}
+				});
+				return this;
+			}
+		},
+
+
+
 		nav: {  /* define exibições e inibições de elementos */
 			value: function(action, data) {
 				action = String(action).toLowerCase().replace(/\s+/g, "");
@@ -6302,60 +6375,6 @@ const wd = (function() {
 				this.forEach(function(v,i) {
 					let node = __Node(v);
 					switch(action) {
-						/*-- aplicado ao elemento e irmãos --*/
-						case "me": {
-							switch(data) {
-								case "show":   {node.show = true;                   break;}
-								case "hide":   {node.show = false;                  break;}
-								case "toggle": {node.show = !node.show;             break;}
-								case "alone":  {node.only();                        break;}
-								case "behind": {node.only(true);                    break;}
-								case "full":   {node.full();                        break;}
-								case "all":    {node.only(true); node.show = true;  break;}
-								case "none":   {node.only();     node.show = false; break;}
-							}
-							break;
-						}
-						/*-- aplicado aos filhos do elemento --*/
-						case "children": {
-							let value = data.split("-");
-							if ((/^[+-]?\d+$/).test(data))
-								node.walk(Number(data));
-							else if ((/^(\d+|\*)\-(\d+|\*)$/).test(data))
-								node.childs(value[0], value[1]);
-							break;
-						}
-						/*-- aplicado ao grupo de filhos do elemento --*/
-						case "page": {
-							if (!(/^([+-]?\d+|\*)\:\d+$/).test(data)) break;
-							let value = data.split(":");
-							let sign  = data[0];
-							let walk  = sign === "+" || sign === "-" ? Number(value[0]) : null;
-							let index = sign === "*" ? -1 : Number(value[0]);
-							let width = Number(value[1]);
-							if (walk === null) {
-								node.pages(index, width);
-							} else if (walk !== 0) {
-								node.pages((Infinity * walk), width);
-								walk += walk > 0 ? -1 : +1;
-								self.nav("page", sign+String(Math.abs(walk))+":"+String(width));
-							}
-							break;
-						}
-
-
-						/*-- aplicado a grupos de elementos tipo tabela --*/
-						case "sort": {
-							if ((/^[+-]\d+$/).test(data))
-								node.sort(Number(data) > 0);
-							else if ((/^\d+((\s\d+)+)?/).test(data)) //FIXME precisa ter sinais
-								node.tsort.apply(node, data.split(/\s/));
-							break;
-						}
-
-
-
-
 
 						case "filter": {
 							node.filter(data1, data2);
