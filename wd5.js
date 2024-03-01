@@ -3330,15 +3330,21 @@ const wd = (function() {
 				});
 			}
 		},
-		/**. ``''void'' childs(''number'' init, ''number'' last)``: Define o intervalo de nós filhos a ser exibido entre o índice inicial (``init``) e final (``last``).**/
+		/**. ``''void'' childs(''integer'' init, ''integer'' last)``: Define o intervalo de nós filhos a ser exibido entre o índice inicial (``init``) e final (``last``). Utilize um número negativo para indicar o último elemento.**/
 		childs: {
 			value: function (init, last) {
 				if (!this._elem) return;
 				let child = __Type(this.node.children).value;
+				let width = child.length - 1;
 				let data1 = __Type(init);
 				let data2 = __Type(last);
-				init = data1.number ? data1.value : -Infinity;
-				last = data2.number ? data2.value : +Infinity;
+				init = data1.number ? (data1 < 0 ? width : data1.value) : -Infinity;
+				last = data2.number ? (data2 < 0 ? width : data2.value) : +Infinity;
+				if (init > last) {
+					let aux = init;
+					init = last;
+					last = aux;
+				}
 				child.forEach(function(v,i,a) {
 					let node = __Node(v);
 					node.show = i >= init && i <= last;
@@ -6290,43 +6296,25 @@ const wd = (function() {
 				return this;
 			}
 		},
-		/**. ``''self'' display(''string'' action)``: Define a exibição do elemento ou seus irmãos. O argumento ``action`` define a ação a ser executada:
-		|Ação|Descrição|
-		|show|Exibe o elemento.|
-		|hide|Esconde o elemento.|
-		|toggle|Alterna a exibição do elemento.|
-		|ahead|Exibe o elemento e esconde os irmãos.|
-		|behind|Exibe os irmãos e esconde o elemento.|
-		|full|Exibe o elemento em tela cheia.|
-		|all|Exibe o elemento e seus irmãos.|
-		|none|Esconde o elemento e seus irmãos.|**/
+		/**. ``''self'' display(''string'' action)``: Organiza a exibição dos elementos filhos. O argumento ``action`` define a forma de organização:
+		- A ação "show" exibe o elemento;
+		- A ação "hide" esconde o elemento;
+		- A ação "toggle" alterna a exibição do elemento;
+		- A ação "ahead" exibe o elemento e esconde os irmãos;
+		- A ação "behind" exibe os irmãos e esconde o elemento;
+		- A ação "full" exibe o elemento em tela cheia;
+		- A ação "all" exibe o elemento e seus irmãos;
+		- A ação "none" esconde o elemento e seus irmãos;
+		- A ação "asc" ordena os filhos em ordem crescente;
+		- A ação "desc" ordena os filhos em ordem decrescente;
+		- A ação "sort" alterna a ordenação dos filhos;
+		- Um número inteiro positivo ''n'' exibe o filho que está a ''n'' posições adiante do elemento atual (ciclo infinito);
+		- Um número inteiro negativo ''n'' exibe o filho que está a ''n'' posições atrás do elemento atual (ciclo infinito);
+		- Numeros inteiros não negativos separados pelo caractere traço (''-'') definem o intervalo de filhos a ser exibido. Os números indicam os índices inicial e final dos filhos, independente da ordem. Utilize o caractere * para designar o último elemento;
+		- Números separados pelo caractere dois pontos ('':'') organizam a exibição dos filhos em grupos de determinada quantidade. O número após o separador define a quantidade de filhos de cada grupo, devendo ser um número positivo. O número antes do separador define o grupo a ser exibido, devendo ser um número inteiro maior ou igual a zero sem sinal (utilize o caractere ''*'' para designar o último grupo). Para avançar ou retroceder nos grupos, adicione os sinais ''&plus;'' ou ''&minus;'' ao início do argumento, o número informado definirá o intervalo a avançar;
+
+		- FIXME Para ordernar colunas de tabelas, organizados da forma como ocorre em ``tbody``, informe números inteiros diferentes de zero entre colchetes e separados por vírgula (''[1,-2,+3]''). Os números correspondem às colunas da tabela (a partir de 1), o sinal indica a ordenação (positivo para crescente e negativo para decrescente) e a ordem informada define a prioridade da ordenação.**/
 		display: {
-			value: function(action) {
-				action = String(action).toLowerCase().replace(/\s+/g, "");
-				this.forEach(function(v,i) {
-					let node = __Node(v);
-					switch(action) {
-						case "show":   {node.show = true;                   break;}
-						case "hide":   {node.show = false;                  break;}
-						case "toggle": {node.show = !node.show;             break;}
-						case "ahead":  {node.only();                        break;}
-						case "behind": {node.only(true);                    break;}
-						case "full":   {node.full();                        break;}
-						case "all":    {node.only(true); node.show = true;  break;}
-						case "none":   {node.only();     node.show = false; break;}
-					}
-				});
-				return this;
-			}
-		},
-		/**. ``''self'' order(''string'' action)``: Organiza a exibição dos elementos filhos. O argumento ``action`` define a forma de organização:
-		- Um número inteiro positivo ''n'' exibe o elemento que está ''n'' posições adiante do elemento atual (ciclo infinito);
-		- Um número inteiro negativo ''n'' exibe o elemento que está ''n'' posições atrás do elemento atual (ciclo infinito);
-		- Numeros inteiros não negativos separados por traço (''-'') definem o intervalos de elementos a serem exibidos. Utilize o caractere * para designar o último elemento;
-		- Números separados pelo caractere '':'' organizam a exibição dos elementos em grupos de determinada quantidade. O número após o separador define a quantidade de elementos de cada grupo, devendo ser um número positivo. O número antes do separador define o grupo a ser exibido, devendo ser um número inteiro maior ou igual a zero sem sinal (utilize o caractere ''*'' para designar o último grupo). Para avançar ou retroceder nos grupos, adicione os sinais ''&plus;'' ou ''&minus;'' ao início do argumento, o número informado definirá o intervalo a avançar;
-		- Para ordenar os elementos em ordem crescente ou decrescente, utilize os atalhos "ASC" e "DESC", respectivamente;
-		- Para ordernar colunas de tabelas, organizados da forma como ocorre em ``tbody``, informe números inteiros diferentes de zero entre colchetes e separados por vírgula (''[1,-2,+3]''). Os números correspondem às colunas da tabela (a partir de 1), o sinal indica a ordenação (positivo para crescente e negativo para decrescente) e a ordem informada define a prioridade da ordenação.**/
-		order: {
 			value: function(action) {
 				action   = String(action).toLowerCase().replace(/\s+/g, "");
 				let self = this;
@@ -6335,8 +6323,8 @@ const wd = (function() {
 					if ((/^[+-]?\d+$/).test(action)) {
 						node.walk(Number(action));
 					} else if ((/^(\+?\d+|\*)\-(\+?\d+|\*)$/).test(action)) {
-						//FIXME se eu quiser exibir só o último elemento (*-*)?
 						let value = action.split("-");
+						value.forEach(function(v,i,a) {a[i] = v.replace(/\*/g, "-1");});
 						node.childs(value[0], value[1]);
 					} else if ((/^([+-]?\d+|\*)\:\d+(\.\d+)?$/).test(action)) {
 						let value = action.split(":");
@@ -6351,54 +6339,55 @@ const wd = (function() {
 							walk += walk > 0 ? -1 : +1;
 							self.order("page", sign+String(Math.abs(walk))+":"+String(width));
 						}
-					} else if (action === "asc" || action === "desc") {
-						node.sort(action === "asc");
 					} else if ((/^\[[+-]?\d+((\,[+-]?\d+)+)?\]$/).test(action)) {
 						let value = action.replace("[", "").replace("]", "").split(/\s/);
 						console.log(value);
 						node.tsort.apply(node, value);
+					} else {
+						switch(action) {
+							case "show":   {node.show = true;                   break;}
+							case "hide":   {node.show = false;                  break;}
+							case "toggle": {node.show = !node.show;             break;}
+							case "ahead":  {node.only();                        break;}
+							case "behind": {node.only(true);                    break;}
+							case "full":   {node.full();                        break;}
+							case "all":    {node.only(true); node.show = true;  break;}
+							case "none":   {node.only();     node.show = false; break;}
+							case "asc":    {node.sort(true);                    break;}
+							case "desc":   {node.sort(false);                   break;}
+							case "sort":   {node.sort();                        break;}
+						}
 					}
 				});
 				return this;
 			}
 		},
-
-
-
-		nav: {  /* define exibições e inibições de elementos */
-			value: function(action, data) {
-				action = String(action).toLowerCase().replace(/\s+/g, "");
-				data = String(data);
-				let check = __Type(data);
-				let self = this;
-
+		/**. ``''self'' filter(''any'' search, ''integer'' width)``: Exibe somente os elementos filhos que contenham o conteúdo de ``search`` (ver __Node.filter)**/
+		filter: {
+			value: function(search, width) {
 				this.forEach(function(v,i) {
 					let node = __Node(v);
-					switch(action) {
-
-						case "filter": {
-							node.filter(data1, data2);
-							break;
-						}
-						case "jump": {//FIXME inserir no rol do "me"
-							node.jump(data);
-							break;
-						}
-
-
-
-
-
-
-
-
-					}
+					node.filter(search, width);
 				});
+				return this
+			}
+		},
+		/**. ``''self'' jump(''node'' jumper)``: Alterna a posição dos elementos informados em ``jumper`` entre os elementos da seleção (ver __Node.jump)**/
+		jump: {
+			value: function(jumper) {
+				let check = __Type(jumper);
+				if (check.node) {
+					let nodes = this._input;
+					console.log(nodes, check.value);
+					check.value.forEach(function(v,i,a) {
+						let node = __Node(v);
+						node.jump(nodes);
+					});
+				}
 				return this;
 			}
 		},
 	});
-
 /*----------------------------------------------------------------------------*/
 	/**### Função Mestre
 	###### ``''object'' WD(''any'' input)``
@@ -6429,7 +6418,7 @@ const wd = (function() {
 	});
 
 	if (__UNDERMAINTENANCE) {
-		console.log("WD JS Library: The maintenance module is on.");
+		console["warn" in console ? "warn" : "log"]("WD JS Library: The maintenance module is on.");
 		Object.defineProperties(WD, {
 			type:     {value: function(x){return __Type.apply(null, Array.prototype.slice.call(arguments));}},
 			array:    {value: function(){return __Array.apply(null, Array.prototype.slice.call(arguments));}},
@@ -6463,7 +6452,7 @@ const wd = (function() {
 	|run|''true'' ou ''false'', ver WDnode.load|Não|
 	|method|Tipo de requisição HTTP, ver WD.send|Não|
 	|$ ou $$|Seletor(es) CSS do formulário com os parâmetros da requição|Não|**/
-	function data_wdLoad(e) {
+	function data_wdLoad(e, event) {
 		if (!("wdLoad" in e.dataset)) return;
 		let data   = __String(e.dataset.wdLoad).wdNotation[0];
 		let query  = __Query.$$$(data);
@@ -6482,7 +6471,7 @@ const wd = (function() {
 	|path|Caminho para o arquivo JSON ou CSV a ser carregado|Sim|
 	|method|Tipo de requisição HTTP, ver WD.send|Não|
 	|$ ou $$|Seletor(es) CSS do formulário com os parâmetros da requição|Não|**/
-	function data_wdRepeat(e) {
+	function data_wdRepeat(e, event) {
 		if (!("wdRepeat" in e.dataset)) return;
 
 		let data   = __String(e.dataset.wdRepeat).wdNotation[0];
@@ -6514,7 +6503,7 @@ const wd = (function() {
 	|table|Seletor CSS que indica a tabela de dados (será ignorado se path for informado)|Não|
 	|$ ou $$|Seletor(es) CSS do formulário com os parâmetros da requição|Não|
 	|method|Tipo de requisição HTTP, ver WD.send (se path for informado)|Não|**/
-	function data_wdChart(e) {
+	function data_wdChart(e, event) {
 		if (!("wdChart" in e.dataset)) return;
 
 		let data   = __String(e.dataset.wdChart).wdNotation[0];
@@ -6568,9 +6557,9 @@ const wd = (function() {
 	|path|Caminho para o arquivo a enviar a requisição|Sim|
 	|method|Tipo de requisição HTTP, ver WD.send|Não|
 	|$ ou $$|Seletor(es) CSS do formulário com os parâmetros da requição|Não|**/
-	function data_wdSend(e) {
+	function data_wdSend(e, event) {
 		if (!("wdSend" in e.dataset)) return;
-		let data   = __String(e.dataset.wdSend).wdNotation;
+		let data = __String(e.dataset.wdSend).wdNotation;
 		data.forEach(function (v,i,a) {
 			let query  = __Query.$$$(v);
 			let target = WD(query);
@@ -6579,27 +6568,84 @@ const wd = (function() {
 		return;
 	};
 
+/*----------------------------------------------------------------------------*/
+	/**###### ``**function** ''void'' data_wdDisplay(''node''  e)``
+	Função vinculada ao atributo HTML ``data-wd-display`` cujo objetivo é manipular a exibição de nós, seus irmãos e filhos utilizando a ferramenta ``WDnode.display``. Possui múltiplos atributos e grupos:
+	|Nome|Descrição|Obrigatório|
+	|action|Ação a ser executada|Sim|
+	|$ ou $$|Seletor CSS para indicar o elemento os elementos a aplicar a ação (se ausente, será o próprio elemento)|Não|**/
+	function data_wdDisplay(e, event) {
+		if (!("wdDisplay" in e.dataset)) return;
+		let data = __String(e.dataset.wdDisplay).wdNotation;
+		let self = WD(e);
+		data.forEach(function (v,i,a) {
+			let query  = __Query.$$$(v);
+			let target = WD(query);
+			if (target.valueOf().length === 0)
+				self.display(v.action);
+			else
+				target.display(v.action);
 
+			//FIXME inserir tempo
 
-
-
-
-
-
-
-
+		});
+		return;
+	};
 
 
 
 /*----------------------------------------------------------------------------*/
-	function data_wdSort(e) { /* Ordenar HTML: data-wd-sort="order{±1}col{>0?}" */
-		if (!("wdSort" in e.dataset)) return;
-		let data  = wd_html_dataset_value(e, "wdSort")[0];
-		let order = "order" in data ? data.order : 1;
-		let col   = "col"   in data ? data.col : null;
-		WD(e).sort(order, col).data({wdSort: null});
+	function data_wdSlide(e) { /* Carrossel: data-wd-slide=time */
+		if (!("wdSlide" in e.dataset)) return delete e.dataset.wdSlideRun;
+		/*--------------------------------------------------------------------------
+		| A) Obter o intervalo entre os slides definido em data-wd-slide
+		| B) se não for um inteiro, definir 1s como padrão
+		\-------------------------------------------------------------------------*/
+		let value = e.dataset.wdSlide; /*A*/
+		let time  = __finite(value) ? __integer(value) : 1000; /*B*/
+		/*--------------------------------------------------------------------------
+		| C) data-wd-slide-run informa se o slide foi executado: definir atividades
+		| D) se tempo < 0, exibir filho anterior, caso conctrário, o próximo
+		| E) informar o  que o slide foi executado
+		| F) decorrido o intervalo, zerar execução e chamar novamente a função
+		\-------------------------------------------------------------------------*/
+		if (!("wdSlideRun" in e.dataset)) { /*C*/
+			WD(e).nav((time < 0 ? "prev" : "next")); /*D*/
+			e.dataset.wdSlideRun = "1"; /*E*/
+			window.setTimeout(function() { /*F*/
+				delete e.dataset.wdSlideRun;
+				return data_wdSlide(e);
+			}, Math.abs(time));
+			return;
+		}
+		return delete e.dataset.wdSlideRun;
+	};
+
+
+
+/*----------------------------------------------------------------------------*/
+	function data_wdClick(e, event) {
+		if (!("wdClick" in e.dataset)) return;
+		let data = __String(e.dataset.wdClick).wdNotation[0];
+		let time = __Type(data.time);
+		if ("click" in e) e.click();
+		if (time.finite && time.positive)
+			window.setTimeout(function() {
+				data_wdClick(e, "timeout");//FIXME melhorar esse evento de ciclo temporal e também mudar esse nome de wd-click
+			}, Math.abs(time.value));
+		else
+			WD(e).set({wdClick: null});
 		return;
 	};
+
+
+
+
+
+
+
+
+
 
 /*----------------------------------------------------------------------------*/
 	function data_wdTsort(e) { /* Ordena tabelas: data-wd-tsort="" */
@@ -6727,35 +6773,8 @@ const wd = (function() {
 		return;
 	};
 
-/*----------------------------------------------------------------------------*/
-	function data_wdPage(e) { /* separação em grupos: data-wd-page=page{p}size{s} */
-		if (!("wdPage" in e.dataset)) return;
-		let data = wd_html_dataset_value(e, "wdPage")[0];
-		WD(e).page(data.page, data.size).data({wdPage: null});
-		return;
-	};
 
-/*----------------------------------------------------------------------------*/
-	function data_wdClick(e) { /* Executa click(): data-wd-click="" */
-		if (!("wdClick" in e.dataset)) return;
-		if ("click" in e) e.click();
-		WD(e).data({wdClick: null});
-		return;
-	};
 
-/*----------------------------------------------------------------------------*/
-	function data_wdData(e) { /* define dataset: data-wd-data=attr1{value}${css}& */
-		if (!("wdData" in e.dataset)) return;
-		let data = wd_html_dataset_value(e, "wdData");
-		for (let i = 0; i < data.length; i++) {
-			let target = __Query.$$$(data[i]);
-			delete data[i]["$"];
-			delete data[i]["$$"];
-			for (let j in data[i]) if (data[i][j] === "null") data[i][j] = null;
-			WD(target === null ? e : target).data(data[i]);
-		}
-		return;
-	};
 
 /*----------------------------------------------------------------------------*/
 	function data_wdEdit(e) { /* edita texto: data-wd-edit=comando{especificação}... */
@@ -6799,46 +6818,8 @@ const wd = (function() {
 		return;
 	};
 
-/*----------------------------------------------------------------------------*/
-	function data_wdFullScreen(e) { /* Estilo fullscreen: data-wd-full=exit{}${} */
-		if (!("wdFull" in e.dataset)) return;
-		let data   = wd_html_dataset_value(e, "wdFull")[0];
-		let exit   = "exit" in data ? true : false;
-		let target = __Query.$$$(data);
-		if (target === document || target === window)
-			target = document.documentElement;
-		else if (target === null)
-			target = e;
-		WD(target).full(exit);
-		return;
-	};
 
-/*----------------------------------------------------------------------------*/
-	function data_wdSlide(e) { /* Carrossel: data-wd-slide=time */
-		if (!("wdSlide" in e.dataset)) return delete e.dataset.wdSlideRun;
-		/*--------------------------------------------------------------------------
-		| A) Obter o intervalo entre os slides definido em data-wd-slide
-		| B) se não for um inteiro, definir 1s como padrão
-		\-------------------------------------------------------------------------*/
-		let value = e.dataset.wdSlide; /*A*/
-		let time  = __finite(value) ? __integer(value) : 1000; /*B*/
-		/*--------------------------------------------------------------------------
-		| C) data-wd-slide-run informa se o slide foi executado: definir atividades
-		| D) se tempo < 0, exibir filho anterior, caso conctrário, o próximo
-		| E) informar o  que o slide foi executado
-		| F) decorrido o intervalo, zerar execução e chamar novamente a função
-		\-------------------------------------------------------------------------*/
-		if (!("wdSlideRun" in e.dataset)) { /*C*/
-			WD(e).nav((time < 0 ? "prev" : "next")); /*D*/
-			e.dataset.wdSlideRun = "1"; /*E*/
-			window.setTimeout(function() { /*F*/
-				delete e.dataset.wdSlideRun;
-				return data_wdSlide(e);
-			}, Math.abs(time));
-			return;
-		}
-		return delete e.dataset.wdSlideRun;
-	};
+
 
 /*----------------------------------------------------------------------------*/
 	function data_wdShared(e) { /* Experimental: compartilhar em redes sociais: data-wd-shared=rede */
@@ -6923,17 +6904,6 @@ const wd = (function() {
 		return;
 	};
 
-/*----------------------------------------------------------------------------*/
-	function data_wdNav(e) { /* Navegação: data-wd-nav=action{arg}${css}& */
-		if (!("wdNav" in e.dataset)) return;
-		let data = __String(e.dataset.wdNav).wdNotation;//wd_html_dataset_value(e, "wdNav");
-		for (let i = 0; i < data.length; i++) {
-			let target = __Query.$$$(data[i]);
-			let value  = "action" in data[i] ? data[i].action : null;
-			WD(target === null ? e : target).nav(value);
-		}
-		return;
-	};
 
 /*----------------------------------------------------------------------------*/
 	function data_wdJump(e) { /* Saltos de pai: data-wd-jump=$${parents}*/
@@ -7084,12 +7054,9 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	function organizationProcedures() { /* procedimento PÓS carregamentos */
-		WD.$$("[data-wd-sort]").forEach(data_wdSort);
 		WD.$$("[data-wd-filter]").forEach(data_wdFilter);
 		WD.$$("[data-wd-mask]").forEach(data_wdMask);
-		WD.$$("[data-wd-page]").forEach(data_wdPage);
 		WD.$$("[data-wd-click]").forEach(data_wdClick);
-		WD.$$("[data-wd-slide]").forEach(data_wdSlide);
 		WD.$$("[data-wd-device]").forEach(data_wdDevice);
 		WD.$$("[data-wd-chart]").forEach(data_wdChart);
 		WD.$$("[data-wd-url]").forEach(data_wdUrl);
@@ -7102,13 +7069,10 @@ const wd = (function() {
 		switch(attr) {
 			case "wdLoad":      loadingProcedures();    break;
 			case "wdRepeat":    loadingProcedures();    break;
-			case "wdSort":      data_wdSort(e);         break;
 			case "wdFilter":    data_wdFilter(e);       break;
 			case "wdMask":      data_wdMask(e);         break;
-			case "wdPage":      data_wdPage(e);         break;
 			case "wdClick":     data_wdClick(e);        break;
 			case "wdDevice":    data_wdDevice(e);       break;
-			case "wdSlide":     data_wdSlide(e);        break;
 			case "wdChart":     data_wdChart(e);        break;
 			case "wdOutput":    data_wdOutput(e, true); break;
 			case "wdUrl":       data_wdUrl(e, true);    break;
@@ -7121,17 +7085,15 @@ const wd = (function() {
 		if (ev.which !== 1) return;
 		let elem = ev.target
 		while (elem !== null) {
-			data_wdSend(elem);
-			data_wdTsort(elem);
-			data_wdData(elem);
-			data_wdEdit(elem);
-			data_wdShared(elem);
-			data_wdSet(elem);
-			data_wdCss(elem);
-			data_wdNav(elem);
-			data_wdFullScreen(elem);
-			data_wdJump(elem);
-			navLink(elem);
+			data_wdSend(elem, "click");
+			data_wdTsort(elem, "click");
+			data_wdEdit(elem, "click");
+			data_wdShared(elem, "click");
+			data_wdSet(elem, "click");
+			data_wdCss(elem, "click");
+			data_wdJump(elem, "click");
+			data_wdDisplay(elem, "click");
+			navLink(elem, "click");
 			/* efeito bolha */
 			elem = "wdNoBubbles" in elem.dataset ? null : elem.parentElement;
 		}
