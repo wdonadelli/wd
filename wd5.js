@@ -6340,8 +6340,8 @@ const wd = (function() {
 							self.order("page", sign+String(Math.abs(walk))+":"+String(width));
 						}
 					} else if ((/^\[[+-]?\d+((\,[+-]?\d+)+)?\]$/).test(action)) {
-						let value = action.replace("[", "").replace("]", "").split(/\s/);
-						console.log(value);
+						let value = action.replace("[", "").replace("]", "").split(/\,/);
+						console.log("[1,-2,3]");
 						node.tsort.apply(node, value);
 					} else {
 						switch(action) {
@@ -6444,7 +6444,7 @@ const wd = (function() {
 
 /*============================================================================*/
 /**#### Atributos dataset
-	###### ``**function** ''void'' data_wdLoad(''node''  e)``
+	###### ``**function** ''void'' data_wdLoad(''node''  e, ''string'' event)``
 	Função vinculada ao atributo HTML ``data-wd-load`` cujo objetivo é carregar arquivo HTML utilizando as ferramentas ``WDnode.load`` e ``WD.send``. Possui múltiplos atributos e grupo único:
 	|Nome|Descrição|Obrigatório|
 	|path|Caminho para o arquivo HTML externo a ser carregado|Sim|
@@ -6465,7 +6465,7 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wdRepeat(''node''  e)``
+	/**###### ``**function** ''void'' data_wdRepeat(''node''  e, ''string'' event)``
 	Função vinculada ao atributo HTML ``data-wd-repeat`` cujo objetivo é clonar elementos filhos a partir de parâmentros contidos em um arquivo JSON ou CSV utilizando as ferramentas ``WDnode.repeat`` e ``WD.send``. Possui múltiplos atributos e grupo único:
 	|Nome|Descrição|Obrigatório|
 	|path|Caminho para o arquivo JSON ou CSV a ser carregado|Sim|
@@ -6482,11 +6482,11 @@ const wd = (function() {
 			method: data.method,
 			ondone: function(x) {
 				let json  = x.json;
-				if (__type(json).array) {
+				if (__Type(json).array) {
 					return target.repeat(json);
 				}
 				let csv = x.csv;
-				if (__type(csv).array) {
+				if (__Type(csv).array) {
 					let table = __Table();
 					table.matrix(csv);
 					return target.repeat(table.json);
@@ -6496,7 +6496,7 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wdChart(''node''  e)``
+	/**###### ``**function** ''void'' data_wdChart(''node''  e, ''string'' event)``
 	Função vinculada ao atributo HTML ``data-wd-chart`` cujo objetivo é criar um gráfico 2D a partir de uma tabela, um arquivo CSV ou parâmetros de dados como filho do elemento possuidor do atributo. Possui múltiplos atributos e grupo único. Para definir funções nos parâmetros, deverá ser informado seu nome e a função deve estar dentro do escopo principal (window) utilizando as palavras chaves ``var`` ou ``function``:
 	|Nome|Descrição|Obrigatório|
 	|path|Caminho para o arquivo CSV a ser carregado|Não|
@@ -6551,7 +6551,7 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wdSend(''node''  e)``
+	/**###### ``**function** ''void'' data_wdSend(''node''  e, ''string'' event)``
 	Função vinculada ao atributo HTML ``data-wd-send`` cujo objetivo é efetuar requisições web utilizando a ferramenta ``WDnode.repeat``. Possui múltiplos atributos e grupos. Os atributos possuem os mesmo valores do argumento ``options`` de WD.send acrescidos dos abaixo relacionados. Para definir funções nos parâmetros, deverá ser informado seu nome e a função deve estar dentro do escopo principal (window) utilizando as palavras chaves ``var`` ou ``function``:
 	|Nome|Descrição|Obrigatório|
 	|path|Caminho para o arquivo a enviar a requisição|Sim|
@@ -6569,7 +6569,7 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wdDisplay(''node''  e)``
+	/**###### ``**function** ''void'' data_wdDisplay(''node''  e, ''string'' event)``
 	Função vinculada ao atributo HTML ``data-wd-display`` cujo objetivo é manipular a exibição de nós, seus irmãos e filhos utilizando a ferramenta ``WDnode.display``. Possui múltiplos atributos e grupos:
 	|Nome|Descrição|Obrigatório|
 	|action|Ação a ser executada|Sim|
@@ -6585,40 +6585,8 @@ const wd = (function() {
 				self.display(v.action);
 			else
 				target.display(v.action);
-
-			//FIXME inserir tempo
-
 		});
 		return;
-	};
-
-
-
-/*----------------------------------------------------------------------------*/
-	function data_wdSlide(e) { /* Carrossel: data-wd-slide=time */
-		if (!("wdSlide" in e.dataset)) return delete e.dataset.wdSlideRun;
-		/*--------------------------------------------------------------------------
-		| A) Obter o intervalo entre os slides definido em data-wd-slide
-		| B) se não for um inteiro, definir 1s como padrão
-		\-------------------------------------------------------------------------*/
-		let value = e.dataset.wdSlide; /*A*/
-		let time  = __finite(value) ? __integer(value) : 1000; /*B*/
-		/*--------------------------------------------------------------------------
-		| C) data-wd-slide-run informa se o slide foi executado: definir atividades
-		| D) se tempo < 0, exibir filho anterior, caso conctrário, o próximo
-		| E) informar o  que o slide foi executado
-		| F) decorrido o intervalo, zerar execução e chamar novamente a função
-		\-------------------------------------------------------------------------*/
-		if (!("wdSlideRun" in e.dataset)) { /*C*/
-			WD(e).nav((time < 0 ? "prev" : "next")); /*D*/
-			e.dataset.wdSlideRun = "1"; /*E*/
-			window.setTimeout(function() { /*F*/
-				delete e.dataset.wdSlideRun;
-				return data_wdSlide(e);
-			}, Math.abs(time));
-			return;
-		}
-		return delete e.dataset.wdSlideRun;
 	};
 
 
@@ -6627,13 +6595,13 @@ const wd = (function() {
 	function data_wdClick(e, event) {
 		if (!("wdClick" in e.dataset)) return;
 		let data = __String(e.dataset.wdClick).wdNotation[0];
-		let time = __Type(data.time);
+		//let time = __Type(data.time);
 		if ("click" in e) e.click();
-		if (time.finite && time.positive)
+		/*if (time.finite && time.positive)
 			window.setTimeout(function() {
 				data_wdClick(e, "timeout");//FIXME melhorar esse evento de ciclo temporal e também mudar esse nome de wd-click
 			}, Math.abs(time.value));
-		else
+		else*/
 			WD(e).set({wdClick: null});
 		return;
 	};
@@ -6642,53 +6610,59 @@ const wd = (function() {
 
 
 
-
-
-
-
-
 /*----------------------------------------------------------------------------*/
-	function data_wdTsort(e) { /* Ordena tabelas: data-wd-tsort="" */
-		if (!("wdTsort" in e.dataset)) return;
-		if (wd_html_tag(e.parentElement.parentElement) !== "thead") return;
-		let order = e.dataset.wdTsort === "+1" ? -1 : 1;
-		let col   = wd_html_bros_index(e);
-		let heads = e.parentElement.children;
-		let thead = e.parentElement.parentElement;
-		let body  = thead.parentElement.tBodies;
-
-		WD(body).sort(order, col);
-		WD(heads).run(function(x) {
-			if ("wdTsort" in x.dataset) x.dataset.wdTsort = "";
-		});
-		WD(e).data({wdTsort: (order < 0 ? "-1" : "+1")});
-
-		return;
-	};
-
-/*----------------------------------------------------------------------------*/
-	function data_wdFilter(e) { /* Filtrar elementos: data-wd-filter=chars{}${css}&... */
+	/**###### ``**function** ''void'' data_wdFilter(''node''  e, ''string'' event)``
+	Função vinculada ao atributo HTML ``data-wd-filter`` cujo objetivo é filtrar os nós filhos que contenham o conteúdo informado utilizando a ferramenta ``WDnode.filter``. Possui múltiplos atributos e grupos:
+	|Nome|Descrição|Obrigatório|
+	|chars|Determina a quantidade mínima de caracteres para executar a busca|Não|
+	|$ ou $$|Seletor CSS dos elementos cujos filhos serão filtrados|Não|**/
+	function data_wdFilter(e, event) { /* Filtrar elementos: data-wd-filter=chars{}${css}&... */
 		if (!("wdFilter" in e.dataset)) return;
-
-		/* verificando se é formulário ou outro elemento */
-		let test   = new WDform(e);
-		let search = test.form ? test.value : e.textContent;
-		if (search === null || search === undefined) search = "";
-
-		/* se for informada uma expressão regular */
-		if ((/^\/.+\/$/).test(search))
-			search = new RegExp(search.substring(1, (search.length - 1)));
-		else if ((/^\/.+\/i$/).test(search))
-			search = new RegExp(search.substring(1, (search.length - 2)), "i");
-		/* localizar */
-		let data = wd_html_dataset_value(e, "wdFilter");
-		for (let i = 0; i < data.length; i++) {
-			let chars  = data[i].chars;
-			let target = __Query.$$$(data[i]);
-			if (target !== null) WD(target).filter(search, chars);
-		}
+		let node = __Node(e);
+		let data = __String(e.dataset.wdFilter).wdNotation;
+		data.forEach(function (v,i,a) {
+			let query  = __Query.$$$(v);
+			let target = WD(query);
+			let chars  = v.chars;
+			let search = node.attribute("textContent");
+			let regexp = /^\/(.+)\/([gim]+?)$/;
+			if (regexp.test(search))
+				search = new RegExp(search.replace(regexp, "$1"), search.replace(regexp, "$2"));
+			target.filter(search, chars);
+		});
 		return;
 	};
+
+
+
+
+
+
+
+
+
+
+
+/*----------------------------------------------------------------------------*/
+	function data_wdTsort(e, event) { /* Ordena tabelas: data-wd-tsort="" */
+		if (!("wdTsort" in e.dataset)) return;
+		try {
+			let data  = __String(e.dataset.wdTsort).wdNotation;
+			let thead = e.parentElement.parentElement;
+			let tbody = thead.parentElement.tBodies;
+			let heads = __Type(e.parentElement.children).value;
+			let index = heads.indexOf(e);
+			let sort  = data === 1 ? -1 : 1;
+			if (thead.tagName.toLowerCase() !== "thead") return;
+			WD(tbody).display("["+(sort * (index + 1))+"]");
+			heads.forEach(function(v,i,a) {
+				if ("wdTsort" in v.dataset)
+					v.dataset.wdTsort = v === e ? (sort > 0 ? "+1" : "-1") : "";
+			});
+		} catch(e) {}
+		return;
+	};
+
 
 /*----------------------------------------------------------------------------*/
 	function data_wdMask(e) { /* Máscara: data-wd-mask="model{mask}call{callback}msg{msg}" */
@@ -7198,7 +7172,7 @@ wd_html_data(), data-wd-data
 		- data-wd-repeat
 			> loadingProcedures()
 		- data-wd-slide
-		- data-wd-sort
+		- data-wd-tsort
 		- data-wd-url
 
 window.onload > loadProcedures()
@@ -7215,7 +7189,7 @@ window.onload > loadProcedures()
 			- data-wd-output
 			- data-wd-page
 			- data-wd-slide
-			- data-wd-sort
+			- data-wd-tsort
 			- data-wd-url
 
 window.onhashchange > hashProcedures()
