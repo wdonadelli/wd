@@ -6413,8 +6413,8 @@ const wd = (function() {
 		$$:      {value: function(css, root) {return WD(__Query(css, root).$$);}},
 		copy:    {value: function(text) {return wd_copy(text);}},
 		device:  {get:   function() {return __DEVICECONTROLLER.device;}},
-		today:   {get:   function() {return WD(new Date());}},
-		now:     {get:   function() {return WD(wd_str_now());}},
+		today:   {get:   function() {return WD(__DateTime().toDateString());}},
+		now:     {get:   function() {return WD(__DateTime().toTimeString());}},
 	});
 
 	if (__UNDERMAINTENANCE) {
@@ -6473,7 +6473,6 @@ const wd = (function() {
 	|$ ou $$|Seletor(es) CSS do formulário com os parâmetros da requição|Não|**/
 	function data_wdRepeat(e, event) {
 		if (!("wdRepeat" in e.dataset)) return;
-
 		let data   = __String(e.dataset.wdRepeat).wdNotation[0];
 		let query  = __Query.$$$(data);
 		let target = WD(e);
@@ -6493,6 +6492,41 @@ const wd = (function() {
 				}
 			}
 		});
+	};
+
+/*----------------------------------------------------------------------------*/
+	/**###### ``**function** ''void'' data_wdSet(''node''  e, ''string'' event)``
+	Função vinculada ao atributo HTML ``data-wd-set`` cujo objetivo é aplicar atributos aos elementos partir de parâmentros contidos em um arquivo JSON ou utilizando a ferramenta ``WDnode.set``. Possui múltiplos atributos e grupos. Se o atributo ``path`` for informado, os valores dos atributos serão executados a partir do arquivo JSON especificado, caso contrário, serão considerados aqueles informados no atributo HTML:
+	|Nome|Descrição|Obrigatório|
+	|path|Caminho para o arquivo JSON a ser carregado|Não|
+	|method|Tipo de requisição HTTP, ver WD.send|Não|
+	|$ ou $$|Seletore CSS para identificar os alvos da ferramenta|Não|**/
+	function data_wdSet(e, event) {
+		if (!("wdSet" in e.dataset)) return;
+		let data = __String(e.dataset.wdSet).wdNotation;
+		let exec = function(input) {
+			let query  = ("$" in input || "$$" in input) ? __Query.$$$(input) : e;
+			let target = WD(query);
+			return target.set(input);
+		}
+		data.forEach(function(v,i,a) {
+			if ("path" in v) {
+				WD().send(v.path, {
+					method: v.method,
+					ondone: function(x) {
+						let json = x.json;
+						if (__Type(json).array)
+							json.forEach(function(s,j,b) {exec(s);});
+					}
+				});
+			} else {
+				for (let i in v)
+					if ((/^.+\{.+\}$/).test(v[i]))
+						v[i] = __String(v[i]).wdNotation[0];
+				exec(v);
+			}
+		});
+		return;
 	};
 
 /*----------------------------------------------------------------------------*/
@@ -6527,7 +6561,6 @@ const wd = (function() {
 				}
 			}
 		}
-
 		/* plotando gráfico */
 		if ("path" in data) {
 			let path = data.path;
@@ -6589,26 +6622,21 @@ const wd = (function() {
 		return;
 	};
 
-
-
 /*----------------------------------------------------------------------------*/
+	/**###### ``**function** ''void'' data_wdClick(''node''  e, ''string'' event)``
+	Função vinculada ao atributo HTML ``data-wd-click`` cujo objetivo é efetuar um autoclique ao elemento. Possui valor simples e opcional. Caso um número inteiro maior que zero seja informado, o clique irá ser executado a cada milisegundos conforme valor definido.**/
 	function data_wdClick(e, event) {
 		if (!("wdClick" in e.dataset)) return;
-		let data = __String(e.dataset.wdClick).wdNotation[0];
-		//let time = __Type(data.time);
+		let data = __String(e.dataset.wdClick).wdNotation;
+		let info = __Type(data);
+		let time = info.finite ? Math.trunc(info.value) : null;
 		if ("click" in e) e.click();
-		/*if (time.finite && time.positive)
-			window.setTimeout(function() {
-				data_wdClick(e, "timeout");//FIXME melhorar esse evento de ciclo temporal e também mudar esse nome de wd-click
-			}, Math.abs(time.value));
-		else*/
-			WD(e).set({wdClick: null});
+		if (time > 0)
+			window.setTimeout(function() {data_wdClick(e);}, time);
+		else
+			WD(e).set({dataset: {wdClick: null}});
 		return;
 	};
-
-
-
-
 
 /*----------------------------------------------------------------------------*/
 	/**###### ``**function** ''void'' data_wdFilter(''node''  e, ''string'' event)``
@@ -6633,17 +6661,9 @@ const wd = (function() {
 		return;
 	};
 
-
-
-
-
-
-
-
-
-
-
 /*----------------------------------------------------------------------------*/
+	/**###### ``**function** ''void'' data_wdTsort(''node''  e, ''string'' event)``
+	Função vinculada ao atributo HTML ``data-wd-tsort`` cujo objetivo é ordenar colunas específicas de tabelas. Não possui atributo:**/
 	function data_wdTsort(e, event) { /* Ordena tabelas: data-wd-tsort="" */
 		if (!("wdTsort" in e.dataset)) return;
 		try {
@@ -6662,6 +6682,74 @@ const wd = (function() {
 		} catch(e) {}
 		return;
 	};
+
+/*----------------------------------------------------------------------------*/
+	/**###### ``**function** ''void'' data_wdDevice(''node''  e, ''string'' event)``
+	Função vinculada ao atributo HTML ``data-wd-device`` cujo objetivo é manipular o atributo ``class`` conforme mudança no tamanho da tela. Possui múltiplos atributos e grupo único:
+	|Nome|Descrição|Obrigatório|
+	|desktop|Estilos CSS separados por espaço a serem utilizados quando a tela corresponder a um desktop.|Não|
+	|tablet|Estilos CSS separados por espaço a serem utilizados quando a tela corresponder a um tablet.|Não|
+	|phone|Estilos CSS separados por espaço a serem utilizados quando a tela corresponder a um phone.|Não|
+	|mobile|Estilos CSS separados por espaço a serem utilizados quando a tela corresponder a um tablet ou phone.|Não|**/
+	function data_wdDevice(e, event) {
+		if (!("wdDevice" in e.dataset)) return;
+		let query  = WD(e);
+		let data   = __String(e.dataset.wdDevice).wdNotation[0];
+		let device = __DEVICECONTROLLER.device;
+		let types  = {
+			desktop: {phone: 0, tablet: 0, mobile: 0, desktop: 1},
+			tablet:  {phone: 0, tablet: 1, mobile: 1, desktop: 0},
+			phone:   {phone: 1, tablet: 0, mobile: 1, desktop: 0},
+		};
+		if (device in types) {
+			let type = types[device];
+			/* removendo css dos dispositivos incompatíveis */
+
+			for (let i in type)
+				if (i in data && type[i] === 0) query.set({class: {remove: data[i]}});
+			/* adicionando css dos dispositivos compatíveis */
+			for (let i in type)
+				if (i in data && type[i] === 1) query.set({class: {add: data[i]}});
+		}
+		return;
+	};
+
+/*----------------------------------------------------------------------------*/
+	/**###### ``**function** ''void'' data_wdJump(''node''  e, ''string'' event)``
+	Função vinculada ao atributo HTML ``data-wd-jump`` cujo objetivo é fazer saltos do nó entre os nós informados. Possui atributo simples e grupo único:
+	|Nome|Descrição|Obrigatório|
+	|$ ou $$|Seletor CSS dos elementos que receberão o nó|Sim|**/
+	function data_wdJump(e, event) { /* Saltos de pai: data-wd-jump=$${parents}*/
+		if (!("wdJump" in e.dataset)) return;
+		let data   = __String(e.dataset.wdJump).wdNotation[0];
+		let query  = __Query.$$$(data);
+		let target = WD(query);
+		target.jump(e);
+		return;
+	};
+
+/*----------------------------------------------------------------------------*/
+	function data_wdEdit(e) { /* edita texto: data-wd-edit=comando{especificação}... */
+		if (!("execCommand" in document) || !("wdEdit" in e.dataset)) return;
+		let data = __String(e.dataset.wdEdit).wdNotation[0];
+		for (let i in data) {
+			let cmd = i;
+			let arg = data[i].trim() === "" ? undefined : data[i].trim();
+			if (cmd === "createLink") {
+				arg = prompt("Link:");
+				if (arg === "" || arg === null) cmd = "unlink";
+			} else if (cmd === "insertImage") {
+				arg = prompt("Link:");
+			}
+			document.execCommand(cmd, false, arg);
+		}
+		return;
+	};
+
+
+
+
+
 
 
 /*----------------------------------------------------------------------------*/
@@ -6750,47 +6838,9 @@ const wd = (function() {
 
 
 
-/*----------------------------------------------------------------------------*/
-	function data_wdEdit(e) { /* edita texto: data-wd-edit=comando{especificação}... */
-		if (!("execCommand" in document)) return;
-		if (!("wdEdit" in e.dataset)) return;
-		let data = wd_html_dataset_value(e, "wdEdit")[0];
-		for (let i in data) {
-			let cmd = i;
-			let arg = data[i].trim() === "" ? undefined : data[i].trim();
-			if (cmd === "createLink") {
-				arg = prompt("Link:");
-				if (arg === "" || arg === null) cmd = "unlink";
-			} else if (cmd === "insertImage") {
-				arg = prompt("Link:");
-			}
-			document.execCommand(cmd, false, arg);
-		}
-		return;
-	};
 
-/*----------------------------------------------------------------------------*/
-	function data_wdDevice(e) { /* Estilo widescreen: data-wd-device=desktop{css}tablet{css}phone{css}mobile{css} */
-		if (!("wdDevice" in e.dataset)) return;
-		let query  = WD(e);
-		let data   = __String(e.dataset.wdDevice).wdNotation[0];
-		let device = __DEVICECONTROLLER.device;
-		let types  = {
-			desktop: {phone: 0, tablet: 0, mobile: 0, desktop: 1},
-			tablet:  {phone: 0, tablet: 1, mobile: 1, desktop: 0},
-			phone:   {phone: 1, tablet: 0, mobile: 1, desktop: 0},
-		};
-		if (device in types) {
-			let type = types[device];
-			/* removendo css dos dispositivos incompatíveis */
-			for (let i in type)
-				if (i in data && type[i] === 0) query.set({class: {remove: data[i]}});
-			/* adicionando css dos dispositivos compatíveis */
-			for (let i in type)
-				if (i in data && type[i] === 1) query.set({class: {add: data[i]}});
-		}
-		return;
-	};
+
+
 
 
 
@@ -6837,58 +6887,11 @@ const wd = (function() {
 		return WD(e).data({wdUrl: null});
 	}
 
-/*----------------------------------------------------------------------------*/
-	function data_wdSet(e) { /* define attributos: data-wd-set=attr{value}${css}&... */
-		if (!("wdSet" in e.dataset)) return;
-		/*--------------------------------------------------------------------------
-		| A) obter os grupos do atributo
-		| B) definir palavras chaves para as correspondentes na linguagem
-		| C) looping pelos grupos
-		| D) definir o alvo e remover atributos que representam os seletores CSS
-		| E) looping pelos atributos do grupo
-		| F) definindo o valor do atributo e verificando palavras chaves
-		| G) aplicando método: limitado a um argumento
-		\--------------------------------------------------------------------------*/
-		let data  = wd_html_dataset_value(e, "wdSet"); /*A*/
-		let words = {"null": null, "false": false, "true": true}; /*B*/
-		for (let i = 0; i < data.length; i++) { /*C*/
-			let target = __Query.$$$(data[i]); /*D*/
-			delete data[i]["$"]; /*D*/
-			delete data[i]["$$"]; /*D*/
-			for (let attr in data[i]) { /*E*/
-				let value = data[i][attr]; /*F*/
-				if (value in words) value = words[value]; /*F*/
-				WD(target === null ? e : target).set(attr, value); /*G*/
-			}
-		}
-		return;
-	};
-
-/*----------------------------------------------------------------------------*/
-	function data_wdCss(e) { /* define class: data-wd-css=add{value}tgl{css}del{css}rpl${css}&... */
-		if (!("wdCss" in e.dataset)) return;
-		let data = wd_html_dataset_value(e, "wdCss");
-		for (let i = 0; i < data.length; i++) {
-			let target = __Query.$$$(data[i]);
-			delete data[i]["$"];
-			delete data[i]["$$"];
-			if (JSON.stringify(data[i]) === "{}") data[i] = null;
-			WD(target === null ? e : target).css(data[i]);
-		}
-		return;
-	};
 
 
-/*----------------------------------------------------------------------------*/
-	function data_wdJump(e) { /* Saltos de pai: data-wd-jump=$${parents}*/
-		if (!("wdJump" in e.dataset)) return;
-		let data    = wd_html_dataset_value(e, "wdJump")[0];
-		let target  = __Query.$$$(data);
-		let parents = wd_vtype(target)
-		if (parents.type === "dom")
-			WD(e).jump(parents.value);
-		return;
-	};
+
+
+
 
 /*----------------------------------------------------------------------------*/
 	function data_wdOutput(e, load) { /* Atribui valor ao target: data-wd-output=${target}call{} */
@@ -6933,11 +6936,13 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	function navLink(e) { /* link ativo do navegador */
+	/**###### ``**function** ''void'' navLink(''node''  e, ''string'' event)``
+	Função vinculada a atributo HTML cujo objetivo é estabelecer o menu ativo do container ``nav``.**/
+	function navLink(e, event) {
 		if (e.parentElement === null) return;
 		if (e.parentElement.tagName.toLowerCase() !== "nav") return;
-		WD(e.parentElement.children).css({add: "js-wd-nav-inactive"});
-		WD(e).css({del: "js-wd-nav-inactive"});
+		WD(e.parentElement.children).set({class: {add: "js-wd-nav-inactive"}});
+		WD(e).set({class: {remove: "js-wd-nav-inactive"}});
 		return;
 	};
 
@@ -7064,7 +7069,6 @@ const wd = (function() {
 			data_wdEdit(elem, "click");
 			data_wdShared(elem, "click");
 			data_wdSet(elem, "click");
-			data_wdCss(elem, "click");
 			data_wdJump(elem, "click");
 			data_wdDisplay(elem, "click");
 			navLink(elem, "click");
@@ -7117,8 +7121,8 @@ const wd = (function() {
 	function focusoutProcedures(ev) { /* procedimentos para saída de formulários */
 		data_wdVform(ev.target);
 		data_wdMask(ev.target);
-		let test = new WDform(ev.target);
-		test.checkValidity();
+		//let test = new WDform(ev.target);
+		//test.checkValidity();
 		return;
 	};
 

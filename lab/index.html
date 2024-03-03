@@ -18,9 +18,9 @@
 function color_screen() {
 	let time = wd.now.valueOf();
 	if (time >= (6*60) && time < (18*60))
-		wd.$$("body, main > article").css({add: "wd-bg-base"});
+		wd.$$("body, main > article").set({class: {add: "wd-bg-base"}});
 	else
-		wd.$$("body, main > article").css({add: "wd-bg-black"});
+		wd.$$("body, main > article").set({class: {add: "wd-bg-black"}});
 	return;
 }
 
@@ -47,15 +47,14 @@ function set_html() {
 
 
 /* carregando disparadores */
-wd(window).addHandler({
-		load: function() {
-			color_screen();
-
-			wd.$("#code_apply").addHandler({click: set_html});
-			wd.$("#code_reset").addHandler({click: get_action});
-			wd.$("#code_get").addHandler({click: get_html});
-		}
-	})
+wd(window).set({addEventListener: {
+	load: function() {
+		color_screen();
+		wd.$("#code_apply").set({addEventListener: {click: set_html}});
+		wd.$("#code_reset").set({addEventListener: {click: get_action}});
+		wd.$("#code_get").set({addEventListener: {click: get_html}});
+	}
+}});
 		</script>
 	</head>
 
@@ -71,10 +70,10 @@ wd(window).addHandler({
 
 			<!-- Navegador -->
 			<nav class="wd-bg-grey wd-header wd-hidden-print">
-				<span class="" data-wd-css="${#menu}tgl{wd-open}" id="bmenu">Menu</span>
-				<span class="" data-wd-css="${#code-block}tgl{wd-hidden}" >Code</span>
-				<span class="" data-wd-css="${html}tgl{wd}" >CSS</span>
-				<span class="" data-wd-css="$${body, main > article}tgl{wd-bg-black wd-bg-base}" >Screen</span>
+				<span class="" data-wd-set="${#menu}class{toggle{wd-open}}" id="bmenu">Menu</span>
+				<span class="" data-wd-set="${#code-block}class{toggle{wd-hidden}}" >Code</span>
+				<span class="" data-wd-set="${html}class{toggle{wd}}" >CSS</span>
+				<span class="" data-wd-set="$${body, main > article}class{toggle{wd-bg-black wd-bg-base}}" >Screen</span>
 				<a href="../../comentarioGuia/?file=../wd/wd5.js" target="_blank">JS Doc</a>
 				<a href="../doc/?file=../wd5.js&code=true" target="_blank" >JS Code</a>
 				<a href="https://github.com/wdonadelli/wd/wiki" target="_blank">Wiki</a>
@@ -131,8 +130,8 @@ wd(window).addHandler({
     </header>
 
 				<nav class="wd-header wd-bg-white">
-					<span data-wd-click="" data-wd-nav="${#css_menu}">CSS</span>
-					<span data-wd-nav="${#data_menu}">Data</span>
+					<span data-wd-click="" data-wd-display="action{ahead}${#css_menu}">CSS</span>
+					<span data-wd-display="action{ahead}${#data_menu}">Data</span>
 				</nav>
 
 				<section>
@@ -140,8 +139,7 @@ wd(window).addHandler({
 					<div id="css_menu">
 						<nav data-wd-repeat="path{menu/css_menu.json}method{GET}" class="wd-nav-block">
 			    <span
-								data-wd-css="tgl{wd-open}${#menu}"
-								data-wd-data="wdLoad{path{css/{{target}}.html}method{GET}}$${#html-block, #text_code}"
+								data-wd-set="class{toggle{wd-open}}${#menu}&dataset{wdLoad{path{css/{{target}}.html}method{GET}}}$${#html-block, #text_code}"
 								onclick="set_action('css/{{target}}.html');"
 							>{{target}}</span>
 			  	</nav>
@@ -150,8 +148,7 @@ wd(window).addHandler({
 					<div id="data_menu">
 						<nav data-wd-repeat="path{menu/data_menu.json}method{GET}" class="wd-nav-block">
 			    <span
-								data-wd-css="tgl{wd-open}${#menu}"
-								data-wd-data="wdLoad{path{data/{{target}}.html}method{GET}}$${#html-block, #text_code}"
+								data-wd-set="class{toggle{wd-open}}${#menu}&dataset{wdLoad{path{data/{{target}}.html}method{GET}}}$${#html-block, #text_code}"
 								onclick="set_action('data/{{target}}.html');"
 							>{{target}}</span>
 			  	</nav>
