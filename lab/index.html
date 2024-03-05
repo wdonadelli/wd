@@ -139,7 +139,7 @@ wd(window).set({addEventListener: {
 					<div id="css_menu">
 						<nav data-wd-repeat="path{menu/css_menu.json}method{GET}" class="wd-nav-block">
 			    <span
-								data-wd-set="class{toggle{wd-open}}${#menu}&dataset{wdLoad{path{css/{{target}}.html}method{GET}}}$${#html-block, #text_code}"
+								data-wd-set="class{toggle{wd-open}}${#menu}&dataset{wdLoad{path{css/{{target}}.html}method{GET}run{true}}}$${#html-block, #text_code}"
 								onclick="set_action('css/{{target}}.html');"
 							>{{target}}</span>
 			  	</nav>
@@ -148,7 +148,7 @@ wd(window).set({addEventListener: {
 					<div id="data_menu">
 						<nav data-wd-repeat="path{menu/data_menu.json}method{GET}" class="wd-nav-block">
 			    <span
-								data-wd-set="class{toggle{wd-open}}${#menu}&dataset{wdLoad{path{data/{{target}}.html}method{GET}}}$${#html-block, #text_code}"
+								data-wd-set="class{toggle{wd-open}}${#menu}&dataset{wdLoad{path{data/{{target}}.html}method{GET}run{true}}}$${#html-block, #text_code}"
 								onclick="set_action('data/{{target}}.html');"
 							>{{target}}</span>
 			  	</nav>

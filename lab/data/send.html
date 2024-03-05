@@ -2,8 +2,7 @@
 
 <script>
 function fsend(x) {
-	if (x.closed)
-		document.getElementById("output").textContent = x.text;
+	document.getElementById("output").textContent = x.text;
 }
 </script>
 
@@ -35,10 +34,10 @@ function fsend(x) {
 	</select>
 
 	<button type="button" style="display: block; width: 100%"
-		data-wd-send="path{examples/target.php}call{fsend}$${#input *}"
+		data-wd-send="path{examples/target.php}ondone{fsend}$${#input *}"
 	>POST</button>
 	<button type="button" style="display: block; width: 100%"
-		data-wd-send="path{examples/target.php}call{fsend}$${#input *}method{GET}"
+		data-wd-send="path{examples/target.php}ondone{fsend}$${#input *}method{GET}"
 	>GET</button>
 
 

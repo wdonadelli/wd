@@ -1395,18 +1395,16 @@ const wd = (function() {
 				return value;
 			}
 		},
-		/**. ``''string'' mask(''string'' model, ''function'' method)``: Checa se a string casa com o formato de máscara definido e a retorna adequada aos parâmetros especificados. Caso não case, uma string vazia será retornada.
-		. O argumento ``model`` define o modelo da máscara conforme caracteres abaixo:
+		/**. ``''string'' mask(''string'' model, ''function'' method)``: Checa se a string casa com o formato de máscara definido e a retorna adequada aos parâmetros especificados. Caso não case, uma string vazia será retornada. O argumento opcional ``method`` define uma função a ser aplicada quando a máscara casa. A função receberá a string formatada como argumento para efetuar checagens mais específicas como. A função deverá retornar uma string como resultado e, se falhar, preferencialmente, ser vazia. O argumento ``model`` define o modelo da máscara conforme caracteres abaixo:
 		|Caractere|Descrição|
-		|#|Exige um dígito|
-		|@|Exige um não dígito|
-		|*|Exige um valor qualquer|
-		|?|Separa modelos alternativos caso o anterior não case|
+		|#|Exige um dígito.|
+		|@|Exige um não dígito.|
+		|*|Exige um valor qualquer.|
+		|?|Separa modelos alternativos caso o anterior não case.|
 		|' (aspóstofro)|Fixa o caractere seguinte sem checar se casa|
 		###### Exemplos
 		- "##/##/####" (data) casa com "01234567" e retorna "01/23/4567".
-		- "(##) # ####-####?(##) ####-####" (telefone) casa com "01234567890", retornando "(01) 2 3456-7890", e casa também com "0123456789" retornando "(01) 2345-6789".
-		. O argumento opcional ``method`` define uma função a ser aplicada quando a máscara casa. A função receberá a string formatada como argumento para efetuar checagens mais específicas como, por exemplo, checar se a data informada é válida. A função deverá retornar uma string como resultado e, se falhar, preferencialmente, ser vazia.**/
+		- "(##) # ####-####?(##) ####-####" (telefone) casa com "01234567890", retornando "(01) 2 3456-7890", e casa também com "0123456789" retornando "(01) 2345-6789".**/
 		mask: {
 			value: function(model, method) {
 				let input = this._value;
@@ -1439,8 +1437,7 @@ const wd = (function() {
 					if (test) break;
 				}
 				if (!test) return "";
-				let check = __Type(method);
-				if (check.function) return method(mask.join(""));
+				if (__Type(method).function) return method(mask.join(""));
 				return mask.join("");
 			}
 		},
@@ -6448,7 +6445,7 @@ const wd = (function() {
 	Função vinculada ao atributo HTML ``data-wd-load`` cujo objetivo é carregar arquivo HTML utilizando as ferramentas ``WDnode.load`` e ``WD.send``. Possui múltiplos atributos e grupo único:
 	|Nome|Descrição|Obrigatório|
 	|path|Caminho para o arquivo HTML externo a ser carregado|Sim|
-	|replace|''true' ou ''false'', ver WDnode.load|Não|
+	|replace|''true'' ou ''false'', ver WDnode.load|Não|
 	|run|''true'' ou ''false'', ver WDnode.load|Não|
 	|method|Tipo de requisição HTTP, ver WD.send|Não|
 	|$ ou $$|Seletor(es) CSS do formulário com os parâmetros da requição|Não|**/
@@ -6539,12 +6536,10 @@ const wd = (function() {
 	|method|Tipo de requisição HTTP, ver WD.send (se path for informado)|Não|**/
 	function data_wdChart(e, event) {
 		if (!("wdChart" in e.dataset)) return;
-
 		let data   = __String(e.dataset.wdChart).wdNotation[0];
 		let query  = __Query.$$$(data);
 		let target = WD(e);
 		target.set({dataset: {wdChart: null}});
-
 		/* acertando nomes de funções para funções */
 		let attrs = ["table", "data"];
 		let i = -1;
@@ -6588,12 +6583,15 @@ const wd = (function() {
 	Função vinculada ao atributo HTML ``data-wd-send`` cujo objetivo é efetuar requisições web utilizando a ferramenta ``WDnode.repeat``. Possui múltiplos atributos e grupos. Os atributos possuem os mesmo valores do argumento ``options`` de WD.send acrescidos dos abaixo relacionados. Para definir funções nos parâmetros, deverá ser informado seu nome e a função deve estar dentro do escopo principal (window) utilizando as palavras chaves ``var`` ou ``function``:
 	|Nome|Descrição|Obrigatório|
 	|path|Caminho para o arquivo a enviar a requisição|Sim|
-	|method|Tipo de requisição HTTP, ver WD.send|Não|
 	|$ ou $$|Seletor(es) CSS do formulário com os parâmetros da requição|Não|**/
 	function data_wdSend(e, event) {
 		if (!("wdSend" in e.dataset)) return;
 		let data = __String(e.dataset.wdSend).wdNotation;
 		data.forEach(function (v,i,a) {
+			if ("header"   in v) v.header   = __String(v.header).wdNotation[0];
+			if ("ondone"   in v) v.ondone   = window[v.ondone];
+			if ("onchange" in v) v.onchange = window[v.onchange];
+			console.log(v);
 			let query  = __Query.$$$(v);
 			let target = WD(query);
 			target.send(v.path, v);
@@ -6753,7 +6751,22 @@ const wd = (function() {
 
 
 /*----------------------------------------------------------------------------*/
+	/**###### ``**function** ''void'' data_wdMask(''node''  e, ''string'' event)``
+	Função vinculada ao atributo HTML ``data-wd-load`` cujo objetivo é carregar arquivo HTML utilizando as ferramentas ``WDnode.load`` e ``WD.send``. Possui múltiplos atributos e grupo único:
+	|Nome|Descrição|Obrigatório|
+	|path|Caminho para o arquivo HTML externo a ser carregado|Sim|
+	|replace|''true'' ou ''false'', ver WDnode.load|Não|
+	|run|''true'' ou ''false'', ver WDnode.load|Não|
+	|method|Tipo de requisição HTTP, ver WD.send|Não|
+	|$ ou $$|Seletor(es) CSS do formulário com os parâmetros da requição|Não|**/
 	function data_wdMask(e) { /* Máscara: data-wd-mask="model{mask}call{callback}msg{msg}" */
+		if (!("wdMask" in e.dataset)) return;
+		let data   = __String(e.dataset.wdMask).wdNotation[0];
+		let query  = __Query.$$$(data);
+		let target = WD(e);
+
+
+
 		/* apagar mensagem de máscara inválida, se houver */
 		if ("wdErrorMessageMask" in e.dataset)
 			delete e.dataset.wdErrorMessageMask;
