@@ -1395,7 +1395,7 @@ const wd = (function() {
 				return value;
 			}
 		},
-		/**. ``''string'' mask(''string'' model, ''function'' method)``: Checa se a string casa com o formato de máscara definido e a retorna adequada aos parâmetros especificados. Caso não case, uma string vazia será retornada. O argumento opcional ``method`` define uma função a ser aplicada quando a máscara casa. A função receberá a string formatada como argumento para efetuar checagens mais específicas como. A função deverá retornar uma string como resultado e, se falhar, preferencialmente, ser vazia. O argumento ``model`` define o modelo da máscara conforme caracteres abaixo:
+		/**. ``''string'' mask(''string'' model, ''function'' method)``: Checa se a string casa com o formato de máscara definido. Retornará uma string vazia se o valor informado não casar com a máscara ou uma string com a máscara aplicada. O argumento opcional ``method`` define uma função a ser aplicada quando há o casamento da máscara, a função receberá a string formatada como argumento para checagens e manipulações complementares para definir o valor retornado. O argumento ``model`` define o modelo da máscara conforme caracteres abaixo:
 		|Caractere|Descrição|
 		|#|Exige um dígito.|
 		|@|Exige um não dígito.|
@@ -6727,7 +6727,7 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-	function data_wdEdit(e) { /* edita texto: data-wd-edit=comando{especificação}... */
+	function data_wdEdit(e, event) { /* edita texto: data-wd-edit=comando{especificação}... */
 		if (!("execCommand" in document) || !("wdEdit" in e.dataset)) return;
 		let data = __String(e.dataset.wdEdit).wdNotation[0];
 		for (let i in data) {
@@ -6752,99 +6752,30 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	/**###### ``**function** ''void'' data_wdMask(''node''  e, ''string'' event)``
-	Função vinculada ao atributo HTML ``data-wd-load`` cujo objetivo é carregar arquivo HTML utilizando as ferramentas ``WDnode.load`` e ``WD.send``. Possui múltiplos atributos e grupo único:
+	Função vinculada ao atributo HTML ``data-wd-mask`` cujo objetivo é definir uma máscara para o campo e checar seu valor utilizando as ferramentas ``WDmain.mask``. Possui múltiplos atributos e grupo único. Para definir a função no parâmetro, deverá ser informado seu nome, devendo estar dentro do escopo principal (window) utilizando as palavras chaves ``var`` ou ``function``:
 	|Nome|Descrição|Obrigatório|
-	|path|Caminho para o arquivo HTML externo a ser carregado|Sim|
-	|replace|''true'' ou ''false'', ver WDnode.load|Não|
-	|run|''true'' ou ''false'', ver WDnode.load|Não|
-	|method|Tipo de requisição HTTP, ver WD.send|Não|
-	|$ ou $$|Seletor(es) CSS do formulário com os parâmetros da requição|Não|**/
-	function data_wdMask(e) { /* Máscara: data-wd-mask="model{mask}call{callback}msg{msg}" */
+	|model|Modelo da máscara|Não|
+	|alert|Mensagem a ser exibida se a máscara não casar (funciona somente em campos de formulário)|Não|
+	|check|Nome da função que checará e retornará o valor da máscara (em caso de falha, retornar string vazia)|Não|**/
+	function data_wdMask(e, event) { /* Máscara: data-wd-mask="model{mask}call{callback}msg{msg}" */
 		if (!("wdMask" in e.dataset)) return;
-		let data   = __String(e.dataset.wdMask).wdNotation[0];
-		let query  = __Query.$$$(data);
-		let target = WD(e);
-
-
-
-		/* apagar mensagem de máscara inválida, se houver */
-		if ("wdErrorMessageMask" in e.dataset)
-			delete e.dataset.wdErrorMessageMask;
-		/* retornar se não tiver nada para fazer */
-		if (!("wdMask" in e.dataset)) return;
-
-		let shorts = {
-			YMD: {mask: "####-##-##", msg: "YYYY-MM-DD (1996-10-20)"},
-			DMY: {mask: "##/##/####", msg: "DD/MM/YYYY (20/10/1996)"},
-			MDY: {mask: "##.##.####", msg: "MM.DD.YYYY (10.20.1996)"},
-			YM:  {mask: "####-##",    msg: "YYYY-MM (1996-10)"},
-			MY:  {mask: "##/####",    msg: "MM/YYYY (10/1996)"},
-			YW:  {mask: "####-W##",   msg: "YYYY-Www (1996-W50)"},
-			WY:  {mask: "##, ####",   msg: "ww, YYYY (1996-W05)"},
-			HMS: {mask: "#:##?##:##?#:##:##?##:##:##", msg: "HH:MM:SS (2:09)"},
-			YMDHMS: {
-				mask: "%#:##?%##:##?%#:##:##?%##:##:##".replace(/\%/g, "####-##-##T"),
-				msg: "YYYY-MM-DDTHH:MM:SS (1996-10-20T2:10)",
-			},
-			DMYHMS: {
-				mask: "%#:##?%##:##?%#:##:##?%##:##:##".replace(/\%/g, "##/##/####T"),
-				msg: "DD/MM/YYYYTHH:MM:SS (20/10/1996T2:10)",
-			},
-			MDYHMS: {
-				mask: "%#:##?%##:##?%#:##:##?%##:##:##".replace(/\%/g, "##.##.####T"),
-				msg: "MM.DD.YYYYTHH:MM:SS (10.20.1996T2:10)",
-			},
-			YMD_HMS: {
-				mask: "%#:##?%##:##?%#:##:##?%##:##:##".replace(/\%/g, "####-##-## "),
-				msg: "YYYY-MM-DD HH:MM:SS (1996-10-20 2:10)",
-			},
-			DMY_HMS: {
-				mask: "%#:##?%##:##?%#:##:##?%##:##:##".replace(/\%/g, "##/##/#### "),
-				msg: "DD/MM/YYYY HH:MM:SS (20/10/1996 2:10)",
-			},
-			MDY_HMS: {
-				mask: "%#:##?%##:##?%#:##:##?%##:##:##".replace(/\%/g, "##.##.#### "),
-				msg: "MM.DD.YYYY HH:MM:SS (10.20.1996 2:10)",
-			},
-		};
-
-		/* obter o atributo da máscara e dados de dataset */
-		let test = new WDform(e);
-		let attr = test.form ? test.mask : "textContent";
-		let data = wd_html_dataset_value(e, "wdMask")[0];
-		if (attr === null || !("model" in data)) return;
-		/* definir outras variáveis*/
-		let text = e[attr];
-		let mask = data.model;
-		let func = "call" in data && data["call"] in window ? window[data["call"]] : null;
-		let msg  = "msg" in data ? data["msg"] : null;
-		/* obtendo dados de checagem de atalho, se for o caso */
-		if (mask in shorts) {
-			let path = shorts[data.model];
-			func = "func" in path ? path.func : func;
-			mask = "mask" in path ? path.mask : mask;
-			msg  = "msg"  in path ? path.msg  : msg;
-		}
-
-		/* checando máscara e checando validade */
-		let value = WD(mask).mask(text, func);
-		/*-------------------------------------------------------------------------
-		| máscara casou:
-		|  entrada e máscara iguais: retornar
-		|  entrada e máscara diferentes: definir e retornar
-		| máscara não casou:
-		|  campo vazio ou indefinido: retornar
-		|  campo preenchido:
-		|   inválido: retornar (erro de máscara é secundário)
-		|   válido: invalidar
-		\-------------------------------------------------------------------------*/
-		if (value !== null) { /* máscara casou */
-			if (text !== value)
-				e[attr] = value;
-		} else { /* máscara não casou */
-			if (test.value !== undefined && test.value !== "" && !test.selfMasked)
-				e.dataset.wdErrorMessageMask = msg === null ? mask : msg;
-		}
+		let data = __String(e.dataset.wdMask).wdNotation[0];
+		let node = __Node(e);
+		let text = node.attribute("textContent");
+		let mask = "";
+		node.validity = "";
+		if (text.trim() === "")   return;
+		if (!__Type(data).object) return;
+		if ("model" in data)
+			mask = WD(text).mask(data.model, window[data.check]);
+		else if (__Type(window[data.check]).function)
+			mask = window[data.check](text);
+		else
+			return;
+		if (mask.trim() === "")
+			node.validity = "alert" in data ? data.alert : data.model;
+		else
+			node.attribute("textContent", mask);
 		return;
 	};
 
@@ -6859,7 +6790,7 @@ const wd = (function() {
 
 
 /*----------------------------------------------------------------------------*/
-	function data_wdShared(e) { /* Experimental: compartilhar em redes sociais: data-wd-shared=rede */
+	function data_wdShared(e, event) { /* Experimental: compartilhar em redes sociais: data-wd-shared=rede */
 		if (!("wdShared" in e.dataset)) return;
 		let url    = encodeURIComponent(document.URL);
 		let title  = encodeURIComponent(document.title);
@@ -6929,24 +6860,6 @@ const wd = (function() {
 		}
 		return;
 	};
-
-/*----------------------------------------------------------------------------*/
-	function data_wdVform(e) { /* checa a validade de um formulário data-wd-vform="callback" */
-		/* apagar mensagem de formulário inválido, se existir */
-		if ("wdErrorMessageVform" in e.dataset)
-			delete e.dataset.wdErrorMessageVform;
-		/* retornar se não tiver nada para fazer */
-		if (!("wdVform" in e.dataset)) return;
-		/* obter dado do atributo e, se for função, obter o resultado */
-		let data = e.dataset.wdVform;
-		if (WD(window[data]).type !== "function") return;
-
-		let value = window[data](e);
-
-		if (value === null || value === undefined) return;
-		e.dataset.wdErrorMessageVform = value;
-		return;
-	}
 
 /*----------------------------------------------------------------------------*/
 	/**###### ``**function** ''void'' navLink(''node''  e, ''string'' event)``
@@ -7132,7 +7045,6 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	function focusoutProcedures(ev) { /* procedimentos para saída de formulários */
-		data_wdVform(ev.target);
 		data_wdMask(ev.target);
 		//let test = new WDform(ev.target);
 		//test.checkValidity();
