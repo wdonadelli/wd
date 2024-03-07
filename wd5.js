@@ -23,6 +23,7 @@
  * SPDX-License-Identifier: MIT
  */
 
+
 "use strict";
 
 const wd = (function() {
@@ -43,7 +44,6 @@ const wd = (function() {
 /*----------------------------------------------------------------------------*/
 	/**###### ``**const** ''object'' __DEVICECONTROLLER``
 	Controla as alterações da tela atribuida a um tipo de dispositivo e executa ações quando houver mudança neste dispositivo idealizado.**/
-	console.log(window.innerWidth);
 	const __DEVICECONTROLLER = {
 		/**. ``''boolean'' _start``: Informar se o controlador já foi iniciado.**/
 		_start: false,
@@ -423,9 +423,9 @@ const wd = (function() {
 		".js-wd-no-display {display: none !important;}",
 		"[data-wd-nav], [data-wd-send], [data-wd-tsort], [data-wd-data], [data-wd-full], [data-wd-jump] {cursor: pointer;}",
 		"[data-wd-set], [data-wd-edit], [data-wd-shared], [data-wd-css], [data-wd-table] {cursor: pointer;}",
-		"[data-wd-tsort]:before {content: \"\\2195 \";}",
-		"[data-wd-tsort=\"-1\"]:before {content: \"\\2191 \";}",
-		"[data-wd-tsort=\"+1\"]:before {content: \"\\2193 \";}",
+		"[data-wd-tsort]:before        {content: \"\\2195 \"; font-weight: normal;}",
+		"[data-wd-tsort=\"-1\"]:before {content: \"\\2191 \"; font-weight: normal;}",
+		"[data-wd-tsort=\"+1\"]:before {content: \"\\2193 \"; font-weight: normal;}",
 		"[data-wd-repeat] > *, [data-wd-load] > * {visibility: hidden;}",
 		"[data-wd-slide] > * {animation: js-wd-fade-in 1s, js-wd-shrink-out 0.5s;}",
 		"nav > *.js-wd-nav-inactive {opacity: 0.5;}",
@@ -5926,15 +5926,14 @@ const wd = (function() {
 		frac: {
 			get: function() {return this._main.frac(this._digits);}
 		},
-
-
-
-		toString: {//FIXME descrição
+		/**. ``''string'' toString(): Retorna o número em forma de texto.**/
+		toString: {
 			value: function() {
 				return this._main.toString();
 			}
 		},
-		toLocaleString: {//FIXME descrição
+		/**. ``''string'' toLocaleString(): Retorna o número em forma de texto local.**/
+		toLocaleString: {
 			value: function(locale) {
 				return this._main.toLocaleString();
 			}
@@ -7046,8 +7045,6 @@ const wd = (function() {
 /*----------------------------------------------------------------------------*/
 	function focusoutProcedures(ev) { /* procedimentos para saída de formulários */
 		data_wdMask(ev.target);
-		//let test = new WDform(ev.target);
-		//test.checkValidity();
 		return;
 	};
 
@@ -7075,77 +7072,3 @@ const wd = (function() {
 
 	return WD;
 }());
-
-/*==============================================================================
-Atributos e Eventos
-
-loadProcedures()
-	> loadingProcedures()
-		> organizationProcedures()
-	> hashProccedures()
-
-wd_html_load(), wd_html_repeat()
-	> loadingProcedures()
-
-wd_html_data(), data-wd-data
-	> settingProcedures()
-		- data-wd-chart
-		- data-wd-click
-		- data-wd-device
-		- data-wd-filter
-		- data-wd-load
-			> loadingProcedures()
-		- data-wd-mask
-		- data-wd-output
-		- data-wd-page
-		- data-wd-repeat
-			> loadingProcedures()
-		- data-wd-slide
-		- data-wd-tsort
-		- data-wd-url
-
-window.onload > loadProcedures()
-	- [preparar biblioteca]
-	> loadingProcedures()
-		- data-wd-load
-		- data-wd-repeat
-		> organizationProcedures()
-			- data-wd-chart
-			- data-wd-click
-			- data-wd-device
-			- data-wd-filter
-			- data-wd-mask
-			- data-wd-output
-			- data-wd-page
-			- data-wd-slide
-			- data-wd-tsort
-			- data-wd-url
-
-window.onhashchange > hashProcedures()
-	- [eventos de linkagem]
-
-window.onresize > scalingProcedures()
-	- data-wd-device
-
-document.onclick > clickProcedures()
-	- data-wd-css
-	- data-wd-data
-	- data-wd-edit
-	- data-wd-full
-	- data-wd-jump
-	- data-wd-nav
-	- data-wd-no-bubbles
-	- data-wd-send
-	- data-wd-set
-	- data-wd-shared
-	- data-wd-tsort
-	- navlink()
-
-document.oninput > inputProcedures()
-	- data-wd-filter
-	- data-wd-output
-
-document.focusout > focusOutProcedures()
-	- data-wd-mask
-	- data-wd-vform
-==============================================================================*/
