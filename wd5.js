@@ -5866,73 +5866,73 @@ const wd = (function() {
 		primes: {
 			get: function() {return this._main.primes;}
 		},
-		/**. ``''string'' significant: Retorna o número com a quantidade de dígitos significativos definida.**/
+		/**. ``''string'' significant``: Retorna o número com a quantidade de dígitos significativos definida.**/
 		significat: {
 			get: function() {return this._main.notation("significant", this._digits);}
 		},
-		/**. ``''string'' decimal: Retorna o número com a quantidade de casas decimais definida.**/
+		/**. ``''string'' decimal``: Retorna o número com a quantidade de casas decimais definida.**/
 		decimal: {
 			get: function() {return this._main.notation("decimal", this._digits);}
 		},
-		/**. ``''string'' integer: Retorna o número com a quantidade de dígitos inteiros definida.**/
+		/**. ``''string'' integer``: Retorna o número com a quantidade de dígitos inteiros definida.**/
 		integer: {
 			get: function() {return this._main.notation("integer", this._digits);}
 		},
-		/**. ``''string'' percent: Retorna o número em notação percentual com a quantidade de casas decimais definida.**/
+		/**. ``''string'' percent``: Retorna o número em notação percentual com a quantidade de casas decimais definida.**/
 		percent: {
 			get: function() {return this._main.notation("percent", this._digits);}
 		},
-		/**. ``''string'' unit: Retorna o número com a unidade de medida definida.**/
+		/**. ``''string'' unit``: Retorna o número com a unidade de medida definida.**/
 		unit: {
 			get: function() {return this._main.notation("unit", this._measurement);}
 		},
-		/**. ``''string'' scientific: Retorna o número em notação científica com a quantidade de casas decimais definida.**/
+		/**. ``''string'' scientific``: Retorna o número em notação científica com a quantidade de casas decimais definida.**/
 		scientific: {
 			get: function() {return this._main.notation("scientific", this._digits);}
 		},
-		/**. ``''string'' engineering: Retorna o número em notação de engenharia com a quantidade de casas decimais definida.**/
+		/**. ``''string'' engineering``: Retorna o número em notação de engenharia com a quantidade de casas decimais definida.**/
 		engineering: {
 			get: function() {return this._main.notation("engineering", this._digits);}
 		},
-		/**. ``''string'' compact: Retorna o número em notação compacta longa.**/
+		/**. ``''string'' compact``: Retorna o número em notação compacta longa.**/
 		compact: {
 			get: function() {return this._main.notation("compact1", null);}
 		},
-		/**. ``''string'' compact: Retorna o número em notação compacta curta.**/
+		/**. ``''string'' compact``: Retorna o número em notação compacta curta.**/
 		shortCompact: {
 			get: function() {return this._main.notation("compact2", null);}
 		},
-		/**. ``''string'' currency: Retorna o número em notação monetária.**/
+		/**. ``''string'' currency``: Retorna o número em notação monetária.**/
 		currency: {
 			get: function() {return this._main.notation("currency1", this._monetary);}
 		},
-		/**. ``''string'' shortCurrency: Retorna o número em notação monetária curta.**/
+		/**. ``''string'' shortCurrency``: Retorna o número em notação monetária curta.**/
 		shortCurrency: {
 			get: function() {return this._main.notation("currency2", this._monetary);}
 		},
-		/**. ``''string'' longCurrency: Retorna o número em notação monetária longa.**/
+		/**. ``''string'' longCurrency``: Retorna o número em notação monetária longa.**/
 		longCurrency: {
 			get: function() {return this._main.notation("currency3", this._monetary);}
 		},
-		/**. ``''number'' round: Retorna o número arredondando-o pela quantidade de casas decimais definida.**/
+		/**. ``''number'' round``: Retorna o número arredondando-o pela quantidade de casas decimais definida.**/
 		round: {
 			get: function() {return this._main.round(this._digits);}
 		},
-		/**. ``''number'' cut: Retorna o número cortando-o pela quantidade de casas decimais definida.**/
+		/**. ``''number'' cut``: Retorna o número cortando-o pela quantidade de casas decimais definida.**/
 		cut: {
 			get: function() {return this._main.cut(this._digits);}
 		},
-		/**. ``''string'' frac: Retorna o número em forma de fração aproximado pela quantidade de casas decimais definida.**/
+		/**. ``''string'' frac``: Retorna o número em forma de fração aproximado pela quantidade de casas decimais definida.**/
 		frac: {
 			get: function() {return this._main.frac(this._digits);}
 		},
-		/**. ``''string'' toString(): Retorna o número em forma de texto.**/
+		/**. ``''string'' toString()``: Retorna o número em forma de texto.**/
 		toString: {
 			value: function() {
 				return this._main.toString();
 			}
 		},
-		/**. ``''string'' toLocaleString(): Retorna o número em forma de texto local.**/
+		/**. ``''string'' toLocaleString()``: Retorna o número em forma de texto local.**/
 		toLocaleString: {
 			value: function(locale) {
 				return this._main.toLocaleString();
