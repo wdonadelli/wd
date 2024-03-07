@@ -5,7 +5,6 @@
 	{"target": "edit"},
 	{"target": "filter"},
 	{"target": "jump"},
-	{"target": "lang"},
 	{"target": "load"},
 	{"target": "mask"},
 	{"target": "no-bubbles"},
@@ -14,7 +13,6 @@
 	{"target": "send"},
 	{"target": "set"},
 	{"target": "shared"},
-	{"target": "translate"},
 	{"target": "tsort"},
 	{"target": "url"},
 	{"target": "extra"}
