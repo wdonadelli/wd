@@ -1606,6 +1606,77 @@ const wd = (function() {
 				return object ? list : this.wdValue(data);
 			}
 		},
+
+		code: {
+			value: function(options) {
+				let code = this.valueOf();
+				let view = {
+					keys: null,
+					multiLineComments: null,
+					singleLineComments: null,
+					multiLineStrings: null,
+				};
+				//if (!__Type(options).object) return code;
+				/* capturando informações repassadas * /
+				for (let i in view)
+					if (i in options)
+						view[i] = String(options[i]).split(" ");*/
+
+
+				code = code.replace(/\\\"/gim, "&bsol;&quot;")
+				code = code.replace(/\\\'/gim, "&bsol;&apos;")
+				code = code.replace(/\ /gim, "&nbsp;")
+				code = code.replace(/\t/gim, "&nbsp;&nbsp;&nbsp;&nbsp;")
+				code = code.replace(/\"([^\"]+)\"/gim, "<i>&quot;$1&quot;</i>")
+				code = code.replace(/\'([^\']+)\'/gim, "<i>&apos;$1&apos;</i>")
+
+
+
+
+
+				//code = code.replace(/\"/gim, "<quote-code>\"</quote-code>")
+				//code = code.replace(/\\\<quote\-code\>\"\<\/quote\-code\>/gim, "\\\"");
+				//code = code.replace(/([^\n\t\ ]+)/gim, "<span>$1</span>")
+				//code = code.split("\n").join("<br>");
+				//code = code.split("\t").join("&amt");
+
+				return "<pre contenteditable>"+code+"</pre>";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			}
+		},
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	});
 
 /*===========================================================================*/
@@ -3237,10 +3308,11 @@ const wd = (function() {
 			value: function(html, replace, run) {
 				if (!this._elem) return;
 				/* definir elemento */
+				html = html === undefined || html === null ? "" : String(html);
+				this.attribute((this.form ? "value" : "innerHTML"), html);
 				let elem = replace === true ? document.createElement("DIV") : this.node;
-				elem.innerHTML = html === undefined || html === null ? "" : String(html);
 				/* rodando scripts, se for o caso (por padrão não roda por motivo de segurança) */
-				if (run === true) {
+				if (run === true && !this.form) {
 					let scripts = __Type(__Query("script", elem).$$).value;
 					scripts.forEach(function (v,i,a) {
 						let parent = v.parentElement;
@@ -4104,11 +4176,18 @@ const wd = (function() {
 				headers: headers,
 				abort:   function() {if (!this.done) request.abort();},
 				get response() {return response;},
-				get text() {return __Type(response).chars ? this.response : null;},
-				get html() {return this.text === null ? null : __String(this.text).html;},
-				get xml()  {return this.text === null ? null : __String(this.text).xml;},
-				get json() {return this.text === null ? null : __String(this.text).json;},
-				get csv()  {return this.text === null ? null : __String(this.text).csv;}
+				get text()  {return __Type(response).chars ? this.response : null;},
+				get html()  {return this.text === null ? null : __String(this.text).html;},
+				get xml()   {return this.text === null ? null : __String(this.text).xml;},
+				get json()  {return this.text === null ? null : __String(this.text).json;},
+				get csv()   {return this.text === null ? null : __String(this.text).csv;},
+				get table() {
+					let csv = this.csv;
+					if (csv === null) return null;
+					let table = __Table(1,0);
+					table.matrix(csv);
+					return table.html();
+				}
 			};
 
 			/*-- chamar disparadores definidos pelo usuário --*/
@@ -4197,7 +4276,7 @@ const wd = (function() {
 			set: function(x) {this._header = x;},
 			get: function()  {return __Type(this._header).object ? this._header : {};},
 		},
-		/**. ``function onchange``: Define e retorna o disparador a ser chamado a cada mudança de estado da requisição ou nulo, se indefinido. O disparador receberá um objeto como argumento contendo os atributos/métodos ''done, time, state, size, loaded, headers, abort(), response, text, html, xml, json e csv''.**/
+		/**. ``function onchange``: Define e retorna o disparador a ser chamado a cada mudança de estado da requisição ou nulo, se indefinido. O disparador receberá um objeto como argumento contendo os atributos/métodos ''done, time, state, size, loaded, headers, abort(), response, text, html, xml, json, csv e table''.**/
 		onchange: {
 			set: function(x) {this._onchange = x;},
 			get: function()  {return __Type(this._onchange).function ? this._onchange : null;},
@@ -4207,7 +4286,7 @@ const wd = (function() {
 			set: function(x) {this._ondone = x;},
 			get: function()  {return __Type(this._ondone).function ? this._ondone : null;},
  		},
-		/**. ``''void'' send(void data)``: Envia uma requisição web. O ``data`` a informação a ser enviada ao destino.**/
+		/**. ``''void'' send(void data)``: Envia uma requisição web. O ``data`` é a informação a ser enviada ao destino.**/
 		send: {
 			value: function(data) {
 				if (this._source !== "path") return;
@@ -6312,34 +6391,39 @@ const wd = (function() {
 		- FIXME Para ordernar colunas de tabelas, organizados da forma como ocorre em ``tbody``, informe números inteiros diferentes de zero entre colchetes e separados por vírgula (''[1,-2,+3]''). Os números correspondem às colunas da tabela (a partir de 1), o sinal indica a ordenação (positivo para crescente e negativo para decrescente) e a ordem informada define a prioridade da ordenação.**/
 		display: {
 			value: function(action) {
-				action   = String(action).toLowerCase().replace(/\s+/g, "");
-				let self = this;
+				let check = __Type(action);
+				action    = check.toString().toLowerCase().replace(/\s+/g, "");
+				let self  = this;
 				this.forEach(function(v,i) {
 					let node = __Node(v);
+					/* avanço/retrocesso de filhos */
 					if ((/^[+-]?\d+$/).test(action)) {
 						node.walk(Number(action));
-					} else if ((/^(\+?\d+|\*)\-(\+?\d+|\*)$/).test(action)) {
+					}
+					/* intervalo de filhos */
+					else if ((/^(\+?\d+|\*)\-(\+?\d+|\*)$/).test(action)) {
 						let value = action.split("-");
 						value.forEach(function(v,i,a) {a[i] = v.replace(/\*/g, "-1");});
 						node.childs(value[0], value[1]);
-					} else if ((/^([+-]?\d+|\*)\:\d+(\.\d+)?$/).test(action)) {
+					}
+					/* grupos */
+					else if ((/^([+-]?\d+|\*)\:\d+(\.\d+)?$/).test(action)) {
 						let value = action.split(":");
 						let sign  = action[0];
 						let walk  = sign === "+" || sign === "-" ? Number(value[0]) : null;
 						let index = sign === "*" ? -1 : Number(value[0]);
 						let width = Number(value[1]);
-						if (walk === null) {
-							node.pages(index, width);
-						} else if (walk !== 0) {
-							node.pages((Infinity * walk), width);
-							walk += walk > 0 ? -1 : +1;
-							self.order("page", sign+String(Math.abs(walk))+":"+String(width));
-						}
-					} else if ((/^\[[+-]?\d+((\,[+-]?\d+)+)?\]$/).test(action)) {
-						let value = action.replace("[", "").replace("]", "").split(/\,/);
-						console.log("[1,-2,3]");
+						/* define ou caminha pelos grupos */
+						if (walk === null)   node.pages(index, width);
+						else if (walk !== 0) node.pages((Infinity * walk), width);
+					}
+					/* ordenamento de colunas */
+					else if ((/^\[[+-]?\d+((\,[+-]?\d+)+)?\]$/).test(action)) {
+						let value = action.replace("[", "").replace("]", "").split(/\,/g);
 						node.tsort.apply(node, value);
-					} else {
+					}
+					/* exibições do elemento */
+					else {
 						switch(action) {
 							case "show":   {node.show = true;                   break;}
 							case "hide":   {node.show = false;                  break;}
@@ -6451,9 +6535,11 @@ const wd = (function() {
 	function data_wdLoad(e, event) {
 		if (!("wdLoad" in e.dataset)) return;
 		let data   = __String(e.dataset.wdLoad).wdNotation[0];
-		let query  = __Query.$$$(data);
 		let target = WD(e);
 		target.set({dataset: {wdLoad: null}}).load("");
+		if (!__Type(data).object) return;
+
+		let query  = __Query.$$$(data);
 		WD(query).send(data.path, {
 			method: data.method,
 			ondone: function(x) {target.load(x.text, data.replace, data.run);}
@@ -6470,9 +6556,11 @@ const wd = (function() {
 	function data_wdRepeat(e, event) {
 		if (!("wdRepeat" in e.dataset)) return;
 		let data   = __String(e.dataset.wdRepeat).wdNotation[0];
-		let query  = __Query.$$$(data);
 		let target = WD(e);
 		target.set({dataset: {wdRepeat: null}}).repeat([]);
+		if (!__Type(data).object) return;
+
+		let query  = __Query.$$$(data);
 		WD(query).send(data.path, {
 			method: data.method,
 			ondone: function(x) {
@@ -6500,12 +6588,14 @@ const wd = (function() {
 	function data_wdSet(e, event) {
 		if (!("wdSet" in e.dataset)) return;
 		let data = __String(e.dataset.wdSet).wdNotation;
+		if (!__Type(data).array) return;
 		let exec = function(input) {
 			let query  = ("$" in input || "$$" in input) ? __Query.$$$(input) : e;
 			let target = WD(query);
 			return target.set(input);
 		}
 		data.forEach(function(v,i,a) {
+			if (!__Type(v).object) return;
 			if ("path" in v) {
 				WD().send(v.path, {
 					method: v.method,
@@ -6536,9 +6626,11 @@ const wd = (function() {
 	function data_wdChart(e, event) {
 		if (!("wdChart" in e.dataset)) return;
 		let data   = __String(e.dataset.wdChart).wdNotation[0];
-		let query  = __Query.$$$(data);
 		let target = WD(e);
 		target.set({dataset: {wdChart: null}});
+		if (!__Type(data).object) return;
+
+		let query  = __Query.$$$(data);
 		/* acertando nomes de funções para funções */
 		let attrs = ["table", "data"];
 		let i = -1;
@@ -6586,7 +6678,9 @@ const wd = (function() {
 	function data_wdSend(e, event) {
 		if (!("wdSend" in e.dataset)) return;
 		let data = __String(e.dataset.wdSend).wdNotation;
+		if (!__Type(data).array) return;
 		data.forEach(function (v,i,a) {
+			if (!__Type(v).object) return;
 			if ("header"   in v) v.header   = __String(v.header).wdNotation[0];
 			if ("ondone"   in v) v.ondone   = window[v.ondone];
 			if ("onchange" in v) v.onchange = window[v.onchange];
@@ -6607,8 +6701,10 @@ const wd = (function() {
 	function data_wdDisplay(e, event) {
 		if (!("wdDisplay" in e.dataset)) return;
 		let data = __String(e.dataset.wdDisplay).wdNotation;
+		if (!__Type(data).array) return;
 		let self = WD(e);
 		data.forEach(function (v,i,a) {
+			if (!__Type(v).object) return;
 			let query  = __Query.$$$(v);
 			let target = WD(query);
 			if (target.valueOf().length === 0)
@@ -6629,7 +6725,7 @@ const wd = (function() {
 		let time = info.finite ? Math.trunc(info.value) : null;
 		if ("click" in e) e.click();
 		if (time > 0)
-			window.setTimeout(function() {data_wdClick(e);}, time);
+			window.setTimeout(function() {data_wdClick(e, event);}, time);
 		else
 			WD(e).set({dataset: {wdClick: null}});
 		return;
@@ -6645,7 +6741,9 @@ const wd = (function() {
 		if (!("wdFilter" in e.dataset)) return;
 		let node = __Node(e);
 		let data = __String(e.dataset.wdFilter).wdNotation;
+		if (!__Type(data).array) return;
 		data.forEach(function (v,i,a) {
+			if (!__Type(v).object) return;
 			let query  = __Query.$$$(v);
 			let target = WD(query);
 			let chars  = v.chars;
@@ -6692,6 +6790,7 @@ const wd = (function() {
 		if (!("wdDevice" in e.dataset)) return;
 		let query  = WD(e);
 		let data   = __String(e.dataset.wdDevice).wdNotation[0];
+		if (!__Type(data).object) return;
 		let device = __DEVICECONTROLLER.device;
 		let types  = {
 			desktop: {phone: 0, tablet: 0, mobile: 0, desktop: 1},
@@ -6719,6 +6818,7 @@ const wd = (function() {
 	function data_wdJump(e, event) { /* Saltos de pai: data-wd-jump=$${parents}*/
 		if (!("wdJump" in e.dataset)) return;
 		let data   = __String(e.dataset.wdJump).wdNotation[0];
+		if (!__Type(data).object) return;
 		let query  = __Query.$$$(data);
 		let target = WD(query);
 		target.jump(e);
@@ -6729,6 +6829,7 @@ const wd = (function() {
 	function data_wdEdit(e, event) { /* edita texto: data-wd-edit=comando{especificação}... */
 		if (!("execCommand" in document) || !("wdEdit" in e.dataset)) return;
 		let data = __String(e.dataset.wdEdit).wdNotation[0];
+		if (!__Type(data).object) return;
 		for (let i in data) {
 			let cmd = i;
 			let arg = data[i].trim() === "" ? undefined : data[i].trim();
@@ -6759,12 +6860,12 @@ const wd = (function() {
 	function data_wdMask(e, event) { /* Máscara: data-wd-mask="model{mask}call{callback}msg{msg}" */
 		if (!("wdMask" in e.dataset)) return;
 		let data = __String(e.dataset.wdMask).wdNotation[0];
+		if (!__Type(data).object) return;
 		let node = __Node(e);
 		let text = node.attribute("textContent");
 		let mask = "";
 		node.validity = "";
 		if (text.trim() === "")   return;
-		if (!__Type(data).object) return;
 		if ("model" in data)
 			mask = WD(text).mask(data.model, window[data.check]);
 		else if (__Type(window[data.check]).function)

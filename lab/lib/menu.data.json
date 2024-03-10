@@ -2,6 +2,7 @@
 	{"target": "chart"},
 	{"target": "click"},
 	{"target": "device"},
+	{"target": "display"},
 	{"target": "edit"},
 	{"target": "filter"},
 	{"target": "jump"},

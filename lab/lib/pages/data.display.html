@@ -1,0 +1,78 @@
+<div id="displayBox" class="wd-bg-black">
+	<datalist id="displayList">
+		<option value="${tbody}action{sort}">Sort (toggle)</option>
+		<option value="${tbody}action{asc}">Sort asc</option>
+		<option value="${tbody}action{desc}">Sort desc</option>
+		<option value="${thead}action{hide}">Hide</option>
+		<option value="${thead}action{show}">Show</option>
+		<option value="${thead}action{toggle}">Toggle</option>
+		<option value="${thead}action{ahead}">Ahead</option>
+		<option value="${thead}action{behind}">Behind</option>
+		<option value="${thead}action{all}">All</option>
+		<option value="${thead}action{none}">All</option>
+		<option value="${#displayBox}action{full}">Full</option>
+		<option value="${tbody}action{2}">Advance 2 lines</option>
+		<option value="${tbody}action{-3}">Return 3 lines</option>
+		<option value="${tbody}action{5-5}">Show lines 5</option>
+		<option value="${tbody}action{1-3}">Show lines 1 to 3</option>
+		<option value="${tbody}action{3-*}">Show lines 3 to the end</option>
+		<option value="${tbody}action{0:3}">First group of 3 lines</option>
+		<option value="${tbody}action{*:3}">Last group of 3 lines</option>
+		<option value="${tbody}action{+1:3}">Advance 1 group of 3 lines</option>
+		<option value="${tbody}action{-2:3}">Back 2 group of 3 lines</option>
+		<option value="${tbody}action{[2,3]}">Sort columns 2 and 3.</option>
+		<option value="${tbody}action{[-3,2]}">Sort columns -3 and 2.</option>
+		<option value="${tbody}action{[-3,2]}">Sort columns -3 and 2.</option>
+	</datalist>
+
+	<div class="wd-form">
+		<div>
+			<input type="text" id="wdDisplay" list="displayList" placeholder="data-wd-display" title="data-wd-display" />
+		</div>
+
+		<div>
+			<button type="button" id="target" >Run</button>
+		</div>
+	</div>
+
+	<div id="table"></div>
+
+	<nav style="margin: auto; width: 50%; align: center">
+		<span data-wd-display="${tbody}action{0:4}">|&lt;</span>
+		<span data-wd-display="${tbody}action{-1:4}">&lt;&lt;</span>
+		<span data-wd-display="${tbody}action{+1:4}">&gt;&gt;</span>
+		<span data-wd-display="${tbody}action{*:4}">&gt;|</span>
+	</nav>
+
+
+	<article class="wd-flyer">
+		<nav>
+			<span data-wd-display="${#tab1}action{ahead}">Tab 1</span>
+			<span data-wd-display="${#tab2}action{ahead}">Tab 2</span>
+			<span data-wd-display="${#tab3}action{ahead}">Tab 3</span>
+			<span data-wd-display="${#tab3}action{all}">All</span>
+			<span data-wd-display="${#tab3}action{none}">None</span>
+			<span data-wd-display="${#tab3}action{behind}">Hide 3</span>
+		</nav>
+		<div>
+			<div id="tab1" class="wd-flyer wd-bg-red"><strong>TAB 1</strong></div>
+			<div id="tab2" class="wd-flyer wd-bg-green"><strong>TAB 2</strong></div>
+			<div id="tab3" class="wd-flyer wd-bg-blue"><strong>TAB 3</strong></div>
+		</div>
+
+
+
+
+
+
+
+
+
+
+
+
+	<script>
+		loadTable(document.getElementById("table"), "lib/add-ons/table.csv");
+		onInputDataSet("#wdDisplay", "#target", "wdDisplay");
+	</script>
+</div>
