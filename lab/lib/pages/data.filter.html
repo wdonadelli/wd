@@ -1,27 +1,50 @@
-<h3>data-wd-filter</h3>
+<section class="wd-flyer">
 
-<div style="padding: 1em">
-	<input type="search" placeholder="Filter"	data-wd-filter="chars{0}${#list}" id="filter" style="width: 100%" />
-</div>
 
-<fieldset>
-	<legend>Target</legend>
+	<nav>
+		<span data-wd-set="dataset{wdFilter{chars{+1}${#list}}}${#filter}">Chars +1</span>
+		<span data-wd-set="dataset{wdFilter{chars{-1}${#list}}}${#filter}">Chars -1</span>
+		<span data-wd-set="dataset{wdFilter{chars{+4}${#list}}}${#filter}">Chars +4</span>
+		<span data-wd-set="dataset{wdFilter{chars{-4}${#list}}}${#filter}">Chars -4</span>
+	</nav>
 
-	<ul id="list">
-		<li>Mario</li>
-		<li>Mary</li>
-		<li>Paul</li>
-		<li>Lucas</li>
-		<li>Maria</li>
-		<li>Alfred</li>
-		<li>Lisa</li>
-	</ul>
-</fieldset>
+	<div class="wd-form">
+		<div>
+			<label>Filter:</label>
+			<input type="search" placeholder="Filter"	data-wd-filter="chars{0}${#list}" id="filter" value="null"/>
+		</div>
+	</div>
 
-<dl>
-	<dt>Using <code>data-wd-data</code>:</dt>
-	<dd><a href="#filter" data-wd-data="wdFilter{chars{1}${#list}}${#filter}">Display and Filter</a></dd>
-	<dd><a href="#filter" data-wd-data="wdFilter{chars{-1}${#list}}${#filter}">Does not display and filter</a></dd>
-	<dd><a href="#filter" data-wd-data="wdFilter{chars{3}${#list}}${#filter}">Displays and filters from 3 characters</a></dd>
-	<dd><a href="#filter" data-wd-data="wdFilter{chars{-3}${#list}}${#filter}">Does not display and filter from 3 characters</a></dd>
-</dl>
+	<ol id="list">
+		<li>Proin et ipsum accumsan, pellentesque velit in, lobortis arcu.</li>
+		<li>Nulla quis libero non mauris condimentum finibus at a est.</li>
+		<li>Integer auctor lectus ac sollicitudin tristique.</li>
+		<li>In ac neque elementum, tincidunt urna sed, consequat elit.</li>
+		<li>Nullam eget mi quis elit viverra tempor sit amet in lectus.</li>
+		<li>Nulla ac dui nec ex sagittis elementum ut a odio.</li>
+		<li>Donec porttitor augue non finibus scelerisque.</li>
+		<li>Nam volutpat mauris at viverra facilisis.</li>
+		<li>Aliquam quis erat tristique, gravida sapien eu, viverra odio.</li>
+		<li>Aliquam bibendum urna venenatis laoreet congue.</li>
+		<li>Quisque iaculis mi sollicitudin urna malesuada rutrum.</li>
+		<li>Vestibulum feugiat tellus ac neque suscipit tincidunt.</li>
+		<li>Aliquam eleifend mi condimentum odio tempus, nec varius nisl pretium.</li>
+		<li>Pellentesque venenatis nulla non augue vestibulum fermentum.</li>
+		<li>Nullam ac ipsum ultricies, sagittis nunc eget, dapibus mi.</li>
+		<li>Nam accumsan diam ac lacus consectetur, at bibendum massa venenatis.</li>
+		<li>Nullam ut enim a orci lobortis molestie.</li>
+		<li>In aliquet neque at mauris vestibulum, eget rhoncus lacus ultricies.</li>
+		<li>Proin efficitur dui euismod nibh volutpat lobortis.</li>
+		<li>In tincidunt dolor posuere felis imperdiet mollis.</li>
+		<li>Quisque et odio id augue tincidunt eleifend.</li>
+		<li>Cras iaculis nisl ac lobortis lacinia.</li>
+		<li>Sed non lectus bibendum, vestibulum odio vel, aliquam metus.</li>
+		<li>Duis sed nisl vel ante condimentum tristique id et eros.</li>
+		<li>Praesent a tortor non metus volutpat maximus.</li>
+		<li>Nullam ut metus pretium, gravida elit at, pretium neque.</li>
+		<li>Sed sed magna at nulla pulvinar cursus sed quis lectus.</li>
+		<li>Integer eu tellus quis turpis interdum fermentum nec ac eros.</li>
+		<li>Suspendisse euismod dui non finibus luctus.</li>
+	</ol>
+
+</section>

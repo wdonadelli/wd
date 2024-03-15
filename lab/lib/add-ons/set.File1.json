@@ -1,0 +1,21 @@
+[
+	{
+		"$": "#setBox",
+		"class": "wd-bg-blue wd-flyer"
+	},
+	{
+		"$": "#setBox header > *",
+		"textContent": "File 1",
+		"class": "wd-case-upper"
+	},
+	{
+		"$$": "#setBox p",
+		"textContent": "File 1 has loaded!",
+		"style": {
+			"fontWeight": "normal",
+			"textIndent": "4em",
+			"textAlign": "justify",
+			"fontStyle": "italic"
+		}
+	}
+]

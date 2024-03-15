@@ -1,17 +1,30 @@
-<h3>data-wd-load</h3>
+<div class="wd-flyer">
 
-<div style="padding: 1em">
-	<input name="form" type="text" placeholder="Page 4 (php)" style="width: 100%">
+	<nav>
+		<span
+			data-wd-set="${#code,#target}dataset{wdLoad{path{lib/add-ons/load.Page1.html}method{GET}}}"
+		>Page 1</span>
+		<span
+			data-wd-set="${#code,#target}dataset{wdLoad{path{lib/add-ons/load.Page1.html}method{GET}run{true}}}"
+		>Page 1 (run)</span>
+		<span
+			data-wd-set="${#code,#target}dataset{wdLoad{path{lib/add-ons/load.Page2.html}method{GET}}}"
+		>Page 2</span>
+		<span
+			data-wd-set="${#target2}dataset{wdLoad{path{lib/add-ons/load.Page1.html}method{GET}run{true}replace{true}}}"
+		>Page 1 (replace)</span>
+	</nav>
+
+	<div id="target" data-wd-load="path{lib/add-ons/load.Page1.html}method{GET}run{true}" ></div>
+
+	<!--========================================================================-->
+	<h5>With replace</h5>
+	<div id="target2">I will be destroyed</div>
+	<!--========================================================================-->
+
+	<textarea id="code" class="wd-code wd-block" style="height: 10em;"
+		data-wd-load="path{lib/add-ons/load.Page1.html}method{GET}run{true}"
+	></textarea>
+
 </div>
 
-<div>Using <code>data-wd-data</code>:</div>
-
-<nav>
-	<span data-wd-data="wdLoad{path{examples/page1.html}}${#load}">Page 1</span>
-	<span data-wd-data="wdLoad{path{examples/page2.html}}${#load}">Page 2</span>
-	<span data-wd-data="wdLoad{path{examples/page3.html}}${#load}">Page 3</span>
-	<span data-wd-data="wdLoad{path{examples/target.php}${input}}${#load}">Page 4 (php)</span>
-	<span data-wd-data="wdLoad{path{examples/page2.html}overlap{true}${#load}}${#load}">Page 2 (overlap)</span>
-</nav>
-
-<div data-wd-load="path{examples/page1.html}" id="load" style="border: 2px solid #0000FF;"></div>

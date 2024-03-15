@@ -1,0 +1,20 @@
+<section class="wd-flyer wd-radius wd-bg-red">
+	<h5>Page 1</h5>
+
+	<p>Hi, I'm Page 1!</p>
+
+	<p>I'll try to load another page:</p>
+
+	<article data-wd-load="path{lib/add-ons/load.Page2.html}method{GET}run{true}"></article>
+
+	<p id="message" class="wd-fg-yellow">The script was not executed!</p>
+
+	<script>
+		{
+			let elem = document.getElementById("message");
+			elem.className = "wd-fg-white";
+			elem.innerHTML = "The script was executed!";
+		}
+	</script>
+
+</section>

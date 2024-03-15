@@ -3307,13 +3307,19 @@ const wd = (function() {
 		load: {
 			value: function(html, replace, run) {
 				if (!this._elem) return;
-				/* definir elemento */
-				html = html === undefined || html === null ? "" : String(html);
-				this.attribute((this.form ? "value" : "innerHTML"), html);
-				let elem = replace === true ? document.createElement("DIV") : this.node;
-				/* rodando scripts, se for o caso (por padrão não roda por motivo de segurança) */
-				if (run === true && !this.form) {
-					let scripts = __Type(__Query("script", elem).$$).value;
+				let inner = html === undefined || html === null ? "" : String(html);
+				let node  = this.node;
+
+				/* se for um formulário, apenas irá definir seu valor */
+				if (this.form) {
+					this.attribute("value", inner);
+					return;
+				}
+				/* definindo conteúdo */
+				this.attribute("innerHTML", inner);
+				/* rodando scripts (não roda por padrão por segurança) */
+				if (run === true) {
+					let scripts = __Type(__Query("script", node).$$).value;
 					scripts.forEach(function (v,i,a) {
 						let parent = v.parentElement;
 						let clone  = __Node(v).clone();
@@ -3323,12 +3329,11 @@ const wd = (function() {
 				}
 				/* substituindo o nó pelo conteúdo, se for o caso */
 				if (replace === true) {
-					let childs = __Type(elem.children).value;
-					let node   = this.node;
+					let childs = __Type(node.children).value;
 					childs.forEach(function(v,i,a) {
 						node.parentElement.insertBefore(v, node);
 					});
-					this.node.remove();
+					node.remove();
 				}
 				/* IMPORTANTE: checar elemento após carregamento */
 				return loadingProcedures();
@@ -6748,7 +6753,7 @@ const wd = (function() {
 			let target = WD(query);
 			let chars  = v.chars;
 			let search = node.attribute("textContent");
-			let regexp = /^\/(.+)\/([gim]+?)$/;
+			let regexp = /^\/(.+)\/([gim]+)?$/;
 			if (regexp.test(search))
 				search = new RegExp(search.replace(regexp, "$1"), search.replace(regexp, "$2"));
 			target.filter(search, chars);

@@ -1,0 +1,27 @@
+[
+	{
+		"$": "#setBox",
+		"class": "wd-bg-red wd-flyer"
+	},
+	{
+		"$": "#setBox header > *",
+		"textContent": "Arquivo 2",
+		"class": "wd-case-capitalize"
+	},
+	{
+		"$$": "#setBox p",
+		"style": null
+	},
+	{
+		"$": "#p1",
+		"innerHTML": "Arquivo 2 foi carregado com <u>sucesso</u>! Esse parágrafo tem um sublinhado."
+	},
+	{
+		"$": "#p2",
+		"textContent": "Esse é o <u>segundo</u> parágrafo! Ele tem um sublinhado que não deve funcionar por causa do atributo escolhido."
+	},
+	{
+		"$": "#p3",
+		"textContent": "Esse é o quarto parágrafo!"
+	}
+]

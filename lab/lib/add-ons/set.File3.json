@@ -1,0 +1,19 @@
+[
+	{
+		"$": "#setBox",
+		"class": "wd-bg-green wd-flyer"
+	},
+	{
+		"$": "#setBox header > *",
+		"textContent": "File 3",
+		"class": "wd-case-capitalize"
+	},
+	{
+		"$$": "#setBox p",
+		"textContent": "Click/Hover me!",
+		"addEventListener": {
+			"click": "pClick",
+			"mouseover": "pMouse"
+		}
+	}
+]

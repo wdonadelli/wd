@@ -1,0 +1,61 @@
+<div>
+
+	<div class="wd-form">
+		<div>
+			<input type="text" id="wdSet" placeholder="data-wd-set" title="data-wd-set" />
+		</div>
+
+		<div>
+			<button type="button" id="target" >Run</button>
+		</div>
+	</div>
+
+	<section id="setBox" class="wd-border wd-radius">
+
+		<header>
+			<h3>Header</h3>
+		</header>
+
+		<p id="p1">Paragraph 1</p>
+		<p id="p2">Paragraph 2</p>
+		<p id="p3">Paragraph 3</p>
+
+	</section>
+
+	<div class="wd-form-grid">
+		<div>
+			<button type="button"
+				data-wd-set="path{lib/add-ons/set.File1.json}method{GET}&${#jsonFile}dataset{wdLoad{path{lib/add-ons/set.File1.json}method{GET}}}"
+			>File 1</button>
+		</div>
+		<div>
+			<button type="button"
+				data-wd-set="path{lib/add-ons/set.File2.json}method{GET}&${#jsonFile}dataset{wdLoad{path{lib/add-ons/set.File2.json}method{GET}}}"
+			>File 2</button>
+		</div>
+		<div>
+			<button type="button"
+				data-wd-set="path{lib/add-ons/set.File3.json}method{GET}&${#jsonFile}dataset{wdLoad{path{lib/add-ons/set.File3.json}method{GET}}}"
+			>File 3</button>
+		</div>
+	</div>
+
+
+
+	<h4>JSON File</h4>
+	<pre id="jsonFile" class="wd-code"></pre>
+
+
+
+
+	<script>
+		onInputDataSet("#wdSet", "#target", "wdSet");
+
+		function pClick(ev) {
+			alert("click on "+ev.target.id);
+		}
+		function pMouse(ev) {
+			wd(ev.target).set({class: {toggle: "wd-bg-purple"}})
+		}
+	</script>
+</div>
