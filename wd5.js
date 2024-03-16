@@ -432,7 +432,19 @@ const wd = (function() {
 		".js-wd-plot {height: 100%; width: 100%; position: absolute; top: 0; left: 0; bottom: 0; right: 0;}",
 		"/* testes */",
 		"*::backdrop {background-color: white;}",
-		"mark-wdfilter {background-color: rgba(154,205,50,0.7); display: inline; border-radius: 0.2em;}"
+		"mark-wdfilter {background-color: rgba(154,205,50,0.7); display: inline; border-radius: 0.2em;}",
+		"[data-wd-code] {background-color: rgb(238,238,236); color: rgb(46,52,54); border-radius: 1em;}",
+		"[data-wd-code] {font-family: monospace; font-size: 0.9em; font-style: normal; font-weight: normal;}",
+		"[data-wd-code] {text-decoration: none; text-indent: 0; padding: 0.5em;overflow: auto; position: relative;}",
+		"[data-wd-code] {counter-reset: countWdLines; white-space: pre;}",
+		"keys-wdcode {color: rgb(0, 153, 0); font-weight: bold;}",
+		"char-wdcode {color: rgb(224,20,130); white-space: pre-wrap;}",
+		"mark-wdcode {color: rgb(0, 128, 255); font-style: italic;}",
+		"comment-wdcode {color: rgb(78,60,195);}",
+		"group-wdcode {font-weight: bold;}",
+		"count-wdcode {padding: 0.2em; margin-right: 0.2em; color: rgb(204,204,204); text-align: left;}",
+		"count-wdcode {font-style: normal; font-weight: normal;}",
+		"count-wdcode:before {content: counter(countWdLines, decimal-leading-zero); counter-increment: countWdLines;}"
 //TODO interessante https://developer.mozilla.org/en-US/docs/Web/CSS/::file-selector-button
 
 
@@ -1607,54 +1619,127 @@ const wd = (function() {
 			}
 		},
 
+
+
+
+
+
 		code: {
 			value: function(options) {
 				let code = this.valueOf();
-				let view = {
-					keys: null,
-					multiLineComments: null,
-					singleLineComments: null,
-					multiLineStrings: null,
+				let KEYS = "";
+				const TRANSLATE = [
+					{from: "#",  to: "&num;"},    {from: "*",  to: "&ast;"},
+					{from: "-",  to: "&dash;"},	  {from: " ",  to: "&nbsp;"},
+					{from: "/",  to: "&sol;"},    {from: "\\", to: "&bsol;"},
+					{from: ">",  to: "&gt;"},     {from: "<",  to: "&lt;"},
+					{from: "!",  to: "&excl;"},   {from: "?",  to: "&quest;"},
+					{from: ",",  to: "&comma;"},  {from: "*",  to: "&ast;"},
+					{from: "%",  to: "&percnt;"}, {from: "$",  to: "&dollar;"},
+					{from: "[",  to: "&lsqb;"},   {from: "]",  to: "&rsqb;"},
+					{from: "(",  to: "&lpar;"},   {from: ")",  to: "&rpar;"},
+					{from: "{",  to: "&lcub;"},   {from: "}",  to: "&rcub;"},
+					{from: "\"", to: "&quot;"},	  {from: "'",  to: "&apos;"}/*,
+					{from: "\t", to: "&Tab;"},    /*{from: "\n", to: "&NewLine;"}*/
+				];
+				const CODES = {
+					text:     {start:   "", end:   ""},
+					string:   {start: "\"", end: "\""},
+					char:     {start: "\'", end: "\'"},
+					mark:     {start:  "#", end: "\n"},
+					comment:  {start: "//", end: "\n"},
+					comments: {start: "/*", end: "*/"}
 				};
-				//if (!__Type(options).object) return code;
-				/* capturando informações repassadas * /
-				for (let i in view)
-					if (i in options)
-						view[i] = String(options[i]).split(" ");*/
+				const TAGS = {
+					keys: "keys-wdcode",
+					string: "char-wdcode",
+					char: "char-wdcode",
+					text: "char-wdcode",
+					mark: "mark-wdcode",
+					comment: "comment-wdcode",
+					comments: "comment-wdcode",
+					group: "group-wdcode",
+					count: "count-wdcode"
+				};
+				let translateChars = function(input) {
+					TRANSLATE.forEach(function (v,i,a){
+						while (input.indexOf(v.from) >= 0)
+							input = input.replace(v.from, v.to);
+					});
+					return input;
+				}
+				/*-- definindo opções do usuário --*/
+				if (__Type(options).object) {
+					for (let id in CODES) {
+						if (id in options) {
+							let user = options[id].replace(/\s+/, " ").trim().split(" ");
+							CODES[id].start = user[0];
+							CODES[id].end   = user.length < 2 ? user[0] : user[1];
+						}
+					}
+					if ("keys" in options && __Type(options.keys).chars)
+						KEYS = options.keys.replace(/([\[\]\{\}\(\)\*\.\-])/g, "\\$1");
+				}
+				/*-- acertando valores comuns (respeitar a ordem) --*/
+				code = code.replace(/\&/gm, "&amp;"); /* tem que se o primeiro */
+				code = code.replace(/\</gm, "&lt;");
+				code = code.replace(/\>/gm, "&gt;");
+				code = code.replace(/\t/gm, "    ");
+				code = code.replace(/\\\"/gm, "&bsol;&quot;");
+				code = code.replace(/\\\'/gm, "&bsol;&apos;");
 
+				/*-- comentários e strings --*/
+				while (true) {
+					/* capturar a abertura */
+					let data = {index: Infinity, id: null};
+					for (let id in CODES) {
+						if (CODES[id].start === "") continue;
+						let value = code.indexOf(CODES[id].start);
+						if (value >= 0 && value < data.index) {
+							data.index = value;
+							data.id    = id;
+						}
+					}
+					if (data.id === null) break;
+					/*-- Capturar o encerramento --*/
+					let target = CODES[data.id]
+					let width1 = target.start.length;
+					let width2 = target.end.length;
+					let tag    = TAGS[data.id];
+					let point1 = data.index;
+					let delta  = code.substring(point1 + width1).indexOf(target.end);
+					let point2 = point1 + width1 + delta + width2;
+					if (delta < 0) break;
+					/* definir os parâmetro para substituição */
+					let text   = code.substring(point1, point2);
+					let trans  = translateChars(text);
+					let html   = "<"+tag+">"+trans+"</"+tag+">";
+					code = code.replace(text, html);
+				}
+				/* definindo palavras chaves */
+				let keys = KEYS.replace(/\s+/g, " ").trim().split(" ");
+				let html = TAGS.keys;
+				let swap = [
+					{re: "^(key)$",         rpl: "<tag>$1</tag>"},
+					{re: "^(key)(\\s)",     rpl: "<tag>$1</tag>$2"},
+					{re: "(\\s)(key)$",     rpl: "$1<tag>$2</tag>"},
+					{re: "(\\s)(key)(\\s)", rpl: "$1<tag>$2</tag>$3"},
+				];
+				keys.forEach(function(key,i,a) {
+					for (let x in swap) {
+						let re  = new RegExp(swap[x].re.replace("key", key), "gm");
+						let rpl = swap[x].rpl.replace("tag", html).replace("tag", html);
+						code = code.replace(re, rpl);
+					}
+				});
+				/*-- definições finais --*/
+				let ghtml = TAGS.group;
+				let chtml = TAGS.count;
+				code = code.replace(/([\{\}\[\]\(\)])/gm, "<"+ghtml+">$1</"+ghtml+">");
+				code = code.replace(/^(.)?/gim, "<"+chtml+"/></"+chtml+">$1");
 
-				code = code.replace(/\\\"/gim, "&bsol;&quot;")
-				code = code.replace(/\\\'/gim, "&bsol;&apos;")
-				code = code.replace(/\ /gim, "&nbsp;")
-				code = code.replace(/\t/gim, "&nbsp;&nbsp;&nbsp;&nbsp;")
-				code = code.replace(/\"([^\"]+)\"/gim, "<i>&quot;$1&quot;</i>")
-				code = code.replace(/\'([^\']+)\'/gim, "<i>&apos;$1&apos;</i>")
-
-
-
-
-
-				//code = code.replace(/\"/gim, "<quote-code>\"</quote-code>")
-				//code = code.replace(/\\\<quote\-code\>\"\<\/quote\-code\>/gim, "\\\"");
-				//code = code.replace(/([^\n\t\ ]+)/gim, "<span>$1</span>")
-				//code = code.split("\n").join("<br>");
-				//code = code.split("\t").join("&amt");
-
-				return "<pre contenteditable>"+code+"</pre>";
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+				console.log(code);
+				return code;
 			}
 		},
 
