@@ -3,6 +3,7 @@
 	{"target": "click"},
 	{"target": "device"},
 	{"target": "display"},
+	{"target": "code"},
 	{"target": "edit"},
 	{"target": "filter"},
 	{"target": "jump"},

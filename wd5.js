@@ -433,7 +433,7 @@ const wd = (function() {
 		"/* testes */",
 		"*::backdrop {background-color: white;}",
 		"mark-wdfilter {background-color: rgba(154,205,50,0.7); display: inline; border-radius: 0.2em;}",
-		"[data-wd-code] {background-color: rgb(238,238,236); color: rgb(46,52,54); border-radius: 1em;}",
+		"[data-wd-code] {background-color: rgb(238,238,236); color: rgb(46,52,54); border-radius: 0.2em;}",
 		"[data-wd-code] {font-family: monospace; font-size: 0.9em; font-style: normal; font-weight: normal;}",
 		"[data-wd-code] {text-decoration: none; text-indent: 0; padding: 0.5em;overflow: auto; position: relative;}",
 		"[data-wd-code] {counter-reset: countWdLines; white-space: pre;}",
@@ -1624,7 +1624,7 @@ const wd = (function() {
 
 
 
-		code: {
+		code: {//FIXME definir texto do método
 			value: function(options) {
 				let code = this.valueOf();
 				let KEYS = "";
@@ -1639,7 +1639,7 @@ const wd = (function() {
 					{from: "[",  to: "&lsqb;"},   {from: "]",  to: "&rsqb;"},
 					{from: "(",  to: "&lpar;"},   {from: ")",  to: "&rpar;"},
 					{from: "{",  to: "&lcub;"},   {from: "}",  to: "&rcub;"},
-					{from: "\"", to: "&quot;"},	  {from: "'",  to: "&apos;"}/*,
+					{from: "\"", to: "&quot;"},	  {from: "'",  to: "&apos;"},
 					{from: "\t", to: "&Tab;"},    /*{from: "\n", to: "&NewLine;"}*/
 				];
 				const CODES = {
@@ -1669,6 +1669,7 @@ const wd = (function() {
 					return input;
 				}
 				/*-- definindo opções do usuário --*/
+				if (code.indexOf("\n") < 0) code += "\n";
 				if (__Type(options).object) {
 					for (let id in CODES) {
 						if (id in options) {
@@ -1684,7 +1685,7 @@ const wd = (function() {
 				code = code.replace(/\&/gm, "&amp;"); /* tem que se o primeiro */
 				code = code.replace(/\</gm, "&lt;");
 				code = code.replace(/\>/gm, "&gt;");
-				code = code.replace(/\t/gm, "    ");
+				//code = code.replace(/\t/gm, "    ");
 				code = code.replace(/\\\"/gm, "&bsol;&quot;");
 				code = code.replace(/\\\'/gm, "&bsol;&apos;");
 
@@ -6805,6 +6806,83 @@ const wd = (function() {
 		return;
 	};
 
+
+
+
+
+
+
+
+
+
+/*----------------------------------------------------------------------------*/
+	/**###### ``**function** ''void'' data_wdDisplay(''node''  e, ''string'' event)``
+	Função vinculada ao atributo HTML ``data-wd-display`` cujo objetivo é manipular a exibição de nós, seus irmãos e filhos utilizando a ferramenta ``WDnode.display``. Possui múltiplos atributos e grupos:
+	|Nome|Descrição|Obrigatório|
+
+	|action|Ação a ser executada|Sim|
+	|$ ou $$|Seletor CSS para indicar o elemento os elementos a aplicar a ação (se ausente, será o próprio elemento)|Não|**/
+	function data_wdCode(e, event) {
+		if (!("wdCode" in e.dataset)) return;
+		if (__Node(e).form) return;
+		let codes = {
+			javascript: {
+				keys: "break case catch class const continue debugger default delete do else export extends false finally for function if import in instanceof new null return super switch this throw true try typeof var void while with let static yied await",
+				mark: ""
+			},
+			python: {
+				keys: "and as assert break class continue def del elif else except False finally for from global if import in is lambda None nonlocal not or pass raise return True try while with yield",
+				mark: "", comments: "", comment: "# \n"
+			},
+			c: {
+				keys: "asm auto break case char const continue default do double else enum extern float for goto if int long register return short signed sizeof static struct switch typedef union unsigned void volatile while"
+			},
+			html: {
+				comments: "<!-- -->", mark: "<! >", comment: "", keys: "&lt;div &lt;span"
+			}
+		}
+
+
+		//FIXME pegar o posicionamento do mouse ou onfocusout?
+
+		let data = __String(e.dataset.wdCode).wdNotation;
+		let cfg  = {};
+		if (__Type(data).array && __Type(data[0]).object)
+			cfg = data[0];
+		else if (data in codes)
+			cfg = codes[data];
+
+		e.innerHTML = __String(e.textContent).code(cfg);
+		return;
+	};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /*----------------------------------------------------------------------------*/
 	/**###### ``**function** ''void'' data_wdClick(''node''  e, ''string'' event)``
 	Função vinculada ao atributo HTML ``data-wd-click`` cujo objetivo é efetuar um autoclique ao elemento. Possui valor simples e opcional. Caso um número inteiro maior que zero seja informado, o clique irá ser executado a cada milisegundos conforme valor definido.**/
@@ -7155,6 +7233,7 @@ const wd = (function() {
 		WD.$$("[data-wd-device]").forEach(data_wdDevice);
 		WD.$$("[data-wd-chart]").forEach(data_wdChart);
 		WD.$$("[data-wd-url]").forEach(data_wdUrl);
+		WD.$$("[data-wd-code]").forEach(data_wdCode);
 		data_wdOutput(document, true);
 		return;
 	};
@@ -7169,8 +7248,9 @@ const wd = (function() {
 			case "wdClick":     data_wdClick(e);        break;
 			case "wdDevice":    data_wdDevice(e);       break;
 			case "wdChart":     data_wdChart(e);        break;
-			case "wdOutput":    data_wdOutput(e, true); break;
+			case "wdOutput":    data_wdOutput(e, true); break;//FIXME para que o true?
 			case "wdUrl":       data_wdUrl(e, true);    break;
+			case "wdCode":      data_wdCode(e, true);   break;
 		};
 		return;
 	};
@@ -7222,12 +7302,13 @@ const wd = (function() {
 		| F) executar
 		\-------------------------------------------------------------------------*/
 		if ("WDdatetimeKey" in ev.target.dataset) { /*C*/
-			let time = new Number(ev.target.dataset.WDdatetimeKey).valueOf();
-			if (now >= (time+__KEYTIMERANGE)) { /*D*/
+			let time = Number(ev.target.dataset.WDdatetimeKey);
+			if (now >= (time + __KEYTIMERANGE)) { /*D*/
 				delete ev.target.dataset.WDdatetimeKey; /*E*/
 				/*F*/
-				data_wdFilter(ev.target);
-				data_wdOutput(ev.target);
+				data_wdFilter(ev.target, "input");
+				data_wdOutput(ev.target, "Input");
+				//data_wdCode(ev.target, "input"); FIXME
 			}
 		}
 		return;
@@ -7235,7 +7316,8 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	function focusoutProcedures(ev) { /* procedimentos para saída de formulários */
-		data_wdMask(ev.target);
+		data_wdMask(ev.target, ev.type);
+		data_wdCode(ev.target, ev.type);
 		return;
 	};
 

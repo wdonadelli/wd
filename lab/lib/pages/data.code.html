@@ -1,0 +1,28 @@
+<div class="wd-flyer">
+
+	<nav>
+		<span
+			data-wd-set="${#code,#target}dataset{wdLoad{path{lib/add-ons/load.Page1.html}method{GET}}}"
+		>Page 1</span>
+		<span
+			data-wd-set="${#code,#target}dataset{wdLoad{path{lib/add-ons/load.Page1.html}method{GET}run{true}}}"
+		>Page 1 (run)</span>
+		<span
+			data-wd-set="${#code,#target}dataset{wdLoad{path{lib/add-ons/load.Page2.html}method{GET}}}"
+		>Page 2</span>
+		<span
+			data-wd-set="${#target2}dataset{wdLoad{path{lib/add-ons/load.Page1.html}method{GET}run{true}replace{true}}}"
+		>Page 1 (replace)</span>
+	</nav>
+
+
+
+	<pre data-wd-code="javascript" contenteditable="true">
+/* função para calcular o valor absoluto de um número */
+function abs(x) {
+	if (typeof x !== "number") return null;
+	return x < 0 ? -x : x;
+}
+	</pre>
+</div>
+
