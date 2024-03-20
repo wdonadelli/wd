@@ -434,17 +434,19 @@ const wd = (function() {
 		"*::backdrop {background-color: white;}",
 		"mark-wdfilter {background-color: rgba(154,205,50,0.7); display: inline; border-radius: 0.2em;}",
 		"[data-wd-code] {background-color: rgb(238,238,236); color: rgb(46,52,54); border-radius: 0.2em;}",
-		"[data-wd-code] {font-family: monospace; font-size: 0.9em; font-style: normal; font-weight: normal;}",
-		"[data-wd-code] {text-decoration: none; text-indent: 0; padding: 0.5em;overflow: auto; position: relative;}",
-		"[data-wd-code] {counter-reset: countWdLines; white-space: pre;}",
-		"keys-wdcode {color: rgb(0, 153, 0); font-weight: bold;}",
-		"char-wdcode {color: rgb(224,20,130); white-space: pre-wrap;}",
-		"mark-wdcode {color: rgb(0, 128, 255); font-style: italic;}",
-		"comment-wdcode {color: rgb(78,60,195);}",
-		"group-wdcode {font-weight: bold;}",
-		"count-wdcode {padding: 0.2em; margin-right: 0.2em; color: rgb(204,204,204); text-align: left;}",
-		"count-wdcode {font-style: normal; font-weight: normal;}",
-		"count-wdcode:before {content: counter(countWdLines, decimal-leading-zero); counter-increment: countWdLines;}"
+		"[data-wd-code] {font-family: monospace; font-size: 0.9em; }",
+		"[data-wd-code] {text-decoration: none; text-indent: 0; font-style: normal; font-weight: normal;}",
+		"[data-wd-code] {padding: 0.5em; margin: 0.5em 0; overflow: auto; position: relative;}",
+		"[data-wd-code] {counter-reset: jswdcode; white-space: pre-wrap;}",
+		"[data-wd-code] * {display: inline;}",
+		"[data-wd-code] keys-wdcode    {color: rgb(0, 153, 0);  font-weight: bold;}",
+		"[data-wd-code] vars-wdcode    {color: rgb(224,20,130);}",
+		"[data-wd-code] macro-wdcode   {color: rgb(0, 128, 255); font-style: italic;}",
+		"[data-wd-code] comment-wdcode {color: rgb(78,60,195);}",
+		"[data-wd-code] scope-wdcode   {font-weight: bold;}",
+		"[data-wd-code] lines-wdcode:before {padding: 0.2em; margin-right: 0.2em;}",
+		"[data-wd-code] lines-wdcode:before {color: rgb(204,204,204); text-align: left;}",
+		"[data-wd-code] lines-wdcode:before {content: counter(jswdcode, decimal-leading-zero); counter-increment: jswdcode;}"
 //TODO interessante https://developer.mozilla.org/en-US/docs/Web/CSS/::file-selector-button
 
 
@@ -1621,126 +1623,256 @@ const wd = (function() {
 
 
 
-
-
-
-		code: {//FIXME definir texto do método
-			value: function(options) {
-				let code = this.valueOf();
-				let KEYS = "";
-				const TRANSLATE = [
-					{from: "#",  to: "&num;"},    {from: "*",  to: "&ast;"},
-					{from: "-",  to: "&dash;"},	  {from: " ",  to: "&nbsp;"},
-					{from: "/",  to: "&sol;"},    {from: "\\", to: "&bsol;"},
-					{from: ">",  to: "&gt;"},     {from: "<",  to: "&lt;"},
-					{from: "!",  to: "&excl;"},   {from: "?",  to: "&quest;"},
-					{from: ",",  to: "&comma;"},  {from: "*",  to: "&ast;"},
-					{from: "%",  to: "&percnt;"}, {from: "$",  to: "&dollar;"},
-					{from: "[",  to: "&lsqb;"},   {from: "]",  to: "&rsqb;"},
-					{from: "(",  to: "&lpar;"},   {from: ")",  to: "&rpar;"},
-					{from: "{",  to: "&lcub;"},   {from: "}",  to: "&rcub;"},
-					{from: "\"", to: "&quot;"},	  {from: "'",  to: "&apos;"},
-					{from: "\t", to: "&Tab;"},    /*{from: "\n", to: "&NewLine;"}*/
-				];
-				const CODES = {
-					text:     {start:   "", end:   ""},
-					string:   {start: "\"", end: "\""},
-					char:     {start: "\'", end: "\'"},
-					mark:     {start:  "#", end: "\n"},
-					comment:  {start: "//", end: "\n"},
-					comments: {start: "/*", end: "*/"}
-				};
-				const TAGS = {
-					keys: "keys-wdcode",
-					string: "char-wdcode",
-					char: "char-wdcode",
-					text: "char-wdcode",
-					mark: "mark-wdcode",
-					comment: "comment-wdcode",
-					comments: "comment-wdcode",
-					group: "group-wdcode",
-					count: "count-wdcode"
-				};
-				let translateChars = function(input) {
-					TRANSLATE.forEach(function (v,i,a){
-						while (input.indexOf(v.from) >= 0)
-							input = input.replace(v.from, v.to);
-					});
-					return input;
-				}
-				/*-- definindo opções do usuário --*/
-				if (code.indexOf("\n") < 0) code += "\n";
-				if (__Type(options).object) {
-					for (let id in CODES) {
-						if (id in options) {
-							let user = options[id].replace(/\s+/, " ").trim().split(" ");
-							CODES[id].start = user[0];
-							CODES[id].end   = user.length < 2 ? user[0] : user[1];
+/*
+					swap: function(code, target, tag) {
+						let trim = "(\\s|[(){}\\[\\]\\-+* /%=!;,:]|\\&gt\\;|\\&lt\\;)";
+						let swap = [
+							{re: "^(target)$",         rpl: "<tag>$1</tag>"},
+							{re: "^(target)"+trim,     rpl: "<tag>$1</tag>$2"},
+							{re: trim+"(target)$",     rpl: "$1<tag>$2</tag>"},
+							{re: trim+"(target)"+trim, rpl: "$1<tag>$2</tag>$3"},
+						];
+						for (let i in swap) {
+							let re = new RegExp(swap[i].re.replace("target", target), "g");
+							let tg = swap[i].rpl.replace("tag", tag);
+							code = code.replace(re, tg);
 						}
-					}
-					if ("keys" in options && __Type(options.keys).chars)
-						KEYS = options.keys.replace(/([\[\]\{\}\(\)\*\.\-])/g, "\\$1");
-				}
-				/*-- acertando valores comuns (respeitar a ordem) --*/
-				code = code.replace(/\&/gm, "&amp;"); /* tem que se o primeiro */
-				code = code.replace(/\</gm, "&lt;");
-				code = code.replace(/\>/gm, "&gt;");
-				//code = code.replace(/\t/gm, "    ");
-				code = code.replace(/\\\"/gm, "&bsol;&quot;");
-				code = code.replace(/\\\'/gm, "&bsol;&apos;");
+						return code;
+					},
+					*/
+	});
 
-				/*-- comentários e strings --*/
-				while (true) {
-					/* capturar a abertura */
-					let data = {index: Infinity, id: null};
-					for (let id in CODES) {
-						if (CODES[id].start === "") continue;
-						let value = code.indexOf(CODES[id].start);
-						if (value >= 0 && value < data.index) {
-							data.index = value;
-							data.id    = id;
-						}
+
+
+
+
+
+
+
+
+
+
+
+/*----------------------------------------------------------------------------*/
+	/**### Code
+	###### ``**constructor** ''object'' __Code(''string'' input)``
+	Construtor para manipulação de textos com formatação de códigos. O argumento ``input`` define o código fonte.**/
+	function __Code(input) {
+		if (!(this instanceof __Code)) return new __Code(input);
+		Object.defineProperties(this, {
+			_input:   {value: input},
+			_code:    {value: String(input), writable: true},
+			_open:    {value: null, writable: true},
+			_options: {
+				value: {
+					vars: [],
+					keys: [],
+					cages: {
+						text:     {start:   "", end:   ""},
+						string:   {start: "\"", end: "\""},
+						char:     {start: "\'", end: "\'"},
+						macro:    {start:  "#", end: "\n"},
+						comment:  {start: "//", end: "\n"},
+						comments: {start: "/*", end: "*/"}
 					}
-					if (data.id === null) break;
-					/*-- Capturar o encerramento --*/
-					let target = CODES[data.id]
-					let width1 = target.start.length;
-					let width2 = target.end.length;
-					let tag    = TAGS[data.id];
-					let point1 = data.index;
-					let delta  = code.substring(point1 + width1).indexOf(target.end);
-					let point2 = point1 + width1 + delta + width2;
-					if (delta < 0) break;
-					/* definir os parâmetro para substituição */
-					let text   = code.substring(point1, point2);
-					let trans  = translateChars(text);
-					let html   = "<"+tag+">"+trans+"</"+tag+">";
-					code = code.replace(text, html);
+				},
+				_done: {value: false, writable: true}
+			},
+		});
+	}
+
+	Object.defineProperties(__Code.prototype, {
+		constructor: {value: __Code},
+
+
+
+
+
+		/**. ``''object'' options``: Define ou retorna as configuração dos componentes do código.*/
+		options: {
+			get: function()  {return this._options;},
+			set: function(x) {
+				if (!__Type(x).object) return;
+				for (let id in this._options.cages) {
+					if (id in x) {
+						let data = String(x[id]).replace(/\s+/g, " ").trim().split(" ");
+						this._options.cages[id].start = data[0];
+						this._options.cages[id].end   = data.length > 1 ? data[1] : data[0];
+					}
 				}
-				/* definindo palavras chaves */
-				let keys = KEYS.replace(/\s+/g, " ").trim().split(" ");
-				let html = TAGS.keys;
-				let swap = [
-					{re: "^(key)$",         rpl: "<tag>$1</tag>"},
-					{re: "^(key)(\\s)",     rpl: "<tag>$1</tag>$2"},
-					{re: "(\\s)(key)$",     rpl: "$1<tag>$2</tag>"},
-					{re: "(\\s)(key)(\\s)", rpl: "$1<tag>$2</tag>$3"},
+				if ("vars" in x)
+					this._options.vars = String(x.vars).replace(/\s+/g, " ").trim().split(" ");
+				if ("keys" in x)
+					this._options.keys = String(x.keys).replace(/\s+/g, " ").trim().split(" ");
+
+
+				//FIXME onde colocar isso?
+				this.setInitial();
+				this.setCages();
+				this.setWords();
+				this.setEnding();
+				this._done = true;
+
+				return;
+			}
+		},
+		/**. ``''string'' tags(''string'' code, ''string'' id)``: Retorna o código informado em ``code`` entre as tags identificadas por ``id``. FIXME complementar isso aqui*/
+		tags: {
+			value: function(code, id) {
+				let tags =  {
+					keys:       "keys-wdcode", vars:        "vars-wdcode",
+					string:     "vars-wdcode", char:        "vars-wdcode",
+					text:       "vars-wdcode", macro:      "macro-wdcode",
+					comment: "comment-wdcode", comments: "comment-wdcode",
+					scope:     "scope-wdcode", lines:      "lines-wdcode"
+				};
+				let tag = id in tags ? tags[id] : null;
+				if (code === null && tag !== null) return tag;
+				return tag === null ? code : "<"+tag+">"+code+"</"+tag+">";
+			}
+		},
+		/**. ``''string'' tranlate(''string'' code)``: Retorna o texto informado em ``code`` com alguns caracteres traduzidos para o HTML .**/
+		translate: {
+			value: function (code) {
+				const chars = [
+					{a: "\t", b: "&tab;"},    {a: " ",  b: "&nbsp;"},
+					{a: "#",  b: "&num;"},    {a: "$",  b: "&dollar;"},
+					{a: "+",  b: "&plus;"},	  {a: "-",  b: "&dash;"},
+					{a: "*",  b: "&ast;"},    {a: "/",  b: "&sol;"},
+					{a: ",",  b: "&comma;"},  /*{a: ";",  b: "&semi;"},*/
+					{a: ".",  b: "&period;"},	{a: "!",  b: "&excl;"},
+					{a: "?",  b: "&quest;"},  {a: "%",  b: "&percnt;"},
+					{a: ":",  b: "&colon;"},  {a: "=",  b: "&equals;"},
+					{a: "`",  b: "&grave;"},  {a: "´",  b: "&acute;"},
+					{a: "^",  b: "&hat;"},    {a: "~",  b: "&tilde;"},
+					{a: "@",  b: "&commat;"}, {a: "_",  b: "&lowbar;"},
+					{a: "<",  b: "&lt;"},     {a: ">",  b: "&gt;"},
+					{a: "[",  b: "&lsqb;"},   {a: "]",  b: "&rsqb;"},
+					{a: "(",  b: "&lpar;"},   {a: ")",  b: "&rpar;"},
+					{a: "{",  b: "&lcub;"},   {a: "}",  b: "&rcub;"},
+					{a: "|",  b: "&verbar;"}, {a: "\\", b: "&bsol;"},
+					{a: "\"", b: "&quot;"},	  {a: "'",  b: "&apos;"},
 				];
-				keys.forEach(function(key,i,a) {
-					for (let x in swap) {
-						let re  = new RegExp(swap[x].re.replace("key", key), "gm");
-						let rpl = swap[x].rpl.replace("tag", html).replace("tag", html);
-						code = code.replace(re, rpl);
-					}
+				chars.forEach(function(v,i,a) {
+					while (code.indexOf(v.a) >= 0) code = code.replace(v.a, v.b);
 				});
-				/*-- definições finais --*/
-				let ghtml = TAGS.group;
-				let chtml = TAGS.count;
-				code = code.replace(/([\{\}\[\]\(\)])/gm, "<"+ghtml+">$1</"+ghtml+">");
-				code = code.replace(/^(.)?/gim, "<"+chtml+"/></"+chtml+">$1");
-
-				console.log(code);
 				return code;
+			}
+		},
+
+		/**. ``''void'' setInitial()``: Altera caracteres sensíveis ao formato HTML.**/
+		setInitial: {
+			value: function() {
+				if (this._done) return;
+				let data = [
+					{a:   /\&/gm, b: "&amp;"},
+					{a:   /\</gm, b: "&lt;"},
+					{a:   /\>/gm, b: "&gt;"},
+					{a: /\\\"/gm, b: "&bsol;&quot;"},
+					{a: /\\\'/gm, b: "&bsol;&apos;"}
+				];
+				let self = this;
+				data.forEach(function(v,i,a) {
+					self._code = self._code.replace(v.a, v.b);
+				});
+				return;
+			}
+		},
+		/**. ``''void'' setCages()``: Define os grupos de comentários, macros e string.**/
+		setCages: {
+			value: function() {
+				if (this._done) return;
+				let cage = {open: null, close: null, id: null, start: Infinity, end: Infinity};
+				/*-- obter a abertura --*/
+				for (let id in this.options.cages) {
+					let open  = this.options.cages[id].start;
+					let index = this._code.indexOf(open);
+					if (open.trim() !== "" & index >= 0 && index < cage.start) {
+						cage.id    = id;
+						cage.start = index;
+						cage.open  = open;
+						cage.close = this.options.cages[id].end;
+					}
+				}
+				if (cage.id === null) return;
+				/*-- obter o fim --*/
+				let code  = this._code.substring(cage.start + cage.open.length);
+				let delta = code.indexOf(cage.close);
+				if (cage.close === "\n")
+					cage.end = cage.start + cage.open.length + code.split("\n")[0].length;
+				else if (delta >= 0)
+					cage.end = cage.start + cage.open.length + delta + cage.close.length;
+				/*-- definir a transformação --*/
+				let text  = this._code.substring(cage.start, cage.end);
+				let trans = text.split("\n");
+				let self  = this;
+				trans.forEach(function (v,i,a) {
+					a[i] = self.translate(v);
+					a[i] = self.tags(a[i], cage.id);
+				})
+				trans = trans.join("\n");
+				/*-- trasportar a transformação e reiniciar ciclo --*/
+				this._code = this._code.replace(text, trans);
+				return this.setCages();
+			}
+		},
+
+		setWords: {
+			value: function() {
+				if (this._done) return;
+				let side = "([!%&|^~+\\‐=*/\\[\\]{}()?:,\t\ ]|\\&gt|\\&lt)";
+				let vars = this.tags(null, "vars");
+				let keys = this.tags(null, "keys");
+				let data = [
+					{re: "^(id)$",         to: "<tag>$1</tag>"},
+					{re: "^(id)"+side,     to: "<tag>$1</tag>$2"},
+					{re: side+"(id)$",    to: "$1<tag>$2</tag>"},
+					{re: side+"(id)"+side, to: "$1<tag>$2</tag>$3"},
+				];
+				let self = this;console.log(this.options);
+				data.forEach(function(v,i,a) {
+
+
+					self.options.vars.forEach(function(id,j,b) {
+						let re = v.re.replace("id", id)
+						let to = v.to.replace(/tag/g, vars);
+						let ob = new RegExp(re, "gm");
+						console.log(ob, to);
+
+
+						self._code = self._code.replace(ob, to);
+					});
+
+
+					self.options.keys.forEach(function(id,j,b) {
+						let re = v.re.replace("id", id)
+						let to = v.to.replace(/tag/g, keys);
+						let ob = new RegExp(re, "gm");
+						console.log(ob, to);
+						self._code = self._code.replace(ob, to);
+
+					});
+				});
+			}
+		},
+		setEnding: {
+			value: function() {
+				if (this._done) return;
+				let scope = this.tags(null, "scope");
+				let lines = this.tags(null, "lines");
+				let join  = "</"+lines+">\n<"+lines+">";
+				let re  = /([\[\{\}\(\)\]]|\&gt\;|\&lt\;)/gm;
+
+				this._code = this._code.replace(re, "<"+scope+">$1</"+scope+">");
+
+				this._code = this._code.split("\n");
+				this._code = "<"+lines+">"+this._code.join(join)+"</"+lines+">";
+
+				this._code = this._code.replace(/\&nbsp\;/gm, " ");
+				this._code = this._code.replace(/\&tab\;/gm, "\t");
+
+
+
 			}
 		},
 
@@ -1748,22 +1880,32 @@ const wd = (function() {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+		valueOf: {
+			value: function() {return this._code;}
+		},
+		toString: {
+			value: function() {return this._input;}
+		},
 	});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /*===========================================================================*/
 	/**### Data e Tempo
@@ -6846,13 +6988,22 @@ const wd = (function() {
 		//FIXME pegar o posicionamento do mouse ou onfocusout?
 
 		let data = __String(e.dataset.wdCode).wdNotation;
+		let code = __Code(e.textContent);
 		let cfg  = {};
-		if (__Type(data).array && __Type(data[0]).object)
-			cfg = data[0];
-		else if (data in codes)
-			cfg = codes[data];
 
-		e.innerHTML = __String(e.textContent).code(cfg);
+
+		if (__Type(data).array && __Type(data[0]).object)
+			code.options = cfg = data[0];
+		else if (data in codes)
+			code.options = cfg = codes[data];
+
+
+
+		e.innerHTML = code.valueOf();
+		console.log(code.options);
+		console.log(code.valueOf());
+
+
 		return;
 	};
 
