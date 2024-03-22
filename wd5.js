@@ -444,10 +444,11 @@ const wd = (function() {
 		"[data-wd-code] macro-wdcode   {color: rgb(0, 128, 255); font-style: italic;}",
 		"[data-wd-code] comment-wdcode {color: rgb(78,60,195);}",
 		"[data-wd-code] scope-wdcode   {font-weight: bold;}",
-		"[data-wd-code] lines-wdcode:before {padding: 0.2em; margin-right: 0.2em;}",
+		"[data-wd-code] lines-wdcode:before {padding-right: 0.2em; margin-right: 0.2em;}",
 		"[data-wd-code] lines-wdcode:before {color: rgb(204,204,204); text-align: left;}",
 		"[data-wd-code] lines-wdcode:before {content: counter(jswdcode, decimal-leading-zero); counter-increment: jswdcode;}"
 //TODO interessante https://developer.mozilla.org/en-US/docs/Web/CSS/::file-selector-button
+
 
 
 	];
@@ -1546,7 +1547,7 @@ const wd = (function() {
 		},
 		/**. ``''any'' wdValue(''any'' x)``: Recebe o valor do argumento ``x`` e o retorna adequado à necessidade do método ``wdNotation``.**/
 		wdValue: {
-			value: function(x) {//console.log(x);
+			value: function(x) {
 				let types = {true: true, false: false, null: null, undefined: undefined};
 				let check = __Type(x);
 				let array = /^\[(.+)\]$/;
@@ -1661,8 +1662,9 @@ const wd = (function() {
 		if (!(this instanceof __Code)) return new __Code(input);
 		Object.defineProperties(this, {
 			_input:   {value: input},
-			_code:    {value: String(input), writable: true},
-			_open:    {value: null, writable: true},
+			_code:    {value: null,  writable: true},
+			_open:    {value: null,  writable: true},
+			_run:     {value: false, writable: true},
 			_options: {
 				value: {
 					vars: [],
@@ -1676,18 +1678,13 @@ const wd = (function() {
 						comments: {start: "/*", end: "*/"}
 					}
 				},
-				_done: {value: false, writable: true}
+
 			},
 		});
 	}
 
 	Object.defineProperties(__Code.prototype, {
 		constructor: {value: __Code},
-
-
-
-
-
 		/**. ``''object'' options``: Define ou retorna as configuração dos componentes do código.*/
 		options: {
 			get: function()  {return this._options;},
@@ -1702,16 +1699,14 @@ const wd = (function() {
 				}
 				if ("vars" in x)
 					this._options.vars = String(x.vars).replace(/\s+/g, " ").trim().split(" ");
+				else
+					this._options.vars = [];
 				if ("keys" in x)
 					this._options.keys = String(x.keys).replace(/\s+/g, " ").trim().split(" ");
+				else
+					this._options.keys = [];
 
-
-				//FIXME onde colocar isso?
-				this.setInitial();
-				this.setCages();
-				this.setWords();
-				this.setEnding();
-				this._done = true;
+				this._code = null;
 
 				return;
 			}
@@ -1719,7 +1714,7 @@ const wd = (function() {
 		/**. ``''string'' tags(''string'' code, ''string'' id)``: Retorna o código informado em ``code`` entre as tags identificadas por ``id``. FIXME complementar isso aqui*/
 		tags: {
 			value: function(code, id) {
-				let tags =  {
+				const tags =  {
 					keys:       "keys-wdcode", vars:        "vars-wdcode",
 					string:     "vars-wdcode", char:        "vars-wdcode",
 					text:       "vars-wdcode", macro:      "macro-wdcode",
@@ -1763,8 +1758,8 @@ const wd = (function() {
 		/**. ``''void'' setInitial()``: Altera caracteres sensíveis ao formato HTML.**/
 		setInitial: {
 			value: function() {
-				if (this._done) return;
-				let data = [
+				if (!this._run) return;
+				const data = [
 					{a:   /\&/gm, b: "&amp;"},
 					{a:   /\</gm, b: "&lt;"},
 					{a:   /\>/gm, b: "&gt;"},
@@ -1778,10 +1773,10 @@ const wd = (function() {
 				return;
 			}
 		},
-		/**. ``''void'' setCages()``: Define os grupos de comentários, macros e string.**/
+		/**. ``''void'' setCages()``: Define os grupos de comentários, macros e string. Só é chamado por processo interno.**/
 		setCages: {
 			value: function() {
-				if (this._done) return;
+				if (!this._run) return;
 				let cage = {open: null, close: null, id: null, start: Infinity, end: Infinity};
 				/*-- obter a abertura --*/
 				for (let id in this.options.cages) {
@@ -1816,73 +1811,120 @@ const wd = (function() {
 				return this.setCages();
 			}
 		},
-
+		/**. ``''void'' setWords()``: Define as palavras reservadas e variáveis. Só é chamado por processo interno.**/
 		setWords: {
 			value: function() {
-				if (this._done) return;
-				let side = "([!%&|^~+\\‐=*/\\[\\]{}()?:,\t\ ]|\\&gt|\\&lt)";
-				let vars = this.tags(null, "vars");
-				let keys = this.tags(null, "keys");
+				if (!this._run) return;
+				const side = "([!%&|^~+\\‐=*/\\[\\]{}()?:,;\t\ ]|\\&gt|\\&lt)";
+				const num  = "[+-]?\\.?\\d+|[+-]?\\.?\\d+e[+-]?\\d+|[+-]?\\d+\\.?\\d+|[+-]?\\d+\\.?\\d+e[+-]?\\d+";
+				const html = "&lt;\s+";//FIXME ???????????
+				const vars = this.tags(null, "vars");
+				const keys = this.tags(null, "keys");
 				let data = [
 					{re: "^(id)$",         to: "<tag>$1</tag>"},
 					{re: "^(id)"+side,     to: "<tag>$1</tag>$2"},
 					{re: side+"(id)$",    to: "$1<tag>$2</tag>"},
 					{re: side+"(id)"+side, to: "$1<tag>$2</tag>$3"},
 				];
-				let self = this;console.log(this.options);
+				let self = this;
 				data.forEach(function(v,i,a) {
-
-
-					self.options.vars.forEach(function(id,j,b) {
-						let re = v.re.replace("id", id)
+					/*-- Variáveis --*/
+					if (self.options.vars.length > 0) {
+						let id = self.options.vars.join("|");
 						let to = v.to.replace(/tag/g, vars);
+						let re = v.re.replace("id", id);
 						let ob = new RegExp(re, "gm");
-						console.log(ob, to);
-
-
 						self._code = self._code.replace(ob, to);
-					});
-
-
-					self.options.keys.forEach(function(id,j,b) {
-						let re = v.re.replace("id", id)
+					}
+					/*-- Palavras reservadas --*/
+					if (self.options.keys.length > 0) {
+						let id = self.options.keys.join("|")/*.replace(/([^|\w])/g, "\\$1")*/;
 						let to = v.to.replace(/tag/g, keys);
+						let re = v.re.replace("id", id);
 						let ob = new RegExp(re, "gm");
-						console.log(ob, to);
 						self._code = self._code.replace(ob, to);
+					}
+					/*-- números --*/
+					if (true) {//FIXME ver melhor isso aí e o que fazer com o html
+						let id = num;
+						let to = v.to.replace(/tag/g, vars);
+						let re = v.re.replace("id", id);
+						let ob = new RegExp(re, "gmi");
+						self._code = self._code.replace(ob, to);
+					}
 
-					});
+
+
+
 				});
+				/*-- números --*/
+
+
+
+
+
+
+
 			}
 		},
+		/**. ``''void'' setEnding()``: Define caracteres de escopo e linhas. Só é chamado por processo interno.**/
 		setEnding: {
 			value: function() {
-				if (this._done) return;
+				if (!this._run) return;
+				/*-- caracteres de escopo e linhas --*/
 				let scope = this.tags(null, "scope");
 				let lines = this.tags(null, "lines");
 				let join  = "</"+lines+">\n<"+lines+">";
 				let re  = /([\[\{\}\(\)\]]|\&gt\;|\&lt\;)/gm;
-
 				this._code = this._code.replace(re, "<"+scope+">$1</"+scope+">");
-
 				this._code = this._code.split("\n");
 				this._code = "<"+lines+">"+this._code.join(join)+"</"+lines+">";
-
+				/*-- retornar &nbsp; e &tab& para \ e \t --*/
 				this._code = this._code.replace(/\&nbsp\;/gm, " ");
 				this._code = this._code.replace(/\&tab\;/gm, "\t");
-
-
-
 			}
 		},
-
-
-
-
-
-		valueOf: {
-			value: function() {return this._code;}
+		/**. ``''void'' lang(''string'' x)``: Define ``options`` por meio do nome da linguagem informada em ``x`` (em construção).**/
+		lang: {
+			set: function(x) {
+				const codes = {
+					javascript: {
+						keys: "break case catch class const continue debugger default delete do else export extends finally for function if import in instanceof new return super switch throw try typeof var void while with let static yied await",
+						vars: "false null this true undefined NaN Infinity"
+					},
+					python: {
+						keys: "and as assert break class continue def del elif else except finally for from global if import in is lambda nonlocal not or pass raise return try while with yield",
+						vars: "False None True",
+						macro: "", comments: "", comment: "# \n"
+					},
+					c: {
+						keys: "asm auto break case char const continue default do double else enum extern float for goto if int long register return short signed sizeof static struct switch typedef union unsigned void volatile while"
+					},
+					html: {
+						comments: "&lt;!-- --&gt;", macro: "&lt;! &gt;", comment: "", keys: "&lt;div &lt;span"
+					}
+				};
+				x = String(x).toLowerCase();
+				if (x in codes) this.options = codes[x];
+				return;
+			}
 		},
+		/**. ``''string'' valueOf()``: Retorna o código formatado para HTML.**/
+		valueOf: {
+			value: function() {
+				if (this._code === null) {
+					this._run  = true;
+					this._code = String(this._input);
+					this.setInitial();
+					this.setCages();
+					this.setWords();
+					this.setEnding();
+					this._run = false;
+				}
+				return this._code;
+			}
+		},
+		/**. ``''string'' toString()``: Retorna o código definido ao instanciar o objeto (``Input``).**/
 		toString: {
 			value: function() {return this._input;}
 		},
@@ -3168,7 +3210,6 @@ const wd = (function() {
 							case "date|time": {
 								if (check.date || check.time || check.datetime) value = check.value;
 								else valid = "Invalid date or time value.";
-								console.log("Passei aqui");
 								break;
 							}
 							case "number": {
@@ -6691,7 +6732,6 @@ const wd = (function() {
 				let check = __Type(jumper);
 				if (check.node) {
 					let nodes = this._input;
-					console.log(nodes, check.value);
 					check.value.forEach(function(v,i,a) {
 						let node = __Node(v);
 						node.jump(nodes);
@@ -6917,7 +6957,6 @@ const wd = (function() {
 			if ("header"   in v) v.header   = __String(v.header).wdNotation[0];
 			if ("ondone"   in v) v.ondone   = window[v.ondone];
 			if ("onchange" in v) v.onchange = window[v.onchange];
-			console.log(v);
 			let query  = __Query.$$$(v);
 			let target = WD(query);
 			target.send(v.path, v);
@@ -6967,41 +7006,18 @@ const wd = (function() {
 	function data_wdCode(e, event) {
 		if (!("wdCode" in e.dataset)) return;
 		if (__Node(e).form) return;
-		let codes = {
-			javascript: {
-				keys: "break case catch class const continue debugger default delete do else export extends false finally for function if import in instanceof new null return super switch this throw true try typeof var void while with let static yied await",
-				mark: ""
-			},
-			python: {
-				keys: "and as assert break class continue def del elif else except False finally for from global if import in is lambda None nonlocal not or pass raise return True try while with yield",
-				mark: "", comments: "", comment: "# \n"
-			},
-			c: {
-				keys: "asm auto break case char const continue default do double else enum extern float for goto if int long register return short signed sizeof static struct switch typedef union unsigned void volatile while"
-			},
-			html: {
-				comments: "<!-- -->", mark: "<! >", comment: "", keys: "&lt;div &lt;span"
-			}
-		}
-
-
 		//FIXME pegar o posicionamento do mouse ou onfocusout?
 
-		let data = __String(e.dataset.wdCode).wdNotation;
-		let code = __Code(e.textContent);
-		let cfg  = {};
-
-
-		if (__Type(data).array && __Type(data[0]).object)
-			code.options = cfg = data[0];
-		else if (data in codes)
-			code.options = cfg = codes[data];
-
-
-
+		let data  = __String(e.dataset.wdCode).wdNotation;
+		let code  = __Code(e.textContent);
+		let check = __Type(data)
+		if (check.array) code.options = data[0];
+		else             code.lang    = data;
 		e.innerHTML = code.valueOf();
-		console.log(code.options);
-		console.log(code.valueOf());
+
+
+		//console.log("\n------------\n", code.options);
+		//console.log("\n------------\n", code.valueOf());
 
 
 		return;
