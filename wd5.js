@@ -1487,7 +1487,7 @@ const wd = (function() {
 		/**. ``''matrix'' csv``: Retorna uma matriz (array) a partir de uma string no formato [CSV]<https://www.rfc-editor.org/rfc/rfc4180> cujas colunas sejam separadas por "\t" e linhas por "\n". Se o valor da célula contiver o caractere divisor de coluna ou linha, a célula deverá estar cercada por aspas duplas.**/
 		csv: {
 			get: function() {
-				/* definindo variáveis */
+				/* definindo variáveis */ //FIXME se tiver uma campo vazio "", ele não reconhece a célula
 				let td    = "\t";
 				let tr    = "\n";
 				let txt   = this._value;
@@ -1676,7 +1676,8 @@ const wd = (function() {
 						macro:    {start:  "#", end: "\n"},
 						comment:  {start: "//", end: "\n"},
 						comments: {start: "/*", end: "*/"}
-					}
+					},
+					number: true,
 				},
 
 			},
@@ -1815,26 +1816,37 @@ const wd = (function() {
 		setWords: {
 			value: function() {
 				if (!this._run) return;
-				const side = "([!%&|^~+\\‐=*/\\[\\]{}()?:,;\t\ ]|\\&gt|\\&lt)";
-				const num  = "[+-]?\\.?\\d+|[+-]?\\.?\\d+e[+-]?\\d+|[+-]?\\d+\\.?\\d+|[+-]?\\d+\\.?\\d+e[+-]?\\d+";
+				const lside = "([!&\\|\\^~\\-+*/%=\\[{\\(?:,;]|\\s)";
+				const rside = "([!&\\|\\^~\\-+*/%=\\]}\\)?:,;]|\\s)";
+				const num  = "[+\\-]?\\.?\\d+|[+\\-]?\\.?\\d+e[+\\-]?\\d+|[+\\-]?\\d+\\.?\\d+|[+\\-]?\\d+\\.?\\d+e[+\\-]?\\d+";
 				const html = "&lt;\s+";//FIXME ???????????
 				const vars = this.tags(null, "vars");
 				const keys = this.tags(null, "keys");
 				let data = [
-					{re: "^(id)$",         to: "<tag>$1</tag>"},
-					{re: "^(id)"+side,     to: "<tag>$1</tag>$2"},
-					{re: side+"(id)$",    to: "$1<tag>$2</tag>"},
-					{re: side+"(id)"+side, to: "$1<tag>$2</tag>$3"},
+					{re: "^(id)$",           to: "<tag>$1</tag>"},
+					{re: lside+"(id)$",      to: "$1<tag>$2</tag>"},
+					{re: "^(id)"+rside,      to: "<tag>$1</tag>$2"},
+					{re: lside+"(id)"+rside, to: "$1<tag>$2</tag>$3"},
 				];
 				let self = this;
 				data.forEach(function(v,i,a) {
+					/*-- números --*/
+					if (self.options.number !== false) {//FIXME ver melhor isso aí e o que fazer com o html
+						let id = num;
+						let to = v.to.replace(/tag/g, vars);
+						let re = v.re.replace("id", id);
+						let ob = new RegExp(re, "i");
+						while (ob.test(self._code))
+							self._code = self._code.replace(ob, to);
+					}
 					/*-- Variáveis --*/
 					if (self.options.vars.length > 0) {
 						let id = self.options.vars.join("|");
 						let to = v.to.replace(/tag/g, vars);
 						let re = v.re.replace("id", id);
-						let ob = new RegExp(re, "gm");
-						self._code = self._code.replace(ob, to);
+						let ob = new RegExp(re);
+						while (ob.test(self._code))
+							self._code = self._code.replace(ob, to);
 					}
 					/*-- Palavras reservadas --*/
 					if (self.options.keys.length > 0) {
@@ -1842,29 +1854,10 @@ const wd = (function() {
 						let to = v.to.replace(/tag/g, keys);
 						let re = v.re.replace("id", id);
 						let ob = new RegExp(re, "gm");
-						self._code = self._code.replace(ob, to);
+						while (ob.test(self._code))
+							self._code = self._code.replace(ob, to);
 					}
-					/*-- números --*/
-					if (true) {//FIXME ver melhor isso aí e o que fazer com o html
-						let id = num;
-						let to = v.to.replace(/tag/g, vars);
-						let re = v.re.replace("id", id);
-						let ob = new RegExp(re, "gmi");
-						self._code = self._code.replace(ob, to);
-					}
-
-
-
-
 				});
-				/*-- números --*/
-
-
-
-
-
-
-
 			}
 		},
 		/**. ``''void'' setEnding()``: Define caracteres de escopo e linhas. Só é chamado por processo interno.**/
@@ -1875,7 +1868,7 @@ const wd = (function() {
 				let scope = this.tags(null, "scope");
 				let lines = this.tags(null, "lines");
 				let join  = "</"+lines+">\n<"+lines+">";
-				let re  = /([\[\{\}\(\)\]]|\&gt\;|\&lt\;)/gm;
+				let re  = /([\[\]\{\}\(\)])/gm;
 				this._code = this._code.replace(re, "<"+scope+">$1</"+scope+">");
 				this._code = this._code.split("\n");
 				this._code = "<"+lines+">"+this._code.join(join)+"</"+lines+">";
@@ -7313,7 +7306,9 @@ const wd = (function() {
 	function loadProcedures(ev) {
 		/* vinculando disparador de mudança de dispositivo */
 		__DEVICECONTROLLER.onchange = function(x) {
-			WD.$$("[data-wd-device]").forEach(data_wdDevice);
+				WD.$$("[data-wd-device]").forEach(function(x) {
+					return data_wdDevice(x, "load");
+				});
 		}
 
 		/* construindo CSS da biblioteca */
@@ -7373,11 +7368,15 @@ const wd = (function() {
 	function loadingProcedures() { /* procedimento para carregamentos */
 
 		/* 1) processar repetições */
-		WD.$$("[data-wd-repeat]").forEach(data_wdRepeat);
+		WD.$$("[data-wd-repeat]").forEach(function(x) {
+			return data_wdRepeat(x, "loading");
+		});
 		if (__COUNTERCONTROL.repeat > 0) return;
 
 		/* 2) processar carregamentos */
-		WD.$$("[data-wd-load]").forEach(data_wdLoad);
+		WD.$$("[data-wd-load]").forEach(function(x) {
+			return data_wdLoad(x, "loading")
+		});
 		if (__COUNTERCONTROL.load > 0) return;
 
 		/* 3) se repetições e carregamentos terminarem, organizar */
@@ -7394,13 +7393,13 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	function organizationProcedures() { /* procedimento PÓS carregamentos */
-		WD.$$("[data-wd-filter]").forEach(data_wdFilter);
-		WD.$$("[data-wd-mask]").forEach(data_wdMask);
-		WD.$$("[data-wd-click]").forEach(data_wdClick);
-		WD.$$("[data-wd-device]").forEach(data_wdDevice);
-		WD.$$("[data-wd-chart]").forEach(data_wdChart);
-		WD.$$("[data-wd-url]").forEach(data_wdUrl);
-		WD.$$("[data-wd-code]").forEach(data_wdCode);
+		WD.$$("[data-wd-filter]").forEach(function(x) {return data_wdFilter(x, "organization");});
+		WD.$$("[data-wd-mask]").forEach(function(x)   {return data_wdMask(x, "organization");});
+		WD.$$("[data-wd-click]").forEach(function(x)  {return data_wdClick(x, "organization");});
+		WD.$$("[data-wd-device]").forEach(function(x) {return data_wdDevice(x, "organization");});
+		WD.$$("[data-wd-chart]").forEach(function(x)  {return data_wdChart(x, "organization");});
+		WD.$$("[data-wd-url]").forEach(function(x)    {return data_wdUrl(x, "organization");});
+		WD.$$("[data-wd-code]").forEach(function(x)   {return data_wdCode(x, "organization");});
 		data_wdOutput(document, true);
 		return;
 	};
