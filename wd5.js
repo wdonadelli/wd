@@ -43,12 +43,8 @@ const wd = (function() {
 	const __UNDERMAINTENANCE = true;
 /*----------------------------------------------------------------------------*/
 	/**###### ``**const** ''object'' __DEVICECONTROLLER``
-	Controla as alterações da tela atribuida a um tipo de dispositivo e executa ações quando houver mudança neste dispositivo idealizado.**/
+	Checa alterações da tela atribuida a um tipo de dispositivo.**/
 	const __DEVICECONTROLLER = {
-		/**. ``''boolean'' _start``: Informar se o controlador já foi iniciado.**/
-		_start: false,
-		/**. ``''function'' _change``: Registra a função disparadora de alteração do tipo de dispositivo.**/
-		_change: null,
 		/**. ``''string'' _device``: Registra o tipo de do dispositivo a partir do tamanho da tela em vigor.**/
 		_device: null,
 		/**. ``''integer'' width``: Retorna o tamanho da tela.**/
@@ -62,49 +58,18 @@ const wd = (function() {
 		},
 		/**. ``''boolean'' mobile``: Informa se dispositivo não é do tamanho desktop.**/
 		get mobile() {return this.device !== "desktop";},
-		/**. ``''void'' onchange``: Define a função disparadora do evento de mudança de tipo de dispositivo.**/
-		set onchange(x) {
-			this._change = typeof x === "function" ? x : null;
-			this._device = null;
-			this.trigger(null);
-			/*-- o evento resize será definido quando a função disparadora for informada pela primeira vez --*/
-			if (!this._start) {
-				let self = this;
-				window.addEventListener("resize", function(ev) {return self.trigger(ev);});
-				this._start = true;
-			}
-		},
-		/**. ``''void'' trigger()``: Chama a função disparadora injetando como argumento os atributos do objeto e do evento resize.**/
-		trigger: function(ev) {
-			/*-- checar alteração de dispositivo --*/
+		/**. ``''boolean'' change``: Informa se o dispositivo foi alterado desde a última consulta.**/
+		get changeDevice() {
 			let device = this.device;
-			if (this._device === device) return;
+			if (this._device === device) return false;
 			this._device = device;
-			/*-- chamar função disparadora --*/
-			if (typeof this._change === "function")
-				this._change({
-					event:   ev,
-					target:  this,
-					width:   this.width,
-					device:  device,
-					mobile:  this.mobile,
-					trigger: this.trigger,
-				});
-		},
+			return true;
+		}
 	};
 /*----------------------------------------------------------------------------*/
 	/**###### ``**const** ''integer'' __KEYTIMERANGE``
 	Registra o intervalo, em milisegundos, entre eventos de digitação (oninput, onkeyup...).**/
 	const __KEYTIMERANGE = 500;
-/*----------------------------------------------------------------------------*/
-	/**###### ``**const** ''object'' __COUNTERCONTROL``
-	Registra a contagem de requisições:
-	. ``''integer'' repeat``: Número de manipulações de repetição.
-	. ``''integer'' load``: Número de manipulações de carregamentos.**/
-	const __COUNTERCONTROL = {
-		repeat: 0,
-		load:   0
-	};
 /*----------------------------------------------------------------------------*/
 	/**###### ``**const** ''object'' __MODALCONTROL``
 	Controla a janela modal.**/
@@ -449,16 +414,7 @@ const wd = (function() {
 		"[data-wd-code] lines-wdcode:before {content: counter(jswdcode, decimal-leading-zero); counter-increment: jswdcode;}"
 //TODO interessante https://developer.mozilla.org/en-US/docs/Web/CSS/::file-selector-button
 
-
-
 	];
-	__JSCSS.forEach(function(v,i,a) {
-		a[i] = v.replace(/\s+/, " ").replace(/^([^{]+)\{(.+)\}$/, "$1 {\n\t$2\n}\n");
-	});
-	//FIXME apagar isso aqui em baixo
-	let a = document.createElement("STYLE");
-	a.innerHTML = __JSCSS.join("");
-	document.head.appendChild(a);
 
 /*----------------------------------------------------------------------------*/
 	/**###### ``**const** ''object'' __TYPE``
@@ -536,6 +492,16 @@ const wd = (function() {
 			return {group: null, subgroup: null, value: x};
 		}
 	};
+
+/*============================================================================*/
+	/**### Eventos Customizados
+	###### ``**const** ''object'' wdDatasetEvent``
+	Evento a ser disparado ao definir o atributo HTML ''dataset'' pela ferramenta da biblioteca (ver __Node).**/
+	const wdDatasetEvent = new CustomEvent("wddataset", {detail: null, bubbles: true});
+/*----------------------------------------------------------------------------*/
+	/**###### ``**const** ''object'' wdReloadEvent``
+	Evento a ser disparado ao carregar elementos a partir de conteúdo externo (ver ''load'' e ''repeat'' em __Node).**/
+	const wdReloadEvent  = new CustomEvent("wdreload",  {detail: null, bubbles: true});
 
 /*============================================================================*/
 	/**### Checagem de Tipos e Valores
@@ -3539,13 +3505,9 @@ const wd = (function() {
 							delete this.node.dataset[name];
 					}
 				}
-				/* IMPORTANTE: cada definição, se for da biblioteca, deverá ser checada */
-				let wd = __Array(wdLib).order;
-				let i  = -1;
-				while (++i < wd.length) {
-					if ((/^wd[A-Z]\w+/).test(wd[i]))
-						wdOnDatasetChange(this.node, wd[i]);
-				}
+				/* registrar os atributos alterados e invocar evento */
+				this.node.dataset.wdDatasetEvent = wdLib.join(",");
+				this.node.dispatchEvent(wdDatasetEvent);
 			}
 		},
 		/**. ``''node'' clone(boolean childs=true)``: Retorna um clone do objeto. Se o argumento opcional ``childs`` for falso, os elementos filhos não serão clonados.**/
@@ -3597,9 +3559,8 @@ const wd = (function() {
 					});
 					node.remove();
 				}
-				/* IMPORTANTE: checar elemento após carregamento */
-				let ev = new CustomEvent("request", {detail: {type: "load"}});
-				return wdOnRequest(ev);
+				/* invocar evento */
+				this.node.dispatchEvent(wdReloadEvent);
 			}
 		},
 		/**. ``''void'' repeat(''array'' list)``: Clona os filhos do elemento repetindo-os de acordo com as informações repassadas pelo array de objetos em ``list``. O elemento filho que contiver o nome do atributo do obejto entre duas chaves (''{{nome}}'') terá o fragmento substituídos pelo valor do atributo do objeto correspondente.**/
@@ -3640,9 +3601,8 @@ const wd = (function() {
 				/* 10) definir filhos */
 				this.node.innerHTML = childs.join("\n");
 				__MODALCONTROL.end();
-				/* IMPORTANTE: checar elementos após carregamento */
-				let ev = new CustomEvent("request", {detail: {type: "repeat"}});
-				return wdOnRequest(ev);
+				/* 11) invocar evento */
+				this.node.dispatchEvent(wdReloadEvent);
 			}
 		},
 		/**. ``''boolean'' show``: Retorna e define a visibilidade do elemento nos termos da biblioteca.**/
@@ -6772,7 +6732,7 @@ const wd = (function() {
 	if (__UNDERMAINTENANCE) {
 		console["warn" in console ? "warn" : "log"]("WD JS Library: The maintenance module is on.");
 		Object.defineProperties(WD, {
-			type:     {value: function(x){return __Type.apply(null, Array.prototype.slice.call(arguments));}},
+			type:     {value: function(){return __Type.apply(null, Array.prototype.slice.call(arguments));}},
 			array:    {value: function(){return __Array.apply(null, Array.prototype.slice.call(arguments));}},
 			datetime: {value: function(){return __DateTime.apply(null, Array.prototype.slice.call(arguments));}},
 			fnode:    {value: function(){return __FNode.apply(null, Array.prototype.slice.call(arguments));}},
@@ -6806,16 +6766,21 @@ const wd = (function() {
 	|$ ou $$|Seletor(es) CSS do formulário com os parâmetros da requição|Não|**/
 	function data_wdLoad(e, event) {
 		if (!("wdLoad" in e.dataset)) return;
-		let data   = __String(e.dataset.wdLoad).wdNotation[0];
 		let target = WD(e);
-		target.set({dataset: {wdLoad: null}}).load("");
-		if (!__Type(data).object) return;
-
+		let data   = __String(e.dataset.wdLoad).wdNotation[0];
+		delete e.dataset.wdLoad;
+		if (!__Type(data).object) {
+			target.load("");
+			return;
+		}
 		let query  = __Query.$$$(data);
 		WD(query).send(data.path, {
 			method: data.method,
-			ondone: function(x) {target.load(x.text, data.replace, data.run);}
+			ondone: function(x) {
+				target.load(x.text, data.replace, data.run);
+			}
 		});
+		return;
 	};
 
 /*----------------------------------------------------------------------------*/
@@ -6827,27 +6792,30 @@ const wd = (function() {
 	|$ ou $$|Seletor(es) CSS do formulário com os parâmetros da requição|Não|**/
 	function data_wdRepeat(e, event) {
 		if (!("wdRepeat" in e.dataset)) return;
-		let data   = __String(e.dataset.wdRepeat).wdNotation[0];
 		let target = WD(e);
-		target.set({dataset: {wdRepeat: null}}).repeat([]);
-		if (!__Type(data).object) return;
+		let data   = __String(e.dataset.wdRepeat).wdNotation[0];
+		delete e.dataset.wdRepeat;
+		if (!__Type(data).object) {
+			target.repeat([]);
+			return;
+		}
 
-		let query  = __Query.$$$(data);
+		let query = __Query.$$$(data);
 		WD(query).send(data.path, {
 			method: data.method,
 			ondone: function(x) {
-				let json  = x.json;
-				if (__Type(json).array) {
-					return target.repeat(json);
-				}
-				let csv = x.csv;
-				if (__Type(csv).array) {
+				let list = [];
+				if (__Type(x.json).array) {
+					list = x.json;
+				} else if (__Type(x.csv).array) {
 					let table = __Table();
 					table.matrix(csv);
-					return target.repeat(table.json);
+					list = table.json;
 				}
+				target.repeat(list);
 			}
 		});
+		return;
 	};
 
 /*----------------------------------------------------------------------------*/
@@ -6996,7 +6964,7 @@ const wd = (function() {
 
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wdDisplay(''node''  e, ''string'' event)``
+	/**###### ``**function** ''void'' data_wdDisplay(''node''  e, ''string'' event)``FIXME
 	Função vinculada ao atributo HTML ``data-wd-display`` cujo objetivo é manipular a exibição de nós, seus irmãos e filhos utilizando a ferramenta ``WDnode.display``. Possui múltiplos atributos e grupos:
 	|Nome|Descrição|Obrigatório|
 
@@ -7008,10 +6976,11 @@ const wd = (function() {
 		let data  = __String(e.dataset.wdCode).wdNotation;
 		let code  = __Code(e.textContent);
 		let check = __Type(data)
-		if (check.array) code.options = data[0];
-		else             code.lang = data;
-		if (event.type === "focusin") e.textContent = code.toString();
-		else                          e.innerHTML   = code.valueOf();
+		code[(check.array ? "options" : "lang")] = (check.array ? data[0] : data);
+		if (event.type === "focusin" && e.isContentEditable ===  true)
+			e.textContent = code.toString();
+		else
+			e.innerHTML   = code.valueOf();
 		return;
 	};
 
@@ -7303,54 +7272,64 @@ const wd = (function() {
 /* -- DISPARADORES -- */
 /*============================================================================*/
 
-	/**###### ``**function** ''void'' wdOnLoad(''object''  ev)``
-	Disparador a ser invocado ao carregar a página: define o disparador de ``__DEVICECONTROLLER`` e o estilo CSS da biblioteca; e invoca os procedimentos de requisições.**/
-	function wdOnLoad(ev) {console.log({wdOnLoad: ev});
-		/*-- vinculando disparador de mudança de dispositivo --*/
-		__DEVICECONTROLLER.onchange = function() {
-				WD.$$("[data-wd-device]").forEach(function(x) {
-					data_wdDevice(x, ev);
-				});
-		}
-
+	/**
+	### Disparadores
+	Funções a serem invocadas ao disparar determinados eventos.
+	###### ``**function** ''void'' wdOnLoad(''object''  ev)``
+	Disparador a ser invocado ao carregar a página (load): define o estilo CSS da biblioteca e invoca os processos pós carregamento.**/
+	function wdOnLoad(ev) {
+		if (__UNDERMAINTENANCE) console.log({wdOnLoad: ev, target: ev.target});
 		/*-- construindo CSS da biblioteca --*/
+		let css   = __JSCSS.slice();
+		let line  = {re: /^([^{]+)\{(.+)\}$/, rp: "$1 {\n\t$2\n}\n"};
 		let style = document.createElement("STYLE");
+		css.forEach(function(v,i,a) {
+			a[i] = v.replace(/\s+/, " ").replace(line.re, line.rp);
+		});
 		style.textContent = __JSCSS.join("");
 		document.head.appendChild(style);
 
 		/*-- aplicando carregamentos e repetições --*/
-		wdOnRequest(ev);
+		wdOnReload(ev);
 
 		return;
 	}
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' wdOnRequest(''object''  ev)``
-	Disparador a ser invocado ao efetuar requisições: controla o carregamento de páginas externas e das repetições; e invoca os procedimentos para reorganizar os elementos carregados.**/
-	function wdOnRequest(ev) {console.log({wdOnRequest: ev});
+	/**###### ``**function** ''void'' wdOnReload(''object''  ev)``
+	Disparador a ser invocado ao efetuar alterações na página e após o carregamento principal (wdreload).**/
+	function wdOnReload(ev) {
+		if (__UNDERMAINTENANCE) console.log({wdOnReload: ev, target: ev.target});
 
 		/*-- processar repetições --*/
-		WD.$$("[data-wd-repeat]").forEach(function(x) {
-			return data_wdRepeat(x, ev);
-		});
-		if (__COUNTERCONTROL.repeat > 0) return;
+		let repeat = WD.$("[data-wd-repeat]");
+		if (repeat.length > 0)
+			return repeat.forEach(function(x) {data_wdRepeat(x, ev);});
 
 		/*-- processar carregamentos --*/
-		WD.$$("[data-wd-load]").forEach(function(x) {
-			return data_wdLoad(x, ev)
-		});
-		if (__COUNTERCONTROL.load > 0) return;
+		let load = WD.$("[data-wd-load]");
+		if (load.length > 0)
+			return load.forEach(function(x) {data_wdLoad(x, ev)});
 
-		/*-- organizar após concluir requisições --*/
-		wdOnAfterRequest(ev);
+		/*-- (re)organizar página após concluir requisições --*/
+		WD.$$("[data-wd-filter]").forEach(function(x) {data_wdFilter(x, ev);});
+		WD.$$("[data-wd-mask]").forEach(function(x)   {data_wdMask(x, ev);});
+		WD.$$("[data-wd-click]").forEach(function(x)  {data_wdClick(x, ev);});
+		WD.$$("[data-wd-chart]").forEach(function(x)  {data_wdChart(x, ev);});
+		WD.$$("[data-wd-url]").forEach(function(x)    {data_wdUrl(x, ev);});
+		WD.$$("[data-wd-code]").forEach(function(x)   {data_wdCode(x, ev);});
 
+		data_wdOutput(document, ev);//FIXME que porra é essa?
+
+		wdOnResize(ev);
 		return;
 	};
 
 /*----------------------------------------------------------------------------*/
 	/**###### ``**function** ''void'' wdOnHash(''object''  ev)``
-	Disparador a ser invocado ao mudar a âncora da página: define margens e posicionamento de elementos HTML ''headers'' e ''footers'', filhos de ''body'', __quando fixos no topo ou na base__, ao mudar a âncora interna (``href="#ancora"``).**/
-	function wdOnHash(ev) {console.log({wdOnHash: ev});
+	Disparador a ser invocado ao mudar a âncora da página (hashchange): define as margens e o posicionamento da âncora em ''body'' se houver elementos filhos ''header'' ou ''footer'' fixos no topo ou na base.**/
+	function wdOnHash(ev) {
+		if (__UNDERMAINTENANCE) console.log({wdOnHash: ev, target: ev.target});
 		let target = WD.$$("body > header, body > footer");
 		let hash   = WD.$(window.location.hash);
 		let data   = {header: 0, footer: 0};
@@ -7379,53 +7358,54 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' wdOnAfterRequest(''object''  ev)``
-	Disparador a ser invocado após concluídas as requisições externas: invoca as funções de atributos que são executadas no carregamento da página e o procedimento de ''hash''.**/
-	function wdOnAfterRequest(ev) {console.log({wdOnAfterRequest: ev});
-		WD.$$("[data-wd-filter]").forEach(function(x) {return data_wdFilter(x, ev);});
-		WD.$$("[data-wd-mask]").forEach(function(x)   {return data_wdMask(x, ev);});
-		WD.$$("[data-wd-click]").forEach(function(x)  {return data_wdClick(x, ev);});
-		WD.$$("[data-wd-device]").forEach(function(x) {return data_wdDevice(x, ev);});
-		WD.$$("[data-wd-chart]").forEach(function(x)  {return data_wdChart(x, ev);});
-		WD.$$("[data-wd-url]").forEach(function(x)    {return data_wdUrl(x, ev);});
-		WD.$$("[data-wd-code]").forEach(function(x)   {return data_wdCode(x, ev);});
+	/**###### ``**function** ''void'' wdOnResize(''object''  ev)``
+	Disparador a ser invocado após mudanças no tipo de dispositivo (resize).**/
+	function wdOnResize(ev) {
+		if (__UNDERMAINTENANCE) console.log({wdOnResize: ev, target: ev.target});
+		let resize = ev.type === "resize";
+		let change = __DEVICECONTROLLER.changeDevice;
+		/* se resize, chamar quando mudar o dispositivo, caso contrário, sempre chamar */
 
-		data_wdOutput(document, ev);//FIXME que porra é essa?
+		if ((resize && change) || !resize)
+			WD.$$("[data-wd-device]").forEach(function(x) {data_wdDevice(x, ev);});
 
-		/*-- processar hash --*/
-		wdOnHash(ev);
 
+		/* FIXME checar hash no carregamento principal */
+		if (ev.type === "load") wdOnHash(ev);
 		return;
 	};
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' wdOnDatasetChange(''object''  ev)``
-	Disparador a ser invocado após mudanças no atributo HTML ''dataset'' mediante o uso da ferramente correspondente da biblioteca (ver (__Node): aplica-se aos atributos que são executados .**/
-	function wdOnDatasetChange(e, attr) {
-		const ev = new CustomEvent("datasetchange", {
-			detail: {target: e, name: attr, value: e.dataset[attr]}
-		});
-		console.log({wdOnDatasetChange: ev});
-		switch(attr) {
-			case "wdLoad":      wdOnRequest(ev);      break;
-			case "wdRepeat":    wdOnRequest(ev);      break;
-			case "wdFilter":    data_wdFilter(e, ev); break;
-			case "wdMask":      data_wdMask(e, ev);   break;
-			case "wdClick":     data_wdClick(e, ev);  break;
-			case "wdDevice":    data_wdDevice(e, ev); break;
-			case "wdChart":     data_wdChart(e, ev);  break;
-			case "wdCode":      data_wdCode(e, ev);   break;
-			case "wdOutput":    data_wdOutput(e, ev); break;
-			case "wdUrl":       data_wdUrl(e, ev);    break;
-
-		};
+	/**###### ``**function** ''void'' wdOnDataset(''object''  ev)``
+	Disparador a ser invocado após mudanças no atributo HTML ''dataset'' (wddataset). Para o evento disparar, deve usar a ferramenta correspondente da biblioteca (ver __Node): aplica-se aos atributos que são executados .**/
+	function wdOnDataset(ev) {
+		if (__UNDERMAINTENANCE) console.log({wdOnDataset: ev, target: ev.target});
+		if (!("wdDatasetEvent" in ev.target.dataset)) return;
+		let data = ev.target.dataset.wdDatasetEvent.split(",");
+		delete ev.target.dataset.wdDatasetEvent;
+		let i = -1;
+		while (++i < data.length) {
+			switch(data[i]) {
+				case "wdLoad":   {wdOnReload(ev);               break;}
+				case "wdRepeat": {wdOnReload(ev);               break;}
+				case "wdFilter": {data_wdFilter(ev.target, ev); break;}
+				case "wdMask":   {data_wdMask(ev.target, ev);   break;}
+				case "wdClick":  {data_wdClick(ev.target, ev);  break;}
+				case "wdDevice": {data_wdDevice(ev.target, ev); break;}
+				case "wdChart":  {data_wdChart(ev.target, ev);  break;}
+				case "wdCode":   {data_wdCode(ev.target, ev);   break;}
+				case "wdOutput": {data_wdOutput(ev.target, ev); break;}
+				case "wdUrl":    {data_wdUrl(ev.target, ev);    break;}
+			};
+		}
 		return;
 	};
 
 /*----------------------------------------------------------------------------*/
 	/**###### ``**function** ''void'' wdOnClick(''object''  ev)``
-	Disparador a ser invocado após o elemento receber um click com o botão esquerdo do mouse: executa funções sensíveis ao clique.**/
-	function wdOnClick(ev) {console.log({wdOnClick: ev});
+	Disparador a ser invocado após o elemento receber um clique com o botão esquerdo do mouse (click).**/
+	function wdOnClick(ev) {
+		if (__UNDERMAINTENANCE) console.log({wdOnClick: ev, target: ev.target});
 		if (ev.which !== 1) return;
 		let elem = ev.target
 		while (elem !== null) {
@@ -7445,8 +7425,9 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	/**###### ``**function** ''void'' wdOnInput(''object''  ev)``
-	Disparador a ser invocado após o elemento sofrer alteração de seu conteúdo textual: executa funções sensíveis ao teclado. Haverá um delay entre o fim da digitação e a execução das funções.**/
-	function wdOnInput(ev) {console.log({wdOnInput: ev});
+	Disparador a ser invocado após o elemento sofrer alteração de seu conteúdo textual (input). Haverá um delay entre a digitação e a execução das funções sensíveis.**/
+	function wdOnInput(ev) {
+		if (__UNDERMAINTENANCE) console.log({wdOnInput: ev, target: ev.target});
 		let now  = (new Date()).valueOf();
 		ev.target.dataset.wdTimeStamp = now;
 		/*-- chamar funções após o delay quanto ao último input efetuado --*/
@@ -7465,8 +7446,9 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	/**###### ``**function** ''void'' wdOnFocusOut(''object''  ev)``
-	Disparador a ser invocado ao sair de um campo editável: executa funções sensíveis à saída de campos.**/
-	function wdOnFocusOut(ev) {console.log({wdOnFocusOut: ev});
+	Disparador a ser invocado ao sair de um campo editável (focusout).**/
+	function wdOnFocusOut(ev) {
+		if (__UNDERMAINTENANCE) console.log({wdOnFocusOut: ev, target: ev.target});
 		data_wdMask(ev.target, ev);
 		data_wdCode(ev.target, ev);
 		return;
@@ -7474,8 +7456,9 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	/**###### ``**function** ''void'' wdOnFocusIn(''object''  ev)``
-	Disparador a ser invocado ao entrar em um campo editável: executa funções sensíveis à entrada em campos.**/
-	function wdOnFocusIn(ev) {console.log({wdOnFocusIn: ev});
+	Disparador a ser invocado ao entrar em um campo editável (focusin).**/
+	function wdOnFocusIn(ev) {
+		if (__UNDERMAINTENANCE) console.log({wdOnFocusIn: ev, target: ev.target});
 		data_wdCode(ev.target, ev);
 		return;
 	};
@@ -7485,17 +7468,19 @@ const wd = (function() {
 	WD(window).set({
 		addEventListener: {
 			load:       wdOnLoad,
-			resize:     wdOnHash,
+			resize:     wdOnResize,
 			hashchange: wdOnHash,
 		}
 	});
 
 	WD(document).set({
 		addEventListener: {
-			click:    wdOnClick,
-			input:    wdOnInput,
-			focusout: wdOnFocusOut,
-			focusin:  wdOnFocusIn,
+			click:     wdOnClick,
+			input:     wdOnInput,
+			focusout:  wdOnFocusOut,
+			focusin:   wdOnFocusIn,
+			wddataset: wdOnDataset,
+			wdreload:  wdOnReload
 		}
 	});
 
