@@ -37,10 +37,12 @@ const wd = (function() {
 	###### ``**const** ''string'' __VERSION``
 	Registra a versão da biblioteca.**/
 	const __VERSION = "WD JS v5.0.0";
+
 /*----------------------------------------------------------------------------*/
 	/**###### ``**const** ''boolean'' __UNDERMAINTENANCE``
 	Se verdadeiro, libera métodos de teste em WD para efetuar testes.**/
 	const __UNDERMAINTENANCE = true;
+
 /*----------------------------------------------------------------------------*/
 	/**###### ``**const** ''object'' __DEVICECONTROLLER``
 	Checa alterações da tela atribuida a um tipo de dispositivo.**/
@@ -66,202 +68,157 @@ const wd = (function() {
 			return true;
 		}
 	};
+
 /*----------------------------------------------------------------------------*/
 	/**###### ``**const** ''integer'' __KEYTIMERANGE``
 	Registra o intervalo, em milisegundos, entre eventos de digitação (oninput, onkeyup...).**/
 	const __KEYTIMERANGE = 500;
+
 /*----------------------------------------------------------------------------*/
-	/**###### ``**const** ''object'' __MODALCONTROL``
-	Controla a janela modal.**/
-	const __MODALCONTROL = {
-		/**. ``''integer'' counter``: Solicitações em aberto (controla a exibição), fecha se zero.**/
-		counter: 0,
-		/**. ``''integer'' delay``: Tempo de segurança, em milisegundos, para decidir sobre o fechamento da janela (evitar piscadas).**/
-		delay: 250,
-		/**. ``''integer'' time``: Intervalo, em milisegundos, de atualização da barra de progresso.**/
-		time: 5,
-		/**. ``''node'' modal``: Plano de fundo.**/
-		modal: (function() {
-			/* Estilos */
-			let styles = {
-				modal: {
-					display: "block", width: "100%", height: "100%",
-					padding: "0.1em 0.5em", margin: "0", zIndex: "999999",
-					position: "fixed", top: "0", right: "0", bottom: "0", left: "0",
-					cursor: "progress", backgroundColor: "rgba(0,0,0,0.3)",
-					animation: "js-wd-fade-in 0.1s",
-				},
-				bar: {
-					display: "block", margin: "5px 5px auto auto", width: "25%",
-					position: "absolute", top: "0", left: "0", right: "0",
-				},
-			};
-			/* janela modal */
-			let modal = document.createElement("DIV");
-			for (let i in styles.modal) modal.style[i] = styles.modal[i];
-			/* barra de progresso */
-			let tag = "DIV";
-			if      ("HTMLMeterElement"    in window) tag = "METER";
-			else if ("HTMLProgressElement" in window) tag = "PROGRESS";
-			let bar = document.createElement(tag);
-			for (let i in styles.bar) bar.style[i] = styles.bar[i];
-			/* unindo os dois */
-			modal.appendChild(bar);
-			return modal;
-		})(),
-		/**. ``''integer'' start()``: Solicita a janela modal, acresce ``counter`` e retorna seu valor.**/
-		start: function() {
-			if (this.counter === 0) document.body.appendChild(this.modal);
-			this.counter++;
-			return this.counter;
-		},
-		/**. ``''integer'' end()``: Dispensa à janela modal, decresce counter e retorna seu valor.**/
-		end: function() {
-			if (this.counter > 0) {
-				this.counter--;
-				/* checar fechamento da janela após delay */
-				if (this.counter === 0) {
-					let modal = this.modal;
-					window.setTimeout(function () {
-						if (modal.parentElement !== null) document.body.removeChild(modal);
-					}, this.delay);
-				}
-			}
-			return this.counter;
-		},
-		/**. ``''void'' progress(''number'' x)``: Define o valor da barra de progresso (0 a 1) por meio do argumento ``x``.**/
-		progress: function(x) {
-			x = x > 1 ? 1 : (x < 0 ? 0 : x);
-			let bar    = this.modal.firstChild;
-			let tag    = bar.tagName.toLowerCase();
-			/* executar progresso após o tempo de interação com o documento */
-			window.setTimeout(function() {
-				if (tag !== "div") bar.value       = x;
-				else               bar.style.width = String(100*x)+"%";
-			}, this.time);
-			return;
-		}
-	};
+	/**###### ``**const** ''node'' __PROGRESSDELAY``
+	Registra o tempo de segurança, em milisegundos, até fechar o visualizador de progresso (evitar piscadas).**/
+	const __PROGRESSDELAY = 250;
+
 /*----------------------------------------------------------------------------*/
-	/**###### ``**const** ''object'' __SIGNALCONTROL``
-	Controla a caixa de mensagens.**/
-	const __SIGNALCONTROL = {
-		/**. ``''integer'' time``: Tempo de duração da mensagem (ver CSS ``js-wd-signal-msg``).**/
-		time: 9000,
-		/**. ``''node'' main``: Container das caixas de mensagem.**/
-		main: (function() {
-			let css = {
-				position: "fixed", top: "0", right: "0.5em", left: "0.5em",
-				width: "auto", margin: "auto", padding: "0", zIndex: "999999",
-				overflow: "auto", maxHeight: "100%"
-			};
-			let main = document.createElement("DIV");
-			for (let i in css) main.style[i] = css[i];
-			return main;
-		})(),
-		/**. ``''node'' model``: Gabarito de caixa de mensagem.**/
-		model: (function() {
-			let html = {
-				message: {
-					elem: document.createElement("DIV"),
-					className: "js-wd-signal-message",
-					style: {
-						//animationName: "js-wd-shrink-out, js-wd-shrink-in",
-						//animationDuration: "0.5s, 0.5s", animationDelay: "0s, 8.5s",
-						position: "relative", margin: "0.5em auto 0 auto", padding: "0",
-						backgroundColor: "rgb(50,50,50)", color: "rgb(230,230,230)",
-						borderRadius: "0.5em", border: "1px solid rgba(0,0,0,0.6)",
-						boxShadow: "1px 1px 6px rgba(0,0,0,0.6)",
-					},
-				},
-				title: {
-					elem: document.createElement("HEADER"),
-					className: "js-wd-signal-title",
-					style: {
-						borderRadius: "0.5em 0.5em 0 0", padding: "0", margin: "0.5em",
-						fontWeight: "bold"
-					}
-				},
-				body: {
-					elem: document.createElement("P"),
-					className: "js-wd-signal-body",
-					style: {
-						margin: "0.5em", padding: "0", borderRadius: "0 0 0.5em 0.5em"
-					}
-				},
-				close: {
-					elem: document.createElement("SPAN"),
-					className: "js-wd-signal-close",
-					style: {
-						position: "absolute", top: "0.25em", right: "0.25em",
-						lineHeight: "1", cursor: "pointer", margin: "0", zIndex: "5"
-					}
-				}
-			};
-			/* definindo elementos */
-			for (let i in html) {
-				html[i].elem.className = html[i].className;
-				for (let j in html[i].style)
-					html[i].elem.style[j] = html[i].style[j];
+	/**###### ``**const** ''integer'' __PROGRESSTIME``
+	Registra o intervalo, em milisegundos, de atualização do visualizador de progresso**/
+	const __PROGRESSTIME = 5;
+
+/*----------------------------------------------------------------------------*/
+	/**###### ``**const** ''node'' __PROGRESSVIEWER``
+	Registra a barra de progresso das requisições da biblioteca.**/
+	const __PROGRESSVIEWER = (function() {
+		const tag = (function() {
+			if ("HTMLMeterElement"    in window) return "METER";
+			if ("HTMLProgressElement" in window) return "PROGRESS";
+			return "DIV";
+		})();
+		const bar  = document.createElement(tag);
+		const main = document.createElement("DIV");
+		const style = {
+			main: {
+				display: "block", width: "100%", height: "100%",
+				padding: "0.1em 0.5em", margin: "0", zIndex: "999999",
+				position: "fixed", top: "0", right: "0", bottom: "0", left: "0",
+				cursor: "progress", backgroundColor: "rgba(0,0,0,0.3)",
+				animation: "js-wd-fade-in 0.1s",
+			},
+			bar: {
+				display: "block", margin: "5px 5px auto auto", width: "25%",
+				position: "absolute", top: "0", left: "0", right: "0",
 			}
-			/* montando a caixa de mensagem */
-			html.message.elem.appendChild(html.title.elem);
-			html.message.elem.appendChild(html.body.elem);
-			html.message.elem.appendChild(html.close.elem);
-			html.close.elem.textContent = "\u00D7";
-			return html.message.elem;
-		})(),
-		/**. ``''void'' open(''string'' body, ''string'' title=" ")``: Demanda a abertura de uma nova caixa de mensagem. O argumento ``message`` define o texto da mensagem e o argumento ``title`` define seu título.**/
-		open: function(body, title) {
-			if (title === undefined || title === null) title = "";
-			if (body  === undefined || body  === null) body  = "";
-			/* clonando uma nova caixa */
-			let width = __DEVICECONTROLLER.device === "desktop" ? "40%" : "auto";
-			let main  = this.main;
-			let model = this.model.cloneNode(true);
-			/* definindo valores */
-			main.style.width = width;
-			model.querySelector(".js-wd-signal-title").textContent = title;
-			model.querySelector(".js-wd-signal-body").textContent  = body;
-			model.querySelector(".js-wd-signal-close").onclick     = function(ev) {
-				try {main.removeChild(model);} catch(e) {}
-				if (main.parentElement !== null && main.children.length === 0)
-					document.body.removeChild(main);
-				return;
-			}
-			/* rendenrizando */
-			if (main.children.length === 0)
-				document.body.appendChild(main);
-			main.insertAdjacentElement("afterbegin", model);
-			/* definindo fechamento automático */
+		};
+
+		/* definindo estilos e dataset */
+		for (let i in style.main) main.style[i] = style.main[i];
+		for (let i in style.bar)  bar.style[i]  = style.bar[i];
+		main.dataset.wdProgressCounter = 0;
+		main.dataset.wdProgressValue   = 1;
+
+		/* adicionando eventos */
+		main.addEventListener("wdopenrequest", function(ev) {
+			let counter = Number(ev.target.dataset.wdProgressCounter);
+			if (counter === 0) document.body.appendChild(ev.target);
+			ev.target.dataset.wdProgressCounter = ++counter;
+		}, false);
+
+		main.addEventListener("wdloadingrequest", function(ev) {
+			let value = Number(ev.target.dataset.wdProgressValue);
+			value = value > 1 ? 1 : (value < 0 ? 0 : value);
+			let tag = bar.tagName.toLowerCase();
 			window.setTimeout(function() {
-				model.querySelector(".js-wd-signal-close").click();
-			}, this.time);
-			return;
-		},
-		/**. ``''void'' notify(''string'' body, ''string'' title=" ")``: Demanda a abertura de uma [notificação](https://developer.mozilla.org/en-US/docs/Web/API/Notification/Notification). O argumento ``message`` define o texto da mensagem e o argumento ``title`` define seu título.**/
-		notify: function(body, title) {
-			if (title === undefined || title === null)  title = "";
-			if (body  === undefined  || body  === null) body  = "";
-			let options = {
-				body: body,
-				lang: __LANG.main,
-				vibrate: [200, 100, 200],
-			};
-			if (!("Notification" in window))
-				return this.open(body, title);
-			if (Notification.permission === "denied")
-				return null;
-			if (Notification.permission === "granted")
-				new Notification(title, options);
-			else
-				Notification.requestPermission().then(function(x) {
-					if (x === "granted")
-						new Notification(title, options);
-				});
-			return;
-		}
-	};
+				if (tag !== "div")
+					bar.value = value;
+				else
+					bar.style.width = String(100*value)+"%";
+			}, __PROGRESSTIME);
+		}, false);
+
+		main.addEventListener("wdcloserequest", function(ev) {
+			let counter = Number(ev.target.dataset.wdProgressCounter);
+			if (counter > 0) {
+				counter--;
+				ev.target.dataset.wdProgressCounter = counter;
+				if (counter === 0) window.setTimeout(function () {
+					if (main.parentElement !== null) document.body.removeChild(main);
+				}, __PROGRESSDELAY);
+			}
+		}, false);
+
+		/* construindo visualizador e retornando-o */
+		main.appendChild(bar);
+		return main;
+	})();
+
+/*----------------------------------------------------------------------------*/
+	/**###### ``**const** ''integer'' __SIGNALTIME``
+	Registra o tempo, em milissegundos, de duração da mensagem.**/
+	const __SIGNALTIME = 9000;
+
+/*----------------------------------------------------------------------------*/
+	/**###### ``**const** ''node'' __SIGNALMESSAGEBOX``
+	Registra o modelo de caixa de mensagem.**/
+	const __SIGNALMESSAGEBOX = (function() {
+		const box   = document.createElement("wdsignal-messagebox");
+		const title = document.createElement("wdsignal-messagetitle");
+		const body  = document.createElement("wdsignal-messagebody");
+		const close = document.createElement("wdsignal-messageclose");
+		box.appendChild(title);
+		box.appendChild(body);
+		box.appendChild(close);
+		return box;
+	})();
+
+/*----------------------------------------------------------------------------*/
+	/**###### ``**const** ''node'' __SIGNALBOX``
+	Registra o container das caixas de mensagem.**/
+	const __SIGNALBOX = (function() {
+		const main = document.createElement("wdsignal-mainbox");
+		/* vinculando evento */
+		main.addEventListener("wdshowmessage", function(ev) {
+			/* Emitir notificações */
+			if (ev.detail.type !== "signal" && "Notification" in window) {
+				let options = {
+					body: ev.detail.body,
+					lang: __LANG.main,
+					vibrate: [200, 100, 200],
+				};
+				if (Notification.permission === "denied")
+					return null;
+				if (Notification.permission === "granted")
+					new Notification(ev.detail.title, options);
+				else
+					Notification.requestPermission().then(function(x) {
+						if (x === "granted")
+							new Notification(ev.detail.title, options);
+					});
+			}
+			/* emitir mensagens */
+			else {
+				/* obtendo elementos */
+				const base  = ev.target;
+				const box   = __SIGNALMESSAGEBOX.cloneNode(true);
+				const title = box.querySelector("wdsignal-messagetitle");
+				const body  = box.querySelector("wdsignal-messagebody");
+				const close = box.querySelector("wdsignal-messageclose");
+				/* definindo valores */
+				title.textContent = ev.detail.title;
+				body.textContent  = ev.detail.body;
+				close.onclick     = function(ev) {
+					try {base.removeChild(box);} catch(e) {}
+					if (base.parentElement !== null && base.childElementCount === 0)
+						document.body.removeChild(base);
+					return;
+				}
+				/* renderizando mensagem */
+				if (base.childElementCount === 0) document.body.appendChild(base);
+				base.insertAdjacentElement("afterbegin", box);
+				/* definindo o tempo de exibição */
+				window.setTimeout(function() {close.click();}, __SIGNALTIME);
+			}
+		}, false);
+		return main;
+	})();
 
 /*----------------------------------------------------------------------------*/
 	/**###### ``**const** ''object'' __LANG``
@@ -377,9 +334,7 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	/**###### ``**const** ''array'' __JSCSS``
-	Guarda os estilos da biblioteca. Cada item da lista é um objeto que define os estilos:
-	. ``''string'' s``: Seletor CSS.
-	. ``''string'' d``: Estilos a serem aplicados ao seletor.**/
+	Guarda os estilos da biblioteca (cada item corresponde a uma linha)**/
 	const __JSCSS = [
 		"@keyframes js-wd-fade-in    {from {opacity: 0 !important;} to {opacity: 1 !important;}}",
 		"@keyframes js-wd-fade-out   {from {opacity: 1 !important;} to {opacity: 0 !important;}}",
@@ -397,21 +352,48 @@ const wd = (function() {
 		".js-wd-plot {height: 100%; width: 100%; position: absolute; top: 0; left: 0; bottom: 0; right: 0;}",
 		"/* testes */",
 		"*::backdrop {background-color: white;}",
-		"mark-wdfilter {background-color: rgba(154,205,50,0.7); display: inline; border-radius: 0.2em;}",
+		"wdsignal-mainbox      {display: block; position: fixed; top: 0; right: 0.5em; left: 0.5em; font-size: 13px;}",
+		"wdsignal-mainbox      {width: auto; margin: auto; padding: 0; z-index: 999999; overflow: auto; max-height: 100%;}",
+		"wdsignal-messagebox   {display: block; position: relative; margin: 0.5em auto 0 auto; padding: 0;}",
+		"wdsignal-messagebox   {background-color: rgb(30,30,30); color: rgb(170,170,170);}",
+		"wdsignal-messagebox   {border-radius: 0.5em; border: 1px solid rgba(0,0,0,0.6);}",
+		"wdsignal-messagebox   {box-shadow: 1px 1px 6px rgba(0,0,0,0.6);}",
+		"wdsignal-messagebox   {animation-name: js-wd-shrink-out, js-wd-shrink-in;}",
+		"wdsignal-messagebox   {animation-duration: 0.5s, 0.5s; animation-delay: 0s, 8.5s;}",
+		"wdsignal-messagetitle {display: block; padding: 0.5em; margin: 0;}",
+		"wdsignal-messagetitle {font-size: larger; border-radius: 0.5em 0.5em 0 0;}",
+		"wdsignal-messagebody  {display: block; padding: 0.5em; margin: 0; border-radius: 0 0 0.5em 0.5em;}",
+		"wdsignal-messageclose {display: block; position: absolute; top: 0.5em; right: 0.5em;}",
+		"wdsignal-messageclose {line-height: 1; cursor: pointer; margin: 0; z-index: 5;}",
+		"wdsignal-messageclose:before {content: \"\u00D7\";}",
+		"@media screen and (min-width: 768px) {wdsignal-mainbox {width: 40%;}}",
+
+
+
+
+
+
+
+
+
+		"wdhtml-mark {background-color: rgba(154,205,50,0.7); display: inline; border-radius: 0.2em;}",
+
+
+
 		"[data-wd-code] {background-color: rgb(238,238,236); color: rgb(46,52,54); border-radius: 0.2em;}",
 		"[data-wd-code] {font-family: monospace; font-size: 0.9em; }",
 		"[data-wd-code] {text-decoration: none; text-indent: 0; font-style: normal; font-weight: normal;}",
 		"[data-wd-code] {padding: 0.5em; margin: 0.5em 0; overflow: auto; position: relative;}",
 		"[data-wd-code] {counter-reset: jswdcode; white-space: pre-wrap;}",
 		"[data-wd-code] * {display: inline;}",
-		"[data-wd-code] keys-wdcode    {color: rgb(0, 153, 0);  font-weight: bold;}",
-		"[data-wd-code] vars-wdcode    {color: rgb(224,20,130);}",
-		"[data-wd-code] macro-wdcode   {color: rgb(0, 128, 255); font-style: italic;}",
-		"[data-wd-code] comment-wdcode {color: rgb(78,60,195);}",
-		"[data-wd-code] scope-wdcode   {font-weight: bold;}",
-		"[data-wd-code] lines-wdcode:before {padding-right: 0.2em; margin-right: 0.2em;}",
-		"[data-wd-code] lines-wdcode:before {color: rgb(204,204,204); text-align: left;}",
-		"[data-wd-code] lines-wdcode:before {content: counter(jswdcode, decimal-leading-zero); counter-increment: jswdcode;}"
+		"[data-wd-code] wdhtml-em    {color: rgb(0, 153, 0);  font-weight: bold;}",
+		"[data-wd-code] wdhtml-var    {color: rgb(224,20,130);}",
+		"[data-wd-code] wdhtml-dfn   {color: rgb(0, 128, 255); font-style: italic;}",
+		"[data-wd-code] wdhtml-cite {color: rgb(78,60,195);}",
+		"[data-wd-code] wdhtml-ins   {font-weight: bold;}",
+		"[data-wd-code] wdhtml-span:before {padding-right: 0.2em; margin-right: 0.2em;}",
+		"[data-wd-code] wdhtml-span:before {color: rgb(204,204,204); text-align: left;}",
+		"[data-wd-code] wdhtml-span:before {content: counter(jswdcode, decimal-leading-zero); counter-increment: jswdcode;}"
 //TODO interessante https://developer.mozilla.org/en-US/docs/Web/CSS/::file-selector-button
 
 	];
@@ -501,7 +483,19 @@ const wd = (function() {
 /*----------------------------------------------------------------------------*/
 	/**###### ``**const** ''object'' wdReloadEvent``
 	Evento a ser disparado ao carregar elementos a partir de conteúdo externo (ver ''load'' e ''repeat'' em __Node).**/
-	const wdReloadEvent  = new CustomEvent("wdreload",  {detail: null, bubbles: true});
+	const wdReloadEvent = new CustomEvent("wdreload",  {detail: null, bubbles: true});
+/*----------------------------------------------------------------------------*/
+	/**###### ``**const** ''object'' wdOpenRequestEvent``
+	Evento a ser disparado ao iniciar uma requisição (ver __Request).**/
+	const wdOpenRequestEvent = new CustomEvent("wdopenrequest");
+/*----------------------------------------------------------------------------*/
+	/**###### ``**const** ''object'' wdLoadingRequestEvent``
+	Evento a ser disparado durante a mudança de status da requisição (ver __Request).**/
+	const wdLoadingRequestEvent = new CustomEvent("wdloadingrequest");
+/*----------------------------------------------------------------------------*/
+	/**###### ``**const** ''object'' wdCloseRequestEvent``
+	Evento a ser disparado ao encerrar uma requisição (ver __Request).**/
+	const wdCloseRequestEvent = new CustomEvent("wdcloserequest");
 
 /*============================================================================*/
 	/**### Checagem de Tipos e Valores
@@ -1682,11 +1676,11 @@ const wd = (function() {
 		tags: {
 			value: function(code, id) {
 				const tags =  {
-					keys:       "keys-wdcode", vars:        "vars-wdcode",
-					string:     "vars-wdcode", char:        "vars-wdcode",
-					text:       "vars-wdcode", macro:      "macro-wdcode",
-					comment: "comment-wdcode", comments: "comment-wdcode",
-					scope:     "scope-wdcode", lines:      "lines-wdcode"
+					keys:      "wdhtml-em", vars:      "wdhtml-var",
+					string:   "wdhtml-var", char:      "wdhtml-var",
+					text:     "wdhtml-var", macro:     "wdhtml-dfn",
+					comment: "wdhtml-cite", comments: "wdhtml-cite",
+					scope:    "wdhtml-ins", lines:    "wdhtml-span"
 				};
 				let tag = id in tags ? tags[id] : null;
 				if (code === null && tag !== null) return tag;
@@ -3265,7 +3259,12 @@ const wd = (function() {
 					if ("reportValidity" in this.node) {
 						this.node.reportValidity();
 					} else {
-						__SIGNALCONTROL.notify(this.node.validationMessage, "");
+						const event = new CustomEvent("wdshowmessage", {detail: {
+							type: "notify",
+							title: title === undefined || title === null ? "" : String(title),
+							body: this.toString()
+						}});
+						__SIGNALBOX.dispatchEvent(event);
 						this.node.focus();
 						this.node.select();
 					}
@@ -3588,9 +3587,7 @@ const wd = (function() {
 				/* 8) executar looping */
 				/* 9) substituir atributos entre chaves duplas por valores e adicionar */
 				let childs = [""];
-				__MODALCONTROL.start();
 				list.forEach(function (v,i,a) {
-					__MODALCONTROL.progress((i+1)/a.length);
 					if (__Type(v).object) {
 						let inner = html;
 						for (let j in v)
@@ -3600,7 +3597,6 @@ const wd = (function() {
 				});
 				/* 10) definir filhos */
 				this.node.innerHTML = childs.join("\n");
-				__MODALCONTROL.end();
 				/* 11) invocar evento */
 				this.node.dispatchEvent(wdReloadEvent);
 			}
@@ -3871,7 +3867,7 @@ const wd = (function() {
 					} else {
 						v.dataset.wdFilterInner = v.innerHTML;
 						node.show = true;
-						node.insertTag("mark-wdfilter", index.init, index.last);
+						node.insertTag("wdhtml-mark", index.init, index.last);
 					}
 				});
 				return;
@@ -4359,7 +4355,8 @@ const wd = (function() {
 				progress = stateCode < 3 ? 0 : 1;
 			else if (source === "file" && stateCode !== 1)
 				progress = stateCode < 1 ? 0 : 1;
-			__MODALCONTROL.progress(progress);
+			__PROGRESSVIEWER.dataset.wdProgressValue = progress;
+			__PROGRESSVIEWER.dispatchEvent(wdLoadingRequestEvent);
 
 			/*-- analisar o estado da requisição --*/
 			let state = states[source][stateCode];
@@ -4423,7 +4420,8 @@ const wd = (function() {
 			if (self.onchange !== null)             self.onchange(argument);
 			if (self._done && self.ondone !== null) self.ondone(argument);
 			/*-- encerrar barra de progresso, se processo finalizado --*/
-			if (self._done) __MODALCONTROL.end();
+			if (self._done) __PROGRESSVIEWER.dispatchEvent(wdCloseRequestEvent);
+
 		}
 
 		/*-- atribuir o disparador nativos a todos os eventos do leitor --*/
@@ -4526,7 +4524,9 @@ const wd = (function() {
 				this._start = new Date().valueOf();
 				this._done  = false;
 				this._request.timeout = this.maxtime;
-				__MODALCONTROL.start();
+				__PROGRESSVIEWER.dispatchEvent(wdOpenRequestEvent);
+
+
 				/* tentando enviar */
 				try {
 					this._request.open(method, target, this.async, this.user, this.password);
@@ -4536,7 +4536,7 @@ const wd = (function() {
 					}
 					this._request.send(data);
 				} catch(e) {
-					__MODALCONTROL.end();
+					__PROGRESSVIEWER.dispatchEvent(wdCloseRequestEvent);
 				}
 				return;
 			}
@@ -4548,9 +4548,9 @@ const wd = (function() {
 				/* iniciando processo */
 				this._start = new Date().valueOf();
 				this._done  = false;
-				__MODALCONTROL.start();
+				__PROGRESSVIEWER.dispatchEvent(wdOpenRequestEvent);
 				try      {this._request[this.method](this._target);}
-				catch(e) {__MODALCONTROL.end();}
+				catch(e) {__PROGRESSVIEWER.dispatchEvent(wdCloseRequestEvent);}
 				return;
 			}
 		}
@@ -6004,14 +6004,24 @@ const wd = (function() {
 		/**. ``''self'' signal(''string'' title)``: Renderiza uma mensagem.**/
 		signal: {
 			value: function(title) {
-				__SIGNALCONTROL.open(this.toString(), title);
+				const event = new CustomEvent("wdshowmessage", {detail: {
+					type: "signal",
+					title: title === undefined || title === null ? "" : String(title),
+					body: this.toString()
+				}});
+				__SIGNALBOX.dispatchEvent(event);
 				return this;
 			}
 		},
 		/**. ``''self'' signal(''string'' title)``: Renderiza uma notificação. Se o tipo de dado for **/
 		notify: { /*renderizar notificação*/
 			value: function(title) {
-				__SIGNALCONTROL.notify(this.toString(), title);
+				const event = new CustomEvent("wdshowmessage", {detail: {
+					type: "notify",
+					title: title === undefined || title === null ? "" : String(title),
+					body: this.toString()
+				}});
+				__SIGNALBOX.dispatchEvent(event);
 				return this;
 			}
 		},
@@ -6748,9 +6758,7 @@ const wd = (function() {
 			url:      {value: function(){return __URL.apply(null, Array.prototype.slice.call(arguments));}},
 			LANG:     {value: __LANG},
 			TYPE:     {value: __TYPE},
-			MODAL:    {value: __MODALCONTROL},
 			DEVICE:   {value: __DEVICECONTROLLER},
-			SIGNAL:   {value: __SIGNALCONTROL},
 		});
 	}
 
@@ -6807,9 +6815,10 @@ const wd = (function() {
 				let list = [];
 				if (__Type(x.json).array) {
 					list = x.json;
-				} else if (__Type(x.csv).array) {
+				}
+				else if (__Type(x.csv).array) {
 					let table = __Table();
-					table.matrix(csv);
+					table.matrix(x.csv);
 					list = table.json;
 				}
 				target.repeat(list);
