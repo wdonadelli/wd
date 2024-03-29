@@ -1444,7 +1444,7 @@ const wd = (function() {
 				return value.join("");
 			}
 		},
-		/**. ``''matrix'' csv``: Retorna uma matriz (array) a partir de uma string no formato [CSV]<https://www.rfc-editor.org/rfc/rfc4180> cujas colunas sejam separadas por "\t" e linhas por "\n". Se o valor da célula contiver o caractere divisor de coluna ou linha, a célula deverá estar cercada por aspas duplas.**/
+		/**. ``''matrix'' csv``: Retorna uma matriz (array) a partir de uma string no estilo [CSV]<https://www.rfc-editor.org/rfc/rfc4180> mas com colunas separadas por "\t" (e não por vírgula) e linhas por "\n". Se o valor da célula contiver o caractere divisor de coluna ou linha, a célula deverá estar cercada por aspas duplas.**/
 		csv: {
 			get: function() {
 				/* definindo variáveis */ //FIXME se tiver uma campo vazio "", ele não reconhece a célula
@@ -1452,8 +1452,9 @@ const wd = (function() {
 				let tr    = "\n";
 				let txt   = this._value;
 				let table = [[]];
-				/* o último caractere precisar ser uma quebra de linha */
+				/* o último caractere precisa ser uma quebra de linha */
 				if (txt[txt.length - 1] !== tr) txt = txt+tr;
+				/* caminhando pelo texto enquanto existir \n e \t */
 				while (txt.indexOf(td) >= 0 || txt.indexOf(tr) >= 0) {
 					let add, cut, val, quote, cell, line, col;
 					col   = table[table.length - 1];
@@ -3559,7 +3560,7 @@ const wd = (function() {
 					node.remove();
 				}
 				/* invocar evento */
-				this.node.dispatchEvent(wdReloadEvent);
+				document.dispatchEvent(wdReloadEvent);
 			}
 		},
 		/**. ``''void'' repeat(''array'' list)``: Clona os filhos do elemento repetindo-os de acordo com as informações repassadas pelo array de objetos em ``list``. O elemento filho que contiver o nome do atributo do obejto entre duas chaves (''{{nome}}'') terá o fragmento substituídos pelo valor do atributo do objeto correspondente.**/
@@ -3598,7 +3599,7 @@ const wd = (function() {
 				/* 10) definir filhos */
 				this.node.innerHTML = childs.join("\n");
 				/* 11) invocar evento */
-				this.node.dispatchEvent(wdReloadEvent);
+				document.dispatchEvent(wdReloadEvent);
 			}
 		},
 		/**. ``''boolean'' show``: Retorna e define a visibilidade do elemento nos termos da biblioteca.**/
@@ -6973,7 +6974,7 @@ const wd = (function() {
 
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wdDisplay(''node''  e, ''string'' event)``FIXME
+	/**###### ``**function** ''void'' data_wdCode(''node''  e, ''string'' event)``FIXME acertar esse texto
 	Função vinculada ao atributo HTML ``data-wd-display`` cujo objetivo é manipular a exibição de nós, seus irmãos e filhos utilizando a ferramenta ``WDnode.display``. Possui múltiplos atributos e grupos:
 	|Nome|Descrição|Obrigatório|
 
@@ -7374,7 +7375,6 @@ const wd = (function() {
 		let resize = ev.type === "resize";
 		let change = __DEVICECONTROLLER.changeDevice;
 		/* se resize, chamar quando mudar o dispositivo, caso contrário, sempre chamar */
-
 		if ((resize && change) || !resize)
 			WD.$$("[data-wd-device]").forEach(function(x) {data_wdDevice(x, ev);});
 
