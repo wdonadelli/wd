@@ -483,7 +483,7 @@ const wd = (function() {
 /*----------------------------------------------------------------------------*/
 	/**###### ``**const** ''object'' wdReloadEvent``
 	Evento a ser disparado ao carregar elementos a partir de conteúdo externo (ver ''load'' e ''repeat'' em __Node).**/
-	const wdReloadEvent = new CustomEvent("wdreload",  {detail: null, bubbles: true});
+	const wdReloadEvent = new CustomEvent("wdreload");
 /*----------------------------------------------------------------------------*/
 	/**###### ``**const** ''object'' wdOpenRequestEvent``
 	Evento a ser disparado ao iniciar uma requisição (ver __Request).**/
@@ -2340,8 +2340,7 @@ const wd = (function() {
 	/**### Listas
 	###### ``**constructor** ''object'' __Array(array input|void  ...)``
 	Construtor para manipulação de listas (array).
-	Caso não seja informado argumento, seja atribuído uma lista vazia. Caso seja informado múltiplos argumentos, cada valor corresponderá a um item do array. Caso seja informado um array como argumento, esse será o valor considerado pelo objeto. Caso contrário, o valor informado será o item do array.
-	{**/
+	Caso não seja informado argumento, seja atribuído uma lista vazia. Caso seja informado múltiplos argumentos, cada valor corresponderá a um item do array. Caso seja informado um array como argumento, esse será o valor considerado pelo objeto. Caso contrário, o valor informado será o item do array.**/
 	function __Array() {
 		let input;
 		if (arguments.length === 0)
@@ -2359,16 +2358,14 @@ const wd = (function() {
 
 	Object.defineProperties(__Array.prototype, {
 		constructor: {value: __Array},
-		/**. ``array|void  valueOf(integer n)``: Retorna o array definido ou um de seus itens.
-		. O argumento opcional ``n`` corresponde ao índice da lista que se comporta conforme o retorno do método ``index``.**/
+		/**. ``''any''  valueOf(''integer'' n)``: Retorna o array definido ou um de seus itens se o índice correspondente for infromado no argumento opcional ``n`` cujo comportamento é idêntico ao do método ``index``.**/
 		valueOf: {
 			value: function(n) {
 				if (arguments.length === 0) return this._value;
 				return this._value[this.index(n)];
 			}
 		},
-		/**. ``''integer'' index(integer n=0)``: Retorna o índice do array, dentro de seu comprimento, como se repetidas listas estivessem lado a lado.
-		. O argumento ``n`` define o valor do índice. Tendo como exemplo um array de três elementos, o conjunto de (``n``, ``index``) teria como resultado  ''{..., (-7, 2), (-6, 0), (-5, 1), (-4, 2), (-3, 0), (-2, 1), (-1, 2), (0, 0), (1, 1), (2, 2), (3, 0), (4, 1), (5, 2), (6, 0), (7, 1), ...}''.**/
+		/**. ``''integer'' index(''integer'' n=0)``: Retorna o índice do array conforme especificado no argumento ``n`` que, se limitado ao seu comprimento, retornará o valor informado, caso contrário, retornarná o índice como se repetidas listas estivessem lado a lado. Tendo como exemplo um array de três elementos, o conjunto de (``n``, ``index``) retornaria  ''{..., (-3,0), (-2,1), (-1,2), (3,0), (4,1), (5,2), ...}''.**/
 		index: {
 			value: function(n) {
 				let data = __Type(n);
@@ -2380,10 +2377,7 @@ const wd = (function() {
 		length: {
 			get: function() {return this._value.length;}
 		},
-		/**. ``''array'' only(string type, boolean keep=false, boolean change=true)``: Retorna uma lista somente com os tipos de itens definidos.
-		. O argumento ``type`` define o tipo do item a ser mantido na lista (ver atributos do objeto ``__Type``).
-		. O argumento ``keep``, se verdadeiro, manterá na lista o item não enquadrado no tipo definido com o valor ``null``.
-		. O argumento ``change``, se verdadeiro, alterará o item casado para o valor (``valueOf``) do objeto ``__Type``.**/
+		/**. ``''array'' only(''string'' type, ''boolean'' keep=false, ''boolean'' change=true)``: Retorna uma lista somente com os tipos de itens definidos. O argumento ``type`` define o tipo do item a ser mantido na lista (ver ``&lowbar;&lowbar;Type``); o argumento ``keep``, se verdadeiro, manterá na lista o item não enquadrado em ``type`` mas com o valor ``null``; e o argumento ``change``, se verdadeiro, alterará o item casado para o valor do objeto (``valueOf`` de ``&lowbar;&lowbar;Type``.**/
 		only: {
 			value: function(type, keep, change) {
 				let list   = [];
@@ -2398,8 +2392,7 @@ const wd = (function() {
 				return list;
 			}
 		},
-		/**. ``''array'' convert(function f, string type)``: Retorna uma lista com o resultado de ``f(x)`` ou ``null`` se algo falhar.
-		. O argumento ``f`` corresponde à função a ser aplicada aos itens da lista. O item da lista será o argumento da função cujo retorno substituirá o valor do item. O argumento opcional ``type`` informa o tipo do resultado esperado de acordo com o método ``__Type`` que, se diferente, devolverá um valor nulo.**/
+		/**. ``''array'' convert(''Function'' f, ''string'' type)``: Retorna uma lista com o resultado de ``f(x)`` ou ``null`` se algo falhar. O argumento ``f`` corresponde à função a ser aplicada aos itens da lista. O item da lista será o argumento da função cujo retorno substituirá o valor do item. O argumento opcional ``type`` informa o tipo do resultado esperado de acordo com o método ``&lowbar;&lowbar;Type`` que, se diferente, devolverá um valor nulo.**/
 		convert: {
 			value: function(f, type) {
 				if (!__Type(f).function) return null;
@@ -2533,7 +2526,7 @@ const wd = (function() {
 				return items.filter(function(v,i,a) {return amount[i] === max;});
 			}
 		},
-		/**. ``''boolean'' check(void  ...)``: Checa se os valores informados como argumento estão presentes na lista.**/
+		/**. ``''boolean'' check(''any''  ...)``: Checa se os valores informados como argumento estão presentes na lista.**/
 		check: {
 			value: function() {
 				if (arguments.length === 0) return false;
@@ -2544,7 +2537,7 @@ const wd = (function() {
 				return check;
 			}
 		},
-		/**. ``''array'' search(void  value)``: Retorna uma lista com os índices onde o valor informado no argumento ``value`` foi localizado.**/
+		/**. ``''array'' search(''any''  value)``: Retorna uma lista com os índices onde o valor informado no argumento ``value`` foi localizado.**/
 		search: {
 			value: function(value) {
 				let index = [];
@@ -2552,14 +2545,14 @@ const wd = (function() {
 				return index;
 			}
 		},
-		/**. ``''array'' hide(void  ...)``: Retorna uma lista ignorando os valores informados como argumento.**/
+		/**. ``''array'' hide(''any''  ...)``: Retorna uma lista ignorando os valores informados como argumento.**/
 		hide: {
 			value: function() {
 				let hide = Array.prototype.slice.call(arguments);
 				return this._value.filter(function(v,i,a) {return hide.indexOf(v) < 0;});
 			}
 		},
-		/**. ``''number'' count(void  value)``: Retorna a quantidade de vezes que o valor informado no argumento ``value`` aparece na lista.**/
+		/**. ``''number'' count(''any''  value)``: Retorna a quantidade de vezes que o valor informado no argumento ``value`` aparece na lista.**/
 		count: {
 			value: function(value) {
 				return this.search(value).length;
@@ -2624,21 +2617,21 @@ const wd = (function() {
 				return __Array(this.unique).sort();
 			}
 		},
-		/**. ``''array'' add(void  ...)``: Adiciona itens (argumentos) ao fim da lista e a retorna.**/
+		/**. ``''array'' add(''any''  ...)``: Adiciona itens (argumentos) ao fim da lista e a retorna.**/
 		add: {
 			value: function() {
 				this._value.push.apply(this._value, arguments);
 				return this._value;
 			}
 		},
-		/**. ``''array'' jump(void  ...)``: Adiciona itens (argumentos) ao início da lista e a retorna.**/
+		/**. ``''array'' jump(''any''  ...)``: Adiciona itens (argumentos) ao início da lista e a retorna.**/
 		jump: {
 			value: function() {
 				this._value.unshift.apply(this._value, arguments);
 				return this._value;
 			}
 		},
-		/**. ``''array'' put(void  ...)``: Adiciona itens (argumentos) não existentes ao fim da lista e a retorna.**/
+		/**. ``''array'' put(''any''  ...)``: Adiciona itens (argumentos) não existentes ao fim da lista e a retorna.**/
 		put: {
 			value: function() {
 				let i = -1;
@@ -2648,14 +2641,14 @@ const wd = (function() {
 				return this._value;
 			}
 		},
-		/**. ``''array'' concat(array|void ...)``: Concatena ou adiciona listas e itens (argumentos) à lista original.**/
+		/**. ``''array'' concat(''any'' ...)``: Concatena listas ou adiciona itens (argumentos) à lista original.**/
 		concat: {
 			value: function() {
 				this._value = this._value.concat.apply(this._value, arguments);
 				return this._value;
 			}
 		},
-		/**. ``''array'' replace(void  from, void  to)``: Altera os valores da lista conforme especificado e a retorna.
+		/**. ``''array'' replace(''any''  from, ''any''  to)``: Altera os valores da lista conforme especificado e a retorna.
 		. O argumento ``from`` definie o valor a ser encontrado e substituído na lista e o argumento ``to`` define seu novo valor.**/
 		replace: {
 			value: function (from, to) {
@@ -2663,7 +2656,7 @@ const wd = (function() {
 				return this._value;
 			}
 		},
-		/**. ``''array'' remove(void ...)``: Remove itens (argumentos) da lista e a retorna.**/
+		/**. ``''array'' remove(''any'' ...)``: Remove itens (argumentos) da lista e a retorna.**/
 		remove: {
 			value: function() {
 				let list = this.hide.apply(this, arguments);
@@ -2673,7 +2666,7 @@ const wd = (function() {
 
 			}
 		},
-		/**. ``''array'' toggle(void  ...)``: Remove, se existente, ou insere, se ausente, itens (argumentos) da lista e a retorna.**/
+		/**. ``''array'' toggle(''any''  ...)``: Remove, se existente, ou insere, se ausente, itens (argumentos) da lista e a retorna.**/
 		toggle: {
 			value: function() {
 				let tgl  = Array.prototype.slice.call(arguments);
@@ -3986,7 +3979,7 @@ const wd = (function() {
 
 	/**#### Tabela
 	###### ``**constructor** ''object'' __Table(''boolean'' head, ''boolean'' foot)``
-	Construtor para obter dados de tabela e matrizes.**/
+	Construtor para obter dados de tabela e matrizes. Os argumentos ``head`` e ``foot`` informam se, ao retornar a tabela no formato HTML, haverá uma linha de cabeçalho (''thead'') ou de rodapé (''tfoot''), respectivamente.**/
 	function __Table(head, foot) {
 		if (!(this instanceof __Table))	return new __Table(head, foot);
 		let check1  = __Type(head);
@@ -4011,8 +4004,7 @@ const wd = (function() {
 
 	Object.defineProperties(__Table.prototype, {
 		constructor: {value: __Table},
-
-		/**. ``''array'' grid``: Retorna um array de duas dimensões contendo as células da tabela.**/
+		/**. ``''array'' grid``: Retorna um array de duas dimensões contendo as células da tabela (''th'' ou ''td'').**/
 		grid: {
 			get: function() {
 				let tags = ["tbody", "thead", "tfoot"];
@@ -4055,7 +4047,7 @@ const wd = (function() {
 			get: function()  {return this._table.caption.textContent;},
 			set: function(x) {this._table.caption.textContent = String(x);}
 		},
-		/**. ``''array'' matrix(''array'' input)``: Define e retorna os dados da tabela a partir de um array (``input`` é opcional).**/
+		/**. ``''array'' matrix(''array'' input)``: Define (``input``) ou retorna dados da tabela no formato de array.**/
 		matrix: {
 			value: function(input) {
 				/*-- retornar a matriz --*/
@@ -4100,11 +4092,12 @@ const wd = (function() {
 				return this.matrix();
 			},
 		},
-		/**. ``''node'' html(''node'' input)``: Define e retorna os dados da tabela a partir de uma tabela HTML (``input`` é opcional).**/
+		/**. ``''node'' html(''node'' input)``: Define (``input``) ou retorna dados da tabela no formato de tabela HTML.**/
 		html: {
 			value: function(input) {
 				/*-- retornar a tabela --*/
 				if (!__Type(input).node) return this._table;
+				/*-- definir a tabela --*/
 				let nodes = ["table", "thead", "tbody", "tfoot", "caption"];
 				let tag   = input.tagName.toLowerCase();
 				if (nodes.indexOf(tag) < 0) return this._table;
@@ -4142,7 +4135,7 @@ const wd = (function() {
 				return this.html();
 			}
 		},
-		/**. ``''string'' csv(''string'' input)``: Define e retorna os dados da tabela a partir do formato CSV (``input`` é opcional).**/
+		/**. ``''string'' csv(''string'' input)``: Define (``input``) ou retorna dados da tabela no formato CSV.**/
 		csv: {
 			value: function(input) {
 				/*-- retornando CSV --*/
@@ -4175,17 +4168,13 @@ const wd = (function() {
 				return data;
 			}
 		},
-		
-
-
-		/** FIXME colocar a descrição
+		/**. ``''array'' cell(''string'' area, ''boolean'' value)``: Retorna uma lista de objetos contendo os atributos ``col`` (número da coluna), ``row`` (número da linha) e ``cell`` (célula da tabela) conforme especificado no argumento ``area``:
 		- Número indica a linha ou coluna da célula (a partir de zero);
 		- Ponto representa o número da última linha ou coluna;
 		- Asterisco corresponde a qualquer número de linha ou coluna;
 		- Vírgula é o separador de linha e coluna (linha,coluna);
 		- Dois pontos é o separador entre a célula inicial e final; e
 		- Ponto e vírgula é o separador de grupos de células.
-
 		|Código|Descrição|
 		|1,2|Célula contida na linha 1 e coluna 2|
 		|.,2|Célula localizada na última linha da coluna 2|
@@ -4196,9 +4185,7 @@ const wd = (function() {
 		|1,*|Todas as células da linha 1|
 		|*,0|Todas as células da coluna 0|
 		|1,2;2,3|Células da linha 1 coluna 2 e linha 2 coluna 3|
-
-
-		**/
+		. Se o argumento ``value`` for verdadeiro, a lista retornará apenas com os valores das células.**/
 		cell: {
 			value: function(area, value) {
 				let data = String(area).split(";");
@@ -4246,7 +4233,7 @@ const wd = (function() {
 
 
 
-
+		/**.FIXME  ``''array'' plot(''object'' options)``: Retorna uma lista de objetos. Os atributos de cada objeto correspondem aos valores da primeira linha da tabela. Os valores desses atributos correspondem à respectiva coluna da tabela das demais linhas. Cada linha corresponde a um item da lista.**/
 		plot: {
 			value: function(options) {
 				//(x, y, label, option)
@@ -4278,16 +4265,6 @@ const wd = (function() {
 		},
 		
 	});
-
-
-
-
-
-
-
-
-
-
 
 /*============================================================================*/
 	/**### Requisições e Arquivos
@@ -6417,6 +6394,10 @@ const wd = (function() {
 
 	WDarray.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDarray},
+		/**. ``''integer'' length``: Retorna a quantidade de itens no array.**/
+		length: {
+			get: function() {return this._main.length;}
+		},
 		/**. ``''number'' min``: Retorna o menor número finito da lista ou ``null``.**/
 		min: {
 			get: function() {return this._main.min;}
@@ -6505,6 +6486,14 @@ const wd = (function() {
 		search: {
 			value: function(value) {return this._main.search(value);}
 		},
+		/**. ``''boolean'' check(''any'' ...)``: Retorna verdadeiro se todos os argumentos informados forem localizados.**/
+		check: {
+			value: function() {return this._main.check.apply(this._main, arguments);}
+		},
+		/**. ``''array'' hide(''any'' ...)``: Retorna a lista ignorando os valores informados como argumento.**/
+		hide: {
+			value: function() {return this._main.hide.apply(this._main, arguments);}
+		},
 		/**. ``''any'' item(''integer'' index)``: Retorna o item especificado no argumento ``index`` considerando uma lista circular.**/
 		item: {
 			value: function(index) {return this._main.valueOf(__Type(index).number ? index : 0);}
@@ -6517,14 +6506,20 @@ const wd = (function() {
 		valueOf: {
 			value: function() {return this._main.valueOf().slice();}
 		},
-
-		//FIXME
+		/**. ``''string'' csv``: Retorna o formato do array, se organizado em forma de matriz, no formato CSV.**/
 		csv: { /* matriz para csv */
-			get: function() {return wd_array_csv(this.valueOf());}
+			get: function() {
+				let table = __Table();
+				table.matrix(this.valueOf());
+				return table.csv();
+			;}
 		},
-		cell: { /* retorna uma lista de valores a partir de endereços de uma matriz do tipo linha:coluna */
-			value: function() {
-				return wd_array_cells(this.valueOf(), Array.prototype.slice.call(arguments));
+		/**. ``''array'' cell(''string'' area)``: Retorna uma lista contendo os valores definidos no argumento ``area`` de um array organizado no formato de matriz (ver __Table).**/
+		cell: {
+			value: function(area) {
+				let table = __Table();
+				table.matrix(this.valueOf());
+				return table.cell(area, true);
 			}
 		},
 	});
