@@ -4230,40 +4230,6 @@ const wd = (function() {
 				return cell;
 			}
 		},
-
-
-
-		/**.FIXME  ``''array'' plot(''object'' options)``: Retorna uma lista de objetos. Os atributos de cada objeto correspondem aos valores da primeira linha da tabela. Os valores desses atributos correspondem à respectiva coluna da tabela das demais linhas. Cada linha corresponde a um item da lista.**/
-		plot: {
-			value: function(options) {
-				//(x, y, label, option)
-				if (!__Type(options).object) return null;
-				let self  = this;
-				let chart = __Plot2D(options.ratio);
-				if ("xLabel" in options) chart.xLabel = options.xLabel;
-				if ("yLabel" in options) chart.yLabel = options.yLabel;
-				if ("title"  in options) chart.title  = options.title;
-				if ("xAxis"  in options) chart.xAxis  = options.xAxis;
-				if ("table"  in options && __Type(options.table).array) {
-					options.table.forEach(function(v,i,a) {
-						if (!__Type(v).object) return;
-						let x     = self.cell("1,"+v.x+":.,"+v.x, true);
-						let y     = self.cell("1,"+v.y+":.,"+v.y, true);
-						let label = "label" in v ? v.label : self.cell("0,"+v.y, true);
-						let fit   = v.fit;
-						chart.add(x, y, label, fit);
-					});
-				}
-				if ("data"  in options && __Type(options.data).array) {
-					options.data.forEach(function(v,i,a) {
-						if (__Type(v).object)
-							chart.add(v.x, v.y, v.label, v.fit);
-					});
-				}
-				return chart.plot();
-			}
-		},
-		
 	});
 
 /*============================================================================*/
@@ -6596,7 +6562,10 @@ const wd = (function() {
 		repeat: {
 			value: function(list) {
 				this.forEach(function(v,i) {__Node(v).repeat(list);});
-				return this;
+				return this;/*----------------------------------------------------------------------------*/
+	/**#### WDnode
+	###### ``**constructor** ''object'' WDnode(''any''  input, ''object'' data)``
+	Construtor genérico para manipulação de nós HTML. Os argumentos ``input`` e ``data`` se referem aos argumento de ``WDmain``**/
 			}
 		},
 		/**. ``''self'' set(''object'' values)``: Define os atributos especificados em ``values`` com seus respectivos valores (ver __Node.atrribute).**/
@@ -6693,7 +6662,10 @@ const wd = (function() {
 		},
 		/**. ``''self'' jump(''node'' jumper)``: Alterna a posição dos elementos informados em ``jumper`` entre os elementos da seleção (ver __Node.jump)**/
 		jump: {
-			value: function(jumper) {
+			value: function(jumper) {/*----------------------------------------------------------------------------*/
+	/**#### WDnode
+	###### ``**constructor** ''object'' WDnode(''any''  input, ''object'' data)``
+	Construtor genérico para manipulação de nós HTML. Os argumentos ``input`` e ``data`` se referem aos argumento de ``WDmain``**/
 				let check = __Type(jumper);
 				if (check.node) {
 					let nodes = this._input;
@@ -6706,6 +6678,137 @@ const wd = (function() {
 			}
 		},
 	});
+/*----------------------------------------------------------------------------*/
+	/**#### WDmatrix
+	###### ``**constructor** ''object'' WDmatrix(''any''  input, ''object'' data)``
+	Construtor genérico para manipulação de nós HTML. Os argumentos ``input`` e ``data`` se referem aos argumento de ``WDmain``**/
+
+	function WDmatrix(input) {
+		let table  = new __Table(true, false);
+		let target = null;
+		let check  = __Type(input);
+		if      (check.node)  table.html(check.value[0]);
+		else if (check.array) table.matrix(input);
+		else if (check.chars) table.csv(input);
+
+		if (check.node && check.value.length > 0)
+			if (check.value[0].tagName.toLowerCase() === "table")
+				target = check.value[0];
+
+		Object.defineProperties(this, {
+			_table:  {value: table},
+			_target: {value: target}
+		});
+	}
+
+	WDmatrix.prototype = Object.create(WDmatrix.prototype, {
+		constructor: {value: WDmatrix},
+		/**. ``''integer'' rows``: Retorna a quantidade de linhas da matriz.**/
+		rows: {
+			get: function() {return this._table.rows;}
+		},
+		/**. ``''integer'' rows``: Retorna a quantidade de colunas da matriz.**/
+		cols: {
+			get: function() {return this._table.rows;}
+		},
+		/**. ``''string'' caption``: Define ou retorna o rótulo da tabela.**/
+		caption: {
+			get: function()  {return this._table.caption;},
+			set: function(x) {return this._table.caption = x;}
+		},
+		/**. ``''array'' array``: Retorna a matriz na forma de array.**/
+		array: {
+			get: function() {return this._table.matrix();}
+		},
+		/**. ``''string'' csv``: Retorna a matriz na forma de string.**/
+		csv: {
+			get: function() {return this._table.csv();}
+		},
+		/**. ``''node'' html``: Retorna a matriz na forma de tabela HTML.**/
+		html: {
+			get: function() {return this._table.html();}
+		},
+		/**. ``''array'' range(''string'' cell)``: Retorna a lista dos valores das células especificadas em ``cell`` (ver &lowbar;&lowbar;Table).**/
+		range: {
+			value: function(cell) {return this._table.cell(cell, true);}
+		},
+
+
+
+		forEach: {
+			value: function(cell, callback) {
+				if (!__Type(callback).function) return;
+				let data = this._table.cell(cell, false);
+				let self = this;
+				data.forEach(function (v,i,a) {
+					let cell = {
+						get index()  {return i;},
+						get row()    {return v.row;},
+						get col()    {return v.col;},
+						get value()  {return v.cell.textContent;},
+						set value(x) {v.cell.textContent = x;},
+						set style(x) {wd(v.cell).set({style: x})},
+						range: function(x) {return self.range(x);},
+					};
+					callback(cell);
+				});
+			}
+		},
+		/**.  ``''node'' plot(''object'' options)``: Retorna um gráfico de acordo com os dados da tabela e conforme especificado em ``options``. O atributo ``options`` possui os seguintes atributos:
+		|Nome|Tipo|Descrição|
+		|xLabel|string|Rótulo do eixo ''x''.|
+		|yLabel|string|Rótulo do eixo ''y''.|
+		|title|string|Título do gráfico.|
+		|xAxis|string|Define o tipo de dado do eixo ''x'': ''number'' (padrão), ''date'', ''time'' e ''datetime''.|
+		|ratio|boolean|Se verdadeiro, o gráfico será proporcional, caso contrário, será plano cartesiano.|
+		|data|array|Conjunto de dados a serem plotados e corresponde a uma lista de objetos.|
+		. Os itens do atributo ``data`` do argumento ``options`` possui os seguintes atributos:
+		|Nome|Tipo|Descrição|
+		|matrix|boolean|Se verdadeiro, os dados serão capturados da matriz.|
+		|x|any|Valores do eixo ''x'', pode ser um array, um objeto (ratio = true) ou o número da coluna (matrix = true)|
+		|y|any|Valores do eixo ''y'', pode ser um array, uma função, uma constante ou o número da coluna (matrix = true)|
+		|label|string|Rótulo do gráfico|
+		|fit|string|Especifica o tipo do gráfico cartesiano.|
+		. Os tipos permitidos para o atributo ``fit`` são:
+		|Valor|Descrição|Valores de Y|
+		|sum|Exibe a soma aproximada da área dentro da curva.|function, constante, array, matrix|
+		|avg|Exibe a média aproximada da curva.|function, array, matrix|
+		|line|Liga os pontos do gráfico com um seguimento de reta.||
+		|link|Liga os pontos do gráfico com um seguimento de reta lincado por um ponto.|array, matrix|
+		|dots|Exibe os pontos do gráfico.|array, matrix|
+		|linear|Executa um ajuste linear aproximado.||
+		|exponential|Executa um ajuste exponencial aproximado.||
+		|geometric|Executa um ajuste geométrico aproximado.||
+		|logarithmic|Executa um ajuste logarítmo aproximado.||
+		|minimum|Executa um ajuste com o menor desvio médio padrão.||**/
+		plot: {
+			value: function(options) {
+				//(x, y, label, option)
+				if (!__Type(options).object) return null;
+				let self  = this;
+				let chart = __Plot2D(options.ratio);
+				let names = {xLabel: 0, yLabel: 0, title: 0, xAxis: 0};
+				for (let attr in names)
+					if (attr in options) chart[attr] = options[attr];
+				if ("data" in options && __Type(options.data).array)
+					options.data.forEach(function (v,i,a) {
+						if (!__Type(v).object) return;
+						let matrix = v.matrix === true;
+						let	x     = matrix ? self.range("1,"+v.x+":.,"+v.x, true) : v.x;
+						let y     = matrix ? self.range("1,"+v.y+":.,"+v.y, true) : v.y;
+						let label = matrix ? self.range("0,"+v.y)[0] : v.label;
+						let fit   = v.fit;
+						chart.add(x, y, label, v.fit);
+					});
+				return chart.plot();
+			}
+		},
+	});
+
+
+
+
+
 /*----------------------------------------------------------------------------*/
 	/**### Função Mestre
 	###### ``''object'' WD(''any'' input)``
@@ -6724,15 +6827,18 @@ const wd = (function() {
 		return new WDmain(input, data);
 	}
 
+	//FIXME colocar a descrição
 	WD.constructor = WD;
 	Object.defineProperties(WD, {
 		version: {value: __VERSION},
 		$:       {value: function(css, root) {return WD(__Query(css, root).$);}},
 		$$:      {value: function(css, root) {return WD(__Query(css, root).$$);}},
-		copy:    {value: function(text) {return wd_copy(text);}},
+		copy:    {value: function(text)  {return wd_copy(text);}}, //FIXME como fica copy?
+		matrix:  {value: function(input) {return new WDmatrix(input);}},
 		device:  {get:   function() {return __DEVICECONTROLLER.device;}},
 		today:   {get:   function() {return WD(__DateTime().toDateString());}},
 		now:     {get:   function() {return WD(__DateTime().toTimeString());}},
+		
 	});
 
 	if (__UNDERMAINTENANCE) {
@@ -6862,7 +6968,7 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	/**###### ``**function** ''void'' data_wdChart(''node''  e, ''string'' event)``
-	Função vinculada ao atributo HTML ``data-wd-chart`` cujo objetivo é criar um gráfico 2D a partir de uma tabela, um arquivo CSV ou parâmetros de dados como filho do elemento possuidor do atributo. Possui múltiplos atributos e grupo único. Para definir funções nos parâmetros, deverá ser informado seu nome e a função deve estar dentro do escopo principal (window) utilizando as palavras chaves ``var`` ou ``function``:
+	Função vinculada ao atributo HTML ``data-wd-chart`` cujo objetivo é criar um gráfico 2D a partir de uma tabela, um arquivo CSV ou parâmetros FIXME de dados como filho do elemento possuidor do atributo. Possui múltiplos atributos e grupo único. Para definir funções nos parâmetros, deverá ser informado seu nome e a função deve estar dentro do escopo principal (window) utilizando as palavras chaves ``var`` ou ``function``:
 	|Nome|Descrição|Obrigatório|
 	|path|Caminho para o arquivo CSV a ser carregado|Não|
 	|table|Seletor CSS que indica a tabela de dados (será ignorado se path for informado)|Não|
@@ -6871,46 +6977,45 @@ const wd = (function() {
 	function data_wdChart(e, event) {
 		if (!("wdChart" in e.dataset)) return;
 		let data   = __String(e.dataset.wdChart).wdNotation[0];
-		let target = WD(e);
-		target.set({dataset: {wdChart: null}});
 		if (!__Type(data).object) return;
-
+		let target = WD(e);
 		let query  = __Query.$$$(data);
-		/* acertando nomes de funções para funções */
-		let attrs = ["table", "data"];
-		let i = -1;
-		while (++i < attrs.length) {
-			let attr = attrs[i];
-			if (attr in data) {
-				let j = -1;
-				while (++j < data[attr].length) {
-					data[attr][j] = __String(data[attr][j]).wdNotation[0];
-					if (attr === "data" && data[attr][j].y in window) {
-						if (__Type(window[data[attr][j].y]).function)
-							data[attr][j].y = window[data[attr][j].y];
-					}
-				}
+		delete e.dataset.wdChart;
+		/* acertando os dados */
+		console.log(data);
+		if (!__Type(data.data).array) return;
+		data.data.forEach(function (v,i,a) {
+			let item = __String(v).wdNotation[0];
+			if (!__Type(item).object) return;
+			a[i] = item;
+			if (__Type(a[i].y).string) {
+				if (a[i].y in window && __Type(window[a[i].y]).function)
+					a[i].y = window[a[i].y];
 			}
-		}
-		/* plotando gráfico */
-		if ("path" in data) {
-			let path = data.path;
-			delete data.path;
-			WD(query).send(path, {
-				method: data.method,
-				ondone: function(x) {
-					let csv   = x.csv;
-					if (__type(csv).array)
-						return e.appendChild(WD(csv).chart(data));
-					let json  = x.json;
-					if (__type(json).array)
-						return e.appendChild(WD(table).chart(data));
-					return e.appendChild(WD().chart(data));
-				}
-			});
+		});
+		console.log(data); return;
+
+		//FIXME deixar data como array não deu certo, da pra fazer o seguinte inserir repetidos add
+		//add{x{[1,2,3]}y{[4,5,6]}label{label 1}}add{x{[1,2,3]}y{[7,8,9]}label{label 2}}
+
+
+		/* definindo origem dos dados */
+		let plotter = function(src) {
+			let matrix = WD.matrix(src);
+			let plot   = matrix.plot(data);
+			if (plot !== null) {
+				e.innerHTML = "";
+				e.appendChild(plot);
+			}
 			return;
-		}
-		e.appendChild(WD(query).chart(data));
+		};
+		if ("path" in data)
+			WD().send(data.path, {
+				method: data.method,
+				ondone: function (x) {plotter(x.csv);}
+			});
+		else
+			plotter(x.csv);
 		return;
 	}
 
@@ -6982,7 +7087,7 @@ const wd = (function() {
 		let code  = __Code(e.textContent);
 		let check = __Type(data)
 		code[(check.array ? "options" : "lang")] = (check.array ? data[0] : data);
-		if (event.type === "focusin" && e.isContentEditable ===  true)
+		if (event.type === "focusin")
 			e.textContent = code.toString();
 		else
 			e.innerHTML   = code.valueOf();
