@@ -1448,13 +1448,113 @@ const wd = (function() {
 		csv: {
 			get: function() {
 				/* definindo variáveis */ //FIXME se tiver uma campo vazio "", ele não reconhece a célula
+				let txt   = this._value.split("");
+				let csv   = [[]];
+				let td    = null;
+				let tr    = "\n";
+				let last  = txt.length - 1;
+				let quote = false;
+				let col   = /[\ \,\;\t\|]/;
+				let cell  = [];
+				txt.forEach(function(v,i,a) {
+					let item = csv.length - 1;
+					/*-- fora das aspas --*/
+					if (!quote) {
+						/*-- identificação do divisor de colunas --*/
+						if (td === null && col.test(v))	td = v;
+						/*-- abertura de aspas --*/
+						if (v === "\"") {
+							quote = true;
+							cell.push("");
+							return;
+						}
+						/* quebra de coluna */
+						if (v === td) {
+							cell.push("");
+							csv[item].push(cell.join(""));
+							cell = [];
+							return;
+						}
+						/*-- quebra de linha --*/
+						if (v === tr) {
+							cell.push("");
+							csv[item].push(cell.join(""));
+							csv.push([]);
+							cell = [];
+							return;
+						}
+						/*-- EOF --*/
+						if (i === last) {
+							cell.push(v);
+							csv[item].push(cell.join(""));
+							return;
+						}
+						/*-- capturar caractere --*/
+						cell.push(v);
+						return;
+					}
+					/*-- dentro das aspas --*/
+					if (quote) {console.log({i: i, v: v});
+						/*-- checar fim das aspas ou aspas internas (duplas) --*/
+						if (v === "\"") {
+							/*-- aspas duplas (interna) --*/
+							if (a[i+1] === "\"") {
+								a[i+1] = "";
+								cell.push(v);
+								return;
+							}
+							/*-- fim das aspas --*/
+							if (a[i+1] !== "\"") {
+								quote = false;
+								cell.push("");
+								/*-- definindo a quebra de coluna, se nulo, como o próximo item --*/
+								if (td === null && a[i+1] !== tr && i !== last)
+									td = a[i+1];
+								return;
+							}
+						}
+						/*-- escapes --*/
+						if (v === "\\") {
+							let char  = null;
+							let scape = [
+								{next:  "t", char: "\t"},
+								{next:  "n", char: "\n"},
+								{next: "\"", char: "\""}
+							];
+							scape.forEach(function(x,y,z) {
+								if (char === null && a[i+1] === x.next) char = x.char;
+							});
+							if (char !== null) {
+								a[i+1] = "";
+								cell.push(char);
+								return;
+							}
+						}
+						/*-- capturando caractere --*/
+						cell.push(v);
+						if (i === last) csv[item].push(cell.join(""));
+						return;
+					}
+				});
+				console.log({td: td, tr: tr});
+
+				return csv;
+
+
+
+
+
+
+
+/*
+
 				let td    = "\t";
 				let tr    = "\n";
 				let txt   = this._value;
 				let table = [[]];
-				/* o último caractere precisa ser uma quebra de linha */
+				/* o último caractere precisa ser uma quebra de linha * /
 				if (txt[txt.length - 1] !== tr) txt = txt+tr;
-				/* caminhando pelo texto enquanto existir \n e \t */
+				/* caminhando pelo texto enquanto existir \n e \t * /
 				while (txt.indexOf(td) >= 0 || txt.indexOf(tr) >= 0) {
 					let add, cut, val, quote, cell, line, col;
 					col   = table[table.length - 1];
@@ -1470,7 +1570,7 @@ const wd = (function() {
 					txt = txt.join(cut);
 					if (add && txt !== "") table.push([]);
  				}
- 				/* igualando número de colunas de todas as linhas */
+ 				/* igualando número de colunas de todas as linhas * /
  				let max = 0;
  				table.forEach(function(v,i,a) {
  					if (v.length > max) max = v.length;
@@ -1479,7 +1579,7 @@ const wd = (function() {
  					while (v.length < max) v.push("");
  				});
 				/* retornando */
- 				return table;
+ 				//return table;
 			}
 		},
 		/**. ``''node'' html``: Retorna um documento HTML caso o conteúdo da string esteja nesse formato, ou nulo.**/
