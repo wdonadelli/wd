@@ -1313,7 +1313,7 @@ const wd = (function() {
 	Construtor para manipulação de textos. O argumento ``input`` define o texto de entrada.**/
 	function __String(input) {
 		if (!(this instanceof __String)) return new __String(input);
-		if (!__Type(input).string) input = String(input);
+		if (!__Type(input).string) input = String(input).normalize("NFD"); //FIXME que merda eu coloco?
 		Object.defineProperties(this, {
 			_value: {value: input}
 		});
@@ -1458,128 +1458,61 @@ const wd = (function() {
 				let cell  = [];
 				txt.forEach(function(v,i,a) {
 					let item = csv.length - 1;
+					let eol  = false;
+					let eoc  = false;
+					let char = v;
 					/*-- fora das aspas --*/
 					if (!quote) {
 						/*-- identificação do divisor de colunas --*/
-						if (td === null && col.test(v))	td = v;
-						/*-- abertura de aspas --*/
-						if (v === "\"") {
+						if (td === null && col.test(char))	td = char;
+						if (i === last) { /*-- fim do arquivo --*/
+							eoc = true;
+						} else if (char === td) { /*-- quebra de coluna --*/
+							char = "";
+							eoc  = true;
+						} else if (char === tr) { /*-- quebra de linha --*/
+							char = "";
+							eol  = true;
+						} else if (char === "\"" && cell.length === 0) { /*-- abertura de aspas --*/
+							char = "";
 							quote = true;
-							cell.push("");
-							return;
 						}
-						/* quebra de coluna */
-						if (v === td) {
-							cell.push("");
-							csv[item].push(cell.join(""));
-							cell = [];
-							return;
-						}
-						/*-- quebra de linha --*/
-						if (v === tr) {
-							cell.push("");
-							csv[item].push(cell.join(""));
-							csv.push([]);
-							cell = [];
-							return;
-						}
-						/*-- EOF --*/
-						if (i === last) {
-							cell.push(v);
-							csv[item].push(cell.join(""));
-							return;
-						}
-						/*-- capturar caractere --*/
-						cell.push(v);
-						return;
-					}
-					/*-- dentro das aspas --*/
-					if (quote) {console.log({i: i, v: v});
-						/*-- checar fim das aspas ou aspas internas (duplas) --*/
-						if (v === "\"") {
-							/*-- aspas duplas (interna) --*/
-							if (a[i+1] === "\"") {
+					} else { /*-- dentro das aspas --*/
+						if (char === "\"") { /*-- aspas duplas (interna) --*/
+							if (a[i+1] === "\"") { /*-- aspas internas (duplas) --*/
 								a[i+1] = "";
-								cell.push(v);
-								return;
-							}
-							/*-- fim das aspas --*/
-							if (a[i+1] !== "\"") {
+							} else { /*-- fim das aspas --*/
 								quote = false;
-								cell.push("");
-								/*-- definindo a quebra de coluna, se nulo, como o próximo item --*/
-								if (td === null && a[i+1] !== tr && i !== last)
-									td = a[i+1];
-								return;
+								char  = "";
+								/*-- definir o próximo caractere como quebra de coluna, se nulo --*/
+								if (td === null && a[i+1] !== tr) td = a[i+1];
+								/*-- fechar coluna se último item --*/
+								if (i === last) eoc = true;
 							}
 						}
-						/*-- escapes --*/
-						if (v === "\\") {
-							let char  = null;
-							let scape = [
-								{next:  "t", char: "\t"},
-								{next:  "n", char: "\n"},
-								{next: "\"", char: "\""}
-							];
-							scape.forEach(function(x,y,z) {
-								if (char === null && a[i+1] === x.next) char = x.char;
-							});
-							if (char !== null) {
-								a[i+1] = "";
-								cell.push(char);
-								return;
-							}
-						}
-						/*-- capturando caractere --*/
-						cell.push(v);
-						if (i === last) csv[item].push(cell.join(""));
-						return;
 					}
+					/*-- adicionar o caractere --*/
+					cell.push(char);
+					/*-- encerrar célula se fim de coluna ou de linha --*/
+					if (eoc || eol) {
+						csv[item].push(cell.join(""));
+						cell = [];
+					}
+					/*-- abrir nova linha se fim de linha --*/
+					if (eol) {
+						csv.push([]);
+					}
+					return;
 				});
-				console.log({td: td, tr: tr});
-
-				return csv;
-
-
-
-
-
-
-
-/*
-
-				let td    = "\t";
-				let tr    = "\n";
-				let txt   = this._value;
-				let table = [[]];
-				/* o último caractere precisa ser uma quebra de linha * /
-				if (txt[txt.length - 1] !== tr) txt = txt+tr;
-				/* caminhando pelo texto enquanto existir \n e \t * /
-				while (txt.indexOf(td) >= 0 || txt.indexOf(tr) >= 0) {
-					let add, cut, val, quote, cell, line, col;
-					col   = table[table.length - 1];
-					quote = (/^\"/).test(txt);
-					cell  = txt.indexOf(quote ? "\""+td : td);
-					line  = txt.indexOf(quote ? "\""+tr : tr);
-					add   = (line < 0 ? Infinity : line) < (cell < 0 ? Infinity : cell);
-					cut   = (quote ? "\"" : "")+(add ? tr : td);
-					txt   = txt.split(cut);
-					val   = quote ? txt[0].replace(/^\"/, "") : txt[0];
-					col.push(val);
-					txt.shift();
-					txt = txt.join(cut);
-					if (add && txt !== "") table.push([]);
- 				}
- 				/* igualando número de colunas de todas as linhas * /
+				/*-- igualando número de colunas de todas as linhas --*/
  				let max = 0;
- 				table.forEach(function(v,i,a) {
+ 				csv.forEach(function(v,i,a) {
  					if (v.length > max) max = v.length;
  				});
- 				table.forEach(function(v,i,a) {
+ 				csv.forEach(function(v,i,a) {
  					while (v.length < max) v.push("");
  				});
-				/* retornando */
- 				//return table;
+				return csv;
 			}
 		},
 		/**. ``''node'' html``: Retorna um documento HTML caso o conteúdo da string esteja nesse formato, ou nulo.**/
