@@ -1444,10 +1444,9 @@ const wd = (function() {
 				return value.join("");
 			}
 		},
-		/**. ``''matrix'' csv``: Retorna uma matriz (array) a partir de uma string no estilo [CSV]<https://www.rfc-editor.org/rfc/rfc4180> mas com colunas separadas por "\t" (e não por vírgula) e linhas por "\n". Se o valor da célula contiver o caractere divisor de coluna ou linha, a célula deverá estar cercada por aspas duplas.**/
+		/**. ``''matrix'' csv``: Retorna uma matriz (array) a partir de uma string no estilo [CSV]<https://www.rfc-editor.org/rfc/rfc4180> com dados separados por vírgula, espaço, tabulação, barra vertical ou ponto e vírgula e registros por quebras de linhas. O primeiro caractere separador encontrado, exceto se entre aspas, será o para separadorr para os demais dados. Dados que contenham os caracteres separadores de dados ou de registros devem estar entre aspas. Aspas em dados protegidos por aspas são definidos como aspas duplas em sequência.**/
 		csv: {
 			get: function() {
-				/* definindo variáveis */ //FIXME se tiver uma campo vazio "", ele não reconhece a célula
 				let txt   = this._value.split("");
 				let csv   = [[]];
 				let td    = null;
@@ -1461,8 +1460,7 @@ const wd = (function() {
 					let eol  = false;
 					let eoc  = false;
 					let char = v;
-					/*-- fora das aspas --*/
-					if (!quote) {
+					if (!quote) { /*-- fora das aspas --*/
 						/*-- identificação do divisor de colunas --*/
 						if (td === null && col.test(char))	td = char;
 						if (i === last) { /*-- fim do arquivo --*/
@@ -1490,6 +1488,8 @@ const wd = (function() {
 								if (i === last) eoc = true;
 							}
 						}
+						/*-- fim do arquivo --*/
+						if (i === last) eoc = true;
 					}
 					/*-- adicionar o caractere --*/
 					cell.push(char);
@@ -1615,28 +1615,38 @@ const wd = (function() {
 				return object ? list : this.wdValue(data);
 			}
 		},
+		wdNotation2: {
+			/*
+			dataset-wd-set="{$$ #id}{dataset {wdSend {path loko.php}{method GET}}}"
+			dataset-wd-set="$${#id}dataset{wdSend{path{loko.php}method{GET}}}"
+			*/
+
+
+			get: function() {
+				let list   = [{}];
+				let data   = this._value.trim();
+				let char   = data.split("");
+				let open   = 0;
+				let key    = 0;
+				let name   = [];
+				let value  = [];
+				let object = false;
+				let self   = this;
+				char.forEach(function(v,i,a) {
 
 
 
-/*
-					swap: function(code, target, tag) {
-						let trim = "(\\s|[(){}\\[\\]\\-+* /%=!;,:]|\\&gt\\;|\\&lt\\;)";
-						let swap = [
-							{re: "^(target)$",         rpl: "<tag>$1</tag>"},
-							{re: "^(target)"+trim,     rpl: "<tag>$1</tag>$2"},
-							{re: trim+"(target)$",     rpl: "$1<tag>$2</tag>"},
-							{re: trim+"(target)"+trim, rpl: "$1<tag>$2</tag>$3"},
-						];
-						for (let i in swap) {
-							let re = new RegExp(swap[i].re.replace("target", target), "g");
-							let tg = swap[i].rpl.replace("tag", tag);
-							code = code.replace(re, tg);
-						}
-						return code;
-					},
-					*/
+				});
+
+
+
+
+		}
+	},
+
+
+
 	});
-
 
 
 
@@ -2849,7 +2859,7 @@ const wd = (function() {
 		},
 		/**. ``''array'' values(''string'' name)``: Retorna uma lista de valores identificados por ``name``.**/
 		values: {
-			values: function(name) {
+			value: function(name) {
 				name = String(name);
 				let list = [];
 				if (name in this._id) {
@@ -2875,7 +2885,7 @@ const wd = (function() {
 				return list.join("&").trim();
 			}
 		},
-		/**. ``''object'' form``: Retorna o parâmetro de buscapor meio do objeto ``FormData``.**/
+		/**. ``''object'' form``: Retorna o parâmetro de busca por meio do objeto ``FormData``.**/
 		form: {
 			get: function() {
 				if (!("FormData" in window)) return null;
@@ -2928,7 +2938,33 @@ const wd = (function() {
 				});
 				return this;
 			}
-		}
+		},
+
+		/**. ``''object'' json``: Retorna um objeto contendo oo conjunto de dados.**/
+		json: {
+			get: function() {
+				let list = {};
+				let self = this;
+				this._data.forEach(function(v,i,a) {
+					if (v !== null) {
+						let value = v.type === "file" ? v.value.name : v.value;
+						let name  = v.name;
+						let array = self._id[name] > 1;
+						if (!(name in list)) list[name] = array ? [] : "";
+						if (array) list[name].push(value);
+						else       list[name] = value;
+					}
+				});
+				return list;
+
+
+
+			}
+
+		},
+
+
+
 	});
 
 /*----------------------------------------------------------------------------*/
