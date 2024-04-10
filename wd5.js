@@ -1618,34 +1618,91 @@ const wd = (function() {
 		wdNotation2: {
 			/*
 			dataset-wd-set="{$$ #id}{dataset {wdSend {path loko.php}{method GET}}}"
-			dataset-wd-set="$${#id}dataset{wdSend{path{loko.php}method{GET}}}"
+			dataset-wd-set="$${#id}dataset{wdSend{path{loko.php}method{GET}lok[1,2,3]}}"
 			*/
 
 
 			get: function() {
-				let list   = [{}];
-				let data   = this._value.trim();
-				let char   = data.split("");
-				let open   = 0;
-				let key    = 0;
-				let name   = [];
-				let value  = [];
-				let object = false;
-				let self   = this;
-				char.forEach(function(v,i,a) {
-
-
-
+				let data  = this._value.trim().split("");
+				let list  = [{}];
+				let name  = [];
+				let value = [];
+				let scope = [];
+				data.forEach(function(v,i,a) {
+					let len = scope.length;
+					let sym = len === 0 ? null : scope[0];
+					let key = name.join("").trim();
+					let val = value.join("").trim();
+					let obj = list[list.length - 1];
+					if (key === "") key = "unknow";
+					/*-- abertura de objeto --*/
+					if (v === "{") {
+						if (sym === null) {
+							obj[key] = undefined;
+							scope.push(v);
+							return;
+						}
+						if (sym === "{") scope.push(v);
+						value.push(v);
+						return;
+					}
+					/*-- fechamento de objeto --*/
+					if (v === "}") {
+						if (sym === "{" && len === 1) {
+							obj[key] = val;
+							value = [];
+							name  = [];
+							scope.pop();
+							return;
+						}
+						if (sym === "{") scope.pop();
+						value.push(v);
+						return;
+					}
+					/*-- abertura de array --*/
+					if (v === "[") {
+						if (sym === null) {
+							obj[key] = [];
+							scope.push(v);
+							return;
+						}
+						if (sym === "[") scope.push(v);
+						value.push(v);
+						return;
+					}
+					/*-- fechamento de array --*/
+					if (v === "]") {
+						if (sym === "[" && len === 1) {
+							obj[key].push(val);
+							value = [];
+							name  = [];
+							scope.pop();
+							return;
+						}
+						if (sym === "[") scope.pop();
+						value.push(v);
+						return;
+					}
+					/*-- acrescendo array --*/
+					if (v === "," && sym === "[" && len === 1) {
+						obj[key].push(val);
+						value = [];
+						return;
+					}
+					/*-- adicionando novo item principal --*/
+					if (v === "&" && sym === null) {
+						list.push({});
+						return;
+					}
+					/*-- incrementando nome ou valor da chave --*/
+					if (sym === null)
+						name.push(v);
+					else
+						value.push(v);
 				});
-
-
-
-
-		}
-	},
-
-
-
+				return list;
+			}
+		},
 	});
 
 
