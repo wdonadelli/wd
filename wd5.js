@@ -1542,160 +1542,124 @@ const wd = (function() {
 		/**. ``''any'' wdValue(''any'' x)``: Recebe o valor do argumento ``x`` e o retorna adequado à necessidade do método ``wdNotation``.**/
 		wdValue: {
 			value: function(x) {
+				/* limpando apóstrofos */
+				const quote = /^\'(.+)?\'$/;
+				const armor = quote.test(x);
+				if (armor) x = x.replace(quote, "$1");
+				/* obtendo o tipo */
+				const type = __Type(x);
+				/* checando números números */
+				if (type.number) return type.value;
+				/* checando expressão regular */
+				const re = /^\/(.+)\/([gim]+)?$/i;
+				if (re.test(x)) return new RegExp(x.replace(re, "$1"), x.replace(re, "$2"));
+				/* palavras reservadas */
 				let types = {true: true, false: false, null: null, undefined: undefined};
-				let check = __Type(x);
-				let array = /^\[(.+)\]$/;
-				let regex = /^\/(.+)\/(g|i|gi|ig)?$/;
-				if (check.chars) {x = x.trim();}
-
-				if (check.array) {
-					let self = this;
-					x.forEach(function(v,i,a) {a[i] = self.wdValue(v);});
-					return x;
-				}
-				if (regex.test(x)) {
-					x = x.split("/");
-					return new RegExp(x[1], x[2]);
-				}
-				if (x in types)    return types[x];
-				if (x === "[]")    return [];
-				if (array.test(x)) return this.wdValue(x.replace(array, "$1").split(","));
-				if (check.number)  return check.value;
-
+				if (x in types && !armor) return types[x];
+				/* demais valores */
 				return x;
 			}
 		},
-		/**. ``''any'' wdNotation``: Retorna o valor informado ou um array de objetos a partir de uma notação particular da biblioteca:
-		|Entrada|Descrição|Exemplo|
-		|"undefined"|Retorna o valor primitivo ``undefined``||
-		|"true"|Retorna o valor primitivo ``true``||
-		|"false"|Retorna o valor primitivo ``false``||
-		|"null"|Retorna o valor primitivo ``null``||
-		|"[str1, true, 3...]"|Retorna um array tendo vírgulas como separador|``["str1", true, 3...]``|
-		|"/regexp/"|Retorna uma expressão regular (aceita os complementos ''g'' e ''i'')|``/regexp/``|
-		|"nome{valor}"|Retorna um array de objetos.|``[{nome: valor}]``|
-		|"nome1{valor1}nome2{valor2}"|Retorna um array de objetos com múltiplos atributos|``[{nome1: valor1, nome2: valor2}]``|
-		|"nome1{valor1}&amp;nome2{valor2}"|Retorna um array de objetos cujos itens são separados pelo caracteres &amp;|``[{nome1: valor1}, {nome2: valor2}]``|
-		. A notação é limitada, só funcionando nos casos acima tratados.**/
+		/**. ``''array'' wdNotation``: Trata-se de uma notação específica para o atributo HTML dataset que invocará as ferramentas da biblioteca ao ter o evento adequado disparado.
+		. A notação consiste num conjunto de dados no formato ''nome{valor}'' que resultará num objeto a ser retornado. O par ''nome{valor}'' inicia com o nome do atributo seguido do caracter de abertura do escopo, do seu respectivo valor e do caractere de fechamento de escopo.
+		. Há três caracteres de escopo&colon; **&lbrace;&rbrace;** define um valor genérico; **&lbrack;&rbrack;** define um array separado por vírgulas; e **&lpar;&rpar;** define o nome de uma função presente dentro do escopo de ''window'' e defindo por ''var'' ou ''function'' e, se a função não existir, será atribuído o valor nulo.
+		. Se o valor contiver o mesmo caractere do escopo, deverá haver a mesma quantidade de caracteres de abertura e de fechamento. Caso seja necessário desobedecer essa regra, o valor deverá ser blindado por apóstrofos (**&apos;**) no início e no fim. Apóstrofos internos são definidos por apóstrofos duplos seguidos (**&apos;&apos;**).
+		. O valor retornado será uma lista de objetos. Para acrescentar um objeto à lista, deve-se utilizar o caractere **&amp;**.
+		. Os valores dos atributos serão do tipo string, exceto nos casos dos valores ''undefined'', ''null'', ''true'', ''false'' e dígitos, que serão tratados de acordo com o que representam. Para definiir uma expressão regular, o valor deverá iniciar e terminar com o caractere de barra (**&frasl;**), podendo adicionar os complementos ''igm'' após a barra final.
+		. A notação é limitada ao primeiro nível. Para adição de cadeias de objetos (objetos dentro de objetos), cada valor deverá ser reprocessado.
+		. A string ''a{true}b[1,2,3]c(alert)&a{test}'' retornará a lista ``[{a&colon; true, b&colon; [1,2,3], c&colon; alert()}, {a&colon; "test"}]``.**/
 		wdNotation: {
-			get: function() {
-			/* a{B}c{D}&e{F} => [{a: B, c: D}, {e: F}] IMPORTANTE: regexp não resolve */
-				let list   = [{}];
-				let data   = this._value.trim();
-				let char   = data.split("");
-				let open   = 0;
-				let key    = 0;
-				let name   = [];
-				let value  = [];
-				let object = false;
-				let self   = this;
-				char.forEach(function(v,i,a) {
-					if (v === "{" && open === 0) { /* define nome */
-						name  = name.join("").trim();
-						if (name === "") name = "#";
-						list[key][name] = undefined;
-						open++;
-						value = [];
-					} else if (v === "}" && open === 1) { /* define valor */
-						value = value.join("");
-						list[key][name] = self.wdValue(value);
-						open--;
-						name   = [];
-						object = true;
-					} else if (v === "&" && open === 0) { /* quebra grupo */
-						list.push({});
-						key++;
-					} else if (open === 0) { /* captura nome */
-						name.push(v);
-					} else if (open > 0) { /* captura valor */
-						if (v === "{" || v === "}") open += v === "{" ? +1 : -1;
-						value.push(v);
-					}
-				});
-				return object ? list : this.wdValue(data);
-			}
-		},
-		wdNotation2: {
-			/*
-			dataset-wd-set="{$$ #id}{dataset {wdSend {path loko.php}{method GET}}}"
-			dataset-wd-set="$${#id}dataset{wdSend{path{loko.php}method{GET}lok[1,2,3]}}"
-			*/
-
-
 			get: function() {
 				let data  = this._value.trim().split("");
 				let list  = [{}];
 				let name  = [];
 				let value = [];
-				let scope = [];
+				let open  = ["[", "{", "("];
+				let close = ["]", "}", ")"];
+				let scope = null;
+				let count = 0;
+				let quote = false;
+				let self  = this;
+				let hash  = "#0";
 				data.forEach(function(v,i,a) {
-					let len = scope.length;
-					let sym = len === 0 ? null : scope[0];
+					let sym = open.indexOf(scope);
 					let key = name.join("").trim();
 					let val = value.join("").trim();
 					let obj = list[list.length - 1];
-					if (key === "") key = "unknow";
-					/*-- abertura de objeto --*/
-					if (v === "{") {
-						if (sym === null) {
-							obj[key] = undefined;
-							scope.push(v);
-							return;
+					if (key === "") key = hash;
+					/*-- abertura e fechamanto da blindagem e caractere interno --*/
+					if (v === "'") {
+						if (!quote && count === 1 && val.length === 0)
+							quote = true;
+						else if (quote && a[i+1] !== "'")
+							quote = false;
+						else if (quote && a[i+1] === "'")
+							a[i+1] = "";
+					}
+					/*-- abertura de escopo --*/
+					if (open.indexOf(v) >= 0) {
+						let index = open.indexOf(v);
+						if (count === 0) {
+							switch(index) {
+								case 0: obj[key] = [];        break;
+								case 1: obj[key] = undefined; break;
+								case 2: obj[key] = "";        break;
+							}
+							scope = v;
+							count++;
+							/* nomes indefinidos */
+							if (key === hash) {
+								name = [hash];
+								hash = "#"+(Number(hash.replace("#", ""))+1);
+							}
+						} else {
+							if (index === sym && !quote) count++;
+							value.push(v);
 						}
-						if (sym === "{") scope.push(v);
-						value.push(v);
 						return;
 					}
-					/*-- fechamento de objeto --*/
-					if (v === "}") {
-						if (sym === "{" && len === 1) {
-							obj[key] = val;
+					/*-- fechamento de escopo --*/
+					if (close.indexOf(v) >= 0) {
+						let index = close.indexOf(v);
+						if (index === sym && count === 1 && !quote) {
+							switch(index) {
+								case 0: {
+									if (obj[key].length !== 0 || val.length !== 0)
+										obj[key].push(self.wdValue(val));
+									break;
+								}
+								case 1: obj[key] = self.wdValue(val); break;
+								case 2: obj[key] = (function() {
+									if (val in window && __Type(window[val]).function)
+										return window[val];
+									return null;
+								})(); break;
+							}
+							scope = null;
+							count--;
 							value = [];
 							name  = [];
-							scope.pop();
-							return;
+							/*-- novo item principal --*/
+							if (a[i+1] === "&") {
+								list.push({});
+								a[i+1] = "";
+							}
+						} else if (index === sym && !quote) {
+							count--;
+							value.push(v);
+						} else {
+							value.push(v);
 						}
-						if (sym === "{") scope.pop();
-						value.push(v);
-						return;
-					}
-					/*-- abertura de array --*/
-					if (v === "[") {
-						if (sym === null) {
-							obj[key] = [];
-							scope.push(v);
-							return;
-						}
-						if (sym === "[") scope.push(v);
-						value.push(v);
-						return;
-					}
-					/*-- fechamento de array --*/
-					if (v === "]") {
-						if (sym === "[" && len === 1) {
-							obj[key].push(val);
-							value = [];
-							name  = [];
-							scope.pop();
-							return;
-						}
-						if (sym === "[") scope.pop();
-						value.push(v);
 						return;
 					}
 					/*-- acrescendo array --*/
-					if (v === "," && sym === "[" && len === 1) {
-						obj[key].push(val);
+					if (v === "," && sym === 0 && count === 1) {
+						obj[key].push(self.wdValue(val));
 						value = [];
 						return;
 					}
-					/*-- adicionando novo item principal --*/
-					if (v === "&" && sym === null) {
-						list.push({});
-						return;
-					}
 					/*-- incrementando nome ou valor da chave --*/
-					if (sym === null)
+					if (scope === null)
 						name.push(v);
 					else
 						value.push(v);
@@ -1704,16 +1668,6 @@ const wd = (function() {
 			}
 		},
 	});
-
-
-
-
-
-
-
-
-
-
 
 /*----------------------------------------------------------------------------*/
 	/**### Code
