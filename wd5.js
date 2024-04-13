@@ -1567,7 +1567,8 @@ const wd = (function() {
 		. O valor retornado será uma lista de objetos. Para acrescentar um objeto à lista, deve-se utilizar o caractere **&amp;**.
 		. Os valores dos atributos serão do tipo string, exceto nos casos dos valores ''undefined'', ''null'', ''true'', ''false'' e dígitos, que serão tratados de acordo com o que representam. Para definiir uma expressão regular, o valor deverá iniciar e terminar com o caractere de barra (**&frasl;**), podendo adicionar os complementos ''igm'' após a barra final.
 		. A notação é limitada ao primeiro nível. Para adição de cadeias de objetos (objetos dentro de objetos), cada valor deverá ser reprocessado.
-		. A string ''a{true}b[1,2,3]c(alert)&a{test}'' retornará a lista ``[{a&colon; true, b&colon; [1,2,3], c&colon; alert()}, {a&colon; "test"}]``.**/
+		. A string ''a{true}b[1,2,3]c(alert)&a{test}'' retornará a lista ``[{a&colon; true, b&colon; [1,2,3], c&colon; alert()}, {a&colon; "test"}]``.
+		. Os atributos identificados com os nomes **&dollar;** e **&dollar;&dollar;**, com valor empacotado por **&lbrace;&rbrace;**, recebem um selector CSS e assumem o valor de um elemento HTML ou de uma lista de elementos (''NodeList'') correspondente ao respectivo seletor. As strings ''document'' e ''window'' assumem os respectivos objetos identificados por esses nomes.**/
 		wdNotation: {
 			get: function() {
 				let data  = this._value.trim().split("");
@@ -1628,7 +1629,16 @@ const wd = (function() {
 										obj[key].push(self.wdValue(val));
 									break;
 								}
-								case 1: obj[key] = self.wdValue(val); break;
+								case 1: obj[key] = (function() {
+									if (key === "$" || key === "$$") {
+										val = val.trim();
+										const html = {document: document, window: window};
+										if (val in html) return html[val];
+										const query = __Query(val);
+										return query[key];
+									}
+									return self.wdValue(val);
+								})(); break;
 								case 2: obj[key] = (function() {
 									if (val in window && __Type(window[val]).function)
 										return window[val];
@@ -6958,17 +6968,11 @@ const wd = (function() {
 		if (!("wdLoad" in e.dataset)) return;
 		let target = WD(e);
 		let data   = __String(e.dataset.wdLoad).wdNotation[0];
+		let query  = data.$$ || data.$ || undefined;
 		delete e.dataset.wdLoad;
-		if (!__Type(data).object) {
-			target.load("");
-			return;
-		}
-		let query  = __Query.$$$(data);
 		WD(query).send(data.path, {
 			method: data.method,
-			ondone: function(x) {
-				target.load(x.text, data.replace, data.run);
-			}
+			ondone: function(x) {target.load(x.text, data.replace, data.run);}
 		});
 		return;
 	};
@@ -6984,13 +6988,9 @@ const wd = (function() {
 		if (!("wdRepeat" in e.dataset)) return;
 		let target = WD(e);
 		let data   = __String(e.dataset.wdRepeat).wdNotation[0];
+		let query  = data.$$ || data.$ || undefined;
 		delete e.dataset.wdRepeat;
-		if (!__Type(data).object) {
-			target.repeat([]);
-			return;
-		}
 
-		let query = __Query.$$$(data);
 		WD(query).send(data.path, {
 			method: data.method,
 			ondone: function(x) {
@@ -7015,18 +7015,20 @@ const wd = (function() {
 	|Nome|Descrição|Obrigatório|
 	|path|Caminho para o arquivo JSON a ser carregado|Não|
 	|method|Tipo de requisição HTTP, ver WD.send|Não|
-	|$ ou $$|Seletore CSS para identificar os alvos da ferramenta|Não|**/
+	|$ ou $$|Seletore CSS para identificar os alvos da ferramenta (se ausente, será o próprio elemento)|Não|**/
 	function data_wdSet(e, event) {
 		if (!("wdSet" in e.dataset)) return;
-		let data = __String(e.dataset.wdSet).wdNotation;
-		if (!__Type(data).array) return;
 		let exec = function(input) {
-			let query  = ("$" in input || "$$" in input) ? __Query.$$$(input) : e;
+			if (!__Type(input).object) return;
+			let query  = input.$$ || input.$ || e;
 			let target = WD(query);
-			return target.set(input);
+			delete input.$;
+			delete input.$$;
+			target.set(input);
+			return;
 		}
+		let data = __String(e.dataset.wdSet).wdNotation;
 		data.forEach(function(v,i,a) {
-			if (!__Type(v).object) return;
 			if ("path" in v) {
 				WD().send(v.path, {
 					method: v.method,
@@ -7050,34 +7052,27 @@ const wd = (function() {
 	/**###### ``**function** ''void'' data_wdChart(''node''  e, ''string'' event)``
 	Função vinculada ao atributo HTML ``data-wd-chart`` cujo objetivo é criar um gráfico 2D a partir de uma tabela, um arquivo CSV ou parâmetros FIXME de dados como filho do elemento possuidor do atributo. Possui múltiplos atributos e grupo único. Para definir funções nos parâmetros, deverá ser informado seu nome e a função deve estar dentro do escopo principal (window) utilizando as palavras chaves ``var`` ou ``function``:
 	|Nome|Descrição|Obrigatório|
-	|path|Caminho para o arquivo CSV a ser carregado|Não|
-	|table|Seletor CSS que indica a tabela de dados (será ignorado se path for informado)|Não|
-	|$ ou $$|Seletor(es) CSS do formulário com os parâmetros da requição|Não|
-	|method|Tipo de requisição HTTP, ver WD.send (se path for informado)|Não|**/
-	function data_wdChart(e, event) {
+	|xLabel|Rótulo do eixo ''x''.|Não|
+	|yLabel|Rótulo do eixo ''y''.|Não|
+	|title|Título do gráfico.|Não|
+	|xAxis|Define o tipo de dado do eixo ''x'': number (padrão), date, time e datetime.|Não|
+	|ratio|Se ''true'', o gráfico será proporcional, caso contrário, será plano cartesiano.|Não|
+	|data|Conjunto de dados a serem plotados.|Sim|
+	|path|Caminho para o arquivo CSV contendo os dados a serem plotados.|Não|
+	|method|Tipo de requisição HTTP, ver WD.send (se path for informado)|Não|
+	|$ ou $$|Seletor(es) CSS do formulário com os parâmetros da requição ou a tabela HTML contendo os dados a serem plotados.|Não|
+
+
+
+	**/
+	function data_wdChart(e, event) { //FIXME pendente
 		if (!("wdChart" in e.dataset)) return;
 		let data   = __String(e.dataset.wdChart).wdNotation[0];
-		if (!__Type(data).object) return;
 		let target = WD(e);
-		let query  = __Query.$$$(data);
+		let query  = data.$$ || data.$ || undefined;
 		delete e.dataset.wdChart;
-		/* acertando os dados */
-		console.log(data);
-		if (!__Type(data.data).array) return;
-		data.data.forEach(function (v,i,a) {
-			let item = __String(v).wdNotation[0];
-			if (!__Type(item).object) return;
-			a[i] = item;
-			if (__Type(a[i].y).string) {
-				if (a[i].y in window && __Type(window[a[i].y]).function)
-					a[i].y = window[a[i].y];
-			}
-		});
-		console.log(data); return;
-
-		//FIXME deixar data como array não deu certo, da pra fazer o seguinte inserir repetidos add
-		//add{x{[1,2,3]}y{[4,5,6]}label{label 1}}add{x{[1,2,3]}y{[7,8,9]}label{label 2}}
-
+		if (!("data" in data)) return;
+		data.data = __String(data.data).wdNotation;
 
 		/* definindo origem dos dados */
 		let plotter = function(src) {
@@ -7089,13 +7084,18 @@ const wd = (function() {
 			}
 			return;
 		};
+		/* arquivo CSV */
 		if ("path" in data)
-			WD().send(data.path, {
+			WD(query).send(data.path, {
 				method: data.method,
 				ondone: function (x) {plotter(x.csv);}
 			});
+		/* tabela HTML */
+		else if (query !== undefined)
+			plotter(query);
+		/* dados */
 		else
-			plotter(x.csv);
+			plotter();
 		return;
 	}
 
@@ -7108,13 +7108,9 @@ const wd = (function() {
 	function data_wdSend(e, event) {
 		if (!("wdSend" in e.dataset)) return;
 		let data = __String(e.dataset.wdSend).wdNotation;
-		if (!__Type(data).array) return;
 		data.forEach(function (v,i,a) {
-			if (!__Type(v).object) return;
-			if ("header"   in v) v.header   = __String(v.header).wdNotation[0];
-			if ("ondone"   in v) v.ondone   = window[v.ondone];
-			if ("onchange" in v) v.onchange = window[v.onchange];
-			let query  = __Query.$$$(v);
+			if ("header" in v) v.header = __String(v.header).wdNotation[0];
+			let query  = v.$$ || v.$ || undefined;
 			let target = WD(query);
 			target.send(v.path, v);
 		});
@@ -7129,14 +7125,12 @@ const wd = (function() {
 	|$ ou $$|Seletor CSS para indicar o elemento os elementos a aplicar a ação (se ausente, será o próprio elemento)|Não|**/
 	function data_wdDisplay(e, event) {
 		if (!("wdDisplay" in e.dataset)) return;
-		let data = __String(e.dataset.wdDisplay).wdNotation;
-		if (!__Type(data).array) return;
 		let self = WD(e);
+		let data = __String(e.dataset.wdDisplay).wdNotation;
 		data.forEach(function (v,i,a) {
-			if (!__Type(v).object) return;
-			let query  = __Query.$$$(v);
+			let query  = v.$$ || v.$ || e;
 			let target = WD(query);
-			if (target.valueOf().length === 0)
+			if (target.length === 0)
 				self.display(v.action);
 			else
 				target.display(v.action);
@@ -7160,7 +7154,7 @@ const wd = (function() {
 
 	|action|Ação a ser executada|Sim|
 	|$ ou $$|Seletor CSS para indicar o elemento os elementos a aplicar a ação (se ausente, será o próprio elemento)|Não|**/
-	function data_wdCode(e, event) {
+	function data_wdCode(e, event) {//FIXME pendente
 		if (!("wdCode" in e.dataset)) return;
 		if (__Node(e).form) return;
 		let data  = __String(e.dataset.wdCode).wdNotation;
@@ -7204,7 +7198,7 @@ const wd = (function() {
 /*----------------------------------------------------------------------------*/
 	/**###### ``**function** ''void'' data_wdClick(''node''  e, ''string'' event)``
 	Função vinculada ao atributo HTML ``data-wd-click`` cujo objetivo é efetuar um autoclique ao elemento. Possui valor simples e opcional. Caso um número inteiro maior que zero seja informado, o clique irá ser executado a cada milisegundos conforme valor definido.**/
-	function data_wdClick(e, event) {
+	function data_wdClick(e, event) { //FIXME pendente
 		if (!("wdClick" in e.dataset)) return;
 		let data = __String(e.dataset.wdClick).wdNotation;
 		let info = __Type(data);
@@ -7222,39 +7216,34 @@ const wd = (function() {
 	Função vinculada ao atributo HTML ``data-wd-filter`` cujo objetivo é filtrar os nós filhos que contenham o conteúdo informado utilizando a ferramenta ``WDnode.filter``. Possui múltiplos atributos e grupos:
 	|Nome|Descrição|Obrigatório|
 	|chars|Determina a quantidade mínima de caracteres para executar a busca|Não|
-	|$ ou $$|Seletor CSS dos elementos cujos filhos serão filtrados|Não|**/
-	function data_wdFilter(e, event) { /* Filtrar elementos: data-wd-filter=chars{}${css}&... */
+	|$ ou $$|Seletor CSS dos elementos cujos filhos serão filtrados|Sim|**/
+	function data_wdFilter(e, event) {
 		if (!("wdFilter" in e.dataset)) return;
 		let node = __Node(e);
 		let data = __String(e.dataset.wdFilter).wdNotation;
-		if (!__Type(data).array) return;
 		data.forEach(function (v,i,a) {
-			if (!__Type(v).object) return;
-			let query  = __Query.$$$(v);
+			let query  = v.$$ || v.$ || undefined;
+			if (query === undefined) return;
 			let target = WD(query);
-			let chars  = v.chars;
-			let search = node.attribute("textContent");
-			let regexp = /^\/(.+)\/([gim]+)?$/;
-			if (regexp.test(search))
-				search = new RegExp(search.replace(regexp, "$1"), search.replace(regexp, "$2"));
-			target.filter(search, chars);
+			let search = __String("").wdValue(node.attribute("textContent"));
+			target.filter(search, v.chars);
 		});
 		return;
 	};
 
 /*----------------------------------------------------------------------------*/
 	/**###### ``**function** ''void'' data_wdTsort(''node''  e, ''string'' event)``
-	Função vinculada ao atributo HTML ``data-wd-tsort`` cujo objetivo é ordenar colunas específicas de tabelas. Não possui atributo:**/
-	function data_wdTsort(e, event) { /* Ordena tabelas: data-wd-tsort="" */
+	Função vinculada ao atributo HTML ``data-wd-tsort`` cujo objetivo é ordenar colunas específicas de tabelas. Não possui atributo.**/
+	function data_wdTsort(e, event) {
 		if (!("wdTsort" in e.dataset)) return;
 		try {
-			let data  = __String(e.dataset.wdTsort).wdNotation;
 			let thead = e.parentElement.parentElement;
+			if (thead.tagName.toLowerCase() !== "thead") return;
 			let tbody = thead.parentElement.tBodies;
 			let heads = __Type(e.parentElement.children).value;
 			let index = heads.indexOf(e);
+			let data  = __String("").wdValue(e.dataset.wdTsort);
 			let sort  = data === 1 ? -1 : 1;
-			if (thead.tagName.toLowerCase() !== "thead") return;
 			WD(tbody).display("["+(sort * (index + 1))+"]");
 			heads.forEach(function(v,i,a) {
 				if ("wdTsort" in v.dataset)
@@ -7276,20 +7265,18 @@ const wd = (function() {
 		if (!("wdDevice" in e.dataset)) return;
 		let query  = WD(e);
 		let data   = __String(e.dataset.wdDevice).wdNotation[0];
-		if (!__Type(data).object) return;
 		let device = __DEVICECONTROLLER.device;
-		let types  = {
+		let types  = { /* 0: elimina css, 1: adiciona css */
 			desktop: {phone: 0, tablet: 0, mobile: 0, desktop: 1},
 			tablet:  {phone: 0, tablet: 1, mobile: 1, desktop: 0},
 			phone:   {phone: 1, tablet: 0, mobile: 1, desktop: 0},
 		};
 		if (device in types) {
 			let type = types[device];
-			/* removendo css dos dispositivos incompatíveis */
-
+			/* 1) removendo css dos dispositivos incompatíveis */
 			for (let i in type)
 				if (i in data && type[i] === 0) query.set({class: {remove: data[i]}});
-			/* adicionando css dos dispositivos compatíveis */
+			/* 2) adicionando css dos dispositivos compatíveis */
 			for (let i in type)
 				if (i in data && type[i] === 1) query.set({class: {add: data[i]}});
 		}
@@ -7304,26 +7291,29 @@ const wd = (function() {
 	function data_wdJump(e, event) { /* Saltos de pai: data-wd-jump=$${parents}*/
 		if (!("wdJump" in e.dataset)) return;
 		let data   = __String(e.dataset.wdJump).wdNotation[0];
-		if (!__Type(data).object) return;
-		let query  = __Query.$$$(data);
+		let query  = data.$$ || data.$ || undefined;
+		if (query === undefined) return;
 		let target = WD(query);
 		target.jump(e);
 		return;
 	};
 
 /*----------------------------------------------------------------------------*/
-	function data_wdEdit(e, event) { /* edita texto: data-wd-edit=comando{especificação}... */
+	function data_wdEdit(e, event) { /*FIXME pendente edita texto: data-wd-edit=comando{especificação}... */
 		if (!("execCommand" in document) || !("wdEdit" in e.dataset)) return;
 		let data = __String(e.dataset.wdEdit).wdNotation[0];
-		if (!__Type(data).object) return;
-		for (let i in data) {
-			let cmd = i;
-			let arg = data[i].trim() === "" ? undefined : data[i].trim();
-			if (cmd === "createLink") {
-				arg = prompt("Link:");
-				if (arg === "" || arg === null) cmd = "unlink";
-			} else if (cmd === "insertImage") {
-				arg = prompt("Link:");
+		for (let cmd in data) {
+			let arg = data[cmd].trim() === "" ? undefined : data[cmd].trim();
+			switch(cmd) {
+				case "createLink": {
+					arg = prompt("Link:", "https://...");
+					if (arg === null || arg.trim() === "") cmd = "unlink";
+					break;
+				}
+				case "insertImage": {
+					arg = prompt("Link:", "https://...");
+					break;
+				}
 			}
 			document.execCommand(cmd, false, arg);
 		}
@@ -7343,7 +7333,7 @@ const wd = (function() {
 	|model|Modelo da máscara|Não|
 	|alert|Mensagem a ser exibida se a máscara não casar (funciona somente em campos de formulário)|Não|
 	|check|Nome da função que checará e retornará o valor da máscara (em caso de falha, retornar string vazia)|Não|**/
-	function data_wdMask(e, event) { /* Máscara: data-wd-mask="model{mask}call{callback}msg{msg}" */
+	function data_wdMask(e, event) { /* FIXME pendente Máscara: data-wd-mask="model{mask}call{callback}msg{msg}" */
 		if (!("wdMask" in e.dataset)) return;
 		let data = __String(e.dataset.wdMask).wdNotation[0];
 		if (!__Type(data).object) return;
@@ -7376,7 +7366,7 @@ const wd = (function() {
 
 
 /*----------------------------------------------------------------------------*/
-	function data_wdShared(e, event) { /* Experimental: compartilhar em redes sociais: data-wd-shared=rede */
+	function data_wdShared(e, event) { /* FIXME pendente Experimental: compartilhar em redes sociais: data-wd-shared=rede */
 		if (!("wdShared" in e.dataset)) return;
 		let url    = encodeURIComponent(document.URL);
 		let title  = encodeURIComponent(document.title);
@@ -7405,7 +7395,7 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-	function data_wdUrl(e) { /* define o valor informado do url no elemento data-wd-url="#" */
+	function data_wdUrl(e) { /* FIXME pendente define o valor informado do url no elemento data-wd-url="#" */
 		if (!("wdUrl" in e.dataset)) return;
 		let data = e.dataset.wdUrl;
 		let val  = WD.url(data);
@@ -7424,7 +7414,7 @@ const wd = (function() {
 
 
 /*----------------------------------------------------------------------------*/
-	function data_wdOutput(e, load) { /* Atribui valor ao target: data-wd-output=${target}call{} */
+	function data_wdOutput(e, load) { /* FIXME pendente Atribui valor ao target: data-wd-output=${target}call{} */
 		let output = __Query("[data-wd-output]").$$;
 		if (output === null) return;
 		/* looping pelos elementos com data-wd-output no documento */
