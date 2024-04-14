@@ -11,6 +11,18 @@ function onInputDataSet(source, target, name) {
 	return;
 }
 
+function toDataSet(source, target, attr) {
+	let data = {dataset: {}};
+	data.dataset[attr] = document.querySelector(source).value;
+	wd.$(target).set(data);
+	return;
+}
+
+
+
+
+
+
 function loadTable(elem, target) {
 	wd().send(target, {
 		method: "GET",

@@ -1313,7 +1313,7 @@ const wd = (function() {
 	Construtor para manipulação de textos. O argumento ``input`` define o texto de entrada.**/
 	function __String(input) {
 		if (!(this instanceof __String)) return new __String(input);
-		if (!__Type(input).string) input = String(input).normalize("NFD"); //FIXME que merda eu coloco?
+		if (!__Type(input).string) input = String(input).normalize();
 		Object.defineProperties(this, {
 			_value: {value: input}
 		});
@@ -1447,7 +1447,7 @@ const wd = (function() {
 		/**. ``''matrix'' csv``: Retorna uma matriz (array) a partir de uma string no estilo [CSV]<https://www.rfc-editor.org/rfc/rfc4180> com dados separados por vírgula, espaço, tabulação, barra vertical ou ponto e vírgula e registros por quebras de linhas. O primeiro caractere separador encontrado, exceto se entre aspas, será o para separadorr para os demais dados. Dados que contenham os caracteres separadores de dados ou de registros devem estar entre aspas. Aspas em dados protegidos por aspas são definidos como aspas duplas em sequência.**/
 		csv: {
 			get: function() {
-				let txt   = this._value.split("");
+				let txt   = this._value.trim().split("");
 				let csv   = [[]];
 				let td    = null;
 				let tr    = "\n";
@@ -3616,31 +3616,31 @@ const wd = (function() {
 				if (!this._elem) return;
 				let inner = html === undefined || html === null ? "" : String(html);
 				let node  = this.node;
-
 				/* se for um formulário, apenas irá definir seu valor */
 				if (this.form) {
 					this.attribute("value", inner);
-					return;
 				}
 				/* definindo conteúdo */
-				this.attribute("innerHTML", inner);
-				/* rodando scripts (não roda por padrão por segurança) */
-				if (run === true) {
-					let scripts = __Type(__Query("script", node).$$).value;
-					scripts.forEach(function (v,i,a) {
-						let parent = v.parentElement;
-						let clone  = __Node(v).clone();
-						parent.insertBefore(clone, v);
-						v.remove();
-					});
-				}
-				/* substituindo o nó pelo conteúdo, se for o caso */
-				if (replace === true) {
-					let childs = __Type(node.children).value;
-					childs.forEach(function(v,i,a) {
-						node.parentElement.insertBefore(v, node);
-					});
-					node.remove();
+				else {
+					this.attribute("innerHTML", inner);
+					/* rodando scripts (não roda por padrão por segurança) */
+					if (run === true) {
+						let scripts = __Type(__Query("script", node).$$).value;
+						scripts.forEach(function (v,i,a) {
+							let parent = v.parentElement;
+							let clone  = __Node(v).clone();
+							parent.insertBefore(clone, v);
+							v.remove();
+						});
+					}
+					/* substituindo o nó pelo conteúdo, se for o caso */
+					if (replace === true) {
+						let childs = __Type(node.children).value;
+						childs.forEach(function(v,i,a) {
+							node.parentElement.insertBefore(v, node);
+						});
+						node.remove();
+					}
 				}
 				/* invocar evento */
 				document.dispatchEvent(wdReloadEvent);
@@ -3650,37 +3650,38 @@ const wd = (function() {
 		repeat: {
 			value: function(list) {
 				if (!this._elem) return;
-				let data = __Type(list);
-				if (!data.array) return;
+				if (!__Type(list).array) list = [];
 				/* 1) obter o conteúdo interno */
-				/* 2) se o conteúdo contiver o formato {{}}, armazená-lo em data-wd-repeat-model */
-				/* 3) se não contiver o formato, recuperar o modelo em data-wd-repeat-model */
-				/* 4) se não existir, retornar */
-				let re   = /\{\{([^}]+)\}\}/
 				let html = this.node.innerHTML;
-				if (re.test(html))
+				/* 2) se o conteúdo possuir o formato {{}}, armazená-lo em data-wd-repeat-model */
+				if ((/\{\{([^}]+)\}\}/).test(html))
 					this.node.dataset.wdRepeatModel = html;
+				/* 3) se não possuir o formato, recuperar o modelo em data-wd-repeat-model */
 				else if ("wdRepeatModel" in this.node.dataset)
 					html = this.node.dataset.wdRepeatModel;
-				else return;
-				/* 5) adequar os atributos do DOM ( {{x}} para {{x}}="" ) */
-				/* 6) limpar conteúdo interno */
-				html = html.split("}}=\"\"").join("}}");
-				this.node.innerHTML = "";
-				/* 7) Criar lista de filhos */
-				/* 8) executar looping */
-				/* 9) substituir atributos entre chaves duplas por valores e adicionar */
-				let childs = [""];
-				list.forEach(function (v,i,a) {
-					if (__Type(v).object) {
-						let inner = html;
-						for (let j in v)
-							inner = inner.split("{{"+j+"}}").join(v[j]);
-						childs.push(inner);
-					}
-				});
-				/* 10) definir filhos */
-				this.node.innerHTML = childs.join("\n");
+				/* 4) se não existir, definir html como null para não efetuar qualquer mudança */
+				else
+					html = null;
+				if (html !== null) {
+					/* 5) adequar os atributos do DOM ( {{x}} para {{x}}="" ) */
+					html = html.split("}}=\"\"").join("}}");
+					/* 6) limpar conteúdo interno */
+					this.node.innerHTML = "";
+					/* 7) Criar lista de filhos */
+					let childs = [""];
+					/* 8) executar looping para criar blocos de filhos */
+					list.forEach(function (v,i,a) {
+						/* 9) substituir atributos entre chaves duplas por valores e adicionar */
+						if (__Type(v).object) {
+							let inner = html;
+							for (let j in v)
+								inner = inner.split("{{"+j+"}}").join(v[j]);
+							childs.push(inner);
+						}
+					});
+					/* 10) definir filhos */
+					this.node.innerHTML = childs.join("\n");
+				}
 				/* 11) invocar evento */
 				document.dispatchEvent(wdReloadEvent);
 			}
@@ -5350,7 +5351,7 @@ const wd = (function() {
 				.title(text);
 			}
 		},
-		/**. ``''node'' plot()``: Constrói o gráfico e o retorna (elemento SVG).**/
+		/**. ``''node'' plot()``: Constrói o gráfico e o retorna (elemento SVG) ou nulo.**/
 		plot: {
 			value: function() {
 				if (this._data.length === 0) return null;
@@ -5368,7 +5369,7 @@ const wd = (function() {
 					while(++i < data.length) {
 						if (!data[i].f) continue;
 						let list = __Data2D(x, data[i].y);
-						if (list.error) return false;
+						if (list.error) return null;
 						data[i].x = list.x;
 						data[i].y = list.y;
 						let yList = __Array(data[i].y);
@@ -5821,8 +5822,6 @@ const wd = (function() {
 			}
 		},
 	});
-
-
 
 
 
@@ -6854,10 +6853,9 @@ const wd = (function() {
 		|data|array|Conjunto de dados a serem plotados e corresponde a uma lista de objetos.|
 		. Os itens do atributo ``data`` do argumento ``options`` possui os seguintes atributos:
 		|Nome|Tipo|Descrição|
-		|matrix|boolean|Se verdadeiro, os dados serão capturados da matriz.|
-		|x|any|Valores do eixo ''x'', pode ser um array, um objeto (ratio = true) ou o número da coluna (matrix = true)|
-		|y|any|Valores do eixo ''y'', pode ser um array, uma função, uma constante ou o número da coluna (matrix = true)|
-		|label|string|Rótulo do gráfico|
+		|x|any|Valores do eixo ''x'', pode ser um array, um objeto (ratio = true) ou o número da coluna precedido de &num;.|
+		|y|any|Valores do eixo ''y'', pode ser um array, uma função, uma constante ou o número da coluna precedido de &num;.|
+		|label|string|Rótulo do gráfico. Se ''y'' utilizar o coluna, o valor será o cabeçalho desta.|
 		|fit|string|Especifica o tipo do gráfico cartesiano.|
 		. Os tipos permitidos para o atributo ``fit`` são:
 		|Valor|Descrição|Valores de Y|
@@ -6873,31 +6871,30 @@ const wd = (function() {
 		|minimum|Executa um ajuste com o menor desvio médio padrão.||**/
 		plot: {
 			value: function(options) {
-				//(x, y, label, option)
-				if (!__Type(options).object) return null;
+				if (!__Type(options).object)     return null;
+				if (!__Type(options.data).array) return null;
+				if (options.data.length === 0)   return null;
 				let self  = this;
 				let chart = __Plot2D(options.ratio);
 				let names = {xLabel: 0, yLabel: 0, title: 0, xAxis: 0};
 				for (let attr in names)
 					if (attr in options) chart[attr] = options[attr];
-				if ("data" in options && __Type(options.data).array)
-					options.data.forEach(function (v,i,a) {
-						if (!__Type(v).object) return;
-						let matrix = v.matrix === true;
-						let	x     = matrix ? self.range("1,"+v.x+":.,"+v.x, true) : v.x;
-						let y     = matrix ? self.range("1,"+v.y+":.,"+v.y, true) : v.y;
-						let label = matrix ? self.range("0,"+v.y)[0] : v.label;
-						let fit   = v.fit;
-						chart.add(x, y, label, v.fit);
-					});
+				options.data.forEach(function (v,i,a) {
+					if (__Type(v.x).string) {
+						let col = v.x.replace(/\D/g, "");
+						v.x = self.range("1,"+col+":.,"+col, true);
+					}
+					if (__Type(v.y).string) {
+						let col = v.y.replace(/\D/g, "");
+						v.y     = self.range("1,"+col+":.,"+col, true);
+						v.label = self.range("0,"+col)[0]
+					}
+					chart.add(v.x, v.y, v.label, v.fit);
+				});
 				return chart.plot();
 			}
 		},
 	});
-
-
-
-
 
 /*----------------------------------------------------------------------------*/
 	/**### Função Mestre
@@ -7039,9 +7036,9 @@ const wd = (function() {
 					}
 				});
 			} else {
-				for (let i in v)
-					if ((/^.+\{.+\}$/).test(v[i]))
-						v[i] = __String(v[i]).wdNotation[0];
+				for (let j in v)
+					if ((/^.+\{.+\}$/).test(v[j]))
+						v[j] = __String(v[j]).wdNotation[0];
 				exec(v);
 			}
 		});
@@ -7057,22 +7054,25 @@ const wd = (function() {
 	|title|Título do gráfico.|Não|
 	|xAxis|Define o tipo de dado do eixo ''x'': number (padrão), date, time e datetime.|Não|
 	|ratio|Se ''true'', o gráfico será proporcional, caso contrário, será plano cartesiano.|Não|
-	|data|Conjunto de dados a serem plotados.|Sim|
+	|data|Lista de dados a serem plotados.|Sim|
 	|path|Caminho para o arquivo CSV contendo os dados a serem plotados.|Não|
 	|method|Tipo de requisição HTTP, ver WD.send (se path for informado)|Não|
-	|$ ou $$|Seletor(es) CSS do formulário com os parâmetros da requição ou a tabela HTML contendo os dados a serem plotados.|Não|
-
-
-
-	**/
-	function data_wdChart(e, event) { //FIXME pendente
+	|$$|Seletor CSS do formulário com os parâmetros da requição.|Não|
+	|$|Seletor CSS que identifica a tabela HTML contendo os dados a serem plotados.|Não|
+	O atributo ''data'' terá os seguintes atributos com a possibilidades de múltiplos grupos:
+	|Nome|Origem|Descrição|Obrigatório|
+	|x|Qualquer|Array com dados do eixo ''x''.|Sim|
+	|x|Arquivo CSV ou tabela|Número da coluna (''&num;c'').|Sim|
+	|y|Qualquer|Array com dados do eixo ''y'' ou nome de uma função no escopo de ''window''|Sim|
+	|y|Arquivo CSV ou tabela|Número da coluna (''&num;c'').|Sim|
+	|label|Qualquer|Nome da curva.|Não|
+	|fit|ratio diferente de ''false''|Nome do ajuste da curva.|Não|**/
+	function data_wdChart(e, event) {
 		if (!("wdChart" in e.dataset)) return;
-		let data   = __String(e.dataset.wdChart).wdNotation[0];
-		let target = WD(e);
-		let query  = data.$$ || data.$ || undefined;
+		let data = __String(e.dataset.wdChart).wdNotation[0];
 		delete e.dataset.wdChart;
-		if (!("data" in data)) return;
-		data.data = __String(data.data).wdNotation;
+		if (!__Type(data.data).array) return;
+		data.data.forEach(function(v,i,a) {a[i] = __String(v).wdNotation[0];});
 
 		/* definindo origem dos dados */
 		let plotter = function(src) {
@@ -7086,13 +7086,13 @@ const wd = (function() {
 		};
 		/* arquivo CSV */
 		if ("path" in data)
-			WD(query).send(data.path, {
+			WD(data.$$).send(data.path, {
 				method: data.method,
 				ondone: function (x) {plotter(x.csv);}
 			});
 		/* tabela HTML */
-		else if (query !== undefined)
-			plotter(query);
+		else if ("$" in data)
+			plotter(data.$);
 		/* dados */
 		else
 			plotter();
@@ -7586,7 +7586,7 @@ const wd = (function() {
 	function wdOnClick(ev) {
 		if (__UNDERMAINTENANCE) console.log({wdOnClick: ev, target: ev.target});
 		if (ev.which !== 1) return;
-		let elem = ev.target
+		let elem = ev.target;
 		while (elem !== null) {
 			data_wdSend(elem, ev);
 			data_wdTsort(elem, ev);
