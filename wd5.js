@@ -6181,12 +6181,13 @@ const wd = (function() {
 			_measurement: {value: null, writable: true},
 			_monetary:    {value: null, writable: true},
 			_digits:      {value: 2, writable: true},
+			_lang:        {value: "", writable: true},
 		});
 	}
 
 	WDnumber.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDnumber},
-		//FIXME que tal transformar o digits, monetary e measurement em getter/setter?
+		//FIXME que tal transformar o digits, monetary e measurement em getter/setter assim como a global lang?
 		//FIXME que tal inserir o notation no toLocaleString()?
 		//FIXME que tal inserir o toString(n) padrão?
 
@@ -6215,6 +6216,12 @@ const wd = (function() {
 				return this;
 			}
 		},
+
+
+
+
+
+
 		/**. ``''integer'' int``: Retorna a parte inteira.**/
 		int: {
 			get: function() {return this._main.int;}
