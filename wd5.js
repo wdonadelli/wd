@@ -1313,9 +1313,13 @@ const wd = (function() {
 	Construtor para manipulação de textos. O argumento ``input`` define o texto de entrada.**/
 	function __String(input) {
 		if (!(this instanceof __String)) return new __String(input);
-		if (!__Type(input).string) input = String(input).normalize();
+		if (!__Type(input).chars) input = String(input);
+		input = input.normalize();
+		let chars = [];
+		for (let i of input) chars.push(i);
 		Object.defineProperties(this, {
-			_value: {value: input}
+			_value: {value: input},
+			_chars: {value: chars}
 		});
 	}
 
@@ -1329,7 +1333,11 @@ const wd = (function() {
 		},
 		/**. ``''string'' length``: Retorna a quantidade de caracteres.**/
 		length: {
-			get: function() {return this.valueOf().length;}
+			get: function() {return this._chars.length;}
+		},
+		/**. ``''string'' length``: Retorna uma cópia da lista de caracteres.**/
+		chars: {
+			get: function() {return this._chars.slice();}
 		},
 		/**. ``''string'' upper``: Retorna caixa alta.**/
 		upper: {
@@ -1342,7 +1350,7 @@ const wd = (function() {
 		/**. ``''string'' toggle``: Inverte a caixa.**/
 		toggle: {
 			get: function() {
-				let list = this._value.split("");
+				let list = this.chars;
 				list.forEach(function(v,i,a) {
 					a[i] = v === v.toUpperCase() ? v.toLowerCase() : v.toUpperCase();
 				});
@@ -1352,7 +1360,7 @@ const wd = (function() {
 		/**. ``''string'' captalize``: Primeira letra de cada palavra, apenas, em caixa alta.**/
 		capitalize: {
 			get: function() {
-				let list = this._value.split("");
+				let list = this.chars;
 				list.forEach(function(v,i,a) {
 					a[i] = i === 0 || (/\s/).test(a[i-1]) ? v.toUpperCase() : v.toLowerCase();
 				});
@@ -1366,7 +1374,7 @@ const wd = (function() {
 				if (white !== false)
 					value = value.replace(/\s+/g, " ").trim();
 				if (accent !== false)
-					value = value.normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+					value = value.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 				return value;
 			}
 		},
@@ -1447,7 +1455,7 @@ const wd = (function() {
 		/**. ``''matrix'' csv``: Retorna uma matriz (array) a partir de uma string no estilo [CSV]<https://www.rfc-editor.org/rfc/rfc4180> com dados separados por vírgula, espaço, tabulação, barra vertical ou ponto e vírgula e registros por quebras de linhas. O primeiro caractere separador encontrado, exceto se entre aspas, será o para separadorr para os demais dados. Dados que contenham os caracteres separadores de dados ou de registros devem estar entre aspas. Aspas em dados protegidos por aspas são definidos como aspas duplas em sequência.**/
 		csv: {
 			get: function() {
-				let txt   = this._value.trim().split("");
+				let txt   = __String(this._value.trim()).chars;
 				let csv   = [[]];
 				let td    = null;
 				let tr    = "\n";
@@ -1571,7 +1579,7 @@ const wd = (function() {
 		. Os atributos identificados com os nomes **&dollar;** e **&dollar;&dollar;**, com valor empacotado por **&lbrace;&rbrace;**, recebem um selector CSS e assumem o valor de um elemento HTML ou de uma lista de elementos (''NodeList'') correspondente ao respectivo seletor. As strings ''document'' e ''window'' assumem os respectivos objetos identificados por esses nomes.**/
 		wdNotation: {
 			get: function() {
-				let data  = this._value.trim().split("");
+				let data  = __String(this._value.trim()).chars;
 				let list  = [{}];
 				let name  = [];
 				let value = [];
@@ -6100,6 +6108,14 @@ const wd = (function() {
 
 	WDstring.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDstring},
+		/**. ``''integer'' length``: Retorna a quantidade de caracteres.**/
+		length: {
+			get: function() {return this._main.length;}
+		},
+		/**. ``''array'' chars``: Retorna um array de caracteres.**/
+		chars: {
+			get: function() {return this._main.chars;}
+		},
 		/**. ``''string'' upper``: Retorna caixa alta.**/
 		upper: {
 			get: function() {return this._main.upper;}
@@ -6170,6 +6186,12 @@ const wd = (function() {
 
 	WDnumber.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDnumber},
+		//FIXME que tal transformar o digits, monetary e measurement em getter/setter?
+		//FIXME que tal inserir o notation no toLocaleString()?
+		//FIXME que tal inserir o toString(n) padrão?
+
+
+
 		/**. ``''object'' decDigits(''integer'' n)``: Fixa a quantidade de dígitos (argumento ``n``) para referência aos atributos e retorna o próprio objeto.**/
 		digits: {
 			value: function(n) {
@@ -6205,20 +6227,35 @@ const wd = (function() {
 		abs: {
 			get: function() {return this._main.abs;}
 		},
-		/**. ``''string'' bytes``: Retorna o valor em bytes.**/
-		bytes: {
-			get: function() {return this._main.bytes;}
+		/**. ``''number'' round``: Retorna o número arredondando-o pela quantidade de casas decimais definida.**/
+		round: {
+			get: function() {return this._main.round(this._digits);}
+		},
+		/**. ``''number'' cut``: Retorna o número cortando-o pela quantidade de casas decimais definida.**/
+		cut: {
+			get: function() {return this._main.cut(this._digits);}
 		},
 		/**. ``''boolean'' prime``: Informa se o número é primo.**/
 		prime: {
 			get: function() {return this._main.prime;}
 		},
-		/**. ``''array'' primes``: Retorna uma lista de primos até o número.**/
+		/**. ``''array'' primes``: Retorna uma lista de primos precedentes.**/
 		primes: {
 			get: function() {return this._main.primes;}
 		},
+
+
+
+
+
+
+
+		/**. ``''string'' bytes``: Retorna o valor em bytes.**/
+		bytes: {
+			get: function() {return this._main.bytes;}
+		},
 		/**. ``''string'' significant``: Retorna o número com a quantidade de dígitos significativos definida.**/
-		significat: {
+		significant: {
 			get: function() {return this._main.notation("significant", this._digits);}
 		},
 		/**. ``''string'' decimal``: Retorna o número com a quantidade de casas decimais definida.**/
@@ -6265,28 +6302,47 @@ const wd = (function() {
 		longCurrency: {
 			get: function() {return this._main.notation("currency3", this._monetary);}
 		},
-		/**. ``''number'' round``: Retorna o número arredondando-o pela quantidade de casas decimais definida.**/
-		round: {
-			get: function() {return this._main.round(this._digits);}
-		},
-		/**. ``''number'' cut``: Retorna o número cortando-o pela quantidade de casas decimais definida.**/
-		cut: {
-			get: function() {return this._main.cut(this._digits);}
-		},
 		/**. ``''string'' frac``: Retorna o número em forma de fração aproximado pela quantidade de casas decimais definida.**/
 		frac: {
 			get: function() {return this._main.frac(this._digits);}
 		},
+
+
+
+
 		/**. ``''string'' toString()``: Retorna o número em forma de texto.**/
 		toString: {
 			value: function() {
 				return this._main.toString();
 			}
 		},
+
+
+//FIXME transformar isso em toString ou format?
 		/**. ``''string'' toLocaleString()``: Retorna o número em forma de texto local.**/
 		toLocaleString: {
-			value: function(locale) {
-				return this._main.toLocaleString();
+			value: function(type) {
+				switch(type) {
+					case "significant":   return this._main.notation("significant", this.digits);
+					case "decimal":       return this._main.notation("decimal", this.digits);
+					case "integer":       return this._main.notation("integer", this.digits);
+					case "percent":       return this._main.notation("percent", this.digits);
+					case "unit":          return this._main.notation("unit", this.measurement);
+					case "scientific":    return this._main.notation("scientific", this.digits);
+					case "engineering":   return this._main.notation("engineering", this.digits);
+					case "compact":       return this._main.notation("compact1", null);
+					case "shortCompact":  return this._main.notation("compact2", null);
+					case "currency":      return this._main.notation("currency1", this.monetary);
+					case "shortCurrency": return this._main.notation("currency2", this.monetary);
+					case "longCurrency":  return this._main.notation("currency3", this.monetary);
+					case "bytes":         return this._main.bytes;
+					case "bin":           return this.valueOf().toString(2);
+					case "hex":           return this.valueOf().toString(16);
+					case "dec":           return this.valueOf().toString(10);
+					case "locale":        return this._main.toLocaleString();
+					case "frac":          return this._main.frac(this._digits);
+				}
+				return this._main.toString();
 			}
 		},
 	});
