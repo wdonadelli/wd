@@ -225,37 +225,36 @@ const wd = (function() {
 	Controla a linguagem local da biblioteca.**/
 	const __LANG = {
 		_re:       /^[a-z]{2,3}(\-[A-Z][a-z]{3})?(\-([A-Z]{2}|[0-9]{3}))?$/,
-		_user:     null,
-		_date:     null,
-		_currency: "",
-		//FIXME fazer monetary
+		_user:     "",
+		_date:     "",
+		_currency: "USD",
+		/**. ``''string'' currency``: Define ou retorna a o código monetário definido pelo usuário.**/
+		get currency()  {return this._currency;},
+		set currency(x) {this._currency = typeof x === "string" ? String(x).trim() : "";},
 		/**. ``''boolean'' test(''string'' x)``: Testa se o argumento ``x`` está no [formato de linguagem](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/lang).**/
 		test: function(x) {
 			return this._re.test(String(x).trim());
 		},
-		/**. ``''string'' node(''node'' node)``: Retorna a linguagem definida no elemento HTML ``node`` (atributo ''lang'') ou em seu elemento superior. Se não encontrado, retorna ``null``.**/
-		node: function(node) {
-			if (typeof node !== "object") return null;
-			while ("parentElement" in node && "attributes" in node) {
-				if ("lang" in node.attributes) {
-					let value = String(node.attributes.lang.value).trim();
+		/**. ``''string'' node(''node'' elem)``: Retorna o atributo ''lang'' do elemento HTML ``elem`` ou em seu elemento superior. Retorna uma string vazia se não encontrado.**/
+		node: function(elem) {
+			if (typeof elem !== "object") return "";
+			while ("parentElement" in elem && "attributes" in elem) {
+				if ("lang" in elem.attributes) {
+					let value = String(elem.attributes.lang.value).trim();
 					if (this.test(value)) return value;
 				}
-				node = node.parentElement;
-				if (node === null || node === undefined) return null;
+				elem = elem.parentElement;
+				if (elem === null || elem === undefined) return "";
 			}
-			return null;
+			return "";
 		},
-		/**. ``''string'' currency``: Define ou retorna a o código monetário definido pelo usuário.**/
-		get currency()  {return this._currency;},
-		set currency(x) {this._currency = String(x).trim();},
-		/**. ``''string'' nav``: Retorna a linguagem definida pelo navegador ou ``null``.**/
-		get nav() {return navigator.language || navigator.browserLanguage || null;},
-		/**. ``''string'' html``: Retorna a linguagem definida no elemento ''body'' ou ''html'' ou ``null``, se não definida.**/
+		/**. ``''string'' nav``: Retorna a linguagem definida pelo navegador.**/
+		get nav() {return navigator.language || navigator.browserLanguage || "";},
+		/**. ``''string'' html``: Retorna a linguagem definida no elemento ''body'' ou ''html''.**/
 		get html() {return this.node(document.body);},
 		/**. ``''string'' user``: Define ou retorna a linguagem definida pelo usuário.**/
 		get user()  {return this._user;},
-		set user(x) {this._user = this.test(String(x).trim()) ? String(x).trim() : null;},
+		set user(x) {this._user = typeof x === "string" && this.test(x) ? x.trim() : "";},
 		/**. ``''string'' main``: Retorna a linguagem definida pelo usuário, no HTML ou pela navegador.**/
 		get main() {return this.user || this. html || this.nav || "en-US";},
 		/**. ``''object'' date``: Retorna um objeto contendo os nomes dos meses e dos dias da semana, na versão longa e curta da linguagem retornada em ``main``.**/
@@ -1178,12 +1177,14 @@ const wd = (function() {
 			get: function() {
 				if (this.valueOf() < 1) return "0 B";
 				if (!this.finite)       return this.toString()+" B";
-				let scale = ["B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
-				let i     = scale.length;
-				while (--i >= 0)
-					if (this >= Math.pow(1024,i))
-						return (this.int/Math.pow(1024,i)).toFixed(2)+" "+scale[i];
-				return this.int+" B";
+				const scale = ["B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
+				let exp = scale.length;
+				let int = this.int;
+				while (--exp >= 0) {
+					let pow = Math.pow(1024, exp);
+					if (int >= pow) return (int/pow).toFixed(2)+" "+scale[exp];
+				}
+				return int+" B";
 			}
 		},
 		/**. ``''string'' type``: Retorna o tipo do número (zero, infinity, integer, real).**/
@@ -1220,9 +1221,9 @@ const wd = (function() {
 		|``compact1``|Exibe em notação compacta na forma longa|Sem efeito|
 		|``compact2``|Exibe em notação compacta na forma abreviada|Sem efeito|
 		|``currency1``|Exibe em notação monetária|Código monetário ([referência]<https://www.six-group.com/en/products-services/financial-information/data-standards.html#scrollTo=currency-codes>)|
-		|``currency2``|Exibe em notação monetária curta|Código monetário|
-		|``currency3``|Exibe em notação monetária textual|Código monetário|
-		|``currency4``|Exibe código no lugar da notação monetária|Código monetário|**/
+		|``currency2``|Exibe em notação monetária curta|Sem efeito|
+		|``currency3``|Exibe em notação monetária textual|Sem efeito|
+		|``currency4``|Exibe código no lugar da notação monetária|Sem efeito|**/
 		notation: {
 			value: function (type, code) {
 				if (!this.finite) return this.toString();
@@ -1270,7 +1271,7 @@ const wd = (function() {
 					},
 					currency: {
 						style: "currency",
-						currency: code,
+						currency: __LANG.currency,
 						signDisplay: "exceptZero",
 						currencyDisplay: (
 							type === "currency4" ? "code" : (
@@ -5909,20 +5910,7 @@ const wd = (function() {
 		type: {
 			get: function() {return this._data.type;}
 		},
-		/**. ``''self'' lang(''string'' local)``: Define a linguagem no argumento ``local`` e retorna o próprio objeto.**/
-		lang: {
-			value: function(local) {
-				__LANG.user = local;
-				return this;
-			}
-		},
-		//FIXME fazer monetary igual a lang
-
-
-
-
-
-		/**. ``''boolean'' is(''string'' type)``: Retorna verdadeiro se o argumento ``type`` corresponder ao tipo de dado (ver ``__Type``).**/
+		/**. ``''boolean'' is(''string'' type)``: Retorna verdadeiro se o argumento ``type`` corresponder ao tipo de dado (ver ``__Type``). FIXME acho que dá para eliminar isso é a mesma coisa que or e and**/
 		is: {
 			value: function(type) {
 				return arguments.length === 0 ? false : (this._data[type] === true);
@@ -5937,7 +5925,7 @@ const wd = (function() {
 				return false;
 			}
 		},
-		/**. ``''boolean'' and(''string'' type...)``: Retorna verdadeiro se todos os tipos informados no argumento ``type`` corresponder ao tipo de dado.**/
+		/**. ``''boolean'' and(''string'' type...)``: Retorna verdadeiro se todos os tipos informados no argumento ``type`` correspondem ao tipo de dado.**/
 		and: {
 			value: function() {
 				var i = -1;
@@ -6066,33 +6054,6 @@ const wd = (function() {
 				return this;
 			}
 		},
-
-
-
-		chart: {
-			value: function(options) {
-				let table = __Table();
-				switch(this.type) {
-					case "string": {
-						table.matrix(this.csv);
-						break;
-					}
-					case "array": {
-						table.matrix(this._input);
-						break;
-					}
-					case "node": {
-						let table = null;
-						this.forEach(function (v,i) {
-							if (table.rows !== 0) return;
-							table.table(v)
-						});
-						break;
-					}
-				}
-				return table.plot(options);
-			}
-		},
 	});
 
 /*----------------------------------------------------------------------------*/
@@ -6177,51 +6138,27 @@ const wd = (function() {
 	function WDnumber(input, data) {
 		WDmain.call(this, input, data);
 		Object.defineProperties(this, {
-			_main:        {value: new __Number(data.value)},
-			_measurement: {value: null, writable: true},
-			_monetary:    {value: null, writable: true},
-			_digits:      {value: 2, writable: true},
-			_lang:        {value: "", writable: true},
+			_main:   {value: new __Number(data.value)},
+			_unit:   {value: "", writable: true},
+			_digits: {value: 2, writable: true},
 		});
 	}
 
 	WDnumber.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDnumber},
-		//FIXME que tal transformar o digits, monetary e measurement em getter/setter assim como a global lang?
-		//FIXME que tal inserir o notation no toLocaleString()?
-		//FIXME que tal inserir o toString(n) padrão?
-
-
-
-		/**. ``''object'' decDigits(''integer'' n)``: Fixa a quantidade de dígitos (argumento ``n``) para referência aos atributos e retorna o próprio objeto.**/
+		/**. ``''integer'' digits``: Define ou retorna a quantidade de casas decimais a ser utilizada nos métodos.**/
 		digits: {
-			value: function(n) {
-				let check = __Type(n);
-				if (check.integer && !check.negative && check.finite)
-					this._digits = check.value;
-				return this;
+			get: function()  {return this._digits;},
+			set: function(x) {
+				const check = __Type(x);
+				if (check.finite) this._digits = Math.trunc(Math.abs(check.value));
 			}
 		},
-		/**. ``''object'' monetary(''string'' n)``: Fixa o código monetário (argumento ``n``) para referência aos atributos e retorna o próprio objeto.**/
-		monetary: {
-			value: function(n) {
-				this._monetary = String(n).trim();
-				return this;
-			},
+		/**. ``''string'' unit``: Define ou retorna o nome da unidade de medida a ser utilizada.**/
+		unit: {
+			get: function()  {return this._unit;},
+			set: function(x) {this._unit = String(x).trim();}
 		},
-		/**. ``''object'' measurement(''string'' n)``: Fixa o nome da unidade de medida (argumento ``n``) para referência aos atributos e retorna o próprio objeto.**/
-		measurement: {
-			value: function(n) {
-				this._measurement = String(n).trim();
-				return this;
-			}
-		},
-
-
-
-
-
-
 		/**. ``''integer'' int``: Retorna a parte inteira.**/
 		int: {
 			get: function() {return this._main.int;}
@@ -6236,11 +6173,11 @@ const wd = (function() {
 		},
 		/**. ``''number'' round``: Retorna o número arredondando-o pela quantidade de casas decimais definida.**/
 		round: {
-			get: function() {return this._main.round(this._digits);}
+			get: function() {return this._main.round(this.digits);}
 		},
 		/**. ``''number'' cut``: Retorna o número cortando-o pela quantidade de casas decimais definida.**/
 		cut: {
-			get: function() {return this._main.cut(this._digits);}
+			get: function() {return this._main.cut(this.digits);}
 		},
 		/**. ``''boolean'' prime``: Informa se o número é primo.**/
 		prime: {
@@ -6250,104 +6187,47 @@ const wd = (function() {
 		primes: {
 			get: function() {return this._main.primes;}
 		},
+		//FIXME transformar isso em toString ou format?
+		/**. ``''string'' toString(options)``: Retorna o número em forma de texto local.
+		|bytes|Retorna o valor em bytes.|
+		|significant|Retorna o número com a quantidade de dígitos significativos definida.|
+		|decimal|Retorna o número com a quantidade de casas decimais definida.|
+		|integer|Retorna o número com a quantidade de dígitos inteiros definida.|
+		|percent|Retorna o número em notação percentual com a quantidade de casas decimais definida.|
+		|unit|Retorna o número com a unidade de medida definida.|
+		|scientific|Retorna o número em notação científica com a quantidade de casas decimais definida.|
+		|engineering|Retorna o número em notação de engenharia com a quantidade de casas decimais definida.|
+		|compact|Retorna o número em notação compacta longa.|
+		|compact|Retorna o número em notação compacta curta.|
+		|currency|Retorna o número em notação monetária.|
+		|shortCurrency|Retorna o número em notação monetária curta.|
+		|longCurrency|Retorna o número em notação monetária longa.|
+		|frac|Retorna o número em forma de fração aproximado pela quantidade de casas decimais definida.|
 
 
-
-
-
-
-
-		/**. ``''string'' bytes``: Retorna o valor em bytes.**/
-		bytes: {
-			get: function() {return this._main.bytes;}
-		},
-		/**. ``''string'' significant``: Retorna o número com a quantidade de dígitos significativos definida.**/
-		significant: {
-			get: function() {return this._main.notation("significant", this._digits);}
-		},
-		/**. ``''string'' decimal``: Retorna o número com a quantidade de casas decimais definida.**/
-		decimal: {
-			get: function() {return this._main.notation("decimal", this._digits);}
-		},
-		/**. ``''string'' integer``: Retorna o número com a quantidade de dígitos inteiros definida.**/
-		integer: {
-			get: function() {return this._main.notation("integer", this._digits);}
-		},
-		/**. ``''string'' percent``: Retorna o número em notação percentual com a quantidade de casas decimais definida.**/
-		percent: {
-			get: function() {return this._main.notation("percent", this._digits);}
-		},
-		/**. ``''string'' unit``: Retorna o número com a unidade de medida definida.**/
-		unit: {
-			get: function() {return this._main.notation("unit", this._measurement);}
-		},
-		/**. ``''string'' scientific``: Retorna o número em notação científica com a quantidade de casas decimais definida.**/
-		scientific: {
-			get: function() {return this._main.notation("scientific", this._digits);}
-		},
-		/**. ``''string'' engineering``: Retorna o número em notação de engenharia com a quantidade de casas decimais definida.**/
-		engineering: {
-			get: function() {return this._main.notation("engineering", this._digits);}
-		},
-		/**. ``''string'' compact``: Retorna o número em notação compacta longa.**/
-		compact: {
-			get: function() {return this._main.notation("compact1", null);}
-		},
-		/**. ``''string'' compact``: Retorna o número em notação compacta curta.**/
-		shortCompact: {
-			get: function() {return this._main.notation("compact2", null);}
-		},
-		/**. ``''string'' currency``: Retorna o número em notação monetária.**/
-		currency: {
-			get: function() {return this._main.notation("currency1", this._monetary);}
-		},
-		/**. ``''string'' shortCurrency``: Retorna o número em notação monetária curta.**/
-		shortCurrency: {
-			get: function() {return this._main.notation("currency2", this._monetary);}
-		},
-		/**. ``''string'' longCurrency``: Retorna o número em notação monetária longa.**/
-		longCurrency: {
-			get: function() {return this._main.notation("currency3", this._monetary);}
-		},
-		/**. ``''string'' frac``: Retorna o número em forma de fração aproximado pela quantidade de casas decimais definida.**/
-		frac: {
-			get: function() {return this._main.frac(this._digits);}
-		},
-
-
-
-
-		/**. ``''string'' toString()``: Retorna o número em forma de texto.**/
+		**/
 		toString: {
-			value: function() {
-				return this._main.toString();
-			}
-		},
-
-
-//FIXME transformar isso em toString ou format?
-		/**. ``''string'' toLocaleString()``: Retorna o número em forma de texto local.**/
-		toLocaleString: {
 			value: function(type) {
 				switch(type) {
 					case "significant":   return this._main.notation("significant", this.digits);
 					case "decimal":       return this._main.notation("decimal", this.digits);
 					case "integer":       return this._main.notation("integer", this.digits);
 					case "percent":       return this._main.notation("percent", this.digits);
-					case "unit":          return this._main.notation("unit", this.measurement);
 					case "scientific":    return this._main.notation("scientific", this.digits);
 					case "engineering":   return this._main.notation("engineering", this.digits);
-					case "compact":       return this._main.notation("compact1", null);
-					case "shortCompact":  return this._main.notation("compact2", null);
-					case "currency":      return this._main.notation("currency1", this.monetary);
-					case "shortCurrency": return this._main.notation("currency2", this.monetary);
-					case "longCurrency":  return this._main.notation("currency3", this.monetary);
+					case "compact":       return this._main.notation("compact1");
+					case "shortCompact":  return this._main.notation("compact2");
+					case "currency":      return this._main.notation("currency1");
+					case "shortCurrency": return this._main.notation("currency2");
+					case "longCurrency":  return this._main.notation("currency3");
+					case "unit":          return this._main.notation("unit", this.unit);
+
 					case "bytes":         return this._main.bytes;
 					case "bin":           return this.valueOf().toString(2);
 					case "hex":           return this.valueOf().toString(16);
 					case "dec":           return this.valueOf().toString(10);
 					case "locale":        return this._main.toLocaleString();
-					case "frac":          return this._main.frac(this._digits);
+					case "frac":          return this._main.frac(this.digits);
 				}
 				return this._main.toString();
 			}
@@ -6977,18 +6857,40 @@ const wd = (function() {
 		return new WDmain(input, data);
 	}
 
-	//FIXME colocar a descrição
+	//FIXME colocar a descrição dos métodos estáticos
 	WD.constructor = WD;
 	Object.defineProperties(WD, {
+		/* ``''string'' version``: Retorna a versão da biblioteca.**/
 		version: {value: __VERSION},
-		$:       {value: function(css, root) {return WD(__Query(css, root).$);}},
-		$$:      {value: function(css, root) {return WD(__Query(css, root).$$);}},
-		copy:    {value: function(text)  {return wd_copy(text);}}, //FIXME como fica copy?
-		matrix:  {value: function(input) {return new WDmatrix(input);}},
-		device:  {get:   function() {return __DEVICECONTROLLER.device;}},
-		today:   {get:   function() {return WD(__DateTime().toDateString());}},
-		now:     {get:   function() {return WD(__DateTime().toTimeString());}},
-		
+		/* ``''object'' $(''string'' css, ''node'' root)``: Retorna um objeto do tipo nó conforme seletor ''css'' individual. O argumento opcional ''root'' é o elemento pai a ser consultado cujo valor padrão é ''document''.**/
+		$: {value: function(css, root) {return WD(__Query(css, root).$);}},
+		/* ``''object'' $$(''string'' css, ''node'' root)``: Retorna um objeto do tipo nó conforme seletor ''css'' múltiplo. O argumento opcional ''root'' é o elemento pai a ser consultado cujo valor padrão é ''document''.**/
+		$$: {value: function(css, root) {return WD(__Query(css, root).$$);}},
+
+
+		copy: {value: function(text)  {return wd_copy(text);}}, //FIXME como fica copy?
+
+
+		/* ``''object'' matrix(input)``: Retorna um objeto do tipo matriz. FIXME o que é o argumento?**/
+		matrix: {value: function(input) {return new WDmatrix(input);}},
+		/* ``''string'' device``: Retorna o tipo de tela de acordo com a biblioteca.**/
+		device: {get: function() {return __DEVICECONTROLLER.device;}},
+		/* ``''object'' today``: Retorna o objeto do tipo data com o valor atual.**/
+		today: {get: function() {return WD(__DateTime().toDateString());}},
+		/* ``''object'' now``: Retorna o objeto do tipo tempo com o valor atual.**/
+		now: {get: function() {return WD(__DateTime().toTimeString());}},
+		/* ``''object'' event``: Retorna o objeto do tipo data/tempo com o valor atual. FIXME acertar um nome para isso**/
+		event: {get: function() {return WD(__DateTime().toString());}},
+		/* ``''string'' lang``: Define ou retorna a linguagem local para uso pela biblioteca.**/
+		lang: {
+			get: function()  {return __LANG.main;},
+			set: function(x) {__LANG.user = x;}
+		},
+		/* ``''string'' currency``: Define ou retorna o código monetário para uso pela biblioteca.**/
+		currency: {
+			get: function()  {return __LANG.currency;},
+			set: function(x) {__LANG.currency = x;}
+		},
 	});
 
 	if (__UNDERMAINTENANCE) {
