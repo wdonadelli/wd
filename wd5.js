@@ -233,7 +233,7 @@ const wd = (function() {
 		set currency(x) {this._currency = typeof x === "string" ? String(x).trim() : "";},
 		/**. ``''boolean'' test(''string'' x)``: Testa se o argumento ``x`` está no [formato de linguagem](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/lang).**/
 		test: function(x) {
-			return this._re.test(String(x).trim());
+			return x === null || x === undefined ? false : this._re.test(String(x).trim());
 		},
 		/**. ``''string'' node(''node'' elem)``: Retorna o atributo ''lang'' do elemento HTML ``elem`` ou em seu elemento superior. Retorna uma string vazia se não encontrado.**/
 		node: function(elem) {
@@ -1208,89 +1208,119 @@ const wd = (function() {
 				return this.valueOf().toPrecision(n);
 			}
 		},
-		/**. ``''string'' notation(''string'' type, ''any'' code)``: Formata o número em determinada notação ([referência]<https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/NumberFormat>).
-		. O argumento ``type`` define o tipo da formatação e o argumento ``code`` dependerá da notação escolhida, podendo ser um número inteiro, uma string ou não ter efeito.
-		|type|Descrição|code|
-		|``significant``|Fixa o número de dígitos significativos|Quantidade de significativos|
-		|``decimal``|Fixa o número de casas decimais|Número de casas decimais|
-		|``integer``|Fixa o número de dígitos inteiros|Número de dígitos inteiros|
-		|``percent``|Exibe em notação percentual|Número de casas decimais|
-		|``unit``|Exibe o número com unidade de medida|Unidade de medida ([referência]<https://tc39.es/proposal-unified-intl-numberformat/section6/locales-currencies-tz_proposed_out.html#sec-issanctionedsimpleunitidentifier>)|
-		|``scientific``|Exibe em notação científica|Número de casas decimais|
-		|``engineering``|Exibe em notação de engenharia|Número de casas decimais|
-		|``compact1``|Exibe em notação compacta na forma longa|Sem efeito|
-		|``compact2``|Exibe em notação compacta na forma abreviada|Sem efeito|
-		|``currency1``|Exibe em notação monetária|Código monetário ([referência]<https://www.six-group.com/en/products-services/financial-information/data-standards.html#scrollTo=currency-codes>)|
-		|``currency2``|Exibe em notação monetária curta|Sem efeito|
-		|``currency3``|Exibe em notação monetária textual|Sem efeito|
-		|``currency4``|Exibe código no lugar da notação monetária|Sem efeito|**/
+		/**. ``''string'' notation(''string'' type, ''object'' options)``: Formata o número em determinada notação ([referência]<https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/NumberFormat>). O argumento ``type`` define o tipo da formatação e o argumento opcional ``options`` define alguns parâmetros. Os seguintes parâmetros estão disponíveis:
+		|Nome|Tipo|Descrição|
+		|locale|String|Código da localidade comum a todos os tipos.|
+		|digits|Integer|Quantidade de dígitos a aplicar ao tipo.|
+		|code|String|O código ou identificador correspondente ao tipo.|
+		|display|String|Forma de visualização do tipo.|
+		A tabela abaixo apresenta a lista dos tipos e seus parâmetros:
+		|type|digits|code|display|Descrição|
+		|significant|Dígitos significativos|Não|Não|Fixa o número de dígitos significativos.|
+		|decimal|Casas decimais|Não|Não|Fixa o número de casas decimais.|
+		|integer|Quantidade de inteiros|Não|Não|Fixa o número mínimo de inteiros.|
+		|percent|Casas decimais|Não|Não|Exibe em notação percentual.|
+		|unit|Casas decimais|[Unidade de medida]<https://tc39.es/proposal-unified-intl-numberformat/section6/locales-currencies-tz_proposed_out.html#sec-issanctionedsimpleunitidentifier>|''short'', ''long'' ou ''narrow''|Exibe a unidade de medida.|
+		|scientific|Casas decimais|Não|Não|Exibe em notação científica.|
+		|engineering|Casas decimais|Não|Não|Exibe em notação de engenharia|
+		|compact|Não|Não|''short'' ou ''long''|Exibe em notação compacta.|
+		|currency|Não|[Código monetário]<https://www.six-group.com/en/products-services/financial-information/data-standards.html#scrollTo=currency-codes>|''symbol'', ''narrowSymbol'', ''name'' ou ''code''|Exibe em notação monetária.|**/
 		notation: {
-			value: function (type, code) {
+			value: function (type, options) {
 				if (!this.finite) return this.toString();
-				type      = String(type).toLowerCase();
-				let attr  = type.replace(/\d+/, "");
-				let types = {
+				if (!__Type(options).object) options = {};
+				type = String(type).toLowerCase();
+				const display = {
+					unit:     ["short", "long", "narrow"],
+					currency: ["symbol", "narrowSymbol", "name", "code"],
+					compact:  ["short", "long"]
+				};
+				const opt = {
+					locale: __LANG.main,
+					digits: 2,
+					code: type === "currency" ? __LANG.currency : "degree",
+					display: type in display ? display[type][0] : undefined
+				};
+				for (let i in opt) {
+					if (i in options) {
+						const value = String(options[i]).trim();
+						const check = __Type(value);
+						switch(i) {
+							case "digits": {
+								if (check.integer && !check.negative) opt[i] = check.value;
+								break;
+							}
+							case "locale": {
+								if (check.string && __LANG.test(value)) opt[i] = value;
+								break;
+							}
+							case "code": {
+								if (check.string && value.length > 0) opt[i] = value;
+								break;
+							}
+							case "display": {
+								if (type in display && display[type].indexOf(value) >= 0) opt[i] = value;
+								break;
+							}
+						}
+					}
+				}
+				let config = {
 					significant: {
-						minimumSignificantDigits: code,
-						maximumSignificantDigits: code
+						style: "decimal",
+						minimumSignificantDigits: opt.digits,
+						maximumSignificantDigits: opt.digits
 					},
 					decimal: {
 						style: "decimal",
-						minimumFractionDigits: code,
-						maximumFractionDigits: code
+						minimumFractionDigits: opt.digits,
+						maximumFractionDigits: opt.digits
 					},
 					integer: {
 						style: "decimal",
-						minimumIntegerDigits: code
+						minimumIntegerDigits: opt.digits
 					},
 					percent: {
 						style: "percent",
-						minimumFractionDigits: code,
-						maximumFractionDigits: code
+						minimumFractionDigits: opt.digits,
+						maximumFractionDigits: opt.digits
 					},
 					unit: {
 						style: "unit",
-						unit: code
+						unit: opt.code,
+						unitDisplay: opt.display,
+						minimumFractionDigits: opt.digits,
+						maximumFractionDigits: opt.digits
 					},
 					scientific: {
 						style: "decimal",
 						notation: "scientific",
-						minimumFractionDigits: code,
-						maximumFractionDigits: code
+						minimumFractionDigits: opt.digits,
+						maximumFractionDigits: opt.digits
 					},
 					engineering: {
 						style: "decimal",
 						notation: "engineering",
-						minimumFractionDigits: code,
-						maximumFractionDigits: code
+						minimumFractionDigits: opt.digits,
+						maximumFractionDigits: opt.digits
 					},
 					compact: {
 						style: "decimal",
 						notation: "compact",
-						compactDisplay: type === "compact2" ? "short" : "long"
+						compactDisplay: opt.display
 					},
 					currency: {
 						style: "currency",
-						currency: __LANG.currency,
 						signDisplay: "exceptZero",
-						currencyDisplay: (
-							type === "currency4" ? "code" : (
-								type === "currency3" ? "name" : (
-									type === "currency2" ? "narrowSymbol" : "symbol"
-								)
-							)
-						)
+						currency: opt.code,
+						currencyDisplay: opt.display
 					}
 				};
 				try {
-					return this.valueOf().toLocaleString(__LANG.main, (attr in types ? types[attr] : {}));
-				} catch(e) {}
-				try {
-					return this.valueOf().toLocaleString(undefined, (attr in types ? types[attr] : {}));
+					return this.valueOf().toLocaleString(opt.locale, config[type]);
 				} catch(e) {
-					return this.valueOf().toLocaleString();
+					return this.valueOf().toLocaleString(opt.locale);
 				}
-				return this.toString()
 			}
 		},
 		/**. ``''number'' e``: Retorna o expoente do número em base 10.**/
@@ -4148,6 +4178,7 @@ const wd = (function() {
 			set: function(x) {this._table.caption.textContent = String(x);}
 		},
 		/**. ``''array'' matrix(''array'' input)``: Define (``input``) ou retorna dados da tabela no formato de array.**/
+		//FIXME é preciso proteger os argumentos com aspas. qual separador utilizar?
 		matrix: {
 			value: function(input) {
 				/*-- retornar a matriz --*/
@@ -5322,16 +5353,16 @@ const wd = (function() {
 				let n = __Number(value);
 				let e = n.e;
 
-				if (n ==    0) return n.notation("decimal", 0);
-				if (e >=  100) return n.notation("scientific", 0);
-				if (e >=   10) return n.notation("scientific", 1);
-				if (e >=    3) return n.notation("scientific", 2);
-				if (e >=    2) return n.notation("decimal", 1);
-				if (e >=    1) return n.notation("decimal", 2);
-				if (e <= -100) return n.notation("scientific", 0);
-				if (e <=  -10) return n.notation("scientific", 1);
-				if (e <    -1) return n.notation("scientific", 2);
-				return n.notation("decimal", 2);
+				if (n ==    0) return n.notation("decimal",    {digits: 0});
+				if (e >=  100) return n.notation("scientific", {digits: 0});
+				if (e >=   10) return n.notation("scientific", {digits: 1});
+				if (e >=    3) return n.notation("scientific", {digits: 2});
+				if (e >=    2) return n.notation("decimal",    {digits: 1});
+				if (e >=    1) return n.notation("decimal",    {digits: 2});
+				if (e <= -100) return n.notation("scientific", {digits: 0});
+				if (e <=  -10) return n.notation("scientific", {digits: 1});
+				if (e <    -1) return n.notation("scientific", {digits: 2});
+				return n.notation("decimal", {digits: 2});
 			}
 		},
 		/**. ``''void'' _legend(''node'' svg, ''string'' text, ''number'' color)``: Constrói a legenda do gráfico.
@@ -5511,7 +5542,7 @@ const wd = (function() {
 							value:  value,
 							_value: __Number(value).notation(),
 							ratio:  total === 0 ? null : value/total,
-							_ratio: total === 0 ? null : __Number(value/total).notation("percent", 2),
+							_ratio: total === 0 ? null : __Number(value/total).notation("percent"),
 							name: i
 						});
 						this._yMin = value;
@@ -5910,27 +5941,21 @@ const wd = (function() {
 		type: {
 			get: function() {return this._data.type;}
 		},
-		/**. ``''boolean'' is(''string'' type)``: Retorna verdadeiro se o argumento ``type`` corresponder ao tipo de dado (ver ``__Type``). FIXME acho que dá para eliminar isso é a mesma coisa que or e and**/
-		is: {
-			value: function(type) {
-				return arguments.length === 0 ? false : (this._data[type] === true);
-			}
-		},
 		/**. ``''boolean'' or(''string'' type...)``: Retorna verdadeiro se algum dos tipos informados no argumento ``type`` corresponder ao tipo de dado.**/
 		or: {
 			value: function() {
-				var i = -1;
-				while (++i < arguments.length)
-					if (this.is(arguments[i])) return true;
+				if (arguments.length === 0) return false;
+				for (let type of arguments)
+					if (this._data[type] === true) return true;
 				return false;
 			}
 		},
-		/**. ``''boolean'' and(''string'' type...)``: Retorna verdadeiro se todos os tipos informados no argumento ``type`` correspondem ao tipo de dado.**/
-		and: {
+		/**. ``''boolean'' is(''string'' type...)``: Retorna verdadeiro se todos os tipos informados no argumento ``type`` correspondem ao tipo de dado.**/
+		is: {
 			value: function() {
-				var i = -1;
-				while (++i < arguments.length)
-					if (!this.is(arguments[i])) return false;
+				if (arguments.length === 0) return false;
+				for (let type of arguments)
+					if (this._data[type] === false) return false;
 				return true;
 			}
 		},
@@ -5976,7 +6001,7 @@ const wd = (function() {
 				return this;
 			}
 		},
-		/**. ``''self'' send(''string'' target, ''object'' options)``: Lê arquivos. O argumento ``target`` é o alvo da requisição e o argumento ``options`` é um objeto que define os atributos da requisição (maxtime, user, password, header, method, onchange e ondone). (ver ``__Request.send``)**/
+		/**. ``''self'' send(''string'' target, ''object'' options)``: Faz requisições. O argumento ``target`` é o alvo da requisição e o argumento ``options`` é um objeto que define os atributos da requisição (maxtime, user, password, header, method, onchange e ondone). (ver ``__Request.send``)**/
 		send: {
 			value: function (target, options) {
 				let url = __URL(target);
@@ -6139,8 +6164,10 @@ const wd = (function() {
 		WDmain.call(this, input, data);
 		Object.defineProperties(this, {
 			_main:   {value: new __Number(data.value)},
-			_unit:   {value: "", writable: true},
 			_digits: {value: 2, writable: true},
+			_unit:   {value: "degree", writable: true},
+			_money:  {value: __LANG.currency, writable: true},
+			_locale: {value: __LANG.main, writable: true},
 		});
 	}
 
@@ -6151,13 +6178,23 @@ const wd = (function() {
 			get: function()  {return this._digits;},
 			set: function(x) {
 				const check = __Type(x);
-				if (check.finite) this._digits = Math.trunc(Math.abs(check.value));
+				if (check.integer && !check.negative) this._digits = check.value;
 			}
 		},
-		/**. ``''string'' unit``: Define ou retorna o nome da unidade de medida a ser utilizada.**/
+		/**. ``''string'' unit``: Define ou retorna o nome da unidade de medida a ser utilizada no objeto.**/
 		unit: {
 			get: function()  {return this._unit;},
-			set: function(x) {this._unit = String(x).trim();}
+			set: function(x) {this._unit = __Type(x).string ? x.trim() : "degree";}
+		},
+		/**. ``''string'' currency``: Define ou retorna o código monetários a ser utilizado no objeto.**/
+		currency: {
+			get: function()  {return this._money;},
+			set: function(x) {this._money = __Type(x).string ? x.trim() : __LANG.currency;}
+		},
+		/**. ``''string'' locale``: Define ou retorna o código de localização a ser utilizado no objeto.**/
+		locale: {
+			get: function()  {return this._locale;},
+			set: function(x) {this._locale = __LANG.test(x) ? x.trim() : __LANG.main;}
 		},
 		/**. ``''integer'' int``: Retorna a parte inteira.**/
 		int: {
@@ -6208,20 +6245,41 @@ const wd = (function() {
 		**/
 		toString: {
 			value: function(type) {
-				switch(type) {
-					case "significant":   return this._main.notation("significant", this.digits);
-					case "decimal":       return this._main.notation("decimal", this.digits);
-					case "integer":       return this._main.notation("integer", this.digits);
-					case "percent":       return this._main.notation("percent", this.digits);
-					case "scientific":    return this._main.notation("scientific", this.digits);
-					case "engineering":   return this._main.notation("engineering", this.digits);
-					case "compact":       return this._main.notation("compact1");
-					case "shortCompact":  return this._main.notation("compact2");
-					case "currency":      return this._main.notation("currency1");
-					case "shortCurrency": return this._main.notation("currency2");
-					case "longCurrency":  return this._main.notation("currency3");
-					case "unit":          return this._main.notation("unit", this.unit);
+				const options = {
+					significant: {locale: this.locale, digits: this.digits},
+					decimal: {locale: this.locale, digits: this.digits},
+					integer: {locale: this.locale, digits: this.digits},
+					percent: {locale: this.locale, digits: this.digits},
+					scientific: {locale: this.locale, digits: this.digits},
+					engineering: {locale: this.locale, digits: this.digits},
+					compact: {locale: this.locale},
+					longCompact: {locale: this.locale, code: "long"},
+					shortCompact: {locale: this.locale, code: "short"},
+					unit: {locale: this.locale, digits: this.digits, code: this.unit},
+					shortUnit: {locale: this.locale, digits: this.digits, code: this.unit, display: "short"},
+					longUnit: {locale: this.locale, digits: this.digits, code: this.unit, display: "long"},
+					narrowUnit: {locale: this.locale, digits: this.digits, code: this.unit, display: "narrow"},
+					currency: {locale: this.locale, code: this.currency},
+					symbolCurrency: {locale: this.locale, code: this.currency, display: "symbol"},
+					narrowCurrency: {locale: this.locale, code: this.currency, display: "narrowSymbol"},
+					nameCurrency: {locale: this.locale, code: this.currency, display: "name"},
+					codeCurrency: {locale: this.locale, code: this.currency, display: "code"},
+				};
+				//FIXME tem um erro no type para utilizar em notation nameCurrency não existe
+				//FIXME que tal colocar um único atributo para definir os options
 
+				if (type in options) return this._main.notation(type, options[type]);
+
+
+
+
+
+
+
+
+
+
+				switch(type) {
 					case "bytes":         return this._main.bytes;
 					case "bin":           return this.valueOf().toString(2);
 					case "hex":           return this.valueOf().toString(16);
@@ -6283,7 +6341,7 @@ const wd = (function() {
 				if (this.type !== "date") this._main.hour = x;
 			}
 		},
-		/**. ``''integer'' minute``: Define e retorna o minuot.**/
+		/**. ``''integer'' minute``: Define e retorna o minuto.**/
 		minute: {
 			get: function()  {
 				return this.type === "date" ? undefined : this._main.minute;
@@ -6396,6 +6454,8 @@ const wd = (function() {
 		length: {
 			get: function() {return this._main.length;}
 		},
+
+		// FIXME que tal encurtar isso e inserir como argumento de ValueOf?
 		/**. ``''number'' min``: Retorna o menor número finito da lista ou ``null``.**/
 		min: {
 			get: function() {return this._main.min;}
@@ -6428,7 +6488,7 @@ const wd = (function() {
 		gcd: {
 			get: function() {return this._main.gcd;}
 		},
-		/**. ``''array'' mode``: Retorna uma lista com os items mais recorrents da lista.**/
+		/**. ``''array'' mode``: Retorna uma lista com os items mais recorrents.**/
 		mode: {
 			get: function() {return this._main.mode;}
 		},
