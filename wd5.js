@@ -1483,7 +1483,7 @@ const wd = (function() {
 				return value.join("");
 			}
 		},
-		/**. ``''matrix'' csv``: Retorna uma matriz (array) a partir de uma string no estilo [CSV]<https://www.rfc-editor.org/rfc/rfc4180> com dados separados por vírgula, espaço, tabulação, barra vertical ou ponto e vírgula e registros por quebras de linhas. O primeiro caractere separador encontrado, exceto se entre aspas, será o para separadorr para os demais dados. Dados que contenham os caracteres separadores de dados ou de registros devem estar entre aspas. Aspas em dados protegidos por aspas são definidos como aspas duplas em sequência.**/
+		/**. ``''matrix'' csv``: Retorna uma matriz (array) a partir de uma string no estilo [CSV]<https://www.rfc-editor.org/rfc/rfc4180>. Dados são separados por vírgula, espaço, tabulação, barra vertical ou ponto e vírgula e enquanto que registros são separados por quebras de linhas. O primeiro caractere separador encontrado, exceto se entre aspas, será o separador para os demais dados. Dados que contenham os caracteres separadores de dados ou registros devem estar protegidos entre aspas. Aspas em dados protegidos são definidos com aspas duplas em sequência.**/
 		csv: {
 			get: function() {
 				let txt   = __String(this._value.trim()).chars;
@@ -4266,7 +4266,7 @@ const wd = (function() {
 				return this.html();
 			}
 		},
-		/**. ``''string'' csv(''string'' input)``: Define (``input``) ou retorna dados da tabela no formato CSV.**/
+		/**. ``''string'' csv(''string'' input)``: Define ou retorna os dados da tabela em formato CSV.**/
 		csv: {
 			value: function(input) {
 				/*-- retornando CSV --*/
@@ -4274,9 +4274,14 @@ const wd = (function() {
 					let matrix = this.matrix();
 					matrix.forEach(function(row,i,ar) {
 						row.forEach(function (col,j,ac) {
-							if ((/(\t|\n)/).test(col)) ac[j] = "\""+col+"\"";
+							//FIXME o que fazer com 10% e 5!?
+							if (!__Type(col).finite) {
+								col = col.split("\"").join("\"\"");
+								col = "\""+col+"\"";
+							}
+							ac[j] = col;
 						});
-						ar[i] = row.join("\t");
+						ar[i] = row.join(",");
 					});
 					return matrix.join("\n");
 				}
@@ -6163,39 +6168,18 @@ const wd = (function() {
 	function WDnumber(input, data) {
 		WDmain.call(this, input, data);
 		Object.defineProperties(this, {
-			_main:   {value: new __Number(data.value)},
-			_digits: {value: 2, writable: true},
-			_unit:   {value: "degree", writable: true},
-			_money:  {value: __LANG.currency, writable: true},
-			_locale: {value: __LANG.main, writable: true},
+			_main:     {value: new __Number(data.value)},
+			_digits:   {value: 2, writable: true},
+			_unit:     {value: "degree", writable: true},
+			_display:  {value: "short", writable: true},
+			_currency: {value: __LANG.currency, writable: true},
+			_locale:   {value: __LANG.main, writable: true},
+			_type:     {value: "", writable: true}
 		});
 	}
 
 	WDnumber.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDnumber},
-		/**. ``''integer'' digits``: Define ou retorna a quantidade de casas decimais a ser utilizada nos métodos.**/
-		digits: {
-			get: function()  {return this._digits;},
-			set: function(x) {
-				const check = __Type(x);
-				if (check.integer && !check.negative) this._digits = check.value;
-			}
-		},
-		/**. ``''string'' unit``: Define ou retorna o nome da unidade de medida a ser utilizada no objeto.**/
-		unit: {
-			get: function()  {return this._unit;},
-			set: function(x) {this._unit = __Type(x).string ? x.trim() : "degree";}
-		},
-		/**. ``''string'' currency``: Define ou retorna o código monetários a ser utilizado no objeto.**/
-		currency: {
-			get: function()  {return this._money;},
-			set: function(x) {this._money = __Type(x).string ? x.trim() : __LANG.currency;}
-		},
-		/**. ``''string'' locale``: Define ou retorna o código de localização a ser utilizado no objeto.**/
-		locale: {
-			get: function()  {return this._locale;},
-			set: function(x) {this._locale = __LANG.test(x) ? x.trim() : __LANG.main;}
-		},
 		/**. ``''integer'' int``: Retorna a parte inteira.**/
 		int: {
 			get: function() {return this._main.int;}
@@ -6210,11 +6194,11 @@ const wd = (function() {
 		},
 		/**. ``''number'' round``: Retorna o número arredondando-o pela quantidade de casas decimais definida.**/
 		round: {
-			get: function() {return this._main.round(this.digits);}
+			get: function() {return this._main.round(this._digits);}
 		},
 		/**. ``''number'' cut``: Retorna o número cortando-o pela quantidade de casas decimais definida.**/
 		cut: {
-			get: function() {return this._main.cut(this.digits);}
+			get: function() {return this._main.cut(this._digits);}
 		},
 		/**. ``''boolean'' prime``: Informa se o número é primo.**/
 		prime: {
@@ -6223,6 +6207,50 @@ const wd = (function() {
 		/**. ``''array'' primes``: Retorna uma lista de primos precedentes.**/
 		primes: {
 			get: function() {return this._main.primes;}
+		},
+
+
+
+		/**. ``''integer'' digits``: Define ou retorna a quantidade de casas decimais a ser utilizada nos métodos.**/
+		/**. ``''string'' unit``: Define ou retorna o nome da unidade de medida a ser utilizada no objeto.**/
+
+		/**. ``''string'' currency``: Define ou retorna o código monetários a ser utilizado no objeto.**/
+
+		/**. ``''string'' locale``: Define ou retorna o código de localização a ser utilizado no objeto.**/
+
+		options: {
+			get: function() {
+				return {
+					digits: this._digits,
+					unit: this._unit,
+					currency: this._currency,
+					locale: this._locale,
+					display: this._display,
+					type: this._type
+				};
+			},
+			set: function (x) {
+				if (!__Type(x).object) return;
+				const opt     = this.options;
+				const display = ["short", "narrow", "long", "symbol", "narrowSymbol", "name", "code"];
+				 for (let i in opt) {
+				 	if (i in x) {
+				 		const data = __Type(x[i]);
+				 		if (i === "digits" && data.integer && !data.negative)
+				 			this._digits = data.value;
+				 		else if (i === "unit" && data.nonempty)
+				 			this._unit = x[i].trim();
+				 		else if (i === "currency" && data.nonempty)
+				 			this._currency = x[i].trim();
+				 		else if (i === "locale" && __LANG.test(x[i]))
+				 			this._locale = x[i].trim();
+				 		else if (i === "display" && display.indexOf(x[i].trim()) >= 0)
+				 			this._display = x[i].trim();
+				 		else if (i === "type" && data.nonempty)
+				 			this._type = x[i].trim().toLowerCase();
+				 	}
+				}
+			}
 		},
 		//FIXME transformar isso em toString ou format?
 		/**. ``''string'' toString(options)``: Retorna o número em forma de texto local.
@@ -6243,43 +6271,25 @@ const wd = (function() {
 
 
 		**/
-		toString: {
-			value: function(type) {
-				const options = {
-					significant: {locale: this.locale, digits: this.digits},
-					decimal: {locale: this.locale, digits: this.digits},
-					integer: {locale: this.locale, digits: this.digits},
-					percent: {locale: this.locale, digits: this.digits},
-					scientific: {locale: this.locale, digits: this.digits},
-					engineering: {locale: this.locale, digits: this.digits},
-					compact: {locale: this.locale},
-					longCompact: {locale: this.locale, code: "long"},
-					shortCompact: {locale: this.locale, code: "short"},
-					unit: {locale: this.locale, digits: this.digits, code: this.unit},
-					shortUnit: {locale: this.locale, digits: this.digits, code: this.unit, display: "short"},
-					longUnit: {locale: this.locale, digits: this.digits, code: this.unit, display: "long"},
-					narrowUnit: {locale: this.locale, digits: this.digits, code: this.unit, display: "narrow"},
-					currency: {locale: this.locale, code: this.currency},
-					symbolCurrency: {locale: this.locale, code: this.currency, display: "symbol"},
-					narrowCurrency: {locale: this.locale, code: this.currency, display: "narrowSymbol"},
-					nameCurrency: {locale: this.locale, code: this.currency, display: "name"},
-					codeCurrency: {locale: this.locale, code: this.currency, display: "code"},
+		toLocaleString: {
+			value: function() {
+				const opt = this.options;
+				const cfg = {
+					significant: {digits: opt.digits},
+					decimal:     {digits: opt.digits},
+					integer:     {digits: opt.digits},
+					percent:     {digits: opt.digits},
+					scientific:  {digits: opt.digits},
+					engineering: {digits: opt.digits},
+					unit:        {digits: opt.digits, code: opt.unit, display: opt.display},
+					compact:     {display: opt.display},
+					currency:    {display: opt.display, code: opt.currency},
 				};
-				//FIXME tem um erro no type para utilizar em notation nameCurrency não existe
-				//FIXME que tal colocar um único atributo para definir os options
-
-				if (type in options) return this._main.notation(type, options[type]);
-
-
-
-
-
-
-
-
-
-
-				switch(type) {
+				if (opt.type in cfg) {
+					cfg[opt.type].locale = opt.locale;
+					return this._main.notation(opt.type, cfg[opt.type]);
+				}
+				switch(opt.type) {
 					case "bytes":         return this._main.bytes;
 					case "bin":           return this.valueOf().toString(2);
 					case "hex":           return this.valueOf().toString(16);
@@ -6454,44 +6464,6 @@ const wd = (function() {
 		length: {
 			get: function() {return this._main.length;}
 		},
-
-		// FIXME que tal encurtar isso e inserir como argumento de ValueOf?
-		/**. ``''number'' min``: Retorna o menor número finito da lista ou ``null``.**/
-		min: {
-			get: function() {return this._main.min;}
-		},
-		/**. ``''number'' max``: Retorna o maior número finito da lista ou ``null``.**/
-		max: {
-			get: function() {return this._main.max;}
-		},
-		/**. ``''number'' sum``: Retorna a soma dos números finitos da lista ou ``null``.**/
-		sum: {
-			get: function() {return this._main.sum;}
-		},
-		/**. ``''number'' avg``: Retorna a média dos números finitos da lista ou ``null``.**/
-		avg: {
-			get: function() {return this._main.avg;}
-		},
-		/**. ``''number'' med``: Retorna a mediana dos números finitos da lista ou ``null``.**/
-		med: {
-			get: function() {return this._main.med;}
-		},
-		/**. ``''number'' harm``: Retorna a média harmônica dos números finitos da lista ou ``null``.**/
-		harm: {
-			get: function() {return this._main.harm;}
-		},
-		/**. ``''number'' geo``: Retorna a média geométrica dos números finitos da lista ou ``null``.**/
-		geo: {
-			get: function() {return this._main.geo;}
-		},
-		/**. ``''number'' gcd``: Retorna máximo divisor comum dos números finitos da lista ou ``null``.**/
-		gcd: {
-			get: function() {return this._main.gcd;}
-		},
-		/**. ``''array'' mode``: Retorna uma lista com os items mais recorrents.**/
-		mode: {
-			get: function() {return this._main.mode;}
-		},
 		/**. ``''array'' unique``: Retorna a lista sem valores repetidos.**/
 		unique: {
 			get: function() {return this._main.unique;}
@@ -6560,12 +6532,37 @@ const wd = (function() {
 		toString: {
 			value: function() {return JSON.stringify(this._data.value);}
 		},
-		/**. ``''array'' valueOf()``: Retorna uma cópia da lista.**/
+		/**. ``''array|number'' valueOf(''string'' value)``: Retorna uma cópia da lista ou os seguintes valores de acordo com o valor do argumento opcional ``value`` que, caso não exista o valor possível, retornará nulo:
+		|Value|Tipo|Descrição|
+		|min|number|Retorna o menor número finito da lista.|
+		|max|number|Retorna o maior número finito da lista.|
+		|sum|number|Retorna a soma dos números finitos da lista.|
+		|avg|number|Retorna a média dos números finitos da lista.|
+		|med|number|Retorna a mediana dos números finitos da lista.|
+		|harm|number|Retorna a média harmônica dos números finitos da lista.|
+		|geo|number|Retorna a média geométrica dos números finitos da lista.|
+		|gcd|number|Retorna máximo divisor comum dos números finitos da lista.|
+		|mode|array|Retorna uma lista com os items mais recorrentes.|**/
 		valueOf: {
-			value: function() {return this._main.valueOf().slice();}
+			value: function(value) {
+				value = String(value).toLowerCase().trim();
+				const self  = this;
+				switch(value) {
+					case "min":  return self._main.min;
+					case "max":  return self._main.max;
+					case "sum":  return self._main.sum;
+					case "avg":  return self._main.avg;
+					case "med":  return self._main.med;
+					case "harm": return self._main.harm;
+					case "geo":  return self._main.geo;
+					case "gcd":  return self._main.gcd;
+					case "mode": return self._main.mode;
+				}
+				return this._main.valueOf().slice();
+			}
 		},
-		/**. ``''string'' csv``: Retorna o formato do array, se organizado em forma de matriz, no formato CSV.**/
-		csv: { /* matriz para csv */
+		/**. ``''string'' csv``: Retorna o array, se organizado em forma de matriz, no formato CSV.**/
+		csv: {
 			get: function() {
 				let table = __Table();
 				table.matrix(this.valueOf());
