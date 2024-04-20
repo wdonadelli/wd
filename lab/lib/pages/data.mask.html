@@ -1,62 +1,86 @@
-<h3>data-wd-mask</h3>
+<div class="wd-flyer">
+	<h4>mask</h4>
 
-<script>
-  function upper(x) {return x.toUpperCase();}
-</script>
+	<script>
+		function myValidity(e, fail) {
+			let val = e.value;
+			let dg  = (/00$/).test(val);
+			if (fail) {
+				e.style.backgroundColor = "yellow";
+				return;
+			}
+			if (val.trim() === "") {
+				e.style.backgroundColor = null;
+				return;
+			}
+			e.style.backgroundColor = dg ? "green" : "yellow";
+			return dg ? "" : "The check digit must be \"00\"!";
+		}
+	</script>
 
-<p>Mask Format: <b>@@ #.##</b></p>
+	<dl>
+		<dt>Element</dt>
+		<dd data-wd-value="mask{###.###-##}" contenteditable="true">a1234-202456789</dd>
+		<dt>Form (with fail)</dt>
+		<dd>
+			<input type="text" value="a123456789" data-wd-value="mask{###.###-##}fail{The mask didn't fit!}" />
+		</dd>
+		<dt>Form (without fail)</dt>
+		<dd>
+			<input type="text" value="a123456789" data-wd-value="mask{###.###-##}" />
+		</dd>
+		<dt>Form (with fail and validity)</dt>
+		<dd>
+			<input type="text" value="a123456789" data-wd-value="mask{###.###-##}fail{The mask didn't fit!}validity(myValidity)" />
+		</dd>
+	</dl>
 
-<div>
-  <span>With correct value when loading: </span>
-  <span data-wd-mask="model{@@ #.##}check{upper}">xy123</span>
+	<h4>output</h4>
+
+	<script>
+		function mySum(e) {
+			const target = wd.$$("#mySource tbody tr > td:first-child");
+			let calc = 0;
+			target.forEach(function(v) {
+				const check = wd(v.textContent);
+				if (check.is("finite")) calc += check.valueOf();
+			});
+			e.style.color = calc < 0 ? "red" : null;
+			return calc;
+		}
+		function myAvg(e) {
+			const target = wd.$$("#mySource tbody tr > td:last-child");
+			let calc = 0;
+			let item = 0;
+			target.forEach(function(v) {
+				const check = wd(v.textContent);
+				if (check.is("finite")) {
+					calc += check.valueOf();
+					item++;
+				}
+			});
+			e.style.color = item === 0 ? "red" : null;
+			return item === 0 ? "NaN" : calc/item;
+		}
+	</script>
+
+	<table border="1" id="mySource" style="margin: auto;">
+		<thead>
+			<tr><th>Sum</th><th>Avg</th></tr>
+		</thead>
+		<tbody>
+			<tr><td contenteditable="true">10</td><td contenteditable="true">12</td></tr>
+			<tr><td contenteditable="true">11</td><td contenteditable="true">78</td></tr>
+			<tr><td contenteditable="true">0</td><td contenteditable="true">4</td></tr>
+		</tbody>
+		<tfoot>
+			<tr>
+				<td data-wd-value="$${#mySource tbody tr > td:first-child}output(mySum)"></td>
+				<td data-wd-value="$${#mySource tbody tr > td:last-child}output(myAvg)"></td>
+			</tr>
+		</tfoot>
+	</table>
+
+
+
 </div>
-
-<div>
-  <span>With incorrect value when loading: </span>
-  <span data-wd-mask="model{@@ #.##}check{upper}">xyz123</span>
-</div>
-
-<div>
-  <span>With editable content: </span>
-  <span data-wd-mask="model{@@ #.##}check{upper}" contenteditable="true" style="background-color: yellow; padding: 0 1em;"></span>
-</div>
-
-<div>
-  <span>With correct value when loading: </span>
-  <input type="text" data-wd-mask="model{@@ #.##}check{upper}" value="xy123" />
-</div>
-
-<div>
-  <span>With incorrect value when loading: </span>
-  <input type="text" data-wd-mask="model{@@ #.##}check{upper}" value="xyz123" />
-</div>
-
-
-
-
-
-
-
-
-With incorrect value when loading:
-
-
-<input type="text"
-  data-wd-mask="model{@@ ##.###}check{upper}alert{The value did not match the mask.}"
-  placeholder="@@ ##.###"
-  value="123abc456"
-/>
-
-<input type="text"
-  data-wd-mask="model{@@ ##.###}check{upper}alert{The value did not match the mask.}"
-  placeholder="@@ ##.###"
-  value="23abc45"
-/>
-
-<input type="text"
-  data-wd-mask="check{upper}"
-  placeholder="Apply capital letters."
-  value=""
-/>
-
-

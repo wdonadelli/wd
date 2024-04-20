@@ -4274,8 +4274,7 @@ const wd = (function() {
 					let matrix = this.matrix();
 					matrix.forEach(function(row,i,ar) {
 						row.forEach(function (col,j,ac) {
-							//FIXME o que fazer com 10% e 5!?
-							if (!__Type(col).finite) {
+							if (!__Type(col).finite || (/[!%]$/).test(col)) {
 								col = col.split("\"").join("\"\"");
 								col = "\""+col+"\"";
 							}
@@ -7349,7 +7348,7 @@ const wd = (function() {
 
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wdMask(''node''  e, ''string'' event)``
+	/**###### ``**function** ''void'' data_wdValue(''node''  e, ''string'' event)``
 	Função vinculada ao atributo HTML ``data-wd-mask`` cujo objetivo é definir uma máscara para o campo e checar seu valor utilizando as ferramentas ``WDmain.mask``. Possui múltiplos atributos e grupo único. Para definir a função no parâmetro, deverá ser informado seu nome, devendo estar dentro do escopo principal (window) utilizando as palavras chaves ``var`` ou ``function``:
 	|Nome|Descrição|Obrigatório|
 	|model|Modelo da máscara|Não|
@@ -7376,6 +7375,71 @@ const wd = (function() {
 			node.attribute("textContent", mask);
 		return;
 	};
+
+
+
+
+	/**###### ``**function** ''void'' data_wdValue(''node''  e, ''string'' event)``
+	Função vinculada ao atributo HTML ``data-wd-mask`` cujo objetivo é definir uma máscara para o campo e checar seu valor utilizando as ferramentas ``WDmain.mask``. Possui múltiplos atributos e grupo único. Para definir a função no parâmetro, deverá ser informado seu nome, devendo estar dentro do escopo principal (window) utilizando as palavras chaves ``var`` ou ``function``:
+	|Nome|Descrição|Obrigatório|
+	|model|Modelo da máscara|Não|
+	|alert|Mensagem a ser exibida se a máscara não casar (funciona somente em campos de formulário)|Não|
+	|check|Nome da função que checará e retornará o valor da máscara (em caso de falha, retornar string vazia)|Não|**/
+	function data_wdValue(e, event) {//FIXME mask, fail, validity, output
+		if (!("wdValue" in e.dataset)) return;
+		let data = __String(e.dataset.wdValue).wdNotation[0];
+		if (!__Type(data).object) return;
+		const node    = __Node(e);
+		const emask   = ["wddataset", "wdreload", "focusout"];
+		const eoput   = ["wddataset", "wdreload", "input"];
+		const target  = "$$" in data ? data.$$ : ("$" in data ? data.$ : null);
+		const attr    = node.form ? "value" : "textContent";
+		node.validity = "";
+
+
+
+
+		/* 1º Valor de saída */
+		if (eoput.indexOf(event.type) >= 0 && __Type(data.output).function && target !== null) {
+
+
+
+			const input = event.type === "input";
+			const elem  = event.target;
+			const src   = __Type(target).value;
+			const calc  = !input ? true : (src.indexOf(elem) >= 0);
+			if (calc) node.attribute(attr, data.output(e));
+			console.log(input, elem, src, calc, "--------------------------------------");
+
+
+		}
+
+		/* 2º Aplicação de máscara */
+		if (emask.indexOf(event.type) >=0 && __Type(data.mask).nonempty) {
+			let text  = node.attribute(attr);
+			let value = WD(text).mask(data.mask);
+			if (text.trim() !== "") {
+				if (value === "")
+					node.validity = __Type(data.fail).nonempty ? data.fail : data.mask;
+				else
+					node.attribute(attr, value);
+			}
+		}
+
+		/* 3º Validação do valor */
+		if (__Type(data.validity).function)
+			node.validity = data.validity(e, node.validity !== "");
+
+		return;
+
+
+
+
+
+
+	};
+
+
 
 
 
@@ -7428,36 +7492,6 @@ const wd = (function() {
 		e[attr] = val;
 		return WD(e).data({wdUrl: null});
 	}
-
-
-
-
-
-
-
-/*----------------------------------------------------------------------------*/
-	function data_wdOutput(e, load) { /* FIXME pendente Atribui valor ao target: data-wd-output=${target}call{} */
-		let output = __Query("[data-wd-output]").$$;
-		if (output === null) return;
-		/* looping pelos elementos com data-wd-output no documento */
-		for (let i = 0; i < output.length; i++) {
-			let elem   = output[i];
-			let data   = wd_html_dataset_value(elem, "wdOutput")[0];
-			let target = __Query.$$$(data);
-			if (!("call" in data) || WD(window[data["call"]]).type !== "function")
-				continue;
-			/* looping pelos elementos citados no atributo data-wd-output */
-			for (let j = 0; j < target.length; j++) {
-				if (target[j] === e || load === true) {
-					let test = new WDform(elem);
-					let attr = test.type !== null ? "value" : "textContent";
-					elem[attr] = window[data["call"]]();
-					break;
-				}
-			}
-		}
-		return;
-	};
 
 /*----------------------------------------------------------------------------*/
 	/**###### ``**function** ''void'' navLink(''node''  e, ''string'' event)``
@@ -7515,13 +7549,11 @@ const wd = (function() {
 
 		/*-- (re)organizar página após concluir requisições --*/
 		WD.$$("[data-wd-filter]").forEach(function(x) {data_wdFilter(x, ev);});
-		WD.$$("[data-wd-mask]").forEach(function(x)   {data_wdMask(x, ev);});
+		WD.$$("[data-wd-value]").forEach(function(x)  {data_wdValue(x, ev);});
 		WD.$$("[data-wd-click]").forEach(function(x)  {data_wdClick(x, ev);});
 		WD.$$("[data-wd-chart]").forEach(function(x)  {data_wdChart(x, ev);});
 		WD.$$("[data-wd-url]").forEach(function(x)    {data_wdUrl(x, ev);});
 		WD.$$("[data-wd-code]").forEach(function(x)   {data_wdCode(x, ev);});
-
-		data_wdOutput(document, ev);//FIXME que porra é essa?
 
 		wdOnResize(ev);
 		return;
@@ -7590,12 +7622,11 @@ const wd = (function() {
 				case "wdLoad":   {wdOnReload(ev);               break;}
 				case "wdRepeat": {wdOnReload(ev);               break;}
 				case "wdFilter": {data_wdFilter(ev.target, ev); break;}
-				case "wdMask":   {data_wdMask(ev.target, ev);   break;}
+				case "wdValue":  {data_wdValue(ev.target, ev);  break;}
 				case "wdClick":  {data_wdClick(ev.target, ev);  break;}
 				case "wdDevice": {data_wdDevice(ev.target, ev); break;}
 				case "wdChart":  {data_wdChart(ev.target, ev);  break;}
 				case "wdCode":   {data_wdCode(ev.target, ev);   break;}
-				case "wdOutput": {data_wdOutput(ev.target, ev); break;}
 				case "wdUrl":    {data_wdUrl(ev.target, ev);    break;}
 			};
 		}
@@ -7638,7 +7669,7 @@ const wd = (function() {
 			let delta = now - stamp;
 			if (delta >= __KEYTIMERANGE) {
 				data_wdFilter(ev.target, ev);
-				data_wdOutput(ev.target, ev);
+				WD.$$("[data-wd-value]").forEach(function(x) {data_wdValue(x, ev);});
 			}
 			return;
 		}, __KEYTIMERANGE);
@@ -7650,7 +7681,7 @@ const wd = (function() {
 	Disparador a ser invocado ao sair de um campo editável (focusout).**/
 	function wdOnFocusOut(ev) {
 		if (__UNDERMAINTENANCE) console.log({wdOnFocusOut: ev, target: ev.target});
-		data_wdMask(ev.target, ev);
+		data_wdValue(ev.target, ev);
 		data_wdCode(ev.target, ev);
 		return;
 	};
