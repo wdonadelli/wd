@@ -3192,7 +3192,7 @@ const wd = (function() {
 				}
 			}
 		},
-		/**. ``''any'' value(''any'' x)``: Define e retorna o texto do formulário. Se o formulário aceita múltiplos valores, o valor retornado será uma lista.**/
+		/**. ``''any'' text(''any'' x)``: Define e retorna o texto do formulário. Se o formulário aceita múltiplos valores, o valor retornado será uma lista.**/
 		text: {
 			value: function(x) {
 				if (!this.form) return;
@@ -3430,7 +3430,7 @@ const wd = (function() {
 				/*-- RETORNAR ATRIBUTO -----------------------------------------------*/
 				name = name.trim();
 				if (arguments.length === 1) {
-					/*-- atributo de formulário -- */
+					/*-- atributos de formulário -- */
 					if (this.form) {
 						switch(name) {
 								case "value":       return this.value();
@@ -3438,7 +3438,7 @@ const wd = (function() {
 								case "name":        return this.name;
 						}
 					}
-					/*-- atributo com comportamento especial --*/
+					/*-- atributos com comportamento especial --*/
 					if (this._elem) {
 						switch(name) {
 							case "style":     return this.style;
@@ -3447,12 +3447,12 @@ const wd = (function() {
 							case "dataset":   return this.dataset;
 						}
 					}
-					/*-- atributo de objeto --*/
+					/*-- atributos de objeto --*/
 					if (name in this.node) return this.node[name];
-					/*-- ATRIBUTOS DE ELEMENTO HTML --*/
+					/*-- atributos de elemento html --*/
 					if (this._elem && "getAttribute" in this.node)
 						return this.node.getAttribute(name);
-					/*-- NÃO LOCALIZADO --*/
+					/*-- não localizado --*/
 					return undefined;
 				}
 				/*-- DEFINIR ATRIBUTO ------------------------------------------------*/
@@ -3493,7 +3493,7 @@ const wd = (function() {
 							this.node[name] = value;
 						return this.attribute(name);
 					}
-					/*-- atributo html --*/
+					/*-- atributos html --*/
 					if (this._elem) {
 						if (value === null)
 							this.node.removeAttribute(name);
@@ -3501,7 +3501,7 @@ const wd = (function() {
 							this.node.setAttribute(name, value);
 						return this.attribute(name);
 					}
-					/*-- atributo não html --*/
+					/*-- atributos não html --*/
 					if (value === null)
 						delete this.node[name];
 					else
@@ -3883,7 +3883,7 @@ const wd = (function() {
 
 
 
-		/** .``''void'' insertTag(''string'' tag, ''integer'' start, ''integer'' end)``: Insere uma ``tag`` HTML entre os índices ``start`` e ``end`` do conteúdo textual. Método destrutivo, não utilizar se houver conteúdo editável no nó.**/
+		/**. ``''void'' insertTag(''string'' tag, ''integer'' start, ''integer'' end)``: Insere uma ``tag`` HTML entre os índices ``start`` e ``end`` do conteúdo textual. Método destrutivo, não utilizar se houver conteúdo editável no nó.**/
 		insertTag: {
 			value: function(tag, start, end) {
 				if (!this._elem) return;
@@ -3920,7 +3920,7 @@ const wd = (function() {
 				return this.node.innerHTML;
 			}
 		},
-		/** .``''object'' textMatch(''regexp|string'' search)``: Localiza dentro do conteúdo textual do nó os índices de início e fim de ``search`` em um objeto contendo os atributos ``init`` e ``last``, retorna ou nulo caso não encontre.**/
+		/**. ``''object'' textMatch(''regexp|string'' search)``: Localiza dentro do conteúdo textual do nó os índices de início e fim de ``search`` em um objeto contendo os atributos ``init`` e ``last``, retorna ou nulo caso não encontre.**/
 		textMatch: {
 			value: function(search) {
 				if (!this._elem) return;
@@ -6974,7 +6974,7 @@ const wd = (function() {
 
 /*============================================================================*/
 /**#### Atributos dataset
-	###### ``**function** ''void'' data_wdLoad(''node''  e, ''string'' event)``
+	###### ``**function** ''void'' data_wdLoad(''node''  e, ''object'' event)``
 	Função vinculada ao atributo HTML ``data-wd-load`` cujo objetivo é carregar arquivo HTML utilizando as ferramentas ``WDnode.load`` e ``WD.send``. Possui múltiplos atributos e grupo único:
 	|Nome|Descrição|Obrigatório|
 	|path|Caminho para o arquivo HTML externo a ser carregado|Sim|
@@ -6996,7 +6996,7 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wdRepeat(''node''  e, ''string'' event)``
+	/**###### ``**function** ''void'' data_wdRepeat(''node''  e, ''object'' event)``
 	Função vinculada ao atributo HTML ``data-wd-repeat`` cujo objetivo é clonar elementos filhos a partir de parâmentros contidos em um arquivo JSON ou CSV utilizando as ferramentas ``WDnode.repeat`` e ``WD.send``. Possui múltiplos atributos e grupo único:
 	|Nome|Descrição|Obrigatório|
 	|path|Caminho para o arquivo JSON ou CSV a ser carregado|Sim|
@@ -7028,7 +7028,7 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wdSet(''node''  e, ''string'' event)``
+	/**###### ``**function** ''void'' data_wdSet(''node''  e, ''object'' event)``
 	Função vinculada ao atributo HTML ``data-wd-set`` cujo objetivo é aplicar atributos aos elementos partir de parâmentros contidos em um arquivo JSON ou utilizando a ferramenta ``WDnode.set``. Possui múltiplos atributos e grupos. Se o atributo ``path`` for informado, os valores dos atributos serão executados a partir do arquivo JSON especificado, caso contrário, serão considerados aqueles informados no atributo HTML:
 	|Nome|Descrição|Obrigatório|
 	|path|Caminho para o arquivo JSON a ser carregado|Não|
@@ -7067,7 +7067,7 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wdChart(''node''  e, ''string'' event)``
+	/**###### ``**function** ''void'' data_wdChart(''node''  e, ''object'' event)``
 	Função vinculada ao atributo HTML ``data-wd-chart`` cujo objetivo é criar um gráfico 2D a partir de uma tabela, um arquivo CSV ou parâmetros FIXME de dados como filho do elemento possuidor do atributo. Possui múltiplos atributos e grupo único. Para definir funções nos parâmetros, deverá ser informado seu nome e a função deve estar dentro do escopo principal (window) utilizando as palavras chaves ``var`` ou ``function``:
 	|Nome|Descrição|Obrigatório|
 	|xLabel|Rótulo do eixo ''x''.|Não|
@@ -7121,7 +7121,7 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wdSend(''node''  e, ''string'' event)``
+	/**###### ``**function** ''void'' data_wdSend(''node''  e, ''object'' event)``
 	Função vinculada ao atributo HTML ``data-wd-send`` cujo objetivo é efetuar requisições web utilizando a ferramenta ``WDnode.repeat``. Possui múltiplos atributos e grupos. Os atributos possuem os mesmo valores do argumento ``options`` de WD.send acrescidos dos abaixo relacionados. Para definir funções nos parâmetros, deverá ser informado seu nome e a função deve estar dentro do escopo principal (window) utilizando as palavras chaves ``var`` ou ``function``:
 	|Nome|Descrição|Obrigatório|
 	|path|Caminho para o arquivo a enviar a requisição|Sim|
@@ -7169,7 +7169,7 @@ const wd = (function() {
 
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wdCode(''node''  e, ''string'' event)``FIXME acertar esse texto
+	/**###### ``**function** ''void'' data_wdCode(''node''  e, ''object'' event)``FIXME acertar esse texto
 	Função vinculada ao atributo HTML ``data-wd-display`` cujo objetivo é manipular a exibição de nós, seus irmãos e filhos utilizando a ferramenta ``WDnode.display``. Possui múltiplos atributos e grupos:
 	|Nome|Descrição|Obrigatório|
 
@@ -7217,7 +7217,7 @@ const wd = (function() {
 
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wdClick(''node''  e, ''string'' event)``
+	/**###### ``**function** ''void'' data_wdClick(''node''  e, ''object'' event)``
 	Função vinculada ao atributo HTML ``data-wd-click`` cujo objetivo é efetuar um autoclique ao elemento. Possui valor simples e opcional. Caso um número inteiro maior que zero seja informado, o clique irá ser executado a cada milisegundos conforme valor definido.**/
 	function data_wdClick(e, event) { //FIXME pendente
 		if (!("wdClick" in e.dataset)) return;
@@ -7233,7 +7233,7 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wdFilter(''node''  e, ''string'' event)``
+	/**###### ``**function** ''void'' data_wdFilter(''node''  e, ''object'' event)``
 	Função vinculada ao atributo HTML ``data-wd-filter`` cujo objetivo é filtrar os nós filhos que contenham o conteúdo informado utilizando a ferramenta ``WDnode.filter``. Possui múltiplos atributos e grupos:
 	|Nome|Descrição|Obrigatório|
 	|chars|Determina a quantidade mínima de caracteres para executar a busca|Não|
@@ -7253,7 +7253,7 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wdTsort(''node''  e, ''string'' event)``
+	/**###### ``**function** ''void'' data_wdTsort(''node''  e, ''object'' event)``
 	Função vinculada ao atributo HTML ``data-wd-tsort`` cujo objetivo é ordenar colunas específicas de tabelas. Não possui atributo.**/
 	function data_wdTsort(e, event) {
 		if (!("wdTsort" in e.dataset)) return;
@@ -7275,7 +7275,7 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wdDevice(''node''  e, ''string'' event)``
+	/**###### ``**function** ''void'' data_wdDevice(''node''  e, ''object'' event)``
 	Função vinculada ao atributo HTML ``data-wd-device`` cujo objetivo é manipular o atributo ``class`` conforme mudança no tamanho da tela. Possui múltiplos atributos e grupo único:
 	|Nome|Descrição|Obrigatório|
 	|desktop|Estilos CSS separados por espaço a serem utilizados quando a tela corresponder a um desktop.|Não|
@@ -7305,7 +7305,7 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wdJump(''node''  e, ''string'' event)``
+	/**###### ``**function** ''void'' data_wdJump(''node''  e, ''object'' event)``
 	Função vinculada ao atributo HTML ``data-wd-jump`` cujo objetivo é fazer saltos do nó entre os nós informados. Possui atributo simples e grupo único:
 	|Nome|Descrição|Obrigatório|
 	|$ ou $$|Seletor CSS dos elementos que receberão o nó|Sim|**/
@@ -7348,95 +7348,79 @@ const wd = (function() {
 
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wdValue(''node''  e, ''string'' event)``
-	Função vinculada ao atributo HTML ``data-wd-mask`` cujo objetivo é definir uma máscara para o campo e checar seu valor utilizando as ferramentas ``WDmain.mask``. Possui múltiplos atributos e grupo único. Para definir a função no parâmetro, deverá ser informado seu nome, devendo estar dentro do escopo principal (window) utilizando as palavras chaves ``var`` ou ``function``:
-	|Nome|Descrição|Obrigatório|
-	|model|Modelo da máscara|Não|
-	|alert|Mensagem a ser exibida se a máscara não casar (funciona somente em campos de formulário)|Não|
-	|check|Nome da função que checará e retornará o valor da máscara (em caso de falha, retornar string vazia)|Não|**/
-	function data_wdMask(e, event) { /* FIXME pendente Máscara: data-wd-mask="model{mask}call{callback}msg{msg}" */
-		if (!("wdMask" in e.dataset)) return;
-		let data = __String(e.dataset.wdMask).wdNotation[0];
-		if (!__Type(data).object) return;
-		let node = __Node(e);
-		let text = node.attribute("textContent");
-		let mask = "";
-		node.validity = "";
-		if (text.trim() === "")   return;
-		if ("model" in data)
-			mask = WD(text).mask(data.model, window[data.check]);
-		else if (__Type(window[data.check]).function)
-			mask = window[data.check](text);
-		else
-			return;
-		if (mask.trim() === "")
-			node.validity = "alert" in data ? data.alert : data.model;
-		else
-			node.attribute("textContent", mask);
-		return;
-	};
-
-
-
-
-	/**###### ``**function** ''void'' data_wdValue(''node''  e, ''string'' event)``
-	Função vinculada ao atributo HTML ``data-wd-mask`` cujo objetivo é definir uma máscara para o campo e checar seu valor utilizando as ferramentas ``WDmain.mask``. Possui múltiplos atributos e grupo único. Para definir a função no parâmetro, deverá ser informado seu nome, devendo estar dentro do escopo principal (window) utilizando as palavras chaves ``var`` ou ``function``:
-	|Nome|Descrição|Obrigatório|
-	|model|Modelo da máscara|Não|
-	|alert|Mensagem a ser exibida se a máscara não casar (funciona somente em campos de formulário)|Não|
-	|check|Nome da função que checará e retornará o valor da máscara (em caso de falha, retornar string vazia)|Não|**/
-	function data_wdValue(e, event) {//FIXME mask, fail, validity, output
+	/**###### ``**function** ''void'' data_wdValue(''node''  e, ''object'' event)``
+	Função vinculada ao atributo HTML ``data-wd-value`` cujos objetivos são:
+	- Aplicar e validar máscara;
+	- Validar dados;
+	- Renderizar dados; e
+	- Obter e definir valores da URL.
+	Possui múltiplos atributos e grupo único:
+	|Nome|Descrição|
+	|mask|Define o modelo da máscara a ser aplicada ao valor.|
+	|fail|Texto do erro da máscara.|
+	|$$ ou $|Seletores CSS dos elementos manipuladores de valor.|
+	|url|blablabalabl|
+	|validity|Nome da função a ser chamada para validar a máscara ou renderizar valores.|
+	Quando ``validity`` é chamada, a função receberá dois argumentos, o nó que contém o atributo e uma string que informa o tipo de verificação, que pode ser ''mask'', ''output'' ou ''validity''.
+	Quando o conteúdo do nó casa com o modelo de máscara, o nó receberá o resultado da aplicação da máscara ao perder o foco. Caso seja necessária uma validação complementar, ``validity`` precisa ser definida para efetuar esse trabalho e receberá como segundo argumento o valor ''mask''. Se a função validar o conteúdo textual do nó, a função deverá retornar uma string vazia, caso contrário, uma mensagem de erro.
+	Quando o conteúdo do nó não casa com a máscara, o nó assumirá o conteúdo de ``fail`` como mensagem de erro ao perder o foco. Se ``fail`` não estiver definido, receberá como mensagem de erro o modelo da máscara.
+	Quando um evento de digitação de texto for disparado nos nós definidos por ``$`` oou ``$$``, o nó que contém o atributo chamará a função definida em ``validity`` para definir o conteúdo textual desse nó e receberá como segundo argumento a string ''output''. O valor retornado pela função deverá ser o valor a ser definido ao conteúdo textual do nó.
+	Se ``validity`` for definida sem a definição de máscara ou manipuladores de valor, a função receberá como segundo argumento o valor ''validity'' e deverá retornar uma string vazia em caso de ratificação da validade do valor ou a mensagem de erro caso contrário.
+	FIXME url ainda não sei**/
+	function data_wdValue(e, event) {
 		if (!("wdValue" in e.dataset)) return;
-		let data = __String(e.dataset.wdValue).wdNotation[0];
+		let data     = __String(e.dataset.wdValue).wdNotation[0];
 		if (!__Type(data).object) return;
-		const node    = __Node(e);
-		const emask   = ["wddataset", "wdreload", "focusout"];
-		const eoput   = ["wddataset", "wdreload", "input"];
-		const target  = "$$" in data ? data.$$ : ("$" in data ? data.$ : null);
-		const attr    = node.form ? "value" : "textContent";
-		node.validity = "";
+		const node   = __Node(e);
+		const target = data.$$ || data.$ || undefined;
+		const type   = event.type;
+		const check  = (function() {
+			const ev = ["wddataset", "wdreload", "input", "focusout"];
+			if (!__Type(data.validity).function) return false;
+			if (ev.indexOf(type) < 0)            return false;
+			return true;
+		})();
+		const output = (function() {
+			const ev = ["wddataset", "wdreload", "input"];
+			if (!check)                return false;
+			if (!__Type(target).array) return false;
+			if (target.length === 0)   return false;
+			if (ev.indexOf(type) < 0)  return false;
+			if (type !== "input")      return true;
+			return target.indexOf(event.target) >= 0;
+		})();
+		const mask   = (function() {
+			const ev = ["wddataset", "wdreload", "input", "focusout"];
+			if (!__Type(data.mask).nonempty) return false;
+			if (ev.indexOf(type) < 0)        return false;
+			if (type === "input" && !output) return false;
+			return true;
+		})();
 
+		console.log({check: check, output: output, mask: mask});
 
-
-
-		/* 1º Valor de saída */
-		if (eoput.indexOf(event.type) >= 0 && __Type(data.output).function && target !== null) {
-
-
-
-			const input = event.type === "input";
-			const elem  = event.target;
-			const src   = __Type(target).value;
-			const calc  = !input ? true : (src.indexOf(elem) >= 0);
-			if (calc) node.attribute(attr, data.output(e));
-			console.log(input, elem, src, calc, "--------------------------------------");
-
-
+		/*-- 1º Definir valor pelos manipuladores --*/
+		if (output) {
+			node.attribute("textContent", data.validity(e, "output"));
 		}
-
-		/* 2º Aplicação de máscara */
-		if (emask.indexOf(event.type) >=0 && __Type(data.mask).nonempty) {
-			let text  = node.attribute(attr);
-			let value = WD(text).mask(data.mask);
-			if (text.trim() !== "") {
-				if (value === "")
-					node.validity = __Type(data.fail).nonempty ? data.fail : data.mask;
-				else
-					node.attribute(attr, value);
+		/*-- 2º Checar a aplicação de máscara --*/
+		if (mask) {
+			const text  = node.attribute("textContent");
+			const value = WD(text).mask(data.mask);
+			const fail  = __Type(data.fail);
+			if (text === "") {
+				node.validity = "";
+			} else if (value === "") {
+				node.validity = fail.nonempty ? data.fail : data.mask;
+			} else {
+				node.attribute("textContent", value);
+				node.validity = check ? data.validity(e, "mask") : "";
 			}
 		}
-
-		/* 3º Validação do valor */
-		if (__Type(data.validity).function)
-			node.validity = data.validity(e, node.validity !== "");
-
+		/*-- 3º Sem máscara ou manipuladores, verificar conteúdo --*/
+		if (check && !mask && !output)
+			node.validity = data.validity(e, "validity");
 		return;
-
-
-
-
-
-
 	};
 
 

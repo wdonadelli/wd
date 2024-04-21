@@ -2,42 +2,12 @@
 	<h4>mask</h4>
 
 	<script>
-		function myValidity(e, fail) {
+		function myValidity(e, type) {
 			let val = e.value;
-			let dg  = (/00$/).test(val);
-			if (fail) {
-				e.style.backgroundColor = "yellow";
-				return;
-			}
-			if (val.trim() === "") {
-				e.style.backgroundColor = null;
-				return;
-			}
-			e.style.backgroundColor = dg ? "green" : "yellow";
-			return dg ? "" : "The check digit must be \"00\"!";
+			let dv  = (/00$/).test(val);
+			return dv ? "" : "The check digit must be \"00\"!";
 		}
-	</script>
 
-	<dl>
-		<dt>Element</dt>
-		<dd data-wd-value="mask{###.###-##}" contenteditable="true">a1234-202456789</dd>
-		<dt>Form (with fail)</dt>
-		<dd>
-			<input type="text" value="a123456789" data-wd-value="mask{###.###-##}fail{The mask didn't fit!}" />
-		</dd>
-		<dt>Form (without fail)</dt>
-		<dd>
-			<input type="text" value="a123456789" data-wd-value="mask{###.###-##}" />
-		</dd>
-		<dt>Form (with fail and validity)</dt>
-		<dd>
-			<input type="text" value="a123456789" data-wd-value="mask{###.###-##}fail{The mask didn't fit!}validity(myValidity)" />
-		</dd>
-	</dl>
-
-	<h4>output</h4>
-
-	<script>
 		function mySum(e) {
 			const target = wd.$$("#mySource tbody tr > td:first-child");
 			let calc = 0;
@@ -48,6 +18,7 @@
 			e.style.color = calc < 0 ? "red" : null;
 			return calc;
 		}
+
 		function myAvg(e) {
 			const target = wd.$$("#mySource tbody tr > td:last-child");
 			let calc = 0;
@@ -62,7 +33,28 @@
 			e.style.color = item === 0 ? "red" : null;
 			return item === 0 ? "NaN" : calc/item;
 		}
+
 	</script>
+
+	<dl>
+		<dt>Element</dt>
+		<dd data-wd-value="mask{###.###-##}" contenteditable="true">20245678</dd>
+		<dt>Form (mask/fail)</dt>
+		<dd>
+			<input type="text" value="a12345678" data-wd-value="mask{###.###-##}fail{The mask didn't fit!}" />
+		</dd>
+		<dt>Form (mask)</dt>
+		<dd>
+			<input type="text" value="a12345678" data-wd-value="mask{###.###-##}" />
+		</dd>
+		<dt>Form (mask/fail/validity)</dt>
+		<dd>
+			<input type="text" value="a12345678" data-wd-value="mask{###.###-##}fail{The mask didn't fit!}validity(myValidity)" />
+		</dd>
+	</dl>
+
+	<h4>output</h4>
+
 
 	<table border="1" id="mySource" style="margin: auto;">
 		<thead>
@@ -75,8 +67,8 @@
 		</tbody>
 		<tfoot>
 			<tr>
-				<td data-wd-value="$${#mySource tbody tr > td:first-child}output(mySum)"></td>
-				<td data-wd-value="$${#mySource tbody tr > td:last-child}output(myAvg)"></td>
+				<td data-wd-value="$${#mySource tbody tr > td:first-child}validity(mySum)"></td>
+				<td data-wd-value="$${#mySource tbody tr > td:last-child}validity(myAvg)"></td>
 			</tr>
 		</tfoot>
 	</table>

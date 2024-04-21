@@ -8,14 +8,12 @@
 	{"target": "filter"},
 	{"target": "jump"},
 	{"target": "load"},
-	{"target": "mask"},
+	{"target": "value"},
 	{"target": "no-bubbles"},
-	{"target": "output"},
 	{"target": "repeat"},
 	{"target": "send"},
 	{"target": "set"},
 	{"target": "shared"},
 	{"target": "tsort"},
-	{"target": "url"},
 	{"target": "extra"}
 ]
