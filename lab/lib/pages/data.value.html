@@ -2,7 +2,7 @@
 	<h4>mask</h4>
 
 	<script>
-		function myValidity(e, type) {
+		function myvalid(e, type) {
 			let val = e.value;
 			let dv  = (/00$/).test(val);
 			return dv ? "" : "The check digit must be \"00\"!";
@@ -47,9 +47,9 @@
 		<dd>
 			<input type="text" value="a12345678" data-wd-value="mask{###.###-##}" />
 		</dd>
-		<dt>Form (mask/fail/validity)</dt>
+		<dt>Form (mask/fail/valid)</dt>
 		<dd>
-			<input type="text" value="a12345678" data-wd-value="mask{###.###-##}fail{The mask didn't fit!}validity(myValidity)" />
+			<input type="text" value="a12345678" data-wd-value="mask{###.###-##}fail{The mask didn't fit!}valid(myvalid)" />
 		</dd>
 	</dl>
 
@@ -67,8 +67,8 @@
 		</tbody>
 		<tfoot>
 			<tr>
-				<td data-wd-value="$${#mySource tbody tr > td:first-child}validity(mySum)"></td>
-				<td data-wd-value="$${#mySource tbody tr > td:last-child}validity(myAvg)"></td>
+				<td data-wd-value="$${#mySource tbody tr > td:first-child}output(mySum)"></td>
+				<td data-wd-value="$${#mySource tbody tr > td:last-child}output(myAvg)"></td>
 			</tr>
 		</tfoot>
 	</table>

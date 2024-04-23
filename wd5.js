@@ -7369,58 +7369,56 @@ const wd = (function() {
 	FIXME url ainda não sei**/
 	function data_wdValue(e, event) {
 		if (!("wdValue" in e.dataset)) return;
-		let data     = __String(e.dataset.wdValue).wdNotation[0];
-		if (!__Type(data).object) return;
+		const data    = __String(e.dataset.wdValue).wdNotation[0];
+		const trigger = ["wddataset", "wdreload", "input", "focusout"];
+		if (!__Type(data).object || trigger.indexOf(event.type) < 0) return;
 		const node   = __Node(e);
 		const target = data.$$ || data.$ || undefined;
-		const type   = event.type;
-		const check  = (function() {
-			const ev = ["wddataset", "wdreload", "input", "focusout"];
-			if (!__Type(data.validity).function) return false;
-			if (ev.indexOf(type) < 0)            return false;
+		function valid() {
+			if (!__Type(data.valid).function) return false;
+			node.validity = data.valid(e);
 			return true;
-		})();
-		const output = (function() {
-			const ev = ["wddataset", "wdreload", "input"];
-			if (!check)                return false;
-			if (!__Type(target).array) return false;
-			if (target.length === 0)   return false;
-			if (ev.indexOf(type) < 0)  return false;
-			if (type !== "input")      return true;
-			return target.indexOf(event.target) >= 0;
-		})();
-		const mask   = (function() {
-			const ev = ["wddataset", "wdreload", "input", "focusout"];
+		}
+
+		function mask() {//FIXME não cabe máscará em fomrulário file
 			if (!__Type(data.mask).nonempty) return false;
-			if (ev.indexOf(type) < 0)        return false;
-			if (type === "input" && !output) return false;
-			return true;
-		})();
-
-		console.log({check: check, output: output, mask: mask});
-
-		/*-- 1º Definir valor pelos manipuladores --*/
-		if (output) {
-			node.attribute("textContent", data.validity(e, "output"));
-		}
-		/*-- 2º Checar a aplicação de máscara --*/
-		if (mask) {
-			const text  = node.attribute("textContent");
-			const value = WD(text).mask(data.mask);
-			const fail  = __Type(data.fail);
-			if (text === "") {
+			const txt = node.attribute("textContent");
+			const val = WD(txt).mask(data.mask);
+			if (txt === "") {
 				node.validity = "";
-			} else if (value === "") {
-				node.validity = fail.nonempty ? data.fail : data.mask;
+			} else if (val === "") {
+				node.validity = __Type(data.fail).nonempty ? data.fail : data.mask;
 			} else {
-				node.attribute("textContent", value);
-				node.validity = check ? data.validity(e, "mask") : "";
+				node.attribute("textContent", val);
+				if (!valid()) node.validity = "";
 			}
+			return true;
 		}
-		/*-- 3º Sem máscara ou manipuladores, verificar conteúdo --*/
-		if (check && !mask && !output)
-			node.validity = data.validity(e, "validity");
-		return;
+
+		function output(list) {
+			if (!__Type(data.output).function) return false;
+			if (list === undefined) {
+				node.attribute("textContent", data.output(e));
+				return true;
+			}
+			const input = __Type(list);
+			if (input.node && input.value.indexOf(event.target) >= 0) {
+				node.attribute("textContent", data.output(e));
+				mask();
+				return true;
+			}
+			return false;
+		}
+
+		if (event.type === "wddataset" || event.type === "wdreload") {
+			output();
+			mask();
+		}
+		else if (event.type === "input") {
+			output(target);
+		} else if (event.type === "focusout") {
+			mask();
+		}
 	};
 
 
