@@ -4178,7 +4178,6 @@ const wd = (function() {
 			set: function(x) {this._table.caption.textContent = String(x);}
 		},
 		/**. ``''array'' matrix(''array'' input)``: Define (``input``) ou retorna dados da tabela no formato de array.**/
-		//FIXME é preciso proteger os argumentos com aspas. qual separador utilizar?
 		matrix: {
 			value: function(input) {
 				/*-- retornar a matriz --*/
@@ -6683,8 +6682,7 @@ const wd = (function() {
 		- Um número inteiro negativo ''n'' exibe o filho que está a ''n'' posições atrás do elemento atual (ciclo infinito);
 		- Numeros inteiros não negativos separados pelo caractere traço (''-'') definem o intervalo de filhos a ser exibido. Os números indicam os índices inicial e final dos filhos, independente da ordem. Utilize o caractere * para designar o último elemento;
 		- Números separados pelo caractere dois pontos ('':'') organizam a exibição dos filhos em grupos de determinada quantidade. O número após o separador define a quantidade de filhos de cada grupo, devendo ser um número positivo. O número antes do separador define o grupo a ser exibido, devendo ser um número inteiro maior ou igual a zero sem sinal (utilize o caractere ''*'' para designar o último grupo). Para avançar ou retroceder nos grupos, adicione os sinais ''&plus;'' ou ''&minus;'' ao início do argumento, o número informado definirá o intervalo a avançar;
-
-		- FIXME Para ordernar colunas de tabelas, organizados da forma como ocorre em ``tbody``, informe números inteiros diferentes de zero entre colchetes e separados por vírgula (''[1,-2,+3]''). Os números correspondem às colunas da tabela (a partir de 1), o sinal indica a ordenação (positivo para crescente e negativo para decrescente) e a ordem informada define a prioridade da ordenação.**/
+		- Para ordernar colunas de tabelas (``tbody``), informe, entre colchetes, os números das colunas a ordenar separados por uma barra vertical (''&lsqb;-0&verbar;2&verbar;+3&rsqb;''). Utilize sinais para definir a ordenação, positivo para crescente e negativo para decrescente. A ordem das colunas define a prioridade da ordenação.**/
 		display: {
 			value: function(action) {
 				let check = __Type(action);
@@ -6714,8 +6712,11 @@ const wd = (function() {
 						else if (walk !== 0) node.pages((Infinity * walk), width);
 					}
 					/* ordenamento de colunas */
-					else if ((/^\[[+-]?\d+((\,[+-]?\d+)+)?\]$/).test(action)) {
-						let value = action.replace("[", "").replace("]", "").split(/\,/g);
+					else if ((/^\[[+-]?\d+((\|[+-]?\d+)+)?\]$/).test(action)) {
+						let value = action.replace(/^\[(.+)\]$/, "$1").split("|");
+						value.forEach(function(v,i,a) {
+							a[i] = (v[0] === "-" ? -1 : 1) * (Number(v.replace("-", "")) + 1);
+						});
 						node.tsort.apply(node, value);
 					}
 					/* exibições do elemento */
@@ -6766,6 +6767,7 @@ const wd = (function() {
 			}
 		},
 	});
+
 /*----------------------------------------------------------------------------*/
 	/**#### WDmatrix
 	###### ``**constructor** ''object'' WDmatrix(''any''  input, ''object'' data)``
@@ -6823,7 +6825,7 @@ const wd = (function() {
 
 
 
-		forEach: {
+		forEach: {//FIXME descrever isso, não sei para que
 			value: function(cell, callback) {
 				if (!__Type(callback).function) return;
 				let data = this._table.cell(cell, false);
@@ -6835,7 +6837,7 @@ const wd = (function() {
 						get col()    {return v.col;},
 						get value()  {return v.cell.textContent;},
 						set value(x) {v.cell.textContent = x;},
-						set style(x) {wd(v.cell).set({style: x})},
+						set style(x) {WD(v.cell).set({style: x})},
 						range: function(x) {return self.range(x);},
 					};
 					callback(cell);
@@ -6912,37 +6914,36 @@ const wd = (function() {
 		}
 		return new WDmain(input, data);
 	}
-
-	//FIXME colocar a descrição dos métodos estáticos
+	/**#### Métodos Estáticos**/
 	WD.constructor = WD;
 	Object.defineProperties(WD, {
-		/* ``''string'' version``: Retorna a versão da biblioteca.**/
+		/**. ``''string'' version``: Retorna a versão da biblioteca.**/
 		version: {value: __VERSION},
-		/* ``''object'' $(''string'' css, ''node'' root)``: Retorna um objeto do tipo nó conforme seletor ''css'' individual. O argumento opcional ''root'' é o elemento pai a ser consultado cujo valor padrão é ''document''.**/
+		/**. ``''object'' $(''string'' css, ''node'' root)``: Retorna um objeto do tipo nó conforme seletor ''css'' individual. O argumento opcional ''root'' é o elemento pai a ser consultado cujo valor padrão é ''document''.**/
 		$: {value: function(css, root) {return WD(__Query(css, root).$);}},
-		/* ``''object'' $$(''string'' css, ''node'' root)``: Retorna um objeto do tipo nó conforme seletor ''css'' múltiplo. O argumento opcional ''root'' é o elemento pai a ser consultado cujo valor padrão é ''document''.**/
+		/**. ``''object'' $$(''string'' css, ''node'' root)``: Retorna um objeto do tipo nó conforme seletor ''css'' múltiplo. O argumento opcional ''root'' é o elemento pai a ser consultado cujo valor padrão é ''document''.**/
 		$$: {value: function(css, root) {return WD(__Query(css, root).$$);}},
 
 
 		copy: {value: function(text)  {return wd_copy(text);}}, //FIXME como fica copy?
 
 
-		/* ``''object'' matrix(input)``: Retorna um objeto do tipo matriz. FIXME o que é o argumento?**/
-		matrix: {value: function(input) {return new WDmatrix(input);}},
-		/* ``''string'' device``: Retorna o tipo de tela de acordo com a biblioteca.**/
-		device: {get: function() {return __DEVICECONTROLLER.device;}},
-		/* ``''object'' today``: Retorna o objeto do tipo data com o valor atual.**/
-		today: {get: function() {return WD(__DateTime().toDateString());}},
-		/* ``''object'' now``: Retorna o objeto do tipo tempo com o valor atual.**/
-		now: {get: function() {return WD(__DateTime().toTimeString());}},
-		/* ``''object'' event``: Retorna o objeto do tipo data/tempo com o valor atual. FIXME acertar um nome para isso**/
-		event: {get: function() {return WD(__DateTime().toString());}},
-		/* ``''string'' lang``: Define ou retorna a linguagem local para uso pela biblioteca.**/
+		/**. ``''object'' matrix(''any'' input)``: Retorna um objeto do tipo matriz conforme ``input`` (table, array, csv)**/
+		matrix:  {value: function(input) {return new WDmatrix(input);}},
+		/**. ``''string'' device``: Retorna o tipo de tela de acordo com a biblioteca.**/
+		device:  {get: function() {return __DEVICECONTROLLER.device;}},
+		/**. ``''object'' today``: Retorna o objeto do tipo data com o valor atual.**/
+		today:   {get: function() {return WD(__DateTime().toDateString());}},
+		/**. ``''object'' now``: Retorna o objeto do tipo tempo com o valor atual.**/
+		now:     {get: function() {return WD(__DateTime().toTimeString());}},
+		/**. ``''object'' already``: Retorna o objeto do tipo data/tempo com o valor atual.**/
+		already: {get: function() {return WD(__DateTime().toString());}},
+		/**. ``''string'' lang``: Define ou retorna a linguagem local para uso pela biblioteca.**/
 		lang: {
 			get: function()  {return __LANG.main;},
 			set: function(x) {__LANG.user = x;}
 		},
-		/* ``''string'' currency``: Define ou retorna o código monetário para uso pela biblioteca.**/
+		/**. ``''string'' currency``: Define ou retorna o código monetário para uso pela biblioteca.**/
 		currency: {
 			get: function()  {return __LANG.currency;},
 			set: function(x) {__LANG.currency = x;}
@@ -7068,26 +7069,26 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	/**###### ``**function** ''void'' data_wdChart(''node''  e, ''object'' event)``
-	Função vinculada ao atributo HTML ``data-wd-chart`` cujo objetivo é criar um gráfico 2D a partir de uma tabela, um arquivo CSV ou parâmetros FIXME de dados como filho do elemento possuidor do atributo. Possui múltiplos atributos e grupo único. Para definir funções nos parâmetros, deverá ser informado seu nome e a função deve estar dentro do escopo principal (window) utilizando as palavras chaves ``var`` ou ``function``:
+	Função vinculada ao atributo HTML ``data-wd-chart`` cujo objetivo é criar um gráfico 2D a partir de uma tabela, um arquivo CSV ou parâmetros. Possui múltiplos atributos e grupo único:
 	|Nome|Descrição|Obrigatório|
 	|xLabel|Rótulo do eixo ''x''.|Não|
 	|yLabel|Rótulo do eixo ''y''.|Não|
 	|title|Título do gráfico.|Não|
-	|xAxis|Define o tipo de dado do eixo ''x'': number (padrão), date, time e datetime.|Não|
+	|xAxis|Define o tipo de dado do eixo ''x'': number (padrão), date, time ou datetime.|Não|
 	|ratio|Se ''true'', o gráfico será proporcional, caso contrário, será plano cartesiano.|Não|
 	|data|Lista de dados a serem plotados.|Sim|
 	|path|Caminho para o arquivo CSV contendo os dados a serem plotados.|Não|
-	|method|Tipo de requisição HTTP, ver WD.send (se path for informado)|Não|
-	|$$|Seletor CSS do formulário com os parâmetros da requição.|Não|
-	|$|Seletor CSS que identifica a tabela HTML contendo os dados a serem plotados.|Não|
+	|method|Tipo de requisição HTTP se path for informado (ver WD.send)|Não|
+	|$$|Seletor CSS do formulário com os parâmetros da requição, se path for informado.|Não|
+	|$|Seletor CSS que identifica a tabela HTML contendo os dados a serem plotados (path não pode ser informado).|Não|
 	O atributo ''data'' terá os seguintes atributos com a possibilidades de múltiplos grupos:
 	|Nome|Origem|Descrição|Obrigatório|
 	|x|Qualquer|Array com dados do eixo ''x''.|Sim|
-	|x|Arquivo CSV ou tabela|Número da coluna (''&num;c'').|Sim|
-	|y|Qualquer|Array com dados do eixo ''y'' ou nome de uma função no escopo de ''window''|Sim|
-	|y|Arquivo CSV ou tabela|Número da coluna (''&num;c'').|Sim|
+	|x|Arquivo CSV ou tabela|Número da coluna no formato ''&num;col''.|Sim|
+	|y|Qualquer|Array com dados do eixo ''y'' ou nome da função no escopo de ''window'' definida com ``var``ou ``function``.|Sim|
+	|y|Arquivo CSV ou tabela|Número da coluna no formato ''&num;col''.|Sim|
 	|label|Qualquer|Nome da curva.|Não|
-	|fit|ratio diferente de ''false''|Nome do ajuste da curva.|Não|**/
+	|fit|Qualquer|Nome do ajuste da curva (ratio não pode ser ''true'').|Não|**/
 	function data_wdChart(e, event) {
 		if (!("wdChart" in e.dataset)) return;
 		let data = __String(e.dataset.wdChart).wdNotation[0];
@@ -7358,67 +7359,62 @@ const wd = (function() {
 	|Nome|Descrição|
 	|mask|Define o modelo da máscara a ser aplicada ao valor.|
 	|fail|Texto do erro da máscara.|
-	|$$ ou $|Seletores CSS dos elementos manipuladores de valor.|
+	|$$ ou $|Seletores CSS dos elementos de entrada vinculados ao valor de saída (''output'').|
 	|url|blablabalabl|
-	|validity|Nome da função a ser chamada para validar a máscara ou renderizar valores.|
-	Quando ``validity`` é chamada, a função receberá dois argumentos, o nó que contém o atributo e uma string que informa o tipo de verificação, que pode ser ''mask'', ''output'' ou ''validity''.
-	Quando o conteúdo do nó casa com o modelo de máscara, o nó receberá o resultado da aplicação da máscara ao perder o foco. Caso seja necessária uma validação complementar, ``validity`` precisa ser definida para efetuar esse trabalho e receberá como segundo argumento o valor ''mask''. Se a função validar o conteúdo textual do nó, a função deverá retornar uma string vazia, caso contrário, uma mensagem de erro.
-	Quando o conteúdo do nó não casa com a máscara, o nó assumirá o conteúdo de ``fail`` como mensagem de erro ao perder o foco. Se ``fail`` não estiver definido, receberá como mensagem de erro o modelo da máscara.
-	Quando um evento de digitação de texto for disparado nos nós definidos por ``$`` oou ``$$``, o nó que contém o atributo chamará a função definida em ``validity`` para definir o conteúdo textual desse nó e receberá como segundo argumento a string ''output''. O valor retornado pela função deverá ser o valor a ser definido ao conteúdo textual do nó.
-	Se ``validity`` for definida sem a definição de máscara ou manipuladores de valor, a função receberá como segundo argumento o valor ''validity'' e deverá retornar uma string vazia em caso de ratificação da validade do valor ou a mensagem de erro caso contrário.
-	FIXME url ainda não sei**/
+	|valid|Nome da função, definida no escopo de ''windows'' com ''var'' ou ''function'', para validar o valor.|
+	|output|Nome da função, definida no escopo de ''windows'' com ''var'' ou ''function'', para definir o valor de saída.|
+	A função ''output'' será chamada quando os elementos de entrada dispararem um evento de ''input''. Ela também será chamada ao carregar conteúdo ou definir o atributo. A função deverá retornar o valor a ser exibido no elemento.
+	A aplicação da máscara será avalida nos carregamento de conteúdo, definição de atributo e quando o elemento perder o foco. Será chamada também no evento ''input'' quando ''output'' for chamada.
+	Quando o conteúdo não casar com a máscara, o nó assumirá como mensagem de erro o conteúdo de ``fail`` ou, se não definido, o modelo da máscara.
+	A função ''valid'' será chamada nos carregamento de conteúdo e definição de atributo. A função deve retornar o valor da mensagem de erro (formulários) ou uma string em branco se não houver.
+	Tanto ''output'' quanto ''valid'' receberão como argumento o elemento do atributo.**/
 	function data_wdValue(e, event) {
 		if (!("wdValue" in e.dataset)) return;
+		const evtype  = event.type;
 		const data    = __String(e.dataset.wdValue).wdNotation[0];
 		const trigger = ["wddataset", "wdreload", "input", "focusout"];
-		if (!__Type(data).object || trigger.indexOf(event.type) < 0) return;
+		if (!__Type(data).object || trigger.indexOf(evtype) < 0) return;
 		const node   = __Node(e);
 		const target = data.$$ || data.$ || undefined;
-		function valid() {
-			if (!__Type(data.valid).function) return false;
-			node.validity = data.valid(e);
+		const inputs = __Type(target).node ? __Type(target).value :  [];
+		const text   = node.attribute("textContent");
+		const output = (function() {
+			if (!__Type(data.output).function) return false;
+			if (evtype === "focusout")         return false;
+			if (evtype === "input" && inputs.indexOf(event.target) < 0)	return false;
 			return true;
-		}
+		})();
+		const mask   = (function() {
+			if (!__Type(data.mask).nonempty)   return false;
+			if (evtype === "input" && !output) return false;
+			return true;
+		})();
+		const valid  = (function() {
+			if (!__Type(data.valid).function)  return false;
+			if (mask) return false; /* mask chamará valid se existir */
+			if (evtype === "input" && !output) return false;
+			return true;
+		})();
 
-		function mask() {//FIXME não cabe máscará em fomrulário file
-			if (!__Type(data.mask).nonempty) return false;
-			const txt = node.attribute("textContent");
-			const val = WD(txt).mask(data.mask);
-			if (txt === "") {
+
+		if (output) {
+			node.attribute("textContent", data.output(e));
+		}
+		if (mask) {
+			const value = WD(text).mask(data.mask);
+			if (text === "") {
 				node.validity = "";
-			} else if (val === "") {
+			} else if (value === "") {
 				node.validity = __Type(data.fail).nonempty ? data.fail : data.mask;
 			} else {
-				node.attribute("textContent", val);
-				if (!valid()) node.validity = "";
+				node.attribute("textContent", value);
+				node.validity = __Type(data.valid).function ? data.valid(e) : "";
 			}
-			return true;
 		}
-
-		function output(list) {
-			if (!__Type(data.output).function) return false;
-			if (list === undefined) {
-				node.attribute("textContent", data.output(e));
-				return true;
-			}
-			const input = __Type(list);
-			if (input.node && input.value.indexOf(event.target) >= 0) {
-				node.attribute("textContent", data.output(e));
-				mask();
-				return true;
-			}
-			return false;
+		if (valid) {
+			node.validity = data.valid(e);
 		}
-
-		if (event.type === "wddataset" || event.type === "wdreload") {
-			output();
-			mask();
-		}
-		else if (event.type === "input") {
-			output(target);
-		} else if (event.type === "focusout") {
-			mask();
-		}
+		return;
 	};
 
 
