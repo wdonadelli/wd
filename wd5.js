@@ -2983,6 +2983,12 @@ const wd = (function() {
 						let check = __Type(url[i]);
 						if (check.chars) data[i] = url[i];
 					}
+					data.values = {};
+					let list = data.search.replace(/^\?/, "").replace(/\#(.+)?$/, "").split("&");
+					list.forEach(function(v,i,a) {
+						const input = v.split("=");
+						data.values[input[0]] = input[1];
+					});
 					return data;
 				} catch(e) {
 					return null;
@@ -2999,7 +3005,6 @@ const wd = (function() {
 				return this;
 			}
 		},
-
 		/**. ``''object'' json``: Retorna um objeto contendo oo conjunto de dados.**/
 		json: {
 			get: function() {
@@ -3016,12 +3021,10 @@ const wd = (function() {
 					}
 				});
 				return list;
-
-
-
 			}
-
 		},
+
+
 
 
 
@@ -6938,6 +6941,8 @@ const wd = (function() {
 		now:     {get: function() {return WD(__DateTime().toTimeString());}},
 		/**. ``''object'' already``: Retorna o objeto do tipo data/tempo com o valor atual.**/
 		already: {get: function() {return WD(__DateTime().toString());}},
+		/**. ``''object'' URL``: Retorna dados da URL.**/
+		URL:     {get: function() {return __URL().url;}},
 		/**. ``''string'' lang``: Define ou retorna a linguagem local para uso pela biblioteca.**/
 		lang: {
 			get: function()  {return __LANG.main;},
@@ -7342,12 +7347,6 @@ const wd = (function() {
 		return;
 	};
 
-
-
-
-
-
-
 /*----------------------------------------------------------------------------*/
 	/**###### ``**function** ''void'' data_wdValue(''node''  e, ''object'' event)``
 	Função vinculada ao atributo HTML ``data-wd-value`` cujos objetivos são:
@@ -7357,77 +7356,58 @@ const wd = (function() {
 	- Obter e definir valores da URL.
 	Possui múltiplos atributos e grupo único:
 	|Nome|Descrição|
-	|mask|Define o modelo da máscara a ser aplicada ao valor.|
+	|mask|Define o modelo da máscara a ser aplicada ao conteúdo.|
 	|fail|Texto do erro da máscara.|
 	|$$ ou $|Seletores CSS dos elementos de entrada vinculados ao valor de saída (''output'').|
-	|url|blablabalabl|
 	|valid|Nome da função, definida no escopo de ''windows'' com ''var'' ou ''function'', para validar o valor.|
 	|output|Nome da função, definida no escopo de ''windows'' com ''var'' ou ''function'', para definir o valor de saída.|
-	A função ''output'' será chamada quando os elementos de entrada dispararem um evento de ''input''. Ela também será chamada ao carregar conteúdo ou definir o atributo. A função deverá retornar o valor a ser exibido no elemento.
-	A aplicação da máscara será avalida nos carregamento de conteúdo, definição de atributo e quando o elemento perder o foco. Será chamada também no evento ''input'' quando ''output'' for chamada.
-	Quando o conteúdo não casar com a máscara, o nó assumirá como mensagem de erro o conteúdo de ``fail`` ou, se não definido, o modelo da máscara.
-	A função ''valid'' será chamada nos carregamento de conteúdo e definição de atributo. A função deve retornar o valor da mensagem de erro (formulários) ou uma string em branco se não houver.
-	Tanto ''output'' quanto ''valid'' receberão como argumento o elemento do atributo.**/
+	A função ''output'' será chamada quando os elementos de entrada dispararem um evento ''input''. Ela também será chamada ao carregar conteúdo ou definir o atributo. A função receberá o elemento e deverá retornar o seu valor.
+	A aplicação da máscara será avalida nos carregamento de conteúdo, definição de atributo e quando o elemento perder o foco. Será chamada também no evento ''input'' se ''output'' for chamada. Se o conteúdo não casar com a máscara, o nó assumirá como mensagem de erro o valor de ``fail`` ou o modelo da máscara.
+	A função ''valid'' será chamada nos carregamento de conteúdo e definição de atributo. A função receberá o elemento e deverá retornar o valor da mensagem de erro ou uma string em branco se não houver. No evento ''input'', ''valid'' só será executada se ''output'' tiver sido chamada.**/
 	function data_wdValue(e, event) {
 		if (!("wdValue" in e.dataset)) return;
-		const evtype  = event.type;
-		const data    = __String(e.dataset.wdValue).wdNotation[0];
-		const trigger = ["wddataset", "wdreload", "input", "focusout"];
-		if (!__Type(data).object || trigger.indexOf(evtype) < 0) return;
+		const data   = __String(e.dataset.wdValue).wdNotation[0];
+		const events = ["wdreload", "wddataset", "focusout", "input"];
+		if (!__Type(data).object || events.indexOf(event.type) < 0) return;
 		const node   = __Node(e);
 		const target = data.$$ || data.$ || undefined;
-		const inputs = __Type(target).node ? __Type(target).value :  [];
-		const text   = node.attribute("textContent");
+
 		const output = (function() {
+			const check = __Type(target);
+			const input = check.node ? check.value : [];
 			if (!__Type(data.output).function) return false;
-			if (evtype === "focusout")         return false;
-			if (evtype === "input" && inputs.indexOf(event.target) < 0)	return false;
-			return true;
-		})();
-		const mask   = (function() {
-			if (!__Type(data.mask).nonempty)   return false;
-			if (evtype === "input" && !output) return false;
-			return true;
-		})();
-		const valid  = (function() {
-			if (!__Type(data.valid).function)  return false;
-			if (mask) return false; /* mask chamará valid se existir */
-			if (evtype === "input" && !output) return false;
-			return true;
-		})();
-
-
-		if (output) {
+			if (event.type === "focusout")     return false;
+			if (event.type === "input" && input.indexOf(event.target) < 0) return false;
 			node.attribute("textContent", data.output(e));
-		}
-		if (mask) {
+			return true;
+		})();
+
+		const mask   = (function() {
+			if (!__Type(data.mask).nonempty)       return false;
+			if (event.type === "input" && !output) return false;
+			const text  = node.attribute("textContent");
 			const value = WD(text).mask(data.mask);
+			const fail  = __Type(data.fail).nonempty ? data.fail : data.mask
 			if (text === "") {
 				node.validity = "";
 			} else if (value === "") {
-				node.validity = __Type(data.fail).nonempty ? data.fail : data.mask;
+				node.validity = fail;
 			} else {
 				node.attribute("textContent", value);
-				node.validity = __Type(data.valid).function ? data.valid(e) : "";
+				node.validity = "";
 			}
-		}
-		if (valid) {
+			return true;
+		})();
+
+		const valid  = (function() {
+			if (!__Type(data.valid).function)      return  false;
+			if (event.type === "input" && !output) return false;
 			node.validity = data.valid(e);
-		}
+			return true;
+		})();
+
 		return;
 	};
-
-
-
-
-
-
-
-
-
-
-
-
 
 /*----------------------------------------------------------------------------*/
 	function data_wdShared(e, event) { /* FIXME pendente Experimental: compartilhar em redes sociais: data-wd-shared=rede */
@@ -7457,19 +7437,6 @@ const wd = (function() {
 
 		return;
 	};
-
-/*----------------------------------------------------------------------------*/
-	function data_wdUrl(e) { /* FIXME pendente define o valor informado do url no elemento data-wd-url="#" */
-		if (!("wdUrl" in e.dataset)) return;
-		let data = e.dataset.wdUrl;
-		let val  = WD.url(data);
-		if (val === null) return;
-		let test = new WDform(e);
-		let attr = test.form ? test.text : "textContent";
-		if (attr === null) return;
-		e[attr] = val;
-		return WD(e).data({wdUrl: null});
-	}
 
 /*----------------------------------------------------------------------------*/
 	/**###### ``**function** ''void'' navLink(''node''  e, ''string'' event)``
@@ -7530,7 +7497,6 @@ const wd = (function() {
 		WD.$$("[data-wd-value]").forEach(function(x)  {data_wdValue(x, ev);});
 		WD.$$("[data-wd-click]").forEach(function(x)  {data_wdClick(x, ev);});
 		WD.$$("[data-wd-chart]").forEach(function(x)  {data_wdChart(x, ev);});
-		WD.$$("[data-wd-url]").forEach(function(x)    {data_wdUrl(x, ev);});
 		WD.$$("[data-wd-code]").forEach(function(x)   {data_wdCode(x, ev);});
 
 		wdOnResize(ev);
@@ -7605,7 +7571,6 @@ const wd = (function() {
 				case "wdDevice": {data_wdDevice(ev.target, ev); break;}
 				case "wdChart":  {data_wdChart(ev.target, ev);  break;}
 				case "wdCode":   {data_wdCode(ev.target, ev);   break;}
-				case "wdUrl":    {data_wdUrl(ev.target, ev);    break;}
 			};
 		}
 		return;

@@ -5,7 +5,17 @@
 		function myvalid(e, type) {
 			let val = e.value;
 			let dv  = (/00$/).test(val);
-			return dv ? "" : "The check digit must be \"00\"!";
+			if (val === "") {
+				e.style.backgroundColor = null;
+				return "";
+			} else if (dv) {
+				e.style.backgroundColor = "lightblue";
+				return "";
+			} else {
+				e.style.backgroundColor = "yellow";
+				return "The check digit must be \"00\"!";
+			}
+			return "";
 		}
 
 		function mySum(e) {
