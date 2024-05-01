@@ -1,0 +1,32 @@
+<div>
+
+	<h4>Jump</h4>
+
+	<div class="wd-col">
+
+		<dl id="myShelf">
+			<dt>Shelf</dt>
+			<dd data-wd-move="type{jump}$${#myShelf, #myBasket, #myRecycler}">Item 1</dd>
+			<dd data-wd-move="type{jump}$${#myShelf, #myRecycler}">Item 2</dd>
+			<dd data-wd-move="type{jump}$${#myShelf, #myBasket}">Item 3</dd>
+		</dl>
+
+		<dl id="myBasket">
+			<dt>Basket</dt>
+		</dl>
+
+		<dl id="myRecycler">
+			<dt>Recycler</dt>
+		</dl>
+
+	</div>
+
+	<h4>Move</h4>
+
+	<div draggable="true" data-wd-move="type{move}${#myPoint}" class="wd-window wd-flyer wd-bg-blue wd-open wd-radius" id="myMove">
+		<header ><h4 id="myPoint">Move</h4></header>
+		<p>Text Content. Text Content. Text Content. Text Content. Text Content. </p>
+		<p>Text Content. Text Content. Text Content. Text Content. Text Content. </p>
+	</div>
+
+</div>
