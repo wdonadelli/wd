@@ -340,9 +340,12 @@ const wd = (function() {
 		"@keyframes js-wd-shrink-out {from {transform: scale(0) !important;} to {transform: scale(1) !important;}}",
 		"@keyframes js-wd-shrink-in  {from {transform: scale(1) !important;} to {transform: scale(0) !important;}}",
 		".js-wd-no-display {display: none !important;}",
-		"[data-wd-nav], [data-wd-send], [data-wd-tsort], [data-wd-set] {cursor: pointer;}",
-		"[data-wd-edit], [data-wd-shared], [data-wd-move*=\"type{jump}\"] {cursor: pointer;}",
-		"[data-wd-move*=\"type{move}\"] {cursor: move;}",
+		"[data-wd-nav],  [data-wd-send], [data-wd-tsort], [data-wd-set] {cursor: pointer;}",
+		"[data-wd-edit], [data-wd-shared] {cursor: pointer;}",
+		"[data-wd-move*=\"type{jump}\"] {cursor: pointer !important;}",
+		"[data-wd-move*=\"type{move}\"] {cursor: pointer !important;}",
+		"[data-wd-move*=\"type{move}\"][draggable=true]   {cursor: move !important;}",
+		"[data-wd-move*=\"type{move}\"][draggable=true] * {cursor: move !important;}",
 		"[data-wd-tsort]:before        {content: \"\\2195 \"; font-weight: normal;}",
 		"[data-wd-tsort=\"-1\"]:before {content: \"\\2191 \"; font-weight: normal;}",
 		"[data-wd-tsort=\"+1\"]:before {content: \"\\2193 \"; font-weight: normal;}",
@@ -7454,7 +7457,7 @@ const wd = (function() {
 	Função vinculada ao atributo HTML ``data-wd-jump`` cujo objetivo é fazer saltos do nó entre os nós informados. Possui atributo simples e grupo único:
 	|Nome|Descrição|Obrigatório|
 	|$ ou $$|Seletor CSS dos elementos que receberão o nó|Sim|**/
-	function data_wdMove(e, event) { /* Saltos de pai: data-wd-jump=$${parents}*/
+	function data_wdMove(e, event) {
 		if (!("wdMove" in e.dataset)) return;
 		const data  = __String(e.dataset.wdMove).wdNotation[0];
 		const query = data.$$ || data.$ || undefined;
@@ -7469,76 +7472,30 @@ const wd = (function() {
 			return;
 		}
 
-		if (data.type === "moveeeee") {
-			const mover = check.node && check.value.length > 0 ? check.value[0] : e;
-			const node  = __Node(mover);
-
-			if (event.type === "mouseover") {
-				mover.draggable = true;
-				return;
-			}
-			if (event.type === "mouseout") {
-				mover.draggable = false;
-				return;
-			}
-
-			if (event.type === "dragstart") {
-
-				const pos = node.position;
-				let  attr = [];
-				if (pos.position === "static") mover.style.position = "relative";
-				for (let i in pos) attr.push(i+"{"+pos[i]+"}");
-				attr.push("x{"+event.pageX+"}");
-				attr.push("y{"+event.pageY+"}");
-				e.dataset.wdMouseData = attr.join("");
-				return;
-			}
-			if (event.type === "dragend") {
-				const attr = __String(e.dataset.wdMouseData).wdNotation[0];
-				const dx   = event.pageX - attr.x;
-				const dy   = event.pageY - attr.y;
-				attr.left  = attr.left === "auto" ? 0 : number(attr.left);
-				attr.top   = attr.top  === "auto" ? 0 : number(attr.top);
-				mover.style.left = String(attr.left + dx)+"px";
-				mover.style.top  = String(attr.top  + dy)+"px";
-				if (attr.right !== "auto")
-					mover.style.right = String(number(attr.right) - dx)+"px";
-				if (attr.bottom !== "auto")
-					mover.style.bottom = String(number(attr.bottom) - dy)+"px";
-
-
-
-				//mover.draggable  = false;
-				delete e.dataset.wdMouseData;
-				return;
-			}
-		}
-
-
-
-
+		/*
+		FIXME
+		tentar usar o getBoundingClientRect() para capturar os dados do elemento
+		tentar, quando tiver $$, usar o mouseover com bubbles para definir o wdMove e draggable da caixa
+		se não tiver $$, usar o mouseover e o mouseout?
+		*/
 
 
 
 		if (data.type === "move") {
-			const point = check.node && check.value.length > 0 ? check.value[0] : e;
 			const node  = __Node(e);
 
-
-
-
+			if (event.type === "dblclick") {
+				const check = __Type(query);
+				const itsme = !check.node || check.value.length < 1 || check.value[0] === e;
+				const crate = itsme ? e : check.value[0];
+				crate.draggable = true;
+				if (!itsme) crate.dataset.wdMove = "type{move}removeWdMove{true}";
+				const sel = document.getSelection();
+				sel.empty();
+				return;
+			}
 
 			if (event.type === "dragstart") {
-				console.log(point, e, event.target, event);
-
-				//funciona meia boca e explicitOriginalTarget não é padrão
-				//if (point !== event.explicitOriginalTarget) event.preventDefault();
-				if (point !== event.explicitOriginalTarget) return;
-
-
-
-
-
 				const pos = node.position;
 				let  attr = [];
 				if (pos.position === "static") e.style.position = "relative";
@@ -7560,8 +7517,9 @@ const wd = (function() {
 					e.style.right = String(number(attr.right) - dx)+"px";
 				if (attr.bottom !== "auto")
 					e.style.bottom = String(number(attr.bottom) - dy)+"px";
-
+				e.draggable = false;
 				delete e.dataset.wdMouseData;
+				if (data.removeWdMove === true) delete e.dataset.wdMove;
 				return;
 			}
 		}
@@ -7575,6 +7533,32 @@ const wd = (function() {
 
 
 
+
+
+		if (data.type === "drag") {
+			const check = __Type(query);
+			if (!check.node) return;
+			const node  = __Node(e);
+
+			if (event.type === "dragstart") {
+
+
+
+
+
+			}
+
+
+
+
+
+
+
+
+
+
+
+		}
 
 
 
@@ -7696,43 +7680,22 @@ const wd = (function() {
 	function wdOnDataset(ev) {
 		if (__UNDERMAINTENANCE) console.log({wdOnDataset: ev, target: ev.target});
 		if (!("wdDatasetEvent" in ev.target.dataset)) return;
-		let data = ev.target.dataset.wdDatasetEvent.split(",");
+		const   data = ev.target.dataset.wdDatasetEvent.split(",");
+		const events = {
+			wdLoad:   {ev: true,  trigger: wdOnReload},
+			wdRepeat: {ev: true,  trigger: wdOnReload},
+			wdFilter: {ev: false, trigger: data_wdFilter},
+			wdValue:  {ev: false, trigger: data_wdValue},
+			wdClick:  {ev: false, trigger: data_wdClick},
+			wdDevice: {ev: false, trigger: data_wdDevice},
+			wdChart:  {ev: false, trigger: data_wdChart},
+			wdCode:   {ev: false, trigger: data_wdCode}
+		};
 		delete ev.target.dataset.wdDatasetEvent;
-		let i = -1;
-		while (++i < data.length) {
-			switch(data[i]) {
-				case "wdLoad":   {wdOnReload(ev);               break;}
-				case "wdRepeat": {wdOnReload(ev);               break;}
-				case "wdFilter": {data_wdFilter(ev.target, ev); break;}
-				case "wdValue":  {data_wdValue(ev.target, ev);  break;}
-				case "wdClick":  {data_wdClick(ev.target, ev);  break;}
-				case "wdDevice": {data_wdDevice(ev.target, ev); break;}
-				case "wdChart":  {data_wdChart(ev.target, ev);  break;}
-				case "wdCode":   {data_wdCode(ev.target, ev);   break;}
-			};
-		}
-		return;
-	};
-
-/*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' wdOnClick(''object''  ev)``
-	Disparador a ser invocado após o elemento receber um clique com o botão esquerdo do mouse (click).**/
-	function wdOnClick(ev) {
-		if (__UNDERMAINTENANCE) console.log({wdOnClick: ev, target: ev.target});
-		if (ev.which !== 1) return;
-		let elem = ev.target;
-		while (elem !== null) {
-			data_wdSend(elem, ev);
-			data_wdTsort(elem, ev);
-			data_wdEdit(elem, ev);
-			data_wdShared(elem, ev);
-			data_wdSet(elem, ev);
-			data_wdMove(elem, ev);
-			data_wdDisplay(elem, ev);
-			navLink(elem, ev);
-			/* efeito bolha */
-			elem = "wdNoBubbles" in elem.dataset ? null : elem.parentElement;
-		}
+		data.forEach(function (v,i,a) {
+			if (v in events)
+				return events[v].ev ? events[v].trigger(ev) : events[v].trigger(ev.target, ev);
+		});
 		return;
 	};
 
@@ -7781,8 +7744,43 @@ const wd = (function() {
 	Disparador a ser invocado em eventos de mouse.**/
 	function wdOnMouse(ev) {
 		if (__UNDERMAINTENANCE) console.log({wdOnMouse: ev, target: ev.target});
-		if (ev.which !== 1) return;
-		data_wdMove(ev.target, ev);
+		const events = {
+			click:      {which: 1, bubbles : true, trigger: [data_wdSend, data_wdTsort,
+			data_wdEdit, data_wdShared, data_wdSet, data_wdDisplay, navLink, data_wdMove]},
+			dblclick:   {which: 1, bubbles : true, trigger: [data_wdMove]},
+
+			mousedown:  {which: 1, bubbles : false, trigger: [data_wdMove]},
+			mouseup:    {which: 1, bubbles : false, trigger: [data_wdMove]},
+			mousemove:  {which: 1, bubbles : false, trigger: [data_wdMove]},
+			mouseenter: {which: 1, bubbles : false, trigger: [data_wdMove]},
+			mouseleave: {which: 1, bubbles : false, trigger: [data_wdMove]},
+			mouseover:  {which: 1, bubbles : false, trigger: [data_wdMove]},
+			mouseout:   {which: 1, bubbles : false, trigger: [data_wdMove]},
+
+			drag:       {which: 1, bubbles : false, trigger: [data_wdMove]},
+			dragstart:  {which: 1, bubbles : false, trigger: [data_wdMove]},
+			dragend:    {which: 1, bubbles : false, trigger: [data_wdMove]},
+		};
+		if (!(ev.type in events)) return;
+		if (ev.which !== events[ev.type].which) return;
+		events[ev.type].trigger.forEach(function (v,i,a) {
+			let elem = ev.target;
+			while (elem !== null) {
+				v(elem, ev);
+				//FIXME tem que ver esse negócio de efeito bolha
+				if (!events[ev.type].bubbles || "wdNoBubbles" in elem.dataset)
+					elem = null;
+				else
+					elem = elem.parentElement;
+			}
+		});
+
+
+
+
+
+
+
 		return;
 	};
 
@@ -7798,7 +7796,7 @@ const wd = (function() {
 
 	WD(document).set({
 		addEventListener: {
-			click:     wdOnClick,
+
 			input:     wdOnInput,
 			focusout:  wdOnFocusOut,
 			focusin:   wdOnFocusIn,
@@ -7808,6 +7806,8 @@ const wd = (function() {
 			dragstart: wdOnMouse,
 			dragend:   wdOnMouse,
 
+
+			click:      wdOnMouse,
 			mousedown:  wdOnMouse,
 			mouseup:    wdOnMouse,
 			mousemove:  wdOnMouse,
@@ -7815,6 +7815,7 @@ const wd = (function() {
 			mouseleave: wdOnMouse,
 			mouseover:  wdOnMouse,
 			mouseout:   wdOnMouse,
+			dblclick:   wdOnMouse,
 
 
 
