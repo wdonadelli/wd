@@ -4113,12 +4113,17 @@ const wd = (function() {
 		/**. ``''object'' position``: Retorna um objeto contendo os valores dos atributos de posicionamento do elemento.**/
 		position: {
 			get: function() {
-				const attr = {top: 0, right: 0, bottom: 0, left: 0, width: 0, height: 0, position: ""};
-				const data = this.styles;
-				for (let i in attr) attr[i] = data[i];
-				return attr;
+				const data = this.node.getBoundingClientRect();
+				return {
+					width:  data.width,
+					left:   data.left,
+					right:  window.innerWidth - data.right,
+					height: data.height,
+					top:    data.top,
+					bottom: window.innerHeight - data.bottom
+				};
 			}
-		},
+		}
 
 
 	});
@@ -7474,7 +7479,6 @@ const wd = (function() {
 
 		/*
 		FIXME
-		tentar usar o getBoundingClientRect() para capturar os dados do elemento
 		tentar, quando tiver $$, usar o mouseover com bubbles para definir o wdMove e draggable da caixa
 		se não tiver $$, usar o mouseover e o mouseout?
 		*/
@@ -7495,31 +7499,42 @@ const wd = (function() {
 				return;
 			}
 
+			if (event.type === "mousemove") {
+				console.log(1, event);
+				event.preventDefault();
+				console.log(1, event);
+				return;
+
+
+
+			}
+
 			if (event.type === "dragstart") {
-				const pos = node.position;
-				let  attr = [];
-				if (pos.position === "static") e.style.position = "relative";
-				for (let i in pos) attr.push(i+"{"+pos[i]+"}");
-				attr.push("x{"+event.pageX+"}");
-				attr.push("y{"+event.pageY+"}");
-				e.dataset.wdMouseData = attr.join("");
+				const box = node.position;
+				box.x = event.pageX;
+				box.y = event.pageY;
+				let attr = [];
+				for (let i in box) attr.push(i+"{"+box[i]+"}");
+				event.dataTransfer.setData("text", attr.join(""));
 				return;
 			}
 			if (event.type === "dragend") {
-				const attr = __String(e.dataset.wdMouseData).wdNotation[0];
-				const dx   = event.pageX - attr.x;
-				const dy   = event.pageY - attr.y;
-				attr.left  = attr.left === "auto" ? 0 : number(attr.left);
-				attr.top   = attr.top  === "auto" ? 0 : number(attr.top);
-				e.style.left = String(attr.left + dx)+"px";
-				e.style.top  = String(attr.top  + dy)+"px";
-				if (attr.right !== "auto")
-					e.style.right = String(number(attr.right) - dx)+"px";
-				if (attr.bottom !== "auto")
-					e.style.bottom = String(number(attr.bottom) - dy)+"px";
-				e.draggable = false;
-				delete e.dataset.wdMouseData;
-				if (data.removeWdMove === true) delete e.dataset.wdMove;
+				const box = __String(event.dataTransfer.getData("text")).wdNotation[0];
+				const sl  = box.left   + (event.pageX - box.x);
+				const sr  = box.right  - (event.pageX - box.x);
+				const st  = box.top    + (event.pageY - box.y);
+				const sb  = box.bottom - (event.pageY - box.y);
+				const sw  = window.screen.width;
+				const sh  = window.screen.height;
+				const vw  = window.innerWidth;
+				const vh  = window.innerHeight;
+				e.style.left   = String((100*sl/vw))+"vw";
+				e.style.right  = String((100*sr/vw))+"vw";
+				e.style.top    = String((100*st/vh))+"vh";
+				e.style.bottom = String((100*sb/vh))+"vh";
+				e.style.width  = "auto";
+				e.style.height = "auto";
+				e.style.transform = "none";
 				return;
 			}
 		}
@@ -7535,19 +7550,35 @@ const wd = (function() {
 
 
 
-		if (data.type === "drag") {
-			const check = __Type(query);
-			if (!check.node) return;
-			const node  = __Node(e);
+		if (data.type === "size") {
+			const node   = __Node(e);
+			const box    = node.position;
+			const delta  = 3;
+			const right  = box.width  - delta;
+			const bottom = box.height - delta;
+			const posx   = event.offsetX;
+			const posy   = event.offsetY;
 
-			if (event.type === "dragstart") {
-
-
-
-
-
+			if (event.type === "mousemove") {
+				if (posx >= right && posy >= bottom) {
+					e.style.cursor = "se-resize";
+					if (event.buttons === 1) {
+						e.style.width  = String(box.width  + event.movementX)+"px";
+						e.style.height = String(box.height + event.movementY)+"px";
+					}
+				} else if (posx >= right) {
+					e.style.cursor = "col-resize";
+					if (event.buttons === 1)
+						e.style.width  = String(box.width  + event.movementX)+"px";
+				} else if (posy >= bottom) {
+					e.style.cursor = "row-resize";
+					if (event.buttons === 1)
+						e.style.height = String(box.height + event.movementY)+"px";
+				} else {
+					e.style.cursor = null;
+				}
+				return;
 			}
-
 
 
 
