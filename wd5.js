@@ -343,9 +343,8 @@ const wd = (function() {
 		"[data-wd-nav],  [data-wd-send], [data-wd-tsort], [data-wd-set] {cursor: pointer;}",
 		"[data-wd-edit], [data-wd-shared] {cursor: pointer;}",
 		"[data-wd-move*=\"type{jump}\"] {cursor: pointer !important;}",
-		"[data-wd-move*=\"type{move}\"] {cursor: pointer !important;}",
-		"[data-wd-move*=\"type{move}\"][draggable=true]   {cursor: move !important;}",
-		"[data-wd-move*=\"type{move}\"][draggable=true] * {cursor: move !important;}",
+		"[data-wd-move*=\"type{move}\"] {cursor: move !important;}",
+		"[data-wd-move*=\"type{move}\"][data-wd-move-action-move] {cursor: grabbing !important;}",
 		"[data-wd-tsort]:before        {content: \"\\2195 \"; font-weight: normal;}",
 		"[data-wd-tsort=\"-1\"]:before {content: \"\\2191 \"; font-weight: normal;}",
 		"[data-wd-tsort=\"+1\"]:before {content: \"\\2193 \"; font-weight: normal;}",
@@ -7467,79 +7466,179 @@ const wd = (function() {
 		const data  = __String(e.dataset.wdMove).wdNotation[0];
 		const query = data.$$ || data.$ || undefined;
 		const check = __Type(query);
-		function number(value) {
-			const re = /[^0-9\.\-]/g;
-			return Number(value.replace(re, ""));
+		function setWdMovePosition(elem, values, auto) {
+ 			const vw  = window.innerWidth;
+			const vh  = window.innerHeight;
+			const cfg = {
+				left:  {un: "vw", vp: vw}, right:  {un: "vw", vp: vw},
+				top:   {un: "vh", vp: vh}, bottom: {un: "vh", vp: vh},
+				width: {un: "vw", vp: vw}, height: {un: "vh", vp: vh}
+			};
+			for (let i in cfg) {
+				const ignore  = auto.indexOf(i) >= 0;
+				const value   = (100*values[i])/cfg[i].vp;
+				elem.style[i] = ignore ? "auto" : String(value)+cfg[i].un;
+			}
+			elem.style.transform = "none";
+			return;
 		}
 
+		/* pular elemento entre containers */
 		if (data.type === "jump" && event.type === "click") {
 			if (check.node) WD(query).jump(e);
 			return;
 		}
 
-		/*
-		FIXME
-		tentar, quando tiver $$, usar o mouseover com bubbles para definir o wdMove e draggable da caixa
-		se não tiver $$, usar o mouseover e o mouseout?
-		*/
-
-
-
+		/*-- mover o elemento de lugar --*/
 		if (data.type === "move") {
-			const node  = __Node(e);
+			/* definir o alvo: o elemento ou a âncora */
+			const node   = __Node(e);
+			const check  = __Type(query);
+			const myself = !check.node || check.value.length < 1 || check.value[0] === e;
+			const move   = myself ? e : check.value[0];
 
-			if (event.type === "dblclick") {
-				const check = __Type(query);
-				const itsme = !check.node || check.value.length < 1 || check.value[0] === e;
-				const crate = itsme ? e : check.value[0];
-				crate.draggable = true;
-				if (!itsme) crate.dataset.wdMove = "type{move}removeWdMove{true}";
-				const sel = document.getSelection();
-				sel.empty();
-				return;
-			}
-
-			if (event.type === "mousemove") {
-				console.log(1, event);
-				event.preventDefault();
-				console.log(1, event);
-				return;
-
-
-
-			}
-
-			if (event.type === "dragstart") {
-				const box = node.position;
-				box.x = event.pageX;
-				box.y = event.pageY;
-				let attr = [];
+			/* configurar o alvo e obter dados iniciais */
+			if (event.type === "mousedown") {
+				window.getSelection().removeAllRanges();
+				const aim = __Node(move);
+				const css = aim.styles;
+				const box = aim.position;
+				if (css.position !== "fixed") {
+					if (css.position === "static") move.style.position = "relative";
+					const values = __Node(e.parentElement).position;
+					for (let i in box) box[i] = box[i] - values[i];
+				}
+				box.clientX = event.clientX;
+				box.clientY = event.clientY;
+				let attr    = [];
 				for (let i in box) attr.push(i+"{"+box[i]+"}");
-				event.dataTransfer.setData("text", attr.join(""));
+
+				e.dataset.wdMoveActionMove = attr.join("");
+				setWdMovePosition(move, box, ["width", "height"], event);
 				return;
 			}
-			if (event.type === "dragend") {
-				const box = __String(event.dataTransfer.getData("text")).wdNotation[0];
-				const sl  = box.left   + (event.pageX - box.x);
-				const sr  = box.right  - (event.pageX - box.x);
-				const st  = box.top    + (event.pageY - box.y);
-				const sb  = box.bottom - (event.pageY - box.y);
-				const sw  = window.screen.width;
-				const sh  = window.screen.height;
-				const vw  = window.innerWidth;
-				const vh  = window.innerHeight;
-				e.style.left   = String((100*sl/vw))+"vw";
-				e.style.right  = String((100*sr/vw))+"vw";
-				e.style.top    = String((100*st/vh))+"vh";
-				e.style.bottom = String((100*sb/vh))+"vh";
-				e.style.width  = "auto";
-				e.style.height = "auto";
-				e.style.transform = "none";
+
+			/* limpar configuração */
+			if (event.type === "mouseup" || event.type === "mouseout") {
+				if ("wdMoveActionMove" in e.dataset) delete e.dataset.wdMoveActionMove;
 				return;
 			}
+
+			/* mover o alvo */
+			if (event.type === "mousemove") {
+				window.getSelection().removeAllRanges();
+
+				if (event.buttons !== 1 || !("wdMoveActionMove" in e.dataset)) return;
+				const box  = __String(e.dataset.wdMoveActionMove).wdNotation[0];
+				const dx   = event.clientX - box.clientX;
+				const dy   = event.clientY - box.clientY;
+				box.left   += dx;
+				box.right  -= dx;
+				box.top    += dy;
+				box.bottom -= dy;
+				setWdMovePosition(move, box, ["width", "height"]);
+				return;
+			}
+			return;
 		}
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		if (data.type === "dragaaaa") {
+			const node   = __Node(e);
+			const check  = __Type(query);
+			const myself = !check.node || check.value.length < 1 || check.value[0] === e;
+			const drag   = myself ? e : check.value[0];
+
+			if (event.type === "mouseover") {console.log("entrou");
+				if (drag.dataset.wdMoveRun === "drag") return;
+				if ("wdMove" in drag.dataset)
+					drag.dataset.wdMoveTemp = drag.dataset.wdMove;
+				drag.draggable = true;
+				drag.dataset.wdMove = "type{draggable}";
+				return;
+			}
+
+			if (event.type === "mouseout") {console.log("saiu");
+				if (drag.dataset.wdMoveRun === "drag") return;
+				drag.draggable = false;
+				delete drag.dataset.wdMove;
+				if ("wdMoveTemp" in drag.dataset) {
+					drag.dataset.wdMove = drag.dataset.wdMoveTemp;
+					delete drag.dataset.wdMoveTemp;
+				}
+				return;
+			}
+			return;
+		}
+
+		if (data.type === "draggable") {
+			const node = __Node(e);
+
+			if (event.type === "dragstart") {
+				event.dataTransfer.effectAllwed = "uninitialized";
+				const css = node.styles;
+				const box = node.position;
+				if (css.position !== "fixed") {
+					const parent = __Node(e.parentElement);
+					const values = parent.position;
+					if (css.position === "static") e.style.position = "relative";
+					for (let i in box) box[i] = box[i] - values[i];
+				}
+				box.clientX  = event.clientX;
+				box.clientY  = event.clientY;
+				box.position = css.position;
+				let attr = [];
+				for (let i in box) attr.push(i+"{"+box[i]+"}");
+				event.dataTransfer.setData("text", attr.join(""));
+				e.dataset.wdMoveRun = "drag";
+				return;
+			}
+
+			if (event.type === "dragend") {
+				event.dataTransfer.effectAllwed = "uninitialized";
+				const box    = __String(event.dataTransfer.getData("text")).wdNotation[0];
+				const dx     = event.clientX - box.clientX;
+				const dy     = event.clientY - box.clientY;
+				const width  = window.innerWidth;
+				const height = window.innerHeight;
+				e.style.left   = String(100*(box.left   + dx)/width)+"vw";
+				e.style.right  = String(100*(box.right  - dx)/width)+"vw";
+				e.style.top    = String(100*(box.top    + dy)/height)+"vh";
+				e.style.bottom = String(100*(box.bottom - dy)/height)+"vh";
+				e.style.width  = "auto";
+				e.style.height = "auto";
+				e.style.transform = "none";
+
+				delete e.dataset.wdMoveRun;
+				delete e.dataset.wdMove;
+				if ("wdMoveTemp" in e.dataset) {
+					e.dataset.wdMove = e.dataset.wdMoveTemp;
+					delete e.dataset.wdMoveTemp;
+				}
+				e.draggable = false;
+				return;
+			}
+			return;
+		}
 
 
 
@@ -7551,44 +7650,75 @@ const wd = (function() {
 
 
 		if (data.type === "size") {
-			const node   = __Node(e);
-			const box    = node.position;
-			const delta  = 3;
-			const right  = box.width  - delta;
-			const bottom = box.height - delta;
-			const posx   = event.offsetX;
-			const posy   = event.offsetY;
+			const node = __Node(e);
+			const box  = node.position;
+			const gap  = 3;
+			const w    = box.width;
+			const h    = box.height;
+			const x    = event.offsetX;
+			const y    = event.offsetY;
+			const dx   = event.movementX;
+			const dy   = event.movementY;
 
 			if (event.type === "mousemove") {
-				if (posx >= right && posy >= bottom) {
-					e.style.cursor = "se-resize";
-					if (event.buttons === 1) {
-						e.style.width  = String(box.width  + event.movementX)+"px";
-						e.style.height = String(box.height + event.movementY)+"px";
-					}
-				} else if (posx >= right) {
-					e.style.cursor = "col-resize";
-					if (event.buttons === 1)
-						e.style.width  = String(box.width  + event.movementX)+"px";
-				} else if (posy >= bottom) {
-					e.style.cursor = "row-resize";
-					if (event.buttons === 1)
-						e.style.height = String(box.height + event.movementY)+"px";
-				} else {
-					e.style.cursor = null;
+				let   cursor = null;
+				if (x >= (w-gap) && y >= (h-gap))
+					cursor = "se-resize";
+				else if (x >= (w-gap) || y >= (h-gap))
+					cursor = x >= (w-gap) ? "col-resize" : "row-resize";
+
+				e.style.cursor = cursor;
+				if (event.buttons === 1) {
+					if (cursor === "se-resize" || cursor === "col-resize")
+						e.style.width  = String(x+dx+(dx > 0 ? gap : -gap))+"px";
+					if (cursor === "se-resize" || cursor === "row-resize")
+						e.style.height = String(x+dx+(dy > 0 ? gap : -gap))+"px";
 				}
+
+
+				console.log(event.buttons);
+
+
+
+
 				return;
 			}
 
+			if (event.type === "drag") {
+				e.style.width  = String(dx)+"px";
+				e.style.height = String(dx)+"px";
+				return
+			}
 
+		}
 
+		if (data.type === "menu" && event.type === "click") {
+			if (e.dataset.wdAuxMove === "menuOpen") return;
 
+			const nav = document.createElement("NAV");
+			nav.style.position = "fixed";
+			nav.style.backgroundColor = "white";
+			nav.style.left = String(100 * event.clientX / window.innerWidth)+"vw";
+			nav.style.top  = String(100 * event.clientY / window.innerHeight)+"vh";
+			const forget = ["type", "$", "$$"];
 
+			e.dataset.wdAuxMove = "menuOpen";
 
-
-
-
-
+			for (let i in data) {
+				if (forget.indexOf(i) < 0 && __Type(data[i]).function) {
+					const span = document.createElement("SPAN");
+					span.textContent = i;
+					span.onclick = function() {
+						data[i](e);
+						nav.remove();
+						delete e.dataset.wdAuxMove;
+						return;
+					};
+					nav.appendChild(span);
+				}
+			}
+			document.body.appendChild(nav);
+			return;
 		}
 
 

@@ -1,5 +1,14 @@
 <div>
 
+	<script>
+		function red(elem) {elem.style.color = "red";}
+		function blue(elem) {elem.style.color = "blue";}
+		function bold(elem) {elem.style.fontWeight = "bold";}
+		function exit(elem) {return;}
+	</script>
+
+
+
 	<h4>Jump</h4>
 
 	<div class="wd-col">
@@ -25,8 +34,10 @@
 
 	<button type="button" data-wd-set="${#myMove}class{add{wd-open}}">Open</button>
 
-	<div class="wd-window wd-flyer wd-bg-blue wd-radius" id="myMove">
-		<header data-wd-move="type{move}${#myMove}" ><h4 id="myPoint">Move</h4></header>
+	<div class="wd-window wd-flyer wd-bg-blue wd-radius" id="myMove" data-wd-move="type{bunda}">
+		<header data-wd-move="type{move}${#myMove}" >
+			<h4 id="myPoint" data-wd-move="type{move}${#myMove}">Move</h4>
+		</header>
 		<p>Text Content. Text Content. Text Content. Text Content. Text Content. </p>
 		<p>Text Content. Text Content. Text Content. Text Content. Text Content. </p>
 		<button type="button" data-wd-set="${#myMove}class{remove{wd-open}}">Close</button>
@@ -39,7 +50,17 @@
 
 	<h4>Move</h4>
 
-	<div data-wd-move="type{size}" style="background-color: yellow; width: 100px; height: 50px;">SIZE</div>
+	<div data-wd-move="type{size}" style="background-color: blue; width: 100px; height: 50px;">SIZE</div>
 
 
+	<h4>Menu</h4>
+
+	<div data-wd-move="type{menu}red(red)blue(blue)bold(bold)exit(exit)" >Click Me</div>
+
+
+
+
+
+
+	<br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
 </div>
