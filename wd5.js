@@ -343,8 +343,7 @@ const wd = (function() {
 		"[data-wd-nav],  [data-wd-send], [data-wd-tsort], [data-wd-set] {cursor: pointer;}",
 		"[data-wd-edit], [data-wd-shared] {cursor: pointer;}",
 		"[data-wd-move*=\"type{jump}\"] {cursor: pointer !important;}",
-		"[data-wd-move*=\"type{move}\"] {cursor: move !important;}",
-		"[data-wd-move*=\"type{move}\"][data-wd-move-action-move] {cursor: grabbing !important;}",
+		"[data-wd-move*=\"type{drag}\"] {cursor: move    !important;}",
 		"[data-wd-tsort]:before        {content: \"\\2195 \"; font-weight: normal;}",
 		"[data-wd-tsort=\"-1\"]:before {content: \"\\2191 \"; font-weight: normal;}",
 		"[data-wd-tsort=\"+1\"]:before {content: \"\\2193 \"; font-weight: normal;}",
@@ -4114,8 +4113,9 @@ const wd = (function() {
 			get: function() {
 				const gbcr = this.node.getBoundingClientRect();
 				const css  = this.styles;
-				let   data = {};
-				for (let i in gbcr) data[i] = gbcr[i];
+				let   data = {height: 0, width: 0, left: 0, top: 0, right: 0, bottom: 0};
+				for (let i in data)
+					if (i in gbcr) data[i] = gbcr[i];
 
 				if (css.position === "fixed") {
 					data.right  = window.innerWidth  - data.right;
@@ -4123,13 +4123,13 @@ const wd = (function() {
 				} else if (css.position === "absolute") {
 					const parent = this.node.parentElement;
 					if (parent !== null) {
-						let upper   = upper.getBoundingClientRect();
-						data.top    = data.top  - upper.top;
-						data.left   = data.left - upper.left;
-						data.bottom = window.innerHeight - (upper.bottom - data.bottom);
-						data.right  = window.innerWidth  - (upper.right  - data.right);
+						let upnode  = parent.getBoundingClientRect();
+						data.top    = data.top  - upnode.top;
+						data.left   = data.left - upnode.left;
+						data.bottom = window.innerHeight - (upnode.bottom - data.bottom);
+						data.right  = window.innerWidth  - (upnode.right  - data.right);
 					}
-				} else if (css.position === "static" || css.position === "relative") {
+				} else {
 					const re = /[^0-9\.\-]/g;
 					data.top    = Number(css.top.replace(re, ""));
 					data.left   = Number(css.left.replace(re, ""));
@@ -7082,8 +7082,8 @@ const wd = (function() {
 		if (!("wdSet" in e.dataset)) return;
 		let exec = function(input) {
 			if (!__Type(input).object) return;
-			let query  = input.$$ || input.$ || e;
-			let target = WD(query);
+			const query  = input.$$ || input.$ || e;
+			const target = WD(query);
 			delete input.$;
 			delete input.$$;
 			target.set(input);
@@ -7287,10 +7287,12 @@ const wd = (function() {
 		let node = __Node(e);
 		let data = __String(e.dataset.wdFilter).wdNotation;
 		data.forEach(function (v,i,a) {
-			let query  = v.$$ || v.$ || undefined;
+			const query  = v.$$ || v.$ || undefined;
 			if (query === undefined) return;
-			let target = WD(query);
-			let search = __String("").wdValue(node.attribute("textContent"));
+			const target = WD(query);
+			const text   = node.attribute("textContent");
+			const value  = __String("").wdValue(text);
+			const search = __Type(value).regexp ? value : text;
 			target.filter(search, v.chars);
 		});
 		return;
@@ -7480,18 +7482,18 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	/**###### ``**function** ''void'' data_wdMove(''node''  e, ''object'' event)``
-	Função vinculada ao atributo HTML ``data-wd-jump`` cujo objetivo é fazer saltos do nó entre os nós informados. Possui atributo simples e grupo único:
-	|Nome|Descrição|Obrigatório|
-	|$ ou $$|Seletor CSS dos elementos que receberão o nó|Sim|**/
-	function data_wdMove(e, event) {
+	Função vinculada ao atributo HTML ``data-wd-move`` cujo objetivo é fazer pular, arrastar, derrubar ou redimencionar elementos. Possui atributo simples e grupo único. Os objetivos dos atributos dependem do tipo de manipulação.
+	O atributo ``type`` indica o tipo de manipulação:
+	. ''jump'': Faz com que o elemento salte entre os elementos definidos em $ ou $$ (obrigatórios) a cada clique efetuado.
+	. ''drag'': Arrasta o elemento na tela, eliminando posicionamentos estáticos. É possível definir uma âncora para o arrasto do elemento, para isso, deve-se vincular o atributo à âncora e informar o elemento a ser arrastado pelo uso dos atributos $ ou $$.
+	. ''size'': Redimenciona o tamanho do elemento.
+	. ''drop'': Arrasta e derruba uma informação em determinada área do documento. O elemento a ser arrastado recebe o atributo e a área de derrubagem é indicada pelos atributos $ e $$ (obrigatório).
+
+	**/
+	function data_wdMove(e, event) {//FIXME tem que ter cuidado com o nodeType
+		try {const test = "wdMove" in e.dataset;} catch(e) {return;}
 		const wdMove  = "wdMove" in e.dataset;
 		const moveAct = WD.$$("[data-wd-move-action]");
-		function setWdMovePosition(elem, values, auto) {
- 			for (let i in values)
- 				if (i !== "type") elem.style[i] = String(values[i])+"px";
-			elem.style.transform = "none";
-			return;
-		}
 
 		/*-- Executar operações primárias --*/
 		if (moveAct.length === 0 && wdMove) {
@@ -7506,13 +7508,11 @@ const wd = (function() {
 			}
 
 			/*-- Mover elemento ----------------------------------------------------*/
-			if (data.type === "move") {
-				/* Alvo: o elemento ou a âncora */
+			if (data.type === "drag") {
 				const node   = __Node(e);
 				const myself = !check.node || check.value.length < 1 || check.value[0] === e;
 				const anchor = myself ? e : check.value[0];
 
-				/* Configurar alvo e obter dados iniciais */
 				if (event.type === "mousedown") {
 					const aim   = __Node(anchor);
 					const css   = aim.styles;
@@ -7537,6 +7537,48 @@ const wd = (function() {
 				return;
 			}
 
+			/*-- Redimencionar elemento --------------------------------------------*/
+			if (data.type === "size") {
+				const box = e.getBoundingClientRect();
+				const d = 5;
+				const x = event.clientX;
+				const y = event.clientY;
+				const N = y <= (box.top    + d);
+				const S = y >= (box.bottom - d);
+				const W = x <= (box.left   + d);
+				const E = x >= (box.right  - d);
+				let cursor = "";
+				if (N || S) cursor += N ? "n" : "s";
+				if (W || E) cursor += E ? "e" : "w";
+
+				if (event.type === "mousemove" || event.type === "mousedown")
+					e.style.cursor = cursor === "" ? null : cursor+"-resize";
+
+				if (event.type === "mousedown" && cursor !== "") {
+					const node  = __Node(e);
+					const box   = node.position;
+					let   attr  = [];
+					const upper = __Node(e.parentElement).styles;
+					box.clientX = event.clientX;
+					box.clientY = event.clientY;
+					box.type    = "size";
+					box.cursor  = cursor;
+
+					if (upper.position === "static")
+						e.parentElement.style.position = "relative";
+					if (node.styles.position === "static")
+						e.style.position = "relative";
+					e.style.transform = "none";
+
+					for (let i in box) attr.push(i+"{"+box[i]+"}");
+					e.dataset.wdMoveAction = attr.join("");
+					node.position = box;
+					document.body.style.cursor = cursor+"-resize";
+					return;
+				}
+				return;
+			}
+
 
 
 
@@ -7554,11 +7596,13 @@ const wd = (function() {
 			/*-- Liberando elementos -----------------------------------------------*/
 			if (event.buttons !== 1 || event.type === "mouseup") {
 				moveAct.forEach(function(x) {delete x.dataset.wdMoveAction;});
+				document.body.style.cursor = null;
 				return;
 			}
 
 			/*-- Executando operações ----------------------------------------------*/
 			moveAct.forEach(function(anchor) {
+				const obj = __Node(anchor);
 				const box = __String(anchor.dataset.wdMoveAction).wdNotation[0];
 				const dx  = event.clientX - box.clientX;
 				const dy  = event.clientY - box.clientY;
@@ -7568,7 +7612,37 @@ const wd = (function() {
 					box.top    += dy;
 					box.bottom -= dy;
 				}
-				setWdMovePosition(anchor, box, ["width", "height"]);
+				else if (box.type === "size") {
+					const cursor = box.cursor.split("");
+					if (cursor.indexOf("n") >= 0) {
+						box.height -= dy;
+						box.top    += dy;
+					}
+					if (cursor.indexOf("s") >= 0) {
+						box.height += dy;
+						box.bottom -= dy;
+					}
+					if (cursor.indexOf("w") >= 0) {
+						box.width -= dx;
+						box.left  += dx;
+					}
+					if (cursor.indexOf("e") >= 0) {
+						box.width += dx;
+						box.right -= dx;
+					}
+
+
+
+
+
+
+
+				}
+
+
+
+
+				obj.position = box;
 				return;
 			});
 			window.getSelection().removeAllRanges();
@@ -7789,6 +7863,9 @@ const wd = (function() {
 	/**###### ``**function** ''void'' wdOnMouse(''object''  ev)``
 	Disparador a ser invocado em eventos de mouse.**/
 	function wdOnMouse(ev) {
+		//FIXME URGENTE o firefox fox está pegando coisas que não são elementos, tipo NodeText (ver nodeType)
+
+
 		if (__UNDERMAINTENANCE) console.log({wdOnMouse: ev, target: ev.target});
 		const events = {
 			click:      {which: 1, bubbles : true, trigger: [data_wdSend, data_wdTsort,
