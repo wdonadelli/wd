@@ -7,6 +7,24 @@
 		function exit(elem) {return;}
 	</script>
 
+	<h4>Drop</h4>
+
+	<div class="wd-col wd-border-child">
+		<dl>
+			<dt>Shelf</dt>
+			<dl id="toDrop" style="min-height: 100px;" class="wd-border wd-bg-grey">
+				<dd data-wd-move="type{drop}$${#myDrop, #toDrop}effect{move}" class="wd-fg-blue">Drop me (move)</dd>
+				<dd data-wd-move="type{drop}${#myDrop}effect{copy}" class="wd-fg-green">Drop me (copy)</dd>
+				<dd data-wd-move="type{drop}${#myDrop}effect{text}" class="wd-fg-red">Drop me (text)</dd>
+			</dl>
+		</dl>
+
+		<dl>
+			<dt>Drop Area</dt>
+			<dl id="myDrop" style="min-height: 100px;" class="wd-border wd-bg-yellow"></dl>
+		</dl>
+	</div>
+
 
 
 	<h4>Jump</h4>

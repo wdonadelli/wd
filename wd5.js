@@ -344,6 +344,7 @@ const wd = (function() {
 		"[data-wd-edit], [data-wd-shared] {cursor: pointer;}",
 		"[data-wd-move*=\"type{jump}\"] {cursor: pointer !important;}",
 		"[data-wd-move*=\"type{drag}\"] {cursor: move    !important;}",
+		"[data-wd-move*=\"type{drop}\"] {cursor: grab    !important;}",
 		"[data-wd-tsort]:before        {content: \"\\2195 \"; font-weight: normal;}",
 		"[data-wd-tsort=\"-1\"]:before {content: \"\\2191 \"; font-weight: normal;}",
 		"[data-wd-tsort=\"+1\"]:before {content: \"\\2193 \"; font-weight: normal;}",
@@ -7501,7 +7502,7 @@ const wd = (function() {
 			const query  = data.$$ || data.$ || undefined;
 			const check  = __Type(query);
 
-			/*-- Saltos de elementos -----------------------------------------------*/
+			/*-- Saltar elementos --------------------------------------------------*/
 			if (data.type === "jump" && event.type === "click") {
 				if (check.node) WD(query).jump(e);
 				return;
@@ -7579,11 +7580,110 @@ const wd = (function() {
 				return;
 			}
 
+			/*-- Derrubar conteúdo -------------------------------------------------*/
+			if (data.type === "drop") {
+				const node = WD(query);
+				if (node.type !== "node") return;
+
+				if (event.type === "mouseover" || event.type === "mouseout") {
+					e.draggable = event.type === "mouseover";
+					return;
+				}
+
+				if (event.type === "dragstart") {
+					const effects = {
+						move: "move", text: "copy", copy: "copy"
+					};
+					const effect = data.effect in effects ? effects[data.effect] : "none";
+					event.dataTransfer.dropEffect = effect;
+					//???event.dataTransfer.effectAllowed = effect;
+					event.dataTransfer.setData("text", data.effect);
+					e.dataset.wdMoveDragDrop = "drag";
+
+					//FIXME definir função única para dragover e drop?
+
+
+
+					node.forEach(function(x) {
+						x.dataset.wdMoveDragDrop = "drop";
+
+
+						x.ondragover = function(evDragOver) {
+							evDragOver.preventDefault();
+							console.log(evDragOver);
+							evDragOver.target.style.backgroudColor = "red"; ////?????
+							return;
+						};
+
+						x.ondrop =  function(evDrop) {
+							evDrop.preventDefault();
+							if (evDrop.target.dataset.wdMoveDragDrop !== "drop") return;
+							const effect = evDrop.dataTransfer.getData("text");
+							const files  = evDrop.dataTransfer.files;
+							const drag   = document.querySelector("[data-wd-move-drag-drop=drag]");
+							const drop   = evDrop.target;
 
 
 
 
 
+
+							if (files.length !== 0) {
+								console.log("tem arquivos");
+							} else {
+								if (effect === "move")
+									drop.appendChild(drag);
+								else if (effect === "copy")
+									drop.appendChild(drag.cloneNode(true));
+
+
+
+
+
+
+
+							}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+							return;
+						};
+						return;
+					});
+				}
+
+				if (event.type === "dragend") {console.log("message");
+					event.preventDefault();
+					node.forEach(function(x) {
+						x.ondragover = null;
+						x.ondrop     = null;
+						if ("wdMoveDragDrop" in x.dataset) delete x.dataset.wdMoveDragDrop;
+						return;
+					});
+					e.draggable = false;
+					if ("wdMoveDragDrop" in e.dataset) delete e.dataset.wdMoveDragDrop;
+					return;
+				}
+
+
+
+
+
+
+
+
+			}
 
 
 			return;
@@ -7613,7 +7713,7 @@ const wd = (function() {
 					box.bottom -= dy;
 				}
 				else if (box.type === "size") {
-					const cursor = box.cursor.split("");
+					const cursor = box.cursor;
 					if (cursor.indexOf("n") >= 0) {
 						box.height -= dy;
 						box.top    += dy;
@@ -7630,18 +7730,7 @@ const wd = (function() {
 						box.width += dx;
 						box.right -= dx;
 					}
-
-
-
-
-
-
-
 				}
-
-
-
-
 				obj.position = box;
 				return;
 			});
@@ -7650,39 +7739,6 @@ const wd = (function() {
 			return;
 		}
 		/*-- Fim das operações secundárias --*/
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 		return;
 	};
 
@@ -7864,7 +7920,7 @@ const wd = (function() {
 	Disparador a ser invocado em eventos de mouse.**/
 	function wdOnMouse(ev) {
 		//FIXME URGENTE o firefox fox está pegando coisas que não são elementos, tipo NodeText (ver nodeType)
-
+		//console.log({event: ev.type, Nodetype: event.target.nodeType});
 
 		if (__UNDERMAINTENANCE) console.log({wdOnMouse: ev, target: ev.target});
 		const events = {
