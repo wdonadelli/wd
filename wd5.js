@@ -342,8 +342,10 @@ const wd = (function() {
 		".js-wd-no-display {display: none !important;}",
 		"[data-wd-nav],  [data-wd-send], [data-wd-tsort], [data-wd-set] {cursor: pointer;}",
 		"[data-wd-edit], [data-wd-shared] {cursor: pointer;}",
-		"[data-wd-move*=\"type{jump}\"] {cursor: pointer !important;}",
-		"[data-wd-move*=\"type{drag}\"] {cursor: move    !important;}",
+		"[data-wd-move*=\"type{jump}\"]   {cursor: pointer  !important;}",
+		"[data-wd-move*=\"type{move}\"]   {cursor: move     !important;}",
+		"[data-wd-move-action=\"move\"]   {cursor: grabbing !important;}",
+		"[data-wd-move-action=\"move\"] * {cursor: grabbing !important;}",
 		"[data-wd-move*=\"type{drop}\"] {cursor: grab    !important;}",
 		"[data-wd-tsort]:before        {content: \"\\2195 \"; font-weight: normal;}",
 		"[data-wd-tsort=\"-1\"]:before {content: \"\\2191 \"; font-weight: normal;}",
@@ -4062,17 +4064,22 @@ const wd = (function() {
 				child.forEach(function(v,i,a) {node.appendChild(v);});
 			}
 		},
-		/**. ``''void'' jump(''node'' list)``: O nó será adicionado aos elementos na ordem definida em ``list`` a cada chamada do método. O argumento ``list`` é uma lista de nós que comodará o elemento.**/
+		/**. ``''void'' jump(''node'' list)``: O nó será adicionado aos elementos na ordem definida em ``list`` a cada chamada do método. O argumento ``list`` é uma lista de nós que acomodará o elemento.**/
 		jump: {
 			value: function(list) {
 				if (!this._elem) return;
-				let check = __Type(list);
-				if (!check.node) return;
-				list = check.value;
-				let index = list.indexOf(this.node.parentElement) + 1;
-				let node  = list[index%list.length];
-				let data  = __Type(node);
-				if (__Type(node).node) node.appendChild(this.node);
+				const check = __Type(list);
+				if (!check.node && !check.array) return;
+				let nodes = [];
+				for (let v of check.value) {
+					if (__Type(v).node && v != this.node) nodes.push(v);
+				}
+				if (nodes.length > 0) {
+					const next = nodes.indexOf(this.node.parentElement) + 1;
+					const node = nodes[next%nodes.length];
+					node.appendChild(this.node);
+				}
+				return;
 			}
 		},
 		/**. ``''void'' full()``: Alterna a exibição do nó em tela cheia.**/
@@ -7492,254 +7499,209 @@ const wd = (function() {
 
 	**/
 	function data_wdMove(e, event) {//FIXME tem que ter cuidado com o nodeType
-		try {const test = "wdMove" in e.dataset;} catch(e) {return;}
-		const wdMove  = "wdMove" in e.dataset;
-		const moveAct = WD.$$("[data-wd-move-action]");
+		const wdMove = "wdMove" in e.dataset;
+		const data   = wdMove ? __String(e.dataset.wdMove).wdNotation[0] : {};
+		const query  = data.$$ || data.$ || null;
+		const check  = __Type(query);
+		const moving = WD.$$("[data-wd-move-action]").length > 0;
+		const init   = wdMove && !moving;
 
-		/*-- Executar operações primárias --*/
-		if (moveAct.length === 0 && wdMove) {
-			const data   = __String(e.dataset.wdMove).wdNotation[0];
-			const query  = data.$$ || data.$ || undefined;
-			const check  = __Type(query);
 
-			/*-- Saltar elementos --------------------------------------------------*/
-			if (data.type === "jump" && event.type === "click") {
-				if (check.node) WD(query).jump(e);
-				return;
+
+		/*------------------------------------------------------------------------*/
+		if (init && data.type === "jump") {
+			if (event.type === "click" && check.node) {
+				WD(query).jump(e);
 			}
+			return;
+		}
 
-			/*-- Mover elemento ----------------------------------------------------*/
-			if (data.type === "drag") {
+		/*------------------------------------------------------------------------*/
+		if (init && data.type === "move") {
+
+			if (event.type === "mousedown") {
 				const node   = __Node(e);
 				const myself = !check.node || check.value.length < 1 || check.value[0] === e;
 				const anchor = myself ? e : check.value[0];
+				const target = __Node(anchor);
+				const css    = target.styles;
+				const box    = target.position;
+				const upper  = __Node(anchor.parentElement).styles;
+				box.clientX  = event.clientX;
+				box.clientY  = event.clientY;
 
-				if (event.type === "mousedown") {
-					const aim   = __Node(anchor);
-					const css   = aim.styles;
-					const box   = aim.position;
-					const upper = __Node(anchor.parentElement).styles;
-					let   attr  = [];
-					box.clientX = event.clientX;
-					box.clientY = event.clientY;
-					box.type    = "move";
+				/* modificando elementos estáticos e transformadores */
+				if (upper.position === "static")
+					anchor.parentElement.style.position = "relative";
+				if (css.position === "static")
+					anchor.style.position = "relative";
+				anchor.style.transform = "none";
+				target.position        = box;
 
-					if (upper.position === "static")
-						anchor.parentElement.style.position = "relative";
-					if (css.position === "static")
-						anchor.style.position = "relative";
-					anchor.style.transform = "none";
-
-					for (let i in box) attr.push(i+"{"+box[i]+"}");
-					anchor.dataset.wdMoveAction = attr.join("");
-					aim.position = box;
-					return;
-				}
+				/* definindo dataTransfer manual */
+				let dataTransfer = [];
+				for (let i in box) dataTransfer.push(i+"{"+box[i]+"}");
+				anchor.dataset.wdMoveAction   = "move";
+				anchor.dataset.wdDataTransfer = dataTransfer.join("");
 				return;
 			}
-
-			/*-- Redimencionar elemento --------------------------------------------*/
-			if (data.type === "size") {
-				const box = e.getBoundingClientRect();
-				const d = 5;
-				const x = event.clientX;
-				const y = event.clientY;
-				const N = y <= (box.top    + d);
-				const S = y >= (box.bottom - d);
-				const W = x <= (box.left   + d);
-				const E = x >= (box.right  - d);
-				let cursor = "";
-				if (N || S) cursor += N ? "n" : "s";
-				if (W || E) cursor += E ? "e" : "w";
-
-				if (event.type === "mousemove" || event.type === "mousedown")
-					e.style.cursor = cursor === "" ? null : cursor+"-resize";
-
-				if (event.type === "mousedown" && cursor !== "") {
-					const node  = __Node(e);
-					const box   = node.position;
-					let   attr  = [];
-					const upper = __Node(e.parentElement).styles;
-					box.clientX = event.clientX;
-					box.clientY = event.clientY;
-					box.type    = "size";
-					box.cursor  = cursor;
-
-					if (upper.position === "static")
-						e.parentElement.style.position = "relative";
-					if (node.styles.position === "static")
-						e.style.position = "relative";
-					e.style.transform = "none";
-
-					for (let i in box) attr.push(i+"{"+box[i]+"}");
-					e.dataset.wdMoveAction = attr.join("");
-					node.position = box;
-					document.body.style.cursor = cursor+"-resize";
-					return;
-				}
-				return;
-			}
-
-			/*-- Derrubar conteúdo -------------------------------------------------*/
-			if (data.type === "drop") {
-				const node = WD(query);
-				if (node.type !== "node") return;
-
-				if (event.type === "mouseover" || event.type === "mouseout") {
-					e.draggable = event.type === "mouseover";
-					return;
-				}
-
-				if (event.type === "dragstart") {
-					const effects = {
-						move: "move", text: "copy", copy: "copy"
-					};
-					const effect = data.effect in effects ? effects[data.effect] : "none";
-					event.dataTransfer.dropEffect = effect;
-					//???event.dataTransfer.effectAllowed = effect;
-					event.dataTransfer.setData("text", data.effect);
-					e.dataset.wdMoveDragDrop = "drag";
-
-					//FIXME definir função única para dragover e drop?
-
-
-
-					node.forEach(function(x) {
-						x.dataset.wdMoveDragDrop = "drop";
-
-
-						x.ondragover = function(evDragOver) {
-							evDragOver.preventDefault();
-							console.log(evDragOver);
-							evDragOver.target.style.backgroudColor = "red"; ////?????
-							return;
-						};
-
-						x.ondrop =  function(evDrop) {
-							evDrop.preventDefault();
-							if (evDrop.target.dataset.wdMoveDragDrop !== "drop") return;
-							const effect = evDrop.dataTransfer.getData("text");
-							const files  = evDrop.dataTransfer.files;
-							const drag   = document.querySelector("[data-wd-move-drag-drop=drag]");
-							const drop   = evDrop.target;
-
-
-
-
-
-
-							if (files.length !== 0) {
-								console.log("tem arquivos");
-							} else {
-								if (effect === "move")
-									drop.appendChild(drag);
-								else if (effect === "copy")
-									drop.appendChild(drag.cloneNode(true));
-
-
-
-
-
-
-
-							}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-							return;
-						};
-						return;
-					});
-				}
-
-				if (event.type === "dragend") {console.log("message");
-					event.preventDefault();
-					node.forEach(function(x) {
-						x.ondragover = null;
-						x.ondrop     = null;
-						if ("wdMoveDragDrop" in x.dataset) delete x.dataset.wdMoveDragDrop;
-						return;
-					});
-					e.draggable = false;
-					if ("wdMoveDragDrop" in e.dataset) delete e.dataset.wdMoveDragDrop;
-					return;
-				}
-
-
-
-
-
-
-
-
-			}
-
-
 			return;
 		}
-		/*-- Fim das operações primárias --*/
 
-		/*-- Executar operações secundárias --*/
-		if (moveAct.length > 0) {
+		const move = WD.$$("[data-wd-move-action=move]");
+		move.forEach(function(x) {
+			if (event.type === "mouseup" || event.buttons !== 1) {
+				delete x.dataset.wdMoveAction;
+				delete x.dataset.wdDataTransfer;
+			} else if (event.type === "mousemove") {
+				const node  = __Node(x);
+				const box   = __String(x.dataset.wdDataTransfer).wdNotation[0];
+				const dx    = event.clientX - box.clientX;
+				const dy    = event.clientY - box.clientY;
+				box.left   += dx;
+				box.right  -= dx;
+				box.top    += dy;
+				box.bottom -= dy;
+				node.position = box;
+				window.getSelection().removeAllRanges();
+			}
+			return;
+		});
 
-			/*-- Liberando elementos -----------------------------------------------*/
-			if (event.buttons !== 1 || event.type === "mouseup") {
-				moveAct.forEach(function(x) {delete x.dataset.wdMoveAction;});
-				document.body.style.cursor = null;
+		/*------------------------------------------------------------------------*/
+		if (init && data.type === "size") {
+			const box = e.getBoundingClientRect();
+			const d = 5;
+			const x = event.clientX;
+			const y = event.clientY;
+			const N = y <= (box.top    + d);
+			const S = y >= (box.bottom - d);
+			const W = x <= (box.left   + d);
+			const E = x >= (box.right  - d);
+			let cursor = "";
+			if (N || S) cursor += N ? "n" : "s";
+			if (W || E) cursor += E ? "e" : "w";
+
+			if (event.type === "mousemove")
+				e.style.cursor = cursor === "" ? null : cursor+"-resize";
+
+			if (event.type === "mousedown" && cursor !== "") {
+				const node  = __Node(e);
+				const box   = node.position;
+				const upper = __Node(e.parentElement).styles;
+				box.clientX = event.clientX;
+				box.clientY = event.clientY;
+
+				/* modificando elementos estáticos e transformadores */
+				if (upper.position === "static")
+					e.parentElement.style.position = "relative";
+				if (node.styles.position === "static")
+					e.style.position = "relative";
+				e.style.transform = "none";
+				node.position     = box;
+
+				/* definindo dataTransfer manual */
+				let dataTransfer = [];
+				for (let i in box) dataTransfer.push(i+"{"+box[i]+"}");
+				e.dataset.wdMoveAction   = "size-"+cursor;
+				e.dataset.wdDataTransfer = dataTransfer.join("");
 				return;
 			}
+			return;
+		}
 
-			/*-- Executando operações ----------------------------------------------*/
-			moveAct.forEach(function(anchor) {
-				const obj = __Node(anchor);
-				const box = __String(anchor.dataset.wdMoveAction).wdNotation[0];
-				const dx  = event.clientX - box.clientX;
-				const dy  = event.clientY - box.clientY;
-				if (box.type === "move") {
-					box.left   += dx;
-					box.right  -= dx;
+		const size = WD.$$("[data-wd-move-action|=size]");
+		size.forEach(function(x) {
+			if (event.type === "mouseup" || event.buttons !== 1) {
+				delete x.dataset.wdMoveAction;
+				delete x.dataset.wdDataTransfer;
+			} else if (event.type === "mousemove") {
+				const node   = __Node(x);
+				const box    = __String(x.dataset.wdDataTransfer).wdNotation[0];
+				const cursor = x.dataset.wdMoveAction.replace("size-", "");console.log(cursor, box);
+				const dx     = event.clientX - box.clientX;
+				const dy     = event.clientY - box.clientY;
+				if (cursor.indexOf("n") >= 0) {
+					box.height -= dy;
 					box.top    += dy;
+				}
+				if (cursor.indexOf("s") >= 0) {
+					box.height += dy;
 					box.bottom -= dy;
 				}
-				else if (box.type === "size") {
-					const cursor = box.cursor;
-					if (cursor.indexOf("n") >= 0) {
-						box.height -= dy;
-						box.top    += dy;
-					}
-					if (cursor.indexOf("s") >= 0) {
-						box.height += dy;
-						box.bottom -= dy;
-					}
-					if (cursor.indexOf("w") >= 0) {
-						box.width -= dx;
-						box.left  += dx;
-					}
-					if (cursor.indexOf("e") >= 0) {
-						box.width += dx;
-						box.right -= dx;
-					}
+				if (cursor.indexOf("w") >= 0) {
+					box.width -= dx;
+					box.left  += dx;
 				}
-				obj.position = box;
-				return;
-			});
-			window.getSelection().removeAllRanges();
+				if (cursor.indexOf("e") >= 0) {
+					box.width += dx;
+					box.right -= dx;
+				}
+				node.position = box;
+				window.getSelection().removeAllRanges();
+			}
+			return;
+		});
 
+		/*------------------------------------------------------------------------*/
+		if (data.type === "drop") {
+			if (!check.node) return;
+
+			if (event.type === "mouseover" || event.type === "mouseout") {
+				e.draggable = event.type === "mouseover";
+				return;
+			}
+
+			if (event.type === "dragenter") {console.log(event.type);
+				e.style.backgroundColor = "red";
+				return;
+			}
+
+			if (event.type === "dragleave") {console.log(event.type);
+				e.style.backgroundColor = null;
+				return;
+			}
+
+
+
+			if (event.type === "dragstart") {
+				const trigger = function(ev) {
+					ev.preventDefault();
+					if (ev.type === "drop") {
+						const drag  = document.querySelector("[data-wd-move-action=drag]");
+						const drop  = ev.target;
+						const attr  = __String(ev.dataTransfer.getData("text")).wdNotation[0];
+						const files = ev.dataTransfer.files;
+						console.log(ev.type);
+						return;
+					}
+					return;
+				}
+				const node = WD(query);
+				node.forEach(function(x) {
+					x.ondragover = trigger;
+					x.ondrop     = trigger;
+					return;
+				});
+				event.dataTransfer.setData("text", e.dataset.wdMove);
+				e.dataset.wdMoveAction = "drag";
+				return;
+			}
+
+			if (event.type === "dragend") {
+				event.preventDefault();
+				const node = WD(query);
+				node.forEach(function(x) {
+					x.ondragover = null;
+					x.ondrop     = null;
+					return;
+				});
+				e.draggable = false;
+				delete e.dataset.wdMoveAction;
+				return;
+			}
 			return;
 		}
-		/*-- Fim das operações secundárias --*/
-		return;
 	};
 
 
@@ -7984,6 +7946,9 @@ const wd = (function() {
 			drag:      wdOnMouse,
 			dragstart: wdOnMouse,
 			dragend:   wdOnMouse,
+			dragenter: wdOnMouse,
+			dragleave: wdOnMouse,
+
 
 
 			click:      wdOnMouse,
