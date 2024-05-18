@@ -10,19 +10,29 @@
 	<h4>Drop</h4>
 
 	<div class="wd-col wd-border-child">
-		<dl>
-			<dt>Shelf</dt>
-			<dl id="toDrop" style="min-height: 100px;" class="wd-border wd-bg-grey">
-				<dd data-wd-move="type{drop}$${#myDrop, #toDrop}effect{move}" class="wd-fg-blue">Drop me (move)</dd>
-				<dd data-wd-move="type{drop}${#myDrop}effect{copy}" class="wd-fg-green">Drop me (copy)</dd>
-				<dd data-wd-move="type{drop}${#myDrop}effect{text}" class="wd-fg-red">Drop me (text)</dd>
-			</dl>
-		</dl>
+		<select multiple="true" size="15" id="dropA">
+			<option data-wd-move="type{drop}effect{copyBefore}$${#dropB > *}" class="wd-bg-green">copyBefore</option>
+			<option data-wd-move="type{drop}effect{copyAfter}$${#dropB > *}" class="wd-bg-blue">copyAfter</option>
+			<option data-wd-move="type{drop}effect{copyStart}$${#dropB}" class="wd-bg-red">copyStart</option>
+			<option data-wd-move="type{drop}effect{copyEnd}$${#dropB}" class="wd-bg-pink">copyEnd</option>
 
-		<dl>
-			<dt>Drop Area</dt>
-			<dl id="myDrop" style="min-height: 100px;" class="wd-border wd-bg-yellow"></dl>
-		</dl>
+			<option data-wd-move="type{drop}effect{moveBefore}$${#dropB > *}" class="wd-bg-green">moveBefore</option>
+			<option data-wd-move="type{drop}effect{moveAfter}$${#dropB > *}" class="wd-bg-blue">moveAfter</option>
+			<option data-wd-move="type{drop}effect{moveStart}$${#dropB}" class="wd-bg-red">moveStart</option>
+			<option data-wd-move="type{drop}effect{moveEnd}$${#dropB}" class="wd-bg-pink">moveEnd</option>
+
+			<option data-wd-move="type{drop}effect{replace}$${#dropB > *}" class="wd-bg-green">replace</option>
+
+			<option data-wd-move="type{drop}effect{remove}$${#dropB}" class="wd-bg-red">remove</option>
+
+			<option data-wd-move="type{drop}effect{style}$${#dropB > *}" class="wd-fg-green" style="font-weight: bold;">style</option>
+
+
+		</select>
+
+
+		<select multiple="true" size="15" id="dropB"></select>
+
 	</div>
 
 

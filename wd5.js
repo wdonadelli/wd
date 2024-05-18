@@ -7644,7 +7644,7 @@ const wd = (function() {
 		});
 
 		/*------------------------------------------------------------------------*/
-		if (data.type === "drop") {
+		if (wdMove && data.type === "drop") {
 			if (!check.node) return;
 
 			if (event.type === "mouseover" || event.type === "mouseout") {
@@ -7652,35 +7652,98 @@ const wd = (function() {
 				return;
 			}
 
-			if (event.type === "dragenter") {console.log(event.type);
-				e.style.backgroundColor = "red";
-				return;
-			}
-
-			if (event.type === "dragleave") {console.log(event.type);
-				e.style.backgroundColor = null;
-				return;
-			}
-
-
-
 			if (event.type === "dragstart") {
-				const trigger = function(ev) {
+
+				/*-- Disparador do drop --*/
+				function trigger(ev) {
+
 					ev.preventDefault();
+					const drag  = document.querySelector("[data-wd-move-action=drag]");
+					const drop  = ev.target;
+					const attr  = __String(ev.dataTransfer.getData("text")).wdNotation[0];
+					const files = ev.dataTransfer.files;
+
 					if (ev.type === "drop") {
-						const drag  = document.querySelector("[data-wd-move-action=drag]");
-						const drop  = ev.target;
-						const attr  = __String(ev.dataTransfer.getData("text")).wdNotation[0];
-						const files = ev.dataTransfer.files;
-						console.log(ev.type);
+						const effect = {
+							copyStart: function(drag, drop) {
+								const copy  = drag.cloneNode(true);
+								const first = drop.firstChild;
+								if (first === null) drop.appendChild(copy);
+								else                drop.insertBefore(copy, first);
+								return;
+							},
+							copyEnd: function(drag, drop) {
+								const copy = drag.cloneNode(true);
+								drop.appendChild(copy);
+								return;
+							},
+							moveStart: function(drag, drop) {
+								const first = drop.firstChild;
+								if (first === null) drop.appendChild(drag);
+								else                drop.insertBefore(drag, first);
+								return;
+							},
+							moveEnd: function(drag, drop) {
+								drop.appendChild(drag);
+								return;
+							},
+							copyBefore: function(drag, drop) {
+								const copy = drag.cloneNode(true);
+								drop.parentElement.insertBefore(copy, drop);
+								return;
+							},
+							copyAfter: function(drag, drop) {
+								const copy = drag.cloneNode(true);
+								const next = drop.nextSibling;
+								if (next === null) drop.parentElement.appendChild(copy);
+								else               drop.parentElement.insertBefore(copy, next);
+								return;
+							},
+							moveBefore: function(drag, drop) {
+								drop.parentElement.insertBefore(drag, drop);
+								return;
+							},
+							moveAfter: function(drag, drop) {
+								const next = drop.nextSibling;
+								if (next === null) drop.parentElement.appendChild(drag);
+								else               drop.parentElement.insertBefore(drag, next);
+								return;
+							},
+							replace: function(drag, drop) {
+								drop.parentElement.replaceChild(drag, drop);
+								return;
+							},
+							style: function(drag, drop) {
+								drop.setAttribute("style", drag.getAttribute("style"));
+								drop.setAttribute("class", drag.getAttribute("class"));
+								return;
+							},
+							remove: function(drag, drop) {
+								drag.remove();
+								return;
+							}
+						};
+
+						if (__Type(attr.effect).function)
+							attr.effect("node", drag, drop);
+						else if (attr.effect in effect)
+							effect[attr.effect](drag, drop);
+						else
+							effect.moveEnd(drag, drop);
 						return;
 					}
 					return;
 				}
+				/*-- Fim do disparador do drop --*/
+
 				const node = WD(query);
 				node.forEach(function(x) {
-					x.ondragover = trigger;
-					x.ondrop     = trigger;
+					if (x !== e) {
+						x.ondragover  = trigger;
+						x.ondrop      = trigger;
+						x.ondragenter = trigger;
+						x.ondragleave = trigger;
+					}
 					return;
 				});
 				event.dataTransfer.setData("text", e.dataset.wdMove);
@@ -7692,14 +7755,18 @@ const wd = (function() {
 				event.preventDefault();
 				const node = WD(query);
 				node.forEach(function(x) {
-					x.ondragover = null;
-					x.ondrop     = null;
+					x.ondragover  = null;
+					x.ondrop      = null;
+					x.ondragenter = null;
+					x.ondragleave = null;
 					return;
 				});
 				e.draggable = false;
 				delete e.dataset.wdMoveAction;
+				window.getSelection().removeAllRanges();
 				return;
 			}
+			//window.getSelection().removeAllRanges();
 			return;
 		}
 	};
