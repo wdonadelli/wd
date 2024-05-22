@@ -348,6 +348,20 @@ const wd = (function() {
 		"[data-wd-move-action=\"move\"] *      {cursor: grabbing !important;}",
 		"[data-wd-move*=\"type{drag}\"]        {cursor: grab     !important;}",
 		"[data-wd-move*=\"type{drag}\"]:active {cursor: grabbing !important;}",
+		//".js-wd-drop-over                      {filter: grayscale(0.8) opacity(0.5) !important;}",
+
+		".js-wd-drop-over                {filter: grayscale(0.8) opacity(0.5);}",
+		".js-wd-drop-over *[data-wd-move-action] {filter: none !important;}",
+
+		".js-wd-cursor-n-resize                {cursor: n-resize  !important;}",
+		".js-wd-cursor-ne-resize               {cursor: ne-resize !important;}",
+		".js-wd-cursor-e-resize                {cursor: e-resize  !important;}",
+		".js-wd-cursor-se-resize               {cursor: se-resize !important;}",
+		".js-wd-cursor-s-resize                {cursor: s-resize  !important;}",
+		".js-wd-cursor-sw-resize               {cursor: sw-resize !important;}",
+		".js-wd-cursor-w-resize                {cursor: w-resize  !important;}",
+		".js-wd-cursor-nw-resize               {cursor: nw-resize !important;}",
+
 
 
 
@@ -357,7 +371,6 @@ const wd = (function() {
 		"[data-wd-repeat] > *, [data-wd-load] > * {visibility: hidden;}",
 		"[data-wd-slide] > * {animation: js-wd-fade-in 1s, js-wd-shrink-out 0.5s;}",
 		"nav > *.js-wd-nav-inactive {opacity: 0.5;}",
-		".js-wd-plot {height: 100%; width: 100%; position: absolute; top: 0; left: 0; bottom: 0; right: 0;}",
 		"/* testes */",
 		"*::backdrop {background-color: white;}",
 		"wdsignal-mainbox      {display: block; position: fixed; top: 0; right: 0.5em; left: 0.5em; font-size: 13px;}",
@@ -7508,12 +7521,10 @@ const wd = (function() {
 		const query  = data.$$ || data.$ || null;
 		const check  = __Type(query);
 		const moving = WD.$$("[data-wd-move-action]").length > 0;
-		const init   = wdMove && !moving;
-
-
+		const stop   = wdMove && !moving;
 
 		/*------------------------------------------------------------------------*/
-		if (init && data.type === "jump") {
+		if (wdMove && data.type === "jump") {
 			if (event.type === "click" && check.node) {
 				WD(query).jump(e);
 			}
@@ -7521,7 +7532,7 @@ const wd = (function() {
 		}
 
 		/*------------------------------------------------------------------------*/
-		if (init && data.type === "move") {
+		if (stop && data.type === "move") {
 
 			if (event.type === "mousedown") {
 				const node   = __Node(e);
@@ -7573,7 +7584,7 @@ const wd = (function() {
 		});
 
 		/*------------------------------------------------------------------------*/
-		if (init && data.type === "size") {
+		if (stop && data.type === "size") {
 			const box = e.getBoundingClientRect();
 			const d = 5;
 			const x = event.clientX;
@@ -7622,7 +7633,7 @@ const wd = (function() {
 			} else if (event.type === "mousemove") {
 				const node   = __Node(x);
 				const box    = __String(x.dataset.wdDataTransfer).wdNotation[0];
-				const cursor = x.dataset.wdMoveAction.replace("size-", "");console.log(cursor, box);
+				const cursor = x.dataset.wdMoveAction.replace("size-", "");
 				const dx     = event.clientX - box.clientX;
 				const dy     = event.clientY - box.clientY;
 				if (cursor.indexOf("n") >= 0) {
@@ -7657,78 +7668,46 @@ const wd = (function() {
 			}
 
 			if (event.type === "dragstart") {
-				const node    = WD(query);
-				const effects = ["copy", "move", "link"];
-				const trigger = function(ev) {
-					ev.preventDefault();
-
-					let drop = ev.target;
-					let over = null;
-					while (drop.dataset.wdMoveAction !== "drop") {
-						over = drop;
-						drop = drop.parentElement;
-						if (drop === null) return;
-					}
-					const drag   = document.querySelector("[data-wd-move-action=drag]");
-					const attr   = __String(ev.dataTransfer.getData("text")).wdNotation[0];
-					const effect = event.dataTransfer.dropEffect;
-
-					if (ev.type === "drop") {
-						if (__Type(attr.effect).function) {
-							attr.effect(drag, drop, over);
-						}
-						else if (effect === "link") {
-							const link = document.createElement("A");
-							const text = drag.textContent || drag.caption || drag.title;
-							if (drag.id.trim() === "") drag.id = (new Date()).toISOString();
-							link.href = "#"+drag.id;
-							link.textContent = text;
-							drop.appendChild(link);
-						}
-						else if (effect === "copy") {
-							const copy = drag.cloneNode(true);
-							if ("wdMove" in copy.dataset) delete copy.dataset.wdMove;
-							drop.appendChild(copy);
-						}
-						else if (effect === "move") {
-							drop.appendChild(drag);
-						} else {
-
-						}
-						return;
-					}
-
-					if (ev.type === "dragover") {
-						drop.style.outline = "10px solid yellow";
-						over.style.marginTop = "30px";
-						return;
-					}
-					if (ev.type === "dragleave" ) {
-						drop.style.outline = null;
-						over.style.marginTop = null;
-
-						return;
-					}
-
-
-
-					return;
-				}
-
-				node.forEach(function(x) {
-					if (x !== e) {
-						x.ondragover  = trigger;
-						x.ondrop      = trigger;
-						x.ondragover  = trigger;
-						x.ondragleave = trigger;
-						x.dataset.wdMoveAction = "drop";
-					}
-					return;
-				});
 				event.dataTransfer.setData("text", e.dataset.wdMove);
 				event.dataTransfer.dropEffect = data.effect;
 				event.dataTransfer.effectAllowed = "all";
 				e.dataset.wdMoveAction = "drag";
+
+				const node = WD(query);
+				node.forEach(function(x) {
+					if (x !== e) {
+						x.dataset.wdMoveAction = "drop";
+						x.ondrop = function(ev) {
+							ev.preventDefault();
+							let drop = ev.target;
+							let over = null;
+							while (drop.dataset.wdMoveAction !== "drop") {
+								over = drop;
+								drop = drop.parentElement;
+								if (drop === null) return;
+							}
+							const drag   = document.querySelector("[data-wd-move-action=drag]");
+							const attr   = __String(ev.dataTransfer.getData("text")).wdNotation[0];
+							const effect = event.dataTransfer.dropEffect;
+							if (!__Type(attr.action).function) return;
+
+							if (ev.type === "drop") {
+								attr.action(drag, drop, over);
+							}
+							else if (ev.type === "dragover") {
+
+							}
+							else if (ev.type === "dragleave" ) {
+
+							}
+							return;
+						};
+						x.ondragover  = x.ondrop;
+						x.ondragover  = x.ondrop;
+						x.ondragleave = x.ondrop;
+					}
+					return;
+				});
 				return;
 			}
 
@@ -7744,13 +7723,44 @@ const wd = (function() {
 					x.draggable = false;
 					return;
 				});
-
 				window.getSelection().removeAllRanges();
 				return;
 			}
 			//window.getSelection().removeAllRanges();
 			return;
 		}
+		/*------------------------------------------------------------------------*/
+		if (data.type === "drop") {
+			event.preventDefault();
+			let drop = e;
+			while (!(/type\{drop\}/).test(drop.dataset.wdMove) && drop !== null)
+				drop = drop.parentElement;
+			if (drop === null) return;
+
+
+
+			const attr = __String(drop.dataset.wdMove).wdNotation[0];
+			if (!__Type(attr.action).function) return;
+
+
+			if (event.type === "drop") {
+				const files = event.dataTransfer.files;
+				attr.action(files, drop);
+			}
+			if (event.type === "dragover" || event.type === "dragenter" || event.type === "dragleave") {
+				console.log(event.type);
+				return;
+			}
+
+			return;
+		}
+
+
+
+
+
+		return;
+
 	};
 
 
@@ -7950,6 +7960,10 @@ const wd = (function() {
 			drag:       {which: 1, bubbles : false, trigger: [data_wdMove]},
 			dragstart:  {which: 1, bubbles : false, trigger: [data_wdMove]},
 			dragend:    {which: 1, bubbles : false, trigger: [data_wdMove]},
+			dragover:   {which: 1, bubbles : false, trigger: [data_wdMove]},
+			dragenter:  {which: 1, bubbles : false, trigger: [data_wdMove]},
+			dragleave:  {which: 1, bubbles : false, trigger: [data_wdMove]},
+			drop:       {which: 1, bubbles : false, trigger: [data_wdMove]},
 		};
 		if (!(ev.type in events)) return;
 		if (ev.which !== events[ev.type].which) return;
@@ -7995,8 +8009,11 @@ const wd = (function() {
 			drag:      wdOnMouse,
 			dragstart: wdOnMouse,
 			dragend:   wdOnMouse,
-			dragenter: wdOnMouse,
 			dragleave: wdOnMouse,
+			dragover:  wdOnMouse,
+			dragenter: wdOnMouse,
+			drop:      wdOnMouse,
+
 
 
 

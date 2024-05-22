@@ -5,15 +5,36 @@
 		function blue(elem) {elem.style.color = "blue";}
 		function bold(elem) {elem.style.fontWeight = "bold";}
 		function exit(elem) {return;}
+		function myDrag(drag, drop, over) {
+			if (over !== null)
+				drop.insertBefore(drag, over);
+			else
+				drop.appendChild(drag);
+		}
+		function myDrop(files, drop) {
+			const p = document.createElement("P");
+			p.textContent = files[0].name;
+			drop.appendChild(p);
+
+
+
+
+		}
 	</script>
+
+	<h4>Drop</h4>
+
+	<div style="height: 100px;overflow: auto;" data-wd-move="type{drop}action(myDrop)" class="wd-border"></div>
+
+
 
 	<h4>Drag</h4>
 
 	<div class="wd-col wd-border-child">
 		<div style="height: 100px;overflow: auto;" id="dropA">
-			<div data-wd-move="type{drag}effect{link}$${#dropB}" class="wd-bg-green">link</div>
-			<div data-wd-move="type{drag}effect{copy}$${#dropB}" class="wd-bg-blue">copy</div>
-			<div data-wd-move="type{drag}effect{move}$${#dropB, #dropA}" class="wd-bg-red">move</div>
+			<div data-wd-move="type{drag}effect{move}action(myDrag)$${#dropB, #dropA}" class="wd-bg-red">Move 1</div>
+			<div data-wd-move="type{drag}effect{move}action(myDrag)$${#dropB, #dropA}" class="wd-bg-blue">Move 2</div>
+			<div data-wd-move="type{drag}effect{move}action(myDrag)$${#dropB, #dropA}" class="wd-bg-green">Move 3</div>
 	</div>
 	<div style="height: 100px;overflow: auto;" id="dropB"></div>
 
