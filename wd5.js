@@ -343,9 +343,9 @@ const wd = (function() {
 		"[data-wd-nav],  [data-wd-send], [data-wd-tsort], [data-wd-set] {cursor: pointer;}",
 		"[data-wd-edit], [data-wd-shared] {cursor: pointer;}",
 		"[data-wd-move*=\"type{jump}\"]        {cursor: pointer  !important;}",
-		"[data-wd-move*=\"type{move}\"]        {cursor: move     !important;}",
-		"[data-wd-move-action=\"move\"]        {cursor: grabbing !important;}",
-		"[data-wd-move-action=\"move\"] *      {cursor: grabbing !important;}",
+		"[data-wd-move*=\"type{move}\"]        {cursor: grab     !important;}",
+		"[data-wd-move-action=\"move\"]        {cursor: move     !important;}",
+		"[data-wd-move-action=\"move\"] *      {cursor: move     !important;}",
 		"[data-wd-move*=\"type{drag}\"]        {cursor: grab     !important;}",
 		"[data-wd-move*=\"type{drag}\"]:active {cursor: grabbing !important;}",
 		//".js-wd-drop-over                      {filter: grayscale(0.8) opacity(0.5) !important;}",
@@ -353,14 +353,19 @@ const wd = (function() {
 		".js-wd-drop-over                {filter: grayscale(0.8) opacity(0.5);}",
 		".js-wd-drop-over *[data-wd-move-action] {filter: none !important;}",
 
-		".js-wd-cursor-n-resize                {cursor: n-resize  !important;}",
-		".js-wd-cursor-ne-resize               {cursor: ne-resize !important;}",
-		".js-wd-cursor-e-resize                {cursor: e-resize  !important;}",
-		".js-wd-cursor-se-resize               {cursor: se-resize !important;}",
-		".js-wd-cursor-s-resize                {cursor: s-resize  !important;}",
-		".js-wd-cursor-sw-resize               {cursor: sw-resize !important;}",
-		".js-wd-cursor-w-resize                {cursor: w-resize  !important;}",
-		".js-wd-cursor-nw-resize               {cursor: nw-resize !important;}",
+		".js-wd-cursor-n-resize  {cursor: n-resize  !important;}",
+		".js-wd-cursor-ne-resize {cursor: ne-resize !important;}",
+		".js-wd-cursor-e-resize  {cursor: e-resize  !important;}",
+		".js-wd-cursor-se-resize {cursor: se-resize !important;}",
+		".js-wd-cursor-s-resize  {cursor: s-resize  !important;}",
+		".js-wd-cursor-sw-resize {cursor: sw-resize !important;}",
+		".js-wd-cursor-w-resize  {cursor: w-resize  !important;}",
+		".js-wd-cursor-nw-resize {cursor: nw-resize !important;}",
+		".js-wd-cursor-none *    {cursor: none      !important;}",
+		".js-wd-hline {position: fixed; left: 0; width: 100%;}",
+		".js-wd-hline {border-top: thin solid #000000; z-index: 999999;}",
+		".js-wd-vline {position: fixed; top: 0; height: 100%;}",
+		".js-wd-vline {border-left: thin solid #000000; height: 100%; z-index: 999999;}",
 
 
 
@@ -7522,12 +7527,13 @@ const wd = (function() {
 		const check  = __Type(query);
 		const moving = WD.$$("[data-wd-move-action]").length > 0;
 		const stop   = wdMove && !moving;
+		const points = ("n ne e se s sw w nw").split(" ");
+		points.forEach(function(v,i,a) {a[i] = "js-wd-cursor-"+v+"-resize";});
 
 		/*------------------------------------------------------------------------*/
-		if (wdMove && data.type === "jump") {
-			if (event.type === "click" && check.node) {
+		if (stop && data.type === "jump") {
+			if (event.type === "click" && check.node)
 				WD(query).jump(e);
-			}
 			return;
 		}
 
@@ -7584,8 +7590,10 @@ const wd = (function() {
 		});
 
 		/*------------------------------------------------------------------------*/
-		if (stop && data.type === "size") {
+		if (stop && data.type === "resize") {
+			/*-- Capturando informações sobre o elemento a redimensionar --*/
 			const box = e.getBoundingClientRect();
+			const pst = __Node(e).styles.position;
 			const d = 5;
 			const x = event.clientX;
 			const y = event.clientY;
@@ -7596,63 +7604,101 @@ const wd = (function() {
 			let cursor = "";
 			if (N || S) cursor += N ? "n" : "s";
 			if (W || E) cursor += E ? "e" : "w";
+			/* Posicionamento estático só avança para baixo e direita */
+			if (pst === "static") cursor = cursor.replace(/[nw]/g, "");
 
-			if (event.type === "mousemove")
-				e.style.cursor = cursor === "" ? null : cursor+"-resize";
+			/*-- Ícone do Mouse --*/
+			if (event.type === "mousemove") {
+				WD(e).set({
+					class: {remove: points.join(" ")}
+				}).set({
+					class: {add: cursor === "" ? "" : "js-wd-cursor-"+cursor+"-resize"}
+				});
+			}
 
+			/*-- Preparando o redimensionamento --*/
 			if (event.type === "mousedown" && cursor !== "") {
 				const node  = __Node(e);
 				const box   = node.position;
-				const upper = __Node(e.parentElement).styles;
 				box.clientX = event.clientX;
 				box.clientY = event.clientY;
-
-				/* modificando elementos estáticos e transformadores */
-				if (upper.position === "static")
-					e.parentElement.style.position = "relative";
-				if (node.styles.position === "static")
-					e.style.position = "relative";
 				e.style.transform = "none";
 				node.position     = box;
 
 				/* definindo dataTransfer manual */
 				let dataTransfer = [];
 				for (let i in box) dataTransfer.push(i+"{"+box[i]+"}");
-				e.dataset.wdMoveAction   = "size-"+cursor;
+				e.dataset.wdMoveAction   = "resize-"+cursor;
 				e.dataset.wdDataTransfer = dataTransfer.join("");
+				/* Criando linhas auxiliares */
+				if ((/[ns]/).test(cursor)) {
+					const hline = document.createElement("DIV");
+					hline.className = "js-wd-hline";
+					document.body.appendChild(hline);
+				}
+				if ((/[ew]/).test(cursor)) {
+					const vline = document.createElement("DIV");
+					vline.className = "js-wd-vline";
+					document.body.appendChild(vline);
+				}
+				WD(document.body).set({class: {add: "js-wd-cursor-none"}});
 				return;
 			}
 			return;
 		}
 
-		const size = WD.$$("[data-wd-move-action|=size]");
+		/*-- Redimencionando o objeto --*/
+		const size  = WD.$$("[data-wd-move-action|=resize]");
+		const hline = WD.$$(".js-wd-hline");
+		const vline = WD.$$(".js-wd-vline");
 		size.forEach(function(x) {
+			/*-- Encerrando o redimensionamento --*/
 			if (event.type === "mouseup" || event.buttons !== 1) {
 				delete x.dataset.wdMoveAction;
 				delete x.dataset.wdDataTransfer;
-			} else if (event.type === "mousemove") {
+				hline.set({remove: []});
+				vline.set({remove: []});
+				WD(e).set({class: {remove: points.join(" ")}});
+				WD(document.body).set({class: {remove: "js-wd-cursor-none"}});
+			}
+			/*-- Redimensionando --*/
+			else if (event.type === "mousemove") {
 				const node   = __Node(x);
 				const box    = __String(x.dataset.wdDataTransfer).wdNotation[0];
-				const cursor = x.dataset.wdMoveAction.replace("size-", "");
+				const cursor = x.dataset.wdMoveAction.replace("resize-", "");
 				const dx     = event.clientX - box.clientX;
 				const dy     = event.clientY - box.clientY;
 				if (cursor.indexOf("n") >= 0) {
 					box.height -= dy;
 					box.top    += dy;
+					hline.set({style: {top: box.top+"px"}});
 				}
 				if (cursor.indexOf("s") >= 0) {
 					box.height += dy;
 					box.bottom -= dy;
+					hline.set({style: {top: (box.top + box.height)+"px"}});
 				}
 				if (cursor.indexOf("w") >= 0) {
 					box.width -= dx;
 					box.left  += dx;
+					vline.set({style: {left: box.left+"px"}});
 				}
 				if (cursor.indexOf("e") >= 0) {
 					box.width += dx;
 					box.right -= dx;
+					vline.set({style: {left: (box.left + box.width)+"px"}});
 				}
 				node.position = box;
+				/* configurando linhas */
+				const lines = x.getBoundingClientRect();
+				if (cursor.indexOf("n") >= 0)
+					hline.set({style: {top: lines.top+"px"}});
+				if (cursor.indexOf("s") >= 0)
+					hline.set({style: {top: lines.bottom+"px"}});
+				if (cursor.indexOf("w") >= 0)
+					vline.set({style: {left: lines.left+"px"}});
+				if (cursor.indexOf("e") >= 0)
+					vline.set({style: {left: lines.right+"px"}});
 				window.getSelection().removeAllRanges();
 			}
 			return;

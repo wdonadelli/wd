@@ -15,10 +15,6 @@
 			const p = document.createElement("P");
 			p.textContent = files[0].name;
 			drop.appendChild(p);
-
-
-
-
 		}
 	</script>
 
@@ -46,28 +42,26 @@
 
 	<div class="wd-col wd-border-child">
 
-		<dl id="myShelf">
-			<dt>Shelf</dt>
-			<dd data-wd-move="type{jump}$${#myShelf, #myBasket, #myRecycler}" class="wd-fg-blue">Item 1</dd>
-			<dd data-wd-move="type{jump}$${#myShelf, #myRecycler}" class="wd-fg-green">Item 2</dd>
-			<dd data-wd-move="type{jump}$${#myShelf, #myBasket}" class="wd-fg-red">Item 3</dd>
-		</dl>
+		<div id="myShelf" style="height: 100px;overflow: auto;">
+			<div class="wd-b">Shelf</div>
+			<div data-wd-move="type{jump}$${#myShelf, #myBasket, #myRecycler}" class="wd-bg-blue">Item 1</div>
+			<div data-wd-move="type{jump}$${#myShelf, #myRecycler}" class="wd-bg-green">Item 2</div>
+			<div data-wd-move="type{jump}$${#myShelf, #myBasket}" class="wd-bg-red">Item 3</div>
+		</div>
 
-		<dl id="myBasket">
-			<dt>Basket</dt>
-		</dl>
+		<div id="myBasket" style="height: 100px;overflow: auto;">
+			<div class="wd-b">Basket</div>
+		</div>
 
-		<dl id="myRecycler">
-			<dt>Recycler</dt>
-		</dl>
+		<div id="myRecycler" style="height: 100px;overflow: auto;">
+			<div class="wd-b">Recycler</div>
+		</div>
 
 	</div>
 
 	<h4>Move</h4>
 
-
-
-	<div class="wd-window wd-flyer wd-bg-blue wd-radius" id="myMove" data-wd-move="type{size}">
+	<div class="wd-window wd-flyer wd-bg-blue wd-radius wd-border" id="myMove" data-wd-move="type{resize}">
 		<header data-wd-move="type{move}${#myMove}" >
 			<h4 id="myPoint" data-wd-move="type{move}${#myMove}">Move me (fixed)</h4>
 		</header>
@@ -95,9 +89,11 @@
 
 
 
-	<h4>Size</h4>
+	<h4>Resize</h4>
 
-	<div data-wd-move="type{size}" class="wd-bg-blue" style="width: 100px; height: 50px;">SIZE</div>
+	<div data-wd-move="type{resize}" class="wd-bg-blue" style="width: 100px; height: 50px;position: static;">SIZE (static)</div>
+
+	<div data-wd-move="type{resize}" class="wd-bg-red" style="width: 100px; height: 50px;position: relative">SIZE (relative)</div>
 
 
 	<h4>Menu</h4>
@@ -110,4 +106,21 @@
 
 
 	<br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
+
+	<table border="1">
+		<thead>
+			<tr>
+				<th class="wd-bg-red" data-wd-move="type{resize}">A</th>
+				<th class="wd-bg-green" data-wd-move="type{resize}">B</th>
+				<th class="wd-bg-blue" data-wd-move="type{resize}">C</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr><td>1</td><td>2</td><td>3</td></tr>
+			<tr><td>1</td><td>2</td><td>3</td></tr>
+			<tr><td>1</td><td>2</td><td>3</td></tr>
+		</tbody>
+	</table>
+
+
 </div>
