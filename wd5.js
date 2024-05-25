@@ -335,10 +335,11 @@ const wd = (function() {
 	/**###### ``**const** ''array'' __JSCSS``
 	Guarda os estilos da biblioteca (cada item corresponde a uma linha)**/
 	const __JSCSS = [
-		"@keyframes js-wd-fade-in    {from {opacity: 0 !important;} to {opacity: 1 !important;}}",
-		"@keyframes js-wd-fade-out   {from {opacity: 1 !important;} to {opacity: 0 !important;}}",
-		"@keyframes js-wd-shrink-out {from {transform: scale(0) !important;} to {transform: scale(1) !important;}}",
-		"@keyframes js-wd-shrink-in  {from {transform: scale(1) !important;} to {transform: scale(0) !important;}}",
+		"@keyframes js-wd-fade-in      {from {opacity: 0 !important;} to {opacity: 1 !important;}}",
+		"@keyframes js-wd-fade-out     {from {opacity: 1 !important;} to {opacity: 0 !important;}}",
+		"@keyframes js-wd-shrink-out   {from {transform: scale(0) !important;} to {transform: scale(1) !important;}}",
+		"@keyframes js-wd-shrink-in    {from {transform: scale(1) !important;} to {transform: scale(0) !important;}}",
+		"@keyframes js-wd-border-blink {from {box-shadow: inset 0 0 3px 1px yellow !important;} to {box-shadow: inset 0 0 1px 1px red !important;}}",
 		".js-wd-no-display {display: none !important;}",
 		"[data-wd-nav],  [data-wd-send], [data-wd-tsort], [data-wd-set] {cursor: pointer;}",
 		"[data-wd-edit], [data-wd-shared] {cursor: pointer;}",
@@ -348,13 +349,16 @@ const wd = (function() {
 		"[data-wd-move-action=\"move\"] *      {cursor: move     !important;}",
 		"[data-wd-move*=\"type{drag}\"]        {cursor: grab     !important;}",
 		"[data-wd-move*=\"type{drag}\"]:active {cursor: grabbing !important;}",
-		"[data-wd-move-action=\"drop\"] {box-shadow: inset 0 0 0 2px yellow; border-radius: 0.5em;}",
-		"[data-wd-move-action=\"drop\"] > * {opacity: 0.5;}",
+
+
+		//"[data-wd-move-action=\"drop\"] {box-shadow: inset 0 0 3px 1px yellow;}",
+
+		"[data-wd-move-action=\"drop\"] {animation-name: js-wd-fade-in; animation-duration: 1s; animation-iteration-count: infinite;}",
+		"[data-wd-move-action=\"drop\"] {background-color: green; border-radius: 0.5em;}",
 
 
 
-		".js-wd-drop-over                {filter: grayscale(0.8) opacity(0.5);}",
-		".js-wd-drop-over *[data-wd-move-action] {filter: none !important;}",
+
 
 		".js-wd-cursor-n-resize  * {cursor: n-resize  !important;}",
 		".js-wd-cursor-ne-resize * {cursor: ne-resize !important;}",
@@ -380,6 +384,12 @@ const wd = (function() {
 		"nav > *.js-wd-nav-inactive {opacity: 0.5;}",
 		"/* testes */",
 		"*::backdrop {background-color: white;}",
+
+
+
+
+
+
 		"wdsignal-mainbox      {display: block; position: fixed; top: 0; right: 0.5em; left: 0.5em; font-size: 13px;}",
 		"wdsignal-mainbox      {width: auto; margin: auto; padding: 0; z-index: 999999; overflow: auto; max-height: 100%;}",
 		"wdsignal-messagebox   {display: block; position: relative; margin: 0.5em auto 0 auto; padding: 0;}",
@@ -7528,6 +7538,7 @@ const wd = (function() {
 		const query  = data.$$ || data.$ || null;
 		const check  = __Type(query);
 		const node   = __Node(e);
+		const action = WD.$$("[data-wd-move-action]").length > 0;
 
 		/*------------------------------------------------------------------------*/
 		if (data.type === "jump" && event.type === "click") {
@@ -7536,9 +7547,7 @@ const wd = (function() {
 		}
 
 		/*------------------------------------------------------------------------*/
-		const moving = WD.$$("[data-wd-move-action=move]");
-
-		if (moving.length === 0 && data.type === "move") {
+		if (!action && data.type === "move") {
 
 			/*-- Preparando o elemento para mover --*/
 			if (event.type === "mousedown") {
@@ -7546,7 +7555,7 @@ const wd = (function() {
 				const mover  = myself ? e : check.value[0];
 				const target = __Node(mover);
 				const nail   = target.styles.position;
-				/* Elemento estático ou semifixo não movem */
+				/* Elementos estáticos e adesivos não se mover */
 				if (nail === "static" || nail === "sticky") return;
 				/* a âncora precisa estar contida no elemento a mover */
 				if (!myself) {
@@ -7572,6 +7581,7 @@ const wd = (function() {
 			return;
 		}
 
+		const moving = WD.$$("[data-wd-move-action=move]");
 		if (moving.length > 0) {
 
 			moving.forEach(function(x) {
@@ -7596,9 +7606,7 @@ const wd = (function() {
 		}
 
 		/*------------------------------------------------------------------------*/
-		const resizing = WD.$$("[data-wd-move-action|=resize]");
-
-		if (resizing.length === 0 && data.type === "resize") {
+		if (!action && data.type === "resize") {
 			/*-- Capturando informações sobre o elemento a redimensionar --*/
 			const box  = e.getBoundingClientRect();
 			const d    = 6;
@@ -7610,12 +7618,16 @@ const wd = (function() {
 			const E    = x <= box.right  && x >= (box.right  - d);
 			const re   = /js\-wd\-cursor\-[nsew]+\-resize\ ?/g;
 			const attr = document.body.className;
+			const pos  = node.styles.position;
+
 			let cursor = "";
 			if (N || S) cursor += (N ? "n" : "s");
 			if (W || E) cursor += (E ? "e" : "w");
-			if (node.styles.position === "static")
+			/* Elemento estático, relativo ou só redimensiona para direita e para baixo */
+			if (pos === "static" || pos === "relative" || pos === "sticky")
 				cursor = cursor.replace(/[nw]/g, "");
 
+			/* especifica o ícone do mouse de acordo com a posição do mouse */
 			const mouse = "js-wd-cursor-"+cursor+"-resize";
 			if (cursor === "" || event.type === "mouseout") {
 				document.body.className = attr.replace(re, "");
@@ -7653,6 +7665,7 @@ const wd = (function() {
 			return;
 		}
 
+		const resizing = WD.$$("[data-wd-move-action|=resize]");
 		if (resizing.length > 0) {
 			const hline = WD.$$(".js-wd-hline");
 			const vline = WD.$$(".js-wd-vline");
@@ -7678,6 +7691,7 @@ const wd = (function() {
 					const cursor = x.dataset.wdMoveAction.replace("resize-", "");
 					const dx     = event.pageX - box.pageX;
 					const dy     = event.pageY - box.pageY;
+					const pos    = node.styles.position;
 					if (cursor.indexOf("n") >= 0) {
 						box.height -= dy;
 						box.top    += dy;
@@ -7694,7 +7708,10 @@ const wd = (function() {
 						box.width += dx;
 						box.right -= dx;
 					}
-					node.position = box;
+					if (pos === "static" || pos === "relative" || pos === "sticky")
+						node.position = {width: box.width, height: box.height};
+					else
+						node.position = box;
 					/* configurando linhas */
 					const lines = x.getBoundingClientRect();
 					if (cursor.indexOf("n") >= 0)
@@ -7729,6 +7746,8 @@ const wd = (function() {
 				event.dataTransfer.dropEffect = data.effect;
 				event.dataTransfer.effectAllowed = "all";
 				e.dataset.wdMoveAction = "drag";
+
+
 				const drops = WD(query);
 
 				drops.forEach(function(x) {
@@ -7782,7 +7801,7 @@ const wd = (function() {
 					x.ondragover  = null;
 					x.ondragleave = null;
 					delete x.dataset.wdMoveAction;
-					x.draggable = false;
+					x.removeAttribute("draggable");
 					return;
 				});
 				window.getSelection().removeAllRanges();
