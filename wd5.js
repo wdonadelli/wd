@@ -101,7 +101,7 @@ const wd = (function() {
 				padding: "0.1em 0.5em", margin: "0", zIndex: "999999",
 				position: "fixed", top: "0", right: "0", bottom: "0", left: "0",
 				cursor: "progress", backgroundColor: "rgba(0,0,0,0.3)",
-				animation: "js-wd-fade-in 0.1s",
+				animation: "js-wd-emerge 0.1s",
 			},
 			bar: {
 				display: "block", margin: "5px 5px auto auto", width: "25%",
@@ -159,10 +159,10 @@ const wd = (function() {
 	/**###### ``**const** ''node'' __SIGNALMESSAGEBOX``
 	Registra o modelo de caixa de mensagem.**/
 	const __SIGNALMESSAGEBOX = (function() {
-		const box   = document.createElement("wdsignal-messagebox");
-		const title = document.createElement("wdsignal-messagetitle");
-		const body  = document.createElement("wdsignal-messagebody");
-		const close = document.createElement("wdsignal-messageclose");
+		const box   = document.createElement("ARTICLE");
+		const title = document.createElement("H6");
+		const body  = document.createElement("P");
+		const close = document.createElement("SPAN");
 		box.appendChild(title);
 		box.appendChild(body);
 		box.appendChild(close);
@@ -173,7 +173,8 @@ const wd = (function() {
 	/**###### ``**const** ''node'' __SIGNALBOX``
 	Registra o container das caixas de mensagem.**/
 	const __SIGNALBOX = (function() {
-		const main = document.createElement("wdsignal-mainbox");
+		const main = document.createElement("SECTION");
+		main.className = "js-wd-signal";
 		/* vinculando evento */
 		main.addEventListener("wdshowmessage", function(ev) {
 			/* Emitir notificações */
@@ -198,9 +199,9 @@ const wd = (function() {
 				/* obtendo elementos */
 				const base  = ev.target;
 				const box   = __SIGNALMESSAGEBOX.cloneNode(true);
-				const title = box.querySelector("wdsignal-messagetitle");
-				const body  = box.querySelector("wdsignal-messagebody");
-				const close = box.querySelector("wdsignal-messageclose");
+				const title = box.querySelector("h6");
+				const body  = box.querySelector("p");
+				const close = box.querySelector("span");
 				/* definindo valores */
 				title.textContent = ev.detail.title;
 				body.textContent  = ev.detail.body;
@@ -335,32 +336,36 @@ const wd = (function() {
 	/**###### ``**const** ''array'' __JSCSS``
 	Guarda os estilos da biblioteca (cada item corresponde a uma linha)**/
 	const __JSCSS = [
-		"@keyframes js-wd-fade-in      {from {opacity: 0 !important;} to {opacity: 1 !important;}}",
-		"@keyframes js-wd-fade-out     {from {opacity: 1 !important;} to {opacity: 0 !important;}}",
-		"@keyframes js-wd-shrink-out   {from {transform: scale(0) !important;} to {transform: scale(1) !important;}}",
-		"@keyframes js-wd-shrink-in    {from {transform: scale(1) !important;} to {transform: scale(0) !important;}}",
-		"@keyframes js-wd-border-blink {from {box-shadow: inset 0 0 3px 1px yellow !important;} to {box-shadow: inset 0 0 1px 1px red !important;}}",
+		"/*-- ANIMATION --*/",
+		"@keyframes js-wd-emerge {from {opacity: 0;} to {opacity: 1;}}",
+		"@keyframes js-wd-fade   {from {opacity: 1;} to {opacity: 0;}}",
+		"@keyframes js-wd-expand {from {transform: scale(0);} to {transform: scale(1);}}",
+		"@keyframes js-wd-shrink {from {transform: scale(1);} to {transform: scale(0);}}",
+		//"@keyframes js-wd-blink {from {} to {background-color: #e6e6e5; box-shadow: 0 0 5px 1px #e6e6e5;}}",
+		//"@keyframes js-wd-blink {from {} to {box-shadow: 0 0 1em 1px grey, inset 0 0 5em 1px grey;}}",
+
+		//"@keyframes js-wd-blink {from {background-cdolor: black;} to {background-codlor: white;box-shadow: spread 0 0 10px 2px white;}}",
+		//"@keyframes js-wd-blink {from {background: repeating-linear-gradient(45deg, blue, red 20px);} to {background: repeating-linear-gradient(45deg, red, blue 20px);}}",
+
+		//"[data-wd-move-action=\"drop\"] {animation: js-wd-blink 1s linear 0s infinite ;}",
+		//"[data-wd-move-action=\"drop\"] {background: repeating-linear-gradient(45deg, blue, red 20px);}",
+		//"[data-wd-move-action=\"drop\"] {border-image: linear-gradient(blue, red) 1 1 / 5px 3px / 1rem round space;}",
+
+
+
+
+
 		".js-wd-no-display {display: none !important;}",
 		"[data-wd-nav],  [data-wd-send], [data-wd-tsort], [data-wd-set] {cursor: pointer;}",
 		"[data-wd-edit], [data-wd-shared] {cursor: pointer;}",
-		"[data-wd-move*=\"type{jump}\"]        {cursor: pointer  !important;}",
-		"[data-wd-move*=\"type{move}\"]        {cursor: grab     !important;}",
-		"[data-wd-move-action=\"move\"]        {cursor: move     !important;}",
-		"[data-wd-move-action=\"move\"] *      {cursor: move     !important;}",
-		"[data-wd-move*=\"type{drag}\"]        {cursor: grab     !important;}",
-		"[data-wd-move*=\"type{drag}\"]:active {cursor: grabbing !important;}",
-
-
-		//"[data-wd-move-action=\"drop\"] {box-shadow: inset 0 0 3px 1px yellow;}",
-
-		"[data-wd-move-action=\"drop\"] {animation-name: js-wd-fade-in; animation-duration: 1s; animation-iteration-count: infinite;}",
-		"[data-wd-move-action=\"drop\"] {background-color: green; border-radius: 0.5em;}",
-
-
-
-
-
-		".js-wd-cursor-n-resize  * {cursor: n-resize  !important;}",
+		"/*-- WDMOVE --*/",
+		"[data-wd-move*=\"type{jump}\"]        {cursor: pointer;}",
+		"[data-wd-move*=\"type{drag}\"]        {cursor: grab;}",
+		"[data-wd-move*=\"type{drag}\"]:active {cursor: grabbing;}",
+		"[data-wd-move*=\"type{move}\"]        {cursor: move;}",
+		"[data-wd-move-action=\"move\"]        {cursor: grabbing;}",
+		"[data-wd-move-action=\"move\"] *      {cursor: grabbing;}",
+		".js-wd-cursor-n-resize  * {cursor: n-resize !important;}",
 		".js-wd-cursor-ne-resize * {cursor: ne-resize !important;}",
 		".js-wd-cursor-e-resize  * {cursor: e-resize  !important;}",
 		".js-wd-cursor-se-resize * {cursor: se-resize !important;}",
@@ -373,6 +378,20 @@ const wd = (function() {
 		".js-wd-vline {position: fixed; top: 0; height: 100vh;}",
 		".js-wd-vline {border-left: thin solid #000000; height: 100%; z-index: 999999;}",
 
+		//"[data-wd-move-action=\"drop\"] {animation: js-wd-blink 1s linear 0s infinite alternate;}",
+
+
+
+
+		/*"[data-wd-move-action=\"drop\"] {/*background-color: green;* / border-radius: 0.5em;}",*/
+
+
+
+
+
+
+
+
 
 
 
@@ -380,31 +399,34 @@ const wd = (function() {
 		"[data-wd-tsort=\"-1\"]:before {content: \"\\2191 \"; font-weight: normal;}",
 		"[data-wd-tsort=\"+1\"]:before {content: \"\\2193 \"; font-weight: normal;}",
 		"[data-wd-repeat] > *, [data-wd-load] > * {visibility: hidden;}",
-		"[data-wd-slide] > * {animation: js-wd-fade-in 1s, js-wd-shrink-out 0.5s;}",
+		"[data-wd-slide] > * {animation: js-wd-emerge 1s, js-wd-shrink-out 0.5s;}",
 		"nav > *.js-wd-nav-inactive {opacity: 0.5;}",
 		"/* testes */",
 		"*::backdrop {background-color: white;}",
 
+		//TODO ver coloração https://developer.mozilla.org/pt-BR/docs/Web/CSS/background-color
+		"/*-- SIGNAL SECTION --*/",
+		".js-wd-signal {position: fixed; top: 0; right: 0.5em; left: 0.5em;}",
+		".js-wd-signal {display: block; width: auto; max-height: 75vh; margin: auto; padding: 1px;}",
+		".js-wd-signal {z-index: 999999; overflow: auto; font-size: 14px; backgroud-color: transparent;}",
+		"@media screen and (min-width: 768px) {.js-wd-signal {left: 30vw; right: 30vw;}}",
+		".js-wd-signal article {position: relative; display: block;}",
+		".js-wd-signal article {margin: 0.5em auto 0 auto; padding: 0;}",
+		".js-wd-signal article {color: #828282; background-color: #1A1A1A;}",
+		".js-wd-signal article {border: thin solid #000000; border-radius: 0.5em;}",
+		".js-wd-signal article {box-shadow: inset 0 0 2px 1px rgba(0,0,0,0.6);}",
+		".js-wd-signal article {animation: js-wd-expand 0.5s ease 0s, js-wd-shrink 0.6s ease 8.5s;}",
+		".js-wd-signal h6      {display: block; padding: 0.5em; margin: 0;}",
+		".js-wd-signal h6      {border-radius: 0.5em 0.5em 0 0;}",
+		".js-wd-signal h6      {font-size: larger; font-weight: normal;}",
+		".js-wd-signal p       {display: block; padding: 0.5em 0.5em 1em 0.5em; margin: 0;}",
+		".js-wd-signal p       {border-radius: 0 0 0.5em 0.5em; white-space: pre-wrap;}",
+		".js-wd-signal span    {position: absolute; display: block; top: 0.5em; right: 0.5em;}",
+		".js-wd-signal span    {line-height: 1; cursor: pointer; margin: 0; z-index: 5;}",
+		".js-wd-signal span:before {content: \"\u00D7\";}",
 
 
 
-
-
-		"wdsignal-mainbox      {display: block; position: fixed; top: 0; right: 0.5em; left: 0.5em; font-size: 13px;}",
-		"wdsignal-mainbox      {width: auto; margin: auto; padding: 0; z-index: 999999; overflow: auto; max-height: 100%;}",
-		"wdsignal-messagebox   {display: block; position: relative; margin: 0.5em auto 0 auto; padding: 0;}",
-		"wdsignal-messagebox   {background-color: rgb(30,30,30); color: rgb(170,170,170);}",
-		"wdsignal-messagebox   {border-radius: 0.5em; border: 1px solid rgba(0,0,0,0.6);}",
-		"wdsignal-messagebox   {box-shadow: 1px 1px 6px rgba(0,0,0,0.6);}",
-		"wdsignal-messagebox   {animation-name: js-wd-shrink-out, js-wd-shrink-in;}",
-		"wdsignal-messagebox   {animation-duration: 0.5s, 0.5s; animation-delay: 0s, 8.5s;}",
-		"wdsignal-messagetitle {display: block; padding: 0.5em; margin: 0;}",
-		"wdsignal-messagetitle {font-size: larger; border-radius: 0.5em 0.5em 0 0;}",
-		"wdsignal-messagebody  {display: block; padding: 0.5em; margin: 0; border-radius: 0 0 0.5em 0.5em;}",
-		"wdsignal-messageclose {display: block; position: absolute; top: 0.5em; right: 0.5em;}",
-		"wdsignal-messageclose {line-height: 1; cursor: pointer; margin: 0; z-index: 5;}",
-		"wdsignal-messageclose:before {content: \"\u00D7\";}",
-		"@media screen and (min-width: 768px) {wdsignal-mainbox {width: 40%;}}",
 
 
 
@@ -4153,32 +4175,11 @@ const wd = (function() {
 		/**. ``''object'' position``: Retorna ou define o dimensionamento do elemento por meio de um objeto com os seguintes atributos: width, height, top, right, bottom e left. Os valores dependem do posicionalmento do elemento e devem ser numéricos.**/
 		position: {
 			get: function() {
-				const gbcr = this.node.getBoundingClientRect();
+				const re   = /[^0-9\.\-]/g;
 				const css  = this.styles;
 				let   data = {height: 0, width: 0, left: 0, top: 0, right: 0, bottom: 0};
 				for (let i in data)
-					if (i in gbcr) data[i] = gbcr[i];
-
-				if (css.position === "fixed") {
-					data.right  = window.innerWidth  - data.right;
-					data.bottom = window.innerHeight - data.bottom;
-				} else if (css.position === "absolute") {
-					const parent = this.node.parentElement;
-					if (parent !== null) {
-						let upnode  = parent.getBoundingClientRect();
-						data.top    = data.top  - upnode.top;
-						data.left   = data.left - upnode.left;
-						data.bottom = window.innerHeight - (upnode.bottom - data.bottom);
-						data.right  = window.innerWidth  - (upnode.right  - data.right);
-					}
-				} else {
-					const re = /[^0-9\.\-]/g;
-					data.top    = Number(css.top.replace(re, ""));
-					data.left   = Number(css.left.replace(re, ""));
-					data.bottom = Number(css.bottom.replace(re, ""));
-					data.right  = Number(css.right.replace(re, ""));
-				}
-
+					data[i] = Number(css[i].replace(re, ""));
 				return data;
 			},
 			set: function(x) {
@@ -7568,8 +7569,7 @@ const wd = (function() {
 				const box = target.position;
 				box.pageX = event.pageX;
 				box.pageY = event.pageY;
-				mover.style.transform = "none";
-				target.position       = box;
+				target.position = box;
 
 				/* definindo dataTransfer manual */
 				let dataTransfer = [];
@@ -7638,11 +7638,10 @@ const wd = (function() {
 
 			/*-- Preparando o redimensionamento --*/
 			if (event.type === "mousedown" && cursor !== "") {
-				const box         = node.position;
-				box.pageX         = event.pageX;
-				box.pageY         = event.pageY;
-				e.style.transform = "none";
-				node.position     = box;
+				const box = node.position;
+				box.pageX = event.pageX;
+				box.pageY = event.pageY;
+				node.position = box;
 
 				/* definindo dataTransfer manual */
 				let dataTransfer = [];
