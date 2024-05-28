@@ -1,0 +1,26 @@
+<div>
+
+	<script>
+	function myMenu(e) {
+		return {
+			color: {
+				text: "Toggle Color",
+				action: function (id, text, elem) {
+					console.log(arguments);
+				}
+			}
+		}
+	}
+
+	</script>
+
+	<h4>Click</h4>
+
+	<div><span data-wd-menu="items(myMenu)">Click me!</span></div>
+
+<!--=========================================================================-->
+	<h4>Over</h4>
+
+	<div><span data-wd-menu="items(myMenu)event{over}">Over me!</span></div>
+
+</div>

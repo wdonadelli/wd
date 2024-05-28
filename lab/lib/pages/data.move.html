@@ -12,6 +12,7 @@
 				drop.appendChild(drag);
 		}
 		function myDrop(files, drop) {
+			if (files.length === 0) return;
 			const p = document.createElement("P");
 			p.textContent = files[0].name;
 			drop.appendChild(p);

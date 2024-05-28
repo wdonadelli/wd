@@ -352,6 +352,15 @@ const wd = (function() {
 		//"[data-wd-move-action=\"drop\"] {border-image: linear-gradient(blue, red) 1 1 / 5px 3px / 1rem round space;}",
 
 
+		"[data-wd-move-action=\"drop\"] {border-image-source: linear-gradient(45deg, white, blue);}",
+		"[data-wd-move-action=\"drop\"] {border-image-width: 10px; border-image-outset: 5px;}",
+		"[data-wd-move-action=\"drop\"] {border-image-slice: 1% fill; }",
+
+		"[data-wd-move-action=\"files\"] {border-image-source: linear-gradient(45deg, white, gray);}",
+		"[data-wd-move-action=\"files\"] {border-image-width: 10px; border-image-outset: 5px;}",
+		"[data-wd-move-action=\"files\"] > * {/*border-image-slice: 5% 10% 15% 20%;*/ visibility: hidden;}",
+
+
 
 
 
@@ -415,7 +424,7 @@ const wd = (function() {
 		".js-wd-signal article {color: #828282; background-color: #1A1A1A;}",
 		".js-wd-signal article {border: thin solid #000000; border-radius: 0.5em;}",
 		".js-wd-signal article {box-shadow: inset 0 0 2px 1px rgba(0,0,0,0.6);}",
-		".js-wd-signal article {animation: js-wd-expand 0.5s ease 0s, js-wd-shrink 0.6s ease 8.5s;}",
+		".js-wd-signal article {animation: js-wd-expand 0.5s ease 0s, js-wd-shrink 0.5s ease 8.5s;}",
 		".js-wd-signal h6      {display: block; padding: 0.5em; margin: 0;}",
 		".js-wd-signal h6      {border-radius: 0.5em 0.5em 0 0;}",
 		".js-wd-signal h6      {font-size: larger; font-weight: normal;}",
@@ -7393,6 +7402,11 @@ const wd = (function() {
 		return;
 	};
 
+
+
+
+
+
 /*----------------------------------------------------------------------------*/
 	function data_wdEdit(e, event) { /*FIXME pendente edita texto: data-wd-edit=comando{especificação}... */
 		if (!("execCommand" in document) || !("wdEdit" in e.dataset)) return;
@@ -7517,23 +7531,16 @@ const wd = (function() {
 		return;
 	};
 
-
-
-
-
-
-
 /*----------------------------------------------------------------------------*/
 	/**###### ``**function** ''void'' data_wdMove(''node''  e, ''object'' event)``
-	Função vinculada ao atributo HTML ``data-wd-move`` cujo objetivo é fazer pular, arrastar, derrubar ou redimencionar elementos. Possui atributo simples e grupo único. Os objetivos dos atributos dependem do tipo de manipulação.
-	O atributo ``type`` indica o tipo de manipulação:
-	. ''jump'': Faz com que o elemento salte entre os elementos definidos em $ ou $$ (obrigatórios) a cada clique efetuado.
-	. ''drag'': Arrasta o elemento na tela, eliminando posicionamentos estáticos. É possível definir uma âncora para o arrasto do elemento, para isso, deve-se vincular o atributo à âncora e informar o elemento a ser arrastado pelo uso dos atributos $ ou $$.
-	. ''size'': Redimenciona o tamanho do elemento.
-	. ''drop'': Arrasta e derruba uma informação em determinada área do documento. O elemento a ser arrastado recebe o atributo e a área de derrubagem é indicada pelos atributos $ e $$ (obrigatório).
-
-	**/
-	function data_wdMove(e, event) {//FIXME tem que ter cuidado com o nodeType
+	Função vinculada ao atributo HTML ``data-wd-move`` cujo objetivo é fazer pular, arrastar, derrubar ou redimensionar elementos. Possui múltiplo atributos e grupo único. Os objetivos dos atributos dependem do tipo de manipulação.
+	O atributo ``type`` indica o tipo de manipulação a ser realizada:
+	. ''jump'': Faz com que o elemento salte entre os elementos definidos em $ ou $$ a cada clique efetuado. O atributo deve ser aplicado ao elemento a saltar.
+	. ''move'': Muda a posição do elemento, exceto para os posicionamentos ''static'' e ''sticky''. O atributo deve ficar vinculado ao ponto de âncora. Se a âncora não for o próprio elemento a ser movido, o atributo $ deve ser informado para defini-lo, sendo que o elemento de âncora deve ser filho do elemento a ser movido.
+	. ''resize'': Redimensiona o elemento. Os posicionamentos ''static'', ''relative'' e ''sticky'' são redimencionados apenas no lado sul e leste.
+	. ''drag'': Arrasta o elemento na tela para derrubá-lo em outro ponto. O atributo deve estar vinculado ao elemento a ser arrastado. Os pontos de queda são definidos pelos atributos $ e $$. O atributo opcional ''effect'' define o objetivo do arraste (''copy'', ''link'' e ''move''). O atributo ''action'' define o nome da função a ser chamada quando ocorrer a queda. A função receberá três argumentos, o elemento arrastado (''drag''), o elemento da queda (''drop'') e, se existir, o elemento onde o mouse repousava na queda (''over'') ou nulo.
+	. ''drop'': Define o local para queda de arquivos externos. O atributo deve ser aplicado ao elemento que receberá a queda. Assim como o tipo ''drag'', possui os atributos ''effect'' e ''action''. A função definida e ''action'' receberá dois atributos, os arquivos arrastados (FileList) e o elemento da queda (''drop'').**/
+	function data_wdMove(e, event) {
 		const wdMove = "wdMove" in e.dataset;
 		const data   = wdMove ? __String(e.dataset.wdMove).wdNotation[0] : {};
 		const query  = data.$$ || data.$ || null;
@@ -7746,9 +7753,7 @@ const wd = (function() {
 				event.dataTransfer.effectAllowed = "all";
 				e.dataset.wdMoveAction = "drag";
 
-
 				const drops = WD(query);
-
 				drops.forEach(function(x) {
 					if (x === e) return;
 					x.dataset.wdMoveAction = "drop";
@@ -7766,20 +7771,9 @@ const wd = (function() {
 						const effect = event.dataTransfer.dropEffect;
 						if (!__Type(attr.action).function) return;
 
-
-
-
-
-
-						if (ev.type === "drop") {
-							attr.action(drag, drop, over);
-						}
-						else if (ev.type === "dragover") {
-
-						}
-						else if (ev.type === "dragleave" ) {
-
-						}
+						if (ev.type === "drop") {attr.action(drag, drop, over);}
+						else if (ev.type === "dragover") {}
+						else if (ev.type === "dragleave" ) {}
 						return;
 					};
 					x.ondragover  = x.ondrop;
@@ -7816,30 +7810,72 @@ const wd = (function() {
 				drop = drop.parentElement;
 			if (drop === null) return;
 
-
-
 			const attr = __String(drop.dataset.wdMove).wdNotation[0];
 			if (!__Type(attr.action).function) return;
 
-
 			if (event.type === "drop") {
+				event.dataTransfer.dropEffect = data.effect;
 				const files = event.dataTransfer.files;
 				attr.action(files, drop);
+				delete drop.dataset.wdMoveAction;
+			} else if (/*event.type === "dragover" || */event.type === "dragenter") {
+				drop.dataset.wdMoveAction = "files";
+			} else if (event.type === "dragleave") {
+				delete drop.dataset.wdMoveAction;
 			}
-			if (event.type === "dragover" || event.type === "dragenter" || event.type === "dragleave") {
-				console.log(event.type);
-				return;
-			}
-
 			return;
 		}
-
-
-
-
-
 		return;
+	};
 
+
+
+
+
+/*----------------------------------------------------------------------------*/
+/**###### ``**function** ''void'' data_wdMenu(''node''  e, ''object'' event)``
+	Função vinculada ao atributo HTML ``data-wd-menu`` cujo objetivo exibir um menu suspenso. Possui múltiplos atributos e grupo único:
+	|Nome|Descrição|Obrigatório|
+	|items|Nome da função que retornará o objeto contendo o identificador, o texto e a função a ser aplicada.|Sim|
+	|event|O tipo de evento do mouse destinado a chamar o menu, ''over'' ou ''click'' (padrão).|Sim|
+	A função definida em ``items`` receberá como argumento o elemento alvo da ação e deverá retornar um objeto cujos atributos corresponderão ao identificador e seus valores serão objetos contendo os atributos ''text'' (texto do item) e ''action'' (função a ser chamada ao clicar no item).
+	A função chamada receberá dois argumentos, o identificador, o texto do item e o elemento.**/
+	function data_wdMenu(e, event) {
+		//WD.$$("nav.js-wd-menu").forEach(function (x) {x.remove();})
+
+		if (!("wdMenu" in e.dataset)) return;
+		const data  = __String(e.dataset.wdMenu).wdNotation[0];
+		const items = !__Type(data.items).function ? data.items(e) : null;
+		const over  = event.type === "mouseenter" && data.event === "over";
+		const click = !over && event.type === "click";
+		console.log({over: over, click: click, items: items});
+
+		if (!__Type(items).object) return;
+		if (!over && !click) return
+
+
+
+
+
+		const nav = document.createElement("NAV");
+		nav.classList = "js-wd-menu";
+
+		for (let id in items) {
+			const item = items[id];
+			if (__Type(item).object) continue;
+			const span = document.createElement("SPAN");
+			span.textContent = "text" in item ? item.text : id;
+			span.onclick     = function(ev) {nav.remove();}
+			if (__Type(item.action).function) span.onclick = function(ev) {
+				item.action(id, node.textContent, e);
+				nav.remove();
+			}
+			nav.appendChild(span);
+		}
+		nav.style.left = event.pageX;
+		nav.style.top  = event.pageY;
+		document.body.appendChild(nav);
+		return;
 	};
 
 
@@ -8019,19 +8055,19 @@ const wd = (function() {
 	/**###### ``**function** ''void'' wdOnMouse(''object''  ev)``
 	Disparador a ser invocado em eventos de mouse.**/
 	function wdOnMouse(ev) {
-		//FIXME URGENTE o firefox fox está pegando coisas que não são elementos, tipo NodeText (ver nodeType)
-		//console.log({event: ev.type, Nodetype: event.target.nodeType});
-
 		if (__UNDERMAINTENANCE) console.log({wdOnMouse: ev, target: ev.target});
+		if (event.target.nodeValue !== null) return;
 		const events = {
-			click:      {which: 1, bubbles : true, trigger: [data_wdSend, data_wdTsort,
-			data_wdEdit, data_wdShared, data_wdSet, data_wdDisplay, navLink, data_wdMove]},
+			click:      {which: 1, bubbles : true, trigger: [
+				data_wdSend, data_wdTsort, data_wdEdit, data_wdShared, data_wdSet,
+				data_wdDisplay, navLink, data_wdMove, data_wdMenu
+			]},
 			dblclick:   {which: 1, bubbles : true, trigger: [data_wdMove]},
 
 			mousedown:  {which: 1, bubbles : false, trigger: [data_wdMove]},
 			mouseup:    {which: 1, bubbles : false, trigger: [data_wdMove]},
 			mousemove:  {which: 1, bubbles : false, trigger: [data_wdMove]},
-			mouseenter: {which: 1, bubbles : false, trigger: [data_wdMove]},
+			mouseenter: {which: 1, bubbles : false, trigger: [data_wdMove, data_wdMenu]},
 			mouseleave: {which: 1, bubbles : false, trigger: [data_wdMove]},
 			mouseover:  {which: 1, bubbles : false, trigger: [data_wdMove]},
 			mouseout:   {which: 1, bubbles : false, trigger: [data_wdMove]},
@@ -8050,7 +8086,7 @@ const wd = (function() {
 			let elem = ev.target;
 			while (elem !== null) {
 				v(elem, ev);
-				//FIXME tem que ver esse negócio de efeito bolha
+				//FIXME tem que ver esse negócio de efeito bolha (TODO ACABAR COM ISSO!!!)
 				if (!events[ev.type].bubbles || "wdNoBubbles" in elem.dataset)
 					elem = null;
 				else
@@ -8084,7 +8120,6 @@ const wd = (function() {
 			focusout:  wdOnFocusOut,
 			focusin:   wdOnFocusIn,
 
-
 			drag:      wdOnMouse,
 			dragstart: wdOnMouse,
 			dragend:   wdOnMouse,
@@ -8092,9 +8127,6 @@ const wd = (function() {
 			dragover:  wdOnMouse,
 			dragenter: wdOnMouse,
 			drop:      wdOnMouse,
-
-
-
 
 			click:      wdOnMouse,
 			mousedown:  wdOnMouse,
@@ -8105,8 +8137,6 @@ const wd = (function() {
 			mouseover:  wdOnMouse,
 			mouseout:   wdOnMouse,
 			dblclick:   wdOnMouse,
-
-
 
 			wddataset: wdOnDataset,
 			wdreload:  wdOnReload,
