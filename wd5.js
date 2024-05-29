@@ -392,7 +392,15 @@ const wd = (function() {
 
 
 
-		/*"[data-wd-move-action=\"drop\"] {/*background-color: green;* / border-radius: 0.5em;}",*/
+		"/*-- WDMENU --*/",
+		"[data-wd-menu] {cursor: context-menu;}",
+		".js-wd-menu {position: absolute;}",
+		".js-wd-menu {display: block; margin: 0; padding: 0; box-shadow: initial; outline: initial;}",
+		".js-wd-menu {color: #ffffff; background-color: #ccc; border: 1px solid #000000; border-radius: 0.5em;}",
+		".js-wd-menu {border: 1px solid #000000; border-radius: 0.5em; outline: initial; box-shadow: initial;}",
+		".js-wd-menu > * {display: block; margin: 0; padding: 0.5em; cursor: pointer;}",
+
+
 
 
 
@@ -7841,46 +7849,43 @@ const wd = (function() {
 	A função definida em ``items`` receberá como argumento o elemento alvo da ação e deverá retornar um objeto cujos atributos corresponderão ao identificador e seus valores serão objetos contendo os atributos ''text'' (texto do item) e ''action'' (função a ser chamada ao clicar no item).
 	A função chamada receberá dois argumentos, o identificador, o texto do item e o elemento.**/
 	function data_wdMenu(e, event) {
-		//WD.$$("nav.js-wd-menu").forEach(function (x) {x.remove();})
+		if (event.type === "click")
+			WD.$$(".js-wd-menu").forEach(function (x) {x.remove();});
+
 
 		if (!("wdMenu" in e.dataset)) return;
 		const data  = __String(e.dataset.wdMenu).wdNotation[0];
-		const items = !__Type(data.items).function ? data.items(e) : null;
-		const over  = event.type === "mouseenter" && data.event === "over";
-		const click = !over && event.type === "click";
-		console.log({over: over, click: click, items: items});
+		const items = __Type(data.items).function ? data.items(e) : null;
+		const enter = event.type === "mouseover" && data.event === "over";
+		const click = !enter && event.type === "click";
+		const leave = !enter && event.type === "mouseout";
+		console.log("data.event", data.event,event.type);
 
 		if (!__Type(items).object) return;
-		if (!over && !click) return
+		if (!enter && !click) return
 
-
-
-
-
-		const nav = document.createElement("NAV");
-		nav.classList = "js-wd-menu";
-
+		const nav = document.createElement("DIV");
 		for (let id in items) {
-			const item = items[id];
-			if (__Type(item).object) continue;
-			const span = document.createElement("SPAN");
-			span.textContent = "text" in item ? item.text : id;
-			span.onclick     = function(ev) {nav.remove();}
-			if (__Type(item.action).function) span.onclick = function(ev) {
-				item.action(id, node.textContent, e);
-				nav.remove();
+			const item   = __Type(items[id]).object ? items[id] : {};
+			const action = __Type(item.action).function ? item.action : null;
+			const span   = document.createElement("DIV");
+			const text   = "text" in items[id] ? item.text : id;
+			span.textContent = text
+			span.onclick = function(ev) {
+				if (action !== null) action(id, ev.target.textContent, e);
+				ev.target.parentElement.remove();
+				return;
 			}
+			if (enter) span.onmouseout  = span.onclick;
 			nav.appendChild(span);
 		}
-		nav.style.left = event.pageX;
-		nav.style.top  = event.pageY;
+		if (nav.childElementCount === 0) return;
+		nav.classList = "js-wd-menu";
+		nav.style.left = (event.pageX /*- (enter ? event.offsetX : 0)*/)+"px";
+		nav.style.top  = (event.pageY /*- (enter ? event.offsetY : 0)*/)+"px";
 		document.body.appendChild(nav);
 		return;
 	};
-
-
-
-
 
 
 /*============================================================================*/
@@ -8056,7 +8061,7 @@ const wd = (function() {
 	Disparador a ser invocado em eventos de mouse.**/
 	function wdOnMouse(ev) {
 		if (__UNDERMAINTENANCE) console.log({wdOnMouse: ev, target: ev.target});
-		if (event.target.nodeValue !== null) return;
+		if (event.target.nodeType !== 1) return;
 		const events = {
 			click:      {which: 1, bubbles : true, trigger: [
 				data_wdSend, data_wdTsort, data_wdEdit, data_wdShared, data_wdSet,
@@ -8067,9 +8072,9 @@ const wd = (function() {
 			mousedown:  {which: 1, bubbles : false, trigger: [data_wdMove]},
 			mouseup:    {which: 1, bubbles : false, trigger: [data_wdMove]},
 			mousemove:  {which: 1, bubbles : false, trigger: [data_wdMove]},
-			mouseenter: {which: 1, bubbles : false, trigger: [data_wdMove, data_wdMenu]},
+			mouseenter: {which: 1, bubbles : false, trigger: [data_wdMove]},
 			mouseleave: {which: 1, bubbles : false, trigger: [data_wdMove]},
-			mouseover:  {which: 1, bubbles : false, trigger: [data_wdMove]},
+			mouseover:  {which: 1, bubbles : false, trigger: [data_wdMove, data_wdMenu]},
 			mouseout:   {which: 1, bubbles : false, trigger: [data_wdMove]},
 
 			drag:       {which: 1, bubbles : false, trigger: [data_wdMove]},
@@ -8083,7 +8088,11 @@ const wd = (function() {
 		if (!(ev.type in events)) return;
 		if (ev.which !== events[ev.type].which) return;
 		events[ev.type].trigger.forEach(function (v,i,a) {
-			let elem = ev.target;
+
+			v(ev.target, ev);
+
+
+			/*let elem = ev.target;
 			while (elem !== null) {
 				v(elem, ev);
 				//FIXME tem que ver esse negócio de efeito bolha (TODO ACABAR COM ISSO!!!)
@@ -8091,7 +8100,7 @@ const wd = (function() {
 					elem = null;
 				else
 					elem = elem.parentElement;
-			}
+			}*/
 		});
 
 
