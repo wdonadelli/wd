@@ -2,12 +2,30 @@
 
 	<script>
 	function myMenu(e) {
+
+
+
 		return {
 			color: {
-				text: "Toggle Color",
-				action: function (id, text, elem) {
-					console.log(arguments);
+				text: (e.style.color === "red" ? "&#10007;" : "&#10003;")+" Red Color",
+				title: "Unset/Set text color to red.",
+				action: function (id, elem) {
+					elem.style.color = elem.style.color === "red" ? null : "red";
 				}
+			},
+			upper: {
+				text: "To Uppercase",
+				title: "Set to upper case.",
+				action: function (id, elem) {
+					elem.style.textTransform = "uppercase";
+				}
+			},
+			noText: {
+				action: function (id, elem) {
+					alert(elem.innerHTML);
+				}
+
+
 			}
 		}
 	}
@@ -16,11 +34,18 @@
 
 	<h4>Click</h4>
 
-	<div><span data-wd-menu="items(myMenu)">Click me!</span></div>
+	<div class="wd-align-left"><span data-wd-menu="items(myMenu)">Click me!</span></div>
+	<div class="wd-align-center"><span data-wd-menu="items(myMenu)">Click me!</span></div>
+	<div class="wd-align-right"><span data-wd-menu="items(myMenu)">Click me!</span></div>
 
 <!--=========================================================================-->
 	<h4>Over</h4>
 
-	<div><span data-wd-menu="items(myMenu)event{over}">Over me!</span></div>
+	<div class="wd-align-left"><span data-wd-menu="items(myMenu)event{over}">Over me!</span></div>
+	<br/><br/><br/><br/><br/><br/>
+	<div class="wd-align-center"><span data-wd-menu="items(myMenu)event{over}">Over me!</span></div>
+	<br/><br/><br/><br/><br/><br/>
+	<div class="wd-align-right"><span data-wd-menu="items(myMenu)event{over}">Over me!</span></div>
+	<br/><br/><br/><br/><br/><br/>
 
 </div>

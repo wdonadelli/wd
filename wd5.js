@@ -393,12 +393,16 @@ const wd = (function() {
 
 
 		"/*-- WDMENU --*/",
+		".js-wd-overflow-hidden {overflow: hidden !important;}",
 		"[data-wd-menu] {cursor: context-menu;}",
-		".js-wd-menu {position: absolute;}",
-		".js-wd-menu {display: block; margin: 0; padding: 0; box-shadow: initial; outline: initial;}",
-		".js-wd-menu {color: #ffffff; background-color: #ccc; border: 1px solid #000000; border-radius: 0.5em;}",
-		".js-wd-menu {border: 1px solid #000000; border-radius: 0.5em; outline: initial; box-shadow: initial;}",
-		".js-wd-menu > * {display: block; margin: 0; padding: 0.5em; cursor: pointer;}",
+		".js-wd-menu {font-size: 13px; font-family: Verdana,sans-serif;}",
+		".js-wd-menu {position: fixed; max-width: 40vw; max-height: 40vh; overflow: auto;}",
+		".js-wd-menu {display: block; margin: 0; padding: 0.3em;}",
+		".js-wd-menu {color: #ffffff; background-color: rgba(0,0,0);}",
+		".js-wd-menu {border: 2px inset #101010; border-radius: 0.2em;}",
+		".js-wd-menu > * {display: block; margin: inherit; padding: inherit; cursor: pointer;}",
+		".js-wd-menu > * {border-radius: inherit;}",
+		".js-wd-menu > *:hover {background-color: rgba(50,50,50); }",
 
 
 
@@ -2919,14 +2923,10 @@ const wd = (function() {
 				return __Type(elem).node ? elem : this.$$;
 			}
 		},
-
-
-
-
 	});
 
 /*----------------------------------------------------------------------------*/
-	/**#### Formulários HTML
+	/**#### Dados para Requisições
 	###### ``**constructor** ''object'' __URL(''string'' input)``
 	Construtor para gerir parâmetros de envio de requisição. O argumento ``input`` é o destino da requisição. Se vazio, observará o URL em vigor. Alguns métodos retornar o próprio objeto**/
 	function __URL(input) {
@@ -3479,6 +3479,7 @@ const wd = (function() {
 	});
 
 /*----------------------------------------------------------------------------*/
+	/**#### Nós HTML
 	/**###### ``**constructor** ''object'' __Node(node input)``
 	Construtor para manipulação de nós HTML.
 	O argumento ``input`` deve ser um nó HTML simples (um elemento), caso contrário será atribuído um elemento ``DIV``.**/
@@ -6753,10 +6754,7 @@ const wd = (function() {
 		repeat: {
 			value: function(list) {
 				this.forEach(function(v,i) {__Node(v).repeat(list);});
-				return this;/*----------------------------------------------------------------------------*/
-	/**#### WDnode
-	###### ``**constructor** ''object'' WDnode(''any''  input, ''object'' data)``
-	Construtor genérico para manipulação de nós HTML. Os argumentos ``input`` e ``data`` se referem aos argumento de ``WDmain``**/
+				return this;
 			}
 		},
 		/**. ``''self'' set(''object'' values)``: Define os atributos especificados em ``values`` com seus respectivos valores (ver __Node.atrribute).**/
@@ -7846,44 +7844,72 @@ const wd = (function() {
 	|Nome|Descrição|Obrigatório|
 	|items|Nome da função que retornará o objeto contendo o identificador, o texto e a função a ser aplicada.|Sim|
 	|event|O tipo de evento do mouse destinado a chamar o menu, ''over'' ou ''click'' (padrão).|Sim|
-	A função definida em ``items`` receberá como argumento o elemento alvo da ação e deverá retornar um objeto cujos atributos corresponderão ao identificador e seus valores serão objetos contendo os atributos ''text'' (texto do item) e ''action'' (função a ser chamada ao clicar no item).
-	A função chamada receberá dois argumentos, o identificador, o texto do item e o elemento.**/
+	A função definida em ``items`` receberá como argumento o elemento alvo da ação e deverá retornar um objeto cujos atributos corresponderão ao identificador e seus valores serão objetos contendo os atributos ''text'' (texto do item), ''title'' (caixa de dica) e ''action'' (função a ser chamada ao clicar no item).
+	A função chamada receberá como argumentos o identificador e o elemento.**/
 	function data_wdMenu(e, event) {
-		if (event.type === "click")
-			WD.$$(".js-wd-menu").forEach(function (x) {x.remove();});
-
+		const menus = WD.$$(".js-wd-menu");
+		const close = function(x) {
+			x.remove();
+			if (document.body.className.indexOf("js-wd-overflow-hidden") > 0)
+				WD(document.body).set({class: {remove: "js-wd-overflow-hidden"}});
+			return;
+		}
+		/* ao clicar em algum ponto da tela, fechar o menu */
+		if (event.type === "click") menus.forEach(close);
 
 		if (!("wdMenu" in e.dataset)) return;
 		const data  = __String(e.dataset.wdMenu).wdNotation[0];
 		const items = __Type(data.items).function ? data.items(e) : null;
 		const enter = event.type === "mouseover" && data.event === "over";
 		const click = !enter && event.type === "click";
-		const leave = !enter && event.type === "mouseout";
-		console.log("data.event", data.event,event.type);
 
+		/* retornar nas seguintes situações */
 		if (!__Type(items).object) return;
 		if (!enter && !click) return
+		if (enter && menus.length > 0) return;
 
-		const nav = document.createElement("DIV");
+		/* construir o menu */
+		const menu = document.createElement("DIV");
 		for (let id in items) {
-			const item   = __Type(items[id]).object ? items[id] : {};
-			const action = __Type(item.action).function ? item.action : null;
-			const span   = document.createElement("DIV");
-			const text   = "text" in items[id] ? item.text : id;
-			span.textContent = text
-			span.onclick = function(ev) {
-				if (action !== null) action(id, ev.target.textContent, e);
+			const item    = __Type(items[id]).object ? items[id] : {};
+			const action  = __Type(item.action).function ? item.action : null;
+			const submenu = document.createElement("DIV");
+			const text    = "text"  in items[id] ? item.text  : id;
+			const title   = "title" in items[id] ? item.title : "";
+			submenu.innerHTML = text;
+			submenu.title     = title;
+			submenu.onclick   = function(ev) {
+				if (action !== null) action(id, e);
 				ev.target.parentElement.remove();
+				WD(document.body).set({class: {remove: "js-wd-overflow-hidden"}});
 				return;
 			}
-			if (enter) span.onmouseout  = span.onclick;
-			nav.appendChild(span);
+			menu.appendChild(submenu);
 		}
-		if (nav.childElementCount === 0) return;
-		nav.classList = "js-wd-menu";
-		nav.style.left = (event.pageX /*- (enter ? event.offsetX : 0)*/)+"px";
-		nav.style.top  = (event.pageY /*- (enter ? event.offsetY : 0)*/)+"px";
-		document.body.appendChild(nav);
+		/* retornar se nenhum item for definido */
+		if (menu.childElementCount === 0) return;
+
+		/* adicionar menu na tela */
+		if (enter) menu.onmouseleave = function(ev) {
+			ev.target.remove();
+			WD(document.body).set({class: {remove: "js-wd-overflow-hidden"}});
+			return;
+		};
+		menu.classList = "js-wd-menu";
+		WD(document.body).set({class: {add: "js-wd-overflow-hidden"}});
+		document.body.appendChild(menu);
+
+		/* posicionar menu na tela */
+		const box = menu.getBoundingClientRect();
+
+		if (event.clientY > (window.innerHeight/2))
+			menu.style.top = (event.clientY - box.height)+"px";
+		else
+			menu.style.top = (event.clientY)+"px";
+		if (event.clientX > (window.innerWidth/2))
+			menu.style.left = (event.clientX - box.width)+"px";
+		else
+			menu.style.left = (event.clientX)+"px";
 		return;
 	};
 
