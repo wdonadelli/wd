@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 MIT License
 
-Copyright (c) 2023 Willian Donadelli <wdonadelli@gmail.com>
+Copyright (c) 2023-2024 Willian Donadelli <wdonadelli@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -177,7 +177,7 @@ https://github.com/wdonadelli/wd
 	--var-font-color: rgb(35,35,35);
 	--var-font-size: 16px;
 	--var-font-height: 1.5;
-	--var-font-table: Verdana,sans-serif;
+	--var-font-table: Verdana, sans-serif;
 	--var-font-headers: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
 	--var-font-bcode: monospace;
 	--var-font-acode: "Courier New";

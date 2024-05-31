@@ -393,13 +393,15 @@ const wd = (function() {
 
 
 		"/*-- WDMENU --*/",
-		".js-wd-overflow-hidden {overflow: hidden !important;}",
+		".js-wd-overflow-hidden	{overflow: hidden !important;}",
 		"[data-wd-menu] {cursor: context-menu;}",
-		".js-wd-menu {font-size: 13px; font-family: Verdana,sans-serif;}",
-		".js-wd-menu {position: fixed; max-width: 40vw; max-height: 40vh; overflow: auto;}",
+		".js-wd-menu {font-size: 14px; font-family: Verdana,sans-serif;}",
+		".js-wd-menu {position: fixed; max-width: 40vw; max-height: 40vh;}",
 		".js-wd-menu {display: block; margin: 0; padding: 0.3em;}",
+		".js-wd-menu {z-index: 999999; overflow: auto !important;}",
 		".js-wd-menu {color: #ffffff; background-color: rgba(0,0,0);}",
-		".js-wd-menu {border: 2px inset #101010; border-radius: 0.2em;}",
+		".js-wd-menu {border: 2px inset #101010; border-radius: 0.3em;}",
+		".js-wd-menu {animation: js-wd-emerge 0.5s linear 0s}",
 		".js-wd-menu > * {display: block; margin: inherit; padding: inherit; cursor: pointer;}",
 		".js-wd-menu > * {border-radius: inherit;}",
 		".js-wd-menu > *:hover {background-color: rgba(50,50,50); }",
@@ -4883,16 +4885,16 @@ const wd = (function() {
 		frame: {
 			value: function(x, y, text, point) {
 				this.text(x, y, "", point);
-				let line = String(text).split("\n");
+				const line = String(text).split("\n");
 				let i = -1;
 				while (++i < line.length) {
-					let span  = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
-					let style = {
+					const span  = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+					const style = {
 						x:  i === 0 ? x : x+4,
 						dy: i === 0 ? "0" : "1.5em",
 						"font-weight": i === 0 ? "bold" : "normal"
 					};
-					span.textContent = line[i].trim();
+					span.textContent = line[i] === "" ? " " : line[i];
 					for (let j in style)
 						span.setAttribute(j, style[j]);
 					this.last.appendChild(span);
@@ -5324,8 +5326,6 @@ const wd = (function() {
 		.. ``''object'' attr_label``: atributos dos rótulos do gráfico.
 		.. ``''object'' attr_area``: atributos da área de plotagem.
 		.. ``''object'' attr_axes``: atributos dos eixos secundários do gráfico.
-		.. ``''object'' attr_tname``: atributos da legenda do gráfico (textual).
-		.. ``''object'' attr_vname``: atributos da legenda do gráfico (visual).
 		.. ``''object'' curve_line``: atributos da curva em linha.
 		.. ``''object'' curve_sum``: atributos da curva de área.
 		.. ``''object'' curve_dash``: atributos da curva de traços.**/
@@ -5361,13 +5361,11 @@ const wd = (function() {
 					"orangered", "cyan",           "blueviolet",      "limegreen",
 					"dimgray"
 				],
-				attr_svg:   {style: "background-color: #ffffe6; margin: 0 20em;"},
+				attr_svg:   {style: "background-color: #ffffff;"},
 				attr_title: {fill: "#262626", "font-weight": "bold", "font-size": "1.5em"},
 				attr_label: {fill: "#262626"},
 				attr_area:  {stroke: "#262626", fill: "None", "stroke-width": 2, "stroke-linecap": "round"},
 				attr_axes:  {stroke: "#778899", "stroke-width": 0.5, "stroke-dasharray": "6,6", "stroke-linecap": "round"},
-				attr_vname: {"stroke-width": 0},
-				attr_tname: {fill: "WhiteSmoke", "font-style": "italic"},
 				curve_line: {fill: "none", "stroke-width": 3, "stroke-linecap": "round"},
 				curve_sum:  {"fill-opacity": 0.5, "stroke-width": 1, "stroke-linecap": "round"},
 				curve_dash: {fill: "None", "stroke-width": 1, "stroke-linecap": "round", "stroke-dasharray": "5,5"},
@@ -5383,9 +5381,47 @@ const wd = (function() {
 				svg.text(cfg.xMiddle, cfg.height - cfg.padding, this.xLabel, "hs").attribute(cfg.attr_label);
 				/* rótulo do eixo y */
 				svg.text(cfg.padding, cfg.yMiddle, this.yLabel, "vn").attribute(cfg.attr_label);
-				/* abscissa e ordenada */
-				svg.lines([cfg.xStart, cfg.xStart, cfg.xClose], [cfg.yStart, cfg.yClose, cfg.yClose]);
+				/* área de plotagem: abscissa e ordenada */
+				svg.rect(cfg.xStart, cfg.yStart, cfg.xSize, cfg.ySize)
 				svg.attribute(cfg.attr_area);
+				//TODO
+				const area = svg.last;
+				svg.text(cfg.width - cfg.padding, cfg.height - cfg.padding, "", "hse");
+				const xypos = svg.last;
+
+				const self = this;
+				svg.svg().onmousemove = function (ev) {
+					const vps = svg.svg().getBoundingClientRect();
+					const vpa = area.getBoundingClientRect();
+					const mx  = ev.clientX;
+					const my  = ev.clientY;
+					if (mx >= vpa.left && mx <= vpa.right && my >= vpa.top && my <= vpa.bottom) {
+						const x  = self._xMin + (self._xMax - self._xMin)*(mx - vpa.left)/vpa.width;
+						const y  = self._yMax - (self._yMax - self._yMin)*(my - vpa.top)/vpa.height;
+						const tx = self._values(x, self.xAxis);
+						const ty = self._values(y);
+						xypos.textContent = "("+tx+", "+ty+")";
+					} else {
+						xypos.textContent = "";
+					}
+
+
+
+				}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 				/* pontos, eixos, rótulos */
 				let px, py, wx, wy;
 				let cx, cy, dx, dy;
@@ -5426,13 +5462,13 @@ const wd = (function() {
 					}
 
 					/* subdivisões: horizontal e vertical */
-					if (i > 0) {
+					if (i > 0 && i < (p-1)) {
 						let x = [cfg.xStart, cfg.xClose];
 						let y = [cfg.yStart, cfg.yClose];
-						svg.lines(x, [py, py]).attribute(cfg.attr_axes);
-						if (cy === 0) svg.attribute({"stroke-dasharray": "None"});
+						svg.lines(x, [py, py]).attribute(cfg.attr_axes)
+						if (cy === 0) svg.attribute({"stroke-dasharray": "none"});
 						svg.lines([px, px], y).attribute(cfg.attr_axes);
-						if (cx === 0) svg.attribute({"stroke-dasharray": "None"});
+						if (cx === 0) svg.attribute({"stroke-dasharray": "none"});
 					}
 					/* escala dos eixos: x e y */
 					let vx = this._values(cx, this.xAxis);
@@ -5442,8 +5478,8 @@ const wd = (function() {
 					svg.text(px, sy, vx, lx).attribute(cfg.attr_label).title(cx);
 					if (this.xAxis === "datetime") svg.attribute({"font-size": "small"});
 					svg.text(sx, py, vy, ly).attribute(cfg.attr_label).title(cy);
-
 				}
+			return;
 			}
 		},
 		/**. ``''string'' _values(''number'' value, ''string'' type)``: Formata e retorna o valor a ser exibido nos eixos.
@@ -5474,29 +5510,38 @@ const wd = (function() {
 			}
 		},
 		/**. ``''void'' _legend(''node'' svg, ''string'' text, ''number'' color)``: Constrói a legenda do gráfico.
-		. O argumento ``svg`` é o elemento SVG onde o gŕafico está sendo construído. O argumento ``text`` é o conteúdo da primeiro linha da legenda que, se for ``null``, retornará a função ignorando a legenda. O argumento ``color`` define a cor da legenda.**/
+		. O argumento ``svg`` é o elemento SVG onde o gŕafico está sendo construído. O argumento ``text`` é o conteúdo da primeiro linha da legenda que, se for ``null``, retornará a função ignorando a legenda. O argumento ``color`` define o número da cor da legenda.**/
 		_legend: {
 			value: function(svg, text, color) {
 				if (text === null) return;
-				let colors = __Array(this._cfg.colors);
-				let ncolor = colors.valueOf(color);
-				let padd   = this._cfg.padding;
-				let delta  = 25;
-				let base   = this._cfg.yStart + (1 + color) * (padd + delta);
-				let x1     = this._cfg.xClose + padd;
-				let x2     = x1 + padd;
-				let x3     = this._cfg.width;
-				let y1     = base;
-				let y2     = y1 - delta;
-				let y3     = (y1 + y2)/2;
+				const colors = __Array(this._cfg.colors);
+				const ncolor = colors.valueOf(color);
+				const cfg    = this._cfg;
+				const side   = (cfg.width - cfg.xClose) / 3;
+				const x1     = cfg.width - (2*side);
+				const y1     = cfg.yStart + (3/2)*(color * side);
+				const id     = "chart_"+color;
+				const chart  = svg.svg();
 
-				svg.lines([x1, x2, x3, x3], [y1, y2, y2, y1], true) /* fundo colorido */
-				.attribute(this._cfg.attr_vname)
-				.attribute({fill: ncolor, stroke: ncolor})
-				.title(text)
-				.text(x2+padd, y3, text.split("\n")[0], "hw") /* legenda */
-				.attribute(this._cfg.attr_tname)
-				.title(text);
+				svg.rect(x1, y1, side, side)
+				.attribute({fill: ncolor, cursor: "pointer"})
+				.title(text.split("\n")[0])
+				.last.onclick = function (ev) {
+					const target = chart.getElementById(id);
+					let   opened = false;
+					WD.$$("[id^=\"chart_\"]", chart).forEach(function(x) {
+						const show = x.getAttribute("display") !== "none";
+						if (x === target)
+							x.setAttribute("display", (show ? "none" : "inline"));
+						else
+							x.setAttribute("display", "none");
+					});
+				};
+				const x2   = cfg.xStart + cfg.padding;
+				const y2   = cfg.yStart + cfg.padding;
+				svg.frame(x2, y2, text, "hnw")
+				.attribute({style: "z-index: 9999;"})
+				.attribute({id: id, fill: ncolor, "font-size": "1.5em", display: "none"});
 			}
 		},
 		/**. ``''node'' plot()``: Constrói o gráfico e o retorna (elemento SVG) ou nulo.**/
@@ -5544,22 +5589,19 @@ const wd = (function() {
 							svg.lines(x, y)
 							.attribute(this._cfg.curve_line)
 							.attribute({stroke: colors.valueOf(color)});
-							if (name !== null) svg.title(name);
 							this._legend(svg, name, color);
 						}
 						if (data[i].type === "dash") {
 							svg.lines(x, y)
 							.attribute(this._cfg.curve_dash)
 							.attribute({stroke: colors.valueOf(color)});
-							if (name !== null) svg.title(name);
 							this._legend(svg, name, color);
 						}
 						if (data[i].type === "dots" || data[i].type === "link") {
 							let j = -1;
 							while(++j < x.length) {
 								svg.circle(x[j], y[j], 4)
-								.attribute({fill: colors.valueOf(color)})
-								.title((name === null ? "" : name+"\n")+"("+data[i].x[j]+", "+data[i].y[j]+")");
+								.attribute({fill: colors.valueOf(color)});
 							}
 							this._legend(svg, name, color);
 						}
@@ -5589,11 +5631,8 @@ const wd = (function() {
 							svg.lines(x, y, true) /* área */
 							.attribute(this._cfg.curve_sum)
 							.attribute({stroke: colors.valueOf(color), fill: colors.valueOf(color)})
-							.title(name)
 							.text(xm, ym, this._values(sum), pm) /* valor numérico */
-							.attribute(this._cfg.attr_tname)
 							.attribute({fill: colors.valueOf(color)})
-							.title(name);
 							this._legend(svg, name, color);
 						}
 						if (data[i].type === "avg") {
@@ -5607,15 +5646,11 @@ const wd = (function() {
 							svg.lines(x, y)
 							.attribute(this._cfg.curve_dash)
 							.attribute({stroke: colors.valueOf(color)})
-							.title(name);
 							svg.lines([xi, xn], [ya, ya])
 							.attribute(this._cfg.curve_line)
 							.attribute({stroke: colors.valueOf(color)})
-							.title(name);
 							svg.text(x[0]+5, ya-5, this._values(avg), "hsw")
-							.attribute(this._cfg.attr_tname)
-							.attribute({fill: colors.valueOf(color)})
-							.title(name);
+							.attribute({fill: colors.valueOf(color)});
 							this._legend(svg, name, color);
 						}
 					}
@@ -5931,7 +5966,7 @@ const wd = (function() {
 							if (fit === null) return false;
 							let target = this._data.length - 1;
 							this._data[target].name += [
-								"\n", fit.m, "a = "+fit.a, "b = "+fit.b, "σ = "+fit.d
+								"", fit.m, "a = "+fit.a, "b = "+fit.b, "σ = "+fit.d
 							].join("\n");
 							this._data[target].type = "dots";
 
@@ -7840,22 +7875,25 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 /**###### ``**function** ''void'' data_wdMenu(''node''  e, ''object'' event)``
-	Função vinculada ao atributo HTML ``data-wd-menu`` cujo objetivo exibir um menu suspenso. Possui múltiplos atributos e grupo único:
+	Função vinculada ao atributo HTML ``data-wd-menu`` cujo objetivo é exibir um menu suspenso. Possui múltiplos atributos e grupo único:
 	|Nome|Descrição|Obrigatório|
-	|items|Nome da função que retornará o objeto contendo o identificador, o texto e a função a ser aplicada.|Sim|
-	|event|O tipo de evento do mouse destinado a chamar o menu, ''over'' ou ''click'' (padrão).|Sim|
-	A função definida em ``items`` receberá como argumento o elemento alvo da ação e deverá retornar um objeto cujos atributos corresponderão ao identificador e seus valores serão objetos contendo os atributos ''text'' (texto do item), ''title'' (caixa de dica) e ''action'' (função a ser chamada ao clicar no item).
-	A função chamada receberá como argumentos o identificador e o elemento.**/
+	|items|Nome da função que retornará o objeto contendo os subitens do menu.|Sim|
+	|event|Nome do evento disparador do menu, ''over'' ou ''click'' (padrão).|Não|
+	A função definida em ``items`` receberá como argumento o elemento detentor do atributo e deverá retornar um objeto. Os atributos do objeto definem o identificador da ação e seus valores deverão ser objetos com as seguintes propriedades:
+	|Nome|Descrição|Obrigatório|
+	|content|Texto ou nó a ser atribuído ao item. O valor padrão é o identificador.|Não|
+	|title|Caixa de dica a ser definida ao item.|Não|
+	|action|Função a ser chamada ao clicar sobre o item, que fechará o menu.|Não|
+	A função definida em ''action'' receberá como argumentos o identificador e o elemento detentor do atributo.**/
 	function data_wdMenu(e, event) {
 		const menus = WD.$$(".js-wd-menu");
-		const close = function(x) {
-			x.remove();
-			if (document.body.className.indexOf("js-wd-overflow-hidden") > 0)
-				WD(document.body).set({class: {remove: "js-wd-overflow-hidden"}});
-			return;
-		}
 		/* ao clicar em algum ponto da tela, fechar o menu */
-		if (event.type === "click") menus.forEach(close);
+		if (event.type === "click")
+			menus.forEach(function(x) {
+				x.remove();
+				WD(document.body).set({class: {remove: "js-wd-overflow-hidden"}});
+				return;
+			});
 
 		if (!("wdMenu" in e.dataset)) return;
 		const data  = __String(e.dataset.wdMenu).wdNotation[0];
@@ -7873,11 +7911,13 @@ const wd = (function() {
 		for (let id in items) {
 			const item    = __Type(items[id]).object ? items[id] : {};
 			const action  = __Type(item.action).function ? item.action : null;
+			const content = "content" in item ? item.content : id;
 			const submenu = document.createElement("DIV");
-			const text    = "text"  in items[id] ? item.text  : id;
-			const title   = "title" in items[id] ? item.title : "";
-			submenu.innerHTML = text;
-			submenu.title     = title;
+			if (__Type(content).node)
+				submenu.appendChild(content);
+			else
+				submenu.innerHTML = content;
+			if ("title" in item) submenu.title = item.title;
 			submenu.onclick   = function(ev) {
 				if (action !== null) action(id, e);
 				ev.target.parentElement.remove();
@@ -7886,7 +7926,7 @@ const wd = (function() {
 			}
 			menu.appendChild(submenu);
 		}
-		/* retornar se nenhum item for definido */
+		/* retornar se nenhum submenu for definido */
 		if (menu.childElementCount === 0) return;
 
 		/* adicionar menu na tela */

@@ -2,31 +2,34 @@
 
 	<script>
 	function myMenu(e) {
-
-
+		const figure  = document.createElement("FIGURE");
+		const image   = document.createElement("IMG");
+		const caption = document.createElement("FIGCAPTION");
+		figure.appendChild(image);
+		figure.appendChild(caption);
+		caption.textContent = "Flowers!";
+		image.src = "lib/add-ons/image.png";
+		image.style.width = "30vw";
+		image.style.height = "30vh";
 
 		return {
 			color: {
-				text: (e.style.color === "red" ? "&#10007;" : "&#10003;")+" Red Color",
+				content: (e.style.color === "red" ? "&#10007;" : "&#10003;")+" Red Color",
 				title: "Unset/Set text color to red.",
 				action: function (id, elem) {
 					elem.style.color = elem.style.color === "red" ? null : "red";
 				}
 			},
 			upper: {
-				text: "To Uppercase",
+				content: "To Uppercase",
 				title: "Set to upper case.",
-				action: function (id, elem) {
-					elem.style.textTransform = "uppercase";
-				}
+				action: function (id, elem) {elem.style.textTransform = "uppercase";}
 			},
-			noText: {
-				action: function (id, elem) {
-					alert(elem.innerHTML);
-				}
-
-
-			}
+			image: {
+				content: figure,
+				title: "Image"
+			},
+			exit: {}
 		}
 	}
 
