@@ -23,7 +23,6 @@
  * SPDX-License-Identifier: MIT
  */
 
-
 "use strict";
 
 const wd = (function() {
@@ -4789,6 +4788,16 @@ const wd = (function() {
 				return this;
 			}
 		},
+
+
+		/**. ``''self'' line(''array'' p1, ''array'' p2)``: Define uma linha ligando dois pontos das coordenadas. Os argumentos ``p1`` e ``p2`` são as coordenadas (x,y).**/
+		line: {
+			value: function(p1, p2) {
+				let svg = document.createElementNS("http://www.w3.org/2000/svg", "line");
+				this.last = svg;
+				return this.attribute({x1: p1[0], y1: p1[1], x2: p2[0], y2: p2[1]});
+			}
+		},
 		/**. ``''self'' lines(''array'' x, ''array'' y, ''boolean'' close=false)``: Define diversos segmentos de reta a partir de um conjunto de coordenadas. Os argumentos ``x`` e ``y`` são as coordenadas (x,y) e o argumento ``close`` indica se o último ponto deve voltar à origem.**/
 		lines: {
 			value: function(x, y, close) {
@@ -4808,7 +4817,6 @@ const wd = (function() {
 				let svg = document.createElementNS("http://www.w3.org/2000/svg", "circle");
 				this.last = svg;
 				return this.attribute({cx: cx, cy: cy, r: r});
-
 			}
 		},
 		/**. ``''self'' semicircle(''number'' cx, ''number'' cy, ''number'' r, ''number'' start, ''number'' width)``: Define um semicírculo. Os argumentos ``cx``, ``cy`` e ``r`` são o centro em x e y e o raio, respectivamente. Os argumentos ``start`` e ``width`` indicam o ângulo inicial e seu tamanho em graus, respectivamente.**/
@@ -4838,7 +4846,6 @@ const wd = (function() {
 				let svg   = document.createElementNS("http://www.w3.org/2000/svg", "rect");
 				this.last = svg;
 				return this.attribute({x: x, y: y, width: width, height: height});
-
 			}
 		},
 		/**. ``''self'' path(''string'' path)``: Define um nó SVG a partir de uma sequência de comandos. O argumento ``path`` define os comandos.**/
@@ -5256,7 +5263,7 @@ const wd = (function() {
 				if (y < this._min.y) this._min.y = y;
 			}
 		},
-		/**. ``''number'' _xScale``: Transforma a coordenada horizontal de real para gráfica.**/
+		/**. ``''number'' _xScale(''number'' x)``: Transforma a coordenada horizontal real ''x'' para gráfica.**/
 		_xScale: {
 			value: function(x) {
 				let dx = this._xMax - this._xMin;
@@ -5265,7 +5272,7 @@ const wd = (function() {
 				return X;
 			}
 		},
-		/**. ``''number'' _yScale``: Transforma a coordenada vertical de real para gráfica.**/
+		/**. ``''number'' _yScale(''number'' y)``: Transforma a coordenada vertical real (''y'') para gráfica.**/
 		_yScale: {
 			value: function(y) {
 				let dy = this._yMax - this._yMin;
@@ -5374,55 +5381,8 @@ const wd = (function() {
 		/**. ``''void'' _plan()``: Constrói a área do gráfico cartesiano.**/
 		_plan: {
 			value: function(svg) {
-				let cfg = this._cfg;
-				/* título */
-				svg.text(cfg.xMiddle, cfg.top, this.title, "hc").attribute(cfg.attr_title);
-				/* rótulo do eixo x */
-				svg.text(cfg.xMiddle, cfg.height - cfg.padding, this.xLabel, "hs").attribute(cfg.attr_label);
-				/* rótulo do eixo y */
-				svg.text(cfg.padding, cfg.yMiddle, this.yLabel, "vn").attribute(cfg.attr_label);
-				/* área de plotagem: abscissa e ordenada */
-				svg.rect(cfg.xStart, cfg.yStart, cfg.xSize, cfg.ySize)
-				svg.attribute(cfg.attr_area);
-				//TODO
-				const area = svg.last;
-				svg.text(cfg.width - cfg.padding, cfg.height - cfg.padding, "", "hse");
-				const xypos = svg.last;
-
-				const self = this;
-				svg.svg().onmousemove = function (ev) {
-					const vps = svg.svg().getBoundingClientRect();
-					const vpa = area.getBoundingClientRect();
-					const mx  = ev.clientX;
-					const my  = ev.clientY;
-					if (mx >= vpa.left && mx <= vpa.right && my >= vpa.top && my <= vpa.bottom) {
-						const x  = self._xMin + (self._xMax - self._xMin)*(mx - vpa.left)/vpa.width;
-						const y  = self._yMax - (self._yMax - self._yMin)*(my - vpa.top)/vpa.height;
-						const tx = self._values(x, self.xAxis);
-						const ty = self._values(y);
-						xypos.textContent = "("+tx+", "+ty+")";
-					} else {
-						xypos.textContent = "";
-					}
-
-
-
-				}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 				/* pontos, eixos, rótulos */
+				let cfg = this._cfg;
 				let px, py, wx, wy;
 				let cx, cy, dx, dy;
 				let lx, ly;
@@ -5430,9 +5390,10 @@ const wd = (function() {
 				wy = (cfg.yClose - cfg.yStart) / (cfg.points - 1);
 				dx = (this._xMax - this._xMin) / (cfg.points - 1);
 				dy = (this._yMax - this._yMin) / (cfg.points - 1);
+
+				/* eixos secudários e escalas */
 				let i = -1;
 				let p = cfg.points;
-				/* eixos secudários e escalas */
 				while (++i < p) {
 					/* IMPORTANTE: py (cima para baixo) é invertido em relação à cy (baixo para cima) */
 					if (i === 0) {
@@ -5479,7 +5440,56 @@ const wd = (function() {
 					if (this.xAxis === "datetime") svg.attribute({"font-size": "small"});
 					svg.text(sx, py, vy, ly).attribute(cfg.attr_label).title(cy);
 				}
-			return;
+				/* título */
+				svg.text(cfg.xMiddle, cfg.top, this.title, "hc").attribute(cfg.attr_title);
+				/* rótulo do eixo x */
+				svg.text(cfg.xMiddle, cfg.height - cfg.padding, this.xLabel, "hs").attribute(cfg.attr_label);
+				/* rótulo do eixo y */
+				svg.text(cfg.padding, cfg.yMiddle, this.yLabel, "vn").attribute(cfg.attr_label);
+				/* área de plotagem */
+				svg.rect(cfg.xStart, cfg.yStart, cfg.xSize, cfg.ySize)
+				svg.attribute(cfg.attr_area);
+				const area = svg.last;
+				/* dados da posição */
+				svg.text(cfg.width - cfg.padding, cfg.height - cfg.padding, "", "hse");
+				const xypos = svg.last;
+				/*TODO linhas auxiliares */
+				svg.line([cfg.xStart, cfg.yStart], [cfg.xClose, cfg.yStart])
+				.attribute({"stroke-width": 1, stroke: "black", display: "none"});
+				const hline = svg.last;
+				svg.line([cfg.xStart, cfg.yStart], [cfg.xStart, cfg.yClose])
+				.attribute({"stroke-width": 1, stroke: "black", display: "none"});
+				const vline = svg.last;
+				const self = this;
+				svg.svg().onmousemove = function (ev) {
+					const vps = svg.svg().getBoundingClientRect();
+					const vpa = area.getBoundingClientRect();
+					const mx  = ev.clientX;
+					const my  = ev.clientY;
+					if (mx >= vpa.left && mx <= vpa.right && my >= vpa.top && my <= vpa.bottom) {
+						const x  = self._xMin + (self._xMax - self._xMin)*(mx - vpa.left)/vpa.width;
+						const y  = self._yMax - (self._yMax - self._yMin)*(my - vpa.top)/vpa.height;
+						const h = self._yScale(y);
+						const v = self._xScale(x);
+						const tx = self._values(x, self.xAxis);
+						const ty = self._values(y);
+						xypos.textContent = tx+" x "+ty;
+						hline.setAttribute("y1", h);
+						hline.setAttribute("y2", h);
+						hline.setAttribute("display", "inline");
+						vline.setAttribute("x1", v);
+						vline.setAttribute("x2", v);
+						vline.setAttribute("display", "inline");
+						svg.svg().setAttribute("cursor", "crosshair");
+					} else {
+						xypos.textContent = "";
+						hline.setAttribute("display", "none");
+						vline.setAttribute("display", "none");
+						svg.svg().removeAttribute("cursor");
+					}
+					return;
+				}
+				return;
 			}
 		},
 		/**. ``''string'' _values(''number'' value, ''string'' type)``: Formata e retorna o valor a ser exibido nos eixos.
@@ -5510,38 +5520,37 @@ const wd = (function() {
 			}
 		},
 		/**. ``''void'' _legend(''node'' svg, ''string'' text, ''number'' color)``: Constrói a legenda do gráfico.
-		. O argumento ``svg`` é o elemento SVG onde o gŕafico está sendo construído. O argumento ``text`` é o conteúdo da primeiro linha da legenda que, se for ``null``, retornará a função ignorando a legenda. O argumento ``color`` define o número da cor da legenda.**/
+		. O argumento ``svg`` é o elemento SVG onde o gŕafico está sendo construído. O argumento ``text`` é o conteúdo da primeiro linha da legenda que, se for ``null``, retornará a função ignorando a legenda. O argumento ``id`` define o número da cor da legenda.**/
 		_legend: {
-			value: function(svg, text, color) {
+			value: function(svg, text, id) {
 				if (text === null) return;
 				const colors = __Array(this._cfg.colors);
-				const ncolor = colors.valueOf(color);
+				const color  = colors.valueOf(id);
 				const cfg    = this._cfg;
 				const side   = (cfg.width - cfg.xClose) / 3;
 				const x1     = cfg.width - (2*side);
-				const y1     = cfg.yStart + (3/2)*(color * side);
-				const id     = "chart_"+color;
-				const chart  = svg.svg();
-
+				const y1     = cfg.yStart + (3/2)*(id * side);
+				const x2     = cfg.xStart + cfg.padding;
+				const y2     = cfg.yStart + cfg.padding;
+				/* dados da legenda */
+				svg.frame(x2, y2, text, "hnw")
+				.attribute({style: "z-index: 9999;", "data-wd-chart-info": id})
+				.attribute({fill: color, "font-size": "1.2em", display: "none"});
+				/* caixa da legenda */
 				svg.rect(x1, y1, side, side)
-				.attribute({fill: ncolor, cursor: "pointer"})
+				.attribute({fill: color, cursor: "pointer", "data-wd-chart-legend": id})
 				.title(text.split("\n")[0])
 				.last.onclick = function (ev) {
-					const target = chart.getElementById(id);
-					let   opened = false;
-					WD.$$("[id^=\"chart_\"]", chart).forEach(function(x) {
+					const info = ev.target.dataset.wdChartLegend;
+					WD.$$("[data-wd-chart-info]", svg.svg()).forEach(function(x) {
 						const show = x.getAttribute("display") !== "none";
-						if (x === target)
+						if (x.dataset.wdChartInfo === info)
 							x.setAttribute("display", (show ? "none" : "inline"));
 						else
 							x.setAttribute("display", "none");
 					});
 				};
-				const x2   = cfg.xStart + cfg.padding;
-				const y2   = cfg.yStart + cfg.padding;
-				svg.frame(x2, y2, text, "hnw")
-				.attribute({style: "z-index: 9999;"})
-				.attribute({id: id, fill: ncolor, "font-size": "1.5em", display: "none"});
+				return;
 			}
 		},
 		/**. ``''node'' plot()``: Constrói o gráfico e o retorna (elemento SVG) ou nulo.**/
