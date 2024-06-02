@@ -5496,6 +5496,7 @@ const wd = (function() {
 		. O argumento ``value`` corresponde ao valor numérico a ser formatado. O argumento opcional ``type`` diz respeito ao tipo de informação (''number'', ''time'', ''date'' ou ''datetime'').**/
 		_values: {
 			value: function(value, type) {
+				const n = __Number(value);
 				switch(type) {
 					case "date":
 						return __DateTime(value).toDateString();
@@ -5503,10 +5504,10 @@ const wd = (function() {
 						return __DateTime(value).toTimeString();
 					case "datetime":
 						return __DateTime(value).format("{YYYY}-{MM}-{DD} {hh}:{mm}");
+					case "%":
+						return n.notation("percent", {digits: 0});
 				}
-				let n = __Number(value);
-				let e = n.e;
-
+				const e = n.e;
 				if (n ==    0) return n.notation("decimal",    {digits: 0});
 				if (e >=  100) return n.notation("scientific", {digits: 0});
 				if (e >=   10) return n.notation("scientific", {digits: 1});
@@ -5519,7 +5520,7 @@ const wd = (function() {
 				return n.notation("decimal", {digits: 2});
 			}
 		},
-		/**. ``''void'' _legend(''node'' svg, ''string'' text, ''number'' color)``: Constrói a legenda do gráfico.
+		/**. ``''void'' _legend(''node'' svg, ''string'' text, ''number'' id)``: Constrói a legenda do gráfico.
 		. O argumento ``svg`` é o elemento SVG onde o gŕafico está sendo construído. O argumento ``text`` é o conteúdo da primeiro linha da legenda que, se for ``null``, retornará a função ignorando a legenda. O argumento ``id`` define o número da cor da legenda.**/
 		_legend: {
 			value: function(svg, text, id) {
@@ -5719,7 +5720,7 @@ const wd = (function() {
 							/* pedaço da pizza */
 							svg.semicircle(cx, cy, r, start, width)
 							.attribute({fill: color})
-							.title(title);
+							.title(item.name + " (" + item.value + ")");
 							/* legenda */
 							let m = start + width/2;
 							let x = cx + (r + 5)*Math.cos(2*Math.PI*m/360);
@@ -5732,7 +5733,7 @@ const wd = (function() {
 							else p = "hw";
 							svg.text(x, y, item.name+" ("+item._ratio+")", p)
 							.attribute({fill: color, "stroke-linecap": "round"})
-							.title(title);
+							.title(item.value);
 							/* iterando */
 							start += width;
 						}
@@ -5753,8 +5754,10 @@ const wd = (function() {
 
 					/* gráfico de barras -----------------------------------------------*/
 					else {
-						let width = this._cfg.xSize / count;
+						let legend = [{label: this.xLabel, plus: 0, minus: 0}];
+						let width  = this._cfg.xSize / count;
 						let i = -1;
+
 						while (++i < pieces.length) {
 							let item  = pieces[i];
 							let color = colors.valueOf(i);
@@ -5764,8 +5767,8 @@ const wd = (function() {
 							let h     = Math.abs(this._yScale(item.value) - this._yScale(0));
 							/* barra */
 							svg.rect(x, y, w, h)
-							.attribute({fill: color})
-							.title(item.name+"\n"+this.yLabel+": "+item._value+"");
+							.attribute({fill: color, "fill-opacity": 0.8, stroke: color, "stroke-width": 2})
+							.title(item.name);
 							/* legenda */
 							svg.text(
 								x + width/2,
@@ -5773,11 +5776,46 @@ const wd = (function() {
 								this._values(item.value),
 								item.value >= 0 ? "hn" : "hs"
 							)
-							.attribute({fill: color});
-							this._legend(svg, item.name, i);
+							.attribute({fill: color})
+							.title(item.value);
+							legend.push({label: item.name, value: item.value, color: color});
+							legend[0][item.value >= 0 ? "plus" : "minus"] += item.value;
 						}
+						let textLegend = [];
+						const self = this;
+						legend.forEach(function(v,i,a) {
+							if (i === 0) {
+								textLegend.push(v.label);
+							} else {
+								v.ratio = v.value / Math.abs(a[0][v.value >= 0 ? "plus" : "minus"]);
+								textLegend.push("■ "+v.label+" ("+self._values(v.ratio, "%")+")");
+							}
+						});
+						svg.frame(this._cfg.xStart, this._cfg.yStart, textLegend.join("\n"), "hnw")
+						.attribute({"font-size": "1.2em"});
+						let childsFrame = svg	.last.children;
+						legend.forEach(function(v,i,a) {
+							if (i > 0) childsFrame[i].setAttribute("fill", v.color)
+						});
+
+
+
+
+
+
+
+
+
+
+
+						console.log(legend, textLegend.join("\n"));
+
+
+
+
+
 						svg.lines( /* linha central */
-							[this._cfg.left, this._cfg.right],
+							[this._cfg.xStart - this._cfg.padding, this._cfg.xClose + this._cfg.padding],
 							[this._yScale(0), this._yScale(0)]
 						).attribute(this._cfg.attr_area)
 						.text( /* título */
