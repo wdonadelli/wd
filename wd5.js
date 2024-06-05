@@ -4748,12 +4748,11 @@ const wd = (function() {
 	**/
 	function __SVG(width, height, xmin, ymin) {
 		if (!(this instanceof __SVG)) return new __SVG(width, height, xmin, ymin);
-		let svg  = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-		let vbox = [xmin, ymin, width, height];
-		let main = [0, 0, 100, 100];
+		const svg  = this.create("svg");
+		const vbox = [xmin, ymin, width, height];
+		const main = [0, 0, 100, 100];
 		vbox.forEach(function (v,i,a) {
-			let check = __Type(v);
-			a[i] = check.finite ? Math.abs(check.value) : main[i];
+			a[i] = __Type(v).finite ? Number(v) : main[i];
 		});
 		svg.setAttribute("viewBox", vbox.join(" "));
 		Object.defineProperties(this, {
@@ -4761,10 +4760,9 @@ const wd = (function() {
 			_last: {value: svg, writable: true}
 		});
 	}
-
 	Object.defineProperties(__SVG.prototype, {
 		constructor: {value: __SVG},
-		/**. ``''node'' last``: Define ou retorna o último nó adicionado ao SVG.**/
+		/**. ``''node'' last``: Define (adiciona) ou retorna o último nó adicionado ao SVG.**/
 		last: {
 			get: function()  {return this._last;},
 			set: function(svg) {
@@ -4772,87 +4770,119 @@ const wd = (function() {
 				this._last = svg;
 			}
 		},
+		/**. ``''node'' create(''string'' tag)``: Retorna um novo elemento SVG do tipo informado em ``tag``.**/
+		create: {
+			value: function(tag) {
+				return document.createElementNS("http://www.w3.org/2000/svg", tag);
+			}
+		},
+		/**. ``''self'' close()``: Clona o último elemento adicionado e o define no lugar.**/
+		clone: {
+			value: function() {
+				this.last = this.last.cloneNode(true);
+				return this;
+			}
+		},
+		/**. ``''number'' xmin``: Retorna e define o valor de ``xmin``.**/
+		xmin: {
+			get: function()  {return this._svg.viewBox.baseVal.x;},
+			set: function(x) {
+				if (__Type(x).finite)	this._svg.viewBox.baseVal.x = Number(x);
+			}
+		},
+		/**. ``''number'' ymin``: Retorna e define o valor de ``ymin``.**/
+		ymin: {
+			get: function()  {return this._svg.viewBox.baseVal.y;},
+			set: function(y) {
+				if (__Type(y).finite)	this._svg.viewBox.baseVal.y = Number(y);
+			}
+		},
+		/**. ``''number'' width``: Retorna e define o valor de ``width``.**/
+		width: {
+			get: function()  {return this._svg.viewBox.baseVal.width;},
+			set: function(w) {
+				if (__Type(w).finite)	this._svg.viewBox.baseVal.width = Number(w);}
+		},
+		/**. ``''number'' height``: Retorna e define o valor de ``height``.**/
+		width: {
+			get: function()  {return this._svg.viewBox.baseVal.height;},
+			set: function(h) {
+				if (__Type(h).finite)	this._svg.viewBox.baseVal.height = Number(h);}
+		},
 		/**. ``''self'' attribute(''object'' attr)``: Define os atributos do último elemento adicionado. O argumento ``attr`` é um objeto cujas chaves representam o valor do atributo e seu respectivo valores.**/
 		attribute: {
 			value: function(attr) {
-				for (let i in attr) this.last.setAttribute(i, attr[i]);
+				if (__Type(attr).object)
+					for (let i in attr) this.last.setAttribute(i, attr[i]);
 				return this;
 			}
 		},
 		/**. ``''self'' title(''string'' value)``: Define um título (dica) ao último elemento adicionado. O argumento ``value`` é o texto da dica.**/
 		title: {
 			value: function(value) {
-				let svg = document.createElementNS("http://www.w3.org/2000/svg", "title");
+				const svg = this.create("title");
 				svg.textContent = value;
 				this.last.appendChild(svg);
 				return this;
 			}
 		},
-
-
 		/**. ``''self'' line(''array'' p1, ''array'' p2)``: Define uma linha ligando dois pontos das coordenadas. Os argumentos ``p1`` e ``p2`` são as coordenadas (x,y).**/
 		line: {
 			value: function(p1, p2) {
-				let svg = document.createElementNS("http://www.w3.org/2000/svg", "line");
-				this.last = svg;
+				this.last = this.create("line");
 				return this.attribute({x1: p1[0], y1: p1[1], x2: p2[0], y2: p2[1]});
 			}
 		},
 		/**. ``''self'' lines(''array'' x, ''array'' y, ''boolean'' close=false)``: Define diversos segmentos de reta a partir de um conjunto de coordenadas. Os argumentos ``x`` e ``y`` são as coordenadas (x,y) e o argumento ``close`` indica se o último ponto deve voltar à origem.**/
 		lines: {
 			value: function(x, y, close) {
-				let svg = document.createElementNS("http://www.w3.org/2000/svg", "path");
+				this.last = this.create("path");
 				let line = x.slice();
 				line.forEach(function(v,i,a) {
 					a[i] = [(i === 0 ? "M" : "L"), v, y[i]].join(" ");
 				});
 				if (close === true) x.push("Z");
-				this.last = svg;
 				return this.attribute({d: line.join(" ")});
 			}
 		},
 		/**. ``''self'' circle(''number'' cx, ''number'' cy, ''number'' r)``: Define um círculo. Os argumentos ``cx``, ``cy`` e ``r`` são o centro em x e y e o raio, respectivamente.**/
 		circle: {
 			value: function(cx, cy, r) {
-				let svg = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-				this.last = svg;
+				this.last = this.create("circle");
 				return this.attribute({cx: cx, cy: cy, r: r});
 			}
 		},
 		/**. ``''self'' semicircle(''number'' cx, ''number'' cy, ''number'' r, ''number'' start, ''number'' width)``: Define um semicírculo. Os argumentos ``cx``, ``cy`` e ``r`` são o centro em x e y e o raio, respectivamente. Os argumentos ``start`` e ``width`` indicam o ângulo inicial e seu tamanho em graus, respectivamente.**/
 		semicircle: {
 			value: function(cx, cy, r, start, width) {
+				this.last = this.create("path");
 				if (Math.abs(width) >= 360) return this.circle(cx, cy, r);
-				let svg = document.createElementNS("http://www.w3.org/2000/svg", "path");
 				start  = 2*Math.PI*start/360;
 				width  = 2*Math.PI*width/360;
 				if (width < 0) {
 					start += width;
 					width  = Math.abs(width);
 				}
-				let x1 = cx + r*Math.cos(start);
-				let y1 = cy - r*Math.sin(start);
-				let x2 = cx + r*Math.cos(start + width);
-				let y2 = cy - r*Math.sin(start + width);
-				let lg = width > Math.PI ? 1 : 0;
-				let  d = ["M", cx, cy, "L", x1, y1, "A", r, r, 0, lg, 0, x2, y2, "Z"];
-				this.last = svg;
+				const x1 = cx + r*Math.cos(start);
+				const y1 = cy - r*Math.sin(start);
+				const x2 = cx + r*Math.cos(start + width);
+				const y2 = cy - r*Math.sin(start + width);
+				const lg = width > Math.PI ? 1 : 0;
+				const  d = ["M", cx, cy, "L", x1, y1, "A", r, r, 0, lg, 0, x2, y2, "Z"];
 				return this.attribute({d: d.join(" ")});
 			}
 		},
 		/**. ``''self'' rect(''number'' x, ''number'' y, ''number'' width, ''number'' height)``: Define um retângulo. Os argumentos ``x`` e ``y`` definem o ponto de partida da figura e os argumentos ``width`` e ``height`` definem o comprimento e a altura do retângulo, respectivamente.**/
 		rect: {
 			value: function(x, y, width, height) {
-				let svg   = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-				this.last = svg;
+				this.last = this.create("rect");
 				return this.attribute({x: x, y: y, width: width, height: height});
 			}
 		},
 		/**. ``''self'' path(''string'' path)``: Define um nó SVG a partir de uma sequência de comandos. O argumento ``path`` define os comandos.**/
 		path: {
 			value: function(path) {
-				let svg = document.createElementNS("http://www.w3.org/2000/svg", "path");
-				this.last = svg;
+				this.last = this.create("path");
 				return this.attribute({d: path});
 			}
 		},
@@ -4863,47 +4893,41 @@ const wd = (function() {
 		|**Baixo/Sul**|sw|s|se|**/
 		text: {
 			value: function(x, y, text, point) {
-				let svg     = document.createElementNS("http://www.w3.org/2000/svg", "text");
-				let vanchor = ["start", "middle", "end"];
-				let vbase   = ["auto", "middle", "hanging"];
-				let anchor  = {n: 1, ne: 2, e: 2, se: 2, s: 1, sw: 0, w: 0, nw: 0, c: 1};
-				let base    = {n: 2, ne: 2, e: 1, se: 0, s: 0, sw: 0, w: 1, nw: 2, c: 1};
-				let attr    = {
+				this.last     = this.create("text");
+				const vanchor = ["start", "middle", "end"];
+				const vbase   = ["auto", "middle", "hanging"];
+				const anchor  = {n: 1, ne: 2, e: 2, se: 2, s: 1, sw: 0, w: 0, nw: 0, c: 1};
+				const base    = {n: 2, ne: 2, e: 1, se: 0, s: 0, sw: 0, w: 1, nw: 2, c: 1};
+				const attr    = {
 					x: point[0] === "v" ? -y : x,
 					y: point[0] === "v" ? x : y,
 					"text-anchor":       vanchor[anchor[point.substring(1)]],
 					"dominant-baseline": vbase[base[point.substring(1)]],
 					"transform":         point[0] === "v" ? "rotate(270)" : "",
 				};
-				svg.textContent = String(text).trim();
-				this.last = svg;
+				this.last.textContent = String(text);
 				return this.attribute(attr);
 			}
 		},
 		/**. ``''self'' ellipse(''number'' cx, ''number'' cy, ''number'' rx, ''number'' ry)``: Define uma elípse.Os argumentos ``cx``, ``cy``, ``rx`` e ``ry`` definem o centro de referência em x e y e os raios de x e y, respectivamente.**/
 		ellipse: {
 			value: function(cx, cy, rx, ry) {
-				let svg = document.createElementNS("http://www.w3.org/2000/svg", "ellipse");
-				this.last = svg;
+				this.last = this.create("ellipse");
 				return this.attribute({cx: cx, cy: cy, rx: rx, ry: ry});
 			}
 		},
 		/**. ``''self'' frame(''number'' x, ''number'' y, ''string'' text, ''string'' point)``: Funciona semelhante ao método ``text``, mas aceita quebra de linha e tabulação no início de cada linha. A primeira linha receberá uma formatação destacada, como um título.**/
 		frame: {
 			value: function(x, y, text, point) {
-				this.text(x, y, "", point);
 				const line = String(text).split("\n");
-				let i = -1;
+				this.text(x, y, line[0], point);
+				this.attribute({"font-weight": "bold"});
+				let i = 0;
 				while (++i < line.length) {
-					const span  = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
-					const style = {
-						x:  i === 0 ? x : x+4,
-						dy: i === 0 ? "0" : "1.5em",
-						"font-weight": i === 0 ? "bold" : "normal"
-					};
+					const span  = this.create("tspan");
+					const style = {x: x, dy: "1.5em", "font-weight": "normal"};
 					span.textContent = line[i] === "" ? " " : line[i];
-					for (let j in style)
-						span.setAttribute(j, style[j]);
+					for (let j in style) span.setAttribute(j, style[j]);
 					this.last.appendChild(span);
 				}
 				return this;
@@ -5674,6 +5698,7 @@ const wd = (function() {
 					let zero  = true;
 					let count = 0;
 					let total = 0;
+
 					for (let i in data[0]) {
 						let value = data[0][i];
 						count++;
@@ -5684,23 +5709,64 @@ const wd = (function() {
 					}
 					if (count === 0 || zero) return false;
 					/* calculando proporções e definindo limites */
-					this._xMin = 0;
-					this._xMax = count;
-					this._yMin = 0;
-					this._yMax = 0;
-					let pieces = [];
+					this._xMin  = 0;
+					this._xMax  = count;
+					this._yMin  = 0;
+					this._yMax  = 0;
+					let pieces  = [];
+					let legend  = [this.xLabel];
+					let idColor = -1;
+
+
+
 					for (let i in data[0]) {
-						let value = data[0][i];
+						const value = data[0][i];
+						legend.push("■ "+i);
 						pieces.push({
 							value:  value,
-							_value: __Number(value).notation(),
+							_value: this._values(value),
 							ratio:  total === 0 ? null : value/total,
-							_ratio: total === 0 ? null : __Number(value/total).notation("percent"),
-							name: i
+							_ratio: total === 0 ? null : this._values(value/total, "%"),
+							name: i,
+							idColor: ++idColor,
+							color: colors.valueOf(idColor)
 						});
 						this._yMin = value;
 						this._yMax = value;
 					}
+					/* Título */
+					svg.text(
+						this._cfg.xMiddle,
+						this._cfg.top,
+						this.title,
+						"hc"
+					).attribute(this._cfg.attr_title);
+
+
+
+
+
+
+					/*TODO  Legenda */
+					svg.frame(
+						this._cfg.xClose + this._cfg.padding,
+						this._cfg.yStart,
+						legend.join("\n"),
+						"hnw"
+					).attribute({"font-size": "1.2em"});
+					const itemsFrame = svg.last.children;
+					pieces.forEach(function (v,i,a) {
+						itemsFrame[i].setAttribute("fill", v.color)
+					});
+
+
+					console.log(pieces);
+					svg.xmin = this._cfg.xStart-this._cfg.padding;
+
+
+
+
+
 
 					/* gráfico de pizza ------------------------------------------------*/
 					if (minus !== plus && total !== 0) {
@@ -5781,34 +5847,8 @@ const wd = (function() {
 							legend.push({label: item.name, value: item.value, color: color});
 							legend[0][item.value >= 0 ? "plus" : "minus"] += item.value;
 						}
-						let textLegend = [];
-						const self = this;
-						legend.forEach(function(v,i,a) {
-							if (i === 0) {
-								textLegend.push(v.label);
-							} else {
-								v.ratio = v.value / Math.abs(a[0][v.value >= 0 ? "plus" : "minus"]);
-								textLegend.push("■ "+v.label+" ("+self._values(v.ratio, "%")+")");
-							}
-						});
-						svg.frame(this._cfg.xStart, this._cfg.yStart, textLegend.join("\n"), "hnw")
-						.attribute({"font-size": "1.2em"});
-						let childsFrame = svg	.last.children;
-						legend.forEach(function(v,i,a) {
-							if (i > 0) childsFrame[i].setAttribute("fill", v.color)
-						});
 
 
-
-
-
-
-
-
-
-
-
-						console.log(legend, textLegend.join("\n"));
 
 
 
