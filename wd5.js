@@ -5729,7 +5729,8 @@ const wd = (function() {
 							_ratio: total === 0 ? null : this._values(value/total, "%"),
 							name: i,
 							idColor: ++idColor,
-							color: colors.valueOf(idColor)
+							color: colors.valueOf(idColor),
+							get title() {return this.name+"\n"+this.value+" ("+this._ratio+")";},
 						});
 						this._yMin = value;
 						this._yMax = value;
@@ -5748,20 +5749,32 @@ const wd = (function() {
 
 
 					/*TODO  Legenda */
+
 					svg.frame(
 						this._cfg.xClose + this._cfg.padding,
 						this._cfg.yStart,
 						legend.join("\n"),
 						"hnw"
-					).attribute({"font-size": "1.2em"});
+					).attribute({"font-size": "1.2em", cursor: "default"});
 					const itemsFrame = svg.last.children;
 					pieces.forEach(function (v,i,a) {
-						itemsFrame[i].setAttribute("fill", v.color)
+						itemsFrame[i].setAttribute("fill", v.color);
+						const title = svg.create("title");
+						title.textContent = v.title;
+						itemsFrame[i].appendChild(title);
+
 					});
+					svg.text(
+						this._cfg.xMiddle,
+						this._cfg.height-this._cfg.padding,
+						this.yLabel+": "+__Number(total).notation(),
+						"hs"
+					);
+
 
 
 					console.log(pieces);
-					svg.xmin = this._cfg.xStart-this._cfg.padding;
+					//svg.xmin = this._cfg.xStart-this._cfg.padding;
 
 
 
@@ -5770,8 +5783,6 @@ const wd = (function() {
 
 					/* gráfico de pizza ------------------------------------------------*/
 					if (minus !== plus && total !== 0) {
-						svg.text(this._cfg.xMiddle, this._cfg.top, this.title, "hc")
-						.attribute(this._cfg.attr_title);
 						let start = 0;
 						let width = 0;
 						let i = -1;
@@ -5779,14 +5790,14 @@ const wd = (function() {
 							let item   = pieces[i];
 							let title  = item.name+"\n"+this.yLabel+": "+item._value;
 							let color  = colors.valueOf(i);
-							let r      = this._cfg.ySize/2;
+							let r      = 2*this._cfg.ySize/5;
 							let cx     = this._cfg.xMiddle;
 							let cy     = this._cfg.yMiddle + this._cfg.top;
 							width = 360*item.ratio;
 							/* pedaço da pizza */
 							svg.semicircle(cx, cy, r, start, width)
 							.attribute({fill: color})
-							.title(item.name + " (" + item.value + ")");
+							.title(item.title);
 							/* legenda */
 							let m = start + width/2;
 							let x = cx + (r + 5)*Math.cos(2*Math.PI*m/360);
@@ -5799,29 +5810,15 @@ const wd = (function() {
 							else p = "hw";
 							svg.text(x, y, item.name+" ("+item._ratio+")", p)
 							.attribute({fill: color, "stroke-linecap": "round"})
-							.title(item.value);
+							.title(item.title);
 							/* iterando */
 							start += width;
 						}
-						svg
-						.text(
-							this._cfg.right,
-							this._cfg.height-this._cfg.padding,
-							this.xLabel+": "+count,
-							"hse"
-						)
-						.text(
-							this._cfg.left,
-							this._cfg.height-this._cfg.padding,
-							this.yLabel+": "+__Number(total).notation(),
-							"hsw"
-						);
 					}
 
 					/* gráfico de barras -----------------------------------------------*/
 					else {
-						let legend = [{label: this.xLabel, plus: 0, minus: 0}];
-						let width  = this._cfg.xSize / count;
+						const width = this._cfg.xSize / count;
 						let i = -1;
 
 						while (++i < pieces.length) {
@@ -5834,7 +5831,7 @@ const wd = (function() {
 							/* barra */
 							svg.rect(x, y, w, h)
 							.attribute({fill: color, "fill-opacity": 0.8, stroke: color, "stroke-width": 2})
-							.title(item.name);
+							.title(item.title);
 							/* legenda */
 							svg.text(
 								x + width/2,
@@ -5842,40 +5839,13 @@ const wd = (function() {
 								this._values(item.value),
 								item.value >= 0 ? "hn" : "hs"
 							)
-							.attribute({fill: color})
+							.attribute({fill: color, cursor: "default"})
 							.title(item.value);
-							legend.push({label: item.name, value: item.value, color: color});
-							legend[0][item.value >= 0 ? "plus" : "minus"] += item.value;
 						}
-
-
-
-
-
-
-
-						svg.lines( /* linha central */
-							[this._cfg.xStart - this._cfg.padding, this._cfg.xClose + this._cfg.padding],
-							[this._yScale(0), this._yScale(0)]
-						).attribute(this._cfg.attr_area)
-						.text( /* título */
-							this._cfg.xMiddle,
-							this._cfg.top,
-							this.title,
-							"hc"
-						).attribute(this._cfg.attr_title)
-						.text( /* Rótulo da quantidade de elementos */
-							this._cfg.right,
-							this._cfg.height-this._cfg.padding,
-							this.xLabel+": "+count,
-							"hse"
-						).attribute(this._cfg.attr_label)
-						.text( /* Rótulo da soma de valores */
-							this._cfg.left,
-							this._cfg.height-this._cfg.padding,
-							this.yLabel+": "+__Number(total).notation(),
-							"hsw"
-						).attribute(this._cfg.attr_label);
+						svg.line(
+							[this._cfg.xStart, this._yScale(0)],
+							[this._cfg.xClose, this._yScale(0)]
+						).attribute(this._cfg.attr_area);
 					}
 				}
 				return svg.svg();
@@ -6479,6 +6449,7 @@ const wd = (function() {
 		},
 		//FIXME transformar isso em toString ou format?
 		/**. ``''string'' toString(options)``: Retorna o número em forma de texto local.
+		|Valor|Descrição|
 		|bytes|Retorna o valor em bytes.|
 		|significant|Retorna o número com a quantidade de dígitos significativos definida.|
 		|decimal|Retorna o número com a quantidade de casas decimais definida.|
