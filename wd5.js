@@ -405,6 +405,11 @@ const wd = (function() {
 		".js-wd-menu > * {border-radius: inherit;}",
 		".js-wd-menu > *:hover {background-color: rgba(50,50,50); }",
 
+		"/*-- SVG --*/",
+		"svg .js-wd-chart-hide {display: none;}",
+		"@media screen and (min-width: 768px) {svg .js-wd-chart-hide {display: inline;}}",
+
+
 
 
 
@@ -5237,7 +5242,6 @@ const wd = (function() {
 			_data:   {value: []},                           /* dados adicionados para plotagem */
 			_min:    {value: {x: +Infinity, y: +Infinity}}, /* menor valor de x,y */
 			_max:    {value: {x: -Infinity, y: -Infinity}}, /* maior valor de x,y */
-
 		});
 	}
 
@@ -5334,7 +5338,7 @@ const wd = (function() {
 		.. ``''number'' xEnd``: Registra o fim do eixo horizontal ``x`` (porcentagem).
 		.. ``''number'' yInit``: Registra o início do eixo vertical ``y`` (porcentagem).
 		.. ``''number'' yEnd``: Registra o fim do eixo vertical ``y`` (porcentagem).
-		.. ``''number'' points``: Número de divisões dos eixos no gráfico.
+		.. ``''number'' points``: Número de divisões dos eixos no gráfico (impar).
 		.. ``''number'' padd``: Define um valor para espaçamento relativo (porcentagem).
 		.. ``''number'' width``: Define a dimensão horizontal do gráfico.
 		.. ``''number'' height``: Retorna a dimensão vertical do gráfico proporcional à ``width``.
@@ -5353,10 +5357,6 @@ const wd = (function() {
 		.. ``''number'' padding``: Retorna o espaçamento definido.
 		.. ``''array'' colors``: Lista de cores.
 		.. ``''object'' attr_svg``: atributos do gráfico.
-		.. ``''object'' attr_title``: atributos do título do gráfico.
-		.. ``''object'' attr_label``: atributos dos rótulos do gráfico.
-		.. ``''object'' attr_area``: atributos da área de plotagem.
-		.. ``''object'' attr_axes``: atributos dos eixos secundários do gráfico.
 		.. ``''object'' curve_line``: atributos da curva em linha.
 		.. ``''object'' curve_sum``: atributos da curva de área.
 		.. ``''object'' curve_dash``: atributos da curva de traços.**/
@@ -5368,7 +5368,7 @@ const wd = (function() {
 				xEnd:       0.90,
 				yInit:      0.10,
 				yEnd:       0.85,
-				points:     5.00,
+				points:     7.00,
 				padd:       0.005,
 				width:      1000,
 				get height()  {return this.width * (this.vertical / this.horizontal);},
@@ -5393,125 +5393,164 @@ const wd = (function() {
 					"dimgray"
 				],
 				attr_svg:   {style: "background-color: #ffffff;"},
-				attr_title: {fill: "#262626", "font-weight": "bold", "font-size": "1.5em"},
-				attr_label: {fill: "#262626"},
-				attr_area:  {stroke: "#262626", fill: "None", "stroke-width": 2, "stroke-linecap": "round"},
-				attr_axes:  {stroke: "#778899", "stroke-width": 0.5, "stroke-dasharray": "6,6", "stroke-linecap": "round"},
 				curve_line: {fill: "none", "stroke-width": 3, "stroke-linecap": "round"},
 				curve_sum:  {"fill-opacity": 0.5, "stroke-width": 1, "stroke-linecap": "round"},
 				curve_dash: {fill: "None", "stroke-width": 1, "stroke-linecap": "round", "stroke-dasharray": "5,5"},
 			}
 		},
-		/**. ``''void'' _plan()``: Constrói a área do gráfico cartesiano.**/
-		_plan: {
-			value: function(svg) {
-				/* pontos, eixos, rótulos */
-				let cfg = this._cfg;
-				let px, py, wx, wy;
-				let cx, cy, dx, dy;
-				let lx, ly;
-				wx = (cfg.xClose - cfg.xStart) / (cfg.points - 1);
-				wy = (cfg.yClose - cfg.yStart) / (cfg.points - 1);
-				dx = (this._xMax - this._xMin) / (cfg.points - 1);
-				dy = (this._yMax - this._yMin) / (cfg.points - 1);
+		/**. ``''void'' _struct(''node'' svg, ''string'' builder)``: Constrói a área do gráfico, devendo ser chamado após a análise dos dados. O argumento ``svg`` é o objeto de construçã da imagem do gráfico e ``builder`` é uma string podendo adicionar os seguintes valores separados por espaços:
+		|Nome|Descrição|
+		|title|Adiciona o título ao gráfico.|
+		|xlabel|Adiciona o rótulo do eixo x.|
+		|ylabel|Adiciona o rótulo do eixo y.|
+		|xyplan|Adiciona um retângulo à area de plotagem.|
+		|xyaxes|Adiciona os eixos abscissa e ordenada (incompatível com xyplan).|
+		|hlines|Adiciona subdivisões de linhas horizontais.|
+		|vlines|Adiciona subdivisões de linhas verticais.|
+		|xscale|Adiciona a escala ao eixo x.|
+		|yscale|Adiciona a escala ao eixo y.|
+		|mouse|Adiciona um identificador de posição no gráfico a partir da posição do mouse.|**/
+		_struct: {
+			value: function(svg, builder) {
+				if (!__Type(builder).chars) return;
+				const cfg   = this._cfg;
+				const parts = builder.replace(/\ +/, " ").trim().toLowerCase().split(" ");
+				const chart = {};
+				parts.forEach(function (v,i,a) {chart[v] = true;});
 
-				/* eixos secudários e escalas */
-				let i = -1;
-				let p = cfg.points;
-				while (++i < p) {
-					/* IMPORTANTE: py (cima para baixo) é invertido em relação à cy (baixo para cima) */
-					if (i === 0) {
-						px = cfg.xStart;
-						py = cfg.yClose;
-						cx = this._xMin;
-						cy = this._yMin;
-						lx = "hnw";
-						ly = "hse";
-					}
-					else if (i === (p - 1)) {
-						px = cfg.xClose;
-						py = cfg.yStart;
-						cx = this._xMax;
-						cy = this._yMax;
-						lx = "hne";
-						ly = "hne";
-					}
-					else {
-						let half = i === ((p - 1) / 2);
-						px = half ? ((cfg.xClose + cfg.xStart) / 2) : (px + wx);
-						py = half ? ((cfg.yStart + cfg.yClose) / 2) : (py - wy);
-						cx = half ? ((this._xMax + this._xMin) / 2) : cx + dx;
-						cy = half ? ((this._yMax + this._yMin) / 2) : cy + dy;
-						lx = "hn";
-						ly = "he";
-					}
+				/* area de plotagem */
+				const attrMain = {
+					stroke: "none", fill: "none", "stroke-width": 2, "stroke-linecap": "round"
+				};
+				svg.rect(cfg.xStart, cfg.yStart, cfg.xSize, cfg.ySize).attribute(attrMain);
+				const main = svg.last;
 
-					/* subdivisões: horizontal e vertical */
-					if (i > 0 && i < (p-1)) {
-						let x = [cfg.xStart, cfg.xClose];
-						let y = [cfg.yStart, cfg.yClose];
-						svg.lines(x, [py, py]).attribute(cfg.attr_axes)
-						if (cy === 0) svg.attribute({"stroke-dasharray": "none"});
-						svg.lines([px, px], y).attribute(cfg.attr_axes);
-						if (cx === 0) svg.attribute({"stroke-dasharray": "none"});
-					}
-					/* escala dos eixos: x e y */
-					let vx = this._values(cx, this.xAxis);
-					let vy = this._values(cy);
-					let sx = cfg.xStart - cfg.padding;
-					let sy = cfg.yClose + cfg.padding;
-					svg.text(px, sy, vx, lx).attribute(cfg.attr_label).title(cx);
-					if (this.xAxis === "datetime") svg.attribute({"font-size": "small"});
-					svg.text(sx, py, vy, ly).attribute(cfg.attr_label).title(cy);
+				/* elementos do gráfico */
+				if (chart.title) {
+					svg.text(cfg.xMiddle, cfg.top, this.title, "hc").attribute({
+						fill: "#000000", "font-size": "1.5em", "font-weight": "bold", cursor: "default"
+					}).title(this.title);
 				}
-				/* título */
-				svg.text(cfg.xMiddle, cfg.top, this.title, "hc").attribute(cfg.attr_title);
-				/* rótulo do eixo x */
-				svg.text(cfg.xMiddle, cfg.height - cfg.padding, this.xLabel, "hs").attribute(cfg.attr_label);
-				/* rótulo do eixo y */
-				svg.text(cfg.padding, cfg.yMiddle, this.yLabel, "vn").attribute(cfg.attr_label);
-				/* área de plotagem */
-				svg.rect(cfg.xStart, cfg.yStart, cfg.xSize, cfg.ySize)
-				svg.attribute(cfg.attr_area);
-				const area = svg.last;
-				/* dados da posição */
-				svg.text(cfg.width - cfg.padding, cfg.height - cfg.padding, "", "hse");
-				const xypos = svg.last;
-				/*TODO linhas auxiliares */
-				svg.line([cfg.xStart, cfg.yStart], [cfg.xClose, cfg.yStart])
-				.attribute({"stroke-width": 1, stroke: "black", display: "none"});
-				const hline = svg.last;
-				svg.line([cfg.xStart, cfg.yStart], [cfg.xStart, cfg.yClose])
-				.attribute({"stroke-width": 1, stroke: "black", display: "none"});
-				const vline = svg.last;
-				const self = this;
-				svg.svg().onmousemove = function (ev) {
-					const vps = svg.svg().getBoundingClientRect();
-					const vpa = area.getBoundingClientRect();
-					const mx  = ev.clientX;
-					const my  = ev.clientY;
-					if (mx >= vpa.left && mx <= vpa.right && my >= vpa.top && my <= vpa.bottom) {
-						const x  = self._xMin + (self._xMax - self._xMin)*(mx - vpa.left)/vpa.width;
-						const y  = self._yMax - (self._yMax - self._yMin)*(my - vpa.top)/vpa.height;
-						const h = self._yScale(y);
-						const v = self._xScale(x);
-						const tx = self._values(x, self.xAxis);
-						const ty = self._values(y);
-						xypos.textContent = tx+" x "+ty;
-						hline.setAttribute("y1", h);
-						hline.setAttribute("y2", h);
-						hline.setAttribute("display", "inline");
-						vline.setAttribute("x1", v);
-						vline.setAttribute("x2", v);
-						vline.setAttribute("display", "inline");
-						svg.svg().setAttribute("cursor", "crosshair");
+				if (chart.xlabel) {
+					svg.text(cfg.xMiddle, cfg.height - 2*cfg.padding, this.xLabel, "hs").attribute({
+						fill: "#000000", cursor: "default"
+					}).title(this.xLabel);
+				}
+				if (chart.ylabel) {
+					svg.text(2*cfg.padding, cfg.yMiddle, this.yLabel, "vn").attribute({
+						fill: "#000000", cursor: "default"
+					}).title(this.yLabel);
+				}
+				if (chart.xyplan) {
+					main.setAttribute("stroke", "#000000");
+				}
+				else if (chart.xyaxes) {
+					svg.lines(
+						[cfg.xStart, cfg.xStart, cfg.xClose],
+						[cfg.yStart, cfg.yClose, cfg.yClose],
+						false
+					).attribute(attrMain).attribute({stroke: "#000000"});
+				}
+
+				/* pontos, valores e âncoras */
+				const dw = (cfg.xClose - cfg.xStart) / (cfg.points - 1);
+				const dh = (cfg.yClose - cfg.yStart) / (cfg.points - 1);
+				const dx = (this._xMax - this._xMin) / (cfg.points - 1);
+				const dy = (this._yMax - this._yMin) / (cfg.points - 1);
+				const dt = ["datetime", "time", "date"].indexOf(this.xAxis) >= 0;
+				let px, py, vx, vy, ax, ay;
+				let i = -1;
+				while (++i < cfg.points) {
+					let zero = i === 0;
+					let half = i === ((cfg.points - 1) / 2);
+					let last = i === (cfg.points - 1);
+					let hide = i%2 !== 0;
+
+					if (zero || last) {
+						px = zero ? cfg.xStart : cfg.xClose;
+						py = zero ? cfg.yClose : cfg.yStart;
+						vx = zero ? this._xMin : this._xMax;
+						vy = zero ? this._yMin : this._yMax;
+						ax = dt ? "hn" : (zero ? "hnw" : "hne");
+						ay = zero ? "hse" : "hne";
 					} else {
-						xypos.textContent = "";
-						hline.setAttribute("display", "none");
-						vline.setAttribute("display", "none");
-						svg.svg().removeAttribute("cursor");
+						px = half ? (cfg.xClose + cfg.xStart) / 2 : px + dw;
+						py = half ? (cfg.yStart + cfg.yClose) / 2 : py - dh;
+						vx = half ? (this._xMax + this._xMin) / 2 : vx + dx;
+						vy = half ? (this._yMax + this._yMin) / 2 : vy + dy;
+						ax = "hn";
+						ay = "he";
 					}
-					return;
+					if (chart.hlines) {
+						svg.line([cfg.xStart, py], [cfg.xClose, py]).attribute({
+							stroke: "#778899", "stroke-width": 1, "stroke-linecap": "round",
+							"stroke-dasharray": (vy === 0 ? "none" : "6,6"),
+							"class": (hide ? "js-wd-chart-hide" : "")
+						});
+					}
+					if (chart.vlines) {
+						svg.line([px, cfg.yStart], [px, cfg.yClose]).attribute({
+							stroke: "#778899", "stroke-width": 1, "stroke-linecap": "round",
+							"stroke-dasharray": (vx === 0 ? "none" : "6,6"),
+							"class": (hide ? "js-wd-chart-hide" : "")
+						});
+					}
+					if (chart.xscale) {
+						svg.text(px, cfg.yClose + cfg.padding, this._values(vx, this.xAxis), ax).attribute({
+							fill: "#262626", "class": (hide ? "js-wd-chart-hide" : ""), cursor: "default"
+						}).title(this._values(vx, this.xAxis));
+						if (dt) svg.attribute({"font-size": "smaller"})
+					}
+					if (chart.yscale) {
+						svg.text(cfg.xStart - cfg.padding, py, this._values(vy), ay).attribute({
+							fill: "#262626", "class": (hide ? "js-wd-chart-hide" : ""), cursor: "default"
+						}).title(this._values(vy));
+					}
+				}
+
+				if (chart.mouse) {
+					svg.text(cfg.width - cfg.padding, cfg.height - cfg.padding, "", "hse").attribute({
+						fill: "#000000", cursor: "default", "data-wd-chart-tool": "coordinates"
+					});
+					svg.line([cfg.xStart, cfg.yStart], [cfg.xClose, cfg.yStart]).attribute({
+						"stroke-width": 1, stroke: "#000000", display: "none", "data-wd-chart-tool": "hline"
+					});
+					svg.line([cfg.xStart, cfg.yStart], [cfg.xStart, cfg.yClose]).attribute(
+						{"stroke-width": 1, stroke: "#000000", display: "none", "data-wd-chart-tool": "vline"
+					});
+					const self = this;
+					svg.svg().onmousemove = function (ev) {
+						const ps = svg.svg().getBoundingClientRect();
+						const pm = main.getBoundingClientRect();
+						const mx = ev.clientX;
+						const my = ev.clientY;
+						const go = mx >= pm.left && mx <= pm.right && my >= pm.top && my <= pm.bottom;
+						const hline = svg.svg().querySelector("[data-wd-chart-tool=hline]");
+						const vline = svg.svg().querySelector("[data-wd-chart-tool=vline]");
+						const xypos = svg.svg().querySelector("[data-wd-chart-tool=coordinates]");
+						if (go) {
+							const dx = self._xMax - self._xMin;
+							const dy = self._yMax - self._yMin;
+							const vx = self._xMin + ((mx - pm.left)/pm.width)*dx;
+							const vy = self._yMax - ((my - pm.top)/pm.height)*dy;
+							const px = self._xScale(vx);
+							const py = self._yScale(vy);
+							const tx = self._values(vx, self.xAxis);
+							const ty = self._values(vy);
+							const hl = {y1: py, y2: py, display: "inline"};
+							const vl = {x1: px, x2: px, display: "inline"};
+							xypos.textContent = tx+" / "+ty;
+							svg.svg().setAttribute("cursor", "crosshair");
+							for (let i in hl) hline.setAttribute(i, hl[i]);
+							for (let i in vl) vline.setAttribute(i, vl[i]);
+						} else {
+							xypos.textContent = "";
+							hline.setAttribute("display", "none");
+							vline.setAttribute("display", "none");
+							svg.svg().removeAttribute("cursor");
+						}
+						return;
+					}
 				}
 				return;
 			}
@@ -5582,11 +5621,11 @@ const wd = (function() {
 		plot: {
 			value: function() {
 				if (this._data.length === 0) return null;
-				let data   = this._data.slice();
-				let colors = __Array(this._cfg.colors);
+				const colors = __Array(this._cfg.colors);
+				let data     = this._data.slice();
 
 				/* definindo a área do gráfico -------------------------------------- */
-				let svg = __SVG(this._cfg.width, this._cfg.height);
+				const svg = __SVG(this._cfg.width, this._cfg.height);
 				svg.attribute(this._cfg.attr_svg);
 
 				/* redefinindo funções para array ----------------------------------- */
@@ -5688,7 +5727,7 @@ const wd = (function() {
 							this._legend(svg, name, color);
 						}
 					}
-					this._plan(svg);
+					this._struct(svg, "xyaxes hlines vlines xlabel ylabel xscale yscale title mouse");
 				}
 				/* plotando gráfico proporcional ------------------------------------ */
 				else {
