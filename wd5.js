@@ -4891,7 +4891,7 @@ const wd = (function() {
 				return this.attribute({d: path});
 			}
 		},
-		/**. ``''self'' text(''number'' x, ''number'' y, ''string'' text, ''string'' point)``: Define um SVG textual. Os argumentos ``x``, ``y`` e ``text`` definem os pontos de referência (''x'', ''y'') e o valor do texto, respectivamente. O argumento ``point`` define a âncora da referência, composta por dois grupos. O primeiro grupo define o posicionamento, ``v`` para vertical ou ``h``. O segundo grupo define o ponto cardeal:
+		/**. ``''self'' text(''number'' x, ''number'' y, ''string'' text, ''string'' point)``: Define um SVG textual sensível à quebra de linha. Os argumentos ``x``, ``y`` e ``text`` definem os pontos de referência (''x'', ''y'') e o valor do texto, respectivamente. O argumento ``point`` define a âncora da referência, composta por dois grupos. O primeiro grupo define o posicionamento, ``v`` para vertical ou ``h``. O segundo grupo define o ponto cardeal:
 		||Esquerda/Oeste|Centro|Direita/Leste|
 		|**Topo/Norte**|nw|n|ne|
 		|**Meio**|w|c|e|
@@ -4910,8 +4910,17 @@ const wd = (function() {
 					"dominant-baseline": vbase[base[point.substring(1)]],
 					"transform":         point[0] === "v" ? "rotate(270)" : "",
 				};
-				this.last.textContent = String(text);
-				return this.attribute(attr);
+				this.attribute(attr);
+				const self  = this;
+				const lines = String(text).split("\n");
+				lines.forEach(function(v,i,a) {
+					const tspan = self.create("tspan");
+					const style = {x: attr.x, dy: i === 0 ? 0 : "1.5em"};
+					tspan.textContent = v === "" ? " " : v;
+					for (let j in style) tspan.setAttribute(j, style[j]);
+					self.last.appendChild(tspan);
+				});
+				return this;
 			}
 		},
 		/**. ``''self'' ellipse(''number'' cx, ''number'' cy, ''number'' rx, ''number'' ry)``: Define uma elípse.Os argumentos ``cx``, ``cy``, ``rx`` e ``ry`` definem o centro de referência em x e y e os raios de x e y, respectivamente.**/
@@ -4919,23 +4928,6 @@ const wd = (function() {
 			value: function(cx, cy, rx, ry) {
 				this.last = this.create("ellipse");
 				return this.attribute({cx: cx, cy: cy, rx: rx, ry: ry});
-			}
-		},
-		/**. ``''self'' frame(''number'' x, ''number'' y, ''string'' text, ''string'' point)``: Funciona semelhante ao método ``text``, mas aceita quebra de linha e tabulação no início de cada linha. A primeira linha receberá uma formatação destacada, como um título.**/
-		frame: {
-			value: function(x, y, text, point) {
-				const line = String(text).split("\n");
-				this.text(x, y, line[0], point);
-				this.attribute({"font-weight": "bold"});
-				let i = 0;
-				while (++i < line.length) {
-					const span  = this.create("tspan");
-					const style = {x: x, dy: "1.5em", "font-weight": "normal"};
-					span.textContent = line[i] === "" ? " " : line[i];
-					for (let j in style) span.setAttribute(j, style[j]);
-					this.last.appendChild(span);
-				}
-				return this;
 			}
 		},
 		/**. ``''node'' svg(''node'' append)``: Retorna o elemento SVG. O argumento opcional ``append`` irá receber o elemento SVG.**/
@@ -5238,7 +5230,7 @@ const wd = (function() {
 			_xLabel: {value: "X Label", writable: true},    /* nome do eixo x */
 			_yLabel: {value: "Y Label", writable: true},    /* nome do eixo y */
 			_xAxis:  {value: "number",  writable: true},    /* tipo de dado do eixo x */
-			_color:  {value: -1,        writable: true},    /* controle de cores */
+			_id:     {value: -1,        writable: true},    /* controle das plotagens */
 			_data:   {value: []},                           /* dados adicionados para plotagem */
 			_min:    {value: {x: +Infinity, y: +Infinity}}, /* menor valor de x,y */
 			_max:    {value: {x: -Infinity, y: -Infinity}}, /* maior valor de x,y */
@@ -5354,21 +5346,16 @@ const wd = (function() {
 		.. ``''number'' bottom``: A metade do espaço inferior.
 		.. ``''number'' left``: A metade do espaço esquerdo.
 		.. ``''number'' right``: A metade do espaço direito.
-		.. ``''number'' padding``: Retorna o espaçamento definido.
-		.. ``''array'' colors``: Lista de cores.
-		.. ``''object'' attr_svg``: atributos do gráfico.
-		.. ``''object'' curve_line``: atributos da curva em linha.
-		.. ``''object'' curve_sum``: atributos da curva de área.
-		.. ``''object'' curve_dash``: atributos da curva de traços.**/
+		.. ``''number'' padding``: Retorna o espaçamento definido.**/
 		_cfg: {
 			value: {
 				vertical:   Math.min(window.screen.width, window.screen.height),
 				horizontal: Math.max(window.screen.width, window.screen.height),
 				xInit:      0.10,
-				xEnd:       0.90,
+				xEnd:       0.80,
 				yInit:      0.10,
-				yEnd:       0.85,
-				points:     7.00,
+				yEnd:       0.90,
+				points:     5.00,
 				padd:       0.005,
 				width:      1000,
 				get height()  {return this.width * (this.vertical / this.horizontal);},
@@ -5384,18 +5371,22 @@ const wd = (function() {
 				get bottom()  {return this.yClose + (this.height - this.yClose)/2;},
 				get left()    {return this.xStart/2;},
 				get right()   {return this.xClose + (this.width - this.xClose)/2;},
-				get padding() {return this.padd*this.width;},
-				colors: [
+				get padding() {return this.padd*this.width;}
+			}
+		},
+		/**. ``''void'' color(''integer'' id)``: Retorna a cor a partir do identificador (``id``) de ciclo  infinito.**/
+		color: {
+			value: function(id) {
+				if (id === undefined) return "#000000";
+				const colors = [
 					"darkred",   "navy",           "indigo",          "teal",
 					"crimson",   "dodgerblue",     "mediumslateblue", "yellowgreen",
 					"deeppink",  "cornflowerblue", "purple",          "darkgreen",
 					"orangered", "cyan",           "blueviolet",      "limegreen",
 					"dimgray"
-				],
-				attr_svg:   {style: "background-color: #ffffff;"},
-				curve_line: {fill: "none", "stroke-width": 3, "stroke-linecap": "round"},
-				curve_sum:  {"fill-opacity": 0.5, "stroke-width": 1, "stroke-linecap": "round"},
-				curve_dash: {fill: "None", "stroke-width": 1, "stroke-linecap": "round", "stroke-dasharray": "5,5"},
+				];
+				const color = __Array(colors);
+				return color.valueOf(id);
 			}
 		},
 		/**. ``''void'' _struct(''node'' svg, ''string'' builder)``: Constrói a área do gráfico, devendo ser chamado após a análise dos dados. O argumento ``svg`` é o objeto de construçã da imagem do gráfico e ``builder`` é uma string podendo adicionar os seguintes valores separados por espaços:
@@ -5416,6 +5407,7 @@ const wd = (function() {
 				const cfg   = this._cfg;
 				const parts = builder.replace(/\ +/, " ").trim().toLowerCase().split(" ");
 				const chart = {};
+				const color = this.color();
 				parts.forEach(function (v,i,a) {chart[v] = true;});
 
 				/* area de plotagem */
@@ -5428,28 +5420,28 @@ const wd = (function() {
 				/* elementos do gráfico */
 				if (chart.title) {
 					svg.text(cfg.xMiddle, cfg.top, this.title, "hc").attribute({
-						fill: "#000000", "font-size": "1.5em", "font-weight": "bold", cursor: "default"
+						fill: color, "font-size": "1.5em", "font-weight": "bold", cursor: "default"
 					}).title(this.title);
 				}
 				if (chart.xlabel) {
 					svg.text(cfg.xMiddle, cfg.height - 2*cfg.padding, this.xLabel, "hs").attribute({
-						fill: "#000000", cursor: "default"
+						fill: color, cursor: "default"
 					}).title(this.xLabel);
 				}
 				if (chart.ylabel) {
 					svg.text(2*cfg.padding, cfg.yMiddle, this.yLabel, "vn").attribute({
-						fill: "#000000", cursor: "default"
+						fill: color, cursor: "default"
 					}).title(this.yLabel);
 				}
 				if (chart.xyplan) {
-					main.setAttribute("stroke", "#000000");
+					main.setAttribute("stroke", color);
 				}
 				else if (chart.xyaxes) {
 					svg.lines(
 						[cfg.xStart, cfg.xStart, cfg.xClose],
 						[cfg.yStart, cfg.yClose, cfg.yClose],
 						false
-					).attribute(attrMain).attribute({stroke: "#000000"});
+					).attribute(attrMain).attribute({stroke: color});
 				}
 
 				/* pontos, valores e âncoras */
@@ -5497,26 +5489,26 @@ const wd = (function() {
 					}
 					if (chart.xscale) {
 						svg.text(px, cfg.yClose + cfg.padding, this._values(vx, this.xAxis), ax).attribute({
-							fill: "#262626", "class": (hide ? "js-wd-chart-hide" : ""), cursor: "default"
+							fill: color, "class": (hide ? "js-wd-chart-hide" : ""), cursor: "default"
 						}).title(this._values(vx, this.xAxis));
 						if (dt) svg.attribute({"font-size": "smaller"})
 					}
 					if (chart.yscale) {
 						svg.text(cfg.xStart - cfg.padding, py, this._values(vy), ay).attribute({
-							fill: "#262626", "class": (hide ? "js-wd-chart-hide" : ""), cursor: "default"
+							fill: color, "class": (hide ? "js-wd-chart-hide" : ""), cursor: "default"
 						}).title(this._values(vy));
 					}
 				}
 
 				if (chart.mouse) {
 					svg.text(cfg.width - cfg.padding, cfg.height - cfg.padding, "", "hse").attribute({
-						fill: "#000000", cursor: "default", "data-wd-chart-tool": "coordinates"
+						fill: color, cursor: "default", "data-wd-chart-tool": "coordinates"
 					});
 					svg.line([cfg.xStart, cfg.yStart], [cfg.xClose, cfg.yStart]).attribute({
-						"stroke-width": 1, stroke: "#000000", display: "none", "data-wd-chart-tool": "hline"
+						"stroke-width": 1, stroke: color, display: "none", "data-wd-chart-tool": "hline"
 					});
 					svg.line([cfg.xStart, cfg.yStart], [cfg.xStart, cfg.yClose]).attribute(
-						{"stroke-width": 1, stroke: "#000000", display: "none", "data-wd-chart-tool": "vline"
+						{"stroke-width": 1, stroke: color, display: "none", "data-wd-chart-tool": "vline"
 					});
 					const self = this;
 					svg.svg().onmousemove = function (ev) {
@@ -5584,36 +5576,87 @@ const wd = (function() {
 			}
 		},
 		/**. ``''void'' _legend(''node'' svg, ''string'' text, ''number'' id)``: Constrói a legenda do gráfico.
-		. O argumento ``svg`` é o elemento SVG onde o gŕafico está sendo construído. O argumento ``text`` é o conteúdo da primeiro linha da legenda que, se for ``null``, retornará a função ignorando a legenda. O argumento ``id`` define o número da cor da legenda.**/
+		. O argumento ``svg`` é o elemento SVG onde o gŕafico está sendo construído. O argumento ``text`` é o conteúdo da primeiro linha da legenda que, se for ``null``, retornará a função ignorando a legenda. O argumento ``id`` define o número da cor da legenda.
+
+		id, subtitle, info, color
+FIXME
+		**/
 		_legend: {
-			value: function(svg, text, id) {
-				if (text === null) return;
-				const colors = __Array(this._cfg.colors);
-				const color  = colors.valueOf(id);
-				const cfg    = this._cfg;
-				const side   = (cfg.width - cfg.xClose) / 3;
-				const x1     = cfg.width - (2*side);
-				const y1     = cfg.yStart + (3/2)*(id * side);
-				const x2     = cfg.xStart + cfg.padding;
-				const y2     = cfg.yStart + cfg.padding;
-				/* dados da legenda */
-				svg.frame(x2, y2, text, "hnw")
-				.attribute({style: "z-index: 9999;", "data-wd-chart-info": id})
-				.attribute({fill: color, "font-size": "1.2em", display: "none"});
-				/* caixa da legenda */
-				svg.rect(x1, y1, side, side)
-				.attribute({fill: color, cursor: "pointer", "data-wd-chart-legend": id})
-				.title(text.split("\n")[0])
-				.last.onclick = function (ev) {
-					const info = ev.target.dataset.wdChartLegend;
-					WD.$$("[data-wd-chart-info]", svg.svg()).forEach(function(x) {
-						const show = x.getAttribute("display") !== "none";
-						if (x.dataset.wdChartInfo === info)
-							x.setAttribute("display", (show ? "none" : "inline"));
-						else
-							x.setAttribute("display", "none");
-					});
-				};
+			value: function(svg, data) {
+				/* definindo itens da legenda */
+				let subtitle = [];
+				data.forEach(function(v,i,a) {
+					if (v.name === null) {a[i] = null;}
+					else subtitle.push(String("● "+v.name));
+				});
+				if (subtitle.length < 1) return;
+				svg.text(
+					this._cfg.xClose + 2*this._cfg.padding,
+					this._cfg.yStart,
+					subtitle.join("\n"),
+					"hnw"
+				).title(this.yLabel);
+				/* definindo atributos dos itens da legenda */
+				const links = svg.last.children;
+				const self  = this;
+				data.forEach(function(v,i,a) {
+					if (v === null) return;
+					const link  = links[i];
+					const id    = v.id
+					const info  = __Type(v.info).nonempty ? v.info : null;
+					const color = v.color;
+					const attr = {
+						fill: color,
+						"font-size": "1.2em",
+						"data-wd-chart-subtitle": id,
+						cursor: info === null ? "default" : "pointer",
+					};
+					for (let j in attr) link.setAttribute(j, attr[j]);
+					/* definindo informação */
+					if (info !== null) {
+						const prop = {
+							fill: color,
+							"font-size": "1.2em",
+							display: "none",
+							"data-wd-chart-info": id
+						};
+						svg.text(
+							self._cfg.xStart + self._cfg.padding,
+							self._cfg.yStart + self._cfg.padding,
+							info,
+							"hnw"
+						).attribute(prop);
+						link.onclick = function(ev) {
+							const id = ev.target.dataset.wdChartSubtitle;
+							let k = -1, y = -1;
+
+							const infos  = svg.svg().querySelectorAll("[data-wd-chart-info]");
+							while(++k < infos.length) {
+								let ref  = infos[k].dataset.wdChartInfo;
+								let hide = infos[k].getAttribute("display") === "none";
+								if (ref === id)
+									infos[k].setAttribute("display", (hide ? "inline" : "none"));
+								else
+									infos[k].setAttribute("display", "none");
+							}
+							//FIXME urgente
+							const curves = svg.svg().querySelectorAll("[data-wd-chart-curve]");
+							while(++y < curves.length) {
+								let ref  = curves[y].dataset.wdChartCurve;
+								let hide = curves[y].getAttribute("display") === "none";
+								if (ref === id)
+									curves[y].setAttribute("display", "inline");
+								else
+									curves[y].setAttribute("display", (hide ? "inline": "none"));
+
+							}
+
+
+
+							return;
+						}
+					}
+				});
 				return;
 			}
 		},
@@ -5621,12 +5664,14 @@ const wd = (function() {
 		plot: {
 			value: function() {
 				if (this._data.length === 0) return null;
-				const colors = __Array(this._cfg.colors);
-				let data     = this._data.slice();
-
-				/* definindo a área do gráfico -------------------------------------- */
-				const svg = __SVG(this._cfg.width, this._cfg.height);
+				const cline = {"stroke-width": 3, "stroke-linecap": "round", fill: "none"};
+				const csum  = {"fill-opacity": 0.5, "stroke-width": 1, "stroke-linecap": "round", fill: "none"};
+				const cdash = {"stroke-width": 1, "stroke-linecap": "round", "stroke-dasharray": "5,5", fill: "none"};
+				let data    = this._data.slice();
+				let legend  = [];
+				const svg   = __SVG(this._cfg.width, this._cfg.height);
 				svg.attribute(this._cfg.attr_svg);
+				svg.svg().style.backgroundColor = "#ffffff";
 
 				/* redefinindo funções para array ----------------------------------- */
 				if (!this._ratio) {
@@ -5649,38 +5694,39 @@ const wd = (function() {
 					let i = -1;
 					while(++i < data.length) {
 						/* obtendo dados da plotagem */
+						let id    = data[i].id;
 						let x     = data[i].x.slice();
 						let y     = data[i].y.slice();
 						let name  = data[i].name;
-						let color = data[i].color;
+						let info  = data[i].info;
+						let color = this.color(id);
 						let self  = this;
+						let curve = {id: id, color: color, info: info, name: name};
 						/* transformando coordenadas reais para gráficas */
 						x.forEach(function(v,i,a){a[i] = self._xScale(v);});
 						y.forEach(function(v,i,a){a[i] = self._yScale(v);});
 						/* plotando de acordo com o tipo de curva */
 						if (data[i].type === "line" || data[i].type === "link") {
 							svg.lines(x, y)
-							.attribute(this._cfg.curve_line)
-							.attribute({stroke: colors.valueOf(color)});
-							this._legend(svg, name, color);
+							.attribute(cline)
+							.attribute({stroke: color, "data-wd-chart-curve": id});
 						}
 						if (data[i].type === "dash") {
 							svg.lines(x, y)
-							.attribute(this._cfg.curve_dash)
-							.attribute({stroke: colors.valueOf(color)});
-							this._legend(svg, name, color);
+							.attribute(cdash)
+							.attribute({stroke: color, "data-wd-chart-curve": id});
 						}
 						if (data[i].type === "dots" || data[i].type === "link") {
 							let j = -1;
 							while(++j < x.length) {
 								svg.circle(x[j], y[j], 4)
-								.attribute({fill: colors.valueOf(color)});
+								.attribute({fill: color, "data-wd-chart-curve": id});
 							}
-							this._legend(svg, name, color);
 						}
 						if (data[i].type === "sum") {
 							let fit = __Data2D(data[i].x, data[i].y);
 							let sum = fit.area;
+							curve.info = name +	"\n∑ yΔx ≈ " + sum;
 							/* obter posicionamento para inserir o rótulo da área */
 							let min = Math.min.apply(null, fit.y);
 							let max = Math.max.apply(null, fit.y);
@@ -5693,8 +5739,6 @@ const wd = (function() {
 							if (xm >= this._cfg.xClose) xm -= this._cfg.padding;
 							if (xm <= (this._cfg.xStart + this._cfg.xSize/4)) pm = "hw";
 							if (xm >= (this._cfg.xClose - this._cfg.xSize/4)) pm = "he";
-							/* acrescendo informação da média ao nome */
-							name   += "\n∑ yΔx ≈ " + sum;
 							/* unindo a curva ao eixo horizontal */
 							x.unshift(x[0]);
 							x.push(x[x.length - 1]);
@@ -5702,11 +5746,10 @@ const wd = (function() {
 							y.push(self._yScale(0));
 							/* plotando */
 							svg.lines(x, y, true) /* área */
-							.attribute(this._cfg.curve_sum)
-							.attribute({stroke: colors.valueOf(color), fill: colors.valueOf(color)})
+							.attribute(csum)
+							.attribute({stroke: color, fill: color, "data-wd-chart-curve": id})
 							.text(xm, ym, this._values(sum), pm) /* valor numérico */
-							.attribute({fill: colors.valueOf(color)})
-							this._legend(svg, name, color);
+							.attribute({fill: color, "data-wd-chart-curve": id})
 						}
 						if (data[i].type === "avg") {
 							let fit = __Data2D(data[i].x, data[i].y);
@@ -5714,18 +5757,18 @@ const wd = (function() {
 							let xi  = this._xScale(this._xMin);
 							let xn  = this._xScale(this._xMax);
 							let ya  = this._yScale(avg);
-							name   += "\n(∑ yΔx)/ΔX ≈ "+avg;
+							curve.info = name + "\n(∑ yΔx)/ΔX ≈ "+avg;
 							/* plotando a curva e a linha média */
 							svg.lines(x, y)
-							.attribute(this._cfg.curve_dash)
-							.attribute({stroke: colors.valueOf(color)})
+							.attribute(cdash)
+							.attribute({stroke: color, "data-wd-chart-curve": id})
 							svg.lines([xi, xn], [ya, ya])
-							.attribute(this._cfg.curve_line)
-							.attribute({stroke: colors.valueOf(color)})
+							.attribute(cline)
+							.attribute({stroke: color, "data-wd-chart-curve": id})
 							svg.text(x[0]+5, ya-5, this._values(avg), "hsw")
-							.attribute({fill: colors.valueOf(color)});
-							this._legend(svg, name, color);
+							.attribute({fill: color, "data-wd-chart-curve": id});
 						}
+						legend.push(curve);
 					}
 					this._struct(svg, "xyaxes hlines vlines xlabel ylabel xscale yscale title mouse");
 				}
@@ -5753,90 +5796,54 @@ const wd = (function() {
 					this._yMin  = 0;
 					this._yMax  = 0;
 					let pieces  = [];
-					let legend  = [this.xLabel];
-					let idColor = -1;
-
-
+					let id      = -1;
 
 					for (let i in data[0]) {
 						const value = data[0][i];
-						legend.push("■ "+i);
 						pieces.push({
 							value:  value,
 							_value: this._values(value),
 							ratio:  total === 0 ? null : value/total,
 							_ratio: total === 0 ? null : this._values(value/total, "%"),
 							name: i,
-							idColor: ++idColor,
-							color: colors.valueOf(idColor),
-							get title() {return this.name+"\n"+this.value+" ("+this._ratio+")";},
+							id: ++id,
+							color: this.color(id),
 						});
 						this._yMin = value;
 						this._yMax = value;
 					}
-					/* Título */
-					svg.text(
-						this._cfg.xMiddle,
-						this._cfg.top,
-						this.title,
-						"hc"
-					).attribute(this._cfg.attr_title);
 
-
-
-
-
-
-					/*TODO  Legenda */
-
-					svg.frame(
-						this._cfg.xClose + this._cfg.padding,
-						this._cfg.yStart,
-						legend.join("\n"),
-						"hnw"
-					).attribute({"font-size": "1.2em", cursor: "default"});
-					const itemsFrame = svg.last.children;
-					pieces.forEach(function (v,i,a) {
-						itemsFrame[i].setAttribute("fill", v.color);
-						const title = svg.create("title");
-						title.textContent = v.title;
-						itemsFrame[i].appendChild(title);
-
-					});
-					svg.text(
+					svg.text(//FIXME
 						this._cfg.xMiddle,
 						this._cfg.height-this._cfg.padding,
 						this.yLabel+": "+__Number(total).notation(),
 						"hs"
 					);
 
-
-
-					console.log(pieces);
-					//svg.xmin = this._cfg.xStart-this._cfg.padding;
-
-
-
-
-
-
 					/* gráfico de pizza ------------------------------------------------*/
 					if (minus !== plus && total !== 0) {
 						let start = 0;
 						let width = 0;
+
 						let i = -1;
 						while (++i < pieces.length) {
-							let item   = pieces[i];
-							let title  = item.name+"\n"+this.yLabel+": "+item._value;
-							let color  = colors.valueOf(i);
-							let r      = 2*this._cfg.ySize/5;
-							let cx     = this._cfg.xMiddle;
-							let cy     = this._cfg.yMiddle + this._cfg.top;
+							let item  = pieces[i];
+							let id    = item.id;
+							let name  = item.name;
+							let color = item.color;
+							let r     = 2*this._cfg.ySize/5;
+							let cx    = this._cfg.xMiddle;
+							let cy    = this._cfg.yMiddle + this._cfg.top;
+							let curve = {id: id, color: color, info: null, name: name};
+							curve.info = [
+								this.xLabel+": "+name,
+								this.yLabel+": "+item.value + " (" + item._ratio + ")"
+							].join("\n");
 							width = 360*item.ratio;
 							/* pedaço da pizza */
 							svg.semicircle(cx, cy, r, start, width)
-							.attribute({fill: color})
-							.title(item.title);
+							.attribute({fill: color, "data-wd-chart-curve": id})
+							.title(curve.info);
 							/* legenda */
 							let m = start + width/2;
 							let x = cx + (r + 5)*Math.cos(2*Math.PI*m/360);
@@ -5848,11 +5855,14 @@ const wd = (function() {
 							else if (m < 360) p = m === 270 ? "hn" : "hnw";
 							else p = "hw";
 							svg.text(x, y, item.name+" ("+item._ratio+")", p)
-							.attribute({fill: color, "stroke-linecap": "round"})
-							.title(item.title);
+							.attribute({fill: color, "stroke-linecap": "round", cursor: "default"})
+							.attribute({"data-wd-chart-curve": id})
+							.title(curve.info);
 							/* iterando */
 							start += width;
+							legend.push(curve);
 						}
+						this._struct(svg, "title");
 					}
 
 					/* gráfico de barras -----------------------------------------------*/
@@ -5862,15 +5872,24 @@ const wd = (function() {
 
 						while (++i < pieces.length) {
 							let item  = pieces[i];
-							let color = colors.valueOf(i);
+							let id    = item.id;
+							let color = item.color;
+							let name  = item.name;
 							let x     = this._xScale(i);
 							let y     = this._yScale(item.value >= 0 ? item.value : 0);
 							let w     = width;
 							let h     = Math.abs(this._yScale(item.value) - this._yScale(0));
+							let curve = {id: id, color: color, info: null, name: name};
+							curve.info = [
+								this.xLabel+": "+name,
+								this.yLabel+": "+item.value
+							].join("\n");
 							/* barra */
 							svg.rect(x, y, w, h)
-							.attribute({fill: color, "fill-opacity": 0.8, stroke: color, "stroke-width": 2})
-							.title(item.title);
+							.attribute({fill: color, "fill-opacity": 0.8})
+							.attribute({stroke: color, "stroke-width": 2})
+							.attribute({"data-wd-chart-curve": id})
+							.title(curve.info);
 							/* legenda */
 							svg.text(
 								x + width/2,
@@ -5879,14 +5898,20 @@ const wd = (function() {
 								item.value >= 0 ? "hn" : "hs"
 							)
 							.attribute({fill: color, cursor: "default"})
+							.attribute({"data-wd-chart-curve": id})
 							.title(item.value);
+							legend.push(curve);
 						}
-						svg.line(
+						svg.line(//FIXME acabar com isso
 							[this._cfg.xStart, this._yScale(0)],
 							[this._cfg.xClose, this._yScale(0)]
 						).attribute(this._cfg.attr_area);
+						this._struct(svg, "xyplan hlines ylabel xlabel yscale title");
 					}
 				}
+				this._legend(svg, legend);
+
+
 				return svg.svg();
 			}
 		},
@@ -5949,8 +5974,8 @@ const wd = (function() {
 					if (xdata.object) {
 						for (let name in x) {
 							let check = __Type(x[name]);
-							if (!check.finite) continue;
-							data[name] = check.value + (name in data ? data[name] : 0);
+							if (check.finite)
+								data[name] = check.value + (name in data ? data[name] : 0);
 						}
 						return true;
 					}
@@ -5998,12 +6023,13 @@ const wd = (function() {
 						this._xMin = xmin;
 						this._xMax = xmax;
 						this._data.push({
-							x:     [xmin, xmax],
-							y:     y,
-							name:  label,
-							f:     true,
-							type:  option in curve ? curve[option] : curve.main,
-							color: ++this._color
+							x:    [xmin, xmax],
+							y:    y,
+							name: label,
+							info: null,
+							f:    true,
+							type: option in curve ? curve[option] : curve.main,
+							id:   ++this._id
 						});
 						return true;
 					}
@@ -6022,12 +6048,13 @@ const wd = (function() {
 						if (this._yMax <= cte)
 							this._yMax = cte === 0 ? +1 : cte + Math.abs(cte/2);
 						this._data.push({
-							x:     [xmin, xmax],
-							y:     [cte, cte],
-							name:  label+"\ny = "+cte,
-							f:     false,
-							type:  option in curve ? curve[option] : curve.main,
-							color: ++this._color
+							x:    [xmin, xmax],
+							y:    [cte, cte],
+							name: label,
+							info: label+"\ny = "+cte,
+							f:    false,
+							type: option in curve ? curve[option] : curve.main,
+							id:   ++this._id
 						});
 						return true;
 					}
@@ -6049,31 +6076,34 @@ const wd = (function() {
 						this._yMin = ylimit.min;
 						this._yMax = ylimit.max;
 						this._data.push({
-							x:     data.x,
-							y:     data.y,
-							name:  label,
-							f:     false,
-							type:  option in curve ? curve[option] : curve.main,
-							color: ++this._color
+							x:    data.x,
+							y:    data.y,
+							name: label,
+							info: null,
+							f:    false,
+							type: option in curve ? curve[option] : curve.main,
+							id:   ++this._id
 						});
 						/* regressões ----------------------------------------------------- */
 						if (option in types.fit) {
 							let fit = data[types.fit[option]];
 							if (fit === null) return false;
 							let target = this._data.length - 1;
-							this._data[target].name += [
-								"", fit.m, "a = "+fit.a, "b = "+fit.b, "σ = "+fit.d
+							this._data[target].info = [
+								this._data[target].name,
+								fit.m, "a = "+fit.a, "b = "+fit.b, "σ = "+fit.d
 							].join("\n");
 							this._data[target].type = "dots";
 
 							/* função principal */
 							this._data.push({
-									x:     [xlimit.min, xlimit.max],
-									y:     fit.f,
-									name:  null,
-									f:     true,
-									type:  "line",
-									color: this._color
+									x:    [xlimit.min, xlimit.max],
+									y:    fit.f,
+									name: null,
+									info: null,
+									f:    true,
+									type: "line",
+									id:   this._id
 							});
 							/* desvio padrão */
 							if (fit.d === 0) return true;
@@ -6081,17 +6111,19 @@ const wd = (function() {
 									x:     [xlimit.min, xlimit.max],
 									y:     function(x) {return fit.f(x)+fit.d;},
 									name:  null,
+									info:  null,
 									f:     true,
 									type:  "dash",
-									color: this._color
+									id:   this._id
 							});
 							this._data.push({
-									x:     [xlimit.min, xlimit.max],
-									y:     function(x) {return fit.f(x)-fit.d;},
-									name:  null,
-									f:     true,
-									type:  "dash",
-									color: this._color
+									x:    [xlimit.min, xlimit.max],
+									y:    function(x) {return fit.f(x)-fit.d;},
+									name: null,
+									info: null,
+									f:    true,
+									type: "dash",
+									id:   this._id
 							});
 						}
 						return true;
