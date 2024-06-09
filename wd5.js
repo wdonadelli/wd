@@ -5400,14 +5400,17 @@ const wd = (function() {
 		|vlines|Adiciona subdivisões de linhas verticais.|
 		|xscale|Adiciona a escala ao eixo x.|
 		|yscale|Adiciona a escala ao eixo y.|
+		|hzero|Adiciona uma linha horizontal se zero estiver no intervalo.|
+		|vzero|Adiciona uma linha vertical se zero estiver no intervalo.|
 		|mouse|Adiciona um identificador de posição no gráfico a partir da posição do mouse.|**/
 		_struct: {
 			value: function(svg, builder) {
 				if (!__Type(builder).chars) return;
-				const cfg   = this._cfg;
-				const parts = builder.replace(/\ +/, " ").trim().toLowerCase().split(" ");
-				const chart = {};
-				const color = this.color();
+				const cfg    = this._cfg;
+				const parts  = builder.replace(/\ +/, " ").trim().toLowerCase().split(" ");
+				const chart  = {};
+				const color  = this.color();
+				const border = {n: false, e: false, s: false, w: false};
 				parts.forEach(function (v,i,a) {chart[v] = true;});
 
 				/* area de plotagem */
@@ -5433,8 +5436,19 @@ const wd = (function() {
 						fill: color, cursor: "default"
 					}).title(this.yLabel);
 				}
+				if (chart.hzero && (this._yMin < 0 && this._yMax > 0)) {
+					const zero = this._yScale(0);console.log(zero);
+					svg.line([cfg.xStart, zero], [cfg.xClose, zero])
+					.attribute({stroke: color, "stroke-width": 2, fill: "none"});
+				}
+				if (chart.vzero && (this._xMin < 0 && this._xMax > 0)) {
+					const zero = this._xScale(0);
+					svg.line([zero, cfg.yStart], [zero, cfg.xClose])
+					.attribute({stroke: color, "stroke-width": 2, fill: "none"});
+				}
 				if (chart.xyplan) {
 					main.setAttribute("stroke", color);
+					for (let j in border) border[j] = true;
 				}
 				else if (chart.xyaxes) {
 					svg.lines(
@@ -5442,6 +5456,8 @@ const wd = (function() {
 						[cfg.yStart, cfg.yClose, cfg.yClose],
 						false
 					).attribute(attrMain).attribute({stroke: color});
+					border.s = true;
+					border.w = true;
 				}
 
 				/* pontos, valores e âncoras */
@@ -5457,6 +5473,7 @@ const wd = (function() {
 					let half = i === ((cfg.points - 1) / 2);
 					let last = i === (cfg.points - 1);
 					let hide = i%2 !== 0;
+					let line = {h: true, v: true};
 
 					if (zero || last) {
 						px = zero ? cfg.xStart : cfg.xClose;
@@ -5465,6 +5482,8 @@ const wd = (function() {
 						vy = zero ? this._yMin : this._yMax;
 						ax = dt ? "hn" : (zero ? "hnw" : "hne");
 						ay = zero ? "hse" : "hne";
+						line.h = zero ? !border.s : !border.n;
+						line.v = zero ? !border.w : !border.e;
 					} else {
 						px = half ? (cfg.xClose + cfg.xStart) / 2 : px + dw;
 						py = half ? (cfg.yStart + cfg.yClose) / 2 : py - dh;
@@ -5473,18 +5492,21 @@ const wd = (function() {
 						ax = "hn";
 						ay = "he";
 					}
+
 					if (chart.hlines) {
 						svg.line([cfg.xStart, py], [cfg.xClose, py]).attribute({
 							stroke: "#778899", "stroke-width": 1, "stroke-linecap": "round",
 							"stroke-dasharray": (vy === 0 ? "none" : "6,6"),
-							"class": (hide ? "js-wd-chart-hide" : "")
+							"class": (hide ? "js-wd-chart-hide" : ""),
+							"display": line.h ? "inline" : "none"
 						});
 					}
 					if (chart.vlines) {
 						svg.line([px, cfg.yStart], [px, cfg.yClose]).attribute({
 							stroke: "#778899", "stroke-width": 1, "stroke-linecap": "round",
 							"stroke-dasharray": (vx === 0 ? "none" : "6,6"),
-							"class": (hide ? "js-wd-chart-hide" : "")
+							"class": (hide ? "js-wd-chart-hide" : ""),
+							"display": line.v ? "inline" : "none"
 						});
 					}
 					if (chart.xscale) {
@@ -5575,86 +5597,85 @@ const wd = (function() {
 				return n.notation("decimal", {digits: 2});
 			}
 		},
-		/**. ``''void'' _legend(''node'' svg, ''string'' text, ''number'' id)``: Constrói a legenda do gráfico.
-		. O argumento ``svg`` é o elemento SVG onde o gŕafico está sendo construído. O argumento ``text`` é o conteúdo da primeiro linha da legenda que, se for ``null``, retornará a função ignorando a legenda. O argumento ``id`` define o número da cor da legenda.
-
-		id, subtitle, info, color
-FIXME
-		**/
+		/**. ``''void'' _legend(''node'' svg, ''object'' data)``: Constrói a legenda do gráfico. O argumento ``svg`` é o elemento SVG onde o gŕafico está sendo construído. O argumento ``data`` contendo as propriedades ``id`` (identificador da legenda), ``name`` (nome da curva), ``info`` (informação complementar) e ``color`` (cor a ser utilizada na legenda). Se ``name`` for nulo, a ação será ignorada.**/
 		_legend: {
 			value: function(svg, data) {
 				/* definindo itens da legenda */
-				let subtitle = [];
+				let legend = [];
+				let items  = [];
 				data.forEach(function(v,i,a) {
-					if (v.name === null) {a[i] = null;}
-					else subtitle.push(String("● "+v.name));
+					if (v.name !== null) {
+						legend.push({
+							id: String(v.id),
+							text: String("● "+v.name),
+							color: v.color,
+							info: String(v.name) + "\n" + String(v.info),
+							link: null,
+						});
+						items.push(legend[legend.length - 1].text);
+					}
 				});
-				if (subtitle.length < 1) return;
+				if (legend.length < 1) return;
+
 				svg.text(
 					this._cfg.xClose + 2*this._cfg.padding,
-					this._cfg.yStart,
-					subtitle.join("\n"),
+					this._cfg.yStart + 2*this._cfg.padding,
+					items.join("\n"),
 					"hnw"
-				).title(this.yLabel);
+				);
+
 				/* definindo atributos dos itens da legenda */
 				const links = svg.last.children;
 				const self  = this;
-				data.forEach(function(v,i,a) {
-					if (v === null) return;
-					const link  = links[i];
-					const id    = v.id
-					const info  = __Type(v.info).nonempty ? v.info : null;
-					const color = v.color;
-					const attr = {
-						fill: color,
+				legend.forEach(function(v,i,a) {
+					a[i].link = links[i];
+					let attr  = {
+						fill: v.color,
 						"font-size": "1.2em",
-						"data-wd-chart-subtitle": id,
-						cursor: info === null ? "default" : "pointer",
+						"data-wd-chart-subtitle": v.id,
+						cursor: "pointer",
+						"data-wd-chart-link": v.id
 					};
-					for (let j in attr) link.setAttribute(j, attr[j]);
-					/* definindo informação */
-					if (info !== null) {
-						const prop = {
-							fill: color,
-							"font-size": "1.2em",
-							display: "none",
-							"data-wd-chart-info": id
-						};
-						svg.text(
-							self._cfg.xStart + self._cfg.padding,
-							self._cfg.yStart + self._cfg.padding,
-							info,
-							"hnw"
-						).attribute(prop);
-						link.onclick = function(ev) {
-							const id = ev.target.dataset.wdChartSubtitle;
-							let k = -1, y = -1;
+					for (let j in attr) v.link.setAttribute(j, attr[j]);
 
-							const infos  = svg.svg().querySelectorAll("[data-wd-chart-info]");
-							while(++k < infos.length) {
-								let ref  = infos[k].dataset.wdChartInfo;
-								let hide = infos[k].getAttribute("display") === "none";
-								if (ref === id)
-									infos[k].setAttribute("display", (hide ? "inline" : "none"));
-								else
-									infos[k].setAttribute("display", "none");
+					/* definindo informação complementar */
+					svg.text(
+						self._cfg.xStart + self._cfg.padding,
+						self._cfg.yStart + self._cfg.padding,
+						v.info,
+						"hnw"
+					).attribute({
+						fill: v.color, "font-size": "1.2em", display: "none",
+						"data-wd-chart-info": v.id
+					});
+					/* definindo ação da legenda */
+					v.link.onclick = function(ev) {
+						const id     = ev.target.dataset.wdChartLink;
+						const infos  = svg.svg().querySelectorAll("[data-wd-chart-info]");
+						const curves = svg.svg().querySelectorAll("[data-wd-chart-curve]");
+						let mark  = false;
+						let k = -1;
+						while (++k < infos.length) {
+							let item = infos[k];
+							let ref  = item.dataset.wdChartInfo;
+							let hide = item.getAttribute("display") ===  "none";
+							if (ref === id && hide) {
+								item.setAttribute("display", "inline");
+								mark = true;
+							} else {
+								item.setAttribute("display", "none");
 							}
-							//FIXME urgente
-							const curves = svg.svg().querySelectorAll("[data-wd-chart-curve]");
-							while(++y < curves.length) {
-								let ref  = curves[y].dataset.wdChartCurve;
-								let hide = curves[y].getAttribute("display") === "none";
-								if (ref === id)
-									curves[y].setAttribute("display", "inline");
-								else
-									curves[y].setAttribute("display", (hide ? "inline": "none"));
-
-							}
-
-
-
-							return;
 						}
+						k = -1;
+						while (++k < curves.length) {
+							let item = curves[k];
+							let ref  = item.dataset.wdChartCurve;
+							if (mark)
+								item.setAttribute("display", (ref === id ? "inline" : "none"));
+							else
+								item.setAttribute("display", "inline");
+						}
+						return;
 					}
 				});
 				return;
@@ -5726,7 +5747,7 @@ FIXME
 						if (data[i].type === "sum") {
 							let fit = __Data2D(data[i].x, data[i].y);
 							let sum = fit.area;
-							curve.info = name +	"\n∑ yΔx ≈ " + sum;
+							curve.info = "∑ yΔx ≈ " + sum;
 							/* obter posicionamento para inserir o rótulo da área */
 							let min = Math.min.apply(null, fit.y);
 							let max = Math.max.apply(null, fit.y);
@@ -5757,7 +5778,7 @@ FIXME
 							let xi  = this._xScale(this._xMin);
 							let xn  = this._xScale(this._xMax);
 							let ya  = this._yScale(avg);
-							curve.info = name + "\n(∑ yΔx)/ΔX ≈ "+avg;
+							curve.info = "(∑ yΔx)/ΔX ≈ "+avg;
 							/* plotando a curva e a linha média */
 							svg.lines(x, y)
 							.attribute(cdash)
@@ -5812,11 +5833,10 @@ FIXME
 						this._yMin = value;
 						this._yMax = value;
 					}
-
-					svg.text(//FIXME
+					svg.text(//FIXME melhorar isso
 						this._cfg.xMiddle,
 						this._cfg.height-this._cfg.padding,
-						this.yLabel+": "+__Number(total).notation(),
+						this.yLabel + " (" + total + ") x " + this.xLabel+ " ("+ pieces.length + ")",
 						"hs"
 					);
 
@@ -5834,11 +5854,8 @@ FIXME
 							let r     = 2*this._cfg.ySize/5;
 							let cx    = this._cfg.xMiddle;
 							let cy    = this._cfg.yMiddle + this._cfg.top;
-							let curve = {id: id, color: color, info: null, name: name};
-							curve.info = [
-								this.xLabel+": "+name,
-								this.yLabel+": "+item.value + " (" + item._ratio + ")"
-							].join("\n");
+							let curve = {id: id, color: color, info: "", name: name};
+							curve.info = this.yLabel+": "+item.value + " (" + item._ratio + ")";
 							width = 360*item.ratio;
 							/* pedaço da pizza */
 							svg.semicircle(cx, cy, r, start, width)
@@ -5879,11 +5896,8 @@ FIXME
 							let y     = this._yScale(item.value >= 0 ? item.value : 0);
 							let w     = width;
 							let h     = Math.abs(this._yScale(item.value) - this._yScale(0));
-							let curve = {id: id, color: color, info: null, name: name};
-							curve.info = [
-								this.xLabel+": "+name,
-								this.yLabel+": "+item.value
-							].join("\n");
+							let curve = {id: id, color: color, info: "", name: name};
+							curve.info = item.value;
 							/* barra */
 							svg.rect(x, y, w, h)
 							.attribute({fill: color, "fill-opacity": 0.8})
@@ -5902,11 +5916,7 @@ FIXME
 							.title(item.value);
 							legend.push(curve);
 						}
-						svg.line(//FIXME acabar com isso
-							[this._cfg.xStart, this._yScale(0)],
-							[this._cfg.xClose, this._yScale(0)]
-						).attribute(this._cfg.attr_area);
-						this._struct(svg, "xyplan hlines ylabel xlabel yscale title");
+						this._struct(svg, "xyplan hlines ylabel yscale title hzero");
 					}
 				}
 				this._legend(svg, legend);
@@ -6026,7 +6036,7 @@ FIXME
 							x:    [xmin, xmax],
 							y:    y,
 							name: label,
-							info: null,
+							info: "",
 							f:    true,
 							type: option in curve ? curve[option] : curve.main,
 							id:   ++this._id
@@ -6051,7 +6061,7 @@ FIXME
 							x:    [xmin, xmax],
 							y:    [cte, cte],
 							name: label,
-							info: label+"\ny = "+cte,
+							info: "y = "+cte,
 							f:    false,
 							type: option in curve ? curve[option] : curve.main,
 							id:   ++this._id
@@ -6079,7 +6089,7 @@ FIXME
 							x:    data.x,
 							y:    data.y,
 							name: label,
-							info: null,
+							info: "",
 							f:    false,
 							type: option in curve ? curve[option] : curve.main,
 							id:   ++this._id
@@ -6090,7 +6100,6 @@ FIXME
 							if (fit === null) return false;
 							let target = this._data.length - 1;
 							this._data[target].info = [
-								this._data[target].name,
 								fit.m, "a = "+fit.a, "b = "+fit.b, "σ = "+fit.d
 							].join("\n");
 							this._data[target].type = "dots";
@@ -6100,7 +6109,7 @@ FIXME
 									x:    [xlimit.min, xlimit.max],
 									y:    fit.f,
 									name: null,
-									info: null,
+									info: "",
 									f:    true,
 									type: "line",
 									id:   this._id
@@ -6111,7 +6120,7 @@ FIXME
 									x:     [xlimit.min, xlimit.max],
 									y:     function(x) {return fit.f(x)+fit.d;},
 									name:  null,
-									info:  null,
+									info:  "",
 									f:     true,
 									type:  "dash",
 									id:   this._id
@@ -6120,7 +6129,7 @@ FIXME
 									x:    [xlimit.min, xlimit.max],
 									y:    function(x) {return fit.f(x)-fit.d;},
 									name: null,
-									info: null,
+									info: "",
 									f:    true,
 									type: "dash",
 									id:   this._id
