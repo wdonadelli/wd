@@ -4891,7 +4891,7 @@ const wd = (function() {
 				return this.attribute({d: path});
 			}
 		},
-		/**. ``''self'' text(''number'' x, ''number'' y, ''string'' text, ''string'' point)``: Define um SVG textual sensível à quebra de linha. Os argumentos ``x``, ``y`` e ``text`` definem os pontos de referência (''x'', ''y'') e o valor do texto, respectivamente. O argumento ``point`` define a âncora da referência, composta por dois grupos. O primeiro grupo define o posicionamento, ``v`` para vertical ou ``h``. O segundo grupo define o ponto cardeal:
+		/**. ``''self'' text(''number'' x, ''number'' y, ''string'' text, ''string'' point)``: Define um SVG textual sensível à quebra de linha. Os argumentos ``x``, ``y`` e ``text`` definem os pontos de referência (''x'', ''y'') e o valor do texto, respectivamente. O argumento ``point`` define a âncora da referência, composta por dois grupos. O primeiro grupo define o posicionamento, ``v`` para vertical ou ``h``. O segundo grupo define o ponto cardeal. A posição e a âncora são definidos a partir da __primeira linha__:
 		||Esquerda/Oeste|Centro|Direita/Leste|
 		|**Topo/Norte**|nw|n|ne|
 		|**Meio**|w|c|e|
@@ -4905,7 +4905,7 @@ const wd = (function() {
 				const base    = {n: 2, ne: 2, e: 1, se: 0, s: 0, sw: 0, w: 1, nw: 2, c: 1};
 				const attr    = {
 					x: point[0] === "v" ? -y : x,
-					y: point[0] === "v" ? x : y,
+					y: point[0] === "v" ?  x : y,
 					"text-anchor":       vanchor[anchor[point.substring(1)]],
 					"dominant-baseline": vbase[base[point.substring(1)]],
 					"transform":         point[0] === "v" ? "rotate(270)" : "",
@@ -4913,9 +4913,10 @@ const wd = (function() {
 				this.attribute(attr);
 				const self  = this;
 				const lines = String(text).split("\n");
+				const dy    = 1.5;
 				lines.forEach(function(v,i,a) {
 					const tspan = self.create("tspan");
-					const style = {x: attr.x, dy: i === 0 ? 0 : "1.5em"};
+					const style = {x: attr.x, dy: (i === 0 ? 0 : dy+"em")};
 					tspan.textContent = v === "" ? " " : v;
 					for (let j in style) tspan.setAttribute(j, style[j]);
 					self.last.appendChild(tspan);
@@ -5424,17 +5425,15 @@ const wd = (function() {
 				if (chart.title) {
 					svg.text(cfg.xMiddle, cfg.top, this.title, "hc").attribute({
 						fill: color, "font-size": "1.5em", "font-weight": "bold", cursor: "default"
-					}).title(this.title);
+					});
 				}
 				if (chart.xlabel) {
-					svg.text(cfg.xMiddle, cfg.height - 2*cfg.padding, this.xLabel, "hs").attribute({
-						fill: color, cursor: "default"
-					}).title(this.xLabel);
+					svg.text(cfg.xMiddle, cfg.height - 2*cfg.padding, this.xLabel, "hs")
+					.attribute({fill: color, cursor: "default"});
 				}
 				if (chart.ylabel) {
-					svg.text(2*cfg.padding, cfg.yMiddle, this.yLabel, "vn").attribute({
-						fill: color, cursor: "default"
-					}).title(this.yLabel);
+					svg.text(2*cfg.padding, cfg.yMiddle, this.yLabel, "vn")
+					.attribute({fill: color, cursor: "default"});
 				}
 				if (chart.hzero && (this._yMin < 0 && this._yMax > 0)) {
 					const zero = this._yScale(0);console.log(zero);
@@ -5459,6 +5458,7 @@ const wd = (function() {
 					border.s = true;
 					border.w = true;
 				}
+
 
 				/* pontos, valores e âncoras */
 				const dw = (cfg.xClose - cfg.xStart) / (cfg.points - 1);
@@ -5553,7 +5553,7 @@ const wd = (function() {
 							const ty = self._values(vy);
 							const hl = {y1: py, y2: py, display: "inline"};
 							const vl = {x1: px, x2: px, display: "inline"};
-							xypos.textContent = tx+" / "+ty;
+							xypos.textContent = tx+" × "+ty;
 							svg.svg().setAttribute("cursor", "crosshair");
 							for (let i in hl) hline.setAttribute(i, hl[i]);
 							for (let i in vl) vline.setAttribute(i, vl[i]);
@@ -5569,8 +5569,7 @@ const wd = (function() {
 				return;
 			}
 		},
-		/**. ``''string'' _values(''number'' value, ''string'' type)``: Formata e retorna o valor a ser exibido nos eixos.
-		. O argumento ``value`` corresponde ao valor numérico a ser formatado. O argumento opcional ``type`` diz respeito ao tipo de informação (''number'', ''time'', ''date'' ou ''datetime'').**/
+		/**. ``''string'' _values(''number'' value, ''string'' type)``: Formata e retorna o valor a ser exibido nos eixos. O argumento ``value`` corresponde ao valor numérico a ser formatado. O argumento opcional ``type`` diz respeito ao tipo de informação (''number'', ''time'', ''date'', ''datetime'' ou ''percent'').**/
 		_values: {
 			value: function(value, type) {
 				const n = __Number(value);
@@ -5581,7 +5580,7 @@ const wd = (function() {
 						return __DateTime(value).toTimeString();
 					case "datetime":
 						return __DateTime(value).format("{YYYY}-{MM}-{DD} {hh}:{mm}");
-					case "%":
+					case "percent":
 						return n.notation("percent", {digits: 0});
 				}
 				const e = n.e;
@@ -5601,8 +5600,9 @@ const wd = (function() {
 		_legend: {
 			value: function(svg, data) {
 				/* definindo itens da legenda */
-				let legend = [];
-				let items  = [];
+				let legend  = [];
+				let items   = [];
+				const color = this.color();
 				data.forEach(function(v,i,a) {
 					if (v.name !== null) {
 						legend.push({
@@ -5645,9 +5645,9 @@ const wd = (function() {
 						v.info,
 						"hnw"
 					).attribute({
-						fill: v.color, "font-size": "1.2em", display: "none",
+						fill: color, "font-size": "1.2em", display: "none",
 						"data-wd-chart-info": v.id
-					});
+					}).last.children[0].setAttribute("font-weight", "bold");
 					/* definindo ação da legenda */
 					v.link.onclick = function(ev) {
 						const id     = ev.target.dataset.wdChartLink;
@@ -5801,6 +5801,8 @@ const wd = (function() {
 					let zero  = true;
 					let count = 0;
 					let total = 0;
+					let positive = 0;
+					let negative = 0;
 
 					for (let i in data[0]) {
 						let value = data[0][i];
@@ -5809,6 +5811,8 @@ const wd = (function() {
 						if (value < 0)   minus = true;
 						if (value > 0)   plus  = true;
 						if (value !== 0) zero  = false;
+						if (value < 0) negative += value;
+						else           positive += value;
 					}
 					if (count === 0 || zero) return false;
 					/* calculando proporções e definindo limites */
@@ -5825,7 +5829,7 @@ const wd = (function() {
 							value:  value,
 							_value: this._values(value),
 							ratio:  total === 0 ? null : value/total,
-							_ratio: total === 0 ? null : this._values(value/total, "%"),
+							_ratio: total === 0 ? null : this._values(value/total, "percent"),
 							name: i,
 							id: ++id,
 							color: this.color(id),
@@ -5833,12 +5837,19 @@ const wd = (function() {
 						this._yMin = value;
 						this._yMax = value;
 					}
-					svg.text(//FIXME melhorar isso
+
+					svg.text(
+						this._cfg.padding,
+						this._cfg.height - this._cfg.padding,
+						this.yLabel + ": " + total,
+						"hsw"
+					).attribute({cursor: "default"});
+					svg.text(
 						this._cfg.xMiddle,
-						this._cfg.height-this._cfg.padding,
-						this.yLabel + " (" + total + ") x " + this.xLabel+ " ("+ pieces.length + ")",
-						"hs"
-					);
+						this._cfg.yClose + this._cfg.padding,
+						this.yLabel + " × " + this.xLabel,
+						"hn"
+					).attribute({cursor: "default"});
 
 					/* gráfico de pizza ------------------------------------------------*/
 					if (minus !== plus && total !== 0) {
@@ -5853,14 +5864,15 @@ const wd = (function() {
 							let color = item.color;
 							let r     = 2*this._cfg.ySize/5;
 							let cx    = this._cfg.xMiddle;
-							let cy    = this._cfg.yMiddle + this._cfg.top;
+							let cy    = this._cfg.yMiddle;
 							let curve = {id: id, color: color, info: "", name: name};
 							curve.info = this.yLabel+": "+item.value + " (" + item._ratio + ")";
 							width = 360*item.ratio;
 							/* pedaço da pizza */
 							svg.semicircle(cx, cy, r, start, width)
-							.attribute({fill: color, "data-wd-chart-curve": id})
-							.title(curve.info);
+							.attribute({fill: color, "data-wd-chart-curve": id, "fill-opacity": 0.8})
+							.attribute({"stroke-linecap": "round", "stroke-width": 1, stroke: color})
+							.title(name+"\n"+curve.info);
 							/* legenda */
 							let m = start + width/2;
 							let x = cx + (r + 5)*Math.cos(2*Math.PI*m/360);
@@ -5872,8 +5884,8 @@ const wd = (function() {
 							else if (m < 360) p = m === 270 ? "hn" : "hnw";
 							else p = "hw";
 							svg.text(x, y, item.name+" ("+item._ratio+")", p)
-							.attribute({fill: color, "stroke-linecap": "round", cursor: "default"})
-							.attribute({"data-wd-chart-curve": id})
+							.attribute({fill: color, cursor: "default"})
+							.attribute({"data-wd-chart-curve": "none"})
 							.title(curve.info);
 							/* iterando */
 							start += width;
@@ -5897,13 +5909,13 @@ const wd = (function() {
 							let w     = width;
 							let h     = Math.abs(this._yScale(item.value) - this._yScale(0));
 							let curve = {id: id, color: color, info: "", name: name};
-							curve.info = item.value;
+							curve.info = this.yLabel+": "+item.value;
 							/* barra */
 							svg.rect(x, y, w, h)
 							.attribute({fill: color, "fill-opacity": 0.8})
 							.attribute({stroke: color, "stroke-width": 2})
 							.attribute({"data-wd-chart-curve": id})
-							.title(curve.info);
+							.title(name+"\n"+curve.info);
 							/* legenda */
 							svg.text(
 								x + width/2,
@@ -5912,16 +5924,14 @@ const wd = (function() {
 								item.value >= 0 ? "hn" : "hs"
 							)
 							.attribute({fill: color, cursor: "default"})
-							.attribute({"data-wd-chart-curve": id})
+							.attribute({"data-wd-chart-curve": "none"})
 							.title(item.value);
 							legend.push(curve);
 						}
-						this._struct(svg, "xyplan hlines ylabel yscale title hzero");
+						this._struct(svg, " hlines ylabel yscale hzero title");
 					}
 				}
 				this._legend(svg, legend);
-
-
 				return svg.svg();
 			}
 		},
