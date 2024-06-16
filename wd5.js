@@ -453,36 +453,34 @@ const wd = (function() {
 		".js-wd-signal span:before {content: \"\u00D7\";}",
 
 
-
-
-
-
-
-
-
-
-
-
 		"wdhtml-mark {background-color: rgba(154,205,50,0.7); display: inline; border-radius: 0.2em;}",
 
 
 
-		"[data-wd-code] {background-color: rgb(238,238,236); color: rgb(46,52,54); border-radius: 0.2em;}",
-		"[data-wd-code] {font-family: monospace; font-size: 0.9em; }",
+		"/*-- CODE SECTION --*/",
+		"[data-wd-code] {display: block, position: static;}",
+		"[data-wd-code] {background-color: rgb(238,238,236); color: rgb(46,52,54);}",
+		"[data-wd-code] {font-family: \"Courier New\"; font-size: 14px; }",
 		"[data-wd-code] {text-decoration: none; text-indent: 0; font-style: normal; font-weight: normal;}",
-		"[data-wd-code] {padding: 0.5em; margin: 0.5em 0; overflow: auto; position: relative;}",
-		"[data-wd-code] {counter-reset: jswdcode; white-space: pre-wrap;}",
-		"[data-wd-code] * {display: inline;}",
-		"[data-wd-code] wdhtml-em    {color: rgb(0, 153, 0);  font-weight: bold;}",
-		"[data-wd-code] wdhtml-var    {color: rgb(224,20,130);}",
-		"[data-wd-code] wdhtml-dfn   {color: rgb(0, 128, 255); font-style: italic;}",
-		"[data-wd-code] wdhtml-cite {color: rgb(78,60,195);}",
-		"[data-wd-code] wdhtml-ins   {font-weight: bold;}",
-		"[data-wd-code] wdhtml-span:before {padding-right: 0.2em; margin-right: 0.2em;}",
-		"[data-wd-code] wdhtml-span:before {color: rgb(204,204,204); text-align: left;}",
-		"[data-wd-code] wdhtml-span:before {content: counter(jswdcode, decimal-leading-zero); counter-increment: jswdcode;}"
-//TODO interessante https://developer.mozilla.org/en-US/docs/Web/CSS/::file-selector-button
+		"[data-wd-code] {padding: 0.3em; margin: 0.5em 0; overflow: auto; border-radius: 0.2em;}",
+		"[data-wd-code] {white-space: pre-wrap; counter-reset: wdcodelines;}",
+		"[data-wd-code] * {display: inline; position: static;}",
+		"[data-wd-code] wd-code-lines        {counter-increment: wdcodelines;}",
+		"[data-wd-code] wd-code-lines:before {content: counter(wdcodelines);}",
+		"[data-wd-code] wd-code-lines:before {display: inline-block; position: static; min-width: 2em;}",
+		"[data-wd-code] wd-code-lines:before {color: Gray; text-align: right;}",
+		"[data-wd-code] wd-code-lines:before {margin: 0 3px 0 0; padding-right: 3px;}",
+		"[data-wd-code] wd-code-vars      {color: MediumVioletRed;}",
+		"[data-wd-code] wd-code-keys      {color: DodgerBlue;}",
+		"[data-wd-code] wd-code-comment   {color: DimGrey; font-style: italic;}",
+		"[data-wd-code] wd-code-comment * {color: inherit; font-weight: inherit; font-style: inherit;}",
+		"[data-wd-code] wd-code-string    {color: darkgreen;}",
+		"[data-wd-code] wd-code-string *  {color: inherit; font-weight: inherit; font-style: inherit;}",
+		"[data-wd-code] wd-code-text      {color: Sienna; font-weight: inherit; font-style: inherit;}",
+		"[data-wd-code] wd-code-text *    {color: inherit; font-weight: inherit; font-style: inherit;}",
+		"[data-wd-code] wd-code-tag       {color: DodgerBlue; font-style: italic;}",
 
+//TODO interessante https://developer.mozilla.org/en-US/docs/Web/CSS/::file-selector-button
 	];
 
 /*----------------------------------------------------------------------------*/
@@ -1810,75 +1808,45 @@ const wd = (function() {
 	/**### Code
 	###### ``**constructor** ''object'' __Code(''string'' input)``
 	Construtor para manipulação de textos com formatação de códigos. O argumento ``input`` define o código fonte.**/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	function __Code(input) {
 		if (!(this instanceof __Code)) return new __Code(input);
 		Object.defineProperties(this, {
-			_input:   {value: input},
-			_code:    {value: null,  writable: true},
-			_open:    {value: null,  writable: true},
-			_run:     {value: false, writable: true},
-			_options: {
-				value: {
-					vars: [],
-					keys: [],
-					cages: {
-						text:     {start:   "", end:   ""},
-						string:   {start: "\"", end: "\""},
-						char:     {start: "\'", end: "\'"},
-						macro:    {start:  "#", end: "\n"},
-						comment:  {start: "//", end: "\n"},
-						comments: {start: "/*", end: "*/"}
-					},
-					number: true,
-				},
-
-			},
+			_input:  {value: String(input === undefined || input === null ? "" : input)},
+			_code:   {writable: true, value: null},
+			_config: {writable: true, value: {
+				string:  ["\"", "\"", "\'", "\'"],
+				comment: ["//", "\n", "/*", "*/"],
+				keys:    ("break case catch class const continue debugger default delete do else export extends finally for function if import in instanceof new return super switch throw try typeof var void while with let static yied await").split(" "),
+				vars:     ("false null this true undefined NaN Infinity").split(" "),
+			}}
 		});
 	}
 
 	Object.defineProperties(__Code.prototype, {
 		constructor: {value: __Code},
-		/**. ``''object'' options``: Define ou retorna as configuração dos componentes do código.*/
-		options: {
-			get: function()  {return this._options;},
-			set: function(x) {
-				if (!__Type(x).object) return;
-				for (let id in this._options.cages) {
-					if (id in x) {
-						let data = String(x[id]).replace(/\s+/g, " ").trim().split(" ");
-						this._options.cages[id].start = data[0];
-						this._options.cages[id].end   = data.length > 1 ? data[1] : data[0];
-					}
-				}
-				if ("vars" in x)
-					this._options.vars = String(x.vars).replace(/\s+/g, " ").trim().split(" ");
-				else
-					this._options.vars = [];
-				if ("keys" in x)
-					this._options.keys = String(x.keys).replace(/\s+/g, " ").trim().split(" ");
-				else
-					this._options.keys = [];
-
-				this._code = null;
-
-				return;
-			}
-		},
-		/**. ``''string'' tags(''string'' code, ''string'' id)``: Retorna o código informado em ``code`` entre as tags identificadas por ``id``. FIXME complementar isso aqui*/
-		tags: {
-			value: function(code, id) {
-				const tags =  {
-					keys:      "wdhtml-em", vars:      "wdhtml-var",
-					string:   "wdhtml-var", char:      "wdhtml-var",
-					text:     "wdhtml-var", macro:     "wdhtml-dfn",
-					comment: "wdhtml-cite", comments: "wdhtml-cite",
-					scope:    "wdhtml-ins", lines:    "wdhtml-span"
-				};
-				let tag = id in tags ? tags[id] : null;
-				if (code === null && tag !== null) return tag;
-				return tag === null ? code : "<"+tag+">"+code+"</"+tag+">";
-			}
-		},
 		/**. ``''string'' tranlate(''string'' code)``: Retorna o texto informado em ``code`` com alguns caracteres traduzidos para o HTML .**/
 		translate: {
 			value: function (code) {
@@ -1908,127 +1876,12 @@ const wd = (function() {
 			}
 		},
 
-		/**. ``''void'' setInitial()``: Altera caracteres sensíveis ao formato HTML.**/
-		setInitial: {
-			value: function() {
-				if (!this._run) return;
-				const data = [
-					{a:   /\&/gm, b: "&amp;"},
-					{a:   /\</gm, b: "&lt;"},
-					{a:   /\>/gm, b: "&gt;"},
-					{a: /\\\"/gm, b: "&bsol;&quot;"},
-					{a: /\\\'/gm, b: "&bsol;&apos;"}
-				];
-				let self = this;
-				data.forEach(function(v,i,a) {
-					self._code = self._code.replace(v.a, v.b);
-				});
-				return;
-			}
-		},
-		/**. ``''void'' setCages()``: Define os grupos de comentários, macros e string. Só é chamado por processo interno.**/
-		setCages: {
-			value: function() {
-				if (!this._run) return;
-				let cage = {open: null, close: null, id: null, start: Infinity, end: Infinity};
-				/*-- obter a abertura --*/
-				for (let id in this.options.cages) {
-					let open  = this.options.cages[id].start;
-					let index = this._code.indexOf(open);
-					if (open.trim() !== "" & index >= 0 && index < cage.start) {
-						cage.id    = id;
-						cage.start = index;
-						cage.open  = open;
-						cage.close = this.options.cages[id].end;
-					}
-				}
-				if (cage.id === null) return;
-				/*-- obter o fim --*/
-				let code  = this._code.substring(cage.start + cage.open.length);
-				let delta = code.indexOf(cage.close);
-				if (cage.close === "\n")
-					cage.end = cage.start + cage.open.length + code.split("\n")[0].length;
-				else if (delta >= 0)
-					cage.end = cage.start + cage.open.length + delta + cage.close.length;
-				/*-- definir a transformação --*/
-				let text  = this._code.substring(cage.start, cage.end);
-				let trans = text.split("\n");
-				let self  = this;
-				trans.forEach(function (v,i,a) {
-					a[i] = self.translate(v);
-					a[i] = self.tags(a[i], cage.id);
-				})
-				trans = trans.join("\n");
-				/*-- trasportar a transformação e reiniciar ciclo --*/
-				this._code = this._code.replace(text, trans);
-				return this.setCages();
-			}
-		},
-		/**. ``''void'' setWords()``: Define as palavras reservadas e variáveis. Só é chamado por processo interno.**/
-		setWords: {
-			value: function() {
-				if (!this._run) return;
-				const lside = "([!&\\|\\^~\\-+*/%=\\[{\\(?:,;]|\\s)";
-				const rside = "([!&\\|\\^~\\-+*/%=\\]}\\)?:,;]|\\s)";
-				const num  = "[+\\-]?\\.?\\d+|[+\\-]?\\.?\\d+e[+\\-]?\\d+|[+\\-]?\\d+\\.?\\d+|[+\\-]?\\d+\\.?\\d+e[+\\-]?\\d+";
-				const html = "&lt;\s+";//FIXME ???????????
-				const vars = this.tags(null, "vars");
-				const keys = this.tags(null, "keys");
-				let data = [
-					{re: "^(id)$",           to: "<tag>$1</tag>"},
-					{re: lside+"(id)$",      to: "$1<tag>$2</tag>"},
-					{re: "^(id)"+rside,      to: "<tag>$1</tag>$2"},
-					{re: lside+"(id)"+rside, to: "$1<tag>$2</tag>$3"},
-				];
-				let self = this;
-				data.forEach(function(v,i,a) {
-					/*-- números --*/
-					if (self.options.number !== false) {//FIXME ver melhor isso aí e o que fazer com o html
-						let id = num;
-						let to = v.to.replace(/tag/g, vars);
-						let re = v.re.replace("id", id);
-						let ob = new RegExp(re, "i");
-						while (ob.test(self._code))
-							self._code = self._code.replace(ob, to);
-					}
-					/*-- Variáveis --*/
-					if (self.options.vars.length > 0) {
-						let id = self.options.vars.join("|");
-						let to = v.to.replace(/tag/g, vars);
-						let re = v.re.replace("id", id);
-						let ob = new RegExp(re);
-						while (ob.test(self._code))
-							self._code = self._code.replace(ob, to);
-					}
-					/*-- Palavras reservadas --*/
-					if (self.options.keys.length > 0) {
-						let id = self.options.keys.join("|")/*.replace(/([^|\w])/g, "\\$1")*/;
-						let to = v.to.replace(/tag/g, keys);
-						let re = v.re.replace("id", id);
-						let ob = new RegExp(re, "gm");
-						while (ob.test(self._code))
-							self._code = self._code.replace(ob, to);
-					}
-				});
-			}
-		},
-		/**. ``''void'' setEnding()``: Define caracteres de escopo e linhas. Só é chamado por processo interno.**/
-		setEnding: {
-			value: function() {
-				if (!this._run) return;
-				/*-- caracteres de escopo e linhas --*/
-				let scope = this.tags(null, "scope");
-				let lines = this.tags(null, "lines");
-				let join  = "</"+lines+">\n<"+lines+">";
-				let re  = /([\[\]\{\}\(\)])/gm;
-				this._code = this._code.replace(re, "<"+scope+">$1</"+scope+">");
-				this._code = this._code.split("\n");
-				this._code = "<"+lines+">"+this._code.join(join)+"</"+lines+">";
-				/*-- retornar &nbsp; e &tab& para \ e \t --*/
-				this._code = this._code.replace(/\&nbsp\;/gm, " ");
-				this._code = this._code.replace(/\&tab\;/gm, "\t");
-			}
-		},
+
+
+
+
+
+
 		/**. ``''void'' lang(''string'' x)``: Define ``options`` por meio do nome da linguagem informada em ``x`` (em construção).**/
 		lang: {
 			set: function(x) {
@@ -2054,24 +1907,191 @@ const wd = (function() {
 				return;
 			}
 		},
+
+
+
+		/**. ``''object'' config(''object'' data)``: Define ou retorna os dados dde configuração da linguagem. O argumento ``data`` possui as propriedades ''string'', ''comment'', ''keys'' e ``vars``, cujos valores são arrays. Nas propriedades ''keys'' e ``vars`` devem ser informadas as palavras reservadas e variáveis, respectivamente, da linguagem, as demais devem ser informadas, em sequência, os caracteres de abertura e fechamento do respectivo propósito.**/
+		config: {
+			value: function(data) {
+				if (!__Type(data).object) {
+					let cfg = {};
+					for (let i in this._config) cfg[i] = this._config[i];
+					return cfg;
+				}
+				for (let i in this._config) {
+					if (i in data && __Type(data[i]).array)
+						this._config[i] = data[i];
+				}
+				return this.config();
+			}
+		},
+		/**. ``''array'' _cages``: Retorna a lista de caracteres de gaiola.**/
+		_cages: {
+			get: function() {
+				const cages = [];
+				const tags  = ["string", "comment"]
+				for (let i in this._config) {
+					if (tags.indexOf(i) >= 0 && this._config[i].length > 0) {
+						let items = this._config[i];
+						for (let j = 0; j < items.length; j += 2) {
+							if (j === items.length - 1) continue;
+							cages.push({
+								a: String(items[j]),
+								b: String(items[j+1]),
+								tag: "wd-code-"+i
+							});
+						}
+					}
+				}
+				return cages;
+			}
+		},
+		/**. ``''void'' _changeChars()``: Transforma caracteres especiais.**/
+		_changeChars: {
+			value: function() {
+				const check = /(\<\/\w+\>|\<\w+.+\/>)$/;
+				const html  = check.test(this.toString().trim());
+				const re    = [
+					{a:   /\&/gm,      b: "&amp;"},
+					{a:   /\</gm,      b: "&lt;"},
+					{a:   /\>/gm,      b: "&gt;"},
+					{a: /\\\"/gm,      b: "&bsol;&quot;"},
+					{a: /\\\'/gm,      b: "&bsol;&apos;"},
+					{a: /\\([a-z])/gm, b: "&bsol;$1"},
+					{a: /\t/gm, b: "  "}
+				];
+				for (let i of re) this._code = this._code.replace(i.a, i.b);
+
+				if (html) {
+					const content = /\&gt\;(.+)\&lt\;/gm;
+					const output  = "&gt;<wd-code-text>$1</wd-code-text>&lt;"
+					this._code    = this._code.replace(content, output);
+					const tags    = /(\&lt\;\/?[\w\-?]+|\/?\&gt\;)/gm;
+					const mark    = "<wd-code-tag>$1</wd-code-tag>";
+					this._code    = this._code.replace(tags, mark);
+				}
+				return;
+			}
+		},
+		/**. ``''void'' _setCages(''integer'' n)``: Captura e define os conteúdos de gaiola a partir da posição ``n``.**/
+		_setCages: {
+			value: function(n) {
+				if (n > this._code.length) return;
+				/*-- localizar a gaiola que primeiro ocorre --*/
+				const cages = this._cages;
+				let search  = [];
+				for (let v of cages) search.push(this._code.indexOf(v.a, n));
+				const data = __Array(search);
+				data.replace(-1, null);
+				const index1 = data.min;
+				if (index1 === null) return;
+				/*-- localizar a qual gaiola pertence --*/
+				const item   = data.search(index1)[0];
+				const cage   = cages[item];
+				/*-- localizar o fim da gaiola --*/
+				let index2 = this._code.indexOf(cage.b, index1 + cage.a.length);
+				if (index2 < 0) index2 = Infinity;
+				/*-- montar gaiola --*/
+				const tag1   =  "<" + cage.tag + ">";
+				const tag2   = "</" + cage.tag + ">";
+				const outer  = [
+					this._code.substring(0, index1),
+					tag1,
+					this._code.substring(index1, (index2 + cage.b.length)),
+					tag2,
+				].join("");
+				this._code = outer + this._code.substring(index2 + cage.b.length);
+				return this._setCages(outer.length);
+			}
+		},
+		/**. ``''void'' _setNumbers()``: Define a formatação dos números.**/
+		_setNumbers: {
+			value: function() {
+				const re = [
+					/([^a-z])([\+\-]?\d+\.\d+e[\+\-]?\d+)([^a-z])/gim,
+					/([^a-z])([\+\-]?\.?\d+e[\+\-]?\d+)([^a-z])/gim,
+					/([^a-z])([\+\-]?\d+e[\+\-]?\d+)([^a-z])/gim,
+					/([^a-z])([\+\-]?\d+\.\d+)([^a-z])/gim,
+					/([^a-z])([\+\-]?\.\d+)([^a-z])/gim,
+					/([^a-z])([\+\-]?\d+)([^a-z])/gim,
+
+					/^()([\+\-]?\d+\.\d+e[\+\-]?\d+)([^a-z])/gim,
+					/^()([\+\-]?\.?\d+e[\+\-]?\d+)([^a-z])/gim,
+					/^()([\+\-]?\d+e[\+\-]?\d+)([^a-z])/gim,
+					/^()([\+\-]?\d+\.\d+)([^a-z])/gim,
+					/^()([\+\-]?\.\d+)([^a-z])/gim,
+					/^()([\+\-]?\d+)([^a-z])/gim,
+
+					/([^a-z])([\+\-]?\d+\.\d+e[\+\-]?\d+)()$/gim,
+					/([^a-z])([\+\-]?\.?\d+e[\+\-]?\d+)()$/gim,
+					/([^a-z])([\+\-]?\d+e[\+\-]?\d+)()$/gim,
+					/([^a-z])([\+\-]?\d+\.\d+)()$/gim,
+					/([^a-z])([\+\-]?\.\d+)()$/gim,
+					/([^a-z])([\+\-]?\d+)()$/gim,
+				];
+				const to = "$1<wd-code-vars>$2</wd-code-vars>$3";
+				for (let v of re)
+					this._code = this._code.replace(v, to);
+			}
+		},
+		/**. ``''void'' _setKeys()``: Define a formatação das palavras reservadas.**/
+		_setKeys: {
+			value: function() {//FIXME falta inserir no início e no fim
+				const input  = ["(\\W)(", "", ")(\\s)"];
+				const output = "$1<wd-code-keys>$2</wd-code-keys>$3";
+				for (let v of this.config().keys) {
+					input[1] = String(v);
+					const re = new RegExp(input.join(""), "gim");
+					this._code = this._code.replace(re, output);
+				}
+			}
+		},
+		/**. ``''void'' _setVars()``: Define a formatação das variáveis.**/
+		_setVars: {//FIXME falta inserir no início e no fim
+			value: function() {
+				const input  = ["(\\W)(", "", ")(\\W)"];
+				const output = "$1<wd-code-vars>$2</wd-code-vars>$3";
+				for (let v of this.config().vars) {
+					input[1] = String(v);
+					const re = new RegExp(input.join(""), "gim");
+					this._code = this._code.replace(re, output);
+				}
+			}
+		},
+		/**. ``''void'' _setLines()``: Define anumeração das linhas.**/
+		_setLines: {
+			value: function() {
+				const lines = this._code.split("\n");
+				lines.forEach(function(v,i,a) {
+					a[i] = "<wd-code-lines></wd-code-lines>"+v;
+				});
+				this._code = lines.join("\n");
+			}
+		},
+		/**. ``''void'' _run()``: Define a código codificado para renderização HTML.**/
+		_run: {
+			value: function() {
+				this._code = this.toString();
+				this._changeChars();
+				this._setCages();
+				this._setNumbers();
+				this._setKeys();
+				this._setVars();
+				this._setLines();
+			}
+		},
 		/**. ``''string'' valueOf()``: Retorna o código formatado para HTML.**/
 		valueOf: {
 			value: function() {
-				if (this._code === null) {
-					this._run  = true;
-					this._code = String(this._input);
-					this.setInitial();
-					this.setCages();
-					this.setWords();
-					this.setEnding();
-					this._run = false;
-				}
-				return this._code;
+				if (this._code === null) this._run();
+				return  this._code;
 			}
 		},
 		/**. ``''string'' toString()``: Retorna o código definido ao instanciar o objeto (``Input``).**/
 		toString: {
-			value: function() {return this._input;}
+			value: function() {
+				return this._input;
+			}
 		},
 	});
 
@@ -7464,13 +7484,16 @@ const wd = (function() {
 		if (!("wdCode" in e.dataset)) return;
 		if (__Node(e).form) return;
 		let data  = __String(e.dataset.wdCode).wdNotation;
-		let code  = __Code(e.textContent);
+		let code  = __Code(e.innerText);
 		let check = __Type(data)
-		code[(check.array ? "options" : "lang")] = (check.array ? data[0] : data);
-		if (event.type === "focusin")
-			e.textContent = code.toString();
-		else
-			e.innerHTML   = code.valueOf();
+		//code[(check.array ? "options" : "lang")] = (check.array ? data[0] : data);
+		if (event.type === "focusin") {
+			e.spellcheck = true;
+			e.innerText  = code.toString();
+		} else {
+			e.spellcheck = false;
+			e.innerHTML  = code.valueOf();
+		}
 		return;
 	};
 
