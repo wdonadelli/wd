@@ -462,14 +462,15 @@ const wd = (function() {
 		"[data-wd-code] {background-color: rgb(238,238,236); color: rgb(46,52,54);}",
 		"[data-wd-code] {font-family: \"Courier New\"; font-size: 14px; }",
 		"[data-wd-code] {text-decoration: none; text-indent: 0; font-style: normal; font-weight: normal;}",
-		"[data-wd-code] {padding: 0.3em; margin: 0.5em 0; overflow: auto; border-radius: 0.2em;}",
+		"[data-wd-code] {padding: 0.3em 0.3em 0.3em 3em; margin: 0.5em 0;}",
+		"[data-wd-code] {overflow: auto; border-radius: 0.2em;}",
 		"[data-wd-code] {white-space: pre-wrap; counter-reset: wdcodelines;}",
 		"[data-wd-code] * {display: inline; position: static;}",
 		"[data-wd-code] wd-code-lines        {counter-increment: wdcodelines;}",
 		"[data-wd-code] wd-code-lines:before {content: counter(wdcodelines);}",
-		"[data-wd-code] wd-code-lines:before {display: inline-block; position: static; min-width: 2em;}",
+		"[data-wd-code] wd-code-lines:before {display: inline-block; position: static; min-width: 3em;}",
 		"[data-wd-code] wd-code-lines:before {color: Gray; text-align: right;}",
-		"[data-wd-code] wd-code-lines:before {margin: 0 3px 0 0; padding-right: 3px;}",
+		"[data-wd-code] wd-code-lines:before {margin: 0 0 0 -3em; padding-right: 0.5em;}",
 		"[data-wd-code] wd-code-vars      {color: MediumVioletRed;}",
 		"[data-wd-code] wd-code-keys      {color: DodgerBlue;}",
 		"[data-wd-code] wd-code-comment   {color: DimGrey; font-style: italic;}",
@@ -2004,62 +2005,93 @@ const wd = (function() {
 				return this._setCages(outer.length);
 			}
 		},
+
+
+		_setTags: {
+			value: function(value, tag) {
+				/* IMPORTANTE: <> não entram pois foram trasformadas para &gt; e &lt; */
+				const lscope   = "\\(\\{\\[";
+				const rscope   = "\\)\\}\\]";
+				const operator = "\\!=\\|\\&\\%\\/\\*\\^\\?\\:";
+				const punct    = "\\,\\;\\s";
+				const lside    = "(["+lscope+operator+punct+"])";
+				const rside    = "(["+rscope+operator+punct+"])";
+				const checks   = {
+					middle: [lside, null, rside],
+					line:   ["^()", null, "()$"],
+					start:  ["^()", null, rside],
+					end:    [lside, null, "()$"],
+				};
+				for (let i in checks) {
+					checks[i][1] = (/^\(.+\)$/).test(value) ? value : "("+value+")";
+					let re  = new RegExp(checks[i].join(""));
+					while (re.test(this._code)) {
+						console.log(re);
+						this._code = this._code.replace(re, "$1<"+tag+">$2</"+tag+">$3");
+					}
+				}
+				return;
+			}
+		},
+
+
+
+
 		/**. ``''void'' _setNumbers()``: Define a formatação dos números.**/
 		_setNumbers: {
 			value: function() {
-				const re = [
-					/([^a-z])([\+\-]?\d+\.\d+e[\+\-]?\d+)([^a-z])/gim,
-					/([^a-z])([\+\-]?\.?\d+e[\+\-]?\d+)([^a-z])/gim,
-					/([^a-z])([\+\-]?\d+e[\+\-]?\d+)([^a-z])/gim,
-					/([^a-z])([\+\-]?\d+\.\d+)([^a-z])/gim,
-					/([^a-z])([\+\-]?\.\d+)([^a-z])/gim,
-					/([^a-z])([\+\-]?\d+)([^a-z])/gim,
-
-					/^()([\+\-]?\d+\.\d+e[\+\-]?\d+)([^a-z])/gim,
-					/^()([\+\-]?\.?\d+e[\+\-]?\d+)([^a-z])/gim,
-					/^()([\+\-]?\d+e[\+\-]?\d+)([^a-z])/gim,
-					/^()([\+\-]?\d+\.\d+)([^a-z])/gim,
-					/^()([\+\-]?\.\d+)([^a-z])/gim,
-					/^()([\+\-]?\d+)([^a-z])/gim,
-
-					/([^a-z])([\+\-]?\d+\.\d+e[\+\-]?\d+)()$/gim,
-					/([^a-z])([\+\-]?\.?\d+e[\+\-]?\d+)()$/gim,
-					/([^a-z])([\+\-]?\d+e[\+\-]?\d+)()$/gim,
-					/([^a-z])([\+\-]?\d+\.\d+)()$/gim,
-					/([^a-z])([\+\-]?\.\d+)()$/gim,
-					/([^a-z])([\+\-]?\d+)()$/gim,
-				];
-				const to = "$1<wd-code-vars>$2</wd-code-vars>$3";
-				for (let v of re)
-					this._code = this._code.replace(v, to);
+				const re = {
+					floatE:    "[+\\-]?\\d+\\.\\d+[eE][+\\-]?\\d+",
+					floatE2:   "[+\\-]?\\.\\d+[eE][+\\-]?\\d+",
+					integerE:  "[+\\-]?\\d+[eE][+\\-]?\\d+",
+					float:     "[+\\-]?\\d+\\.\\d+",
+					float2:    "[+\\-]?\\.\\d+",
+					integer:   "[+\\-]?\\d+"
+				};
+				let number = [];
+				for (let i in re) number.push(re[i]);
+				this._setTags(number.join("|"), "wd-code-vars");
+				return;
 			}
 		},
 		/**. ``''void'' _setKeys()``: Define a formatação das palavras reservadas.**/
 		_setKeys: {
 			value: function() {//FIXME falta inserir no início e no fim
-				const input  = ["(\\W)(", "", ")(\\s)"];
+				for (let v of this.config().keys)
+					this._setTags(v, "wd-code-keys");
+
+
+				/*const input  = ["(\\W)(", "", ")(\\s)"];
 				const output = "$1<wd-code-keys>$2</wd-code-keys>$3";
 				for (let v of this.config().keys) {
 					input[1] = String(v);
 					const re = new RegExp(input.join(""), "gim");
 					this._code = this._code.replace(re, output);
-				}
+				}*/
+				return;
 			}
 		},
 		/**. ``''void'' _setVars()``: Define a formatação das variáveis.**/
 		_setVars: {//FIXME falta inserir no início e no fim
 			value: function() {
-				const input  = ["(\\W)(", "", ")(\\W)"];
+				for (let v of this.config().vars)
+					this._setTags(v, "wd-code-vars");
+
+
+
+
+				/*const input  = ["(\\W)(", "", ")(\\W)"];
 				const output = "$1<wd-code-vars>$2</wd-code-vars>$3";
 				for (let v of this.config().vars) {
 					input[1] = String(v);
 					const re = new RegExp(input.join(""), "gim");
 					this._code = this._code.replace(re, output);
-				}
+				}*/
+				return;
 			}
 		},
 		/**. ``''void'' _setLines()``: Define anumeração das linhas.**/
-		_setLines: {
+		_setLines: {//FIXME o número da linha seguinte está sainda em itálico após // na linha superior culpa do \n
 			value: function() {
 				const lines = this._code.split("\n");
 				lines.forEach(function(v,i,a) {
@@ -2077,7 +2109,7 @@ const wd = (function() {
 				this._setNumbers();
 				this._setKeys();
 				this._setVars();
-				this._setLines();
+				//this._setLines();
 			}
 		},
 		/**. ``''string'' valueOf()``: Retorna o código formatado para HTML.**/
