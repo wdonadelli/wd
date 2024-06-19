@@ -2,22 +2,20 @@
 
 	<nav>
 		<span
-			data-wd-set="${#code,#target}dataset{wdLoad{path{lib/add-ons/load.Page1.html}method{GET}}}"
-		>Page 1</span>
+			data-wd-set="${#code}dataset{wdCode{lang{javascript}}}"
+		>Javascript</span>
 		<span
-			data-wd-set="${#code,#target}dataset{wdLoad{path{lib/add-ons/load.Page1.html}method{GET}run{true}}}"
-		>Page 1 (run)</span>
+			data-wd-set="${#code}dataset{wdCode{lang{c}}}"
+		>C</span>
 		<span
-			data-wd-set="${#code,#target}dataset{wdLoad{path{lib/add-ons/load.Page2.html}method{GET}}}"
-		>Page 2</span>
+			data-wd-set="${#code}dataset{wdCode{lang{python}}}"
+		>Python</span>
 		<span
-			data-wd-set="${#target2}dataset{wdLoad{path{lib/add-ons/load.Page1.html}method{GET}run{true}replace{true}}}"
-		>Page 1 (replace)</span>
+			data-wd-set="${#code}dataset{wdCode{lang{html}}}"
+		>HTML</span>
 	</nav>
 
-
-
-	<pre data-wd-code="javascript" contenteditable="true">
+	<pre data-wd-code="lang{javascript}" contenteditable="true" id="code">
 /* função para calcular o valor absoluto de um número */
 function abs(x) {
 	if (typeof x !== "number") return null;

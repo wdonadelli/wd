@@ -458,7 +458,7 @@ const wd = (function() {
 
 
 		"/*-- CODE SECTION --*/",
-		"[data-wd-code] {display: block, position: static;}",
+		"[data-wd-code] {display: block, position: relative;}",
 		"[data-wd-code] {background-color: rgb(238,238,236); color: rgb(46,52,54);}",
 		"[data-wd-code] {font-family: \"Courier New\"; font-size: 14px; }",
 		"[data-wd-code] {text-decoration: none; text-indent: 0; font-style: normal; font-weight: normal;}",
@@ -466,20 +466,24 @@ const wd = (function() {
 		"[data-wd-code] {overflow: auto; border-radius: 0.2em;}",
 		"[data-wd-code] {white-space: pre-wrap; counter-reset: wdcodelines;}",
 		"[data-wd-code] * {display: inline; position: static;}",
-		"[data-wd-code] wd-code-lines        {counter-increment: wdcodelines;}",
-		"[data-wd-code] wd-code-lines:before {content: counter(wdcodelines);}",
-		"[data-wd-code] wd-code-lines:before {display: inline-block; position: static; min-width: 3em;}",
-		"[data-wd-code] wd-code-lines:before {color: Gray; text-align: right;}",
-		"[data-wd-code] wd-code-lines:before {margin: 0 0 0 -3em; padding-right: 0.5em;}",
 		"[data-wd-code] wd-code-vars      {color: MediumVioletRed;}",
 		"[data-wd-code] wd-code-keys      {color: DodgerBlue;}",
+		"[data-wd-code] wd-code-tag       {color: DodgerBlue; font-style: italic;}",
+
 		"[data-wd-code] wd-code-comment   {color: DimGrey; font-style: italic;}",
 		"[data-wd-code] wd-code-comment * {color: inherit; font-weight: inherit; font-style: inherit;}",
 		"[data-wd-code] wd-code-string    {color: darkgreen;}",
 		"[data-wd-code] wd-code-string *  {color: inherit; font-weight: inherit; font-style: inherit;}",
 		"[data-wd-code] wd-code-text      {color: Sienna; font-weight: inherit; font-style: inherit;}",
 		"[data-wd-code] wd-code-text *    {color: inherit; font-weight: inherit; font-style: inherit;}",
-		"[data-wd-code] wd-code-tag       {color: DodgerBlue; font-style: italic;}",
+
+		"[data-wd-code] wd-code-lines        {counter-increment: wdcodelines;}",
+		"[data-wd-code] wd-code-lines:before {content: counter(wdcodelines);}",
+		"[data-wd-code] wd-code-lines:before {display: inline-block; position: relative;}",
+		"[data-wd-code] wd-code-lines:before {margin: 0 0 0 -3em; padding-right: 0.5em; min-width: 3em;}",
+		"[data-wd-code] wd-code-lines:before {font-weight: normal; font-style: normal;}",
+		"[data-wd-code] wd-code-lines:before {color: Gray; text-align: right;}",
+
 
 //TODO interessante https://developer.mozilla.org/en-US/docs/Web/CSS/::file-selector-button
 	];
@@ -1834,83 +1838,79 @@ const wd = (function() {
 
 	function __Code(input) {
 		if (!(this instanceof __Code)) return new __Code(input);
+		input = input === undefined || input === null ? "" : String(input);
+		const html = /(\<\/[a-z0-9.\-_]+\>|\<\w+.+\/>)$/i;
 		Object.defineProperties(this, {
-			_input:  {value: String(input === undefined || input === null ? "" : input)},
-			_code:   {writable: true, value: null},
-			_config: {writable: true, value: {
+			_html:   {writable: false, value: html.test(input.trim())},
+			_input:  {writable: false, value: input},
+			_code:   {writable: true,  value: null},
+			_config: {writable: true,  value: {
 				string:  ["\"", "\"", "\'", "\'"],
 				comment: ["//", "\n", "/*", "*/"],
-				keys:    ("break case catch class const continue debugger default delete do else export extends finally for function if import in instanceof new return super switch throw try typeof var void while with let static yied await").split(" "),
-				vars:     ("false null this true undefined NaN Infinity").split(" "),
+				keys:    [],
+				vars:    [],
 			}}
 		});
 	}
 
 	Object.defineProperties(__Code.prototype, {
 		constructor: {value: __Code},
-		/**. ``''string'' tranlate(''string'' code)``: Retorna o texto informado em ``code`` com alguns caracteres traduzidos para o HTML .**/
-		translate: {
-			value: function (code) {
-				const chars = [
-					{a: "\t", b: "&tab;"},    {a: " ",  b: "&nbsp;"},
-					{a: "#",  b: "&num;"},    {a: "$",  b: "&dollar;"},
-					{a: "+",  b: "&plus;"},	  {a: "-",  b: "&dash;"},
-					{a: "*",  b: "&ast;"},    {a: "/",  b: "&sol;"},
-					{a: ",",  b: "&comma;"},  /*{a: ";",  b: "&semi;"},*/
-					{a: ".",  b: "&period;"},	{a: "!",  b: "&excl;"},
-					{a: "?",  b: "&quest;"},  {a: "%",  b: "&percnt;"},
-					{a: ":",  b: "&colon;"},  {a: "=",  b: "&equals;"},
-					{a: "`",  b: "&grave;"},  {a: "´",  b: "&acute;"},
-					{a: "^",  b: "&hat;"},    {a: "~",  b: "&tilde;"},
-					{a: "@",  b: "&commat;"}, {a: "_",  b: "&lowbar;"},
-					{a: "<",  b: "&lt;"},     {a: ">",  b: "&gt;"},
-					{a: "[",  b: "&lsqb;"},   {a: "]",  b: "&rsqb;"},
-					{a: "(",  b: "&lpar;"},   {a: ")",  b: "&rpar;"},
-					{a: "{",  b: "&lcub;"},   {a: "}",  b: "&rcub;"},
-					{a: "|",  b: "&verbar;"}, {a: "\\", b: "&bsol;"},
-					{a: "\"", b: "&quot;"},	  {a: "'",  b: "&apos;"},
-				];
-				chars.forEach(function(v,i,a) {
-					while (code.indexOf(v.a) >= 0) code = code.replace(v.a, v.b);
-				});
-				return code;
-			}
+		dict: { /* sem efeito */
+			value: [
+				{a: "\t", b: "&tab;"},    {a: " ",  b: "&nbsp;"},
+				{a: "#",  b: "&num;"},    {a: "$",  b: "&dollar;"},
+				{a: "+",  b: "&plus;"},	  {a: "-",  b: "&dash;"},
+				{a: "*",  b: "&ast;"},    {a: "/",  b: "&sol;"},
+				{a: ",",  b: "&comma;"},  /*{a: ";",  b: "&semi;"},*/
+				{a: ".",  b: "&period;"},	{a: "!",  b: "&excl;"},
+				{a: "?",  b: "&quest;"},  {a: "%",  b: "&percnt;"},
+				{a: ":",  b: "&colon;"},  {a: "=",  b: "&equals;"},
+				{a: "`",  b: "&grave;"},  {a: "´",  b: "&acute;"},
+				{a: "^",  b: "&hat;"},    {a: "~",  b: "&tilde;"},
+				{a: "@",  b: "&commat;"}, {a: "_",  b: "&lowbar;"},
+				{a: "<",  b: "&lt;"},     {a: ">",  b: "&gt;"},
+				{a: "[",  b: "&lsqb;"},   {a: "]",  b: "&rsqb;"},
+				{a: "(",  b: "&lpar;"},   {a: ")",  b: "&rpar;"},
+				{a: "{",  b: "&lcub;"},   {a: "}",  b: "&rcub;"},
+				{a: "|",  b: "&verbar;"}, {a: "\\", b: "&bsol;"},
+				{a: "\"", b: "&quot;"},	  {a: "'",  b: "&apos;"},
+			]
 		},
-
-
-
-
-
-
-
 		/**. ``''void'' lang(''string'' x)``: Define ``options`` por meio do nome da linguagem informada em ``x`` (em construção).**/
 		lang: {
-			set: function(x) {
+			value: function(x) {
 				const codes = {
 					javascript: {
 						keys: "break case catch class const continue debugger default delete do else export extends finally for function if import in instanceof new return super switch throw try typeof var void while with let static yied await",
-						vars: "false null this true undefined NaN Infinity"
+						vars: "false null this true undefined NaN [-+]Infinity",
+						comment: "// \n /* */",
+						string: "' ' ` ` \" \""
 					},
 					python: {
 						keys: "and as assert break class continue def del elif else except finally for from global if import in is lambda nonlocal not or pass raise return try while with yield",
 						vars: "False None True",
-						macro: "", comments: "", comment: "# \n"
+						comment: "# \n",
+						string: "' ' \" \""
 					},
 					c: {
-						keys: "asm auto break case char const continue default do double else enum extern float for goto if int long register return short signed sizeof static struct switch typedef union unsigned void volatile while"
+						keys: "asm auto break case char const continue default do double else enum extern float for goto if int long register return short signed sizeof static struct switch typedef union unsigned void volatile while",
+						comment: "// \n /* */",
+						string: "' ' \" \""
 					},
 					html: {
-						comments: "&lt;!-- --&gt;", macro: "&lt;! &gt;", comment: "", keys: "&lt;div &lt;span"
+						comment: "",
+						string: "' ' \" \""
 					}
 				};
 				x = String(x).toLowerCase();
-				if (x in codes) this.options = codes[x];
+				if (x in codes)	{
+					let code = codes[x];
+					for (let i in code) code[i] = code[i].split(" ");
+					this.config(code);
+				}
 				return;
 			}
 		},
-
-
-
 		/**. ``''object'' config(''object'' data)``: Define ou retorna os dados dde configuração da linguagem. O argumento ``data`` possui as propriedades ''string'', ''comment'', ''keys'' e ``vars``, cujos valores são arrays. Nas propriedades ''keys'' e ``vars`` devem ser informadas as palavras reservadas e variáveis, respectivamente, da linguagem, as demais devem ser informadas, em sequência, os caracteres de abertura e fechamento do respectivo propósito.**/
 		config: {
 			value: function(data) {
@@ -1950,8 +1950,6 @@ const wd = (function() {
 		/**. ``''void'' _changeChars()``: Transforma caracteres especiais.**/
 		_changeChars: {
 			value: function() {
-				const check = /(\<\/\w+\>|\<\w+.+\/>)$/;
-				const html  = check.test(this.toString().trim());
 				const re    = [
 					{a:   /\&/gm,      b: "&amp;"},
 					{a:   /\</gm,      b: "&lt;"},
@@ -1959,18 +1957,27 @@ const wd = (function() {
 					{a: /\\\"/gm,      b: "&bsol;&quot;"},
 					{a: /\\\'/gm,      b: "&bsol;&apos;"},
 					{a: /\\([a-z])/gm, b: "&bsol;$1"},
-					{a: /\t/gm, b: "  "}
+					{a: /\t/gm,        b: "  "}
 				];
-				for (let i of re) this._code = this._code.replace(i.a, i.b);
-
-				if (html) {
-					const content = /\&gt\;(.+)\&lt\;/gm;
-					const output  = "&gt;<wd-code-text>$1</wd-code-text>&lt;"
-					this._code    = this._code.replace(content, output);
-					const tags    = /(\&lt\;\/?[\w\-?]+|\/?\&gt\;)/gm;
-					const mark    = "<wd-code-tag>$1</wd-code-tag>";
-					this._code    = this._code.replace(tags, mark);
-				}
+				for (let i of re)
+					this._code = this._code.replace(i.a, i.b);
+				return;
+			}
+		},
+		/**. ``''void'' _setHTML()``: Adiciona tags XML/HTML, se for o caso..**/
+		_setHTML: {
+			value: function() {
+				if (!this._html) return;
+				const content = /\&gt\;(.+)\&lt\;/gm;
+				const output  = "&gt;<wd-code-text>$1</wd-code-text>&lt;"
+				this._code    = this._code.replace(content, output);
+				const comment = /(\&lt\;\!\-\-)(.+)?(\-\-\&gt\;)/gm;
+				const value   = "<wd-code-comment>$1$2$3</wd-code-comment>";
+				this._code    = this._code.replace(comment, value);
+				/* https://html.spec.whatwg.org/multipage/custom-elements.html#valid-custom-element-name */
+				const tags    = /(\&lt\;\/?\??[a-z0-9.\-_]+|[^\-]\&gt\;)/gm;
+				const mark    = "<wd-code-tag>$1</wd-code-tag>";
+				this._code    = this._code.replace(tags, mark);
 				return;
 			}
 		},
@@ -2005,8 +2012,7 @@ const wd = (function() {
 				return this._setCages(outer.length);
 			}
 		},
-
-
+		/**. ``''void'' _setTags(''string'' value, ''string'' tag)``: Define a formatação dos valores e palavras reservadas. O argumeto ``tag`` indica a marcação a envolver o valor ``value``.**/
 		_setTags: {
 			value: function(value, tag) {
 				/* IMPORTANTE: <> não entram pois foram trasformadas para &gt; e &lt; */
@@ -2025,18 +2031,12 @@ const wd = (function() {
 				for (let i in checks) {
 					checks[i][1] = (/^\(.+\)$/).test(value) ? value : "("+value+")";
 					let re  = new RegExp(checks[i].join(""));
-					while (re.test(this._code)) {
-						console.log(re);
+					while (re.test(this._code))
 						this._code = this._code.replace(re, "$1<"+tag+">$2</"+tag+">$3");
-					}
 				}
 				return;
 			}
 		},
-
-
-
-
 		/**. ``''void'' _setNumbers()``: Define a formatação dos números.**/
 		_setNumbers: {
 			value: function() {
@@ -2056,42 +2056,22 @@ const wd = (function() {
 		},
 		/**. ``''void'' _setKeys()``: Define a formatação das palavras reservadas.**/
 		_setKeys: {
-			value: function() {//FIXME falta inserir no início e no fim
+			value: function() {
 				for (let v of this.config().keys)
 					this._setTags(v, "wd-code-keys");
-
-
-				/*const input  = ["(\\W)(", "", ")(\\s)"];
-				const output = "$1<wd-code-keys>$2</wd-code-keys>$3";
-				for (let v of this.config().keys) {
-					input[1] = String(v);
-					const re = new RegExp(input.join(""), "gim");
-					this._code = this._code.replace(re, output);
-				}*/
 				return;
 			}
 		},
 		/**. ``''void'' _setVars()``: Define a formatação das variáveis.**/
-		_setVars: {//FIXME falta inserir no início e no fim
+		_setVars: {
 			value: function() {
 				for (let v of this.config().vars)
 					this._setTags(v, "wd-code-vars");
-
-
-
-
-				/*const input  = ["(\\W)(", "", ")(\\W)"];
-				const output = "$1<wd-code-vars>$2</wd-code-vars>$3";
-				for (let v of this.config().vars) {
-					input[1] = String(v);
-					const re = new RegExp(input.join(""), "gim");
-					this._code = this._code.replace(re, output);
-				}*/
 				return;
 			}
 		},
 		/**. ``''void'' _setLines()``: Define anumeração das linhas.**/
-		_setLines: {//FIXME o número da linha seguinte está sainda em itálico após // na linha superior culpa do \n
+		_setLines: {
 			value: function() {
 				const lines = this._code.split("\n");
 				lines.forEach(function(v,i,a) {
@@ -2105,11 +2085,13 @@ const wd = (function() {
 			value: function() {
 				this._code = this.toString();
 				this._changeChars();
+
 				this._setCages();
+				this._setHTML();
 				this._setNumbers();
 				this._setKeys();
 				this._setVars();
-				//this._setLines();
+				this._setLines();
 			}
 		},
 		/**. ``''string'' valueOf()``: Retorna o código formatado para HTML.**/
@@ -2126,26 +2108,6 @@ const wd = (function() {
 			}
 		},
 	});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /*===========================================================================*/
 	/**### Data e Tempo
 	###### ``**constructor** ''object'' __DateTime(''any'' input)``
@@ -7515,15 +7477,14 @@ const wd = (function() {
 	function data_wdCode(e, event) {//FIXME pendente
 		if (!("wdCode" in e.dataset)) return;
 		if (__Node(e).form) return;
-		let data  = __String(e.dataset.wdCode).wdNotation;
-		let code  = __Code(e.innerText);
-		let check = __Type(data)
-		//code[(check.array ? "options" : "lang")] = (check.array ? data[0] : data);
+		const data  = __String(e.dataset.wdCode).wdNotation[0];
+		const code  = __Code(e.innerText);
+		if ("lang" in data) code.lang(data.lang);
+		else code.config(data);
+		e.spellcheck = false;
 		if (event.type === "focusin") {
-			e.spellcheck = true;
 			e.innerText  = code.toString();
 		} else {
-			e.spellcheck = false;
 			e.innerHTML  = code.valueOf();
 		}
 		return;
