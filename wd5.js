@@ -477,12 +477,12 @@ const wd = (function() {
 		"[data-wd-code] wd-code-text      {color: Sienna; font-weight: inherit; font-style: inherit;}",
 		"[data-wd-code] wd-code-text *    {color: inherit; font-weight: inherit; font-style: inherit;}",
 
-		"[data-wd-code] wd-code-lines        {counter-increment: wdcodelines;}",
-		"[data-wd-code] wd-code-lines:before {content: counter(wdcodelines);}",
-		"[data-wd-code] wd-code-lines:before {display: inline-block; position: relative;}",
-		"[data-wd-code] wd-code-lines:before {margin: 0 0 0 -3em; padding-right: 0.5em; min-width: 3em;}",
-		"[data-wd-code] wd-code-lines:before {font-weight: normal; font-style: normal;}",
-		"[data-wd-code] wd-code-lines:before {color: Gray; text-align: right;}",
+		"[data-wd-code] wd-code-line        {counter-increment: wdcodelines;}",
+		"[data-wd-code] wd-code-line:before {content: counter(wdcodelines);}",
+		"[data-wd-code] wd-code-line:before {display: inline-block; position: relative;}",
+		"[data-wd-code] wd-code-line:before {margin: 0 0 0 -3em; padding-right: 0.5em; min-width: 3em;}",
+		"[data-wd-code] wd-code-line:before {font-weight: normal; font-style: normal;}",
+		"[data-wd-code] wd-code-line:before {color: Gray; text-align: right;}",
 
 
 //TODO interessante https://developer.mozilla.org/en-US/docs/Web/CSS/::file-selector-button
@@ -1839,9 +1839,13 @@ const wd = (function() {
 	function __Code(input) {
 		if (!(this instanceof __Code)) return new __Code(input);
 		input = input === undefined || input === null ? "" : String(input);
-		const html = /(\<\/[a-z0-9.\-_]+\>|\<\w+.+\/>)$/i;
+		const text   = input.trim();
+		const start  = /^\<[a-z0-9.\-_:?!]+([^\>]+)?\>/i;
+		const close  = /\<\/?[a-z0-9.\-_:?!]+([^\>]+)?\>$/i;
+		const markup = start.test(text) && close.test(text);
 		Object.defineProperties(this, {
-			_html:   {writable: false, value: html.test(input.trim())},
+			_markup: {writable: false, value: markup},
+			_xml:    {writable: false, value: markup && (/^\<\?/).test(text)},
 			_input:  {writable: false, value: input},
 			_code:   {writable: true,  value: null},
 			_config: {writable: true,  value: {
@@ -1855,26 +1859,31 @@ const wd = (function() {
 
 	Object.defineProperties(__Code.prototype, {
 		constructor: {value: __Code},
-		dict: { /* sem efeito */
-			value: [
-				{a: "\t", b: "&tab;"},    {a: " ",  b: "&nbsp;"},
-				{a: "#",  b: "&num;"},    {a: "$",  b: "&dollar;"},
-				{a: "+",  b: "&plus;"},	  {a: "-",  b: "&dash;"},
-				{a: "*",  b: "&ast;"},    {a: "/",  b: "&sol;"},
-				{a: ",",  b: "&comma;"},  /*{a: ";",  b: "&semi;"},*/
-				{a: ".",  b: "&period;"},	{a: "!",  b: "&excl;"},
-				{a: "?",  b: "&quest;"},  {a: "%",  b: "&percnt;"},
-				{a: ":",  b: "&colon;"},  {a: "=",  b: "&equals;"},
-				{a: "`",  b: "&grave;"},  {a: "´",  b: "&acute;"},
-				{a: "^",  b: "&hat;"},    {a: "~",  b: "&tilde;"},
-				{a: "@",  b: "&commat;"}, {a: "_",  b: "&lowbar;"},
-				{a: "<",  b: "&lt;"},     {a: ">",  b: "&gt;"},
-				{a: "[",  b: "&lsqb;"},   {a: "]",  b: "&rsqb;"},
-				{a: "(",  b: "&lpar;"},   {a: ")",  b: "&rpar;"},
-				{a: "{",  b: "&lcub;"},   {a: "}",  b: "&rcub;"},
-				{a: "|",  b: "&verbar;"}, {a: "\\", b: "&bsol;"},
-				{a: "\"", b: "&quot;"},	  {a: "'",  b: "&apos;"},
-			]
+		_char: {
+			value: function(x) {
+				const data = [
+					{a: "\t", b: "&tab;"},    {a: " ",  b: "&nbsp;"},
+					{a: "#",  b: "&num;"},    {a: "$",  b: "&dollar;"},
+					{a: "+",  b: "&plus;"},	  {a: "-",  b: "&dash;"},
+					{a: "*",  b: "&ast;"},    {a: "/",  b: "&sol;"},
+					{a: ",",  b: "&comma;"},  /*{a: ";",  b: "&semi;"},*/
+					{a: ".",  b: "&period;"},	{a: "!",  b: "&excl;"},
+					{a: "?",  b: "&quest;"},  {a: "%",  b: "&percnt;"},
+					{a: ":",  b: "&colon;"},  {a: "=",  b: "&equals;"},
+					{a: "`",  b: "&grave;"},  {a: "´",  b: "&acute;"},
+					{a: "^",  b: "&hat;"},    {a: "~",  b: "&tilde;"},
+					{a: "@",  b: "&commat;"}, {a: "_",  b: "&lowbar;"},
+					{a: "<",  b: "&lt;"},     {a: ">",  b: "&gt;"},
+					{a: "[",  b: "&lsqb;"},   {a: "]",  b: "&rsqb;"},
+					{a: "(",  b: "&lpar;"},   {a: ")",  b: "&rpar;"},
+					{a: "{",  b: "&lcub;"},   {a: "}",  b: "&rcub;"},
+					{a: "|",  b: "&verbar;"}, {a: "\\", b: "&bsol;"},
+					{a: "\"", b: "&quot;"},	  {a: "'",  b: "&apos;"},
+				];
+				for (let v of data)
+					if (x === v.a) return v.b;
+				return x;
+			}
 		},
 		/**. ``''void'' lang(''string'' x)``: Define ``options`` por meio do nome da linguagem informada em ``x`` (em construção).**/
 		lang: {
@@ -1893,11 +1902,13 @@ const wd = (function() {
 						string: "' ' \" \""
 					},
 					c: {
-						keys: "asm auto break case char const continue default do double else enum extern float for goto if int long register return short signed sizeof static struct switch typedef union unsigned void volatile while",
+						keys: "asm auto break case char const continue default do double else enum extern float for goto if int long register return short signed sizeof static struct switch typedef union unsigned void volatile while #define",
 						comment: "// \n /* */",
 						string: "' ' \" \""
 					},
 					html: {
+						vars: "",
+						keys: "",
 						comment: "",
 						string: "' ' \" \""
 					}
@@ -1926,6 +1937,69 @@ const wd = (function() {
 				return this.config();
 			}
 		},
+
+
+
+		_setMarkupLanguage: {
+			value: function() {
+				const markup = ["<wd-code-line></wd-code-line><wd-code-content>"];
+				const code   = this._input.split("");
+				const self   = this;
+				let   str    = null;
+				let   tag    = false;
+				code.forEach(function(v,i,a) {
+					const char = self._char(v);
+					if (v === "\n") {
+						markup.push("<br/><wd-code-line></wd-code-line>");
+						return;
+					}
+					if (!tag && v === "<") {
+						markup.push("</wd-code-content><wd-code-tag>"+char);
+						tag = true;
+						return;
+					}
+					if (tag && v === ">") {
+						markup.push(char+"</wd-code-tag><wd-code-content>");
+						tag = false;
+						return;
+					}
+					if (tag && (v === "\"" || v === "'")) {
+						if (str === null) {
+							markup.push("<wd-code-string>"+char);
+							str = v;
+						}
+						else if (v === str) {
+							markup.push(char+"</wd-code-string>");
+							str = null;
+						}
+						else {
+							markup.push(char);
+						}
+						return;
+					}
+					markup.push(char);
+					return;
+				});
+				if (!tag)              markup.push("</wd-code-content>");
+				else if (tag)          markup.push("</wd-code-tag>");
+				else if (str !== null) markup.push("</wd-code-string>");
+
+				let base   = markup.join("");
+				const start = /(\<wd\-code\-tag\>)([^\s/]+)/gm;
+				const close = /(()(\<\/wd\-code\-tag\>)/;
+
+
+
+
+				this._code = base;
+
+			}
+		},
+
+
+
+
+
 		/**. ``''array'' _cages``: Retorna a lista de caracteres de gaiola.**/
 		_cages: {
 			get: function() {
@@ -1968,6 +2042,10 @@ const wd = (function() {
 		_setHTML: {
 			value: function() {
 				if (!this._html) return;
+				//FIXME falta o <!DOCTYPE html>
+
+
+
 				const content = /\&gt\;(.+)\&lt\;/gm;
 				const output  = "&gt;<wd-code-text>$1</wd-code-text>&lt;"
 				this._code    = this._code.replace(content, output);
@@ -1975,7 +2053,7 @@ const wd = (function() {
 				const value   = "<wd-code-comment>$1$2$3</wd-code-comment>";
 				this._code    = this._code.replace(comment, value);
 				/* https://html.spec.whatwg.org/multipage/custom-elements.html#valid-custom-element-name */
-				const tags    = /(\&lt\;\/?\??[a-z0-9.\-_]+|[^\-]\&gt\;)/gm;
+				const tags    = /(\&lt\;\/?\??[a-z0-9.\-_]+|[a-z0-9._ ]?\&gt\;)/gim;
 				const mark    = "<wd-code-tag>$1</wd-code-tag>";
 				this._code    = this._code.replace(tags, mark);
 				return;
@@ -2075,7 +2153,7 @@ const wd = (function() {
 			value: function() {
 				const lines = this._code.split("\n");
 				lines.forEach(function(v,i,a) {
-					a[i] = "<wd-code-lines></wd-code-lines>"+v;
+					a[i] = "<wd-code-line></wd-code-line>"+v;
 				});
 				this._code = lines.join("\n");
 			}
@@ -2083,7 +2161,20 @@ const wd = (function() {
 		/**. ``''void'' _run()``: Define a código codificado para renderização HTML.**/
 		_run: {
 			value: function() {
+				if (this._markup) {
+					this._setMarkupLanguage();
+					return;
+				}
+
+
+
+
+
 				this._code = this.toString();
+
+
+
+
 				this._changeChars();
 
 				this._setCages();
