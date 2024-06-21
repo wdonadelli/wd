@@ -466,8 +466,8 @@ const wd = (function() {
 		"[data-wd-code] {overflow: auto; border-radius: 0.2em;}",
 		"[data-wd-code] {white-space: pre-wrap; counter-reset: wdcodelines;}",
 		"[data-wd-code] * {display: inline; position: static;}",
-		"[data-wd-code] wd-code-vars      {color: MediumVioletRed;}",
-		"[data-wd-code] wd-code-keys      {color: DodgerBlue;}",
+		"[data-wd-code] wd-code-var      {color: MediumVioletRed;}",
+		"[data-wd-code] wd-code-key      {color: DodgerBlue;}",
 		"[data-wd-code] wd-code-tag       {color: DodgerBlue; font-style: italic;}",
 
 		"[data-wd-code] wd-code-comment   {color: DimGrey; font-style: italic;}",
@@ -1861,12 +1861,12 @@ const wd = (function() {
 		constructor: {value: __Code},
 		_char: {
 			value: function(x) {
-				const data = [
-					{a: "\t", b: "&tab;"},    {a: " ",  b: "&nbsp;"},
+				const data = [/*
+					{a: "\t", b: "&Tab;"},    {a: " ",  b: "&nbsp;"},
 					{a: "#",  b: "&num;"},    {a: "$",  b: "&dollar;"},
-					{a: "+",  b: "&plus;"},	  {a: "-",  b: "&dash;"},
+					{a: "+",  b: "&plus;"},	  {a: "-",  b: "&#45;"},
 					{a: "*",  b: "&ast;"},    {a: "/",  b: "&sol;"},
-					{a: ",",  b: "&comma;"},  /*{a: ";",  b: "&semi;"},*/
+					{a: ",",  b: "&comma;"},  {a: ";",  b: "&semi;"},
 					{a: ".",  b: "&period;"},	{a: "!",  b: "&excl;"},
 					{a: "?",  b: "&quest;"},  {a: "%",  b: "&percnt;"},
 					{a: ":",  b: "&colon;"},  {a: "=",  b: "&equals;"},
@@ -1879,6 +1879,30 @@ const wd = (function() {
 					{a: "{",  b: "&lcub;"},   {a: "}",  b: "&rcub;"},
 					{a: "|",  b: "&verbar;"}, {a: "\\", b: "&bsol;"},
 					{a: "\"", b: "&quot;"},	  {a: "'",  b: "&apos;"},
+					{a: "&",  b: "&amp;"}*/
+					/*{a: "_", b: "&#95;"},  {a: "-", b: "&#45;"},
+					{a: ",", b: "&#44;"},  {a: ";", b: "&#59;"},
+					{a: ":", b: "&#58;"},  {a: "!", b: "&#33;"},
+					{a: "?", b: "&#63;"},  {a: ".", b: "&#46;"},
+					{a: "-", b: "&#39;"},  {a: "(", b: "&#40;"},
+					{a: ")", b: "&#41;"},  {a: "[", b: "&#91;"},
+					{a: "]", b: "&#93;"},  {a: "{", b: "&#123;"},
+					{a: "}", b: "&#125;"}, {a: "@", b: "&#64;"},
+					{a: "*", b: "&#42;"},  {a: "/", b: "&#47;"},
+					{a: "\"", b: "&#34;"}, {a: "\\", b: "&#92;"},
+					{a: "&", b: "&#38;"},  {a: "#", b: "&#35;"},
+					{a: "%", b: "&#37;"},  {a: "`", b: "&#96;"},
+					{a: "^", b: "&#94;"},  {a: "+", b: "&#43;"},
+					{a: "<", b: "&#60;"},  {a: "=", b: "&#61;"},
+					{a: ">", b: "&#62;"},  {a: "|", b: "&#124;"},
+					{a: "~", b: "&#126;"}, {a: "$", b: "&#36;"}*/
+					{a:   "&",      b: "&amp;"},
+					{a:   "<",      b: "&lt;"},
+					{a:   ">",      b: "&gt;"}
+
+
+
+
 				];
 				for (let v of data)
 					if (x === v.a) return v.b;
@@ -1942,56 +1966,125 @@ const wd = (function() {
 
 		_setMarkupLanguage: {
 			value: function() {
-				const markup = ["<wd-code-line></wd-code-line><wd-code-content>"];
-				const code   = this._input.split("");
-				const self   = this;
-				let   str    = null;
-				let   tag    = false;
+				const tree = {
+					_tree: [],
+					_data: [],
+					_char: function(x) {
+						if (x === undefined) return "";
+						const chars = [
+							{a: "&", b: "&amp;"},
+							{a: "<", b: "&lt;"},
+							{a: ">", b: "&gt;"}
+						];
+						for (let v of chars)
+							if (x === v.a) return v.b;
+						return x;
+					},
+					get tag() {
+						if (this._tree.length === 0) return null;
+						return this._tree[this._tree.length - 1];
+					},
+					add: function(char) {
+						this._data.push(this._char(char));
+					},
+					open: function(tag, char) {
+						this._tree.push(tag);
+						this._data.push("<wd-code-"+tag+">"+this._char(char));
+					},
+					close: function(char) {
+						this._data.push(this._char(char)+"</wd-code-"+this.tag+">");
+						this._tree.pop();
+					},
+					finish: function() {
+						while (this.tag !== null) this.close("");
+					},
+					get data() {
+						return this._data.join("");
+					}
+				};
+
+				const code = this._input.split("");
+				const self = this;
+				let quote  = null;
+				tree.open("content");
+				tree.open("line");
+				tree.close();
+
 				code.forEach(function(v,i,a) {
-					const char = self._char(v);
+					//const char = self._char(v);
+					const tag  = tree.tag;
+
+
+					//FIXME pre e script
+
 					if (v === "\n") {
-						markup.push("<br/><wd-code-line></wd-code-line>");
+						tree.add(v);
+						tree.open("line")
+						tree.close();
 						return;
 					}
-					if (!tag && v === "<") {
-						markup.push("</wd-code-content><wd-code-tag>"+char);
-						tag = true;
-						return;
-					}
-					if (tag && v === ">") {
-						markup.push(char+"</wd-code-tag><wd-code-content>");
-						tag = false;
-						return;
-					}
-					if (tag && (v === "\"" || v === "'")) {
-						if (str === null) {
-							markup.push("<wd-code-string>"+char);
-							str = v;
+					if (tag === "content") {
+						if (v === "<") {
+							if (a[i+1] === "!" && a[i+2] === "-" && a[i+3] === "-")
+								tree.open("comment", v);
+							else if ((/[!?]/).test(a[i+1]))
+								tree.open("doctype", v);
+							else
+								tree.open("tag", v);
+						} else {
+							tree.add(v);
 						}
-						else if (v === str) {
-							markup.push(char+"</wd-code-string>");
-							str = null;
-						}
-						else {
-							markup.push(char);
-						}
-						return;
 					}
-					markup.push(char);
+					else if (tag === "comment") {
+						if (v === ">" && a[i-1] === "-" && a[i-2] === "-")
+							tree.close(v);
+						else
+							tree.add(v);
+					}
+					else if (tag === "doctype") {
+						if (v === ">")
+							tree.close(v);
+						else
+							tree.add(v);
+					}
+					else if (tag === "tag") {
+						if (v === ">")
+							tree.close(v);
+						else if ((/\s/).test(v))
+							tree.open("attribute", v);
+						else
+							tree.add(v);
+					}
+					else if (tag === "attribute") {
+						if (quote === null && v === "'" || v === "\"") {
+							tree.open("string", v);
+							quote = v;
+						} else if (v === "/" && a[i+1] === ">") {
+							tree.close();
+							tree.add(v);
+						} else if (v === ">") {
+							tree.close();
+							tree.close(v);
+						} else {
+							tree.add(v);
+						}
+					}
+					else if (tag === "string") {
+						if (quote === v && a[i-1] !== "\\") {
+							tree.close(v);
+							quote = null;
+						} else {
+							tree.add(v);
+						}
+					}
+					else {
+						tree.add(v);
+					}
 					return;
 				});
-				if (!tag)              markup.push("</wd-code-content>");
-				else if (tag)          markup.push("</wd-code-tag>");
-				else if (str !== null) markup.push("</wd-code-string>");
+				tree.finish();
 
-				let base   = markup.join("");
-				const start = /(\<wd\-code\-tag\>)([^\s/]+)/gm;
-				const close = /(()(\<\/wd\-code\-tag\>)/;
-
-
-
-
-				this._code = base;
+				this._code = tree.data;
 
 			}
 		},
@@ -2128,7 +2221,7 @@ const wd = (function() {
 				};
 				let number = [];
 				for (let i in re) number.push(re[i]);
-				this._setTags(number.join("|"), "wd-code-vars");
+				this._setTags(number.join("|"), "wd-code-var");
 				return;
 			}
 		},
@@ -2136,7 +2229,7 @@ const wd = (function() {
 		_setKeys: {
 			value: function() {
 				for (let v of this.config().keys)
-					this._setTags(v, "wd-code-keys");
+					this._setTags(v, "wd-code-key");
 				return;
 			}
 		},
@@ -2144,7 +2237,7 @@ const wd = (function() {
 		_setVars: {
 			value: function() {
 				for (let v of this.config().vars)
-					this._setTags(v, "wd-code-vars");
+					this._setTags(v, "wd-code-var");
 				return;
 			}
 		},
