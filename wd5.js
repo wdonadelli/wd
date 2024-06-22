@@ -458,24 +458,28 @@ const wd = (function() {
 
 
 		"/*-- CODE SECTION --*/",
-		"[data-wd-code] {display: block, position: relative;}",
-		"[data-wd-code] {background-color: rgb(238,238,236); color: rgb(46,52,54);}",
-		"[data-wd-code] {font-family: \"Courier New\"; font-size: 14px; }",
-		"[data-wd-code] {text-decoration: none; text-indent: 0; font-style: normal; font-weight: normal;}",
-		"[data-wd-code] {padding: 0.3em 0.3em 0.3em 3em; margin: 0.5em 0;}",
-		"[data-wd-code] {overflow: auto; border-radius: 0.2em;}",
-		"[data-wd-code] {white-space: pre-wrap; counter-reset: wdcodelines;}",
-		"[data-wd-code] * {display: inline; position: static;}",
-		"[data-wd-code] wd-code-var      {color: MediumVioletRed;}",
-		"[data-wd-code] wd-code-key      {color: DodgerBlue;}",
-		"[data-wd-code] wd-code-tag       {color: DodgerBlue; font-style: italic;}",
+		"wd-code-root   {display: none, position: static;}",
+		"wd-code-root   {background-color: rgb(30, 30, 30); color: white;}",
+		"wd-code-root   {font-family: \"Courier New\"; font-size: 14px; }",
+		"wd-code-root   {text-decoration: none; text-indent: 0;}",
+		"wd-code-root   {font-style: normal; font-weight: normal;}",
+		"wd-code-root   {padding: 0.3em 0.3em 0.3em 3em; margin: 0.5em 0;}",
+		"wd-code-root   {overflow: auto; border-radius: 0.2em;}",
+		"wd-code-root   {white-space: pre-wrap; counter-reset: wdcodelines;}",
+		"wd-code-root * {display: inline; position: static;}",
+		"wd-code-root * {font-style: normal; font-weight: normal;}",
+		"wd-code-root wd-code-doctype   {color: MediumVioletRed;}",
+		"wd-code-root wd-code-comment   {color: DimGrey; font-style: italic;}",
+		"wd-code-root wd-code-tag       {color: DodgerBlue;}",
+		"wd-code-root wd-code-attribute {color: darkgreen;}",
+		"wd-code-root wd-code-value     {color: violet;}",
+		"[data-wd-code] wd-code-root    {display: block;}",
 
-		"[data-wd-code] wd-code-comment   {color: DimGrey; font-style: italic;}",
-		"[data-wd-code] wd-code-comment * {color: inherit; font-weight: inherit; font-style: inherit;}",
+
+
+		"[data-wd-code] wd-code-key      {color: DodgerBlue;}",
 		"[data-wd-code] wd-code-string    {color: darkgreen;}",
-		"[data-wd-code] wd-code-string *  {color: inherit; font-weight: inherit; font-style: inherit;}",
 		"[data-wd-code] wd-code-text      {color: Sienna; font-weight: inherit; font-style: inherit;}",
-		"[data-wd-code] wd-code-text *    {color: inherit; font-weight: inherit; font-style: inherit;}",
 
 		"[data-wd-code] wd-code-line        {counter-increment: wdcodelines;}",
 		"[data-wd-code] wd-code-line:before {content: counter(wdcodelines);}",
@@ -1810,31 +1814,112 @@ const wd = (function() {
 	});
 
 /*----------------------------------------------------------------------------*/
+	/**### Tree
+	###### ``**constructor** ''object'' __Tree()``
+	Construtor para manipulação de textos com com aberturas e fechamentos de níveis para fins de formação personalizada de código HTML a ser renderizado.**/
+	function __Tree() {
+		if (!(this instanceof __Tree)) return new __Tree();
+		Object.defineProperties(this, {
+			_tree:    {value: []},
+			_data:    {value: []},
+			_pattern: {writable: true, value: "?"}
+		});
+	}
+
+	Object.defineProperties(__Tree.prototype, {
+		constructor: {value: __Tree},
+		/**. ``''string'' _char(''string'' x)``: Retorna o argumento adaptado para exibição HTML.**/
+		_char: {
+			value: function(x) {
+				if (x === undefined || x === null) return "";
+				const chars = String(x).split("");
+				const html  = [
+					/*{a: "_", b: "&#95;"},  {a: "-", b: "&#45;"},
+					{a: ",", b: "&#44;"},  {a: ";", b: "&#59;"},
+					{a: ":", b: "&#58;"},  {a: "!", b: "&#33;"},
+					{a: "?", b: "&#63;"},  {a: ".", b: "&#46;"},
+					{a: "-", b: "&#39;"},  {a: "(", b: "&#40;"},
+					{a: ")", b: "&#41;"},  {a: "[", b: "&#91;"},
+					{a: "]", b: "&#93;"},  {a: "{", b: "&#123;"},
+					{a: "}", b: "&#125;"}, {a: "@", b: "&#64;"},
+					{a: "*", b: "&#42;"},  {a: "/", b: "&#47;"},
+					{a: "\"", b: "&#34;"}, {a: "\\", b: "&#92;"},
+					{a: "&", b: "&#38;"},  {a: "#", b: "&#35;"},
+					{a: "%", b: "&#37;"},  {a: "`", b: "&#96;"},
+					{a: "^", b: "&#94;"},  {a: "+", b: "&#43;"},
+					{a: "<", b: "&#60;"},  {a: "=", b: "&#61;"},
+					{a: ">", b: "&#62;"},  {a: "|", b: "&#124;"},
+					{a: "~", b: "&#126;"}, {a: "$", b: "&#36;"}*/
+					{a: "&", b: "&amp;"},
+					{a: "<", b: "&lt;"},
+					{a: ">", b: "&gt;"}
+				];
+				chars.forEach(function(v,i,a) {
+					for (let h of html)
+						if (v === h.a) a[i] = h.b;
+				});
+				return chars.join("");
+			}
+		},
+		/**. ``''string'' level: Retorna o nome do último nível informado ou nulo se vazio.**/
+		level: {
+			get: function() {
+				if (this._tree.length === 0) return null;
+				return this._tree[this._tree.length - 1];
+			}
+		},
+		/**. ``''string'' pattern(''string'' model)``: Define e retorna um modelo padrão de ''tag'' a ser elaborada a partir do nome do nível. O nome do nível será inserido no modelo a partir da substituição do caracteres de interrogação. Por exemplo, se definido o modelo "span-?" e nível "line", a ''tag'' de abertura será ''<span-line>''. O valor padrão é "?", obtido quando se define o argumento como string vazia ou nulo. Se o argumento for indefinido, retorna o valor.**/
+		pattern: {
+			value: function(model) {
+				if (model === undefined) return this._pattern;
+				const pattern = model === null ? "?" : String(model).replace(/\s+/g, "").trim();
+				this._pattern = pattern.length === 0 ? "?" : pattern;
+				return this._pattern;
+			}
+		},
+		/**. ``''void'' add(''string'' chars)``: Adiciona caracteres à arvore.**/
+		add: {
+			value: function(chars) {
+				this._data.push(this._char(chars));
+			}
+		},
+		/**. ``''void'' open(''string'' name, ''string'' chars)``: Abre um novo nível (``nome``) e adiciona caracteres (``chars``) após abertura.**/
+		open: {
+			value: function(name, chars) {
+				const level = String(name).replace(/\s+/g, "").trim();
+				const elem  = this.pattern().replace(/\?+/g, level);
+				this._tree.push(level);
+				this._data.push("<"+elem+">"+this._char(chars));
+			}
+		},
+		/**. ``''void'' close(''string'' chars)``: Fecha o último nível aberto e adiciona caracteres (``chars``) antes do fechamento.**/
+		close: {
+			value: function(chars) {
+				const elem = this.pattern().replace(/\?+/g, this.level);
+				this._data.push(this._char(chars)+"</"+elem+">");
+				this._tree.pop();
+			}
+		},
+		/**. ``''void'' finish()``: Fecha todos os níveis abertos.**/
+		finish: {
+			value: function() {
+				while (this.level !== null) this.close("");
+			}
+		},
+		/**. ``''string'' toString()``: Retorna o resultado da árvore.**/
+		toString: {
+			value: function() {return this._data.join("");}
+		},
+		/**. ``''string'' valueOf()``: Como o método toString.**/
+		valueOf: {
+			value: function() {return this._data.join("");}
+		}
+	});
+
+/*----------------------------------------------------------------------------*/
 	/**### Code
 	###### ``**constructor** ''object'' __Code(''string'' input)``
 	Construtor para manipulação de textos com formatação de códigos. O argumento ``input`` define o código fonte.**/
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 	function __Code(input) {
 		if (!(this instanceof __Code)) return new __Code(input);
@@ -1859,56 +1944,6 @@ const wd = (function() {
 
 	Object.defineProperties(__Code.prototype, {
 		constructor: {value: __Code},
-		_char: {
-			value: function(x) {
-				const data = [/*
-					{a: "\t", b: "&Tab;"},    {a: " ",  b: "&nbsp;"},
-					{a: "#",  b: "&num;"},    {a: "$",  b: "&dollar;"},
-					{a: "+",  b: "&plus;"},	  {a: "-",  b: "&#45;"},
-					{a: "*",  b: "&ast;"},    {a: "/",  b: "&sol;"},
-					{a: ",",  b: "&comma;"},  {a: ";",  b: "&semi;"},
-					{a: ".",  b: "&period;"},	{a: "!",  b: "&excl;"},
-					{a: "?",  b: "&quest;"},  {a: "%",  b: "&percnt;"},
-					{a: ":",  b: "&colon;"},  {a: "=",  b: "&equals;"},
-					{a: "`",  b: "&grave;"},  {a: "´",  b: "&acute;"},
-					{a: "^",  b: "&hat;"},    {a: "~",  b: "&tilde;"},
-					{a: "@",  b: "&commat;"}, {a: "_",  b: "&lowbar;"},
-					{a: "<",  b: "&lt;"},     {a: ">",  b: "&gt;"},
-					{a: "[",  b: "&lsqb;"},   {a: "]",  b: "&rsqb;"},
-					{a: "(",  b: "&lpar;"},   {a: ")",  b: "&rpar;"},
-					{a: "{",  b: "&lcub;"},   {a: "}",  b: "&rcub;"},
-					{a: "|",  b: "&verbar;"}, {a: "\\", b: "&bsol;"},
-					{a: "\"", b: "&quot;"},	  {a: "'",  b: "&apos;"},
-					{a: "&",  b: "&amp;"}*/
-					/*{a: "_", b: "&#95;"},  {a: "-", b: "&#45;"},
-					{a: ",", b: "&#44;"},  {a: ";", b: "&#59;"},
-					{a: ":", b: "&#58;"},  {a: "!", b: "&#33;"},
-					{a: "?", b: "&#63;"},  {a: ".", b: "&#46;"},
-					{a: "-", b: "&#39;"},  {a: "(", b: "&#40;"},
-					{a: ")", b: "&#41;"},  {a: "[", b: "&#91;"},
-					{a: "]", b: "&#93;"},  {a: "{", b: "&#123;"},
-					{a: "}", b: "&#125;"}, {a: "@", b: "&#64;"},
-					{a: "*", b: "&#42;"},  {a: "/", b: "&#47;"},
-					{a: "\"", b: "&#34;"}, {a: "\\", b: "&#92;"},
-					{a: "&", b: "&#38;"},  {a: "#", b: "&#35;"},
-					{a: "%", b: "&#37;"},  {a: "`", b: "&#96;"},
-					{a: "^", b: "&#94;"},  {a: "+", b: "&#43;"},
-					{a: "<", b: "&#60;"},  {a: "=", b: "&#61;"},
-					{a: ">", b: "&#62;"},  {a: "|", b: "&#124;"},
-					{a: "~", b: "&#126;"}, {a: "$", b: "&#36;"}*/
-					{a:   "&",      b: "&amp;"},
-					{a:   "<",      b: "&lt;"},
-					{a:   ">",      b: "&gt;"}
-
-
-
-
-				];
-				for (let v of data)
-					if (x === v.a) return v.b;
-				return x;
-			}
-		},
 		/**. ``''void'' lang(''string'' x)``: Define ``options`` por meio do nome da linguagem informada em ``x`` (em construção).**/
 		lang: {
 			value: function(x) {
@@ -1966,64 +2001,24 @@ const wd = (function() {
 
 		_setMarkupLanguage: {
 			value: function() {
-				const tree = {
-					_tree: [],
-					_data: [],
-					_char: function(x) {
-						if (x === undefined) return "";
-						const chars = [
-							{a: "&", b: "&amp;"},
-							{a: "<", b: "&lt;"},
-							{a: ">", b: "&gt;"}
-						];
-						for (let v of chars)
-							if (x === v.a) return v.b;
-						return x;
-					},
-					get tag() {
-						if (this._tree.length === 0) return null;
-						return this._tree[this._tree.length - 1];
-					},
-					add: function(char) {
-						this._data.push(this._char(char));
-					},
-					open: function(tag, char) {
-						this._tree.push(tag);
-						this._data.push("<wd-code-"+tag+">"+this._char(char));
-					},
-					close: function(char) {
-						this._data.push(this._char(char)+"</wd-code-"+this.tag+">");
-						this._tree.pop();
-					},
-					finish: function() {
-						while (this.tag !== null) this.close("");
-					},
-					get data() {
-						return this._data.join("");
-					}
-				};
-
+				const tree = __Tree();
 				const code = this._input.split("");
 				const self = this;
 				let quote  = null;
-				tree.open("content");
+				tree.pattern("wd-code-?");
+				tree.open("root");
 				tree.open("line");
 				tree.close();
 
 				code.forEach(function(v,i,a) {
-					//const char = self._char(v);
-					const tag  = tree.tag;
-
-
-					//FIXME pre e script
+					const tag = tree.level;
 
 					if (v === "\n") {
 						tree.add(v);
 						tree.open("line")
 						tree.close();
-						return;
 					}
-					if (tag === "content") {
+					else if (tag === "root") {
 						if (v === "<") {
 							if (a[i+1] === "!" && a[i+2] === "-" && a[i+3] === "-")
 								tree.open("comment", v);
@@ -2057,7 +2052,7 @@ const wd = (function() {
 					}
 					else if (tag === "attribute") {
 						if (quote === null && v === "'" || v === "\"") {
-							tree.open("string", v);
+							tree.open("value", v);
 							quote = v;
 						} else if (v === "/" && a[i+1] === ">") {
 							tree.close();
@@ -2069,7 +2064,7 @@ const wd = (function() {
 							tree.add(v);
 						}
 					}
-					else if (tag === "string") {
+					else if (tag === "value") {
 						if (quote === v && a[i-1] !== "\\") {
 							tree.close(v);
 							quote = null;
@@ -2084,8 +2079,8 @@ const wd = (function() {
 				});
 				tree.finish();
 
-				this._code = tree.data;
-
+				//FIXME pre e script
+				this._code = tree.toString();
 			}
 		},
 
@@ -7661,11 +7656,27 @@ const wd = (function() {
 	function data_wdCode(e, event) {//FIXME pendente
 		if (!("wdCode" in e.dataset)) return;
 		if (__Node(e).form) return;
-		const data  = __String(e.dataset.wdCode).wdNotation[0];
-		const code  = __Code(e.innerText);
+
+		const data   = __String(e.dataset.wdCode).wdNotation[0];
+		const childs = e.children;
+		const root   = childs.length === 1 ? childs[0].nodeName.toLowerCase() : "";
+		e.spellcheck = false;
+		e.translate  = false;
+
+		let code = __Code(e.innerText);
+		/*if (root === "wd-code-root")
+			code = __Code(e.innerText);
+		else
+			code = __Code(e.innerHTML);*/
+
+
+
+
 		if ("lang" in data) code.lang(data.lang);
 		else code.config(data);
-		e.spellcheck = false;
+
+
+
 		if (event.type === "focusin") {
 			e.innerText  = code.toString();
 		} else {
