@@ -468,6 +468,7 @@ const wd = (function() {
 		"wd-code-root   {white-space: pre-wrap; counter-reset: wdcodelines;}",
 		"wd-code-root * {display: inline; position: static;}",
 		"wd-code-root * {font-style: normal; font-weight: normal;}",
+		"wd-code-root wd-code-content   {color: yellow;}",
 		"wd-code-root wd-code-doctype   {color: MediumVioletRed;}",
 		"wd-code-root wd-code-comment   {color: DimGrey; font-style: italic;}",
 		"wd-code-root wd-code-tag       {color: DodgerBlue;}",
@@ -1852,7 +1853,8 @@ const wd = (function() {
 					{a: "~", b: "&#126;"}, {a: "$", b: "&#36;"}*/
 					{a: "&", b: "&amp;"},
 					{a: "<", b: "&lt;"},
-					{a: ">", b: "&gt;"}
+					{a: ">", b: "&gt;"},
+					{a: "\n", b: "</br>"}
 				];
 				chars.forEach(function(v,i,a) {
 					for (let h of html)
@@ -1861,7 +1863,7 @@ const wd = (function() {
 				return chars.join("");
 			}
 		},
-		/**. ``''string'' level: Retorna o nome do último nível informado ou nulo se vazio.**/
+		/**. ``''string'' level``: Retorna o nome do último nível informado ou nulo se vazio.**/
 		level: {
 			get: function() {
 				if (this._tree.length === 0) return null;
@@ -2009,17 +2011,21 @@ const wd = (function() {
 				tree.open("root");
 				tree.open("line");
 				tree.close();
+				tree.open("content");
 
 				code.forEach(function(v,i,a) {
 					const tag = tree.level;
 
 					if (v === "\n") {
+						tree.close();
 						tree.add(v);
 						tree.open("line")
 						tree.close();
+						tree.open(tag);
 					}
-					else if (tag === "root") {
-						if (v === "<") {
+					else if (tag === "content") {
+						if (v === "<" && !(/\s/).test(a[i+1])) {
+							tree.close();
 							if (a[i+1] === "!" && a[i+2] === "-" && a[i+3] === "-")
 								tree.open("comment", v);
 							else if ((/[!?]/).test(a[i+1]))
@@ -2031,21 +2037,18 @@ const wd = (function() {
 						}
 					}
 					else if (tag === "comment") {
-						if (v === ">" && a[i-1] === "-" && a[i-2] === "-")
+						if (v === ">" && a[i-1] === "-" && a[i-2] === "-") {
 							tree.close(v);
-						else
+							tree.open("content");
+						}	else {
 							tree.add(v);
+						}
 					}
-					else if (tag === "doctype") {
-						if (v === ">")
+					else if (tag === "tag" || tag === "doctype") {
+						if (v === ">") {
 							tree.close(v);
-						else
-							tree.add(v);
-					}
-					else if (tag === "tag") {
-						if (v === ">")
-							tree.close(v);
-						else if ((/\s/).test(v))
+							tree.open("content");
+						} else if ((/\s/).test(v))
 							tree.open("attribute", v);
 						else
 							tree.add(v);
@@ -2060,6 +2063,7 @@ const wd = (function() {
 						} else if (v === ">") {
 							tree.close();
 							tree.close(v);
+							tree.open("content");
 						} else {
 							tree.add(v);
 						}
@@ -2083,6 +2087,95 @@ const wd = (function() {
 				this._code = tree.toString();
 			}
 		},
+
+
+
+		_setLinearLanguage: {
+			value: function() {
+				const tree = __Tree();
+				const code = this._input.split("");
+				const self = this;
+				let  quote = null;
+				tree.pattern("wd-code-?");
+				tree.open("root");
+				tree.open("line");
+				tree.close();
+				tree.open("content");
+
+				code.forEach(function(v,i,a) {
+					const tag = tree.level;
+
+					if (v === "\n") {
+						tree.close();
+						tree.add(v);
+						tree.open("line")
+						tree.close();
+						tree.open(tag);
+					}
+					else if (tag === "content") {
+						const cage = this._getCage(quote, a, i);
+						if (cage === null) {
+							tree.add(v);
+						} else {
+							quote = cage;
+							tree.close();
+							tree.open(cage, v)
+						}
+					}//FIXME criar savePath openRoot openPath em Tree
+					else if (quote !== null) {
+						const cage = this._getCage(quote, a, i);
+						if (cage === null) {
+							tree.add(v);
+						} else {
+							quote = null;
+							tree.close(v);
+							tree.open("content");
+						}
+					}
+					else {
+						tree.add(v);
+					}
+					return;
+				});
+				tree.finish();
+
+				//FIXME pre e script
+				this._code = tree.toString();
+			}
+		},
+
+
+
+		_checkAround: {
+			value: function(array, item, chars, direction) {
+				const list  = chars.split("");
+				const ahead = !__Type(direction).negative;
+				let i = -1;
+				while (++i < list.length) {
+					let index = ahead ? item : (item - (list.length - 1));
+					if (list[i] !== array[index + i]) return false;
+				}
+				return true;
+			}
+		},
+
+
+		// 0  1  2
+		// a  b  c
+		//-2 -1  0
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2123,27 +2216,6 @@ const wd = (function() {
 				];
 				for (let i of re)
 					this._code = this._code.replace(i.a, i.b);
-				return;
-			}
-		},
-		/**. ``''void'' _setHTML()``: Adiciona tags XML/HTML, se for o caso..**/
-		_setHTML: {
-			value: function() {
-				if (!this._html) return;
-				//FIXME falta o <!DOCTYPE html>
-
-
-
-				const content = /\&gt\;(.+)\&lt\;/gm;
-				const output  = "&gt;<wd-code-text>$1</wd-code-text>&lt;"
-				this._code    = this._code.replace(content, output);
-				const comment = /(\&lt\;\!\-\-)(.+)?(\-\-\&gt\;)/gm;
-				const value   = "<wd-code-comment>$1$2$3</wd-code-comment>";
-				this._code    = this._code.replace(comment, value);
-				/* https://html.spec.whatwg.org/multipage/custom-elements.html#valid-custom-element-name */
-				const tags    = /(\&lt\;\/?\??[a-z0-9.\-_]+|[a-z0-9._ ]?\&gt\;)/gim;
-				const mark    = "<wd-code-tag>$1</wd-code-tag>";
-				this._code    = this._code.replace(tags, mark);
 				return;
 			}
 		},
@@ -2220,63 +2292,15 @@ const wd = (function() {
 				return;
 			}
 		},
-		/**. ``''void'' _setKeys()``: Define a formatação das palavras reservadas.**/
-		_setKeys: {
-			value: function() {
-				for (let v of this.config().keys)
-					this._setTags(v, "wd-code-key");
-				return;
-			}
-		},
-		/**. ``''void'' _setVars()``: Define a formatação das variáveis.**/
-		_setVars: {
-			value: function() {
-				for (let v of this.config().vars)
-					this._setTags(v, "wd-code-var");
-				return;
-			}
-		},
-		/**. ``''void'' _setLines()``: Define anumeração das linhas.**/
-		_setLines: {
-			value: function() {
-				const lines = this._code.split("\n");
-				lines.forEach(function(v,i,a) {
-					a[i] = "<wd-code-line></wd-code-line>"+v;
-				});
-				this._code = lines.join("\n");
-			}
-		},
-		/**. ``''void'' _run()``: Define a código codificado para renderização HTML.**/
-		_run: {
-			value: function() {
-				if (this._markup) {
-					this._setMarkupLanguage();
-					return;
-				}
-
-
-
-
-
-				this._code = this.toString();
-
-
-
-
-				this._changeChars();
-
-				this._setCages();
-				this._setHTML();
-				this._setNumbers();
-				this._setKeys();
-				this._setVars();
-				this._setLines();
-			}
-		},
 		/**. ``''string'' valueOf()``: Retorna o código formatado para HTML.**/
 		valueOf: {
 			value: function() {
-				if (this._code === null) this._run();
+				if (this._code === null) {
+					if (this._markup)
+						this._setMarkupLanguage();
+					else
+						this._setLinearLanguage();
+				}
 				return  this._code;
 			}
 		},
