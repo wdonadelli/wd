@@ -1851,10 +1851,8 @@ const wd = (function() {
 					{a: "<", b: "&#60;"},  {a: "=", b: "&#61;"},
 					{a: ">", b: "&#62;"},  {a: "|", b: "&#124;"},
 					{a: "~", b: "&#126;"}, {a: "$", b: "&#36;"}*/
-					{a: "&", b: "&amp;"},
-					{a: "<", b: "&lt;"},
-					{a: ">", b: "&gt;"},
-					{a: "\n", b: "</br>"}
+					{a: "&",  b: "&amp;"}, {a: "<",  b: "&lt;"},  {a: ">", b: "&gt;"},
+					{a: "\n", b: "</br>"}, {a: "\t", b: "&Tab;"}, {a: " ", b: "&nbsp;"}
 				];
 				chars.forEach(function(v,i,a) {
 					for (let h of html)
@@ -2024,20 +2022,21 @@ const wd = (function() {
 						tree.open(tag);
 					}
 					else if (tag === "content") {
-						if (v === "<" && !(/\s/).test(a[i+1])) {
+						if (self._checkAround(a, i, "<!--", 1)) {
 							tree.close();
-							if (a[i+1] === "!" && a[i+2] === "-" && a[i+3] === "-")
-								tree.open("comment", v);
-							else if ((/[!?]/).test(a[i+1]))
-								tree.open("doctype", v);
-							else
-								tree.open("tag", v);
+							tree.open("comment", v);
+						} else if (self._checkAround(a, i, /^\<[!?]/, 1)) {
+							tree.close();
+							tree.open("doctype", v);
+						} else if (self._checkAround(a, i, /^\<\S/, 1)) {
+							tree.close();
+							tree.open("tag", v);
 						} else {
 							tree.add(v);
 						}
 					}
 					else if (tag === "comment") {
-						if (v === ">" && a[i-1] === "-" && a[i-2] === "-") {
+						if (self._checkAround(a, i, "-->", -1)) {
 							tree.close(v);
 							tree.open("content");
 						}	else {
@@ -2054,10 +2053,10 @@ const wd = (function() {
 							tree.add(v);
 					}
 					else if (tag === "attribute") {
-						if (quote === null && v === "'" || v === "\"") {
+						if (quote === null && (/['"]/).test(v)) {
 							tree.open("value", v);
 							quote = v;
-						} else if (v === "/" && a[i+1] === ">") {
+						} else if (self._checkAround(a, i, "/>", 1)) {
 							tree.close();
 							tree.add(v);
 						} else if (v === ">") {
@@ -2113,7 +2112,7 @@ const wd = (function() {
 						tree.open(tag);
 					}
 					else if (tag === "content") {
-						const cage = this._getCage(quote, a, i);
+						const cage = self._getCage(quote, a, i);
 						if (cage === null) {
 							tree.add(v);
 						} else {
@@ -2123,7 +2122,7 @@ const wd = (function() {
 						}
 					}//FIXME criar savePath openRoot openPath em Tree
 					else if (quote !== null) {
-						const cage = this._getCage(quote, a, i);
+						const cage = self._getCage(quote, a, i);
 						if (cage === null) {
 							tree.add(v);
 						} else {
@@ -2148,33 +2147,18 @@ const wd = (function() {
 
 		_checkAround: {
 			value: function(array, item, chars, direction) {
-				const list  = chars.split("");
 				const ahead = !__Type(direction).negative;
-				let i = -1;
-				while (++i < list.length) {
-					let index = ahead ? item : (item - (list.length - 1));
-					if (list[i] !== array[index + i]) return false;
-				}
-				return true;
+				const start = ahead ? item     : 0;
+				const close = ahead ? Infinity : item + 1;
+				const text  = array.join("").substring(start, close);
+				if (__Type(chars).regexp)
+					return chars.test(text);
+				else if (ahead)
+					return chars === text.substring(0, chars.length);
+				else
+					return chars === text.substring(text.length - chars.length, Infinity);
 			}
 		},
-
-
-		// 0  1  2
-		// a  b  c
-		//-2 -1  0
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
