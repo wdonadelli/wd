@@ -1823,7 +1823,8 @@ const wd = (function() {
 		Object.defineProperties(this, {
 			_tree:    {value: []},
 			_data:    {value: []},
-			_pattern: {writable: true, value: "?"}
+			_pattern: {writable: true, value: "?"},
+			_save:    {writable: true, value: []}
 		});
 	}
 
@@ -1835,22 +1836,6 @@ const wd = (function() {
 				if (x === undefined || x === null) return "";
 				const chars = String(x).split("");
 				const html  = [
-					/*{a: "_", b: "&#95;"},  {a: "-", b: "&#45;"},
-					{a: ",", b: "&#44;"},  {a: ";", b: "&#59;"},
-					{a: ":", b: "&#58;"},  {a: "!", b: "&#33;"},
-					{a: "?", b: "&#63;"},  {a: ".", b: "&#46;"},
-					{a: "-", b: "&#39;"},  {a: "(", b: "&#40;"},
-					{a: ")", b: "&#41;"},  {a: "[", b: "&#91;"},
-					{a: "]", b: "&#93;"},  {a: "{", b: "&#123;"},
-					{a: "}", b: "&#125;"}, {a: "@", b: "&#64;"},
-					{a: "*", b: "&#42;"},  {a: "/", b: "&#47;"},
-					{a: "\"", b: "&#34;"}, {a: "\\", b: "&#92;"},
-					{a: "&", b: "&#38;"},  {a: "#", b: "&#35;"},
-					{a: "%", b: "&#37;"},  {a: "`", b: "&#96;"},
-					{a: "^", b: "&#94;"},  {a: "+", b: "&#43;"},
-					{a: "<", b: "&#60;"},  {a: "=", b: "&#61;"},
-					{a: ">", b: "&#62;"},  {a: "|", b: "&#124;"},
-					{a: "~", b: "&#126;"}, {a: "$", b: "&#36;"}*/
 					{a: "&",  b: "&amp;"}, {a: "<",  b: "&lt;"},  {a: ">", b: "&gt;"},
 					{a: "\n", b: "</br>"}, {a: "\t", b: "&Tab;"}, {a: " ", b: "&nbsp;"}
 				];
@@ -1877,33 +1862,59 @@ const wd = (function() {
 				return this._pattern;
 			}
 		},
-		/**. ``''void'' add(''string'' chars)``: Adiciona caracteres à arvore.**/
+		/**. ``''self'' add(''string'' chars)``: Adiciona caracteres à arvore.**/
 		add: {
 			value: function(chars) {
 				this._data.push(this._char(chars));
+				return this;
 			}
 		},
-		/**. ``''void'' open(''string'' name, ''string'' chars)``: Abre um novo nível (``nome``) e adiciona caracteres (``chars``) após abertura.**/
+		/**. ``''self'' open(''string'' name, ''string'' chars)``: Abre um novo nível (``nome``) e adiciona caracteres (``chars``) após abertura.**/
 		open: {
 			value: function(name, chars) {
 				const level = String(name).replace(/\s+/g, "").trim();
 				const elem  = this.pattern().replace(/\?+/g, level);
 				this._tree.push(level);
 				this._data.push("<"+elem+">"+this._char(chars));
+				return this;
 			}
 		},
-		/**. ``''void'' close(''string'' chars)``: Fecha o último nível aberto e adiciona caracteres (``chars``) antes do fechamento.**/
+		/**. ``''self'' close(''string'' chars)``: Fecha o último nível aberto e adiciona caracteres (``chars``) antes do fechamento.**/
 		close: {
 			value: function(chars) {
 				const elem = this.pattern().replace(/\?+/g, this.level);
 				this._data.push(this._char(chars)+"</"+elem+">");
 				this._tree.pop();
+				return this;
 			}
 		},
-		/**. ``''void'' finish()``: Fecha todos os níveis abertos.**/
+		/**. ``''self'' finish()``: Fecha todos os níveis abertos.**/
 		finish: {
 			value: function() {
 				while (this.level !== null) this.close("");
+				return this;
+			}
+		},
+		/**. ``''self'' walkTo(''integer'' level)``: Fechar todos os níveis até o nível informado em ''level'', salvando o caminho para restauração através do método ''backTo''.**/
+		walkTo: {
+			value: function(level) {
+				const check = __Type(level);
+				if (check.integer && !check.negative && check.value < this._tree.length) {
+					this._save = this._tree.slice();
+					while (this._tree.length > check.value) this.close();
+				}
+				return this;
+			}
+		},
+		/**. ``''self'' backTo()``: Reabre os caminhos fechados em ''walkToTo''.**/
+		backTo: {
+			value: function() {
+				if (this._tree.length < this._save.length) {
+					for (let i = this._tree.length; i < this._save.length; i++)
+						this.open(this._save[i], "");
+					this._save = [];
+				}
+				return this;
 			}
 		},
 		/**. ``''string'' toString()``: Retorna o resultado da árvore.**/
@@ -1934,10 +1945,10 @@ const wd = (function() {
 			_input:  {writable: false, value: input},
 			_code:   {writable: true,  value: null},
 			_config: {writable: true,  value: {
-				string:  ["\"", "\"", "\'", "\'"],
-				comment: ["//", "\n", "/*", "*/"],
-				keys:    [],
-				vars:    [],
+				string:   ["\"", "\"", "\'", "\'"],
+				comment:  ["//", "\n", "/*", "*/"],
+				reserved: [],
+				values:   [],
 			}}
 		});
 	}
@@ -1949,26 +1960,21 @@ const wd = (function() {
 			value: function(x) {
 				const codes = {
 					javascript: {
-						keys: "break case catch class const continue debugger default delete do else export extends finally for function if import in instanceof new return super switch throw try typeof var void while with let static yied await",
-						vars: "false null this true undefined NaN [-+]Infinity",
+						reserved: "break case catch class const continue debugger default delete do else export extends finally for function if import in instanceof new return super switch throw try typeof var void while with let static yied await",
+						value: "false null this true undefined NaN [-+]Infinity",
 						comment: "// \n /* */",
 						string: "' ' ` ` \" \""
 					},
 					python: {
-						keys: "and as assert break class continue def del elif else except finally for from global if import in is lambda nonlocal not or pass raise return try while with yield",
-						vars: "False None True",
+						reserved: "and as assert break class continue def del elif else except finally for from global if import in is lambda nonlocal not or pass raise return try while with yield",
+						value: "False None True",
 						comment: "# \n",
 						string: "' ' \" \""
 					},
 					c: {
-						keys: "asm auto break case char const continue default do double else enum extern float for goto if int long register return short signed sizeof static struct switch typedef union unsigned void volatile while #define",
+						reserved: "asm auto break case char const continue default do double else enum extern float for goto if int long register return short signed sizeof static struct switch typedef union unsigned void volatile while #define",
+						value: "",
 						comment: "// \n /* */",
-						string: "' ' \" \""
-					},
-					html: {
-						vars: "",
-						keys: "",
-						comment: "",
 						string: "' ' \" \""
 					}
 				};
@@ -1981,19 +1987,72 @@ const wd = (function() {
 				return;
 			}
 		},
-		/**. ``''object'' config(''object'' data)``: Define ou retorna os dados dde configuração da linguagem. O argumento ``data`` possui as propriedades ''string'', ''comment'', ''keys'' e ``vars``, cujos valores são arrays. Nas propriedades ''keys'' e ``vars`` devem ser informadas as palavras reservadas e variáveis, respectivamente, da linguagem, as demais devem ser informadas, em sequência, os caracteres de abertura e fechamento do respectivo propósito.**/
+		/**. ``''object'' config(''object'' data)``: Define ou retorna os dados de configuração da linguagem. O argumento ``data`` possui as seguintes propriedades cujo valor deve ser um array:
+		|Nome|Descrição|
+		|string|Pares de abertura e fechamento de strings. Ex.: ``["\"", "\"", "'", "'"]``|
+		|comment|Pares de abertura e fechamento de cometários. Ex.: ``["//", "\n", "#", "\n"]``|
+		|reserved|Palavras reservadas. Ex.: ``["let", "function", "var"]``|
+		|values|Valores especiais. Ex.: ``["null", "undefined"]``|
+		Os valores podem ser em forma de string (preferencial) ou expressão regular.**/
 		config: {
 			value: function(data) {
-				if (!__Type(data).object) {
-					let cfg = {};
-					for (let i in this._config) cfg[i] = this._config[i];
-					return cfg;
+				const cfg = {};
+				for (let i in this._config) cfg[i] = this._config[i];
+
+				if (__Type(data).object) {
+					for (let i in cfg) {
+						cfg[i] = [];
+						if (i in data && __Type(data[i]).array) {
+							data[i].forEach(function(v,j,a) {
+								const check = __Type(v);
+								if (check.nonempty || check.regexp)
+									cfg[i].push(check.nonempty ? v.trim() : v);
+							});
+						}
+					}
+					for (let i in cfg) this._config[i] = cfg[i];
 				}
-				for (let i in this._config) {
-					if (i in data && __Type(data[i]).array)
-						this._config[i] = data[i];
-				}
-				return this.config();
+				return cfg;
+			}
+		},
+
+
+
+		_getCage: {
+			value: function() {
+				const cage = [];
+				const cfg  = this.config();
+				for (let i = 0; i < cfg.string; i += 2)
+					cage.push({type: "string", a: cfg.string[i], b: cfg.string[i+1]});
+				for (let i = 0; i < cfg.comment; i += 2)
+					cage.push({type: "comment", a: cfg.comment[i], b: cfg.comment[i+1]});
+				cage.sort(function(x,y) {
+					const A = __Type(x.a).nonempty ? x.a.length : null;
+					const B = __Type(y.a).nonempty ? y.a.length : null;
+					if (A === B)    return  0;
+					if (A === null) return  1;
+					if (A > B)      return -1;
+					return 0;
+				});
+				return cage;
+			}
+		},
+
+
+
+
+		_checkAround: {
+			value: function(array, item, chars, direction) {
+				const ahead = !__Type(direction).negative;
+				const start = ahead ? item     : 0;
+				const close = ahead ? Infinity : item + 1;
+				const text  = array.join("").substring(start, close);
+				if (__Type(chars).regexp)
+					return chars.test(text);
+				else if (ahead)
+					return chars === text.substring(0, chars.length);
+				else
+					return chars === text.substring(text.length - chars.length, Infinity);
 			}
 		},
 
@@ -2006,63 +2065,49 @@ const wd = (function() {
 				const self = this;
 				let quote  = null;
 				tree.pattern("wd-code-?");
-				tree.open("root");
-				tree.open("line");
-				tree.close();
-				tree.open("content");
+				tree.open("root").open("line").close().open("content");
 
 				code.forEach(function(v,i,a) {
 					const tag = tree.level;
 
 					if (v === "\n") {
-						tree.close();
-						tree.add(v);
-						tree.open("line")
-						tree.close();
-						tree.open(tag);
+						tree.walkTo(1).add(v).open("line").close().backTo();
 					}
 					else if (tag === "content") {
 						if (self._checkAround(a, i, "<!--", 1)) {
-							tree.close();
-							tree.open("comment", v);
+							tree.close().open("comment", v);
 						} else if (self._checkAround(a, i, /^\<[!?]/, 1)) {
-							tree.close();
-							tree.open("doctype", v);
+							tree.close().open("doctype", v);
 						} else if (self._checkAround(a, i, /^\<\S/, 1)) {
-							tree.close();
-							tree.open("tag", v);
+							tree.close().open("tag", v);
 						} else {
 							tree.add(v);
 						}
 					}
 					else if (tag === "comment") {
 						if (self._checkAround(a, i, "-->", -1)) {
-							tree.close(v);
-							tree.open("content");
+							tree.close(v).open("content");
 						}	else {
 							tree.add(v);
 						}
 					}
 					else if (tag === "tag" || tag === "doctype") {
 						if (v === ">") {
-							tree.close(v);
-							tree.open("content");
-						} else if ((/\s/).test(v))
+							tree.close(v).open("content");
+						} else if ((/\s/).test(v)) {
 							tree.open("attribute", v);
-						else
+						} else {
 							tree.add(v);
+						}
 					}
 					else if (tag === "attribute") {
 						if (quote === null && (/['"]/).test(v)) {
 							tree.open("value", v);
 							quote = v;
-						} else if (self._checkAround(a, i, "/>", 1)) {
-							tree.close();
-							tree.add(v);
+						} else if (self._checkAround(a, i, /^[\/\?]\>//*"/>"*/, 1)) {
+							tree.close().add(v);
 						} else if (v === ">") {
-							tree.close();
-							tree.close(v);
-							tree.open("content");
+							tree.close().close(v).open("content");
 						} else {
 							tree.add(v);
 						}
@@ -2096,20 +2141,13 @@ const wd = (function() {
 				const self = this;
 				let  quote = null;
 				tree.pattern("wd-code-?");
-				tree.open("root");
-				tree.open("line");
-				tree.close();
-				tree.open("content");
+				tree.open("root").open("line").close().open("content");
 
 				code.forEach(function(v,i,a) {
 					const tag = tree.level;
 
 					if (v === "\n") {
-						tree.close();
-						tree.add(v);
-						tree.open("line")
-						tree.close();
-						tree.open(tag);
+						tree.walkTo(1).add(v).open("line").close().backTo();
 					}
 					else if (tag === "content") {
 						const cage = self._getCage(quote, a, i);
@@ -2145,20 +2183,7 @@ const wd = (function() {
 
 
 
-		_checkAround: {
-			value: function(array, item, chars, direction) {
-				const ahead = !__Type(direction).negative;
-				const start = ahead ? item     : 0;
-				const close = ahead ? Infinity : item + 1;
-				const text  = array.join("").substring(start, close);
-				if (__Type(chars).regexp)
-					return chars.test(text);
-				else if (ahead)
-					return chars === text.substring(0, chars.length);
-				else
-					return chars === text.substring(text.length - chars.length, Infinity);
-			}
-		},
+
 
 
 
