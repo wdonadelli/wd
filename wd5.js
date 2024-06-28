@@ -474,6 +474,7 @@ const wd = (function() {
 		"wd-code-root wd-code-tag       {color: DodgerBlue;}",
 		"wd-code-root wd-code-attribute {color: darkgreen;}",
 		"wd-code-root wd-code-value     {color: violet;}",
+		"wd-code-root wd-code-reserved  {color: MediumVioletRed;}",
 		"[data-wd-code] wd-code-root    {display: block;}",
 
 
@@ -1940,17 +1941,26 @@ const wd = (function() {
 		const close  = /\<\/?[a-z0-9.\-_:?!]+([^\>]+)?\>$/i;
 		const markup = start.test(text) && close.test(text);
 		Object.defineProperties(this, {
-			_markup: {writable: false, value: markup},
-			_xml:    {writable: false, value: markup && (/^\<\?/).test(text)},
-			_input:  {writable: false, value: input},
-			_code:   {writable: true,  value: null},
-			_config: {writable: true,  value: {
+			_markup: {value: markup},
+			_input:  {value: input},
+			_code:   {value: null, writable: true},
+			_config: {value: {
 				string:   ["\"", "\"", "\'", "\'"],
 				comment:  ["//", "\n", "/*", "*/"],
 				reserved: [],
-				values:   [],
-			}}
+				value:    []
+			}},
+			_numbers: {value: [
+					"[+\\-]?\\d+\\.\\d+[eE][+\\-]?\\d+",
+					"[+\\-]?\\.\\d+[eE][+\\-]?\\d+",
+					"[+\\-]?\\d+[eE][+\\-]?\\d+",
+					"[+\\-]?\\d+\\.\\d+",
+					"[+\\-]?\\.\\d+",
+					"[+\\-]?\\d+"
+				]}
 		});
+		this.lang("javascript");
+		return;
 	}
 
 	Object.defineProperties(__Code.prototype, {
@@ -1961,9 +1971,15 @@ const wd = (function() {
 				const codes = {
 					javascript: {
 						reserved: "break case catch class const continue debugger default delete do else export extends finally for function if import in instanceof new return super switch throw try typeof var void while with let static yied await",
-						value: "false null this true undefined NaN [-+]Infinity",
+						value: "false null this true undefined NaN Infinity",
 						comment: "// \n /* */",
 						string: "' ' ` ` \" \""
+					},
+					css: {
+						reserved: "calc\\(",
+						value: "false null true",
+						comment: "/* */",
+						string: "' ' \" \""
 					},
 					python: {
 						reserved: "and as assert break class continue def del elif else except finally for from global if import in is lambda nonlocal not or pass raise return try while with yield",
@@ -1978,22 +1994,23 @@ const wd = (function() {
 						string: "' ' \" \""
 					}
 				};
+
 				x = String(x).toLowerCase();
 				if (x in codes)	{
-					let code = codes[x];
-					for (let i in code) code[i] = code[i].split(" ");
-					this.config(code);
+					const data = {};
+					for (let i in codes[x])
+						data[i] = codes[x][i].split(" ");
+					this.config(data);
 				}
 				return;
 			}
 		},
-		/**. ``''object'' config(''object'' data)``: Define ou retorna os dados de configuração da linguagem. O argumento ``data`` possui as seguintes propriedades cujo valor deve ser um array:
+		/**. ``''object'' config(''object'' data)``: Define ou retorna os dados de configuração da linguagem. O argumento ``data`` possui as seguintes propriedades cujo valor deve ser um array de strings:
 		|Nome|Descrição|
 		|string|Pares de abertura e fechamento de strings. Ex.: ``["\"", "\"", "'", "'"]``|
 		|comment|Pares de abertura e fechamento de cometários. Ex.: ``["//", "\n", "#", "\n"]``|
 		|reserved|Palavras reservadas. Ex.: ``["let", "function", "var"]``|
-		|values|Valores especiais. Ex.: ``["null", "undefined"]``|
-		Os valores podem ser em forma de string (preferencial) ou expressão regular.**/
+		|values|Valores especiais. Ex.: ``["null", "undefined"]``|**/
 		config: {
 			value: function(data) {
 				const cfg = {};
@@ -2002,13 +2019,8 @@ const wd = (function() {
 				if (__Type(data).object) {
 					for (let i in cfg) {
 						cfg[i] = [];
-						if (i in data && __Type(data[i]).array) {
-							data[i].forEach(function(v,j,a) {
-								const check = __Type(v);
-								if (check.nonempty || check.regexp)
-									cfg[i].push(check.nonempty ? v.trim() : v);
-							});
-						}
+						if (i in data && __Type(data[i]).array)
+							for (let v of data[i]) cfg[i].push(String(v));
 					}
 					for (let i in cfg) this._config[i] = cfg[i];
 				}
@@ -2018,13 +2030,13 @@ const wd = (function() {
 
 
 
-		_getCage: {
+		_cages: {
 			value: function() {
 				const cage = [];
 				const cfg  = this.config();
-				for (let i = 0; i < cfg.string; i += 2)
+				for (let i = 0; i < cfg.string.length; i += 2)
 					cage.push({type: "string", a: cfg.string[i], b: cfg.string[i+1]});
-				for (let i = 0; i < cfg.comment; i += 2)
+				for (let i = 0; i < cfg.comment.length; i += 2)
 					cage.push({type: "comment", a: cfg.comment[i], b: cfg.comment[i+1]});
 				cage.sort(function(x,y) {
 					const A = __Type(x.a).nonempty ? x.a.length : null;
@@ -2138,35 +2150,53 @@ const wd = (function() {
 			value: function() {
 				const tree = __Tree();
 				const code = this._input.split("");
+				const cage = this._cages();
+				const cfg  = this.config();
 				const self = this;
 				let  quote = null;
-				tree.pattern("wd-code-?");
-				tree.open("root").open("line").close().open("content");
 
+				/* configurando a árevore */
+				tree.pattern("wd-code-?");
+				/* construindo a árvore */
+				tree.open("root").open("line").close().open("content");
 				code.forEach(function(v,i,a) {
 					const tag = tree.level;
 
-					if (v === "\n") {
-						tree.walkTo(1).add(v).open("line").close().backTo();
-					}
-					else if (tag === "content") {
-						const cage = self._getCage(quote, a, i);
-						if (cage === null) {
-							tree.add(v);
-						} else {
-							quote = cage;
-							tree.close();
-							tree.open(cage, v)
+					if (tag === "content") {
+						let scope = null;
+						for (let x of cage) {
+							if (scope === null && self._checkAround(a, i, x.a, 1))
+								scope = x;
 						}
-					}//FIXME criar savePath openRoot openPath em Tree
-					else if (quote !== null) {
-						const cage = self._getCage(quote, a, i);
-						if (cage === null) {
-							tree.add(v);
+						if (scope !== null) {
+							quote = scope.b;
+							tree.close().open(scope.type);
+							if (v === "\n") {
+								tree.walkTo(1).add(v).open("line").close().backTo();
+							} else {
+								tree.add(v);
+							}
 						} else {
-							quote = null;
-							tree.close(v);
-							tree.open("content");
+							if (v === "\n") {
+								tree.walkTo(1).add(v).open("line").close().backTo();
+							} else {
+								tree.add(v);
+							}
+						}
+					}
+					else if (tag === "comment" || tag === "string") {
+						const close = self._checkAround(a, i, quote, -1);
+
+						if (close && a[i-1] !== "\\") {
+							quote === null;
+							if (v === "\n") {
+								tree.close().open("content");
+								tree.walkTo(1).add(v).open("line").close().backTo();
+							} else {
+								tree.close(v).open("content");
+							}
+						} else {
+							tree.add(v);
 						}
 					}
 					else {
@@ -2176,131 +2206,61 @@ const wd = (function() {
 				});
 				tree.finish();
 
-				//FIXME pre e script
-				this._code = tree.toString();
-			}
-		},
-
-
-
-
-
-
-
-
-
-
-		/**. ``''array'' _cages``: Retorna a lista de caracteres de gaiola.**/
-		_cages: {
-			get: function() {
-				const cages = [];
-				const tags  = ["string", "comment"]
-				for (let i in this._config) {
-					if (tags.indexOf(i) >= 0 && this._config[i].length > 0) {
-						let items = this._config[i];
-						for (let j = 0; j < items.length; j += 2) {
-							if (j === items.length - 1) continue;
-							cages.push({
-								a: String(items[j]),
-								b: String(items[j+1]),
-								tag: "wd-code-"+i
-							});
-						}
-					}
+				/* configurando outras tags */
+				const div = document.createElement("DIV");
+				div.innerHTML = tree.toString();
+				const query = div.querySelectorAll("wd-code-content");
+				for (let e of query) {
+					let content = e.innerText;
+					content = this._tags(content, cfg.value, "wd-code-value");
+					content = this._tags(content, cfg.reserved, "wd-code-reserved");
+					content = this._tags(content, this._numbers, "wd-code-value");
+					e.innerHTML = content;
 				}
-				return cages;
+
+				/* definindo o código */
+				this._code = div.innerHTML;
 			}
 		},
-		/**. ``''void'' _changeChars()``: Transforma caracteres especiais.**/
-		_changeChars: {
-			value: function() {
-				const re    = [
-					{a:   /\&/gm,      b: "&amp;"},
-					{a:   /\</gm,      b: "&lt;"},
-					{a:   /\>/gm,      b: "&gt;"},
-					{a: /\\\"/gm,      b: "&bsol;&quot;"},
-					{a: /\\\'/gm,      b: "&bsol;&apos;"},
-					{a: /\\([a-z])/gm, b: "&bsol;$1"},
-					{a: /\t/gm,        b: "  "}
-				];
-				for (let i of re)
-					this._code = this._code.replace(i.a, i.b);
-				return;
-			}
-		},
-		/**. ``''void'' _setCages(''integer'' n)``: Captura e define os conteúdos de gaiola a partir da posição ``n``.**/
-		_setCages: {
-			value: function(n) {
-				if (n > this._code.length) return;
-				/*-- localizar a gaiola que primeiro ocorre --*/
-				const cages = this._cages;
-				let search  = [];
-				for (let v of cages) search.push(this._code.indexOf(v.a, n));
-				const data = __Array(search);
-				data.replace(-1, null);
-				const index1 = data.min;
-				if (index1 === null) return;
-				/*-- localizar a qual gaiola pertence --*/
-				const item   = data.search(index1)[0];
-				const cage   = cages[item];
-				/*-- localizar o fim da gaiola --*/
-				let index2 = this._code.indexOf(cage.b, index1 + cage.a.length);
-				if (index2 < 0) index2 = Infinity;
-				/*-- montar gaiola --*/
-				const tag1   =  "<" + cage.tag + ">";
-				const tag2   = "</" + cage.tag + ">";
-				const outer  = [
-					this._code.substring(0, index1),
-					tag1,
-					this._code.substring(index1, (index2 + cage.b.length)),
-					tag2,
-				].join("");
-				this._code = outer + this._code.substring(index2 + cage.b.length);
-				return this._setCages(outer.length);
-			}
-		},
-		/**. ``''void'' _setTags(''string'' value, ''string'' tag)``: Define a formatação dos valores e palavras reservadas. O argumeto ``tag`` indica a marcação a envolver o valor ``value``.**/
-		_setTags: {
-			value: function(value, tag) {
-				/* IMPORTANTE: <> não entram pois foram trasformadas para &gt; e &lt; */
+
+
+
+
+
+
+
+
+
+
+		/**. ``''void'' _tags(''string'' value, ''string'' tag)``: Define a formatação dos valores e palavras reservadas. O argumeto ``tag`` indica a marcação a envolver o valor ``value``.**/
+		_tags: {
+			value: function(content, list, tag) {
 				const lscope   = "\\(\\{\\[";
 				const rscope   = "\\)\\}\\]";
-				const operator = "\\!=\\|\\&\\%\\/\\*\\^\\?\\:";
+				const operator = "\\!\\=\\|\\&\\+\\-\\%\\/\\*\\^\\?\\:";
 				const punct    = "\\,\\;\\s";
 				const lside    = "(["+lscope+operator+punct+"])";
 				const rside    = "(["+rscope+operator+punct+"])";
-				const checks   = {
+				const check    = {
 					middle: [lside, null, rside],
 					line:   ["^()", null, "()$"],
 					start:  ["^()", null, rside],
 					end:    [lside, null, "()$"],
 				};
-				for (let i in checks) {
-					checks[i][1] = (/^\(.+\)$/).test(value) ? value : "("+value+")";
-					let re  = new RegExp(checks[i].join(""));
-					while (re.test(this._code))
-						this._code = this._code.replace(re, "$1<"+tag+">$2</"+tag+">$3");
+				for (let v of list) {
+					for (let i in check) {
+						check[i][1] = "("+v+")";
+						let re = new RegExp(check[i].join(""));
+						while (re.test(content))
+							content = content.replace(re, "$1<"+tag+">$2</"+tag+">$3");
+					}
 				}
-				return;
+				return content;
 			}
 		},
-		/**. ``''void'' _setNumbers()``: Define a formatação dos números.**/
-		_setNumbers: {
-			value: function() {
-				const re = {
-					floatE:    "[+\\-]?\\d+\\.\\d+[eE][+\\-]?\\d+",
-					floatE2:   "[+\\-]?\\.\\d+[eE][+\\-]?\\d+",
-					integerE:  "[+\\-]?\\d+[eE][+\\-]?\\d+",
-					float:     "[+\\-]?\\d+\\.\\d+",
-					float2:    "[+\\-]?\\.\\d+",
-					integer:   "[+\\-]?\\d+"
-				};
-				let number = [];
-				for (let i in re) number.push(re[i]);
-				this._setTags(number.join("|"), "wd-code-var");
-				return;
-			}
-		},
+
+
+
 		/**. ``''string'' valueOf()``: Retorna o código formatado para HTML.**/
 		valueOf: {
 			value: function() {
@@ -3366,14 +3326,14 @@ const wd = (function() {
 				type: {
 					reset:  {value: "value", text: "inner", send: 0, check: null},
 					button: {value: "value", text: "inner", send: 0, check: null},
-					submit: {value: "value", text: "inner", send: 0, check: null},
+					submit: {value: "value", text: "inner", send: 1, check: null},
 				}
 			},
 			input: {
 				type: {
 					button:           {value: "value", text: "value", send: 0, check:        null},
 					reset:            {value: "value", text: "value", send: 0, check:        null},
-					submit:           {value: "value", text: "value", send: 0, check:        null},
+					submit:           {value: "value", text: "value", send: 1, check:        null},
 					image:            {value: "value", text: "value", send: 0, check:        null},
 					color:            {value: "value", text:    null, send: 1, check:        null},
 					radio:            {value: "check", text:    null, send: 1, check:        null},
@@ -7470,6 +7430,7 @@ const wd = (function() {
 			node:     {value: function(){return __Node.apply(null, Array.prototype.slice.call(arguments));}},
 			number:   {value: function(){return __Number.apply(null, Array.prototype.slice.call(arguments));}},
 			string:   {value: function(){return __String.apply(null, Array.prototype.slice.call(arguments));}},
+			code:     {value: function(){return __Code.apply(null, Array.prototype.slice.call(arguments));}},
 			data2D:   {value: function(){return __Data2D.apply(null, Array.prototype.slice.call(arguments));}},
 			plot:     {value: function(){return __Plot2D.apply(null, Array.prototype.slice.call(arguments));}},
 			request:  {value: function(){return __Request.apply(null, Array.prototype.slice.call(arguments));}},
@@ -8518,7 +8479,7 @@ const wd = (function() {
 	/**###### ``**function** ''void'' wdOnMouse(''object''  ev)``
 	Disparador a ser invocado em eventos de mouse.**/
 	function wdOnMouse(ev) {
-		if (__UNDERMAINTENANCE) console.log({wdOnMouse: ev, target: ev.target});
+		//if (__UNDERMAINTENANCE) console.log({wdOnMouse: ev, target: ev.target});
 		if (event.target.nodeType !== 1) return;
 		const events = {
 			click:      {which: 1, bubbles : true, trigger: [
@@ -8584,6 +8545,7 @@ const wd = (function() {
 		addEventListener: {
 
 			input:     wdOnInput,
+
 			focusout:  wdOnFocusOut,
 			focusin:   wdOnFocusIn,
 
