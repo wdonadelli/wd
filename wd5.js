@@ -458,9 +458,8 @@ const wd = (function() {
 
 
 		"/*-- CODE SECTION --*/",
-		"wd-code-root   {display: none, position: static;}",
-		"wd-code-root   {background-color: rgb(30, 30, 30); color: white;}",
-		"wd-code-root   {font-family: \"Courier New\"; font-size: 14px; }",
+		"[data-wd-code] wd-code-root {display: block;}",
+		"wd-code-root   {font-family: \"Courier New\"; font-size: 14px;}",
 		"wd-code-root   {text-decoration: none; text-indent: 0;}",
 		"wd-code-root   {font-style: normal; font-weight: normal;}",
 		"wd-code-root   {padding: 0.3em 0.3em 0.3em 3em; margin: 0.5em 0;}",
@@ -468,27 +467,21 @@ const wd = (function() {
 		"wd-code-root   {white-space: pre-wrap; counter-reset: wdcodelines;}",
 		"wd-code-root * {display: inline; position: static;}",
 		"wd-code-root * {font-style: normal; font-weight: normal;}",
-		"wd-code-root wd-code-content   {color: yellow;}",
-		"wd-code-root wd-code-doctype   {color: MediumVioletRed;}",
-		"wd-code-root wd-code-comment   {color: DimGrey; font-style: italic;}",
-		"wd-code-root wd-code-tag       {color: DodgerBlue;}",
-		"wd-code-root wd-code-attribute {color: darkgreen;}",
-		"wd-code-root wd-code-value     {color: violet;}",
-		"wd-code-root wd-code-reserved  {color: MediumVioletRed;}",
-		"[data-wd-code] wd-code-root    {display: block;}",
-
-
-
-		"[data-wd-code] wd-code-key      {color: DodgerBlue;}",
-		"[data-wd-code] wd-code-string    {color: darkgreen;}",
-		"[data-wd-code] wd-code-text      {color: Sienna; font-weight: inherit; font-style: inherit;}",
-
-		"[data-wd-code] wd-code-line        {counter-increment: wdcodelines;}",
-		"[data-wd-code] wd-code-line:before {content: counter(wdcodelines);}",
-		"[data-wd-code] wd-code-line:before {display: inline-block; position: relative;}",
-		"[data-wd-code] wd-code-line:before {margin: 0 0 0 -3em; padding-right: 0.5em; min-width: 3em;}",
-		"[data-wd-code] wd-code-line:before {font-weight: normal; font-style: normal;}",
-		"[data-wd-code] wd-code-line:before {color: Gray; text-align: right;}",
+		"wd-code-root wd-code-content     {color: yellow;}",
+		"wd-code-root wd-code-doctype     {color: MediumVioletRed;}",
+		"wd-code-root wd-code-comment     {color: DimGrey; font-style: italic;}",
+		"wd-code-root wd-code-tag         {color: DodgerBlue;}",
+		"wd-code-root wd-code-attribute   {color: darkgreen;}",
+		"wd-code-root wd-code-value       {color: violet;}",
+		"wd-code-root wd-code-reserved    {color: MediumVioletRed;}",
+		"wd-code-root wd-code-tick        {font-style: italic;}",
+		"wd-code-root wd-code-string      {color: darkgreen;}",
+		"wd-code-root wd-code-line        {counter-increment: wdcodelines;}",
+		"wd-code-root wd-code-line:before {content: counter(wdcodelines);}",
+		"wd-code-root wd-code-line:before {display: inline-block; position: relative;}",
+		"wd-code-root wd-code-line:before {margin: 0 0 0 -3em; padding-right: 0.5em; min-width: 3em;}",
+		"wd-code-root wd-code-line:before {font-weight: normal; font-style: normal;}",
+		"wd-code-root wd-code-line:before {color: Gray; text-align: right;}",
 
 
 //TODO interessante https://developer.mozilla.org/en-US/docs/Web/CSS/::file-selector-button
@@ -1959,14 +1952,14 @@ const wd = (function() {
 					"[+\\-]?\\d+"
 				]}
 		});
-		this.lang("javascript");
+		this._lang("javascript");
 		return;
 	}
 
 	Object.defineProperties(__Code.prototype, {
 		constructor: {value: __Code},
-		/**. ``''void'' lang(''string'' x)``: Define ``options`` por meio do nome da linguagem informada em ``x`` (em construção).**/
-		lang: {
+		/**. ``''void'' _lang(''string'' x)``: Define os caracteres especiais de determinada linguagem, sendo o padrão "javascrip").**/
+		_lang: {
 			value: function(x) {
 				const codes = {
 					javascript: {
@@ -1979,18 +1972,6 @@ const wd = (function() {
 						reserved: "calc\\(",
 						value: "false null true",
 						comment: "/* */",
-						string: "' ' \" \""
-					},
-					python: {
-						reserved: "and as assert break class continue def del elif else except finally for from global if import in is lambda nonlocal not or pass raise return try while with yield",
-						value: "False None True",
-						comment: "# \n",
-						string: "' ' \" \""
-					},
-					c: {
-						reserved: "asm auto break case char const continue default do double else enum extern float for goto if int long register return short signed sizeof static struct switch typedef union unsigned void volatile while #define",
-						value: "",
-						comment: "// \n /* */",
 						string: "' ' \" \""
 					}
 				};
@@ -2027,9 +2008,7 @@ const wd = (function() {
 				return cfg;
 			}
 		},
-
-
-
+		/**. ``''array'' _cages()``: Retorna a lista de caracteres de abertura e fechamento de strings e comentários ordenadas da mais específica para a menos específica. Cada item da lista é um objeto cuja abertura está representada pela propriedade ''a'', e fechamento pela ''b'' e o tipo pela ''type''.**/
 		_cages: {
 			value: function() {
 				const cage = [];
@@ -2039,20 +2018,14 @@ const wd = (function() {
 				for (let i = 0; i < cfg.comment.length; i += 2)
 					cage.push({type: "comment", a: cfg.comment[i], b: cfg.comment[i+1]});
 				cage.sort(function(x,y) {
-					const A = __Type(x.a).nonempty ? x.a.length : null;
-					const B = __Type(y.a).nonempty ? y.a.length : null;
-					if (A === B)    return  0;
-					if (A === null) return  1;
-					if (A > B)      return -1;
-					return 0;
+					const A = x.a.length;
+					const B = y.a.length;
+					return A > B ? -1 : (A === B ? 0 : 1);
 				});
 				return cage;
 			}
 		},
-
-
-
-
+		/**. ``''boolean'' _checkAround(''array'' array, ''integer'' item, ''string|regexp'' chars, ''integer'' direction)``: Verifica nas proximidades do ``item`` especificado em array, se casa com a informação presente em ``chars``. Se ``direction`` for negativo, a verificação ocorre para a esquerda, caso contrário, para a direita.**/
 		_checkAround: {
 			value: function(array, item, chars, direction) {
 				const ahead = !__Type(direction).negative;
@@ -2067,9 +2040,44 @@ const wd = (function() {
 					return chars === text.substring(text.length - chars.length, Infinity);
 			}
 		},
-
-
-
+		/**. ``''string'' _tags(''string'' content, ''array'' list, ''string'' tag)``: Define e retorna o conteúdo de ``content`` agasalhando as ocorrências das strings presentes em ``list`` com a ``tag``defininda.**/
+		_tags: {
+			value: function(content, list, tag) {
+				const lscope   = "\\(\\{\\[";
+				const rscope   = "\\)\\}\\]";
+				const operator = "\\!\\=\\|\\&\\+\\-\\%\\/\\*\\^\\?\\:";
+				const punct    = "\\,\\;\\s";
+				const lside    = "(["+lscope+operator+punct+"])";
+				const rside    = "(["+rscope+operator+punct+"])";
+				const tags     = [
+					{
+						re: function   (x) {return lside+"("+x+")"+rside;},
+						to: function (tag) {return"$1<"+tag+">$2</"+tag+">$3";}
+					},
+					{
+						re: function   (x) {return "^("+x+")$";},
+						to: function (tag) {return"<"+tag+">$1</"+tag+">";}
+					},
+					{
+						re: function   (x) {return "^("+x+")"+rside;},
+						to: function (tag) {return"<"+tag+">$1</"+tag+">$2";}
+					},
+					{
+						re: function   (x) {return lside+"("+x+")$";},
+						to: function (tag) {return"$1<"+tag+">$2</"+tag+">";}
+					}
+				];
+				for (let word of list) {
+					for (let html of tags) {
+						let re = new RegExp(html.re(word), "g");
+						let to = html.to(tag);
+						content = content.replace(re, to);
+					}
+				}
+				return content;
+			}
+		},
+		/**. ``''void'' _setMarkupLanguage()``: Define a codificação para linguagens de marcação genéricas.**/
 		_setMarkupLanguage: {
 			value: function() {
 				const tree = __Tree();
@@ -2139,13 +2147,70 @@ const wd = (function() {
 				});
 				tree.finish();
 
+				/* configurando outros elementos */
+				let  open = null;
+				let  text = [];
+				let  html = [];
+				const div = document.createElement("DIV");
+				div.innerHTML = tree.valueOf();
+				const query = div.querySelectorAll("wd-code-root > *");
+				for (let e of query) {
+					let tag   = e.nodeName.toLowerCase();
+					let inner = e.innerText;
+					if (tag === "wd-code-tag") {
+						let start = null;
+						if      ((/^\<script/i).test(inner))   start = "script";
+						else if ((/^\<\/script/i).test(inner)) start = "/script";
+						else if ((/^\<style/i).test(inner))    start = "style";
+						else if ((/^\<\/style/i).test(inner))  start = "/style";
+
+						if (open === null) {
+							continue;
+						} else if (open[0] !== "/") {
+							text = [];
+						} else if (open[0] === "/") {
+							let root = document.createElement("DIV");
+							let code = __Code(text.join(""));
+							code._lang(open === "/script" ? "javascript" : "css");
+							root.innerHTML = code.valueOf();
+							e.parentElement.insertBefore(root.children[0], e);
+							console.log(open, text, html);
+							open = null;
+						}
+					} else if (open !== null) {
+						html.push(e);
+						text.push(tag === "br" ? "\n" : inner);
+					}
+				}
+				for (let i of html) i.remove();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 				//FIXME pre e script
-				this._code = tree.toString();
+				this._code = div.innerHTML;
 			}
 		},
-
-
-
+		/**. ``''void'' _setLinearLanguage()``: Define a codificação para linguagens lineares genéricas.**/
 		_setLinearLanguage: {
 			value: function() {
 				const tree = __Tree();
@@ -2196,7 +2261,11 @@ const wd = (function() {
 								tree.close(v).open("content");
 							}
 						} else {
-							tree.add(v);
+							if (v === "\n") {
+								tree.walkTo(1).add(v).open("line").close().backTo();
+							} else {
+								tree.add(v);
+							}
 						}
 					}
 					else {
@@ -2209,58 +2278,24 @@ const wd = (function() {
 				/* configurando outras tags */
 				const div = document.createElement("DIV");
 				div.innerHTML = tree.toString();
-				const query = div.querySelectorAll("wd-code-content");
-				for (let e of query) {
+				const query1 = div.querySelectorAll("wd-code-content");
+				for (let e of query1) {
 					let content = e.innerText;
-					content = this._tags(content, cfg.value, "wd-code-value");
 					content = this._tags(content, cfg.reserved, "wd-code-reserved");
+					content = this._tags(content, cfg.value, "wd-code-value");
 					content = this._tags(content, this._numbers, "wd-code-value");
 					e.innerHTML = content;
 				}
-
+				const query2 = div.querySelectorAll("wd-code-string");
+				for (let e of query2) {
+					let content = e.innerText;
+					content = content.replace(/(\$\{[^}]+\})/g, "<wd-code-tick>$1</wd-code-tick>");
+					e.innerHTML = content;
+				}
 				/* definindo o código */
 				this._code = div.innerHTML;
 			}
 		},
-
-
-
-
-
-
-
-
-
-
-		/**. ``''void'' _tags(''string'' value, ''string'' tag)``: Define a formatação dos valores e palavras reservadas. O argumeto ``tag`` indica a marcação a envolver o valor ``value``.**/
-		_tags: {
-			value: function(content, list, tag) {
-				const lscope   = "\\(\\{\\[";
-				const rscope   = "\\)\\}\\]";
-				const operator = "\\!\\=\\|\\&\\+\\-\\%\\/\\*\\^\\?\\:";
-				const punct    = "\\,\\;\\s";
-				const lside    = "(["+lscope+operator+punct+"])";
-				const rside    = "(["+rscope+operator+punct+"])";
-				const check    = {
-					middle: [lside, null, rside],
-					line:   ["^()", null, "()$"],
-					start:  ["^()", null, rside],
-					end:    [lside, null, "()$"],
-				};
-				for (let v of list) {
-					for (let i in check) {
-						check[i][1] = "("+v+")";
-						let re = new RegExp(check[i].join(""));
-						while (re.test(content))
-							content = content.replace(re, "$1<"+tag+">$2</"+tag+">$3");
-					}
-				}
-				return content;
-			}
-		},
-
-
-
 		/**. ``''string'' valueOf()``: Retorna o código formatado para HTML.**/
 		valueOf: {
 			value: function() {
@@ -7666,7 +7701,7 @@ const wd = (function() {
 
 
 
-		if ("lang" in data) code.lang(data.lang);
+		if ("lang" in data) code._lang(data.lang);
 		else code.config(data);
 
 
