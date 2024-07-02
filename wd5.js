@@ -1963,14 +1963,14 @@ const wd = (function() {
 			value: function(x) {
 				const codes = {
 					javascript: {
-						reserved: "break case catch class const continue debugger default delete do else export extends finally for function if import in instanceof new return super switch throw try typeof var void while with let static yied await",
+						reserved: "break case catch class const continue debugger default delete do else export extends finally for function if import in instanceof new return super switch throw try typeof var void while with let static yied await async",
 						value: "false null this true undefined NaN Infinity",
 						comment: "// \n /* */",
 						string: "' ' ` ` \" \""
 					},
 					css: {
-						reserved: "calc\\(",
-						value: "false null true",
+						reserved: "[\\w\\-]+\\([^)]+\\)",
+						value: "[\\w\\-]+\\:",
 						comment: "/* */",
 						string: "' ' \" \""
 					}
@@ -2047,8 +2047,8 @@ const wd = (function() {
 				const rscope   = "\\)\\}\\]";
 				const operator = "\\!\\=\\|\\&\\+\\-\\%\\/\\*\\^\\?\\:";
 				const punct    = "\\,\\;\\s";
-				const lside    = "(["+lscope+operator+punct+"])";
-				const rside    = "(["+rscope+operator+punct+"])";
+				const lside    = "(["+lscope+rscope+operator+punct+"])";
+				const rside    = "(["+lscope+rscope+operator+punct+"])";
 				const tags     = [
 					{
 						re: function   (x) {return lside+"("+x+")"+rside;},
@@ -2148,65 +2148,42 @@ const wd = (function() {
 				tree.finish();
 
 				/* configurando outros elementos */
-				let  open = null;
-				let  text = [];
-				let  html = [];
+				let   open = null;
+				let   text = [];
+				let   html = [];
+				const re   = /^\/?(script|style)/;
 				const div = document.createElement("DIV");
 				div.innerHTML = tree.valueOf();
 				const query = div.querySelectorAll("wd-code-root > *");
 				for (let e of query) {
-					let tag   = e.nodeName.toLowerCase();
-					let inner = e.innerText;
+					let tag  = e.nodeName.toLowerCase();
+					let type = e.innerText.replace(/^\<([^\s\>]+).+/, "$1").toLowerCase();
 					if (tag === "wd-code-tag") {
-						let start = null;
-						if      ((/^\<script/i).test(inner))   start = "script";
-						else if ((/^\<\/script/i).test(inner)) start = "/script";
-						else if ((/^\<style/i).test(inner))    start = "style";
-						else if ((/^\<\/style/i).test(inner))  start = "/style";
-
-						if (open === null) {
+						if (open === null && re.test(type)) {
+							open = type;
 							continue;
-						} else if (open[0] !== "/") {
+						}
+						else if (open !== null && re.test(type) && type[0] === "/") {
+							let root  = document.createElement("wd-code-" + open);
+							let code  = __Code(text.join(""));
+							code._lang(open === "script" ? "javascript" : "css");
+							let inner = code.valueOf();
+							inner = inner.replace(/\<\/?wd\-code\-root\>/gim, "");
+							inner = inner.replace(/\<\/?wd\-code\-line\>/i, "");
+							root.innerHTML = inner;
+							e.parentElement.insertBefore(root, e);
 							text = [];
-						} else if (open[0] === "/") {
-							let root = document.createElement("DIV");
-							let code = __Code(text.join(""));
-							code._lang(open === "/script" ? "javascript" : "css");
-							root.innerHTML = code.valueOf();
-							e.parentElement.insertBefore(root.children[0], e);
-							console.log(open, text, html);
 							open = null;
 						}
-					} else if (open !== null) {
+					}
+					else if (open !== null) {
 						html.push(e);
-						text.push(tag === "br" ? "\n" : inner);
+						text.push(tag === "br" ? "\n" : e.innerText);
 					}
 				}
 				for (let i of html) i.remove();
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-				//FIXME pre e script
+				/* definindo código completo */
 				this._code = div.innerHTML;
 			}
 		},
@@ -2276,11 +2253,14 @@ const wd = (function() {
 				tree.finish();
 
 				/* configurando outras tags */
-				const div = document.createElement("DIV");
+				const lt   = {a: /\</gm, b: "&lt;"};
+				const gt   = {a: /\>/gm, b: "&gt;"};
+				const tick = {a: /(\$\{)([^}]+)(\})/g, b: "$1<wd-code-tick>$2</wd-code-tick>$3"};
+				const div  = document.createElement("DIV");
 				div.innerHTML = tree.toString();
 				const query1 = div.querySelectorAll("wd-code-content");
 				for (let e of query1) {
-					let content = e.innerText;
+					let content = e.innerText.replace(lt.a, lt.b).replace(gt.a, gt.b);
 					content = this._tags(content, cfg.reserved, "wd-code-reserved");
 					content = this._tags(content, cfg.value, "wd-code-value");
 					content = this._tags(content, this._numbers, "wd-code-value");
@@ -2288,8 +2268,8 @@ const wd = (function() {
 				}
 				const query2 = div.querySelectorAll("wd-code-string");
 				for (let e of query2) {
-					let content = e.innerText;
-					content = content.replace(/(\$\{[^}]+\})/g, "<wd-code-tick>$1</wd-code-tick>");
+					let content = e.innerText.replace(lt.a, lt.b).replace(gt.a, gt.b);
+					content = content.replace(tick.a, tick.b);
 					e.innerHTML = content;
 				}
 				/* definindo o código */
