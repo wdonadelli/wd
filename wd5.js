@@ -453,21 +453,25 @@ const wd = (function() {
 		".js-wd-signal span:before {content: \"\u00D7\";}",
 
 
-		"wdhtml-mark {background-color: rgba(154,205,50,0.7); display: inline; border-radius: 0.2em;}",
+		"wd-mark {background-color: rgba(154,205,50,0.7); display: inline; border-radius: 0.2em;}",
 
 
 
 		"/*-- CODE SECTION --*/",
-		"[data-wd-code] wd-code-root {display: block;}",
-		"wd-code-root   {font-family: \"Courier New\"; font-size: 14px;}",
-		"wd-code-root   {text-decoration: none; text-indent: 0;}",
-		"wd-code-root   {font-style: normal; font-weight: normal;}",
-		"wd-code-root   {padding: 0.3em 0.3em 0.3em 3em; margin: 0.5em 0;}",
-		"wd-code-root   {overflow: auto; border-radius: 0.2em;}",
-		"wd-code-root   {white-space: pre-wrap; counter-reset: wdcodelines;}",
+		"[data-wd-code] {display: block;}",
+		"[data-wd-code] {padding: 0.3em 0.3em 0.3em 3em; overflow: auto;}",
+		"[data-wd-code] {border-radius: 0.5em; border: 1px solid black;}",
+		"[data-wd-code] {font-family: \"Courier New\"; font-size: 14px; white-space: pre-wrap;}",
+		"[data-wd-code] {text-decoration: none; text-indent: 0;}",
+		"[data-wd-code] {font-style: normal; font-weight: normal;}",
+		"[data-wd-code] {color: yellow; background-color: black;}",
+		//data-wd-code deve ser igual a wd-code-root, se tirarem o dataset
+
+
+		"wd-code-root   {display: block; white-space: pre-wrap;}",
+		"wd-code-root   {counter-reset: wdcodelines;}",
 		"wd-code-root * {display: inline; position: static;}",
-		"wd-code-root * {font-style: normal; font-weight: normal;}",
-		"wd-code-root wd-code-content     {color: yellow;}",
+		"wd-code-root wd-code-content     {color: inherit;}",
 		"wd-code-root wd-code-doctype     {color: MediumVioletRed;}",
 		"wd-code-root wd-code-comment     {color: DimGrey; font-style: italic;}",
 		"wd-code-root wd-code-tag         {color: DodgerBlue;}",
@@ -480,7 +484,6 @@ const wd = (function() {
 		"wd-code-root wd-code-line:before {content: counter(wdcodelines);}",
 		"wd-code-root wd-code-line:before {display: inline-block; position: relative;}",
 		"wd-code-root wd-code-line:before {margin: 0 0 0 -3em; padding-right: 0.5em; min-width: 3em;}",
-		"wd-code-root wd-code-line:before {font-weight: normal; font-style: normal;}",
 		"wd-code-root wd-code-line:before {color: Gray; text-align: right;}",
 
 
@@ -1925,7 +1928,6 @@ const wd = (function() {
 	/**### Code
 	###### ``**constructor** ''object'' __Code(''string'' input)``
 	Construtor para manipulação de textos com formatação de códigos. O argumento ``input`` define o código fonte.**/
-
 	function __Code(input) {
 		if (!(this instanceof __Code)) return new __Code(input);
 		input = input === undefined || input === null ? "" : String(input);
@@ -1934,8 +1936,9 @@ const wd = (function() {
 		const close  = /\<\/?[a-z0-9.\-_:?!]+([^\>]+)?\>$/i;
 		const markup = start.test(text) && close.test(text);
 		Object.defineProperties(this, {
-			_markup: {value: markup},
 			_input:  {value: input},
+			_markup: {value: markup},
+			_html:   {value: markup && (/\<\/html(\s[^>]+)?\>$/).test(text)},
 			_code:   {value: null, writable: true},
 			_config: {value: {
 				string:   ["\"", "\"", "\'", "\'"],
@@ -2147,41 +2150,43 @@ const wd = (function() {
 				});
 				tree.finish();
 
-				/* configurando outros elementos */
+				/* configurando script e style */
 				let   open = null;
 				let   text = [];
 				let   html = [];
 				const re   = /^\/?(script|style)/;
 				const div = document.createElement("DIV");
 				div.innerHTML = tree.valueOf();
-				const query = div.querySelectorAll("wd-code-root > *");
-				for (let e of query) {
-					let tag  = e.nodeName.toLowerCase();
-					let type = e.innerText.replace(/^\<([^\s\>]+).+/, "$1").toLowerCase();
-					if (tag === "wd-code-tag") {
-						if (open === null && re.test(type)) {
-							open = type;
-							continue;
+				if (this._html) {
+					const query = div.querySelectorAll("wd-code-root > *");
+					for (let e of query) {
+						let tag  = e.nodeName.toLowerCase();
+						let type = e.innerText.replace(/^\<([^\s\>]+).+/, "$1").toLowerCase();
+						if (tag === "wd-code-tag") {
+							if (open === null && re.test(type)) {
+								open = type;
+								continue;
+							}
+							else if (open !== null && re.test(type) && type[0] === "/") {
+								let root  = document.createElement("wd-code-" + open);
+								let code  = __Code(text.join(""));
+								code._lang(open === "script" ? "javascript" : "css");
+								let inner = code.valueOf();
+								inner = inner.replace(/\<\/?wd\-code\-root\>/gim, "");
+								inner = inner.replace(/\<\/?wd\-code\-line\>/i, "");
+								root.innerHTML = inner;
+								e.parentElement.insertBefore(root, e);
+								text = [];
+								open = null;
+							}
 						}
-						else if (open !== null && re.test(type) && type[0] === "/") {
-							let root  = document.createElement("wd-code-" + open);
-							let code  = __Code(text.join(""));
-							code._lang(open === "script" ? "javascript" : "css");
-							let inner = code.valueOf();
-							inner = inner.replace(/\<\/?wd\-code\-root\>/gim, "");
-							inner = inner.replace(/\<\/?wd\-code\-line\>/i, "");
-							root.innerHTML = inner;
-							e.parentElement.insertBefore(root, e);
-							text = [];
-							open = null;
+						else if (open !== null) {
+							html.push(e);
+							text.push(tag === "br" ? "\n" : e.innerText);
 						}
 					}
-					else if (open !== null) {
-						html.push(e);
-						text.push(tag === "br" ? "\n" : e.innerText);
-					}
+					for (let i of html) i.remove();
 				}
-				for (let i of html) i.remove();
 
 				/* definindo código completo */
 				this._code = div.innerHTML;
@@ -4280,7 +4285,7 @@ const wd = (function() {
 					} else {
 						v.dataset.wdFilterInner = v.innerHTML;
 						node.show = true;
-						node.insertTag("wdhtml-mark", index.init, index.last);
+						node.insertTag("wd-mark", index.init, index.last);
 					}
 				});
 				return;
@@ -7664,32 +7669,29 @@ const wd = (function() {
 	|$ ou $$|Seletor CSS para indicar o elemento os elementos a aplicar a ação (se ausente, será o próprio elemento)|Não|**/
 	function data_wdCode(e, event) {//FIXME pendente
 		if (!("wdCode" in e.dataset)) return;
-		if (__Node(e).form) return;
-
-		const data   = __String(e.dataset.wdCode).wdNotation[0];
-		const childs = e.children;
-		const root   = childs.length === 1 ? childs[0].nodeName.toLowerCase() : "";
+		const data = __String(e.dataset.wdCode).wdNotation[0];
+		const node = __Node(e);
+		const code = __Code(node.form ? node.value() : e.innerText);
+		let   html = node.form ? document.createElement("PRE") : e;
+		if (__Type(data.config).function) {
+			code.config(data.config());
+		}
 		e.spellcheck = false;
 		e.translate  = false;
-
-		let code = __Code(e.innerText);
-		/*if (root === "wd-code-root")
-			code = __Code(e.innerText);
-		else
-			code = __Code(e.innerHTML);*/
-
-
-
-
-		if ("lang" in data) code._lang(data.lang);
-		else code.config(data);
-
-
-
+		if (node.form) {
+			e.parentElement.insertBefore(html, e);
+			html.dataset.wdCode = e.dataset.wdCode;
+			html.setAttribute("class", e.getAttribute("class"));
+			html.setAttribute("style", e.getAttribute("style"));
+			if (!e.readOnly && !e.disabled)
+				html.contentEditable = true;
+			e.remove();
+		}
 		if (event.type === "focusin") {
-			e.innerText  = code.toString();
+			html.innerText  = code.toString();
 		} else {
-			e.innerHTML  = code.valueOf();
+			html.innerHTML  = code.valueOf();
+			window.getSelection().removeAllRanges();
 		}
 		return;
 	};

@@ -1,46 +1,92 @@
-<!--
-python: {
-						reserved: "and as assert break class continue def del elif else except finally for from global if import in is lambda nonlocal not or pass raise return try while with yield",
-						value: "False None True",
-						comment: "# \n",
-						string: "' ' \" \""
-					},
-					c: {
-						reserved: "asm auto break case char const continue default do double else enum extern float for goto if int long register return short signed sizeof static struct switch typedef union unsigned void volatile while #define",
-						value: "",
-						comment: "// \n /* */",
-						string: "' ' \" \""
-					}
--->
-
 <div class="wd-flyer">
+	<script>
+function c() {
+	return {
+		reserved: ("asm auto break case char const continue default do double else enum extern float for goto if int long register return short signed sizeof static struct switch typedef union unsigned void volatile while #define #include").split(" "),
+		value: [],
+		comment: ("// \n /* */").split(" "),
+		string: ("' ' \" \"").split(" ")
+	};
+}
 
-	<!--<nav>
-		<span
-			data-wd-set="${#code}dataset{wdCode{lang{javascript}}}"
-		>Javascript</span>
-		<span
-			data-wd-set="${#code}dataset{wdCode{lang{c}}}"
-		>C</span>
-		<span
-			data-wd-set="${#code}dataset{wdCode{lang{python}}}"
-		>Python</span>
-		<span
-			data-wd-set="${#code}dataset{wdCode{lang{html}}}"
-		>HTML</span>
-	</nav>-->
+function python() {
+	return {
+		reserved: ("and as assert break class continue def del elif else except finally for from global if import in is lambda nonlocal not or pass raise return try while with yield").split(" "),
+		value: ("False None True").split(" "),
+		comment: ("# \n").split(" "),
+		string: ("' ' \" \"").split(" ")
+	};
+}
+	</script>
 
-	<pre data-wd-code="lang{javascript}" contenteditable="true" id="code" style="max-height: 12em;">
+	<h3>Linear</h3>
+
+	<pre data-wd-code="" contenteditable="true" style="max-height: 10em;">
 /* função para calcular o valor absoluto de um número */
 function abs(x) {
 	if (typeof x !== "nu${loko}mber") return null;
 	return x < 0 ? -x : x;
 }
-<a href="#">Target</a>
 	</pre>
 
+	<h3>Markup</h3>
 
+	<textarea data-wd-code="">
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Hello</title>
+		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1"/>
+		<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+		<script>
+//Script
+function hello() {
+	alert("Hello!");
+	return 0;
+}
+/*-----\
+| HELO |
+\-----*/
+		</script>
+		<style>
+/* Styles */
+#myid {background-color: red; color: blue;}
+		</style>
+	</head>
+	<body>
+		<h2>Hello!!!</h2>
+		<p>Go!</p>
+	</body>
+</html>
+	</textarea>
+
+	<h3>C</h3>
+
+	<pre data-wd-code="config(c)">
+#include <stdio.h>
+
+int main ()
+{
+	int ch;
+	for( ch = 75 ; ch <= 100; ch++ ) {
+    printf("ASCII value = %d, Character = %c\n", ch , ch );
+  }
+	/* c
+long comment */ return(0);
+}
+	</pre>
+
+	<h3>Python</h3>
+
+	<textarea data-wd-code="config(python)">
+import os
+filename = os.environ.get('PYTHONSTARTUP')
+if filename and os.path.isfile(filename):
+    with open(filename) as fobj:
+        startup_file = fobj.read()
+    exec(startup_file)
+	</textarea>
 
 
 </div>
-
