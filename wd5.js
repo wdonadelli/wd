@@ -40,7 +40,7 @@ const wd = (function() {
 /*----------------------------------------------------------------------------*/
 	/**###### ``**const** ''boolean'' __UNDERMAINTENANCE``
 	Se verdadeiro, libera métodos de teste em WD para efetuar testes.**/
-	const __UNDERMAINTENANCE = false;
+	const __UNDERMAINTENANCE = true;
 
 /*----------------------------------------------------------------------------*/
 	/**###### ``**const** ''object'' __DEVICECONTROLLER``
@@ -4951,6 +4951,154 @@ const wd = (function() {
 		}
 	});
 
+
+/*============================================================================*/
+	/**### Figuras
+	###### ``**constructor** ''object'' __SVG(''number'' width=100, ''number'' height=100, ''number'' xmin=0, ''number'' ymin=0)``
+	Construtor de imagens SVG.
+	Os argumentos são opcionais e estão relacionados ao atributo [``viewBox``]<https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/viewBox> do elemento SVG.
+	**/
+	function __Request2(config, trigger) {
+		if (!(this instanceof __Request2)) return new __Request2(config, trigger);
+		Object.defineProperties(this, {
+			_config:  {value: __Type(config).object    ? config  : {}},
+			_trigger: {value: __Type(trigger).function ? trigger : null}
+		});
+	}
+	Object.defineProperties(__Request2.prototype, {
+		constructor: {value: __Request2},
+		_data: {
+			get: function() {
+				return {
+					methods: {
+						send: ["CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT", "TRACE"],
+					},
+					response: {
+						send: ["text", "arraybuffer", "blob", "document", "json"],
+						read: ["readAsBinaryString", "readAsText", "readAsArrayBuffer", "readAsDataURL"],
+					},
+					send: {
+						method: "POST", url: "", async: true, body: null, headers: {}, timeout: 0,
+						response: "text", user: null, password: null
+					},
+					upload: ["onabort", "onerror", "onload", "onloadend", "onloadstart",
+						"onprogress", "ontimeout", "onreadystatechange"
+					],
+					mime: {
+						TEXT:  "readAsText",    URL:   "readAsDataURL",
+						AUDIO: "readAsDataURL", VIDEO: "readAsDataURL", IMAGE: "readAsDataURL"
+					}
+				}
+			}
+		},
+
+		_getConfig: {
+			value: function(type) {
+				const data     = this._data;
+				const input    = this._config;
+				const config   = data[type];
+				const response = type in data.response ? data.response[type] : [];
+				const methods  = type in data.methods  ? data.methods[type]  : [];
+				for (let i in config) {
+					if (!(i in input)) continue;
+					let value = input[i];
+					let check = __Type(value);
+					switch(i) {
+						case "timeout": {
+							if (check.finite && check.value >= 1)
+								config[i] = Math.trunc(check.value);
+							break;
+						}
+						case "headers": {
+							if (check.object)
+								config[i] = value;
+							break;
+						}
+						case "method": {
+							if (check.nonempty) {
+								value = value.trim().toUpperCase();
+								if (methods.indexOf(value) >= 0) config[i] = value;
+							}
+							break;
+						}
+						case "response": {
+							if (check.nonempty) {
+								value = value.trim().toLowerCase();
+								if (response.indexOf(value) >= 0) config[i] = value;
+							}
+							break;
+						}
+						case "async": {
+							if (check.boolean)
+								config[i] = value;
+							break;
+						}
+						case "body": {
+							//FIXME body ???
+
+							break;
+						}
+						default: {
+							let strings = ["user", "password", "url"];
+							if (strings.indexOf(i) >= 0 && check.nonempty)
+								config[i] = value;
+						}
+					}
+				}
+				return config;
+			}
+		},
+
+
+
+
+		/**. ``''node'' send()``: Envia uma requisição ao servidor via XMLHttpRequest.**/
+		send: {
+			value: function() {
+				const cfg  = this._getConfig("send");
+				const data = this._data;
+				try {
+					const request = new XMLHttpRequest();
+					request.open(cfg.method, cfg.url, cfg.async, cfg.user, cfg.password);
+					request.timeout      = cfg.timeout;
+					request.responseType = cfg.response;
+					for (let name in cfg.headers)
+						request.setRequestHeader(name, cfg.headers[name]);
+
+
+					//FIXME criar __Response
+
+					for (let i of data.upload) {
+						if (i in request)
+							request[i] = (ev) => console.log(ev.type, ev.target.response);
+						if (i in request.upload)
+							request.upload[i] = (ev) => console.log(ev.type, ev.target.response);
+					}
+					request.send(cfg.body);
+				} catch(e) {
+					console.error(e);
+				}
+				return;
+			},
+		},
+
+
+
+
+
+
+	});
+
+
+
+
+
+
+
+
+
+
+
 /*============================================================================*/
 	/**### Figuras
 	###### ``**constructor** ''object'' __SVG(''number'' width=100, ''number'' height=100, ''number'' xmin=0, ''number'' ymin=0)``
@@ -7454,6 +7602,7 @@ const wd = (function() {
 			data2D:   {value: function(){return __Data2D.apply(null, Array.prototype.slice.call(arguments));}},
 			plot:     {value: function(){return __Plot2D.apply(null, Array.prototype.slice.call(arguments));}},
 			request:  {value: function(){return __Request.apply(null, Array.prototype.slice.call(arguments));}},
+			request2: {value: function(){return __Request2.apply(null, Array.prototype.slice.call(arguments));}},
 			query:    {value: function(){return __Query.apply(null, Array.prototype.slice.call(arguments));}},
 			svg:      {value: function(){return __SVG.apply(null, Array.prototype.slice.call(arguments));}},
 			table:    {value: function(){return __Table.apply(null, Array.prototype.slice.call(arguments));}},
