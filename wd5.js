@@ -4950,14 +4950,93 @@ const wd = (function() {
 			}
 		}
 	});
+/*============================================================================*/
+	/**### Requisições e Arquivos
+	``**constructor** ''object'' __Response(''object'' config, ''function'' trigger)``
+	Construtor para [requisições Web](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest) ou leituras de [arquivos](https://developer.mozilla.org/en-US/docs/Web/API/FileReader). O argumento opcional ``trigger`` define o disparador a ser invocado a cada mudança ou encerramento da requisição. O argumento ``config` contem as propriedades da requisição de acordo com o método escolhido. As seguintes prorpiedades são comuns**/
+	function __Response(trigger) {
+		if (!(this instanceof __Response)) return new __Response(trigger);
+		Object.defineProperties(this, {
+			_trigger:  {value: __Type(trigger).function ? trigger : null},
+			_start:    {value: new Date().valueOf()},
+			_response: { value: {
+					done: false,
+					ok: null,
+					status: null,
+					time: 0,
+					progress: 0,
+					headers: {},
+					size: 0,
+					response: null,
+					abort: null
+				}
+			}
+		});
+		//__PROGRESSVIEWER.dispatchEvent(wdOpenRequestEvent);
+	}
+	Object.defineProperties(__Response.prototype, {
+		constructor: {value: __Response},
+		send: {
+			value: function(ev, upload) {
+				if (this._response.done) return;
+				const target = ev.target;
+				const type   = ev.type;
+				const done   = {loadend: 1, error: 0, abort: 0, timeout: 0};
+				this._response.time = (new Date().valueOf()) - this._start;
+				if (this._response.abort === null)
+					this._response.abort = function() {target.abort();}
+				if (this._response.size === 0 && "total" in ev)
+					this._response.size = ev.total;
+				if (this._response.size !== 0 && "loaded" in ev)
+					this._response.progress = ev.loaded/this._response.size;
+				if (type in done && (upload !== true || done[type] === 0)) {
+					this._response.done = true;
+					if (done[type] === 0) {
+						this._response.status = target.status + " - " + type;
+						this._response.ok = false;
+					} else {
+						this._response.status = target.status + " - " + target.statusText;
+						if (target.status >= 200 && target.status < 300)
+							this._response.ok = true;
+						else
+							this._response.ok = false;
+					}
+				}
+
+				if (this._response.ok) {
+					const headers = target.getAllResponseHeaders().split(/[\r\n]+/g);
+					for (let v of headers) {
+						let name  = v.split(":")[0].trim();
+						let value = v.replace(/^[^:]+\:(.+)$/, "$1").trim();
+						if (name.length > 0 && value.length > 0)
+							this._response.headers[name] = value;
+					}
+					this._response.response = target.response;
+				}
+				if (this._trigger !== null) this._trigger(this._response);
+			}
+		}
+
+
+
+
+
+	});
+
+
+
+
+
+
+
+
+
 
 
 /*============================================================================*/
-	/**### Figuras
-	###### ``**constructor** ''object'' __SVG(''number'' width=100, ''number'' height=100, ''number'' xmin=0, ''number'' ymin=0)``
-	Construtor de imagens SVG.
-	Os argumentos são opcionais e estão relacionados ao atributo [``viewBox``]<https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/viewBox> do elemento SVG.
-	**/
+	/**### Requisições e Arquivos
+	``**constructor** ''object'' __Request(''object'' config, ''function'' trigger)``
+	Construtor para [requisições Web](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest) ou leituras de [arquivos](https://developer.mozilla.org/en-US/docs/Web/API/FileReader). O argumento opcional ``trigger`` define o disparador a ser invocado a cada mudança ou encerramento da requisição. O argumento ``config` contem as propriedades da requisição de acordo com o método escolhido. As seguintes prorpiedades são comuns**/
 	function __Request2(config, trigger) {
 		if (!(this instanceof __Request2)) return new __Request2(config, trigger);
 		Object.defineProperties(this, {
@@ -4967,112 +5046,58 @@ const wd = (function() {
 	}
 	Object.defineProperties(__Request2.prototype, {
 		constructor: {value: __Request2},
-		_data: {
-			get: function() {
-				return {
-					methods: {
-						send: ["CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT", "TRACE"],
-					},
-					response: {
-						send: ["text", "arraybuffer", "blob", "document", "json"],
-						read: ["readAsBinaryString", "readAsText", "readAsArrayBuffer", "readAsDataURL"],
-					},
-					send: {
-						method: "POST", url: "", async: true, body: null, headers: {}, timeout: 0,
-						response: "text", user: null, password: null
-					},
-					upload: ["onabort", "onerror", "onload", "onloadend", "onloadstart",
-						"onprogress", "ontimeout", "onreadystatechange"
-					],
-					mime: {
-						TEXT:  "readAsText",    URL:   "readAsDataURL",
-						AUDIO: "readAsDataURL", VIDEO: "readAsDataURL", IMAGE: "readAsDataURL"
-					}
-				}
+		_events: {
+			value: [
+				"onabort", "onerror", "onload", "onloadend", "onloadstart", "onprogress",
+				"ontimeout", "ionreadystatechange????????????"
+			]
+		},
+		_methods: {
+			value: [
+				"post", "connect", "delete", "get", "head", "options", "patch", "put", "trace"
+			]
+		},
+		_readAs: {
+			value: [
+				"readAsArrayBuffer", "readAsBinaryString", "readAsText", "readAsDataURL"
+			]
+		},
+		_mime: {
+			value: {
+				text:  "readAsText",    url:   "readAsDataURL",
+				audio: "readAsDataURL", video: "readAsDataURL", image: "readAsDataURL"
 			}
 		},
-
-		_getConfig: {
-			value: function(type) {
-				const data     = this._data;
-				const input    = this._config;
-				const config   = data[type];
-				const response = type in data.response ? data.response[type] : [];
-				const methods  = type in data.methods  ? data.methods[type]  : [];
-				for (let i in config) {
-					if (!(i in input)) continue;
-					let value = input[i];
-					let check = __Type(value);
-					switch(i) {
-						case "timeout": {
-							if (check.finite && check.value >= 1)
-								config[i] = Math.trunc(check.value);
-							break;
-						}
-						case "headers": {
-							if (check.object)
-								config[i] = value;
-							break;
-						}
-						case "method": {
-							if (check.nonempty) {
-								value = value.trim().toUpperCase();
-								if (methods.indexOf(value) >= 0) config[i] = value;
-							}
-							break;
-						}
-						case "response": {
-							if (check.nonempty) {
-								value = value.trim().toLowerCase();
-								if (response.indexOf(value) >= 0) config[i] = value;
-							}
-							break;
-						}
-						case "async": {
-							if (check.boolean)
-								config[i] = value;
-							break;
-						}
-						case "body": {
-							//FIXME body ???
-
-							break;
-						}
-						default: {
-							let strings = ["user", "password", "url"];
-							if (strings.indexOf(i) >= 0 && check.nonempty)
-								config[i] = value;
-						}
-					}
-				}
-				return config;
+		_send: {
+			value: {
+				method: "POST", url: "", async: true, body: null, headers: {}, timeout: 0,
+				response: "text", user: null, password: null, mimetype: null, credentials: false
 			}
 		},
-
-
-
-
-		/**. ``''node'' send()``: Envia uma requisição ao servidor via XMLHttpRequest.**/
-		send: {
-			value: function() {
-				const cfg  = this._getConfig("send");
-				const data = this._data;
-				try {
-					const request = new XMLHttpRequest();
-					request.open(cfg.method, cfg.url, cfg.async, cfg.user, cfg.password);
-					request.timeout      = cfg.timeout;
-					request.responseType = cfg.response;
-					for (let name in cfg.headers)
-						request.setRequestHeader(name, cfg.headers[name]);
 
 
 					//FIXME criar __Response
-
-					for (let i of data.upload) {
+		/**. ``''node'' send()``: Envia uma requisição ao servidor via XMLHttpRequest.**/
+		send: {
+			value: function() {
+				try {
+					const request  = new XMLHttpRequest();
+					const response = __Response(this._trigger)
+					const cfg      = this._config;
+					for (let i in this._send)
+						if (!(i in cfg)) cfg[i] = this._send[i];
+					request.open(cfg.method, cfg.url, cfg.async, cfg.user, cfg.password);
+					request.timeout = cfg.timeout;
+					request.responseType = cfg.response;
+					request.withCredentials = cfg.credentials;
+					if (cfg.mimetype !== null) request.overrideMimeType(cfg.overrideMimeType);
+					for (let name in cfg.headers)
+						request.setRequestHeader(name, cfg.headers[name]);
+					for (let i of this._events) {
 						if (i in request)
-							request[i] = (ev) => console.log(ev.type, ev.target.response);
+							request[i] = function (ev) {response.send(ev, false);};
 						if (i in request.upload)
-							request.upload[i] = (ev) => console.log(ev.type, ev.target.response);
+							request.upload[i] = function (ev) {response.send(ev, true);};
 					}
 					request.send(cfg.body);
 				} catch(e) {
