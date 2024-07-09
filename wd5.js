@@ -4968,11 +4968,11 @@ const wd = (function() {
 					headers: {},
 					size: 0,
 					response: null,
-					abort: null
+					abort: null,
 				}
 			}
 		});
-		//__PROGRESSVIEWER.dispatchEvent(wdOpenRequestEvent);
+		__PROGRESSVIEWER.dispatchEvent(wdOpenRequestEvent);
 	}
 	Object.defineProperties(__Response.prototype, {
 		constructor: {value: __Response},
@@ -4982,27 +4982,23 @@ const wd = (function() {
 				const target = ev.target;
 				const type   = ev.type;
 				const done   = {loadend: 1, error: 0, abort: 0, timeout: 0};
-				this._response.time = (new Date().valueOf()) - this._start;
-				if (this._response.abort === null)
-					this._response.abort = function() {target.abort();}
-				if (this._response.size === 0 && "total" in ev)
-					this._response.size = ev.total;
-				if (this._response.size !== 0 && "loaded" in ev)
-					this._response.progress = ev.loaded/this._response.size;
-				if (type in done && (upload !== true || done[type] === 0)) {
-					this._response.done = true;
-					if (done[type] === 0) {
-						this._response.status = target.status + " - " + type;
-						this._response.ok = false;
-					} else {
-						this._response.status = target.status + " - " + target.statusText;
-						if (target.status >= 200 && target.status < 300)
-							this._response.ok = true;
-						else
-							this._response.ok = false;
-					}
+				this._response.time   = (new Date().valueOf()) - this._start;
+				if (this._response.abort === null && target instanceof XMLHttpRequest) {
+					this._response.abort = function() {return target.abort();}
 				}
-
+				if (ev.lengthComputable === true) {
+					this._response.size = ev.total;
+					this._response.progress = ev.loaded/ev.total;
+					__PROGRESSVIEWER.dataset.wdProgressValue = ev.loaded/ev.total;
+				}
+				if (target instanceof XMLHttpRequest && type in done) {
+					const code = target.status;
+					const text = target.statusText;
+					const fail = done[type] === 0;
+					this._response.done   = true;
+					this._response.status = fail ? type  : (code + " - " + text);
+					this._response.ok     = fail ? false : (code >= 200 && code < 300);
+				}
 				if (this._response.ok) {
 					const headers = target.getAllResponseHeaders().split(/[\r\n]+/g);
 					for (let v of headers) {
@@ -5014,6 +5010,21 @@ const wd = (function() {
 					this._response.response = target.response;
 				}
 				if (this._trigger !== null) this._trigger(this._response);
+				if (this._response.done)
+					__PROGRESSVIEWER.dispatchEvent(wdCloseRequestEvent);
+				return;
+			}
+		},
+
+
+		error: {
+			value: function(status) {
+				this._response.done   = true;
+				this._response.ok     = false;
+				this._response.status = status;
+				if (this._trigger !== null) this._trigger(this._response);
+				__PROGRESSVIEWER.dispatchEvent(wdCloseRequestEvent);
+				return;
 			}
 		}
 
@@ -5047,20 +5058,26 @@ const wd = (function() {
 	Object.defineProperties(__Request2.prototype, {
 		constructor: {value: __Request2},
 		_events: {
-			value: [
-				"onabort", "onerror", "onload", "onloadend", "onloadstart", "onprogress",
-				"ontimeout", "ionreadystatechange????????????"
-			]
+			value: {
+				send: ["onabort", "onerror", "onload", "onloadend", "onloadstart", "onprogress", "ontimeout"],
+				read: ["onabort", "onerror", "onload", "onloadend", "onloadstart", "onprogress"]
+			}
 		},
 		_methods: {
-			value: [
-				"post", "connect", "delete", "get", "head", "options", "patch", "put", "trace"
-			]
+			value: ["post", "connect", "delete", "get", "head", "options", "patch", "put", "trace"]
 		},
-		_readAs: {
-			value: [
-				"readAsArrayBuffer", "readAsBinaryString", "readAsText", "readAsDataURL"
-			]
+		_type: {
+			value: {
+				text:   {send: "text",        read: "readAsText",         fetch: "text"},
+				blob:   {send: "blob",        read: "readAsBinaryString", fetch: "blob"},
+				html:   {send: "document",    read: "readAsText",         fetch: "document"},
+				json:   {send: "json",        read: "readAsText",         fetch: "json"},
+				buffer: {send: "arraybuffer", read: "readAsArrayBuffer",  fetch: "arrayBuffer"},
+				url:    {send: "text",        read: "readAsDataURL",      fetch: "text"},
+				csv:    {send: "text",        read: "readAsText",         fetch: "text"},
+				table:  {send: "text",        read: "readAsText",         fetch: "text"},
+				chart:  {send: "text",        read: "readAsText",         fetch: "text"}
+			}
 		},
 		_mime: {
 			value: {
@@ -5070,38 +5087,85 @@ const wd = (function() {
 		},
 		_send: {
 			value: {
-				method: "POST", url: "", async: true, body: null, headers: {}, timeout: 0,
+				method: "post", url: "", async: true, body: null, headers: {}, timeout: 0,
 				response: "text", user: null, password: null, mimetype: null, credentials: false
 			}
 		},
 
+		_headers: {
+			value: function(src) {
+				const head  = [];
+				const check = __Type(src);
+				if ("Headers" in window && src instanceof Headers) {
+					src.forEach(function (v,i,a) {head.push({name: i, value: v});});
+				} else if (check.nonempty) {
+					const items = src.split(/[\r\n]+/g);
+					for (let v of items) {
+						let name  = v.split(":")[0].trim();
+						let value = v.replace(/^[^:]+\:(.+)$/, "$1").trim();
+						if (name.length > 0 && value.length > 0)
+							head.push({name: name, value: value});
+					}
+				} else if (check.object) {
+					for (let i in src)
+						head.push({name: i, value: src[i]});
+				}
+				return head;
+			}
+		},
 
-					//FIXME criar __Response
+
+
 		/**. ``''node'' send()``: Envia uma requisição ao servidor via XMLHttpRequest.**/
 		send: {
 			value: function() {
+				const request  = new XMLHttpRequest();
+				const response = new __Response(this._trigger);
+				const cfg      = this._config;
 				try {
-					const request  = new XMLHttpRequest();
-					const response = __Response(this._trigger)
-					const cfg      = this._config;
 					for (let i in this._send)
 						if (!(i in cfg)) cfg[i] = this._send[i];
+					request.open(cfg.method, cfg.url, cfg.async, cfg.user, cfg.password);
+					request.timeout = cfg.timeout;
+					request.responseType = this._type[cfg.response in this._type ? cfg.response : "text"];
+					request.withCredentials = cfg.credentials;
+					if (cfg.mimetype !== null) request.overrideMimeType(cfg.overrideMimeType);
+					for (let v of this._headers(cfg.headers))
+						request.setRequestHeader(v.name, v.value);
+					for (let i of this._events.send) {
+						request[i]        = function (ev) {response.send(ev);};
+						request.upload[i] = function (ev) {response.send(ev);};
+					}
+					request.send(cfg.body);
+				} catch(e) {
+					response.error(e.name + "- " + e.message);
+				}
+				return;
+			},
+		},
+		/**. ``''node'' read()``: Lê um arquivo via FileReader.**/
+		read: {
+			value: function() {
+				const request  = new FileReader();
+				const response = new __Response(this._trigger);
+				const cfg      = this._config;
+				try {//TIMEOUT
+					for (let i in this._read)
+						if (!(i in cfg)) cfg[i] = this._read[i];
 					request.open(cfg.method, cfg.url, cfg.async, cfg.user, cfg.password);
 					request.timeout = cfg.timeout;
 					request.responseType = cfg.response;
 					request.withCredentials = cfg.credentials;
 					if (cfg.mimetype !== null) request.overrideMimeType(cfg.overrideMimeType);
-					for (let name in cfg.headers)
-						request.setRequestHeader(name, cfg.headers[name]);
+					for (let v of this._headers(cfg.headers))
+						request.setRequestHeader(v.name, v.value);
 					for (let i of this._events) {
-						if (i in request)
-							request[i] = function (ev) {response.send(ev, false);};
-						if (i in request.upload)
-							request.upload[i] = function (ev) {response.send(ev, true);};
+						request[i]        = function (ev) {response.send(ev);};
+						request.upload[i] = function (ev) {response.send(ev);};
 					}
 					request.send(cfg.body);
 				} catch(e) {
-					console.error(e);
+					response.error(e.name + "- " + e.message);
 				}
 				return;
 			},
