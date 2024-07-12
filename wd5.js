@@ -3139,6 +3139,170 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	/**#### Dados para Requisições
+	###### ``**constructor** ''object'' __DataAdmin()``
+	Construtor para gerir múltiplas entradas de dados.**/
+	function __DataAdmin() {
+		if (!(this instanceof __DataAdmin))	return new __DataAdmin();
+		Object.defineProperties(this, {
+			_data: {value: []}
+		});
+	}
+
+	Object.defineProperties(__DataAdmin.prototype, {
+		constructor: {value: __DataAdmin},
+		/**. ``''self'' append(''string'' name, ''any'' value)``: Acrescenta um valor (``value``) vinculado a um identificador (``name``).**/
+		append: {
+			value: function(name, value) {
+				name = String(name).replace(/\[\]$/, "").trim();
+				if (name.length !== 0)
+					this._data.push({name: name, value: value});
+				return this
+			}
+		},
+		/**. ``''self'' delete(''string'' name)``: Remove todos os valores associados ao indentificador ``name``.**/
+		delete: {
+			value: function(name) {
+				name = String(name).replace(/\[\]$/, "").trim();
+				if (name.length !== 0)
+					this._data.forEach(function(v,i,a) {
+						if (v !== null && name === v.name) a[i] = null;
+					});
+				return this;
+			}
+		},
+		/**. ``''self'' set(''string'' name, ''any'' value)``: Define um valor (``value``) vinculado a um identificador (``name``), substuindo os existentes.**/
+		set: {
+			value: function(name, value) {
+				this.delete(name).append(name, value);
+				return this;
+			}
+		},
+		/**. ``''array'' getAll(''string'' name)``: Retorna uma lista de valores identificados por ``name``.**/
+		getAll: {
+			value: function(name) {
+				name = String(name).replace(/\[\]$/, "").trim();
+				const list = [];
+				if (name.length !== 0)
+					this._data.forEach(function(v,i,a) {
+						if (v !== null && name === v.name) list.push(v.value);
+					});
+				return list;
+			}
+		},
+		/**. ``''boolean'' has(''string'' name)``: Retorna verdadeiro se o identificador ``name`` existir.**/
+		has: {
+			value: function(name) {
+				name = String(name).replace(/\[\]$/, "").trim();
+				if (name.length !== 0)
+					this._data.forEach(function(v,i,a) {
+						if (v !== null && name === v.name) return true;
+					});
+				return false;
+			}
+		},
+		/**. ``''self'' forEach(''function'' caller)``: Chama ``caller`` para cada item, repassando nome e o valor como argumentos.**/
+		forEach: {
+			value: function(caller) {
+				if (__Type(caller).function)
+					this._data.forEach(function(v,i,a) {
+						if (v !== null) caller(v.value, v.name);
+					});
+				return this;
+			}
+		},
+		/**. ``''object'' _formDataAdmin``: Retorna um novo objeto __DataAdmin contendo o conjunto de dados de forma individual sem os nulos para fins de submissão de formulários.**/
+		_formDataAdmin: {
+			get: function() {
+				const data = new __DataAdmin();
+				for (let v of this._data) {
+					if (v === null) continue;
+					let name  = v.name;
+					let value = v.value;
+					let check = __Type(value);
+					if (check.file && value instanceof FileList) {
+						if (value.length === 0)
+							data.append(name, "");
+						else
+							for (let i = 0; i < value.length; i++)
+								data.append(name, value[i]);
+					} else if (check.array && value.length > 0) {
+						for (let i = 0; i < value.length; i++)
+							data.append(name, value[i]);
+					} else if (check.object) {
+						let count = 0;
+						for (let j in value) count++;
+						if (count === 0)
+							data.append(name, "");
+						else
+							for (let i in value) data.append(name+"."+i, value[i]);
+					} else {
+						data.append(name, value);
+					}
+				}
+				return data;
+			}
+		},
+		/**. ``''object'' dataType(''string'' type)``: Retorna o objeto especficado em ``type`` contendo os dados ou nulo. Os valores do argumento são "Headers", "FormData" ou "URL" (URLSearchParams).**/
+		dataType: {
+			value: function(type) {
+				type = __Type(type).nonempty ? type.toLowerCase().trim() : null;
+				const types = {
+					headers:  "Headers" in window ? new Headers() : null,
+					formdata: "FormData" in window ? new FormData() : null,
+					url:      "URLSearchParams" in window ? new URLSearchParams() : null,
+				};
+				if (!(type in types) || types[type] === null) return null;
+				const data = types[type];
+				const form = type === "headers" ? this : this._formDataAdmin;
+				const size = {};
+				form.forEach(function (v,i) {
+					let name  = i;
+					let value = v;
+					let check = __Type(value);
+					if (!(name in size)) size[name] = form.getAll(name).length;
+					if (type !== "headers" && size[name] > 1) name += "[]";
+					data.append(name, value);
+				});
+				return data;
+			}
+		},
+		/**. ``''object'' valueOf(''object'' input)``: Retorna o conjuto de dados em forma de objeto. Se o argumento opcional ``input`` for informado nesse mesmo formato, o conjunto de dados será definido.**/
+		valueOf: {
+			value: function(input) {
+				if (__Type(input).object) {
+					for (let name in input) this.append(name, input[name]);
+					return;
+				}
+				let list = {};
+				this._data.forEach(function (v,i,a) {
+					if (v !== null) list[v.name] = v.value;
+				});
+				return list;
+			}
+		},
+		/**. ``''string'' toString(''string'' input)``: Retorna o conjuto de dados em string. Se o argumento opcional ``input`` for informado no formato "name: value\r\n", o conjunto de dados será definido.**/
+		toString: {
+			value: function(input) {
+				if (__Type(input).nonempty) {
+					const headers = input.split(/[\r\n]+/g);
+					for (let v of headers) {
+						let name  = v.split(":")[0].trim();
+						let value = v.replace(/^[^:]+\:(.+)$/, "$1").trim();
+						if (name.length > 0) this.append(name, value);
+					}
+					return;
+				}
+				const list = [];
+				this._data.forEach(function (v,i,a) {
+					if (v !== null) list.push(v.name+": "+v.value);
+				});
+				return list.join("\r\n");
+			}
+		},
+	});
+
+	//FIXME apagar isso aqui pois será substituído por DataAdmin (é utilizado em send)
+	/**#### Dados para Requisições
 	###### ``**constructor** ''object'' __URL(''string'' input)``
 	Construtor para gerir parâmetros de envio de requisição. O argumento ``input`` é o destino da requisição. Se vazio, observará o URL em vigor. Alguns métodos retornar o próprio objeto**/
 	function __URL(input) {
@@ -4977,7 +5141,7 @@ const wd = (function() {
 	Object.defineProperties(__Response.prototype, {
 		constructor: {value: __Response},
 		send: {
-			value: function(ev, responseType) {
+			value: function(ev, config) {
 				if (this._response.done) return;
 				const target = ev.target;
 				const type   = ev.type;
@@ -5017,7 +5181,7 @@ const wd = (function() {
 
 
 		read: {
-			value: function(ev, responseType, timeout) {
+			value: function(ev, config) {
 				if (this._response.done) return;
 				const target = ev.target;
 				let   type   = ev.type;
@@ -5145,7 +5309,7 @@ const wd = (function() {
 					}
 				};
 				if (check.nonempty) {
-					const items = src.split("\r\n");
+					const items = src.split(/[\r\n]+/g);
 					for (let v of items) {
 						let name  = v.split(":")[0];
 						let value = v.replace(/^[^:]+\:(.+)$/, "$1");
@@ -7764,6 +7928,7 @@ const wd = (function() {
 			svg:      {value: function(){return __SVG.apply(null, Array.prototype.slice.call(arguments));}},
 			table:    {value: function(){return __Table.apply(null, Array.prototype.slice.call(arguments));}},
 			url:      {value: function(){return __URL.apply(null, Array.prototype.slice.call(arguments));}},
+			admin:    {value: function(){return __DataAdmin.apply(null, Array.prototype.slice.call(arguments));}},
 			LANG:     {value: __LANG},
 			TYPE:     {value: __TYPE},
 			DEVICE:   {value: __DEVICECONTROLLER},
