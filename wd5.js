@@ -590,9 +590,10 @@ const wd = (function() {
 	const wdCloseRequestEvent = new CustomEvent("wdcloserequest");
 
 /*============================================================================*/
-	/**### Checagem de Tipos e Valores
+	/**### Administração de Dados
+	#### Tipologia
 	###### ``**constructor** ''object'' __Type(''any''  input)``
-	Construtor para identificação do tipo de dado informado informado no argumento ``input``.**/
+	Construtor para identificação do tipo de dado informado em ``input``.**/
 	function __Type(input) {
 		if (!(this instanceof __Type)) return new __Type(input);
 		Object.defineProperties(this, {
@@ -605,9 +606,9 @@ const wd = (function() {
 		});
 
 		/* IMPORTANTE: o atributo string deve ser o último */
-		let strings = ["number", "date", "time", "datetime", "string"];
+		const strings = ["number", "date", "time", "datetime", "string"];
 		/* IMPORTANTE: object deve ser o último (qualquer um pode ser um objeto) */
-		let objects = [
+		const objects = [
 			"null", "undefined", "boolean", "number", "datetime",
 			"array", "node", "regexp", "function", "file", "object"
 		];
@@ -646,38 +647,37 @@ const wd = (function() {
 
 	Object.defineProperties(__Type.prototype, {
 		constructor: {value: __Type},
-		/**. ``''boolean'' chars``: Checa se o argumento é um conjunto de caracteres (string).**/
+		/**. ``''boolean'' chars``: Checa se o valor é uma string.**/
 		chars: {
 			get: function() {
-				return (typeof this._input === "string" || this._input instanceof String);
+				return (typeof this._input === "string" || this.instanceOf("String"));
 			}
 		},
-		/**. ``''boolean'' empty``: Checa se o argumento é um conjunto de caracteres não visualizáveis (string vazia).**/
+		/**. ``''boolean'' empty``: Checa se o valor é uma string de caracteres não visualizáveis.**/
 		empty: {
 			get: function() {
-				return (this.chars && this._input.trim() === "");
+				return (this.chars && this._input.trim().length === 0);
 			}
 		},
-		/**. ``''boolean'' nonempty``: Checa se o argumento é um conjunto de caracteres visualizáveis (string não vazia).**/
+		/**. ``''boolean'' nonempty``: Checa se o valor é uma string de caracteres visualizáveis.**/
 		nonempty: {
 			get: function() {
-				return (this.chars && this._input.trim() !== "");
+				return (this.chars && this._input.trim().length > 0);
 			}
 		},
-		/**. ``''boolean'' lang``: Checa se o argumento está no formato de linguagem.**/
+		/**. ``''boolean'' lang``: Checa se o valor é uma string no formato de linguagem.**/
 		lang: {
 			get: function() {
 				return (this.chars && __LANG.test(this._input));
 			}
 		},
-		/**. ``''boolean'' email``: Checa se o argumento é um e-mail.**/
+		/**. ``''boolean'' email``: Checa se o valor é uma string no formato de e-mail.**/
 		email: {
 			get: function() {
-				if (!this.chars) return false;
-				return __TYPE.email.email.test(this._input.trim());
+				return this.chars && __TYPE.email.email.test(this._input.trim());
 			}
 		},
-		/**. ``''boolean'' url``: Checa se o argumento é uma URL válida.**/
+		/**. ``''boolean'' url``: Checa se o valor é uma URL válida.**/
 		url: {
 			get: function() {
 				if (!this.chars) return false;
@@ -689,7 +689,7 @@ const wd = (function() {
 				}
 			}
 		},
-		/**. ``''boolean'' month``: Checa se o argumento está no formato de mês:**/
+		/**. ``''boolean'' month``: Checa se o valor está no formato de mês:**/
 		month: {
 			get: function() {
 				if (!this.chars)                  return false;
@@ -701,14 +701,14 @@ const wd = (function() {
 				return true;
 			}
 		},
-		/**. ``''boolean'' week``: Checa se o argumento está no formato de semana.**/
+		/**. ``''boolean'' week``: Checa se o valor está no formato de semana.**/
 		week: {
 			get: function() {
 				if (!this.chars) return false;
 				return this._test.group === "week";
 			}
 		},
-		/**. ``''boolean'' string``: Checa se o argumento é uma string diferente de número ou data/tempo.**/
+		/**. ``''boolean'' string``: Checa se o valor é uma string diferente de número ou data/tempo.**/
 		string: {
 			get: function() {
 				if (this.type !== null) return this.type === "string";
@@ -720,12 +720,12 @@ const wd = (function() {
 				return true;
 			}
 		},
-		/**. ``''boolean'' number``: Checa se o argumento é um número real, fatorial (string) ou percentual (string).**/
+		/**. ``''boolean'' number``: Checa se o valor é um número real, fatorial (string) ou percentual (string).**/
 		number: {
 			get: function() {
 				if (this.type !== null) return this.type === "number";
 				/*-- Número --*/
-				if (typeof this._input === "number" || this._input instanceof Number) {
+				if (typeof this._input === "number" || this.instanceOf("Number")) {
 					if (isNaN(this._input)) return false;
 					this._type     = "number";
 					this._value    = this._input.valueOf();
@@ -756,7 +756,7 @@ const wd = (function() {
 					}
 				}
 				let check = __Type(value);
-				if (check.number) {
+				if (!isNaN(value)) {
 					this._type     = check._type;
 					this._value    = check._value;
 					this._valueOf  = check._valueOf;
@@ -766,65 +766,65 @@ const wd = (function() {
 				return false;
 			}
 		},
-		/**. ``''boolean'' finite``: Checa se o argumento é um número finito.**/
+		/**. ``''boolean'' finite``: Checa se o valor é um número finito.**/
 		finite: {
 			get: function() {
-				return this.number ? isFinite(this.value) : false;
+				return this.number && isFinite(this.value);
 			}
 		},
-		/**. ``''boolean'' infinite``: Checa se o argumento é um número infinito.**/
+		/**. ``''boolean'' infinite``: Checa se o valor é um número infinito.**/
 		infinite: {
 			get: function() {
-				return this.number ? !this.finite : false;
+				return this.number && !isFinite(this.value);
 			}
 		},
-		/**. ``''boolean'' integer``: Checa se o argumento é um número inteiro.**/
+		/**. ``''boolean'' integer``: Checa se o valor é um número inteiro.**/
 		integer: {
 			get: function() {
-				return this.finite ? (this.value%1 === 0) : false;
+				return this.finite && (this.value%1) === 0;
 			}
 		},
-		/**. ``''boolean'' decimal``: Checa se o argumento é um número decimal.**/
+		/**. ``''boolean'' decimal``: Checa se o valor é um número decimal.**/
 		decimal: {
 			get: function() {
-				return this.finite ? (this.value%1 !== 0) : false;
+				return this.finite && (this.value%1) !== 0;
 			}
 		},
-		/**. ``''boolean'' positive``: Checa se o argumento é um número positivo.**/
+		/**. ``''boolean'' positive``: Checa se o valor é um número positivo.**/
 		positive: {
 			get: function() {
 				return this.number && this.value > 0;
 			}
 		},
-		/**. ``''boolean'' negative``: Checa se o argumento é um número negativo.**/
+		/**. ``''boolean'' negative``: Checa se o valor é um número negativo.**/
 		negative: {
 			get: function() {
 				return this.number && this.value < 0;
 			}
 		},
-		/**. ``''boolean'' zero``: Checa se o argumento é zero.**/
+		/**. ``''boolean'' zero``: Checa se o valor é zero.**/
 		zero: {
 			get: function() {
-				return this.number && this.value === 0;
+				return this.value === 0;
 			}
 		},
-		/**. ``''boolean'' xml``: Checa se o argumento é documento XML.**/
+		/**. ``''boolean'' xml``: Checa se o valor é documento XML.**/
 		xml: {
 			get: function() {
-				return this.node && this.value[0] instanceof XMLDocument;
+				return this.instanceOf("XMLDocument");
 			}
 		},
-		/**. ``''boolean'' html``: Checa se o argumento é documento XML.**/
+		/**. ``''boolean'' html``: Checa se o valor é documento HTML.**/
 		html: {
 			get: function() {
-				return this.node && this.value[0] instanceof HTMLDocument;
+				return this.instanceOf("HTMLDocument");
 			}
 		},
-		/**. ``''boolean'' boolean``: Checa se o argumento é um valor booleano.**/
+		/**. ``''boolean'' boolean``: Checa se o valor é um valor booleano.**/
 		boolean: {
 			get: function() {
 				if (this.type !== null) return this.type === "boolean";
-				if (typeof this._input === "boolean" || this._input instanceof Boolean) {
+				if (typeof this._input === "boolean" || this.instanceOf("Boolean")) {
 					this._type     = "boolean";
 					this._value    = this._input.valueOf();
 					this._valueOf  = this._value === true ? 1 : 0;
@@ -834,11 +834,11 @@ const wd = (function() {
 				return false;
 			}
 		},
-		/**. ``''boolean'' regexp``: Checa se o argumento é uma expressão regular.**/
+		/**. ``''boolean'' regexp``: Checa se o valor é uma expressão regular.**/
 		regexp: {
 			get: function() {
 				if (this.type !== null) return this.type === "regexp";
-				if (this._input instanceof RegExp) {
+				if (this.instanceOf("RegExp")) {
 					this._type  = "regexp";
 					this._value = this._input;
 					this._valueOf  = this._value.valueOf();
@@ -848,11 +848,11 @@ const wd = (function() {
 				return false;
 			}
 		},
-		/**. ``''boolean'' datetime``: Checa se o argumento é um conjunto data/tempo. Enquadram-se nessa condição o construtor nativo ``Date`` e strings em formato de data e tempo, nos termos da biblioteca, separados por espaço, virgula e espaço ou a letra T.**/
+		/**. ``''boolean'' datetime``: Checa se o valor é um conjunto data/tempo. Enquadram-se nessa condição o construtor nativo ``Date`` e strings em formato de data e tempo, nos termos da biblioteca, separados por espaço, virgula e espaço ou a letra T.**/
 		datetime: {
 			get: function() {
 				if (this.type !== null) return this.type === "datetime";
-				if (this._input instanceof Date) {
+				if (this.instanceOf("Date")) {
 					let input = this._input;
 					let number = {
 						D: input.getDate(),  M: input.getMonth()+1, Y: input.getFullYear(),
@@ -893,7 +893,7 @@ const wd = (function() {
 				return true;
 			}
 		},
-		/**. ``''boolean'' date``: Checa se o argumento é uma data em formato de string.**/
+		/**. ``''boolean'' date``: Checa se o valor é uma data em formato de string.**/
 		date: {
 			get: function() {
 				if (this.type !== null) return this.type === "date";
@@ -937,11 +937,11 @@ const wd = (function() {
 				return true;
 			}
 		},
-		/**. ``''boolean'' function``: Checa se o argumento é uma função.**/
+		/**. ``''boolean'' function``: Checa se o valor é uma função.**/
 		function: {
 			get: function() {
 				if (this.type !== null) return this.type === "function";
-				if (typeof this._input === "function" || this._input instanceof Function) {
+				if (typeof this._input === "function" || this.instanceOf("Function")) {
 					this._type     = "function";
 					this._value    = this._input;
 					this._valueOf  = "valueOf" in this._value ? this._value.valueOf() : this._value;
@@ -951,11 +951,11 @@ const wd = (function() {
 				return false;
 			}
 		},
-		/**. ``''boolean'' array``: Checa se o argumento é um array.**/
+		/**. ``''boolean'' array``: Checa se o valor é um array.**/
 		array: {
 			get: function() {
 				if (this.type !== null) return this.type === "array";
-				if (Array.isArray(this._input) || this._input instanceof Array) {
+				if (Array.isArray(this._input) || this.instanceOf("Array")) {
 					this._type     = "array";
 					this._value    = this._input;
 					this._valueOf  = "valueOf" in this._value ? this._value.valueOf() : this._value;
@@ -965,7 +965,7 @@ const wd = (function() {
 				return false;
 			}
 		},
-		/**. ``''boolean'' null``: Checa se o argumento é um valor nulo (``null``).**/
+		/**. ``''boolean'' null``: Checa se o valor é nulo.**/
 		null: {
 			get: function () {
 				if (this.type !== null) return this.type === "null";
@@ -979,7 +979,7 @@ const wd = (function() {
 				return false;
 			}
 		},
-		/**. ``''boolean'' undefined``: Checa se o argumento é um valor indefinido (``undefined``).**/
+		/**. ``''boolean'' undefined``: Checa se o valor é indefinido.**/
 		undefined: {
 			get: function() {
 				if (this.type !== null) return this.type === "undefined";
@@ -1030,7 +1030,7 @@ const wd = (function() {
 				if (node === window) {
 					html = [node];
 				} else {
-					let nodes = { /* 0: individual, 1: lista */
+					let nodes = { /* 0: individual, 1: lista */ //FIXME XML e HTML não são nós: terá implicações
 						XMLDocument: 0,
 						HTMLDocument: 0,
 						HTMLElement: 0,
@@ -1043,7 +1043,7 @@ const wd = (function() {
 						HTMLFormControlsCollection: 1
 					};
 					for (let HTML in nodes) {
-						if (HTML in window && node instanceof window[HTML]) {
+						if (this.instanceOf(HTML)) {
 							if (nodes[HTML] === 0) node = [node];
 							html = [];
 							let i = -1;
@@ -1070,7 +1070,7 @@ const wd = (function() {
 				};
 				let file = null;
 				for (let name in files) {
-					if (name in window && this._input instanceof window[name]) {
+					if (this.instanceOf(name)) {
 						file = [];
 						if (files[name] === 0) {
 							file.push(this._input);
@@ -1103,7 +1103,6 @@ const wd = (function() {
 				return false;
 			}
 		},
-
 		/**. ``''string'' type``: Retorna o tipo do argumento verificado (number, date, time, datetime, string, null, undefined, boolean, array, node, regexp, function, object).**/
 		type: {
 			get: function() {return this._type;}
@@ -1123,8 +1122,215 @@ const wd = (function() {
 			value: function() {
 				return this._toString;
 			}
+		},
+		/**. ``''boolean'' instanceOf(''string'' name)``: Retorna se o valor informado é instância do objeto cujo __nome__ é informado no argumento ``name``.**/
+		instanceOf: {
+			value: function (name) {
+				name = String(name).trim();
+				if (name in window)
+					return this._input instanceof window[name];
+				return false;
+			}
 		}
 	});
+
+/*----------------------------------------------------------------------------*/
+	/**#### Administração
+	###### ``**constructor** ''object'' __DataSet(''any'' input)``
+	Construtor para gerir conjunto de dados. O argumento opcional ``input`` pode ser uma string com dados separados por \r\n ou um objeto (ver retornos de toString e valueOf).**/
+	function __DataSet(input) {
+		if (!(this instanceof __DataSet))	return new __DataSet(input);
+		Object.defineProperties(this, {
+			_data: {value: []}
+		});
+
+		const check = __Type(input);console.log(check.type, check.nonempty);
+		if (check.nonempty) {
+			const data = input.trim().split(/[\r\n]+/);
+			for (let v of data) {
+				let name  = v.split(":")[0].trim();
+				let value = v.replace(/^[^:]+\:(.+)$/, "$1").trim();
+				if (name.length > 0) this.append(name, value);
+			}
+		} else if (check.object) {
+			for (let name in input)
+				this.append(name, input[name]);
+		}
+	}
+
+	Object.defineProperties(__DataSet.prototype, {
+		constructor: {value: __DataSet},
+		/**. ``''self'' append(''string'' name, ''any'' value)``: Acrescenta um valor (``value``) vinculado a um identificador (``name``).**/
+		append: {
+			value: function(name, value) {
+				name = String(name).replace(/\[\]$/, "").trim();
+				if (name.length !== 0)
+					this._data.push({name: name, value: value});
+				return this
+			}
+		},
+		/**. ``''self'' delete(''string'' name)``: Remove todos os valores associados ao indentificador ``name``.**/
+		delete: {
+			value: function(name) {
+				name = String(name).replace(/\[\]$/, "").trim();
+				if (name.length !== 0)
+					this._data.forEach(function(v,i,a) {
+						if (v !== null && name === v.name) a[i] = null;
+					});
+				return this;
+			}
+		},
+		/**. ``''self'' set(''string'' name, ''any'' value)``: Define um valor (``value``) vinculado a um identificador (``name``), substuindo os existentes.**/
+		set: {
+			value: function(name, value) {
+				this.delete(name).append(name, value);
+				return this;
+			}
+		},
+		/**. ``''array'' getAll(''string'' name)``: Retorna uma lista de valores identificados por ``name``.**/
+		getAll: {
+			value: function(name) {
+				name = String(name).replace(/\[\]$/, "").trim();
+				const list = [];
+				if (name.length !== 0)
+					this._data.forEach(function(v,i,a) {
+						if (v !== null && name === v.name) list.push(v.value);
+					});
+				return list;
+			}
+		},
+		/**. ``''boolean'' has(''string'' name)``: Retorna verdadeiro se o identificador ``name`` existir.**/
+		has: {
+			value: function(name) {
+				name = String(name).replace(/\[\]$/, "").trim();
+				if (name.length !== 0)
+					this._data.forEach(function(v,i,a) {
+						if (v !== null && name === v.name) return true;
+					});
+				return false;
+			}
+		},
+		/**. ``''self'' forEach(''function'' caller)``: Chama ``caller`` para cada item, repassando o valor e nome, respectivamente, como argumentos.**/
+		forEach: {
+			value: function(caller) {
+				if (__Type(caller).function)
+					this._data.forEach(function(v,i,a) {
+						if (v !== null) caller(v.value, v.name);
+					});
+				return this;
+			}
+		},
+
+		/**. ``''object'' toObject``: Converte o conjunto de dados em um objeto organizado em listas.**/
+		toObject: {
+			value: function() {
+				const data = {};
+				for (let v of this._data) {
+					if (v === null) continue;
+					let name  = v.name;
+					let value = v.value;
+					let check = __Type(value);
+					if (!(name in data) && !check.object) data[name] = [];
+					if (check.instanceOf("FileList") || check.array) {
+						if (value.length === 0) {
+							data[name].push("");
+						} else {
+							for (let i = 0; i < value.length; i++)
+								data[name].push(value[i]);
+						}
+					}
+					else if (check.object) {
+						let count = 0;
+						for (let i in value) count++;
+						if (count === 0) {
+							if (!(name in data)) data[name] = [];
+							data[name].push("");
+						} else {
+							for (let i in value) {
+								let prop = name+"."+i;
+								if (!(prop in data)) data[prop] = [];
+								data[prop].push(value[i]);
+							}
+						}
+					}
+					else {
+						data[name].push(value);
+					}
+				}
+				return data;
+			}
+		},
+		/**. ``''object'' toHeaders()``: Converte o conjunto de dados em um objeto Headers.**/
+		toHeaders: {
+			value: function() {
+				if (!("Headers" in window)) return null;
+				const data = new Headers();
+				const src  = this.toObject();
+				for (let name in src)
+					for (let value of src[name])
+						data.append(name, value);
+				return data;
+			}
+		},
+		/**. ``''object'' toFormData()``: Converte o conjunto de dados em um objeto FormData.**/
+		toFormData: {
+			value: function() {
+				if (!("FormData" in window)) return null;
+				const data = new FormData();
+				const src  = this.toObject();
+				for (let name in src)
+					for (let value of src[name])
+						data.append(name+(src[name].length > 1 ? "[]" : ""), value);
+				return data;
+			}
+		},
+		/**. ``''object'' toURLSearchParams()``: Converte o conjunto de dados em um objeto URLSearchParams.**/
+		toURLSearchParams: {
+			value: function() {
+				if (!("URLSearchParams" in window)) return null;
+				const data = new URLSearchParams();
+				const src  = this.toObject();
+				for (let name in src)
+					for (let value of src[name])
+						data.append(name+(src[name].length > 1 ? "[]" : ""), value);
+				return data;
+			}
+		},
+		/**. ``''string'' toURL()``: Converte o conjunto de dados em uma string com itens separados por &amp;.**/
+		toURL: {
+			value: function() {
+				const data = [];
+				const src  = this.toObject();
+				for (let name in src) {
+					for (let value of src[name]) {
+						let prop = encodeURIComponent(name)+(src[name].length > 1 ? "[]" : "");
+						let val  = encodeURIComponent(value);
+						data.push(prop+"="+val);
+					}
+				}
+				return data.join("&");
+			}
+		},
+		/**. ``''object'' valueOf()``: Converte o conjunto de dados em um objeto organizado em strings.**/
+		valueOf: {
+			value: function() {
+				const data = {};
+				const src  = this.toObject();
+				for (let i in src) data[i] = src[i].join(", ");
+				return data;
+			}
+		},
+		/**. ``''string'' toString()``: Converte o conjunto de dados em uma string com itens separados por \r\n.**/
+		toString: {
+			value: function(input) {
+				const data = [];
+				const src  = this.valueOf();
+				for (let i in src) data.push(i+": "+src[i]);
+				return data.join("\r\n");
+			}
+		},
+	});
+
 /*============================================================================*/
 	/**### Números
 	###### ``**constructor** ''object'' __Number(number input=0)``
@@ -1179,35 +1385,35 @@ const wd = (function() {
 				return (exp*this.valueOf() - exp*this.int) / exp;
 			}
 		},
-		/**. ``''number'' round(''integer'' n=3)``: Arredonda o número conforme especificado. O argumento ``n`` define a quantidade de casas decimais.**/
+		/**. ``''number'' round(''integer'' n)``: Arredonda o número conforme especificado. O argumento ``n`` define a quantidade de casas decimais.**/
 		round: {
 			value: function(n) {
 				if (!this.finite) return this.valueOf();
-				n = __Type(n);
-				n = !n.finite ? 3 : (n.negative ? 0 : Math.trunc(n.value));
-				return Number(this.valueOf().toFixed(n));
+				const check = __Type(n);
+				const value = check.finite && !check.negative ? Math.trunc(check.value) : 0;
+				return Number(this.valueOf().toFixed(value));
 			}
 		},
-		/**. ``''number'' cut(''integer'' n=3)``: Corta o número de casas decimais conforme especificado sem arrendondar. O argumento opcional ``n`` define a quantidade de casas decimais.**/
+		/**. ``''number'' cut(''integer'' n)``: Corta o número de casas decimais conforme especificado sem arrendondar. O argumento opcional ``n`` define a quantidade de casas decimais.**/
 		cut: {
 			value: function(n) {
 				if (!this.finite) return this.valueOf();
-				n = __Type(n);
-				n = !n.finite ? 3 : (n.negative ? 0 : Math.trunc(n.value));
+				const check = __Type(n);
+				const value = check.finite && !check.negative ? Math.trunc(check.value) : 0;
 				let base = 1;
 				let i = -1;
 				while (++i < n) base = 10*base;
-				let value = __Number(base*this.valueOf());
-				return value.int/base;
+				const number = __Number(base*this.valueOf());
+				return number.int/base;
 			}
 		},
 		/**. ``''array'' primes``: Retorna uma lista com os números primos até o valor do objeto.**/
 		primes: {
 			get: function() {
 				if (!this.finite || this.valueOf() < 2) return [];
-				let list = [2];
-				let int  = this.int;
-				let i    = 3;
+				const list = [2];
+				const int  = this.int;
+				let i = 3;
 				while (i <= int) {
 					let isPrime = true;
 					let j = 0; /* não checar o 2 */
@@ -1227,20 +1433,19 @@ const wd = (function() {
 		prime: {
 			get: function() {
 				if (this.valueOf() < 2 || !this.finite || this.dec !== 0) return false;
-				return this.primes.reverse()[0] === this.valueOf() ? true : false;
+				return this.primes.reverse()[0] === this.valueOf();
 			}
 		},
-		/**. ``''string'' frac(''integer'' n=3)``: Retorna a notação numérica em forma de fração. O argumento ``n`` define o limitador de precisão (valores maiores exigem mais processamento).**/
+		/**. ``''string'' frac(''integer'' n)``: Retorna a notação numérica em forma de fração. O argumento ``n`` define o limitador de precisão (valores maiores exigem mais processamento, evitar).**/
 		frac: {
 			value: function(n) {
-				let int = Math.abs(this.int);
-				let dec = Math.abs(this.dec);
-				if (!this.finite || dec === 0) return this.toString();
-				/* checando argumento limitador */
+				if (!this.finite || this.dec === 0) return this.toString();
 				n = __Type(n);
 				n = !n.finite ? 3 : (n < 1 ? 0 : (n > 5 ? 5 : Math.trunc(n.value)));
 				if (n === 0) return String(this.int);
-				/* divisor, dividendo e números significativos */
+				/* parte inteira, decimal, divisor, dividendo e números significativos */
+				let int = Math.abs(this.int);
+				let dec = Math.abs(this.dec);
 				let div = 1;
 				let dnd = dec * div;
 				let len = 0;
@@ -1289,10 +1494,10 @@ const wd = (function() {
 				return "real";
 			}
 		},
-		/**. ``''string'' precision(''integer'' n=3)``: Fixa a quantidade de dígitos numéricos (argumento ``n``) a exibir.**/
+		/**. ``''string'' precision(''integer'' n)``: Fixa a quantidade de dígitos numéricos (argumento ``n``) a exibir.**/
 		precision: {
 			value: function(n) {
-				let check = __Type(n);
+				const check = __Type(n);
 				let abs   = this.abs;
 				n = Math.trunc(check.finite ? check.value : 3);
 				if (n < 1) n = 1;
@@ -1432,14 +1637,13 @@ const wd = (function() {
 		}
 	});
 /*===========================================================================*/
-	/**### Textos
+	/**### Caracteres
 	###### ``**constructor** ''object'' __String(''string'' input)``
 	Construtor para manipulação de textos. O argumento ``input`` define o texto de entrada.**/
 	function __String(input) {
 		if (!(this instanceof __String)) return new __String(input);
-		if (!__Type(input).chars) input = String(input);
-		input = input.normalize();
-		let chars = [];
+		input = String(input).normalize();
+		const chars = [];
 		for (let i of input) chars.push(i);
 		Object.defineProperties(this, {
 			_value: {value: input},
@@ -1449,9 +1653,11 @@ const wd = (function() {
 
 	Object.defineProperties(__String.prototype, {
 		constructor: {value: __String},
+		/**. ``''string'' valueOf()``: Retorna o valor de entrada.**/
 		valueOf: {
 			value: function() {return this._value;}
 		},
+		/**. ``''string'' toString()``: Retorna o valor de entrada sem espaços extras.**/
 		toString: {
 			value: function() {return this.clear(true, false);}
 		},
@@ -1481,7 +1687,7 @@ const wd = (function() {
 				return list.join("");
 			}
 		},
-		/**. ``''string'' captalize``: Primeira letra de cada palavra, apenas, em caixa alta.**/
+		/**. ``''string'' captalize``: Caixa alta na primeira letra de cada palavra apenas.**/
 		capitalize: {
 			get: function() {
 				let list = this.chars;
@@ -1514,9 +1720,9 @@ const wd = (function() {
 		- "(##) # ####-####?(##) ####-####" (telefone) casa com "01234567890", retornando "(01) 2 3456-7890", e casa também com "0123456789" retornando "(01) 2345-6789".**/
 		mask: {
 			value: function(model, method) {
-				let input = this._value;
-				let code  = {"#": /\d/, "@": /\D/, "*": /./};
-				let nline = "\n"+String(Date.now())+"\n";
+				const input = this.valueOf();
+				const code  = {"#": /\d/, "@": /\D/, "*": /./};
+				const nline = "\n"+String(Date.now())+"\n";
 				let mask, test, c;
 				model = String(model).replace(/([^'])\?/, "$1"+nline).split(nline);
 
@@ -3139,167 +3345,7 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	/**#### Dados para Requisições
-	###### ``**constructor** ''object'' __DataAdmin()``
-	Construtor para gerir múltiplas entradas de dados.**/
-	function __DataAdmin() {
-		if (!(this instanceof __DataAdmin))	return new __DataAdmin();
-		Object.defineProperties(this, {
-			_data: {value: []}
-		});
-	}
 
-	Object.defineProperties(__DataAdmin.prototype, {
-		constructor: {value: __DataAdmin},
-		/**. ``''self'' append(''string'' name, ''any'' value)``: Acrescenta um valor (``value``) vinculado a um identificador (``name``).**/
-		append: {
-			value: function(name, value) {
-				name = String(name).replace(/\[\]$/, "").trim();
-				if (name.length !== 0)
-					this._data.push({name: name, value: value});
-				return this
-			}
-		},
-		/**. ``''self'' delete(''string'' name)``: Remove todos os valores associados ao indentificador ``name``.**/
-		delete: {
-			value: function(name) {
-				name = String(name).replace(/\[\]$/, "").trim();
-				if (name.length !== 0)
-					this._data.forEach(function(v,i,a) {
-						if (v !== null && name === v.name) a[i] = null;
-					});
-				return this;
-			}
-		},
-		/**. ``''self'' set(''string'' name, ''any'' value)``: Define um valor (``value``) vinculado a um identificador (``name``), substuindo os existentes.**/
-		set: {
-			value: function(name, value) {
-				this.delete(name).append(name, value);
-				return this;
-			}
-		},
-		/**. ``''array'' getAll(''string'' name)``: Retorna uma lista de valores identificados por ``name``.**/
-		getAll: {
-			value: function(name) {
-				name = String(name).replace(/\[\]$/, "").trim();
-				const list = [];
-				if (name.length !== 0)
-					this._data.forEach(function(v,i,a) {
-						if (v !== null && name === v.name) list.push(v.value);
-					});
-				return list;
-			}
-		},
-		/**. ``''boolean'' has(''string'' name)``: Retorna verdadeiro se o identificador ``name`` existir.**/
-		has: {
-			value: function(name) {
-				name = String(name).replace(/\[\]$/, "").trim();
-				if (name.length !== 0)
-					this._data.forEach(function(v,i,a) {
-						if (v !== null && name === v.name) return true;
-					});
-				return false;
-			}
-		},
-		/**. ``''self'' forEach(''function'' caller)``: Chama ``caller`` para cada item, repassando nome e o valor como argumentos.**/
-		forEach: {
-			value: function(caller) {
-				if (__Type(caller).function)
-					this._data.forEach(function(v,i,a) {
-						if (v !== null) caller(v.value, v.name);
-					});
-				return this;
-			}
-		},
-		/**. ``''object'' _formDataAdmin``: Retorna um novo objeto __DataAdmin contendo o conjunto de dados de forma individual sem os nulos para fins de submissão de formulários.**/
-		_formDataAdmin: {
-			get: function() {
-				const data = new __DataAdmin();
-				for (let v of this._data) {
-					if (v === null) continue;
-					let name  = v.name;
-					let value = v.value;
-					let check = __Type(value);
-					if (check.file && value instanceof FileList) {
-						if (value.length === 0)
-							data.append(name, "");
-						else
-							for (let i = 0; i < value.length; i++)
-								data.append(name, value[i]);
-					} else if (check.array && value.length > 0) {
-						for (let i = 0; i < value.length; i++)
-							data.append(name, value[i]);
-					} else if (check.object) {
-						let count = 0;
-						for (let j in value) count++;
-						if (count === 0)
-							data.append(name, "");
-						else
-							for (let i in value) data.append(name+"."+i, value[i]);
-					} else {
-						data.append(name, value);
-					}
-				}
-				return data;
-			}
-		},
-		/**. ``''object'' dataType(''string'' type)``: Retorna o objeto especficado em ``type`` contendo os dados ou nulo. Os valores do argumento são "Headers", "FormData" ou "URL" (URLSearchParams).**/
-		dataType: {
-			value: function(type) {
-				type = __Type(type).nonempty ? type.toLowerCase().trim() : null;
-				const types = {
-					headers:  "Headers" in window ? new Headers() : null,
-					formdata: "FormData" in window ? new FormData() : null,
-					url:      "URLSearchParams" in window ? new URLSearchParams() : null,
-				};
-				if (!(type in types) || types[type] === null) return null;
-				const data = types[type];
-				const form = type === "headers" ? this : this._formDataAdmin;
-				const size = {};
-				form.forEach(function (v,i) {
-					let name  = i;
-					let value = v;
-					let check = __Type(value);
-					if (!(name in size)) size[name] = form.getAll(name).length;
-					if (type !== "headers" && size[name] > 1) name += "[]";
-					data.append(name, value);
-				});
-				return data;
-			}
-		},
-		/**. ``''object'' valueOf(''object'' input)``: Retorna o conjuto de dados em forma de objeto. Se o argumento opcional ``input`` for informado nesse mesmo formato, o conjunto de dados será definido.**/
-		valueOf: {
-			value: function(input) {
-				if (__Type(input).object) {
-					for (let name in input) this.append(name, input[name]);
-					return;
-				}
-				let list = {};
-				this._data.forEach(function (v,i,a) {
-					if (v !== null) list[v.name] = v.value;
-				});
-				return list;
-			}
-		},
-		/**. ``''string'' toString(''string'' input)``: Retorna o conjuto de dados em string. Se o argumento opcional ``input`` for informado no formato "name: value\r\n", o conjunto de dados será definido.**/
-		toString: {
-			value: function(input) {
-				if (__Type(input).nonempty) {
-					const headers = input.split(/[\r\n]+/g);
-					for (let v of headers) {
-						let name  = v.split(":")[0].trim();
-						let value = v.replace(/^[^:]+\:(.+)$/, "$1").trim();
-						if (name.length > 0) this.append(name, value);
-					}
-					return;
-				}
-				const list = [];
-				this._data.forEach(function (v,i,a) {
-					if (v !== null) list.push(v.name+": "+v.value);
-				});
-				return list.join("\r\n");
-			}
-		},
-	});
 
 	//FIXME apagar isso aqui pois será substituído por DataAdmin (é utilizado em send)
 	/**#### Dados para Requisições
@@ -7928,7 +7974,7 @@ const wd = (function() {
 			svg:      {value: function(){return __SVG.apply(null, Array.prototype.slice.call(arguments));}},
 			table:    {value: function(){return __Table.apply(null, Array.prototype.slice.call(arguments));}},
 			url:      {value: function(){return __URL.apply(null, Array.prototype.slice.call(arguments));}},
-			admin:    {value: function(){return __DataAdmin.apply(null, Array.prototype.slice.call(arguments));}},
+			admin:    {value: function(){return __DataSet.apply(null, Array.prototype.slice.call(arguments));}},
 			LANG:     {value: __LANG},
 			TYPE:     {value: __TYPE},
 			DEVICE:   {value: __DEVICECONTROLLER},
