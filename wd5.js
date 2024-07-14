@@ -591,7 +591,7 @@ const wd = (function() {
 
 /*============================================================================*/
 	/**### Administração de Dados
-	#### Tipologia
+	#### Tipologia de Dados
 	###### ``**constructor** ''object'' __Type(''any''  input)``
 	Construtor para identificação do tipo de dado informado em ``input``.**/
 	function __Type(input) {
@@ -1135,7 +1135,7 @@ const wd = (function() {
 	});
 
 /*----------------------------------------------------------------------------*/
-	/**#### Administração
+	/**#### Gestão de Dados
 	###### ``**constructor** ''object'' __DataSet(''any'' input)``
 	Construtor para gerir conjunto de dados. O argumento opcional ``input`` pode ser uma string com dados separados por \r\n ou um objeto (ver retornos de toString e valueOf).**/
 	function __DataSet(input) {
@@ -1220,7 +1220,6 @@ const wd = (function() {
 				return this;
 			}
 		},
-
 		/**. ``''object'' toObject``: Converte o conjunto de dados em um objeto organizado em listas.**/
 		toObject: {
 			value: function() {
@@ -1327,6 +1326,310 @@ const wd = (function() {
 				const src  = this.valueOf();
 				for (let i in src) data.push(i+": "+src[i]);
 				return data.join("\r\n");
+			}
+		},
+	});
+
+/*----------------------------------------------------------------------------*/
+	/**#### Árvore de Dados
+	###### ``**constructor** ''object'' __Tree()``
+	Construtor para manipulação de textos com com aberturas e fechamentos de níveis para fins de formação personalizada de código HTML para renderização.**/
+	function __Tree() {
+		if (!(this instanceof __Tree)) return new __Tree();
+		Object.defineProperties(this, {
+			_tree:    {value: []},
+			_data:    {value: []},
+			_pattern: {writable: true, value: "?"},
+			_save:    {writable: true, value: []}
+		});
+	}
+
+	Object.defineProperties(__Tree.prototype, {
+		constructor: {value: __Tree},
+		/**. ``''string'' _char(''string'' x)``: Retorna o argumento adaptado para exibição HTML.**/
+		_char: {
+			value: function(x) {
+				if (x === undefined || x === null) return "";
+				const chars = String(x).split("");
+				const html  = [
+					{a: "&",  b: "&amp;"}, {a: "<",  b: "&lt;"},  {a: ">", b: "&gt;"},
+					{a: "\n", b: "</br>"}, {a: "\t", b: "&Tab;"}, {a: " ", b: "&nbsp;"}
+				];
+				chars.forEach(function(v,i,a) {
+					for (let h of html)
+						if (v === h.a) a[i] = h.b;
+				});
+				return chars.join("");
+			}
+		},
+		/**. ``''string'' level``: Retorna o nome do último nível informado ou nulo se vazio.**/
+		level: {
+			get: function() {
+				if (this._tree.length === 0) return null;
+				return this._tree[this._tree.length - 1];
+			}
+		},
+		/**. ``''string'' pattern(''string'' model)``: Define e retorna um modelo padrão de ''tag'' a ser elaborada a partir do nome do nível. O nome do nível será inserido no modelo a partir da substituição do caracteres de interrogação. Por exemplo, se definido o modelo "span-?" e nível "line", a ''tag'' de abertura será ''<span-line>''. O valor padrão é "?", obtido quando se define o argumento como string vazia ou nulo. Se o argumento for indefinido, retorna o valor.**/
+		pattern: {
+			value: function(model) {
+				if (model === undefined) return this._pattern;
+				const pattern = model === null ? "?" : String(model).replace(/\s+/g, "").trim();
+				this._pattern = pattern.length === 0 ? "?" : pattern;
+				return this._pattern;
+			}
+		},
+		/**. ``''self'' add(''string'' chars)``: Adiciona caracteres à arvore.**/
+		add: {
+			value: function(chars) {
+				this._data.push(this._char(chars));
+				return this;
+			}
+		},
+		/**. ``''self'' open(''string'' name, ''string'' chars)``: Abre um novo nível (``nome``) e adiciona caracteres (``chars``) após abertura.**/
+		open: {
+			value: function(name, chars) {
+				const level = String(name).replace(/\s+/g, "").trim();
+				const elem  = this.pattern().replace(/\?+/g, level);
+				this._tree.push(level);
+				this._data.push("<"+elem+">"+this._char(chars));
+				return this;
+			}
+		},
+		/**. ``''self'' close(''string'' chars)``: Fecha o último nível aberto e adiciona caracteres (``chars``) antes do fechamento.**/
+		close: {
+			value: function(chars) {
+				const elem = this.pattern().replace(/\?+/g, this.level);
+				this._data.push(this._char(chars)+"</"+elem+">");
+				this._tree.pop();
+				return this;
+			}
+		},
+		/**. ``''self'' finish()``: Fecha todos os níveis abertos.**/
+		finish: {
+			value: function() {
+				while (this.level !== null) this.close("");
+				return this;
+			}
+		},
+		/**. ``''self'' walkTo(''integer'' level)``: Fechar todos os níveis até o nível informado em ''level'', salvando o caminho para restauração através do método ''backTo''.**/
+		walkTo: {
+			value: function(level) {
+				const check = __Type(level);
+				if (check.integer && !check.negative && check.value < this._tree.length) {
+					this._save = this._tree.slice();
+					while (this._tree.length > check.value) this.close();
+				}
+				return this;
+			}
+		},
+		/**. ``''self'' backTo()``: Reabre os caminhos fechados em ''walkTo''.**/
+		backTo: {
+			value: function() {
+				if (this._tree.length < this._save.length) {
+					for (let i = this._tree.length; i < this._save.length; i++)
+						this.open(this._save[i], "");
+					this._save = [];
+				}
+				return this;
+			}
+		},
+		/**. ``''string'' toString()``: Retorna o resultado da árvore.**/
+		toString: {
+			value: function() {return this._data.join("");}
+		},
+		/**. ``''string'' valueOf()``: Como o método toString.**/
+		valueOf: {
+			value: function() {return this._data.join("");}
+		}
+	});
+
+/*----------------------------------------------------------------------------*/
+	/**#### Transformação de Dados
+	###### ``**constructor** ''object'' __Parse(''any'' input)``
+	Construtor para transformação de dados. Os dados de entrada são informados no argumento ``input``. Se a transformação falhar, os atributos retornarão nulo.**/
+	function __Parse(input) {
+		if (!(this instanceof __Parse)) return new __Parse(input);
+		const check = new __Type(input);
+		let   table = check.node && check.value.length === 1;
+		Object.defineProperties(this, {
+			_data:  {value: input},
+			_check: {value: check},
+			_saved: {value: {}},
+			_table: {value: table && input.tagName.toLowerCase() === "table"}
+		});
+	}
+
+	Object.defineProperties(__Parse.prototype, {
+		constructor: {value: __Parse},
+		/**. ``''node'' csvTable``: Transforma string CSV em tabela HTML.**/
+		csvTable: {
+			get: function() {
+				if ("csvTable" in this._saved) return this._saved.csvTable;
+				let data = null;
+				if (this._check.chars) {
+					const tree = new __Tree();
+					const code = this._data.split("");
+					const cols = /[\ \,\;\t\|]/;
+					let    col = null;
+					let  lines = 0;
+					tree.open("table").open("thead").open("tr");
+					code.forEach(function(v,i,a) {
+						const tag = tree.level;
+						if (tag === "span") {
+							if (v === "'" && a[i+1] === "'") {
+								a[i+1] = "";
+								tree.add("\"");
+							} else if (v === "\"") {
+								tree.close();
+								if (col === null) col = a[i+1];
+							} else {
+								tree.add(v)
+							}
+						}
+						else if (tag === "td" || tag === "th") {
+							if (v === "\n") {
+								if (lines === 0) {
+									tree.close().close().close().open("tbody").open("tr");
+								} else if (lines < (a.length - 1)) {
+									tree.close().close().open("tr");
+								}
+								lines++;
+							} else if (col === null && cols.test(v)) {
+								col = v;
+								tree.close()
+							} else if (col === v) {
+								tree.close();
+							} else {
+								tree.add(v);
+							}
+						}
+						else if (tag === "tr") {
+							if (v === "\n") {
+								if (lines === 0) {
+									tree.close().close().open("tbody").open("tr");
+								} else if (lines < (a.length - 1)) {
+									tree.close().open("tr");
+								}
+								lines++;
+							} else if (v === "\"") {
+								tree.open(lines === 0 ? "th" : "td").open("span");
+							} else {
+								tree.open(lines === 0 ? "th" : "td", v);
+							}
+						}
+					});
+					tree.finish();
+					const div = document.createElement("DIV");
+					div.innerHTML = tree.valueOf();
+					data = div.children[0];
+				}
+				this._saved["csvTable"] = data;
+				return this.csvTable;
+			}
+		},
+		/**. ``''array'' tableMatrix``: Transforma tabela HTML em matriz.**/
+		tableMatrix: {
+			get: function() {
+				if ("tableMatrix" in this._saved) return this._saved.tableMatrix;
+				let data = null;
+				if (this._table) {
+					const matrix = [];
+					const table  = this._data;
+					const rows   = table.rows;
+					for (let i = 0; i < rows.length; i++) {
+						matrix.push([]);
+						let cells = rows[i].cells;
+						for (let j = 0; j < cells.length; j++)
+							matrix[i].push(cells[j].textContent);
+					}
+					data = matrix;
+				}
+				this._saved["tableMatrix"] = data;
+				return this.tableMatrix;
+			}
+		},
+		/**. ``''string'' matrixCSV``: Transforma uma matriz em string CSV.**/
+		matrixCSV: {
+			get: function() {
+				if ("matrixCSV" in this._saved) return this._saved.matrixCSV;
+				let data = null;
+				if (this._check.array) {
+					try {
+						const csv = []
+						this._data.forEach(function (row,i,a) {
+							csv.push([]);
+							row.forEach(function (col,j,b) {
+								let text = String(col).replace(/\"/g, "''");
+								csv[i].push("\"" + text + "\"");
+							});
+							csv[i] = csv[i].join(",");
+						});
+						data = csv.join("\n");
+					} catch(e) {}
+				}
+				this._saved["matrixCSV"] = data;
+				return this.matrixCSV;
+			}
+		},
+		/**. ``''array'' csvMatrix``: Transforma string CSV em matriz.**/
+		csvMatrix: {
+			get: function() {
+				if ("csvMatrix" in this._saved) return this._saved.csvMatrix;
+				let data = null;
+				if (this.csvTable !== null) {
+					const parse = new __Parse(this.csvTable);
+					data = parse.tableMatrix;
+				}
+				this._saved["csvMatrix"] = data;
+				return this.csvMatrix;
+			}
+		},
+		/**. ``''string'' tableCSV``: Transforma tabela HTML string CSV.**/
+		tableCSV: {
+			get: function() {
+				if ("tableCSV" in this._saved) return this._saved.tableCSV;
+				let data = null;
+				if (this.tableMatrix !== null) {
+					const parse = new __Parse(this.tableMatrix);
+					data = parse.matrixCSV;
+				}
+				this._saved["tableCSV"] = data;
+				return this.tableCSV;
+			}
+		},
+		/**. ``''node'' matrixTable``: Transforma uma matriz em tabela HTML.**/
+		matrixTable: {
+			get: function() {
+				if ("matrixTable" in this._saved) return this._saved.matrixTable;
+				let data = null;
+				if (this.matrixCSV !== null) {
+					const parse = new __Parse(this.matrixCSV);
+					data = parse.csvTable;
+				}
+				this._saved["matrixTable"] = data;
+				return this.matrixTable;
+			}
+		},
+		/**. ``''object'' stringJSON``: Transforma string JSON em objeto.**/
+		stringJSON: {
+			get: function() {
+				if ("stringJSON" in this._saved) return this._saved.stringJSON;
+				let data = null;
+				if (this._check.chars)
+					try {data = JSON.parse(this._data);} catch(e) {}
+				this._saved["stringJSON"] = data;
+				return this.stringJSON;
+			}
+		},
+		/**. ``''string'' jsonString``: Transforma objeto em string JSON.**/
+		jsonString: {
+			get: function() {
+				if ("jsonString" in this._saved) return this._saved.jsonString;
+				let data = null;
+				if (this._check.object)
+					try {data = JSON.stringify(this._data);} catch(e) {}
+				this._saved["jsonString"] = data;
+				return this.jsonString;
 			}
 		},
 	});
@@ -1714,44 +2017,45 @@ const wd = (function() {
 		|@|Exige um não dígito.|
 		|*|Exige um valor qualquer.|
 		|?|Separa modelos alternativos caso o anterior não case.|
-		|' (aspóstofro)|Fixa o caractere seguinte sem checar se casa|
+		|%|Fixa o caractere seguinte sem checar se casa.|
 		###### Exemplos
-		- "##/##/####" (data) casa com "01234567" e retorna "01/23/4567".
-		- "(##) # ####-####?(##) ####-####" (telefone) casa com "01234567890", retornando "(01) 2 3456-7890", e casa também com "0123456789" retornando "(01) 2345-6789".**/
+		|Modelo|Valor|Retorno|
+		|##/##/####|01234567|01/23/4567|
+		|(##) # ####-####?(##) ####-####|01234567890|(01) 2 3456-7890|
+		|(##) # ####-####?(##) ####-####|0123456789|(01) 2345-6789|**/
 		mask: {
 			value: function(model, method) {
-				const input = this.valueOf();
-				const code  = {"#": /\d/, "@": /\D/, "*": /./};
-				const nline = "\n"+String(Date.now())+"\n";
-				let mask, test, c;
-				model = String(model).replace(/([^'])\?/, "$1"+nline).split(nline);
-
-				let m = -1;
-				while (++m < model.length) {
-					c    = 0;
-					test = true;
-					mask = String(model[m]).split("");
-					mask.forEach(function(v,i,a) {
-						if (!test) return;
-						if (v === "'" && i < (a.length-1)) {
-							a[i]   = a[i+1];
-							a[i+1] = null;
-						} else if (v === null) {
-							a[i] = "";
-						} else if (v in code) {
-							test = code[v].test(input[c]);
-							a[i] = test ? input[c] : v;
-							c    = c + (test ? 1 : 0);
-						} else {
-							c = c + (v === input[c] ? 1 : 0);
+				const char = this.valueOf().split("");
+				const mask = String(model).split("");
+				const code = "#@*%";
+				let c = 0, m = -1, ok = true, base = [];
+				while (++m < mask.length) {
+					if (mask[m] === null) {
+						continue;
+					} else if (mask[m] === "?") {
+						if (ok && c === char.length) return base.join("");
+						ok = true; c = 0; base = [];
+					} else if (ok && mask[m] === "%") {
+						let fixed = code.indexOf(mask[m+1]) >= 0;
+						let point = fixed ? mask[m+1] : mask[m];
+						base.push(point);
+						c += char[c] === point ? 1 : 0;
+						if (fixed) mask[m+1] = null;
+					} else if (ok && code.indexOf(mask[m]) >= 0) {
+						switch(mask[m]) {
+							case "#": {ok = (/^\d$/).test(char[c]); break;}
+							case "@": {ok = (/^\D$/).test(char[c]); break;}
+							case "*": {ok = (/^\.$/).test(char[c]); break;}
 						}
-					});
-					test = test && c === input.length;
-					if (test) break;
+						if (ok) {base.push(char[c]);}
+						else    {base = [];}
+						c = ok ? (c + 1) : 0;
+					} else if (ok) {
+						base.push(mask[m]);
+						c += char[c] === mask[m] ? 1 : 0;
+					}
 				}
-				if (!test) return "";
-				if (__Type(method).function) return method(mask.join(""));
-				return mask.join("");
+				return (ok && c === char.length) ? base.join("") : "";
 			}
 		},
 		/**. ``''string'' dash``: Retorna uma string identificadora no formato de traços (alfabetos latinos).**/
@@ -1760,7 +2064,7 @@ const wd = (function() {
 				let value = this.clear().replace(/\ +/g, "-").split("");
 				value.forEach(function (v,i,a) {
 					/* eliminar caracteres não permitidos */
-					if (!(/[a-zA-Z0-9._:-]/).test(v)) a[i] = "";
+					if (!(/[a-zA-Z0-9_.:\-]/).test(v)) a[i] = "";
 					/* adicionar traço antes de maiúsculas e inverter caixa */
 					else if (/[A-Z]/.test(v)) a[i] = "-"+v.toLowerCase();
 				});
@@ -2017,118 +2321,6 @@ const wd = (function() {
 		},
 	});
 
-/*----------------------------------------------------------------------------*/
-	/**### Tree
-	###### ``**constructor** ''object'' __Tree()``
-	Construtor para manipulação de textos com com aberturas e fechamentos de níveis para fins de formação personalizada de código HTML a ser renderizado.**/
-	function __Tree() {
-		if (!(this instanceof __Tree)) return new __Tree();
-		Object.defineProperties(this, {
-			_tree:    {value: []},
-			_data:    {value: []},
-			_pattern: {writable: true, value: "?"},
-			_save:    {writable: true, value: []}
-		});
-	}
-
-	Object.defineProperties(__Tree.prototype, {
-		constructor: {value: __Tree},
-		/**. ``''string'' _char(''string'' x)``: Retorna o argumento adaptado para exibição HTML.**/
-		_char: {
-			value: function(x) {
-				if (x === undefined || x === null) return "";
-				const chars = String(x).split("");
-				const html  = [
-					{a: "&",  b: "&amp;"}, {a: "<",  b: "&lt;"},  {a: ">", b: "&gt;"},
-					{a: "\n", b: "</br>"}, {a: "\t", b: "&Tab;"}, {a: " ", b: "&nbsp;"}
-				];
-				chars.forEach(function(v,i,a) {
-					for (let h of html)
-						if (v === h.a) a[i] = h.b;
-				});
-				return chars.join("");
-			}
-		},
-		/**. ``''string'' level``: Retorna o nome do último nível informado ou nulo se vazio.**/
-		level: {
-			get: function() {
-				if (this._tree.length === 0) return null;
-				return this._tree[this._tree.length - 1];
-			}
-		},
-		/**. ``''string'' pattern(''string'' model)``: Define e retorna um modelo padrão de ''tag'' a ser elaborada a partir do nome do nível. O nome do nível será inserido no modelo a partir da substituição do caracteres de interrogação. Por exemplo, se definido o modelo "span-?" e nível "line", a ''tag'' de abertura será ''<span-line>''. O valor padrão é "?", obtido quando se define o argumento como string vazia ou nulo. Se o argumento for indefinido, retorna o valor.**/
-		pattern: {
-			value: function(model) {
-				if (model === undefined) return this._pattern;
-				const pattern = model === null ? "?" : String(model).replace(/\s+/g, "").trim();
-				this._pattern = pattern.length === 0 ? "?" : pattern;
-				return this._pattern;
-			}
-		},
-		/**. ``''self'' add(''string'' chars)``: Adiciona caracteres à arvore.**/
-		add: {
-			value: function(chars) {
-				this._data.push(this._char(chars));
-				return this;
-			}
-		},
-		/**. ``''self'' open(''string'' name, ''string'' chars)``: Abre um novo nível (``nome``) e adiciona caracteres (``chars``) após abertura.**/
-		open: {
-			value: function(name, chars) {
-				const level = String(name).replace(/\s+/g, "").trim();
-				const elem  = this.pattern().replace(/\?+/g, level);
-				this._tree.push(level);
-				this._data.push("<"+elem+">"+this._char(chars));
-				return this;
-			}
-		},
-		/**. ``''self'' close(''string'' chars)``: Fecha o último nível aberto e adiciona caracteres (``chars``) antes do fechamento.**/
-		close: {
-			value: function(chars) {
-				const elem = this.pattern().replace(/\?+/g, this.level);
-				this._data.push(this._char(chars)+"</"+elem+">");
-				this._tree.pop();
-				return this;
-			}
-		},
-		/**. ``''self'' finish()``: Fecha todos os níveis abertos.**/
-		finish: {
-			value: function() {
-				while (this.level !== null) this.close("");
-				return this;
-			}
-		},
-		/**. ``''self'' walkTo(''integer'' level)``: Fechar todos os níveis até o nível informado em ''level'', salvando o caminho para restauração através do método ''backTo''.**/
-		walkTo: {
-			value: function(level) {
-				const check = __Type(level);
-				if (check.integer && !check.negative && check.value < this._tree.length) {
-					this._save = this._tree.slice();
-					while (this._tree.length > check.value) this.close();
-				}
-				return this;
-			}
-		},
-		/**. ``''self'' backTo()``: Reabre os caminhos fechados em ''walkToTo''.**/
-		backTo: {
-			value: function() {
-				if (this._tree.length < this._save.length) {
-					for (let i = this._tree.length; i < this._save.length; i++)
-						this.open(this._save[i], "");
-					this._save = [];
-				}
-				return this;
-			}
-		},
-		/**. ``''string'' toString()``: Retorna o resultado da árvore.**/
-		toString: {
-			value: function() {return this._data.join("");}
-		},
-		/**. ``''string'' valueOf()``: Como o método toString.**/
-		valueOf: {
-			value: function() {return this._data.join("");}
-		}
-	});
 
 /*----------------------------------------------------------------------------*/
 	/**### Code
@@ -7974,7 +8166,8 @@ const wd = (function() {
 			svg:      {value: function(){return __SVG.apply(null, Array.prototype.slice.call(arguments));}},
 			table:    {value: function(){return __Table.apply(null, Array.prototype.slice.call(arguments));}},
 			url:      {value: function(){return __URL.apply(null, Array.prototype.slice.call(arguments));}},
-			admin:    {value: function(){return __DataSet.apply(null, Array.prototype.slice.call(arguments));}},
+			dataset:  {value: function(){return __DataSet.apply(null, Array.prototype.slice.call(arguments));}},
+			parse:   {value: function(){return __Parse.apply(null, Array.prototype.slice.call(arguments));}},
 			LANG:     {value: __LANG},
 			TYPE:     {value: __TYPE},
 			DEVICE:   {value: __DEVICECONTROLLER},
