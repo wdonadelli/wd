@@ -1137,29 +1137,41 @@ const wd = (function() {
 /*----------------------------------------------------------------------------*/
 	/**#### Gestão de Dados
 	###### ``**constructor** ''object'' __DataSet(''any'' input)``
-	Construtor para gerir conjunto de dados. O argumento opcional ``input`` pode ser uma string com dados separados por \r\n ou um objeto (ver retornos de toString e valueOf).**/
+	Construtor para gerir conjunto de dados. O argumento opcional ``input`` será importado conforme método ``import`` que será chamado durante a construção.pode ser uma string  ou um objeto (ver retornos de toString e valueOf).**/
 	function __DataSet(input) {
 		if (!(this instanceof __DataSet))	return new __DataSet(input);
 		Object.defineProperties(this, {
 			_data: {value: []}
 		});
-
-		const check = __Type(input);console.log(check.type, check.nonempty);
-		if (check.nonempty) {
-			const data = input.trim().split(/[\r\n]+/);
-			for (let v of data) {
-				let name  = v.split(":")[0].trim();
-				let value = v.replace(/^[^:]+\:(.+)$/, "$1").trim();
-				if (name.length > 0) this.append(name, value);
-			}
-		} else if (check.object) {
-			for (let name in input)
-				this.append(name, input[name]);
-		}
+		this.import(input);
 	}
 
 	Object.defineProperties(__DataSet.prototype, {
 		constructor: {value: __DataSet},
+		/**. ``''self'' import(''any'' input)``: Importa os dados de ``input`` que pode ser uma string (name: value\r\n), um objeto ou instâncias de Headers, FormaData ou URLSearchParams.**/
+		import: {
+			value: function(input) {
+				const check = __Type(input);
+				const self  = this;
+				if (check.nonempty) {
+					const data = input.trim().split(/[\r\n]+/);
+					for (let v of data) {
+						let name  = v.split(":")[0].trim();
+						let value = v.replace(/^[^:]+\:(.+)$/, "$1").trim();
+						if (name.length > 0) this.append(name, value);
+					}
+				} else if (check.instanceOf("Headers")) {
+					input.forEach(function (value,name,data) {self.append(name, value);});
+				} else if (check.instanceOf("URLSearchParams")) {
+					input.forEach(function (value,name,data) {self.append(name, value);});
+				} else if (check.instanceOf("FormData")) {
+					for (const data of input.entries()) {this.append(data[0], data[1]);}
+				} else if (check.object) {
+					for (let name in input) this.append(name, input[name]);
+				}
+				return;
+			}
+		},
 		/**. ``''self'' append(''string'' name, ''any'' value)``: Acrescenta um valor (``value``) vinculado a um identificador (``name``).**/
 		append: {
 			value: function(name, value) {
@@ -1333,7 +1345,7 @@ const wd = (function() {
 /*----------------------------------------------------------------------------*/
 	/**#### Árvore de Dados
 	###### ``**constructor** ''object'' __Tree()``
-	Construtor para manipulação de textos com com aberturas e fechamentos de níveis para fins de formação personalizada de código HTML para renderização.**/
+	Construtor para manipulação de regras com com aberturas e fechamentos de níveis para fins de construção guiada de código XML.**/
 	function __Tree() {
 		if (!(this instanceof __Tree)) return new __Tree();
 		Object.defineProperties(this, {
@@ -1352,6 +1364,8 @@ const wd = (function() {
 				if (x === undefined || x === null) return "";
 				const chars = String(x).split("");
 				const html  = [
+					//FIXME para servir como XML, apenas <>&'" tem dingbats, __Code sofrerá ver também stringWD
+
 					{a: "&",  b: "&amp;"}, {a: "<",  b: "&lt;"},  {a: ">", b: "&gt;"},
 					{a: "\n", b: "</br>"}, {a: "\t", b: "&Tab;"}, {a: " ", b: "&nbsp;"}
 				];
@@ -1445,10 +1459,10 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	/**#### Transformação de Dados
-	###### ``**constructor** ''object'' __Parse(''any'' input)``
+	###### ``**constructor** ''object'' __Parser(''any'' input)``
 	Construtor para transformação de dados. Os dados de entrada são informados no argumento ``input``. Se a transformação falhar, os atributos retornarão nulo.**/
-	function __Parse(input) {
-		if (!(this instanceof __Parse)) return new __Parse(input);
+	function __Parser(input) {
+		if (!(this instanceof __Parser)) return new __Parser(input);
 		const check = new __Type(input);
 		let   table = check.node && check.value.length === 1;
 		Object.defineProperties(this, {
@@ -1459,8 +1473,8 @@ const wd = (function() {
 		});
 	}
 
-	Object.defineProperties(__Parse.prototype, {
-		constructor: {value: __Parse},
+	Object.defineProperties(__Parser.prototype, {
+		constructor: {value: __Parser},
 		/**. ``''node'' csvTable``: Transforma string CSV em tabela HTML.**/
 		csvTable: {
 			get: function() {
@@ -1632,6 +1646,246 @@ const wd = (function() {
 				return this.jsonString;
 			}
 		},
+		/**. ``''object'' stringHTML``: Transforma string em documento HTML.**/
+		stringHTML: {
+			get: function() {
+				if ("stringHTML" in this._saved) return this._saved.stringHTML;
+				let data = null;
+				try {
+					let parse = new DOMParser();
+					data = parse.parseFromString(this._data, "text/html");
+				} catch(e) {}
+				this._saved["stringHTML"] = data;
+				return this.stringHTML;
+			}
+		},
+		/**. ``''object'' stringXML``: Transforma string em documento XML.**/
+		stringXML: {
+			get: function() {
+				if ("stringXML" in this._saved) return this._saved.stringXML;
+				let data = null;
+				try {
+					let parse = new DOMParser();
+					data = parse.parseFromString(this._data, "application/xml");
+				} catch(e) {}
+				this._saved["stringXML"] = data;
+				return this.stringXML;
+			}
+		},
+		/**. ``''object'' stringSVG``: Transforma string em documento XML.**/
+		stringSVG: {
+			get: function() {
+				if ("stringSVG" in this._saved) return this._saved.stringSVG;
+				let data = null;
+				try {
+					let parse = new DOMParser();
+					data = parse.parseFromString(this._data, "image/svg+xml");
+				} catch(e) {}
+				this._saved["stringSVG"] = data;
+				return this.stringSVG;
+			}
+		},
+		/**. FIXME``''array'' wdArray``: Transforma notação wd em array de objetos. Trata-se de uma notação específica para o atributo HTML dataset que invocará as ferramentas da biblioteca ao ter o evento adequado disparado.
+		. A notação consiste num conjunto de dados no formato ''nome{valor}'' que resultará num objeto a ser retornado. O par ''nome{valor}'' inicia com o nome do atributo seguido do caracter de abertura do escopo, do seu respectivo valor e do caractere de fechamento de escopo.
+		. Há três caracteres de escopo&colon; **&lbrace;&rbrace;** define um valor genérico; **&lbrack;&rbrack;** define um array separado por vírgulas; e **&lpar;&rpar;** define o nome de uma função presente dentro do escopo de ''window'' e defindo por ''var'' ou ''function'' e, se a função não existir, será atribuído o valor nulo.
+		. Se o valor contiver o mesmo caractere do escopo, deverá haver a mesma quantidade de caracteres de abertura e de fechamento. Caso seja necessário desobedecer essa regra, o valor deverá ser blindado por apóstrofos (**&apos;**) no início e no fim. Apóstrofos internos são definidos por apóstrofos duplos seguidos (**&apos;&apos;**).
+		. O valor retornado será uma lista de objetos. Para acrescentar um objeto à lista, deve-se utilizar o caractere **&amp;**.
+		. Os valores dos atributos serão do tipo string, exceto nos casos dos valores ''undefined'', ''null'', ''true'', ''false'' e dígitos, que serão tratados de acordo com o que representam. Para definiir uma expressão regular, o valor deverá iniciar e terminar com o caractere de barra (**&frasl;**), podendo adicionar os complementos ''igm'' após a barra final.
+		. A notação é limitada ao primeiro nível. Para adição de cadeias de objetos (objetos dentro de objetos), cada valor deverá ser reprocessado.
+		. A string ''a{true}b[1,2,3]c(alert)&a{test}'' retornará a lista ``[{a&colon; true, b&colon; [1,2,3], c&colon; alert()}, {a&colon; "test"}]``.
+		. Os atributos identificados com os nomes **&dollar;** e **&dollar;&dollar;**, com valor empacotado por **&lbrace;&rbrace;**, recebem um selector CSS e assumem o valor de um elemento HTML ou de uma lista de elementos (''NodeList'') correspondente ao respectivo seletor. As strings ''document'' e ''window'' assumem os respectivos objetos identificados por esses nomes.**/
+		wdArray: {
+			get: function() {
+				if ("wdArray" in this._saved) return this._saved.wdArray;
+				let data = null;
+				try {
+					if (this._check.chars) {
+						const tree = new __Tree();
+						const code = this._data.split("");
+						tree.open("wd").open("object");
+						code.forEach(function(v,i,a) {
+							const tag = tree.level;
+							if (tag === "object") {
+								     if (v === "&")    tree.close().open("object");
+								else if (i < a.length) tree.open("property").open("name", v);
+							}
+							else if (tag === "property") {
+								tree.open("name", v);
+							}
+							else if (tag === "name") {
+								if (v === "{") {
+									tree.close().open("type", "value").close().open("value");
+									if (a[i+1] === "'") {
+										tree.open("quote");
+										a[i+1] = "";
+									}
+								} else if (v === "(") {
+									tree.close().open("type", "function").close().open("function");
+								} else if (v === "[") {
+									tree.close().open("type", "array").close().open("array").open("item");
+									if (a[i+1] === "'") {
+										tree.open("quote");
+										a[i+1] = "";
+									}
+								} else {
+									tree.add(v)
+								}
+							}
+							else if (tag === "item") {
+								if (v === ",") {
+									tree.close().open("item");
+									if (a[i+1] === "'") {
+										tree.open("quote");
+										a[i+1] = "";
+									}
+								}
+								else if (v === "]") tree.close().close().close();
+								else                tree.add(v);
+							}
+							else if (tag === "quote") {
+								if (v === "'") {
+									if (a[i+1] === "'") a[i+1] = "\"";
+									else                tree.close();
+								} else {
+									tree.add(v)
+								}
+							}
+							else if (tag === "value") {
+								if (v === "}") tree.close().close();
+								else            tree.add(v);
+							}
+							else if (tag === "function") {
+								if (v === ")") tree.close().close();
+								else           tree.add(v);
+							}
+							else if (tag === "array") {
+								if (v === "]") tree.close().close();
+								else           tree.add(v);
+							}
+						});
+						tree.finish();
+						//FIXME mudar para stringXML após adaptar Tree para XML e consertar __Code
+						const parse  = __Parser(tree.valueOf());
+						const xml    = parse.stringHTML;
+						const object = xml.getElementsByTagName("object");
+						data = [];
+						for (let i = 0; i < object.length; i++) {
+							let json = {};
+							let prop = object[i].getElementsByTagName("property");
+							for (let j = 0; j < prop.length; j++) {
+								let name   = prop[j].getElementsByTagName("name")[0].innerText.trim();
+								let type   = prop[j].getElementsByTagName("type")[0].innerText.trim();
+								let source = prop[j].getElementsByTagName(type)[0];
+								let value  = undefined;
+								if (type === "value") {
+									value = source.innerText;
+									let change = {true: true, false: false, null: null, undefined: undefined};
+									let regexp = /^\/(.+)\/([gim]+)?$/;
+									if (name === "$" || name === "$$")
+										value = new __Query(value)[name];
+									else if (value.trim() in change)
+										value = change[value.trim()];
+									else if (regexp.test(value))
+										value = new RegExp(value.replace(regexp, "$1"), value.replace(regexp, "$2"));
+									else
+										value = __Type(value).value;
+								} else if (type === "function") {
+									value = source.innerText.trim();
+									value = value in window ? window[value] : undefined;
+								} else if (type === "array") {
+									value = [];
+									let items = source.getElementsByTagName("item");
+									for (let k = 0; k < items.length; k++)
+										value.push(items[k].textContent)
+
+								}
+								json[name] = value;
+							}
+							data.push(json);
+						}
+					}
+				} catch(e) {console.log(e);}
+				this._saved["wdArray"] = data;
+				return this.wdArray;
+			}
+		},
+		/**. ``''string'' arrayWD``: Transforma array de objetos em notação wd.**/
+		arrayWD: {
+			get: function() {
+				if ("arrayWD" in this._saved) return this._saved.arrayWD;
+				let data = null;
+				try {
+					if (this._check.array) {
+						let wd = [];
+						for (let object of this._data) {
+							let obj = [];
+							let qre = /\"/g;
+							for (let name in object) {
+								let value = object[name];
+								let ref   = __Type(value);
+								if (ref.function && value.name in window) {
+									obj.push(name, "(", value.name, ")");
+								} else if (ref.array) {
+									let list = []
+									for (let item of value) {
+										let text = String(item);
+										if ((/[,"]/).test(text))
+											text = "'"+text.replace(qre, "''")+"'";
+										list.push(text);
+									}
+									obj.push(name, "[", list.join(","), "]");
+								} else {
+									let text = String(value);
+									if ((/\"/).test(text))
+										text = "'"+text.replace(qre, "''")+"'";
+									obj.push(name, "{",text, "}");
+								}
+							}
+							wd.push(obj.join(""));
+						}
+						data = wd.join("&");
+					}
+				} catch(e) {console.log(e);}
+				this._saved["arrayWD"] = data;
+				return this.arrayWD;
+			}
+		},
+
+
+
+
+		/**. ``''string'' fileURL``: Transforma dados em string URL.**/
+		fileURL: {
+			get: function() {
+				if ("fileURL" in this._saved) return this._saved.fileURL;
+				let data = null;
+				try {
+					if (this._check.file)
+						data = URL.createObjectURL(this._data);
+				} catch(e) {}
+				this._saved["fileURL"] = data;
+				return this.fileURL;
+			}
+		},
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	});
 
 /*============================================================================*/
@@ -2155,168 +2409,6 @@ const wd = (function() {
  					while (v.length < max) v.push("");
  				});
 				return csv;
-			}
-		},
-		/**. ``''node'' html``: Retorna um documento HTML caso o conteúdo da string esteja nesse formato, ou nulo.**/
-		html: {
-			get: function() {
-				try {
-					let parse = new DOMParser();
-					return parse.parseFromString(this._value, "text/html");
-				} catch(e) {return null;}
-			}
-		},
-		/**. ``''node'' xml``: Retorna um documento XML caso o conteúdo da string esteja nesse formato, ou nulo.**/
-		xml: {
-			get: function() {
-				try {
-					let parse = new DOMParser();
-					return parse.parseFromString(this._value, "application/xml");
-				} catch(e) {return null;}
-			}
-		},
-		/**. ``''any'' json``: Retorna notação em Javascript caso o conteúdo da string esteja no formato JSON, ou nulo.**/
-		json: {
-			get: function() {
-				try {return JSON.parse(this._value);} catch(e) {return null;}
-			}
-		},
-		/**. ``''any'' wdValue(''any'' x)``: Recebe o valor do argumento ``x`` e o retorna adequado à necessidade do método ``wdNotation``.**/
-		wdValue: {
-			value: function(x) {
-				/* limpando apóstrofos */
-				const quote = /^\'(.+)?\'$/;
-				const armor = quote.test(x);
-				if (armor) x = x.replace(quote, "$1");
-				/* obtendo o tipo */
-				const type = __Type(x);
-				/* checando números números */
-				if (type.number) return type.value;
-				/* checando expressão regular */
-				const re = /^\/(.+)\/([gim]+)?$/i;
-				if (re.test(x)) return new RegExp(x.replace(re, "$1"), x.replace(re, "$2"));
-				/* palavras reservadas */
-				let types = {true: true, false: false, null: null, undefined: undefined};
-				if (x in types && !armor) return types[x];
-				/* demais valores */
-				return x;
-			}
-		},
-		/**. ``''array'' wdNotation``: Trata-se de uma notação específica para o atributo HTML dataset que invocará as ferramentas da biblioteca ao ter o evento adequado disparado.
-		. A notação consiste num conjunto de dados no formato ''nome{valor}'' que resultará num objeto a ser retornado. O par ''nome{valor}'' inicia com o nome do atributo seguido do caracter de abertura do escopo, do seu respectivo valor e do caractere de fechamento de escopo.
-		. Há três caracteres de escopo&colon; **&lbrace;&rbrace;** define um valor genérico; **&lbrack;&rbrack;** define um array separado por vírgulas; e **&lpar;&rpar;** define o nome de uma função presente dentro do escopo de ''window'' e defindo por ''var'' ou ''function'' e, se a função não existir, será atribuído o valor nulo.
-		. Se o valor contiver o mesmo caractere do escopo, deverá haver a mesma quantidade de caracteres de abertura e de fechamento. Caso seja necessário desobedecer essa regra, o valor deverá ser blindado por apóstrofos (**&apos;**) no início e no fim. Apóstrofos internos são definidos por apóstrofos duplos seguidos (**&apos;&apos;**).
-		. O valor retornado será uma lista de objetos. Para acrescentar um objeto à lista, deve-se utilizar o caractere **&amp;**.
-		. Os valores dos atributos serão do tipo string, exceto nos casos dos valores ''undefined'', ''null'', ''true'', ''false'' e dígitos, que serão tratados de acordo com o que representam. Para definiir uma expressão regular, o valor deverá iniciar e terminar com o caractere de barra (**&frasl;**), podendo adicionar os complementos ''igm'' após a barra final.
-		. A notação é limitada ao primeiro nível. Para adição de cadeias de objetos (objetos dentro de objetos), cada valor deverá ser reprocessado.
-		. A string ''a{true}b[1,2,3]c(alert)&a{test}'' retornará a lista ``[{a&colon; true, b&colon; [1,2,3], c&colon; alert()}, {a&colon; "test"}]``.
-		. Os atributos identificados com os nomes **&dollar;** e **&dollar;&dollar;**, com valor empacotado por **&lbrace;&rbrace;**, recebem um selector CSS e assumem o valor de um elemento HTML ou de uma lista de elementos (''NodeList'') correspondente ao respectivo seletor. As strings ''document'' e ''window'' assumem os respectivos objetos identificados por esses nomes.**/
-		wdNotation: {
-			get: function() {
-				let data  = __String(this._value.trim()).chars;
-				let list  = [{}];
-				let name  = [];
-				let value = [];
-				let open  = ["[", "{", "("];
-				let close = ["]", "}", ")"];
-				let scope = null;
-				let count = 0;
-				let quote = false;
-				let self  = this;
-				let hash  = "#0";
-				data.forEach(function(v,i,a) {
-					let sym = open.indexOf(scope);
-					let key = name.join("").trim();
-					let val = value.join("").trim();
-					let obj = list[list.length - 1];
-					if (key === "") key = hash;
-					/*-- abertura e fechamanto da blindagem e caractere interno --*/
-					if (v === "'") {
-						if (!quote && count === 1 && val.length === 0)
-							quote = true;
-						else if (quote && a[i+1] !== "'")
-							quote = false;
-						else if (quote && a[i+1] === "'")
-							a[i+1] = "";
-					}
-					/*-- abertura de escopo --*/
-					if (open.indexOf(v) >= 0) {
-						let index = open.indexOf(v);
-						if (count === 0) {
-							switch(index) {
-								case 0: obj[key] = [];        break;
-								case 1: obj[key] = undefined; break;
-								case 2: obj[key] = "";        break;
-							}
-							scope = v;
-							count++;
-							/* nomes indefinidos */
-							if (key === hash) {
-								name = [hash];
-								hash = "#"+(Number(hash.replace("#", ""))+1);
-							}
-						} else {
-							if (index === sym && !quote) count++;
-							value.push(v);
-						}
-						return;
-					}
-					/*-- fechamento de escopo --*/
-					if (close.indexOf(v) >= 0) {
-						let index = close.indexOf(v);
-						if (index === sym && count === 1 && !quote) {
-							switch(index) {
-								case 0: {
-									if (obj[key].length !== 0 || val.length !== 0)
-										obj[key].push(self.wdValue(val));
-									break;
-								}
-								case 1: obj[key] = (function() {
-									if (key === "$" || key === "$$") {
-										val = val.trim();
-										const html = {document: document, window: window};
-										if (val in html) return html[val];
-										const query = __Query(val);
-										return query[key];
-									}
-									return self.wdValue(val);
-								})(); break;
-								case 2: obj[key] = (function() {
-									if (val in window && __Type(window[val]).function)
-										return window[val];
-									return null;
-								})(); break;
-							}
-							scope = null;
-							count--;
-							value = [];
-							name  = [];
-							/*-- novo item principal --*/
-							if (a[i+1] === "&") {
-								list.push({});
-								a[i+1] = "";
-							}
-						} else if (index === sym && !quote) {
-							count--;
-							value.push(v);
-						} else {
-							value.push(v);
-						}
-						return;
-					}
-					/*-- acrescendo array --*/
-					if (v === "," && sym === 0 && count === 1) {
-						obj[key].push(self.wdValue(val));
-						value = [];
-						return;
-					}
-					/*-- incrementando nome ou valor da chave --*/
-					if (scope === null)
-						name.push(v);
-					else
-						value.push(v);
-				});
-				return list;
 			}
 		},
 	});
@@ -8167,7 +8259,7 @@ const wd = (function() {
 			table:    {value: function(){return __Table.apply(null, Array.prototype.slice.call(arguments));}},
 			url:      {value: function(){return __URL.apply(null, Array.prototype.slice.call(arguments));}},
 			dataset:  {value: function(){return __DataSet.apply(null, Array.prototype.slice.call(arguments));}},
-			parse:   {value: function(){return __Parse.apply(null, Array.prototype.slice.call(arguments));}},
+			parser:   {value: function(){return __Parser.apply(null, Array.prototype.slice.call(arguments));}},
 			LANG:     {value: __LANG},
 			TYPE:     {value: __TYPE},
 			DEVICE:   {value: __DEVICECONTROLLER},
@@ -8187,7 +8279,7 @@ const wd = (function() {
 	function data_wdLoad(e, event) {
 		if (!("wdLoad" in e.dataset)) return;
 		let target = WD(e);
-		let data   = __String(e.dataset.wdLoad).wdNotation[0];
+		let data   = __Parser(e.dataset.wdLoad).wdArray[0];
 		let query  = data.$$ || data.$ || undefined;
 		delete e.dataset.wdLoad;
 		WD(query).send(data.path, {
@@ -8207,7 +8299,7 @@ const wd = (function() {
 	function data_wdRepeat(e, event) {
 		if (!("wdRepeat" in e.dataset)) return;
 		let target = WD(e);
-		let data   = __String(e.dataset.wdRepeat).wdNotation[0];
+		let data   = __Parser(e.dataset.wdRepeat).wdArray[0];
 		let query  = data.$$ || data.$ || undefined;
 		delete e.dataset.wdRepeat;
 
@@ -8247,7 +8339,7 @@ const wd = (function() {
 			target.set(input);
 			return;
 		}
-		let data = __String(e.dataset.wdSet).wdNotation;
+		let data = __Parser(e.dataset.wdSet).wdArray;
 		data.forEach(function(v,i,a) {
 			if ("path" in v) {
 				WD().send(v.path, {
@@ -8261,7 +8353,7 @@ const wd = (function() {
 			} else {
 				for (let j in v)
 					if ((/^.+\{.+\}$/).test(v[j]))
-						v[j] = __String(v[j]).wdNotation[0];
+						v[j] = __Parser(v[j]).wdArray[0];
 				exec(v);
 			}
 		});
@@ -8292,10 +8384,10 @@ const wd = (function() {
 	|fit|Qualquer|Nome do ajuste da curva (ratio não pode ser ''true'').|Não|**/
 	function data_wdChart(e, event) {
 		if (!("wdChart" in e.dataset)) return;
-		let data = __String(e.dataset.wdChart).wdNotation[0];
+		let data = __Parser(e.dataset.wdChart).wdArray[0];
 		delete e.dataset.wdChart;
 		if (!__Type(data.data).array) return;
-		data.data.forEach(function(v,i,a) {a[i] = __String(v).wdNotation[0];});
+		data.data.forEach(function(v,i,a) {a[i] = __Parser(v).wdArray[0];});
 
 		/* definindo origem dos dados */
 		let plotter = function(src) {
@@ -8330,9 +8422,9 @@ const wd = (function() {
 	|$ ou $$|Seletor(es) CSS do formulário com os parâmetros da requição|Não|**/
 	function data_wdSend(e, event) {
 		if (!("wdSend" in e.dataset)) return;
-		let data = __String(e.dataset.wdSend).wdNotation;
+		let data = __Parser(e.dataset.wdSend).wdArray;
 		data.forEach(function (v,i,a) {
-			if ("header" in v) v.header = __String(v.header).wdNotation[0];
+			if ("header" in v) v.header = __Parser(v.header).wdArray[0];
 			let query  = v.$$ || v.$ || undefined;
 			let target = WD(query);
 			target.send(v.path, v);
@@ -8349,7 +8441,7 @@ const wd = (function() {
 	function data_wdDisplay(e, event) {
 		if (!("wdDisplay" in e.dataset)) return;
 		let self = WD(e);
-		let data = __String(e.dataset.wdDisplay).wdNotation;
+		let data = __Parser(e.dataset.wdDisplay).wdArray;
 		data.forEach(function (v,i,a) {
 			let query  = v.$$ || v.$ || e;
 			let target = WD(query);
@@ -8379,7 +8471,7 @@ const wd = (function() {
 	|$ ou $$|Seletor CSS para indicar o elemento os elementos a aplicar a ação (se ausente, será o próprio elemento)|Não|**/
 	function data_wdCode(e, event) {//FIXME pendente
 		if (!("wdCode" in e.dataset)) return;
-		const data = __String(e.dataset.wdCode).wdNotation[0];
+		const data = __Parser(e.dataset.wdCode).wdArray[0];
 		const node = __Node(e);
 		const code = __Code(node.form ? node.value() : e.innerText);
 		let   html = node.form ? document.createElement("PRE") : e;
@@ -8438,7 +8530,7 @@ const wd = (function() {
 	Função vinculada ao atributo HTML ``data-wd-click`` cujo objetivo é efetuar um autoclique ao elemento. Possui valor simples e opcional. Caso um número inteiro maior que zero seja informado, o clique irá ser executado a cada milisegundos conforme valor definido.**/
 	function data_wdClick(e, event) { //FIXME pendente
 		if (!("wdClick" in e.dataset)) return;
-		let data = __String(e.dataset.wdClick).wdNotation;
+		let data = __Parser(e.dataset.wdClick).wdArray;
 		let info = __Type(data);
 		let time = info.finite ? Math.trunc(info.value) : null;
 		if ("click" in e) e.click();
@@ -8458,7 +8550,7 @@ const wd = (function() {
 	function data_wdFilter(e, event) {
 		if (!("wdFilter" in e.dataset)) return;
 		let node = __Node(e);
-		let data = __String(e.dataset.wdFilter).wdNotation;
+		let data = __Parser(e.dataset.wdFilter).wdArray;
 		data.forEach(function (v,i,a) {
 			const query  = v.$$ || v.$ || undefined;
 			if (query === undefined) return;
@@ -8504,7 +8596,7 @@ const wd = (function() {
 	function data_wdDevice(e, event) {
 		if (!("wdDevice" in e.dataset)) return;
 		let query  = WD(e);
-		let data   = __String(e.dataset.wdDevice).wdNotation[0];
+		let data   = __Parser(e.dataset.wdDevice).wdArray[0];
 		let device = __DEVICECONTROLLER.device;
 		let types  = { /* 0: elimina css, 1: adiciona css */
 			desktop: {phone: 0, tablet: 0, mobile: 0, desktop: 1},
@@ -8531,7 +8623,7 @@ const wd = (function() {
 /*----------------------------------------------------------------------------*/
 	function data_wdEdit(e, event) { /*FIXME pendente edita texto: data-wd-edit=comando{especificação}... */
 		if (!("execCommand" in document) || !("wdEdit" in e.dataset)) return;
-		let data = __String(e.dataset.wdEdit).wdNotation[0];
+		let data = __Parser(e.dataset.wdEdit).wdArray[0];
 		for (let cmd in data) {
 			let arg = data[cmd].trim() === "" ? undefined : data[cmd].trim();
 			switch(cmd) {
@@ -8569,7 +8661,7 @@ const wd = (function() {
 	A função ''valid'' será chamada nos carregamento de conteúdo e definição de atributo. A função receberá o elemento e deverá retornar o valor da mensagem de erro ou uma string em branco se não houver. No evento ''input'', ''valid'' só será executada se ''output'' tiver sido chamada.**/
 	function data_wdValue(e, event) {
 		if (!("wdValue" in e.dataset)) return;
-		const data   = __String(e.dataset.wdValue).wdNotation[0];
+		const data   = __Parser(e.dataset.wdValue).wdArray[0];
 		const events = ["wdreload", "wddataset", "focusout", "input"];
 		if (!__Type(data).object || events.indexOf(event.type) < 0) return;
 		const node   = __Node(e);
@@ -8663,7 +8755,7 @@ const wd = (function() {
 	. ''drop'': Define o local para queda de arquivos externos. O atributo deve ser aplicado ao elemento que receberá a queda. Assim como o tipo ''drag'', possui os atributos ''effect'' e ''action''. A função definida e ''action'' receberá dois atributos, os arquivos arrastados (FileList) e o elemento da queda (''drop'').**/
 	function data_wdMove(e, event) {
 		const wdMove = "wdMove" in e.dataset;
-		const data   = wdMove ? __String(e.dataset.wdMove).wdNotation[0] : {};
+		const data   = wdMove ? __Parser(e.dataset.wdMove).wdArray[0] : {};
 		const query  = data.$$ || data.$ || null;
 		const check  = __Type(query);
 		const node   = __Node(e);
@@ -8718,7 +8810,7 @@ const wd = (function() {
 					delete x.dataset.wdDataTransfer;
 				} else if (event.type === "mousemove") {
 					const target = __Node(x);
-					const box    = __String(x.dataset.wdDataTransfer).wdNotation[0];
+					const box    = __Parser(x.dataset.wdDataTransfer).wdArray[0];
 					const dx     = event.pageX - box.pageX;
 					const dy     = event.pageY - box.pageY;
 					box.left    += dx;
@@ -8814,7 +8906,7 @@ const wd = (function() {
 				/*-- Redimensionando --*/
 				if (event.type === "mousemove") {
 					const node   = __Node(x);
-					const box    = __String(x.dataset.wdDataTransfer).wdNotation[0];
+					const box    = __Parser(x.dataset.wdDataTransfer).wdArray[0];
 					const cursor = x.dataset.wdMoveAction.replace("resize-", "");
 					const dx     = event.pageX - box.pageX;
 					const dy     = event.pageY - box.pageY;
@@ -8888,7 +8980,7 @@ const wd = (function() {
 							if (drop === null) return;
 						}
 						const drag   = document.querySelector("[data-wd-move-action=drag]");
-						const attr   = __String(ev.dataTransfer.getData("text")).wdNotation[0];
+						const attr   = __Parser(ev.dataTransfer.getData("text")).wdArray[0];
 						const effect = event.dataTransfer.dropEffect;
 						if (!__Type(attr.action).function) return;
 
@@ -8931,7 +9023,7 @@ const wd = (function() {
 				drop = drop.parentElement;
 			if (drop === null) return;
 
-			const attr = __String(drop.dataset.wdMove).wdNotation[0];
+			const attr = __Parser(drop.dataset.wdMove).wdArray[0];
 			if (!__Type(attr.action).function) return;
 
 			if (event.type === "drop") {
@@ -8976,7 +9068,7 @@ const wd = (function() {
 			});
 
 		if (!("wdMenu" in e.dataset)) return;
-		const data  = __String(e.dataset.wdMenu).wdNotation[0];
+		const data  = __Parser(e.dataset.wdMenu).wdArray[0];
 		const items = __Type(data.items).function ? data.items(e) : null;
 		const enter = event.type === "mouseover" && data.event === "over";
 		const click = !enter && event.type === "click";
