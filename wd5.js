@@ -1137,7 +1137,7 @@ const wd = (function() {
 /*----------------------------------------------------------------------------*/
 	/**#### Gestão de Dados
 	###### ``**constructor** ''object'' __DataSet(''any'' input)``
-	Construtor para gerir conjunto de dados. O argumento opcional ``input`` será importado conforme método ``import`` que será chamado durante a construção.pode ser uma string  ou um objeto (ver retornos de toString e valueOf).**/
+	Construtor para gerir conjunto de dados. O argumento opcional ``input`` será importado conforme método ``import`` que será chamado durante a construção.**/
 	function __DataSet(input) {
 		if (!(this instanceof __DataSet))	return new __DataSet(input);
 		Object.defineProperties(this, {
@@ -1148,7 +1148,7 @@ const wd = (function() {
 
 	Object.defineProperties(__DataSet.prototype, {
 		constructor: {value: __DataSet},
-		/**. ``''self'' import(''any'' input)``: Importa os dados de ``input`` que pode ser uma string (name: value\r\n), um objeto ou instâncias de Headers, FormaData ou URLSearchParams.**/
+		/**. ``''self'' import(''any'' input)``: Importa os dados de ``input`` que pode ser uma string (name: value\r\n), um objeto ou instâncias de Headers, FormData ou URLSearchParams.**/
 		import: {
 			value: function(input) {
 				const check = __Type(input);
@@ -1232,8 +1232,16 @@ const wd = (function() {
 				return this;
 			}
 		},
-		/**. ``''object'' toObject``: Converte o conjunto de dados em um objeto organizado em listas.**/
+		/**. ``''object'' toObject``: Converte o conjunto de dados em um objeto com sobreposição de identificadores.**/
 		toObject: {
+			value: function() {
+				const data = {};
+				this.forEach(function (value, name) {data[name] = value;});
+				return data;
+			}
+		},
+		/**. ``''object'' toListObject``: Converte o conjunto de dados em um objeto organizado em listas.**/
+		toListObject: {
 			value: function() {
 				const data = {};
 				for (let v of this._data) {
@@ -1276,7 +1284,7 @@ const wd = (function() {
 			value: function() {
 				if (!("Headers" in window)) return null;
 				const data = new Headers();
-				const src  = this.toObject();
+				const src  = this.toListObject();
 				for (let name in src)
 					for (let value of src[name])
 						data.append(name, value);
@@ -1288,7 +1296,7 @@ const wd = (function() {
 			value: function() {
 				if (!("FormData" in window)) return null;
 				const data = new FormData();
-				const src  = this.toObject();
+				const src  = this.toListObject();
 				for (let name in src)
 					for (let value of src[name])
 						data.append(name+(src[name].length > 1 ? "[]" : ""), value);
@@ -1300,7 +1308,7 @@ const wd = (function() {
 			value: function() {
 				if (!("URLSearchParams" in window)) return null;
 				const data = new URLSearchParams();
-				const src  = this.toObject();
+				const src  = this.toListObject();
 				for (let name in src)
 					for (let value of src[name])
 						data.append(name+(src[name].length > 1 ? "[]" : ""), value);
@@ -1326,7 +1334,7 @@ const wd = (function() {
 		valueOf: {
 			value: function() {
 				const data = {};
-				const src  = this.toObject();
+				const src  = this.toListObject();
 				for (let i in src) data[i] = src[i].join(", ");
 				return data;
 			}
@@ -1352,7 +1360,8 @@ const wd = (function() {
 			_tree:    {value: []},
 			_data:    {value: []},
 			_pattern: {writable: true, value: "?"},
-			_save:    {writable: true, value: []}
+			_save:    {writable: true, value: []},
+			_xml:     {writable: true, value: false}
 		});
 	}
 
@@ -1363,18 +1372,20 @@ const wd = (function() {
 			value: function(x) {
 				if (x === undefined || x === null) return "";
 				const chars = String(x).split("");
-				const html  = [
-					//FIXME para servir como XML, apenas <>&'" tem dingbats, __Code sofrerá ver também stringWD
-
-					{a: "&",  b: "&amp;"}, {a: "<",  b: "&lt;"},  {a: ">", b: "&gt;"},
-					{a: "\n", b: "</br>"}, {a: "\t", b: "&Tab;"}, {a: " ", b: "&nbsp;"}
-				];
+				const html  = [{a: "&",  b: "&amp;"}, {a: "<",  b: "&lt;"},  {a: ">", b: "&gt;"}];
+				if (!this.xml)
+					html.push({a: "\n", b: "</br>"}, {a: "\t", b: "&Tab;"}, {a: " ", b: "&nbsp;"});
 				chars.forEach(function(v,i,a) {
 					for (let h of html)
 						if (v === h.a) a[i] = h.b;
 				});
 				return chars.join("");
 			}
+		},
+		/**. ``''boolean'' xml``: Define se a estrutura da árvore se destina à marcação XML.**/
+		xml: {
+			get: function()  {return this._xml === true;},
+			set: function(x) {this._xml = x === true;}
 		},
 		/**. ``''string'' level``: Retorna o nome do último nível informado ou nulo se vazio.**/
 		level: {
@@ -1685,7 +1696,7 @@ const wd = (function() {
 				return this.stringSVG;
 			}
 		},
-		/**. FIXME``''array'' wdArray``: Transforma notação wd em array de objetos. Trata-se de uma notação específica para o atributo HTML dataset que invocará as ferramentas da biblioteca ao ter o evento adequado disparado.
+		/**. ``''array'' wdArray``: Transforma notação wd em array de objetos. Trata-se de uma notação específica para o atributo HTML dataset que invocará as ferramentas da biblioteca ao ter o evento adequado disparado.
 		. A notação consiste num conjunto de dados no formato ''nome{valor}'' que resultará num objeto a ser retornado. O par ''nome{valor}'' inicia com o nome do atributo seguido do caracter de abertura do escopo, do seu respectivo valor e do caractere de fechamento de escopo.
 		. Há três caracteres de escopo&colon; **&lbrace;&rbrace;** define um valor genérico; **&lbrack;&rbrack;** define um array separado por vírgulas; e **&lpar;&rpar;** define o nome de uma função presente dentro do escopo de ''window'' e defindo por ''var'' ou ''function'' e, se a função não existir, será atribuído o valor nulo.
 		. Se o valor contiver o mesmo caractere do escopo, deverá haver a mesma quantidade de caracteres de abertura e de fechamento. Caso seja necessário desobedecer essa regra, o valor deverá ser blindado por apóstrofos (**&apos;**) no início e no fim. Apóstrofos internos são definidos por apóstrofos duplos seguidos (**&apos;&apos;**).
@@ -1702,6 +1713,8 @@ const wd = (function() {
 					if (this._check.chars) {
 						const tree = new __Tree();
 						const code = this._data.split("");
+						let  count = 0;
+						tree.xml = true;
 						tree.open("wd").open("object");
 						code.forEach(function(v,i,a) {
 							const tag = tree.level;
@@ -1751,31 +1764,42 @@ const wd = (function() {
 								}
 							}
 							else if (tag === "value") {
-								if (v === "}") tree.close().close();
-								else            tree.add(v);
+								if (v === "}" && count === 0) {
+									tree.close().close();
+								} else {
+									if (v === "{" || v === "}") count += v === "{" ? 1 : -1;
+									tree.add(v);
+								}
 							}
 							else if (tag === "function") {
-								if (v === ")") tree.close().close();
-								else           tree.add(v);
+								if (v === ")" && count === 0) {
+									tree.close().close();
+								} else {
+									if (v === "(" || v === ")") count += v === "(" ? 1 : -1;
+									tree.add(v);
+								}
 							}
 							else if (tag === "array") {
-								if (v === "]") tree.close().close();
-								else           tree.add(v);
+								if (v === "]" && count === 0) {
+									tree.close().close();
+								} else {
+									if (v === "[" || v === "]") count += v === "[" ? 1 : -1;
+									tree.add(v);
+								}
 							}
 						});
 						tree.finish();
-						//FIXME mudar para stringXML após adaptar Tree para XML e consertar __Code
 						const parse  = __Parser(tree.valueOf());
-						const xml    = parse.stringHTML;
-						const object = xml.getElementsByTagName("object");
+						const html   = parse.stringHTML;
+						const object = html.querySelectorAll("object");
 						data = [];
 						for (let i = 0; i < object.length; i++) {
 							let json = {};
-							let prop = object[i].getElementsByTagName("property");
+							let prop = object[i].querySelectorAll("property");
 							for (let j = 0; j < prop.length; j++) {
-								let name   = prop[j].getElementsByTagName("name")[0].innerText.trim();
-								let type   = prop[j].getElementsByTagName("type")[0].innerText.trim();
-								let source = prop[j].getElementsByTagName(type)[0];
+								let name   = prop[j].querySelector("name").innerText.trim();
+								let type   = prop[j].querySelector("type").innerText.trim();
+								let source = prop[j].querySelector(type);
 								let value  = undefined;
 								if (type === "value") {
 									value = source.innerText;
@@ -1794,7 +1818,7 @@ const wd = (function() {
 									value = value in window ? window[value] : undefined;
 								} else if (type === "array") {
 									value = [];
-									let items = source.getElementsByTagName("item");
+									let items = source.querySelectorAll("item");
 									for (let k = 0; k < items.length; k++)
 										value.push(items[k].textContent)
 
@@ -5493,13 +5517,10 @@ const wd = (function() {
 					this._response.ok     = fail ? false : (code >= 200 && code < 300);
 				}
 				if (this._response.ok) {
-					const headers = target.getAllResponseHeaders().split(/[\r\n]+/g);
-					for (let v of headers) {
-						let name  = v.split(":")[0].trim();
-						let value = v.replace(/^[^:]+\:(.+)$/, "$1").trim();
-						if (name.length > 0 && value.length > 0)
-							this._response.headers[name] = value;
-					}
+					const headers = new __DataSet(target.getAllResponseHeaders());
+					const header  = headers.toHeaders();
+					//FIXME ver como Response em fetch devolve header para fazer igual
+					this._response.headers  = header === null ? headers.valueOf() : header;
 					this._response.response = target.response;
 				}
 				if (this._trigger !== null) this._trigger(this._response);
@@ -5516,8 +5537,10 @@ const wd = (function() {
 				const target = ev.target;
 				let   type   = ev.type;
 				const done   = {loadend: 1, error: 0, abort: 0, timeout: 0};
-				this._response.time   = (new Date().valueOf()) - this._start;
-				if (this._response.time > timeout) type = "timeout";
+				this._response.time = (new Date().valueOf()) - this._start;
+				if (config.timeout > 0 && !(type in done)) {
+					if (this._response.time > config.timeout) type = "timeout";
+				}
 				if (this._response.abort === null)
 					this._response.abort = function() {return target.abort();}
 				if (ev.lengthComputable === true) {
@@ -5526,15 +5549,15 @@ const wd = (function() {
 					__PROGRESSVIEWER.dataset.wdProgressValue = ev.loaded/ev.total;
 				}
 				if (type in done) {
-					const code = target.status;
-					const text = target.statusText;
+					const code = target.readyState;
+					const text = ["EMPTY", "LOADING", "DONE"]
 					const fail = done[type] === 0;
 					this._response.done   = true;
-					this._response.status = fail ? type  : (code + " - " + text);
-					this._response.ok     = fail ? false : (code >= 200 && code < 300);
+					this._response.status = fail ? type : (text[code]);
+					this._response.ok     = !fail;
 				}
 				if (this._response.ok) {
-					this._response.result = target.result;
+					this._response.response = target.result;
 				}
 				if (this._trigger !== null) this._trigger(this._response);
 				if (this._response.done)
@@ -5574,130 +5597,118 @@ const wd = (function() {
 
 /*============================================================================*/
 	/**### Requisições e Arquivos
-	``**constructor** ''object'' __Request(''object'' config, ''function'' trigger)``
-	Construtor para [requisições Web](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest) ou leituras de [arquivos](https://developer.mozilla.org/en-US/docs/Web/API/FileReader). O argumento opcional ``trigger`` define o disparador a ser invocado a cada mudança ou encerramento da requisição. O argumento ``config` contem as propriedades da requisição de acordo com o método escolhido. As seguintes prorpiedades são comuns**/
-	function __Request2(config, trigger) {
-		if (!(this instanceof __Request2)) return new __Request2(config, trigger);
+	``**constructor** ''object'' __Request(''object'' config)``
+	Construtor para [requisições Web](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest) ou leituras de [arquivos](https://developer.mozilla.org/en-US/docs/Web/API/FileReader). O argumento ``config` contem as propriedades da requisição de acordo com o método escolhido sendo o s básicos:
+	|Nome|Referência|Aplicação|
+	|url|Alvo da requisição ou da leitura|send, read e fetch|
+	|method|Método da Requisição (padrão é post)|send e fetch|
+	|type|Tipo de resposta a retornar (padrão text)|send, read e fetch|
+	|headers|Cabeçalho a enviar|send e fetch|
+	|body|Dados a enviar na requisição|send e fetch|
+	|timeout|Tempo de espera pela resposta|send, read e precariamente em fetch|**/
+	function __Request2(config) {
+		if (!(this instanceof __Request2)) return new __Request2(config);
+		const dataset = new __DataSet(config);
 		Object.defineProperties(this, {
-			_config:  {value: __Type(config).object    ? config  : {}},
-			_trigger: {value: __Type(trigger).function ? trigger : null}
+			_config: {value: dataset.toObject()},
 		});
 	}
 	Object.defineProperties(__Request2.prototype, {
 		constructor: {value: __Request2},
+		/**. ``''array'' _events``: Array contendo os eventos de XMLHttpRequest e FileReader.**/
 		_events: {
-			get: function() {
-				const data = "onabort onerror onload onloadend onloadstart onprogress ontimeout";
-				return data.split(" ");
+			value: ("onabort onerror onload onloadend onloadstart onprogress ontimeout").split(" ")
+		},
+		/**. ``''array'' _methods``: Array contendo os métodos para requisições web.**/
+		_methods: {
+			value: ("post connect delete get head options patch put trace").split(" ")
+		},
+		/**. ``''object'' _types``: Objeto contendo a configuração de responseType conforme método acionado.**/
+		_types: {
+			value: {
+				text:   {send: "text",        read: "readAsText",         fetch: "text"},
+				blob:   {send: "blob",        read: "readAsBinaryString", fetch: "blob"},
+				html:   {send: "document",    read: "readAsText",         fetch: "document"},
+				json:   {send: "json",        read: "readAsText",         fetch: "json"},
+				buffer: {send: "arraybuffer", read: "readAsArrayBuffer",  fetch: "arrayBuffer"},
+				url:    {send: "text",        read: "readAsDataURL",      fetch: "text"},
+				csv:    {send: "text",        read: "readAsText",         fetch: "text"},
+				table:  {send: "text",        read: "readAsText",         fetch: "text"},
+				chart:  {send: "text",        read: "readAsText",         fetch: "text"},
+				video:  {send: "blob",        read: "readAsDataURL",      fetch: "blob"},
+				audio:  {send: "blob",        read: "readAsDataURL",      fetch: "blob"},
+				image:  {send: "blob",        read: "readAsDataURL",      fetch: "blob"},
 			}
 		},
-		_method: {
-			value: function (src) {
-				const data = "post connect delete get head options patch put trace";
-				const list = data.split(" ");
-				src = !__Type(src).nonempty ? "post" : src.trim().toLowerCase();
-				return list.indexOf(src) >= 0 ? src : list[0];
-			}
-		},
-		_type: {
-			value: function(src, caller) {
-				const data = {
-					text:   {send: "text",        read: "readAsText",         fetch: "text"},
-					blob:   {send: "blob",        read: "readAsBinaryString", fetch: "blob"},
-					html:   {send: "document",    read: "readAsText",         fetch: "document"},
-					json:   {send: "json",        read: "readAsText",         fetch: "json"},
-					buffer: {send: "arraybuffer", read: "readAsArrayBuffer",  fetch: "arrayBuffer"},
-					url:    {send: "text",        read: "readAsDataURL",      fetch: "text"},
-					csv:    {send: "text",        read: "readAsText",         fetch: "text"},
-					table:  {send: "text",        read: "readAsText",         fetch: "text"},
-					chart:  {send: "text",        read: "readAsText",         fetch: "text"},
-					video:  {send: "blob",        read: "readAsDataURL",      fetch: "blob"},
-					audio:  {send: "blob",        read: "readAsDataURL",      fetch: "blob"},
-					image:  {send: "blob",        read: "readAsDataURL",      fetch: "blob"},
-				};
-				return data[src in data ? src : "text"][caller];
-			}
-		},
-		_headers: {
-			value: function(src) {
-				const ok = "Headers" in window;
-				if (ok && src instanceof Headers) return src;
-				const check  = __Type(src);
-				const header = ok ? new Headers() : {
-					data: [],
-					forEach: function (caller) {
-						for (let v of this.data) return caller(v.value, v.name);
-					},
-					append: function (name, value) {
-						if (!__Type(name).nonempty) return;
-						this.data.push({name: String(name).trim(), value: String(value).trim()})
-					},
-					get json() {
-						const data = {};
-						for (let v of this.data) data[v.name] = v.value;
-						return data;
-					}
-				};
-				if (check.nonempty) {
-					const items = src.split(/[\r\n]+/g);
-					for (let v of items) {
-						let name  = v.split(":")[0];
-						let value = v.replace(/^[^:]+\:(.+)$/, "$1");
-						header.append(name, value);
-					}
-				} else if (check.object) {
-					for (let name in src)
-						header.append(name, src[name]);
-				}
-				return header;
-			}
-		},
+		/**. ``''object'' _cfg(''string'' caller)``: Retorna a configuração adaptada ao tipo de chamada (``caller``).**/
 		_cfg: {
 			value: function(caller) {
-				const data = {
-					read:  {type: "text", url: new Blob([])},
-					fetch: {type: "text", url: ""},
-					send:  {
-						method: "post", url: "", async: true,  user: null, password: null,
-						body: null, headers: {}, timeout: 0, type: "text", mimetype: null,
-						credentials: false
-					}
-				};
-				const cfg = data[caller];
-				const obj = {};
-				for (let i in this._config) obj[i] = this._config[i];
-				for (let i in cfg) {
-					if (i === "method")
-						obj[i] = this._method(obj[i], caller);
-					else if (i === "headers")
-						obj[i] = this._headers(obj[i]);
-					else if (i === "type")
-						obj[i] = this._type(obj[i], caller);
-					else if (!(i in obj))
-						obj[i] = cfg[i];
+				/*-- clonando --*/
+				const cfg = {};
+				for (let i in this._config) cfg[i] = this._config[i];
+				/*-- cabeçalho --*/
+				if (caller === "send" || caller === "fetch") {
+					const dataset = new __DataSet(cfg["headers"]);
+					cfg["headers"] = dataset.valueOf();
 				}
-				return obj;
+				/*-- Método --*/
+				if (caller === "send" || caller === "fetch") {
+					cfg.method = __Type(cfg.method).nonempty ? cfg.method.toLowerCase().trim() : "post";
+					if (this._methods.indexOf(cfg.method) < 0)
+						cfg.method = "post"
+				}
+				/*-- Tipo de resposta --*/
+				if (caller === "send" || caller === "fetch") {
+					if (!(cfg.type in this._types))
+						cfg.type = "text";
+					cfg.responseType = this._types[cfg.type][caller];
+				} else {
+					if (!(cfg.type in this._types))
+						cfg.type = cfg.url.type.split("/")[0].toLowerCase().trim();
+					if (!(cfg.type in this._types))
+						cfg.type = "text";
+					cfg.responseType = this._types[cfg.type][caller];
+				}
+				/*-- específico para o método send --*/
+				if (caller === "send") {
+					const data = {async: true, user: null, password: null};
+					for (let i in data)
+						if (!(i in cfg)) cfg[i] = data[i];
+				}
+				/*-- timeout --*/
+				const time  = __Type(cfg.timeout);
+				cfg.timeout = time.finite && time.positive ? Math.trunc(time.value) : 0;
+
+				return cfg;
 			}
 		},
-		/**. ``''node'' send()``: Envia uma requisição ao servidor via XMLHttpRequest.**/
+		/**. ``''node'' send(''function'' trigger)``: Envia uma requisição ao servidor via XMLHttpRequest e executa o argumento opcional ``trigger`` a cada atualização (ver __Response). As seguintes propriedades opcionais específicas estão disponíveis:
+		|Nome|Descrição|
+		|async|Indica se a requisição é assíncrona (padrão verdadeiro)|
+		|user|Usuário (padrão nulo)|
+		|password|Senha (padrão nulo)|
+		|withCredentials|Aplica-se à propriedade de mesmo nome|
+		|overrideMimeType|Aplica-se ao método de mesmo nome|**/
 		send: {
-			value: function() {
+			value: function(trigger) {
 				const request  = new XMLHttpRequest();
-				const response = new __Response(this._trigger);
+				const response = new __Response(trigger);
 				const cfg      = this._cfg("send");
 				try {
 					request.open(cfg.method, cfg.url, cfg.async, cfg.user, cfg.password);
-					request.timeout = cfg.timeout;
-					request.responseType = cfg.type;
-					request.withCredentials = cfg.credentials;
-					if (cfg.mimetype !== null)
+					request.responseType = cfg.responseType;
+					request.timeout      = cfg.timeout;
+					for (let i in cfg.headers)
+						request.setRequestHeader(i, cfg.headers[i]);
+					if ("withCredentials" in cfg)
+						request.withCredentials = cfg.withCredentials;
+					if ("overrideMimeType" in cfg)
 						request.overrideMimeType(cfg.overrideMimeType);
-					cfg.headers.forEach(function(value,name,o) {
-						request.setRequestHeader(name, value);
-					});
 					for (let v of this._events) {
-						request[v]        = function (ev) {response.send(ev);};
-						request.upload[v] = function (ev) {response.send(ev);};
+						if (v in request)
+							request[v] = function (ev) {response.send(ev, cfg);};
+						if (v in request.upload)
+							request.upload[v] = function (ev) {response.send(ev, cfg);};
 					}
 					request.send(cfg.body);
 				} catch(e) {
@@ -5706,28 +5717,30 @@ const wd = (function() {
 				return;
 			},
 		},
-		/**. ``''node'' read()``: Lê um arquivo via FileReader.**/
+		/**. ``''node'' read(''function'' trigger)``: Lê um arquivo via FileReader e executa o argumento opcional ``trigger`` a cada atualização (ver __Response)**/
 		read: {
-			value: function() {
-				const request  = new FileReader();
-				const response = new __Response(this._trigger);
-				const cfg      = this._cfg("read");
-				if (cfg.url instanceof FileList) {
+			value: function(trigger) {
+				if (__Type(this._config.url).instanceOf("FileList")) {
 					const obj = {};
-					for (let i in cfg) obj[i] = cfg[i];
+					for (let i in this._config) obj[i] = this._config;
 					for (let i = 0; i < cfg.url.length; i++) {
 						obj.url = cfg.url[i];
-						let data = new __Request2(obj, this._trigger);
-						data.read();
+						let data = new __Request2(obj);
+						data.read(trigger);
 					}
 					return;
 				}
+				const request  = new FileReader();
+				const response = new __Response(trigger);
+				const cfg      = this._cfg("read");
 				try {
-					for (let v of this._events)
-						request[v] = function (ev) {response.read(ev);};
-					request[cfg.type](cfg.url);
+					for (let v of this._events) {
+						if (v in request)
+							request[v] = function (ev) {response.read(ev, cfg);};
+					}
+					request[cfg.responseType](cfg.url);
 				} catch(e) {
-					response.error(e.name + "- " + e.message);
+					response.error(e.name + " - " + e.message);
 				}
 				return;
 			},
