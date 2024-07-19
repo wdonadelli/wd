@@ -591,7 +591,7 @@ const wd = (function() {
 
 /*============================================================================*/
 	/**### Administração de Dados
-	#### Tipologia de Dados
+	#### Tipologia
 	###### ``**constructor** ''object'' __Type(''any''  input)``
 	Construtor para identificação do tipo de dado informado em ``input``.**/
 	function __Type(input) {
@@ -610,16 +610,17 @@ const wd = (function() {
 		/* IMPORTANTE: object deve ser o último (qualquer um pode ser um objeto) */
 		const objects = [
 			"null", "undefined", "boolean", "number", "datetime",
-			"array", "node", "regexp", "function", "file", "object"
+			"array", "node", "regexp", "function", "object"
 		];
 		/*-- Checagem do tipo --*/
-		let types = this.chars ? strings : objects;
-		let group = this._test.group;
+		const types = this.chars ? strings : objects;
+		const group = this._test.group;
 		if (types.indexOf(group) >= 0 && this[group]) return;
 		/*-- Checando cada possibilidade --*/
-		let i = -1;
-		while (++i < types.length)
-			if (types[i] !== group && this[types[i]]) return;
+		for (let v of types) {
+			if (v !== group && this[v]) return;
+		}
+
 		/*-- Não se encaixa em nada conhecido --*/
 		this._value    = input;
 		this._type     = "unknow";
@@ -806,18 +807,6 @@ const wd = (function() {
 		zero: {
 			get: function() {
 				return this.value === 0;
-			}
-		},
-		/**. ``''boolean'' xml``: Checa se o valor é documento XML.**/
-		xml: {
-			get: function() {
-				return this.instanceOf("XMLDocument");
-			}
-		},
-		/**. ``''boolean'' html``: Checa se o valor é documento HTML.**/
-		html: {
-			get: function() {
-				return this.instanceOf("HTMLDocument");
 			}
 		},
 		/**. ``''boolean'' boolean``: Checa se o valor é um valor booleano.**/
@@ -1021,69 +1010,37 @@ const wd = (function() {
 				return true;
 			}
 		},
-		/**. ``''boolean'' node``: Checa se o argumento é um elemento/document HTML/XML, ou uma coleção desses.**/
+		/**. ``''boolean'' node``: Checa se o argumento é um elemento HTML ou uma coleção desses.**/
 		node: {
 			get: function() {
 				if (this.type !== null) return this.type === "node";
-				let html  = null;
-				let node  = this._input;
-				if (node === window) {
-					html = [node];
-				} else {
-					let nodes = { /* 0: individual, 1: lista */ //FIXME XML e HTML não são nós: terá implicações
-						XMLDocument: 0,
-						HTMLDocument: 0,
-						HTMLElement: 0,
-						SVGElement: 0,
-						MathMLElement: 0,
-						NodeList: 1,
-						HTMLCollection: 1,
-						HTMLAllCollection: 1,
-						HTMLOptionsCollection: 1,
-						HTMLFormControlsCollection: 1
-					};
-					for (let HTML in nodes) {
-						if (this.instanceOf(HTML)) {
-							if (nodes[HTML] === 0) node = [node];
-							html = [];
+				let   html = null;
+				const node = this._input;
+				const list = { /* 0: individual, 1: lista */
+					HTMLElement: false,
+					SVGElement: false,
+					MathMLElement: false,
+					NodeList: true,
+					HTMLCollection: true,
+					HTMLAllCollection: true,
+					HTMLOptionsCollection: true,
+					HTMLFormControlsCollection: true
+				};
+				for (let object in list) {
+					if (this.instanceOf(object)) {
+						html  = [];
+						if (!list[object]) {
+							html.push(node);
+						} else {
 							let i = -1;
 							while (++i < node.length) html.push(node[i]);
 						}
+						break;
 					}
 				}
 				if (html === null) return false;
 				this._type     = "node";
 				this._value    = html;
-				this._valueOf  = this._value.slice();
-				this._toString = this._value;
-				return true;
-			}
-		},
-		/**. ``''boolean'' file``: Checa se o argumento é do tipo ``File``, ``FileList`` ou ``Blob``.**/
-		file: {
-			get: function() {
-				if (this.type !== null) return this.type === "file";
-				let files = { /* 0: individual, 1: lista */
-					File: 0,
-					FileList: 1,
-					Blob: 0
-				};
-				let file = null;
-				for (let name in files) {
-					if (this.instanceOf(name)) {
-						file = [];
-						if (files[name] === 0) {
-							file.push(this._input);
-						} else {
-							let i = -1;
-							while (++i < this._input.length)
-								file.push(this._input[i]);
-						}
-					}
-				}
-				if (file === null) return false;
-				this._type     = "file";
-				this._value    = file;
 				this._valueOf  = this._value.slice();
 				this._toString = this._value;
 				return true;
@@ -1097,7 +1054,7 @@ const wd = (function() {
 					this._type     = "object";
 					this._value    = this._input;
 					this._valueOf  = this._value;
-					this._toString = JSON.stringify(this._value);
+					this._toString = this._value;
 					return true;
 				}
 				return false;
@@ -1552,6 +1509,45 @@ const wd = (function() {
 				return this.csvTable;
 			}
 		},
+		/**. ``''array'' csvMatrix``: Transforma string CSV em matriz.**/
+		csvMatrix: {
+			get: function() {
+				if ("csvMatrix" in this._saved) return this._saved.csvMatrix;
+				let data = null;
+				if (this.csvTable !== null) {
+					const parser = new __Parser(this.csvTable);
+					data = parser.tableMatrix;
+				}
+				this._saved["csvMatrix"] = data;
+				return this.csvMatrix;
+			}
+		},
+		/**. ``''array'' csvObjectList``: Transforma uma string CSV em uma lista de objetos.**/
+		csvObjectList: {
+			get: function() {
+				if ("csvObjectList" in this._saved) return this._saved.csvObjectList;
+				let data = null;
+				if (this.csvMatrix !== null) {
+					const parser = new __Parser(this.csvMatrix);
+					data = parser.matrixObjectList;
+				}
+				this._saved["csvObjectList"] = data;
+				return this.csvObjectList;
+			}
+		},
+		/**. ``''string'' tableCSV``: Transforma tabela HTML string CSV.**/
+		tableCSV: {
+			get: function() {
+				if ("tableCSV" in this._saved) return this._saved.tableCSV;
+				let data = null;
+				if (this.tableMatrix !== null) {
+					const parser = new __Parser(this.tableMatrix);
+					data = parser.matrixCSV;
+				}
+				this._saved["tableCSV"] = data;
+				return this.tableCSV;
+			}
+		},
 		/**. ``''array'' tableMatrix``: Transforma tabela HTML em matriz.**/
 		tableMatrix: {
 			get: function() {
@@ -1573,6 +1569,19 @@ const wd = (function() {
 				return this.tableMatrix;
 			}
 		},
+		/**. ``''array'' tableObjectList``: Transforma uma tabela HTML em uma lista de objetos.**/
+		tableObjectList: {
+			get: function() {
+				if ("tableObjectList" in this._saved) return this._saved.tableObjectList;
+				let data = null;
+				if (this.tableMatrix !== null) {
+					const parser = new __Parser(this.tableMatrix);
+					data = parser.matrixObjectList;
+				}
+				this._saved["tableObjectList"] = data;
+				return this.tableObjectList;
+			}
+		},
 		/**. ``''string'' matrixCSV``: Transforma uma matriz em string CSV.**/
 		matrixCSV: {
 			get: function() {
@@ -1580,7 +1589,7 @@ const wd = (function() {
 				let data = null;
 				if (this._check.array) {
 					try {
-						const csv = []
+						const csv = [];
 						this._data.forEach(function (row,i,a) {
 							csv.push([]);
 							row.forEach(function (col,j,b) {
@@ -1596,43 +1605,38 @@ const wd = (function() {
 				return this.matrixCSV;
 			}
 		},
-		/**. ``''array'' csvMatrix``: Transforma string CSV em matriz.**/
-		csvMatrix: {
-			get: function() {
-				if ("csvMatrix" in this._saved) return this._saved.csvMatrix;
-				let data = null;
-				if (this.csvTable !== null) {
-					const parse = new __Parse(this.csvTable);
-					data = parse.tableMatrix;
-				}
-				this._saved["csvMatrix"] = data;
-				return this.csvMatrix;
-			}
-		},
-		/**. ``''string'' tableCSV``: Transforma tabela HTML string CSV.**/
-		tableCSV: {
-			get: function() {
-				if ("tableCSV" in this._saved) return this._saved.tableCSV;
-				let data = null;
-				if (this.tableMatrix !== null) {
-					const parse = new __Parse(this.tableMatrix);
-					data = parse.matrixCSV;
-				}
-				this._saved["tableCSV"] = data;
-				return this.tableCSV;
-			}
-		},
 		/**. ``''node'' matrixTable``: Transforma uma matriz em tabela HTML.**/
 		matrixTable: {
 			get: function() {
 				if ("matrixTable" in this._saved) return this._saved.matrixTable;
 				let data = null;
 				if (this.matrixCSV !== null) {
-					const parse = new __Parse(this.matrixCSV);
-					data = parse.csvTable;
+					const parser = new __Parser(this.matrixCSV);
+					data = parser.csvTable;
 				}
 				this._saved["matrixTable"] = data;
 				return this.matrixTable;
+			}
+		},
+		/**. ``''array'' matrixObjectList``: Transforma uma matriz em uma lista de objetos.**/
+		matrixObjectList: {
+			get: function() {
+				if ("matrixObjectList" in this._saved) return this._saved.matrixObjectList;
+				let data = null;
+				if (this._check.array) {
+					try {
+						const object = [];
+						this._data.forEach(function (row,i,a) {
+							if (i === 0) return;
+							let item = {};
+							row.forEach(function(value,j,b) {item[a[0][j]] = value;});
+							object.push(item)
+						});
+						data = object;
+					} catch(e) {}
+				}
+				this._saved["matrixObjectList"] = data;
+				return this.matrixObjectList;
 			}
 		},
 		/**. ``''object'' stringJSON``: Transforma string JSON em objeto.**/
@@ -1663,8 +1667,8 @@ const wd = (function() {
 				if ("stringHTML" in this._saved) return this._saved.stringHTML;
 				let data = null;
 				try {
-					let parse = new DOMParser();
-					data = parse.parseFromString(this._data, "text/html");
+					let parser = new DOMParser();
+					data = parser.parseFromString(this._data, "text/html");
 				} catch(e) {}
 				this._saved["stringHTML"] = data;
 				return this.stringHTML;
@@ -1676,8 +1680,8 @@ const wd = (function() {
 				if ("stringXML" in this._saved) return this._saved.stringXML;
 				let data = null;
 				try {
-					let parse = new DOMParser();
-					data = parse.parseFromString(this._data, "application/xml");
+					let parser = new DOMParser();
+					data = parser.parseFromString(this._data, "application/xml");
 				} catch(e) {}
 				this._saved["stringXML"] = data;
 				return this.stringXML;
@@ -1689,8 +1693,8 @@ const wd = (function() {
 				if ("stringSVG" in this._saved) return this._saved.stringSVG;
 				let data = null;
 				try {
-					let parse = new DOMParser();
-					data = parse.parseFromString(this._data, "image/svg+xml");
+					let parser = new DOMParser();
+					data = parser.parseFromString(this._data, "image/svg+xml");
 				} catch(e) {}
 				this._saved["stringSVG"] = data;
 				return this.stringSVG;
@@ -1789,8 +1793,8 @@ const wd = (function() {
 							}
 						});
 						tree.finish();
-						const parse  = __Parser(tree.valueOf());
-						const html   = parse.stringHTML;
+						const parser = __Parser(tree.valueOf());
+						const html   = parser.stringHTML;
 						const object = html.querySelectorAll("object");
 						data = [];
 						for (let i = 0; i < object.length; i++) {
@@ -1884,7 +1888,7 @@ const wd = (function() {
 				if ("fileURL" in this._saved) return this._saved.fileURL;
 				let data = null;
 				try {
-					if (this._check.file)
+					if (this._check.instanceOf("Blob") || this._check.instanceOf("File"))
 						data = URL.createObjectURL(this._data);
 				} catch(e) {}
 				this._saved["fileURL"] = data;
@@ -3599,7 +3603,7 @@ const wd = (function() {
 		if (!(this instanceof __Query))	return new __Query(css, root);
 		let check = __Type(root);
 		Object.defineProperties(this, {
-			_css:  {value: css === undefined || css === null ? "" : String(css).trim()},
+			_css:  {value: __Type(css).nonempty ? String(css).trim() : ""},
 			_root: {value: check.node ? check.value[0] : document},
 		});
 	}
@@ -3655,8 +3659,13 @@ const wd = (function() {
 	/**#### Dados para Requisições
 
 
-	//FIXME apagar isso aqui pois será substituído por DataAdmin (é utilizado em send)
-	/**#### Dados para Requisições
+	//FIXME apagar isso aqui pois será substituído por DataSet (é utilizado em send)
+
+
+
+
+
+	/**#### Dados para Requisições (apagar)
 	###### ``**constructor** ''object'' __URL(''string'' input)``
 	Construtor para gerir parâmetros de envio de requisição. O argumento ``input`` é o destino da requisição. Se vazio, observará o URL em vigor. Alguns métodos retornar o próprio objeto**/
 	function __URL(input) {
@@ -3839,21 +3848,15 @@ const wd = (function() {
 	});
 
 /*----------------------------------------------------------------------------*/
-	/**#### Formulários HTML
+	/**#### Formulários
 	###### ``**constructor** ''object'' __FNode(''node'' input)``
 	Construtor para gerir formulários HTML. O argumento ``node`` é o campo de formulário.**/
 	function __FNode(input) {
 		if (!(this instanceof __FNode))	return new __FNode(input);
-		let check = __Type(input);
-		let node  = check.node ? check.value[0] : null;
-		let elem  = node !== null;
-		let tag   = null;
-		let type  = null;
-		let form  = false;
-		let cfg   = null;
-		let fwork = false;
-		let fmask = false;
-		let forms = {
+		const check = __Type(input);
+		const node  = check.node ? check.value[0] : document.body;
+		const tag   = node.tagName.toLowerCase();
+		const forms = {
 			meter:    {value: "value", text: "value", send: 0, check: null},
 			progress: {value: "value", text: "value", send: 0, check: null},
 			option:   {value: "value", text:  "text", send: 0, check: null},
@@ -3895,18 +3898,14 @@ const wd = (function() {
 				}
 			}
 		};
-		/* identificando o tipo de node */
-		if (node !== null) {
-			if (check.html || check.xml || input === window) {
-				tag  = node.constructor.name.toLowerCase();
-				elem = false;
-			} else {
-				tag = node.tagName.toLowerCase();
-			}
-		}
 		/* obtendo informações de formulário */
+		let type  = null;
+		let form  = false;
+		let cfg   = null;
+		let fwork = false;
+		let fmask = false;
+
 		if (tag in forms) {
-			/* é formulário */
 			form  = true;
 			cfg   = forms[tag];
 			type  = tag;
@@ -3922,7 +3921,6 @@ const wd = (function() {
 				}
 			})();
 			if ("type" in cfg) {
-				/* é um formulário com tipo especificado */
 				let type1 = String(node.getAttribute("type")).toLowerCase();
 				let type2 = String(node.type).toLowerCase();
 				type  = type1 in cfg.type ? type1 : type2;
@@ -3933,7 +3931,6 @@ const wd = (function() {
 		Object.defineProperties(this, {
 			_form:  {value:  form}, /* informa se é um formulário */
 			_node:  {value:  node}, /* registra o nó */
-			_elem:  {value:  elem}, /* registra se o nó é HTML */
 			_tag:   {value:   tag}, /* registra a tag do nó */
 			_type:  {value:  type}, /* registra o tipo de formulário ou nulo */
 			_cfg:   {value:   cfg}, /* registra a configuração do formulário ou nulo */
@@ -3944,16 +3941,14 @@ const wd = (function() {
 
 	Object.defineProperties(__FNode.prototype, {
 		constructor: {value: __FNode},
-		/**. ``''boolean'' form``: Informar se o nó é um formulário.**/
+		/**. ``''boolean'' form``: Informa se o nó é um formulário.**/
 		form: {get: function() {return this._form;}},
 		/**. ``''node'' node``: Retorna o nó HTML.**/
 		node: {get: function() {return this._node;}},
-		/**. ``''string'' type``: Retorna o tipo de nó de formulário ou o atributo ``tag``.**/
+		/**. ``''string'' type``: Retorna o tipo do formulário.**/
 		type: {get: function() {return this._type;}},
 		/**. ``''string'' tag``: Retorna o a tag do nó em letra minúscula.**/
 		tag: {get: function() {return this._tag;}},
-		/**. ``''boolean'' picker``: Testa se o campo de fomulário possui máscara nativa implementada.**/
-
 		/**. ``''any'' value(''any'' x)``: Define e retorna o valor do formulário. Se o formulário aceita múltiplos valores, o valor retornado será uma lista.**/
 		value: {
 			value: function(x) {
@@ -4037,7 +4032,7 @@ const wd = (function() {
 				}
 			}
 		},
-		/**. ``''string'' name``: Define ou retorna o nome do formulário ou nulo se inexistentes ``name`` ou ``id``.**/
+		/**. ``''string'' name``: Define ou retorna o nome do formulário ou nulo se inexistentes ``name`` e ``id``.**/
 		name: {
 			get: function() {
 				if (!this.form) return null;
@@ -4224,47 +4219,39 @@ const wd = (function() {
 		/**. ``''any'' attribute(''string'' name, ''any'' value)``: Define e retorna valores de atributos dos elementos HTML. Os argumentos ``name`` e ``value`` são, respectivamente, o nome e o valor do atributo. Se ``value`` for omitido, retornará o valor de ``name``. Se ``name`` for omitido, retornará um objeto com os nome e valores dos atributos HTML.**/
 		attribute: {
 			value: function (name, value) {
-				if (this._node === null) return;
 				/*-- RETORNAR LISTA DE ATRIBUTOS -------------------------------------*/
 				if (!__Type(name).nonempty) {
-					let data = {};
-					if ("attributes" in this.node) {
-						let attr = this.node.attributes;
-						let i = -1;
-						while(++i < attr.length)
-							data[attr[i].name] = attr[i].value;
-					} else {
-						for (let i in this.node)
-							data[i] = this.node[i];
-					}
+					const data = {};
+					let attr = this.node.attributes;
+					let i = -1;
+					while(++i < attr.length)
+						data[attr[i].name] = attr[i].value;
 					return data;
 				}
 				/*-- RETORNAR ATRIBUTO -----------------------------------------------*/
 				name = name.trim();
+				const attr = this.attribute();
 				if (arguments.length === 1) {
 					/*-- atributos de formulário -- */
 					if (this.form) {
 						switch(name) {
-								case "value":       return this.value();
-								case "textContent": return this.text();
-								case "name":        return this.name;
+							case "value":       return this.value();
+							case "textContent": return this.text();
+							case "name":        return this.name;
 						}
 					}
 					/*-- atributos com comportamento especial --*/
-					if (this._elem) {
-						switch(name) {
-							case "style":     return this.style;
-							case "class":     return this.class;
-							case "className": return this.class;
-							case "dataset":   return this.dataset;
-						}
+					switch(name) {
+						case "style":     return this.style;
+						case "class":     return this.class;
+						case "className": return this.class;
+						case "dataset":   return this.dataset;
 					}
-					/*-- atributos de objeto --*/
-					if (name in this.node) return this.node[name];
-					/*-- atributos de elemento html --*/
-					if (this._elem && "getAttribute" in this.node)
+					/*-- atributos ou propriedades --*/
+					if (name in this.node)
+						return this.node[name];
+					else if (name in attr)
 						return this.node.getAttribute(name);
-					/*-- não localizado --*/
 					return undefined;
 				}
 				/*-- DEFINIR ATRIBUTO ------------------------------------------------*/
@@ -4272,52 +4259,49 @@ const wd = (function() {
 					/*-- atributo de formulário HTML -- */
 					if (this.form) {
 						switch(name) {
-								case "value":       this.value(value); return this.attribute(name);
-								case "textContent": this.text(value);  return this.attribute(name);
-								case "name":        this.name = value; return this.attribute(name);
+							case "value":       {this.value(value); return this.attribute(name);}
+							case "textContent": {this.text(value);  return this.attribute(name);}
+							case "name":        {this.name = value; return this.attribute(name);}
 						}
 					}
 					/*-- atributo HTML com comportamento especial --*/
-					if (this._elem) {
-						switch(name) {
-							case "style":     this.style   = value; return this.attribute(name);
-							case "class":     this.class   = value; return this.attribute(name);
-							case "className": this.class   = value; return this.attribute(name);
-							case "dataset":   this.dataset = value; return this.attribute(name);
-						}
+					switch(name) {
+						case "style":     {this.style   = value; return this.attribute(name);}
+						case "class":     {this.class   = value; return this.attribute(name);}
+						case "className": {this.class   = value; return this.attribute(name);}
+						case "dataset":   {this.dataset = value; return this.attribute(name);}
 					}
 					/*-- método com comportamento especial --*/
 					switch(name) {
 						case "addEventListener":    return this.handler(value, false);
 						case "removeEventListener": return this.handler(value, true);
 					}
-					/*-- atributo de objeto --*/
+					/*-- atributo ou propriedade --*/
 					if (name in this.node) {
 						let testAttr  = __Type(this.node[name]);
 						let testValue = __Type(value);
 						/*-- método --*/
-						if (testAttr.function && testValue.array)
+						if (testAttr.function && testValue.array) {
 							return this.node[name].apply(this.node, value);
-						/*-- attributo booleano e não booelano --*/
-						if (testAttr.boolean && (testValue.boolean || value === "!"))
+						}
+						/*-- propriedade booleana --*/
+						if (testAttr.boolean && (testValue.boolean || value === "!")) {
 							this.node[name] = testValue.boolean ? value : !this.node[name];
-						else
+						}
+						/*-- demais propriedades --*/
+						else if (value === null) {
+							delete this.node[name];
+						} else {
 							this.node[name] = value;
-						return this.attribute(name);
+						}
 					}
-					/*-- atributos html --*/
-					if (this._elem) {
+					/*-- attributos --*/
+					else {
 						if (value === null)
 							this.node.removeAttribute(name);
 						else
 							this.node.setAttribute(name, value);
-						return this.attribute(name);
 					}
-					/*-- atributos não html --*/
-					if (value === null)
-						delete this.node[name];
-					else
-						this.node[name] = value;
 					return this.attribute(name);
 				}
 			}
@@ -4325,7 +4309,6 @@ const wd = (function() {
 		/**. ``''object'' style``: Define e retorna o valor do atributo ``style`` por meio de um objeto. Valor nulo excluí o atributo, valor textual define o atributo HTML e valor em objeto define o par nome-valor.**/
 		style: {
 			get: function() {
-				if (!this._elem) return {};
 				let data = {};
 				let i    = -1;
 				while (++i < this.node.style.length) {
@@ -4336,7 +4319,6 @@ const wd = (function() {
 				return data;
 			},
 			set: function(x) {
-				if (!this._elem) return;
 				let data = __Type(x);
 				if (data.null) {
 					let attr = this.style;
@@ -4357,7 +4339,6 @@ const wd = (function() {
 		/**. ``''array'' class``: Define e retorna o valor do atributo ``class`` por meio de um array. Valor nulo excluí o atributo, valor textual define o atributo HTML e valor em objeto define ações ''replace'', ''toggle'', ''add'' e  ''remove''.**/
 		class: {
 			get: function() {
-				if (!this._elem) return [];
 				let css   = this.node.getAttribute("class");
 				let array = css === null ? [] : css.replace(/\s+/g, " ").trim().split(" ");
 				let value = __Array(array).order;
@@ -4365,7 +4346,6 @@ const wd = (function() {
 				return value;
 			},
 			set: function(x) {
-				if (!this._elem) return;
 				let data = __Type(x);
 				if (data.chars) {
 					this.node.setAttribute("class", x);
@@ -4386,7 +4366,6 @@ const wd = (function() {
 		/**. ``''void''  handler(''any'' list, ''boolean'' remove=false, ''boolean'' capture=false)``: Define ou remove disparadores ao elemento. O argumento ``list`` pode ser um objeto ou uma lista. Se for uma lista, cada item da lista corresponderá, respectivamente, ao nome do evento, a função disparadora e o argumento ``useCapture`` dos métoso ''addEventListener'' e ''removeEventListener''. Se for um objeto, o atributo corresponderá ao nome do evento e seu valor a função disparadora ou uma lista de funções. A função disparadora, se estiver dentro do escopo de ``window``, poderá ser uma string com seu respectivo nome. O argumento opcional ``remove``, se verdadeiro, executará a remoção da função disparadora. O argumento opcional ``capture`` determina o valor do argumento ``useCapture`` dos métodos nativos.**/
 		handler: {
 			value: function(list, remove, capture) {
-				if (this.node === null) return;
 				let data = __Type(list);
 				if (data.array) {
 					let object = {};
@@ -4412,14 +4391,12 @@ const wd = (function() {
 		/**. ``''object'' dataset``: Define e retorna os valores do atributo ``dataset``. Valor nulo excluí o atributo e valor em objeto define seus pares nome-valor.**/
 		dataset: {
 			get: function() {
-				if (!this._elem) return {};
 				let data = {};
 				for (let i in this.node.dataset)
 					data[i] = this.node.dataset[i];
 				return data;
 			},
 			set: function(x) {
-				if (!this._elem) return;
 				let data  = __Type(x);
 				let wdLib = []
 				if (data.null) {
@@ -4447,7 +4424,6 @@ const wd = (function() {
 		/**. ``''node'' clone(boolean childs=true)``: Retorna um clone do objeto. Se o argumento opcional ``childs`` for falso, os elementos filhos não serão clonados.**/
 		clone: {
 			value: function(childs) {
-				if (!this._elem) return null;
 				let special = ["script"];
 				/* se não for um script */
 				if (special.indexOf(this.tag) < 0)
@@ -4464,17 +4440,52 @@ const wd = (function() {
 		/**. ``''void'' load(''string'' html="", ''boolean'' replace=false, ''boolean'' run=false)``: Carrega um conteúdo HTML no elemento ou o substitui. O argumento ``html`` deve conter o código HTML a ser carregado; O argumento opcional ``replace``, se verdadeiro, irá substituir o elemento pelo conteúdo de ``html``; e O argumento ``run``, se verdadeiro, executará elementos scripts existentes.**/
 		load: {
 			value: function(html, replace, run) {
-				if (!this._elem) return;
-				let inner = html === undefined || html === null ? "" : String(html);
-				let node  = this.node;
-				/* se for um formulário, apenas irá definir seu valor */
+				const check = __Type(html);
+				let body;
+				if (check.chars) {
+					const parser = __Parser(html);
+					body = parser.stringHTML.body;
+				} else if (check.instanceOf("XMLDocument")) {
+					const inner  = html.documentElement.innerHTML;
+					const parser = __Parser(inner);
+					body = parser.stringHTML.body;
+				} else if (check.instanceOf("HTMLDocument") || check.instanceOf("Document")) {
+					body = html.body;
+				} else {
+					return;
+				}
+				if (this.form) {
+					this.attribute("value", body.innerHTML);
+				} else {
+					let children = body.children;
+					while (this.node.childElementCount > 0)
+						this.node.firstElementChild.remove();
+					for (let i = 0; i < children.length; i++)
+						this.node.appendChild(children[i]);
+				}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+				/* se for um formulário, apenas irá definir seu valor * /
 				if (this.form) {
 					this.attribute("value", inner);
 				}
-				/* definindo conteúdo */
+				/* definindo conteúdo * /
 				else {
 					this.attribute("innerHTML", inner);
-					/* rodando scripts (não roda por padrão por segurança) */
+					/* rodando scripts (não roda por padrão por segurança) * /
 					if (run === true) {
 						let scripts = __Type(__Query("script", node).$$).value;
 						scripts.forEach(function (v,i,a) {
@@ -4484,7 +4495,7 @@ const wd = (function() {
 							v.remove();
 						});
 					}
-					/* substituindo o nó pelo conteúdo, se for o caso */
+					/* substituindo o nó pelo conteúdo, se for o caso * /
 					if (replace === true) {
 						let childs = __Type(node.children).value;
 						childs.forEach(function(v,i,a) {
@@ -4492,15 +4503,19 @@ const wd = (function() {
 						});
 						node.remove();
 					}
-				}
-				/* invocar evento */
+				}*/
+
+
+
+
+
+				/* FIXME invocar evento */
 				document.dispatchEvent(wdReloadEvent);
 			}
 		},
-		/**. ``''void'' repeat(''array'' list)``: Clona os filhos do elemento repetindo-os de acordo com as informações repassadas pelo array de objetos em ``list``. O elemento filho que contiver o nome do atributo do obejto entre duas chaves (''{{nome}}'') terá o fragmento substituídos pelo valor do atributo do objeto correspondente.**/
+		/**. ``''void'' repeat(''array'' list)``: Clona os filhos do elemento repetindo-os de acordo com as informações repassadas pela lista de objetos (``list``). O elemento filho que contiver o nome do atributo do objeto entre duas chaves (''{{nome}}'') terá o fragmento substituídos pelo valor do atributo do objeto correspondente.**/
 		repeat: {
 			value: function(list) {
-				if (!this._elem) return;
 				if (!__Type(list).array) list = [];
 				/* 1) obter o conteúdo interno */
 				let html = this.node.innerHTML;
@@ -4510,48 +4525,51 @@ const wd = (function() {
 				/* 3) se não possuir o formato, recuperar o modelo em data-wd-repeat-model */
 				else if ("wdRepeatModel" in this.node.dataset)
 					html = this.node.dataset.wdRepeatModel;
-				/* 4) se não existir, definir html como null para não efetuar qualquer mudança */
+				/* 4) se não encontrar o modelo, retornar */
 				else
-					html = null;
-				if (html !== null) {
-					/* 5) adequar os atributos do DOM ( {{x}} para {{x}}="" ) */
-					html = html.split("}}=\"\"").join("}}");
-					/* 6) limpar conteúdo interno */
-					this.node.innerHTML = "";
-					/* 7) Criar lista de filhos */
-					let childs = [""];
-					/* 8) executar looping para criar blocos de filhos */
-					list.forEach(function (v,i,a) {
-						/* 9) substituir atributos entre chaves duplas por valores e adicionar */
-						if (__Type(v).object) {
-							let inner = html;
-							for (let j in v)
-								inner = inner.split("{{"+j+"}}").join(v[j]);
-							childs.push(inner);
-						}
-					});
-					/* 10) definir filhos */
-					this.node.innerHTML = childs.join("\n");
-				}
-				/* 11) invocar evento */
+					return;
+				/* 5) adequar os atributos do DOM ( de {{x}}="" para {{x}} ) */
+				html = html.split("}}=\"\"").join("}}");
+				/* 6) limpar conteúdo interno */
+				while (this.node.childElementCount > 0)
+					this.node.firstElementChild.remove();
+				/* 7) Criar lista de filhos */
+				let childs = [""];
+				/* 8) executar looping para criar blocos de filhos */
+				list.forEach(function (v,i,a) {
+					/* 9) substituir atributos entre chaves duplas por valores e adicionar */
+					if (__Type(v).object) {
+						let inner = html;
+						for (let j in v) inner = inner.split("{{"+j+"}}").join(v[j]);
+						childs.push(inner);
+					}
+				});
+				/* 10) definir filhos */
+				const inner    = ["<"+this.tag+">", childs.join("\n"), "</"+this.tag+">"]
+				const parser   = __Parser(inner.join(""));
+				const children = parser.stringHTML.body.firstElementChild.children;
+				for (let i = 0; i < children.length; i++)
+					this.node.appendChild(children[i]);
+
+
+
+
+				/* 11) FIXME invocar evento */
 				document.dispatchEvent(wdReloadEvent);
 			}
 		},
 		/**. ``''boolean'' show``: Retorna e define a visibilidade do elemento nos termos da biblioteca.**/
 		show: {
 			get: function() {
-				if (!this._elem) return true;
 				return this.class.indexOf("js-wd-no-display") < 0;
 			},
 			set: function(x) {
-				if (!this._elem) return;
 				this.class = x === false ? {add: "js-wd-no-display"} : {remove: "js-wd-no-display"}
 			}
 		},
 		/**. ``''void'' only(''boolean'' reverse)``: Exibe o nó e esconde os irmãos. Se ``reverse`` for verdadeiro, inverte-se o resultado.**/
 		only: {
 			value: function(reverse) {
-				if (!this._elem) return;
 				let node  = this.node;
 				let nodes = __Type(this.node.parentElement.children).value;
 				nodes.forEach(function(v,i,a) {
@@ -4563,7 +4581,6 @@ const wd = (function() {
 		/**. ``''void'' childs(''integer'' init, ''integer'' last)``: Define o intervalo de nós filhos a ser exibido entre o índice inicial (``init``) e final (``last``). Utilize um número negativo para indicar o último elemento.**/
 		childs: {
 			value: function (init, last) {
-				if (!this._elem) return;
 				let child = __Type(this.node.children).value;
 				let width = child.length - 1;
 				let data1 = __Type(init);
@@ -4584,7 +4601,6 @@ const wd = (function() {
 		/**. ``''array'' groups(''boolean'' child)``: Retorna uma lista de objetos contendo os intervalos (atributos ``init`` e ``last``) dos elementos visíveis. Se o argumento ``child`` for verdadeiro, a análise será dentre os filhos, caso contrário, entre elemento e seus irmãos.**/
 		groups: {
 			value: function(child) {
-				if (!this._elem) return [];
 				let target = child === true ? this.node : this.node.parentElement;
 				let nodes  = __Type(target.children).value;
 				let groups = [];
@@ -4608,7 +4624,6 @@ const wd = (function() {
 		/**. ``''void'' walk(''integer'' n=1)``: Exibe um determinado nó filho avançando ou retrocedendo entre os nós irmãos. O argumento ``n`` indica o intervalo a avançar (positivo) ou a retroceder (negativo).**/
 		walk: {
 			value: function(n) {
-				if (!this._elem) return;
 				if (this.node.childElementCount < 2) return this.childs(0, 0);
 				let data   = __Type(n);
 				let childs = this.node.childElementCount;
@@ -4625,7 +4640,6 @@ const wd = (function() {
 		/**. ``''void'' pages(''number'' index, ''number'' width)``: Agrupa os nós filhos em grupos de certo comprimento. O argumento ``index`` define o índice do grupo a ser exibido limitado ao primeiro (0) e ao último (-1). Se valores infinitos forem informados, os grupos avançarão (+) ou retrocederão (-) uma unidade. O argumento ``width`` é um número finito positivo que define o comprimento dos grupos, pode ser um número não inteiro.**/
 		pages: {
 			value: function(index, width) {
-				if (!this._elem) return;
 				if (this.node.childElementCount < 2) return this.childs(0,0);
 				/* definindo o tamanho da página */
 				let length = this.node.childElementCount;
@@ -4673,8 +4687,6 @@ const wd = (function() {
 		//TODO isso é interessante para talvez deixar mais profissional outros métodos
 		removeMark: {
 			value: function(selector, start, end) {
-
-				if (!this._elem) return;
 				tag = String(tag).trim();
 				css = __Type(css).nonempty ? css.trim() : "";
 				/*-- remover elementos (substituir por span), se for o caso --*/
@@ -4698,7 +4710,6 @@ const wd = (function() {
 		/**. ``''void'' insertTag(''string'' tag, ''integer'' start, ''integer'' end)``: Insere uma ``tag`` HTML entre os índices ``start`` e ``end`` do conteúdo textual. Método destrutivo, não utilizar se houver conteúdo editável no nó.**/
 		insertTag: {
 			value: function(tag, start, end) {
-				if (!this._elem) return;
 				let init = __Type(start);
 				let last = __Type(end);
 				tag  = String(tag).trim().toLowerCase().replace(/[^a-z\-]/gi, "");
@@ -4735,7 +4746,6 @@ const wd = (function() {
 		/**. ``''object'' textMatch(''regexp|string'' search)``: Localiza dentro do conteúdo textual do nó os índices de início e fim de ``search`` em um objeto contendo os atributos ``init`` e ``last``, retorna ou nulo caso não encontre.**/
 		textMatch: {
 			value: function(search) {
-				if (!this._elem) return;
 				let check = __Type(search);
 				if (check.regexp) {
 					let text = this.node.innerText;
@@ -4759,7 +4769,6 @@ const wd = (function() {
 		/**. ``''void'' filter(''string|regexp'' search, ''integer'' width)``: Exibe os nós filhos que casam com o valor definido em ``search``. O argumento ``width`` indica o número mínimo de caracteres a ser informado em ``search`` (string). Quando ``search`'for menor que o valor absoluto de ``width``, nenhum elemento será exibido, se negativo, ou todos, se positivo.**/
 		filter: {
 			value: function(search, width) {
-				if (!this._elem) return;
 				if (this.node.childElementCount === 0) return;
 				let data  = __Type(search);
 				let check = __Type(width);
@@ -4812,7 +4821,6 @@ const wd = (function() {
 		/**. ``''void'' sort(''boolean'' asc)``: Ordena os elementos filhos. O argumento opcional ``asc`` define a classificação. Se verdadeiro, será ascendente; se falso, descendente; e, se não boleano, será o inverso da classificação vigente.**/
 		sort: {
 			value: function(asc) {
-				if (!this._elem) return;
 				if (this.node.childElementCount === 0) return;
 				let node  = this.node;
 				let child = __Type(this.node.children).value;
@@ -4824,7 +4832,6 @@ const wd = (function() {
 		/**. ``''void'' tsort(''integer'' order...)``: Ordena os nós filhos com referência aos nós netos, ordenando colunas de tabelas. Os argumentos ``order`` definem a sequência de prioridade na classificação, com a indicação do número da coluna (a partir de 1, da esquerda para a direita). Se indicador da coluna for positivo, sua ordem será ascendente, caso contrário, descendente.**/
 		tsort: {
 			value: function() {
-				if (!this._elem) return;
 				if (this.node.childElementCount === 0) return;
 				/*-- acertando argumentos --*/
 				let args = [];
@@ -4871,7 +4878,6 @@ const wd = (function() {
 		/**. ``''void'' jump(''node'' list)``: O nó será adicionado aos elementos na ordem definida em ``list`` a cada chamada do método. O argumento ``list`` é uma lista de nós que acomodará o elemento.**/
 		jump: {
 			value: function(list) {
-				if (!this._elem) return;
 				const check = __Type(list);
 				if (!check.node && !check.array) return;
 				let nodes = [];
@@ -4890,7 +4896,6 @@ const wd = (function() {
 		//TODO interessante: https://developer.mozilla.org/en-US/docs/Web/CSS/::backdrop    https://developer.mozilla.org/en-US/docs/Web/CSS/:fullscreen
 		full: {
 			value: function() {
-				if (this.node === null) return;
 				let attr = {
 					open: ["requestFullscreen", "webkitRequestFullscreen", "msRequestFullscreen"],
 					exit: ["exitFullscreen",    "webkitExitFullscreen",    "msExitFullscreen"]
@@ -4910,7 +4915,6 @@ const wd = (function() {
 		/**. ``''object'' styles``: Retorna um objeto contendo os estilos e seus valores computados ao elemento.**/
 		styles: {
 			get: function() {
-				if (!this._elem) return;
 				let object = {};
 				let styles = window.getComputedStyle(this.node, null);
 				for (let i in styles) {
@@ -5202,289 +5206,35 @@ const wd = (function() {
 	});
 
 /*============================================================================*/
-	/**### Requisições e Arquivos
-	``**constructor** ''object'' __Request(''any'' input)``
-	Construtor para [requisições Web](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest) ou leituras de [arquivos](https://developer.mozilla.org/en-US/docs/Web/API/FileReader). O argumento ``input` é o alvo a ser requisitado ou lido, pode ser um endereço (string), um arquivo ou uma lista de arquivos (só o primeiro item será lido).**/
-	function __Request(input) {
-		if (!(this instanceof __Request))	return new __Request(input);
-		/*-- analisando argumento --*/
-		let check   = __Type(input);
-		let request = null;
-		let source  = null;
-		let target  = null;
-		/*-- checando o alvo e obtendo o leitor adequado --*/
-		if (check.file && check.value.length > 0) {
-			target  = check.value[0];
-			request = new FileReader();
-			source  = "file";
-		} else if (check.nonempty) {
-			target  = String(input).trim();
-			request = new XMLHttpRequest();
-			source  = "path";
-		}
-
-		/*-- definindo atributos do objeto --*/
-		Object.defineProperties(this, {
-			_target:   {value: target},  /* alvo da requisição: file ou path */
-			_source:   {value: source},  /* tipo do alvo: path ou file */
-			_request:  {value: request}, /* objeto leitor */
-			_onchange: {value: null,  writable: true}, /* disparador de mudança */
-			_ondone:   {value: null,  writable: true}, /* disparador de término */
-			_done:     {value: false, writable: true}, /* informa o encerramento da requisição */
-			_maxtime:  {value: 0,     writable: true}, /* tempo máxima da requisição */
-			_async:    {value: true,  writable: true}, /* leitura síncrona ou assíncrona */
-			_user:     {value: null,  writable: true}, /* usuário */
-			_password: {value: null,  writable: true}, /* senha */
-			_method:   {value: null,  writable: true}, /* método de envio ou leitura */
-			_header:   {value: null,  writable: true}, /* cabeçalhos de envio */
-			_start:    {value: 0,     writable: true}, /* tempo de início da requisição */
-		});
-		if (source === null) return;
-
-		/*-- definir disparador nativo e vinculá-lo aos eventos do objeto leitor --*/
-		let self    = this;
-		let trigger = function(event) {
-			/*-- Não retornar o disparador depois do encerramento ou se não identificado o alvo --*/
-			if (self._done || self._target === null) return;
-
-			/*-- definir variáveis do disparador --*/
-			let time      = new Date().valueOf() - self._start;
-			let source    = self._source;
-			let request   = self._request;
-			let stateCode = request.readyState;
-			let status    = request.status;
-			let maxtime   = self.maxtime;
-			let type      = event.type;
-			let size      = "total"  in event ? event.total  : 0;
-			let loaded    = "loaded" in event ? event.loaded : 0;
-			let progress  = size === 0 ? 1 : loaded/size;
-			let states    = {
-				file:   ["empty", "loading", "done"],
-				path:   ["unsent", "opened", "headers", "loading", "done"],
-				errors: ["abort", "timeout", "error"]
-			};
-			/*-- definindo o progresso --*/
-			if (source === "path" && stateCode !== 3)
-				progress = stateCode < 3 ? 0 : 1;
-			else if (source === "file" && stateCode !== 1)
-				progress = stateCode < 1 ? 0 : 1;
-			__PROGRESSVIEWER.dataset.wdProgressValue = progress;
-			__PROGRESSVIEWER.dispatchEvent(wdLoadingRequestEvent);
-
-			/*-- analisar o estado da requisição --*/
-			let state = states[source][stateCode];
-
-			if (status === 404) {
-				self._done = true;
-				state = "notfound";
-			} else if (states.errors.indexOf(type) >= 0) {
-				self._done = true;
-				state = type;
-			} else if (source === "file" && maxtime > 0 && time > maxtime) {
-				request.abort();
-				self._done = true;
-				state = "timeout";
-			} else {
-				self._done = state === "done";
-			}
-
-			/*-- Obter cabeçalhos --*/
-			let headers = null;
-			if (self._done && "getAllResponseHeaders" in request) {
-				headers = request.getAllResponseHeaders();
-				if (__Type(headers).nonempty) {
-					let list = headers.split(/[\r\n]+/g);
-					headers = {};
-					list.forEach(function(v,i,a) {
-						let name  = v.split(":")[0].trim();
-						let value = v.replace(/^[^:]+\:(.+)$/, "$1").trim();
-						headers[name] = value;
-					});
-				}
-			}
-			/*-- obter resultado --*/
-			let response = null;
-			if (self._done)
-				response = request[source === "path" ? "response" : "result"];
-			let argument = {
-				done:    self._done,
-				time:    time,
-				state:   state,
-				size:    size,
-				loaded:  loaded,
-				headers: headers,
-				abort:   function() {if (!this.done) request.abort();},
-				get response() {return response;},
-				get text()  {return __Type(response).chars ? this.response : null;},
-				get html()  {return this.text === null ? null : __String(this.text).html;},
-				get xml()   {return this.text === null ? null : __String(this.text).xml;},
-				get json()  {return this.text === null ? null : __String(this.text).json;},
-				get csv()   {return this.text === null ? null : __String(this.text).csv;},
-				get table() {
-					let csv = this.csv;
-					if (csv === null) return null;
-					let table = __Table(1,0);
-					table.matrix(csv);
-					return table.html();
-				}
-			};
-
-			/*-- chamar disparadores definidos pelo usuário --*/
-			if (self.onchange !== null)             self.onchange(argument);
-			if (self._done && self.ondone !== null) self.ondone(argument);
-			/*-- encerrar barra de progresso, se processo finalizado --*/
-			if (self._done) __PROGRESSVIEWER.dispatchEvent(wdCloseRequestEvent);
-
-		}
-
-		/*-- atribuir o disparador nativos a todos os eventos do leitor --*/
-		let events = [
-			"onabort", "onerror", "onload", "onloadend", "onloadstart",
-			"onprogress", "ontimeout", "onreadystatechange"
-		];
-		events.forEach(function(v,i,a) {
-			if (v in self._request)
-				self._request[v] = trigger;
-			if ("upload" in self._request && v in self._request.upload)
-				self._request.upload[v] = trigger;
-		});
-	}
-
-	Object.defineProperties(__Request.prototype, {
-		constructor: {value: __Request},
-		/**. ``''number'' maxtime``: Define e retorna o tempo máximo de requisição em milisegundos.**/
-		maxtime: {
-			set: function(x) {this._maxtime = x;},
-			get: function()  {
-				return __Type(this._maxtime).positive ? Math.trunc(this._maxtime) : 0;
-			},
-		},
-		/**. ``''boolean'' async``: Define e retorna se a requisição será assíncrona (apenas para envio de dados).**/
-		async: {
-			set: function(x) {this._async = x;},
-			get: function()  {return this._async === false ? false : true;}
-		},
-		/**. ``''string'' user``: Define e retorna o usuário da requisição ou nulo se indefinido.**/
-		user: {
-			set: function(x) {this._user = x;},
-			get: function()  {
-				let check = __Type(this._user);
-				return check.undefined || check.null ? null : String(this._user);
-			}
-		},
-		/**. ``''string'' password``: Define e retorna a senha da requisição ou nulo se indefinida.**/
-		password: {
-			set: function(x) {this._password = x;},
-			get: function()  {
-				let check = __Type(this._password);
-				return check.undefined || check.null ? null : String(this._password);
-			}
-		},
-		/**. ``''string'' method``: Define e retorna a forma de leitura ou da requisição. Se for requisição HTTP, aceita-se CONNECT, DELETE, GET, HEAD, OPTIONS, PATCH ou POST (padrão). Se for leitura de arquivo, aceita-se readAsBinaryString, readAsText, readAsDataURL ou readAsArrayBuffer, o valor padrão depende do MimeType do arquivo.**/
-		method: {
-			set: function(x) {this._method = x;},
-			get: function()  {
-				let value = String(this._method).toUpperCase().trim();
-				switch(this._source) {
-					case "path": {
-						let methodHTTP = [
-							"CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST",
-							"PUT", "TRACE"
-						];
-						return methodHTTP.indexOf(value) >= 0 ? value : "POST";
-					}
-					case "file": {
-						let methodRead = {
-							READASBINARYSTRING: "readAsBinaryString", READASTEXT:    "readAsText",
-							READASARRAYBUFFER: "readAsArrayBuffer",   READASDATAURL: "readAsDataURL"
-						};
-						if (value in methodRead) return methodRead[value];
-
-						let mime = String(this._target.type).split("/")[0].toUpperCase();
-						let methodMime = {
-							TEXT:  "readAsText",    URL:   "readAsDataURL",
-							AUDIO: "readAsDataURL", VIDEO: "readAsDataURL", IMAGE: "readAsDataURL"
-						};
-						return mime in methodMime ? methodMime[mime] : "readAsArrayBuffer";
-					}
-				}
-				return null;
-			},
-		},
-		/**. ``''object'' header``: Define e retorna os cabeçalhos em forma de objeto contendo nome/valor.**/
-		header: {
-			set: function(x) {this._header = x;},
-			get: function()  {return __Type(this._header).object ? this._header : {};},
-		},
-		/**. ``function onchange``: Define e retorna o disparador a ser chamado a cada mudança de estado da requisição ou nulo, se indefinido. O disparador receberá um objeto como argumento contendo os atributos/métodos ''done, time, state, size, loaded, headers, abort(), response, text, html, xml, json, csv e table''.**/
-		onchange: {
-			set: function(x) {this._onchange = x;},
-			get: function()  {return __Type(this._onchange).function ? this._onchange : null;},
- 		},
- 		/**. ``function ondone``: Como ``onchange``, mas será disparada somente no fim do procedimento.**/
- 		ondone: {
-			set: function(x) {this._ondone = x;},
-			get: function()  {return __Type(this._ondone).function ? this._ondone : null;},
- 		},
-		/**. ``''void'' send(void data)``: Envia uma requisição web. O ``data`` é a informação a ser enviada ao destino.**/
-		send: {
-			value: function(data) {
-				if (this._source !== "path") return;
-				let method  = this.method;
-				let header  = this.header;
-				let target  = this._target;
-				/* iniciando processo */
-				this._start = new Date().valueOf();
-				this._done  = false;
-				this._request.timeout = this.maxtime;
-				__PROGRESSVIEWER.dispatchEvent(wdOpenRequestEvent);
-
-
-				/* tentando enviar */
-				try {
-					this._request.open(method, target, this.async, this.user, this.password);
-					if (header !== null) {
-						for (let name in header)
-							this._request.setRequestHeader(String(name), String(header[name]));
-					}
-					this._request.send(data);
-				} catch(e) {
-					__PROGRESSVIEWER.dispatchEvent(wdCloseRequestEvent);
-				}
-				return;
-			}
-		},
-		/**. ``''void'' read()``: Lê o conteúdo de um arquivo (objeto ``File``).**/
-		read: {
-			value: function() {
-				if (this._source !== "file") return null;
-				/* iniciando processo */
-				this._start = new Date().valueOf();
-				this._done  = false;
-				__PROGRESSVIEWER.dispatchEvent(wdOpenRequestEvent);
-				try      {this._request[this.method](this._target);}
-				catch(e) {__PROGRESSVIEWER.dispatchEvent(wdCloseRequestEvent);}
-				return;
-			}
-		}
-	});
-/*============================================================================*/
-	/**### Requisições e Arquivos
-	``**constructor** ''object'' __Response(''object'' config, ''function'' trigger)``
-	Construtor para [requisições Web](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest) ou leituras de [arquivos](https://developer.mozilla.org/en-US/docs/Web/API/FileReader). O argumento opcional ``trigger`` define o disparador a ser invocado a cada mudança ou encerramento da requisição. O argumento ``config` contem as propriedades da requisição de acordo com o método escolhido. As seguintes prorpiedades são comuns**/
+	/**### Requisições e Leituras
+	#### Resposta
+	``**constructor** ''object'' __Response(''function'' trigger)``
+	Construtor para [requisições Web](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest) ou leituras de [arquivos](https://developer.mozilla.org/en-US/docs/Web/API/FileReader). O argumento opcional ``trigger`` define o disparador a ser invocado a cada mudança ou encerramento da requisição. O disparador receberá a cada atualização um objeto com as seguintes propriedades:
+	|Nome|Descrição|
+	|done|Booleano que indica o fim do processo.|
+	|ok|Indica, ao fim do processo, se o procedimento foi concluído com sucesso.|
+	|staus|Traz, ao fim do processo, uma mensagem sobre o procedimento.|
+	|time|Indica o tempo de execução do processo.|
+	|size|Indica a quantidade de trabalho do processo.|
+	|progress|Indica o progresso do processo (de 0 a 1).|
+	|headers|Traz, ao fim do processo e se aplicável, o cabeçalho de retorno (Headers ou object).|
+	|response|Traz, ao fim do processo, o conteúdo do procedimento ou nulo se inaplicável.|
+	|abort()|Uma função para abortar o procedimento.|**/
 	function __Response(trigger) {
 		if (!(this instanceof __Response)) return new __Response(trigger);
 		Object.defineProperties(this, {
 			_trigger:  {value: __Type(trigger).function ? trigger : null},
 			_start:    {value: new Date().valueOf()},
+			_fetch:    {value: null,  writable: true},
+			_aborted:  {value: false, writable: true},
 			_response: { value: {
 					done: false,
 					ok: null,
 					status: null,
 					time: 0,
-					progress: 0,
-					headers: {},
 					size: 0,
+					progress: 0,
+					headers: null,
 					response: null,
 					abort: null,
 				}
@@ -5494,6 +5244,37 @@ const wd = (function() {
 	}
 	Object.defineProperties(__Response.prototype, {
 		constructor: {value: __Response},
+		/**. ``''void'' _changes(''string'' type, ''string'' caller)``: Define o formato da resposta conforme tipo (``type``) e o método (``caller``).**/
+		_changes: {
+			value: function(type, caller) {
+				if (this._response.response !== null) {
+					const parser = new __Parser(this._response.response);
+					const change = {
+						read: {
+							xml:   function() {return parser.stringXML;},
+							html:  function() {return parser.stringHTML;},
+							json:  function() {return parser.stringJSON;},
+							csv:   function() {return parser.csvMatrix;},
+							table: function() {return parser.csvTable;},
+						},
+						send: {
+							url:   function() {return parser.fileURL;},
+							csv:   function() {return parser.csvMatrix;},
+							table: function() {return parser.csvTable;},
+						},
+						fetch: {
+							url:   function() {return parser.fileURL;},
+							csv:   function() {return parser.csvMatrix;},
+							table: function() {return parser.csvTable;},
+						}
+					}
+					if (type in change[caller])
+						this._response.response = change[caller][type]();
+				}
+				return;
+			}
+		},
+		/**. ``''void'' send(''object'' ev, ''object'' config)``: Disparador para o método ``send`` de __Request. O argumento ``ev`` é o evento disparador e ``config``os dados de configuração da requisição.**/
 		send: {
 			value: function(ev, config) {
 				if (this._response.done) return;
@@ -5519,9 +5300,9 @@ const wd = (function() {
 				if (this._response.ok) {
 					const headers = new __DataSet(target.getAllResponseHeaders());
 					const header  = headers.toHeaders();
-					//FIXME ver como Response em fetch devolve header para fazer igual
 					this._response.headers  = header === null ? headers.valueOf() : header;
 					this._response.response = target.response;
+					this._changes(config.type, "send");
 				}
 				if (this._trigger !== null) this._trigger(this._response);
 				if (this._response.done)
@@ -5529,8 +5310,7 @@ const wd = (function() {
 				return;
 			}
 		},
-
-
+		/**. ``''void'' read(''object'' ev, ''object'' config)``: Disparador para o método ``read`` de __Request. O argumento ``ev`` é o evento disparador e ``config``os dados de configuração da leitura.**/
 		read: {
 			value: function(ev, config) {
 				if (this._response.done) return;
@@ -5558,63 +5338,90 @@ const wd = (function() {
 				}
 				if (this._response.ok) {
 					this._response.response = target.result;
+					this._changes(config.type, "read");
 				}
 				if (this._trigger !== null) this._trigger(this._response);
 				if (this._response.done)
 					__PROGRESSVIEWER.dispatchEvent(wdCloseRequestEvent);
 				return;
-
 			}
 		},
+		/**. ``''boolean'' fetch(''object'' ev, ''object'' config)``: Disparador para o método ``fetch`` de __Request. O argumento ``ev`` é o retorno do ação e ``config``os dados de configuração da requisição. Retorna falso se os eventos precários "timeout" e "aborted" ocorrerem.**/
+		fetch: {
+			value: function(ev, config) {
+				if (this._response.done) return;
+				const self     = this;
+				const progress = {EMPTY: 0, LOADEND: 1/2, DONE: 1};
+				this._response.time = (new Date().valueOf()) - this._start;
+				this._response.progress = progress[config._status];
 
+				if (this._response.abort === null) {
+					this._response.abort = function() {self._aborted = true;}
+				}
+				if (this._aborted) {
+					this.error("aborted");
+					return false;
+				}
+				if (config.timeout > 0 && this._response.time > config.timeout) {
+					this.error("timeout");
+					return false;
+				}
+				if (config._status === "LOADEND") {
+					this._fetch = ev;
+				}
+				else if (config._status === "DONE") {
+					const fetch = this._fetch;
+					this._response.done     = true;
+					this._response.ok       = fetch.ok;
+					this._response.status   = fetch.status + " - " + fetch.statusText;
+					this._response.headers  = fetch.headers;
+					this._response.response = ev;
+					this._changes(config.type, "fetch");
+				}
 
+				__PROGRESSVIEWER.dataset.wdProgressValue = this._response.progress;
+
+				if (this._trigger !== null) this._trigger(this._response);
+				if (this._response.done)
+					__PROGRESSVIEWER.dispatchEvent(wdCloseRequestEvent);
+				return true;
+			}
+		},
+		/**. ``''void'' error(''string'' status)``: Disparador para casos de erro em __Request. O argumento ``status`` é a mensagem de erro.**/
 		error: {
 			value: function(status) {
-				this._response.done   = true;
-				this._response.ok     = false;
-				this._response.status = status;
+				this._response.time     = (new Date().valueOf()) - this._start;
+				this._response.progress = 1;
+				this._response.done     = true;
+				this._response.ok       = false;
+				this._response.status   = status;
 				if (this._trigger !== null) this._trigger(this._response);
 				__PROGRESSVIEWER.dispatchEvent(wdCloseRequestEvent);
 				return;
 			}
 		}
-
-
-
-
-
 	});
 
-
-
-
-
-
-
-
-
-
-
-/*============================================================================*/
-	/**### Requisições e Arquivos
+/*----------------------------------------------------------------------------*/
+	/**#### Requisição
 	``**constructor** ''object'' __Request(''object'' config)``
 	Construtor para [requisições Web](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest) ou leituras de [arquivos](https://developer.mozilla.org/en-US/docs/Web/API/FileReader). O argumento ``config` contem as propriedades da requisição de acordo com o método escolhido sendo o s básicos:
 	|Nome|Referência|Aplicação|
-	|url|Alvo da requisição ou da leitura|send, read e fetch|
+	|url|Alvo da requisição ou da leitura, não necessariamento um URL|send, read e fetch|
 	|method|Método da Requisição (padrão é post)|send e fetch|
 	|type|Tipo de resposta a retornar (padrão text)|send, read e fetch|
 	|headers|Cabeçalho a enviar|send e fetch|
 	|body|Dados a enviar na requisição|send e fetch|
 	|timeout|Tempo de espera pela resposta|send, read e precariamente em fetch|**/
-	function __Request2(config) {
-		if (!(this instanceof __Request2)) return new __Request2(config);
+	function __Request(config) {
+		if (!(this instanceof __Request)) return new __Request(config);
 		const dataset = new __DataSet(config);
 		Object.defineProperties(this, {
 			_config: {value: dataset.toObject()},
 		});
 	}
-	Object.defineProperties(__Request2.prototype, {
-		constructor: {value: __Request2},
+	Object.defineProperties(__Request.prototype, {
+		constructor: {value: __Request},
 		/**. ``''array'' _events``: Array contendo os eventos de XMLHttpRequest e FileReader.**/
 		_events: {
 			value: ("onabort onerror onload onloadend onloadstart onprogress ontimeout").split(" ")
@@ -5623,21 +5430,28 @@ const wd = (function() {
 		_methods: {
 			value: ("post connect delete get head options patch put trace").split(" ")
 		},
-		/**. ``''object'' _types``: Objeto contendo a configuração de responseType conforme método acionado.**/
+		/**. ``''object'' _types``: Objeto contendo a configuração de responseType conforme definido na propriedade ``type``:
+		|Propriedade|Retorno|Exceção|
+		|text|Conteúdo em string.|Escolha padrão.|
+		|blob|Conteúdo em arquivo.|``read`` retorna como BinaryString.|
+		|html|Conteúdo em documento HTML.|``send`` e ``fetch`` retorna um Document.|
+		|xml|Conteúdo em documento XML.|``send`` e ``fetch`` retorna um Document.|
+		|json|Conteúdo em JSON.|-|
+		|buffer|Conteúdo em ArrayBuffer.|-|
+		|url|Conteúdo em ObjectURL.|-|
+		|csv|Conteúdo em Array a partir de dados/arquivo CSV.|-|
+		|table|Conteúdo em nó HTML ''table'' a partir de dados/arquivo CSV.|-|**/
 		_types: {
 			value: {
 				text:   {send: "text",        read: "readAsText",         fetch: "text"},
 				blob:   {send: "blob",        read: "readAsBinaryString", fetch: "blob"},
 				html:   {send: "document",    read: "readAsText",         fetch: "document"},
+				xml:    {send: "document",    read: "readAsText",         fetch: "document"},
 				json:   {send: "json",        read: "readAsText",         fetch: "json"},
 				buffer: {send: "arraybuffer", read: "readAsArrayBuffer",  fetch: "arrayBuffer"},
-				url:    {send: "text",        read: "readAsDataURL",      fetch: "text"},
+				url:    {send: "blob",        read: "readAsDataURL",      fetch: "blob"},
 				csv:    {send: "text",        read: "readAsText",         fetch: "text"},
 				table:  {send: "text",        read: "readAsText",         fetch: "text"},
-				chart:  {send: "text",        read: "readAsText",         fetch: "text"},
-				video:  {send: "blob",        read: "readAsDataURL",      fetch: "blob"},
-				audio:  {send: "blob",        read: "readAsDataURL",      fetch: "blob"},
-				image:  {send: "blob",        read: "readAsDataURL",      fetch: "blob"},
 			}
 		},
 		/**. ``''object'' _cfg(''string'' caller)``: Retorna a configuração adaptada ao tipo de chamada (``caller``).**/
@@ -5663,10 +5477,10 @@ const wd = (function() {
 						cfg.type = "text";
 					cfg.responseType = this._types[cfg.type][caller];
 				} else {
+					const type = cfg.url.type.split("/")[0].toLowerCase().trim();
+					const file = ["image", "audio", "video"];
 					if (!(cfg.type in this._types))
-						cfg.type = cfg.url.type.split("/")[0].toLowerCase().trim();
-					if (!(cfg.type in this._types))
-						cfg.type = "text";
+						cfg.type = file.indexOf(type) < 0 ? "text" : "url";
 					cfg.responseType = this._types[cfg.type][caller];
 				}
 				/*-- específico para o método send --*/
@@ -5682,7 +5496,7 @@ const wd = (function() {
 				return cfg;
 			}
 		},
-		/**. ``''node'' send(''function'' trigger)``: Envia uma requisição ao servidor via XMLHttpRequest e executa o argumento opcional ``trigger`` a cada atualização (ver __Response). As seguintes propriedades opcionais específicas estão disponíveis:
+		/**. ``''void'' send(''function'' trigger)``: Envia uma requisição ao servidor via XMLHttpRequest e executa o argumento opcional ``trigger`` a cada atualização (ver __Response). As seguintes propriedades opcionais específicas estão disponíveis:
 		|Nome|Descrição|
 		|async|Indica se a requisição é assíncrona (padrão verdadeiro)|
 		|user|Usuário (padrão nulo)|
@@ -5717,7 +5531,7 @@ const wd = (function() {
 				return;
 			},
 		},
-		/**. ``''node'' read(''function'' trigger)``: Lê um arquivo via FileReader e executa o argumento opcional ``trigger`` a cada atualização (ver __Response)**/
+		/**. ``''void'' read(''function'' trigger)``: Lê um arquivo via FileReader e executa o argumento opcional ``trigger`` a cada atualização (ver __Response)**/
 		read: {
 			value: function(trigger) {
 				if (__Type(this._config.url).instanceOf("FileList")) {
@@ -5725,7 +5539,7 @@ const wd = (function() {
 					for (let i in this._config) obj[i] = this._config;
 					for (let i = 0; i < cfg.url.length; i++) {
 						obj.url = cfg.url[i];
-						let data = new __Request2(obj);
+						let data = new __Request(obj);
 						data.read(trigger);
 					}
 					return;
@@ -5745,23 +5559,44 @@ const wd = (function() {
 				return;
 			},
 		},
+		/**. ``''void'' fetch(''function'' trigger)``: Envia uma requisição ao servidor via fetch e executa o argumento opcional ``trigger`` a cada atualização (ver __Response). As propriedades são as mesmas utilizadas no método nativo, exceto ''url''.**/
+		fetch: {
+			value: function(trigger) {
+				const request  = new FileReader();
+				const response = new __Response(trigger);
+				const cfg      = this._cfg("fetch");
 
-
-
-
-
-
+				try {
+					cfg._status = "EMPTY";
+					response.fetch(null, cfg);
+					/*-- chamando fetch --*/
+					fetch(cfg.url, cfg)
+					.then(function(output) {
+						cfg._status = "LOADEND";
+						if (output.ok) {
+							if (response.fetch(output, cfg)) {
+								cfg._status = "DONE"
+								output[cfg.responseType]()
+								.then(function(data) {response.fetch(data, cfg);})
+								.catch(function (e)  {response.fetch(null, cfg);});
+							}
+						} else {
+							if (response.fetch(output, cfg)) {
+								cfg._status = "DONE"
+								response.fetch(null, cfg);
+							}
+						}
+					})
+					.catch(function(e) {
+						response.error(e.name + " - " + e.message);
+					});
+				} catch(e) {
+					response.error(e.name + " - " + e.message);
+				}
+				return;
+			},
+		}
 	});
-
-
-
-
-
-
-
-
-
-
 
 /*============================================================================*/
 	/**### Figuras
@@ -7279,88 +7114,10 @@ const wd = (function() {
 				return this._data.toString();
 			}
 		},
-		/**. ``''string'' mask(''string'' mask, ''function'' callback)``: Retorna o valor o valor formatado por uma máscara. O argumento ``mask`` define o formato da máscara e o argumento opcional ``callback`` o método que irá avaliar o retorno da máscara. Se a máscara não casa, será retornado nulo.**/
+		/**. ``''string'' mask(''string'' mask, ''function'' callback)``: Retorna o valor formatado por uma máscara definida em no argumento ``mask``. Se a máscara não casar, retornará uma string vazia.**/
 		mask: {
 			value: function(mask, callback) {
 				return new __String(this._input).mask(mask, callback)
-			}
-		},
-		/**. ``''self'' read(''object'' options)``: Lê arquivos. O argumento ``options`` é um objeto que define os atributos da requisição (maxtime, method, onchange e ondone). (ver ``__Request.read``)**/
-		read: {
-			value: function(options) {
-				let opt  = {maxtime: 0, method: null, onchange: null, ondone: null};
-				let data = __Type(this._input);
-				let pack = [];
-				/* obtendo lista de arquivos a depender do tipo */
-				if (this.type === "node") pack = this.files;
-				else if (data.file)       pack = this._data.value;
-				if (pack.length === 0)    return this;
-				/* acertando opções */
-				if (__Type(options).object) {
-					for (let i in opt)
-						if (i in options) opt[i] = options[i];
-				}
-				/* executando leituras */
-				pack.forEach(function (v,i,a){
-					let request = new __Request(v);
-					for (let i in opt) request[i] = opt[i];
-					request.read();
-				});
-				return this;
-			}
-		},
-		/**. ``''self'' send(''string'' target, ''object'' options)``: Faz requisições. O argumento ``target`` é o alvo da requisição e o argumento ``options`` é um objeto que define os atributos da requisição (maxtime, user, password, header, method, onchange e ondone). (ver ``__Request.send``)**/
-		send: {
-			value: function (target, options) {
-				let url = __URL(target);
-				let opt = {
-					maxtime:    0, user:     null, password: null, header:  {},
-					method:  null, onchange: null, ondone:   null
-				};
-
-				/* obtendo dados para envio */
-				switch(this.type) {
-					case "node": {
-						let submit = this.submit;
-						/* não requisitar se não houver dados para nó HTML (erro no formulário) */
-						if (submit === null) return this;
-						submit.forEach(function (v,i,a) {url.append(v.name, v.value);});
-						break;
-					}
-					case "object": {
-						for (let i in this._input) url.append(i, this._input[i]);
-						break;
-					}
-					case "array": {
-						this._data.value.forEach(function(v,i,a) {url.append(i, v);});
-						break;
-					}
-					case "file": {
-						url.append(this.type, this._data.value);
-						break;
-					}
-					case "number": {
-						url.append(this.type, this._data.value);
-						break;
-					}
-					default: {
-						url.append(this.type, this.toString());
-					}
-				}
-				/* acertando opções */
-				if (__Type(options).object) {
-					for (let i in opt)
-						if (i in options) opt[i] = options[i];
-				}
-				/* checando o tipo de requisição */
-				let method = String(opt.method).toUpperCase().trim();
-				let head   = method === "GET" || method === "HEAD";
-				let pack   = head ? null : url.form;
-				/* abrindo requisição, definindo parâmetros e enviando */
-				let request = new __Request(head ? url.target : target);
-				for (let i in opt) request[i] = opt[i];
-				request.send(pack);
-				return this;
 			}
 		},
 		/**. ``''self'' signal(''string'' title)``: Renderiza uma mensagem.**/
@@ -7884,6 +7641,52 @@ const wd = (function() {
 	});
 
 /*----------------------------------------------------------------------------*/
+	/**#### WDobject
+	###### ``**constructor** ''object'' WDobject(''any''  input, ''object'' data)``
+	Construtor genérico para manipulação de tempo. Os argumentos ``input`` e ``data`` se referem aos argumento de ``WDmain``**/
+	function WDobject(input, data) {
+		WDmain.call(this, input, data);
+		Object.defineProperties(this, {
+			_main: {value: new __DataSet(data.value)},
+		});
+	}
+
+	WDobject.prototype = Object.create(WDmain.prototype, {
+		constructor: {value: WDobject},
+		/**. ``''self'' send(''function'' trigger)``: Efetua requisição XMLHttpRequest. O argumento opcional ``trigger``define o disparador (ver __Request).**/
+		send: {
+			value: function(trigger) {
+				const request = new __Request(this._input);
+				request.send(trigger);
+				return this;
+			}
+		},
+		/**. ``''self'' fetch(''function'' trigger)``: Efetua requisição fetch. O argumento opcional ``trigger``define o disparador (ver __Request).**/
+		fetch: {
+			value: function(trigger) {
+				const request = new __Request(this._input);
+				request.fetch(trigger);
+				return this;
+			}
+		},
+		/**. ``''self'' read(''function'' trigger)``: Efetua leitura de arquivos. O argumento opcional ``trigger``define o disparador (ver __Request).**/
+		read: {
+			value: function(trigger) {
+				const request = new __Request(this._input);
+				request.read(trigger);
+				return this;
+			}
+		},
+		/**. ``''boolean'' instanceOf(''string'' name)``: Checa se o conteúdo é instância do objeto informado em ``name``.**/
+		instanceOf: {
+			value: function(name) {
+				return this._data.instanceOf(name);
+			}
+
+		}
+	});
+
+/*----------------------------------------------------------------------------*/
 	/**#### WDnode
 	###### ``**constructor** ''object'' WDnode(''any''  input, ''object'' data)``
 	Construtor genérico para manipulação de nós HTML. Os argumentos ``input`` e ``data`` se referem aos argumento de ``WDmain``**/
@@ -8211,6 +8014,7 @@ const wd = (function() {
 			case "datetime": return new WDdatetime(input, data);
 			case "node":     return new WDnode(input, data);
 			case "string":   return new WDstring(input, data);
+			case "object":   return new WDobject(input, data);
 		}
 		return new WDmain(input, data);
 	}
@@ -8266,11 +8070,9 @@ const wd = (function() {
 			data2D:   {value: function(){return __Data2D.apply(null, Array.prototype.slice.call(arguments));}},
 			plot:     {value: function(){return __Plot2D.apply(null, Array.prototype.slice.call(arguments));}},
 			request:  {value: function(){return __Request.apply(null, Array.prototype.slice.call(arguments));}},
-			request2: {value: function(){return __Request2.apply(null, Array.prototype.slice.call(arguments));}},
 			query:    {value: function(){return __Query.apply(null, Array.prototype.slice.call(arguments));}},
 			svg:      {value: function(){return __SVG.apply(null, Array.prototype.slice.call(arguments));}},
 			table:    {value: function(){return __Table.apply(null, Array.prototype.slice.call(arguments));}},
-			url:      {value: function(){return __URL.apply(null, Array.prototype.slice.call(arguments));}},
 			dataset:  {value: function(){return __DataSet.apply(null, Array.prototype.slice.call(arguments));}},
 			parser:   {value: function(){return __Parser.apply(null, Array.prototype.slice.call(arguments));}},
 			LANG:     {value: __LANG},
@@ -8282,54 +8084,28 @@ const wd = (function() {
 /*============================================================================*/
 /**#### Atributos dataset
 	###### ``**function** ''void'' data_wdLoad(''node''  e, ''object'' event)``
-	Função vinculada ao atributo HTML ``data-wd-load`` cujo objetivo é carregar arquivo HTML utilizando as ferramentas ``WDnode.load`` e ``WD.send``. Possui múltiplos atributos e grupo único:
-	|Nome|Descrição|Obrigatório|
-	|path|Caminho para o arquivo HTML externo a ser carregado|Sim|
-	|replace|''true'' ou ''false'', ver WDnode.load|Não|
-	|run|''true'' ou ''false'', ver WDnode.load|Não|
-	|method|Tipo de requisição HTTP, ver WD.send|Não|
-	|$ ou $$|Seletor(es) CSS do formulário com os parâmetros da requição|Não|**/
+	Função vinculada ao atributo HTML ``data-wd-load`` cujo objetivo é carregar arquivo HTML (ver ``WDnode.load`` e ``WD.send``). Possui múltiplos atributos e grupo único.**/
 	function data_wdLoad(e, event) {
 		if (!("wdLoad" in e.dataset)) return;
 		let target = WD(e);
 		let data   = __Parser(e.dataset.wdLoad).wdArray[0];
-		let query  = data.$$ || data.$ || undefined;
 		delete e.dataset.wdLoad;
-		WD(query).send(data.path, {
-			method: data.method,
-			ondone: function(x) {target.load(x.text, data.replace, data.run);}
+		wd(data).send(function(x) {
+			if (x.ok) target.load(x.response, data.replace, data.run);
 		});
 		return;
 	};
 
 /*----------------------------------------------------------------------------*/
 	/**###### ``**function** ''void'' data_wdRepeat(''node''  e, ''object'' event)``
-	Função vinculada ao atributo HTML ``data-wd-repeat`` cujo objetivo é clonar elementos filhos a partir de parâmentros contidos em um arquivo JSON ou CSV utilizando as ferramentas ``WDnode.repeat`` e ``WD.send``. Possui múltiplos atributos e grupo único:
-	|Nome|Descrição|Obrigatório|
-	|path|Caminho para o arquivo JSON ou CSV a ser carregado|Sim|
-	|method|Tipo de requisição HTTP, ver WD.send|Não|
-	|$ ou $$|Seletor(es) CSS do formulário com os parâmetros da requição|Não|**/
+	Função vinculada ao atributo HTML ``data-wd-repeat`` cujo objetivo é clonar elementos filhos a partir de parâmentros contidos em um arquivo JSON ou CSV (ver ``WDnode.repeat`` e ``WDobject.send``). Possui múltiplos atributos e grupo único.**/
 	function data_wdRepeat(e, event) {
 		if (!("wdRepeat" in e.dataset)) return;
 		let target = WD(e);
 		let data   = __Parser(e.dataset.wdRepeat).wdArray[0];
-		let query  = data.$$ || data.$ || undefined;
 		delete e.dataset.wdRepeat;
-
-		WD(query).send(data.path, {
-			method: data.method,
-			ondone: function(x) {
-				let list = [];
-				if (__Type(x.json).array) {
-					list = x.json;
-				}
-				else if (__Type(x.csv).array) {
-					let table = __Table();
-					table.matrix(x.csv);
-					list = table.json;
-				}
-				target.repeat(list);
-			}
+		wd(data).send(function(x) {
+			if (x.ok) target.repeat(x.response);
 		});
 		return;
 	};
@@ -9364,46 +9140,50 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
+	const __TRIGGERS = {
+		window: {
+			target: window,
+			events: {
+				load:       wdOnLoad,
+				resize:     wdOnResize,
+				hashchange: wdOnHash,
+			}
+		},
+		document: {
+			target: document,
+			events: {
+				input:     wdOnInput,
 
-	WD(window).set({
-		addEventListener: {
-			load:       wdOnLoad,
-			resize:     wdOnResize,
-			hashchange: wdOnHash,
+				focusout:  wdOnFocusOut,
+				focusin:   wdOnFocusIn,
+
+				drag:      wdOnMouse,
+				dragstart: wdOnMouse,
+				dragend:   wdOnMouse,
+				dragleave: wdOnMouse,
+				dragover:  wdOnMouse,
+				dragenter: wdOnMouse,
+				drop:      wdOnMouse,
+
+				click:      wdOnMouse,
+				mousedown:  wdOnMouse,
+				mouseup:    wdOnMouse,
+				mousemove:  wdOnMouse,
+				mouseenter: wdOnMouse,
+				mouseleave: wdOnMouse,
+				mouseover:  wdOnMouse,
+				mouseout:   wdOnMouse,
+				dblclick:   wdOnMouse,
+
+				wddataset: wdOnDataset,
+				wdreload:  wdOnReload,
+			}
 		}
-	});
+	};
 
-	WD(document).set({
-		addEventListener: {
-
-			input:     wdOnInput,
-
-			focusout:  wdOnFocusOut,
-			focusin:   wdOnFocusIn,
-
-			drag:      wdOnMouse,
-			dragstart: wdOnMouse,
-			dragend:   wdOnMouse,
-			dragleave: wdOnMouse,
-			dragover:  wdOnMouse,
-			dragenter: wdOnMouse,
-			drop:      wdOnMouse,
-
-			click:      wdOnMouse,
-			mousedown:  wdOnMouse,
-			mouseup:    wdOnMouse,
-			mousemove:  wdOnMouse,
-			mouseenter: wdOnMouse,
-			mouseleave: wdOnMouse,
-			mouseover:  wdOnMouse,
-			mouseout:   wdOnMouse,
-			dblclick:   wdOnMouse,
-
-			wddataset: wdOnDataset,
-			wdreload:  wdOnReload,
-
-		}
-	});
+	for (let i in __TRIGGERS)
+		for (let j in __TRIGGERS[i].events)
+			__TRIGGERS[i].target.addEventListener(j, __TRIGGERS[i].events[j], false);
 
 	return WD;
 }());

@@ -40,7 +40,7 @@ function loadTable(elem, target) {
 function openPage(x) {
 	localStorage.setItem("page", x);
 	wd.$$("#renderCode, #sourceCode").set({
-		dataset: {wdLoad: "path{"+x+"}method{GET}run{true}"}
+		dataset: {wdLoad: "url{"+x+"}run{true}"}
 	});
 	return;
 }
@@ -74,11 +74,9 @@ function setCode() {
 	return;
 }
 
-wd(window).set({addEventListener: {
-	load: function() {
+window.addEventListener("load", function() {
 		darkMode();
 		wd.$("#setCode").set(  {addEventListener: {click: setCode}});
 		wd.$("#getCode").set(  {addEventListener: {click: getCode}});
 		wd.$("#resetCode").set({addEventListener: {click: reloadPage}});
-	}
-}});
+	}, false);

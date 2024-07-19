@@ -85,7 +85,7 @@
 
 					<!-- MENU css -->
 					<div id="CSSMenu">
-						<nav data-wd-repeat="path{lib/menu.css.json}method{GET}" class="wd-nav-block">
+						<nav data-wd-repeat="url{lib/menu.css.json}type{json}method{GET}" class="wd-nav-block">
 					    <span
 					      data-wd-set="class{toggle{wd-open}}${#menu}&${#title}textContent{CSS {{target}}}"
 					      onclick="openPage('lib/pages/css.{{target}}.html');"
@@ -95,7 +95,7 @@
 
 					<!-- MENU DATASET -->
 					<div id="dataMenu">
-						<nav data-wd-repeat="path{lib/menu.data.json}method{GET}" class="wd-nav-block">
+						<nav data-wd-repeat="url{lib/menu.data.json}type{json}method{GET}" class="wd-nav-block">
 							<span
 								data-wd-set="class{toggle{wd-open}}${#menu}&${#title}textContent{data-wd-{{target}}}"
 			        	onclick="openPage('lib/pages/data.{{target}}.html');"
