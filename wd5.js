@@ -574,8 +574,8 @@ const wd = (function() {
 	const wdDatasetEvent = new CustomEvent("wddataset", {detail: null, bubbles: true});
 /*----------------------------------------------------------------------------*/
 	/**###### ``**const** ''object'' wdReloadEvent``
-	Evento a ser disparado ao carregar elementos a partir de conteúdo externo (ver ''load'' e ''repeat'' em __Node).**/
-	const wdReloadEvent = new CustomEvent("wdreload");
+	Evento a ser disparado ao carregar elementos pela biblioteca (ver __Node.load).**/
+	const wdReloadEvent = new CustomEvent("wdreload", {detail: null, bubbles: true});
 /*----------------------------------------------------------------------------*/
 	/**###### ``**const** ''object'' wdOpenRequestEvent``
 	Evento a ser disparado ao iniciar uma requisição (ver __Request).**/
@@ -1276,7 +1276,7 @@ const wd = (function() {
 		toURL: {
 			value: function() {
 				const data = [];
-				const src  = this.toObject();
+				const src  = this.toListObject();
 				for (let name in src) {
 					for (let value of src[name]) {
 						let prop = encodeURIComponent(name)+(src[name].length > 1 ? "[]" : "");
@@ -1331,7 +1331,7 @@ const wd = (function() {
 				const chars = String(x).split("");
 				const html  = [{a: "&",  b: "&amp;"}, {a: "<",  b: "&lt;"},  {a: ">", b: "&gt;"}];
 				if (!this.xml)
-					html.push({a: "\n", b: "</br>"}, {a: "\t", b: "&Tab;"}, {a: " ", b: "&nbsp;"});
+					html.push({a: "\n", b: "<br />"}, {a: "\t", b: "&Tab;"}, {a: " ", b: "&nbsp;"});
 				chars.forEach(function(v,i,a) {
 					for (let h of html)
 						if (v === h.a) a[i] = h.b;
@@ -4237,6 +4237,7 @@ const wd = (function() {
 						switch(name) {
 							case "value":       return this.value();
 							case "textContent": return this.text();
+							case "innerText":   return this.text();
 							case "name":        return this.name;
 						}
 					}
@@ -4261,6 +4262,7 @@ const wd = (function() {
 						switch(name) {
 							case "value":       {this.value(value); return this.attribute(name);}
 							case "textContent": {this.text(value);  return this.attribute(name);}
+							case "innerText":   {this.text(value);  return this.attribute(name);}
 							case "name":        {this.name = value; return this.attribute(name);}
 						}
 					}
@@ -4309,7 +4311,7 @@ const wd = (function() {
 		/**. ``''object'' style``: Define e retorna o valor do atributo ``style`` por meio de um objeto. Valor nulo excluí o atributo, valor textual define o atributo HTML e valor em objeto define o par nome-valor.**/
 		style: {
 			get: function() {
-				let data = {};
+				const data = {};
 				let i    = -1;
 				while (++i < this.node.style.length) {
 					let attr = this.node.style[i];
@@ -4437,125 +4439,116 @@ const wd = (function() {
 				return clone;
 			}
 		},
-		/**. ``''void'' load(''string'' html="", ''boolean'' replace=false, ''boolean'' run=false)``: Carrega um conteúdo HTML no elemento ou o substitui. O argumento ``html`` deve conter o código HTML a ser carregado; O argumento opcional ``replace``, se verdadeiro, irá substituir o elemento pelo conteúdo de ``html``; e O argumento ``run``, se verdadeiro, executará elementos scripts existentes.**/
+		/**. ``''void'' load(''string'' html="", ''object'')``: Atribui o conteúdo definido em ``html`` ao elemento ou o substitui. O argumento ``html`` pode ser um nó ou um conjunto de nós HTML, uma string em linguagem de marcação ou objetos do tipo um XMLDocument, HTMLDocument ou Document. O argumento ``options`` pode possuir as seguintes propriedades boleanas:
+		|Nome|Descrição|
+		|script|Se verdadeiro, forçará a execução de scripts (exceto para XML).|
+		|replace|Se verdadeiro, o conteúdo substituirá o elemento (nós do mesmo documento serão transferidos)|
+		|text|Se verdadeiro, o conteúdo será lançado como texto como ocorre em formulários.|**/
 		load: {
-			value: function(html, replace, run) {
+			value: function(html, options) {
+				if (!__Type(options).object) options = {};
 				const check = __Type(html);
-				let body;
-				if (check.chars) {
+				let   xml  = false;
+				let   data = []
+				const load = [];
+				if (check.node) {
+					data = check.value;
+				} else if (check.chars) {
+					const re = /^\<body.+\<\/body\>$/;
+					if (!re.test(html.trim()))
+						html = "<body>"+html.trim()+"</body>";
 					const parser = __Parser(html);
-					body = parser.stringHTML.body;
+					data = parser.stringHTML.body.children;
 				} else if (check.instanceOf("XMLDocument")) {
-					const inner  = html.documentElement.innerHTML;
-					const parser = __Parser(inner);
-					body = parser.stringHTML.body;
+					xml  = true;
+					data = html.documentElement.children;
 				} else if (check.instanceOf("HTMLDocument") || check.instanceOf("Document")) {
-					body = html.body;
-				} else {
+					data = html.body.children;
+				}
+				/*-- transformar data em array --*/
+				for (let i = 0; i < data.length; i++)
+					load.push(data[i]);
+				/*-- limpar nó --*/
+				while (this.node.childElementCount > 0)
+					this.node.firstElementChild.remove();
+				/*-- adicionar texto apenas --*/
+				if (this.form || options.text === true) {
+					const text = [];
+					for (let v of load)
+						text.push(v.outerHTML);
+					this.attribute("textContent", text.join("\n"));
 					return;
 				}
-				if (this.form) {
-					this.attribute("value", body.innerHTML);
+				/*-- introduzir ou substituir conteúdo --*/
+				if (options.replace === true) {
+					for (let v of load)
+						this.node.parentElement.insertBefore(v, this.node);
+					this.node.remove();
 				} else {
-					let children = body.children;
-					while (this.node.childElementCount > 0)
-						this.node.firstElementChild.remove();
-					for (let i = 0; i < children.length; i++)
-						this.node.appendChild(children[i]);
+					for (let v of load)
+						this.node.appendChild(v);
 				}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-				/* se for um formulário, apenas irá definir seu valor * /
-				if (this.form) {
-					this.attribute("value", inner);
+				/*-- rodando scripts --*/
+				if (options.script === true && !xml) {
+					for (let elem of load) {
+						let list = [elem];
+						if (elem.tagName.toLowerCase() !== "script")
+							list = __Type(__Query("script", elem).$$).value;
+						for (let script of list) {
+							let clone = __Node(script).clone();
+							script.parentElement.insertBefore(clone, script);
+							script.remove();
+						}
+					}
 				}
-				/* definindo conteúdo * /
-				else {
-					this.attribute("innerHTML", inner);
-					/* rodando scripts (não roda por padrão por segurança) * /
-					if (run === true) {
-						let scripts = __Type(__Query("script", node).$$).value;
-						scripts.forEach(function (v,i,a) {
-							let parent = v.parentElement;
-							let clone  = __Node(v).clone();
-							parent.insertBefore(clone, v);
-							v.remove();
-						});
+				/*-- invocar evento --*/
+				if (!xml) {
+					if (options.replace === true) {
+						for (let elem of load)
+							elem.dispatchEvent(wdReloadEvent);
+					} else {
+						this.node.dispatchEvent(wdReloadEvent);
 					}
-					/* substituindo o nó pelo conteúdo, se for o caso * /
-					if (replace === true) {
-						let childs = __Type(node.children).value;
-						childs.forEach(function(v,i,a) {
-							node.parentElement.insertBefore(v, node);
-						});
-						node.remove();
-					}
-				}*/
-
-
-
-
-
-				/* FIXME invocar evento */
-				document.dispatchEvent(wdReloadEvent);
+				}
 			}
 		},
 		/**. ``''void'' repeat(''array'' list)``: Clona os filhos do elemento repetindo-os de acordo com as informações repassadas pela lista de objetos (``list``). O elemento filho que contiver o nome do atributo do objeto entre duas chaves (''{{nome}}'') terá o fragmento substituídos pelo valor do atributo do objeto correspondente.**/
 		repeat: {
 			value: function(list) {
 				if (!__Type(list).array) list = [];
-				/* 1) obter o conteúdo interno */
-				let html = this.node.innerHTML;
-				/* 2) se o conteúdo possuir o formato {{}}, armazená-lo em data-wd-repeat-model */
-				if ((/\{\{([^}]+)\}\}/).test(html))
+				/*----------------------------------------------------------------------
+					1) innerHTML do nó possui o formato {{propriedade}}?
+						sim: armazená-lo em data-wd-repeat-model e ir para 3
+						não: ir para 2
+					2) Há modelo em data-wd-repeat-model?
+						sim: ir para 3
+						não: retornar
+					3) Criar lista de filhos a carregar (load)
+					4) Alterar {{propriedade}} conforme list
+					5) Limpar propriedades não encontradas
+					6) Carregar filhos
+				----------------------------------------------------------------------*/
+				const html = this.node.innerHTML;
+				const load = [];
+				const re   = /\{\{([^}]+)\}\}/;
+				if (re.test(html))
 					this.node.dataset.wdRepeatModel = html;
-				/* 3) se não possuir o formato, recuperar o modelo em data-wd-repeat-model */
 				else if ("wdRepeatModel" in this.node.dataset)
 					html = this.node.dataset.wdRepeatModel;
-				/* 4) se não encontrar o modelo, retornar */
 				else
 					return;
-				/* 5) adequar os atributos do DOM ( de {{x}}="" para {{x}} ) */
-				html = html.split("}}=\"\"").join("}}");
-				/* 6) limpar conteúdo interno */
-				while (this.node.childElementCount > 0)
-					this.node.firstElementChild.remove();
-				/* 7) Criar lista de filhos */
-				let childs = [""];
-				/* 8) executar looping para criar blocos de filhos */
-				list.forEach(function (v,i,a) {
-					/* 9) substituir atributos entre chaves duplas por valores e adicionar */
+				for (let v of list) {
 					if (__Type(v).object) {
 						let inner = html;
-						for (let j in v) inner = inner.split("{{"+j+"}}").join(v[j]);
-						childs.push(inner);
+						for (let j in v)
+							inner = inner.split("{{"+j+"}}").join(v[j]);
+						while (re.test(inner))
+							inner = inner.replace(re, "");
+						load.push(inner);
 					}
-				});
-				/* 10) definir filhos */
-				const inner    = ["<"+this.tag+">", childs.join("\n"), "</"+this.tag+">"]
-				const parser   = __Parser(inner.join(""));
-				const children = parser.stringHTML.body.firstElementChild.children;
-				for (let i = 0; i < children.length; i++)
-					this.node.appendChild(children[i]);
-
-
-
-
-				/* 11) FIXME invocar evento */
-				document.dispatchEvent(wdReloadEvent);
+				}
+				this.load(load.join(""));
+				return;
 			}
 		},
 		/**. ``''boolean'' show``: Retorna e define a visibilidade do elemento nos termos da biblioteca.**/
@@ -8087,11 +8080,12 @@ const wd = (function() {
 	Função vinculada ao atributo HTML ``data-wd-load`` cujo objetivo é carregar arquivo HTML (ver ``WDnode.load`` e ``WD.send``). Possui múltiplos atributos e grupo único.**/
 	function data_wdLoad(e, event) {
 		if (!("wdLoad" in e.dataset)) return;
-		let target = WD(e);
-		let data   = __Parser(e.dataset.wdLoad).wdArray[0];
+		const target  = WD(e);
+		const data    = __Parser(e.dataset.wdLoad).wdArray[0];
+		const options = {replace: data._replace, script: data._script, text: data._text};
 		delete e.dataset.wdLoad;
 		wd(data).send(function(x) {
-			if (x.ok) target.load(x.response, data.replace, data.run);
+			if (x.ok) target.load(x.response, options);
 		});
 		return;
 	};
@@ -8101,8 +8095,8 @@ const wd = (function() {
 	Função vinculada ao atributo HTML ``data-wd-repeat`` cujo objetivo é clonar elementos filhos a partir de parâmentros contidos em um arquivo JSON ou CSV (ver ``WDnode.repeat`` e ``WDobject.send``). Possui múltiplos atributos e grupo único.**/
 	function data_wdRepeat(e, event) {
 		if (!("wdRepeat" in e.dataset)) return;
-		let target = WD(e);
-		let data   = __Parser(e.dataset.wdRepeat).wdArray[0];
+		const target = WD(e);
+		const data   = __Parser(e.dataset.wdRepeat).wdArray[0];
 		delete e.dataset.wdRepeat;
 		wd(data).send(function(x) {
 			if (x.ok) target.repeat(x.response);
@@ -8927,18 +8921,16 @@ const wd = (function() {
 	function wdOnLoad(ev) {
 		if (__UNDERMAINTENANCE) console.log({wdOnLoad: ev, target: ev.target});
 		/*-- construindo CSS da biblioteca --*/
-		let css   = __JSCSS.slice();
-		let line  = {re: /^([^{]+)\{(.+)\}$/, rp: "$1 {\n\t$2\n}\n"};
-		let style = document.createElement("STYLE");
+		const css   = __JSCSS.slice();
+		const line  = {re: /^([^{]+)\{(.+)\}$/, rp: "$1 {\n\t$2\n}\n"};
+		const style = document.createElement("STYLE");
 		css.forEach(function(v,i,a) {
 			a[i] = v.replace(/\s+/, " ").replace(line.re, line.rp);
 		});
-		style.textContent = __JSCSS.join("");
+		style.innerHTML = __JSCSS.join("");
 		document.head.appendChild(style);
-
 		/*-- aplicando carregamentos e repetições --*/
 		wdOnReload(ev);
-
 		return;
 	}
 
@@ -8947,23 +8939,52 @@ const wd = (function() {
 	Disparador a ser invocado ao efetuar alterações na página e após o carregamento principal (wdreload).**/
 	function wdOnReload(ev) {
 		if (__UNDERMAINTENANCE) console.log({wdOnReload: ev, target: ev.target});
+		const root = __Type(ev.target).node ? ev.target : document;
+		console.log("Root -----> ", root);
 
-		/*-- processar repetições --*/
+
+
+		/* experiência 2 * /
+		const repeat = WD.$$("[data-wd-repeat]");
+		const load   = WD.$$("[data-wd-load]");
+		const async  = (repeat.length + load.length) > 0;
+
+
+		/*--*/
+
+
+
+
+		/* experiência 1 */
+		WD.$$("[data-wd-load]",   root).forEach(function(x) {data_wdLoad(x, ev);});
+		WD.$$("[data-wd-repeat]", root).forEach(function(x) {data_wdRepeat(x, ev);});
+		WD.$$("[data-wd-value]",  root).forEach(function(x) {data_wdValue(x, ev);});
+		WD.$$("[data-wd-click]",  root).forEach(function(x) {data_wdClick(x, ev);});
+		WD.$$("[data-wd-chart]",  root).forEach(function(x) {data_wdChart(x, ev);});
+		WD.$$("[data-wd-code]",   root).forEach(function(x) {data_wdCode(x, ev);});
+		WD.$$("[data-wd-filter]").forEach(function(x) {data_wdFilter(x, ev);});
+
+		/*--*/
+
+
+		/* Experiência original * /
+		/*-- processar repetições --* /
 		let repeat = WD.$("[data-wd-repeat]");
 		if (repeat.length > 0)
 			return repeat.forEach(function(x) {data_wdRepeat(x, ev);});
 
-		/*-- processar carregamentos --*/
+		/*-- processar carregamentos --* /
 		let load = WD.$("[data-wd-load]");
 		if (load.length > 0)
 			return load.forEach(function(x) {data_wdLoad(x, ev)});
 
-		/*-- (re)organizar página após concluir requisições --*/
+		/*-- (re)organizar página após concluir requisições --* /
 		WD.$$("[data-wd-filter]").forEach(function(x) {data_wdFilter(x, ev);});
 		WD.$$("[data-wd-value]").forEach(function(x)  {data_wdValue(x, ev);});
 		WD.$$("[data-wd-click]").forEach(function(x)  {data_wdClick(x, ev);});
 		WD.$$("[data-wd-chart]").forEach(function(x)  {data_wdChart(x, ev);});
 		WD.$$("[data-wd-code]").forEach(function(x)   {data_wdCode(x, ev);});
+		/*--*/
 
 		wdOnResize(ev);
 		return;
