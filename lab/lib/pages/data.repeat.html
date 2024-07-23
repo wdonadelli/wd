@@ -1,14 +1,14 @@
 <div class="wd-flyer">
 
 	<nav>
-		<span	data-wd-set="${#repeat}dataset{wdRepeat{path{lib/add-ons/repeat.List.json}method{GET}}}&${#repeatCode}dataset{wdLoad{path{lib/add-ons/repeat.List.json}method{GET}}}" >JSON</span>
-		<span	data-wd-set="${#repeat}dataset{wdRepeat{path{lib/add-ons/repeat.List.csv}method{GET}}}&${#repeatCode}dataset{wdLoad{path{lib/add-ons/repeat.List.csv}method{GET}}}" >CSV</span>
+		<span	data-wd-set="${#repeat}dataset{wdRepeat{url{lib/add-ons/repeat.List.json}method{get}}}&${#repeatCode}dataset{wdLoad{url{lib/add-ons/repeat.List.json}method{get}}}" >JSON</span>
+		<span	data-wd-set="${#repeat}dataset{wdRepeat{url{lib/add-ons/repeat.List.csv}method{get}}}&${#repeatCode}dataset{wdLoad{url{lib/add-ons/repeat.List.csv}method{get}}}" >CSV</span>
 	</nav>
 
-	<ol id="repeat" data-wd-repeat="path{lib/add-ons/repeat.List.json}method{GET}" >
+	<ol id="repeat" data-wd-repeat="url{lib/add-ons/repeat.List.json}method{get}" >
 		<li style="background-color: {{color}}" class="wd-padd">{{name}}</li>
 	</ol>
 
-	<pre class="wd-code" id="repeatCode" data-wd-load="path{lib/add-ons/repeat.List.json}method{GET}"></pre>
+	<pre class="wd-code" id="repeatCode" data-wd-load="url{lib/add-ons/repeat.List.json}method{get}"></pre>
 
 </div>

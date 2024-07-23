@@ -1,21 +1,20 @@
 <div class="wd-flyer">
-
 	<nav>
 		<span
-			data-wd-set="${#code,#target}dataset{wdLoad{path{lib/add-ons/load.Page1.html}method{GET}}}"
+			data-wd-set="$${#code,#target}dataset{wdLoad{url{lib/add-ons/load.Page1.html}method{get}}}"
 		>Page 1</span>
 		<span
-			data-wd-set="${#code,#target}dataset{wdLoad{path{lib/add-ons/load.Page1.html}method{GET}run{true}}}"
+		data-wd-set="$${#code,#target}dataset{wdLoad{url{lib/add-ons/load.Page1.html}method{get}_script{true}}}"
 		>Page 1 (run)</span>
 		<span
-			data-wd-set="${#code,#target}dataset{wdLoad{path{lib/add-ons/load.Page2.html}method{GET}}}"
+			data-wd-set="$${#code,#target}dataset{wdLoad{url{lib/add-ons/load.Page2.html}method{get}}}"
 		>Page 2</span>
 		<span
-			data-wd-set="${#target2}dataset{wdLoad{path{lib/add-ons/load.Page1.html}method{GET}run{true}replace{true}}}"
+			data-wd-set="${#target2}dataset{wdLoad{url{lib/add-ons/load.Page1.html}method{get}_script{true}_replace{true}}}"
 		>Page 1 (replace)</span>
 	</nav>
 
-	<div id="target" data-wd-load="path{lib/add-ons/load.Page1.html}method{GET}run{true}" ></div>
+	<div id="target" data-wd-load="url{lib/add-ons/load.Page1.html}method{get}_script{true}" ></div>
 
 	<!--========================================================================-->
 	<h5>With replace</h5>
@@ -23,7 +22,7 @@
 	<!--========================================================================-->
 
 	<textarea id="code" class="wd-code wd-block" style="height: 10em;"
-		data-wd-load="path{lib/add-ons/load.Page1.html}method{GET}run{true}"
+		data-wd-load="url{lib/add-ons/load.Page1.html}method{get}_script{true}"
 	></textarea>
 
 </div>

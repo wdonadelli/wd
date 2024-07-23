@@ -1,75 +1,75 @@
 <section class="wd-flyer">
 
-<div id="input" class="wd-form">
-
-	<div>
-		<label>Text</label>
-		<input type="text" name="text" required="true" />
-	</div>
-
-	<div>
-		<label><input type="checkbox" name="box1" />Checkbox 1</label>
-	</div>
-
-	<div>
-		<label><input type="checkbox" name="box2" value="checked" />Checkbox 2</label>
-	</div>
-
-	<div>
-		<label><input type="radio" name="radio" value="radio1" />Radio 1</label>
-	</div>
-
-	<div>
-		<label><input type="radio" name="radio" value="radio2" />Radio 2</label>
-	</div>
-
-	<div>
-		<label>File</label>
-		<input type="file" name="file" multiple="" />
-	</div>
-
-	<div>
-		<label>e-mail</label>
-		<input type="email" name="email" multiple="" />
-	</div>
-
-	<div>
-		<label style="display: block; width: 100%;">Select</label>
-		<select name="select" multiple="" style="display: block; width: 100%; margin-bottom: 5px;" >
-			<option value="Item 0">Item 0</option>
-			<option value="Item 1">Item 1</option>
-			<option value="Item 2">Item 2</option>
-		</select>
-	</div>
-
-	<div>
-		<button type="button"
-			data-wd-send="path{examples/target.php?method=POST}ondone(fsend)$${#input *}"
-		>POST</button>
-	</div>
-
-	<div>
-		<button type="button"
-			data-wd-send="path{examples/target.php?method=GET}ondone(fsend)$${#input *}method{GET}"
-		>GET</button>
-	</div>
-</div>
-
-<label>Output (php):</label>
-<pre id="output" style="wd-code wd-fg-red"></pre>
-
-
-
-
-
-
-
-
 	<script>
 		function fsend(x) {
 			document.getElementById("output").textContent = x.text;
 		}
 	</script>
+
+
+
+	<form id="input" class="wd-form" data-wd-send="trigger(fsend)" action="examples/target.php?" method="get">
+
+		<div>
+			<label>Text</label>
+			<input type="text" name="text" required="true" />
+		</div>
+
+		<div>
+			<label><input type="checkbox" name="box1" />Checkbox 1</label>
+		</div>
+
+		<div>
+			<label><input type="checkbox" name="box2" value="checked" />Checkbox 2</label>
+		</div>
+
+		<div>
+			<label><input type="radio" name="radio" value="radio1" />Radio 1</label>
+		</div>
+
+		<div>
+			<label><input type="radio" name="radio" value="radio2" />Radio 2</label>
+		</div>
+
+		<div>
+			<label>File</label>
+			<input type="file" name="file" multiple="" />
+		</div>
+
+		<div>
+			<label>e-mail</label>
+			<input type="email" name="email" multiple="" />
+		</div>
+
+		<div>
+			<label style="display: block; width: 100%;">Select</label>
+			<select name="select" multiple="" style="display: block; width: 100%; margin-bottom: 5px;" >
+				<option value="Item 0">Item 0</option>
+				<option value="Item 1">Item 1</option>
+				<option value="Item 2">Item 2</option>
+			</select>
+		</div>
+
+		<div>
+			<button type="submit" formmethod="post">POST</button>
+		</div>
+
+		<div>
+			<button type="submit" >GET</button>
+		</div>
+	</form>
+
+	<label>Output (php):</label>
+	<pre id="output" style="wd-code wd-fg-red"></pre>
+
+
+
+
+
+
+
+
+
 </section>
 
 

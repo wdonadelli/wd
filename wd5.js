@@ -46,13 +46,13 @@ const wd = (function() {
 	/**###### ``**const** ''object'' __DEVICECONTROLLER``
 	Checa alterações da tela atribuida a um tipo de dispositivo.**/
 	const __DEVICECONTROLLER = {
-		/**. ``''string'' _device``: Registra o tipo de do dispositivo a partir do tamanho da tela em vigor.**/
+		/**. ``''string'' _device``: Registra o tipo do dispositivo a partir do tamanho da tela atual.**/
 		_device: null,
 		/**. ``''integer'' width``: Retorna o tamanho da tela.**/
 		get width() {return window.innerWidth;},
 		/**. ``''string'' device``: Retorna o tipo de dispositivo - desktop (&ge; 768px) tablet (&ge; 600px) ou phone (&lt; 600px)**/
 		get device() {
-			let width = this.width;
+			const width = this.width;
 			if (width >= 768) return "desktop";
 			if (width >= 600) return "tablet";
 			return "phone";
@@ -61,7 +61,7 @@ const wd = (function() {
 		get mobile() {return this.device !== "desktop";},
 		/**. ``''boolean'' change``: Informa se o dispositivo foi alterado desde a última consulta.**/
 		get changeDevice() {
-			let device = this.device;
+			const device = this.device;
 			if (this._device === device) return false;
 			this._device = device;
 			return true;
@@ -1451,6 +1451,7 @@ const wd = (function() {
 				if (this._check.chars) {
 					const tree = new __Tree();
 					const code = this._data.split("");
+					const rows = this._data.trim().split("\n").length;
 					const cols = /[\ \,\;\t\|]/;
 					let    col = null;
 					let  lines = 0;
@@ -1472,7 +1473,7 @@ const wd = (function() {
 							if (v === "\n") {
 								if (lines === 0) {
 									tree.close().close().close().open("tbody").open("tr");
-								} else if (lines < (a.length - 1)) {
+								} else if (lines < (rows - 1)) {
 									tree.close().close().open("tr");
 								}
 								lines++;
@@ -1489,7 +1490,7 @@ const wd = (function() {
 							if (v === "\n") {
 								if (lines === 0) {
 									tree.close().close().open("tbody").open("tr");
-								} else if (lines < (a.length - 1)) {
+								} else if (lines < (rows - 1)) {
 									tree.close().open("tr");
 								}
 								lines++;
@@ -1507,45 +1508,6 @@ const wd = (function() {
 				}
 				this._saved["csvTable"] = data;
 				return this.csvTable;
-			}
-		},
-		/**. ``''array'' csvMatrix``: Transforma string CSV em matriz.**/
-		csvMatrix: {
-			get: function() {
-				if ("csvMatrix" in this._saved) return this._saved.csvMatrix;
-				let data = null;
-				if (this.csvTable !== null) {
-					const parser = new __Parser(this.csvTable);
-					data = parser.tableMatrix;
-				}
-				this._saved["csvMatrix"] = data;
-				return this.csvMatrix;
-			}
-		},
-		/**. ``''array'' csvObjectList``: Transforma uma string CSV em uma lista de objetos.**/
-		csvObjectList: {
-			get: function() {
-				if ("csvObjectList" in this._saved) return this._saved.csvObjectList;
-				let data = null;
-				if (this.csvMatrix !== null) {
-					const parser = new __Parser(this.csvMatrix);
-					data = parser.matrixObjectList;
-				}
-				this._saved["csvObjectList"] = data;
-				return this.csvObjectList;
-			}
-		},
-		/**. ``''string'' tableCSV``: Transforma tabela HTML string CSV.**/
-		tableCSV: {
-			get: function() {
-				if ("tableCSV" in this._saved) return this._saved.tableCSV;
-				let data = null;
-				if (this.tableMatrix !== null) {
-					const parser = new __Parser(this.tableMatrix);
-					data = parser.matrixCSV;
-				}
-				this._saved["tableCSV"] = data;
-				return this.tableCSV;
 			}
 		},
 		/**. ``''array'' tableMatrix``: Transforma tabela HTML em matriz.**/
@@ -1567,19 +1529,6 @@ const wd = (function() {
 				}
 				this._saved["tableMatrix"] = data;
 				return this.tableMatrix;
-			}
-		},
-		/**. ``''array'' tableObjectList``: Transforma uma tabela HTML em uma lista de objetos.**/
-		tableObjectList: {
-			get: function() {
-				if ("tableObjectList" in this._saved) return this._saved.tableObjectList;
-				let data = null;
-				if (this.tableMatrix !== null) {
-					const parser = new __Parser(this.tableMatrix);
-					data = parser.matrixObjectList;
-				}
-				this._saved["tableObjectList"] = data;
-				return this.tableObjectList;
 			}
 		},
 		/**. ``''string'' matrixCSV``: Transforma uma matriz em string CSV.**/
@@ -1605,38 +1554,33 @@ const wd = (function() {
 				return this.matrixCSV;
 			}
 		},
-		/**. ``''node'' matrixTable``: Transforma uma matriz em tabela HTML.**/
-		matrixTable: {
+		/**. ``''array'' matrixList``: Transforma uma matriz em uma lista de objetos.**/
+		matrixList: {
 			get: function() {
-				if ("matrixTable" in this._saved) return this._saved.matrixTable;
-				let data = null;
-				if (this.matrixCSV !== null) {
-					const parser = new __Parser(this.matrixCSV);
-					data = parser.csvTable;
-				}
-				this._saved["matrixTable"] = data;
-				return this.matrixTable;
-			}
-		},
-		/**. ``''array'' matrixObjectList``: Transforma uma matriz em uma lista de objetos.**/
-		matrixObjectList: {
-			get: function() {
-				if ("matrixObjectList" in this._saved) return this._saved.matrixObjectList;
+				if ("matrixList" in this._saved) return this._saved.matrixList;
 				let data = null;
 				if (this._check.array) {
 					try {
 						const object = [];
+						let   title  = null;
 						this._data.forEach(function (row,i,a) {
-							if (i === 0) return;
+							if (!__Type(row).array) return;
+							if (title === null) {
+								title = row;
+								return;
+							}
 							let item = {};
-							row.forEach(function(value,j,b) {item[a[0][j]] = value;});
+							row.forEach(function(value,j,b) {
+								let name = j < title.length ? title[j] : "#"+j;
+								item[name] = value;
+							});
 							object.push(item)
 						});
 						data = object;
 					} catch(e) {}
 				}
-				this._saved["matrixObjectList"] = data;
-				return this.matrixObjectList;
+				this._saved["matrixList"] = data;
+				return this.matrixList;
 			}
 		},
 		/**. ``''object'' stringJSON``: Transforma string JSON em objeto.**/
@@ -1687,7 +1631,7 @@ const wd = (function() {
 				return this.stringXML;
 			}
 		},
-		/**. ``''object'' stringSVG``: Transforma string em documento XML.**/
+		/**. ``''object'' stringSVG``: Transforma string em documento SVG.**/
 		stringSVG: {
 			get: function() {
 				if ("stringSVG" in this._saved) return this._saved.stringSVG;
@@ -1698,6 +1642,16 @@ const wd = (function() {
 				} catch(e) {}
 				this._saved["stringSVG"] = data;
 				return this.stringSVG;
+			}
+		},
+		/**. ``''object'' dataBlob``: Transforma dados em objeto Blob.**/
+		dataBlob: {
+			get: function() {
+				if ("dataBlob" in this._saved) return this._saved.dataBlob;
+				let data = null;
+				try {data = new Blob([this._data]);} catch(e) {}
+				this._saved["dataBlob"] = data;
+				return this.dataBlob;
 			}
 		},
 		/**. ``''array'' wdArray``: Transforma notação wd em array de objetos. Trata-se de uma notação específica para o atributo HTML dataset que invocará as ferramentas da biblioteca ao ter o evento adequado disparado.
@@ -1878,10 +1832,6 @@ const wd = (function() {
 				return this.arrayWD;
 			}
 		},
-
-
-
-
 		/**. ``''string'' fileURL``: Transforma dados em string URL.**/
 		fileURL: {
 			get: function() {
@@ -1895,6 +1845,23 @@ const wd = (function() {
 				return this.fileURL;
 			}
 		},
+		/**. ``''any'' parser(''string'' attr...)``: Transforma tipo de dados em outro. Os argumentos ``attr`` indicam os mecanismos de transformação, que correspondem aos atributos do objeto.**/
+		parser: {
+			value: function(attr) {
+				attr = String(attr).trim();
+				if (attr in this) {
+					let data = this[attr];
+					for (let i = 1; i < arguments.length; i++) {
+						let parser = new __Parser(data);
+						data = parser.parser(arguments[i]);
+						if (data === null) return data;
+					}
+					return data;
+				}
+				return null;
+			}
+		},
+
 
 
 
@@ -4393,16 +4360,16 @@ const wd = (function() {
 		/**. ``''object'' dataset``: Define e retorna os valores do atributo ``dataset``. Valor nulo excluí o atributo e valor em objeto define seus pares nome-valor.**/
 		dataset: {
 			get: function() {
-				let data = {};
+				const data = {};
 				for (let i in this.node.dataset)
 					data[i] = this.node.dataset[i];
 				return data;
 			},
 			set: function(x) {
-				let data  = __Type(x);
-				let wdLib = []
+				const data  = __Type(x);
+				const wdLib = [];
 				if (data.null) {
-					let attr = this.dataset;
+					const attr = this.dataset;
 					for (let i in attr) {
 						wdLib.push(i);
 						delete this.node.dataset[i];
@@ -4528,7 +4495,7 @@ const wd = (function() {
 					5) Limpar propriedades não encontradas
 					6) Carregar filhos
 				----------------------------------------------------------------------*/
-				const html = this.node.innerHTML;
+				let   html = this.node.innerHTML;
 				const load = [];
 				const re   = /\{\{([^}]+)\}\}/;
 				if (re.test(html))
@@ -5244,21 +5211,24 @@ const wd = (function() {
 					const parser = new __Parser(this._response.response);
 					const change = {
 						read: {
-							xml:   function() {return parser.stringXML;},
-							html:  function() {return parser.stringHTML;},
-							json:  function() {return parser.stringJSON;},
-							csv:   function() {return parser.csvMatrix;},
-							table: function() {return parser.csvTable;},
+							xml:    function() {return parser.stringXML;},
+							html:   function() {return parser.stringHTML;},
+							json:   function() {return parser.stringJSON;},
+							table:  function() {return parser.csvTable;},
+							matrix: function() {return new __Parser(this.table()).tableMatrix;},
+							csv:    function() {return new __Parser(this.matrix()).matrixList;}
 						},
 						send: {
-							url:   function() {return parser.fileURL;},
-							csv:   function() {return parser.csvMatrix;},
-							table: function() {return parser.csvTable;},
+							url:    function() {return parser.fileURL;},
+							table:  function() {return parser.csvTable;},
+							matrix: function() {return new __Parser(this.table()).tableMatrix;},
+							csv:    function() {return new __Parser(this.matrix()).matrixList;}
 						},
 						fetch: {
-							url:   function() {return parser.fileURL;},
-							csv:   function() {return parser.csvMatrix;},
-							table: function() {return parser.csvTable;},
+							url:    function() {return parser.fileURL;},
+							table:  function() {return parser.csvTable;},
+							matrix: function() {return new __Parser(this.table()).tableMatrix;},
+							csv:    function() {return new __Parser(this.matrix()).matrixList;}
 						}
 					}
 					if (type in change[caller])
@@ -5432,8 +5402,9 @@ const wd = (function() {
 		|json|Conteúdo em JSON.|-|
 		|buffer|Conteúdo em ArrayBuffer.|-|
 		|url|Conteúdo em ObjectURL.|-|
-		|csv|Conteúdo em Array a partir de dados/arquivo CSV.|-|
-		|table|Conteúdo em nó HTML ''table'' a partir de dados/arquivo CSV.|-|**/
+		|matrix|Conteúdo em Array a partir de dados/arquivo CSV.|-|
+		|table|Conteúdo em nó HTML ''table'' a partir de dados/arquivo CSV.|-|
+		|css|Conteúdo em lista de objetos a partir de dados/arquivo CSV.|-|**/
 		_types: {
 			value: {
 				text:   {send: "text",        read: "readAsText",         fetch: "text"},
@@ -5443,8 +5414,9 @@ const wd = (function() {
 				json:   {send: "json",        read: "readAsText",         fetch: "json"},
 				buffer: {send: "arraybuffer", read: "readAsArrayBuffer",  fetch: "arrayBuffer"},
 				url:    {send: "blob",        read: "readAsDataURL",      fetch: "blob"},
-				csv:    {send: "text",        read: "readAsText",         fetch: "text"},
+				matrix: {send: "text",        read: "readAsText",         fetch: "text"},
 				table:  {send: "text",        read: "readAsText",         fetch: "text"},
+				csv:    {send: "text",        read: "readAsText",         fetch: "text"},
 			}
 		},
 		/**. ``''object'' _cfg(''string'' caller)``: Retorna a configuração adaptada ao tipo de chamada (``caller``).**/
@@ -8075,8 +8047,43 @@ const wd = (function() {
 	}
 
 /*============================================================================*/
-/**#### Atributos dataset
-	###### ``**function** ''void'' data_wdLoad(''node''  e, ''object'' event)``
+/**#### Atributos HTML dataset
+	###### ``**function** ''void'' data_wdSend(''node''  e, ''object'' event)``
+	Função vinculada ao atributo HTML ``data-wd-send`` cujo objetivo é efetuar requisições web (ver ``WDrequest.send``). Possui múltiplos atributos e grupos. Os atributos são os mesmos do método acrescido do ''_trigger'' que define o nome do disparador a executar ao fim do processo, que deve ter sido declarado no escopo principal (window) utilizando as palavras chaves ``var`` ou ``function``. No caso de submissão de formulário, o grupo será único e os dados serão aqueles definidos no HTML.**/
+	function data_wdSend(e, event) {
+		if (!("wdSend" in e.dataset)) return;
+		event.preventDefault();
+		const data = __Parser(e.dataset.wdSend).wdArray;
+		if (event.type === "submit") {
+			console.clear();
+			for (let i in e) {
+				if ((/^(on|aria|textC|inner|outer)/).test(i)) continue;
+				console.log(i,": ", e[i]);
+			}
+			console.log("-------------------------------------------");
+			//for (let i in event)
+				//console.log(i,": ", event[i])
+			const config = data[0];
+			config.url     = e.action;
+			config.method  = e.method;
+			config.body    = e.elements;
+			config.headers = {type: e.enctype}
+			console.log(config);
+
+
+
+
+
+		} else {
+			data.forEach(function (config,i,a) {
+				WD(config).send(config.trigger);
+			});
+		}
+		return;
+	};
+
+/*----------------------------------------------------------------------------*/
+	/**###### ``**function** ''void'' data_wdLoad(''node''  e, ''object'' event)``
 	Função vinculada ao atributo HTML ``data-wd-load`` cujo objetivo é carregar arquivo HTML (ver ``WDnode.load`` e ``WD.send``). Possui múltiplos atributos e grupo único.**/
 	function data_wdLoad(e, event) {
 		if (!("wdLoad" in e.dataset)) return;
@@ -8092,11 +8099,12 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	/**###### ``**function** ''void'' data_wdRepeat(''node''  e, ''object'' event)``
-	Função vinculada ao atributo HTML ``data-wd-repeat`` cujo objetivo é clonar elementos filhos a partir de parâmentros contidos em um arquivo JSON ou CSV (ver ``WDnode.repeat`` e ``WDobject.send``). Possui múltiplos atributos e grupo único.**/
+	Função vinculada ao atributo HTML ``data-wd-repeat`` cujo objetivo é clonar elementos filhos a partir de parâmentros contidos em arquivo JSON ou CSV (ver ``WDnode.repeat`` e ``WDobject.send``). Possui múltiplos atributos e grupo único. O atributo ``type`` da requisição deve ser ''json'' ou ''css''.**/
 	function data_wdRepeat(e, event) {
 		if (!("wdRepeat" in e.dataset)) return;
 		const target = WD(e);
 		const data   = __Parser(e.dataset.wdRepeat).wdArray[0];
+		if (data.type !== "css") data.type = "json";
 		delete e.dataset.wdRepeat;
 		wd(data).send(function(x) {
 			if (x.ok) target.repeat(x.response);
@@ -8106,38 +8114,36 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	/**###### ``**function** ''void'' data_wdSet(''node''  e, ''object'' event)``
-	Função vinculada ao atributo HTML ``data-wd-set`` cujo objetivo é aplicar atributos aos elementos partir de parâmentros contidos em um arquivo JSON ou utilizando a ferramenta ``WDnode.set``. Possui múltiplos atributos e grupos. Se o atributo ``path`` for informado, os valores dos atributos serão executados a partir do arquivo JSON especificado, caso contrário, serão considerados aqueles informados no atributo HTML:
+	Função vinculada ao atributo HTML ``data-wd-set`` cujo objetivo é manipular atributos/propriedades dos nós HTML. Os dados de configuração poderão vir de um arquivo JSON ou CSV ou a partir das propriedades definidas no atributo dataset (ver ``WDnode.set``). Para fonte arquivo, a propriedade ``_file`` deverá ser definida como ''true'' e a propriedade ``type`` deverá ser ''json'' ou ''css'', a depender do tipo de arquivo. Possui múltiplos atributos e grupos:
 	|Nome|Descrição|Obrigatório|
-	|path|Caminho para o arquivo JSON a ser carregado|Não|
-	|method|Tipo de requisição HTTP, ver WD.send|Não|
+	|_file|Se verdadeiro, define configuração por arquivo externo|Não|
 	|$ ou $$|Seletore CSS para identificar os alvos da ferramenta (se ausente, será o próprio elemento)|Não|**/
 	function data_wdSet(e, event) {
 		if (!("wdSet" in e.dataset)) return;
-		let exec = function(input) {
+		const data = __Parser(e.dataset.wdSet).wdArray;
+		const exec = function(input) {
 			if (!__Type(input).object) return;
 			const query  = input.$$ || input.$ || e;
 			const target = WD(query);
-			delete input.$;
-			delete input.$$;
+			if ("$"     in input) delete input.$;
+			if ("$$"    in input) delete input.$$;
+			if ("_file" in input) delete input._file;
 			target.set(input);
 			return;
 		}
-		let data = __Parser(e.dataset.wdSet).wdArray;
-		data.forEach(function(v,i,a) {
-			if ("path" in v) {
-				WD().send(v.path, {
-					method: v.method,
-					ondone: function(x) {
-						let json = x.json;
-						if (__Type(json).array)
-							json.forEach(function(s,j,b) {exec(s);});
-					}
+
+		data.forEach(function(group,i,g) {
+			if (group._file === true) {
+				WD(group).send(function (x) {
+					if (x.ok && __Type(x.response).array)
+						x.response.forEach(function(config,j,c) {return exec(config);});
 				});
 			} else {
-				for (let j in v)
-					if ((/^.+\{.+\}$/).test(v[j]))
-						v[j] = __Parser(v[j]).wdArray[0];
-				exec(v);
+				for (let config in group) {
+					if ((/^.+\{.+\}$/).test(group[config]))
+						group[config] = __Parser(group[config]).wdArray[0];
+				}
+				exec(group);
 			}
 		});
 		return;
@@ -8196,24 +8202,6 @@ const wd = (function() {
 			plotter();
 		return;
 	}
-
-/*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wdSend(''node''  e, ''object'' event)``
-	Função vinculada ao atributo HTML ``data-wd-send`` cujo objetivo é efetuar requisições web utilizando a ferramenta ``WDnode.repeat``. Possui múltiplos atributos e grupos. Os atributos possuem os mesmo valores do argumento ``options`` de WD.send acrescidos dos abaixo relacionados. Para definir funções nos parâmetros, deverá ser informado seu nome e a função deve estar dentro do escopo principal (window) utilizando as palavras chaves ``var`` ou ``function``:
-	|Nome|Descrição|Obrigatório|
-	|path|Caminho para o arquivo a enviar a requisição|Sim|
-	|$ ou $$|Seletor(es) CSS do formulário com os parâmetros da requição|Não|**/
-	function data_wdSend(e, event) {
-		if (!("wdSend" in e.dataset)) return;
-		let data = __Parser(e.dataset.wdSend).wdArray;
-		data.forEach(function (v,i,a) {
-			if ("header" in v) v.header = __Parser(v.header).wdArray[0];
-			let query  = v.$$ || v.$ || undefined;
-			let target = WD(query);
-			target.send(v.path, v);
-		});
-		return;
-	};
 
 /*----------------------------------------------------------------------------*/
 	/**###### ``**function** ''void'' data_wdDisplay(''node''  e, ''string'' event)``
@@ -8929,7 +8917,7 @@ const wd = (function() {
 		});
 		style.innerHTML = __JSCSS.join("");
 		document.head.appendChild(style);
-		/*-- aplicando carregamentos e repetições --*/
+		/*-- aplicar carregamentos, repetições e ajustes --*/
 		wdOnReload(ev);
 		return;
 	}
@@ -8940,52 +8928,22 @@ const wd = (function() {
 	function wdOnReload(ev) {
 		if (__UNDERMAINTENANCE) console.log({wdOnReload: ev, target: ev.target});
 		const root = __Type(ev.target).node ? ev.target : document;
-		console.log("Root -----> ", root);
-
-
-
-		/* experiência 2 * /
-		const repeat = WD.$$("[data-wd-repeat]");
-		const load   = WD.$$("[data-wd-load]");
-		const async  = (repeat.length + load.length) > 0;
-
-
-		/*--*/
-
-
-
-
-		/* experiência 1 */
-		WD.$$("[data-wd-load]",   root).forEach(function(x) {data_wdLoad(x, ev);});
-		WD.$$("[data-wd-repeat]", root).forEach(function(x) {data_wdRepeat(x, ev);});
-		WD.$$("[data-wd-value]",  root).forEach(function(x) {data_wdValue(x, ev);});
-		WD.$$("[data-wd-click]",  root).forEach(function(x) {data_wdClick(x, ev);});
-		WD.$$("[data-wd-chart]",  root).forEach(function(x) {data_wdChart(x, ev);});
-		WD.$$("[data-wd-code]",   root).forEach(function(x) {data_wdCode(x, ev);});
-		WD.$$("[data-wd-filter]").forEach(function(x) {data_wdFilter(x, ev);});
-
-		/*--*/
-
-
-		/* Experiência original * /
-		/*-- processar repetições --* /
-		let repeat = WD.$("[data-wd-repeat]");
-		if (repeat.length > 0)
-			return repeat.forEach(function(x) {data_wdRepeat(x, ev);});
-
-		/*-- processar carregamentos --* /
-		let load = WD.$("[data-wd-load]");
-		if (load.length > 0)
-			return load.forEach(function(x) {data_wdLoad(x, ev)});
-
-		/*-- (re)organizar página após concluir requisições --* /
-		WD.$$("[data-wd-filter]").forEach(function(x) {data_wdFilter(x, ev);});
-		WD.$$("[data-wd-value]").forEach(function(x)  {data_wdValue(x, ev);});
-		WD.$$("[data-wd-click]").forEach(function(x)  {data_wdClick(x, ev);});
-		WD.$$("[data-wd-chart]").forEach(function(x)  {data_wdChart(x, ev);});
-		WD.$$("[data-wd-code]").forEach(function(x)   {data_wdCode(x, ev);});
-		/*--*/
-
+		const data = [
+			{selector: "[data-wd-repeat]", method: data_wdRepeat},
+			{selector: "[data-wd-load]",   method: data_wdLoad},
+			{selector: "[data-wd-value]",  method: data_wdValue},
+			{selector: "[data-wd-click]",  method: data_wdClick},
+			{selector: "[data-wd-chart]",  method: data_wdChart},
+			{selector: "[data-wd-code]",   method: data_wdCode},
+			{selector: "[data-wd-filter]", method: data_wdFilter}//FIXME manter?
+		];
+		for (let v of data) {
+			/*-- avaliar o alvo carregado (root != document) --*/
+			if (root !== document)
+				WD(root).forEach(function(x) {v.method(x, ev)});
+			/*-- avaliar todo o documento (root = document) ou os descendentes do alvo --*/
+			WD.$$(v.selector, root).forEach(function(x) {v.method(x, ev)});
+		}
 		wdOnResize(ev);
 		return;
 	};
@@ -8995,9 +8953,9 @@ const wd = (function() {
 	Disparador a ser invocado ao mudar a âncora da página (hashchange): define as margens e o posicionamento da âncora em ''body'' se houver elementos filhos ''header'' ou ''footer'' fixos no topo ou na base.**/
 	function wdOnHash(ev) {
 		if (__UNDERMAINTENANCE) console.log({wdOnHash: ev, target: ev.target});
-		let target = WD.$$("body > header, body > footer");
-		let hash   = WD.$(window.location.hash);
-		let data   = {header: 0, footer: 0};
+		const target = WD.$$("body > header, body > footer");
+		const hash   = WD.$(window.location.hash);
+		const data   = {header: 0, footer: 0};
 		target.forEach(function(x) {
 			let node   = __Node(x);
 			let style  = node.styles;
@@ -9027,40 +8985,45 @@ const wd = (function() {
 	Disparador a ser invocado após mudanças no tipo de dispositivo (resize).**/
 	function wdOnResize(ev) {
 		if (__UNDERMAINTENANCE) console.log({wdOnResize: ev, target: ev.target});
-		let resize = ev.type === "resize";
-		let change = __DEVICECONTROLLER.changeDevice;
-		/* se resize, chamar quando mudar o dispositivo, caso contrário, sempre chamar */
-		if ((resize && change) || !resize)
+		const alldoc = ev.type === "resize" || ev.type === "load";
+		const change = __DEVICECONTROLLER.changeDevice;
+		/*-- se load ou resize, averiguar todo o documento --*/
+		if (alldoc && change) {
 			WD.$$("[data-wd-device]").forEach(function(x) {data_wdDevice(x, ev);});
-
-
-		/* FIXME checar hash no carregamento principal */
+		}
+		/*-- caso contrário, avaliar só o elemento e seus descendentes --*/
+		else {
+			WD.$$(ev.target).forEach(function(x) {data_wdDevice(x, ev);});
+			WD.$$("[data-wd-device]", ev.target).forEach(function(x) {data_wdDevice(x, ev);});
+		}
+		/*-- checar hash no carregamento principal (FIXME funciona?) --*/
 		if (ev.type === "load") wdOnHash(ev);
 		return;
 	};
 
 /*----------------------------------------------------------------------------*/
 	/**###### ``**function** ''void'' wdOnDataset(''object''  ev)``
-	Disparador a ser invocado após mudanças no atributo HTML ''dataset'' (wddataset). Para o evento disparar, deve usar a ferramenta correspondente da biblioteca (ver __Node): aplica-se aos atributos que são executados .**/
+	Disparador a ser invocado após mudanças no atributo HTML ''dataset'' (evento wddataset) a partir do uso da ferramenta da biblioteca (ver __Node.dataset).**/
 	function wdOnDataset(ev) {
 		if (__UNDERMAINTENANCE) console.log({wdOnDataset: ev, target: ev.target});
 		if (!("wdDatasetEvent" in ev.target.dataset)) return;
-		const   data = ev.target.dataset.wdDatasetEvent.split(",");
+		const data   = ev.target.dataset.wdDatasetEvent.split(",");
 		const events = {
-			wdLoad:   {ev: true,  trigger: wdOnReload},
-			wdRepeat: {ev: true,  trigger: wdOnReload},
-			wdFilter: {ev: false, trigger: data_wdFilter},
-			wdValue:  {ev: false, trigger: data_wdValue},
-			wdClick:  {ev: false, trigger: data_wdClick},
-			wdDevice: {ev: false, trigger: data_wdDevice},
-			wdChart:  {ev: false, trigger: data_wdChart},
-			wdCode:   {ev: false, trigger: data_wdCode}
+			wdLoad:   data_wdLoad,
+			wdRepeat: data_wdRepeat,
+			wdFilter: data_wdFilter,
+			wdValue:  data_wdValue,
+			wdClick:  data_wdClick,
+			wdDevice: data_wdDevice,
+			wdChart:  data_wdChart,
+			wdCode:   data_wdCode
 		};
+		/*-- Apagar propriedade registradora das propriedades definidas --*/
 		delete ev.target.dataset.wdDatasetEvent;
-		data.forEach(function (v,i,a) {
-			if (v in events)
-				return events[v].ev ? events[v].trigger(ev) : events[v].trigger(ev.target, ev);
-		});
+		for (let v of data) {
+			let name = v.trim();
+			if (name in events) events[name](ev.target, ev);
+		}
 		return;
 	};
 
@@ -9101,6 +9064,15 @@ const wd = (function() {
 	function wdOnFocusIn(ev) {
 		if (__UNDERMAINTENANCE) console.log({wdOnFocusIn: ev, target: ev.target});
 		data_wdCode(ev.target, ev);
+		return;
+	};
+
+/*----------------------------------------------------------------------------*/
+	/**###### ``**function** ''void'' wdOnSubmit(''object''  ev)``
+	Disparador a ser invocado ao submeter formulário.**/
+	function wdOnSubmit(ev) {
+		if (__UNDERMAINTENANCE) console.log({wdOnSubmit: ev, target: ev.target});
+		data_wdSend(ev.target, ev);
 		return;
 	};
 
@@ -9198,6 +9170,9 @@ const wd = (function() {
 
 				wddataset: wdOnDataset,
 				wdreload:  wdOnReload,
+
+				submit:    wdOnSubmit
+
 			}
 		}
 	};
