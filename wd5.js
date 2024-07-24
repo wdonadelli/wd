@@ -1266,9 +1266,14 @@ const wd = (function() {
 				if (!("URLSearchParams" in window)) return null;
 				const data = new URLSearchParams();
 				const src  = this.toListObject();
-				for (let name in src)
-					for (let value of src[name])
-						data.append(name+(src[name].length > 1 ? "[]" : ""), value);
+				for (let name in src) {
+					for (let value of src[name]) {
+						let file = __Type(value).instanceOf("File");
+						let prop = name+(src[name].length > 1 ? "[]" : "")
+						let val  = file ? value.name : value
+						data.append(prop, val);
+					}
+				}
 				return data;
 			}
 		},
@@ -1279,8 +1284,9 @@ const wd = (function() {
 				const src  = this.toListObject();
 				for (let name in src) {
 					for (let value of src[name]) {
+						let file = __Type(value).instanceOf("File");
 						let prop = encodeURIComponent(name)+(src[name].length > 1 ? "[]" : "");
-						let val  = encodeURIComponent(value);
+						let val  = encodeURIComponent(file ? value.name : value);
 						data.push(prop+"="+val);
 					}
 				}
@@ -1588,8 +1594,9 @@ const wd = (function() {
 			get: function() {
 				if ("stringJSON" in this._saved) return this._saved.stringJSON;
 				let data = null;
-				if (this._check.chars)
+				if (this._check.chars) {
 					try {data = JSON.parse(this._data);} catch(e) {}
+				}
 				this._saved["stringJSON"] = data;
 				return this.stringJSON;
 			}
@@ -1599,8 +1606,7 @@ const wd = (function() {
 			get: function() {
 				if ("jsonString" in this._saved) return this._saved.jsonString;
 				let data = null;
-				if (this._check.object)
-					try {data = JSON.stringify(this._data);} catch(e) {}
+				try {data = JSON.stringify(this._data);} catch(e) {}
 				this._saved["jsonString"] = data;
 				return this.jsonString;
 			}
@@ -1610,10 +1616,12 @@ const wd = (function() {
 			get: function() {
 				if ("stringHTML" in this._saved) return this._saved.stringHTML;
 				let data = null;
-				try {
-					let parser = new DOMParser();
-					data = parser.parseFromString(this._data, "text/html");
-				} catch(e) {}
+				if (this._check.chars) {
+					try {
+						let parser = new DOMParser();
+						data = parser.parseFromString(this._data, "text/html");
+					} catch(e) {}
+				}
 				this._saved["stringHTML"] = data;
 				return this.stringHTML;
 			}
@@ -1623,10 +1631,12 @@ const wd = (function() {
 			get: function() {
 				if ("stringXML" in this._saved) return this._saved.stringXML;
 				let data = null;
-				try {
-					let parser = new DOMParser();
-					data = parser.parseFromString(this._data, "application/xml");
-				} catch(e) {}
+				if (this._check.chars) {
+					try {
+						let parser = new DOMParser();
+						data = parser.parseFromString(this._data, "application/xml");
+					} catch(e) {}
+				}
 				this._saved["stringXML"] = data;
 				return this.stringXML;
 			}
@@ -1636,22 +1646,14 @@ const wd = (function() {
 			get: function() {
 				if ("stringSVG" in this._saved) return this._saved.stringSVG;
 				let data = null;
-				try {
-					let parser = new DOMParser();
-					data = parser.parseFromString(this._data, "image/svg+xml");
-				} catch(e) {}
+				if (this._check.chars) {
+					try {
+						let parser = new DOMParser();
+						data = parser.parseFromString(this._data, "image/svg+xml");
+					} catch(e) {}
+				}
 				this._saved["stringSVG"] = data;
 				return this.stringSVG;
-			}
-		},
-		/**. ``''object'' dataBlob``: Transforma dados em objeto Blob.**/
-		dataBlob: {
-			get: function() {
-				if ("dataBlob" in this._saved) return this._saved.dataBlob;
-				let data = null;
-				try {data = new Blob([this._data]);} catch(e) {}
-				this._saved["dataBlob"] = data;
-				return this.dataBlob;
 			}
 		},
 		/**. ``''array'' wdArray``: Transforma notação wd em array de objetos. Trata-se de uma notação específica para o atributo HTML dataset que invocará as ferramentas da biblioteca ao ter o evento adequado disparado.
@@ -1845,6 +1847,19 @@ const wd = (function() {
 				return this.fileURL;
 			}
 		},
+		/**. ``''object'' dataBlob``: Transforma dados em objeto Blob.**/
+		dataBlob: {
+			get: function() {
+				if ("dataBlob" in this._saved) return this._saved.dataBlob;
+				let data = null;
+				try {
+					const opt = {type: this._check.chars ? "text/plan" : "application/octet-stream"};
+					data = new Blob([this._data], opt);
+				} catch(e) {console.log(e);}
+				this._saved["dataBlob"] = data;
+				return this.dataBlob;
+			}
+		},
 		/**. ``''any'' parser(''string'' attr...)``: Transforma tipo de dados em outro. Os argumentos ``attr`` indicam os mecanismos de transformação, que correspondem aos atributos do objeto.**/
 		parser: {
 			value: function(attr) {
@@ -1861,26 +1876,6 @@ const wd = (function() {
 				return null;
 			}
 		},
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 	});
 
 /*============================================================================*/
@@ -8056,27 +8051,42 @@ const wd = (function() {
 		const data = __Parser(e.dataset.wdSend).wdArray;
 		if (event.type === "submit") {
 			console.clear();
-			for (let i in e) {
-				if ((/^(on|aria|textC|inner|outer)/).test(i)) continue;
-				console.log(i,": ", e[i]);
+			const config  = data[0];
+			const form    = e;
+			const active  = document.activeElement;
+			const type    = __Node(active).type;
+			const overlap = ["button", "submit", "image"].indexOf(type) >= 0;
+			const proper  = {
+				method: null, action: null, enctype: null, encoding: null, charset: null,
+				acceptCharset: null,
 			}
-			console.log("-------------------------------------------");
-			//for (let i in event)
-				//console.log(i,": ", event[i])
-			const config = data[0];
-			config.url     = e.action;
-			config.method  = e.method;
+			for (let name in proper) {
+				let formname = "form"+__String(name).capitalize;
+				let invalid  = __Type(form[name]).node;
+				if (overlap && formname in active && __Type(active[formname]).nonempty)
+					proper[name] = active[formname];
+				else
+					proper[name] = invalid ? form.getAttribute(name) : form[name];
+			}
+
+
+
+
+
+
+
+
+
+
 			config.body    = e.elements;
-			config.headers = {type: e.enctype}
-			console.log(config);
-
-
-
+			console.log({active: active, type: type, overlap: overlap})
+			console.log("proper: ", proper);
+			console.log("config: ", config);
 
 
 		} else {
 			data.forEach(function (config,i,a) {
-				WD(config).send(config.trigger);
+				WD(config).send(config._trigger);
 			});
 		}
 		return;
