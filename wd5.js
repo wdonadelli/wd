@@ -1108,15 +1108,28 @@ const wd = (function() {
 		/**. ``''self'' import(''any'' input)``: Importa os dados de ``input`` que pode ser uma string (name: value\r\n), um objeto ou instâncias de Headers, FormData ou URLSearchParams.**/
 		import: {
 			value: function(input) {
-				const check = __Type(input);
-				const self  = this;
-				if (check.nonempty) {
-					const data = input.trim().split(/[\r\n]+/);
+				const check  = __Type(input);
+				const self   = this;
+				const header = /^([a-z\-]+\:\ [^\n]+\r\n)+$/;
+				const search = /^\??([^=]+\=(\&?|[^&]+\&?))+$/;
+				if (check.nonempty && header.test(input)) {
+					const data = input.trim().split("\r\n");
 					for (let v of data) {
-						let name  = v.split(":")[0].trim();
-						let value = v.replace(/^[^:]+\:(.+)$/, "$1").trim();
+						let part  = v.split(": ");
+						let name  = part[0].trim();
+						let value = part.length > 0 ? part[1].trim() : "";
 						if (name.length > 0) this.append(name, value);
 					}
+				} else if (check.nonempty && search.test(input)) {
+					const data = input.replace(/^\?/, "").trim().split("&");
+					for (let v of data) {
+						let part  = v.split("=");
+						let name  = part[0].trim().replace(/\[\]$/, "");
+						let value = part.length > 1 ? part[1] : "";
+						if (name.length > 0) this.append(name, value);
+					}
+				} else if (check.instanceOf("URL")) {
+					return this.import(input.search);
 				} else if (check.instanceOf("Headers")) {
 					input.forEach(function (value,name,data) {self.append(name, value);});
 				} else if (check.instanceOf("URLSearchParams")) {
@@ -1189,17 +1202,17 @@ const wd = (function() {
 				return this;
 			}
 		},
-		/**. ``''object'' toObject``: Converte o conjunto de dados em um objeto com sobreposição de identificadores.**/
+		/**. ``''object'' toObject``: Converte o conjunto de dados em um objeto com **sobreposição de identificadores**.**/
 		toObject: {
-			value: function() {
+			get: function() {
 				const data = {};
 				this.forEach(function (value, name) {data[name] = value;});
 				return data;
 			}
 		},
-		/**. ``''object'' toListObject``: Converte o conjunto de dados em um objeto organizado em listas.**/
+		/**. ``''object'' toListObject``: Converte o conjunto de dados em um objeto organizado em listas de valores.**/
 		toListObject: {
-			value: function() {
+			get: function() {
 				const data = {};
 				for (let v of this._data) {
 					if (v === null) continue;
@@ -1236,36 +1249,54 @@ const wd = (function() {
 				return data;
 			}
 		},
-		/**. ``''object'' toHeaders()``: Converte o conjunto de dados em um objeto Headers.**/
+		/**. ``''object'' toHeaders``: Converte o conjunto de dados em um objeto Headers. Se a ferramenta não estiver definida, retornará o resultado da propriedade ``toObjectHeaders``.**/
 		toHeaders: {
-			value: function() {
-				if (!("Headers" in window)) return null;
+			get: function() {
+				if (!("Headers" in window)) return this.toObjectHeaders;
 				const data = new Headers();
-				const src  = this.toListObject();
+				const src  = this.toListObject;
 				for (let name in src)
 					for (let value of src[name])
 						data.append(name, value);
 				return data;
 			}
 		},
-		/**. ``''object'' toFormData()``: Converte o conjunto de dados em um objeto FormData.**/
+		/**. ``''string'' toStringHeaders``: Converte o conjunto de dados em uma string com dados separados por "\r\n" e nome e valor separados por ": ".**/
+		toStringHeaders: {
+			get: function() {
+			const data = [];
+				const src  = this.valueOf();
+				for (let i in src) data.push(i+": "+src[i]);
+				return data.join("\r\n");
+			}
+		},
+		/**. ``''object'' toObjectHeaders``: Converte o conjunto de dados em um objeto organizado em strings com valores separador por ", ".**/
+		toObjectHeaders: {
+			get: function() {
+				const data = {};
+				const src  = this.toListObject;
+				for (let i in src) data[i] = src[i].join(", ");
+				return data;
+			}
+		},
+		/**. ``''object'' toFormData``: Converte o conjunto de dados em um objeto FormData. Se a ferramenta não estiver definida, retornará o resultado da propriedade ``toSearch``.**/
 		toFormData: {
-			value: function() {
-				if (!("FormData" in window)) return null;
+			get: function() {
+				if (!("FormData" in window)) return this.toSearch;
 				const data = new FormData();
-				const src  = this.toListObject();
+				const src  = this.toListObject;
 				for (let name in src)
 					for (let value of src[name])
 						data.append(name+(src[name].length > 1 ? "[]" : ""), value);
 				return data;
 			}
 		},
-		/**. ``''object'' toURLSearchParams()``: Converte o conjunto de dados em um objeto URLSearchParams.**/
+		/**. ``''object'' toURLSearchParams``: Converte o conjunto de dados em um objeto URLSearchParams. Se a ferramenta não estiver definida, retornará o resultado da propriedade ``toSearch``.**/
 		toURLSearchParams: {
-			value: function() {
-				if (!("URLSearchParams" in window)) return null;
+			get: function() {
+				if (!("URLSearchParams" in window)) return this.toSearch;
 				const data = new URLSearchParams();
-				const src  = this.toListObject();
+				const src  = this.toListObject;
 				for (let name in src) {
 					for (let value of src[name]) {
 						let file = __Type(value).instanceOf("File");
@@ -1277,11 +1308,11 @@ const wd = (function() {
 				return data;
 			}
 		},
-		/**. ``''string'' toURL()``: Converte o conjunto de dados em uma string com itens separados por &amp;.**/
-		toURL: {
-			value: function() {
+		/**. ``''string'' toSearch``: Converte o conjunto de dados em uma string com itens separados por &amp;.**/
+		toSearch: {
+			get: function() {
 				const data = [];
-				const src  = this.toListObject();
+				const src  = this.toListObject;
 				for (let name in src) {
 					for (let value of src[name]) {
 						let file = __Type(value).instanceOf("File");
@@ -1293,23 +1324,13 @@ const wd = (function() {
 				return data.join("&");
 			}
 		},
-		/**. ``''object'' valueOf()``: Converte o conjunto de dados em um objeto organizado em strings.**/
+		/**. ``''object'' valueOf()``: Retorna o mesmo produto da propriedade ``toObjectHeaders``.**/
 		valueOf: {
-			value: function() {
-				const data = {};
-				const src  = this.toListObject();
-				for (let i in src) data[i] = src[i].join(", ");
-				return data;
-			}
+			value: function() {return this.toObjectHeaders;}
 		},
-		/**. ``''string'' toString()``: Converte o conjunto de dados em uma string com itens separados por \r\n.**/
+		/**. ``''string'' toString()``: Retorna o mesmo produto da propriedade ``toStringHeaders``.**/
 		toString: {
-			value: function(input) {
-				const data = [];
-				const src  = this.valueOf();
-				for (let i in src) data.push(i+": "+src[i]);
-				return data.join("\r\n");
-			}
+			value: function() {return this.toStringHeaders}
 		},
 	});
 
@@ -5256,9 +5277,8 @@ const wd = (function() {
 					this._response.ok     = fail ? false : (code >= 200 && code < 300);
 				}
 				if (this._response.ok) {
-					const headers = new __DataSet(target.getAllResponseHeaders());
-					const header  = headers.toHeaders();
-					this._response.headers  = header === null ? headers.valueOf() : header;
+					const dataset = new __DataSet(target.getAllResponseHeaders());
+					this._response.headers  = dataset.toHeaders;
 					this._response.response = target.response;
 					this._changes(config.type, "send");
 				}
@@ -5363,7 +5383,7 @@ const wd = (function() {
 /*----------------------------------------------------------------------------*/
 	/**#### Requisição
 	``**constructor** ''object'' __Request(''object'' config)``
-	Construtor para [requisições Web](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest) ou leituras de [arquivos](https://developer.mozilla.org/en-US/docs/Web/API/FileReader). O argumento ``config` contem as propriedades da requisição de acordo com o método escolhido sendo o s básicos:
+	Construtor para [requisições Web](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest) ou leituras de [arquivos](https://developer.mozilla.org/en-US/docs/Web/API/FileReader). O argumento ``config`` aceita os mesmos valores do objeto ``__Dataset`` e contem as propriedades da requisição de acordo com o método escolhido, sendo os básicos:
 	|Nome|Referência|Aplicação|
 	|url|Alvo da requisição ou da leitura, não necessariamento um URL|send, read e fetch|
 	|method|Método da Requisição (padrão é post)|send e fetch|
@@ -5375,7 +5395,7 @@ const wd = (function() {
 		if (!(this instanceof __Request)) return new __Request(config);
 		const dataset = new __DataSet(config);
 		Object.defineProperties(this, {
-			_config: {value: dataset.toObject()},
+			_config: {value: dataset.toObject},
 		});
 	}
 	Object.defineProperties(__Request.prototype, {
@@ -5423,7 +5443,7 @@ const wd = (function() {
 				/*-- cabeçalho --*/
 				if (caller === "send" || caller === "fetch") {
 					const dataset = new __DataSet(cfg["headers"]);
-					cfg["headers"] = dataset.valueOf();
+					cfg["headers"] = dataset.toObjectHeaders;
 				}
 				/*-- Método --*/
 				if (caller === "send" || caller === "fetch") {
@@ -8052,22 +8072,23 @@ const wd = (function() {
 		if (event.type === "submit") {
 			console.clear();
 			const config  = data[0];
-			const form    = e;
 			const active  = document.activeElement;
 			const type    = __Node(active).type;
-			const overlap = ["button", "submit", "image"].indexOf(type) >= 0;
-			const proper  = {
-				method: null, action: null, enctype: null, encoding: null, charset: null,
-				acceptCharset: null,
-			}
-			for (let name in proper) {
-				let formname = "form"+__String(name).capitalize;
-				let invalid  = __Type(form[name]).node;
-				if (overlap && formname in active && __Type(active[formname]).nonempty)
-					proper[name] = active[formname];
+			const overlap = type === "submit" || type === "image";
+			const attr    = {method: null, action: null, enctype: null};
+			for (let name in attr) {
+				let formName = "form"+__String(name).capitalize;
+				let invalid  = __Type(e[name]).node;
+				if (invalid) {
+					console.debug("Inappropriate form name:", name);
+					return;
+				}
+				if (overlap && active.hasAttribute(formName))
+					attr[name] = active[formName];
 				else
-					proper[name] = invalid ? form.getAttribute(name) : form[name];
+					attr[name] = invalid ? e.getAttribute(name) : e[name];
 			}
+			console.log(attr);
 
 
 
@@ -8079,8 +8100,6 @@ const wd = (function() {
 
 
 			config.body    = e.elements;
-			console.log({active: active, type: type, overlap: overlap})
-			console.log("proper: ", proper);
 			console.log("config: ", config);
 
 
