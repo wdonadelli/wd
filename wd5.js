@@ -3823,16 +3823,137 @@ const wd = (function() {
 				return list;
 			}
 		},
-
-
-
-
-
 	});
 
 /*----------------------------------------------------------------------------*/
+
+
+
+
+
+
 	/**#### Formulários
-	###### ``**constructor** ''object'' __FNode(''node'' input)``
+	###### ``**constructor** ''object'' __FormProperties(''node'' input)``
+	Construtor para checar características de campos de formulários HTML (argumento ``node``).**/
+	function __FormProperties(input) {
+		if (!(this instanceof __FormProperties))	return new __FormProperties(input);
+		const check = __Type(input);
+		const node  = check.node ? check.value[0] : document.body;
+		const tag   = node.tagName.toLowerCase();
+		Object.defineProperties(this, {
+			_node:  {value: node}, /* registra o nó */
+			_tag:   {value: tag}, /* registra a tag do nó */
+			_clone: {value: node.cloneNode()}
+		});
+	}
+
+	Object.defineProperties(__FormProperties.prototype, {
+		constructor: {value: __FormProperties},
+		/**. ``''node'' node``: Retorna o nó.**/
+		node: {
+			get: function() {return this._node;}
+		},
+		/**. ``''string'' tag``: Retorna a tag do nó.**/
+		tag: {
+			get: function() {return this._tag;}
+		},
+		/**. ``''boolean'' form``: Informa se o nó é um campo de formulário.**/
+		form: {
+			get: function() {
+				const tags = {
+					meter:  1, progress: 1, option: 1, output: 1, select: 1, textarea: 1,
+					button: 1, input: 1
+				};
+				return this.tag in tags;
+			}
+		},
+		/**. ``''string'' ftype``: Retorna o tipo de formulário ou nulo.**/
+		ftype: {
+			get: function() {
+				if (!this.form) return null;
+				const tag  = this.tag;
+				const name = [null, "datetime", "date/time"];
+				const attr = String(this.node.getAttribute("type")).toLowerCase();
+				const prop = String(this.node.type).toLowerCase();
+				const tags = {
+					button: {reset: 0, button: 0, submit: 0},
+					input:  {
+						button:   0, reset:  0, submit:   0, image:  0, color: 0, radio:  0,
+						checkbox: 0, date:   0, datetime: 2, month:  0, week:  0, time:   0,
+						range:    0, number: 0, file:     0, url:    0, email: 0, tel:    0,
+						text:     0, search: 0, password: 0, hidden: 0, "datetime-local": 1
+					}
+				};
+				if (!(tag in tags)) return tag;
+				if (attr in tags[tag] || prop in tags[tag]) {
+					const data = attr in tags[tag] ? attr : prop;
+					return tags[tag][data] === 0 ? data : name[tags[tag][data]];
+				}
+				return null;
+			}
+		},
+		/**. ``''boolean'' fwork``: Informar se o formulário foi implementado ou falso.**/
+		fwork: {
+			get: function() {
+				if (!this.form) return false;
+				const attr = String(this.node.getAttribute("type")).toLowerCase();
+				const prop = String(this.node.type).toLowerCase();
+				return attr === prop;
+			}
+		},
+		/**. ``''boolean'' fmask``: Informa se o formulário possui máscara implementada ou falso.**/
+		fmask: {
+			get: function() {
+				if (!this.form) return false;
+				const invalid = "A1!@#$%¨&*()+";
+				const tags    = {
+					color:  0, date: 0, datetime: 0, month: 0, week: 0, time:   0, range: 0,
+					number: 0, file: 0, url:      0, email: 0, tel:  0, search: 0, "date/time": 0
+				};
+				if (!(this.ftype in tags)) return false;
+				this._clone.value = invalid;
+				return this._clone.value !== invalid;
+			}
+		},
+		/**. ``''boolean'' fsend``: Informa se o formulário pode ser enviado em requisições ou falso.**/
+		fsend: {
+			get: function() {
+				if (!this.form) return false;
+				const types = {
+					select:   0, textarea: 0, submit:   0, color:  0, color:    0, radio: 0,
+					checkbox: 0, date:     0, datetime: 0, month:  0, week:     0, time:  0,
+					range:    0, number:   0, file:     0, url:    0, email:    0, tel:   0,
+					text:     0, search:   0, password: 0, hidden: 0, datetime: 0, "date/time": 0
+				};
+				return this.ftype in types;
+			}
+		}
+	});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	/**###### ``**constructor** ''object'' __FNode(''node'' input)``
 	Construtor para gerir formulários HTML. O argumento ``node`` é o campo de formulário.**/
 	function __FNode(input) {
 		if (!(this instanceof __FNode))	return new __FNode(input);
@@ -3863,7 +3984,7 @@ const wd = (function() {
 					radio:            {value: "check", text:    null, send: 1, check:        null},
 					checkbox:         {value: "check", text:    null, send: 1, check:        null},
 					date:             {value: "value", text: "value", send: 1, check:      "date"},
-					datetime:         {value: "value", text: "value", send: 1, check: "date|time"},
+					datetime:         {value: "value", text: "value", send: 1, check: "date_time"},
 					month:            {value: "value", text: "value", send: 1, check:     "month"},
 					week:             {value: "value", text: "value", send: 1, check:      "week"},
 					time:             {value: "value", text: "value", send: 1, check:      "time"},
@@ -3932,17 +4053,17 @@ const wd = (function() {
 		type: {get: function() {return this._type;}},
 		/**. ``''string'' tag``: Retorna o a tag do nó em letra minúscula.**/
 		tag: {get: function() {return this._tag;}},
-		/**. ``''any'' value(''any'' x)``: Define e retorna o valor do formulário. Se o formulário aceita múltiplos valores, o valor retornado será uma lista.**/
+		/**. ``''any'' value(''any'' x)``: Define e retorna o valor do formulário. Campos com a possibilidade de múltiplos valores aceitam e retornam lista.**/
 		value: {
 			value: function(x) {
 				if (!this.form) return;
-				let check  = __Type(x);
-				let setter = !check.undefined;
+				const check  = __Type(x);
+				const setter = !check.undefined;
 				switch(this._cfg.value) {
 					case "combo": {
 						if (!check.array) x = check.null ? [] : [x];
 						x.forEach(function(v,i,a) {a[i] = String(v);});
-						let items = [];
+						const items = [];
 						let i  = -1;
 						while (++i < this.node.length) {
 							if (setter) {
@@ -3956,14 +4077,14 @@ const wd = (function() {
 					case "email": {
 						if (!check.array) x = check.null ? [] : String(x).split(",");
 						if (setter) this.node.value = String(x);
-						let data  = this.node.value.trim();
-						let items = data === "" ? [] : data.split(",");
+						const data  = this.node.value.trim();
+						const items = data === "" ? [] : data.split(",");
 						items.forEach(function(v,i,a) {a[i] = String(v).trim();});
 						return items;
 					}
 					case "file": {
 						if (check.null) this.node.value = null;
-						let files = this.node.files;
+						const files = this.node.files;
 						return Array.prototype.slice.call(files);
 					}
 					case "check": {
@@ -4000,7 +4121,7 @@ const wd = (function() {
 					case "combo": {
 						if (!check.array) x = check.null ? [] : [x];
 						x.forEach(function(v,i,a) {a[i] = __String(v).clear(true, false);});
-						let items = [];
+						const items = [];
 						let i  = -1;
 						while (++i < this.node.length) {
 							if (setter) {
@@ -4015,12 +4136,12 @@ const wd = (function() {
 				}
 			}
 		},
-		/**. ``''string'' name``: Define ou retorna o nome do formulário ou nulo se inexistentes ``name`` e ``id``.**/
+		/**. ``''string'' name``: Define ou retorna o nome do formulário ou nulo se inexistentes, o nome é definido pelos atributos ``name`` ou, alternativamente, por ``id``.**/
 		name: {
 			get: function() {
 				if (!this.form) return null;
-				let name = __Type(this.node.name);
-				let id   = __Type(this.node.id);
+				const name = __Type(this.node.name);
+				const id   = __Type(this.node.id);
 				if (name.nonempty) return this.node.name.trim();
 				if (id.nonempty)   return this.node.id.trim();
 				return null;
@@ -4030,20 +4151,205 @@ const wd = (function() {
 				this.node.name = __Type(x).nonempty ? String(x).trim() : "";
 			}
 		},
-		/**. ``''string'' validity``: Define ou retorna a mensagem de erro do formulário.**/
+		/**. ``''string'' validity``: Define ou retorna a mensagem de erro personalizada do formulário.**/
 		validity: {
 			set: function(msg) {
 				if (!this.form || this._cfg.send !== 1) return;
-				let meg = __Type(msg).nonempty ? msg.trim() : "";
-				this.node.setCustomValidity(msg);
+				const message = __Type(msg).nonempty ? msg.trim() : "";
+				this.node.setCustomValidity(message);
 			},
 			get: function() {
 				if (!this.form || this._cfg.send !== 1) return "";
-				let validity = this.node.checkValidity();
+				const validity = this.node.checkValidity();
 				return validity ? "" : this.node.validationMessage.trim();
 			}
 		},
-		/**. ``''object'' submit``: Retorna os dado do formulário para submissão ou nulo se não for campo de envio de dados. O objeto retornado possui as informações do nome (``name``), do valor (``value``), da validade (``validity``) e da mensagem de erro (``message``) do campo de formulário. Se inválido o valor, será exibida uma mensagem.**/
+		/**. ``''boolean'' checkFormValidity``: Retorna falso se o conteúdo informado manualmente em formulários não implementados ou sem máscara, utilizados para submissão, for inválido, caso contrário, retorna verdadeiro.** /
+		checkFormValidity: {
+			get: function() {
+				if (!this.form || this._cfg.send !== 1 || this._fmask || this._fwork)
+					return true;
+				const value = this.value();
+				const test  = __Type(value);
+				const check = this._cfg.check;
+				const error = "Invalid " + check + " value.";
+				const mult  = ["email", "file", "combo"];
+				const basic = {
+					date:      ["date"],
+					time:      ["time"],
+					datetime:  ["datetime"],
+					date_time: ["date", "time", "datetime"],
+					number:    ["finite"]
+				};
+
+				/*-- testanto alternativas em formulários comuns --* /
+				if (check in basic) {
+					for (let prop of basic[check])
+						if (test[prop]) return true;
+					this.validity = error;
+					return false;
+				}
+				/*-- testanto campos com múltiplos valores --* /
+				if (mult.indexOf(check) >= 1) {
+					if (this.node.multiple !== true && value.length > 1) {
+						this.validity = "Multiple values not allowed.";
+						return false;
+					}
+					if (check === "email") {
+						for (let v of value) {
+							if (!__Type(v).email) {
+								self.validity = error;
+								return false;
+							}
+						}
+						return true;
+					}
+					return true;
+				}
+				/*-- testanto campos diferenciados --* /
+				if (check === "week") {
+
+
+
+
+						if (!check.week) {
+							valid = "Invalid week value."
+							break;
+						}
+						let data = {
+							WWYYYY: {year: "$2", week: "$1", re: __TYPE.week.WWYYYY},
+							YYYYWW: {year: "$1", week: "$2", re: __TYPE.week.YYYYWW},
+						};
+						let type = data[check._test.subgroup];
+						let year = value.replace(type.re, type.year);
+						let week = value.replace(type.re, type.week);
+						let wmax = __DateTime(__Type.zeros(year, 4)+"-01-01").maxWeekForm;
+						if (Number(week) > wmax) {
+							valid = "Invalid week value."
+							break;
+						}
+						value    = __Type.zeros(year, 4)+"-W"+__Type.zeros(week, 2);
+						break;
+					}
+					case "month": {
+						if (!check.month) {
+							valid = "Invalid month value."
+							break;
+						}
+						let data = {
+							MMYYYY:   {year: "$2", month: "$1", re: __TYPE.month.MMYYYY,   txt: false},
+							YYYYMM:   {year: "$1", month: "$2", re: __TYPE.month.YYYYMM,   txt: false},
+							MMMMYYYY: {year: "$2", month: "$1", re: __TYPE.month.MMMMYYYY, txt: true},
+						};
+						let type  = data[check._test.subgroup];
+						let year  = value.replace(type.re, type.year);
+						let month = value.replace(type.re, type.month);
+						if (type.txt) month = __LANG.month(month);
+						value     = __Type.zeros(year, 4)+"-"+__Type.zeros(month, 2);
+						break;
+					}
+				}
+				if (valid !== "") this.validity = valid;
+			}
+
+
+
+
+			}
+		},
+
+
+
+
+
+
+
+
+		/**. ``''object'' submit``: Retorna um objeto com os dados do campo de formulário ou nulo se não submeter dados ou se o nome ou o valor forem nulos. O objeto retornado possui as seguintes propriedades:
+		|Nome|Descrição|
+		|name|String com o nome do campo (atributos ''name'' ou ''id''|
+		|value|Valor do campo de fomulário (retorno dependende do tipo do campo)|
+		|validity|Boleano que indica se o valor do campo é válido|
+		|message|String com a mensagem de invalidação ou vazio se validity for verdadeiro|** /
+		submit: {
+			get: function() {
+				if (!this.form || this._cfg.send !== 1) return null;
+				this.validity = "";
+				const data = {
+					value:    this.value(),
+					name:     this.name,
+					validity: this.validity === "",
+					message:  this.validity
+				};
+				if (data.value === null || data.name === null) return null;
+				/*-- checar manualmente a validade de formulários não implementados ou sem máscara --* /
+				if (!this._fmask || !this._fwork) {
+
+				}
+				/*-- se não encontrado erro, checar verificação personalizada (data-wd-validity) --* /
+				if (valid === "" && "wdValidity" in this.node.dataset) {
+					let func = this.node.dataset.wdValidity
+					if (func in window && __Type(window[func]).function) {
+						let error = window[func](value);
+						if (__Type(error).nonempty) {
+							valid = error.trim();
+							this.validity = valid;
+						}
+					}
+				}
+				/*-- definindo valor de retorno --* /
+				let data = {
+					name: name, value: value, validity: valid === "", message: valid
+				};
+				/*-- exibindo mensagem de erro caso o valor seja inválido --* /
+				if (!data.validity) {
+					if ("reportValidity" in this.node) {
+						this.node.reportValidity();
+					} else {
+						const event = new CustomEvent("wdshowmessage", {detail: {
+							type: "notify",
+							title: title === undefined || title === null ? "" : String(title),
+							body: this.toString()
+						}});
+						__SIGNALBOX.dispatchEvent(event);
+						this.node.focus();
+						this.node.select();
+					}
+				}
+				return data;
+			}
+		}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		/**. ``''object'' submit``: Retorna um objeto com as os dado do formulário para submissão ou nulo se não for campo de envio de dados. O objeto retornado possui as informações do nome (``name``), do valor (``value``), da validade (``validity``) e da mensagem de erro (``message``) do campo de formulário, . Se inválido o valor, será exibida uma mensagem.**/
 		submit: {
 			get: function() {
 				if (!this.form || this._cfg.send !== 1) return null;
@@ -4054,7 +4360,7 @@ const wd = (function() {
 				if (value === null || name === null) return null;
 				/*-- checar validade para formulário não implementado ou sem máscara --*/
 				if (!this._fmask || !this._fwork) {
-					let check = __Type(value);
+					const check = __Type(value);
 					if (valid === "" && (check.nonempty || check.array)) {
 						switch(this._cfg.check) {
 							case "date": {
@@ -4184,6 +4490,13 @@ const wd = (function() {
 				return data;
 			}
 		}
+
+
+
+
+
+
+
 	});
 
 /*----------------------------------------------------------------------------*/
@@ -5388,7 +5701,7 @@ const wd = (function() {
 	|url|Alvo da requisição ou da leitura, não necessariamento um URL|send, read e fetch|
 	|method|Método da Requisição (padrão é post)|send e fetch|
 	|type|Tipo de resposta a retornar (padrão text)|send, read e fetch|
-	|headers|Cabeçalho a enviar|send e fetch|
+	|headers|Cabeçalhos a enviar (ver __DataSet|send e fetch|
 	|body|Dados a enviar na requisição|send e fetch|
 	|timeout|Tempo de espera pela resposta|send, read e precariamente em fetch|**/
 	function __Request(config) {
@@ -5442,8 +5755,8 @@ const wd = (function() {
 				for (let i in this._config) cfg[i] = this._config[i];
 				/*-- cabeçalho --*/
 				if (caller === "send" || caller === "fetch") {
-					const dataset = new __DataSet(cfg["headers"]);
-					cfg["headers"] = dataset.toObjectHeaders;
+					const dataset  = new __DataSet(cfg["headers"]);
+					cfg["headers"] = dataset[caller === "send" ? "toObjectHeaders" : "toHeaders"];
 				}
 				/*-- Método --*/
 				if (caller === "send" || caller === "fetch") {
@@ -8042,6 +8355,7 @@ const wd = (function() {
 			type:     {value: function(){return __Type.apply(null, Array.prototype.slice.call(arguments));}},
 			array:    {value: function(){return __Array.apply(null, Array.prototype.slice.call(arguments));}},
 			datetime: {value: function(){return __DateTime.apply(null, Array.prototype.slice.call(arguments));}},
+			fprop:    {value: function(){return __FormProperties.apply(null, Array.prototype.slice.call(arguments));}},
 			fnode:    {value: function(){return __FNode.apply(null, Array.prototype.slice.call(arguments));}},
 			node:     {value: function(){return __Node.apply(null, Array.prototype.slice.call(arguments));}},
 			number:   {value: function(){return __Number.apply(null, Array.prototype.slice.call(arguments));}},
@@ -8079,16 +8393,15 @@ const wd = (function() {
 			for (let name in attr) {
 				let formName = "form"+__String(name).capitalize;
 				let invalid  = __Type(e[name]).node;
-				if (invalid) {
-					console.debug("Inappropriate form name:", name);
-					return;
-				}
 				if (overlap && active.hasAttribute(formName))
 					attr[name] = active[formName];
-				else
+				else if (!invalid)
 					attr[name] = invalid ? e.getAttribute(name) : e[name];
+				else
+					delete attr[name];
 			}
-			console.log(attr);
+			for (let name in attr) config[name] = attr[name];
+
 
 
 
