@@ -225,26 +225,28 @@ const wd = (function() {
 	Controla a linguagem local da biblioteca.**/
 	const __LANG = {
 		_re:       /^[a-z]{2,3}(\-[A-Z][a-z]{3})?(\-([A-Z]{2}|[0-9]{3}))?$/,
-		_user:     "",
-		_date:     "",
-		_currency: "USD",
-		/**. ``''string'' currency``: Define ou retorna a o código monetário definido pelo usuário.**/
+		_user:       "",
+		_currency:   "USD",
+		_langMonths:  null,
+		_months:      null,
+		_langDays:    null,
+		_days:        null,
+		_langREDates: null,
+		_reDates:     null,
+
+		/**. ``''string'' currency``: Define ou retorna o código monetário definido pelo usuário.**/
 		get currency()  {return this._currency;},
-		set currency(x) {this._currency = typeof x === "string" ? String(x).trim() : "";},
+		set currency(x) {this._currency = String(x).trim();},
 		/**. ``''boolean'' test(''string'' x)``: Testa se o argumento ``x`` está no [formato de linguagem](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/lang).**/
-		test: function(x) {
-			return x === null || x === undefined ? false : this._re.test(String(x).trim());
-		},
-		/**. ``''string'' node(''node'' elem)``: Retorna o atributo ''lang'' do elemento HTML ``elem`` ou em seu elemento superior. Retorna uma string vazia se não encontrado.**/
+		test: function(x) {return this._re.test(String(x).trim());},
+		/**. ``''string'' node(''node'' elem)``: Retorna o atributo ''lang'' do elemento HTML ``elem`` ou seu ascendente ou vazio.**/
 		node: function(elem) {
-			if (typeof elem !== "object") return "";
-			while ("parentElement" in elem && "attributes" in elem) {
-				if ("lang" in elem.attributes) {
-					let value = String(elem.attributes.lang.value).trim();
+			if (elem instanceof HTMLElement) {
+				while (elem !== null) {
+					let value = String(elem.lang).trim();
 					if (this.test(value)) return value;
+					elem = elem.parentElement;
 				}
-				elem = elem.parentElement;
-				if (elem === null || elem === undefined) return "";
 			}
 			return "";
 		},
@@ -253,82 +255,97 @@ const wd = (function() {
 		/**. ``''string'' html``: Retorna a linguagem definida no elemento ''body'' ou ''html''.**/
 		get html() {return this.node(document.body);},
 		/**. ``''string'' user``: Define ou retorna a linguagem definida pelo usuário.**/
-		get user()  {return this._user;},
-		set user(x) {this._user = typeof x === "string" && this.test(x) ? x.trim() : "";},
+		get user()  {return this.test(this._user) ? this._user : "";},
+		set user(x) {this._user = String(x).trim();},
 		/**. ``''string'' main``: Retorna a linguagem definida pelo usuário, no HTML ou pela navegador.**/
 		get main() {return this.user || this. html || this.nav || "en-US";},
-		/**. ``''object'' date``: Retorna um objeto contendo os nomes dos meses e dos dias da semana, na versão longa e curta da linguagem retornada em ``main``.**/
-		get date() {
-			let lang = this.main;
-			if (this._date !== null && this._date.lang === lang) return this._date;
-			/* definir */
-			let date = new Date(1970, 0, 1, 12, 0, 0, 0);
-			let data = {
-				lang:  lang,
-				month: {long: Array(12), short: Array(12)},
-				week:  {long:  Array(7), short:  Array(7)}
-			};
-			let month = -1;
-			while (++month < 12) {
-				date.setMonth(month);
-				let index = date.getMonth();
-				data.month.long[index]  = date.toLocaleDateString(lang, {month: "long"}).trim();
-				data.month.short[index] = date.toLocaleDateString(lang, {month: "short"}).trim();
+		/**. ``''array'' months``: Retorna uma lista de objetos contendo informações sobre os meses:
+		|Nome|Descrição|
+		|index|Índice numérico do mês [1-12]|
+		|value|Retorna o índice do mês com dois caracteres|
+		|long|Nome do mês (MMMM)|
+		|short|Abreviação do mês (MMM)|**/
+		get months() {
+			if (this._langMonths === this.main) return this._months;
+			const date = new Date(1970, 0, 1, 12, 0, 0, 0);
+			const data = [];
+			const lang = this.main;
+			let long, short, index, value;
+			for (let i = 0; i < 12; i++) {
+				date.setMonth(i);
+				long  = date.toLocaleDateString(lang, {month: "long"}).trim();
+				short = date.toLocaleDateString(lang, {month: "short"}).trim();
+				index = i+1;
+				value = (index < 10 ? "0" : "") + String(index);
+				data.push({index: index, value: value, long: long, short: short});
 			}
-			let day = 0;
-			while (++day < 8) {
-				date.setDate(day);
-				let index = date.getDay();
-				data.week.long[index]  = date.toLocaleDateString(lang, {weekday: "long"}).trim();
-				data.week.short[index] = date.toLocaleDateString(lang, {weekday: "short"}).trim();
-			}
-			this._date = data;
-			return data;
+			this._langMonths = lang;
+			this._months     = data;
+			return this.months;
 		},
-		/**. ``''integer'' month(''string'' name)``: Retorna o número do mês (1-12), a partir de seu ``nome`` (ignorando caixa), considerando a linguagem retornada em ``main``. Retorna zero se não localizado.**/
-		month: function (name) {
-			let date  = this.date;
-			let name1 = String(name).trim();
-			let name2 = name1.toUpperCase();
-			let name3 = name1.toLowerCase();
-			let i = -1;
-			while (++i < date.month.long.length) {
-				let long  = date.month.long[i];
-				let short = date.month.short[i];
-				if (
-					name1 === long               || name1 === short ||
-					name2 === long.toLowerCase() || name2 === short.toLowerCase() ||
-					name3 === long.toLowerCase() || name3 === short.toLowerCase()
-				) return i+1;
+		/**. ``''array'' days``: Retorna uma lista de objetos contendo informações sobre os dias:
+		|Nome|Descrição|
+		|index|Índice numérico do dia da semana [1-7]|
+		|value|Retorna o índice do dia com dois caracteres|
+		|long|Nome do dia (DDDD)|
+		|short|Abreviação do dia (DDD)|**/
+		get days() {
+			if (this._langDays === this.main) return this._days;
+			const date = new Date(1970, 0, 1, 12, 0, 0, 0);
+			const data = [];
+			const lang = this.main;
+			let long, short, index, value;
+			for (let i = 1; i < 8; i++) {
+				date.setDate(i);
+				long  = date.toLocaleDateString(lang, {weekday: "long"}).trim();
+				short = date.toLocaleDateString(lang, {weekday: "short"}).trim();
+				index = date.getDay() + 1;
+				value = "0" + String(index);
+				data.push({index: index, value: value, long: long, short: short});
 			}
-			return 0;
+			this._langDays = lang;
+			this._days     = data;
+			return this.days;
 		},
-		/**. ``''integer'' week(''string'' name)``: Retorna o número do dia da semana (1-7 [domingo-sábado]), a partir de seu ``nome`` (ignorando caixa), considerando a linguagem retornada em ``main``. Retorna zero se não localizado.**/
-		week: function (name) {
-			let date  = this.date;
-			let name1 = String(name).trim();
-			let name2 = name1.toUpperCase();
-			let name3 = name1.toLowerCase();
-			let i = -1;
-			while (++i < date.week.long.length) {
-				let long  = date.week.long[i];
-				let short = date.week.short[i];
-				if (
-					name1 === long               || name1 === short ||
-					name2 === long.toLowerCase() || name2 === short.toLowerCase() ||
-					name3 === long.toLowerCase() || name3 === short.toLowerCase()
-				) return i+1;
+		/**. ``''object'' searchByName(''string'' type, ''string'' name)``: Retorna o objeto com as informações sobre o mês ou o dia da semana (``type``) em buca pelo nome (``name``).**/
+		searchByName: function(type, name) {
+			name = String(name).trim();
+			const upper = name.toUpperCase();
+			const lower = name.toLowerCase();
+			const data  = this[type];
+			let short, long, ushort, ulong, lshort, llong;
+			for (let v of data) {
+				short  = v.short;
+				long   = v.long;
+				ushort = short.toUpperCase();
+				ulong  = long.toUpperCase();
+				lshort = short.toLowerCase();
+				llong  = long.toLowerCase();
+				if (short  === name  || long  === name)  return v;
+				if (ushort === upper || ulong === upper) return v;
+				if (lshort === lower || llong === lower) return v;
 			}
-			return 0;
+			return null;
 		},
-		/**. ``''string'' MMM(''integer'' value)``: Retorna o mês abreviado a partir do seu número (``value`` [1-12]).**/
-		MMM:  function(value) {return this.date.month.short[value-1];},
-		/**. ``''string'' MMM(''integer'' value)``: Retorna o mês a partir do seu número (``value`` [1-12]).**/
-		MMMM: function(value) {return this.date.month.long[value-1];},
-		/**. ``''string'' MMM(''integer'' value)``: Retorna o dia da semana abreviado a partir do seu número (``value`` [1-7]).**/
-		DDD:  function(value) {return this.date.week.short[value-1];},
-		/**. ``''string'' MMM(''integer'' value)``: Retorna o dia da semana a partir do seu número (``value`` [1-7]).**/
-		DDDD: function(value) {return this.date.week.long[value-1];},
+		/**. ``''object'' monthRegExp: Retorna um objeto contendo as expressões regulares para os formatos DMMMMYYYY, MMMMDYYYY e MMMMYYYY.**/
+		get monthRegExp() {
+			if (this._langREDates === this.main) return this._reDates;
+			const data = [];
+			const day  = "(0?[1-9]|[12]\\d|3[01])";
+			const year = "([-+]?\\d{3}\\d+)";
+			for (let v of this.months) {
+				data.push(v.long.replace(/(\W)/g, "\\$1"));
+				data.push(v.short.replace(/(\W)/g, "\\$1"));
+			}
+			const month = "(" + data.join("|") + ")";
+			this._langREDates = this.main;
+			this._reDates = {
+				DMMMMYYYY: new RegExp("^" + ([day, month, year].join("\\ ")) + "$", "i"),
+				MMMMDYYYY: new RegExp("^" + ([month, day, year].join("\\ ")) + "$", "i"),
+				MMMMYYYY:  new RegExp("^" + ([month, year].join("[\\ /]"))   + "$", "i"),
+			}
+			return this.monthRegExp;
+		}
 	};
 
 /*----------------------------------------------------------------------------*/
@@ -533,8 +550,8 @@ const wd = (function() {
 			YYYYMMDD:  /^([-+]?\d{3}\d+)\-(0[1-9]|1[0-2])\-(0[1-9]|[12]\d|3[01])$/,
 			DDMMYYYY:  /^(0[1-9]|[12]\d|3[01])\/(0[1-9]|1[0-2])\/([-+]?\d{3}\d+)$/,
 			MMDDYYYY:  /^(0[1-9]|1[0-2])\.(0[1-9]|[12]\d|3[01])\.([-+]?\d{3}\d+)$/,
-			DMMMMYYYY: /^(0?[1-9]|[12]\d|3[01])\ ([^0-9]+)\ ([-+]?\d{3}\d+)$/i,
-			MMMMDYYYY: /^([^0-9]+)\ (0?[1-9]|[12]\d|3[01])\ ([-+]?\d{3}\d+)$/i,
+			get DMMMMYYYY() {return __LANG.monthRegExp.DMMMMYYYY;},
+			get MMMMDYYYY() {return __LANG.monthRegExp.MMMMDYYYY;},
 		},
 		time: {
 			hmmss: /^([01]?\d|2[0-4])\:([0-5]\d)(\:[0-5]\d(\.\d{1,3})?)?$/,
@@ -544,7 +561,7 @@ const wd = (function() {
 		month: {
 			YYYYMM:   /^([-+]?\d{3}\d+)\-(0[1-9]|1[0-2])$/,
 			MMYYYY:   /^(0[1-9]|1[0-2])\/([-+]?\d{3}\d+)$/,
-			MMMMYYYY: /^([^0-9]+)[/ ]([-+]?\d{3}\d+)$/i,
+			get MMMMYYYY() {return __LANG.monthRegExp.MMMMYYYY;},
 		},
 		week: {
 			YYYYWW: /^([-+]?\d{3}\d+)\-W(0[1-9]|[1-4]\d|5[0-4])?$/i,
@@ -557,10 +574,11 @@ const wd = (function() {
 		test: function(x) {
 			x = String(x).trim();
 			for (let i in this) {
-				if (i === "test") continue;
-				for (let j in this[i]) {
-					if (this[i][j].test(x))
-						return {group: i, subgroup: j, value: x, regexp: this[i][j]};
+				if (i !== "test") {
+					for (let j in this[i]) {
+						if (this[i][j].test(x))
+							return {group: i, subgroup: j, value: x, regexp: this[i][j]};
+					}
 				}
 			}
 			return {group: null, subgroup: null, value: x};
