@@ -1174,10 +1174,10 @@ const wd = (function() {
 			value: function(name) {
 				name = String(name).replace(/\[\]$/, "").trim();
 				const list = [];
-				if (name.length !== 0)
-					this._data.forEach(function(v,i,a) {
-						if (v !== null && name === v.name) list.push(v.value);
-					});
+				if (name.length !== 0) {
+					for (let i of this.entries())
+						if (name === i.name) list.push(i.value);
+				}
 				return list;
 			}
 		},
@@ -1185,28 +1185,18 @@ const wd = (function() {
 		has: {
 			value: function(name) {
 				name = String(name).replace(/\[\]$/, "").trim();
-				if (name.length !== 0)
-					this._data.forEach(function(v,i,a) {
-						if (v !== null && name === v.name) return true;
-					});
+				if (name.length !== 0) {
+					for (let i of this.entries())
+						if (name === i.name) return true;
+				}
 				return false;
-			}
-		},
-		/**. ``''self'' forEach(''function'' caller)``: Chama ``caller`` para cada item, repassando o valor e nome, respectivamente, como argumentos.**/
-		forEach: {
-			value: function(caller) {
-				if (__Type(caller).function)
-					this._data.forEach(function(v,i,a) {
-						if (v !== null) caller(v.value, v.name);
-					});
-				return this;
 			}
 		},
 		/**. ``''object'' toObject``: Converte o conjunto de dados em um objeto com **sobreposição de identificadores**.**/
 		toObject: {
 			get: function() {
 				const data = {};
-				this.forEach(function (value, name) {data[name] = value;});
+				for (let i of this.entries()) data[i.name] = i.value;
 				return data;
 			}
 		},
@@ -1214,19 +1204,18 @@ const wd = (function() {
 		toListObject: {
 			get: function() {
 				const data = {};
-				for (let v of this._data) {
-					if (v === null) continue;
+				for (let v of this.entries()) {
 					let name  = v.name;
 					let value = v.value;
 					let check = __Type(value);
+					/*-- definição da propriedade, se for objeto analisar cada item adiante --*/
 					if (!(name in data) && !check.object) data[name] = [];
+
 					if (check.instanceOf("FileList") || check.array) {
-						if (value.length === 0) {
+						if (value.length === 0)
 							data[name].push("");
-						} else {
-							for (let i = 0; i < value.length; i++)
-								data[name].push(value[i]);
-						}
+						else
+							for (let i = 0; i < value.length; i++) data[name].push(value[i]);
 					}
 					else if (check.object) {
 						let count = 0;
@@ -1264,10 +1253,10 @@ const wd = (function() {
 		/**. ``''string'' toStringHeaders``: Converte o conjunto de dados em uma string com dados separados por "\r\n" e nome e valor separados por ": ".**/
 		toStringHeaders: {
 			get: function() {
-			const data = [];
-				const src  = this.valueOf();
-				for (let i in src) data.push(i+": "+src[i]);
-				return data.join("\r\n");
+				const data = [];
+				const src  = this.toObjectHeaders;
+				for (let i in src) data.push(i + ": " + src[i] + "\r\n");
+				return data.join("");
 			}
 		},
 		/**. ``''object'' toObjectHeaders``: Converte o conjunto de dados em um objeto organizado em strings com valores separador por ", ".**/
@@ -1322,6 +1311,33 @@ const wd = (function() {
 					}
 				}
 				return data.join("&");
+			}
+		},
+		/**. ``''object'' entries()``: Retorna um objeto Generator para looping ''for of'' das entradas.**/
+		entries: {
+			value: function*() {
+				for (let v of this._data)
+					if (v !== null) yield {name: v.name, value: v.value};
+			}
+		},
+		/**. ``''object'' keys()``: Retorna um objeto Generator para looping ''for of'' das chaves.**/
+		keys: {
+			value: function*() {
+				for (let i of this.entries()) yield i.name;
+			}
+		},
+		/**. ``''object'' values()``: Retorna um objeto Generator para looping ''for of'' dos valores.**/
+		values: {
+			value: function*() {
+				for (let i of this.entries()) yield i.value;
+			}
+		},
+		/**. ``''self'' forEach(''function'' caller)``: Chama ``caller`` para cada item, repassando o valor e nome, respectivamente, como argumentos.**/
+		forEach: {
+			value: function(caller) {
+				if (__Type(caller).function)
+					for (let i of this.entries()) caller(i.name, i.value);
+				return this;
 			}
 		},
 		/**. ``''object'' valueOf()``: Retorna o mesmo produto da propriedade ``toObjectHeaders``.**/
@@ -1455,25 +1471,25 @@ const wd = (function() {
 /*----------------------------------------------------------------------------*/
 	/**#### Transformação de Dados
 	###### ``**constructor** ''object'' __Parser(''any'' input)``
-	Construtor para transformação de dados. Os dados de entrada são informados no argumento ``input``. Se a transformação falhar, os atributos retornarão nulo.**/
+	Construtor para transformação de dados. Os dados de entrada são informados no argumento ``input``. Se a transformação falhar, os atributos retornarão nulo. Todos as propriedades retornam uma nova instância do objeto ''__Parser'' com o resultado da transformação anterior com o objetivo de fazê-las em cadeia. Utilize o método ''get'' ao fim das trasformações para obter seu valor.**/
 	function __Parser(input) {
 		if (!(this instanceof __Parser)) return new __Parser(input);
 		const check = new __Type(input);
-		let   table = check.node && check.value.length === 1;
 		Object.defineProperties(this, {
 			_data:  {value: input},
 			_check: {value: check},
 			_saved: {value: {}},
-			_table: {value: table && input.tagName.toLowerCase() === "table"}
+			_table: {value: check.instanceOf("HTMLTableElement")}
 		});
 	}
 
 	Object.defineProperties(__Parser.prototype, {
 		constructor: {value: __Parser},
-		/**. ``''node'' csvTable``: Transforma string CSV em tabela HTML.**/
+		/**. ``''object'' csvTable``: Transforma string CSV em tabela HTML.**/
 		csvTable: {
 			get: function() {
-				if ("csvTable" in this._saved) return this._saved.csvTable;
+				if ("csvTable" in this._saved)
+					return new __Parser(this._saved.csvTable);
 				let data = null;
 				if (this._check.chars) {
 					const tree = new __Tree();
@@ -1537,10 +1553,11 @@ const wd = (function() {
 				return this.csvTable;
 			}
 		},
-		/**. ``''array'' tableMatrix``: Transforma tabela HTML em matriz.**/
+		/**. ``''object'' tableMatrix``: Transforma tabela HTML em matriz.**/
 		tableMatrix: {
 			get: function() {
-				if ("tableMatrix" in this._saved) return this._saved.tableMatrix;
+				if ("tableMatrix" in this._saved)
+					return new __Parser(this._saved.tableMatrix);
 				let data = null;
 				if (this._table) {
 					const matrix = [];
@@ -1558,10 +1575,11 @@ const wd = (function() {
 				return this.tableMatrix;
 			}
 		},
-		/**. ``''string'' matrixCSV``: Transforma uma matriz em string CSV.**/
+		/**. ``''object'' matrixCSV``: Transforma uma matriz em string CSV.**/
 		matrixCSV: {
 			get: function() {
-				if ("matrixCSV" in this._saved) return this._saved.matrixCSV;
+				if ("matrixCSV" in this._saved)
+					return new __Parser(this._saved.matrixCSV);
 				let data = null;
 				if (this._check.array) {
 					try {
@@ -1581,10 +1599,11 @@ const wd = (function() {
 				return this.matrixCSV;
 			}
 		},
-		/**. ``''array'' matrixList``: Transforma uma matriz em uma lista de objetos.**/
+		/**. ``''object'' matrixList``: Transforma uma matriz em uma lista de objetos.**/
 		matrixList: {
 			get: function() {
-				if ("matrixList" in this._saved) return this._saved.matrixList;
+				if ("matrixList" in this._saved)
+					return new __Parser(this._saved.matrixList);
 				let data = null;
 				if (this._check.array) {
 					try {
@@ -1613,7 +1632,8 @@ const wd = (function() {
 		/**. ``''object'' stringJSON``: Transforma string JSON em objeto.**/
 		stringJSON: {
 			get: function() {
-				if ("stringJSON" in this._saved) return this._saved.stringJSON;
+				if ("stringJSON" in this._saved)
+					return new __Parser(this._saved.stringJSON);
 				let data = null;
 				if (this._check.chars) {
 					try {data = JSON.parse(this._data);} catch(e) {}
@@ -1622,10 +1642,11 @@ const wd = (function() {
 				return this.stringJSON;
 			}
 		},
-		/**. ``''string'' jsonString``: Transforma objeto em string JSON.**/
+		/**. ``''object'' jsonString``: Transforma objeto em string JSON.**/
 		jsonString: {
 			get: function() {
-				if ("jsonString" in this._saved) return this._saved.jsonString;
+				if ("jsonString" in this._saved)
+					return new __Parser(this._saved.jsonString);
 				let data = null;
 				try {data = JSON.stringify(this._data);} catch(e) {}
 				this._saved["jsonString"] = data;
@@ -1635,7 +1656,8 @@ const wd = (function() {
 		/**. ``''object'' stringHTML``: Transforma string em documento HTML.**/
 		stringHTML: {
 			get: function() {
-				if ("stringHTML" in this._saved) return this._saved.stringHTML;
+				if ("stringHTML" in this._saved)
+					return new __Parser(this._saved.stringHTML);
 				let data = null;
 				if (this._check.chars) {
 					try {
@@ -1650,7 +1672,8 @@ const wd = (function() {
 		/**. ``''object'' stringXML``: Transforma string em documento XML.**/
 		stringXML: {
 			get: function() {
-				if ("stringXML" in this._saved) return this._saved.stringXML;
+				if ("stringXML" in this._saved)
+					return new __Parser(this._saved.stringXML);
 				let data = null;
 				if (this._check.chars) {
 					try {
@@ -1665,7 +1688,8 @@ const wd = (function() {
 		/**. ``''object'' stringSVG``: Transforma string em documento SVG.**/
 		stringSVG: {
 			get: function() {
-				if ("stringSVG" in this._saved) return this._saved.stringSVG;
+				if ("stringSVG" in this._saved)
+					return (this._saved.stringSVG);
 				let data = null;
 				if (this._check.chars) {
 					try {
@@ -1677,7 +1701,7 @@ const wd = (function() {
 				return this.stringSVG;
 			}
 		},
-		/**. ``''array'' wdArray``: Transforma notação wd em array de objetos. Trata-se de uma notação específica para o atributo HTML dataset que invocará as ferramentas da biblioteca ao ter o evento adequado disparado.
+		/**. ``''object'' wdArray``: Transforma notação wd em array de objetos. Trata-se de uma notação específica para o atributo HTML dataset que invocará as ferramentas da biblioteca ao ter o evento adequado disparado.
 		. A notação consiste num conjunto de dados no formato ''nome{valor}'' que resultará num objeto a ser retornado. O par ''nome{valor}'' inicia com o nome do atributo seguido do caracter de abertura do escopo, do seu respectivo valor e do caractere de fechamento de escopo.
 		. Há três caracteres de escopo&colon; **&lbrace;&rbrace;** define um valor genérico; **&lbrack;&rbrack;** define um array separado por vírgulas; e **&lpar;&rpar;** define o nome de uma função presente dentro do escopo de ''window'' e defindo por ''var'' ou ''function'' e, se a função não existir, será atribuído o valor nulo.
 		. Se o valor contiver o mesmo caractere do escopo, deverá haver a mesma quantidade de caracteres de abertura e de fechamento. Caso seja necessário desobedecer essa regra, o valor deverá ser blindado por apóstrofos (**&apos;**) no início e no fim. Apóstrofos internos são definidos por apóstrofos duplos seguidos (**&apos;&apos;**).
@@ -1688,7 +1712,8 @@ const wd = (function() {
 		. Os atributos identificados com os nomes **&dollar;** e **&dollar;&dollar;**, com valor empacotado por **&lbrace;&rbrace;**, recebem um selector CSS e assumem o valor de um elemento HTML ou de uma lista de elementos (''NodeList'') correspondente ao respectivo seletor. As strings ''document'' e ''window'' assumem os respectivos objetos identificados por esses nomes.**/
 		wdArray: {
 			get: function() {
-				if ("wdArray" in this._saved) return this._saved.wdArray;
+				if ("wdArray" in this._saved)
+					return new __Parser(this._saved.wdArray);
 				let data = null;
 				try {
 					if (this._check.chars) {
@@ -1770,8 +1795,8 @@ const wd = (function() {
 							}
 						});
 						tree.finish();
-						const parser = __Parser(tree.valueOf());
-						const html   = parser.stringHTML;
+						const parser = new __Parser(tree.valueOf());
+						const html   = parser.stringHTML.get();
 						const object = html.querySelectorAll("object");
 						data = [];
 						for (let i = 0; i < object.length; i++) {
@@ -1814,10 +1839,11 @@ const wd = (function() {
 				return this.wdArray;
 			}
 		},
-		/**. ``''string'' arrayWD``: Transforma array de objetos em notação wd.**/
+		/**. ``''object'' arrayWD``: Transforma array de objetos em notação wd.**/
 		arrayWD: {
 			get: function() {
-				if ("arrayWD" in this._saved) return this._saved.arrayWD;
+				if ("arrayWD" in this._saved)
+					return new __Parser(this._saved.arrayWD);
 				let data = null;
 				try {
 					if (this._check.array) {
@@ -1855,10 +1881,11 @@ const wd = (function() {
 				return this.arrayWD;
 			}
 		},
-		/**. ``''string'' fileURL``: Transforma dados em string URL.**/
+		/**. ``''object'' fileURL``: Transforma dados em string URL.**/
 		fileURL: {
 			get: function() {
-				if ("fileURL" in this._saved) return this._saved.fileURL;
+				if ("fileURL" in this._saved)
+					return new __Parser(this._saved.fileURL);
 				let data = null;
 				try {
 					if (this._check.instanceOf("Blob") || this._check.instanceOf("File"))
@@ -1871,7 +1898,8 @@ const wd = (function() {
 		/**. ``''object'' dataBlob``: Transforma dados em objeto Blob.**/
 		dataBlob: {
 			get: function() {
-				if ("dataBlob" in this._saved) return this._saved.dataBlob;
+				if ("dataBlob" in this._saved)
+					return new __Parser(this._saved.dataBlob);
 				let data = null;
 				try {
 					const opt = {type: this._check.chars ? "text/plan" : "application/octet-stream"};
@@ -1881,21 +1909,9 @@ const wd = (function() {
 				return this.dataBlob;
 			}
 		},
-		/**. ``''any'' parser(''string'' attr...)``: Transforma tipo de dados em outro. Os argumentos ``attr`` indicam os mecanismos de transformação, que correspondem aos atributos do objeto.**/
-		parser: {
-			value: function(attr) {
-				attr = String(attr).trim();
-				if (attr in this) {
-					let data = this[attr];
-					for (let i = 1; i < arguments.length; i++) {
-						let parser = new __Parser(data);
-						data = parser.parser(arguments[i]);
-						if (data === null) return data;
-					}
-					return data;
-				}
-				return null;
-			}
+		/**. ``''any'' get()``: Obtem o valor da transformação ou de entrada.**/
+		get: {
+			value: function() {return this._data;}
 		},
 	});
 
@@ -3841,9 +3857,8 @@ const wd = (function() {
 		const node  = check.node ? check.value[0] : document.body;
 		const tag   = node.tagName.toLowerCase();
 		Object.defineProperties(this, {
-			_node:  {value: node}, /* registra o nó */
-			_tag:   {value: tag}, /* registra a tag do nó */
-			_clone: {value: node.cloneNode()}
+			_node:  {value: node},
+			_tag:   {value: tag},
 		});
 	}
 
@@ -3857,7 +3872,7 @@ const wd = (function() {
 		tag: {
 			get: function() {return this._tag;}
 		},
-		/**. ``''boolean'' form``: Informa se o nó é um campo de formulário.**/
+		/**. ``''boolean'' form``: Informa se o nó é campo de formulário.**/
 		form: {
 			get: function() {
 				const tags = {
@@ -3867,19 +3882,19 @@ const wd = (function() {
 				return this.tag in tags;
 			}
 		},
-		/**. ``''string'' ftype``: Retorna o tipo de formulário ou nulo.**/
+		/**. ``''string'' ftype``: Retorna o tipo de formulário ou vazio.**/
 		ftype: {
 			get: function() {
-				if (!this.form) return null;
+				if (!this.form) return "";
 				const tag  = this.tag;
-				const name = [null, "datetime", "date/time"];
+				const name = [null, "datetime"];
 				const attr = String(this.node.getAttribute("type")).toLowerCase();
 				const prop = String(this.node.type).toLowerCase();
 				const tags = {
 					button: {reset: 0, button: 0, submit: 0},
 					input:  {
 						button:   0, reset:  0, submit:   0, image:  0, color: 0, radio:  0,
-						checkbox: 0, date:   0, datetime: 2, month:  0, week:  0, time:   0,
+						checkbox: 0, date:   0, datetime: 1, month:  0, week:  0, time:   0,
 						range:    0, number: 0, file:     0, url:    0, email: 0, tel:    0,
 						text:     0, search: 0, password: 0, hidden: 0, "datetime-local": 1
 					}
@@ -3889,10 +3904,10 @@ const wd = (function() {
 					const data = attr in tags[tag] ? attr : prop;
 					return tags[tag][data] === 0 ? data : name[tags[tag][data]];
 				}
-				return null;
+				return "";
 			}
 		},
-		/**. ``''boolean'' fwork``: Informar se o formulário foi implementado ou falso.**/
+		/**. ``''boolean'' fwork``: Informar se o formulário está implementado ou falso.**/
 		fwork: {
 			get: function() {
 				if (!this.form) return false;
@@ -3904,15 +3919,16 @@ const wd = (function() {
 		/**. ``''boolean'' fmask``: Informa se o formulário possui máscara implementada ou falso.**/
 		fmask: {
 			get: function() {
-				if (!this.form) return false;
-				const invalid = "A1!@#$%¨&*()+";
-				const tags    = {
-					color:  0, date: 0, datetime: 0, month: 0, week: 0, time:   0, range: 0,
-					number: 0, file: 0, url:      0, email: 0, tel:  0, search: 0, "date/time": 0
+				if (!this.form || this.tag !== "input") return false;
+				const types = {
+					color: 0, date:   0, month: 0, week: 0, time:  0, tel:      0,
+					range: 0, number: 0, file:  0, url:  0, email: 0, datetime: 0
 				};
-				if (!(this.ftype in tags)) return false;
-				this._clone.value = invalid;
-				return this._clone.value !== invalid;
+				if (!(this.ftype in types)) return false;
+				const invalid = "A1!@#$%¨&*()+";
+				const clone   = this.node.cloneNode();
+				clone.value   = invalid;
+				return clone.value !== invalid;
 			}
 		},
 		/**. ``''boolean'' fsend``: Informa se o formulário pode ser enviado em requisições ou falso.**/
@@ -3920,20 +3936,177 @@ const wd = (function() {
 			get: function() {
 				if (!this.form) return false;
 				const types = {
-					select:   0, textarea: 0, submit:   0, color:  0, color:    0, radio: 0,
-					checkbox: 0, date:     0, datetime: 0, month:  0, week:     0, time:  0,
-					range:    0, number:   0, file:     0, url:    0, email:    0, tel:   0,
-					text:     0, search:   0, password: 0, hidden: 0, datetime: 0, "date/time": 0
+					select:   0, textarea: 0, submit: 0, color: 0, radio: 0, checkbox: 0,
+					date:     0, datetime: 0, month:  0, week:  0, time:  0, range:    0,
+					number:   0, file:     0, url:    0, email: 0, tel:   0, text:     0,
+					search:   0, password: 0, hidden: 0
 				};
 				return this.ftype in types;
+			}
+		},
+		/**. ``''string'' fname``: Define ou retorna o valor do atributo ``name`` do formulário ou vazio.**/
+		fname: {
+			get: function() {
+				return this.form ? this.node.name.trim() : "";
+			},
+			set: function(x) {
+				if (this.form)
+					this.node.name = __Type(x).nonempty ? String(x).trim() : "";
+			}
+		},
+		/**. ``''boolean'' ferror``: Retorna se o campo de formulário é inválido.**/
+		ferror: {
+			get: function() {
+				const check = __Type(this.node.checkValidity).function;
+				return check && this.node.checkValidity() !== true;
+			}
+		},
+		/**. ``''string'' fvalidity``: Define ou retorna mensagem de restrição do formulário.**/
+		fvalidity	: {
+			get: function() {
+				return this.ferror ? this.node.validationMessage.trim() : "";
+			},
+			set: function(x) {
+				const check = __Type(this.node.setCustomValidity).function;
+				const error = __Type(x).nonempty ? x.trim() : "";
+				if (check) this.node.setCustomValidity(error);
 			}
 		}
 	});
 
+/*-----------------------------------------------------------------------------*/
+	/**###### ``**constructor** ''object'' __FormValues(''node'' input)``
+	Construtor para checar características de campos de formulários HTML (argumento ``node``).**/
+	function __FormValues(input) {
+		if (!(this instanceof __FormValues))	return new __FormValues(input);
+		__FormProperties.call(this, input);
+	}
+
+
+	__FormValues.prototype = Object.create(__FormProperties.prototype, {
+		constructor: {value: __FormValues},
+		/*select, textarea
+					button: {reset: 0, button: 0, submit: 0},
+					input:  {
+						button:   0, reset:  0, submit:   0, image:  0, color: 0, radio:  0,
+						checkbox: 0, date:   0, datetime: 1, month:  0, week:  0, time:   0,
+						range:    0, number: 0, file:     0, url:    0, email: 0, tel:    0,
+						text:     0, search: 0, password: 0, hidden: 0, "datetime-local": 1
+					}*/
+
+
+
+		/**. ``''any'' fvalue(''any'' data)``: Define ou retorna o valor do formulário ou nulo.**/
+		fvalue: {
+			value: function(data) {
+				if (!this.node) return null;
+				const getter = arguments.length === 0 || data === undefined;
+				const check  = __Type(data);
+				const value  = __Type(this.node.value);
+				const type   = this.ftype;
+				const driver = {way: null, type: null};
+				const ways   = {
+					file:     {file: null},
+					finite:   {number: null, range: null},
+					url:      {url: null},
+					check:    {checkbox: null, radio: null},
+					combo:    {select: null},
+					email:    {email: null},
+					datetime: {date: null, time: null, datetime: null},
+					month:    {month: null},
+					week:     {week: null},
+				};
+				for (let i in ways) {
+					if (type in ways[i]) {
+						driver.way  = i;
+						driver.type = ways[i][type];
+						break;
+					}
+				}
+				/*-- checagem de caminhos: se for getter, já retornar --*/
+				if (driver.way === "file") {
+					if (getter)
+						return Array.prototype.slice.call(this.node.files);
+				}
+				else if (driver.way === "finite") {
+					if (getter)
+						return value.finite ? this.node.value : "";
+					if (check.finite || check.null)
+						this.node.value = data;
+				}
+				else if (driver.way === "url") {
+					if (getter) {
+						try      {return new URL(this.node.value).href;}
+						catch(e) {return "";}
+					}
+					if (check.instanceOf("URL") || check.null) {
+						this.node.value = check.null ? data : data.href;
+					} else {
+						try {this.node.value = new URL(data).href;} catch(e) {}
+					}
+				}
+				else if (driver.way === "check") {
+					if (getter)
+						return this.node.checked ? this.node.value : null;
+					if (check.boolean)
+						this.node.checked = check.value;
+					else if (check.null)
+						this.node.checked = !this.node.checked;
+					else
+						this.node.value = String(data);
+				}
+				else if (driver.way === "combo") {
+					const list  = [];
+					const combo = check.array ? data : [data];
+					combo.forEach(function(v,i,a) {
+						a[i] = v === null || v === undefined ? v : String(v);
+					});
+					for (let i = 0; i < this.node.length; i++) {
+						let sel = this.node[i].selected;
+						let val = this.node[i].value;
+						if (sel) list.push(val);
+						if (!getter)
+							this.node[i].selected = combo.indexOf(val) >= 0;
+					}
+					if (getter) return list;
+				}
+				else if (driver.way === "email") {
+
+				}
 
 
 
 
+				else {
+					if (getter) return this.node.value;
+					this.node.value = data;
+				}
+
+
+
+
+				return this.fvalue();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			}
+		}
+
+
+
+
+	});
 
 
 
@@ -4753,8 +4926,8 @@ const wd = (function() {
 					const re = /^\<body.+\<\/body\>$/;
 					if (!re.test(html.trim()))
 						html = "<body>"+html.trim()+"</body>";
-					const parser = __Parser(html);
-					data = parser.stringHTML.body.children;
+					const parser = new __Parser(html);
+					data = parser.stringHTML.get().body.children;
 				} else if (check.instanceOf("XMLDocument")) {
 					xml  = true;
 					data = html.documentElement.children;
@@ -5540,24 +5713,24 @@ const wd = (function() {
 					const parser = new __Parser(this._response.response);
 					const change = {
 						read: {
-							xml:    function() {return parser.stringXML;},
-							html:   function() {return parser.stringHTML;},
-							json:   function() {return parser.stringJSON;},
-							table:  function() {return parser.csvTable;},
-							matrix: function() {return new __Parser(this.table()).tableMatrix;},
-							csv:    function() {return new __Parser(this.matrix()).matrixList;}
+							xml:    function() {return parser.stringXML.get();},
+							html:   function() {return parser.stringHTML.get();},
+							json:   function() {return parser.stringJSON.get();},
+							table:  function() {return parser.csvTable.get();},
+							matrix: function() {return parser.csvTable.tableMatrix.get();},
+							csv:    function() {return parser.csvTable.tableMatrix.matrixList.get();}
 						},
 						send: {
-							url:    function() {return parser.fileURL;},
-							table:  function() {return parser.csvTable;},
-							matrix: function() {return new __Parser(this.table()).tableMatrix;},
-							csv:    function() {return new __Parser(this.matrix()).matrixList;}
+							url:    function() {return parser.fileURL.get();},
+							table:  function() {return parser.csvTable.get();},
+							matrix: function() {return parser.csvTable.tableMatrix.get();},
+							csv:    function() {return parser.csvTable.tableMatrix.matrixList.get();}
 						},
 						fetch: {
-							url:    function() {return parser.fileURL;},
-							table:  function() {return parser.csvTable;},
-							matrix: function() {return new __Parser(this.table()).tableMatrix;},
-							csv:    function() {return new __Parser(this.matrix()).matrixList;}
+							url:    function() {return parser.fileURL.get();},
+							table:  function() {return parser.csvTable.get();},
+							matrix: function() {return parser.csvTable.tableMatrix.get();},
+							csv:    function() {return parser.csvTable.tableMatrix.matrixList.get();}
 						}
 					}
 					if (type in change[caller])
@@ -8355,7 +8528,7 @@ const wd = (function() {
 			type:     {value: function(){return __Type.apply(null, Array.prototype.slice.call(arguments));}},
 			array:    {value: function(){return __Array.apply(null, Array.prototype.slice.call(arguments));}},
 			datetime: {value: function(){return __DateTime.apply(null, Array.prototype.slice.call(arguments));}},
-			fprop:    {value: function(){return __FormProperties.apply(null, Array.prototype.slice.call(arguments));}},
+			fprop:    {value: function(){return __FormValues.apply(null, Array.prototype.slice.call(arguments));}},
 			fnode:    {value: function(){return __FNode.apply(null, Array.prototype.slice.call(arguments));}},
 			node:     {value: function(){return __Node.apply(null, Array.prototype.slice.call(arguments));}},
 			number:   {value: function(){return __Number.apply(null, Array.prototype.slice.call(arguments));}},
@@ -8382,7 +8555,7 @@ const wd = (function() {
 	function data_wdSend(e, event) {
 		if (!("wdSend" in e.dataset)) return;
 		event.preventDefault();
-		const data = __Parser(e.dataset.wdSend).wdArray;
+		const data = new __Parser(e.dataset.wdSend).wdArray.get();
 		if (event.type === "submit") {
 			console.clear();
 			const config  = data[0];
@@ -8430,7 +8603,7 @@ const wd = (function() {
 	function data_wdLoad(e, event) {
 		if (!("wdLoad" in e.dataset)) return;
 		const target  = WD(e);
-		const data    = __Parser(e.dataset.wdLoad).wdArray[0];
+		const data    = new __Parser(e.dataset.wdLoad).wdArray.get()[0];
 		const options = {replace: data._replace, script: data._script, text: data._text};
 		delete e.dataset.wdLoad;
 		wd(data).send(function(x) {
@@ -8445,7 +8618,7 @@ const wd = (function() {
 	function data_wdRepeat(e, event) {
 		if (!("wdRepeat" in e.dataset)) return;
 		const target = WD(e);
-		const data   = __Parser(e.dataset.wdRepeat).wdArray[0];
+		const data   = new __Parser(e.dataset.wdRepeat).wdArray.get()[0];
 		if (data.type !== "css") data.type = "json";
 		delete e.dataset.wdRepeat;
 		wd(data).send(function(x) {
@@ -8462,7 +8635,7 @@ const wd = (function() {
 	|$ ou $$|Seletore CSS para identificar os alvos da ferramenta (se ausente, será o próprio elemento)|Não|**/
 	function data_wdSet(e, event) {
 		if (!("wdSet" in e.dataset)) return;
-		const data = __Parser(e.dataset.wdSet).wdArray;
+		const data = new __Parser(e.dataset.wdSet).wdArray.get();
 		const exec = function(input) {
 			if (!__Type(input).object) return;
 			const query  = input.$$ || input.$ || e;
@@ -8483,7 +8656,7 @@ const wd = (function() {
 			} else {
 				for (let config in group) {
 					if ((/^.+\{.+\}$/).test(group[config]))
-						group[config] = __Parser(group[config]).wdArray[0];
+						group[config] = new __Parser(group[config]).wdArray.get()[0];
 				}
 				exec(group);
 			}
@@ -8515,10 +8688,10 @@ const wd = (function() {
 	|fit|Qualquer|Nome do ajuste da curva (ratio não pode ser ''true'').|Não|**/
 	function data_wdChart(e, event) {
 		if (!("wdChart" in e.dataset)) return;
-		let data = __Parser(e.dataset.wdChart).wdArray[0];
+		let data = new __Parser(e.dataset.wdChart).wdArray.get()[0];
 		delete e.dataset.wdChart;
 		if (!__Type(data.data).array) return;
-		data.data.forEach(function(v,i,a) {a[i] = __Parser(v).wdArray[0];});
+		data.data.forEach(function(v,i,a) {a[i] = new __Parser(v).wdArray.get()[0];});
 
 		/* definindo origem dos dados */
 		let plotter = function(src) {
@@ -8554,7 +8727,7 @@ const wd = (function() {
 	function data_wdDisplay(e, event) {
 		if (!("wdDisplay" in e.dataset)) return;
 		let self = WD(e);
-		let data = __Parser(e.dataset.wdDisplay).wdArray;
+		let data = new __Parser(e.dataset.wdDisplay).wdArray.get();
 		data.forEach(function (v,i,a) {
 			let query  = v.$$ || v.$ || e;
 			let target = WD(query);
@@ -8584,7 +8757,7 @@ const wd = (function() {
 	|$ ou $$|Seletor CSS para indicar o elemento os elementos a aplicar a ação (se ausente, será o próprio elemento)|Não|**/
 	function data_wdCode(e, event) {//FIXME pendente
 		if (!("wdCode" in e.dataset)) return;
-		const data = __Parser(e.dataset.wdCode).wdArray[0];
+		const data = new __Parser(e.dataset.wdCode).wdArray.get()[0];
 		const node = __Node(e);
 		const code = __Code(node.form ? node.value() : e.innerText);
 		let   html = node.form ? document.createElement("PRE") : e;
@@ -8643,7 +8816,7 @@ const wd = (function() {
 	Função vinculada ao atributo HTML ``data-wd-click`` cujo objetivo é efetuar um autoclique ao elemento. Possui valor simples e opcional. Caso um número inteiro maior que zero seja informado, o clique irá ser executado a cada milisegundos conforme valor definido.**/
 	function data_wdClick(e, event) { //FIXME pendente
 		if (!("wdClick" in e.dataset)) return;
-		let data = __Parser(e.dataset.wdClick).wdArray;
+		let data = new __Parser(e.dataset.wdClick).wdArray.get();
 		let info = __Type(data);
 		let time = info.finite ? Math.trunc(info.value) : null;
 		if ("click" in e) e.click();
@@ -8663,7 +8836,7 @@ const wd = (function() {
 	function data_wdFilter(e, event) {
 		if (!("wdFilter" in e.dataset)) return;
 		let node = __Node(e);
-		let data = __Parser(e.dataset.wdFilter).wdArray;
+		let data = new __Parser(e.dataset.wdFilter).wdArray.get();
 		data.forEach(function (v,i,a) {
 			const query  = v.$$ || v.$ || undefined;
 			if (query === undefined) return;
@@ -8709,7 +8882,7 @@ const wd = (function() {
 	function data_wdDevice(e, event) {
 		if (!("wdDevice" in e.dataset)) return;
 		let query  = WD(e);
-		let data   = __Parser(e.dataset.wdDevice).wdArray[0];
+		let data   = new __Parser(e.dataset.wdDevice).wdArray.get()[0];
 		let device = __DEVICECONTROLLER.device;
 		let types  = { /* 0: elimina css, 1: adiciona css */
 			desktop: {phone: 0, tablet: 0, mobile: 0, desktop: 1},
@@ -8736,7 +8909,7 @@ const wd = (function() {
 /*----------------------------------------------------------------------------*/
 	function data_wdEdit(e, event) { /*FIXME pendente edita texto: data-wd-edit=comando{especificação}... */
 		if (!("execCommand" in document) || !("wdEdit" in e.dataset)) return;
-		let data = __Parser(e.dataset.wdEdit).wdArray[0];
+		let data = new __Parser(e.dataset.wdEdit).wdArray.get()[0];
 		for (let cmd in data) {
 			let arg = data[cmd].trim() === "" ? undefined : data[cmd].trim();
 			switch(cmd) {
@@ -8774,7 +8947,7 @@ const wd = (function() {
 	A função ''valid'' será chamada nos carregamento de conteúdo e definição de atributo. A função receberá o elemento e deverá retornar o valor da mensagem de erro ou uma string em branco se não houver. No evento ''input'', ''valid'' só será executada se ''output'' tiver sido chamada.**/
 	function data_wdValue(e, event) {
 		if (!("wdValue" in e.dataset)) return;
-		const data   = __Parser(e.dataset.wdValue).wdArray[0];
+		const data   = new __Parser(e.dataset.wdValue).wdArray.get()[0];
 		const events = ["wdreload", "wddataset", "focusout", "input"];
 		if (!__Type(data).object || events.indexOf(event.type) < 0) return;
 		const node   = __Node(e);
@@ -8868,7 +9041,7 @@ const wd = (function() {
 	. ''drop'': Define o local para queda de arquivos externos. O atributo deve ser aplicado ao elemento que receberá a queda. Assim como o tipo ''drag'', possui os atributos ''effect'' e ''action''. A função definida e ''action'' receberá dois atributos, os arquivos arrastados (FileList) e o elemento da queda (''drop'').**/
 	function data_wdMove(e, event) {
 		const wdMove = "wdMove" in e.dataset;
-		const data   = wdMove ? __Parser(e.dataset.wdMove).wdArray[0] : {};
+		const data   = wdMove ? __Parser(e.dataset.wdMove).wdArray.get()[0] : {};
 		const query  = data.$$ || data.$ || null;
 		const check  = __Type(query);
 		const node   = __Node(e);
@@ -8923,7 +9096,7 @@ const wd = (function() {
 					delete x.dataset.wdDataTransfer;
 				} else if (event.type === "mousemove") {
 					const target = __Node(x);
-					const box    = __Parser(x.dataset.wdDataTransfer).wdArray[0];
+					const box    = new __Parser(x.dataset.wdDataTransfer).wdArray.get()[0];
 					const dx     = event.pageX - box.pageX;
 					const dy     = event.pageY - box.pageY;
 					box.left    += dx;
@@ -9019,7 +9192,7 @@ const wd = (function() {
 				/*-- Redimensionando --*/
 				if (event.type === "mousemove") {
 					const node   = __Node(x);
-					const box    = __Parser(x.dataset.wdDataTransfer).wdArray[0];
+					const box    = new __Parser(x.dataset.wdDataTransfer).wdArray.get()[0];
 					const cursor = x.dataset.wdMoveAction.replace("resize-", "");
 					const dx     = event.pageX - box.pageX;
 					const dy     = event.pageY - box.pageY;
@@ -9093,7 +9266,7 @@ const wd = (function() {
 							if (drop === null) return;
 						}
 						const drag   = document.querySelector("[data-wd-move-action=drag]");
-						const attr   = __Parser(ev.dataTransfer.getData("text")).wdArray[0];
+						const attr   = new __Parser(ev.dataTransfer.getData("text")).wdArray.get()[0];
 						const effect = event.dataTransfer.dropEffect;
 						if (!__Type(attr.action).function) return;
 
@@ -9136,7 +9309,7 @@ const wd = (function() {
 				drop = drop.parentElement;
 			if (drop === null) return;
 
-			const attr = __Parser(drop.dataset.wdMove).wdArray[0];
+			const attr = new __Parser(drop.dataset.wdMove).wdArray.get()[0];
 			if (!__Type(attr.action).function) return;
 
 			if (event.type === "drop") {
@@ -9181,7 +9354,7 @@ const wd = (function() {
 			});
 
 		if (!("wdMenu" in e.dataset)) return;
-		const data  = __Parser(e.dataset.wdMenu).wdArray[0];
+		const data  = new __Parser(e.dataset.wdMenu).wdArray.get()[0];
 		const items = __Type(data.items).function ? data.items(e) : null;
 		const enter = event.type === "mouseover" && data.event === "over";
 		const click = !enter && event.type === "click";
