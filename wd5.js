@@ -564,7 +564,7 @@ const wd = (function() {
 			get MMMMYYYY() {return __LANG.monthRegExp.MMMMYYYY;},
 		},
 		week: {
-			YYYYWW: /^([-+]?\d{3}\d+)\-W(0[1-9]|[1-4]\d|5[0-4])?$/i,
+			YYYYWW: /^([-+]?\d{3}\d+)\-W(0[1-9]|[1-4]\d|5[0-4])$/i,
 			WWYYYY: /^(0[1-9]|[1-4]\d|5[0-4])\,\ ([-+]?\d{3}\d+)$/,
 		},
 		email: {
@@ -690,6 +690,10 @@ const wd = (function() {
 				return (this.chars && __LANG.test(this._input));
 			}
 		},
+
+
+
+		//TODO acabar com isso aqui
 		/**. ``''boolean'' email``: Checa se o valor é uma string no formato de e-mail.**/
 		email: {
 			get: function() {
@@ -727,6 +731,12 @@ const wd = (function() {
 				return this._test.group === "week";
 			}
 		},
+		//TODO termina aqui
+
+
+
+
+
 		/**. ``''boolean'' string``: Checa se o valor é uma string diferente de número ou data/tempo.**/
 		string: {
 			get: function() {
@@ -860,23 +870,26 @@ const wd = (function() {
 			get: function() {
 				if (this.type !== null) return this.type === "datetime";
 				if (this.instanceOf("Date")) {
-					let input = this._input;
-					let number = {
+					const input = this._input;
+					const data  = {
 						D: input.getDate(),  M: input.getMonth()+1, Y: input.getFullYear(),
 						h: input.getHours(), m: input.getMinutes(), s: input.getSeconds(),
 						l: input.getMilliseconds()
 					};
-					let text = {};
-					for (let i in number) {
-						let value = number[i];
-						switch(i) {
-							case "Y": text[i] = __Type.zeros(value, 4); break;
-							case "l": text[i] = __Type.zeros(value, 3).substring(0,3); break;
-							default:  text[i] = __Type.zeros(value, 2).substring(0,2);
-						}
+					let v, repeat, string;
+					for (let i in data) {
+						v = Math.abs(data[i]);
+						if (i === "Y")
+							repeat = (v < 10 ? 3 : (v < 100 ? 2 : (v < 1000 ? 1 : 0)));
+						else if (i === "l")
+							repeat = (v < 10 ? 2 : (v < 100 ? 1 : 0));
+						else
+							repeat = (v < 10 ? 1 : 0);
+						string  = ("0").repeat(repeat) + String(v);
+						data[i] = (data[i] < 0 ? "-" : "") + string;
 					}
-					let time = [text.h, text.m, text.s+"."+text.l].join(":");
-					let date = [text.Y, text.M, text.D].join("-");
+					const time = [data.h, data.m, data.s+"."+data.l].join(":");
+					const date = [data.Y, data.M, data.D].join("-");
 					this._type     = "datetime";
 					this._value    = date+"T"+time;
 					this._valueOf  = this._value;
@@ -885,13 +898,12 @@ const wd = (function() {
 				}
 				/*-- Data/Tempo em formato de string --*/
 				if (!this.chars) return false;
-				let dt = this._input.trim();
-				let re = /(\d\d)(T|\,\ |\ )(\d?\d\:)/i;
+				let   dt = this._input.trim();
+				const re = /(\d\d)(T|\,\ |\ )(\d?\d\:)/i;
 				if (!re.test(dt)) return false;
 				dt = dt.replace(re, "$1T$3").split("T");
-				if (dt.length !== 2) return false;
-				let date = __Type(dt[0]);
-				let time = __Type(dt[1]);
+				const date = __Type(dt[0]);
+				const time = __Type(dt[1]);
 				if (!date.date || !time.time) return false;
 				this._type     = "datetime";
 				this._value    = date.value+"T"+time.value;
@@ -905,40 +917,45 @@ const wd = (function() {
 			get: function() {
 				if (this.type !== null) return this.type === "date";
 				if (!this.chars || this._test.group !== "date") return false;
-				let value = this._test.value;
-				let date = {};
-				let type = {
-					YYYYMMDD:  {split: "-", ymd: [0,1,2]},
-					DDMMYYYY:  {split: "/", ymd: [2,1,0]},
-					MMDDYYYY:  {split: ".", ymd: [2,0,1]},
-					DMMMMYYYY: {replace: this._test.regexp, ymd: ["$3", "$2", "$1"]},
-					MMMMDYYYY: {replace: this._test.regexp, ymd: ["$3", "$1", "$2"]}
+				const type = {
+					YYYYMMDD:  {y: "$1", m: "$2", d: "$3", MMMM: false},
+					DDMMYYYY:  {y: "$3", m: "$2", d: "$1", MMMM: false},
+					MMDDYYYY:  {y: "$3", m: "$1", d: "$2", MMMM: false},
+					DMMMMYYYY: {y: "$3", m: "$2", d: "$1", MMMM: true},
+					MMMMDYYYY: {y: "$3", m: "$1", d: "$2", MMMM: true}
 				}
-				let cfg = type[this._test.subgroup];
-				if ("split" in cfg) {
-					let data = value.split(cfg.split);
-					date.y = data[cfg.ymd[0]];
-					date.m = data[cfg.ymd[1]];
-					date.d = data[cfg.ymd[2]];
-				} else if ("replace" in cfg) {
-					date.y = value.replace(cfg.replace, cfg.ymd[0]);
-					date.m = value.replace(cfg.replace, cfg.ymd[1]);
-					date.d = value.replace(cfg.replace, cfg.ymd[2]);
-					if (date.m !== date.m.trim()) return false;
-					date.m = __LANG.month(date.m);
-					if (date.m < 1) return false;
-				} else {return false;}
-
+				if (!(this._test.subgroup in type)) return false;
+				const cfg  = type[this._test.subgroup];
+				const date = {
+					y: this._test.value.replace(this._test.regexp, cfg.y),
+					m: this._test.value.replace(this._test.regexp, cfg.m),
+					d: this._test.value.replace(this._test.regexp, cfg.d)
+				};
+				/* caso o mês seja pelo nome, capturar índice do mês */
+				if (cfg.MMMM) {
+					const MMMM = __LANG.searchByName("months", date.m);
+					if (MMMM === null) return false;
+					date.m = MMMM.index;
+				}
+				for (let i in date) date[i] = Number(date[i]);
 				/* checando dados da data */
-				let d = Number(date.d);
-				let m = Number(date.m);
-				let y = Number(date.y);
-				/* checando dia */
-				let feb  = (y%400 === 0 || (y%4 === 0 && y%100 !== 0)) ?  29 : 28;
-				let days = [31, feb, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-				if (d > days[m-1]) return false;
+				const y    = date.y;
+				const feb  = (y%400 === 0 || (y%4 === 0 && y%100 !== 0)) ? 29 : 28;
+				const days = [0, 31, feb, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+				if (date.d > days[date.m]) return false;
+				/* acertando o formato */
+				let v, repeat, string;
+				for (let i in date) {
+					v = Math.abs(date[i]);
+					if (i === "y")
+						repeat = (v < 10 ? 3 : (v < 100 ? 2 : (v < 1000 ? 1 : 0)));
+					else
+						repeat = (v < 10 ? 1 : 0);
+					string  = ("0").repeat(repeat) + String(v);
+					date[i] = (date[i] < 0 ? "-" : "") + string;
+				}
 				this._type     = "date";
-				this._value    = [__Type.zeros(y, 4), __Type.zeros(m, 2), __Type.zeros(d, 2)].join("-");
+				this._value    = [date.y, date.m, date.d].join("-");
 				this._valueOf  = this._value;
 				this._toString = this._value;
 				return true;
@@ -1019,8 +1036,16 @@ const wd = (function() {
 					time.h = time.h === 12 ? 12 : ((12 + time.h ) % 24);
 				else
 					time.h = time.h % 24;
-				for (let i in time)
-					time[i] = __Type.zeros(time[i], (i === "l" ? 3 : 2));
+				let v, repeat, string;
+				for (let i in time) {
+					v = time[i];
+					if (i === "l")
+						repeat = (v < 10 ? 2 : (v < 100 ? 1 : 0));
+					else
+						repeat = (v < 10 ? 1 : 0);
+					string  = ("0").repeat(repeat) + String(v);
+					time[i] = (time[i] < 0 ? "-" : "") + string;
+				}
 				this._type     = "time";
 				this._value    = [time.h, time.m, time.s+"."+time.l].join(":");
 				this._valueOf  = this._value;
@@ -2845,49 +2870,82 @@ const wd = (function() {
 	- Caso contrário, assumirá o valor de data e tempo atuais.**/
 	function __DateTime(input) {
 		if (!(this instanceof __DateTime)) return new __DateTime(input);
-		let check = __Type(input);
-		let type  = check.type;
-		let datetime, date, time;
-		switch(type) {
-			case "time":     {datetime = "0000-01-01T"+check.value; break;}
-			case "date":     {datetime = check.value+"T00:00:00";   break;}
-			case "datetime": {datetime = check.value;               break;}
-			case "number":   {
-				if (check.finite) {
-					let dt    = __DateTime("0000-01-01T00:00:00");
-					dt.second = check.value;
-					datetime  = dt.toString();
-					break;
-				}
-			}
-			case "object": {
-				let keys = {year: 0, month: 1, day: 1, hour: 0, minute: 0, second: 0};
-				let dt   = __DateTime(0);
-				for (let i in keys) {
-					let test = __Type(i in input ? input[i] : keys[i]);
-					dt[i]    = test.finite ? test.value : keys[i];
-				}
-				datetime = dt.toString();
-				break;
-			}
-			default: {
-				datetime = __Type(new Date()).value;
-			}
+		const check = __Type(input);
+		const test  = check._test;
+		let datetime = __Type(new Date()).value;
+		if (check.time) {
+			datetime = "0000-01-01T" + check.value;
 		}
-		datetime = datetime.split("T");
-		date     = datetime[0];
-		time     = datetime[1];
+		else if (check.date) {
+			datetime = check.value + "T00:00:00.000"
+		}
+		else if (check.datetime) {
+			datetime = check.value + "T00:00:00.000"
+		}
+		else if (check.finite) {
+			const dt  = new __DateTime("0000-01-01");
+			dt.second = check.value;
+			datetime  = dt.toString();
+		}
+		else if (check.object) {
+			const keys = {year: 0, month: 1, day: 1, hour: 0, minute: 0, second: 0};
+			const dt   = new __DateTime("0000-01-01");
+			for (let i in keys) {
+				let test = __Type(i in input ? input[i] : keys[i]);
+				dt[i]    = test.finite ? test.value : keys[i];
+			}
+			datetime = dt.toString();
+		}
+		else if (test.group === "month") {
+			const config = {
+				MMYYYY:   {m: "$1", y: "$2"},
+				YYYYMM:   {m: "$2", y: "$1"},
+				MMMMYYYY: {m: "$1", y: "$2"}
+			};
+			const type = test.subgroup;
+			let month = test.value.replace(test.regexp, config[type].m);
+			let year  = test.value.replace(test.regexp, config[type].y);
+			if (type === "MMMMYYYY") {
+				const search = __LANG.searchByName("months", month);
+				month = search === null ? null : search.value;
+			}
+			const date = [year, month, "01"];
+			datetime = date[1] === null ? datetime : (date.join("-") + "T00:00:00.000");
+		}
+		else if (test.group === "week") {
+			const config = {
+				WWYYYY:   {w: "$1", y: "$2"},
+				YYYYWW:   {w: "$2", y: "$1"},
+			};
+			const type = test.subgroup;
+			const week = Number(test.value.replace(test.regexp, config[type].w));
+			const year = test.value.replace(test.regexp, config[type].y);
+			const dt   = new __DateTime(year + "-01-01");
+			while (dt.week !== week) dt.day += 7;
+			const delta = dt.weekDay - 1;
+			//TODO e se week = 54 num ano de maxweek = 53? dá um looping demorado
+
+			dt.day = (dt.day - delta) < 1 ? 1 : (dt.day - delta);
+			datetime = dt.toString();
+		}
+
+
+		datetime   = datetime.split("T");
+		const date = datetime[0];
+		const time = datetime[1];
 
 		Object.defineProperties(this, {
+
 			_Y: {value: Number(date.slice(0,-6)),  writable: true}, /* ano */
 			_M: {value: Number(date.slice(-5,-3)), writable: true}, /* mês */
 			_D: {value: Number(date.slice(-2)),    writable: true}, /* dia */
 			_h: {value: Number(time.slice(0,2)),   writable: true}, /* hora */
 			_m: {value: Number(time.slice(3,5)),   writable: true}, /* minutos */
 			_s: {value: Number(time.slice(6)),     writable: true}, /* segundos */
-			_change: {value: null, writable: true}, /* disparador do evento alteração */
-			_print:  {value: null, writable: true}, /* retrato dos parâmetros */
-			_field:  {value: null, writable: true}, /* parâmetro que chamou o disparador */
+			_input:  {value: test.group},            /* tipo de entrada */
+			_change: {value: null, writable: true},  /* disparador do evento alteração */
+			_print:  {value: null, writable: true},  /* retrato dos parâmetros */
+			_field:  {value: null, writable: true},  /* parâmetro que chamou o disparador */
 		});
 	}
 
