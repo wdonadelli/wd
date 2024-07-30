@@ -327,6 +327,15 @@ const wd = (function() {
 			}
 			return null;
 		},
+		/**. ``''object'' searchByIndex(''string'' type, ''integer'' index)``: Retorna o objeto com as informações sobre o mês ou o dia da semana (``type``) em buca pelo índice (``index``).**/
+		searchByIndex: function(type, index) {
+			const check = __Type(index);
+			const data  = this[type];
+			if (!__Type(index).integer) return null;
+			for (let v of data)
+				if (check.value === v.index) return v;
+			return null;
+		},
 		/**. ``''object'' monthRegExp: Retorna um objeto contendo as expressões regulares para os formatos DMMMMYYYY, MMMMDYYYY e MMMMYYYY.**/
 		get monthRegExp() {
 			if (this._langREDates === this.main) return this._reDates;
@@ -1219,7 +1228,7 @@ const wd = (function() {
 				const list = [];
 				if (name.length !== 0) {
 					for (let i of this.entries())
-						if (name === i.name) list.push(i.value);
+						if (name === i[0]) list.push(i[1]);
 				}
 				return list;
 			}
@@ -1230,7 +1239,7 @@ const wd = (function() {
 				name = String(name).replace(/\[\]$/, "").trim();
 				if (name.length !== 0) {
 					for (let i of this.entries())
-						if (name === i.name) return true;
+						if (name === i[0]) return true;
 				}
 				return false;
 			}
@@ -1248,8 +1257,8 @@ const wd = (function() {
 			get: function() {
 				const data = {};
 				for (let v of this.entries()) {
-					let name  = v.name;
-					let value = v.value;
+					let name  = v[0];
+					let value = v[1];
 					let check = __Type(value);
 					/*-- definição da propriedade, se for objeto analisar cada item adiante --*/
 					if (!(name in data) && !check.object) data[name] = [];
@@ -1356,30 +1365,32 @@ const wd = (function() {
 				return data.join("&");
 			}
 		},
+		[Symbol.iterator]: {
+			value: function*() {for (let v of this.entries()) yield v;}
+		},
 		/**. ``''object'' entries()``: Retorna um objeto Generator para looping ''for of'' das entradas.**/
 		entries: {
 			value: function*() {
 				for (let v of this._data)
-					if (v !== null) yield {name: v.name, value: v.value};
+					if (v !== null) yield [v.name, v.value];
 			}
 		},
 		/**. ``''object'' keys()``: Retorna um objeto Generator para looping ''for of'' das chaves.**/
 		keys: {
-			value: function*() {
-				for (let i of this.entries()) yield i.name;
-			}
+			value: function*() {for (let v of this.entries()) yield v[0];}
 		},
 		/**. ``''object'' values()``: Retorna um objeto Generator para looping ''for of'' dos valores.**/
 		values: {
-			value: function*() {
-				for (let i of this.entries()) yield i.value;
-			}
+			value: function*() {for (let v of this.entries()) yield v[1];}
 		},
-		/**. ``''self'' forEach(''function'' caller)``: Chama ``caller`` para cada item, repassando o valor e nome, respectivamente, como argumentos.**/
+		/**. ``''self'' forEach(''function'' caller)``: Chama ``caller`` para cada item, repassando o valor e nome, e um objeto com o par nome/valor, respectivamente, como argumentos.**/
 		forEach: {
 			value: function(caller) {
 				if (__Type(caller).function)
-					for (let i of this.entries()) caller(i.name, i.value);
+					for (let i of this.entries()) {
+						let data = {name: i[0], value: i[1]};
+						caller(i[1], i[0], data);
+					}
 				return this;
 			}
 		},
@@ -1389,7 +1400,7 @@ const wd = (function() {
 		},
 		/**. ``''string'' toString()``: Retorna o mesmo produto da propriedade ``toStringHeaders``.**/
 		toString: {
-			value: function() {return this.toStringHeaders}
+			value: function() {return this.toStringHeaders;}
 		},
 	});
 
@@ -2917,11 +2928,11 @@ const wd = (function() {
 				WWYYYY:   {w: "$1", y: "$2"},
 				YYYYWW:   {w: "$2", y: "$1"},
 			};
-			const type = test.subgroup;
-			const week = Number(test.value.replace(test.regexp, config[type].w));
-			const year = test.value.replace(test.regexp, config[type].y);
-			const dt   = new __DateTime(year + "-01-01");
-			while (dt.week !== week) dt.day += 7;
+			const type  = test.subgroup;
+			const week  = Number(test.value.replace(test.regexp, config[type].w));
+			const year  = test.value.replace(test.regexp, config[type].y);
+			const dt    = new __DateTime(year + "-01-01");
+			dt.day     += 7 * (week - 1);
 			const delta = dt.weekDay - 1;
 			//TODO e se week = 54 num ano de maxweek = 53? dá um looping demorado
 
@@ -2951,8 +2962,7 @@ const wd = (function() {
 
 	Object.defineProperties(__DateTime.prototype, {
 		constructor: {value: __DateTime},
-		/**. ``''void'' _trigger(''string'' field)``: Método que aciona o disparador nas mudanças dos parâmetros de data e tempo. O atributo ``field`` identifica o parâmetro que solicita a demanda.
-		. O disparador receberá como argumento um __objeto__ com as seguintes chaves:
+		/**. ``''void'' _trigger(''string'' field)``: Método que aciona o disparador nas mudanças dos parâmetros de data e tempo. O atributo ``field`` identifica o parâmetro que solicita a demanda. O disparador receberá como argumento um __objeto__ com as seguintes chaves:
 		.. ``''object'' target``: O objeto ``__DateTime``.
 		.. ``''string'' field``: Nome do parâmetro alterado.
 		.. ``''number'' old``: Valor anterior do campo.
@@ -2983,19 +2993,17 @@ const wd = (function() {
 				return (y%400 === 0 || (y%4 === 0 && y%100 !== 0));
 			}
 		},
-		/**. ``''integer'' _maxDay(''integer'' m=month, ''integer'' y=year)``: Método que retorna a quantidade de dias do mês.
-		. Os atributos ``m`` e ``y`` correspondem ao mês e ao ano e que, se indefinidos, assumirão o mês o e ano registrados pelo objeto, respectivamente.**/
+		/**. ``''integer'' _maxDay(''integer'' m=month, ''integer'' y=year)``: Método que retorna a quantidade de dias do mês. Os atributos ``m`` e ``y`` correspondem ao mês e ao ano e que, se indefinidos, assumirão o mês o e ano registrados pelo objeto, respectivamente.**/
 		_maxDay: {
 			value: function(m, y) {
 				if (m === undefined) m = this.month;
 				if (y === undefined) y = this.year;
-				let fev = this._leap(y) ? 29 : 28;
-				let max = [31, fev, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+				const fev = this._leap(y) ? 29 : 28;
+				const max = [31, fev, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 				return max[m-1];
 			}
 		},
-		/**. ``''integer'' _weekDay(''integer'' x=dateOf())``: Retorna o dia da semana (1-7), de domingo à sábado, tendo como referência o dia desde 0000-01-01.
-		. O atributo opcional ``x`` define o valor de referência do dia a ser analisado que, se indefinido, assumirá o valor do método ``dateOf``.**/
+		/**. ``''integer'' _weekDay(''integer'' x=dateOf())``: Retorna o dia da semana (1-7), de domingo à sábado, tendo como referência o dia desde 0000-01-01. O atributo opcional ``x`` define o valor de referência do dia a ser analisado que, se indefinido, assumirá o valor do método ``dateOf``.**/
 		_weekDay: {
 			value: function(x) {
 				/* dias positivos: +0000-01-01, dia 1, é sábado (7) (crescente) */
@@ -3009,12 +3017,12 @@ const wd = (function() {
 		year: {
 			get: function() {return this._Y;},
 			set: function(x) {
-				let check = __Type(x);
+				const check = __Type(x);
 				if (!check.finite || check.value === this.year) return;
 				this._trigger("year");
-				let val = __Number(check.value);
-				let int = val.int;
-				let dec = Math.abs(val.dec);
+				const val = __Number(check.value);
+				const int = val.int;
+				const dec = Math.abs(val.dec);
 				this._Y = int;
 				if (dec !== 0) this.month = 12*dec;
 				return this._trigger("year");
@@ -3024,12 +3032,12 @@ const wd = (function() {
 		month: {
 			get: function() {return this._M;},
 			set: function(x) {
-				let check = __Type(x);
+				const check = __Type(x);
 				if (!check.finite || check.value === this.month) return;
 				this._trigger("month");
-				let val    = __Number(check.value);
-				let int    = val.int;
-				let dec    = Math.abs(val.dec);
+				const val  = __Number(check.value);
+				const int  = val.int;
+				const dec  = Math.abs(val.dec);
 				this._M    = int%12 <= 0 ? (int%12+12) : (int%12);
 				this.year += Math.trunc(int < 1 ? (int-12)/12 : (int-1)/12);
 				if (dec !== 0) this.day = dec*this._maxDay();
@@ -3040,18 +3048,18 @@ const wd = (function() {
 		day: {
 			get: function() {return this._D > this._maxDay() ? this._maxDay() : this._D;},
 			set: function(x) {
-				let check = __Type(x);
+				const check = __Type(x);
 				if (!check.finite || check.value === this.day) return;
 				this._trigger("day");
-				let val     = __Number(check.value);
-				let int     = val.int;
-				let dec     = Math.abs(val.dec);
+				const val = __Number(check.value);
+				const int = val.int;
+				const dec = Math.abs(val.dec);
 				if (int >= 1 && int <= this._maxDay()) {
 					this._D = int;
 				} else {
-					this._D     = int < 1 ? 1 : this._maxDay();
-					let delta   = int - this._D;
-					let future  = this.dateOf() + delta;
+					this._D      = int < 1 ? 1 : this._maxDay();
+					const delta  = int - this._D;
+					const future = this.dateOf() + delta;
 					/* aproximação anual */
 					this.year  += Math.trunc((future - this.dateOf())/365);
 					/* aproximação mensal */
@@ -3076,14 +3084,14 @@ const wd = (function() {
 		hour: {
 			get: function() {return this._h;},
 			set: function(x) {
-				let check = __Type(x);
+				const check = __Type(x);
 				if (!check.finite || check.value === this.hour) return;
 				this._trigger("hour");
-				let val     = __Number(check.value);
-				let int     = val.int;
-				let dec     = Math.abs(val.dec);
-				this._h     = (int%24 < 0 ? 24 : 0) + int%24;
-				this.day   += Math.trunc(int/24) + (val < 0 && int%24 !== 0 ? -1 : 0);
+				const val = __Number(check.value);
+				const int = val.int;
+				const dec = Math.abs(val.dec);
+				this._h   = (int%24 < 0 ? 24 : 0) + int%24;
+				this.day += Math.trunc(int/24) + (val < 0 && int%24 !== 0 ? -1 : 0);
 				if (dec !== 0) this.minute = 60*dec;
 				return this._trigger("hour");
 			}
@@ -3092,12 +3100,12 @@ const wd = (function() {
 		minute: {
 			get: function() {return this._m;},
 			set: function(x) {
-				let check = __Type(x);
+				const check = __Type(x);
 				if (!check.finite || check.value === this.minute) return;
 				this._trigger("minute");
-				let val    = __Number(check.value);
-				let int    = val.int;
-				let dec    = Math.abs(val.dec);
+				const val  = __Number(check.value);
+				const int  = val.int;
+				const dec  = Math.abs(val.dec);
 				this._m    = (int%60 < 0 ? 60 : 0) + int%60;
 				this.hour += Math.trunc(int/60) + (val < 0 && int%60 !== 0 ? -1 : 0);
 				if (dec !== 0) this.second = 60*dec;
@@ -3108,12 +3116,12 @@ const wd = (function() {
 		second: {
 			get: function() {return this._s;},
 			set: function(x) {
-				let check = __Type(x);
+				const check = __Type(x);
 				if (!check.finite || check.value === this.second) return;
 				this._trigger("second");
-				let val      = __Number(check.value);
-				let int      = val.int;
-				let dec      = Math.abs(val.dec);
+				const val    = __Number(check.value);
+				const int    = val.int;
+				const dec    = Math.abs(val.dec);
 				this._s      = (int%60 < 0 ? 60 : 0) + int%60 + dec;
 				this.minute += Math.trunc(int/60) + (val < 0 && int%60 !== 0 ? -1 : 0);
 				return this._trigger("second");
@@ -3124,8 +3132,8 @@ const wd = (function() {
 		/**. ``''integer'' dayYear``: Informa o dia do ano (1-366).**/
 		dayYear: {
 			get: function() {
-				let days = [0,31,59,90,120,151,181,212,243,273,304,334,365];
-				let leap = this.leap && this.month > 2 ? 1 : 0;
+				const days = [0,31,59,90,120,151,181,212,243,273,304,334,365];
+				const leap = this.leap && this.month > 2 ? 1 : 0;
 				return days[this.month-1] + leap + this.day;
 			}
 		},
@@ -3136,10 +3144,10 @@ const wd = (function() {
 		/**. ``''integer'' week``: Retorna a semana do ano (1-54) a partir de seu primeiro dia.**/
 		week: {
 			get: function() {
-				let start = this._weekDay(this.dateOf() - this.dayYear + 1);
-				let today = this.weekDay;
-				let day0  = 1 - (start - 1);
-				let dayn  = this.dayYear - (today - 1);
+				const start = this._weekDay(this.dateOf() - this.dayYear + 1);
+				const today = this.weekDay;
+				const day0  = 1 - (start - 1);
+				const dayn  = this.dayYear - (today - 1);
 				return 1+(dayn - day0)/7;
 			}
 		},
@@ -3150,11 +3158,11 @@ const wd = (function() {
 		/**. ``''integer'' nonWorkingDays``: Retorna a quantidade de dias não úteis atá a data no ano.**/
 		nonWorkingDays: {
 			get: function() {
-				let start = this._weekDay(this.dateOf() - this.dayYear + 1);
-				let today = this.weekDay;
-				let weeks = this.week;
-				let day1  = weeks - (start === 1 ? 0 : 1);
-				let day7  = weeks - (today === 7 ? 0 : 1);
+				const start = this._weekDay(this.dateOf() - this.dayYear + 1);
+				const today = this.weekDay;
+				const weeks = this.week;
+				const day1  = weeks - (start === 1 ? 0 : 1);
+				const day7  = weeks - (today === 7 ? 0 : 1);
 				return day1 + day7;
 			}
 		},
@@ -3168,58 +3176,44 @@ const wd = (function() {
 				return this.dayYear - this.nonWorkingDays;
 			}
 		},
-		/**. ``''string'' Y``: Retorna o ano.**/
-		Y:    {get: function() {return __Type.zeros(this.year, 1);}},
-		/**. ``''string'' YY``: Retorna o ano com os dois últimos dígitos.**/
-		YY:   {get: function() {return this.YYYY.replace(/\d+(\d\d)$/, "$1");}},
-		/**. ``''string'' YYYY``: Retorna o ano com pelo menos quatro dígitos.**/
-		YYYY: {get: function() {return __Type.zeros(this.year, 4);}},
-		/**. ``''string'' M``: Retorna o mês.**/
-		M:    {get: function() {return __Type.zeros(this.month, 1);}},
-		/**. ``''string'' MM``: Retorna o mês com dois dígitos.**/
-		MM:   {get: function() {return __Type.zeros(this.month, 2);}},
-		/**. ``''string'' MMM``: Retorna o nome abreviado do mês.**/
-		MMM:  {get: function() {return __LANG.MMM(this.month);}},
-		/**. ``''string'' MMMM``: Retorna o nome do mês.**/
-		MMMM: {get: function() {return __LANG.MMMM(this.month);}},
-		/**. ``''string'' D``: Retorna o dia.**/
-		D:    {get: function() {return __Type.zeros(this.day, 1);}},
-		/**. ``''string'' DD``: Retorna o dia com dois dígitos.**/
-		DD:   {get: function() {return __Type.zeros(this.day, 2);}},
-		/**. ``''string'' DDD``: Retorna o dia da semana abreviado.**/
-		DDD:  {get: function() {return __LANG.DDD(this.weekDay);}},
-		/**. ``''string'' DDDD``: Retorna o dia da semana.**/
-		DDDD: {get: function() {return __LANG.DDDD(this.weekDay);}},
-		/**. ``''string'' W``: Retorna a semana do ano (atributo ``week``).**/
-		W:   {get: function() {return __Type.zeros(this.week, 1);}},
-		/**. ``''string'' WW``: Retorna a semana do ano com dois dígitos (atributo ``week``).**/
-		WW:   {get: function() {return __Type.zeros(this.week, 2);}},
-		/**. ``''string'' h``: Retorna a hora.**/
-		h:    {get: function() {return __Type.zeros(this.hour, 1);}},
-		/**. ``''string'' hh``: Retorna o a hora com dois dígitos.**/
-		hh:   {get: function() {return __Type.zeros(this.hour, 2);}},
-		/**. ``''string'' m``: Retorna o minuto.**/
-		m:    {get: function() {return __Type.zeros(this.minute, 1);}},
-		/**. ``''string'' mm``: Retorna o minuto com dois dígitos.**/
-		mm:   {get: function() {return __Type.zeros(this.minute, 2);}},
-		/**. ``''string'' s``: Retorna o segundo.**/
-		s:    {get: function() {return (this.second).toFixed(3);}},
-		/**. ``''string'' ss``: Retorna o segundo com dois dígitos.**/
-		ss:   {
-			get: function() {
-				return Math.trunc(this.second) < 10 ? ("0"+this.s) : this.s;
-			}
-		},
-		/**. ``''string'' AMPM``: Retorna ``AM`` se a hora for anterior ao meio dia, caso contrário, ``PM``.**/
-		AMPM: {
-			get: function() {return this.hour < 12 ? "AM" : "PM";}
-		},
-		/**. ``''string'' h12``: Retorna a hora no formato 12h.**/
-		h12: {
-			get: function() {
-				return ("0" + String(this.hour - (this.hour < 13 ? 0 : 12))).slice(-2);
-			}
-		},
+
+
+
+		 code: {
+		 	value: function(value) {
+		 		const id    = String(value).trim();
+		 		const self  = this;
+		 		const codes = {
+		 			get    Y() {return String(self.year);},
+		 			get   YY() {return this.YYYY.replace(/(\-?)\d+(\d\d)$/, "$1$2");},
+		 			get YYYY() {
+		 				const y   = Math.abs(self.year);
+				 		const len = (y < 10 ? 3 : (y < 100 ? 2 : (y < 1000 ? 1 : 0)));
+				 		return (self.year < 0 ? "-" : "") + ("0").repeat(len) + String(y);
+		 			},
+		 			get    M() {return String(self.month);},
+		 			get   MM() {return (this.M.length < 2 ? "0" : "") + this.M;},
+		 			get  MMM() {return __LANG.searchByIndex("months", this.M).short;},
+		 			get MMMM() {return __LANG.searchByIndex("months", this.M).long;},
+		 			get    D() {return String(self.day);},
+		 			get   DD() {return (this.D.length < 2 ? "0" : "") + this.D;},
+		 			get  DDD() {return __LANG.searchByIndex("days", self.weekDay).short;},
+		 			get DDDD() {return __LANG.searchByIndex("days", self.weekDay).long;},
+					get    W() {return String(self.week);},
+		 			get   WW() {return (this.W.length < 2 ? "0" : "") + this.W;},
+		 			get    h() {return String(self.hour);},
+		 			get   hh() {return (this.h.length < 2 ? "0" : "") + this.h;},
+		 			get    m() {return String(self.minute);},
+		 			get   mm() {return (this.m.length < 2 ? "0" : "") + this.m;},
+		 			get    s() {return (self.second).toFixed(3);},
+		 			get   ss() {return (this.s.length < 6 ? "0" : "") + this.s;},
+		 			get AMPM() {return self.hour < 12 ? "AM" : "PM";},
+		 			get  h12() {return String(self.hour - (self.hour < 13 ? 0 : 12));},
+		 			get hh12() {return (this.h12.length < 2 ? "0" : "") + this.h12;},
+				};
+	 			return id in codes ? codes[id] : value;
+		 	}
+		 },
 		/**. ``''integer'' maxWeekForm``: Retorna a quantidade de semanas do ano para fins do [fomulário HTML ``week``]<https://developer.mozilla.org/en-US/docs/Web/HTML/Date_and_time_formats#week_strings>.**/
 		maxWeekForm: {
 			get: function() {
@@ -3231,14 +3225,13 @@ const wd = (function() {
 		format: {
 			value: function(x) {
 				x = __Type(x).chars ? x: "{DDDD}, {D} {MMMM} {YYYY}, {h}:{mm}:{ss}";
-				let obj  = this;
 				let data = x.match(/\{\w+\}/gi);
 				if (data === null) return x;
-				data.forEach(function(v,i,a){
-					let id = v.replace("{", "").replace("}", "");
-					if (id in obj && !__Type(obj[id]).function)
-						x = x.replace(v, obj[id]);
-				});
+				for (let v of data) {
+					let code  = v.replace(/^\{(\w+)\}$/, "$1");
+					let value = this.code(code);
+					x = x.replace(v, value);
+				}
 				return x;
 			}
 		},
@@ -3249,17 +3242,25 @@ const wd = (function() {
 				this._change = x;
 			}
 		},
+
+
+
+
+		/**. ``''integer'' valueOf()``: Retorna os segundos desde 0000-01-01T00:00:00.**/
+		valueOf: {
+			value: function() {
+				let date = this.dateOf();
+				let time = this.timeOf();
+				if (date >= 1)
+					return 24*3600*(date-1)+time;
+				return 24*3600*date - (24*3600 - time);
+      }
+		},
 		/**. ``''integer'' timeOf()``: Retorna o tempo em segundos.**/
 		timeOf: {
 			value: function() {
 				return 3600*this.hour + 60*this.minute + this.second;
 			}
-		},
-		/**. ``''string'' toTimeString()``: Retorna o tempo no formato ``hh:mm:ss.sss``.**/
-		toTimeString: {
-			value: function() {
-				return this.format("{hh}:{mm}:{ss}");
-      }
 		},
 		/**. ``''integer'' dateOf()``: Retorna os dias desde 0000-01-01 (dia 1).**/
 		dateOf: {
@@ -3279,28 +3280,25 @@ const wd = (function() {
 				return -(days + ((this.leap ? 366 : 365) - this.dayYear));
 			}
 		},
-		/**. ``''string'' toDateString()``: Retorna a data no formato ``YYYY-MM-DD``.**/
-		toDateString: {
-			value: function() {
-				return this.format("{YYYY}-{MM}-{DD}");
-      }
-		},
 		/**. ``''string'' toString()``: Retorna a data e o tempo no formato ``YYYY-MM-DDThh:mm:ss.sss``.**/
 		toString: {
-			value: function() {
-				return this.toDateString()+"T"+this.toTimeString();
-      }
+			value: function() {return this.format("{YYYY}-{MM}-{DD}T{hh}:{mm}:{ss}");}
 		},
-		/**. ``''integer'' valueOf()``: Retorna os segundos desde 0000-01-01T00:00:00.**/
-		valueOf: {
-			value: function() {
-				let date = this.dateOf();
-				let time = this.timeOf();
-				if (date >= 1)
-					return 24*3600*(date-1)+time;
-				return 24*3600*date - (24*3600 - time);
-      }
+		/**. ``''string'' toTimeString()``: Retorna o tempo no formato ``hh:mm:ss.sss``.**/
+		toTimeString: {
+			value: function() {return this.format("{hh}:{mm}:{ss}");}
 		},
+		/**. ``''string'' toDateString()``: Retorna a data no formato ``YYYY-MM-DD``.**/
+		toDateString: {
+			value: function() {return this.format("{YYYY}-{MM}-{DD}");}
+		},
+
+
+
+
+
+
+
 		/**. ``''string'' testDrive(''integer'' x=100)``: checa a sequencialidade dos dias e dos dias da semana. O atributo ``x`` define o o ciclo da simulação em anos, do negativo ao positivo (dobra).**/
 		testDrive: {
 			value: function(x) {
@@ -3348,6 +3346,11 @@ const wd = (function() {
 
 	Object.defineProperties(__Array.prototype, {
 		constructor: {value: __Array},
+		[Symbol.iterator]: {
+			value: function*() {
+				for (let i of this._value) yield i;
+			}
+		},
 		/**. ``''any''  valueOf(''integer'' n)``: Retorna o array definido ou um de seus itens se o índice correspondente for infromado no argumento opcional ``n`` cujo comportamento é idêntico ao do método ``index``.**/
 		valueOf: {
 			value: function(n) {
@@ -8063,6 +8066,11 @@ const wd = (function() {
 
 	WDarray.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDarray},
+		[Symbol.iterator]: {
+			value: function*() {
+				for (let i of this._main) yield i;
+			}
+		},
 		/**. ``''integer'' length``: Retorna a quantidade de itens no array.**/
 		length: {
 			get: function() {return this._main.length;}
