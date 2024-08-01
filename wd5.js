@@ -2978,10 +2978,10 @@ const wd = (function() {
 			_h: {value: Number(time.slice(0,2)),   writable: true}, /* hora */
 			_m: {value: Number(time.slice(3,5)),   writable: true}, /* minutos */
 			_s: {value: Number(time.slice(6)),     writable: true}, /* segundos */
-			_group:  {value: group},            /* tipo de entrada */
-			_change: {value: null, writable: true},  /* disparador do evento alteração */
-			_print:  {value: null, writable: true},  /* retrato dos parâmetros */
-			_field:  {value: null, writable: true},  /* parâmetro que chamou o disparador */
+			_group:  {value: group},                /* tipo de entrada */
+			_change: {value: null, writable: true}, /* disparador do evento alteração */
+			_print:  {value: null, writable: true}, /* retrato dos parâmetros */
+			_field:  {value: null, writable: true}, /* parâmetro que chamou o disparador */
 		});
 	}
 
@@ -3310,12 +3310,12 @@ const wd = (function() {
 				/* se o ano for zero: dias do ano corrente */
 				if (this.year === 0) return this.dayYear;
 				/* se o ano for diferente de zero, calcular dias de anos completos (ano - 1) */
-				let year = Math.abs(this.year) - 1;
-				let y365 = 365*year;
-				let y400 = Math.trunc(year/400);
-				let y004 = Math.trunc(year/4);
-				let y100 = Math.trunc(year/100);
-				let days = y365 + y400 + y004 - y100;
+				const year = Math.abs(this.year) - 1;
+				const y365 = 365*year;
+				const y400 = Math.trunc(year/400);
+				const y004 = Math.trunc(year/4);
+				const y100 = Math.trunc(year/100);
+				const days = y365 + y400 + y004 - y100;
 				/* se o ano for positivo: dias do ano zero + dias de anos completos + dias do ano corrente */
 				if (this.year >= 0) return 366 + days + this.dayYear;
 				/* se o ano for negativo: dias de anos completos + (dias total do ano - dias do ano corrente) */
@@ -3362,15 +3362,8 @@ const wd = (function() {
 				// se lang for ar fudeu o esquema
 				const format = new Intl.DateTimeFormat(__LANG.main);
 				return format.formatToParts();
-
-
 				//return format.format();
-
-
-
 			}
-
-
 		},
 
 
@@ -3402,6 +3395,138 @@ const wd = (function() {
 			}
 		}
 	});
+
+/*----------------------------------------------------------------------------*/
+	/**##### Ano
+	###### ``**constructor** ''object'' __Year(''integer'' year)``
+	Construtor para resgate de informações sobre o ano (``year``).**/
+	function __Year(year) {
+		if (!(this instanceof __Year)) return new __Year(year);
+		const check = __Type(year);
+		if (!check.integer)
+			throw new TypeError("Invalid year value.");
+		Object.defineProperties(this, {
+			_Y: {value: check.value},
+		});
+	}
+
+	Object.defineProperties(__Year.prototype, {
+		constructor: {value: __Year},
+		/**. ``''string'' toString()``: Retorna uma string no formato YYYY-MM.**/
+		toString: {
+			value: function() {
+ 				const y     = Math.abs(this._Y);
+				const len   = (y < 10 ? 3 : (y < 100 ? 2 : (y < 1000 ? 1 : 0)));
+				return (this._Y < 0 ? "-" : "") + ("0").repeat(len) + String(y);
+			}
+		},
+		/**. ``''integer'' valueOf()``: Retorna o ano.**/
+		valueOf: {
+			value: function() {return this._Y;}
+		},
+		/**. ``''integer'' timeline``: Retorna os dias decorridos desde 0000-01-01 (dia 1) no primeiro dia do ano.**/
+		timeline: {
+			get: function() {
+				const y    = this._Y;
+				const len  = this.leap ? 366 : 365;
+				const year = Math.abs(y) - 1;
+				const y365 = 365*year;
+				const y400 = Math.trunc(year/400);
+				const y004 = Math.trunc(year/4);
+				const y100 = Math.trunc(year/100);
+				const days = y365 + y400 + y004 - y100;
+				return y === 0 ? 0 : (y > 0 ? (366 + days) : -(days + len));
+				/* se o ano for zero: dias do ano corrente */
+				//if (this.year === 0) return this.dayYear;
+				/* se o ano for diferente de zero, calcular dias de anos completos (ano - 1) */
+				/* se o ano for positivo: dias do ano zero + dias de anos completos + dias do ano corrente */
+				//if (this.year >= 0) return 366 + days + this.dayYear;
+				/* se o ano for negativo: dias de anos completos + (dias total do ano - dias do ano corrente) */
+				//return -(days + ((this.leap ? 366 : 365) - this.dayYear));
+			}
+		},
+		/**. ``''boolean'' leap``: Informa se o ano é bissexto.**/
+		leap: {
+			get: function() {
+				const y = Math.abs(this._Y);
+				return (y%400 === 0 || (y%4 === 0 && y%100 !== 0));
+			}
+		},
+	});
+
+/*----------------------------------------------------------------------------*/
+	/**##### Mês
+	###### ``**constructor** ''object'' __Month(''integer'' year, ''integer'' month)``
+	Construtor para resgate de informações sobre meses a partir da informação do ano (``year``) e do mês (1-12) (``month``).**/
+	function __Month(year, month) {
+		if (!(this instanceof __Month)) return new __Month(year, month);
+		const check = __Type(month);
+		const ydata = __Year(year);
+		if (!check.integer || check < 1 || check > 12)
+			throw TypeError("Invalid month value.");
+		Object.defineProperties(this, {
+			_year: {value: ydata},
+			_Y:    {value: ydata.valueOf()},
+			_M:    {value: check.value},
+			_data: {value: __LANG.searchByIndex("months", check.value)}
+		});
+	}
+
+	Object.defineProperties(__Month.prototype, {
+		constructor: {value: __Month},
+		/**. ``''string'' toString()``: Retorna uma string no formato YYYY-MM.**/
+		toString: {
+			value: function() {
+				return [this._year.toString(), this._data.value].join("-");
+			}
+		},
+		/**. ``''integer'' valueOf()``: Retorna os dias decorridos em 01/01 desde 0000-01-01 (dia 1).**/
+		valueOf: {
+			value: function() {
+
+			}
+		},
+		/**. ``''string'' long``: Retorna o nome do mês.**/
+		long: {
+			get: function() {return this._data.long;}
+		},
+		/**. ``''string'' short``: Retorna o nome do mês abreviado.**/
+		short: {
+			get: function() {return this._data.short;}
+		},
+		/**. ``''integer'' width``: Retorna a quantidade de dias do mês.**/
+		width: {
+			get: function() {
+				const leap = this._year.leap;
+				const days = [null,31,(leap ? 29 : 28),31,30,31,30,31,31,30,31,30,31];
+				return days[this._M];
+			}
+		},
+		/**. ``''integer'' first``: Retorna o dia do ano em que o mês inicia.**/
+		first: {
+			get: function() {
+				const leap = this._year.leap;
+				const days = [null,1,32,60,91,121,152,182,213,244,274,305,335];
+				return days[this._M] + (this._M > 2 && leap ? 1 : 0);
+			}
+		},
+		/**. ``''integer'' last``: Retorna o dia do ano em que o mês termina.**/
+		last: {
+			get: function() {
+				return this.first + this.width - 1;
+			}
+		}
+	});
+
+
+
+
+
+
+
+
+
+
 
 /*===========================================================================*/
 	/**### Listas
@@ -8691,6 +8816,8 @@ const wd = (function() {
 			type:     {value: function(){return __Type.apply(null, Array.prototype.slice.call(arguments));}},
 			array:    {value: function(){return __Array.apply(null, Array.prototype.slice.call(arguments));}},
 			datetime: {value: function(){return __DateTime.apply(null, Array.prototype.slice.call(arguments));}},
+			month:    {value: function(){return __Month.apply(null, Array.prototype.slice.call(arguments));}},
+			year:     {value: function(){return __Year.apply(null, Array.prototype.slice.call(arguments));}},
 			fprop:    {value: function(){return __FormValues.apply(null, Array.prototype.slice.call(arguments));}},
 			fnode:    {value: function(){return __FNode.apply(null, Array.prototype.slice.call(arguments));}},
 			node:     {value: function(){return __Node.apply(null, Array.prototype.slice.call(arguments));}},
