@@ -3397,136 +3397,203 @@ const wd = (function() {
 	});
 
 /*----------------------------------------------------------------------------*/
-	/**##### Ano
+	/**#### Ano
 	###### ``**constructor** ''object'' __Year(''integer'' year)``
 	Construtor para resgate de informações sobre o ano (``year``).**/
 	function __Year(year) {
 		if (!(this instanceof __Year)) return new __Year(year);
 		const check = __Type(year);
-		if (!check.integer)
-			throw new TypeError("Invalid year value.");
+		if (!check.integer) throw new RangeError("Invalid year value.");
 		Object.defineProperties(this, {
-			_Y: {value: check.value},
+			/**. ``''integer'' year``: Retorna o ano.**/
+			year: {value: check.value},
 		});
 	}
 
 	Object.defineProperties(__Year.prototype, {
 		constructor: {value: __Year},
-		/**. ``''string'' toString()``: Retorna uma string no formato YYYY-MM.**/
-		toString: {
-			value: function() {
- 				const y     = Math.abs(this._Y);
-				const len   = (y < 10 ? 3 : (y < 100 ? 2 : (y < 1000 ? 1 : 0)));
-				return (this._Y < 0 ? "-" : "") + ("0").repeat(len) + String(y);
+		/**. ``''string'' YYYY``: Retorna uma string no formato YYYY.**/
+		YYYY: {
+			get: function() {
+ 				const y   = Math.abs(this.year);
+				const len = (y < 10 ? 3 : (y < 100 ? 2 : (y < 1000 ? 1 : 0)));
+				return (this.year < 0 ? "-" : "") + ("0").repeat(len) + String(y);
 			}
 		},
-		/**. ``''integer'' valueOf()``: Retorna o ano.**/
-		valueOf: {
-			value: function() {return this._Y;}
-		},
-		/**. ``''integer'' timeline``: Retorna os dias decorridos desde 0000-01-01 (dia 1) no primeiro dia do ano.**/
-		timeline: {
+		/**. ``''integer'' daysElapsedYear``: Retorna os dias decorridos de 0000-01-01T00:00:00 (valor 0) até o primeiro dia do ano.**/
+		daysElapsedYear: {
 			get: function() {
-				const y    = this._Y;
+				const y    = this.year;
 				const len  = this.leap ? 366 : 365;
-				const year = Math.abs(y) - 1;
+				const year = Math.abs(y);
 				const y365 = 365*year;
 				const y400 = Math.trunc(year/400);
 				const y004 = Math.trunc(year/4);
 				const y100 = Math.trunc(year/100);
 				const days = y365 + y400 + y004 - y100;
-				return y === 0 ? 0 : (y > 0 ? (366 + days) : -(days + len));
-				/* se o ano for zero: dias do ano corrente */
-				//if (this.year === 0) return this.dayYear;
-				/* se o ano for diferente de zero, calcular dias de anos completos (ano - 1) */
-				/* se o ano for positivo: dias do ano zero + dias de anos completos + dias do ano corrente */
-				//if (this.year >= 0) return 366 + days + this.dayYear;
-				/* se o ano for negativo: dias de anos completos + (dias total do ano - dias do ano corrente) */
-				//return -(days + ((this.leap ? 366 : 365) - this.dayYear));
+				return y === 0 ? 0 : (y > 0 ? (366 + days - len) : -(days));
 			}
 		},
 		/**. ``''boolean'' leap``: Informa se o ano é bissexto.**/
 		leap: {
 			get: function() {
-				const y = Math.abs(this._Y);
+				const y = Math.abs(this.year);
 				return (y%400 === 0 || (y%4 === 0 && y%100 !== 0));
 			}
 		},
 	});
 
 /*----------------------------------------------------------------------------*/
-	/**##### Mês
+	/**#### Mês
 	###### ``**constructor** ''object'' __Month(''integer'' year, ''integer'' month)``
-	Construtor para resgate de informações sobre meses a partir da informação do ano (``year``) e do mês (1-12) (``month``).**/
+	Construtor para resgate de informações sobre meses a partir da informação do ano (``year``) e do mês (1-12) (``month``). Herda propriedades do objeto __Year.**/
 	function __Month(year, month) {
 		if (!(this instanceof __Month)) return new __Month(year, month);
+		__Year.call(this, year);
 		const check = __Type(month);
-		const ydata = __Year(year);
 		if (!check.integer || check < 1 || check > 12)
-			throw TypeError("Invalid month value.");
+			throw RangeError("Invalid month value.", {cause: "1 > month > 12"});
 		Object.defineProperties(this, {
-			_year: {value: ydata},
-			_Y:    {value: ydata.valueOf()},
-			_M:    {value: check.value},
-			_data: {value: __LANG.searchByIndex("months", check.value)}
+			/**. ``''integer'' month``: Retorna o mês (1-12).**/
+			month:  {value: check.value},
+			_Mdata: {value: __LANG.searchByIndex("months", check.value)}
 		});
 	}
 
-	Object.defineProperties(__Month.prototype, {
+	__Month.prototype = Object.create(__Year.prototype, {
 		constructor: {value: __Month},
-		/**. ``''string'' toString()``: Retorna uma string no formato YYYY-MM.**/
-		toString: {
-			value: function() {
-				return [this._year.toString(), this._data.value].join("-");
+		/**. ``''string'' YYYYMM``: Retorna uma string no formato YYYY-MM.**/
+		YYYYMM: {get: function() {return [this.YYYY, this.MM].join("-");}},
+		/**. ``''string'' MMMM``: Retorna o nome do mês.**/
+		MMMM: {get: function() {return this._Mdata.long;}},
+		/**. ``''string'' MMM``: Retorna o nome do mês abreviado.**/
+		MMM: {get: function() {return this._Mdata.short;}},
+		/**. ``''string'' MMM``: Retorna o mês com dois dígitos.**/
+		MM: {get: function() {return this._Mdata.value;}},
+		/**. ``''integer'' daysElapsedMonth``: Retorna os dias decorridos de 0000-01-01T00:00:00 (valor 0) até o primeiro dia do mês.**/
+		daysElapsedMonth: {
+			get: function() {
+				const year = this.daysElapsedYear;
+				const days = this.firstDayMonthYear;
+				return year + days - 1;
 			}
-		},
-		/**. ``''integer'' valueOf()``: Retorna os dias decorridos em 01/01 desde 0000-01-01 (dia 1).**/
-		valueOf: {
-			value: function() {
-
-			}
-		},
-		/**. ``''string'' long``: Retorna o nome do mês.**/
-		long: {
-			get: function() {return this._data.long;}
-		},
-		/**. ``''string'' short``: Retorna o nome do mês abreviado.**/
-		short: {
-			get: function() {return this._data.short;}
 		},
 		/**. ``''integer'' width``: Retorna a quantidade de dias do mês.**/
 		width: {
 			get: function() {
-				const leap = this._year.leap;
-				const days = [null,31,(leap ? 29 : 28),31,30,31,30,31,31,30,31,30,31];
-				return days[this._M];
+				const feb  = this.leap ? 29 : 28;
+				const days = [null,31,feb,31,30,31,30,31,31,30,31,30,31];
+				return days[this.month];
 			}
 		},
-		/**. ``''integer'' first``: Retorna o dia do ano em que o mês inicia.**/
-		first: {
+		/**. ``''integer'' firstDayMonthYear``: Retorna o dia do ano em que o mês inicia.**/
+		firstDayMonthYear: {
 			get: function() {
-				const leap = this._year.leap;
+				const gap  = this.month > 2 && this.leap ? 1 : 0;
 				const days = [null,1,32,60,91,121,152,182,213,244,274,305,335];
-				return days[this._M] + (this._M > 2 && leap ? 1 : 0);
+				return days[this.month] + gap;
 			}
 		},
-		/**. ``''integer'' last``: Retorna o dia do ano em que o mês termina.**/
-		last: {
-			get: function() {
-				return this.first + this.width - 1;
-			}
-		}
 	});
 
+/*----------------------------------------------------------------------------*/
+	/**#### Dia
+	###### ``**constructor** ''object'' __Day(''integer'' year, ''integer'' month, ''integer'' day)``
+	Construtor para resgate de informações sobre dias a partir da informação do ano (``year``), mês (1-12) (``month``) e dia (1-31) (``day``). Herda propriedades do objeto __Month.**/
+	function __Day(year, month, day) {
+		if (!(this instanceof __Day)) return new __Day(year, month, day);
+		__Month.call(this, year, month);
+		const check = __Type(day);
+		if (!check.integer || check < 1 || check > this.width)
+			throw RangeError("Invalid day value.", {cause: "1 > day > " + String(this.width)});
+		Object.defineProperties(this, {
+			/**. ``''integer'' day``: Retorna o dia (1-31).**/
+			day: {value: check.value}
+		});
+	}
+
+	__Day.prototype = Object.create(__Month.prototype, {
+		constructor: {value: __Day},
+		/**. ``''string'' DD``: Retorna o dia com dois dígitos.**/
+		DD: {get: function() {return (this.day < 10 ? "0" : "") + String(this.day);}},
+		/**. ``''string'' YYYYMMDD``: Retorna a data no formato YYYY-MM-DD.**/
+		YYYYMMDD: {get: function() {return [this.YYYYMM, this.DD].join("-");}},
+		/**. ``''integer'' daysElapsed``: Retorna os dias decorridos de 0000-01-01T00:00:00 (valor 0) até o dia.**/
+		daysElapsed: {
+			get: function() {
+				const year = this.daysElapsedYear;
+				const days = this.days;
+				return year + days - 1;
+			}
+		},
+		/**. ``''integer'' days``: Retorna o dia do ano.**/
+		days: {
+			get: function() {
+				return this.firstDayMonthYear + this.day - 1;
+			}
+		},
+		next: {
+			value: function() {
+				const d = this.day === this.width ? 1 : (this.day + 1);
+				const m = this.day === this.width ? (this.month + 1) : this.month;
+				const y = m > 12 ?  (this.year + 1) : this.year;
+				return new this.constructor(y, (m > 12 ? 1 : m), d);
+			}
+		},
+	});
+/*----------------------------------------------------------------------------*/
+	/**#### Dia da Semana
+	###### ``**constructor** ''object'' __WeekDay(''integer'' year, ''integer'' month, ''integer'' day)``
+	Construtor para resgate de informações sobre a semana a partir da informação do ano (``year``), mês (1-12) (``month``) e dia (1-31) (``day``).  Herda propriedades do objeto __Day.**/
+	function __WeekDay(year, month, day) {
+		if (!(this instanceof __WeekDay)) return new __WeekDay(year, month, day);
+		__Day.call(this, year, month, day);
+		const sunday  = new __Day(2023,1,1).daysElapsed;
+		const today   = this.daysElapsed;
+		const index   = Math.abs(today - sunday)%7;
+		const weekDay =  (today > sunday ? index : (7 - index)%7) + 1;
+		Object.defineProperties(this, {
+			/**. ``''integer'' weekDay``: Retorna o dia da semana, de domingo a sábado (1-7).**/
+			weekDay: {value: weekDay},
+			_Ddata:  {value: __LANG.searchByIndex("days", weekDay)}
+		});
+	}
+
+	__WeekDay.prototype = Object.create(__Day.prototype, {
+		constructor: {value: __WeekDay},
+		/**. ``''string'' DDD``: Retorna o dia da semana abreviado.**/
+		DDD: {get: function() {return this._Ddata.short;}},
+		/**. ``''string'' DDDD``: Retorna o dia da semana.**/
+		DDDD: {get: function() {return this._Ddata.long;}},
+	});
+
+/*----------------------------------------------------------------------------*/
+	/**#### Semana do Ano
+	###### ``**constructor** ''object'' __Week(''integer'' year, ''integer'' month, ''integer'' day)``
+	Construtor para resgate de informações sobre a semana do ano a partir da informação do ano (``year``), mês (1-12) (``month``) e dia (1-31) (``day``).  Herda propriedades do objeto __WeekDay.**/
+	function __Week(year, month, day) {
+		if (!(this instanceof __Week)) return new __Week(year, month, day);
+		__WeekDay.call(this, year, month, day);
+		const init  = new __Day(this.year,1,1);
+		//const today   = this.daysElapsed;
+		//const index   = Math.abs(today - sunday)%7;
+		//const weekDay =  (today > sunday ? index : (7 - index)%7) + 1;
+		Object.defineProperties(this, {
+			/**. ``''integer'' week``: Retorna a semana do ano (1-54).**/
+//			week:     {value: weekDay},
+			/**. ``''integer'' formWeek``: Retorna a semana do ano no padrão de formulário HTML (1-53).**/
+//			formWeek: {value: weekDay}
+		});
+	}
+
+	__Week.prototype = Object.create(__WeekDay.prototype, {
+		constructor: {value: __Week},
+		/**. ``''string'' DDD``: Retorna o dia da semana abreviado.**/
+		//DDD: {get: function() {return this._Ddata.short;}},
 
 
 
-
-
-
-
-
-
+	});
 
 /*===========================================================================*/
 	/**### Listas
@@ -8816,8 +8883,7 @@ const wd = (function() {
 			type:     {value: function(){return __Type.apply(null, Array.prototype.slice.call(arguments));}},
 			array:    {value: function(){return __Array.apply(null, Array.prototype.slice.call(arguments));}},
 			datetime: {value: function(){return __DateTime.apply(null, Array.prototype.slice.call(arguments));}},
-			month:    {value: function(){return __Month.apply(null, Array.prototype.slice.call(arguments));}},
-			year:     {value: function(){return __Year.apply(null, Array.prototype.slice.call(arguments));}},
+			time:     {value: function(){return __Week.apply(null, Array.prototype.slice.call(arguments));}},
 			fprop:    {value: function(){return __FormValues.apply(null, Array.prototype.slice.call(arguments));}},
 			fnode:    {value: function(){return __FNode.apply(null, Array.prototype.slice.call(arguments));}},
 			node:     {value: function(){return __Node.apply(null, Array.prototype.slice.call(arguments));}},
