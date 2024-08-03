@@ -3454,7 +3454,7 @@ const wd = (function() {
 		if (!check.integer || check < 1 || check > 12)
 			throw RangeError("Invalid month value.", {cause: "1 > month > 12"});
 		Object.defineProperties(this, {
-			/**. ``''integer'' month``: Retorna o mês (1-12).**/
+			/**. ``''integer'' month``: Registra o mês (1-12).**/
 			month:  {value: check.value},
 			_Mdata: {value: __LANG.searchByIndex("months", check.value)}
 		});
@@ -3507,7 +3507,7 @@ const wd = (function() {
 		if (!check.integer || check < 1 || check > this.width)
 			throw RangeError("Invalid day value.", {cause: "1 > day > " + String(this.width)});
 		Object.defineProperties(this, {
-			/**. ``''integer'' day``: Retorna o dia (1-31).**/
+			/**. ``''integer'' day``: Registra o dia (1-31).**/
 			day: {value: check.value}
 		});
 	}
@@ -3553,7 +3553,7 @@ const wd = (function() {
 		const index   = Math.abs(today - sunday)%7;
 		const weekDay =  (today > sunday ? index : (7 - index)%7) + 1;
 		Object.defineProperties(this, {
-			/**. ``''integer'' weekDay``: Retorna o dia da semana, de domingo a sábado (1-7).**/
+			/**. ``''integer'' weekDay``: Registra o dia da semana, de domingo a sábado (1-7).**/
 			weekDay: {value: weekDay},
 			_Ddata:  {value: __LANG.searchByIndex("days", weekDay)}
 		});
@@ -3574,25 +3574,44 @@ const wd = (function() {
 	function __Week(year, month, day) {
 		if (!(this instanceof __Week)) return new __Week(year, month, day);
 		__WeekDay.call(this, year, month, day);
-		const init  = new __Day(this.year,1,1);
-		//const today   = this.daysElapsed;
-		//const index   = Math.abs(today - sunday)%7;
-		//const weekDay =  (today > sunday ? index : (7 - index)%7) + 1;
+		const week = this.weekDay;
+		const ref  = this.days % 7;
+		const src  = week - (ref - 1);
+		const fwdy = src + (src < 1 ? 7 : 0);
+		const mfw  = this.leap && fwdy === 4 || fwdy === 5 ? 53 : 52;
 		Object.defineProperties(this, {
-			/**. ``''integer'' week``: Retorna a semana do ano (1-54).**/
-//			week:     {value: weekDay},
-			/**. ``''integer'' formWeek``: Retorna a semana do ano no padrão de formulário HTML (1-53).**/
-//			formWeek: {value: weekDay}
+			/**. ``''integer'' firstWeekDayYear``: Registra o primeiro dia da semana do ano (1-7).**/
+			firstWeekDayYear: {value: fwdy},
+			maxFormWeek:      {value: mfw}
 		});
 	}
 
 	__Week.prototype = Object.create(__WeekDay.prototype, {
 		constructor: {value: __Week},
-		/**. ``''string'' DDD``: Retorna o dia da semana abreviado.**/
-		//DDD: {get: function() {return this._Ddata.short;}},
-
-
-
+		/**. ``''string'' WW``: Retorna a semana com dois dígitos.**/
+		WW: {get: function() {return (this.week < 10 ? "0" : "") + String(this.week);}},
+		/**. ``''string'' YYYYWW``: Retorna a semana no formato YYYY-Www.**/
+		YYYYWW: {get: function() {return [this.YYYY,this.WW].join("-W");}},
+		/**. ``''integer'' week``: Retorna a semana do ano (1-54) desde o primeiro dia do ano e início no domingo.**/
+		week: {
+			get: function() {
+				const plus = this.firstWeekDayYear - 1;
+				const days = this.days + plus;
+				/*-- PA -> an = a0 + rn --*/
+				return Math.trunc((days - 1)/7) + 1;
+			}
+		},
+		/**. ``''integer'' fweek``: Retorna a semana do ano (1-53) conforme formulário HTML. ()[https://developer.mozilla.org/en-US/docs/Web/HTML/Date_and_time_formats#week_strings]**/
+		fweek: {
+			get: function() {
+			//	if (week > 5 || week === 1)
+			//		return this.constructor(this.year-1, 12, 31).maxFormWeek;
+				const plus = this.firstWeekDayYear - 2;
+				const days = this.days - plus;
+				/*-- PA -> an = a0 + rn --*/
+				return Math.trunc((days - 1)/7) + 1;
+			}
+		},
 	});
 
 /*===========================================================================*/
