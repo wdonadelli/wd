@@ -3412,6 +3412,8 @@ const wd = (function() {
 
 	Object.defineProperties(__Year.prototype, {
 		constructor: {value: __Year},
+		toString: {value: function() {return this.YYYY;}},
+		valueOf:  {value: function() {return this.daysElapsedYear;}},
 		/**. ``''string'' YYYY``: Retorna uma string no formato YYYY.**/
 		YYYY: {
 			get: function() {
@@ -3462,6 +3464,8 @@ const wd = (function() {
 
 	__Month.prototype = Object.create(__Year.prototype, {
 		constructor: {value: __Month},
+		toString: {value: function() {return this.YYYYMM;}},
+		valueOf:  {value: function() {return this.daysElapsedMonth;}},
 		/**. ``''string'' YYYYMM``: Retorna uma string no formato YYYY-MM.**/
 		YYYYMM: {get: function() {return [this.YYYY, this.MM].join("-");}},
 		/**. ``''string'' MMMM``: Retorna o nome do mês.**/
@@ -3514,6 +3518,8 @@ const wd = (function() {
 
 	__Day.prototype = Object.create(__Month.prototype, {
 		constructor: {value: __Day},
+		toString: {value: function() {return this.YYYYMMDD;}},
+		valueOf:  {value: function() {return this.daysElapsed;}},
 		/**. ``''string'' DD``: Retorna o dia com dois dígitos.**/
 		DD: {get: function() {return (this.day < 10 ? "0" : "") + String(this.day);}},
 		/**. ``''string'' YYYYMMDD``: Retorna a data no formato YYYY-MM-DD.**/
@@ -3530,14 +3536,6 @@ const wd = (function() {
 		days: {
 			get: function() {
 				return this.firstDayMonthYear + this.day - 1;
-			}
-		},
-		next: {
-			value: function() {
-				const d = this.day === this.width ? 1 : (this.day + 1);
-				const m = this.day === this.width ? (this.month + 1) : this.month;
-				const y = m > 12 ?  (this.year + 1) : this.year;
-				return new this.constructor(y, (m > 12 ? 1 : m), d);
 			}
 		},
 	});
@@ -3561,6 +3559,8 @@ const wd = (function() {
 
 	__WeekDay.prototype = Object.create(__Day.prototype, {
 		constructor: {value: __WeekDay},
+		toString: {value: function() {return this.DDDD;}},
+		valueOf:  {value: function() {return this.weekDay;}},
 		/**. ``''string'' DDD``: Retorna o dia da semana abreviado.**/
 		DDD: {get: function() {return this._Ddata.short;}},
 		/**. ``''string'' DDDD``: Retorna o dia da semana.**/
@@ -3574,20 +3574,24 @@ const wd = (function() {
 	function __Week(year, month, day) {
 		if (!(this instanceof __Week)) return new __Week(year, month, day);
 		__WeekDay.call(this, year, month, day);
-		const week = this.weekDay;
-		const ref  = this.days % 7;
-		const src  = week - (ref - 1);
-		const fwdy = src + (src < 1 ? 7 : 0);
-		const mfw  = this.leap && fwdy === 4 || fwdy === 5 ? 53 : 52;
+		const week = this.weekDay - 1;
+		const days = (this.days - 1)%7;
+		const ref  = week - days;
+		const fwd  = 1 + ref + (ref < 0 ? 7 : 0);
+
+		//console.log(week, ref, fwd);
+		const mfw  = this.leap && fwd === 4 || fwd === 5 ? 53 : 52;
 		Object.defineProperties(this, {
-			/**. ``''integer'' firstWeekDayYear``: Registra o primeiro dia da semana do ano (1-7).**/
-			firstWeekDayYear: {value: fwdy},
-			maxFormWeek:      {value: mfw}
+			/**. ``''integer'' firstWeekDay``: Registra o primeiro dia da semana do ano (1-7).**/
+			firstWeekDay: {value: fwd},
+			maxFormWeek:  {value: mfw}
 		});
 	}
 
 	__Week.prototype = Object.create(__WeekDay.prototype, {
 		constructor: {value: __Week},
+		toString: {value: function() {return this.YYYYWW;}},
+		valueOf:  {value: function() {return this.week;}},
 		/**. ``''string'' WW``: Retorna a semana com dois dígitos.**/
 		WW: {get: function() {return (this.week < 10 ? "0" : "") + String(this.week);}},
 		/**. ``''string'' YYYYWW``: Retorna a semana no formato YYYY-Www.**/
@@ -3595,23 +3599,74 @@ const wd = (function() {
 		/**. ``''integer'' week``: Retorna a semana do ano (1-54) desde o primeiro dia do ano e início no domingo.**/
 		week: {
 			get: function() {
-				const plus = this.firstWeekDayYear - 1;
-				const days = this.days + plus;
-				/*-- PA -> an = a0 + rn --*/
-				return Math.trunc((days - 1)/7) + 1;
+				const sun = ([null,1,0,-1,-2,-3,-4,-5])[this.firstWeekDay];
+				const end = this.days;
+				return Math.trunc((end - sun)/7) + 1;
 			}
 		},
 		/**. ``''integer'' fweek``: Retorna a semana do ano (1-53) conforme formulário HTML. ()[https://developer.mozilla.org/en-US/docs/Web/HTML/Date_and_time_formats#week_strings]**/
 		fweek: {
 			get: function() {
-			//	if (week > 5 || week === 1)
-			//		return this.constructor(this.year-1, 12, 31).maxFormWeek;
-				const plus = this.firstWeekDayYear - 2;
-				const days = this.days - plus;
-				/*-- PA -> an = a0 + rn --*/
-				return Math.trunc((days - 1)/7) + 1;
+				const day  = this.firstWeekDay;
+				const mon  = ([null,2,1,0,-1,-2,4,3])[day];
+				const end  = this.days;
+				const len  = Math.trunc((end - mon)/7) + 1;
+				const max  = [null,1,null,null,null,null,3,2];
+				const back = (day > 5 || day === 1) && end <= max[day];
+				return back ? -(new __Week(this.year-1, 12, 31).maxFormWeek) : len;
 			}
 		},
+		/**. ``''integer'' workingDays``: Retorna a quantidade de dias úteis decorridos até o dia.**/
+		workingDays : {
+			get: function() {
+				const sun  = ([null,1,7,6,5,4,3,2])[this.firstWeekDay];
+				const sat  = ([null,7,6,5,4,3,2,1])[this.firstWeekDay];
+				const end  = this.days;
+				const dsun = this.day < sun ? 0 : (Math.trunc((end - sun)/7) + 1);
+				const dsat = this.day < sat ? 0 : (Math.trunc((end - sat)/7) + 1);
+				return end - (dsun + dsat);
+			}
+		},
+		/**. ``''object'' next()``: Retorna uma instância do objeto __Week para o dia seguinte.**/
+		next: {
+			value: function() {
+				const d = this.day === this.width ? 1 : (this.day + 1);
+				const m = this.day === this.width ? (this.month + 1) : this.month;
+				const y = m > 12 ?  (this.year + 1) : this.year;
+				return new __Week(y, (m > 12 ? 1 : m), d);
+			}
+		},
+		sequentialityTest: {
+			value: function(stop) {
+				const time = new Date().valueOf();
+				let next = new __Week(this.year, this.month, this.day);
+				let days = next.daysElapsed;
+				let day  = next.weekDay;
+				let week = next.week;
+				let year = next.year;
+				while (next.year < stop) {
+					next = next.next();
+					if (next.daysElapsed !== (days + 1))
+						throw ReferenceError("daysElapsed", {cause: next.YYYYMMDD})
+					if (next.weekDay !== (day === 7 ? 1 : day+1))
+						throw ReferenceError("weekDay", {cause: next.YYYYMMDD})
+					if (next.year === year) {
+						if (next.weekDay === 1 && next.week !== (week + 1))
+							throw ReferenceError("week", {cause: next.YYYYMMDD})
+					}
+					days = next.daysElapsed;
+					day  = next.weekDay;
+					week = next.week;
+					year = next.year;
+				}
+				return ((new Date()).valueOf() - time)/(next.daysElapsed - this.daysElapsed);
+			}
+		}
+
+
+
+
+
 	});
 
 /*===========================================================================*/
