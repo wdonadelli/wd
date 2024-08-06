@@ -3455,10 +3455,16 @@ const wd = (function() {
 		const check = __Type(month);
 		if (!check.integer || check < 1 || check > 12)
 			throw RangeError("Invalid month value.", {cause: "1 > month > 12"});
+		const data = __LANG.searchByIndex("months", check.value);
 		Object.defineProperties(this, {
 			/**. ``''integer'' month``: Registra o mês (1-12).**/
-			month:  {value: check.value},
-			_Mdata: {value: __LANG.searchByIndex("months", check.value)}
+			month: {value: check.value},
+			/**. ``''string'' MMMM``: Retorna o nome do mês.**/
+			MMMM:  {value: data.long},
+			/**. ``''string'' MMM``: Retorna o nome do mês abreviado.**/
+			MMM:   {value: data.short},
+			/**. ``''string'' MM``: Retorna o mês com dois dígitos.**/
+			MM:    {value: data.value},
 		});
 	}
 
@@ -3468,12 +3474,6 @@ const wd = (function() {
 		valueOf:  {value: function() {return this.daysElapsedMonth;}},
 		/**. ``''string'' YYYYMM``: Retorna uma string no formato YYYY-MM.**/
 		YYYYMM: {get: function() {return [this.YYYY, this.MM].join("-");}},
-		/**. ``''string'' MMMM``: Retorna o nome do mês.**/
-		MMMM: {get: function() {return this._Mdata.long;}},
-		/**. ``''string'' MMM``: Retorna o nome do mês abreviado.**/
-		MMM: {get: function() {return this._Mdata.short;}},
-		/**. ``''string'' MMM``: Retorna o mês com dois dígitos.**/
-		MM: {get: function() {return this._Mdata.value;}},
 		/**. ``''integer'' daysElapsedMonth``: Retorna os dias decorridos de 0000-01-01T00:00:00 (valor 0) até o primeiro dia do mês.**/
 		daysElapsedMonth: {
 			get: function() {
@@ -3550,10 +3550,14 @@ const wd = (function() {
 		const today   = this.daysElapsed;
 		const index   = Math.abs(today - sunday)%7;
 		const weekDay =  (today > sunday ? index : (7 - index)%7) + 1;
+		const data    = __LANG.searchByIndex("days", weekDay);
 		Object.defineProperties(this, {
 			/**. ``''integer'' weekDay``: Registra o dia da semana, de domingo a sábado (1-7).**/
 			weekDay: {value: weekDay},
-			_Ddata:  {value: __LANG.searchByIndex("days", weekDay)}
+			/**. ``''string'' DDD``: Retorna o dia da semana abreviado.**/
+			DDD:     {value: data.short},
+			/**. ``''string'' DDDD``: Retorna o dia da semana.**/
+			DDDD:    {value: data.long},
 		});
 	}
 
@@ -3561,10 +3565,6 @@ const wd = (function() {
 		constructor: {value: __WeekDay},
 		toString: {value: function() {return this.DDDD;}},
 		valueOf:  {value: function() {return this.weekDay;}},
-		/**. ``''string'' DDD``: Retorna o dia da semana abreviado.**/
-		DDD: {get: function() {return this._Ddata.short;}},
-		/**. ``''string'' DDDD``: Retorna o dia da semana.**/
-		DDDD: {get: function() {return this._Ddata.long;}},
 	});
 
 /*----------------------------------------------------------------------------*/
@@ -3578,12 +3578,11 @@ const wd = (function() {
 		const days = (this.days - 1)%7;
 		const ref  = week - days;
 		const fwd  = 1 + ref + (ref < 0 ? 7 : 0);
-
-		//console.log(week, ref, fwd);
 		const mfw  = this.leap && fwd === 4 || fwd === 5 ? 53 : 52;
 		Object.defineProperties(this, {
 			/**. ``''integer'' firstWeekDay``: Registra o primeiro dia da semana do ano (1-7).**/
 			firstWeekDay: {value: fwd},
+			/**. ``''integer'' maxFormWeek``: Registra o número máximo de semanas no ano para formulário HTML (1-53).**/
 			maxFormWeek:  {value: mfw}
 		});
 	}
@@ -3636,6 +3635,7 @@ const wd = (function() {
 				return new __Week(y, (m > 12 ? 1 : m), d);
 			}
 		},
+		/**. ``''void'' sequentialityTest(''integer'' stop)``: Testa a sequencialidade da data até o ano definido em ``stop``.**/
 		sequentialityTest: {
 			value: function(stop) {
 				const time = new Date().valueOf();
@@ -3662,12 +3662,80 @@ const wd = (function() {
 				return ((new Date()).valueOf() - time)/(next.daysElapsed - this.daysElapsed);
 			}
 		}
+	});
+
+/*----------------------------------------------------------------------------*/
+	/**#### Tempo
+	###### ``**constructor** ''object'' __Time(''integer'' year, ''integer'' month, ''integer'' day, ''integer'' hour, ''integer'' minute, ''finite'' second)``
+	Construtor para resgate de informações sobre a hora a partir da informação do ano (``year``), mês (1-12) (``month``), dia (1-31) (``day``), hora (0-24) (``hour``), minuto (0-59) (``minute``) e segundo (0-59.999) (``second``).  Herda propriedades do objeto __Week.**/
+
+	function __Time(year, month, day, hour, minute, second) {
+		if (!(this instanceof __Time)) return new __Time(year, month, day, hour, minute, second);
+		__Week.call(this, year, month, day);
+		const checkH = new __Type(hour);
+		const checkM = new __Type(minute);
+		const checkS = new __Type(second);
+		if (!checkH.integer || checkH > 24 || checkH < 0)
+			throw RangeError("Invalid hour value.", {cause: "0 > hour > 24"});
+		if (!checkM.integer || checkM > 59 || checkM < 0)
+			throw RangeError("Invalid minute value.", {cause: "0 > minute > 59"});
+		if (!checkS.finite || checkS > 59.999 || checkS < 0)
+			throw RangeError("Invalid second value.", {cause: "0 > minute > 59.999"});
+		Object.defineProperties(this, {
+			/**. ``''integer'' hour``: Registra a hora (0-23).**/
+			hour:   {value: checkH.value % 24},
+			/**. ``''integer'' minute``: Registra o minuot (0-59).**/
+			minute: {value: checkM.value},
+			/**. ``''number'' second``: Registra o segundo (0-59.999).**/
+			second: {value: checkS.value}
+		});
+	}
+
+	__Time.prototype = Object.create(__Week.prototype, {
+		constructor: {value: __Time},
+		toString: {value: function() {return [this.YYYYMMDD,this.hhmmss].join("T");}},
+		valueOf:  {value: function() {return this.timeElapsed;}},
+		/**. ``''string'' hh``: Retorna a hora com dois dígitos.**/
+		hh: {get: function() {return (this.hour < 10 ? "0" : "") + String(this.hour)}},
+		/**. ``''string'' mm``: Retorna o minuto com dois dígitos.**/
+		mm: {get: function() {return (this.minute < 10 ? "0" : "") + String(this.minute)}},
+		/**. ``''string'' ss``: Retorna o segundo com dois dígitos e casa centesimais.**/
+		ss: {get: function() {return (this.second < 10 ? "0" : "") + (this.second).toFixed(3)}},
+		/**. ``''string'' hhmmss``: Retorna a hora no formato hh:mm:ss.**/
+		hhmmss: {get: function() {return [this.hh,this.mm,this.ss].join(":")}},
+		/**. ``''number'' time``: Retorna a quantidade total de segundos.**/
+		time: {get: function() {return 3600*this.hour + 60*this.minute + this.second;}},
+		/**. ``''integer'' timeElapsed``: Retorna os segundos decorridos de 0000-01-01T00:00:00 (valor 0) até a hora.**/
+		timeElapsed: {get: function() {return 24*3600*this.daysElapsed + this.time;}},
+		/**. ``''string'' meridiem``: Retorna AM ou PM de acordo com a hora.**/
+		meridiem: {get: function() {return this.hour < 12 ? "AM" : "PM";}},
+		/**. ``''integer'' h12``: Retorna a hora no formato de 12 horas (AM/PM).**/
+		h12: {
+			get: function() {
+				return this.hour === 0 ? 12 : this.hour - (this.hour < 13 ? 0 : 12);
+			}
+		},
 
 
 
+		/**. ``''string'' datetime``: Retorna o tempo no formato YYYY-MM-DDThh:mm:ss.**/
+		clock: {
+			get: function() {
+
+
+
+
+
+			}
+
+		}
 
 
 	});
+
+
+
+
 
 /*===========================================================================*/
 	/**### Listas
@@ -8957,7 +9025,7 @@ const wd = (function() {
 			type:     {value: function(){return __Type.apply(null, Array.prototype.slice.call(arguments));}},
 			array:    {value: function(){return __Array.apply(null, Array.prototype.slice.call(arguments));}},
 			datetime: {value: function(){return __DateTime.apply(null, Array.prototype.slice.call(arguments));}},
-			time:     {value: function(){return __Week.apply(null, Array.prototype.slice.call(arguments));}},
+			time:     {value: function(){return __Time.apply(null, Array.prototype.slice.call(arguments));}},
 			fprop:    {value: function(){return __FormValues.apply(null, Array.prototype.slice.call(arguments));}},
 			fnode:    {value: function(){return __FNode.apply(null, Array.prototype.slice.call(arguments));}},
 			node:     {value: function(){return __Node.apply(null, Array.prototype.slice.call(arguments));}},
