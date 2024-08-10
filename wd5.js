@@ -3443,25 +3443,7 @@ const wd = (function() {
 				return (y%400 === 0 || (y%4 === 0 && y%100 !== 0));
 			}
 		},
-		/**. ``''array'' daysToYear(''integer'' value)``: Retorna o ano (item 0) a partir do número de dias .**/
-		daysToYear: {
-			value: function(value) {
-				const check = new __Type(value);
-				if (!check.integer)
-					throw TypeError("Invalid date value", {cause: "Value must be an integer."});
-				let year = Math.trunc(value/365);
-				let data = new __Year(year);
-				let init = data.daysElapsedYear;
-				let last = init + (data.leap ? 366 : 365);
-				while (value < init || value > last) {
-					year = year + (value < init ? -1 : 1);
-					data = new __Year(year);
-					init = data.daysElapsedYear;
-					last = init + (data.leap ? 366 : 365);
-				}
-				return [data.year];
-			}
-		},
+
 	});
 
 /*----------------------------------------------------------------------------*/
@@ -3517,23 +3499,6 @@ const wd = (function() {
 				return days[this.month] + gap;
 			}
 		},
-		/**. ``''array'' daysToMonth(''integer'' value)``: Retorna o ano (item 0) e o mês (item 1) a partir do número de dias .**/
-		daysToMonth: {
-			value: function(value) {
-				const year = this.daysToYear(value)[0];
-				let month  = 6;
-				let data   = new __Month(year,month);
-				let init   = data.daysElapsedMonth;
-				let last   = init + data.width;
-				while (value < init || value > last) {
-					month = month + (value < init ? -1 : 1);
-					data  = new __Month(year, month);
-					init  = data.daysElapsedMonth;
-					last  = init + data.width;
-				}
-				return [data.year, data.month];
-			}
-		},
 	});
 
 /*----------------------------------------------------------------------------*/
@@ -3574,24 +3539,8 @@ const wd = (function() {
 				return this.firstDayMonthYear + this.day - 1;
 			}
 		},
-		/**. ``''array'' daysToDay(''integer'' value)``: Retorna o ano (item 0), o mês (item 1) e o dia (item 2) a partir do número de dias .**/
-		daysToDay: {
-			value: function(value) {
-				const data = this.daysToMonth(value);
-				const date = new __Month(data[0], data[1]);
-				const day  = value - date.daysElapsedMonth + 1;
-				return [date.year, date.month, day];
-			}
-		},
-		/**. ``''array'' daysToDate(''integer'' value)``: Retorna a data (YYYY-MM-DD) a partir do número de dias.**/
-		daysToDate: {
-			value: function(value) {
-				const data  = this.daysToDay(value);
-				const date = new __Day(data[0], data[1], data[2]);
-				return date.YYYYMMDD;
-			}
-		},
 	});
+
 /*----------------------------------------------------------------------------*/
 	/**#### Dia da Semana
 	###### ``**constructor** ''object'' __WeekDay(''integer'' year, ''integer'' month, ''integer'' day)``
@@ -3679,42 +3628,6 @@ const wd = (function() {
 				return end - (dsun + dsat);
 			}
 		},
-		/**. ``''object'' next()``: Retorna uma instância do objeto __Week para o dia seguinte.**/
-		next: {
-			value: function() {
-				const d = this.day === this.width ? 1 : (this.day + 1);
-				const m = this.day === this.width ? (this.month + 1) : this.month;
-				const y = m > 12 ?  (this.year + 1) : this.year;
-				return new __Week(y, (m > 12 ? 1 : m), d);
-			}
-		},
-		/**. ``''void'' sequentialityTest(''integer'' stop)``: Testa a sequencialidade da data até o ano definido em ``stop``.**/
-		sequentialityTest: {
-			value: function(stop) {
-				const time = new Date().valueOf();
-				let next = new __Week(this.year, this.month, this.day);
-				let days = next.daysElapsed;
-				let day  = next.weekDay;
-				let week = next.week;
-				let year = next.year;
-				while (next.year < stop) {
-					next = next.next();
-					if (next.daysElapsed !== (days + 1))
-						throw ReferenceError("daysElapsed", {cause: next.YYYYMMDD})
-					if (next.weekDay !== (day === 7 ? 1 : day+1))
-						throw ReferenceError("weekDay", {cause: next.YYYYMMDD})
-					if (next.year === year) {
-						if (next.weekDay === 1 && next.week !== (week + 1))
-							throw ReferenceError("week", {cause: next.YYYYMMDD})
-					}
-					days = next.daysElapsed;
-					day  = next.weekDay;
-					week = next.week;
-					year = next.year;
-				}
-				return ((new Date()).valueOf() - time)/(next.daysElapsed - this.daysElapsed);
-			}
-		}
 	});
 
 /*----------------------------------------------------------------------------*/
@@ -3768,69 +3681,146 @@ const wd = (function() {
 				return this.hour === 0 ? 12 : this.hour - (this.hour < 13 ? 0 : 12);
 			}
 		},
+		/**. ``''object'' next()``: Retorna uma instância do objeto para o dia seguinte.**/
+		next: {
+			value: function() {
+				const d = this.day === this.width ? 1 : (this.day + 1);
+				const m = this.day === this.width ? (this.month + 1) : this.month;
+				const y = m > 12 ?  (this.year + 1) : this.year;
+				return new __Time(y, (m > 12 ? 1 : m), d, this.hour, this.minute, this.second);
+			}
+		},
+	});
 
-		/**. ``''array'' secondsToTime(''integer'' value)``: Retorna a hora (item 0), o minuto (item 1) e o segundo (item 2) a partir do número de segundos.**/
+	Object.defineProperties(__Time, {
+		/**##### Tempo: Métodos e Propriedades Estáticos
+		. ``''array'' daysToYear(''integer'' value)``: Retorna o ano (item 0) a partir do número de dias .**/
+		daysToYear: {
+			value: function(value) {
+				const check = new __Type(value);
+				if (!check.integer)
+					throw TypeError("Invalid date value", {cause: "Value must be an integer."});
+				let   days = Math.abs(value) - 1;
+				let   year = value < 0 ? +1 : 0;
+				/*-- dias por período --*/
+				const d001 = 365;
+				const d004 =  4*d001 + 1;
+				const d100 = 25*d004 - 1;
+				const d400 =  4*d100 + 1;
+				/*-- anos por período --*/
+				const y400 = Math.trunc(days/d400);
+				days -= y400 * d400;
+				const y100 = Math.trunc(days/d100);
+				days -= y100 * d100;
+				const y004 = Math.trunc(days/d004);
+				days -= y004 * d004;
+				const y001 = Math.trunc(days/d001);
+				days -= y001 * d001;
+				year += 400*y400 + 100*y100 + 4*y004 + y001;
+				/*-- ajuste fino --*/
+				let data = new __Year(value < 0 ? -year : year);
+				let init = data.daysElapsedYear;
+				let last = init + (data.leap ? 366 : 365);
+				while (value < init || value > last) {
+					data = new __Year(data.year + (value < init ? -1 : 1));
+					init = data.daysElapsedYear;
+					last = init + (data.leap ? 366 : 365);
+				}
+				return [data.year];
+			}
+		},
+		/**. ``''array'' daysToMonth(''integer'' value)``: Retorna o ano (item 0) e o mês (item 1) a partir do número de dias .**/
+		daysToMonth: {
+			value: function(value) {
+				const year = this.daysToYear(value)[0];
+				let data   = new __Month(year,6);
+				let init   = data.daysElapsedMonth;
+				let last   = init + data.width;
+				while (value < init || value > last) {
+					data  = new __Month(year, data.month + (value < init ? -1 : 1));
+					init  = data.daysElapsedMonth;
+					last  = init + data.width;
+				}
+				return [year, data.month];
+			}
+		},
+		/**. ``''array'' daysToDate(''integer'' value)``: Retorna o ano (item 0), o mês (item 1) e o dia (item 2) a partir do número de dias .**/
+		daysToDate: {
+			value: function(value) {
+				const data = this.daysToMonth(value);
+				const date = new __Month(data[0], data[1]);
+				const day  = value - date.daysElapsedMonth + 1;
+				return [date.year, date.month, day];
+			}
+		},
+		/**. ``''array'' secondsToTime(''number'' value)``: Retorna a hora (item 0), o minuto (item 1) e o segundo (item 2) a partir do número de segundos.**/
 		secondsToTime: {
 			value: function(value) {
 				const check = new __Type(value);
-				if (!check.finite)
+				if (!check.finite || check < 0)
 					throw TypeError("Invalid time value", {cause: "Value must be a positive finite number."});
 				const day    = 24*3600;
-				const time   = check.value % day;
+				const time   = check.value%day;
 				const hour   = Math.trunc(time/3600);
 				const minute = Math.trunc((time - 3600*hour)/60);
 				const second = time - 60*minute - 3600*hour;
 				return [hour, minute, Number(second.toFixed(3))];
 			}
 		},
-
-
-		/**. ``''array'' secondsToDate(''integer'' value)``: Retorna o ano (item 0), o mês (item 1), o dia (item 2), a hora (item 3), o minuto (item 4) e o segundo (item 5) a partir do número de segundos.**/
+		/**. ``''array'' seconds(''integer'' value)``: Retorna o ano (item 0), o mês (item 1), o dia (item 2), a hora (item 3), o minuto (item 4) e o segundo (item 5) a partir do número de segundos.**/
 		secondsToDate: {
 			value: function(value) {
-				const time = this.secondsToTime(Math.abs(value));
 				const day  = 24*3600;
-				const days = Math.trunc(value/day);
-				const date = this.daysToDay(days);console.log(date);
-				date.push(time[0], time[1], time[2]);
-				return date;//FIXME da errado quando negativo, tem que tirar um dia
-
-
-
+				const sec  = value%day;
+				const days = Math.trunc((value - sec)/day);
+				const date = this.daysToDate(days - (value < 0 ? 1 : 0));
+				const time = this.secondsToTime(sec + (value < 0 ? day : 0));
+				return [date[0],date[1],date[2],time[0],time[1],time[2]];
 			}
 		},
+		/**. ``''array'' toDateTime(''integer'' value)``: Retorna o o tempo no formato YYY-MM-DDThh:mm:ss a partir do número de segundos.**/
+		toDateTime: {
+			value: function(value) {
+				const data = this.secondsToDate(value);
+				const time = new __Time(data[0],data[1],data[2],data[3],data[4],data[5]);
+				return time.toString();
+			}
+		},
+		/**. ``''void'' sequentialityTest(''integer'' start, ''integer'' stop)``: Testa a sequencialidade da data do ano ``start`` até o ano ``stop``.**/
+		sequentialityTest: {
+			value: function(start, stop) {
+				let zero = new Date().valueOf();
+				let next = new __Time(start,1,1,0,0,0);
+				let days = next.daysElapsed;
+				let time = days;
+				let day  = next.weekDay;
+				let week = next.week;
+				let year = next.year;
+				let gap  = 0;
+				while (next.year <= stop) {
+					next = next.next();
+					if (next.daysElapsed !== (days + 1))
+						throw ReferenceError("daysElapsed", {cause: next.YYYYMMDD})
+					if (next.weekDay !== (day === 7 ? 1 : day+1))
+						throw ReferenceError("weekDay", {cause: next.YYYYMMDD})
+					if (next.year === year) {
+						if (next.weekDay === 1 && next.week !== (week + 1))
+							throw ReferenceError("week", {cause: next.YYYYMMDD})
+					}
+					days = next.daysElapsed;
+					day  = next.weekDay;
+					week = next.week;
+					year = next.year;
+					gap++;
+				}
+				if (gap !== (next.daysElapsed - time))
+					throw ReferenceError("timeElapsed", {cause: gap})
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+				console.log({time: ((new Date()).valueOf() - zero)/1000, items: gap});
+				return
+			}
+		}
 	});
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -3851,14 +3841,11 @@ const wd = (function() {
 			value = check.value;
 		}
 		else if (check.finite) {
-			const dt  = new __DateTime("0000-01-01T00:00:00.000");
-			dt.second = check.value;
-
-			value     = dt.toString();
+			value  = __Time.toDateTime(check.value);
 		}
 		else if (check.object) {
 			const keys = {year: 0, month: 1, day: 1, hour: 0, minute: 0, second: 0};
-			const dt   = new __DateTime("0000-01-01T00:00:00.000");
+			const dt   = new __DateTime2("0000-01-01T00:00:00.000");
 			for (let i in keys) {
 				let test = __Type(i in input ? input[i] : keys[i]);
 				dt[i]    = test.finite ? test.value : keys[i];
