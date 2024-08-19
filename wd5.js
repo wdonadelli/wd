@@ -1986,6 +1986,22 @@ const wd = (function() {
 		get: {
 			value: function() {return this._data;}
 		},
+		/**. ``''void'' mixin(''object'' supplier, ''array'' exceptions)``: Cópia as propriedades do __objeto__ definido em ``supplier`` para o __objeto__ de entrada, exceto aquelas propriedades listadas em ``exceptions``.**/
+		mixin: {
+			value: function(supplier, exceptions) {
+				if (!this.check.object) return;
+				if (!__Type(supplier).object) return;
+				if (!__Type(exceptions).array) exceptions = [];
+				const names = Object.getOwnPropertyNames(supplier);
+				for (let name of names) {
+					if (exceptions.indexOf(name) < 0) {
+						let desc = Object.getOwnPropertyDescriptor(supplier, name);
+						Object.defineProperty(this.get, name, desc);
+					}
+				}
+				return;
+			}
+		}
 	});
 
 /*============================================================================*/
@@ -2892,512 +2908,7 @@ const wd = (function() {
 	});
 /*===========================================================================*/
 	/**### Data e Tempo
-	###### ``**constructor** ''object'' __DateTime(''any'' input)``
-	Construtor para manipulação de data/tempo. O atributo ``input`` aceita valores do tipo:
-	- Data, tempo ou data/tempo nos parâmetros da biblioteca;
-	- Numérico correspondendo ao número de segundos desde 0000-01-01T00:00:00.0000 (segundo 0);
-	- Objeto contendo a definição de data/tempo por meio de chaves (``year``,``month``, ``day``, ``hour``, ``minute``, ``second``) e seus respectivos valores; e
-	- Caso contrário, assumirá o valor de data e tempo atuais.**/
-	function __DateTime(input) {
-		if (!(this instanceof __DateTime)) return new __DateTime(input);
-		const check = __Type(input);
-		const test  = check._test;
-		let   group = check.type;
-		let   value = __Type(new Date()).toString();
-		if (check.time) {
-			value = "0000-01-01T" + check.value;
-		}
-		else if (check.date) {
-			value = check.value + "T00:00:00.000";
-		}
-		else if (check.datetime) {
-			value = check.value;
-		}
-		else if (check.finite) {
-			const dt  = new __DateTime("0000-01-01T00:00:00.000");
-			dt.second = check.value;
-			value     = dt.toString();
-		}
-		else if (check.object) {
-			const keys = {year: 0, month: 1, day: 1, hour: 0, minute: 0, second: 0};
-			const dt   = new __DateTime("0000-01-01T00:00:00.000");
-			for (let i in keys) {
-				let test = __Type(i in input ? input[i] : keys[i]);
-				dt[i]    = test.finite ? test.value : keys[i];
-			}
-			value = dt.toString();
-		}
-		else if (test.group === "month") {
-			const config = {
-				MMYYYY:   {m: "$1", y: "$2"},
-				YYYYMM:   {m: "$2", y: "$1"},
-				MMMMYYYY: {m: "$1", y: "$2"}
-			};
-			const type = test.subgroup;
-			let month  = test.value.replace(test.regexp, config[type].m);
-			let year   = test.value.replace(test.regexp, config[type].y);
-			if (type === "MMMMYYYY") {
-				const search = __LANG.searchByName("months", month);
-				month = search === null ? null : search.value;
-			}
-			if (month !== null) {
-				const date = [year, month, "01"];
-				value = date.join("-") + "T00:00:00.000";
-				group = test.group;
-			}
-		}
-		else if (test.group === "week") {
-			const config = {
-				WWYYYY:   {w: "$1", y: "$2"},
-				YYYYWW:   {w: "$2", y: "$1"},
-			};
-			const type = test.subgroup;
-			const week = Number(test.value.replace(test.regexp, config[type].w));
-			const year = test.value.replace(test.regexp, config[type].y);
-			const last = new __DateTime(year + "-12-31");
-			if (week <= last.week) {
-				const dt    = new __DateTime(year + "-01-01");
-				dt.day     += 7 * (week - 1);
-				const delta = dt.weekDay - 1;
-				dt.day = (dt.day - delta) < 1 ? 1 : (dt.day - delta);
-				value = dt.toString();
-				group = test.group;
-			}
-		} else {
-			group = "undefined";
-		}
-		const data = value.split("T");
-		const date = data[0];
-		const time = data[1];
-
-		Object.defineProperties(this, {
-
-			_Y: {value: Number(date.slice(0,-6)),  writable: true}, /* ano */
-			_M: {value: Number(date.slice(-5,-3)), writable: true}, /* mês */
-			_D: {value: Number(date.slice(-2)),    writable: true}, /* dia */
-			_h: {value: Number(time.slice(0,2)),   writable: true}, /* hora */
-			_m: {value: Number(time.slice(3,5)),   writable: true}, /* minutos */
-			_s: {value: Number(time.slice(6)),     writable: true}, /* segundos */
-			_group:  {value: group},                /* tipo de entrada */
-			_change: {value: null, writable: true}, /* disparador do evento alteração */
-			_print:  {value: null, writable: true}, /* retrato dos parâmetros */
-			_field:  {value: null, writable: true}, /* parâmetro que chamou o disparador */
-		});
-	}
-
-	Object.defineProperties(__DateTime.prototype, {
-		constructor: {value: __DateTime},
-		/**. ``''void'' _trigger(''string'' field)``: Método que aciona o disparador nas mudanças dos parâmetros de data e tempo. O atributo ``field`` identifica o parâmetro que solicita a demanda. O disparador receberá como argumento um __objeto__ com as seguintes chaves:
-		.. ``''object'' target``: O objeto ``__DateTime``.
-		.. ``''string'' field``: Nome do parâmetro alterado.
-		.. ``''number'' old``: Valor anterior do campo.
-		.. ``''number'' new``: Valor atual do campo.**/
-		_trigger: {
-			value: function (field) {
-				if (this._change === null) {
-					return;
-				} else if (this._field === null) {
-					this._print = {year: 0, month: 0, day: 0, hour: 0, minute: 0, second: 0};
-					this._field = field;
-					for (let i in this._print) this._print[i] = this[i];
-				} else if (this._field === field) {
-					for (let i in this._print)
-						if (this._print[i] !== this[i]) this._change({
-							target: this, field: i, old: this._print[i], new: this[i]
-						});
-					this._field = null;
-					this._print = null;
-				}
-				return;
-			}
-		},
-		/**. ``''boolean'' _leap(''integer'' y=year)``: Método que retorna se o ano é bissexto. O atributo ``y`` define o ano que, se indefinido, assumirá o ano registrado pelo objeto.**/
-		_leap: {
-			value: function(y) {
-				y = Math.abs(y === undefined ? this.year : y);
-				return (y%400 === 0 || (y%4 === 0 && y%100 !== 0));
-			}
-		},
-		/**. ``''integer'' _maxDay(''integer'' m=month, ''integer'' y=year)``: Método que retorna a quantidade de dias do mês. Os atributos ``m`` e ``y`` correspondem ao mês e ao ano e que, se indefinidos, assumirão o mês o e ano registrados pelo objeto, respectivamente.**/
-		_maxDay: {
-			value: function(m, y) {
-				if (m === undefined) m = this.month;
-				if (y === undefined) y = this.year;
-				const fev = this._leap(y) ? 29 : 28;
-				const max = [31, fev, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-				return max[m-1];
-			}
-		},
-		/**. ``''integer'' _weekDay(''integer'' x=dateValueOf())``: Retorna o dia da semana (1-7), de domingo à sábado, tendo como referência o dia desde 0000-01-01. O atributo opcional ``x`` define o valor de referência do dia a ser analisado que, se indefinido, assumirá o valor do método ``dateValueOf``.**/
-		_weekDay: {
-			value: function(x) {
-				/* dias positivos: +0000-01-01, dia 1, é sábado (7) (crescente) */
-				/* dias negativos: -0001-12-31, dia 0, é sexta-feira (6) (decrescente) */
-				if (x === undefined) x = this.dateValueOf();
-				let wday = x > 0 ? [6, 7, 1, 2, 3, 4, 5] : [6, 5, 4, 3, 2, 1, 7];
-				return wday[Math.abs(x)%7];
-			}
-		},
-		/**. ``''integer'' year``: Define ou retorna o ano.**/
-		year: {
-			get: function() {return this._Y;},
-			set: function(x) {
-				const check = __Type(x);
-				if (!check.finite || check.value === this.year) return;
-				this._trigger("year");
-				const val = __Number(check.value);
-				const int = val.int;
-				const dec = Math.abs(val.dec);
-				this._Y = int;
-				if (dec !== 0) this.month = 12*dec;
-				return this._trigger("year");
-			}
-		},
-		/**. ``''integer'' month``: Define ou retorna o mês de 1 a 12 (janeiro a dezembro). O parâmetro será alterado para o valor definido, exceto quando extrapolar os limites. (**Observação**: ao alterar o mês de 2000-01-31 para fevereiro, a data definida será 2000-02-29 e não 2000-03-02)**/
-		month: {
-			get: function() {return this._M;},
-			set: function(x) {
-				const check = __Type(x);
-				if (!check.finite || check.value === this.month) return;
-				this._trigger("month");
-				const val  = __Number(check.value);
-				const int  = val.int;
-				const dec  = Math.abs(val.dec);
-				this._M    = int%12 <= 0 ? (int%12+12) : (int%12);
-				this.year += Math.trunc(int < 1 ? (int-12)/12 : (int-1)/12);
-				if (dec !== 0) this.day = dec*this._maxDay();
-				return this._trigger("month");
-			}
-		},
-		/**. ``''integer'' day``: Define ou retorna o dia de 1 a 31. O parâmetro será alterado para o valor definido, exceto quando extrapolar os limites. (**Observação**: Quando o dia de um mês for maior que a quantidade de dias do mês alterado, o valor ficará limitado ao último dia e, ao acrescentar unidades de mês à data 2000-01-31, por exemplo, o resultado será 2000-02-29, 2000-03-31, 2000-04-30, 2000-05-31...**/
-		day: {
-			get: function() {return this._D > this._maxDay() ? this._maxDay() : this._D;},
-			set: function(x) {
-				const check = __Type(x);
-				if (!check.finite || check.value === this.day) return;
-				this._trigger("day");
-				const val = __Number(check.value);
-				const int = val.int;
-				const dec = Math.abs(val.dec);
-				if (int >= 1 && int <= this._maxDay()) {
-					this._D = int;
-				} else {
-					this._D      = int < 1 ? 1 : this._maxDay();
-					const delta  = int - this._D;
-					const future = this.dateValueOf() + delta;
-					/* aproximação anual */
-					this.year  += Math.trunc((future - this.dateValueOf())/365);
-					/* aproximação mensal */
-					this.month += Math.trunc((future - this.dateValueOf())/30);
-					/* aproximação diária */
-					while (this.dateValueOf() !== future) {
-						this._D += this.dateValueOf() < future ? +1 : -1;
-						if (this._D > this._maxDay()) { /* IMPORTANTE: definir dia antes do mês */
-							this._D = 1;
-							this.month++;
-						} else if (this._D < 1) { /* IMPORTANTE: definir mês antes do dia */
-							this.month--;
-							this._D = this._maxDay();
-						}
-					}
-				}
-				if (dec !== 0) this.hour = 24*dec;
-				return this._trigger("day");
-			}
-		},
-		/**. ``''integer'' hour``: Define ou retorna a hora (0 a 23). O parâmetro será alterado para o valor definido, exceto quando extrapolar os limites.**/
-		hour: {
-			get: function() {return this._h;},
-			set: function(x) {
-				const check = __Type(x);
-				if (!check.finite || check.value === this.hour) return;
-				this._trigger("hour");
-				const val = __Number(check.value);
-				const int = val.int;
-				const dec = Math.abs(val.dec);
-				this._h   = (int%24 < 0 ? 24 : 0) + int%24;
-				this.day += Math.trunc(int/24) + (val < 0 && int%24 !== 0 ? -1 : 0);
-				if (dec !== 0) this.minute = 60*dec;
-				return this._trigger("hour");
-			}
-		},
-		/**. ``''integer'' minute``: Define ou retorna o minuto de 0 a 59. O parâmetro será alterado para o valor definido, exceto quando extrapolar os limites.**/
-		minute: {
-			get: function() {return this._m;},
-			set: function(x) {
-				const check = __Type(x);
-				if (!check.finite || check.value === this.minute) return;
-				this._trigger("minute");
-				const val  = __Number(check.value);
-				const int  = val.int;
-				const dec  = Math.abs(val.dec);
-				this._m    = (int%60 < 0 ? 60 : 0) + int%60;
-				this.hour += Math.trunc(int/60) + (val < 0 && int%60 !== 0 ? -1 : 0);
-				if (dec !== 0) this.second = 60*dec;
-				return this._trigger("minute");
-			}
-		},
-		/**. ``''number'' second``: Define ou retorna o segundo de 0 a 59.999. O parâmetro será alterado para o valor definido, exceto quando extrapolar o limites.**/
-		second: {
-			get: function() {return this._s;},
-			set: function(x) {
-				const check = __Type(x);
-				if (!check.finite || check.value === this.second) return;
-				this._trigger("second");
-				const val    = __Number(check.value);
-				const int    = val.int;
-				const dec    = Math.abs(val.dec);
-				this._s      = (int%60 < 0 ? 60 : 0) + int%60 + dec;
-				this.minute += Math.trunc(int/60) + (val < 0 && int%60 !== 0 ? -1 : 0);
-				return this._trigger("second");
-			}
-		},
-		/**. ``''boolean'' leap``: Informa se o ano definido é bissexto.**/
-		leap: {get: function() {return this._leap();}},
-		/**. ``''integer'' dayYear``: Informa o dia do ano (1-366).**/
-		dayYear: {
-			get: function() {
-				const days = [0,31,59,90,120,151,181,212,243,273,304,334,365];
-				const leap = this.leap && this.month > 2 ? 1 : 0;
-				return days[this.month-1] + leap + this.day;
-			}
-		},
-		/**. ``''integer'' weekDay``: Retorna o dia da semana de domingo (1) à sábado (7).**/
-		weekDay: {
-			get: function() { return this._weekDay();}
-		},
-		/**. ``''integer'' week``: Retorna a semana do ano (1-54) a partir de seu primeiro dia.**/
-		week: {
-			get: function() {
-				const start = this._weekDay(this.dateValueOf() - this.dayYear + 1);
-				const today = this.weekDay;
-				const day0  = 1 - (start - 1);
-				const dayn  = this.dayYear - (today - 1);
-				return 1+(dayn - day0)/7;
-			}
-		},
-		/**. ``''boolean'' workingDay``: Retorna se é um dia útil.**/
-		workingDay: {
-			get: function() {return this.weekDay !== 1 && this.weekDay !== 7;}
-		},
-		/**. ``''integer'' nonWorkingDays``: Retorna a quantidade de dias não úteis atá a data no ano.**/
-		nonWorkingDays: {
-			get: function() {
-				const start = this._weekDay(this.dateValueOf() - this.dayYear + 1);
-				const today = this.weekDay;
-				const weeks = this.week;
-				const day1  = weeks - (start === 1 ? 0 : 1);
-				const day7  = weeks - (today === 7 ? 0 : 1);
-				return day1 + day7;
-			}
-		},
-		/**. ``''integer'' width``: Retorna a quantidade de dias no mês.**/
-		width: {
-			get: function() {return this._maxDay();}
-		},
-		/**. ``''integer'' workingDays``: Retorna a quantidade de dias úteis atá a data no ano.**/
-		workingDays: {
-			get: function() {
-				return this.dayYear - this.nonWorkingDays;
-			}
-		},
-		/**. ``''string'' code(''string'' value)``: Retorna o valor correspondente ao código informado no argumento ``value``:
-		|Código|Descrição|
-		|Y|Ano|
-		|YY|Ano com os dois últimos dígitos|
-		|YYYY|Ano com pelo menos quatro dígitos|
-		|M|Mês|
-		|MM|Mês com dois dígitos|
-		|MMM|Nome abreviado do mês|
-		|MMMM|Nome do mês|
-		|D|Dia|
-		|DD|Dia com dois dígitos|
-		|DDD|Nome abreviado do dia da semana|
-		|DDDD|Nome do dia da semana|
-		|w|Número da semana do ano|
-		|ww|Número da semana do ano com dois dígitos|
-		|h|Hora|
-		|hh|Hora com dois dígitos|
-		|m|Minuto|
-		|mm|Minuot com dois dígitos|
-		|s|Segundos|
-		|ss|Segundos com cinco dígitos (inteiros e milésimos)|
-		|ampm|AM ou PM a depender da hora|
-		|h12|Hora de relógio de 12h|
-		|hh12|Hora de relógio de 12h com dois dígitos|.**/
-		 code: {
-		 	value: function(value) {
-		 		const id    = String(value).trim();
-		 		const self  = this;
-		 		const codes = {
-		 			get    Y() {return String(self.year);},
-		 			get   YY() {return this.YYYY.replace(/(\-?)\d+(\d\d)$/, "$1$2");},
-		 			get YYYY() {
-		 				const y   = Math.abs(self.year);
-				 		const len = (y < 10 ? 3 : (y < 100 ? 2 : (y < 1000 ? 1 : 0)));
-				 		return (self.year < 0 ? "-" : "") + ("0").repeat(len) + String(y);
-		 			},
-		 			get    M() {return String(self.month);},
-		 			get   MM() {return (this.M.length < 2 ? "0" : "") + this.M;},
-		 			get  MMM() {return __LANG.searchByIndex("months", this.M).short;},
-		 			get MMMM() {return __LANG.searchByIndex("months", this.M).long;},
-		 			get    D() {return String(self.day);},
-		 			get   DD() {return (this.D.length < 2 ? "0" : "") + this.D;},
-		 			get  DDD() {return __LANG.searchByIndex("days", self.weekDay).short;},
-		 			get DDDD() {return __LANG.searchByIndex("days", self.weekDay).long;},
-					get    w() {return String(self.week);},
-		 			get   ww() {return (this.W.length < 2 ? "0" : "") + this.W;},
-		 			get    h() {return String(self.hour);},
-		 			get   hh() {return (this.h.length < 2 ? "0" : "") + this.h;},
-		 			get    m() {return String(self.minute);},
-		 			get   mm() {return (this.m.length < 2 ? "0" : "") + this.m;},
-		 			get    s() {return (self.second).toFixed(3);},
-		 			get   ss() {return (this.s.length < 6 ? "0" : "") + this.s;},
-		 			get ampm() {return self.hour < 12 ? "AM" : "PM";},
-		 			get  h12() {return String(self.hour - (self.hour < 13 ? 0 : 12));},
-		 			get hh12() {return (this.h12.length < 2 ? "0" : "") + this.h12;},
-				};
-	 			return id in codes ? codes[id] : value;
-		 	}
-		 },
-		/**. ``''integer'' maxWeekForm``: Retorna a quantidade de semanas do ano para fins do [fomulário HTML ``week``]<https://developer.mozilla.org/en-US/docs/Web/HTML/Date_and_time_formats#week_strings>.**/
-		maxWeekForm: {
-			get: function() {
-				let week = this._weekDay(this.dateValueOf() - this.dayYear + 1);
-				return (week === 5 || (week === 4 && this.leap)) ? 53 : 52;
-			}
-		},
-		/**. ``''string'' format(''string'' x)``: Retorna uma string pré-formatada com valores dos atributos sendo representados por atalhos correspondentes ao nome do respectivo atributo entre chaves ``{nome}``. O argumento ``x`` deve conter as configurações da string a ser retornada (**Exemplo**: ``{DD}/{MM}/{YYYY}`` returna a data no formato ``DD/MM/YYYY``).**/
-		format: {
-			value: function(x) {
-				x = __Type(x).chars ? x: "{DDDD}, {D} {MMMM} {YYYY}, {h}:{mm}:{ss}";
-				let data = x.match(/\{\w+\}/gi);
-				if (data === null) return x;
-				for (let v of data) {
-					let code  = v.replace(/^\{(\w+)\}$/, "$1");
-					let value = this.code(code);
-					x = x.replace(v, value);
-				}
-				return x;
-			}
-		},
-		/**. ``''function'' onchange``: Define um disparador para ser chamado quando houver mudanças nos parâmetros de data e tempo. Para removê-lo, deve-se definí-lo com o valor ``null``.**/
-		onchange: {
-			set: function(x) {
-				if (!__Type(x).function && x !== null) return;
-				this._change = x;
-			}
-		},
-		/**. ``''integer'' valueOf()``: Retorna os segundos desde 0000-01-01T00:00:00.**/
-		valueOf: {
-			value: function() {
-				let date = this.dateValueOf();
-				let time = this.timeValueOf();
-				if (date >= 1)
-					return 24*3600*(date-1)+time;
-				return 24*3600*date - (24*3600 - time);
-      }
-		},
-		/**. ``''integer'' timeValueOf()``: Retorna o tempo em segundos.**/
-		timeValueOf: {
-			value: function() {
-				return 3600*this.hour + 60*this.minute + this.second;
-			}
-		},
-		/**. ``''integer'' dateValueOf()``: Retorna os dias desde 0000-01-01 (dia 1).**/
-		dateValueOf: {
-			value: function() {
-				/* se o ano for zero: dias do ano corrente */
-				if (this.year === 0) return this.dayYear;
-				/* se o ano for diferente de zero, calcular dias de anos completos (ano - 1) */
-				const year = Math.abs(this.year) - 1;
-				const y365 = 365*year;
-				const y400 = Math.trunc(year/400);
-				const y004 = Math.trunc(year/4);
-				const y100 = Math.trunc(year/100);
-				const days = y365 + y400 + y004 - y100;
-				/* se o ano for positivo: dias do ano zero + dias de anos completos + dias do ano corrente */
-				if (this.year >= 0) return 366 + days + this.dayYear;
-				/* se o ano for negativo: dias de anos completos + (dias total do ano - dias do ano corrente) */
-				return -(days + ((this.leap ? 366 : 365) - this.dayYear));
-			}
-		},
-		/**. ``''string'' toString()``: Retorna a data e o tempo no formato ``YYYY-MM-DDThh:mm:ss.sss``.**/
-		toString: {
-			value: function() {return this.format("{YYYY}-{MM}-{DD}T{hh}:{mm}:{ss}");}
-		},
-		/**. ``''string'' toTimeString()``: Retorna o tempo no formato ``hh:mm:ss.sss``.**/
-		toTimeString: {
-			value: function() {return this.format("{hh}:{mm}:{ss}");}
-		},
-		/**. ``''string'' toDateString()``: Retorna a data no formato ``YYYY-MM-DD``.**/
-		toDateString: {
-			value: function() {return this.format("{YYYY}-{MM}-{DD}");}
-		},
-		/**. ``''string'' toWeekString()``: Retorna a semana no formato ``YYYY-wWW``.**/
-		toWeekString: {
-			value: function() {return this.format("{YYYY}-W{WW}");}
-		},
-		/**. ``''string'' toMonthString()``: Retorna o mês no formato ``YYYY-MM``.**/
-		toMonthString: {
-			value: function() {return this.format("{YYYY}-{MM}");}
-		},
-		/**. ``''string'' toTimeFormString()``: Retorna o tempo no formato para formulário ``hh:mm``.**/
-		toTimeFormString: {
-			value: function() {return this.format("{hh}:{mm}");}
-		},
-		/**. ``''string'' toDateFormString()``: Retorna a data no formato para formulário ``YYYY-MM-DD`` limitado ao ano 1 ou vazio.**/
-		toDateFormString: {
-			value: function() {return this.year < 1 ? "" : this.format("{YYYY}-{MM}-{DD}");}
-		},
-		/**. ``''string'' toFormString()``: Retorna data/tempo no formato para formulário ou vazio.**/
-		toFormString: {
-			value: function() {
-				return this.year < 1 ? "" : this.format("{YYYY}-{MM}-{DD}T{hh}:{mm}");
-			}
-		},
-
-		toLocaleDateString: {
-			value: function() {
-				// se lang for ar fudeu o esquema
-				const format = new Intl.DateTimeFormat(__LANG.main);
-				return format.formatToParts();
-				//return format.format();
-			}
-		},
-
-
-
-
-
-
-		/**. ``''string'' testDrive(''integer'' x=100)``: checa a sequencialidade dos dias e dos dias da semana. O atributo ``x`` define o ciclo da simulação em anos, do negativo ao positivo (dobra).**/
-		testDrive: {
-			value: function(x) {
-				/* https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date */
-				x = (x === undefined ? 100 : Math.abs(x))*365*24*3600;
-				let min = __DateTime(-x);
-				let max = __DateTime(+x);
-				let i   = min.dateValueOf();
-				let w   = min.weekDay;
-				let ni  = min.dateValueOf();
-				let nf  = max.dateValueOf();
-				console.log({min: min.toDateString(), max: max.toDateString()});
-				while (min < max) {
-					if (i !== min.dateValueOf()) throw new Error("dateValueOf: "  + min.toString());
-					if (w !== min.weekDay)  throw new Error("weekDay: " + min.toString());
-					min.day++;
-					i++;
-					w = w === 7 ? 1 : (w+1);
-				}
-				console.log({min: min.toDateString(), max: max.toDateString()});
-				return "Sucesso!"
-			}
-		}
-	});
-
-/*----------------------------------------------------------------------------*/
-	/**#### Ano
+	#### Ano
 	###### ``**constructor** ''object'' __Year(''integer'' year)``
 	Construtor para resgate de informações sobre o ano (``year``).**/
 	function __Year(year) {
@@ -3412,14 +2923,18 @@ const wd = (function() {
 
 	Object.defineProperties(__Year.prototype, {
 		constructor: {value: __Year},
-		toString: {value: function() {return this.YYYY;}},
-		valueOf:  {value: function() {return this.daysElapsedYear;}},
 		/**. ``''string'' YYYY``: Retorna uma string no formato YYYY.**/
 		YYYY: {
 			get: function() {
  				const y   = Math.abs(this.year);
 				const len = (y < 10 ? 3 : (y < 100 ? 2 : (y < 1000 ? 1 : 0)));
 				return (this.year < 0 ? "-" : "") + ("0").repeat(len) + String(y);
+			}
+		},
+		/**. ``''string'' YY``: Retorna uma string no formato YY (dois últimos dígitos do ano).**/
+		YY: {
+			get: function() {
+				return this.YYYY.replace(/(\-?)\d\d(\d\d)/, "$1$2");
 			}
 		},
 		/**. ``''integer'' daysElapsedYear``: Retorna os dias decorridos de 0000-01-01T00:00:00 (valor 0) até o primeiro dia do ano.**/
@@ -3470,8 +2985,6 @@ const wd = (function() {
 
 	__Month.prototype = Object.create(__Year.prototype, {
 		constructor: {value: __Month},
-		toString: {value: function() {return this.YYYYMM;}},
-		valueOf:  {value: function() {return this.daysElapsedMonth;}},
 		/**. ``''string'' YYYYMM``: Retorna uma string no formato YYYY-MM.**/
 		YYYYMM: {get: function() {return [this.YYYY, this.MM].join("-");}},
 		/**. ``''integer'' daysElapsedMonth``: Retorna os dias decorridos de 0000-01-01T00:00:00 (valor 0) até o primeiro dia do mês.**/
@@ -3518,8 +3031,6 @@ const wd = (function() {
 
 	__Day.prototype = Object.create(__Month.prototype, {
 		constructor: {value: __Day},
-		toString: {value: function() {return this.YYYYMMDD;}},
-		valueOf:  {value: function() {return this.daysElapsed;}},
 		/**. ``''string'' DD``: Retorna o dia com dois dígitos.**/
 		DD: {get: function() {return (this.day < 10 ? "0" : "") + String(this.day);}},
 		/**. ``''string'' YYYYMMDD``: Retorna a data no formato YYYY-MM-DD.**/
@@ -3564,8 +3075,6 @@ const wd = (function() {
 
 	__WeekDay.prototype = Object.create(__Day.prototype, {
 		constructor: {value: __WeekDay},
-		toString: {value: function() {return this.DDDD;}},
-		valueOf:  {value: function() {return this.weekDay;}},
 	});
 
 /*----------------------------------------------------------------------------*/
@@ -3590,8 +3099,6 @@ const wd = (function() {
 
 	__Week.prototype = Object.create(__WeekDay.prototype, {
 		constructor: {value: __Week},
-		toString: {value: function() {return this.YYYYWW;}},
-		valueOf:  {value: function() {return this.week;}},
 		/**. ``''string'' WW``: Retorna a semana com dois dígitos.**/
 		WW: {get: function() {return (this.week < 10 ? "0" : "") + String(this.week);}},
 		/**. ``''string'' YYYYWW``: Retorna a semana no formato YYYY-Www.**/
@@ -3616,8 +3123,8 @@ const wd = (function() {
 				return back ? -(new __Week(this.year-1, 12, 31).maxFormWeek) : len;
 			}
 		},
-		/**. ``''integer'' workingDays``: Retorna a quantidade de dias úteis decorridos até o dia.**/
-		workingDays : {
+		/**. ``''integer'' work``: Retorna a quantidade de dias úteis decorridos até o dia.**/
+		work: {
 			get: function() {
 				const sun  = ([null,1,7,6,5,4,3,2])[this.firstWeekDay];
 				const sat  = ([null,7,6,5,4,3,2,1])[this.firstWeekDay];
@@ -3689,11 +3196,36 @@ const wd = (function() {
 				return new __Time(y, (m > 12 ? 1 : m), d, this.hour, this.minute, this.second);
 			}
 		},
+
+		/**. ``''object'' walk(''integer'' value)``: Retorna uma instância do objeto caminhando o valor de segundos definidos no argumento.**/
+		walk: {
+			value: function(value) {
+				const check = new __Type(value);
+				if (!check.finite) value = 0;
+				const time = this.timeElapsed;
+				return this.constructor.toTimeObject(time + value);
+			}
+		},
+		/** . ``''object'' codes``: Retorna um objeto contendo propriedades temporais abreviadas.**/
+		codes: {
+			get: function() {
+				return {
+		 			Y:   String(this.year),   YY: this.YY, YYYY: this.YYYY,
+		 			M:   String(this.month),  MM: this.MM, MMM:  this.MMM, MMMM: this.MMMM,
+					D:   String(this.day),    DD: this.DD, DDD:  this.DDD, DDDD: this.DDDD,
+					w:   String(this.week),   ww: this.WW,
+		 			h:   String(this.hour),   hh: this.hh,
+		 			m:   String(this.month),  mm: this.mm,
+		 			s:   String(this.second), ss: this.ss,
+		 			h12: String(this.h12),    ampm: this.meridiem
+				};
+			}
+		},
 	});
 
 	Object.defineProperties(__Time, {
 		/**##### Tempo: Métodos e Propriedades Estáticos
-		. ``''array'' daysToYear(''integer'' value)``: Retorna o ano (item 0) a partir do número de dias .**/
+		. ``''array'' daysToYear(''integer'' value)``: Retorna o ano (item 0) a partir do número de dias (``value``).**/
 		daysToYear: {
 			value: function(value) {
 				const check = new __Type(value);
@@ -3724,7 +3256,7 @@ const wd = (function() {
 				return [year];
 			}
 		},
-		/**. ``''array'' daysToMonth(''integer'' value)``: Retorna o ano (item 0) e o mês (item 1) a partir do número de dias .**/
+		/**. ``''array'' daysToMonth(''integer'' value)``: Retorna o ano (item 0) e o mês (item 1) a partir do número de dias (``value``).**/
 		daysToMonth: {
 			value: function(value) {
 				const year = this.daysToYear(value)[0];
@@ -3741,10 +3273,9 @@ const wd = (function() {
 				while (value < help.daysElapsedMonth)
 					help = new __Month(year, help.month-1);
 				return [year, help.month]
-
 			}
 		},
-		/**. ``''array'' daysToDate(''integer'' value)``: Retorna o ano (item 0), o mês (item 1) e o dia (item 2) a partir do número de dias .**/
+		/**. ``''array'' daysToDate(''integer'' value)``: Retorna o ano (item 0), o mês (item 1) e o dia (item 2) a partir do número de dias (``value``).**/
 		daysToDate: {
 			value: function(value) {
 				const data = this.daysToMonth(value);
@@ -3753,7 +3284,7 @@ const wd = (function() {
 				return [date.year, date.month, day];
 			}
 		},
-		/**. ``''array'' secondsToTime(''number'' value)``: Retorna a hora (item 0), o minuto (item 1) e o segundo (item 2) a partir do número de segundos.**/
+		/**. ``''array'' secondsToTime(''number'' value)``: Retorna a hora (item 0), o minuto (item 1) e o segundo (item 2) a partir do número de segundos (``value``).**/
 		secondsToTime: {
 			value: function(value) {
 				const check = new __Type(value);
@@ -3768,9 +3299,9 @@ const wd = (function() {
 				return [hour, minute, Number(second.toFixed(3))];
 			}
 		},
-		/**. ``''array'' seconds(''integer'' value)``: Retorna o ano (item 0), o mês (item 1), o dia (item 2), a hora (item 3), o minuto (item 4) e o segundo (item 5) a partir do número de segundos.**/
+		/**. ``''array'' seconds(''integer'' value)``: Retorna o ano (item 0), o mês (item 1), o dia (item 2), a hora (item 3), o minuto (item 4) e o segundo (item 5) a partir do número de segundos (``value``).**/
 		secondsToDate: {
-			value: function(value) {//FIXME quando o ano é negativo está dando diferença
+			value: function(value) {
 				const day  = 24*3600;
 				const sec  = value%day;
 				const days = Math.trunc((value - sec)/day);
@@ -3779,15 +3310,13 @@ const wd = (function() {
 				return [date[0],date[1],date[2],time[0],time[1],time[2]];
 			}
 		},
-		/**. ``''object'' toTimeObject(''integer'' value)``: Retorna um objeto __Time a partir do número de segundos.**/
+		/**. ``''object'' toTimeObject(''integer'' value)``: Retorna um objeto __Time a partir do número de segundos (``value``).**/
 		toTimeObject: {
 			value: function(value) {
 				const data = this.secondsToDate(value);
 				return new __Time(data[0],data[1],data[2],data[3],data[4],data[5]);
 			}
 		},
-
-
 		/**. ``''async'' sequentialityTest(''integer'' start, ''integer'' stop, ''integer'' sec)``: Testa a sequencialidade da data do ano ``start`` até o ano ``stop`` (opcional) no tempo fixo de segundos ``sec`` (opcional).**/
 		sequentialityTest: {
 			value: async function(start, stop, sec) {
@@ -3831,53 +3360,57 @@ const wd = (function() {
 		}
 	});
 
-
-
-
-
-
-
-
-
-
-
-	function __DateTime2(input) {
-		if (!(this instanceof __DateTime2)) return new __DateTime2(input);
+/*----------------------------------------------------------------------------*/
+	/**###### ``**constructor** ''object'' __DateTime(''any'' input)``
+	Construtor para manipulação de data/tempo. O atributo ``input`` aceita valores do tipo:
+	- Data, tempo ou data/tempo nos parâmetros da biblioteca;
+	- Numérico correspondendo ao número de segundos desde 0000-01-01T00:00:00.0000 (segundo 0);
+	- Objeto contendo a definição de data/tempo por meio de chaves (``year``,``month``, ``day``, ``hour``, ``minute``, ``second``) e seus respectivos valores que, se não informados, assumirão os atuais; e
+	- Caso contrário, assumirá o valor de data e tempo atuais.**/
+	function __DateTime(input) {
+		if (!(this instanceof __DateTime)) return new __DateTime(input);
 		const check = __Type(input);
 		const test  = check._test;
-		const data  = {year: 0, month: 1, day: 1, hour: 0, minute: 0, second: 0, type: "default"};
+		const now   = new Date();
+		const data  = {
+			year:   now.getFullYear(),
+			month:  now.getMonth() + 1,
+			day:    now.getDate(),
+			hour:   now.getHours(),
+			minute: now.getMinutes(),
+			second: now.getSeconds() + now.getMilliseconds()/1000,
+			type:   "now"
+		};
 		if (check.time) {
-			const base  = check.value;
-			data.hour   = base.substring(0, 2);
-			data.minute = base.substring(3, 5);
-			data.second = base.substring(7,12);
-			data.type   = "time";
+			const base = check.value.split(":");
+			const list = {hour: base[0], minute: base[1], second: base[2], type: "time"};
+			for (let i in data)
+				data[i] = i in list ? list[i] : (i === "month" || i === "day" ? 1 : 0);
 		}
 		else if (check.date) {
-			const base = check.value;
-			data.year  = base[0] === "-" ? base.substring(0, 5) : base.substring(0, 4);
-			data.month = base[0] === "-" ? base.substring(6, 8) : base.substring(5, 7);
-			data.day   = base[0] === "-" ? base.substring(9,11) : base.substring(8,10);
-			data.type  = "date";
+			const minus = check.value[0] === "-";
+			const base  = check.value.replace(/^\-/, "").split("-");
+			base[0]     = (minus ? "-" : "") + base[0];
+			const list  = {year: base[0], month: base[1], day: base[2], type: "date"};
+			for (let i in data)
+				data[i] = i in list ? list[i] : 0;
 		}
 		else if (check.datetime) {
-			const base  = check.value;
-			data.year   = base[0] === "-" ? base.substring( 0, 5) : base.substring( 0, 4);
-			data.month  = base[0] === "-" ? base.substring( 6, 8) : base.substring( 5, 7);
-			data.day    = base[0] === "-" ? base.substring( 9,11) : base.substring( 8,10);
-			data.hour   = base[0] === "-" ? base.substring(12,14) : base.substring(11,13);
-			data.minute = base[0] === "-" ? base.substring(15,17) : base.substring(14,16);
-			data.second = base[0] === "-" ? base.substring(18,24) : base.substring(17,23);
-			data.type   = "datetime";
+			const base  = check.value.split("T");
+			const minus = base[0][0] === "-";
+			const date  = base[0].replace(/^\-/, "").split("-");
+			const time  = base[1].split(":");
+			date[0] = (minus ? "-" : "") + date[0];
+			const list = {
+				year: date[0], month:  date[1], day:    date[2],
+				hour: time[0], minute: time[1], second: time[2],
+				type: "datetime"
+			};
+			for (let i in data) data[i] = list[i];
 		}
 		else if (check.finite) {
-			const base  = __Time.secondsToDate(check.value);
-			data.year   = base[0];
-			data.month  = base[1];
-			data.day    = base[2];
-			data.hour   = base[3];
-			data.minute = base[4];
-			data.second = base[5];
+			const base  = __Time.toTimeObject(check.value);
+			for (let i in data) data[i] = base[i];
 			data.type  = "number";
 		}
 		else if (check.object) {
@@ -3893,11 +3426,14 @@ const wd = (function() {
 			};
 			const regexp = test.regexp;
 			const format = test.subgroup;
-			data.type  = "month";
-			data.month = test.value.replace(regexp, config[format].m);
-			data.year  = test.value.replace(regexp, config[format].y);
+			const list   = {day: 1, type: "month",
+				month: test.value.replace(regexp, config[format].m),
+				year:  test.value.replace(regexp, config[format].y),
+			};
 			if (format === "MMMMYYYY")
-				data.month = __LANG.searchByName("months", data.month).index;
+				list.month = __LANG.searchByName("months", list.month).index;
+			for (let i in data)
+				data[i] = i in list ? list[i] : 0;
 		}
 		else if (test.group === "week") {
 			const config = {
@@ -3906,40 +3442,36 @@ const wd = (function() {
 			};
 			const regexp = test.regexp;
 			const format = test.subgroup;
-			let     week = Number(test.value.replace(regexp, config[format].w));
-			let     year = Number(test.value.replace(regexp, config[format].y));
+			const   week = Number(test.value.replace(regexp, config[format].w));
+			const   year = Number(test.value.replace(regexp, config[format].y));
 			let     date = new __Time(year,12,31,0,0,0);
-			if (week > date.week) {
-				week = week - date.week;
-				date = date.next();
+			if (week <= date.week) {
+				if (date.weekDay !== 1)
+					date = date.walk(24*3600*(1 - date.weekDay));
+				while (week !== date.week && date.week > 1)
+					date = date.walk(-7*24*3600);
+				const form = week <= date.maxFormWeek;
+				const list = {
+					year:  year,
+					type:  "week" + (form ? "/fweek" : ""),
+					month: date.week === 1 ? 1 : date.month,
+					day:   date.week === 1 ? 1 : date.day
+				}
+				for (let i in data)
+					data[i] = i in list ? list[i] : 0;
 			}
-			while (date.week !== week) date = date.next();
-			data.year  = date.year;
-			data.month = date.month;
-			data.day   = date.day;
-			data.type  = "week";
-		} else {
-			const base  = new Date();
-			data.year   = base.getFullYear();
-			data.month  = base.getMonth() + 1;
-			data.day    = base.getDate();
-			data.hour   = base.getHours();
-			data.minute = base.getMinutes();
-			data.second = base.getSeconds() + base.getMilliseconds()/1000;
-			data.type   = "now";
 		}
 		let main, error;
 		try {
 			main  = new __Time(data.year, data.month,  data.day, data.hour, data.minute, data.second);
 			error = "";
 		} catch(e) {
-			main  = new __Time(0, 1, 1, 0, 0, 0);
+			main  = new __DateTime();
 			error = e.message;
 			data.type  = "error";
 		}
-
-
 		Object.defineProperties(this, {
+			_max:  {value: null, writable: true},
 			/**. ``''object'' main``: Registra o objeto __Time auxiliar.**/
 			main:  {value: main, writable: true},
 			/**. ``''string'' error``: Registra o tipo de erro encontrado ou vazio.**/
@@ -3949,52 +3481,52 @@ const wd = (function() {
 		});
 	}
 
-	Object.defineProperties(__DateTime2.prototype, {
-		constructor: {value: __DateTime2},
-
-
-		update: {
-			value: function(input) {
-				const check = __Type(input);
-				if (check.finite)
-					this.main = __Time.toTimeObject(check.value);
-				else
-					this.main = new __Time(
-						this.year, this.month, this.day, this.hour, this.minute, this.second
-					);
-			}
-		},
-		/**. ``''integer'' year``: Define ou retorna o ano.** /
+	Object.defineProperties(__DateTime.prototype, {
+		constructor: {value: __DateTime},
+		/**. ``''string'' toString()``: Retorna o tempo no formato YYYY-MM-DDThh:mm:ss.sss.**/
+		toString: {value: function() {return this.main.toString();}},
+		/**. ``''number'' valueOf``: Retorna so segundos desde 000-01-01T00:00:00.000.**/
+		valueOf:  {value: function() {return this.main.valueOf();}},
+		/**. ``''integer'' year``: Define ou retorna o ano.**/
 		year: {
-			get: function() {
-				return this._Y;
-			},
+			get: function() {return this.main.year;},
 			set: function(x) {
 				const check = __Type(x);
 				if (!check.finite || check.value === this.year) return;
 				const val = __Number(check.value);
 				const int = val.int;
-				const dec = Math.abs(val.dec);
-				this._Y = int;
-				this._update();
-				if (dec !== 0) this.month = 12*dec;
+				const dec = val.dec;
+				const obj = new __Day(int, this.month, 1);
+				const day = this._max === null ? this.day : this._max;
+				this.main = new __Time(
+					int, this.month, day > obj.width ? obj.width : day,
+					this.hour, this.minute, this.second
+				);
+				this._max = day > obj.width ? day : null;
+				if (Math.trunc(12*dec) !== 0)
+					this.month = 12*dec;
 			}
 		},
-		/**. ``''integer'' month``: Define ou retorna o mês de 1 a 12 (janeiro a dezembro). O parâmetro será alterado para o valor definido, exceto quando extrapolar os limites. (**Observação**: ao alterar o mês de 2000-01-31 para fevereiro, a data definida será 2000-02-29 e não 2000-03-02)** /
+		/**. ``''integer'' month``: Define ou retorna o mês de 1 a 12 (janeiro a dezembro). O parâmetro será alterado para o valor definido, exceto quando extrapolar os limites. (**Observação**: ao alterar o mês de 2000-01-31 para fevereiro, a data definida será 2000-02-29 e não 2000-03-02)**/
 		month: {
-			get: function() {
-				return this._M;
-			},
+			get: function() {return this.main.month;},
 			set: function(x) {
 				const check = __Type(x);
-				if (!check.finite || check.value === this.month) return;
-				const val  = __Number(check.value);
-				const int  = val.int;
-				const dec  = Math.abs(val.dec);
-				this._M    = int%12 <= 0 ? (int%12+12) : (int%12);
-				this._update();
-				this.year += Math.trunc(int < 1 ? (int-12)/12 : (int-1)/12);
-				if (dec !== 0) this.day = dec*this._time.width;
+				if (!check.finite) return;
+				const val   = __Number(check.value);
+				const int   = val.int;
+				const dec   = val.dec;
+				const month = (12 + (int-1)%12)%12 + 1;
+				const year  = Math.trunc((int - (int < 1 ? 12 : 1))/12) + this.year;
+				const obj = new __Day(year, month, 1);
+				const day = this._max === null ? this.day : this._max;
+				this.main = new __Time(
+					year, month, day > obj.width ? obj.width : day,
+					this.hour, this.minute, this.second
+				);
+				this._max = day > obj.width ? day : null;
+				if (Math.trunc(this.main.width*dec) !== 0)
+					this.day = this.main.width*dec;
 			}
 		},
 		/**. ``''integer'' day``: Define ou retorna o dia de 1 a 31. O parâmetro será alterado para o valor definido, exceto quando extrapolar os limites. (**Observação**: Quando o dia de um mês for maior que a quantidade de dias do mês alterado, o valor ficará limitado ao último dia e, ao acrescentar unidades de mês à data 2000-01-31, por exemplo, o resultado será 2000-02-29, 2000-03-31, 2000-04-30, 2000-05-31...**/
@@ -4003,23 +3535,29 @@ const wd = (function() {
 			set: function(x) {
 				const check = __Type(x);
 				if (!check.finite) return;
-				const unit  = 24*3600;
-				const delta = check.value - this.day;
-				const value = this.main.timeElapsed + (unit*delta);
-				this.update(value);
+				const val = __Number(check.value);
+				const int = val.int;
+				const dec = val.dec;
+				const gap = 24*60*60*(int - this.day);
+				this.main = this.main.walk(gap);
+				this._max = null;
+				if (Math.trunc(24*dec) !== 0)
+					this.hour = 24*dec;
 			}
 		},
-
 		/**. ``''integer'' hour``: Define ou retorna a hora (0 a 23). O parâmetro será alterado para o valor definido, exceto quando extrapolar os limites.**/
 		hour: {
 			get: function() {return this.main.hour;},
 			set: function(x) {
 				const check = __Type(x);
 				if (!check.finite) return;
-				const unit  = 3600;
-				const delta = check.value - this.hour;
-				const value = this.main.timeElapsed + (unit*delta);
-				this.update(value);
+				const val = __Number(check.value);
+				const int = val.int;
+				const dec = val.dec;
+				const gap = 60*60*(int - this.hour);
+				this.main = this.main.walk(gap);
+				if (Math.trunc(60*dec) !== 0)
+					this.minute = 60*dec;
 			}
 		},
 		/**. ``''integer'' minute``: Define ou retorna o minuto de 0 a 59. O parâmetro será alterado para o valor definido, exceto quando extrapolar os limites.**/
@@ -4028,10 +3566,13 @@ const wd = (function() {
 			set: function(x) {
 				const check = __Type(x);
 				if (!check.finite) return;
-				const unit  = 60;
-				const delta = check.value - this.minute;
-				const value = this.main.timeElapsed + (unit*delta);
-				this.update(value);
+				const val = __Number(check.value);
+				const int = val.int;
+				const dec = val.dec;
+				const gap = 60*(int - this.minute);
+				this.main = this.main.walk(gap);
+				if (Math.trunc(60*dec) !== 0)
+					this.second = 60*dec;
 			}
 		},
 		/**. ``''number'' second``: Define ou retorna o segundo de 0 a 59.999. O parâmetro será alterado para o valor definido, exceto quando extrapolar o limites.**/
@@ -4040,46 +3581,11 @@ const wd = (function() {
 			set: function(x) {
 				const check = __Type(x);
 				if (!check.finite) return;
-				const unit  = 1;
-				const delta = check.value - this.second;
-				const value = this.main.timeElapsed + (unit*delta);
-				this.update(value);
+				const gap = check.value - this.second;
+				this.main = this.main.walk(gap);
 			}
 		},
 	});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /*===========================================================================*/
 	/**### Listas
@@ -8666,9 +8172,119 @@ const wd = (function() {
 	});
 
 /*----------------------------------------------------------------------------*/
-	/**#### WDdatetime
-	###### ``**constructor** ''object'' WDdatetime(''any''  input, ''object'' data)``
-	Construtor genérico para manipulação de tempo. Os argumentos ``input`` e ``data`` se referem aos argumento de ``WDmain``**/
+	/**#### WDtime**/
+	/**###### ``**constructor** ''object'' WDtime(''any''  input, ''object'' data)``
+	Construtor para manipulação de tempo. Os argumentos ``input`` e ``data`` se referem aos argumento de ``WDmain``**/
+	function WDtime(input, data) {
+		WDmain.call(this, input, data);
+		Object.defineProperties(this, {
+			_main: {value: new __DateTime(data.value)},
+		});
+	}
+
+	WDtime.prototype = Object.create(WDmain.prototype, {
+		constructor: {value: WDtime},
+		/**. ``''number'' hour``: Retorna ou define a hora.**/
+		hour: {
+			get: function()  {return this._main.hour;},
+			set: function(x) {return this._main.hour = x;}
+		},
+		/**. ``''number'' minute``: Retorna ou define o minuto.**/
+		minute: {
+			get: function()  {return this._main.minute;},
+			set: function(x) {return this._main.minute = x;}
+		},
+		/**. ``''number'' second``: Retorna ou define o segundo.**/
+		second: {
+			get: function()  {return this._main.second;},
+			set: function(x) {return this._main.second = x;}
+		},
+		/**. ``''integer'' h12``: Retorna a hora no ciclo de 12h.**/
+		h12: {get: function() {return this._main.main.h12;}},
+		/**. ``''string'' h12``: Retorna AM ou PM.**/
+		meridiem: {get: function() {return this._main.main.meridiem;}},
+		/**. ``''integer'' valueOf()``: Retorna o tempo em segundos.**/
+		valueOf: {value: function() {return this._main.main.time;}},
+		/**. ``''string'' toString(''string'' input)``: Retorna notação de hora ou o pre-formata a partir de codificação específica definida no argumento opcional ``input``.**/
+		toString: {
+			value: function(input) {
+				if (typeof input !== "string") return this._main.main.hhmmss;
+				const codes = this._main.main.codes;
+				const allow = ["h", "hh", "h12", "m", "mm", "s", "ss", "ampm"];
+				for (let code of allow) {
+					let re = new RegExp("\\{"+code+"\\}", "gm");
+					input = input.replace(re, codes[code]);
+				}
+				return input;
+			}
+		},
+	});
+
+/*----------------------------------------------------------------------------*/
+	/**#### WDdate**/
+	/**###### ``**constructor** ''object'' WDdate(''any''  input, ''object'' data)``
+	Construtor para manipulação de data. Os argumentos ``input`` e ``data`` se referem aos argumento de ``WDmain``**/
+	function WDdate(input, data) {
+		WDmain.call(this, input, data);
+		Object.defineProperties(this, {
+			_main: {value: new __DateTime(data.value)},
+		});
+	}
+
+	WDdate.prototype = Object.create(WDmain.prototype, {
+		constructor: {value: WDdate},
+		/**. ``''number'' year``: Retorna ou define o ano.**/
+		year: {
+			get: function()  {return this._main.year;},
+			set: function(x) {return this._main.year = x;}
+		},
+		/**. ``''number'' month``: Retorna ou define o mês.**/
+		month: {
+			get: function()  {return this._main.month;},
+			set: function(x) {return this._main.month = x;}
+		},
+		/**. ``''number'' day``: Retorna ou define o dia.**/
+		day: {
+			get: function()  {return this._main.day;},
+			set: function(x) {return this._main.day = x;}
+		},
+		/**. ``''integer'' week``: Retorna o número da semana.**/
+		week: {get: function()  {return this._main.main.week;}},
+		/**. ``''integer'' weekDay``: Retorna o número do dia da semana.**/
+		weekDay: {get: function()  {return this._main.main.weekDay;}},
+		/**. ``''boolean'' leap``: Informa se o ano é bissexto.**/
+		leap: {get: function()  {return this._main.main.leap;}},
+		/**. ``''integer'' width``: Retorna a quantidade de dias do mês.**/
+		width: {get: function()  {return this._main.main.width;}},
+		/**. ``''integer'' days``: Retorna o número do dia do ano.**/
+		days: {get: function()  {return this._main.main.days;}},
+		/**. ``''integer'' work``: Retorna o número de dias úteis até o momento.**/
+		work: {get: function()  {return this._main.main.work;}},
+		/**. ``''integer'' valueOf()``: Retorna o número de dias desde 0000-01-01.**/
+		valueOf: {value: function() {return this._main.main.daysElapsed;}},
+		/**. ``''string'' toString(''string'' input)``: Retorna notação de data ou a pre-formata a partir de codificação específica definida no argumento opcional ``input``.**/
+		toString: {
+			value: function(input) {
+				if (typeof input !== "string") return this._main.main.YYYYMMDD;
+				const codes = this._main.main.codes;
+				const allow = [
+					"Y", "YY", "YYYY", "M", "MM", "MMM", "MMMM", "D", "DD", "DDD", "DDDD",
+					"w", "ww"
+				];
+				for (let code of allow) {
+					let re = new RegExp("\\{"+code+"\\}", "gm");
+					input = input.replace(re, codes[code]);
+				}
+				return input;
+			}
+		},
+	});
+
+
+/*----------------------------------------------------------------------------*/
+	/**#### WDdatetime**/
+	/**###### ``**constructor** ''object'' WDdatetime(''any''  input, ''object'' data)``
+	Construtor para manipulação de data/tempo. Os argumentos ``input`` e ``data`` se referem aos argumento de ``WDmain``**/
 	function WDdatetime(input, data) {
 		WDmain.call(this, input, data);
 		Object.defineProperties(this, {
@@ -8678,137 +8294,47 @@ const wd = (function() {
 
 	WDdatetime.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDdatetime},
-		/**. ``''integer'' year``: Define e retorna o ano.**/
-		year: {
-			get: function()  {
-				return this.type === "time" ? undefined : this._main.year;
-			},
-			set: function(x) {
-				if (this.type !== "time") this._main.year = x;
-			}
-		},
-		/**. ``''integer'' month``: Define e retorna o mês.**/
-		month: {
-			get: function()  {
-				return this.type === "time" ? undefined : this._main.month;
-			},
-			set: function(x) {
-				if (this.type !== "time") this._main.month = x;
-			}
-		},
-		/**. ``''integer'' day``: Define e retorna o dia.**/
-		day: {
-			get: function()  {
-				return this.type === "time" ? undefined : this._main.day;
-			},
-			set: function(x) {
-				if (this.type !== "time") this._main.day = x;
-			}
-		},
-		/**. ``''integer'' hour``: Define e retorna a hora.**/
-		hour: {
-			get: function()  {
-				return this.type === "date" ? undefined : this._main.hour;
-			},
-			set: function(x) {
-				if (this.type !== "date") this._main.hour = x;
-			}
-		},
-		/**. ``''integer'' minute``: Define e retorna o minuto.**/
-		minute: {
-			get: function()  {
-				return this.type === "date" ? undefined : this._main.minute;
-			},
-			set: function(x) {
-				if (this.type !== "date") this._main.minute = x;
-			}
-		},
-		/**. ``''number'' second``: Define e retorna o segundo.**/
-		second: {
-			get: function()  {
-				return this.type === "date" ? undefined : this._main.second;
-			},
-			set: function(x) {
-				if (this.type !== "date") this._main.second = x;
-			}
-		},
-		/**. ``''integer'' h12``: Retorna a hora no formato 12h (1-12).**/
-		h12: {
-			get: function() {
-				return this.type !== "date" ? this._main.h12 : undefined;
-			},
-		},
-		/**. ``''boolean'' leap``: Informa se a data é ano bissexto.**/
-		leap: {
-			get: function() {
-				return this.type !== "time" ? this._main.leap : undefined;
-			}
-		},
-		/**. ``''integer'' dayYear``: Retorna o dia do ano (1-365).**/
-		dayYear: {
-			get: function() {
-				return this.type !== "time" ? this._main.dayYear : undefined;
-			}
-		},
-		/**. ``''integer'' weekDay``: Retorna o dia da semana (1-7).**/
-		weekDay: {
-			get: function() {
-				return this.type !== "time" ? this._main.weekDay : undefined;
-			}
-		},
-		/**. ``''integer'' week``: Retorna a semana do ano (1-54).**/
-		week: {
-			get: function() {
-				return this.type !== "time" ? this._main.week : undefined;
-			}
-		},
-		/**. ``''boolean'' workingDay``: Informa se o dia é útil.**/
-		workingDay: {
-			get: function() {
-				return this.type !== "time" ? this._main.workingDay : undefined;
-			}
-		},
-		/**. ``''integer'' workingDays``: Retorna a quantidade de dias úteis até a data.**/
-		workingDays: {
-			get: function() {
-				return this.type !== "time" ? this._main.workingDays : undefined;
-			}
-		},
-		/**. ``''integer'' nonWorkingDays``: Retorna a quantidade de dias não úteis até a data.**/
-		nonWorkingDays: {
-			get: function() {
-				return this.type !== "time" ? this._main.nonWorkingDays : undefined;
-			}
-		},
-		/**. ``''integer'' width``: Retorna a quantidade de dias do mês (28-31).**/
-		width: {
-			get: function() {
-				return this.type !== "time" ? this._main.width : undefined;
-			}
-		},
-		/**. ``''string'' format(''string'' str)``: Pre-formata data/tempo a partir de codificação específica.**/
-		format: {
-			value: function(str) {
-				return this._main.format(str);
-			}
-		},
-		/**. ``''string'' toString()``: Retorna uma string nos formatos de data ou tempo.**/
-		toString: {
-			value: function() {
-				if (this.type === "time") return this._main.toTimeString();
-				if (this.type === "date") return this._main.toDateString();
-				return this._main.toString();
-			}
-		},
-		/**. ``''number'' valueOf()``: Retorna a quantidade de segundos ou dias desde a origem (0000-01-01).**/
+		/**. ``''integer'' valueOf(''string'' option)``: Retorna o número de segundos desde 0000-01-01T00:00:00.000. Se o argumento opcional ``input`` for definido como "date", retornará os dias desde a origem e se for definido como "time", o valor de segundos do dia.**/
 		valueOf: {
-			value: function() {
-				if (this.type === "time") return this._main.timeValueOf();
-				if (this.type === "date") return this._main.dateValueOf();
-				return this._main.valueOf();
+			value: function(input) {
+				const types = {
+					time: this._main.main.time,
+					date: this._main.main.daysElapsed,
+					datetime: this._main.main.timeElapsed
+				};
+				return input in types ? types[input] : types.datetime;
+			}
+		},
+		/**. ``''string'' toString(''string'' input)``: Retorna notação de data/tempo ou a pre-formata a partir de codificação específica definida no argumento opcional ``input``.**/
+		toString: {
+			value: function(input) {
+				if (typeof input !== "string") return this._main.main.toString();
+				const codes = this._main.main.codes;
+				for (let code in codes) {
+					let re = new RegExp("\\{"+code+"\\}", "gm");
+					input = input.replace(re, codes[code]);
+				}
+				return input;
 			}
 		},
 	});
+
+	/*-- copiando propriedades de WDtime e WDdate */
+	const forget   = ["toString", "valueOf", "constructor"];
+	const timeProp = Object.getOwnPropertyNames(WDtime.prototype);
+	const dateProp = Object.getOwnPropertyNames(WDdate.prototype);
+	for (let prop of timeProp) {
+		if (forget.indexOf(prop) < 0) {
+			let desc = Object.getOwnPropertyDescriptor(WDtime.prototype, prop);
+			Object.defineProperty(WDdatetime.prototype, prop, desc);
+		}
+	}
+	for (let prop of dateProp) {
+		if (forget.indexOf(prop) < 0) {
+			let desc = Object.getOwnPropertyDescriptor(WDdate.prototype, prop);
+			Object.defineProperty(WDdatetime.prototype, prop, desc);
+		}
+	}
 
 /*----------------------------------------------------------------------------*/
 	/**#### WDarray
@@ -8989,7 +8515,6 @@ const wd = (function() {
 			value: function(name) {
 				return this._data.instanceOf(name);
 			}
-
 		}
 	});
 
@@ -9316,8 +8841,8 @@ const wd = (function() {
 		switch(data.type) {
 			case "number":   return new WDnumber(input, data);
 			case "array":    return new WDarray(input, data);
-			case "date":     return new WDdatetime(input, data);
-			case "time":     return new WDdatetime(input, data);
+			case "date":     return new WDdate(input, data);
+			case "time":     return new WDtime(input, data);
 			case "datetime": return new WDdatetime(input, data);
 			case "node":     return new WDnode(input, data);
 			case "string":   return new WDstring(input, data);
@@ -9344,10 +8869,6 @@ const wd = (function() {
 		/**. ``''string'' device``: Retorna o tipo de tela de acordo com a biblioteca.**/
 		device:  {get: function() {return __DEVICECONTROLLER.device;}},
 		/**. ``''object'' today``: Retorna o objeto do tipo data com o valor atual.**/
-		today:   {get: function() {return WD(__DateTime().toDateString());}},
-		/**. ``''object'' now``: Retorna o objeto do tipo tempo com o valor atual.**/
-		now:     {get: function() {return WD(__DateTime().toTimeString());}},
-		/**. ``''object'' already``: Retorna o objeto do tipo data/tempo com o valor atual.**/
 		already: {get: function() {return WD(__DateTime().toString());}},
 		/**. ``''object'' URL``: Retorna dados da URL.**/
 		URL:     {get: function() {return __URL().url;}},
@@ -9361,6 +8882,22 @@ const wd = (function() {
 			get: function()  {return __LANG.currency;},
 			set: function(x) {__LANG.currency = x;}
 		},
+		/**. ``''object'' datetime(''any'' input)``: Retorna um objeto WD de data/tempo a partir dos valores:
+		|input|Descrição|
+		|Padrão|O valor atual de data/tempo|
+		|Tempo|O tempo com data definida em 000-01-01|
+		|Data|A data com tempo definido em 00:00:00|
+		|Data/Tempo|Conforme definido|
+		|Número|A quantidade de segundos desde 0000-01-01T00:00:00|
+		|Semana|O primeiro dia da semana com tempo definido em 00:00:00|
+		|Mês|Primeiro dia do mês com tempo definido em 00:00:00|
+		|Objeto|As propriedades definidas alteram o valor atual da data/tempo|**/
+		datetime: {
+			value: function(input) {
+				const datetime = new __DateTime(input);
+				return WD(datetime.toString());
+			}
+		},
 	});
 
 	if (__UNDERMAINTENANCE) {
@@ -9368,8 +8905,7 @@ const wd = (function() {
 		Object.defineProperties(WD, {
 			type:     {value: function(){return __Type.apply(null, Array.prototype.slice.call(arguments));}},
 			array:    {value: function(){return __Array.apply(null, Array.prototype.slice.call(arguments));}},
-			datetime: {value: function(){return __DateTime.apply(null, Array.prototype.slice.call(arguments));}},
-			dt: {value: function(){return __DateTime2.apply(null, Array.prototype.slice.call(arguments));}},
+			DateTime: {value: function(){return __DateTime.apply(null, Array.prototype.slice.call(arguments));}},
 			time:     {value: function(){return __Time.apply(null, Array.prototype.slice.call(arguments));}},
 			fprop:    {value: function(){return __FormValues.apply(null, Array.prototype.slice.call(arguments));}},
 			fnode:    {value: function(){return __FNode.apply(null, Array.prototype.slice.call(arguments));}},
