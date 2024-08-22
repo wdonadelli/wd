@@ -4196,94 +4196,97 @@ const wd = (function() {
 	function __FormProperties(input) {
 		if (!(this instanceof __FormProperties))	return new __FormProperties(input);
 		const check = __Type(input);
-		const node  = check.node ? check.value[0] : document.body;
-		const tag   = node.tagName.toLowerCase();
+		if (!check.node || check.value.length < 1)
+			throw new TypeError("Input value is not an HTML node");
 		Object.defineProperties(this, {
-			_node:  {value: node},
-			_tag:   {value: tag},
+			/**. ``''node'' node``: Retorna o nó.**/
+			node: {value: check.value[0]},
+			/**. ``''string'' tag``: Retorna a tag do nó.**/
+			tag:  {value: check.value[0].tagName.toLowerCase()},
 		});
 	}
 
 	Object.defineProperties(__FormProperties.prototype, {
 		constructor: {value: __FormProperties},
-		/**. ``''node'' node``: Retorna o nó.**/
-		node: {
-			get: function() {return this._node;}
-		},
-		/**. ``''string'' tag``: Retorna a tag do nó.**/
-		tag: {
-			get: function() {return this._tag;}
-		},
-		/**. ``''boolean'' form``: Informa se o nó é campo de formulário.**/
-		form: {
+		/**. ``''object'' fstruct``: Retorna as tags de formulário e a lista de tipos, se existir.**/
+		fstruct: {
 			get: function() {
-				const tags = {
-					meter:  1, progress: 1, option: 1, output: 1, select: 1, textarea: 1,
-					button: 1, input: 1
+				return {
+					meter:  null, progress: null, option:   null, output: null,
+					select: null, textarea: null,
+					button: ["reset", "button", "submit"],
+					input: [
+						"button",   "reset",    "submit", "image", "color", "radio", "checkbox",
+						"range",    "number",   "file",   "url",   "email", "tel", "text", "search",
+						"date",     "datetime", "month",  "week",  "time",  "datetime-local",
+						"password", "hidden"
+					]
 				};
-				return this.tag in tags;
 			}
 		},
+		/**. ``''boolean'' form``: Informa se o nó é campo de formulário.**/
+		form: {get: function() {return this.tag in this.fstruct;}},
 		/**. ``''string'' ftype``: Retorna o tipo de formulário ou vazio.**/
 		ftype: {
 			get: function() {
-				if (!this.form) return "";
-				const tag  = this.tag;
-				const name = [null, "datetime"];
-				const attr = String(this.node.getAttribute("type")).toLowerCase();
-				const prop = String(this.node.type).toLowerCase();
-				const tags = {
-					button: {reset: 0, button: 0, submit: 0},
-					input:  {
-						button:   0, reset:  0, submit:   0, image:  0, color: 0, radio:  0,
-						checkbox: 0, date:   0, datetime: 1, month:  0, week:  0, time:   0,
-						range:    0, number: 0, file:     0, url:    0, email: 0, tel:    0,
-						text:     0, search: 0, password: 0, hidden: 0, "datetime-local": 1
+				if (this.form) {
+					const types = this.fstruct[this.tag];
+					if (types !== null) {
+						const attr = String(this.node.getAttribute("type")).toLowerCase();
+						const prop = String(this.node.type).toLowerCase();
+						if (types.indexOf(attr) >= 0) return attr;
+						if (types.indexOf(prop) >= 0) return prop;
+						return "";
 					}
-				};
-				if (!(tag in tags)) return tag;
-				if (attr in tags[tag] || prop in tags[tag]) {
-					const data = attr in tags[tag] ? attr : prop;
-					return tags[tag][data] === 0 ? data : name[tags[tag][data]];
+					return this.tag
 				}
 				return "";
 			}
 		},
-		/**. ``''boolean'' fwork``: Informar se o formulário está implementado ou falso.**/
+		/**. ``''boolean'' fwork``: Informa se o formulário está implementado.**/
 		fwork: {
 			get: function() {
-				if (!this.form) return false;
-				const attr = String(this.node.getAttribute("type")).toLowerCase();
-				const prop = String(this.node.type).toLowerCase();
-				return attr === prop;
+				if (this.form) {
+					const types = this.fstruct[this.tag];
+					if (types !== null) {
+						const attr = String(this.node.getAttribute("type")).toLowerCase();
+						const prop = String(this.node.type).toLowerCase();
+						return attr === prop;
+					}
+					return true;
+				}
+				return false;
 			}
 		},
-		/**. ``''boolean'' fmask``: Informa se o formulário possui máscara implementada ou falso.**/
+
+		//FIXME jogar isso para o próximo objeto e checar no construtor, pois quando isso for verdadeiro, não terá que checar constraints
+		/**. ``''boolean'' fmask``: Informa se o formulário possui máscara nativa implementada.**/
 		fmask: {
 			get: function() {
-				if (!this.form || this.tag !== "input") return false;
-				const types = {
-					color: 0, date:   0, month: 0, week: 0, time:  0, tel:      0,
-					range: 0, number: 0, file:  0, url:  0, email: 0, datetime: 0
-				};
-				if (!(this.ftype in types)) return false;
-				const invalid = "A1!@#$%¨&*()+";
-				const clone   = this.node.cloneNode();
-				clone.value   = invalid;
-				return clone.value !== invalid;
+				const types = [
+					"color", "date", "month", "week", "time", "tel", "range", "number",
+					"file", "url", "email", "datetime", "datetime-local"
+				];
+				if (types.indexOf(this.ftype) >= 0) {
+					const invalid = "A1!@#$%¨&*()+";
+					const clone   = this.node.cloneNode();
+					clone.value   = invalid;
+					return clone.value !== invalid;
+				}
+				return false;
 			}
 		},
 		/**. ``''boolean'' fsend``: Informa se o formulário pode ser enviado em requisições ou falso.**/
 		fsend: {
 			get: function() {
 				if (!this.form) return false;
-				const types = {
-					select:   0, textarea: 0, submit: 0, color: 0, radio: 0, checkbox: 0,
-					date:     0, datetime: 0, month:  0, week:  0, time:  0, range:    0,
-					number:   0, file:     0, url:    0, email: 0, tel:   0, text:     0,
-					search:   0, password: 0, hidden: 0
-				};
-				return this.ftype in types;
+				const types = [
+					"select",   "textarea", "submit", "color", "radio", "checkbox",
+					"date",     "datetime", "month",  "week",  "time",  "datetime-local",
+					"range",    "number",   "file",   "url",   "email", "tel", "text", "search",
+					"password", "hidden"
+				];
+				return types.indexOf(this.ftype) >= 0;
 			}
 		},
 		/**. ``''string'' fname``: Define ou retorna o valor do atributo ``name`` do formulário ou vazio.**/
@@ -4296,6 +4299,10 @@ const wd = (function() {
 					this.node.name = __Type(x).nonempty ? String(x).trim() : "";
 			}
 		},
+
+
+
+		//FIXME jogar para o próximo construtor
 		/**. ``''boolean'' ferror``: Retorna se o campo de formulário é inválido.**/
 		ferror: {
 			get: function() {
@@ -4303,6 +4310,7 @@ const wd = (function() {
 				return check && this.node.checkValidity() !== true;
 			}
 		},
+		//FIXME jogar para o próximo construtor
 		/**. ``''string'' fvalidity``: Define ou retorna mensagem de restrição do formulário.**/
 		fvalidity	: {
 			get: function() {
@@ -4341,11 +4349,58 @@ const wd = (function() {
 		/**. ``''any'' fvalue(''any'' data)``: Define ou retorna o valor do formulário ou nulo.**/
 		fvalue: {
 			value: function(data) {
-				if (!this.node) return null;
+				if (!this.form) return null;
 				const getter = arguments.length === 0 || data === undefined;
-				const check  = __Type(data);
-				const value  = __Type(this.node.value);
 				const type   = this.ftype;
+				const input  = __Type(data);
+				const output = __Type(this.node.value);
+				if (type === "select") {
+					if (getter) {
+						const value = [];
+						for (let i = 0; i < this.node.length; i++) {
+							if (this.node[i].selected)
+								value.push(this.node[i].value)
+						}
+						return value;
+					} else {
+						const value = input.array ? data : [data];
+						value.forEach(function(v,i,a) {
+							a[i] = v === null || v === undefined ? v : String(v);
+						});
+						for (let i = 0; i < this.node.length; i++) {
+							this.node[i].selected = value.indexOf(this.node[i].value) >= 0;
+						}
+						return this.fvalue;
+					}
+				} else if (type === "email") {
+					if (getter) {
+						const value = [];
+						for (let i = 0; i < this.node.length; i++) {
+							if (this.node[i].selected)
+								value.push(this.node[i].value)
+						}
+						return value;
+					} else {
+						const value = input.array ? data : [data];
+						value.forEach(function(v,i,a) {
+							a[i] = v === null || v === undefined ? v : String(v);
+						});
+						for (let i = 0; i < this.node.length; i++) {
+							this.node[i].selected = value.indexOf(this.node[i].value) >= 0;
+						}
+						return this.fvalue;
+					}
+
+
+				}
+
+
+
+
+
+
+
+
 				const driver = {way: null, type: null};
 				const ways   = {
 					file:     {file: null},
@@ -7968,65 +8023,35 @@ const wd = (function() {
 	WDstring.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDstring},
 		/**. ``''integer'' length``: Retorna a quantidade de caracteres.**/
-		length: {
-			get: function() {return this._main.length;}
-		},
+		length: {get: function() {return this._main.length;}},
 		/**. ``''array'' chars``: Retorna um array de caracteres.**/
-		chars: {
-			get: function() {return this._main.chars;}
-		},
+		chars: {get: function() {return this._main.chars;}},
 		/**. ``''string'' upper``: Retorna caixa alta.**/
-		upper: {
-			get: function() {return this._main.upper;}
-		},
+		upper: {get: function() {return this._main.upper;}},
 		/**. ``''string'' lower``: Retorna caixa baixa.**/
-		lower: {
-			get: function() {return this._main.lower;}
-		},
+		lower: {get: function() {return this._main.lower;}},
 		/**. ``''string'' capitalize``: Retorna a primeira letra de cada palavra em caixa alta.**/
-		capitalize: {
-			get: function() {return this._main.capitalize;}
-		},
+		capitalize: {get: function() {return this._main.capitalize;}},
 		/**. ``''string'' toggle``: Inverte a caixa.**/
-		toggle: {
-			get: function() {return this._main.toggle;}
-		},
+		toggle: {get: function() {return this._main.toggle;}},
 		/**. ``''string'' camel``: Transforma a string em camelCase.**/
-		camel: {
-			get: function() {return this._main.camel;}
-		},
+		camel: {get: function() {return this._main.camel;}},
 		/**. ``''string'' dash``: Divide a string em traços.**/
-		dash: {
-			get: function() {return this._main.dash;}
-		},
+		dash: {get: function() {return this._main.dash;}},
 		/**. ``''string'' clear``: Remove acentos.**/
-		clear: {
-			get: function() {return this._main.clear(false, true);}
-		},
+		clear: {get: function() {return this._main.clear(false, true);}},
 		/**. ``''string'' trim``: Remove espaços excedentes.**/
-		trim: {
-			get: function() {return this._main.clear(true, false);}
-		},
+		trim: {get: function() {return this._main.clear(true, false);}},
 		/**. ``''string'' clean``: Remove acentos e espaços excedentes.**/
-		clean: {
-			get: function() {return this._main.clear();}
-		},
+		clean: {get: function() {return this._main.clear();}},
 		/**. ``''array'' csv``: Retorna string em CSV para array.**/
-		csv: {
-			get: function() {return this._main.csv;},
-		},
+		csv: {get: function() {return this._main.csv;}},
 		/**. ``''any'' json``: Retorna notação em JSON para valor em Javascript ou nulo se inválido.**/
-		json: {
-			get: function() {return this._main.json;},
-		},
+		json: {get: function() {return this._main.json;}},
 		/**. ``''node'' html``: Retorna notação em HTML para documento correspondente ou nulo se inválido.**/
-		html: {
-			get: function() {return this._main.html;},
-		},
+		html: {get: function() {return this._main.html;}},
 		/**. ``''node'' xml``: Retorna notação em XML para documento correspondente ou nulo se inválido.**/
-		xml: {
-			get: function() {return this._main.xml;},
-		},
+		xml: {get: function() {return this._main.xml;}},
 	});
 
 /*----------------------------------------------------------------------------*/
@@ -8049,17 +8074,11 @@ const wd = (function() {
 	WDnumber.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDnumber},
 		/**. ``''integer'' int``: Retorna a parte inteira.**/
-		int: {
-			get: function() {return this._main.int;}
-		},
+		int: {get: function() {return this._main.int;}},
 		/**. ``''number'' dec``: Retorna a parte decimal.**/
-		dec: {
-			get: function() {return this._main.dec;}
-		},
+		dec: {get: function() {return this._main.dec;}},
 		/**. ``''number'' abs``: Retorna o valor absoluto.**/
-		abs: {
-			get: function() {return this._main.abs;}
-		},
+		abs: {get: function() {return this._main.abs;}},
 		/**. ``''number'' round``: Retorna o número arredondando-o pela quantidade de casas decimais definida.**/
 		round: {
 			get: function() {return this._main.round(this._digits);}
@@ -8279,7 +8298,6 @@ const wd = (function() {
 			}
 		},
 	});
-
 
 /*----------------------------------------------------------------------------*/
 	/**#### WDdatetime**/
@@ -8907,7 +8925,7 @@ const wd = (function() {
 			array:    {value: function(){return __Array.apply(null, Array.prototype.slice.call(arguments));}},
 			DateTime: {value: function(){return __DateTime.apply(null, Array.prototype.slice.call(arguments));}},
 			time:     {value: function(){return __Time.apply(null, Array.prototype.slice.call(arguments));}},
-			fprop:    {value: function(){return __FormValues.apply(null, Array.prototype.slice.call(arguments));}},
+			fprop:    {value: function(){return __FormProperties.apply(null, Array.prototype.slice.call(arguments));}},
 			fnode:    {value: function(){return __FNode.apply(null, Array.prototype.slice.call(arguments));}},
 			node:     {value: function(){return __Node.apply(null, Array.prototype.slice.call(arguments));}},
 			number:   {value: function(){return __Number.apply(null, Array.prototype.slice.call(arguments));}},
