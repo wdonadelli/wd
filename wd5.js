@@ -3365,22 +3365,13 @@ const wd = (function() {
 	Construtor para manipulação de data/tempo. O atributo ``input`` aceita valores do tipo:
 	- Data, tempo ou data/tempo nos parâmetros da biblioteca;
 	- Numérico correspondendo ao número de segundos desde 0000-01-01T00:00:00.0000 (segundo 0);
-	- Objeto contendo a definição de data/tempo por meio de chaves (``year``,``month``, ``day``, ``hour``, ``minute``, ``second``) e seus respectivos valores que, se não informados, assumirão os atuais; e
+	- Objeto contendo os valores das propriedades de data/tempo (``year``,``month``, ``day``, ``hour``, ``minute``, ``second``) que, se não informados, assumirão zeros; e
 	- Caso contrário, assumirá o valor de data e tempo atuais.**/
 	function __DateTime(input) {
 		if (!(this instanceof __DateTime)) return new __DateTime(input);
 		const check = __Type(input);
 		const test  = check._test;
-		const now   = new Date();
-		const data  = {
-			year:   now.getFullYear(),
-			month:  now.getMonth() + 1,
-			day:    now.getDate(),
-			hour:   now.getHours(),
-			minute: now.getMinutes(),
-			second: now.getSeconds() + now.getMilliseconds()/1000,
-			type:   "now"
-		};
+		const data  = {year: 0, month: 1, day: 1, hour: 0, minute: 0, second: 0, type: "default"};
 		if (check.time) {
 			const base = check.value.split(":");
 			const list = {hour: base[0], minute: base[1], second: base[2], type: "time"};
@@ -3460,6 +3451,16 @@ const wd = (function() {
 				for (let i in data)
 					data[i] = i in list ? list[i] : 0;
 			}
+		}
+		else {
+			const now = new Date();
+			data.year   = now.getFullYear();
+			data.month  = now.getMonth() + 1;
+			data.day    = now.getDate();
+			data.hour   = now.getHours();
+			data.minute = now.getMinutes();
+			data.second = now.getSeconds() + now.getMilliseconds()/1000;
+			data.type   = "now";
 		}
 		let main, error;
 		try {
@@ -4198,294 +4199,183 @@ const wd = (function() {
 		const check = __Type(input);
 		if (!check.node || check.value.length < 1)
 			throw new TypeError("Input value is not an HTML node");
+		const fcheck = [null, "finite", "datetime", "combo", "check", "text"];
+		const forms = {
+			meter:    {send: 0, mask: 0, check: 1},
+			progress: {send: 0, mask: 0, check: 1},
+			option:   {send: 0, mask: 0, check: 5},
+			output:   {send: 0, mask: 0, check: 5},
+			select:   {send: 1, mask: 0, check: 3},
+			textarea: {send: 1, mask: 0, check: 5},
+			button: {
+				types: {
+					reset:  {send: 0, mask: 0, check: 5},
+					button: {send: 0, mask: 0, check: 5},
+					submit: {send: 1, mask: 0, check: 5}
+				}
+			},
+			input: {
+				types: {
+					button:   {send: 0, mask: 0, check: 5},
+					reset:    {send: 0, mask: 0, check: 5},
+					submit:   {send: 1, mask: 0, check: 5},
+					image:    {send: 0, mask: 0, check: 0},
+					color:    {send: 1, mask: 1, check: 5},
+					radio:    {send: 1, mask: 0, check: 4},
+					checkbox: {send: 1, mask: 0, check: 4},
+					range:    {send: 1, mask: 1, check: 1},
+					number:   {send: 1, mask: 1, check: 1},
+					file:     {send: 1, mask: 0, check: 3},
+					url:      {send: 1, mask: 1, check: 5},
+					email:    {send: 1, mask: 1, check: 3},
+					tel:      {send: 1, mask: 0, check: 5},
+					text:     {send: 1, mask: 0, check: 5},
+					search:   {send: 1, mask: 0, check: 5},
+					date:     {send: 1, mask: 1, check: 2},
+					datetime: {send: 1, mask: 1, check: 2},
+					month:    {send: 1, mask: 1, check: 2},
+					week:     {send: 1, mask: 1, check: 2},
+					time:     {send: 1, mask: 1, check: 2},
+					"datetime-local": {send: 1, mask: 1, check: 2},
+					password: {send: 1, mask: 0, check: 5},
+					hidden:   {send: 1, mask: 0, check: 5}
+				}
+			}
+		};
+
+		const node = check.value[0];
+		const tag  = node.tagName.toLowerCase();
+		const form = tag in forms;
+		const data = (function() {
+			if (!form) return {};
+			const cfg = "types" in forms[tag] ? forms[tag].types : forms;
+			let name  = tag;
+			let work  = true;
+			if ("types" in forms[tag]) {
+				const attr = String(node.getAttribute("type")).toLowerCase();
+				const prop = String(node.type).toLowerCase();
+				name = attr in cfg ? attr : (prop in cfg ? prop : "text");
+				work = prop === attr;
+			}
+			cfg[name].name  = name;
+			cfg[name].work  = work;
+			cfg[name].check = fcheck[cfg[name].check];
+			return cfg[name];
+		})();
+		const fmask = data.mask !== 1 ? true : (function() {
+			const invalid = "A1!@#$%¨&*()+";
+			const clone   = node.cloneNode();
+			clone.value   = invalid;
+			return clone.value !== invalid;
+		})();
 		Object.defineProperties(this, {
 			/**. ``''node'' node``: Retorna o nó.**/
-			node: {value: check.value[0]},
+			node:   {value: node},
 			/**. ``''string'' tag``: Retorna a tag do nó.**/
-			tag:  {value: check.value[0].tagName.toLowerCase()},
+			tag:    {value: tag},
+			/**. ``''boolean'' form``: Informa se o nó é campo de formulário.**/
+			form:   {value: form},
+			/**. ``''string'' ftype``: Retorna o tipo de formulário ou vazio.**/
+			ftype:  {value: data.name},
+			/**. ``''boolean'' fmask``: Informa se o formulário possui máscara nativa implementada.**/
+			fmask:  {value: fmask},
+			/**. ``''boolean'' fsend``: Informa se o formulário pode ser enviado em requisições ou falso.**/
+			fsend:  {value: data.send === 1},
+			/**. ``''boolean'' fwork``: Informa se o formulário está implementado.**/
+			fwork:  {value: data.work === true},
+			/**. ``''string'' fcheck``: Informa o tipo de verificação do valor do formulário.**/
+			fcheck: {value: "check" in data ? data.check : ""},
 		});
 	}
 
 	Object.defineProperties(__FormProperties.prototype, {
 		constructor: {value: __FormProperties},
-		/**. ``''object'' fstruct``: Retorna as tags de formulário e a lista de tipos, se existir.**/
-		fstruct: {
-			get: function() {
-				return {
-					meter:  null, progress: null, option:   null, output: null,
-					select: null, textarea: null,
-					button: ["reset", "button", "submit"],
-					input: [
-						"button",   "reset",    "submit", "image", "color", "radio", "checkbox",
-						"range",    "number",   "file",   "url",   "email", "tel", "text", "search",
-						"date",     "datetime", "month",  "week",  "time",  "datetime-local",
-						"password", "hidden"
-					]
-				};
-			}
-		},
-		/**. ``''boolean'' form``: Informa se o nó é campo de formulário.**/
-		form: {get: function() {return this.tag in this.fstruct;}},
-		/**. ``''string'' ftype``: Retorna o tipo de formulário ou vazio.**/
-		ftype: {
-			get: function() {
-				if (this.form) {
-					const types = this.fstruct[this.tag];
-					if (types !== null) {
-						const attr = String(this.node.getAttribute("type")).toLowerCase();
-						const prop = String(this.node.type).toLowerCase();
-						if (types.indexOf(attr) >= 0) return attr;
-						if (types.indexOf(prop) >= 0) return prop;
-						return "";
-					}
-					return this.tag
-				}
-				return "";
-			}
-		},
-		/**. ``''boolean'' fwork``: Informa se o formulário está implementado.**/
-		fwork: {
-			get: function() {
-				if (this.form) {
-					const types = this.fstruct[this.tag];
-					if (types !== null) {
-						const attr = String(this.node.getAttribute("type")).toLowerCase();
-						const prop = String(this.node.type).toLowerCase();
-						return attr === prop;
-					}
-					return true;
-				}
-				return false;
-			}
-		},
-
-		//FIXME jogar isso para o próximo objeto e checar no construtor, pois quando isso for verdadeiro, não terá que checar constraints
-		/**. ``''boolean'' fmask``: Informa se o formulário possui máscara nativa implementada.**/
-		fmask: {
-			get: function() {
-				const types = [
-					"color", "date", "month", "week", "time", "tel", "range", "number",
-					"file", "url", "email", "datetime", "datetime-local"
-				];
-				if (types.indexOf(this.ftype) >= 0) {
-					const invalid = "A1!@#$%¨&*()+";
-					const clone   = this.node.cloneNode();
-					clone.value   = invalid;
-					return clone.value !== invalid;
-				}
-				return false;
-			}
-		},
-		/**. ``''boolean'' fsend``: Informa se o formulário pode ser enviado em requisições ou falso.**/
-		fsend: {
-			get: function() {
-				if (!this.form) return false;
-				const types = [
-					"select",   "textarea", "submit", "color", "radio", "checkbox",
-					"date",     "datetime", "month",  "week",  "time",  "datetime-local",
-					"range",    "number",   "file",   "url",   "email", "tel", "text", "search",
-					"password", "hidden"
-				];
-				return types.indexOf(this.ftype) >= 0;
-			}
-		},
 		/**. ``''string'' fname``: Define ou retorna o valor do atributo ``name`` do formulário ou vazio.**/
 		fname: {
-			get: function() {
-				return this.form ? this.node.name.trim() : "";
-			},
+			get: function()  {return this.form ? this.node.name.trim() : "";},
 			set: function(x) {
-				if (this.form)
-					this.node.name = __Type(x).nonempty ? String(x).trim() : "";
+				if (this.form) this.node.name = x === null ? "" : String(x).trim();
 			}
 		},
-
-
-
-		//FIXME jogar para o próximo construtor
 		/**. ``''boolean'' ferror``: Retorna se o campo de formulário é inválido.**/
 		ferror: {
 			get: function() {
-				const check = __Type(this.node.checkValidity).function;
-				return check && this.node.checkValidity() !== true;
+				const check = this.form && "checkValidity" in this.node;
+				return check ? this.node.checkValidity() !== true : false;
 			}
 		},
-		//FIXME jogar para o próximo construtor
 		/**. ``''string'' fvalidity``: Define ou retorna mensagem de restrição do formulário.**/
 		fvalidity	: {
 			get: function() {
 				return this.ferror ? this.node.validationMessage.trim() : "";
 			},
 			set: function(x) {
-				const check = __Type(this.node.setCustomValidity).function;
-				const error = __Type(x).nonempty ? x.trim() : "";
+				const check = this.form && "setCustomValidity" in this.node;
+				const error = x === null ? "" : String(x).trim();
 				if (check) this.node.setCustomValidity(error);
 			}
-		}
-	});
-
-/*-----------------------------------------------------------------------------*/
-	/**###### ``**constructor** ''object'' __FormValues(''node'' input)``
-	Construtor para checar características de campos de formulários HTML (argumento ``node``).**/
-	function __FormValues(input) {
-		if (!(this instanceof __FormValues))	return new __FormValues(input);
-		__FormProperties.call(this, input);
-	}
-
-
-	__FormValues.prototype = Object.create(__FormProperties.prototype, {
-		constructor: {value: __FormValues},
-		/*select, textarea
-					button: {reset: 0, button: 0, submit: 0},
-					input:  {
-						button:   0, reset:  0, submit:   0, image:  0, color: 0, radio:  0,
-						checkbox: 0, date:   0, datetime: 1, month:  0, week:  0, time:   0,
-						range:    0, number: 0, file:     0, url:    0, email: 0, tel:    0,
-						text:     0, search: 0, password: 0, hidden: 0, "datetime-local": 1
-					}*/
-
-
-
+		},
 		/**. ``''any'' fvalue(''any'' data)``: Define ou retorna o valor do formulário ou nulo.**/
 		fvalue: {
-			value: function(data) {
+			get: function() {
 				if (!this.form) return null;
-				const getter = arguments.length === 0 || data === undefined;
-				const type   = this.ftype;
-				const input  = __Type(data);
-				const output = __Type(this.node.value);
-				if (type === "select") {
-					if (getter) {
-						const value = [];
-						for (let i = 0; i < this.node.length; i++) {
-							if (this.node[i].selected)
-								value.push(this.node[i].value)
+				const node  = this.node;
+				const value = node.value;
+				const check = __Type(value);
+				if (this.fcheck === "finite") {
+					return check.finite ? value : "";
+				}
+				if (this.fcheck === "datetime") {
+					const data = __DateTime(value);
+					const type = data.type;
+					const main = data.main;
+					switch(this.ftype) {
+						case "date":
+							return type === "date" ? main.YYYYMM : "";
+						case "time":
+							return type === "time" ? main.hhmmss : "";
+						case "month":
+							return type === "month" ? main.YYYYMM : "";
+						case "week":
+							return type === "week/fweek" ? main.YYYYWW : "";
+						case "datetime-local":
+							return type === "datetime" ? main.toString() : "";
+						case "datetime": {
+							const types = ["date", "time", "month", "week", "datetime", "week/fweek", "number"];
+							return types.indexOf(type) >= 0 ? main.toString() : "";
 						}
-						return value;
-					} else {
-						const value = input.array ? data : [data];
-						value.forEach(function(v,i,a) {
-							a[i] = v === null || v === undefined ? v : String(v);
-						});
-						for (let i = 0; i < this.node.length; i++) {
-							this.node[i].selected = value.indexOf(this.node[i].value) >= 0;
-						}
-						return this.fvalue;
 					}
-				} else if (type === "email") {
-					if (getter) {
-						const value = [];
-						for (let i = 0; i < this.node.length; i++) {
-							if (this.node[i].selected)
-								value.push(this.node[i].value)
-						}
-						return value;
-					} else {
-						const value = input.array ? data : [data];
-						value.forEach(function(v,i,a) {
-							a[i] = v === null || v === undefined ? v : String(v);
-						});
-						for (let i = 0; i < this.node.length; i++) {
-							this.node[i].selected = value.indexOf(this.node[i].value) >= 0;
-						}
-						return this.fvalue;
-					}
-
-
+					return "";
 				}
-
-
-
-
-
-
-
-
-				const driver = {way: null, type: null};
-				const ways   = {
-					file:     {file: null},
-					finite:   {number: null, range: null},
-					url:      {url: null},
-					check:    {checkbox: null, radio: null},
-					combo:    {select: null},
-					email:    {email: null},
-					datetime: {date: null, time: null, datetime: null},
-					month:    {month: null},
-					week:     {week: null},
-				};
-				for (let i in ways) {
-					if (type in ways[i]) {
-						driver.way  = i;
-						driver.type = ways[i][type];
-						break;
+				if (this.fcheck === "combo") {
+					let list = [];
+					switch(this.ftype) {
+						case "file":
+							list = check.instanceOf("FileList") ? value : [];
+						case "email":
+							list = value.replace(/\s+/g, "").split(",");
+						case "select":
+							for (let i = 0; i < node.length; i++)
+								if (node[i].selected) list.push(node[i].value);
+					}
+					return list;
+				}
+				if (this.fcheck === "check") {
+					return node.checked ? value : null;
+				}
+				if (this.fcheck === "text") {
+					switch(this.ftype) {
+						case "color":
+							return (/^\#[0-9a-f]+$/).test(value.trim()) ? value.trim() : "";
+						case "":
+							list = value.replace(/\s+/g, "").split(",");
+						case "url":
+							try {return new URL(value).href;} catch(e) {return ""}
+						default:
+							return value;
 					}
 				}
-				/*-- checagem de caminhos: se for getter, já retornar --*/
-				if (driver.way === "file") {
-					if (getter)
-						return Array.prototype.slice.call(this.node.files);
-				}
-				else if (driver.way === "finite") {
-					if (getter)
-						return value.finite ? this.node.value : "";
-					if (check.finite || check.null)
-						this.node.value = data;
-				}
-				else if (driver.way === "url") {
-					if (getter) {
-						try      {return new URL(this.node.value).href;}
-						catch(e) {return "";}
-					}
-					if (check.instanceOf("URL") || check.null) {
-						this.node.value = check.null ? data : data.href;
-					} else {
-						try {this.node.value = new URL(data).href;} catch(e) {}
-					}
-				}
-				else if (driver.way === "check") {
-					if (getter)
-						return this.node.checked ? this.node.value : null;
-					if (check.boolean)
-						this.node.checked = check.value;
-					else if (check.null)
-						this.node.checked = !this.node.checked;
-					else
-						this.node.value = String(data);
-				}
-				else if (driver.way === "combo") {
-					const list  = [];
-					const combo = check.array ? data : [data];
-					combo.forEach(function(v,i,a) {
-						a[i] = v === null || v === undefined ? v : String(v);
-					});
-					for (let i = 0; i < this.node.length; i++) {
-						let sel = this.node[i].selected;
-						let val = this.node[i].value;
-						if (sel) list.push(val);
-						if (!getter)
-							this.node[i].selected = combo.indexOf(val) >= 0;
-					}
-					if (getter) return list;
-				}
-				else if (driver.way === "email") {
-
-				}
-
-
-
-
-				else {
-					if (getter) return this.node.value;
-					this.node.value = data;
-				}
-
-
-
-
-				return this.fvalue();
-
-
-
+				throw new Error("merda de formulário");
 
 
 
