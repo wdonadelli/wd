@@ -3444,7 +3444,7 @@ const wd = (function() {
 				const form = week <= date.maxFormWeek;
 				const list = {
 					year:  year,
-					type:  "week" + (form ? "/fweek" : ""),
+					type:  form ? "fweek" : "week",
 					month: date.week === 1 ? 1 : date.month,
 					day:   date.week === 1 ? 1 : date.day
 				}
@@ -4201,44 +4201,45 @@ const wd = (function() {
 			throw new TypeError("Input value is not an HTML node");
 		const fcheck = [null, "finite", "datetime", "combo", "check", "text"];
 		const forms = {
-			meter:    {send: 0, mask: 0, check: 1},
-			progress: {send: 0, mask: 0, check: 1},
-			option:   {send: 0, mask: 0, check: 5},
-			output:   {send: 0, mask: 0, check: 5},
-			select:   {send: 1, mask: 0, check: 3},
-			textarea: {send: 1, mask: 0, check: 5},
+			meter:    {send: 0, mask: 0, check: 1, text: 0},
+			progress: {send: 0, mask: 0, check: 1, text: 0},
+			option:   {send: 0, mask: 0, check: 5, text: 1},
+			output:   {send: 0, mask: 0, check: 5, text: 0},
+			select:   {send: 1, mask: 0, check: 3, text: 1},
+			textarea: {send: 1, mask: 0, check: 5, text: 0},
 			button: {
 				types: {
-					reset:  {send: 0, mask: 0, check: 5},
-					button: {send: 0, mask: 0, check: 5},
-					submit: {send: 1, mask: 0, check: 5}
+					reset:  {send: 0, mask: 0, check: 5, text: 1},
+					button: {send: 0, mask: 0, check: 5, text: 1},
+					submit: {send: 1, mask: 0, check: 5, text: 1}
 				}
 			},
 			input: {
 				types: {
-					button:   {send: 0, mask: 0, check: 5},
-					reset:    {send: 0, mask: 0, check: 5},
-					submit:   {send: 1, mask: 0, check: 5},
-					image:    {send: 0, mask: 0, check: 0},
-					color:    {send: 1, mask: 1, check: 5},
-					radio:    {send: 1, mask: 0, check: 4},
-					checkbox: {send: 1, mask: 0, check: 4},
-					range:    {send: 1, mask: 1, check: 1},
-					number:   {send: 1, mask: 1, check: 1},
-					file:     {send: 1, mask: 0, check: 3},
-					url:      {send: 1, mask: 1, check: 5},
-					email:    {send: 1, mask: 1, check: 3},
-					tel:      {send: 1, mask: 0, check: 5},
-					text:     {send: 1, mask: 0, check: 5},
-					search:   {send: 1, mask: 0, check: 5},
-					date:     {send: 1, mask: 1, check: 2},
-					datetime: {send: 1, mask: 1, check: 2},
-					month:    {send: 1, mask: 1, check: 2},
-					week:     {send: 1, mask: 1, check: 2},
-					time:     {send: 1, mask: 1, check: 2},
-					"datetime-local": {send: 1, mask: 1, check: 2},
-					password: {send: 1, mask: 0, check: 5},
-					hidden:   {send: 1, mask: 0, check: 5}
+					button:   {send: 0, mask: 0, check: 5, text: 0},
+					reset:    {send: 0, mask: 0, check: 5, text: 0},
+					submit:   {send: 1, mask: 0, check: 5, text: 0},
+					image:    {send: 0, mask: 0, check: 0, text: 0},
+					color:    {send: 1, mask: 1, check: 5, text: 0},
+					radio:    {send: 1, mask: 0, check: 4, text: 0},
+					checkbox: {send: 1, mask: 0, check: 4, text: 0},
+					range:    {send: 1, mask: 1, check: 1, text: 0},
+					number:   {send: 1, mask: 1, check: 1, text: 0},
+					file:     {send: 1, mask: 0, check: 3, text: 0},
+					url:      {send: 1, mask: 1, check: 5, text: 0},
+					email:    {send: 1, mask: 1, check: 3, text: 0},
+					tel:      {send: 1, mask: 0, check: 5, text: 0},
+					text:     {send: 1, mask: 0, check: 5, text: 0},
+					search:   {send: 1, mask: 0, check: 5, text: 0},
+					password: {send: 1, mask: 0, check: 5, text: 0},
+					hidden:   {send: 1, mask: 0, check: 5, text: 0},
+					date:     {send: 1, mask: 1, check: 2, text: 0},
+					datetime: {send: 1, mask: 1, check: 2, text: 0},
+					month:    {send: 1, mask: 1, check: 2, text: 0},
+					week:     {send: 1, mask: 1, check: 2, text: 0},
+					time:     {send: 1, mask: 1, check: 2, text: 0},
+					"datetime-local": {send: 1, mask: 1, check: 2, text: 0}
+
 				}
 			}
 		};
@@ -4315,7 +4316,7 @@ const wd = (function() {
 				if (check) this.node.setCustomValidity(error);
 			}
 		},
-		/**. ``''any'' fvalue(''any'' data)``: Define ou retorna o valor do formulário ou nulo.**/
+		/**. ``''any'' fvalue``: Define ou retorna o valor do formulário ou nulo.**/
 		fvalue: {
 			get: function() {
 				if (!this.form) return null;
@@ -4323,72 +4324,158 @@ const wd = (function() {
 				const value = node.value;
 				const check = __Type(value);
 				if (this.fcheck === "finite") {
-					return check.finite ? value : "";
+					return check.finite ? check.value : "";
 				}
 				if (this.fcheck === "datetime") {
-					const data = __DateTime(value);
-					const type = data.type;
-					const main = data.main;
+					const data  = __DateTime(value);
+					const type  = data.type;
+					const main  = data.main;
+					const types = ["date", "time", "month", "week", "datetime", "fweek", "number"];
+					const found = types.indexOf(type) >= 0;
 					switch(this.ftype) {
-						case "date":
-							return type === "date" ? main.YYYYMM : "";
-						case "time":
-							return type === "time" ? main.hhmmss : "";
-						case "month":
-							return type === "month" ? main.YYYYMM : "";
-						case "week":
-							return type === "week/fweek" ? main.YYYYWW : "";
-						case "datetime-local":
-							return type === "datetime" ? main.toString() : "";
-						case "datetime": {
-							const types = ["date", "time", "month", "week", "datetime", "week/fweek", "number"];
-							return types.indexOf(type) >= 0 ? main.toString() : "";
-						}
+						case "date":           return type === "date"     ? main.YYYYMMDD   : "";
+						case "time":           return type === "time"     ? main.hhmmss     : "";
+						case "month":          return type === "month"    ? main.YYYYMM     : "";
+						case "week":           return type === "fweek"    ? main.YYYYWW     : "";
+						case "datetime":       return found               ? main.toString() : "";
+						case "datetime-local": return type === "datetime" ? main.toString() : "";
 					}
 					return "";
 				}
 				if (this.fcheck === "combo") {
-					let list = [];
 					switch(this.ftype) {
-						case "file":
-							list = check.instanceOf("FileList") ? value : [];
-						case "email":
-							list = value.replace(/\s+/g, "").split(",");
-						case "select":
+						case "file": {
+							const list = node.files;
+							return !node.multiple && list.length > 1 ? [] : list;
+						}
+						case "email": {
+							const email = __TYPE.email.email;
+							const list  = value.replace(/\s+/g, "").split(",");
+							for (let v of list)
+								if (!email.test(v.trim())) return [];
+							return !node.multiple && list.length > 1 ? [] : list.join(",");
+						}
+						case "select": {
+							const list = [];
 							for (let i = 0; i < node.length; i++)
 								if (node[i].selected) list.push(node[i].value);
+							return !node.multiple && list.length > 1 ? [] : list;
+						}
 					}
-					return list;
+					return [];
 				}
 				if (this.fcheck === "check") {
 					return node.checked ? value : null;
 				}
 				if (this.fcheck === "text") {
+					const color = /^\#[0-9a-f]{6}$/i;
 					switch(this.ftype) {
-						case "color":
-							return (/^\#[0-9a-f]+$/).test(value.trim()) ? value.trim() : "";
-						case "":
-							list = value.replace(/\s+/g, "").split(",");
-						case "url":
-							try {return new URL(value).href;} catch(e) {return ""}
-						default:
-							return value;
+						case "color": return color.test(value.trim()) ? value.trim() : "#000000";
+						case "url":   try {return new URL(value).href;} catch(e) {return "";}
 					}
+					return value;
 				}
-				throw new Error("merda de formulário");
-
-
-
-
-
-
-
-
-
-
-
+				return null;
+			},
+			set: function(value) {
+				if (!this.form) return;
+				const node  = this.node;
+				const check = __Type(value);
+				const mask  = this.fmask;
+				if (this.fcheck === "finite") {
+					if (!check.finite && !check.null) return;
+					node.value = check.value;
+					return;
+				}
+				if (this.fcheck === "datetime") {
+					if (check.null) {
+						node.value = null;
+						return;
+					}
+					const data  = __DateTime(value);
+					const type  = data.type;
+					const main  = data.main;
+					const types = ["date", "time", "month", "week", "datetime", "fweek", "number"];
+					if (this.ftype === "date" && type === this.ftype) {
+						if (mask && data.year < 1) return;
+						node.value = main.YYYYMMDD;
+						return;
+					}
+					if (this.ftype === "time" && type === this.ftype) {
+						node.value = mask ? main.hhmmss.substring(0,5) : main.hhmmss;
+						return;
+					}
+					if (this.ftype === "month" && type === this.ftype) {
+						if (mask && data.year < 1) return;
+						node.value = main.YYYYMM;
+						return;
+					}
+					if (this.ftype === "week" && type === "fweek") {
+						if (mask && data.year < 1) return;
+						node.value = main.YYYYWW;
+						return;
+					}
+					if (this.ftype === "datetime" && types.indexOf(type) >= 0) {
+						if (mask && data.year < 1) return;
+						node.value = mask ? main.toString().substring(0,16) : main.toString();
+						return;
+					}
+					if (this.ftype === "datetime-local" && type === "datetime") {
+						if (mask && data.year < 1) return;
+						node.value = mask ? main.toString().substring(0,16) : main.toString();
+						return;
+					}
+					return;
+				}
+				if (this.fcheck === "combo") {
+					if (check.null && (this.ftype === "file" || this.ftype === "email")) {
+						node.value = null;
+						return;
+					}
+					if (this.ftype === "file") return;
+					if (this.ftype === "email") {
+						const email = __TYPE.email.email;
+						const list  = check.array ? value : String(value).split(",");
+						for (let v of list) if (!email.test(v.trim())) return;
+						node.value = list.join(",").replace(/\s+/g, "");
+						return;
+					}
+					if (this.ftype === "select") {
+						const list = check.array ? value : [value];
+						for (let i = 0; i < node.length; i++)
+							node[i].selected = list.indexOf(node[i].value) >= 0;
+						return;
+					}
+					return;
+				}
+				if (this.fcheck === "check") {
+					if (check.boolean)
+						node.checked = check.value;
+					else if (check.null)
+						node.checked = !node.checked;
+					else
+						node.checked = check.value;
+					return;
+				}
+				if (this.fcheck === "text") {
+					if (this.ftype === "color") {
+						const color = /^\#[0-9a-f]{6}$/i;
+						if (color.test(value.trim()))
+							node.value = value.trim().toLowerCase();
+						return;
+					}
+					if (this.ftype === "url") {
+						if (check.instanceOf("URL"))
+							node.value = value.href;
+						else
+							try {node.value = new URL(value).href;} catch(e) {}
+						return;
+					}
+					node.value = value;
+				}
+				return;
 			}
-		}
+		},
 
 
 
