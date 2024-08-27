@@ -4353,13 +4353,13 @@ const wd = (function() {
 							const list  = value.replace(/\s+/g, "").split(",");
 							for (let v of list)
 								if (!email.test(v.trim())) return [];
-							return !node.multiple && list.length > 1 ? [] : list.join(",");
+							return node.multiple === false && list.length > 1 ? [] : list;
 						}
 						case "select": {
 							const list = [];
 							for (let i = 0; i < node.length; i++)
 								if (node[i].selected) list.push(node[i].value);
-							return !node.multiple && list.length > 1 ? [] : list;
+							return node.multiple === false && list.length > 1 ? [] : list;
 						}
 					}
 					return [];
@@ -4382,56 +4382,36 @@ const wd = (function() {
 				const node  = this.node;
 				const check = __Type(value);
 				const mask  = this.fmask;
+				if (check.null && this.fcheck !== "check") {
+					node.value = null;
+					return;
+				}
 				if (this.fcheck === "finite") {
-					if (!check.finite && !check.null) return;
-					node.value = check.value;
+					if (check.finite) node.value = check.value;
 					return;
 				}
 				if (this.fcheck === "datetime") {
-					if (check.null) {
-						node.value = null;
-						return;
-					}
 					const data  = __DateTime(value);
 					const type  = data.type;
 					const main  = data.main;
-					const types = ["date", "time", "month", "week", "datetime", "fweek", "number"];
-					if (this.ftype === "date" && type === this.ftype) {
-						if (mask && data.year < 1) return;
-						node.value = main.YYYYMMDD;
-						return;
-					}
-					if (this.ftype === "time" && type === this.ftype) {
-						node.value = mask ? main.hhmmss.substring(0,5) : main.hhmmss;
-						return;
-					}
-					if (this.ftype === "month" && type === this.ftype) {
-						if (mask && data.year < 1) return;
-						node.value = main.YYYYMM;
-						return;
-					}
-					if (this.ftype === "week" && type === "fweek") {
-						if (mask && data.year < 1) return;
-						node.value = main.YYYYWW;
-						return;
-					}
-					if (this.ftype === "datetime" && types.indexOf(type) >= 0) {
-						if (mask && data.year < 1) return;
-						node.value = mask ? main.toString().substring(0,16) : main.toString();
-						return;
-					}
-					if (this.ftype === "datetime-local" && type === "datetime") {
-						if (mask && data.year < 1) return;
-						node.value = mask ? main.toString().substring(0,16) : main.toString();
-						return;
+					const names = {week: "fweek", "datetime-local": "datetime"};
+					const ftype = this.ftype in names ? names[this.ftype] :  this.ftype;
+					const types = {
+						date:  main.YYYYMMDD,
+						time:  mask ? main.hhmmss.substring(0,5) : main.hhmmss,
+						month: main.YYYYMM,
+						week:  main.YYYYWW,
+						fweek: main.YYYYWW,
+						datetime: mask ? main.toString().substring(0,16) : main.toString(),
+						number:   mask ? main.toString().substring(0,16) : main.toString()
+					};
+					if (ftype === type || (this.ftype === "datetime" && type in types)) {
+						if (mask && type !== "time" && data.year < 1) return;
+						node.value = types[ftype];
 					}
 					return;
 				}
 				if (this.fcheck === "combo") {
-					if (check.null && (this.ftype === "file" || this.ftype === "email")) {
-						node.value = null;
-						return;
-					}
 					if (this.ftype === "file") return;
 					if (this.ftype === "email") {
 						const email = __TYPE.email.email;
