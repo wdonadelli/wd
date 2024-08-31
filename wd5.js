@@ -39,32 +39,40 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	/**###### ``**const** ''boolean'' __UNDERMAINTENANCE``
-	Se verdadeiro, libera métodos de teste em WD para efetuar testes.**/
+	Se verdadeiro, libera métodos para teste em WD e imprime cascata de eventos.**/
 	const __UNDERMAINTENANCE = true;
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**const** ''object'' __DEVICECONTROLLER``
+	/**###### ``**const** ''object'' __DEVICE``
 	Checa alterações da tela atribuida a um tipo de dispositivo.**/
-	const __DEVICECONTROLLER = {
+	const __DEVICE = {
 		/**. ``''string'' _device``: Registra o tipo do dispositivo a partir do tamanho da tela atual.**/
 		_device: null,
+		/**. ``''array'' _devices``: Registra uma lista de dispositivos em ordem decrescente de tamanho.**/
+		_devices: [
+				{name: "desktop", size: 768},
+				{name: "tablet",  size: 600},
+				{name: "phone",   size: 0}
+			],
 		/**. ``''integer'' width``: Retorna o tamanho da tela.**/
 		get width() {return window.innerWidth;},
-		/**. ``''string'' device``: Retorna o tipo de dispositivo - desktop (&ge; 768px) tablet (&ge; 600px) ou phone (&lt; 600px)**/
+		/**. ``''string'' device``: Retorna o tipo de dispositivo**/
 		get device() {
-			const width = this.width;
-			if (width >= 768) return "desktop";
-			if (width >= 600) return "tablet";
-			return "phone";
+			const width  = this.width;
+			for (let v of this._devices)
+				if (width >= v.size) return v.name
 		},
 		/**. ``''boolean'' mobile``: Informa se dispositivo não é do tamanho desktop.**/
 		get mobile() {return this.device !== "desktop";},
 		/**. ``''boolean'' change``: Informa se o dispositivo foi alterado desde a última consulta.**/
 		get changeDevice() {
 			const device = this.device;
-			if (this._device === device) return false;
-			this._device = device;
-			return true;
+			if (this._device !== device) {
+				this._device = device;
+				return true;
+			}
+			return false;
+
 		}
 	};
 
@@ -84,14 +92,86 @@ const wd = (function() {
 	const __PROGRESSTIME = 5;
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**const** ''node'' __PROGRESSVIEWER``
+	/**###### ``**const** ''node'' __PROGRESS``
 	Registra a barra de progresso das requisições da biblioteca.**/
-	const __PROGRESSVIEWER = (function() {
-		const tag = (function() {
-			if ("HTMLMeterElement"    in window) return "METER";
-			if ("HTMLProgressElement" in window) return "PROGRESS";
-			return "DIV";
-		})();
+	const __PROGRESS = {
+		/**. ``''node'' bar``: Barra de progresso.**/
+		bar: (function() {
+			const tag = (function() {
+				if ("HTMLMeterElement"    in window) return "METER";
+				if ("HTMLProgressElement" in window) return "PROGRESS";
+				return "DIV";
+			})();
+			const node  = document.createElement(tag);
+			const style = {
+				display: "block", margin: "5px 5px auto auto", width: "25%",
+				position: "absolute", top: "0", left: "0", right: "0", height: "10px", "backgound-color": "red"
+			};
+			for (let i in style) node.style[i] = style[i];
+			return node;
+		})(),
+		/**. ``''node'' wall``: Papel de parede.**/
+		wall: (function() {
+			const node = document.createElement("DIV");
+			const style = {
+				display: "block", width: "100%", height: "100%",
+				padding: "0.1em 0.5em", margin: "0", zIndex: "999999",
+				position: "fixed", top: "0", right: "0", bottom: "0", left: "0",
+				cursor: "progress", backgroundColor: "rgba(0,0,0,0.3)",
+				animation: "js-wd-emerge 0.1s",
+			};
+			for (let i in style) node.style[i] = style[i];
+			return node;
+		})(),
+		/**. ``''integer'' count``: Registra o número de processos em aberto.**/
+		count: 0,
+
+		delay: 0,
+
+		open: function*() {
+			this.count++;
+			if (this.bar.parentElement  === null) this.wall.appendChild(this.bar);
+			if (this.wall.parentElement === null) document.body.appendChild(this.wall);
+			return;
+		},
+
+		close: function*() {
+			this.count += this.count === 0 ? 0 : -1;
+			const self = this;
+			window.setTimeout(function () {
+				if (self.count === 0 && self.wall.parentElement !== null)
+					document.body.removeChild(self.wall);
+				return;
+			}, this.delay);
+			return
+		},
+
+		set: function*(ratio) {
+			const check = __Type(ratio);
+			const value = check.finite ? check.value : 1;
+			const tag   = this.bar.tagName.toLowerCase();
+			if (tag === "div")
+				this.bar.style.width = String(25*value)+"%";
+			else
+				this.bar.value = value;
+			return;
+		}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+
 		const bar  = document.createElement(tag);
 		const main = document.createElement("DIV");
 		const style = {
@@ -108,13 +188,13 @@ const wd = (function() {
 			}
 		};
 
-		/* definindo estilos e dataset */
+		/* definindo estilos e dataset * /
 		for (let i in style.main) main.style[i] = style.main[i];
 		for (let i in style.bar)  bar.style[i]  = style.bar[i];
 		main.dataset.wdProgressCounter = 0;
 		main.dataset.wdProgressValue   = 1;
 
-		/* adicionando eventos */
+		/* adicionando eventos * /
 		main.addEventListener("wdopenrequest", function(ev) {
 			let counter = Number(ev.target.dataset.wdProgressCounter);
 			if (counter === 0) document.body.appendChild(ev.target);
@@ -144,10 +224,12 @@ const wd = (function() {
 			}
 		}, false);
 
-		/* construindo visualizador e retornando-o */
+		/* construindo visualizador e retornando-o * /
 		main.appendChild(bar);
 		return main;
 	})();
+	*/
+	}
 
 /*----------------------------------------------------------------------------*/
 	/**###### ``**const** ''integer'' __SIGNALTIME``
@@ -4185,28 +4267,23 @@ const wd = (function() {
 	});
 
 /*----------------------------------------------------------------------------*/
-
-
-
-
-
-
-	/**#### Formulários
-	###### ``**constructor** ''object'' __FormProperties(''node'' input)``
+	/**#### Nós HTML
+	#### Formulários
+	###### ``**constructor** ''object'' __FNode(''node'' input)``
 	Construtor para checar características de campos de formulários HTML (argumento ``node``).**/
-	function __FormProperties(input) {
-		if (!(this instanceof __FormProperties))	return new __FormProperties(input);
+	function __FNode(input) {
+		if (!(this instanceof __FNode))	return new __FNode(input);
 		const check = __Type(input);
 		if (!check.node || check.value.length < 1)
 			throw new TypeError("Input value is not an HTML node");
 		const fcheck = [null, "finite", "datetime", "combo", "check", "text"];
-		const forms = {
+		const forms  = {
 			meter:    {send: 0, mask: 0, check: 1, text: 0},
 			progress: {send: 0, mask: 0, check: 1, text: 0},
 			option:   {send: 0, mask: 0, check: 5, text: 1},
-			output:   {send: 0, mask: 0, check: 5, text: 0},
-			select:   {send: 1, mask: 0, check: 3, text: 1},
-			textarea: {send: 1, mask: 0, check: 5, text: 0},
+			output:   {send: 0, mask: 0, check: 5, text: 1},
+			select:   {send: 1, mask: 0, check: 3, text: 0},
+			textarea: {send: 1, mask: 0, check: 5, text: 1},
 			button: {
 				types: {
 					reset:  {send: 0, mask: 0, check: 5, text: 1},
@@ -4243,7 +4320,6 @@ const wd = (function() {
 				}
 			}
 		};
-
 		const node = check.value[0];
 		const tag  = node.tagName.toLowerCase();
 		const form = tag in forms;
@@ -4286,34 +4362,18 @@ const wd = (function() {
 			fwork:  {value: data.work === true},
 			/**. ``''string'' fcheck``: Informa o tipo de verificação do valor do formulário.**/
 			fcheck: {value: "check" in data ? data.check : ""},
+			/**. ``''boolean'' ftext``: Informa se o formulário aceita conteúdo de texto.**/
+			ftext:  {value: data.text !== 0},
 		});
 	}
 
-	Object.defineProperties(__FormProperties.prototype, {
-		constructor: {value: __FormProperties},
+	Object.defineProperties(__FNode.prototype, {
+		constructor: {value: __FNode},
 		/**. ``''string'' fname``: Define ou retorna o valor do atributo ``name`` do formulário ou vazio.**/
 		fname: {
 			get: function()  {return this.form ? this.node.name.trim() : "";},
 			set: function(x) {
 				if (this.form) this.node.name = x === null ? "" : String(x).trim();
-			}
-		},
-		/**. ``''boolean'' ferror``: Retorna se o campo de formulário é inválido.**/
-		ferror: {
-			get: function() {
-				const check = this.form && "checkValidity" in this.node;
-				return check ? this.node.checkValidity() !== true : false;
-			}
-		},
-		/**. ``''string'' fvalidity``: Define ou retorna mensagem de restrição do formulário.**/
-		fvalidity	: {
-			get: function() {
-				return this.ferror ? this.node.validationMessage.trim() : "";
-			},
-			set: function(x) {
-				const check = this.form && "setCustomValidity" in this.node;
-				const error = x === null ? "" : String(x).trim();
-				if (check) this.node.setCustomValidity(error);
 			}
 		},
 		/**. ``''any'' fvalue``: Define ou retorna o valor do formulário ou nulo.**/
@@ -4422,6 +4482,7 @@ const wd = (function() {
 					}
 					if (this.ftype === "select") {
 						const list = check.array ? value : [value];
+						list.forEach(function(v,i,a) {a[i] = String(v);})
 						for (let i = 0; i < node.length; i++)
 							node[i].selected = list.indexOf(node[i].value) >= 0;
 						return;
@@ -4456,583 +4517,69 @@ const wd = (function() {
 				return;
 			}
 		},
-
-
-
-
-	});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	/**###### ``**constructor** ''object'' __FNode(''node'' input)``
-	Construtor para gerir formulários HTML. O argumento ``node`` é o campo de formulário.**/
-	function __FNode(input) {
-		if (!(this instanceof __FNode))	return new __FNode(input);
-		const check = __Type(input);
-		const node  = check.node ? check.value[0] : document.body;
-		const tag   = node.tagName.toLowerCase();
-		const forms = {
-			meter:    {value: "value", text: "value", send: 0, check: null},
-			progress: {value: "value", text: "value", send: 0, check: null},
-			option:   {value: "value", text:  "text", send: 0, check: null},
-			output:   {value: "value", text:  "text", send: 0, check: null},
-			select:   {value: "combo", text: "combo", send: 1, check: null},
-			textarea: {value: "value", text: "value", send: 1, check: null},
-			button:   {
-				type: {
-					reset:  {value: "value", text: "inner", send: 0, check: null},
-					button: {value: "value", text: "inner", send: 0, check: null},
-					submit: {value: "value", text: "inner", send: 1, check: null},
-				}
-			},
-			input: {
-				type: {
-					button:           {value: "value", text: "value", send: 0, check:        null},
-					reset:            {value: "value", text: "value", send: 0, check:        null},
-					submit:           {value: "value", text: "value", send: 1, check:        null},
-					image:            {value: "value", text: "value", send: 0, check:        null},
-					color:            {value: "value", text:    null, send: 1, check:        null},
-					radio:            {value: "check", text:    null, send: 1, check:        null},
-					checkbox:         {value: "check", text:    null, send: 1, check:        null},
-					date:             {value: "value", text: "value", send: 1, check:      "date"},
-					datetime:         {value: "value", text: "value", send: 1, check: "date_time"},
-					month:            {value: "value", text: "value", send: 1, check:     "month"},
-					week:             {value: "value", text: "value", send: 1, check:      "week"},
-					time:             {value: "value", text: "value", send: 1, check:      "time"},
-					range:            {value: "value", text: "value", send: 1, check:    "number"},
-					number:           {value: "value", text: "value", send: 1, check:    "number"},
-					file:             {value:  "file", text:    null, send: 1, check:        null},
-					url:              {value: "value", text: "value", send: 1, check:       "url"},
-					email:            {value: "email", text: "value", send: 1, check:     "email"},
-					tel:              {value: "value", text: "value", send: 1, check:        null},
-					text:             {value: "value", text: "value", send: 1, check:        null},
-					search:           {value: "value", text: "value", send: 1, check:        null},
-					password:         {value: "value", text: "value", send: 1, check:        null},
-					hidden:           {value: "value", text: "value", send: 1, check:        null},
-					"datetime-local": {value: "value", text: "value", send: 1, check:  "datetime"},
-				}
-			}
-		};
-		/* obtendo informações de formulário */
-		let type  = null;
-		let form  = false;
-		let cfg   = null;
-		let fwork = false;
-		let fmask = false;
-
-		if (tag in forms) {
-			form  = true;
-			cfg   = forms[tag];
-			type  = tag;
-			fwork = true;
-			fmask = (function() {
-				try {
-					let clone   = node.cloneNode();
-					let invalid = "A1!@#$%¨&*()+";
-					clone.value = invalid;
-					return clone.value !== invalid;
-				} catch(e) {
-					return false;
-				}
-			})();
-			if ("type" in cfg) {
-				let type1 = String(node.getAttribute("type")).toLowerCase();
-				let type2 = String(node.type).toLowerCase();
-				type  = type1 in cfg.type ? type1 : type2;
-				cfg   = cfg.type[type];
-				fwork = type1 === type2;
-			}
-		}
-		Object.defineProperties(this, {
-			_form:  {value:  form}, /* informa se é um formulário */
-			_node:  {value:  node}, /* registra o nó */
-			_tag:   {value:   tag}, /* registra a tag do nó */
-			_type:  {value:  type}, /* registra o tipo de formulário ou nulo */
-			_cfg:   {value:   cfg}, /* registra a configuração do formulário ou nulo */
-			_fwork: {value: fwork}, /* registra se o formulário está implementado */
-			_fmask: {value: fmask}, /* registra se o formulário possui máscara nativa */
-		});
-	}
-
-	Object.defineProperties(__FNode.prototype, {
-		constructor: {value: __FNode},
-		/**. ``''boolean'' form``: Informa se o nó é um formulário.**/
-		form: {get: function() {return this._form;}},
-		/**. ``''node'' node``: Retorna o nó HTML.**/
-		node: {get: function() {return this._node;}},
-		/**. ``''string'' type``: Retorna o tipo do formulário.**/
-		type: {get: function() {return this._type;}},
-		/**. ``''string'' tag``: Retorna o a tag do nó em letra minúscula.**/
-		tag: {get: function() {return this._tag;}},
-		/**. ``''any'' value(''any'' x)``: Define e retorna o valor do formulário. Campos com a possibilidade de múltiplos valores aceitam e retornam lista.**/
-		value: {
-			value: function(x) {
-				if (!this.form) return;
-				const check  = __Type(x);
-				const setter = !check.undefined;
-				switch(this._cfg.value) {
-					case "combo": {
-						if (!check.array) x = check.null ? [] : [x];
-						x.forEach(function(v,i,a) {a[i] = String(v);});
-						const items = [];
-						let i  = -1;
-						while (++i < this.node.length) {
-							if (setter) {
-								let value = this.node[i].value;
-								this.node[i].selected = x.indexOf(value) >= 0;
-							}
-							if (this.node[i].selected) items.push(this.node[i].value);
-						}
-						return items;
-					}
-					case "email": {
-						if (!check.array) x = check.null ? [] : String(x).split(",");
-						if (setter) this.node.value = String(x);
-						const data  = this.node.value.trim();
-						const items = data === "" ? [] : data.split(",");
-						items.forEach(function(v,i,a) {a[i] = String(v).trim();});
-						return items;
-					}
-					case "file": {
-						if (check.null) this.node.value = null;
-						const files = this.node.files;
-						return Array.prototype.slice.call(files);
-					}
-					case "check": {
-						if (setter) {
-							if (check.boolean)   this.node.checked = check.value;
-							else if (check.null) this.node.checked = !this.node.checked;
-							else                 this.node.value   = String(x);
-						}
-						return this.node.checked ? this.node.value : null;
-					}
-					case "value": {
-						if (setter) this.node.value = x;
-						return this.node.value;
-					}
-				}
-			}
-		},
-		/**. ``''any'' text(''any'' x)``: Define e retorna o texto do formulário. Se o formulário aceita múltiplos valores, o valor retornado será uma lista.**/
-		text: {
-			value: function(x) {
-				if (!this.form) return;
-				let check  = __Type(x);
-				let setter = !check.undefined;
-				switch(this._cfg.text) {
-					case "value": return this.value(x);
-					case "text": {
-						if (setter) this.node.textContent = __String(x).clear(true, false);
-						return this.node.textContent;
-					}
-					case "inner": {
-						if (setter) this.node.innerHTML = __String(x).clear(true, false);
-						return this.node.innerHTML;
-					}
-					case "combo": {
-						if (!check.array) x = check.null ? [] : [x];
-						x.forEach(function(v,i,a) {a[i] = __String(v).clear(true, false);});
-						const items = [];
-						let i  = -1;
-						while (++i < this.node.length) {
-							if (setter) {
-								let value = __String(this.node[i].textContent).clear(true, false);
-								this.node[i].selected = x.indexOf(value) >= 0;
-							}
-							if (this.node[i].selected)
-								items.push(__String(this.node[i].textContent).clear(true, false));
-						}
-						return items;
-					}
-				}
-			}
-		},
-		/**. ``''string'' name``: Define ou retorna o nome do formulário ou nulo se inexistentes, o nome é definido pelos atributos ``name`` ou, alternativamente, por ``id``.**/
-		name: {
+		/**. ``''boolean'' ferror``: Retorna se o campo de formulário é inválido.**/
+		ferror: {
 			get: function() {
-				if (!this.form) return null;
-				const name = __Type(this.node.name);
-				const id   = __Type(this.node.id);
-				if (name.nonempty) return this.node.name.trim();
-				if (id.nonempty)   return this.node.id.trim();
-				return null;
+				if (this.form) {
+					/*-- Zerando erros personalizados --*/
+					this.fvalidity = "";
+					/*-- Checando erros implementados pelo navegador --*/
+					if (this.node.checkValidity() === false) return true;
+					/*-- Checando erros de valores --*/
+					const value  = this.node.value !== "";
+					const combo  = this.fcheck === "combo";
+					const fvalue = combo ? this.fvalue.length > 0 : this.fvalue !== "";
+					if (value && !fvalue) {
+					 this.fvalidity = this.ftype+": inadequate value.";
+					 return true;
+					}
+					/*-- checando erros do dataset-wd-value --*/
+					this.node.dispatchEvent(wdReloadEvent);
+					if (this.node.checkValidity() === false) return true;
+				}
+				return false;
+			}
+		},
+		/**. ``''string'' fvalidity``: Define ou retorna mensagem de restrição do formulário.**/
+		fvalidity	: {
+			get: function() {
+				return this.ferror ? this.node.validationMessage.trim() : "";
 			},
 			set: function(x) {
-				if (!this.form) return;
-				this.node.name = __Type(x).nonempty ? String(x).trim() : "";
+				const check = this.form && "setCustomValidity" in this.node;
+				const error = x === null ? "" : String(x).trim();
+				if (check) this.node.setCustomValidity(error);
 			}
 		},
-		/**. ``''string'' validity``: Define ou retorna a mensagem de erro personalizada do formulário.**/
-		validity: {
-			set: function(msg) {
-				if (!this.form || this._cfg.send !== 1) return;
-				const message = __Type(msg).nonempty ? msg.trim() : "";
-				this.node.setCustomValidity(message);
-			},
+		/**. ``''object'' fsubmit``: Retorna um objeto contendo as propriedades ``name``, ``value``, ``error`` e ``message`` do formulário ou nulo se não for o caso para submeter.**/
+		fsubmit	: {
 			get: function() {
-				if (!this.form || this._cfg.send !== 1) return "";
-				const validity = this.node.checkValidity();
-				return validity ? "" : this.node.validationMessage.trim();
+				if (this.fsend) {
+					const data = {
+						name:  this.fname,  value:   this.fvalue,
+						error: this.ferror, message: this.fvalidity
+					};
+					return data.name === "" || data.value === null ? null : data;
+				}
+				return null;
 			}
 		},
-		/**. ``''boolean'' checkFormValidity``: Retorna falso se o conteúdo informado manualmente em formulários não implementados ou sem máscara, utilizados para submissão, for inválido, caso contrário, retorna verdadeiro.** /
-		checkFormValidity: {
-			get: function() {
-				if (!this.form || this._cfg.send !== 1 || this._fmask || this._fwork)
-					return true;
-				const value = this.value();
-				const test  = __Type(value);
-				const check = this._cfg.check;
-				const error = "Invalid " + check + " value.";
-				const mult  = ["email", "file", "combo"];
-				const basic = {
-					date:      ["date"],
-					time:      ["time"],
-					datetime:  ["datetime"],
-					date_time: ["date", "time", "datetime"],
-					number:    ["finite"]
-				};
-
-				/*-- testanto alternativas em formulários comuns --* /
-				if (check in basic) {
-					for (let prop of basic[check])
-						if (test[prop]) return true;
-					this.validity = error;
-					return false;
-				}
-				/*-- testanto campos com múltiplos valores --* /
-				if (mult.indexOf(check) >= 1) {
-					if (this.node.multiple !== true && value.length > 1) {
-						this.validity = "Multiple values not allowed.";
-						return false;
-					}
-					if (check === "email") {
-						for (let v of value) {
-							if (!__Type(v).email) {
-								self.validity = error;
-								return false;
-							}
-						}
-						return true;
-					}
-					return true;
-				}
-				/*-- testanto campos diferenciados --* /
-				if (check === "week") {
-
-
-
-
-						if (!check.week) {
-							valid = "Invalid week value."
-							break;
-						}
-						let data = {
-							WWYYYY: {year: "$2", week: "$1", re: __TYPE.week.WWYYYY},
-							YYYYWW: {year: "$1", week: "$2", re: __TYPE.week.YYYYWW},
-						};
-						let type = data[check._test.subgroup];
-						let year = value.replace(type.re, type.year);
-						let week = value.replace(type.re, type.week);
-						let wmax = __DateTime(__Type.zeros(year, 4)+"-01-01").maxWeekForm;
-						if (Number(week) > wmax) {
-							valid = "Invalid week value."
-							break;
-						}
-						value    = __Type.zeros(year, 4)+"-W"+__Type.zeros(week, 2);
-						break;
-					}
-					case "month": {
-						if (!check.month) {
-							valid = "Invalid month value."
-							break;
-						}
-						let data = {
-							MMYYYY:   {year: "$2", month: "$1", re: __TYPE.month.MMYYYY,   txt: false},
-							YYYYMM:   {year: "$1", month: "$2", re: __TYPE.month.YYYYMM,   txt: false},
-							MMMMYYYY: {year: "$2", month: "$1", re: __TYPE.month.MMMMYYYY, txt: true},
-						};
-						let type  = data[check._test.subgroup];
-						let year  = value.replace(type.re, type.year);
-						let month = value.replace(type.re, type.month);
-						if (type.txt) month = __LANG.month(month);
-						value     = __Type.zeros(year, 4)+"-"+__Type.zeros(month, 2);
-						break;
-					}
-				}
-				if (valid !== "") this.validity = valid;
-			}
-
-
-
-
-			}
-		},
-
-
-
-
-
-
-
-
-		/**. ``''object'' submit``: Retorna um objeto com os dados do campo de formulário ou nulo se não submeter dados ou se o nome ou o valor forem nulos. O objeto retornado possui as seguintes propriedades:
-		|Nome|Descrição|
-		|name|String com o nome do campo (atributos ''name'' ou ''id''|
-		|value|Valor do campo de fomulário (retorno dependende do tipo do campo)|
-		|validity|Boleano que indica se o valor do campo é válido|
-		|message|String com a mensagem de invalidação ou vazio se validity for verdadeiro|** /
-		submit: {
-			get: function() {
-				if (!this.form || this._cfg.send !== 1) return null;
-				this.validity = "";
-				const data = {
-					value:    this.value(),
-					name:     this.name,
-					validity: this.validity === "",
-					message:  this.validity
-				};
-				if (data.value === null || data.name === null) return null;
-				/*-- checar manualmente a validade de formulários não implementados ou sem máscara --* /
-				if (!this._fmask || !this._fwork) {
-
-				}
-				/*-- se não encontrado erro, checar verificação personalizada (data-wd-validity) --* /
-				if (valid === "" && "wdValidity" in this.node.dataset) {
-					let func = this.node.dataset.wdValidity
-					if (func in window && __Type(window[func]).function) {
-						let error = window[func](value);
-						if (__Type(error).nonempty) {
-							valid = error.trim();
-							this.validity = valid;
-						}
-					}
-				}
-				/*-- definindo valor de retorno --* /
-				let data = {
-					name: name, value: value, validity: valid === "", message: valid
-				};
-				/*-- exibindo mensagem de erro caso o valor seja inválido --* /
-				if (!data.validity) {
-					if ("reportValidity" in this.node) {
-						this.node.reportValidity();
-					} else {
-						const event = new CustomEvent("wdshowmessage", {detail: {
-							type: "notify",
-							title: title === undefined || title === null ? "" : String(title),
-							body: this.toString()
-						}});
-						__SIGNALBOX.dispatchEvent(event);
-						this.node.focus();
-						this.node.select();
-					}
-				}
-				return data;
+		/**. ``''void'' falert()``: Exibe a mensagem de erro na tela, se implementado pelo navegador.**/
+		falert	: {
+			value: function() {
+				const validity = this.fvalidity;
+				if (validity !== "" && "reportValidity" in this.node)
+					this.node.reportValidity();
+				return;
 			}
 		}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-		/**. ``''object'' submit``: Retorna um objeto com as os dado do formulário para submissão ou nulo se não for campo de envio de dados. O objeto retornado possui as informações do nome (``name``), do valor (``value``), da validade (``validity``) e da mensagem de erro (``message``) do campo de formulário, . Se inválido o valor, será exibida uma mensagem.**/
-		submit: {
-			get: function() {
-				if (!this.form || this._cfg.send !== 1) return null;
-				this.validity = "";
-				let value     = this.value();
-				let name      = this.name;
-				let valid     = this.validity;
-				if (value === null || name === null) return null;
-				/*-- checar validade para formulário não implementado ou sem máscara --*/
-				if (!this._fmask || !this._fwork) {
-					const check = __Type(value);
-					if (valid === "" && (check.nonempty || check.array)) {
-						switch(this._cfg.check) {
-							case "date": {
-								if (check.date) value = check.date;
-								else valid = "Invalid date value.";
-								break;
-							}
-							case "time": {
-								if (check.time) value = check.time;
-								else valid = "Invalid time value.";
-								break;
-							}
-							case "datetime": {
-								if (check.datetime) value = check.datetime;
-								else valid = "Invalid date/time value.";
-								break;
-							}
-							case "date|time": {
-								if (check.date || check.time || check.datetime) value = check.value;
-								else valid = "Invalid date or time value.";
-								break;
-							}
-							case "number": {
-								if (check.finite) value = check.finite;
-								else valid = "Invalid numeric value.";
-								break;
-							}
-							case "url": {
-								if (check.url) value = value.trim();
-								else valid = "Invalid URL value.";
-								break;
-							}
-							case "email": {
-								if (this.node.multiple !== true && value.length > 1) {
-									valid = "Multiple values not allowed.";
-									break;
-								}
-								let email = true;
-								value.forEach(function(v,i,a) {
-									if (!email) return;
-									let test = __Type(v).email;
-								});
-								if (!email) valid = "Invalid email value."
-								break;
-							}
-							case "file":	 {
-								if (this.node.multiple !== true && value.length > 1)
-									valid = "Multiple values not allowed.";
-								break;
-							}
-							case "combo": {
-								if (this.node.multiple !== true && value.length > 1)
-									valid = "Multiple values not allowed.";
-								break;
-							}
-							case "week": {
-								if (!check.week) {
-									valid = "Invalid week value."
-									break;
-								}
-								let data = {
-									WWYYYY: {year: "$2", week: "$1", re: __TYPE.week.WWYYYY},
-									YYYYWW: {year: "$1", week: "$2", re: __TYPE.week.YYYYWW},
-								};
-								let type = data[check._test.subgroup];
-								let year = value.replace(type.re, type.year);
-								let week = value.replace(type.re, type.week);
-								let wmax = __DateTime(__Type.zeros(year, 4)+"-01-01").maxWeekForm;
-								if (Number(week) > wmax) {
-									valid = "Invalid week value."
-									break;
-								}
-								value    = __Type.zeros(year, 4)+"-W"+__Type.zeros(week, 2);
-								break;
-							}
-							case "month": {
-								if (!check.month) {
-									valid = "Invalid month value."
-									break;
-								}
-								let data = {
-									MMYYYY:   {year: "$2", month: "$1", re: __TYPE.month.MMYYYY,   txt: false},
-									YYYYMM:   {year: "$1", month: "$2", re: __TYPE.month.YYYYMM,   txt: false},
-									MMMMYYYY: {year: "$2", month: "$1", re: __TYPE.month.MMMMYYYY, txt: true},
-								};
-								let type  = data[check._test.subgroup];
-								let year  = value.replace(type.re, type.year);
-								let month = value.replace(type.re, type.month);
-								if (type.txt) month = __LANG.month(month);
-								value     = __Type.zeros(year, 4)+"-"+__Type.zeros(month, 2);
-								break;
-							}
-						}
-						if (valid !== "") this.validity = valid;
-					}
-				}
-				/*-- se não encontrado erro, checar verificação personalizada (data-wd-validity) --*/
-				if (valid === "" && "wdValidity" in this.node.dataset) {
-					let func = this.node.dataset.wdValidity
-					if (func in window && __Type(window[func]).function) {
-						let error = window[func](value);
-						if (__Type(error).nonempty) {
-							valid = error.trim();
-							this.validity = valid;
-						}
-					}
-				}
-				/*-- definindo valor de retorno --*/
-				let data = {
-					name: name, value: value, validity: valid === "", message: valid
-				};
-				/*-- exibindo mensagem de erro caso o valor seja inválido --*/
-				if (!data.validity) {
-					if ("reportValidity" in this.node) {
-						this.node.reportValidity();
-					} else {
-						const event = new CustomEvent("wdshowmessage", {detail: {
-							type: "notify",
-							title: title === undefined || title === null ? "" : String(title),
-							body: this.toString()
-						}});
-						__SIGNALBOX.dispatchEvent(event);
-						this.node.focus();
-						this.node.select();
-					}
-				}
-				return data;
-			}
-		}
-
-
-
-
-
-
-
 	});
 
 /*----------------------------------------------------------------------------*/
-	/**#### Nós HTML
 	/**###### ``**constructor** ''object'' __Node(node input)``
-	Construtor para manipulação de nós HTML.
-	O argumento ``input`` deve ser um nó HTML simples (um elemento), caso contrário será atribuído um elemento ``DIV``.**/
+	Construtor para manipulação de nós HTML.**/
 	function __Node(input) {
-		if (!(this instanceof __Node))	return new __Node(input);
+		if (!(this instanceof __Node)) return new __Node(input);
 		__FNode.call(this, input);
 	}
 
@@ -5058,10 +4605,8 @@ const wd = (function() {
 					/*-- atributos de formulário -- */
 					if (this.form) {
 						switch(name) {
-							case "value":       return this.value();
-							case "textContent": return this.text();
-							case "innerText":   return this.text();
-							case "name":        return this.name;
+							case "value": return this.fvalue;
+							case "name":  return this.fname;
 						}
 					}
 					/*-- atributos com comportamento especial --*/
@@ -5083,10 +4628,8 @@ const wd = (function() {
 					/*-- atributo de formulário HTML -- */
 					if (this.form) {
 						switch(name) {
-							case "value":       {this.value(value); return this.attribute(name);}
-							case "textContent": {this.text(value);  return this.attribute(name);}
-							case "innerText":   {this.text(value);  return this.attribute(name);}
-							case "name":        {this.name = value; return this.attribute(name);}
+							case "value": {this.fvalue = value; return this.attribute(name);}
+							case "name":  {this.fname  = value; return this.attribute(name);}
 						}
 					}
 					/*-- atributo HTML com comportamento especial --*/
@@ -6056,7 +5599,7 @@ const wd = (function() {
 				}
 			}
 		});
-		__PROGRESSVIEWER.dispatchEvent(wdOpenRequestEvent);
+		__PROGRESS.open();
 	}
 	Object.defineProperties(__Response.prototype, {
 		constructor: {value: __Response},
@@ -6106,7 +5649,7 @@ const wd = (function() {
 				if (ev.lengthComputable === true) {
 					this._response.size = ev.total;
 					this._response.progress = ev.loaded/ev.total;
-					__PROGRESSVIEWER.dataset.wdProgressValue = ev.loaded/ev.total;
+					__PROGRESS.set(ev.loaded/ev.total);
 				}
 				if (target instanceof XMLHttpRequest && type in done) {
 					const code = target.status;
@@ -6123,8 +5666,7 @@ const wd = (function() {
 					this._changes(config.type, "send");
 				}
 				if (this._trigger !== null) this._trigger(this._response);
-				if (this._response.done)
-					__PROGRESSVIEWER.dispatchEvent(wdCloseRequestEvent);
+				if (this._response.done) __PROGRESS.close();
 				return;
 			}
 		},
@@ -6144,7 +5686,7 @@ const wd = (function() {
 				if (ev.lengthComputable === true) {
 					this._response.size = ev.total;
 					this._response.progress = ev.loaded/ev.total;
-					__PROGRESSVIEWER.dataset.wdProgressValue = ev.loaded/ev.total;
+					__PROGRESS.set(ev.loaded/ev.total);
 				}
 				if (type in done) {
 					const code = target.readyState;
@@ -6160,7 +5702,7 @@ const wd = (function() {
 				}
 				if (this._trigger !== null) this._trigger(this._response);
 				if (this._response.done)
-					__PROGRESSVIEWER.dispatchEvent(wdCloseRequestEvent);
+					__PROGRESS.close();
 				return;
 			}
 		},
@@ -6197,11 +5739,11 @@ const wd = (function() {
 					this._changes(config.type, "fetch");
 				}
 
-				__PROGRESSVIEWER.dataset.wdProgressValue = this._response.progress;
+				__PROGRESS.set(this._response.progress);
 
 				if (this._trigger !== null) this._trigger(this._response);
 				if (this._response.done)
-					__PROGRESSVIEWER.dispatchEvent(wdCloseRequestEvent);
+					__PROGRESS.close();
 				return true;
 			}
 		},
@@ -6214,7 +5756,7 @@ const wd = (function() {
 				this._response.ok       = false;
 				this._response.status   = status;
 				if (this._trigger !== null) this._trigger(this._response);
-				__PROGRESSVIEWER.dispatchEvent(wdCloseRequestEvent);
+				__PROGRESS.close();
 				return;
 			}
 		}
@@ -8546,7 +8088,7 @@ const wd = (function() {
 					let node = __Node(v);
 					let form = node.submit;
 					if (form === null) return;
-					if (!form.validity)
+					if (!form.fvalidity)
 						error = true;
 					else
 						data.push({name: form.name, value: form.value});
@@ -8842,7 +8384,7 @@ const wd = (function() {
 		/**. ``''object'' matrix(''any'' input)``: Retorna um objeto do tipo matriz conforme ``input`` (table, array, csv)**/
 		matrix:  {value: function(input) {return new WDmatrix(input);}},
 		/**. ``''string'' device``: Retorna o tipo de tela de acordo com a biblioteca.**/
-		device:  {get: function() {return __DEVICECONTROLLER.device;}},
+		device:  {get: function() {return __DEVICE.device;}},
 		/**. ``''object'' today``: Retorna o objeto do tipo data com o valor atual.**/
 		already: {get: function() {return WD(__DateTime().toString());}},
 		/**. ``''object'' URL``: Retorna dados da URL.**/
@@ -8880,10 +8422,8 @@ const wd = (function() {
 		Object.defineProperties(WD, {
 			type:     {value: function(){return __Type.apply(null, Array.prototype.slice.call(arguments));}},
 			array:    {value: function(){return __Array.apply(null, Array.prototype.slice.call(arguments));}},
-			DateTime: {value: function(){return __DateTime.apply(null, Array.prototype.slice.call(arguments));}},
+			time:     {value: function(){return __DateTime.apply(null, Array.prototype.slice.call(arguments));}},
 			time:     {value: function(){return __Time.apply(null, Array.prototype.slice.call(arguments));}},
-			fprop:    {value: function(){return __FormProperties.apply(null, Array.prototype.slice.call(arguments));}},
-			fnode:    {value: function(){return __FNode.apply(null, Array.prototype.slice.call(arguments));}},
 			node:     {value: function(){return __Node.apply(null, Array.prototype.slice.call(arguments));}},
 			number:   {value: function(){return __Number.apply(null, Array.prototype.slice.call(arguments));}},
 			string:   {value: function(){return __String.apply(null, Array.prototype.slice.call(arguments));}},
@@ -8898,7 +8438,8 @@ const wd = (function() {
 			parser:   {value: function(){return __Parser.apply(null, Array.prototype.slice.call(arguments));}},
 			LANG:     {value: __LANG},
 			TYPE:     {value: __TYPE},
-			DEVICE:   {value: __DEVICECONTROLLER},
+			DEVICE:   {value: __DEVICE},
+			PROGRESS: {value: __PROGRESS},
 		});
 	}
 
@@ -9237,7 +8778,7 @@ const wd = (function() {
 		if (!("wdDevice" in e.dataset)) return;
 		let query  = WD(e);
 		let data   = new __Parser(e.dataset.wdDevice).wdArray.get()[0];
-		let device = __DEVICECONTROLLER.device;
+		let device = __DEVICE.device;
 		let types  = { /* 0: elimina css, 1: adiciona css */
 			desktop: {phone: 0, tablet: 0, mobile: 0, desktop: 1},
 			tablet:  {phone: 0, tablet: 1, mobile: 1, desktop: 0},
@@ -9313,31 +8854,31 @@ const wd = (function() {
 			if (!__Type(data.output).function) return false;
 			if (event.type === "focusout")     return false;
 			if (event.type === "input" && input.indexOf(event.target) < 0) return false;
-			node.attribute("textContent", data.output(e));
+			e[node.ftext ? "textContent" : "value"] = data.output(e);
 			return true;
 		})();
 
 		const mask   = (function() {
 			if (!__Type(data.mask).nonempty)       return false;
 			if (event.type === "input" && !output) return false;
-			const text  = node.attribute("textContent");
+			const text  = node.ftext ? e.textContent : e.value;
 			const value = WD(text).mask(data.mask);
 			const fail  = __Type(data.fail).nonempty ? data.fail : data.mask
 			if (text === "") {
-				node.validity = "";
+				node.fvalidity = "";
 			} else if (value === "") {
-				node.validity = fail;
+				node.fvalidity = fail;
 			} else {
-				node.attribute("textContent", value);
-				node.validity = "";
+				e[node.ftext ? "textContent" : "value"] = value;
+				node.fvalidity = "";
 			}
 			return true;
 		})();
 
 		const valid  = (function() {
-			if (!__Type(data.valid).function)      return  false;
+			if (!__Type(data.valid).function)      return false;
 			if (event.type === "input" && !output) return false;
-			node.validity = data.valid(e);
+			node.fvalidity = data.valid(e);
 			return true;
 		})();
 
@@ -9855,7 +9396,7 @@ const wd = (function() {
 	function wdOnResize(ev) {
 		if (__UNDERMAINTENANCE) console.log({wdOnResize: ev, target: ev.target});
 		const alldoc = ev.type === "resize" || ev.type === "load";
-		const change = __DEVICECONTROLLER.changeDevice;
+		const change = __DEVICE.changeDevice;
 		/*-- se load ou resize, averiguar todo o documento --*/
 		if (alldoc && change) {
 			WD.$$("[data-wd-device]").forEach(function(x) {data_wdDevice(x, ev);});
