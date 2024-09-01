@@ -59,8 +59,8 @@ const wd = (function() {
 		/**. ``''string'' device``: Retorna o tipo de dispositivo**/
 		get device() {
 			const width  = this.width;
-			for (let v of this._devices)
-				if (width >= v.size) return v.name
+			for (let i = 0; i < this._devices.length; i++)
+				if (width >= this._devices[i].size) return this._devices[i].name;
 		},
 		/**. ``''boolean'' mobile``: Informa se dispositivo não é do tamanho desktop.**/
 		get mobile() {return this.device !== "desktop";},
@@ -383,27 +383,29 @@ const wd = (function() {
 			const upper = name.toUpperCase();
 			const lower = name.toLowerCase();
 			const data  = this[type];
-			let short, long, ushort, ulong, lshort, llong;
-			for (let v of data) {
-				short  = v.short;
-				long   = v.long;
+			let value, short, long, ushort, ulong, lshort, llong;
+			for (let i = 0; i < data.length; i++) {
+				value  = data[i];
+				short  = value.short;
+				long   = value.long;
 				ushort = short.toUpperCase();
 				ulong  = long.toUpperCase();
 				lshort = short.toLowerCase();
 				llong  = long.toLowerCase();
-				if (short  === name  || long  === name)  return v;
-				if (ushort === upper || ulong === upper) return v;
-				if (lshort === lower || llong === lower) return v;
+				if (short  === name  || long  === name)  return value;
+				if (ushort === upper || ulong === upper) return value;
+				if (lshort === lower || llong === lower) return value;
 			}
 			return null;
 		},
 		/**. ``''object'' searchByIndex(''string'' type, ''integer'' index)``: Retorna o objeto com as informações sobre o mês ou o dia da semana (``type``) em buca pelo índice (``index``).**/
 		searchByIndex: function(type, index) {
-			const check = __Type(index);
-			const data  = this[type];
-			if (!__Type(index).integer) return null;
-			for (let v of data)
-				if (check.value === v.index) return v;
+			index = Number(index);
+			const data = this[type];
+			for (let i = 0; i < data.length; i++) {
+				let value = data[i];
+				if (index === value.index) return value;
+			}
 			return null;
 		},
 		/**. ``''object'' monthRegExp: Retorna um objeto contendo as expressões regulares para os formatos DMMMMYYYY, MMMMDYYYY e MMMMYYYY.**/
@@ -412,9 +414,10 @@ const wd = (function() {
 			const data = [];
 			const day  = "(0?[1-9]|[12]\\d|3[01])";
 			const year = "([-+]?\\d{3}\\d+)";
-			for (let v of this.months) {
-				data.push(v.long.replace(/(\W)/g, "\\$1"));
-				data.push(v.short.replace(/(\W)/g, "\\$1"));
+			for (let i = 0; i < this.months.length; i++) {
+				let value = this.months[i];
+				data.push(value.long.replace(/(\W)/g, "\\$1"));
+				data.push(value.short.replace(/(\W)/g, "\\$1"));
 			}
 			const month = "(" + data.join("|") + ")";
 			this._langREDates = this.main;
@@ -690,10 +693,10 @@ const wd = (function() {
 		const group = this._test.group;
 		if (types.indexOf(group) >= 0 && this[group]) return;
 		/*-- Checando cada possibilidade --*/
-		for (let v of types) {
-			if (v !== group && this[v]) return;
+		for (let i = 0; i < types.length; i++) {
+			let value = types[i];
+			if (value !== group && this[value]) return;
 		}
-
 		/*-- Não se encaixa em nada conhecido --*/
 		this._value    = input;
 		this._type     = "unknow";
@@ -815,14 +818,14 @@ const wd = (function() {
 				return this.number && !isFinite(this.value);
 			}
 		},
-		/**. ``''boolean'' integer``: Checa se o valor é um número inteiro.**/
+		/**. ``''boolean'' integer``: Checa se o valor é um número real inteiro.**/
 		integer: {
 			get: function() {
 				return this.finite && (this.value%1) === 0;
 			}
 		},
-		/**. ``''boolean'' decimal``: Checa se o valor é um número decimal.**/
-		decimal: {
+		/**. ``''boolean'' real``: Checa se o valor é um número real não inteiro.**/
+		real: {
 			get: function() {
 				return this.finite && (this.value%1) !== 0;
 			}
@@ -1161,16 +1164,16 @@ const wd = (function() {
 				const search = /^\??([^=]+\=(\&?|[^&]+\&?))+$/;
 				if (check.nonempty && header.test(input)) {
 					const data = input.trim().split("\r\n");
-					for (let v of data) {
-						let part  = v.split(": ");
+					for (let i = 0; i < data.length; i++) {
+						let part  = data[i].split(": ");
 						let name  = part[0].trim();
 						let value = part.length > 0 ? part[1].trim() : "";
 						if (name.length > 0) this.append(name, value);
 					}
 				} else if (check.nonempty && search.test(input)) {
 					const data = input.replace(/^\?/, "").trim().split("&");
-					for (let v of data) {
-						let part  = v.split("=");
+					for (let i = 0; i < data.length; i++) {
+						let part  = data[i].split("=");
 						let name  = part[0].trim().replace(/\[\]$/, "");
 						let value = part.length > 1 ? part[1] : "";
 						if (name.length > 0) this.append(name, value);
@@ -2015,12 +2018,18 @@ const wd = (function() {
 
 	Object.defineProperties(__Number.prototype, {
 		constructor: {value: __Number},
-
-
-		_primes: {value: [2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97]},
-
-
-
+		/**. ``''array'' _primes``: Lista de números primos até 1000.**/
+		_primes: {value: [
+			2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97,101,
+			103,107,109,113,127,131,137,139,149,151,157,163,167,173,179,181,191,193,197,
+			199,211,223,227,229,233,239,241,251,257,263,269,271,277,281,283,293,307,311,
+			313,317,331,337,347,349,353,359,367,373,379,383,389,397,401,409,419,421,431,
+			433,439,443,449,457,461,463,467,479,487,491,499,503,509,521,523,541,547,557,
+			563,569,571,577,587,593,599,601,607,613,617,619,631,641,643,647,653,659,661,
+			673,677,683,691,701,709,719,727,733,739,743,751,757,761,769,773,787,797,809,
+			811,821,823,827,829,839,853,857,859,863,877,881,883,887,907,911,919,929,937,
+			941,947,953,967,971,977,983,991,997
+		]},
 		/**. ``''boolean'' finite``: Checa se o número é finito.**/
 		finite: {
 			get: function() {return this._check.finite;}
@@ -2044,6 +2053,15 @@ const wd = (function() {
 		/**. ``''integer'' int``: Retorna a parte inteira do número.**/
 		int: {
 			get: function() {return Math.trunc(this.value);}
+		},
+		/**. ``''string'' type``: Retorna o tipo do número (zero, infinite, integer, real).**/
+		type: {
+			get: function() {
+				const types = ["infinite", "zero", "integer", "real"];
+				for (let i = 0; i < types.length; i++)
+					if (this._check[types[i]] === true) return types[i];
+				return "unknow";
+			}
 		},
 		/**. ``''integer'' base10``: Retorna o número que multiplicado pelo valor eliminaria os decimais.**/
 		base10: {
@@ -2082,7 +2100,7 @@ const wd = (function() {
 			}
 		},
 		/**. ``''array'' primes``: Retorna uma lista com os números primos até o número informado.**/
-		primes: {
+		primes: {//FIXME colocar aqui números negativos também (ABS)
 			get: function() {
 				if (!this.finite || this.value < 2) return [];
 				/*-- Checando se o número primo já consta na lista --*/
@@ -2108,23 +2126,56 @@ const wd = (function() {
 		prime: {
 			get: function() {return this.primes.indexOf(this.value) >= 0;}
 		},
-
-
-		multiples: {
+		/**. ``''array'' factorization``: Retorna a fatorização de inteiro em números primos.**/
+		factorization: {
 			get: function() {
-				if (this.type !== "integer") return [];
+				if (this.type !== "integer") return [1];
 				const primes = this.primes;
 				const list   = [];
 				let   value  = Math.abs(this.int);
-				let   item   = -1;
-				while (value >= primes[++item]) {
-					let div = primes[item];
-					while (value >= div && value%div === 0) {
-						value = value / div;
-						list.push(div);
-					}
+				let   item   = 0;
+				while (value >= primes[item] && item < primes.length) {
+					if (value%primes[item] === 0) {
+						value = value / primes[item];
+						list.push(primes[item]);
+					} else {item++;}
 				}
 				return list;
+			}
+		},
+
+		gcd: {
+			value: function() {
+				const fact = this.factorization;
+				const gcd  = [1];
+				const args = [];
+				/*-- Capturando a fatorização dos argumentos --*/
+				for (let i = 0; i < arguments.length; i++) {
+					let check = __Type(arguments[i]);
+					if (check.integer) {
+						let number = new __Number(check.value);
+						args.push(number.factorization)
+					}
+				}
+				/*-- Checando fatores em comum --*/
+				for (let i = 0; i < fact.length; i++) {
+					let found = true;
+					let value = fact[i];
+					for (let j = 0; j < args.length; j++) {
+						let index = args[j].indexOf(value);
+						if (index < 0) {
+							found = false;
+							break;
+						} else {
+							args[j][index] = null;
+						}
+					}
+					if (found) gcd.push(value);
+				}
+				/*-- Calculando Máximo Divisor Comum --*/
+				let value = 1;
+				for (let i = 0; i < gcd.length; i++) value = value * gcd[i];
+				return value;
 			}
 		},
 
@@ -2181,14 +2232,7 @@ const wd = (function() {
 				return int+" B";
 			}
 		},
-		/**. ``''string'' type``: Retorna o tipo do número (zero, infinity, integer, real).**/
-		type: {
-			get: function() {
-				if (!this.finite) return "infinity";
-				return this.value === 0 ? "zero" : (this.dec === 0 ? "integer" : "real");
 
-			}
-		},
 		/**. ``''string'' precision(''integer'' n)``: Fixa a quantidade de dígitos numéricos (argumento ``n``) a exibir.**/
 		precision: {
 			value: function(n) {
