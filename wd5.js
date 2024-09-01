@@ -72,7 +72,6 @@ const wd = (function() {
 				return true;
 			}
 			return false;
-
 		}
 	};
 
@@ -82,225 +81,214 @@ const wd = (function() {
 	const __KEYTIMERANGE = 500;
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**const** ''node'' __PROGRESSDELAY``
-	Registra o tempo de segurança, em milisegundos, até fechar o visualizador de progresso (evitar piscadas).**/
-	const __PROGRESSDELAY = 250;
-
-/*----------------------------------------------------------------------------*/
-	/**###### ``**const** ''integer'' __PROGRESSTIME``
-	Registra o intervalo, em milisegundos, de atualização do visualizador de progresso**/
-	const __PROGRESSTIME = 5;
-
-/*----------------------------------------------------------------------------*/
 	/**###### ``**const** ''node'' __PROGRESS``
 	Registra a barra de progresso das requisições da biblioteca.**/
 	const __PROGRESS = {
 		/**. ``''node'' bar``: Barra de progresso.**/
 		bar: (function() {
-			const tag = (function() {
-				if ("HTMLMeterElement"    in window) return "METER";
-				if ("HTMLProgressElement" in window) return "PROGRESS";
-				return "DIV";
+			/*-- Plano de fundo --*/
+			const wall = (function() {
+				const node = document.createElement("DIV");
+				const style = {
+					display: "block", width: "100vw", height: "100vh",
+					padding: "0", margin: "0", zIndex: "999999",
+					position: "fixed", top: "0", right: "0", bottom: "0", left: "0",
+					cursor: "progress", backgroundColor: "rgba(0,0,0,0.3)",
+					animation: "js-wd-emerge 0.1s",
+				};
+				for (let i in style) node.style[i] = style[i];
+				return node;
 			})();
-			const node  = document.createElement(tag);
-			const style = {
-				display: "block", margin: "5px 5px auto auto", width: "25%",
-				position: "absolute", top: "0", left: "0", right: "0", height: "10px", "backgound-color": "red"
-			};
-			for (let i in style) node.style[i] = style[i];
-			return node;
-		})(),
-		/**. ``''node'' wall``: Papel de parede.**/
-		wall: (function() {
-			const node = document.createElement("DIV");
-			const style = {
-				display: "block", width: "100%", height: "100%",
-				padding: "0.1em 0.5em", margin: "0", zIndex: "999999",
-				position: "fixed", top: "0", right: "0", bottom: "0", left: "0",
-				cursor: "progress", backgroundColor: "rgba(0,0,0,0.3)",
-				animation: "js-wd-emerge 0.1s",
-			};
-			for (let i in style) node.style[i] = style[i];
-			return node;
-		})(),
-		/**. ``''integer'' count``: Registra o número de processos em aberto.**/
-		count: 0,
+			/*-- Barra de progresso --*/
+			const bar = (function () {
+				const tag = (function() {
+					if ("HTMLMeterElement"    in window) return "METER";
+					if ("HTMLProgressElement" in window) return "PROGRESS";
+					return "DIV";
+				})();
+				const node  = document.createElement(tag);
+				const style = {
+					display: "block", width: "99vw", height: "10px",
+					padding: "0", margin: "auto",
+					position: "absolute", top: "0", left: "0", right: "0"
+				};
+				if (tag === "DIV") {
+					style.backgroundColor = "red";
+					style.borderRadius    = "0.5em";
+					style.border          = "1px solid black";
+				}
+				for (let i in style) node.style[i] = style[i];
+				return node;
+			})();
+			/*-- Agrupar elementos --*/
+			wall.appendChild(bar);
+			/*-- Definindo atributos --*/
+			wall.dataset.delay = 5;
+			wall.dataset.value = 0;
+			wall.dataset.count = 0;
 
-		delay: 0,
+			/*-- Disparadores --*/
+			bar.addEventListener("wdprogressopen", function(ev) {
+				const wall = ev.target.parentElement;
+				if (wall.parentElement !== document.body)
+					document.body.appendChild(wall);
+				wall.dataset.count = Number(wall.dataset.count) + 1;
+				ev.target.value    = Number(wall.dataset.value);
+			}, false);
 
-		open: function*() {
-			this.count++;
-			if (this.bar.parentElement  === null) this.wall.appendChild(this.bar);
-			if (this.wall.parentElement === null) document.body.appendChild(this.wall);
+			bar.addEventListener("wdprogressclose", function(ev) {
+				const wall  = ev.target.parentElement;
+				const count = Number(wall.dataset.count) - 1;
+				const delay = Number(wall.dataset.delay);
+				wall.dataset.count = count < 0 ? 0 : count;
+				window.setTimeout(function () {
+					if (count === 0 && wall.parentElement !== null)
+						wall.parentElement.removeChild(wall);
+				}, delay);
+			}, false);
+
+			bar.addEventListener("wdprogressset", function(ev) {
+				const wall  = ev.target.parentElement;
+				const value = Number(wall.dataset.value);
+				const tag   = ev.target.tagName.toLowerCase();
+				if (tag === "div")
+					ev.target.style.width = String(100*value)+"%";
+				else
+					ev.target.value = value;
+			}, false);
+
+			return bar;
+		})(),
+		/**. ``''object'' openEvent``: Evento de abertura da barra de progresso.**/
+		openEvent:  new CustomEvent("wdprogressopen"),
+		/**. ``''object'' closeEvent``: Evento de fechamento da barra de progresso.**/
+		closeEvent: new CustomEvent("wdprogressclose"),
+		/**. ``''object'' setEvent``: Evento de definição da barra de progresso.**/
+		setEvent:   new CustomEvent("wdprogressset"),
+		/**. ``''void'' open()``: Abre a barra de progresso.**/
+		open: function()  {
+			this.bar.dispatchEvent(this.openEvent);
 			return;
 		},
-
-		close: function*() {
-			this.count += this.count === 0 ? 0 : -1;
-			const self = this;
-			window.setTimeout(function () {
-				if (self.count === 0 && self.wall.parentElement !== null)
-					document.body.removeChild(self.wall);
-				return;
-			}, this.delay);
-			return
+		/**. ``''void'' close()``: Fecha a barra de progresso.**/
+		close: function() {
+			this.bar.dispatchEvent(this.closeEvent);
+			return;
 		},
-
-		set: function*(ratio) {
-			const check = __Type(ratio);
-			const value = check.finite ? check.value : 1;
-			const tag   = this.bar.tagName.toLowerCase();
-			if (tag === "div")
-				this.bar.style.width = String(25*value)+"%";
-			else
-				this.bar.value = value;
+		/**. ``''void'' set(''integer'' value)``: Define o valor da barra de progresso pelo seu argumento.**/
+		set: function(value) {
+			this.bar.parentElement.dataset.value = value;
+			this.bar.dispatchEvent(this.setEvent);
 			return;
 		}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*
-
-		const bar  = document.createElement(tag);
-		const main = document.createElement("DIV");
-		const style = {
-			main: {
-				display: "block", width: "100%", height: "100%",
-				padding: "0.1em 0.5em", margin: "0", zIndex: "999999",
-				position: "fixed", top: "0", right: "0", bottom: "0", left: "0",
-				cursor: "progress", backgroundColor: "rgba(0,0,0,0.3)",
-				animation: "js-wd-emerge 0.1s",
-			},
-			bar: {
-				display: "block", margin: "5px 5px auto auto", width: "25%",
-				position: "absolute", top: "0", left: "0", right: "0",
-			}
-		};
-
-		/* definindo estilos e dataset * /
-		for (let i in style.main) main.style[i] = style.main[i];
-		for (let i in style.bar)  bar.style[i]  = style.bar[i];
-		main.dataset.wdProgressCounter = 0;
-		main.dataset.wdProgressValue   = 1;
-
-		/* adicionando eventos * /
-		main.addEventListener("wdopenrequest", function(ev) {
-			let counter = Number(ev.target.dataset.wdProgressCounter);
-			if (counter === 0) document.body.appendChild(ev.target);
-			ev.target.dataset.wdProgressCounter = ++counter;
-		}, false);
-
-		main.addEventListener("wdloadingrequest", function(ev) {
-			let value = Number(ev.target.dataset.wdProgressValue);
-			value = value > 1 ? 1 : (value < 0 ? 0 : value);
-			let tag = bar.tagName.toLowerCase();
-			window.setTimeout(function() {
-				if (tag !== "div")
-					bar.value = value;
-				else
-					bar.style.width = String(100*value)+"%";
-			}, __PROGRESSTIME);
-		}, false);
-
-		main.addEventListener("wdcloserequest", function(ev) {
-			let counter = Number(ev.target.dataset.wdProgressCounter);
-			if (counter > 0) {
-				counter--;
-				ev.target.dataset.wdProgressCounter = counter;
-				if (counter === 0) window.setTimeout(function () {
-					if (main.parentElement !== null) document.body.removeChild(main);
-				}, __PROGRESSDELAY);
-			}
-		}, false);
-
-		/* construindo visualizador e retornando-o * /
-		main.appendChild(bar);
-		return main;
-	})();
-	*/
-	}
+	};
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**const** ''integer'' __SIGNALTIME``
-	Registra o tempo, em milissegundos, de duração da mensagem.**/
-	const __SIGNALTIME = 9000;
-
-/*----------------------------------------------------------------------------*/
-	/**###### ``**const** ''node'' __SIGNALMESSAGEBOX``
-	Registra o modelo de caixa de mensagem.**/
-	const __SIGNALMESSAGEBOX = (function() {
-		const box   = document.createElement("ARTICLE");
-		const title = document.createElement("H6");
-		const body  = document.createElement("P");
-		const close = document.createElement("SPAN");
-		box.appendChild(title);
-		box.appendChild(body);
-		box.appendChild(close);
-		return box;
-	})();
-
-/*----------------------------------------------------------------------------*/
-	/**###### ``**const** ''node'' __SIGNALBOX``
-	Registra o container das caixas de mensagem.**/
-	const __SIGNALBOX = (function() {
-		const main = document.createElement("SECTION");
-		main.className = "js-wd-signal";
-		/* vinculando evento */
-		main.addEventListener("wdshowmessage", function(ev) {
-			/* Emitir notificações */
-			if (ev.detail.type !== "signal" && "Notification" in window) {
-				let options = {
-					body: ev.detail.body,
-					lang: __LANG.main,
-					vibrate: [200, 100, 200],
+	/**###### ``**const** ''object'' __SIGNAL``
+	Renderiza mensagens e notificações.**/
+	const __SIGNAL = {
+		/**. ``''node'' wall``: Caixa de mensagens.**/
+		wall: (function() {
+			const node  = document.createElement("SECTION");
+			const style = {
+				position: "fixed", display: "block", margin: "auto", padding: "1px",
+				width: "auto", maxHeight: "75vh", overflow: "auto", zIndex: "999999",
+				fontSize: "14px", backgroudColor: "transparent"
+			};
+			for (let i in style) node.style[i] = style[i];
+			node.className = "js-wd-signal";
+			return node;
+		})(),
+		/**. ``''void'' alert(''string'' body, ''string'' title)``: Renderiza uma mensagem (``body``) com título (``title``).**/
+		alert: function (body, title) {
+			const time = 8900;
+			const wall = this.wall;
+			/*-- Caixa de mensagem --*/
+			const box = (function() {
+				const node  = document.createElement("ARTICLE");
+				const style = {
+					position: "relative", display: "block", margin: "0.5em", padding: 0,
+					color: "#828282", backgroundColor: "#1A1A1A",
+					border: "thin solid #000000", borderRadius: "0.5em",
+					boxShadow: "inset 0 0 2px 1px rgba(0,0,0,0.6)",
+					animation: "js-wd-expand 0.5s ease 0s, js-wd-shrink 0.5s ease 8.5s"
 				};
-				if (Notification.permission === "denied")
-					return null;
-				if (Notification.permission === "granted")
-					new Notification(ev.detail.title, options);
-				else
-					Notification.requestPermission().then(function(x) {
-						if (x === "granted")
-							new Notification(ev.detail.title, options);
-					});
-			}
-			/* emitir mensagens */
-			else {
-				/* obtendo elementos */
-				const base  = ev.target;
-				const box   = __SIGNALMESSAGEBOX.cloneNode(true);
-				const title = box.querySelector("h6");
-				const body  = box.querySelector("p");
-				const close = box.querySelector("span");
-				/* definindo valores */
-				title.textContent = ev.detail.title;
-				body.textContent  = ev.detail.body;
-				close.onclick     = function(ev) {
-					try {base.removeChild(box);} catch(e) {}
-					if (base.parentElement !== null && base.childElementCount === 0)
-						document.body.removeChild(base);
+				for (let i in style) node.style[i] = style[i];
+				node.role = "alert";
+				return node;
+			})();
+			/*-- Caixa de título --*/
+			const titleBox = (function() {
+				const node  = document.createElement("H6");
+				const style = {
+					display: "block", padding: "0.5em", margin: "0",
+					borderRadius: "0.5em 0.5em 0 0",
+					fontSize: "larger", fontWeight: "normal"
+				};
+				for (let i in style) node.style[i] = style[i];
+				node.innerText = title !== undefined && title !== null ? title : "";
+				return node;
+			})();
+			/*-- Caixa de texto --*/
+			const bodyBox = (function() {
+				const node  = document.createElement("P");
+				const style = {
+					display: "block", padding: "0.5em 0.5em 1em 0.5em", margin: "0",
+					borderRadius: "0 0 0.5em 0.5em", whiteSpace: "pre-wrap"
+				};
+				for (let i in style) node.style[i] = style[i];
+				node.innerText = body !== undefined && body !== null ? body : "";
+				return node;
+			})();
+			/*-- Caixa de fechamento --*/
+			const closeBox = (function() {
+				const node  = document.createElement("SPAN");
+				const style = {
+					position: "absolute", display: "block", top: "0.5em", right: "0.5em",
+					lineHeight: "1", cursor: "pointer", margin: "0", zIndex: "5"
+				};
+				for (let i in style) node.style[i] = style[i];
+				node.innerHTML = "\u00D7";
+				node.addEventListener("click", function(ev) {
+					const box = ev.target.parentElement;
+					if (box.parentElement !== null)
+						box.parentElement.removeChild(box);
+					if (wall.childElementCount === 0 && wall.parentElement !== null)
+						wall.parentElement.removeChild(wall);
 					return;
-				}
-				/* renderizando mensagem */
-				if (base.childElementCount === 0) document.body.appendChild(base);
-				base.insertAdjacentElement("afterbegin", box);
-				/* definindo o tempo de exibição */
-				window.setTimeout(function() {close.click();}, __SIGNALTIME);
-			}
-		}, false);
-		return main;
-	})();
+				}, false);
+				return node;
+			})();
+			/*-- Agrupamento --*/
+			box.appendChild(titleBox);
+			box.appendChild(bodyBox);
+			box.appendChild(closeBox);
+			wall.insertAdjacentElement("afterbegin", box)
+			if (wall.parentElement !== document.body)
+				document.body.appendChild(wall);
+			/*-- Expirando em --*/
+			window.setTimeout(function() {closeBox.click();}, time);
+			return;
+		},
+		/**. ``''void'' notify(''string'' body, ''string'' title)``: Renderiza uma notificação (``body``) com título (``title``).**/
+		notify: function (body, title) {
+			title = title !== undefined && title !== null ? title : "";
+			const options = {
+				body: body !== undefined && body !== null ? body : "",
+				lang: __LANG.main,
+			};
+			if (Notification.permission === "denied")
+				return null;
+			if (Notification.permission === "granted")
+				new Notification(title, options);
+			else
+				Notification.requestPermission().then(function(x) {
+					if (x === "granted")
+						new Notification(title, options);
+				});
+			return;
+		}
+	};
 
 /*----------------------------------------------------------------------------*/
 	/**###### ``**const** ''object'' __LANG``
@@ -541,24 +529,12 @@ const wd = (function() {
 
 		//TODO ver coloração https://developer.mozilla.org/pt-BR/docs/Web/CSS/background-color
 		"/*-- SIGNAL SECTION --*/",
-		".js-wd-signal {position: fixed; top: 0; right: 0.5em; left: 0.5em;}",
-		".js-wd-signal {display: block; width: auto; max-height: 75vh; margin: auto; padding: 1px;}",
-		".js-wd-signal {z-index: 999999; overflow: auto; font-size: 14px; backgroud-color: transparent;}",
-		"@media screen and (min-width: 768px) {.js-wd-signal {left: 30vw; right: 30vw;}}",
-		".js-wd-signal article {position: relative; display: block;}",
-		".js-wd-signal article {margin: 0.5em auto 0 auto; padding: 0;}",
-		".js-wd-signal article {color: #828282; background-color: #1A1A1A;}",
-		".js-wd-signal article {border: thin solid #000000; border-radius: 0.5em;}",
-		".js-wd-signal article {box-shadow: inset 0 0 2px 1px rgba(0,0,0,0.6);}",
-		".js-wd-signal article {animation: js-wd-expand 0.5s ease 0s, js-wd-shrink 0.5s ease 8.5s;}",
-		".js-wd-signal h6      {display: block; padding: 0.5em; margin: 0;}",
-		".js-wd-signal h6      {border-radius: 0.5em 0.5em 0 0;}",
-		".js-wd-signal h6      {font-size: larger; font-weight: normal;}",
-		".js-wd-signal p       {display: block; padding: 0.5em 0.5em 1em 0.5em; margin: 0;}",
-		".js-wd-signal p       {border-radius: 0 0 0.5em 0.5em; white-space: pre-wrap;}",
-		".js-wd-signal span    {position: absolute; display: block; top: 0.5em; right: 0.5em;}",
-		".js-wd-signal span    {line-height: 1; cursor: pointer; margin: 0; z-index: 5;}",
-		".js-wd-signal span:before {content: \"\u00D7\";}",
+		".js-wd-signal {top: 0; right: 0; left: 0; bottom: initial}",
+		"@media screen and (min-width: 768px) {.js-wd-signal {bottom: 0; right: 0; left: 75vw; top: initial}}",
+
+
+
+
 
 
 		"wd-mark {background-color: rgba(154,205,50,0.7); display: inline; border-radius: 0.2em;}",
@@ -685,18 +661,6 @@ const wd = (function() {
 	/**###### ``**const** ''object'' wdReloadEvent``
 	Evento a ser disparado ao carregar elementos pela biblioteca (ver __Node.load).**/
 	const wdReloadEvent = new CustomEvent("wdreload", {detail: null, bubbles: true});
-/*----------------------------------------------------------------------------*/
-	/**###### ``**const** ''object'' wdOpenRequestEvent``
-	Evento a ser disparado ao iniciar uma requisição (ver __Request).**/
-	const wdOpenRequestEvent = new CustomEvent("wdopenrequest");
-/*----------------------------------------------------------------------------*/
-	/**###### ``**const** ''object'' wdLoadingRequestEvent``
-	Evento a ser disparado durante a mudança de status da requisição (ver __Request).**/
-	const wdLoadingRequestEvent = new CustomEvent("wdloadingrequest");
-/*----------------------------------------------------------------------------*/
-	/**###### ``**const** ''object'' wdCloseRequestEvent``
-	Evento a ser disparado ao encerrar uma requisição (ver __Request).**/
-	const wdCloseRequestEvent = new CustomEvent("wdcloserequest");
 
 /*============================================================================*/
 	/**### Administração de Dados
@@ -781,53 +745,6 @@ const wd = (function() {
 				return (this.chars && __LANG.test(this._input));
 			}
 		},
-
-
-
-		//TODO acabar com isso aqui
-		/**. ``''boolean'' email``: Checa se o valor é uma string no formato de e-mail.**/
-		email: {
-			get: function() {
-				return this.chars && __TYPE.email.email.test(this._input.trim());
-			}
-		},
-		/**. ``''boolean'' url``: Checa se o valor é uma URL válida.**/
-		url: {
-			get: function() {
-				if (!this.chars) return false;
-				try {
-					let url = new URL(this._input.trim());
-					return true;
-				} catch(e) {
-					return false;
-				}
-			}
-		},
-		/**. ``''boolean'' month``: Checa se o valor está no formato de mês:**/
-		month: {
-			get: function() {
-				if (!this.chars)                  return false;
-				if (this._test.group !== "month") return false;
-				if (this._test.subgroup === "MMMMYYYY") {
-					let month = this._input.trim().replace(this._test.regexp, "$1");
-					if (month.trim() === month) return __LANG.month(month) > 0;
-				}
-				return true;
-			}
-		},
-		/**. ``''boolean'' week``: Checa se o valor está no formato de semana.**/
-		week: {
-			get: function() {
-				if (!this.chars) return false;
-				return this._test.group === "week";
-			}
-		},
-		//TODO termina aqui
-
-
-
-
-
 		/**. ``''boolean'' string``: Checa se o valor é uma string diferente de número ou data/tempo.**/
 		string: {
 			get: function() {
@@ -1204,15 +1121,11 @@ const wd = (function() {
 		},
 		/**. ``''void''  valueOf()``: Método padrão.**/
 		valueOf: {
-			value: function() {
-				return this._valueOf;
-			}
+			value: function() {return this._valueOf;}
 		},
 		/**. ``''string'' toString()``: Método padrão.**/
 		toString: {
-			value: function() {
-				return this._toString;
-			}
+			value: function() {return this._toString;}
 		},
 		/**. ``''boolean'' instanceOf(''string'' name)``: Retorna se o valor informado é instância do objeto cujo __nome__ é informado no argumento ``name``.**/
 		instanceOf: {
@@ -2093,104 +2006,132 @@ const wd = (function() {
 	function __Number(input) {
 		if (!(this instanceof __Number)) return new __Number(input);
 		let check = __Type(input);
+		if (!check.number) throw new TypeError("Value entered is not a valid number.");
 		Object.defineProperties(this, {
-			_value:  {value: !check.number ?    0 : check.value},
-			_finite: {value: !check.number ? true : check.finite}
+			_check: {value: check},
+			value:  {value: check.value},
 		});
 	}
 
 	Object.defineProperties(__Number.prototype, {
 		constructor: {value: __Number},
+
+
+		_primes: {value: [2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97]},
+
+
+
 		/**. ``''boolean'' finite``: Checa se o número é finito.**/
 		finite: {
-			get: function() {return this._finite;}
+			get: function() {return this._check.finite;}
 		},
 		/**. ``''number'' valueOf()``: Retorna o valor numérico.**/
 		valueOf: {
-			value: function() {return this._value;}
+			value: function() {return this.value;}
 		},
 		/**. ``''number'' toString()``: Retorna o valor em forma de string.**/
 		toString: {
-			value: function() {
-				return this.finite ? this._value.toString() : (this < 0 ? "-∞" : "+∞");
-			}
+			value: function() {return this._check.toString()}
 		},
 		/**. ``''string'' toString()``: Retorna o valor em forma de string de acordo com a linguagem definida.**/
 		toLocaleString: {
-			value: function() {
-				return this._value.toLocaleString(__LANG.main);
-			}
+			value: function() {return this.value.toLocaleString(__LANG.main);}
 		},
 		/**. ``''number'' abs``: Retorna o valor absoluto do número.**/
 		abs: {
-			get: function() {return Math.abs(this.valueOf());}
+			get: function() {return Math.abs(this.value);}
 		},
 		/**. ``''integer'' int``: Retorna a parte inteira do número.**/
 		int: {
+			get: function() {return Math.trunc(this.value);}
+		},
+		/**. ``''integer'' base10``: Retorna o número que multiplicado pelo valor eliminaria os decimais.**/
+		base10: {
 			get: function() {
-				return Math.trunc(this.valueOf());
+				if (!this.finite) return 1;
+				let i = 1;
+				while ((this.value * i)%1 !== 0) i = 10*i;
+				return i;
 			}
 		},
 		/**. ``''float'' dec``: Retorna a parte decimal do número.**/
 		dec: {
 			get: function() {
-				if (!this.finite) return this.valueOf();
-				let exp = 1;
-				while ((this.valueOf() * exp)%1 !== 0) exp = 10*exp;
-				return (exp*this.valueOf() - exp*this.int) / exp;
+				if (!this.finite) return this.value;
+				const div = this.base10;
+				return (div*this.value - div*this.int) / div;
 			}
 		},
 		/**. ``''number'' round(''integer'' n)``: Arredonda o número conforme especificado. O argumento ``n`` define a quantidade de casas decimais.**/
 		round: {
 			value: function(n) {
-				if (!this.finite) return this.valueOf();
+				if (!this.finite) return this.value;
 				const check = __Type(n);
 				const value = check.finite && !check.negative ? Math.trunc(check.value) : 0;
-				return Number(this.valueOf().toFixed(value));
+				return Number(this.value.toFixed(value));
 			}
 		},
 		/**. ``''number'' cut(''integer'' n)``: Corta o número de casas decimais conforme especificado sem arrendondar. O argumento opcional ``n`` define a quantidade de casas decimais.**/
 		cut: {
 			value: function(n) {
-				if (!this.finite) return this.valueOf();
+				if (!this.finite) return this.value;
 				const check = __Type(n);
 				const value = check.finite && !check.negative ? Math.trunc(check.value) : 0;
-				let base = 1;
-				let i = -1;
-				while (++i < n) base = 10*base;
-				const number = __Number(base*this.valueOf());
-				return number.int/base;
+				const base  = Math.pow(10, value);
+				return Math.trunc(base*this.value)/base;
 			}
 		},
-		/**. ``''array'' primes``: Retorna uma lista com os números primos até o valor do objeto.**/
+		/**. ``''array'' primes``: Retorna uma lista com os números primos até o número informado.**/
 		primes: {
 			get: function() {
-				if (!this.finite || this.valueOf() < 2) return [];
-				const list = [2];
-				const int  = this.int;
-				let i = 3;
-				while (i <= int) {
-					let isPrime = true;
-					let j = 0; /* não checar o 2 */
-					while (++j < list.length) {
-						if (i % list[j] === 0) {
-							isPrime = false;
-							break;
-						}
-					}
-					if (isPrime) list.push(i);
-					i += 2; /* não checar par */
+				if (!this.finite || this.value < 2) return [];
+				/*-- Checando se o número primo já consta na lista --*/
+				const last = this._primes[this._primes.length - 1];
+				if (this.value <= last) {
+					let i = 0;
+					while (this.value >= this._primes[i]) i++;
+					return this._primes.slice(0, i);
 				}
-				return list;
+				/*-- Adicionando novos números primos --*/
+				for (let num = last+2; num <= this.value; num += 2) {
+					for (let item = 0; item < this._primes.length; item++) {
+						if (num % this._primes[item] === 0)
+							break;
+						else if (item === this._primes.length - 1)
+							this._primes.push(num);
+					}
+				}
+				return this._primes;
 			}
 		},
 		/**. ``''boolean'' prime``: Checa se número é primo.**/
 		prime: {
+			get: function() {return this.primes.indexOf(this.value) >= 0;}
+		},
+
+
+		multiples: {
 			get: function() {
-				if (this.valueOf() < 2 || !this.finite || this.dec !== 0) return false;
-				return this.primes.reverse()[0] === this.valueOf();
+				if (this.type !== "integer") return [];
+				const primes = this.primes;
+				const list   = [];
+				let   value  = Math.abs(this.int);
+				let   item   = -1;
+				while (value >= primes[++item]) {
+					let div = primes[item];
+					while (value >= div && value%div === 0) {
+						value = value / div;
+						list.push(div);
+					}
+				}
+				return list;
 			}
 		},
+
+
+
+
+
 		/**. ``''string'' frac(''integer'' n)``: Retorna a notação numérica em forma de fração. O argumento ``n`` define o limitador de precisão (valores maiores exigem mais processamento, evitar).**/
 		frac: {
 			value: function(n) {
@@ -2228,8 +2169,8 @@ const wd = (function() {
 		/**. ``''string'' bytes``: Retorna a notação em bytes (de ''B'' a ''YB'').**/
 		bytes: {
 			get: function() {
-				if (this.valueOf() < 1) return "0 B";
-				if (!this.finite)       return this.toString()+" B";
+				if (this.value < 1) return "0 B";
+				if (!this.finite)   return this.toString()+" B";
 				const scale = ["B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
 				let exp = scale.length;
 				let int = this.int;
@@ -2243,10 +2184,9 @@ const wd = (function() {
 		/**. ``''string'' type``: Retorna o tipo do número (zero, infinity, integer, real).**/
 		type: {
 			get: function() {
-				if (this.valueOf() === 0) return "zero";
-				if (!this.finite)         return "infinity";
-				if (this.dec === 0)       return "integer";
-				return "real";
+				if (!this.finite) return "infinity";
+				return this.value === 0 ? "zero" : (this.dec === 0 ? "integer" : "real");
+
 			}
 		},
 		/**. ``''string'' precision(''integer'' n)``: Fixa a quantidade de dígitos numéricos (argumento ``n``) a exibir.**/
@@ -7482,27 +7422,17 @@ const wd = (function() {
 				return new __String(this._input).mask(mask, callback)
 			}
 		},
-		/**. ``''self'' signal(''string'' title)``: Renderiza uma mensagem.**/
-		signal: {
+		/**. ``''self'' alert(''string'' title)``: Renderiza uma mensagem.**/
+		alert: {
 			value: function(title) {
-				const event = new CustomEvent("wdshowmessage", {detail: {
-					type: "signal",
-					title: title === undefined || title === null ? "" : String(title),
-					body: this.toString()
-				}});
-				__SIGNALBOX.dispatchEvent(event);
+				__SIGNAL.alert(this.toString(), title);
 				return this;
 			}
 		},
 		/**. ``''self'' signal(''string'' title)``: Renderiza uma notificação. Se o tipo de dado for **/
 		notify: { /*renderizar notificação*/
 			value: function(title) {
-				const event = new CustomEvent("wdshowmessage", {detail: {
-					type: "notify",
-					title: title === undefined || title === null ? "" : String(title),
-					body: this.toString()
-				}});
-				__SIGNALBOX.dispatchEvent(event);
+				__SIGNAL.notify(this.toString(), title);
 				return this;
 			}
 		},
@@ -8440,6 +8370,7 @@ const wd = (function() {
 			TYPE:     {value: __TYPE},
 			DEVICE:   {value: __DEVICE},
 			PROGRESS: {value: __PROGRESS},
+			SIGNAL:   {value: __SIGNAL},
 		});
 	}
 
