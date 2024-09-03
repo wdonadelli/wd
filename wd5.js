@@ -2100,18 +2100,19 @@ const wd = (function() {
 			}
 		},
 		/**. ``''array'' primes``: Retorna uma lista com os números primos até o número informado.**/
-		primes: {//FIXME colocar aqui números negativos também (ABS)
+		primes: {
 			get: function() {
-				if (!this.finite || this.value < 2) return [];
+				if (!this.finite || this.abs < 2) return [];
+				const value = this.abs;
 				/*-- Checando se o número primo já consta na lista --*/
 				const last = this._primes[this._primes.length - 1];
-				if (this.value <= last) {
+				if (value <= last) {
 					let i = 0;
-					while (this.value >= this._primes[i]) i++;
+					while (value >= this._primes[i]) i++;
 					return this._primes.slice(0, i);
 				}
 				/*-- Adicionando novos números primos --*/
-				for (let num = last+2; num <= this.value; num += 2) {
+				for (let num = last+2; num <= value; num += 2) {
 					for (let item = 0; item < this._primes.length; item++) {
 						if (num % this._primes[item] === 0)
 							break;
@@ -2126,24 +2127,36 @@ const wd = (function() {
 		prime: {
 			get: function() {return this.primes.indexOf(this.value) >= 0;}
 		},
-		/**. ``''array'' factorization``: Retorna a fatorização de inteiro em números primos.**/
+		/**. ``''array'' factorization``: Retorna a fatorização do inteiro em números primos.**/
 		factorization: {
 			get: function() {
 				if (this.type !== "integer") return [1];
-				const primes = this.primes;
-				const list   = [];
-				let   value  = Math.abs(this.int);
-				let   item   = 0;
+				const list = [];
+				let value  = Math.abs(this.int);
+				let primes = this._primes;
+				let item   = 0;
+				/*-- Looping sobre os primos existentes --*/
 				while (value >= primes[item] && item < primes.length) {
 					if (value%primes[item] === 0) {
 						value = value / primes[item];
 						list.push(primes[item]);
 					} else {item++;}
 				}
+				/*-- Looping sobre os primos extraordinários --*/
+				if (value > 1) {
+					new __Number(value).primes;
+					primes = this._primes;
+					while (value >= primes[item] && item < primes.length) {
+						if (value%primes[item] === 0) {
+							value = value / primes[item];
+							list.push(primes[item]);
+						} else {item++;}
+					}
+				}
 				return list;
 			}
 		},
-
+		/**. ``''number'' gcd(...)``: Retorna o máximo divisor comum de números inteiros comparando o número informado com aqueles passados como argumento.**/
 		gcd: {
 			value: function() {
 				const fact = this.factorization;
@@ -2178,50 +2191,23 @@ const wd = (function() {
 				return value;
 			}
 		},
-
-
-
-
-
-		/**. ``''string'' frac(''integer'' n)``: Retorna a notação numérica em forma de fração. O argumento ``n`` define o limitador de precisão (valores maiores exigem mais processamento, evitar).**/
+		/**. ``''string'' frac``: Retorna a notação numérica em forma de fração.**/
 		frac: {
-			value: function(n) {
-				if (!this.finite || this.dec === 0) return this.toString();
-				n = __Type(n);
-				n = !n.finite ? 3 : (n < 1 ? 0 : (n > 5 ? 5 : Math.trunc(n.value)));
-				if (n === 0) return String(this.int);
-				/* parte inteira, decimal, divisor, dividendo e números significativos */
-				let int = Math.abs(this.int);
-				let dec = Math.abs(this.dec);
-				let div = 1;
-				let dnd = dec * div;
-				let len = 0;
-				while(dnd%1 !== 0) {
-					div = 10*div;
-					dnd = dec * div;
-					/* checando limites */
-					let check = __Number(dnd);
-					if (check.int !== 0) {
-						len++;
-						if (len >= n) {
-							dnd = check.int;
-							break;
-						}
-					}
-				}
-				/* obtendo o máximo divisor comum e a fração */
-				let gcd = __Array(div, dnd).gcd;
-				int = int === 0 ? "" : int.toString()+" ";
-				dnd = String(dnd/gcd);
-				div = String(div/gcd);
-				return (this._value < 0 ? "-" : "")+int+dnd+"/"+div;
+			get: function() {
+				if (this.type !== "real") return this.toString();
+				const int = this.int !== 0 ? String(this.int)+" " : (this.value < 0 ? "-" : "");
+				const div = this.base10;
+				const dnd = div * Math.abs(this.dec);
+				const gcd = new __Number(dnd).gcd(div);
+				return int+String(dnd/gcd)+"/"+String(div/gcd);
 			}
 		},
 		/**. ``''string'' bytes``: Retorna a notação em bytes (de ''B'' a ''YB'').**/
 		bytes: {
 			get: function() {
-				if (this.value < 1) return "0 B";
-				if (!this.finite)   return this.toString()+" B";
+				if (!this.finite) return this.toString()+" B";
+				if (this.value < 1)
+				 return this.value <= 0 ? "0 B" : Math.trunc(8*this.value)+" b";
 				const scale = ["B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
 				let exp = scale.length;
 				let int = this.int;
@@ -2233,7 +2219,7 @@ const wd = (function() {
 			}
 		},
 
-		/**. ``''string'' precision(''integer'' n)``: Fixa a quantidade de dígitos numéricos (argumento ``n``) a exibir.**/
+		/**. ``''string'' precision(''integer'' n)``: Fixa a quantidade de dígitos numéricos (argumento ``n``) a exibir. FIXME para que serve isso mesmo?**/
 		precision: {
 			value: function(n) {
 				const check = __Type(n);
@@ -2245,6 +2231,53 @@ const wd = (function() {
 				return this.valueOf().toPrecision(n);
 			}
 		},
+
+		//[Unidade de medida]<https://tc39.es/proposal-unified-intl-numberformat/section6/locales-currencies-tz_proposed_out.html#sec-issanctionedsimpleunitidentifier>
+		unit: {
+			value: function(unit, display, digits) {
+				display = String(display).toLowerCase();
+				const check  = __Type(digits);
+				const show   = ["short", "long", "narrow"];
+				const config = {
+					style: unit === "unit",
+					unit: String(unit),
+					unitDisplay: show.indexOf(display) < 0 ? show[0] : display,
+					minimumFractionDigits: check.integer && check >=0 ? check.value : 2,
+					maximumFractionDigits: check.integer && check >=0 ? check.value : 2
+				};
+				try {
+					return this.value.toLocaleString(__LANG.main, config);
+				} catch(e) {
+					return this.value.toLocaleString(__LANG.main);
+				}
+			}
+		},
+
+
+		//<https://www.six-group.com/en/products-services/financial-information/data-standards.html#scrollTo=currency-codes>
+		currency: {
+			value: function(code, display) {
+				display = String(display);
+				const show   = ["symbol", "narrowSymbol", "name", "code"];
+				const config = {
+					style: "currency",
+					currency: typeof code === "string" ? code : __LANG.currency,
+					currencyDisplay: show.indexOf(display) < 0 ? show[0] : display,
+					signDisplay: "exceptZero"
+				};
+				try {
+					return this.value.toLocaleString(__LANG.main, config);
+				} catch(e) {
+					return this.value.toLocaleString(__LANG.main);
+				}
+			}
+		},
+
+		//notation
+
+
+
+
 		/**. ``''string'' notation(''string'' type, ''object'' options)``: Formata o número em determinada notação ([referência]<https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/NumberFormat>). O argumento ``type`` define o tipo da formatação e o argumento opcional ``options`` define alguns parâmetros. Os seguintes parâmetros estão disponíveis:
 		|Nome|Tipo|Descrição|
 		|locale|String|Código da localidade comum a todos os tipos.|
