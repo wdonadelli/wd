@@ -2064,26 +2064,41 @@ const wd = (function() {
 			}
 		},
 		/**. ``''integer'' base10``: Retorna o número que multiplicado pelo valor eliminaria os decimais.**/
+
+		//FIXME TODO 2.00078*10 dá um número bizzaro e influencia no dec e no base10
+
+
 		base10: {
 			get: function() {
 				if (!this.finite) return 1;
+				const value = Math.abs(this.value);
 				let i = 1;
-				while ((this.value * i)%1 !== 0) i = 10*i;
+				while ((value * i)%1 !== 0) i = 10*i;
 				return i;
 			}
 		},
-		/**. ``''float'' dec``: Retorna a parte decimal do número.**/
+
+
+
+
+
+
+
+
+
+		/**. ``''float'' dec``: Retorna a parte decimal do número (zero se infinito ou inteiro).**/
 		dec: {
 			get: function() {
-				if (!this.finite) return this.value;
-				const div = this.base10;
-				return (div*this.value - div*this.int) / div;
+				if (this.type !== "real") return 0;
+				if (this.abs < 1) return this.value;
+				const sign = this.value < 0 ? "-0." : "0.";
+				return Number(sign+String(this.value).split(".")[1]);
 			}
 		},
 		/**. ``''number'' round(''integer'' n)``: Arredonda o número conforme especificado. O argumento ``n`` define a quantidade de casas decimais.**/
 		round: {
 			value: function(n) {
-				if (!this.finite) return this.value;
+				if (this.type !== "real") return this.value;
 				const check = __Type(n);
 				const value = check.finite && !check.negative ? Math.trunc(check.value) : 0;
 				return Number(this.value.toFixed(value));
@@ -2092,7 +2107,7 @@ const wd = (function() {
 		/**. ``''number'' cut(''integer'' n)``: Corta o número de casas decimais conforme especificado sem arrendondar. O argumento opcional ``n`` define a quantidade de casas decimais.**/
 		cut: {
 			value: function(n) {
-				if (!this.finite) return this.value;
+				if (this.type !== "real") return this.value;
 				const check = __Type(n);
 				const value = check.finite && !check.negative ? Math.trunc(check.value) : 0;
 				const base  = Math.pow(10, value);
@@ -2102,7 +2117,7 @@ const wd = (function() {
 		/**. ``''array'' primes``: Retorna uma lista com os números primos até o número informado.**/
 		primes: {
 			get: function() {
-				if (!this.finite || this.abs < 2) return [];
+				if (this.abs < 2) return [];
 				const value = this.abs;
 				/*-- Checando se o número primo já consta na lista --*/
 				const last = this._primes[this._primes.length - 1];
@@ -2191,15 +2206,32 @@ const wd = (function() {
 				return value;
 			}
 		},
-		/**. ``''string'' frac``: Retorna a notação numérica em forma de fração.**/
+		/**. ``''string'' frac``: Retorna a notação numérica em forma de fração com máximo de 6 dígitos no numerador e aproximação de até 6 casas decimais.**/
 		frac: {
 			get: function() {
 				if (this.type !== "real") return this.toString();
-				const int = this.int !== 0 ? String(this.int)+" " : (this.value < 0 ? "-" : "");
-				const div = this.base10;
-				const dnd = div * Math.abs(this.dec);
-				const gcd = new __Number(dnd).gcd(div);
-				return int+String(dnd/gcd)+"/"+String(div/gcd);
+				/*--x = a/b = a/(a+n), n = a(1/x-1)--*/
+				const int = this.int;
+				const dec = Math.abs(this.dec);
+				const num = int !== 0 ? String(int)+" " : (this.value < 0 ? "-" : "");
+				const cte = (1/dec) - 1;
+				const max = 1e6; /*-- número máximo de dígitos do numerador --*/
+				const exp = 6;   /*-- número de casas a arrendondar na checagem  --*/
+				let   dnd = 0;   /*-- dividendo --*/
+				let   div = 0;   /*-- divisor --*/
+				let   val, rnd;  /*-- diferença entre divisor e dividendo --*/
+				while(div === 0 && ++dnd < max) {
+					val = dnd*cte;
+					rnd = Number(val.toFixed(exp));
+					div = rnd%1 === 0 ? (dnd + rnd) : 0;
+				}
+				/*-- caso não tenha encontrado o valor dentro do limite --*/
+				if (div === 0) {
+					const str = String(dec.toFixed(exp)).split(".")[1];
+					dnd = str.replace(/^0+/, "");
+					div = String(Math.pow(10, str.length));
+				}
+				return num+String(dnd)+"/"+String(div);
 			}
 		},
 		/**. ``''string'' bytes``: Retorna a notação em bytes (de ''B'' a ''YB'').**/
@@ -2219,37 +2251,25 @@ const wd = (function() {
 			}
 		},
 
-		/**. ``''string'' precision(''integer'' n)``: Fixa a quantidade de dígitos numéricos (argumento ``n``) a exibir. FIXME para que serve isso mesmo?**/
-		precision: {
-			value: function(n) {
-				const check = __Type(n);
-				let abs   = this.abs;
-				n = Math.trunc(check.finite ? check.value : 3);
-				if (n < 1) n = 1;
-				if (abs < 1 && abs !== 0)
-					return this.valueOf()[abs < Math.pow(10,-n+1) ? "toExponential" : "toFixed"](n-1);
-				return this.valueOf().toPrecision(n);
-			}
-		},
+
 
 		//[Unidade de medida]<https://tc39.es/proposal-unified-intl-numberformat/section6/locales-currencies-tz_proposed_out.html#sec-issanctionedsimpleunitidentifier>
 		unit: {
 			value: function(unit, display, digits) {
-				display = String(display).toLowerCase();
+				display      = String(display).trim().toLowerCase();
 				const check  = __Type(digits);
 				const show   = ["short", "long", "narrow"];
 				const config = {
-					style: unit === "unit",
-					unit: String(unit),
-					unitDisplay: show.indexOf(display) < 0 ? show[0] : display,
-					minimumFractionDigits: check.integer && check >=0 ? check.value : 2,
-					maximumFractionDigits: check.integer && check >=0 ? check.value : 2
+					style: "unit",
+					unit: String(unit).trim(),
+					unitDisplay: show.indexOf(display) < 0 ? show[0] : display
 				};
-				try {
-					return this.value.toLocaleString(__LANG.main, config);
-				} catch(e) {
-					return this.value.toLocaleString(__LANG.main);
+				if (check.finite && check >= 0) {
+					config.minimumFractionDigits = Math.trunc(check.value);
+					config.maximumFractionDigits = Math.trunc(check.value);
 				}
+				try      {return this.value.toLocaleString(__LANG.main, config);}
+				catch(e) {return this.value.toLocaleString(__LANG.main);}
 			}
 		},
 
@@ -2257,23 +2277,53 @@ const wd = (function() {
 		//<https://www.six-group.com/en/products-services/financial-information/data-standards.html#scrollTo=currency-codes>
 		currency: {
 			value: function(code, display) {
-				display = String(display);
-				const show   = ["symbol", "narrowSymbol", "name", "code"];
+				display = String(display).trim().toLowerCase();
+				const show   = {symbol: "symbol", narrow: "narrowSymbol", name: "name", code: "code"};
 				const config = {
 					style: "currency",
-					currency: typeof code === "string" ? code : __LANG.currency,
-					currencyDisplay: show.indexOf(display) < 0 ? show[0] : display,
+					currency: String(code).trim(),
+					currencyDisplay: display in show ? show[display] : show.symbol,
 					signDisplay: "exceptZero"
 				};
-				try {
-					return this.value.toLocaleString(__LANG.main, config);
-				} catch(e) {
-					return this.value.toLocaleString(__LANG.main);
-				}
+				try      {return this.value.toLocaleString(__LANG.main, config);}
+				catch(e) {return this.value.toLocaleString(__LANG.main);}
 			}
 		},
 
-		//notation
+		notation: {
+			value: function(type, digits) {
+				type = String(type).trim().toLowerCase();
+				const check = __Type(digits);
+				const types = {
+					decimal:     {style: "decimal"},
+					integer:     {style: "decimal"},
+					significant: {style: "decimal"},
+					percent:     {style: "percent"},
+					scientific:  {style: "decimal", notation: "scientific"},
+					engineering: {style: "decimal", notation: "engineering"},
+					short:       {style: "decimal", notation: "compact", compactDisplay: "short"},
+					long:        {style: "decimal", notation: "compact", compactDisplay: "long"}
+				};
+				const adjustment = {
+					integer:     ["minimumIntegerDigits"],
+					significant: ["minimumSignificantDigits", "maximumSignificantDigits"],
+					decimal:     ["minimumFractionDigits",    "maximumFractionDigits"],
+					percent:     ["minimumFractionDigits",    "maximumFractionDigits"],
+					scientific:  ["minimumFractionDigits",    "maximumFractionDigits"],
+					engineering: ["minimumFractionDigits",    "maximumFractionDigits"]
+				};
+				const config = {};
+				if (type in types) {
+					for (let i in types[type])
+						config[i] = types[type][i];
+					if (type in adjustment && check.finite && check >= 0)
+						for (let i = 0; i < adjustment[type].length; i++)
+							config[adjustment[type][i]] = Math.trunc(check.value);
+				}
+				try      {return this.value.toLocaleString(__LANG.main, config);}
+				catch(e) {return this.value.toLocaleString(__LANG.main);}
+			}
+		},
 
 
 
@@ -2295,7 +2345,7 @@ const wd = (function() {
 		|engineering|Casas decimais|Não|Não|Exibe em notação de engenharia|
 		|compact|Não|Não|''short'' ou ''long''|Exibe em notação compacta.|
 		|currency|Não|[Código monetário]<https://www.six-group.com/en/products-services/financial-information/data-standards.html#scrollTo=currency-codes>|''symbol'', ''narrowSymbol'', ''name'' ou ''code''|Exibe em notação monetária.|**/
-		notation: {
+		notatfffion: {
 			value: function (type, options) {
 				if (!this.finite) return this.toString();
 				if (!__Type(options).object) options = {};
