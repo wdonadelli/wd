@@ -2063,29 +2063,34 @@ const wd = (function() {
 				return "unknow";
 			}
 		},
-		/**. ``''integer'' base10``: Retorna o número que multiplicado pelo valor eliminaria os decimais.**/
-
-		//FIXME TODO 2.00078*10 dá um número bizzaro e influencia no dec e no base10
-
-
-		base10: {
-			get: function() {
-				if (!this.finite) return 1;
-				const value = Math.abs(this.value);
-				let i = 1;
-				while ((value * i)%1 !== 0) i = 10*i;
-				return i;
+		/**. ``''string'' random(''object'' options)``: Retorna conjuntos de números inteiros aleatórios conforme especificado no argumento ``options``:
+		|Nome|Descrição|
+		|min|Número inteiro que indica o menor valor do conjunto|
+		|max|Número inteiro que indica o maior valor do conjunto|
+		|len|Número inteiro que indica o tamanho do conjunto|
+		|set|Número inteiro que indica a quantidade de conjuntos|**/
+		random: {
+			value: function(options) {
+				if (!__Type(options).object) options = {};
+				const min  = "min" in options ? Number(options.min) : 1;
+				const max  = "max" in options ? Number(options.max) : 60;
+				const len  = "len" in options ? Number(options.len) : 6;
+				const set  = "set" in options ? Number(options.set) : 3;
+				const bets = [];
+				let bet, list, num;
+				while (bets.length < set) {
+					list = [];
+					while (list.length < len) {
+						num = Number((min + max*Math.random()).toFixed(0));
+						if (list.indexOf(num) < 0) list.push(num);
+					}
+					list.sort(function (a,b) {return a < b ? -1 : 1;});
+					bet = list.join("\t");
+					if (bets.indexOf(bet) < 0) bets.push(bet);
+				}
+				return bets.join("\n");
 			}
 		},
-
-
-
-
-
-
-
-
-
 		/**. ``''float'' dec``: Retorna a parte decimal do número (zero se infinito ou inteiro).**/
 		dec: {
 			get: function() {
