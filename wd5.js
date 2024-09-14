@@ -1556,7 +1556,7 @@ const wd = (function() {
 
 	Object.defineProperties(__Parser.prototype, {
 		constructor: {value: __Parser},
-		/**. ``''object'' csvTable``: Transforma string CSV em tabela HTML.**/
+		/**. ``''object'' csvTable``: Transforma string [CSV]<https://www.rfc-editor.org/rfc/rfc4180> em tabela HTML.**/
 		csvTable: {
 			get: function() {
 				if ("csvTable" in this._saved)
@@ -1564,8 +1564,9 @@ const wd = (function() {
 				let data = null;
 				if (this._check.chars) {
 					const tree = new __Tree();
-					const code = this._data.split("");
-					const rows = this._data.trim().split("\n").length;
+					const text = this._data.replace(/\r\n/g, "\n");
+					const code = text.split("");
+					const rows = text.trim().split("\n").length;
 					const cols = /[\ \,\;\t\|]/;
 					let    col = null;
 					let  lines = 0;
@@ -1663,7 +1664,7 @@ const wd = (function() {
 							});
 							csv[i] = csv[i].join(",");
 						});
-						data = csv.join("\n");
+						data = csv.join("\r\n");
 					} catch(e) {}
 				}
 				this._saved["matrixCSV"] = data;
@@ -2255,18 +2256,15 @@ const wd = (function() {
 				return int+" B";
 			}
 		},
-
-
-
-		//[Unidade de medida]<https://tc39.es/proposal-unified-intl-numberformat/section6/locales-currencies-tz_proposed_out.html#sec-issanctionedsimpleunitidentifier>
+		/**. ``''string'' unit(''string'' name, ''string'' display, ''integer'' digits)``: formata o número conforme [unidade de medida]<https://tc39.es/proposal-unified-intl-numberformat/section6/locales-currencies-tz_proposed_out.html#sec-issanctionedsimpleunitidentifier> informada no argumento ``name``. O argumento opcional ``display`` define a forma de escrita ("short", "long" ou "narrow"). O argumento opcional ``digits`` define o número de casas decimais.**/
 		unit: {
-			value: function(unit, display, digits) {
+			value: function(name, display, digits) {
 				display      = String(display).trim().toLowerCase();
 				const check  = __Type(digits);
 				const show   = ["short", "long", "narrow"];
 				const config = {
 					style: "unit",
-					unit: String(unit).trim(),
+					unit: String(name).trim(),
 					unitDisplay: show.indexOf(display) < 0 ? show[0] : display
 				};
 				if (check.finite && check >= 0) {
@@ -2277,9 +2275,7 @@ const wd = (function() {
 				catch(e) {return this.value.toLocaleString(__LANG.main);}
 			}
 		},
-
-
-		//<https://www.six-group.com/en/products-services/financial-information/data-standards.html#scrollTo=currency-codes>
+		/**. ``''string'' currency(''string'' name, ''string'' display)``: formata o número conforme [código monetário]<https://www.six-group.com/en/products-services/financial-information/data-standards.html#scrollTo=currency-codes> informada no argumento ``code``. O argumento opcional ``display`` define a forma de escrita ("symbol", "narrow", "name" e "code").**/
 		currency: {
 			value: function(code, display) {
 				display = String(display).trim().toLowerCase();
@@ -2294,7 +2290,7 @@ const wd = (function() {
 				catch(e) {return this.value.toLocaleString(__LANG.main);}
 			}
 		},
-
+/**. ``''string'' notation(''string'' type, ''integer'' digits)``: formata o número conforme [tipo]<https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/NumberFormat> informada no argumento ``type``. O argumento opcional ``digits`` define o número de dígitos a depender do tipo escolhido.**/
 		notation: {
 			value: function(type, digits) {
 				type = String(type).trim().toLowerCase();
@@ -2327,125 +2323,6 @@ const wd = (function() {
 				}
 				try      {return this.value.toLocaleString(__LANG.main, config);}
 				catch(e) {return this.value.toLocaleString(__LANG.main);}
-			}
-		},
-
-
-
-
-		/**. ``''string'' notation(''string'' type, ''object'' options)``: Formata o número em determinada notação ([referência]<https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/NumberFormat>). O argumento ``type`` define o tipo da formatação e o argumento opcional ``options`` define alguns parâmetros. Os seguintes parâmetros estão disponíveis:
-		|Nome|Tipo|Descrição|
-		|locale|String|Código da localidade comum a todos os tipos.|
-		|digits|Integer|Quantidade de dígitos a aplicar ao tipo.|
-		|code|String|O código ou identificador correspondente ao tipo.|
-		|display|String|Forma de visualização do tipo.|
-		A tabela abaixo apresenta a lista dos tipos e seus parâmetros:
-		|type|digits|code|display|Descrição|
-		|significant|Dígitos significativos|Não|Não|Fixa o número de dígitos significativos.|
-		|decimal|Casas decimais|Não|Não|Fixa o número de casas decimais.|
-		|integer|Quantidade de inteiros|Não|Não|Fixa o número mínimo de inteiros.|
-		|percent|Casas decimais|Não|Não|Exibe em notação percentual.|
-		|unit|Casas decimais|[Unidade de medida]<https://tc39.es/proposal-unified-intl-numberformat/section6/locales-currencies-tz_proposed_out.html#sec-issanctionedsimpleunitidentifier>|''short'', ''long'' ou ''narrow''|Exibe a unidade de medida.|
-		|scientific|Casas decimais|Não|Não|Exibe em notação científica.|
-		|engineering|Casas decimais|Não|Não|Exibe em notação de engenharia|
-		|compact|Não|Não|''short'' ou ''long''|Exibe em notação compacta.|
-		|currency|Não|[Código monetário]<https://www.six-group.com/en/products-services/financial-information/data-standards.html#scrollTo=currency-codes>|''symbol'', ''narrowSymbol'', ''name'' ou ''code''|Exibe em notação monetária.|**/
-		notatfffion: {
-			value: function (type, options) {
-				if (!this.finite) return this.toString();
-				if (!__Type(options).object) options = {};
-				type = String(type).toLowerCase();
-				const display = {
-					unit:     ["short", "long", "narrow"],
-					currency: ["symbol", "narrowSymbol", "name", "code"],
-					compact:  ["short", "long"]
-				};
-				const opt = {
-					locale: __LANG.main,
-					digits: 2,
-					code: type === "currency" ? __LANG.currency : "degree",
-					display: type in display ? display[type][0] : undefined
-				};
-				for (let i in opt) {
-					if (i in options) {
-						const value = String(options[i]).trim();
-						const check = __Type(value);
-						switch(i) {
-							case "digits": {
-								if (check.integer && !check.negative) opt[i] = check.value;
-								break;
-							}
-							case "locale": {
-								if (check.string && __LANG.test(value)) opt[i] = value;
-								break;
-							}
-							case "code": {
-								if (check.string && value.length > 0) opt[i] = value;
-								break;
-							}
-							case "display": {
-								if (type in display && display[type].indexOf(value) >= 0) opt[i] = value;
-								break;
-							}
-						}
-					}
-				}
-				let config = {
-					significant: {
-						style: "decimal",
-						minimumSignificantDigits: opt.digits,
-						maximumSignificantDigits: opt.digits
-					},
-					decimal: {
-						style: "decimal",
-						minimumFractionDigits: opt.digits,
-						maximumFractionDigits: opt.digits
-					},
-					integer: {
-						style: "decimal",
-						minimumIntegerDigits: opt.digits
-					},
-					percent: {
-						style: "percent",
-						minimumFractionDigits: opt.digits,
-						maximumFractionDigits: opt.digits
-					},
-					unit: {
-						style: "unit",
-						unit: opt.code,
-						unitDisplay: opt.display,
-						minimumFractionDigits: opt.digits,
-						maximumFractionDigits: opt.digits
-					},
-					scientific: {
-						style: "decimal",
-						notation: "scientific",
-						minimumFractionDigits: opt.digits,
-						maximumFractionDigits: opt.digits
-					},
-					engineering: {
-						style: "decimal",
-						notation: "engineering",
-						minimumFractionDigits: opt.digits,
-						maximumFractionDigits: opt.digits
-					},
-					compact: {
-						style: "decimal",
-						notation: "compact",
-						compactDisplay: opt.display
-					},
-					currency: {
-						style: "currency",
-						signDisplay: "exceptZero",
-						currency: opt.code,
-						currencyDisplay: opt.display
-					}
-				};
-				try {
-					return this.valueOf().toLocaleString(opt.locale, config[type]);
-				} catch(e) {
-					return this.valueOf().toLocaleString(opt.locale);
-				}
 			}
 		},
 		/**. ``''number'' e``: Retorna o expoente do número em base 10.**/
@@ -2481,33 +2358,21 @@ const wd = (function() {
 	Object.defineProperties(__String.prototype, {
 		constructor: {value: __String},
 		/**. ``''string'' valueOf()``: Retorna o valor de entrada.**/
-		valueOf: {
-			value: function() {return this._value;}
-		},
+		valueOf: {value: function() {return this._value;}},
 		/**. ``''string'' toString()``: Retorna o valor de entrada sem espaços extras.**/
-		toString: {
-			value: function() {return this.clear(true, false);}
-		},
+		toString: {value: function() {return this.clear(true, false);}},
 		/**. ``''string'' length``: Retorna a quantidade de caracteres.**/
-		length: {
-			get: function() {return this._chars.length;}
-		},
+		length: {get: function() {return this._chars.length;}},
 		/**. ``''string'' length``: Retorna uma cópia da lista de caracteres.**/
-		chars: {
-			get: function() {return this._chars.slice();}
-		},
+		chars: {get: function() {return this._chars.slice();}},
 		/**. ``''string'' upper``: Retorna caixa alta.**/
-		upper: {
-			get: function() {return this.valueOf().toUpperCase();}
-		},
+		upper: {get: function() {return this.valueOf().toUpperCase();}},
 		/**. ``''string'' lower``: Retorna caixa baixa.**/
-		lower: {
-			get: function() {return this.valueOf().toLowerCase();}
-		},
+		lower: {get: function() {return this.valueOf().toLowerCase();}},
 		/**. ``''string'' toggle``: Inverte a caixa.**/
 		toggle: {
 			get: function() {
-				let list = this.chars;
+				const list = this.chars;
 				list.forEach(function(v,i,a) {
 					a[i] = v === v.toUpperCase() ? v.toLowerCase() : v.toUpperCase();
 				});
@@ -2517,7 +2382,7 @@ const wd = (function() {
 		/**. ``''string'' captalize``: Caixa alta na primeira letra de cada palavra apenas.**/
 		capitalize: {
 			get: function() {
-				let list = this.chars;
+				const list = this.chars;
 				list.forEach(function(v,i,a) {
 					a[i] = i === 0 || (/\s/).test(a[i-1]) ? v.toUpperCase() : v.toLowerCase();
 				});
@@ -2535,50 +2400,77 @@ const wd = (function() {
 				return value;
 			}
 		},
-		/**. ``''string'' mask(''string'' model, ''function'' method)``: Checa se a string casa com o formato de máscara definido. Retornará uma string vazia se o valor informado não casar com a máscara ou uma string com a máscara aplicada. O argumento opcional ``method`` define uma função a ser aplicada quando há o casamento da máscara, a função receberá a string formatada como argumento para checagens e manipulações complementares para definir o valor retornado. O argumento ``model`` define o modelo da máscara conforme caracteres abaixo:
+		/**. ``''string'' mask(''string'' model)``: Checa se a string casa com o formato de máscara definido no argumento ``model`` e a retorna. Se não casar, retorna uma string vazia. A máscara é definida com os seguintes manipuladores:
 		|Caractere|Descrição|
 		|#|Exige um dígito.|
 		|@|Exige um não dígito.|
 		|*|Exige um valor qualquer.|
 		|?|Separa modelos alternativos caso o anterior não case.|
-		|%|Fixa o caractere seguinte sem checar se casa.|
+		|%|Cancela o efeito do manipulador que o precede.|
 		###### Exemplos
 		|Modelo|Valor|Retorno|
 		|##/##/####|01234567|01/23/4567|
 		|(##) # ####-####?(##) ####-####|01234567890|(01) 2 3456-7890|
 		|(##) # ####-####?(##) ####-####|0123456789|(01) 2345-6789|**/
 		mask: {
-			value: function(model, method) {
-				const char = this.valueOf().split("");
+			value: function(model) {
+				/*-------------------------------------------------
+					char: lista de caracteres de entrada
+					c:    índice do caracter do texto de entrada
+					mask: lista de caracteres da máscara
+					m:    índice do caracter do modelo da máscara
+					base: lista de caracteres de saída
+					code: caracteres manipuladores
+					ok:   condição do casamento da máscara
+			  -------------------------------------------------*/
+			  const char = this.valueOf().split("");
 				const mask = String(model).split("");
 				const code = "#@*%";
 				let c = 0, m = -1, ok = true, base = [];
+				/*-- looping sobre cada caracteres do modelo --*/
 				while (++m < mask.length) {
+					/*-- Não fazer nada quando um caracter do modelo for definido como nulo --*/
 					if (mask[m] === null) {
 						continue;
-					} else if (mask[m] === "?") {
+					}
+					/*-- Checar o casamento da máscara ao fim de cada modelo --*/
+					else if (mask[m] === "?") {
+						/*-- máscara bateu? já checou todos os caracteres de entrada? --*/
 						if (ok && c === char.length) return base.join("");
 						ok = true; c = 0; base = [];
-					} else if (ok && mask[m] === "%") {
+					}
+					/*-- Checar caractere manipulador a ser fixado como caractere comum --*/
+					else if (ok && mask[m] === "%") {
 						let fixed = code.indexOf(mask[m+1]) >= 0;
 						let point = fixed ? mask[m+1] : mask[m];
 						base.push(point);
-						c += char[c] === point ? 1 : 0;
 						if (fixed) mask[m+1] = null;
-					} else if (ok && code.indexOf(mask[m]) >= 0) {
+						/*-- Se o caractere do modelo tiver sido informado na entrada, avançar na checagem --*/
+						c += char[c] === point ? 1 : 0;
+					}
+					/*-- Checar se o caractere de entrada casa com o manipulador --*/
+					else if (ok && code.indexOf(mask[m]) >= 0) {
 						switch(mask[m]) {
 							case "#": {ok = (/^\d$/).test(char[c]); break;}
 							case "@": {ok = (/^\D$/).test(char[c]); break;}
 							case "*": {ok = (/^\.$/).test(char[c]); break;}
 						}
-						if (ok) {base.push(char[c]);}
-						else    {base = [];}
-						c = ok ? (c + 1) : 0;
-					} else if (ok) {
+						if (ok) {
+							base.push(char[c]);
+							c++;
+						} else {
+							base = [];
+							c = 0;
+						}
+					}
+					/*-- Adicionar o caractere não manipulador do modelo à saída --*/
+					else if (ok) {
 						base.push(mask[m]);
+						/*-- Se o caractere do modelo tiver sido informado na entrada, avançar na checagem --*/
 						c += char[c] === mask[m] ? 1 : 0;
 					}
 				}
+				/*-- máscara bateu? já checou todos os caracteres de entrada? --*/
 				return (ok && c === char.length) ? base.join("") : "";
 			}
 		},
@@ -2599,7 +2491,7 @@ const wd = (function() {
 		/**. ``''string'' camel``: Retorna uma string identificadora no formato de camelCase (alfabetos latinos).**/
 		camel: {
 			get: function() {
-				let value = this.dash.split("-");
+				const value = this.dash.split("-");
 				value.forEach(function (v,i,a) {
 					if (i !== 0) {
 						let dot = v.split("");
@@ -2610,79 +2502,21 @@ const wd = (function() {
 				return value.join("");
 			}
 		},
-		/**. ``''matrix'' csv``: Retorna uma matriz (array) a partir de uma string no estilo [CSV]<https://www.rfc-editor.org/rfc/rfc4180>. Dados são separados por vírgula, espaço, tabulação, barra vertical ou ponto e vírgula e enquanto que registros são separados por quebras de linhas. O primeiro caractere separador encontrado, exceto se entre aspas, será o separador para os demais dados. Dados que contenham os caracteres separadores de dados ou registros devem estar protegidos entre aspas. Aspas em dados protegidos são definidos com aspas duplas em sequência.**/
+		/**. ``''matrix'' csv``: Retorna uma matriz (array) a partir de uma string CSV.**/
 		csv: {
 			get: function() {
-				let txt   = __String(this._value.trim()).chars;
-				let csv   = [[]];
-				let td    = null;
-				let tr    = "\n";
-				let last  = txt.length - 1;
-				let quote = false;
-				let col   = /[\ \,\;\t\|]/;
-				let cell  = [];
-				txt.forEach(function(v,i,a) {
-					let item = csv.length - 1;
-					let eol  = false;
-					let eoc  = false;
-					let char = v;
-					if (!quote) { /*-- fora das aspas --*/
-						/*-- identificação do divisor de colunas --*/
-						if (td === null && col.test(char))	td = char;
-						if (i === last) { /*-- fim do arquivo --*/
-							eoc = true;
-						} else if (char === td) { /*-- quebra de coluna --*/
-							char = "";
-							eoc  = true;
-						} else if (char === tr) { /*-- quebra de linha --*/
-							char = "";
-							eol  = true;
-						} else if (char === "\"" && cell.length === 0) { /*-- abertura de aspas --*/
-							char = "";
-							quote = true;
-						}
-					} else { /*-- dentro das aspas --*/
-						if (char === "\"") { /*-- aspas duplas (interna) --*/
-							if (a[i+1] === "\"") { /*-- aspas internas (duplas) --*/
-								a[i+1] = "";
-							} else { /*-- fim das aspas --*/
-								quote = false;
-								char  = "";
-								/*-- definir o próximo caractere como quebra de coluna, se nulo --*/
-								if (td === null && a[i+1] !== tr) td = a[i+1];
-								/*-- fechar coluna se último item --*/
-								if (i === last) eoc = true;
-							}
-						}
-						/*-- fim do arquivo --*/
-						if (i === last) eoc = true;
-					}
-					/*-- adicionar o caractere --*/
-					cell.push(char);
-					/*-- encerrar célula se fim de coluna ou de linha --*/
-					if (eoc || eol) {
-						csv[item].push(cell.join(""));
-						cell = [];
-					}
-					/*-- abrir nova linha se fim de linha --*/
-					if (eol) {
-						csv.push([]);
-					}
-					return;
-				});
-				/*-- igualando número de colunas de todas as linhas --*/
- 				let max = 0;
- 				csv.forEach(function(v,i,a) {
- 					if (v.length > max) max = v.length;
- 				});
- 				csv.forEach(function(v,i,a) {
- 					while (v.length < max) v.push("");
- 				});
-				return csv;
+				const parser = __Parser(this._value);
+				return parser.csvTable.tableMatrix.matrixCSV.get();
+			}
+		},
+		/**. ``''object'' json``: Retorna objeto JSON a partir de uma string nesse formato.**/
+		json: {
+			get: function() {
+				const parser = __Parser(this._value);
+				return parser.stringJSON.get();
 			}
 		},
 	});
-
 
 /*----------------------------------------------------------------------------*/
 	/**### Code
@@ -3766,32 +3600,33 @@ const wd = (function() {
 		constructor: {value: __Array},
 		[Symbol.iterator]: {
 			value: function*() {
-				for (let i of this._value) yield i;
+				for (let i = 0; i < this._value.length; i++) yield this._value[i];
 			}
 		},
-		/**. ``''any''  valueOf(''integer'' n)``: Retorna o array definido ou um de seus itens se o índice correspondente for infromado no argumento opcional ``n`` cujo comportamento é idêntico ao do método ``index``.**/
+		/**. ``''any''  valueOf(''integer'' n)``: Retorna o array definido ou um de seus itens se for especificado o índice como argumento, podendo se estender para além do cumprimento do array, repetindo-se a lista de forma constante.**/
 		valueOf: {
 			value: function(n) {
-				if (arguments.length === 0) return this._value;
-				return this._value[this.index(n)];
+				if (n === null || n === undefined) return this._value;
+				const check = __Type(n);
+				if (!check.finite) return this._value;
+				const value = Math.trunc(check.value);
+				const index = (Math.abs(value)*this.length + value)%this.length;
+				return this._value[index];
 			}
 		},
-		/**. ``''integer'' index(''integer'' n=0)``: Retorna o índice do array conforme especificado no argumento ``n`` que, se limitado ao seu comprimento, retornará o valor informado, caso contrário, retornarná o índice como se repetidas listas estivessem lado a lado. Tendo como exemplo um array de três elementos, o conjunto de (``n``, ``index``) retornaria  ''{..., (-3,0), (-2,1), (-1,2), (3,0), (4,1), (5,2), ...}''.**/
-		index: {
-			value: function(n) {
-				let data = __Type(n);
-				n = data.finite ? Math.trunc(data.value) : 0;
-				return (Math.abs(n)*this.length + n)%this.length;
+		/**. ``''string'' toString()``: Retorna a representação em texto do array.**/
+		toString: {
+			value: function() {
+				const parser = __Parser(this._value);
+				return parser.jsonString.get();
 			}
 		},
 		/**. ``''integer'' length``: Retorna a quantidade de itens da lista.**/
-		length: {
-			get: function() {return this._value.length;}
-		},
+		length: {get: function() {return this._value.length;}},
 		/**. ``''array'' only(''string'' type, ''boolean'' keep=false, ''boolean'' change=true)``: Retorna uma lista somente com os tipos de itens definidos. O argumento ``type`` define o tipo do item a ser mantido na lista (ver ``&lowbar;&lowbar;Type``); o argumento ``keep``, se verdadeiro, manterá na lista o item não enquadrado em ``type`` mas com o valor ``null``; e o argumento ``change``, se verdadeiro, alterará o item casado para o valor do objeto (``valueOf`` de ``&lowbar;&lowbar;Type``.**/
 		only: {
 			value: function(type, keep, change) {
-				let list   = [];
+				const list = [];
 				let i = -1;
 				while (++i < this.length) {
 					let check = __Type(this._value[i]);
@@ -3807,12 +3642,13 @@ const wd = (function() {
 		convert: {
 			value: function(f, type) {
 				if (!__Type(f).function) return null;
-				let list = this._value.slice();
+				const list = this._value.slice();
+				const test = __Type(type);
 				list.forEach(function(v,i,a) {
 					try {
 						let value = f(v);
 						let check = __Type(value);
-						if (__Type(type).chars && type in check)
+						if (test.chars && type in check)
 							a[i] = check[type] ? check.value : null;
 						else
 							a[i] = value;
@@ -3826,57 +3662,56 @@ const wd = (function() {
 		/**. ``''number'' min``: Retorna o menor número finito do conjunto de items da lista ou ``null`` em caso de vazio.**/
 		min: {
 			get: function() {
-				let list = this.only("finite");
+				const list = this.only("finite");
 				return list.length === 0 ? null : Math.min.apply(null, list);
 			}
 		},
 		/**. ``''number'' max``:  Retorna o maior número finito do conjunto de items da lista ou ``null`` em caso de vazio.**/
 		max: {
 			get: function() {
-				let list = this.only("finite");
+				const list = this.only("finite");
 				return list.length === 0 ? null : Math.max.apply(null, list);
 			}
 		},
 		/**. ``''number'' sum``: Retorna a soma dos números finitos da lista ou ``null`` em caso de vazio.**/
 		sum: {
 			get: function() {
-				let list = this.only("finite");
-				if (list.length === 0) return null;
-				let sum  = 0;
+				const list = this.only("finite");
+				let sum = 0;
 				list.forEach(function(v,i,a) {sum += v;});
-				return sum;
+				return list.length === 0 ? null : sum;
 			}
 		},
 		/**. ``''number'' avg``: Retorna a média dos números finitos da lista ou ``null`` em caso de vazio.**/
 		avg: {
 			get: function() {
-				let list = this.only("finite");
+				const list = this.only("finite");
 				return list.length === 0 ? null : this.sum/list.length;
 			}
 		},
 		/**. ``''number'' med``: Retorna a mediana dos números finitos da lista ou ``null`` em caso de vazio.**/
 		med: {
 			get: function() {
-				let list = this.only("finite");
+				const list = this.only("finite");
 				if (list.length === 0) return null;
-				let y    = list.sort(function(a,b) {return a < b ? -1 : 1;});
-				let l    = list.length;
+				const y = list.sort(function(a,b) {return a < b ? -1 : 1;});
+				const l = list.length;
 				return l%2 === 0 ? (y[l/2]+y[(l/2)-1])/2 : y[(l-1)/2];
 			}
 		},
 		/**. ``''number'' harm``: Retorna a média harmônica dos números finitos diferentes de zero da lista ou ``null`` em caso de vazio.**/
 		harm: {
 			get: function() {
-				let list = this.only("finite");
-				let sum  = 0;
-				list.forEach(function (v,i,a) {sum += v === 0 ? 0 : 1/v;});
+				const list = this.only("finite");
+				let sum = 0;
+				list.forEach(function(v,i,a) {sum += v === 0 ? 0 : 1/v;});
 				return list.length === 0 || sum === 0 ? null : list.length/sum;
 			}
 		},
 		/**. ``''number'' geo``: Retorna a média geométrica do valor absoluto dos números finitos diferentes de zero da lista ou ``null`` em caso de vazio.**/
 		geo: {
 			get: function() {
-				let list = this.only("finite");
+				const list = this.only("finite");
 				let mult = list.length === 0 ? -1 : 1;
 				list.forEach(function (v,i,a) {mult = mult * (v === 0 ? 1 : v);});
 				return mult < 0 && list.length%2 === 0 ? null : Math.pow(mult, 1/list.length);
@@ -6868,19 +6703,19 @@ const wd = (function() {
 					case "datetime":
 						return __DateTime(value).format("{YYYY}-{MM}-{DD} {hh}:{mm}");
 					case "percent":
-						return n.notation("percent", {digits: 0});
+						return n.notation("percent", 0);
 				}
 				const e = n.e;
-				if (n ==    0) return n.notation("decimal",    {digits: 0});
-				if (e >=  100) return n.notation("scientific", {digits: 0});
-				if (e >=   10) return n.notation("scientific", {digits: 1});
-				if (e >=    3) return n.notation("scientific", {digits: 2});
-				if (e >=    2) return n.notation("decimal",    {digits: 1});
-				if (e >=    1) return n.notation("decimal",    {digits: 2});
-				if (e <= -100) return n.notation("scientific", {digits: 0});
-				if (e <=  -10) return n.notation("scientific", {digits: 1});
-				if (e <    -1) return n.notation("scientific", {digits: 2});
-				return n.notation("decimal", {digits: 2});
+				if (n ==    0) return n.notation("decimal",    0);
+				if (e >=  100) return n.notation("scientific", 0);
+				if (e >=   10) return n.notation("scientific", 1);
+				if (e >=    3) return n.notation("scientific", 2);
+				if (e >=    2) return n.notation("decimal",    1);
+				if (e >=    1) return n.notation("decimal",    2);
+				if (e <= -100) return n.notation("scientific", 0);
+				if (e <=  -10) return n.notation("scientific", 1);
+				if (e <    -1) return n.notation("scientific", 2);
+				return n.notation("decimal", 2);
 			}
 		},
 		/**. ``''void'' _legend(''node'' svg, ''object'' data)``: Constrói a legenda do gráfico. O argumento ``svg`` é o elemento SVG onde o gŕafico está sendo construído. O argumento ``data`` contendo as propriedades ``id`` (identificador da legenda), ``name`` (nome da curva), ``info`` (informação complementar) e ``color`` (cor a ser utilizada na legenda). Se ``name`` for nulo, a ação será ignorada.**/
@@ -7548,10 +7383,10 @@ const wd = (function() {
 				return this._data.toString();
 			}
 		},
-		/**. ``''string'' mask(''string'' mask, ''function'' callback)``: Retorna o valor formatado por uma máscara definida em no argumento ``mask``. Se a máscara não casar, retornará uma string vazia.**/
+		/**. ``''string'' mask(''string'' model)``: Retorna o valor formatado pela máscara definida no argumento ``model``. Se a máscara não casar, retornará uma string vazia.**/
 		mask: {
-			value: function(mask, callback) {
-				return new __String(this._input).mask(mask, callback)
+			value: function(model) {
+				return new __String(this._input).mask(model);
 			}
 		},
 		/**. ``''self'' alert(''string'' title)``: Renderiza uma mensagem.**/
