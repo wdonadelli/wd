@@ -3606,12 +3606,13 @@ const wd = (function() {
 		/**. ``''any''  valueOf(''integer'' n)``: Retorna o array definido ou um de seus itens se for especificado o índice como argumento, podendo se estender para além do cumprimento do array, repetindo-se a lista de forma constante.**/
 		valueOf: {
 			value: function(n) {
-				if (n === null || n === undefined) return this._value;
+				const array = this._value.slice();
+				if (n === null || n === undefined) return array;
 				const check = __Type(n);
-				if (!check.finite) return this._value;
+				if (!check.finite) return array;
 				const value = Math.trunc(check.value);
 				const index = (Math.abs(value)*this.length + value)%this.length;
-				return this._value[index];
+				return array[index];
 			}
 		},
 		/**. ``''string'' toString()``: Retorna a representação em texto do array.**/
@@ -3644,18 +3645,18 @@ const wd = (function() {
 				if (!__Type(f).function) return null;
 				const list = this._value.slice();
 				const test = __Type(type);
-				list.forEach(function(v,i,a) {
+				for (let i = 0; i < list.length; i++) {
 					try {
-						let value = f(v);
+						let value = f(list[i]);
 						let check = __Type(value);
 						if (test.chars && type in check)
-							a[i] = check[type] ? check.value : null;
+							list[i] = check[type] ? check.value : null;
 						else
-							a[i] = value;
+							list[i] = value;
 					} catch(e) {
-						a[i] = null;
+						list[i] = null;
 					}
-				});
+				}
 				return list;
 			}
 		},
@@ -3677,8 +3678,8 @@ const wd = (function() {
 		sum: {
 			get: function() {
 				const list = this.only("finite");
-				let sum = 0;
-				list.forEach(function(v,i,a) {sum += v;});
+				let sum = 0, i = -1;
+				while (++i < list.length) sum += list[i];
 				return list.length === 0 ? null : sum;
 			}
 		},
@@ -3686,73 +3687,51 @@ const wd = (function() {
 		avg: {
 			get: function() {
 				const list = this.only("finite");
-				return list.length === 0 ? null : this.sum/list.length;
+				let sum = 0, i = -1;
+				while (++i < list.length) sum += list[i];
+				return list.length === 0 ? null : sum/list.length;
 			}
 		},
 		/**. ``''number'' med``: Retorna a mediana dos números finitos da lista ou ``null`` em caso de vazio.**/
 		med: {
 			get: function() {
 				const list = this.only("finite");
-				if (list.length === 0) return null;
 				const y = list.sort(function(a,b) {return a < b ? -1 : 1;});
 				const l = list.length;
-				return l%2 === 0 ? (y[l/2]+y[(l/2)-1])/2 : y[(l-1)/2];
+				return l === 0 ? null : (l%2 === 0 ? (y[l/2]+y[(l/2)-1])/2 : y[(l-1)/2]);
 			}
 		},
-		/**. ``''number'' harm``: Retorna a média harmônica dos números finitos diferentes de zero da lista ou ``null`` em caso de vazio.**/
+		/**. ``''number'' harm``: Retorna a média harmônica dos números finitos __diferentes de zero__ da lista ou ``null`` em caso de vazio.**/
 		harm: {
 			get: function() {
 				const list = this.only("finite");
-				let sum = 0;
-				list.forEach(function(v,i,a) {sum += v === 0 ? 0 : 1/v;});
-				return list.length === 0 || sum === 0 ? null : list.length/sum;
+				let sum = 0, len = 0, i = -1;
+				while (++i < list.length) {
+				  sum += list[i] === 0 ? 0 : 1/list[i];
+				  len += list[i] === 0 ? 0 : 1;
+				}
+				return len === 0 || sum === 0 ? null : len/sum;
 			}
 		},
-		/**. ``''number'' geo``: Retorna a média geométrica do valor absoluto dos números finitos diferentes de zero da lista ou ``null`` em caso de vazio.**/
+		/**. ``''number'' geo``: Retorna a média geométrica dos números finitos __positivos__ da lista ou ``null`` em caso de vazio.**/
 		geo: {
 			get: function() {
 				const list = this.only("finite");
-				let mult = list.length === 0 ? -1 : 1;
-				list.forEach(function (v,i,a) {mult = mult * (v === 0 ? 1 : v);});
-				return mult < 0 && list.length%2 === 0 ? null : Math.pow(mult, 1/list.length);
+				let val = 1, len = 0, i = -1;
+				while (++i < list.length) {
+				  val  = val * (list[i] <= 0 ? 1 : list[i]);
+				  len += list[i] <= 0 ? 0 : 1;
+				}
+				return len === 0 ? null : Math.pow(val, 1/len);
 			}
 		},
-		/**. ``''number'' gcd``: Retorna o máximo divisor comum do valor absoluto dos números inteiros da lista ou ``null`` em caso de vazio.**/
+		/**. ``''number'' gcd``: Retorna o máximo divisor comum dos números inteiros da lista ou ``null`` em caso de vazio.**/
 		gcd: {
 			get: function() {
-				/* obtendo valores absolutos inteiros */
-				let input =  this.only("finite");
-				input.forEach(function(v,i,a) {a[i] = Math.trunc(Math.abs(v));});
-				input = __Array(input).order;
-				if (input.length < 2) return input.length === 1 ? input[0] : null;
-				if (input.indexOf(0) >= 0) return 0;
-				if (input.indexOf(1) >= 0) return 1;
-				/* obtendo números primos */
-				let primes = __Number(Math.min.apply(null, input)).primes;
-				if (primes.length === 0) return 1;
-				/* obtendo o mdc */
-				let mdc = 1;
-				let i = 0;
-				/* looping pelos primos */
-				while (i < primes.length) {
-					let test = true;
-					let stop = false;
-					/* checando se todos os argumentos são divisíveis pelo primo da vez */
-					let j = -1;
-					while(++j < input.length) {
-						if (primes[i] > input[j])     stop = true;
-						if (input[j]%primes[i] !== 0)	test = false;
-						if (stop || !test)            break;
-					}
-					/* se todos forem divisíveis, reprocessar argumentos e ajustar mdc ou chamar próximo primo */
-					if (test) {
-						input.forEach(function(v,k,a) {a[k] = v/primes[i];});
-						mdc = mdc * primes[i];
-					} else {i++;}
-					/* Primo maior que um dos argumentos: parar processamento */
-					if (stop) break;
-				}
-				return mdc;
+				const list = this.only("integer");
+				if (list.length < 2) return list.length === 0 ? null : list[0];
+				const number = new __Number(list[0]);
+				return number.gcd.apply(number, list.slice(1));
 			}
 		},
 		/**. ``''array'' unique``: Retorna a lista sem valores repetidos.**/
@@ -3764,45 +3743,45 @@ const wd = (function() {
 		/**. ``''array'' mode``: Retorna uma lista com os valores da moda (valores que mais se repetem).**/
 		mode: {
 			get: function() {
-				let items  = this.unique;
-				let amount = [];
-				items.forEach(function() {amount.push(0);})
-				this._value.forEach(function(v,i,a) {amount[items.indexOf(v)]++;});
-				let max = Math.max.apply(null, amount);
-				return items.filter(function(v,i,a) {return amount[i] === max;});
+				const items = this.unique;
+				const count = new Array(items.length);
+				for (let i = 0; i < this._value.length; i++) {
+				  let index = items.indexOf(this._value[i]);
+				  count[index] = count[index] === undefined ? 1 : (count[index] + 1);
+				}
+				const max = Math.max.apply(null, count);
+				return items.filter(function(v,i,a) {return count[i] === max;});
 			}
 		},
 		/**. ``''boolean'' check(''any''  ...)``: Checa se os valores informados como argumento estão presentes na lista.**/
 		check: {
 			value: function() {
 				if (arguments.length === 0) return false;
-				let value = Array.prototype.slice.call(arguments);
-				let check = true;
-				let list  = this._value;
-				value.forEach(function(v,i,a) {if (list.indexOf(v) < 0) check = false;});
-				return check;
+				const list = Array.prototype.slice.call(arguments);
+				for (let i = 0; i < list.length; i++)
+				  if (this._value.indexOf(list[i]) < 0) return false;
+				return true;
 			}
 		},
 		/**. ``''array'' search(''any''  value)``: Retorna uma lista com os índices onde o valor informado no argumento ``value`` foi localizado.**/
 		search: {
 			value: function(value) {
-				let index = [];
-				this._value.forEach(function (v,i,a){if (v === value) index.push(i);});
+				const index = [];
+				for (let i = 0; i < this._value.length; i++)
+				  if (this._value[i] === value) index.push(i);
 				return index;
 			}
 		},
 		/**. ``''array'' hide(''any''  ...)``: Retorna uma lista ignorando os valores informados como argumento.**/
 		hide: {
 			value: function() {
-				let hide = Array.prototype.slice.call(arguments);
+				const hide = Array.prototype.slice.call(arguments);
 				return this._value.filter(function(v,i,a) {return hide.indexOf(v) < 0;});
 			}
 		},
 		/**. ``''number'' count(''any''  value)``: Retorna a quantidade de vezes que o valor informado no argumento ``value`` aparece na lista.**/
 		count: {
-			value: function(value) {
-				return this.search(value).length;
-			}
+			value: function(value) {return this.search(value).length;}
 		},
 		/**. ``''array'' sort(''boolean'' asc)``: Retorna a lista ordenada e organizada por grupos na seguinte sequência: número, tempo, data, datatempo, texto, booelano, nulo, nós, lista, objeto, função, expressão regular, indefinido e demais valores.
 		. O argumento opcional ``asc`` define a classificação da lista. Se verdadeiro, ascendente; se falso, descendente; e, se omitido, inverterá a ordenação atual com prevalência da ordem ascendente.**/
@@ -3812,10 +3791,10 @@ const wd = (function() {
 					"boolean", "number", "time", "date", "datetime", "string", "null", "node",
 					"array", "object", "function", "regexp", "unknown", "undefined"
 				];
-				let data  = __Type(asc);
-				let array = this._value.slice();
+				const data  = __Type(asc);
+				const array = this._value.slice();
 				asc = data.boolean ? data.value : null;
-				array.sort(function(a, b) {
+				array.sort(function(a,b) {
 					let A = __Type(a);
 					let B = __Type(b);
 					/* comparação entre tipos diferentes */
@@ -3831,7 +3810,7 @@ const wd = (function() {
 						let node1 = a.textContent;
 						let node2 = b.textContent;
 						if (node1 === node2) return 0;
-						let array = __Array(node1, node2).sort(true);
+						const list = __Array(node1, node2).sort(true);
 						return array[0] === node1 ? -1 : 1;
 					}
 					if (A.number || A.boolean) {
@@ -3859,68 +3838,67 @@ const wd = (function() {
 		},
 		/**. ``''array'' order``: Retorna uma lista ordenada de forma crescente sem valores repetidos.**/
 		order: {
-			get: function() {
-				return __Array(this.unique).sort();
-			}
+			get: function() {return __Array(this.unique).sort();}
 		},
 		/**. ``''array'' add(''any''  ...)``: Adiciona itens (argumentos) ao fim da lista e a retorna.**/
 		add: {
 			value: function() {
 				this._value.push.apply(this._value, arguments);
-				return this._value;
+				return this.valueOf();
 			}
 		},
 		/**. ``''array'' jump(''any''  ...)``: Adiciona itens (argumentos) ao início da lista e a retorna.**/
 		jump: {
 			value: function() {
 				this._value.unshift.apply(this._value, arguments);
-				return this._value;
+				return this.valueOf();
 			}
 		},
 		/**. ``''array'' put(''any''  ...)``: Adiciona itens (argumentos) não existentes ao fim da lista e a retorna.**/
 		put: {
 			value: function() {
-				let i = -1;
-				while (++i < arguments.length)
+				for (let i = 0; i < arguments.length; i++)
 					if (!this.check(arguments[i]))
 						this.add(arguments[i]);
-				return this._value;
+				return this.valueOf();
 			}
 		},
 		/**. ``''array'' concat(''any'' ...)``: Concatena listas ou adiciona itens (argumentos) à lista original.**/
 		concat: {
 			value: function() {
 				this._value = this._value.concat.apply(this._value, arguments);
-				return this._value;
+				return this.valueOf();
 			}
 		},
 		/**. ``''array'' replace(''any''  from, ''any''  to)``: Altera os valores da lista conforme especificado e a retorna.
 		. O argumento ``from`` definie o valor a ser encontrado e substituído na lista e o argumento ``to`` define seu novo valor.**/
 		replace: {
 			value: function (from, to) {
-				this._value.forEach(function(v,i,a) {if (v === from) a[i] = to;});
-				return this._value;
+			  for (let i = 0; i < this._value.length; i++)
+			    if (this._value[i] === from) this._value[i] = to;
+				return this.valueOf();
 			}
 		},
 		/**. ``''array'' remove(''any'' ...)``: Remove itens (argumentos) da lista e a retorna.**/
 		remove: {
 			value: function() {
-				let list = this.hide.apply(this, arguments);
+				const list = this.hide.apply(this, arguments);
 				while(this._value.length !== 0) this._value.pop();
 				this.add.apply(this, list);
-				return this._value;
-
+				return this.valueOf();
 			}
 		},
 		/**. ``''array'' toggle(''any''  ...)``: Remove, se existente, ou insere, se ausente, itens (argumentos) da lista e a retorna.**/
 		toggle: {
 			value: function() {
-				let tgl  = Array.prototype.slice.call(arguments);
-				let self = this;
-				tgl.forEach(function(v,i,a) {
-					if (self._value.indexOf(v) < 0) self.add(v); else self.remove(v);
-				});
-				return this._value;
+				const tgl  = Array.prototype.slice.call(arguments);
+				for (let i = 0; i < tgl.length; i++) {
+					if (this._value.indexOf(tgl[i]) < 0)
+					  this.add(tgl[i]);
+					else
+					  this.remove(tgl[i]);
+				}
+				return this.valueOf();
 			}
 		},
 	});
@@ -3932,39 +3910,12 @@ const wd = (function() {
 	Construtor para obter elementos HTML. O argumento ``css`` é um seletor CSS válido e o argumento opcional ``root`` define o elemento raiz da busca.	**/
 	function __Query(css, root) {
 		if (!(this instanceof __Query))	return new __Query(css, root);
-		let check = __Type(root);
+		const check = __Type(root);
 		Object.defineProperties(this, {
-			_css:  {value: __Type(css).nonempty ? String(css).trim() : ""},
-			_root: {value: check.node ? check.value[0] : document},
+			css:  {value: __Type(css).nonempty ? String(css).trim() : ""},
+			root: {value: check.node && check.value.length > 0 ? check.value[0] : document},
 		});
 	}
-
-	Object.defineProperties(__Query, {
-
-		/**. ``''array'' __Query.$$$(''object'' data, ''boolean'' unique)``: retorna uma lista de nós (``NodeList``) ou um nó específico a partir do seletor CSS inserido nos atributos de nome ``$`` (nó único) ou ``$$`` (nó múltiplo) do argumento ``data``. Aceita-se como elemento as strings "document" e "window" que correspondem aos objetos/documentos de mesmo nome. Quando os dois atributos são informados, o atributo ``$`` não é utilizado. Os dois atributos serão deletados do objeto original. O argumento ``unique``, se verdadeiro, forçará o retorno de um único elemento.**/
-		$$$: {
-			value: function(data, unique) {
-				if (!__Type(data).object) return __Query().$;
-				let one = null;
-				let all = null;
-				let key = {"document": document, "window":  window};
-				let re  = /^(\s+)?(document|window)(\s+)?$/;
-				if ("$" in data) {
-					one = data["$"];
-					delete data["$"];
-				}
-				if ("$$" in data) {
-					all = data["$$"];
-					delete data["$$"];
-				}
-				if (re.test(one)) return key[one.trim()];
-				if (re.test(all)) return key[all.trim()];
-				let list = all === null ? __Query(one).$ : __Query(all).$$;
-				return (all !== null && unique === true && list.length > 0) ? list[0] : list;
-			}
-		},
-	});
-
 
 	Object.defineProperties(__Query.prototype, {
 		constructor: {value: __Query},
@@ -3972,7 +3923,7 @@ const wd = (function() {
 		$$: {
 			get: function() {
 				let elem = null;
-				try {elem = this._root.querySelectorAll(this._css);} catch(e) {}
+				try {elem = this.root.querySelectorAll(this.css);} catch(e) {}
 				return __Type(elem).node ? elem : document.querySelectorAll("#_._");
 			}
 		},
@@ -3980,195 +3931,8 @@ const wd = (function() {
 		$: {
 			get: function() {
 				let elem = null;
-				try {elem = this._root.querySelector(this._css);} catch(e) {}
+				try {elem = this.root.querySelector(this.css);} catch(e) {}
 				return __Type(elem).node ? elem : this.$$;
-			}
-		},
-	});
-
-/*----------------------------------------------------------------------------*/
-	/**#### Dados para Requisições
-
-
-	//FIXME apagar isso aqui pois será substituído por DataSet (é utilizado em send)
-
-
-
-
-
-	/**#### Dados para Requisições (apagar)
-	###### ``**constructor** ''object'' __URL(''string'' input)``
-	Construtor para gerir parâmetros de envio de requisição. O argumento ``input`` é o destino da requisição. Se vazio, observará o URL em vigor. Alguns métodos retornar o próprio objeto**/
-	function __URL(input) {
-		if (!(this instanceof __URL))	return new __URL(input);
-		if (input === undefined || input === null || String(input).trim() === "")
-			input = document.URL;
-		input = String(input).split("#");
-		let target = input[0].trim().replace(/\?+$/, "").trim();
-		let hash   = input.length > 1 ? "#"+input[1].trim() :  "";
-		Object.defineProperties(this, {
-			_target: {value: target},
-			_hash:   {value: hash},
-			_data:   {value: []},
-			_id:     {value: {}},
-		});
-	}
-
-	Object.defineProperties(__URL.prototype, {
-		constructor: {value: __URL},
-		/**. ``''self'' append(''string'' name, ''any'' value)``: Apensa um conjunto de dados ``name/value``. Se ``value`` for um array, ``name`` receberá um par de colchetes ao fim da string. Se ``value`` for um objeto, ``name`` receberá ao fim da string o nome do atributo.**/
-		append: {
-			value: function(name, value) {
-				name = String(name).replace(/\[\]$/, "");
-				let check = __Type(value);
-				let self  = this;
-				switch(check.type) {
-					case "array": {
-						if (value.length === 0)
-							self.append(name, "");
-						else
-							value.forEach(function (v,i,a) {self.append(name, v);});
-						break;
-					}
-					case "object": {
-						for (let i in value) this.append(name+"."+i, value[i]);
-						break;
-					}
-					default: {
-						if (name in this._id) this._id[name]++;
-						else this._id[name] = 1;
-						this._data.push({name: name, value: value, type: check.type});
-					}
-				}
-				return this;
-			}
-		},
-		/**. ``''self'' remove(''string'' name)``: Remove todos os conjuntos de dados identificados por ``name``.**/
-		remove: {
-			value: function(name) {
-				name = String(name);
-				if (name in this._id) {
-					this._data.forEach(function(v,i,a) {
-						if (v !== null && v.name === name)
-							a[i] = null;
-					});
-					delete this._id[name];
-				}
-				return this;
-			}
-		},
-		/**. ``''self'' add(''string'' name, ''any'' value)``: Como ``append``, mas substitui o conjunto.**/
-		add: {
-			value: function(name, value) {
-				this.remove(name);
-				this.append(name, value);
-				return this;
-			}
-		},
-		/**. ``''array'' values(''string'' name)``: Retorna uma lista de valores identificados por ``name``.**/
-		values: {
-			value: function(name) {
-				name = String(name);
-				let list = [];
-				if (name in this._id) {
-					this._data.forEach(function(v,i,a) {
-						if (v !== null && v.name === name) list.push(v.value);
-					});
-				}
-				return list;
-			}
-		},
-		/**. ``''string'' search``: Retorna o parâmetro de busca em forma de string.**/
-		search: {
-			get: function() {
-				let list = [];
-				let self = this;
-				this._data.forEach(function(v,i,a) {
-					if (v !== null) {
-						let name  = v.name + (self._id[v.name] > 1 ? "[]" : "");
-						let value = v.type === "file" ? v.value.name : String(v.value);
-						list.push(name+"="+encodeURIComponent(value));
-					}
-				});
-				return list.join("&").trim();
-			}
-		},
-		/**. ``''object'' form``: Retorna o parâmetro de busca por meio do objeto ``FormData``.**/
-		form: {
-			get: function() {
-				if (!("FormData" in window)) return null;
-				let list = new FormData();
-				let self = this;
-				this._data.forEach(function(v,i,a) {
-					if (v !== null) {
-						let name  = v.name + (self._id[v.name] > 1 ? "[]" : "");
-						list.append(name, v.value);
-					}
-				});
-				return list;
-			}
-		},
-		/**. ``''string'' target``: Retorna a URL com o parâmetro de busca sem a parte do hash.**/
-		target: {
-			get: function() {
-				let search = this.search;
-				let hash   = this._hash;
-				let split  = this._target.indexOf("?") >= 0 ? "&" : "?";
-				return [
-					this._target,
-					search === "" ? "" : split+search,
-					hash === "" ? "" : hash
-				].join("");
-			}
-		},
-		/**. ``''object'' url``: Retorna dados da URL.**/
-		url: {
-			get: function() {
-				try {
-					let data = {};
-					let url = new URL(this.target);
-					for (let i in url) {
-						let check = __Type(url[i]);
-						if (check.chars) data[i] = url[i];
-					}
-					data.values = {};
-					let list = data.search.replace(/^\?/, "").replace(/\#(.+)?$/, "").split("&");
-					list.forEach(function(v,i,a) {
-						const input = v.split("=");
-						data.values[input[0]] = input[1];
-					});
-					return data;
-				} catch(e) {
-					return null;
-				}
-			}
-		},
-		/**. ``''self'' forEach(''function'' x)``: Chama ``x`` para cada item do conjunto, informando o valor o nome como argumentos.**/
-		forEach: {
-			value: function(x) {
-				if (!__Type(x).function) return;
-				this._data.forEach(function(v,i,a) {
-					if (v !== null) x(v.value, v.name);
-				});
-				return this;
-			}
-		},
-		/**. ``''object'' json``: Retorna um objeto contendo oo conjunto de dados.**/
-		json: {
-			get: function() {
-				let list = {};
-				let self = this;
-				this._data.forEach(function(v,i,a) {
-					if (v !== null) {
-						let value = v.type === "file" ? v.value.name : v.value;
-						let name  = v.name;
-						let array = self._id[name] > 1;
-						if (!(name in list)) list[name] = array ? [] : "";
-						if (array) list[name].push(value);
-						else       list[name] = value;
-					}
-				});
-				return list;
 			}
 		},
 	});
@@ -4585,7 +4349,7 @@ const wd = (function() {
 		style: {
 			get: function() {
 				const data = {};
-				let i    = -1;
+				let i = -1;
 				while (++i < this.node.style.length) {
 					let attr = this.node.style[i];
 					let name = __String(attr).camel;
@@ -4836,21 +4600,20 @@ const wd = (function() {
 		/**. ``''void'' only(''boolean'' reverse)``: Exibe o nó e esconde os irmãos. Se ``reverse`` for verdadeiro, inverte-se o resultado.**/
 		only: {
 			value: function(reverse) {
-				let node  = this.node;
-				let nodes = __Type(this.node.parentElement.children).value;
-				nodes.forEach(function(v,i,a) {
-					let data = __Node(v);
-					data.show = v === node ? (reverse !== true) : (reverse === true);
-				});
+				const nodes = __Type(this.node.parentElement.children).value;
+				for (let i = 0; i < nodes.length; i++) {
+				  const data = __Node(nodes[i]);
+					data.show = nodes[i] === this.node ? (reverse !== true) : (reverse === true);
+				}
 			}
 		},
 		/**. ``''void'' childs(''integer'' init, ''integer'' last)``: Define o intervalo de nós filhos a ser exibido entre o índice inicial (``init``) e final (``last``). Utilize um número negativo para indicar o último elemento.**/
 		childs: {
 			value: function (init, last) {
-				let child = __Type(this.node.children).value;
-				let width = child.length - 1;
-				let data1 = __Type(init);
-				let data2 = __Type(last);
+				const child = __Type(this.node.children).value;
+				const width = child.length - 1;
+				const data1 = __Type(init);
+				const data2 = __Type(last);
 				init = data1.number ? (data1 < 0 ? width : data1.value) : -Infinity;
 				last = data2.number ? (data2 < 0 ? width : data2.value) : +Infinity;
 				if (init > last) {
@@ -4858,32 +4621,32 @@ const wd = (function() {
 					init = last;
 					last = aux;
 				}
-				child.forEach(function(v,i,a) {
-					let node = __Node(v);
-					node.show = i >= init && i <= last;
-				});
+				for (let i = 0; i < child.length; i++) {
+					const node = __Node(child[i]);
+					node.show  = i >= init && i <= last;
+				}
 			}
 		},
-		/**. ``''array'' groups(''boolean'' child)``: Retorna uma lista de objetos contendo os intervalos (atributos ``init`` e ``last``) dos elementos visíveis. Se o argumento ``child`` for verdadeiro, a análise será dentre os filhos, caso contrário, entre elemento e seus irmãos.**/
+		/**. ``''array'' groups(''boolean'' child)``: Retorna uma lista de objetos contendo os intervalos (propriedades ``init`` e ``last``) dos elementos visíveis. Se o argumento ``child`` for verdadeiro, a análise será dentre os filhos, caso contrário, entre elemento e seus irmãos.**/
 		groups: {
 			value: function(child) {
-				let target = child === true ? this.node : this.node.parentElement;
-				let nodes  = __Type(target.children).value;
-				let groups = [];
-				let data   = {init: null, last: null};
-				nodes.forEach(function(v,i,a) {
-					let show = v.className.indexOf("js-wd-no-display") < 0;
+				const target = child === true ? this.node : this.node.parentElement;
+				const nodes  = __Type(target.children).value;
+				const groups = [];
+				const data   = {init: null, last: null};
+				for (let i = 0; i < nodes.length; i++) {
+					let show = nodes[i].className.split(/\s/).indexOf("js-wd-no-display") < 0;
 					if (show) {
 						if (data.init === null) data.init = i;
 						data.last  = i;
-						if (i === (a.length - 1))
+						if (i === (nodes.length - 1))
 							groups.push({init: data.init, last: data.last});
 					} else if (data.init !== null) {
 						groups.push({init: data.init, last: data.last});
-						data.init  = null;
-						data.last   = null;
+						data.init = null;
+						data.last = null;
 					}
-				});
+				}
 				return groups;
 			}
 		},
@@ -4891,11 +4654,11 @@ const wd = (function() {
 		walk: {
 			value: function(n) {
 				if (this.node.childElementCount < 2) return this.childs(0, 0);
-				let data   = __Type(n);
-				let childs = this.node.childElementCount;
-				let delta  = data.finite ? Math.trunc(data.value) : 1;
-				let groups = this.groups(true);
-				let active = groups.length === 0 ? 0 : groups[0].init;
+				const data   = __Type(n);
+				const childs = this.node.childElementCount;
+				const delta  = data.finite ? Math.trunc(data.value) : 1;
+				const groups = this.groups(true);
+				let   active = groups.length === 0 ? 0 : groups[0].init;
 				if (delta >= 0)
 					active = groups.length === 0 ? -1 : groups[groups.length - 1].last;
 				let next   = (active + delta)%childs;
@@ -4908,8 +4671,8 @@ const wd = (function() {
 			value: function(index, width) {
 				if (this.node.childElementCount < 2) return this.childs(0,0);
 				/* definindo o tamanho da página */
-				let length = this.node.childElementCount;
-				let check1 = __Type(width);
+				const length = this.node.childElementCount;
+				const check1 = __Type(width);
 				width = !check1.finite || check1 <= 0 || check1 > length ? length : check1.value;
 				if (width < 1) width = Math.round(width * length);
 				width = Math.trunc(width) < 1 ? 1 : Math.trunc(width);
@@ -5012,7 +4775,7 @@ const wd = (function() {
 		/**. ``''object'' textMatch(''regexp|string'' search)``: Localiza dentro do conteúdo textual do nó os índices de início e fim de ``search`` em um objeto contendo os atributos ``init`` e ``last``, retorna ou nulo caso não encontre.**/
 		textMatch: {
 			value: function(search) {
-				let check = __Type(search);
+				const check = __Type(search);
 				if (check.regexp) {
 					let text = this.node.innerText;
 					let list = text.match(search);
@@ -5036,9 +4799,9 @@ const wd = (function() {
 		filter: {
 			value: function(search, width) {
 				if (this.node.childElementCount === 0) return;
-				let data  = __Type(search);
-				let check = __Type(width);
-				let child = __Type(this.node.children).value;
+				const data  = __Type(search);
+				const check = __Type(width);
+				const child = __Type(this.node.children).value;
 				/*-- avaliando search (string ou regexp) --*/
 				if (data.null || data.undefined)
 					search = "";
@@ -5089,9 +4852,10 @@ const wd = (function() {
 			value: function(asc) {
 				if (this.node.childElementCount === 0) return;
 				let node  = this.node;
-				let child = __Type(this.node.children).value;
-				let sort  = __Array(child).sort(asc);
-				sort.forEach(function(v,i,a) {node.appendChild(v);});
+				const child = __Type(this.node.children).value;
+				const sort  = __Array(child).sort(asc);
+				for (let i = 0; i < sort.length; i++)
+				  this.node.appendChild(sort[i]);
 				return;
 			}
 		},
@@ -5100,7 +4864,7 @@ const wd = (function() {
 			value: function() {
 				if (this.node.childElementCount === 0) return;
 				/*-- acertando argumentos --*/
-				let args = [];
+				const args = [];
 				let j = -1;
 				while (++j < arguments.length) {
 					let check = __Type(arguments[j]);
@@ -5146,10 +4910,11 @@ const wd = (function() {
 			value: function(list) {
 				const check = __Type(list);
 				if (!check.node && !check.array) return;
-				let nodes = [];
-				for (let v of check.value) {
-					if (__Type(v).node && v != this.node) nodes.push(v);
-				}
+				const nodes = [];
+				const value = check.value;
+				for (let i = 0; i < value.length; i++)
+				  if (__Type(value[i]).node && value[i] != this.node)
+				    nodes.push(value[i]);
 				if (nodes.length > 0) {
 					const next = nodes.indexOf(this.node.parentElement) + 1;
 					const node = nodes[next%nodes.length];
@@ -5162,16 +4927,14 @@ const wd = (function() {
 		//TODO interessante: https://developer.mozilla.org/en-US/docs/Web/CSS/::backdrop    https://developer.mozilla.org/en-US/docs/Web/CSS/:fullscreen
 		full: {
 			value: function() {
-				let attr = {
+				const attr = {
 					open: ["requestFullscreen", "webkitRequestFullscreen", "msRequestFullscreen"],
 					exit: ["exitFullscreen",    "webkitExitFullscreen",    "msExitFullscreen"]
 				};
-				let full = document.fullscreenElement;
-				let node = this._elem ? this.node : document.documentElement;
-				let act  = full === node ? "exit" : "open";
-				if (act === "exit") node = document;
-				let i = -1;
-				while (++i < attr[act].length) {
+				const full = document.fullscreenElement;
+				const act  = full === this.node ? "exit" : "open";
+				const node = act === "exit" ? document : this.node;
+				for (let i = 0; i < attr[act].length; i++) {
 					if (attr[act][i] in node)
 						try {return node[attr[act][i]]();} catch(e) {}
 				}
@@ -5181,8 +4944,8 @@ const wd = (function() {
 		/**. ``''object'' styles``: Retorna um objeto contendo os estilos e seus valores computados ao elemento.**/
 		styles: {
 			get: function() {
-				let object = {};
-				let styles = window.getComputedStyle(this.node, null);
+				const object = {};
+				const styles = window.getComputedStyle(this.node, null);
 				for (let i in styles) {
 					if ((/\d+/).test(i)) continue;
 					object[i] = styles.getPropertyValue(i);
@@ -5215,259 +4978,130 @@ const wd = (function() {
 	/**#### Tabela
 	###### ``**constructor** ''object'' __Table(''boolean'' head, ''boolean'' foot)``
 	Construtor para obter dados de tabela e matrizes. Os argumentos ``head`` e ``foot`` informam se, ao retornar a tabela no formato HTML, haverá uma linha de cabeçalho (''thead'') ou de rodapé (''tfoot''), respectivamente.**/
-	function __Table(head, foot) {
-		if (!(this instanceof __Table))	return new __Table(head, foot);
-		let check1  = __Type(head);
-		let check2  = __Type(foot);
-		//let check3  = __Type(caption);
-		let table   = document.createElement("TABLE");
-		let caption = document.createElement("CAPTION");
-		let thead   = document.createElement("THEAD");
-		let tbody   = document.createElement("TBODY");
-		let tfoot   = document.createElement("TFOOT");
-		table.appendChild(caption);
-		table.appendChild(thead);
-		table.appendChild(tbody);
-		table.appendChild(tfoot);
-
-		Object.defineProperties(this, {
-			_head:  {value: check1.boolean ? check1.value : true},
-			_foot:  {value: check2.boolean ? check2.value : false},
-			_table: {value: table},
-		});
+	function __Table(input) {
+		if (!(this instanceof __Table))	return new __Table(input);
+		const check  = __Type(input);
+		const parser = new __Parser(input);
+		let table;
+		if (check.nonempty)
+		  table = parser.csvTable.get();
+		else if (check.array)
+		  table = parser.matrixCSV.csvTable.get();
+		else if (check.node && check.value[0].tagName.toLowerCase() === "table")
+		  table = check.value[0];
+		else
+		  table = document.createElement("TABLE");
+		Object.defineProperties(this,
+		  {table: {value: table}}
+		);
 	}
 
 	Object.defineProperties(__Table.prototype, {
 		constructor: {value: __Table},
-		/**. ``''array'' grid``: Retorna um array de duas dimensões contendo as células da tabela (''th'' ou ''td'').**/
-		grid: {
-			get: function() {
-				let tags = ["tbody", "thead", "tfoot"];
-				let grid = [];
-				let tabs = Array.prototype.slice.call(this._table.children);
-				tabs.forEach(function (tab,t,at) {
-					if (tags.indexOf(tab.tagName.toLowerCase()) < 0) return;
-					let rows = Array.prototype.slice.call(tab.children);
-					rows.forEach(function(row,r,ar) {
-						let cols = Array.prototype.slice.call(row.children);
-						grid.push(cols);
-					});
-				});
-				return grid;
+		/**. ``''array'' valueOf(''string'' type)``: Retorna as células da tabela como objeto HTML. O argumento ``type`` define o conteúdo dos itens do array:
+		|Nome|Descrição|
+		|value|Valor padrão, retorna um array de duas dimensões com os valores das células|
+		|html|Retorna um array de duas dimensões com os elementos HTML das células (tr ou td)|
+		|struct|Retorna uma lista de objetos cujas propriedades correspondem ao título da coluna|**/
+		valueOf: {
+			value: function(type) {
+			  type = String(type).toLowerCase();
+			  if (type === "html") {
+  		    const rows = Array.prototype.slice.call(this.table.rows);
+			    for (let i = 0; i < rows.length; i++)
+			      rows[i] = Array.prototype.slice.call(rows[i].children);
+			    return rows;
+			  } else if (type === "struct") {
+			    const parser = new __Parser(this.table);
+  				return parser.tableMatrix.matrixList.get();
+			  } else {
+			    return new __Parser(this.table).tableMatrix.get();
+				  return parser;
+				}
 			}
 		},
-		/**. ``''void'' clear()``: Remove dados da tabela.**/
-		clear: {
-			value: function() {
-				let tabs = Array.prototype.slice.call(this._table.children);
-				tabs.forEach(function (tab,t,at) {
-					let rows = Array.prototype.slice.call(tab.children);
-					rows.forEach(function(row,r,ar) {
-						row.parentElement.removeChild(row);
-					});
-				});
-				this.caption = "";
+		/**. ``''string'' toString(''string'' type)``: Retorna os dados da tabela em formato CSV. O argumento ``type`` define o conteúdo de saída:
+		|Nome|Descrição|
+		|csv|Valor padrão, retorna os dados da tabela em formato CSV|
+		|json|Retorna o valor do método ``valueOf()`` em formato JSON|**/
+		toString: {
+			value: function(type) {
+			  type = String(type).toLowerCase();
+			  if (type === "json") {
+			    return JSON.stringify(this.valueOf());
+			  } else {
+			    const parser = new __Parser(this.table);
+				  return parser.tableMatrix.matrixCSV.get();
+				}
 			}
 		},
-		/**. ``''integer'' cols``: Retorna a quantidade de colunas da tabela.**/
+		/**. ``''integer'' cols``: Retorna a quantidade de colunas da tabela com base na maior linha.**/
 		cols: {
-			get: function() {return this.grid[0].length;}
+		  get: function() {
+        const matrix = this.valueOf();
+        let   cols = 0;
+        for (let i = 0; i < matrix.length; i++)
+          if (matrix[i].length > cols) cols = matrix[i].length;
+        return cols;
+		  }
 		},
 		/**. ``''integer'' rows``: Retorna a quantidade de linhas da tabela.**/
-		rows: {
-			get: function() {return this.grid.length;}
-		},
-		/**. ``''string'' caption``: Define ou retorna o valor do título da tabela.**/
+		rows: {get: function() {return this.valueOf().length;}},
+    /**. ``''string'' caption``: Define ou retorna o valor do título da tabela.**/
 		caption: {
-			get: function()  {return this._table.caption.textContent;},
-			set: function(x) {this._table.caption.textContent = String(x);}
+		  get: function () {
+		    return this.table.caption === null ? "" : this.table.caption.textContent;
+		  },
+		  set: function (x) {
+		    if (this.table.caption === null) {
+		      const node = document.createElement("CAPTION");
+		      this.table.appendChild(node);
+		    }
+		    this.table.caption.textContent = String(x);
+		  }
 		},
-		/**. ``''array'' matrix(''array'' input)``: Define (``input``) ou retorna dados da tabela no formato de array.**/
-		matrix: {
-			value: function(input) {
-				/*-- retornar a matriz --*/
-				if (!__Type(input).array) {
-					let matrix = this.grid.slice();
-					matrix.forEach(function(row,r,ar) {
-						row.forEach(function(col,c,ac) {
-							ac[c] = col.textContent;
-						});
-					});
-					return matrix;
-				}
-				/*-- definir a tabela --*/
-				let matrix = input.slice();
-				let count  = 0;
-				/* checando e acertando array de duas dimensões */
-				matrix.forEach(function(v,i,a) {
-					if (!__Type(v).array) a[i] = [v];
-					if (v.length > count) count = v.length;
-				});
-				/* acertando quantidade de colunas */
-				matrix.forEach(function(v,i,a) {
-					while (v.length < count) a[i].push("");
-				});
-				/* definindo nova tabela */
-				this.clear();
-				let self = this;
-				matrix.forEach(function(row,r,ar) {
-					let tr = document.createElement("TR");
-					if (r === 0 && self._head)
-						self._table.tHead.appendChild(tr);
-					else if (r === (ar.length - 1) && self._foot)
-						self._table.tFoot.appendChild(tr);
-					else
-						self._table.tBodies[0].appendChild(tr);
-					row.forEach(function(col,c,ac) {
-						let cell = document.createElement((r === 0 && self._head) ? "TH" : "TD");
-						cell.textContent = col;
-						tr.appendChild(cell);
-					});
-				});
-				return this.matrix();
-			},
-		},
-		/**. ``''node'' html(''node'' input)``: Define (``input``) ou retorna dados da tabela no formato de tabela HTML.**/
-		html: {
-			value: function(input) {
-				/*-- retornar a tabela --*/
-				if (!__Type(input).node) return this._table;
-				/*-- definir a tabela --*/
-				let nodes = ["table", "thead", "tbody", "tfoot", "caption"];
-				let tag   = input.tagName.toLowerCase();
-				if (nodes.indexOf(tag) < 0) return this._table;
-				/*-- definir a tabela --*/
-				let matrix = [];
-				switch(tag) {
-					case "table": {
-						let childs = Array.prototype.slice.call(input.children);
-						let object = __Table(this._head, this._foot);
-						childs.forEach(function (v,i,a) {
-							let node = v.tagName.toLowerCase();
-							if (nodes.indexOf(node) < 0) return;
-							object.html(v);
-							let vector = object.matrix();
-							vector.forEach(function(r,j,b) {matrix.push(r);});
-						});
-						this.caption = object.caption;
-						break;
-					}
-					case "caption": {
-						this.caption = input.textContent;
-						break;
-					}
-					default: {
-						let rows = Array.prototype.slice.call(input.children);
-						rows.forEach(function(row,r,ar) {
-							let cols = Array.prototype.slice.call(row.children);
-							cols.forEach(function(col,c,ac) {ac[c] = col.textContent;});
-							matrix.push(cols);
-						});
-					}
-				}
-				/* redefinindo dados */
-				this.matrix(matrix);
-				return this.html();
-			}
-		},
-		/**. ``''string'' csv(''string'' input)``: Define ou retorna os dados da tabela em formato CSV.**/
-		csv: {
-			value: function(input) {
-				/*-- retornando CSV --*/
-				if (!__Type(input).nonempty) {
-					let matrix = this.matrix();
-					matrix.forEach(function(row,i,ar) {
-						row.forEach(function (col,j,ac) {
-							if (!__Type(col).finite || (/[!%]$/).test(col)) {
-								col = col.split("\"").join("\"\"");
-								col = "\""+col+"\"";
-							}
-							ac[j] = col;
-						});
-						ar[i] = row.join(",");
-					});
-					return matrix.join("\n");
-				}
-				/*-- definindo tabela --*/
-				this.matrix(__String(input).csv);
-				return this.csv();
-			}
-		},
-		/**. ``''array'' json``: Retorna uma lista de objetos. Os atributos de cada objeto correspondem aos valores da primeira linha da tabela. Os valores desses atributos correspondem à respectiva coluna da tabela das demais linhas. Cada linha corresponde a um item da lista.**/
-		json: {
-			get: function() {
-				let matrix = this.matrix();
-				let data = [];
-				matrix.forEach(function(row,r,ar) {
-					if (r === 0) return;
-					let item = {};
-					row.forEach(function(col,c,ac) {item[ar[0][c]] = col;})
-					data.push(item);
-				});
-				return data;
-			}
-		},
-		/**. ``''array'' cell(''string'' area, ''boolean'' value)``: Retorna uma lista de objetos contendo os atributos ``col`` (número da coluna), ``row`` (número da linha) e ``cell`` (célula da tabela) conforme especificado no argumento ``area``:
-		- Número indica a linha ou coluna da célula (a partir de zero);
-		- Ponto representa o número da última linha ou coluna;
-		- Asterisco corresponde a qualquer número de linha ou coluna;
-		- Vírgula é o separador de linha e coluna (linha,coluna);
-		- Dois pontos é o separador entre a célula inicial e final; e
-		- Ponto e vírgula é o separador de grupos de células.
-		|Código|Descrição|
-		|1,2|Célula contida na linha 1 e coluna 2|
-		|.,2|Célula localizada na última linha da coluna 2|
-		|1,.|Célula localizada na última coluna da linha 1|
-		|*,2|Qualquer linha da coluna 2|
-		|1,*|Qualquer coluna da linha 1|
-		|1,3:2,4|Todas as células contidas entre as linhas 1 e 2 e colunas 3 e 4|
-		|1,*|Todas as células da linha 1|
-		|*,0|Todas as células da coluna 0|
-		|1,2;2,3|Células da linha 1 coluna 2 e linha 2 coluna 3|
-		. Se o argumento ``value`` for verdadeiro, a lista retornará apenas com os valores das células.**/
-		cell: {
-			value: function(area, value) {
-				let data = String(area).split(";");
-				let cell = [];
-				/*-- múltiplos grupos --*/
-				if (data.length > 1) {
-					let self = this;
-					data.forEach(function(v,i,a) {
-						let subList = self.cell(v, value);
-						subList.forEach(function (x,y,z) {cell.push(x);});
-					});
-					return cell;
-				}
-				/*-- checando parâmetro --*/
-				data   = data.join("").replace(/\s+/g, "");
-				let re = /^(\d+|[*.])\,(\d+|[*.])(\:(\d+|[*.])\,(\d+|[*.]))?$/;
-				if (!re.test(data)) return cell;
-				let gap  = data.split(":");
-				let init = gap[0].split(",");
-				let end  = (gap.length > 1 ? gap[1] : gap[0]).split(",");
-				let drow = {init: init[0], end: end[0]};
-				let dcol = {init: init[1], end: end[1]};
-				for (let i in drow) {
-					if (drow[i] !== "*")
-						drow[i] = drow[i] === "." ? (this.rows - 1) : Number(drow[i]);
-				}
-				for (let i in dcol) {
-					if (dcol[i] !== "*")
-						dcol[i] = dcol[i] === "." ? (this.cols - 1) : Number(dcol[i]);
-				}
-				/*-- capturando células definidas --*/
-				let grid = value === true ? this.matrix() : this.grid;
-				grid.forEach(function(row,r,ar) {
-					if (drow.init !== "*" && r < drow.init) return;
-					if (drow.end  !== "*" && r > drow.end ) return;
-					row.forEach(function(col,c,ac) {
-						if (dcol.init !== "*" && c < dcol.init) return;
-						if (dcol.end  !== "*" && c > dcol.end ) return;
-						cell.push(value === true ? col : {col: c, row: r, cell: col});
-					});
-				});
-				return cell;
-			}
+		/**. ``''array'' cells(''object'' area, ''boolean'' value)``: Retorna uma lista contendo informações das células da tabela cuja especificação será definida pelo argumento ``data`` que possui as seguintes propriedades:
+		|Nome|Descrição|
+		|row1|Índice da linha de início da captura.|
+		|row2|Índice da linha de fim da captura, se não informado será igual a ''row1''.|
+		|col1|Índice da coluna de início da captura.|
+		|col2|Índice da coluna de fim da captura, se não informado será igual a ''col1''.|
+		. Se o argumento ''value'' for verdadeiro, os valores da lista serão os valores textuais das células. Caso contrário, cada item será um objeto contendo as seguintes propriedades:
+		|Nome|Descrição|
+		|cell|Elemento HTML da célula (''tr''/''td'')|
+		|row|Número da linha|
+		|col|Número da coluna|**/
+		cells: {
+		  value: function(area, value) {
+		    /*-- Dados da área --*/
+		    if (!__Type(area).object) area = {};
+		    const attr = /^(row[12]|col[12])$/;
+		    for (let i in area) {
+		      let check = __Type(area[i]);
+		      if (attr.test(i) && check.integer && check >= 0)
+		        area[i] = check.value;
+		    }
+		    area.row1 = "row1" in area ? area.row1 : ("row2" in area ? area.row2 : 0);
+		    area.col1 = "col1" in area ? area.col1 : ("col2" in area ? area.col2 : 0);
+		    area.row2 = "row2" in area ? area.row2 : area.row1;
+		    area.col2 = "col2" in area ? area.col2 : area.col1;
+		    if (area.col1 === null || area.row1 === null) return [];
+		    /*-- Capturando informação --*/
+		    const cell = [];
+		    const rows = this.valueOf("html").slice(area.row1, area.row2+1);
+		    for (let i = 0; i < rows.length; i++) {
+		      let row = area.row1 + i;
+		      let cols = rows[i].slice(area.col1, area.col2+1);
+		      for (let j = 0; j < cols.length; j++) {
+		        let col  = area.col1 + j;
+		        if (value === true)
+		          cell.push(cols[j].textContent);
+		        else
+		          cell.push({cell: cols[j], row: row, col: col});
+		      }
+		    }
+		    return cell;
+		  }
 		},
 	});
 
@@ -8284,8 +7918,6 @@ const wd = (function() {
 		device:  {get: function() {return __DEVICE.device;}},
 		/**. ``''object'' today``: Retorna o objeto do tipo data com o valor atual.**/
 		already: {get: function() {return WD(__DateTime().toString());}},
-		/**. ``''object'' URL``: Retorna dados da URL.**/
-		URL:     {get: function() {return __URL().url;}},
 		/**. ``''string'' lang``: Define ou retorna a linguagem local para uso pela biblioteca.**/
 		lang: {
 			get: function()  {return __LANG.main;},
