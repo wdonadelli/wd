@@ -1632,14 +1632,11 @@ const wd = (function() {
 					return new __Parser(this._saved.tableMatrix);
 				let data = null;
 				if (this._table) {
-					const matrix = [];
-					const table  = this._data;
-					const rows   = table.rows;
-					for (let i = 0; i < rows.length; i++) {
-						matrix.push([]);
-						let cells = rows[i].cells;
-						for (let j = 0; j < cells.length; j++)
-							matrix[i].push(cells[j].textContent);
+  				const matrix = Array.prototype.slice.call(this._data.rows);
+					for (let i = 0; i < matrix.length; i++) {
+					  matrix[i] = Array.prototype.slice.call(matrix[i].cells);
+					  for (let j = 0; j < matrix[i].length; j++)
+					    matrix[i][j] = matrix[i][j].innerText;
 					}
 					data = matrix;
 				}
@@ -2220,22 +2217,22 @@ const wd = (function() {
 				const int = this.int;
 				const dec = Math.abs(this.dec);
 				const num = int !== 0 ? String(int)+" " : (this.value < 0 ? "-" : "");
-				const cte = (1/dec) - 1;
 				const max = 1e6; /*-- número máximo de dígitos do numerador --*/
-				const exp = 6;   /*-- número de casas a arrendondar na checagem  --*/
+				const err = 6;   /*-- número de casas a arrendondar na checagem  --*/
 				let   dnd = 0;   /*-- dividendo --*/
-				let   div = 0;   /*-- divisor --*/
-				let   val, rnd;  /*-- diferença entre divisor e dividendo --*/
-				while(div === 0 && ++dnd < max) {
-					val = dnd*cte;
-					rnd = Number(val.toFixed(exp));
-					div = rnd%1 === 0 ? (dnd + rnd) : 0;
-				}
+				let   div = 0.5; /*-- divisor (valor não inteiro por causa do while) --*/
+				while (!Number.isInteger(div) && ++dnd < max)
+				  div = Number((dnd/dec).toFixed(err));
 				/*-- caso não tenha encontrado o valor dentro do limite --*/
-				if (div === 0) {
-					const str = String(dec.toFixed(exp)).split(".")[1];
+				if (!Number.isInteger(div)) {
+					const str = String(dec.toFixed(err)).split(".")[1];
 					dnd = str.replace(/^0+/, "");
 					div = String(Math.pow(10, str.length));
+					while((dnd%2 === 0 && div%2 === 0) || (dnd%5 === 0 && div%5 === 0)) {
+					  let gcd = dnd%2 === 0 && div%2 === 0 ? 2 : 5;
+					  dnd = dnd/gcd;
+					  div = div/gcd;
+					}
 				}
 				return num+String(dnd)+"/"+String(div);
 			}
@@ -3586,7 +3583,7 @@ const wd = (function() {
 		if (arguments.length === 0)
 			input = [];
 		else if (arguments.length > 1)
-			input = Array.prototype.slice.call(arguments)
+			input = Array.prototype.slice.call(arguments);
 		else
 			input = __Type(arguments[0]).array ? arguments[0] : [arguments[0]];
 
@@ -3787,6 +3784,30 @@ const wd = (function() {
 		. O argumento opcional ``asc`` define a classificação da lista. Se verdadeiro, ascendente; se falso, descendente; e, se omitido, inverterá a ordenação atual com prevalência da ordem ascendente.**/
 		sort: {
 			value: function(asc) {
+
+				//FIXME ver localCompare
+				//https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Global_Objects/String/localeCompare
+				const options  = {sensitive: "base", }
+				const collator = new Intl.Collator(__LANG.main, options);
+				console.log(collator.compare("a", "z"));
+				/*
+				A negative value if string1 comes before string2;
+        A positive value if string1 comes after string2;
+        0 if they are considered equal.
+
+        collator.resolvedOptions()
+        usedOptions.locale; // "de"
+        usedOptions.usage; // "sort"
+        usedOptions.sensitivity; // "base"
+        usedOptions.ignorePunctuation; // false
+        usedOptions.collation; // "default"
+        usedOptions.numeric; // false
+        */
+
+
+
+
+
 				let order = [
 					"boolean", "number", "time", "date", "datetime", "string", "null", "node",
 					"array", "object", "function", "regexp", "unknown", "undefined"
@@ -4980,18 +5001,18 @@ const wd = (function() {
 	Construtor para obter dados de tabela e matrizes. Os argumentos ``head`` e ``foot`` informam se, ao retornar a tabela no formato HTML, haverá uma linha de cabeçalho (''thead'') ou de rodapé (''tfoot''), respectivamente.**/
 	function __Table(input) {
 		if (!(this instanceof __Table))	return new __Table(input);
-		const check  = __Type(input);
 		const parser = new __Parser(input);
 		let table;
-		if (check.nonempty)
+		if (parser._check.nonempty)
 		  table = parser.csvTable.get();
-		else if (check.array)
+		else if (parser._check.array)
 		  table = parser.matrixCSV.csvTable.get();
-		else if (check.node && check.value[0].tagName.toLowerCase() === "table")
-		  table = check.value[0];
+		else if (parser._check.node && parser._check.value[0].tagName.toLowerCase() === "table")
+		  table = parser._check.value[0];
 		else
 		  table = document.createElement("TABLE");
 		Object.defineProperties(this,
+		  /**. ``''node'' table``: Retorna a tabela.**/
 		  {table: {value: table}}
 		);
 	}
@@ -5000,23 +5021,23 @@ const wd = (function() {
 		constructor: {value: __Table},
 		/**. ``''array'' valueOf(''string'' type)``: Retorna as células da tabela como objeto HTML. O argumento ``type`` define o conteúdo dos itens do array:
 		|Nome|Descrição|
-		|value|Valor padrão, retorna um array de duas dimensões com os valores das células|
-		|html|Retorna um array de duas dimensões com os elementos HTML das células (tr ou td)|
+		|html|Valor padrão, retorna um array de duas dimensões com os elementos HTML das células (tr ou td)|
+		|value|Retorna um array de duas dimensões com os valores das células|
 		|struct|Retorna uma lista de objetos cujas propriedades correspondem ao título da coluna|**/
 		valueOf: {
 			value: function(type) {
 			  type = String(type).toLowerCase();
-			  if (type === "html") {
-  		    const rows = Array.prototype.slice.call(this.table.rows);
-			    for (let i = 0; i < rows.length; i++)
-			      rows[i] = Array.prototype.slice.call(rows[i].children);
-			    return rows;
+			  if (type === "value") {
+  		    const parser = new __Parser(this.table);
+				  return parser.tableMatrix.get();
 			  } else if (type === "struct") {
 			    const parser = new __Parser(this.table);
   				return parser.tableMatrix.matrixList.get();
 			  } else {
-			    return new __Parser(this.table).tableMatrix.get();
-				  return parser;
+				  const rows = Array.prototype.slice.call(this.table.rows);
+			    for (let i = 0; i < rows.length; i++)
+			      rows[i] = Array.prototype.slice.call(rows[i].cells);
+			    return rows;
 				}
 			}
 		},
@@ -5028,25 +5049,23 @@ const wd = (function() {
 			value: function(type) {
 			  type = String(type).toLowerCase();
 			  if (type === "json") {
-			    return JSON.stringify(this.valueOf());
+			    return JSON.stringify(this.valueOf("value"));
 			  } else {
 			    const parser = new __Parser(this.table);
 				  return parser.tableMatrix.matrixCSV.get();
 				}
 			}
 		},
-		/**. ``''integer'' cols``: Retorna a quantidade de colunas da tabela com base na maior linha.**/
-		cols: {
+    /**. ``''object'' length``: Retorna um objeto com as propriedades ``rows``e ``cols`` que informam o tamanho máximo de linhas e colunas da tabela.**/
+		length: {
 		  get: function() {
-        const matrix = this.valueOf();
-        let   cols = 0;
-        for (let i = 0; i < matrix.length; i++)
-          if (matrix[i].length > cols) cols = matrix[i].length;
-        return cols;
+  	    const matrix = this.valueOf();
+		    const length = {rows: matrix.length, cols: matrix[0].length};
+		    for (let i = 0; i < matrix.length; i++)
+          if (matrix[i].length > length.cols) length.cols = matrix[i].length;
+        return length;
 		  }
 		},
-		/**. ``''integer'' rows``: Retorna a quantidade de linhas da tabela.**/
-		rows: {get: function() {return this.valueOf().length;}},
     /**. ``''string'' caption``: Define ou retorna o valor do título da tabela.**/
 		caption: {
 		  get: function () {
@@ -5087,20 +5106,18 @@ const wd = (function() {
 		    area.col2 = "col2" in area ? area.col2 : area.col1;
 		    if (area.col1 === null || area.row1 === null) return [];
 		    /*-- Capturando informação --*/
-		    const cell = [];
-		    const rows = this.valueOf("html").slice(area.row1, area.row2+1);
+		    const list = [];
+		    const base = this.valueOf(value === true ? "value" : "html");
+		    const rows = base.slice(area.row1, area.row2+1);
 		    for (let i = 0; i < rows.length; i++) {
 		      let row = area.row1 + i;
 		      let cols = rows[i].slice(area.col1, area.col2+1);
 		      for (let j = 0; j < cols.length; j++) {
-		        let col  = area.col1 + j;
-		        if (value === true)
-		          cell.push(cols[j].textContent);
-		        else
-		          cell.push({cell: cols[j], row: row, col: col});
+		        let col = area.col1 + j;
+	          list.push({list: cols[j], row: row, col: col});
 		      }
 		    }
-		    return cell;
+		    return list;
 		  }
 		},
 	});
