@@ -101,22 +101,12 @@ const wd = (function() {
 			})();
 			/*-- Barra de progresso --*/
 			const bar = (function () {
-				const tag = (function() {
-					if ("HTMLMeterElement"    in window) return "METER";
-					if ("HTMLProgressElement" in window) return "PROGRESS";
-					return "DIV";
-				})();
-				const node  = document.createElement(tag);
+				const node  = document.createElement("DIV");
 				const style = {
-					display: "block", width: "99vw", height: "10px",
-					padding: "0", margin: "auto",
-					position: "absolute", top: "0", left: "0", right: "0"
+					position: "absolute", top: "0", left: "0",
+					display: "block", width: "0", height: "5px", padding: "0", margin: "auto",
+					backgroundColor: "royalblue", borderRadius: "0.2em", border: "1px solid black"
 				};
-				if (tag === "DIV") {
-					style.backgroundColor = "red";
-					style.borderRadius    = "0.5em";
-					style.border          = "1px solid black";
-				}
 				for (let i in style) node.style[i] = style[i];
 				return node;
 			})();
@@ -151,10 +141,7 @@ const wd = (function() {
 				const wall  = ev.target.parentElement;
 				const value = Number(wall.dataset.value);
 				const tag   = ev.target.tagName.toLowerCase();
-				if (tag === "div")
-					ev.target.style.width = String(100*value)+"%";
-				else
-					ev.target.value = value;
+				ev.target.style.width = String(100*value)+"%";
 			}, false);
 
 			return bar;
@@ -825,7 +812,7 @@ const wd = (function() {
 			}
 		},
 		/**. ``''boolean'' real``: Checa se o valor é um número real não inteiro.**/
-		real: {
+		decimal: {
 			get: function() {
 				return this.finite && (this.value%1) !== 0;
 			}
@@ -2029,33 +2016,23 @@ const wd = (function() {
 			941,947,953,967,971,977,983,991,997
 		]},
 		/**. ``''boolean'' finite``: Checa se o número é finito.**/
-		finite: {
-			get: function() {return this._check.finite;}
-		},
+		finite: {get: function() {return this._check.finite;}},
 		/**. ``''number'' valueOf()``: Retorna o valor numérico.**/
-		valueOf: {
-			value: function() {return this.value;}
-		},
+		valueOf: {value: function() {return this.value;}},
 		/**. ``''number'' toString()``: Retorna o valor em forma de string.**/
-		toString: {
-			value: function() {return this._check.toString()}
-		},
+		toString: {value: function() {return this._check.toString()}},
 		/**. ``''string'' toString()``: Retorna o valor em forma de string de acordo com a linguagem definida.**/
 		toLocaleString: {
 			value: function() {return this.value.toLocaleString(__LANG.main);}
 		},
 		/**. ``''number'' abs``: Retorna o valor absoluto do número.**/
-		abs: {
-			get: function() {return Math.abs(this.value);}
-		},
+		abs: {get: function() {return Math.abs(this.value);}},
 		/**. ``''integer'' int``: Retorna a parte inteira do número.**/
-		int: {
-			get: function() {return Math.trunc(this.value);}
-		},
-		/**. ``''string'' type``: Retorna o tipo do número (zero, infinite, integer, real).**/
+		int: {get: function() {return Math.trunc(this.value);}},
+		/**. ``''string'' type``: Retorna o tipo do número (zero, infinite, integer, decimal).**/
 		type: {
 			get: function() {
-				const types = ["infinite", "zero", "integer", "real"];
+				const types = ["infinite", "zero", "integer", "decimal"];
 				for (let i = 0; i < types.length; i++)
 					if (this._check[types[i]] === true) return types[i];
 				return "unknow";
@@ -2092,7 +2069,7 @@ const wd = (function() {
 		/**. ``''float'' dec``: Retorna a parte decimal do número (zero se infinito ou inteiro).**/
 		dec: {
 			get: function() {
-				if (this.type !== "real") return 0;
+				if (this.type !== "decimal") return 0;
 				if (this.abs < 1) return this.value;
 				const sign = this.value < 0 ? "-0." : "0.";
 				return Number(sign+String(this.value).split(".")[1]);
@@ -2101,7 +2078,7 @@ const wd = (function() {
 		/**. ``''number'' round(''integer'' n)``: Arredonda o número conforme especificado. O argumento ``n`` define a quantidade de casas decimais.**/
 		round: {
 			value: function(n) {
-				if (this.type !== "real") return this.value;
+				if (this.type !== "decimal") return this.value;
 				const check = __Type(n);
 				const value = check.finite && !check.negative ? Math.trunc(check.value) : 0;
 				return Number(this.value.toFixed(value));
@@ -2110,7 +2087,7 @@ const wd = (function() {
 		/**. ``''number'' cut(''integer'' n)``: Corta o número de casas decimais conforme especificado sem arrendondar. O argumento opcional ``n`` define a quantidade de casas decimais.**/
 		cut: {
 			value: function(n) {
-				if (this.type !== "real") return this.value;
+				if (this.type !== "decimal") return this.value;
 				const check = __Type(n);
 				const value = check.finite && !check.negative ? Math.trunc(check.value) : 0;
 				const base  = Math.pow(10, value);
@@ -2142,13 +2119,25 @@ const wd = (function() {
 			}
 		},
 		/**. ``''boolean'' prime``: Checa se número é primo.**/
+		//FIXME melhorar isso, tá demorando demais
 		prime: {
-			get: function() {return this.primes.indexOf(this.value) >= 0;}
+			get: function() {
+				/*-- testar se ele já existe na lista --*/
+				if (this._primes.indexOf(this.value) >= 0) return true;
+				/*-- se a lista já for suficiente --*/
+				if (this.value <= this._primes[this._primes.length - 1]) return false;
+				/*-- testar individualemte --*/
+
+
+				/*-- se precisar verificar mais dados --*/
+				this.primes;
+				return this.value === this._primes[this._primes.length - 1];
+			}
 		},
 		/**. ``''array'' factorization``: Retorna a fatorização do inteiro em números primos.**/
 		factorization: {
 			get: function() {
-				if (this.type !== "integer") return [1];
+				if (this.type !== "integer") return [];
 				const list = [];
 				let value  = Math.abs(this.int);
 				let primes = this._primes;
@@ -2212,7 +2201,7 @@ const wd = (function() {
 		/**. ``''string'' frac``: Retorna a notação numérica em forma de fração com máximo de 6 dígitos no numerador e aproximação de até 6 casas decimais.**/
 		frac: {
 			get: function() {
-				if (this.type !== "real") return this.toString();
+				if (this.type !== "decimal") return this.toString();
 				/*--x = a/b = a/(a+n), n = a(1/x-1)--*/
 				const int = this.int;
 				const dec = Math.abs(this.dec);
@@ -5079,46 +5068,63 @@ const wd = (function() {
 		    this.table.caption.textContent = String(x);
 		  }
 		},
-		/**. ``''array'' cells(''object'' area, ''boolean'' value)``: Retorna uma lista contendo informações das células da tabela cuja especificação será definida pelo argumento ``data`` que possui as seguintes propriedades:
+		/**. ``''array'' cells(''object'' area, ''boolean'' value)``: Retorna uma lista de objetos contendo informações das células conforme especificado no argumento ``area`` com as seguintes propriedades:
 		|Nome|Descrição|
-		|row1|Índice da linha de início da captura.|
-		|row2|Índice da linha de fim da captura, se não informado será igual a ''row1''.|
-		|col1|Índice da coluna de início da captura.|
-		|col2|Índice da coluna de fim da captura, se não informado será igual a ''col1''.|
-		. Se o argumento ''value'' for verdadeiro, os valores da lista serão os valores textuais das células. Caso contrário, cada item será um objeto contendo as seguintes propriedades:
+		|row|Índice da linha de início da captura (padrão 0).|
+		|col|Índice da coluna de início da captura (padrão 0).|
+		|rows|Quantidade de linhas (padrão 1).|
+		|cols|Quantidade de colunas (padrão 1).|
+		. Se o argumento ''value'' for verdadeiro, retornará os valores textuais das células, caso contrário, o elemento HTML da célula. O conteúdo da lista é um objeto com as seguintes propriedades:
 		|Nome|Descrição|
-		|cell|Elemento HTML da célula (''tr''/''td'')|
+		|cell|Elemento HTML ou valor da célula.|
 		|row|Número da linha|
 		|col|Número da coluna|**/
 		cells: {
-		  value: function(area, value) {
-		    /*-- Dados da área --*/
-		    if (!__Type(area).object) area = {};
-		    const attr = /^(row[12]|col[12])$/;
-		    for (let i in area) {
-		      let check = __Type(area[i]);
-		      if (attr.test(i) && check.integer && check >= 0)
-		        area[i] = check.value;
-		    }
-		    area.row1 = "row1" in area ? area.row1 : ("row2" in area ? area.row2 : 0);
-		    area.col1 = "col1" in area ? area.col1 : ("col2" in area ? area.col2 : 0);
-		    area.row2 = "row2" in area ? area.row2 : area.row1;
-		    area.col2 = "col2" in area ? area.col2 : area.col1;
-		    if (area.col1 === null || area.row1 === null) return [];
-		    /*-- Capturando informação --*/
-		    const list = [];
-		    const base = this.valueOf(value === true ? "value" : "html");
-		    const rows = base.slice(area.row1, area.row2+1);
-		    for (let i = 0; i < rows.length; i++) {
-		      let row = area.row1 + i;
-		      let cols = rows[i].slice(area.col1, area.col2+1);
-		      for (let j = 0; j < cols.length; j++) {
-		        let col = area.col1 + j;
-	          list.push({list: cols[j], row: row, col: col});
-		      }
-		    }
-		    return list;
-		  }
+			value: function(area, value) {
+				/*-- Dados da área --*/
+				if (!__Type(area).object) area = {};
+				const attr = /^(row|col)s?$/;
+				for (let i in area) {
+					let num = !isNaN(area[i]) && attr.test(i) ? Number(area[i]) : -1;
+					if (num >= 0 && Number.isInteger(num))
+						area[i] = num;
+					else
+						delete area[i];
+				}
+				area.row  = "row"  in area ? area.row : 0;
+				area.col  = "col"  in area ? area.col : 0;
+				area.rows = "rows" in area && area.rows > 0 ? area.rows : 1;
+				area.cols = "cols" in area && area.cols > 0 ? area.cols : 1;
+				/*-- Capturando informação --*/
+				const list = [];
+				const base = this.valueOf(value === true ? "value" : "html");
+				const rows = base.slice(area.row, area.row + area.rows);
+				for (let i = 0; i < rows.length; i++) {
+					let row = area.row + i;
+					let cols = rows[i].slice(area.col, area.col + area.cols);
+					for (let j = 0; j < cols.length; j++) {
+						let col = area.col + j;
+						list.push({cell: cols[j], row: row, col: col});
+					}
+				}
+				return list;
+			}
+		},
+		/**. ``''array'' row(''integer'' index, ''boolean'' value)``: Retorna a lista de células ou valores contidos na linha definida em ``index``.**/
+		row: {
+			value: function (index, value) {
+				const list = this.cells({row: index, cols: this.length.cols}, value);
+				for (let i = 0; i < list.length; i++) list[i] = list[i].cell;
+				return list;
+			}
+		},
+		/**. ``''array'' col(''integer'' index, ''boolean'' value)``: Retorna a lista de células ou valores contidos na coluna definida em ``index``.**/
+		col: {
+			value: function (index, value) {
+				const list = this.cells({col: index, rows: this.length.rows}, value);
+				for (let i = 0; i < list.length; i++) list[i] = list[i].cell;
+				return list;
+			}
 		},
 	});
 
@@ -5130,7 +5136,7 @@ const wd = (function() {
 	|Nome|Descrição|
 	|done|Booleano que indica o fim do processo.|
 	|ok|Indica, ao fim do processo, se o procedimento foi concluído com sucesso.|
-	|staus|Traz, ao fim do processo, uma mensagem sobre o procedimento.|
+	|status|Traz, ao fim do processo, uma mensagem sobre o procedimento.|
 	|time|Indica o tempo de execução do processo.|
 	|size|Indica a quantidade de trabalho do processo.|
 	|progress|Indica o progresso do processo (de 0 a 1).|
@@ -5756,8 +5762,7 @@ const wd = (function() {
 		});
 
 		/* ordenando em x */
-		data.sort(function(a, b) {return a.x > b.x;});
-
+		data.sort(function(a,b) {return a.x < b.x ? -1 : 1;});
 		/* retornando valores */
 		x     = [];
 		y     = [];
@@ -5767,25 +5772,19 @@ const wd = (function() {
 			y.push(data[i].y);
 		}
 		Object.defineProperties(this, {
-			_x:   {value: x},
-			_y:   {value: y},
+			_x: {value: x},
+			_y: {value: y},
 		});
 	}
 
 	Object.defineProperties(__Data2D.prototype, {
 		constructor: {value: __Data2D},
 		/**. ``''array'' x``: Retorna os valores do argumento ``x`` ajustado.**/
-		x: {
-			get: function() {return this._x;}
-		} ,
+		x: {get: function() {return this._x;}} ,
 		/**. ``''array'' y``: Retorna os valores do argumento ``y`` ajustado.**/
-		y: {
-			get: function() {return this._y;}
-		},
+		y: {get: function() {return this._y;}},
 		/**. ``''boolean'' error``: Se o conjunto tiver menos que um par de valores, retornará verdadeiro.**/
-		error: {
-			get: function() {return this._y.length < 2 || this._x.length < 2;}
-		},
+		error: {get: function() {return this._y.length < 2 || this._x.length < 2;}},
 		/**. ``''object'' leastSquares``: Aplica o método dos mínimos quadrados ao conjunto de dados e retorna objeto contendo o coeficiente angular ``a`` e o linear ``b`` de ``y = ax + b``.**/
 		leastSquares: {
 			get: function () {
@@ -6935,6 +6934,8 @@ const wd = (function() {
 
 
 
+
+
 /*----------------------------------------------------------------------------*/
 	function wd_copy(value) { /* copia o conteúdo da variável para a área de transferência */
 		/* copiar o que está selecionado */
@@ -7000,45 +7001,39 @@ const wd = (function() {
 
 	Object.defineProperties(WDmain.prototype, {
 		constructor: {value: WDmain},
-		/**. ``''string'' type``: Retorna o tipo do dado.**/
-		type: {
-			get: function() {return this._data.type;}
+		/**. ``''any'' valueOf()``: Retorna o valor do dado (ver ``__Type``).**/
+		valueOf: {
+			value: function() {return this._data.valueOf();}
 		},
+		/**. ``''string'' toString()``: Retorna o valor textual do dado (ver ``__Type``).**/
+		toString: {
+			value: function() {return this._data.toString();}
+		},
+		/**. ``''string'' type``: Retorna o tipo do dado.**/
+		type: {get: function() {return this._data.type;}},
 		/**. ``''boolean'' or(''string'' type...)``: Retorna verdadeiro se algum dos tipos informados no argumento ``type`` corresponder ao tipo de dado.**/
 		or: {
 			value: function() {
-				if (arguments.length === 0) return false;
-				for (let type of arguments)
-					if (this._data[type] === true) return true;
+				for (let i = 0; i < arguments.length; i++) {
+					let name = arguments[i];
+					if (name in this._data && this._data[name] === true) return true;
+				}
 				return false;
 			}
 		},
 		/**. ``''boolean'' is(''string'' type...)``: Retorna verdadeiro se todos os tipos informados no argumento ``type`` correspondem ao tipo de dado.**/
 		is: {
 			value: function() {
-				if (arguments.length === 0) return false;
-				for (let type of arguments)
-					if (this._data[type] === false) return false;
+				for (let i = 0; i < arguments.length; i++) {
+					let name = arguments[i];
+					if (name in this._data && this._data[name] === false) return false;
+				}
 				return true;
-			}
-		},
-		/**. ``''any'' valueOf()``: Retorna o valor do dado (ver ``__Type``).**/
-		valueOf: {
-			value: function() {
-				return this._data.valueOf();
-			}
-		},
-		/**. ``''string'' toString()``: Retorna o valor textual do dado (ver ``__Type``).**/
-		toString: {
-			value: function() {
-				return this._data.toString();
 			}
 		},
 		/**. ``''string'' mask(''string'' model)``: Retorna o valor formatado pela máscara definida no argumento ``model``. Se a máscara não casar, retornará uma string vazia.**/
 		mask: {
-			value: function(model) {
-				return new __String(this._input).mask(model);
-			}
+			value: function(model) {return new __String(this._input).mask(model);}
 		},
 		/**. ``''self'' alert(''string'' title)``: Renderiza uma mensagem.**/
 		alert: {
@@ -7093,6 +7088,8 @@ const wd = (function() {
 		clean: {get: function() {return this._main.clear();}},
 		/**. ``''array'' csv``: Retorna string em CSV para array.**/
 		csv: {get: function() {return this._main.csv;}},
+
+		//FIXME não dá certo isso quando se insere "123" ou true
 		/**. ``''any'' json``: Retorna notação em JSON para valor em Javascript ou nulo se inválido.**/
 		json: {get: function() {return this._main.json;}},
 		/**. ``''node'' html``: Retorna notação em HTML para documento correspondente ou nulo se inválido.**/
@@ -7127,21 +7124,13 @@ const wd = (function() {
 		/**. ``''number'' abs``: Retorna o valor absoluto.**/
 		abs: {get: function() {return this._main.abs;}},
 		/**. ``''number'' round``: Retorna o número arredondando-o pela quantidade de casas decimais definida.**/
-		round: {
-			get: function() {return this._main.round(this._digits);}
-		},
+		round: {get: function() {return this._main.round(this._digits);}},
 		/**. ``''number'' cut``: Retorna o número cortando-o pela quantidade de casas decimais definida.**/
-		cut: {
-			get: function() {return this._main.cut(this._digits);}
-		},
-		/**. ``''boolean'' prime``: Informa se o número é primo.**/
-		prime: {
-			get: function() {return this._main.prime;}
-		},
-		/**. ``''array'' primes``: Retorna uma lista de primos precedentes.**/
-		primes: {
-			get: function() {return this._main.primes;}
-		},
+		cut: {get: function() {return this._main.cut(this._digits);}},
+		/**. ``''boolean'' prime``: Informa se o número é primo por meio de um Promise.**/
+		prime: {get: async function() {return this._main.prime;}},
+		/**. ``''array'' primes``: Retorna uma lista de primos precedentes por meio de um Promise.**/
+		primes: {get: async function() {return this._main.primes;}},
 
 
 
@@ -9139,4 +9128,4 @@ const wd = (function() {
 			__TRIGGERS[i].target.addEventListener(j, __TRIGGERS[i].events[j], false);
 
 	return WD;
-}());
+}());
