@@ -2119,19 +2119,20 @@ const wd = (function() {
 			}
 		},
 		/**. ``''boolean'' prime``: Checa se número é primo.**/
-		//FIXME melhorar isso, tá demorando demais
 		prime: {
 			get: function() {
+				/*-- testar se é um inteiro maior que 1 --*/
+				if (this.type !== "integer" || this.value < 2)
+					return false;
 				/*-- testar se ele já existe na lista --*/
-				if (this._primes.indexOf(this.value) >= 0) return true;
-				/*-- se a lista já for suficiente --*/
-				if (this.value <= this._primes[this._primes.length - 1]) return false;
-				/*-- testar individualemte --*/
-
-
-				/*-- se precisar verificar mais dados --*/
-				this.primes;
-				return this.value === this._primes[this._primes.length - 1];
+				if (this.value <= this._primes[this._primes.length - 1])
+					return this._primes.indexOf(this.value) >= 0;
+				/*-- verificando se não é divisível por primo --*/
+				for (let i = 0; i < this._primes.length; i++)
+					if (this.value%this._primes[i] === 0) return false;
+				/*-- capturando novos primos até a raiz do número --*/
+				new __Number(this.value).primes;
+				return this.prime;
 			}
 		},
 		/**. ``''array'' factorization``: Retorna a fatorização do inteiro em números primos.**/
@@ -2152,7 +2153,6 @@ const wd = (function() {
 				/*-- Looping sobre os primos extraordinários --*/
 				if (value > 1) {
 					new __Number(value).primes;
-					primes = this._primes;
 					while (value >= primes[item] && item < primes.length) {
 						if (value%primes[item] === 0) {
 							value = value / primes[item];
@@ -7108,10 +7108,7 @@ const wd = (function() {
 			_main:     {value: new __Number(data.value)},
 			_digits:   {value: 2, writable: true},
 			_unit:     {value: "degree", writable: true},
-			_display:  {value: "short", writable: true},
 			_currency: {value: __LANG.currency, writable: true},
-			_locale:   {value: __LANG.main, writable: true},
-			_type:     {value: "", writable: true}
 		});
 	}
 
@@ -7123,21 +7120,56 @@ const wd = (function() {
 		dec: {get: function() {return this._main.dec;}},
 		/**. ``''number'' abs``: Retorna o valor absoluto.**/
 		abs: {get: function() {return this._main.abs;}},
-		/**. ``''number'' round``: Retorna o número arredondando-o pela quantidade de casas decimais definida.**/
-		round: {get: function() {return this._main.round(this._digits);}},
-		/**. ``''number'' cut``: Retorna o número cortando-o pela quantidade de casas decimais definida.**/
-		cut: {get: function() {return this._main.cut(this._digits);}},
 		/**. ``''boolean'' prime``: Informa se o número é primo por meio de um Promise.**/
 		prime: {get: async function() {return this._main.prime;}},
 		/**. ``''array'' primes``: Retorna uma lista de primos precedentes por meio de um Promise.**/
 		primes: {get: async function() {return this._main.primes;}},
+		/**. ``''number'' round``: Arredonda o número em casas decimais definida na propriedade ``digits``.**/
+		round: {get: function() {return this._main.round(this.digits);}},
+		/**. ``''number'' cut``: Corta o número em casas decimais definida na propriedade ``digits``.**/
+		cut: {get: function() {return this._main.cut(this.digits);}},
+		/**. ``''string'' currency``: Define ou retorna o código monetário.**/
+		currency: {
+			get: function() {return this._currency;},
+			set: function(x) {this._currency = String(x).trim();}
+		},
+		/**. ``''string'' unit``: Define ou retorna o nome da unidade de medida.**/
+		unit: {
+			get: function() {return this._unit;},
+			set: function(x) {this._unit = String(x).trim();}
+		},
+		/**. ``''integer'' digits``: Define ou retorna a quantidade de casas decimais.**/
+		digits: {
+			get: function() {return this._digits;},
+			set: function(x) {this._unit = isFinite(x) ? Math.abs(Math.trunc(Number(x))) : 2;}
+		},
+
+		notation: {
+			value: function(type) {
+				const data = String(type).trim().toLowerCase().split(":");
+				const re   = {
+					currency: /^currency(\:symbol|\:narrow|\:name|\:code)?$/i,
+					unit: /^unit(\:short|\:narrow|\:long)?$/i,
+					notation: /^(decimal|integer|significant|percent|scientific|engineering)$/i,
+					compact: /^compact(\:short|\:long)?$/i
+				};
+				if (type === "bytes")       return this._main.bytes;
+				if (type === "frac")        return this._main.frac;
+				if (re.notation.test(type)) return this._main.notation(data[0], this.digits);
+				if (re.currency.test(type)) return this._main.currency(this.currency, data[1]);
+				if (re.unit.test(type))  		return this._main.unit(this.unit, data[1], this.digits);
+				if (re.compact.test(type))  return this._main.notation(data[1], this.digits);
+				return this._main.value.toLocaleString(__LANG.main);
+			}
+		},
 
 
 
-		/**. ``''integer'' digits``: Define ou retorna a quantidade de casas decimais a ser utilizada nos métodos.**/
-		/**. ``''string'' unit``: Define ou retorna o nome da unidade de medida a ser utilizada no objeto.**/
 
-		/**. ``''string'' currency``: Define ou retorna o código monetários a ser utilizado no objeto.**/
+
+
+
+
 
 		/**. ``''string'' locale``: Define ou retorna o código de localização a ser utilizado no objeto.**/
 
@@ -9128,4 +9160,4 @@ const wd = (function() {
 			__TRIGGERS[i].target.addEventListener(j, __TRIGGERS[i].events[j], false);
 
 	return WD;
-}());
+}());
