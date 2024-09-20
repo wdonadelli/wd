@@ -2311,6 +2311,88 @@ const wd = (function() {
 				catch(e) {return this.value.toLocaleString(__LANG.main);}
 			}
 		},
+
+
+
+		toLocaleString: {
+			value: function(config) {
+				if (!__Type(config).object) return this.value.toLocaleString(__LANG.main);
+				const optional = {
+					decimal: ["minimumFractionDigits", "maximumFractionDigits"],
+					integer: ["minimumIntegerDigits"],
+					digits:  ["minimumSignificantDigits", "maximumSignificantDigits"]
+				}
+				const properties = {
+					currency: [
+						{attr: "style",           name: null,      values: ["currency"]},
+						{attr: "signDisplay",     name: null,      values: ["exceptZero"]},
+						{attr: "currencyDisplay", name: "display", values: ["symbol", "narrowSymbol", "name", "code"]},
+						{attr: "currency",        name: "value",   values: []}
+					],
+					unit: [
+						{attr: "style",       name: null,      values: ["unit"]},
+						{attr: "unit",        name: "value",   values: []},
+						{attr: "unitDisplay", name: "display", values: ["short", "long", "narrow"]},
+					],
+					percent: [
+						{attr: "style", name: null, values: ["percent"]},
+					],
+					scientific: [
+						{attr: "style",    name: null, values: ["decimal"]},
+						{attr: "notation", name: null, values: ["scientific"]},
+					],
+					engineering: [
+						{attr: "style",    name: null, values: ["decimal"]},
+						{attr: "notation", name: null, values: ["engineering"]},
+					],
+					compact: [
+						{attr: "style",          name: null,      values: ["decimal"]},
+						{attr: "notation",       name: null,      values: ["compact"]},
+						{attr: "compactDisplay", name: "display", values: ["short", "long"]},
+
+					],
+					decimal: [
+						{attr: "style",    name: null, values: ["decimal"]},
+					],
+				};
+				const options  = {};
+				const property = config.type in properties ? properties[config.type] : properties.decimal;
+				for (let i = 0; i < property.length; i++) {
+					let data = property[i];
+					/*-- propriedade padrão --*/
+					if (data.name === null) {
+						options[data.attr] = data.values[0];
+					}
+					/*-- propriedade obrigatória --*/
+					else if (data.values.length === 0) {
+						if (data.name in config) {
+							options[data.attr] = config[data.name];
+						} else {
+							config.type = "decimal";
+							return this.toLocaleString(config);
+						}
+					}
+					/*-- propriedade alternativa --*/
+					else {
+						if (data.values.indexOf(config[data.name]) >= 0)
+							options[data.attr] = config[data.name];
+						else
+							options[data.attr] = data.values[0];
+					}
+				}
+				/*-- propriedades opcionais --*/
+				for (let i in optional) {
+					let check = __Type(config[i]);
+					if (check.integer && check >= 0)
+						for (let j = 0; j < optional[i].length; j++)
+							options[optional[i][j]] = check.value;
+				}
+				options.useGrouping = config.group !== false;
+				/*-- Retornando valor --*/
+				try      {return this.value.toLocaleString(__LANG.main, options);}
+				catch(e) {return this.value.toLocaleString(__LANG.main);}
+			}
+		},
 		/**. ``''number'' e``: Retorna o expoente do número em base 10.**/
 		e: {
 			get: function() {
