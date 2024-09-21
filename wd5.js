@@ -316,6 +316,15 @@ const wd = (function() {
 		set user(x) {this._user = String(x).trim();},
 		/**. ``''string'' main``: Retorna a linguagem definida pelo usuário, no HTML ou pela navegador.**/
 		get main() {return this.user || this. html || this.nav || "en-US";},
+		/**. ``''string'' list``: Retorna uma lista de preferências de linguagem (usuário, HTML, navegador ou padrão).**/
+		get list() {
+			const data = [];
+			if (this.user !== "") data.push(this.user);
+			if (this.html !== "") data.push(this.html);
+			if (this.nav  !== "") data.push(this.nav);
+			data.push("en-US");
+			return data;
+		},
 		/**. ``''array'' months``: Retorna uma lista de objetos contendo informações sobre os meses:
 		|Nome|Descrição|
 		|index|Índice numérico do mês [1-12]|
@@ -326,6 +335,8 @@ const wd = (function() {
 			if (this._langMonths === this.main) return this._months;
 			const date = new Date(1970, 0, 1, 12, 0, 0, 0);
 			const data = [];
+
+			//FIXME arrumar isso para lista de options
 			const lang = this.main;
 			let long, short, index, value;
 			for (let i = 0; i < 12; i++) {
@@ -350,6 +361,9 @@ const wd = (function() {
 			if (this._langDays === this.main) return this._days;
 			const date = new Date(1970, 0, 1, 12, 0, 0, 0);
 			const data = [];
+
+
+			//FIXME arrumar isso para lista de options
 			const lang = this.main;
 			let long, short, index, value;
 			for (let i = 1; i < 8; i++) {
@@ -415,6 +429,11 @@ const wd = (function() {
 			}
 			return this.monthRegExp;
 		}
+
+
+
+
+
 	};
 
 /*----------------------------------------------------------------------------*/
@@ -2021,10 +2040,6 @@ const wd = (function() {
 		valueOf: {value: function() {return this.value;}},
 		/**. ``''number'' toString()``: Retorna o valor em forma de string.**/
 		toString: {value: function() {return this._check.toString()}},
-		/**. ``''string'' toString()``: Retorna o valor em forma de string de acordo com a linguagem definida.**/
-		toLocaleString: {
-			value: function() {return this.value.toLocaleString(__LANG.main);}
-		},
 		/**. ``''number'' abs``: Retorna o valor absoluto do número.**/
 		abs: {get: function() {return Math.abs(this.value);}},
 		/**. ``''integer'' int``: Retorna a parte inteira do número.**/
@@ -2075,23 +2090,16 @@ const wd = (function() {
 				return Number(sign+String(this.value).split(".")[1]);
 			}
 		},
-		/**. ``''number'' round(''integer'' n)``: Arredonda o número conforme especificado. O argumento ``n`` define a quantidade de casas decimais.**/
-		round: {
-			value: function(n) {
+		/**. ``''number'' fixed(''integer'' length, ''boolean'' round)``: Fixa a quantidade máxima de casas decimais definidas em ``length``. O argumento ``round``, se falso, não arredondará o valor.**/
+		fixed: {
+			value: function(length, round) {
 				if (this.type !== "decimal") return this.value;
-				const check = __Type(n);
-				const value = check.finite && !check.negative ? Math.trunc(check.value) : 0;
-				return Number(this.value.toFixed(value));
-			}
-		},
-		/**. ``''number'' cut(''integer'' n)``: Corta o número de casas decimais conforme especificado sem arrendondar. O argumento opcional ``n`` define a quantidade de casas decimais.**/
-		cut: {
-			value: function(n) {
-				if (this.type !== "decimal") return this.value;
-				const check = __Type(n);
-				const value = check.finite && !check.negative ? Math.trunc(check.value) : 0;
-				const base  = Math.pow(10, value);
-				return Math.trunc(base*this.value)/base;
+				round  = round !== false;
+				length = isFinite(length) && Number(length) >= 0  ? Math.trunc(Number(length)) : 0;
+				const fixed = Number(this.value.toFixed(length));
+				const base  = Math.pow(10, length);
+				const cut   = Math.trunc(base*this.value)/base;
+				return round ?  fixed : cut;
 			}
 		},
 		/**. ``''array'' primes``: Retorna uma lista com os números primos até o número informado.**/
@@ -2242,90 +2250,44 @@ const wd = (function() {
 				return int+" B";
 			}
 		},
-		/**. ``''string'' unit(''string'' name, ''string'' display, ''integer'' digits)``: formata o número conforme [unidade de medida]<https://tc39.es/proposal-unified-intl-numberformat/section6/locales-currencies-tz_proposed_out.html#sec-issanctionedsimpleunitidentifier> informada no argumento ``name``. O argumento opcional ``display`` define a forma de escrita ("short", "long" ou "narrow"). O argumento opcional ``digits`` define o número de casas decimais.**/
-		unit: {
-			value: function(name, display, digits) {
-				display      = String(display).trim().toLowerCase();
-				const check  = __Type(digits);
-				const show   = ["short", "long", "narrow"];
-				const config = {
-					style: "unit",
-					unit: String(name).trim(),
-					unitDisplay: show.indexOf(display) < 0 ? show[0] : display
-				};
-				if (check.finite && check >= 0) {
-					config.minimumFractionDigits = Math.trunc(check.value);
-					config.maximumFractionDigits = Math.trunc(check.value);
+		/**. ``''number'' exp``: Retorna o expoente do número em base 10.**/
+		exp: {
+			get: function() {
+				if (!this.finite || this.value === 0) return !this.finite ? 0 : Infinity;
+				let value = this.abs;
+				let n = 0;
+				while (value < 1 || value >= 10) {
+					n    += value < 1 ? -1 : +1;
+					value = value * (value < 1 ? 10 : 1/10);
 				}
-				try      {return this.value.toLocaleString(__LANG.main, config);}
-				catch(e) {return this.value.toLocaleString(__LANG.main);}
+				return n;
 			}
 		},
-		/**. ``''string'' currency(''string'' name, ''string'' display)``: formata o número conforme [código monetário]<https://www.six-group.com/en/products-services/financial-information/data-standards.html#scrollTo=currency-codes> informada no argumento ``code``. O argumento opcional ``display`` define a forma de escrita ("symbol", "narrow", "name" e "code").**/
-		currency: {
-			value: function(code, display) {
-				display = String(display).trim().toLowerCase();
-				const show   = {symbol: "symbol", narrow: "narrowSymbol", name: "name", code: "code"};
-				const config = {
-					style: "currency",
-					currency: String(code).trim(),
-					currencyDisplay: display in show ? show[display] : show.symbol,
-					signDisplay: "exceptZero"
-				};
-				try      {return this.value.toLocaleString(__LANG.main, config);}
-				catch(e) {return this.value.toLocaleString(__LANG.main);}
-			}
-		},
-/**. ``''string'' notation(''string'' type, ''integer'' digits)``: formata o número conforme [tipo]<https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/NumberFormat> informada no argumento ``type``. O argumento opcional ``digits`` define o número de dígitos a depender do tipo escolhido.**/
-		notation: {
-			value: function(type, digits) {
-				type = String(type).trim().toLowerCase();
-				const check = __Type(digits);
-				const types = {
-					decimal:     {style: "decimal"},
-					integer:     {style: "decimal"},
-					significant: {style: "decimal"},
-					percent:     {style: "percent"},
-					scientific:  {style: "decimal", notation: "scientific"},
-					engineering: {style: "decimal", notation: "engineering"},
-					short:       {style: "decimal", notation: "compact", compactDisplay: "short"},
-					long:        {style: "decimal", notation: "compact", compactDisplay: "long"}
-				};
-				const adjustment = {
-					integer:     ["minimumIntegerDigits"],
-					significant: ["minimumSignificantDigits", "maximumSignificantDigits"],
-					decimal:     ["minimumFractionDigits",    "maximumFractionDigits"],
-					percent:     ["minimumFractionDigits",    "maximumFractionDigits"],
-					scientific:  ["minimumFractionDigits",    "maximumFractionDigits"],
-					engineering: ["minimumFractionDigits",    "maximumFractionDigits"]
-				};
-				const config = {};
-				if (type in types) {
-					for (let i in types[type])
-						config[i] = types[type][i];
-					if (type in adjustment && check.finite && check >= 0)
-						for (let i = 0; i < adjustment[type].length; i++)
-							config[adjustment[type][i]] = Math.trunc(check.value);
-				}
-				try      {return this.value.toLocaleString(__LANG.main, config);}
-				catch(e) {return this.value.toLocaleString(__LANG.main);}
-			}
-		},
-
-
-
+/**. ``''string'' toLocaleString(''object'' options)``: Retorna o número no formato local de acordo com as [configurações]<https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/NumberFormat> definidas no argumento ``options``, que possui as seguintes propriedades:
+|Nome|Tipo|Descrição|Obrigatório|
+|type|string|Tipo de notação a ser exibida|Sim|
+|value|string|Informação complementar ao tipo de notação|Depende do tipo de notação|
+|display|string|Forma da exibição da notação|Não|
+|group|boolean|Separador de milhar|Não|
+|decimal|integer|Quantidade de casas decimais (0-20)|Não|
+|integer|integer|Quantidade de números inteiros (1-21)|Não|
+|digits|integer|Quantidade de números significativos (0-20)|Não|
+. Os seguintes tipos são possíveis&colon;
+|type|value|display|
+|unit|[unidade de medida]<https://tc39.es/proposal-unified-intl-numberformat/section6/locales-currencies-tz_proposed_out.html#sec-issanctionedsimpleunitidentifier>|short, long, narrow|
+|currency|[código monetário]<https://www.six-group.com/en/products-services/financial-information/data-standards.html#scrollTo=currency-codes>|symbol, narrowSymbol, name, code|
+|compact||short, long|
+|percent|||
+|scientific|||
+|engineering|||
+|decimal|||**/
 		toLocaleString: {
-			value: function(config) {
-				if (!__Type(config).object) return this.value.toLocaleString(__LANG.main);
-				const optional = {
-					decimal: ["minimumFractionDigits", "maximumFractionDigits"],
-					integer: ["minimumIntegerDigits"],
-					digits:  ["minimumSignificantDigits", "maximumSignificantDigits"]
-				}
+			value: function(options) {
+				if (typeof options !== "object") options = {};
 				const properties = {
 					currency: [
 						{attr: "style",           name: null,      values: ["currency"]},
-						{attr: "signDisplay",     name: null,      values: ["exceptZero"]},
+						//{attr: "signDisplay",     name: null,      values: ["exceptZero"]},
 						{attr: "currencyDisplay", name: "display", values: ["symbol", "narrowSymbol", "name", "code"]},
 						{attr: "currency",        name: "value",   values: []}
 					],
@@ -2355,58 +2317,50 @@ const wd = (function() {
 						{attr: "style",    name: null, values: ["decimal"]},
 					],
 				};
-				const options  = {};
-				const property = config.type in properties ? properties[config.type] : properties.decimal;
+				const property = options.type in properties ? properties[options.type] : properties.decimal;
+				/*-- adicionando propriedades opcionais --*/
+				const intList = new Array(22);
+				for (let i = 0; i < intList.length; i++) intList[i] = i;
+				const optional = [
+					{attr: "minimumFractionDigits",    name: "decimal", values: intList.slice(0,21)},
+					{attr: "maximumFractionDigits",    name: "decimal", values: intList.slice(0,21)},
+					{attr: "minimumIntegerDigits",     name: "integer", values: intList.slice(1,22)},
+					{attr: "minimumSignificantDigits", name: "digits",  values: intList.slice(0,21)},
+					{attr: "maximumSignificantDigits", name: "digits",  values: intList.slice(0,21)},
+					{attr: "useGrouping",              name: "group",   values: ["auto",true,false]},
+				];
+				for (let i = 0; i < optional.length; i++)
+					if (optional[i].name in options) property.push(optional[i]);
+				/*-- obtendo os dados de configuração --*/
+				const config = {};
 				for (let i = 0; i < property.length; i++) {
-					let data = property[i];
-					/*-- propriedade padrão --*/
-					if (data.name === null) {
-						options[data.attr] = data.values[0];
+					let item = property[i];
+					/*-- propriedades padrão --*/
+					if (item.name === null) {
+						config[item.attr] = item.values[0];
 					}
-					/*-- propriedade obrigatória --*/
-					else if (data.values.length === 0) {
-						if (data.name in config) {
-							options[data.attr] = config[data.name];
+					/*-- propriedades obrigatórias --*/
+					else if (item.values.length === 0) {
+						if (item.name in options) {
+							config[item.attr] = options[item.name];
 						} else {
 							config.type = "decimal";
 							return this.toLocaleString(config);
 						}
 					}
-					/*-- propriedade alternativa --*/
+					/*-- propriedades alternativas --*/
 					else {
-						if (data.values.indexOf(config[data.name]) >= 0)
-							options[data.attr] = config[data.name];
+						if (item.values.indexOf(options[item.name]) >= 0)
+							config[item.attr] = options[item.name];
 						else
-							options[data.attr] = data.values[0];
+							config[item.attr] = item.values[0];
 					}
 				}
-				/*-- propriedades opcionais --*/
-				for (let i in optional) {
-					let check = __Type(config[i]);
-					if (check.integer && check >= 0)
-						for (let j = 0; j < optional[i].length; j++)
-							options[optional[i][j]] = check.value;
-				}
-				options.useGrouping = config.group !== false;
 				/*-- Retornando valor --*/
-				try      {return this.value.toLocaleString(__LANG.main, options);}
-				catch(e) {return this.value.toLocaleString(__LANG.main);}
+				try      {return this.value.toLocaleString(__LANG.list, config);}
+				catch(e) {return this.value.toLocaleString(__LANG.list);}
 			}
 		},
-		/**. ``''number'' e``: Retorna o expoente do número em base 10.**/
-		e: {
-			get: function() {
-				if (!this.finite)         return 0;
-				if (this.valueOf() === 0) return Infinity;
-				let value = this.abs;
-				let n = 0;
-				while (value < 1 || value >= 10) {
-					n    += value < 1 ? -1 : +1;
-					value = value * (value < 1 ? 10 : 1/10);
-				}
-				return n;
-			}
-		}
 	});
 /*===========================================================================*/
 	/**### Caracteres
@@ -3859,7 +3813,7 @@ const wd = (function() {
 				//FIXME ver localCompare
 				//https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Global_Objects/String/localeCompare
 				const options  = {sensitive: "base", }
-				const collator = new Intl.Collator(__LANG.main, options);
+				const collator = new Intl.Collator(__LANG.list, options);
 				console.log(collator.compare("a", "z"));
 				/*
 				A negative value if string1 comes before string2;
@@ -6435,19 +6389,19 @@ const wd = (function() {
 					case "datetime":
 						return __DateTime(value).format("{YYYY}-{MM}-{DD} {hh}:{mm}");
 					case "percent":
-						return n.notation("percent", 0);
+						return n.toLocaleString({type : "percent", decimal: 0});
 				}
-				const e = n.e;
-				if (n ==    0) return n.notation("decimal",    0);
-				if (e >=  100) return n.notation("scientific", 0);
-				if (e >=   10) return n.notation("scientific", 1);
-				if (e >=    3) return n.notation("scientific", 2);
-				if (e >=    2) return n.notation("decimal",    1);
-				if (e >=    1) return n.notation("decimal",    2);
-				if (e <= -100) return n.notation("scientific", 0);
-				if (e <=  -10) return n.notation("scientific", 1);
-				if (e <    -1) return n.notation("scientific", 2);
-				return n.notation("decimal", 2);
+				const e = n.exp;
+				if (n ==    0) return n.toLocaleString({type : "decimal",    decimal: 0});
+				if (e >=  100) return n.toLocaleString({type : "scientific", decimal: 0});
+				if (e >=   10) return n.toLocaleString({type : "scientific", decimal: 1});
+				if (e >=    3) return n.toLocaleString({type : "scientific", decimal: 2});
+				if (e >=    2) return n.toLocaleString({type : "decimal",    decimal: 1});
+				if (e >=    1) return n.toLocaleString({type : "decimal",    decimal: 2});
+				if (e <= -100) return n.toLocaleString({type : "scientific", decimal: 0});
+				if (e <=  -10) return n.toLocaleString({type : "scientific", decimal: 1});
+				if (e <    -1) return n.toLocaleString({type : "scientific", decimal: 2});
+				return n.toLocaleString({type : "decimal", decimal: 2});
 			}
 		},
 		/**. ``''void'' _legend(''node'' svg, ''object'' data)``: Constrói a legenda do gráfico. O argumento ``svg`` é o elemento SVG onde o gŕafico está sendo construído. O argumento ``data`` contendo as propriedades ``id`` (identificador da legenda), ``name`` (nome da curva), ``info`` (informação complementar) e ``color`` (cor a ser utilizada na legenda). Se ``name`` for nulo, a ação será ignorada.**/
@@ -7187,10 +7141,7 @@ const wd = (function() {
 	function WDnumber(input, data) {
 		WDmain.call(this, input, data);
 		Object.defineProperties(this, {
-			_main:     {value: new __Number(data.value)},
-			_digits:   {value: 2, writable: true},
-			_unit:     {value: "degree", writable: true},
-			_currency: {value: __LANG.currency, writable: true},
+			_main: {value: new __Number(data.value)},
 		});
 	}
 
@@ -7206,138 +7157,12 @@ const wd = (function() {
 		prime: {get: async function() {return this._main.prime;}},
 		/**. ``''array'' primes``: Retorna uma lista de primos precedentes por meio de um Promise.**/
 		primes: {get: async function() {return this._main.primes;}},
-		/**. ``''number'' round``: Arredonda o número em casas decimais definida na propriedade ``digits``.**/
-		round: {get: function() {return this._main.round(this.digits);}},
-		/**. ``''number'' cut``: Corta o número em casas decimais definida na propriedade ``digits``.**/
-		cut: {get: function() {return this._main.cut(this.digits);}},
-		/**. ``''string'' currency``: Define ou retorna o código monetário.**/
-		currency: {
-			get: function() {return this._currency;},
-			set: function(x) {this._currency = String(x).trim();}
-		},
-		/**. ``''string'' unit``: Define ou retorna o nome da unidade de medida.**/
-		unit: {
-			get: function() {return this._unit;},
-			set: function(x) {this._unit = String(x).trim();}
-		},
-		/**. ``''integer'' digits``: Define ou retorna a quantidade de casas decimais.**/
-		digits: {
-			get: function() {return this._digits;},
-			set: function(x) {this._unit = isFinite(x) ? Math.abs(Math.trunc(Number(x))) : 2;}
-		},
-
-		notation: {
-			value: function(type) {
-				const data = String(type).trim().toLowerCase().split(":");
-				const re   = {
-					currency: /^currency(\:symbol|\:narrow|\:name|\:code)?$/i,
-					unit: /^unit(\:short|\:narrow|\:long)?$/i,
-					notation: /^(decimal|integer|significant|percent|scientific|engineering)$/i,
-					compact: /^compact(\:short|\:long)?$/i
-				};
-				if (type === "bytes")       return this._main.bytes;
-				if (type === "frac")        return this._main.frac;
-				if (re.notation.test(type)) return this._main.notation(data[0], this.digits);
-				if (re.currency.test(type)) return this._main.currency(this.currency, data[1]);
-				if (re.unit.test(type))  		return this._main.unit(this.unit, data[1], this.digits);
-				if (re.compact.test(type))  return this._main.notation(data[1], this.digits);
-				return this._main.value.toLocaleString(__LANG.main);
-			}
-		},
-
-
-
-
-
-
-
-
-
-		/**. ``''string'' locale``: Define ou retorna o código de localização a ser utilizado no objeto.**/
-
-		options: {
-			get: function() {
-				return {
-					digits: this._digits,
-					unit: this._unit,
-					currency: this._currency,
-					locale: this._locale,
-					display: this._display,
-					type: this._type
-				};
-			},
-			set: function (x) {
-				if (!__Type(x).object) return;
-				const opt     = this.options;
-				const display = ["short", "narrow", "long", "symbol", "narrowSymbol", "name", "code"];
-				 for (let i in opt) {
-				 	if (i in x) {
-				 		const data = __Type(x[i]);
-				 		if (i === "digits" && data.integer && !data.negative)
-				 			this._digits = data.value;
-				 		else if (i === "unit" && data.nonempty)
-				 			this._unit = x[i].trim();
-				 		else if (i === "currency" && data.nonempty)
-				 			this._currency = x[i].trim();
-				 		else if (i === "locale" && __LANG.test(x[i]))
-				 			this._locale = x[i].trim();
-				 		else if (i === "display" && display.indexOf(x[i].trim()) >= 0)
-				 			this._display = x[i].trim();
-				 		else if (i === "type" && data.nonempty)
-				 			this._type = x[i].trim().toLowerCase();
-				 	}
-				}
-			}
-		},
-		//FIXME transformar isso em toString ou format?
-		/**. ``''string'' toString(options)``: Retorna o número em forma de texto local.
-		|Valor|Descrição|
-		|bytes|Retorna o valor em bytes.|
-		|significant|Retorna o número com a quantidade de dígitos significativos definida.|
-		|decimal|Retorna o número com a quantidade de casas decimais definida.|
-		|integer|Retorna o número com a quantidade de dígitos inteiros definida.|
-		|percent|Retorna o número em notação percentual com a quantidade de casas decimais definida.|
-		|unit|Retorna o número com a unidade de medida definida.|
-		|scientific|Retorna o número em notação científica com a quantidade de casas decimais definida.|
-		|engineering|Retorna o número em notação de engenharia com a quantidade de casas decimais definida.|
-		|compact|Retorna o número em notação compacta longa.|
-		|compact|Retorna o número em notação compacta curta.|
-		|currency|Retorna o número em notação monetária.|
-		|shortCurrency|Retorna o número em notação monetária curta.|
-		|longCurrency|Retorna o número em notação monetária longa.|
-		|frac|Retorna o número em forma de fração aproximado pela quantidade de casas decimais definida.|
-
-
-		**/
-		toLocaleString: {
-			value: function() {
-				const opt = this.options;
-				const cfg = {
-					significant: {digits: opt.digits},
-					decimal:     {digits: opt.digits},
-					integer:     {digits: opt.digits},
-					percent:     {digits: opt.digits},
-					scientific:  {digits: opt.digits},
-					engineering: {digits: opt.digits},
-					unit:        {digits: opt.digits, code: opt.unit, display: opt.display},
-					compact:     {display: opt.display},
-					currency:    {display: opt.display, code: opt.currency},
-				};
-				if (opt.type in cfg) {
-					cfg[opt.type].locale = opt.locale;
-					return this._main.notation(opt.type, cfg[opt.type]);
-				}
-				switch(opt.type) {
-					case "bytes":         return this._main.bytes;
-					case "bin":           return this.valueOf().toString(2);
-					case "hex":           return this.valueOf().toString(16);
-					case "dec":           return this.valueOf().toString(10);
-					case "locale":        return this._main.toLocaleString();
-					case "frac":          return this._main.frac(this.digits);
-				}
-				return this._main.toString();
-			}
-		},
+		/**. ``''number'' fixed(''integer'' length, ''boolean'' round)``: Abrevia o número para as casas decimais (ver __Number).**/
+		fixed: {value: function(lenght, round) {return this._main.fixed(lenght, round);}},
+		/**. ``''string'' toString()``: Funciona como o método nativo.**/
+		toString: {value: function(type) {return this._main.value.toString(type);}},
+		/**. ``''string'' toLocaleString(''object'' options)``: Ver __Number.**/
+		toLocaleString: {value: function(options) {return this._main.toLocaleString(options);}},
 	});
 
 /*----------------------------------------------------------------------------*/
