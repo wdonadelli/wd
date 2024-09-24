@@ -262,7 +262,7 @@ const wd = (function() {
 			title = title !== undefined && title !== null ? title : "";
 			const options = {
 				body: body !== undefined && body !== null ? body : "",
-				lang: __LANG.main,
+				lang: __LANG.list,
 			};
 			if (Notification.permission === "denied")
 				return null;
@@ -281,49 +281,58 @@ const wd = (function() {
 	/**###### ``**const** ''object'' __LANG``
 	Controla a linguagem local da biblioteca.**/
 	const __LANG = {
-		_re:       /^[a-z]{2,3}(\-[A-Z][a-z]{3})?(\-([A-Z]{2}|[0-9]{3}))?$/,
-		_user:       "",
-		_currency:   "USD",
-		_langMonths:  null,
-		_months:      null,
-		_langDays:    null,
-		_days:        null,
-		_langREDates: null,
-		_reDates:     null,
+		_re:          /^[a-z]{2,3}(\-[A-Z][a-z]{3})?(\-([A-Z]{2}|[0-9]{3}))?$/,
+		_nav:         navigator.language || navigator.browserLanguage || "",
+		_user:        "",
+		_currency:    "USD",
+		_langNumbers: [],
+		_numbers:     [],
+		_langMonths:  [],
+		_months:      [],
+		_langDays:    [],
+		_days:        [],
+		_langREDates: [],
+		_reDates:     {},
 
 		/**. ``''string'' currency``: Define ou retorna o código monetário definido pelo usuário.**/
 		get currency()  {return this._currency;},
 		set currency(x) {this._currency = String(x).trim();},
 		/**. ``''boolean'' test(''string'' x)``: Testa se o argumento ``x`` está no [formato de linguagem](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/lang).**/
-		test: function(x) {return this._re.test(String(x).trim());},
+		test: function(x) {return this._re.test(String(x));},
 		/**. ``''string'' node(''node'' elem)``: Retorna o atributo ''lang'' do elemento HTML ``elem`` ou seu ascendente ou vazio.**/
 		node: function(elem) {
+			let lang = "";
 			if (elem instanceof HTMLElement) {
-				while (elem !== null) {
-					let value = String(elem.lang).trim();
-					if (this.test(value)) return value;
+				while (elem !== null && lang === "") {
+					lang = String(elem.lang).replace(/\s+/g, " ").trim();
 					elem = elem.parentElement;
 				}
 			}
-			return "";
+			return lang;
 		},
-		/**. ``''string'' nav``: Retorna a linguagem definida pelo navegador.**/
-		get nav() {return navigator.language || navigator.browserLanguage || "";},
+		/**. ``''string'' std``: Retorna a linguagem padrão "en-US".**/
+		get std() {return "en-US";},
+		/**. ``''string'' nav``: Retorna a linguagem definida pelo navegador ou vazio.**/
+		get nav() {return String(this._nav).replace(/\s+/, " ").trim();},
 		/**. ``''string'' html``: Retorna a linguagem definida no elemento ''body'' ou ''html''.**/
 		get html() {return this.node(document.body);},
-		/**. ``''string'' user``: Define ou retorna a linguagem definida pelo usuário.**/
-		get user()  {return this.test(this._user) ? this._user : "";},
-		set user(x) {this._user = String(x).trim();},
-		/**. ``''string'' main``: Retorna a linguagem definida pelo usuário, no HTML ou pela navegador.**/
-		get main() {return this.user || this. html || this.nav || "en-US";},
+		/**. ``''string'' user``: Define ou retorna a linguagens definidas pelo usuário (separação por espaço em branco).**/
+		get user()  {return this._user;},
+		set user(x) {this._user = String(x).replace(/\s+/g, " ").trim();},
+		/**. ``''string'' main``: Retorna a linguagem principal definida pelo usuário, HTML ou navegador.**/
+		get main() {return this.list[0];},
 		/**. ``''string'' list``: Retorna uma lista de preferências de linguagem (usuário, HTML, navegador ou padrão).**/
 		get list() {
-			const data = [];
-			if (this.user !== "") data.push(this.user);
-			if (this.html !== "") data.push(this.html);
-			if (this.nav  !== "") data.push(this.nav);
-			data.push("en-US");
-			return data;
+			const list = [this.user, this.html, this.nav, this.std].join(" ").split(" ");
+			const self = this;
+			return list.filter(function(v,i,a) {return self.test(v);})
+		},
+		/**. ``''boolean'' compare(''array'' base, ''array'' test)``: Retorna verdadeiro se os valores dos arrays informados nos argumentos forem idênticos.**/
+		compare: function(base, test) {
+			if (base.length !== test.length) return false;
+			for (let i = 0; i < base.length; i++)
+				if (base[i] !== test[i]) return false;
+			return true;
 		},
 		/**. ``''array'' months``: Retorna uma lista de objetos contendo informações sobre os meses:
 		|Nome|Descrição|
@@ -332,12 +341,11 @@ const wd = (function() {
 		|long|Nome do mês (MMMM)|
 		|short|Abreviação do mês (MMM)|**/
 		get months() {
-			if (this._langMonths === this.main) return this._months;
+			const lang = this.list;
+			if (this.compare(lang, this._langMonths)) return this._months;
 			const date = new Date(1970, 0, 1, 12, 0, 0, 0);
 			const data = [];
-
-			//FIXME arrumar isso para lista de options
-			const lang = this.main;
+			//const lang = this.main;
 			let long, short, index, value;
 			for (let i = 0; i < 12; i++) {
 				date.setMonth(i);
@@ -349,7 +357,7 @@ const wd = (function() {
 			}
 			this._langMonths = lang;
 			this._months     = data;
-			return this.months;
+			return this._months;
 		},
 		/**. ``''array'' days``: Retorna uma lista de objetos contendo informações sobre os dias:
 		|Nome|Descrição|
@@ -358,13 +366,10 @@ const wd = (function() {
 		|long|Nome do dia (DDDD)|
 		|short|Abreviação do dia (DDD)|**/
 		get days() {
-			if (this._langDays === this.main) return this._days;
+			const lang = this.list;
+			if (this.compare(lang, this._langDays)) return this._days;
 			const date = new Date(1970, 0, 1, 12, 0, 0, 0);
 			const data = [];
-
-
-			//FIXME arrumar isso para lista de options
-			const lang = this.main;
 			let long, short, index, value;
 			for (let i = 1; i < 8; i++) {
 				date.setDate(i);
@@ -376,7 +381,7 @@ const wd = (function() {
 			}
 			this._langDays = lang;
 			this._days     = data;
-			return this.days;
+			return this._days;
 		},
 		/**. ``''object'' searchByName(''string'' type, ''string'' name)``: Retorna o objeto com as informações sobre o mês ou o dia da semana (``type``) em buca pelo nome (``name``).**/
 		searchByName: function(type, name) {
@@ -411,7 +416,8 @@ const wd = (function() {
 		},
 		/**. ``''object'' monthRegExp: Retorna um objeto contendo as expressões regulares para os formatos DMMMMYYYY, MMMMDYYYY e MMMMYYYY.**/
 		get monthRegExp() {
-			if (this._langREDates === this.main) return this._reDates;
+			const lang = this.list;
+			if (this.compare(lang, this._langREDates)) return this._reDates;
 			const data = [];
 			const day  = "(0?[1-9]|[12]\\d|3[01])";
 			const year = "([-+]?\\d{3}\\d+)";
@@ -421,19 +427,25 @@ const wd = (function() {
 				data.push(value.short.replace(/(\W)/g, "\\$1"));
 			}
 			const month = "(" + data.join("|") + ")";
-			this._langREDates = this.main;
+			this._langREDates = lang;
 			this._reDates = {
 				DMMMMYYYY: new RegExp("^" + ([day, month, year].join("\\ ")) + "$", "i"),
 				MMMMDYYYY: new RegExp("^" + ([month, day, year].join("\\ ")) + "$", "i"),
 				MMMMYYYY:  new RegExp("^" + ([month, year].join("[\\ /]"))   + "$", "i"),
 			}
-			return this.monthRegExp;
-		}
-
-
-
-
-
+			return this._reDates;
+		},
+		/**. ``''array'' numbers``: Retorna uma lista de números inteiros de zero a dez.**/
+		get numbers() {
+			const lang = this.list;
+			if (this.compare(lang, this._langNumbers)) return this._numbers;
+			const data = [];
+			for (let i = -9; i < 10; i++)
+				data.push({id: i, value: Number(i).toLocaleString(lang)});
+			this._langNumbers = lang;
+			this._numbers     = data;
+			return this._numbers;
+		},
 	};
 
 /*----------------------------------------------------------------------------*/
@@ -2173,7 +2185,7 @@ const wd = (function() {
 		},
 		/**. ``''number'' gcd(...)``: Retorna o máximo divisor comum de números inteiros comparando o número informado com aqueles passados como argumento.**/
 		gcd: {
-			value: function() {
+			get: function() {
 				const fact = this.factorization;
 				const gcd  = [1];
 				const args = [];
@@ -2263,7 +2275,7 @@ const wd = (function() {
 				return n;
 			}
 		},
-/**. ``''string'' toLocaleString(''object'' options)``: Retorna o número no formato local de acordo com as [configurações]<https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/NumberFormat> definidas no argumento ``options``, que possui as seguintes propriedades:
+		/**. ``''string'' toLocaleString(''object'' options)``: Retorna o número no formato local de acordo com as [configurações]<https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/NumberFormat> definidas no argumento ``options``, que possui as seguintes propriedades:
 |Nome|Tipo|Descrição|Obrigatório|
 |type|string|Tipo de notação a ser exibida|Sim|
 |value|string|Informação complementar ao tipo de notação|Depende do tipo de notação|
@@ -2272,6 +2284,7 @@ const wd = (function() {
 |decimal|integer|Quantidade de casas decimais (0-20)|Não|
 |integer|integer|Quantidade de números inteiros (1-21)|Não|
 |digits|integer|Quantidade de números significativos (0-20)|Não|
+|sign|string|Exibição do sinal (auto, always, exceptZero, negative, never)|Não|
 . Os seguintes tipos são possíveis&colon;
 |type|value|display|
 |unit|[unidade de medida]<https://tc39.es/proposal-unified-intl-numberformat/section6/locales-currencies-tz_proposed_out.html#sec-issanctionedsimpleunitidentifier>|short, long, narrow|
@@ -2287,7 +2300,6 @@ const wd = (function() {
 				const properties = {
 					currency: [
 						{attr: "style",           name: null,      values: ["currency"]},
-						//{attr: "signDisplay",     name: null,      values: ["exceptZero"]},
 						{attr: "currencyDisplay", name: "display", values: ["symbol", "narrowSymbol", "name", "code"]},
 						{attr: "currency",        name: "value",   values: []}
 					],
@@ -2311,7 +2323,6 @@ const wd = (function() {
 						{attr: "style",          name: null,      values: ["decimal"]},
 						{attr: "notation",       name: null,      values: ["compact"]},
 						{attr: "compactDisplay", name: "display", values: ["short", "long"]},
-
 					],
 					decimal: [
 						{attr: "style",    name: null, values: ["decimal"]},
@@ -2322,6 +2333,7 @@ const wd = (function() {
 				const intList = new Array(22);
 				for (let i = 0; i < intList.length; i++) intList[i] = i;
 				const optional = [
+					{attr: "signDisplay",              name: "sign",    values: ["auto", "always", "exceptZero", "negative", "never"]},
 					{attr: "minimumFractionDigits",    name: "decimal", values: intList.slice(0,21)},
 					{attr: "maximumFractionDigits",    name: "decimal", values: intList.slice(0,21)},
 					{attr: "minimumIntegerDigits",     name: "integer", values: intList.slice(1,22)},
@@ -7157,8 +7169,12 @@ const wd = (function() {
 		prime: {get: async function() {return this._main.prime;}},
 		/**. ``''array'' primes``: Retorna uma lista de primos precedentes por meio de um Promise.**/
 		primes: {get: async function() {return this._main.primes;}},
+		/**. ``''number'' factorization``: Retorna a fatorização do número por meio de um Promise.**/
+		factorization: {get: async function() {return this._main.factorization;}},
 		/**. ``''number'' fixed(''integer'' length, ''boolean'' round)``: Abrevia o número para as casas decimais (ver __Number).**/
 		fixed: {value: function(lenght, round) {return this._main.fixed(lenght, round);}},
+		/**. ``''string'' fraction``: Retorna o número em forma de fração.**/
+		fraction: {get: function() {return this._main.frac;}},
 		/**. ``''string'' toString()``: Funciona como o método nativo.**/
 		toString: {value: function(type) {return this._main.value.toString(type);}},
 		/**. ``''string'' toLocaleString(''object'' options)``: Ver __Number.**/
@@ -7863,9 +7879,9 @@ const wd = (function() {
 		device:  {get: function() {return __DEVICE.device;}},
 		/**. ``''object'' today``: Retorna o objeto do tipo data com o valor atual.**/
 		already: {get: function() {return WD(__DateTime().toString());}},
-		/**. ``''string'' lang``: Define ou retorna a linguagem local para uso pela biblioteca.**/
+		/**. ``''string'' lang``: Define ou retorna a lista de linguagem em ordem de preferência da biblioteca.**/
 		lang: {
-			get: function()  {return __LANG.main;},
+			get: function()  {return __LANG.list.join(" ");},
 			set: function(x) {__LANG.user = x;}
 		},
 		/**. ``''string'' currency``: Define ou retorna o código monetário para uso pela biblioteca.**/
