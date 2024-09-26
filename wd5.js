@@ -2000,6 +2000,7 @@ const wd = (function() {
 		get: {
 			value: function() {return this._data;}
 		},
+		//FIXME não funciona, tem que estar fora de um objeto
 		/**. ``''void'' mixin(''object'' supplier, ''array'' exceptions)``: Cópia as propriedades do __objeto__ definido em ``supplier`` para o __objeto__ de entrada, exceto aquelas propriedades listadas em ``exceptions``.**/
 		mixin: {
 			value: function(supplier, exceptions) {
@@ -2384,8 +2385,9 @@ const wd = (function() {
 		const chars = [];
 		for (let i of input) chars.push(i);
 		Object.defineProperties(this, {
-			_value: {value: input},
-			_chars: {value: chars}
+			_value:  {value: input},
+			_chars:  {value: chars},
+			_parser: {value: new __Parser(input)}
 		});
 	}
 
@@ -2397,7 +2399,7 @@ const wd = (function() {
 		toString: {value: function() {return this.clear(true, false);}},
 		/**. ``''string'' length``: Retorna a quantidade de caracteres.**/
 		length: {get: function() {return this._chars.length;}},
-		/**. ``''string'' length``: Retorna uma cópia da lista de caracteres.**/
+		/**. ``''string'' chars``: Retorna uma cópia da lista de caracteres.**/
 		chars: {get: function() {return this._chars.slice();}},
 		/**. ``''string'' upper``: Retorna caixa alta.**/
 		upper: {get: function() {return this.valueOf().toUpperCase();}},
@@ -2407,9 +2409,13 @@ const wd = (function() {
 		toggle: {
 			get: function() {
 				const list = this.chars;
-				list.forEach(function(v,i,a) {
-					a[i] = v === v.toUpperCase() ? v.toLowerCase() : v.toUpperCase();
-				});
+				let char, upper, lower;
+				for (let i = 0; i < list.length; i++) {
+					char  = list[i];
+					upper = char.toUpperCase();
+					lower = char.toLowerCase();
+					list[i] = char === upper ? lower : upper;
+				}
 				return list.join("");
 			}
 		},
@@ -2417,13 +2423,16 @@ const wd = (function() {
 		capitalize: {
 			get: function() {
 				const list = this.chars;
-				list.forEach(function(v,i,a) {
-					a[i] = i === 0 || (/\s/).test(a[i-1]) ? v.toUpperCase() : v.toLowerCase();
-				});
+				let char, space;
+				for (let i = 0; i < list.length; i++) {
+					char  = list[i];
+					space = i === 0 || (/\s/).test(list[i-1]);
+					list[i] = space ? char.toUpperCase() : char.toLowerCase()
+				}
 				return list.join("");
 			}
 		},
-		/**. ``''string'' clear(''boolean'' white=true, ''boolean'' accent=true)``: Limpa espaços desnecessários ou acentos. O argumento ``white`` define a limpeza de espaços extras e o argumento ``accent`` define a remoção dos acentos.**/
+		/**. ``''string'' clear(''boolean'' white, ''boolean'' accent)``: Limpa espaços desnecessários ou acentos. O argumento ``white``, se diferente de falso, limpa os espaços extras e o argumento ``accent``, se diferente de falso, remove os acentos.**/
 		clear: {
 			value: function(white, accent) {
 				let value = this.valueOf();
@@ -2537,19 +2546,9 @@ const wd = (function() {
 			}
 		},
 		/**. ``''matrix'' csv``: Retorna uma matriz (array) a partir de uma string CSV.**/
-		csv: {
-			get: function() {
-				const parser = __Parser(this._value);
-				return parser.csvTable.tableMatrix.matrixCSV.get();
-			}
-		},
+		csv: {get: function() {return this._parser.csvTable.tableMatrix.matrixCSV.get();}},
 		/**. ``''object'' json``: Retorna objeto JSON a partir de uma string nesse formato.**/
-		json: {
-			get: function() {
-				const parser = __Parser(this._value);
-				return parser.stringJSON.get();
-			}
-		},
+		json: {get: function() {return this._parser.stringJSON.get();}},
 	});
 
 /*----------------------------------------------------------------------------*/
@@ -7175,6 +7174,8 @@ const wd = (function() {
 		fixed: {value: function(lenght, round) {return this._main.fixed(lenght, round);}},
 		/**. ``''string'' fraction``: Retorna o número em forma de fração.**/
 		fraction: {get: function() {return this._main.frac;}},
+		/**. ``''string'' bytes``: Retorna o número em quantidade de bytes.**/
+		bytes: {get: function() {return this._main.bytes;}},
 		/**. ``''string'' toString()``: Funciona como o método nativo.**/
 		toString: {value: function(type) {return this._main.value.toString(type);}},
 		/**. ``''string'' toLocaleString(''object'' options)``: Ver __Number.**/
