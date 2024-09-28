@@ -2563,9 +2563,12 @@ const wd = (function() {
 		const close  = /\<\/?[a-z0-9.\-_:?!]+([^\>]+)?\>$/i;
 		const markup = start.test(text) && close.test(text);
 		Object.defineProperties(this, {
-			_input:  {value: input},
-			_markup: {value: markup},
-			_html:   {value: markup && (/\<\/html(\s[^>]+)?\>$/).test(text)},
+			/**. ``''string'' input``: código de entrada.**/
+			input:  {value: input},
+			/**. ``''boolean'' markup``: Informar se é código de marcação tipo XML/HTML.**/
+			markup: {value: markup},
+			/**. ``''boolean'' html``: Informar se é código de marcação tipo HTML.**/
+			html:   {value: markup && (/\<\/html(\s[^>]+)?\>$/).test(text)},
 			_code:   {value: null, writable: true},
 			_config: {value: {
 				string:   ["\"", "\"", "\'", "\'"],
@@ -2582,14 +2585,14 @@ const wd = (function() {
 					"[+\\-]?\\d+"
 				]}
 		});
-		this._lang("javascript");
+		this.webLang("javascript");
 		return;
 	}
 
 	Object.defineProperties(__Code.prototype, {
 		constructor: {value: __Code},
-		/**. ``''void'' _lang(''string'' x)``: Define os caracteres especiais de determinada linguagem, sendo o padrão "javascrip").**/
-		_lang: {
+		/**. ``''void'' webLang(''string'' x)``: Define os caracteres especiais de determinada linguagem, sendo o padrão "javascrip").**/
+		webLang: {
 			value: function(x) {
 				const codes = {
 					javascript: {
@@ -2638,8 +2641,8 @@ const wd = (function() {
 				return cfg;
 			}
 		},
-		/**. ``''array'' _cages()``: Retorna a lista de caracteres de abertura e fechamento de strings e comentários ordenadas da mais específica para a menos específica. Cada item da lista é um objeto cuja abertura está representada pela propriedade ''a'', e fechamento pela ''b'' e o tipo pela ''type''.**/
-		_cages: {
+		/**. ``''array'' cages()``: Retorna a lista de caracteres de abertura e fechamento de strings e comentários ordenadas da mais específica para a menos específica. Cada item da lista é um objeto cuja abertura está representada pela propriedade ''a'', e fechamento pela ''b'' e o tipo pela ''type''.**/
+		cages: {
 			value: function() {
 				const cage = [];
 				const cfg  = this.config();
@@ -2655,6 +2658,28 @@ const wd = (function() {
 				return cage;
 			}
 		},
+		/**. ``''boolean'' right(''integer'' i, ''string|regexp'' text))``: Verifica se o código a partir do índice ``i``, à direita, casa com o texto definido em ``text``.**/
+		right: {
+		value: function(i, text) {
+			const check = __Type(text);
+			const delta = check.regexp ? Infinity : String(text).length;
+			const value = this.input.substring(i, i+delta);
+			return check.regexp ? text.test(value) : String(text) === value;
+			}
+		},
+		/**. ``''boolean'' left(''integer'' i, ''string|regexp'' text))``: Verifica se o código a partir do índice ``i``, à esquerda, casa com o texto definido em ``text``.**/
+		left: {
+		value: function(i, text) {
+			const check = __Type(text);
+			const delta = check.regexp ? i : String(text).length;
+			const value = this.input.substring(i-delta, i);
+			return check.regexp ? text.test(value) : String(text) === value;
+			}
+		},
+
+
+
+
 		/**. ``''boolean'' _checkAround(''array'' array, ''integer'' item, ''string|regexp'' chars, ''integer'' direction)``: Verifica nas proximidades do ``item`` especificado em array, se casa com a informação presente em ``chars``. Se ``direction`` for negativo, a verificação ocorre para a esquerda, caso contrário, para a direita.**/
 		_checkAround: {
 			value: function(array, item, chars, direction) {
@@ -2670,6 +2695,10 @@ const wd = (function() {
 					return chars === text.substring(text.length - chars.length, Infinity);
 			}
 		},
+
+
+
+
 		/**. ``''string'' _tags(''string'' content, ''array'' list, ''string'' tag)``: Define e retorna o conteúdo de ``content`` agasalhando as ocorrências das strings presentes em ``list`` com a ``tag``defininda.**/
 		_tags: {
 			value: function(content, list, tag) {
@@ -2707,124 +2736,135 @@ const wd = (function() {
 				return content;
 			}
 		},
-		/**. ``''void'' _setMarkupLanguage()``: Define a codificação para linguagens de marcação genéricas.**/
-		_setMarkupLanguage: {
+		/**. ``''void'' markupLanguage()``: Define a codificação para linguagens de marcação genéricas.**/
+		markupLanguage: {
 			value: function() {
 				const tree = __Tree();
-				const code = this._input.split("");
-				const self = this;
-				let quote  = null;
+				const code = this.input.split("");
+				let  quote = null;
+				let linear = null;
+				let tag, val;
+
 				tree.pattern("wd-code-?");
 				tree.open("root").open("line").close().open("content");
 
-				code.forEach(function(v,i,a) {
-					const tag = tree.level;
-
-					if (v === "\n") {
-						tree.walkTo(1).add(v).open("line").close().backTo();
+				for (let i = 0; i < code.length; i++) {
+					tag = tree.level;
+					val = code[i];
+					/*-- Nova linha --*/
+					if (val === "\n") {
+						tree.walkTo(1).add(val).open("line").close().backTo();
 					}
+					/*-- Conteúdo --*/
 					else if (tag === "content") {
-						if (self._checkAround(a, i, "<!--", 1)) {
-							tree.close().open("comment", v);
-						} else if (self._checkAround(a, i, /^\<[!?]/, 1)) {
-							tree.close().open("doctype", v);
-						} else if (self._checkAround(a, i, /^\<\S/, 1)) {
-							tree.close().open("tag", v);
-						} else {
-							tree.add(v);
+						if (this.right(i, "<!--")) { /*-- abrir comentário --*/
+							tree.close().open("comment", val);
+						} else if (this.right(i, /^\<[!?]/)) { /*-- abrir cabeçalho --*/
+							tree.close().open("doctype", val);
+						} else if (this.right(i, /^\<\S/)) { /*-- abrir tag normal e checar se é tag especial (script/style) --*/
+							if (this.right(i, /^\<(script|style)/i))
+								linear = this.right(i, /^\<script/i) ? "script" : "style";
+							tree.close().open("tag", val);
+						} else { /*-- definir texto --*/
+							tree.add(val);
 						}
 					}
+					/*-- Comentário aberto --*/
 					else if (tag === "comment") {
-						if (self._checkAround(a, i, "-->", -1)) {
-							tree.close(v).open("content");
-						}	else {
-							tree.add(v);
+						if (this.left(i, "-->")) { /*-- fechar comentário --*/
+							tree.close(val).open("content");
+						}	else { /*-- definir texto --*/
+							tree.add(val);
 						}
 					}
+					/*-- Tag aberta --*/
 					else if (tag === "tag" || tag === "doctype") {
-						if (v === ">") {
-							tree.close(v).open("content");
-						} else if ((/\s/).test(v)) {
-							tree.open("attribute", v);
-						} else {
-							tree.add(v);
+						if (val === ">") { /*-- fechar tag normal e/ou abrir tag especial (script/style) --*/
+							if (linear === "script" || linear === "style")
+								tree.add(val).close().open("tag-"+linear);
+							else
+								tree.close(val).open("content");
+						} else if ((/\s/).test(val)) { /*-- abrir atributo --*/
+							tree.open("attribute", val);
+						} else { /*-- definir texto --*/
+							tree.add(val);
 						}
 					}
+					/*-- Nome do atributo --*/
 					else if (tag === "attribute") {
-						if (quote === null && (/['"]/).test(v)) {
-							tree.open("value", v);
-							quote = v;
-						} else if (self._checkAround(a, i, /^[\/\?]\>//*"/>"*/, 1)) {
-							tree.close().add(v);
-						} else if (v === ">") {
-							tree.close().close(v).open("content");
-						} else {
-							tree.add(v);
+						if (quote === null && (/['"]/).test(val)) { /*-- abrir valor do atributo conforme quote --*/
+							tree.open("value", val);
+							quote = val;
+						} else if (this.right(i, /^[\/\?]\>/)) { /*-- fechar atributo --*/
+							tree.close().add(val);
+						} else if (val === ">") { /*-- fechar atributo e tag --*/
+							tree.close().close(val).open("content");
+						} else { /*-- definir texto --*/
+							tree.add(val);
 						}
 					}
+					/*-- Valor do atributo --*/
 					else if (tag === "value") {
-						if (quote === v && a[i-1] !== "\\") {
-							tree.close(v);
+						if (quote === val && code[i-1] !== "\\") { /*-- fechar valor do atributo --*/
+							tree.close(val);
 							quote = null;
-						} else {
-							tree.add(v);
+						} else { /*-- definir texto --*/
+							tree.add(val);
 						}
 					}
-					else {
-						tree.add(v);
+					/*-- Tag especiais (script/style) --*/
+					else if (tag === "tag-script" || tag === "tag-style") {
+						//FIXME adicionar controle de aspas "</script" pode fechar a tag
+
+						if (this.right(i, /^\<\/(script|style)/i)) { /*-- fechar tag especial e abrir tag normal --*/
+							linear = null;
+							tree.close().open("tag").add(val);
+						} else { /*-- definir texto --*/
+							tree.add(val);
+						}
 					}
-					return;
-				});
+					/*-- Valores diversos --*/
+					else {
+						tree.add(val);
+					}
+				}
 				tree.finish();
 
-				/* configurando script e style */
-				let   open = null;
-				let   text = [];
-				let   html = [];
-				const re   = /^\/?(script|style)/;
-				const div = document.createElement("DIV");
-				div.innerHTML = tree.valueOf();
-				if (this._html) {
-					const query = div.querySelectorAll("wd-code-root > *");
-					for (let e of query) {
-						let tag  = e.nodeName.toLowerCase();
-						let type = e.innerText.replace(/^\<([^\s\>]+).+/, "$1").toLowerCase();
-						if (tag === "wd-code-tag") {
-							if (open === null && re.test(type)) {
-								open = type;
-								continue;
-							}
-							else if (open !== null && re.test(type) && type[0] === "/") {
-								let root  = document.createElement("wd-code-" + open);
-								let code  = __Code(text.join(""));
-								code._lang(open === "script" ? "javascript" : "css");
-								let inner = code.valueOf();
-								inner = inner.replace(/\<\/?wd\-code\-root\>/gim, "");
-								inner = inner.replace(/\<\/?wd\-code\-line\>/i, "");
-								root.innerHTML = inner;
-								e.parentElement.insertBefore(root, e);
-								text = [];
-								open = null;
-							}
-						}
-						else if (open !== null) {
-							html.push(e);
-							text.push(tag === "br" ? "\n" : e.innerText);
+				/*-- Transformando código em HTML --*/
+				const elem = document.createElement("code");
+				elem.innerHTML = tree.valueOf();
+
+				/*-- Acertando script e style em caso de HTML --*/
+				if (this.html) {
+					const webLang = {
+						javascript: elem.querySelectorAll("wd-code-tag-script"),
+						css: elem.querySelectorAll("wd-code-tag-style")
+					}
+					const reline = /^\<\/?wd\-code\-line\>/i;
+					let temp, data, line, target;
+
+					for (let lang in webLang) {
+						target = webLang[lang];
+						for (let i = 0; i < target.length; i++) {
+							line = reline.test(target[i].innerHTML);
+							temp = new __Code(target[i].innerText);
+							temp.webLang(lang);
+							data = temp.valueOf();
+							target[i].innerHTML = data;
+							if (!line) target[i].querySelector("wd-code-line").remove();
 						}
 					}
-					for (let i of html) i.remove();
 				}
-
 				/* definindo código completo */
-				this._code = div.innerHTML;
+				this._code = elem.innerHTML;
 			}
 		},
-		/**. ``''void'' _setLinearLanguage()``: Define a codificação para linguagens lineares genéricas.**/
-		_setLinearLanguage: {
+		/**. ``''void'' linearLanguage()``: Define a codificação para linguagens lineares genéricas.**/
+		linearLanguage: {
 			value: function() {
 				const tree = __Tree();
-				const code = this._input.split("");
-				const cage = this._cages();
+				const code = this.input.split("");
+				const cage = this.cages();
 				const cfg  = this.config();
 				const self = this;
 				let  quote = null;
@@ -2912,10 +2952,10 @@ const wd = (function() {
 		valueOf: {
 			value: function() {
 				if (this._code === null) {
-					if (this._markup)
-						this._setMarkupLanguage();
+					if (this.markup)
+						this.markupLanguage();
 					else
-						this._setLinearLanguage();
+						this.linearLanguage();
 				}
 				return  this._code;
 			}
@@ -2923,7 +2963,7 @@ const wd = (function() {
 		/**. ``''string'' toString()``: Retorna o código definido ao instanciar o objeto (``Input``).**/
 		toString: {
 			value: function() {
-				return this._input;
+				return this.input;
 			}
 		},
 	});
