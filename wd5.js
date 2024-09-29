@@ -558,38 +558,39 @@ const wd = (function() {
 
 
 
-		"wd-mark {background-color: rgba(154,205,50,0.7); display: inline; border-radius: 0.2em;}",
+		"wdtag-mark {background-color: rgba(154,205,50,0.7); display: inline; border-radius: 0.2em;}",
 
 
 
 		"/*-- CODE SECTION --*/",
-		"[data-wd-code] {display: block;}",
-		"[data-wd-code] {padding: 0.3em 0.3em 0.3em 3em; overflow: auto;}",
-		"[data-wd-code] {border-radius: 0.5em; border: 1px solid black;}",
-		"[data-wd-code] {font-family: \"Courier New\"; font-size: 14px; white-space: pre-wrap;}",
-		"[data-wd-code] {text-decoration: none; text-indent: 0;}",
-		"[data-wd-code] {font-style: normal; font-weight: normal;}",
-		"[data-wd-code] {color: yellow; background-color: black;}",
-		//data-wd-code deve ser igual a wd-code-root, se tirarem o dataset
+		"wdtag-root   {display: block;}",
+		"wdtag-root   {padding: 0.3em 0.3em 0.3em 3em; overflow: auto;}",
+		"wdtag-root   {border-radius: 0.5em; border: 1px solid black;}",
+		"wdtag-root   {font-family: \"Courier New\"; font-size: 14px; white-space: pre-wrap;}",
+		"wdtag-root   {text-decoration: none; text-indent: 0;}",
+		"wdtag-root   {font-style: normal; font-weight: normal;}",
+		"wdtag-root   {color: yellow; background-color: #eeeeee;}",
+		"wdtag-root   {counter-reset: wdcodelines;}",
+		"wdtag-root * {display: inline; position: static;}",
+		"wdtag-root wdtag-content     {color: orange;}",
+		"wdtag-root wdtag-comment     {color: DimGrey; font-style: italic;}",
+		"wdtag-root wdtag-doc         {color: MediumVioletRed; font-weight: bold;}",
+		"wdtag-root wdtag-tag         {color: DodgerBlue;}",
+		"wdtag-root wdtag-attribute   {color: darkgreen;}",
+		"wdtag-root wdtag-value       {color: violet;}",
+
+		"wdtag-root wdtag-script      {background-color: yellow;}",
+		"wdtag-root wdtag-style       {background-color: red;}",
 
 
-		"wd-code-root   {display: block; white-space: pre-wrap;}",
-		"wd-code-root   {counter-reset: wdcodelines;}",
-		"wd-code-root * {display: inline; position: static;}",
-		"wd-code-root wd-code-content     {color: inherit;}",
-		"wd-code-root wd-code-doctype     {color: MediumVioletRed;}",
-		"wd-code-root wd-code-comment     {color: DimGrey; font-style: italic;}",
-		"wd-code-root wd-code-tag         {color: DodgerBlue;}",
-		"wd-code-root wd-code-attribute   {color: darkgreen;}",
-		"wd-code-root wd-code-value       {color: violet;}",
-		"wd-code-root wd-code-reserved    {color: MediumVioletRed;}",
-		"wd-code-root wd-code-tick        {font-style: italic;}",
-		"wd-code-root wd-code-string      {color: darkgreen;}",
-		"wd-code-root wd-code-line        {counter-increment: wdcodelines;}",
-		"wd-code-root wd-code-line:before {content: counter(wdcodelines);}",
-		"wd-code-root wd-code-line:before {display: inline-block; position: relative;}",
-		"wd-code-root wd-code-line:before {margin: 0 0 0 -3em; padding-right: 0.5em; min-width: 3em;}",
-		"wd-code-root wd-code-line:before {color: Gray; text-align: right;}",
+		"wdtag-root wdtag-reserved    {color: MediumVioletRed;}",
+		"wdtag-root wdtag-tick        {font-style: italic;}",
+		"wdtag-root wdtag-string      {color: darkgreen;}",
+		"wdtag-root wdtag-line        {counter-increment: wdcodelines;}",
+		"wdtag-root wdtag-line:before {content: counter(wdcodelines);}",
+		"wdtag-root wdtag-line:before {display: inline-block; position: relative;}",
+		"wdtag-root wdtag-line:before {margin: 0 0 0 -3em; padding-right: 0.5em; min-width: 3em;}",
+		"wdtag-root wdtag-line:before {color: Gray; text-align: right;}",
 
 
 //TODO interessante https://developer.mozilla.org/en-US/docs/Web/CSS/::file-selector-button
@@ -1456,8 +1457,8 @@ const wd = (function() {
 
 	Object.defineProperties(__Tree.prototype, {
 		constructor: {value: __Tree},
-		/**. ``''string'' _char(''string'' x)``: Retorna o argumento adaptado para exibição HTML.**/
-		_char: {
+		/**. ``''string'' char(''string'' x)``: Retorna o argumento adaptado para exibição HTML.**/
+		char: {
 			value: function(x) {
 				if (x === undefined || x === null) return "";
 				const chars = String(x).split("");
@@ -1495,33 +1496,39 @@ const wd = (function() {
 		/**. ``''self'' add(''string'' chars)``: Adiciona caracteres à arvore.**/
 		add: {
 			value: function(chars) {
-				this._data.push(this._char(chars));
+				this._data.push(this.char(chars));
 				return this;
 			}
 		},
-		/**. ``''self'' open(''string'' name, ''string'' chars)``: Abre um novo nível (``nome``) e adiciona caracteres (``chars``) após abertura.**/
+		/**. ``''self'' open(''string'' name)``: Abre novo nível nomeado conforme argumento ``name``.**/
 		open: {
-			value: function(name, chars) {
+			value: function(name) {
 				const level = String(name).replace(/\s+/g, "").trim();
 				const elem  = this.pattern().replace(/\?+/g, level);
 				this._tree.push(level);
-				this._data.push("<"+elem+">"+this._char(chars));
+				this._data.push("<"+elem+">");
 				return this;
 			}
 		},
-		/**. ``''self'' close(''string'' chars)``: Fecha o último nível aberto e adiciona caracteres (``chars``) antes do fechamento.**/
+		/**. ``''self'' close()``: Fecha o último nível aberto.**/
 		close: {
-			value: function(chars) {
+			value: function() {
 				const elem = this.pattern().replace(/\?+/g, this.level);
-				this._data.push(this._char(chars)+"</"+elem+">");
+				this._data.push("</"+elem+">");
 				this._tree.pop();
 				return this;
+			}
+		},
+		/**. ``''self'' append(''string'' name, string'' chars)``: Aplica o método ``open`` e ``close`` em sequência inserido o conteúdo de ``chars``.**/
+		append: {
+			value: function(name, chars) {
+				return this.open(name).add(chars).close();
 			}
 		},
 		/**. ``''self'' finish()``: Fecha todos os níveis abertos.**/
 		finish: {
 			value: function() {
-				while (this.level !== null) this.close("");
+				while (this.level !== null) this.close();
 				return this;
 			}
 		},
@@ -1548,13 +1555,9 @@ const wd = (function() {
 			}
 		},
 		/**. ``''string'' toString()``: Retorna o resultado da árvore.**/
-		toString: {
-			value: function() {return this._data.join("");}
-		},
+		toString: {value: function() {return this._data.join("");}},
 		/**. ``''string'' valueOf()``: Como o método toString.**/
-		valueOf: {
-			value: function() {return this._data.join("");}
-		}
+		valueOf: {value: function() {return this._data.join("");}}
 	});
 
 /*----------------------------------------------------------------------------*/
@@ -2565,6 +2568,8 @@ const wd = (function() {
 		Object.defineProperties(this, {
 			/**. ``''string'' input``: código de entrada.**/
 			input:  {value: input},
+			/**. ``''array'' chars``: lista de caracteres.**/
+			chars:  {value: input.split("")},
 			/**. ``''boolean'' markup``: Informar se é código de marcação tipo XML/HTML.**/
 			markup: {value: markup},
 			/**. ``''boolean'' html``: Informar se é código de marcação tipo HTML.**/
@@ -2658,22 +2663,22 @@ const wd = (function() {
 				return cage;
 			}
 		},
-		/**. ``''boolean'' right(''integer'' i, ''string|regexp'' text))``: Verifica se o código a partir do índice ``i``, à direita, casa com o texto definido em ``text``.**/
+		/**. ``''boolean'' right(''integer'' i, ''string|regexp'' search))``: Verifica se o código a partir do índice ``i``, à direita, casa com o texto definido em ``search``.**/
 		right: {
-		value: function(i, text) {
-			const check = __Type(text);
-			const delta = check.regexp ? Infinity : String(text).length;
+		value: function(i, search) {
+			const check = __Type(search);
+			const delta = check.regexp ? Infinity : String(search).length;
 			const value = this.input.substring(i, i+delta);
-			return check.regexp ? text.test(value) : String(text) === value;
+			return check.regexp ? search.test(value) : String(search) === value;
 			}
 		},
-		/**. ``''boolean'' left(''integer'' i, ''string|regexp'' text))``: Verifica se o código a partir do índice ``i``, à esquerda, casa com o texto definido em ``text``.**/
+		/**. ``''boolean'' left(''integer'' i, ''string|regexp'' search))``: Verifica se o código a partir do índice ``i``, à esquerda, casa com o texto definido em ``search``.**/
 		left: {
-		value: function(i, text) {
-			const check = __Type(text);
-			const delta = check.regexp ? i : String(text).length;
-			const value = this.input.substring(i-delta, i);
-			return check.regexp ? text.test(value) : String(text) === value;
+		value: function(i, search) {
+			const check = __Type(search);
+			const delta = check.regexp ? 0 : String(search).length;
+			const value = this.input.substring(delta === 0 ? 0 : (i+1-delta), i+1);
+			return check.regexp ? search.test(value) : String(search) === value;
 			}
 		},
 
@@ -2739,92 +2744,139 @@ const wd = (function() {
 		/**. ``''void'' markupLanguage()``: Define a codificação para linguagens de marcação genéricas.**/
 		markupLanguage: {
 			value: function() {
-				const tree = __Tree();
-				const code = this.input.split("");
-				let  quote = null;
-				let linear = null;
+				const tree  = __Tree();
+				const code  = this.input.split("");
+				let quotes  = null;
+				let comment = null;
+				let script  = null;
+				let close   = false;
 				let tag, val;
-
-				tree.pattern("wd-code-?");
-				tree.open("root").open("line").close().open("content");
+				/*----------------------------------------------------------------------
+				document|<tag| attribute=|value
+				raiz
+					texto
+					comentário
+					tag
+						atributo
+							valor|aspas
+				----------------------------------------------------------------------*/
+				tree.pattern("wdtag-?");
+				tree.open("root").append("line");
 
 				for (let i = 0; i < code.length; i++) {
 					tag = tree.level;
 					val = code[i];
-					/*-- Nova linha --*/
-					if (val === "\n") {
-						tree.walkTo(1).add(val).open("line").close().backTo();
-					}
-					/*-- Conteúdo --*/
-					else if (tag === "content") {
-						if (this.right(i, "<!--")) { /*-- abrir comentário --*/
-							tree.close().open("comment", val);
-						} else if (this.right(i, /^\<[!?]/)) { /*-- abrir cabeçalho --*/
-							tree.close().open("doctype", val);
-						} else if (this.right(i, /^\<\S/)) { /*-- abrir tag normal e checar se é tag especial (script/style) --*/
-							if (this.right(i, /^\<(script|style)/i))
-								linear = this.right(i, /^\<script/i) ? "script" : "style";
-							tree.close().open("tag", val);
-						} else { /*-- definir texto --*/
-							tree.add(val);
-						}
-					}
-					/*-- Comentário aberto --*/
-					else if (tag === "comment") {
-						if (this.left(i, "-->")) { /*-- fechar comentário --*/
-							tree.close(val).open("content");
-						}	else { /*-- definir texto --*/
-							tree.add(val);
-						}
-					}
-					/*-- Tag aberta --*/
-					else if (tag === "tag" || tag === "doctype") {
-						if (val === ">") { /*-- fechar tag normal e/ou abrir tag especial (script/style) --*/
-							if (linear === "script" || linear === "style")
-								tree.add(val).close().open("tag-"+linear);
-							else
-								tree.close(val).open("content");
-						} else if ((/\s/).test(val)) { /*-- abrir atributo --*/
-							tree.open("attribute", val);
-						} else { /*-- definir texto --*/
-							tree.add(val);
-						}
-					}
-					/*-- Nome do atributo --*/
-					else if (tag === "attribute") {
-						if (quote === null && (/['"]/).test(val)) { /*-- abrir valor do atributo conforme quote --*/
-							tree.open("value", val);
-							quote = val;
-						} else if (this.right(i, /^[\/\?]\>/)) { /*-- fechar atributo --*/
-							tree.close().add(val);
-						} else if (val === ">") { /*-- fechar atributo e tag --*/
-							tree.close().close(val).open("content");
-						} else { /*-- definir texto --*/
-							tree.add(val);
-						}
-					}
-					/*-- Valor do atributo --*/
-					else if (tag === "value") {
-						if (quote === val && code[i-1] !== "\\") { /*-- fechar valor do atributo --*/
-							tree.close(val);
-							quote = null;
-						} else { /*-- definir texto --*/
-							tree.add(val);
-						}
-					}
-					/*-- Tag especiais (script/style) --*/
-					else if (tag === "tag-script" || tag === "tag-style") {
-						//FIXME adicionar controle de aspas "</script" pode fechar a tag
 
-						if (this.right(i, /^\<\/(script|style)/i)) { /*-- fechar tag especial e abrir tag normal --*/
-							linear = null;
-							tree.close().open("tag").add(val);
-						} else { /*-- definir texto --*/
+					if (val === "\n") {
+						tree.walkTo(1).add(val).append("line").backTo();
+					}
+					else if (tag === "root") {
+						if (this.right(i, "<!--")) {
+							tree.open("comment").add(val);
+						} else if (this.right(i, /^\<[!?]?\w/)) {
+							tree.open(this.right(i, /^\<[!?]/) ? "doc" : "tag").add(val);
+						} else {
 							tree.add(val);
 						}
 					}
-					/*-- Valores diversos --*/
-					else {
+					else if (tag === "comment") {
+						tree.add(val);
+						if (val === ">" && this.left(i, "-->"))
+							tree.close();
+					}
+					else if (tag === "tag" || tag === "doc") {
+						if (code[i-1] === "<") {
+							/*-- checar se é tag script ou style --*/
+							if (this.right(i, /^(script|style)(\s|\>)/i))
+								script = this.right(i, /^script/i) ? "script" : "style";
+							else
+								script = null;
+							/*-- checar se é tag de fechamento --*/
+							close = (/[!?/]/).test(val);
+						}
+						/*-- analisar dados --*/
+						if ((/\s/).test(val)) {
+							tree.open("attribute").add(val);
+						} else if (this.left(i, /[!?/]\>$/)) {
+								tree.add(val).close();
+						} else if (val === ">") {
+							if (close === true)
+								tree.add(val).close();
+							else if (script === null)
+								tree.add(val).open("content");
+							else
+								tree.add(val).open(script);
+						} else {
+							tree.add(val);
+						}
+					}
+					else if (tag === "content") {
+						if (this.right(i, "<!--")) {
+							tree.open("comment").add(val);
+						} else if (this.right(i, /^\<\w/)) {
+							tree.open("tag").add(val);
+						} else if (this.right(i, /^\<\/\w/)) {
+							tree.close().add(val);
+						} else {
+							tree.add(val);
+						}
+					}
+					else if (tag === "attribute") {
+						if (val === "=") {
+							tree.add(val).open("value");
+						} else if (this.right(i, /^[!?/]?\>/)) {
+							tree.close();
+							i--;
+						} else {
+							tree.add(val);
+						}
+					}
+					else if (tag === "value") {
+						if (this.left(i, /\=\s+$/)) {
+							tree.add(val)
+						} else if (quotes === null && (/\s/).test(val)) {
+							tree.add(val).close();
+						} else if ((/["'`]/).test(val) && quotes === null) {
+							quotes = val;
+							tree.add(val);
+						} else if (quotes === val && code[i-1] !== "\\") {
+							quotes = null;
+							tree.add(val).close();
+						} else {
+							tree.add(val);
+						}
+					}
+
+
+					else if (tag === "script" || tag === "style") {
+						if ((/['"`]/).test(val)) {
+							quotes = val;
+							tree.open("cages").add(val);
+						} else if (this.right(i, "/*")) {
+							quotes = "*/";
+							tree.open("cages").add(val);
+						} else if (tag === "script" && this.right(i, "//")) {
+							quotes = "\n";
+							tree.open("cages").add(val);
+						} else if (this.right(i, /^\<\/(script|style)/i)) {
+							tree.close();
+							i--;
+						} else {
+							tree.add(val);
+						}
+					}
+					else if (tag === "cages") {
+						if (quotes === "\n" && this.right(i+1, quotes)) {
+							quotes = null;
+							tree.add(val).close();
+						} else if (this.left(i, quotes)) {
+							quotes = null;
+							tree.add(val).close();
+						} else {
+							tree.add(val);
+						}
+					}
+					else { /*-- Valores diversos --*/
 						tree.add(val);
 					}
 				}
@@ -2837,8 +2889,8 @@ const wd = (function() {
 				/*-- Acertando script e style em caso de HTML --*/
 				if (this.html) {
 					const webLang = {
-						javascript: elem.querySelectorAll("wd-code-tag-script"),
-						css: elem.querySelectorAll("wd-code-tag-style")
+						javascript: elem.querySelectorAll("wdtag-tag-script"),
+						css: elem.querySelectorAll("wdtag-tag-style")
 					}
 					const reline = /^\<\/?wd\-code\-line\>/i;
 					let temp, data, line, target;
@@ -2851,7 +2903,7 @@ const wd = (function() {
 							temp.webLang(lang);
 							data = temp.valueOf();
 							target[i].innerHTML = data;
-							if (!line) target[i].querySelector("wd-code-line").remove();
+							if (!line) target[i].querySelector("wdtag-line").remove();
 						}
 					}
 				}
@@ -2870,7 +2922,7 @@ const wd = (function() {
 				let  quote = null;
 
 				/* configurando a árevore */
-				tree.pattern("wd-code-?");
+				tree.pattern("wdtag-?");
 				/* construindo a árvore */
 				tree.open("root").open("line").close().open("content");
 				code.forEach(function(v,i,a) {
@@ -2927,18 +2979,18 @@ const wd = (function() {
 				/* configurando outras tags */
 				const lt   = {a: /\</gm, b: "&lt;"};
 				const gt   = {a: /\>/gm, b: "&gt;"};
-				const tick = {a: /(\$\{)([^}]+)(\})/g, b: "$1<wd-code-tick>$2</wd-code-tick>$3"};
+				const tick = {a: /(\$\{)([^}]+)(\})/g, b: "$1<wdtag-tick>$2</wdtag-tick>$3"};
 				const div  = document.createElement("DIV");
 				div.innerHTML = tree.toString();
-				const query1 = div.querySelectorAll("wd-code-content");
+				const query1 = div.querySelectorAll("wdtag-content");
 				for (let e of query1) {
 					let content = e.innerText.replace(lt.a, lt.b).replace(gt.a, gt.b);
-					content = this._tags(content, cfg.reserved, "wd-code-reserved");
-					content = this._tags(content, cfg.value, "wd-code-value");
-					content = this._tags(content, this._numbers, "wd-code-value");
+					content = this._tags(content, cfg.reserved, "wdtag-reserved");
+					content = this._tags(content, cfg.value, "wdtag-value");
+					content = this._tags(content, this._numbers, "wdtag-value");
 					e.innerHTML = content;
 				}
-				const query2 = div.querySelectorAll("wd-code-string");
+				const query2 = div.querySelectorAll("wdtag-string");
 				for (let e of query2) {
 					let content = e.innerText.replace(lt.a, lt.b).replace(gt.a, gt.b);
 					content = content.replace(tick.a, tick.b);
@@ -4938,7 +4990,7 @@ const wd = (function() {
 					} else {
 						v.dataset.wdFilterInner = v.innerHTML;
 						node.show = true;
-						node.insertTag("wd-mark", index.init, index.last);
+						node.insertTag("wdtag-mark", index.init, index.last);
 					}
 				});
 				return;
