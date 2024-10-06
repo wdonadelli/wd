@@ -563,32 +563,31 @@ const wd = (function() {
 
 
 		"/*-- TAG SECTION --*/",
-		"wdtag-mark   {background-color: rgba(154,205,50,0.7); display: inline; border-radius: 0.2em;}",
+		"wdtag-mark   {background-color: rgba(154,205,50,0.7); display: inline; border-radius: 0.2em; color: #000000;}",
 		"wdtag-root   {display: block;}",
 		"wdtag-root   {padding: 0.3em 0.3em 0.3em 3em; overflow: auto;}",
-		"wdtag-root   {border-radius: 0.5em; border: 1px solid black;}",
-		"wdtag-root   {font-family: \"Courier New\"; font-size: 14px; white-space: pre-wrap;}",
+		"wdtag-root   {border-radius: 0.5em; 	border: 1px solid #000000;}",
+		"wdtag-root   {font-family: monospace; font-size: 14px; white-space: pre-wrap;}",
 		"wdtag-root   {text-decoration: none; text-indent: 0;}",
 		"wdtag-root   {font-style: normal; font-weight: normal;}",
-		"wdtag-root   {color: yellow; background-color: #eeeeee;}",
-		"wdtag-root * {display: inline; position: static;}",
+		"wdtag-root   {background-color: #262626;}",
+		"wdtag-root * {display: inline; position: static; padding: 0;}",
+		"wdtag-root * {font-weight: normal; font-style: normal; border: none; border-raius: none;}",
 		"wdtag-root                   {counter-reset: wdcodelines;}",
 		"wdtag-root wdtag-line        {counter-increment: wdcodelines;}",
 		"wdtag-root wdtag-line:before {content: counter(wdcodelines);}",
 		"wdtag-root wdtag-line:before {display: inline-block; position: relative;}",
 		"wdtag-root wdtag-line:before {margin: 0 0 0 -3em; padding-right: 0.5em; min-width: 3em;}",
-		"wdtag-root wdtag-line:before {color: Gray; text-align: right;}",
-		"wdtag-root wdtag-content     {color: orange;}",
-		"wdtag-root wdtag-comment     {color: DimGrey; font-style: italic;}",
-		"wdtag-root wdtag-doc         {color: MediumVioletRed; font-weight: bold;}",
-		"wdtag-root wdtag-tag         {color: DodgerBlue;}",
-		"wdtag-root wdtag-attribute   {color: darkgreen;}",
-		"wdtag-root wdtag-value       {color: violet;}",
-		"wdtag-root wdtag-script      {background-color: yellow;}",
-		"wdtag-root wdtag-style       {background-color: red;}",
-		"wdtag-root wdtag-word        {color: MediumVioletRed;}",
-		"wdtag-root wdtag-tick        {font-weight: bold;}",
-		"wdtag-root wdtag-string      {color: darkgreen;}",
+		"wdtag-root wdtag-line:before {color: #bcc118; text-align: right;}",
+		"wdtag-root wdtag-content     {color: #b3b3b3;}",
+		"wdtag-root wdtag-comment     {color: #8c8c8c; font-style: italic;}",
+		"wdtag-root wdtag-doc         {color: #df6d6d; font-weight: bold;}",
+		"wdtag-root wdtag-tag         {color: #418bff;}",
+		"wdtag-root wdtag-attribute   {color: #57ac57;}",
+		"wdtag-root wdtag-value       {color: #cf8ee1;}",
+		"wdtag-root wdtag-word        {color: #df6d6d; font-weight: bold;}",
+		"wdtag-root wdtag-tick        {font-weight: bold; color: #68cccc;}",
+		"wdtag-root wdtag-string      {color: #57ac57;}",
 
 
 
@@ -628,11 +627,10 @@ const wd = (function() {
 
 	const __TYPE = {
 		number: {
-			integer:    /^[+-]?\d+(e[+-]?\d+)?$/i,
-			decimal:    /^[+-]?(\d+)?\.\d+(e[+-]?\d+)?$/i,
-			percentage: /^[+-]?(\d+|(\d+)?\.\d+)(e[+-]?\d+)?\%$/i,
+			finite:     /^[+-]?(\.?\d+|\d+\.\d+)(e[+-]?\d+)?$/i,
+			percentage: /^[+-]?(\.?\d+|\d+\.\d+)(e[+-]?\d+)?\%$/i,
 			factorial:  /^\+?\d+\!$/,
-			infinity:   /^[+-]?\∞$/,
+			infinite:   /^[+-]?\∞$/,
 		},
 		date: {
 			YYYYMMDD:  /^([-+]?\d{3}\d+)\-(0[1-9]|1[0-2])\-(0[1-9]|[12]\d|3[01])$/,
@@ -721,26 +719,8 @@ const wd = (function() {
 		this._toString = String(input);
 		this._valueOf  = Number(input);
 	}
-	Object.defineProperties(__Type, {
-		/**. ``''string'' __Type.zeros(''integer'' value, ''integer'' lenght)``: Fixa o tamanho do inteiro ``value`` na quantidade definida em ``length`` completando com zeros à esquerda.**/
-		zeros: {
-			value: function(value, length) {
-				value   = Math.trunc(Number(value));
-				let str = value < 0 ? "-" : "";
-				let abs = Math.abs(value);
-				if (abs === 0) return String("0").repeat(length);
-				let i = 0;
-				while (++i < length) {
-					let pow10 = Math.pow(10, i);
-					let zeros = String("0").repeat(length - i);
-					if (abs < pow10) return str+zeros+abs;
-				}
-				return str+String(abs);
-			}
-		},
-	});
 
-	Object.defineProperties(__Type.prototype, {
+Object.defineProperties(__Type.prototype, {
 		constructor: {value: __Type},
 		/**. ``''boolean'' chars``: Checa se o valor é uma string.**/
 		chars: {
@@ -805,7 +785,7 @@ const wd = (function() {
 						value = Number(value.replace("%", ""))/100;
 						break;
 					}
-					case "infinity": {
+					case "infinite": {
 						value = value[0] === "-" ? -Infinity : +Infinity
 						break;
 					}
@@ -2585,7 +2565,7 @@ const wd = (function() {
 			/**. ``''boolean'' markup``: Informar se é código de marcação tipo XML/HTML.**/
 			markup: {value: markup},
 			/**. ``''boolean'' html``: Informar se é código de marcação tipo HTML.**/
-			html:   {value: markup && (/\<\/html(\s[^>]+)?\>$/).test(text)},
+			html:    {value: markup && (/\<\/html(\s[^>]+)?\>$/).test(text)},
 			_code:   {value: null, writable: true},
 			_config: {value: {
 				string:  ["\"", "\"", "\'", "\'"],
@@ -2594,14 +2574,13 @@ const wd = (function() {
 				value:   []
 			}},
 		});
-		this.webLang("javascript");
 		return;
 	}
 
 	Object.defineProperties(__Code.prototype, {
 		constructor: {value: __Code},
-		/**. ``''void'' webLang(''string'' x)``: Define os caracteres especiais de determinada linguagem, sendo o padrão "javascrip").**/
-		webLang: {
+		/**. ``''void'' setCodeConfig(''string'' x)``: Define a codificação em "javascript" ou "CSS".**/
+		setCodeConfig: {
 			value: function(x) {
 				const codes = {
 					javascript: {
@@ -2611,8 +2590,8 @@ const wd = (function() {
 						string: "' ' ` ` \" \""
 					},
 					css: {
-						reserved: "[\\w\\-]+\\([^)]+\\)",
-						value: "[\\w\\-]+\\:",
+						word: "[a-zA-Z0-9\\-]+\\:",
+						value: "none initial \\#[0-9a-fA-F]+ [a-zA-Z]+\\([^)]+\\)",
 						comment: "/* */",
 						string: "' ' \" \""
 					}
@@ -2647,6 +2626,12 @@ const wd = (function() {
 					}
 					for (let i in cfg) this._config[i] = cfg[i];
 				}
+				cfg.numbers = [
+					"[+\\-]?\\d+\\.\\d+[eE][+\\-]?\\d+",
+					"[+\\-]?\\.?\\d+[eE][+\\-]?\\d+",
+					"[+\\-]?\\d+\\.\\d+",
+					"[+\\-]?\\.?\\d+"
+				];
 				return cfg;
 			}
 		},
@@ -2685,9 +2670,10 @@ const wd = (function() {
 			return check.regexp ? search.test(value) : String(search) === value;
 			}
 		},
-		/**. ``''void'' markupLanguage()``: Define a codificação para linguagens de marcação genéricas.**/
-		markupLanguage: {
+		/**. ``''string'' markupCode()``: Retorna o código de __marcação__ codificado em HTML para renderização ou nulo.**/
+		markupCode: {
 			value: function() {
+				if (!this.markup) return null;
 				const tree  = __Tree();
 				const code  = this.input.split("");
 				let quotes  = null;
@@ -2815,37 +2801,37 @@ const wd = (function() {
 				tree.finish();
 
 				/*-- Transformando código em HTML --*/
-				const elem = document.createElement("code");
+				const elem = document.createElement("DIV");
 				elem.innerHTML = tree.valueOf();
 
 				/*-- Acertando script e style em caso de HTML --*/
 				if (this.html) {
-					const webLang = {
-						//javascript: elem.querySelectorAll("wdtag-script"),
-						//css:        elem.querySelectorAll("wdtag-style")
+					const web = {
+						javascript: elem.querySelectorAll("wdtag-script"),
+						css:        elem.querySelectorAll("wdtag-style")
 					}
 					const reline = /^\<\/?wdtag\-line\>/i;
 					let temp, data, line, target;
 
-					for (let lang in webLang) {
-						target = webLang[lang];
+					for (let lang in web) {
+						target = web[lang];
 						for (let i = 0; i < target.length; i++) {
 							line = reline.test(target[i].innerHTML);
 							temp = new __Code(target[i].innerText);
-							temp.webLang(lang);
-							data = temp.valueOf();
-							target[i].innerHTML = data;
-							//if (!line) target[i].querySelector("wdtag-line").remove();
+							temp.setCodeConfig(lang);
+							target[i].innerHTML = temp.toString();
+							if (!line && target[i].querySelector("wdtag-line") !== null)
+								target[i].querySelector("wdtag-line").remove();
 						}
 					}
 				}
-				/* definindo código completo */
-				this._code = elem.innerHTML;
+				return elem.innerHTML;
 			}
 		},
-		/**. ``''void'' linearLanguage()``: Define a codificação para linguagens lineares genéricas.**/
-		linearLanguage: {
+		/**. ``''string'' linearCode()``: Retorna o código codificado em HTML para renderização ou nulo.**/
+		linearCode: {
 			value: function() {
+				if (this.markup) return null;
 				const tree = __Tree();
 				const code = this.input.split("");
 				const cage = this.cages();
@@ -2897,17 +2883,15 @@ const wd = (function() {
 				tree.finish();
 
 				/*-- transformando em HTML --*/
-				const elem   = document.createElement("code");
+				const elem   = document.createElement("DIV");
 				elem.innerHTML = tree.valueOf();
 
 				/*-- Complementando o conteúdo --*/
 				let re1, re2, re3, re4, inner;
 				const query  = elem.querySelectorAll("wdtag-content");
 				const config = this.config();
-				const words  = "([\\(\\)\\[\\]\\{\\}\\,\\;]|\\s)";
-				const value  = "([\\(\\)\\[\\]\\{\\}\\,\\;\\!\\=\\|\\&\\+\\-\\%\\/\\*\\^\\?\\:]|\\s)";
-
-
+				const words  = "([()\\[\\]{},;]|\\s)";
+				const value  = "([()\\[\\]{},;!=|&+\\-%/*^?:]|\\s|\\&gt\\;|\\&lt\\;)";
 
 				for (let i = 0; i < query.length; i++) {
 					inner = query[i].innerText;
@@ -2915,97 +2899,69 @@ const wd = (function() {
 					inner = inner.replace(/\</gm, "&lt;");
 					inner = inner.replace(/\>/gm, "&gt;");
 					/*-- palavras reservadas --*/
-					for (let j = 0; j < config.word.length; j++) {console.log(inner,re1,re2,re3,re4);
-						val = config.word[j];
-						re1 = new RegExp(  "^"+val+"$"  , "gm");
-						re2 = new RegExp(  "^"+val+words, "gm");
-						re3 = new RegExp(words+val+"$"  , "gm");
-						re4 = new RegExp(words+val+words, "gm");
-						inner = inner.replace(re1, "<wdtag-word>"+val+"</wdtag-word>");
-						inner = inner.replace(re2, "<wdtag-word>"+val+"</wdtag-word>$1");
-						inner = inner.replace(re3, "$1<wdtag-word>"+val+"</wdtag-word>");
-						inner = inner.replace(re4, "$1<wdtag-word>"+val+"</wdtag-word>$2");
+					for (let j = 0; j < config.word.length; j++) {
+						val = "("+config.word[j]+")";
+						re1 = new RegExp(  "^"+val+"$"  , "g");
+						re2 = new RegExp(  "^"+val+words, "g");
+						re3 = new RegExp(words+val+"$"  , "g");
+						re4 = new RegExp(words+val+words, "g");
+						inner = inner.replace(re1, "<wdtag-word>$1</wdtag-word>");
+						inner = inner.replace(re2, "<wdtag-word>$1</wdtag-word>$2");
+						inner = inner.replace(re3, "$1<wdtag-word>$2</wdtag-word>");
+						inner = inner.replace(re4, "$1<wdtag-word>$2</wdtag-word>$3");
 					}
 					/*-- valores --*/
 					for (let j = 0; j < config.value.length; j++) {
-						val = config.value[j];
-						re1 = new RegExp(  "^"+val+"$"  , "gm");
-						re2 = new RegExp(  "^"+val+value, "gm");
-						re3 = new RegExp(value+val+"$"  , "gm");
-						re4 = new RegExp(value+val+value, "gm");
-						inner = inner.replace(re1, "<wdtag-value>"+val+"</wdtag-value>");
-						inner = inner.replace(re2, "<wdtag-value>"+val+"</wdtag-value>$1");
-						inner = inner.replace(re3, "$1<wdtag-value>"+val+"</wdtag-value>");
-						inner = inner.replace(re4, "$1<wdtag-value>"+val+"</wdtag-value>$2");
+						val = "("+config.value[j]+")";
+						re1 = new RegExp(  "^"+val+"$"  , "g");
+						re2 = new RegExp(  "^"+val+value, "g");
+						re3 = new RegExp(value+val+"$"  , "g");
+						re4 = new RegExp(value+val+value, "g");
+						inner = inner.replace(re1, "<wdtag-value>$1</wdtag-value>");
+						inner = inner.replace(re2, "<wdtag-value>$1</wdtag-value>$2");
+						inner = inner.replace(re3, "$1<wdtag-value>$2</wdtag-value>");
+						inner = inner.replace(re4, "$1<wdtag-value>$2</wdtag-value>$3");
 					}
 					/*-- Números --*/
-					const number = /([\+\-]?(\d+|\d+\.\d+|\.\d+)(e[\+\-]?\d+)?)/i;
-					/*[
-					"[+\\-]?\\d+\\.\\d+[eE][+\\-]?\\d+",
-					"[+\\-]?\\.\\d+[eE][+\\-]?\\d+",
-					"[+\\-]?\\d+[eE][+\\-]?\\d+",
-					"[+\\-]?\\d+\\.\\d+",
-					"[+\\-]?\\.\\d+",
-					"[+\\-]?\\d+"
-				]*/
+					for (let j = 0; j < config.numbers.length; j++) {
+						val = "("+config.numbers[j]+")";
+						re1 = new RegExp(  "^"+val+"$"  , "g");
+						re2 = new RegExp(  "^"+val+value, "g");
+						re3 = new RegExp(value+val+"$"  , "g");
+						re4 = new RegExp(value+val+value, "g");
+						inner = inner.replace(re1, "<wdtag-value>$1</wdtag-value>");
+						inner = inner.replace(re1, "<wdtag-value>$1</wdtag-value>");
+						inner = inner.replace(re2, "<wdtag-value>$1</wdtag-value>$2");
+						inner = inner.replace(re2, "<wdtag-value>$1</wdtag-value>$2");
+						inner = inner.replace(re3, "$1<wdtag-value>$2</wdtag-value>");
+						inner = inner.replace(re3, "$1<wdtag-value>$2</wdtag-value>");
+						inner = inner.replace(re4, "$1<wdtag-value>$2</wdtag-value>$3");
+						inner = inner.replace(re4, "$1<wdtag-value>$2</wdtag-value>$3");
+					}
 					/*-- escopos --*/
 					inner = inner.replace(/([\[\]{}()])/gm, "<wdtag-tick>$1</wdtag-tick>");
-
-
-
-
-
-
+					/*-- devolver valor --*/
 					query[i].innerHTML = inner;
 				}
-
-				document.body.appendChild(elem);
-				console.log(elem.innerHTML);
-
-
-
-
-				/* configurando outras tags * /
-				const lt   = {a: /\</gm, b: "&lt;"};
-				const gt   = {a: /\>/gm, b: "&gt;"};
-				const tick = {a: /(\$\{)([^}]+)(\})/g, b: "$1<wdtag-tick>$2</wdtag-tick>$3"};
-				const query1 = div.querySelectorAll("wdtag-content");
-				for (let e of query1) {
-					let content = e.innerText.replace(lt.a, lt.b).replace(gt.a, gt.b);
-					content = this._tags(content, cfg.reserved, "wdtag-word");
-					content = this._tags(content, cfg.value, "wdtag-value");
-					content = this._tags(content, this._numbers, "wdtag-value");
-					e.innerHTML = content;
-				}
-				const query2 = div.querySelectorAll("wdtag-string");
-				for (let e of query2) {
-					let content = e.innerText.replace(lt.a, lt.b).replace(gt.a, gt.b);
-					content = content.replace(tick.a, tick.b);
-					e.innerHTML = content;
-				}
-				/* definindo o código */
-				//this._code = div.innerHTML;
+				return elem.innerHTML;
 			}
 		},
-		/**. ``''string'' valueOf()``: Retorna o código formatado para HTML.**/
+		/**. ``''node'' valueOf()``: Retorna um elemento DIV com a codificação renderizada.**/
 		valueOf: {
 			value: function() {
-				if (this._code === null) {
-					if (this.markup)
-						this.markupLanguage();
-					else
-						this.linearLanguage();
-				}
-				return  this._code;
+				const elem = document.createElement("DIV");
+				elem.innerHTML = this.toString();
+				return elem;
 			}
 		},
-		/**. ``''string'' toString()``: Retorna o código definido ao instanciar o objeto (``Input``).**/
+		/**. ``''string'' toString()``: Retorna o código em codificação HTML.**/
 		toString: {
 			value: function() {
-				return this.input;
+				return this.markup ? this.markupCode() : this.linearCode();
 			}
 		},
 	});
+
 /*===========================================================================*/
 	/**### Data e Tempo
 	#### Ano
@@ -7139,20 +7095,19 @@ const wd = (function() {
 		type: {get: function() {return this._data.type;}},
 		/**. ``''boolean'' or(''string'' type...)``: Retorna verdadeiro se algum dos tipos informados no argumento ``type`` corresponder ao tipo de dado.**/
 		or: {
-			value: function() {
+			value: function(type) {
 				for (let i = 0; i < arguments.length; i++) {
-					let name = arguments[i];
-					if (name in this._data && this._data[name] === true) return true;
+					if (this._data[arguments[i]] === true) return true;
 				}
 				return false;
 			}
 		},
 		/**. ``''boolean'' is(''string'' type...)``: Retorna verdadeiro se todos os tipos informados no argumento ``type`` correspondem ao tipo de dado.**/
 		is: {
-			value: function() {
+			value: function(type) {
+				if (arguments.length < 2) return this.or(type);
 				for (let i = 0; i < arguments.length; i++) {
-					let name = arguments[i];
-					if (name in this._data && this._data[name] === false) return false;
+					if (this._data[arguments[i]] !== true) return false;
 				}
 				return true;
 			}
