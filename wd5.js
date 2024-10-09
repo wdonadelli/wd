@@ -3544,6 +3544,48 @@ Object.defineProperties(__Type.prototype, {
 		toString: {value: function() {return this.main.toString();}},
 		/**. ``''number'' valueOf``: Retorna so segundos desde 000-01-01T00:00:00.000.**/
 		valueOf:  {value: function() {return this.main.valueOf();}},
+
+		toDateObject: {
+			get: function() {
+				const sec  = Math.trunc(this.second);
+				const mill = 1000*Number("0."+this.main.ss.split(".")[1]);
+				const date = new Date();
+				date.setFullYear(2000);
+				date.setMonth(this.month-1);
+				date.setDate(this.day);
+				date.setHours(this.hour);
+				date.setMinutes(this.minute);
+				date.setSeconds(sec);
+				date.setMilliseconds(mill);
+				return date;
+			}
+		},
+
+
+
+
+
+		/**. ``''integer'' year``: Define ou retorna o ano.**/
+		toLocaleDateString: {
+			value: function() {
+				const date = this.toDateObject;
+				const intl = new Intl.DateTimeFormat(__LANG.list);
+				const part = intl.formatToParts(date);
+				const opt  = intl.resolvedOptions(date);
+				const form = intl.format(date);
+				console.log(part, opt, form);
+
+
+			}
+		},
+
+		toLocaleTimeString: {
+			value: function() {
+				return this.toDateObject.toLocaleTimeString(__LANG.list);
+			}
+		},
+
+
 		/**. ``''integer'' year``: Define ou retorna o ano.**/
 		year: {
 			get: function() {return this.main.year;},
