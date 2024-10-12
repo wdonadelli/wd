@@ -3252,7 +3252,6 @@ Object.defineProperties(__Type.prototype, {
 				return new __Time(y, (m > 12 ? 1 : m), d, this.hour, this.minute, this.second);
 			}
 		},
-
 		/**. ``''object'' walk(''integer'' value)``: Retorna uma instância do objeto caminhando o valor de segundos definidos no argumento.**/
 		walk: {
 			value: function(value) {
@@ -3280,7 +3279,7 @@ Object.defineProperties(__Type.prototype, {
 	});
 
 	Object.defineProperties(__Time, {
-		/**##### Tempo: Métodos e Propriedades Estáticos
+		/**##### Tempo:return [this.YYYYMMDD,this.hhmmss].join("T") Métodos e Propriedades Estáticos
 		. ``''array'' daysToYear(''integer'' value)``: Retorna o ano (item 0) a partir do número de dias (``value``).**/
 		daysToYear: {
 			value: function(value) {
@@ -3540,52 +3539,83 @@ Object.defineProperties(__Type.prototype, {
 
 	Object.defineProperties(__DateTime.prototype, {
 		constructor: {value: __DateTime},
-		/**. ``''string'' toString()``: Retorna o tempo no formato YYYY-MM-DDThh:mm:ss.sss.**/
-		toString: {value: function() {return this.main.toString();}},
-		/**. ``''number'' valueOf``: Retorna so segundos desde 000-01-01T00:00:00.000.**/
-		valueOf:  {value: function() {return this.main.valueOf();}},
-
+		/**. ``''object'' toDateObject``: Retorna um objeto nativo Date com o tempo fixado no ano 2000.**/
 		toDateObject: {
 			get: function() {
 				const sec  = Math.trunc(this.second);
 				const mill = 1000*Number("0."+this.main.ss.split(".")[1]);
-				const date = new Date();
-				date.setFullYear(2000);
-				date.setMonth(this.month-1);
-				date.setDate(this.day);
-				date.setHours(this.hour);
-				date.setMinutes(this.minute);
-				date.setSeconds(sec);
-				date.setMilliseconds(mill);
+				const utc  = Date.UTC(2000, this.month-1, this.day, this.hour, this.minute, sec, mill)
+				const date = new Date(utc);
 				return date;
 			}
 		},
-
-
-
-
-
-		/**. ``''integer'' year``: Define ou retorna o ano.**/
+		/**. ``''number'' valueOf()``: Retorna os segundos desde 0000-01-01T00:00:00.000.**/
+		valueOf: {value: function() {return this.main.timeElapsed;}},
+		/**. ``''number'' valueOfDate()``: Retorna os dias desde 0000-01-01.**/
+		valueOfDate: {value: function() {return this.main.daysElapsed;}},
+		/**. ``''number'' valueOfTime()``: Retorna os segundos desde 00:00:00.000.**/
+		valueOfTime: {value: function() {return this.main.time;}},
+		/**. ``''string'' toString()``: Retorna o tempo no formato YYYY-MM-DDThh:mm:ss.sss.**/
+		toString: {value: function() {return this.main.toString();}},
+		/**. ``''string'' toDateString()``: Retorna o tempo no formato YYYY-MM-DD.**/
+		toDateString: {value: function() {return this.main.YYYYMMDD;}},
+		/**. ``''string'' toString()``: Retorna o tempo no formato hh:mm:ss.sss.**/
+		toTimeString: {value: function() {return this.main.hhmmss;}},
+		/**. ``''string'' toLocaleString()``: Retorna o valor data/tempo no formato local.**/
+		toLocaleString: {
+			value: function() {
+				const date = this.toDateObject;
+				const iso  = date.toLocaleString(__LANG.list, {timeZone: "UTC"});
+				const from = date.toLocaleDateString(__LANG.list, {timeZone: "UTC"});
+				const to   = this.toLocaleDateString();
+				return iso.replace(from, to);
+			}
+		},
+		/**. ``''string'' toLocaleDateString()``: Retorna a data no formato local.**/
 		toLocaleDateString: {
 			value: function() {
 				const date = this.toDateObject;
-				const intl = new Intl.DateTimeFormat(__LANG.list);
-				const part = intl.formatToParts(date);
-				const opt  = intl.resolvedOptions(date);
-				const form = intl.format(date);
-				console.log(part, opt, form);
-
-
+				const year = new __Number(this.year).toLocaleString({group: false});
+				const intl = new Intl.DateTimeFormat(__LANG.list, {timeZone: "UTC"});
+				if ("formatToParts" in intl) {
+					const text = [];
+					const part = intl.formatToParts(date);
+					for (let i = 0; i < part.length; i++)
+						text.push(part[i].type === "year" ? year : part[i].value);
+					return text.join("");
+				} else {
+					const type = intl.resolvedOptions(date).year;
+					const yntl = new Intl.DateTimeFormat(__LANG.list, {timeZone: "UTC", year: type});
+					const from = yntl.format(date);
+					return intl.format(date).replace(from, year);
+				}
 			}
 		},
-
+		/**. ``''string'' toLocaleTimeString()``: Retorna o tempo no formato local.**/
 		toLocaleTimeString: {
 			value: function() {
-				return this.toDateObject.toLocaleTimeString(__LANG.list);
+				return this.toDateObject.toLocaleTimeString(__LANG.list, {timeZone: "UTC"});
 			}
 		},
-
-
+		/**. ``''string'' format(''string'' input, ''string'' type)``: Retorna notação de data/tempo pre-formatada a partir de codificação especificada no argumento ``input``. No argumento ``type`` é possível limitar os códigos permitidos para "date" ou "time".**/
+		format: {
+			value: function(input, type) {
+				if (typeof input !== "string") return "";
+				type = String(type).trim().toLowerCase();
+				const codes = this.main.codes;
+				const types = {
+					date: ["Y", "YY", "YYYY", "M", "MM", "MMM", "MMMM", "D", "DD", "DDD", "DDDD", "w", "ww"],
+					time: ["h", "hh", "h12", "m", "mm", "s", "ss", "ampm"],
+				}
+				const allow = type in types ? types[type] : types.date.slice().concat(types.time);
+				let re, code;
+				for (let i = 0; i < allow.length; i++) {
+					re   = new RegExp("\\{"+allow[i]+"\\}", "gm");
+					input = input.replace(re, codes[allow[i]]);
+				}
+				return input;
+			}
+		},
 		/**. ``''integer'' year``: Define ou retorna o ano.**/
 		year: {
 			get: function() {return this.main.year;},
@@ -7290,21 +7320,14 @@ Object.defineProperties(__Type.prototype, {
 		h12: {get: function() {return this._main.main.h12;}},
 		/**. ``''string'' h12``: Retorna AM ou PM.**/
 		meridiem: {get: function() {return this._main.main.meridiem;}},
-		/**. ``''integer'' valueOf()``: Retorna o tempo em segundos.**/
-		valueOf: {value: function() {return this._main.main.time;}},
-		/**. ``''string'' toString(''string'' input)``: Retorna notação de hora ou o pre-formata a partir de codificação específica definida no argumento opcional ``input``.**/
-		toString: {
-			value: function(input) {
-				if (typeof input !== "string") return this._main.main.hhmmss;
-				const codes = this._main.main.codes;
-				const allow = ["h", "hh", "h12", "m", "mm", "s", "ss", "ampm"];
-				for (let code of allow) {
-					let re = new RegExp("\\{"+code+"\\}", "gm");
-					input = input.replace(re, codes[code]);
-				}
-				return input;
-			}
-		},
+		/**. ``''integer'' valueOf()``: Retorna os segundos desde 00:00:00.000.**/
+		valueOf: {value: function() {return this._main.valueOfTime();}},
+		/**. ``''string'' toString()``: Retorna o tempo no formado hh:mm:ss.sss.**/
+		toString: {value: function() {return this._main.toTimeString();}},
+		/**. ``''string'' toLocaleString()``: Retorna o tempo no formato local.**/
+		toLocaleString: {value: function() {return this._main.toLocaleTimeString();}},
+		/**. ``''string'' format(''string'' input)``: Retorna notação de hora pre-formatada em ``input``.**/
+		format: {value: function(input) {return this._main.format(input, "time");}},
 	});
 
 /*----------------------------------------------------------------------------*/
@@ -7348,23 +7371,13 @@ Object.defineProperties(__Type.prototype, {
 		/**. ``''integer'' work``: Retorna o número de dias úteis até o momento.**/
 		work: {get: function()  {return this._main.main.work;}},
 		/**. ``''integer'' valueOf()``: Retorna o número de dias desde 0000-01-01.**/
-		valueOf: {value: function() {return this._main.main.daysElapsed;}},
-		/**. ``''string'' toString(''string'' input)``: Retorna notação de data ou a pre-formata a partir de codificação específica definida no argumento opcional ``input``.**/
-		toString: {
-			value: function(input) {
-				if (typeof input !== "string") return this._main.main.YYYYMMDD;
-				const codes = this._main.main.codes;
-				const allow = [
-					"Y", "YY", "YYYY", "M", "MM", "MMM", "MMMM", "D", "DD", "DDD", "DDDD",
-					"w", "ww"
-				];
-				for (let code of allow) {
-					let re = new RegExp("\\{"+code+"\\}", "gm");
-					input = input.replace(re, codes[code]);
-				}
-				return input;
-			}
-		},
+		valueOf: {value: function() {return this._main.valueOfDate();}},
+		/**. ``''string'' toString()``: Retorna a data no formato YYYY-MM-DD.**/
+		toString: {value: function() {return this._main.toDateString();}},
+		/**. ``''string'' toLocaleString()``: Retorna a data no formato local.**/
+		toLocaleString: {value: function() {return this._main.toLocaleDateString();}},
+		/**. ``''string'' format(''string'' input)``: Retorna notação de data pre-formatada em ``input``.**/
+		format: {value: function(input) {return this._main.format(input, "date");}},
 	});
 
 /*----------------------------------------------------------------------------*/
@@ -7380,33 +7393,30 @@ Object.defineProperties(__Type.prototype, {
 
 	WDdatetime.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDdatetime},
-		/**. ``''integer'' valueOf(''string'' option)``: Retorna o número de segundos desde 0000-01-01T00:00:00.000. Se o argumento opcional ``input`` for definido como "date", retornará os dias desde a origem e se for definido como "time", o valor de segundos do dia.**/
-		valueOf: {
-			value: function(input) {
-				const types = {
-					time: this._main.main.time,
-					date: this._main.main.daysElapsed,
-					datetime: this._main.main.timeElapsed
-				};
-				return input in types ? types[input] : types.datetime;
-			}
-		},
-		/**. ``''string'' toString(''string'' input)``: Retorna notação de data/tempo ou a pre-formata a partir de codificação específica definida no argumento opcional ``input``.**/
-		toString: {
-			value: function(input) {
-				if (typeof input !== "string") return this._main.main.toString();
-				const codes = this._main.main.codes;
-				for (let code in codes) {
-					let re = new RegExp("\\{"+code+"\\}", "gm");
-					input = input.replace(re, codes[code]);
-				}
-				return input;
-			}
-		},
+		/**. ``''integer'' valueOf()``: Retorna o número de segundos desde 0000-01-01T00:00:00.000..**/
+		valueOf:     {value: function() {return this._main.valueOf();}},
+		/**. ``''integer'' valueOfDate()``: Retorna o número de dias desde 0000-01-01.**/
+		valueOfDate: {value: function() {return this._main.valueOfDate();}},
+		/**. ``''integer'' valueOfTime()``: Retorna os segundos desde 00:00:00.000.**/
+		valueOfTime: {value: function() {return this._main.valueOfTime();}},
+		/**. ``''string'' toDateString()``: Retorna a data no formato YYYY-MM-DD.**/
+		toDateString: {value: function() {return this._main.toDateString();}},
+		/**. ``''string'' toTimeString()``: Retorna o tempo no formato hh:mm:ss.sss.**/
+		toTimeString: {value: function() {return this._main.toTimeString();}},
+		/**. ``''string'' toString()``: Retorna o valor data/tempo no formato YYYY-MM-DDThh:mm:ss.sss.**/
+		toString: {value: function() {return this._main.toString();}},
+		/**. ``''string'' toLocaleDateString()``: Retorna a data no formato local.**/
+		toLocaleDateString: {value: function() {return this._main.toLocaleDateString();}},
+		/**. ``''string'' toLocaleTimeString()``: Retorna o tempo no formato local.**/
+		toLocaleTimeString: {value: function() {return this._main.toLocaleTimeString();}},
+		/**. ``''string'' toLocaleString()``: Retorna o valor data/tempo no formato local.**/
+		toLocaleString: {value: function() {return this._main.toLocaleString();}},
+		/**. ``''string'' format(''string'' input)``: Retorna notação data/tempo pre-formatada em ``input``.**/
+		format: {value: function(input) {return this._main.format(input);}},
 	});
 
 	/*-- copiando propriedades de WDtime e WDdate */
-	const forget   = ["toString", "valueOf", "constructor"];
+	const forget   = ["toString", "valueOf", "constructor", "toLocaleString", "format"];
 	const timeProp = Object.getOwnPropertyNames(WDtime.prototype);
 	const dateProp = Object.getOwnPropertyNames(WDdate.prototype);
 	for (let prop of timeProp) {
@@ -7990,7 +8000,6 @@ Object.defineProperties(__Type.prototype, {
 			type:     {value: function(){return __Type.apply(null, Array.prototype.slice.call(arguments));}},
 			array:    {value: function(){return __Array.apply(null, Array.prototype.slice.call(arguments));}},
 			time:     {value: function(){return __DateTime.apply(null, Array.prototype.slice.call(arguments));}},
-			time:     {value: function(){return __Time.apply(null, Array.prototype.slice.call(arguments));}},
 			node:     {value: function(){return __Node.apply(null, Array.prototype.slice.call(arguments));}},
 			number:   {value: function(){return __Number.apply(null, Array.prototype.slice.call(arguments));}},
 			string:   {value: function(){return __String.apply(null, Array.prototype.slice.call(arguments));}},
