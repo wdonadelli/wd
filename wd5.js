@@ -2181,7 +2181,7 @@ Object.defineProperties(__Type.prototype, {
 		},
 		/**. ``''number'' gcd(...)``: Retorna o máximo divisor comum de números inteiros comparando o número informado com aqueles passados como argumento.**/
 		gcd: {
-			get: function() {
+			value: function() {
 				const fact = this.factorization;
 				const gcd  = [1];
 				const args = [];
@@ -2435,7 +2435,7 @@ Object.defineProperties(__Type.prototype, {
 					value = value.replace(/\s+/g, " ").trim();
 				if (accent !== false)
 					value = value.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-				return value;
+				return value.normalize();
 			}
 		},
 		/**. ``''string'' mask(''string'' model)``: Checa se a string casa com o formato de máscara definido no argumento ``model`` e a retorna. Se não casar, retorna uma string vazia. A máscara é definida com os seguintes manipuladores:
@@ -3768,8 +3768,7 @@ Object.defineProperties(__Type.prototype, {
 		only: {
 			value: function(type, keep, change) {
 				const list = [];
-				let i = -1;
-				while (++i < this.length) {
+				for (let i = 0; i < this.length; i++) {
 					let check = __Type(this._value[i]);
 					if (check[type] === true)
 						list.push(change === false ? this._value[i] : check.valueOf());
@@ -3779,7 +3778,7 @@ Object.defineProperties(__Type.prototype, {
 				return list;
 			}
 		},
-		/**. ``''array'' convert(''Function'' f, ''string'' type)``: Retorna uma lista com o resultado de ``f(x)`` ou ``null`` se algo falhar. O argumento ``f`` corresponde à função a ser aplicada aos itens da lista. O item da lista será o argumento da função cujo retorno substituirá o valor do item. O argumento opcional ``type`` informa o tipo do resultado esperado de acordo com o método ``&lowbar;&lowbar;Type`` que, se diferente, devolverá um valor nulo.**/
+		/**. ``''array'' convert(''Function'' f, ''string'' type)``: Retorna uma lista com o resultado de ``f(x)`` ou nulo se algo falhar. O argumento ``f`` corresponde à função a ser aplicada aos itens da lista. O item da lista será o argumento da função cujo retorno substituirá o valor do item. O argumento opcional ``type`` informa o tipo do resultado esperado de acordo com o método ``&lowbar;&lowbar;Type`` que, se diferente, devolverá um valor nulo.**/
 		convert: {
 			value: function(f, type) {
 				if (!__Type(f).function) return null;
@@ -3800,21 +3799,21 @@ Object.defineProperties(__Type.prototype, {
 				return list;
 			}
 		},
-		/**. ``''number'' min``: Retorna o menor número finito do conjunto de items da lista ou ``null`` em caso de vazio.**/
+		/**. ``''number'' min``: Retorna o menor número finito do conjunto de items da lista ou nulo em caso de vazio.**/
 		min: {
 			get: function() {
 				const list = this.only("finite");
 				return list.length === 0 ? null : Math.min.apply(null, list);
 			}
 		},
-		/**. ``''number'' max``:  Retorna o maior número finito do conjunto de items da lista ou ``null`` em caso de vazio.**/
+		/**. ``''number'' max``:  Retorna o maior número finito do conjunto de items da lista ou nulo em caso de vazio.**/
 		max: {
 			get: function() {
 				const list = this.only("finite");
 				return list.length === 0 ? null : Math.max.apply(null, list);
 			}
 		},
-		/**. ``''number'' sum``: Retorna a soma dos números finitos da lista ou ``null`` em caso de vazio.**/
+		/**. ``''number'' sum``: Retorna a soma dos números finitos da lista ou nulo em caso de vazio.**/
 		sum: {
 			get: function() {
 				const list = this.only("finite");
@@ -3823,7 +3822,7 @@ Object.defineProperties(__Type.prototype, {
 				return list.length === 0 ? null : sum;
 			}
 		},
-		/**. ``''number'' avg``: Retorna a média dos números finitos da lista ou ``null`` em caso de vazio.**/
+		/**. ``''number'' avg``: Retorna a média dos números finitos da lista ou nulo em caso de vazio.**/
 		avg: {
 			get: function() {
 				const list = this.only("finite");
@@ -3832,7 +3831,7 @@ Object.defineProperties(__Type.prototype, {
 				return list.length === 0 ? null : sum/list.length;
 			}
 		},
-		/**. ``''number'' med``: Retorna a mediana dos números finitos da lista ou ``null`` em caso de vazio.**/
+		/**. ``''number'' med``: Retorna a mediana dos números finitos da lista ou nulo em caso de vazio.**/
 		med: {
 			get: function() {
 				const list = this.only("finite");
@@ -3841,7 +3840,7 @@ Object.defineProperties(__Type.prototype, {
 				return l === 0 ? null : (l%2 === 0 ? (y[l/2]+y[(l/2)-1])/2 : y[(l-1)/2]);
 			}
 		},
-		/**. ``''number'' harm``: Retorna a média harmônica dos números finitos __diferentes de zero__ da lista ou ``null`` em caso de vazio.**/
+		/**. ``''number'' harm``: Retorna a média harmônica dos números finitos __diferentes de zero__ da lista ou nulo em caso de vazio.**/
 		harm: {
 			get: function() {
 				const list = this.only("finite");
@@ -3853,7 +3852,7 @@ Object.defineProperties(__Type.prototype, {
 				return len === 0 || sum === 0 ? null : len/sum;
 			}
 		},
-		/**. ``''number'' geo``: Retorna a média geométrica dos números finitos __positivos__ da lista ou ``null`` em caso de vazio.**/
+		/**. ``''number'' geo``: Retorna a média geométrica dos números finitos __positivos__ da lista ou nulo em caso de vazio.**/
 		geo: {
 			get: function() {
 				const list = this.only("finite");
@@ -3865,7 +3864,7 @@ Object.defineProperties(__Type.prototype, {
 				return len === 0 ? null : Math.pow(val, 1/len);
 			}
 		},
-		/**. ``''number'' gcd``: Retorna o máximo divisor comum dos números inteiros da lista ou ``null`` em caso de vazio.**/
+		/**. ``''number'' gcd``: Retorna o máximo divisor comum dos números inteiros da lista ou nulo em caso de vazio.**/
 		gcd: {
 			get: function() {
 				const list = this.only("integer");
@@ -3884,11 +3883,10 @@ Object.defineProperties(__Type.prototype, {
 		mode: {
 			get: function() {
 				const items = this.unique;
-				const count = new Array(items.length);
-				for (let i = 0; i < this._value.length; i++) {
-				  let index = items.indexOf(this._value[i]);
-				  count[index] = count[index] === undefined ? 1 : (count[index] + 1);
-				}
+				const count = [];
+				while (count.length !== items.length) count.push(0);
+				for (let i = 0; i < this._value.length; i++)
+				  count[items.indexOf(this._value[i])]++;
 				const max = Math.max.apply(null, count);
 				return items.filter(function(v,i,a) {return count[i] === max;});
 			}
@@ -3923,86 +3921,67 @@ Object.defineProperties(__Type.prototype, {
 		count: {
 			value: function(value) {return this.search(value).length;}
 		},
-		/**. ``''array'' sort(''boolean'' asc)``: Retorna a lista ordenada e organizada por grupos na seguinte sequência: número, tempo, data, datatempo, texto, booelano, nulo, nós, lista, objeto, função, expressão regular, indefinido e demais valores.
+		/**. ``''array'' sort(''boolean'' asc)``: Retorna a lista ordenada e organizada por grupos na seguinte sequência: número, tempo, data, datatempo, string, booleano, nulo, nós, lista, objeto, função, expressão regular, indefinido e demais valores.
 		. O argumento opcional ``asc`` define a classificação da lista. Se verdadeiro, ascendente; se falso, descendente; e, se omitido, inverterá a ordenação atual com prevalência da ordem ascendente.**/
 		sort: {
 			value: function(asc) {
-
-				//FIXME ver localCompare
-				//https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Global_Objects/String/localeCompare
-				const options  = {sensitive: "base", }
-				const collator = new Intl.Collator(__LANG.list, options);
-				console.log(collator.compare("a", "z"));
-				/*
-				A negative value if string1 comes before string2;
-        A positive value if string1 comes after string2;
-        0 if they are considered equal.
-
-        collator.resolvedOptions()
-        usedOptions.locale; // "de"
-        usedOptions.usage; // "sort"
-        usedOptions.sensitivity; // "base"
-        usedOptions.ignorePunctuation; // false
-        usedOptions.collation; // "default"
-        usedOptions.numeric; // false
-        */
-
-
-
-
-
-				let order = [
-					"boolean", "number", "time", "date", "datetime", "string", "null", "node",
-					"array", "object", "function", "regexp", "unknown", "undefined"
-				];
 				const data  = __Type(asc);
 				const array = this._value.slice();
+				let   order = [
+					"number", "time", "date", "datetime", "string", "boolean", "null", "node",
+					"array", "object", "function", "regexp", "undefined", "unknow"
+				];
 				asc = data.boolean ? data.value : null;
 				array.sort(function(a,b) {
 					let A = __Type(a);
 					let B = __Type(b);
-					/* comparação entre tipos diferentes */
+					/*-- comparação entre tipos diferentes --*/
 					if (A.type !== B.type) {
 						let typeA = order.indexOf(A.type);
 						let typeB = order.indexOf(B.type);
 						return typeA < typeB ? -1 : (typeA > typeB ? 1 : 0);
 					}
-					/* comparação entre tipos iguais */
+					/*-- comparação entre tipos iguais --*/
 					let avalue = a;
 					let bvalue = b;
+					/*-- nós HTML --*/
 					if (A.node) {
 						let node1 = a.textContent;
 						let node2 = b.textContent;
 						if (node1 === node2) return 0;
-						const list = __Array(node1, node2).sort(true);
+						const list = new __Array(node1, node2).sort(true);
 						return array[0] === node1 ? -1 : 1;
 					}
+					/*-- números e boleanos --*/
 					if (A.number || A.boolean) {
 						avalue = A.valueOf();
 						bvalue = B.valueOf();
-					} else if (A.date || A.time || A.datetime) {
+					}
+					/*-- data/tempo --*/
+					else if (A.date || A.time || A.datetime) {
 						avalue = __DateTime(A.value).valueOf();
 						bvalue = __DateTime(B.value).valueOf();
-					} else if (A.string) {
+					}
+					/*-- strings --*/
+					else if (A.string) {
 						if (A.empty || B.empty) return A.empty ? 1 : -1;
-						avalue = __String(a.toLowerCase()).clear().trim();
-						bvalue = __String(b.toLowerCase()).clear().trim();
+						avalue = __String(a.toLowerCase()).clear();
+						bvalue = __String(b.toLowerCase()).clear();
 					}
 					return avalue < bvalue ? -1 : (avalue > bvalue ? 1 : 0);
 				});
-				/* com asc definido */
-				if (asc === true)  return array;
-				if (asc === false) return array.reverse();
-				/* com asc não definido */
-				let i = -1;
-				while (++i < array.length)
+				/*-- retornando com ordem definida --*/
+				if (asc === false || asc === true)
+					return asc === true ? array : array.reverse();
+				/*-- retornando sem ordem definida --*/
+				for (let i = 0; i < array.length; i++)
 					if (array[i] !== this._value[i]) return array;
 				return array.reverse();
 			}
 		},
 		/**. ``''array'' order``: Retorna uma lista ordenada de forma crescente sem valores repetidos.**/
 		order: {
-			get: function() {return __Array(this.unique).sort();}
+			get: function() {return __Array(this.unique).sort(true);}
 		},
 		/**. ``''array'' add(''any''  ...)``: Adiciona itens (argumentos) ao fim da lista e a retorna.**/
 		add: {
@@ -4018,7 +3997,7 @@ Object.defineProperties(__Type.prototype, {
 				return this.valueOf();
 			}
 		},
-		/**. ``''array'' put(''any''  ...)``: Adiciona itens (argumentos) não existentes ao fim da lista e a retorna.**/
+		/**. ``''array'' put(''any''  ...)``: Adiciona itens (argumentos) __não existentes__ ao fim da lista e a retorna.**/
 		put: {
 			value: function() {
 				for (let i = 0; i < arguments.length; i++)
@@ -4034,8 +4013,7 @@ Object.defineProperties(__Type.prototype, {
 				return this.valueOf();
 			}
 		},
-		/**. ``''array'' replace(''any''  from, ''any''  to)``: Altera os valores da lista conforme especificado e a retorna.
-		. O argumento ``from`` definie o valor a ser encontrado e substituído na lista e o argumento ``to`` define seu novo valor.**/
+		/**. ``''array'' replace(''any''  from, ''any''  to)``: Altera os valores da lista conforme especificado e a retorna. O argumento ``from`` definie o valor a ser encontrado e substituído na lista e o argumento ``to`` define seu novo valor.**/
 		replace: {
 			value: function (from, to) {
 			  for (let i = 0; i < this._value.length; i++)
@@ -4052,7 +4030,7 @@ Object.defineProperties(__Type.prototype, {
 				return this.valueOf();
 			}
 		},
-		/**. ``''array'' toggle(''any''  ...)``: Remove, se existente, ou insere, se ausente, itens (argumentos) da lista e a retorna.**/
+		/**. ``''array'' toggle(''any''  ...)``: Remove, se existente, ou insere ao fim, se ausente, itens (argumentos) da lista e a retorna.**/
 		toggle: {
 			value: function() {
 				const tgl  = Array.prototype.slice.call(arguments);
@@ -4151,7 +4129,6 @@ Object.defineProperties(__Type.prototype, {
 					week:     {send: 1, mask: 1, check: 2, text: 0},
 					time:     {send: 1, mask: 1, check: 2, text: 0},
 					"datetime-local": {send: 1, mask: 1, check: 2, text: 0}
-
 				}
 			}
 		};
@@ -4652,31 +4629,38 @@ Object.defineProperties(__Type.prototype, {
 				let   xml  = false;
 				let   data = []
 				const load = [];
+				/*-- se for nó(s), capturar a lista --*/
 				if (check.node) {
 					data = check.value;
-				} else if (check.chars) {
+				}
+				/*-- se for HTML, capturar os filhos --*/
+				else if (check.chars) {
 					const re = /^\<body.+\<\/body\>$/;
 					if (!re.test(html.trim()))
 						html = "<body>"+html.trim()+"</body>";
 					const parser = new __Parser(html);
 					data = parser.stringHTML.get().body.children;
-				} else if (check.instanceOf("XMLDocument")) {
+				}
+				/*-- se for XML, capturar os filhos --*/
+				else if (check.instanceOf("XMLDocument")) {
 					xml  = true;
 					data = html.documentElement.children;
-				} else if (check.instanceOf("HTMLDocument") || check.instanceOf("Document")) {
+				}
+				/*-- se for document, capturar os filhos de body --*/
+				else if (check.instanceOf("HTMLDocument") || check.instanceOf("Document")) {
 					data = html.body.children;
 				}
-				/*-- transformar data em array --*/
+				/*-- migrar itens de data para o array load --*/
 				for (let i = 0; i < data.length; i++)
 					load.push(data[i]);
 				/*-- limpar nó --*/
 				while (this.node.childElementCount > 0)
 					this.node.firstElementChild.remove();
-				/*-- adicionar texto apenas --*/
+				/*-- adicionar texto: pai formulário ou se optado --*/
 				if (this.form || options.text === true) {
 					const text = [];
-					for (let v of load)
-						text.push(v.outerHTML);
+					for (let i = 0; i < load.length; i++)
+						text.push(load[i].outerHTML);
 					this.attribute("textContent", text.join("\n"));
 					return;
 				}
