@@ -3551,10 +3551,12 @@ Object.defineProperties(__Type.prototype, {
 		},
 		/**. ``''number'' valueOf()``: Retorna os segundos desde 0000-01-01T00:00:00.000.**/
 		valueOf: {value: function() {return this.main.timeElapsed;}},
-		/**. ``''number'' valueOfDate()``: Retorna os dias desde 0000-01-01.**/
+		/**. ``''integer'' valueOfDate()``: Retorna os dias desde 0000-01-01.**/
 		valueOfDate: {value: function() {return this.main.daysElapsed;}},
 		/**. ``''number'' valueOfTime()``: Retorna os segundos desde 00:00:00.000.**/
 		valueOfTime: {value: function() {return this.main.time;}},
+		/**. ``''number'' valueOfDays()``: Retorna os dias desde 0000-01-01 com o tempo como elemento decimal.**/
+		valueOfDays: {value: function() {return this.valueOfDate()+this.valueOfTime()/(24*3600);}},
 		/**. ``''string'' toString()``: Retorna o tempo no formato YYYY-MM-DDThh:mm:ss.sss.**/
 		toString: {value: function() {return this.main.toString();}},
 		/**. ``''string'' toDateString()``: Retorna o tempo no formato YYYY-MM-DD.**/
@@ -4666,31 +4668,31 @@ Object.defineProperties(__Type.prototype, {
 				}
 				/*-- introduzir ou substituir conteúdo --*/
 				if (options.replace === true) {
-					for (let v of load)
-						this.node.parentElement.insertBefore(v, this.node);
+					for (let i = 0; i < load.length; i++)
+						this.node.parentElement.insertBefore(load[i], this.node);
 					this.node.remove();
 				} else {
-					for (let v of load)
-						this.node.appendChild(v);
+					for (let i = 0; i < load.length; i++)
+						this.node.appendChild(load[i]);
 				}
 				/*-- rodando scripts --*/
 				if (options.script === true && !xml) {
-					for (let elem of load) {
-						let list = [elem];
-						if (elem.tagName.toLowerCase() !== "script")
-							list = __Type(__Query("script", elem).$$).value;
-						for (let script of list) {
-							let clone = __Node(script).clone();
-							script.parentElement.insertBefore(clone, script);
-							script.remove();
+					for (let i = 0; i < load.length; i++) {
+						let list = [load[i]];
+						if (load[i].tagName.toLowerCase() !== "script")
+							list = __Type(__Query("script", load[i]).$$).value;
+						for (let j = 0; j < list.length; j++) {
+							let clone = __Node(list[j]).clone();
+							list[j].parentElement.insertBefore(clone, list[j]);
+							list[j].remove();
 						}
 					}
 				}
 				/*-- invocar evento --*/
 				if (!xml) {
 					if (options.replace === true) {
-						for (let elem of load)
-							elem.dispatchEvent(wdReloadEvent);
+						for (let i = 0; i < load.length; i++)
+							load[i].dispatchEvent(wdReloadEvent);
 					} else {
 						this.node.dispatchEvent(wdReloadEvent);
 					}
@@ -4722,11 +4724,13 @@ Object.defineProperties(__Type.prototype, {
 					html = this.node.dataset.wdRepeatModel;
 				else
 					return;
-				for (let v of list) {
-					if (__Type(v).object) {
+
+				for (let i = 0; i < list.length; i++) {
+					let obj = list[i];
+					if (__Type(obj).object) {
 						let inner = html;
-						for (let j in v)
-							inner = inner.split("{{"+j+"}}").join(v[j]);
+						for (let j in obj)
+							inner = inner.split("{{"+j+"}}").join(obj[j]);
 						while (re.test(inner))
 							inner = inner.replace(re, "");
 						load.push(inner);
@@ -4856,34 +4860,6 @@ Object.defineProperties(__Type.prototype, {
 				return this.pages(page, width);
 			}
 		},
-
-
-
-
-
-		//TODO isso é interessante para talvez deixar mais profissional outros métodos
-		removeMark: {
-			value: function(selector, start, end) {
-				tag = String(tag).trim();
-				css = __Type(css).nonempty ? css.trim() : "";
-				/*-- remover elementos (substituir por span), se for o caso --*/
-				if (remove === true) {
-					let selector = tag + (css === "" ? "" : "."+css);
-					let child    = __Type(this.node.querySelectorAll(selector)).value;
-					child.forEach(function (v,i,a) {
-						let span = document.createElement("span");
-						span.innerHTML = v.innerHTML;
-						v.parentElement.replaceChild(span, v); //TODO Essa é a parte interessante
-					});
-				}
-			//TODO interessante também https://developer.mozilla.org/en-US/docs/Web/API/Element/replaceWith aceita texto mas não html
-			}
-		},
-
-
-
-
-
 		/**. ``''void'' insertTag(''string'' tag, ''integer'' start, ''integer'' end)``: Insere uma ``tag`` HTML entre os índices ``start`` e ``end`` do conteúdo textual. Método destrutivo, não utilizar se houver conteúdo editável no nó.**/
 		insertTag: {
 			value: function(tag, start, end) {
@@ -5673,9 +5649,8 @@ Object.defineProperties(__Type.prototype, {
 		const svg  = this.create("svg");
 		const vbox = [xmin, ymin, width, height];
 		const main = [0, 0, 100, 100];
-		vbox.forEach(function (v,i,a) {
-			a[i] = __Type(v).finite ? Number(v) : main[i];
-		});
+		for (let i = 0; i < vbox.length; i++)
+			vbox[i] = __Type(vbox[i]).finite ? Number(vbox[i]) : main[i];
 		svg.setAttribute("viewBox", vbox.join(" "));
 		Object.defineProperties(this, {
 			_svg:  {value: svg},
@@ -5726,7 +5701,7 @@ Object.defineProperties(__Type.prototype, {
 				if (__Type(w).finite)	this._svg.viewBox.baseVal.width = Number(w);}
 		},
 		/**. ``''number'' height``: Retorna e define o valor de ``height``.**/
-		width: {
+		height: {
 			get: function()  {return this._svg.viewBox.baseVal.height;},
 			set: function(h) {
 				if (__Type(h).finite)	this._svg.viewBox.baseVal.height = Number(h);}
@@ -5864,26 +5839,26 @@ Object.defineProperties(__Type.prototype, {
 	###### ``**constructor** ''object'' __Data2D(''array'' x, ''any'' y)``
 	Análise de dados em duas dimensões.
 	O argumento ``x`` corresponde a uma lista de valores (array) de referência que aceita valores numéricos, de tempo, data e data/tempo, conforme regras da biblioteca.
-	O argumento ``y`` é a resposta em função de ``x``, podendo ser uma lista de valores numéricos (array), uma constante numérica ou uma função. No caso de função, ``y`` receberá o valor de ``y(x)``.
+	O argumento ``y`` é a resposta em função de ``x``, podendo ser uma lista de valores como ``x``, uma constante numérica ou uma função. No caso de função, ``y`` receberá o valor de ``y(x)``.
 	Valores não finitos serão eliminados do conjunto ``(x, y)``.**/
 	function __Data2D(x, y) {
 		if (!(this instanceof __Data2D)) return new __Data2D(x, y);
-		/* avaliando X */
-		let xtest = __Type(x);
-		if (!xtest.array) x = [];
-		x = __Array(x).convert(function(n) {
-			let check = __Type(n);
+		const xtest = __Type(x);
+		const ytest = __Type(y);
+		function dataArray(n) {
+			const check = __Type(n);
 			if (check.finite)
 				return check.value;
 			if (check.date || check.time || check.datetime)
-				return __DateTime(check.value).valueOf();
+				return new __DateTime(n).valueOf();
 			return null;
-		}, "finite");
+		}
 
-		/* avaliando Y */
-		let ytest = __Type(y);
+		/*-- avaliando X --*/
+		x = __Array(xtest.array ? x : []).convert(dataArray, "finite");
+		/*-- avaliando Y --*/
 		if (ytest.array)
-			y = __Array(y).only("finite", true);
+			y = __Array(y).convert(dataArray, "finite");
 		else if (ytest.finite)
 			y = __Array(x).convert(function(n) {return ytest.value;}, "finite");
 		else if (ytest.function)
@@ -5891,38 +5866,37 @@ Object.defineProperties(__Type.prototype, {
 		else
 			y = [];
 
-		/* igualando conjunto */
-		let less = y.length < x.length ? y : x;
-		let data = [];
-		less.forEach(function(v,i,a) {
-			if (x[i] === null || y[i] === null) return;
-			data.push({x: x[i], y: y[i]});
+		/*-- igualando conjunto --*/
+		const less = y.length < x.length ? y : x;
+		const data = [];
+		for (let i = 0; i < less.length; i++) {
+			if (x[i] !== null && y[i] !== null)
+				data.push({x: x[i], y: y[i]});
+		}
+		/*-- ordenando em x --*/
+		data.sort(function(a,b) {
+			return a.x === b.x ? 0 : (a.x < b.x ? -1 : 1);
 		});
 
-		/* ordenando em x */
-		data.sort(function(a,b) {return a.x < b.x ? -1 : 1;});
-		/* retornando valores */
-		x     = [];
-		y     = [];
-		let i = -1;
-		while (++i < data.length) {
-			x.push(data[i].x);
-			y.push(data[i].y);
+		/*-- retornando valores --*/
+		const sortx = [];
+		const sorty = [];
+		for (let i = 0; i < data.length; i++) {
+			sortx.push(data[i].x);
+			sorty.push(data[i].y);
 		}
 		Object.defineProperties(this, {
-			_x: {value: x},
-			_y: {value: y},
+			/**. ``''array'' x``: Registra os valores do argumento ``x`` ajustado.**/
+			x: {value: sortx},
+			/**. ``''array'' y``: Retorna os valores do argumento ``y`` ajustado.**/
+			y: {value: sorty},
+			/**. ``''boolean'' error``: Se o conjunto tiver menos que um par de valores, retornará verdadeiro.**/
+			error: {value: sortx.length < 2 || sorty.length < 2}
 		});
 	}
 
 	Object.defineProperties(__Data2D.prototype, {
 		constructor: {value: __Data2D},
-		/**. ``''array'' x``: Retorna os valores do argumento ``x`` ajustado.**/
-		x: {get: function() {return this._x;}} ,
-		/**. ``''array'' y``: Retorna os valores do argumento ``y`` ajustado.**/
-		y: {get: function() {return this._y;}},
-		/**. ``''boolean'' error``: Se o conjunto tiver menos que um par de valores, retornará verdadeiro.**/
-		error: {get: function() {return this._y.length < 2 || this._x.length < 2;}},
 		/**. ``''object'' leastSquares``: Aplica o método dos mínimos quadrados ao conjunto de dados e retorna objeto contendo o coeficiente angular ``a`` e o linear ``b`` de ``y = ax + b``.**/
 		leastSquares: {
 			get: function () {
@@ -5959,7 +5933,7 @@ Object.defineProperties(__Type.prototype, {
 				while(++i < this.x.length)
 					data.push(this.x[i] - this.y[i]);
 				this._standardDeviation = Math.hypot.apply(null, data) / Math.sqrt(data.length);
-				return this.standardDeviation;
+				return this._standardDeviation;
 			}
 		},
 		/**. ``''object'' linearFit``: Retorna um objeto contendo os dados da regressão linear ou ``null`` em caso de erro.
@@ -7377,12 +7351,14 @@ Object.defineProperties(__Type.prototype, {
 
 	WDdatetime.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDdatetime},
-		/**. ``''integer'' valueOf()``: Retorna o número de segundos desde 0000-01-01T00:00:00.000..**/
+		/**. ``''integer'' valueOf()``: Retorna o número de segundos desde 0000-01-01T00:00:00.000.**/
 		valueOf:     {value: function() {return this._main.valueOf();}},
 		/**. ``''integer'' valueOfDate()``: Retorna o número de dias desde 0000-01-01.**/
 		valueOfDate: {value: function() {return this._main.valueOfDate();}},
-		/**. ``''integer'' valueOfTime()``: Retorna os segundos desde 00:00:00.000.**/
+		/**. ``''number'' valueOfTime()``: Retorna os segundos desde 00:00:00.000.**/
 		valueOfTime: {value: function() {return this._main.valueOfTime();}},
+		/**. ``''number'' valueOfDays()``: Retorna os dias desde 0000-01-01 com o tempo como elemento decimal.**/
+		valueOfDays: {value: function() {return this._main.valueOfDays();}},
 		/**. ``''string'' toDateString()``: Retorna a data no formato YYYY-MM-DD.**/
 		toDateString: {value: function() {return this._main.toDateString();}},
 		/**. ``''string'' toTimeString()``: Retorna o tempo no formato hh:mm:ss.sss.**/
