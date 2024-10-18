@@ -5928,8 +5928,8 @@ Object.defineProperties(__Type.prototype, {
 			get: function() {
 				if (this.error) return Infinity;
 				if ("_standardDeviation" in this) return this._standardDeviation;
-				let data = [];
-				let i    = -1;
+				const data = [];
+				let i = -1;
 				while(++i < this.x.length)
 					data.push(this.x[i] - this.y[i]);
 				this._standardDeviation = Math.hypot.apply(null, data) / Math.sqrt(data.length);
@@ -6104,13 +6104,19 @@ Object.defineProperties(__Type.prototype, {
 /*============================================================================*/
 	/**#### Análise Gráfica
 
-	###### ``**constructor** ''object'' __Plot2D(''boolean'' ratio=false)``
-	Objeto para preparar dados para construção de gráfico 2D.
-	O argumento ``ratio``, se falso, define que o gráfico será de coordenadas no plano cartesiano e, se verdadeiro, será de grandezas proporcionais (circular ou colunas)**/
-	function __Plot2D(ratio) {
-		if (!(this instanceof __Plot2D)) return new __Plot2D(ratio);
+	###### ``**constructor** ''object'' __Plot2D(''string'' type)``
+	Objeto para preparar dados para construção de gráfico 2D. O argumento ``type`` define o tipo do gráfico:
+	|Valor|Descrição|
+	|plan|Gráfico cartesiano xy (padrão)|
+	|cols|Gráfico de colunas|
+	|pie|Gráfico circular ou gráfico de colunas se houver valores negativos|**/
+	function __Plot2D(type) {
+		if (!(this instanceof __Plot2D)) return new __Plot2D(type);
+		type = String(type).toLowerCase();
+		const types = ["plan", "cols", "pie"];
+		const chart = types.indexOf(type) < 0 ? types[0] : type;
 		Object.defineProperties(this, {
-			_ratio:  {value: ratio === true},               /* tipo do gráfico */
+			_chart:  {value: chart},                        /* tipo do gráfico */
 			_title:  {value: "Title",   writable: true},    /* título do gráfico */
 			_xLabel: {value: "X Label", writable: true},    /* nome do eixo x */
 			_yLabel: {value: "Y Label", writable: true},    /* nome do eixo y */
@@ -6296,12 +6302,10 @@ Object.defineProperties(__Type.prototype, {
 				const chart  = {};
 				const color  = this.color();
 				const border = {n: false, e: false, s: false, w: false};
-				parts.forEach(function (v,i,a) {chart[v] = true;});
+				for (let i = 0; i < parts.length; i++) chart[parts[i]] = true;
 
 				/* area de plotagem */
-				const attrMain = {
-					stroke: "none", fill: "none", "stroke-width": 2, "stroke-linecap": "round"
-				};
+				const attrMain = {stroke: "none", fill: "none", "stroke-width": 2, "stroke-linecap": "round"};
 				svg.rect(cfg.xStart, cfg.yStart, cfg.xSize, cfg.ySize).attribute(attrMain);
 				const main = svg.last;
 
@@ -6320,7 +6324,7 @@ Object.defineProperties(__Type.prototype, {
 					.attribute({fill: color, cursor: "default"});
 				}
 				if (chart.hzero && (this._yMin < 0 && this._yMax > 0)) {
-					const zero = this._yScale(0);console.log(zero);
+					const zero = this._yScale(0);
 					svg.line([cfg.xStart, zero], [cfg.xClose, zero])
 					.attribute({stroke: color, "stroke-width": 2, fill: "none"});
 				}
@@ -6342,9 +6346,7 @@ Object.defineProperties(__Type.prototype, {
 					border.s = true;
 					border.w = true;
 				}
-
-
-				/* pontos, valores e âncoras */
+			/* pontos, valores e âncoras */
 				const dw = (cfg.xClose - cfg.xStart) / (cfg.points - 1);
 				const dh = (cfg.yClose - cfg.yStart) / (cfg.points - 1);
 				const dx = (this._xMax - this._xMin) / (cfg.points - 1);
@@ -6459,13 +6461,15 @@ Object.defineProperties(__Type.prototype, {
 				const n = __Number(value);
 				switch(type) {
 					case "date":
-						return __DateTime(value).toDateString();
+						return __DateTime(value).toLocaleDateString();
 					case "time":
-						return __DateTime(value).toTimeString();
+						return __DateTime(value).toLocaleTimeString();
 					case "datetime":
-						return __DateTime(value).format("{YYYY}-{MM}-{DD} {hh}:{mm}");
+						return __DateTime(value).toLocaleString();
 					case "percent":
 						return n.toLocaleString({type : "percent", decimal: 0});
+					case "number":
+						return n.toLocaleString();
 				}
 				const e = n.exp;
 				if (n ==    0) return n.toLocaleString({type : "decimal",    decimal: 0});
@@ -6569,33 +6573,34 @@ Object.defineProperties(__Type.prototype, {
 		plot: {
 			value: function() {
 				if (this._data.length === 0) return null;
-				const cline = {"stroke-width": 3, "stroke-linecap": "round", fill: "none"};
-				const csum  = {"fill-opacity": 0.5, "stroke-width": 1, "stroke-linecap": "round", fill: "none"};
-				const cdash = {"stroke-width": 1, "stroke-linecap": "round", "stroke-dasharray": "5,5", fill: "none"};
-				let data    = this._data.slice();
-				let legend  = [];
-				const svg   = __SVG(this._cfg.width, this._cfg.height);
-				svg.attribute(this._cfg.attr_svg);
+				const attrs = {
+					line: {"stroke-width": 3, "stroke-linecap": "round", fill: "none"},
+					sum:  {"fill-opacity": 0.5, "stroke-width": 1, "stroke-linecap": "round", fill: "none"},
+					dash: {"stroke-width": 1, "stroke-linecap": "round", "stroke-dasharray": "5,5", fill: "none"}
+				};
+				let data   = this._data.slice();
+				let legend = [];
+				const svg  = __SVG(this._cfg.width, this._cfg.height);
 				svg.svg().style.backgroundColor = "#ffffff";
 
 				/* redefinindo funções para array ----------------------------------- */
-				if (!this._ratio) {
-					let i = -1;
+				if (this._chart === "plan") {
 					let x = this._xSpace;
+					let i = -1;
 					while(++i < data.length) {
-						if (!data[i].f) continue;
-						let list = __Data2D(x, data[i].y);
-						if (list.error) return null;
-						data[i].x = list.x;
-						data[i].y = list.y;
-						let yList = __Array(data[i].y);
-						this._yMin = yList.min;
-						this._yMax = yList.max;
+						if (data[i].f) {
+							let list = __Data2D(x, data[i].y);
+							if (list.error) return null;
+							data[i].x = list.x;
+							data[i].y = list.y;
+							let yList = __Array(data[i].y);
+							this._yMin = yList.min;
+							this._yMax = yList.max;
+						}
 					}
 				}
-
 				/* plotando plano cartesiano ---------------------------------------- */
-				if (!this._ratio) {
+				if (this._chart === "plan") {
 					let i = -1;
 					while(++i < data.length) {
 						/* obtendo dados da plotagem */
@@ -6605,20 +6610,21 @@ Object.defineProperties(__Type.prototype, {
 						let name  = data[i].name;
 						let info  = data[i].info;
 						let color = this.color(id);
-						let self  = this;
 						let curve = {id: id, color: color, info: info, name: name};
 						/* transformando coordenadas reais para gráficas */
-						x.forEach(function(v,i,a){a[i] = self._xScale(v);});
-						y.forEach(function(v,i,a){a[i] = self._yScale(v);});
+						for (let i = 0; i < x.length; i++) {
+							x[i] = this._xScale(x[i]);
+							y[i] = this._yScale(y[i]);
+						}
 						/* plotando de acordo com o tipo de curva */
 						if (data[i].type === "line" || data[i].type === "link") {
 							svg.lines(x, y)
-							.attribute(cline)
+							.attribute(attrs.line)
 							.attribute({stroke: color, "data-wd-chart-curve": id});
 						}
 						if (data[i].type === "dash") {
 							svg.lines(x, y)
-							.attribute(cdash)
+							.attribute(attrs.dash)
 							.attribute({stroke: color, "data-wd-chart-curve": id});
 						}
 						if (data[i].type === "dots" || data[i].type === "link") {
@@ -6631,7 +6637,7 @@ Object.defineProperties(__Type.prototype, {
 						if (data[i].type === "sum") {
 							let fit = __Data2D(data[i].x, data[i].y);
 							let sum = fit.area;
-							curve.info = "∑ yΔx ≈ " + sum;
+							curve.info = "∑ yΔx ≈ " + this._values(sum, "number");
 							/* obter posicionamento para inserir o rótulo da área */
 							let min = Math.min.apply(null, fit.y);
 							let max = Math.max.apply(null, fit.y);
@@ -6647,13 +6653,13 @@ Object.defineProperties(__Type.prototype, {
 							/* unindo a curva ao eixo horizontal */
 							x.unshift(x[0]);
 							x.push(x[x.length - 1]);
-							y.unshift(self._yScale(0));
-							y.push(self._yScale(0));
+							y.unshift(this._yScale(0));
+							y.push(this._yScale(0));
 							/* plotando */
 							svg.lines(x, y, true) /* área */
-							.attribute(csum)
+							.attribute(attrs.sum)
 							.attribute({stroke: color, fill: color, "data-wd-chart-curve": id})
-							.text(xm, ym, this._values(sum), pm) /* valor numérico */
+							.text(xm, ym, this._values(sum, "number"), pm) /* valor numérico */
 							.attribute({fill: color, "data-wd-chart-curve": id})
 						}
 						if (data[i].type === "avg") {
@@ -6662,15 +6668,15 @@ Object.defineProperties(__Type.prototype, {
 							let xi  = this._xScale(this._xMin);
 							let xn  = this._xScale(this._xMax);
 							let ya  = this._yScale(avg);
-							curve.info = "(∑ yΔx)/ΔX ≈ "+avg;
+							curve.info = "(∑ yΔx)/ΔX ≈ " + this._values(avg, "number");
 							/* plotando a curva e a linha média */
 							svg.lines(x, y)
-							.attribute(cdash)
+							.attribute(attrs.dash)
 							.attribute({stroke: color, "data-wd-chart-curve": id})
 							svg.lines([xi, xn], [ya, ya])
-							.attribute(cline)
+							.attribute(attrs.line)
 							.attribute({stroke: color, "data-wd-chart-curve": id})
-							svg.text(x[0]+5, ya-5, this._values(avg), "hsw")
+							svg.text(x[0]+5, ya-5, this._values(avg, "number"), "hsw")
 							.attribute({fill: color, "data-wd-chart-curve": id});
 						}
 						legend.push(curve);
@@ -6708,10 +6714,10 @@ Object.defineProperties(__Type.prototype, {
 					let id      = -1;
 
 					for (let i in data[0]) {
-						const value = data[0][i];
+						let value = data[0][i];
 						pieces.push({
 							value:  value,
-							_value: this._values(value),
+							_value: this._values(value, "number"),
 							ratio:  total === 0 ? null : value/total,
 							_ratio: total === 0 ? null : this._values(value/total, "percent"),
 							name: i,
@@ -6722,10 +6728,12 @@ Object.defineProperties(__Type.prototype, {
 						this._yMax = value;
 					}
 
+
+					//FIXME aqui tenho que ver o que é melhor entre o gŕafico circular e o de colunas
 					svg.text(
 						this._cfg.padding,
 						this._cfg.height - this._cfg.padding,
-						this.yLabel + ": " + total,
+						this.yLabel + ": " + this._values(total, "number"),
 						"hsw"
 					).attribute({cursor: "default"});
 					svg.text(
@@ -6735,8 +6743,13 @@ Object.defineProperties(__Type.prototype, {
 						"hn"
 					).attribute({cursor: "default"});
 
-					/* gráfico de pizza ------------------------------------------------*/
-					if (minus !== plus && total !== 0) {
+
+
+
+
+
+					/* gráfico circular ------------------------------------------------*/
+					if (this._chart !== "cols" && minus !== plus && total !== 0) {
 						let start = 0;
 						let width = 0;
 
@@ -6750,7 +6763,7 @@ Object.defineProperties(__Type.prototype, {
 							let cx    = this._cfg.xMiddle;
 							let cy    = this._cfg.yMiddle;
 							let curve = {id: id, color: color, info: "", name: name};
-							curve.info = this.yLabel+": "+item.value + " (" + item._ratio + ")";
+							curve.info = this.yLabel+": " + item._value + " (" + item._ratio + ")";
 							width = 360*item.ratio;
 							/* pedaço da pizza */
 							svg.semicircle(cx, cy, r, start, width)
@@ -6777,12 +6790,10 @@ Object.defineProperties(__Type.prototype, {
 						}
 						this._struct(svg, "title");
 					}
-
 					/* gráfico de barras -----------------------------------------------*/
 					else {
 						const width = this._cfg.xSize / count;
 						let i = -1;
-
 						while (++i < pieces.length) {
 							let item  = pieces[i];
 							let id    = item.id;
@@ -6793,7 +6804,7 @@ Object.defineProperties(__Type.prototype, {
 							let w     = width;
 							let h     = Math.abs(this._yScale(item.value) - this._yScale(0));
 							let curve = {id: id, color: color, info: "", name: name};
-							curve.info = this.yLabel+": "+item.value;
+							curve.info = this.yLabel+": "+item._value;
 							/* barra */
 							svg.rect(x, y, w, h)
 							.attribute({fill: color, "fill-opacity": 0.8})
@@ -6812,7 +6823,7 @@ Object.defineProperties(__Type.prototype, {
 							.title(item.value);
 							legend.push(curve);
 						}
-						this._struct(svg, " hlines ylabel yscale hzero title");
+						this._struct(svg, "hlines ylabel yscale hzero title");
 					}
 				}
 				this._legend(svg, legend);
@@ -6834,20 +6845,23 @@ Object.defineProperties(__Type.prototype, {
 			get: function()  {return this._title;},
 			set: function(x) {this._title = x === null || x === undefined ? "Title" : String(x);}
 		},
-		/**. ``''string'' xAxis``: Define ou retorna o tipo de dado do eixo ``x``: ''number'', ''date'', ''time'' ou ''datetime''**/
+		/**. ``''string'' xAxis``: Define ou retorna o tipo de escala do eixo ``x``: default, date, time ou datetime.**/
 		xAxis: {
 			get: function()  {return this._xAxis;},
 			set: function(x) {
-				let values  = ["number", "date", "time", "datetime"];
-				this._xAxis = values.indexOf(x) >= 0 ? x : "number";
+				let values  = ["date", "time", "datetime"];
+				this._xAxis = values.indexOf(x) >= 0 ? x : "default";
 			}
 		},
+		//FIXME fazer yAxis
+
+
 		/**. ``''boolean'' add(''array'' x, ''any'' y, ''string'' label, ''string'' option)``: Adiciona dados para plotagem e retorna falso se não for possível processar a solicitação.
 		. Os argumentos ``x`` e ``y`` representam a abscissa (eixo horizontal) e a ordenada (eixo vertical), respectivamente. Seus valores dependem do tipo de gráfico.
 		. No caso de plotagem no __plano cartesiano__, o valor de ``x`` deverá ser uma lista de valores numéricos ou de data/tempo. Já o valor de ``y`` poderá ser uma __função__ que retorna um valor numérico finito; uma __lista__ de valores finitos; ou uma __constante numérica__ finita.
 		. No caso de plotagem de __gráfico de proporcionalidade__ (circular ou de barras), o valor de ``x`` poderá ser uma lista de identificadores (numéricos ou string) e ``y`` uma lista de valores numéricos correspondentes aos identificadores definidos em ``x``.
 		. O valor de ``x`` também poderá ser um objeto, cujos atributos definirão os identificadores, tornado o valor de ``y`` desnecessário.
-		. No caso de gráfico de proporcionalidade, o comportamento padrão é exibir uma gráfico circular, mas se existir valores positivos e negativos para os identificadores, um gráfico de barras será exibido.
+		. No caso de gráfico circular, se existir valores positivos e negativos para os identificadores, um gráfico de barras será exibido no lugar.
 		. O argumento ``label`` é utilizado para identificar o gráfico no caso de plano cartesiano.
 		. O argumento ``option`` é opcional e direcionado para o gráfico de plano cartesiano com valores de ``x`` e ``y`` como array. Seus valores podem ser (todos retornam valores aproximados):
 		|Valor|Descrição|
@@ -6870,7 +6884,7 @@ Object.defineProperties(__Type.prototype, {
 				/*----------------------------------------------------------------------
 					gráfico proporcional
 				----------------------------------------------------------------------*/
-				if (this._ratio) {
+				if (this._chart === "pie" || this._chart === "cols") {
 					if (this._data.length === 0) this._data.push({});
 					let data = this._data[0];
 
@@ -6994,7 +7008,10 @@ Object.defineProperties(__Type.prototype, {
 							if (fit === null) return false;
 							let target = this._data.length - 1;
 							this._data[target].info = [
-								fit.m, "a = "+fit.a, "b = "+fit.b, "σ = "+fit.d
+								fit.m,
+								"a = "+this._values(fit.a, "number"),
+								"b = "+this._values(fit.b, "number"),
+								"σ = "+this._values(fit.d, "number")
 							].join("\n");
 							this._data[target].type = "dots";
 
