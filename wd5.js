@@ -2061,7 +2061,7 @@ Object.defineProperties(__Type.prototype, {
 				return "unknow";
 			}
 		},
-		/**. ``''string'' random(''object'' options)``: Retorna conjuntos de números inteiros aleatórios conforme especificado no argumento ``options``:
+		/**. ``''string'' random(''object'' options)``: Retorna conjuntos de números inteiros "aleatórios" conforme especificado no argumento ``options``:
 		|Nome|Descrição|
 		|min|Número inteiro que indica o menor valor do conjunto|
 		|max|Número inteiro que indica o maior valor do conjunto|
@@ -2069,6 +2069,10 @@ Object.defineProperties(__Type.prototype, {
 		|set|Número inteiro que indica a quantidade de conjuntos|**/
 		random: {
 			value: function(options) {
+				/*-----------------------------------------------
+				let a = new Uint8Array(len);
+				window.crypto.getRandomValues(a)
+				-----------------------------------------------*/
 				if (!__Type(options).object) options = {};
 				const min  = "min" in options ? Number(options.min) : 1;
 				const max  = "max" in options ? Number(options.max) : 60;
@@ -2079,7 +2083,7 @@ Object.defineProperties(__Type.prototype, {
 				while (bets.length < set) {
 					list = [];
 					while (list.length < len) {
-						num = Number((min + max*Math.random()).toFixed(0));
+						num = Math.trunc(min) + Math.trunc(max*Math.random());
 						if (list.indexOf(num) < 0) list.push(num);
 					}
 					list.sort(function (a,b) {return a < b ? -1 : 1;});
@@ -2087,6 +2091,22 @@ Object.defineProperties(__Type.prototype, {
 					if (bets.indexOf(bet) < 0) bets.push(bet);
 				}
 				return bets.join("\n");
+			}
+		},
+		/**. ``''array'' crypto(''integer'' bit, ''integer'' len)``: Retorna uma lista de ``len`` itens contendo números inteiros de comprimento ``bit`` (8, 16 ou 32).**/
+		crypto: {
+			value: function(bit, len) {
+				bit = Number(bit);
+				len = Number(len);
+				len = isFinite(len) && len >= 1 ? Math.trunc(len) : 1;
+				let array;
+				switch(bit) {
+					case 32: array = new Uint32Array(len); break;
+					case 16: array = new Uint16Array(len); break;
+					default: array = new Uint8Array(len);  break;
+				}
+				window.crypto.getRandomValues(array);
+				return array;
 			}
 		},
 		/**. ``''float'' dec``: Retorna a parte decimal do número (zero se infinito ou inteiro).**/
@@ -5838,8 +5858,8 @@ Object.defineProperties(__Type.prototype, {
 	#### Análise Quantitativa
 	###### ``**constructor** ''object'' __Data2D(''array'' x, ''any'' y)``
 	Análise de dados em duas dimensões.
-	O argumento ``x`` corresponde a uma lista de valores (array) de referência que aceita valores numéricos, de tempo, data e data/tempo, conforme regras da biblioteca.
-	O argumento ``y`` é a resposta em função de ``x``, podendo ser uma lista de valores como ``x``, uma constante numérica ou uma função. No caso de função, ``y`` receberá o valor de ``y(x)``.
+	O argumento ``x`` corresponde a uma lista de valores (array) de referência que aceita valores finitos e de data/tempo, conforme regras da biblioteca.
+	O argumento ``y`` é a resposta em função de ``x``, podendo ser uma lista de valores do mesmo tipo que ``x``, uma constante ou uma função. No caso de função, ``y`` receberá o valor de ``y(x)``.
 	Valores não finitos serão eliminados do conjunto ``(x, y)``.**/
 	function __Data2D(x, y) {
 		if (!(this instanceof __Data2D)) return new __Data2D(x, y);
@@ -5861,6 +5881,8 @@ Object.defineProperties(__Type.prototype, {
 			y = __Array(y).convert(dataArray, "finite");
 		else if (ytest.finite)
 			y = __Array(x).convert(function(n) {return ytest.value;}, "finite");
+		else if (ytest.date || ytest.time || ytest.datetime)
+			y = __Array(x).convert(function(n) {return new __DateTime(y).valueOf();}, "finite");
 		else if (ytest.function)
 			y = __Array(x).convert(y, "finite");
 		else
@@ -6120,7 +6142,8 @@ Object.defineProperties(__Type.prototype, {
 			_title:  {value: "Title",   writable: true},    /* título do gráfico */
 			_xLabel: {value: "X Label", writable: true},    /* nome do eixo x */
 			_yLabel: {value: "Y Label", writable: true},    /* nome do eixo y */
-			_xAxis:  {value: "number",  writable: true},    /* tipo de dado do eixo x */
+			_xAxis:  {value: "default", writable: true},    /* tipo de dado do eixo x */
+			_yAxis:  {value: "default", writable: true},    /* tipo de dado do eixo y */
 			_id:     {value: -1,        writable: true},    /* controle das plotagens */
 			_data:   {value: []},                           /* dados adicionados para plotagem */
 			_min:    {value: {x: +Infinity, y: +Infinity}}, /* menor valor de x,y */
@@ -6351,7 +6374,13 @@ Object.defineProperties(__Type.prototype, {
 				const dh = (cfg.yClose - cfg.yStart) / (cfg.points - 1);
 				const dx = (this._xMax - this._xMin) / (cfg.points - 1);
 				const dy = (this._yMax - this._yMin) / (cfg.points - 1);
-				const dt = ["datetime", "time", "date"].indexOf(this.xAxis) >= 0;
+				const dt = {
+					datetime: "x-small",
+					time: "smaller",
+					date: "small",
+					number: "smaller",
+					default: "normal"
+				};
 				let px, py, vx, vy, ax, ay;
 				let i = -1;
 				while (++i < cfg.points) {
@@ -6366,7 +6395,7 @@ Object.defineProperties(__Type.prototype, {
 						py = zero ? cfg.yClose : cfg.yStart;
 						vx = zero ? this._xMin : this._xMax;
 						vy = zero ? this._yMin : this._yMax;
-						ax = dt ? "hn" : (zero ? "hnw" : "hne");
+						ax = zero ? "hnw" : "hne";
 						ay = zero ? "hse" : "hne";
 						line.h = zero ? !border.s : !border.n;
 						line.v = zero ? !border.w : !border.e;
@@ -6396,26 +6425,33 @@ Object.defineProperties(__Type.prototype, {
 						});
 					}
 					if (chart.xscale) {
-						svg.text(px, cfg.yClose + cfg.padding, this._values(vx, this.xAxis), ax).attribute({
-							fill: color, "class": (hide ? "js-wd-chart-hide" : ""), cursor: "default"
-						}).title(this._values(vx, this.xAxis));
-						if (dt) svg.attribute({"font-size": "smaller"})
+						let xscaleval = this._values(vx, this.xAxis);
+						svg.text(px, cfg.yClose + cfg.padding, xscaleval, ax).attribute({
+							fill: color, "class": (hide ? "js-wd-chart-hide" : ""),
+							cursor: "default", "font-size": dt[this.xAxis]
+						}).title(xscaleval);
 					}
 					if (chart.yscale) {
-						svg.text(cfg.xStart - cfg.padding, py, this._values(vy), ay).attribute({
-							fill: color, "class": (hide ? "js-wd-chart-hide" : ""), cursor: "default"
-						}).title(this._values(vy));
+						let yscaleval = this._values(vy, this.yAxis);
+						svg.text(cfg.xStart - cfg.padding, py, yscaleval, ay).attribute({
+							fill: color, "class": (hide ? "js-wd-chart-hide" : ""),
+							cursor: "default", "font-size": dt[this.yAxis]
+						}).title(yscaleval);
 					}
 				}
 
 				if (chart.mouse) {
-					svg.text(cfg.width - cfg.padding, cfg.height - cfg.padding, "", "hse").attribute({
-						fill: color, cursor: "default", "data-wd-chart-tool": "coordinates"
+					svg.text(cfg.width - cfg.padding, cfg.height - cfg.padding, "", "hse")
+					.attribute({
+						fill: color, cursor: "default", "data-wd-chart-tool": "coordinates",
+						"font-size": "smaller"
 					});
-					svg.line([cfg.xStart, cfg.yStart], [cfg.xClose, cfg.yStart]).attribute({
+					svg.line([cfg.xStart, cfg.yStart], [cfg.xClose, cfg.yStart])
+					.attribute({
 						"stroke-width": 1, stroke: color, display: "none", "data-wd-chart-tool": "hline"
 					});
-					svg.line([cfg.xStart, cfg.yStart], [cfg.xStart, cfg.yClose]).attribute(
+					svg.line([cfg.xStart, cfg.yStart], [cfg.xStart, cfg.yClose])
+					.attribute(
 						{"stroke-width": 1, stroke: color, display: "none", "data-wd-chart-tool": "vline"
 					});
 					const self = this;
@@ -6435,8 +6471,8 @@ Object.defineProperties(__Type.prototype, {
 							const vy = self._yMax - ((my - pm.top)/pm.height)*dy;
 							const px = self._xScale(vx);
 							const py = self._yScale(vy);
-							const tx = self._values(vx, self.xAxis);
-							const ty = self._values(vy);
+							const tx = self._values(vx, self.xAxis === "default" ? "number" : self.xAxis);
+							const ty = self._values(vy, self.yAxis === "default" ? "number" : self.yAxis);
 							const hl = {y1: py, y2: py, display: "inline"};
 							const vl = {x1: px, x2: px, display: "inline"};
 							xypos.textContent = tx+" × "+ty;
@@ -6845,23 +6881,27 @@ Object.defineProperties(__Type.prototype, {
 			get: function()  {return this._title;},
 			set: function(x) {this._title = x === null || x === undefined ? "Title" : String(x);}
 		},
-		/**. ``''string'' xAxis``: Define ou retorna o tipo de escala do eixo ``x``: default, date, time ou datetime.**/
+		/**. ``''string'' xAxis``: Define ou retorna o tipo de escala do eixo ``x``: default, date, time, datetime ou percent.**/
 		xAxis: {
 			get: function()  {return this._xAxis;},
 			set: function(x) {
-				let values  = ["date", "time", "datetime"];
+				let values  = ["date", "time", "datetime", "percent"];
 				this._xAxis = values.indexOf(x) >= 0 ? x : "default";
 			}
 		},
-		//FIXME fazer yAxis
-
-
-		/**. ``''boolean'' add(''array'' x, ''any'' y, ''string'' label, ''string'' option)``: Adiciona dados para plotagem e retorna falso se não for possível processar a solicitação.
-		. Os argumentos ``x`` e ``y`` representam a abscissa (eixo horizontal) e a ordenada (eixo vertical), respectivamente. Seus valores dependem do tipo de gráfico.
-		. No caso de plotagem no __plano cartesiano__, o valor de ``x`` deverá ser uma lista de valores numéricos ou de data/tempo. Já o valor de ``y`` poderá ser uma __função__ que retorna um valor numérico finito; uma __lista__ de valores finitos; ou uma __constante numérica__ finita.
-		. No caso de plotagem de __gráfico de proporcionalidade__ (circular ou de barras), o valor de ``x`` poderá ser uma lista de identificadores (numéricos ou string) e ``y`` uma lista de valores numéricos correspondentes aos identificadores definidos em ``x``.
-		. O valor de ``x`` também poderá ser um objeto, cujos atributos definirão os identificadores, tornado o valor de ``y`` desnecessário.
+		/**. ``''string'' yAxis``: Define ou retorna o tipo de escala do eixo ``y``: default, date, time, datetime ou percent.**/
+		yAxis: {
+			get: function()  {return this._yAxis;},
+			set: function(x) {
+				let values  = ["date", "time", "datetime", "percent"];
+				this._yAxis = values.indexOf(x) >= 0 ? x : "default";
+			}
+		},
+		/**. ``''boolean'' add(''array'' x, ''any'' y, ''string'' label, ''string'' option)``: Adiciona dados para plotagem e retorna falso se não for possível processar a solicitação. Os argumentos ``x`` e ``y`` representam a abscissa (eixo horizontal) e a ordenada (eixo vertical), respectivamente. Seus valores dependem do tipo de gráfico.
+		. No caso de plotagem no __plano cartesiano__, o valor de ``x`` deverá ser uma lista de valores finitos ou de data/tempo. Já o valor de ``y`` poderá ser uma __função__ que retorna um valor numérico finito, uma __lista__ de valores finitos ou de data/tempo; ou uma __constante numérica__ finita.
+		. No caso de plotagem de __gráfico de proporcionalidade__ (circular ou de barras), o valor de ``x`` poderá ser uma lista de identificadores (string) e ``y`` uma lista de valores finitos ou de data/tempo correspondente aos identificadores definidos em ``x``. O valor de ``x`` também poderá ser um objeto, cujos atributos definirão os identificadores, tornado o valor de ``y`` desnecessário.
 		. No caso de gráfico circular, se existir valores positivos e negativos para os identificadores, um gráfico de barras será exibido no lugar.
+		. Quando utilizar valores de data/tempo, a referência obtida será a quantidade de segundos desde 0000-01-01.
 		. O argumento ``label`` é utilizado para identificar o gráfico no caso de plano cartesiano.
 		. O argumento ``option`` é opcional e direcionado para o gráfico de plano cartesiano com valores de ``x`` e ``y`` como array. Seus valores podem ser (todos retornam valores aproximados):
 		|Valor|Descrição|
@@ -6888,16 +6928,19 @@ Object.defineProperties(__Type.prototype, {
 					if (this._data.length === 0) this._data.push({});
 					let data = this._data[0];
 
-					/* objeto ----------------------------------------------------------  */
+					/*-- objeto --------------------------------------------------------*/
 					if (xdata.object) {
 						for (let name in x) {
 							let check = __Type(x[name]);
-							if (check.finite)
-								data[name] = check.value + (name in data ? data[name] : 0);
+							let value = null;
+							if (check.finite || check.date || check.time || check.datetime)
+								value = check.finite ? check.value : new __DateTime(x[name]).valueOf();
+							if (value !== null)
+								data[name] = value + (name in data ? data[name] : 0);
 						}
 						return true;
 					}
-					/* array ---------------------------------------------------------- */
+					/*-- array ---------------------------------------------------------*/
 					else if (xdata.array && ydata.array) {
 						let i   = -1;
 						let obj = {};
