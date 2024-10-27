@@ -6238,29 +6238,30 @@ Object.defineProperties(__Type.prototype, {
 			}
 		},
 		/**. ``''object'' _cfg``: Registra as configurações do gráfico:
-		.. ``''number'' vertical``: registra o menor tamanho da tela do dispositivo.
-		.. ``''number'' horizontal``: registra o maior tamanho da tela do dispositivo.
-		.. ``''number'' xInit``: Registra o início do eixo horizontal ``x`` (porcentagem).
-		.. ``''number'' xEnd``: Registra o fim do eixo horizontal ``x`` (porcentagem).
-		.. ``''number'' yInit``: Registra o início do eixo vertical ``y`` (porcentagem).
-		.. ``''number'' yEnd``: Registra o fim do eixo vertical ``y`` (porcentagem).
-		.. ``''number'' points``: Número de divisões dos eixos no gráfico (impar).
-		.. ``''number'' padd``: Define um valor para espaçamento relativo (porcentagem).
-		.. ``''number'' width``: Define a dimensão horizontal do gráfico.
-		.. ``''number'' height``: Retorna a dimensão vertical do gráfico proporcional à ``width``.
-		.. ``''number'' xStart``: Coordenada horizontal da origem do gráfico.
-		.. ``''number'' xSize``: Tamanho do eixo ``x``.
-		.. ``''number'' xMiddle``: Metade do eixo ``x``.
-		.. ``''number'' xClose``: Fim do eixo ``x``.
-		.. ``''number'' yStart``: Coordenada vertical da origem do gráfico.
-		.. ``''number'' ySize``: Tamanho do eixo ``y``.
-		.. ``''number'' yMiddle``: Metade do eixo ``y``.
-		.. ``''number'' yClose``: Fim do eixo ``y``.
-		.. ``''number'' top``: A metade do espaço superior.
-		.. ``''number'' bottom``: A metade do espaço inferior.
-		.. ``''number'' left``: A metade do espaço esquerdo.
-		.. ``''number'' right``: A metade do espaço direito.
-		.. ``''number'' padding``: Retorna o espaçamento definido.**/
+		|Nome|Tipo|Descrição|
+		|vertical|number|registra o menor tamanho da tela do dispositivo.|
+		|horizontal|number|registra o maior tamanho da tela do dispositivo.|
+		|xInit|number|Registra o início do eixo horizontal ``x`` (porcentagem).|
+		|xEnd|number|Registra o fim do eixo horizontal ``x`` (porcentagem).|
+		|yInit|number|Registra o início do eixo vertical ``y`` (porcentagem).|
+		|yEnd|number|Registra o fim do eixo vertical ``y`` (porcentagem).|
+		|points|number|Número de divisões dos eixos no gráfico (impar).|
+		|padd|number|Define um valor para espaçamento relativo (porcentagem).|
+		|width|number|Define a dimensão horizontal do gráfico.|
+		|height|number|Retorna a dimensão vertical do gráfico proporcional à ``width``.|
+		|xStart|number|Coordenada horizontal da origem do gráfico.|
+		|xSize|number|Tamanho do eixo ``x``.|
+		|xMiddle|number|Metade do eixo ``x``.|
+		|xClose|number|Fim do eixo ``x``.|
+		|yStart|number|Coordenada vertical da origem do gráfico.|
+		|ySize|number|Tamanho do eixo ``y``.|
+		|yMiddle|number|Metade do eixo ``y``.|
+		|yClose|number|Fim do eixo ``y``.|
+		|top|number|A metade do espaço superior.|
+		|bottom|number|A metade do espaço inferior.|
+		|left|number|A metade do espaço esquerdo.|
+		|right|number|A metade do espaço direito.|
+		|padding|number|Retorna o espaçamento definido.|**/
 		_cfg: {
 			value: {
 				vertical:   Math.min(window.screen.width, window.screen.height),
@@ -6327,39 +6328,45 @@ Object.defineProperties(__Type.prototype, {
 				const border = {n: false, e: false, s: false, w: false};
 				for (let i = 0; i < parts.length; i++) chart[parts[i]] = true;
 
-				/* area de plotagem */
+				/*-- Área de plotagem --*/
 				const attrMain = {stroke: "none", fill: "none", "stroke-width": 2, "stroke-linecap": "round"};
 				svg.rect(cfg.xStart, cfg.yStart, cfg.xSize, cfg.ySize).attribute(attrMain);
 				const main = svg.last;
 
-				/* elementos do gráfico */
+				/*-- Título do gráfico --*/
 				if (chart.title) {
 					svg.text(cfg.xMiddle, cfg.top, this.title, "hc").attribute({
 						fill: color, "font-size": "1.5em", "font-weight": "bold", cursor: "default"
 					});
 				}
+				/*-- Rótulo do eixo horizontal --*/
 				if (chart.xlabel) {
 					svg.text(cfg.xMiddle, cfg.height - 2*cfg.padding, this.xLabel, "hs")
 					.attribute({fill: color, cursor: "default"});
 				}
+				/*-- Rótulo do eixo vertical --*/
 				if (chart.ylabel) {
 					svg.text(2*cfg.padding, cfg.yMiddle, this.yLabel, "vn")
 					.attribute({fill: color, cursor: "default"});
 				}
+				/*-- Linha secundária de zero horizontal --*/
 				if (chart.hzero && (this._yMin < 0 && this._yMax > 0)) {
 					const zero = this._yScale(0);
 					svg.line([cfg.xStart, zero], [cfg.xClose, zero])
 					.attribute({stroke: color, "stroke-width": 2, fill: "none"});
 				}
+				/*-- Linha secundária de zero vertical --*/
 				if (chart.vzero && (this._xMin < 0 && this._xMax > 0)) {
 					const zero = this._xScale(0);
 					svg.line([zero, cfg.yStart], [zero, cfg.xClose])
 					.attribute({stroke: color, "stroke-width": 2, fill: "none"});
 				}
+				/*-- Abscissas e ordenadas (retângulo) --*/
 				if (chart.xyplan) {
 					main.setAttribute("stroke", color);
 					for (let j in border) border[j] = true;
 				}
+				/*-- Abscissa e ordenada (eixos perpendiculares) --*/
 				else if (chart.xyaxes) {
 					svg.lines(
 						[cfg.xStart, cfg.xStart, cfg.xClose],
@@ -6369,21 +6376,24 @@ Object.defineProperties(__Type.prototype, {
 					border.s = true;
 					border.w = true;
 				}
-			/* pontos, valores e âncoras */
+				/*-- pontos, valores e âncoras --*/
 				const dw = (cfg.xClose - cfg.xStart) / (cfg.points - 1);
 				const dh = (cfg.yClose - cfg.yStart) / (cfg.points - 1);
 				const dx = (this._xMax - this._xMin) / (cfg.points - 1);
 				const dy = (this._yMax - this._yMin) / (cfg.points - 1);
-				const dt = {
-					datetime: "x-small",
+				const aSize = {
+					datetime: "small",
 					time: "smaller",
 					date: "small",
 					number: "smaller",
 					default: "normal"
 				};
+				const xAxis = this.xAxis;
+				const yAxis = this.yAxis;
 				let px, py, vx, vy, ax, ay;
 				let i = -1;
 				while (++i < cfg.points) {
+					/*-- obtendo referenciais para montagem da área de plotagem --*/
 					let zero = i === 0;
 					let half = i === ((cfg.points - 1) / 2);
 					let last = i === (cfg.points - 1);
@@ -6407,7 +6417,7 @@ Object.defineProperties(__Type.prototype, {
 						ax = "hn";
 						ay = "he";
 					}
-
+					/*-- Linhas secundárias horizontais --*/
 					if (chart.hlines) {
 						svg.line([cfg.xStart, py], [cfg.xClose, py]).attribute({
 							stroke: "#778899", "stroke-width": 1, "stroke-linecap": "round",
@@ -6416,6 +6426,7 @@ Object.defineProperties(__Type.prototype, {
 							"display": line.h ? "inline" : "none"
 						});
 					}
+					/*-- Linhas secundárias verticais --*/
 					if (chart.vlines) {
 						svg.line([px, cfg.yStart], [px, cfg.yClose]).attribute({
 							stroke: "#778899", "stroke-width": 1, "stroke-linecap": "round",
@@ -6424,36 +6435,48 @@ Object.defineProperties(__Type.prototype, {
 							"display": line.v ? "inline" : "none"
 						});
 					}
+					/*-- Escala eixo horizontal --*/
 					if (chart.xscale) {
-						let xscaleval = this._values(vx, this.xAxis);
-						svg.text(px, cfg.yClose + cfg.padding, xscaleval, ax).attribute({
+						let size = xAxis === "datetime" ? "x-small" : "smaller";
+						let sval = this._values(vx, "x");
+						if (xAxis === "datetime") sval = sval.replace(/\,?\s+/, "\n");
+						svg.text(px, cfg.yClose + cfg.padding, sval, ax)
+						.attribute({
 							fill: color, "class": (hide ? "js-wd-chart-hide" : ""),
-							cursor: "default", "font-size": dt[this.xAxis]
-						}).title(xscaleval);
+							cursor: "default", "font-size": size
+						}).title(this._values(vx, "X"));
 					}
+					/*-- Escala eixo vertical --*/
 					if (chart.yscale) {
-						let yscaleval = this._values(vy, this.yAxis);
-						svg.text(cfg.xStart - cfg.padding, py, yscaleval, ay).attribute({
+						let size = (/^(date)?(time)?$/).test(yAxis) ? "x-small" : "smaller";
+						let sval = this._values(vy, "y");
+						if (yAxis === "datetime") sval = sval.replace(/\,?\s+/, "\n");
+						svg.text(cfg.xStart - cfg.padding, py, sval, ay)
+						.attribute({
 							fill: color, "class": (hide ? "js-wd-chart-hide" : ""),
-							cursor: "default", "font-size": dt[this.yAxis]
-						}).title(yscaleval);
+							cursor: "default", "font-size": size
+						}).title(this._values(vy, "Y"));
 					}
 				}
-
+				/*-- Evento do mouse dentro da área de plotagem --*/
 				if (chart.mouse) {
+					/*-- texto com os valores do conjunto (x,y) --*/
 					svg.text(cfg.width - cfg.padding, cfg.height - cfg.padding, "", "hse")
 					.attribute({
 						fill: color, cursor: "default", "data-wd-chart-tool": "coordinates",
-						"font-size": "smaller"
+						"font-size": "small"
 					});
+					/*-- linha horizontal --*/
 					svg.line([cfg.xStart, cfg.yStart], [cfg.xClose, cfg.yStart])
 					.attribute({
 						"stroke-width": 1, stroke: color, display: "none", "data-wd-chart-tool": "hline"
 					});
+					/*-- linha vertical --*/
 					svg.line([cfg.xStart, cfg.yStart], [cfg.xStart, cfg.yClose])
-					.attribute(
-						{"stroke-width": 1, stroke: color, display: "none", "data-wd-chart-tool": "vline"
+					.attribute({
+						"stroke-width": 1, stroke: color, display: "none", "data-wd-chart-tool": "vline"
 					});
+					/*-- Disparador do Evento do mouse --*/
 					const self = this;
 					svg.svg().onmousemove = function (ev) {
 						const ps = svg.svg().getBoundingClientRect();
@@ -6464,6 +6487,7 @@ Object.defineProperties(__Type.prototype, {
 						const hline = svg.svg().querySelector("[data-wd-chart-tool=hline]");
 						const vline = svg.svg().querySelector("[data-wd-chart-tool=vline]");
 						const xypos = svg.svg().querySelector("[data-wd-chart-tool=coordinates]");
+						/*-- Dentro da área de plotagem --*/
 						if (go) {
 							const dx = self._xMax - self._xMin;
 							const dy = self._yMax - self._yMin;
@@ -6471,15 +6495,17 @@ Object.defineProperties(__Type.prototype, {
 							const vy = self._yMax - ((my - pm.top)/pm.height)*dy;
 							const px = self._xScale(vx);
 							const py = self._yScale(vy);
-							const tx = self._values(vx, self.xAxis === "default" ? "number" : self.xAxis);
-							const ty = self._values(vy, self.yAxis === "default" ? "number" : self.yAxis);
+							const tx = self._values(vx, "X");
+							const ty = self._values(vy, "Y");
 							const hl = {y1: py, y2: py, display: "inline"};
 							const vl = {x1: px, x2: px, display: "inline"};
 							xypos.textContent = tx+" × "+ty;
 							svg.svg().setAttribute("cursor", "crosshair");
 							for (let i in hl) hline.setAttribute(i, hl[i]);
 							for (let i in vl) vline.setAttribute(i, vl[i]);
-						} else {
+						}
+						/*-- Fora da área de plotagem --*/
+						else {
 							xypos.textContent = "";
 							hline.setAttribute("display", "none");
 							vline.setAttribute("display", "none");
@@ -6493,37 +6519,83 @@ Object.defineProperties(__Type.prototype, {
 		},
 		/**. ``''string'' _values(''number'' value, ''string'' type)``: Formata e retorna o valor a ser exibido nos eixos. O argumento ``value`` corresponde ao valor numérico a ser formatado. O argumento opcional ``type`` diz respeito ao tipo de informação (''number'', ''time'', ''date'', ''datetime'' ou ''percent'').**/
 		_values: {
-			value: function(value, type) {
-				const n = __Number(value);
-				switch(type) {
-					case "date":
-						return __DateTime(value).toLocaleDateString();
-					case "time":
-						return __DateTime(value).toLocaleTimeString();
-					case "datetime":
-						return __DateTime(value).toLocaleString();
-					case "percent":
-						return n.toLocaleString({type : "percent", decimal: 0});
-					case "number":
-						return n.toLocaleString();
+			value: function(value, axis) {
+				//minúsculo é para o eixo maiúsculo para para exibição
+				const x = axis === "x" || axis === "X";
+				const y = axis === "y" || axis === "Y";
+				/*-- valores para eixos e exibição --*/
+				if (x || y) {
+					const scale = x ? this.xAxis : this.yAxis;
+					/*-- escala data/tempo | valor para eixo e exibição --*/
+					if ((/^(date|time|datetime)$/).test(scale)) {
+						const num = new __DateTime(value);
+						if (scale === "date") return num.toLocaleDateString();
+						if (scale === "time") return num.toLocaleTimeString();
+						const dt = num.toLocaleString()
+						return axis === "y" ? dt.replace(/\,?\s+/, "\n") : dt;
+					}
+					/*-- escala numérica/proporcional --*/
+					const num = new __Number(value);
+					const exp = num.exp;
+					let cfg;
+					/*-- valores para eixo --*/
+					if (axis === "x" || axis === "y") {
+						if (scale === "percent") {
+							cfg = {type: "percent"};
+							     if (num ==  0) cfg.decimal = 0;
+							else if (exp <= -4) cfg.decimal = 4;
+							else if (exp <= -3) cfg.decimal = 3;
+							else if (exp <=  0) cfg.decimal = 2;
+							else if (exp <= +1) cfg.decimal = 1;
+							else                cfg.decimal = 0;
+						} else {
+							     if (num ==    0) cfg = {type: "decimal",    decimal: 0};
+							else if (exp >=  100) cfg = {type: "scientific", decimal: 0};
+							else if (exp >=   10) cfg = {type: "scientific", decimal: 1};
+							else if (exp >=    3) cfg = {type: "scientific", decimal: 2};
+							else if (exp >=    2) cfg = {type: "decimal",    decimal: 1};
+							else if (exp >=    1) cfg = {type: "decimal",    decimal: 2};
+							else if (exp <= -100) cfg = {type: "scientific", decimal: 0};
+							else if (exp <=  -10) cfg = {type: "scientific", decimal: 1};
+							else if (exp <    -1) cfg = {type: "scientific", decimal: 2};
+							else                  cfg = {type: "decimal",    decimal: 2};
+						}
+					}
+					/*-- valores para exibição --*/
+					else {
+						const min = x ? this._xMin : this._yMin;
+						const max = x ? this._xMax : this._yMax;
+						const gap = (max - min) / (x ? this._cfg.width : this._cfg.height);
+						const dec = gap < 1 ? Math.abs(new __Number(gap).exp) : 0;
+						const sci = exp > 2 || exp < -2;
+						cfg = {};
+						if (scale === "percent") {
+							cfg.type = "percent";
+							cfg.decimal = dec <= 2 ? 0 : dec-2;
+						} else {
+							cfg.type    = sci ? "scientific" : "decimal";
+							cfg.decimal = dec + (sci ? exp : 0);
+						}
+					}
+					return num.toLocaleString(cfg);
 				}
-				const e = n.exp;
-				if (n ==    0) return n.toLocaleString({type : "decimal",    decimal: 0});
-				if (e >=  100) return n.toLocaleString({type : "scientific", decimal: 0});
-				if (e >=   10) return n.toLocaleString({type : "scientific", decimal: 1});
-				if (e >=    3) return n.toLocaleString({type : "scientific", decimal: 2});
-				if (e >=    2) return n.toLocaleString({type : "decimal",    decimal: 1});
-				if (e >=    1) return n.toLocaleString({type : "decimal",    decimal: 2});
-				if (e <= -100) return n.toLocaleString({type : "scientific", decimal: 0});
-				if (e <=  -10) return n.toLocaleString({type : "scientific", decimal: 1});
-				if (e <    -1) return n.toLocaleString({type : "scientific", decimal: 2});
-				return n.toLocaleString({type : "decimal", decimal: 2});
+				/*-- valores para constantes --*/
+				//FIXME não está dando certo as casas decimais :(
+				const num = new __Number(value);
+				const exp = num.exp;
+				const gap = Math.abs(num.dec);
+				const dec = gap < 1 ? Math.abs(new __Number(gap).exp) : 0;
+				const sci = exp > 2 || exp < -2;
+				return num.toLocaleString({
+					type:    sci ? "scientific" : "decimal",
+					decimal: dec + (sci ? exp : 0)
+				});
 			}
 		},
 		/**. ``''void'' _legend(''node'' svg, ''object'' data)``: Constrói a legenda do gráfico. O argumento ``svg`` é o elemento SVG onde o gŕafico está sendo construído. O argumento ``data`` contendo as propriedades ``id`` (identificador da legenda), ``name`` (nome da curva), ``info`` (informação complementar) e ``color`` (cor a ser utilizada na legenda). Se ``name`` for nulo, a ação será ignorada.**/
 		_legend: {
 			value: function(svg, data) {
-				/* definindo itens da legenda */
+				/*-- definindo itens da legenda --*/
 				let legend  = [];
 				let items   = [];
 				const color = this.color();
@@ -6540,7 +6612,7 @@ Object.defineProperties(__Type.prototype, {
 					}
 				});
 				if (legend.length < 1) return;
-
+				/*-- Renderizando a legenda --*/
 				svg.text(
 					this._cfg.xClose + 2*this._cfg.padding,
 					this._cfg.yStart + 2*this._cfg.padding,
@@ -6548,7 +6620,7 @@ Object.defineProperties(__Type.prototype, {
 					"hnw"
 				);
 
-				/* definindo atributos dos itens da legenda */
+				/*-- definindo atributos dos itens da legenda --*/
 				const links = svg.last.children;
 				const self  = this;
 				legend.forEach(function(v,i,a) {
@@ -6562,7 +6634,7 @@ Object.defineProperties(__Type.prototype, {
 					};
 					for (let j in attr) v.link.setAttribute(j, attr[j]);
 
-					/* definindo informação complementar */
+					/*-- definindo informação complementar --*/
 					svg.text(
 						self._cfg.xStart + self._cfg.padding,
 						self._cfg.yStart + self._cfg.padding,
@@ -6572,7 +6644,7 @@ Object.defineProperties(__Type.prototype, {
 						fill: color, "font-size": "1.2em", display: "none",
 						"data-wd-chart-info": v.id
 					}).last.children[0].setAttribute("font-weight", "bold");
-					/* definindo ação da legenda */
+					/*-- definindo ação da legenda --*/
 					v.link.onclick = function(ev) {
 						const id     = ev.target.dataset.wdChartLink;
 						const infos  = svg.svg().querySelectorAll("[data-wd-chart-info]");
@@ -6595,9 +6667,11 @@ Object.defineProperties(__Type.prototype, {
 							let item = curves[k];
 							let ref  = item.dataset.wdChartCurve;
 							if (mark)
-								item.setAttribute("display", (ref === id ? "inline" : "none"));
+								//item.setAttribute("display", (ref === id ? "inline" : "none"));
+								item.setAttribute("opacity", (ref === id ? "0.8" : "0.1"));
 							else
-								item.setAttribute("display", "inline");
+								//item.setAttribute("display", "inline");
+								item.setAttribute("opacity", "1");
 						}
 						return;
 					}
@@ -6673,7 +6747,7 @@ Object.defineProperties(__Type.prototype, {
 						if (data[i].type === "sum") {
 							let fit = __Data2D(data[i].x, data[i].y);
 							let sum = fit.area;
-							curve.info = "∑ yΔx ≈ " + this._values(sum, "number");
+							curve.info = "∑ yΔx ≈ " + this._values(sum);
 							/* obter posicionamento para inserir o rótulo da área */
 							let min = Math.min.apply(null, fit.y);
 							let max = Math.max.apply(null, fit.y);
@@ -6695,7 +6769,7 @@ Object.defineProperties(__Type.prototype, {
 							svg.lines(x, y, true) /* área */
 							.attribute(attrs.sum)
 							.attribute({stroke: color, fill: color, "data-wd-chart-curve": id})
-							.text(xm, ym, this._values(sum, "number"), pm) /* valor numérico */
+							.text(xm, ym, this._values(sum), pm) /* valor numérico */
 							.attribute({fill: color, "data-wd-chart-curve": id})
 						}
 						if (data[i].type === "avg") {
@@ -6704,7 +6778,7 @@ Object.defineProperties(__Type.prototype, {
 							let xi  = this._xScale(this._xMin);
 							let xn  = this._xScale(this._xMax);
 							let ya  = this._yScale(avg);
-							curve.info = "(∑ yΔx)/ΔX ≈ " + this._values(avg, "number");
+							curve.info = "(∑ yΔx)/ΔX ≈ " + this._values(avg);
 							/* plotando a curva e a linha média */
 							svg.lines(x, y)
 							.attribute(attrs.dash)
@@ -6712,7 +6786,7 @@ Object.defineProperties(__Type.prototype, {
 							svg.lines([xi, xn], [ya, ya])
 							.attribute(attrs.line)
 							.attribute({stroke: color, "data-wd-chart-curve": id})
-							svg.text(x[0]+5, ya-5, this._values(avg, "number"), "hsw")
+							svg.text(x[0]+5, ya-5, this._values(avg), "hsw")
 							.attribute({fill: color, "data-wd-chart-curve": id});
 						}
 						legend.push(curve);
@@ -6752,14 +6826,14 @@ Object.defineProperties(__Type.prototype, {
 					for (let i in data[0]) {
 						let value = data[0][i];
 						pieces.push({
-							value:  value,
-							_value: this._values(value, "number"),
-							ratio:  total === 0 ? null : value/total,
-							_ratio: total === 0 ? null : this._values(value/total, "percent"),
-							name: i,
-							id: ++id,
+							value: value,
+							ratio: total === 0 ? null : value/total,
+							name:  i,
+							id:    ++id,
 							color: this.color(id),
 						});
+
+						//FIXME porque isso?
 						this._yMin = value;
 						this._yMax = value;
 					}
@@ -6769,23 +6843,29 @@ Object.defineProperties(__Type.prototype, {
 					svg.text(
 						this._cfg.padding,
 						this._cfg.height - this._cfg.padding,
-						this.yLabel + ": " + this._values(total, "number"),
+						"∑ = " + this._values(total, "number"),
 						"hsw"
 					).attribute({cursor: "default"});
-					svg.text(
-						this._cfg.xMiddle,
-						this._cfg.yClose + this._cfg.padding,
-						this.yLabel + " × " + this.xLabel,
-						"hn"
-					).attribute({cursor: "default"});
 
 
 
 
 
 
-					/* gráfico circular ------------------------------------------------*/
+
+					/*-- gráfico circular ----------------------------------------------*/
 					if (this._chart !== "cols" && minus !== plus && total !== 0) {
+						this.xAxis = "number";
+						this.yAxis = "percent";
+
+						//FIXME será que eu deixo assim?
+						svg.text(
+							this._cfg.xMiddle,
+							this._cfg.yClose + this._cfg.padding,
+							this.yLabel + " × " + this.xLabel,
+							"hn"
+						).attribute({cursor: "default"});
+
 						let start = 0;
 						let width = 0;
 
@@ -6799,7 +6879,14 @@ Object.defineProperties(__Type.prototype, {
 							let cx    = this._cfg.xMiddle;
 							let cy    = this._cfg.yMiddle;
 							let curve = {id: id, color: color, info: "", name: name};
-							curve.info = this.yLabel+": " + item._value + " (" + item._ratio + ")";
+
+							curve.info = [
+								this.yLabel+": ",
+								this._values(item.value, "y"),
+								" (" + this._values(item.ratio, "x") + ")"
+							].join("");
+
+
 							width = 360*item.ratio;
 							/* pedaço da pizza */
 							svg.semicircle(cx, cy, r, start, width)
@@ -6840,7 +6927,7 @@ Object.defineProperties(__Type.prototype, {
 							let w     = width;
 							let h     = Math.abs(this._yScale(item.value) - this._yScale(0));
 							let curve = {id: id, color: color, info: "", name: name};
-							curve.info = this.yLabel+": "+item._value;
+							curve.info = "---\n "+this.yLabel+": "+item._value;
 							/* barra */
 							svg.rect(x, y, w, h)
 							.attribute({fill: color, "fill-opacity": 0.8})
@@ -6881,20 +6968,20 @@ Object.defineProperties(__Type.prototype, {
 			get: function()  {return this._title;},
 			set: function(x) {this._title = x === null || x === undefined ? "Title" : String(x);}
 		},
-		/**. ``''string'' xAxis``: Define ou retorna o tipo de escala do eixo ``x``: default, date, time, datetime ou percent.**/
+		/**. ``''string'' xAxis``: Define ou retorna o tipo de escala do eixo ``x``: number, date, time, datetime ou percent.**/
 		xAxis: {
 			get: function()  {return this._xAxis;},
 			set: function(x) {
 				let values  = ["date", "time", "datetime", "percent"];
-				this._xAxis = values.indexOf(x) >= 0 ? x : "default";
+				this._xAxis = values.indexOf(x) >= 0 ? x : "number";
 			}
 		},
-		/**. ``''string'' yAxis``: Define ou retorna o tipo de escala do eixo ``y``: default, date, time, datetime ou percent.**/
+		/**. ``''string'' yAxis``: Define ou retorna o tipo de escala do eixo ``y``: number, date, time, datetime ou percent.**/
 		yAxis: {
 			get: function()  {return this._yAxis;},
 			set: function(x) {
 				let values  = ["date", "time", "datetime", "percent"];
-				this._yAxis = values.indexOf(x) >= 0 ? x : "default";
+				this._yAxis = values.indexOf(x) >= 0 ? x : "number";
 			}
 		},
 		/**. ``''boolean'' add(''array'' x, ''any'' y, ''string'' label, ''string'' option)``: Adiciona dados para plotagem e retorna falso se não for possível processar a solicitação. Os argumentos ``x`` e ``y`` representam a abscissa (eixo horizontal) e a ordenada (eixo vertical), respectivamente. Seus valores dependem do tipo de gráfico.
@@ -7052,9 +7139,9 @@ Object.defineProperties(__Type.prototype, {
 							let target = this._data.length - 1;
 							this._data[target].info = [
 								fit.m,
-								"a = "+this._values(fit.a, "number"),
-								"b = "+this._values(fit.b, "number"),
-								"σ = "+this._values(fit.d, "number")
+								"a = "+this._values(fit.a),
+								"b = "+this._values(fit.b),
+								"σ = "+this._values(fit.d)
 							].join("\n");
 							this._data[target].type = "dots";
 
