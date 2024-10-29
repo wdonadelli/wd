@@ -2313,6 +2313,7 @@ Object.defineProperties(__Type.prototype, {
 		toLocaleString: {
 			value: function(options) {
 				if (typeof options !== "object") options = {};
+				/*-- {attr: real, name: atalho, values: opções (0 é padrão)} --*/
 				const properties = {
 					currency: [
 						{attr: "style",           name: null,      values: ["currency"]},
@@ -2340,48 +2341,68 @@ Object.defineProperties(__Type.prototype, {
 						{attr: "notation",       name: null,      values: ["compact"]},
 						{attr: "compactDisplay", name: "display", values: ["short", "long"]},
 					],
-					decimal: [
+					decimal: [ /*-- padrão --*/
 						{attr: "style",    name: null, values: ["decimal"]},
 					],
 				};
 				const property = options.type in properties ? properties[options.type] : properties.decimal;
-				/*-- adicionando propriedades opcionais --*/
-				const intList = new Array(22);
-				for (let i = 0; i < intList.length; i++) intList[i] = i;
-				const optional = [
-					{attr: "signDisplay",              name: "sign",    values: ["auto", "always", "exceptZero", "negative", "never"]},
-					{attr: "minimumFractionDigits",    name: "decimal", values: intList.slice(0,21)},
-					{attr: "maximumFractionDigits",    name: "decimal", values: intList.slice(0,21)},
-					{attr: "minimumIntegerDigits",     name: "integer", values: intList.slice(1,22)},
-					{attr: "minimumSignificantDigits", name: "digits",  values: intList.slice(0,21)},
-					{attr: "maximumSignificantDigits", name: "digits",  values: intList.slice(0,21)},
-					{attr: "useGrouping",              name: "group",   values: ["auto",true,false]},
-				];
-				for (let i = 0; i < optional.length; i++)
-					if (optional[i].name in options) property.push(optional[i]);
 				/*-- obtendo os dados de configuração --*/
 				const config = {};
 				for (let i = 0; i < property.length; i++) {
 					let item = property[i];
-					/*-- propriedades padrão --*/
+					/*-- propriedade não configurável (name = null) --*/
 					if (item.name === null) {
 						config[item.attr] = item.values[0];
 					}
-					/*-- propriedades obrigatórias --*/
+					/*-- propriedade configurável sem valores definidos (values = []) --*/
 					else if (item.values.length === 0) {
-						if (item.name in options) {
-							config[item.attr] = options[item.name];
-						} else {
-							config.type = "decimal";
-							return this.toLocaleString(config);
-						}
+						if (item.name in options)
+							config[item.attr] = String(options[item.name]);
 					}
-					/*-- propriedades alternativas --*/
+					/*-- propriedade configurável com valores definidos (values = [...]) --*/
 					else {
-						if (item.values.indexOf(options[item.name]) >= 0)
-							config[item.attr] = options[item.name];
-						else
-							config[item.attr] = item.values[0];
+						let index = item.values.indexOf(options[item.name]);
+						config[item.attr] = item.values[index < 0 ? 0 : index];
+					}
+				}
+				/*-- propriedades opcionais --*/
+				const intList = new Array(22);
+				for (let i = 0; i < intList.length; i++) intList[i] = i;
+
+				if ("sign" in options) {
+					let value = ["auto", "always", "exceptZero", "negative", "never"];
+					let index = value.indexOf(options.sign);
+					if (index >= 0) config.signDisplay = value[index];
+				}
+				if ("group" in options) {
+					let value = ["auto", true, false];
+					let index = value.indexOf(options.group);
+					if (index >= 0) config.useGrouping = value[index];
+				}
+				if ("digits" in options) {
+					let value = intList.slice(1,22);
+					let index = value.indexOf(Number(options.digits));
+					if (index >= 0) {
+						config.minimumSignificantDigits = value[index];
+						config.maximumSignificantDigits = value[index];
+					}
+				}
+				if (!("minimumSignificantDigits" in config)) {
+					/* Significant é prevalente sobre Fraction e Integer */
+					if ("integer" in options) {
+						let value = intList.slice(1,22);
+						let index = value.indexOf(Number(options.integer));
+						if (index >= 0) config.minimumIntegerDigits = value[index];
+					}
+					if ("decimal" in options) {
+						let value = intList.slice(0,21);
+						let index = value.indexOf(Number(options.decimal));
+						if (index >= 0) {
+							config.minimumFractionDigits = value[index];
+							config.maximumFractionDigits = value[index];
+						}
+					} else if (config.style !== "currency") {
+						config.maximumFractionDigits = 20;
 					}
 				}
 				/*-- Retornando valor --*/
@@ -5821,6 +5842,8 @@ Object.defineProperties(__Type.prototype, {
 					"text-anchor":       vanchor[anchor[point.substring(1)]],
 					"dominant-baseline": vbase[base[point.substring(1)]],
 					"transform":         point[0] === "v" ? "rotate(270)" : "",
+					"style": "white-space: break-spaces;"//FIXME múltiplas linhas
+
 				};
 				this.attribute(attr);
 				const self  = this;
@@ -6439,7 +6462,6 @@ Object.defineProperties(__Type.prototype, {
 					if (chart.xscale) {
 						let size = xAxis === "datetime" ? "x-small" : "smaller";
 						let sval = this._values(vx, "x");
-						if (xAxis === "datetime") sval = sval.replace(/\,?\s+/, "\n");
 						svg.text(px, cfg.yClose + cfg.padding, sval, ax)
 						.attribute({
 							fill: color, "class": (hide ? "js-wd-chart-hide" : ""),
@@ -6450,7 +6472,6 @@ Object.defineProperties(__Type.prototype, {
 					if (chart.yscale) {
 						let size = (/^(date)?(time)?$/).test(yAxis) ? "x-small" : "smaller";
 						let sval = this._values(vy, "y");
-						if (yAxis === "datetime") sval = sval.replace(/\,?\s+/, "\n");
 						svg.text(cfg.xStart - cfg.padding, py, sval, ay)
 						.attribute({
 							fill: color, "class": (hide ? "js-wd-chart-hide" : ""),
@@ -6580,102 +6601,101 @@ Object.defineProperties(__Type.prototype, {
 					return num.toLocaleString(cfg);
 				}
 				/*-- valores para constantes --*/
-				//FIXME não está dando certo as casas decimais :(
 				const num = new __Number(value);
-				const exp = num.exp;
-				const gap = Math.abs(num.dec);
-				const dec = gap < 1 ? Math.abs(new __Number(gap).exp) : 0;
-				const sci = exp > 2 || exp < -2;
-				return num.toLocaleString({
-					type:    sci ? "scientific" : "decimal",
-					decimal: dec + (sci ? exp : 0)
-				});
+				return num.toLocaleString();
 			}
 		},
-		/**. ``''void'' _legend(''node'' svg, ''object'' data)``: Constrói a legenda do gráfico. O argumento ``svg`` é o elemento SVG onde o gŕafico está sendo construído. O argumento ``data`` contendo as propriedades ``id`` (identificador da legenda), ``name`` (nome da curva), ``info`` (informação complementar) e ``color`` (cor a ser utilizada na legenda). Se ``name`` for nulo, a ação será ignorada.**/
+		/**. ``''void'' _legend(''node'' svg, ''object'' data)``: Constrói a legenda do gráfico. O argumento ``svg`` é o elemento SVG onde o gŕafico está sendo construído. O argumento ``data`` contém as propriedades ``id`` (identificador da legenda), ``name`` (nome da curva), ``info`` (informação complementar) e ``color`` (cor a ser utilizada na legenda). Se ``name`` for nulo, a ação será ignorada.**/
 		_legend: {
 			value: function(svg, data) {
 				/*-- definindo itens da legenda --*/
-				let legend  = [];
-				let items   = [];
+				const legend  = [];
+				const items   = [];
 				const color = this.color();
-				data.forEach(function(v,i,a) {
-					if (v.name !== null) {
+				for (let i = 0; i < data.length; i++) {
+					if (data[i].name !== null) {
 						legend.push({
-							id: String(v.id),
-							text: String("● "+v.name),
-							color: v.color,
-							info: String(v.name) + "\n" + String(v.info),
+							id: String(data[i].id),
+							text: String("\u25A0 "+data[i].name),
+							color: data[i].color,
+							info: [
+								"\u25A0 "+String(data[i].name),
+								"-------------------------------------",
+								String(data[i].info),
+								"-------------------------------------"
+							].join("\n"),
 							link: null,
 						});
 						items.push(legend[legend.length - 1].text);
 					}
-				});
+				}
 				if (legend.length < 1) return;
-				/*-- Renderizando a legenda --*/
+				/*-- Renderizando os itens da legenda --*/
 				svg.text(
 					this._cfg.xClose + 2*this._cfg.padding,
 					this._cfg.yStart + 2*this._cfg.padding,
 					items.join("\n"),
 					"hnw"
 				);
-
 				/*-- definindo atributos dos itens da legenda --*/
 				const links = svg.last.children;
-				const self  = this;
-				legend.forEach(function(v,i,a) {
-					a[i].link = links[i];
+				for (let i = 0; i < legend.length; i++) {
+					legend[i].link = links[i];
 					let attr  = {
-						fill: v.color,
-						"font-size": "1.2em",
-						"data-wd-chart-subtitle": v.id,
-						cursor: "pointer",
-						"data-wd-chart-link": v.id
+						"font-size": "1.2em", cursor: "pointer",
+						fill: legend[i].color,
+						"data-wd-chart-subtitle": legend[i].id,
+						"data-wd-chart-link":     legend[i].id
 					};
-					for (let j in attr) v.link.setAttribute(j, attr[j]);
-
+					for (let j in attr)
+						legend[i].link.setAttribute(j, attr[j]);
 					/*-- definindo informação complementar --*/
 					svg.text(
-						self._cfg.xStart + self._cfg.padding,
-						self._cfg.yStart + self._cfg.padding,
-						v.info,
+						this._cfg.xStart + this._cfg.padding,
+						this._cfg.yStart + this._cfg.padding,
+						legend[i].info,
 						"hnw"
 					).attribute({
-						fill: color, "font-size": "1.2em", display: "none",
-						"data-wd-chart-info": v.id
-					}).last.children[0].setAttribute("font-weight", "bold");
+						fill: color, "font-size": "1em", opacity: "0",
+						"font-family": "Courier New, monospace",
+						"data-wd-chart-info": legend[i].id
+					});
+					svg.last.children[0].setAttribute("font-weight", "bold");
+					svg.last.children[0].setAttribute("font-size", "larger");
+					svg.last.children[0].setAttribute("fill", legend[i].color);
 					/*-- definindo ação da legenda --*/
-					v.link.onclick = function(ev) {
+					legend[i].link.onclick = function(ev) {
+						let root = ev.target;
+						while (root.tagName.toLowerCase() !== "svg")
+							root = root.parentElement;
 						const id     = ev.target.dataset.wdChartLink;
-						const infos  = svg.svg().querySelectorAll("[data-wd-chart-info]");
-						const curves = svg.svg().querySelectorAll("[data-wd-chart-curve]");
-						let mark  = false;
-						let k = -1;
-						while (++k < infos.length) {
-							let item = infos[k];
-							let ref  = item.dataset.wdChartInfo;
-							let hide = item.getAttribute("display") ===  "none";
-							if (ref === id && hide) {
-								item.setAttribute("display", "inline");
-								mark = true;
-							} else {
-								item.setAttribute("display", "none");
-							}
+						const show   = root.dataset.wdChartShow !== id;
+						const infos  = root.querySelectorAll("[data-wd-chart-info]");
+						const curves = root.querySelectorAll("[data-wd-chart-curve]");
+						const links  = root.querySelectorAll("[data-wd-chart-link]");
+						root.dataset.wdChartShow = show ? id : "";
+						/*-- destacando informações complementares --*/
+						for (let k = 0; k < infos.length; k++) {
+							let ref = infos[k].dataset.wdChartInfo;
+							let val = show && ref === id ? "1" : "0";
+							infos[k].setAttribute("opacity", val);
 						}
-						k = -1;
-						while (++k < curves.length) {
-							let item = curves[k];
-							let ref  = item.dataset.wdChartCurve;
-							if (mark)
-								//item.setAttribute("display", (ref === id ? "inline" : "none"));
-								item.setAttribute("opacity", (ref === id ? "0.8" : "0.1"));
-							else
-								//item.setAttribute("display", "inline");
-								item.setAttribute("opacity", "1");
+						/*-- destacando curvas --*/
+						for (let k = 0; k < curves.length; k++) {
+							let ref = curves[k].dataset.wdChartCurve;
+							let val = show ? (ref === id ? "0.8" : "0.1") : "1";
+							curves[k].setAttribute("opacity", val);
 						}
+						//FIXME
+						for (let k = 0; k < links.length; k++) {
+							let ref = links[k].dataset.wdChartLink;
+							let val = show ? (ref === id ? "0.8" : "0.1") : "1";
+							links[k].setAttribute("opacity", val);
+						}
+
 						return;
 					}
-				});
+				}
 				return;
 			}
 		},
@@ -6769,7 +6789,7 @@ Object.defineProperties(__Type.prototype, {
 							svg.lines(x, y, true) /* área */
 							.attribute(attrs.sum)
 							.attribute({stroke: color, fill: color, "data-wd-chart-curve": id})
-							.text(xm, ym, this._values(sum), pm) /* valor numérico */
+							.text(xm, ym, this._values(sum, "Y"), pm) /* valor numérico */
 							.attribute({fill: color, "data-wd-chart-curve": id})
 						}
 						if (data[i].type === "avg") {
@@ -6783,10 +6803,10 @@ Object.defineProperties(__Type.prototype, {
 							svg.lines(x, y)
 							.attribute(attrs.dash)
 							.attribute({stroke: color, "data-wd-chart-curve": id})
-							svg.lines([xi, xn], [ya, ya])
+							.lines([xi, xn], [ya, ya])
 							.attribute(attrs.line)
 							.attribute({stroke: color, "data-wd-chart-curve": id})
-							svg.text(x[0]+5, ya-5, this._values(avg), "hsw")
+							.text(x[0]+5, ya-5, this._values(avg, "Y"), "hsw")
 							.attribute({fill: color, "data-wd-chart-curve": id});
 						}
 						legend.push(curve);
@@ -6832,38 +6852,16 @@ Object.defineProperties(__Type.prototype, {
 							id:    ++id,
 							color: this.color(id),
 						});
-
-						//FIXME porque isso?
 						this._yMin = value;
 						this._yMax = value;
 					}
-
-
-					//FIXME aqui tenho que ver o que é melhor entre o gŕafico circular e o de colunas
-					svg.text(
-						this._cfg.padding,
-						this._cfg.height - this._cfg.padding,
-						"∑ = " + this._values(total, "number"),
-						"hsw"
-					).attribute({cursor: "default"});
-
-
-
-
-
-
-
 					/*-- gráfico circular ----------------------------------------------*/
 					if (this._chart !== "cols" && minus !== plus && total !== 0) {
-						this.xAxis = "number";
 						this.yAxis = "percent";
 
-						//FIXME será que eu deixo assim?
 						svg.text(
-							this._cfg.xMiddle,
-							this._cfg.yClose + this._cfg.padding,
-							this.yLabel + " × " + this.xLabel,
-							"hn"
+							this._cfg.xMiddle, this._cfg.bottom,
+							this.yLabel + " × " + this.xLabel, "hc"
 						).attribute({cursor: "default"});
 
 						let start = 0;
@@ -6874,25 +6872,26 @@ Object.defineProperties(__Type.prototype, {
 							let item  = pieces[i];
 							let id    = item.id;
 							let name  = item.name;
+							let value = item.value;
+							let ratio = item.ratio;
 							let color = item.color;
 							let r     = 2*this._cfg.ySize/5;
 							let cx    = this._cfg.xMiddle;
 							let cy    = this._cfg.yMiddle;
 							let curve = {id: id, color: color, info: "", name: name};
-
 							curve.info = [
-								this.yLabel+": ",
-								this._values(item.value, "y"),
-								" (" + this._values(item.ratio, "x") + ")"
-							].join("");
-
-
-							width = 360*item.ratio;
-							/* pedaço da pizza */
+								" "+this.yLabel,
+								"  "+this._values(total),
+								" "+this.xLabel,
+								"  "+name,
+								"  "+this._values(value) + " (" + this._values(ratio, "y") + ")"
+							].join("\n");
+							width = 360*ratio;
+							/*-- pedaço da pizza --*/
 							svg.semicircle(cx, cy, r, start, width)
 							.attribute({fill: color, "data-wd-chart-curve": id, "fill-opacity": 0.8})
 							.attribute({"stroke-linecap": "round", "stroke-width": 1, stroke: color})
-							.title(name+"\n"+curve.info);
+							.title(name+"\n"+this._values(value));
 							/* legenda */
 							let m = start + width/2;
 							let x = cx + (r + 5)*Math.cos(2*Math.PI*m/360);
@@ -6903,9 +6902,9 @@ Object.defineProperties(__Type.prototype, {
 							else if (m < 270) p = m === 180 ? "he" : "hne";
 							else if (m < 360) p = m === 270 ? "hn" : "hnw";
 							else p = "hw";
-							svg.text(x, y, item.name+" ("+item._ratio+")", p)
+							svg.text(x, y, name+" ("+this._values(ratio, "y")+")", p)
 							.attribute({fill: color, cursor: "default"})
-							.attribute({"data-wd-chart-curve": "none"})
+							.attribute({"data-wd-chart-curve": id})
 							.title(curve.info);
 							/* iterando */
 							start += width;
@@ -6922,28 +6921,36 @@ Object.defineProperties(__Type.prototype, {
 							let id    = item.id;
 							let color = item.color;
 							let name  = item.name;
+							let value = item.value;
 							let x     = this._xScale(i);
 							let y     = this._yScale(item.value >= 0 ? item.value : 0);
 							let w     = width;
 							let h     = Math.abs(this._yScale(item.value) - this._yScale(0));
 							let curve = {id: id, color: color, info: "", name: name};
-							curve.info = "---\n "+this.yLabel+": "+item._value;
+							curve.info = [
+								""+this.yLabel,
+								" "+this._values(total),
+								""+this.xLabel,
+								" "+name,
+								" "+this._values(value)
+							].join("\n");
+
 							/* barra */
 							svg.rect(x, y, w, h)
 							.attribute({fill: color, "fill-opacity": 0.8})
 							.attribute({stroke: color, "stroke-width": 2})
 							.attribute({"data-wd-chart-curve": id})
-							.title(name+"\n"+curve.info);
-							/* legenda */
+							.title(name+"\n"+this._values(value));
+							/* Escala eixo x */
 							svg.text(
 								x + width/2,
-								item.value >= 0 ? (y+h+5) : (y-5),
-								this._values(item.value),
-								item.value >= 0 ? "hn" : "hs"
+								value >= 0 ? (y+h+5) : (y-5),
+								this._values(value, "y"),
+								value >= 0 ? "hn" : "hs"
 							)
 							.attribute({fill: color, cursor: "default"})
-							.attribute({"data-wd-chart-curve": "none"})
-							.title(item.value);
+							.attribute({"data-wd-chart-curve": id})
+							.title(this._values(value));
 							legend.push(curve);
 						}
 						this._struct(svg, "hlines ylabel yscale hzero title");
