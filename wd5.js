@@ -5824,14 +5824,10 @@ Object.defineProperties(__Type.prototype, {
 				return this.attribute({d: path});
 			}
 		},
-		/**. ``''self'' text(''number'' x, ''number'' y, ''string'' text, ''string'' point)``: Define um SVG textual sensível à quebra de linha. Os argumentos ``x``, ``y`` e ``text`` definem os pontos de referência (''x'', ''y'') e o valor do texto, respectivamente. O argumento ``point`` define a âncora da referência, composta por dois grupos. O primeiro grupo define o posicionamento, ``v`` para vertical ou ``h``. O segundo grupo define o ponto cardeal. A posição e a âncora são definidos a partir da __primeira linha__:
-		||Esquerda/Oeste|Centro|Direita/Leste|
-		|**Topo/Norte**|nw|n|ne|
-		|**Meio**|w|c|e|
-		|**Baixo/Sul**|sw|s|se|**/
+		/**. ``''self'' text(''number'' x, ''number'' y, ''string|array'' text, ''string'' point)``: Define um SVG textual. Os argumentos ``x`` e ``y`` definem o posicionamento. O argumento ``text``, se lista, criará um elemento ''tspan'' para cada item empilhados e, se texto, criará um elemento ''text''. O argumento ``point`` define a posição (vertical/horizontal) e a âncora do texto. O primeiro caractere define a posição, ''v'' para vertical e ''h'' para horizontal, os demais definem a âncora conforme pontos cardeais: ''n, ne, e, se, s, sw, w, nw'' e ''c'' para o meio.**/
 		text: {
 			value: function(x, y, text, point) {
-				this.last     = this.create("text");
+				/*-- definindo atributos do texto --*/
 				const vanchor = ["start", "middle", "end"];
 				const vbase   = ["auto", "middle", "hanging"];
 				const anchor  = {n: 1, ne: 2, e: 2, se: 2, s: 1, sw: 0, w: 0, nw: 0, c: 1};
@@ -5842,20 +5838,26 @@ Object.defineProperties(__Type.prototype, {
 					"text-anchor":       vanchor[anchor[point.substring(1)]],
 					"dominant-baseline": vbase[base[point.substring(1)]],
 					"transform":         point[0] === "v" ? "rotate(270)" : "",
-					"style": "white-space: break-spaces;"//FIXME múltiplas linhas
-
 				};
+				this.last = this.create("text");
+				this.last.style.whiteSpace = "break-spaces";
 				this.attribute(attr);
-				const self  = this;
-				const lines = String(text).split("\n");
-				const dy    = 1.5;
-				lines.forEach(function(v,i,a) {
-					const tspan = self.create("tspan");
-					const style = {x: attr.x, dy: (i === 0 ? 0 : dy+"em")};
-					tspan.textContent = v === "" ? " " : v;
-					for (let j in style) tspan.setAttribute(j, style[j]);
-					self.last.appendChild(tspan);
-				});
+				/*-- definindo texto em linha ou empilhado --*/
+				if (!__Type(text).array) {
+					const value = String(text);
+					const tspan = this.create("tspan");
+					tspan.textContent = value == "" ? " " : value;
+					this.last.appendChild(tspan);
+				} else {
+					for (let i = 0; i < text.length; i++) {
+						let style = {x: attr.x, dy: (i === 0 ? 0 : "1.5em")};
+						let value = String(text[i]);
+						let tspan = this.create("tspan");
+						tspan.textContent = value === "" ? " " : value;
+						for (let j in style) tspan.setAttribute(j, style[j]);
+						this.last.appendChild(tspan);
+					}
+				}
 				return this;
 			}
 		},
@@ -6609,24 +6611,27 @@ Object.defineProperties(__Type.prototype, {
 		_legend: {
 			value: function(svg, data) {
 				/*-- definindo itens da legenda --*/
-				const legend  = [];
-				const items   = [];
-				const color = this.color();
+				const legend = [];
+				const items  = [];
+				const color  = this.color();
+				const char   = {val: "*", len: 35};
 				for (let i = 0; i < data.length; i++) {
 					if (data[i].name !== null) {
-						legend.push({
-							id: String(data[i].id),
-							text: String("\u25A0 "+data[i].name),
+						let name = String(data[i].name).trim();
+						let side = Math.trunc((char.len-name.length-2)/2);
+						let cfg = {
+							id:    String(data[i].id),
+							text:  String("\u25A0 "+name),
 							color: data[i].color,
-							info: [
-								"\u25A0 "+String(data[i].name),
-								"-------------------------------------",
+							info:  [
+								char.val.repeat(side)+" "+String(name)+" "+char.val.repeat(side),
 								String(data[i].info),
-								"-------------------------------------"
+								char.val.repeat(2*side+2+name.length)
 							].join("\n"),
 							link: null,
-						});
-						items.push(legend[legend.length - 1].text);
+						};
+						legend.push(cfg);
+						items.push(cfg.text);
 					}
 				}
 				if (legend.length < 1) return;
@@ -6634,35 +6639,28 @@ Object.defineProperties(__Type.prototype, {
 				svg.text(
 					this._cfg.xClose + 2*this._cfg.padding,
 					this._cfg.yStart + 2*this._cfg.padding,
-					items.join("\n"),
-					"hnw"
+					items, "hnw"
 				);
 				/*-- definindo atributos dos itens da legenda --*/
 				const links = svg.last.children;
 				for (let i = 0; i < legend.length; i++) {
 					legend[i].link = links[i];
 					let attr  = {
-						"font-size": "1.2em", cursor: "pointer",
-						fill: legend[i].color,
-						"data-wd-chart-subtitle": legend[i].id,
-						"data-wd-chart-link":     legend[i].id
+						"font-size": "1.2em", cursor: "pointer", fill: legend[i].color,
+						"data-wd-chart-link": legend[i].id
 					};
 					for (let j in attr)
 						legend[i].link.setAttribute(j, attr[j]);
-					/*-- definindo informação complementar --*/
+					/*-- definindo informação complementar da curva --*/
 					svg.text(
-						this._cfg.xStart + this._cfg.padding,
-						this._cfg.yStart + this._cfg.padding,
-						legend[i].info,
-						"hnw"
+						this._cfg.xStart + 2*this._cfg.padding,
+						this._cfg.yStart + 2*this._cfg.padding,
+						legend[i].info, "hnw"
 					).attribute({
 						fill: color, "font-size": "1em", opacity: "0",
 						"font-family": "Courier New, monospace",
 						"data-wd-chart-info": legend[i].id
 					});
-					svg.last.children[0].setAttribute("font-weight", "bold");
-					svg.last.children[0].setAttribute("font-size", "larger");
-					svg.last.children[0].setAttribute("fill", legend[i].color);
 					/*-- definindo ação da legenda --*/
 					legend[i].link.onclick = function(ev) {
 						let root = ev.target;
@@ -6686,11 +6684,11 @@ Object.defineProperties(__Type.prototype, {
 							let val = show ? (ref === id ? "0.8" : "0.1") : "1";
 							curves[k].setAttribute("opacity", val);
 						}
-						//FIXME
+						/*-- destacando items da legenda --*/
 						for (let k = 0; k < links.length; k++) {
 							let ref = links[k].dataset.wdChartLink;
 							let val = show ? (ref === id ? "0.8" : "0.1") : "1";
-							links[k].setAttribute("opacity", val);
+							links[k].setAttribute("fill-opacity", val);
 						}
 
 						return;
@@ -6729,7 +6727,7 @@ Object.defineProperties(__Type.prototype, {
 						}
 					}
 				}
-				/* plotando plano cartesiano ---------------------------------------- */
+				/*-- plotando plano cartesiano ---------------------------------------*/
 				if (this._chart === "plan") {
 					let i = -1;
 					while(++i < data.length) {
@@ -6767,7 +6765,7 @@ Object.defineProperties(__Type.prototype, {
 						if (data[i].type === "sum") {
 							let fit = __Data2D(data[i].x, data[i].y);
 							let sum = fit.area;
-							curve.info = "∑ yΔx ≈ " + this._values(sum);
+							curve.info = " ∑ yΔx ≈ " + this._values(sum);
 							/* obter posicionamento para inserir o rótulo da área */
 							let min = Math.min.apply(null, fit.y);
 							let max = Math.max.apply(null, fit.y);
@@ -6798,7 +6796,7 @@ Object.defineProperties(__Type.prototype, {
 							let xi  = this._xScale(this._xMin);
 							let xn  = this._xScale(this._xMax);
 							let ya  = this._yScale(avg);
-							curve.info = "(∑ yΔx)/ΔX ≈ " + this._values(avg);
+							curve.info = " (∑ yΔx)/ΔX ≈ " + this._values(avg);
 							/* plotando a curva e a linha média */
 							svg.lines(x, y)
 							.attribute(attrs.dash)
@@ -6858,15 +6856,15 @@ Object.defineProperties(__Type.prototype, {
 					/*-- gráfico circular ----------------------------------------------*/
 					if (this._chart !== "cols" && minus !== plus && total !== 0) {
 						this.yAxis = "percent";
-
+						/*-- rótulo inferior --*/
 						svg.text(
 							this._cfg.xMiddle, this._cfg.bottom,
 							this.yLabel + " × " + this.xLabel, "hc"
 						).attribute({cursor: "default"});
 
+						/*-- dados para construção dos semi-círculos --*/
 						let start = 0;
 						let width = 0;
-
 						let i = -1;
 						while (++i < pieces.length) {
 							let item  = pieces[i];
@@ -6882,17 +6880,17 @@ Object.defineProperties(__Type.prototype, {
 							curve.info = [
 								" "+this.yLabel,
 								"  "+this._values(total),
-								" "+this.xLabel,
+								" "+this.xLabel+" ("+this._values(count)+")",
 								"  "+name,
 								"  "+this._values(value) + " (" + this._values(ratio, "y") + ")"
 							].join("\n");
 							width = 360*ratio;
-							/*-- pedaço da pizza --*/
+							/*-- semi-círculos --*/
 							svg.semicircle(cx, cy, r, start, width)
 							.attribute({fill: color, "data-wd-chart-curve": id, "fill-opacity": 0.8})
 							.attribute({"stroke-linecap": "round", "stroke-width": 1, stroke: color})
-							.title(name+"\n"+this._values(value));
-							/* legenda */
+							.title(curve.info);
+							/*-- legenda ao lado dos semi-círculos --*/
 							let m = start + width/2;
 							let x = cx + (r + 5)*Math.cos(2*Math.PI*m/360);
 							let y = cy - (r + 5)*Math.sin(2*Math.PI*m/360);
@@ -6903,8 +6901,7 @@ Object.defineProperties(__Type.prototype, {
 							else if (m < 360) p = m === 270 ? "hn" : "hnw";
 							else p = "hw";
 							svg.text(x, y, name+" ("+this._values(ratio, "y")+")", p)
-							.attribute({fill: color, cursor: "default"})
-							.attribute({"data-wd-chart-curve": id})
+							.attribute({fill: color, cursor: "default", "data-wd-chart-curve": id})
 							.title(curve.info);
 							/* iterando */
 							start += width;
@@ -6912,8 +6909,10 @@ Object.defineProperties(__Type.prototype, {
 						}
 						this._struct(svg, "title");
 					}
-					/* gráfico de barras -----------------------------------------------*/
+					/*-- gráfico de colunas --------------------------------------------*/
 					else {
+						this.yAxis = "number";
+						/*-- dados para construção das colunas --*/
 						const width = this._cfg.xSize / count;
 						let i = -1;
 						while (++i < pieces.length) {
@@ -6928,32 +6927,30 @@ Object.defineProperties(__Type.prototype, {
 							let h     = Math.abs(this._yScale(item.value) - this._yScale(0));
 							let curve = {id: id, color: color, info: "", name: name};
 							curve.info = [
-								""+this.yLabel,
-								" "+this._values(total),
-								""+this.xLabel,
-								" "+name,
-								" "+this._values(value)
+								" "+this.yLabel,
+								"  "+this._values(total),
+								" "+this.xLabel+" ("+this._values(count)+")",
+								"  "+name,
+								"  "+this._values(value)
 							].join("\n");
-
-							/* barra */
+							/*-- colunas --*/
 							svg.rect(x, y, w, h)
 							.attribute({fill: color, "fill-opacity": 0.8})
 							.attribute({stroke: color, "stroke-width": 2})
 							.attribute({"data-wd-chart-curve": id})
-							.title(name+"\n"+this._values(value));
-							/* Escala eixo x */
+							.title(curve.info);
+							/*-- Escala eixo x --*/
 							svg.text(
 								x + width/2,
 								value >= 0 ? (y+h+5) : (y-5),
 								this._values(value, "y"),
 								value >= 0 ? "hn" : "hs"
 							)
-							.attribute({fill: color, cursor: "default"})
-							.attribute({"data-wd-chart-curve": id})
+							.attribute({fill: color, cursor: "default", "data-wd-chart-curve": id})
 							.title(this._values(value));
 							legend.push(curve);
 						}
-						this._struct(svg, "hlines ylabel yscale hzero title");
+						this._struct(svg, "hlines ylabel xlabel yscale hzero title");
 					}
 				}
 				this._legend(svg, legend);
@@ -7145,10 +7142,10 @@ Object.defineProperties(__Type.prototype, {
 							if (fit === null) return false;
 							let target = this._data.length - 1;
 							this._data[target].info = [
-								fit.m,
-								"a = "+this._values(fit.a),
-								"b = "+this._values(fit.b),
-								"σ = "+this._values(fit.d)
+								" "+fit.m,
+								" a = "+this._values(fit.a),
+								" b = "+this._values(fit.b),
+								" σ = "+this._values(fit.d)
 							].join("\n");
 							this._data[target].type = "dots";
 
@@ -7199,10 +7196,7 @@ Object.defineProperties(__Type.prototype, {
 
 
 
-
-
-
-/*----------------------------------------------------------------------------*/
+/*-------------------------------------------------------------------------FIXME---*/
 	function wd_copy(value) { /* copia o conteúdo da variável para a área de transferência */
 		/* copiar o que está selecionado */
 		if (value === undefined && "execCommand" in document) {
