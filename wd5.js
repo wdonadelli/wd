@@ -6250,14 +6250,16 @@ Object.defineProperties(__Type.prototype, {
 		/**. ``''array'' _xSpace``: Retorna uma lista contendo todos os valores possíveis de ``x``**/
 		_xSpace: {
 			get: function() {
-				let x   = [this._xMin];
-				let max = this._xMax;
-				let dx  = this._dx;
-				let end = false;
-				while (!end) {
-					let value = x[x.length - 1] + dx;
-					x.push(value <=  max ? value : max);
-					end = value >= max;
+				const x   = [this._xMin];
+				const max = this._xMax;
+				const dx  = this._dx;
+				const mid = (this._xMax + this._xMin)/2;
+				let value = -Infinity;
+				while (value < max) {
+					value = x[x.length - 1] + dx;
+					/*-- número central de x (manter nessa posição) --*/
+					if (value > mid && (value-dx) < mid) x.push(mid);
+					x.push(value <= max ? value : max);
 				}
 				return x;
 			}
@@ -6406,13 +6408,6 @@ Object.defineProperties(__Type.prototype, {
 				const dh = (cfg.yClose - cfg.yStart) / (cfg.points - 1);
 				const dx = (this._xMax - this._xMin) / (cfg.points - 1);
 				const dy = (this._yMax - this._yMin) / (cfg.points - 1);
-				const aSize = {
-					datetime: "small",
-					time: "smaller",
-					date: "small",
-					number: "smaller",
-					default: "normal"
-				};
 				const xAxis = this.xAxis;
 				const yAxis = this.yAxis;
 				let px, py, vx, vy, ax, ay;
@@ -6424,7 +6419,7 @@ Object.defineProperties(__Type.prototype, {
 					let last = i === (cfg.points - 1);
 					let hide = i%2 !== 0;
 					let line = {h: true, v: true};
-
+					/*-- primeiro e último valor da escala --*/
 					if (zero || last) {
 						px = zero ? cfg.xStart : cfg.xClose;
 						py = zero ? cfg.yClose : cfg.yStart;
@@ -6434,7 +6429,9 @@ Object.defineProperties(__Type.prototype, {
 						ay = zero ? "hse" : "hne";
 						line.h = zero ? !border.s : !border.n;
 						line.v = zero ? !border.w : !border.e;
-					} else {
+					}
+					/*-- valores intermediários da escala --*/
+					else {
 						px = half ? (cfg.xClose + cfg.xStart) / 2 : px + dw;
 						py = half ? (cfg.yStart + cfg.yClose) / 2 : py - dh;
 						vx = half ? (this._xMax + this._xMin) / 2 : vx + dx;
@@ -6925,7 +6922,7 @@ Object.defineProperties(__Type.prototype, {
 							let y     = this._yScale(item.value >= 0 ? item.value : 0);
 							let w     = width;
 							let h     = Math.abs(this._yScale(item.value) - this._yScale(0));
-							let curve = {id: id, color: color, info: "", name: name};
+							let curve = {id: id, color: color, info: "", name: this._values(id+1)+") "+name};
 							curve.info = [
 								" "+this.yLabel,
 								"  "+this._values(total),
@@ -6939,7 +6936,7 @@ Object.defineProperties(__Type.prototype, {
 							.attribute({stroke: color, "stroke-width": 2})
 							.attribute({"data-wd-chart-curve": id})
 							.title(curve.info);
-							/*-- Escala eixo x --*/
+							/*-- Escalas valores (horizontal) --*/
 							svg.text(
 								x + width/2,
 								value >= 0 ? (y+h+5) : (y-5),
@@ -6948,6 +6945,15 @@ Object.defineProperties(__Type.prototype, {
 							)
 							.attribute({fill: color, cursor: "default", "data-wd-chart-curve": id})
 							.title(this._values(value));
+							/*-- Escalas id (horizontal) --*/
+							svg.text(
+								x + width/2,
+								value >= 0 ? (y-5) : (y+h+5),
+								this._values(id+1),
+								value >= 0 ? "hs" : "hn"
+							)
+							.attribute({fill: color, cursor: "default", "data-wd-chart-curve": id})
+							.title(this._values(id+1)+") "+name);
 							legend.push(curve);
 						}
 						this._struct(svg, "hlines ylabel xlabel yscale hzero title");
@@ -7078,11 +7084,11 @@ Object.defineProperties(__Type.prototype, {
 							x:    [xmin, xmax],
 							y:    y,
 							name: label,
-							info: "",
+							info: y.name.trim() === "" ? " y = "+label : " f(x) = "+y.name+"(x)",
 							f:    true,
 							type: option in curve ? curve[option] : curve.main,
 							id:   ++this._id
-						});
+						});console.log(y.name)
 						return true;
 					}
 					/* Y é constante ---------------------------------------------------- */
@@ -7103,7 +7109,7 @@ Object.defineProperties(__Type.prototype, {
 							x:    [xmin, xmax],
 							y:    [cte, cte],
 							name: label,
-							info: "y = "+cte,
+							info: " f(x) = "+this._values(cte),
 							f:    false,
 							type: option in curve ? curve[option] : curve.main,
 							id:   ++this._id
