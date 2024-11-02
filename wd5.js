@@ -232,7 +232,7 @@ const wd = (function() {
 				const node  = document.createElement("SPAN");
 				const style = {
 					position: "absolute", display: "block", top: "0.5em", right: "0.5em",
-					lineHeight: "1", cursor: "pointer", margin: "0", zIndex: "5"
+					lineHeight: "1", cursor: "pointer", margin: "0", zIndex: "5", fontSize: "x-large"
 				};
 				for (let i in style) node.style[i] = style[i];
 				node.innerHTML = "\u00D7";
@@ -250,7 +250,7 @@ const wd = (function() {
 			box.appendChild(titleBox);
 			box.appendChild(bodyBox);
 			box.appendChild(closeBox);
-			wall.insertAdjacentElement("afterbegin", box)
+			wall.insertAdjacentElement("afterbegin", box);
 			if (wall.parentElement !== document.body)
 				document.body.appendChild(wall);
 			/*-- Expirando em --*/
@@ -5949,23 +5949,22 @@ Object.defineProperties(__Type.prototype, {
 			get: function () {
 				if (this.error) return {a: 0, b: 0};
 				if ("_leastSquares" in this) return this._leastSquares;
-				let x     = this.x;
-				let y     = this.y;
-				let width = x.length;
+				const x   = this.x;
+				const y   = this.y;
+				const len = x.length;
 				let sumX  = 0;
 				let sumY  = 0;
 				let sumX2 = 0;
 				let sumXY = 0;
-				let i = -1;
-				while(++i < width) {
+				for (let i = 0; i < len; i++) {
 					sumX  += x[i];
 					sumY  += y[i];
 					sumX2 += x[i]*x[i];
 					sumXY += x[i]*y[i];
 				}
-				let data = {};
-				data.a = ((width * sumXY) - (sumX * sumY)) / ((width * sumX2) - (sumX * sumX));
-				data.b = ((sumY) - (sumX * data.a)) / (width);
+				const data = {};
+				data.a = ((len * sumXY) - (sumX * sumY)) / ((len * sumX2) - (sumX * sumX));
+				data.b = ((sumY) - (sumX * data.a)) / (len);
 				this._leastSquares = data;
 				return this.leastSquares;
 			}
@@ -5976,8 +5975,7 @@ Object.defineProperties(__Type.prototype, {
 				if (this.error) return Infinity;
 				if ("_standardDeviation" in this) return this._standardDeviation;
 				const data = [];
-				let i = -1;
-				while(++i < this.x.length)
+				for (let i = 0; i < this.x.length; i++)
 					data.push(this.x[i] - this.y[i]);
 				this._standardDeviation = Math.hypot.apply(null, data) / Math.sqrt(data.length);
 				return this._standardDeviation;
@@ -5989,16 +5987,20 @@ Object.defineProperties(__Type.prototype, {
 			get: function() {
 				if (this.error) return null;
 				if ("_linearFit" in this) return this._linearFit;
-				let sqrs = this.leastSquares;
-				let a    = sqrs.a;
-				let b    = sqrs.b;
-				let func = function(x) {return a*x + b;}
-				let devi = __Data2D(this.y, __Array(this.x).convert(func, "finite")).standardDeviation;
-				let math = "y = a x + (b) ± σ";
-				let show = math.replace("a", a).replace("b", b).replace("σ", devi);
-				this._linearFit = {
-					t: "linear", a: a, b: b, f: func, d: devi, m: math, s: show};
-				return this._linearFit;
+				const X    = new __Array(this.x);
+				const Y    = new __Array(this.y);
+				const sqrs = this.leastSquares;
+				const fit  = {};
+				fit.a = sqrs.a;
+				fit.b = sqrs.b;
+				fit.f = function(x) {return fit.a*x + fit.b;}
+				fit.d = new __Data2D(this.y, X.convert(fit.f, "finite")).standardDeviation;
+				fit.m = "y = a x + (b) ± σ";
+				fit.s = fit.m.toString()
+				const cte = {a: "a", b: "b", d: "σ"};
+				for (let k in cte) fit.s = fit.s.replace(cte[k], fit[k]);
+				this._linearFit = fit;
+				return fit;
 			}
 		},
 		/**. ``''object'' geometricFit``: Retorna um objeto contendo os dados da regressão geométrica ou ``null`` em caso de erro.
@@ -6007,25 +6009,28 @@ Object.defineProperties(__Type.prototype, {
 			get: function() {
 				if (this.error) return null;
 				if ("_geometricFit" in this) return this._geometricFit;
-				let data = __Data2D(
-					__Array(this.x).convert(Math.log, "finite"),
-					__Array(this.y).convert(Math.log, "finite")
+				const X    = new __Array(this.x);
+				const Y    = new __Array(this.y);
+				const data = new __Data2D(
+					X.convert(Math.log, "finite"),
+					Y.convert(Math.log, "finite")
 				);
 				if (data.error) {
 					this._geometricFit = null;
 					return null;
 				}
-				let sqrs = data.leastSquares;
-				let a    = Math.exp(sqrs.b);
-				let b    = sqrs.a;
-				let func = function(x) {return a*Math.pow(x, b);}
-				let devi = __Data2D(this.y, __Array(this.x).convert(func, "finite")).standardDeviation;
-				let math = "y = a x^(b) ± σ";
-				let show = math.replace("a", a).replace("b", b).replace("σ", devi);
-				this._geometricFit = {
-					t: "geometric", a: a, b: b, f: func, d: devi, m: math, s: show
-				};
-				return this._geometricFit;
+				const sqrs = data.leastSquares;
+				const fit  = {};
+				fit.a = Math.exp(sqrs.b);
+				fit.b = sqrs.a;
+				fit.f = function(x) {return fit.a*Math.pow(x, fit.b);}
+				fit.d = __Data2D(this.y, X.convert(fit.f, "finite")).standardDeviation;
+				fit.m = "y = a x^(b) ± σ";
+				fit.s = fit.m.toString();
+				const cte = {a: "a", b: "b", d: "σ"};
+				for (let k in cte) fit.s = fit.s.replace(cte[k], fit[k]);
+				this._geometricFit = fit;
+				return fit;
 			}
 		},
 		/**. ``''object'' exponentialFit``: Retorna um objeto contendo os dados da regressão exponencial ou ``null`` em caso de erro.
@@ -6034,25 +6039,25 @@ Object.defineProperties(__Type.prototype, {
 			get: function() {
 				if (this.error) return null;
 				if ("_exponentialFit" in this) return this._exponentialFit;
-				let data = __Data2D(
-					this.x,
-					__Array(this.y).convert(Math.log, "finite")
-				);
+				const X    = new __Array(this.x);
+				const Y    = new __Array(this.y);
+				const data = new __Data2D(this.x, Y.convert(Math.log, "finite"));
 				if (data.error) {
 					this._exponentialFit = null;
 					return null;
 				}
-				let sqrs = data.leastSquares;
-				let a    = Math.exp(sqrs.b);
-				let b    = sqrs.a;
-				let func = function(x) {return a*Math.exp(b*x);}
-				let devi = __Data2D(this.y, __Array(this.x).convert(func)).standardDeviation;
-				let math = "y = a exp(b x) ± σ";
-				let show = math.replace("a", a).replace("b", b).replace("σ", devi);
-				this._exponentialFit = {
-					t: "exponential", a: a, b: b, f: func, d: devi, m: math, s: show
-				};
-				return this._exponentialFit;
+				const sqrs = data.leastSquares;
+				const fit  = {};
+				fit.a = Math.exp(sqrs.b);
+				fit.b = sqrs.a;
+				fit.f = function(x) {return fit.a*Math.exp(fit.b*x);}
+				fit.d = __Data2D(this.y, X.convert(fit.f, "finite")).standardDeviation;
+				fit.m = "y = a exp(b x) ± σ";
+				fit.s = fit.m.toString();
+				const cte = {a: "a", b: "b", d: "σ"};
+				for (let k in cte) fit.s = fit.s.replace(cte[k], fit[k]);
+				this._exponentialFit = fit;
+				return fit;
 			}
 		},
 		/**. ``''object'' logarithmicFit``: Retorna um objeto contendo os dados da regressão logarítmica ou ``null`` em caso de erro.
@@ -6061,25 +6066,26 @@ Object.defineProperties(__Type.prototype, {
 			get: function() {
 				if (this.error) return null;
 				if ("_logarithmicFit" in this) return this._logarithmicFit;
-				let data = __Data2D(
-					this.x,
-					__Array(this.y).convert(Math.exp, "finite")
+				const X    = new __Array(this.x);
+				const Y    = new __Array(this.y);
+				const data = new __Data2D(this.x, Y.convert(Math.exp, "finite")
 				);
-				if (data.error || data.geometricFit === null) {
+				if (data.geometricFit === null) {
 					this._logarithmicFit = null;
 					return null;
 				}
-				let sqrs = data.geometricFit;
-				let a    = sqrs.b;
-				let b    = Math.pow(sqrs.a, 1/sqrs.b);
-				let func = function(x) {return a*Math.log(b*x);}
-				let devi = __Data2D(this.y, __Array(this.x).convert(func)).standardDeviation;
-				let math = "y = a ln(b x) ± σ";
-				let show = math.replace("a", a).replace("b", b).replace("σ", devi);
-				this._logarithmicFit = {
-					t: "logarithmic", a: a, b: b, f: func, d: devi, m: math, s: show
-				};
-				return this._logarithmicFit;
+				const sqrs = data.geometricFit;
+				const fit  = {};
+				fit.a = sqrs.b;
+				fit.b = Math.pow(sqrs.a, 1/sqrs.b);
+				fit.f = function(x) {return fit.a*Math.log(fit.b*x);}
+				fit.d = __Data2D(this.y, X.convert(fit.f)).standardDeviation;
+				fit.m = "y = a ln(b x) ± σ";
+				fit.s = fit.m.toString();
+				const cte = {a: "a", b: "b", d: "σ"};
+				for (let k in cte) fit.s = fit.s.replace(cte[k], fit[k]);
+				this._logarithmicFit = fit;
+				return fit;
 			}
 		},
 		/**. ``''object'' minDeviation``: Retorna o objeto contendo os dados da regressão com o menor valor de desvio padrão.**/
@@ -6087,16 +6093,14 @@ Object.defineProperties(__Type.prototype, {
 			get: function() {
 				if (this.error) return null;
 				if ("_minDeviation" in this) return this._minDeviation;
-				let fit = [
-					"linearFit", "geometricFit", "exponentialFit", "logarithmicFit"
-				];
-				let best = {value: Infinity, name: null};
-				let i = -1;
-				while (++i < fit.length) {
-					let id = fit[i];
+				const fit  = ["linear", "geometric", "exponential", "logarithmic"];
+				const best = {value: Infinity, name: null};
+				for (let i = 0; i < fit.length; i++) {
+					let id = fit[i]+"Fit";
 					if (this[id] !== null && this[id].d < best.value) {
 						 best.value = this[id].d;
 						 best.name  = id;
+						 if (best.value === 0) break;
 					}
 				}
 				this._minDeviation = best.name === null ? null : this[best.name];
@@ -6108,11 +6112,10 @@ Object.defineProperties(__Type.prototype, {
     	get: function() {
 	    	if (this.error) return null;
 				if ("_area" in this) return this._area;
-				let x    = this.x;
-				let y    = this.y;
+				const x  = this.x;
+				const y  = this.y;
 				let area = 0;
-				let i    = 0;
-				while (++i < x.length)
+				for (let i = 1; i < x.length; i++)
 					area += (y[i]+y[i-1])*(x[i]-x[i-1])/2;
 				this._area = area;
 				return this._area;
@@ -6123,30 +6126,12 @@ Object.defineProperties(__Type.prototype, {
     	get: function() {
     		if (this.area === null) return null;
     		if ("_average" in this) return this._average;
-    		let data = __Array(this.x);
-    		let div  = data.max - data.min;
+    		const data = new __Array(this.x);
+    		const div  = data.max - data.min;
     		this._average = div === 0 ? null : this.area / div;
     		return this._average;
     	}
     },
-    /**
-    . ``''object'' datetime``: retorna um objeto com as informações de data, tempo e data/tempo (chaves ``date``, ``time`` e ``datetime``) dos valores do eixo ``x``.**/
-    datetime: {
-    	get: function() {
-    		if (this.error) return null;
-    		if ("_datetime" in this) return this._datetime;
-    		let data = {time: [], date: [], datetime: []};
-    		let i    = -1;
-    		while(++i < this.x.length) {
-    			let dt = __DateTime(this.x[i]);
-    			data.time.push(dt.toTimeString());
-    			data.date.push(dt.toDateString());
-    			data.datetime.push(dt.toString());
-    		}
-    		this._datetime = data;
-    		return this._datetime;
-    	}
-    }
 	});
 /*============================================================================*/
 	/**#### Análise Gráfica
@@ -6939,18 +6924,18 @@ Object.defineProperties(__Type.prototype, {
 							/*-- Escalas valores (horizontal) --*/
 							svg.text(
 								x + width/2,
-								value >= 0 ? (y+h+5) : (y-5),
+								value >= 0 ? (y-5) : (y+h+5),
 								this._values(value, "y"),
-								value >= 0 ? "hn" : "hs"
+								value >= 0 ? "hs" : "hn"
 							)
 							.attribute({fill: color, cursor: "default", "data-wd-chart-curve": id})
 							.title(this._values(value));
 							/*-- Escalas id (horizontal) --*/
 							svg.text(
 								x + width/2,
-								value >= 0 ? (y-5) : (y+h+5),
+								value >= 0 ? (y+h+5) : (y-5),
 								this._values(id+1),
-								value >= 0 ? "hs" : "hn"
+								value >= 0 ? "hn" : "hs"
 							)
 							.attribute({fill: color, cursor: "default", "data-wd-chart-curve": id})
 							.title(this._values(id+1)+") "+name);
@@ -7201,8 +7186,8 @@ Object.defineProperties(__Type.prototype, {
 
 
 
-
-/*-------------------------------------------------------------------------FIXME---*/
+//FIXME copy como fazer?
+/*----------------------------------------------------------------------------*/
 	function wd_copy(value) { /* copia o conteúdo da variável para a área de transferência */
 		/* copiar o que está selecionado */
 		if (value === undefined && "execCommand" in document) {
@@ -7268,21 +7253,16 @@ Object.defineProperties(__Type.prototype, {
 	Object.defineProperties(WDmain.prototype, {
 		constructor: {value: WDmain},
 		/**. ``''any'' valueOf()``: Retorna o valor do dado (ver ``__Type``).**/
-		valueOf: {
-			value: function() {return this._data.valueOf();}
-		},
+		valueOf: {value: function() {return this._data.valueOf();}},
 		/**. ``''string'' toString()``: Retorna o valor textual do dado (ver ``__Type``).**/
-		toString: {
-			value: function() {return this._data.toString();}
-		},
+		toString: {value: function() {return this._data.toString();}},
 		/**. ``''string'' type``: Retorna o tipo do dado.**/
 		type: {get: function() {return this._data.type;}},
 		/**. ``''boolean'' or(''string'' type...)``: Retorna verdadeiro se algum dos tipos informados no argumento ``type`` corresponder ao tipo de dado.**/
 		or: {
 			value: function(type) {
-				for (let i = 0; i < arguments.length; i++) {
+				for (let i = 0; i < arguments.length; i++)
 					if (this._data[arguments[i]] === true) return true;
-				}
 				return false;
 			}
 		},
@@ -7290,16 +7270,16 @@ Object.defineProperties(__Type.prototype, {
 		is: {
 			value: function(type) {
 				if (arguments.length < 2) return this.or(type);
-				for (let i = 0; i < arguments.length; i++) {
+				for (let i = 0; i < arguments.length; i++)
 					if (this._data[arguments[i]] !== true) return false;
-				}
 				return true;
 			}
 		},
+
+
+		//FIXME deixo essas coisas aqui mesmo?
 		/**. ``''string'' mask(''string'' model)``: Retorna o valor formatado pela máscara definida no argumento ``model``. Se a máscara não casar, retornará uma string vazia.**/
-		mask: {
-			value: function(model) {return new __String(this._input).mask(model);}
-		},
+		mask: {value: function(model) {return new __String(this._input).mask(model);}},
 		/**. ``''self'' alert(''string'' title)``: Renderiza uma mensagem.**/
 		alert: {
 			value: function(title) {
