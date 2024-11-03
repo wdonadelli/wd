@@ -705,7 +705,6 @@ q {
 }
 .wd nav.wd-nav-block {
 	flex-direction: column;
-
 }
 .wd nav.wd-nav-block > * {
 	border-bottom: thin solid;

@@ -43,6 +43,94 @@ const wd = (function() {
 	const __UNDERMAINTENANCE = true;
 
 /*----------------------------------------------------------------------------*/
+	/**###### ``**const** ''array'' __STYLE``
+	Estilos da biblioteca.**/
+	const __STYLE = [
+		{target: ".js-wd-signal-box", style: [
+			"position: fixed; top: 0; right: 0; left: 0; bottom: initial;",
+			"display: block; margin: auto; padding: 1px; width: auto; max-height: 75vh;",
+			" overflow: auto; z-index: 999999; font-size: 14px; background-color: transparent;"
+		]},
+		{target: "@media screen and (min-width: 768px) {.js-wd-signal-box", style: [
+			"bottom: 0; right: 0; left: 75vw; top: initial;}"
+		]},
+		{target: ".js-wd-signal-wall", style: [
+			"position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;",
+			"margin: 0; padding: 0; background-color: rgba(0,0,50,0.3); z-index: 999999;"
+		]},
+		{target: ".js-wd-signal-msg, .js-wd-signal-ask", style: [
+			"display: block; padding: 0;",
+			"color: #d4d4e6; background-color: #353535;",
+			"border: thin solid #000000; border-radius: 0.5em;",
+			"box-shadow: inset 0 0 2px 1px rgba(0,0,0,0.6);"
+		]},
+		{target: ".js-wd-signal-msg", style: [
+			"position: relative; margin: 0.5em 0; ",
+			"animation: js-wd-expand 0.5s ease 0s, js-wd-shrink 0.5s ease 8.5s;"
+		]},
+		{target: ".js-wd-signal-ask", style: [
+			"position: absolute; top: 5vh; max-height: 90vh; left: 5vw; width: 90vw; margin: auto;",
+		]},
+		{target: "@media screen and (min-width: 768px) {.js-wd-signal-ask", style: [
+			"top: 20vh; max-height: 60vh; left: 30vw; max-width: 40vw;}"
+		]},
+		{target: ".js-wd-signal-close", style: [
+			"position: absolute; top: 0.2em; right: 0.2em; display: inline-block;",
+			"line-height: 1; cursor: pointer; margin: 0; z-index: 5; font-size: large;"
+		]},
+		{target: ".js-wd-signal-close:before", style: ["content: \"\\00D7\";"]},
+		{target: ".js-wd-signal-title", style: [
+			"display: block; padding: 0.25em 0.5em; margin: 0;",
+			"border-radius: 0.5em 0.5em 0 0;",
+			"font-size: larger; font-weight: bold; background-color: #000000;"
+		]},
+		{target: ".js-wd-signal-body", style: [
+			"display: block; padding: 1em 1em 1em 2em; margin: 0; white-space: pre-wrap;"
+		]},
+		{target: ".js-wd-signal-nav", style: [
+			"display: flex; flex-direction: column; flex-wrap: wrap;",
+			"justify-content: center; align-items: start; background-color: #000000;"
+		]},
+		{target: "@media screen and (min-width: 768px) {.js-wd-signal-nav", style: [
+			"flex-direction: row; justify-content: start; align-items: start;"
+		]},
+		{target: ".js-wd-signal-msg .js-wd-signal-body, .js-wd-signal-ask .js-wd-signal-nav", style: [
+			"border-radius: 0 0 0.5em 0.5em;"
+		]},
+		{target: ".js-wd-signal-link", style: [
+			"padding: 0.25em 0.5em; margin: 0.5em; width: 100%;",
+			"color: #333333; background-color: #f0f0f0; cursor: pointer; font-size: smaller;",
+			"border-radius: 0.5em; border: 1px solid white; box-shadow: none;",
+		]},
+		{target: "@media screen and (min-width: 768px) {.js-wd-signal-link", style: [
+			"width: auto;"
+		]},
+		{target: ".js-wd-signal-link:focus, .js-wd-signal-link:hover", style: [
+			"text-decoration: underline; outline: 2px solid #9999ff;"
+		]},
+
+
+
+
+
+
+
+	];
+
+//FIXME tirar isso daqui
+const style = document.createElement("STYLE");
+for (let i = 0; i < __STYLE.length; i++) {
+	style.innerHTML += __STYLE[i].target+" {";
+	style.innerHTML += __STYLE[i].style.join(" ").replace(/\;/g, " !important;")+"}\n";
+}
+document.head.appendChild(style);
+
+
+
+
+
+
+/*----------------------------------------------------------------------------*/
 	/**###### ``**const** ''object'' __DEVICE``
 	Checa alterações da tela atribuida a um tipo de dispositivo.**/
 	const __DEVICE = {
@@ -174,106 +262,146 @@ const wd = (function() {
 	/**###### ``**const** ''object'' __SIGNAL``
 	Renderiza mensagens e notificações.**/
 	const __SIGNAL = {
-		/**. ``''node'' wall``: Caixa de mensagens.**/
-		wall: (function() {
-			const node  = document.createElement("SECTION");
-			const style = {
-				position: "fixed", display: "block", margin: "auto", padding: "1px",
-				width: "auto", maxHeight: "75vh", overflow: "auto", zIndex: "999999",
-				fontSize: "14px", backgroudColor: "transparent"
-			};
-			for (let i in style) node.style[i] = style[i];
-			node.className = "js-wd-signal";
+		/**. ``''node'' box``: Agrupador de mensagens.**/
+		box: (function() {
+			const node  = document.createElement("ASIDE");
+			node.className = "js-wd-signal-box";
 			return node;
 		})(),
-		/**. ``''void'' alert(''string'' body, ''string'' title)``: Renderiza uma mensagem (``body``) com título (``title``).**/
-		alert: function (body, title) {
-			const time = 8900;
-			const wall = this.wall;
-			/*-- Caixa de mensagem --*/
-			const box = (function() {
-				const node  = document.createElement("ARTICLE");
-				const style = {
-					position: "relative", display: "block", margin: "0.5em", padding: 0,
-					color: "#828282", backgroundColor: "#1A1A1A",
-					border: "thin solid #000000", borderRadius: "0.5em",
-					boxShadow: "inset 0 0 2px 1px rgba(0,0,0,0.6)",
-					animation: "js-wd-expand 0.5s ease 0s, js-wd-shrink 0.5s ease 8.5s"
-				};
-				for (let i in style) node.style[i] = style[i];
-				node.role = "alert";
-				return node;
-			})();
-			/*-- Caixa de título --*/
-			const titleBox = (function() {
-				const node  = document.createElement("H6");
-				const style = {
-					display: "block", padding: "0.5em", margin: "0",
-					borderRadius: "0.5em 0.5em 0 0",
-					fontSize: "larger", fontWeight: "normal"
-				};
-				for (let i in style) node.style[i] = style[i];
-				node.innerText = title !== undefined && title !== null ? title : "";
-				return node;
-			})();
-			/*-- Caixa de texto --*/
-			const bodyBox = (function() {
-				const node  = document.createElement("P");
-				const style = {
-					display: "block", padding: "0.5em 0.5em 1em 0.5em", margin: "0",
-					borderRadius: "0 0 0.5em 0.5em", whiteSpace: "pre-wrap"
-				};
-				for (let i in style) node.style[i] = style[i];
-				node.innerText = body !== undefined && body !== null ? body : "";
-				return node;
-			})();
-			/*-- Caixa de fechamento --*/
-			const closeBox = (function() {
-				const node  = document.createElement("SPAN");
-				const style = {
-					position: "absolute", display: "block", top: "0.5em", right: "0.5em",
-					lineHeight: "1", cursor: "pointer", margin: "0", zIndex: "5", fontSize: "x-large"
-				};
-				for (let i in style) node.style[i] = style[i];
-				node.innerHTML = "\u00D7";
-				node.addEventListener("click", function(ev) {
-					const box = ev.target.parentElement;
-					if (box.parentElement !== null)
+		/**. ``''node'' wall``: Modal de diálogo.**/
+		wall: (function() {
+			const node  = document.createElement("ASIDE");
+			node.className = "js-wd-signal-wall";
+			return node;
+		})(),
+		/**. ``''node'' msg``: Caixa de mensagens (para clonar).**/
+		msg: (function() {
+			const node = document.createElement("SECTION")
+			node.className = "js-wd-signal-msg";
+			const nodes = {HEADER: "title", ARTICLE: "body", SPAN: "close"};
+			for (let i in nodes) {
+				let child = document.createElement(i);
+				child.className = "js-wd-signal-"+nodes[i];
+				node.appendChild(child);
+			}
+			return node;
+		})(),
+		/**. ``''node'' ask``: Caixa de diálogo (para clonar).**/
+		ask: (function() {
+			const node = document.createElement("SECTION");
+			node.className = "js-wd-signal-ask";
+			const nodes = {HEADER: "title", ARTICLE: "body", NAV: "nav"};
+			for (let i in nodes) {
+				let child = document.createElement(i);
+				child.className = "js-wd-signal-"+nodes[i];
+				node.appendChild(child);
+			}
+			return node;
+		})(),
+		/**. ``''void'' message(''object'' options)``: Ver método ''signal''.**/
+		message: function (options) {
+			const node = this.msg.cloneNode(true);
+			if ("title" in options)
+				node.querySelector(".js-wd-signal-title").innerText = options.title;
+			if ("body" in options)
+				node.querySelector(".js-wd-signal-body").innerText = options.body;
+			/*-- Evento do botão de fechar --*/
+			node.querySelector(".js-wd-signal-close").addEventListener("click", function(ev) {
+				const msg = ev.target.parentElement;
+				const box = msg.parentElement;
+				if (box !== null) {
+					box.removeChild(msg);
+					if (box.childElementCount === 0)
 						box.parentElement.removeChild(box);
-					if (wall.childElementCount === 0 && wall.parentElement !== null)
-						wall.parentElement.removeChild(wall);
-					return;
-				}, false);
-				return node;
-			})();
-			/*-- Agrupamento --*/
-			box.appendChild(titleBox);
-			box.appendChild(bodyBox);
-			box.appendChild(closeBox);
-			wall.insertAdjacentElement("afterbegin", box);
-			if (wall.parentElement !== document.body)
-				document.body.appendChild(wall);
+				}
+			}, false);
 			/*-- Expirando em --*/
-			window.setTimeout(function() {closeBox.click();}, time);
+			window.setTimeout(function() {
+				node.querySelector(".js-wd-signal-close").click();
+			}, 8900);
+			/*-- renderizando box e node --*/
+			if (this.box.parentElement === null)
+				document.body.appendChild(this.box);
+			this.box.insertAdjacentElement("afterbegin", node);
 			return;
 		},
-		/**. ``''void'' notify(''string'' body, ''string'' title)``: Renderiza uma notificação (``body``) com título (``title``).**/
-		notify: function (body, title) {
-			title = title !== undefined && title !== null ? title : "";
-			const options = {
-				body: body !== undefined && body !== null ? body : "",
+		/**. ``''void'' notify(''object'' options)``: Ver método ''signal''.**/
+		notify: function (options) {
+			const title  = "title" in options ? options.title : "";
+			const config = {
+				body: "body" in options ? options.body : "",
 				lang: __LANG.list,
 			};
 			if (Notification.permission === "denied")
 				return null;
 			if (Notification.permission === "granted")
-				new Notification(title, options);
+				new Notification(title, config);
 			else
 				Notification.requestPermission().then(function(x) {
-					if (x === "granted")
-						new Notification(title, options);
+					if (x === "granted") new Notification(title, config);
 				});
 			return;
+		},
+		/**. ``''void'' notify(''object'' dialog)``: Ver método ''signal''.**/
+		dialog: function (options) {
+			const wall = this.wall;
+			const node = this.ask.cloneNode(true);
+			const nav  = node.querySelector(".js-wd-signal-nav");
+			const fire = typeof options.trigger === "function" ? options.trigger : console.log;
+			const acts = typeof options.actions === "object"   ? options.actions : {closed: "\u00D7"};
+			function trigger(ev) {
+				if (ev.type === "click" || ev.key === "Enter") {
+					const link = ev.target;
+					const ask  = link.parentElement.parentElement;
+					const wall = ask.parentElement;
+					wall.removeChild(ask);
+					wall.parentElement.removeChild(wall);
+					fire(link.dataset.link);
+				}
+			}
+			/*-- não permitir múltiplos diálogos --*/
+			if (wall.childElementCount > 0) {
+				fire(null);
+				return;
+			}
+			if ("title" in options)
+				node.querySelector(".js-wd-signal-title").innerText = options.title;
+			if ("body" in options)
+				node.querySelector(".js-wd-signal-body").innerText = options.body;
+
+			let focus = null;
+			let index = 0;
+			for (let i in acts) {
+				let text = acts[i].replace(/\*$/, "");
+				let link = document.createElement("SPAN");
+				link.className    = "js-wd-signal-link";
+				link.dataset.link = i;
+				link.innerText    = text;
+				link.tabIndex     = ++index;
+				link.addEventListener("keypress", trigger, false);
+				link.addEventListener("click", trigger, false);
+				nav.appendChild(link);
+				if ((/\*$/).test(acts[i])) focus = link;
+			}
+			/*-- renderizando box e node --*/
+			document.body.appendChild(wall);
+			wall.appendChild(node);
+			if (focus !== null) focus.focus();
+			return;
+		},
+		/**. ``''void'' signal(''object'' options)``: Produz interação com o usuário. O argumento ``options`` possui as seguintes propriedades:
+		|Nome|Tipo|Valores|Descrição|
+		|type|string|notify, dialog ou message (padrão)|Indica o tipo de interação.|
+		|title|string|-|Define o título da interação (opcional).|
+		|body|string|-|Define a mensgem da interação.|
+		|trigger|function|-|Define a função a ser chamada pelo retorno do diálogo (opcional, type=dialog)|
+		|actions|object|-|Define os botões do diálogo (opcional, type=dialog)|
+		. O nome das propriedades de ``actions`` define o identificador da ação e seu valor o respectivo texto visual. Ao clicar sobre o botão da ação, a função ``trigger`` será chamada passando como argumento o respectivo identificador da ação. Não é permitido executar múltiplas caixas de diálogo. Se o valor da ação encerrar com o caractere asterisco, essa ação será focalizada.**/
+		signal: function(options) {
+			if (typeof options !== "object") options = {};
+			if (options.type === "notify") return this.notify(options);
+			if (options.type === "dialog") return this.dialog(options);
+			return this.message(options);
 		}
 	};
 
@@ -549,9 +677,8 @@ const wd = (function() {
 		"*::backdrop {background-color: white;}",
 
 		//TODO ver coloração https://developer.mozilla.org/pt-BR/docs/Web/CSS/background-color
-		"/*-- SIGNAL SECTION --*/",
-		".js-wd-signal {top: 0; right: 0; left: 0; bottom: initial}",
-		"@media screen and (min-width: 768px) {.js-wd-signal {bottom: 0; right: 0; left: 75vw; top: initial}}",
+
+
 
 
 
@@ -7280,20 +7407,6 @@ Object.defineProperties(__Type.prototype, {
 		//FIXME deixo essas coisas aqui mesmo?
 		/**. ``''string'' mask(''string'' model)``: Retorna o valor formatado pela máscara definida no argumento ``model``. Se a máscara não casar, retornará uma string vazia.**/
 		mask: {value: function(model) {return new __String(this._input).mask(model);}},
-		/**. ``''self'' alert(''string'' title)``: Renderiza uma mensagem.**/
-		alert: {
-			value: function(title) {
-				__SIGNAL.alert(this.toString(), title);
-				return this;
-			}
-		},
-		/**. ``''self'' signal(''string'' title)``: Renderiza uma notificação. Se o tipo de dado for **/
-		notify: { /*renderizar notificação*/
-			value: function(title) {
-				__SIGNAL.notify(this.toString(), title);
-				return this;
-			}
-		},
 	});
 
 /*----------------------------------------------------------------------------*/
@@ -8049,6 +8162,8 @@ Object.defineProperties(__Type.prototype, {
 		$: {value: function(css, root) {return WD(__Query(css, root).$);}},
 		/**. ``''object'' $$(''string'' css, ''node'' root)``: Retorna um objeto do tipo nó conforme seletor ''css'' múltiplo. O argumento opcional ''root'' é o elemento pai a ser consultado cujo valor padrão é ''document''.**/
 		$$: {value: function(css, root) {return WD(__Query(css, root).$$);}},
+		/**. ``''void'' signal(''object'' options)``: Produz uma interação (ver ''__SIGNAL.signal'').**/
+		signal:  {value: function(options) {return __SIGNAL.signal(options);}},
 
 
 		copy: {value: function(text)  {return wd_copy(text);}}, //FIXME como fica copy?
