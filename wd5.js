@@ -46,6 +46,114 @@ const wd = (function() {
 	/**###### ``**const** ''array'' __STYLE``
 	Estilos da biblioteca.**/
 	const __STYLE = [
+		/*-- animações --*/
+		{target: "@keyframes js-wd-emerge", style: ["from {opacity: 0;} to {opacity: 1;}"]},
+		{target: "@keyframes js-wd-fade",   style: ["from {opacity: 1;} to {opacity: 0;}"]},
+		{target: "@keyframes js-wd-expand", style: ["from {transform: scale(0);} to {transform: scale(1);}"]},
+		{target: "@keyframes js-wd-shrink", style: ["from {transform: scale(1);} to {transform: scale(0);}"]},
+		/*-- estilos genéricos --*/
+		{target: ".js-wd-no-display",      style: ["display: none;"]},
+		{target: ".js-wd-overflow-hidden", style: ["overflow: hidden;"]},
+		{target: "nav > *.js-wd-nav-inactive", style: ["opacity: 0.5;"]},
+		/*-- data-wd- --*/
+		{target: "[data-wd-nav], [data-wd-send], [data-wd-set], [data-wd-edit], [data-wd-shared]", style: ["cursor: pointer;"]},
+		/*-- data-wd-move --*/
+		{target: "[data-wd-move*=\"type{jump}\"]",        style: ["cursor: pointer;"]},
+		{target: "[data-wd-move*=\"type{drag}\"]",        style: ["cursor: grab;"]},
+		{target: "[data-wd-move*=\"type{drag}\"]:active", style: ["cursor: grabbing;"]},
+		{target: "[data-wd-move*=\"type{move}\"]",        style: ["cursor: move;"]},
+		/*-- data-wd-move: drop --*/
+		{target: "[data-wd-move-action=\"drop\"]", style: [
+			"border-image-source: linear-gradient(45deg, white, blue);",
+			"border-image-width: 10px; border-image-outset: 5px;",
+			"border-image-slice: 1% fill;",
+		]},
+		/*-- data-wd-move: file --*/
+		{target: "[data-wd-move-action=\"files\"]", style: [
+			"border-image-source: linear-gradient(45deg, white, gray);",
+			"border-image-width: 10px; border-image-outset: 5px;"
+		]},
+		{target: "[data-wd-move-action=\"files\" > *]", style: ["visibility: hidden;"]},
+		/*-- data-wd-move: move --*/
+		{target: "[data-wd-move-action=\"move\"], [data-wd-move-action=\"move\"] > *", style: ["cursor: grabbing;"]},
+		/*-- data-wd-move: resize --*/
+		{target: ".js-wd-cursor-n-resize  *",  style: ["cursor: n-resize;"]},
+		{target: ".js-wd-cursor-ne-resize  *", style: ["cursor: ne-resize;"]},
+		{target: ".js-wd-cursor-se-resize  *", style: ["cursor: sw-resize;"]},
+		{target: ".js-wd-cursor-s-resize  *",  style: ["cursor: s-resize;"]},
+		{target: ".js-wd-cursor-sw-resize  *", style: ["cursor: sw-resize;"]},
+		{target: ".js-wd-cursor-w-resize  *",  style: ["cursor: w-resize;"]},
+		{target: ".js-wd-cursor-nw-resize  *", style: ["cursor: nw-resize;"]},
+		{target: ".js-wd-cursor-n-resize  *",  style: ["cursor: n-resize;"]},
+		{target: ".js-wd-hline",  style: [
+			"position: fixed; left: 0; width: 100vw;",
+			"border-top: thin solid #000000; z-index: 999999;"
+		]},
+		{target: ".js-wd-vline",  style: [
+			"position: fixed; top: 0; height: 100vh;",
+			"border-left: thin solid #000000; height: 100%; z-index: 999999;"
+		]},
+		/*-- data-wd-menu --*/
+		{target: "[data-wd-menu]", style: ["cursor: context-menu;"]},
+		{target: ".js-wd-menu", style: [
+			"font-size: 14px; font-family: Verdana,sans-serif;",
+			"position: fixed; max-width: 40vw; max-height: 40vh;",
+			"display: block; margin: 0; padding: 0.3em;",
+			"z-index: 999999; overflow: auto !important;",
+			"color: #ffffff; background-color: rgba(0,0,0);",
+			"border: 2px inset #101010; border-radius: 0.3em;",
+			"animation: js-wd-emerge 0.5s linear 0s"
+		]},
+		{target: ".js-wd-menu > *", style: [
+			"display: block; margin: inherit; padding: inherit; cursor: pointer; border-radius: inherit;"
+		]},
+		{target: ".js-wd-menu > *:hover", style: ["background-color: rgba(50,50,50);"]},
+		/*-- data-wd-tsort --*/
+		{target: "[data-wd-tsort]", style: ["cursor: pointer;"]},
+		{target: "[data-wd-tsort]:before", style: ["content: \"\\2195 \"; font-weight: normal;"]},
+		{target: "[data-wd-tsort=\"-1\"]:before", style: ["content: \"\\2191 \";"]},
+		{target: "[data-wd-tsort=\"+1\"]:before", style: ["content: \"\\2193 \";"]},
+		/*-- data-wd-repeat/load --*/
+		{target: "[data-wd-repeat] > *, [data-wd-load] > *", style: ["visibility: hidden;"]},
+		/*-- data-wd-slide --*/
+		{target: "[data-wd-slide] > *", style: ["animation: js-wd-emerge 1s, js-wd-shrink-out 0.5s;"]},
+		/*-- SVG --*/
+		{target: "svg .js-wd-chart-hide", style: ["display: none;"]},
+		{target: "@media screen and (min-width: 768px) {svg .js-wd-chart-hide", style: ["display: inline;}"]},
+		/*-- tags especiais --*/
+		{target: "wdtag-mark", style: [
+			"background-color: rgba(154,205,50,0.7); display: inline; border-radius: 0.2em; color: #000000;"
+		]},
+		{target: "wdtag-root", style: [
+			"display: block; padding: 0.3em 0.3em 0.3em 3em; overflow: auto;",
+			"border-radius: 0.5em; 	border: 1px solid #000000;",
+			"font-family: monospace; font-size: 14px; white-space: pre-wrap;",
+			"text-decoration: none; text-indent: 0;",
+			"font-style: normal; font-weight: normal;",
+			"background-color: #262626;",
+			"counter-reset: wdcodelines;"
+		]},
+		{target: "wdtag-root *", style: [
+			"display: inline; position: static; padding: 0;",
+			"font-weight: normal; font-style: normal; border: none; border-raius: none;"
+		]},
+		{target: "wdtag-root wdtag-line", style: ["counter-increment: wdcodelines;"]},
+		{target: "wdtag-root wdtag-line:before", style: [
+			"content: counter(wdcodelines);",
+			"display: inline-block; position: relative;",
+			"margin: 0 0 0 -3em; padding-right: 0.5em; min-width: 3em;",
+			"color: #bcc118; text-align: right;"
+		]},
+		{target: "wdtag-root wdtag-content", style: ["color: #b3b3b3;"]},
+		{target: "wdtag-root wdtag-comment", style: ["color: #8c8c8c; font-style: italic;"]},
+		{target: "wdtag-root wdtag-doc", style: ["color: #df6d6d; font-weight: bold;"]},
+		{target: "wdtag-root wdtag-tag", style: ["color: #418bff;"]},
+		{target: "wdtag-root wdtag-attribute", style: ["color: #57ac57;"]},
+		{target: "wdtag-root wdtag-value", style: ["color: #cf8ee1;"]},
+		{target: "wdtag-root wdtag-word", style: ["color: #df6d6d; font-weight: bold;"]},
+		{target: "wdtag-root wdtag-tick", style: ["font-weight: bold; color: #68cccc;"]},
+		{target: "wdtag-root wdtag-string", style: ["color: #57ac57"]},
+		/*-- container da caixa de mensagens --*/
 		{target: ".js-wd-signal-box", style: [
 			"position: fixed; top: 0; right: 0; left: 0; bottom: initial;",
 			"display: block; margin: auto; padding: 1px; width: auto; max-height: 75vh;",
@@ -54,81 +162,69 @@ const wd = (function() {
 		{target: "@media screen and (min-width: 768px) {.js-wd-signal-box", style: [
 			"bottom: 0; right: 0; left: 75vw; top: initial;}"
 		]},
-		{target: ".js-wd-signal-wall", style: [
-			"position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;",
-			"margin: 0; padding: 0; background-color: rgba(0,0,50,0.3); z-index: 999999;"
+		/*-- modal da caixa de diálogo --*/
+		{target: ".js-wd-signal-modal", style: [
+			"position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 0.1s js-wd-emerge;",
+			"margin: 0; padding: 0; background-color: rgba(0,0,50,0.3); z-index: 999999; cursor: forbidden;"
 		]},
-		{target: ".js-wd-signal-msg, .js-wd-signal-ask", style: [
+		/*-- caixas de mensagem e diálogo --*/
+		{target: ".js-wd-signal-message, .js-wd-signal-dialog", style: [
 			"display: block; padding: 0;",
 			"color: #d4d4e6; background-color: #353535;",
 			"border: thin solid #000000; border-radius: 0.5em;",
 			"box-shadow: inset 0 0 2px 1px rgba(0,0,0,0.6);"
 		]},
-		{target: ".js-wd-signal-msg", style: [
+		/*-- caixa de mensagem --*/
+		{target: ".js-wd-signal-message", style: [
 			"position: relative; margin: 0.5em 0; ",
 			"animation: js-wd-expand 0.5s ease 0s, js-wd-shrink 0.5s ease 8.5s;"
 		]},
-		{target: ".js-wd-signal-ask", style: [
-			"position: absolute; top: 5vh; max-height: 90vh; left: 5vw; width: 90vw; margin: auto;",
+		/*-- caixa de diálogo --*/
+		{target: ".js-wd-signal-dialog", style: [
+			"position: absolute; top: 5vh; max-height: 90vh; left: 5vw; width: 90vw; margin: 0;",
+			"animation: js-wd-expand 0.5s ease 0s;"
 		]},
-		{target: "@media screen and (min-width: 768px) {.js-wd-signal-ask", style: [
+		{target: "@media screen and (min-width: 768px) {.js-wd-signal-dialog", style: [
 			"top: 20vh; max-height: 60vh; left: 30vw; max-width: 40vw;}"
 		]},
+		/*-- botão para fechar caixa de mensagens --*/
 		{target: ".js-wd-signal-close", style: [
 			"position: absolute; top: 0.2em; right: 0.2em; display: inline-block;",
 			"line-height: 1; cursor: pointer; margin: 0; z-index: 5; font-size: large;"
 		]},
 		{target: ".js-wd-signal-close:before", style: ["content: \"\\00D7\";"]},
-		{target: ".js-wd-signal-title", style: [
+		/*-- cabeçalho das caixas de mensagem e diálogo --*/
+		{target: ".js-wd-signal-head", style: [
 			"display: block; padding: 0.25em 0.5em; margin: 0;",
 			"border-radius: 0.5em 0.5em 0 0;",
 			"font-size: larger; font-weight: bold; background-color: #000000;"
 		]},
+		/*-- corpo das caixas de mensagem e diálogo --*/
 		{target: ".js-wd-signal-body", style: [
 			"display: block; padding: 1em 1em 1em 2em; margin: 0; white-space: pre-wrap;"
 		]},
-		{target: ".js-wd-signal-nav", style: [
-			"display: flex; flex-direction: column; flex-wrap: wrap;",
-			"justify-content: center; align-items: start; background-color: #000000;"
+		{target: ".js-wd-signal-message .js-wd-signal-body", style: ["border-radius: 0 0 0.5em 0.5em;"]},
+		/*-- rodapé da caixa de diálogo --*/
+		{target: ".js-wd-signal-foot", style: [
+			"display: flex; flex-flow: column nowrap;",
+			"background-color: #000000; border-radius: 0 0 0.5em 0.5em; font-size: smaller;"
 		]},
-		{target: "@media screen and (min-width: 768px) {.js-wd-signal-nav", style: [
-			"flex-direction: row; justify-content: start; align-items: start;"
+		{target: "@media screen and (min-width: 768px) {.js-wd-signal-foot", style: [
+			"flex-flow: row wrap; justify-content: space-evenly; align-items: baseline;}"
 		]},
-		{target: ".js-wd-signal-msg .js-wd-signal-body, .js-wd-signal-ask .js-wd-signal-nav", style: [
-			"border-radius: 0 0 0.5em 0.5em;"
+		/*-- ações da caixa de diálogo --*/
+		{target: ".js-wd-signal-action", style: [
+			"padding: 0.25em 0.5em; border-radius: 0.2em;",
+			"color: #333333; background-color: #f0f0f0; cursor: pointer;",
+			 "font-size: inherit; text-align: center;"
 		]},
-		{target: ".js-wd-signal-link", style: [
-			"padding: 0.25em 0.5em; margin: 0.5em; width: 100%;",
-			"color: #333333; background-color: #f0f0f0; cursor: pointer; font-size: smaller;",
-			"border-radius: 0.5em; border: 1px solid white; box-shadow: none;",
-		]},
-		{target: "@media screen and (min-width: 768px) {.js-wd-signal-link", style: [
-			"width: auto;"
-		]},
-		{target: ".js-wd-signal-link:focus, .js-wd-signal-link:hover", style: [
-			"text-decoration: underline; outline: 2px solid #9999ff;"
-		]},
-
-
-
-
-
-
-
+		{target: "@media screen and (min-width: 768px) {.js-wd-signal-action", style: ["flex-shrink: 0;"]},
+		{target: ".js-wd-signal-action:focus", style: ["outline: 2px solid #9999ff;"]},
+		{target: ".js-wd-signal-action:hover", style: ["text-decoration: underline;"]},
+		//"*::backdrop {background-color: white;}",
+		//TODO ver coloração https://developer.mozilla.org/pt-BR/docs/Web/CSS/background-color
+		//TODO interessante https://developer.mozilla.org/en-US/docs/Web/CSS/::file-selector-button
 	];
-
-//FIXME tirar isso daqui
-const style = document.createElement("STYLE");
-for (let i = 0; i < __STYLE.length; i++) {
-	style.innerHTML += __STYLE[i].target+" {";
-	style.innerHTML += __STYLE[i].style.join(" ").replace(/\;/g, " !important;")+"}\n";
-}
-document.head.appendChild(style);
-
-
-
-
-
 
 /*----------------------------------------------------------------------------*/
 	/**###### ``**const** ''object'' __DEVICE``
@@ -268,17 +364,17 @@ document.head.appendChild(style);
 			node.className = "js-wd-signal-box";
 			return node;
 		})(),
-		/**. ``''node'' wall``: Modal de diálogo.**/
-		wall: (function() {
+		/**. ``''node'' modal``: Modal de diálogo.**/
+		modal: (function() {
 			const node  = document.createElement("ASIDE");
-			node.className = "js-wd-signal-wall";
+			node.className = "js-wd-signal-modal";
 			return node;
 		})(),
 		/**. ``''node'' msg``: Caixa de mensagens (para clonar).**/
 		msg: (function() {
 			const node = document.createElement("SECTION")
-			node.className = "js-wd-signal-msg";
-			const nodes = {HEADER: "title", ARTICLE: "body", SPAN: "close"};
+			node.className = "js-wd-signal-message";
+			const nodes = {HEADER: "head", ARTICLE: "body", SPAN: "close"};
 			for (let i in nodes) {
 				let child = document.createElement(i);
 				child.className = "js-wd-signal-"+nodes[i];
@@ -289,8 +385,8 @@ document.head.appendChild(style);
 		/**. ``''node'' ask``: Caixa de diálogo (para clonar).**/
 		ask: (function() {
 			const node = document.createElement("SECTION");
-			node.className = "js-wd-signal-ask";
-			const nodes = {HEADER: "title", ARTICLE: "body", NAV: "nav"};
+			node.className = "js-wd-signal-dialog";
+			const nodes = {HEADER: "head", ARTICLE: "body", FOOTER: "foot"};
 			for (let i in nodes) {
 				let child = document.createElement(i);
 				child.className = "js-wd-signal-"+nodes[i];
@@ -302,7 +398,7 @@ document.head.appendChild(style);
 		message: function (options) {
 			const node = this.msg.cloneNode(true);
 			if ("title" in options)
-				node.querySelector(".js-wd-signal-title").innerText = options.title;
+				node.querySelector(".js-wd-signal-head").innerText = options.title;
 			if ("body" in options)
 				node.querySelector(".js-wd-signal-body").innerText = options.body;
 			/*-- Evento do botão de fechar --*/
@@ -344,9 +440,11 @@ document.head.appendChild(style);
 		},
 		/**. ``''void'' notify(''object'' dialog)``: Ver método ''signal''.**/
 		dialog: function (options) {
-			const wall = this.wall;
+			/*-- não permitir múltiplos diálogos --*/
+			if (this.modal.childElementCount > 0) return;
+			const wall = this.modal;
 			const node = this.ask.cloneNode(true);
-			const nav  = node.querySelector(".js-wd-signal-nav");
+			const nav  = node.querySelector(".js-wd-signal-foot");
 			const fire = typeof options.trigger === "function" ? options.trigger : console.log;
 			const acts = typeof options.actions === "object"   ? options.actions : {closed: "\u00D7"};
 			function trigger(ev) {
@@ -359,13 +457,9 @@ document.head.appendChild(style);
 					fire(link.dataset.link);
 				}
 			}
-			/*-- não permitir múltiplos diálogos --*/
-			if (wall.childElementCount > 0) {
-				fire(null);
-				return;
-			}
+
 			if ("title" in options)
-				node.querySelector(".js-wd-signal-title").innerText = options.title;
+				node.querySelector(".js-wd-signal-head").innerText = options.title;
 			if ("body" in options)
 				node.querySelector(".js-wd-signal-body").innerText = options.body;
 
@@ -373,8 +467,8 @@ document.head.appendChild(style);
 			let index = 0;
 			for (let i in acts) {
 				let text = acts[i].replace(/\*$/, "");
-				let link = document.createElement("SPAN");
-				link.className    = "js-wd-signal-link";
+				let link = document.createElement("span");
+				link.className    = "js-wd-signal-action";
 				link.dataset.link = i;
 				link.innerText    = text;
 				link.tabIndex     = ++index;
@@ -575,151 +669,6 @@ document.head.appendChild(style);
 			return this._numbers;
 		},
 	};
-
-/*----------------------------------------------------------------------------*/
-	/**###### ``**const** ''array'' __JSCSS``
-	Guarda os estilos da biblioteca (cada item corresponde a uma linha)**/
-	const __JSCSS = [
-		"/*-- ANIMATION --*/",
-		"@keyframes js-wd-emerge {from {opacity: 0;} to {opacity: 1;}}",
-		"@keyframes js-wd-fade   {from {opacity: 1;} to {opacity: 0;}}",
-		"@keyframes js-wd-expand {from {transform: scale(0);} to {transform: scale(1);}}",
-		"@keyframes js-wd-shrink {from {transform: scale(1);} to {transform: scale(0);}}",
-		//"@keyframes js-wd-blink {from {} to {background-color: #e6e6e5; box-shadow: 0 0 5px 1px #e6e6e5;}}",
-		//"@keyframes js-wd-blink {from {} to {box-shadow: 0 0 1em 1px grey, inset 0 0 5em 1px grey;}}",
-
-		//"@keyframes js-wd-blink {from {background-cdolor: black;} to {background-codlor: white;box-shadow: spread 0 0 10px 2px white;}}",
-		//"@keyframes js-wd-blink {from {background: repeating-linear-gradient(45deg, blue, red 20px);} to {background: repeating-linear-gradient(45deg, red, blue 20px);}}",
-
-		//"[data-wd-move-action=\"drop\"] {animation: js-wd-blink 1s linear 0s infinite ;}",
-		//"[data-wd-move-action=\"drop\"] {background: repeating-linear-gradient(45deg, blue, red 20px);}",
-		//"[data-wd-move-action=\"drop\"] {border-image: linear-gradient(blue, red) 1 1 / 5px 3px / 1rem round space;}",
-
-
-		"[data-wd-move-action=\"drop\"] {border-image-source: linear-gradient(45deg, white, blue);}",
-		"[data-wd-move-action=\"drop\"] {border-image-width: 10px; border-image-outset: 5px;}",
-		"[data-wd-move-action=\"drop\"] {border-image-slice: 1% fill; }",
-
-		"[data-wd-move-action=\"files\"] {border-image-source: linear-gradient(45deg, white, gray);}",
-		"[data-wd-move-action=\"files\"] {border-image-width: 10px; border-image-outset: 5px;}",
-		"[data-wd-move-action=\"files\"] > * {/*border-image-slice: 5% 10% 15% 20%;*/ visibility: hidden;}",
-
-
-
-
-
-		".js-wd-no-display {display: none !important;}",
-		"[data-wd-nav],  [data-wd-send], [data-wd-tsort], [data-wd-set] {cursor: pointer;}",
-		"[data-wd-edit], [data-wd-shared] {cursor: pointer;}",
-		"/*-- WDMOVE --*/",
-		"[data-wd-move*=\"type{jump}\"]        {cursor: pointer;}",
-		"[data-wd-move*=\"type{drag}\"]        {cursor: grab;}",
-		"[data-wd-move*=\"type{drag}\"]:active {cursor: grabbing;}",
-		"[data-wd-move*=\"type{move}\"]        {cursor: move;}",
-		"[data-wd-move-action=\"move\"]        {cursor: grabbing;}",
-		"[data-wd-move-action=\"move\"] *      {cursor: grabbing;}",
-		".js-wd-cursor-n-resize  * {cursor: n-resize !important;}",
-		".js-wd-cursor-ne-resize * {cursor: ne-resize !important;}",
-		".js-wd-cursor-e-resize  * {cursor: e-resize  !important;}",
-		".js-wd-cursor-se-resize * {cursor: se-resize !important;}",
-		".js-wd-cursor-s-resize  * {cursor: s-resize  !important;}",
-		".js-wd-cursor-sw-resize * {cursor: sw-resize !important;}",
-		".js-wd-cursor-w-resize  * {cursor: w-resize  !important;}",
-		".js-wd-cursor-nw-resize * {cursor: nw-resize !important;}",
-		".js-wd-hline {position: fixed; left: 0; width: 100vw;}",
-		".js-wd-hline {border-top: thin solid #000000; z-index: 999999;}",
-		".js-wd-vline {position: fixed; top: 0; height: 100vh;}",
-		".js-wd-vline {border-left: thin solid #000000; height: 100%; z-index: 999999;}",
-
-		//"[data-wd-move-action=\"drop\"] {animation: js-wd-blink 1s linear 0s infinite alternate;}",
-
-
-
-
-		"/*-- WDMENU --*/",
-		".js-wd-overflow-hidden	{overflow: hidden !important;}",
-		"[data-wd-menu] {cursor: context-menu;}",
-		".js-wd-menu {font-size: 14px; font-family: Verdana,sans-serif;}",
-		".js-wd-menu {position: fixed; max-width: 40vw; max-height: 40vh;}",
-		".js-wd-menu {display: block; margin: 0; padding: 0.3em;}",
-		".js-wd-menu {z-index: 999999; overflow: auto !important;}",
-		".js-wd-menu {color: #ffffff; background-color: rgba(0,0,0);}",
-		".js-wd-menu {border: 2px inset #101010; border-radius: 0.3em;}",
-		".js-wd-menu {animation: js-wd-emerge 0.5s linear 0s}",
-		".js-wd-menu > * {display: block; margin: inherit; padding: inherit; cursor: pointer;}",
-		".js-wd-menu > * {border-radius: inherit;}",
-		".js-wd-menu > *:hover {background-color: rgba(50,50,50); }",
-
-		"/*-- SVG --*/",
-		"svg .js-wd-chart-hide {display: none;}",
-		"@media screen and (min-width: 768px) {svg .js-wd-chart-hide {display: inline;}}",
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-		"[data-wd-tsort]:before        {content: \"\\2195 \"; font-weight: normal;}",
-		"[data-wd-tsort=\"-1\"]:before {content: \"\\2191 \"; font-weight: normal;}",
-		"[data-wd-tsort=\"+1\"]:before {content: \"\\2193 \"; font-weight: normal;}",
-		"[data-wd-repeat] > *, [data-wd-load] > * {visibility: hidden;}",
-		"[data-wd-slide] > * {animation: js-wd-emerge 1s, js-wd-shrink-out 0.5s;}",
-		"nav > *.js-wd-nav-inactive {opacity: 0.5;}",
-		"/* testes */",
-		"*::backdrop {background-color: white;}",
-
-		//TODO ver coloração https://developer.mozilla.org/pt-BR/docs/Web/CSS/background-color
-
-
-
-
-
-
-
-
-
-
-
-
-		"/*-- TAG SECTION --*/",
-		"wdtag-mark   {background-color: rgba(154,205,50,0.7); display: inline; border-radius: 0.2em; color: #000000;}",
-		"wdtag-root   {display: block;}",
-		"wdtag-root   {padding: 0.3em 0.3em 0.3em 3em; overflow: auto;}",
-		"wdtag-root   {border-radius: 0.5em; 	border: 1px solid #000000;}",
-		"wdtag-root   {font-family: monospace; font-size: 14px; white-space: pre-wrap;}",
-		"wdtag-root   {text-decoration: none; text-indent: 0;}",
-		"wdtag-root   {font-style: normal; font-weight: normal;}",
-		"wdtag-root   {background-color: #262626;}",
-		"wdtag-root * {display: inline; position: static; padding: 0;}",
-		"wdtag-root * {font-weight: normal; font-style: normal; border: none; border-raius: none;}",
-		"wdtag-root                   {counter-reset: wdcodelines;}",
-		"wdtag-root wdtag-line        {counter-increment: wdcodelines;}",
-		"wdtag-root wdtag-line:before {content: counter(wdcodelines);}",
-		"wdtag-root wdtag-line:before {display: inline-block; position: relative;}",
-		"wdtag-root wdtag-line:before {margin: 0 0 0 -3em; padding-right: 0.5em; min-width: 3em;}",
-		"wdtag-root wdtag-line:before {color: #bcc118; text-align: right;}",
-		"wdtag-root wdtag-content     {color: #b3b3b3;}",
-		"wdtag-root wdtag-comment     {color: #8c8c8c; font-style: italic;}",
-		"wdtag-root wdtag-doc         {color: #df6d6d; font-weight: bold;}",
-		"wdtag-root wdtag-tag         {color: #418bff;}",
-		"wdtag-root wdtag-attribute   {color: #57ac57;}",
-		"wdtag-root wdtag-value       {color: #cf8ee1;}",
-		"wdtag-root wdtag-word        {color: #df6d6d; font-weight: bold;}",
-		"wdtag-root wdtag-tick        {font-weight: bold; color: #68cccc;}",
-		"wdtag-root wdtag-string      {color: #57ac57;}",
-
-
-
-//TODO interessante https://developer.mozilla.org/en-US/docs/Web/CSS/::file-selector-button
-	];
 
 /*----------------------------------------------------------------------------*/
 	/**###### ``**const** ''object'' __TYPE``
@@ -9105,14 +9054,16 @@ Object.defineProperties(__Type.prototype, {
 	function wdOnLoad(ev) {
 		if (__UNDERMAINTENANCE) console.log({wdOnLoad: ev, target: ev.target});
 		/*-- construindo CSS da biblioteca --*/
-		const css   = __JSCSS.slice();
-		const line  = {re: /^([^{]+)\{(.+)\}$/, rp: "$1 {\n\t$2\n}\n"};
-		const style = document.createElement("STYLE");
-		css.forEach(function(v,i,a) {
-			a[i] = v.replace(/\s+/, " ").replace(line.re, line.rp);
-		});
-		style.innerHTML = __JSCSS.join("");
-		document.head.appendChild(style);
+		const node = document.createElement("STYLE");
+		const data = [];
+		for (let i = 0; i < __STYLE.length; i++) {
+			let target = __STYLE[i].target;
+			let style  = __STYLE[i].style.join(" ").replace(/\;+/g, " !important;");
+			let block  = [target.trim(), " {", style.trim(), "}"].join("");
+			data.push(block);
+		}
+		node.innerHTML = data.join("\n");
+		document.head.appendChild(node);
 		/*-- aplicar carregamentos, repetições e ajustes --*/
 		wdOnReload(ev);
 		return;

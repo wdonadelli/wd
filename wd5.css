@@ -668,7 +668,20 @@ q {
 	align-items: center;
 }
 
-
+/*-- FLEX Container ------------------------------------------------------------
+  flex-direction: row row-reverse column column-reverse
+    Posicionamento dos itens, se em linha ou em coluna
+  flex-wrap: wrap nowrap wrap-reverse
+    Indica se os itens pulam ou não para a próxima linha se acabar o espaço
+  flex-flow (atalho)
+    Junção das propriedades flex-direction e flex-wrap
+  justify-content: center start end flex-start/end left right space-between/around space-evenly stretch
+    Distribuição do espaço entre os itens
+  align-items: center start end baseline flex-start/end self-start/end stretch
+    Alinhamento vertical dos itens
+  align-content: center start end flex-start/end left right stretch
+    Alinhamento vertical do conteúdo dos itens
+------------------------------------------------------------------------------*/
 @media screen and (min-width: 600px) { /* tablet/desktop */
 	/* row */
 	.wd .wd-form-col > * {
