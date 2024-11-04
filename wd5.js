@@ -224,6 +224,17 @@ const wd = (function() {
 		//"*::backdrop {background-color: white;}",
 		//TODO ver coloração https://developer.mozilla.org/pt-BR/docs/Web/CSS/background-color
 		//TODO interessante https://developer.mozilla.org/en-US/docs/Web/CSS/::file-selector-button
+		/*-- barra de progresso --*/
+		{target: ".js-wd-progress-modal", style: [
+			"position: fixed; top: 0; left: 0; display: block;",
+			"width: 100vw; height: 100vh; padding: 0; margin: 0; z-index: 999999;",
+			"cursor: progress; background-color: rgba(0,0,0,0.3); animation: js-wd-emerge 0.1s;",
+		]},
+		{target: ".js-wd-progress-bar", style: [
+			"position: absolute; top: 0; left: 0;",
+			"display: block; height: 5px; padding: 0; margin: 0;",
+			"background-color: royalblue; border-radius: 0.2em; border: 1px solid black;"
+		]}
 	];
 
 /*----------------------------------------------------------------------------*/
@@ -270,64 +281,44 @@ const wd = (function() {
 	const __PROGRESS = {
 		/**. ``''node'' bar``: Barra de progresso.**/
 		bar: (function() {
-			/*-- Plano de fundo --*/
-			const wall = (function() {
-				const node = document.createElement("DIV");
-				const style = {
-					display: "block", width: "100vw", height: "100vh",
-					padding: "0", margin: "0", zIndex: "999999",
-					position: "fixed", top: "0", right: "0", bottom: "0", left: "0",
-					cursor: "progress", backgroundColor: "rgba(0,0,0,0.3)",
-					animation: "js-wd-emerge 0.1s",
-				};
-				for (let i in style) node.style[i] = style[i];
-				return node;
-			})();
-			/*-- Barra de progresso --*/
-			const bar = (function () {
-				const node  = document.createElement("DIV");
-				const style = {
-					position: "absolute", top: "0", left: "0",
-					display: "block", width: "0", height: "5px", padding: "0", margin: "auto",
-					backgroundColor: "royalblue", borderRadius: "0.2em", border: "1px solid black"
-				};
-				for (let i in style) node.style[i] = style[i];
-				return node;
-			})();
-			/*-- Agrupar elementos --*/
+			/*-- Plano de fundo e barra de  progresso --*/
+			const wall = document.createElement("DIV");
+			const bar  = document.createElement("DIV");
+			wall.className = "js-wd-progress-modal";
+			bar.className  = "js-wd-progress-bar";
 			wall.appendChild(bar);
 			/*-- Definindo atributos --*/
-			wall.dataset.delay = 5;
-			wall.dataset.value = 0;
-			wall.dataset.count = 0;
-
-			/*-- Disparadores --*/
+			bar.dataset.delay = 5; /*-- tempo de espera até fechar o modal --*/
+			bar.dataset.value = 0; /*-- valor da barra de progresso --*/
+			bar.dataset.count = 0; /*-- quantidade de processos em aberto --*/
+			/*-- Disparador de abertura de processo --*/
 			bar.addEventListener("wdprogressopen", function(ev) {
-				const wall = ev.target.parentElement;
+				const bar  = ev.target;
+				const wall = bar.parentElement;
 				if (wall.parentElement !== document.body)
 					document.body.appendChild(wall);
-				wall.dataset.count = Number(wall.dataset.count) + 1;
-				ev.target.value    = Number(wall.dataset.value);
+				bar.dataset.count = Number(bar.dataset.count) + 1;
 			}, false);
-
+			/*-- Disparador de fechamento de processo --*/
 			bar.addEventListener("wdprogressclose", function(ev) {
-				const wall  = ev.target.parentElement;
-				const count = Number(wall.dataset.count) - 1;
-				const delay = Number(wall.dataset.delay);
-				wall.dataset.count = count < 0 ? 0 : count;
+				const bar   = ev.target;
+				const count = Number(bar.dataset.count) - 1;
+				const delay = Number(bar.dataset.delay);
+				bar.dataset.count = count < 0 ? 0 : count;
 				window.setTimeout(function () {
-					if (count === 0 && wall.parentElement !== null)
+					const count = Number(bar.dataset.count);
+					const wall  = bar.parentElement;
+					if (count <= 0 && wall.parentElement !== null)
 						wall.parentElement.removeChild(wall);
 				}, delay);
 			}, false);
-
+			/*-- Disparador de definição de valor --*/
 			bar.addEventListener("wdprogressset", function(ev) {
-				const wall  = ev.target.parentElement;
-				const value = Number(wall.dataset.value);
-				const tag   = ev.target.tagName.toLowerCase();
-				ev.target.style.width = String(100*value)+"%";
+				const bar   = ev.target;
+				const value = Number(bar.dataset.value);
+				bar.style.width = String(100*value)+"%";
 			}, false);
-
+			/*-- retornando a barra de progresso --*/
 			return bar;
 		})(),
 		/**. ``''object'' openEvent``: Evento de abertura da barra de progresso.**/
@@ -348,7 +339,7 @@ const wd = (function() {
 		},
 		/**. ``''void'' set(''integer'' value)``: Define o valor da barra de progresso pelo seu argumento.**/
 		set: function(value) {
-			this.bar.parentElement.dataset.value = value;
+			this.bar.dataset.value = value;
 			this.bar.dispatchEvent(this.setEvent);
 			return;
 		}
@@ -440,11 +431,19 @@ const wd = (function() {
 		},
 		/**. ``''void'' notify(''object'' dialog)``: Ver método ''signal''.**/
 		dialog: function (options) {
-			/*-- não permitir múltiplos diálogos --*/
-			if (this.modal.childElementCount > 0) return;
+			/*-- não permitir múltiplos diálogos ou matar processo --*/
+			if (this.modal.childElementCount > 0) {
+				if (options.close === true) {
+					while (this.modal.childElementCount > 0)
+						this.modal.removeChild(this.modal.firstElementChild);
+					this.modal.parentElement.removeChild(this.modal);
+				}
+				return;
+			}
+			/*-- construindo caixa de diálogo --*/
 			const wall = this.modal;
 			const node = this.ask.cloneNode(true);
-			const nav  = node.querySelector(".js-wd-signal-foot");
+			const foot = node.querySelector(".js-wd-signal-foot");
 			const fire = typeof options.trigger === "function" ? options.trigger : console.log;
 			const acts = typeof options.actions === "object"   ? options.actions : {closed: "\u00D7"};
 			function trigger(ev) {
@@ -474,7 +473,7 @@ const wd = (function() {
 				link.tabIndex     = ++index;
 				link.addEventListener("keypress", trigger, false);
 				link.addEventListener("click", trigger, false);
-				nav.appendChild(link);
+				foot.appendChild(link);
 				if ((/\*$/).test(acts[i])) focus = link;
 			}
 			/*-- renderizando box e node --*/
@@ -490,6 +489,7 @@ const wd = (function() {
 		|body|string|-|Define a mensgem da interação.|
 		|trigger|function|-|Define a função a ser chamada pelo retorno do diálogo (opcional, type=dialog)|
 		|actions|object|-|Define os botões do diálogo (opcional, type=dialog)|
+		|close|boolean|-|Se verdadeiro, fecha o diálogo aberto (opcional, type=dialog)|
 		. O nome das propriedades de ``actions`` define o identificador da ação e seu valor o respectivo texto visual. Ao clicar sobre o botão da ação, a função ``trigger`` será chamada passando como argumento o respectivo identificador da ação. Não é permitido executar múltiplas caixas de diálogo. Se o valor da ação encerrar com o caractere asterisco, essa ação será focalizada.**/
 		signal: function(options) {
 			if (typeof options !== "object") options = {};
@@ -1632,6 +1632,7 @@ Object.defineProperties(__Type.prototype, {
 
 	Object.defineProperties(__Parser.prototype, {
 		constructor: {value: __Parser},
+		//FIXME isso parou de funcionar
 		/**. ``''object'' csvTable``: Transforma string [CSV]<https://www.rfc-editor.org/rfc/rfc4180> em tabela HTML.**/
 		csvTable: {
 			get: function() {
@@ -1640,7 +1641,7 @@ Object.defineProperties(__Type.prototype, {
 				let data = null;
 				if (this._check.chars) {
 					const tree = new __Tree();
-					const text = this._data.replace(/\r\n/g, "\n");
+					const text = this._data.replace(/\r?\n/g, "\n");
 					const code = text.split("");
 					const rows = text.trim().split("\n").length;
 					const cols = /[\ \,\;\t\|]/;
@@ -7334,7 +7335,7 @@ Object.defineProperties(__Type.prototype, {
 		toString: {value: function() {return this._data.toString();}},
 		/**. ``''string'' type``: Retorna o tipo do dado.**/
 		type: {get: function() {return this._data.type;}},
-		/**. ``''boolean'' or(''string'' type...)``: Retorna verdadeiro se algum dos tipos informados no argumento ``type`` corresponder ao tipo de dado.**/
+		/**. ``''boolean'' or(''string'' type...)``: Retorna verdadeiro algum tipo informado em ``type`` corresponder ao dado.**/
 		or: {
 			value: function(type) {
 				for (let i = 0; i < arguments.length; i++)
@@ -7342,7 +7343,7 @@ Object.defineProperties(__Type.prototype, {
 				return false;
 			}
 		},
-		/**. ``''boolean'' is(''string'' type...)``: Retorna verdadeiro se todos os tipos informados no argumento ``type`` correspondem ao tipo de dado.**/
+		/**. ``''boolean'' is(''string'' type...)``: Retorna verdadeiro todos os tipos informados em ``type`` corresponder ao dado.**/
 		is: {
 			value: function(type) {
 				if (arguments.length < 2) return this.or(type);
@@ -7351,9 +7352,6 @@ Object.defineProperties(__Type.prototype, {
 				return true;
 			}
 		},
-
-
-		//FIXME deixo essas coisas aqui mesmo?
 		/**. ``''string'' mask(''string'' model)``: Retorna o valor formatado pela máscara definida no argumento ``model``. Se a máscara não casar, retornará uma string vazia.**/
 		mask: {value: function(model) {return new __String(this._input).mask(model);}},
 	});
@@ -7399,6 +7397,8 @@ Object.defineProperties(__Type.prototype, {
 		//FIXME não dá certo isso quando se insere "123" ou true
 		/**. ``''any'' json``: Retorna notação em JSON para valor em Javascript ou nulo se inválido.**/
 		json: {get: function() {return this._main.json;}},
+
+		//FIXME isso não funciona porque não tem em __String
 		/**. ``''node'' html``: Retorna notação em HTML para documento correspondente ou nulo se inválido.**/
 		html: {get: function() {return this._main.html;}},
 		/**. ``''node'' xml``: Retorna notação em XML para documento correspondente ou nulo se inválido.**/
