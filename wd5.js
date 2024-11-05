@@ -1632,7 +1632,6 @@ Object.defineProperties(__Type.prototype, {
 
 	Object.defineProperties(__Parser.prototype, {
 		constructor: {value: __Parser},
-		//FIXME isso parou de funcionar
 		/**. ``''object'' csvTable``: Transforma string [CSV]<https://www.rfc-editor.org/rfc/rfc4180> em tabela HTML.**/
 		csvTable: {
 			get: function() {
@@ -1641,7 +1640,7 @@ Object.defineProperties(__Type.prototype, {
 				let data = null;
 				if (this._check.chars) {
 					const tree = new __Tree();
-					const text = this._data.replace(/\r?\n/g, "\n");
+					const text = this._data.replace(/\r\n/g, "\n");
 					const code = text.split("");
 					const rows = text.trim().split("\n").length;
 					const cols = /[\ \,\;\t\|]/;
@@ -1650,17 +1649,19 @@ Object.defineProperties(__Type.prototype, {
 					tree.open("table").open("thead").open("tr");
 					code.forEach(function(v,i,a) {
 						const tag = tree.level;
+						/*-- células entre aspas --*/
 						if (tag === "span") {
 							if (v === "'" && a[i+1] === "'") {
 								a[i+1] = "";
 								tree.add("\"");
 							} else if (v === "\"") {
 								tree.close();
-								if (col === null) col = a[i+1];
+								if (col === null && a[i+1] !== "\n") col = a[i+1];
 							} else {
 								tree.add(v)
 							}
 						}
+						/*-- células descrição ou de cabeçalho --*/
 						else if (tag === "td" || tag === "th") {
 							if (v === "\n") {
 								if (lines === 0) {
@@ -1669,15 +1670,16 @@ Object.defineProperties(__Type.prototype, {
 									tree.close().close().open("tr");
 								}
 								lines++;
-							} else if (col === null && cols.test(v)) {
+							} else if (col === null && cols.test(v)) { /*-- capturando separador de célula --*/
 								col = v;
 								tree.close()
-							} else if (col === v) {
+							} else if (col === v) { /*-- encerrando célula --*/
 								tree.close();
 							} else {
 								tree.add(v);
 							}
 						}
+						/*-- linhas --*/
 						else if (tag === "tr") {
 							if (v === "\n") {
 								if (lines === 0) {
@@ -1689,7 +1691,7 @@ Object.defineProperties(__Type.prototype, {
 							} else if (v === "\"") {
 								tree.open(lines === 0 ? "th" : "td").open("span");
 							} else {
-								tree.open(lines === 0 ? "th" : "td", v);
+								tree.open(lines === 0 ? "th" : "td").add(v);
 							}
 						}
 					});
@@ -4484,7 +4486,7 @@ Object.defineProperties(__Type.prototype, {
 			}
 		},
 		/**. ``''object'' fsubmit``: Retorna um objeto contendo as propriedades ``name``, ``value``, ``error`` e ``message`` do formulário ou nulo se não for o caso para submeter.**/
-		fsubmit	: {
+		fsubmit: {
 			get: function() {
 				if (this.fsend) {
 					const data = {
@@ -7354,6 +7356,30 @@ Object.defineProperties(__Type.prototype, {
 		},
 		/**. ``''string'' mask(''string'' model)``: Retorna o valor formatado pela máscara definida no argumento ``model``. Se a máscara não casar, retornará uma string vazia.**/
 		mask: {value: function(model) {return new __String(this._input).mask(model);}},
+		/**. ``''boolean'' instanceOf(''string'' name)``: Checa se o conteúdo é instância do objeto informado em ``name``.**/
+		instanceOf: {value: function(name) {return this._data.instanceOf(name);}},
+
+
+		//FIXME colocar isso de forma genérica? to(type)
+		/**. ``''array'' csv``: Retorna string em CSV para array.**/
+		csv: {get: function() {return this._main.csv;}},
+		/**. ``''any'' json``: Retorna notação em JSON para valor em Javascript ou nulo se inválido.**/
+		json: {get: function() {return this._main.json;}},
+		/**. ``''node'' html``: Retorna notação em HTML para documento correspondente ou nulo se inválido.**/
+		html: {get: function() {return this._main.html;}},
+		/**. ``''node'' xml``: Retorna notação em XML para documento correspondente ou nulo se inválido.**/
+		xml: {get: function() {return this._main.xml;}},
+		/**. ``''string'' csv``: Retorna o array, se organizado em forma de matriz, no formato CSV.**/
+		mcsv: {
+			get: function() {
+				let table = __Table();
+				table.matrix(this.valueOf());
+				return table.csv();
+			;}
+		},
+
+
+
 	});
 
 /*----------------------------------------------------------------------------*/
@@ -7391,18 +7417,6 @@ Object.defineProperties(__Type.prototype, {
 		trim: {get: function() {return this._main.clear(true, false);}},
 		/**. ``''string'' clean``: Remove acentos e espaços excedentes.**/
 		clean: {get: function() {return this._main.clear();}},
-		/**. ``''array'' csv``: Retorna string em CSV para array.**/
-		csv: {get: function() {return this._main.csv;}},
-
-		//FIXME não dá certo isso quando se insere "123" ou true
-		/**. ``''any'' json``: Retorna notação em JSON para valor em Javascript ou nulo se inválido.**/
-		json: {get: function() {return this._main.json;}},
-
-		//FIXME isso não funciona porque não tem em __String
-		/**. ``''node'' html``: Retorna notação em HTML para documento correspondente ou nulo se inválido.**/
-		html: {get: function() {return this._main.html;}},
-		/**. ``''node'' xml``: Retorna notação em XML para documento correspondente ou nulo se inválido.**/
-		xml: {get: function() {return this._main.xml;}},
 	});
 
 /*----------------------------------------------------------------------------*/
@@ -7571,7 +7585,7 @@ Object.defineProperties(__Type.prototype, {
 		format: {value: function(input) {return this._main.format(input);}},
 	});
 
-	/*-- copiando propriedades de WDtime e WDdate */
+	/*-- copiando propriedades de WDtime e WDdate para WDdatetime --------------*/
 	const forget   = ["toString", "valueOf", "constructor", "toLocaleString", "format"];
 	const timeProp = Object.getOwnPropertyNames(WDtime.prototype);
 	const dateProp = Object.getOwnPropertyNames(WDdate.prototype);
@@ -7601,83 +7615,43 @@ Object.defineProperties(__Type.prototype, {
 
 	WDarray.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDarray},
-		[Symbol.iterator]: {
-			value: function*() {
-				for (let i of this._main) yield i;
-			}
-		},
+		[Symbol.iterator]: {value: function*() {for (let i of this._main) yield i;}},
 		/**. ``''integer'' length``: Retorna a quantidade de itens no array.**/
-		length: {
-			get: function() {return this._main.length;}
-		},
+		length: {get: function() {return this._main.length;}},
 		/**. ``''array'' unique``: Retorna a lista sem valores repetidos.**/
-		unique: {
-			get: function() {return this._main.unique;}
-		},
+		unique: {get: function() {return this._main.unique;}},
 		/**. ``''array'' asc``: Retorna a lista ordenada de forma ascentende.**/
-		asc: {
-			get: function() {return this._main.sort(true);}
-		},
+		asc: {get: function() {return this._main.sort(true);}},
 		/**. ``''array'' desc``: Retorna a lista ordenada de forma descendente.**/
-		desc: {
-			get: function() {return this._main.sort(false);}
-		},
+		desc: {get: function() {return this._main.sort(false);}},
 		/**. ``''array'' sort``: Retorna a lista com ordem inversa ou forma ascendente, se desordenada.**/
-		sort: {
-			get: function() {return this._main.sort();}
-		},
+		sort: {get: function() {return this._main.sort();}},
 		/**. ``''array'' order``: Retorna a lista ordenada de forma ascendente sem repetições.**/
-		order: {
-			get: function() {return this._main.order;}
-		},
+		order: {get: function() {return this._main.order;}},
 		/**. ``''array'' add(''any'' ...)``: Adicina itens ao fim da lista e a retorna.**/
-		add: {
-			value: function() {return this._main.add.apply(this._main, arguments);}
-		},
+		add: {value: function() {return this._main.add.apply(this._main, arguments);}},
 		/**. ``''array'' jump(''any'' ...)``: Adicina itens ao início da lista e a retorna.**/
-		jump: {
-			value: function() {return this._main.jump.apply(this._main, arguments);}
-		},
+		jump: {value: function() {return this._main.jump.apply(this._main, arguments);}},
 		/**. ``''array'' put(''any'' ...)``: Adicina itens, se inexistentes, ao fim da lista e a retorna.**/
-		put: {
-			value: function() {return this._main.put.apply(this._main, arguments);}
-		},
+		put: {value: function() {return this._main.put.apply(this._main, arguments);}},
 		/**. ``''array'' concat(''any'' ...)``: Concatena itens ou arrays ao fim da lista e a retorna.**/
-		concat: {
-			value: function() {return this._main.concat.apply(this._main, arguments);}
-		},
+		concat: {value: function() {return this._main.concat.apply(this._main, arguments);}},
 		/**. ``''array'' remove(''any'' ...)``: Remove da lista todas as ocorrências dos itens especificados e a retorna.**/
-		remove: {
-			value: function() {return this._main.remove.apply(this._main, arguments);}
-		},
+		remove: {value: function() {return this._main.remove.apply(this._main, arguments);}},
 		/**. ``''array'' toggle(''any'' ...)``: Alterna a existência dos itens especificados na lista e a retorna.**/
-		toggle: {
-			value: function() {return this._main.toggle.apply(this._main, arguments);}
-		},
+		toggle: {value: function() {return this._main.toggle.apply(this._main, arguments);}},
 		/**. ``''array'' replace(''any'' from, ''any'' to)``: Altera todas as ocorrências (``from``) pelo novo valor (``to``) e retorna a lista modificada.**/
-		replace: {
-			value: function(from, to) {return this._main.replace(from, to);}
-		},
+		replace: {value: function(from, to) {return this._main.replace(from, to);}},
 		/**. ``''array'' search(''any'' value)``: Retorna uma lista com os índices em que o argumento ``value`` aparece.**/
-		search: {
-			value: function(value) {return this._main.search(value);}
-		},
+		search: {value: function(value) {return this._main.search(value);}},
 		/**. ``''boolean'' check(''any'' ...)``: Retorna verdadeiro se todos os argumentos informados forem localizados.**/
-		check: {
-			value: function() {return this._main.check.apply(this._main, arguments);}
-		},
+		check: {value: function() {return this._main.check.apply(this._main, arguments);}},
 		/**. ``''array'' hide(''any'' ...)``: Retorna a lista ignorando os valores informados como argumento.**/
-		hide: {
-			value: function() {return this._main.hide.apply(this._main, arguments);}
-		},
+		hide: {value: function() {return this._main.hide.apply(this._main, arguments);}},
 		/**. ``''any'' item(''integer'' index)``: Retorna o item especificado no argumento ``index`` considerando uma lista circular.**/
-		item: {
-			value: function(index) {return this._main.valueOf(__Type(index).number ? index : 0);}
-		},
+		item: {value: function(index) {return this._main.valueOf(__Type(index).number ? index : 0);}},
 		/**. ``''string'' toString()``: Retorna a lista em forma de JSON.**/
-		toString: {
-			value: function() {return JSON.stringify(this._data.value);}
-		},
+		toString: {value: function() {return JSON.stringify(this._data.value);}},
 		/**. ``''array|number'' valueOf(''string'' value)``: Retorna uma cópia da lista ou os seguintes valores de acordo com o valor do argumento opcional ``value`` que, caso não exista o valor possível, retornará nulo:
 		|Value|Tipo|Descrição|
 		|min|number|Retorna o menor número finito da lista.|
@@ -7707,14 +7681,7 @@ Object.defineProperties(__Type.prototype, {
 				return this._main.valueOf().slice();
 			}
 		},
-		/**. ``''string'' csv``: Retorna o array, se organizado em forma de matriz, no formato CSV.**/
-		csv: {
-			get: function() {
-				let table = __Table();
-				table.matrix(this.valueOf());
-				return table.csv();
-			;}
-		},
+		//FIXME coloco onde isso aqui?
 		/**. ``''array'' cell(''string'' area)``: Retorna uma lista contendo os valores definidos no argumento ``area`` de um array organizado no formato de matriz (ver __Table).**/
 		cell: {
 			value: function(area) {
@@ -7731,43 +7698,21 @@ Object.defineProperties(__Type.prototype, {
 	Construtor genérico para manipulação de tempo. Os argumentos ``input`` e ``data`` se referem aos argumento de ``WDmain``**/
 	function WDobject(input, data) {
 		WDmain.call(this, input, data);
+		const request = new __Request(this._input);
 		Object.defineProperties(this, {
-			_main: {value: new __DataSet(data.value)},
+			_main:    {value: new __DataSet(data.value)},
+			_request: {value: request}
 		});
 	}
 
 	WDobject.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDobject},
-		/**. ``''self'' send(''function'' trigger)``: Efetua requisição XMLHttpRequest. O argumento opcional ``trigger``define o disparador (ver __Request).**/
-		send: {
-			value: function(trigger) {
-				const request = new __Request(this._input);
-				request.send(trigger);
-				return this;
-			}
-		},
-		/**. ``''self'' fetch(''function'' trigger)``: Efetua requisição fetch. O argumento opcional ``trigger``define o disparador (ver __Request).**/
-		fetch: {
-			value: function(trigger) {
-				const request = new __Request(this._input);
-				request.fetch(trigger);
-				return this;
-			}
-		},
-		/**. ``''self'' read(''function'' trigger)``: Efetua leitura de arquivos. O argumento opcional ``trigger``define o disparador (ver __Request).**/
-		read: {
-			value: function(trigger) {
-				const request = new __Request(this._input);
-				request.read(trigger);
-				return this;
-			}
-		},
-		/**. ``''boolean'' instanceOf(''string'' name)``: Checa se o conteúdo é instância do objeto informado em ``name``.**/
-		instanceOf: {
-			value: function(name) {
-				return this._data.instanceOf(name);
-			}
-		}
+		/**. ``''self'' send(''function'' trigger)``: Efetua requisição XMLHttpRequest e dispara ``trigger``(ver __Request).**/
+		send: {value: function(trigger) {this._request.send(trigger); return this;}},
+		/**. ``''self'' fetch(''function'' trigger)``: Efetua requisição fetch e dispara ``trigger``(ver __Request).**/
+		fetch: {value: function(trigger) {this._request.fetch(trigger); return this;}},
+		/**. ``''self'' read(''function'' trigger)``: Efetua leitura de arquivos e dispara ``trigger``(ver __Request).**/
+		read: {	value: function(trigger) {this._request.read(trigger); return this;}},
 	});
 
 /*----------------------------------------------------------------------------*/
@@ -7784,49 +7729,47 @@ Object.defineProperties(__Type.prototype, {
 	WDnode.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDnode},
 		/**. ``''integer'' length``: Retorna a quantidade de nós HTML.**/
-		length: {
-			get: function() {return this._data.value.length;}
-		},
+		length: {get: function() {return this._data.value.length;}},
 		/**. ``''array'' valueOf()``: Retorna uma cópia da lista contendo os nós HTML.**/
-		valueOf: { /* método padrão */
-			value: function() {return this._data.value.slice();}
-		},
-		/**. ``''self'' forEach(''function'' callback)``: Executa looping nos nós HTML, informando-os no argumento ``callback`` que receberá dois argumento: o nó HTML e sua sequência numérica na lista.**/
+		valueOf: {value: function() {return this._data.value.slice();}},
+		/**. ``''self'' forEach(''function'' callback)``: Executa looping nos nós HTML, informando no argumento ``callback`` o nó e seu índice.**/
 		forEach: {
 			value: function(callback) {
-				if (!__Type(callback).function) return;
-				this._data.value.forEach(function(v,i,a) {callback(v,i);});
+				if (__Type(callback).function) {
+					for (let i = 0; i < this._data.value.length; i++)
+						callback(this._data.value[i], i);
+				}
 				return this;
 			}
 		},
 		/**. ``''array'' files``: Retorna uma lista com os arquivos selecionados nos campos de formulário.**/
 		files: {
 			get: function() {
-				let pack = [];
+				const pack = [];
 				this.forEach(function(v,i) {
-					let node = __Node(v);
-					if (node.type === "file") {
-						let i = -1;
-						while(++i < v.files.length) pack.push(v.files[i]);
+					const node = __Node(v);
+					if (node.ftype === "file") {
+						for (let j = 0; j < v.files.length; j++)
+							pack.push(v.files[j]);
 					}
 				});
 				return pack;
 			}
 		},
+		//FIXME parei aqui
 		/**. ``''array'' submit``: Retorna uma lista de objetos contendo o nome e o valor dos campos de formulários. Se houver algum campo com erro, retornará nulo.**/
 		submit: {
 			get: function() {
-				let data  = [];
-				let error = false;
+				const data = [];
+				let  error = false;
 				this.forEach(function(v,i) {
-					if (error) return;
-					let node = __Node(v);
-					let form = node.submit;
-					if (form === null) return;
-					if (!form.fvalidity)
-						error = true;
-					else
-						data.push({name: form.name, value: form.value});
+					if (!error) {
+						const node = __Node(v);
+						const form = node.fsubmit;
+						error = form !== null && form.error;
+						if (!error && form !== null)
+							data.push({name: form.name, value: form.value});
+					}
 				});
 				return error ? null : data;
 			}
