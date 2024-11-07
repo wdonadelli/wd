@@ -1704,7 +1704,7 @@ Object.defineProperties(__Type.prototype, {
 				return this.csvTable;
 			}
 		},
-		/**. ``''object'' tableMatrix``: Transforma tabela HTML em matriz.**/
+		/**. ``''object'' tableMatrix``: Transforma tabela HTML em matriz 2x2.**/
 		tableMatrix: {
 			get: function() {
 				if ("tableMatrix" in this._saved)
@@ -1712,15 +1712,27 @@ Object.defineProperties(__Type.prototype, {
 				let data = null;
 				if (this._table) {
   				const matrix = Array.prototype.slice.call(this._data.rows);
-					for (let i = 0; i < matrix.length; i++) {
+					for (let i = 0; i < matrix.length; i++)
 					  matrix[i] = Array.prototype.slice.call(matrix[i].cells);
-					  for (let j = 0; j < matrix[i].length; j++)
-					    matrix[i][j] = matrix[i][j].innerText;
-					}
 					data = matrix;
 				}
 				this._saved["tableMatrix"] = data;
 				return this.tableMatrix;
+			}
+		},
+		/**. ``''object'' tableValues``: Igual à propriedade ``tableMatrix``, mas exibindo os valores das células.**/
+		tableValues: {
+			get: function() {
+				if ("tableValues" in this._saved)
+					return new __Parser(this._saved.tableValues);
+				let data = this.tableMatrix.get();
+				if (data !== null) {
+  				for (let i = 0; i < data.length; i++)
+  					for (let j = 0; j < data[i].length; j++)
+  						data[i][j] = data[i][j].innerText;
+				}
+				this._saved["tableValues"] = data;
+				return this.tableValues;
 			}
 		},
 		/**. ``''object'' matrixCSV``: Transforma uma matriz em string CSV.**/
@@ -2661,7 +2673,7 @@ Object.defineProperties(__Type.prototype, {
 			}
 		},
 		/**. ``''matrix'' csv``: Retorna uma matriz (array) a partir de uma string CSV.**/
-		csv: {get: function() {return this._parser.csvTable.tableMatrix.matrixCSV.get();}},
+		csv: {get: function() {return this._parser.csvTable.tableValues.matrixCSV.get();}},
 		/**. ``''object'' json``: Retorna objeto JSON a partir de uma string nesse formato.**/
 		json: {get: function() {return this._parser.stringJSON.get();}},
 	});
@@ -3854,7 +3866,9 @@ Object.defineProperties(__Type.prototype, {
 
 		if (!(this instanceof __Array))	return new __Array(input);
 		Object.defineProperties(this, {
-			_value: {value: input, writable: true}
+			_value: {value: input},
+			/**. ``''integer'' index``: Retorna o valor do índice (ver ``next``e ``index``).**/
+			index:  {value: -1, writable: true},
 		});
 	}
 
@@ -3886,6 +3900,16 @@ Object.defineProperties(__Type.prototype, {
 		},
 		/**. ``''integer'' length``: Retorna a quantidade de itens da lista.**/
 		length: {get: function() {return this._value.length;}},
+		/**. ``''any'' value``: Retorna o valor do item (ver ``next``e ``index``).**/
+		value:  {get: function() {return this._value[this.index];}},
+		/**. ``''boolean''  next(''boolean'' run)``: Método para utilizar em looping ''while''. Retornará verdadeiro enquanto os itens não forem percorridos ou enquando o argumento ``run`` for diferente de falso. A cada fim de ciclo, com retorno falso, o processo é reiniciado. Utilizar em conjunto com as propriedades ``value`` e ``index``.**/
+		next: {
+			value: function(run) {
+				run = run !== false && this.index < this.length - 1;
+				this.index = run ? this.index + 1 : -1;
+				return run;
+			}
+		},
 		/**. ``''array'' only(''string'' type, ''boolean'' keep=false, ''boolean'' change=true)``: Retorna uma lista somente com os tipos de itens definidos. O argumento ``type`` define o tipo do item a ser mantido na lista (ver ``&lowbar;&lowbar;Type``); o argumento ``keep``, se verdadeiro, manterá na lista o item não enquadrado em ``type`` mas com o valor ``null``; e o argumento ``change``, se verdadeiro, alterará o item casado para o valor do objeto (``valueOf`` de ``&lowbar;&lowbar;Type``.**/
 		only: {
 			value: function(type, keep, change) {
@@ -4049,7 +4073,7 @@ Object.defineProperties(__Type.prototype, {
 			value: function(asc) {
 				const data  = __Type(asc);
 				const array = this._value.slice();
-				let   order = [
+				const order = [
 					"number", "time", "date", "datetime", "string", "boolean", "null", "node",
 					"array", "object", "function", "regexp", "undefined", "unknow"
 				];
@@ -4064,16 +4088,7 @@ Object.defineProperties(__Type.prototype, {
 						return typeA < typeB ? -1 : (typeA > typeB ? 1 : 0);
 					}
 					/*-- comparação entre tipos iguais --*/
-					let avalue = a;
-					let bvalue = b;
-					/*-- nós HTML --*/
-					if (A.node) {
-						let node1 = a.textContent;
-						let node2 = b.textContent;
-						if (node1 === node2) return 0;
-						const list = new __Array(node1, node2).sort(true);
-						return array[0] === node1 ? -1 : 1;
-					}
+					let avalue, bvalue;
 					/*-- números e boleanos --*/
 					if (A.number || A.boolean) {
 						avalue = A.valueOf();
@@ -4081,16 +4096,22 @@ Object.defineProperties(__Type.prototype, {
 					}
 					/*-- data/tempo --*/
 					else if (A.date || A.time || A.datetime) {
-						avalue = __DateTime(A.value).valueOf();
-						bvalue = __DateTime(B.value).valueOf();
+						avalue = new __DateTime(A.value).valueOf();
+						bvalue = new __DateTime(B.value).valueOf();
 					}
-					/*-- strings --*/
-					else if (A.string) {
-						if (A.empty || B.empty) return A.empty ? 1 : -1;
-						avalue = __String(a.toLowerCase()).clear();
-						bvalue = __String(b.toLowerCase()).clear();
+					/*-- string/node --*/
+					else if (A.string || A.node) {
+						let aval = (A.node ? a.textContent : a).toLowerCase();
+						let bval = (B.node ? b.textContent : b).toLowerCase();
+						avalue = new __String(aval).clear();
+						bvalue = new __String(bval).clear();
 					}
-					return avalue < bvalue ? -1 : (avalue > bvalue ? 1 : 0);
+					/*-- valores não específicos --*/
+					else {
+						avalue = a;
+						bvalue = b;
+					}
+					return avalue > bvalue ? 1 : -1;
 				});
 				/*-- retornando com ordem definida --*/
 				if (asc === false || asc === true)
@@ -4131,7 +4152,10 @@ Object.defineProperties(__Type.prototype, {
 		/**. ``''array'' concat(''any'' ...)``: Concatena listas ou adiciona itens (argumentos) à lista original.**/
 		concat: {
 			value: function() {
-				this._value = this._value.concat.apply(this._value, arguments);
+				for (let i = 0; i < arguments.length; i++) {
+					let item = arguments[i];
+					this.add.apply(this, __Type(item).array ? item : [item]);
+				}
 				return this.valueOf();
 			}
 		},
@@ -4519,76 +4543,68 @@ Object.defineProperties(__Type.prototype, {
 
 	__Node.prototype = Object.create(__FNode.prototype, {
 		constructor: {value: __Node},
-
 		/**. ``''any'' attribute(''string'' name, ''any'' value)``: Define e retorna valores de atributos dos elementos HTML. Os argumentos ``name`` e ``value`` são, respectivamente, o nome e o valor do atributo. Se ``value`` for omitido, retornará o valor de ``name``. Se ``name`` for omitido, retornará um objeto com os nome e valores dos atributos HTML.**/
 		attribute: {
 			value: function (name, value) {
 				/*-- RETORNAR LISTA DE ATRIBUTOS -------------------------------------*/
 				if (!__Type(name).nonempty) {
 					const data = {};
-					let attr = this.node.attributes;
-					let i = -1;
-					while(++i < attr.length)
+					const attr = this.node.attributes;
+					for (let i = 0; i < attr.length; i++)
 						data[attr[i].name] = attr[i].value;
 					return data;
 				}
-				/*-- RETORNAR ATRIBUTO -----------------------------------------------*/
+				/*-- RETORNAR/DEFINIR ATRIBUTO ---------------------------------------*/
 				name = name.trim();
-				const attr = this.attribute();
-				if (arguments.length === 1) {
+				const prop = {
+					form:  {value: "fvalue", name: "fname"},
+					node:  {style: "style", class: "class", className: "class", dataset: "dataset"},
+					event: {addEventListener: "addHandler", removeEventListener: "removeHandler"}
+				};
+				/*-- RETORNAR ATRIBUTO -----------------------------------------------*/
+				if (arguments.length < 2) {
+					const attr = this.attribute();
 					/*-- atributos de formulário -- */
-					if (this.form) {
-						switch(name) {
-							case "value": return this.fvalue;
-							case "name":  return this.fname;
-						}
-					}
+					if (this.form && name in prop.form)
+						return this[prop.form[name]];
 					/*-- atributos com comportamento especial --*/
-					switch(name) {
-						case "style":     return this.style;
-						case "class":     return this.class;
-						case "className": return this.class;
-						case "dataset":   return this.dataset;
-					}
-					/*-- atributos ou propriedades --*/
+					if (name in prop.node)
+						return this[prop.node[name]];
+					/*-- propriedades de objeto --*/
 					if (name in this.node)
 						return this.node[name];
-					else if (name in attr)
+					/*-- propriedades do elemento --*/
+					if (name in attr)
 						return this.node.getAttribute(name);
 					return undefined;
 				}
 				/*-- DEFINIR ATRIBUTO ------------------------------------------------*/
 				else {
 					/*-- atributo de formulário HTML -- */
-					if (this.form) {
-						switch(name) {
-							case "value": {this.fvalue = value; return this.attribute(name);}
-							case "name":  {this.fname  = value; return this.attribute(name);}
-						}
+					if (this.form && name in prop.form) {
+						this[prop.form[name]] = value;
+						return this.attribute(name);
 					}
 					/*-- atributo HTML com comportamento especial --*/
-					switch(name) {
-						case "style":     {this.style   = value; return this.attribute(name);}
-						case "class":     {this.class   = value; return this.attribute(name);}
-						case "className": {this.class   = value; return this.attribute(name);}
-						case "dataset":   {this.dataset = value; return this.attribute(name);}
+					if (name in prop.node) {
+						this[prop.node[name]] = value;
+						return this.attribute(name);
 					}
-					/*-- método com comportamento especial --*/
-					switch(name) {
-						case "addEventListener":    return this.handler(value, false);
-						case "removeEventListener": return this.handler(value, true);
+					/*-- métodos com comportamento especial --*/
+					if (name in prop.event) {
+						return this[prop.event[name]](value);
 					}
-					/*-- atributo ou propriedade --*/
+					/*-- propriedade do objeto --*/
 					if (name in this.node) {
-						let testAttr  = __Type(this.node[name]);
-						let testValue = __Type(value);
-						/*-- método --*/
+						const testAttr  = __Type(this.node[name]);
+						const testValue = __Type(value);
+						/*-- método: valor igual array --*/
 						if (testAttr.function && testValue.array) {
 							return this.node[name].apply(this.node, value);
 						}
 						/*-- propriedade booleana --*/
 						if (testAttr.boolean && (testValue.boolean || value === "!")) {
-							this.node[name] = testValue.boolean ? value : !this.node[name];
+							this.node[name] = testValue.boolean ? testValuevalue : !this.node[name];
 						}
 						/*-- demais propriedades --*/
 						else if (value === null) {
@@ -4597,7 +4613,7 @@ Object.defineProperties(__Type.prototype, {
 							this.node[name] = value;
 						}
 					}
-					/*-- attributos --*/
+					/*-- attributos do elemento --*/
 					else {
 						if (value === null)
 							this.node.removeAttribute(name);
@@ -4612,8 +4628,7 @@ Object.defineProperties(__Type.prototype, {
 		style: {
 			get: function() {
 				const data = {};
-				let i = -1;
-				while (++i < this.node.style.length) {
+				for (let i = 0; i < this.node.style.length; i++) {
 					let attr = this.node.style[i];
 					let name = __String(attr).camel;
 					data[name] = this.node.style[attr];
@@ -4621,10 +4636,8 @@ Object.defineProperties(__Type.prototype, {
 				return data;
 			},
 			set: function(x) {
-				let data = __Type(x);
+				const data = new __Type(x);
 				if (data.null) {
-					let attr = this.style;
-					for (let i in attr) this.node.style[i] = null;
 					this.node.removeAttribute("style");
 				}
 				else if (data.chars) {
@@ -4632,7 +4645,7 @@ Object.defineProperties(__Type.prototype, {
 				}
 				else if (data.object) {
 					for (let i in x) {
-						let name = __String(i).camel;
+						let name = new __String(i).camel;
 						this.node.style[name] = x[i];
 					}
 				}
@@ -4641,14 +4654,14 @@ Object.defineProperties(__Type.prototype, {
 		/**. ``''array'' class``: Define e retorna o valor do atributo ``class`` por meio de um array. Valor nulo excluí o atributo, valor textual define o atributo HTML e valor em objeto define ações ''replace'', ''toggle'', ''add'' e  ''remove''.**/
 		class: {
 			get: function() {
-				let css   = this.node.getAttribute("class");
-				let array = css === null ? [] : css.replace(/\s+/g, " ").trim().split(" ");
-				let value = __Array(array).order;
+				const css   = this.node.getAttribute("class");
+				const array = css === null ? [] : css.replace(/\s+/g, " ").trim().split(" ");
+				const value = new __Array(array).order;
 				this.node.setAttribute("class", value.join(" "));
 				return value;
 			},
 			set: function(x) {
-				let data = __Type(x);
+				const data = new __Type(x);
 				if (data.chars) {
 					this.node.setAttribute("class", x);
 				}
@@ -4656,7 +4669,7 @@ Object.defineProperties(__Type.prototype, {
 					this.node.removeAttribute("class");
 				}
 				else if (data.object) {
-					let css = __Array(this.class);
+					const css = new __Array(this.class);
 					if ("replace" in x) css.replace.apply(css, x.replace.split(" "));
 					if ("toggle"  in x) css.toggle.apply(css, x.toggle.split(" "));
 					if ("add"     in x) css.put.apply(css, x.add.split(" "));
@@ -4665,29 +4678,54 @@ Object.defineProperties(__Type.prototype, {
 				}
 			}
 		},
-		/**. ``''void''  handler(''any'' list, ''boolean'' remove=false, ''boolean'' capture=false)``: Define ou remove disparadores ao elemento. O argumento ``list`` pode ser um objeto ou uma lista. Se for uma lista, cada item da lista corresponderá, respectivamente, ao nome do evento, a função disparadora e o argumento ``useCapture`` dos métoso ''addEventListener'' e ''removeEventListener''. Se for um objeto, o atributo corresponderá ao nome do evento e seu valor a função disparadora ou uma lista de funções. A função disparadora, se estiver dentro do escopo de ``window``, poderá ser uma string com seu respectivo nome. O argumento opcional ``remove``, se verdadeiro, executará a remoção da função disparadora. O argumento opcional ``capture`` determina o valor do argumento ``useCapture`` dos métodos nativos.**/
+		/**. ``''void''  handler(''object'' list)``: Define ou remove disparadores ao elemento. As propriedades do argumento ``list`` correspondem ao nome do evento e seus valores as funções disparadoras ou uma lista delas. Caso a função disparadora esteja no escopo de ``window``, poderá ser informada a string com seu nome. As propriedades booleanas especiais "#remove" e "#capture" definem se trata de remoção de evento e o valor do terceiro argumento (``useCapture``) dos métodos nativos "add/removeEventListener".**/
 		handler: {
-			value: function(list, remove, capture) {
-				let data = __Type(list);
-				if (data.array) {
-					let object = {};
-					object[list[0]] = list[1];
-					return this.handler(object, remove, list[2]);
-				}
-				if (!data.object) return;
-				capture = capture === true;
-				remove  = remove  === true;
-				for (let i in list) {
-					let event   = String(i).trim().replace(/^(on)?/i, "");
-					let methods = __Type(list[i]).array ? list[i] : [list[i]];
-					let attr    = (remove ? "remove" : "add")+"EventListener";
-					let item    = -1;
-					while (++item < methods.length) {
-						let method = methods[item];
-						if (__Type(method).nonempty) method = window[method.trim()];
-						if (__Type(method).function) this.node[attr](event, method, capture);
+			value: function(list) {
+				if (new __Type(list).object) {
+					const capture = list["#capture"] === true;
+					const remove  = list["#remove"]  === true;
+					const method  = (remove ? "remove" : "add")+"EventListener";
+					if ("#remove"  in list) delete list["#remove"];
+					if ("#capture" in list) delete list["#capture"];
+					console.log(list, method, capture);
+
+					for (let i in list) {
+						let event = String(i).trim().replace(/^(on)?/i, "");
+						let fires = __Type(list[i]).array ? list[i] : [list[i]];
+						for (let j = 0; j < fires.length; j++) {
+							let fire = fires[j];
+							if (new __Type(fire).nonempty) fire = window[fire.trim()];
+							if (new __Type(fire).function) this.node[method](event, fire, capture);
+						}
 					}
 				}
+				return;
+			}
+		},
+		/**. ``''void''  addHandler(''object|array'' list)``: Método auxiliar de ``handler`` para atrelar disparadores a eventos. Se ``list`` for um array, seus itens deverão ser o nome do evento, a função disparadora ou uma lista delas e o valor do terceiro argumento (``useCapture``) dos métodos nativos, respectivamente.**/
+		addHandler: {
+			value: function(list) {
+				const check     = new __Type(list)
+				const data      = check.object ? list : {};
+				data["#remove"] = false;
+				if (check.array) {
+					data[list[0]]    = list[1];
+					data["#capture"] = list[2];
+				}
+				return this.handler(data);
+			}
+		},
+		/**. ``''void''  removeHandler(''object|array'' list)``: Método auxiliar de ``handler`` para desatrelar disparadores a eventos. Se ``list`` for um array, seus itens deverão ser o nome do evento, a função disparadora ou uma lista delas e o valor do terceiro argumento (``useCapture``) dos métodos nativos, respectivamente.**/
+		removeHandler: {
+			value: function(list) {
+				const check     = new __Type(list)
+				const data      = check.object ? list : {};
+				data["#remove"] = true;
+				if (check.array) {
+					data[list[0]]    = list[1];
+					data["#capture"] = list[2];
+				}
+				return this.handler(data);
 			}
 		},
 		/**. ``''object'' dataset``: Define e retorna os valores do atributo ``dataset``. Valor nulo excluí o atributo e valor em objeto define seus pares nome-valor.**/
@@ -4699,7 +4737,7 @@ Object.defineProperties(__Type.prototype, {
 				return data;
 			},
 			set: function(x) {
-				const data  = __Type(x);
+				const data  = new __Type(x);
 				const wdLib = [];
 				if (data.null) {
 					const attr = this.dataset;
@@ -5220,8 +5258,8 @@ Object.defineProperties(__Type.prototype, {
 /*----------------------------------------------------------------------------*/
 
 	/**#### Tabela
-	###### ``**constructor** ''object'' __Table(''boolean'' head, ''boolean'' foot)``
-	Construtor para obter dados de tabela e matrizes. Os argumentos ``head`` e ``foot`` informam se, ao retornar a tabela no formato HTML, haverá uma linha de cabeçalho (''thead'') ou de rodapé (''tfoot''), respectivamente.**/
+	###### ``**constructor** ''object'' __Table(''any'' input)``
+	Construtor para obter dados de tabela e matrizes. O argumento ``input`` pode uma String no formato CSV, uma metriz de array ou uma tabela HTML;**/
 	function __Table(input) {
 		if (!(this instanceof __Table))	return new __Table(input);
 		const parser = new __Parser(input);
@@ -5242,53 +5280,41 @@ Object.defineProperties(__Type.prototype, {
 
 	Object.defineProperties(__Table.prototype, {
 		constructor: {value: __Table},
-		/**. ``''array'' valueOf(''string'' type)``: Retorna as células da tabela como objeto HTML. O argumento ``type`` define o conteúdo dos itens do array:
+		/**. ``''object'' to``: Retorna um objeto para exportar os dados da tabela para:
 		|Nome|Descrição|
-		|html|Valor padrão, retorna um array de duas dimensões com os elementos HTML das células (tr ou td)|
-		|value|Retorna um array de duas dimensões com os valores das células|
-		|struct|Retorna uma lista de objetos cujas propriedades correspondem ao título da coluna|**/
-		valueOf: {
-			value: function(type) {
-			  type = String(type).toLowerCase();
-			  if (type === "value") {
-  		    const parser = new __Parser(this.table);
-				  return parser.tableMatrix.get();
-			  } else if (type === "struct") {
-			    const parser = new __Parser(this.table);
-  				return parser.tableMatrix.matrixList.get();
-			  } else {
-				  const rows = Array.prototype.slice.call(this.table.rows);
-			    for (let i = 0; i < rows.length; i++)
-			      rows[i] = Array.prototype.slice.call(rows[i].cells);
-			    return rows;
-				}
+		|matrix|Retorna os nós ''td'' e ''th'' da tabela em forma de matriz 2X2|
+		|values|Semelhante à propriedade ``matrix`` mas exibe os valores das células|
+		|struct|Retorna uma lista de objetos cujas propriedades correspondem ao título da coluna|
+		|csv|Retorna os dados da tabela em formato CSV|
+		|json|Retorna o resultado da propriedade ``values`` no formato JSON|**/
+		to: {
+			get: function() {
+				const parser = new __Parser(this.table);
+				return {
+					get matrix() {return parser.tableMatrix.get();},
+					get values() {return parser.tableValues.get();},
+					get struct() {return parser.tableValues.matrixList.get();},
+					get csv()    {return parser.tableValues.matrixCSV.get();},
+					get json()   {return parser.tableValues.jsonString.get();}
+				};
 			}
 		},
-		/**. ``''string'' toString(''string'' type)``: Retorna os dados da tabela em formato CSV. O argumento ``type`` define o conteúdo de saída:
-		|Nome|Descrição|
-		|csv|Valor padrão, retorna os dados da tabela em formato CSV|
-		|json|Retorna o valor do método ``valueOf()`` em formato JSON|**/
-		toString: {
-			value: function(type) {
-			  type = String(type).toLowerCase();
-			  if (type === "json") {
-			    return JSON.stringify(this.valueOf("value"));
-			  } else {
-			    const parser = new __Parser(this.table);
-				  return parser.tableMatrix.matrixCSV.get();
-				}
-			}
-		},
-    /**. ``''object'' length``: Retorna um objeto com as propriedades ``rows``e ``cols`` que informam o tamanho máximo de linhas e colunas da tabela.**/
-		length: {
-		  get: function() {
-  	    const matrix = this.valueOf();
-		    const length = {rows: matrix.length, cols: matrix[0].length};
-		    for (let i = 0; i < matrix.length; i++)
-          if (matrix[i].length > length.cols) length.cols = matrix[i].length;
-        return length;
-		  }
-		},
+		/**. ``''string'' toString()``: Retorna os valores da tabela em formato CSV.**/
+		toString: {value: function() {return this.to.csv;}},
+		/**. ``''string'' valueOf()``: Retorna os valores da tabela em forma de matriz.**/
+		valueOf: {value: function() {return this.to.values;}},
+		/**. ``''integer'' rows``: Retorna a quantidade de linhas da tabela.**/
+    rows: {get: function() {return this.valueOf().length;}},
+		/**. ``''integer'' cols``: Retorna a quantidade máxima de colunas da tabela.**/
+    cols: {
+    	get: function() {
+    		const matrix = this.valueOf();
+    		let cols = 0;
+    		for (let i = 0; i < matrix.length; i++)
+    			if (matrix[i].length > cols) cols = matrix[i].length;
+    		return cols;
+    	}
+    },
     /**. ``''string'' caption``: Define ou retorna o valor do título da tabela.**/
 		caption: {
 		  get: function () {
@@ -5302,7 +5328,7 @@ Object.defineProperties(__Type.prototype, {
 		    this.table.caption.textContent = String(x);
 		  }
 		},
-		/**. ``''array'' cells(''object'' area, ''boolean'' value)``: Retorna uma lista de objetos contendo informações das células conforme especificado no argumento ``area`` com as seguintes propriedades:
+		/**.FIXME reescrever isso ``''array'' cells(''object'' area, ''boolean'' value)``: Retorna uma lista de objetos contendo informações das células conforme especificado no argumento ``area`` com as seguintes propriedades:
 		|Nome|Descrição|
 		|row|Índice da linha de início da captura (padrão 0).|
 		|col|Índice da coluna de início da captura (padrão 0).|
@@ -5313,51 +5339,116 @@ Object.defineProperties(__Type.prototype, {
 		|cell|Elemento HTML ou valor da célula.|
 		|row|Número da linha|
 		|col|Número da coluna|**/
-		cells: {
-			value: function(area, value) {
-				/*-- Dados da área --*/
-				if (!__Type(area).object) area = {};
-				const attr = /^(row|col)s?$/;
-				for (let i in area) {
-					let num = !isNaN(area[i]) && attr.test(i) ? Number(area[i]) : -1;
-					if (num >= 0 && Number.isInteger(num))
-						area[i] = num;
-					else
-						delete area[i];
-				}
-				area.row  = "row"  in area ? area.row : 0;
-				area.col  = "col"  in area ? area.col : 0;
-				area.rows = "rows" in area && area.rows > 0 ? area.rows : 1;
-				area.cols = "cols" in area && area.cols > 0 ? area.cols : 1;
-				/*-- Capturando informação --*/
-				const list = [];
-				const base = this.valueOf(value === true ? "value" : "html");
-				const rows = base.slice(area.row, area.row + area.rows);
-				for (let i = 0; i < rows.length; i++) {
-					let row = area.row + i;
-					let cols = rows[i].slice(area.col, area.col + area.cols);
-					for (let j = 0; j < cols.length; j++) {
-						let col = area.col + j;
-						list.push({cell: cols[j], row: row, col: col});
+
+		cell: {
+			value: function(target, caller) {
+				const groups = String(target).replace(/\s+/g, "").split(";");
+				const change = new __Type(caller).function;
+				const reCell = /^(\d+|\*)\,(\d+|\*)$/;
+				const reArea = /^(\d+|\*)\,(\d+|\*)\:(\d+|\*)\,(\d+|\*)$/;
+				const rows   = this.rows;
+				const cols   = this.cols;
+				const matrix = this.to.matrix
+				const list   = [];
+				let group, data, area, item, result;
+				/*-- grupos separados por ";" --*/
+				for (let i = 0; i < groups.length; i++) {
+					/*-- capturando dados das células --*/
+					group = groups[i];
+					area  = reArea.test(group);
+					if (area || reCell.test(group)) {
+						data = {
+							row1: group.replace((area ? reArea : reCell), "$1"),
+							col1: group.replace((area ? reArea : reCell), "$2"),
+							row2: area ? group.replace(reArea , "$3") : null,
+							col2: area ? group.replace(reArea , "$4") : null
+						};
+						/*-- ajustando as células --*/
+						for (let attr in data) {
+							if (data[attr] === "*")
+								data[attr] = ((/^row/).test(attr) ? rows : cols) - 1;
+							if (data[attr] !== null)
+								data[attr] = Number(data[attr]);
+						}
+						if (data.row2 === null) data.row2 = data.row1;
+						if (data.col2 === null) data.col2 = data.col1;
+						/*-- capturando dados --*/
+						for (let row = data.row1; row <= data.row2; row++) {
+							for (let col = data.col1; col <= data.col2; col++) {
+								if (row < rows && col < matrix[row].length) {
+									item   = matrix[row][col];
+									result = change ? caller(item, row, col) : undefined;
+									list.push(result === undefined ? item : result);
+								}
+							}
+						}
 					}
 				}
 				return list;
 			}
 		},
-		/**. ``''array'' row(''integer'' index, ''boolean'' value)``: Retorna a lista de células ou valores contidos na linha definida em ``index``.**/
-		row: {
-			value: function (index, value) {
-				const list = this.cells({row: index, cols: this.length.cols}, value);
-				for (let i = 0; i < list.length; i++) list[i] = list[i].cell;
-				return list;
-			}
-		},
-		/**. ``''array'' col(''integer'' index, ''boolean'' value)``: Retorna a lista de células ou valores contidos na coluna definida em ``index``.**/
-		col: {
-			value: function (index, value) {
-				const list = this.cells({col: index, rows: this.length.rows}, value);
-				for (let i = 0; i < list.length; i++) list[i] = list[i].cell;
-				return list;
+
+
+
+
+
+		/**.  ``''node'' plot(''object'' options)``: Retorna um gráfico de acordo com os dados da tabela e conforme especificado em ``options``:
+		|Nome|Tipo|Descrição|
+		|xLabel|string|Rótulo do eixo ''x''.|
+		|yLabel|string|Rótulo do eixo ''y''.|
+		|title|string|Título do gráfico.|
+		|xAxis|string|Define a formatação da escala do eixo ''x'', se ''number'', ''date'', ''time'', ''datetime'' ou ''percent''.|
+		|yAxis|string|Define a formatação da escala do eixo ''y'' (ver xAxis).|
+		|type|string|Tipo de gráfico, ''plan'', ''cols'' ou ''pie''.|
+		|data|array|Conjunto de dados de plotagem.|
+		. Os itens da propriedade ``data`` são objetos com os seguintes especificações:
+		|Nome|Tipo|Descrição|
+		|x|any|Valores do eixo ''x'': um array, um objeto (cols ou pie) ou o número da coluna da tabela precedido de &num;.|
+		|y|any|Valores do eixo ''y'', pode ser um array, uma função, uma constante ou o número da coluna precedido de &num;.|
+		|label|string|Rótulo do gráfico.|
+		|fit|string|Especifica o tipo do gráfico cartesiano.|
+		. Os valores permitidos para o atributo ``fit`` são:
+		|Valor|Descrição|Valores de Y|
+		|sum|Exibe a soma aproximada da área dentro da curva.|function, constante, array, matrix|
+		|avg|Exibe a média aproximada da curva.|function, array, matrix|
+		|line|Liga os pontos do gráfico com um seguimento de reta.||
+		|link|Liga os pontos do gráfico com um seguimento de reta lincado por um ponto.|array, matrix|
+		|dots|Exibe os pontos do gráfico.|array, matrix|
+		|linear|Executa um ajuste linear aproximado.||
+		|exponential|Executa um ajuste exponencial aproximado.||
+		|geometric|Executa um ajuste geométrico aproximado.||
+		|logarithmic|Executa um ajuste logarítmo aproximado.||
+		|minimum|Executa um ajuste com o menor desvio médio padrão.||**/
+		plot: {
+			value: function(options) {
+				if (!__Type(options).object)     return null;
+				if (!__Type(options.data).array) return null;
+				if (options.data.length === 0)   return null;
+				const chart = __Plot2D(options.type);
+				/*-- valores gerais --*/
+				const names = ["xLabel", "yLabel", "title", "xAxis", "yAxis"];
+				for (let i = 0; i < names.length; i++)
+					if (names[i] in options)
+						chart[names[i]] = options[attr];
+				/*-- adicionando dados --*/
+				const re = /^\#(\d+)$/;
+				for (let i = 0; i < options.data.length; i++) {
+					let item = options.data[i];
+					let col, arr;
+					if (re.test(item.x)) {
+						col = Number(item.x.replace(re, "$1"));
+						arr = this.col(col, true);
+						item.x = arr.slice(1);
+					}
+					if (re.test(item.y)) {
+						col = Number(item.y.replace(re, "$1"));
+						arr = this.col(col, true);
+						item.y     = arr.slice(1);
+						item.label = arr[0];
+					}
+					chart.add(item.x, item.y, item.label, item.fit);
+				}
+				return chart.plot();
 			}
 		},
 	});
@@ -5412,20 +5503,20 @@ Object.defineProperties(__Type.prototype, {
 							html:   function() {return parser.stringHTML.get();},
 							json:   function() {return parser.stringJSON.get();},
 							table:  function() {return parser.csvTable.get();},
-							matrix: function() {return parser.csvTable.tableMatrix.get();},
-							csv:    function() {return parser.csvTable.tableMatrix.matrixList.get();}
+							matrix: function() {return parser.csvTable.tableValues.get();},
+							csv:    function() {return parser.csvTable.tableValues.matrixList.get();}
 						},
 						send: {
 							url:    function() {return parser.fileURL.get();},
 							table:  function() {return parser.csvTable.get();},
-							matrix: function() {return parser.csvTable.tableMatrix.get();},
-							csv:    function() {return parser.csvTable.tableMatrix.matrixList.get();}
+							matrix: function() {return parser.csvTable.tableValues.get();},
+							csv:    function() {return parser.csvTable.tableValues.matrixList.get();}
 						},
 						fetch: {
 							url:    function() {return parser.fileURL.get();},
 							table:  function() {return parser.csvTable.get();},
-							matrix: function() {return parser.csvTable.tableMatrix.get();},
-							csv:    function() {return parser.csvTable.tableMatrix.matrixList.get();}
+							matrix: function() {return parser.csvTable.tableValues.get();},
+							csv:    function() {return parser.csvTable.tableValues.matrixList.get();}
 						}
 					}
 					if (type in change[caller])
@@ -7721,9 +7812,14 @@ Object.defineProperties(__Type.prototype, {
 	Construtor genérico para manipulação de nós HTML. Os argumentos ``input`` e ``data`` se referem aos argumento de ``WDmain``**/
 	function WDnode(input, data) {
 		WDmain.call(this, input, data);
-		/*Object.defineProperties(this, {
-			_main: {value: new __Array(data.value)},
-		});*/
+		const node = this._data.value;
+		const main = [];
+		for (let i = 0; i < node.length; i++)
+			main.push(new __Node(node[i]));
+		Object.defineProperties(this, {
+			_main:  {value: main},
+			_array: {value: new __Array(main)}
+		});
 	}
 
 	WDnode.prototype = Object.create(WDmain.prototype, {
@@ -7732,12 +7828,13 @@ Object.defineProperties(__Type.prototype, {
 		length: {get: function() {return this._data.value.length;}},
 		/**. ``''array'' valueOf()``: Retorna uma cópia da lista contendo os nós HTML.**/
 		valueOf: {value: function() {return this._data.value.slice();}},
-		/**. ``''self'' forEach(''function'' callback)``: Executa looping nos nós HTML, informando no argumento ``callback`` o nó e seu índice.**/
+		/**. ``''self'' forEach(''function'' callback)``: Executa looping nos nós HTML. A função definida em ``callback`` receberá como argumentos um nó, o seu índice e uma **cópia** da lista de nós. Se a função retornar falso, o looping é interrompido.**/
 		forEach: {
-			value: function(callback) {
-				if (__Type(callback).function) {
-					for (let i = 0; i < this._data.value.length; i++)
-						callback(this._data.value[i], i);
+			value: function(run) {
+				if (__Type(run).function) {
+					const nodes = this.valueOf();
+					for (let i = 0; i < nodes.length; i++)
+						if (run(nodes[i], i, nodes) === false) break;
 				}
 				return this;
 			}
@@ -7746,113 +7843,116 @@ Object.defineProperties(__Type.prototype, {
 		files: {
 			get: function() {
 				const pack = [];
-				this.forEach(function(v,i) {
-					const node = __Node(v);
-					if (node.ftype === "file") {
-						for (let j = 0; j < v.files.length; j++)
-							pack.push(v.files[j]);
-					}
-				});
+				for (let i = 0; i < this._main.length; i++) {
+					let obj = this._main[i];
+					if (obj.ftype === "file")
+						for (let j = 0; j < obj.node.files.length; j++)
+							pack.push(obj.node.files[j]);
+				}
 				return pack;
 			}
 		},
-		//FIXME parei aqui
+		//FIXME quando chamado submit, wdOnResize e wdOnReload são chamado. Por quê?
 		/**. ``''array'' submit``: Retorna uma lista de objetos contendo o nome e o valor dos campos de formulários. Se houver algum campo com erro, retornará nulo.**/
 		submit: {
 			get: function() {
 				const data = [];
-				let  error = false;
-				this.forEach(function(v,i) {
-					if (!error) {
-						const node = __Node(v);
-						const form = node.fsubmit;
-						error = form !== null && form.error;
-						if (!error && form !== null)
-							data.push({name: form.name, value: form.value});
+				for (let i = 0; i < this._main.length; i++) {
+					let obj  = this._main[i];
+					let form = obj.submit;
+					if (form !== null) {
+						if (form.error) return null;
+						data.push({name: form.name, value: form.value});
 					}
-				});
-				return error ? null : data;
+				}
+				return data;
 			}
 		},
 		/**. ``''self'' load(''string'' html, ''boolean'' replace, ''boolean'' run)``: Insere o código HTML contido em ``html`` no elemento. Se ``replace`` for verdadeiro, substituirá o elemento pelo código. Se ``run``for verdadeiro, rodará scripts.**/
 		load: {
 			value: function(html, replace, run) {
-				this.forEach(function(v,i) {__Node(v).load(html, replace, run);});
+				for (let i = 0; i < this._main.length; i++)
+					this._main[i].load(html, replace, run);
 				return this;
 			}
 		},
 		/**. ``''self'' repeat(''array'' list)``: Repete elementos a partir de um modelo. ``list`` é uma lista de objetos cujo valor do atributo substituirá o respectivo valor entre do modelo que será informado em chaves duplas ({{atributo}}).**/
 		repeat: {
 			value: function(list) {
-				this.forEach(function(v,i) {__Node(v).repeat(list);});
+				for (let i = 0; i < this._main.length; i++)
+					this._main[i].repeat(list);
 				return this;
 			}
 		},
-		/**. ``''self'' set(''object'' values)``: Define os atributos especificados em ``values`` com seus respectivos valores (ver __Node.atrribute).**/
+		/**. ``''self'' set(''object'' data)``: Atribui aos elementos o valor dos atributos especificados em ``data`` (ver __Node.atrribute).**/
 		set: {
-			value: function(values) {
-				if (!__Type(values).object) return this;
-				this.forEach(function(v,i) {
-					let node = __Node(v);
-					for (let i in values) node.attribute(i, values[i]);
-				});
+			value: function(data) {
+				if (__Type(data).object)
+					for (let i = 0; i < this._main.length; i++)
+						for (let attr in data)
+							this._main[i].attribute(attr, data[attr]);
 				return this;
 			}
 		},
-		/**. ``''self'' display(''string'' action)``: Organiza a exibição dos elementos filhos. O argumento ``action`` define a forma de organização:
-		- A ação "show" exibe o elemento;
-		- A ação "hide" esconde o elemento;
-		- A ação "toggle" alterna a exibição do elemento;
-		- A ação "ahead" exibe o elemento e esconde os irmãos;
-		- A ação "behind" exibe os irmãos e esconde o elemento;
-		- A ação "full" exibe o elemento em tela cheia;
-		- A ação "all" exibe o elemento e seus irmãos;
-		- A ação "none" esconde o elemento e seus irmãos;
-		- A ação "asc" ordena os filhos em ordem crescente;
-		- A ação "desc" ordena os filhos em ordem decrescente;
-		- A ação "sort" alterna a ordenação dos filhos;
-		- Um número inteiro positivo ''n'' exibe o filho que está a ''n'' posições adiante do elemento atual (ciclo infinito);
-		- Um número inteiro negativo ''n'' exibe o filho que está a ''n'' posições atrás do elemento atual (ciclo infinito);
-		- Numeros inteiros não negativos separados pelo caractere traço (''-'') definem o intervalo de filhos a ser exibido. Os números indicam os índices inicial e final dos filhos, independente da ordem. Utilize o caractere * para designar o último elemento;
-		- Números separados pelo caractere dois pontos ('':'') organizam a exibição dos filhos em grupos de determinada quantidade. O número após o separador define a quantidade de filhos de cada grupo, devendo ser um número positivo. O número antes do separador define o grupo a ser exibido, devendo ser um número inteiro maior ou igual a zero sem sinal (utilize o caractere ''*'' para designar o último grupo). Para avançar ou retroceder nos grupos, adicione os sinais ''&plus;'' ou ''&minus;'' ao início do argumento, o número informado definirá o intervalo a avançar;
-		- Para ordernar colunas de tabelas (``tbody``), informe, entre colchetes, os números das colunas a ordenar separados por uma barra vertical (''&lsqb;-0&verbar;2&verbar;+3&rsqb;''). Utilize sinais para definir a ordenação, positivo para crescente e negativo para decrescente. A ordem das colunas define a prioridade da ordenação.**/
+		/**. ``''self'' display(''string'' action)``: Organiza a exibição dos elementos filhos conforme argumento ``action``. Quanto ao elemento:
+		|Valor|Descrição|
+		|show|exibe o elemento|
+		|hide|oculta o elemento|
+		|toogle|alterna a exibição do elemento|
+		|full|exibe o elemento em tela cheia|
+		. Quanto aos irmãos:
+		|Valor|Descrição|
+		|ahead|exibe o elemento e oculta os irmãos|
+		|behind|oculta o elemento e exibe os irmãos|
+		|all|exibe o elemento e seus irmãos|
+		|none|oculta o elemento e seus irmãos|
+		. Quanto aos filhos:
+		|Valor|Descrição|
+		|asc|ordena os elemento filhos em ordem crescente|
+		|desc|ordena os elemento filhos em ordem decrescente|
+		|sort|alterana a order dos elemento filhos|
+		. Quanto à organização dos filhos:
+		|Valor|Descrição|
+		|+N|exibe o filho avançando N posições do elemento atual (ciclo infinito)|
+		|-N|exibe o filho retrocedendo N posições do elemento atual (ciclo infinito)|
+		|N-M|intervalo de filhos a exibir, índices inicial e final|
+		|N:D|organiza os filhos por grupos de D elementos, onde N representa o índice do grupo|
+		|+N:D|avança N grupos de filhos organizados em grupos de D elementos|
+		|-N:D|retrocede N grupos de filhos organizados em grupos de D elementos|
+		. Quanto aos netos:
+		|Valor|Descrição|
+		|[+N&verbar;-M&verbar;...]|ordena os filhos com base no valor dos netos na ordem especificada e conforme sinais (positivos ascendentes, negativos descendentes).|
+		. Onde N e M são números inteiros e D pode ser inteiro ou decimal. Para representar o último índice, utilizar o caractere asterisco.**/
 		display: {
 			value: function(action) {
-				let check = __Type(action);
-				action    = check.toString().toLowerCase().replace(/\s+/g, "");
-				let self  = this;
-				this.forEach(function(v,i) {
-					let node = __Node(v);
-					/* avanço/retrocesso de filhos */
+				action = String(action).replace(/\s+/g, "").toLowerCase();
+				for (let i = 0; i < this._main.length; i++) {
+					let node = this._main[i];
+					/*-- avanço/retrocesso de filhos --*/
 					if ((/^[+-]?\d+$/).test(action)) {
-						node.walk(Number(action));
+						node.walk(action);
 					}
-					/* intervalo de filhos */
+					/*-- intervalo de filhos --*/
 					else if ((/^(\+?\d+|\*)\-(\+?\d+|\*)$/).test(action)) {
-						let value = action.split("-");
-						value.forEach(function(v,i,a) {a[i] = v.replace(/\*/g, "-1");});
-						node.childs(value[0], value[1]);
+						const val = action.split("-");
+						node.childs(val[0] === "*" ? -1 : val[0], val[1] === "*" ? -1 : val[1]);
 					}
-					/* grupos */
-					else if ((/^([+-]?\d+|\*)\:\d+(\.\d+)?$/).test(action)) {
-						let value = action.split(":");
-						let sign  = action[0];
-						let walk  = sign === "+" || sign === "-" ? Number(value[0]) : null;
-						let index = sign === "*" ? -1 : Number(value[0]);
-						let width = Number(value[1]);
-						/* define ou caminha pelos grupos */
-						if (walk === null)   node.pages(index, width);
-						else if (walk !== 0) node.pages((Infinity * walk), width);
+					/*-- agrupamento de nós --*/
+					else if ((/^([+-]?\d+|\*)\:(\d+|0?\.\d+)$/).test(action)) {
+						const val   = action.split(":");
+						const walk  = (/^[+-]\d+/).test(action);
+						const index = Number(val[0] === "*" ? -1 : val[0]) * (walk ? Infinity : 1);
+						const width = Number(val[1]);
+						node.pages(index, width);
 					}
-					/* ordenamento de colunas */
+					/*-- ordenamento de colunas --*/
 					else if ((/^\[[+-]?\d+((\|[+-]?\d+)+)?\]$/).test(action)) {
-						let value = action.replace(/^\[(.+)\]$/, "$1").split("|");
-						value.forEach(function(v,i,a) {
-							a[i] = (v[0] === "-" ? -1 : 1) * (Number(v.replace("-", "")) + 1);
-						});
-						node.tsort.apply(node, value);
+						const val = action.replace(/^\[(.+)\]$/, "$1").split("|");
+						for (let j = 0; j < val.length; j++)
+							val[j]  = (val[j][0] === "-" ? -1 : +1) + Number(val[j]);
+						node.tsort.apply(node, val);
 					}
-					/* exibições do elemento */
+					/*-- exibições do elemento --*/
 					else {
 						switch(action) {
 							case "show":   {node.show = true;                   break;}
@@ -7868,31 +7968,24 @@ Object.defineProperties(__Type.prototype, {
 							case "sort":   {node.sort();                        break;}
 						}
 					}
-				});
+				}
 				return this;
 			}
 		},
 		/**. ``''self'' filter(''any'' search, ''integer'' width)``: Exibe somente os elementos filhos que contenham o conteúdo de ``search`` (ver __Node.filter)**/
 		filter: {
 			value: function(search, width) {
-				this.forEach(function(v,i) {
-					let node = __Node(v);
-					node.filter(search, width);
-				});
+				for (let i = 0; i < this._main.length; i++)
+					this._main[i].filter(search, width);
 				return this
 			}
 		},
-		/**. ``''self'' jump(''node'' jumper)``: Alterna a posição dos elementos informados em ``jumper`` entre os elementos da seleção (ver __Node.jump)**/
+		/**. ``''self'' jump(''node'' spaces)``: Alterna a posição dos nós entre os elementos informados em ``spaces`` (ver __Node.jump)**/
 		jump: {
-			value: function(jumper) {
-				let check = __Type(jumper);
-				if (check.node) {
-					let nodes = this._input;
-					check.value.forEach(function(v,i,a) {
-						let node = __Node(v);
-						node.jump(nodes);
-					});
-				}
+			value: function(spaces) {
+				if (__Type(spaces).node)
+					for (let i = 0; i < this._main.length; i++)
+						this._main[i].jump(spaces);
 				return this;
 			}
 		},
