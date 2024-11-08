@@ -42,6 +42,22 @@ const wd = (function() {
 	Se verdadeiro, libera métodos para teste em WD e imprime cascata de eventos.**/
 	const __UNDERMAINTENANCE = true;
 
+
+/*----------------------------------------------------------------------------*/
+	/**###### ``**const** ''object'' __MIME``
+	Registra alguns [MIME types](https://developer.mozilla.org/en-US/docs/Web/HTTP/MIME_types/Common_types) úteis à biblioteca.**/
+	const __MIME = {
+		/*-- texto --*/
+		"text/plain": "text", "text/csv":   "csv", "text/css": "css",
+		"text/xml":    "xml", "text/html": "html",
+		/*-- aplicações --*/
+		"application/octet-stream": "default",
+		"application/json": "json", "application/javascript": "json",
+		"application/xml":   "xml",
+		/**-- imagens --*/
+		"image/svg+xml": "svg",
+	};
+
 /*----------------------------------------------------------------------------*/
 	/**###### ``**const** ''array'' __STYLE``
 	Estilos da biblioteca.**/
@@ -154,16 +170,16 @@ const wd = (function() {
 		{target: "wdtag-root wdtag-tick", style: ["font-weight: bold; color: #68cccc;"]},
 		{target: "wdtag-root wdtag-string", style: ["color: #57ac57"]},
 		/*-- container da caixa de mensagens --*/
-		{target: ".js-wd-signal-box", style: [
+		{target: ".js-wd-signal-modal-message", style: [
 			"position: fixed; top: 0; right: 0; left: 0; bottom: initial;",
 			"display: block; margin: auto; padding: 1px; width: auto; max-height: 75vh;",
 			" overflow: auto; z-index: 999999; font-size: 14px; background-color: transparent;"
 		]},
-		{target: "@media screen and (min-width: 768px) {.js-wd-signal-box", style: [
+		{target: "@media screen and (min-width: 768px) {.js-wd-signal-modal-message", style: [
 			"bottom: 0; right: 0; left: 75vw; top: initial;}"
 		]},
 		/*-- modal da caixa de diálogo --*/
-		{target: ".js-wd-signal-modal", style: [
+		{target: ".js-wd-signal-modal-dialog", style: [
 			"position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 0.1s js-wd-emerge;",
 			"margin: 0; padding: 0; background-color: rgba(0,0,50,0.3); z-index: 999999; cursor: forbidden;"
 		]},
@@ -196,8 +212,8 @@ const wd = (function() {
 		/*-- cabeçalho das caixas de mensagem e diálogo --*/
 		{target: ".js-wd-signal-head", style: [
 			"display: block; padding: 0.25em 0.5em; margin: 0;",
-			"border-radius: 0.5em 0.5em 0 0;",
-			"font-size: larger; font-weight: bold; background-color: #000000;"
+			"border-radius: 0.5em 0.5em 0 0; white-space: pre-wrap;",
+			"font-size: larger; background-color: #000000;"
 		]},
 		/*-- corpo das caixas de mensagem e diálogo --*/
 		{target: ".js-wd-signal-body", style: [
@@ -349,35 +365,22 @@ const wd = (function() {
 	/**###### ``**const** ''object'' __SIGNAL``
 	Renderiza mensagens e notificações.**/
 	const __SIGNAL = {
-		/**. ``''node'' box``: Agrupador de mensagens.**/
+		/**. ``''node'' modalMessage``: Agrupador de mensagens.**/
+		modalMessage: (function() {
+			const node  = document.createElement("ASIDE");
+			node.className = "js-wd-signal-modal-message";
+			return node;
+		})(),
+		/**. ``''node'' modalDialog``: Modal de diálogo.**/
+		modalDialog: (function() {
+			const node  = document.createElement("ASIDE");
+			node.className = "js-wd-signal-modal-dialog";
+			return node;
+		})(),
+		/**. ``''node'' box``: Caixa de mensagens/diálogo (para clonar).**/
 		box: (function() {
-			const node  = document.createElement("ASIDE");
-			node.className = "js-wd-signal-box";
-			return node;
-		})(),
-		/**. ``''node'' modal``: Modal de diálogo.**/
-		modal: (function() {
-			const node  = document.createElement("ASIDE");
-			node.className = "js-wd-signal-modal";
-			return node;
-		})(),
-		/**. ``''node'' msg``: Caixa de mensagens (para clonar).**/
-		msg: (function() {
 			const node = document.createElement("SECTION")
-			node.className = "js-wd-signal-message";
-			const nodes = {HEADER: "head", ARTICLE: "body", SPAN: "close"};
-			for (let i in nodes) {
-				let child = document.createElement(i);
-				child.className = "js-wd-signal-"+nodes[i];
-				node.appendChild(child);
-			}
-			return node;
-		})(),
-		/**. ``''node'' ask``: Caixa de diálogo (para clonar).**/
-		ask: (function() {
-			const node = document.createElement("SECTION");
-			node.className = "js-wd-signal-dialog";
-			const nodes = {HEADER: "head", ARTICLE: "body", FOOTER: "foot"};
+			const nodes = {HEADER: "head", ARTICLE: "body", SPAN: "close", FOOTER: "foot"};
 			for (let i in nodes) {
 				let child = document.createElement(i);
 				child.className = "js-wd-signal-"+nodes[i];
@@ -387,33 +390,72 @@ const wd = (function() {
 		})(),
 		/**. ``''void'' message(''object'' options)``: Ver método ''signal''.**/
 		message: function (options) {
-			const node = this.msg.cloneNode(true);
-			if ("title" in options)
-				node.querySelector(".js-wd-signal-head").innerText = options.title;
-			if ("body" in options)
-				node.querySelector(".js-wd-signal-body").innerText = options.body;
-			/*-- Evento do botão de fechar --*/
-			node.querySelector(".js-wd-signal-close").addEventListener("click", function(ev) {
-				const msg = ev.target.parentElement;
-				const box = msg.parentElement;
-				if (box !== null) {
-					box.removeChild(msg);
-					if (box.childElementCount === 0)
-						box.parentElement.removeChild(box);
+			/*-- checando dados inciais --*/
+			if (typeof options !== "object") return;
+			const dialog = typeof options.trigger === "function";
+			const modal  = dialog ? this.modalDialog : this.modalMessage;
+			if (dialog && modal.childElementCount > 0) return;
+			/*-- capturando estrutura --*/
+			const node   = this.box.cloneNode(true);
+			const title  = node.querySelector(".js-wd-signal-head");
+			const body   = node.querySelector(".js-wd-signal-body");
+			const foot   = node.querySelector(".js-wd-signal-foot");
+			const close  = node.querySelector(".js-wd-signal-close");
+			let focus = null, index = 0;
+			/*-- personalisando caixa de interação --*/
+			node.className  = dialog ? "js-wd-signal-dialog" : "js-wd-signal-message";
+			title.innerText = "title" in options ? options.title : " ";
+			body.innerText  =  "body" in options ? options.body  : "?";
+			node.removeChild(dialog ? close : foot);
+			/*-- definindo ações --*/
+			if (dialog) {
+				/*-- capturando informações do diálogo --*/
+				const actions  = options.actions;
+				const isObject = typeof actions === "object" && Object.keys(actions).length > 0;
+				const objects  = isObject ? actions : {ok: "OK*"};
+				const trigger  = options.trigger;
+				const handler  = function (ev) {
+					if (ev.type === "click" || ev.key === "Enter") {
+						trigger(ev.target.dataset.response);
+						modal.removeChild(node);
+						modal.parentElement.removeChild(modal);
+					}
 				}
-			}, false);
-			/*-- Expirando em --*/
-			window.setTimeout(function() {
-				node.querySelector(".js-wd-signal-close").click();
-			}, 8900);
-			/*-- renderizando box e node --*/
+				/*-- criando links de ação --*/
+				for (let response in objects) {
+					let item = objects[response];
+					let link = document.createElement("span");
+					link.className        = "js-wd-signal-action";
+					link.dataset.response = response;
+					link.tabIndex         = ++index;
+					link.innerText        = String(item).replace(/\*$/, "");
+					link.addEventListener("keypress", handler, false);
+					link.addEventListener("click",    handler, false);
+					foot.appendChild(link);
+					if ((/\*$/).test(item)) focus = link;
+				}
+			}
+			else {
+				/*-- botão fechar --*/
+				close.addEventListener("click", function(ev) {
+					if (node.parentElement !== null) {
+						modal.removeChild(node);
+						if (modal.childElementCount === 0)
+							modal.parentElement.removeChild(modal);
+					}
+				}, false);
+				/*-- tempo de exibição da mensagem --*/
+				window.setTimeout(function() {close.click();}, 8900);
+			}
+			/*-- renderizando caixa de interação --*/
 			if (this.box.parentElement === null)
-				document.body.appendChild(this.box);
-			this.box.insertAdjacentElement("afterbegin", node);
+				document.body.appendChild(modal);
+			modal.insertAdjacentElement("afterbegin", node);
 			return;
 		},
 		/**. ``''void'' notify(''object'' options)``: Ver método ''signal''.**/
 		notify: function (options) {
+			if (typeof options !== "object") return;
 			const title  = "title" in options ? options.title : "";
 			const config = {
 				body: "body" in options ? options.body : "",
@@ -429,73 +471,16 @@ const wd = (function() {
 				});
 			return;
 		},
-		/**. ``''void'' notify(''object'' dialog)``: Ver método ''signal''.**/
-		dialog: function (options) {
-			/*-- não permitir múltiplos diálogos ou matar processo --*/
-			if (this.modal.childElementCount > 0) {
-				if (options.close === true) {
-					while (this.modal.childElementCount > 0)
-						this.modal.removeChild(this.modal.firstElementChild);
-					this.modal.parentElement.removeChild(this.modal);
-				}
-				return;
-			}
-			/*-- construindo caixa de diálogo --*/
-			const wall = this.modal;
-			const node = this.ask.cloneNode(true);
-			const foot = node.querySelector(".js-wd-signal-foot");
-			const fire = typeof options.trigger === "function" ? options.trigger : console.log;
-			const acts = typeof options.actions === "object"   ? options.actions : {closed: "\u00D7"};
-			function trigger(ev) {
-				if (ev.type === "click" || ev.key === "Enter") {
-					const link = ev.target;
-					const ask  = link.parentElement.parentElement;
-					const wall = ask.parentElement;
-					wall.removeChild(ask);
-					wall.parentElement.removeChild(wall);
-					fire(link.dataset.link);
-				}
-			}
-
-			if ("title" in options)
-				node.querySelector(".js-wd-signal-head").innerText = options.title;
-			if ("body" in options)
-				node.querySelector(".js-wd-signal-body").innerText = options.body;
-
-			let focus = null;
-			let index = 0;
-			for (let i in acts) {
-				let text = acts[i].replace(/\*$/, "");
-				let link = document.createElement("span");
-				link.className    = "js-wd-signal-action";
-				link.dataset.link = i;
-				link.innerText    = text;
-				link.tabIndex     = ++index;
-				link.addEventListener("keypress", trigger, false);
-				link.addEventListener("click", trigger, false);
-				foot.appendChild(link);
-				if ((/\*$/).test(acts[i])) focus = link;
-			}
-			/*-- renderizando box e node --*/
-			document.body.appendChild(wall);
-			wall.appendChild(node);
-			if (focus !== null) focus.focus();
-			return;
-		},
 		/**. ``''void'' signal(''object'' options)``: Produz interação com o usuário. O argumento ``options`` possui as seguintes propriedades:
 		|Nome|Tipo|Valores|Descrição|
-		|type|string|notify, dialog ou message (padrão)|Indica o tipo de interação.|
-		|title|string|-|Define o título da interação (opcional).|
+		|type|string|notify signal|Indica o tipo de interação, notificação ou caixas de mensagem ou diálogo (padrão).|
+		|title|string|-|(opcional) Define o título da interação.|
 		|body|string|-|Define a mensgem da interação.|
-		|trigger|function|-|Define a função a ser chamada pelo retorno do diálogo (opcional, type=dialog)|
-		|actions|object|-|Define os botões do diálogo (opcional, type=dialog)|
-		|close|boolean|-|Se verdadeiro, fecha o diálogo aberto (opcional, type=dialog)|
-		. O nome das propriedades de ``actions`` define o identificador da ação e seu valor o respectivo texto visual. Ao clicar sobre o botão da ação, a função ``trigger`` será chamada passando como argumento o respectivo identificador da ação. Não é permitido executar múltiplas caixas de diálogo. Se o valor da ação encerrar com o caractere asterisco, essa ação será focalizada.**/
+		|trigger|function|-|(opcional) Se definida, abrirá uma caixa de diálogo, caso contrário, de mensagens.|
+		|actions|object|-|(opcional) Define os botões e a resposta para a caixa de diálogo.|
+		. O nome das propriedades de ``actions`` define a resposta da ação que retornará como argumento em ``trigger`` ao ser acionada e seu valor o define o respectivo texto visual. Não é permitido executar múltiplas caixas de diálogo. Se o valor da ação encerrar com o caractere asterisco, essa ação será focalizada, se aceitável pelo navegador.**/
 		signal: function(options) {
-			if (typeof options !== "object") options = {};
-			if (options.type === "notify") return this.notify(options);
-			if (options.type === "dialog") return this.dialog(options);
-			return this.message(options);
+			options.type === "notify" ? this.notify(options) : this.message(options);
 		}
 	};
 
@@ -4777,7 +4762,7 @@ Object.defineProperties(__Type.prototype, {
 				return clone;
 			}
 		},
-		/**. ``''void'' load(''string'' html="", ''object'')``: Atribui o conteúdo definido em ``html`` ao elemento ou o substitui. O argumento ``html`` pode ser um nó ou um conjunto de nós HTML, uma string em linguagem de marcação ou objetos do tipo um XMLDocument, HTMLDocument ou Document. O argumento ``options`` pode possuir as seguintes propriedades boleanas:
+		/**. ``''void'' load(''string'' html="", options ''object'')``: Atribui o conteúdo definido em ``html`` ao elemento ou o substitui. O argumento ``html`` pode ser um nó ou um conjunto de nós HTML, uma string em linguagem de marcação ou objetos do tipo um XMLDocument, HTMLDocument ou Document. O argumento ``options`` pode possuir as seguintes propriedades boleanas:
 		|Nome|Descrição|
 		|script|Se verdadeiro, forçará a execução de scripts (exceto para XML).|
 		|replace|Se verdadeiro, o conteúdo substituirá o elemento (nós do mesmo documento serão transferidos)|
@@ -4795,9 +4780,6 @@ Object.defineProperties(__Type.prototype, {
 				}
 				/*-- se for HTML, capturar os filhos --*/
 				else if (check.chars) {
-					const re = /^\<body.+\<\/body\>$/;
-					if (!re.test(html.trim()))
-						html = "<body>"+html.trim()+"</body>";
 					const parser = new __Parser(html);
 					data = parser.stringHTML.get().body.children;
 				}
@@ -5328,19 +5310,10 @@ Object.defineProperties(__Type.prototype, {
 		    this.table.caption.textContent = String(x);
 		  }
 		},
-		/**.FIXME reescrever isso ``''array'' cells(''object'' area, ''boolean'' value)``: Retorna uma lista de objetos contendo informações das células conforme especificado no argumento ``area`` com as seguintes propriedades:
-		|Nome|Descrição|
-		|row|Índice da linha de início da captura (padrão 0).|
-		|col|Índice da coluna de início da captura (padrão 0).|
-		|rows|Quantidade de linhas (padrão 1).|
-		|cols|Quantidade de colunas (padrão 1).|
-		. Se o argumento ''value'' for verdadeiro, retornará os valores textuais das células, caso contrário, o elemento HTML da célula. O conteúdo da lista é um objeto com as seguintes propriedades:
-		|Nome|Descrição|
-		|cell|Elemento HTML ou valor da célula.|
-		|row|Número da linha|
-		|col|Número da coluna|**/
-
-		cell: {
+		/**. ``''array'' cells(''string'' target, ''function'' caller)``: Retorna uma lista de células da tabela conforme configuração definida no argumento ``target``.
+		. A célula é especificada pelos índices da linha e coluna separados por vírgula (''row,col''), onde zero é a origem e o caractere "asterísco" o último índice. Para especificar um intervalo de células, deve-se separar as células por um caractere de "dois pontos" (''row1,col1:row2,col2''), nesse caso, a linha e a coluna da célula inicial devem ser menores ou iguais a aqueles especificados na célula final. Para especificar várias células ou intervalos de forma independente, deve-se separá-los por um caractere de "ponto e vírgula" (''row1,col1;row2,col2:row3,col3'').
+		. A função opcional definida em ``caller`` permite alterar o conteúdo retornado. Por padrão, cada item da lista conterá o nó ``td`` ou ``th`` da tabela conforme definido em ``target``. A função receberá três argumentos, o nó HTML e os índices da linha e coluna, nessa ordem. O retorno da função, se definido, definirá o novo valor do item da lista.**/
+		cells: {
 			value: function(target, caller) {
 				const groups = String(target).replace(/\s+/g, "").split(";");
 				const change = new __Type(caller).function;
@@ -5387,11 +5360,6 @@ Object.defineProperties(__Type.prototype, {
 				return list;
 			}
 		},
-
-
-
-
-
 		/**.  ``''node'' plot(''object'' options)``: Retorna um gráfico de acordo com os dados da tabela e conforme especificado em ``options``:
 		|Nome|Tipo|Descrição|
 		|xLabel|string|Rótulo do eixo ''x''.|
@@ -5424,25 +5392,27 @@ Object.defineProperties(__Type.prototype, {
 				if (!__Type(options).object)     return null;
 				if (!__Type(options.data).array) return null;
 				if (options.data.length === 0)   return null;
-				const chart = __Plot2D(options.type);
+				const chart = new __Plot2D(options.type);
 				/*-- valores gerais --*/
 				const names = ["xLabel", "yLabel", "title", "xAxis", "yAxis"];
 				for (let i = 0; i < names.length; i++)
 					if (names[i] in options)
-						chart[names[i]] = options[attr];
+						chart[names[i]] = options[names[i]];
 				/*-- adicionando dados --*/
 				const re = /^\#(\d+)$/;
 				for (let i = 0; i < options.data.length; i++) {
 					let item = options.data[i];
-					let col, arr;
+					let col, arr, cell;
 					if (re.test(item.x)) {
-						col = Number(item.x.replace(re, "$1"));
-						arr = this.col(col, true);
-						item.x = arr.slice(1);
+						col  = item.x.replace(re, "$1");
+						cell = "1,"+col+":*,"+col;
+						arr = this.cells(cell, function(v,r,c) {return v.innerText;});
+						item.x = arr;
 					}
 					if (re.test(item.y)) {
 						col = Number(item.y.replace(re, "$1"));
-						arr = this.col(col, true);
+						cell = "0,"+col+":*,"+col;
+						arr = this.cells(cell, function(v,r,c) {return v.innerText;});
 						item.y     = arr.slice(1);
 						item.label = arr[0];
 					}
@@ -5657,7 +5627,7 @@ Object.defineProperties(__Type.prototype, {
 	Construtor para [requisições Web](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest) ou leituras de [arquivos](https://developer.mozilla.org/en-US/docs/Web/API/FileReader). O argumento ``config`` aceita os mesmos valores do objeto ``__Dataset`` e contem as propriedades da requisição de acordo com o método escolhido, sendo os básicos:
 	|Nome|Referência|Aplicação|
 	|url|Alvo da requisição ou da leitura, não necessariamento um URL|send, read e fetch|
-	|method|Método da Requisição (padrão é post)|send e fetch|
+	|method|[https://developer.mozilla.org/pt-BR/docs/Web/HTTP/Methods](Método da Requisição) (padrão é post)|send e fetch|
 	|type|Tipo de resposta a retornar (padrão text)|send, read e fetch|
 	|headers|Cabeçalhos a enviar (ver __DataSet|send e fetch|
 	|body|Dados a enviar na requisição|send e fetch|
@@ -6973,6 +6943,8 @@ Object.defineProperties(__Type.prototype, {
 					let total = 0;
 					let positive = 0;
 					let negative = 0;
+					let min      = +Infinity;
+					let max      = -Infinity;
 
 					for (let i in data[0]) {
 						let value = data[0][i];
@@ -6983,6 +6955,8 @@ Object.defineProperties(__Type.prototype, {
 						if (value !== 0) zero  = false;
 						if (value < 0) negative += value;
 						else           positive += value;
+						if (value < min) min = value;
+						if (value > max) max = value;
 					}
 					if (count === 0 || zero) return false;
 					/* calculando proporções e definindo limites */
@@ -7030,11 +7004,14 @@ Object.defineProperties(__Type.prototype, {
 							let cy    = this._cfg.yMiddle;
 							let curve = {id: id, color: color, info: "", name: name};
 							curve.info = [
+								" "+this.xLabel,
+								"  n = "+this._values(count),
 								" "+this.yLabel,
-								"  "+this._values(total),
-								" "+this.xLabel+" ("+this._values(count)+")",
-								"  "+name,
-								"  "+this._values(value) + " (" + this._values(ratio, "y") + ")"
+								"  {y ∈ ℝ | "+this._values(min)+" ≤ y ≤ "+this._values(max)+"}",
+								"  y  = "+this._values(value),
+								"  ∑y = "+this._values(total),
+								"  ∑y/y = "+this._values(ratio, "y"),
+								"  ∑y/n = "+this._values(total/count),
 							].join("\n");
 							width = 360*ratio;
 							/*-- semi-círculos --*/
@@ -7079,11 +7056,13 @@ Object.defineProperties(__Type.prototype, {
 							let h     = Math.abs(this._yScale(item.value) - this._yScale(0));
 							let curve = {id: id, color: color, info: "", name: this._values(id+1)+") "+name};
 							curve.info = [
+								" "+this.xLabel,
+								"  n = "+this._values(count),
 								" "+this.yLabel,
-								"  "+this._values(total),
-								" "+this.xLabel+" ("+this._values(count)+")",
-								"  "+name,
-								"  "+this._values(value)
+								"  {y ∈ ℝ | "+this._values(min)+" ≤ y ≤ "+this._values(max)+"}",
+								"  y  = "+this._values(value),
+								"  ∑y = "+this._values(total),
+								"  ∑y/n = "+this._values(total/count),
 							].join("\n");
 							/*-- colunas --*/
 							svg.rect(x, y, w, h)
@@ -7107,7 +7086,7 @@ Object.defineProperties(__Type.prototype, {
 								this._values(id+1),
 								value >= 0 ? "hn" : "hs"
 							)
-							.attribute({fill: color, cursor: "default", "data-wd-chart-curve": id})
+							.attribute({fill: color, cursor: "default", "font-weight": "bold", "data-wd-chart-curve": id})
 							.title(this._values(id+1)+") "+name);
 							legend.push(curve);
 						}
@@ -7868,11 +7847,11 @@ Object.defineProperties(__Type.prototype, {
 				return data;
 			}
 		},
-		/**. ``''self'' load(''string'' html, ''boolean'' replace, ''boolean'' run)``: Insere o código HTML contido em ``html`` no elemento. Se ``replace`` for verdadeiro, substituirá o elemento pelo código. Se ``run``for verdadeiro, rodará scripts.**/
+		/**. ``''self'' load(''string'' data, ''object'' options)``: Ajusta o código HTML contido em ``html`` no elemento (ver __Node.load).**/
 		load: {
-			value: function(html, replace, run) {
+			value: function(data, options) {
 				for (let i = 0; i < this._main.length; i++)
-					this._main[i].load(html, replace, run);
+					this._main[i].load(data, options);
 				return this;
 			}
 		},
@@ -7993,132 +7972,10 @@ Object.defineProperties(__Type.prototype, {
 
 /*----------------------------------------------------------------------------*/
 	/**#### WDmatrix
-	###### ``**constructor** ''object'' WDmatrix(''any''  input, ''object'' data)``
-	Construtor genérico para manipulação de nós HTML. Os argumentos ``input`` e ``data`` se referem aos argumento de ``WDmain``**/
-
-	function WDmatrix(input) {
-		let table  = new __Table(true, false);
-		let target = null;
-		let check  = __Type(input);
-		if      (check.node)  table.html(check.value[0]);
-		else if (check.array) table.matrix(input);
-		else if (check.chars) table.csv(input);
-
-		if (check.node && check.value.length > 0)
-			if (check.value[0].tagName.toLowerCase() === "table")
-				target = check.value[0];
-
-		Object.defineProperties(this, {
-			_table:  {value: table},
-			_target: {value: target}
-		});
-	}
-
-	WDmatrix.prototype = Object.create(WDmatrix.prototype, {
-		constructor: {value: WDmatrix},
-		/**. ``''integer'' rows``: Retorna a quantidade de linhas da matriz.**/
-		rows: {
-			get: function() {return this._table.rows;}
-		},
-		/**. ``''integer'' rows``: Retorna a quantidade de colunas da matriz.**/
-		cols: {
-			get: function() {return this._table.rows;}
-		},
-		/**. ``''string'' caption``: Define ou retorna o rótulo da tabela.**/
-		caption: {
-			get: function()  {return this._table.caption;},
-			set: function(x) {return this._table.caption = x;}
-		},
-		/**. ``''array'' array``: Retorna a matriz na forma de array.**/
-		array: {
-			get: function() {return this._table.matrix();}
-		},
-		/**. ``''string'' csv``: Retorna a matriz na forma de string.**/
-		csv: {
-			get: function() {return this._table.csv();}
-		},
-		/**. ``''node'' html``: Retorna a matriz na forma de tabela HTML.**/
-		html: {
-			get: function() {return this._table.html();}
-		},
-		/**. ``''array'' range(''string'' cell)``: Retorna a lista dos valores das células especificadas em ``cell`` (ver &lowbar;&lowbar;Table).**/
-		range: {
-			value: function(cell) {return this._table.cell(cell, true);}
-		},
-
-
-
-		forEach: {//FIXME descrever isso, não sei para que
-			value: function(cell, callback) {
-				if (!__Type(callback).function) return;
-				let data = this._table.cell(cell, false);
-				let self = this;
-				data.forEach(function (v,i,a) {
-					let cell = {
-						get index()  {return i;},
-						get row()    {return v.row;},
-						get col()    {return v.col;},
-						get value()  {return v.cell.textContent;},
-						set value(x) {v.cell.textContent = x;},
-						set style(x) {WD(v.cell).set({style: x})},
-						range: function(x) {return self.range(x);},
-					};
-					callback(cell);
-				});
-			}
-		},
-		/**.  ``''node'' plot(''object'' options)``: Retorna um gráfico de acordo com os dados da tabela e conforme especificado em ``options``. O atributo ``options`` possui os seguintes atributos:
-		|Nome|Tipo|Descrição|
-		|xLabel|string|Rótulo do eixo ''x''.|
-		|yLabel|string|Rótulo do eixo ''y''.|
-		|title|string|Título do gráfico.|
-		|xAxis|string|Define o tipo de dado do eixo ''x'': ''number'' (padrão), ''date'', ''time'' e ''datetime''.|
-		|ratio|boolean|Se verdadeiro, o gráfico será proporcional, caso contrário, será plano cartesiano.|
-		|data|array|Conjunto de dados a serem plotados e corresponde a uma lista de objetos.|
-		. Os itens do atributo ``data`` do argumento ``options`` possui os seguintes atributos:
-		|Nome|Tipo|Descrição|
-		|x|any|Valores do eixo ''x'', pode ser um array, um objeto (ratio = true) ou o número da coluna precedido de &num;.|
-		|y|any|Valores do eixo ''y'', pode ser um array, uma função, uma constante ou o número da coluna precedido de &num;.|
-		|label|string|Rótulo do gráfico. Se ''y'' utilizar o coluna, o valor será o cabeçalho desta.|
-		|fit|string|Especifica o tipo do gráfico cartesiano.|
-		. Os tipos permitidos para o atributo ``fit`` são:
-		|Valor|Descrição|Valores de Y|
-		|sum|Exibe a soma aproximada da área dentro da curva.|function, constante, array, matrix|
-		|avg|Exibe a média aproximada da curva.|function, array, matrix|
-		|line|Liga os pontos do gráfico com um seguimento de reta.||
-		|link|Liga os pontos do gráfico com um seguimento de reta lincado por um ponto.|array, matrix|
-		|dots|Exibe os pontos do gráfico.|array, matrix|
-		|linear|Executa um ajuste linear aproximado.||
-		|exponential|Executa um ajuste exponencial aproximado.||
-		|geometric|Executa um ajuste geométrico aproximado.||
-		|logarithmic|Executa um ajuste logarítmo aproximado.||
-		|minimum|Executa um ajuste com o menor desvio médio padrão.||**/
-		plot: {
-			value: function(options) {
-				if (!__Type(options).object)     return null;
-				if (!__Type(options.data).array) return null;
-				if (options.data.length === 0)   return null;
-				let self  = this;
-				let chart = __Plot2D(options.ratio);
-				let names = {xLabel: 0, yLabel: 0, title: 0, xAxis: 0};
-				for (let attr in names)
-					if (attr in options) chart[attr] = options[attr];
-				options.data.forEach(function (v,i,a) {
-					if (__Type(v.x).string) {
-						let col = v.x.replace(/\D/g, "");
-						v.x = self.range("1,"+col+":.,"+col, true);
-					}
-					if (__Type(v.y).string) {
-						let col = v.y.replace(/\D/g, "");
-						v.y     = self.range("1,"+col+":.,"+col, true);
-						v.label = self.range("0,"+col)[0]
-					}
-					chart.add(v.x, v.y, v.label, v.fit);
-				});
-				return chart.plot();
-			}
-		},
-	});
+	###### ``**constructor** ''object'' WDmatrix(''any''  input)``
+	Cópia do construtor __Table**/
+	function WDmatrix(input) {__Table.call(this, input);}
+	WDmatrix.prototype = Object.create(__Table.prototype, {constructor: {value: WDmatrix}});
 
 /*----------------------------------------------------------------------------*/
 	/**### Função Mestre
@@ -8143,33 +8000,41 @@ Object.defineProperties(__Type.prototype, {
 	Object.defineProperties(WD, {
 		/**. ``''string'' version``: Retorna a versão da biblioteca.**/
 		version: {value: __VERSION},
-		/**. ``''object'' $(''string'' css, ''node'' root)``: Retorna um objeto do tipo nó conforme seletor ''css'' individual. O argumento opcional ''root'' é o elemento pai a ser consultado cujo valor padrão é ''document''.**/
-		$: {value: function(css, root) {return WD(__Query(css, root).$);}},
-		/**. ``''object'' $$(''string'' css, ''node'' root)``: Retorna um objeto do tipo nó conforme seletor ''css'' múltiplo. O argumento opcional ''root'' é o elemento pai a ser consultado cujo valor padrão é ''document''.**/
-		$$: {value: function(css, root) {return WD(__Query(css, root).$$);}},
-		/**. ``''void'' signal(''object'' options)``: Produz uma interação (ver ''__SIGNAL.signal'').**/
-		signal:  {value: function(options) {return __SIGNAL.signal(options);}},
-
-
-		copy: {value: function(text)  {return wd_copy(text);}}, //FIXME como fica copy?
-
-
-		/**. ``''object'' matrix(''any'' input)``: Retorna um objeto do tipo matriz conforme ``input`` (table, array, csv)**/
-		matrix:  {value: function(input) {return new WDmatrix(input);}},
 		/**. ``''string'' device``: Retorna o tipo de tela de acordo com a biblioteca.**/
 		device:  {get: function() {return __DEVICE.device;}},
-		/**. ``''object'' today``: Retorna o objeto do tipo data com o valor atual.**/
+		/**. ``''object'' now``: Retorna a instância do objeto do tipo tempo com o valor atual.**/
+		now: {get: function() {return WD(new __DateTime().toTimeString());}},
+		/**. ``''object'' now``: Retorna a instância do objeto do tipo data com o valor atual.**/
+		today: {get: function() {return WD(new __DateTime().toDateString());}},
+		/**. ``''object'' already``: Retorna a instância do objeto do tipo data/tempo com o valor atual.**/
 		already: {get: function() {return WD(__DateTime().toString());}},
 		/**. ``''string'' lang``: Define ou retorna a lista de linguagem em ordem de preferência da biblioteca.**/
 		lang: {
 			get: function()  {return __LANG.list.join(" ");},
 			set: function(x) {__LANG.user = x;}
 		},
-		/**. ``''string'' currency``: Define ou retorna o código monetário para uso pela biblioteca.**/
-		currency: {
-			get: function()  {return __LANG.currency;},
-			set: function(x) {__LANG.currency = x;}
-		},
+		/**. ``''object'' $(''string'' css, ''node'' root)``: Retorna um objeto do tipo nó conforme seletor ''css'' individual. O argumento opcional ''root'' é o elemento pai a ser consultado cujo valor padrão é ''document''.**/
+		$: {value: function(css, root) {return WD(__Query(css, root).$);}},
+		/**. ``''object'' $$(''string'' css, ''node'' root)``: Retorna um objeto do tipo nó conforme seletor ''css'' múltiplo. O argumento opcional ''root'' é o elemento pai a ser consultado cujo valor padrão é ''document''.**/
+		$$: {value: function(css, root) {return WD(__Query(css, root).$$);}},
+		/**. ``''void'' signal(''object'' options)``: Produz uma interação (ver ''__SIGNAL.signal'').**/
+		signal:  {value: function(options) {return __SIGNAL.signal(options);}},
+		/**. ``''object'' matrix(''any'' input)``: Retorna um objeto do tipo matriz conforme ``input`` (table, array, csv)**/
+		matrix:  {value: function(input) {return new WDmatrix(input);}},
+
+
+
+
+
+
+
+		copy: {value: function(text)  {return wd_copy(text);}}, //FIXME como fica copy?
+
+
+
+
+
+
 		/**. ``''object'' datetime(''any'' input)``: Retorna um objeto WD de data/tempo a partir dos valores:
 		|input|Descrição|
 		|Padrão|O valor atual de data/tempo|
@@ -8180,12 +8045,7 @@ Object.defineProperties(__Type.prototype, {
 		|Semana|O primeiro dia da semana com tempo definido em 00:00:00|
 		|Mês|Primeiro dia do mês com tempo definido em 00:00:00|
 		|Objeto|As propriedades definidas alteram o valor atual da data/tempo|**/
-		datetime: {
-			value: function(input) {
-				const datetime = new __DateTime(input);
-				return WD(datetime.toString());
-			}
-		},
+		datetime: {value: function(input) {return WD(new __DateTime(input).toString());}},
 	});
 
 	if (__UNDERMAINTENANCE) {
@@ -8211,6 +8071,7 @@ Object.defineProperties(__Type.prototype, {
 			DEVICE:   {value: __DEVICE},
 			PROGRESS: {value: __PROGRESS},
 			SIGNAL:   {value: __SIGNAL},
+			MIME:     {value: __MIME},
 		});
 	}
 
@@ -8219,8 +8080,8 @@ Object.defineProperties(__Type.prototype, {
 	###### ``**function** ''void'' data_wdSend(''node''  e, ''object'' event)``
 	Função vinculada ao atributo HTML ``data-wd-send`` cujo objetivo é efetuar requisições web (ver ``WDrequest.send``). Possui múltiplos atributos e grupos. Os atributos são os mesmos do método acrescido do ''_trigger'' que define o nome do disparador a executar ao fim do processo, que deve ter sido declarado no escopo principal (window) utilizando as palavras chaves ``var`` ou ``function``. No caso de submissão de formulário, o grupo será único e os dados serão aqueles definidos no HTML.**/
 	function data_wdSend(e, event) {
-		if (!("wdSend" in e.dataset)) return;
 		event.preventDefault();
+		if (!("wdSend" in e.dataset)) return;
 		const data = new __Parser(e.dataset.wdSend).wdArray.get();
 		if (event.type === "submit") {
 			console.clear();
@@ -8272,8 +8133,19 @@ Object.defineProperties(__Type.prototype, {
 		const data    = new __Parser(e.dataset.wdLoad).wdArray.get()[0];
 		const options = {replace: data._replace, script: data._script, text: data._text};
 		delete e.dataset.wdLoad;
+		let type = "text";
+		WD({url: data.url, method: "head"}).send(function(x) {
+		//
+
+
 		wd(data).send(function(x) {
-			if (x.ok) target.load(x.response, options);
+			if (x.ok) {
+				let  input = x.response;
+				const mime = new __DataSet(x.headers).getAll("content-type")[0];
+				if (__MIME[mim] === "xml)
+
+				target.load(x.response, options);
+			}
 		});
 		return;
 	};
