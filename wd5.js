@@ -4762,80 +4762,97 @@ Object.defineProperties(__Type.prototype, {
 				return clone;
 			}
 		},
-		/**. ``''void'' load(''string'' html="", options ''object'')``: Atribui o conteúdo definido em ``html`` ao elemento ou o substitui. O argumento ``html`` pode ser um nó ou um conjunto de nós HTML, uma string em linguagem de marcação ou objetos do tipo um XMLDocument, HTMLDocument ou Document. O argumento ``options`` pode possuir as seguintes propriedades boleanas:
+		/**. ``''void'' load(''string'' html="", options ''object'')``: Atribui ao nó ou o substitui pelo conteúdo definido em ``html`` renderizando-o como nós ou notação XML/HTML. O argumento ``options`` pode possuir as seguintes propriedades boleanas:
 		|Nome|Descrição|
 		|script|Se verdadeiro, forçará a execução de scripts (exceto para XML).|
-		|replace|Se verdadeiro, o conteúdo substituirá o elemento (nós do mesmo documento serão transferidos)|
-		|text|Se verdadeiro, o conteúdo será lançado como texto como ocorre em formulários.|**/
+		|replace|Se verdadeiro, o nó será substituído pelo conteúdo (apenas nós do tipo elemento).|
+		|text|Se verdadeiro ou em caso de formulário, o conteúdo será lançado como texto e as demais propriedades não terão efeito.|
+		. Comportamento esperado conforme conteúdo de ``html``:
+		|html|Comportamento|
+		|String|Texto da string ou sua renderização como innerHTML.|
+		|HTMLDocument|Texto da estrutura HTML ou a renderização de ''body'' como innerHTML.|
+		|XMLDocument|Texto da estrutura XML ou a apensação de seus elementos raiz ao nó.|
+		|Lista HTML|Texto do outerHTML de cada nó agrupado ou a apensação de seus elementos ao nó.|**/
 		load: {
 			value: function(html, options) {
 				if (!__Type(options).object) options = {};
-				const check = __Type(html);
-				let   xml  = false;
-				let   data = []
-				const load = [];
-				/*-- se for nó(s), capturar a lista --*/
-				if (check.node) {
-					data = check.value;
+				const check = new __Type(html);
+				const text  = this.form || options.text === true;
+				let replace = options.replace === true && !text;
+				let script  = options.script  === true && !text;
+				let attr    = this.form ? "value" : "innerText";
+				let data    = [];
+				let xml     = false;
+				this.node.innerHTML = "";
+				/*-- entrada de texto --*/
+				if (check.chars) {
+					if (text) {
+						this.attribute(attr, html);
+					} else {
+						this.node.innerHTML = html;
+						data = this.node.children;
+					}
 				}
-				/*-- se for HTML, capturar os filhos --*/
-				else if (check.chars) {
-					const parser = new __Parser(html);
-					data = parser.stringHTML.get().body.children;
-				}
-				/*-- se for XML, capturar os filhos --*/
-				else if (check.instanceOf("XMLDocument")) {
-					xml  = true;
-					data = html.documentElement.children;
-				}
-				/*-- se for document, capturar os filhos de body --*/
+				/*-- documento HTML --*/
 				else if (check.instanceOf("HTMLDocument") || check.instanceOf("Document")) {
-					data = html.body.children;
+					if (text) {
+						this.attribute(attr, html.children[0].outerHTML);
+					} else {
+						this.node.innerHTML = html.body.innerHTML;
+						data = this.node.children;
+					}
 				}
-				/*-- migrar itens de data para o array load --*/
-				for (let i = 0; i < data.length; i++)
-					load.push(data[i]);
-				/*-- limpar nó --*/
-				while (this.node.childElementCount > 0)
-					this.node.firstElementChild.remove();
-				/*-- adicionar texto: pai formulário ou se optado --*/
-				if (this.form || options.text === true) {
-					const text = [];
-					for (let i = 0; i < load.length; i++)
-						text.push(load[i].outerHTML);
-					this.attribute("textContent", text.join("\n"));
-					return;
+				/*-- documento XML --*/
+				else if (check.instanceOf("XMLDocument")) {
+					script = false;
+					xml    = true;
+					if (text) {
+						this.attribute(attr, html.children[0].outerHTML);
+					} else {
+						data = html.children;
+						for (let i = 0; i < data.length; i++)
+							this.node.appendChild(data[i]);
+					}
 				}
-				/*-- introduzir ou substituir conteúdo --*/
-				if (options.replace === true) {
-					for (let i = 0; i < load.length; i++)
-						this.node.parentElement.insertBefore(load[i], this.node);
+				/*-- nós HTML --*/
+				else if (check.node) {
+					if (text) {
+						const list = check.value;
+						for (let i = 0; i < list.length; i++)
+							list[i] = list[i].outerHTML;
+						this.attribute(attr, list.join("\n"));
+					} else {
+						data = check.value;
+						for (let i = 0; i < data.length; i++)
+							this.node.appendChild(data[i]);
+					}
+				}
+				/*-- substituindo elemento --*/
+				if (replace) {
+					for (let i = 0; i < data.length; i++)
+						this.node.parentElement.insertBefore(data[i], this.node);
 					this.node.remove();
-				} else {
-					for (let i = 0; i < load.length; i++)
-						this.node.appendChild(load[i]);
 				}
 				/*-- rodando scripts --*/
-				if (options.script === true && !xml) {
-					for (let i = 0; i < load.length; i++) {
-						let list = [load[i]];
-						if (load[i].tagName.toLowerCase() !== "script")
-							list = __Type(__Query("script", load[i]).$$).value;
-						for (let j = 0; j < list.length; j++) {
-							let clone = __Node(list[j]).clone();
-							list[j].parentElement.insertBefore(clone, list[j]);
-							list[j].remove();
+				if (script) {
+					for (let i = 0; i < data.length; i++) {
+						let script = data[i].tagName.toLowerCase() === "script";
+						let query  = script ? [data[i]] : data[i].querySelectorAll("script");
+						for (let q = 0; q < query.length; q++) {
+							let clone = __Node(query[q]).clone();
+							query[q].parentElement.insertBefore(clone, query[q]);
+							query[q].remove();
+							if (script) data[i] = clone;
 						}
 					}
 				}
 				/*-- invocar evento --*/
 				if (!xml) {
-					if (options.replace === true) {
-						for (let i = 0; i < load.length; i++)
-							load[i].dispatchEvent(wdReloadEvent);
-					} else {
+					if (replace)
+						for (let i = 0; i < data.length; i++)
+							data[i].dispatchEvent(wdReloadEvent);
+					else
 						this.node.dispatchEvent(wdReloadEvent);
-					}
 				}
 			}
 		},
@@ -5469,24 +5486,24 @@ Object.defineProperties(__Type.prototype, {
 					const parser = new __Parser(this._response.response);
 					const change = {
 						read: {
-							xml:    function() {return parser.stringXML.get();},
-							html:   function() {return parser.stringHTML.get();},
-							json:   function() {return parser.stringJSON.get();},
-							table:  function() {return parser.csvTable.get();},
-							matrix: function() {return parser.csvTable.tableValues.get();},
-							csv:    function() {return parser.csvTable.tableValues.matrixList.get();}
+							xml:     function() {return parser.stringXML.get();},
+							html:    function() {return parser.stringHTML.get();},
+							json:    function() {return parser.stringJSON.get();},
+							table:   function() {return parser.csvTable.get();},
+							matrix:  function() {return parser.csvTable.tableValues.get();},
+							csvlist: function() {return parser.csvTable.tableValues.matrixList.get();}
 						},
 						send: {
-							url:    function() {return parser.fileURL.get();},
-							table:  function() {return parser.csvTable.get();},
-							matrix: function() {return parser.csvTable.tableValues.get();},
-							csv:    function() {return parser.csvTable.tableValues.matrixList.get();}
+							url:     function() {return parser.fileURL.get();},
+							table:   function() {return parser.csvTable.get();},
+							matrix:  function() {return parser.csvTable.tableValues.get();},
+							csvlist: function() {return parser.csvTable.tableValues.matrixList.get();}
 						},
 						fetch: {
-							url:    function() {return parser.fileURL.get();},
-							table:  function() {return parser.csvTable.get();},
-							matrix: function() {return parser.csvTable.tableValues.get();},
-							csv:    function() {return parser.csvTable.tableValues.matrixList.get();}
+							url:     function() {return parser.fileURL.get();},
+							table:   function() {return parser.csvTable.get();},
+							matrix:  function() {return parser.csvTable.tableValues.get();},
+							csvlist: function() {return parser.csvTable.tableValues.matrixList.get();}
 						}
 					}
 					if (type in change[caller])
@@ -5659,20 +5676,20 @@ Object.defineProperties(__Type.prototype, {
 		|buffer|Conteúdo em ArrayBuffer.|-|
 		|url|Conteúdo em ObjectURL.|-|
 		|matrix|Conteúdo em Array a partir de dados/arquivo CSV.|-|
-		|table|Conteúdo em nó HTML ''table'' a partir de dados/arquivo CSV.|-|
-		|css|Conteúdo em lista de objetos a partir de dados/arquivo CSV.|-|**/
+		|table|Conteúdo em tabela HTML a partir de dados/arquivo CSV.|-|
+		|csvlist|Conteúdo em lista de objetos a partir de dados/arquivo CSV.|-|**/
 		_types: {
 			value: {
-				text:   {send: "text",        read: "readAsText",         fetch: "text"},
-				blob:   {send: "blob",        read: "readAsBinaryString", fetch: "blob"},
-				html:   {send: "document",    read: "readAsText",         fetch: "document"},
-				xml:    {send: "document",    read: "readAsText",         fetch: "document"},
-				json:   {send: "json",        read: "readAsText",         fetch: "json"},
-				buffer: {send: "arraybuffer", read: "readAsArrayBuffer",  fetch: "arrayBuffer"},
-				url:    {send: "blob",        read: "readAsDataURL",      fetch: "blob"},
-				matrix: {send: "text",        read: "readAsText",         fetch: "text"},
-				table:  {send: "text",        read: "readAsText",         fetch: "text"},
-				csv:    {send: "text",        read: "readAsText",         fetch: "text"},
+				text:    {send: "text",        read: "readAsText",         fetch: "text"},
+				blob:    {send: "blob",        read: "readAsBinaryString", fetch: "blob"},
+				html:    {send: "document",    read: "readAsText",         fetch: "document"},
+				xml:     {send: "document",    read: "readAsText",         fetch: "document"},
+				json:    {send: "json",        read: "readAsText",         fetch: "json"},
+				buffer:  {send: "arraybuffer", read: "readAsArrayBuffer",  fetch: "arrayBuffer"},
+				url:     {send: "blob",        read: "readAsDataURL",      fetch: "blob"},
+				matrix:  {send: "text",        read: "readAsText",         fetch: "text"},
+				table:   {send: "text",        read: "readAsText",         fetch: "text"},
+				csvlist: {send: "text",        read: "readAsText",         fetch: "text"},
 			}
 		},
 		/**. ``''object'' _cfg(''string'' caller)``: Retorna a configuração adaptada ao tipo de chamada (``caller``).**/
@@ -8126,41 +8143,43 @@ Object.defineProperties(__Type.prototype, {
 
 /*----------------------------------------------------------------------------*/
 	/**###### ``**function** ''void'' data_wdLoad(''node''  e, ''object'' event)``
-	Função vinculada ao atributo HTML ``data-wd-load`` cujo objetivo é carregar arquivo HTML (ver ``WDnode.load`` e ``WD.send``). Possui múltiplos atributos e grupo único.**/
+	Função vinculada ao atributo HTML ``data-wd-load`` cujo objetivo é carregar arquivo HTML (ver ``WDnode.load`` e ``WD.send``). Possui múltiplos atributos e grupo único. As opções ''replace'', ''script'' e ''text'' de WDnode.load devem ser precedidos de underline para não conflitar com os argumentos de WD.send.**/
 	function data_wdLoad(e, event) {
+		event.preventDefault();
 		if (!("wdLoad" in e.dataset)) return;
 		const target  = WD(e);
 		const data    = new __Parser(e.dataset.wdLoad).wdArray.get()[0];
 		const options = {replace: data._replace, script: data._script, text: data._text};
 		delete e.dataset.wdLoad;
-		let type = "text";
-		WD({url: data.url, method: "head"}).send(function(x) {
-		//
-
-
+		data.type = options.text === true ? "text" : "html";
 		wd(data).send(function(x) {
-			if (x.ok) {
-				let  input = x.response;
-				const mime = new __DataSet(x.headers).getAll("content-type")[0];
-				if (__MIME[mim] === "xml)
-
-				target.load(x.response, options);
-			}
+			if (x.ok) target.load(x.response, options);
 		});
 		return;
 	};
 
 /*----------------------------------------------------------------------------*/
 	/**###### ``**function** ''void'' data_wdRepeat(''node''  e, ''object'' event)``
-	Função vinculada ao atributo HTML ``data-wd-repeat`` cujo objetivo é clonar elementos filhos a partir de parâmentros contidos em arquivo JSON ou CSV (ver ``WDnode.repeat`` e ``WDobject.send``). Possui múltiplos atributos e grupo único. O atributo ``type`` da requisição deve ser ''json'' ou ''css''.**/
+	Função vinculada ao atributo HTML ``data-wd-repeat`` cujo objetivo é clonar elementos filhos a partir de parâmentros contidos em arquivo JSON ou CSV conforme cabeçalho da origem (ver ``WDnode.repeat`` e ``WDobject.send``). Possui múltiplos atributos e grupo único. O atributo ``type`` da requisição deve ser ''json'' ou ''css''.**/
 	function data_wdRepeat(e, event) {
+		event.preventDefault();
 		if (!("wdRepeat" in e.dataset)) return;
 		const target = WD(e);
 		const data   = new __Parser(e.dataset.wdRepeat).wdArray.get()[0];
-		if (data.type !== "css") data.type = "json";
 		delete e.dataset.wdRepeat;
+		data.type = "text";
 		wd(data).send(function(x) {
-			if (x.ok) target.repeat(x.response);
+			if (x.ok) {
+				const head = new __DataSet(x.headers);
+				const mime = __MIME[head.getAll("content-type")[0]];
+				if (mime === "json" || mime === "csv") {
+					const parser = new __Parser(x.response);
+					const list   = mime === "json" ? parser.stringJSON : parser.csvTable.tableValues.matrixList;
+					target.repeat(list.get());
+				} else {
+					target.repeat([]);
+				}
+			}
 		});
 		return;
 	};
