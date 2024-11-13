@@ -1214,13 +1214,14 @@ Object.defineProperties(__Type.prototype, {
 
 	Object.defineProperties(__DataSet.prototype, {
 		constructor: {value: __DataSet},
-		/**. ``''self'' import(''any'' input)``: Importa os dados de ``input`` que pode ser uma string (name: value\r\n), um objeto ou instâncias de Headers, FormData ou URLSearchParams.**/
+		/**. ``''self'' import(''any'' input)``: Importa os dados de ``input`` que podendo ser uma string no formato "name: value\r\n", um objeto, um array ou instâncias de Headers, FormData, URLSearchParams ou __DataSet.**/
 		import: {
 			value: function(input) {
 				const check  = __Type(input);
 				const self   = this;
 				const header = /^([a-z\-]+\:\ [^\n]+\r\n)+$/;
 				const search = /^\??([^=]+\=(\&?|[^&]+\&?))+$/;
+				/*-- string header => name: value\r\n --*/
 				if (check.nonempty && header.test(input)) {
 					const data = input.trim().split("\r\n");
 					for (let i = 0; i < data.length; i++) {
@@ -1229,7 +1230,9 @@ Object.defineProperties(__Type.prototype, {
 						let value = part.length > 0 ? part[1].trim() : "";
 						if (name.length > 0) this.append(name, value);
 					}
-				} else if (check.nonempty && search.test(input)) {
+				}
+				/*-- string search => ?name=value& --*/
+				else if (check.nonempty && search.test(input)) {
 					const data = input.replace(/^\?/, "").trim().split("&");
 					for (let i = 0; i < data.length; i++) {
 						let part  = data[i].split("=");
@@ -1237,15 +1240,33 @@ Object.defineProperties(__Type.prototype, {
 						let value = part.length > 1 ? part[1] : "";
 						if (name.length > 0) this.append(name, value);
 					}
-				} else if (check.instanceOf("URL")) {
+				}
+				/*-- instância de URL --*/
+				else if (check.instanceOf("URL")) {
 					return this.import(input.search);
-				} else if (check.instanceOf("Headers")) {
+				}
+				/*-- instância de Headers --*/
+				else if (check.instanceOf("Headers")) {
 					input.forEach(function (value,name,data) {self.append(name, value);});
-				} else if (check.instanceOf("URLSearchParams")) {
+				}
+				/*-- instância de URLSearchParams --*/
+				else if (check.instanceOf("URLSearchParams")) {
 					input.forEach(function (value,name,data) {self.append(name, value);});
-				} else if (check.instanceOf("FormData")) {
+				}
+				/*-- instância de FormData --*/
+				else if (check.instanceOf("FormData")) {
 					for (const data of input.entries()) {this.append(data[0], data[1]);}
-				} else if (check.object) {
+				}
+				/*-- instância de __DataSet --*/
+				else if (input instanceof __DataSet) {console.log("LOUCU");
+					input.forEach(function (value,name,data) {self.append(name, value);});
+				}
+				/*-- JS Array --*/
+				else if (check.array) {
+					for (let i = 0; i < input.length; i++) this.append(String(i), input[i]);
+				}
+				/*-- JS Objeto (ficar por último) --*/
+				else if (check.object) {
 					for (let name in input) this.append(name, input[name]);
 				}
 				return;
@@ -1939,7 +1960,7 @@ Object.defineProperties(__Type.prototype, {
 								} else {
 									if (val === "(" || val === ")")
 										count += val === "(" ? 1 : -1;
-									tree.add(v);
+									tree.add(val);
 								}
 							}
 							else if (tag === "array") {
@@ -2787,10 +2808,10 @@ Object.defineProperties(__Type.prototype, {
 			return check.regexp ? search.test(value) : String(search) === value;
 			}
 		},
-		/**. ``''string'' markupCode()``: Retorna o código de __marcação__ codificado em HTML para renderização ou nulo.**/
+		/**. ``''string'' markupCode()``: Retorna o código codificado em XML/HTML renderizado ou vazio.**/
 		markupCode: {
 			value: function() {
-				if (!this.markup) return null;
+				if (!this.markup) return "";
 				const tree  = __Tree();
 				const code  = this.input.split("");
 				let quotes  = null;
@@ -2945,10 +2966,10 @@ Object.defineProperties(__Type.prototype, {
 				return elem.innerHTML;
 			}
 		},
-		/**. ``''string'' linearCode()``: Retorna o código codificado em HTML para renderização ou nulo.**/
+		/**. ``''string'' linearCode()``: Retorna o código genérico renderizado ou vazio..**/
 		linearCode: {
 			value: function() {
-				if (this.markup) return null;
+				if (this.markup) return "";
 				const tree = __Tree();
 				const code = this.input.split("");
 				const cage = this.cages();
@@ -4214,104 +4235,154 @@ Object.defineProperties(__Type.prototype, {
 	/**#### Nós HTML
 	#### Formulários
 	###### ``**constructor** ''object'' __FNode(''node'' input)``
-	Construtor para checar características de campos de formulários HTML (argumento ``node``).**/
+	Construtor para checar características de campo de formulário HTML (argumento ``input``).**/
 	function __FNode(input) {
 		if (!(this instanceof __FNode))	return new __FNode(input);
 		const check = __Type(input);
 		if (!check.node || check.value.length < 1)
 			throw new TypeError("Input value is not an HTML node");
-		const fcheck = [null, "finite", "datetime", "combo", "check", "text"];
-		const forms  = {
-			meter:    {send: 0, mask: 0, check: 1, text: 0},
-			progress: {send: 0, mask: 0, check: 1, text: 0},
-			option:   {send: 0, mask: 0, check: 5, text: 1},
-			output:   {send: 0, mask: 0, check: 5, text: 1},
-			select:   {send: 1, mask: 0, check: 3, text: 0},
-			textarea: {send: 1, mask: 0, check: 5, text: 1},
-			button: {
-				types: {
-					reset:  {send: 0, mask: 0, check: 5, text: 1},
-					button: {send: 0, mask: 0, check: 5, text: 1},
-					submit: {send: 1, mask: 0, check: 5, text: 1}
-				}
-			},
-			input: {
-				types: {
-					button:   {send: 0, mask: 0, check: 5, text: 0},
-					reset:    {send: 0, mask: 0, check: 5, text: 0},
-					submit:   {send: 1, mask: 0, check: 5, text: 0},
-					image:    {send: 0, mask: 0, check: 0, text: 0},
-					color:    {send: 1, mask: 1, check: 5, text: 0},
-					radio:    {send: 1, mask: 0, check: 4, text: 0},
-					checkbox: {send: 1, mask: 0, check: 4, text: 0},
-					range:    {send: 1, mask: 1, check: 1, text: 0},
-					number:   {send: 1, mask: 1, check: 1, text: 0},
-					file:     {send: 1, mask: 0, check: 3, text: 0},
-					url:      {send: 1, mask: 1, check: 5, text: 0},
-					email:    {send: 1, mask: 1, check: 3, text: 0},
-					tel:      {send: 1, mask: 0, check: 5, text: 0},
-					text:     {send: 1, mask: 0, check: 5, text: 0},
-					search:   {send: 1, mask: 0, check: 5, text: 0},
-					password: {send: 1, mask: 0, check: 5, text: 0},
-					hidden:   {send: 1, mask: 0, check: 5, text: 0},
-					date:     {send: 1, mask: 1, check: 2, text: 0},
-					datetime: {send: 1, mask: 1, check: 2, text: 0},
-					month:    {send: 1, mask: 1, check: 2, text: 0},
-					week:     {send: 1, mask: 1, check: 2, text: 0},
-					time:     {send: 1, mask: 1, check: 2, text: 0},
-					"datetime-local": {send: 1, mask: 1, check: 2, text: 0}
-				}
-			}
-		};
-		const node = check.value[0];
-		const tag  = node.tagName.toLowerCase();
-		const form = tag in forms;
-		const data = (function() {
-			if (!form) return {};
-			const cfg = "types" in forms[tag] ? forms[tag].types : forms;
-			let name  = tag;
-			let work  = true;
-			if ("types" in forms[tag]) {
-				const attr = String(node.getAttribute("type")).toLowerCase();
-				const prop = String(node.type).toLowerCase();
-				name = attr in cfg ? attr : (prop in cfg ? prop : "text");
-				work = prop === attr;
-			}
-			cfg[name].name  = name;
-			cfg[name].work  = work;
-			cfg[name].check = fcheck[cfg[name].check];
-			return cfg[name];
-		})();
-		const fmask = data.mask !== 1 ? true : (function() {
-			const invalid = "A1!@#$%¨&*()+";
-			const clone   = node.cloneNode();
-			clone.value   = invalid;
-			return clone.value !== invalid;
-		})();
+		/*-- capturando informações --*/
+		const data = {};
+		data.node = check.value[0];
+		data.tag  = data.node.tagName.toLowerCase();
+		data.form = data.tag in this._config;
+		if (data.form && "types" in this._config[data.tag]) {
+			const attr = String(data.node.getAttribute("type")).toLowerCase();
+			const prop = String(data.node.type).toLowerCase();
+			const find = this._config[data.tag].types;
+			data.type = attr in find ? attr : (prop in find ? prop : "text");
+			data.work = attr === prop && attr in find;
+			data.cfg  = this._config[data.tag].types[data.type];
+		} else {
+			data.type = data.form ? data.tag : "";
+			data.work = data.form;
+			data.cfg  = data.form ? this._config[data.tag] : null;
+		}
+		data.text  = data.form ? data.cfg.text  : false;
+		data.send  = data.form ? data.cfg.send  : false;
+		data.check = data.form ? data.cfg.check : "";
+		if (data.form && data.cfg.mask) {
+			const error = "A1!@#$%¨&*()+";
+			const clone = data.node.cloneNode();
+			try { /*-- tipo file dá erro aqui --*/
+				clone.value = error;
+				data.mask = clone.value !== error;
+			} catch(e) {return true;}
+		} else {
+			data.mask = false;
+		}
 		Object.defineProperties(this, {
 			/**. ``''node'' node``: Retorna o nó.**/
-			node:   {value: node},
+			node:   {value: data.node},
 			/**. ``''string'' tag``: Retorna a tag do nó.**/
-			tag:    {value: tag},
+			tag:    {value: data.tag},
 			/**. ``''boolean'' form``: Informa se o nó é campo de formulário.**/
-			form:   {value: form},
+			form:   {value: data.form},
 			/**. ``''string'' ftype``: Retorna o tipo de formulário ou vazio.**/
-			ftype:  {value: data.name},
+			ftype:  {value: data.type},
 			/**. ``''boolean'' fmask``: Informa se o formulário possui máscara nativa implementada.**/
-			fmask:  {value: fmask},
+			fmask:  {value: data.mask},
 			/**. ``''boolean'' fsend``: Informa se o formulário pode ser enviado em requisições ou falso.**/
-			fsend:  {value: data.send === 1},
+			fsend:  {value: data.send},
 			/**. ``''boolean'' fwork``: Informa se o formulário está implementado.**/
-			fwork:  {value: data.work === true},
+			fwork:  {value: data.work},
 			/**. ``''string'' fcheck``: Informa o tipo de verificação do valor do formulário.**/
-			fcheck: {value: "check" in data ? data.check : ""},
+			fcheck: {value: data.check},
 			/**. ``''boolean'' ftext``: Informa se o formulário aceita conteúdo de texto.**/
-			ftext:  {value: data.text !== 0},
+			ftext:  {value: data.text},
 		});
 	}
 
 	Object.defineProperties(__FNode.prototype, {
 		constructor: {value: __FNode},
+		/**. ``''object'' _msg``: Registra algumas mensagens de validação de formulários.**/
+		_msg: {
+			value: (function(){
+				const msg     = {};
+				const re      = "[0-9]";
+				const elem    = document.createElement("INPUT");
+				elem.required = true;
+				msg.required  = elem.validationMessage;
+				elem.title    = re;
+				elem.pattern  = re;
+				elem.value    = "ABC";
+				msg.pattern   = elem.validationMessage.replace(re , "?");
+				Object.freeze(msg);
+				return msg;
+			})()
+		},
+
+
+		/**. ``''object'' _config``: Contém as configurações sobre os campos de formulário.**/
+		_config: {
+			value: (function() {
+				/*-- informações que definem o tipo do campo de formulário -------------
+					tag.tipo:config1;config2
+						tag: tag do elemento
+						tipo: tipo do elemento quando houver (tag input e button)
+
+					SUBMIT: o campo pode ser submetido em um formulário
+					VISUAL: o campo possui representação textual
+					VALUE.tipo: define o valor aceito pelo campo
+					MASK: checar se o campo possui máscara nativa
+				----------------------------------------------------------------------*/
+				const config = [
+					"button.button:VALUE.text;VISUAL",
+					"button.reset:VALUE.text;VISUAL",
+					"button.submit:SUBMIT;VALUE.text;VISUAL",
+					"input.button:VALUE.text",
+					"input.checkbox:SUBMIT;VALUE.check",
+					"input.color:SUBMIT;MASK;VALUE.text",
+					"input.date:SUBMIT;MASK;VALUE.datetime",
+					"input.datetime-local:SUBMIT;MASK;VALUE.datetime",
+					"input.datetime:SUBMIT;MASK;VALUE.datetime",
+					"input.email:SUBMIT;MASK;VALUE.combo",
+					"input.file:SUBMIT;VALUE.combo",
+					"input.hidden:SUBMIT;VALUE.text",
+					"input.image:",
+					"input.month:SUBMIT;MASK;VALUE.datetime",
+					"input.number:SUBMIT;MASK;VALUE.finite",
+					"input.password:SUBMIT;VALUE.text",
+					"input.radio:SUBMIT;VALUE.check",
+					"input.range:SUBMIT;MASK;VALUE.finite",
+					"input.reset:VALUE.text",
+					"input.search:SUBMIT;VALUE.text",
+					"input.submit:SUBMIT;VALUE.text",
+					"input.tel:SUBMIT;VALUE.text",
+					"input.text:SUBMIT;VALUE.text",
+					"input.time:SUBMIT;MASK;VALUE.datetime",
+					"input.url:SUBMIT;MASK;VALUE.text",
+					"input.week:SUBMIT;MASK;VALUE.datetime",
+					"meter:VALUE.finite",
+					"option:VALUE.text;VISUAL",
+					"output:VALUE.text;VISUAL",
+					"progress:VALUE.finite",
+					"select:SUBMIT;VALUE.combo",
+					"textarea:SUBMIT;VALUE.text;VISUAL"
+				];
+				/*-- redesenhando config para objeto --*/
+				const data = {};
+				for (let i = 0; i < config.length; i++) {
+					let item = config[i].split(":");
+					let cfg1 = item[0].split(".");
+					let cfg2 = item[1].split(";");
+					let tag  = cfg1[0];
+					let type = cfg1.length > 1 ? cfg1[1] : null;
+					let val  = cfg2.filter(function(x) {return (/^VALUE\./).test(x);});
+					if (type !== null && !(tag in data))
+						data[tag] = {types: {}};
+					let obj = type === null ? data : data[tag].types;
+					obj[type === null ? tag : type] = {
+						mask:  cfg2.indexOf("SUBMIT") >= 0,
+						send:  cfg2.indexOf("SUBMIT") >= 0,
+						text:  cfg2.indexOf("VISUAL") >= 0,
+						check: val.length > 0 ? val[0].split(".")[1] : ""
+					}
+				}
+				Object.freeze(data);
+				return data;
+			})()
+		},
 		/**. ``''string'' fname``: Define ou retorna o valor do atributo ``name`` do formulário ou vazio.**/
 		fname: {
 			get: function()  {return this.form ? this.node.name.trim() : "";},
@@ -4325,12 +4396,14 @@ Object.defineProperties(__Type.prototype, {
 				if (!this.form) return null;
 				const node  = this.node;
 				const value = node.value;
-				const check = __Type(value);
+				const check = new __Type(value);
+				/*-- valor finito --*/
 				if (this.fcheck === "finite") {
 					return check.finite ? check.value : "";
 				}
+				/*-- data/tempo --*/
 				if (this.fcheck === "datetime") {
-					const data  = __DateTime(value);
+					const data  = new __DateTime(value);
 					const type  = data.type;
 					const main  = data.main;
 					const types = ["date", "time", "month", "week", "datetime", "fweek", "number"];
@@ -4340,11 +4413,12 @@ Object.defineProperties(__Type.prototype, {
 						case "time":           return type === "time"     ? main.hhmmss     : "";
 						case "month":          return type === "month"    ? main.YYYYMM     : "";
 						case "week":           return type === "fweek"    ? main.YYYYWW     : "";
-						case "datetime":       return found               ? main.toString() : "";
 						case "datetime-local": return type === "datetime" ? main.toString() : "";
+						case "datetime":       return found               ? main.toString() : "";
 					}
 					return "";
 				}
+				/*-- lista de valores --*/
 				if (this.fcheck === "combo") {
 					switch(this.ftype) {
 						case "file": {
@@ -4367,9 +4441,11 @@ Object.defineProperties(__Type.prototype, {
 					}
 					return [];
 				}
+				/*-- valor boleano --*/
 				if (this.fcheck === "check") {
 					return node.checked ? value : null;
 				}
+				/*-- valor textual/cor --*/
 				if (this.fcheck === "text") {
 					const color = /^\#[0-9a-f]{6}$/i;
 					switch(this.ftype) {
@@ -4378,27 +4454,31 @@ Object.defineProperties(__Type.prototype, {
 					}
 					return value;
 				}
+				/*-- outros valores --*/
 				return null;
 			},
 			set: function(value) {
 				if (!this.form) return;
 				const node  = this.node;
-				const check = __Type(value);
+				const check = new __Type(value);
 				const mask  = this.fmask;
+				/*-- apagar valor --*/
 				if (check.null && this.fcheck !== "check") {
 					node.value = null;
 					return;
 				}
+				/*-- definir valor finito --*/
 				if (this.fcheck === "finite") {
 					if (check.finite) node.value = check.value;
 					return;
 				}
+				/*-- definir data/tempo --*/
 				if (this.fcheck === "datetime") {
-					const data  = __DateTime(value);
+					const data  = new __DateTime(value);
 					const type  = data.type;
 					const main  = data.main;
 					const names = {week: "fweek", "datetime-local": "datetime"};
-					const ftype = this.ftype in names ? names[this.ftype] :  this.ftype;
+					const ftype = this.ftype in names ? names[this.ftype] : this.ftype;
 					const types = {
 						date:  main.YYYYMMDD,
 						time:  mask ? main.hhmmss.substring(0,5) : main.hhmmss,
@@ -4414,6 +4494,7 @@ Object.defineProperties(__Type.prototype, {
 					}
 					return;
 				}
+				/*-- definir lista de valores --*/
 				if (this.fcheck === "combo") {
 					if (this.ftype === "file") return;
 					if (this.ftype === "email") {
@@ -4432,6 +4513,7 @@ Object.defineProperties(__Type.prototype, {
 					}
 					return;
 				}
+				/*-- definir valores boleanos --*/
 				if (this.fcheck === "check") {
 					if (check.boolean)
 						node.checked = check.value;
@@ -4441,6 +4523,7 @@ Object.defineProperties(__Type.prototype, {
 						node.checked = check.value;
 					return;
 				}
+				/*-- definir valores textuais/color/url --*/
 				if (this.fcheck === "text") {
 					if (this.ftype === "color") {
 						const color = /^\#[0-9a-f]{6}$/i;
@@ -4466,19 +4549,21 @@ Object.defineProperties(__Type.prototype, {
 				if (this.form) {
 					/*-- Zerando erros personalizados --*/
 					this.fvalidity = "";
-					/*-- Checando erros implementados pelo navegador --*/
+					/*-- Erros implementados pelo navegador --*/
 					if (this.node.checkValidity() === false) return true;
-					/*-- Checando erros de valores --*/
-					const value  = this.node.value !== "";
+					/*-- Erros de valores (conteúdo e valor devem ser coerentes) --*/
 					const combo  = this.fcheck === "combo";
+					const value  = this.node.value !== "";
 					const fvalue = combo ? this.fvalue.length > 0 : this.fvalue !== "";
 					if (value && !fvalue) {
-					 this.fvalidity = this.ftype+": inadequate value.";
+					 this.fvalidity = this._msg.pattern.replace("?", "");
 					 return true;
 					}
-					/*-- checando erros do dataset-wd-value --*/
-					this.node.dispatchEvent(wdReloadEvent);
-					if (this.node.checkValidity() === false) return true;
+					/*-- Erros do dataset-wd-value --*/
+					if ("wdValue" in this.node.dataset)
+						this.node.dispatchEvent(wdReloadEvent);
+					/*-- retornando se há erro encontrado --*/
+					return !this.node.checkValidity()	;
 				}
 				return false;
 			}
@@ -4511,11 +4596,15 @@ Object.defineProperties(__Type.prototype, {
 		falert	: {
 			value: function() {
 				const validity = this.fvalidity;
-				if (validity !== "" && "reportValidity" in this.node)
-					this.node.reportValidity();
+				if (validity !== "") {
+					if ("reportValidity" in this.node)
+						this.node.reportValidity();
+					else
+						__SIGNAL.signal({body: validity, title: "!"});
+				}
 				return;
 			}
-		}
+		},
 	});
 
 /*----------------------------------------------------------------------------*/
@@ -5251,6 +5340,26 @@ Object.defineProperties(__Type.prototype, {
 					if (i in x) this.node.style[i] = String(x[i])+"px";
 				return;
 			}
+		},
+		/**. ``''boolean'' mask(''string'' model)``: Retorna falso se o conteúdo do elemento não corresponder ao modelo da máscara ``model`` (ver __String.mask). Caso contrário, definirá o valor do conteúdo conforme definido pela máscara.**/
+		mask: {
+			value: function(model) {
+				/*-- se for um formulário com máscara primitiva, não avaliar --*/
+				if (this.fmask) return true;
+				/*-- se o conteúdo for vazio, não avaliar --*/
+				const val = this.node[!this.form || this.ftext ? "innerText" : "value"];
+				if (val === "") return true;
+				/*-- avaliando máscara --*/
+				const str = new __String(val);
+				const txt = str.mask(model);
+				/*-- validando formulário --*/
+				if (this.form)
+					this.fvalidity = txt === "" ? this._msg.pattern.replace("?", model) : "";
+				/*-- definindo valor da máscara --*/
+				if (txt !== "" && txt !== val)
+					this.node[!this.form || this.ftext ? "innerText" : "value"] = txt;
+				return txt !== "";
+			}
 		}
 	});
 
@@ -5646,7 +5755,7 @@ Object.defineProperties(__Type.prototype, {
 	|url|Alvo da requisição ou da leitura, não necessariamento um URL|send, read e fetch|
 	|method|[https://developer.mozilla.org/pt-BR/docs/Web/HTTP/Methods](Método da Requisição) (padrão é post)|send e fetch|
 	|type|Tipo de resposta a retornar (padrão text)|send, read e fetch|
-	|headers|Cabeçalhos a enviar (ver __DataSet|send e fetch|
+	|headers|Cabeçalhos a enviar (ver __DataSet)|send e fetch|
 	|body|Dados a enviar na requisição|send e fetch|
 	|timeout|Tempo de espera pela resposta|send, read e precariamente em fetch|**/
 	function __Request(config) {
@@ -5750,6 +5859,8 @@ Object.defineProperties(__Type.prototype, {
 					request.open(cfg.method, cfg.url, cfg.async, cfg.user, cfg.password);
 					request.responseType = cfg.responseType;
 					request.timeout      = cfg.timeout;
+
+					//FIXME o que é esse headers?
 					for (let i in cfg.headers)
 						request.setRequestHeader(i, cfg.headers[i]);
 					if ("withCredentials" in cfg)
@@ -7835,6 +7946,7 @@ Object.defineProperties(__Type.prototype, {
 				return this;
 			}
 		},
+		//FIXME files para que serve isso mesmo?
 		/**. ``''array'' files``: Retorna uma lista com os arquivos selecionados nos campos de formulário.**/
 		files: {
 			get: function() {
@@ -7848,20 +7960,26 @@ Object.defineProperties(__Type.prototype, {
 				return pack;
 			}
 		},
-		//FIXME quando chamado submit, wdOnResize e wdOnReload são chamado. Por quê?
-		/**. ``''array'' submit``: Retorna uma lista de objetos contendo o nome e o valor dos campos de formulários. Se houver algum campo com erro, retornará nulo.**/
+		/**. ``''any'' submit(''string'' method, ''boolean'' check)``: Se ``method`` for "get" ou "head", retornará uam string para uso em URL, caso contrário retornará um objeto ``FormData``. Se ``check`` for falso, o processo continuá sem interrupção mesmo quando localizado um erro no campo de formulário, caso contrário, o processo será interrompido e retornará nulo.**/
 		submit: {
-			get: function() {
-				const data = [];
+			value: function(method, check) {
+				check  = check !== false;
+				method = String(method).toLowerCase();
+				const post = method !== "get" && method !== "head";
+				const data = new __DataSet();
 				for (let i = 0; i < this._main.length; i++) {
-					let obj  = this._main[i];
-					let form = obj.submit;
-					if (form !== null) {
-						if (form.error) return null;
-						data.push({name: form.name, value: form.value});
+					let node   = this._main[i];
+					let submit = node.fsubmit;
+					if (submit !== null) {
+						data.append(submit.name, submit.value);
+						if (check && submit.error) {
+							node.falert(submit.message);
+							node.node.focus();
+							return null;
+						}
 					}
 				}
-				return data;
+				return post ? data.toFormData : data.toSearch;
 			}
 		},
 		/**. ``''self'' load(''string'' data, ''object'' options)``: Ajusta o código HTML contido em ``html`` no elemento (ver __Node.load).**/
@@ -8095,48 +8213,108 @@ Object.defineProperties(__Type.prototype, {
 /*============================================================================*/
 /**#### Atributos HTML dataset
 	###### ``**function** ''void'' data_wdSend(''node''  e, ''object'' event)``
-	Função vinculada ao atributo HTML ``data-wd-send`` cujo objetivo é efetuar requisições web (ver ``WDrequest.send``). Possui múltiplos atributos e grupos. Os atributos são os mesmos do método acrescido do ''_trigger'' que define o nome do disparador a executar ao fim do processo, que deve ter sido declarado no escopo principal (window) utilizando as palavras chaves ``var`` ou ``function``. No caso de submissão de formulário, o grupo será único e os dados serão aqueles definidos no HTML.**/
+	Função vinculada ao atributo HTML ``data-wd-send`` cujo objetivo é efetuar requisições web (ver ``WDrequest.send``). Possui múltiplos atributos e grupos, exceto quando submetido em formulário, em que o grupo será único e parte dos dados (body, headers, url e method) serão obtidos no próprio formulário. Os atributos são os mesmos do respectivo método acrescido de ''_trigger'' que define o nome do disparador a executar ao fim do processo, declarado no escopo principal de window utilizando as palavras chaves ``var`` ou ``function``. A propriedade headers deve ser na notação de objeto no formato de atributo da biblioteca. O argumento body será sempre em relação aos campos do formulário ou aqueles citados com os atributos $ e $$ - por padrão, os campos passarão por validação exceto no caso de formulário em relação ao atributo ``noValidate`` -, caso queira passar dados diferentes, informe-os na url.**/
 	function data_wdSend(e, event) {
-		event.preventDefault();
 		if (!("wdSend" in e.dataset)) return;
-		const data = new __Parser(e.dataset.wdSend).wdArray.get();
+		event.preventDefault();
+		const data  = new __Parser(e.dataset.wdSend).wdArray.get();
+		const ctype = {
+			get:  "application/x-www-form-urlencoded",
+			head: "application/x-www-form-urlencoded",
+			post: "multipart/form-data",
+			text: "text/html"
+		};
+		/*-- submetendo formulário -----------------------------------------------*/
 		if (event.type === "submit") {
-			console.clear();
-			const config  = data[0];
-			const active  = document.activeElement;
-			const type    = __Node(active).type;
-			const overlap = type === "submit" || type === "image";
-			const attr    = {method: null, action: null, enctype: null};
-			for (let name in attr) {
-				let formName = "form"+__String(name).capitalize;
-				let invalid  = __Type(e[name]).node;
-				if (overlap && active.hasAttribute(formName))
-					attr[name] = active[formName];
-				else if (!invalid)
-					attr[name] = invalid ? e.getAttribute(name) : e[name];
-				else
-					delete attr[name];
+			/*-- obter a configuração, o formulário, os campos e o botão acionador --*/
+			const config = data[0];
+			const form   = e;
+			const fields = form.elements;
+			const enter  = (function(){
+				const elem = document.activeElement;
+				const node = new __Node(__Type(elem).node ? elem : form);
+				const type = /^(image|submit)$/;
+				return elem.form !== form || !type.test(node.ftype) ? null : elem;
+			})();
+			/*-- limpar informações de elementos, se houver --*/
+			if ( "$" in config) delete config["$"];
+			if ("$$" in config) delete config["$$"];
+			/*-- obter os atributos vindos do formulário --*/
+			const detail = {method: null,	enctype: null, action: null, noValidate: null};
+			for (let i in detail) {
+				/*-- verificar se o botão acionador (j) possui o atributo --*/
+				let j = "form"+(i.replace(i[0], i[0].toUpperCase()));
+				if (enter !== null && enter.hasAttribute(j.toLowerCase())) {
+					detail[i] = enter[j].trim() !== "" ? enter[j] : null;
+				}
+				/*-- se o botão acionador não possuir o atributo, buscar do formulário (i) --*/
+				if (detail[i] === null) {
+					/*-- se não foi dado nome de atributo a algum campo de formulário (correto) --*/
+					if (!__Type(form[i]).node)
+						detail[i] = form[i];
+					/*-- se foi dado nome de atributo a algum campo de formulário (errado) --*/
+					else if (form.hasAttribute(i) && form.getAttribute(i).trim() !== "")
+						detail[i] = form.getAttribute(i).trim();
+				}
 			}
-			for (let name in attr) config[name] = attr[name];
-
-
-
-
-
-
-
-
-
-
-
-			config.body    = e.elements;
-			console.log("config: ", config);
-
-
-		} else {
-			data.forEach(function (config,i,a) {
+			/*-- Redefinindo METHOD --*/
+			const method  = detail.method !== null ? detail.method : ("method" in config ? config.method : "get");
+			config.method = String(method).toLowerCase().trim();
+			/*-- Redefinindo HEADERS --*/
+			const headers = "headers" in config;
+			config.headers = headers ? new __Parser(config.headers).wdArray.get()[0] : {};
+			/*-- Redefinindo ENCTYPE --*/
+			const enctype = detail.enctype !== null ? detail.enctype : (method in ctype ? ctype[method] : ctype.post);
+			config.headers["Content-Type"] = enctype;
+			/*-- Redefinindo BODY --*/
+ 			const check = detail.noValidate !== true;
+			const body  = WD(fields).submit(method, check);
+			if (body === null) return;
+			config.body = body;
+			/*-- Redefinindo URL --*/
+			const url  = detail.action !== null ? detail.action : ("url" in config ? config.url : "");
+			config.url = String(url);
+			if (method === "head" || method === "get") {
+				if (config.url.indexOf("?") >= 0)
+					config.url = config.url.replace("?", "?"+config.body+"&");
+				else
+					config.url = config.url+"?"+config.body;
+			}
+			console.log(config);
+			/*-- executar requisição --*/
+			WD(config).send(config._trigger);
+		}
+		/*-- executando cliques --------------------------------------------------*/
+		else {
+			for (let i = 0; i < data.length; i++) {
+				let config = data[i];
+				/*-- Redefinindo METHOD --*/
+				const method  = "method" in config ? config.method : "get";
+				config.method = String(method).toLowerCase().trim();
+				/*-- ajustando HEADERS --*/
+				const headers = "headers" in config;
+				config.headers = headers ? new __Parser(config.headers).wdArray.get()[0] : {};
+				/*-- Redefinindo ENCTYPE --*/
+				const enctype = method in ctype ? ctype[method] : ctype.post;
+				if (!("Content-Type" in config.headers))
+					config.headers["Content-Type"] = enctype;
+				/*-- Redefinindo BODY --*/
+				const query = config.$$ || config.$ || e;
+				const body  = WD(query).submit(method, true);
+				if (body === null) return;
+				config.body = body;
+				/*-- Redefinindo URL --*/
+				const url  = "url" in config ? config.url : "";
+				config.url = url;
+				if (method === "head" || method === "get") {
+					if (config.url.indexOf("?") >= 0)
+						config.url = config.url.replace("?", "?"+config.body+"&");
+					else
+						config.url = config.url+"?"+config.body;
+				}
+				/*-- executando a requisição --*/
 				WD(config).send(config._trigger);
-			});
+			}
 		}
 		return;
 	};
@@ -8145,13 +8323,15 @@ Object.defineProperties(__Type.prototype, {
 	/**###### ``**function** ''void'' data_wdLoad(''node''  e, ''object'' event)``
 	Função vinculada ao atributo HTML ``data-wd-load`` cujo objetivo é carregar arquivo HTML (ver ``WDnode.load`` e ``WD.send``). Possui múltiplos atributos e grupo único. As opções ''replace'', ''script'' e ''text'' de WDnode.load devem ser precedidos de underline para não conflitar com os argumentos de WD.send.**/
 	function data_wdLoad(e, event) {
-		event.preventDefault();
 		if (!("wdLoad" in e.dataset)) return;
+		event.preventDefault();
 		const target  = WD(e);
 		const data    = new __Parser(e.dataset.wdLoad).wdArray.get()[0];
 		const options = {replace: data._replace, script: data._script, text: data._text};
 		delete e.dataset.wdLoad;
 		data.type = options.text === true ? "text" : "html";
+		if ("headers" in data)
+			data.headers = new __Parser(data.headers).wdArray.get()[0];
 		wd(data).send(function(x) {
 			if (x.ok) target.load(x.response, options);
 		});
@@ -8162,12 +8342,14 @@ Object.defineProperties(__Type.prototype, {
 	/**###### ``**function** ''void'' data_wdRepeat(''node''  e, ''object'' event)``
 	Função vinculada ao atributo HTML ``data-wd-repeat`` cujo objetivo é clonar elementos filhos a partir de parâmentros contidos em arquivo JSON ou CSV conforme cabeçalho da origem (ver ``WDnode.repeat`` e ``WDobject.send``). Possui múltiplos atributos e grupo único. O atributo ``type`` da requisição deve ser ''json'' ou ''css''.**/
 	function data_wdRepeat(e, event) {
-		event.preventDefault();
 		if (!("wdRepeat" in e.dataset)) return;
+		event.preventDefault();
 		const target = WD(e);
 		const data   = new __Parser(e.dataset.wdRepeat).wdArray.get()[0];
 		delete e.dataset.wdRepeat;
 		data.type = "text";
+		if ("headers" in data)
+			data.headers = new __Parser(data.headers).wdArray.get()[0];
 		wd(data).send(function(x) {
 			if (x.ok) {
 				const head = new __DataSet(x.headers);
