@@ -488,9 +488,12 @@ const wd = (function() {
 	/**###### ``**const** ''object'' __LANG``
 	Controla a linguagem local da biblioteca.**/
 	const __LANG = {
+		//FIXME navigator.languages é um array
 		_re:          /^[a-z]{2,3}(\-[A-Z][a-z]{3})?(\-([A-Z]{2}|[0-9]{3}))?$/,
-		_nav:         navigator.language || navigator.browserLanguage || "",
+		_nav:         navigator.languages,
 		_user:        "",
+
+
 		_currency:    "USD",
 		_langNumbers: [],
 		_numbers:     [],
@@ -500,7 +503,6 @@ const wd = (function() {
 		_days:        [],
 		_langREDates: [],
 		_reDates:     {},
-
 		/**. ``''string'' currency``: Define ou retorna o código monetário definido pelo usuário.**/
 		get currency()  {return this._currency;},
 		set currency(x) {this._currency = String(x).trim();},
@@ -519,8 +521,8 @@ const wd = (function() {
 		},
 		/**. ``''string'' std``: Retorna a linguagem padrão "en-US".**/
 		get std() {return "en-US";},
-		/**. ``''string'' nav``: Retorna a linguagem definida pelo navegador ou vazio.**/
-		get nav() {return String(this._nav).replace(/\s+/, " ").trim();},
+		/**. ``''string'' nav``: Retorna a linguagem principal definida pelo navegador ou vazio.**/
+		get nav() {return this._nav[0];},
 		/**. ``''string'' html``: Retorna a linguagem definida no elemento ''body'' ou ''html''.**/
 		get html() {return this.node(document.body);},
 		/**. ``''string'' user``: Define ou retorna a linguagens definidas pelo usuário (separação por espaço em branco).**/
@@ -1206,9 +1208,7 @@ Object.defineProperties(__Type.prototype, {
 	Construtor para gerir conjunto de dados. O argumento opcional ``input`` será importado conforme método ``import`` que será chamado durante a construção.**/
 	function __DataSet(input) {
 		if (!(this instanceof __DataSet))	return new __DataSet(input);
-		Object.defineProperties(this, {
-			_data: {value: []}
-		});
+		Object.defineProperties(this, {_data: {value: []}});
 		this.import(input);
 	}
 
@@ -1220,7 +1220,7 @@ Object.defineProperties(__Type.prototype, {
 				const check  = __Type(input);
 				const self   = this;
 				const header = /^([a-z\-]+\:\ [^\n]+\r\n)+$/;
-				const search = /^\??([^=]+\=(\&?|[^&]+\&?))+$/;
+				const search = /^([^?]+\?|\?)?([^=]+\=(\&?|[^&]+\&?))+$/;
 				/*-- string header => name: value\r\n --*/
 				if (check.nonempty && header.test(input)) {
 					const data = input.trim().split("\r\n");
@@ -1233,7 +1233,8 @@ Object.defineProperties(__Type.prototype, {
 				}
 				/*-- string search => ?name=value& --*/
 				else if (check.nonempty && search.test(input)) {
-					const data = input.replace(/^\?/, "").trim().split("&");
+					const url  = input.split("?");
+					const data = url[url.length - 1].trim().split("&");
 					for (let i = 0; i < data.length; i++) {
 						let part  = data[i].split("=");
 						let name  = part[0].trim().replace(/\[\]$/, "");
@@ -1258,7 +1259,7 @@ Object.defineProperties(__Type.prototype, {
 					for (const data of input.entries()) {this.append(data[0], data[1]);}
 				}
 				/*-- instância de __DataSet --*/
-				else if (input instanceof __DataSet) {console.log("LOUCU");
+				else if (input instanceof __DataSet) {
 					input.forEach(function (value,name,data) {self.append(name, value);});
 				}
 				/*-- JS Array --*/
@@ -1368,6 +1369,21 @@ Object.defineProperties(__Type.prototype, {
 				return data;
 			}
 		},
+		/**. ``''object'' toObjectHeaders``: Converte o conjunto de dados em um objeto organizado em strings com valores separador por ", ".**/
+		toObjectHeaders: {
+			get: function() {
+				const data = {};
+				const src  = this.toListObject;
+				for (let i in src) {
+					let name = i.toLowerCase();
+					if (name in data)
+						data[name] = [data[name], src[i].join(", ")].join(", ");
+					else
+						data[name] = src[i].join(", ")
+				}
+				return data;
+			}
+		},
 		/**. ``''object'' toHeaders``: Converte o conjunto de dados em um objeto Headers. Se a ferramenta não estiver definida, retornará o resultado da propriedade ``toObjectHeaders``.**/
 		toHeaders: {
 			get: function() {
@@ -1387,15 +1403,6 @@ Object.defineProperties(__Type.prototype, {
 				const src  = this.toObjectHeaders;
 				for (let i in src) data.push(i + ": " + src[i] + "\r\n");
 				return data.join("");
-			}
-		},
-		/**. ``''object'' toObjectHeaders``: Converte o conjunto de dados em um objeto organizado em strings com valores separador por ", ".**/
-		toObjectHeaders: {
-			get: function() {
-				const data = {};
-				const src  = this.toListObject;
-				for (let i in src) data[i] = src[i].join(", ");
-				return data;
 			}
 		},
 		/**. ``''object'' toFormData``: Converte o conjunto de dados em um objeto FormData. Se a ferramenta não estiver definida, retornará o resultado da propriedade ``toSearch``.**/
@@ -1498,6 +1505,32 @@ Object.defineProperties(__Type.prototype, {
 		/**. ``''string'' toString()``: Retorna o mesmo produto da propriedade ``toStringHeaders``.**/
 		toString: {
 			value: function() {return this.toStringHeaders;}
+		},
+		/**. ``''object'' toSubmit(''any'' action, ''string'' method)``: O argumento ``action`` é a URL (string ou objeto URL) e o argumento ``method`` é o método da requisição. O método retorna um objeto com as seguintes propriedades para fins de requisição XMLHttpRequest, devendo inicialmente povoar o objeto com os valores de formulário e depois chamar o método:
+		|Nome|Descrição|
+		|url|URL a ser utilizada na requisição|
+		|ctype|O content-type a ser informado no cabeçalho, dependendo do método|
+		|body|O corpo da requisição, a depender do método|**/
+		toSubmit: {
+			value: function(action, method) {
+				/*-- https://developer.mozilla.org/pt-BR/docs/Web/HTTP/Methods --*/
+				/*-- https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form --*/
+				method        = String(method).toLowerCase().trim();
+				const hasBody = {get: 0, head: 0, post: 1, put: 1, delete: 1, connect: 1, options: 0, trace: 0, patch: 1};
+				const check   = new __Type(action);
+				const ctype   = {post: "multipart/form-data", get: "application/x-www-form-urlencoded", text: "text/plain"};
+				const data    = {
+					url:     check.instanceOf("URL") ? action.href : (check.nonempty ? action : ""),
+					ctype: hasBody[method] === 1 ? ctype.post : ctype.get,
+					body:    hasBody[method] === 1 ? this.toFormData : null
+				};
+				if (hasBody[method] !== 1) {
+					const dataset = new this.constructor(data.url);
+					dataset.import(this);
+					data.url = data.url.split("?")[0]+"?"+dataset.toSearch;
+				}
+				return data;
+			}
 		},
 	});
 
@@ -5859,8 +5892,6 @@ Object.defineProperties(__Type.prototype, {
 					request.open(cfg.method, cfg.url, cfg.async, cfg.user, cfg.password);
 					request.responseType = cfg.responseType;
 					request.timeout      = cfg.timeout;
-
-					//FIXME o que é esse headers?
 					for (let i in cfg.headers)
 						request.setRequestHeader(i, cfg.headers[i]);
 					if ("withCredentials" in cfg)
@@ -7960,12 +7991,9 @@ Object.defineProperties(__Type.prototype, {
 				return pack;
 			}
 		},
-		/**. ``''any'' submit(''string'' method, ''boolean'' check)``: Se ``method`` for "get" ou "head", retornará uam string para uso em URL, caso contrário retornará um objeto ``FormData``. Se ``check`` for falso, o processo continuá sem interrupção mesmo quando localizado um erro no campo de formulário, caso contrário, o processo será interrompido e retornará nulo.**/
+		/**. ``''object'' submit(''string'' method, ''boolean'' check)``: Retornará o mesmo resultado que o método __DataSet.toSubmit, exceto se o processo for interrompido por alguma restrição no campo de formulário, retornando nulo. Para não verificar restrições, o argumento ``check`` deverá ser falso.**/
 		submit: {
-			value: function(method, check) {
-				check  = check !== false;
-				method = String(method).toLowerCase();
-				const post = method !== "get" && method !== "head";
+			value: function(url, method, check) {
 				const data = new __DataSet();
 				for (let i = 0; i < this._main.length; i++) {
 					let node   = this._main[i];
@@ -7979,7 +8007,7 @@ Object.defineProperties(__Type.prototype, {
 						}
 					}
 				}
-				return post ? data.toFormData : data.toSearch;
+				return data.toSubmit(url, method);
 			}
 		},
 		/**. ``''self'' load(''string'' data, ''object'' options)``: Ajusta o código HTML contido em ``html`` no elemento (ver __Node.load).**/
@@ -8214,155 +8242,157 @@ Object.defineProperties(__Type.prototype, {
 /**#### Atributos HTML dataset
 	###### ``**function** ''void'' data_wdSend(''node''  e, ''object'' event)``
 	Função vinculada ao atributo HTML ``data-wd-send`` cujo objetivo é efetuar requisições web (ver ``WDrequest.send``). Possui múltiplos atributos e grupos, exceto quando submetido em formulário, em que o grupo será único e parte dos dados (body, headers, url e method) serão obtidos no próprio formulário. Os atributos são os mesmos do respectivo método acrescido de ''_trigger'' que define o nome do disparador a executar ao fim do processo, declarado no escopo principal de window utilizando as palavras chaves ``var`` ou ``function``. A propriedade headers deve ser na notação de objeto no formato de atributo da biblioteca. O argumento body será sempre em relação aos campos do formulário ou aqueles citados com os atributos $ e $$ - por padrão, os campos passarão por validação exceto no caso de formulário em relação ao atributo ``noValidate`` -, caso queira passar dados diferentes, informe-os na url.**/
-	function data_wdSend(e, event) {
-		if (!("wdSend" in e.dataset)) return;
-		event.preventDefault();
-		const data  = new __Parser(e.dataset.wdSend).wdArray.get();
-		const ctype = {
-			get:  "application/x-www-form-urlencoded",
-			head: "application/x-www-form-urlencoded",
-			post: "multipart/form-data",
-			text: "text/html"
-		};
-		/*-- submetendo formulário -----------------------------------------------*/
-		if (event.type === "submit") {
-			/*-- obter a configuração, o formulário, os campos e o botão acionador --*/
-			const config = data[0];
-			const form   = e;
-			const fields = form.elements;
-			const enter  = (function(){
-				const elem = document.activeElement;
-				const node = new __Node(__Type(elem).node ? elem : form);
-				const type = /^(image|submit)$/;
-				return elem.form !== form || !type.test(node.ftype) ? null : elem;
-			})();
-			/*-- limpar informações de elementos, se houver --*/
-			if ( "$" in config) delete config["$"];
-			if ("$$" in config) delete config["$$"];
-			/*-- obter os atributos vindos do formulário --*/
-			const detail = {method: null,	enctype: null, action: null, noValidate: null};
-			for (let i in detail) {
-				/*-- verificar se o botão acionador (j) possui o atributo --*/
-				let j = "form"+(i.replace(i[0], i[0].toUpperCase()));
-				if (enter !== null && enter.hasAttribute(j.toLowerCase())) {
-					detail[i] = enter[j].trim() !== "" ? enter[j] : null;
-				}
-				/*-- se o botão acionador não possuir o atributo, buscar do formulário (i) --*/
-				if (detail[i] === null) {
-					/*-- se não foi dado nome de atributo a algum campo de formulário (correto) --*/
-					if (!__Type(form[i]).node)
-						detail[i] = form[i];
-					/*-- se foi dado nome de atributo a algum campo de formulário (errado) --*/
-					else if (form.hasAttribute(i) && form.getAttribute(i).trim() !== "")
-						detail[i] = form.getAttribute(i).trim();
-				}
-			}
-			/*-- Redefinindo METHOD --*/
-			const method  = detail.method !== null ? detail.method : ("method" in config ? config.method : "get");
-			config.method = String(method).toLowerCase().trim();
-			/*-- Redefinindo HEADERS --*/
-			const headers = "headers" in config;
-			config.headers = headers ? new __Parser(config.headers).wdArray.get()[0] : {};
-			/*-- Redefinindo ENCTYPE --*/
-			const enctype = detail.enctype !== null ? detail.enctype : (method in ctype ? ctype[method] : ctype.post);
-			config.headers["Content-Type"] = enctype;
-			/*-- Redefinindo BODY --*/
- 			const check = detail.noValidate !== true;
-			const body  = WD(fields).submit(method, check);
-			if (body === null) return;
-			config.body = body;
-			/*-- Redefinindo URL --*/
-			const url  = detail.action !== null ? detail.action : ("url" in config ? config.url : "");
-			config.url = String(url);
-			if (method === "head" || method === "get") {
-				if (config.url.indexOf("?") >= 0)
-					config.url = config.url.replace("?", "?"+config.body+"&");
-				else
-					config.url = config.url+"?"+config.body;
-			}
-			console.log(config);
-			/*-- executar requisição --*/
-			WD(config).send(config._trigger);
-		}
-		/*-- executando cliques --------------------------------------------------*/
-		else {
-			for (let i = 0; i < data.length; i++) {
-				let config = data[i];
-				/*-- Redefinindo METHOD --*/
-				const method  = "method" in config ? config.method : "get";
-				config.method = String(method).toLowerCase().trim();
-				/*-- ajustando HEADERS --*/
-				const headers = "headers" in config;
-				config.headers = headers ? new __Parser(config.headers).wdArray.get()[0] : {};
-				/*-- Redefinindo ENCTYPE --*/
-				const enctype = method in ctype ? ctype[method] : ctype.post;
-				if (!("Content-Type" in config.headers))
-					config.headers["Content-Type"] = enctype;
-				/*-- Redefinindo BODY --*/
-				const query = config.$$ || config.$ || e;
-				const body  = WD(query).submit(method, true);
-				if (body === null) return;
-				config.body = body;
-				/*-- Redefinindo URL --*/
-				const url  = "url" in config ? config.url : "";
-				config.url = url;
-				if (method === "head" || method === "get") {
-					if (config.url.indexOf("?") >= 0)
-						config.url = config.url.replace("?", "?"+config.body+"&");
-					else
-						config.url = config.url+"?"+config.body;
-				}
-				/*-- executando a requisição --*/
-				WD(config).send(config._trigger);
-			}
-		}
-		return;
-	};
 
-/*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wdLoad(''node''  e, ''object'' event)``
+	/**FIXME ###### ``**function** ''void'' data_wdLoad(''node''  e, ''object'' event)``
 	Função vinculada ao atributo HTML ``data-wd-load`` cujo objetivo é carregar arquivo HTML (ver ``WDnode.load`` e ``WD.send``). Possui múltiplos atributos e grupo único. As opções ''replace'', ''script'' e ''text'' de WDnode.load devem ser precedidos de underline para não conflitar com os argumentos de WD.send.**/
-	function data_wdLoad(e, event) {
-		if (!("wdLoad" in e.dataset)) return;
-		event.preventDefault();
-		const target  = WD(e);
-		const data    = new __Parser(e.dataset.wdLoad).wdArray.get()[0];
-		const options = {replace: data._replace, script: data._script, text: data._text};
-		delete e.dataset.wdLoad;
-		data.type = options.text === true ? "text" : "html";
-		if ("headers" in data)
-			data.headers = new __Parser(data.headers).wdArray.get()[0];
-		wd(data).send(function(x) {
-			if (x.ok) target.load(x.response, options);
-		});
-		return;
-	};
 
-/*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wdRepeat(''node''  e, ''object'' event)``
-	Função vinculada ao atributo HTML ``data-wd-repeat`` cujo objetivo é clonar elementos filhos a partir de parâmentros contidos em arquivo JSON ou CSV conforme cabeçalho da origem (ver ``WDnode.repeat`` e ``WDobject.send``). Possui múltiplos atributos e grupo único. O atributo ``type`` da requisição deve ser ''json'' ou ''css''.**/
-	function data_wdRepeat(e, event) {
-		if (!("wdRepeat" in e.dataset)) return;
-		event.preventDefault();
-		const target = WD(e);
-		const data   = new __Parser(e.dataset.wdRepeat).wdArray.get()[0];
-		delete e.dataset.wdRepeat;
-		data.type = "text";
-		if ("headers" in data)
-			data.headers = new __Parser(data.headers).wdArray.get()[0];
-		wd(data).send(function(x) {
-			if (x.ok) {
-				const head = new __DataSet(x.headers);
-				const mime = __MIME[head.getAll("content-type")[0]];
-				if (mime === "json" || mime === "csv") {
-					const parser = new __Parser(x.response);
-					const list   = mime === "json" ? parser.stringJSON : parser.csvTable.tableValues.matrixList;
-					target.repeat(list.get());
-				} else {
-					target.repeat([]);
+	/**FIXME ###### ``**function** ''void'' data_wdRepeat(''node''  e, ''object'' event)``
+	Função vinculada ao atributo HTML ``data-wd-repeat`` cujo objetivo é clonar elementos filhos a partir de parâmentros contidos em arquivo JSON ou CSV conforme cabeçalho da fonte (ver ``WDnode.repeat`` e ``WDobject.send``). Possui múltiplos atributos e grupo único.**/
+
+
+	function data_wdSend(e, event) {
+		/*-- Variáveis gerais ----------------------------------------------------*/
+		const triggers = [];
+		const events   = [
+			{event: "submit",    name: "wdSend",   config: null},
+			{event: "click",     name: "wdSend",   config: null},
+			{event: "load",      name: "wdRepeat", config: null},
+			{event: "wdreload",  name: "wdRepeat", config: null},
+			{event: "wddataset", name: "wdRepeat", config: null},
+			{event: "load",      name: "wdLoad",   config: null},
+			{event: "wdreload",  name: "wdLoad",   config: null},
+			{event: "wddataset", name: "wdLoad",   config: null}
+		];
+		/*-- Validar: Eventos x Disparos -----------------------------------------*/
+		for (let i = 0; i < events.length; i++) {
+			let value = events[i];
+			if (value.event === event.type && value.name in e.dataset) {
+				let dataset = e.dataset[value.name];
+				let parser  = new __Parser(dataset);
+				let config  = parser.wdArray.get();
+				if (config !== null && config.length > 0) {
+					events[i].config = config;
+					triggers.push(events[i]);
 				}
 			}
-		});
+		}
+		/*-- Escapando do comportamento padrão -----------------------------------*/
+		if (triggers.length > 0)
+			event.preventDefault();
+		/*-- Analisar disparos ---------------------------------------------------*/
+		for (let i = 0; i < triggers.length; i++) {
+			let event    = triggers[i].event;
+			let name     = triggers[i].name;
+			let config   = triggers[i].config;
+			let validate = true;
+
+			/*-- Adequando cabeçalhos --*/
+			for (let j = 0; j < config.length; j++) {
+				let value  = "headers" in config[j] ? config[j].headers : "";
+				let parser = new __Parser(value);
+				config[j].headers = parser.wdArray.get()[0];
+			}
+
+			/*-- Análise do disparo ------------------------------------------------*/
+			/*.. DATA-WD-SEND ON SUBMIT ............................................*/
+			if (name === "wdSend" && event === "submit") {
+				config = config[0];
+				/*-- Elementos do formulário --*/
+				let form  = e;
+				let query = form.elements;
+				let html  = {method: null,	enctype: null, action: null, noValidate: null};
+				let enter = (function(){
+					const elem = document.activeElement;
+					const node = new __Node(__Type(elem).node ? elem : form);
+					const type = /^(image|submit)$/;
+					return elem.form !== form || !type.test(node.ftype) ? null : elem;
+				})();
+
+				/*-- Informações do formulário: button ou form --*/
+				for (let j in html) {
+					/*-- encontrar atributo no elemento acionador --*/
+					if (enter !== null) {
+						const camel = "form"+(j.replace(j[0], j[0].toUpperCase()));
+						const lower = camel.toLowerCase();
+						const value = enter.hasAttribute(lower) ? enter[camel].trim() : "";
+						html[j] = value !== "" ? value : null;
+					}
+					/*-- se não localizado, buscar no formulário --*/
+					if (html[j] === null) {
+						const valid = !__Type(form[j]).node;
+						const value = form.hasAttribute(j) ? form.getAttribute(j).trim() : "";
+						html[j] = valid ? form[j] : (value !== "" ? value : null);
+					}
+				}
+				/*-- Redefinindo atributos de configuração --*/
+				if ("$" in config) delete config["$"];
+				if (html.method  !== null) config.method = html.method;
+				if (html.action  !== null) config.url = html.action;
+				if (html.enctype !== null) config.headers["content-type"] = html.enctype;
+				config["$$"] = query;
+				/*-- Reconfigurar dados iniciais --*/
+				validate = html.noValidate !== true;
+				config   = [config];
+			}
+			/*.. DATA-WD-SEND ON CLICK .............................................*/
+			else if (name === "wdSend" && event === "click") {
+				/*-- fazer nada --*/
+			}
+			/*.. DATA-WD-LOAD ......................................................*/
+			else if (name === "wdLoad" && ["load", "wdreload", "wddataset"].indexOf(event) >= 0) {
+				config          = config[0];
+				let options     = {replace: config._replace, script: config._script, text: config._text};
+				config.type     = options.text === true ? "text" : "html";
+				config._trigger = function(x) {
+					if (x.ok) WD(e).load(x.response, options);
+				}
+				/*-- apagando informações desnecessárias --*/
+				delete e.dataset.wdLoad;
+				for (let i in options)
+					if (i in config) delete config[i];
+				/*-- Reconfigurar dados iniciais --*/
+				config = [config];
+			}
+			/*.. DATA-WD-REPEAT ....................................................*/
+			else if (name === "wdRepeat" && ["load", "wdreload", "wddataset"].indexOf(event) >= 0) {
+				config          = config[0];
+				config.type     = "text";
+				config._trigger = function(x) {
+
+					if (x.ok)  {
+						const head = new __DataSet(x.headers);
+						const mime = __MIME[head.getAll("content-type")[0]];
+						if (mime === "json" || mime === "csv") {
+							const parser = new __Parser(x.response);
+							const list   = mime === "json" ? parser.stringJSON : parser.csvTable.tableValues.matrixList;
+							WD(e).repeat(list.get());
+						} else {
+							WD(e).repeat([]);
+						}
+					}
+				}
+				/*-- apagando informações desnecessárias --*/
+				delete e.dataset.wdRepeat;
+				/*-- Reconfigurar dados iniciais --*/
+				config = [config];
+			}
+
+			/*-- Executar parâmetros -----------------------------------------------*/
+			for (let j = 0; j < config.length; j++) {
+				let data   = config[i];
+				let query  = data.$$ || data.$ || e;
+				let submit = WD(query).submit(data.url, data.method, validate);
+				if ("$"  in data) delete data["$"];
+				if ("$$" in data) delete data["$$"];
+				if (submit !== null) {
+					data.url  = submit.url;
+					data.body = submit.body;
+					if (!("content-type" in data.headers))
+						data.headers["content-type"] = submit.ctype;
+					WD(data).send(data._trigger);
+				}
+			}
+		}
 		return;
 	};
 
@@ -9185,8 +9215,8 @@ Object.defineProperties(__Type.prototype, {
 		if (__UNDERMAINTENANCE) console.log({wdOnReload: ev, target: ev.target});
 		const root = __Type(ev.target).node ? ev.target : document;
 		const data = [
-			{selector: "[data-wd-repeat]", method: data_wdRepeat},
-			{selector: "[data-wd-load]",   method: data_wdLoad},
+			{selector: "[data-wd-repeat]", method: data_wdSend},
+			{selector: "[data-wd-load]",   method: data_wdSend},
 			{selector: "[data-wd-value]",  method: data_wdValue},
 			{selector: "[data-wd-click]",  method: data_wdClick},
 			{selector: "[data-wd-chart]",  method: data_wdChart},
@@ -9265,8 +9295,8 @@ Object.defineProperties(__Type.prototype, {
 		if (!("wdDatasetEvent" in ev.target.dataset)) return;
 		const data   = ev.target.dataset.wdDatasetEvent.split(",");
 		const events = {
-			wdLoad:   data_wdLoad,
-			wdRepeat: data_wdRepeat,
+			wdLoad:   data_wdSend,
+			wdRepeat: data_wdSend,
 			wdFilter: data_wdFilter,
 			wdValue:  data_wdValue,
 			wdClick:  data_wdClick,
