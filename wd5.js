@@ -7991,16 +7991,18 @@ Object.defineProperties(__Type.prototype, {
 				return pack;
 			}
 		},
-		/**. ``''object'' submit(''string'' method, ''boolean'' check)``: Retornará o mesmo resultado que o método __DataSet.toSubmit, exceto se o processo for interrompido por alguma restrição no campo de formulário, retornando nulo. Para não verificar restrições, o argumento ``check`` deverá ser falso.**/
+		/**. ``''object'' submit(''string'' method, ''boolean'' ignore)``: Retornará o mesmo resultado que o método __DataSet.toSubmit, exceto se o processo for interrompido por alguma restrição no campo de formulário, retornando nulo. Para não verificar restrições, o argumento ``ignore`` deverá ser verdadeiro.**/
 		submit: {
-			value: function(url, method, check) {
+			value: function(url, method, ignore) {
+				ignore = ignore === true;
 				const data = new __DataSet();
+
 				for (let i = 0; i < this._main.length; i++) {
 					let node   = this._main[i];
 					let submit = node.fsubmit;
 					if (submit !== null) {
 						data.append(submit.name, submit.value);
-						if (check && submit.error) {
+						if (!ignore && submit.error) {
 							node.falert(submit.message);
 							node.node.focus();
 							return null;
@@ -8240,28 +8242,47 @@ Object.defineProperties(__Type.prototype, {
 
 /*============================================================================*/
 /**#### Atributos HTML dataset
-	###### ``**function** ''void'' data_wdSend(''node''  e, ''object'' event)``
-	Função vinculada ao atributo HTML ``data-wd-send`` cujo objetivo é efetuar requisições web (ver ``WDrequest.send``). Possui múltiplos atributos e grupos, exceto quando submetido em formulário, em que o grupo será único e parte dos dados (body, headers, url e method) serão obtidos no próprio formulário. Os atributos são os mesmos do respectivo método acrescido de ''_trigger'' que define o nome do disparador a executar ao fim do processo, declarado no escopo principal de window utilizando as palavras chaves ``var`` ou ``function``. A propriedade headers deve ser na notação de objeto no formato de atributo da biblioteca. O argumento body será sempre em relação aos campos do formulário ou aqueles citados com os atributos $ e $$ - por padrão, os campos passarão por validação exceto no caso de formulário em relação ao atributo ``noValidate`` -, caso queira passar dados diferentes, informe-os na url.**/
-
-	/**FIXME ###### ``**function** ''void'' data_wdLoad(''node''  e, ''object'' event)``
-	Função vinculada ao atributo HTML ``data-wd-load`` cujo objetivo é carregar arquivo HTML (ver ``WDnode.load`` e ``WD.send``). Possui múltiplos atributos e grupo único. As opções ''replace'', ''script'' e ''text'' de WDnode.load devem ser precedidos de underline para não conflitar com os argumentos de WD.send.**/
-
-	/**FIXME ###### ``**function** ''void'' data_wdRepeat(''node''  e, ''object'' event)``
-	Função vinculada ao atributo HTML ``data-wd-repeat`` cujo objetivo é clonar elementos filhos a partir de parâmentros contidos em arquivo JSON ou CSV conforme cabeçalho da fonte (ver ``WDnode.repeat`` e ``WDobject.send``). Possui múltiplos atributos e grupo único.**/
-
-
-	function data_wdSend(e, event) {
+	###### ``**function** ''void'' data_wd_request(''node''  e, ''object'' event)``
+	Função com o propósito de atender os atributos HTML ''data'' que podem necessitar de requisições web conforme abaixo:
+	|Nome|Evento|Atributos|Grupos|
+	|data-wd-send|submit|Múltiplo|1|
+	|data-wd-send|click|Múltiplo|Múltiplo|
+	|data-wd-repeat|load, wdreload, wddataset|Múltiplo|1|
+	|data-wd-load|load, wdreload, wddataset|Múltiplo|2|
+	O atributo ''data-wd-send'' está atrelado ao método ''__Request.send'' e possui as seguintes propriedades:
+	|Nome|Tipo|Descrição|
+	|url|string|Ver __Request|
+	|method|string|Ver __Request|
+	|type|string|Ver __Request|
+	|headers|object|Ver __Request|
+	|$ ou $$|string|CSS Selector dos campos de formulário a serem enviados em ''body'' de __Request|
+	|timeout|integer|Ver __Request|
+	|async|boolean|Ver __Request.send|
+	|user|string|Ver __Request.send|
+	|password|string|Ver __Request.send|
+	|withCredentials|boolean|Ver __Request.send|
+	|overrideMimeType|string|Ver __Request.send|
+	|noValidate|boolean|Se verdadeiro, a requisição não fará a validação primária dos campos deformulário|
+	|trigger|function|Disparador a ser chamado ao fim da requisição definido no escopo de ''window'' com ''var'' ou ''function''|
+	As propriedades ''url'', ''method'', ''$'' ou ''$$'', content-type'' de ''headers'' e ''noValidate'' em eventos ''submit'' serão definidos pelo formulário, se existentes.
+	O atributo ''data-wd-repeat'' está atrelado ao método ''__Node.repeat'' e possui as mesmas propriedades de ''data-wd-send'', exceto ''type'' e ''trigger'', que não podem ser definidos previamente. O arquivo definido em ''url'' deve conter o cabeçalho ''content-type'' como ''text/csv'' ou  ''application/json''.
+	O atributo ''data-wd-load'' está atrelado ao método ''__Node.load'' e possui as propriedades de ''data-wd-send'', exceto ''type'', que será definido pelo atributo ''text'' do segundo grupo, e ''trigger'', que não pode ser definido previamente. O segundo grupo possui as seguintes propriedades:
+	|Nome|Tipo|Descrição|
+	|replace|boolean|Ver __Node.load|
+	|script|boolean|Ver __Node.load|
+	|text|boolean|Ver __Node.load e, se verdadeiro, ''type'' assumirá "text", caso contrári, "html"|**/
+	function data_wd_request(e, event) {
 		/*-- Variáveis gerais ----------------------------------------------------*/
 		const triggers = [];
 		const events   = [
-			{event: "submit",    name: "wdSend",   config: null},
-			{event: "click",     name: "wdSend",   config: null},
-			{event: "load",      name: "wdRepeat", config: null},
-			{event: "wdreload",  name: "wdRepeat", config: null},
-			{event: "wddataset", name: "wdRepeat", config: null},
-			{event: "load",      name: "wdLoad",   config: null},
-			{event: "wdreload",  name: "wdLoad",   config: null},
-			{event: "wddataset", name: "wdLoad",   config: null}
+			{event: "submit",    name: "wdSend",   data: null},
+			{event: "click",     name: "wdSend",   data: null},
+			{event: "load",      name: "wdRepeat", data: null},
+			{event: "wdreload",  name: "wdRepeat", data: null},
+			{event: "wddataset", name: "wdRepeat", data: null},
+			{event: "load",      name: "wdLoad",   data: null},
+			{event: "wdreload",  name: "wdLoad",   data: null},
+			{event: "wddataset", name: "wdLoad",   data: null}
 		];
 		/*-- Validar: Eventos x Disparos -----------------------------------------*/
 		for (let i = 0; i < events.length; i++) {
@@ -8269,9 +8290,9 @@ Object.defineProperties(__Type.prototype, {
 			if (value.event === event.type && value.name in e.dataset) {
 				let dataset = e.dataset[value.name];
 				let parser  = new __Parser(dataset);
-				let config  = parser.wdArray.get();
-				if (config !== null && config.length > 0) {
-					events[i].config = config;
+				let data    = parser.wdArray.get();
+				if (data !== null && data.length > 0) {
+					events[i].data = data;
 					triggers.push(events[i]);
 				}
 			}
@@ -8281,33 +8302,35 @@ Object.defineProperties(__Type.prototype, {
 			event.preventDefault();
 		/*-- Analisar disparos ---------------------------------------------------*/
 		for (let i = 0; i < triggers.length; i++) {
-			let event    = triggers[i].event;
-			let name     = triggers[i].name;
-			let config   = triggers[i].config;
-			let validate = true;
+			/*-- Variáveis direcionadoras --*/
+			let event = triggers[i].event;
+			let name  = triggers[i].name;
+			let data  = triggers[i].data;
 
 			/*-- Adequando cabeçalhos --*/
-			for (let j = 0; j < config.length; j++) {
-				let value  = "headers" in config[j] ? config[j].headers : "";
-				let parser = new __Parser(value);
-				config[j].headers = parser.wdArray.get()[0];
+			for (let j = 0; j < data.length; j++) {
+				let value  = "headers" in data[j] ? data[j].headers : {};
+				if (typeof value === "string") {
+					let parser = new __Parser(value);
+					data[j].headers = parser.wdArray.get()[0];
+				} else {
+					data[j].headers = value;
+				}
 			}
 
-			/*-- Análise do disparo ------------------------------------------------*/
 			/*.. DATA-WD-SEND ON SUBMIT ............................................*/
 			if (name === "wdSend" && event === "submit") {
-				config = config[0];
+				let config = data[0];
 				/*-- Elementos do formulário --*/
-				let form  = e;
-				let query = form.elements;
-				let html  = {method: null,	enctype: null, action: null, noValidate: null};
-				let enter = (function(){
+				let form   = e;
+				let query  = form.elements;
+				let html   = {method: null,	enctype: null, action: null, noValidate: null};
+				let enter  = (function(){
 					const elem = document.activeElement;
 					const node = new __Node(__Type(elem).node ? elem : form);
 					const type = /^(image|submit)$/;
 					return elem.form !== form || !type.test(node.ftype) ? null : elem;
 				})();
-
 				/*-- Informações do formulário: button ou form --*/
 				for (let j in html) {
 					/*-- encontrar atributo no elemento acionador --*/
@@ -8325,40 +8348,37 @@ Object.defineProperties(__Type.prototype, {
 					}
 				}
 				/*-- Redefinindo atributos de configuração --*/
-				if ("$" in config) delete config["$"];
-				if (html.method  !== null) config.method = html.method;
-				if (html.action  !== null) config.url = html.action;
-				if (html.enctype !== null) config.headers["content-type"] = html.enctype;
+				if (html.method     !== null) config.method = html.method;
+				if (html.action     !== null) config.url = html.action;
+				if (html.enctype    !== null) config.headers["content-type"] = html.enctype;
+				if (html.noValidate !== null) config.noValidate = html.noValidate;
 				config["$$"] = query;
+				if ("$" in config) delete config["$"];
 				/*-- Reconfigurar dados iniciais --*/
-				validate = html.noValidate !== true;
-				config   = [config];
+				data = [config];
 			}
 			/*.. DATA-WD-SEND ON CLICK .............................................*/
 			else if (name === "wdSend" && event === "click") {
 				/*-- fazer nada --*/
 			}
 			/*.. DATA-WD-LOAD ......................................................*/
-			else if (name === "wdLoad" && ["load", "wdreload", "wddataset"].indexOf(event) >= 0) {
-				config          = config[0];
-				let options     = {replace: config._replace, script: config._script, text: config._text};
-				config.type     = options.text === true ? "text" : "html";
-				config._trigger = function(x) {
+			else if (name === "wdLoad") {
+				let config     = data[0];
+				let options    = data.length > 1 ? data[1] : {};
+				config.type    = options.text === true ? "text" : "html";
+				config.trigger = function(x) {
 					if (x.ok) WD(e).load(x.response, options);
 				}
-				/*-- apagando informações desnecessárias --*/
+				/*-- apagando dados desnecessários --*/
 				delete e.dataset.wdLoad;
-				for (let i in options)
-					if (i in config) delete config[i];
 				/*-- Reconfigurar dados iniciais --*/
-				config = [config];
+				data = [config];
 			}
 			/*.. DATA-WD-REPEAT ....................................................*/
-			else if (name === "wdRepeat" && ["load", "wdreload", "wddataset"].indexOf(event) >= 0) {
-				config          = config[0];
-				config.type     = "text";
-				config._trigger = function(x) {
-
+			else if (name === "wdRepeat") {
+				let config     = data[0];
+				config.type    = "text";
+				config.trigger = function(x) {
 					if (x.ok)  {
 						const head = new __DataSet(x.headers);
 						const mime = __MIME[head.getAll("content-type")[0]];
@@ -8371,25 +8391,32 @@ Object.defineProperties(__Type.prototype, {
 						}
 					}
 				}
-				/*-- apagando informações desnecessárias --*/
+				/*-- apagando dados desnecessários --*/
 				delete e.dataset.wdRepeat;
 				/*-- Reconfigurar dados iniciais --*/
-				config = [config];
+				data = [config];
 			}
 
+			/*.. DATA-WD-CHART .....................................................*/
+			else if (name === "wdChart") {}
+
 			/*-- Executar parâmetros -----------------------------------------------*/
-			for (let j = 0; j < config.length; j++) {
-				let data   = config[i];
-				let query  = data.$$ || data.$ || e;
-				let submit = WD(query).submit(data.url, data.method, validate);
-				if ("$"  in data) delete data["$"];
-				if ("$$" in data) delete data["$$"];
+			for (let j = 0; j < data.length; j++) {
+				let config  = data[i];
+				let query   = config["$$"] || config["$"] || document.body;
+				let submit  = WD(query).submit(config.url, config.method, config.noValidate);
+				let handler = config.trigger;
+				let kill    = ["$", "$$", "trigger"];
+				/*-- apagar dados desnecessários --*/
+				for (let k = 0; k < kill.length; k++)
+					if (kill[k] in config) delete config[kill[k]];
+				/*-- Efetuar requisição se não encontrados erros --*/
 				if (submit !== null) {
-					data.url  = submit.url;
-					data.body = submit.body;
-					if (!("content-type" in data.headers))
-						data.headers["content-type"] = submit.ctype;
-					WD(data).send(data._trigger);
+					config.url  = submit.url;
+					config.body = submit.body;
+					if (!("content-type" in config.headers))
+						config.headers["content-type"] = submit.ctype;
+					WD(config).send(handler);
 				}
 			}
 		}
@@ -9215,8 +9242,8 @@ Object.defineProperties(__Type.prototype, {
 		if (__UNDERMAINTENANCE) console.log({wdOnReload: ev, target: ev.target});
 		const root = __Type(ev.target).node ? ev.target : document;
 		const data = [
-			{selector: "[data-wd-repeat]", method: data_wdSend},
-			{selector: "[data-wd-load]",   method: data_wdSend},
+			{selector: "[data-wd-repeat]", method: data_wd_request},
+			{selector: "[data-wd-load]",   method: data_wd_request},
 			{selector: "[data-wd-value]",  method: data_wdValue},
 			{selector: "[data-wd-click]",  method: data_wdClick},
 			{selector: "[data-wd-chart]",  method: data_wdChart},
@@ -9295,8 +9322,8 @@ Object.defineProperties(__Type.prototype, {
 		if (!("wdDatasetEvent" in ev.target.dataset)) return;
 		const data   = ev.target.dataset.wdDatasetEvent.split(",");
 		const events = {
-			wdLoad:   data_wdSend,
-			wdRepeat: data_wdSend,
+			wdLoad:   data_wd_request,
+			wdRepeat: data_wd_request,
 			wdFilter: data_wdFilter,
 			wdValue:  data_wdValue,
 			wdClick:  data_wdClick,
@@ -9358,7 +9385,7 @@ Object.defineProperties(__Type.prototype, {
 	Disparador a ser invocado ao submeter formulário.**/
 	function wdOnSubmit(ev) {
 		if (__UNDERMAINTENANCE) console.log({wdOnSubmit: ev, target: ev.target});
-		data_wdSend(ev.target, ev);
+		data_wd_request(ev.target, ev);
 		return;
 	};
 
@@ -9370,7 +9397,7 @@ Object.defineProperties(__Type.prototype, {
 		if (event.target.nodeType !== 1) return;
 		const events = {
 			click:      {which: 1, bubbles : true, trigger: [
-				data_wdSend, data_wdTsort, data_wdEdit, data_wdShared, data_wdSet,
+				data_wd_request, data_wdTsort, data_wdEdit, data_wdShared, data_wdSet,
 				data_wdDisplay, navLink, data_wdMove, data_wdMenu
 			]},
 			dblclick:   {which: 1, bubbles : true, trigger: [data_wdMove]},

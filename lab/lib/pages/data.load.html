@@ -4,17 +4,17 @@
 			data-wd-set="$${#code,#target}dataset{wdLoad{url{lib/add-ons/load.Page1.html}method{get}}}"
 		>Page 1</span>
 		<span
-		data-wd-set="$${#code,#target}dataset{wdLoad{url{lib/add-ons/load.Page1.html}method{get}_script{true}}}"
+		data-wd-set="$${#code,#target}dataset{wdLoad{url{lib/add-ons/load.Page1.html}method{get}&script{true}}}"
 		>Page 1 (run)</span>
 		<span
 			data-wd-set="$${#code,#target}dataset{wdLoad{url{lib/add-ons/load.Page2.html}method{get}}}"
 		>Page 2</span>
 		<span
-			data-wd-set="${#target2}dataset{wdLoad{url{lib/add-ons/load.Page1.html}method{get}_script{true}_replace{true}}}"
+			data-wd-set="${#target2}dataset{wdLoad{url{lib/add-ons/load.Page1.html}method{get}&script{true}replace{true}}}"
 		>Page 1 (replace)</span>
 	</nav>
 
-	<div id="target" data-wd-load="url{lib/add-ons/load.Page1.html}method{get}_script{true}" ></div>
+	<div id="target" data-wd-load="url{lib/add-ons/load.Page1.html}method{get}&script{true}" ></div>
 
 	<!--========================================================================-->
 	<h5>With replace</h5>
@@ -22,8 +22,7 @@
 	<!--========================================================================-->
 
 	<textarea id="code" class="wd-code wd-block" style="height: 10em;"
-		data-wd-load="url{lib/add-ons/load.Page1.html}method{get}_script{true}"
+		data-wd-load="url{lib/add-ons/load.Page1.html}method{get}&script{true}"
 	></textarea>
 
 </div>
-
