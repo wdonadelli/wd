@@ -1258,6 +1258,10 @@ Object.defineProperties(__Type.prototype, {
 				else if (check.instanceOf("FormData")) {
 					for (const data of input.entries()) {this.append(data[0], data[1]);}
 				}
+				/*-- instância de Map --*/
+				else if (check.instanceOf("Map")) {
+					input.forEach(function (value,name,data) {self.append(name, value);});
+				}
 				/*-- instância de __DataSet --*/
 				else if (input instanceof __DataSet) {
 					input.forEach(function (value,name,data) {self.append(name, value);});
@@ -1328,6 +1332,14 @@ Object.defineProperties(__Type.prototype, {
 			get: function() {
 				const data = {};
 				for (let i of this.entries()) data[i[0]] = i[1];
+				return data;
+			}
+		},
+		/**. ``''object'' toMap``: Converte o conjunto de dados em um Mapa com **sobreposição de identificadores**.**/
+		toMap: {
+			get: function() {
+				const data = new Map();
+				for (let i of this.entries()) data.set(i[0],i[1]);
 				return data;
 			}
 		},
@@ -1900,15 +1912,21 @@ Object.defineProperties(__Type.prototype, {
 				return this.stringSVG;
 			}
 		},
-		/**. ``''object'' wdArray``: Transforma notação wd em array de objetos. Trata-se de uma notação específica para o atributo HTML dataset que invocará as ferramentas da biblioteca ao ter o evento adequado disparado.
-		. A notação consiste num conjunto de dados no formato ''nome{valor}'' que resultará num objeto a ser retornado. O par ''nome{valor}'' inicia com o nome do atributo seguido do caracter de abertura do escopo, do seu respectivo valor e do caractere de fechamento de escopo.
-		. Há três caracteres de escopo&colon; **&lbrace;&rbrace;** define um valor genérico; **&lbrack;&rbrack;** define um array separado por vírgulas; e **&lpar;&rpar;** define o nome de uma função presente dentro do escopo de ''window'' e defindo por ''var'' ou ''function'' e, se a função não existir, será atribuído o valor nulo.
-		. Se o valor contiver o mesmo caractere do escopo, deverá haver a mesma quantidade de caracteres de abertura e de fechamento. Caso seja necessário desobedecer essa regra, o valor deverá ser blindado por apóstrofos (**&apos;**) no início e no fim. Apóstrofos internos são definidos por apóstrofos duplos seguidos (**&apos;&apos;**).
-		. O valor retornado será uma lista de objetos. Para acrescentar um objeto à lista, deve-se utilizar o caractere **&amp;**.
-		. Os valores dos atributos serão do tipo string, exceto nos casos dos valores ''undefined'', ''null'', ''true'', ''false'' e dígitos, que serão tratados de acordo com o que representam. Para definiir uma expressão regular, o valor deverá iniciar e terminar com o caractere de barra (**&frasl;**), podendo adicionar os complementos ''igm'' após a barra final.
-		. A notação é limitada ao primeiro nível. Para adição de cadeias de objetos (objetos dentro de objetos), cada valor deverá ser reprocessado.
-		. A string ''a{true}b[1,2,3]c(alert)&a{test}'' retornará a lista ``[{a&colon; true, b&colon; [1,2,3], c&colon; alert()}, {a&colon; "test"}]``.
-		. Os atributos identificados com os nomes **&dollar;** e **&dollar;&dollar;**, com valor empacotado por **&lbrace;&rbrace;**, recebem um selector CSS e assumem o valor de um elemento HTML ou de uma lista de elementos (''NodeList'') correspondente ao respectivo seletor. As strings ''document'' e ''window'' assumem os respectivos objetos identificados por esses nomes.**/
+		/**. ``''object'' wdArray``: Transforma notação wd em array de objetos.
+		. Trata-se de uma notação específica para o atributo HTML dataset que invocará as ferramentas da biblioteca ao ter o evento adequado disparado. Cada item do array retornado é chamado de ''grupo'' e cada grupo é composto por um objeto.
+		. As propriedades são definidas por uma string que inicia com o seu nome seguido do caracter de abertura do escopo, do seu respectivo valor e do caractere de fechamento de escopo (''nome{valor}''). As propriedades seguintes são enfileiradas sem qualquer divisão entre elas (''nome1{valor1}nome2{valor2}''. Cada caractere de escopo possui uma atribuição:
+		|Tipo|Escopo|Descrição|
+		|Valor|{ }|Define um valor genérico (string, número, nulo, indefinido e expressão regular)|
+		|Lista|[ ]|Define uma lista com itens separados por vírgulas|
+		|Função|( )|Faz referência a uma função dentro do escolo de ''window'' pelo seu nome|
+		|Estrutura|<< >>|Define um objeto|
+		. Os grupos são separados pelo caractere "&amp;".
+		. Se o valor contiver o mesmo caractere do escopo, deverá haver a mesma quantidade de caracteres de abertura e de fechamento. Caso seja necessário desobedecer essa regra, o valor deverá ser blindado por apóstrofos (&apos;) no início e no fim. Apóstrofos internos são definidos por apóstrofos duplos seguidos (**&apos;&apos;**).
+		. As strings "undefined", "null", "true", "false" e números serão tratados de acordo com o que representam. Para definir uma expressão regular, o valor deverá iniciar e terminar com o caractere de barra (**&frasl;**), podendo adicionar os complementos ''igm'' após a barra final.
+		. O valor do tipo "função" deve corresponder ao nome de uma função presente dentro do escopo de ''window'' e defindo pelas palavras-chave ''var'' ou ''function''.
+		. O valor do tipo "estrutura" deve corresponder ao mesmo formato da notação, entretanto, não terá grupos e não será permitido conter o caractere de escopo em seu conteúdo (limitação).
+		. A notação é limitada ao primeiro nível, exceto para o tipo "estrutura". Caso seja necessário, deverá haver reprocessamentos.
+		. As propriedades do tipo "valor" nomeadas como "&dollar;" e "&dollar;&dollar;" recebem um selector CSS e assumem, respectivamente, o valor de um elemento HTML ou de uma lista de elementos (''NodeList'') correspondente ao respectivo seletor.**/
 		wdArray: {
 			get: function() {
 				if ("wdArray" in this._saved)
@@ -1941,17 +1959,24 @@ Object.defineProperties(__Type.prototype, {
 									tree.close().open("type").add("value").close().open("value");
 									if (code[i+1] === "'") {
 										tree.open("quote");
-										code[i+1] = "";
+										i++;
 									}
-								} else if (val === "(") {
+								}
+								else if (val === "(") {
 									tree.close().open("type").add("function").close().open("function");
-								} else if (val === "[") {
+								}
+								else if (val === "[") {
 									tree.close().open("type").add("array").close().open("array").open("item");
 									if (code[i+1] === "'") {
 										tree.open("quote");
-										code[i+1] = "";
+										i++;
 									}
-								} else {
+								}
+								else if (val === "<" && code[i+1] === "<") {
+									tree.close().open("type").add("struct").close().open("struct");
+									i++;
+								}
+								else {
 									tree.add(val)
 								}
 							}
@@ -1960,7 +1985,7 @@ Object.defineProperties(__Type.prototype, {
 									tree.close().open("item");
 									if (code[i+1] === "'") {
 										tree.open("quote");
-										code[i+1] = "";
+										i++;
 									}
 								}	else if (val === "]") {
 									tree.close().close().close();
@@ -2005,11 +2030,21 @@ Object.defineProperties(__Type.prototype, {
 									tree.add(v);
 								}
 							}
+							else if (tag === "struct") {
+								if (val === ">" && code[i+1] === ">") {
+									i++;
+									tree.close().close();
+								} else {
+									tree.add(val);
+								}
+							}
 						};
 						tree.finish();
 						const parser = new __Parser(tree.valueOf());
 						const html   = parser.stringHTML.get();
 						const object = html.querySelectorAll("object");
+						const change = {true: true, false: false, null: null, undefined: undefined};
+						const regexp = /^\/(.+)\/([gim]+)?$/;
 						data = [];
 						for (let i = 0; i < object.length; i++) {
 							let json = {};
@@ -2021,32 +2056,48 @@ Object.defineProperties(__Type.prototype, {
 								let value  = undefined;
 								if (type === "value") {
 									value = source.innerText;
-									let change = {true: true, false: false, null: null, undefined: undefined};
-									let regexp = /^\/(.+)\/([gim]+)?$/;
 									if (name === "$" || name === "$$")
 										value = new __Query(value)[name];
-									else if (value.trim() in change)
+									else if (value in change)
 										value = change[value.trim()];
 									else if (regexp.test(value))
 										value = new RegExp(value.replace(regexp, "$1"), value.replace(regexp, "$2"));
 									else
 										value = __Type(value).value;
-								} else if (type === "function") {
+								}
+								else if (type === "function") {
 									value = source.innerText.trim();
 									value = value in window ? window[value] : undefined;
-								} else if (type === "array") {
+								}
+								else if (type === "array") {
 									value = [];
 									let items = source.querySelectorAll("item");
-									for (let k = 0; k < items.length; k++)
-										value.push(items[k].textContent)
-
+									for (let k = 0; k < items.length; k++) {
+										let text  = items[k].textContent;
+										let check = __Type(text);
+										if (check.finite)
+											value.push(check.value)
+										else if (text in change)
+											value.push(change[text]);
+										else if (regexp.test(text))
+											value.push(new RegExp(text.replace(regexp, "$1"), text.replace(regexp, "$2")));
+										else
+											value.push(text);
+									}
+								}
+								else if (type === "struct") {
+									let struct = new __Parser(source.innerText.trim());
+									value = struct.wdArray.get()[0];
 								}
 								json[name] = value;
 							}
 							data.push(json);
 						}
 					}
-				} catch(e) {console.log(e);}
+				} catch(e) {
+					console.info("The \"dataset\" attribute notation was rejected: "+this._data);
+					data = null;
+				}
 				this._saved["wdArray"] = data;
 				return this.wdArray;
 			}
@@ -2068,7 +2119,8 @@ Object.defineProperties(__Type.prototype, {
 								let ref   = __Type(value);
 								if (ref.function && value.name in window) {
 									obj.push(name, "(", value.name, ")");
-								} else if (ref.array) {
+								}
+								else if (ref.array) {
 									let list = []
 									for (let item of value) {
 										let text = String(item);
@@ -2077,7 +2129,13 @@ Object.defineProperties(__Type.prototype, {
 										list.push(text);
 									}
 									obj.push(name, "[", list.join(","), "]");
-								} else {
+								}
+								else if (ref.object) {
+									let struct = new __Parser([value]);
+									let text   = struct.arrayWD.get()
+									obj.push(name, "<<", text, ">>");
+								}
+								else {
 									let text = String(value);
 									if ((/\"/).test(text))
 										text = "'"+text.replace(qre, "''")+"'";
@@ -8241,15 +8299,14 @@ Object.defineProperties(__Type.prototype, {
 	}
 
 /*============================================================================*/
-/**#### Atributos HTML dataset
-	###### ``**function** ''void'' data_wd_request(''node''  e, ''object'' event)``
-	Função com o propósito de atender os atributos HTML ''data'' que podem necessitar de requisições web conforme abaixo:
-	|Nome|Evento|Atributos|Grupos|
-	|data-wd-send|submit|Múltiplo|1|
-	|data-wd-send|click|Múltiplo|Múltiplo|
-	|data-wd-repeat|load, wdreload, wddataset|Múltiplo|1|
-	|data-wd-load|load, wdreload, wddataset|Múltiplo|2|
-	O atributo ''data-wd-send'' está atrelado ao método ''__Request.send'' e possui as seguintes propriedades:
+/**#### Atributos HTML dataset**/
+/*============================================================================*/
+	/**###### ``**function** ''void'' data_wd_send(''node''  target, ''object'' event, ''array'' wdArray)``
+	Função com o propósito de efetuar requisições por meio do atributo HTML ''data''.
+	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
+	|data-wd-send|click|Múltiplas|Múltiplos|__Request.send|Elementos que possam receber cliques|
+	|data-wd-send|submit|Múltiplas|Único|__Request.send|Elemento de formulário (''form'')|
+	Propriedades:
 	|Nome|Tipo|Descrição|
 	|url|string|Ver __Request|
 	|method|string|Ver __Request|
@@ -8263,165 +8320,133 @@ Object.defineProperties(__Type.prototype, {
 	|withCredentials|boolean|Ver __Request.send|
 	|overrideMimeType|string|Ver __Request.send|
 	|noValidate|boolean|Se verdadeiro, a requisição não fará a validação primária dos campos deformulário|
-	|trigger|function|Disparador a ser chamado ao fim da requisição definido no escopo de ''window'' com ''var'' ou ''function''|
-	As propriedades ''url'', ''method'', ''$'' ou ''$$'', content-type'' de ''headers'' e ''noValidate'' em eventos ''submit'' serão definidos pelo formulário, se existentes.
-	O atributo ''data-wd-repeat'' está atrelado ao método ''__Node.repeat'' e possui as mesmas propriedades de ''data-wd-send'', exceto ''type'' e ''trigger'', que não podem ser definidos previamente. O arquivo definido em ''url'' deve conter o cabeçalho ''content-type'' como ''text/csv'' ou  ''application/json''.
-	O atributo ''data-wd-load'' está atrelado ao método ''__Node.load'' e possui as propriedades de ''data-wd-send'', exceto ''type'', que será definido pelo atributo ''text'' do segundo grupo, e ''trigger'', que não pode ser definido previamente. O segundo grupo possui as seguintes propriedades:
+	|trigger|function|Nome do disparador a ser chamado durante a requisição|
+	O disparador deve ser definido no escopo de ''window'' com as palavras ''var'' ou ''function''**/
+	function data_wd_send(target, event, wdArray) {
+		event.preventDefault();
+		let data, query, submit, trigger, kill;
+		for (let i = 0; i < wdArray.length; i++) {
+			data    = wdArray[i];
+			query   = data["$$"] || data["$"] || document.body;
+			trigger = data.trigger;
+			submit  = WD(query).submit(data.url, data.method, data.noValidate);
+			kill    = ["$", "$$", "trigger"];
+			/*-- apagar dados desnecessários --*/
+			for (let k = 0; k < kill.length; k++)
+				if (kill[k] in data) delete data[kill[k]];
+			/*-- Efetuar requisição se não encontrados erros --*/
+			if (submit !== null) {
+				data.url  = submit.url;
+				data.body = submit.body;
+				if (!("content-type" in data.headers))
+					data.headers["content-type"] = submit.ctype;
+				WD(data).send(trigger);
+			}
+		}
+		return;
+	}
+
+/*----------------------------------------------------------------------------*/
+	/**###### ``**function** ''void'' data_wd_submit(''node''  target, ''object'' event, ''array'' wdArray)``
+	Função complementar à função ''data_wd_send'' para aplicação em formulários. As propriedades ''url'', ''method'', ''$'' ou ''$$'', ''content-type'' de ''headers'' e ''noValidate'' serão obtidas pelo formulário, se existentes.**/
+	function data_wd_submit(target, event, wdArray) {
+		const data  = wdArray[0];
+		const form  = target;
+		const query = form.elements;
+		const html  = {method: null,	enctype: null, action: null, noValidate: null};
+		const enter = (function(){
+			const elem = document.activeElement;
+			const node = new __Node(__Type(elem).node ? elem : form);
+			const type = /^(image|submit)$/;
+			return elem.form !== form || !type.test(node.ftype) ? null : elem;
+		})();
+		/*-- Informações do formulário: button ou form --*/
+		for (let i in html) {
+			/*-- encontrar atributo no elemento acionador --*/
+			if (enter !== null) {
+				const camel = "form"+(i.replace(i[0], i[0].toUpperCase()));
+				const lower = camel.toLowerCase();
+				const value = enter.hasAttribute(lower) ? enter[camel].trim() : "";
+				html[i] = value !== "" ? value : null;
+			}
+			/*-- se não localizado, buscar no formulário --*/
+			if (html[i] === null) {
+				const valid = !__Type(form[i]).node;
+				const value = form.hasAttribute(i) ? form.getAttribute(i).trim() : "";
+				html[i] = valid ? form[i] : (value !== "" ? value : null);
+			}
+		}
+		/*-- Redefinindo atributos de configuração --*/
+		if (html.method     !== null) data.method = html.method;
+		if (html.action     !== null) data.url = html.action;
+		if (html.enctype    !== null) data.headers["content-type"] = html.enctype;
+		if (html.noValidate !== null) data.noValidate = html.noValidate;
+		data["$$"] = query;
+		if ("$" in data) delete data["$"];
+		return data_wd_send(target, event, [data]);
+	}
+
+/*----------------------------------------------------------------------------*/
+	/**###### ``**function** ''void'' data_wd_load(''node''  target, ''object'' event, ''array'' wdArray)``
+	Função com o propósito de efetuar carregamento de dados externos por meio do atributo HTML ''data''.
+	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
+	|data-wd-load|load wdreload wddataset|Múltiplas|Único|__Node.load|Elementos que possam conteúdo interno|
+	Possui as mesmas propriedades de ''data-wd-send'', exceto ''trigger'' e ''type'', acrescidas das seguintes:
 	|Nome|Tipo|Descrição|
 	|replace|boolean|Ver __Node.load|
 	|script|boolean|Ver __Node.load|
 	|text|boolean|Ver __Node.load e, se verdadeiro, ''type'' assumirá "text", caso contrári, "html"|**/
-	function data_wd_request(e, event) {
-		/*-- Variáveis gerais ----------------------------------------------------*/
-		const triggers = [];
-		const events   = [
-			{event: "submit",    name: "wdSend",   data: null},
-			{event: "click",     name: "wdSend",   data: null},
-			{event: "load",      name: "wdRepeat", data: null},
-			{event: "wdreload",  name: "wdRepeat", data: null},
-			{event: "wddataset", name: "wdRepeat", data: null},
-			{event: "load",      name: "wdLoad",   data: null},
-			{event: "wdreload",  name: "wdLoad",   data: null},
-			{event: "wddataset", name: "wdLoad",   data: null}
-		];
-		/*-- Validar: Eventos x Disparos -----------------------------------------*/
-		for (let i = 0; i < events.length; i++) {
-			let value = events[i];
-			if (value.event === event.type && value.name in e.dataset) {
-				let dataset = e.dataset[value.name];
-				let parser  = new __Parser(dataset);
-				let data    = parser.wdArray.get();
-				if (data !== null && data.length > 0) {
-					events[i].data = data;
-					triggers.push(events[i]);
-				}
+	function data_wd_load(target, event, wdArray) {
+		const data     = wdArray[0];
+		const options  = {replace: null, script: null, text: null}
+		for (let i in options) {
+			if (i in data) {
+				options[i] = data[i];
+				delete data[i];
 			}
 		}
-		/*-- Escapando do comportamento padrão -----------------------------------*/
-		if (triggers.length > 0)
-			event.preventDefault();
-		/*-- Analisar disparos ---------------------------------------------------*/
-		for (let i = 0; i < triggers.length; i++) {
-			/*-- Variáveis direcionadoras --*/
-			let event = triggers[i].event;
-			let name  = triggers[i].name;
-			let data  = triggers[i].data;
+		data.type    = options.text === true ? "text" : "html";
+		data.trigger = function(x) {
+			if (x.ok) WD(e).load(x.response, options);
+		}
+		return data_wd_send(target, event, [data]);
+	}
 
-			/*-- Adequando cabeçalhos --*/
-			for (let j = 0; j < data.length; j++) {
-				let value  = "headers" in data[j] ? data[j].headers : {};
-				if (typeof value === "string") {
-					let parser = new __Parser(value);
-					data[j].headers = parser.wdArray.get()[0];
+/*----------------------------------------------------------------------------*/
+	/**###### ``**function** ''void'' data_wd_repeat(''node''  target, ''object'' event, ''array'' wdArray)``
+	Função com o propósito de efetuar repetições de dados externos por meio do atributo HTML ''data''.
+	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
+	|data-wd-repeat|load wdreload wddataset|Múltiplas|Único|__Node.repeat|Elementos que possam conteúdo interno|
+	Possui as mesmas propriedades de ''data-wd-send'', exceto ''trigger'' e ''type''. O arquivo definido em ''url'' deve conter o cabeçalho ''content-type'' como ''text/csv'' ou  ''application/json''!**/
+	function data_wd_repeat(target, event, wdArray) {
+		const data   = wdArray[0];
+		data.type    = "text";
+		data.trigger = function(x) {
+			if (x.ok)  {
+				const head = new __DataSet(x.headers);
+				const mime = __MIME[head.getAll("content-type")[0]];
+				if (mime === "json" || mime === "csv") {
+					const parser = new __Parser(x.response);
+					const list   = mime === "json" ? parser.stringJSON : parser.csvTable.tableValues.matrixList;
+					WD(e).repeat(list.get());
 				} else {
-					data[j].headers = value;
-				}
-			}
-
-			/*.. DATA-WD-SEND ON SUBMIT ............................................*/
-			if (name === "wdSend" && event === "submit") {
-				let config = data[0];
-				/*-- Elementos do formulário --*/
-				let form   = e;
-				let query  = form.elements;
-				let html   = {method: null,	enctype: null, action: null, noValidate: null};
-				let enter  = (function(){
-					const elem = document.activeElement;
-					const node = new __Node(__Type(elem).node ? elem : form);
-					const type = /^(image|submit)$/;
-					return elem.form !== form || !type.test(node.ftype) ? null : elem;
-				})();
-				/*-- Informações do formulário: button ou form --*/
-				for (let j in html) {
-					/*-- encontrar atributo no elemento acionador --*/
-					if (enter !== null) {
-						const camel = "form"+(j.replace(j[0], j[0].toUpperCase()));
-						const lower = camel.toLowerCase();
-						const value = enter.hasAttribute(lower) ? enter[camel].trim() : "";
-						html[j] = value !== "" ? value : null;
-					}
-					/*-- se não localizado, buscar no formulário --*/
-					if (html[j] === null) {
-						const valid = !__Type(form[j]).node;
-						const value = form.hasAttribute(j) ? form.getAttribute(j).trim() : "";
-						html[j] = valid ? form[j] : (value !== "" ? value : null);
-					}
-				}
-				/*-- Redefinindo atributos de configuração --*/
-				if (html.method     !== null) config.method = html.method;
-				if (html.action     !== null) config.url = html.action;
-				if (html.enctype    !== null) config.headers["content-type"] = html.enctype;
-				if (html.noValidate !== null) config.noValidate = html.noValidate;
-				config["$$"] = query;
-				if ("$" in config) delete config["$"];
-				/*-- Reconfigurar dados iniciais --*/
-				data = [config];
-			}
-			/*.. DATA-WD-SEND ON CLICK .............................................*/
-			else if (name === "wdSend" && event === "click") {
-				/*-- fazer nada --*/
-			}
-			/*.. DATA-WD-LOAD ......................................................*/
-			else if (name === "wdLoad") {
-				let config     = data[0];
-				let options    = data.length > 1 ? data[1] : {};
-				config.type    = options.text === true ? "text" : "html";
-				config.trigger = function(x) {
-					if (x.ok) WD(e).load(x.response, options);
-				}
-				/*-- apagando dados desnecessários --*/
-				delete e.dataset.wdLoad;
-				/*-- Reconfigurar dados iniciais --*/
-				data = [config];
-			}
-			/*.. DATA-WD-REPEAT ....................................................*/
-			else if (name === "wdRepeat") {
-				let config     = data[0];
-				config.type    = "text";
-				config.trigger = function(x) {
-					if (x.ok)  {
-						const head = new __DataSet(x.headers);
-						const mime = __MIME[head.getAll("content-type")[0]];
-						if (mime === "json" || mime === "csv") {
-							const parser = new __Parser(x.response);
-							const list   = mime === "json" ? parser.stringJSON : parser.csvTable.tableValues.matrixList;
-							WD(e).repeat(list.get());
-						} else {
-							WD(e).repeat([]);
-						}
-					}
-				}
-				/*-- apagando dados desnecessários --*/
-				delete e.dataset.wdRepeat;
-				/*-- Reconfigurar dados iniciais --*/
-				data = [config];
-			}
-
-			/*.. DATA-WD-CHART .....................................................*/
-			else if (name === "wdChart") {}
-
-			/*-- Executar parâmetros -----------------------------------------------*/
-			for (let j = 0; j < data.length; j++) {
-				let config  = data[i];
-				let query   = config["$$"] || config["$"] || document.body;
-				let submit  = WD(query).submit(config.url, config.method, config.noValidate);
-				let handler = config.trigger;
-				let kill    = ["$", "$$", "trigger"];
-				/*-- apagar dados desnecessários --*/
-				for (let k = 0; k < kill.length; k++)
-					if (kill[k] in config) delete config[kill[k]];
-				/*-- Efetuar requisição se não encontrados erros --*/
-				if (submit !== null) {
-					config.url  = submit.url;
-					config.body = submit.body;
-					if (!("content-type" in config.headers))
-						config.headers["content-type"] = submit.ctype;
-					WD(config).send(handler);
+					WD(e).repeat([]);
 				}
 			}
 		}
-		return;
-	};
+		return data_wd_send(target, event, [data]);
+	}
+
+
+
+
+
+
+
+
+
+
+
 
 /*----------------------------------------------------------------------------*/
 	/**###### ``**function** ''void'' data_wdSet(''node''  e, ''object'' event)``
@@ -9242,8 +9267,8 @@ Object.defineProperties(__Type.prototype, {
 		if (__UNDERMAINTENANCE) console.log({wdOnReload: ev, target: ev.target});
 		const root = __Type(ev.target).node ? ev.target : document;
 		const data = [
-			{selector: "[data-wd-repeat]", method: data_wd_request},
-			{selector: "[data-wd-load]",   method: data_wd_request},
+			//{selector: "[data-wd-repeat]", method: data_wd_repeat},
+			//{selector: "[data-wd-load]",   method: data_wd_load},
 			{selector: "[data-wd-value]",  method: data_wdValue},
 			{selector: "[data-wd-click]",  method: data_wdClick},
 			{selector: "[data-wd-chart]",  method: data_wdChart},
@@ -9322,8 +9347,8 @@ Object.defineProperties(__Type.prototype, {
 		if (!("wdDatasetEvent" in ev.target.dataset)) return;
 		const data   = ev.target.dataset.wdDatasetEvent.split(",");
 		const events = {
-			wdLoad:   data_wd_request,
-			wdRepeat: data_wd_request,
+			//wdLoad:   data_wd_request,
+			//wdRepeat: data_wd_request,
 			wdFilter: data_wdFilter,
 			wdValue:  data_wdValue,
 			wdClick:  data_wdClick,
@@ -9397,7 +9422,7 @@ Object.defineProperties(__Type.prototype, {
 		if (event.target.nodeType !== 1) return;
 		const events = {
 			click:      {which: 1, bubbles : true, trigger: [
-				data_wd_request, data_wdTsort, data_wdEdit, data_wdShared, data_wdSet,
+				/*data_wd_request,*/ data_wdTsort, data_wdEdit, data_wdShared, data_wdSet,
 				data_wdDisplay, navLink, data_wdMove, data_wdMenu
 			]},
 			dblclick:   {which: 1, bubbles : true, trigger: [data_wdMove]},
@@ -9444,6 +9469,210 @@ Object.defineProperties(__Type.prototype, {
 
 		return;
 	};
+
+
+
+	const __EVENTS = {
+		load: {
+			target: window,
+			trigger: [
+				{data: "?", call: wdOnLoad}
+			]
+		},
+		resize: {
+			target: window,
+			trigger: [
+				{data: "?", call: wdOnResize}
+			]
+		},
+		hashchange: {
+			target: window,
+			trigger: [
+				{data: "?", call: wdOnHash}
+			]
+		},
+		input: {
+			target: document,
+			trigger: [
+				{data: "?", call: wdOnInput}
+			]
+		},
+		focusout: {
+			target: document,
+			trigger: [
+				{data: "?", call: wdOnFocusOut}
+			]
+		},
+		focusin: {
+			target: document,
+			trigger: [
+				{data: "?", call: wdOnFocusIn}
+			]
+		},
+		drag: {
+			target: document,
+			trigger: [
+				{data: "?", call: wdOnMouse}
+			]
+		},
+		dragstart: {
+			target: document,
+			trigger: [
+				{data: "?", call: wdOnMouse}
+			]
+		},
+		dragend: {
+			target: document,
+			trigger: [
+				{data: "?", call: wdOnMouse}
+			]
+		},
+		dragleave: {
+			target: document,
+			trigger: [
+				{data: "?", call: wdOnMouse}
+			]
+		},
+		dragover: {
+			target: document,
+			trigger: [
+				{data: "?", call: wdOnMouse}
+			]
+		},
+		dragenter: {
+			target: document,
+			trigger: [
+				{data: "?", call: wdOnMouse}
+			]
+		},
+		drop: {
+			target: document,
+			trigger: [
+				{data: "?", call: wdOnMouse}
+			]
+		},
+		click: {
+			target: document,
+			trigger: [
+				{data: "wdSend", call: data_wd_send, delete: false, sub: "headers"}
+			]
+		},
+		mousedown: {
+			target: document,
+			trigger: [
+				{data: "?", call: wdOnMouse}
+			]
+		},
+		mouseup: {
+			target: document,
+			trigger: [
+				{data: "?", call: wdOnMouse}
+			]
+		},
+		mousemove: {
+			target: document,
+			trigger: [
+				{data: "?", call: wdOnMouse}
+			]
+		},
+		mouseenter: {
+			target: document,
+			trigger: [
+				{data: "?", call: wdOnMouse}
+			]
+		},
+		mouseleave: {
+			target: document,
+			trigger: [
+				{data: "?", call: wdOnMouse}
+			]
+		},
+		mouseover: {
+			target: document,
+			trigger: [
+				{data: "?", call: wdOnMouse}
+			]
+		},
+		mouseout: {
+			target: document,
+			trigger: [
+				{data: "?", call: wdOnMouse}
+			]
+		},
+		dblclick: {
+			target: document,
+			trigger: [
+				{data: "?", call: wdOnMouse}
+			]
+		},
+		wddataset: {
+			target: document,
+			trigger: [
+				{data: "wdRepeat", call: data_wd_repeat},
+				{data: "wdLoad", call: data_wd_load}
+			]
+		},
+		wdreload: {
+			target: window,
+			trigger: [
+				{data: "?", call: wdOnReload}
+			]
+		},
+		submit: {
+			target: document,
+			trigger: [
+				{data: "wdSend", call: data_wd_submit, delete: false, sub: "headers"}
+			]
+		}
+	};
+
+	function eventManager(event) {
+		const target  = event.target;
+		const trigger = event.type in __EVENTS ? __EVENTS[event.type].trigger : [];
+		let item, parser, wdArray;
+
+		for (let i = 0; i < trigger.length; i++) {
+			item = trigger[i];
+			if (item.data in target.dataset) {
+				parser  = new __Parser(target.dataset[item.data]);
+				wdArray = parser.wdArray.get();
+
+				if ("sub" in item) {
+					for (let j = 0; j < wdArray.length; j++) {
+						if (!(item.sub in wdArray[j])) {
+							wdArray[j][item.sub] = {};
+						} else if (typeof wdArray[j][item.sub] === "string") {
+							parser = new __Parser(wdArray[j][item.sub])
+							wdArray[j][data.sub] = parser.wdArray.get();
+						}
+					}
+				}
+
+				if (item.delete === true)
+					delete target.dataset[item.data];
+
+				item.call(target, event, wdArray);
+				//console.log({target: target, event: event, wdArray: wdArray});
+			}
+		}
+	};
+
+	for (let ev in __EVENTS)
+		__EVENTS[ev].target.addEventListener(ev, eventManager, false);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /*----------------------------------------------------------------------------*/
 	const __TRIGGERS = {
