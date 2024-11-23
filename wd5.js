@@ -59,199 +59,217 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**const** ''array'' __STYLE``
+	/**###### ``**const** ''object'' __STYLE``
 	Estilos da biblioteca.**/
-	const __STYLE = [
-		/*-- animações --*/
-		{target: "@keyframes js-wd-emerge", style: ["from {opacity: 0;} to {opacity: 1;}"]},
-		{target: "@keyframes js-wd-fade",   style: ["from {opacity: 1;} to {opacity: 0;}"]},
-		{target: "@keyframes js-wd-expand", style: ["from {transform: scale(0);} to {transform: scale(1);}"]},
-		{target: "@keyframes js-wd-shrink", style: ["from {transform: scale(1);} to {transform: scale(0);}"]},
-		/*-- estilos genéricos --*/
-		{target: ".js-wd-no-display",      style: ["display: none;"]},
-		{target: ".js-wd-overflow-hidden", style: ["overflow: hidden;"]},
-		{target: "nav > *.js-wd-nav-inactive", style: ["opacity: 0.5;"]},
-		/*-- data-wd- --*/
-		{target: "[data-wd-nav], [data-wd-send], [data-wd-set], [data-wd-edit], [data-wd-shared]", style: ["cursor: pointer;"]},
-		/*-- data-wd-move --*/
-		{target: "[data-wd-move*=\"type{jump}\"]",        style: ["cursor: pointer;"]},
-		{target: "[data-wd-move*=\"type{drag}\"]",        style: ["cursor: grab;"]},
-		{target: "[data-wd-move*=\"type{drag}\"]:active", style: ["cursor: grabbing;"]},
-		{target: "[data-wd-move*=\"type{move}\"]",        style: ["cursor: move;"]},
-		/*-- data-wd-move: drop --*/
-		{target: "[data-wd-move-action=\"drop\"]", style: [
-			"border-image-source: linear-gradient(45deg, white, blue);",
-			"border-image-width: 10px; border-image-outset: 5px;",
-			"border-image-slice: 1% fill;",
-		]},
-		/*-- data-wd-move: file --*/
-		{target: "[data-wd-move-action=\"files\"]", style: [
-			"border-image-source: linear-gradient(45deg, white, gray);",
-			"border-image-width: 10px; border-image-outset: 5px;"
-		]},
-		{target: "[data-wd-move-action=\"files\" > *]", style: ["visibility: hidden;"]},
-		/*-- data-wd-move: move --*/
-		{target: "[data-wd-move-action=\"move\"], [data-wd-move-action=\"move\"] > *", style: ["cursor: grabbing;"]},
-		/*-- data-wd-move: resize --*/
-		{target: ".js-wd-cursor-n-resize  *",  style: ["cursor: n-resize;"]},
-		{target: ".js-wd-cursor-ne-resize  *", style: ["cursor: ne-resize;"]},
-		{target: ".js-wd-cursor-se-resize  *", style: ["cursor: sw-resize;"]},
-		{target: ".js-wd-cursor-s-resize  *",  style: ["cursor: s-resize;"]},
-		{target: ".js-wd-cursor-sw-resize  *", style: ["cursor: sw-resize;"]},
-		{target: ".js-wd-cursor-w-resize  *",  style: ["cursor: w-resize;"]},
-		{target: ".js-wd-cursor-nw-resize  *", style: ["cursor: nw-resize;"]},
-		{target: ".js-wd-cursor-n-resize  *",  style: ["cursor: n-resize;"]},
-		{target: ".js-wd-hline",  style: [
-			"position: fixed; left: 0; width: 100vw;",
-			"border-top: thin solid #000000; z-index: 999999;"
-		]},
-		{target: ".js-wd-vline",  style: [
-			"position: fixed; top: 0; height: 100vh;",
-			"border-left: thin solid #000000; height: 100%; z-index: 999999;"
-		]},
-		/*-- data-wd-menu --*/
-		{target: "[data-wd-menu]", style: ["cursor: context-menu;"]},
-		{target: ".js-wd-menu", style: [
-			"font-size: 14px; font-family: Verdana,sans-serif;",
-			"position: fixed; max-width: 40vw; max-height: 40vh;",
-			"display: block; margin: 0; padding: 0.3em;",
-			"z-index: 999999; overflow: auto !important;",
-			"color: #ffffff; background-color: rgba(0,0,0);",
-			"border: 2px inset #101010; border-radius: 0.3em;",
-			"animation: js-wd-emerge 0.5s linear 0s"
-		]},
-		{target: ".js-wd-menu > *", style: [
-			"display: block; margin: inherit; padding: inherit; cursor: pointer; border-radius: inherit;"
-		]},
-		{target: ".js-wd-menu > *:hover", style: ["background-color: rgba(50,50,50);"]},
-		/*-- data-wd-tsort --*/
-		{target: "[data-wd-tsort]", style: ["cursor: pointer;"]},
-		{target: "[data-wd-tsort]:before", style: ["content: \"\\2195 \"; font-weight: normal;"]},
-		{target: "[data-wd-tsort=\"-1\"]:before", style: ["content: \"\\2191 \";"]},
-		{target: "[data-wd-tsort=\"+1\"]:before", style: ["content: \"\\2193 \";"]},
-		/*-- data-wd-repeat/load --*/
-		{target: "[data-wd-repeat] > *, [data-wd-load] > *", style: ["visibility: hidden;"]},
-		/*-- data-wd-slide --*/
-		{target: "[data-wd-slide] > *", style: ["animation: js-wd-emerge 1s, js-wd-shrink-out 0.5s;"]},
-		/*-- SVG --*/
-		{target: "svg .js-wd-chart-hide", style: ["display: none;"]},
-		{target: "@media screen and (min-width: 768px) {svg .js-wd-chart-hide", style: ["display: inline;}"]},
-		/*-- tags especiais --*/
-		{target: "wdtag-mark", style: [
-			"background-color: rgba(154,205,50,0.7); display: inline; border-radius: 0.2em; color: #000000;"
-		]},
-		{target: "wdtag-root", style: [
-			"display: block; padding: 0.3em 0.3em 0.3em 3em; overflow: auto;",
-			"border-radius: 0.5em; 	border: 1px solid #000000;",
-			"font-family: monospace; font-size: 14px; white-space: pre-wrap;",
-			"text-decoration: none; text-indent: 0;",
-			"font-style: normal; font-weight: normal;",
-			"background-color: #262626;",
-			"counter-reset: wdcodelines;"
-		]},
-		{target: "wdtag-root *", style: [
-			"display: inline; position: static; padding: 0;",
-			"font-weight: normal; font-style: normal; border: none; border-raius: none;"
-		]},
-		{target: "wdtag-root wdtag-line", style: ["counter-increment: wdcodelines;"]},
-		{target: "wdtag-root wdtag-line:before", style: [
-			"content: counter(wdcodelines);",
-			"display: inline-block; position: relative;",
-			"margin: 0 0 0 -3em; padding-right: 0.5em; min-width: 3em;",
-			"color: #bcc118; text-align: right;"
-		]},
-		{target: "wdtag-root wdtag-content", style: ["color: #b3b3b3;"]},
-		{target: "wdtag-root wdtag-comment", style: ["color: #8c8c8c; font-style: italic;"]},
-		{target: "wdtag-root wdtag-doc", style: ["color: #df6d6d; font-weight: bold;"]},
-		{target: "wdtag-root wdtag-tag", style: ["color: #418bff;"]},
-		{target: "wdtag-root wdtag-attribute", style: ["color: #57ac57;"]},
-		{target: "wdtag-root wdtag-value", style: ["color: #cf8ee1;"]},
-		{target: "wdtag-root wdtag-word", style: ["color: #df6d6d; font-weight: bold;"]},
-		{target: "wdtag-root wdtag-tick", style: ["font-weight: bold; color: #68cccc;"]},
-		{target: "wdtag-root wdtag-string", style: ["color: #57ac57"]},
-		/*-- container da caixa de mensagens --*/
-		{target: ".js-wd-signal-modal-message", style: [
-			"position: fixed; top: 0; right: 0; left: 0; bottom: initial;",
-			"display: block; margin: auto; padding: 1px; width: auto; max-height: 75vh;",
-			" overflow: auto; z-index: 999999; font-size: 14px; background-color: transparent;"
-		]},
-		{target: "@media screen and (min-width: 768px) {.js-wd-signal-modal-message", style: [
-			"bottom: 0; right: 0; left: 75vw; top: initial;}"
-		]},
-		/*-- modal da caixa de diálogo --*/
-		{target: ".js-wd-signal-modal-dialog", style: [
-			"position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 0.1s js-wd-emerge;",
-			"margin: 0; padding: 0; background-color: rgba(0,0,50,0.3); z-index: 999999; cursor: forbidden;"
-		]},
-		/*-- caixas de mensagem e diálogo --*/
-		{target: ".js-wd-signal-message, .js-wd-signal-dialog", style: [
-			"display: block; padding: 0;",
-			"color: #d4d4e6; background-color: #353535;",
-			"border: thin solid #000000; border-radius: 0.5em;",
-			"box-shadow: inset 0 0 2px 1px rgba(0,0,0,0.6);"
-		]},
-		/*-- caixa de mensagem --*/
-		{target: ".js-wd-signal-message", style: [
-			"position: relative; margin: 0.5em 0; ",
-			"animation: js-wd-expand 0.5s ease 0s, js-wd-shrink 0.5s ease 8.5s;"
-		]},
-		/*-- caixa de diálogo --*/
-		{target: ".js-wd-signal-dialog", style: [
-			"position: absolute; top: 5vh; max-height: 90vh; left: 5vw; width: 90vw; margin: 0;",
-			"animation: js-wd-expand 0.5s ease 0s;"
-		]},
-		{target: "@media screen and (min-width: 768px) {.js-wd-signal-dialog", style: [
-			"top: 20vh; max-height: 60vh; left: 30vw; max-width: 40vw;}"
-		]},
-		/*-- botão para fechar caixa de mensagens --*/
-		{target: ".js-wd-signal-close", style: [
-			"position: absolute; top: 0.2em; right: 0.2em; display: inline-block;",
-			"line-height: 1; cursor: pointer; margin: 0; z-index: 5; font-size: large;"
-		]},
-		{target: ".js-wd-signal-close:before", style: ["content: \"\\00D7\";"]},
-		/*-- cabeçalho das caixas de mensagem e diálogo --*/
-		{target: ".js-wd-signal-head", style: [
-			"display: block; padding: 0.25em 0.5em; margin: 0;",
-			"border-radius: 0.5em 0.5em 0 0; white-space: pre-wrap;",
-			"font-size: larger; background-color: #000000;"
-		]},
-		/*-- corpo das caixas de mensagem e diálogo --*/
-		{target: ".js-wd-signal-body", style: [
-			"display: block; padding: 1em 1em 1em 2em; margin: 0; white-space: pre-wrap;"
-		]},
-		{target: ".js-wd-signal-message .js-wd-signal-body", style: ["border-radius: 0 0 0.5em 0.5em;"]},
-		/*-- rodapé da caixa de diálogo --*/
-		{target: ".js-wd-signal-foot", style: [
-			"display: flex; flex-flow: column nowrap;",
-			"background-color: #000000; border-radius: 0 0 0.5em 0.5em; font-size: smaller;"
-		]},
-		{target: "@media screen and (min-width: 768px) {.js-wd-signal-foot", style: [
-			"flex-flow: row wrap; justify-content: space-evenly; align-items: baseline;}"
-		]},
-		/*-- ações da caixa de diálogo --*/
-		{target: ".js-wd-signal-action", style: [
-			"padding: 0.25em 0.5em; border-radius: 0.2em;",
-			"color: #333333; background-color: #f0f0f0; cursor: pointer;",
-			 "font-size: inherit; text-align: center;"
-		]},
-		{target: "@media screen and (min-width: 768px) {.js-wd-signal-action", style: ["flex-shrink: 0;"]},
-		{target: ".js-wd-signal-action:focus", style: ["outline: 2px solid #9999ff;"]},
-		{target: ".js-wd-signal-action:hover", style: ["text-decoration: underline;"]},
-		//"*::backdrop {background-color: white;}",
-		//TODO ver coloração https://developer.mozilla.org/pt-BR/docs/Web/CSS/background-color
-		//TODO interessante https://developer.mozilla.org/en-US/docs/Web/CSS/::file-selector-button
-		/*-- barra de progresso --*/
-		{target: ".js-wd-progress-modal", style: [
-			"position: fixed; top: 0; left: 0; display: block;",
-			"width: 100vw; height: 100vh; padding: 0; margin: 0; z-index: 999999;",
-			"cursor: progress; background-color: rgba(0,0,0,0.3); animation: js-wd-emerge 0.1s;",
-		]},
-		{target: ".js-wd-progress-bar", style: [
-			"position: absolute; top: 0; left: 0;",
-			"display: block; height: 5px; padding: 0; margin: 0;",
-			"background-color: royalblue; border-radius: 0.2em; border: 1px solid black;"
-		]}
-	];
+	const __STYLE = {
+		/**. ``''array'' css``: Registra as propriedades CSS da biblioteca.**/
+		css: [
+			/*-- animações --*/
+			{target: "@keyframes js-wd-emerge", style: ["from {opacity: 0;} to {opacity: 1;}"]},
+			{target: "@keyframes js-wd-fade",   style: ["from {opacity: 1;} to {opacity: 0;}"]},
+			{target: "@keyframes js-wd-expand", style: ["from {transform: scale(0);} to {transform: scale(1);}"]},
+			{target: "@keyframes js-wd-shrink", style: ["from {transform: scale(1);} to {transform: scale(0);}"]},
+			/*-- estilos genéricos --*/
+			{target: ".js-wd-no-display",      style: ["display: none;"]},
+			{target: ".js-wd-overflow-hidden", style: ["overflow: hidden;"]},
+			{target: "nav > *.js-wd-nav-inactive", style: ["opacity: 0.5;"]},
+			/*-- data-wd- --*/
+			{target: "[data-wd-nav], [data-wd-send], [data-wd-set], [data-wd-edit], [data-wd-shared]", style: ["cursor: pointer;"]},
+			/*-- data-wd-move --*/
+			{target: "[data-wd-move*=\"type{jump}\"]",        style: ["cursor: pointer;"]},
+			{target: "[data-wd-move*=\"type{drag}\"]",        style: ["cursor: grab;"]},
+			{target: "[data-wd-move*=\"type{drag}\"]:active", style: ["cursor: grabbing;"]},
+			{target: "[data-wd-move*=\"type{move}\"]",        style: ["cursor: move;"]},
+			/*-- data-wd-move: drop --*/
+			{target: "[data-wd-move-action=\"drop\"]", style: [
+				"border-image-source: linear-gradient(45deg, white, blue);",
+				"border-image-width: 10px; border-image-outset: 5px;",
+				"border-image-slice: 1% fill;",
+			]},
+			/*-- data-wd-move: file --*/
+			{target: "[data-wd-move-action=\"files\"]", style: [
+				"border-image-source: linear-gradient(45deg, white, gray);",
+				"border-image-width: 10px; border-image-outset: 5px;"
+			]},
+			{target: "[data-wd-move-action=\"files\" > *]", style: ["visibility: hidden;"]},
+			/*-- data-wd-move: move --*/
+			{target: "[data-wd-move-action=\"move\"], [data-wd-move-action=\"move\"] > *", style: ["cursor: grabbing;"]},
+			/*-- data-wd-move: resize --*/
+			{target: ".js-wd-cursor-n-resize  *",  style: ["cursor: n-resize;"]},
+			{target: ".js-wd-cursor-ne-resize  *", style: ["cursor: ne-resize;"]},
+			{target: ".js-wd-cursor-se-resize  *", style: ["cursor: sw-resize;"]},
+			{target: ".js-wd-cursor-s-resize  *",  style: ["cursor: s-resize;"]},
+			{target: ".js-wd-cursor-sw-resize  *", style: ["cursor: sw-resize;"]},
+			{target: ".js-wd-cursor-w-resize  *",  style: ["cursor: w-resize;"]},
+			{target: ".js-wd-cursor-nw-resize  *", style: ["cursor: nw-resize;"]},
+			{target: ".js-wd-cursor-n-resize  *",  style: ["cursor: n-resize;"]},
+			{target: ".js-wd-hline",  style: [
+				"position: fixed; left: 0; width: 100vw;",
+				"border-top: thin solid #000000; z-index: 999999;"
+			]},
+			{target: ".js-wd-vline",  style: [
+				"position: fixed; top: 0; height: 100vh;",
+				"border-left: thin solid #000000; height: 100%; z-index: 999999;"
+			]},
+			/*-- data-wd-menu --*/
+			{target: "[data-wd-menu]", style: ["cursor: context-menu;"]},
+			{target: ".js-wd-menu", style: [
+				"font-size: 14px; font-family: Verdana,sans-serif;",
+				"position: fixed; max-width: 40vw; max-height: 40vh;",
+				"display: block; margin: 0; padding: 0.3em;",
+				"z-index: 999999; overflow: auto !important;",
+				"color: #ffffff; background-color: rgba(0,0,0);",
+				"border: 2px inset #101010; border-radius: 0.3em;",
+				"animation: js-wd-emerge 0.5s linear 0s"
+			]},
+			{target: ".js-wd-menu > *", style: [
+				"display: block; margin: inherit; padding: inherit; cursor: pointer; border-radius: inherit;"
+			]},
+			{target: ".js-wd-menu > *:hover", style: ["background-color: rgba(50,50,50);"]},
+			/*-- data-wd-tsort --*/
+			{target: "[data-wd-tsort]", style: ["cursor: pointer;"]},
+			{target: "[data-wd-tsort]:before", style: ["content: \"\\2195 \"; font-weight: normal;"]},
+			{target: "[data-wd-tsort=\"-1\"]:before", style: ["content: \"\\2191 \";"]},
+			{target: "[data-wd-tsort=\"+1\"]:before", style: ["content: \"\\2193 \";"]},
+			/*-- data-wd-repeat/load --*/
+			{target: "[data-wd-repeat] > *, [data-wd-load] > *", style: ["visibility: hidden;"]},
+			/*-- data-wd-slide --*/
+			{target: "[data-wd-slide] > *", style: ["animation: js-wd-emerge 1s, js-wd-shrink-out 0.5s;"]},
+			/*-- SVG --*/
+			{target: "svg .js-wd-chart-hide", style: ["display: none;"]},
+			{target: "@media screen and (min-width: 768px) {svg .js-wd-chart-hide", style: ["display: inline;}"]},
+			/*-- tags especiais --*/
+			{target: "wdtag-mark", style: [
+				"background-color: rgba(154,205,50,0.7); display: inline; border-radius: 0.2em; color: #000000;"
+			]},
+			{target: "wdtag-root", style: [
+				"display: block; padding: 0.3em 0.3em 0.3em 3em; overflow: auto;",
+				"border-radius: 0.5em; 	border: 1px solid #000000;",
+				"font-family: monospace; font-size: 14px; white-space: pre-wrap;",
+				"text-decoration: none; text-indent: 0;",
+				"font-style: normal; font-weight: normal;",
+				"background-color: #262626;",
+				"counter-reset: wdcodelines;"
+			]},
+			{target: "wdtag-root *", style: [
+				"display: inline; position: static; padding: 0;",
+				"font-weight: normal; font-style: normal; border: none; border-raius: none;"
+			]},
+			{target: "wdtag-root wdtag-line", style: ["counter-increment: wdcodelines;"]},
+			{target: "wdtag-root wdtag-line:before", style: [
+				"content: counter(wdcodelines);",
+				"display: inline-block; position: relative;",
+				"margin: 0 0 0 -3em; padding-right: 0.5em; min-width: 3em;",
+				"color: #bcc118; text-align: right;"
+			]},
+			{target: "wdtag-root wdtag-content", style: ["color: #b3b3b3;"]},
+			{target: "wdtag-root wdtag-comment", style: ["color: #8c8c8c; font-style: italic;"]},
+			{target: "wdtag-root wdtag-doc", style: ["color: #df6d6d; font-weight: bold;"]},
+			{target: "wdtag-root wdtag-tag", style: ["color: #418bff;"]},
+			{target: "wdtag-root wdtag-attribute", style: ["color: #57ac57;"]},
+			{target: "wdtag-root wdtag-value", style: ["color: #cf8ee1;"]},
+			{target: "wdtag-root wdtag-word", style: ["color: #df6d6d; font-weight: bold;"]},
+			{target: "wdtag-root wdtag-tick", style: ["font-weight: bold; color: #68cccc;"]},
+			{target: "wdtag-root wdtag-string", style: ["color: #57ac57"]},
+			/*-- container da caixa de mensagens --*/
+			{target: ".js-wd-signal-modal-message", style: [
+				"position: fixed; top: 0; right: 0; left: 0; bottom: initial;",
+				"display: block; margin: auto; padding: 1px; width: auto; max-height: 75vh;",
+				" overflow: auto; z-index: 999999; font-size: 14px; background-color: transparent;"
+			]},
+			{target: "@media screen and (min-width: 768px) {.js-wd-signal-modal-message", style: [
+				"bottom: 0; right: 0; left: 75vw; top: initial;}"
+			]},
+			/*-- modal da caixa de diálogo --*/
+			{target: ".js-wd-signal-modal-dialog", style: [
+				"position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 0.1s js-wd-emerge;",
+				"margin: 0; padding: 0; background-color: rgba(0,0,50,0.3); z-index: 999999; cursor: forbidden;"
+			]},
+			/*-- caixas de mensagem e diálogo --*/
+			{target: ".js-wd-signal-message, .js-wd-signal-dialog", style: [
+				"display: block; padding: 0;",
+				"color: #d4d4e6; background-color: #353535;",
+				"border: thin solid #000000; border-radius: 0.5em;",
+				"box-shadow: inset 0 0 2px 1px rgba(0,0,0,0.6);"
+			]},
+			/*-- caixa de mensagem --*/
+			{target: ".js-wd-signal-message", style: [
+				"position: relative; margin: 0.5em 0; ",
+				"animation: js-wd-expand 0.5s ease 0s, js-wd-shrink 0.5s ease 8.5s;"
+			]},
+			/*-- caixa de diálogo --*/
+			{target: ".js-wd-signal-dialog", style: [
+				"position: absolute; top: 5vh; max-height: 90vh; left: 5vw; width: 90vw; margin: 0;",
+				"animation: js-wd-expand 0.5s ease 0s;"
+			]},
+			{target: "@media screen and (min-width: 768px) {.js-wd-signal-dialog", style: [
+				"top: 20vh; max-height: 60vh; left: 30vw; max-width: 40vw;}"
+			]},
+			/*-- botão para fechar caixa de mensagens --*/
+			{target: ".js-wd-signal-close", style: [
+				"position: absolute; top: 0.2em; right: 0.2em; display: inline-block;",
+				"line-height: 1; cursor: pointer; margin: 0; z-index: 5; font-size: large;"
+			]},
+			{target: ".js-wd-signal-close:before", style: ["content: \"\\00D7\";"]},
+			/*-- cabeçalho das caixas de mensagem e diálogo --*/
+			{target: ".js-wd-signal-head", style: [
+				"display: block; padding: 0.25em 0.5em; margin: 0;",
+				"border-radius: 0.5em 0.5em 0 0; white-space: pre-wrap;",
+				"font-size: larger; background-color: #000000;"
+			]},
+			/*-- corpo das caixas de mensagem e diálogo --*/
+			{target: ".js-wd-signal-body", style: [
+				"display: block; padding: 1em 1em 1em 2em; margin: 0; white-space: pre-wrap;"
+			]},
+			{target: ".js-wd-signal-message .js-wd-signal-body", style: ["border-radius: 0 0 0.5em 0.5em;"]},
+			/*-- rodapé da caixa de diálogo --*/
+			{target: ".js-wd-signal-foot", style: [
+				"display: flex; flex-flow: column nowrap;",
+				"background-color: #000000; border-radius: 0 0 0.5em 0.5em; font-size: smaller;"
+			]},
+			{target: "@media screen and (min-width: 768px) {.js-wd-signal-foot", style: [
+				"flex-flow: row wrap; justify-content: space-evenly; align-items: baseline;}"
+			]},
+			/*-- ações da caixa de diálogo --*/
+			{target: ".js-wd-signal-action", style: [
+				"padding: 0.25em 0.5em; border-radius: 0.2em;",
+				"color: #333333; background-color: #f0f0f0; cursor: pointer;",
+				 "font-size: inherit; text-align: center;"
+			]},
+			{target: "@media screen and (min-width: 768px) {.js-wd-signal-action", style: ["flex-shrink: 0;"]},
+			{target: ".js-wd-signal-action:focus", style: ["outline: 2px solid #9999ff;"]},
+			{target: ".js-wd-signal-action:hover", style: ["text-decoration: underline;"]},
+			//"*::backdrop {background-color: white;}",
+			//TODO ver coloração https://developer.mozilla.org/pt-BR/docs/Web/CSS/background-color
+			//TODO interessante https://developer.mozilla.org/en-US/docs/Web/CSS/::file-selector-button
+			/*-- barra de progresso --*/
+			{target: ".js-wd-progress-modal", style: [
+				"position: fixed; top: 0; left: 0; display: block;",
+				"width: 100vw; height: 100vh; padding: 0; margin: 0; z-index: 999999;",
+				"cursor: progress; background-color: rgba(0,0,0,0.3); animation: js-wd-emerge 0.1s;",
+			]},
+			{target: ".js-wd-progress-bar", style: [
+				"position: absolute; top: 0; left: 0;",
+				"display: block; height: 5px; padding: 0; margin: 0;",
+				"background-color: royalblue; border-radius: 0.2em; border: 1px solid black;"
+			]}
+		],
+		/**. ``''void'' builder()``: Cria o elemento ''style'' com o CSS da biblioteca e o adiciona à página.**/
+		builder: function() {
+			const node = document.createElement("STYLE");
+			const data = [];
+			for (let i = 0; i < this.css.length; i++) {
+				let target = this.css[i].target;
+				let style  = this.css[i].style.join(" ").replace(/\;+/g, " !important;");
+				let block  = [target.trim(), " {", style.trim(), "}"].join("");
+				data.push(block);
+			}
+			node.innerHTML = data.join("\n");
+			document.head.appendChild(node);
+			return;
+		},
+	};
+
 
 /*----------------------------------------------------------------------------*/
 	/**###### ``**const** ''object'' __DEVICE``
@@ -743,6 +761,10 @@ const wd = (function() {
 	/**###### ``**const** ''object'' wdReloadEvent``
 	Evento a ser disparado ao carregar elementos pela biblioteca (ver __Node.load).**/
 	const wdReloadEvent = new CustomEvent("wdreload", {detail: null, bubbles: true});
+/*----------------------------------------------------------------------------*/
+	/**###### ``**const** ''object'' wdResizeEvent``
+	Evento a ser disparado ao alterar as dimensões da tela.**/
+	const wdResizeEvent = new CustomEvent("wdresize", {detail: null, bubbles: true});
 
 /*============================================================================*/
 	/**### Administração de Dados
@@ -1919,12 +1941,12 @@ Object.defineProperties(__Type.prototype, {
 		|Valor|{ }|Define um valor genérico (string, número, nulo, indefinido e expressão regular)|
 		|Lista|[ ]|Define uma lista com itens separados por vírgulas|
 		|Função|( )|Faz referência a uma função dentro do escolo de ''window'' pelo seu nome|
-		|Estrutura|<< >>|Define um objeto|
+		|Estrutura|<< >>|Define um objeto ou uma lista de objetos|
 		. Os grupos são separados pelo caractere "&amp;".
 		. Se o valor contiver o mesmo caractere do escopo, deverá haver a mesma quantidade de caracteres de abertura e de fechamento. Caso seja necessário desobedecer essa regra, o valor deverá ser blindado por apóstrofos (&apos;) no início e no fim. Apóstrofos internos são definidos por apóstrofos duplos seguidos (**&apos;&apos;**).
 		. As strings "undefined", "null", "true", "false" e números serão tratados de acordo com o que representam. Para definir uma expressão regular, o valor deverá iniciar e terminar com o caractere de barra (**&frasl;**), podendo adicionar os complementos ''igm'' após a barra final.
 		. O valor do tipo "função" deve corresponder ao nome de uma função presente dentro do escopo de ''window'' e defindo pelas palavras-chave ''var'' ou ''function''.
-		. O valor do tipo "estrutura" deve corresponder ao mesmo formato da notação, entretanto, não terá grupos e não será permitido conter o caractere de escopo em seu conteúdo (limitação).
+		. O valor do tipo "estrutura" corresponde ao mesmo formato da notação, entretanto, não será permitido conter o caractere de escopo em seu conteúdo (não há subnível). Caso seja atribuídos grupos, o valor da propriedade será um array de objetos, caso contrário, um objeto.
 		. A notação é limitada ao primeiro nível, exceto para o tipo "estrutura". Caso seja necessário, deverá haver reprocessamentos.
 		. As propriedades do tipo "valor" nomeadas como "&dollar;" e "&dollar;&dollar;" recebem um selector CSS e assumem, respectivamente, o valor de um elemento HTML ou de uma lista de elementos (''NodeList'') correspondente ao respectivo seletor.**/
 		wdArray: {
@@ -2087,7 +2109,8 @@ Object.defineProperties(__Type.prototype, {
 								}
 								else if (type === "struct") {
 									let struct = new __Parser(source.innerText.trim());
-									value = struct.wdArray.get()[0];
+									let array  = struct.wdArray.get();
+									value = array.length > 1 ? array : array[0];
 								}
 								json[name] = value;
 							}
@@ -2121,14 +2144,23 @@ Object.defineProperties(__Type.prototype, {
 									obj.push(name, "(", value.name, ")");
 								}
 								else if (ref.array) {
-									let list = []
-									for (let item of value) {
-										let text = String(item);
+									let list  = []
+									let struct, item, text, isobj = true;
+									for (let a = 0; a < value.length; a++) {
+										item  = value[a];
+										text  = String(item);
+										isobj = isobj ? __Type(item).object : false;
 										if ((/[,"]/).test(text))
 											text = "'"+text.replace(qre, "''")+"'";
 										list.push(text);
 									}
-									obj.push(name, "[", list.join(","), "]");
+									if (isobj) {
+										struct = new __Parser(value);
+										text   = struct.arrayWD.get()
+										obj.push(name, "<<", text, ">>");
+									} else {
+										obj.push(name, "[", list.join(","), "]");
+									}
 								}
 								else if (ref.object) {
 									let struct = new __Parser([value]);
@@ -4852,8 +4884,6 @@ Object.defineProperties(__Type.prototype, {
 					const method  = (remove ? "remove" : "add")+"EventListener";
 					if ("#remove"  in list) delete list["#remove"];
 					if ("#capture" in list) delete list["#capture"];
-					console.log(list, method, capture);
-
 					for (let i in list) {
 						let event = String(i).trim().replace(/^(on)?/i, "");
 						let fires = __Type(list[i]).array ? list[i] : [list[i]];
@@ -4921,8 +4951,7 @@ Object.defineProperties(__Type.prototype, {
 							delete this.node.dataset[name];
 					}
 				}
-				/* registrar os atributos alterados e invocar evento */
-				this.node.dataset.wdDatasetEvent = wdLib.join(",");
+				/*-- invocar evento de atribuição de dataset --*/
 				this.node.dispatchEvent(wdDatasetEvent);
 			}
 		},
@@ -5026,7 +5055,7 @@ Object.defineProperties(__Type.prototype, {
 						}
 					}
 				}
-				/*-- invocar evento --*/
+				/*-- invocar evento de carregamento de página --*/
 				if (!xml) {
 					if (replace)
 						for (let i = 0; i < data.length; i++)
@@ -5577,7 +5606,7 @@ Object.defineProperties(__Type.prototype, {
 				return list;
 			}
 		},
-		/**.  ``''node'' plot(''object'' options)``: Retorna um gráfico de acordo com os dados da tabela e conforme especificado em ``options``:
+		/**.  ``''node'' plot(''object'' options)``: Retorna um gráfico de acordo com os dados da tabela e conforme especificado em ``options`` (ver __Plot2D.add):
 		|Nome|Tipo|Descrição|
 		|xLabel|string|Rótulo do eixo ''x''.|
 		|yLabel|string|Rótulo do eixo ''y''.|
@@ -5585,7 +5614,7 @@ Object.defineProperties(__Type.prototype, {
 		|xAxis|string|Define a formatação da escala do eixo ''x'', se ''number'', ''date'', ''time'', ''datetime'' ou ''percent''.|
 		|yAxis|string|Define a formatação da escala do eixo ''y'' (ver xAxis).|
 		|type|string|Tipo de gráfico, ''plan'', ''cols'' ou ''pie''.|
-		|data|array|Conjunto de dados de plotagem.|
+		|data|array object|Um objeto ou uma lista de objetos com os dados de plotagem.|
 		. Os itens da propriedade ``data`` são objetos com os seguintes especificações:
 		|Nome|Tipo|Descrição|
 		|x|any|Valores do eixo ''x'': um array, um objeto (cols ou pie) ou o número da coluna da tabela precedido de &num;.|
@@ -5607,8 +5636,8 @@ Object.defineProperties(__Type.prototype, {
 		plot: {
 			value: function(options) {
 				if (!__Type(options).object)     return null;
-				if (!__Type(options.data).array) return null;
-				if (options.data.length === 0)   return null;
+				const check = new __Type(options.data);
+				if (!check.array && !check.object) return null;
 				const chart = new __Plot2D(options.type);
 				/*-- valores gerais --*/
 				const names = ["xLabel", "yLabel", "title", "xAxis", "yAxis"];
@@ -5617,6 +5646,7 @@ Object.defineProperties(__Type.prototype, {
 						chart[names[i]] = options[names[i]];
 				/*-- adicionando dados --*/
 				const re = /^\#(\d+)$/;
+				if (check.object) options.data = [options.data];
 				for (let i = 0; i < options.data.length; i++) {
 					let item = options.data[i];
 					let col, arr, cell;
@@ -7346,11 +7376,18 @@ Object.defineProperties(__Type.prototype, {
 			}
 		},
 		/**. ``''boolean'' add(''array'' x, ''any'' y, ''string'' label, ''string'' option)``: Adiciona dados para plotagem e retorna falso se não for possível processar a solicitação. Os argumentos ``x`` e ``y`` representam a abscissa (eixo horizontal) e a ordenada (eixo vertical), respectivamente. Seus valores dependem do tipo de gráfico.
-		. No caso de plotagem no __plano cartesiano__, o valor de ``x`` deverá ser uma lista de valores finitos ou de data/tempo. Já o valor de ``y`` poderá ser uma __função__ que retorna um valor numérico finito, uma __lista__ de valores finitos ou de data/tempo; ou uma __constante numérica__ finita.
-		. No caso de plotagem de __gráfico de proporcionalidade__ (circular ou de barras), o valor de ``x`` poderá ser uma lista de identificadores (string) e ``y`` uma lista de valores finitos ou de data/tempo correspondente aos identificadores definidos em ``x``. O valor de ``x`` também poderá ser um objeto, cujos atributos definirão os identificadores, tornado o valor de ``y`` desnecessário.
+		|Propriedade|Plotagem|Tipo|Descrição|
+		|x|Plano cartesiano|array|Lista de valores finitos ou data/tempo|
+		|y|Plano cartesiano|array|Lista de valores finitos ou data/tempo|
+		|y|Plano cartesiano|função|Função ''f(x)'' que retorna um valor finito|
+		|y|Plano cartesiano|número|Uma constante finita|
+		|x|Circular/Colunas|array|Lista de identificadores|
+		|y|Circular/Colunas|array|Lista de valores finitos ou data/tempo relacionados a cada identificador (item) de ''x''|
+		|x|Circular/Colunas|objeto|Um objeto cujas propriedades e seus valores correspondem as listas de ''x'' e ''y''|
+		|y|Circular/Colunas|indefinido|Se ''x'' for um objeto|
+		|label|Plano cartesiano|string|utilizado para identificar o gráfico|
 		. No caso de gráfico circular, se existir valores positivos e negativos para os identificadores, um gráfico de barras será exibido no lugar.
 		. Quando utilizar valores de data/tempo, a referência obtida será a quantidade de segundos desde 0000-01-01.
-		. O argumento ``label`` é utilizado para identificar o gráfico no caso de plano cartesiano.
 		. O argumento ``option`` é opcional e direcionado para o gráfico de plano cartesiano com valores de ``x`` e ``y`` como array. Seus valores podem ser (todos retornam valores aproximados):
 		|Valor|Descrição|
 		|linear|Traça a regressão linear.|
@@ -8295,12 +8332,82 @@ Object.defineProperties(__Type.prototype, {
 			PROGRESS: {value: __PROGRESS},
 			SIGNAL:   {value: __SIGNAL},
 			MIME:     {value: __MIME},
+			STYLE:    {value: __STYLE},
 		});
 	}
 
 /*============================================================================*/
 /**#### Atributos HTML dataset**/
 /*============================================================================*/
+
+		/*TODO esses elementos devem ser carregados no onload
+		{selector: "[data-wd-value]",  method: data_wdValue},
+		{selector: "[data-wd-click]",  method: data_wdClick},
+		{selector: "[data-wd-chart]",  method: data_wdChart},
+		{selector: "[data-wd-code]",   method: data_wdCode},
+		{selector: "[data-wd-filter]", method: data_wdFilter}//FIXME manter?*/
+
+		/*TODO esses elementos devem ser carregados no wddataset
+		wdFilter: data_wdFilter,
+		wdValue:  data_wdValue,
+		wdClick:  data_wdClick,
+		wdDevice: data_wdDevice,
+		wdChart:  data_wdChart,
+		wdCode:   data_wdCode*/
+
+
+
+
+
+
+
+
+/*----------------------------------------------------------------------------*/
+	/**###### ``**function** ''void'' data_wd_device(''node''  target, ''object'' event, ''array'' wdArray)``
+	Função com o propósito de manipular o atributo ``class`` conforme mudança no tamanho da tela por meio do atributo HTML ''data''.
+	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
+	|data-wd-device|load wdreload wddataset|Múltiplas|Único|__Node.style|Qualquer elemento|
+	Possui as seguintes propriedades opcionais:
+	|Nome|Tipo|Descrição|
+	|desktop|string|Estilos CSS separados por espaço a serem utilizados quando a tela corresponder a um desktop.|
+	|tablet|string|Estilos CSS separados por espaço a serem utilizados quando a tela corresponder a um tablet.|
+	|phone|string|Estilos CSS separados por espaço a serem utilizados quando a tela corresponder a um phone.|
+	|mobile|string|Estilos CSS separados por espaço a serem utilizados quando a tela corresponder a um tablet ou phone.|**/
+	function data_wd_device(target, event, wdArray) {
+		/*-- Eventos de carregamento total ou parcial da página --*/
+		if (event.type === "load" || event.type === "wdreload" || event.type === "resize") {
+			const change = __DEVICE.changeDevice;
+			/*-- não executar quanto não houver mudança de dispositivo ao redimensionar a tela --*/
+			if (change || event.type !== "resize") {
+				const device = WD.$$("[data-wd-device]", target);
+				device.forEach(function(node,i) {
+					node.dispatchEvent(wdDatasetEvent);
+				});
+			}
+			return;
+		}
+		/*-- Evento de carregamento do elemento individual --*/
+		const query  = WD(target);
+		const data   = wdArray[0];
+		const device = __DEVICE.device;
+		const types  = { /* 0: elimina css, 1: adiciona css */
+			desktop: {phone: 0, tablet: 0, mobile: 0, desktop: 1},
+			tablet:  {phone: 0, tablet: 1, mobile: 1, desktop: 0},
+			phone:   {phone: 1, tablet: 0, mobile: 1, desktop: 0},
+		};
+		if (device in types) {
+			let type = types[device];
+			/* 1) removendo css dos dispositivos incompatíveis */
+			for (let i in type)
+				if (i in data && type[i] === 0) query.set({class: {remove: data[i]}});
+			/* 2) adicionando css dos dispositivos compatíveis */
+			for (let i in type)
+				if (i in data && type[i] === 1) query.set({class: {add: data[i]}});
+		}
+		return;
+	};
+
+/*----------------------------------------------------------------------------*/
 	/**###### ``**function** ''void'' data_wd_send(''node''  target, ''object'' event, ''array'' wdArray)``
 	Função com o propósito de efetuar requisições por meio do atributo HTML ''data''.
 	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
@@ -8323,17 +8430,16 @@ Object.defineProperties(__Type.prototype, {
 	|trigger|function|Nome do disparador a ser chamado durante a requisição|
 	O disparador deve ser definido no escopo de ''window'' com as palavras ''var'' ou ''function''**/
 	function data_wd_send(target, event, wdArray) {
-		event.preventDefault();
-		let data, query, submit, trigger, kill;
+		/*-- wdSend em form só no evento submit --*/
+		if (event.type === "click") {
+			if (target.tagName.toLowerCase() === "form") return;
+		}
+		let data, query, submit, trigger;
 		for (let i = 0; i < wdArray.length; i++) {
 			data    = wdArray[i];
 			query   = data["$$"] || data["$"] || document.body;
 			trigger = data.trigger;
 			submit  = WD(query).submit(data.url, data.method, data.noValidate);
-			kill    = ["$", "$$", "trigger"];
-			/*-- apagar dados desnecessários --*/
-			for (let k = 0; k < kill.length; k++)
-				if (kill[k] in data) delete data[kill[k]];
 			/*-- Efetuar requisição se não encontrados erros --*/
 			if (submit !== null) {
 				data.url  = submit.url;
@@ -8397,6 +8503,15 @@ Object.defineProperties(__Type.prototype, {
 	|script|boolean|Ver __Node.load|
 	|text|boolean|Ver __Node.load e, se verdadeiro, ''type'' assumirá "text", caso contrári, "html"|**/
 	function data_wd_load(target, event, wdArray) {
+		/*-- Eventos de carregamento total ou parcial da página --*/
+		if (event.type === "load" || event.type === "wdreload") {
+			const repeat = WD.$$("[data-wd-load]", target);
+			repeat.forEach(function(node,i) {
+				node.dispatchEvent(wdDatasetEvent);
+			});
+			return;
+		}
+		/*-- Evento de carregamento do elemento individual --*/
 		const data     = wdArray[0];
 		const options  = {replace: null, script: null, text: null}
 		for (let i in options) {
@@ -8405,9 +8520,9 @@ Object.defineProperties(__Type.prototype, {
 				delete data[i];
 			}
 		}
-		data.type    = options.text === true ? "text" : "html";
+		//data.type    = options.text === true ? "text" : "html";//FIXME isso não está muito certo
 		data.trigger = function(x) {
-			if (x.ok) WD(e).load(x.response, options);
+			if (x.ok) WD(target).load(x.response, options);
 		}
 		return data_wd_send(target, event, [data]);
 	}
@@ -8419,6 +8534,15 @@ Object.defineProperties(__Type.prototype, {
 	|data-wd-repeat|load wdreload wddataset|Múltiplas|Único|__Node.repeat|Elementos que possam conteúdo interno|
 	Possui as mesmas propriedades de ''data-wd-send'', exceto ''trigger'' e ''type''. O arquivo definido em ''url'' deve conter o cabeçalho ''content-type'' como ''text/csv'' ou  ''application/json''!**/
 	function data_wd_repeat(target, event, wdArray) {
+		/*-- Eventos de carregamento total ou parcial da página --*/
+		if (event.type === "load" || event.type === "wdreload") {
+			const repeat = WD.$$("[data-wd-repeat]", target);
+			repeat.forEach(function(node,i) {
+				node.dispatchEvent(wdDatasetEvent);
+			});
+			return;
+		}
+		/*-- Evento de carregamento do elemento individual --*/
 		const data   = wdArray[0];
 		data.type    = "text";
 		data.trigger = function(x) {
@@ -8428,14 +8552,28 @@ Object.defineProperties(__Type.prototype, {
 				if (mime === "json" || mime === "csv") {
 					const parser = new __Parser(x.response);
 					const list   = mime === "json" ? parser.stringJSON : parser.csvTable.tableValues.matrixList;
-					WD(e).repeat(list.get());
+					WD(target).repeat(list.get());
 				} else {
-					WD(e).repeat([]);
+					WD(target).repeat([]);
 				}
 			}
 		}
 		return data_wd_send(target, event, [data]);
 	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -8691,41 +8829,6 @@ Object.defineProperties(__Type.prototype, {
 		} catch(e) {}
 		return;
 	};
-
-/*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wdDevice(''node''  e, ''object'' event)``
-	Função vinculada ao atributo HTML ``data-wd-device`` cujo objetivo é manipular o atributo ``class`` conforme mudança no tamanho da tela. Possui múltiplos atributos e grupo único:
-	|Nome|Descrição|Obrigatório|
-	|desktop|Estilos CSS separados por espaço a serem utilizados quando a tela corresponder a um desktop.|Não|
-	|tablet|Estilos CSS separados por espaço a serem utilizados quando a tela corresponder a um tablet.|Não|
-	|phone|Estilos CSS separados por espaço a serem utilizados quando a tela corresponder a um phone.|Não|
-	|mobile|Estilos CSS separados por espaço a serem utilizados quando a tela corresponder a um tablet ou phone.|Não|**/
-	function data_wdDevice(e, event) {
-		if (!("wdDevice" in e.dataset)) return;
-		let query  = WD(e);
-		let data   = new __Parser(e.dataset.wdDevice).wdArray.get()[0];
-		let device = __DEVICE.device;
-		let types  = { /* 0: elimina css, 1: adiciona css */
-			desktop: {phone: 0, tablet: 0, mobile: 0, desktop: 1},
-			tablet:  {phone: 0, tablet: 1, mobile: 1, desktop: 0},
-			phone:   {phone: 1, tablet: 0, mobile: 1, desktop: 0},
-		};
-		if (device in types) {
-			let type = types[device];
-			/* 1) removendo css dos dispositivos incompatíveis */
-			for (let i in type)
-				if (i in data && type[i] === 0) query.set({class: {remove: data[i]}});
-			/* 2) adicionando css dos dispositivos compatíveis */
-			for (let i in type)
-				if (i in data && type[i] === 1) query.set({class: {add: data[i]}});
-		}
-		return;
-	};
-
-
-
-
-
 
 /*----------------------------------------------------------------------------*/
 	function data_wdEdit(e, event) { /*FIXME pendente edita texto: data-wd-edit=comando{especificação}... */
@@ -9237,54 +9340,8 @@ Object.defineProperties(__Type.prototype, {
 /* -- DISPARADORES -- */
 /*============================================================================*/
 
-	/**
-	### Disparadores
-	Funções a serem invocadas ao disparar determinados eventos.
-	###### ``**function** ''void'' wdOnLoad(''object''  ev)``
-	Disparador a ser invocado ao carregar a página (load): define o estilo CSS da biblioteca e invoca os processos pós carregamento.**/
-	function wdOnLoad(ev) {
-		if (__UNDERMAINTENANCE) console.log({wdOnLoad: ev, target: ev.target});
-		/*-- construindo CSS da biblioteca --*/
-		const node = document.createElement("STYLE");
-		const data = [];
-		for (let i = 0; i < __STYLE.length; i++) {
-			let target = __STYLE[i].target;
-			let style  = __STYLE[i].style.join(" ").replace(/\;+/g, " !important;");
-			let block  = [target.trim(), " {", style.trim(), "}"].join("");
-			data.push(block);
-		}
-		node.innerHTML = data.join("\n");
-		document.head.appendChild(node);
-		/*-- aplicar carregamentos, repetições e ajustes --*/
-		wdOnReload(ev);
-		return;
-	}
 
-/*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' wdOnReload(''object''  ev)``
-	Disparador a ser invocado ao efetuar alterações na página e após o carregamento principal (wdreload).**/
-	function wdOnReload(ev) {
-		if (__UNDERMAINTENANCE) console.log({wdOnReload: ev, target: ev.target});
-		const root = __Type(ev.target).node ? ev.target : document;
-		const data = [
-			//{selector: "[data-wd-repeat]", method: data_wd_repeat},
-			//{selector: "[data-wd-load]",   method: data_wd_load},
-			{selector: "[data-wd-value]",  method: data_wdValue},
-			{selector: "[data-wd-click]",  method: data_wdClick},
-			{selector: "[data-wd-chart]",  method: data_wdChart},
-			{selector: "[data-wd-code]",   method: data_wdCode},
-			{selector: "[data-wd-filter]", method: data_wdFilter}//FIXME manter?
-		];
-		for (let v of data) {
-			/*-- avaliar o alvo carregado (root != document) --*/
-			if (root !== document)
-				WD(root).forEach(function(x) {v.method(x, ev)});
-			/*-- avaliar todo o documento (root = document) ou os descendentes do alvo --*/
-			WD.$$(v.selector, root).forEach(function(x) {v.method(x, ev)});
-		}
-		wdOnResize(ev);
-		return;
-	};
+
 
 /*----------------------------------------------------------------------------*/
 	/**###### ``**function** ''void'' wdOnHash(''object''  ev)``
@@ -9315,53 +9372,6 @@ Object.defineProperties(__Type.prototype, {
 		if (data.footer > 0) document.body.style.marginBottom = data.footer+"px";
 		if (data.header > 0 && hash.length === 1)
 			window.scrollTo(0, hash.valueOf()[0].offsetTop - data.header);
-		return;
-	};
-
-/*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' wdOnResize(''object''  ev)``
-	Disparador a ser invocado após mudanças no tipo de dispositivo (resize).**/
-	function wdOnResize(ev) {
-		if (__UNDERMAINTENANCE) console.log({wdOnResize: ev, target: ev.target});
-		const alldoc = ev.type === "resize" || ev.type === "load";
-		const change = __DEVICE.changeDevice;
-		/*-- se load ou resize, averiguar todo o documento --*/
-		if (alldoc && change) {
-			WD.$$("[data-wd-device]").forEach(function(x) {data_wdDevice(x, ev);});
-		}
-		/*-- caso contrário, avaliar só o elemento e seus descendentes --*/
-		else {
-			WD.$$(ev.target).forEach(function(x) {data_wdDevice(x, ev);});
-			WD.$$("[data-wd-device]", ev.target).forEach(function(x) {data_wdDevice(x, ev);});
-		}
-		/*-- checar hash no carregamento principal (FIXME funciona?) --*/
-		if (ev.type === "load") wdOnHash(ev);
-		return;
-	};
-
-/*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' wdOnDataset(''object''  ev)``
-	Disparador a ser invocado após mudanças no atributo HTML ''dataset'' (evento wddataset) a partir do uso da ferramenta da biblioteca (ver __Node.dataset).**/
-	function wdOnDataset(ev) {
-		if (__UNDERMAINTENANCE) console.log({wdOnDataset: ev, target: ev.target});
-		if (!("wdDatasetEvent" in ev.target.dataset)) return;
-		const data   = ev.target.dataset.wdDatasetEvent.split(",");
-		const events = {
-			//wdLoad:   data_wd_request,
-			//wdRepeat: data_wd_request,
-			wdFilter: data_wdFilter,
-			wdValue:  data_wdValue,
-			wdClick:  data_wdClick,
-			wdDevice: data_wdDevice,
-			wdChart:  data_wdChart,
-			wdCode:   data_wdCode
-		};
-		/*-- Apagar propriedade registradora das propriedades definidas --*/
-		delete ev.target.dataset.wdDatasetEvent;
-		for (let v of data) {
-			let name = v.trim();
-			if (name in events) events[name](ev.target, ev);
-		}
 		return;
 	};
 
@@ -9402,15 +9412,6 @@ Object.defineProperties(__Type.prototype, {
 	function wdOnFocusIn(ev) {
 		if (__UNDERMAINTENANCE) console.log({wdOnFocusIn: ev, target: ev.target});
 		data_wdCode(ev.target, ev);
-		return;
-	};
-
-/*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' wdOnSubmit(''object''  ev)``
-	Disparador a ser invocado ao submeter formulário.**/
-	function wdOnSubmit(ev) {
-		if (__UNDERMAINTENANCE) console.log({wdOnSubmit: ev, target: ev.target});
-		data_wd_request(ev.target, ev);
 		return;
 	};
 
@@ -9470,191 +9471,233 @@ Object.defineProperties(__Type.prototype, {
 		return;
 	};
 
-
-
+	/*TODO descrever
+	target: objeto a vincular o evento
+	preventDefault: informa se é para chamar o método preventDefault
+	data: lista de configuração e disparadores do evento
+	name: nome do atributo dataset
+	call: disparador
+	kill: informa se é para eliminar o atributo de dataset
+	bind: atributos obrigatórios a estarem contidos em dataset
+	*/
 	const __EVENTS = {
+		/**. ``''object'' load``: Evento de carregamento da página (todos elementos).**/
 		load: {
-			target: window,
-			trigger: [
-				{data: "?", call: wdOnLoad}
+			target: window, preventDefault: false,
+			data: [
+				{name: "*", call: function() {__STYLE.builder();}, kill: false, bind: {}},
+				{name: "*", call: data_wd_repeat, kill: false, bind: {}},
+				{name: "*", call: data_wd_load,   kill: false, bind: {}},
+				{name: "*", call: data_wd_device, kill: false, bind: {}}
 			]
 		},
+		/**. ``''object'' wdreload``: Evento de carregamento parcial da página (filhos do elemento).**/
+		wdreload: {
+			target: window, preventDefault: false,
+			data: [
+				{name: "*", call: data_wd_repeat, kill: false, bind: {}},
+				{name: "*", call: data_wd_load,   kill: false, bind: {}},
+				{name: "*", call: data_wd_device, kill: false, bind: {}}
+			]
+		},
+		/**. ``''object'' wddataset``: Evento de definição de atributo dataset (o elemento individual).**/
+		wddataset: {
+			target: document, preventDefault: false,
+			data: [
+				{name: "wdRepeat", call: data_wd_repeat, kill: true, bind: {headers: {}}},
+				{name: "wdLoad",   call: data_wd_load,   kill: true, bind: {headers: {}}},
+				{name: "wdDevice", call: data_wd_device, kill: false, bind: {}}
+			]
+		},
+		/**. ``''object'' resize``: Evento para re/definir estilos.**/
 		resize: {
-			target: window,
-			trigger: [
-				{data: "?", call: wdOnResize}
+			target: window, preventDefault: false,
+			data: [
+				{name: "*", call: data_wd_device, kill: false, bind: {}}
 			]
 		},
 		hashchange: {
-			target: window,
-			trigger: [
-				{data: "?", call: wdOnHash}
-			]
-		},
-		input: {
-			target: document,
-			trigger: [
-				{data: "?", call: wdOnInput}
-			]
-		},
-		focusout: {
-			target: document,
-			trigger: [
-				{data: "?", call: wdOnFocusOut}
-			]
-		},
-		focusin: {
-			target: document,
-			trigger: [
-				{data: "?", call: wdOnFocusIn}
-			]
-		},
-		drag: {
-			target: document,
-			trigger: [
-				{data: "?", call: wdOnMouse}
-			]
-		},
-		dragstart: {
-			target: document,
-			trigger: [
-				{data: "?", call: wdOnMouse}
-			]
-		},
-		dragend: {
-			target: document,
-			trigger: [
-				{data: "?", call: wdOnMouse}
-			]
-		},
-		dragleave: {
-			target: document,
-			trigger: [
-				{data: "?", call: wdOnMouse}
-			]
-		},
-		dragover: {
-			target: document,
-			trigger: [
-				{data: "?", call: wdOnMouse}
-			]
-		},
-		dragenter: {
-			target: document,
-			trigger: [
-				{data: "?", call: wdOnMouse}
-			]
-		},
-		drop: {
-			target: document,
-			trigger: [
-				{data: "?", call: wdOnMouse}
-			]
-		},
-		click: {
-			target: document,
-			trigger: [
-				{data: "wdSend", call: data_wd_send, delete: false, sub: "headers"}
-			]
-		},
-		mousedown: {
-			target: document,
-			trigger: [
-				{data: "?", call: wdOnMouse}
-			]
-		},
-		mouseup: {
-			target: document,
-			trigger: [
-				{data: "?", call: wdOnMouse}
-			]
-		},
-		mousemove: {
-			target: document,
-			trigger: [
-				{data: "?", call: wdOnMouse}
-			]
-		},
-		mouseenter: {
-			target: document,
-			trigger: [
-				{data: "?", call: wdOnMouse}
-			]
-		},
-		mouseleave: {
-			target: document,
-			trigger: [
-				{data: "?", call: wdOnMouse}
-			]
-		},
-		mouseover: {
-			target: document,
-			trigger: [
-				{data: "?", call: wdOnMouse}
-			]
-		},
-		mouseout: {
-			target: document,
-			trigger: [
-				{data: "?", call: wdOnMouse}
-			]
-		},
-		dblclick: {
-			target: document,
-			trigger: [
-				{data: "?", call: wdOnMouse}
-			]
-		},
-		wddataset: {
-			target: document,
-			trigger: [
-				{data: "wdRepeat", call: data_wd_repeat},
-				{data: "wdLoad", call: data_wd_load}
-			]
-		},
-		wdreload: {
-			target: window,
-			trigger: [
-				{data: "?", call: wdOnReload}
+			target: window, preventDefault: false,
+			data: [
+				{name: "?", call: wdOnHash, kill: false, bind: {}}
 			]
 		},
 		submit: {
-			target: document,
-			trigger: [
-				{data: "wdSend", call: data_wd_submit, delete: false, sub: "headers"}
+			target: document, preventDefault: true,
+			data: [
+				{name: "wdSend", call: data_wd_submit, kill: false, bind: {headers: {}}}
 			]
-		}
+		},
+		click: {
+			target: document, preventDefault: true,
+			data: [
+				{name: "wdSend", call: data_wd_send, kill: false, bind: {headers: {}}}
+			]
+		},
+		input: {
+			target: document, preventDefault: false,
+			data: [
+				{name: "?", call: wdOnInput, kill: false, bind: {}}
+			]
+		},
+		focusout: {
+			target: document, preventDefault: false,
+			data: [
+				{name: "?", call: wdOnFocusOut, kill: false, bind: {}}
+			]
+		},
+		focusin: {
+			target: document, preventDefault: false,
+			data: [
+				{name: "?", call: wdOnFocusIn, kill: false, bind: {}}
+			]
+		},
+		drag: {
+			target: document, preventDefault: false,
+			data: [
+				{name: "?", call: wdOnMouse, kill: false, bind: {}}
+			]
+		},
+		dragstart: {
+			target: document, preventDefault: false,
+			data: [
+				{name: "?", call: wdOnMouse, kill: false, bind: {}}
+			]
+		},
+		dragend: {
+			target: document, preventDefault: false,
+			data: [
+				{name: "?", call: wdOnMouse, kill: false, bind: {}}
+			]
+		},
+		dragleave: {
+			target: document, preventDefault: false,
+			data: [
+				{name: "?", call: wdOnMouse, kill: false, bind: {}}
+			]
+		},
+		dragover: {
+			target: document, preventDefault: false,
+			data: [
+				{name: "?", call: wdOnMouse, kill: false, bind: {}}
+			]
+		},
+		dragenter: {
+			target: document, preventDefault: false,
+			data: [
+				{name: "?", call: wdOnMouse, kill: false, bind: {}}
+			]
+		},
+		drop: {
+			target: document, preventDefault: false,
+			data: [
+				{name: "?", call: wdOnMouse, kill: false, bind: {}}
+			]
+		},
+		mousedown: {
+			target: document, preventDefault: false,
+			data: [
+				{name: "?", call: wdOnMouse, kill: false, bind: {}}
+			]
+		},
+		mouseup: {
+			target: document, preventDefault: false,
+			data: [
+				{name: "?", call: wdOnMouse, kill: false, bind: {}}
+			]
+		},
+		mousemove: {
+			target: document, preventDefault: false,
+			data: [
+				{name: "?", call: wdOnMouse, kill: false, bind: {}}
+			]
+		},
+		mouseenter: {
+			target: document, preventDefault: false,
+			data: [
+				{name: "?", call: wdOnMouse, kill: false, bind: {}}
+			]
+		},
+		mouseleave: {
+			target: document, preventDefault: false,
+			data: [
+				{name: "?", call: wdOnMouse, kill: false, bind: {}}
+			]
+		},
+		mouseover: {
+			target: document, preventDefault: false,
+			data: [
+				{name: "?", call: wdOnMouse, kill: false, bind: {}}
+			]
+		},
+		mouseout: {
+			target: document, preventDefault: false,
+			data: [
+				{name: "?", call: wdOnMouse, kill: false, bind: {}}
+			]
+		},
+		dblclick: {
+			target: document, preventDefault: false,
+			data: [
+				{name: "?", call: wdOnMouse, kill: false, bind: {}}
+			]
+		},
 	};
 
+
+
+		//TODO descrever
 	function eventManager(event) {
-		const target  = event.target;
-		const trigger = event.type in __EVENTS ? __EVENTS[event.type].trigger : [];
-		let item, parser, wdArray;
+		const target  = event.target === window ? document : event.target;
+		const config  = __EVENTS[event.type]
+		const dataset = config.data;
+		const trigger = [];
+		let map, value, parser, wdarray;
 
-		for (let i = 0; i < trigger.length; i++) {
-			item = trigger[i];
-			if (item.data in target.dataset) {
-				parser  = new __Parser(target.dataset[item.data]);
-				wdArray = parser.wdArray.get();
-
-				if ("sub" in item) {
-					for (let j = 0; j < wdArray.length; j++) {
-						if (!(item.sub in wdArray[j])) {
-							wdArray[j][item.sub] = {};
-						} else if (typeof wdArray[j][item.sub] === "string") {
-							parser = new __Parser(wdArray[j][item.sub])
-							wdArray[j][data.sub] = parser.wdArray.get();
+		for (let i = 0; i < dataset.length; i++) {
+			map = dataset[i];
+			/*-- Checar se a propriedade existe em dataset --*/
+			if ("dataset" in target && map.name in target.dataset) {
+				/*-- checar se o valor do atributo foi lido corretamente --*/
+				value   = target.dataset[map.name];
+				parser  = new __Parser(value);
+				wdarray = parser.wdArray.get();
+				/*-- checar se a leitura foi bem sucedida --*/
+				if (wdarray !== null) {
+					/*-- checar se propriedades obrigatórias não foram informadas --*/
+					for (let prop in map.bind) {
+						for (let j = 0; j < wdarray.length; j++) {
+							if (!(prop in wdarray[j]))
+								wdarray[j][prop] = map.bind[prop];
 						}
 					}
+					/*-- verificar se é para excluir a propriedade de dataset --*/
+					if (map.kill) delete target.dataset[map.name];
+					/*-- adicionar disparador à lista --*/
+					trigger.push({wdarray: wdarray, call: map.call, name: map.name});
 				}
-
-				if (item.delete === true)
-					delete target.dataset[item.data];
-
-				item.call(target, event, wdArray);
-				//console.log({target: target, event: event, wdArray: wdArray});
+			}
+			/*-- disparador não vinculado à propriedade dataset --*/
+			else if (map.name === "*") {
+				trigger.push({wdarray: null, call: map.call, name: map.name});
 			}
 		}
+		/*-- checar chamada de preventDefault --*/
+		if (config.preventDefault && trigger.length > 0)
+			event.preventDefault();
+		/*-- chamar disparadores --*/
+		for (let i = 0; i < trigger.length; i++) {
+			if (__UNDERMAINTENANCE) {
+				let info = {};
+				let type = event.type;
+				info[type] = trigger[i].name;
+				info.call  = trigger[i].call.name;
+				info.data  = trigger[i].wdarray
+				console.info(info);
+			}
+			trigger[i].call(target, event, trigger[i].wdarray);
+		}
+		return;
 	};
 
 	for (let ev in __EVENTS)
@@ -9679,8 +9722,6 @@ Object.defineProperties(__Type.prototype, {
 		window: {
 			target: window,
 			events: {
-				load:       wdOnLoad,
-				resize:     wdOnResize,
 				hashchange: wdOnHash,
 			}
 		},
@@ -9709,12 +9750,6 @@ Object.defineProperties(__Type.prototype, {
 				mouseover:  wdOnMouse,
 				mouseout:   wdOnMouse,
 				dblclick:   wdOnMouse,
-
-				wddataset: wdOnDataset,
-				wdreload:  wdOnReload,
-
-				submit:    wdOnSubmit
-
 			}
 		}
 	};
