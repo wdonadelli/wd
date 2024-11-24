@@ -5487,7 +5487,7 @@ Object.defineProperties(__Type.prototype, {
 
 	/**#### Tabela
 	###### ``**constructor** ''object'' __Table(''any'' input)``
-	Construtor para obter dados de tabela e matrizes. O argumento ``input`` pode uma String no formato CSV, uma metriz de array ou uma tabela HTML;**/
+	Construtor para obter dados de tabela e matrizes. O argumento ``input`` pode ser uma String CSV, uma matriz de array ou uma tabela HTML;**/
 	function __Table(input) {
 		if (!(this instanceof __Table))	return new __Table(input);
 		const parser = new __Parser(input);
@@ -7078,8 +7078,9 @@ Object.defineProperties(__Type.prototype, {
 				let data   = this._data.slice();
 				let legend = [];
 				const svg  = __SVG(this._cfg.width, this._cfg.height);
-				svg.svg().style.backgroundColor = "#ffffff";
-
+				//FIXME colocar no CSS ou no style?
+				const css  = {backgroundColor: "#ffffff", fontSize: "16px", fontWeight: "normal", fontStyle: "normal"};
+				for (let i in css) svg.svg().style[i] = css[i];
 				/* redefinindo funções para array ----------------------------------- */
 				if (this._chart === "plan") {
 					let x = this._xSpace;
@@ -7252,13 +7253,15 @@ Object.defineProperties(__Type.prototype, {
 							let curve = {id: id, color: color, info: "", name: name};
 							curve.info = [
 								" "+this.xLabel,
+								"  {i ∈ ℕ | 1 ≤ i ≤ n}",
 								"  n = "+this._values(count),
+								"  i = "+this._values(i+1),
 								" "+this.yLabel,
 								"  {y ∈ ℝ | "+this._values(min)+" ≤ y ≤ "+this._values(max)+"}",
-								"  y  = "+this._values(value),
-								"  ∑y = "+this._values(total),
-								"  ∑y/y = "+this._values(ratio, "y"),
-								"  ∑y/n = "+this._values(total/count),
+								"  y     = "+this._values(value),
+								"  ∑yᵢ   = "+this._values(total),
+								"  ∑yᵢ/y = "+this._values(ratio, "y"),
+								"  ∑yᵢ/n = "+this._values(total/count)
 							].join("\n");
 							width = 360*ratio;
 							/*-- semi-círculos --*/
@@ -7304,12 +7307,14 @@ Object.defineProperties(__Type.prototype, {
 							let curve = {id: id, color: color, info: "", name: this._values(id+1)+") "+name};
 							curve.info = [
 								" "+this.xLabel,
+								"  {i ∈ ℕ | 1 ≤ i ≤ n}",
 								"  n = "+this._values(count),
+								"  i = "+this._values(i+1),
 								" "+this.yLabel,
 								"  {y ∈ ℝ | "+this._values(min)+" ≤ y ≤ "+this._values(max)+"}",
-								"  y  = "+this._values(value),
-								"  ∑y = "+this._values(total),
-								"  ∑y/n = "+this._values(total/count),
+								"  y     = "+this._values(value),
+								"  ∑yᵢ   = "+this._values(total),
+								"  ∑yᵢ/n = "+this._values(total/count)
 							].join("\n");
 							/*-- colunas --*/
 							svg.rect(x, y, w, h)
@@ -8238,7 +8243,7 @@ Object.defineProperties(__Type.prototype, {
 	WDmatrix.prototype = Object.create(__Table.prototype, {constructor: {value: WDmatrix}});
 
 /*----------------------------------------------------------------------------*/
-	/**### Função Mestre
+	/**#### Função Mestre
 	###### ``''object'' WD(''any'' input)``
 	Função principal, única de acesso ao usuário, com o objetivo de chamar os construtores correspondentes ao valor informado no argumento ``input``.**/
 	function WD(input) {
@@ -8255,7 +8260,7 @@ Object.defineProperties(__Type.prototype, {
 		}
 		return new WDmain(input, data);
 	}
-	/**#### Métodos Estáticos**/
+	/**##### Métodos e Atributos Estáticos**/
 	WD.constructor = WD;
 	Object.defineProperties(WD, {
 		/**. ``''string'' version``: Retorna a versão da biblioteca.**/
@@ -8337,36 +8342,13 @@ Object.defineProperties(__Type.prototype, {
 	}
 
 /*============================================================================*/
-/**#### Atributos HTML dataset**/
+/**### Atributos HTML dataset**/
 /*============================================================================*/
 
-		/*TODO esses elementos devem ser carregados no onload
-		{selector: "[data-wd-value]",  method: data_wdValue},
-		{selector: "[data-wd-click]",  method: data_wdClick},
-		{selector: "[data-wd-chart]",  method: data_wdChart},
-		{selector: "[data-wd-code]",   method: data_wdCode},
-		{selector: "[data-wd-filter]", method: data_wdFilter}//FIXME manter?*/
-
-		/*TODO esses elementos devem ser carregados no wddataset
-		wdFilter: data_wdFilter,
-		wdValue:  data_wdValue,
-		wdClick:  data_wdClick,
-		wdDevice: data_wdDevice,
-		wdChart:  data_wdChart,
-		wdCode:   data_wdCode*/
-
-
-
-
-
-
-
-
-/*----------------------------------------------------------------------------*/
 	/**###### ``**function** ''void'' data_wd_device(''node''  target, ''object'' event, ''array'' wdArray)``
 	Função com o propósito de manipular o atributo ``class`` conforme mudança no tamanho da tela por meio do atributo HTML ''data''.
 	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
-	|data-wd-device|load wdreload wddataset|Múltiplas|Único|__Node.style|Qualquer elemento|
+	|data-wd-device|load wdreload wddataset resize|Múltiplas|Único|__Node.style|Qualquer elemento|
 	Possui as seguintes propriedades opcionais:
 	|Nome|Tipo|Descrição|
 	|desktop|string|Estilos CSS separados por espaço a serem utilizados quando a tela corresponder a um desktop.|
@@ -8375,7 +8357,7 @@ Object.defineProperties(__Type.prototype, {
 	|mobile|string|Estilos CSS separados por espaço a serem utilizados quando a tela corresponder a um tablet ou phone.|**/
 	function data_wd_device(target, event, wdArray) {
 		/*-- Eventos de carregamento total ou parcial da página --*/
-		if (event.type === "load" || event.type === "wdreload" || event.type === "resize") {
+		if (event.type === "resize" || event.type === "wdreload" || event.type === "load") {
 			const change = __DEVICE.changeDevice;
 			/*-- não executar quanto não houver mudança de dispositivo ao redimensionar a tela --*/
 			if (change || event.type !== "resize") {
@@ -8408,11 +8390,43 @@ Object.defineProperties(__Type.prototype, {
 	};
 
 /*----------------------------------------------------------------------------*/
+	/**###### ``**function** ''void'' data_wd_hash(''node''  target, ''object'' event, ''array'' wdArray)``
+	Disparador a ser invocado ao mudar a âncora da página () definindo as margens e o posicionamento da âncora em ''body'' se houver elementos filhos ''header'' ou ''footer'' fixos no topo ou na base.
+	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
+	|Não há|load wdreload hashchange resize|Não se aplica|Não se aplica|Não há|.**/
+	function data_wd_hash(target, event, wdArray) {
+		const nodes = WD.$$("body > header, body > footer");
+		const hash  = WD.$(window.location.hash);
+		const data  = {header: 0, footer: 0};
+		nodes.forEach(function(x) {
+			let node   = new __Node(x);
+			let style  = node.styles;
+			let height = 0;
+			if (style.position !== "fixed") return;
+			if (node.tag === "header") {
+				height += Number(style.top.replace(/[^0-9\.]/g, ""));
+				height += Number(style.height.replace(/[^0-9\.]/g, ""));
+				height += Number(style.marginBottom.replace(/[^0-9\.]/g, ""));
+				if (height > data.header) data.header = height;
+			} else if (node.tag === "footer") {
+				height += Number(style.bottom.replace(/[^0-9\.]/g, ""));
+				height += Number(style.height.replace(/[^0-9\.]/g, ""));
+				height += Number(style.marginTop.replace(/[^0-9\.]/g, ""));
+				if (height > data.footer) data.footer = height;
+			}
+		});
+		if (data.header > 0) document.body.style.marginTop    = data.header+"px";
+		if (data.footer > 0) document.body.style.marginBottom = data.footer+"px";
+		if (data.header > 0 && hash.length === 1)
+			window.scrollTo(0, hash.valueOf()[0].offsetTop - data.header);
+		return;
+	};
+
+/*----------------------------------------------------------------------------*/
 	/**###### ``**function** ''void'' data_wd_send(''node''  target, ''object'' event, ''array'' wdArray)``
 	Função com o propósito de efetuar requisições por meio do atributo HTML ''data''.
 	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
 	|data-wd-send|click|Múltiplas|Múltiplos|__Request.send|Elementos que possam receber cliques|
-	|data-wd-send|submit|Múltiplas|Único|__Request.send|Elemento de formulário (''form'')|
 	Propriedades:
 	|Nome|Tipo|Descrição|
 	|url|string|Ver __Request|
@@ -8430,10 +8444,6 @@ Object.defineProperties(__Type.prototype, {
 	|trigger|function|Nome do disparador a ser chamado durante a requisição|
 	O disparador deve ser definido no escopo de ''window'' com as palavras ''var'' ou ''function''**/
 	function data_wd_send(target, event, wdArray) {
-		/*-- wdSend em form só no evento submit --*/
-		if (event.type === "click") {
-			if (target.tagName.toLowerCase() === "form") return;
-		}
 		let data, query, submit, trigger;
 		for (let i = 0; i < wdArray.length; i++) {
 			data    = wdArray[i];
@@ -8454,7 +8464,10 @@ Object.defineProperties(__Type.prototype, {
 
 /*----------------------------------------------------------------------------*/
 	/**###### ``**function** ''void'' data_wd_submit(''node''  target, ''object'' event, ''array'' wdArray)``
-	Função complementar à função ''data_wd_send'' para aplicação em formulários. As propriedades ''url'', ''method'', ''$'' ou ''$$'', ''content-type'' de ''headers'' e ''noValidate'' serão obtidas pelo formulário, se existentes.**/
+	Função semelhante à função ''data_wd_send'' para aplicação ao conteiner de formulário sendo executada ao submetê-lo.
+	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
+	|data_wd_submit|submit|Múltiplas|Único|__Request.send|Elemento de formulário (''form'')|
+	As propriedades ''url'', ''method'', ''$'' ou ''$$'', ''content-type'' de ''headers'' e ''noValidate'' serão obtidas pelo formulário, se existentes.**/
 	function data_wd_submit(target, event, wdArray) {
 		const data  = wdArray[0];
 		const form  = target;
@@ -8497,14 +8510,14 @@ Object.defineProperties(__Type.prototype, {
 	Função com o propósito de efetuar carregamento de dados externos por meio do atributo HTML ''data''.
 	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
 	|data-wd-load|load wdreload wddataset|Múltiplas|Único|__Node.load|Elementos que possam conteúdo interno|
-	Possui as mesmas propriedades de ''data-wd-send'', exceto ''trigger'' e ''type'', acrescidas das seguintes:
+	Possui as mesmas propriedades de ''data-wd-send'', exceto ''trigger'', acrescidas das seguintes:
 	|Nome|Tipo|Descrição|
 	|replace|boolean|Ver __Node.load|
 	|script|boolean|Ver __Node.load|
 	|text|boolean|Ver __Node.load e, se verdadeiro, ''type'' assumirá "text", caso contrári, "html"|**/
 	function data_wd_load(target, event, wdArray) {
 		/*-- Eventos de carregamento total ou parcial da página --*/
-		if (event.type === "load" || event.type === "wdreload") {
+		if (event.type === "wdreload" || event.type === "load") {
 			const repeat = WD.$$("[data-wd-load]", target);
 			repeat.forEach(function(node,i) {
 				node.dispatchEvent(wdDatasetEvent);
@@ -8535,7 +8548,7 @@ Object.defineProperties(__Type.prototype, {
 	Possui as mesmas propriedades de ''data-wd-send'', exceto ''trigger'' e ''type''. O arquivo definido em ''url'' deve conter o cabeçalho ''content-type'' como ''text/csv'' ou  ''application/json''!**/
 	function data_wd_repeat(target, event, wdArray) {
 		/*-- Eventos de carregamento total ou parcial da página --*/
-		if (event.type === "load" || event.type === "wdreload") {
+		if (event.type === "wdreload" || event.type === "load") {
 			const repeat = WD.$$("[data-wd-repeat]", target);
 			repeat.forEach(function(node,i) {
 				node.dispatchEvent(wdDatasetEvent);
@@ -8550,9 +8563,10 @@ Object.defineProperties(__Type.prototype, {
 				const head = new __DataSet(x.headers);
 				const mime = __MIME[head.getAll("content-type")[0]];
 				if (mime === "json" || mime === "csv") {
-					const parser = new __Parser(x.response);
-					const list   = mime === "json" ? parser.stringJSON : parser.csvTable.tableValues.matrixList;
-					WD(target).repeat(list.get());
+					const parser  = new __Parser(x.response);
+					const content = mime === "json" ? parser.stringJSON : parser.csvTable.tableValues.matrixList;
+					const list    = content.get();
+					WD(target).repeat(list);
 				} else {
 					WD(target).repeat([]);
 				}
@@ -8561,121 +8575,184 @@ Object.defineProperties(__Type.prototype, {
 		return data_wd_send(target, event, [data]);
 	}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wdSet(''node''  e, ''object'' event)``
-	Função vinculada ao atributo HTML ``data-wd-set`` cujo objetivo é manipular atributos/propriedades dos nós HTML. Os dados de configuração poderão vir de um arquivo JSON ou CSV ou a partir das propriedades definidas no atributo dataset (ver ``WDnode.set``). Para fonte arquivo, a propriedade ``_file`` deverá ser definida como ''true'' e a propriedade ``type`` deverá ser ''json'' ou ''css'', a depender do tipo de arquivo. Possui múltiplos atributos e grupos:
-	|Nome|Descrição|Obrigatório|
-	|_file|Se verdadeiro, define configuração por arquivo externo|Não|
-	|$ ou $$|Seletore CSS para identificar os alvos da ferramenta (se ausente, será o próprio elemento)|Não|**/
-	function data_wdSet(e, event) {
-		if (!("wdSet" in e.dataset)) return;
-		const data = new __Parser(e.dataset.wdSet).wdArray.get();
-		const exec = function(input) {
-			if (!__Type(input).object) return;
-			const query  = input.$$ || input.$ || e;
-			const target = WD(query);
-			if ("$"     in input) delete input.$;
-			if ("$$"    in input) delete input.$$;
-			if ("_file" in input) delete input._file;
-			target.set(input);
+	/**###### ``**function** ''void'' data_wd_set(''node''  target, ''object'' event, ''array'' wdArray)``
+	Função com o propósito de definir propriedades dos elementos por meio do atributo HTML ''data''.
+	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
+	|data-wd-set|click|Múltiplas|Múltiplos|__Node.attribute|Elementos que possam receber cliques|
+	As propriedades e seus valores são definidos em cada grupo sendo que, no caso de valores em forma de objeto, deverá ser adotada a notação de estrutura. Os elementos alvos são definidos pelas propriedades "$" e "$$" que, se não informadas, assumirá como sendo o elemento disparador do evento.
+	As propriedades também podem estar definidas em um arquivo externo em notação JSON ou CSV (conforme cabeçalho). Nesse caso, a propriedade ''_file_'' (estrutura) deverá ser definida contendo os dados para requisição conforme ''data_wd_send'', exceto por ''type'' e ''trigger''.**/
+	function data_wd_set(target, event, wdArray) {
+		const data    = wdArray;
+		const trigger = function(input) {
+			const query = input.$$ || input.$ || target;
+			const nodes = WD(query);
+			if ( "$" in input) delete input["$"];
+			if ("$$" in input) delete input["$$"];
+			nodes.set(input);
 			return;
 		}
-
-		data.forEach(function(group,i,g) {
-			if (group._file === true) {
-				WD(group).send(function (x) {
-					if (x.ok && __Type(x.response).array)
-						x.response.forEach(function(config,j,c) {return exec(config);});
+		/*-- passando por todas as configurações --*/
+		data.forEach(function(cfg,i,a) {
+			/*-- se as definições estiverem em um arquivo externo --*/
+			if ("_file_" in cfg) {
+				let file = cfg["_file_"];
+				delete cfg["_file_"];
+				cfg.type = "text";
+				WD(file).send(function(x) {
+					if (x.ok) {
+						const head = new __DataSet(x.headers);
+						const mime = __MIME[head.getAll("content-type")[0]];
+						if (mime === "json" || mime === "csv") {
+							const parser  = new __Parser(x.response);
+							const content = mime === "json" ? parser.stringJSON : parser.csvTable.tableValues.matrixList;
+							const list    = content.get();
+							/*-- executar configurações de cada lista --*/
+							for (let j = 0; j < list.length; j++) trigger(list[j]);
+						}
+					}
 				});
-			} else {
-				for (let config in group) {
-					if ((/^.+\{.+\}$/).test(group[config]))
-						group[config] = new __Parser(group[config]).wdArray.get()[0];
-				}
-				exec(group);
+			}
+			/*-- configurações no atributo --*/
+			else {
+				trigger(cfg);
 			}
 		});
 		return;
 	};
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wdChart(''node''  e, ''object'' event)``
-	Função vinculada ao atributo HTML ``data-wd-chart`` cujo objetivo é criar um gráfico 2D a partir de uma tabela, um arquivo CSV ou parâmetros. Possui múltiplos atributos e grupo único:
-	|Nome|Descrição|Obrigatório|
-	|xLabel|Rótulo do eixo ''x''.|Não|
-	|yLabel|Rótulo do eixo ''y''.|Não|
-	|title|Título do gráfico.|Não|
-	|xAxis|Define o tipo de dado do eixo ''x'': number (padrão), date, time ou datetime.|Não|
-	|ratio|Se ''true'', o gráfico será proporcional, caso contrário, será plano cartesiano.|Não|
-	|data|Lista de dados a serem plotados.|Sim|
-	|path|Caminho para o arquivo CSV contendo os dados a serem plotados.|Não|
-	|method|Tipo de requisição HTTP se path for informado (ver WD.send)|Não|
-	|$$|Seletor CSS do formulário com os parâmetros da requição, se path for informado.|Não|
-	|$|Seletor CSS que identifica a tabela HTML contendo os dados a serem plotados (path não pode ser informado).|Não|
-	O atributo ''data'' terá os seguintes atributos com a possibilidades de múltiplos grupos:
-	|Nome|Origem|Descrição|Obrigatório|
-	|x|Qualquer|Array com dados do eixo ''x''.|Sim|
-	|x|Arquivo CSV ou tabela|Número da coluna no formato ''&num;col''.|Sim|
-	|y|Qualquer|Array com dados do eixo ''y'' ou nome da função no escopo de ''window'' definida com ``var``ou ``function``.|Sim|
-	|y|Arquivo CSV ou tabela|Número da coluna no formato ''&num;col''.|Sim|
-	|label|Qualquer|Nome da curva.|Não|
-	|fit|Qualquer|Nome do ajuste da curva (ratio não pode ser ''true'').|Não|**/
-	function data_wdChart(e, event) {
-		if (!("wdChart" in e.dataset)) return;
-		let data = new __Parser(e.dataset.wdChart).wdArray.get()[0];
-		delete e.dataset.wdChart;
-		if (!__Type(data.data).array) return;
-		data.data.forEach(function(v,i,a) {a[i] = new __Parser(v).wdArray.get()[0];});
-
-		/* definindo origem dos dados */
-		let plotter = function(src) {
-			let matrix = WD.matrix(src);
-			let plot   = matrix.plot(data);
-			if (plot !== null) {
-				e.innerHTML = "";
-				e.appendChild(plot);
-			}
-			return;
-		};
-		/* arquivo CSV */
-		if ("path" in data)
-			WD(data.$$).send(data.path, {
-				method: data.method,
-				ondone: function (x) {plotter(x.csv);}
+	/**###### ``**function** ''void'' data_wd_chart(''node''  target, ''object'' event, ''array'' wdArray)``
+	Função com o propósito de plotar gráficos 2D por meio do atributo HTML ''data''.
+	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
+	|data-wd-chart|load wdreload wddataset|Múltiplas|Único|__Table.plot|Elemento que possa receber conteúdo|
+	As propriedades são as mesma do método __Table.plot, o gráfico substituirá o conteúdo do alvo.
+	Os dados da plotagem podem estar definidos na propriedade, em um arquivo externo JSON ou CSV, em uma tabela HTML ou no conteúdo textual de um elemento.
+	Para capturar dados de uma tabela ou elemento HTML, deve-se utilizar a propriedade ''$'' para referenciá-lo.
+	Para capturar dados de um arquivo externo em notação JSON ou CSV (conforme cabeçalho), deve-se definir a propriedade ''_file_'' (estrutura) contendo os dados para requisição conforme ''data_wd_send'', exceto por ''type'' e ''trigger''.**/
+	function data_wd_chart(target, event, wdArray) {
+		/*-- Eventos de carregamento total ou parcial da página --*/
+		if (event.type === "wdreload" || event.type === "load") {
+			const repeat = WD.$$("[data-wd-chart]", target);
+			repeat.forEach(function(node,i) {
+				node.dispatchEvent(wdDatasetEvent);
 			});
-		/* tabela HTML */
-		else if ("$" in data)
-			plotter(data.$);
-		/* dados */
-		else
-			plotter();
+			return;
+		}
+		/*-- Evento de carregamento do elemento individual --*/
+		const data    = wdArray[0];
+		const file    = "_file_" in data ? data["_file_"] : null;
+		const html    = "$" in data ? __Type(data["$"]) : null;
+		const trigger = function(content, config) {
+			const table = __Table(content);
+			const chart = table.plot(config);
+			target.innerHTML = "";
+			if (chart !== null)
+				target.appendChild(chart);
+			}
+		if ( "$" in data) delete data["$"];
+		if ("$$" in data) delete data["$$"];
+		/*-- no caso de arquivo externo --*/
+		if (file !== null) {
+			delete data["_file_"];
+			data.type = "text";
+			WD(file).send(function(x) {
+				if (x.ok) {
+					const head = new __DataSet(x.headers);
+					const mime = __MIME[head.getAll("content-type")[0]];
+					if (mime === "json" || mime === "csv") {
+						const parser  = new __Parser(x.response);
+						const content = mime === "json" ? parser.stringJSON.get() : x.response;
+						trigger(content, data);
+					}
+				}
+			});
+		}
+		/*-- caso de um elemento HTML --*/
+		else if (html.node && html.value.length > 0) {
+			const elem    = html.value[0]
+			const node    = new __Node(elem);
+			const content = node.tag === "table" ? elem : elem[node.form ?  "value" : "innerText"];
+			trigger(content, data);
+		}
+		/*-- configuração apenas no atributo --*/
+		else {
+			trigger(null, data);
+		}
 		return;
 	}
+
+/*----------------------------------------------------------------------------*/
+	/**###### ``**function** ''void'' data_wdClick(''node''  target, ''object'' event, ''array'' wdArray)``
+	Função com o propósito de plotar gráficos 2D por meio do atributo HTML ''data''.
+	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
+	|data-wd-click|load wdreload wddataset|Múltiplas|Único|Não há|Elemento que possa receber um clique|
+
+
+	Função vinculada ao atributo HTML ``data-wd-click`` cujo objetivo é efetuar um autoclique ao elemento. Possui valor simples e opcional. Caso um número inteiro maior que zero seja informado, o clique irá ser executado a cada milisegundos conforme valor definido.**/
+	function data_wd_click(target, event, wdArray) { //FIXME pendente
+		/*-- Eventos de carregamento total ou parcial da página --*/
+		if (event.type === "wdreload" || event.type === "load") {
+			const repeat = WD.$$("[data-wd-click]", target);
+			repeat.forEach(function(node,i) {
+				node.dispatchEvent(wdDatasetEvent);
+			});
+			return;
+		}
+		/*-- Evento de carregamento do elemento individual --*/
+		const data   = wdArray[0];
+		const repeat = new __Type(data.repeat);
+		const time   = repeat.finite && repeat > 0 ? Math.trunc(repeat.value) : 0;
+		const stamp  = String(event.timeStamp);
+		/*-- não é para repetir --*/
+		if (time === 0) {
+			delete target.dataset.wdClick;
+			if ("wdClickId" in target.dataset)
+				delete target.dataset.wdClickId;
+			target.click();
+			return;
+		}
+		/*-- repetir, primeira vez --*/
+		if (!("wdClickId" in target.dataset)) {
+			target.dataset.wdClickId = stamp;
+			target.click();//FIXME tem que combinar o próximo clique
+			return;
+		}
+ 		/*-- repetição, atributo foi apagado, não clicar --*/
+		if (!("wdClick" in target.dataset)) {
+			if ("wdClickId" in target.dataset)
+				delete target.dataset.wdClickId;
+			return;
+		}
+		/*-- repetição, identificador diferente, não clicar --*/
+		if (target.dataset.wdClickId !== stamp) {
+			return;
+		}
+
+
+		delete target.wdClick;
+		target.click()
+		console.log(event);
+
+
+		if (time > 0)
+			window.setTimeout(function() {
+
+
+			}, time);
+		return;
+	};
+
+
+
+
+
+
+
+
+
+
+
 
 /*----------------------------------------------------------------------------*/
 	/**###### ``**function** ''void'' data_wdDisplay(''node''  e, ''string'' event)``
@@ -8753,6 +8830,11 @@ Object.defineProperties(__Type.prototype, {
 
 
 
+/*TODO esses elementos devem ser carregados no onload
+		{selector: "[data-wd-value]",  method: data_wdValue},
+
+		{selector: "[data-wd-code]",   method: data_wdCode},
+		{selector: "[data-wd-filter]", method: data_wdFilter}//FIXME manter?*/
 
 
 
@@ -8770,21 +8852,6 @@ Object.defineProperties(__Type.prototype, {
 
 
 
-/*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wdClick(''node''  e, ''object'' event)``
-	Função vinculada ao atributo HTML ``data-wd-click`` cujo objetivo é efetuar um autoclique ao elemento. Possui valor simples e opcional. Caso um número inteiro maior que zero seja informado, o clique irá ser executado a cada milisegundos conforme valor definido.**/
-	function data_wdClick(e, event) { //FIXME pendente
-		if (!("wdClick" in e.dataset)) return;
-		let data = new __Parser(e.dataset.wdClick).wdArray.get();
-		let info = __Type(data);
-		let time = info.finite ? Math.trunc(info.value) : null;
-		if ("click" in e) e.click();
-		if (time > 0)
-			window.setTimeout(function() {data_wdClick(e, event);}, time);
-		else
-			WD(e).set({dataset: {wdClick: null}});
-		return;
-	};
 
 /*----------------------------------------------------------------------------*/
 	/**###### ``**function** ''void'' data_wdFilter(''node''  e, ''object'' event)``
@@ -9343,37 +9410,7 @@ Object.defineProperties(__Type.prototype, {
 
 
 
-/*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' wdOnHash(''object''  ev)``
-	Disparador a ser invocado ao mudar a âncora da página (hashchange): define as margens e o posicionamento da âncora em ''body'' se houver elementos filhos ''header'' ou ''footer'' fixos no topo ou na base.**/
-	function wdOnHash(ev) {
-		if (__UNDERMAINTENANCE) console.log({wdOnHash: ev, target: ev.target});
-		const target = WD.$$("body > header, body > footer");
-		const hash   = WD.$(window.location.hash);
-		const data   = {header: 0, footer: 0};
-		target.forEach(function(x) {
-			let node   = __Node(x);
-			let style  = node.styles;
-			let height = 0;
-			if (style.position !== "fixed") return;
-			if (node.tag === "header") {
-				height += Number(style.top.replace(/[^0-9\.]/g, ""));
-				height += Number(style.height.replace(/[^0-9\.]/g, ""));
-				height += Number(style.marginBottom.replace(/[^0-9\.]/g, ""));
-				if (height > data.header) data.header = height;
-			} else if (node.tag === "footer") {
-				height += Number(style.bottom.replace(/[^0-9\.]/g, ""));
-				height += Number(style.height.replace(/[^0-9\.]/g, ""));
-				height += Number(style.marginTop.replace(/[^0-9\.]/g, ""));
-				if (height > data.footer) data.footer = height;
-			}
-		});
-		if (data.header > 0) document.body.style.marginTop    = data.header+"px";
-		if (data.footer > 0) document.body.style.marginBottom = data.footer+"px";
-		if (data.header > 0 && hash.length === 1)
-			window.scrollTo(0, hash.valueOf()[0].offsetTop - data.header);
-		return;
-	};
+
 
 /*----------------------------------------------------------------------------*/
 	/**###### ``**function** ''void'' wdOnInput(''object''  ev)``
@@ -9423,7 +9460,7 @@ Object.defineProperties(__Type.prototype, {
 		if (event.target.nodeType !== 1) return;
 		const events = {
 			click:      {which: 1, bubbles : true, trigger: [
-				/*data_wd_request,*/ data_wdTsort, data_wdEdit, data_wdShared, data_wdSet,
+				data_wdTsort, data_wdEdit, data_wdShared,
 				data_wdDisplay, navLink, data_wdMove, data_wdMenu
 			]},
 			dblclick:   {which: 1, bubbles : true, trigger: [data_wdMove]},
@@ -9488,7 +9525,10 @@ Object.defineProperties(__Type.prototype, {
 				{name: "*", call: function() {__STYLE.builder();}, kill: false, bind: {}},
 				{name: "*", call: data_wd_repeat, kill: false, bind: {}},
 				{name: "*", call: data_wd_load,   kill: false, bind: {}},
-				{name: "*", call: data_wd_device, kill: false, bind: {}}
+				{name: "*", call: data_wd_chart,  kill: false, bind: {}},
+				{name: "*", call: data_wd_device, kill: false, bind: {}},
+				{name: "*", call: data_wd_click,  kill: false, bind: {}},
+				{name: "*", call: data_wd_hash,   kill: false, bind: {}}
 			]
 		},
 		/**. ``''object'' wdreload``: Evento de carregamento parcial da página (filhos do elemento).**/
@@ -9497,41 +9537,50 @@ Object.defineProperties(__Type.prototype, {
 			data: [
 				{name: "*", call: data_wd_repeat, kill: false, bind: {}},
 				{name: "*", call: data_wd_load,   kill: false, bind: {}},
-				{name: "*", call: data_wd_device, kill: false, bind: {}}
+				{name: "*", call: data_wd_chart,  kill: false, bind: {}},
+				{name: "*", call: data_wd_device, kill: false, bind: {}},
+				{name: "*", call: data_wd_click,  kill: false, bind: {}},
+				{name: "*", call: data_wd_hash,   kill: false, bind: {}}
 			]
 		},
 		/**. ``''object'' wddataset``: Evento de definição de atributo dataset (o elemento individual).**/
 		wddataset: {
 			target: document, preventDefault: false,
 			data: [
-				{name: "wdRepeat", call: data_wd_repeat, kill: true, bind: {headers: {}}},
-				{name: "wdLoad",   call: data_wd_load,   kill: true, bind: {headers: {}}},
-				{name: "wdDevice", call: data_wd_device, kill: false, bind: {}}
+				{name: "wdRepeat", call: data_wd_repeat, kill: true,  bind: {headers: {}}},
+				{name: "wdLoad",   call: data_wd_load,   kill: true,  bind: {headers: {}}},
+				{name: "wdChart",  call: data_wd_chart,  kill: true,  bind: {}},
+				{name: "wdClick",  call: data_wd_click,  kill: false, bind: {}},
+				{name: "wdDevice", call: data_wd_device, kill: false, bind: {}},
 			]
 		},
 		/**. ``''object'' resize``: Evento para re/definir estilos.**/
 		resize: {
 			target: window, preventDefault: false,
 			data: [
-				{name: "*", call: data_wd_device, kill: false, bind: {}}
+				{name: "*", call: data_wd_device, kill: false, bind: {}},
+				{name: "*", call: data_wd_hash,   kill: false, bind: {}}
 			]
 		},
 		hashchange: {
 			target: window, preventDefault: false,
 			data: [
-				{name: "?", call: wdOnHash, kill: false, bind: {}}
+				{name: "*", call: data_wd_hash,   kill: false, bind: {}}
 			]
 		},
+		/**. ``''object'' submit``: Evento para submeter formulários sem mudança de página.**/
 		submit: {
 			target: document, preventDefault: true,
 			data: [
-				{name: "wdSend", call: data_wd_submit, kill: false, bind: {headers: {}}}
+				{name: "wdSubmit", call: data_wd_submit, kill: false, bind: {headers: {}}}
 			]
 		},
+		/**. ``''object'' click``: Evento ao clicar sobre elementos.**/
 		click: {
 			target: document, preventDefault: true,
 			data: [
-				{name: "wdSend", call: data_wd_send, kill: false, bind: {headers: {}}}
+				{name: "wdSend", call: data_wd_send, kill: false, bind: {headers: {}}},
+				{name: "wdSet",  call: data_wd_set,  kill: false, bind: {}}
 			]
 		},
 		input: {
@@ -9719,12 +9768,6 @@ Object.defineProperties(__Type.prototype, {
 
 /*----------------------------------------------------------------------------*/
 	const __TRIGGERS = {
-		window: {
-			target: window,
-			events: {
-				hashchange: wdOnHash,
-			}
-		},
 		document: {
 			target: document,
 			events: {
