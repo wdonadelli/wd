@@ -4434,8 +4434,6 @@ Object.defineProperties(__Type.prototype, {
 				return msg;
 			})()
 		},
-
-
 		/**. ``''object'' _config``: Contém as configurações sobre os campos de formulário.**/
 		_config: {
 			value: (function() {
@@ -5285,7 +5283,7 @@ Object.defineProperties(__Type.prototype, {
 				return null;
 			}
 		},
-		/**. ``''void'' filter(''string|regexp'' search, ''integer'' width)``: Exibe os nós filhos que casam com o valor definido em ``search``. O argumento ``width`` indica o número mínimo de caracteres a ser informado em ``search`` (string). Quando ``search`'for menor que o valor absoluto de ``width``, nenhum elemento será exibido, se negativo, ou todos, se positivo.**/
+		/**. ``''void'' filter(''string|regexp'' search, ''integer'' width)``: Exibe os nós filhos que casam com o valor definido em ``search``. O argumento ``width`` indica o número mínimo de caracteres a ser informado em ``search`` (string). Quando o comprimento de ``search`` for menor que o valor absoluto de ``width``, nenhum elemento será exibido, se negativo, ou todos, se positivo.**/
 		filter: {
 			value: function(search, width) {
 				if (this.node.childElementCount === 0) return;
@@ -8584,7 +8582,7 @@ Object.defineProperties(__Type.prototype, {
 	As propriedades também podem estar definidas em um arquivo externo em notação JSON ou CSV (conforme cabeçalho). Nesse caso, a propriedade ''_file_'' (estrutura) deverá ser definida contendo os dados para requisição conforme ''data_wd_send'', exceto por ''type'' e ''trigger''.**/
 	function data_wd_set(target, event, wdArray) {
 		const data    = wdArray;
-		const trigger = function(input) {
+		const handler = function(input) {
 			const query = input.$$ || input.$ || target;
 			const nodes = WD(query);
 			if ( "$" in input) delete input["$"];
@@ -8596,10 +8594,10 @@ Object.defineProperties(__Type.prototype, {
 		data.forEach(function(cfg,i,a) {
 			/*-- se as definições estiverem em um arquivo externo --*/
 			if ("_file_" in cfg) {
-				let file = cfg["_file_"];
-				delete cfg["_file_"];
-				cfg.type = "text";
-				WD(file).send(function(x) {
+				let file     = cfg["_file_"];
+				file.type    = "text";
+				file.headers = "headers" in file ? file.headers : {};
+				file.trigger = function(x) {
 					if (x.ok) {
 						const head = new __DataSet(x.headers);
 						const mime = __MIME[head.getAll("content-type")[0]];
@@ -8608,14 +8606,16 @@ Object.defineProperties(__Type.prototype, {
 							const content = mime === "json" ? parser.stringJSON : parser.csvTable.tableValues.matrixList;
 							const list    = content.get();
 							/*-- executar configurações de cada lista --*/
-							for (let j = 0; j < list.length; j++) trigger(list[j]);
+							for (let j = 0; j < list.length; j++)
+								handler(list[j]);
 						}
 					}
-				});
+				};
+				data_wd_send(target, event, [file]);
 			}
 			/*-- configurações no atributo --*/
 			else {
-				trigger(cfg);
+				handler(cfg);
 			}
 		});
 		return;
@@ -8643,54 +8643,52 @@ Object.defineProperties(__Type.prototype, {
 		const data    = wdArray[0];
 		const file    = "_file_" in data ? data["_file_"] : null;
 		const html    = "$" in data ? __Type(data["$"]) : null;
-		const trigger = function(content, config) {
+		const handler = function(content, config) {
 			const table = __Table(content);
 			const chart = table.plot(config);
 			target.innerHTML = "";
-			if (chart !== null)
-				target.appendChild(chart);
-			}
+			if (chart !== null) target.appendChild(chart);
+		}
 		if ( "$" in data) delete data["$"];
 		if ("$$" in data) delete data["$$"];
 		/*-- no caso de arquivo externo --*/
 		if (file !== null) {
-			delete data["_file_"];
-			data.type = "text";
-			WD(file).send(function(x) {
+			file.type    = "text";
+			file.headers = "headers" in file ? file.headers : {};
+			file.trigger = function(x) {
 				if (x.ok) {
 					const head = new __DataSet(x.headers);
 					const mime = __MIME[head.getAll("content-type")[0]];
 					if (mime === "json" || mime === "csv") {
 						const parser  = new __Parser(x.response);
 						const content = mime === "json" ? parser.stringJSON.get() : x.response;
-						trigger(content, data);
+						handler(content, data);
 					}
 				}
-			});
+			}
+			data_wd_send(target, event, [file]);
 		}
 		/*-- caso de um elemento HTML --*/
 		else if (html.node && html.value.length > 0) {
 			const elem    = html.value[0]
 			const node    = new __Node(elem);
-			const content = node.tag === "table" ? elem : elem[node.form ?  "value" : "innerText"];
-			trigger(content, data);
+			const content = node.tag === "table" ? elem : elem[node.form ? "value" : "innerText"];
+			handler(content, data);
 		}
 		/*-- configuração apenas no atributo --*/
 		else {
-			trigger(null, data);
+			handler(null, data);
 		}
 		return;
 	}
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wdClick(''node''  target, ''object'' event, ''array'' wdArray)``
-	Função com o propósito de plotar gráficos 2D por meio do atributo HTML ''data''.
+	/**###### ``**function** ''void'' data_wd_click(''node''  target, ''object'' event, ''array'' wdArray)``
+	Função com o propósito de definir cliques sobre o elemento por meio do atributo HTML ''data''.
 	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
 	|data-wd-click|load wdreload wddataset|Múltiplas|Único|Não há|Elemento que possa receber um clique|
-
-
-	Função vinculada ao atributo HTML ``data-wd-click`` cujo objetivo é efetuar um autoclique ao elemento. Possui valor simples e opcional. Caso um número inteiro maior que zero seja informado, o clique irá ser executado a cada milisegundos conforme valor definido.**/
-	function data_wd_click(target, event, wdArray) { //FIXME pendente
+	Ao definir o atributo, o elemento sofrerá um clique. Se a propriedade opcional ``repeat`` for definida, um clique a cada intervalo de tempo definido (em milisegundos, inteiro positivo) será executado enquanto o atributo não sofrer alterações.**/
+	function data_wd_click(target, event, wdArray) {
 		/*-- Eventos de carregamento total ou parcial da página --*/
 		if (event.type === "wdreload" || event.type === "load") {
 			const repeat = WD.$$("[data-wd-click]", target);
@@ -8700,50 +8698,99 @@ Object.defineProperties(__Type.prototype, {
 			return;
 		}
 		/*-- Evento de carregamento do elemento individual --*/
-		const data   = wdArray[0];
-		const repeat = new __Type(data.repeat);
-		const time   = repeat.finite && repeat > 0 ? Math.trunc(repeat.value) : 0;
-		const stamp  = String(event.timeStamp);
-		/*-- não é para repetir --*/
-		if (time === 0) {
+		const data  = wdArray[0];
+		const check = new __Type(data.repeat);
+		const time  = check.finite && check > 0 ? Math.trunc(check.value) : 0;
+		const first = data.id === null;
+		let  action = [];
+		data.id     = first ? String(new Date().valueOf()) : data.id;
+		/*-- tempo não especificado: não repetir --*/
+		if (time === 0)
+			action = ["delWD", "delID", "click"];
+		/*-- wdClick removido entre repetições: sair --*/
+		else if (!("wdClick" in target.dataset))
+			action = ["delID"];
+		/*-- primeiro passo: definir ID e iniciar repetição --*/
+		else if (first)
+			action = ["setID", "click", "again"];
+		/*-- passo 2: mesmo ID (repetir) --*/
+		else if (target.dataset.wdClickId === data.id)
+			action = ["click", "again"];
+		/*-- definindo ações --*/
+		if (action.indexOf("delWD") >= 0 && "wdClick"   in target.dataset)
 			delete target.dataset.wdClick;
-			if ("wdClickId" in target.dataset)
-				delete target.dataset.wdClickId;
+		if (action.indexOf("delID") >= 0 && "wdClickId" in target.dataset)
+			delete target.dataset.wdClickId;
+		if (action.indexOf("setID") >= 0)
+			target.dataset.wdClickId = data.id;
+		if (action.indexOf("click") >= 0)
 			target.click();
-			return;
-		}
-		/*-- repetir, primeira vez --*/
-		if (!("wdClickId" in target.dataset)) {
-			target.dataset.wdClickId = stamp;
-			target.click();//FIXME tem que combinar o próximo clique
-			return;
-		}
- 		/*-- repetição, atributo foi apagado, não clicar --*/
-		if (!("wdClick" in target.dataset)) {
-			if ("wdClickId" in target.dataset)
-				delete target.dataset.wdClickId;
-			return;
-		}
-		/*-- repetição, identificador diferente, não clicar --*/
-		if (target.dataset.wdClickId !== stamp) {
-			return;
-		}
-
-
-		delete target.wdClick;
-		target.click()
-		console.log(event);
-
-
-		if (time > 0)
+		if (action.indexOf("again") >= 0)
 			window.setTimeout(function() {
-
-
+				data_wd_click(target, event, [data]);
 			}, time);
 		return;
 	};
 
+/*----------------------------------------------------------------------------*/
+	/**###### ``**function** ''void'' data_wdClick(''node''  target, ''object'' event, ''array'' wdArray)``
+	Função com o propósito de definir cliques sobre o elemento por meio do atributo HTML ''data''.
+	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
+	|data-wd-click|load wdreload wddataset|Múltiplas|Único|Não há|Elemento que possa receber um clique|
 
+
+
+	###### ``**function** ''void'' data_wd_filter(''node''  e, ''object'' event)``
+	Função vinculada ao atributo HTML ``data-wd-filter`` cujo objetivo é filtrar os nós filhos que contenham o conteúdo informado utilizando a ferramenta ``WDnode.filter``. Possui múltiplos atributos e grupos:
+	|Nome|Descrição|Obrigatório|
+	|chars|Determina a quantidade mínima de caracteres para executar a busca|Não|
+	|$ ou $$|Seletor CSS dos elementos cujos filhos serão filtrados|Sim|**/
+	function data_wd_filter(target, event, wdArray) {
+		/*-- Eventos de carregamento total ou parcial da página --*/
+		if (event.type === "wdreload" || event.type === "load") {
+			const filter = WD.$$("[data-wd-filter]", target);
+			filter.forEach(function(node,i) {
+				node.dispatchEvent(wdDatasetEvent);
+			});
+			return;
+		}
+		/*-- em evento de teclado, aguardar intervalo para execução --*/
+		if (event.type === "input") {
+			const data = wdArray[0];
+			/*-- primeiro passo --*/
+			if (data.id === null) {
+				data.id = String(new Date().valueOf());
+				target.dataset.wdFilterId = data.id;
+				window.setTimeout(function() {
+					data_wd_filter(target, event, [data]);
+				}, __KEYTIMERANGE);
+				return;
+			}
+			/*-- segundo passo --*/
+			else {
+				if (target.dataset.wdFilterId === data.id)
+					delete data.id;
+				else
+					return;
+			}
+		}
+		/*-- executar filtro --*/
+		const data   = wdArray[0];
+		const query  = data.$$ || data.$ || null;
+		const width  = data.width;
+		const node   = new __Node(target);
+		const regexp = /^\/(.+)\/([gim]+)?$/;
+		const value  = target[!node.form || node.ftext ? "textContent" : "value"];
+		let   search = value;
+		if (regexp.test(search)) {
+			const arg1 = search.replace(regexp, "$1");
+			const arg2 = search.replace(regexp, "$2");
+			search = new RegExp(arg1, arg2);
+		}
+		if (query !== null)
+			WD(query).filter(search, width);
+		return;
+	};
 
 
 
@@ -8832,7 +8879,6 @@ Object.defineProperties(__Type.prototype, {
 
 /*TODO esses elementos devem ser carregados no onload
 		{selector: "[data-wd-value]",  method: data_wdValue},
-
 		{selector: "[data-wd-code]",   method: data_wdCode},
 		{selector: "[data-wd-filter]", method: data_wdFilter}//FIXME manter?*/
 
@@ -8853,27 +8899,7 @@ Object.defineProperties(__Type.prototype, {
 
 
 
-/*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wdFilter(''node''  e, ''object'' event)``
-	Função vinculada ao atributo HTML ``data-wd-filter`` cujo objetivo é filtrar os nós filhos que contenham o conteúdo informado utilizando a ferramenta ``WDnode.filter``. Possui múltiplos atributos e grupos:
-	|Nome|Descrição|Obrigatório|
-	|chars|Determina a quantidade mínima de caracteres para executar a busca|Não|
-	|$ ou $$|Seletor CSS dos elementos cujos filhos serão filtrados|Sim|**/
-	function data_wdFilter(e, event) {
-		if (!("wdFilter" in e.dataset)) return;
-		let node = __Node(e);
-		let data = new __Parser(e.dataset.wdFilter).wdArray.get();
-		data.forEach(function (v,i,a) {
-			const query  = v.$$ || v.$ || undefined;
-			if (query === undefined) return;
-			const target = WD(query);
-			const text   = node.attribute("textContent");
-			const value  = __String("").wdValue(text);
-			const search = __Type(value).regexp ? value : text;
-			target.filter(search, v.chars);
-		});
-		return;
-	};
+
 
 /*----------------------------------------------------------------------------*/
 	/**###### ``**function** ''void'' data_wdTsort(''node''  e, ''object'' event)``
@@ -9528,6 +9554,7 @@ Object.defineProperties(__Type.prototype, {
 				{name: "*", call: data_wd_chart,  kill: false, bind: {}},
 				{name: "*", call: data_wd_device, kill: false, bind: {}},
 				{name: "*", call: data_wd_click,  kill: false, bind: {}},
+				{name: "*", call: data_wd_filter, kill: false, bind: {}},
 				{name: "*", call: data_wd_hash,   kill: false, bind: {}}
 			]
 		},
@@ -9540,6 +9567,7 @@ Object.defineProperties(__Type.prototype, {
 				{name: "*", call: data_wd_chart,  kill: false, bind: {}},
 				{name: "*", call: data_wd_device, kill: false, bind: {}},
 				{name: "*", call: data_wd_click,  kill: false, bind: {}},
+				{name: "*", call: data_wd_filter, kill: false, bind: {}},
 				{name: "*", call: data_wd_hash,   kill: false, bind: {}}
 			]
 		},
@@ -9550,7 +9578,8 @@ Object.defineProperties(__Type.prototype, {
 				{name: "wdRepeat", call: data_wd_repeat, kill: true,  bind: {headers: {}}},
 				{name: "wdLoad",   call: data_wd_load,   kill: true,  bind: {headers: {}}},
 				{name: "wdChart",  call: data_wd_chart,  kill: true,  bind: {}},
-				{name: "wdClick",  call: data_wd_click,  kill: false, bind: {}},
+				{name: "wdClick",  call: data_wd_click,  kill: false, bind: {id: null}},
+				{name: "wdFilter", call: data_wd_filter, kill: false, bind: {}},
 				{name: "wdDevice", call: data_wd_device, kill: false, bind: {}},
 			]
 		},
@@ -9586,7 +9615,7 @@ Object.defineProperties(__Type.prototype, {
 		input: {
 			target: document, preventDefault: false,
 			data: [
-				{name: "?", call: wdOnInput, kill: false, bind: {}}
+				{name: "wdFilter", call: data_wd_filter, kill: false, bind: {id: null}}
 			]
 		},
 		focusout: {
@@ -9702,7 +9731,6 @@ Object.defineProperties(__Type.prototype, {
 		const dataset = config.data;
 		const trigger = [];
 		let map, value, parser, wdarray;
-
 		for (let i = 0; i < dataset.length; i++) {
 			map = dataset[i];
 			/*-- Checar se a propriedade existe em dataset --*/
@@ -9771,7 +9799,6 @@ Object.defineProperties(__Type.prototype, {
 		document: {
 			target: document,
 			events: {
-				input:     wdOnInput,
 
 				focusout:  wdOnFocusOut,
 				focusin:   wdOnFocusIn,
