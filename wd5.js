@@ -8354,19 +8354,17 @@ Object.defineProperties(__Type.prototype, {
 	|phone|string|Estilos CSS separados por espaço a serem utilizados quando a tela corresponder a um phone.|
 	|mobile|string|Estilos CSS separados por espaço a serem utilizados quando a tela corresponder a um tablet ou phone.|**/
 	function data_wd_device(target, event, wdArray) {
-		/*-- Eventos de carregamento total ou parcial da página --*/
-		if (event.type === "resize" || event.type === "wdreload" || event.type === "load") {
-			const change = __DEVICE.changeDevice;
-			/*-- não executar quanto não houver mudança de dispositivo ao redimensionar a tela --*/
-			if (change || event.type !== "resize") {
-				const device = WD.$$("[data-wd-device]", target);
-				device.forEach(function(node,i) {
+		/*-- evento de mundança de toda a página --*/
+		if (event.type === "resize") {
+			if (__DEVICE.changeDevice) {
+				const selector = WD.$$("[data-wd-device]", target);
+				selector.forEach(function(node,i) {
 					node.dispatchEvent(wdDatasetEvent);
 				});
 			}
 			return;
 		}
-		/*-- Evento de carregamento do elemento individual --*/
+		/*-- Evento de mudança do elemento individual --*/
 		const query  = WD(target);
 		const data   = wdArray[0];
 		const device = __DEVICE.device;
@@ -8514,15 +8512,6 @@ Object.defineProperties(__Type.prototype, {
 	|script|boolean|Ver __Node.load|
 	|text|boolean|Ver __Node.load e, se verdadeiro, ''type'' assumirá "text", caso contrári, "html"|**/
 	function data_wd_load(target, event, wdArray) {
-		/*-- Eventos de carregamento total ou parcial da página --*/
-		if (event.type === "wdreload" || event.type === "load") {
-			const repeat = WD.$$("[data-wd-load]", target);
-			repeat.forEach(function(node,i) {
-				node.dispatchEvent(wdDatasetEvent);
-			});
-			return;
-		}
-		/*-- Evento de carregamento do elemento individual --*/
 		const data     = wdArray[0];
 		const options  = {replace: null, script: null, text: null}
 		for (let i in options) {
@@ -8545,15 +8534,6 @@ Object.defineProperties(__Type.prototype, {
 	|data-wd-repeat|load wdreload wddataset|Múltiplas|Único|__Node.repeat|Elementos que possam conteúdo interno|
 	Possui as mesmas propriedades de ''data-wd-send'', exceto ''trigger'' e ''type''. O arquivo definido em ''url'' deve conter o cabeçalho ''content-type'' como ''text/csv'' ou  ''application/json''!**/
 	function data_wd_repeat(target, event, wdArray) {
-		/*-- Eventos de carregamento total ou parcial da página --*/
-		if (event.type === "wdreload" || event.type === "load") {
-			const repeat = WD.$$("[data-wd-repeat]", target);
-			repeat.forEach(function(node,i) {
-				node.dispatchEvent(wdDatasetEvent);
-			});
-			return;
-		}
-		/*-- Evento de carregamento do elemento individual --*/
 		const data   = wdArray[0];
 		data.type    = "text";
 		data.trigger = function(x) {
@@ -8631,15 +8611,6 @@ Object.defineProperties(__Type.prototype, {
 	Para capturar dados de uma tabela ou elemento HTML, deve-se utilizar a propriedade ''$'' para referenciá-lo.
 	Para capturar dados de um arquivo externo em notação JSON ou CSV (conforme cabeçalho), deve-se definir a propriedade ''_file_'' (estrutura) contendo os dados para requisição conforme ''data_wd_send'', exceto por ''type'' e ''trigger''.**/
 	function data_wd_chart(target, event, wdArray) {
-		/*-- Eventos de carregamento total ou parcial da página --*/
-		if (event.type === "wdreload" || event.type === "load") {
-			const repeat = WD.$$("[data-wd-chart]", target);
-			repeat.forEach(function(node,i) {
-				node.dispatchEvent(wdDatasetEvent);
-			});
-			return;
-		}
-		/*-- Evento de carregamento do elemento individual --*/
 		const data    = wdArray[0];
 		const file    = "_file_" in data ? data["_file_"] : null;
 		const html    = "$" in data ? __Type(data["$"]) : null;
@@ -8689,15 +8660,6 @@ Object.defineProperties(__Type.prototype, {
 	|data-wd-click|load wdreload wddataset|Múltiplas|Único|Não há|Elemento que possa receber um clique|
 	Ao definir o atributo, o elemento sofrerá um clique. Se a propriedade opcional ``repeat`` for definida, um clique a cada intervalo de tempo definido (em milisegundos, inteiro positivo) será executado enquanto o atributo não sofrer alterações.**/
 	function data_wd_click(target, event, wdArray) {
-		/*-- Eventos de carregamento total ou parcial da página --*/
-		if (event.type === "wdreload" || event.type === "load") {
-			const repeat = WD.$$("[data-wd-click]", target);
-			repeat.forEach(function(node,i) {
-				node.dispatchEvent(wdDatasetEvent);
-			});
-			return;
-		}
-		/*-- Evento de carregamento do elemento individual --*/
 		const data  = wdArray[0];
 		const check = new __Type(data.repeat);
 		const time  = check.finite && check > 0 ? Math.trunc(check.value) : 0;
@@ -8746,15 +8708,6 @@ Object.defineProperties(__Type.prototype, {
 	|chars|Determina a quantidade mínima de caracteres para executar a busca|Não|
 	|$ ou $$|Seletor CSS dos elementos cujos filhos serão filtrados|Sim|**/
 	function data_wd_filter(target, event, wdArray) {
-		/*-- Eventos de carregamento total ou parcial da página --*/
-		if (event.type === "wdreload" || event.type === "load") {
-			const filter = WD.$$("[data-wd-filter]", target);
-			filter.forEach(function(node,i) {
-				node.dispatchEvent(wdDatasetEvent);
-			});
-			return;
-		}
-		/*-- em evento de teclado, aguardar intervalo para execução --*/
 		if (event.type === "input") {
 			const data = wdArray[0];
 			/*-- primeiro passo --*/
@@ -9544,31 +9497,33 @@ Object.defineProperties(__Type.prototype, {
 	bind: atributos obrigatórios a estarem contidos em dataset
 	*/
 	const __EVENTS = {
-		/**. ``''object'' load``: Evento de carregamento da página (todos elementos).**/
+		/**. ``''object'' load``: Evento de carregamento da página.**/
 		load: {
 			target: window, preventDefault: false,
 			data: [
-				{name: "*", call: function() {__STYLE.builder();}, kill: false, bind: {}},
-				{name: "*", call: data_wd_repeat, kill: false, bind: {}},
-				{name: "*", call: data_wd_load,   kill: false, bind: {}},
-				{name: "*", call: data_wd_chart,  kill: false, bind: {}},
-				{name: "*", call: data_wd_device, kill: false, bind: {}},
-				{name: "*", call: data_wd_click,  kill: false, bind: {}},
-				{name: "*", call: data_wd_filter, kill: false, bind: {}},
-				{name: "*", call: data_wd_hash,   kill: false, bind: {}}
+				{
+					name: "*",
+					call: function() {
+						/*-- adicionar o style da biblioteca e provocar o evento wdreaload no documento --*/
+						__STYLE.builder();
+						document.dispatchEvent(wdReloadEvent);
+					},
+					kill: false,
+					bind: {}
+				}
 			]
 		},
 		/**. ``''object'' wdreload``: Evento de carregamento parcial da página (filhos do elemento).**/
 		wdreload: {
 			target: window, preventDefault: false,
 			data: [
-				{name: "*", call: data_wd_repeat, kill: false, bind: {}},
-				{name: "*", call: data_wd_load,   kill: false, bind: {}},
-				{name: "*", call: data_wd_chart,  kill: false, bind: {}},
-				{name: "*", call: data_wd_device, kill: false, bind: {}},
-				{name: "*", call: data_wd_click,  kill: false, bind: {}},
-				{name: "*", call: data_wd_filter, kill: false, bind: {}},
-				{name: "*", call: data_wd_hash,   kill: false, bind: {}}
+				{name: "[data-wd-repeat]", call: null, kill: false, bind: {}},
+				{name: "[data-wd-load]",   call: null, kill: false, bind: {}},
+				{name: "[data-wd-chart]",  call: null, kill: false, bind: {}},
+				{name: "[data-wd-click]",  call: null, kill: false, bind: {}},
+				{name: "[data-wd-filter]", call: null, kill: false, bind: {}},
+				{name: "[data-wd-device]", call: null, kill: false, bind: {}},
+				{name: "*", call: data_wd_hash, kill: false, bind: {}}
 			]
 		},
 		/**. ``''object'' wddataset``: Evento de definição de atributo dataset (o elemento individual).**/
@@ -9730,25 +9685,33 @@ Object.defineProperties(__Type.prototype, {
 		const config  = __EVENTS[event.type]
 		const dataset = config.data;
 		const trigger = [];
-		let map, value, parser, wdarray;
+		const search  = /^\[data\-wd\-.+\]$/;
+		let map, value, parser, wdarray, selector;
 		for (let i = 0; i < dataset.length; i++) {
 			map = dataset[i];
+			/*-- Checar se é o caso de procurar propriedades dataset em elementos carregados --*/
+			if (search.test(map.name)) {
+				selector = WD.$$(map.name, target);
+				selector.forEach(function(node,i) {
+					node.dispatchEvent(wdDatasetEvent);
+				});
+			}
 			/*-- Checar se a propriedade existe em dataset --*/
-			if ("dataset" in target && map.name in target.dataset) {
+			else if ("dataset" in target && map.name in target.dataset) {
 				/*-- checar se o valor do atributo foi lido corretamente --*/
 				value   = target.dataset[map.name];
 				parser  = new __Parser(value);
 				wdarray = parser.wdArray.get();
 				/*-- checar se a leitura foi bem sucedida --*/
 				if (wdarray !== null) {
-					/*-- checar se propriedades obrigatórias não foram informadas --*/
+					/*-- definir propriedades obrigatórias se não informadas --*/
 					for (let prop in map.bind) {
 						for (let j = 0; j < wdarray.length; j++) {
 							if (!(prop in wdarray[j]))
 								wdarray[j][prop] = map.bind[prop];
 						}
 					}
-					/*-- verificar se é para excluir a propriedade de dataset --*/
+					/*-- verificar se é para excluir a propriedade dataset --*/
 					if (map.kill) delete target.dataset[map.name];
 					/*-- adicionar disparador à lista --*/
 					trigger.push({wdarray: wdarray, call: map.call, name: map.name});
@@ -9759,6 +9722,14 @@ Object.defineProperties(__Type.prototype, {
 				trigger.push({wdarray: null, call: map.call, name: map.name});
 			}
 		}
+
+
+
+
+
+
+
+
 		/*-- checar chamada de preventDefault --*/
 		if (config.preventDefault && trigger.length > 0)
 			event.preventDefault();
