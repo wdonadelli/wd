@@ -5434,10 +5434,9 @@ Object.defineProperties(__Type.prototype, {
 			get: function() {
 				const object = {};
 				const styles = window.getComputedStyle(this.node, null);
-				for (let i in styles) {
-					if ((/\d+/).test(i)) continue;
-					object[i] = styles.getPropertyValue(i);
-				}
+				for (let i in styles)
+					if (!(/\d+/).test(i))
+						object[i] = styles[i];
 				return object;
 			}
 		},
@@ -8354,17 +8353,6 @@ Object.defineProperties(__Type.prototype, {
 	|phone|string|Estilos CSS separados por espaço a serem utilizados quando a tela corresponder a um phone.|
 	|mobile|string|Estilos CSS separados por espaço a serem utilizados quando a tela corresponder a um tablet ou phone.|**/
 	function data_wd_device(target, event, wdArray) {
-		/*-- evento de mundança de toda a página --*/
-		if (event.type === "resize") {
-			if (__DEVICE.changeDevice) {
-				const selector = WD.$$("[data-wd-device]", target);
-				selector.forEach(function(node,i) {
-					node.dispatchEvent(wdDatasetEvent);
-				});
-			}
-			return;
-		}
-		/*-- Evento de mudança do elemento individual --*/
 		const query  = WD(target);
 		const data   = wdArray[0];
 		const device = __DEVICE.device;
@@ -8394,26 +8382,26 @@ Object.defineProperties(__Type.prototype, {
 		const nodes = WD.$$("body > header, body > footer");
 		const hash  = WD.$(window.location.hash);
 		const data  = {header: 0, footer: 0};
+		const re    = /[^0-9\.]/g;
 		nodes.forEach(function(x) {
-			let node   = new __Node(x);
-			let style  = node.styles;
+			const node  = new __Node(x);
+			const tag   = node.tag;
+			const style = node.styles;
+			const attr  = {top: 0, bottom: 0, height: 0, position: null};
+			/*-- obter atributos --*/
+			for (let i in attr)
+				attr[i] = attr[i] === null ? style[i].toLowerCase() : Number(style[i].replace(re, ""));
+			/*-- avaliar altura --*/
 			let height = 0;
-			if (style.position !== "fixed") return;
-			if (node.tag === "header") {
-				height += Number(style.top.replace(/[^0-9\.]/g, ""));
-				height += Number(style.height.replace(/[^0-9\.]/g, ""));
-				height += Number(style.marginBottom.replace(/[^0-9\.]/g, ""));
-				if (height > data.header) data.header = height;
-			} else if (node.tag === "footer") {
-				height += Number(style.bottom.replace(/[^0-9\.]/g, ""));
-				height += Number(style.height.replace(/[^0-9\.]/g, ""));
-				height += Number(style.marginTop.replace(/[^0-9\.]/g, ""));
-				if (height > data.footer) data.footer = height;
-			}
+			if (attr.position === "fixed")
+				height = attr.height + (tag === "header" ? attr.top : attr.bottom);
+			data[tag] = height > data[tag] ? height : data[tag];
 		});
+		/*-- acertar margens de body --*/
 		if (data.header > 0) document.body.style.marginTop    = data.header+"px";
 		if (data.footer > 0) document.body.style.marginBottom = data.footer+"px";
-		if (data.header > 0 && hash.length === 1)
+		/*-- reposicionar body no hash --*/
+		if (data.header > 0 && hash.length === 1 && event.type !== "resize")
 			window.scrollTo(0, hash.valueOf()[0].offsetTop - data.header);
 		return;
 	};
@@ -9501,16 +9489,11 @@ Object.defineProperties(__Type.prototype, {
 		load: {
 			target: window, preventDefault: false,
 			data: [
-				{
-					name: "*",
-					call: function() {
-						/*-- adicionar o style da biblioteca e provocar o evento wdreaload no documento --*/
-						__STYLE.builder();
-						document.dispatchEvent(wdReloadEvent);
-					},
-					kill: false,
-					bind: {}
-				}
+				{name: "*", kill: false, bind: {}, call: function() {
+					/*-- adicionar o style da biblioteca e provocar o evento wdreload no documento --*/
+					__STYLE.builder();
+					document.dispatchEvent(wdReloadEvent);
+				}}
 			]
 		},
 		/**. ``''object'' wdreload``: Evento de carregamento parcial da página (filhos do elemento).**/
@@ -9542,8 +9525,15 @@ Object.defineProperties(__Type.prototype, {
 		resize: {
 			target: window, preventDefault: false,
 			data: [
-				{name: "*", call: data_wd_device, kill: false, bind: {}},
-				{name: "*", call: data_wd_hash,   kill: false, bind: {}}
+				{name: "*", kill: false, bind: {}, call: function() {
+					if (__DEVICE.changeDevice) {
+						const selector = WD.$$("[data-wd-device]");
+						selector.forEach(function(node,i) {
+							node.dispatchEvent(wdDatasetEvent);
+						});
+					}
+				}},
+				{name: "*", call: data_wd_hash, kill: false, bind: {}}
 			]
 		},
 		hashchange: {
@@ -9722,14 +9712,6 @@ Object.defineProperties(__Type.prototype, {
 				trigger.push({wdarray: null, call: map.call, name: map.name});
 			}
 		}
-
-
-
-
-
-
-
-
 		/*-- checar chamada de preventDefault --*/
 		if (config.preventDefault && trigger.length > 0)
 			event.preventDefault();
