@@ -8683,39 +8683,16 @@ Object.defineProperties(__Type.prototype, {
 	};
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wdClick(''node''  target, ''object'' event, ''array'' wdArray)``
-	Função com o propósito de definir cliques sobre o elemento por meio do atributo HTML ''data''.
+	/**###### ``**function** ''void'' data_wd_filter(''node''  target, ''object'' event, ''array'' wdArray)``
+	Função com o propósito de filtrar elementos de acordo com seu conteúdo textual por meio do atributo HTML ''data''.
 	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
-	|data-wd-click|load wdreload wddataset|Múltiplas|Único|Não há|Elemento que possa receber um clique|
-
-
-
-	###### ``**function** ''void'' data_wd_filter(''node''  e, ''object'' event)``
-	Função vinculada ao atributo HTML ``data-wd-filter`` cujo objetivo é filtrar os nós filhos que contenham o conteúdo informado utilizando a ferramenta ``WDnode.filter``. Possui múltiplos atributos e grupos:
-	|Nome|Descrição|Obrigatório|
-	|chars|Determina a quantidade mínima de caracteres para executar a busca|Não|
-	|$ ou $$|Seletor CSS dos elementos cujos filhos serão filtrados|Sim|**/
+	|data-wd-filter|load wdreload wddataset input|Múltiplas|Único|__Node.filter|Elemento que possa receber evento de digitação|
+	Possui as seguintes propriedades:
+	|Nome|Tipo|Descrição|
+	|$ ou $$|node|Seletor CSS que define os elementos que terão seus filhos filtrados|
+	|width|integer|Mesmo propósito do argumento de __Node.filter, sendo opcional|
+	O texto a ser pesquisado é obtido pelo conteúdo do texto que contém o argumento.**/
 	function data_wd_filter(target, event, wdArray) {
-		if (event.type === "input") {
-			const data = wdArray[0];
-			/*-- primeiro passo --*/
-			if (data.id === null) {
-				data.id = String(new Date().valueOf());
-				target.dataset.wdFilterId = data.id;
-				window.setTimeout(function() {
-					data_wd_filter(target, event, [data]);
-				}, __KEYTIMERANGE);
-				return;
-			}
-			/*-- segundo passo --*/
-			else {
-				if (target.dataset.wdFilterId === data.id)
-					delete data.id;
-				else
-					return;
-			}
-		}
-		/*-- executar filtro --*/
 		const data   = wdArray[0];
 		const query  = data.$$ || data.$ || null;
 		const width  = data.width;
@@ -8733,35 +8710,26 @@ Object.defineProperties(__Type.prototype, {
 		return;
 	};
 
-
-
-
-
-
-
-
-
-
 /*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wdDisplay(''node''  e, ''string'' event)``
-	Função vinculada ao atributo HTML ``data-wd-display`` cujo objetivo é manipular a exibição de nós, seus irmãos e filhos utilizando a ferramenta ``WDnode.display``. Possui múltiplos atributos e grupos:
-	|Nome|Descrição|Obrigatório|
-	|action|Ação a ser executada|Sim|
-	|$ ou $$|Seletor CSS para indicar o elemento os elementos a aplicar a ação (se ausente, será o próprio elemento)|Não|**/
-	function data_wdDisplay(e, event) {
-		if (!("wdDisplay" in e.dataset)) return;
-		let self = WD(e);
-		let data = new __Parser(e.dataset.wdDisplay).wdArray.get();
-		data.forEach(function (v,i,a) {
-			let query  = v.$$ || v.$ || e;
-			let target = WD(query);
-			if (target.length === 0)
-				self.display(v.action);
-			else
-				target.display(v.action);
+	/**###### ``**function** ''void'' data_wd_display(''node''  target, ''object'' event, ''array'' wdArray)``
+	Função com o propósito de definir exibições por meio do atributo HTML ''data''.
+	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
+	|data-wd-display|click|Múltiplas|Múltiplos|__Node.display|Elemento que possa receber clique|
+	Possui as seguintes propriedades:
+	|Nome|Tipo|Descrição|
+	|$ ou $$|node|Seletor CSS que define os elementos alvos da ação (se não informado, será o próprio elemento)|
+	|action|integer|Mesmo propósito do argumento de __Node.display|**/
+	function data_wd_display(target, event, wdArray) {
+		wdArray.forEach(function (v,i,a) {
+			const query = v.$$ || v.$ || target;
+			WD(query).display(v.action);
 		});
 		return;
 	};
+
+
+
+
 
 
 
@@ -8821,7 +8789,7 @@ Object.defineProperties(__Type.prototype, {
 /*TODO esses elementos devem ser carregados no onload
 		{selector: "[data-wd-value]",  method: data_wdValue},
 		{selector: "[data-wd-code]",   method: data_wdCode},
-		{selector: "[data-wd-filter]", method: data_wdFilter}//FIXME manter?*/
+*/
 
 
 
@@ -9374,51 +9342,6 @@ Object.defineProperties(__Type.prototype, {
 /* -- DISPARADORES -- */
 /*============================================================================*/
 
-
-
-
-
-
-/*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' wdOnInput(''object''  ev)``
-	Disparador a ser invocado após o elemento sofrer alteração de seu conteúdo textual (input). Haverá um delay entre a digitação e a execução das funções sensíveis.**/
-	function wdOnInput(ev) {
-		if (__UNDERMAINTENANCE) console.log({wdOnInput: ev, target: ev.target});
-		let now  = (new Date()).valueOf();
-		ev.target.dataset.wdTimeStamp = now;
-		/*-- chamar funções após o delay quanto ao último input efetuado --*/
-		window.setTimeout(function() {
-			let now   = (new Date()).valueOf();
-			let stamp = Number(ev.target.dataset.wdTimeStamp);
-			let delta = now - stamp;
-			if (delta >= __KEYTIMERANGE) {
-				data_wdFilter(ev.target, ev);
-				WD.$$("[data-wd-value]").forEach(function(x) {data_wdValue(x, ev);});
-			}
-			return;
-		}, __KEYTIMERANGE);
-		return;
-	};
-
-/*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' wdOnFocusOut(''object''  ev)``
-	Disparador a ser invocado ao sair de um campo editável (focusout).**/
-	function wdOnFocusOut(ev) {
-		if (__UNDERMAINTENANCE) console.log({wdOnFocusOut: ev, target: ev.target});
-		data_wdValue(ev.target, ev);
-		data_wdCode(ev.target, ev);
-		return;
-	};
-
-/*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' wdOnFocusIn(''object''  ev)``
-	Disparador a ser invocado ao entrar em um campo editável (focusin).**/
-	function wdOnFocusIn(ev) {
-		if (__UNDERMAINTENANCE) console.log({wdOnFocusIn: ev, target: ev.target});
-		data_wdCode(ev.target, ev);
-		return;
-	};
-
 /*----------------------------------------------------------------------------*/
 	/**###### ``**function** ''void'' wdOnMouse(''object''  ev)``
 	Disparador a ser invocado em eventos de mouse.**/
@@ -9428,7 +9351,7 @@ Object.defineProperties(__Type.prototype, {
 		const events = {
 			click:      {which: 1, bubbles : true, trigger: [
 				data_wdTsort, data_wdEdit, data_wdShared,
-				data_wdDisplay, navLink, data_wdMove, data_wdMenu
+				navLink, data_wdMove, data_wdMenu
 			]},
 			dblclick:   {which: 1, bubbles : true, trigger: [data_wdMove]},
 
@@ -9454,16 +9377,6 @@ Object.defineProperties(__Type.prototype, {
 
 			v(ev.target, ev);
 
-
-			/*let elem = ev.target;
-			while (elem !== null) {
-				v(elem, ev);
-				//FIXME tem que ver esse negócio de efeito bolha (TODO ACABAR COM ISSO!!!)
-				if (!events[ev.type].bubbles || "wdNoBubbles" in elem.dataset)
-					elem = null;
-				else
-					elem = elem.parentElement;
-			}*/
 		});
 
 
@@ -9539,7 +9452,7 @@ Object.defineProperties(__Type.prototype, {
 		hashchange: {
 			target: window, preventDefault: false,
 			data: [
-				{name: "*", call: data_wd_hash,   kill: false, bind: {}}
+				{name: "*", call: data_wd_hash, kill: false, bind: {}}
 			]
 		},
 		/**. ``''object'' submit``: Evento para submeter formulários sem mudança de página.**/
@@ -9553,8 +9466,9 @@ Object.defineProperties(__Type.prototype, {
 		click: {
 			target: document, preventDefault: true,
 			data: [
-				{name: "wdSend", call: data_wd_send, kill: false, bind: {headers: {}}},
-				{name: "wdSet",  call: data_wd_set,  kill: false, bind: {}}
+				{name: "wdSend",    call: data_wd_send,    kill: false, bind: {headers: {}}},
+				{name: "wdSet",     call: data_wd_set,     kill: false, bind: {}},
+				{name: "wdDisplay", call: data_wd_display, kill: false, bind: {}}
 			]
 		},
 		input: {
@@ -9566,13 +9480,13 @@ Object.defineProperties(__Type.prototype, {
 		focusout: {
 			target: document, preventDefault: false,
 			data: [
-				{name: "?", call: wdOnFocusOut, kill: false, bind: {}}
+				//{name: "?", call: wdOnFocusOut, kill: false, bind: {}}
 			]
 		},
 		focusin: {
 			target: document, preventDefault: false,
 			data: [
-				{name: "?", call: wdOnFocusIn, kill: false, bind: {}}
+				//{name: "?", call: wdOnFocusIn, kill: false, bind: {}}
 			]
 		},
 		drag: {
@@ -9677,6 +9591,30 @@ Object.defineProperties(__Type.prototype, {
 		const trigger = [];
 		const search  = /^\[data\-wd\-.+\]$/;
 		let map, value, parser, wdarray, selector;
+		/*-- especifidades de cada evento --*/
+		switch(event.type) {
+			/*-- aplicável a apenas nós de elementos e cliques com o botão esquerdo --*/
+			case "click": {
+				if (target.nodeType !== 1 || event.which !== 1) return;
+				break;
+			}
+			case "input": {
+				/*-- deve-se aguardar um tempo de repouso na digitação --*/
+				if (!("wdInputID" in event)) {
+					event.wdInputID  = new Date().valueOf();
+					target.wdInputID = event.wdInputID;
+					window.setTimeout(function() {eventManager(event);}, 500);
+					return;
+				} else if (event.wdInputID === target.wdInputID) {
+					delete event.wdInputID;
+					delete target.wdInputID;
+				} else {
+					return;
+				}
+				break;
+			}
+		}
+		/*-- analisando demanda da biblioteca --*/
 		for (let i = 0; i < dataset.length; i++) {
 			map = dataset[i];
 			/*-- Checar se é o caso de procurar propriedades dataset em elementos carregados --*/
@@ -9752,10 +9690,6 @@ Object.defineProperties(__Type.prototype, {
 		document: {
 			target: document,
 			events: {
-
-				focusout:  wdOnFocusOut,
-				focusin:   wdOnFocusIn,
-
 				drag:      wdOnMouse,
 				dragstart: wdOnMouse,
 				dragend:   wdOnMouse,
