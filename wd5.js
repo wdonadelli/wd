@@ -4680,8 +4680,8 @@ Object.defineProperties(__Type.prototype, {
 					 this.fvalidity = this._msg.pattern.replace("?", "");
 					 return true;
 					}
-					/*-- Erros do dataset-wd-value --*/
-					if ("wdValue" in this.node.dataset)
+					/*-- Erros do dataset-wd-mask --*/
+					if ("wdMask" in this.node.dataset)
 						this.node.dispatchEvent(wdReloadEvent);
 					/*-- retornando se há erro encontrado --*/
 					return !this.node.checkValidity()	;
@@ -5464,7 +5464,7 @@ Object.defineProperties(__Type.prototype, {
 				/*-- se for um formulário com máscara primitiva, não avaliar --*/
 				if (this.fmask) return true;
 				/*-- se o conteúdo for vazio, não avaliar --*/
-				const val = this.node[!this.form || this.ftext ? "innerText" : "value"];
+				const val = this.node[!this.form || this.ftext ? "textContent" : "value"];
 				if (val === "") return true;
 				/*-- avaliando máscara --*/
 				const str = new __String(val);
@@ -5474,7 +5474,7 @@ Object.defineProperties(__Type.prototype, {
 					this.fvalidity = txt === "" ? this._msg.pattern.replace("?", model) : "";
 				/*-- definindo valor da máscara --*/
 				if (txt !== "" && txt !== val)
-					this.node[!this.form || this.ftext ? "innerText" : "value"] = txt;
+					this.node[!this.form || this.ftext ? "textContent" : "value"] = txt;
 				return txt !== "";
 			}
 		}
@@ -8727,6 +8727,100 @@ Object.defineProperties(__Type.prototype, {
 		return;
 	};
 
+/*----------------------------------------------------------------------------*/
+	/**###### ``**function** ''void'' data_wd_mask(''node''  target, ''object'' event, ''array'' wdArray)``
+	Função com o propósito de definir máscaras por meio do atributo HTML ''data''.
+	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
+	|data-wd-mask|load wdreload wddataset focusout|Único|Múltiplos|__Node.display|Elemento que possa receber conteúdo|
+	Possui as seguintes propriedades opcionais:
+	|Nome|Tipo|Descrição|
+	|model|string|Modelo da máscara|
+	|check|function|Função a ser checada se a máscara casar ou não for informada|**/
+	function data_wd_mask(target, event, wdArray) {
+		const data  = wdArray[0];
+		const node  = new __Node(target);
+		const model = "model" in data ? String(data.model) : null;
+		const check = __Type(data.check).function ? data.check : null;
+		const mask  = model === null ? true : node.mask(model);
+		if (mask && check !== null)
+			node.fvalidity = check(node.form ? node.fvalue : target.textContent);
+		return;
+	};
+
+/*----------------------------------------------------------------------------*/
+	function data_wd_edit(target, event, wdArray) {
+		const data = wdArray[0]
+		for (let cmd in data) {
+			let arg = data[cmd].trim() === "" ? undefined : data[cmd].trim();
+			/*switch(cmd) {
+				case "createLink": {
+					arg = prompt("Link:", "https://...");
+					if (arg === null || arg.trim() === "") cmd = "unlink";
+					break;
+				}
+				case "insertImage": {
+					arg = prompt("Link:", "https://...");
+					break;
+				}
+			}*/
+			document.execCommand(cmd, false, arg);
+		}
+		return;
+	};
+
+
+
+
+
+
+
+/*----------------------------------------------------------------------------*/
+	/**###### ``**function** ''void'' data_wdValue(''node''  e, ''object'' event)``
+	Função vinculada ao atributo HTML ``data-wd-value`` cujos objetivos são:
+	- Aplicar e validar máscara;
+	- Validar dados;
+	- Renderizar dados; e
+	- Obter e definir valores da URL.
+	Possui múltiplos atributos e grupo único:
+	|Nome|Descrição|
+	|mask|Define o modelo da máscara a ser aplicada ao conteúdo.|
+	|fail|Texto do erro da máscara.|
+	|$$ ou $|Seletores CSS dos elementos de entrada vinculados ao valor de saída (''output'').|
+	|valid|Nome da função, definida no escopo de ''windows'' com ''var'' ou ''function'', para validar o valor.|
+	|output|Nome da função, definida no escopo de ''windows'' com ''var'' ou ''function'', para definir o valor de saída.|
+	A função ''output'' será chamada quando os elementos de entrada dispararem um evento ''input''. Ela também será chamada ao carregar conteúdo ou definir o atributo. A função receberá o elemento e deverá retornar o seu valor.
+	A aplicação da máscara será avalida nos carregamento de conteúdo, definição de atributo e quando o elemento perder o foco. Será chamada também no evento ''input'' se ''output'' for chamada. Se o conteúdo não casar com a máscara, o nó assumirá como mensagem de erro o valor de ``fail`` ou o modelo da máscara.
+	A função ''valid'' será chamada nos carregamento de conteúdo e definição de atributo. A função receberá o elemento e deverá retornar o valor da mensagem de erro ou uma string em branco se não houver. No evento ''input'', ''valid'' só será executada se ''output'' tiver sido chamada.**/
+	function data_wd_output(target, event, wdArray) {
+		const data  = wdArray[0];
+		const query = new __Type(data.$$ || data.$ || undefined);
+		const value = __Type(data.value).function ? data.value : null;
+
+
+		const output = (function() {
+			const check = __Type(target);
+			const input = check.node ? check.value : [];
+			if (!__Type(data.output).function) return false;
+			if (event.type === "focusout")     return false;
+			if (event.type === "input" && input.indexOf(event.target) < 0) return false;
+			e[node.ftext ? "textContent" : "value"] = data.output(e);
+			return true;
+		})();
+		return;
+	};
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -8741,23 +8835,34 @@ Object.defineProperties(__Type.prototype, {
 
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wdCode(''node''  e, ''object'' event)``FIXME acertar esse texto
+	/**###### ``**function** ''void'' data_wd_code(''node''  target, ''object'' event, ''array'' wdArray)``
+	Função com o propósito de definir exibições por meio do atributo HTML ''data''.
+	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
+	|data-wd-display|click|Múltiplas|Múltiplos|__Node.display|Elemento que possa receber clique|
+	Possui as seguintes propriedades:
+	|Nome|Tipo|Descrição|
+	|$ ou $$|node|Seletor CSS que define os elementos alvos da ação (se não informado, será o próprio elemento)|
+	|action|integer|Mesmo propósito do argumento de __Node.display|
 	Função vinculada ao atributo HTML ``data-wd-display`` cujo objetivo é manipular a exibição de nós, seus irmãos e filhos utilizando a ferramenta ``WDnode.display``. Possui múltiplos atributos e grupos:
 	|Nome|Descrição|Obrigatório|
 
 	|action|Ação a ser executada|Sim|
 	|$ ou $$|Seletor CSS para indicar o elemento os elementos a aplicar a ação (se ausente, será o próprio elemento)|Não|**/
-	function data_wdCode(e, event) {//FIXME pendente
-		if (!("wdCode" in e.dataset)) return;
-		const data = new __Parser(e.dataset.wdCode).wdArray.get()[0];
-		const node = __Node(e);
-		const code = __Code(node.form ? node.value() : e.innerText);
-		let   html = node.form ? document.createElement("PRE") : e;
-		if (__Type(data.config).function) {
-			code.config(data.config());
-		}
-		e.spellcheck = false;
-		e.translate  = false;
+	function data_wd_code(target, event, wdArray) {
+		const data = wdArray[0];
+		const node = new __Node(target);
+		const code = new __Code(target[node.form ? "value" : "innerText"]);
+		console.log(target.children[0]);
+		code.config(data);
+		target.spellcheck = false;
+		target.translate  = false;
+		target.innerHTML = code.toString();
+
+
+
+
+
+		/*
 		if (node.form) {
 			e.parentElement.insertBefore(html, e);
 			html.dataset.wdCode = e.dataset.wdCode;
@@ -8772,7 +8877,7 @@ Object.defineProperties(__Type.prototype, {
 		} else {
 			html.innerHTML  = code.valueOf();
 			window.getSelection().removeAllRanges();
-		}
+		}*/
 		return;
 	};
 
@@ -8788,8 +8893,25 @@ Object.defineProperties(__Type.prototype, {
 
 /*TODO esses elementos devem ser carregados no onload
 		{selector: "[data-wd-value]",  method: data_wdValue},
-		{selector: "[data-wd-code]",   method: data_wdCode},
 */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -8832,89 +8954,8 @@ Object.defineProperties(__Type.prototype, {
 		return;
 	};
 
-/*----------------------------------------------------------------------------*/
-	function data_wdEdit(e, event) { /*FIXME pendente edita texto: data-wd-edit=comando{especificação}... */
-		if (!("execCommand" in document) || !("wdEdit" in e.dataset)) return;
-		let data = new __Parser(e.dataset.wdEdit).wdArray.get()[0];
-		for (let cmd in data) {
-			let arg = data[cmd].trim() === "" ? undefined : data[cmd].trim();
-			switch(cmd) {
-				case "createLink": {
-					arg = prompt("Link:", "https://...");
-					if (arg === null || arg.trim() === "") cmd = "unlink";
-					break;
-				}
-				case "insertImage": {
-					arg = prompt("Link:", "https://...");
-					break;
-				}
-			}
-			document.execCommand(cmd, false, arg);
-		}
-		return;
-	};
 
-/*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wdValue(''node''  e, ''object'' event)``
-	Função vinculada ao atributo HTML ``data-wd-value`` cujos objetivos são:
-	- Aplicar e validar máscara;
-	- Validar dados;
-	- Renderizar dados; e
-	- Obter e definir valores da URL.
-	Possui múltiplos atributos e grupo único:
-	|Nome|Descrição|
-	|mask|Define o modelo da máscara a ser aplicada ao conteúdo.|
-	|fail|Texto do erro da máscara.|
-	|$$ ou $|Seletores CSS dos elementos de entrada vinculados ao valor de saída (''output'').|
-	|valid|Nome da função, definida no escopo de ''windows'' com ''var'' ou ''function'', para validar o valor.|
-	|output|Nome da função, definida no escopo de ''windows'' com ''var'' ou ''function'', para definir o valor de saída.|
-	A função ''output'' será chamada quando os elementos de entrada dispararem um evento ''input''. Ela também será chamada ao carregar conteúdo ou definir o atributo. A função receberá o elemento e deverá retornar o seu valor.
-	A aplicação da máscara será avalida nos carregamento de conteúdo, definição de atributo e quando o elemento perder o foco. Será chamada também no evento ''input'' se ''output'' for chamada. Se o conteúdo não casar com a máscara, o nó assumirá como mensagem de erro o valor de ``fail`` ou o modelo da máscara.
-	A função ''valid'' será chamada nos carregamento de conteúdo e definição de atributo. A função receberá o elemento e deverá retornar o valor da mensagem de erro ou uma string em branco se não houver. No evento ''input'', ''valid'' só será executada se ''output'' tiver sido chamada.**/
-	function data_wdValue(e, event) {
-		if (!("wdValue" in e.dataset)) return;
-		const data   = new __Parser(e.dataset.wdValue).wdArray.get()[0];
-		const events = ["wdreload", "wddataset", "focusout", "input"];
-		if (!__Type(data).object || events.indexOf(event.type) < 0) return;
-		const node   = __Node(e);
-		const target = data.$$ || data.$ || undefined;
 
-		const output = (function() {
-			const check = __Type(target);
-			const input = check.node ? check.value : [];
-			if (!__Type(data.output).function) return false;
-			if (event.type === "focusout")     return false;
-			if (event.type === "input" && input.indexOf(event.target) < 0) return false;
-			e[node.ftext ? "textContent" : "value"] = data.output(e);
-			return true;
-		})();
-
-		const mask   = (function() {
-			if (!__Type(data.mask).nonempty)       return false;
-			if (event.type === "input" && !output) return false;
-			const text  = node.ftext ? e.textContent : e.value;
-			const value = WD(text).mask(data.mask);
-			const fail  = __Type(data.fail).nonempty ? data.fail : data.mask
-			if (text === "") {
-				node.fvalidity = "";
-			} else if (value === "") {
-				node.fvalidity = fail;
-			} else {
-				e[node.ftext ? "textContent" : "value"] = value;
-				node.fvalidity = "";
-			}
-			return true;
-		})();
-
-		const valid  = (function() {
-			if (!__Type(data.valid).function)      return false;
-			if (event.type === "input" && !output) return false;
-			node.fvalidity = data.valid(e);
-			return true;
-		})();
-
-		return;
-	};
 
 /*----------------------------------------------------------------------------*/
 	function data_wdShared(e, event) { /* FIXME pendente Experimental: compartilhar em redes sociais: data-wd-shared=rede */
@@ -9350,7 +9391,7 @@ Object.defineProperties(__Type.prototype, {
 		if (event.target.nodeType !== 1) return;
 		const events = {
 			click:      {which: 1, bubbles : true, trigger: [
-				data_wdTsort, data_wdEdit, data_wdShared,
+				data_wdTsort, data_wdShared,
 				navLink, data_wdMove, data_wdMenu
 			]},
 			dblclick:   {which: 1, bubbles : true, trigger: [data_wdMove]},
@@ -9416,8 +9457,10 @@ Object.defineProperties(__Type.prototype, {
 				{name: "[data-wd-repeat]", call: null, kill: false, bind: {}},
 				{name: "[data-wd-load]",   call: null, kill: false, bind: {}},
 				{name: "[data-wd-chart]",  call: null, kill: false, bind: {}},
+				{name: "[data-wd-code]",   call: null, kill: false, bind: {}},
 				{name: "[data-wd-click]",  call: null, kill: false, bind: {}},
 				{name: "[data-wd-filter]", call: null, kill: false, bind: {}},
+				{name: "[data-wd-mask]",   call: null, kill: false, bind: {}},
 				{name: "[data-wd-device]", call: null, kill: false, bind: {}},
 				{name: "*", call: data_wd_hash, kill: false, bind: {}}
 			]
@@ -9429,8 +9472,10 @@ Object.defineProperties(__Type.prototype, {
 				{name: "wdRepeat", call: data_wd_repeat, kill: true,  bind: {headers: {}}},
 				{name: "wdLoad",   call: data_wd_load,   kill: true,  bind: {headers: {}}},
 				{name: "wdChart",  call: data_wd_chart,  kill: true,  bind: {}},
+				{name: "wdCode",   call: data_wd_code,   kill: true,  bind: {}},
 				{name: "wdClick",  call: data_wd_click,  kill: false, bind: {id: null}},
 				{name: "wdFilter", call: data_wd_filter, kill: false, bind: {}},
+				{name: "wdMask",  call: data_wd_mask,    kill: false, bind: {}},
 				{name: "wdDevice", call: data_wd_device, kill: false, bind: {}},
 			]
 		},
@@ -9468,19 +9513,21 @@ Object.defineProperties(__Type.prototype, {
 			data: [
 				{name: "wdSend",    call: data_wd_send,    kill: false, bind: {headers: {}}},
 				{name: "wdSet",     call: data_wd_set,     kill: false, bind: {}},
-				{name: "wdDisplay", call: data_wd_display, kill: false, bind: {}}
+				{name: "wdDisplay", call: data_wd_display, kill: false, bind: {}},
+				{name: "wdEdit",    call: data_wd_edit,    kill: false, bind: {}}
 			]
 		},
 		input: {
 			target: document, preventDefault: false,
 			data: [
-				{name: "wdFilter", call: data_wd_filter, kill: false, bind: {id: null}}
+				{name: "wdFilter",  call: data_wd_filter, kill: false, bind: {id: null}},
+				//{name: "*",         call: data_wd_output, kill: false, bind: {}},
 			]
 		},
 		focusout: {
 			target: document, preventDefault: false,
 			data: [
-				//{name: "?", call: wdOnFocusOut, kill: false, bind: {}}
+				{name: "wdMask", call: data_wd_mask, kill: false, bind: {}},
 			]
 		},
 		focusin: {
