@@ -2017,12 +2017,14 @@ Object.defineProperties(__Type.prototype, {
 							}
 							else if (tag === "quote") {
 								if (val === "'") {
-									if (code[i+1] === "'")
-										code[i+1] = "\"";
-									else
+									if (code[i+1] === "'") {
+										tree.add("'");
+										i++;
+									} else {
 										tree.close();
+									}
 								} else {
-									tree.add(val)
+									tree.add(val);
 								}
 							}
 							else if (tag === "value") {
@@ -4931,26 +4933,30 @@ Object.defineProperties(__Type.prototype, {
 			},
 			set: function(x) {
 				const data  = new __Type(x);
-				const wdLib = [];
+				/*-- deletar todas as propriedades de dataset --*/
 				if (data.null) {
 					const attr = this.dataset;
-					for (let i in attr) {
-						wdLib.push(i);
+					for (let i in attr)
 						delete this.node.dataset[i];
-					}
 				}
+				/*-- definir ou excluir propriedades de dataset --*/
 				else if (data.object) {
+					const wddataset = [];
 					for (let i in x) {
-						wdLib.push(i);
 						let name = __String(i).camel;
 						if (x[i] !== null)
 							this.node.dataset[name] = x[i];
 						else if (name in this.node.dataset)
 							delete this.node.dataset[name];
+
+						if (x[i] !== null) wddataset.push(name);
 					}
+					//FIXME consertar isso
+					this.node.dataset.wddataset = wddataset.join(" ");
+					this.node.dispatchEvent(wdDatasetEvent);
 				}
 				/*-- invocar evento de atribuição de dataset --*/
-				this.node.dispatchEvent(wdDatasetEvent);
+				//this.node.dispatchEvent(wdDatasetEvent);
 			}
 		},
 		/**. ``''node'' clone(boolean childs=true)``: Retorna um clone do objeto. Se o argumento opcional ``childs`` for falso, os elementos filhos não serão clonados.**/
@@ -4980,6 +4986,7 @@ Object.defineProperties(__Type.prototype, {
 		|HTMLDocument|Texto da estrutura HTML ou a renderização de ''body'' como innerHTML.|
 		|XMLDocument|Texto da estrutura XML ou a apensação de seus elementos raiz ao nó.|
 		|Lista HTML|Texto do outerHTML de cada nó agrupado ou a apensação de seus elementos ao nó.|**/
+		//FIXME quando for substituir elementos, tem que provocar o wdreload sobre o elemento pai
 		load: {
 			value: function(html, options) {
 				if (!__Type(options).object) options = {};
@@ -8748,21 +8755,22 @@ Object.defineProperties(__Type.prototype, {
 	};
 
 /*----------------------------------------------------------------------------*/
+	/**###### ``**function** ''void'' data_wd_edit(''node''  target, ''object'' event, ''array'' wdArray)``
+	Função com o propósito de formatar textos em elementos editáveis por meio do atributo HTML ''data''.
+	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
+	|data-wd-edit|click|Único|Múltiplos|-|Elementos que possa receber click|
+	As propriedades e seus valores são advindas da ferramenta nativa ''execCommand''. TODO melhorar isso**/
 	function data_wd_edit(target, event, wdArray) {
 		const data = wdArray[0]
 		for (let cmd in data) {
 			let arg = data[cmd].trim() === "" ? undefined : data[cmd].trim();
-			/*switch(cmd) {
-				case "createLink": {
-					arg = prompt("Link:", "https://...");
-					if (arg === null || arg.trim() === "") cmd = "unlink";
-					break;
-				}
-				case "insertImage": {
-					arg = prompt("Link:", "https://...");
-					break;
-				}
-			}*/
+			if (cmd === "createLink") {
+				arg = prompt("Link:", "https://...");
+				if (arg === null || arg.trim() === "") cmd = "unlink";
+			}
+			else if (cmd === "insertImage") {
+				arg = prompt("Link:", "https://...");
+			}
 			document.execCommand(cmd, false, arg);
 		}
 		return;
@@ -8849,9 +8857,12 @@ Object.defineProperties(__Type.prototype, {
 	|action|Ação a ser executada|Sim|
 	|$ ou $$|Seletor CSS para indicar o elemento os elementos a aplicar a ação (se ausente, será o próprio elemento)|Não|**/
 	function data_wd_code(target, event, wdArray) {
-		const data = wdArray[0];
-		const node = new __Node(target);
-		const code = new __Code(target[node.form ? "value" : "innerText"]);
+		const data  = wdArray[0];
+		const node  = new __Node(target);
+		const child = target.childElementCount > 0;
+		const inner = child ? new __Node(target.children[0]).tag : null;
+		const attr  = node.form ? "value" : (inner === "wdtag-root" ? "innerText" : "innerHTML");
+		const code  = new __Code(target[attr]);
 		console.log(target.children[0]);
 		code.config(data);
 		target.spellcheck = false;
@@ -9637,34 +9648,46 @@ Object.defineProperties(__Type.prototype, {
 		const dataset = config.data;
 		const trigger = [];
 		const search  = /^\[data\-wd\-.+\]$/;
-		let map, value, parser, wdarray, selector;
+		const wdAttr  = [];
+		let map, value, parser, wdarray, selector, wddataset;
+		/*-- Apenas elementos (1) e document (9) são aceitáveis como alvos --*/
+		if (target.nodeType !== 1 && target.nodeType !== 9)
+			return;
 		/*-- especifidades de cada evento --*/
-		switch(event.type) {
-			/*-- aplicável a apenas nós de elementos e cliques com o botão esquerdo --*/
-			case "click": {
-				if (target.nodeType !== 1 || event.which !== 1) return;
-				break;
+		if (event.type === "wddataset") {
+			if ("dataset" in target && "wddataset" in target.dataset) {
+				const wdlist = target.dataset.wddataset.split(" ");
+				wdlist.forEach(function(v,i,a) {wdAttr.push(v);});
+				delete target.dataset.wddataset;
 			}
-			case "input": {
-				/*-- deve-se aguardar um tempo de repouso na digitação --*/
-				if (!("wdInputID" in event)) {
-					event.wdInputID  = new Date().valueOf();
-					target.wdInputID = event.wdInputID;
-					window.setTimeout(function() {eventManager(event);}, 500);
-					return;
-				} else if (event.wdInputID === target.wdInputID) {
-					delete event.wdInputID;
-					delete target.wdInputID;
-				} else {
-					return;
-				}
-				break;
+		}
+		/*-- aplicável apenas a nós de elementos e cliques com o botão esquerdo (1) --*/
+		else if (event.type === "click") {
+			if (event.which !== 1) return;
+		}
+		/*-- deve-se aguardar um tempo de repouso na digitação --*/
+		else if (event.type === "input") {
+			/*-- primeiro passo: aguardar intervalo de pausa antes de prosseguir --*/
+			if (!("wdInputID" in event)) {
+				event.wdInputID  = new Date().valueOf();
+				target.wdInputID = event.wdInputID;
+				window.setTimeout(function() {eventManager(event);}, 500);
+				return;
+			}
+			/*-- segundo passo: intervalo respeitado, continuar --*/
+			else if (event.wdInputID === target.wdInputID) {
+				delete event.wdInputID;
+				delete target.wdInputID;
+			}
+			/*-- segundo passo: intervalo desrespeitado, sair --*/
+			else {
+				return;
 			}
 		}
 		/*-- analisando demanda da biblioteca --*/
 		for (let i = 0; i < dataset.length; i++) {
 			map = dataset[i];
-			/*-- Checar se é o caso de procurar propriedades dataset em elementos carregados --*/
+			/*-- Checar se é o caso de procurar propriedades dataset em carregamentos --*/
 			if (search.test(map.name)) {
 				selector = WD.$$(map.name, target);
 				selector.forEach(function(node,i) {
@@ -9673,11 +9696,18 @@ Object.defineProperties(__Type.prototype, {
 			}
 			/*-- Checar se a propriedade existe em dataset --*/
 			else if ("dataset" in target && map.name in target.dataset) {
-				/*-- checar se o valor do atributo foi lido corretamente --*/
+				/*-- ler e checar as informações do atributo --*/
 				value   = target.dataset[map.name];
 				parser  = new __Parser(value);
 				wdarray = parser.wdArray.get();
-				/*-- checar se a leitura foi bem sucedida --*/
+
+				//FIXME
+				if (wdAttr.length > 0 && wdAttr.indexOf(map.name) < 0)
+					wdarray = null
+
+
+
+				/*-- adicionar demanda se a leitura foi bem sucedida --*/
 				if (wdarray !== null) {
 					/*-- definir propriedades obrigatórias se não informadas --*/
 					for (let prop in map.bind) {
