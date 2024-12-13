@@ -93,7 +93,7 @@ const wd = (function() {
 			]},
 			{target: "[data-wd-move-action=\"files\" > *]", style: ["visibility: hidden;"]},
 			/*-- data-wd-move: move --*/
-			{target: "[data-wd-move-action=\"move\"], [data-wd-move-action=\"move\"] > *", style: ["cursor: grabbing;"]},
+			{target: "[data-wd-move-moving], [data-wd-move-moving] > *", style: ["cursor: grabbing;"]},
 			/*-- data-wd-move: resize --*/
 			{target: ".js-wd-cursor-n-resize  *",  style: ["cursor: n-resize;"]},
 			{target: ".js-wd-cursor-ne-resize  *", style: ["cursor: ne-resize;"]},
@@ -8800,20 +8800,23 @@ Object.defineProperties(__Type.prototype, {
 	A aplicação da máscara será avalida nos carregamento de conteúdo, definição de atributo e quando o elemento perder o foco. Será chamada também no evento ''input'' se ''output'' for chamada. Se o conteúdo não casar com a máscara, o nó assumirá como mensagem de erro o valor de ``fail`` ou o modelo da máscara.
 	A função ''valid'' será chamada nos carregamento de conteúdo e definição de atributo. A função receberá o elemento e deverá retornar o valor da mensagem de erro ou uma string em branco se não houver. No evento ''input'', ''valid'' só será executada se ''output'' tiver sido chamada.**/
 	function data_wd_output(target, event, wdArray) {
-		const data  = wdArray[0];
-		const query = new __Type(data.$$ || data.$ || undefined);
-		const value = __Type(data.value).function ? data.value : null;
-
-
-		const output = (function() {
-			const check = __Type(target);
-			const input = check.node ? check.value : [];
-			if (!__Type(data.output).function) return false;
-			if (event.type === "focusout")     return false;
-			if (event.type === "input" && input.indexOf(event.target) < 0) return false;
-			e[node.ftext ? "textContent" : "value"] = data.output(e);
-			return true;
-		})();
+		const nodes = WD.$$("[data-wd-output]");
+		nodes.forEach(function(output,i) {
+			const parser  = new __Parser(output.dataset.wdOutput);
+			const wdarray = parser.wdArray.get();
+			if (wdarray !== null) {
+				const input = target;
+				const data  = wdarray[0];
+				const query = data.$$ || data.$ || null;
+				const call  = __Type(data.call).function ? data.call : null;
+				const list  = new __Type(query).value;
+				if (query === null || call === null || list.indexOf(target) < 0) return;
+				if ("$"  in data) delete data["$"];
+				if ("$$" in data) delete data["$$"];
+				delete data["call"];
+				call(input, output, data)
+			}
+		});
 		return;
 	};
 
@@ -8898,116 +8901,6 @@ Object.defineProperties(__Type.prototype, {
 
 
 
-
-
-
-
-/*TODO esses elementos devem ser carregados no onload
-		{selector: "[data-wd-value]",  method: data_wdValue},
-*/
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wdTsort(''node''  e, ''object'' event)``
-	Função vinculada ao atributo HTML ``data-wd-tsort`` cujo objetivo é ordenar colunas específicas de tabelas. Não possui atributo.**/
-	function data_wdTsort(e, event) {
-		if (!("wdTsort" in e.dataset)) return;
-		try {
-			let thead = e.parentElement.parentElement;
-			if (thead.tagName.toLowerCase() !== "thead") return;
-			let tbody = thead.parentElement.tBodies;
-			let heads = __Type(e.parentElement.children).value;
-			let index = heads.indexOf(e);
-			let data  = __String("").wdValue(e.dataset.wdTsort);
-			let sort  = data === 1 ? -1 : 1;
-			WD(tbody).display("["+(sort * (index + 1))+"]");
-			heads.forEach(function(v,i,a) {
-				if ("wdTsort" in v.dataset)
-					v.dataset.wdTsort = v === e ? (sort > 0 ? "+1" : "-1") : "";
-			});
-		} catch(e) {}
-		return;
-	};
-
-
-
-
-/*----------------------------------------------------------------------------*/
-	function data_wdShared(e, event) { /* FIXME pendente Experimental: compartilhar em redes sociais: data-wd-shared=rede */
-		if (!("wdShared" in e.dataset)) return;
-		let url    = encodeURIComponent(document.URL);
-		let title  = encodeURIComponent(document.title);
-		let social = e.dataset.wdShared.trim().toLowerCase();
-		let link   = {
-			/* https://developers.facebook.com/docs/workplace/sharing/share-dialog/#sharedialogvialink */
-			/* https://developers.facebook.com/docs/plugins/share-button/ */
-			facebook: "https://www.facebook.com/sharer.php?u="+url,
-			/* https://developer.twitter.com/en/docs/twitter-for-websites/tweet-button/guides/web-intent */
-			twitter:  "https://twitter.com/intent/tweet?url="+url+"&text="+title,
-			/* https://www.coderstool.com/share-social-link-generator */
-			linkedin: "https://www.linkedin.com/shareArticle?url="+url+"&title="+title,
-			/* https://www.reddit.com/dev/api#POST_api_submit */
-			reddit:   "https://reddit.com/submit?url="+url+"&title="+title,
-			/* https://www.coderstool.com/share-social-link-generator */
-			evernote: "https://www.evernote.com/clip.action?url="+url+"&title="+title,
-			/* https://core.telegram.org/widgets/share */
-			telegram: "https://t.me/share/url?url="+url+"&text="+title,
-			/* https://faq.whatsapp.com/563219570998715/?locale=en_US */
-			whatsapp: "https://wa.me/?text="+url,
-		}
-		if ("clipboard" in navigator) navigator.clipboard.writeText(document.URL);
-		if (social in link) {window.open(link[social]);}
-
-		return;
-	};
-
-/*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' navLink(''node''  e, ''string'' event)``
-	Função vinculada a atributo HTML cujo objetivo é estabelecer o menu ativo do container ``nav``.**/
-	function navLink(e, event) {
-		if (e.parentElement === null) return;
-		if (e.parentElement.tagName.toLowerCase() !== "nav") return;
-		WD(e.parentElement.children).set({class: {add: "js-wd-nav-inactive"}});
-		WD(e).set({class: {remove: "js-wd-nav-inactive"}});
-		return;
-	};
-
 /*----------------------------------------------------------------------------*/
 	/**###### ``**function** ''void'' data_wdMove(''node''  e, ''object'' event)``
 	Função vinculada ao atributo HTML ``data-wd-move`` cujo objetivo é fazer pular, arrastar, derrubar ou redimensionar elementos. Possui múltiplo atributos e grupo único. Os objetivos dos atributos dependem do tipo de manipulação.
@@ -9017,6 +8910,65 @@ Object.defineProperties(__Type.prototype, {
 	. ''resize'': Redimensiona o elemento. Os posicionamentos ''static'', ''relative'' e ''sticky'' são redimencionados apenas no lado sul e leste.
 	. ''drag'': Arrasta o elemento na tela para derrubá-lo em outro ponto. O atributo deve estar vinculado ao elemento a ser arrastado. Os pontos de queda são definidos pelos atributos $ e $$. O atributo opcional ''effect'' define o objetivo do arraste (''copy'', ''link'' e ''move''). O atributo ''action'' define o nome da função a ser chamada quando ocorrer a queda. A função receberá três argumentos, o elemento arrastado (''drag''), o elemento da queda (''drop'') e, se existir, o elemento onde o mouse repousava na queda (''over'') ou nulo.
 	. ''drop'': Define o local para queda de arquivos externos. O atributo deve ser aplicado ao elemento que receberá a queda. Assim como o tipo ''drag'', possui os atributos ''effect'' e ''action''. A função definida e ''action'' receberá dois atributos, os arquivos arrastados (FileList) e o elemento da queda (''drop'').**/
+
+	function data_wd_move_jump(target, event, wdArray) {
+		if (wdArray[0].type !== "jump") return;
+		const data  = wdArray[0];
+		const query = data.$$ || data.$ || null;
+		if (query !== null) WD(target).jump(query);
+		return;
+	}
+
+
+	function data_wd_move_move(target, event, wdArray) {
+		const data = wdArray[0];
+		/*-- iniciar movimento --*/
+		if (event.type === "mousedown" && data.type === "move") {
+			const query  = data.$$ || data.$ || target;
+			const check  = new __Type(query);
+			const mover  = !check.node || check.value.length < 1 ? target : check.value[0];
+
+			//FIXME checar se mover é pai da âncora?
+			const node   = new __Node(mover);
+			const box    = node.position;
+			const stop   = ["static", "sticky"];
+			const source = [];
+			/*-- posicionamentos que não podem movimentar --*/
+			if (stop.indexOf(node.styles.position) >= 0) return;
+			/*-- obtendo e redefinindo a origem do elemento a movimentar --*/
+			box.pageX = event.pageX;
+			box.pageY = event.pageY;
+			node.position = box;
+			/*-- definindo parâmetros da origem e o tipo de ação --*/
+			for (let i in box) source.push(i+"{"+box[i]+"}");
+			mover.dataset.wdMoveMoving = source.join("");
+		}
+		/*-- parar movimento --*/
+		else if (event.type === "mouseup" || event.buttons !== 1) {
+			delete target.dataset.wdMoveMoving;
+			window.getSelection().removeAllRanges();
+		}
+		/*-- movimentar --*/
+		else if (event.type === "mousemove") {
+			const node    = new __Node(target);
+			const box     = data;
+			const dx      = event.pageX - box.pageX;
+			const dy      = event.pageY - box.pageY;
+			box.left     += dx;
+			box.right    -= dx;
+			box.top      += dy;
+			box.bottom   -= dy;
+			node.position = box;
+			window.getSelection().removeAllRanges();
+		}
+		return;
+	}
+
+
+
+
+
+
 	function data_wdMove(e, event) {
 		const wdMove = "wdMove" in e.dataset;
 		const data   = wdMove ? __Parser(e.dataset.wdMove).wdArray.get()[0] : {};
@@ -9024,12 +8976,6 @@ Object.defineProperties(__Type.prototype, {
 		const check  = __Type(query);
 		const node   = __Node(e);
 		const action = WD.$$("[data-wd-move-action]").length > 0;
-
-		/*------------------------------------------------------------------------*/
-		if (data.type === "jump" && event.type === "click") {
-			if (check.node) WD(query).jump(e);
-			return;
-		}
 
 		/*------------------------------------------------------------------------*/
 		if (!action && data.type === "move") {
@@ -9309,6 +9255,122 @@ Object.defineProperties(__Type.prototype, {
 
 
 
+
+
+
+
+
+/*TODO esses elementos devem ser carregados no onload
+		{selector: "[data-wd-value]",  method: data_wdValue},
+*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*----------------------------------------------------------------------------*/
+	/**###### ``**function** ''void'' data_wdTsort(''node''  e, ''object'' event)``
+	Função vinculada ao atributo HTML ``data-wd-tsort`` cujo objetivo é ordenar colunas específicas de tabelas. Não possui atributo.**/
+	function data_wdTsort(e, event) {
+		if (!("wdTsort" in e.dataset)) return;
+		try {
+			let thead = e.parentElement.parentElement;
+			if (thead.tagName.toLowerCase() !== "thead") return;
+			let tbody = thead.parentElement.tBodies;
+			let heads = __Type(e.parentElement.children).value;
+			let index = heads.indexOf(e);
+			let data  = __String("").wdValue(e.dataset.wdTsort);
+			let sort  = data === 1 ? -1 : 1;
+			WD(tbody).display("["+(sort * (index + 1))+"]");
+			heads.forEach(function(v,i,a) {
+				if ("wdTsort" in v.dataset)
+					v.dataset.wdTsort = v === e ? (sort > 0 ? "+1" : "-1") : "";
+			});
+		} catch(e) {}
+		return;
+	};
+
+
+
+
+/*----------------------------------------------------------------------------*/
+	function data_wdShared(e, event) { /* FIXME pendente Experimental: compartilhar em redes sociais: data-wd-shared=rede */
+		if (!("wdShared" in e.dataset)) return;
+		let url    = encodeURIComponent(document.URL);
+		let title  = encodeURIComponent(document.title);
+		let social = e.dataset.wdShared.trim().toLowerCase();
+		let link   = {
+			/* https://developers.facebook.com/docs/workplace/sharing/share-dialog/#sharedialogvialink */
+			/* https://developers.facebook.com/docs/plugins/share-button/ */
+			facebook: "https://www.facebook.com/sharer.php?u="+url,
+			/* https://developer.twitter.com/en/docs/twitter-for-websites/tweet-button/guides/web-intent */
+			twitter:  "https://twitter.com/intent/tweet?url="+url+"&text="+title,
+			/* https://www.coderstool.com/share-social-link-generator */
+			linkedin: "https://www.linkedin.com/shareArticle?url="+url+"&title="+title,
+			/* https://www.reddit.com/dev/api#POST_api_submit */
+			reddit:   "https://reddit.com/submit?url="+url+"&title="+title,
+			/* https://www.coderstool.com/share-social-link-generator */
+			evernote: "https://www.evernote.com/clip.action?url="+url+"&title="+title,
+			/* https://core.telegram.org/widgets/share */
+			telegram: "https://t.me/share/url?url="+url+"&text="+title,
+			/* https://faq.whatsapp.com/563219570998715/?locale=en_US */
+			whatsapp: "https://wa.me/?text="+url,
+		}
+		if ("clipboard" in navigator) navigator.clipboard.writeText(document.URL);
+		if (social in link) {window.open(link[social]);}
+
+		return;
+	};
+
+/*----------------------------------------------------------------------------*/
+	/**###### ``**function** ''void'' navLink(''node''  e, ''string'' event)``
+	Função vinculada a atributo HTML cujo objetivo é estabelecer o menu ativo do container ``nav``.**/
+	function navLink(e, event) {
+		if (e.parentElement === null) return;
+		if (e.parentElement.tagName.toLowerCase() !== "nav") return;
+		WD(e.parentElement.children).set({class: {add: "js-wd-nav-inactive"}});
+		WD(e).set({class: {remove: "js-wd-nav-inactive"}});
+		return;
+	};
+
+
+
+
+
+
 /*----------------------------------------------------------------------------*/
 /**###### ``**function** ''void'' data_wdMenu(''node''  e, ''object'' event)``
 	Função vinculada ao atributo HTML ``data-wd-menu`` cujo objetivo é exibir um menu suspenso. Possui múltiplos atributos e grupo único:
@@ -9465,15 +9527,15 @@ Object.defineProperties(__Type.prototype, {
 		wdreload: {
 			target: window, preventDefault: false,
 			data: [
-				{name: "[data-wd-repeat]", call: null, kill: false, bind: {}},
-				{name: "[data-wd-load]",   call: null, kill: false, bind: {}},
-				{name: "[data-wd-chart]",  call: null, kill: false, bind: {}},
-				{name: "[data-wd-code]",   call: null, kill: false, bind: {}},
-				{name: "[data-wd-click]",  call: null, kill: false, bind: {}},
-				{name: "[data-wd-filter]", call: null, kill: false, bind: {}},
-				{name: "[data-wd-mask]",   call: null, kill: false, bind: {}},
-				{name: "[data-wd-device]", call: null, kill: false, bind: {}},
-				{name: "*", call: data_wd_hash, kill: false, bind: {}}
+				{name: "[data-wd-repeat]", call: data_wd_repeat, kill: true,  bind: {headers: {}}},
+				{name: "[data-wd-load]",   call: data_wd_load,   kill: true,  bind: {headers: {}}},
+				{name: "[data-wd-chart]",  call: data_wd_chart,  kill: true,  bind: {}},
+				{name: "[data-wd-code]",   call: data_wd_code,   kill: true,  bind: {}},
+				{name: "[data-wd-click]",  call: data_wd_click,  kill: false, bind: {}},
+				{name: "[data-wd-filter]", call: data_wd_filter, kill: false, bind: {}},
+				{name: "[data-wd-mask]",   call: data_wd_mask,   kill: false, bind: {}},
+				{name: "[data-wd-device]", call: data_wd_device, kill: false, bind: {}},
+				{name: "*",                call: data_wd_hash,   kill: false, bind: {}}
 			]
 		},
 		/**. ``''object'' wddataset``: Evento de definição de atributo dataset (o elemento individual).**/
@@ -9522,23 +9584,33 @@ Object.defineProperties(__Type.prototype, {
 		click: {
 			target: document, preventDefault: true,
 			data: [
-				{name: "wdSend",    call: data_wd_send,    kill: false, bind: {headers: {}}},
-				{name: "wdSet",     call: data_wd_set,     kill: false, bind: {}},
-				{name: "wdDisplay", call: data_wd_display, kill: false, bind: {}},
-				{name: "wdEdit",    call: data_wd_edit,    kill: false, bind: {}}
+				{name: "wdSend",    call: data_wd_send,      kill: false, bind: {headers: {}}},
+				{name: "wdSet",     call: data_wd_set,       kill: false, bind: {}},
+				{name: "wdDisplay", call: data_wd_display,   kill: false, bind: {}},
+				{name: "wdEdit",    call: data_wd_edit,      kill: false, bind: {}},
+				{name: "wdMove",    call: data_wd_move_jump, kill: false, bind: {}}
+
+
 			]
 		},
+
+
+
+
+
+
 		input: {
 			target: document, preventDefault: false,
 			data: [
 				{name: "wdFilter",  call: data_wd_filter, kill: false, bind: {id: null}},
-				//{name: "*",         call: data_wd_output, kill: false, bind: {}},
+				{name: "*",      call: data_wd_output, kill: false, bind: {}}
 			]
 		},
 		focusout: {
 			target: document, preventDefault: false,
 			data: [
-				{name: "wdMask", call: data_wd_mask, kill: false, bind: {}},
+				{name: "wdMask", call: data_wd_mask,   kill: false, bind: {}},
+				//{name: "*",      call: data_wd_output, kill: false, bind: {}}
 			]
 		},
 		focusin: {
@@ -9550,91 +9622,91 @@ Object.defineProperties(__Type.prototype, {
 		drag: {
 			target: document, preventDefault: false,
 			data: [
-				{name: "?", call: wdOnMouse, kill: false, bind: {}}
+				//{name: "?", call: wdOnMouse, kill: false, bind: {}}
 			]
 		},
 		dragstart: {
 			target: document, preventDefault: false,
 			data: [
-				{name: "?", call: wdOnMouse, kill: false, bind: {}}
+				//{name: "?", call: wdOnMouse, kill: false, bind: {}}
 			]
 		},
 		dragend: {
 			target: document, preventDefault: false,
 			data: [
-				{name: "?", call: wdOnMouse, kill: false, bind: {}}
+				//{name: "?", call: wdOnMouse, kill: false, bind: {}}
 			]
 		},
 		dragleave: {
 			target: document, preventDefault: false,
 			data: [
-				{name: "?", call: wdOnMouse, kill: false, bind: {}}
+				//{name: "?", call: wdOnMouse, kill: false, bind: {}}
 			]
 		},
 		dragover: {
 			target: document, preventDefault: false,
 			data: [
-				{name: "?", call: wdOnMouse, kill: false, bind: {}}
+				//{name: "?", call: wdOnMouse, kill: false, bind: {}}
 			]
 		},
 		dragenter: {
 			target: document, preventDefault: false,
 			data: [
-				{name: "?", call: wdOnMouse, kill: false, bind: {}}
+				//{name: "?", call: wdOnMouse, kill: false, bind: {}}
 			]
 		},
 		drop: {
 			target: document, preventDefault: false,
 			data: [
-				{name: "?", call: wdOnMouse, kill: false, bind: {}}
+				//{name: "?", call: wdOnMouse, kill: false, bind: {}}
 			]
 		},
 		mousedown: {
 			target: document, preventDefault: false,
 			data: [
-				{name: "?", call: wdOnMouse, kill: false, bind: {}}
+				{name: "wdMove", call: data_wd_move_move, kill: false, bind: {}}
 			]
 		},
 		mouseup: {
 			target: document, preventDefault: false,
 			data: [
-				{name: "?", call: wdOnMouse, kill: false, bind: {}}
+				{name: "*[data-wd-move-moving]", call: data_wd_move_move, kill: false, bind: {}}
 			]
 		},
 		mousemove: {
 			target: document, preventDefault: false,
 			data: [
-				{name: "?", call: wdOnMouse, kill: false, bind: {}}
+				{name: "*[data-wd-move-moving]", call: data_wd_move_move, kill: false, bind: {}}
 			]
 		},
 		mouseenter: {
 			target: document, preventDefault: false,
 			data: [
-				{name: "?", call: wdOnMouse, kill: false, bind: {}}
+				//{name: "?", call: wdOnMouse, kill: false, bind: {}}
 			]
 		},
 		mouseleave: {
 			target: document, preventDefault: false,
 			data: [
-				{name: "?", call: wdOnMouse, kill: false, bind: {}}
+				//{name: "?", call: wdOnMouse, kill: false, bind: {}}
 			]
 		},
 		mouseover: {
 			target: document, preventDefault: false,
 			data: [
-				{name: "?", call: wdOnMouse, kill: false, bind: {}}
+				//{name: "?", call: wdOnMouse, kill: false, bind: {}}
 			]
 		},
 		mouseout: {
 			target: document, preventDefault: false,
 			data: [
-				{name: "?", call: wdOnMouse, kill: false, bind: {}}
+				//{name: "?", call: wdOnMouse, kill: false, bind: {}}
 			]
 		},
 		dblclick: {
 			target: document, preventDefault: false,
 			data: [
-				{name: "?", call: wdOnMouse, kill: false, bind: {}}
+				//{name: "?", call: wdOnMouse, kill: false, bind: {}}
 			]
 		},
 	};
@@ -9643,154 +9715,145 @@ Object.defineProperties(__Type.prototype, {
 
 		//TODO descrever
 	function eventManager(event) {
-		const target  = event.target === window ? document : event.target;
-		const config  = __EVENTS[event.type]
+		/*-- Alvo do evento: elemento (1) ou documento (9) -----------------------*/
+		const target = event.target === window ? document : event.target;
+		if ([1, 9].indexOf(target.nodeType) < 0) return;
+
+		/*-- Configuração e especifidade do evento -------------------------------*/
+		const config    = __EVENTS[event.type];
+		const wddataset = [];
+		const checker   = {
+			wddataset: target.nodeType === 1 && "wddataset" in target.dataset ? "getDataset" : null,
+			input:     "endTyping",
+			click:     "leftButton",
+			mousedown: "leftButton",
+			mousemove: "leftButton",
+			mouseup:   "leftButton",
+		};
+		switch(checker[event.type]) {
+			case "getDataset": {
+				/*-- Especifidade: obtendo as propriedades definidas em dataset --*/
+				const list = target.dataset.wddataset.split(" ");
+				list.forEach(function(v,i,a) {wddataset.push(v);});
+				delete target.dataset.wddataset;
+				break;
+			}
+			case "leftButton": {
+				/*-- Especifidade: checando qual botão do mouse foi clicado --*/
+				if (event.which !== 1) return;
+				break;
+			}
+			case "endTyping": {
+				/*-- Especifidade: checando intervalo da digitação --*/
+				const body = document.body;
+				if (!("wdTypingID" in event)) {
+					const time = 500;
+					event.wdTypingID = new Date().valueOf();
+					body.wdTypingID  = event.wdTypingID;
+					window.setTimeout(function() {eventManager(event);}, time);
+					return;
+				}
+				if (event.wdTypingID === body.wdTypingID) {
+					delete event.wdTypingID;
+					delete body.wdTypingID;
+				} else {
+					return;
+				}
+				break;
+			}
+		}
+
+		/*-- Verificando lista de disparadores -----------------------------------*/
 		const dataset = config.data;
 		const trigger = [];
-		const search  = /^\[data\-wd\-.+\]$/;
-		const wdAttr  = [];
-		let map, value, parser, wdarray, selector, wddataset;
-		/*-- Apenas elementos (1) e document (9) são aceitáveis como alvos --*/
-		if (target.nodeType !== 1 && target.nodeType !== 9)
-			return;
-		/*-- especifidades de cada evento --*/
-		if (event.type === "wddataset") {
-			if ("dataset" in target && "wddataset" in target.dataset) {
-				const wdlist = target.dataset.wddataset.split(" ");
-				wdlist.forEach(function(v,i,a) {wdAttr.push(v);});
-				delete target.dataset.wddataset;
-			}
-		}
-		/*-- aplicável apenas a nós de elementos e cliques com o botão esquerdo (1) --*/
-		else if (event.type === "click") {
-			if (event.which !== 1) return;
-		}
-		/*-- deve-se aguardar um tempo de repouso na digitação --*/
-		else if (event.type === "input") {
-			/*-- primeiro passo: aguardar intervalo de pausa antes de prosseguir --*/
-			if (!("wdInputID" in event)) {
-				event.wdInputID  = new Date().valueOf();
-				target.wdInputID = event.wdInputID;
-				window.setTimeout(function() {eventManager(event);}, 500);
-				return;
-			}
-			/*-- segundo passo: intervalo respeitado, continuar --*/
-			else if (event.wdInputID === target.wdInputID) {
-				delete event.wdInputID;
-				delete target.wdInputID;
-			}
-			/*-- segundo passo: intervalo desrespeitado, sair --*/
-			else {
-				return;
-			}
-		}
-		/*-- analisando demanda da biblioteca --*/
+		const search  = /^\*?\[([0-9a-zA-Z\-]+)(\=[^\]]+)?\]$/;
+		let map, root, name, query;
 		for (let i = 0; i < dataset.length; i++) {
 			map = dataset[i];
-			/*-- Checar se é o caso de procurar propriedades dataset em carregamentos --*/
+			/*-- Procurar por seletor CSS: descendente ou documento (*) --*/
 			if (search.test(map.name)) {
-				selector = WD.$$(map.name, target);
-				selector.forEach(function(node,i) {
-					node.dispatchEvent(wdDatasetEvent);
+				root  = map.name[0] === "*" ? document : target;
+				name  = map.name.replace(search, "$1");
+				query = WD.$$(map.name, root);
+				query.forEach(function(node) {
+					trigger.push({
+						target:  node,
+						name:    map.name,
+						call:    map.call,
+						bind:    map.bind,
+						check:   true,
+						value:   node.getAttribute(name),
+						wdArray: null,
+					});
+					if (map.kill) node.removeAttribute(name);
 				});
 			}
-			/*-- Checar se a propriedade existe em dataset --*/
-			else if ("dataset" in target && map.name in target.dataset) {
-				/*-- ler e checar as informações do atributo --*/
-				value   = target.dataset[map.name];
-				parser  = new __Parser(value);
-				wdarray = parser.wdArray.get();
-
-				//FIXME
-				if (wdAttr.length > 0 && wdAttr.indexOf(map.name) < 0)
-					wdarray = null
-
-
-
-				/*-- adicionar demanda se a leitura foi bem sucedida --*/
-				if (wdarray !== null) {
-					/*-- definir propriedades obrigatórias se não informadas --*/
-					for (let prop in map.bind) {
-						for (let j = 0; j < wdarray.length; j++) {
-							if (!(prop in wdarray[j]))
-								wdarray[j][prop] = map.bind[prop];
-						}
-					}
-					/*-- verificar se é para excluir a propriedade dataset --*/
-					if (map.kill) delete target.dataset[map.name];
-					/*-- adicionar disparador à lista --*/
-					trigger.push({wdarray: wdarray, call: map.call, name: map.name});
-				}
-			}
-			/*-- disparador não vinculado à propriedade dataset --*/
+			/*-- Procurar independente de atributo: caso genérico --*/
 			else if (map.name === "*") {
-				trigger.push({wdarray: null, call: map.call, name: map.name});
+				trigger.push({
+					target:  target,
+					name:    map.name,
+					call:    map.call,
+					bind:    map.bind,
+					check:   false,
+					value:   null,
+					wdArray: null,
+				});
+			}
+			/*-- Procurar por nome da propriedade dataset --*/
+			else if ("dataset" in target && map.name in target.dataset) {
+				trigger.push({
+					target:  target,
+					name:    map.name,
+					call:    map.call,
+					bind:    map.bind,
+					check:   true,
+					value:   target.dataset[map.name],
+					wdArray: null,
+				});
+				if (map.kill) delete target.dataset[map.name];
 			}
 		}
-		/*-- checar chamada de preventDefault --*/
-		if (config.preventDefault && trigger.length > 0)
-			event.preventDefault();
-		/*-- chamar disparadores --*/
-		for (let i = 0; i < trigger.length; i++) {
-			if (__UNDERMAINTENANCE) {
-				let info = {};
-				let type = event.type;
-				info[type] = trigger[i].name;
-				info.call  = trigger[i].call.name;
-				info.data  = trigger[i].wdarray
-				console.info(info);
+
+		/*-- Analisando e chamando disparadores ----------------------------------*/
+		const info = {};
+		let parser, wdarray, count = 0;
+		trigger.forEach(function(map,i,a) {
+			if (map.check) {
+				/*-- verificar se a propriedade dataset definida está prevista --*/
+				if (wddataset.length > 0 && wddataset.indexOf(map.name) < 0)
+					return;
+				/*-- verificar se o valor do atributo pode ser obtido --*/
+				parser  = new __Parser(map.value);
+				wdarray = parser.wdArray.get();
+				if (wdarray === null)
+					return;
+				/*-- verificar se há alguma prorpiedade obrigatória a definir --*/
+				for (let prop in map.bind) {
+					for (let j = 0; j < wdarray.length; j++) {
+						if (!(prop in wdarray[j]))
+							wdarray[j][prop] = map.bind[prop];
+					}
+				}
+				map.wdArray = wdarray;
 			}
-			trigger[i].call(target, event, trigger[i].wdarray);
-		}
+			/*-- log de manutenção--*/
+			info[event.type] = map.name;
+			info.call = map.call.name;
+			info.data = map.wdArray;
+			if (__UNDERMAINTENANCE) console.info(info);
+
+			/*-- chamar disparador --*/
+			if (config.preventDefault && count === 0)
+				event.preventDefault();
+			map.call(map.target, event, map.wdArray);
+			count++;
+		});
 		return;
 	};
 
 	for (let ev in __EVENTS)
 		__EVENTS[ev].target.addEventListener(ev, eventManager, false);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*----------------------------------------------------------------------------*/
-	const __TRIGGERS = {
-		document: {
-			target: document,
-			events: {
-				drag:      wdOnMouse,
-				dragstart: wdOnMouse,
-				dragend:   wdOnMouse,
-				dragleave: wdOnMouse,
-				dragover:  wdOnMouse,
-				dragenter: wdOnMouse,
-				drop:      wdOnMouse,
-
-				click:      wdOnMouse,
-				mousedown:  wdOnMouse,
-				mouseup:    wdOnMouse,
-				mousemove:  wdOnMouse,
-				mouseenter: wdOnMouse,
-				mouseleave: wdOnMouse,
-				mouseover:  wdOnMouse,
-				mouseout:   wdOnMouse,
-				dblclick:   wdOnMouse,
-			}
-		}
-	};
-
-	for (let i in __TRIGGERS)
-		for (let j in __TRIGGERS[i].events)
-			__TRIGGERS[i].target.addEventListener(j, __TRIGGERS[i].events[j], false);
 
 	return WD;
 }());
