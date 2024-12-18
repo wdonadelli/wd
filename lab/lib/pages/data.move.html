@@ -32,17 +32,17 @@
 		<div style="height: 100px;overflow: auto;" id="dropA">
 
 			<div
-				data-wd-move="type{drag}effect{move}action(myDrag)$${#dropB, #dropA, #dropC}"
+				data-wd-move="type{drag}effect{move}action(myDrag)$${#dropB, #dropA, #dropC, #dropB > *}"
 				class="wd-bg-red"
 			>Move 1</div>
 
 			<div
-				data-wd-move="type{drag}effect{move}action(myDrag)$${#dropA, #dropC}"
+				data-wd-move="type{drag}effect{copy}action(myDrag)$${#dropA, #dropC}"
 				class="wd-bg-blue"
 			>Move 2</div>
 
 			<div
-				data-wd-move="type{drag}effect{move}action(myDrag)$${#dropB, #dropA, #dropC}"
+				data-wd-move="type{drag}effect{link}action(myDrag)$${#dropB, #dropA, #dropC}"
 				class="wd-bg-green"
 			>Move 3</div>
 

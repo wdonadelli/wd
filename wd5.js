@@ -81,10 +81,11 @@ const wd = (function() {
 			{target: "[data-wd-move*=\"type{drag}\"]:active", style: ["cursor: grabbing;"]},
 			{target: "[data-wd-move*=\"type{move}\"]",        style: ["cursor: move;"]},
 			/*-- data-wd-move: drop --*/
-			{target: "[data-wd-move-action=\"drop\"]", style: [
+			{target: "[data-wd-move-dropping]", style: [
 				"border-image-source: linear-gradient(45deg, white, blue);",
 				"border-image-width: 10px; border-image-outset: 5px;",
 				"border-image-slice: 1% fill;",
+				"padding-bottom: 2em;"
 			]},
 			/*-- data-wd-move: file --*/
 			{target: "[data-wd-move-action=\"files\"]", style: [
@@ -9092,69 +9093,82 @@ Object.defineProperties(__Type.prototype, {
 
 
 	function data_wd_move_drag(target, event, wdArray) {
+		/*-- verificando atributo --*/
 		const data  = wdArray[0];
 		const query = data.$$ || data.$ || null;
+		const drops = WD(query);
 		if (data.type !== "drag" || query === null) return;
 		/*-- Habilitando configuração de arrasto ---------------------------------*/
-		if (event.type === "mouseover" || event.type === "mouseout") {
-			target.draggable = event.type === "mouseover";
+		if (["mouseenter", "mouseover", "mouseout"].indexOf(event.type) >= 0)  {
+			target.draggable = event.type !== "mouseout";
 		}
 		/*-- Iniciando arrasto ---------------------------------------------------*/
-		if (event.type === "dragstart") {
-			event.dataTransfer.setData("text", target.dataset.wdMove);
-			event.dataTransfer.dropEffect = data.effect;
-			event.dataTransfer.effectAllowed = "all";
-			/*-- configurando alvo --*/
-			const drops = WD(query);
+		else if (event.type === "dragstart") {
+			const list   = ["none", "link", "move", "copy"];
+			const effect = list.indexOf(data.effect) >= 0 ? data.effect : list[0];
+			target.dataset.wdMoveDragging    = target.dataset.wdMove;
+			event.dataTransfer.effectAllowed = effect;
+			event.dataTransfer.dropEffect    = effect;
+			//event.dataTransfer.setData("text", data.effect in effect ? effect : "none"); FIXME o que eu faço com isso?
 			drops.forEach(function(drop) {
-				if (drop === target) return;
-				drop.dataset.wdMoveDragDrop = "drop";
-				drop.ondrop = function(ev) {
-					ev.preventDefault();
-					let over = null;
-					while (drop.dataset.wdMoveAction !== "drop") {
-						over = drop;
-						drop = drop.parentElement;
-						if (drop === null) return;
-					}
+				if (drop !== target)
+					drop.dataset.wdMoveDropping = target.dataset.wdMove;;
+			});
+		}
+		/*-- Encerrando arrasto --------------------------------------------------*/
+		else if (event.type === "dragend") {
+			const nodes = WD.$$("[data-wd-move-dragging], [data-wd-move-dropping]");
+			nodes.forEach(function (node) {
+				if ("wdMoveDragging" in node.dataset)
+					delete node.dataset.wdMoveDragging;
+				if ("wdMoveDropping" in node.dataset)
+					delete node.dataset.wdMoveDropping;
+				if ("wdMove" in node.dataset && node.hasAttribute("draggable"))
+					node.removeAttribute("draggable");
+			});
+		}
+		return;
+	}
 
 
-					const drag   = document.querySelector("[data-wd-move-action=drag]");
-					const attr   = new __Parser(ev.dataTransfer.getData("text")).wdArray.get()[0];
-					const effect = event.dataTransfer.dropEffect;
-					if (!__Type(attr.action).function) return;
 
-					if (ev.type === "drop") {attr.action(drag, drop, over);}
-					else if (ev.type === "dragover") {}
-					else if (ev.type === "dragleave" ) {}
-					return;
-				};
-					x.ondragover  = x.ondrop;
-					x.ondragover  = x.ondrop;
-					x.ondragleave = x.ondrop;
-					return;
-				});
+
+
+
+
+
+	function data_wd_move_drop(target, event, wdArray) {
+		console.warn({allow: event.dataTransfer.effectAllowed, drop: event.dataTransfer.dropEffect});
+		/*-- Derrubando elemento --*/
+		if (event.type === "drop") {
+			const data = wdArray[0];
+			const drag = document.querySelector("[data-wd-move-dragging]");
+			const drop = target;
+			//const act  = data.effect;//event.dataTransfer.dropEffect;
+
+
+			if (drag === null) {
 				return;
+			} else if (__Type(data.call).function) {
+				data.call(drag, drop, wdArray)
+			} else if (act === "move") {
+				drop.appendChild(drag);
+			} else if (act === "copy") {
+				drop.appendChild(drag.cloneNode(true));
+			} else if (act === "link") {
+				if (drag.id.trim() === "")
+					drag.id = drag.tagName + String(new Date().valueOf());
+				const span = document.createElement("SPAN");
+				const link = document.createElement("A");
+				link.href = "#"+drag.id;
+				link.style.display = "inline-block";
+				link.style.padding = "0.5em";
+				link.appendChild(span)
+				span.innerText = drag.textContent;
+				drop.appendChild(link);
 			}
-
-			/*-- Encerrando o arrasto --*/
-			if (event.type === "dragend") {
-				event.preventDefault();
-				const wdAction = WD.$$("[data-wd-move-action]");
-				wdAction.forEach(function(x) {
-					x.ondragover  = null;
-					x.ondrop      = null;
-					x.ondragover  = null;
-					x.ondragleave = null;
-					delete x.dataset.wdMoveAction;
-					x.removeAttribute("draggable");
-					return;
-				});
-				window.getSelection().removeAllRanges();
-				return;
-			}
-			return;
-
+		}
+		return;
 	}
 
 
@@ -9177,266 +9191,7 @@ Object.defineProperties(__Type.prototype, {
 
 
 	function data_wdMove(e, event) {
-		const wdMove = "wdMove" in e.dataset;
-		const data   = wdMove ? __Parser(e.dataset.wdMove).wdArray.get()[0] : {};
-		const query  = data.$$ || data.$ || null;
-		const check  = __Type(query);
-		const node   = __Node(e);
-		const action = WD.$$("[data-wd-move-action]").length > 0;
 
-		/*------------------------------------------------------------------------*/
-		if (!action && data.type === "move") {
-
-			/*-- Preparando o elemento para mover --*/
-			if (event.type === "mousedown") {
-				const myself = !check.node || check.value.length < 1 || check.value[0] === e;
-				const mover  = myself ? e : check.value[0];
-				const target = __Node(mover);
-				const nail   = target.styles.position;
-				/* Elementos estáticos e adesivos não se mover */
-				if (nail === "static" || nail === "sticky") return;
-				/* a âncora precisa estar contida no elemento a mover */
-				if (!myself) {
-					let test = e;
-					while (test !== mover) {
-						test = test.parentElement;
-						if (test === null) return;
-					}
-				}
-				const box = target.position;
-				box.pageX = event.pageX;
-				box.pageY = event.pageY;
-				target.position = box;
-
-				/* definindo dataTransfer manual */
-				let dataTransfer = [];
-				for (let i in box) dataTransfer.push(i+"{"+box[i]+"}");
-				mover.dataset.wdMoveAction   = "move";
-				mover.dataset.wdDataTransfer = dataTransfer.join("");
-				return;
-			}
-			return;
-		}
-
-		const moving = WD.$$("[data-wd-move-action=move]");
-		if (moving.length > 0) {
-
-			moving.forEach(function(x) {
-				if (event.type === "mouseup" || event.buttons !== 1) {
-					delete x.dataset.wdMoveAction;
-					delete x.dataset.wdDataTransfer;
-				} else if (event.type === "mousemove") {
-					const target = __Node(x);
-					const box    = new __Parser(x.dataset.wdDataTransfer).wdArray.get()[0];
-					const dx     = event.pageX - box.pageX;
-					const dy     = event.pageY - box.pageY;
-					box.left    += dx;
-					box.right   -= dx;
-					box.top     += dy;
-					box.bottom  -= dy;
-					target.position = box;
-				}
-				window.getSelection().removeAllRanges();
-				return;
-			});
-			return;
-		}
-
-		/*------------------------------------------------------------------------*/
-		if (!action && data.type === "resize") {
-			/*-- Capturando informações sobre o elemento a redimensionar --*/
-			const box  = e.getBoundingClientRect();
-			const d    = 6;
-			const x    = event.clientX;
-			const y    = event.clientY;
-			const N    = y >= box.top    && y <= (box.top    + d);
-			const S    = y <= box.bottom && y >= (box.bottom - d);
-			const W    = x >= box.left   && x <= (box.left   + d);
-			const E    = x <= box.right  && x >= (box.right  - d);
-			const re   = /js\-wd\-cursor\-[nsew]+\-resize\ ?/g;
-			const attr = document.body.className;
-			const pos  = node.styles.position;
-
-			let cursor = "";
-			if (N || S) cursor += (N ? "n" : "s");
-			if (W || E) cursor += (E ? "e" : "w");
-			/* Elemento estático, relativo ou só redimensiona para direita e para baixo */
-			if (pos === "static" || pos === "relative" || pos === "sticky")
-				cursor = cursor.replace(/[nw]/g, "");
-
-			/* especifica o ícone do mouse de acordo com a posição do mouse */
-			const mouse = "js-wd-cursor-"+cursor+"-resize";
-			if (cursor === "" || event.type === "mouseout") {
-				document.body.className = attr.replace(re, "");
-				return;
-			} else if (attr.indexOf(mouse) < 0) {
-				document.body.className = attr.replace(re, "")+" "+mouse;
-			}
-
-			/*-- Preparando o redimensionamento --*/
-			if (event.type === "mousedown" && cursor !== "") {
-				const box = node.position;
-				box.pageX = event.pageX;
-				box.pageY = event.pageY;
-				node.position = box;
-
-				/* definindo dataTransfer manual */
-				let dataTransfer = [];
-				for (let i in box) dataTransfer.push(i+"{"+box[i]+"}");
-				e.dataset.wdMoveAction   = "resize-"+cursor;
-				e.dataset.wdDataTransfer = dataTransfer.join("");
-				/* Criando linhas auxiliares */
-				if ((/[ns]/).test(cursor)) {
-					const hline = document.createElement("DIV");
-					hline.className = "js-wd-hline";
-					document.body.appendChild(hline);
-				}
-				if ((/[ew]/).test(cursor)) {
-					const vline = document.createElement("DIV");
-					vline.className = "js-wd-vline";
-					document.body.appendChild(vline);
-				}
-				return;
-			}
-			return;
-		}
-
-		const resizing = WD.$$("[data-wd-move-action|=resize]");
-		if (resizing.length > 0) {
-			const hline = WD.$$(".js-wd-hline");
-			const vline = WD.$$(".js-wd-vline");
-
-			resizing.forEach(function(x) {
-
-				/*-- Encerrando o redimensionamento --*/
-				if (event.type === "mouseup" || event.buttons !== 1) {
-					delete x.dataset.wdMoveAction;
-					delete x.dataset.wdDataTransfer;
-					hline.set({remove: []});
-					vline.set({remove: []});
-					const re = /js\-wd\-cursor\-[nsew]+\-resize\ ?/g;
-					let attr = document.body.className.replace(re, "");
-					document.body.className = attr;
-					return;
-				}
-
-				/*-- Redimensionando --*/
-				if (event.type === "mousemove") {
-					const node   = __Node(x);
-					const box    = new __Parser(x.dataset.wdDataTransfer).wdArray.get()[0];
-					const cursor = x.dataset.wdMoveAction.replace("resize-", "");
-					const dx     = event.pageX - box.pageX;
-					const dy     = event.pageY - box.pageY;
-					const pos    = node.styles.position;
-					if (cursor.indexOf("n") >= 0) {
-						box.height -= dy;
-						box.top    += dy;
-					}
-					if (cursor.indexOf("s") >= 0) {
-						box.height += dy;
-						box.bottom -= dy;
-					}
-					if (cursor.indexOf("w") >= 0) {
-						box.width -= dx;
-						box.left  += dx;
-					}
-					if (cursor.indexOf("e") >= 0) {
-						box.width += dx;
-						box.right -= dx;
-					}
-					if (pos === "static" || pos === "relative" || pos === "sticky")
-						node.position = {width: box.width, height: box.height};
-					else
-						node.position = box;
-					/* configurando linhas */
-					const lines = x.getBoundingClientRect();
-					if (cursor.indexOf("n") >= 0)
-						hline.set({style: {top: lines.top+"px"}});
-					if (cursor.indexOf("s") >= 0)
-						hline.set({style: {top: lines.bottom+"px"}});
-					if (cursor.indexOf("w") >= 0)
-						vline.set({style: {left: lines.left+"px"}});
-					if (cursor.indexOf("e") >= 0)
-						vline.set({style: {left: lines.right+"px"}});
-					window.getSelection().removeAllRanges();
-					return;
-				}
-				return;
-			});
-			return;
-		}
-
-
-
-
-
-
-		/*------------------------------------------------------------------------*/
-		if (wdMove && data.type === "drag") {
-			if (!check.node) return;
-
-			/*-- Preparando o elemento para ser arrastado --*/
-			if (event.type === "mouseover" || event.type === "mouseout") {
-				e.draggable = event.type === "mouseover";
-				return;
-			}
-
-			/*-- Iniciando o arrasto --*/
-			if (event.type === "dragstart") {
-				event.dataTransfer.setData("text", e.dataset.wdMove);
-				event.dataTransfer.dropEffect = data.effect;
-				event.dataTransfer.effectAllowed = "all";
-				e.dataset.wdMoveAction = "drag";
-
-				const drops = WD(query);
-				drops.forEach(function(x) {
-					if (x === e) return;
-					x.dataset.wdMoveAction = "drop";
-					x.ondrop = function(ev) {
-						ev.preventDefault();
-						let drop = ev.target;
-						let over = null;
-						while (drop.dataset.wdMoveAction !== "drop") {
-							over = drop;
-							drop = drop.parentElement;
-							if (drop === null) return;
-						}
-						const drag   = document.querySelector("[data-wd-move-action=drag]");
-						const attr   = new __Parser(ev.dataTransfer.getData("text")).wdArray.get()[0];
-						const effect = event.dataTransfer.dropEffect;
-						if (!__Type(attr.action).function) return;
-
-						if (ev.type === "drop") {attr.action(drag, drop, over);}
-						else if (ev.type === "dragover") {}
-						else if (ev.type === "dragleave" ) {}
-						return;
-					};
-					x.ondragover  = x.ondrop;
-					x.ondragover  = x.ondrop;
-					x.ondragleave = x.ondrop;
-					return;
-				});
-				return;
-			}
-
-			/*-- Encerrando o arrasto --*/
-			if (event.type === "dragend") {
-				event.preventDefault();
-				const wdAction = WD.$$("[data-wd-move-action]");
-				wdAction.forEach(function(x) {
-					x.ondragover  = null;
-					x.ondrop      = null;
-					x.ondragover  = null;
-					x.ondragleave = null;
-					delete x.dataset.wdMoveAction;
-					x.removeAttribute("draggable");
-					return;
-				});
-				window.getSelection().removeAllRanges();
-				return;
-			}
-			return;
-		}
 		/*------------------------------------------------------------------------*/
 		if (data.type === "drop") {
 			event.preventDefault();
@@ -9840,13 +9595,13 @@ Object.defineProperties(__Type.prototype, {
 		dragstart: {
 			target: document, preventDefault: false,
 			data: [
-				//{name: "?", call: wdOnMouse, kill: false, bind: {}}
+				{name: "wdMove", call: data_wd_move_drag, kill: false, bind: {}}
 			]
 		},
 		dragend: {
 			target: document, preventDefault: false,
 			data: [
-				//{name: "?", call: wdOnMouse, kill: false, bind: {}}
+				{name: "wdMove", call: data_wd_move_drag, kill: false, bind: {}}
 			]
 		},
 		dragleave: {
@@ -9856,9 +9611,9 @@ Object.defineProperties(__Type.prototype, {
 			]
 		},
 		dragover: {
-			target: document, preventDefault: false,
+			target: document, preventDefault: true,
 			data: [
-				//{name: "?", call: wdOnMouse, kill: false, bind: {}}
+				{name: "wdMoveDropping", call: data_wd_move_drop, kill: false, bind: {}}
 			]
 		},
 		dragenter: {
@@ -9868,9 +9623,9 @@ Object.defineProperties(__Type.prototype, {
 			]
 		},
 		drop: {
-			target: document, preventDefault: false,
+			target: document, preventDefault: true,
 			data: [
-				//{name: "?", call: wdOnMouse, kill: false, bind: {}}
+				{name: "wdMoveDropping", call: data_wd_move_drop, kill: false, bind: {}}
 			]
 		},
 		mousedown: {
@@ -9898,26 +9653,26 @@ Object.defineProperties(__Type.prototype, {
 		mouseenter: {
 			target: document, preventDefault: false,
 			data: [
-				//{name: "?", call: wdOnMouse, kill: false, bind: {}}
+				{name: "wdMove", call: data_wd_move_drag, kill: false, bind: {}}
 			]
 		},
 		mouseleave: {
 			target: document, preventDefault: false,
 			data: [
-				//{name: "?", call: wdOnMouse, kill: false, bind: {}}
+				//{name: "wdMove", call: data_wd_move_drag, kill: false, bind: {}}
 			]
 		},
 		mouseover: {
 			target: document, preventDefault: false,
 			data: [
-				//{name: "?", call: wdOnMouse, kill: false, bind: {}}
+				{name: "wdMove", call: data_wd_move_drag, kill: false, bind: {}}
 			]
 		},
 		mouseout: {
 			target: document, preventDefault: false,
 			data: [
-				{name: "wdMove", call: data_wd_move_size, kill: false, bind: {}}
-				//{name: "?", call: wdOnMouse, kill: false, bind: {}}
+				{name: "wdMove", call: data_wd_move_size, kill: false, bind: {}},
+				{name: "wdMove", call: data_wd_move_drag, kill: false, bind: {}}
 			]
 		},
 		dblclick: {
