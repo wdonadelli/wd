@@ -59,218 +59,144 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**const** ''object'' __STYLE``
+	/**###### ``**const** ''string'' __STYLE``
 	Estilos da biblioteca.**/
-	const __STYLE = {
-		/**. ``''array'' css``: Registra as propriedades CSS da biblioteca.**/
-		css: [
-			/*-- animações --*/
-			{target: "@keyframes js-wd-emerge", style: ["from {opacity: 0;} to {opacity: 1;}"]},
-			{target: "@keyframes js-wd-fade",   style: ["from {opacity: 1;} to {opacity: 0;}"]},
-			{target: "@keyframes js-wd-expand", style: ["from {transform: scale(0);} to {transform: scale(1);}"]},
-			{target: "@keyframes js-wd-shrink", style: ["from {transform: scale(1);} to {transform: scale(0);}"]},
-			/*-- estilos genéricos --*/
-			{target: ".js-wd-no-display",      style: ["display: none;"]},
-			{target: ".js-wd-overflow-hidden", style: ["overflow: hidden;"]},
-			{target: "nav > *.js-wd-nav-inactive", style: ["opacity: 0.5;"]},
-			/*-- data-wd- --*/
-			{target: "[data-wd-nav], [data-wd-send], [data-wd-set], [data-wd-edit], [data-wd-shared]", style: ["cursor: pointer;"]},
-			/*-- data-wd-move --*/
-			{target: "[data-wd-move*=\"type{jump}\"]",        style: ["cursor: pointer;"]},
-			{target: "[data-wd-move*=\"type{drag}\"]",        style: ["cursor: grab;"]},
-			{target: "[data-wd-move*=\"type{drag}\"]:active", style: ["cursor: grabbing;"]},
-			{target: "[data-wd-move*=\"type{move}\"]",        style: ["cursor: move;"]},
-			/*-- data-wd-move: drop --*/
-			{target: "[data-wd-move-dropping]", style: [
-				"border-image-source: linear-gradient(45deg, white, blue);",
-				"border-image-width: 10px; border-image-outset: 5px;",
-				"border-image-slice: 1% fill;",
-				"padding-bottom: 2em;"
-			]},
-			/*-- data-wd-move: file --*/
-			{target: "[data-wd-move-action=\"files\"]", style: [
-				"border-image-source: linear-gradient(45deg, white, gray);",
-				"border-image-width: 10px; border-image-outset: 5px;"
-			]},
-			{target: "[data-wd-move-action=\"files\" > *]", style: ["visibility: hidden;"]},
-			/*-- data-wd-move: move --*/
-			{target: "[data-wd-move-moving], [data-wd-move-moving] > *", style: ["cursor: grabbing;"]},
-			/*-- data-wd-move: size --*/
-			{target: ".js-wd-cursor-n-resize  *", style: ["cursor: n-resize;"]},
-			{target: ".js-wd-cursor-ne-resize *", style: ["cursor: ne-resize;"]},
-			{target: ".js-wd-cursor-e-resize *",  style: ["cursor: e-resize;"]},
-			{target: ".js-wd-cursor-se-resize *", style: ["cursor: se-resize;"]},
-			{target: ".js-wd-cursor-s-resize  *", style: ["cursor: s-resize;"]},
-			{target: ".js-wd-cursor-sw-resize *", style: ["cursor: sw-resize;"]},
-			{target: ".js-wd-cursor-w-resize  *", style: ["cursor: w-resize;"]},
-			{target: ".js-wd-cursor-nw-resize *", style: ["cursor: nw-resize;"]},
-			{target: ".js-wd-cursor-n-resize  *", style: ["cursor: n-resize;"]},
-			{target: ".js-wd-hline",  style: [
-				"position: fixed; left: 0; width: 100vw;",
-				"border-top: thin solid #000000; z-index: 999999;"
-			]},
-			{target: ".js-wd-vline",  style: [
-				"position: fixed; top: 0; height: 100vh;",
-				"border-left: thin solid #000000; height: 100%; z-index: 999999;"
-			]},
-			/*-- data-wd-menu --*/
-			{target: "[data-wd-menu]", style: ["cursor: context-menu;"]},
-			{target: ".js-wd-menu", style: [
-				"font-size: 14px; font-family: Verdana,sans-serif;",
-				"position: fixed; max-width: 40vw; max-height: 40vh;",
-				"display: block; margin: 0; padding: 0.3em;",
-				"z-index: 999999; overflow: auto !important;",
-				"color: #ffffff; background-color: rgba(0,0,0);",
-				"border: 2px inset #101010; border-radius: 0.3em;",
-				"animation: js-wd-emerge 0.5s linear 0s"
-			]},
-			{target: ".js-wd-menu > *", style: [
-				"display: block; margin: inherit; padding: inherit; cursor: pointer; border-radius: inherit;"
-			]},
-			{target: ".js-wd-menu > *:hover", style: ["background-color: rgba(50,50,50);"]},
-			/*-- data-wd-tsort --*/
-			{target: "[data-wd-tsort]", style: ["cursor: pointer;"]},
-			{target: "[data-wd-tsort]:before", style: ["content: \"\\2195 \"; font-weight: normal;"]},
-			{target: "[data-wd-tsort=\"-1\"]:before", style: ["content: \"\\2191 \";"]},
-			{target: "[data-wd-tsort=\"+1\"]:before", style: ["content: \"\\2193 \";"]},
-			/*-- data-wd-repeat/load --*/
-			{target: "[data-wd-repeat] > *, [data-wd-load] > *", style: ["visibility: hidden;"]},
-			/*-- data-wd-slide --*/
-			{target: "[data-wd-slide] > *", style: ["animation: js-wd-emerge 1s, js-wd-shrink-out 0.5s;"]},
-			/*-- SVG --*/
-			{target: "svg .js-wd-chart-hide", style: ["display: none;"]},
-			{target: "@media screen and (min-width: 768px) {svg .js-wd-chart-hide", style: ["display: inline;}"]},
-			/*-- tags especiais --*/
-			{target: "wdtag-mark", style: [
-				"background-color: rgba(154,205,50,0.7); display: inline; border-radius: 0.2em; color: #000000;"
-			]},
-			{target: "wdtag-root", style: [
-				"display: block; padding: 0.3em 0.3em 0.3em 3em; overflow: auto;",
-				"border-radius: 0.5em; 	border: 1px solid #000000;",
-				"font-family: monospace; font-size: 14px; white-space: pre-wrap;",
-				"text-decoration: none; text-indent: 0;",
-				"font-style: normal; font-weight: normal;",
-				"background-color: #262626;",
-				"counter-reset: wdcodelines;"
-			]},
-			{target: "wdtag-root *", style: [
-				"display: inline; position: static; padding: 0;",
-				"font-weight: normal; font-style: normal; border: none; border-raius: none;"
-			]},
-			{target: "wdtag-root wdtag-line", style: ["counter-increment: wdcodelines;"]},
-			{target: "wdtag-root wdtag-line:before", style: [
-				"content: counter(wdcodelines);",
-				"display: inline-block; position: relative;",
-				"margin: 0 0 0 -3em; padding-right: 0.5em; min-width: 3em;",
-				"color: #bcc118; text-align: right;"
-			]},
-			{target: "wdtag-root wdtag-content", style: ["color: #b3b3b3;"]},
-			{target: "wdtag-root wdtag-comment", style: ["color: #8c8c8c; font-style: italic;"]},
-			{target: "wdtag-root wdtag-doc", style: ["color: #df6d6d; font-weight: bold;"]},
-			{target: "wdtag-root wdtag-tag", style: ["color: #418bff;"]},
-			{target: "wdtag-root wdtag-attribute", style: ["color: #57ac57;"]},
-			{target: "wdtag-root wdtag-value", style: ["color: #cf8ee1;"]},
-			{target: "wdtag-root wdtag-word", style: ["color: #df6d6d; font-weight: bold;"]},
-			{target: "wdtag-root wdtag-tick", style: ["font-weight: bold; color: #68cccc;"]},
-			{target: "wdtag-root wdtag-string", style: ["color: #57ac57"]},
-			/*-- container da caixa de mensagens --*/
-			{target: ".js-wd-signal-modal-message", style: [
-				"position: fixed; top: 0; right: 0; left: 0; bottom: initial;",
-				"display: block; margin: auto; padding: 1px; width: auto; max-height: 75vh;",
-				" overflow: auto; z-index: 999999; font-size: 14px; background-color: transparent;"
-			]},
-			{target: "@media screen and (min-width: 768px) {.js-wd-signal-modal-message", style: [
-				"bottom: 0; right: 0; left: 75vw; top: initial;}"
-			]},
-			/*-- modal da caixa de diálogo --*/
-			{target: ".js-wd-signal-modal-dialog", style: [
-				"position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 0.1s js-wd-emerge;",
-				"margin: 0; padding: 0; background-color: rgba(0,0,50,0.3); z-index: 999999; cursor: forbidden;"
-			]},
-			/*-- caixas de mensagem e diálogo --*/
-			{target: ".js-wd-signal-message, .js-wd-signal-dialog", style: [
-				"display: block; padding: 0;",
-				"color: #d4d4e6; background-color: #353535;",
-				"border: thin solid #000000; border-radius: 0.5em;",
-				"box-shadow: inset 0 0 2px 1px rgba(0,0,0,0.6);"
-			]},
-			/*-- caixa de mensagem --*/
-			{target: ".js-wd-signal-message", style: [
-				"position: relative; margin: 0.5em 0; ",
-				"animation: js-wd-expand 0.5s ease 0s, js-wd-shrink 0.5s ease 8.5s;"
-			]},
-			/*-- caixa de diálogo --*/
-			{target: ".js-wd-signal-dialog", style: [
-				"position: absolute; top: 5vh; max-height: 90vh; left: 5vw; width: 90vw; margin: 0;",
-				"animation: js-wd-expand 0.5s ease 0s;"
-			]},
-			{target: "@media screen and (min-width: 768px) {.js-wd-signal-dialog", style: [
-				"top: 20vh; max-height: 60vh; left: 30vw; max-width: 40vw;}"
-			]},
-			/*-- botão para fechar caixa de mensagens --*/
-			{target: ".js-wd-signal-close", style: [
-				"position: absolute; top: 0.2em; right: 0.2em; display: inline-block;",
-				"line-height: 1; cursor: pointer; margin: 0; z-index: 5; font-size: large;"
-			]},
-			{target: ".js-wd-signal-close:before", style: ["content: \"\\00D7\";"]},
-			/*-- cabeçalho das caixas de mensagem e diálogo --*/
-			{target: ".js-wd-signal-head", style: [
-				"display: block; padding: 0.25em 0.5em; margin: 0;",
-				"border-radius: 0.5em 0.5em 0 0; white-space: pre-wrap;",
-				"font-size: larger; background-color: #000000;"
-			]},
-			/*-- corpo das caixas de mensagem e diálogo --*/
-			{target: ".js-wd-signal-body", style: [
-				"display: block; padding: 1em 1em 1em 2em; margin: 0; white-space: pre-wrap;"
-			]},
-			{target: ".js-wd-signal-message .js-wd-signal-body", style: ["border-radius: 0 0 0.5em 0.5em;"]},
-			/*-- rodapé da caixa de diálogo --*/
-			{target: ".js-wd-signal-foot", style: [
-				"display: flex; flex-flow: column nowrap;",
-				"background-color: #000000; border-radius: 0 0 0.5em 0.5em; font-size: smaller;"
-			]},
-			{target: "@media screen and (min-width: 768px) {.js-wd-signal-foot", style: [
-				"flex-flow: row wrap; justify-content: space-evenly; align-items: baseline;}"
-			]},
-			/*-- ações da caixa de diálogo --*/
-			{target: ".js-wd-signal-action", style: [
-				"padding: 0.25em 0.5em; border-radius: 0.2em;",
-				"color: #333333; background-color: #f0f0f0; cursor: pointer;",
-				 "font-size: inherit; text-align: center;"
-			]},
-			{target: "@media screen and (min-width: 768px) {.js-wd-signal-action", style: ["flex-shrink: 0;"]},
-			{target: ".js-wd-signal-action:focus", style: ["outline: 2px solid #9999ff;"]},
-			{target: ".js-wd-signal-action:hover", style: ["text-decoration: underline;"]},
+	const __STYLE = `
+		/*-- Efeitos -------------------------------------------------------------*/
+		@keyframes js-wd-emerge {
+			from {opacity: 0 !important;} to {opacity: 1 !important;}
+		}
+		@keyframes js-wd-fade {
+			from {opacity: 1 !important;} to {opacity: 0 !important;}
+		}
+		@keyframes js-wd-expand {
+			from {transform: scale(0) !important;} to {transform: scale(1) !important;}
+		}
+		@keyframes js-wd-shrink {
+			from {transform: scale(1) !important;} to {transform: scale(0) !important;}
+		}
+		/*-- Importantes ---------------------------------------------------------*/
+		.js-wd-no-display  {display: none !important;}
+		.js-wd-no-overflow {overflow: hidden !important;}
+		/*-- dataset -------------------------------------------------------------*/
+		[data-wd-send], [data-wd-set], [data-wd-edit], [data-wd-shared] {
+			cursor: pointer !important;
+		}
+		/*-- data-wd-move: jump --------------------------------------------------*/
+		[data-wd-move*="type{jump}"] {cursor: pointer !important;}
+		/*-- data-wd-move: drag --------------------------------------------------*/
+		[data-wd-move*="type{drag}"] {cursor: grab !important;}
+		[data-wd-move*="type{drag}"]:active {cursor: grabbing !important;}
+		/*-- data-wd-move: drop --------------------------------------------------*/
+		[data-wd-move-dropping][data-wd-move*="effect{copy}"] {outline: 2px solid blue !important;}
+		[data-wd-move-dropping][data-wd-move*="effect{move}"] {outline: 2px solid red !important;}
+		[data-wd-move-dropping][data-wd-move*="effect{link}"] {outline: 2px solid green !important;}
+		[data-wd-move-dropping][data-wd-move*="effect{hide}"] {outline: 2px solid purple !important;}
+		[data-wd-move-dropping] {min-height: 4em !important;}
+		[data-wd-move-dropping] > * {visibility: hidden !important;}
+		[data-wd-move-dropping] > [data-wd-move-dragging] {visibility: visible !important;}
+		[data-wd-move-dropping="move"], [data-wd-move-dropping="copy"],
+		[data-wd-move-dropping="link"], [data-wd-move-dropping="hide"] {
+			background-repeat: no-repeat;
+			background-position: center;
+			background-size: inherit inherit;
+			background-color: rgba(255,255,255,0.8);
+		}
+		[data-wd-move-dropping="copy"] {
+			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' height='100' width='100' ><text x='50%' y='50%' font-size='4em' text-anchor='middle' dominant-baseline='middle' fill='rgba(0,0,0,1)'>\\2795</text></svg>");
+		}
+		[data-wd-move-dropping="move"] {
+			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' height='100' width='100' ><text x='50%' y='50%' font-size='4em' text-anchor='middle' dominant-baseline='middle' fill='rgba(0,0,0,1)'>\\1F82F</text></svg>");
+		}
+		[data-wd-move-dropping="link"] {
+			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' height='100' width='100' ><text x='50%' y='50%' font-size='4em' text-anchor='middle' dominant-baseline='middle' fill='rgba(0,0,0,1)'>\\1F517</text></svg>");
+		}
+		[data-wd-move-dropping="hide"] {
+			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' height='100' width='100' ><text x='50%' y='50%' font-size='4em' text-anchor='middle' dominant-baseline='middle' fill='rgba(0,0,0,1)'>\\1F5D1</text></svg>");
+		}
+		/*-- data-wd-move: move --------------------------------------------------*/
+		[data-wd-move*="type{move}"] {cursor: move !important;}
+		[data-wd-move-moving], [data-wd-move-moving] > * {cursor: grabbing !important;}
+		/*-- data-wd-move: size --------------------------------------------------*/
+		.js-wd-cursor-n-resize  * {cursor: n-resize !important;}
+		.js-wd-cursor-ne-resize * {cursor: ne-resize !important;}
+		.js-wd-cursor-e-resize  * {cursor: e-resize !important;}
+		.js-wd-cursor-se-resize * {cursor: se-resize !important;}
+		.js-wd-cursor-s-resize  * {cursor: s-resize !important;}
+		.js-wd-cursor-sw-resize * {cursor: sw-resize !important;}
+		.js-wd-cursor-w-resize  * {cursor: w-resize !important;}
+		.js-wd-cursor-nw-resize * {cursor: nw-resize !important;}
+		.js-wd-cursor-n-resize  * {cursor: n-resize !important;}
+		.js-wd-hline, .js-wd-vline {
+			position:   fixed !important;
+			z-index:    999999 !important;
+		}
+		.js-wd-hline {
+			left:  0 !important;
+			width: 100vw !important;
+			border-top: thin solid #000000 !important;
+		}
+		.js-wd-vline {
+			top: 0 !important;
+			height: 100vh !important;
+			border-left: thin solid #000000;
+		}
+		/*-- data-wd-menu --------------------------------------------------------*/
+
+
+
+		[data-wd-menu] {cursor: context-menu !important;}
+		.js-wd-menu {font-size: 14px !important; font-family: Verdana,sans-serif !important; position: fixed !important; max-width: 40vw !important; max-height: 40vh !important; display: block !important; margin: 0 !important; padding: 0.3em !important; z-index: 999999 !important; overflow: auto !important !important; color: #ffffff !important; background-color: rgba(0,0,0) !important; border: 2px inset #101010 !important; border-radius: 0.3em !important; animation: js-wd-emerge 0.5s linear 0s}
+		.js-wd-menu > * {display: block !important; margin: inherit !important; padding: inherit !important; cursor: pointer !important; border-radius: inherit !important;}
+		.js-wd-menu > *:hover {background-color: rgba(50,50,50) !important;}
+		[data-wd-tsort] {cursor: pointer !important;}
+		[data-wd-tsort]:before {content: "\\2195 " !important; font-weight: normal !important;}
+		[data-wd-tsort="-1"]:before {content: "\\2191 " !important;}
+		[data-wd-tsort="+1"]:before {content: "\\2193 " !important;}
+		[data-wd-repeat] > *, [data-wd-load] > * {visibility: hidden !important;}
+		[data-wd-slide] > * {animation: js-wd-emerge 1s, js-wd-shrink-out 0.5s !important;}
+		svg .js-wd-chart-hide {display: none !important;}
+		@media screen and (min-width: 768px) {svg .js-wd-chart-hide {display: inline !important;}}
+		wdtag-mark {background-color: rgba(154,205,50,0.7) !important; display: inline !important; border-radius: 0.2em !important; color: #000000 !important;}
+		wdtag-root {display: block !important; padding: 0.3em 0.3em 0.3em 3em !important; overflow: auto !important; border-radius: 0.5em !important; 	border: 1px solid #000000 !important; font-family: monospace !important; font-size: 14px !important; white-space: pre-wrap !important; text-decoration: none !important; text-indent: 0 !important; font-style: normal !important; font-weight: normal !important; background-color: #262626 !important; counter-reset: wdcodelines !important;}
+		wdtag-root * {display: inline !important; position: static !important; padding: 0 !important; font-weight: normal !important; font-style: normal !important; border: none !important; border-raius: none !important;}
+		wdtag-root wdtag-line {counter-increment: wdcodelines !important;}
+		wdtag-root wdtag-line:before {content: counter(wdcodelines) !important; display: inline-block !important; position: relative !important; margin: 0 0 0 -3em !important; padding-right: 0.5em !important; min-width: 3em !important; color: #bcc118 !important; text-align: right !important;}
+		wdtag-root wdtag-content {color: #b3b3b3 !important;}
+		wdtag-root wdtag-comment {color: #8c8c8c !important; font-style: italic !important;}
+		wdtag-root wdtag-doc {color: #df6d6d !important; font-weight: bold !important;}
+		wdtag-root wdtag-tag {color: #418bff !important;}
+		wdtag-root wdtag-attribute {color: #57ac57 !important;}
+		wdtag-root wdtag-value {color: #cf8ee1 !important;}
+		wdtag-root wdtag-word {color: #df6d6d !important; font-weight: bold !important;}
+		wdtag-root wdtag-tick {font-weight: bold !important; color: #68cccc !important;}
+		wdtag-root wdtag-string {color: #57ac57}
+		.js-wd-signal-modal-message {position: fixed !important; top: 0 !important; right: 0 !important; left: 0 !important; bottom: initial !important; display: block !important; margin: auto !important; padding: 1px !important; width: auto !important; max-height: 75vh !important;  overflow: auto !important; z-index: 999999 !important; font-size: 14px !important; background-color: transparent !important;}
+		@media screen and (min-width: 768px) {.js-wd-signal-modal-message {bottom: 0 !important; right: 0 !important; left: 75vw !important; top: initial !important;}}
+		.js-wd-signal-modal-dialog {position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; 0.1s js-wd-emerge !important; margin: 0 !important; padding: 0 !important; background-color: rgba(0,0,50,0.3) !important; z-index: 999999 !important; cursor: forbidden !important;}
+		.js-wd-signal-message, .js-wd-signal-dialog {display: block !important; padding: 0 !important; color: #d4d4e6 !important; background-color: #353535 !important; border: thin solid #000000 !important; border-radius: 0.5em !important; box-shadow: inset 0 0 2px 1px rgba(0,0,0,0.6) !important;}
+		.js-wd-signal-message {position: relative !important; margin: 0.5em 0 !important;  animation: js-wd-expand 0.5s ease 0s, js-wd-shrink 0.5s ease 8.5s !important;}
+		.js-wd-signal-dialog {position: absolute !important; top: 5vh !important; max-height: 90vh !important; left: 5vw !important; width: 90vw !important; margin: 0 !important; animation: js-wd-expand 0.5s ease 0s !important;}
+		@media screen and (min-width: 768px) {.js-wd-signal-dialog {top: 20vh !important; max-height: 60vh !important; left: 30vw !important; max-width: 40vw !important;}}
+		.js-wd-signal-close {position: absolute !important; top: 0.2em !important; right: 0.2em !important; display: inline-block !important; line-height: 1 !important; cursor: pointer !important; margin: 0 !important; z-index: 5 !important; font-size: large !important;}
+		.js-wd-signal-close:before {content: "\\00D7" !important;}
+		.js-wd-signal-head {display: block !important; padding: 0.25em 0.5em !important; margin: 0 !important; border-radius: 0.5em 0.5em 0 0 !important; white-space: pre-wrap !important; font-size: larger !important; background-color: #000000 !important;}
+		.js-wd-signal-body {display: block !important; padding: 1em 1em 1em 2em !important; margin: 0 !important; white-space: pre-wrap !important;}
+		.js-wd-signal-message .js-wd-signal-body {border-radius: 0 0 0.5em 0.5em !important;}
+		.js-wd-signal-foot {display: flex !important; flex-flow: column nowrap !important; background-color: #000000 !important; border-radius: 0 0 0.5em 0.5em !important; font-size: smaller !important;}
+		@media screen and (min-width: 768px) {.js-wd-signal-foot {flex-flow: row wrap !important; justify-content: space-evenly !important; align-items: baseline !important;}}
+		.js-wd-signal-action {padding: 0.25em 0.5em !important; border-radius: 0.2em !important; color: #333333 !important; background-color: #f0f0f0 !important; cursor: pointer !important; font-size: inherit !important; text-align: center !important;}
+		@media screen and (min-width: 768px) {.js-wd-signal-action {flex-shrink: 0 !important;}
+		.js-wd-signal-action:focus {outline: 2px solid #9999ff !important;}
+		.js-wd-signal-action:hover {text-decoration: underline !important;}
+		.js-wd-progress-modal {position: fixed !important; top: 0 !important; left: 0 !important; display: block !important; width: 100vw !important; height: 100vh !important; padding: 0 !important; margin: 0 !important; z-index: 999999 !important; cursor: progress !important; background-color: rgba(0,0,0,0.3) !important; animation: js-wd-emerge 0.1s !important;}
+		.js-wd-progress-bar {position: absolute !important; top: 0 !important; left: 0 !important; display: block !important; height: 5px !important; padding: 0 !important; margin: 0 !important; background-color: royalblue !important; border-radius: 0.2em !important; border: 1px solid black !important;}`;
+
 			//"*::backdrop {background-color: white;}",
 			//TODO ver coloração https://developer.mozilla.org/pt-BR/docs/Web/CSS/background-color
 			//TODO interessante https://developer.mozilla.org/en-US/docs/Web/CSS/::file-selector-button
 			/*-- barra de progresso --*/
-			{target: ".js-wd-progress-modal", style: [
-				"position: fixed; top: 0; left: 0; display: block;",
-				"width: 100vw; height: 100vh; padding: 0; margin: 0; z-index: 999999;",
-				"cursor: progress; background-color: rgba(0,0,0,0.3); animation: js-wd-emerge 0.1s;",
-			]},
-			{target: ".js-wd-progress-bar", style: [
-				"position: absolute; top: 0; left: 0;",
-				"display: block; height: 5px; padding: 0; margin: 0;",
-				"background-color: royalblue; border-radius: 0.2em; border: 1px solid black;"
-			]}
-		],
 		/**. ``''void'' builder()``: Cria o elemento ''style'' com o CSS da biblioteca e o adiciona à página.**/
-		builder: function() {
-			const node = document.createElement("STYLE");
-			const data = [];
-			for (let i = 0; i < this.css.length; i++) {
-				let target = this.css[i].target;
-				let style  = this.css[i].style.join(" ").replace(/\;+/g, " !important;");
-				let block  = [target.trim(), " {", style.trim(), "}"].join("");
-				data.push(block);
-			}
-			node.innerHTML = data.join("\n");
-			document.head.appendChild(node);
-			return;
-		},
-	};
 
 
 /*----------------------------------------------------------------------------*/
@@ -9093,40 +9019,55 @@ Object.defineProperties(__Type.prototype, {
 
 
 	function data_wd_move_drag(target, event, wdArray) {
-		/*-- verificando atributo --*/
-		const data  = wdArray[0];
-		const query = data.$$ || data.$ || null;
-		const drops = WD(query);
-		if (data.type !== "drag" || query === null) return;
+		if (wdArray[0].type !== "drag") return;
+		const data = wdArray[0];
 		/*-- Habilitando configuração de arrasto ---------------------------------*/
-		if (["mouseenter", "mouseover", "mouseout"].indexOf(event.type) >= 0)  {
-			target.draggable = event.type !== "mouseout";
-		}
+		if (target.draggable !== true)
+			target.draggable = true;
 		/*-- Iniciando arrasto ---------------------------------------------------*/
-		else if (event.type === "dragstart") {
-			const list   = ["none", "link", "move", "copy"];
-			const effect = list.indexOf(data.effect) >= 0 ? data.effect : list[0];
-			target.dataset.wdMoveDragging    = target.dataset.wdMove;
-			event.dataTransfer.effectAllowed = effect;
-			event.dataTransfer.dropEffect    = effect;
-			//event.dataTransfer.setData("text", data.effect in effect ? effect : "none"); FIXME o que eu faço com isso?
-			drops.forEach(function(drop) {
-				if (drop !== target)
-					drop.dataset.wdMoveDropping = target.dataset.wdMove;;
+		if (event.type === "dragstart") {
+			/*-- definindo o efeito de arrasto --*/
+			const effect = __Type(data.effect).array ? data.effect : [];
+			const hide   = effect.indexOf("hide") >= 0;
+			const move   = effect.indexOf("move") >= 0 || hide;
+			const copy   = effect.indexOf("copy") >= 0;
+			const link   = effect.indexOf("link") >= 0;
+			let allowed;
+			if (move === link && move === copy)
+				allowed = "all";
+			else if (copy && move)
+				allowed = "copyMove";
+			else if (copy && link)
+				allowed = "copyLink";
+			else if (link && move)
+				allowed = "linkMove";
+			else
+				allowed = copy ? "copy" : (move ? "move" : "link");
+			/*-- definindo os dados do arrasto --*/
+			event.dataTransfer.effectAllowed = allowed;
+			event.dataTransfer.setData("text", target.dataset.wdMove);
+			target.dataset.wdMoveDragging = "on";
+			/*-- definindo locais de queda --*/
+			const re = /effect\{([a-z]+)\}/;
+			WD.$$("[data-wd-move*=\"type{drop}\"]").forEach(function(node) {
+				const attr  = node.dataset.wdMove;
+				const match = attr.match(re);
+				const value = match !== null && match.length > 1 ? match[1] : null;
+				if (effect.indexOf(value) >= 0)
+					node.dataset.wdMoveDropping = "";
 			});
 		}
 		/*-- Encerrando arrasto --------------------------------------------------*/
 		else if (event.type === "dragend") {
-			const nodes = WD.$$("[data-wd-move-dragging], [data-wd-move-dropping]");
-			nodes.forEach(function (node) {
+			const nodes = WD.$$("*[data-wd-move-dragging], *[data-wd-move-dropping]");
+			nodes.forEach(function(node) {
 				if ("wdMoveDragging" in node.dataset)
 					delete node.dataset.wdMoveDragging;
 				if ("wdMoveDropping" in node.dataset)
 					delete node.dataset.wdMoveDropping;
-				if ("wdMove" in node.dataset && node.hasAttribute("draggable"))
-					node.removeAttribute("draggable");
 			});
 		}
+		window.getSelection().removeAllRanges();
 		return;
 	}
 
@@ -9138,24 +9079,41 @@ Object.defineProperties(__Type.prototype, {
 
 
 	function data_wd_move_drop(target, event, wdArray) {
-		console.warn({allow: event.dataTransfer.effectAllowed, drop: event.dataTransfer.dropEffect});
-		/*-- Derrubando elemento --*/
-		if (event.type === "drop") {
-			const data = wdArray[0];
-			const drag = document.querySelector("[data-wd-move-dragging]");
-			const drop = target;
-			//const act  = data.effect;//event.dataTransfer.dropEffect;
-
-
-			if (drag === null) {
-				return;
-			} else if (__Type(data.call).function) {
-				data.call(drag, drop, wdArray)
-			} else if (act === "move") {
+		if (wdArray[0].type !== "drop") return;
+		const data   = wdArray[0];
+		/*-- Checando compatibilidade de efeitos na queda ------------------------*/
+		const drag    = document.querySelector("[data-wd-move-dragging]");
+		const drop    = target;
+		const effects = {move: "move", copy: "copy", link: "link", hide: "move"};
+		const effect  = data.effect;
+		if (drag === null || !(effect in effects)) return;
+		/*-- Checando compatibilidade de efeitos no arrasto ----------------------*/
+		const parser = new __Parser(event.dataTransfer.getData("text"));
+		const wddrag = parser.wdArray.get()[0];
+		const source = __Type(wddrag.effect).array ? wddrag.effect : [];
+		if (source.indexOf(effect) < 0) return;
+		/*-- Configurando visualização de queda ----------------------------------*/
+		if (event.type === "dragover" || event.type === "dragenter") {
+			event.dataTransfer.dropEffect = effects[effect];
+			drop.dataset.wdMoveDropping = effect;
+		}
+		else if (event.type === "dragleave") {
+			drop.dataset.wdMoveDropping = "";
+		}
+		/*-- Derrubando elemento -------------------------------------------------*/
+		else if (event.type === "drop") {
+			if (__Type(data.call).function) {
+				data.call(drag, drop, wddrag)
+			}
+			else if (effect === "move" || effect === "hide") {
 				drop.appendChild(drag);
-			} else if (act === "copy") {
+				if (effect === "hide")
+					drag.style.display = "none";
+			}
+			else if (effect === "copy") {
 				drop.appendChild(drag.cloneNode(true));
-			} else if (act === "link") {
+			}
+			else if (effect === "link") {
 				if (drag.id.trim() === "")
 					drag.id = drag.tagName + String(new Date().valueOf());
 				const span = document.createElement("SPAN");
@@ -9167,7 +9125,9 @@ Object.defineProperties(__Type.prototype, {
 				span.innerText = drag.textContent;
 				drop.appendChild(link);
 			}
+			delete drop.dataset.wdMoveDropping;
 		}
+		window.getSelection().removeAllRanges();
 		return;
 	}
 
@@ -9356,7 +9316,7 @@ Object.defineProperties(__Type.prototype, {
 		if (event.type === "click")
 			menus.forEach(function(x) {
 				x.remove();
-				WD(document.body).set({class: {remove: "js-wd-overflow-hidden"}});
+				WD(document.body).set({class: {remove: "js-wd-no-overflow"}});
 				return;
 			});
 
@@ -9386,7 +9346,7 @@ Object.defineProperties(__Type.prototype, {
 			submenu.onclick   = function(ev) {
 				if (action !== null) action(id, e);
 				ev.target.parentElement.remove();
-				WD(document.body).set({class: {remove: "js-wd-overflow-hidden"}});
+				WD(document.body).set({class: {remove: "js-wd-no-overflow"}});
 				return;
 			}
 			menu.appendChild(submenu);
@@ -9397,11 +9357,11 @@ Object.defineProperties(__Type.prototype, {
 		/* adicionar menu na tela */
 		if (enter) menu.onmouseleave = function(ev) {
 			ev.target.remove();
-			WD(document.body).set({class: {remove: "js-wd-overflow-hidden"}});
+			WD(document.body).set({class: {remove: "js-wd-no-overflow"}});
 			return;
 		};
 		menu.classList = "js-wd-menu";
-		WD(document.body).set({class: {add: "js-wd-overflow-hidden"}});
+		WD(document.body).set({class: {add: "js-wd-no-overflow"}});
 		document.body.appendChild(menu);
 
 		/* posicionar menu na tela */
@@ -9423,51 +9383,6 @@ Object.defineProperties(__Type.prototype, {
 /* -- DISPARADORES -- */
 /*============================================================================*/
 
-/*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' wdOnMouse(''object''  ev)``
-	Disparador a ser invocado em eventos de mouse.**/
-	function wdOnMouse(ev) {
-		//if (__UNDERMAINTENANCE) console.log({wdOnMouse: ev, target: ev.target});
-		if (event.target.nodeType !== 1) return;
-		const events = {
-			click:      {which: 1, bubbles : true, trigger: [
-				data_wdTsort, data_wdShared,
-				navLink, data_wdMove, data_wdMenu
-			]},
-			dblclick:   {which: 1, bubbles : true, trigger: [data_wdMove]},
-
-			mousedown:  {which: 1, bubbles : false, trigger: [data_wdMove]},
-			mouseup:    {which: 1, bubbles : false, trigger: [data_wdMove]},
-			mousemove:  {which: 1, bubbles : false, trigger: [data_wdMove]},
-			mouseenter: {which: 1, bubbles : false, trigger: [data_wdMove]},
-			mouseleave: {which: 1, bubbles : false, trigger: [data_wdMove]},
-			mouseover:  {which: 1, bubbles : false, trigger: [data_wdMove, data_wdMenu]},
-			mouseout:   {which: 1, bubbles : false, trigger: [data_wdMove]},
-
-			drag:       {which: 1, bubbles : false, trigger: [data_wdMove]},
-			dragstart:  {which: 1, bubbles : false, trigger: [data_wdMove]},
-			dragend:    {which: 1, bubbles : false, trigger: [data_wdMove]},
-			dragover:   {which: 1, bubbles : false, trigger: [data_wdMove]},
-			dragenter:  {which: 1, bubbles : false, trigger: [data_wdMove]},
-			dragleave:  {which: 1, bubbles : false, trigger: [data_wdMove]},
-			drop:       {which: 1, bubbles : false, trigger: [data_wdMove]},
-		};
-		if (!(ev.type in events)) return;
-		if (ev.which !== events[ev.type].which) return;
-		events[ev.type].trigger.forEach(function (v,i,a) {
-
-			v(ev.target, ev);
-
-		});
-
-
-
-
-
-
-
-		return;
-	};
 
 	/*TODO descrever
 	target: objeto a vincular o evento
@@ -9484,9 +9399,11 @@ Object.defineProperties(__Type.prototype, {
 			target: window, preventDefault: false,
 			data: [
 				{name: "*", kill: false, bind: {}, call: function() {
-					/*-- adicionar o style da biblioteca e provocar o evento wdreload no documento --*/
-					__STYLE.builder();
+					const node = document.createElement("STYLE");
+					node.innerHTML = __STYLE;
+					document.head.appendChild(node);
 					document.dispatchEvent(wdReloadEvent);
+					return;
 				}}
 			]
 		},
@@ -9605,27 +9522,27 @@ Object.defineProperties(__Type.prototype, {
 			]
 		},
 		dragleave: {
-			target: document, preventDefault: false,
+			target: document, preventDefault: true,
 			data: [
-				//{name: "?", call: wdOnMouse, kill: false, bind: {}}
+				{name: "wdMove", call: data_wd_move_drop, kill: false, bind: {}}
 			]
 		},
 		dragover: {
 			target: document, preventDefault: true,
 			data: [
-				{name: "wdMoveDropping", call: data_wd_move_drop, kill: false, bind: {}}
+				{name: "wdMove", call: data_wd_move_drop, kill: false, bind: {}}
 			]
 		},
 		dragenter: {
 			target: document, preventDefault: false,
 			data: [
-				//{name: "?", call: wdOnMouse, kill: false, bind: {}}
+				{name: "wdMove", call: data_wd_move_drop, kill: false, bind: {}}
 			]
 		},
 		drop: {
 			target: document, preventDefault: true,
 			data: [
-				{name: "wdMoveDropping", call: data_wd_move_drop, kill: false, bind: {}}
+				{name: "wdMove", call: data_wd_move_drop, kill: false, bind: {}}
 			]
 		},
 		mousedown: {

@@ -29,29 +29,18 @@
 
 	<div class="wd-col wd-border-child wd-margin-child">
 
-		<div style="height: 100px;overflow: auto;" id="dropA">
-
-			<div
-				data-wd-move="type{drag}effect{move}action(myDrag)$${#dropB, #dropA, #dropC, #dropB > *}"
-				class="wd-bg-red"
-			>Move 1</div>
-
-			<div
-				data-wd-move="type{drag}effect{copy}action(myDrag)$${#dropA, #dropC}"
-				class="wd-bg-blue"
-			>Move 2</div>
-
-			<div
-				data-wd-move="type{drag}effect{link}action(myDrag)$${#dropB, #dropA, #dropC}"
-				class="wd-bg-green"
-			>Move 3</div>
-
+		<div style="height: 150px;overflow: auto;">
+			<div data-wd-move="type{drag}effect[move]" class="wd-bg-red">Move</div>
+			<div data-wd-move="type{drag}effect[copy]" class="wd-bg-blue">Copy</div>
+			<div data-wd-move="type{drag}effect[link]" class="wd-bg-green">Link</div>
+			<div data-wd-move="type{drag}effect[hide]" class="wd-bg-yellow">Hide</div>
+			<div data-wd-move="type{drag}effect[move,copy,hide,link]" class="wd-bg-pink">All</div>
 		</div>
 
-		<div style="height: 100px;overflow: auto;" id="dropB"></div>
-
-		<div style="height: 100px;overflow: auto;" id="dropC"></div>
-
+		<div data-wd-move="type{drop}effect{copy}" style="height: 150px;overflow: auto;"><span>copy</span></div>
+		<div data-wd-move="type{drop}effect{move}" style="height: 150px;overflow: auto;"><span>move</span></div>
+		<div data-wd-move="type{drop}effect{link}" style="height: 150px;overflow: auto;"><span>link</span></div>
+		<div data-wd-move="type{drop}effect{hide}" style="height: 150px;overflow: auto;"><span>hide</span></div>
 	</div>
 
 <!--=========================================================================-->
