@@ -88,11 +88,11 @@ const wd = (function() {
 		[data-wd-move*="type{drag}"] {cursor: grab !important;}
 		[data-wd-move*="type{drag}"]:active {cursor: grabbing !important;}
 		/*-- data-wd-move: drop --------------------------------------------------*/
-		[data-wd-move-dropping][data-wd-move*="effect{copy}"] {outline: 2px solid blue !important;}
-		[data-wd-move-dropping][data-wd-move*="effect{move}"] {outline: 2px solid red !important;}
-		[data-wd-move-dropping][data-wd-move*="effect{link}"] {outline: 2px solid green !important;}
-		[data-wd-move-dropping][data-wd-move*="effect{hide}"] {outline: 2px solid purple !important;}
 		[data-wd-move-dropping] {min-height: 4em !important;}
+		[data-wd-move-dropping][data-wd-move*="effect{copy}"] {outline: 2px solid rgb(30,144,255) !important;}
+		[data-wd-move-dropping][data-wd-move*="effect{move}"] {outline: 2px solid rgb(255,51,51)  !important;}
+		[data-wd-move-dropping][data-wd-move*="effect{link}"] {outline: 2px solid rgb(0,153,0)    !important;}
+		[data-wd-move-dropping][data-wd-move*="effect{hide}"] {outline: 2px solid rgb(255,215,0)  !important;}
 		[data-wd-move-dropping] > * {visibility: hidden !important;}
 		[data-wd-move-dropping] > [data-wd-move-dragging] {visibility: visible !important;}
 		[data-wd-move-dropping="move"], [data-wd-move-dropping="copy"],
@@ -100,19 +100,22 @@ const wd = (function() {
 			background-repeat: no-repeat;
 			background-position: center;
 			background-size: inherit inherit;
-			background-color: rgba(255,255,255,0.8);
 		}
 		[data-wd-move-dropping="copy"] {
-			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' height='100' width='100' ><text x='50%' y='50%' font-size='4em' text-anchor='middle' dominant-baseline='middle' fill='rgba(0,0,0,1)'>\\2795</text></svg>");
+			background-color: rgb(204,230,255);
+			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' height='100' width='100' ><text x='50%' y='50%' font-size='3em' text-anchor='middle' dominant-baseline='middle' fill='rgb(0,0,0)'>\\2795</text></svg>");
 		}
 		[data-wd-move-dropping="move"] {
-			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' height='100' width='100' ><text x='50%' y='50%' font-size='4em' text-anchor='middle' dominant-baseline='middle' fill='rgba(0,0,0,1)'>\\1F82F</text></svg>");
+			background-color: rgb(255,204,204);
+			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' height='100' width='100' ><text x='50%' y='50%' font-size='3em' text-anchor='middle' dominant-baseline='middle' fill='rgb(0,0,0)'>\\1F82F</text></svg>");
 		}
 		[data-wd-move-dropping="link"] {
-			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' height='100' width='100' ><text x='50%' y='50%' font-size='4em' text-anchor='middle' dominant-baseline='middle' fill='rgba(0,0,0,1)'>\\1F517</text></svg>");
+			background-color: rgb(204,255, 204);
+			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' height='100' width='100' ><text x='50%' y='50%' font-size='3em' text-anchor='middle' dominant-baseline='middle' fill='rgb(0,0,0)'>\\1F517</text></svg>");
 		}
 		[data-wd-move-dropping="hide"] {
-			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' height='100' width='100' ><text x='50%' y='50%' font-size='4em' text-anchor='middle' dominant-baseline='middle' fill='rgba(0,0,0,1)'>\\1F5D1</text></svg>");
+			background-color: rgb(255,247,204);
+			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' height='100' width='100' ><text x='50%' y='50%' font-size='3em' text-anchor='middle' dominant-baseline='middle' fill='rgb(0,0,0)'>\\2796</text></svg>");
 		}
 		/*-- data-wd-move: move --------------------------------------------------*/
 		[data-wd-move*="type{move}"] {cursor: move !important;}
@@ -171,20 +174,199 @@ const wd = (function() {
 		wdtag-root wdtag-word {color: #df6d6d !important; font-weight: bold !important;}
 		wdtag-root wdtag-tick {font-weight: bold !important; color: #68cccc !important;}
 		wdtag-root wdtag-string {color: #57ac57}
-		.js-wd-signal-modal-message {position: fixed !important; top: 0 !important; right: 0 !important; left: 0 !important; bottom: initial !important; display: block !important; margin: auto !important; padding: 1px !important; width: auto !important; max-height: 75vh !important;  overflow: auto !important; z-index: 999999 !important; font-size: 14px !important; background-color: transparent !important;}
-		@media screen and (min-width: 768px) {.js-wd-signal-modal-message {bottom: 0 !important; right: 0 !important; left: 75vw !important; top: initial !important;}}
-		.js-wd-signal-modal-dialog {position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; 0.1s js-wd-emerge !important; margin: 0 !important; padding: 0 !important; background-color: rgba(0,0,50,0.3) !important; z-index: 999999 !important; cursor: forbidden !important;}
+
+
+
+
+
+
+
+
+
+
+
+
+
+		/*-- Modais de diálogo e alerta ------------------------------------------*/
+		.js-wd-signal-frame {
+			position: fixed;
+			top: 0.5em;
+			right: 0.5em;
+			left: 0.5em;
+			bottom: initial;
+			display: block;
+			margin: 0;
+			padding: 0;
+			width: auto;
+			max-height: 75vh;
+			overflow: auto;
+			z-index: 999999;
+		}
+		@media screen and (min-width: 768px) {
+			.js-wd-signal-frame {
+				bottom: 0.5em;
+				right: 0.5em;
+				left: 75vw;
+				top: initial
+			}
+		}
+		/*-- Caixas de diálogo e alerta ------------------------------------------*/
+		/*-- caixa principal --*/
+		.js-wd-signal {
+			position: relative;
+			display: block;
+			margin:  0 0 0.5em 0;
+			padding: 0;
+			border: 1px solid;
+			border-radius: 0.5em;
+			font-size: 14px;
+			animation: js-wd-expand 0.5s ease 0s, js-wd-shrink 0.5s ease 8.5s;
+		}
+		.js-wd-signal:last-child {margin: 0;}
+		.js-wd-signal-modal > .js-wd-signal {position: absolute;}
+		/*-- caixa principal: tipos --*/
+		.js-wd-signal.js-wd-signal-type-info {
+			color: rgb(56, 98, 224);
+			background-color: rgb(211, 220, 248);
+		}
+		/*-- Cabeçalho --*/
+		.js-wd-signal-head {
+			display: block;
+			padding: 0.25em 0.5em;
+			margin: 0 !important; /*-- FIXME remover pendências de wd.css --*/
+			font-size: inherit !important; /*-- FIXME remover pendências de wd.css --*/
+			font-weight: bold !important; /*-- FIXME remover pendências de wd.css --*/
+			border-radius: 0.5em 0.5em 0 0;
+		}
+		/*-- Cabeçalho: tipos --*/
+		.js-wd-signal.js-wd-signal-type-info > .js-wd-signal-head {
+			background-color: rgb(56, 98, 224);
+			color: rgb(211, 220, 248);
+		}
+		/*-- Corpo --*/
+		.js-wd-signal-body {
+			padding: 1em 1em 1em 3em;
+			margin: 0;
+			border-radius: 0.5em 0.5em 0 0;
+			min-height: 3em;
+			background-repeat: no-repeat;
+			background-position: left;
+			background-size: 3em 3em;
+		}
+		.js-wd-signal-head + .js-wd-signal-body {border-radius: 0;}
+		.js-wd-signal-body:last-child {border-radius: 0 0 0.5em 0.5em;}
+		/*-- Corpo: tipos --*/
+		.js-wd-signal.js-wd-signal-type-info > .js-wd-signal-body {
+			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' style='backgrounsd-color: red' height='100' width='100' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-size='4em'>\\24d8</text></svg>");
+		}
+
+
+		/*-- Rodapé --*/
+		.js-wd-signal-foot {
+			display: flex !important;
+			flex-flow: column nowrap !important;
+			border-radius: 0 0 inherit inherit;
+		}
+		@media screen and (min-width: 768px) {
+			.js-wd-signal-foot {
+				flex-flow: row wrap !important;
+				justify-content: space-evenly !important;
+				align-items: baseline !important;
+			}
+		}
+		.js-wd-signal-close {
+			position: absolute !important;
+			top: 0 !important;
+			right: 0 !important;
+			margin: 0 !important;
+			padding: 0.125em !important;
+			min-height: auto !important;
+			min-width:  auto !important;
+			z-index:    2 !important;
+			font-size:  2em !important;
+			line-height: normal !important;
+			background-color: transparent !important;
+			border: 0 !important;
+		}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		/*-- Caixas de alerta ----------------------------------------------------*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	/*-- Caixas diálogo ------------------------------------------*/
+
+
+		.js-wd-signal-modal {position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; 0.1s js-wd-emerge !important; margin: 0 !important; padding: 0 !important; background-color: rgba(0,0,50,0.3) !important; z-index: 999999 !important; cursor: forbidden !important;}
+
 		.js-wd-signal-message, .js-wd-signal-dialog {display: block !important; padding: 0 !important; color: #d4d4e6 !important; background-color: #353535 !important; border: thin solid #000000 !important; border-radius: 0.5em !important; box-shadow: inset 0 0 2px 1px rgba(0,0,0,0.6) !important;}
-		.js-wd-signal-message {position: relative !important; margin: 0.5em 0 !important;  animation: js-wd-expand 0.5s ease 0s, js-wd-shrink 0.5s ease 8.5s !important;}
-		.js-wd-signal-dialog {position: absolute !important; top: 5vh !important; max-height: 90vh !important; left: 5vw !important; width: 90vw !important; margin: 0 !important; animation: js-wd-expand 0.5s ease 0s !important;}
-		@media screen and (min-width: 768px) {.js-wd-signal-dialog {top: 20vh !important; max-height: 60vh !important; left: 30vw !important; max-width: 40vw !important;}}
-		.js-wd-signal-close {position: absolute !important; top: 0.2em !important; right: 0.2em !important; display: inline-block !important; line-height: 1 !important; cursor: pointer !important; margin: 0 !important; z-index: 5 !important; font-size: large !important;}
-		.js-wd-signal-close:before {content: "\\00D7" !important;}
-		.js-wd-signal-head {display: block !important; padding: 0.25em 0.5em !important; margin: 0 !important; border-radius: 0.5em 0.5em 0 0 !important; white-space: pre-wrap !important; font-size: larger !important; background-color: #000000 !important;}
-		.js-wd-signal-body {display: block !important; padding: 1em 1em 1em 2em !important; margin: 0 !important; white-space: pre-wrap !important;}
-		.js-wd-signal-message .js-wd-signal-body {border-radius: 0 0 0.5em 0.5em !important;}
-		.js-wd-signal-foot {display: flex !important; flex-flow: column nowrap !important; background-color: #000000 !important; border-radius: 0 0 0.5em 0.5em !important; font-size: smaller !important;}
-		@media screen and (min-width: 768px) {.js-wd-signal-foot {flex-flow: row wrap !important; justify-content: space-evenly !important; align-items: baseline !important;}}
+
+
+		.js-wd-signal-dialog {
+			position: absolute !important;
+			top: 5vh !important;
+			max-height: 90vh !important;
+			left: 5vw !important;
+			width: 90vw !important;
+			margin: 0 !important;
+			animation: js-wd-expand 0.5s ease 0s !important;
+		}
+		@media screen and (min-width: 768px) {
+			.js-wd-signal-dialog {
+				top: 20vh !important;
+				max-height: 60vh !important;
+				left: 30vw !important;
+				max-width: 40vw !important;
+			}
+		}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 		.js-wd-signal-action {padding: 0.25em 0.5em !important; border-radius: 0.2em !important; color: #333333 !important; background-color: #f0f0f0 !important; cursor: pointer !important; font-size: inherit !important; text-align: center !important;}
 		@media screen and (min-width: 768px) {.js-wd-signal-action {flex-shrink: 0 !important;}
 		.js-wd-signal-action:focus {outline: 2px solid #9999ff !important;}
@@ -311,35 +493,93 @@ const wd = (function() {
 	/**###### ``**const** ''object'' __SIGNAL``
 	Renderiza mensagens e notificações.**/
 	const __SIGNAL = {
-		/**. ``''node'' modalMessage``: Agrupador de mensagens.**/
-		modalMessage: (function() {
+		/**. ``''node'' frame``: Agrupador de mensagens de alerta.**/
+		frame: (function() {
 			const node  = document.createElement("ASIDE");
-			node.className = "js-wd-signal-modal-message";
+			node.className = "js-wd-signal-frame";
+			node.tabIndex = -1;
 			return node;
 		})(),
-		/**. ``''node'' modalDialog``: Modal de diálogo.**/
-		modalDialog: (function() {
+		/**. ``''node'' modal``: Modal de diálogo.**/
+		modal: (function() {
 			const node  = document.createElement("ASIDE");
-			node.className = "js-wd-signal-modal-dialog";
+			node.className = "js-wd-signal-modal";
+			node.tabIndex = -1;
 			return node;
 		})(),
 		/**. ``''node'' box``: Caixa de mensagens/diálogo (para clonar).**/
 		box: (function() {
-			const node = document.createElement("SECTION")
-			const nodes = {HEADER: "head", ARTICLE: "body", SPAN: "close", FOOTER: "foot"};
-			for (let i in nodes) {
-				let child = document.createElement(i);
-				child.className = "js-wd-signal-"+nodes[i];
-				node.appendChild(child);
-			}
-			return node;
+			const box = document.createElement("ARTICLE");
+			box.className = "js-wd-signal"
+			box.innerHTML = `
+				<button class="js-wd-signal-close" >&times;</button>
+				<h6 class="js-wd-signal-head"></h6>
+				<section class="js-wd-signal-body"><section>
+				<section class="js-wd-signal-foot"></section>`;
+			return box;
 		})(),
+
+
+
+		alert: function(options) {
+			/*-- Obtendo dados iniciais --*/
+			const types = ["info", "warn", "error", "ok"];
+			const type  = types.indexOf(options.type) > 0 ? options.type : types[0];
+			const id    = String(new Date().valueOf());
+			const modal = this.frame;
+			const box   = this.box.cloneNode(true);
+			const nodes = {head: 0, close: 0, body: 0, foot: 0};
+			for (let i in nodes)
+				nodes[i] = box.querySelector(`.js-wd-signal-${i}`);
+			/*-- Caixa --*/
+			box.className += ` js-wd-signal-type-${type}`;
+			box.setAttribute("role", "alert");
+			box.setAttribute("aria-modal", "false");
+			/*-- Cabeçalho --*/
+			if ("title" in options && options.title.trim() !== "") {
+				nodes.head.innerHTML = options.title;
+				nodes.head.id = `label_${id}`;
+				box.setAttribute("aria-labelledby", nodes.head.id);
+			} else {
+				nodes.head.remove();
+			}
+			/*-- Corpo --*/
+			nodes.body.innerHTML = "body"  in options ? options.body  : "?";
+			nodes.body.id = `details_${id}`;
+			box.setAttribute("aria-details", nodes.body.id);
+			/*-- Rodapé --*/
+			nodes.foot.remove();
+			/*-- Fechar --*/
+			nodes.close.onclick  = function(ev) {
+				if (box.parentElement !== null) {
+					box.remove();
+					if (modal.childElementCount === 0)
+						modal.remove();
+				}
+			};
+			/*-- Temporizador --*/
+			window.setTimeout(function() {nodes.close.click();}, 88888900);
+			/*-- Renderizando --*/
+			if (modal.parentElement === null)
+				document.body.appendChild(modal);
+			modal.insertAdjacentElement("afterbegin", box);
+			return;
+		},
+
+
+
+
+
+
+
 		/**. ``''void'' message(''object'' options)``: Ver método ''signal''.**/
 		message: function (options) {
-			/*-- checando dados inciais --*/
+			/*-- Sair se options não foi definido --*/
 			if (typeof options !== "object") return;
+
+
 			const dialog = typeof options.trigger === "function";
-			const modal  = dialog ? this.modalDialog : this.modalMessage;
+			const modal  = dialog ? this.modal : this.frame;
 			if (dialog && modal.childElementCount > 0) return;
 			/*-- capturando estrutura --*/
 			const node   = this.box.cloneNode(true);
@@ -399,13 +639,20 @@ const wd = (function() {
 			modal.insertAdjacentElement("afterbegin", node);
 			return;
 		},
+
+
+
+
+
+
+
 		/**. ``''void'' notify(''object'' options)``: Ver método ''signal''.**/
 		notify: function (options) {
 			if (typeof options !== "object") return;
 			const title  = "title" in options ? options.title : "";
 			const config = {
 				body: "body" in options ? options.body : "",
-				lang: __LANG.list,
+				lang: __LANG.list
 			};
 			if (Notification.permission === "denied")
 				return null;
@@ -417,14 +664,26 @@ const wd = (function() {
 				});
 			return;
 		},
-		/**. ``''void'' signal(''object'' options)``: Produz interação com o usuário. O argumento ``options`` possui as seguintes propriedades:
-		|Nome|Tipo|Valores|Descrição|
-		|type|string|notify signal|Indica o tipo de interação, notificação ou caixas de mensagem ou diálogo (padrão).|
-		|title|string|-|(opcional) Define o título da interação.|
-		|body|string|-|Define a mensgem da interação.|
-		|trigger|function|-|(opcional) Se definida, abrirá uma caixa de diálogo, caso contrário, de mensagens.|
-		|actions|object|-|(opcional) Define os botões e a resposta para a caixa de diálogo.|
-		. O nome das propriedades de ``actions`` define a resposta da ação que retornará como argumento em ``trigger`` ao ser acionada e seu valor o define o respectivo texto visual. Não é permitido executar múltiplas caixas de diálogo. Se o valor da ação encerrar com o caractere asterisco, essa ação será focalizada, se aceitável pelo navegador.**/
+		/**. ``''void'' signal(''object'' options)``: Define mensagens de alerta ou caixas de diálogo simples. O argumento ``options`` possui as seguintes propriedades:
+		|Nome|Tipo|Descrição|
+		|type|string|Indica o tipo de interação: notificação, alerta diálogo.|
+		|title|string|Define o título da interação.|
+		|body|string|Define a mensagem da interação.|
+		|tag|string|Identificador da interação.|
+		|actions|object|Define os botões de resposta para a __caixa de diálogo__.|
+		|trigger|function|Define a função a ser chamada após a decisão da __caixa de diálogo__.|
+		. Os seguintes valores de ``type`` são possíveis:
+		|Valor|Interação|
+		|notify|Exibe uma notificação.|
+		|alert|Exibe uma caixa de alerta.|
+		|warn|Exibe uma __caixa de alerta__ de advertência.|
+		|error|Exibe uma __caixa de alerta__ de erro.|
+		|info|Exibe uma __caixa de alerta__ de informação.|
+		|ok|Exibe uma __caixa de alerta__ de sucesso.|
+		|dialog|Exibe uma caixa de diálogo.|
+		. O nome das propriedades de ``actions`` define o identificador da resposta enquanto que seu valor define o texto do botão. Adicione um asterisco ao fim do nome do botão para definir sua focalização ordinária.
+		. Múltiplas caixas de diálogo não são permitidas.
+		. A função ``trigger`` receberá como argumento o identificador da interação e do bot]ao acionado.**/
 		signal: function(options) {
 			options.type === "notify" ? this.notify(options) : this.message(options);
 		}
