@@ -42,7 +42,6 @@ const wd = (function() {
 	Se verdadeiro, libera métodos para teste em WD e imprime cascata de eventos.**/
 	const __UNDERMAINTENANCE = true;
 
-
 /*----------------------------------------------------------------------------*/
 	/**###### ``**const** ''object'' __MIME``
 	Registra alguns [MIME types](https://developer.mozilla.org/en-US/docs/Web/HTTP/MIME_types/Common_types) úteis à biblioteca.**/
@@ -61,7 +60,22 @@ const wd = (function() {
 /*----------------------------------------------------------------------------*/
 	/**###### ``**const** ''string'' __STYLE``
 	Estilos da biblioteca.**/
+	//FIXME fazer uma função para criar ID (para não sair repetido)
+
 	const __STYLE = `
+		/*-- Variáveis -----------------------------------------------------------*/
+		:root {
+			--var-js-wd-light-info: rgb(230,242,255);
+			--var-js-wd-dark-info:  rgb(0,123,255);
+			--var-js-wd-light-ok: rgb(230,255,230);
+			--var-js-wd-dark-ok:  rgb(0,128,0);
+			--var-js-wd-light-warn: rgb(255,244,230);
+			--var-js-wd-dark-warn:  rgb(230,126,0);
+			--var-js-wd-light-error: rgb(255,230,230);
+			--var-js-wd-dark-error:  rgb(179,0,0);
+			--var-js-wd-light-question: rgb(242,236,249);
+			--var-js-wd-dark-question:  rgb(102,51,153);
+		}
 		/*-- Efeitos -------------------------------------------------------------*/
 		@keyframes js-wd-emerge {
 			from {opacity: 0 !important;} to {opacity: 1 !important;}
@@ -210,6 +224,9 @@ const wd = (function() {
 				top: initial
 			}
 		}
+
+				.js-wd-signal-modal {position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; 0.1s js-wd-emerge !important; margin: 0 !important; padding: 0 !important; background-color: rgba(0,0,50,0.3) !important; z-index: 999999 !important; cursor: forbidden !important;}
+
 		/*-- Caixas de diálogo e alerta ------------------------------------------*/
 		/*-- caixa principal --*/
 		.js-wd-signal {
@@ -224,11 +241,6 @@ const wd = (function() {
 		}
 		.js-wd-signal:last-child {margin: 0;}
 		.js-wd-signal-modal > .js-wd-signal {position: absolute;}
-		/*-- caixa principal: tipos --*/
-		.js-wd-signal.js-wd-signal-type-info {
-			color: rgb(56, 98, 224);
-			background-color: rgb(211, 220, 248);
-		}
 		/*-- Cabeçalho --*/
 		.js-wd-signal-head {
 			display: block;
@@ -237,11 +249,6 @@ const wd = (function() {
 			font-size: inherit !important; /*-- FIXME remover pendências de wd.css --*/
 			font-weight: bold !important; /*-- FIXME remover pendências de wd.css --*/
 			border-radius: 0.5em 0.5em 0 0;
-		}
-		/*-- Cabeçalho: tipos --*/
-		.js-wd-signal.js-wd-signal-type-info > .js-wd-signal-head {
-			background-color: rgb(56, 98, 224);
-			color: rgb(211, 220, 248);
 		}
 		/*-- Corpo --*/
 		.js-wd-signal-body {
@@ -255,12 +262,6 @@ const wd = (function() {
 		}
 		.js-wd-signal-head + .js-wd-signal-body {border-radius: 0;}
 		.js-wd-signal-body:last-child {border-radius: 0 0 0.5em 0.5em;}
-		/*-- Corpo: tipos --*/
-		.js-wd-signal.js-wd-signal-type-info > .js-wd-signal-body {
-			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' style='backgrounsd-color: red' height='100' width='100' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-size='4em'>\\24d8</text></svg>");
-		}
-
-
 		/*-- Rodapé --*/
 		.js-wd-signal-foot {
 			display: flex !important;
@@ -274,6 +275,7 @@ const wd = (function() {
 				align-items: baseline !important;
 			}
 		}
+		/*-- Fechar --*/
 		.js-wd-signal-close {
 			position: absolute !important;
 			top: 0 !important;
@@ -290,89 +292,65 @@ const wd = (function() {
 		}
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-		/*-- Caixas de alerta ----------------------------------------------------*/
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	/*-- Caixas diálogo ------------------------------------------*/
-
-
-		.js-wd-signal-modal {position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; 0.1s js-wd-emerge !important; margin: 0 !important; padding: 0 !important; background-color: rgba(0,0,50,0.3) !important; z-index: 999999 !important; cursor: forbidden !important;}
-
-		.js-wd-signal-message, .js-wd-signal-dialog {display: block !important; padding: 0 !important; color: #d4d4e6 !important; background-color: #353535 !important; border: thin solid #000000 !important; border-radius: 0.5em !important; box-shadow: inset 0 0 2px 1px rgba(0,0,0,0.6) !important;}
-
-
-		.js-wd-signal-dialog {
-			position: absolute !important;
-			top: 5vh !important;
-			max-height: 90vh !important;
-			left: 5vw !important;
-			width: 90vw !important;
-			margin: 0 !important;
-			animation: js-wd-expand 0.5s ease 0s !important;
+		/*-- Tipos --*/
+		.js-wd-signal.js-wd-signal-type-info {
+			color: var(--var-js-wd-dark-info);
+			background-color: var(--var-js-wd-light-info);
 		}
-		@media screen and (min-width: 768px) {
-			.js-wd-signal-dialog {
-				top: 20vh !important;
-				max-height: 60vh !important;
-				left: 30vw !important;
-				max-width: 40vw !important;
-			}
+		.js-wd-signal.js-wd-signal-type-ok {
+			color: var(--var-js-wd-dark-ok);
+			background-color: var(--var-js-wd-light-ok);
 		}
+		.js-wd-signal.js-wd-signal-type-warn {
+			color: var(--var-js-wd-dark-warn);
+			background-color: var(--var-js-wd-light-warn);
+		}
+		.js-wd-signal.js-wd-signal-type-error {
+			color: var(--var-js-wd-dark-error);
+			background-color: var(--var-js-wd-light-error);
+		}
+		.js-wd-signal.js-wd-signal-type-question {
+			color: var(--var-js-wd-dark-question);
+			background-color: var(--var-js-wd-light-question);
+		}
+				.js-wd-signal.js-wd-signal-type-info > .js-wd-signal-head {
+			color: var(--var-js-wd-light-info);
+			background-color: var(--var-js-wd-dark-info);
+		}
+		.js-wd-signal.js-wd-signal-type-ok > .js-wd-signal-head {
+			color: var(--var-js-wd-light-ok);
+			background-color: var(--var-js-wd-dark-ok);
+		}
+		.js-wd-signal.js-wd-signal-type-warn > .js-wd-signal-head {
+			color: var(--var-js-wd-light-warn);
+			background-color: var(--var-js-wd-dark-warn);
+		}
+		.js-wd-signal.js-wd-signal-type-error > .js-wd-signal-head {
+			color: var(--var-js-wd-light-error);
+			background-color: var(--var-js-wd-dark-error);
+		}
+		.js-wd-signal.js-wd-signal-type-question > .js-wd-signal-head {
+			color: var(--var-js-wd-light-question);
+			background-color: var(--var-js-wd-dark-question);
+		}
+		.js-wd-signal.js-wd-signal-type-info > .js-wd-signal-body {
+			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' style='backgrounsd-color: red' height='100' width='100' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-size='4em'>\\24d8</text></svg>");
+		}
+		.js-wd-signal.js-wd-signal-type-ok > .js-wd-signal-body {
+			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' style='backgrounsd-color: red' height='100' width='100' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-size='4em'>\\2714</text></svg>");
+		}
+		.js-wd-signal.js-wd-signal-type-warn > .js-wd-signal-body {
+			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' style='backgrounsd-color: red' height='100' width='100' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-size='4em'>\\26A0</text></svg>");
+		}
+		.js-wd-signal.js-wd-signal-type-error > .js-wd-signal-body {
+			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' style='backgrounsd-color: red' height='100' width='100' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-size='4em'>\\274C</text></svg>");
+		}
+		.js-wd-signal.js-wd-signal-type-question > .js-wd-signal-body {
+			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' style='backgrounsd-color: red' height='100' width='100' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-size='4em'>\\24d8</text></svg>");
+		}`;
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-		.js-wd-signal-action {padding: 0.25em 0.5em !important; border-radius: 0.2em !important; color: #333333 !important; background-color: #f0f0f0 !important; cursor: pointer !important; font-size: inherit !important; text-align: center !important;}
-		@media screen and (min-width: 768px) {.js-wd-signal-action {flex-shrink: 0 !important;}
-		.js-wd-signal-action:focus {outline: 2px solid #9999ff !important;}
-		.js-wd-signal-action:hover {text-decoration: underline !important;}
-		.js-wd-progress-modal {position: fixed !important; top: 0 !important; left: 0 !important; display: block !important; width: 100vw !important; height: 100vh !important; padding: 0 !important; margin: 0 !important; z-index: 999999 !important; cursor: progress !important; background-color: rgba(0,0,0,0.3) !important; animation: js-wd-emerge 0.1s !important;}
-		.js-wd-progress-bar {position: absolute !important; top: 0 !important; left: 0 !important; display: block !important; height: 5px !important; padding: 0 !important; margin: 0 !important; background-color: royalblue !important; border-radius: 0.2em !important; border: 1px solid black !important;}`;
 
 			//"*::backdrop {background-color: white;}",
 			//TODO ver coloração https://developer.mozilla.org/pt-BR/docs/Web/CSS/background-color
@@ -5675,7 +5653,6 @@ Object.defineProperties(__Type.prototype, {
 	});
 
 /*----------------------------------------------------------------------------*/
-
 	/**#### Tabela
 	###### ``**constructor** ''object'' __Table(''any'' input)``
 	Construtor para obter dados de tabela e matrizes. O argumento ``input`` pode ser uma String CSV, uma matriz de array ou uma tabela HTML;**/
@@ -8573,6 +8550,7 @@ Object.defineProperties(__Type.prototype, {
 	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
 	|Não há|load wdreload hashchange resize|Não se aplica|Não se aplica|Não há|.**/
 	function data_wd_hash(target, event, wdArray) {
+		console.log(event)
 		const nodes = WD.$$("body > header, body > footer");
 		const hash  = WD.$(window.location.hash);
 		const data  = {header: 0, footer: 0};
@@ -9089,15 +9067,14 @@ Object.defineProperties(__Type.prototype, {
 
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wdMove(''node''  e, ''object'' event)``
-	Função vinculada ao atributo HTML ``data-wd-move`` cujo objetivo é fazer pular, arrastar, derrubar ou redimensionar elementos. Possui múltiplo atributos e grupo único. Os objetivos dos atributos dependem do tipo de manipulação.
-	O atributo ``type`` indica o tipo de manipulação a ser realizada:
-	. ''jump'': Faz com que o elemento salte entre os elementos definidos em $ ou $$ a cada clique efetuado. O atributo deve ser aplicado ao elemento a saltar.
-	. ''move'': Muda a posição do elemento, exceto para os posicionamentos ''static'' e ''sticky''. O atributo deve ficar vinculado ao ponto de âncora. Se a âncora não for o próprio elemento a ser movido, o atributo $ deve ser informado para defini-lo, sendo que o elemento de âncora deve ser filho do elemento a ser movido.
-	. ''resize'': Redimensiona o elemento. Os posicionamentos ''static'', ''relative'' e ''sticky'' são redimencionados apenas no lado sul e leste.
-	. ''drag'': Arrasta o elemento na tela para derrubá-lo em outro ponto. O atributo deve estar vinculado ao elemento a ser arrastado. Os pontos de queda são definidos pelos atributos $ e $$. O atributo opcional ''effect'' define o objetivo do arraste (''copy'', ''link'' e ''move''). O atributo ''action'' define o nome da função a ser chamada quando ocorrer a queda. A função receberá três argumentos, o elemento arrastado (''drag''), o elemento da queda (''drop'') e, se existir, o elemento onde o mouse repousava na queda (''over'') ou nulo.
-	. ''drop'': Define o local para queda de arquivos externos. O atributo deve ser aplicado ao elemento que receberá a queda. Assim como o tipo ''drag'', possui os atributos ''effect'' e ''action''. A função definida e ''action'' receberá dois atributos, os arquivos arrastados (FileList) e o elemento da queda (''drop'').**/
-
+	/**###### ``**function** ''void'' data_wd_move_jump(''node''  target, ''object'' event, ''array'' wdArray)``
+	Função com o propósito de transferir elementos entre containers ao receberem cliques por meio do atributo HTML ''data''.
+	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
+	|data-wd-move|click|Único|Múltiplos|__Node.jump|Elemento que possa receber click|
+	Possui as seguintes propriedades:
+	|Nome|Tipo|Descrição|
+	|type|string|Tipo do movimento, que deve ser ''jump''|
+	|$$|node|Seletor CSS que define a lista de containers que receberão o elemento a cada salto (click)|**/
 	function data_wd_move_jump(target, event, wdArray) {
 		if (wdArray[0].type === "jump") {
 			const data  = wdArray[0];
@@ -9107,7 +9084,16 @@ Object.defineProperties(__Type.prototype, {
 		return;
 	}
 
-
+/*----------------------------------------------------------------------------*/
+	/**###### ``**function** ''void'' data_wd_move_move(''node''  target, ''object'' event, ''array'' wdArray)``
+	Função com o propósito de mover o elemento por meio do atributo HTML ''data''.
+	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
+	|data-wd-move|mousedown mousemove e mouseup|Único|Múltiplos|-|Elementos que possam ser movidos|
+	Possui as seguintes propriedades:
+	|Nome|Tipo|Descrição|
+	|type|string|Tipo do movimento, que deve ser ''move''|
+	|$|node|Seletor CSS que define a o elemento a ser movido|
+	O atributo ''data-wd-move'' deve ficar sobre o elemento âncora e a propriedade ''$'' especificará o elemento que será movido. Recomenda-se que a âncora seja filho do elemento. Se a propriedade ''$'' não for definida, a âncora será o próprio elemento.**/
 	function data_wd_move_move(target, event, wdArray) {
 		const data = wdArray[0];
 		/*-- iniciar movimento --*/
@@ -9115,8 +9101,6 @@ Object.defineProperties(__Type.prototype, {
 			const query  = data.$$ || data.$ || target;
 			const check  = new __Type(query);
 			const mover  = !check.node || check.value.length < 1 ? target : check.value[0];
-
-			//FIXME checar se mover é pai da âncora?
 			const node   = new __Node(mover);
 			const box    = node.position;
 			const stop   = ["static", "sticky"];
@@ -9152,9 +9136,14 @@ Object.defineProperties(__Type.prototype, {
 		return;
 	}
 
-
-
-
+/*----------------------------------------------------------------------------*/
+	/**###### ``**function** ''void'' data_wd_move_size(''node''  target, ''object'' event, ''array'' wdArray)``
+	Função com o propósito de alterar as dimensões do elemento por meio do atributo HTML ''data''.
+	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
+	|data-wd-move|mousedown mousemove, mouseup e mouseout|Único|Múltiplos|-|Elementos que possam ser redimensionados|
+	Possui as seguintes propriedades:
+	|Nome|Tipo|Descrição|
+	|type|string|Tipo do movimento, que deve ser ''size''|**/
 	function data_wd_move_size(target, event, wdArray) {
 		/*-- Verificando ação ----------------------------------------------------*/
 		const data   = wdArray[0];
@@ -9272,11 +9261,15 @@ Object.defineProperties(__Type.prototype, {
 		return;
 	}
 
-
-
-
-
-
+/*----------------------------------------------------------------------------*/
+	/**###### ``**function** ''void'' data_wd_move_drag(''node''  target, ''object'' event, ''array'' wdArray)``
+	Função com o propósito de arrastar elementos por meio do atributo HTML ''data''.
+	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
+	|data-wd-move|dragstart e dragend|Único|Múltiplos|-|Nós de elementos que possam ser arrastados|
+	Possui as seguintes propriedades:
+	|Nome|Tipo|Descrição|
+	|type|string|Tipo do movimento, que deve ser ''drag''|
+	|effect|array|Efeitos do movimento: ''hide, move, copy e link''|**/
 	function data_wd_move_drag(target, event, wdArray) {
 		if (wdArray[0].type !== "drag") return;
 		const data = wdArray[0];
@@ -9330,13 +9323,22 @@ Object.defineProperties(__Type.prototype, {
 		return;
 	}
 
-
-
-
-
-
-
-
+/*----------------------------------------------------------------------------*/
+	/**###### ``**function** ''void'' data_wd_move_drop(''node''  target, ''object'' event, ''array'' wdArray)``
+	Função com o propósito de receber o elemento arrastado por meio do atributo HTML ''data''.
+	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
+	|data-wd-move|dragover, dragenter, dragleave e drop|Único|Múltiplos|-|Nós de elementos que receberão alguma ação|
+	Possui as seguintes propriedades:
+	|Nome|Tipo|Descrição|
+	|type|string|Tipo do movimento, que deve ser ''drop''|
+	|effect|string|Efeitos do movimento: ''hide, move, copy ou link''|
+	|call|function|Função a ser chamada ao derrubar o elemento no container|
+	A propriedade ''call'' receberá como argumento o elemento arrastável, o elemento recebedo e o objeto referente ao atributo ''data-wd-move'' inserido no elemento arrastado. Se não informado, uma ação padrão será realizada a depender do tipo de efeito:
+	|Nome|Descrição|
+	|hide|O elemento arrastável será escondido no elemento de soltura|
+	|move|O elemento arrastável será movido para o elemento de soltura|
+	|copy|O elemento arrastável será copiado no elemento de soltura|
+	|link|O elemento arrastável será lincado ao elemento de soltura|**/
 	function data_wd_move_drop(target, event, wdArray) {
 		if (wdArray[0].type !== "drop") return;
 		const data   = wdArray[0];
@@ -9347,7 +9349,7 @@ Object.defineProperties(__Type.prototype, {
 		const effect  = data.effect;
 		if (drag === null || !(effect in effects)) return;
 		/*-- Checando compatibilidade de efeitos no arrasto ----------------------*/
-		const parser = new __Parser(event.dataTransfer.getData("text"));
+		const parser = new __Parser(drag.dataset.wdMove);
 		const wddrag = parser.wdArray.get()[0];
 		const source = __Type(wddrag.effect).array ? wddrag.effect : [];
 		if (source.indexOf(effect) < 0) return;
@@ -9355,9 +9357,11 @@ Object.defineProperties(__Type.prototype, {
 		if (event.type === "dragover" || event.type === "dragenter") {
 			event.dataTransfer.dropEffect = effects[effect];
 			drop.dataset.wdMoveDropping = effect;
+			drag.style.cursor = "copy";
 		}
 		else if (event.type === "dragleave") {
 			drop.dataset.wdMoveDropping = "";
+			drag.style.cursor = "pointer";
 		}
 		/*-- Derrubando elemento -------------------------------------------------*/
 		else if (event.type === "drop") {
@@ -9374,15 +9378,25 @@ Object.defineProperties(__Type.prototype, {
 			}
 			else if (effect === "link") {
 				if (drag.id.trim() === "")
-					drag.id = drag.tagName + String(new Date().valueOf());
-				const span = document.createElement("SPAN");
-				const link = document.createElement("A");
-				link.href = "#"+drag.id;
-				link.style.display = "inline-block";
-				link.style.padding = "0.5em";
-				link.appendChild(span)
-				span.innerText = drag.textContent;
-				drop.appendChild(link);
+					drag.id = "ID_" + String(new Date().valueOf());
+				if (drop.tagName.toLowerCase() === "a") {
+					drop.href = "#"+drag.id;
+				} else {
+					const url = location.pathname+"#"+drag.id;
+					const text = drag.textContent;
+					drop.onclick      = function() {location.assign(url);};
+					drop.style.cursor = "pointer";
+					drop.innerHTML    = "&#x1F517 "+(text.length > 10 ? text.slice(0,10)+"..." : text);
+					drop.setAttribute("role", "link");
+					drop.setAttribute("aria-label", text);
+					drop.setAttribute("title", text);
+					drop.setAttribute("tabindex", "0");
+					//FIXME colocar keydown? limitar o textContent?
+					//TODO interessante style.textOverflow = "ellipsis";
+					//FIXME nos atributos dataset de clicar devo colocar tabindex, role e onkeydown?
+					//TODO ideia: no evento keydown de enter forçar um click e tá resolvido
+					//TODO ideia: no load e set definir tabindex se o atributo for de clique
+				}
 			}
 			delete drop.dataset.wdMoveDropping;
 		}
