@@ -73,25 +73,225 @@ const wd = (function() {
 			--var-js-wd-dark-warn:  rgb(230,126,0);
 			--var-js-wd-light-error: rgb(255,230,230);
 			--var-js-wd-dark-error:  rgb(179,0,0);
-			--var-js-wd-light-question: rgb(242,236,249);
-			--var-js-wd-dark-question:  rgb(102,51,153);
+			--var-js-wd-light-dialog: rgb(242,236,249);
+			--var-js-wd-dark-dialog:  rgb(102,51,153);
+			--var-js-wd-z-index-1: 9000;
+			--var-js-wd-z-index-2: 8000;
+			--var-js-wd-z-index-3: 7000;
 		}
-		/*-- Efeitos -------------------------------------------------------------*/
-		@keyframes js-wd-emerge {
-			from {opacity: 0 !important;} to {opacity: 1 !important;}
+		/*-- Animações -----------------------------------------------------------*/
+		@keyframes js-wd-animation-emerge {
+			from {opacity: 0;} to {opacity: 1;}
 		}
-		@keyframes js-wd-fade {
-			from {opacity: 1 !important;} to {opacity: 0 !important;}
+		@keyframes js-wd-animation-fade {
+			from {opacity: 1;} to {opacity: 0;}
 		}
-		@keyframes js-wd-expand {
-			from {transform: scale(0) !important;} to {transform: scale(1) !important;}
+		@keyframes js-wd-animation-expand {
+			from {transform: scale(0);} to {transform: scale(1);}
 		}
-		@keyframes js-wd-shrink {
-			from {transform: scale(1) !important;} to {transform: scale(0) !important;}
+		@keyframes js-wd-animation-shrink {
+			from {transform: scale(1);} to {transform: scale(0);}
 		}
 		/*-- Importantes ---------------------------------------------------------*/
-		.js-wd-no-display  {display: none !important;}
-		.js-wd-no-overflow {overflow: hidden !important;}
+		.js-wd-no-display     {display: none !important;}
+		.js-wd-no-overflow    {overflow: hidden !important;}
+		.js-wd-hide-child > * {visibility: hidden !important;}
+		/*-- Barra de progresso --------------------------------------------------*/
+		.js-wd-progress-modal {
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100vw;
+			height: 100vh;
+			background-color: rgba(50,50,50,0.7);
+			z-index: var(--var-js-wd-z-index-3);
+			animation: js-wd-animation-emerge 0.5s ease;
+		}
+		.js-wd-hide-child .js-wd-progress-modal {visibility: visible !important;}
+		.js-wd-progress-bar {
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 100vw;
+			margin: 0;
+			padding: 0;
+		}
+		/*-- Caixas de diálogo e alerta ------------------------------------------*/
+		/*-- Frame --*/
+		.js-wd-signal-frame {
+			position: fixed;
+			top: 0.5em;
+			right: 0.5em;
+			left: 0.5em;
+			bottom: initial;
+			display: block;
+			margin: 0;
+			padding: 0;
+			width: auto;
+			max-height: calc(100vh - 1em);
+			overflow: auto;
+			z-index: var(--var-js-wd-z-index-1);
+		}
+		@media screen and (min-width: 768px) {
+			.js-wd-signal-frame {
+				bottom: 0.5em;
+				right: 0.5em;
+				left: calc(75vw - 0.5em);
+				top: initial
+			}
+		}
+		.js-wd-hide-child .js-wd-signal-frame {visibility: visible !important;}
+		/*-- Modal --*/
+		.js-wd-signal-modal {
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100vw;
+			height: 100vh;
+			background-color: rgba(50,50,60,0.5);
+			z-index: var(--var-js-wd-z-index-2);
+			animation: js-wd-animation-emerge 0.5s linear;
+		}
+		.js-wd-hide-child .js-wd-signal-modal {visibility: visible !important;}
+		/*-- Box --*/
+		.js-wd-signal {
+			position: relative;
+			display: block;
+			margin:  0 0 0.5em 0;
+			padding: 0;
+			border: 1px solid;
+			border-radius: 0.5em;
+			width: auto;
+			font-size: 14px;
+			animation: js-wd-animation-expand 0.5s ease;
+		}
+		.js-wd-signal:last-child {margin: 0;}
+		.js-wd-signal-modal > .js-wd-signal {
+			position: absolute;
+			top: 0.5em;
+			left: 0.5em;
+			bottom: initial;
+			right: 0.5em;
+		}
+		@media screen and (min-width: 768px) {
+			.js-wd-signal-modal > .js-wd-signal {
+				top: 25vh;
+				left: 25vw;
+				right: 25vw;
+			}
+		}
+		/*-- Head --*/
+		.js-wd-signal-head {
+			display: block;
+			padding: 0.25em 1em 0.25em 0.5em;
+			margin: 0 !important; /*-- FIXME remover pendências de wd.css --*/
+			font-size: inherit !important; /*-- FIXME remover pendências de wd.css --*/
+			font-weight: bold !important; /*-- FIXME remover pendências de wd.css --*/
+			border-radius: 0.5em 0.5em 0 0;
+		}
+		/*-- Body --*/
+		.js-wd-signal-body {
+			padding: 1em 1em 1em 3em;
+			margin: 0;
+			min-height: 3em;
+			border-radius: 0.5em 0.5em 0 0;
+			background-repeat: no-repeat;
+			background-position: left;
+			background-size: 3em 3em;
+		}
+		.js-wd-signal-head + .js-wd-signal-body {border-radius: 0;}
+		.js-wd-signal-body:last-child {border-radius: 0 0 0.5em 0.5em;}
+		/*-- Foot --*/
+		.js-wd-signal-foot {
+			display: flex;
+			flex-flow: column nowrap;
+			border-radius: 0 0 0.5em 0.5em;
+			padding: 0.5em;
+		}
+		.js-wd-signal-foot > * {
+			font-size: 14px !important; /*FIXME consertar CSS*/
+		}
+		@media screen and (min-width: 768px) {
+			.js-wd-signal-foot {
+				flex-flow: row wrap;
+				justify-content: space-evenly;
+				align-items: baseline;
+			}
+		}
+		/*-- Kill --*/
+		.js-wd-signal-kill {
+			position: absolute !important;
+			top: 0;
+			right: 0;
+			margin: 0 0.5em 0 0;
+			padding: 0 !important;  /*FIXME consertar CSS*/
+			z-index: 2;
+			font-size: 1.5em !important;  /*FIXME consertar CSS*/
+			min-height: auto !important;  /*FIXME consertar CSS*/
+			line-height: normal !important; /*FIXME consertar CSS*/
+			background-color: transparent !important;  /*FIXME consertar CSS*/
+			border: 0 !important; /*FIXME consertar CSS*/
+		}
+		/*-- Info --*/
+		.js-wd-signal-type-info {
+			color: var(--var-js-wd-dark-info);
+			background-color: var(--var-js-wd-light-info);
+		}
+		.js-wd-signal-type-info .js-wd-signal-head {
+			color: var(--var-js-wd-light-info);
+			background-color: var(--var-js-wd-dark-info);
+		}
+		.js-wd-signal-type-info .js-wd-signal-body {
+			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' style='backgrounsd-color: red' height='100' width='100' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-size='4em'>\\24d8</text></svg>");
+		}
+		/*-- Ok --*/
+		.js-wd-signal-type-ok {
+			color: var(--var-js-wd-dark-ok);
+			background-color: var(--var-js-wd-light-ok);
+		}
+		.js-wd-signal-type-ok .js-wd-signal-head {
+			color: var(--var-js-wd-light-ok);
+			background-color: var(--var-js-wd-dark-ok);
+		}
+		.js-wd-signal-type-ok .js-wd-signal-body {
+			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' style='backgrounsd-color: red' height='100' width='100' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-size='4em'>\\2714</text></svg>");
+		}
+		/*-- Warn --*/
+		.js-wd-signal-type-warn {
+			color: var(--var-js-wd-dark-warn);
+			background-color: var(--var-js-wd-light-warn);
+		}
+		.js-wd-signal-type-warn .js-wd-signal-head {
+			color: var(--var-js-wd-light-warn);
+			background-color: var(--var-js-wd-dark-warn);
+		}
+		.js-wd-signal-type-warn .js-wd-signal-body {
+			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' style='backgrounsd-color: red' height='100' width='100' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-size='4em'>\\26A0</text></svg>");
+		}
+		/*-- Error --*/
+		.js-wd-signal-type-error {
+			color: var(--var-js-wd-dark-error);
+			background-color: var(--var-js-wd-light-error);
+		}
+		.js-wd-signal-type-error .js-wd-signal-head {
+			color: var(--var-js-wd-light-error);
+			background-color: var(--var-js-wd-dark-error);
+		}
+		.js-wd-signal-type-error .js-wd-signal-body {
+			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' style='backgrounsd-color: red' height='100' width='100' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-size='4em'>\\274C</text></svg>");
+		}
+		/*-- Dialog --*/
+		.js-wd-signal-type-dialog {
+			color: var(--var-js-wd-dark-dialog);
+			background-color: var(--var-js-wd-light-dialog);
+		}
+		.js-wd-signal-type-dialog .js-wd-signal-head {
+			color: var(--var-js-wd-light-dialog);
+			background-color: var(--var-js-wd-dark-dialog);
+		}
+		.js-wd-signal-type-dialog .js-wd-signal-body {
+			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' style='backgrounsd-color: red' height='100' width='100' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-size='4em'>\\003F</text></svg>");
+		}
 		/*-- dataset -------------------------------------------------------------*/
 		[data-wd-send], [data-wd-set], [data-wd-edit], [data-wd-shared] {
 			cursor: pointer !important;
@@ -163,7 +363,7 @@ const wd = (function() {
 
 
 		[data-wd-menu] {cursor: context-menu !important;}
-		.js-wd-menu {font-size: 14px !important; font-family: Verdana,sans-serif !important; position: fixed !important; max-width: 40vw !important; max-height: 40vh !important; display: block !important; margin: 0 !important; padding: 0.3em !important; z-index: 999999 !important; overflow: auto !important !important; color: #ffffff !important; background-color: rgba(0,0,0) !important; border: 2px inset #101010 !important; border-radius: 0.3em !important; animation: js-wd-emerge 0.5s linear 0s}
+		.js-wd-menu {font-size: 14px !important; font-family: Verdana,sans-serif !important; position: fixed !important; max-width: 40vw !important; max-height: 40vh !important; display: block !important; margin: 0 !important; padding: 0.3em !important; z-index: 999999 !important; overflow: auto !important !important; color: #ffffff !important; background-color: rgba(0,0,0) !important; border: 2px inset #101010 !important; border-radius: 0.3em !important; animation: js-wd-animation-emerge 0.5s linear 0s}
 		.js-wd-menu > * {display: block !important; margin: inherit !important; padding: inherit !important; cursor: pointer !important; border-radius: inherit !important;}
 		.js-wd-menu > *:hover {background-color: rgba(50,50,50) !important;}
 		[data-wd-tsort] {cursor: pointer !important;}
@@ -171,7 +371,7 @@ const wd = (function() {
 		[data-wd-tsort="-1"]:before {content: "\\2191 " !important;}
 		[data-wd-tsort="+1"]:before {content: "\\2193 " !important;}
 		[data-wd-repeat] > *, [data-wd-load] > * {visibility: hidden !important;}
-		[data-wd-slide] > * {animation: js-wd-emerge 1s, js-wd-shrink-out 0.5s !important;}
+		[data-wd-slide] > * {animation: js-wd-animation-emerge 1s, js-wd-animation-shrink-out 0.5s !important;}
 		svg .js-wd-chart-hide {display: none !important;}
 		@media screen and (min-width: 768px) {svg .js-wd-chart-hide {display: inline !important;}}
 		wdtag-mark {background-color: rgba(154,205,50,0.7) !important; display: inline !important; border-radius: 0.2em !important; color: #000000 !important;}
@@ -187,167 +387,7 @@ const wd = (function() {
 		wdtag-root wdtag-value {color: #cf8ee1 !important;}
 		wdtag-root wdtag-word {color: #df6d6d !important; font-weight: bold !important;}
 		wdtag-root wdtag-tick {font-weight: bold !important; color: #68cccc !important;}
-		wdtag-root wdtag-string {color: #57ac57}
-
-
-
-
-
-
-
-
-
-
-
-
-
-		/*-- Modais de diálogo e alerta ------------------------------------------*/
-		.js-wd-signal-frame {
-			position: fixed;
-			top: 0.5em;
-			right: 0.5em;
-			left: 0.5em;
-			bottom: initial;
-			display: block;
-			margin: 0;
-			padding: 0;
-			width: auto;
-			max-height: 75vh;
-			overflow: auto;
-			z-index: 999999;
-		}
-		@media screen and (min-width: 768px) {
-			.js-wd-signal-frame {
-				bottom: 0.5em;
-				right: 0.5em;
-				left: 75vw;
-				top: initial
-			}
-		}
-
-				.js-wd-signal-modal {position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; 0.1s js-wd-emerge !important; margin: 0 !important; padding: 0 !important; background-color: rgba(0,0,50,0.3) !important; z-index: 999999 !important; cursor: forbidden !important;}
-
-		/*-- Caixas de diálogo e alerta ------------------------------------------*/
-		/*-- caixa principal --*/
-		.js-wd-signal {
-			position: relative;
-			display: block;
-			margin:  0 0 0.5em 0;
-			padding: 0;
-			border: 1px solid;
-			border-radius: 0.5em;
-			font-size: 14px;
-			animation: js-wd-expand 0.5s ease 0s, js-wd-shrink 0.5s ease 8.5s;
-		}
-		.js-wd-signal:last-child {margin: 0;}
-		.js-wd-signal-modal > .js-wd-signal {position: absolute;}
-		/*-- Cabeçalho --*/
-		.js-wd-signal-head {
-			display: block;
-			padding: 0.25em 0.5em;
-			margin: 0 !important; /*-- FIXME remover pendências de wd.css --*/
-			font-size: inherit !important; /*-- FIXME remover pendências de wd.css --*/
-			font-weight: bold !important; /*-- FIXME remover pendências de wd.css --*/
-			border-radius: 0.5em 0.5em 0 0;
-		}
-		/*-- Corpo --*/
-		.js-wd-signal-body {
-			padding: 1em 1em 1em 3em;
-			margin: 0;
-			border-radius: 0.5em 0.5em 0 0;
-			min-height: 3em;
-			background-repeat: no-repeat;
-			background-position: left;
-			background-size: 3em 3em;
-		}
-		.js-wd-signal-head + .js-wd-signal-body {border-radius: 0;}
-		.js-wd-signal-body:last-child {border-radius: 0 0 0.5em 0.5em;}
-		/*-- Rodapé --*/
-		.js-wd-signal-foot {
-			display: flex !important;
-			flex-flow: column nowrap !important;
-			border-radius: 0 0 inherit inherit;
-		}
-		@media screen and (min-width: 768px) {
-			.js-wd-signal-foot {
-				flex-flow: row wrap !important;
-				justify-content: space-evenly !important;
-				align-items: baseline !important;
-			}
-		}
-		/*-- Fechar --*/
-		.js-wd-signal-close {
-			position: absolute !important;
-			top: 0 !important;
-			right: 0 !important;
-			margin: 0 !important;
-			padding: 0.125em !important;
-			min-height: auto !important;
-			min-width:  auto !important;
-			z-index:    2 !important;
-			font-size:  2em !important;
-			line-height: normal !important;
-			background-color: transparent !important;
-			border: 0 !important;
-		}
-
-
-		/*-- Tipos --*/
-		.js-wd-signal.js-wd-signal-type-info {
-			color: var(--var-js-wd-dark-info);
-			background-color: var(--var-js-wd-light-info);
-		}
-		.js-wd-signal.js-wd-signal-type-ok {
-			color: var(--var-js-wd-dark-ok);
-			background-color: var(--var-js-wd-light-ok);
-		}
-		.js-wd-signal.js-wd-signal-type-warn {
-			color: var(--var-js-wd-dark-warn);
-			background-color: var(--var-js-wd-light-warn);
-		}
-		.js-wd-signal.js-wd-signal-type-error {
-			color: var(--var-js-wd-dark-error);
-			background-color: var(--var-js-wd-light-error);
-		}
-		.js-wd-signal.js-wd-signal-type-question {
-			color: var(--var-js-wd-dark-question);
-			background-color: var(--var-js-wd-light-question);
-		}
-				.js-wd-signal.js-wd-signal-type-info > .js-wd-signal-head {
-			color: var(--var-js-wd-light-info);
-			background-color: var(--var-js-wd-dark-info);
-		}
-		.js-wd-signal.js-wd-signal-type-ok > .js-wd-signal-head {
-			color: var(--var-js-wd-light-ok);
-			background-color: var(--var-js-wd-dark-ok);
-		}
-		.js-wd-signal.js-wd-signal-type-warn > .js-wd-signal-head {
-			color: var(--var-js-wd-light-warn);
-			background-color: var(--var-js-wd-dark-warn);
-		}
-		.js-wd-signal.js-wd-signal-type-error > .js-wd-signal-head {
-			color: var(--var-js-wd-light-error);
-			background-color: var(--var-js-wd-dark-error);
-		}
-		.js-wd-signal.js-wd-signal-type-question > .js-wd-signal-head {
-			color: var(--var-js-wd-light-question);
-			background-color: var(--var-js-wd-dark-question);
-		}
-		.js-wd-signal.js-wd-signal-type-info > .js-wd-signal-body {
-			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' style='backgrounsd-color: red' height='100' width='100' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-size='4em'>\\24d8</text></svg>");
-		}
-		.js-wd-signal.js-wd-signal-type-ok > .js-wd-signal-body {
-			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' style='backgrounsd-color: red' height='100' width='100' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-size='4em'>\\2714</text></svg>");
-		}
-		.js-wd-signal.js-wd-signal-type-warn > .js-wd-signal-body {
-			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' style='backgrounsd-color: red' height='100' width='100' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-size='4em'>\\26A0</text></svg>");
-		}
-		.js-wd-signal.js-wd-signal-type-error > .js-wd-signal-body {
-			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' style='backgrounsd-color: red' height='100' width='100' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-size='4em'>\\274C</text></svg>");
-		}
-		.js-wd-signal.js-wd-signal-type-question > .js-wd-signal-body {
-			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' style='backgrounsd-color: red' height='100' width='100' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-size='4em'>\\24d8</text></svg>");
-		}`;
+		wdtag-root wdtag-string {color: #57ac57}`;
 
 
 
@@ -405,14 +445,14 @@ const wd = (function() {
 		bar: (function() {
 			/*-- Plano de fundo e barra de  progresso --*/
 			const wall = document.createElement("DIV");
-			const bar  = document.createElement("DIV");
-			wall.className = "js-wd-progress-modal";
-			bar.className  = "js-wd-progress-bar";
-			wall.appendChild(bar);
-			/*-- Definindo atributos --*/
+			const bar  = document.createElement("PROGRESS");
+			wall.className    = "js-wd-progress-modal";
+			bar.className     = "js-wd-progress-bar";
+			bar.setAttribute("aria-modal", "true");
 			bar.dataset.delay = 5; /*-- tempo de espera até fechar o modal --*/
-			bar.dataset.value = 0; /*-- valor da barra de progresso --*/
+			bar.dataset.value = 0; /*-- valor provisório enviado pelos eventos --*/
 			bar.dataset.count = 0; /*-- quantidade de processos em aberto --*/
+			wall.appendChild(bar);
 			/*-- Disparador de abertura de processo --*/
 			bar.addEventListener("wdprogressopen", function(ev) {
 				const bar  = ev.target;
@@ -430,15 +470,20 @@ const wd = (function() {
 				window.setTimeout(function () {
 					const count = Number(bar.dataset.count);
 					const wall  = bar.parentElement;
-					if (count <= 0 && wall.parentElement !== null)
+					if (count <= 0 && wall.parentElement !== null) {
 						wall.parentElement.removeChild(wall);
+						bar.removeAttribute("value");
+					}
 				}, delay);
 			}, false);
 			/*-- Disparador de definição de valor --*/
 			bar.addEventListener("wdprogressset", function(ev) {
 				const bar   = ev.target;
 				const value = Number(bar.dataset.value);
-				bar.style.width = String(100*value)+"%";
+				if (isNaN(value))
+					bar.removeAttribute("value");
+				else
+					bar.value = value < 0 ? 0 : (value > 1 ? 1 : value);
 			}, false);
 			/*-- retornando a barra de progresso --*/
 			return bar;
@@ -471,167 +516,143 @@ const wd = (function() {
 	/**###### ``**const** ''object'' __SIGNAL``
 	Renderiza mensagens e notificações.**/
 	const __SIGNAL = {
-		/**. ``''node'' frame``: Agrupador de mensagens de alerta.**/
+		/**. ``''node'' frame``: Frame do alerta.**/
 		frame: (function() {
 			const node  = document.createElement("ASIDE");
+			node.tabIndex  = -1;
 			node.className = "js-wd-signal-frame";
-			node.tabIndex = -1;
 			return node;
 		})(),
-		/**. ``''node'' modal``: Modal de diálogo.**/
+		/**. ``''node'' modal``: Modal do diálogo.**/
 		modal: (function() {
 			const node  = document.createElement("ASIDE");
+			node.tabIndex  = -1;
 			node.className = "js-wd-signal-modal";
-			node.tabIndex = -1;
 			return node;
 		})(),
-		/**. ``''node'' box``: Caixa de mensagens/diálogo (para clonar).**/
+		/**. ``''node'' box``: Caixa de alerta/diálogo.**/
 		box: (function() {
-			const box = document.createElement("ARTICLE");
+			const box = document.createElement("DIALOG");
+			if (typeof box.show === "function")
+				box.show();
+			else
+				box.setAttribute("open", "");
 			box.className = "js-wd-signal"
 			box.innerHTML = `
-				<button class="js-wd-signal-close" >&times;</button>
+				<button class="js-wd-signal-kill" >&times;</button>
 				<h6 class="js-wd-signal-head"></h6>
-				<section class="js-wd-signal-body"><section>
-				<section class="js-wd-signal-foot"></section>`;
+				<p class="js-wd-signal-body"><p>
+				<search class="js-wd-signal-foot"></search>`;
 			return box;
 		})(),
-
-
-
+		/**. ``''void'' alert(''object'' options)``: Ver método ''signal''.**/
 		alert: function(options) {
 			/*-- Obtendo dados iniciais --*/
-			const types = ["info", "warn", "error", "ok"];
-			const type  = types.indexOf(options.type) > 0 ? options.type : types[0];
-			const id    = String(new Date().valueOf());
-			const modal = this.frame;
-			const box   = this.box.cloneNode(true);
-			const nodes = {head: 0, close: 0, body: 0, foot: 0};
-			for (let i in nodes)
-				nodes[i] = box.querySelector(`.js-wd-signal-${i}`);
-			/*-- Caixa --*/
-			box.className += ` js-wd-signal-type-${type}`;
-			box.setAttribute("role", "alert");
-			box.setAttribute("aria-modal", "false");
-			/*-- Cabeçalho --*/
-			if ("title" in options && options.title.trim() !== "") {
-				nodes.head.innerHTML = options.title;
-				nodes.head.id = `label_${id}`;
-				box.setAttribute("aria-labelledby", nodes.head.id);
-			} else {
-				nodes.head.remove();
+			const data = {
+				info:   {back: "frame", head: 1, body: 1, foot: 0, kill: 1},
+				ok:     {back: "frame", head: 1, body: 1, foot: 0, kill: 1},
+				warn:   {back: "frame", head: 1, body: 1, foot: 0, kill: 1},
+				error:  {back: "frame", head: 1, body: 1, foot: 0, kill: 1},
+				dialog: {back: "modal", head: 1, body: 1, foot: 1, kill: 0}
 			}
-			/*-- Corpo --*/
-			nodes.body.innerHTML = "body"  in options ? options.body  : "?";
-			nodes.body.id = `details_${id}`;
-			box.setAttribute("aria-details", nodes.body.id);
-			/*-- Rodapé --*/
-			nodes.foot.remove();
-			/*-- Fechar --*/
-			nodes.close.onclick  = function(ev) {
-				if (box.parentElement !== null) {
-					box.remove();
-					if (modal.childElementCount === 0)
-						modal.remove();
-				}
+			const type = options.type in data ? options.type : "info";
+			const back = this[data[type].back];
+			const box  = this.box.cloneNode(true);
+			const head = box.querySelector(".js-wd-signal-head");
+			const body = box.querySelector(".js-wd-signal-body");
+			const foot = box.querySelector(".js-wd-signal-foot");
+			const kill = box.querySelector(".js-wd-signal-kill");
+			const code = new Date().valueOf() + back.childElementCount;
+			const drop = function(ev) {
+				if (box.parentElement !== null) box.remove();
+				const visible   = back.parentElement !== null;
+				const children  = back.childElementCount > 0;
+				if (visible && !children)
+					back.remove()
+				else if (!visible && children)
+					back.innerHTML = "";
 			};
-			/*-- Temporizador --*/
-			window.setTimeout(function() {nodes.close.click();}, 88888900);
-			/*-- Renderizando --*/
-			if (modal.parentElement === null)
-				document.body.appendChild(modal);
-			modal.insertAdjacentElement("afterbegin", box);
-			return;
-		},
+			/*-- box --*/
+			box.className += ` js-wd-signal-type-${type}`;
+			box.setAttribute("role",       (type === "dialog" ? "alertdialog" : "alert"));
+			box.setAttribute("aria-modal", (type === "dialog" ? "true" : "false"));
+			/*-- head --*/
+			if (data[type].head === 0 || !("title" in options)) {
+				head.remove();
+			} else {
+				head.textContent = String(options.title);
+				head.id = `label_${code}`;
+				box.setAttribute("aria-labelledby", head.id);
+			}
+			/*-- body --*/
+			if (data[type].body === 0 || !("body" in options)) {
+				body.remove();
+			} else {
+				body.textContent = String(options.body);
+				body.id = `body_${code}`;
+				box.setAttribute("aria-describedby", body.id);
+			}
+			/*-- foot --*/
+			if (data[type].foot === 0) {
+				foot.remove();
+			} else {
+				const acts = __Type(options.actions).object   ? options.actions : {ok: "OK"};
+				const call = __Type(options.trigger).function ? options.trigger : null;
+				const auto = /\*$/;
 
+				//FIXME ver o atributo inert aplicar sobre todos os elementos menos os modais específicos, é bom criar uma função inert
 
-
-
-
-
-
-		/**. ``''void'' message(''object'' options)``: Ver método ''signal''.**/
-		message: function (options) {
-			/*-- Sair se options não foi definido --*/
-			if (typeof options !== "object") return;
-
-
-			const dialog = typeof options.trigger === "function";
-			const modal  = dialog ? this.modal : this.frame;
-			if (dialog && modal.childElementCount > 0) return;
-			/*-- capturando estrutura --*/
-			const node   = this.box.cloneNode(true);
-			const title  = node.querySelector(".js-wd-signal-head");
-			const body   = node.querySelector(".js-wd-signal-body");
-			const foot   = node.querySelector(".js-wd-signal-foot");
-			const close  = node.querySelector(".js-wd-signal-close");
-			let focus = null, index = 0;
-			/*-- personalisando caixa de interação --*/
-			node.className  = dialog ? "js-wd-signal-dialog" : "js-wd-signal-message";
-			title.innerText = "title" in options ? options.title : " ";
-			body.innerText  =  "body" in options ? options.body  : "?";
-			node.removeChild(dialog ? close : foot);
-			/*-- definindo ações --*/
-			if (dialog) {
-				/*-- capturando informações do diálogo --*/
-				const actions  = options.actions;
-				const isObject = typeof actions === "object" && Object.keys(actions).length > 0;
-				const objects  = isObject ? actions : {ok: "OK*"};
-				const trigger  = options.trigger;
-				const handler  = function (ev) {
-					if (ev.type === "click" || ev.key === "Enter") {
-						trigger(ev.target.dataset.response);
-						modal.removeChild(node);
-						modal.parentElement.removeChild(modal);
-					}
-				}
-				/*-- criando links de ação --*/
-				for (let response in objects) {
-					let item = objects[response];
-					let link = document.createElement("span");
-					link.className        = "js-wd-signal-action";
-					link.dataset.response = response;
-					link.tabIndex         = ++index;
-					link.innerText        = String(item).replace(/\*$/, "");
-					link.addEventListener("keypress", handler, false);
-					link.addEventListener("click",    handler, false);
-					foot.appendChild(link);
-					if ((/\*$/).test(item)) focus = link;
+				const hide = "js-wd-hide-child";
+				if (document.body.className.indexOf(hide) < 0)
+					document.body.className += ` ${hide}`;
+				for (let act in acts) {
+					let btn = document.createElement("BUTTON");
+					btn.textContent = acts[act].replace(auto, "");;
+					btn.autofocus   = auto.test(acts[act]);
+					btn.addEventListener("click", function(ev) {
+						const hide = /js\-wd\-hide\-child/g;
+						const body = document.body.className.replace(hide, "").trim();
+						document.body.className = body.replace(/\ +/g, " ");
+						drop();
+						if (call !== null) call(options.id, act);
+					}, false);
+					foot.appendChild(btn);
 				}
 			}
-			else {
-				/*-- botão fechar --*/
-				close.addEventListener("click", function(ev) {
-					if (node.parentElement !== null) {
-						modal.removeChild(node);
-						if (modal.childElementCount === 0)
-							modal.parentElement.removeChild(modal);
-					}
-				}, false);
-				/*-- tempo de exibição da mensagem --*/
-				window.setTimeout(function() {close.click();}, 8900);
+			/*-- kill --*/
+			if (data[type].kill === 0) {
+				kill.remove();
+			} else {
+				kill.addEventListener("click", drop, false);
+			};
+			/*-- Background --*/
+			if (back.parentElement !== document.body)
+				document.body.appendChild(back);
+			if (type !== "dialog" || back.childElementCount < 1)
+				back.insertAdjacentElement("afterbegin", box);
+			else
+				return;
+
+
+
+
+			/*-- Encerramento --*/
+			if (type === "dialog") {
+				const query  = foot.querySelector("button[autofocus]");
+				const active = query == null ? foot.children[0] : query;
+				active.focus();
+			} else {
+				if (typeof options.time === "number" && Math.trunc(options.time) > 0)
+					window.setTimeout(function() {kill.click();}, Math.trunc(options.time));
 			}
-			/*-- renderizando caixa de interação --*/
-			if (this.box.parentElement === null)
-				document.body.appendChild(modal);
-			modal.insertAdjacentElement("afterbegin", node);
 			return;
 		},
-
-
-
-
-
-
-
 		/**. ``''void'' notify(''object'' options)``: Ver método ''signal''.**/
 		notify: function (options) {
-			if (typeof options !== "object") return;
 			const title  = "title" in options ? options.title : "";
-			const config = {
-				body: "body" in options ? options.body : "",
-				lang: __LANG.list
-			};
+			const config = {lang: __LANG.list};
+			if ("body" in options) config.body = options.body;
+			if ("id"   in options) config.tag  = options.id;
 			if (Notification.permission === "denied")
 				return null;
 			if (Notification.permission === "granted")
@@ -644,12 +665,13 @@ const wd = (function() {
 		},
 		/**. ``''void'' signal(''object'' options)``: Define mensagens de alerta ou caixas de diálogo simples. O argumento ``options`` possui as seguintes propriedades:
 		|Nome|Tipo|Descrição|
-		|type|string|Indica o tipo de interação: notificação, alerta diálogo.|
+		|type|string|Indica o tipo de interação, se notificação, alerta ou diálogo.|
 		|title|string|Define o título da interação.|
 		|body|string|Define a mensagem da interação.|
-		|tag|string|Identificador da interação.|
-		|actions|object|Define os botões de resposta para a __caixa de diálogo__.|
-		|trigger|function|Define a função a ser chamada após a decisão da __caixa de diálogo__.|
+		|id|string|Identificador da interação.|
+		|actions|object|Define os botões de resposta o diálogo.|
+		|trigger|function|Define a função a ser chamada após a decisão do diálogo.|
+		|time|integer|Duração do alerta em milissegundos que não fecha por padrão.|
 		. Os seguintes valores de ``type`` são possíveis:
 		|Valor|Interação|
 		|notify|Exibe uma notificação.|
@@ -661,9 +683,10 @@ const wd = (function() {
 		|dialog|Exibe uma caixa de diálogo.|
 		. O nome das propriedades de ``actions`` define o identificador da resposta enquanto que seu valor define o texto do botão. Adicione um asterisco ao fim do nome do botão para definir sua focalização ordinária.
 		. Múltiplas caixas de diálogo não são permitidas.
-		. A função ``trigger`` receberá como argumento o identificador da interação e do bot]ao acionado.**/
+		. A função ``trigger`` receberá como argumento o identificador da interação e do botão acionado.**/
 		signal: function(options) {
-			options.type === "notify" ? this.notify(options) : this.message(options);
+			if (typeof options === "object")
+				options.type === "notify" ? this.notify(options) : this.alert(options);
 		}
 	};
 
@@ -6012,7 +6035,6 @@ Object.defineProperties(__Type.prototype, {
 					this._response.response = ev;
 					this._changes(config.type, "fetch");
 				}
-
 				__PROGRESS.set(this._response.progress);
 
 				if (this._trigger !== null) this._trigger(this._response);
