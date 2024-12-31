@@ -93,9 +93,48 @@ const wd = (function() {
 			from {transform: scale(1);} to {transform: scale(0);}
 		}
 		/*-- Importantes ---------------------------------------------------------*/
-		.js-wd-no-display     {display: none !important;}
-		.js-wd-no-overflow    {overflow: hidden !important;}
-		.js-wd-hide-child > * {visibility: hidden !important;}
+		.js-wd-no-display {display: none !important;}
+		.js-wd-no-scroll  {overflow: hidden !important;}
+		/*-- Janela Modal --------------------------------------------------------*/
+		.js-wd-modal-inert {
+			overflow: hidden !important;
+		}
+		.js-wd-modal-inert > * {
+			visibility: hidden !important;
+			pointer-events: none !important;
+		}
+		.js-wd-modal-inert > .js-wd-modal-wall,
+		.js-wd-modal-inert > .js-wd-modal-glass {
+			visibility: visible !important;
+			pointer-events: auto !important;
+		}
+		.js-wd-modal-wall, .js-wd-modal-glass {
+			position: fixed;
+			top: 0;
+			bottom: 0;
+			left: 0;
+			right: 0;
+			width: 100vw;
+			height: 100vh;
+			animation: js-wd-animation-emerge 0.5s ease;
+		}
+		.js-wd-modal-wall > *, .js-wd-modal-glass > * {
+			position: absolute;
+			top: 25vh;
+			bottom: initial;
+			left: 25vw;
+			right: 25vw;
+			width: auto;
+			height: auto;
+			animation: js-wd-animation-expand 0.5s ease;
+		}
+		.js-wd-modal-wall  {background-color: rgba(50,50,50,0.7);}
+		.js-wd-modal-glass {background-color: transparent;}
+
+
+
+
+
 		/*-- Barra de progresso --------------------------------------------------*/
 		.js-wd-progress-modal {
 			position: fixed;
@@ -107,7 +146,7 @@ const wd = (function() {
 			z-index: var(--var-js-wd-z-index-3);
 			animation: js-wd-animation-emerge 0.5s ease;
 		}
-		.js-wd-hide-child .js-wd-progress-modal {visibility: visible !important;}
+		.js-wd-modal-inert .js-wd-progress-modal {visibility: visible !important;}
 		.js-wd-progress-bar {
 			position: absolute;
 			top: 0;
@@ -140,7 +179,7 @@ const wd = (function() {
 				top: initial
 			}
 		}
-		.js-wd-hide-child .js-wd-signal-frame {visibility: visible !important;}
+		.js-wd-modal-inert .js-wd-signal-frame {visibility: visible !important;}
 		/*-- Modal --*/
 		.js-wd-signal-modal {
 			position: fixed;
@@ -152,7 +191,7 @@ const wd = (function() {
 			z-index: var(--var-js-wd-z-index-2);
 			animation: js-wd-animation-emerge 0.5s linear;
 		}
-		.js-wd-hide-child .js-wd-signal-modal {visibility: visible !important;}
+		.js-wd-modal-inert .js-wd-signal-modal {visibility: visible !important;}
 		/*-- Box --*/
 		.js-wd-signal {
 			position: relative;
@@ -437,8 +476,137 @@ const wd = (function() {
 	Registra o intervalo, em milisegundos, entre eventos de digitação (oninput, onkeyup...).**/
 	const __KEYTIMERANGE = 500;
 
+
+
 /*----------------------------------------------------------------------------*/
-	/**###### ``**const** ''node'' __PROGRESS``
+	/**###### ``**const** ''object'' __MODAL``
+	Registra a barra de progresso das requisições da biblioteca.**/
+	const __MODAL = {
+		/**. ``''array'' heap``: Pilha das janelas.**/
+		heap: [],
+		/**. ``''object'' data``: Identificadores das janelas.**/
+		data: {},
+		/**. ``''integer'' zIndex``: Controlador de prevalência.**/
+		zIndex: 1000,
+		inert: function() {
+			const lastID = this.heap.length === 0 ? null : this.heap[this.heap.length - 1];
+			const lastBG = lastID === null ? null : this.data[lastID];
+			const lastTP = lastBG === null ? null : lastBG.className;
+			const body   = document.body.className;
+			const inert  = body.indexOf("js-wd-modal-inert") >= 0;
+			const scroll = body.indexOf("js-wd-no-scroll") < 0;
+
+			/*-- des/bloquear acesso ao body com inert, se implementado --*/
+			//if (document.body.inert === true || document.body.inert === false) {
+			if (1 === 2) {
+				const child = document.body.children;
+				for (let i = 0; i < child.length; i++) {
+					let css  = child[i].className;
+					let back = css === "js-wd-modal-wall" || css === "js-wd-modal-glass";
+					child[i].inert = back || empty ? false : true;
+				}
+			}
+
+			else {
+				if (!inert && lastTP === "js-wd-modal-wall")
+					document.body.className += " js-wd-modal-inert";
+				else if (inert)
+					document.body.className = body.replace("js-wd-modal-inert", "").replace(/\ +/g, " ").trim();
+			}
+			/*-- bloqueando scroll --*/
+			if (scroll && lastBG !== null)
+				document.body.className += " js-wd-no-scroll";
+			else if (!scroll)
+				document.body.className = body.replace("js-wd-no-scroll", "").replace(/\ +/g, " ").trim();
+		},
+
+
+
+
+		/**. ``''boolean'' push(''string'' id, ''node'' node)``: Vincula um nó a uma janela modal. Retorna falso se algo falhar.**/
+		push: function(id, node) {
+			const error = id === null || id === undefined || String(id).trim() === "";
+			/*-- criar a janela modal, adicionar elemento e vinculá-lo a lista de id --*/
+			if (!error && !(id in this.data)) {
+				try {
+					this.data[id] = document.createElement("SECTION");
+					this.data[id].appendChild(node);
+					return true;
+				} catch(e) {
+					return false;
+				}
+			}
+			return false;
+		},
+
+
+		show: function(id, options) {
+			/*-- exibir modal que não está na pilha --*/
+			if (this.heap.indexOf(id) < 0 && id in this.data) {
+				const back = this.data[id];
+				const node = back.children[0];
+				const attr = ["top", "bottom", "left", "right", "width", "height"];
+				const opts = typeof options === "object" ? options : {};
+				/*-- definindo características --*/
+				back.className = opts.wall === false ? "js-wd-modal-glass" : "js-wd-modal-wall";
+				back.style.zIndex = this.zIndex;
+				node.setAttribute("aria-modal", opts.wall === false ? "false" : "true");
+				for (let i = 0; i < attr.length; i++)
+					if (attr[i] in opts) node.style[attr[i]] = opts[attr[i]];
+				/*-- definindo eventos --*/
+				if (opts.wall === false) {
+					back.onclick = function(ev) {
+						ev.preventDefault();
+						if (ev.target === back) __MODAL.hide(id);
+					}
+				} else {
+					back.onclick = null;
+				}
+				/*-- Exibindo modal --*/
+				document.body.appendChild(back);
+				this.zIndex++;
+				this.heap.push(id);
+				this.inert();
+				return true;
+			}
+			/*-- trazer para frente modal que já está na pilha --*/
+			else if (id in this.data) {
+				this.hide(id);
+				return this.show(id, options);
+			}
+			/*-- modal inexistente --*/
+			return false;
+		},
+
+		hide: function(id) {
+			const index = this.heap.indexOf(id);
+			if (index >= 0) {
+				document.body.removeChild(this.data[id]);
+				this.heap[index] = null;
+				this.heap = this.heap.filter(function(v,i,a) {return v !== null;});
+				this.inert();
+				return true;
+			}
+			return false;
+		}
+
+
+
+
+
+
+
+	}
+
+
+
+
+
+
+
+
+/*----------------------------------------------------------------------------*/
+	/**###### ``**const** ''object'' __PROGRESS``
 	Registra a barra de progresso das requisições da biblioteca.**/
 	const __PROGRESS = {
 		/**. ``''node'' bar``: Barra de progresso.**/
@@ -600,9 +768,9 @@ const wd = (function() {
 				const call = __Type(options.trigger).function ? options.trigger : null;
 				const auto = /\*$/;
 
-				//FIXME ver o atributo inert aplicar sobre todos os elementos menos os modais específicos, é bom criar uma função inert
+				//FIXME ver o atributo inert aplicar sobre todos os elementos menos os modais específicos, é bom criar uma função inert inert(true), inert(false)
 
-				const hide = "js-wd-hide-child";
+				const hide = "js-wd-modal-inert";
 				if (document.body.className.indexOf(hide) < 0)
 					document.body.className += ` ${hide}`;
 				for (let act in acts) {
@@ -8525,6 +8693,7 @@ Object.defineProperties(__Type.prototype, {
 			TYPE:     {value: __TYPE},
 			DEVICE:   {value: __DEVICE},
 			PROGRESS: {value: __PROGRESS},
+			MODAL:    {value: __MODAL},
 			SIGNAL:   {value: __SIGNAL},
 			MIME:     {value: __MIME},
 			STYLE:    {value: __STYLE},
@@ -9611,7 +9780,7 @@ Object.defineProperties(__Type.prototype, {
 		if (event.type === "click")
 			menus.forEach(function(x) {
 				x.remove();
-				WD(document.body).set({class: {remove: "js-wd-no-overflow"}});
+				WD(document.body).set({class: {remove: "js-wd-no-scroll"}});
 				return;
 			});
 
@@ -9641,7 +9810,7 @@ Object.defineProperties(__Type.prototype, {
 			submenu.onclick   = function(ev) {
 				if (action !== null) action(id, e);
 				ev.target.parentElement.remove();
-				WD(document.body).set({class: {remove: "js-wd-no-overflow"}});
+				WD(document.body).set({class: {remove: "js-wd-no-scroll"}});
 				return;
 			}
 			menu.appendChild(submenu);
@@ -9652,11 +9821,11 @@ Object.defineProperties(__Type.prototype, {
 		/* adicionar menu na tela */
 		if (enter) menu.onmouseleave = function(ev) {
 			ev.target.remove();
-			WD(document.body).set({class: {remove: "js-wd-no-overflow"}});
+			WD(document.body).set({class: {remove: "js-wd-no-scroll"}});
 			return;
 		};
 		menu.classList = "js-wd-menu";
-		WD(document.body).set({class: {add: "js-wd-no-overflow"}});
+		WD(document.body).set({class: {add: "js-wd-no-scroll"}});
 		document.body.appendChild(menu);
 
 		/* posicionar menu na tela */
