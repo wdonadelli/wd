@@ -116,7 +116,7 @@ const wd = (function() {
 			right: 0;
 			width: 100vw;
 			height: 100vh;
-			animation: js-wd-animation-emerge 0.5s ease;
+			animation: js-wd-animation-emerge 0.3s ease;
 		}
 		.js-wd-modal-wall > *, .js-wd-modal-glass > * {
 			position: absolute;
@@ -126,35 +126,11 @@ const wd = (function() {
 			right: 25vw;
 			width: auto;
 			height: auto;
-			animation: js-wd-animation-expand 0.5s ease;
+			margin: auto;
+			animation: js-wd-animation-expand 0.3s ease;
 		}
 		.js-wd-modal-wall  {background-color: rgba(50,50,50,0.7);}
 		.js-wd-modal-glass {background-color: transparent;}
-
-
-
-
-
-		/*-- Barra de progresso --------------------------------------------------*/
-		.js-wd-progress-modal {
-			position: fixed;
-			top: 0;
-			left: 0;
-			width: 100vw;
-			height: 100vh;
-			background-color: rgba(50,50,50,0.7);
-			z-index: var(--var-js-wd-z-index-3);
-			animation: js-wd-animation-emerge 0.5s ease;
-		}
-		.js-wd-modal-inert .js-wd-progress-modal {visibility: visible !important;}
-		.js-wd-progress-bar {
-			position: absolute;
-			top: 0;
-			left: 0;
-			width: 100vw;
-			margin: 0;
-			padding: 0;
-		}
 		/*-- Caixas de diálogo e alerta ------------------------------------------*/
 		/*-- Frame --*/
 		.js-wd-signal-frame {
@@ -179,24 +155,9 @@ const wd = (function() {
 				top: initial
 			}
 		}
-		.js-wd-modal-inert .js-wd-signal-frame {visibility: visible !important;}
-		/*-- Modal --*/
-		.js-wd-signal-modal {
-			position: fixed;
-			top: 0;
-			left: 0;
-			width: 100vw;
-			height: 100vh;
-			background-color: rgba(50,50,60,0.5);
-			z-index: var(--var-js-wd-z-index-2);
-			animation: js-wd-animation-emerge 0.5s linear;
-		}
-		.js-wd-modal-inert .js-wd-signal-modal {visibility: visible !important;}
 		/*-- Box --*/
 		.js-wd-signal {
-			position: relative;
 			display: block;
-			margin:  0 0 0.5em 0;
 			padding: 0;
 			border: 1px solid;
 			border-radius: 0.5em;
@@ -205,19 +166,9 @@ const wd = (function() {
 			animation: js-wd-animation-expand 0.5s ease;
 		}
 		.js-wd-signal:last-child {margin: 0;}
-		.js-wd-signal-modal > .js-wd-signal {
-			position: absolute;
-			top: 0.5em;
-			left: 0.5em;
-			bottom: initial;
-			right: 0.5em;
-		}
-		@media screen and (min-width: 768px) {
-			.js-wd-signal-modal > .js-wd-signal {
-				top: 25vh;
-				left: 25vw;
-				right: 25vw;
-			}
+		.js-wd-signal-frame > .js-wd-signal {
+			position: relative;
+			margin:  0 0 0.5em 0;
 		}
 		/*-- Head --*/
 		.js-wd-signal-head {
@@ -482,67 +433,67 @@ const wd = (function() {
 	/**###### ``**const** ''object'' __MODAL``
 	Registra a barra de progresso das requisições da biblioteca.**/
 	const __MODAL = {
-		/**. ``''array'' heap``: Pilha das janelas.**/
+		/**. ``''array'' heap``: Pilha das janelas ativas.**/
 		heap: [],
 		/**. ``''object'' data``: Identificadores das janelas.**/
 		data: {},
 		/**. ``''integer'' zIndex``: Controlador de prevalência.**/
 		zIndex: 1000,
-		inert: function() {
-			const lastID = this.heap.length === 0 ? null : this.heap[this.heap.length - 1];
-			const lastBG = lastID === null ? null : this.data[lastID];
-			const lastTP = lastBG === null ? null : lastBG.className;
-			const body   = document.body.className;
-			const inert  = body.indexOf("js-wd-modal-inert") >= 0;
-			const scroll = body.indexOf("js-wd-no-scroll") < 0;
-
-			/*-- des/bloquear acesso ao body com inert, se implementado --*/
-			//if (document.body.inert === true || document.body.inert === false) {
-			if (1 === 2) {
-				const child = document.body.children;
-				for (let i = 0; i < child.length; i++) {
-					let css  = child[i].className;
-					let back = css === "js-wd-modal-wall" || css === "js-wd-modal-glass";
-					child[i].inert = back || empty ? false : true;
-				}
-			}
-
-			else {
-				if (!inert && lastTP === "js-wd-modal-wall")
-					document.body.className += " js-wd-modal-inert";
-				else if (inert)
-					document.body.className = body.replace("js-wd-modal-inert", "").replace(/\ +/g, " ").trim();
-			}
-			/*-- bloqueando scroll --*/
-			if (scroll && lastBG !== null)
-				document.body.className += " js-wd-no-scroll";
-			else if (!scroll)
-				document.body.className = body.replace("js-wd-no-scroll", "").replace(/\ +/g, " ").trim();
+		/**. ``''node'' active``: Retorna a última janela da pilha (modal ativo).**/
+		get active() {
+			const id = this.heap.length < 1 ? null : this.heap[this.heap.length - 1];
+			return id === null ? id : this.data[id];
 		},
-
-
-
-
-		/**. ``''boolean'' push(''string'' id, ''node'' node)``: Vincula um nó a uma janela modal. Retorna falso se algo falhar.**/
-		push: function(id, node) {
-			const error = id === null || id === undefined || String(id).trim() === "";
-			/*-- criar a janela modal, adicionar elemento e vinculá-lo a lista de id --*/
-			if (!error && !(id in this.data)) {
-				try {
-					this.data[id] = document.createElement("SECTION");
-					this.data[id].appendChild(node);
-					return true;
-				} catch(e) {
-					return false;
-				}
+		/**. ``''node'' inert()``: Define as regras para tornar a parte posterior ao modal inativo.**/
+		inert: function() {
+			const back  = this.active;
+			const type  = back === null ? back : back.className;
+			const inert = document.body.inert === true || document.body.inert === false;
+			const data  = {inert: type === "js-wd-modal-wall", frozen: back !== null};
+			const re    = {inert: /js\-wd\-modal\-inert/g,     frozen: /js\-wd\-no\-scroll/g};
+			const list  = inert ? document.body.children : [];
+			let   body  = document.body.className;
+			/*-- ativar/desativar tela --*/
+			if (inert) {
+				for (let i = 0; i < list.length; i++)
+					list[i].inert = data.inert ? (list[i] !== back) : false;
+			} else {
+				if (data.inert && !re.inert.test(body))
+					body = body+" js-wd-modal-inert";
+				if (!data.inert && re.inert.test(body))
+					body = body.replace(re.inert, "");
 			}
+			/*-- congelar tela --*/
+			if (data.frozen && !re.frozen.test(body))
+				body = body+" js-wd-no-scroll";
+			if (!data.frozen && re.frozen.test(body))
+				body = body.replace(re.frozen, "");
+			/*-- definindo body --*/
+			body = body.replace(/\ +/g, " ").trim();
+			if (document.body.className !== body)
+				document.body.className = body;
+		},
+		/**. ``''boolean'' push(''string'' id, ''node'' node)``: Vincula um nó a uma janela modal e a identifica.**/
+		push: function(id, node) {
+			/*-- checando validade do id --*/
+			if (id === null || id === undefined || String(id).trim() === "")
+				return false;
+			/*-- checando duplicidade de id --*/
+			if (id in this.data) return false;
+			/*-- criar a janela modal, adicionar elemento e vinculá-lo a lista de id --*/
+			try {
+				this.data[id] = document.createElement("ASIDE");
+				this.data[id].appendChild(node);
+				return true;
+			} catch(e) {}
 			return false;
 		},
-
-
+		/**. ``''boolean'' show(''string'' id)``: Exibe a janela modal vinculada ao identificador.**/
 		show: function(id, options) {
+			/*-- checar se o id foi adicionado --*/
+			if (!(id in this.data)) return false;
 			/*-- exibir modal que não está na pilha --*/
-			if (this.heap.indexOf(id) < 0 && id in this.data) {
+			if (this.heap.indexOf(id) < 0) {
 				const back = this.data[id];
 				const node = back.children[0];
 				const attr = ["top", "bottom", "left", "right", "width", "height"];
@@ -577,7 +528,7 @@ const wd = (function() {
 			/*-- modal inexistente --*/
 			return false;
 		},
-
+		/**. ``''boolean'' hide(''string'' id)``: Esconde a janela modal vinculada ao identificador ou todas se não definido.**/
 		hide: function(id) {
 			const index = this.heap.indexOf(id);
 			if (index >= 0) {
@@ -586,24 +537,15 @@ const wd = (function() {
 				this.heap = this.heap.filter(function(v,i,a) {return v !== null;});
 				this.inert();
 				return true;
+			} else if (id === null || id === undefined) {
+				const list = this.heap.slice();
+				for (let i = 0; i < list.length; i++)
+					this.hide(list[i]);
+				return true;
 			}
 			return false;
-		}
-
-
-
-
-
-
-
-	}
-
-
-
-
-
-
-
+		},
+	};
 
 /*----------------------------------------------------------------------------*/
 	/**###### ``**const** ''object'' __PROGRESS``
@@ -611,47 +553,35 @@ const wd = (function() {
 	const __PROGRESS = {
 		/**. ``''node'' bar``: Barra de progresso.**/
 		bar: (function() {
-			/*-- Plano de fundo e barra de  progresso --*/
-			const wall = document.createElement("DIV");
-			const bar  = document.createElement("PROGRESS");
-			wall.className    = "js-wd-progress-modal";
-			bar.className     = "js-wd-progress-bar";
-			bar.setAttribute("aria-modal", "true");
-			bar.dataset.delay = 5; /*-- tempo de espera até fechar o modal --*/
-			bar.dataset.value = 0; /*-- valor provisório enviado pelos eventos --*/
+			/*-- Plano de fundo e barra de progresso --*/
+			const bar = document.createElement("PROGRESS");
 			bar.dataset.count = 0; /*-- quantidade de processos em aberto --*/
-			wall.appendChild(bar);
+			__MODAL.push("js-wd-progress-bar", bar);
 			/*-- Disparador de abertura de processo --*/
 			bar.addEventListener("wdprogressopen", function(ev) {
-				const bar  = ev.target;
-				const wall = bar.parentElement;
-				if (wall.parentElement !== document.body)
-					document.body.appendChild(wall);
-				bar.dataset.count = Number(bar.dataset.count) + 1;
+				const opt = {top: 0, right: 0, left: 0, width: "100vw", wall: true};
+				ev.target.dataset.count = Number(ev.target.dataset.count) + 1;
+				__MODAL.show("js-wd-progress-bar", opt);
 			}, false);
 			/*-- Disparador de fechamento de processo --*/
 			bar.addEventListener("wdprogressclose", function(ev) {
-				const bar   = ev.target;
-				const count = Number(bar.dataset.count) - 1;
-				const delay = Number(bar.dataset.delay);
-				bar.dataset.count = count < 0 ? 0 : count;
+				const count = Number(ev.target.dataset.count) - 1;
+				ev.target.dataset.count = count < 0 ? 0 : count;
 				window.setTimeout(function () {
-					const count = Number(bar.dataset.count);
-					const wall  = bar.parentElement;
-					if (count <= 0 && wall.parentElement !== null) {
-						wall.parentElement.removeChild(wall);
-						bar.removeAttribute("value");
+					const count = Number(ev.target.dataset.count);
+					if (count < 1) {
+						__MODAL.hide("js-wd-progress-bar");
+						ev.target.removeAttribute("value");
 					}
-				}, delay);
+				}, 5);
 			}, false);
 			/*-- Disparador de definição de valor --*/
 			bar.addEventListener("wdprogressset", function(ev) {
-				const bar   = ev.target;
-				const value = Number(bar.dataset.value);
+				const value = Number(ev.target.dataset.value);
 				if (isNaN(value))
-					bar.removeAttribute("value");
+					ev.target.removeAttribute("value");
 				else
-					bar.value = value < 0 ? 0 : (value > 1 ? 1 : value);
+					ev.target.value = value < 0 ? 0 : (value > 1 ? 1 : value);
 			}, false);
 			/*-- retornando a barra de progresso --*/
 			return bar;
@@ -691,16 +621,9 @@ const wd = (function() {
 			node.className = "js-wd-signal-frame";
 			return node;
 		})(),
-		/**. ``''node'' modal``: Modal do diálogo.**/
-		modal: (function() {
-			const node  = document.createElement("ASIDE");
-			node.tabIndex  = -1;
-			node.className = "js-wd-signal-modal";
-			return node;
-		})(),
 		/**. ``''node'' box``: Caixa de alerta/diálogo.**/
 		box: (function() {
-			const box = document.createElement("DIALOG");
+			const box = document.createElement("DIV");
 			if (typeof box.show === "function")
 				box.show();
 			else
@@ -716,102 +639,88 @@ const wd = (function() {
 		/**. ``''void'' alert(''object'' options)``: Ver método ''signal''.**/
 		alert: function(options) {
 			/*-- Obtendo dados iniciais --*/
-			const data = {
-				info:   {back: "frame", head: 1, body: 1, foot: 0, kill: 1},
-				ok:     {back: "frame", head: 1, body: 1, foot: 0, kill: 1},
-				warn:   {back: "frame", head: 1, body: 1, foot: 0, kill: 1},
-				error:  {back: "frame", head: 1, body: 1, foot: 0, kill: 1},
-				dialog: {back: "modal", head: 1, body: 1, foot: 1, kill: 0}
-			}
-			const type = options.type in data ? options.type : "info";
-			const back = this[data[type].back];
-			const box  = this.box.cloneNode(true);
-			const head = box.querySelector(".js-wd-signal-head");
-			const body = box.querySelector(".js-wd-signal-body");
-			const foot = box.querySelector(".js-wd-signal-foot");
-			const kill = box.querySelector(".js-wd-signal-kill");
-			const code = new Date().valueOf() + back.childElementCount;
-			const drop = function(ev) {
-				if (box.parentElement !== null) box.remove();
-				const visible   = back.parentElement !== null;
-				const children  = back.childElementCount > 0;
-				if (visible && !children)
-					back.remove()
-				else if (!visible && children)
-					back.innerHTML = "";
-			};
+			options = typeof options === "object" ? options : {};
+			const data  = ["info", "ok", "warn", "error", "dialog"];
+			const type  = data.indexOf(options.type) >= 0 ? options.type : data[0];
+			const frame = this.frame;
+			const code  = new Date().valueOf() + frame.childElementCount;
+			const box   = this.box.cloneNode(true);
+			const child = {head: null, body: null, foot: null, kill: null};
+			for (let i in child)
+				child[i] = box.querySelector(`.js-wd-signal-${i}`);
 			/*-- box --*/
 			box.className += ` js-wd-signal-type-${type}`;
 			box.setAttribute("role",       (type === "dialog" ? "alertdialog" : "alert"));
 			box.setAttribute("aria-modal", (type === "dialog" ? "true" : "false"));
-			/*-- head --*/
-			if (data[type].head === 0 || !("title" in options)) {
-				head.remove();
+			/*-- title --*/
+			if ("title" in options) {
+				child.head.textContent = String(options.title);
+				child.head.id = `label_${code}`;
+				box.setAttribute("aria-labelledby", child.head.id);
 			} else {
-				head.textContent = String(options.title);
-				head.id = `label_${code}`;
-				box.setAttribute("aria-labelledby", head.id);
+				child.head.remove();
 			}
 			/*-- body --*/
-			if (data[type].body === 0 || !("body" in options)) {
-				body.remove();
+			if ("body" in options) {
+				child.body.textContent = String(options.body);
+				child.body.id = `body_${code}`;
+				box.setAttribute("aria-describedby", child.body.id);
 			} else {
-				body.textContent = String(options.body);
-				body.id = `body_${code}`;
-				box.setAttribute("aria-describedby", body.id);
+				child.body.remove();
 			}
-			/*-- foot --*/
-			if (data[type].foot === 0) {
-				foot.remove();
-			} else {
-				const acts = __Type(options.actions).object   ? options.actions : {ok: "OK"};
-				const call = __Type(options.trigger).function ? options.trigger : null;
+			/*-- diálogo --*/
+			if (type === "dialog") {
+				child.kill.remove();
+				const acts = typeof options.actions === "object"   ? options.actions : {ok: "OK*"};
+				const call = typeof options.trigger === "function" ? options.trigger : null;
 				const auto = /\*$/;
-
-				//FIXME ver o atributo inert aplicar sobre todos os elementos menos os modais específicos, é bom criar uma função inert inert(true), inert(false)
-
-				const hide = "js-wd-modal-inert";
-				if (document.body.className.indexOf(hide) < 0)
-					document.body.className += ` ${hide}`;
+				const id   = `dialog_${code}`;
+				let  focus = null;
+				__MODAL.push(id, box);
 				for (let act in acts) {
 					let btn = document.createElement("BUTTON");
 					btn.textContent = acts[act].replace(auto, "");;
 					btn.autofocus   = auto.test(acts[act]);
+					btn.tabIndex    = 1;
 					btn.addEventListener("click", function(ev) {
-						const hide = /js\-wd\-hide\-child/g;
-						const body = document.body.className.replace(hide, "").trim();
-						document.body.className = body.replace(/\ +/g, " ");
-						drop();
+						__MODAL.hide(id);
 						if (call !== null) call(options.id, act);
 					}, false);
-					foot.appendChild(btn);
+					child.foot.appendChild(btn);
+					if (btn.autofocus) focus = btn;
 				}
+				__MODAL.show(id, {wall: true});
+				console.log(focus);
+
+				if (focus !== null)
+					window.setTimeout(function() {focus.focus();}, 20);;
+
+				/*if (type === "dialog") {
+					const query  = foot.querySelector("button[autofocus]");
+					const active = query == null ? foot.children[0] : query;
+					active.focus();
+				}*/
 			}
-			/*-- kill --*/
-			if (data[type].kill === 0) {
-				kill.remove();
-			} else {
-				kill.addEventListener("click", drop, false);
-			};
-			/*-- Background --*/
-			if (back.parentElement !== document.body)
-				document.body.appendChild(back);
-			if (type !== "dialog" || back.childElementCount < 1)
-				back.insertAdjacentElement("afterbegin", box);
-			else
-				return;
-
-
-
-
-			/*-- Encerramento --*/
-			if (type === "dialog") {
-				const query  = foot.querySelector("button[autofocus]");
-				const active = query == null ? foot.children[0] : query;
-				active.focus();
-			} else {
+			/*-- alert --*/
+			else {
+				child.foot.remove();
+				child.kill.addEventListener("click", function(ev) {
+					const box   = ev.target.parentElement;
+					const frame = box.parentElement;
+					if (frame !== null) box.remove();
+					const visible   = frame.parentElement !== null;
+					const children  = frame.childElementCount > 0;
+					if (visible && !children)
+						frame.remove()
+					else if (!visible && children)
+						frame.innerHTML = "";
+				}, false);
+				if (frame.parentElement !== document.body)
+					document.body.appendChild(frame);
+				//FIXME ? if (frame.childElementCount < 1)
+				frame.insertAdjacentElement("afterbegin", box);
 				if (typeof options.time === "number" && Math.trunc(options.time) > 0)
-					window.setTimeout(function() {kill.click();}, Math.trunc(options.time));
+					window.setTimeout(function() {child.kill.click();}, Math.trunc(options.time));
 			}
 			return;
 		},
