@@ -9755,7 +9755,7 @@ Object.defineProperties(__Type.prototype, {
 /*============================================================================*/
 /* -- DISPARADORES -- */
 /*============================================================================*/
-
+	//FIXME quando o evento de clique receber um enter, forçar um click
 
 	/*TODO descrever
 	target: objeto a vincular o evento
@@ -9771,7 +9771,7 @@ Object.defineProperties(__Type.prototype, {
 		load: {
 			target: window, preventDefault: false,
 			data: [
-				{name: "*", kill: false, bind: {}, call: function() {
+				{name: null, kill: false, bind: {}, call: function() {
 					const node = document.createElement("STYLE");
 					node.innerHTML = __STYLE;
 					document.head.appendChild(node);
@@ -9792,7 +9792,7 @@ Object.defineProperties(__Type.prototype, {
 				{name: "[data-wd-filter]", call: data_wd_filter, kill: false, bind: {}},
 				{name: "[data-wd-mask]",   call: data_wd_mask,   kill: false, bind: {}},
 				{name: "[data-wd-device]", call: data_wd_device, kill: false, bind: {}},
-				{name: "*",                call: data_wd_hash,   kill: false, bind: {}}
+				{name: null,               call: data_wd_hash,   kill: false, bind: {}}
 			]
 		},
 		/**. ``''object'' wddataset``: Evento de definição de atributo dataset (o elemento individual).**/
@@ -9813,7 +9813,7 @@ Object.defineProperties(__Type.prototype, {
 		resize: {
 			target: window, preventDefault: false,
 			data: [
-				{name: "*", kill: false, bind: {}, call: function() {
+				{name: null, kill: false, bind: {}, call: function() {
 					if (__DEVICE.changeDevice) {
 						const selector = WD.$$("[data-wd-device]");
 						selector.forEach(function(node,i) {
@@ -9821,13 +9821,13 @@ Object.defineProperties(__Type.prototype, {
 						});
 					}
 				}},
-				{name: "*", call: data_wd_hash, kill: false, bind: {}}
+				{name: null, call: data_wd_hash, kill: false, bind: {}}
 			]
 		},
 		hashchange: {
 			target: window, preventDefault: false,
 			data: [
-				{name: "*", call: data_wd_hash, kill: false, bind: {}}
+				{name: null, call: data_wd_hash, kill: false, bind: {}}
 			]
 		},
 		/**. ``''object'' submit``: Evento para submeter formulários sem mudança de página.**/
@@ -9859,27 +9859,27 @@ Object.defineProperties(__Type.prototype, {
 		input: {
 			target: document, preventDefault: false,
 			data: [
-				{name: "wdFilter",  call: data_wd_filter, kill: false, bind: {id: null}},
-				{name: "*",      call: data_wd_output, kill: false, bind: {}}
+				{name: "wdFilter", call: data_wd_filter, kill: false, bind: {id: null}},
+				{name: null,       call: data_wd_output, kill: false, bind: {}}
 			]
 		},
 		focusout: {
 			target: document, preventDefault: false,
 			data: [
 				{name: "wdMask", call: data_wd_mask,   kill: false, bind: {}},
-				//{name: "*",      call: data_wd_output, kill: false, bind: {}}
+				//{name: null,      call: data_wd_output, kill: false, bind: {}}
 			]
 		},
 		focusin: {
 			target: document, preventDefault: false,
 			data: [
-				//{name: "?", call: wdOnFocusIn, kill: false, bind: {}}
+				//{name: null, call: wdOnFocusIn, kill: false, bind: {}}
 			]
 		},
 		drag: {
 			target: document, preventDefault: false,
 			data: [
-				//{name: "?", call: wdOnMouse, kill: false, bind: {}}
+				//{name: null, call: wdOnMouse, kill: false, bind: {}}
 			]
 		},
 		dragstart: {
@@ -9968,7 +9968,14 @@ Object.defineProperties(__Type.prototype, {
 		dblclick: {
 			target: document, preventDefault: false,
 			data: [
-				//{name: "?", call: wdOnMouse, kill: false, bind: {}}
+				//{name: null, call: wdOnMouse, kill: false, bind: {}}
+			]
+		},
+		keyup: {
+			target: document, preventDefault: false,
+			data: [
+				//{name: "*[data-wd-modal]", call: (a,b,c) => console.log(a,b,c), kill: false, bind: {}},
+				{name: ".js-wd-modal-wall", call: (a,b,c) => console.log(a,b,c), kill: false, bind: {}},
 			]
 		},
 	};
@@ -9977,20 +9984,25 @@ Object.defineProperties(__Type.prototype, {
 
 		//TODO descrever
 	function eventManager(event) {
-		/*-- Alvo do evento: elemento (1) ou documento (9) -----------------------*/
+		/*-- Checar alvo do evento: elemento (1) ou documento (9) ----------------*/
 		const target = event.target === window ? document : event.target;
 		if ([1, 9].indexOf(target.nodeType) < 0) return;
 
-		/*-- Configuração e especifidade do evento -------------------------------*/
+		/*-- Checar parâmetros específicos de alguns eventos ---------------------*/
 		const config    = __EVENTS[event.type];
 		const wddataset = [];
 		const checker   = {
+			/*-- Verificar as propriedades dataset alteradas --*/
 			wddataset: target.nodeType === 1 && "wddataset" in target.dataset ? "getDataset" : null,
+			/*-- Aguardar delay da digitação --*/
 			input:     "endTyping",
+			/*-- Checar se o clique do mouse foi com o botão esquerdo --*/
 			click:     "leftButton",
 			mousedown: "leftButton",
 			mousemove: "leftButton",
 			mouseup:   "leftButton",
+			/*-- Checar qual a tecla acionada no teclado --*/
+			keyup:     "keys"
 		};
 		switch(checker[event.type]) {
 			case "getDataset": {
@@ -10023,6 +10035,12 @@ Object.defineProperties(__Type.prototype, {
 				}
 				break;
 			}
+			case "keys": {
+				/*-- Especifidade: checando se a tecla é útil para a biblioteca --*/
+				const keys = ["Escape"];
+				if (keys.indexOf(event.key) < 0) return;
+				break;
+			}
 		}
 
 		/*-- Verificando lista de disparadores -----------------------------------*/
@@ -10030,9 +10048,10 @@ Object.defineProperties(__Type.prototype, {
 		const trigger = [];
 		const search  = /^\*?\[([0-9a-zA-Z\-]+)(\=[^\]]+)?\]$/;
 		let map, root, name, query;
+		/*-- Procurando elementos qua casam com o parâmetro --*/
 		for (let i = 0; i < dataset.length; i++) {
 			map = dataset[i];
-			/*-- Procurar por seletor CSS: descendente ou documento (*) --*/
+			/*-- Elementos descendentes com atributo HTML data: *[data-wd...] (wdArray) --*/
 			if (search.test(map.name)) {
 				root  = map.name[0] === "*" ? document : target;
 				name  = map.name.replace(search, "$1");
@@ -10050,19 +10069,7 @@ Object.defineProperties(__Type.prototype, {
 					if (map.kill) node.removeAttribute(name);
 				});
 			}
-			/*-- Procurar independente de atributo: caso genérico --*/
-			else if (map.name === "*") {
-				trigger.push({
-					target:  target,
-					name:    map.name,
-					call:    map.call,
-					bind:    map.bind,
-					check:   false,
-					value:   null,
-					wdArray: null,
-				});
-			}
-			/*-- Procurar por nome da propriedade dataset --*/
+			/*-- Elementos por nome da propriedade dataset: wdNome (wdArray) --*/
 			else if ("dataset" in target && map.name in target.dataset) {
 				trigger.push({
 					target:  target,
@@ -10074,6 +10081,21 @@ Object.defineProperties(__Type.prototype, {
 					wdArray: null,
 				});
 				if (map.kill) delete target.dataset[map.name];
+			}
+			/*-- Busca genérica, independente da propriedade dataset ou atributo HTML data --*/
+			else {
+				query = typeof map.name === "string" ? WD.$$(map.name, document) : [target];
+				query.forEach(function(node) {
+					trigger.push({
+						target:  node,
+						name:    map.name,
+						call:    map.call,
+						bind:    map.bind,
+						check:   false,
+						value:   null,
+						wdArray: null,
+					});
+				});
 			}
 		}
 
