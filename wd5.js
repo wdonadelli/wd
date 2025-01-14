@@ -96,6 +96,42 @@ const wd = (function() {
 		.js-wd-no-display {display: none !important;}
 		.js-wd-no-scroll  {overflow: hidden !important;}
 		/*-- Janela Modal --------------------------------------------------------*/
+		/*-- Frame --*/
+		[data-js-wd-modal="frame"] {
+			position: fixed;
+			top: 0.5em;
+			right: 0.5em;
+			left: 0.5em;
+			bottom: initial;
+			display: block;
+			margin: 0;
+			padding: 0;
+			width: auto;
+			max-height: calc(100vh - 1em);
+			overflow: auto;
+			z-index: var(--var-js-wd-z-index-1);
+		}
+		@media screen and (min-width: 768px) {
+			[data-js-wd-modal="frame"] {
+				top: initial;
+				bottom: 0.5em;
+				right: 0.5em;
+				left: calc(75vw - 0.5em);
+			}
+		}
+		[data-js-wd-modal="frame"] > * {
+			margin: 0 0 0.5em 0;
+			animation: js-wd-animation-expand 0.5s ease,;
+		}
+		[data-js-wd-modal="frame"] > *:last-child {
+			margin-bottom: 0;
+		}
+
+
+
+
+
+
 		.js-wd-modal-inert {
 			overflow: hidden !important;
 		}
@@ -132,32 +168,10 @@ const wd = (function() {
 		.js-wd-modal-wall  {background-color: rgba(50,50,50,0.7);}
 		.js-wd-modal-glass {background-color: transparent;}
 		/*-- Caixas de diálogo e alerta ------------------------------------------*/
-		/*-- Frame --*/
-		.js-wd-signal-frame {
-			position: fixed;
-			top: 0.5em;
-			right: 0.5em;
-			left: 0.5em;
-			bottom: initial;
+		/*-- Signal --*/
+		[data-js-wd-signal] {
 			display: block;
-			margin: 0;
-			padding: 0;
-			width: auto;
-			max-height: calc(100vh - 1em);
-			overflow: auto;
-			z-index: var(--var-js-wd-z-index-1);
-		}
-		@media screen and (min-width: 768px) {
-			.js-wd-signal-frame {
-				bottom: 0.5em;
-				right: 0.5em;
-				left: calc(75vw - 0.5em);
-				top: initial
-			}
-		}
-		/*-- Box --*/
-		.js-wd-signal {
-			display: block;
+			position: relative;
 			padding: 0;
 			border: 1px solid;
 			border-radius: 0.5em;
@@ -165,13 +179,8 @@ const wd = (function() {
 			font-size: 14px;
 			animation: js-wd-animation-expand 0.5s ease;
 		}
-		.js-wd-signal:last-child {margin: 0;}
-		.js-wd-signal-frame > .js-wd-signal {
-			position: relative;
-			margin:  0 0 0.5em 0;
-		}
 		/*-- Head --*/
-		.js-wd-signal-head {
+		[data-js-wd-signal-head] {
 			display: block;
 			padding: 0.25em 1em 0.25em 0.5em;
 			margin: 0 !important; /*-- FIXME remover pendências de wd.css --*/
@@ -180,7 +189,7 @@ const wd = (function() {
 			border-radius: 0.5em 0.5em 0 0;
 		}
 		/*-- Body --*/
-		.js-wd-signal-body {
+		[data-js-wd-signal-body] {
 			padding: 1em 1em 1em 3em;
 			margin: 0;
 			min-height: 3em;
@@ -189,27 +198,27 @@ const wd = (function() {
 			background-position: left;
 			background-size: 3em 3em;
 		}
-		.js-wd-signal-head + .js-wd-signal-body {border-radius: 0;}
-		.js-wd-signal-body:last-child {border-radius: 0 0 0.5em 0.5em;}
+		[data-js-wd-signal-head] + [data-js-wd-signal-body] {border-radius: 0;}
+		[data-js-wd-signal-body]:last-child {border-radius: 0 0 0.5em 0.5em;}
 		/*-- Foot --*/
-		.js-wd-signal-foot {
+		[data-js-wd-signal-foot] {
 			display: flex;
 			flex-flow: column nowrap;
 			border-radius: 0 0 0.5em 0.5em;
 			padding: 0.5em;
 		}
-		.js-wd-signal-foot > * {
+		[data-js-wd-signal-foot] > * {
 			font-size: 14px !important; /*FIXME consertar CSS*/
 		}
 		@media screen and (min-width: 768px) {
-			.js-wd-signal-foot {
+			[data-js-wd-signal-foot] {
 				flex-flow: row wrap;
 				justify-content: space-evenly;
 				align-items: baseline;
 			}
 		}
 		/*-- Kill --*/
-		.js-wd-signal-kill {
+		[data-js-wd-signal-kill] {
 			position: absolute !important;
 			top: 0;
 			right: 0;
@@ -223,65 +232,69 @@ const wd = (function() {
 			border: 0 !important; /*FIXME consertar CSS*/
 		}
 		/*-- Info --*/
-		.js-wd-signal-type-info {
+		[data-js-wd-signal="info"] {
 			color: var(--var-js-wd-dark-info);
 			background-color: var(--var-js-wd-light-info);
 		}
-		.js-wd-signal-type-info .js-wd-signal-head {
+		[data-js-wd-signal="info"] [data-js-wd-signal-head] {
 			color: var(--var-js-wd-light-info);
 			background-color: var(--var-js-wd-dark-info);
 		}
-		.js-wd-signal-type-info .js-wd-signal-body {
+		[data-js-wd-signal="info"] [data-js-wd-signal-body] {
 			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' style='backgrounsd-color: red' height='100' width='100' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-size='4em'>\\24d8</text></svg>");
 		}
 		/*-- Ok --*/
-		.js-wd-signal-type-ok {
+		[data-js-wd-signal="ok"] {
 			color: var(--var-js-wd-dark-ok);
 			background-color: var(--var-js-wd-light-ok);
 		}
-		.js-wd-signal-type-ok .js-wd-signal-head {
+		[data-js-wd-signal="ok"] [data-js-wd-signal-head] {
 			color: var(--var-js-wd-light-ok);
 			background-color: var(--var-js-wd-dark-ok);
 		}
-		.js-wd-signal-type-ok .js-wd-signal-body {
+		[data-js-wd-signal="ok"] [data-js-wd-signal-body] {
 			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' style='backgrounsd-color: red' height='100' width='100' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-size='4em'>\\2714</text></svg>");
 		}
 		/*-- Warn --*/
-		.js-wd-signal-type-warn {
+		[data-js-wd-signal="warn"] {
 			color: var(--var-js-wd-dark-warn);
 			background-color: var(--var-js-wd-light-warn);
 		}
-		.js-wd-signal-type-warn .js-wd-signal-head {
+		[data-js-wd-signal="warn"] [data-js-wd-signal-head] {
 			color: var(--var-js-wd-light-warn);
 			background-color: var(--var-js-wd-dark-warn);
 		}
-		.js-wd-signal-type-warn .js-wd-signal-body {
+		[data-js-wd-signal="warn"] [data-js-wd-signal-body] {
 			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' style='backgrounsd-color: red' height='100' width='100' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-size='4em'>\\26A0</text></svg>");
 		}
 		/*-- Error --*/
-		.js-wd-signal-type-error {
+		[data-js-wd-signal="error"] {
 			color: var(--var-js-wd-dark-error);
 			background-color: var(--var-js-wd-light-error);
 		}
-		.js-wd-signal-type-error .js-wd-signal-head {
+		[data-js-wd-signal="error"] [data-js-wd-signal-head] {
 			color: var(--var-js-wd-light-error);
 			background-color: var(--var-js-wd-dark-error);
 		}
-		.js-wd-signal-type-error .js-wd-signal-body {
+		[data-js-wd-signal="error"] [data-js-wd-signal-body] {
 			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' style='backgrounsd-color: red' height='100' width='100' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-size='4em'>\\274C</text></svg>");
 		}
 		/*-- Dialog --*/
-		.js-wd-signal-type-dialog {
+		[data-js-wd-signal="dialog"] {
+			position: fixed;
 			color: var(--var-js-wd-dark-dialog);
 			background-color: var(--var-js-wd-light-dialog);
 		}
-		.js-wd-signal-type-dialog .js-wd-signal-head {
+		[data-js-wd-signal="dialog"] [data-js-wd-signal-head] {
 			color: var(--var-js-wd-light-dialog);
 			background-color: var(--var-js-wd-dark-dialog);
 		}
-		.js-wd-signal-type-dialog .js-wd-signal-body {
+		[data-js-wd-signal="dialog"] [data-js-wd-signal-body] {
 			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' style='backgrounsd-color: red' height='100' width='100' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-size='4em'>\\003F</text></svg>");
 		}
+
+
+
 		/*-- dataset -------------------------------------------------------------*/
 		[data-wd-send], [data-wd-set], [data-wd-edit], [data-wd-shared] {
 			cursor: pointer !important;
@@ -423,16 +436,46 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**const** ''integer'' __KEYTIMERANGE``
-	Registra o intervalo, em milisegundos, entre eventos de digitação (oninput, onkeyup...).**/
-	const __KEYTIMERANGE = 500;
-
-
-
-/*----------------------------------------------------------------------------*/
 	/**###### ``**const** ''object'' __MODAL``
 	Registra a barra de progresso das requisições da biblioteca.**/
 	const __MODAL = {
+		/**. ``''node'' frame``: Frame para agrupamento de mensagens.**/
+		frame: (function() {
+			const node  = document.createElement("ASIDE");
+			node.dataset.jsWdModal = "frame";
+			node.tabIndex  = -1;
+			node.style.zIndex = 5000;
+			return node;
+		})(),
+		/**. ``''void'' update()``: Determina a renderização do frame na tela.**/
+		update: function() {
+			const child = this.frame.childElementCount > 0;
+			const show  = this.frame.parentElement === document.body;
+			if (child && !show)
+				document.body.appendChild(this.frame);
+			else if (!child && show)
+				this.frame.remove();
+		},
+		/**. ``''void'' add(''node'' node)``: Adiciona o nó ao frame.**/
+		add: function(node) {
+			this.frame.appendChild(node);
+			this.update();
+		},
+		/**. ``''void'' del(''node'' node)``: Remove o nó do frame.**/
+		del: function(node) {
+			if (node.parentElement === this.frame) {
+				node.remove();
+				this.update();
+			}
+		},
+
+
+
+
+
+
+
+
 		/**. ``''array'' heap``: Pilha das janelas ativas.**/
 		heap: [],
 		/**. ``''object'' data``: Identificadores das janelas.**/
@@ -614,74 +657,73 @@ const wd = (function() {
 	/**###### ``**const** ''object'' __SIGNAL``
 	Renderiza mensagens e notificações.**/
 	const __SIGNAL = {
-		/**. ``''node'' frame``: Frame do alerta.**/
-		frame: (function() {
-			const node  = document.createElement("ASIDE");
-			node.tabIndex  = -1;
-			node.className = "js-wd-signal-frame";
+		/**. ``''node'' node``: Caixa de alerta/diálogo.**/
+		node: (function() {
+			const node = document.createElement("ARTICLE");
+			node.innerHTML = `
+				<button data-js-wd-signal-kill="" >&times;</button>
+				<h6 data-js-wd-signal-head=""></h6>
+				<p  data-js-wd-signal-body=""><p>
+				<search data-js-wd-signal-foot=""></search>`;
 			return node;
 		})(),
-		/**. ``''node'' box``: Caixa de alerta/diálogo.**/
-		box: (function() {
-			const box = document.createElement("DIV");
-			if (typeof box.show === "function")
-				box.show();
-			else
-				box.setAttribute("open", "");
-			box.className = "js-wd-signal"
-			box.innerHTML = `
-				<button class="js-wd-signal-kill" >&times;</button>
-				<h6 class="js-wd-signal-head"></h6>
-				<p class="js-wd-signal-body"><p>
-				<search class="js-wd-signal-foot"></search>`;
-			return box;
-		})(),
+		/**. ``''integer'' id``: Controla o id da caixa de mensagem.**/
+		id: {info: 0, ok: 0, warn: 0, error: 0, dialog: 0},
 		/**. ``''void'' alert(''object'' options)``: Ver método ''signal''.**/
 		alert: function(options) {
 			/*-- Obtendo dados iniciais --*/
 			options = typeof options === "object" ? options : {};
-			const data  = ["info", "ok", "warn", "error", "dialog"];
-			const type  = data.indexOf(options.type) >= 0 ? options.type : data[0];
-			const frame = this.frame;
-			const code  = new Date().valueOf() + frame.childElementCount;
-			const box   = this.box.cloneNode(true);
+			const type  = options.type in this.id ? options.type : "info";
+			const id    = `js_wd_signal_${type}_${this.id[type]++}`;
+			const node  = this.node.cloneNode(true);
 			const child = {head: null, body: null, foot: null, kill: null};
 			for (let i in child)
-				child[i] = box.querySelector(`.js-wd-signal-${i}`);
+				child[i] = node.querySelector(`[data-js-wd-signal-${i}]`);
 			/*-- box --*/
-			box.className += ` js-wd-signal-type-${type}`;
-			box.setAttribute("role",       (type === "dialog" ? "alertdialog" : "alert"));
-			box.setAttribute("aria-modal", (type === "dialog" ? "true" : "false"));
+			node.dataset.jsWdSignal = type;
+			node.setAttribute("role",       (type === "dialog" ? "alertdialog" : "alert"));
+			node.setAttribute("aria-modal", (type === "dialog" ? "true" : "false"));
 			/*-- title --*/
 			if ("title" in options) {
 				child.head.textContent = String(options.title);
-				child.head.id = `label_${code}`;
-				box.setAttribute("aria-labelledby", child.head.id);
+				child.head.id = `${id}_label`;
+				node.setAttribute("aria-labelledby", child.head.id);
 			} else {
 				child.head.remove();
 			}
 			/*-- body --*/
 			if ("body" in options) {
 				child.body.textContent = String(options.body);
-				child.body.id = `body_${code}`;
-				box.setAttribute("aria-describedby", child.body.id);
+				child.body.id = `${id}_body`;
+				node.setAttribute("aria-describedby", child.body.id);
 			} else {
 				child.body.remove();
 			}
-			/*-- diálogo --*/
-			if (type === "dialog") {
+			/*-- alertas --*/
+			if (type !== "dialog") {
+				child.foot.remove();
+				child.kill.addEventListener("click", function(ev) {
+					__MODAL.del(ev.target.parentElement);
+				}, false);
+				__MODAL.add(node);
+				if (typeof options.time === "number" && Math.trunc(options.time) > 0)
+					window.setTimeout(function() {
+						child.kill.click();
+					}, Math.trunc(options.time));
+			}
+			/*-- dialogo --*/
+			else {
 				child.kill.remove();
 				const acts = typeof options.actions === "object"   ? options.actions : {ok: "OK*"};
 				const call = typeof options.trigger === "function" ? options.trigger : null;
 				const auto = /\*$/;
-				const id   = `dialog_${code}`;
 				let  focus = null;
-				__MODAL.push(id, box);
+				__MODAL.push(id, node);
 				for (let act in acts) {
 					let btn = document.createElement("BUTTON");
 					btn.textContent = acts[act].replace(auto, "");;
-					btn.autofocus   = auto.test(acts[act]);
-					btn.tabIndex    = 1;
+					//btn.autofocus   = auto.test(acts[act]);
+					//btn.tabIndex    = 1;
 					btn.addEventListener("click", function(ev) {
 						__MODAL.hide(id);
 						if (call !== null) call(options.id, act);
@@ -702,26 +744,6 @@ const wd = (function() {
 				}*/
 			}
 			/*-- alert --*/
-			else {
-				child.foot.remove();
-				child.kill.addEventListener("click", function(ev) {
-					const box   = ev.target.parentElement;
-					const frame = box.parentElement;
-					if (frame !== null) box.remove();
-					const visible   = frame.parentElement !== null;
-					const children  = frame.childElementCount > 0;
-					if (visible && !children)
-						frame.remove()
-					else if (!visible && children)
-						frame.innerHTML = "";
-				}, false);
-				if (frame.parentElement !== document.body)
-					document.body.appendChild(frame);
-				//FIXME ? if (frame.childElementCount < 1)
-				frame.insertAdjacentElement("afterbegin", box);
-				if (typeof options.time === "number" && Math.trunc(options.time) > 0)
-					window.setTimeout(function() {child.kill.click();}, Math.trunc(options.time));
-			}
 			return;
 		},
 		/**. ``''void'' notify(''object'' options)``: Ver método ''signal''.**/
