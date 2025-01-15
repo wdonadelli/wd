@@ -79,6 +79,7 @@ const wd = (function() {
 			--var-js-wd-z-index-2: 8000;
 			--var-js-wd-z-index-3: 7000;
 		}
+
 		/*-- Animações -----------------------------------------------------------*/
 		@keyframes js-wd-animation-emerge {
 			from {opacity: 0;} to {opacity: 1;}
@@ -92,9 +93,11 @@ const wd = (function() {
 		@keyframes js-wd-animation-shrink {
 			from {transform: scale(1);} to {transform: scale(0);}
 		}
+
 		/*-- Importantes ---------------------------------------------------------*/
 		.js-wd-no-display {display: none !important;}
 		.js-wd-no-scroll  {overflow: hidden !important;}
+
 		/*-- Janela Modal --------------------------------------------------------*/
 		/*-- Frame --*/
 		[data-js-wd-modal="frame"] {
@@ -120,31 +123,15 @@ const wd = (function() {
 			}
 		}
 		[data-js-wd-modal="frame"] > * {
+			position: relative !important;
 			margin: 0 0 0.5em 0;
 			animation: js-wd-animation-expand 0.5s ease,;
 		}
 		[data-js-wd-modal="frame"] > *:last-child {
 			margin-bottom: 0;
 		}
-
-
-
-
-
-
-		.js-wd-modal-inert {
-			overflow: hidden !important;
-		}
-		.js-wd-modal-inert > * {
-			visibility: hidden !important;
-			pointer-events: none !important;
-		}
-		.js-wd-modal-inert > .js-wd-modal-wall,
-		.js-wd-modal-inert > .js-wd-modal-glass {
-			visibility: visible !important;
-			pointer-events: auto !important;
-		}
-		.js-wd-modal-wall, .js-wd-modal-glass {
+		/*-- modal --*/
+		[data-js-wd-modal="wall"], [data-js-wd-modal="glass"] {
 			position: fixed;
 			top: 0;
 			bottom: 0;
@@ -154,8 +141,8 @@ const wd = (function() {
 			height: 100vh;
 			animation: js-wd-animation-emerge 0.3s ease;
 		}
-		.js-wd-modal-wall > *, .js-wd-modal-glass > * {
-			position: absolute;
+		[data-js-wd-modal="wall"] > *, [data-js-wd-modal="glass"] > * {
+			position: absolute !important;
 			top: 25vh;
 			bottom: initial;
 			left: 25vw;
@@ -163,15 +150,27 @@ const wd = (function() {
 			width: auto;
 			height: auto;
 			margin: auto;
-			animation: js-wd-animation-expand 0.3s ease;
+			animation: js-wd-animation-expand 0.5s ease;
 		}
-		.js-wd-modal-wall  {background-color: rgba(50,50,50,0.7);}
-		.js-wd-modal-glass {background-color: transparent;}
+		[data-js-wd-modal="wall"]  {background-color: rgba(50,50,50,0.7);}
+		[data-js-wd-modal="glass"] {background-color: transparent;}
+		/*-- inert/lock --*/
+		[data-js-wd-modal-body*="lock"] {
+			overflow: hidden !important;
+		}
+		[data-js-wd-modal-body*="inert"] > * {
+			visibility: hidden !important;
+			pointer-events: none !important;
+		}
+		[data-js-wd-modal-body*="inert"] > [data-js-wd-modal] {
+			visibility: visible !important;
+			pointer-events: auto !important;
+		}
+
 		/*-- Caixas de diálogo e alerta ------------------------------------------*/
 		/*-- Signal --*/
 		[data-js-wd-signal] {
 			display: block;
-			position: relative;
 			padding: 0;
 			border: 1px solid;
 			border-radius: 0.5em;
@@ -437,156 +436,139 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	/**###### ``**const** ''object'' __MODAL``
-	Registra a barra de progresso das requisições da biblioteca.**/
+	Administra containers para janelas modais (wall e glass) e de quadro (frame).**/
 	const __MODAL = {
-		/**. ``''node'' frame``: Frame para agrupamento de mensagens.**/
+		/**. ``''array'' heap``: Pilha das janelas modais ativas.**/
+		heap: [],
+		/**. ``''object'' data``: Identificadores das janelas modais.**/
+		data: {},
+		/**. ``''integer'' zIndex``: Controlador de prevalência das janelas modais.**/
+		zIndex: 1000,
+		/**. ``''node'' frame``: Quadro para agrupamento de mensagens.**/
 		frame: (function() {
 			const node  = document.createElement("ASIDE");
 			node.dataset.jsWdModal = "frame";
 			node.tabIndex  = -1;
-			node.style.zIndex = 5000;
 			return node;
 		})(),
-		/**. ``''void'' update()``: Determina a renderização do frame na tela.**/
-		update: function() {
+		/**. ``''void'' updateFrame()``: Atualiza a renderização do frame na tela.**/
+		updateFrame: function() {
+			this.frame.style.zIndex = this.zIndex + 1000;
 			const child = this.frame.childElementCount > 0;
 			const show  = this.frame.parentElement === document.body;
 			if (child && !show)
 				document.body.appendChild(this.frame);
 			else if (!child && show)
 				this.frame.remove();
+			return;
 		},
-		/**. ``''void'' add(''node'' node)``: Adiciona o nó ao frame.**/
+		/**. ``''void'' add(''node'' node)``: Adiciona um nó ao frame.**/
 		add: function(node) {
 			this.frame.appendChild(node);
-			this.update();
+			return this.updateFrame();
 		},
-		/**. ``''void'' del(''node'' node)``: Remove o nó do frame.**/
+		/**. ``''void'' del(''node'' node)``: Remove um nó do frame.**/
 		del: function(node) {
-			if (node.parentElement === this.frame) {
-				node.remove();
-				this.update();
-			}
+			if (node.parentElement === this.frame) node.remove();
+			return this.updateFrame();
 		},
-
-
-
-
-
-
-
-
-		/**. ``''array'' heap``: Pilha das janelas ativas.**/
-		heap: [],
-		/**. ``''object'' data``: Identificadores das janelas.**/
-		data: {},
-		/**. ``''integer'' zIndex``: Controlador de prevalência.**/
-		zIndex: 1000,
-		/**. ``''node'' active``: Retorna a última janela da pilha (modal ativo).**/
-		get active() {
-			const id = this.heap.length < 1 ? null : this.heap[this.heap.length - 1];
-			return id === null ? id : this.data[id];
+		/**. ``''object'' main``: Retorna dados da janela modal prevalente (id, modal, node, type) ou nulo.**/
+		get main() {
+			return this.heap.length < 1 ? null : {
+				id: this.heap[this.heap.length - 1],
+				modal: this.data[this.heap[this.heap.length - 1]],
+				get node() {return this.modal.children[0];},
+				get type() {return this.modal.dataset.jsWdModal;}
+			};
 		},
-		/**. ``''node'' inert()``: Define as regras para tornar a parte posterior ao modal inativo.**/
-		inert: function() {
-			const back  = this.active;
-			const type  = back === null ? back : back.className;
-			const inert = document.body.inert === true || document.body.inert === false;
-			const data  = {inert: type === "js-wd-modal-wall", frozen: back !== null};
-			const re    = {inert: /js\-wd\-modal\-inert/g,     frozen: /js\-wd\-no\-scroll/g};
-			const list  = inert ? document.body.children : [];
-			let   body  = document.body.className;
-			/*-- ativar/desativar tela --*/
-			if (inert) {
+		/**. ``''void'' escape()``: Simula um ''esc'' fechando a janela modal prevalente do tipo seja glass.**/
+		escape: function() {
+			const main = this.main;
+			if (main !== null && main.type === "glass") this.hide(main.id);
+			return;
+		},
+		/**. ``''node'' updateModal()``: Atualiza as condições de exibição da janela modal.**/
+		updateModal: function() {
+			const main  = this.main;
+			const attr  = "inert" in document.body && typeof document.body.inert === "boolean";
+			const	inert = main !== null && main.type !== "glass";
+			const lock  = main !== null;
+			const body  = inert && !attr ? (lock ? "inert+lock" : "inert") : (lock ? "lock" : "");
+			/*-- configurando fundo --*/
+			if (body !== "")
+				document.body.dataset.jsWdModalBody = body;
+			else if ("jsWdModalBody" in document.body.dataset)
+				delete document.body.dataset.jsWdModalBody
+			/*-- se inert estiver implantado --*/
+			if (attr) {
+				const list = document.body.children;
 				for (let i = 0; i < list.length; i++)
-					list[i].inert = data.inert ? (list[i] !== back) : false;
-			} else {
-				if (data.inert && !re.inert.test(body))
-					body = body+" js-wd-modal-inert";
-				if (!data.inert && re.inert.test(body))
-					body = body.replace(re.inert, "");
+					list[i].inert = inert ? (list[i] !== main.modal) : false;//FIXME frame não pode inerte
 			}
-			/*-- congelar tela --*/
-			if (data.frozen && !re.frozen.test(body))
-				body = body+" js-wd-no-scroll";
-			if (!data.frozen && re.frozen.test(body))
-				body = body.replace(re.frozen, "");
-			/*-- definindo body --*/
-			body = body.replace(/\ +/g, " ").trim();
-			if (document.body.className !== body)
-				document.body.className = body;
+			return;
 		},
-		/**. ``''boolean'' push(''string'' id, ''node'' node)``: Vincula um nó a uma janela modal e a identifica.**/
+		/**. ``''void'' push(''string'' id, ''node'' node)``: Vincula um nó a uma janela modal e a identifica.**/
 		push: function(id, node) {
-			/*-- checando validade do id --*/
-			if (id === null || id === undefined || String(id).trim() === "")
-				return false;
-			/*-- checando duplicidade de id --*/
-			if (id in this.data) return false;
-			/*-- criar a janela modal, adicionar elemento e vinculá-lo a lista de id --*/
-			try {
+			id = id === null || id === undefined ? "" : String(id).trim();
+			if (arguments.length > 1 && id !== "" && !(id in this.data)) {
 				this.data[id] = document.createElement("ASIDE");
 				this.data[id].appendChild(node);
-				return true;
-			} catch(e) {}
-			return false;
+			}
+			return;
 		},
-		/**. ``''boolean'' show(''string'' id)``: Exibe a janela modal vinculada ao identificador.**/
+		/**. ``''void'' show(''string'' id)``: Exibe a janela modal vinculada ao identificador.**/
 		show: function(id, options) {
-			/*-- checar se o id foi adicionado --*/
-			if (!(id in this.data)) return false;
+			id = id === null || id === undefined ? "" : String(id).trim();
 			/*-- exibir modal que não está na pilha --*/
-			if (this.heap.indexOf(id) < 0) {
+			if (id in this.data && this.heap.indexOf(id) < 0) {
+				const opts = typeof options === "object" ? options : {};
 				const back = this.data[id];
 				const node = back.children[0];
+				const wall = opts.wall !== false;
 				const attr = ["top", "bottom", "left", "right", "width", "height"];
-				const opts = typeof options === "object" ? options : {};
-				/*-- definindo características --*/
-				back.className = opts.wall === false ? "js-wd-modal-glass" : "js-wd-modal-wall";
-				back.style.zIndex = this.zIndex;
-				node.setAttribute("aria-modal", opts.wall === false ? "false" : "true");
+				/*-- elemento --*/
+				node.setAttribute("aria-modal", wall ? "true" : "false");
 				for (let i = 0; i < attr.length; i++)
 					if (attr[i] in opts) node.style[attr[i]] = opts[attr[i]];
-				/*-- definindo eventos --*/
-				if (opts.wall === false) {
-					back.onclick = function(ev) {
-						ev.preventDefault();
-						if (ev.target === back) __MODAL.hide(id);
-					}
-				} else {
-					back.onclick = null;
+				/*-- modal --*/
+				back.dataset.jsWdModal = wall ? "wall" : "glass";
+				back.style.zIndex      = this.zIndex;
+				back.onclick           = wall ? null : function(ev) {
+					ev.preventDefault();
+					if (ev.target === back) __MODAL.hide(id);
 				}
-				/*-- Exibindo modal --*/
+				/*-- Renderizando --*/
 				document.body.appendChild(back);
 				this.zIndex++;
 				this.heap.push(id);
-				this.inert();
-				return true;
+				this.updateModal();
 			}
 			/*-- trazer para frente modal que já está na pilha --*/
 			else if (id in this.data) {
 				this.hide(id);
-				return this.show(id, options);
+				this.show(id, options);
 			}
-			/*-- modal inexistente --*/
-			return false;
+			return;
 		},
-		/**. ``''boolean'' hide(''string'' id)``: Esconde a janela modal vinculada ao identificador ou todas se não definido.**/
+		/**. ``''boolean'' hide(''string'' id)``: Esconde a janela modal vinculada ao id, todas, se id for nulo, ou a última, se indefinido.**/
 		hide: function(id) {
+			id = id === null || id === undefined ? id : String(id).trim();
 			const index = this.heap.indexOf(id);
 			if (index >= 0) {
-				document.body.removeChild(this.data[id]);
+				this.data[id].remove();
 				this.heap[index] = null;
 				this.heap = this.heap.filter(function(v,i,a) {return v !== null;});
-				this.inert();
-				return true;
-			} else if (id === null || id === undefined) {
+				this.updateModal();
+			} else if (id === null) {
 				const list = this.heap.slice();
 				for (let i = 0; i < list.length; i++)
 					this.hide(list[i]);
-				return true;
+			} else if (id === undefined) {
+				const main = this.main;
+				if (main !== null)
+					this.hide(main.id);
 			}
-			return false;
+			return;
 		},
 	};
 
