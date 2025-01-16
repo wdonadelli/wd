@@ -448,7 +448,6 @@ const wd = (function() {
 		frame: (function() {
 			const node  = document.createElement("ASIDE");
 			node.dataset.jsWdModal = "frame";
-			node.tabIndex  = -1;
 			return node;
 		})(),
 		/**. ``''void'' updateFrame()``: Atualiza a renderização do frame na tela.**/
@@ -465,6 +464,7 @@ const wd = (function() {
 		/**. ``''void'' add(''node'' node)``: Adiciona um nó ao frame.**/
 		add: function(node) {
 			this.frame.appendChild(node);
+			node.setAttribute("aria-modal", "false");
 			return this.updateFrame();
 		},
 		/**. ``''void'' del(''node'' node)``: Remove um nó do frame.**/
@@ -503,7 +503,10 @@ const wd = (function() {
 			if (attr) {
 				const list = document.body.children;
 				for (let i = 0; i < list.length; i++)
-					list[i].inert = inert ? (list[i] !== main.modal) : false;//FIXME frame não pode inerte
+					if (!inert || list[i] === main.modal || list[i].dataset.jsWdModal === "frame")
+						list[i].inert = false;
+					else
+						list[i].inert = true;
 			}
 			return;
 		},
@@ -578,35 +581,43 @@ const wd = (function() {
 	const __PROGRESS = {
 		/**. ``''node'' bar``: Barra de progresso.**/
 		bar: (function() {
-			/*-- Plano de fundo e barra de progresso --*/
+			const id  = "js_wd_progress_bar_"+String(new Date().valueOf());
 			const bar = document.createElement("PROGRESS");
-			bar.dataset.count = 0; /*-- quantidade de processos em aberto --*/
-			__MODAL.push("js-wd-progress-bar", bar);
-			/*-- Disparador de abertura de processo --*/
+			__MODAL.push(id, bar);
+			bar.dataset.jsWdProgressCount = 0;
+			/*-- Disparadores de abertura de processo --*/
 			bar.addEventListener("wdprogressopen", function(ev) {
-				const opt = {top: 0, right: 0, left: 0, width: "100vw", wall: true};
-				ev.target.dataset.count = Number(ev.target.dataset.count) + 1;
-				__MODAL.show("js-wd-progress-bar", opt);
+				const main  = __MODAL.main;
+				const count = Number(ev.target.dataset.jsWdProgressCount) + 1;
+				ev.target.dataset.jsWdProgressCount = count;
+				if (main === null || main.node !== ev.target) {
+					const opt = {top: 0, right: 0, left: 0, width: "100vw", wall: true};
+					__MODAL.show(id, opt);
+				}
+				return;
 			}, false);
 			/*-- Disparador de fechamento de processo --*/
 			bar.addEventListener("wdprogressclose", function(ev) {
-				const count = Number(ev.target.dataset.count) - 1;
-				ev.target.dataset.count = count < 0 ? 0 : count;
+				const count = Number(ev.target.dataset.jsWdProgressCount) - 1;
+				ev.target.dataset.jsWdProgressCount = count < 0 ? 0 : count;
+				/*-- delay para evitar alternação de exibição irritante --*/
 				window.setTimeout(function () {
-					const count = Number(ev.target.dataset.count);
+					const count = Number(ev.target.dataset.jsWdProgressCount);
 					if (count < 1) {
-						__MODAL.hide("js-wd-progress-bar");
+						__MODAL.hide(id);
 						ev.target.removeAttribute("value");
 					}
-				}, 5);
+				}, 50);
+				return;
 			}, false);
 			/*-- Disparador de definição de valor --*/
 			bar.addEventListener("wdprogressset", function(ev) {
-				const value = Number(ev.target.dataset.value);
+				const value = Number(ev.target.dataset.jsWdProgressValue);
 				if (isNaN(value))
 					ev.target.removeAttribute("value");
 				else
 					ev.target.value = value < 0 ? 0 : (value > 1 ? 1 : value);
+				return;
 			}, false);
 			/*-- retornando a barra de progresso --*/
 			return bar;
@@ -629,7 +640,7 @@ const wd = (function() {
 		},
 		/**. ``''void'' set(''integer'' value)``: Define o valor da barra de progresso pelo seu argumento.**/
 		set: function(value) {
-			this.bar.dataset.value = value;
+			this.bar.dataset.jsWdProgressValue = value;
 			this.bar.dispatchEvent(this.setEvent);
 			return;
 		}
@@ -645,8 +656,8 @@ const wd = (function() {
 			node.innerHTML = `
 				<button data-js-wd-signal-kill="" >&times;</button>
 				<h6 data-js-wd-signal-head=""></h6>
-				<p  data-js-wd-signal-body=""><p>
-				<search data-js-wd-signal-foot=""></search>`;
+				<p  data-js-wd-signal-body="">_<p>
+				<form data-js-wd-signal-foot=""></form>`;
 			return node;
 		})(),
 		/**. ``''integer'' id``: Controla o id da caixa de mensagem.**/
@@ -663,8 +674,7 @@ const wd = (function() {
 				child[i] = node.querySelector(`[data-js-wd-signal-${i}]`);
 			/*-- box --*/
 			node.dataset.jsWdSignal = type;
-			node.setAttribute("role",       (type === "dialog" ? "alertdialog" : "alert"));
-			node.setAttribute("aria-modal", (type === "dialog" ? "true" : "false"));
+			node.setAttribute("role", (type === "dialog" ? "alertdialog" : "alert"));
 			/*-- title --*/
 			if ("title" in options) {
 				child.head.textContent = String(options.title);
@@ -705,7 +715,7 @@ const wd = (function() {
 					let btn = document.createElement("BUTTON");
 					btn.textContent = acts[act].replace(auto, "");;
 					//btn.autofocus   = auto.test(acts[act]);
-					//btn.tabIndex    = 1;
+					//btn.tabIndex    = 0;
 					btn.addEventListener("click", function(ev) {
 						__MODAL.hide(id);
 						if (call !== null) call(options.id, act);
