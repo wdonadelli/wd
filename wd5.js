@@ -87,6 +87,9 @@ const wd = (function() {
 		@keyframes js-wd-animation-fade {
 			from {opacity: 1;} to {opacity: 0;}
 		}
+		@keyframes js-wd-animation-emerge-modal {
+			from {background-color: rgba(50,50,50,0);} to {background-color: rgba(50,50,50,0.7);}
+		}
 		@keyframes js-wd-animation-expand {
 			from {transform: scale(0);} to {transform: scale(1);}
 		}
@@ -112,7 +115,6 @@ const wd = (function() {
 			width: auto;
 			max-height: calc(100vh - 1em);
 			overflow: auto;
-			z-index: var(--var-js-wd-z-index-1);
 		}
 		@media screen and (min-width: 768px) {
 			[data-js-wd-modal="frame"] {
@@ -125,7 +127,6 @@ const wd = (function() {
 		[data-js-wd-modal="frame"] > * {
 			position: relative !important;
 			margin: 0 0 0.5em 0;
-			animation: js-wd-animation-expand 0.5s ease,;
 		}
 		[data-js-wd-modal="frame"] > *:last-child {
 			margin-bottom: 0;
@@ -139,7 +140,7 @@ const wd = (function() {
 			right: 0;
 			width: 100vw;
 			height: 100vh;
-			animation: js-wd-animation-emerge 0.3s ease;
+			animation: js-wd-animation-emerge-modal 0.2s ease;
 		}
 		[data-js-wd-modal="wall"] > *, [data-js-wd-modal="glass"] > * {
 			position: absolute !important;
@@ -150,7 +151,6 @@ const wd = (function() {
 			width: auto;
 			height: auto;
 			margin: auto;
-			animation: js-wd-animation-expand 0.5s ease;
 		}
 		[data-js-wd-modal="wall"]  {background-color: rgba(50,50,50,0.7);}
 		[data-js-wd-modal="glass"] {background-color: transparent;}
@@ -170,41 +170,110 @@ const wd = (function() {
 		/*-- Caixas de diálogo e alerta ------------------------------------------*/
 		/*-- Signal --*/
 		[data-js-wd-signal] {
+			position: relative;
 			display: block;
 			padding: 0;
 			border: 1px solid;
 			border-radius: 0.5em;
 			width: auto;
+			height: auto;
 			font-size: 14px;
 			animation: js-wd-animation-expand 0.5s ease;
-		}
-		/*-- Head --*/
-		[data-js-wd-signal-head] {
-			display: block;
-			padding: 0.25em 1em 0.25em 0.5em;
-			margin: 0 !important; /*-- FIXME remover pendências de wd.css --*/
-			font-size: inherit !important; /*-- FIXME remover pendências de wd.css --*/
-			font-weight: bold !important; /*-- FIXME remover pendências de wd.css --*/
-			border-radius: 0.5em 0.5em 0 0;
-		}
-		/*-- Body --*/
-		[data-js-wd-signal-body] {
-			padding: 1em 1em 1em 3em;
-			margin: 0;
-			min-height: 3em;
-			border-radius: 0.5em 0.5em 0 0;
+
+
 			background-repeat: no-repeat;
 			background-position: left;
 			background-size: 3em 3em;
 		}
+		[data-js-wd-signal] > * {
+			margin: 0.2em 0;
+			padding: 0.2em;
+		}
+		[data-js-wd-signal] > *:first-child {margin-top:    0;}
+		[data-js-wd-signal] > *:last-child  {margin-bottom: 0;}
+
+		[data-js-wd-signal="info"] {
+			color: var(--var-js-wd-dark-info);
+			background-color: var(--var-js-wd-light-info);
+		}
+		[data-js-wd-signal="ok"] {
+			color: var(--var-js-wd-dark-ok);
+			background-color: var(--var-js-wd-light-ok);
+		}
+		[data-js-wd-signal="warn"] {
+			color: var(--var-js-wd-dark-warn);
+			background-color: var(--var-js-wd-light-warn);
+		}
+		[data-js-wd-signal="error"] {
+			color: var(--var-js-wd-dark-error);
+			background-color: var(--var-js-wd-light-error);
+		}
+		[data-js-wd-signal="dialog"] {
+			position: fixed;
+			color: var(--var-js-wd-dark-dialog);
+			background-color: var(--var-js-wd-light-dialog);
+		}
+
+
+
+
+
+		/*-- Head --*/
+		[data-js-wd-signal-head] {
+			display: block;
+			padding-right: 1em;
+			margin: -0.2em -0.2em 0.2em -0.2em !important; /*-- FIXME remover pendências de wd.css --*/
+			font-size: inherit !important; /*-- FIXME remover pendências de wd.css --*/
+			font-weight: bold !important; /*-- FIXME remover pendências de wd.css --*/
+			border-radius: 0.5em 0.5em 0 0;
+		}
+		[data-js-wd-signal-head="info"] {
+			color: var(--var-js-wd-light-info);
+			background-color: var(--var-js-wd-dark-info);
+		}
+		[data-js-wd-signal-head="ok"] {
+			color: var(--var-js-wd-light-ok);
+			background-color: var(--var-js-wd-dark-ok);
+		}
+		[data-js-wd-signal-head="warn"] {
+			color: var(--var-js-wd-light-warn);
+			background-color: var(--var-js-wd-dark-warn);
+		}
+		[data-js-wd-signal-head="error"] {
+			color: var(--var-js-wd-light-error);
+			background-color: var(--var-js-wd-dark-error);
+		}
+		[data-js-wd-signal-head="dialog"] {
+			color: var(--var-js-wd-light-dialog);
+			background-color: var(--var-js-wd-dark-dialog);
+		}
+
+
+
+
+		/*-- Body --*/
+		[data-js-wd-signal-body] {
+			display: block;
+			padding-left: 3em;
+			margin: 0;
+		}
 		[data-js-wd-signal-head] + [data-js-wd-signal-body] {border-radius: 0;}
 		[data-js-wd-signal-body]:last-child {border-radius: 0 0 0.5em 0.5em;}
+		/*-- Time --*/
+		[data-js-wd-signal-time] {
+			display: block;
+			font-size: small;
+			text-align: right;
+			padding: 0;
+			margin: 0.2em 0;
+		}
+
+
 		/*-- Foot --*/
 		[data-js-wd-signal-foot] {
 			display: flex;
 			flex-flow: column nowrap;
-			border-radius: 0 0 0.5em 0.5em;
-			padding: 0.5em;
+			padding: 0.2em;
 		}
 		[data-js-wd-signal-foot] > * {
 			font-size: 14px !important; /*FIXME consertar CSS*/
@@ -231,63 +300,32 @@ const wd = (function() {
 			border: 0 !important; /*FIXME consertar CSS*/
 		}
 		/*-- Info --*/
+
+
 		[data-js-wd-signal="info"] {
-			color: var(--var-js-wd-dark-info);
-			background-color: var(--var-js-wd-light-info);
-		}
-		[data-js-wd-signal="info"] [data-js-wd-signal-head] {
-			color: var(--var-js-wd-light-info);
-			background-color: var(--var-js-wd-dark-info);
-		}
-		[data-js-wd-signal="info"] [data-js-wd-signal-body] {
 			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' style='backgrounsd-color: red' height='100' width='100' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-size='4em'>\\24d8</text></svg>");
 		}
 		/*-- Ok --*/
-		[data-js-wd-signal="ok"] {
-			color: var(--var-js-wd-dark-ok);
-			background-color: var(--var-js-wd-light-ok);
-		}
-		[data-js-wd-signal="ok"] [data-js-wd-signal-head] {
-			color: var(--var-js-wd-light-ok);
-			background-color: var(--var-js-wd-dark-ok);
-		}
+
+
 		[data-js-wd-signal="ok"] [data-js-wd-signal-body] {
 			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' style='backgrounsd-color: red' height='100' width='100' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-size='4em'>\\2714</text></svg>");
 		}
 		/*-- Warn --*/
-		[data-js-wd-signal="warn"] {
-			color: var(--var-js-wd-dark-warn);
-			background-color: var(--var-js-wd-light-warn);
-		}
-		[data-js-wd-signal="warn"] [data-js-wd-signal-head] {
-			color: var(--var-js-wd-light-warn);
-			background-color: var(--var-js-wd-dark-warn);
-		}
+
+
 		[data-js-wd-signal="warn"] [data-js-wd-signal-body] {
 			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' style='backgrounsd-color: red' height='100' width='100' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-size='4em'>\\26A0</text></svg>");
 		}
 		/*-- Error --*/
-		[data-js-wd-signal="error"] {
-			color: var(--var-js-wd-dark-error);
-			background-color: var(--var-js-wd-light-error);
-		}
-		[data-js-wd-signal="error"] [data-js-wd-signal-head] {
-			color: var(--var-js-wd-light-error);
-			background-color: var(--var-js-wd-dark-error);
-		}
+
+
 		[data-js-wd-signal="error"] [data-js-wd-signal-body] {
 			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' style='backgrounsd-color: red' height='100' width='100' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-size='4em'>\\274C</text></svg>");
 		}
 		/*-- Dialog --*/
-		[data-js-wd-signal="dialog"] {
-			position: fixed;
-			color: var(--var-js-wd-dark-dialog);
-			background-color: var(--var-js-wd-light-dialog);
-		}
-		[data-js-wd-signal="dialog"] [data-js-wd-signal-head] {
-			color: var(--var-js-wd-light-dialog);
-			background-color: var(--var-js-wd-dark-dialog);
-		}
+
+
 		[data-js-wd-signal="dialog"] [data-js-wd-signal-body] {
 			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' style='backgrounsd-color: red' height='100' width='100' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-size='4em'>\\003F</text></svg>");
 		}
@@ -481,7 +519,7 @@ const wd = (function() {
 				get type() {return this.modal.dataset.jsWdModal;}
 			};
 		},
-		/**. ``''void'' escape()``: Simula um ''esc'' fechando a janela modal prevalente do tipo seja glass.**/
+		/**. ``''void'' escape()``: Simula um ''esc'' fechando a janela modal prevalente do tipo glass.**/
 		escape: function() {
 			const main = this.main;
 			if (main !== null && main.type === "glass") this.hide(main.id);
@@ -510,7 +548,7 @@ const wd = (function() {
 			}
 			return;
 		},
-		/**. ``''void'' push(''string'' id, ''node'' node)``: Vincula um nó a uma janela modal e a identifica.**/
+		/**. ``''void'' push(''string'' id, ''node'' node)``: Vincula um nó a uma janela modal identificada por ``id``.**/
 		push: function(id, node) {
 			id = id === null || id === undefined ? "" : String(id).trim();
 			if (arguments.length > 1 && id !== "" && !(id in this.data)) {
@@ -536,10 +574,14 @@ const wd = (function() {
 				/*-- modal --*/
 				back.dataset.jsWdModal = wall ? "wall" : "glass";
 				back.style.zIndex      = this.zIndex;
-				back.onclick           = wall ? null : function(ev) {
+				/*back.onclick           = wall ? null : function(ev) {
 					ev.preventDefault();
 					if (ev.target === back) __MODAL.hide(id);
-				}
+				}*/
+				back.addEventListener("click", function(ev) {
+					ev.preventDefault();
+					if (ev.target === back) __MODAL.escape();
+				}, false);
 				/*-- Renderizando --*/
 				document.body.appendChild(back);
 				this.zIndex++;
@@ -654,10 +696,12 @@ const wd = (function() {
 		node: (function() {
 			const node = document.createElement("ARTICLE");
 			node.innerHTML = `
-				<button data-js-wd-signal-kill="" >&times;</button>
-				<h6 data-js-wd-signal-head=""></h6>
-				<p  data-js-wd-signal-body="">_<p>
-				<form data-js-wd-signal-foot=""></form>`;
+				<button data-js-wd-signal-kill="" ></button>
+				<h1     data-js-wd-signal-head="" ></h1>
+				<p      data-js-wd-signal-body="" ></p>
+				<div    data-js-wd-signal-icon="" ></div>
+				<time   data-js-wd-signal-time="" ></time>
+				<foot   data-js-wd-signal-foot="" ></foot>`;
 			return node;
 		})(),
 		/**. ``''integer'' id``: Controla o id da caixa de mensagem.**/
@@ -666,15 +710,22 @@ const wd = (function() {
 		alert: function(options) {
 			/*-- Obtendo dados iniciais --*/
 			options = typeof options === "object" ? options : {};
+			const time  = new Date();
 			const type  = options.type in this.id ? options.type : "info";
 			const id    = `js_wd_signal_${type}_${this.id[type]++}`;
 			const node  = this.node.cloneNode(true);
-			const child = {head: null, body: null, foot: null, kill: null};
-			for (let i in child)
-				child[i] = node.querySelector(`[data-js-wd-signal-${i}]`);
-			/*-- box --*/
+			const child = {head: null, icon: null, body: null, foot: null, kill: null, time: null};
+			for (let i in child) {
+				let attr = `data-js-wd-signal-${i}`;
+				child[i] = node.querySelector(`[${attr}]`);
+				child[i].setAttribute(attr, type);
+			}
+			/*-- box/time/kill --*/
 			node.dataset.jsWdSignal = type;
 			node.setAttribute("role", (type === "dialog" ? "alertdialog" : "alert"));
+			child.time.setAttribute("datetime", time.toISOString());
+			child.time.textContent  = time.toLocaleString();
+			child.kill.innerHTML    = "&times";
 			/*-- title --*/
 			if ("title" in options) {
 				child.head.textContent = String(options.title);
@@ -713,29 +764,20 @@ const wd = (function() {
 				__MODAL.push(id, node);
 				for (let act in acts) {
 					let btn = document.createElement("BUTTON");
-					btn.textContent = acts[act].replace(auto, "");;
-					//btn.autofocus   = auto.test(acts[act]);
-					//btn.tabIndex    = 0;
+					btn.textContent = acts[act].replace(auto, "");
 					btn.addEventListener("click", function(ev) {
 						__MODAL.hide(id);
 						if (call !== null) call(options.id, act);
 					}, false);
 					child.foot.appendChild(btn);
-					if (btn.autofocus) focus = btn;
+					if (focus === null && auto.test(acts[act])) {
+						btn.autofocus = true;
+						focus = btn;
+					}
 				}
 				__MODAL.show(id, {wall: true});
-				console.log(focus);
-
-				if (focus !== null)
-					window.setTimeout(function() {focus.focus();}, 20);;
-
-				/*if (type === "dialog") {
-					const query  = foot.querySelector("button[autofocus]");
-					const active = query == null ? foot.children[0] : query;
-					active.focus();
-				}*/
+				if (focus !== null) focus.focus();
 			}
-			/*-- alert --*/
 			return;
 		},
 		/**. ``''void'' notify(''object'' options)``: Ver método ''signal''.**/
@@ -9986,11 +10028,12 @@ Object.defineProperties(__Type.prototype, {
 			]
 		},
 		keyup: {
-			target: document, preventDefault: false,
+			target: window, preventDefault: true,
 			data: [
-				//{name: "*[data-wd-modal]", call: (a,b,c) => console.log(a,b,c), kill: false, bind: {}},
-				{name: ".js-wd-modal-wall", call: (a,b,c) => console.log(a,b,c), kill: false, bind: {}},
-			]
+				{name: "[data-js-wd-modal=\"glass\"]", kill: false, bind: {}, call: function(e,ev) {
+					if (ev.key === "Escape") __MODAL.escape();
+				}}
+			],
 		},
 	};
 
@@ -10060,7 +10103,7 @@ Object.defineProperties(__Type.prototype, {
 		/*-- Verificando lista de disparadores -----------------------------------*/
 		const dataset = config.data;
 		const trigger = [];
-		const search  = /^\*?\[([0-9a-zA-Z\-]+)(\=[^\]]+)?\]$/;
+		const search  = /^\*?\[(data\-wd\-[0-9a-zA-Z\-]+)(\=[^\]]+)?\]$/;
 		let map, root, name, query;
 		/*-- Procurando elementos qua casam com o parâmetro --*/
 		for (let i = 0; i < dataset.length; i++) {
