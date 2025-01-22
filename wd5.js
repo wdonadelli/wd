@@ -78,6 +78,7 @@ const wd = (function() {
 			--var-js-wd-z-index-1: 9000;
 			--var-js-wd-z-index-2: 8000;
 			--var-js-wd-z-index-3: 7000;
+			--var-js-wd-font: Verdana, sans-serif;
 		}
 
 		/*-- Animações -----------------------------------------------------------*/
@@ -98,38 +99,37 @@ const wd = (function() {
 		}
 
 		/*-- Importantes ---------------------------------------------------------*/
+		* {box-sizing: border-box !important;}
 		.js-wd-no-display {display: none !important;}
 		.js-wd-no-scroll  {overflow: hidden !important;}
 
 		/*-- Janela Modal --------------------------------------------------------*/
 		/*-- Frame --*/
 		[data-js-wd-modal="frame"] {
-			position: fixed;
-			top: 0.5em;
-			right: 0.5em;
-			left: 0.5em;
-			bottom: initial;
-			display: block;
-			margin: 0;
-			padding: 0;
-			width: auto;
-			max-height: calc(100vh - 1em);
-			overflow: auto;
+			position: fixed !important;
+			top: 0.5em !important;
+			right: 0.5em !important;
+			left: 0.5em !important;
+			bottom: initial !important;
+			display: block !important;
+			margin: 0 !important;
+			padding: 0 !important;
+			width: auto !important;
+			height: auto !important;
+			max-height: calc(100vh - 0.5em) !important;
+			overflow: auto !important;
 		}
 		@media screen and (min-width: 768px) {
 			[data-js-wd-modal="frame"] {
-				top: initial;
-				bottom: 0.5em;
-				right: 0.5em;
-				left: calc(75vw - 0.5em);
+				top: initial !important;
+				bottom: 0.5em !important;
+				right: 0.5em !important;
+				left: calc(75vw - 0.5em) !important;
 			}
 		}
 		[data-js-wd-modal="frame"] > * {
 			position: relative !important;
-			margin: 0 0 0.5em 0;
-		}
-		[data-js-wd-modal="frame"] > *:last-child {
-			margin-bottom: 0;
+			margin: 0 !important;
 		}
 		/*-- modal --*/
 		[data-js-wd-modal="wall"], [data-js-wd-modal="glass"] {
@@ -168,143 +168,161 @@ const wd = (function() {
 		}
 
 		/*-- Caixas de diálogo e alerta ------------------------------------------*/
-		/*-- Signal --*/
-		[data-js-wd-signal] {
-			position: relative;
-			display: block;
-			padding: 0;
-			border: 1px solid;
-			border-radius: 0.5em;
-			width: auto;
-			height: auto;
-			font-size: 14px;
-			animation: js-wd-animation-expand 0.5s ease;
 
+		/*-- Signal: box --*/
+		[data-js-wd-signal-type] {
+			position: relative !important;
+			margin:  0 !important;
+			padding: 0 !important;
+			font-size: 14px !important;
+			font-family: var(--var-js-wd-font) !important;
+			font-weight: normal;
+			font-style: normal;
+			line-height: normal;
+			background-color: transparent !important;
+			animation: js-wd-animation-expand 0.5s ease !important;
+		}
+		[data-js-wd-signal-type="dialog"] {
+			position: absolute !important;
+		}
+		[data-js-wd-signal-type] * {
+			font-family: inherit !important;
+			font-size:   inherit !important;
+			font-weight: inherit !important;
+			font-style:  inherit !important;
+			line-height: inherit !important;
+		}
+		[data-js-wd-signal-type] {margin: 0.5em 0 !important;}
+		[data-js-wd-signal-type]:first-child {margin-top: 0 !important;}
+		[data-js-wd-signal-type]:last-child  {margin-bottom: 0 !important;}
 
-			background-repeat: no-repeat;
-			background-position: left;
-			background-size: 3em 3em;
-		}
-		[data-js-wd-signal] > * {
-			margin: 0.2em 0;
-			padding: 0.2em;
-		}
-		[data-js-wd-signal] > *:first-child {margin-top:    0;}
-		[data-js-wd-signal] > *:last-child  {margin-bottom: 0;}
-
-		[data-js-wd-signal="info"] {
-			color: var(--var-js-wd-dark-info);
-			background-color: var(--var-js-wd-light-info);
-		}
-		[data-js-wd-signal="ok"] {
-			color: var(--var-js-wd-dark-ok);
-			background-color: var(--var-js-wd-light-ok);
-		}
-		[data-js-wd-signal="warn"] {
-			color: var(--var-js-wd-dark-warn);
-			background-color: var(--var-js-wd-light-warn);
-		}
-		[data-js-wd-signal="error"] {
-			color: var(--var-js-wd-dark-error);
-			background-color: var(--var-js-wd-light-error);
-		}
-		[data-js-wd-signal="dialog"] {
-			position: fixed;
-			color: var(--var-js-wd-dark-dialog);
-			background-color: var(--var-js-wd-light-dialog);
+		/*-- Signal: kill --*/
+		[data-js-wd-signal="kill"] {
+			position: absolute !important;
+			top: 0 !important;
+			right: 0 !important;
+			margin: 0 0.5em 0 0 !important;
+			padding: 0 !important;
+			z-index: 2 !important;
+			font-size: 1.5em !important;
+			min-height: auto !important;
+			line-height: normal !important;
+			background-color: transparent !important;
+			border: 0 !important;
 		}
 
-
-
-
-
-		/*-- Head --*/
-		[data-js-wd-signal-head] {
-			display: block;
-			padding-right: 1em;
-			margin: -0.2em -0.2em 0.2em -0.2em !important; /*-- FIXME remover pendências de wd.css --*/
-			font-size: inherit !important; /*-- FIXME remover pendências de wd.css --*/
-			font-weight: bold !important; /*-- FIXME remover pendências de wd.css --*/
-			border-radius: 0.5em 0.5em 0 0;
+		/*-- Signal: main --*/
+		[data-js-wd-signal="main"] {
+			display: block !important;
+			margin: 0 !important;
+			padding: 0 !important;
+			width: auto !important;
+			height: auto !important;
+			border-width: thin !important;
+			border-style: solid !important;
+			border-radius: 0.5em !important;
 		}
-		[data-js-wd-signal-head="info"] {
-			color: var(--var-js-wd-light-info);
-			background-color: var(--var-js-wd-dark-info);
-		}
-		[data-js-wd-signal-head="ok"] {
-			color: var(--var-js-wd-light-ok);
-			background-color: var(--var-js-wd-dark-ok);
-		}
-		[data-js-wd-signal-head="warn"] {
-			color: var(--var-js-wd-light-warn);
-			background-color: var(--var-js-wd-dark-warn);
-		}
-		[data-js-wd-signal-head="error"] {
-			color: var(--var-js-wd-light-error);
-			background-color: var(--var-js-wd-dark-error);
-		}
-		[data-js-wd-signal-head="dialog"] {
-			color: var(--var-js-wd-light-dialog);
-			background-color: var(--var-js-wd-dark-dialog);
+		[data-js-wd-signal="main"] > * {
+			margin: 0 !important;
+			padding: 0.5em !important;
 		}
 
-
-
-
-		/*-- Body --*/
-		[data-js-wd-signal-body] {
-			display: block;
-			padding-left: 3em;
-			margin: 0;
-		}
-		[data-js-wd-signal-head] + [data-js-wd-signal-body] {border-radius: 0;}
-		[data-js-wd-signal-body]:last-child {border-radius: 0 0 0.5em 0.5em;}
-		/*-- Time --*/
-		[data-js-wd-signal-time] {
-			display: block;
-			font-size: small;
-			text-align: right;
-			padding: 0;
-			margin: 0.2em 0;
+		/*-- Signal: head --*/
+		[data-js-wd-signal="head"] {
+			display: block !important;
+			padding-right: 1em !important;
+			font-weight: bold !important;
 		}
 
-
-		/*-- Foot --*/
-		[data-js-wd-signal-foot] {
-			display: flex;
-			flex-flow: column nowrap;
-			padding: 0.2em;
+		/*-- Signal: body --*/
+		[data-js-wd-signal="body"] {
+			display: block !important;
+			padding-left: 3em !important;
 		}
-		[data-js-wd-signal-foot] > * {
-			font-size: 14px !important; /*FIXME consertar CSS*/
+
+		/*-- Signal: time --*/
+		[data-js-wd-signal="time"] {
+			display: block !important;
+			font-size: x-small !important;
+			font-style: italic !important;
+			text-align: right !important;
+		}
+
+		/*-- Signal: foot --*/
+		[data-js-wd-signal="foot"] {
+			display: flex !important;
+			flex-flow: column nowrap !important;
+		}
+		[data-js-wd-signal="foot"] > * {
+			font-size: 14px !important; /*FIXME consertar botões*/
 		}
 		@media screen and (min-width: 768px) {
-			[data-js-wd-signal-foot] {
-				flex-flow: row wrap;
-				justify-content: space-evenly;
-				align-items: baseline;
+			[data-js-wd-signal="foot"	] {
+				flex-flow: row wrap !important;
+				justify-content: space-evenly !important;
+				align-items: baseline !important;
 			}
 		}
-		/*-- Kill --*/
-		[data-js-wd-signal-kill] {
-			position: absolute !important;
-			top: 0;
-			right: 0;
-			margin: 0 0.5em 0 0;
-			padding: 0 !important;  /*FIXME consertar CSS*/
-			z-index: 2;
-			font-size: 1.5em !important;  /*FIXME consertar CSS*/
-			min-height: auto !important;  /*FIXME consertar CSS*/
-			line-height: normal !important; /*FIXME consertar CSS*/
-			background-color: transparent !important;  /*FIXME consertar CSS*/
-			border: 0 !important; /*FIXME consertar CSS*/
+
+		/*-- Signal: personalização --*/
+		[data-js-wd-signal="main"] {
+			background-repeat: no-repeat;
+			background-position: left;
+			background-size: auto;
 		}
-		/*-- Info --*/
+		[data-js-wd-signal-type="info"] [data-js-wd-signal="main"] {
+			color: var(--var-js-wd-dark-info) !important;
+			background-color: var(--var-js-wd-light-info) !important;
+		}
+		[data-js-wd-signal-type="ok"] [data-js-wd-signal="main"] {
+			color: var(--var-js-wd-dark-ok) !important;
+			background-color: var(--var-js-wd-light-ok) !important;
+		}
+		[data-js-wd-signal-type="warn"] [data-js-wd-signal="main"] {
+			color: var(--var-js-wd-dark-warn) !important;
+			background-color: var(--var-js-wd-light-warn) !important;
+		}
+		[data-js-wd-signal-type="error"] [data-js-wd-signal="main"] {
+			color: var(--var-js-wd-dark-error) !important;
+			background-color: var(--var-js-wd-light-error) !important;
+		}
+		[data-js-wd-signal-type="dialog"] [data-js-wd-signal="main"] {
+			color: var(--var-js-wd-dark-dialog) !important;
+			background-color: var(--var-js-wd-light-dialog) !important;
+		}
+		[data-js-wd-signal-type="info"] [data-js-wd-signal="head"] {
+			color: var(--var-js-wd-light-info) !important;
+			background-color: var(--var-js-wd-dark-info) !important;
+		}
+		[data-js-wd-signal-type="ok"] [data-js-wd-signal="head"] {
+			color: var(--var-js-wd-light-ok) !important;
+			background-color: var(--var-js-wd-dark-ok) !important;
+		}
+		[data-js-wd-signal-type="warn"] [data-js-wd-signal="head"] {
+			color: var(--var-js-wd-light-warn) !important;
+			background-color: var(--var-js-wd-dark-warn) !important;
+		}
+		[data-js-wd-signal-type="error"] [data-js-wd-signal="head"] {
+			color: var(--var-js-wd-light-error) !important;
+			background-color: var(--var-js-wd-dark-error) !important;
+		}
+		[data-js-wd-signal-type="dialog"] [data-js-wd-signal="head"] {
+			color: var(--var-js-wd-light-dialog) !important;
+			background-color: var(--var-js-wd-dark-dialog) !important;
+		}
 
 
-		[data-js-wd-signal="info"] {
-			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' style='backgrounsd-color: red' height='100' width='100' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-size='4em'>\\24d8</text></svg>");
+		[data-js-wd-signal-type="info"] > * {
+			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' transform='rotate(30)' opacity='0.1' height='100' width='100' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-size='4em'>\\24d8</text></svg>");
 		}
+
+		/* FIXME que tal criar um elemento de link ao lado de kill e colocar um z-index maior? ou colocar um background transparente no cabeçalho*/
+
+
+
+
+
+
 		/*-- Ok --*/
 
 
@@ -694,14 +712,15 @@ const wd = (function() {
 	const __SIGNAL = {
 		/**. ``''node'' node``: Caixa de alerta/diálogo.**/
 		node: (function() {
-			const node = document.createElement("ARTICLE");
+			const node = document.createElement("DIV");
 			node.innerHTML = `
-				<button data-js-wd-signal-kill="" ></button>
-				<h1     data-js-wd-signal-head="" ></h1>
-				<p      data-js-wd-signal-body="" ></p>
-				<div    data-js-wd-signal-icon="" ></div>
-				<time   data-js-wd-signal-time="" ></time>
-				<foot   data-js-wd-signal-foot="" ></foot>`;
+				<button  data-js-wd-signal="kill" ></button>
+				<article data-js-wd-signal="main" >
+					<h1    data-js-wd-signal="head" ></h1>
+					<p     data-js-wd-signal="body" ></p>
+					<foot  data-js-wd-signal="foot" ></foot>
+					<time  data-js-wd-signal="time" ></time>
+				</article>`;
 			return node;
 		})(),
 		/**. ``''integer'' id``: Controla o id da caixa de mensagem.**/
@@ -714,15 +733,12 @@ const wd = (function() {
 			const type  = options.type in this.id ? options.type : "info";
 			const id    = `js_wd_signal_${type}_${this.id[type]++}`;
 			const node  = this.node.cloneNode(true);
-			const child = {head: null, icon: null, body: null, foot: null, kill: null, time: null};
-			for (let i in child) {
-				let attr = `data-js-wd-signal-${i}`;
-				child[i] = node.querySelector(`[${attr}]`);
-				child[i].setAttribute(attr, type);
-			}
-			/*-- box/time/kill --*/
-			node.dataset.jsWdSignal = type;
-			node.setAttribute("role", (type === "dialog" ? "alertdialog" : "alert"));
+			const child = {main: null, head: null, body: null, foot: null, time: null, kill: null};
+			for (let i in child)
+				child[i] = node.querySelector(`[data-js-wd-signal="${i}"]`);
+			/*-- node/main/time/kill --*/
+			node.dataset.jsWdSignalType = type;
+			child.main.setAttribute("role", (type === "dialog" ? "alertdialog" : "alert"));
 			child.time.setAttribute("datetime", time.toISOString());
 			child.time.textContent  = time.toLocaleString();
 			child.kill.innerHTML    = "&times";
@@ -730,7 +746,7 @@ const wd = (function() {
 			if ("title" in options) {
 				child.head.textContent = String(options.title);
 				child.head.id = `${id}_label`;
-				node.setAttribute("aria-labelledby", child.head.id);
+				child.main.setAttribute("aria-labelledby", child.head.id);
 			} else {
 				child.head.remove();
 			}
@@ -738,7 +754,7 @@ const wd = (function() {
 			if ("body" in options) {
 				child.body.textContent = String(options.body);
 				child.body.id = `${id}_body`;
-				node.setAttribute("aria-describedby", child.body.id);
+				child.main.setAttribute("aria-describedby", child.body.id);
 			} else {
 				child.body.remove();
 			}
