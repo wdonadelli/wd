@@ -104,6 +104,7 @@ const wd = (function() {
 		.js-wd-no-scroll  {overflow: hidden !important;}
 
 		/*-- Janela Modal --------------------------------------------------------*/
+
 		/*-- Frame --*/
 		[data-js-wd-modal="frame"] {
 			position: fixed !important;
@@ -131,29 +132,42 @@ const wd = (function() {
 			position: relative !important;
 			margin: 0 !important;
 		}
+
 		/*-- modal --*/
 		[data-js-wd-modal="wall"], [data-js-wd-modal="glass"] {
-			position: fixed;
-			top: 0;
-			bottom: 0;
-			left: 0;
-			right: 0;
-			width: 100vw;
-			height: 100vh;
+			position: fixed !important;
+			top: 0 !important;
+			bottom: 0 !important;
+			left: 0 !important;
+			right: 0 !important;
+			width: 100vw !important;
+			height: 100vh !important;
 			animation: js-wd-animation-emerge-modal 0.2s ease;
 		}
 		[data-js-wd-modal="wall"] > *, [data-js-wd-modal="glass"] > * {
 			position: absolute !important;
-			top: 25vh;
-			bottom: initial;
-			left: 25vw;
-			right: 25vw;
-			width: auto;
-			height: auto;
-			margin: auto;
+			top: 5vh !important;
+			bottom: initial !important;
+			left: 5vw !important;
+			right: 5vw !important;
+			width: auto !important;
+			height: auto !important;
+			margin: auto !important;
+			max-height: calc(100vh - 30vh) !important;
+			overflow: auto !important;
 		}
-		[data-js-wd-modal="wall"]  {background-color: rgba(50,50,50,0.7);}
-		[data-js-wd-modal="glass"] {background-color: transparent;}
+
+		@media screen and (min-width: 768px) {
+			[data-js-wd-modal="wall"] > *, [data-js-wd-modal="glass"] > * {
+				top: 25vh !important;
+				left: 25vw !important;
+				right: 25vw !important;
+			}
+		}
+
+		[data-js-wd-modal="wall"]  {background-color: rgba(50,50,50,0.7) !important;}
+		[data-js-wd-modal="glass"] {background-color: transparent !important;}
+
 		/*-- inert/lock --*/
 		[data-js-wd-modal-body*="lock"] {
 			overflow: hidden !important;
@@ -172,19 +186,20 @@ const wd = (function() {
 		/*-- Signal: box --*/
 		[data-js-wd-signal-type] {
 			position: relative !important;
-			margin:  0 !important;
+			margin: 0.5em 0 !important;
 			padding: 0 !important;
+			background-color: transparent !important;
+			animation: js-wd-animation-expand 0.5s ease !important;
 			font-size: 14px !important;
 			font-family: var(--var-js-wd-font) !important;
 			font-weight: normal;
 			font-style: normal;
-			line-height: normal;
-			background-color: transparent !important;
-			animation: js-wd-animation-expand 0.5s ease !important;
+			line-height: 1.2;
 		}
-		[data-js-wd-signal-type="dialog"] {
-			position: absolute !important;
-		}
+		[data-js-wd-signal-type]:first-child {margin-top:    0 !important;}
+		[data-js-wd-signal-type]:last-child  {margin-bottom: 0 !important;}
+		[data-js-wd-signal-type="dialog"]    {position: absolute !important;}
+
 		[data-js-wd-signal-type] * {
 			font-family: inherit !important;
 			font-size:   inherit !important;
@@ -192,21 +207,17 @@ const wd = (function() {
 			font-style:  inherit !important;
 			line-height: inherit !important;
 		}
-		[data-js-wd-signal-type] {margin: 0.5em 0 !important;}
-		[data-js-wd-signal-type]:first-child {margin-top: 0 !important;}
-		[data-js-wd-signal-type]:last-child  {margin-bottom: 0 !important;}
 
 		/*-- Signal: kill --*/
 		[data-js-wd-signal="kill"] {
 			position: absolute !important;
 			top: 0 !important;
 			right: 0 !important;
-			margin: 0 0.5em 0 0 !important;
-			padding: 0 !important;
+			margin:  0.25em 0.75em 0 0 !important;
+			padding: 0     !important;
 			z-index: 2 !important;
 			font-size: 1.5em !important;
 			min-height: auto !important;
-			line-height: normal !important;
 			background-color: transparent !important;
 			border: 0 !important;
 		}
@@ -231,20 +242,18 @@ const wd = (function() {
 		[data-js-wd-signal="head"] {
 			display: block !important;
 			padding-right: 1em !important;
-			font-weight: bold !important;
 		}
 
 		/*-- Signal: body --*/
 		[data-js-wd-signal="body"] {
 			display: block !important;
-			padding-left: 3em !important;
+			padding-left: 2em !important;
 		}
 
 		/*-- Signal: time --*/
 		[data-js-wd-signal="time"] {
 			display: block !important;
-			font-size: x-small !important;
-			font-style: italic !important;
+			font-size: xx-small !important;
 			text-align: right !important;
 		}
 
@@ -267,86 +276,39 @@ const wd = (function() {
 		/*-- Signal: personalização --*/
 		[data-js-wd-signal="main"] {
 			background-repeat: no-repeat;
-			background-position: left;
-			background-size: auto;
+			background-position: center;
+			background-size: cover/*contain/*cover*/;
+			background-origin: content-box;
 		}
 		[data-js-wd-signal-type="info"] [data-js-wd-signal="main"] {
-			color: var(--var-js-wd-dark-info) !important;
-			background-color: var(--var-js-wd-light-info) !important;
+			color: rgb(255, 255, 255) !important;
+			background-color: rgb(64, 110, 193) !important;
+			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' transform='rotate(-15)' opacity='0.1' height='1em' width='2em' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-height='1.2' font-size='1em'>\\24d8</text></svg>");
 		}
 		[data-js-wd-signal-type="ok"] [data-js-wd-signal="main"] {
-			color: var(--var-js-wd-dark-ok) !important;
-			background-color: var(--var-js-wd-light-ok) !important;
+			color: rgb(255, 255, 255) !important;
+			background-color: rgb(25, 105, 25) !important;
+			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' transform='rotate(0)' opacity='0.1' height='1em' width='2em' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-height='1.2' font-size='1em'>\\2714</text></svg>");
 		}
 		[data-js-wd-signal-type="warn"] [data-js-wd-signal="main"] {
-			color: var(--var-js-wd-dark-warn) !important;
-			background-color: var(--var-js-wd-light-warn) !important;
+			color: rgb(255, 255, 255) !important;
+			background-color: rgb(150, 90, 5) !important;
+			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' transform='rotate(-15)' opacity='0.1' height='1em' width='2em' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-height='1.2' font-size='1em'>\\26A0</text></svg>");
 		}
 		[data-js-wd-signal-type="error"] [data-js-wd-signal="main"] {
-			color: var(--var-js-wd-dark-error) !important;
-			background-color: var(--var-js-wd-light-error) !important;
+			color: rgb(255,255,255) !important;
+			background-color: rgb(85, 20, 20) !important;
+			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' transform='rotate(0)' opacity='0.1' height='1em' width='2em' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-height='1.2' font-size='1em'>\\274C</text></svg>");
 		}
 		[data-js-wd-signal-type="dialog"] [data-js-wd-signal="main"] {
-			color: var(--var-js-wd-dark-dialog) !important;
-			background-color: var(--var-js-wd-light-dialog) !important;
-		}
-		[data-js-wd-signal-type="info"] [data-js-wd-signal="head"] {
-			color: var(--var-js-wd-light-info) !important;
-			background-color: var(--var-js-wd-dark-info) !important;
-		}
-		[data-js-wd-signal-type="ok"] [data-js-wd-signal="head"] {
-			color: var(--var-js-wd-light-ok) !important;
-			background-color: var(--var-js-wd-dark-ok) !important;
-		}
-		[data-js-wd-signal-type="warn"] [data-js-wd-signal="head"] {
-			color: var(--var-js-wd-light-warn) !important;
-			background-color: var(--var-js-wd-dark-warn) !important;
-		}
-		[data-js-wd-signal-type="error"] [data-js-wd-signal="head"] {
-			color: var(--var-js-wd-light-error) !important;
-			background-color: var(--var-js-wd-dark-error) !important;
-		}
-		[data-js-wd-signal-type="dialog"] [data-js-wd-signal="head"] {
-			color: var(--var-js-wd-light-dialog) !important;
-			background-color: var(--var-js-wd-dark-dialog) !important;
+			color: rgb(255,255,255) !important;
+			background-color: rgb(135, 90, 180) !important;
+			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' transform='rotate(-15)' opacity='0.1' height='1em' width='3em' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-height='1.2' font-size='1em'>\\003F</text></svg>");
 		}
 
 
-		[data-js-wd-signal-type="info"] > * {
-			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' transform='rotate(30)' opacity='0.1' height='100' width='100' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-size='4em'>\\24d8</text></svg>");
-		}
-
-		/* FIXME que tal criar um elemento de link ao lado de kill e colocar um z-index maior? ou colocar um background transparente no cabeçalho*/
 
 
-
-
-
-
-		/*-- Ok --*/
-
-
-		[data-js-wd-signal="ok"] [data-js-wd-signal-body] {
-			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' style='backgrounsd-color: red' height='100' width='100' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-size='4em'>\\2714</text></svg>");
-		}
-		/*-- Warn --*/
-
-
-		[data-js-wd-signal="warn"] [data-js-wd-signal-body] {
-			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' style='backgrounsd-color: red' height='100' width='100' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-size='4em'>\\26A0</text></svg>");
-		}
-		/*-- Error --*/
-
-
-		[data-js-wd-signal="error"] [data-js-wd-signal-body] {
-			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' style='backgrounsd-color: red' height='100' width='100' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-size='4em'>\\274C</text></svg>");
-		}
-		/*-- Dialog --*/
-
-
-		[data-js-wd-signal="dialog"] [data-js-wd-signal-body] {
-			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' style='backgrounsd-color: red' height='100' width='100' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-size='4em'>\\003F</text></svg>");
-		}
 
 
 
