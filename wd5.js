@@ -261,17 +261,37 @@ const wd = (function() {
 		[data-js-wd-signal="foot"] {
 			display: flex !important;
 			flex-flow: column nowrap !important;
+			padding: 0 !important;
 		}
-		[data-js-wd-signal="foot"] > * {
-			font-size: 14px !important; /*FIXME consertar botões*/
+		[data-js-wd-signal="foot"] > button {
+			flex-basis: 100%;
+			margin: auto !important;
+			padding: 0.5em 2em !important;
+			white-space: nowrap !important;
+			background-color: rgb(240,240,240) !important;
+			color: rgb(65, 65, 65) !important;
+			border: thin solid rgb(115, 115, 115) !important;
+			border-radius: 0.25em !important;
+			cursor: pointer !important;
 		}
-		@media screen and (min-width: 768px) {
+    [data-js-wd-signal="foot"] > button:hover,
+    [data-js-wd-signal="foot"] > button:focus {
+			border: thin solid rgb(30,144,255) !important;
+			background-color: rgb(250,250,250) !important;
+			outline: thin solid rgb(30,144,255) !important;
+    }
+    @media screen and (min-width: 768px) {
 			[data-js-wd-signal="foot"	] {
 				flex-flow: row wrap !important;
 				justify-content: space-evenly !important;
-				align-items: baseline !important;
+				align-items: center !important;
+				align-content: space-evenly !important;
+			}
+			[data-js-wd-signal="foot"	] > button {
+				flex-basis: auto;
 			}
 		}
+
 
 		/*-- Signal: personalização --*/
 		[data-js-wd-signal="main"] {
