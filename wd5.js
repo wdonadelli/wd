@@ -292,7 +292,6 @@ const wd = (function() {
 			}
 		}
 
-
 		/*-- Signal: personalização --*/
 		[data-js-wd-signal="main"] {
 			background-repeat: no-repeat;
@@ -471,6 +470,190 @@ const wd = (function() {
 			return false;
 		}
 	};
+
+/*----------------------------------------------------------------------------*/
+	/**###### ``**const** ''object'' __LANG``
+	Controla a linguagem local da biblioteca.**/
+	const __LANG = {
+		/*-- https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/lang --*/
+		_re:     /^[a-z]{2,3}(\-[A-Z][a-z]{3})?(\-([A-Z]{2}|[0-9]{3}))?$/,
+		_prev:   [],
+		_user:   [],
+		_date:   {},
+		_number: [],
+
+
+		_langREDates: [],
+		_reDates:     {},
+		/**. ``''array'' node(''node'' elem)``: Retorna a lista dos atributos ''lang'' do elemento HTML e seus ascendentes, se houver.**/
+		node: function(elem) {
+			let lang = [];
+			while (elem !== null) {
+				if (elem.hasAttribute("lang")) {
+					let list = elem.lang.replace(/\s+/g, " ").trim().split(" ");
+					lang = lang.concat(list);
+				}
+				elem = elem.parentElement;
+			}
+			return lang;
+		},
+		/**. ``''string'' value``: Define e retorna a lista de linguagens estabelecidas pelo usuário, pelo HTML e pelo navegador.**/
+		get value() {
+			const nav  = navigator.languages;
+			const html = this.node(document.body);
+			return this._user.concat(html, nav, ["en"]);
+		},
+		set value(x) {
+			if (typeof x === "string")
+				this._user = x.replace(/\s+/g, " ").trim().split(" ");
+			else if (Array.isArray(x))
+				this._user = x;
+			else
+				this._user = [];
+		},
+		/**. ``''boolean'' change()``: Checa, reestabelece dados e retorna se houve mudança nos parâmetros de linguagem.**/
+		change: function() {
+			const value = this.value;
+			const check = this._prev;
+			const match = value.join(",") === check.join(",");
+			if (!match) {
+				this.date();
+				this.number();
+				this._prev = value;
+			}
+			return !match;
+		},
+		/**. ``''object'' date()``: Constrói um objeto contendo informações dos meses (''month'') e dias da semana (''days'') cujas propriedades contêm uma lista de objetos com as seguintes propriedades:
+		|Nome|Descrição|Mês|Dia|
+		|index|Índice numérico|1-12|1-7|
+		|value|Retorna o índice dois caracteres|01-12|01-07|
+		|long|Valor longo por extenso|MMMM|DDDD|
+		|short|Valor curto por extenso|MMM|DDD|**/
+		date: function() {
+			const lang   = this.value;
+			const months = new Date(1970, 0, 1, 12, 0, 0, 0);
+			const days   = new Date(1970, 0, 1, 12, 0, 0, 0);
+			this._date.months = [];
+			this._date.days   = [];
+			let long, short, index, value;
+			for (let i = 0; i < 12; i++) {
+				/*-- Mês --*/
+				months.setMonth(i);
+				long  = months.toLocaleDateString(lang, {month: "long"}).trim();
+				short = months.toLocaleDateString(lang, {month: "short"}).trim();
+				index = i+1;
+				value = (index < 10 ? "0" : "") + String(index);
+				this._date.months.push({index: index, value: value, long: long, short: short});
+				/*-- dias --*/
+				if (i >= 1 && i < 8) {
+					days.setDate(i);
+					long  = days.toLocaleDateString(lang, {weekday: "long"}).trim();
+					short = days.toLocaleDateString(lang, {weekday: "short"}).trim();
+					index = days.getDay() + 1;
+					value = "0" + String(index);
+					this._date.days.push({index: index, value: value, long: long, short: short});
+				}
+			}
+		},
+		/**. ``''array'' months``: Retorna uma lista de objetos contendo informações sobre os meses (ver método ``date``)**/
+		get months() {
+			this.change();
+			return this._date.months;
+		},
+		/**. ``''array'' days``: Retorna uma lista de objetos contendo informações sobre os dias da semana (ver método ``date``)**/
+		get days() {
+			this.change();
+			return this._date.days;
+		},
+		/**. ``''array'' numbers``: Constrói uma lista de números de acordo com a linguagem.**/
+		number: function() {
+			const lang = this.value;
+			const data = [];
+			for (let i = -9; i < 10; i++)
+				data.push({id: i, value: Number(i).toLocaleString(lang)});
+			this._number = data;
+		},
+		/**. ``''array'' numbers``: Retorna uma lista de números inteiros de zero a dez na linguagem definida.**/
+		get numbers() {
+			this.change();
+			return this._number;
+		},
+
+
+
+
+		/**. ``''object'' searchByName(''string'' type, ''string'' name)``: Retorna o objeto com as informações sobre o mês ou o dia da semana (``type``) em buca pelo nome (``name``).**/
+		searchByName: function(type, name) {
+			name = String(name).trim();
+			const upper = name.toUpperCase();
+			const lower = name.toLowerCase();
+			const data  = this[type];
+			let value, short, long, ushort, ulong, lshort, llong;
+			for (let i = 0; i < data.length; i++) {
+				value  = data[i];
+				short  = value.short;
+				long   = value.long;
+				ushort = short.toUpperCase();
+				ulong  = long.toUpperCase();
+				lshort = short.toLowerCase();
+				llong  = long.toLowerCase();
+				if (short  === name  || long  === name)  return value;
+				if (ushort === upper || ulong === upper) return value;
+				if (lshort === lower || llong === lower) return value;
+			}
+			return null;
+		},
+
+
+
+
+		/**. ``''object'' searchByIndex(''string'' type, ''integer'' index)``: Retorna o objeto com as informações sobre o mês ou o dia da semana (``type``) em buca pelo índice (``index``).**/
+		searchByIndex: function(type, index) {
+			index = Number(index);
+			const data = this[type];
+			for (let i = 0; i < data.length; i++) {
+				let value = data[i];
+				if (index === value.index) return value;
+			}
+			return null;
+		},
+
+
+
+
+		/**. ``''object'' monthRegExp: Retorna um objeto contendo as expressões regulares para os formatos DMMMMYYYY, MMMMDYYYY e MMMMYYYY.**/
+		get monthRegExp() {
+			const lang = this.list;
+			//if (this.compare(lang, this._langREDates)) return this._reDates;
+			const data = [];
+			const day  = "(0?[1-9]|[12]\\d|3[01])";
+			const year = "([-+]?\\d{3}\\d+)";
+			for (let i = 0; i < this.months.length; i++) {
+				let value = this.months[i];
+				data.push(value.long.replace(/(\W)/g, "\\$1"));
+				data.push(value.short.replace(/(\W)/g, "\\$1"));
+			}
+			const month = "(" + data.join("|") + ")";
+			this._langREDates = lang;
+			this._reDates = {
+				DMMMMYYYY: new RegExp("^" + ([day, month, year].join("\\ ")) + "$", "i"),
+				MMMMDYYYY: new RegExp("^" + ([month, day, year].join("\\ ")) + "$", "i"),
+				MMMMYYYY:  new RegExp("^" + ([month, year].join("[\\ /]"))   + "$", "i"),
+			}
+			return this._reDates;
+		},
+
+
+
+
+
+
+	};
+
+
+
+
+
 
 /*----------------------------------------------------------------------------*/
 	/**###### ``**const** ''object'' __MODAL``
@@ -781,7 +964,7 @@ const wd = (function() {
 		/**. ``''void'' notify(''object'' options)``: Ver método ''signal''.**/
 		notify: function (options) {
 			const title  = "title" in options ? options.title : "";
-			const config = {lang: __LANG.list};
+			const config = {lang: __LANG.value};
 			if ("body" in options) config.body = options.body;
 			if ("id"   in options) config.tag  = options.id;
 			if (Notification.permission === "denied")
@@ -819,179 +1002,6 @@ const wd = (function() {
 			if (typeof options === "object")
 				options.type === "notify" ? this.notify(options) : this.alert(options);
 		}
-	};
-
-/*----------------------------------------------------------------------------*/
-	/**###### ``**const** ''object'' __LANG``
-	Controla a linguagem local da biblioteca.**/
-	const __LANG = {
-		//FIXME navigator.languages é um array
-		_re:          /^[a-z]{2,3}(\-[A-Z][a-z]{3})?(\-([A-Z]{2}|[0-9]{3}))?$/,
-		_nav:         navigator.languages,
-		_user:        "",
-
-
-		_currency:    "USD",
-		_langNumbers: [],
-		_numbers:     [],
-		_langMonths:  [],
-		_months:      [],
-		_langDays:    [],
-		_days:        [],
-		_langREDates: [],
-		_reDates:     {},
-		/**. ``''string'' currency``: Define ou retorna o código monetário definido pelo usuário.**/
-		get currency()  {return this._currency;},
-		set currency(x) {this._currency = String(x).trim();},
-		/**. ``''boolean'' test(''string'' x)``: Testa se o argumento ``x`` está no [formato de linguagem](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/lang).**/
-		test: function(x) {return this._re.test(String(x));},
-		/**. ``''string'' node(''node'' elem)``: Retorna o atributo ''lang'' do elemento HTML ``elem`` ou seu ascendente ou vazio.**/
-		node: function(elem) {
-			let lang = "";
-			if (elem instanceof HTMLElement) {
-				while (elem !== null && lang === "") {
-					lang = String(elem.lang).replace(/\s+/g, " ").trim();
-					elem = elem.parentElement;
-				}
-			}
-			return lang;
-		},
-		/**. ``''string'' std``: Retorna a linguagem padrão "en-US".**/
-		get std() {return "en-US";},
-		/**. ``''string'' nav``: Retorna a linguagem principal definida pelo navegador ou vazio.**/
-		get nav() {return this._nav[0];},
-		/**. ``''string'' html``: Retorna a linguagem definida no elemento ''body'' ou ''html''.**/
-		get html() {return this.node(document.body);},
-		/**. ``''string'' user``: Define ou retorna a linguagens definidas pelo usuário (separação por espaço em branco).**/
-		get user()  {return this._user;},
-		set user(x) {this._user = String(x).replace(/\s+/g, " ").trim();},
-		/**. ``''string'' main``: Retorna a linguagem principal definida pelo usuário, HTML ou navegador.**/
-		get main() {return this.list[0];},
-		/**. ``''string'' list``: Retorna uma lista de preferências de linguagem (usuário, HTML, navegador ou padrão).**/
-		get list() {
-			const list = [this.user, this.html, this.nav, this.std].join(" ").split(" ");
-			const self = this;
-			return list.filter(function(v,i,a) {return self.test(v);})
-		},
-		/**. ``''boolean'' compare(''array'' base, ''array'' test)``: Retorna verdadeiro se os valores dos arrays informados nos argumentos forem idênticos.**/
-		compare: function(base, test) {
-			if (base.length !== test.length) return false;
-			for (let i = 0; i < base.length; i++)
-				if (base[i] !== test[i]) return false;
-			return true;
-		},
-		/**. ``''array'' months``: Retorna uma lista de objetos contendo informações sobre os meses:
-		|Nome|Descrição|
-		|index|Índice numérico do mês [1-12]|
-		|value|Retorna o índice do mês com dois caracteres|
-		|long|Nome do mês (MMMM)|
-		|short|Abreviação do mês (MMM)|**/
-		get months() {
-			const lang = this.list;
-			if (this.compare(lang, this._langMonths)) return this._months;
-			const date = new Date(1970, 0, 1, 12, 0, 0, 0);
-			const data = [];
-			//const lang = this.main;
-			let long, short, index, value;
-			for (let i = 0; i < 12; i++) {
-				date.setMonth(i);
-				long  = date.toLocaleDateString(lang, {month: "long"}).trim();
-				short = date.toLocaleDateString(lang, {month: "short"}).trim();
-				index = i+1;
-				value = (index < 10 ? "0" : "") + String(index);
-				data.push({index: index, value: value, long: long, short: short});
-			}
-			this._langMonths = lang;
-			this._months     = data;
-			return this._months;
-		},
-		/**. ``''array'' days``: Retorna uma lista de objetos contendo informações sobre os dias:
-		|Nome|Descrição|
-		|index|Índice numérico do dia da semana [1-7]|
-		|value|Retorna o índice do dia com dois caracteres|
-		|long|Nome do dia (DDDD)|
-		|short|Abreviação do dia (DDD)|**/
-		get days() {
-			const lang = this.list;
-			if (this.compare(lang, this._langDays)) return this._days;
-			const date = new Date(1970, 0, 1, 12, 0, 0, 0);
-			const data = [];
-			let long, short, index, value;
-			for (let i = 1; i < 8; i++) {
-				date.setDate(i);
-				long  = date.toLocaleDateString(lang, {weekday: "long"}).trim();
-				short = date.toLocaleDateString(lang, {weekday: "short"}).trim();
-				index = date.getDay() + 1;
-				value = "0" + String(index);
-				data.push({index: index, value: value, long: long, short: short});
-			}
-			this._langDays = lang;
-			this._days     = data;
-			return this._days;
-		},
-		/**. ``''object'' searchByName(''string'' type, ''string'' name)``: Retorna o objeto com as informações sobre o mês ou o dia da semana (``type``) em buca pelo nome (``name``).**/
-		searchByName: function(type, name) {
-			name = String(name).trim();
-			const upper = name.toUpperCase();
-			const lower = name.toLowerCase();
-			const data  = this[type];
-			let value, short, long, ushort, ulong, lshort, llong;
-			for (let i = 0; i < data.length; i++) {
-				value  = data[i];
-				short  = value.short;
-				long   = value.long;
-				ushort = short.toUpperCase();
-				ulong  = long.toUpperCase();
-				lshort = short.toLowerCase();
-				llong  = long.toLowerCase();
-				if (short  === name  || long  === name)  return value;
-				if (ushort === upper || ulong === upper) return value;
-				if (lshort === lower || llong === lower) return value;
-			}
-			return null;
-		},
-		/**. ``''object'' searchByIndex(''string'' type, ''integer'' index)``: Retorna o objeto com as informações sobre o mês ou o dia da semana (``type``) em buca pelo índice (``index``).**/
-		searchByIndex: function(type, index) {
-			index = Number(index);
-			const data = this[type];
-			for (let i = 0; i < data.length; i++) {
-				let value = data[i];
-				if (index === value.index) return value;
-			}
-			return null;
-		},
-		/**. ``''object'' monthRegExp: Retorna um objeto contendo as expressões regulares para os formatos DMMMMYYYY, MMMMDYYYY e MMMMYYYY.**/
-		get monthRegExp() {
-			const lang = this.list;
-			if (this.compare(lang, this._langREDates)) return this._reDates;
-			const data = [];
-			const day  = "(0?[1-9]|[12]\\d|3[01])";
-			const year = "([-+]?\\d{3}\\d+)";
-			for (let i = 0; i < this.months.length; i++) {
-				let value = this.months[i];
-				data.push(value.long.replace(/(\W)/g, "\\$1"));
-				data.push(value.short.replace(/(\W)/g, "\\$1"));
-			}
-			const month = "(" + data.join("|") + ")";
-			this._langREDates = lang;
-			this._reDates = {
-				DMMMMYYYY: new RegExp("^" + ([day, month, year].join("\\ ")) + "$", "i"),
-				MMMMDYYYY: new RegExp("^" + ([month, day, year].join("\\ ")) + "$", "i"),
-				MMMMYYYY:  new RegExp("^" + ([month, year].join("[\\ /]"))   + "$", "i"),
-			}
-			return this._reDates;
-		},
-		/**. ``''array'' numbers``: Retorna uma lista de números inteiros de zero a dez.**/
-		get numbers() {
-			const lang = this.list;
-			if (this.compare(lang, this._langNumbers)) return this._numbers;
-			const data = [];
-			for (let i = -9; i < 10; i++)
-				data.push({id: i, value: Number(i).toLocaleString(lang)});
-			this._langNumbers = lang;
-			this._numbers     = data;
-			return this._numbers;
-		},
 	};
 
 /*----------------------------------------------------------------------------*/
@@ -2947,8 +2957,8 @@ Object.defineProperties(__Type.prototype, {
 					}
 				}
 				/*-- Retornando valor --*/
-				try      {return this.value.toLocaleString(__LANG.list, config);}
-				catch(e) {return this.value.toLocaleString(__LANG.list);}
+				try      {return this.value.toLocaleString(__LANG.value, config);}
+				catch(e) {return this.value.toLocaleString(__LANG.value);}
 			}
 		},
 	});
@@ -4149,8 +4159,8 @@ Object.defineProperties(__Type.prototype, {
 		toLocaleString: {
 			value: function() {
 				const date = this.toDateObject;
-				const iso  = date.toLocaleString(__LANG.list, {timeZone: "UTC"});
-				const from = date.toLocaleDateString(__LANG.list, {timeZone: "UTC"});
+				const iso  = date.toLocaleString(__LANG.value, {timeZone: "UTC"});
+				const from = date.toLocaleDateString(__LANG.value, {timeZone: "UTC"});
 				const to   = this.toLocaleDateString();
 				return iso.replace(from, to);
 			}
@@ -4160,7 +4170,7 @@ Object.defineProperties(__Type.prototype, {
 			value: function() {
 				const date = this.toDateObject;
 				const year = new __Number(this.year).toLocaleString({group: false});
-				const intl = new Intl.DateTimeFormat(__LANG.list, {timeZone: "UTC"});
+				const intl = new Intl.DateTimeFormat(__LANG.value, {timeZone: "UTC"});
 				if ("formatToParts" in intl) {
 					const text = [];
 					const part = intl.formatToParts(date);
@@ -4169,7 +4179,7 @@ Object.defineProperties(__Type.prototype, {
 					return text.join("");
 				} else {
 					const type = intl.resolvedOptions(date).year;
-					const yntl = new Intl.DateTimeFormat(__LANG.list, {timeZone: "UTC", year: type});
+					const yntl = new Intl.DateTimeFormat(__LANG.value, {timeZone: "UTC", year: type});
 					const from = yntl.format(date);
 					return intl.format(date).replace(from, year);
 				}
@@ -4178,7 +4188,7 @@ Object.defineProperties(__Type.prototype, {
 		/**. ``''string'' toLocaleTimeString()``: Retorna o tempo no formato local.**/
 		toLocaleTimeString: {
 			value: function() {
-				return this.toDateObject.toLocaleTimeString(__LANG.list, {timeZone: "UTC"});
+				return this.toDateObject.toLocaleTimeString(__LANG.value, {timeZone: "UTC"});
 			}
 		},
 		/**. ``''string'' format(''string'' input, ''string'' type)``: Retorna notação de data/tempo pre-formatada a partir de codificação especificada no argumento ``input``. No argumento ``type`` é possível limitar os códigos permitidos para "date" ou "time".**/
@@ -8596,8 +8606,8 @@ Object.defineProperties(__Type.prototype, {
 		already: {get: function() {return WD(__DateTime().toString());}},
 		/**. ``''string'' lang``: Define ou retorna a lista de linguagem em ordem de preferência da biblioteca.**/
 		lang: {
-			get: function()  {return __LANG.list.join(" ");},
-			set: function(x) {__LANG.user = x;}
+			get: function()  {return __LANG.value;},
+			set: function(x) {__LANG.value = x;}
 		},
 		/**. ``''object'' $(''string'' css, ''node'' root)``: Retorna um objeto do tipo nó conforme seletor ''css'' individual. O argumento opcional ''root'' é o elemento pai a ser consultado cujo valor padrão é ''document''.**/
 		$: {value: function(css, root) {return WD(__Query(css, root).$);}},
