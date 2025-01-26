@@ -60,8 +60,8 @@ const wd = (function() {
 /*----------------------------------------------------------------------------*/
 	/**###### ``**const** ''string'' __STYLE``
 	Estilos da biblioteca.**/
-	//FIXME fazer uma função para criar ID (para não sair repetido)
 
+	//FIXME aprender sobre flex para deixar frame e modal nessa condição
 	const __STYLE = `
 		/*-- Variáveis -----------------------------------------------------------*/
 		:root {
@@ -475,16 +475,14 @@ const wd = (function() {
 	/**###### ``**const** ''object'' __LANG``
 	Controla a linguagem local da biblioteca.**/
 	const __LANG = {
-		/*-- https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/lang --*/
-		_re:     /^[a-z]{2,3}(\-[A-Z][a-z]{3})?(\-([A-Z]{2}|[0-9]{3}))?$/,
 		_prev:   [],
 		_user:   [],
-		_date:   {},
+		_month:  [],
+		_week:   [],
 		_number: [],
-
-
-		_langREDates: [],
-		_reDates:     {},
+		_date:   [],
+		/**. ``''regexp'' re``: Retorna a expressão regular que verifica o formato de linguagem https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/lang).**/
+		re: /^[a-z]{2,3}(\-[A-Z][a-z]{3})?(\-([A-Z]{2}|[0-9]{3}))?$/,
 		/**. ``''array'' node(''node'' elem)``: Retorna a lista dos atributos ''lang'' do elemento HTML e seus ascendentes, se houver.**/
 		node: function(elem) {
 			let lang = [];
@@ -497,7 +495,7 @@ const wd = (function() {
 			}
 			return lang;
 		},
-		/**. ``''string'' value``: Define e retorna a lista de linguagens estabelecidas pelo usuário, pelo HTML e pelo navegador.**/
+		/**. ``''string'' value``: Define ou retorna a cadeia de linguagens estabelecidas pelo usuário, pelo HTML e pelo navegador.**/
 		get value() {
 			const nav  = navigator.languages;
 			const html = this.node(document.body);
@@ -511,149 +509,105 @@ const wd = (function() {
 			else
 				this._user = [];
 		},
-		/**. ``''boolean'' change()``: Checa, reestabelece dados e retorna se houve mudança nos parâmetros de linguagem.**/
-		change: function() {
-			const value = this.value;
-			const check = this._prev;
-			const match = value.join(",") === check.join(",");
-			if (!match) {
-				this.date();
-				this.number();
-				this._prev = value;
-			}
-			return !match;
-		},
-		/**. ``''object'' date()``: Constrói um objeto contendo informações dos meses (''month'') e dias da semana (''days'') cujas propriedades contêm uma lista de objetos com as seguintes propriedades:
-		|Nome|Descrição|Mês|Dia|
-		|index|Índice numérico|1-12|1-7|
-		|value|Retorna o índice dois caracteres|01-12|01-07|
-		|long|Valor longo por extenso|MMMM|DDDD|
-		|short|Valor curto por extenso|MMM|DDD|**/
-		date: function() {
-			const lang   = this.value;
-			const months = new Date(1970, 0, 1, 12, 0, 0, 0);
-			const days   = new Date(1970, 0, 1, 12, 0, 0, 0);
-			this._date.months = [];
-			this._date.days   = [];
+		/**. ``''void'' update()``: Atualiza os dados de acordo com a linguagem construindo as seguintes informações:
+		|Propriedade|Descrição|month|week|number|
+		|index|Índice numérico|1 a 12|1 a 7|-9 a 9|
+		|value|Retorna o índice com dois caracteres|01 a 12|01 a 07|Não se aplica|
+		|long|Valor longo por extenso|MMMM|DDDD|Não se aplica|
+		|short|Valor curto por extenso|MMM|DDD|Não se aplica|
+		Quanto a data por extenso, criar expressões regulares para encontrar os formatos DMMMMYYYY, MMMMDYYYY e MMMMYYYY.**/
+		update: function() {
+			const lang = this.value;
+			const test = this._prev;
+			/*-- sem alteração da cadeia de linguagem: retornar --*/
+			if (lang.join(",") === test.join(",")) return;
+			/*-- com alteração da cadeia de linguagem: atualizar --*/
+			this._prev   = lang;
+			this._month  = [];
+			this._week   = [];
+			this._number = [];
+			this._date   = {};
+			/*-- variáveis auxiliares --*/
+			const month  = new Date(1970, 0, 1, 12, 0, 0, 0);
+			const week   = new Date(1970, 0, 1, 12, 0, 0, 0);
+			const date   = {day: "(0?[1-9]|[12]\\d|3[01])", month: [], year: "([-+]?\\d{3}\\d+)"};
 			let long, short, index, value;
-			for (let i = 0; i < 12; i++) {
-				/*-- Mês --*/
-				months.setMonth(i);
-				long  = months.toLocaleDateString(lang, {month: "long"}).trim();
-				short = months.toLocaleDateString(lang, {month: "short"}).trim();
-				index = i+1;
+			for (let i = 0; i <= 11; i++) {
+				/*-- Atualizar mês --*/
+				month.setMonth(i);
+				long  = month.toLocaleDateString(lang, {month: "long"}).trim();
+				short = month.toLocaleDateString(lang, {month: "short"}).trim();
+				index = i + 1;
 				value = (index < 10 ? "0" : "") + String(index);
-				this._date.months.push({index: index, value: value, long: long, short: short});
-				/*-- dias --*/
-				if (i >= 1 && i < 8) {
-					days.setDate(i);
-					long  = days.toLocaleDateString(lang, {weekday: "long"}).trim();
-					short = days.toLocaleDateString(lang, {weekday: "short"}).trim();
-					index = days.getDay() + 1;
+				this._month.push({index: index, value: value, long: long, short: short});
+				/*-- Atualizar expressão regular para datas com nome de mês --*/
+				date.month.push( long.replace(/(\W)/g, "\\$1"));
+				date.month.push(short.replace(/(\W)/g, "\\$1"));
+				if (i === 11) {
+					date.month = "(" + date.month.join("|") + ")";
+					value = [date.day, date.month, date.year].join("\\ ");
+					this._date.DMMMMYYYY = new RegExp("^" + value + "$", "i");
+					value = [date.month, date.day, date.year].join("\\ ");
+					this._date.MMMMDYYYY = new RegExp("^" + value + "$", "i");
+					value = [date.month, date.year].join("[\\ /]");
+					this._date.MMMMYYYY  = new RegExp("^" + value + "$", "i");
+				}
+				/*-- Atualizar dia da semana --*/
+				if (i >= 1 && i <= 7) {
+					week.setDate(i);
+					long  = week.toLocaleDateString(lang, {weekday: "long"}).trim();
+					short = week.toLocaleDateString(lang, {weekday: "short"}).trim();
+					index = week.getDay() + 1;
 					value = "0" + String(index);
-					this._date.days.push({index: index, value: value, long: long, short: short});
+					this._week.push({index: index, value: value, long: long, short: short});
+				}
+				/*-- Atualizar números --*/
+				if (i >= 0 && i <= 9) {
+					value = Number(i).toLocaleString(lang);
+					this._number.push({index: i, value: value});
+					value = Number(-i).toLocaleString(lang);
+					this._number.push({index: -i, value: value});
 				}
 			}
+			return;
 		},
-		/**. ``''array'' months``: Retorna uma lista de objetos contendo informações sobre os meses (ver método ``date``)**/
-		get months() {
-			this.change();
-			return this._date.months;
+		/**. ``''array'' month``: Retorna uma lista de objetos contendo informações sobre os meses (ver método ``update``)**/
+		get month() {
+			this.update();
+			return this._month;
 		},
-		/**. ``''array'' days``: Retorna uma lista de objetos contendo informações sobre os dias da semana (ver método ``date``)**/
-		get days() {
-			this.change();
-			return this._date.days;
+		/**. ``''array'' week``: Retorna uma lista de objetos contendo informações sobre os dias da semana (ver método ``update``)**/
+		get week() {
+			this.update();
+			return this._week;
 		},
-		/**. ``''array'' numbers``: Constrói uma lista de números de acordo com a linguagem.**/
-		number: function() {
-			const lang = this.value;
-			const data = [];
-			for (let i = -9; i < 10; i++)
-				data.push({id: i, value: Number(i).toLocaleString(lang)});
-			this._number = data;
-		},
-		/**. ``''array'' numbers``: Retorna uma lista de números inteiros de zero a dez na linguagem definida.**/
-		get numbers() {
-			this.change();
+		/**. ``''array'' number``: Retorna uma lista de objetos contendo informações sobre os números (ver método ``update``)**/
+		get number() {
+			this.update();
 			return this._number;
 		},
-
-
-
-
-		/**. ``''object'' searchByName(''string'' type, ''string'' name)``: Retorna o objeto com as informações sobre o mês ou o dia da semana (``type``) em buca pelo nome (``name``).**/
-		searchByName: function(type, name) {
-			name = String(name).trim();
-			const upper = name.toUpperCase();
-			const lower = name.toLowerCase();
-			const data  = this[type];
-			let value, short, long, ushort, ulong, lshort, llong;
-			for (let i = 0; i < data.length; i++) {
-				value  = data[i];
-				short  = value.short;
-				long   = value.long;
-				ushort = short.toUpperCase();
-				ulong  = long.toUpperCase();
-				lshort = short.toLowerCase();
-				llong  = long.toLowerCase();
-				if (short  === name  || long  === name)  return value;
-				if (ushort === upper || ulong === upper) return value;
-				if (lshort === lower || llong === lower) return value;
-			}
+		/**. ``''object'' search(''string'' name, ''any'' value)``: Busca a informação (argumento ``value``) dentro das propriedades (argumento ``name``) ''month'', ''week'' e ''number'' e a retorna individualmente ou nulo se não encontrado.**/
+		search: function(name, value) {
+			if (["month", "week", "number"].indexOf(name) < 0) return null;
+			const chars = isNaN(value);
+			const upper = chars ? String(value).toUpperCase() : null;
+			const lower = chars ? String(value).toLowerCase() : null;
+			const index = chars ? null : Number(value);
+			const array = this[`_${name}`];
+			for (let i = 0; i < array.length; i++)
+				if (
+					index === array[i].index ||
+					upper === array[i].long  || upper === array[i].short ||
+					lower === array[i].long  || lower === array[i].short
+				) return array[i];
 			return null;
 		},
-
-
-
-
-		/**. ``''object'' searchByIndex(''string'' type, ''integer'' index)``: Retorna o objeto com as informações sobre o mês ou o dia da semana (``type``) em buca pelo índice (``index``).**/
-		searchByIndex: function(type, index) {
-			index = Number(index);
-			const data = this[type];
-			for (let i = 0; i < data.length; i++) {
-				let value = data[i];
-				if (index === value.index) return value;
-			}
-			return null;
+		/**. ``''object'' date``: Retorna um objeto com expressões regulares de datas por extenso (ver método ``update``)**/
+		get date() {
+			this.update();
+			return this._date;
 		},
-
-
-
-
-		/**. ``''object'' monthRegExp: Retorna um objeto contendo as expressões regulares para os formatos DMMMMYYYY, MMMMDYYYY e MMMMYYYY.**/
-		get monthRegExp() {
-			const lang = this.list;
-			//if (this.compare(lang, this._langREDates)) return this._reDates;
-			const data = [];
-			const day  = "(0?[1-9]|[12]\\d|3[01])";
-			const year = "([-+]?\\d{3}\\d+)";
-			for (let i = 0; i < this.months.length; i++) {
-				let value = this.months[i];
-				data.push(value.long.replace(/(\W)/g, "\\$1"));
-				data.push(value.short.replace(/(\W)/g, "\\$1"));
-			}
-			const month = "(" + data.join("|") + ")";
-			this._langREDates = lang;
-			this._reDates = {
-				DMMMMYYYY: new RegExp("^" + ([day, month, year].join("\\ ")) + "$", "i"),
-				MMMMDYYYY: new RegExp("^" + ([month, day, year].join("\\ ")) + "$", "i"),
-				MMMMYYYY:  new RegExp("^" + ([month, year].join("[\\ /]"))   + "$", "i"),
-			}
-			return this._reDates;
-		},
-
-
-
-
-
-
 	};
-
-
-
-
-
 
 /*----------------------------------------------------------------------------*/
 	/**###### ``**const** ''object'' __MODAL``
@@ -905,7 +859,7 @@ const wd = (function() {
 			node.dataset.jsWdSignalType = type;
 			child.main.setAttribute("role", (type === "dialog" ? "alertdialog" : "alert"));
 			child.time.setAttribute("datetime", time.toISOString());
-			child.time.textContent  = time.toLocaleString();
+			child.time.textContent  = time.toLocaleString(__LANG.value);
 			child.kill.innerHTML    = "&times";
 			/*-- title --*/
 			if ("title" in options) {
@@ -985,7 +939,7 @@ const wd = (function() {
 		|id|string|Identificador da interação.|
 		|actions|object|Define os botões de resposta o diálogo.|
 		|trigger|function|Define a função a ser chamada após a decisão do diálogo.|
-		|time|integer|Duração do alerta em milissegundos que não fecha por padrão.|
+		|time|integer|Duração da mensagem de alerta em milissegundos (o padrão é não fechar).|
 		. Os seguintes valores de ``type`` são possíveis:
 		|Valor|Interação|
 		|notify|Exibe uma notificação.|
@@ -996,7 +950,6 @@ const wd = (function() {
 		|ok|Exibe uma __caixa de alerta__ de sucesso.|
 		|dialog|Exibe uma caixa de diálogo.|
 		. O nome das propriedades de ``actions`` define o identificador da resposta enquanto que seu valor define o texto do botão. Adicione um asterisco ao fim do nome do botão para definir sua focalização ordinária.
-		. Múltiplas caixas de diálogo não são permitidas.
 		. A função ``trigger`` receberá como argumento o identificador da interação e do botão acionado.**/
 		signal: function(options) {
 			if (typeof options === "object")
@@ -1046,8 +999,8 @@ const wd = (function() {
 			YYYYMMDD:  /^([-+]?\d{3}\d+)\-(0[1-9]|1[0-2])\-(0[1-9]|[12]\d|3[01])$/,
 			DDMMYYYY:  /^(0[1-9]|[12]\d|3[01])\/(0[1-9]|1[0-2])\/([-+]?\d{3}\d+)$/,
 			MMDDYYYY:  /^(0[1-9]|1[0-2])\.(0[1-9]|[12]\d|3[01])\.([-+]?\d{3}\d+)$/,
-			get DMMMMYYYY() {return __LANG.monthRegExp.DMMMMYYYY;},
-			get MMMMDYYYY() {return __LANG.monthRegExp.MMMMDYYYY;},
+			get DMMMMYYYY() {return __LANG.date.DMMMMYYYY;},
+			get MMMMDYYYY() {return __LANG.date.MMMMDYYYY;},
 		},
 		time: {
 			hmmss: /^([01]?\d|2[0-4])\:([0-5]\d)(\:[0-5]\d(\.\d{1,3})?)?$/,
@@ -1057,7 +1010,7 @@ const wd = (function() {
 		month: {
 			YYYYMM:   /^([-+]?\d{3}\d+)\-(0[1-9]|1[0-2])$/,
 			MMYYYY:   /^(0[1-9]|1[0-2])\/([-+]?\d{3}\d+)$/,
-			get MMMMYYYY() {return __LANG.monthRegExp.MMMMYYYY;},
+			get MMMMYYYY() {return __LANG.date.MMMMYYYY;},
 		},
 		week: {
 			YYYYWW: /^([-+]?\d{3}\d+)\-W(0[1-9]|[1-4]\d|5[0-4])$/i,
@@ -1134,7 +1087,7 @@ const wd = (function() {
 		this._valueOf  = Number(input);
 	}
 
-Object.defineProperties(__Type.prototype, {
+	Object.defineProperties(__Type.prototype, {
 		constructor: {value: __Type},
 		/**. ``''boolean'' chars``: Checa se o valor é uma string.**/
 		chars: {
@@ -1157,7 +1110,7 @@ Object.defineProperties(__Type.prototype, {
 		/**. ``''boolean'' lang``: Checa se o valor é uma string no formato de linguagem.**/
 		lang: {
 			get: function() {
-				return (this.chars && __LANG.test(this._input));
+				return (this.chars && __LANG.re(this._input));
 			}
 		},
 		/**. ``''boolean'' string``: Checa se o valor é uma string diferente de número ou data/tempo.**/
@@ -1356,7 +1309,7 @@ Object.defineProperties(__Type.prototype, {
 				};
 				/* caso o mês seja pelo nome, capturar índice do mês */
 				if (cfg.MMMM) {
-					const MMMM = __LANG.searchByName("months", date.m);
+					const MMMM = __LANG.search("month", date.m);
 					if (MMMM === null) return false;
 					date.m = MMMM.index;
 				}
@@ -3618,7 +3571,7 @@ Object.defineProperties(__Type.prototype, {
 		const check = __Type(month);
 		if (!check.integer || check < 1 || check > 12)
 			throw RangeError("Invalid month value.", {cause: "1 > month > 12"});
-		const data = __LANG.searchByIndex("months", check.value);
+		const data = __LANG.search("month", check.value);
 		Object.defineProperties(this, {
 			/**. ``''integer'' month``: Registra o mês (1-12).**/
 			month: {value: check.value},
@@ -3710,7 +3663,7 @@ Object.defineProperties(__Type.prototype, {
 		const today   = this.daysElapsed;
 		const index   = Math.abs(today - sunday)%7;
 		const weekDay =  (today > sunday ? index : (7 - index)%7) + 1;
-		const data    = __LANG.searchByIndex("days", weekDay);
+		const data    = __LANG.search("week", weekDay);
 		Object.defineProperties(this, {
 			/**. ``''integer'' weekDay``: Registra o dia da semana, de domingo a sábado (1-7).**/
 			weekDay: {value: weekDay},
@@ -4069,7 +4022,7 @@ Object.defineProperties(__Type.prototype, {
 				year:  test.value.replace(regexp, config[format].y),
 			};
 			if (format === "MMMMYYYY")
-				list.month = __LANG.searchByName("months", list.month).index;
+				list.month = __LANG.search("month", list.month).index;
 			for (let i in data)
 				data[i] = i in list ? list[i] : 0;
 		}
