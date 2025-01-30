@@ -221,7 +221,7 @@ hr {
 	height: 0;
 	overflow: visible;
 }
-
+/*
 body, main, section, article, header, footer, nav, adress, aside, details, form, fieldset {
 	display: block;
 	margin: 0;
@@ -255,7 +255,7 @@ script, style {
 q {
 	quotes: "\201C" "\201D" "\2018" "\2019";
 }
-
+*/
 /* == BLOCO 3 ================================================================*/
 .wd {
 	color: var(--var-font-color);

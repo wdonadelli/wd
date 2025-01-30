@@ -105,68 +105,91 @@ const wd = (function() {
 
 		/*-- Janela Modal --------------------------------------------------------*/
 
+		/*-- Base (janela básica) --*/
+		[data-js-wd-modal] {
+			position: fixed;
+			margin: 0;
+			padding: 0;
+			width: auto;
+			height: auto;
+			display: flex;
+		}
+
 		/*-- Frame --*/
 		[data-js-wd-modal="frame"] {
-			position: fixed !important;
-			top: 0.5em !important;
-			right: 0.5em !important;
-			left: 0.5em !important;
-			bottom: initial !important;
-			display: block !important;
-			margin: 0 !important;
-			padding: 0 !important;
-			width: auto !important;
-			height: auto !important;
-			max-height: calc(100vh - 0.5em) !important;
-			overflow: auto !important;
+			top: 0;
+			right: 0;
+			left: 0;
+			bottom: initial;
+			max-height: 100vh;
+			overflow: auto;
+			flex-direction: column;
 		}
+
 		@media screen and (min-width: 768px) {
 			[data-js-wd-modal="frame"] {
-				top: initial !important;
-				bottom: 0.5em !important;
-				right: 0.5em !important;
-				left: calc(75vw - 0.5em) !important;
+				top: initial;
+				bottom: 0;
+				right: 0;
+				left: 75vw;
 			}
-		}
-		[data-js-wd-modal="frame"] > * {
-			position: relative !important;
-			margin: 0 !important;
 		}
 
 		/*-- modal --*/
 		[data-js-wd-modal="wall"], [data-js-wd-modal="glass"] {
-			position: fixed !important;
-			top: 0 !important;
-			bottom: 0 !important;
-			left: 0 !important;
-			right: 0 !important;
-			width: 100vw !important;
-			height: 100vh !important;
-			animation: js-wd-animation-emerge-modal 0.2s ease;
+			top: 0;
+			bottom: 0;
+			left: 0;
+			right: 0;
+			justify-content: center;
+			align-items: center;
 		}
-		[data-js-wd-modal="wall"] > *, [data-js-wd-modal="glass"] > * {
-			position: absolute !important;
-			top: 5vh !important;
-			bottom: initial !important;
-			left: 5vw !important;
-			right: 5vw !important;
-			width: auto !important;
-			height: auto !important;
-			margin: auto !important;
-			max-height: calc(100vh - 30vh) !important;
-			overflow: auto !important;
+		[data-js-wd-modal="wall"]  {background-color: rgba(50,50,50,0.7);}
+
+		/*-- posicionamento vertical modal --*/
+		[data-js-wd-modal-position="nw"], [data-js-wd-modal-position="n"],
+		[data-js-wd-modal-position="ne"], [data-js-wd-modal-position="top"] {
+			align-items: flex-start;
+		}
+		[data-js-wd-modal-position="sw"], [data-js-wd-modal-position="s"],
+		[data-js-wd-modal-position="se"], [data-js-wd-modal-position="bottom"] {
+			align-items: flex-end;
+		}
+		[data-js-wd-modal-position="w"], [data-js-wd-modal-position="e"],
+		[data-js-wd-modal-position="center"] {
+			align-items: center;
+		}
+		[data-js-wd-modal-position="left"], [data-js-wd-modal-position="right"],
+		[data-js-wd-modal-position="full"] {
+			align-items: stretch;
+		}
+		/*-- posicionamento horizontal modal --*/
+		[data-js-wd-modal-position="nw"], [data-js-wd-modal-position="w"],
+		[data-js-wd-modal-position="sw"], [data-js-wd-modal-position="left"] {
+			justify-content: flex-start;
+		}
+		[data-js-wd-modal-position="ne"], [data-js-wd-modal-position="e"],
+		[data-js-wd-modal-position="se"], [data-js-wd-modal-position="right"] {
+			justify-content: flex-end;
+		}
+		[data-js-wd-modal-position="n"], [data-js-wd-modal-position="center"],
+		[data-js-wd-modal-position="s"], [data-js-wd-modal-position="full"] {
+			justify-content: center;
+		}
+		[data-js-wd-modal-position="top"] > *,
+		[data-js-wd-modal-position="bottom"] > *,
+		[data-js-wd-modal-position="full"] > * {
+			flex-grow: 1;
 		}
 
-		@media screen and (min-width: 768px) {
-			[data-js-wd-modal="wall"] > *, [data-js-wd-modal="glass"] > * {
-				top: 25vh !important;
-				left: 25vw !important;
-				right: 25vw !important;
-			}
-		}
 
-		[data-js-wd-modal="wall"]  {background-color: rgba(50,50,50,0.7) !important;}
-		[data-js-wd-modal="glass"] {background-color: transparent !important;}
+
+
+
+
+
+
+
 
 		/*-- inert/lock --*/
 		[data-js-wd-modal-body*="lock"] {
@@ -198,7 +221,7 @@ const wd = (function() {
 		}
 		[data-js-wd-signal-type]:first-child {margin-top:    0 !important;}
 		[data-js-wd-signal-type]:last-child  {margin-bottom: 0 !important;}
-		[data-js-wd-signal-type="dialog"]    {position: absolute !important;}
+		/*[data-js-wd-signal-type="dialog"]    {position: absolute !important;}*/
 
 		[data-js-wd-signal-type] * {
 			font-family: inherit !important;
@@ -833,12 +856,12 @@ const wd = (function() {
 		node: (function() {
 			const node = document.createElement("DIV");
 			node.innerHTML = `
-				<button  data-js-wd-signal="kill" ></button>
-				<article data-js-wd-signal="main" >
-					<h1    data-js-wd-signal="head" ></h1>
-					<p     data-js-wd-signal="body" ></p>
-					<foot  data-js-wd-signal="foot" ></foot>
-					<time  data-js-wd-signal="time" ></time>
+				<button   data-js-wd-signal="kill" ></button>
+				<article  data-js-wd-signal="main" >
+					<h1     data-js-wd-signal="head" ></h1>
+					<p      data-js-wd-signal="body" ></p>
+					<footer data-js-wd-signal="foot" ></footer>
+					<time   data-js-wd-signal="time" ></time>
 				</article>`;
 			return node;
 		})(),
