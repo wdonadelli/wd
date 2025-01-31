@@ -108,6 +108,10 @@ const wd = (function() {
 		/*-- Base (janela básica) --*/
 		[data-js-wd-modal] {
 			position: fixed;
+			top: 0;
+			right: 0;
+			bottom: 0;
+			left: 0;
 			margin: 0;
 			padding: 0;
 			width: auto;
@@ -117,74 +121,57 @@ const wd = (function() {
 
 		/*-- Frame --*/
 		[data-js-wd-modal="frame"] {
-			top: 0;
-			right: 0;
-			left: 0;
+			flex-direction: column;
 			bottom: initial;
 			max-height: 100vh;
 			overflow: auto;
-			flex-direction: column;
 		}
 
 		@media screen and (min-width: 768px) {
 			[data-js-wd-modal="frame"] {
-				top: initial;
 				bottom: 0;
-				right: 0;
+				top: initial;
 				left: 75vw;
 			}
 		}
 
 		/*-- modal --*/
 		[data-js-wd-modal="wall"], [data-js-wd-modal="glass"] {
-			top: 0;
-			bottom: 0;
-			left: 0;
-			right: 0;
+			flex-direction: row;
 			justify-content: center;
 			align-items: center;
 		}
 		[data-js-wd-modal="wall"]  {background-color: rgba(50,50,50,0.7);}
 
-		/*-- posicionamento vertical modal --*/
-		[data-js-wd-modal-position="nw"], [data-js-wd-modal-position="n"],
-		[data-js-wd-modal-position="ne"], [data-js-wd-modal-position="top"] {
+		/*-- modal: pontos cardeais --*/
+		[data-js-wd-modal-position="n"], [data-js-wd-modal-position="ne"], [data-js-wd-modal-position="nw"] {
 			align-items: flex-start;
 		}
-		[data-js-wd-modal-position="sw"], [data-js-wd-modal-position="s"],
-		[data-js-wd-modal-position="se"], [data-js-wd-modal-position="bottom"] {
+		[data-js-wd-modal-position="s"], [data-js-wd-modal-position="sw"], [data-js-wd-modal-position="se"] {
 			align-items: flex-end;
 		}
-		[data-js-wd-modal-position="w"], [data-js-wd-modal-position="e"],
-		[data-js-wd-modal-position="center"] {
-			align-items: center;
-		}
-		[data-js-wd-modal-position="left"], [data-js-wd-modal-position="right"],
-		[data-js-wd-modal-position="full"] {
-			align-items: stretch;
-		}
-		/*-- posicionamento horizontal modal --*/
-		[data-js-wd-modal-position="nw"], [data-js-wd-modal-position="w"],
-		[data-js-wd-modal-position="sw"], [data-js-wd-modal-position="left"] {
+		[data-js-wd-modal-position="w"], [data-js-wd-modal-position="nw"], [data-js-wd-modal-position="sw"] {
 			justify-content: flex-start;
 		}
-		[data-js-wd-modal-position="ne"], [data-js-wd-modal-position="e"],
-		[data-js-wd-modal-position="se"], [data-js-wd-modal-position="right"] {
+		[data-js-wd-modal-position="e"], [data-js-wd-modal-position="se"], [data-js-wd-modal-position="ne"] {
 			justify-content: flex-end;
 		}
-		[data-js-wd-modal-position="n"], [data-js-wd-modal-position="center"],
-		[data-js-wd-modal-position="s"], [data-js-wd-modal-position="full"] {
-			justify-content: center;
+		/*-- modal: lados --*/
+		[data-js-wd-modal-position="left"], [data-js-wd-modal-position="right"] {
+			align-items: stretch;
 		}
-		[data-js-wd-modal-position="top"] > *,
-		[data-js-wd-modal-position="bottom"] > *,
-		[data-js-wd-modal-position="full"] > * {
-			flex-grow: 1;
+		[data-js-wd-modal-position="top"], [data-js-wd-modal-position="bottom"] {
+			flex-direction: column;
+			align-items: stretch;
 		}
-
-
-
-
+		[data-js-wd-modal-position="left"], [data-js-wd-modal-position="top"] {
+			justify-content: flex-start;
+		}
+		[data-js-wd-modal-position="right"], [data-js-wd-modal-position="bottom"] {
+			justify-content: flex-end;
+		}
+		[data-js-wd-modal-position="full"] {align-items: stretch;}
+		[data-js-wd-modal-position="full"] > * {flex-grow: 1;}
 
 
 
@@ -204,38 +191,86 @@ const wd = (function() {
 			pointer-events: auto !important;
 		}
 
+
+
+
+
+
 		/*-- Caixas de diálogo e alerta ------------------------------------------*/
 
 		/*-- Signal: box --*/
-		[data-js-wd-signal-type] {
-			position: relative !important;
-			margin: 0.5em 0 !important;
-			padding: 0 !important;
-			background-color: transparent !important;
+		[data-js-wd-signal] {
+			position: relative;
+			display: flex;
+			flex-direction: column;
+			margin: 0.5em;
+			padding: 0.5em;
 			animation: js-wd-animation-expand 0.5s ease !important;
-			font-size: 14px !important;
-			font-family: var(--var-js-wd-font) !important;
-			font-weight: normal;
-			font-style: normal;
+			font-family: Verdana, sans-serif;;
+			font-size: 14px;
 			line-height: 1.2;
+			border-width: thin;
+			border-style: solid;
+			border-radius: 0.5em;
+			background-repeat: no-repeat;
+			background-position: center;
+			background-size: cover;
+			background-origin: content-box;
 		}
-		[data-js-wd-signal-type]:first-child {margin-top:    0 !important;}
-		[data-js-wd-signal-type]:last-child  {margin-bottom: 0 !important;}
-		/*[data-js-wd-signal-type="dialog"]    {position: absolute !important;}*/
+		[data-js-wd-signal="info"] {
+			color: rgb(255, 255, 255);
+			background-color: rgb(64, 110, 193);
+			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' transform='rotate(-15)' opacity='0.1' height='1em' width='2em' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-height='1.2' font-size='1em'>\\24d8</text></svg>");
+		}
+		[data-js-wd-signal="ok"] {
+			color: rgb(255, 255, 255);
+			background-color: rgb(25, 105, 25);
+			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' transform='rotate(0)' opacity='0.1' height='1em' width='2em' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-height='1.2' font-size='1em'>\\2714</text></svg>");
+		}
+		[data-js-wd-signal="warn"] {
+			color: rgb(255, 255, 255);
+			background-color: rgb(150, 90, 5);
+			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' transform='rotate(-15)' opacity='0.1' height='1em' width='2em' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-height='1.2' font-size='1em'>\\26A0</text></svg>");
+		}
+		[data-js-wd-signal="error"] {
+			color: rgb(255,255,255);
+			background-color: rgb(85, 20, 20);
+			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' transform='rotate(0)' opacity='0.1' height='1em' width='2em' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-height='1.2' font-size='1em'>\\274C</text></svg>");
+		}
+		[data-js-wd-signal="dialog"] {
+			color: rgb(255,255,255);
+			background-color: rgb(135, 90, 180);
+			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' transform='rotate(-15)' opacity='0.1' height='1em' width='3em' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-height='1.2' font-size='1em'>\\003F</text></svg>");
+		}
 
-		[data-js-wd-signal-type] * {
+
+
+
+
+		[data-js-wd-signal] * {
 			font-family: inherit !important;
-			font-size:   inherit !important;
+			font-size:   inherit;
 			font-weight: inherit !important;
 			font-style:  inherit !important;
 			line-height: inherit !important;
 		}
 
-		/*-- Signal: kill --*/
-		[data-js-wd-signal="kill"] {
-			position: absolute !important;
-			top: 0 !important;
-			right: 0 !important;
+
+
+
+
+
+		[data-js-wd-signal-head] {padding: 0.2em 2.0em 1.0em 0.2em;}
+		[data-js-wd-signal-body] {padding: 0.2em 0.2em 0.2em 2.0em;}
+		[data-js-wd-signal-time] {
+			font-size: xx-small;
+			text-align: right;
+		}
+
+		[data-js-wd-signal-kill] {
+			position: absolute;
+			top: 0;
+			right: 0;
 			margin:  0.25em 0.75em 0 0 !important;
 			padding: 0     !important;
 			z-index: 2 !important;
@@ -244,50 +279,23 @@ const wd = (function() {
 			background-color: transparent !important;
 			border: 0 !important;
 		}
-
-		/*-- Signal: main --*/
-		[data-js-wd-signal="main"] {
-			display: block !important;
-			margin: 0 !important;
-			padding: 0 !important;
-			width: auto !important;
-			height: auto !important;
-			border-width: thin !important;
-			border-style: solid !important;
-			border-radius: 0.5em !important;
+		[data-js-wd-signal-foot] {
+			display: flex;
+			flex-direction: column;
+			padding: 0;
 		}
-		[data-js-wd-signal="main"] > * {
-			margin: 0 !important;
-			padding: 0.5em !important;
+		@media screen and (min-width: 768px) {
+			[data-js-wd-signal-foot] {
+				flex-direction: row;
+				justify-content: space-evenly;
+				align-items: center;
+			}
 		}
 
-		/*-- Signal: head --*/
-		[data-js-wd-signal="head"] {
-			display: block !important;
-			padding-right: 1em !important;
-		}
 
-		/*-- Signal: body --*/
-		[data-js-wd-signal="body"] {
-			display: block !important;
-			padding-left: 2em !important;
-		}
 
-		/*-- Signal: time --*/
-		[data-js-wd-signal="time"] {
-			display: block !important;
-			font-size: xx-small !important;
-			text-align: right !important;
-		}
 
-		/*-- Signal: foot --*/
-		[data-js-wd-signal="foot"] {
-			display: flex !important;
-			flex-flow: column nowrap !important;
-			padding: 0 !important;
-		}
-		[data-js-wd-signal="foot"] > button {
-			flex-basis: 100%;
+		[data-js-wd-signal-foot] > button {
 			margin: auto !important;
 			padding: 0.5em 2em !important;
 			white-space: nowrap !important;
@@ -297,56 +305,13 @@ const wd = (function() {
 			border-radius: 0.25em !important;
 			cursor: pointer !important;
 		}
-    [data-js-wd-signal="foot"] > button:hover,
-    [data-js-wd-signal="foot"] > button:focus {
+    [data-js-wd-signal-foot] > button:hover,
+    [data-js-wd-signal-foot] > button:focus {
 			border: thin solid rgb(30,144,255) !important;
 			background-color: rgb(250,250,250) !important;
 			outline: thin solid rgb(30,144,255) !important;
     }
-    @media screen and (min-width: 768px) {
-			[data-js-wd-signal="foot"	] {
-				flex-flow: row wrap !important;
-				justify-content: space-evenly !important;
-				align-items: center !important;
-				align-content: space-evenly !important;
-			}
-			[data-js-wd-signal="foot"	] > button {
-				flex-basis: auto;
-			}
-		}
 
-		/*-- Signal: personalização --*/
-		[data-js-wd-signal="main"] {
-			background-repeat: no-repeat;
-			background-position: center;
-			background-size: cover/*contain/*cover*/;
-			background-origin: content-box;
-		}
-		[data-js-wd-signal-type="info"] [data-js-wd-signal="main"] {
-			color: rgb(255, 255, 255) !important;
-			background-color: rgb(64, 110, 193) !important;
-			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' transform='rotate(-15)' opacity='0.1' height='1em' width='2em' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-height='1.2' font-size='1em'>\\24d8</text></svg>");
-		}
-		[data-js-wd-signal-type="ok"] [data-js-wd-signal="main"] {
-			color: rgb(255, 255, 255) !important;
-			background-color: rgb(25, 105, 25) !important;
-			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' transform='rotate(0)' opacity='0.1' height='1em' width='2em' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-height='1.2' font-size='1em'>\\2714</text></svg>");
-		}
-		[data-js-wd-signal-type="warn"] [data-js-wd-signal="main"] {
-			color: rgb(255, 255, 255) !important;
-			background-color: rgb(150, 90, 5) !important;
-			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' transform='rotate(-15)' opacity='0.1' height='1em' width='2em' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-height='1.2' font-size='1em'>\\26A0</text></svg>");
-		}
-		[data-js-wd-signal-type="error"] [data-js-wd-signal="main"] {
-			color: rgb(255,255,255) !important;
-			background-color: rgb(85, 20, 20) !important;
-			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' transform='rotate(0)' opacity='0.1' height='1em' width='2em' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-height='1.2' font-size='1em'>\\274C</text></svg>");
-		}
-		[data-js-wd-signal-type="dialog"] [data-js-wd-signal="main"] {
-			color: rgb(255,255,255) !important;
-			background-color: rgb(135, 90, 180) !important;
-			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' transform='rotate(-15)' opacity='0.1' height='1em' width='3em' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-height='1.2' font-size='1em'>\\003F</text></svg>");
-		}
 
 
 
@@ -854,15 +819,13 @@ const wd = (function() {
 	const __SIGNAL = {
 		/**. ``''node'' node``: Caixa de alerta/diálogo.**/
 		node: (function() {
-			const node = document.createElement("DIV");
+			const node = document.createElement("ARTICLE");
 			node.innerHTML = `
-				<button   data-js-wd-signal="kill" ></button>
-				<article  data-js-wd-signal="main" >
-					<h1     data-js-wd-signal="head" ></h1>
-					<p      data-js-wd-signal="body" ></p>
-					<footer data-js-wd-signal="foot" ></footer>
-					<time   data-js-wd-signal="time" ></time>
-				</article>`;
+				<button data-js-wd-signal-kill="" ></button>
+				<h1     data-js-wd-signal-head="" ></h1>
+				<p      data-js-wd-signal-body="" ></p>
+				<footer data-js-wd-signal-foot="" ></footer>
+				<time   data-js-wd-signal-time="" ></time>`;
 			return node;
 		})(),
 		/**. ``''integer'' id``: Controla o id da caixa de mensagem.**/
@@ -875,12 +838,12 @@ const wd = (function() {
 			const type  = options.type in this.id ? options.type : "info";
 			const id    = `js_wd_signal_${type}_${this.id[type]++}`;
 			const node  = this.node.cloneNode(true);
-			const child = {main: null, head: null, body: null, foot: null, time: null, kill: null};
+			const child = {head: null, body: null, foot: null, time: null, kill: null};
 			for (let i in child)
-				child[i] = node.querySelector(`[data-js-wd-signal="${i}"]`);
+				child[i] = node.querySelector(`[data-js-wd-signal-${i}]`);
 			/*-- node/main/time/kill --*/
-			node.dataset.jsWdSignalType = type;
-			child.main.setAttribute("role", (type === "dialog" ? "alertdialog" : "alert"));
+			node.dataset.jsWdSignal = type;
+			node.setAttribute("role", (type === "dialog" ? "alertdialog" : "alert"));
 			child.time.setAttribute("datetime", time.toISOString());
 			child.time.textContent  = time.toLocaleString(__LANG.value);
 			child.kill.innerHTML    = "&times";
@@ -888,7 +851,7 @@ const wd = (function() {
 			if ("title" in options) {
 				child.head.textContent = String(options.title);
 				child.head.id = `${id}_label`;
-				child.main.setAttribute("aria-labelledby", child.head.id);
+				node.setAttribute("aria-labelledby", child.head.id);
 			} else {
 				child.head.remove();
 			}
@@ -896,7 +859,7 @@ const wd = (function() {
 			if ("body" in options) {
 				child.body.textContent = String(options.body);
 				child.body.id = `${id}_body`;
-				child.main.setAttribute("aria-describedby", child.body.id);
+				node.setAttribute("aria-describedby", child.body.id);
 			} else {
 				child.body.remove();
 			}
