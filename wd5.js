@@ -98,85 +98,122 @@ const wd = (function() {
 			from {transform: scale(1);} to {transform: scale(0);}
 		}
 
-		/*-- Importantes ---------------------------------------------------------*/
+
+		/*font-family: Verdana, sans-serif */
+
+		/*-- Class ---------------------------------------------------------------*/
 		* {box-sizing: border-box !important;}
-		.js-wd-no-display {display: none !important;}
-		.js-wd-no-scroll  {overflow: hidden !important;}
+		.js-wd-style {
+			top: initial !important;
+			right: initial !important;
+			bottom: initial !important;
+			left: initial !important;
+			margin: 0 !important;
+			padding: 0 !important;
+			width: auto !important;
+			max-width: none !important;
+			min-width: auto !important;
+			height: auto !important;
+			max-height: none !important;
+			min-height: auto !important;
+			font-family: inherit !important;
+			font-size: inherit !important;
+			font-weight: inherit !important;
+			font-style: inherit !important;
+			text-decoration: inherit !important;
+			text-align: inherit !important;
+			text-indent: 0 !important;
+			vertical-align: inherit !important;
+			line-height: inherit !important;
+			white-space: inherit !important;
+			background-color: transparent !important;
+			color: inherit !important;
+			border: none !important;
+			border-radius: 0 !important;
+			cursor: default !important;
+		}
+		.js-wd-style.js-wd-button {
+			padding: 0.5em 2em !important;
+			text-align: center !important;
+			background-color: rgb(240,240,240) !important;
+			color: rgb(105,90,90) !important;
+			border: thin solid rgb(115, 115, 115) !important;
+			border-radius: 0.25em !important;
+			cursor: pointer !important;
+			opacity: 0.8 !important;
+		}
+    .js-wd-style.js-wd-button:hover, .js-wd-button:focus {opacity: 1 !important;}
+    .js-wd-style.js-wd-button:focus  {outline: thin solid rgb(30,144,255) !important;}
+    .js-wd-style.js-wd-button:active {opacity: 0.5 !important;}
 
 		/*-- Janela Modal --------------------------------------------------------*/
 
 		/*-- Base (janela básica) --*/
 		[data-js-wd-modal] {
-			position: fixed;
-			top: 0;
-			right: 0;
-			bottom: 0;
-			left: 0;
-			margin: 0;
-			padding: 0;
-			width: auto;
-			height: auto;
-			display: flex;
+			position: fixed !important;
+			top: 0 !important;
+			right: 0 !important;
+			bottom: 0 !important;
+			left: 0 !important;
+			margin: 0 !important;
+			padding: 0 !important;
+			width: auto !important;
+			height: auto !important;
+			display: flex !important;
 		}
 
 		/*-- Frame --*/
 		[data-js-wd-modal="frame"] {
-			flex-direction: column;
-			bottom: initial;
-			max-height: 100vh;
-			overflow: auto;
+			flex-direction: column !important;
+			bottom: initial !important;
+			max-height: 100vh !important;
+			overflow: auto !important;
 		}
 
 		@media screen and (min-width: 768px) {
 			[data-js-wd-modal="frame"] {
-				bottom: 0;
-				top: initial;
-				left: 75vw;
+				bottom: 0 !important;
+				top: initial !important;
+				left: 75vw !important;
 			}
 		}
 
 		/*-- modal --*/
 		[data-js-wd-modal="wall"], [data-js-wd-modal="glass"] {
-			flex-direction: row;
-			justify-content: center;
-			align-items: center;
+			flex-direction: row !important;
+			justify-content: center !important;
+			align-items: center !important;
 		}
-		[data-js-wd-modal="wall"]  {background-color: rgba(50,50,50,0.7);}
+		[data-js-wd-modal="wall"] {background-color: rgba(50,50,50,0.7) !important;}
 
-		/*-- modal: pontos cardeais --*/
-		[data-js-wd-modal-position="n"], [data-js-wd-modal-position="ne"], [data-js-wd-modal-position="nw"] {
-			align-items: flex-start;
+		/*-- modal local --*/
+		[data-js-wd-modal-position="n"],
+		[data-js-wd-modal-position="ne"],
+		[data-js-wd-modal-position="nw"] {align-items: flex-start !important;}
+		[data-js-wd-modal-position="s"],
+		[data-js-wd-modal-position="sw"],
+		[data-js-wd-modal-position="se"] {align-items: flex-end !important;}
+		[data-js-wd-modal-position="w"],
+		[data-js-wd-modal-position="nw"],
+		[data-js-wd-modal-position="sw"] {justify-content: flex-start !important;}
+		[data-js-wd-modal-position="e"],
+		[data-js-wd-modal-position="se"],
+		[data-js-wd-modal-position="ne"] {justify-content: flex-end !important;}
+		[data-js-wd-modal-position="left"],
+		[data-js-wd-modal-position="right"] {align-items: stretch !important;}
+		[data-js-wd-modal-position="top"],
+		[data-js-wd-modal-position="bottom"] {
+			flex-direction: column !important;
+			align-items: stretch !important;
 		}
-		[data-js-wd-modal-position="s"], [data-js-wd-modal-position="sw"], [data-js-wd-modal-position="se"] {
-			align-items: flex-end;
-		}
-		[data-js-wd-modal-position="w"], [data-js-wd-modal-position="nw"], [data-js-wd-modal-position="sw"] {
-			justify-content: flex-start;
-		}
-		[data-js-wd-modal-position="e"], [data-js-wd-modal-position="se"], [data-js-wd-modal-position="ne"] {
-			justify-content: flex-end;
-		}
-		/*-- modal: lados --*/
-		[data-js-wd-modal-position="left"], [data-js-wd-modal-position="right"] {
-			align-items: stretch;
-		}
-		[data-js-wd-modal-position="top"], [data-js-wd-modal-position="bottom"] {
-			flex-direction: column;
-			align-items: stretch;
-		}
-		[data-js-wd-modal-position="left"], [data-js-wd-modal-position="top"] {
-			justify-content: flex-start;
-		}
-		[data-js-wd-modal-position="right"], [data-js-wd-modal-position="bottom"] {
-			justify-content: flex-end;
-		}
-		[data-js-wd-modal-position="full"] {align-items: stretch;}
-		[data-js-wd-modal-position="full"] > * {flex-grow: 1;}
+		[data-js-wd-modal-position="left"],
+		[data-js-wd-modal-position="top"]    {justify-content: flex-start !important;}
+		[data-js-wd-modal-position="right"],
+		[data-js-wd-modal-position="bottom"] {justify-content: flex-end !important;}
+		[data-js-wd-modal-position="full"]   {align-items: stretch !important;}
+		[data-js-wd-modal-position="full"] > * {flex-grow: 1 !important;}
 
-
-
-
-
+		/*FIXME consertar isso aqui */
 
 		/*-- inert/lock --*/
 		[data-js-wd-modal-body*="lock"] {
@@ -200,117 +237,95 @@ const wd = (function() {
 
 		/*-- Signal: box --*/
 		[data-js-wd-signal] {
-			position: relative;
-			display: flex;
-			flex-direction: column;
-			margin: 0.5em;
-			padding: 0.5em;
-			animation: js-wd-animation-expand 0.5s ease !important;
-			font-family: Verdana, sans-serif;;
-			font-size: 14px;
-			line-height: 1.2;
-			border-width: thin;
-			border-style: solid;
-			border-radius: 0.5em;
-			background-repeat: no-repeat;
-			background-position: center;
-			background-size: cover;
-			background-origin: content-box;
+			position: relative !important;
+			display: flex !important;
+			flex-direction: column !important;
+			margin: 0.5em !important;
+			padding: 0.5em !important;
+			animation: js-wd-animation-expand 0.5s ease !important !important;
+			font-size: 14px !important;
+			font-family: Verdana, sans-serif !important;
+			line-height: 1.2 !important;
+			border-width: thin !important;
+			border-style: solid !important;
+			border-radius: 0.5em !important;
+			background-repeat: no-repeat !important;
+			background-position: center !important;
+			background-size: cover !important;
+			background-origin: content-box !important;
 		}
+
 		[data-js-wd-signal="info"] {
-			color: rgb(255, 255, 255);
-			background-color: rgb(64, 110, 193);
-			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' transform='rotate(-15)' opacity='0.1' height='1em' width='2em' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-height='1.2' font-size='1em'>\\24d8</text></svg>");
+			color: rgb(255, 255, 255) !important;
+			background-color: rgb(64, 110, 193) !important;
+			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' transform='rotate(-15)' opacity='0.1' height='1em' width='2em' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-height='1.2' font-size='1em'>\\24d8</text></svg>") !important;
 		}
 		[data-js-wd-signal="ok"] {
-			color: rgb(255, 255, 255);
-			background-color: rgb(25, 105, 25);
-			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' transform='rotate(0)' opacity='0.1' height='1em' width='2em' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-height='1.2' font-size='1em'>\\2714</text></svg>");
+			color: rgb(255, 255, 255) !important;
+			background-color: rgb(25, 105, 25) !important;
+			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' transform='rotate(0)' opacity='0.1' height='1em' width='2em' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-height='1.2' font-size='1em'>\\2714</text></svg>") !important;
 		}
 		[data-js-wd-signal="warn"] {
-			color: rgb(255, 255, 255);
-			background-color: rgb(150, 90, 5);
-			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' transform='rotate(-15)' opacity='0.1' height='1em' width='2em' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-height='1.2' font-size='1em'>\\26A0</text></svg>");
+			color: rgb(255, 255, 255) !important;
+			background-color: rgb(150, 90, 5) !important;
+			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' transform='rotate(-15)' opacity='0.1' height='1em' width='2em' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-height='1.2' font-size='1em'>\\26A0</text></svg>") !important;
 		}
 		[data-js-wd-signal="error"] {
-			color: rgb(255,255,255);
-			background-color: rgb(85, 20, 20);
-			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' transform='rotate(0)' opacity='0.1' height='1em' width='2em' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-height='1.2' font-size='1em'>\\274C</text></svg>");
+			color: rgb(181,135,135) !important;
+			background-color: rgb(85, 20, 20) !important;
+			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' transform='rotate(0)' opacity='0.1' height='1em' width='2em' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-height='1.2' font-size='1em'>\\2717</text></svg>") !important;
 		}
 		[data-js-wd-signal="dialog"] {
-			color: rgb(255,255,255);
-			background-color: rgb(135, 90, 180);
-			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' transform='rotate(-15)' opacity='0.1' height='1em' width='3em' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-height='1.2' font-size='1em'>\\003F</text></svg>");
+			max-width: 50vw !important;
+			color: rgb(255,255,255) !important;
+			background-color: rgb(135, 90, 180) !important;
+			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' transform='rotate(-15)' opacity='0.1' height='1em' width='3em' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-height='1.2' font-size='1em'>\\003F</text></svg>") !important;
 		}
-
-
-
-
-
-		[data-js-wd-signal] * {
-			font-family: inherit !important;
-			font-size:   inherit;
-			font-weight: inherit !important;
-			font-style:  inherit !important;
-			line-height: inherit !important;
+		[data-js-wd-signal-head] {
+			padding-right: 2em !important;
+			margin-bottom: 0.5em !important;
 		}
-
-
-
-
-
-
-		[data-js-wd-signal-head] {padding: 0.2em 2.0em 1.0em 0.2em;}
-		[data-js-wd-signal-body] {padding: 0.2em 0.2em 0.2em 2.0em;}
-		[data-js-wd-signal-time] {
-			font-size: xx-small;
-			text-align: right;
-		}
-
-		[data-js-wd-signal-kill] {
-			position: absolute;
-			top: 0;
-			right: 0;
-			margin:  0.25em 0.75em 0 0 !important;
-			padding: 0     !important;
-			z-index: 2 !important;
-			font-size: 1.5em !important;
-			min-height: auto !important;
-			background-color: transparent !important;
-			border: 0 !important;
+		[data-js-wd-signal-body] {
+			margin-bottom: 0.5em !important;
+			text-indent: 1.4em !important;
 		}
 		[data-js-wd-signal-foot] {
-			display: flex;
-			flex-direction: column;
-			padding: 0;
+			display: flex !important;
+			flex-direction: column !important;
+			margin: 0.5em 0 !important;
 		}
 		@media screen and (min-width: 768px) {
 			[data-js-wd-signal-foot] {
-				flex-direction: row;
-				justify-content: space-evenly;
-				align-items: center;
+				flex-direction: row !important;
+				justify-content: space-evenly !important;
+				align-items: center !important;
 			}
+			[data-js-wd-signal-foot] > button {margin: 0 0.5em !important;}
 		}
 
+		[data-js-wd-signal-time] {
+			font-size: xx-small !important;
+			text-align: right !important;
+		}
 
-
-
-		[data-js-wd-signal-foot] > button {
-			margin: auto !important;
-			padding: 0.5em 2em !important;
-			white-space: nowrap !important;
-			background-color: rgb(240,240,240) !important;
-			color: rgb(65, 65, 65) !important;
-			border: thin solid rgb(115, 115, 115) !important;
-			border-radius: 0.25em !important;
+		[data-js-wd-signal-kill] {
+			position: absolute !important;
+			top: 0 !important;
+			right: 0 !important;
+			margin:  0.25em 0.75em !important;
+			height: 1em !important;
+			width: 1em !important;
+			font-size: 1.5em !important !important;
+			text-align: center !important;
 			cursor: pointer !important;
 		}
-    [data-js-wd-signal-foot] > button:hover,
-    [data-js-wd-signal-foot] > button:focus {
-			border: thin solid rgb(30,144,255) !important;
-			background-color: rgb(250,250,250) !important;
-			outline: thin solid rgb(30,144,255) !important;
-    }
+    [data-js-wd-signal-kill]:focus {outline: 1px solid !important;}
+
+
+
+
+
+
 
 
 
@@ -414,7 +429,10 @@ const wd = (function() {
 		wdtag-root wdtag-value {color: #cf8ee1 !important;}
 		wdtag-root wdtag-word {color: #df6d6d !important; font-weight: bold !important;}
 		wdtag-root wdtag-tick {font-weight: bold !important; color: #68cccc !important;}
-		wdtag-root wdtag-string {color: #57ac57}`;
+		wdtag-root wdtag-string {color: #57ac57}
+
+		/*-- Importantes ---------------------------------------------------------*/
+		.js-wd-no-display {display: none !important;}`;
 
 
 
@@ -610,6 +628,7 @@ const wd = (function() {
 		/**. ``''node'' frame``: Quadro para agrupamento de mensagens.**/
 		frame: (function() {
 			const node  = document.createElement("ASIDE");
+			node.className = "js-wd-style";
 			node.dataset.jsWdModal = "frame";
 			return node;
 		})(),
@@ -678,31 +697,22 @@ const wd = (function() {
 			id = id === null || id === undefined ? "" : String(id).trim();
 			if (arguments.length > 1 && id !== "" && !(id in this.data)) {
 				this.data[id] = document.createElement("ASIDE");
+				this.data[id].className = "js-wd-style";
 				this.data[id].appendChild(node);
 			}
 			return;
 		},
-		/**. ``''void'' show(''string'' id)``: Exibe a janela modal vinculada ao identificador.**/
-		show: function(id, options) {
+		/**. ``''void'' show(''string'' id, ''string'' place, ''booelan'' wall)``: Exibe a janela modal vinculada ao identificador ``id``. O argumento ``place`` define o local do elemento na tela ([nswe]|[ns][we]|top|bottom|left|right|full) e o argumento ``wall``, se falso, não criará um fundo escurecido.**/
+		show: function(id, place, wall) {
 			id = id === null || id === undefined ? "" : String(id).trim();
 			/*-- exibir modal que não está na pilha --*/
 			if (id in this.data && this.heap.indexOf(id) < 0) {
-				const opts = typeof options === "object" ? options : {};
 				const back = this.data[id];
 				const node = back.children[0];
-				const wall = opts.wall !== false;
-				const attr = ["top", "bottom", "left", "right", "width", "height"];
-				/*-- elemento --*/
-				node.setAttribute("aria-modal", wall ? "true" : "false");
-				for (let i = 0; i < attr.length; i++)
-					if (attr[i] in opts) node.style[attr[i]] = opts[attr[i]];
-				/*-- modal --*/
-				back.dataset.jsWdModal = wall ? "wall" : "glass";
-				back.style.zIndex      = this.zIndex;
-				/*back.onclick           = wall ? null : function(ev) {
-					ev.preventDefault();
-					if (ev.target === back) __MODAL.hide(id);
-				}*/
+				node.setAttribute("aria-modal", wall !== false ? "true" : "false");
+				back.dataset.jsWdModal         = wall !== false ? "wall" : "glass";
+				back.dataset.jsWdModalPosition = typeof place === "string" ? place : "";
+				back.style.zIndex              = this.zIndex;
 				back.addEventListener("click", function(ev) {
 					ev.preventDefault();
 					if (ev.target === back) __MODAL.escape();
@@ -716,7 +726,7 @@ const wd = (function() {
 			/*-- trazer para frente modal que já está na pilha --*/
 			else if (id in this.data) {
 				this.hide(id);
-				this.show(id, options);
+				this.show(id, place, wall);
 			}
 			return;
 		},
@@ -757,10 +767,8 @@ const wd = (function() {
 				const main  = __MODAL.main;
 				const count = Number(ev.target.dataset.jsWdProgressCount) + 1;
 				ev.target.dataset.jsWdProgressCount = count;
-				if (main === null || main.node !== ev.target) {
-					const opt = {top: 0, right: 0, left: 0, width: "100vw", wall: true};
-					__MODAL.show(id, opt);
-				}
+				if (main === null || main.node !== ev.target)
+					__MODAL.show(id, "top", true);
 				return;
 			}, false);
 			/*-- Disparador de fechamento de processo --*/
@@ -821,11 +829,12 @@ const wd = (function() {
 		node: (function() {
 			const node = document.createElement("ARTICLE");
 			node.innerHTML = `
-				<button data-js-wd-signal-kill="" ></button>
-				<h1     data-js-wd-signal-head="" ></h1>
-				<p      data-js-wd-signal-body="" ></p>
-				<footer data-js-wd-signal-foot="" ></footer>
-				<time   data-js-wd-signal-time="" ></time>`;
+				<button data-js-wd-signal-kill="" class="js-wd-style" ></button>
+				<h1     data-js-wd-signal-head="" class="js-wd-style" ></h1>
+				<p      data-js-wd-signal-body="" class="js-wd-style" ></p>
+				<footer data-js-wd-signal-foot="" class="js-wd-style" ></footer>
+				<time   data-js-wd-signal-time="" class="js-wd-style" ></time>`;
+			node.className="js-wd-style";
 			return node;
 		})(),
 		/**. ``''integer'' id``: Controla o id da caixa de mensagem.**/
@@ -885,6 +894,8 @@ const wd = (function() {
 				__MODAL.push(id, node);
 				for (let act in acts) {
 					let btn = document.createElement("BUTTON");
+					btn.type = "button";
+					btn.className = "js-wd-style js-wd-button";
 					btn.textContent = acts[act].replace(auto, "");
 					btn.addEventListener("click", function(ev) {
 						__MODAL.hide(id);
@@ -896,7 +907,7 @@ const wd = (function() {
 						focus = btn;
 					}
 				}
-				__MODAL.show(id, {wall: true});
+				__MODAL.show(id, null, true);
 				if (focus !== null) focus.focus();
 			}
 			return;
