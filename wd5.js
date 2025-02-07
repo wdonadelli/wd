@@ -187,31 +187,31 @@ const wd = (function() {
 		[data-js-wd-modal="wall"] {background-color: rgba(50,50,50,0.7) !important;}
 
 		/*-- modal local --*/
-		[data-js-wd-modal-position="n"],
-		[data-js-wd-modal-position="ne"],
-		[data-js-wd-modal-position="nw"] {align-items: flex-start !important;}
-		[data-js-wd-modal-position="s"],
-		[data-js-wd-modal-position="sw"],
-		[data-js-wd-modal-position="se"] {align-items: flex-end !important;}
-		[data-js-wd-modal-position="w"],
-		[data-js-wd-modal-position="nw"],
-		[data-js-wd-modal-position="sw"] {justify-content: flex-start !important;}
-		[data-js-wd-modal-position="e"],
-		[data-js-wd-modal-position="se"],
-		[data-js-wd-modal-position="ne"] {justify-content: flex-end !important;}
-		[data-js-wd-modal-position="left"],
-		[data-js-wd-modal-position="right"] {align-items: stretch !important;}
-		[data-js-wd-modal-position="top"],
-		[data-js-wd-modal-position="bottom"] {
+		[data-js-wd-modal-place="n"],
+		[data-js-wd-modal-place="ne"],
+		[data-js-wd-modal-place="nw"] {align-items: flex-start !important;}
+		[data-js-wd-modal-place="s"],
+		[data-js-wd-modal-place="sw"],
+		[data-js-wd-modal-place="se"] {align-items: flex-end !important;}
+		[data-js-wd-modal-place="w"],
+		[data-js-wd-modal-place="nw"],
+		[data-js-wd-modal-place="sw"] {justify-content: flex-start !important;}
+		[data-js-wd-modal-place="e"],
+		[data-js-wd-modal-place="se"],
+		[data-js-wd-modal-place="ne"] {justify-content: flex-end !important;}
+		[data-js-wd-modal-place="left"],
+		[data-js-wd-modal-place="right"] {align-items: stretch !important;}
+		[data-js-wd-modal-place="top"],
+		[data-js-wd-modal-place="bottom"] {
 			flex-direction: column !important;
 			align-items: stretch !important;
 		}
-		[data-js-wd-modal-position="left"],
-		[data-js-wd-modal-position="top"]    {justify-content: flex-start !important;}
-		[data-js-wd-modal-position="right"],
-		[data-js-wd-modal-position="bottom"] {justify-content: flex-end !important;}
-		[data-js-wd-modal-position="full"]   {align-items: stretch !important;}
-		[data-js-wd-modal-position="full"] > * {flex-grow: 1 !important;}
+		[data-js-wd-modal-place="left"],
+		[data-js-wd-modal-place="top"]    {justify-content: flex-start !important;}
+		[data-js-wd-modal-place="right"],
+		[data-js-wd-modal-place="bottom"] {justify-content: flex-end !important;}
+		[data-js-wd-modal-place="full"]   {align-items: stretch !important;}
+		[data-js-wd-modal-place="full"] > * {flex-grow: 1 !important;}
 
 		/*FIXME consertar isso aqui */
 
@@ -432,7 +432,20 @@ const wd = (function() {
 		wdtag-root wdtag-string {color: #57ac57}
 
 		/*-- Importantes ---------------------------------------------------------*/
-		.js-wd-no-display {display: none !important;}`;
+		.js-wd-hide     {display: none !important;}
+		.js-wd-freeze   {overflow: hidden !important;}
+		.js-wd-unfreeze {overflow: visible !important;}
+		.js-wd-inert {
+			visibility: hidden !important;
+			pointer-events: none !important;
+		}
+		.js-wd-usable {
+			visibility: visible !important;
+			pointer-events: auto !important;
+		}
+
+
+		`;
 
 
 
@@ -619,20 +632,20 @@ const wd = (function() {
 	/**###### ``**const** ''object'' __MODAL``
 	Administra containers para janelas modais (wall e glass) e de quadro (frame).**/
 	const __MODAL = {
-		/**. ``''array'' heap``: Pilha das janelas modais ativas.**/
+		/**. ``''array'' heap``: Pilha das janelas modais ativas.** /
 		heap: [],
-		/**. ``''object'' data``: Identificadores das janelas modais.**/
+		/**. ``''object'' data``: Identificadores das janelas modais.** /
 		data: {},
-		/**. ``''integer'' zIndex``: Controlador de prevalência das janelas modais.**/
+		/**. ``''integer'' zIndex``: Controlador de prevalência das janelas modais.** /
 		zIndex: 1000,
-		/**. ``''node'' frame``: Quadro para agrupamento de mensagens.**/
+		/**. ``''node'' frame``: Quadro para agrupamento de mensagens.** /
 		frame: (function() {
 			const node  = document.createElement("ASIDE");
 			node.className = "js-wd-style";
 			node.dataset.jsWdModal = "frame";
 			return node;
 		})(),
-		/**. ``''void'' updateFrame()``: Atualiza a renderização do frame na tela.**/
+		/**. ``''void'' updateFrame()``: Atualiza a renderização do frame na tela.** /
 		updateFrame: function() {
 			this.frame.style.zIndex = this.zIndex + 1000;
 			const child = this.frame.childElementCount > 0;
@@ -643,18 +656,18 @@ const wd = (function() {
 				this.frame.remove();
 			return;
 		},
-		/**. ``''void'' add(''node'' node)``: Adiciona um nó ao frame.**/
+		/**. ``''void'' add(''node'' node)``: Adiciona um nó ao frame.** /
 		add: function(node) {
 			this.frame.appendChild(node);
 			node.setAttribute("aria-modal", "false");
 			return this.updateFrame();
 		},
-		/**. ``''void'' del(''node'' node)``: Remove um nó do frame.**/
+		/**. ``''void'' del(''node'' node)``: Remove um nó do frame.** /
 		del: function(node) {
 			if (node.parentElement === this.frame) node.remove();
 			return this.updateFrame();
 		},
-		/**. ``''object'' main``: Retorna dados da janela modal prevalente (id, modal, node, type) ou nulo.**/
+		/**. ``''object'' main``: Retorna dados da janela modal prevalente (id, modal, node, type) ou nulo.** /
 		get main() {
 			return this.heap.length < 1 ? null : {
 				id: this.heap[this.heap.length - 1],
@@ -663,25 +676,25 @@ const wd = (function() {
 				get type() {return this.modal.dataset.jsWdModal;}
 			};
 		},
-		/**. ``''void'' escape()``: Simula um ''esc'' fechando a janela modal prevalente do tipo glass.**/
+		/**. ``''void'' escape()``: Simula um ''esc'' fechando a janela modal prevalente do tipo glass.** /
 		escape: function() {
 			const main = this.main;
 			if (main !== null && main.type === "glass") this.hide(main.id);
 			return;
 		},
-		/**. ``''node'' updateModal()``: Atualiza as condições de exibição da janela modal.**/
+		/**. ``''node'' updateModal()``: Atualiza as condições de exibição da janela modal.** /
 		updateModal: function() {
 			const main  = this.main;
 			const attr  = "inert" in document.body && typeof document.body.inert === "boolean";
 			const	inert = main !== null && main.type !== "glass";
 			const lock  = main !== null;
 			const body  = inert && !attr ? (lock ? "inert+lock" : "inert") : (lock ? "lock" : "");
-			/*-- configurando fundo --*/
+			/*-- configurando fundo --* /
 			if (body !== "")
 				document.body.dataset.jsWdModalBody = body;
 			else if ("jsWdModalBody" in document.body.dataset)
 				delete document.body.dataset.jsWdModalBody
-			/*-- se inert estiver implantado --*/
+			/*-- se inert estiver implantado --* /
 			if (attr) {
 				const list = document.body.children;
 				for (let i = 0; i < list.length; i++)
@@ -692,7 +705,7 @@ const wd = (function() {
 			}
 			return;
 		},
-		/**. ``''void'' push(''string'' id, ''node'' node)``: Vincula um nó a uma janela modal identificada por ``id``.**/
+		/**. ``''void'' push(''string'' id, ''node'' node)``: Vincula um nó a uma janela modal identificada por ``id``.** /
 		push: function(id, node) {
 			id = id === null || id === undefined ? "" : String(id).trim();
 			if (arguments.length > 1 && id !== "" && !(id in this.data)) {
@@ -702,10 +715,10 @@ const wd = (function() {
 			}
 			return;
 		},
-		/**. ``''void'' show(''string'' id, ''string'' place, ''booelan'' wall)``: Exibe a janela modal vinculada ao identificador ``id``. O argumento ``place`` define o local do elemento na tela ([nswe]|[ns][we]|top|bottom|left|right|full) e o argumento ``wall``, se falso, não criará um fundo escurecido.**/
+		/**. ``''void'' show(''string'' id, ''string'' place, ''booelan'' wall)``: Exibe a janela modal vinculada ao identificador ``id``. O argumento ``place`` define o local do elemento na tela ([nswe]|[ns][we]|top|bottom|left|right|full) e o argumento ``wall``, se falso, não criará um fundo escurecido.** /
 		show: function(id, place, wall) {
 			id = id === null || id === undefined ? "" : String(id).trim();
-			/*-- exibir modal que não está na pilha --*/
+			/*-- exibir modal que não está na pilha --* /
 			if (id in this.data && this.heap.indexOf(id) < 0) {
 				const back = this.data[id];
 				const node = back.children[0];
@@ -717,20 +730,20 @@ const wd = (function() {
 					ev.preventDefault();
 					if (ev.target === back) __MODAL.escape();
 				}, false);
-				/*-- Renderizando --*/
+				/*-- Renderizando --* /
 				document.body.appendChild(back);
 				this.zIndex++;
 				this.heap.push(id);
 				this.updateModal();
 			}
-			/*-- trazer para frente modal que já está na pilha --*/
+			/*-- trazer para frente modal que já está na pilha --* /
 			else if (id in this.data) {
 				this.hide(id);
 				this.show(id, place, wall);
 			}
 			return;
 		},
-		/**. ``''boolean'' hide(''string'' id)``: Esconde a janela modal vinculada ao id, todas, se id for nulo, ou a última, se indefinido.**/
+		/**. ``''boolean'' hide(''string'' id)``: Esconde a janela modal vinculada ao id, todas, se id for nulo, ou a última, se indefinido.** /
 		hide: function(id) {
 			id = id === null || id === undefined ? id : String(id).trim();
 			const index = this.heap.indexOf(id);
@@ -750,6 +763,234 @@ const wd = (function() {
 			}
 			return;
 		},
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		/*get freeze() {
+			return document.querySelector("body.js-wd-freeze") !== null;
+		},
+		set freeze(value) {
+			value = value !== false;
+			const freeze = this.freeze;
+			let   style  = document.body.className;
+			if (value && !freeze)
+				style += " js-wd-freeze";
+			else if (!value && freeze)
+				style = style.replace(/js\-wd\-freeze/g, "").replace(/\s+/g, " ").trim();
+			if (style !== document.body.className)
+				document.body.className = style;
+			return;
+		},
+
+
+		get inert() {
+			const inert = typeof document.body.inert === "boolean";
+			if (!inert)
+				return document.querySelector("body.js-wd-inert") !== null;
+			const child = document.body.children;
+			for (let i = 0; i < child.length; i++) {
+				if (child[i] !== this.pack && this.heap2.indexOf(child[i]) < 0)
+					if (child[i].inert === false) return false;
+			}
+			return true;
+		},
+		set inert(value) {
+			value = value !== false;
+			const freeze = this.freeze;
+			let   style  = document.body.className;
+			if (value && !freeze)
+				style += " js-wd-freeze";
+			else if (!value && freeze)
+				style = style.replace(/js\-wd\-freeze/g, "").replace(/\s+/g, " ").trim();
+			if (style !== document.body.className)
+				document.body.className = style;
+			return;
+		},*/
+
+
+
+
+
+
+
+
+
+		index: 1000,
+		/**. ``''node'' frame``: Quadro para agrupamento de mensagens.**/
+		frame: document.createElement("ASIDE"),
+		/**. ``''node'' glass``: Quadro falso para menu de contexto.**/
+		glass: document.createElement("ASIDE"),
+		/**. ``''node'' wall``: Quadro modal para elementos.**/
+		get wall() {return document.createElement("ASIDE");},
+		/**. ``''array'' heap``: Pilha de quadros ativos.**/
+		heap: [],
+
+
+
+		append: function(node, options) {
+			const conf  = typeof options === "object" ? options : {};
+			const type  = /^(frame|glass|wall)$/i;
+			const place = /^(top|bottom|left|right|full|[nswe]|[ns][we])$/i;
+			conf.type   = type.test(conf.type)   ? conf.type.toLowerCase()  : "frame";
+			conf.place  = place.test(conf.place) ? conf.place.toLowerCase() : "";
+			conf.index  = String(this.index++);
+			conf.close  = typeof conf.onclose === "function" ? conf.onclose : null;
+			conf.node   = node;
+			conf.back   = this[conf.type];
+			conf.aria   = conf.type === "wall" ? "true" : "false";
+			conf.tab    = conf.type === "frame" ? -1 : 0;
+			/*-- glass é frágil e sempre se quebra a cada interação --*/
+			this.glass.innerHTML = "";
+			/*-- reorganizar a pilha em caso de repetição de container --*/
+			this.heap = this.heap.filter(function(v,i,a) {return v.back !== conf.back;});
+			/*-- apensando elementos --*/
+			conf.back.appendChild(conf.node);
+			document.body.appendChild(conf.back);
+			this.heap.push(conf);
+			return this.update();
+		},
+
+
+
+		update: function() {
+			this.heap = this.heap.filter(function(v,i,a) {
+				/*-- limpar elemento vazio ou desvinculado de body --*/
+				if (v.back.childElementCount < 1 || v.back.parentElement !== document.body) {
+					v.back.remove();
+					v.back.innerHTML = "";
+					return false;
+				}
+				/*-- redefinindo propriedades da parede --*/
+				if (v.back.dataset.jsWdModalPlace !== v.place)
+					v.back.dataset.jsWdModalPlace = v.place;
+				if (v.back.dataset.jsWdModal !== v.type)
+					v.back.dataset.jsWdModal = v.type;
+				if (v.back.className !== "js-wd-style")
+					v.back.className = "js-wd-style";
+				if (v.back.style.zIndex !== v.index)
+					v.back.style.zIndex = v.index;
+				if (v.back.tabIndex !== v.tab)
+					v.back.tabIndex = v.tab;
+				/*-- redefinindo propriedades do nó --*/
+				if (v.node.getAttribute("aria-modal") !== v.aria)
+					v.node.setAttribute("aria-modal", v.aria);
+				if (v.node.tabIndex >= 0)
+					v.node.tabIndex = -1;
+				/*-- definindo eventos --*/
+				v.back.onkeyup = v.type === "frame" ? null : function(ev) {
+					if (ev.key === "Escape") {
+						ev.target.remove();
+						if (v.close !== null) v.close();
+					}
+					return __MODAL.update();
+				}
+				v.back.onclick = v.type !== "glass" ? null : function(ev) {
+					ev.target.remove();
+					if (v.close !== null) v.close();
+					return __MODAL.update();
+				}
+				/*-- retornando filtro --*/
+				return true;
+			});
+			return this.inert();
+		},
+
+		inert: function() {
+			const inert = typeof document.body.inert === "boolean";
+
+
+		},
+
+
+			/*-- verificar desabilitação do fundo --*/
+			/*const main   = this.heap2.length < 1 ? null : this.heap2[this.heap2.length - 1];
+			const type   = main === null ? null : main.dataset.jsWdModal;
+			const inert  = "inert" in document.body && typeof document.body.inert === "boolean";
+			const freeze = "js-wd-freeze";
+			let   style  = body.className.split(/\s/);
+			/*-- congelando o movimento --* /
+			if (type === null && value.indexOf(freeze) >= 0)
+				body.className = value.split(freeze).join("").replace(/\s+/, " ").trim();
+			else if (type !== null && value.indexOf(freeze) < 0)
+				body.className += ` ${freeze}`;
+			/*-- desabilitando interação --*/
+				/*-- desabilitando interação --* /
+				if (inert)
+					for (let i = 0; i < child.length; i++) {
+						child[i].inert = !(child[i] === main || child[i] === this.pack);
+					}
+			const attr  = "inert" in document.body && typeof document.body.inert === "boolean";
+			const	inert = main !== null && main.type !== "glass";
+			const lock  = main !== null;
+			const body  = inert && !attr ? (lock ? "inert+lock" : "inert") : (lock ? "lock" : "");
+			/*-- configurando fundo --* /
+			if (body !== "")
+				document.body.dataset.jsWdModalBody = body;
+			else if ("jsWdModalBody" in document.body.dataset)
+				delete document.body.dataset.jsWdModalBody
+			/*-- se inert estiver implantado --* /
+			if (attr) {
+				const list = document.body.children;
+				for (let i = 0; i < list.length; i++)
+					if (!inert || list[i] === main.modal || list[i].dataset.jsWdModal === "frame")
+						list[i].inert = false;
+					else
+						list[i].inert = true;
+			}
+			}*/
+
+
+
+
+
+
+
+
+		escape: function() {//FIXME TESTE keyup
+			/*for (let i = 0; i < this.heap.length; i++)
+				if (this.heap[i] !== this.frame) {
+					this.heap[i].remove();
+					this.update();
+					return;
+				}*/
+			return;
+		},
+
+
+
+
+
+		remove: function(node) {
+			const back = node.parentElement;
+			for (let i = 0; i < this.heap.length; i++)
+				if (this.heap[i].back === back) {
+					node.remove();
+					if (this.heap[i].close !== null) this.heap[i].close();
+					return this.update();
+				}
+			return;
+		},
+
+
+
+
+
+
+
+
+
 	};
 
 /*----------------------------------------------------------------------------*/
@@ -758,17 +999,13 @@ const wd = (function() {
 	const __PROGRESS = {
 		/**. ``''node'' bar``: Barra de progresso.**/
 		bar: (function() {
-			const id  = "js_wd_progress_bar_"+String(new Date().valueOf());
 			const bar = document.createElement("PROGRESS");
-			__MODAL.push(id, bar);
 			bar.dataset.jsWdProgressCount = 0;
 			/*-- Disparadores de abertura de processo --*/
 			bar.addEventListener("wdprogressopen", function(ev) {
-				const main  = __MODAL.main;
 				const count = Number(ev.target.dataset.jsWdProgressCount) + 1;
 				ev.target.dataset.jsWdProgressCount = count;
-				if (main === null || main.node !== ev.target)
-					__MODAL.show(id, "top", true);
+				__MODAL.append(ev.target, {type: "wall", place: "top"});
 				return;
 			}, false);
 			/*-- Disparador de fechamento de processo --*/
@@ -779,7 +1016,7 @@ const wd = (function() {
 				window.setTimeout(function () {
 					const count = Number(ev.target.dataset.jsWdProgressCount);
 					if (count < 1) {
-						__MODAL.hide(id);
+						__MODAL.remove(ev.target);
 						ev.target.removeAttribute("value");
 					}
 				}, 50);
@@ -876,9 +1113,9 @@ const wd = (function() {
 			if (type !== "dialog") {
 				child.foot.remove();
 				child.kill.addEventListener("click", function(ev) {
-					__MODAL.del(ev.target.parentElement);
+					__MODAL.remove(ev.target.parentElement);
 				}, false);
-				__MODAL.add(node);
+				__MODAL.append(node, {type: "frame"});
 				if (typeof options.time === "number" && Math.trunc(options.time) > 0)
 					window.setTimeout(function() {
 						child.kill.click();
@@ -891,14 +1128,13 @@ const wd = (function() {
 				const call = typeof options.trigger === "function" ? options.trigger : null;
 				const auto = /\*$/;
 				let  focus = null;
-				__MODAL.push(id, node);
 				for (let act in acts) {
 					let btn = document.createElement("BUTTON");
 					btn.type = "button";
 					btn.className = "js-wd-style js-wd-button";
 					btn.textContent = acts[act].replace(auto, "");
 					btn.addEventListener("click", function(ev) {
-						__MODAL.hide(id);
+						__MODAL.remove(this.parentElement.parentElement);
 						if (call !== null) call(options.id, act);
 					}, false);
 					child.foot.appendChild(btn);
@@ -907,7 +1143,7 @@ const wd = (function() {
 						focus = btn;
 					}
 				}
-				__MODAL.show(id, null, true);
+				__MODAL.append(node, {type: "wall", onclose: () => call(options.id, null)});
 				if (focus !== null) focus.focus();
 			}
 			return;
@@ -5393,10 +5629,10 @@ const wd = (function() {
 		/**. ``''boolean'' show``: Retorna e define a visibilidade do elemento nos termos da biblioteca.**/
 		show: {
 			get: function() {
-				return this.class.indexOf("js-wd-no-display") < 0;
+				return this.class.indexOf("js-wd-hide") < 0;
 			},
 			set: function(x) {
-				this.class = x === false ? {add: "js-wd-no-display"} : {remove: "js-wd-no-display"}
+				this.class = x === false ? {add: "js-wd-hide"} : {remove: "js-wd-hide"}
 			}
 		},
 		/**. ``''void'' only(''boolean'' reverse)``: Exibe o nó e esconde os irmãos. Se ``reverse`` for verdadeiro, inverte-se o resultado.**/
@@ -5437,7 +5673,7 @@ const wd = (function() {
 				const groups = [];
 				const data   = {init: null, last: null};
 				for (let i = 0; i < nodes.length; i++) {
-					let show = nodes[i].className.split(/\s/).indexOf("js-wd-no-display") < 0;
+					let show = nodes[i].className.split(/\s/).indexOf("js-wd-hide") < 0;
 					if (show) {
 						if (data.init === null) data.init = i;
 						data.last  = i;
