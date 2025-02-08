@@ -632,225 +632,46 @@ const wd = (function() {
 	/**###### ``**const** ''object'' __MODAL``
 	Administra containers para janelas modais (wall e glass) e de quadro (frame).**/
 	const __MODAL = {
-		/**. ``''array'' heap``: Pilha das janelas modais ativas.** /
-		heap: [],
-		/**. ``''object'' data``: Identificadores das janelas modais.** /
-		data: {},
-		/**. ``''integer'' zIndex``: Controlador de prevalência das janelas modais.** /
-		zIndex: 1000,
-		/**. ``''node'' frame``: Quadro para agrupamento de mensagens.** /
-		frame: (function() {
-			const node  = document.createElement("ASIDE");
-			node.className = "js-wd-style";
-			node.dataset.jsWdModal = "frame";
-			return node;
-		})(),
-		/**. ``''void'' updateFrame()``: Atualiza a renderização do frame na tela.** /
-		updateFrame: function() {
-			this.frame.style.zIndex = this.zIndex + 1000;
-			const child = this.frame.childElementCount > 0;
-			const show  = this.frame.parentElement === document.body;
-			if (child && !show)
-				document.body.appendChild(this.frame);
-			else if (!child && show)
-				this.frame.remove();
-			return;
-		},
-		/**. ``''void'' add(''node'' node)``: Adiciona um nó ao frame.** /
-		add: function(node) {
-			this.frame.appendChild(node);
-			node.setAttribute("aria-modal", "false");
-			return this.updateFrame();
-		},
-		/**. ``''void'' del(''node'' node)``: Remove um nó do frame.** /
-		del: function(node) {
-			if (node.parentElement === this.frame) node.remove();
-			return this.updateFrame();
-		},
-		/**. ``''object'' main``: Retorna dados da janela modal prevalente (id, modal, node, type) ou nulo.** /
-		get main() {
-			return this.heap.length < 1 ? null : {
-				id: this.heap[this.heap.length - 1],
-				modal: this.data[this.heap[this.heap.length - 1]],
-				get node() {return this.modal.children[0];},
-				get type() {return this.modal.dataset.jsWdModal;}
-			};
-		},
-		/**. ``''void'' escape()``: Simula um ''esc'' fechando a janela modal prevalente do tipo glass.** /
-		escape: function() {
-			const main = this.main;
-			if (main !== null && main.type === "glass") this.hide(main.id);
-			return;
-		},
-		/**. ``''node'' updateModal()``: Atualiza as condições de exibição da janela modal.** /
-		updateModal: function() {
-			const main  = this.main;
-			const attr  = "inert" in document.body && typeof document.body.inert === "boolean";
-			const	inert = main !== null && main.type !== "glass";
-			const lock  = main !== null;
-			const body  = inert && !attr ? (lock ? "inert+lock" : "inert") : (lock ? "lock" : "");
-			/*-- configurando fundo --* /
-			if (body !== "")
-				document.body.dataset.jsWdModalBody = body;
-			else if ("jsWdModalBody" in document.body.dataset)
-				delete document.body.dataset.jsWdModalBody
-			/*-- se inert estiver implantado --* /
-			if (attr) {
-				const list = document.body.children;
-				for (let i = 0; i < list.length; i++)
-					if (!inert || list[i] === main.modal || list[i].dataset.jsWdModal === "frame")
-						list[i].inert = false;
-					else
-						list[i].inert = true;
-			}
-			return;
-		},
-		/**. ``''void'' push(''string'' id, ''node'' node)``: Vincula um nó a uma janela modal identificada por ``id``.** /
-		push: function(id, node) {
-			id = id === null || id === undefined ? "" : String(id).trim();
-			if (arguments.length > 1 && id !== "" && !(id in this.data)) {
-				this.data[id] = document.createElement("ASIDE");
-				this.data[id].className = "js-wd-style";
-				this.data[id].appendChild(node);
-			}
-			return;
-		},
-		/**. ``''void'' show(''string'' id, ''string'' place, ''booelan'' wall)``: Exibe a janela modal vinculada ao identificador ``id``. O argumento ``place`` define o local do elemento na tela ([nswe]|[ns][we]|top|bottom|left|right|full) e o argumento ``wall``, se falso, não criará um fundo escurecido.** /
-		show: function(id, place, wall) {
-			id = id === null || id === undefined ? "" : String(id).trim();
-			/*-- exibir modal que não está na pilha --* /
-			if (id in this.data && this.heap.indexOf(id) < 0) {
-				const back = this.data[id];
-				const node = back.children[0];
-				node.setAttribute("aria-modal", wall !== false ? "true" : "false");
-				back.dataset.jsWdModal         = wall !== false ? "wall" : "glass";
-				back.dataset.jsWdModalPosition = typeof place === "string" ? place : "";
-				back.style.zIndex              = this.zIndex;
-				back.addEventListener("click", function(ev) {
-					ev.preventDefault();
-					if (ev.target === back) __MODAL.escape();
-				}, false);
-				/*-- Renderizando --* /
-				document.body.appendChild(back);
-				this.zIndex++;
-				this.heap.push(id);
-				this.updateModal();
-			}
-			/*-- trazer para frente modal que já está na pilha --* /
-			else if (id in this.data) {
-				this.hide(id);
-				this.show(id, place, wall);
-			}
-			return;
-		},
-		/**. ``''boolean'' hide(''string'' id)``: Esconde a janela modal vinculada ao id, todas, se id for nulo, ou a última, se indefinido.** /
-		hide: function(id) {
-			id = id === null || id === undefined ? id : String(id).trim();
-			const index = this.heap.indexOf(id);
-			if (index >= 0) {
-				this.data[id].remove();
-				this.heap[index] = null;
-				this.heap = this.heap.filter(function(v,i,a) {return v !== null;});
-				this.updateModal();
-			} else if (id === null) {
-				const list = this.heap.slice();
-				for (let i = 0; i < list.length; i++)
-					this.hide(list[i]);
-			} else if (id === undefined) {
-				const main = this.main;
-				if (main !== null)
-					this.hide(main.id);
-			}
-			return;
-		},
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-		/*get freeze() {
-			return document.querySelector("body.js-wd-freeze") !== null;
-		},
-		set freeze(value) {
-			value = value !== false;
-			const freeze = this.freeze;
-			let   style  = document.body.className;
-			if (value && !freeze)
-				style += " js-wd-freeze";
-			else if (!value && freeze)
-				style = style.replace(/js\-wd\-freeze/g, "").replace(/\s+/g, " ").trim();
-			if (style !== document.body.className)
-				document.body.className = style;
-			return;
-		},
-
-
-		get inert() {
-			const inert = typeof document.body.inert === "boolean";
-			if (!inert)
-				return document.querySelector("body.js-wd-inert") !== null;
-			const child = document.body.children;
-			for (let i = 0; i < child.length; i++) {
-				if (child[i] !== this.pack && this.heap2.indexOf(child[i]) < 0)
-					if (child[i].inert === false) return false;
-			}
-			return true;
-		},
-		set inert(value) {
-			value = value !== false;
-			const freeze = this.freeze;
-			let   style  = document.body.className;
-			if (value && !freeze)
-				style += " js-wd-freeze";
-			else if (!value && freeze)
-				style = style.replace(/js\-wd\-freeze/g, "").replace(/\s+/g, " ").trim();
-			if (style !== document.body.className)
-				document.body.className = style;
-			return;
-		},*/
-
-
-
-
-
-
-
-
-
+		/**. ``''integer'' index``: Controle pe sobreposição de camadas.**/
 		index: 1000,
-		/**. ``''node'' frame``: Quadro para agrupamento de mensagens.**/
+		/**. ``''node'' frame``: Quadro para agrupamento de alertas.**/
 		frame: document.createElement("ASIDE"),
-		/**. ``''node'' glass``: Quadro falso para menu de contexto.**/
+		/**. ``''node'' glass``: Quadro para menus de contexto.**/
 		glass: document.createElement("ASIDE"),
-		/**. ``''node'' wall``: Quadro modal para elementos.**/
+		/**. ``''node'' wall``: Quadro para camadas de diálogos.**/
 		get wall() {return document.createElement("ASIDE");},
-		/**. ``''array'' heap``: Pilha de quadros ativos.**/
+		/**. ``''array'' heap``: Pilha de controle de quadros.**/
 		heap: [],
-
-
-
+		/**. ``''void'' append(''node'' node, ''object'' options)``: Agrega elementos aos quadros. O argumento ``node`` refere-se ao elemento a ser agregado e o argumento ``options`` define as características do elemento:
+		|Nome|Tipo|Valor|Descrição|
+		|type|string|frame (padrão), glass ou wall|Define o tipo de quadro|
+		|place|string|center (padrão), top bottom left right full ou ponto cardeais (nswe)|Define o posicionamento do nó|
+		|onclose|function|-|Função a ser chamada ao fechar o elemento|
+		Quanto às características dos quadro, tem-se:
+		|Característica|frame|wall|glass|
+		|Acondiciona vários nós|Agrupado|Individualmente|Não|
+		|Fundo|Transparente-Redimencionável|Opaco-Tela|Transparente-Tela|
+		|Fundo recebe foco|Não|Não|Sim|
+		|Nó tem foco|Não|Sim|Sim|
+		|Tecla de fechamento|Não|Esc|Esc, click (no fundo) e Tab (perder foco)|
+		|Sobreposição|Coluna|Camadas|Não|
+		|Fundo inert|Não|Sim|Sim|
+		|Objetivo|Alerta|Diálogo|Menu|
+		Se o modal for fechado com o método ``remove``, a função definida em ``onclose`` receberá como argumento o valor 1 (um), caso contrário, 0 (zero).**/
 		append: function(node, options) {
-			const conf  = typeof options === "object" ? options : {};
-			const type  = /^(frame|glass|wall)$/i;
-			const place = /^(top|bottom|left|right|full|[nswe]|[ns][we])$/i;
-			conf.type   = type.test(conf.type)   ? conf.type.toLowerCase()  : "frame";
-			conf.place  = place.test(conf.place) ? conf.place.toLowerCase() : "";
-			conf.index  = String(this.index++);
-			conf.close  = typeof conf.onclose === "function" ? conf.onclose : null;
-			conf.node   = node;
-			conf.back   = this[conf.type];
-			conf.aria   = conf.type === "wall" ? "true" : "false";
-			conf.tab    = conf.type === "frame" ? -1 : 0;
+			if (node === document.body) return;
+			const conf   = typeof options === "object" ? options : {};
+			const type   = /^(frame|glass|wall)$/i;
+			const place  = /^(top|bottom|left|right|full|[nswe]|[ns][we])$/i;
+			conf.type    = type.test(conf.type)   ? conf.type.toLowerCase()  : "frame";
+			conf.place   = place.test(conf.place) ? conf.place.toLowerCase() : "";
+			conf.index   = String(this.index++);
+			conf.close   = typeof conf.onclose === "function" ? conf.onclose : null;
+			conf.node    = node;
+			conf.back    = this[conf.type];
+			conf.aria    = conf.type === "wall" ? "true" : "false";
+			conf.tabBack = conf.type === "glass" ?  0 : -1;
+			conf.tabNode = conf.type === "frame" ? -1 :  0;
 			/*-- glass é frágil e sempre se quebra a cada interação --*/
 			this.glass.innerHTML = "";
 			/*-- reorganizar a pilha em caso de repetição de container --*/
@@ -881,116 +702,70 @@ const wd = (function() {
 					v.back.className = "js-wd-style";
 				if (v.back.style.zIndex !== v.index)
 					v.back.style.zIndex = v.index;
-				if (v.back.tabIndex !== v.tab)
-					v.back.tabIndex = v.tab;
+				if (v.back.tabIndex !== v.tabBack)
+					v.back.tabIndex = v.tabBack;
 				/*-- redefinindo propriedades do nó --*/
 				if (v.node.getAttribute("aria-modal") !== v.aria)
 					v.node.setAttribute("aria-modal", v.aria);
-				if (v.node.tabIndex >= 0)
-					v.node.tabIndex = -1;
+				if (v.node.tabIndex !== v.tabNode)
+					v.node.tabIndex = v.tabNode;
 				/*-- definindo eventos --*/
-				v.back.onkeyup = v.type === "frame" ? null : function(ev) {
+				v.back.onkeydown = v.type === "frame" ? null : function(ev) {
 					if (ev.key === "Escape") {
 						ev.target.remove();
-						if (v.close !== null) v.close();
+						if (v.close !== null) v.close(0);
+						__MODAL.update();
 					}
-					return __MODAL.update();
+					return;
 				}
-				v.back.onclick = v.type !== "glass" ? null : function(ev) {
+				v.node.onblur = v.type !== "glass" ? null : function(ev) {
 					ev.target.remove();
-					if (v.close !== null) v.close();
+					if (v.close !== null) v.close(0);
 					return __MODAL.update();
 				}
-				/*-- retornando filtro --*/
+				/*-- Definindo focus --*/
+				v[v.tabNode === 0 ? "node" : "back"].focus();
 				return true;
 			});
 			return this.inert();
 		},
 
 		inert: function() {
-			const inert = typeof document.body.inert === "boolean";
+			const attr = typeof document.body.inert === "boolean";
+			const node = document.body.children;
+			const heap = this.heap.reverse();
+			const back = (function() {
+				if (heap.length === 0)
+					return [];
+				if (heap.length === 1 && heap[0].type === "frame")
+					return [];
+				if (heap[0].type === "frame")
+					return [heap[0].back, heap[1].back];
+				return [heap[0].back];
+			})();
+			const inert = back.length > 0;
+			/*-- aplicando inércia --*/
+			for (let i = 0; i < node.length; i++) {
+				if (attr) {
+					node[i].inert = inert ? back.indexOf(node[i]) < 0 : false;
+				}
 
 
-		},
 
 
-			/*-- verificar desabilitação do fundo --*/
-			/*const main   = this.heap2.length < 1 ? null : this.heap2[this.heap2.length - 1];
-			const type   = main === null ? null : main.dataset.jsWdModal;
-			const inert  = "inert" in document.body && typeof document.body.inert === "boolean";
-			const freeze = "js-wd-freeze";
-			let   style  = body.className.split(/\s/);
-			/*-- congelando o movimento --* /
-			if (type === null && value.indexOf(freeze) >= 0)
-				body.className = value.split(freeze).join("").replace(/\s+/, " ").trim();
-			else if (type !== null && value.indexOf(freeze) < 0)
-				body.className += ` ${freeze}`;
-			/*-- desabilitando interação --*/
-				/*-- desabilitando interação --* /
-				if (inert)
-					for (let i = 0; i < child.length; i++) {
-						child[i].inert = !(child[i] === main || child[i] === this.pack);
-					}
-			const attr  = "inert" in document.body && typeof document.body.inert === "boolean";
-			const	inert = main !== null && main.type !== "glass";
-			const lock  = main !== null;
-			const body  = inert && !attr ? (lock ? "inert+lock" : "inert") : (lock ? "lock" : "");
-			/*-- configurando fundo --* /
-			if (body !== "")
-				document.body.dataset.jsWdModalBody = body;
-			else if ("jsWdModalBody" in document.body.dataset)
-				delete document.body.dataset.jsWdModalBody
-			/*-- se inert estiver implantado --* /
-			if (attr) {
-				const list = document.body.children;
-				for (let i = 0; i < list.length; i++)
-					if (!inert || list[i] === main.modal || list[i].dataset.jsWdModal === "frame")
-						list[i].inert = false;
-					else
-						list[i].inert = true;
 			}
-			}*/
-
-
-
-
-
-
-
-
-		escape: function() {//FIXME TESTE keyup
-			/*for (let i = 0; i < this.heap.length; i++)
-				if (this.heap[i] !== this.frame) {
-					this.heap[i].remove();
-					this.update();
-					return;
-				}*/
-			return;
 		},
-
-
-
-
 
 		remove: function(node) {
 			const back = node.parentElement;
 			for (let i = 0; i < this.heap.length; i++)
 				if (this.heap[i].back === back) {
 					node.remove();
-					if (this.heap[i].close !== null) this.heap[i].close();
+					if (this.heap[i].close !== null) this.heap[i].close(1);
 					return this.update();
 				}
 			return;
 		},
-
-
-
-
-
-
-
-
-
 	};
 
 /*----------------------------------------------------------------------------*/
@@ -1005,7 +780,7 @@ const wd = (function() {
 			bar.addEventListener("wdprogressopen", function(ev) {
 				const count = Number(ev.target.dataset.jsWdProgressCount) + 1;
 				ev.target.dataset.jsWdProgressCount = count;
-				__MODAL.append(ev.target, {type: "wall", place: "top"});
+				__MODAL.append(ev.target, {type: "frame"});
 				return;
 			}, false);
 			/*-- Disparador de fechamento de processo --*/
