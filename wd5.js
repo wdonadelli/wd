@@ -637,7 +637,14 @@ const wd = (function() {
 		/**. ``''node'' frame``: Quadro para agrupamento de alertas.**/
 		frame: document.createElement("ASIDE"),
 		/**. ``''node'' glass``: Quadro para menus de contexto.**/
-		glass: document.createElement("ASIDE"),
+		glass: (function() {
+			const node = document.createElement("ASIDE");
+			node.addEventListener("click", function(ev) {
+				return __MODAL.escape("Tab");
+			}, false);
+			return node;
+		}()),
+
 		/**. ``''node'' wall``: Quadro para camadas de diálogos.**/
 		get wall() {return document.createElement("ASIDE");},
 		/**. ``''array'' heap``: Pilha de controle de quadros.**/
@@ -651,8 +658,6 @@ const wd = (function() {
 		|Característica|frame|wall|glass|
 		|Acondiciona vários nós|Agrupado|Individualmente|Não|
 		|Fundo|Transparente-Redimencionável|Opaco-Tela|Transparente-Tela|
-		|Fundo recebe foco|Não|Não|Sim|
-		|Nó tem foco|Não|Sim|Sim|
 		|Tecla de fechamento|Não|Esc|Esc, click (no fundo) e Tab (perder foco)|
 		|Sobreposição|Coluna|Camadas|Não|
 		|Fundo inert|Não|Sim|Sim|
@@ -660,18 +665,16 @@ const wd = (function() {
 		Se o modal for fechado com o método ``remove``, a função definida em ``onclose`` receberá como argumento o valor 1 (um), caso contrário, 0 (zero).**/
 		append: function(node, options) {
 			if (node === document.body) return;
-			const conf   = typeof options === "object" ? options : {};
-			const type   = /^(frame|glass|wall)$/i;
-			const place  = /^(top|bottom|left|right|full|[nswe]|[ns][we])$/i;
-			conf.type    = type.test(conf.type)   ? conf.type.toLowerCase()  : "frame";
-			conf.place   = place.test(conf.place) ? conf.place.toLowerCase() : "";
-			conf.index   = String(this.index++);
-			conf.close   = typeof conf.onclose === "function" ? conf.onclose : null;
-			conf.node    = node;
-			conf.back    = this[conf.type];
-			conf.aria    = conf.type === "wall" ? "true" : "false";
-			conf.tabBack = conf.type === "glass" ?  0 : -1;
-			conf.tabNode = conf.type === "frame" ? -1 :  0;
+			const conf  = typeof options === "object" ? options : {};
+			const type  = /^(frame|glass|wall)$/i;
+			const place = /^(top|bottom|left|right|full|[nswe]|[ns][we])$/i;
+			conf.type   = type.test(conf.type)   ? conf.type.toLowerCase()  : "frame";
+			conf.place  = place.test(conf.place) ? conf.place.toLowerCase() : "";
+			conf.index  = String(this.index++);
+			conf.close  = typeof conf.onclose === "function" ? conf.onclose : null;
+			conf.node   = node;
+			conf.back   = this[conf.type];
+			conf.aria   = conf.type === "wall" ? "true" : "false";
 			/*-- glass é frágil e sempre se quebra a cada interação --*/
 			this.glass.innerHTML = "";
 			/*-- reorganizar a pilha em caso de repetição de container --*/
@@ -689,8 +692,10 @@ const wd = (function() {
 			this.heap = this.heap.filter(function(v,i,a) {
 				/*-- limpar elemento vazio ou desvinculado de body --*/
 				if (v.back.childElementCount < 1 || v.back.parentElement !== document.body) {
-					v.back.remove();
+					v.node.removeAttribute("aria-modal");
+					v.node.remove();
 					v.back.innerHTML = "";
+					v.back.remove();
 					return false;
 				}
 				/*-- redefinindo propriedades da parede --*/
@@ -702,33 +707,42 @@ const wd = (function() {
 					v.back.className = "js-wd-style";
 				if (v.back.style.zIndex !== v.index)
 					v.back.style.zIndex = v.index;
-				if (v.back.tabIndex !== v.tabBack)
-					v.back.tabIndex = v.tabBack;
+				if (v.back.tabIndex >= 0)
+					v.back.tabIndex = -1;
 				/*-- redefinindo propriedades do nó --*/
 				if (v.node.getAttribute("aria-modal") !== v.aria)
 					v.node.setAttribute("aria-modal", v.aria);
-				if (v.node.tabIndex !== v.tabNode)
-					v.node.tabIndex = v.tabNode;
-				/*-- definindo eventos --*/
-				v.back.onkeydown = v.type === "frame" ? null : function(ev) {
-					if (ev.key === "Escape") {
-						ev.target.remove();
-						if (v.close !== null) v.close(0);
-						__MODAL.update();
+				/*-- focalizando o primeiro elemento --*/
+				if (v.type !== "frame") {
+					const all = v.node.querySelectorAll("*");
+					for (let j = 0; j < all.length; j++) {
+						if (all[j].tabIndex >= 0) {
+							all[j].focus();
+							break;
+						}
 					}
-					return;
 				}
-				v.node.onblur = v.type !== "glass" ? null : function(ev) {
-					ev.target.remove();
-					if (v.close !== null) v.close(0);
-					return __MODAL.update();
-				}
-				/*-- Definindo focus --*/
-				v[v.tabNode === 0 ? "node" : "back"].focus();
 				return true;
 			});
 			return this.inert();
 		},
+
+		escape: function(key) {
+			if (!(/^(Tab|Escape)$/i).test(key)) return;
+			const keys = {wall: /^Escape$/i, glass: /^(Tab|Escape)$/i}
+			const heap = this.heap.reverse();
+			for (let i = 0; i < heap.length; i++) {
+				if (heap[i].type in keys && keys[heap[i].type].test(key)) {
+					heap[i].back.remove();
+					if (heap[i].close !== null) heap[i].close(0);
+					this.update();
+					return;
+				}
+			}
+			return;
+		},
+
+
 
 		inert: function() {
 			const attr = typeof document.body.inert === "boolean";
@@ -772,40 +786,31 @@ const wd = (function() {
 	/**###### ``**const** ''object'' __PROGRESS``
 	Registra a barra de progresso das requisições da biblioteca.**/
 	const __PROGRESS = {
+		/**. ``''integer'' count``: Contador de ações em progresso.**/
+		count: 0,
 		/**. ``''node'' bar``: Barra de progresso.**/
 		bar: (function() {
 			const bar = document.createElement("PROGRESS");
-			bar.dataset.jsWdProgressCount = 0;
 			/*-- Disparadores de abertura de processo --*/
 			bar.addEventListener("wdprogressopen", function(ev) {
-				const count = Number(ev.target.dataset.jsWdProgressCount) + 1;
-				ev.target.dataset.jsWdProgressCount = count;
-				__MODAL.append(ev.target, {type: "frame"});
+				__PROGRESS.count++;
+				__MODAL.append(ev.target, {type: "frame", place: "top"});
 				return;
 			}, false);
 			/*-- Disparador de fechamento de processo --*/
 			bar.addEventListener("wdprogressclose", function(ev) {
-				const count = Number(ev.target.dataset.jsWdProgressCount) - 1;
-				ev.target.dataset.jsWdProgressCount = count < 0 ? 0 : count;
-				/*-- delay para evitar alternação de exibição irritante --*/
+				__PROGRESS.count = __PROGRESS.count < 1 ? 0 : (__PROGRESS.count - 1);
 				window.setTimeout(function () {
-					const count = Number(ev.target.dataset.jsWdProgressCount);
-					if (count < 1) {
+					if (__PROGRESS.count < 1) {
 						__MODAL.remove(ev.target);
 						ev.target.removeAttribute("value");
 					}
+					return;
 				}, 50);
 				return;
 			}, false);
 			/*-- Disparador de definição de valor --*/
-			bar.addEventListener("wdprogressset", function(ev) {
-				const value = Number(ev.target.dataset.jsWdProgressValue);
-				if (isNaN(value))
-					ev.target.removeAttribute("value");
-				else
-					ev.target.value = value < 0 ? 0 : (value > 1 ? 1 : value);
-				return;
-			}, false);
+			bar.addEventListener("wdprogressset", function(ev) {}, false);
 			/*-- retornando a barra de progresso --*/
 			return bar;
 		})(),
@@ -827,7 +832,11 @@ const wd = (function() {
 		},
 		/**. ``''void'' set(''integer'' value)``: Define o valor da barra de progresso pelo seu argumento.**/
 		set: function(value) {
-			this.bar.dataset.jsWdProgressValue = value;
+			value = Number(value);
+			if (isNaN(value))
+				this.bar.removeAttribute("value");
+			else
+				this.bar.value = value < 0 ? 0 : (value > 1 ? 1 : value);
 			this.bar.dispatchEvent(this.setEvent);
 			return;
 		}
@@ -854,7 +863,8 @@ const wd = (function() {
 		/**. ``''void'' alert(''object'' options)``: Ver método ''signal''.**/
 		alert: function(options) {
 			/*-- Obtendo dados iniciais --*/
-			options = typeof options === "object" ? options : {};
+			options     = typeof options === "object" ? options : {};
+			const call  = typeof options.trigger === "function" ? options.trigger : null;
 			const time  = new Date();
 			const type  = options.type in this.id ? options.type : "info";
 			const id    = `js_wd_signal_${type}_${this.id[type]++}`;
@@ -862,7 +872,7 @@ const wd = (function() {
 			const child = {head: null, body: null, foot: null, time: null, kill: null};
 			for (let i in child)
 				child[i] = node.querySelector(`[data-js-wd-signal-${i}]`);
-			/*-- node/main/time/kill --*/
+			/*-- node/time/kill --*/
 			node.dataset.jsWdSignal = type;
 			node.setAttribute("role", (type === "dialog" ? "alertdialog" : "alert"));
 			child.time.setAttribute("datetime", time.toISOString());
@@ -887,39 +897,65 @@ const wd = (function() {
 			/*-- alertas --*/
 			if (type !== "dialog") {
 				child.foot.remove();
-				child.kill.addEventListener("click", function(ev) {
-					__MODAL.remove(ev.target.parentElement);
-				}, false);
-				__MODAL.append(node, {type: "frame"});
-				if (typeof options.time === "number" && Math.trunc(options.time) > 0)
-					window.setTimeout(function() {
-						child.kill.click();
-					}, Math.trunc(options.time));
+				child.kill.addEventListener("click", function(ev) {return __MODAL.remove(node);}, false);
+				__MODAL.append(node, {
+					type: "frame",
+					onclose: function() {if (call !== null) call(options.id, null);}
+				});
+				const delta = typeof options.time === "number" ? Math.trunc(options.time) : 0;
+				if (delta > 0)
+					window.setTimeout(function() {child.kill.click();}, delta);
 			}
 			/*-- dialogo --*/
 			else {
 				child.kill.remove();
-				const acts = typeof options.actions === "object"   ? options.actions : {ok: "OK*"};
-				const call = typeof options.trigger === "function" ? options.trigger : null;
+				const acts = typeof options.actions === "object" ? options.actions : {ok: "OK*"};
 				const auto = /\*$/;
 				let  focus = null;
+				/*-- botões de ação --*/
 				for (let act in acts) {
 					let btn = document.createElement("BUTTON");
 					btn.type = "button";
 					btn.className = "js-wd-style js-wd-button";
 					btn.textContent = acts[act].replace(auto, "");
+					btn.addEventListener("keydown", function(ev) {
+						const keys = {
+							next: /^(ArrowRight|ArrowDown)$/i,
+							previus: /^(ArrowLeft|ArrowUp)$/i,
+							first: /^(Home)$/i,
+							last: /^(End)$/i
+						};
+						const child = ev.target.parentElement.children;
+						if (keys.next.test(ev.key) && ev.target.nextElementSibling !== null)
+							ev.target.nextElementSibling.focus();
+						else if (keys.previus.test(ev.key) && ev.target.previousElementSibling !== null)
+							ev.target.previousElementSibling.focus();
+						else if (keys.first.test(ev.key))
+							child[0].focus();
+						else if (keys.last.test(ev.key))
+							child[child.length - 1].focus();
+						return;
+					}, false);
 					btn.addEventListener("click", function(ev) {
-						__MODAL.remove(this.parentElement.parentElement);
+						__MODAL.remove(node);
 						if (call !== null) call(options.id, act);
+						return;
 					}, false);
 					child.foot.appendChild(btn);
-					if (focus === null && auto.test(acts[act])) {
-						btn.autofocus = true;
-						focus = btn;
-					}
+					focus = focus === null && auto.test(acts[act]) ? btn : focus;
 				}
-				__MODAL.append(node, {type: "wall", onclose: () => call(options.id, null)});
-				if (focus !== null) focus.focus();
+				/*-- Renderizando diálogo --*/
+				__MODAL.append(node, {
+					type: "wall",
+					onclose: function(result) {
+						if (call !== null && result === 0) call(options.id, null);
+						return;
+					}
+				});
+				if (focus !== null) {
+					focus.autofocus = true;
+					focus.focus();
+				}
 			}
 			return;
 		},
@@ -9996,11 +10032,11 @@ const wd = (function() {
 				//{name: null, call: wdOnMouse, kill: false, bind: {}}
 			]
 		},
-		keyup: {
-			target: window, preventDefault: true,
+		keydown: {
+			target: window, preventDefault: false,
 			data: [
-				{name: "[data-js-wd-modal=\"glass\"]", kill: false, bind: {}, call: function(e,ev) {
-					if (ev.key === "Escape") __MODAL.escape();
+				{name: `[data-js-wd-modal]`, kill: false, bind: {}, call: function(e,event) {
+						return __MODAL.escape(event.key);
 				}}
 			],
 		},
