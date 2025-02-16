@@ -65,20 +65,9 @@ const wd = (function() {
 	const __STYLE = `
 		/*-- Variáveis -----------------------------------------------------------*/
 		:root {
-			--var-js-wd-light-info: rgb(230,242,255);
-			--var-js-wd-dark-info:  rgb(0,123,255);
-			--var-js-wd-light-ok: rgb(230,255,230);
-			--var-js-wd-dark-ok:  rgb(0,128,0);
-			--var-js-wd-light-warn: rgb(255,244,230);
-			--var-js-wd-dark-warn:  rgb(230,126,0);
-			--var-js-wd-light-error: rgb(255,230,230);
-			--var-js-wd-dark-error:  rgb(179,0,0);
-			--var-js-wd-light-dialog: rgb(242,236,249);
-			--var-js-wd-dark-dialog:  rgb(102,51,153);
-			--var-js-wd-z-index-1: 9000;
-			--var-js-wd-z-index-2: 8000;
-			--var-js-wd-z-index-3: 7000;
-			--var-js-wd-font: Verdana, sans-serif;
+			--var-js-wd-z-index-1: 9999;
+			--var-js-wd-z-index-2: 9998;
+			--var-js-wd-z-index-3: 9997;
 		}
 
 		/*-- Animações -----------------------------------------------------------*/
@@ -104,10 +93,6 @@ const wd = (function() {
 		/*-- Class ---------------------------------------------------------------*/
 		* {box-sizing: border-box !important;}
 		.js-wd-style {
-			top: initial !important;
-			right: initial !important;
-			bottom: initial !important;
-			left: initial !important;
 			margin: 0 !important;
 			padding: 0 !important;
 			width: auto !important;
@@ -134,104 +119,113 @@ const wd = (function() {
 		}
 		.js-wd-style.js-wd-button {
 			padding: 0.5em 2em !important;
+			margin: 2px !important;
 			text-align: center !important;
-			background-color: rgb(240,240,240) !important;
-			color: rgb(105,90,90) !important;
-			border: thin solid rgb(115, 115, 115) !important;
+			background-color: rgb(230,230,230) !important;
+			color: rgb(50,50,50) !important;
+			border: thin solid !important;
 			border-radius: 0.25em !important;
 			cursor: pointer !important;
-			opacity: 0.8 !important;
 		}
-    .js-wd-style.js-wd-button:hover, .js-wd-button:focus {opacity: 1 !important;}
-    .js-wd-style.js-wd-button:focus  {outline: thin solid rgb(30,144,255) !important;}
-    .js-wd-style.js-wd-button:active {opacity: 0.5 !important;}
+    .js-wd-style.js-wd-button:hover,
+    .js-wd-button:focus {background-color: rgb(245,245,245) !important;}
+    .js-wd-style.js-wd-button:focus  {outline: 2px solid rgb(0, 50, 200) !important;}
+    .js-wd-style.js-wd-button:active {background-color: rgb(200,200,200) !important; }
 
-		/*-- Janela Modal --------------------------------------------------------*/
+		/*-- Janela Flutuante ----------------------------------------------------*/
 
 		/*-- Base (janela básica) --*/
-		[data-js-wd-modal] {
+		[data-js-wd-float] {
 			position: fixed !important;
-			top: 0 !important;
-			right: 0 !important;
-			bottom: 0 !important;
-			left: 0 !important;
-			margin: 0 !important;
-			padding: 0 !important;
-			width: auto !important;
-			height: auto !important;
-			display: flex !important;
+			display:   flex !important;
+			margin:       0 !important;
+			padding:      0 !important;
+			width:     auto !important;
+			height:    auto !important;
+			overflow:  auto !important;
 		}
 
 		/*-- Frame --*/
-		[data-js-wd-modal="frame"] {
-			flex-direction: column !important;
+		[data-js-wd-float="frame"] {
+			top:   0 !important;
+			left:  0 !important;
+			right: 0 !important;
 			bottom: initial !important;
+			flex-direction: column !important;
 			max-height: 100vh !important;
-			overflow: auto !important;
+			z-index: var(--var-js-wd-z-index-2);
 		}
-
 		@media screen and (min-width: 768px) {
-			[data-js-wd-modal="frame"] {
+			[data-js-wd-float="frame"] {
 				bottom: 0 !important;
 				top: initial !important;
 				left: 75vw !important;
 			}
 		}
 
+		/*-- Float --*/
+		[data-js-wd-float="float"] {
+			max-height: 90vh !important;
+			max-width:  30vw !important;
+			z-index: var(--var-js-wd-z-index-1);
+		}
+
 		/*-- modal --*/
-		[data-js-wd-modal="wall"], [data-js-wd-modal="glass"] {
+		[data-js-wd-float="modal"] {
+			top:    0 !important;
+			left:   0 !important;
+			right:  0 !important;
+			bottom: 0 !important;
 			flex-direction: row !important;
 			justify-content: center !important;
 			align-items: center !important;
+			background-color: rgba(50,50,50,0.7) !important;
+			z-index: var(--var-js-wd-z-index-3);
 		}
-		[data-js-wd-modal="wall"] {background-color: rgba(50,50,50,0.7) !important;}
-
-		/*-- modal local --*/
-		[data-js-wd-modal-place="n"],
-		[data-js-wd-modal-place="ne"],
-		[data-js-wd-modal-place="nw"] {align-items: flex-start !important;}
-		[data-js-wd-modal-place="s"],
-		[data-js-wd-modal-place="sw"],
-		[data-js-wd-modal-place="se"] {align-items: flex-end !important;}
-		[data-js-wd-modal-place="w"],
-		[data-js-wd-modal-place="nw"],
-		[data-js-wd-modal-place="sw"] {justify-content: flex-start !important;}
-		[data-js-wd-modal-place="e"],
-		[data-js-wd-modal-place="se"],
-		[data-js-wd-modal-place="ne"] {justify-content: flex-end !important;}
-		[data-js-wd-modal-place="left"],
-		[data-js-wd-modal-place="right"] {align-items: stretch !important;}
-		[data-js-wd-modal-place="top"],
-		[data-js-wd-modal-place="bottom"] {
+		[data-js-wd-float="modal"] > *:not(*:first-child) {display: none !important;}
+		[data-js-wd-float="modal"][data-js-wd-float-place="n"],
+		[data-js-wd-float="modal"][data-js-wd-float-place="ne"],
+		[data-js-wd-float="modal"][data-js-wd-float-place="nw"] {
+			align-items: flex-start !important;
+		}
+		[data-js-wd-float="modal"][data-js-wd-float-place="s"],
+		[data-js-wd-float="modal"][data-js-wd-float-place="sw"],
+		[data-js-wd-float="modal"][data-js-wd-float-place="se"] {
+			align-items: flex-end !important;
+		}
+		[data-js-wd-float="modal"][data-js-wd-float-place="w"],
+		[data-js-wd-float="modal"][data-js-wd-float-place="nw"],
+		[data-js-wd-float="modal"][data-js-wd-float-place="sw"] {
+			justify-content: flex-start !important;
+		}
+		[data-js-wd-float="modal"][data-js-wd-float-place="e"],
+		[data-js-wd-float="modal"][data-js-wd-float-place="se"],
+		[data-js-wd-float="modal"][data-js-wd-float-place="ne"] {
+			justify-content: flex-end !important;
+		}
+		[data-js-wd-float="modal"][data-js-wd-float-place="left"],
+		[data-js-wd-float="modal"][data-js-wd-float-place="right"] {
+			align-items: stretch !important;
+		}
+		[data-js-wd-float="modal"][data-js-wd-float-place="top"],
+		[data-js-wd-float="modal"][data-js-wd-float-place="bottom"] {
 			flex-direction: column !important;
 			align-items: stretch !important;
 		}
-		[data-js-wd-modal-place="left"],
-		[data-js-wd-modal-place="top"]    {justify-content: flex-start !important;}
-		[data-js-wd-modal-place="right"],
-		[data-js-wd-modal-place="bottom"] {justify-content: flex-end !important;}
-		[data-js-wd-modal-place="full"]   {align-items: stretch !important;}
-		[data-js-wd-modal-place="full"] > * {flex-grow: 1 !important;}
-
-		/*FIXME consertar isso aqui */
-
-		/*-- inert/lock --*/
-		[data-js-wd-modal-body*="lock"] {
-			overflow: hidden !important;
+		[data-js-wd-float="modal"][data-js-wd-float-place="left"],
+		[data-js-wd-float="modal"][data-js-wd-float-place="top"] {
+			justify-content: flex-start !important;
 		}
-		[data-js-wd-modal-body*="inert"] > * {
-			visibility: hidden !important;
-			pointer-events: none !important;
+		[data-js-wd-float="modal"][data-js-wd-float-place="right"],
+		[data-js-wd-float="modal"][data-js-wd-float-place="bottom"] {
+			justify-content: flex-end !important;
 		}
-		[data-js-wd-modal-body*="inert"] > [data-js-wd-modal] {
-			visibility: visible !important;
-			pointer-events: auto !important;
+		[data-js-wd-float="modal"][data-js-wd-float-place="full"] {
+			align-items: stretch !important;
 		}
-
-
-
-
-
+		[data-js-wd-float="modal"][data-js-wd-float-place="full"] > * {
+			flex-grow: 1 !important;
+		}
 
 		/*-- Caixas de diálogo e alerta ------------------------------------------*/
 
@@ -242,7 +236,7 @@ const wd = (function() {
 			flex-direction: column !important;
 			margin: 0.5em !important;
 			padding: 0.5em !important;
-			animation: js-wd-animation-expand 0.5s ease !important !important;
+			animation: js-wd-animation-expand 0.5s ease !important;
 			font-size: 14px !important;
 			font-family: Verdana, sans-serif !important;
 			line-height: 1.2 !important;
@@ -300,7 +294,6 @@ const wd = (function() {
 				justify-content: space-evenly !important;
 				align-items: center !important;
 			}
-			[data-js-wd-signal-foot] > button {margin: 0 0.5em !important;}
 		}
 
 		[data-js-wd-signal-time] {
@@ -400,14 +393,17 @@ const wd = (function() {
 			height: 100vh !important;
 			border-left: thin solid #000000;
 		}
-		/*-- data-wd-menu --------------------------------------------------------*/
 
 
 
-		[data-wd-menu] {cursor: context-menu !important;}
-		.js-wd-menu {font-size: 14px !important; font-family: Verdana,sans-serif !important; position: fixed !important; max-width: 40vw !important; max-height: 40vh !important; display: block !important; margin: 0 !important; padding: 0.3em !important; z-index: 999999 !important; overflow: auto !important !important; color: #ffffff !important; background-color: rgba(0,0,0) !important; border: 2px inset #101010 !important; border-radius: 0.3em !important; animation: js-wd-animation-emerge 0.5s linear 0s}
-		.js-wd-menu > * {display: block !important; margin: inherit !important; padding: inherit !important; cursor: pointer !important; border-radius: inherit !important;}
-		.js-wd-menu > *:hover {background-color: rgba(50,50,50) !important;}
+		/*-- data-wd-float --------------------------------------------------------*/
+		[data-wd-float] {cursor: context-menu !important;}
+
+
+
+
+
+
 		[data-wd-tsort] {cursor: pointer !important;}
 		[data-wd-tsort]:before {content: "\\2195 " !important; font-weight: normal !important;}
 		[data-wd-tsort="-1"]:before {content: "\\2191 " !important;}
@@ -432,20 +428,16 @@ const wd = (function() {
 		wdtag-root wdtag-string {color: #57ac57}
 
 		/*-- Importantes ---------------------------------------------------------*/
-		.js-wd-hide     {display: none !important;}
-		.js-wd-freeze   {overflow: hidden !important;}
-		.js-wd-unfreeze {overflow: visible !important;}
-		.js-wd-inert {
-			visibility: hidden !important;
-			pointer-events: none !important;
+		[data-js-wd-hide]:not([data-js-wd-show]) {
+			display: none !important;
 		}
-		.js-wd-usable {
-			visibility: visible !important;
-			pointer-events: auto !important;
+		[data-js-wd-inert]:not([data-js-wd-mobile]) {
+			overflow:       hidden !important;
+			pointer-events: none   !important;
 		}
-
-
-		`;
+		[data-js-wd-freeze]:not([data-js-wd-defrost]) {
+			overflow: hidden !important;
+		}`;
 
 
 
@@ -629,155 +621,207 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**const** ''object'' __MODAL``
+	/**###### ``**const** ''object'' __FLOAT``
 	Administra containers para janelas modais (wall e glass) e de quadro (frame).**/
-	const __MODAL = {
-		/**. ``''integer'' index``: Controle pe sobreposição de camadas.**/
-		index: 1000,
+	const __FLOAT = {
+		/**. ``''array'' heap``: Registra informações sobre os quadros.**/
+		heap: [],
 		/**. ``''node'' frame``: Quadro para agrupamento de alertas.**/
 		frame: document.createElement("ASIDE"),
-		/**. ``''node'' glass``: Quadro para menus de contexto.**/
-		glass: (function() {
-			const node = document.createElement("ASIDE");
-			node.addEventListener("click", function(ev) {
-				return __MODAL.escape("Tab");
-			}, false);
-			return node;
-		}()),
-
-		/**. ``''node'' wall``: Quadro para camadas de diálogos.**/
-		get wall() {return document.createElement("ASIDE");},
-		/**. ``''array'' heap``: Pilha de controle de quadros.**/
-		heap: [],
+		/**. ``''node'' modal``: Quadro para agrupamento de diálogos.**/
+		modal: document.createElement("ASIDE"),
+		/**. ``''node'' float``: Quadro para agrupamento de elementos flutuantes.**/
+		float: document.createElement("ASIDE"),
 		/**. ``''void'' append(''node'' node, ''object'' options)``: Agrega elementos aos quadros. O argumento ``node`` refere-se ao elemento a ser agregado e o argumento ``options`` define as características do elemento:
-		|Nome|Tipo|Valor|Descrição|
-		|type|string|frame (padrão), glass ou wall|Define o tipo de quadro|
-		|place|string|center (padrão), top bottom left right full ou ponto cardeais (nswe)|Define o posicionamento do nó|
-		|onclose|function|-|Função a ser chamada ao fechar o elemento|
+		|Nome|Tipo|Valores|Descrição|
+		|type|string|float (padrão), modal ou frame|Define o tipo de quadro|
+		|place|string|ver adiante|Posicionamento do nó no quadro|
+		|close|function|-|Função a ser chamada ao fechar o nó|
 		Quanto às características dos quadro, tem-se:
-		|Característica|frame|wall|glass|
-		|Acondiciona vários nós|Agrupado|Individualmente|Não|
-		|Fundo|Transparente-Redimencionável|Opaco-Tela|Transparente-Tela|
-		|Tecla de fechamento|Não|Esc|Esc, click (no fundo) e Tab (perder foco)|
-		|Sobreposição|Coluna|Camadas|Não|
-		|Fundo inert|Não|Sim|Sim|
+		|Característica|frame|modal|float|
+		|Acondicionamento|Em fila|Em camada|Individual|
+		|Fundo|Transparente-localizado|Opaco-Tela-Inerte|Ausente-Tela|
+		|Fechamento|Não|Esc|Esc, Tab e clique|
 		|Objetivo|Alerta|Diálogo|Menu|
-		Se o modal for fechado com o método ``remove``, a função definida em ``onclose`` receberá como argumento o valor 1 (um), caso contrário, 0 (zero).**/
+		Ao fechar o nó com o método ``remove``, ``close`` receberá como argumento ''verdadeiro'', caso contrário, ''falso''.
+		Para o tipo ``modal``, ``place`` pode ter posicionalmento nos lados (top, right, bottom, left, center, full) ou nos pontos cardeais (n, ne, e, se, s, sw, w, nw). Para o tipo ``float``, a posição (x,y) da tela. Não há posicionamento para o tipo ``frame``.**/
 		append: function(node, options) {
 			if (node === document.body) return;
-			const conf  = typeof options === "object" ? options : {};
-			const type  = /^(frame|glass|wall)$/i;
-			const place = /^(top|bottom|left|right|full|[nswe]|[ns][we])$/i;
-			conf.type   = type.test(conf.type)   ? conf.type.toLowerCase()  : "frame";
-			conf.place  = place.test(conf.place) ? conf.place.toLowerCase() : "";
-			conf.index  = String(this.index++);
-			conf.close  = typeof conf.onclose === "function" ? conf.onclose : null;
-			conf.node   = node;
-			conf.back   = this[conf.type];
-			conf.aria   = conf.type === "wall" ? "true" : "false";
-			/*-- glass é frágil e sempre se quebra a cada interação --*/
-			this.glass.innerHTML = "";
-			/*-- reorganizar a pilha em caso de repetição de container --*/
-			this.heap = this.heap.filter(function(v,i,a) {return v.back !== conf.back;});
-			/*-- apensando elementos --*/
-			conf.back.appendChild(conf.node);
-			document.body.appendChild(conf.back);
-			this.heap.push(conf);
+			const data  = typeof options === "object" ? options : {};
+			const query = node.querySelectorAll("*");
+			const type  = /^(float|frame|modal)$/i;
+			const place = {
+				modal: /^(top|bottom|left|right|full|[nswe]|[ns][we])$/i,
+				float: /^(\d+\,\d+)$/i,
+				frame: /xxxxx/
+			};
+			data.type   = type.test(data.type) ? data.type.toLowerCase()  : "float";
+			data.place  = place[data.type].test(data.place) ? data.place.toLowerCase() : "0,0";
+			data.close  = typeof data.close === "function" ? data.close : null;
+			data.node   = node;
+			data.back   = this[data.type];
+			data.back.appendChild(data.node);
+			this.heap.push(data);
 			return this.update();
 		},
-
-
-
-		update: function() {
+		/**. ``''void'' remove(''node'' node)``: Remove o nó do quadro que o armazena.**/
+		remove: function(node) {
 			this.heap = this.heap.filter(function(v,i,a) {
-				/*-- limpar elemento vazio ou desvinculado de body --*/
-				if (v.back.childElementCount < 1 || v.back.parentElement !== document.body) {
-					v.node.removeAttribute("aria-modal");
+				if (v.node === node) {
 					v.node.remove();
-					v.back.innerHTML = "";
-					v.back.remove();
+					if (v.close !== null) v.close(true);
 					return false;
 				}
-				/*-- redefinindo propriedades da parede --*/
-				if (v.back.dataset.jsWdModalPlace !== v.place)
-					v.back.dataset.jsWdModalPlace = v.place;
-				if (v.back.dataset.jsWdModal !== v.type)
-					v.back.dataset.jsWdModal = v.type;
-				if (v.back.className !== "js-wd-style")
-					v.back.className = "js-wd-style";
-				if (v.back.style.zIndex !== v.index)
-					v.back.style.zIndex = v.index;
-				if (v.back.tabIndex >= 0)
-					v.back.tabIndex = -1;
-				/*-- redefinindo propriedades do nó --*/
-				if (v.node.getAttribute("aria-modal") !== v.aria)
-					v.node.setAttribute("aria-modal", v.aria);
-				/*-- focalizando o primeiro elemento --*/
-				if (v.type !== "frame") {
-					const all = v.node.querySelectorAll("*");
-					for (let j = 0; j < all.length; j++) {
-						if (all[j].tabIndex >= 0) {
-							all[j].focus();
+				return true;
+			});
+			return this.update();
+		},
+		/**. ``''void'' update()``: Atualiza as informações dos quadros contra manipulações externas.**/
+		update: function() {
+			const names = ["modal", "frame", "float"];
+			let back, child, node, type;
+			for (let i = 0; i < names.length; i++) {
+				/*-- fundo --*/
+				type  = names[i];
+				back  = this[type];
+				child = back.children;
+				if (back.className !== "js-wd-style")
+					back.className = "js-wd-style";
+				if (back.tabIndex >= 0)
+					back.tabIndex = -1;
+				if (back.dataset.jsWdFloat !== type)
+					back.dataset.jsWdFloat = type;
+				if (back.childElementCount > 0 && back.parentElement !== document.body)
+					document.body.appendChild(back);
+				if (back.childElementCount < 1 && back.parentElement !== null)
+					back.remove();
+				while (type === "float" && back.childElementCount > 1)
+					back.firstElementChild.remove();
+				/*-- nós --*/
+				for (let j = 0; j < child.length; j++) {
+					node = child[j];
+					if (node.tabIndex >= 0)
+						node.tabIndex = -1;
+					if (node.getAttribute("aria-modal") !== (type === "modal" ? "true" : "false"))
+						node.setAttribute("aria-modal", type === "modal" ? "true" : "false");
+					if (node.style.display === "none")
+						node.style.display = null;
+					if (node.style.visibility === "hidden")
+						node.style.visibility = null;
+				}
+			}
+			/*-- reconfigurando heap --*/
+			this.heap = this.heap.filter(function(v,i,a) {
+				if (v.node.parentElement !== v.back) {
+					if (v.close !== null) v.close(false);
+					return false;
+				} else {
+					/*-- redefinindo o posicionamento --*/
+					if (v.node === v.back.firstElementChild)
+						v.back.dataset.jsWdFloatPlace = v.place;
+					if (v.type === "float") {
+						const wh = v.node.getBoundingClientRect();
+						const xy = v.place.split(",");
+						const x  = Number(xy[0]);
+						const y  = Number(xy[1]);
+						if (y > (window.innerHeight/2))
+							v.back.style.top = (y - wd.height)+"px";
+						else
+							v.back.style.top = (y)+"px";
+						if (x > (window.innerWidth/2))
+							v.back.style.left = (x - wh.width)+"px";
+						else
+							v.back.style.left = (x)+"px";
+					}
+					return true;
+				}
+			});
+			/*-- focalizar primeiro filho com autofocus --*/
+			if (this.heap.length > 0) {
+				const last = this.heap[this.heap.length - 1];
+				if (last.type !== "frame") {
+					const root  = last.back.firstElementChild;
+					const query = root.querySelectorAll("*");
+					for (let i = 0; i < query.length; i++) {
+						if (query[i].tabIndex >= 0) {
+							query[i].focus();
 							break;
 						}
 					}
 				}
-				return true;
-			});
-			return this.inert();
+			}
+			return this.setBack();
 		},
-
-		escape: function(key) {
-			if (!(/^(Tab|Escape)$/i).test(key)) return;
-			const keys = {wall: /^Escape$/i, glass: /^(Tab|Escape)$/i}
-			const heap = this.heap.reverse();
-			for (let i = 0; i < heap.length; i++) {
-				if (heap[i].type in keys && keys[heap[i].type].test(key)) {
-					heap[i].back.remove();
-					if (heap[i].close !== null) heap[i].close(0);
-					this.update();
-					return;
+		/**. ``''void'' setBack()``: Estabelece a condição do plano de fundo.**/
+		setBack: function() {
+			const child  = document.body.children;
+			const inert  = this.modal.childElementCount > 0;
+			const freeze = inert || this.float.childElementCount > 0;
+			const forget = [this.float, this.frame, this.modal];
+			/*-- congelamento de body --*/
+			if (freeze)
+				document.body.setAttribute("data-js-wd-freeze", "");
+			else
+				document.body.removeAttribute("data-js-wd-freeze");
+			/*-- definindo inercia --*/
+			for (let i = 0; i < child.length; i++)
+				if (forget.indexOf(child[i]) < 0)
+					this.inert(child[i], inert)
+			return;
+		},
+		/**. ``''void'' inert(''node'' node, ''boolean'' force)``: Define o elemento ''node'' e seus filhos como inertes conforme valor  do argumento ''force'' (padrão é verdadeiro).**/
+		inert: function(node, force) {
+			force = force !== false;
+			/*-- padrão --*/
+			if ("inert" in node && typeof node.inert === "boolean") {
+				node.inert = force;
+				return;
+			}
+			/*-- alternativo FIXME só fazer o looping para o tabindex >= 0 o CSS pode aplicar a todos internos --*/
+			const attr  = "data-js-wd-inert";
+			const query = node.querySelectorAll("*");
+			const list  = Array.prototype.slice.call(query);
+			list.push(node);
+			let has, index, tab;
+			for (let i = 0; i < list.length; i++) {
+				if (force && !list[i].hasAttribute(attr)) {
+					has   = list[i].hasAttribute("tabindex");
+					index = list[i].tabIndex;
+					tab   = (has ? "tabindex=" : "=")+String(index);
+					list[i].setAttribute(attr, tab);
+					list[i].tabIndex = -1;
+				}
+				else if (!force && list[i].hasAttribute(attr)) {
+					tab   = list[i].getAttribute(attr);
+					has   = (/^tabindex\=/i).test(tab);
+					index = Number(tab.split("=")[1]);
+					list[i].removeAttribute(attr);
+					if (has) list[i].tabIndex = index;
+					else     list[i].removeAttribute("tabindex");
 				}
 			}
 			return;
 		},
-
-
-
-		inert: function() {
-			const attr = typeof document.body.inert === "boolean";
-			const node = document.body.children;
-			const heap = this.heap.reverse();
-			const back = (function() {
-				if (heap.length === 0)
-					return [];
-				if (heap.length === 1 && heap[0].type === "frame")
-					return [];
-				if (heap[0].type === "frame")
-					return [heap[0].back, heap[1].back];
-				return [heap[0].back];
-			})();
-			const inert = back.length > 0;
-			/*-- aplicando inércia --*/
-			for (let i = 0; i < node.length; i++) {
-				if (attr) {
-					node[i].inert = inert ? back.indexOf(node[i]) < 0 : false;
-				}
-
-
-
-
+		/**. ``''void'' escape()``: Disparador a ser chamado quando for utilizado método alternativo de fechamento da janela.**/
+		escape: function(target, event, wdArray) {
+			const float  = __FLOAT.float;
+			const modal  = __FLOAT.modal;
+			const type   = float.childElementCount > 0 ? "float" : (modal.childElementCount > 0 ? "modal" : null);
+			const back   = type === null ? null : (type === "float" ? float : modal);
+			const node   = back === null ? null : back.firstElementChild;
+			let remove = false;
+			if (node !== null) {
+				if (type === "float" && event.type === "click")
+					remove = target === null ? true : !float.contains(target);
+				else if (type === "float" && event.type === "keydown")
+					remove = (/^(Tab|Escape)$/i).test(event.key);
+				else if (type === "modal" && event.type === "keydown")
+					remove = (/^(Escape)$/i).test(event.key);
 			}
-		},
-
-		remove: function(node) {
-			const back = node.parentElement;
-			for (let i = 0; i < this.heap.length; i++)
-				if (this.heap[i].back === back) {
-					node.remove();
-					if (this.heap[i].close !== null) this.heap[i].close(1);
-					return this.update();
-				}
+			if (remove) {
+				node.remove();
+				__FLOAT.update();
+			}
 			return;
 		},
 	};
@@ -794,7 +838,7 @@ const wd = (function() {
 			/*-- Disparadores de abertura de processo --*/
 			bar.addEventListener("wdprogressopen", function(ev) {
 				__PROGRESS.count++;
-				__MODAL.append(ev.target, {type: "frame", place: "top"});
+				__FLOAT.append(ev.target, {type: "frame"});
 				return;
 			}, false);
 			/*-- Disparador de fechamento de processo --*/
@@ -802,7 +846,7 @@ const wd = (function() {
 				__PROGRESS.count = __PROGRESS.count < 1 ? 0 : (__PROGRESS.count - 1);
 				window.setTimeout(function () {
 					if (__PROGRESS.count < 1) {
-						__MODAL.remove(ev.target);
+						__FLOAT.remove(ev.target);
 						ev.target.removeAttribute("value");
 					}
 					return;
@@ -897,10 +941,10 @@ const wd = (function() {
 			/*-- alertas --*/
 			if (type !== "dialog") {
 				child.foot.remove();
-				child.kill.addEventListener("click", function(ev) {return __MODAL.remove(node);}, false);
-				__MODAL.append(node, {
+				child.kill.addEventListener("click", function(ev) {return __FLOAT.remove(node);}, false);
+				__FLOAT.append(node, {
 					type: "frame",
-					onclose: function() {if (call !== null) call(options.id, null);}
+					close: function() {if (call !== null) call(options.id, null);}
 				});
 				const delta = typeof options.time === "number" ? Math.trunc(options.time) : 0;
 				if (delta > 0)
@@ -937,7 +981,7 @@ const wd = (function() {
 						return;
 					}, false);
 					btn.addEventListener("click", function(ev) {
-						__MODAL.remove(node);
+						__FLOAT.remove(node);
 						if (call !== null) call(options.id, act);
 						return;
 					}, false);
@@ -945,17 +989,14 @@ const wd = (function() {
 					focus = focus === null && auto.test(acts[act]) ? btn : focus;
 				}
 				/*-- Renderizando diálogo --*/
-				__MODAL.append(node, {
-					type: "wall",
-					onclose: function(result) {
-						if (call !== null && result === 0) call(options.id, null);
+				__FLOAT.append(node, {
+					type: "modal",
+					close: function(result) {
+						if (call !== null && !result) call(options.id, null);
 						return;
 					}
 				});
-				if (focus !== null) {
-					focus.autofocus = true;
-					focus.focus();
-				}
+				if (focus !== null) focus.focus();
 			}
 			return;
 		},
@@ -5440,10 +5481,13 @@ const wd = (function() {
 		/**. ``''boolean'' show``: Retorna e define a visibilidade do elemento nos termos da biblioteca.**/
 		show: {
 			get: function() {
-				return this.class.indexOf("js-wd-hide") < 0;
+				return this.node.hasAttribute("data-js-wd-hide");
 			},
 			set: function(x) {
-				this.class = x === false ? {add: "js-wd-hide"} : {remove: "js-wd-hide"}
+				if (x === true)
+					this.node.setAttribute("data-js-wd-hide", "");
+				else if (x === false)
+					this.node.removeAttribute("data-js-wd-hide");
 			}
 		},
 		/**. ``''void'' only(''boolean'' reverse)``: Exibe o nó e esconde os irmãos. Se ``reverse`` for verdadeiro, inverte-se o resultado.**/
@@ -8663,7 +8707,7 @@ const wd = (function() {
 			TYPE:     {value: __TYPE},
 			DEVICE:   {value: __DEVICE},
 			PROGRESS: {value: __PROGRESS},
-			MODAL:    {value: __MODAL},
+			FLOAT:    {value: __FLOAT},
 			SIGNAL:   {value: __SIGNAL},
 			MIME:     {value: __MIME},
 			STYLE:    {value: __STYLE},
@@ -8711,7 +8755,6 @@ const wd = (function() {
 	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
 	|Não há|load wdreload hashchange resize|Não se aplica|Não se aplica|Não há|.**/
 	function data_wd_hash(target, event, wdArray) {
-		console.log(event)
 		const nodes = WD.$$("body > header, body > footer");
 		const hash  = WD.$(window.location.hash);
 		const data  = {header: 0, footer: 0};
@@ -9573,17 +9616,6 @@ const wd = (function() {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
 	function data_wdMove(e, event) {
 
 		/*------------------------------------------------------------------------*/
@@ -9624,18 +9656,6 @@ const wd = (function() {
 /*TODO esses elementos devem ser carregados no onload
 		{selector: "[data-wd-value]",  method: data_wdValue},
 */
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -9717,118 +9737,94 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' navLink(''node''  e, ''string'' event)``
-	Função vinculada a atributo HTML cujo objetivo é estabelecer o menu ativo do container ``nav``.**/
-	function navLink(e, event) {
-		if (e.parentElement === null) return;
-		if (e.parentElement.tagName.toLowerCase() !== "nav") return;
-		WD(e.parentElement.children).set({class: {add: "js-wd-nav-inactive"}});
-		WD(e).set({class: {remove: "js-wd-nav-inactive"}});
-		return;
-	};
+/**###### ``**function** ''void'' data_wd_float(''node''  target, ''object'' event, ''array'' wdArray)``
+	Função com o propósito de exibir elementos no ponto de clicagem por meio do atributo HTML ''data''.
 
 
-
-
-
-
-/*----------------------------------------------------------------------------*/
-/**###### ``**function** ''void'' data_wdMenu(''node''  e, ''object'' event)``
-	Função vinculada ao atributo HTML ``data-wd-menu`` cujo objetivo é exibir um menu suspenso. Possui múltiplos atributos e grupo único:
-	|Nome|Descrição|Obrigatório|
-	|items|Nome da função que retornará o objeto contendo os subitens do menu.|Sim|
-	|event|Nome do evento disparador do menu, ''over'' ou ''click'' (padrão).|Não|
-	A função definida em ``items`` receberá como argumento o elemento detentor do atributo e deverá retornar um objeto. Os atributos do objeto definem o identificador da ação e seus valores deverão ser objetos com as seguintes propriedades:
-	|Nome|Descrição|Obrigatório|
-	|content|Texto ou nó a ser atribuído ao item. O valor padrão é o identificador.|Não|
-	|title|Caixa de dica a ser definida ao item.|Não|
-	|action|Função a ser chamada ao clicar sobre o item, que fechará o menu.|Não|
-	A função definida em ''action'' receberá como argumentos o identificador e o elemento detentor do atributo.**/
-	function data_wdMenu(e, event) {
-		const menus = WD.$$(".js-wd-menu");
-		/* ao clicar em algum ponto da tela, fechar o menu */
-		if (event.type === "click")
-			menus.forEach(function(x) {
-				x.remove();
-				WD(document.body).set({class: {remove: "js-wd-no-scroll"}});
-				return;
-			});
-
-		if (!("wdMenu" in e.dataset)) return;
-		const data  = new __Parser(e.dataset.wdMenu).wdArray.get()[0];
-		const items = __Type(data.items).function ? data.items(e) : null;
-		const enter = event.type === "mouseover" && data.event === "over";
-		const click = !enter && event.type === "click";
-
-		/* retornar nas seguintes situações */
-		if (!__Type(items).object) return;
-		if (!enter && !click) return
-		if (enter && menus.length > 0) return;
-
-		/* construir o menu */
-		const menu = document.createElement("DIV");
-		for (let id in items) {
-			const item    = __Type(items[id]).object ? items[id] : {};
-			const action  = __Type(item.action).function ? item.action : null;
-			const content = "content" in item ? item.content : id;
-			const submenu = document.createElement("DIV");
-			if (__Type(content).node)
-				submenu.appendChild(content);
-			else
-				submenu.innerHTML = content;
-			if ("title" in item) submenu.title = item.title;
-			submenu.onclick   = function(ev) {
-				if (action !== null) action(id, e);
-				ev.target.parentElement.remove();
-				WD(document.body).set({class: {remove: "js-wd-no-scroll"}});
-				return;
+	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
+	|data-wd-move|dragstart e dragend|Único|Múltiplos|-|Nós de elementos que possam ser arrastados|
+	Possui as seguintes propriedades:
+	|Nome|Tipo|Descrição|
+	|type|string|Tipo do movimento, que deve ser ''drag''|
+	|effect|array|Efeitos do movimento: ''hide, move, copy e link''|**/
+	function data_wd_float(target, event, wdArray) {
+		console.log(wdArray[0])
+		const data  = wdArray[0];
+		const query = data.$ || data.$$ || null;
+		const check = new __Type(query);
+		const float = check.node ? check.value[0] : null;
+		if (float !== null) {
+			/*-- definindo propriedades e atributos --*/
+			document.body.appendChild(float);
+			float.tabIndex = -1;
+			float.setAttribute("aria-modal", "false");
+			float.onkeydown = function(ev) {
+				ev.preventDefault();
+				const re = /^(Escape|Tab)/i;
+				if (re.test(ev.key)) float.style.display = "none";
 			}
-			menu.appendChild(submenu);
+			/*-- definindo estilos --*/
+			const place = target.getBoundingClientRect();
+			float.style.position  = "fixed";
+			float.style.display   = "block";
+			float.style.maxWidth  = "30vw";
+			float.style.maxHeight = "75vw";
+			if (event.clientY > (window.innerHeight/2))
+				float.style.top = (event.clientY - place.height)+"px";
+			else
+				float.style.top = (event.clientY)+"px";
+			if (event.clientX > (window.innerWidth/2))
+				float.style.left = (event.clientX - place.width)+"px";
+			else
+				float.style.left = (event.clientX)+"px";
+			/*-- Focando no primeiro elemento focável --*/
+			const child = float.querySelectorAll("*");
+			for (let i = 0; i < child.length; i++) {
+				if (child[i].tabIndex >= 0) {
+					child[i].focus();
+					break;
+				}
+			}
 		}
-		/* retornar se nenhum submenu for definido */
-		if (menu.childElementCount === 0) return;
-
-		/* adicionar menu na tela */
-		if (enter) menu.onmouseleave = function(ev) {
-			ev.target.remove();
-			WD(document.body).set({class: {remove: "js-wd-no-scroll"}});
-			return;
-		};
-		menu.classList = "js-wd-menu";
-		WD(document.body).set({class: {add: "js-wd-no-scroll"}});
-		document.body.appendChild(menu);
-
-		/* posicionar menu na tela */
-		const box = menu.getBoundingClientRect();
-
-		if (event.clientY > (window.innerHeight/2))
-			menu.style.top = (event.clientY - box.height)+"px";
-		else
-			menu.style.top = (event.clientY)+"px";
-		if (event.clientX > (window.innerWidth/2))
-			menu.style.left = (event.clientX - box.width)+"px";
-		else
-			menu.style.left = (event.clientX)+"px";
 		return;
 	};
-
 
 /*============================================================================*/
 /* -- DISPARADORES -- */
 /*============================================================================*/
+	/**###### ``**const** ''object'' __EVENTS``
+	Registra os eventos da biblioteca e seus disparadores.
+	O primeiro nível de dados diz respeito ao nome do evento cujo valor é um objeto.
+	O segundo nível de propriedades possui as seguintes características:
+	|Nome|Tipo|Descrição|
+	|target|object|É o alvo genérico (bubble) do disparador (window, document)|
+	|preventDefault|boolean|Define se evoca o método preventDefault dp evento|
+	|data|Array|Lista de objetos contendo a configuração de cada evento|
+	|extra|string|Define uma especifidade a ser verificada para o evento (opcional)|
+	Os itens da lista definida em ``data`` possui as seguintes propriedades:
+	|Nome|Tipo|Descrição|
+	|name|string ou nulo|Define o seletor CSS, se existir, vinculado ao disparador|
+	|kill|boolean|Define se o atributo dataset será excluído após chamar o disparador|
+	|bind|object|Propriedades obrigatórias do dataset que serão definidas caso não tenham sido|
+	|call|function|nome do disparador|
+	|extra|string|Define uma especifidade a ser verificada para o método (opcional)|
+	Quanto aos tipo de seletores, tem-se:
+	|Tipo|Exemplo|Comportamento|
+	|atributo data|[data-wd-nome]|Aplica-se ao elementos descendentes do alvo|
+	|atributo data|*[data-wd-nome]|Aplica-se ao elementos descendentes do documento|
+	|propriedade dataset|wdNome|Aplica-se ao elemento titular da propriedade|
+	|Seletor CSS|*|Aplica-se aos elementos identificados pelo seletor definido|
+	|null|null|Aplica-se ao alvo específico|
+	Regras específicas:
+	- Se a propriedade ``target`` for definida como window, document será considerado como alvo;
+	- Os eventos só ocorrem para elementos HTML (tipo 1) ou document (tipo 9);
+	- O valor dos tipos "atributo data" e "propriedade dataset" precisa estar no formato wdArray obrigatoriamente;
+	- As propriedades ``bind`` e ``kill`` se aplicam apenas aos tipos "atributo data" e "propriedade dataset";
+	- O disparador ``call`` receberá como argumentos o alvo, os dados do evento e uma lista wdArray; e
+	- A lista wdArray será nula nos casos de tipos diferentes de "atributo data" e "propriedade dataset".**/
 	//FIXME quando o evento de clique receber um enter, forçar um click
-
-	/*TODO descrever
-	target: objeto a vincular o evento
-	preventDefault: informa se é para chamar o método preventDefault
-	data: lista de configuração e disparadores do evento
-	name: nome do atributo dataset
-	call: disparador
-	kill: informa se é para eliminar o atributo de dataset
-	bind: atributos obrigatórios a estarem contidos em dataset
-	*/
+	//FIXME implantar extra para cada disparador
 	const __EVENTS = {
-		/**. ``''object'' load``: Evento de carregamento da página.**/
 		load: {
 			target: window, preventDefault: false,
 			data: [
@@ -9841,7 +9837,6 @@ const wd = (function() {
 				}}
 			]
 		},
-		/**. ``''object'' wdreload``: Evento de carregamento parcial da página (filhos do elemento).**/
 		wdreload: {
 			target: window, preventDefault: false,
 			data: [
@@ -9856,9 +9851,8 @@ const wd = (function() {
 				{name: null,               call: data_wd_hash,   kill: false, bind: {}}
 			]
 		},
-		/**. ``''object'' wddataset``: Evento de definição de atributo dataset (o elemento individual).**/
 		wddataset: {
-			target: document, preventDefault: false,
+			target: document, preventDefault: false, extra: "wddatasetList",
 			data: [
 				{name: "wdRepeat", call: data_wd_repeat, kill: true,  bind: {headers: {}}},
 				{name: "wdLoad",   call: data_wd_load,   kill: true,  bind: {headers: {}}},
@@ -9870,7 +9864,6 @@ const wd = (function() {
 				{name: "wdDevice", call: data_wd_device, kill: false, bind: {}},
 			]
 		},
-		/**. ``''object'' resize``: Evento para re/definir estilos.**/
 		resize: {
 			target: window, preventDefault: false,
 			data: [
@@ -9891,34 +9884,27 @@ const wd = (function() {
 				{name: null, call: data_wd_hash, kill: false, bind: {}}
 			]
 		},
-		/**. ``''object'' submit``: Evento para submeter formulários sem mudança de página.**/
 		submit: {
 			target: document, preventDefault: true,
 			data: [
 				{name: "wdSubmit", call: data_wd_submit, kill: false, bind: {headers: {}}}
 			]
 		},
-		/**. ``''object'' click``: Evento ao clicar sobre elementos.**/
+		//FIXME verificar o impacto de preventDefault nos disparadores de clique (testar todos)
 		click: {
-			target: document, preventDefault: true,
+			target: document, preventDefault: false, extra: "leftClick",
 			data: [
 				{name: "wdSend",    call: data_wd_send,      kill: false, bind: {headers: {}}},
 				{name: "wdSet",     call: data_wd_set,       kill: false, bind: {}},
 				{name: "wdDisplay", call: data_wd_display,   kill: false, bind: {}},
 				{name: "wdEdit",    call: data_wd_edit,      kill: false, bind: {}},
-				{name: "wdMove",    call: data_wd_move_jump, kill: false, bind: {}}
-
-
+				{name: "wdMove",    call: data_wd_move_jump, kill: false, bind: {}},
+				{name: null,        call: __FLOAT.escape,    kill: false, bind: {}}//FIXME vincular esse trigger a um float fecha sem abrir
+				/*{name: "wdFloat",   call: data_wd_float,     kill: false, bind: {}}*/
 			]
 		},
-
-
-
-
-
-
 		input: {
-			target: document, preventDefault: false,
+			target: document, preventDefault: false, extra: "checkTypingTime",
 			data: [
 				{name: "wdFilter", call: data_wd_filter, kill: false, bind: {id: null}},
 				{name: null,       call: data_wd_output, kill: false, bind: {}}
@@ -9980,14 +9966,14 @@ const wd = (function() {
 			]
 		},
 		mousedown: {
-			target: document, preventDefault: false,
+			target: document, preventDefault: false, extra: "leftClick",
 			data: [
 				{name: "wdMove", call: data_wd_move_move, kill: false, bind: {}},
 				{name: "wdMove", call: data_wd_move_size, kill: false, bind: {}}
 			]
 		},
 		mouseup: {
-			target: document, preventDefault: false,
+			target: document, preventDefault: false, extra: "leftClick",
 			data: [
 				{name: "*[data-wd-move-moving]",   call: data_wd_move_move, kill: false, bind: {}},
 				{name: "*[data-wd-move-resizing]", call: data_wd_move_size, kill: false, bind: {}}
@@ -10027,7 +10013,7 @@ const wd = (function() {
 			]
 		},
 		dblclick: {
-			target: document, preventDefault: false,
+			target: document, preventDefault: false, extra: "leftClick",
 			data: [
 				//{name: null, call: wdOnMouse, kill: false, bind: {}}
 			]
@@ -10035,82 +10021,61 @@ const wd = (function() {
 		keydown: {
 			target: window, preventDefault: false,
 			data: [
-				{name: `[data-js-wd-modal]`, kill: false, bind: {}, call: function(e,event) {
-						return __MODAL.escape(event.key);
-				}}
+				{name: null, call: __FLOAT.escape, kill: false, bind: {}}
 			],
 		},
 	};
 
-
-
-		//TODO descrever
+	/**###### ``**function** ''void'' eventManager(event)``
+	Disparador genérico da biblioteca, administra o conteúdo de __EVENTS.**/
 	function eventManager(event) {
 		/*-- Checar alvo do evento: elemento (1) ou documento (9) ----------------*/
 		const target = event.target === window ? document : event.target;
 		if ([1, 9].indexOf(target.nodeType) < 0) return;
-
-		/*-- Checar parâmetros específicos de alguns eventos ---------------------*/
+		/*-- obtendo dados iniciais --*/
 		const config    = __EVENTS[event.type];
+		const dataset   = config.data;
 		const wddataset = [];
-		const checker   = {
-			/*-- Verificar as propriedades dataset alteradas --*/
-			wddataset: target.nodeType === 1 && "wddataset" in target.dataset ? "getDataset" : null,
-			/*-- Aguardar delay da digitação --*/
-			input:     "endTyping",
-			/*-- Checar se o clique do mouse foi com o botão esquerdo --*/
-			click:     "leftButton",
-			mousedown: "leftButton",
-			mousemove: "leftButton",
-			mouseup:   "leftButton",
-			/*-- Checar qual a tecla acionada no teclado --*/
-			keyup:     "keys"
-		};
-		switch(checker[event.type]) {
-			case "getDataset": {
-				/*-- Especifidade: obtendo as propriedades definidas em dataset --*/
-				const list = target.dataset.wddataset.split(" ");
-				list.forEach(function(v,i,a) {wddataset.push(v);});
-				delete target.dataset.wddataset;
-				break;
-			}
-			case "leftButton": {
-				/*-- Especifidade: checando qual botão do mouse foi clicado --*/
-				if (event.which !== 1) return;
-				break;
-			}
-			case "endTyping": {
-				/*-- Especifidade: checando intervalo da digitação --*/
+		const trigger   = [];
+		const search    = /^\*?\[(data\-wd\-[0-9a-zA-Z\-]+)(\=[^\]]+)?\]$/;
+		const extra     = {
+			 /*-- tempo mínimo para digitação encerrar --*/
+			 typingTime: function(ev) {
 				const body = document.body;
-				if (!("wdTypingID" in event)) {
-					const time = 500;
-					event.wdTypingID = new Date().valueOf();
-					body.wdTypingID  = event.wdTypingID;
-					window.setTimeout(function() {eventManager(event);}, time);
-					return;
+				if (!("wdTypingTime" in ev)) {
+					ev.wdTypingTime   = new Date().valueOf();
+					body.wdTypingTime = ev.wdTypingTime;
+					window.setTimeout(function() {eventManager(ev);}, 500);
+					return false;
 				}
-				if (event.wdTypingID === body.wdTypingID) {
-					delete event.wdTypingID;
-					delete body.wdTypingID;
-				} else {
-					return;
+				if (ev.wdTypingTime === body.wdTypingTime) {
+					delete ev.wdTypingTime;
+					delete body.wdTypingTime;
+					return true;
 				}
-				break;
-			}
-			case "keys": {
-				/*-- Especifidade: checando se a tecla é útil para a biblioteca --*/
-				const keys = ["Escape"];
-				if (keys.indexOf(event.key) < 0) return;
-				break;
-			}
-		}
+				return false;
+			},
+			/*-- clique com o botão esquerdo do mouse --*/
+			leftClick: function(ev) {
+				return event.which === 1;
+			},
+			/*-- capturar as propriedades definidas em dataset (wddataset = variável global) --*/
+			wddatasetList: function(ev) {
+				if (ev.target.nodeType === 1 && "wddataset" in ev.target.dataset) {
+					const list = ev.target.dataset.wddataset.split(" ");
+					list.forEach(function(v,i,a) {wddataset.push(v);});
+					delete ev.target.dataset.wddataset;
+				}
+				return true;
+			},
+		};
 
-		/*-- Verificando lista de disparadores -----------------------------------*/
-		const dataset = config.data;
-		const trigger = [];
-		const search  = /^\*?\[(data\-wd\-[0-9a-zA-Z\-]+)(\=[^\]]+)?\]$/;
+		/*-- checar especifidades de cada evento ---------------------------------*/
+		if ("extra" in config && config.extra in extra)
+			if (!extra[config.extra](event)) return;
+
+		/*-- Lista de disparadores: elementos qua casam com o parâmetro ----------*/
 		let map, root, name, query;
-		/*-- Procurando elementos qua casam com o parâmetro --*/
 		for (let i = 0; i < dataset.length; i++) {
 			map = dataset[i];
 			/*-- Elementos descendentes com atributo HTML data: *[data-wd...] (wdArray) --*/
@@ -10174,7 +10139,7 @@ const wd = (function() {
 				wdarray = parser.wdArray.get();
 				if (wdarray === null)
 					return;
-				/*-- verificar se há alguma prorpiedade obrigatória a definir --*/
+				/*-- verificar se há alguma propriedade obrigatória a definir --*/
 				for (let prop in map.bind) {
 					for (let j = 0; j < wdarray.length; j++) {
 						if (!(prop in wdarray[j]))
@@ -10198,8 +10163,10 @@ const wd = (function() {
 		return;
 	};
 
+	/*-- defininir eventos e disparadores --*/
 	for (let ev in __EVENTS)
 		__EVENTS[ev].target.addEventListener(ev, eventManager, false);
 
+	/*-- retornar a função principal da biblioteca --*/
 	return WD;
 }());
