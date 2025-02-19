@@ -21,7 +21,7 @@
 
 	<h4>Drop</h4>
 
-	<div style="height: 100px;overflow: auto;" data-wd-move="type{drop}action(myDrop)" class="wd-border"></div>
+	<div style="height: 100px;overflow: auto;" data-wd-move="action(myDrop)" class="wd-border"></div>
 
 
 <!--=========================================================================-->
@@ -30,17 +30,17 @@
 	<div class="wd-col wd-border-child wd-margin-child">
 
 		<div style="overflow: auto;">
-			<div data-wd-move="type{drag}effect[move]" class="wd-bg-red">Move</div>
-			<div data-wd-move="type{drag}effect[copy]" class="wd-bg-blue">Copy</div>
-			<div data-wd-move="type{drag}effect[link]" class="wd-bg-green">Link</div>
-			<div data-wd-move="type{drag}effect[hide]" class="wd-bg-yellow">Hide</div>
-			<div data-wd-move="type{drag}effect[move,copy,hide,link]" class="wd-bg-pink">All</div>
+			<div data-wd-drag="effect[move]" class="wd-bg-red">Move</div>
+			<div data-wd-drag="effect[copy]" class="wd-bg-blue">Copy</div>
+			<div data-wd-drag="effect[link]" class="wd-bg-green">Link</div>
+			<div data-wd-drag="effect[hide]" class="wd-bg-yellow">Hide</div>
+			<div data-wd-drag="effect[move,copy,hide,link]" class="wd-bg-pink">All</div>
 		</div>
 
-		<div data-wd-move="type{drop}effect{copy}" style="overflow: auto;"><span>copy</span></div>
-		<div data-wd-move="type{drop}effect{move}" style="overflow: auto;"><span>move</span></div>
-		<div data-wd-move="type{drop}effect{link}" style="overflow: auto;"><span>link</span></div>
-		<div data-wd-move="type{drop}effect{hide}" style="overflow: auto;"><span>hide</span></div>
+		<div data-wd-drop="effect{copy}" style="overflow: auto;"><span>copy</span></div>
+		<div data-wd-drop="effect{move}" style="overflow: auto;"><span>move</span></div>
+		<div data-wd-drop="effect{link}" style="overflow: auto;"><span>link</span></div>
+		<div data-wd-drop="effect{hide}" style="overflow: auto;"><span>hide</span></div>
 	</div>
 
 <!--=========================================================================-->
@@ -50,9 +50,9 @@
 
 		<div id="myShelf" style="height: 100px;overflow: auto;">
 			<div class="wd-b">Shelf</div>
-			<div data-wd-move="type{jump}$${#myShelf, #myBasket, #myRecycler}" class="wd-bg-blue">Item 1</div>
-			<div data-wd-move="type{jump}$${#myShelf, #myRecycler}" class="wd-bg-green">Item 2</div>
-			<div data-wd-move="type{jump}$${#myShelf, #myBasket}" class="wd-bg-red">Item 3</div>
+			<div data-wd-jump="$${#myShelf, #myBasket, #myRecycler}" class="wd-bg-blue">Item 1</div>
+			<div data-wd-jump="$${#myShelf, #myRecycler}" class="wd-bg-green">Item 2</div>
+			<div data-wd-jump="$${#myShelf, #myBasket}" class="wd-bg-red">Item 3</div>
 		</div>
 
 		<div id="myBasket" style="height: 100px;overflow: auto;">
@@ -69,12 +69,12 @@
 	<h4>Move</h4>
 
 	<div id="myMove" class="wd-window wd-flyer wd-bg-blue wd-radius wd-border-x"
-		data-wd-move="type{size}"
+		data-wd-size=""
 	>
-		<header data-wd-move="type{move}${#myMove}"	>
+		<header data-wd-move="${#myMove}"	>
 
 			<h4 id="myPoint"
-				data-wd-move="type{move}${#myMove}"
+				data-wd-move="${#myMove}"
 			>Move me (fixed)</h4>
 
 		</header>
@@ -86,33 +86,33 @@
 
 	<div style="height: 100px; position: relative" class="wd-border wd-bg-yellow">
 
-		<span data-wd-move="type{move}" class="wd-bg-blue" style="position: static;">Move me (static)</span>
+		<span data-wd-move="" class="wd-bg-blue" style="position: static;">Move me (static)</span>
 
 		<span>Text Content</span>
 
-		<span data-wd-move="type{move}" class="wd-bg-red" style="position: relative;">Move me (relative)</span>
+		<span data-wd-move="" class="wd-bg-red" style="position: relative;">Move me (relative)</span>
 
 		<span>Text Content</span>
 
-		<span data-wd-move="type{move}" class="wd-bg-green" style="position: sticky;">Move me (sticky)</span>
+		<span data-wd-move="" class="wd-bg-green" style="position: sticky;">Move me (sticky)</span>
 
-		<span data-wd-move="type{move}" class="wd-bg-orange" style="position: absolute; bottom: 0; left: 0;">Move me (absolute)</span>
-
-		<span>Text Content</span>
-
-		<span data-wd-move="type{size}" class="wd-bg-blue" style="position: static; display: inline-block">size me (static inline-block)</span>
+		<span data-wd-move="" class="wd-bg-orange" style="position: absolute; bottom: 0; left: 0;">Move me (absolute)</span>
 
 		<span>Text Content</span>
 
-		<span data-wd-move="type{size}" class="wd-bg-red" style="position: relative; display: inline-block">size me (relative, inline-block)</span>
+		<span data-wd-size="" class="wd-bg-blue" style="position: static; display: inline-block">size me (static inline-block)</span>
 
 		<span>Text Content</span>
 
-		<span data-wd-move="type{size}" class="wd-bg-green" style="position: sticky; display: inline-block;">size me (sticky inline-block)</span>
+		<span data-wd-size="" class="wd-bg-red" style="position: relative; display: inline-block">size me (relative, inline-block)</span>
 
 		<span>Text Content</span>
 
-		<span data-wd-move="type{size}" class="wd-bg-orange" style="position: absolute; display: inline-block;right: 0; bottom: 0;">size me (absolute inline-block)</span>
+		<span data-wd-size="" class="wd-bg-green" style="position: sticky; display: inline-block;">size me (sticky inline-block)</span>
+
+		<span>Text Content</span>
+
+		<span data-wd-size="" class="wd-bg-orange" style="position: absolute; display: inline-block;right: 0; bottom: 0;">size me (absolute inline-block)</span>
 
 		<span class="wd-fg-purple" data-wd-set="${#myMove}class{add{wd-open}}">Click me (fixed)</span>
 
@@ -125,41 +125,29 @@
 	<div style="position: relative;" class="wd-border wd-bg-yellow">
 
 		<div class="wd-bg-blue" style="width: 100px; height: 50px;position: static;"
-			data-wd-move="type{size}"
+			data-wd-size=""
 		>SIZE (static)</div>
 
 		<div class="wd-bg-red" style="width: 100px; height: 50px;position: relative;"
-			data-wd-move="type{size}"
+			data-wd-size=""
 		>SIZE (relative)</div>
 
 		<div class="wd-bg-green" style="width: 100px; height: 50px;position: absolute; right: 0"
-			data-wd-move="type{size}"
+			data-wd-size=""
 		>SIZE (absolute)</div>
 
 		<div class="wd-bg-brown" style="width: 100px; height: 50px;position: sticky;"
-			data-wd-move="type{size}"
+			data-wd-size=""
 		>SIZE (sticky)</div>
 
 	</div>
 
-
-	<h4>Menu</h4>
-
-	<div data-wd-move="type{menu}red(red)blue(blue)bold(bold)exit(exit)" >Click Me</div>
-
-
-
-
-
-
-	<br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
-
 	<table border="1">
 		<thead>
 			<tr>
-				<th class="wd-bg-red" data-wd-move="type{size}">A</th>
-				<th class="wd-bg-green" data-wd-move="type{size}">B</th>
-				<th class="wd-bg-blue" data-wd-move="type{size}">C</th>
+				<th class="wd-bg-red" data-wd-size="">A</th>
+				<th class="wd-bg-green" data-wd-size="">B</th>
+				<th class="wd-bg-blue" data-wd-size="">C</th>
 			</tr>
 		</thead>
 		<tbody>

@@ -332,10 +332,9 @@ const wd = (function() {
 			cursor: pointer !important;
 		}
 		/*-- data-wd-move: jump --------------------------------------------------*/
-		[data-wd-move*="type{jump}"] {cursor: pointer !important;}
+
 		/*-- data-wd-move: drag --------------------------------------------------*/
-		[data-wd-move*="type{drag}"] {cursor: grab !important;}
-		[data-wd-move*="type{drag}"]:active {cursor: grabbing !important;}
+
 		/*-- data-wd-move: drop --------------------------------------------------*/
 		[data-wd-move-dropping] {min-height: 4em !important;}
 		[data-wd-move-dropping][data-wd-move*="effect{copy}"] {outline: 2px solid rgb(30,144,255) !important;}
@@ -366,33 +365,23 @@ const wd = (function() {
 			background-color: rgb(255,247,204);
 			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' height='100' width='100' ><text x='50%' y='50%' font-size='3em' text-anchor='middle' dominant-baseline='middle' fill='rgb(0,0,0)'>\\2796</text></svg>");
 		}
-		/*-- data-wd-move: move --------------------------------------------------*/
-		[data-wd-move*="type{move}"] {cursor: move !important;}
-		[data-wd-move-moving], [data-wd-move-moving] > * {cursor: grabbing !important;}
-		/*-- data-wd-move: size --------------------------------------------------*/
-		.js-wd-cursor-n-resize  * {cursor: n-resize !important;}
-		.js-wd-cursor-ne-resize * {cursor: ne-resize !important;}
-		.js-wd-cursor-e-resize  * {cursor: e-resize !important;}
-		.js-wd-cursor-se-resize * {cursor: se-resize !important;}
-		.js-wd-cursor-s-resize  * {cursor: s-resize !important;}
-		.js-wd-cursor-sw-resize * {cursor: sw-resize !important;}
-		.js-wd-cursor-w-resize  * {cursor: w-resize !important;}
-		.js-wd-cursor-nw-resize * {cursor: nw-resize !important;}
-		.js-wd-cursor-n-resize  * {cursor: n-resize !important;}
-		.js-wd-hline, .js-wd-vline {
-			position:   fixed !important;
-			z-index:    999999 !important;
-		}
-		.js-wd-hline {
-			left:  0 !important;
-			width: 100vw !important;
-			border-top: thin solid #000000 !important;
-		}
-		.js-wd-vline {
-			top: 0 !important;
-			height: 100vh !important;
-			border-left: thin solid #000000;
-		}
+
+		/*-- data-wd-jump|move|size|drop|drag ------------------------------------*/
+		[data-wd-jump]   {cursor: pointer !important;}
+		[data-wd-move]   {cursor: grab    !important;}
+		[data-wd-drag]   {cursor: grab    !important;}
+		[data-wd-size-cursor="n"]  {cursor: n-resize  !important;}
+		[data-wd-size-cursor="ne"] {cursor: ne-resize !important;}
+		[data-wd-size-cursor="e"]  {cursor: e-resize  !important;}
+		[data-wd-size-cursor="se"] {cursor: se-resize !important;}
+		[data-wd-size-cursor="s"]  {cursor: s-resize  !important;}
+		[data-wd-size-cursor="sw"] {cursor: sw-resize !important;}
+		[data-wd-size-cursor="w"]  {cursor: w-resize  !important;}
+		[data-wd-size-cursor="nw"] {cursor: nw-resize !important;}
+		[data-wd-size-cursor="n"]  {cursor: n-resize  !important;}
+
+
+
 
 
 
@@ -437,7 +426,45 @@ const wd = (function() {
 		}
 		[data-js-wd-freeze]:not([data-js-wd-defrost]) {
 			overflow: hidden !important;
-		}`;
+		}
+
+		[data-js-wd-cursor="move"],    [data-js-wd-cursor="move"]    * {cursor:     grab !important;}
+		[data-js-wd-cursor="moving"],  [data-js-wd-cursor="moving"]  * {cursor:     move !important;}
+		[data-js-wd-cursor="drag"],    [data-js-wd-cursor="drag"]    * {cursor:     grab !important;}
+		[data-js-wd-cursor="draging"], [data-js-wd-cursor="draging"] * {cursor: grabbing !important;}
+
+
+		[data-js-wd-line] {
+			position: fixed !important;
+			background-color: rgba(127,127,127,0.2) !important;
+			z-index: 9999 !important;
+		}
+		[data-js-wd-line="vertical"] {
+			top: 0 !important;
+			bottom: 0 !important;
+			height: 100vh !important;
+			border-left:  thin dashed #ccc !important;
+			border-right: thin dashed #ccc !important;
+		}
+		[data-js-wd-line="horizontal"] {
+			left: 0 !important;
+			right: 0 !important;
+			width: 100vw !important;
+			border-top:    thin dashed #ccc !important;
+			border-bottom: thin dashed #ccc !important;
+		}
+
+
+
+
+
+
+		`;
+
+
+
+
+
 
 
 
@@ -5854,7 +5881,43 @@ const wd = (function() {
 					this.node[!this.form || this.ftext ? "textContent" : "value"] = txt;
 				return txt !== "";
 			}
+		},
+
+
+		highlight: {
+			value: function(show) {
+				if (show === false) {
+					const query = document.querySelectorAll("[data-js-wd-line]");
+					for (let i = 0; i < query.length; i++)
+						query[i].remove();
+				} else {
+					this.highlight(false);
+					const hline = document.createElement("DIV");
+					const vline = document.createElement("DIV");
+					const data  = this.node.getBoundingClientRect();
+					hline.dataset.jsWdLine = "horizontal";
+					hline.style.top    = data.top+"px";
+					hline.style.height = data.height+"px";
+					document.body.appendChild(hline);
+					vline.dataset.jsWdLine = "vertical";
+					vline.style.left   = data.left+"px";
+					vline.style.width  = data.width+"px";
+					document.body.appendChild(vline);
+				}
+
+
+
+
+
+
+
+
+			}
 		}
+
+
+
+
 	});
 
 /*----------------------------------------------------------------------------*/
@@ -9271,60 +9334,64 @@ const wd = (function() {
 
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wd_move_jump(''node''  target, ''object'' event, ''array'' wdArray)``
+	/**###### ``**function** ''void'' data_wd_jump(''node''  target, ''object'' event, ''array'' wdArray)``
 	Função com o propósito de transferir elementos entre containers ao receberem cliques por meio do atributo HTML ''data''.
 	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
-	|data-wd-move|click|Único|Múltiplos|__Node.jump|Elemento que possa receber click|
+	|data-wd-move|click|Único|Única|__Node.jump|Elemento que possa receber click|
 	Possui as seguintes propriedades:
 	|Nome|Tipo|Descrição|
-	|type|string|Tipo do movimento, que deve ser ''jump''|
 	|$$|node|Seletor CSS que define a lista de containers que receberão o elemento a cada salto (click)|**/
-	function data_wd_move_jump(target, event, wdArray) {
-		if (wdArray[0].type === "jump") {
-			const data  = wdArray[0];
-			const query = data.$$ || data.$ || null;
-			if (query !== null) WD(target).jump(query);
-		}
+	function data_wd_jump(target, event, wdArray) {
+		const data  = wdArray[0];
+		const query = data.$$ || data.$ || null;
+		if (query !== null) WD(target).jump(query);
 		return;
 	}
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wd_move_move(''node''  target, ''object'' event, ''array'' wdArray)``
+	/**###### ``**function** ''void'' data_wd_move(''node''  target, ''object'' event, ''array'' wdArray)``
 	Função com o propósito de mover o elemento por meio do atributo HTML ''data''.
 	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
-	|data-wd-move|mousedown mousemove e mouseup|Único|Múltiplos|-|Elementos que possam ser movidos|
+	|data-wd-move|mousedown mousemove e mouseup|Único|Único|-|Elementos que possam ser movidos|
 	Possui as seguintes propriedades:
 	|Nome|Tipo|Descrição|
-	|type|string|Tipo do movimento, que deve ser ''move''|
 	|$|node|Seletor CSS que define a o elemento a ser movido|
-	O atributo ''data-wd-move'' deve ficar sobre o elemento âncora e a propriedade ''$'' especificará o elemento que será movido. Recomenda-se que a âncora seja filho do elemento. Se a propriedade ''$'' não for definida, a âncora será o próprio elemento.**/
-	function data_wd_move_move(target, event, wdArray) {
+	O atributo ''data-wd-move'' deve ficar sobre o elemento âncora e a propriedade ''$'' especificará o elemento que será movido. Para um movimento padrão, a âncora deve ser um filho do elemento a se mover, se não definido, será o próprio elemento. Elementos com posicionamento ''static'' e ''sticky'' não serão movimentados.**/
+	function data_wd_move(target, event, wdArray) {
 		const data = wdArray[0];
-		/*-- iniciar movimento --*/
-		if (event.type === "mousedown" && data.type === "move") {
+		/*-- iniciar movimento (data-wd-move) --*/
+		if (event.type === "mousedown") {
 			const query  = data.$$ || data.$ || target;
 			const check  = new __Type(query);
-			const mover  = !check.node || check.value.length < 1 ? target : check.value[0];
-			const node   = new __Node(mover);
-			const box    = node.position;
+			const mover  = !check.node || check.value.length < 1 ? [target] : check.value;
 			const stop   = ["static", "sticky"];
-			const source = [];
-			/*-- posicionamentos que não podem movimentar --*/
-			if (stop.indexOf(node.styles.position) >= 0) return;
-			/*-- obtendo e redefinindo a origem do elemento a movimentar --*/
-			box.pageX = event.pageX;
-			box.pageY = event.pageY;
-			node.position = box;
-			/*-- definindo parâmetros da origem e o tipo de ação --*/
-			for (let i in box) source.push(i+"{"+box[i]+"}");
-			mover.dataset.wdMoveMoving = source.join("");
+			/*-- looping pelos elementos --*/
+			let node, box, source, count = 0;
+			for (let i = 0; i < mover.length; i++) {
+				node = new __Node(mover[i]);
+				/*-- se não for posicionamento static ou sticky --*/
+				if (stop.indexOf(node.styles.position) < 0) {
+					/*-- capturando e definindo dados de referência --*/
+					source    = [];
+					box       = node.position;
+					box.pageX = event.pageX;
+					box.pageY = event.pageY;
+					node.position = box;
+					for (let j in box) source.push(`${j}{${box[j]}}`);
+					mover[i].setAttribute("data-wd-moving", source.join(""));
+					count++;
+				}
+			}
+			if (count > 0) document.body.setAttribute("data-js-wd-cursor", "moving");
 		}
-		/*-- parar movimento --*/
+		/*-- parar movimento (data-js-wd-move) --*/
 		else if (event.type === "mouseup" || event.buttons !== 1) {
-			delete target.dataset.wdMoveMoving;
+			const node = new __Node(target);
+			document.body.removeAttribute("data-js-wd-cursor");
+			node.highlight(false);
 			window.getSelection().removeAllRanges();
 		}
-		/*-- movimentar --*/
+		/*-- movimentar (data-js-wd-move) --*/
 		else if (event.type === "mousemove") {
 			const node    = new __Node(target);
 			const box     = data;
@@ -9335,132 +9402,106 @@ const wd = (function() {
 			box.top      += dy;
 			box.bottom   -= dy;
 			node.position = box;
+			node.highlight(true);
 			window.getSelection().removeAllRanges();
 		}
 		return;
 	}
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wd_move_size(''node''  target, ''object'' event, ''array'' wdArray)``
+	/**###### ``**function** ''void'' data_wd_size(''node''  target, ''object'' event, ''array'' wdArray)``
 	Função com o propósito de alterar as dimensões do elemento por meio do atributo HTML ''data''.
 	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
-	|data-wd-move|mousedown mousemove, mouseup e mouseout|Único|Múltiplos|-|Elementos que possam ser redimensionados|
+	|data-wd-size|mousedown mousemove, mouseup e mouseout|Único|Múltiplos|-|Elementos que possam ser redimensionados|
 	Possui as seguintes propriedades:
 	|Nome|Tipo|Descrição|
 	|type|string|Tipo do movimento, que deve ser ''size''|**/
-	function data_wd_move_size(target, event, wdArray) {
-		/*-- Verificando ação ----------------------------------------------------*/
-		const data   = wdArray[0];
-		const size   = data.type === "size";
-		const resize = "wdMoveResizing" in target.dataset;
-		const other  = document.querySelectorAll("[data-wd-move-resizing]").length > 0;
-		const act    = resize ? "resize" : (size && !other ? "size" : null);
-		if (act === null) return;
-		/*-- Capturando dados ----------------------------------------------------*/
+	function data_wd_size(target, event, wdArray) {
+		const data = wdArray[0];
 		const node = new __Node(target);
 		const non  = ["static", "relative", "sticky"];
 		const cut  = non.indexOf(node.styles.position) >= 0;
-		const re   = /js\-wd\-cursor\-[nsew]+\-resize/g;
-		const body = document.body.className;
-		/*-- Definindo o ponteiro ------------------------------------------------*/
-		if (event.type === "mousemove" && act === "size") {
-			const box  = target.getBoundingClientRect();
-			const d    = 6;
-			const x    = event.clientX;
-			const y    = event.clientY;
-			const N    = cut ? false : (y >= box.top    && y <= (box.top    + d));
-			const S    = y <= box.bottom && y >= (box.bottom - d);
-			const W    = cut ? false : (x >= box.left   && x <= (box.left   + d));
-			const E    = x <= box.right  && x >= (box.right  - d);
-			const ptr  = (N || S ? (N ? "n" : "s") : "") + (W || E ? (E ? "e" : "w") : "");
-			const css  = "js-wd-cursor-"+ptr+"-resize";
-			if (ptr === "") {
-				if (re.test(body))
-					document.body.className = body.replace(re, "");
-				if ("wdMoveSizePointer" in target.dataset)
-					delete target.dataset.wdMoveSizePointer;
-			} else {
-				if (body.indexOf(css) < 0)
-					document.body.className = body.replace(re, "") + " " + css;
-				target.dataset.wdMoveSizePointer = ptr;
-			}
-		}
-		/*-- Saindo do elemento --------------------------------------------------*/
-		else if (event.type === "mouseout" && act === "size") {
-			if (re.test(body))
-				document.body.className = body.replace(re, "");
-			if ("wdMoveSizePointer" in target.dataset)
-				delete target.dataset.wdMoveSizePointer;
-		}
-		/*-- Preparando para redimencionar ---------------------------------------*/
-		else if (event.type === "mousedown" && act === "size") {
-			if ("wdMoveSizePointer" in target.dataset) {
-				const box = node.position;
-				box.pageX = event.pageX;
-				box.pageY = event.pageY;
-				const value = [];
-				for (let i in box) value.push(i+"{"+box[i]+"}");
-				target.dataset.wdMoveResizing = value.join("");
+		/*--------------------------------------------------------------------------
+		[data-wd-size]                      (mousemove) - define [data-wd-size-cursor] na borda
+		[data-wd-size]                      (mouseout)  - remove [data-wd-size-cursor]
+		[data-wd-size][data-wd-size-cursor] (mousedown) - define [data-wd-resizing]
+		[data-wd-size][data-wd-resizing]    (mousemove) - redimenciona
+		[data-wd-size][data-wd-resizing]    (mouseup)   - define [data-wd-resizing]
+		--------------------------------------------------------------------------*/
+		//FIXME fazer por meio do evento mesmo
 
-				const lines = {hline: "js-wd-hline", vline: "js-wd-vline"};
+		/*-- Redimencionando -----------------------------------------------------*/
+		if (target.hasAttribute("data-wd-resizing")) {
+			if (event.type === "mousemove") {
+				const box = data;
+				const ptr = target.getAttribute("data-wd-size-cursor");
+				const dx  = event.pageX - box.pageX;
+				const dy  = event.pageY - box.pageY;
+				if (ptr.indexOf("n") >= 0) {
+					box.height -= dy;
+					box.top    += dy;
+				}
+				if (ptr.indexOf("s") >= 0) {
+					box.height += dy;
+					box.bottom -= dy;
+				}
+				if (ptr.indexOf("w") >= 0) {
+					box.width -= dx;
+					box.left  += dx;
+				}
+				if (ptr.indexOf("e") >= 0) {
+					box.width += dx;
+					box.right -= dx;
+				}
+				node.position = cut ? {width: box.width, height: box.height} : box;
+				node.highlight(true);
+			}
+			else if (event.type === "mouseup") {
+				target.removeAttribute("data-wd-size-cursor");
+				document.body.removeAttribute("data-js-wd-cursor");
+				node.highlight(false);
+			}
+			window.getSelection().removeAllRanges();
+		}
+		/*-- Posicionado para redimencionar --------------------------------------*/
+		else if (target.hasAttribute("data-wd-size-cursor")) {
+			if (event.type === "mousedown") {
+				const ptr   = target.getAttribute("data-wd-size-cursor");
+				const value = [];
+				const box   = node.position;
+				box.pageX   = event.pageX;
+				box.pageY   = event.pageY;
+				for (let i in box) value.push(`${i}{${+box[i]}}`);
+				target.setAttribute("data-wd-resizing", value.join(""));
+				document.body.setAttribute("data-js-wd-cursor", ptr);
+				/*const lines = {hline: "js-wd-hline", vline: "js-wd-vline"};
 				for (let i in lines) {
 					let elem = document.createElement("DIV");
 					elem.className = lines[i];
 					document.body.appendChild(elem);
-				}
+				}*/
+			}
+			else if (event.type === "mouseout") {
+				target.removeAttribute("data-wd-size-cursor");
 			}
 		}
-		/*-- Redimencionando -----------------------------------------------------*/
-		else if (event.type === "mousemove" && act === "resize") {
-			const box = data;
-			const ptr = target.dataset.wdMoveSizePointer.split("");
-			const dx  = event.pageX - box.pageX;
-			const dy  = event.pageY - box.pageY;
-			if (ptr.indexOf("n") >= 0) {
-				box.height -= dy;
-				box.top    += dy;
+		/*-- Buscando local de redimencionamento -------------------------------*/
+		else {
+			if (event.type === "mousemove") {
+				const box  = target.getBoundingClientRect();
+				const d    = 6;
+				const x    = event.clientX;
+				const y    = event.clientY;
+				const N    = cut ? false : (y >= box.top  && y <= (box.top  + d));
+				const S    = y <= box.bottom && y >= (box.bottom - d);
+				const W    = cut ? false : (x >= box.left && x <= (box.left + d));
+				const E    = x <= box.right  && x >= (box.right  - d);
+				const ptr  = (N || S ? (N ? "n" : "s") : "") + (W || E ? (E ? "e" : "w") : "");
+				if (ptr === "")
+					target.removeAttribute("data-wd-size-cursor");
+				else
+					target.setAttribute("data-wd-size-cursor", ptr);
 			}
-			if (ptr.indexOf("s") >= 0) {
-				box.height += dy;
-				box.bottom -= dy;
-			}
-			if (ptr.indexOf("w") >= 0) {
-				box.width -= dx;
-				box.left  += dx;
-			}
-			if (ptr.indexOf("e") >= 0) {
-				box.width += dx;
-				box.right -= dx;
-			}
-			node.position = cut ? {width: box.width, height: box.height} : box;
-			/*-- exibindo linhas --*/
-			const hline = document.querySelector(".js-wd-hline");
-			const vline = document.querySelector(".js-wd-vline");
-			const gbcr  = target.getBoundingClientRect();
-			if (ptr.indexOf("n") >= 0)
-				hline.style.top = gbcr.top+"px";
-			if (ptr.indexOf("s") >= 0)
-				hline.style.top = gbcr.bottom+"px";
-			if (ptr.indexOf("w") >= 0)
-				vline.style.left = gbcr.left+"px";
-			if (ptr.indexOf("e") >= 0)
-				vline.style.left = gbcr.right+"px";
-
-			window.getSelection().removeAllRanges();
-		}
-		/*-- Parar redimenciomento -----------------------------------------------*/
-		else if (event.type === "mouseup" && act === "resize") {
-			if (re.test(body))
-				document.body.className = body.replace(re, "");
-			if ("wdMoveSizePointer" in target.dataset)
-				delete target.dataset.wdMoveSizePointer;
-			if ("wdMoveResizing" in target.dataset)
-				delete target.dataset.wdMoveResizing;
-			const hline = document.querySelector(".js-wd-hline");
-			const vline = document.querySelector(".js-wd-vline");
-			if (hline !== null) hline.remove();
-			if (vline !== null) vline.remove();
-			window.getSelection().removeAllRanges();
 		}
 		return;
 	}
@@ -9898,7 +9939,7 @@ const wd = (function() {
 				{name: "wdSet",     call: data_wd_set,       kill: false, bind: {}},
 				{name: "wdDisplay", call: data_wd_display,   kill: false, bind: {}},
 				{name: "wdEdit",    call: data_wd_edit,      kill: false, bind: {}},
-				{name: "wdMove",    call: data_wd_move_jump, kill: false, bind: {}},
+				{name: "wdJump",    call: data_wd_jump,      kill: false, bind: {}},
 				{name: null,        call: __FLOAT.escape,    kill: false, bind: {}}//FIXME vincular esse trigger a um float fecha sem abrir
 				/*{name: "wdFloat",   call: data_wd_float,     kill: false, bind: {}}*/
 			]
@@ -9932,86 +9973,102 @@ const wd = (function() {
 		dragstart: {
 			target: document, preventDefault: false,
 			data: [
-				{name: "wdMove", call: data_wd_move_drag, kill: false, bind: {}}
+				{name: "wdDrag", call: data_wd_move_drag, kill: false, bind: {}}
 			]
 		},
 		dragend: {
 			target: document, preventDefault: false,
 			data: [
-				{name: "wdMove", call: data_wd_move_drag, kill: false, bind: {}}
+				{name: "wdDrag", call: data_wd_move_drag, kill: false, bind: {}}
 			]
 		},
 		dragleave: {
 			target: document, preventDefault: true,
 			data: [
-				{name: "wdMove", call: data_wd_move_drop, kill: false, bind: {}}
+				{name: "wdDrop", call: data_wd_move_drop, kill: false, bind: {}}
 			]
 		},
 		dragover: {
 			target: document, preventDefault: true,
 			data: [
-				{name: "wdMove", call: data_wd_move_drop, kill: false, bind: {}}
+				{name: "wdDrop", call: data_wd_move_drop, kill: false, bind: {}}
 			]
 		},
 		dragenter: {
 			target: document, preventDefault: false,
 			data: [
-				{name: "wdMove", call: data_wd_move_drop, kill: false, bind: {}}
+				{name: "wdDrop", call: data_wd_move_drop, kill: false, bind: {}}
 			]
 		},
 		drop: {
 			target: document, preventDefault: true,
 			data: [
-				{name: "wdMove", call: data_wd_move_drop, kill: false, bind: {}}
+				{name: "wdDrop", call: data_wd_move_drop, kill: false, bind: {}}
 			]
 		},
+
+
 		mousedown: {
 			target: document, preventDefault: false, extra: "leftClick",
 			data: [
-				{name: "wdMove", call: data_wd_move_move, kill: false, bind: {}},
-				{name: "wdMove", call: data_wd_move_size, kill: false, bind: {}}
+				{name: "wdMove", call: data_wd_move, kill: false, bind: {}},
+				{name: "wdSize", call: data_wd_size, kill: false, bind: {cursor: null}}
 			]
 		},
 		mouseup: {
 			target: document, preventDefault: false, extra: "leftClick",
 			data: [
-				{name: "*[data-wd-move-moving]",   call: data_wd_move_move, kill: false, bind: {}},
-				{name: "*[data-wd-move-resizing]", call: data_wd_move_size, kill: false, bind: {}}
+				{name: "*[data-wd-moving]",   call: data_wd_move, kill: true, bind: {}},
+				{name: "*[data-wd-resizing]", call: data_wd_size, kill: true, bind: {cursor: null}}
 			]
 		},
 		mousemove: {
 			target: document, preventDefault: false,
 			data: [
-				{name: "*[data-wd-move-moving]",   call: data_wd_move_move, kill: false, bind: {}},
-				{name: "wdMove",                   call: data_wd_move_size, kill: false, bind: {}},
-				{name: "*[data-wd-move-resizing]", call: data_wd_move_size, kill: false, bind: {}}
+				{name: "wdSize", call: data_wd_size, kill: false, bind: {}},
+
+				{name: "*[data-wd-moving]",   call: data_wd_move, kill: false, bind: {}},
+				{name: "*[data-wd-resizing]", call: data_wd_size, kill: false, bind: {cursor: null}},
+
 			]
 		},
 		mouseenter: {
 			target: document, preventDefault: false,
 			data: [
-				{name: "wdMove", call: data_wd_move_drag, kill: false, bind: {}}
+				//{name: "wdSize", call: data_wd_size, kill: false, bind: {}},
+
+
+
+				{name: "wdDrag", call: data_wd_move_drag, kill: false, bind: {}}
+
 			]
 		},
 		mouseleave: {
 			target: document, preventDefault: false,
 			data: [
-				//{name: "wdMove", call: data_wd_move_drag, kill: false, bind: {}}
+				//{name: "wdSize", call: data_wd_size, kill: false, bind: {}}
 			]
 		},
 		mouseover: {
 			target: document, preventDefault: false,
 			data: [
-				{name: "wdMove", call: data_wd_move_drag, kill: false, bind: {}}
+				//{name: "wdSize", call: data_wd_size, kill: false, bind: {}},
+
+
+				{name: "wdDrag", call: data_wd_move_drag, kill: false, bind: {}}
 			]
 		},
 		mouseout: {
 			target: document, preventDefault: false,
 			data: [
-				{name: "wdMove", call: data_wd_move_size, kill: false, bind: {}},
-				{name: "wdMove", call: data_wd_move_drag, kill: false, bind: {}}
+				{name: "wdSize", call: data_wd_size, kill: false, bind: {cursor: null}},
+				{name: "wdDrag", call: data_wd_move_drag, kill: false, bind: {}}
 			]
 		},
+
+
+
+
 		dblclick: {
 			target: document, preventDefault: false, extra: "leftClick",
 			data: [
