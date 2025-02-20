@@ -369,16 +369,17 @@ const wd = (function() {
 		/*-- data-wd-jump|move|size|drop|drag ------------------------------------*/
 		[data-wd-jump]   {cursor: pointer !important;}
 		[data-wd-move]   {cursor: grab    !important;}
+		[data-wd-moving] {cursor: move    !important;}
 		[data-wd-drag]   {cursor: grab    !important;}
-		[data-wd-size-cursor="n"]  {cursor: n-resize  !important;}
-		[data-wd-size-cursor="ne"] {cursor: ne-resize !important;}
-		[data-wd-size-cursor="e"]  {cursor: e-resize  !important;}
-		[data-wd-size-cursor="se"] {cursor: se-resize !important;}
-		[data-wd-size-cursor="s"]  {cursor: s-resize  !important;}
-		[data-wd-size-cursor="sw"] {cursor: sw-resize !important;}
-		[data-wd-size-cursor="w"]  {cursor: w-resize  !important;}
-		[data-wd-size-cursor="nw"] {cursor: nw-resize !important;}
-		[data-wd-size-cursor="n"]  {cursor: n-resize  !important;}
+		[data-wd-size="cursor{n}"]  {cursor: n-resize  !important;}
+		[data-wd-size="cursor{ne}"] {cursor: ne-resize !important;}
+		[data-wd-size="cursor{e}"]  {cursor: e-resize  !important;}
+		[data-wd-size="cursor{se}"] {cursor: se-resize !important;}
+		[data-wd-size="cursor{s}"]  {cursor: s-resize  !important;}
+		[data-wd-size="cursor{sw}"] {cursor: sw-resize !important;}
+		[data-wd-size="cursor{w}"]  {cursor: w-resize  !important;}
+		[data-wd-size="cursor{nw}"] {cursor: nw-resize !important;}
+		[data-wd-size="cursor{n}"]  {cursor: n-resize  !important;}
 
 
 
@@ -434,19 +435,19 @@ const wd = (function() {
 		[data-js-wd-cursor="draging"], [data-js-wd-cursor="draging"] * {cursor: grabbing !important;}
 
 
-		[data-js-wd-line] {
+		[data-js-wd-area] {
 			position: fixed !important;
 			background-color: rgba(127,127,127,0.2) !important;
 			z-index: 9999 !important;
 		}
-		[data-js-wd-line="vertical"] {
+		[data-js-wd-area="vertical"] {
 			top: 0 !important;
 			bottom: 0 !important;
 			height: 100vh !important;
 			border-left:  thin dashed #ccc !important;
 			border-right: thin dashed #ccc !important;
 		}
-		[data-js-wd-line="horizontal"] {
+		[data-js-wd-area="horizontal"] {
 			left: 0 !important;
 			right: 0 !important;
 			width: 100vw !important;
@@ -5883,37 +5884,38 @@ const wd = (function() {
 			}
 		},
 
-
+		//FIXME descrever
 		highlight: {
 			value: function(show) {
 				if (show === false) {
-					const query = document.querySelectorAll("[data-js-wd-line]");
+					const query = document.querySelectorAll("[data-js-wd-area]");
 					for (let i = 0; i < query.length; i++)
 						query[i].remove();
 				} else {
-					this.highlight(false);
-					const hline = document.createElement("DIV");
-					const vline = document.createElement("DIV");
 					const data  = this.node.getBoundingClientRect();
-					hline.dataset.jsWdLine = "horizontal";
+					const mouse = window.getComputedStyle(this.node).cursor;
+					let  hline = document.querySelector(`[data-js-wd-area="horizontal"]`);
+					let  vline = document.querySelector(`[data-js-wd-area="vertical"]`);
+					if (hline === null) {
+						hline = document.createElement("DIV");
+						hline.dataset.jsWdArea = "horizontal";
+						document.body.appendChild(hline);
+					}
+					if (vline === null) {
+						vline = document.createElement("DIV");
+						vline.dataset.jsWdArea = "vertical";
+						document.body.appendChild(vline);
+					}
 					hline.style.top    = data.top+"px";
 					hline.style.height = data.height+"px";
-					document.body.appendChild(hline);
-					vline.dataset.jsWdLine = "vertical";
+					hline.style.cursor = mouse;
 					vline.style.left   = data.left+"px";
 					vline.style.width  = data.width+"px";
-					document.body.appendChild(vline);
+					vline.style.cursor = mouse;
 				}
-
-
-
-
-
-
-
-
+				return;
 			}
-		}
+		},
 
 
 
@@ -9359,14 +9361,14 @@ const wd = (function() {
 	O atributo ''data-wd-move'' deve ficar sobre o elemento âncora e a propriedade ''$'' especificará o elemento que será movido. Para um movimento padrão, a âncora deve ser um filho do elemento a se mover, se não definido, será o próprio elemento. Elementos com posicionamento ''static'' e ''sticky'' não serão movimentados.**/
 	function data_wd_move(target, event, wdArray) {
 		const data = wdArray[0];
-		/*-- iniciar movimento (data-wd-move) --*/
+		/*-- iniciar movimento (data-wd-move) ------------------------------------*/
 		if (event.type === "mousedown") {
-			const query  = data.$$ || data.$ || target;
-			const check  = new __Type(query);
-			const mover  = !check.node || check.value.length < 1 ? [target] : check.value;
-			const stop   = ["static", "sticky"];
+			const query = data.$$ || data.$ || target;
+			const check = new __Type(query);
+			const mover = !check.node || check.value.length < 1 ? [target] : check.value;
+			const stop  = ["static", "sticky"];
 			/*-- looping pelos elementos --*/
-			let node, box, source, count = 0;
+			let node, box, source;
 			for (let i = 0; i < mover.length; i++) {
 				node = new __Node(mover[i]);
 				/*-- se não for posicionamento static ou sticky --*/
@@ -9379,19 +9381,16 @@ const wd = (function() {
 					node.position = box;
 					for (let j in box) source.push(`${j}{${box[j]}}`);
 					mover[i].setAttribute("data-wd-moving", source.join(""));
-					count++;
 				}
 			}
-			if (count > 0) document.body.setAttribute("data-js-wd-cursor", "moving");
 		}
-		/*-- parar movimento (data-js-wd-move) --*/
-		else if (event.type === "mouseup" || event.buttons !== 1) {
+		/*-- parar movimento (data-wd-moving) ------------------------------------*/
+		else if (event.type === "mouseup") {
 			const node = new __Node(target);
-			document.body.removeAttribute("data-js-wd-cursor");
 			node.highlight(false);
 			window.getSelection().removeAllRanges();
 		}
-		/*-- movimentar (data-js-wd-move) --*/
+		/*-- movimentar (data-wd-moving) -----------------------------------------*/
 		else if (event.type === "mousemove") {
 			const node    = new __Node(target);
 			const box     = data;
@@ -9403,7 +9402,6 @@ const wd = (function() {
 			box.bottom   -= dy;
 			node.position = box;
 			node.highlight(true);
-			window.getSelection().removeAllRanges();
 		}
 		return;
 	}
@@ -9421,87 +9419,66 @@ const wd = (function() {
 		const node = new __Node(target);
 		const non  = ["static", "relative", "sticky"];
 		const cut  = non.indexOf(node.styles.position) >= 0;
-		/*--------------------------------------------------------------------------
-		[data-wd-size]                      (mousemove) - define [data-wd-size-cursor] na borda
-		[data-wd-size]                      (mouseout)  - remove [data-wd-size-cursor]
-		[data-wd-size][data-wd-size-cursor] (mousedown) - define [data-wd-resizing]
-		[data-wd-size][data-wd-resizing]    (mousemove) - redimenciona
-		[data-wd-size][data-wd-resizing]    (mouseup)   - define [data-wd-resizing]
-		--------------------------------------------------------------------------*/
-		//FIXME fazer por meio do evento mesmo
-
-		/*-- Redimencionando -----------------------------------------------------*/
-		if (target.hasAttribute("data-wd-resizing")) {
-			if (event.type === "mousemove") {
-				const box = data;
-				const ptr = target.getAttribute("data-wd-size-cursor");
-				const dx  = event.pageX - box.pageX;
-				const dy  = event.pageY - box.pageY;
-				if (ptr.indexOf("n") >= 0) {
-					box.height -= dy;
-					box.top    += dy;
-				}
-				if (ptr.indexOf("s") >= 0) {
-					box.height += dy;
-					box.bottom -= dy;
-				}
-				if (ptr.indexOf("w") >= 0) {
-					box.width -= dx;
-					box.left  += dx;
-				}
-				if (ptr.indexOf("e") >= 0) {
-					box.width += dx;
-					box.right -= dx;
-				}
-				node.position = cut ? {width: box.width, height: box.height} : box;
-				node.highlight(true);
+		const init = target.hasAttribute("data-wd-resizing");
+		const scan = /^cursor\{([nesw]|[ns][ew])\}$/
+		const side = scan.test(target.dataset.wdSize) ? target.dataset.wdSize.replace(scan, "$1") : null;
+		/*-- Redimencionar -------------------------------------------------------*/
+		if (event.type === "mousemove" && init) {
+			const box = data;
+			const ptr = side;
+			const dx  = event.pageX - box.pageX;
+			const dy  = event.pageY - box.pageY;
+			if (ptr.indexOf("n") >= 0) {
+				box.height -= dy;
+				box.top    += dy;
 			}
-			else if (event.type === "mouseup") {
-				target.removeAttribute("data-wd-size-cursor");
-				document.body.removeAttribute("data-js-wd-cursor");
-				node.highlight(false);
+			if (ptr.indexOf("s") >= 0) {
+				box.height += dy;
+				box.bottom -= dy;
 			}
+			if (ptr.indexOf("w") >= 0) {
+				box.width -= dx;
+				box.left  += dx;
+			}
+			if (ptr.indexOf("e") >= 0) {
+				box.width += dx;
+				box.right -= dx;
+			}
+			node.position = cut ? {width: box.width, height: box.height} : box;
+			node.highlight(true);
+		}
+		/*-- Preparar ------------------------------------------------------------*/
+		else if (event.type === "mousemove" && !init) {
+			const box = target.getBoundingClientRect();
+			const d   = 6;
+			const x   = event.clientX;
+			const y   = event.clientY;
+			const N   = cut ? false : (y >= box.top  && y <= (box.top  + d));
+			const S   = y <= box.bottom && y >= (box.bottom - d);
+			const W   = cut ? false : (x >= box.left && x <= (box.left + d));
+			const E   = x <= box.right  && x >= (box.right  - d);
+			const p   = (N || S ? (N ? "n" : "s") : "") + (W || E ? (E ? "e" : "w") : "");
+			target.dataset.wdSize = `cursor{${p}}`;
+		}
+		/*-- Desistir ------------------------------------------------------------*/
+		else if (event.type === "mouseout" && !init) {
+			target.dataset.wdSize = `cursor{}`;
+		}
+		/*-- Iniciar -------------------------------------------------------------*/
+		else if (event.type === "mousedown" && side !== null) {
+			const ptr   = side;
+			const value = [];
+			const box   = node.position;
+			box.pageX   = event.pageX;
+			box.pageY   = event.pageY;
+			for (let i in box) value.push(`${i}{${+box[i]}}`);
+			target.dataset.wdResizing = value.join("");
+		}
+		/*-- Encerrar ------------------------------------------------------------*/
+		else if (event.type === "mouseup") {
+			target.dataset.wdSize = "cursor{}";
+			node.highlight(false);
 			window.getSelection().removeAllRanges();
-		}
-		/*-- Posicionado para redimencionar --------------------------------------*/
-		else if (target.hasAttribute("data-wd-size-cursor")) {
-			if (event.type === "mousedown") {
-				const ptr   = target.getAttribute("data-wd-size-cursor");
-				const value = [];
-				const box   = node.position;
-				box.pageX   = event.pageX;
-				box.pageY   = event.pageY;
-				for (let i in box) value.push(`${i}{${+box[i]}}`);
-				target.setAttribute("data-wd-resizing", value.join(""));
-				document.body.setAttribute("data-js-wd-cursor", ptr);
-				/*const lines = {hline: "js-wd-hline", vline: "js-wd-vline"};
-				for (let i in lines) {
-					let elem = document.createElement("DIV");
-					elem.className = lines[i];
-					document.body.appendChild(elem);
-				}*/
-			}
-			else if (event.type === "mouseout") {
-				target.removeAttribute("data-wd-size-cursor");
-			}
-		}
-		/*-- Buscando local de redimencionamento -------------------------------*/
-		else {
-			if (event.type === "mousemove") {
-				const box  = target.getBoundingClientRect();
-				const d    = 6;
-				const x    = event.clientX;
-				const y    = event.clientY;
-				const N    = cut ? false : (y >= box.top  && y <= (box.top  + d));
-				const S    = y <= box.bottom && y >= (box.bottom - d);
-				const W    = cut ? false : (x >= box.left && x <= (box.left + d));
-				const E    = x <= box.right  && x >= (box.right  - d);
-				const ptr  = (N || S ? (N ? "n" : "s") : "") + (W || E ? (E ? "e" : "w") : "");
-				if (ptr === "")
-					target.removeAttribute("data-wd-size-cursor");
-				else
-					target.setAttribute("data-wd-size-cursor", ptr);
-			}
 		}
 		return;
 	}
@@ -10052,9 +10029,6 @@ const wd = (function() {
 		mouseover: {
 			target: document, preventDefault: false,
 			data: [
-				//{name: "wdSize", call: data_wd_size, kill: false, bind: {}},
-
-
 				{name: "wdDrag", call: data_wd_move_drag, kill: false, bind: {}}
 			]
 		},
