@@ -9388,7 +9388,6 @@ const wd = (function() {
 		else if (event.type === "mouseup") {
 			const node = new __Node(target);
 			node.highlight(false);
-			window.getSelection().removeAllRanges();
 		}
 		/*-- movimentar (data-wd-moving) -----------------------------------------*/
 		else if (event.type === "mousemove") {
@@ -9402,6 +9401,7 @@ const wd = (function() {
 			box.bottom   -= dy;
 			node.position = box;
 			node.highlight(true);
+			window.getSelection().removeAllRanges();
 		}
 		return;
 	}
@@ -9446,6 +9446,7 @@ const wd = (function() {
 			}
 			node.position = cut ? {width: box.width, height: box.height} : box;
 			node.highlight(true);
+			window.getSelection().removeAllRanges();
 		}
 		/*-- Preparar ------------------------------------------------------------*/
 		else if (event.type === "mousemove" && !init) {
@@ -9478,67 +9479,60 @@ const wd = (function() {
 		else if (event.type === "mouseup") {
 			target.dataset.wdSize = "cursor{}";
 			node.highlight(false);
-			window.getSelection().removeAllRanges();
 		}
 		return;
 	}
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wd_move_drag(''node''  target, ''object'' event, ''array'' wdArray)``
+	/**###### ``**function** ''void'' data_wd_drag(''node''  target, ''object'' event, ''array'' wdArray)``
 	Função com o propósito de arrastar elementos por meio do atributo HTML ''data''.
 	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
 	|data-wd-move|dragstart e dragend|Único|Múltiplos|-|Nós de elementos que possam ser arrastados|
-	Possui as seguintes propriedades:
+	Possui as seguintes propriedades quanto ao efeito desejado:
 	|Nome|Tipo|Descrição|
-	|type|string|Tipo do movimento, que deve ser ''drag''|
-	|effect|array|Efeitos do movimento: ''hide, move, copy e link''|**/
-	function data_wd_move_drag(target, event, wdArray) {
-		if (wdArray[0].type !== "drag") return;
+	|hide|boolean|Para fins de derrubada para remover o elemento do DOM|
+	|move|boolean|Para fins de derrubada para mover o elemento para o alvo|
+	|copy|boolean|Para fins de derrubada para cópia o elemento para o alvo|
+	|link|boolean|Para fins de derrubada para lincagem do elemento no alvo|**/
+	function data_wd_drag(target, event, wdArray) {
 		const data = wdArray[0];
 		/*-- Habilitando configuração de arrasto ---------------------------------*/
 		if (target.draggable !== true)
 			target.draggable = true;
-		/*-- Iniciando arrasto ---------------------------------------------------*/
+		/*-- Checando a existência de drops --------------------------------------*/
 		if (event.type === "dragstart") {
-			/*-- definindo o efeito de arrasto --*/
-			const effect = __Type(data.effect).array ? data.effect : [];
-			const hide   = effect.indexOf("hide") >= 0;
-			const move   = effect.indexOf("move") >= 0 || hide;
-			const copy   = effect.indexOf("copy") >= 0;
-			const link   = effect.indexOf("link") >= 0;
-			let allowed;
-			if (move === link && move === copy)
-				allowed = "all";
-			else if (copy && move)
-				allowed = "copyMove";
-			else if (copy && link)
-				allowed = "copyLink";
-			else if (link && move)
-				allowed = "linkMove";
-			else
-				allowed = copy ? "copy" : (move ? "move" : "link");
-			/*-- definindo os dados do arrasto --*/
-			event.dataTransfer.effectAllowed = allowed;
-			event.dataTransfer.setData("text", target.dataset.wdMove);
-			target.dataset.wdMoveDragging = "on";
-			/*-- definindo locais de queda --*/
-			const re = /effect\{([a-z]+)\}/;
-			WD.$$("[data-wd-move*=\"type{drop}\"]").forEach(function(node) {
-				const attr  = node.dataset.wdMove;
-				const match = attr.match(re);
-				const value = match !== null && match.length > 1 ? match[1] : null;
-				if (effect.indexOf(value) >= 0)
-					node.dataset.wdMoveDropping = "";
-			});
+			const allow = {hide: false, move: false, copy: false, link: false};
+			let  count = 0;
+			for (let i in allow) {
+				if (data[i] === true) {
+					let query = `[data-wd-drop*="effect{${i}}"]`;
+					WD.$$(query).forEach(function(node) {node.dataset.wdDropping = i;});
+					allow[i] = true;
+					count++;
+				}
+			}
+			/*-- definindo dados e efeito --*/
+			if (count > 0) {
+				target.dataset.wdDragging = "";
+				event.dataTransfer.setData("text", target.dataset.wdDrag);
+				if (allow.copy && allow.link && (allow.move || allow.hide))
+					event.dataTransfer.effectAllowed = "all";
+				else if (allow.link  && (allow.move || allow.hide))
+					event.dataTransfer.effectAllowed = "linkMove";
+				else if (allow.copy && (allow.move || allow.hide))
+					event.dataTransfer.effectAllowed = "copyMove";
+				else if (allow.copy && allow.link)
+					event.dataTransfer.effectAllowed = "copyLink";
+				else
+					event.dataTransfer.effectAllowed = allow.copy ? "copy" : (allow.link ? "link" : "move");
+			}
 		}
 		/*-- Encerrando arrasto --------------------------------------------------*/
 		else if (event.type === "dragend") {
-			const nodes = WD.$$("*[data-wd-move-dragging], *[data-wd-move-dropping]");
+			const nodes = WD.$$("[data-wd-dragging], [data-wd-dropping]");
 			nodes.forEach(function(node) {
-				if ("wdMoveDragging" in node.dataset)
-					delete node.dataset.wdMoveDragging;
-				if ("wdMoveDropping" in node.dataset)
-					delete node.dataset.wdMoveDropping;
+				node.removeAttribute("data-wd-dragging");
+				node.removeAttribute("data-wd-dropping");
 			});
 		}
 		window.getSelection().removeAllRanges();
@@ -9546,7 +9540,7 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wd_move_drop(''node''  target, ''object'' event, ''array'' wdArray)``
+	/**###### ``**function** ''void'' data_wd_drop(''node''  target, ''object'' event, ''array'' wdArray)``
 	Função com o propósito de receber o elemento arrastado por meio do atributo HTML ''data''.
 	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
 	|data-wd-move|dragover, dragenter, dragleave e drop|Único|Múltiplos|-|Nós de elementos que receberão alguma ação|
@@ -9561,11 +9555,10 @@ const wd = (function() {
 	|move|O elemento arrastável será movido para o elemento de soltura|
 	|copy|O elemento arrastável será copiado no elemento de soltura|
 	|link|O elemento arrastável será lincado ao elemento de soltura|**/
-	function data_wd_move_drop(target, event, wdArray) {
-		if (wdArray[0].type !== "drop") return;
+	function data_wd_drop(target, event, wdArray) {
 		const data   = wdArray[0];
 		/*-- Checando compatibilidade de efeitos na queda ------------------------*/
-		const drag    = document.querySelector("[data-wd-move-dragging]");
+		const drag    = document.querySelector("[data-wd-dragging]");
 		const drop    = target;
 		const effects = {move: "move", copy: "copy", link: "link", hide: "move"};
 		const effect  = data.effect;
@@ -9950,104 +9943,84 @@ const wd = (function() {
 		dragstart: {
 			target: document, preventDefault: false,
 			data: [
-				{name: "wdDrag", call: data_wd_move_drag, kill: false, bind: {}}
+				{name: "wdDrag", call: data_wd_drag, kill: false, bind: {}}
 			]
 		},
 		dragend: {
 			target: document, preventDefault: false,
 			data: [
-				{name: "wdDrag", call: data_wd_move_drag, kill: false, bind: {}}
+				{name: "wdDrag", call: data_wd_drag, kill: false, bind: {}}
 			]
 		},
 		dragleave: {
 			target: document, preventDefault: true,
 			data: [
-				{name: "wdDrop", call: data_wd_move_drop, kill: false, bind: {}}
+				{name: "wdDrop", call: data_wd_drop, kill: false, bind: {}}
 			]
 		},
 		dragover: {
 			target: document, preventDefault: true,
 			data: [
-				{name: "wdDrop", call: data_wd_move_drop, kill: false, bind: {}}
+				{name: "wdDrop", call: data_wd_drop, kill: false, bind: {}}
 			]
 		},
 		dragenter: {
 			target: document, preventDefault: false,
 			data: [
-				{name: "wdDrop", call: data_wd_move_drop, kill: false, bind: {}}
+				{name: "wdDrop", call: data_wd_drop, kill: false, bind: {}}
 			]
 		},
 		drop: {
 			target: document, preventDefault: true,
 			data: [
-				{name: "wdDrop", call: data_wd_move_drop, kill: false, bind: {}}
+				{name: "wdDrop", call: data_wd_drop, kill: false, bind: {}}
 			]
 		},
-
-
 		mousedown: {
 			target: document, preventDefault: false, extra: "leftClick",
 			data: [
 				{name: "wdMove", call: data_wd_move, kill: false, bind: {}},
-				{name: "wdSize", call: data_wd_size, kill: false, bind: {cursor: null}}
+				{name: "wdSize", call: data_wd_size, kill: false, bind: {cursor: ""}}
 			]
 		},
 		mouseup: {
 			target: document, preventDefault: false, extra: "leftClick",
 			data: [
 				{name: "*[data-wd-moving]",   call: data_wd_move, kill: true, bind: {}},
-				{name: "*[data-wd-resizing]", call: data_wd_size, kill: true, bind: {cursor: null}}
+				{name: "*[data-wd-resizing]", call: data_wd_size, kill: true, bind: {cursor: ""}}
 			]
 		},
 		mousemove: {
 			target: document, preventDefault: false,
 			data: [
-				{name: "wdSize", call: data_wd_size, kill: false, bind: {}},
-
+				{name: "wdSize",              call: data_wd_size, kill: false, bind: {}},
 				{name: "*[data-wd-moving]",   call: data_wd_move, kill: false, bind: {}},
-				{name: "*[data-wd-resizing]", call: data_wd_size, kill: false, bind: {cursor: null}},
-
+				{name: "*[data-wd-resizing]", call: data_wd_size, kill: false, bind: {cursor: ""}},
 			]
 		},
 		mouseenter: {
 			target: document, preventDefault: false,
-			data: [
-				//{name: "wdSize", call: data_wd_size, kill: false, bind: {}},
-
-
-
-				{name: "wdDrag", call: data_wd_move_drag, kill: false, bind: {}}
-
-			]
+			data: []
 		},
 		mouseleave: {
 			target: document, preventDefault: false,
-			data: [
-				//{name: "wdSize", call: data_wd_size, kill: false, bind: {}}
-			]
+			data: []
 		},
 		mouseover: {
 			target: document, preventDefault: false,
 			data: [
-				{name: "wdDrag", call: data_wd_move_drag, kill: false, bind: {}}
+				{name: "wdDrag", call: data_wd_drag, kill: false, bind: {}}
 			]
 		},
 		mouseout: {
 			target: document, preventDefault: false,
 			data: [
 				{name: "wdSize", call: data_wd_size, kill: false, bind: {cursor: null}},
-				{name: "wdDrag", call: data_wd_move_drag, kill: false, bind: {}}
 			]
 		},
-
-
-
-
 		dblclick: {
 			target: document, preventDefault: false, extra: "leftClick",
-			data: [
-				//{name: null, call: wdOnMouse, kill: false, bind: {}}
-			]
+			data: []
 		},
 		keydown: {
 			target: window, preventDefault: false,
