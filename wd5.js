@@ -314,58 +314,6 @@ const wd = (function() {
 		}
     [data-js-wd-signal-kill]:focus {outline: 1px solid !important;}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-		/*-- dataset -------------------------------------------------------------*/
-		[data-wd-send], [data-wd-set], [data-wd-edit], [data-wd-shared] {
-			cursor: pointer !important;
-		}
-		/*-- data-wd-move: jump --------------------------------------------------*/
-
-		/*-- data-wd-move: drag --------------------------------------------------*/
-
-		/*-- data-wd-move: drop --------------------------------------------------*/
-		[data-wd-move-dropping] {min-height: 4em !important;}
-		[data-wd-move-dropping][data-wd-move*="effect{copy}"] {outline: 2px solid rgb(30,144,255) !important;}
-		[data-wd-move-dropping][data-wd-move*="effect{move}"] {outline: 2px solid rgb(255,51,51)  !important;}
-		[data-wd-move-dropping][data-wd-move*="effect{link}"] {outline: 2px solid rgb(0,153,0)    !important;}
-		[data-wd-move-dropping][data-wd-move*="effect{hide}"] {outline: 2px solid rgb(255,215,0)  !important;}
-		[data-wd-move-dropping] > * {visibility: hidden !important;}
-		[data-wd-move-dropping] > [data-wd-move-dragging] {visibility: visible !important;}
-		[data-wd-move-dropping="move"], [data-wd-move-dropping="copy"],
-		[data-wd-move-dropping="link"], [data-wd-move-dropping="hide"] {
-			background-repeat: no-repeat;
-			background-position: center;
-			background-size: inherit inherit;
-		}
-		[data-wd-move-dropping="copy"] {
-			background-color: rgb(204,230,255);
-			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' height='100' width='100' ><text x='50%' y='50%' font-size='3em' text-anchor='middle' dominant-baseline='middle' fill='rgb(0,0,0)'>\\2795</text></svg>");
-		}
-		[data-wd-move-dropping="move"] {
-			background-color: rgb(255,204,204);
-			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' height='100' width='100' ><text x='50%' y='50%' font-size='3em' text-anchor='middle' dominant-baseline='middle' fill='rgb(0,0,0)'>\\1F82F</text></svg>");
-		}
-		[data-wd-move-dropping="link"] {
-			background-color: rgb(204,255, 204);
-			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' height='100' width='100' ><text x='50%' y='50%' font-size='3em' text-anchor='middle' dominant-baseline='middle' fill='rgb(0,0,0)'>\\1F517</text></svg>");
-		}
-		[data-wd-move-dropping="hide"] {
-			background-color: rgb(255,247,204);
-			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' height='100' width='100' ><text x='50%' y='50%' font-size='3em' text-anchor='middle' dominant-baseline='middle' fill='rgb(0,0,0)'>\\2796</text></svg>");
-		}
-
 		/*-- data-wd-jump|move|size|drop|drag ------------------------------------*/
 		[data-wd-jump]   {cursor: pointer !important;}
 		[data-wd-move]   {cursor: grab    !important;}
@@ -380,7 +328,39 @@ const wd = (function() {
 		[data-wd-size="cursor{w}"]  {cursor: w-resize  !important;}
 		[data-wd-size="cursor{nw}"] {cursor: nw-resize !important;}
 		[data-wd-size="cursor{n}"]  {cursor: n-resize  !important;}
+		[data-wd-dropping] {
+			min-height: 4em !important;
+			background-repeat: no-repeat !important;
+			background-position: center !important;
+			background-size: inherit inherit !important;
+		}
+		[data-wd-dropping] > * {visibility: hidden !important;}
+		[data-wd-dropping="copy"] {
+			outline: 2px solid rgb(30,144,255) !important;
+			background-color: rgb(204,230,255) !important;
+			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' height='100' width='100' ><text x='50%' y='50%' font-size='3em' text-anchor='middle' dominant-baseline='middle' fill='rgb(0,0,0)'>\\2795</text></svg>");
+		}
+		[data-wd-dropping="move"] {
+			outline: 2px solid rgb(255,51,51)  !important;
+			background-color: rgb(255,204,204) !important;
+			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' height='100' width='100' ><text x='50%' y='50%' font-size='3em' text-anchor='middle' dominant-baseline='middle' fill='rgb(0,0,0)'>\\1F82F</text></svg>");
+		}
+		[data-wd-dropping="link"] {
+			outline: 2px solid rgb(0,153,0)     !important;
+			background-color: rgb(204,255, 204) !important;
+			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' height='100' width='100' ><text x='50%' y='50%' font-size='3em' text-anchor='middle' dominant-baseline='middle' fill='rgb(0,0,0)'>\\1F517</text></svg>");
+		}
+		[data-wd-dropping="hide"] {
+			outline: 2px solid rgb(255,215,0)  !important;
+			background-color: rgb(255,247,204) !important;
+			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' height='100' width='100' ><text x='50%' y='50%' font-size='3em' text-anchor='middle' dominant-baseline='middle' fill='rgb(0,0,0)'>\\2796</text></svg>");
+		}
 
+
+		/*-- dataset -------------------------------------------------------------*/
+		[data-wd-send], [data-wd-set], [data-wd-edit], [data-wd-shared] {
+			cursor: pointer !important;
+		}
 
 
 
@@ -388,11 +368,6 @@ const wd = (function() {
 
 		/*-- data-wd-float --------------------------------------------------------*/
 		[data-wd-float] {cursor: context-menu !important;}
-
-
-
-
-
 
 		[data-wd-tsort] {cursor: pointer !important;}
 		[data-wd-tsort]:before {content: "\\2195 " !important; font-weight: normal !important;}
@@ -9502,18 +9477,18 @@ const wd = (function() {
 		/*-- Checando a existência de drops --------------------------------------*/
 		if (event.type === "dragstart") {
 			const allow = {hide: false, move: false, copy: false, link: false};
-			let  count = 0;
+			const list  = [];
 			for (let i in allow) {
 				if (data[i] === true) {
 					let query = `[data-wd-drop*="effect{${i}}"]`;
 					WD.$$(query).forEach(function(node) {node.dataset.wdDropping = i;});
 					allow[i] = true;
-					count++;
+					list.push(i);
 				}
 			}
 			/*-- definindo dados e efeito --*/
-			if (count > 0) {
-				target.dataset.wdDragging = "";
+			if (list.length > 0) {
+				target.dataset.wdDragging = list.join(",");
 				event.dataTransfer.setData("text", target.dataset.wdDrag);
 				if (allow.copy && allow.link && (allow.move || allow.hide))
 					event.dataTransfer.effectAllowed = "all";
@@ -9556,132 +9531,79 @@ const wd = (function() {
 	|copy|O elemento arrastável será copiado no elemento de soltura|
 	|link|O elemento arrastável será lincado ao elemento de soltura|**/
 	function data_wd_drop(target, event, wdArray) {
-		const data   = wdArray[0];
-		/*-- Checando compatibilidade de efeitos na queda ------------------------*/
-		const drag    = document.querySelector("[data-wd-dragging]");
-		const drop    = target;
-		const effects = {move: "move", copy: "copy", link: "link", hide: "move"};
-		const effect  = data.effect;
-		if (drag === null || !(effect in effects)) return;
-		/*-- Checando compatibilidade de efeitos no arrasto ----------------------*/
-		const parser = new __Parser(drag.dataset.wdMove);
-		const wddrag = parser.wdArray.get()[0];
-		const source = __Type(wddrag.effect).array ? wddrag.effect : [];
-		if (source.indexOf(effect) < 0) return;
+		const data = wdArray[0];
+		const file = event.dataTransfer.files.length > 0;
+		const drop = target;
+		const drag = document.querySelector("[data-wd-dragging]");
 		/*-- Configurando visualização de queda ----------------------------------*/
 		if (event.type === "dragover" || event.type === "dragenter") {
-			event.dataTransfer.dropEffect = effects[effect];
-			drop.dataset.wdMoveDropping = effect;
-			drag.style.cursor = "copy";
+			event.dataTransfer.dropEffect = drop.dataset.wdDropping;
 		}
 		else if (event.type === "dragleave") {
-			drop.dataset.wdMoveDropping = "";
-			drag.style.cursor = "pointer";
+			console.log("fazer o que aqui?");
 		}
 		/*-- Derrubando elemento -------------------------------------------------*/
 		else if (event.type === "drop") {
-			if (__Type(data.call).function) {
-				data.call(drag, drop, wddrag)
+			/*-- arquivos --*/
+			if (file) {
+				//FIXME
 			}
-			else if (effect === "move" || effect === "hide") {
-				drop.appendChild(drag);
-				if (effect === "hide")
+			/*-- elementos --*/
+			else {
+				const input  = drop.dataset.wdDropping;
+				const output = drag.dataset.wdDragging.split(",");
+				console.log(drop, output, input)
+
+				if (output.indexOf(input) < 0) {
+					return;
+				}
+				else if (__Type(data.call).function) {
+					data.call(drag, drop, input);
+				}
+				else if (input === "move") {
+					drop.appendChild(drag);
+				}
+				else if (input === "hide") {
+					drop.appendChild(drag);
 					drag.style.display = "none";
-			}
-			else if (effect === "copy") {
-				drop.appendChild(drag.cloneNode(true));
-			}
-			else if (effect === "link") {
-				if (drag.id.trim() === "")
-					drag.id = "ID_" + String(new Date().valueOf());
-				if (drop.tagName.toLowerCase() === "a") {
-					drop.href = "#"+drag.id;
-				} else {
-					const url = location.pathname+"#"+drag.id;
-					const text = drag.textContent;
-					drop.onclick      = function() {location.assign(url);};
-					drop.style.cursor = "pointer";
-					drop.innerHTML    = "&#x1F517 "+(text.length > 10 ? text.slice(0,10)+"..." : text);
-					drop.setAttribute("role", "link");
-					drop.setAttribute("aria-label", text);
-					drop.setAttribute("title", text);
-					drop.setAttribute("tabindex", "0");
-					//FIXME colocar keydown? limitar o textContent?
-					//TODO interessante style.textOverflow = "ellipsis";
-					//FIXME nos atributos dataset de clicar devo colocar tabindex, role e onkeydown?
-					//TODO ideia: no evento keydown de enter forçar um click e tá resolvido
-					//TODO ideia: no load e set definir tabindex se o atributo for de clique
+				}
+				else if (input === "copy") {
+					drop.appendChild(drag.cloneNode(true));
+				}
+				else if (input === "link") {
+					if (drag.id.trim() === "")
+						drag.id = "ID_drag_link_" + String(new Date().valueOf());
+					if (drop.tagName.toLowerCase() === "a") {
+						drop.href = "#"+drag.id;
+					} else {
+						const url = location.pathname+"#"+drag.id;
+						const text = drag.textContent;
+						drop.setAttribute("role", "link");
+						drop.setAttribute("aria-label", text);
+						drop.innerHTML = `&#x1F517 <span style="text-decoration: underline;">${text}</span>`;
+						drop.title     = text;
+						drop.tabIndex  = 0;
+						drop.style.cursor = "pointer";
+						drop.style.textOverflow = "ellipsis";
+						drop.onclick = function(ev) {
+							location.assign(url);
+						}
+						drop.onkeypress = function(ev) {
+							if ((/^Enter$/i).test(ev.key)) ev.target.click();
+						}
+						drop.onfocus = function(ev) {
+							ev.target.style.outline = "2px solid blue";
+						}
+						drop.onblur = function(ev) {
+							ev.target.style.outline = "none";
+						}
+					}
 				}
 			}
-			delete drop.dataset.wdMoveDropping;
 		}
 		window.getSelection().removeAllRanges();
 		return;
 	}
-
-
-
-
-
-
-
-
-
-	function data_wdMove(e, event) {
-
-		/*------------------------------------------------------------------------*/
-		if (data.type === "drop") {
-			event.preventDefault();
-			let drop = e;
-			while (!(/type\{drop\}/).test(drop.dataset.wdMove) && drop !== null)
-				drop = drop.parentElement;
-			if (drop === null) return;
-
-			const attr = new __Parser(drop.dataset.wdMove).wdArray.get()[0];
-			if (!__Type(attr.action).function) return;
-
-			if (event.type === "drop") {
-				event.dataTransfer.dropEffect = data.effect;
-				const files = event.dataTransfer.files;
-				attr.action(files, drop);
-				delete drop.dataset.wdMoveAction;
-			} else if (/*event.type === "dragover" || */event.type === "dragenter") {
-				drop.dataset.wdMoveAction = "files";
-			} else if (event.type === "dragleave") {
-				delete drop.dataset.wdMoveAction;
-			}
-			return;
-		}
-		return;
-	};
-
-
-
-
-
-
-
-
-
-
-/*TODO esses elementos devem ser carregados no onload
-		{selector: "[data-wd-value]",  method: data_wdValue},
-*/
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -9799,6 +9721,12 @@ const wd = (function() {
 		}
 		return;
 	};
+
+						//FIXME nos atributos dataset de clicar devo colocar tabindex, role e onkeydown?
+						//TODO ideia: no evento keydown de enter forçar um click e tá resolvido
+						//TODO ideia: no load e set definir tabindex se o atributo for de clique
+
+
 
 /*============================================================================*/
 /* -- DISPARADORES -- */
