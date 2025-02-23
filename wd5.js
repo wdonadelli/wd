@@ -350,7 +350,7 @@ const wd = (function() {
 			background-color: rgb(204,255, 204) !important;
 			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' height='100' width='100' ><text x='50%' y='50%' font-size='3em' text-anchor='middle' dominant-baseline='middle' fill='rgb(0,0,0)'>\\1F517</text></svg>");
 		}
-		[data-wd-dropping="hide"] {
+		[data-wd-dropping="file"] {
 			outline: 2px solid rgb(255,215,0)  !important;
 			background-color: rgb(255,247,204) !important;
 			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' height='100' width='100' ><text x='50%' y='50%' font-size='3em' text-anchor='middle' dominant-baseline='middle' fill='rgb(0,0,0)'>\\2796</text></svg>");
@@ -419,15 +419,15 @@ const wd = (function() {
 			top: 0 !important;
 			bottom: 0 !important;
 			height: 100vh !important;
-			border-left:  thin dashed #ccc !important;
-			border-right: thin dashed #ccc !important;
+			border-left:  thin dashed rgb(128, 128, 128) !important;
+			border-right: thin dashed rgb(128, 128, 128) !important;
 		}
 		[data-js-wd-area="horizontal"] {
 			left: 0 !important;
 			right: 0 !important;
 			width: 100vw !important;
-			border-top:    thin dashed #ccc !important;
-			border-bottom: thin dashed #ccc !important;
+			border-top:    thin dashed rgb(128, 128, 128) !important;
+			border-bottom: thin dashed rgb(128, 128, 128) !important;
 		}
 
 
@@ -9463,43 +9463,46 @@ const wd = (function() {
 	Função com o propósito de arrastar elementos por meio do atributo HTML ''data''.
 	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
 	|data-wd-move|dragstart e dragend|Único|Múltiplos|-|Nós de elementos que possam ser arrastados|
-	Possui as seguintes propriedades quanto ao efeito desejado:
+	Possui as seguintes propriedades:
 	|Nome|Tipo|Descrição|
-	|hide|boolean|Para fins de derrubada para remover o elemento do DOM|
-	|move|boolean|Para fins de derrubada para mover o elemento para o alvo|
-	|copy|boolean|Para fins de derrubada para cópia o elemento para o alvo|
-	|link|boolean|Para fins de derrubada para lincagem do elemento no alvo|**/
+	|effect|string|Efeito do arrasto: all, move, copy, link, copyMove, copyLink e linkMove|**/
 	function data_wd_drag(target, event, wdArray) {
 		const data = wdArray[0];
+		const info = {
+			move:     {allow: "move",     list: ["move"]},
+			copy:     {allow: "copy",     list: ["copy"]},
+			link:     {allow: "link",     list: ["link"]},
+			all:      {allow: "all",      list: ["move", "link", "copy"]},
+			copymove: {allow: "copyMove", list: ["copy", "move"]},
+			copylink: {allow: "copyLink", list: ["copy", "link"]},
+			linkmove: {allow: "linkMove", list: ["link", "move"]}
+		};
+		const effect = String(data.effect).toLowerCase();
 		/*-- Habilitando configuração de arrasto ---------------------------------*/
-		if (target.draggable !== true)
-			target.draggable = true;
+		if (event.type === "mouseover") {
+			if (effect in info)
+				target.draggable = true;
+			else
+				target.draggable = false;
+		}
 		/*-- Checando a existência de drops --------------------------------------*/
-		if (event.type === "dragstart") {
-			const allow = {hide: false, move: false, copy: false, link: false};
-			const list  = [];
-			for (let i in allow) {
-				if (data[i] === true) {
-					let query = `[data-wd-drop*="effect{${i}}"]`;
-					WD.$$(query).forEach(function(node) {node.dataset.wdDropping = i;});
-					allow[i] = true;
-					list.push(i);
-				}
-			}
+		else if (event.type === "dragstart") {
 			/*-- definindo dados e efeito --*/
-			if (list.length > 0) {
-				target.dataset.wdDragging = list.join(",");
-				event.dataTransfer.setData("text", target.dataset.wdDrag);
-				if (allow.copy && allow.link && (allow.move || allow.hide))
-					event.dataTransfer.effectAllowed = "all";
-				else if (allow.link  && (allow.move || allow.hide))
-					event.dataTransfer.effectAllowed = "linkMove";
-				else if (allow.copy && (allow.move || allow.hide))
-					event.dataTransfer.effectAllowed = "copyMove";
-				else if (allow.copy && allow.link)
-					event.dataTransfer.effectAllowed = "copyLink";
-				else
-					event.dataTransfer.effectAllowed = allow.copy ? "copy" : (allow.link ? "link" : "move");
+			const item = info[effect];
+			target.dataset.wdDragging = item.list.join(",");
+			event.dataTransfer.setData("text", target.dataset.wdDrag);
+			event.dataTransfer.effectAllowed = item.allow;
+			/*-- definindo drops (exceto no container que já comporta o elemento) --*/
+			const parent = target.parentElement;
+			for (let i = 0; i < item.list.length; i++) {
+				let value = item.list[i];
+				let query = `[data-wd-drop*="effect{${value}}"]`;
+				WD.$$(query).forEach(function(node) {
+					if (node !== parent)
+						node.setAttribute("data-wd-dropping", value);
+					else
+						node.removeAttribute("data-wd-dropping");
+				});
 			}
 		}
 		/*-- Encerrando arrasto --------------------------------------------------*/
@@ -9509,8 +9512,8 @@ const wd = (function() {
 				node.removeAttribute("data-wd-dragging");
 				node.removeAttribute("data-wd-dropping");
 			});
+			window.getSelection().removeAllRanges();
 		}
-		window.getSelection().removeAllRanges();
 		return;
 	}
 
@@ -9531,46 +9534,82 @@ const wd = (function() {
 	|copy|O elemento arrastável será copiado no elemento de soltura|
 	|link|O elemento arrastável será lincado ao elemento de soltura|**/
 	function data_wd_drop(target, event, wdArray) {
-		const data = wdArray[0];
-		const file = event.dataTransfer.files.length > 0;
-		const drop = target;
-		const drag = document.querySelector("[data-wd-dragging]");
+		const data   = wdArray[0];
+		const drop   = target;
+		const drag   = document.querySelector("[data-wd-dragging]");
+		const effect = data.effect;
 		/*-- Configurando visualização de queda ----------------------------------*/
-		if (event.type === "dragover" || event.type === "dragenter") {
-			event.dataTransfer.dropEffect = drop.dataset.wdDropping;
+		if (event.type === "dragover") {
+			event.dataTransfer.dropEffect = effect;
+			if (event.dataTransfer.types.indexOf("Files") >= 0)
+				drop.dataset.wdDropping = "file";
 		}
+
+
 		else if (event.type === "dragleave") {
-			console.log("fazer o que aqui?");
+			console.table(event.dataTransfer);
+			if (drop.dataset.wdDropping === "file")
+				drop.removeAttribute("data-wd-dropping");
 		}
+
+
 		/*-- Derrubando elemento -------------------------------------------------*/
 		else if (event.type === "drop") {
+			const call = __Type(data.call).function ? data.call : null;
 			/*-- arquivos --*/
-			if (file) {
-				//FIXME
+			if (event.dataTransfer.files.length > 0) {
+				const files = event.dataTransfer.files;
+				for (let i = 0; i < files.length; i++) {
+					if (call !== null) {
+						call(drop, files[i], effect);
+					} else {
+						let file = new __Request({url: files[i], type: "url",});
+						file.read(function(x) {
+							if (x.ok) {
+								const object     = document.createElement("OBJECT");
+								const link       = document.createElement("a");
+								object.data      = x.response;
+								object.type      = files[i].type;
+								link.href        = x.response;
+								link.download    = files[i].name;
+								link.textContent = files[i].name;
+								if (effect === "move")
+										drop.innerHTML = "";
+								if (effect === "link") {
+									drop.appendChild(link);
+								} else {
+									drop.appendChild(object);
+									object.appendChild(link);
+								}
+							}
+							return;
+						});
+						const nodes = WD.$$("[data-wd-dragging], [data-wd-dropping]");
+						nodes.forEach(function(node) {
+							node.removeAttribute("data-wd-dragging");
+							node.removeAttribute("data-wd-dropping");
+						});
+
+
+					}
+				}
 			}
 			/*-- elementos --*/
 			else {
-				const input  = drop.dataset.wdDropping;
-				const output = drag.dataset.wdDragging.split(",");
-				console.log(drop, output, input)
-
-				if (output.indexOf(input) < 0) {
+				const allow = drag === null ? [] : drag.dataset.wdDragging.split(",");
+				if (allow.indexOf(effect) < 0) {
 					return;
 				}
-				else if (__Type(data.call).function) {
-					data.call(drag, drop, input);
+				else if (call !== null) {
+					call(drop, drag, effect);
 				}
-				else if (input === "move") {
+				else if (effect === "move") {
 					drop.appendChild(drag);
 				}
-				else if (input === "hide") {
-					drop.appendChild(drag);
-					drag.style.display = "none";
-				}
-				else if (input === "copy") {
+				else if (effect === "copy") {
 					drop.appendChild(drag.cloneNode(true));
 				}
-				else if (input === "link") {
+				else if (effect === "link") {
 					if (drag.id.trim() === "")
 						drag.id = "ID_drag_link_" + String(new Date().valueOf());
 					if (drop.tagName.toLowerCase() === "a") {
@@ -9580,7 +9619,7 @@ const wd = (function() {
 						const text = drag.textContent;
 						drop.setAttribute("role", "link");
 						drop.setAttribute("aria-label", text);
-						drop.innerHTML = `&#x1F517 <span style="text-decoration: underline;">${text}</span>`;
+						drop.innerHTML = `&#x1F517 ${text}`;
 						drop.title     = text;
 						drop.tabIndex  = 0;
 						drop.style.cursor = "pointer";
@@ -9862,11 +9901,12 @@ const wd = (function() {
 				//{name: null, call: wdOnFocusIn, kill: false, bind: {}}
 			]
 		},
+
+
+
 		drag: {
 			target: document, preventDefault: false,
-			data: [
-				//{name: null, call: wdOnMouse, kill: false, bind: {}}
-			]
+			data: []
 		},
 		dragstart: {
 			target: document, preventDefault: false,
@@ -9882,9 +9922,7 @@ const wd = (function() {
 		},
 		dragleave: {
 			target: document, preventDefault: true,
-			data: [
-				{name: "wdDrop", call: data_wd_drop, kill: false, bind: {}}
-			]
+			data: [{name: "wdDrop", call: data_wd_drop, kill: false, bind: {}}]
 		},
 		dragover: {
 			target: document, preventDefault: true,
@@ -9893,10 +9931,8 @@ const wd = (function() {
 			]
 		},
 		dragenter: {
-			target: document, preventDefault: false,
-			data: [
-				{name: "wdDrop", call: data_wd_drop, kill: false, bind: {}}
-			]
+			target: document, preventDefault: true,
+			data: []
 		},
 		drop: {
 			target: document, preventDefault: true,
@@ -9928,7 +9964,9 @@ const wd = (function() {
 		},
 		mouseenter: {
 			target: document, preventDefault: false,
-			data: []
+			data: [
+				//{name: "wdDrag", call: data_wd_drag, kill: false, bind: {effect: "all"}}
+			]
 		},
 		mouseleave: {
 			target: document, preventDefault: false,
