@@ -267,13 +267,13 @@ const wd = (function() {
 		[data-js-wd-signal="error"] {
 			color: rgb(181,135,135) !important;
 			background-color: rgb(85, 20, 20) !important;
-			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' transform='rotate(0)' opacity='0.1' height='1em' width='2em' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-height='1.2' font-size='1em'>\\2717</text></svg>") !important;
+			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' transform='rotate(0)' opacity='0.1' height='1em' width='2em' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-height='1.2' font-size='1em'>\\2BBF</text></svg>") !important;
 		}
 		[data-js-wd-signal="dialog"] {
 			max-width: 50vw !important;
 			color: rgb(255,255,255) !important;
 			background-color: rgb(135, 90, 180) !important;
-			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' transform='rotate(-15)' opacity='0.1' height='1em' width='3em' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-height='1.2' font-size='1em'>\\003F</text></svg>") !important;
+			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' transform='rotate(-15)' opacity='0.1' height='1em' width='2em' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-height='1.2' font-size='1em'>\\2BD1</text></svg>") !important;
 		}
 		[data-js-wd-signal-head] {
 			padding-right: 2em !important;
@@ -329,6 +329,7 @@ const wd = (function() {
 		[data-wd-size="cursor{nw}"] {cursor: nw-resize !important;}
 		[data-wd-size="cursor{n}"]  {cursor: n-resize  !important;}
 		[data-wd-dropping] {
+			outline: 2px solid rgb(125,125,125) !important;
 			min-height: 4em !important;
 			background-repeat: no-repeat !important;
 			background-position: center !important;
@@ -338,12 +339,12 @@ const wd = (function() {
 		[data-wd-dropping="copy"] {
 			outline: 2px solid rgb(30,144,255) !important;
 			background-color: rgb(204,230,255) !important;
-			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' height='100' width='100' ><text x='50%' y='50%' font-size='3em' text-anchor='middle' dominant-baseline='middle' fill='rgb(0,0,0)'>\\2795</text></svg>");
+			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' height='100' width='100' ><text x='50%' y='50%' font-size='3em' text-anchor='middle' dominant-baseline='middle' fill='rgb(0,0,0)'>\\1F4DD	</text></svg>");
 		}
 		[data-wd-dropping="move"] {
 			outline: 2px solid rgb(255,51,51)  !important;
 			background-color: rgb(255,204,204) !important;
-			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' height='100' width='100' ><text x='50%' y='50%' font-size='3em' text-anchor='middle' dominant-baseline='middle' fill='rgb(0,0,0)'>\\1F82F</text></svg>");
+			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' height='100' width='100' ><text x='50%' y='50%' font-size='3em' text-anchor='middle' dominant-baseline='middle' fill='rgb(0,0,0)'>\\1F4E5</text></svg>");
 		}
 		[data-wd-dropping="link"] {
 			outline: 2px solid rgb(0,153,0)     !important;
@@ -353,11 +354,20 @@ const wd = (function() {
 		[data-wd-dropping="file"] {
 			outline: 2px solid rgb(255,215,0)  !important;
 			background-color: rgb(255,247,204) !important;
-			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' height='100' width='100' ><text x='50%' y='50%' font-size='3em' text-anchor='middle' dominant-baseline='middle' fill='rgb(0,0,0)'>\\2796</text></svg>");
+			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' height='100' width='100' ><text x='50%' y='50%' font-size='3em' text-anchor='middle' dominant-baseline='middle' fill='rgb(0,0,0)'>\\1F5BA</text></svg>");
 		}
 
-
 		/*-- dataset -------------------------------------------------------------*/
+		[data-wd-grid] [aria-sort] {cursor: pointer !important;}
+		[data-wd-grid] [aria-sort]:before {content: "\\2195 " !important;;}
+		[data-wd-grid] [aria-sort="descending"]:before {content: "\\2191 " !important;}
+		[data-wd-grid] [aria-sort="ascending"]:before  {content: "\\2193 " !important;}
+
+
+
+
+
+
 		[data-wd-send], [data-wd-set], [data-wd-edit], [data-wd-shared] {
 			cursor: pointer !important;
 		}
@@ -369,10 +379,20 @@ const wd = (function() {
 		/*-- data-wd-float --------------------------------------------------------*/
 		[data-wd-float] {cursor: context-menu !important;}
 
-		[data-wd-tsort] {cursor: pointer !important;}
-		[data-wd-tsort]:before {content: "\\2195 " !important; font-weight: normal !important;}
-		[data-wd-tsort="-1"]:before {content: "\\2191 " !important;}
-		[data-wd-tsort="+1"]:before {content: "\\2193 " !important;}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 		[data-wd-repeat] > *, [data-wd-load] > * {visibility: hidden !important;}
 		[data-wd-slide] > * {animation: js-wd-animation-emerge 1s, js-wd-animation-shrink-out 0.5s !important;}
 		svg .js-wd-chart-hide {display: none !important;}
@@ -9467,52 +9487,120 @@ const wd = (function() {
 	|Nome|Tipo|Descrição|
 	|effect|string|Efeito do arrasto: all, move, copy, link, copyMove, copyLink e linkMove|**/
 	function data_wd_drag(target, event, wdArray) {
-		const data = wdArray[0];
-		const info = {
-			move:     {allow: "move",     list: ["move"]},
-			copy:     {allow: "copy",     list: ["copy"]},
-			link:     {allow: "link",     list: ["link"]},
-			all:      {allow: "all",      list: ["move", "link", "copy"]},
-			copymove: {allow: "copyMove", list: ["copy", "move"]},
-			copylink: {allow: "copyLink", list: ["copy", "link"]},
-			linkmove: {allow: "linkMove", list: ["link", "move"]}
-		};
-		const effect = String(data.effect).toLowerCase();
-		/*-- Habilitando configuração de arrasto ---------------------------------*/
-		if (event.type === "mouseover") {
-			if (effect in info)
-				target.draggable = true;
-			else
-				target.draggable = false;
-		}
-		/*-- Checando a existência de drops --------------------------------------*/
-		else if (event.type === "dragstart") {
-			/*-- definindo dados e efeito --*/
-			const item = info[effect];
-			target.dataset.wdDragging = item.list.join(",");
-			event.dataTransfer.setData("text", target.dataset.wdDrag);
-			event.dataTransfer.effectAllowed = item.allow;
-			/*-- definindo drops (exceto no container que já comporta o elemento) --*/
-			const parent = target.parentElement;
-			for (let i = 0; i < item.list.length; i++) {
-				let value = item.list[i];
-				let query = `[data-wd-drop*="effect{${value}}"]`;
-				WD.$$(query).forEach(function(node) {
-					if (node !== parent)
-						node.setAttribute("data-wd-dropping", value);
-					else
-						node.removeAttribute("data-wd-dropping");
+		const data = wdArray;
+		function dragging(drop, drag, effect) {
+			if (effect === "file") {
+				const file = new __Request({url: drag[0], type: "url",});
+				file.read(function(x) {
+					if (x.ok) {
+						const object     = document.createElement("OBJECT");
+						const link       = document.createElement("A");
+						object.data      = x.response;
+						object.type      = drag[0].type;
+						link.href        = x.response;
+						link.download    = drag[0].name;
+						link.textContent = drag[0].name;
+						drop.innerHTML   = "";
+						drop.appendChild(object);
+						object.appendChild(link);
+					}
 				});
 			}
+			else if (effect === "move") {
+				drop.appendChild(drag);
+			}
+			else if (effect === "copy") {
+				drop.appendChild(drag.cloneNode(true));
+			}
+			else if (effect === "link") {
+				if (drag.id.trim() === "")
+					drag.id = "ID_drag_link_" + String(new Date().valueOf());
+				const anchor = drop.tagName.toLowerCase() === "a" ? drop : document.createElement("A");
+				anchor.href = "#"+drag.id;
+				anchor.textContent = drag.textContent;
+				anchor.title = drag.textContent;
+				anchor.style.textOverflow = "ellipsis";
+				drop.innerHTML = "";
+				drop.appendChild(anchor);
+				drop.style.display = "flex";
+				drop.style.justifyContent = "center";
+				drop.style.alignItems = "center";
+			}
+			/*-- limpando --*/
+			const query = document.querySelectorAll("[data-wd-dropping], [data-wd-dragging]")
+			for (let i = 0; i < query.length; i++) {
+				query[i].removeAttribute("data-wd-dropping");
+				query[i].removeAttribute("data-wd-dragging");
+				query[i].ondragover  = null;
+				query[i].ondragleave = null;
+				query[i].ondrop      = null;
+			}
+			window.getSelection().removeAllRanges();
+			return;
+		}
+		/*-- Habilitando configuração de arrasto ---------------------------------*/
+		if (event.type === "mouseover") {
+			 target.draggable = true;
+		}
+		/*-- Definindo drop ------------------------------------------------------*/
+		else if (event.type === "dragstart") {
+			const effects = {link: 0, move: 0, copy: 0};
+			const parent  = target.parentElement;
+			/*-- looping pelos grupos --*/
+			for (let i = 0; i < data.length; i++) {
+				let query  = data[i].$$ || data[i].$ || null;
+				let drop   = new __Type(data[i].drop).function ? data[i].drop : dragging;
+				let effect = String(data[i].effect).toLowerCase();
+				/*-- efeito confirmado, drops definidos --*/
+				if (effect in effects && query !== null) {
+					effects[effect] = 1;
+					/*-- looping pelos drops --*/
+					WD(query).forEach(function(node) {
+						if (node !== parent) {
+							node.dataset.wdDropping = "";
+							node.ondragover = function(ev) {
+								ev.preventDefault();
+								if ((/^(on)?dragover$/i).test(ev.type)) {
+									ev.target.dataset.wdDropping   = effect;
+									ev.dataTransfer.dropEffect = effect;
+								}
+								else if ((/^(on)?dragleave$/i).test(ev.type)) {
+									ev.target.dataset.wdDropping = "";
+								}
+								else if ((/^(on)?drop$/i).test(ev.type)) {
+									drop(ev.target, target, effect);
+								}
+								return;
+							}
+							node.ondragleave = node.ondragover;
+							node.ondrop      = node.ondragover;
+						}
+					});
+				}
+			}
+			/*-- definindo drag --*/
+			if (effects.move > 0 && effects.copy > 0 && effects.link > 0)
+				event.dataTransfer.effectAllowed = "all";
+			else if (effects.move > 0 && effects.copy > 0)
+				event.dataTransfer.effectAllowed = "copyMove";
+			else if (effects.copy > 0 && effects.link > 0)
+				event.dataTransfer.effectAllowed = "copyLink";
+			else if (effects.move > 0 && effects.link > 0)
+				event.dataTransfer.effectAllowed = "linkMove";
+			else if (effects.move > 0)
+				event.dataTransfer.effectAllowed = "move";
+			else if (effects.copy > 0)
+				event.dataTransfer.effectAllowed = "copy";
+			else if (effects.link > 0)
+				event.dataTransfer.effectAllowed = "link";
+			else
+				event.dataTransfer.effectAllowed = "none";
+			if (event.dataTransfer.effectAllowed !== "none")
+				target.dataset.wdDragging = event.dataTransfer.effectAllowed;
 		}
 		/*-- Encerrando arrasto --------------------------------------------------*/
 		else if (event.type === "dragend") {
-			const nodes = WD.$$("[data-wd-dragging], [data-wd-dropping]");
-			nodes.forEach(function(node) {
-				node.removeAttribute("data-wd-dragging");
-				node.removeAttribute("data-wd-dropping");
-			});
-			window.getSelection().removeAllRanges();
+			dragging();
 		}
 		return;
 	}
@@ -9525,84 +9613,81 @@ const wd = (function() {
 	Possui as seguintes propriedades:
 	|Nome|Tipo|Descrição|
 	|type|string|Tipo do movimento, que deve ser ''drop''|
-	|effect|string|Efeitos do movimento: ''hide, move, copy ou link''|
+	|effect|string|Efeitos do movimento: ''hide, move, copy, link ou file''|
 	|call|function|Função a ser chamada ao derrubar o elemento no container|
-	A propriedade ''call'' receberá como argumento o elemento arrastável, o elemento recebedo e o objeto referente ao atributo ''data-wd-move'' inserido no elemento arrastado. Se não informado, uma ação padrão será realizada a depender do tipo de efeito:
+	A função definida na propriedade ''call'' receberá como argumentos o recipiente, o elemento ou os arquivos arrastáveis e o tipo de recipiente. Se não informada, uma ação padrão será realizada a depender do tipo de efeito:
 	|Nome|Descrição|
-	|hide|O elemento arrastável será escondido no elemento de soltura|
-	|move|O elemento arrastável será movido para o elemento de soltura|
-	|copy|O elemento arrastável será copiado no elemento de soltura|
-	|link|O elemento arrastável será lincado ao elemento de soltura|**/
+	|move|O elemento arrastável será movido para o recipiente de soltura|
+	|copy|O elemento arrastável será copiado no recipiente de soltura|
+	|link|Uma âncora para o elemento será criada no recipiente de soltura|
+	|file|O primeiro dos arquivos arrastáveis será exibido, se possível, no navegador|**/
 	function data_wd_drop(target, event, wdArray) {
-		const data   = wdArray[0];
-		const drop   = target;
-		const drag   = document.querySelector("[data-wd-dragging]");
-		const effect = data.effect;
+		const data    = wdArray[0];
+		const drop    = target;
+		const drag    = document.querySelector("[data-wd-dragging]");
+		const effect  = data.effect;
+		const file    = event.dataTransfer.types.indexOf("Files") >= 0;
+		function setDropFile(show) {
+			const query = show ? `[data-wd-drop*="effect{file}"]` : "[data-wd-dragging], [data-wd-dropping]";
+			WD.$$(query).forEach(function(node) {
+				if (show) {
+					if (!node.hasAttribute("data-wd-dropping"))
+						node.setAttribute("data-wd-dropping", "file");
+				}
+				else {
+					node.removeAttribute("data-wd-dragging");
+					node.removeAttribute("data-wd-dropping");
+				}
+			});
+		}
+
 		/*-- Configurando visualização de queda ----------------------------------*/
 		if (event.type === "dragover") {
-			event.dataTransfer.dropEffect = effect;
-			if (event.dataTransfer.types.indexOf("Files") >= 0)
-				drop.dataset.wdDropping = "file";
+			if (drag === null) {//console.log({drag: drag, effect: effect})
+				if (effect === "file")
+					event.dataTransfer.dropEffect = "copy";
+				else
+					setDropFile(true);
+			} else {
+				event.dataTransfer.dropEffect = effect;
+			}
 		}
-
-
+		/*-- Desconfigurando visualização de queda (file) ------------------------*/
 		else if (event.type === "dragleave") {
-			console.table(event.dataTransfer);
-			if (drop.dataset.wdDropping === "file")
-				drop.removeAttribute("data-wd-dropping");
+			//console.log({drag: drag, x: event.clientX, y: event.clientY, effect: effect})
+
+			if (drag === null)
+				setDropFile(false);
 		}
-
-
 		/*-- Derrubando elemento -------------------------------------------------*/
 		else if (event.type === "drop") {
-			const call = __Type(data.call).function ? data.call : null;
-			/*-- arquivos --*/
-			if (event.dataTransfer.files.length > 0) {
-				const files = event.dataTransfer.files;
-				for (let i = 0; i < files.length; i++) {
-					if (call !== null) {
-						call(drop, files[i], effect);
-					} else {
-						let file = new __Request({url: files[i], type: "url",});
-						file.read(function(x) {
+			const call  = __Type(data.call).function ? data.call : null;
+			const allow = drag === null ? ["file"] : drag.dataset.wdDragging.split(",");
+			const files = event.dataTransfer.files;
+			if (allow.indexOf(effect) >= 0) {
+				if (call !== null) {
+					call(drop, (file ? files : drag), effect);
+				}
+				else if (effect === "file") { //FIXME limitar o arquivo a ser lançado aqui para evitar bobeiras
+					if (files.length > 0) {
+						const blob = new __Request({url: files[0], type: "url",});
+						blob.read(function(x) {
 							if (x.ok) {
 								const object     = document.createElement("OBJECT");
 								const link       = document.createElement("a");
 								object.data      = x.response;
-								object.type      = files[i].type;
+								object.type      = files[0].type;
 								link.href        = x.response;
-								link.download    = files[i].name;
-								link.textContent = files[i].name;
-								if (effect === "move")
-										drop.innerHTML = "";
-								if (effect === "link") {
-									drop.appendChild(link);
-								} else {
-									drop.appendChild(object);
-									object.appendChild(link);
-								}
+								link.download    = files[0].name;
+								link.textContent = files[0].name;
+								drop.innerHTML   = "";
+								drop.appendChild(object);
+								object.appendChild(link);
 							}
-							return;
 						});
-						const nodes = WD.$$("[data-wd-dragging], [data-wd-dropping]");
-						nodes.forEach(function(node) {
-							node.removeAttribute("data-wd-dragging");
-							node.removeAttribute("data-wd-dropping");
-						});
-
-
 					}
 				}
-			}
-			/*-- elementos --*/
-			else {
-				const allow = drag === null ? [] : drag.dataset.wdDragging.split(",");
-				if (allow.indexOf(effect) < 0) {
-					return;
-				}
-				else if (call !== null) {
-					call(drop, drag, effect);
-				}
+				/*-- elementos --*/
 				else if (effect === "move") {
 					drop.appendChild(drag);
 				}
@@ -9612,36 +9697,22 @@ const wd = (function() {
 				else if (effect === "link") {
 					if (drag.id.trim() === "")
 						drag.id = "ID_drag_link_" + String(new Date().valueOf());
-					if (drop.tagName.toLowerCase() === "a") {
-						drop.href = "#"+drag.id;
-					} else {
-						const url = location.pathname+"#"+drag.id;
-						const text = drag.textContent;
-						drop.setAttribute("role", "link");
-						drop.setAttribute("aria-label", text);
-						drop.innerHTML = `&#x1F517 ${text}`;
-						drop.title     = text;
-						drop.tabIndex  = 0;
-						drop.style.cursor = "pointer";
-						drop.style.textOverflow = "ellipsis";
-						drop.onclick = function(ev) {
-							location.assign(url);
-						}
-						drop.onkeypress = function(ev) {
-							if ((/^Enter$/i).test(ev.key)) ev.target.click();
-						}
-						drop.onfocus = function(ev) {
-							ev.target.style.outline = "2px solid blue";
-						}
-						drop.onblur = function(ev) {
-							ev.target.style.outline = "none";
-						}
-					}
+					const anchor = drop.tagName.toLowerCase() === "a" ? drop : document.createElement("A");
+					anchor.href = "#"+drag.id;
+					anchor.textContent = drag.textContent;
+					anchor.title = drag.textContent;
+					anchor.style.textOverflow = "ellipsis";
+					drop.innerHTML = "";
+					drop.appendChild(anchor);
+					drop.style.display = "flex";
+					drop.style.justifyContent = "center";
+					drop.style.alignItems = "center";
 				}
 			}
+			window.getSelection().removeAllRanges();
+			setDropFile(false);
+			return;
 		}
-		window.getSelection().removeAllRanges();
-		return;
 	}
 
 
@@ -9922,12 +9993,15 @@ const wd = (function() {
 		},
 		dragleave: {
 			target: document, preventDefault: true,
-			data: [{name: "wdDrop", call: data_wd_drop, kill: false, bind: {}}]
+			data: [
+				//{name: "body",   call: data_wd_drop, kill: false, bind: {}}
+			]
 		},
 		dragover: {
 			target: document, preventDefault: true,
 			data: [
-				{name: "wdDrop", call: data_wd_drop, kill: false, bind: {}}
+				//{name: "wdDrop", call: data_wd_drop, kill: false, bind: {}},
+				//{name: "body",   call: data_wd_drop, kill: false, bind: {}}
 			]
 		},
 		dragenter: {
@@ -9937,7 +10011,7 @@ const wd = (function() {
 		drop: {
 			target: document, preventDefault: true,
 			data: [
-				{name: "wdDrop", call: data_wd_drop, kill: false, bind: {}}
+				//{name: "wdDrop", call: data_wd_drop, kill: false, bind: {}}
 			]
 		},
 		mousedown: {
@@ -10007,7 +10081,7 @@ const wd = (function() {
 		const dataset   = config.data;
 		const wddataset = [];
 		const trigger   = [];
-		const search    = /^\*?\[(data\-wd\-[0-9a-zA-Z\-]+)(\=[^\]]+)?\]$/;
+		const search    = /^\*?\[(data\-wd\-[0-9a-zA-Z\-]+)(\=[^\]]+)?\]$/;//TODO retirar o $ do fim da re?
 		const extra     = {
 			 /*-- tempo mínimo para digitação encerrar --*/
 			 typingTime: function(ev) {
@@ -10055,13 +10129,12 @@ const wd = (function() {
 				query = WD.$$(map.name, root);
 				query.forEach(function(node) {
 					trigger.push({
-						target:  node,
-						name:    map.name,
-						call:    map.call,
-						bind:    map.bind,
-						check:   true,
-						value:   node.getAttribute(name),
-						wdArray: null,
+						target:  node,                    /*-- nó alvo --*/
+						name:    map.name,                /*-- selector CSS --*/
+						call:    map.call,                /*-- função a ser chamada --*/
+						bind:    map.bind,                /*-- configurações iniciais do evento --*/
+						value:   node.getAttribute(name), /*-- valor do atributo --*/
+						wdArray: null,                    /*-- valor de wdArray --*/
 					});
 					if (map.kill) node.removeAttribute(name);
 				});
@@ -10073,7 +10146,6 @@ const wd = (function() {
 					name:    map.name,
 					call:    map.call,
 					bind:    map.bind,
-					check:   true,
 					value:   target.dataset[map.name],
 					wdArray: null,
 				});
@@ -10088,8 +10160,7 @@ const wd = (function() {
 						name:    map.name,
 						call:    map.call,
 						bind:    map.bind,
-						check:   false,
-						value:   null,
+						value:   "",
 						wdArray: null,
 					});
 				});
@@ -10100,24 +10171,25 @@ const wd = (function() {
 		const info = {};
 		let parser, wdarray, count = 0;
 		trigger.forEach(function(map,i,a) {
-			if (map.check) {
-				/*-- verificar se a propriedade dataset definida está prevista --*/
-				if (wddataset.length > 0 && wddataset.indexOf(map.name) < 0)
-					return;
-				/*-- verificar se o valor do atributo pode ser obtido --*/
-				parser  = new __Parser(map.value);
-				wdarray = parser.wdArray.get();
-				if (wdarray === null)
-					return;
-				/*-- verificar se há alguma propriedade obrigatória a definir --*/
-				for (let prop in map.bind) {
-					for (let j = 0; j < wdarray.length; j++) {
-						if (!(prop in wdarray[j]))
-							wdarray[j][prop] = map.bind[prop];
-					}
+			/*-- evento wddataset: verificar se a propriedade definida está prevista --*/
+			if (wddataset.length > 0 && wddataset.indexOf(map.name) < 0)
+				return;
+			/*-- verificar se o valor do atributo pode ser obtido --*/
+			parser  = new __Parser(map.value);
+			wdarray = parser.wdArray.get();
+			if (wdarray === null)
+				return;
+			/*-- verificar se há alguma propriedade obrigatória a definir --*/
+			for (let prop in map.bind) {
+				for (let j = 0; j < wdarray.length; j++) {
+					if (!(prop in wdarray[j]))
+						wdarray[j][prop] = map.bind[prop];
 				}
-				map.wdArray = wdarray;
 			}
+			map.wdArray = wdarray;
+
+
+
 			/*-- log de manutenção--*/
 			info[event.type] = map.name;
 			info.call = map.call.name;

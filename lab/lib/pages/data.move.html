@@ -24,15 +24,16 @@
 	<div class="wd-col wd-border-child wd-margin-child">
 
 		<div style="overflow: auto;">
-			<div data-wd-drag="effect{move}" class="wd-bg-red">Move</div>
-			<div data-wd-drag="effect{copy}" class="wd-bg-blue">Copy</div>
-			<div data-wd-drag="effect{link}" class="wd-bg-green">Link</div>
-			<div data-wd-drag="effect{all}" class="wd-bg-pink">All</div>
+			<div data-wd-drag="effect{move}${.drop-move}" class="wd-bg-red">Move</div>
+			<div data-wd-drag="effect{copy}${.drop-copy}" class="wd-bg-blue">Copy</div>
+			<div data-wd-drag="effect{link}${.drop-link}" class="wd-bg-green">Link</div>
+			<div data-wd-drag="effect{link}${.drop-link}&effect{move}${.drop-move}&effect{copy}${.drop-copy}" class="wd-bg-pink">All</div>
 		</div>
 
-		<div data-wd-drop="effect{copy}" style="overflow: auto;"><span>copy</span></div>
-		<div data-wd-drop="effect{move}" style="overflow: auto;"><span>move</span></div>
-		<div data-wd-drop="effect{link}" style="overflow: auto;"><span>link</span></div>
+		<div class="drop-copy" data-wd-ddrop="effect{copy}" style="overflow: auto;"><span>copy</span></div>
+		<div class="drop-move" data-wd-ddrop="effect{move}" style="overflow: auto;"><span>move</span></div>
+		<div class="drop-link" data-wd-ddrop="effect{link}" style="overflow: auto;"><span>link</span></div>
+		<div class="drop-file" data-wd-ddrop="effect{file}" style="overflow: auto;"><span>File</span></div>
 	</div>
 
 <!--=========================================================================-->
