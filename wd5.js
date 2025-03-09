@@ -267,7 +267,7 @@ const wd = (function() {
 		[data-js-wd-signal="error"] {
 			color: rgb(181,135,135) !important;
 			background-color: rgb(85, 20, 20) !important;
-			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' transform='rotate(0)' opacity='0.1' height='1em' width='2em' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-height='1.2' font-size='1em'>\\2BBF</text></svg>") !important;
+			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' transform='rotate(0)' opacity='0.1' height='1em' width='2em' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-height='1.2' font-size='1em'>\\1F6AB</text></svg>") !important;
 		}
 		[data-js-wd-signal="dialog"] {
 			max-width: 50vw !important;
@@ -3215,7 +3215,7 @@ const wd = (function() {
 		input = input === undefined || input === null ? "" : String(input);
 		const text   = input.trim();
 		const start  = /^\<[a-z0-9.\-_:?!]+([^\>]+)?\>/i;
-		const close  = /\<\/?[a-z0-9.\-_:?!]+([^\>]+)?\>$/i;
+		const close  = /\<\/?[a-z0-9.\-_:?!]+([^\>]+)?\/?\>$/i;
 		const markup = start.test(text) && close.test(text);
 		Object.defineProperties(this, {
 			/**. ``''string'' input``: código de entrada.**/
@@ -3224,7 +3224,7 @@ const wd = (function() {
 			chars:  {value: input.split("")},
 			/**. ``''boolean'' markup``: Informar se é código de marcação tipo XML/HTML.**/
 			markup: {value: markup},
-			/**. ``''boolean'' html``: Informar se é código de marcação tipo HTML.**/
+			/**. ``''boolean'' html``: Informar se é código de marcação tipo HTML (com script e css).**/
 			html:    {value: markup && (/\<\/html(\s[^>]+)?\>$/).test(text)},
 			_code:   {value: null, writable: true},
 			_config: {value: {
@@ -3233,12 +3233,185 @@ const wd = (function() {
 				word:    [],
 				value:   []
 			}},
+
+
+
+
+
+
+
+			_string:  {writable: true, value: []},
+			_comment: {writable: true, value: []},
+			_word:    {writable: true, value: []},
+			_value:   {writable: true, value: []},
+			_number:  {writable: false, value: [
+				{open: "[+\\-]?\\d+\\.\\d+[eE][+\\-]?\\d+", close: ""},
+				{open: "[+\\-]?\\.?\\d+[eE][+\\-]?\\d+",    close: ""},
+				{open: "[+\\-]?\\d+\\.\\d+",                close: ""},
+				{open: "[+\\-]?\\.?\\d+",                   close: ""}
+			]},
+			_tag: {writable: false, value: [
+				{open: "\\<\\/?[a-zA-Z][a-zA-Z0-9_\-]+", close: "\\/?\\>"}
+			]},
+			_doc: {writable: false, value: [
+				{open: "\\<\\!\\[a-zA-Z][a-zA-Z0-9_\-]", close: "\\/?\\>"}
+			]},
+			_attr: {writable: false, value: [
+				{open: "[a-zA-Z0-9_\-]", close: "(\\s+\\=|\\=|\\s)"}
+			]},
+			_scopo: {writable: false, value: [
+				{open: "[", close: "]"}, {open: "(", close: ")"}, {open: "{", close: "}"}
+			]},
 		});
 		return;
 	}
 
 	Object.defineProperties(__Code.prototype, {
 		constructor: {value: __Code},
+		/**. ``''array'' frames``: Retorna a lista de caracteres de controle da linguagem.** /
+		frames: {
+			get: function() {
+				if (this._order) return this._frames;
+				const aux   = this._frames.reverse();
+				const frames = [];
+				/*-- remover duplicatas --* /
+				this._frames = aux.filter(function(v,i,a) {
+					if (frames.indexOf(v.open) < 0) {
+						frames.push(v.open);
+						return true;
+					}
+					return false;
+				});
+				/*-- orderna por especifidade --* /
+				this._frames = this._frames.sort(function(x,y) {
+					const A = x.open.length;
+					const B = y.open.length;
+					return A > B ? -1 : (A === B ? 0 : 1);
+				});
+				this._order = true;
+				return this._frames;
+			}
+		},*/
+
+		/**. ``''void'' add(''string'' type, string'' value)``: Adiciona caracteres de controle da linguagem. O argumento ''type'' pode ser "string", "comment", "word" ou "value". O argumento ''value'' é uma lista de caracteres de controle separados por um espaço em branco. No caso de "string" e "comment", os caracteres de fechamento devem vir logo depois de seu caracteres de abertura (tanto a dupla quanto os conjunto são separados por um espaço).**/
+		add: {
+			value: function(type, value) {
+				type  = String(type).toLowerCase();
+				value = String(value).replace(/\ +/g, " ");
+				const data = value.split(" ");
+				const next = {comment: 2, string: 2, word: 1, value: 1};
+				if (type in next) {
+					for (let i = 0; i < data.length; i = i + next[type]) {
+						if (type === "comment")
+							this._comment.push({open: data[i], close: data[i+1]});
+						else if (type === "string")
+							this._string.push({open: data[i], close: data[i+1]});
+						else if (type === "word")
+							this._word.push({open: data[i], close: ""});
+						else if (type === "value")
+							this._value.push({open: data[i], close: ""});
+					}
+				}
+				return;
+			}
+		},
+		/**. ``''void'' clear()``: Apaga o conjunto de caracteres de controles definidos.**/
+		clear: {
+			value: function() {
+				const data = {_comment: [], _string: [], _word: [], _value: []};
+				for (let i in data) this[i] = data[i];
+				return;
+			}
+		},
+		/**. ``''void'' JS()``: Define caracteres básicos de controle JavaScript.**/
+		JS: {
+			value: function() {
+				this.clear();
+				this.add("word", "break case catch class const continue debugger default delete do else export extends finally for function if import in instanceof new return super switch throw try typeof var void while with let static yied await async");
+				this.add("value", "false null this true undefined NaN Infinity");
+				this.add("comment", "// \n /* */");
+				this.add("string", "\" \" ' ' ` `");
+				return;
+			}
+		},
+		/**. ``''void'' CSS()``: Define caracteres básicos de controle CSS.**/
+		CSS: {
+			value: function() {
+				this.clear();
+				this.add("word", "[a-zA-Z0-9\\-]+\\:");
+				this.add("value", "none initial \\#[0-9a-fA-F]+ [a-zA-Z]+\\([^)]+\\)");
+				this.add("comment", "/* */");
+				this.add("string", "\" \" ' '");
+				return;
+			}
+		},
+
+		package: {
+			value: function() {
+				const data = {frame: []};
+				/*-- obtendo o conteúdo dos quadros --*/
+				const list = ["doc", "tag", "attr", "number", "value", "word", "comment", "string", "scopo"];
+				for (let i = 0; i < arguments.length; i++) {
+					let type = (arguments[i]).toLowerCase();
+					if (list.indexOf(type) >= 0) {
+						let frame = this[`_${type}`];
+						for (let j = 0; j < frame.length; j++) {
+							let object = frame[j];
+							object.type = type;
+							data.frame.push(object);
+						}
+					}
+				}
+				/*-- ordenando os frame --*/
+				data.frame = data.frame.sort(function(x,y) {
+					const A = x.open.length;
+					const B = y.open.length;
+					return A > B ? -1 : (A === B ? 0 : 1);
+				});
+				/*-- definindo o localizador --*/
+				data.code = this.input;
+				data.find = function(index) {
+					//FIXME esse negócio de expressão regular e aglutinação não é a mesma coisa
+					const notRE = ["doc", "tag", "attr", "number", "value", "word", "comment", "string", "scopo"];
+					for (let i = 0; i < this.frame.length; i++) {
+						let item = this.frame[i];
+						let join = item.type !== "comment" && item.type !== "string";
+						let find = join ? new RegExp(`^${item.open}${item.close}`) : item.open;
+						let text = this.code.slice(index, (join ? Infinity : index+item.open.length));
+						//console.log({find: find, text: text, index: index});
+
+
+
+						if (join && find.test(text)) {
+							item.length = text.match(find)[0].length;
+							return item;
+						}
+						else if (!join && find === text) {
+							item.length = item.open.length;
+							return item;
+						}
+
+
+					}
+					return null;
+				}
+				return data;
+			}
+		},
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 		/**. ``''void'' setCodeConfig(''string'' x)``: Define a codificação em "javascript" ou "CSS".**/
 		setCodeConfig: {
 			value: function(x) {
@@ -9544,16 +9717,17 @@ const wd = (function() {
 					else if (effect === "link") {
 						if (drag.id.trim() === "")
 							drag.id = "ID_drag_link_" + String(new Date().valueOf());
-						const anchor = drop.tagName.toLowerCase() === "a" ? drop : document.createElement("A");
-						anchor.href = "#"+drag.id;
-						anchor.textContent = drag.textContent;
-						anchor.title = drag.textContent;
-						anchor.style.textOverflow = "ellipsis";
-						drop.innerHTML = "";
-						drop.appendChild(anchor);
-						drop.style.display = "flex";
-						drop.style.justifyContent = "center";
-						drop.style.alignItems = "center";
+						if (drop.tagName.toLowerCase() === "a") {
+							drop.href = `#${drag.id}`;
+						} else {
+							drop.style.cursor = "pointer";
+							drop.tabIndex     = 0;
+							drop.onclick      = function(ev) {location.hash = drag.id;}
+							drop.onkeypress   = function(ev) {
+								if ((/enter/i).test(ev.key)) ev.target.click();
+							}
+						}
+						drop.focus();
 					}
 					return;
 				}
@@ -9611,22 +9785,6 @@ const wd = (function() {
 		return;
 	}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /*----------------------------------------------------------------------------*/
 	/**###### ``**function** ''void'' data_wd_drop(''node''  target, ''object'' event, ''array'' wdArray)``
 	Função com o propósito de definir o comportamento do elemento ao receber arquivos arrastáveis por meio do atributo HTML ''data''.
@@ -9637,9 +9795,12 @@ const wd = (function() {
 	|drop|function|Função a ser chamada ao derrubar os arquivos|
 	A função ''drop'' receberá como argumentos o elemento drop e os arquivos arrastáveis (FileList) e, se não informada, uma ação padrão será realizada. Nessa ação padrão, tentar-se-á carregar o arquivo na página (o primeiro arquivo de tamanho até 1000000 Bytes apenas).**/
 	function data_wd_drop(target, event, wdArray) {
-		const data = wdArray[0];
-		const file = event.dataTransfer.types.indexOf("Files") >= 0;
+		const data  = wdArray[0];
+		const file  = event.dataTransfer.types.indexOf("Files") >= 0;
+		const time  = new Date();
+		const ready = document.querySelectorAll("[data-wd-drop][data-wd-dropping]").length > 0;
 		function clearDrops() {
+			document.body.removeAttribute("data-wd-file-drop-time");
 			WD.$$("[data-wd-dropping]").forEach(function(node) {
 				node.removeAttribute("data-wd-dropping");
 				node.ondragover  = null;
@@ -9650,9 +9811,12 @@ const wd = (function() {
 			return;
 		};
 		/*-- somente atuar em caso de arquivos --*/
-		if (!file) return;
-		/*-- Configurando visualização de queda ----------------------------------*/
-		if (event.type === "dragover") {
+		if (file)
+			document.body.dataset.wdFileDropTime = time.valueOf();
+		else
+			return;
+		/*-- Definindo visualização de queda -------------------------------------*/
+		if (event.type === "dragover" && !ready) {
 			const caller = new __Type(data.drop).function ? data.drop : function (drop, files) {
 				for (let i = 0; i < files.length; i++) {
 					if (files[i].size <= 10000000) {
@@ -9660,15 +9824,13 @@ const wd = (function() {
 						let file = new __Request({url: files[i], type: "url",});
 						file.read(function(x) {
 							if (x.ok) {
-								const object     = document.createElement("OBJECT");
-								const link       = document.createElement("A");
-								object.data      = x.response;
-								object.type      = files[i].type;
-								link.href        = x.response;
-								link.download    = files[i].name;
-								link.textContent = files[i].name;
+								const object   = document.createElement("OBJECT");
+								const span     = document.createElement("em");
+								object.data    = x.response;
+								object.type    = files[i].type;
+								span.innerHTML = `&#x1F6A7; ${files[i].name} (${files[i].type})`;
 								drop.appendChild(object);
-								object.appendChild(link);
+								object.appendChild(span);
 							}
 						});
 						break;
@@ -9676,47 +9838,43 @@ const wd = (function() {
 					return;
 				}
 			};
-			const d = 10;
-			const y = event.pageY;
-			const x = event.pageX;
-			const w = window.innerWidth;
-			const h = window.innerHeight;
-			console.log({x: x, y: y, w: w, h: h, target: target});
-
-			/*-- habilitar drops --*/
-			if (x >= d && x <= (w - d) && y >= d && y <= (h - d)) {
-				const drops = document.querySelectorAll("[data-wd-drop][data-wd-dropping]");
-				if (drops.length === 0) {
-					event.dataTransfer.dropEffect = "none";
-					WD.$$("[data-wd-drop]").forEach(function(node) {
-						node.dataset.wdDropping = "file";
-						node.ondragover = function(ev) {
-							ev.preventDefault();
-							if ((/^(on)?dragover$/i).test(ev.type)) {
-								ev.target.dataset.wdDropping = "FILE";
-								ev.dataTransfer.dropEffect   = "copy";
-							}
-							else if ((/^(on)?dragleave$/i).test(ev.type)) {
-								ev.target.dataset.wdDropping = "file";
-							}
-							else if ((/^(on)?drop$/i).test(ev.type)) {
-								caller(ev.target, ev.dataTransfer.files);
-								clearDrops();
-							}
-							return;
-						}
-						node.ondragleave = node.ondragover;
-						node.ondrop      = node.ondragover;
-					});
+			event.dataTransfer.dropEffect = "none";
+			WD.$$("[data-wd-drop]").forEach(function(node) {
+				node.dataset.wdDropping = "file";
+				node.ondragover = function(ev) {
+					ev.preventDefault();
+					if ((/^(on)?dragover$/i).test(ev.type)) {
+						ev.target.dataset.wdDropping = "FILE";
+						ev.dataTransfer.dropEffect   = "copy";
+					}
+					else if ((/^(on)?dragleave$/i).test(ev.type)) {
+						ev.target.dataset.wdDropping = "file";
+					}
+					else if ((/^(on)?drop$/i).test(ev.type)) {
+						caller(ev.target, ev.dataTransfer.files);
+						clearDrops();
+					}
+					return;
 				}
-			}
-			/*-- desabilitar drops --*/
-			else {
-				clearDrops();
-			}
-
+				node.ondragleave = node.ondragover;
+				node.ondrop      = node.ondragover;
+			});
+		}
+		/*-- Apagando visualização de queda --------------------------------------*/
+		else if (event.type === "dragleave" && ready) {
+			const delta = 200;
+			window.setTimeout(function() {
+				const now = new Date();
+				const val = Number(document.body.dataset.wdFileDropTime);
+				if (now.valueOf() - val >= delta) clearDrops();
+			}, delta);
 		}
 	}
+
+
+
+
+
 /*----------------------------------------------------------------------------*/
 	/**###### ``**function** ''void'' data_wdTsort(''node''  e, ''object'' event)``
 	Função vinculada ao atributo HTML ``data-wd-tsort`` cujo objetivo é ordenar colunas específicas de tabelas. Não possui atributo.**/
@@ -9982,7 +10140,7 @@ const wd = (function() {
 		},
 		dragleave: {
 			target: document, preventDefault: true,
-			data: []
+			data: [{name: "html", call: data_wd_drop, kill: false, bind: {}}]
 		},
 		dragover: {
 			target: document, preventDefault: true,
