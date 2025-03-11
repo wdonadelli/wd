@@ -3240,59 +3240,61 @@ const wd = (function() {
 
 
 
+			_frames:  {writable: true, value: null},
 			_string:  {writable: true, value: []},
 			_comment: {writable: true, value: []},
 			_word:    {writable: true, value: []},
 			_value:   {writable: true, value: []},
 			_number:  {writable: false, value: [
-				{open: "[+\\-]?\\d+\\.\\d+[eE][+\\-]?\\d+", close: ""},
-				{open: "[+\\-]?\\.?\\d+[eE][+\\-]?\\d+",    close: ""},
-				{open: "[+\\-]?\\d+\\.\\d+",                close: ""},
-				{open: "[+\\-]?\\.?\\d+",                   close: ""}
+				{open: "/^[+\\-]?\\d+\\.\\d+e[+\\-]?\\d+$/i", close: "", double: true},
+				{open: "/^[+\\-]?\\.?\\d+e[+\\-]?\\d+$/i",    close: "", double: true},
+				{open: "/^[+\\-]?\\d+\\.\\d+$/",              close: "", double: true},
+				{open: "/^[+\\-]?\\.?\\d+$/",                 close: "", double: true}
 			]},
 			_tag: {writable: false, value: [
-				{open: "\\<\\/?[a-zA-Z][a-zA-Z0-9_\-]+", close: "\\/?\\>"}
+				{open: "/^\\<\\/?[a-z][a-z0-9_\\-]+$/i", close: ">", double: false}
 			]},
 			_doc: {writable: false, value: [
-				{open: "\\<\\!\\[a-zA-Z][a-zA-Z0-9_\-]", close: "\\/?\\>"}
+				{open: "/^\\<\\!\\[a-z][a-z0-9_\\-]$/i", close: ">", double: false}
 			]},
 			_attr: {writable: false, value: [
-				{open: "[a-zA-Z0-9_\-]", close: "(\\s+\\=|\\=|\\s)"}
+				{open: "/^[a-z0-9_\\-]$\i", close: "/^(\\s+\\=|\\=|\\s)$/", double: true}
 			]},
 			_scopo: {writable: false, value: [
-				{open: "[", close: "]"}, {open: "(", close: ")"}, {open: "{", close: "}"}
+				{open: "[", close: "", double: false}, {open: "]", close: "", double: false},
+				{open: "(", close: "", double: false}, {open: ")", close: "", double: false},
+				{open: "{", close: "", double: false}, {open: "}", close: "", double: false}
 			]},
+
 		});
 		return;
 	}
 
 	Object.defineProperties(__Code.prototype, {
 		constructor: {value: __Code},
-		/**. ``''array'' frames``: Retorna a lista de caracteres de controle da linguagem.** /
+		/**. ``''array'' frames``: Retorna a lista de caracteres de controle da linguagem.**/
 		frames: {
 			get: function() {
-				if (this._order) return this._frames;
-				const aux   = this._frames.reverse();
-				const frames = [];
-				/*-- remover duplicatas --* /
-				this._frames = aux.filter(function(v,i,a) {
-					if (frames.indexOf(v.open) < 0) {
-						frames.push(v.open);
-						return true;
+				if (this._frames !== null) return this._frames;
+				/*-- obtendo o conteúdo dos quadros --*/
+				const data = [];
+				const name = ["doc", "tag", "attr", "number", "value", "word", "comment", "string", "scopo"];
+				for (let i = 0; i < name.length; i++) {
+					let list = this[`_${name[i]}`];
+					for (let j = 0; j < list.length; j++) {
+						let item = list[j];
+						data.push({type: name[i], open: item.open, close: item.close, double: item.double});
 					}
-					return false;
-				});
-				/*-- orderna por especifidade --* /
-				this._frames = this._frames.sort(function(x,y) {
+				}
+				/*-- ordenando os frame --*/
+				this._frames = data.sort(function(x,y) {
 					const A = x.open.length;
 					const B = y.open.length;
 					return A > B ? -1 : (A === B ? 0 : 1);
 				});
-				this._order = true;
 				return this._frames;
 			}
-		},*/
-
+		},
 		/**. ``''void'' add(''string'' type, string'' value)``: Adiciona caracteres de controle da linguagem. O argumento ''type'' pode ser "string", "comment", "word" ou "value". O argumento ''value'' é uma lista de caracteres de controle separados por um espaço em branco. No caso de "string" e "comment", os caracteres de fechamento devem vir logo depois de seu caracteres de abertura (tanto a dupla quanto os conjunto são separados por um espaço).**/
 		add: {
 			value: function(type, value) {
@@ -3303,15 +3305,16 @@ const wd = (function() {
 				if (type in next) {
 					for (let i = 0; i < data.length; i = i + next[type]) {
 						if (type === "comment")
-							this._comment.push({open: data[i], close: data[i+1]});
+							this._comment.push({open: data[i], close: data[i+1], double: false});
 						else if (type === "string")
-							this._string.push({open: data[i], close: data[i+1]});
+							this._string.push({open: data[i], close: data[i+1], double: false});
 						else if (type === "word")
-							this._word.push({open: data[i], close: ""});
+							this._word.push({open: data[i], close: "", double: true});
 						else if (type === "value")
-							this._value.push({open: data[i], close: ""});
+							this._value.push({open: data[i], close: "", double: true});
 					}
 				}
+				this._frame = null;
 				return;
 			}
 		},
@@ -3320,6 +3323,7 @@ const wd = (function() {
 			value: function() {
 				const data = {_comment: [], _string: [], _word: [], _value: []};
 				for (let i in data) this[i] = data[i];
+				this._frame = null;
 				return;
 			}
 		},
@@ -3345,57 +3349,42 @@ const wd = (function() {
 				return;
 			}
 		},
-
-		package: {
-			value: function() {
-				const data = {frame: []};
-				/*-- obtendo o conteúdo dos quadros --*/
-				const list = ["doc", "tag", "attr", "number", "value", "word", "comment", "string", "scopo"];
-				for (let i = 0; i < arguments.length; i++) {
-					let type = (arguments[i]).toLowerCase();
-					if (list.indexOf(type) >= 0) {
-						let frame = this[`_${type}`];
-						for (let j = 0; j < frame.length; j++) {
-							let object = frame[j];
-							object.type = type;
-							data.frame.push(object);
-						}
+		/**. ``''object'' find(''integer'' index, ''string'' search))``: Verifica se o código a partir de ''index'' casa com ``search``. É retornado um objeto contendo as propriedades ''match'' (texto casado) e ''length'' (comprimento do texto casado). Se nada for encontrado, retonará nulo. Se ''search'' iniciar e terminar com barra, será considerado uma expressão regular, aceitando ignore case.**/
+		find: {
+			value: function(index, search) {
+				const re   = /^\/(.+)\/i?$/;
+				const isre = re.test(search);
+				const isic = isre && (/i$/).test(search) ? "i" : "";
+				const find = isre ? new RegExp(search.replace(re, "$1"), isic) : search;
+				const text = this.input.slice(index, isre ? Infinity : index+search.length);
+				if (isre && find.test(text))
+					return {match: text.match(find)[0], get length(){return this.match.length;}};
+				if (!isre && find === text)
+					return {match: find, get length(){return this.match.length;}};
+				return null;
+			}
+		},
+		/**. ``''object'' pack(''integer'' index, ''array'' list))``: Retorna um objeto contendo as informações de ''frames'' e ''find'' se a informação casar com os tipos de caracteres de controle listados em ''list''. Caso contrário, retorna nulo.**/
+		pack: {
+			value: function(index, list) {
+				const frames = this.frames;
+				for (let i = 0; i < frames.length; i++) {
+					let frame = frames[i];
+					let type  = list.indexOf(frame.type) >= 0;
+					let find  = type ? this.find(index, frame.open) : null;
+					if (find !== null) {
+						let ok = !frame.double ? true : this.find(index+find.length, frame.close) !== null;
+						if (ok) return {
+							match: find.match,
+							length: find.length,
+							type: frame.type,
+							open: frame.open,
+							close: frame.close,
+							double: frame.double
+						};
 					}
 				}
-				/*-- ordenando os frame --*/
-				data.frame = data.frame.sort(function(x,y) {
-					const A = x.open.length;
-					const B = y.open.length;
-					return A > B ? -1 : (A === B ? 0 : 1);
-				});
-				/*-- definindo o localizador --*/
-				data.code = this.input;
-				data.find = function(index) {
-					//FIXME esse negócio de expressão regular e aglutinação não é a mesma coisa
-					const notRE = ["doc", "tag", "attr", "number", "value", "word", "comment", "string", "scopo"];
-					for (let i = 0; i < this.frame.length; i++) {
-						let item = this.frame[i];
-						let join = item.type !== "comment" && item.type !== "string";
-						let find = join ? new RegExp(`^${item.open}${item.close}`) : item.open;
-						let text = this.code.slice(index, (join ? Infinity : index+item.open.length));
-						//console.log({find: find, text: text, index: index});
-
-
-
-						if (join && find.test(text)) {
-							item.length = text.match(find)[0].length;
-							return item;
-						}
-						else if (!join && find === text) {
-							item.length = item.open.length;
-							return item;
-						}
-
-
-					}
-					return null;
-				}
-				return data;
+				return null;
 			}
 		},
 
