@@ -404,20 +404,62 @@ const wd = (function() {
 		[data-wd-slide] > * {animation: js-wd-animation-emerge 1s, js-wd-animation-shrink-out 0.5s !important;}
 		svg .js-wd-chart-hide {display: none !important;}
 		@media screen and (min-width: 768px) {svg .js-wd-chart-hide {display: inline !important;}}
-		wdtag-mark {background-color: rgba(154,205,50,0.7) !important; display: inline !important; border-radius: 0.2em !important; color: #000000 !important;}
-		wdtag-root {display: block !important; padding: 0.3em 0.3em 0.3em 3em !important; overflow: auto !important; border-radius: 0.5em !important; 	border: 1px solid #000000 !important; font-family: monospace !important; font-size: 14px !important; white-space: pre-wrap !important; text-decoration: none !important; text-indent: 0 !important; font-style: normal !important; font-weight: normal !important; background-color: #262626 !important; counter-reset: wdcodelines !important;}
-		wdtag-root * {display: inline !important; position: static !important; padding: 0 !important; font-weight: normal !important; font-style: normal !important; border: none !important; border-raius: none !important;}
-		wdtag-root wdtag-line {counter-increment: wdcodelines !important;}
-		wdtag-root wdtag-line:before {content: counter(wdcodelines) !important; display: inline-block !important; position: relative !important; margin: 0 0 0 -3em !important; padding-right: 0.5em !important; min-width: 3em !important; color: #bcc118 !important; text-align: right !important;}
-		wdtag-root wdtag-content {color: #b3b3b3 !important;}
-		wdtag-root wdtag-comment {color: #8c8c8c !important; font-style: italic !important;}
-		wdtag-root wdtag-doc {color: #df6d6d !important; font-weight: bold !important;}
-		wdtag-root wdtag-tag {color: #418bff !important;}
-		wdtag-root wdtag-attribute {color: #57ac57 !important;}
-		wdtag-root wdtag-value {color: #cf8ee1 !important;}
-		wdtag-root wdtag-word {color: #df6d6d !important; font-weight: bold !important;}
-		wdtag-root wdtag-tick {font-weight: bold !important; color: #68cccc !important;}
-		wdtag-root wdtag-string {color: #57ac57}
+		wd-mark {background-color: rgba(154,205,50,0.7) !important; display: inline !important; border-radius: 0.2em !important; color: #000000 !important;}
+
+
+
+
+
+
+
+
+
+
+		wd-root {
+			display: block !important;
+			padding: 0.3em 0.3em 0.3em 3em !important;
+			overflow: auto !important;
+			border-radius: 0.5em !important;
+			border: 1px solid #000000 !important;
+			font-family: monospace !important;
+			font-size: 14px !important;
+			white-space: pre-wrap !important;
+			text-decoration: none !important;
+			text-indent: 0 !important;
+			font-style: normal !important;
+			font-weight: normal !important;
+			background-color: #262626 !important;
+		}
+		wd-root * {
+			display: inline !important;
+			position: static !important;
+			padding: 0 !important;
+			font-weight: normal !important;
+			font-style: normal !important;
+			border: none !important;
+			border-raius: none !important;
+		}
+		wd-root wd-line {
+			content: counter(wdcodelines) !important;
+			display: inline-block !important;
+			position: relative !important;
+			margin: 0 0 0 -3em !important;
+			padding-right: 0.5em !important;
+			min-width: 3em !important;
+			color: #bcc118 !important;
+			text-align: right !important;
+		}
+		wd-root    {color: #b3b3b3 !important;}
+		wd-comment {color: #8c8c8c !important; font-style: italic !important;}
+		wd-doc     {color: #df6d6d !important; font-weight: bold !important;}
+		wd-tag     {color: #418bff !important;}
+		wd-attr    {color: #57ac57 !important;}
+		wd-value   {color: #cf8ee1 !important;}
+		wd-number  {color: #cf8ee1 !important;}
+		wd-string  {color: #cf8ee1 !important;}
+		wd-word    {color: #df6d6d !important; font-weight: bold !important;}
+		wd-scope   {font-weight: bold !important; color: #68cccc !important;}
+
 
 		/*-- Importantes ---------------------------------------------------------*/
 		[data-js-wd-hide]:not([data-js-wd-show]) {
@@ -3217,50 +3259,39 @@ const wd = (function() {
 		const start  = /^\<[a-z0-9.\-_:?!]+([^\>]+)?\>/i;
 		const close  = /\<\/?[a-z0-9.\-_:?!]+([^\>]+)?\/?\>$/i;
 		const markup = start.test(text) && close.test(text);
+		const ends   = {
+			word: "/^([()\\[\\]{},;]|\\s)/",
+			value: "/^([()\\[\\]{},;!=|&+\\-%/*^?:]|\\s|\\&gt\\;|\\&lt\\;)/",
+		};
 		Object.defineProperties(this, {
 			/**. ``''string'' input``: código de entrada.**/
 			input:  {value: input},
-			/**. ``''array'' chars``: lista de caracteres.**/
-			chars:  {value: input.split("")},
 			/**. ``''boolean'' markup``: Informar se é código de marcação tipo XML/HTML.**/
 			markup: {value: markup},
 			/**. ``''boolean'' html``: Informar se é código de marcação tipo HTML (com script e css).**/
-			html:    {value: markup && (/\<\/html(\s[^>]+)?\>$/).test(text)},
-			_code:   {value: null, writable: true},
-			_config: {value: {
-				string:  ["\"", "\"", "\'", "\'"],
-				comment: ["//", "\n", "/*", "*/"],
-				word:    [],
-				value:   []
-			}},
-
-
-
-
-
-
-
-			_frames:  {writable: true, value: null},
-			_string:  {writable: true, value: []},
-			_comment: {writable: true, value: []},
-			_word:    {writable: true, value: []},
-			_value:   {writable: true, value: []},
+			html:     {value: markup && (/\<\/html(\s[^>]+)?\>$/).test(text)},
+			_ends:    {value: ends},
+			_frames:  {writable: true,  value: null},
+			_string:  {writable: true,  value: []},
+			_comment: {writable: true,  value: []},
+			_word:    {writable: true,  value: []},
+			_value:   {writable: true,  value: []},
 			_number:  {writable: false, value: [
-				{open: "/^[+\\-]?\\d+\\.\\d+e[+\\-]?\\d+$/i", close: "", double: true},
-				{open: "/^[+\\-]?\\.?\\d+e[+\\-]?\\d+$/i",    close: "", double: true},
-				{open: "/^[+\\-]?\\d+\\.\\d+$/",              close: "", double: true},
-				{open: "/^[+\\-]?\\.?\\d+$/",                 close: "", double: true}
+				{open: "/^[+\\-]?\\d+\\.\\d+e[+\\-]?\\d+/i", close: ends.value, double: true},
+				{open: "/^[+\\-]?\\.?\\d+e[+\\-]?\\d+/i",    close: ends.value, double: true},
+				{open: "/^[+\\-]?\\d+\\.\\d+/",              close: ends.value, double: true},
+				{open: "/^[+\\-]?\\.?\\d+/",                 close: ends.value, double: true}
 			]},
 			_tag: {writable: false, value: [
-				{open: "/^\\<\\/?[a-z][a-z0-9_\\-]+$/i", close: ">", double: false}
+				{open: "/^\\<\\/?[a-z][a-z0-9_\\-]+/i", close: ">", double: false}
 			]},
 			_doc: {writable: false, value: [
-				{open: "/^\\<\\!\\[a-z][a-z0-9_\\-]$/i", close: ">", double: false}
+				{open: "/^\\<![a-z][a-z0-9_\\-]+/i", close: ">", double: false}
 			]},
 			_attr: {writable: false, value: [
-				{open: "/^[a-z0-9_\\-]$\i", close: "/^(\\s+\\=|\\=|\\s)$/", double: true}
+				{open: "/^[a-z0-9_\\-]/i", close: "/^(\\s+\\=|\\=|\\s)/", double: true}
 			]},
-			_scopo: {writable: false, value: [
+			_scope: {writable: false, value: [
 				{open: "[", close: "", double: false}, {open: "]", close: "", double: false},
 				{open: "(", close: "", double: false}, {open: ")", close: "", double: false},
 				{open: "{", close: "", double: false}, {open: "}", close: "", double: false}
@@ -3278,7 +3309,7 @@ const wd = (function() {
 				if (this._frames !== null) return this._frames;
 				/*-- obtendo o conteúdo dos quadros --*/
 				const data = [];
-				const name = ["doc", "tag", "attr", "number", "value", "word", "comment", "string", "scopo"];
+				const name = ["doc", "tag", "attr", "number", "value", "word", "comment", "string", "scope"];
 				for (let i = 0; i < name.length; i++) {
 					let list = this[`_${name[i]}`];
 					for (let j = 0; j < list.length; j++) {
@@ -3309,9 +3340,9 @@ const wd = (function() {
 						else if (type === "string")
 							this._string.push({open: data[i], close: data[i+1], double: false});
 						else if (type === "word")
-							this._word.push({open: data[i], close: "", double: true});
+							this._word.push({open: data[i], close: this._ends.word, double: true});
 						else if (type === "value")
-							this._value.push({open: data[i], close: "", double: true});
+							this._value.push({open: data[i], close: this._ends.value, double: true});
 					}
 				}
 				this._frame = null;
@@ -3332,7 +3363,7 @@ const wd = (function() {
 			value: function() {
 				this.clear();
 				this.add("word", "break case catch class const continue debugger default delete do else export extends finally for function if import in instanceof new return super switch throw try typeof var void while with let static yied await async");
-				this.add("value", "false null this true undefined NaN Infinity");
+				this.add("value", "false null this true undefined NaN Infinity /^\\/(.+)\\/([a-z]+)?/");
 				this.add("comment", "// \n /* */");
 				this.add("string", "\" \" ' ' ` `");
 				return;
@@ -3349,6 +3380,15 @@ const wd = (function() {
 				return;
 			}
 		},
+		/**. ``''void'' XML()``: Define caracteres básicos de controle XML/XTML.**/
+		XML: {
+			value: function() {
+				this.clear();
+				this.add("comment", "<!-- -->");
+				this.add("string", "\" \" ' '");
+				return;
+			}
+		},
 		/**. ``''object'' find(''integer'' index, ''string'' search))``: Verifica se o código a partir de ''index'' casa com ``search``. É retornado um objeto contendo as propriedades ''match'' (texto casado) e ''length'' (comprimento do texto casado). Se nada for encontrado, retonará nulo. Se ''search'' iniciar e terminar com barra, será considerado uma expressão regular, aceitando ignore case.**/
 		find: {
 			value: function(index, search) {
@@ -3357,11 +3397,16 @@ const wd = (function() {
 				const isic = isre && (/i$/).test(search) ? "i" : "";
 				const find = isre ? new RegExp(search.replace(re, "$1"), isic) : search;
 				const text = this.input.slice(index, isre ? Infinity : index+search.length);
+				const data = {
+					match: null,
+					get length() {return this.match.length;},
+					get next()   {return index + this.length;}
+				};
 				if (isre && find.test(text))
-					return {match: text.match(find)[0], get length(){return this.match.length;}};
-				if (!isre && find === text)
-					return {match: find, get length(){return this.match.length;}};
-				return null;
+					data.match = text.match(find)[0];
+				else if (!isre && find === text)
+					data.match = find;
+				return data.match === null ? null : data;
 			}
 		},
 		/**. ``''object'' pack(''integer'' index, ''array'' list))``: Retorna um objeto contendo as informações de ''frames'' e ''find'' se a informação casar com os tipos de caracteres de controle listados em ''list''. Caso contrário, retorna nulo.**/
@@ -3373,10 +3418,12 @@ const wd = (function() {
 					let type  = list.indexOf(frame.type) >= 0;
 					let find  = type ? this.find(index, frame.open) : null;
 					if (find !== null) {
+						//console.log({find: find.match, frame: frame, next: this.input.slice(index+find.length)})
 						let ok = !frame.double ? true : this.find(index+find.length, frame.close) !== null;
 						if (ok) return {
 							match: find.match,
 							length: find.length,
+							next: find.next,
 							type: frame.type,
 							open: frame.open,
 							close: frame.close,
@@ -3387,387 +3434,154 @@ const wd = (function() {
 				return null;
 			}
 		},
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-		/**. ``''void'' setCodeConfig(''string'' x)``: Define a codificação em "javascript" ou "CSS".**/
-		setCodeConfig: {
-			value: function(x) {
-				const codes = {
-					javascript: {
-						word: "break case catch class const continue debugger default delete do else export extends finally for function if import in instanceof new return super switch throw try typeof var void while with let static yied await async",
-						value: "false null this true undefined NaN Infinity",
-						comment: "// \n /* */",
-						string: "' ' ` ` \" \""
-					},
-					css: {
-						word: "[a-zA-Z0-9\\-]+\\:",
-						value: "none initial \\#[0-9a-fA-F]+ [a-zA-Z]+\\([^)]+\\)",
-						comment: "/* */",
-						string: "' ' \" \""
-					}
-				};
-
-				x = String(x).toLowerCase();
-				if (x in codes)	{
-					const data = {};
-					for (let i in codes[x])
-						data[i] = codes[x][i].split(" ");
-					this.config(data);
-				}
-				return;
-			}
-		},
-		/**. ``''object'' config(''object'' data)``: Define ou retorna os dados de configuração da linguagem. O argumento ``data`` possui as seguintes propriedades cujo valor deve ser um array de strings:
-		|Nome|Descrição|
-		|string|Pares de abertura e fechamento de strings. Ex.: ``["\"", "\"", "'", "'"]``|
-		|comment|Pares de abertura e fechamento de cometários. Ex.: ``["//", "\n", "#", "\n"]``|
-		|word|Palavras reservadas. Ex.: ``["let", "function", "var"]``|
-		|value|Valores especiais. Ex.: ``["null", "undefined"]``|**/
-		config: {
-			value: function(data) {
-				const cfg = {};
-				for (let i in this._config) cfg[i] = this._config[i];
-
-				if (__Type(data).object) {
-					for (let i in cfg) {
-						cfg[i] = [];
-						if (i in data && __Type(data[i]).array)
-							for (let v of data[i]) cfg[i].push(String(v));
-					}
-					for (let i in cfg) this._config[i] = cfg[i];
-				}
-				cfg.numbers = [
-					"[+\\-]?\\d+\\.\\d+[eE][+\\-]?\\d+",
-					"[+\\-]?\\.?\\d+[eE][+\\-]?\\d+",
-					"[+\\-]?\\d+\\.\\d+",
-					"[+\\-]?\\.?\\d+"
-				];
-				return cfg;
-			}
-		},
-		/**. ``''array'' cages()``: Retorna a lista de caracteres de abertura e fechamento de strings e comentários ordenadas da mais específica para a menos específica. Cada item da lista é um objeto cuja abertura está representada pela propriedade ''a'', e fechamento pela ''b'' e o tipo pela ''type''.**/
-		cages: {
+		/**. ``''string'' linearCode()``: Retorna o código genérico renderizado.**/
+		linearCode: {
 			value: function() {
-				const cage = [];
-				const cfg  = this.config();
-				for (let i = 0; i < cfg.string.length; i += 2)
-					cage.push({type: "string", a: cfg.string[i], b: cfg.string[i+1]});
-				for (let i = 0; i < cfg.comment.length; i += 2)
-					cage.push({type: "comment", a: cfg.comment[i], b: cfg.comment[i+1]});
-				cage.sort(function(x,y) {
-					const A = x.a.length;
-					const B = y.a.length;
-					return A > B ? -1 : (A === B ? 0 : 1);
-				});
-				return cage;
+				const tree = __Tree();
+				const code = this.input.split("");
+				const list = ["string", "comment", "number", "value", "word", "scope"];
+
+				let tag, val, close, pack, find, esc;
+				tree.pattern("wd-?");
+				tree.open("root");
+				for (let index = 0; index < code.length; index++) {
+					tag = tree.level;
+					val = code[index];
+
+					if (tag === "root") {
+						pack = this.pack(index, list);
+						if (pack === null) {
+							tree.add(val);
+						}
+						else if (pack.type === "string" || pack.type === "comment") {
+							close = pack.close;
+							tree.open(pack.type).add(pack.match);
+							index = pack.next - 1;
+						}
+						else if (pack.type === "value" || pack.type === "word" || pack.type === "number" || pack.type === "scope") {
+							tree.open(pack.type).add(pack.match).close();
+							index = pack.next - 1;
+						}
+					}
+					else if (tag === "string" || tag === "comment") {
+						find = this.find(index, close);
+						esc  = tag === "string" && code[index-1] === "\\";
+						if (find !== null && !esc) {
+							tree.add(find.match).close();
+							index = find.next - 1;
+						}
+						else {
+							tree.add(val);
+						}
+					}
+				}
+				tree.finish();
+				return tree.valueOf();
 			}
 		},
-		/**. ``''boolean'' right(''integer'' i, ''string|regexp'' search))``: Verifica se o código a partir do índice ``i``, à direita, casa com o texto definido em ``search``.**/
-		right: {
-		value: function(i, search) {
-			const check = __Type(search);
-			const delta = check.regexp ? Infinity : String(search).length;
-			const value = this.input.substring(i, i+delta);
-			return check.regexp ? search.test(value) : String(search) === value;
-			}
-		},
-		/**. ``''boolean'' left(''integer'' i, ''string|regexp'' search))``: Verifica se o código a partir do índice ``i``, à esquerda, casa com o texto definido em ``search``.**/
-		left: {
-		value: function(i, search) {
-			const check = __Type(search);
-			const delta = check.regexp ? 0 : String(search).length;
-			const value = this.input.substring(delta === 0 ? 0 : (i+1-delta), i+1);
-			return check.regexp ? search.test(value) : String(search) === value;
-			}
-		},
-		/**. ``''string'' markupCode()``: Retorna o código codificado em XML/HTML renderizado ou vazio.**/
+		/**. ``''string'' markupCode()``: Retorna o código codificado em XML/HTML renderizado.**/
 		markupCode: {
 			value: function() {
-				if (!this.markup) return "";
-				const tree  = __Tree();
-				const code  = this.input.split("");
-				let quotes  = null;
-				let script  = null;
-				let close   = false;
-				let tag, val;
-				tree.pattern("wdtag-?");
-				tree.open("root").append("line");
+				this.XML();
+				const tree = __Tree();
+				const code = this.input.split("");
 
-				for (let i = 0; i < code.length; i++) {
+				let tag, val, close, pack, find, end, html;
+				tree.pattern("wd-?");
+				tree.open("root");
+				for (let index = 0; index < code.length; index++) {
 					tag = tree.level;
-					val = code[i];
-
-					if (val === "\n") {
-						tree.walkTo(1).add(val).append("line").backTo();
-					}
-					else if (tag === "root") {
-						if (this.right(i, "<!--")) {
-							tree.open("comment").add(val);
-						} else if (this.right(i, /^\<[!?]?\w/)) {
-							tree.open(this.right(i, /^\<[!?]/) ? "doc" : "tag").add(val);
-						} else {
+					val = code[index];
+					if (tag === "root") {
+						pack = this.pack(index, ["comment", "tag", "doc"]);
+						if (pack === null) {
 							tree.add(val);
+						}
+						else if (pack.type === "comment") {
+							close = pack.close;
+							tree.open(pack.type).add(pack.match);
+							index = pack.next - 1;
+						} else {
+							close = pack.close;
+							tree.open(pack.type).add(pack.match).open("attr");
+							index = pack.next - 1;
+							html  = pack.match.replace(/^\<!?/, "");
 						}
 					}
 					else if (tag === "comment") {
-						tree.add(val);
-						if (val === ">" && this.left(i, "-->"))
-							tree.close();
-					}
-					else if (tag === "tag" || tag === "doc") {
-						if (code[i-1] === "<") {
-							/*-- checar se é tag script ou style --*/
-							if (this.right(i, /^(script|style)(\s|\>)/i))
-								script = this.right(i, /^script/i) ? "script" : "style";
-							else
-								script = null;
-							/*-- checar se é tag de fechamento --*/
-							close = (/[!?/]/).test(val);
+						find = this.find(index, close);
+						if (find !== null && code[index-1] !== "\\") {
+							tree.add(find.match).close();
+							index = find.next - 1;
 						}
-						/*-- analisar dados --*/
-						if ((/\s/).test(val)) {
-							tree.open("attribute").add(val);
-						} else if (this.left(i, /[!?/]\>$/)) {
-								tree.add(val).close();
-						} else if (val === ">") {
-							if (close === true)
-								tree.add(val).close();
-							else if (script === null)
-								tree.add(val).open("content");
-							else
-								tree.add(val).open(script);
-						} else {
+						else {
 							tree.add(val);
 						}
 					}
-					else if (tag === "content") {
-						if (this.right(i, "<!--")) {
-							tree.open("comment").add(val);
-						} else if (this.right(i, /^\<\w/)) {
-							tree.open("tag").add(val);
-						} else if (this.right(i, /^\<\/\w/)) {
-							tree.close().add(val);
-						} else {
+					else if (tag === "string") {
+						find = this.find(index, end);
+						if (find !== null && code[index-1] !== "\\") {
+							tree.add(find.match).close();
+							index = find.next - 1;
+						}
+						else {
 							tree.add(val);
 						}
 					}
-					else if (tag === "attribute") {
-						if (val === "=") {
-							tree.add(val).open("value");
-						} else if (this.right(i, /^[!?/]?\>/)) {
-							tree.close();
-							i--;
-						} else {
+					else if (tag === "attr") {
+						pack = this.pack(index, ["string"]);
+						find = this.find(index, close);
+
+						if (find !== null) {
+							tree.close().add(find.match).close();
+							index = find.next - 1;
+						}
+						else if (pack !== null) {
+							end = pack.close;
+							tree.open(pack.type).add(pack.match);
+							index = pack.next - 1;
+						}
+						else {
 							tree.add(val);
 						}
-					}
-					else if (tag === "value") {
-						if (this.left(i, /\=\s+$/)) {
-							tree.add(val)
-						} else if (quotes === null && (/\s/).test(val)) {
-							tree.close().add(val);
-						} else if ((/["'`]/).test(val) && quotes === null) {
-							quotes = val;
-							tree.add(val);
-						} else if (quotes === val && code[i-1] !== "\\") {
-							quotes = null;
-							tree.add(val).close();
-						} else {
-							tree.add(val);
-						}
-					}
-					else if (tag === "script" || tag === "style") {
-						if ((/['"`]/).test(val)) {
-							quotes = val;
-							tree.open("cages").add(val);
-						} else if (this.right(i, "/*")) {
-							quotes = "*/";
-							tree.open("cages").add(val);
-						} else if (tag === "script" && this.right(i, "//")) {
-							quotes = "\n";
-							tree.open("cages").add(val);
-						} else if (this.right(i, /^\<\/(script|style)/i)) {
-							tree.close();
-							i--;
-						} else {
-							tree.add(val);
-						}
-					}
-					else if (tag === "cages") {
-						if (quotes === "\n" && this.right(i+1, quotes)) {
-							quotes = null;
-							tree.add(val).close();
-						} else if (this.left(i, quotes)) {
-							quotes = null;
-							tree.add(val).close();
-						} else {
-							tree.add(val);
-						}
-					}
-					else { /*-- Valores diversos --*/
-						tree.add(val);
 					}
 				}
 				tree.finish();
-
-				/*-- Transformando código em HTML --*/
-				const elem = document.createElement("DIV");
-				elem.innerHTML = tree.valueOf();
-
-				/*-- Acertando script e style em caso de HTML --*/
-				if (this.html) {
-					const web = {
-						javascript: elem.querySelectorAll("wdtag-script"),
-						css:        elem.querySelectorAll("wdtag-style")
-					}
-					const reline = /^\<\/?wdtag\-line\>/i;
-					let temp, data, line, target;
-
-					for (let lang in web) {
-						target = web[lang];
-						for (let i = 0; i < target.length; i++) {
-							line = reline.test(target[i].innerHTML);
-							temp = new __Code(target[i].innerText);
-							temp.setCodeConfig(lang);
-							target[i].innerHTML = temp.toString();
-							if (!line && target[i].querySelector("wdtag-line") !== null)
-								target[i].querySelector("wdtag-line").remove();
-						}
-					}
-				}
-				return elem.innerHTML;
+				return tree.valueOf();
 			}
 		},
-		/**. ``''string'' linearCode()``: Retorna o código genérico renderizado ou vazio..**/
-		linearCode: {
+		/**. ``''string'' lines()``: Retorna a codificação HTML para exibição das linhas.**/
+		lines: {
 			value: function() {
-				if (this.markup) return "";
 				const tree = __Tree();
-				const code = this.input.split("");
-				const cage = this.cages();
-				let  quote = null;
-				let tag, val, scope, close;
-
-				tree.pattern("wdtag-?");
-				tree.open("root").append("line").open("content");
-
-				for (let i = 0; i < code.length; i++) {
-					tag = tree.level;
-					val = code[i];
-
-					if (tag === "content") {
-						scope = null;
-						/*-- checando abertura de comentário ou texto --*/
-						for (let x of cage) {
-							if (scope === null && this.right(i, x.a))
-								scope = x;
-						}
-						if (scope !== null) {
-							quote = scope.b;
-							tree.close().open(scope.type);
-						}
-						if (val === "\n")
-							tree.walkTo(1).add(val).append("line").backTo();
-						else
-							tree.add(val);
-					}
-					else if (tag === "comment" || tag === "string") {
-						close = this.left(i, quote);
-						/*-- checando fechamento de comentário ou texto --*/
-						if (close && code[i-1] !== "\\") {
-							quote === null;
-							tree.add(val === "\n" ? "" : val).close().open("content");
-							if (val === "\n")
-								tree.walkTo(1).add(val).append("line").backTo();
-						} else {
-							if (val === "\n")
-								tree.walkTo(1).add(val).append("line").backTo();
-							else
-								tree.add(val);
-						}
-					}
-					else {
-						tree.add(v);
-					}
-				}
+				const code = this.input.split("\n");
+				tree.pattern("wd-?");
+				tree.open("lines");
+				for (let index = 0; index < code.length; index++)
+					tree.open("line").add(index+1).close();
 				tree.finish();
-
-				/*-- transformando em HTML --*/
-				const elem   = document.createElement("DIV");
-				elem.innerHTML = tree.valueOf();
-
-				/*-- Complementando o conteúdo --*/
-				let re1, re2, re3, re4, inner;
-				const query  = elem.querySelectorAll("wdtag-content");
-				const config = this.config();
-				const words  = "([()\\[\\]{},;]|\\s)";
-				const value  = "([()\\[\\]{},;!=|&+\\-%/*^?:]|\\s|\\&gt\\;|\\&lt\\;)";
-
-				for (let i = 0; i < query.length; i++) {
-					inner = query[i].innerText;
-					/*-- sinais maior/menor --*/
-					inner = inner.replace(/\</gm, "&lt;");
-					inner = inner.replace(/\>/gm, "&gt;");
-					/*-- palavras reservadas --*/
-					for (let j = 0; j < config.word.length; j++) {
-						val = "("+config.word[j]+")";
-						re1 = new RegExp(  "^"+val+"$"  , "g");
-						re2 = new RegExp(  "^"+val+words, "g");
-						re3 = new RegExp(words+val+"$"  , "g");
-						re4 = new RegExp(words+val+words, "g");
-						inner = inner.replace(re1, "<wdtag-word>$1</wdtag-word>");
-						inner = inner.replace(re2, "<wdtag-word>$1</wdtag-word>$2");
-						inner = inner.replace(re3, "$1<wdtag-word>$2</wdtag-word>");
-						inner = inner.replace(re4, "$1<wdtag-word>$2</wdtag-word>$3");
-					}
-					/*-- valores --*/
-					for (let j = 0; j < config.value.length; j++) {
-						val = "("+config.value[j]+")";
-						re1 = new RegExp(  "^"+val+"$"  , "g");
-						re2 = new RegExp(  "^"+val+value, "g");
-						re3 = new RegExp(value+val+"$"  , "g");
-						re4 = new RegExp(value+val+value, "g");
-						inner = inner.replace(re1, "<wdtag-value>$1</wdtag-value>");
-						inner = inner.replace(re2, "<wdtag-value>$1</wdtag-value>$2");
-						inner = inner.replace(re3, "$1<wdtag-value>$2</wdtag-value>");
-						inner = inner.replace(re4, "$1<wdtag-value>$2</wdtag-value>$3");
-					}
-					/*-- Números --*/
-					for (let j = 0; j < config.numbers.length; j++) {
-						val = "("+config.numbers[j]+")";
-						re1 = new RegExp(  "^"+val+"$"  , "g");
-						re2 = new RegExp(  "^"+val+value, "g");
-						re3 = new RegExp(value+val+"$"  , "g");
-						re4 = new RegExp(value+val+value, "g");
-						inner = inner.replace(re1, "<wdtag-value>$1</wdtag-value>");
-						inner = inner.replace(re1, "<wdtag-value>$1</wdtag-value>");
-						inner = inner.replace(re2, "<wdtag-value>$1</wdtag-value>$2");
-						inner = inner.replace(re2, "<wdtag-value>$1</wdtag-value>$2");
-						inner = inner.replace(re3, "$1<wdtag-value>$2</wdtag-value>");
-						inner = inner.replace(re3, "$1<wdtag-value>$2</wdtag-value>");
-						inner = inner.replace(re4, "$1<wdtag-value>$2</wdtag-value>$3");
-						inner = inner.replace(re4, "$1<wdtag-value>$2</wdtag-value>$3");
-					}
-					/*-- escopos --*/
-					inner = inner.replace(/([\[\]{}()])/gm, "<wdtag-tick>$1</wdtag-tick>");
-					/*-- devolver valor --*/
-					query[i].innerHTML = inner;
-				}
-				return elem.innerHTML;
+				return tree.valueOf();
 			}
 		},
+
+		code: {
+			value: function(lines, editable) {
+
+
+
+			}
+		},
+
+
+
+
+
+
+
+
+
+
+
 		/**. ``''node'' valueOf()``: Retorna um elemento DIV com a codificação renderizada.**/
 		valueOf: {
 			value: function() {
