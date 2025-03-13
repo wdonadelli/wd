@@ -414,40 +414,78 @@ const wd = (function() {
 
 
 
+		/*-- Códificação ---------------------------------------------------------*/
 
-		wd-root {
+		[data-wd-encoding="code"] {
 			display: block !important;
-			padding: 0.3em 0.3em 0.3em 3em !important;
-			overflow: auto !important;
-			border-radius: 0.5em !important;
-			border: 1px solid #000000 !important;
+			position: relative !important;
+			width:  auto !important;
+			height: auto !important;
+			padding: 0 !important;
+			border-radius: 0.2em !important;
+			border: thin solid #000000 !important;
+			overflow: hidden !important;
+		}
+		[data-wd-encoding="code"] > * {
+			display: block !important;
+			width:  auto !important;
+			height: auto !important;
+			overflow: hidden !important;
 			font-family: monospace !important;
 			font-size: 14px !important;
 			white-space: pre-wrap !important;
 			text-decoration: none !important;
-			text-indent: 0 !important;
 			font-style: normal !important;
 			font-weight: normal !important;
-			background-color: #262626 !important;
+			text-align: left !important;
+			letter-spacing: 1px;
+			border: none !important;
 		}
-		wd-root * {
+		[data-wd-encoding="code"] > [data-wd-encoding="line"] {
+			position: relative !important;
+			z-index: 0 !important;
+			padding: 0 !important;
+			margin: 0 !important;
+			background-color: gray !important;
+			counter-reset: lines !important;
+		}
+		[data-wd-encoding="code"] > [data-wd-encoding="mask"] {
+			position: absolute !important;
+			top: 0 !important;
+			bottom: 0 !important;
+			right: 0 !important;
+			left: 1em !important;
+			padding: 0 !important;
+			margin: 0 0 0 auto !important;
+			z-index: 2 !important;
+			background-color: white !important;
+		}
+		[data-wd-encoding="code"] > [data-wd-encoding="text"] {
+			position: absolute !important;
+			top: 0 !important;
+			bottom: 0 !important;
+			right: 0 !important;
+			left: 0 !important;
+			padding: 0 0 0 1em !important;
+			margin: 0 !important;
+			z-index: 3 !important;
+			background-color: transparent !important;
+			color: black !important;
+			-webkit-text-fill-color: transparent !important;
+			resize: none !important;
+		}
+
+		[data-wd-encoding="line"] > span::before {
+			counter-increment: lines !important;
+			content: counter(lines) !important;
+			color: #bcc118 !important;
+			text-align: left !important;
+		}
+
+
+		wd-root, wd-root * {
 			display: inline !important;
 			position: static !important;
-			padding: 0 !important;
-			font-weight: normal !important;
-			font-style: normal !important;
-			border: none !important;
-			border-raius: none !important;
-		}
-		wd-root wd-line {
-			content: counter(wdcodelines) !important;
-			display: inline-block !important;
-			position: relative !important;
-			margin: 0 0 0 -3em !important;
-			padding-right: 0.5em !important;
-			min-width: 3em !important;
-			color: #bcc118 !important;
-			text-align: right !important;
 		}
 		wd-root    {color: #b3b3b3 !important;}
 		wd-comment {color: #8c8c8c !important; font-style: italic !important;}
@@ -3550,51 +3588,13 @@ const wd = (function() {
 				return tree.valueOf();
 			}
 		},
-		/**. ``''string'' lines()``: Retorna a codificação HTML para exibição das linhas.**/
-		lines: {
-			value: function() {
-				const tree = __Tree();
-				const code = this.input.split("\n");
-				tree.pattern("wd-?");
-				tree.open("lines");
-				for (let index = 0; index < code.length; index++)
-					tree.open("line").add(index+1).close();
-				tree.finish();
-				return tree.valueOf();
-			}
-		},
-
-		code: {
-			value: function(lines, editable) {
-
-
-
-			}
-		},
-
-
-
-
-
-
-
-
-
-
-
-		/**. ``''node'' valueOf()``: Retorna um elemento DIV com a codificação renderizada.**/
+		/**. ``''node'' valueOf()``: Retorna a codificação estruturada em HTML.**/
 		valueOf: {
-			value: function() {
-				const elem = document.createElement("DIV");
-				elem.innerHTML = this.toString();
-				return elem;
-			}
+			value: function() {	return this.markup ? this.markupCode() : this.linearCode();}
 		},
-		/**. ``''string'' toString()``: Retorna o código em codificação HTML.**/
+		/**. ``''string'' toString()``: Retorna a codificação.**/
 		toString: {
-			value: function() {
-				return this.markup ? this.markupCode() : this.linearCode();
-			}
+			value: function() {return this.input;}
 		},
 	});
 
