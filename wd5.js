@@ -495,6 +495,7 @@ const wd = (function() {
 		wd-value   {color: #cf8ee1 !important;}
 		wd-number  {color: #cf8ee1 !important;}
 		wd-string  {color: #cf8ee1 !important;}
+		wd-script  {color: #cf8ee1 !important; font-style: italic !important;}
 		wd-word    {color: #df6d6d !important; font-weight: bold !important;}
 		wd-scope   {font-weight: bold !important; color: #68cccc !important;}
 
@@ -3292,62 +3293,99 @@ const wd = (function() {
 	Construtor para manipulação de textos com formatação de códigos. O argumento ``input`` define o código fonte.**/
 	function __Code(input) {
 		if (!(this instanceof __Code)) return new __Code(input);
-		input = input === undefined || input === null ? "" : String(input);
-		const text   = input.trim();
-		const start  = /^\<[a-z0-9.\-_:?!]+([^\>]+)?\>/i;
-		const close  = /\<\/?[a-z0-9.\-_:?!]+([^\>]+)?\/?\>$/i;
-		const markup = start.test(text) && close.test(text);
-		const ends   = {
-			word: "/^([()\\[\\]{},;]|\\s)/",
-			value: "/^([()\\[\\]{},;!=|&+\\-%/*^?:]|\\s|\\&gt\\;|\\&lt\\;)/",
-		};
+		this.input = input;
 		Object.defineProperties(this, {
-			/**. ``''string'' input``: código de entrada.**/
-			input:  {value: input},
-			/**. ``''boolean'' markup``: Informar se é código de marcação tipo XML/HTML.**/
-			markup: {value: markup},
-			/**. ``''boolean'' html``: Informar se é código de marcação tipo HTML (com script e css).**/
-			html:     {value: markup && (/\<\/html(\s[^>]+)?\>$/).test(text)},
-			_ends:    {value: ends},
+			_input:   {writable: true,  value: input},
 			_frames:  {writable: true,  value: null},
+			/*-- caracteres de controle personalizáveis --*/
 			_string:  {writable: true,  value: []},
 			_comment: {writable: true,  value: []},
 			_word:    {writable: true,  value: []},
 			_value:   {writable: true,  value: []},
-			_number:  {writable: false, value: [
-				{open: "/^[+\\-]?\\d+\\.\\d+e[+\\-]?\\d+/i", close: ends.value, double: true},
-				{open: "/^[+\\-]?\\.?\\d+e[+\\-]?\\d+/i",    close: ends.value, double: true},
-				{open: "/^[+\\-]?\\d+\\.\\d+/",              close: ends.value, double: true},
-				{open: "/^[+\\-]?\\.?\\d+/",                 close: ends.value, double: true}
-			]},
-			_tag: {writable: false, value: [
-				{open: "/^\\<\\/?[a-z][a-z0-9_\\-]+/i", close: ">", double: false}
-			]},
-			_doc: {writable: false, value: [
-				{open: "/^\\<![a-z][a-z0-9_\\-]+/i", close: ">", double: false}
-			]},
-			_attr: {writable: false, value: [
-				{open: "/^[a-z0-9_\\-]/i", close: "/^(\\s+\\=|\\=|\\s)/", double: true}
-			]},
-			_scope: {writable: false, value: [
-				{open: "[", close: "", double: false}, {open: "]", close: "", double: false},
-				{open: "(", close: "", double: false}, {open: ")", close: "", double: false},
-				{open: "{", close: "", double: false}, {open: "}", close: "", double: false}
-			]},
-
 		});
+		for (let i in this._number)
+			this._number[i].close = this._ends.value;
 		return;
 	}
 
 	Object.defineProperties(__Code.prototype, {
 		constructor: {value: __Code},
+		/**. ``''array'' _ends``: Caracteres de controle fixo de encerramento.**/
+		_ends: {
+			value: {
+				word:  "/^([()\\[\\]{},;]|\\s)/",
+				value: "/^([()\\[\\]{},;!=|&+\\-%/*^?:]|\\s|\\>|\\>)/"
+			}
+		},
+		/**. ``''array'' _tag``: Caracteres de controle fixo de tag XML/HTML.**/
+		_tag: {
+			value: [
+				{open: "/^\\<\\/?[a-z]([a-z0-9_\\-]+)?/i", close: "/^\\/?\\>/", double: false}
+			]
+		},
+		/**. ``''array'' _doc``: Caracteres de controle fixo de doctype XML/HTML.**/
+		_doc: {
+			value: [
+				{open: "/^\\<![a-z]([a-z0-9_\\-]+)?/i", close: "/^\\/?\\>/", double: false}
+			]
+		},
+		/**. ``''array'' _scope``: Caracteres de controle fixo de escopos.**/
+		_scope: {
+			value: [
+				{open: "[", close: "", double: false}, {open: "]", close: "", double: false},
+				{open: "(", close: "", double: false}, {open: ")", close: "", double: false},
+				{open: "{", close: "", double: false}, {open: "}", close: "", double: false}
+			]
+		},
+		/**. ``''array'' _xstring``: Caracteres de controle fixo de string XML/HTML.**/
+		_xstring:  {
+			value: [
+				{open: "\"", close: "\"", double: false},
+				{open: "\'", close: "\'", double: false}
+			]
+		},
+		/**. ``''array'' _xcomment``: Caracteres de controle fixo de comentários XML/HTML.**/
+		_xcomment: {
+			value: [
+				{open: "<!--", close: "-->", double: false},
+			]
+		},
+		/**. ``''array'' _number``: Caracteres de controle fixo para números.**/
+		_number: {
+			value: [
+				{open: "/^[+\\-]?\\d+\\.\\d+e[+\\-]?\\d+/i", close: "", double: true},
+				{open: "/^[+\\-]?\\.?\\d+e[+\\-]?\\d+/i",    close: "", double: true},
+				{open: "/^[+\\-]?\\d+\\.\\d+/",              close: "", double: true},
+				{open: "/^[+\\-]?\\.?\\d+/",                 close: "", double: true}
+			]
+		},
+		/**. ``''string'' input``: Define ou retorna o código fonte.**/
+		input: {
+			get: function()  {return this._input;},
+			set: function(x) {this._input = String(x);}
+		},
+		/**. ``''string'' type``: Retorna o tipo de código: xml, html ou linear.**/
+		type: {
+			get: function() {
+				const text = this.input.trim();
+				const start  = /^\<[a-z0-9.\-_:?!]+([^\>]+)?\>/i;
+				const close  = /\<\/?[a-z0-9.\-_:?!]+([^\>]+)?\/?\>$/i;
+				if (start.test(text) && close.test(text))
+					return (/\<\/html(\s[^>]+)?\>$/).test(text) ? "html" : "xml";
+				return "linear";
+			}
+		},
 		/**. ``''array'' frames``: Retorna a lista de caracteres de controle da linguagem.**/
 		frames: {
 			get: function() {
 				if (this._frames !== null) return this._frames;
 				/*-- obtendo o conteúdo dos quadros --*/
+				const re   = /^\/.+\/([a-z]+)?$/i
 				const data = [];
-				const name = ["doc", "tag", "attr", "number", "value", "word", "comment", "string", "scope"];
+				const name = [
+					"doc", "tag", "xcomment", "xstring",
+					"number", "value", "word", "comment", "string", "scope"
+				];
 				for (let i = 0; i < name.length; i++) {
 					let list = this[`_${name[i]}`];
 					for (let j = 0; j < list.length; j++) {
@@ -3359,7 +3397,12 @@ const wd = (function() {
 				this._frames = data.sort(function(x,y) {
 					const A = x.open.length;
 					const B = y.open.length;
-					return A > B ? -1 : (A === B ? 0 : 1);
+					const a = re.test(x.open);
+					const b = re.test(y.open);
+					if (a !== b)
+						return a ? 1 : -1;
+					else
+						return A > B ? -1 : (A === B ? 0 : 1);
 				});
 				return this._frames;
 			}
@@ -3401,7 +3444,7 @@ const wd = (function() {
 			value: function() {
 				this.clear();
 				this.add("word", "break case catch class const continue debugger default delete do else export extends finally for function if import in instanceof new return super switch throw try typeof var void while with let static yied await async");
-				this.add("value", "false null this true undefined NaN Infinity /^\\/(.+)\\/([a-z]+)?/");
+				this.add("value", "false null this true undefined NaN Infinity /^\\/[^*](.+)?\\/([a-z]+)?/");
 				this.add("comment", "// \n /* */");
 				this.add("string", "\" \" ' ' ` `");
 				return;
@@ -3414,15 +3457,6 @@ const wd = (function() {
 				this.add("word", "[a-zA-Z0-9\\-]+\\:");
 				this.add("value", "none initial \\#[0-9a-fA-F]+ [a-zA-Z]+\\([^)]+\\)");
 				this.add("comment", "/* */");
-				this.add("string", "\" \" ' '");
-				return;
-			}
-		},
-		/**. ``''void'' XML()``: Define caracteres básicos de controle XML/XTML.**/
-		XML: {
-			value: function() {
-				this.clear();
-				this.add("comment", "<!-- -->");
 				this.add("string", "\" \" ' '");
 				return;
 			}
@@ -3472,9 +3506,9 @@ const wd = (function() {
 				return null;
 			}
 		},
-		/**. ``''string'' linearCode()``: Retorna o código genérico renderizado.**/
-		linearCode: {
-			value: function() {
+		/**. ``''string'' linear``: Retorna o código genérico renderizado.**/
+		linear: {
+			get: function() {
 				const tree = __Tree();
 				const code = this.input.split("");
 				const list = ["string", "comment", "number", "value", "word", "scope"];
@@ -3517,33 +3551,34 @@ const wd = (function() {
 				return tree.valueOf();
 			}
 		},
-		/**. ``''string'' markupCode()``: Retorna o código codificado em XML/HTML renderizado.**/
-		markupCode: {
-			value: function() {
-				this.XML();
-				const tree = __Tree();
-				const code = this.input.split("");
-
+		/**. ``''string'' markup``: Retorna o código codificado em XML/HTML renderizado.**/
+		markup: {
+			get: function() {
+				const tree   = __Tree();
+				const code   = this.input.split("");
+				const script = ["<script", "<style", "<textarea"];
 				let tag, val, close, pack, find, end, html;
+
 				tree.pattern("wd-?");
+				tree.xml = this.type === "xml";
 				tree.open("root");
 				for (let index = 0; index < code.length; index++) {
 					tag = tree.level;
 					val = code[index];
 					if (tag === "root") {
-						pack = this.pack(index, ["comment", "tag", "doc"]);
+						pack = this.pack(index, ["xcomment", "tag", "doc"]);
 						if (pack === null) {
 							tree.add(val);
 						}
-						else if (pack.type === "comment") {
+						else if (pack.type === "xcomment") {
 							close = pack.close;
-							tree.open(pack.type).add(pack.match);
+							tree.open(pack.type.slice(1)).add(pack.match);
 							index = pack.next - 1;
-						} else {
+						} else if (pack.type === "tag" || pack.type === "doc") {
 							close = pack.close;
 							tree.open(pack.type).add(pack.match).open("attr");
 							index = pack.next - 1;
-							html  = pack.match.replace(/^\<!?/, "");
+							html  = pack.match;
 						}
 					}
 					else if (tag === "comment") {
@@ -3567,17 +3602,31 @@ const wd = (function() {
 						}
 					}
 					else if (tag === "attr") {
-						pack = this.pack(index, ["string"]);
+						pack = this.pack(index, ["xstring"]);
 						find = this.find(index, close);
 
 						if (find !== null) {
 							tree.close().add(find.match).close();
 							index = find.next - 1;
+							if (this.type === "html" && script.indexOf(html) >= 0 && find.match === ">") {
+								html = html.replace("<", "</");
+								tree.open("script");
+							}
 						}
-						else if (pack !== null) {
+						else if (pack !== null && pack.type === "xstring") {
 							end = pack.close;
-							tree.open(pack.type).add(pack.match);
+							tree.open(pack.type.slice(1)).add(pack.match);
 							index = pack.next - 1;
+						}
+						else {
+							tree.add(val);
+						}
+					}
+					else if (tag === "script") {
+						find = this.find(index, html);
+						if (find !== null) {
+							tree.close().open("tag").add(find.match).open("attr");
+							index = find.next - 1;
 						}
 						else {
 							tree.add(val);
@@ -3590,7 +3639,7 @@ const wd = (function() {
 		},
 		/**. ``''node'' valueOf()``: Retorna a codificação estruturada em HTML.**/
 		valueOf: {
-			value: function() {	return this.markup ? this.markupCode() : this.linearCode();}
+			value: function() {	return this.type === "linear" ? this.linear : this.markup;}
 		},
 		/**. ``''string'' toString()``: Retorna a codificação.**/
 		toString: {
@@ -9272,38 +9321,50 @@ const wd = (function() {
 	|action|Ação a ser executada|Sim|
 	|$ ou $$|Seletor CSS para indicar o elemento os elementos a aplicar a ação (se ausente, será o próprio elemento)|Não|**/
 	function data_wd_code(target, event, wdArray) {
-		const data  = wdArray[0];
-		const node  = new __Node(target);
-		const child = target.childElementCount > 0;
-		const inner = child ? new __Node(target.children[0]).tag : null;
-		const attr  = node.form ? "value" : (inner === "wdtag-root" ? "innerText" : "innerHTML");
-		const code  = new __Code(target[attr]);
-		console.log(target.children[0]);
-		code.config(data);
-		target.spellcheck = false;
-		target.translate  = false;
-		target.innerHTML = code.toString();
-
-
-
-
-
-		/*
-		if (node.form) {
-			e.parentElement.insertBefore(html, e);
-			html.dataset.wdCode = e.dataset.wdCode;
-			html.setAttribute("class", e.getAttribute("class"));
-			html.setAttribute("style", e.getAttribute("style"));
-			if (!e.readOnly && !e.disabled)
-				html.contentEditable = true;
-			e.remove();
+		const data = wdArray[0];
+		const node = new __Node(target);
+		const text = node.form ? target.value : target.innerText;
+		const code = new __Code(text);
+		const tags = {code: "DIV", line: "DIV", mask: "DIV", text: "TEXTAREA"};
+		const conf = ["value", "comment", "word", "string"];
+		console.log(data);
+		/*-- configurando código --*/
+		for (let i = 0; i < conf.length; i++) {
+			if (conf[i] in data)
+				code.add(conf[i], String(data[conf[i]]));
 		}
-		if (event.type === "focusin") {
-			html.innerText  = code.toString();
-		} else {
-			html.innerHTML  = code.valueOf();
-			window.getSelection().removeAllRanges();
-		}*/
+		/*-- construindo container --*/
+		for (let i in tags) {
+			tags[i] = document.createElement(tags[i]);
+			tags[i].dataset.wdEncoding = i;
+		}
+		tags.code.appendChild(tags.line);
+		tags.code.appendChild(tags.mask);
+		tags.code.appendChild(tags.text);
+		/*-- definindo propriedades --*/
+		tags.text.spellcheck = false;
+		tags.text.translate  = false;
+		tags.text.value      = text;
+		tags.text.oninput    = function(ev) {
+			const time  = new Date().valueOf();
+			const input = tags.text.value;
+			const lines = input.split("\n").length;
+			const delta = 500;
+			tags.line.innerHTML = ("<span></span><br/>").repeat(lines);
+			if (!("wdEncodingTime" in ev)) {
+				tags.mask.innerText = input;
+				ev.wdEncodingTime = time;
+				window.setTimeout(function() {tags.text.oninput(ev);}, delta);
+			}
+			//FIXME não está certo isso aqui
+			else if ((ev.wdEncodingTime + delta) <= time) {
+				code.input = input;
+				tags.mask.innerHTML = code.valueOf();
+			}
+		}
+		target.parentElement.replaceChild(tags.code, target);
+		tags.text.oninput({});
+
 		return;
 	};
 
