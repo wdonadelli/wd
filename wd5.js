@@ -433,32 +433,22 @@ const wd = (function() {
 			overflow: hidden !important;
 			font-family: monospace !important;
 			font-size: 14px !important;
-			white-space: pre-wrap !important;
 			text-decoration: none !important;
 			font-style: normal !important;
 			font-weight: normal !important;
 			text-align: left !important;
-			letter-spacing: 1px;
+			white-space: pre-wrap !important;
+			letter-spacing: normal;
+			word-break: break-all;
 			border: none !important;
 		}
-		[data-wd-encoding="code"] > [data-wd-encoding="line"] {
-			position: relative !important;
-			z-index: 0 !important;
-			padding: 0 !important;
-			margin: 0 !important;
-			background-color: gray !important;
-			counter-reset: lines !important;
-		}
 		[data-wd-encoding="code"] > [data-wd-encoding="mask"] {
-			position: absolute !important;
-			top: 0 !important;
-			bottom: 0 !important;
-			right: 0 !important;
-			left: 1em !important;
+			position: relative !important;
 			padding: 0 !important;
-			margin: 0 0 0 auto !important;
-			z-index: 2 !important;
+			margin:  0 !important;
+			z-index: 0 !important;
 			background-color: white !important;
+			counter-reset: lines !important;
 		}
 		[data-wd-encoding="code"] > [data-wd-encoding="text"] {
 			position: absolute !important;
@@ -468,14 +458,14 @@ const wd = (function() {
 			left: 0 !important;
 			padding: 0 0 0 1em !important;
 			margin: 0 !important;
-			z-index: 3 !important;
+			z-index: 1 !important;
 			background-color: transparent !important;
-			color: black !important;
+			color: green !important;
 			-webkit-text-fill-color: transparent !important;
 			resize: none !important;
 		}
 
-		[data-wd-encoding="line"] > span::before {
+		[data-wd-encoding="line"]::before {
 			counter-increment: lines !important;
 			content: counter(lines) !important;
 			color: #bcc118 !important;
@@ -483,21 +473,19 @@ const wd = (function() {
 		}
 
 
-		wd-root, wd-root * {
-			display: inline !important;
-			position: static !important;
-		}
-		wd-root    {color: #b3b3b3 !important;}
-		wd-comment {color: #8c8c8c !important; font-style: italic !important;}
-		wd-doc     {color: #df6d6d !important; font-weight: bold !important;}
-		wd-tag     {color: #418bff !important;}
-		wd-attr    {color: #57ac57 !important;}
-		wd-value   {color: #cf8ee1 !important;}
-		wd-number  {color: #cf8ee1 !important;}
-		wd-string  {color: #cf8ee1 !important;}
-		wd-script  {color: #cf8ee1 !important; font-style: italic !important;}
-		wd-word    {color: #df6d6d !important; font-weight: bold !important;}
-		wd-scope   {font-weight: bold !important; color: #68cccc !important;}
+
+
+		[data-wd-encoding="line"]    {color: #b3b3b3 !important;}
+		[data-wd-encoding="comment"] {color: #8c8c8c !important; font-style: italic !important;}
+		[data-wd-encoding="doc"]     {color: #df6d6d !important; font-weight: bold !important;}
+		[data-wd-encoding="tag"]     {color: #418bff !important;}
+		[data-wd-encoding="attr"]    {color: #57ac57 !important;}
+		[data-wd-encoding="value"]   {color: #cf8ee1 !important;}
+		[data-wd-encoding="number"]  {color: #cf8ee1 !important;}
+		[data-wd-encoding="string"] {color: #cf8ee1 !important;}
+		[data-wd-encoding="script"]  {color: #cf8ee1 !important; font-style: italic !important;}
+		[data-wd-encoding="word"]    {color: #df6d6d !important; font-weight: bold !important;}
+		[data-wd-encoding="scope"]   {font-weight: bold !important; color: #68cccc !important;}
 
 
 		/*-- Importantes ---------------------------------------------------------*/
@@ -3310,6 +3298,25 @@ const wd = (function() {
 
 	Object.defineProperties(__Code.prototype, {
 		constructor: {value: __Code},
+		_translate: {
+			value: function(input) {
+				const tags = ["line", "doc", "tag", "number", "value", "word", "comment", "string", "scope"];
+				for (let i = 0; i < tags.length; i++) {
+					let tag   = tags[i];
+					let find1 = new RegExp(`\\<wd\\-${tag}\\>`, "g");
+					let find2 = new RegExp(`\\<\\/wd\\-${tag}\\>`, "g");
+					let swap1 = `<span data-wd-encoding="${tag}">`;
+					let swap2 = `</span>`;
+					input = input.replace(find1, swap1);
+					input = input.replace(find2, swap2);
+				}
+				return input;
+			}
+		},
+
+
+
+
 		/**. ``''array'' _ends``: Caracteres de controle fixo de encerramento.**/
 		_ends: {
 			value: {
@@ -3512,15 +3519,19 @@ const wd = (function() {
 				const tree = __Tree();
 				const code = this.input.split("");
 				const list = ["string", "comment", "number", "value", "word", "scope"];
-
 				let tag, val, close, pack, find, esc;
+
 				tree.pattern("wd-?");
-				tree.open("root");
+				tree.open("line");
+
 				for (let index = 0; index < code.length; index++) {
 					tag = tree.level;
 					val = code[index];
 
-					if (tag === "root") {
+					if (val === "\n") {
+						tree.walkTo(0).add(val).backTo();
+					}
+					else if (tag === "line") {
 						pack = this.pack(index, list);
 						if (pack === null) {
 							tree.add(val);
@@ -3548,7 +3559,7 @@ const wd = (function() {
 					}
 				}
 				tree.finish();
-				return tree.valueOf();
+				return this._translate(tree.valueOf());
 			}
 		},
 		/**. ``''string'' markup``: Retorna o código codificado em XML/HTML renderizado.**/
@@ -3561,11 +3572,16 @@ const wd = (function() {
 
 				tree.pattern("wd-?");
 				tree.xml = this.type === "xml";
-				tree.open("root");
+				tree.open("line");
+
 				for (let index = 0; index < code.length; index++) {
 					tag = tree.level;
 					val = code[index];
-					if (tag === "root") {
+
+					if (val === "\n") {
+						tree.walkTo(0).add(val).backTo();
+					}
+					else if (tag === "line") {
 						pack = this.pack(index, ["xcomment", "tag", "doc"]);
 						if (pack === null) {
 							tree.add(val);
@@ -3634,7 +3650,7 @@ const wd = (function() {
 					}
 				}
 				tree.finish();
-				return tree.valueOf();
+				return this._translate(tree.valueOf());
 			}
 		},
 		/**. ``''node'' valueOf()``: Retorna a codificação estruturada em HTML.**/
@@ -9325,9 +9341,8 @@ const wd = (function() {
 		const node = new __Node(target);
 		const text = node.form ? target.value : target.innerText;
 		const code = new __Code(text);
-		const tags = {code: "DIV", line: "DIV", mask: "DIV", text: "TEXTAREA"};
+		const tags = {code: "DIV", mask: "DIV", text: "TEXTAREA"};
 		const conf = ["value", "comment", "word", "string"];
-		console.log(data);
 		/*-- configurando código --*/
 		for (let i = 0; i < conf.length; i++) {
 			if (conf[i] in data)
@@ -9337,33 +9352,27 @@ const wd = (function() {
 		for (let i in tags) {
 			tags[i] = document.createElement(tags[i]);
 			tags[i].dataset.wdEncoding = i;
+			tags[i].spellcheck = false;
+			tags[i].translate  = false;
 		}
-		tags.code.appendChild(tags.line);
 		tags.code.appendChild(tags.mask);
 		tags.code.appendChild(tags.text);
 		/*-- definindo propriedades --*/
-		tags.text.spellcheck = false;
-		tags.text.translate  = false;
 		tags.text.value      = text;
 		tags.text.oninput    = function(ev) {
 			const time  = new Date().valueOf();
 			const input = tags.text.value;
-			const lines = input.split("\n").length;
-			const delta = 500;
-			tags.line.innerHTML = ("<span></span><br/>").repeat(lines);
-			if (!("wdEncodingTime" in ev)) {
-				tags.mask.innerText = input;
-				ev.wdEncodingTime = time;
-				window.setTimeout(function() {tags.text.oninput(ev);}, delta);
-			}
-			//FIXME não está certo isso aqui
-			else if ((ev.wdEncodingTime + delta) <= time) {
-				code.input = input;
-				tags.mask.innerHTML = code.valueOf();
-			}
-		}
+			tags.mask.innerText = input;
+			window.setTimeout(function() {
+				const value = tags.text.value;
+				if (value === input) {
+					code.input = input;
+					tags.mask.innerHTML = code.valueOf();
+				}
+			}, 500);
+		};
 		target.parentElement.replaceChild(tags.code, target);
-		tags.text.oninput({});
+		tags.text.oninput();
 
 		return;
 	};
