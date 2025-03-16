@@ -430,6 +430,8 @@ const wd = (function() {
 			display: block !important;
 			width:  auto !important;
 			height: auto !important;
+			margin: 0 !important;
+			padding: 0 0 0 3em !important;
 			overflow: hidden !important;
 			font-family: monospace !important;
 			font-size: 14px !important;
@@ -437,55 +439,56 @@ const wd = (function() {
 			font-style: normal !important;
 			font-weight: normal !important;
 			text-align: left !important;
+			color: black !important;
 			white-space: pre-wrap !important;
 			letter-spacing: normal;
 			word-break: break-all;
 			border: none !important;
 		}
-		[data-wd-encoding="code"] > [data-wd-encoding="mask"] {
+		[data-wd-encoding="mask"] {
 			position: relative !important;
-			padding: 0 !important;
-			margin:  0 !important;
 			z-index: 0 !important;
-			background-color: white !important;
 			counter-reset: lines !important;
 		}
-		[data-wd-encoding="code"] > [data-wd-encoding="text"] {
+		[data-wd-encoding="text"] {
 			position: absolute !important;
 			top: 0 !important;
 			bottom: 0 !important;
 			right: 0 !important;
 			left: 0 !important;
-			padding: 0 0 0 1em !important;
-			margin: 0 !important;
 			z-index: 1 !important;
-			background-color: transparent !important;
-			color: green !important;
 			-webkit-text-fill-color: transparent !important;
 			resize: none !important;
 		}
-
+		[data-wd-encoding="line"] {
+			position: relative !important;
+		}
 		[data-wd-encoding="line"]::before {
+			display: inline-block !important;
+			position: absolute !important;
+			top: 0;
+			left: -3em;
+			width: 3em;
+			text-align: right !important;
 			counter-increment: lines !important;
 			content: counter(lines) !important;
-			color: #bcc118 !important;
-			text-align: left !important;
 		}
 
 
-
-
-		[data-wd-encoding="line"]    {color: #b3b3b3 !important;}
-		[data-wd-encoding="comment"] {color: #8c8c8c !important; font-style: italic !important;}
-		[data-wd-encoding="doc"]     {color: #df6d6d !important; font-weight: bold !important;}
-		[data-wd-encoding="tag"]     {color: #418bff !important;}
-		[data-wd-encoding="attr"]    {color: #57ac57 !important;}
-		[data-wd-encoding="value"]   {color: #cf8ee1 !important;}
-		[data-wd-encoding="number"]  {color: #cf8ee1 !important;}
-		[data-wd-encoding="string"] {color: #cf8ee1 !important;}
-		[data-wd-encoding="script"]  {color: #cf8ee1 !important; font-style: italic !important;}
-		[data-wd-encoding="word"]    {color: #df6d6d !important; font-weight: bold !important;}
-		[data-wd-encoding="scope"]   {font-weight: bold !important; color: #68cccc !important;}
+		[data-wd-encoding="text"]         {background-color: transparent !important;}
+		[data-wd-encoding="mask"]         {background-color: GhostWhite !important;}
+		[data-wd-encoding="line"]         {color: black !important;}
+		[data-wd-encoding="line"]::before {color: red !important; background-color: lightgrey !important;}
+		[data-wd-encoding="comment"]      {color: #8c8c8c !important; font-style: italic !important;}
+		[data-wd-encoding="doc"]          {color: #df6d6d !important; font-weight: bold !important;}
+		[data-wd-encoding="tag"]          {color: #418bff !important;}
+		[data-wd-encoding="attr"]         {color: #57ac57 !important;}
+		[data-wd-encoding="value"]        {color: violet !important;}
+		[data-wd-encoding="number"]       {color: violet !important;}
+		[data-wd-encoding="string"]       {color: violet !important;}
+		[data-wd-encoding="script"]       {color: #cf8ee1 !important; font-style: italic !important;}
+		[data-wd-encoding="word"]         {color: #df6d6d !important; font-weight: bold !important;}
+		[data-wd-encoding="scope"]        {font-weight: bold !important; color: #68cccc !important;}
 
 
 		/*-- Importantes ---------------------------------------------------------*/
@@ -3284,12 +3287,11 @@ const wd = (function() {
 		this.input = input;
 		Object.defineProperties(this, {
 			_input:   {writable: true,  value: input},
-			_frames:  {writable: true,  value: null},
-			/*-- caracteres de controle personalizáveis --*/
+			_frames:  {writable: false, value: {linear: null, xml: null, html: null}},
 			_string:  {writable: true,  value: []},
 			_comment: {writable: true,  value: []},
 			_word:    {writable: true,  value: []},
-			_value:   {writable: true,  value: []},
+			_value:   {writable: true,  value: []}
 		});
 		for (let i in this._number)
 			this._number[i].close = this._ends.value;
@@ -3298,9 +3300,17 @@ const wd = (function() {
 
 	Object.defineProperties(__Code.prototype, {
 		constructor: {value: __Code},
+		/**. ``''array'' _ends``: Caracteres de controle fixo de encerramento.**/
+		_ends: {
+			value: {
+				word:  "/^([()\\[\\]{},;]|\\s)/",
+				value: "/^([()\\[\\]{},;!=|&+\\-%/*^?:]|\\s|\\>|\\>)/"
+			}
+		},
+		/**. ``''string'' _translate(''string'' input)``: Altera codificação HTML adaptada para padrão.**/
 		_translate: {
 			value: function(input) {
-				const tags = ["line", "doc", "tag", "number", "value", "word", "comment", "string", "scope"];
+				const tags = ["line", "doc", "tag", "number", "value", "word", "comment", "string", "scope", "attr"];
 				for (let i = 0; i < tags.length; i++) {
 					let tag   = tags[i];
 					let find1 = new RegExp(`\\<wd\\-${tag}\\>`, "g");
@@ -3313,58 +3323,70 @@ const wd = (function() {
 				return input;
 			}
 		},
-
-
-
-
-		/**. ``''array'' _ends``: Caracteres de controle fixo de encerramento.**/
-		_ends: {
-			value: {
-				word:  "/^([()\\[\\]{},;]|\\s)/",
-				value: "/^([()\\[\\]{},;!=|&+\\-%/*^?:]|\\s|\\>|\\>)/"
+		/**. ``''object'' frames``: Retorna os caracteres de controle.**/
+		frames: {
+			get: function() {
+				const type  = this.type;
+				if (this._frames[type] !== null) return this._frames[type];
+				const isre   = /^\/.+\/([a-z]+)?$/i
+				const data   = [];
+				const frames = type === "xml" || type === "html" ? {
+					tag: [
+						{open: "/^\\<\\/?[a-z]([a-z0-9_\\-]+)?/i", close: "/^\\/?\\>/", double: false}
+					],
+					doc: [
+						{open: "/^\\<![a-z]([a-z0-9_\\-]+)?/i", close: "/^\\/?\\>/", double: false}
+					],
+					string: [
+						{open: "\"", close: "\"", double: false},
+						{open: "\'", close: "\'", double: false}
+					],
+					comment: [
+						{open: "<!--", close: "-->", double: false},
+					]
+				} : {
+					scope: [
+						{open: "[", close: "", double: false}, {open: "]", close: "", double: false},
+						{open: "(", close: "", double: false}, {open: ")", close: "", double: false},
+						{open: "{", close: "", double: false}, {open: "}", close: "", double: false}
+					],
+					number: [
+						{open: "/^[+\\-]?\\d+\\.\\d+e[+\\-]?\\d+/i", close: this._ends.value, double: true},
+						{open: "/^[+\\-]?\\.?\\d+e[+\\-]?\\d+/i",    close: this._ends.value, double: true},
+						{open: "/^[+\\-]?\\d+\\.\\d+/",              close: this._ends.value, double: true},
+						{open: "/^[+\\-]?\\.?\\d+/",                 close: this._ends.value, double: true}
+					],
+					string:  this._string,
+					comment: this._comment,
+					word:    this._word,
+					value:   this._value
+				};
+				/*-- adicionando em lista --*/
+				for (let name in frames) {
+					for (let i = 0; i < frames[name].length; i++) {
+						let item = frames[name][i];
+						data.push({
+							type:   name,
+							open:   item.open,
+							close:  item.close,
+							double: item.double,
+							regexp: isre.test(item.open)
+						});
+					}
+				}
+				/*-- ordenando a lista --*/
+				this._frames[type] = data.sort(function(x,y) {
+					const A = x.open.length;
+					const B = y.open.length;
+					const a = x.regexp;
+					const b = y.regexp;
+					if (a !== b)
+						return a ? 1 : -1;
+					else
+						return A > B ? -1 : (A === B ? 0 : 1);
+				});
+				return this._frames[type];
 			}
-		},
-		/**. ``''array'' _tag``: Caracteres de controle fixo de tag XML/HTML.**/
-		_tag: {
-			value: [
-				{open: "/^\\<\\/?[a-z]([a-z0-9_\\-]+)?/i", close: "/^\\/?\\>/", double: false}
-			]
-		},
-		/**. ``''array'' _doc``: Caracteres de controle fixo de doctype XML/HTML.**/
-		_doc: {
-			value: [
-				{open: "/^\\<![a-z]([a-z0-9_\\-]+)?/i", close: "/^\\/?\\>/", double: false}
-			]
-		},
-		/**. ``''array'' _scope``: Caracteres de controle fixo de escopos.**/
-		_scope: {
-			value: [
-				{open: "[", close: "", double: false}, {open: "]", close: "", double: false},
-				{open: "(", close: "", double: false}, {open: ")", close: "", double: false},
-				{open: "{", close: "", double: false}, {open: "}", close: "", double: false}
-			]
-		},
-		/**. ``''array'' _xstring``: Caracteres de controle fixo de string XML/HTML.**/
-		_xstring:  {
-			value: [
-				{open: "\"", close: "\"", double: false},
-				{open: "\'", close: "\'", double: false}
-			]
-		},
-		/**. ``''array'' _xcomment``: Caracteres de controle fixo de comentários XML/HTML.**/
-		_xcomment: {
-			value: [
-				{open: "<!--", close: "-->", double: false},
-			]
-		},
-		/**. ``''array'' _number``: Caracteres de controle fixo para números.**/
-		_number: {
-			value: [
-				{open: "/^[+\\-]?\\d+\\.\\d+e[+\\-]?\\d+/i", close: "", double: true},
-				{open: "/^[+\\-]?\\.?\\d+e[+\\-]?\\d+/i",    close: "", double: true},
-				{open: "/^[+\\-]?\\d+\\.\\d+/",              close: "", double: true},
-				{open: "/^[+\\-]?\\.?\\d+/",                 close: "", double: true}
-			]
 		},
 		/**. ``''string'' input``: Define ou retorna o código fonte.**/
 		input: {
@@ -3380,38 +3402,6 @@ const wd = (function() {
 				if (start.test(text) && close.test(text))
 					return (/\<\/html(\s[^>]+)?\>$/).test(text) ? "html" : "xml";
 				return "linear";
-			}
-		},
-		/**. ``''array'' frames``: Retorna a lista de caracteres de controle da linguagem.**/
-		frames: {
-			get: function() {
-				if (this._frames !== null) return this._frames;
-				/*-- obtendo o conteúdo dos quadros --*/
-				const re   = /^\/.+\/([a-z]+)?$/i
-				const data = [];
-				const name = [
-					"doc", "tag", "xcomment", "xstring",
-					"number", "value", "word", "comment", "string", "scope"
-				];
-				for (let i = 0; i < name.length; i++) {
-					let list = this[`_${name[i]}`];
-					for (let j = 0; j < list.length; j++) {
-						let item = list[j];
-						data.push({type: name[i], open: item.open, close: item.close, double: item.double});
-					}
-				}
-				/*-- ordenando os frame --*/
-				this._frames = data.sort(function(x,y) {
-					const A = x.open.length;
-					const B = y.open.length;
-					const a = re.test(x.open);
-					const b = re.test(y.open);
-					if (a !== b)
-						return a ? 1 : -1;
-					else
-						return A > B ? -1 : (A === B ? 0 : 1);
-				});
-				return this._frames;
 			}
 		},
 		/**. ``''void'' add(''string'' type, string'' value)``: Adiciona caracteres de controle da linguagem. O argumento ''type'' pode ser "string", "comment", "word" ou "value". O argumento ''value'' é uma lista de caracteres de controle separados por um espaço em branco. No caso de "string" e "comment", os caracteres de fechamento devem vir logo depois de seu caracteres de abertura (tanto a dupla quanto os conjunto são separados por um espaço).**/
@@ -3433,16 +3423,16 @@ const wd = (function() {
 							this._value.push({open: data[i], close: this._ends.value, double: true});
 					}
 				}
-				this._frame = null;
+				this._frames.linear = null;
 				return;
 			}
 		},
 		/**. ``''void'' clear()``: Apaga o conjunto de caracteres de controles definidos.**/
 		clear: {
 			value: function() {
-				const data = {_comment: [], _string: [], _word: [], _value: []};
-				for (let i in data) this[i] = data[i];
-				this._frame = null;
+				const name = {_comment: [], _string: [], _word: [], _value: []};
+				for (let i in name) this[i] = data[i];
+				this._frames.linear = null;
 				return;
 			}
 		},
@@ -3582,13 +3572,13 @@ const wd = (function() {
 						tree.walkTo(0).add(val).backTo();
 					}
 					else if (tag === "line") {
-						pack = this.pack(index, ["xcomment", "tag", "doc"]);
+						pack = this.pack(index, ["comment", "tag", "doc"]);
 						if (pack === null) {
 							tree.add(val);
 						}
-						else if (pack.type === "xcomment") {
+						else if (pack.type === "comment") {
 							close = pack.close;
-							tree.open(pack.type.slice(1)).add(pack.match);
+							tree.open(pack.type).add(pack.match);
 							index = pack.next - 1;
 						} else if (pack.type === "tag" || pack.type === "doc") {
 							close = pack.close;
@@ -3599,7 +3589,7 @@ const wd = (function() {
 					}
 					else if (tag === "comment") {
 						find = this.find(index, close);
-						if (find !== null && code[index-1] !== "\\") {
+						if (find !== null) {
 							tree.add(find.match).close();
 							index = find.next - 1;
 						}
@@ -3618,7 +3608,7 @@ const wd = (function() {
 						}
 					}
 					else if (tag === "attr") {
-						pack = this.pack(index, ["xstring"]);
+						pack = this.pack(index, ["string"]);
 						find = this.find(index, close);
 
 						if (find !== null) {
@@ -3629,9 +3619,9 @@ const wd = (function() {
 								tree.open("script");
 							}
 						}
-						else if (pack !== null && pack.type === "xstring") {
+						else if (pack !== null && pack.type === "string") {
 							end = pack.close;
-							tree.open(pack.type.slice(1)).add(pack.match);
+							tree.open(pack.type).add(pack.match);
 							index = pack.next - 1;
 						}
 						else {
@@ -9358,6 +9348,9 @@ const wd = (function() {
 		tags.code.appendChild(tags.mask);
 		tags.code.appendChild(tags.text);
 		/*-- definindo propriedades --*/
+
+		//TODO pegar conteúdo do pseudo elemento getComputedStyle($$("p")[0], "::after").content
+
 		tags.text.value      = text;
 		tags.text.oninput    = function(ev) {
 			const time  = new Date().valueOf();
