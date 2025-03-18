@@ -473,22 +473,25 @@ const wd = (function() {
 			counter-increment: lines !important;
 			content: counter(lines) !important;
 		}
-
-
+		[data-wd-encoding="line"]::after {
+			content: " " !important;
+		}
 		[data-wd-encoding="text"]         {background-color: transparent !important;}
 		[data-wd-encoding="mask"]         {background-color: GhostWhite !important;}
 		[data-wd-encoding="line"]         {color: black !important;}
-		[data-wd-encoding="line"]::before {color: red !important; background-color: lightgrey !important;}
-		[data-wd-encoding="comment"]      {color: #8c8c8c !important; font-style: italic !important;}
-		[data-wd-encoding="doc"]          {color: #df6d6d !important; font-weight: bold !important;}
-		[data-wd-encoding="tag"]          {color: #418bff !important;}
-		[data-wd-encoding="attr"]         {color: #57ac57 !important;}
+		[data-wd-encoding="line"]::before {color: red !important;}
+		[data-wd-encoding="comment"]      {color: gray !important; font-style: italic !important;}
+		[data-wd-encoding="doc"]          {color: purple !important; font-weight: bold !important;}
+		[data-wd-encoding="tag"]          {color: royalblue !important;}
+		[data-wd-encoding="attr"]         {color: green !important;}
 		[data-wd-encoding="value"]        {color: violet !important;}
 		[data-wd-encoding="number"]       {color: violet !important;}
 		[data-wd-encoding="string"]       {color: violet !important;}
-		[data-wd-encoding="script"]       {color: #cf8ee1 !important; font-style: italic !important;}
-		[data-wd-encoding="word"]         {color: #df6d6d !important; font-weight: bold !important;}
-		[data-wd-encoding="scope"]        {font-weight: bold !important; color: #68cccc !important;}
+		[data-wd-encoding="script"]       {color: orange !important; font-style: italic !important;}
+		[data-wd-encoding="word"]         {color: royalblue !important; font-weight: bold !important;}
+		[data-wd-encoding="scope"]        {color: #68cccc !important; font-weight: bold !important;}
+		[data-wd-encoding="flag"]         {color: brown !important; font-weight: bold !important;}
+		[data-wd-encoding="trash"]        {color: red !important; text-decoration: underline !important;}
 
 
 		/*-- Importantes ---------------------------------------------------------*/
@@ -540,7 +543,7 @@ const wd = (function() {
 
 
 
-
+//TODO
 
 
 
@@ -2061,7 +2064,7 @@ const wd = (function() {
 				const chars = String(x).split("");
 				const html  = [{a: "&",  b: "&amp;"}, {a: "<",  b: "&lt;"},  {a: ">", b: "&gt;"}];
 				if (!this.xml)
-					html.push({a: "\n", b: "<br />"}, {a: "\t", b: "&Tab;"}, {a: " ", b: "&nbsp;"});
+					html.push({a: "\n", b: "<br/>"}, {a: "\t", b: "&Tab;"}, {a: " ", b: "&nbsp;"});
 				chars.forEach(function(v,i,a) {
 					for (let h of html)
 						if (v === h.a) a[i] = h.b;
@@ -3286,12 +3289,13 @@ const wd = (function() {
 		if (!(this instanceof __Code)) return new __Code(input);
 		this.input = input;
 		Object.defineProperties(this, {
-			_input:   {writable: true,  value: input},
+			_input:   {writable: true,  value: ""},
 			_frames:  {writable: false, value: {linear: null, xml: null, html: null}},
 			_string:  {writable: true,  value: []},
 			_comment: {writable: true,  value: []},
 			_word:    {writable: true,  value: []},
-			_value:   {writable: true,  value: []}
+			_value:   {writable: true,  value: []},
+			_flags:   {writable: false, value: "/^(TODO|FIXME|OPTIMIZE|HACK|REVIEW)\ /"}
 		});
 		for (let i in this._number)
 			this._number[i].close = this._ends.value;
@@ -3310,7 +3314,10 @@ const wd = (function() {
 		/**. ``''string'' _translate(''string'' input)``: Altera codificação HTML adaptada para padrão.**/
 		_translate: {
 			value: function(input) {
-				const tags = ["line", "doc", "tag", "number", "value", "word", "comment", "string", "scope", "attr"];
+				const tags = [
+					"line", "doc", "tag", "attr", "script", "flag", "trash",
+					"number", "value", "word", "comment", "string", "scope"
+				];
 				for (let i = 0; i < tags.length; i++) {
 					let tag   = tags[i];
 					let find1 = new RegExp(`\\<wd\\-${tag}\\>`, "g");
@@ -3396,11 +3403,11 @@ const wd = (function() {
 		/**. ``''string'' type``: Retorna o tipo de código: xml, html ou linear.**/
 		type: {
 			get: function() {
-				const text = this.input.trim();
-				const start  = /^\<[a-z0-9.\-_:?!]+([^\>]+)?\>/i;
-				const close  = /\<\/?[a-z0-9.\-_:?!]+([^\>]+)?\/?\>$/i;
-				if (start.test(text) && close.test(text))
-					return (/\<\/html(\s[^>]+)?\>$/).test(text) ? "html" : "xml";
+				const input = this.input.trim();
+				const start = /^\<[a-z0-9.\-_:?!]+([^\>]+)?\>/i;
+				const close = /\<\/?[a-z0-9.\-_:?!]+([^\>]+)?\/?\>$/i;
+				if (start.test(input) && close.test(input))
+					return (/\<\/html(\s[^>]+)?\>$/).test(input) ? "html" : "xml";
 				return "linear";
 			}
 		},
@@ -3509,7 +3516,7 @@ const wd = (function() {
 				const tree = __Tree();
 				const code = this.input.split("");
 				const list = ["string", "comment", "number", "value", "word", "scope"];
-				let tag, val, close, pack, find, esc;
+				let tag, val, close, pack, find, esc, flag;
 
 				tree.pattern("wd-?");
 				tree.open("line");
@@ -3518,12 +3525,12 @@ const wd = (function() {
 					tag = tree.level;
 					val = code[index];
 
-					if (val === "\n") {
-						tree.walkTo(0).add(val).backTo();
-					}
-					else if (tag === "line") {
+					if (tag === "line") {
 						pack = this.pack(index, list);
-						if (pack === null) {
+						if (val === "\n") {
+							tree.walkTo(0).add(val).backTo();
+						}
+						else if (pack === null) {
 							tree.add(val);
 						}
 						else if (pack.type === "string" || pack.type === "comment") {
@@ -3536,16 +3543,40 @@ const wd = (function() {
 							index = pack.next - 1;
 						}
 					}
-					else if (tag === "string" || tag === "comment") {
+					else if (tag === "string") {
 						find = this.find(index, close);
 						esc  = tag === "string" && code[index-1] === "\\";
-						if (find !== null && !esc) {
+						if (find !== null && find.match === "\n") {
+							tree.close().walkTo(0).add(val).backTo();
+						}
+						else if (find !== null && !esc) {
 							tree.add(find.match).close();
 							index = find.next - 1;
 						}
 						else {
 							tree.add(val);
 						}
+					}
+					else if (tag === "comment") {
+						find = this.find(index, close);
+						flag = this.find(index, this._flags);
+						if (close === "\n" && val === "\n") {
+							tree.close().walkTo(0).add(val).backTo();
+						}
+						else if (flag !== null) {
+							tree.open("flag").add(flag.match).close();
+							index = flag.next - 1;
+						}
+						else if (find !== null) {
+							tree.add(find.match).close();
+							index = find.next - 1;
+						}
+						else {
+							tree.add(val);
+						}
+					}
+					else {
+						tree.open("trash").add(val).close();
 					}
 				}
 				tree.finish();
@@ -3558,10 +3589,9 @@ const wd = (function() {
 				const tree   = __Tree();
 				const code   = this.input.split("");
 				const script = ["<script", "<style", "<textarea"];
-				let tag, val, close, pack, find, end, html;
+				let tag, val, close, pack, find, end, html, flag;
 
 				tree.pattern("wd-?");
-				tree.xml = this.type === "xml";
 				tree.open("line");
 
 				for (let index = 0; index < code.length; index++) {
@@ -3589,7 +3619,12 @@ const wd = (function() {
 					}
 					else if (tag === "comment") {
 						find = this.find(index, close);
-						if (find !== null) {
+						flag = this.find(index, this._flags);
+						if (flag !== null) {
+							tree.open("flag").add(flag.match).close();
+							index = flag.next - 1;
+						}
+						else if (find !== null) {
 							tree.add(find.match).close();
 							index = find.next - 1;
 						}
@@ -9329,7 +9364,7 @@ const wd = (function() {
 	function data_wd_code(target, event, wdArray) {
 		const data = wdArray[0];
 		const node = new __Node(target);
-		const text = node.form ? target.value : target.innerText;
+		const text = node.form ? target.value : target.innerText.replace(/\s$/, "");
 		const code = new __Code(text);
 		const tags = {code: "DIV", mask: "DIV", text: "TEXTAREA"};
 		const conf = ["value", "comment", "word", "string"];
@@ -9351,18 +9386,11 @@ const wd = (function() {
 
 		//TODO pegar conteúdo do pseudo elemento getComputedStyle($$("p")[0], "::after").content
 
-		tags.text.value      = text;
-		tags.text.oninput    = function(ev) {
-			const time  = new Date().valueOf();
-			const input = tags.text.value;
-			tags.mask.innerText = input;
-			window.setTimeout(function() {
-				const value = tags.text.value;
-				if (value === input) {
-					code.input = input;
-					tags.mask.innerHTML = code.valueOf();
-				}
-			}, 500);
+		tags.text.value    = text;
+		tags.text.readOnly = data.editable === true;
+		tags.text.oninput  = function(ev) {
+			code.input = tags.text.value;
+			tags.mask.innerHTML = code.valueOf();
 		};
 		target.parentElement.replaceChild(tags.code, target);
 		tags.text.oninput();
