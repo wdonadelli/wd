@@ -416,6 +416,7 @@ const wd = (function() {
 
 		/*-- Códificação ---------------------------------------------------------*/
 
+		/*-- containers --*/
 		[data-wd-encoding="code"] {
 			display: block !important;
 			position: relative !important;
@@ -430,8 +431,8 @@ const wd = (function() {
 			display: block !important;
 			width:  auto !important;
 			height: auto !important;
-			margin: 0 !important;
-			padding: 0 0 0 3em !important;
+			margin:  0 !important;
+			padding: 0.5em !important;
 			overflow: hidden !important;
 			font-family: monospace !important;
 			font-size: 14px !important;
@@ -460,37 +461,74 @@ const wd = (function() {
 			-webkit-text-fill-color: transparent !important;
 			resize: none !important;
 		}
-		[data-wd-encoding="line"] {
-			position: relative !important;
-		}
-		[data-wd-encoding="line"]::before {
+		[data-wd-encoding="line"]        {position: relative !important;}
+		/*-- linhas --*/
+		[data-wd-encoding="line"]::after {content: " " !important;}
+		[data-wd-encoding-lines] [data-wd-encoding="line"]::before {
 			display: inline-block !important;
 			position: absolute !important;
 			top: 0;
-			left: -3em;
-			width: 3em;
+			padding: 0 0.2em 0 0 !important;
 			text-align: right !important;
 			counter-increment: lines !important;
 			content: counter(lines) !important;
 		}
-		[data-wd-encoding="line"]::after {
-			content: " " !important;
+		[data-wd-encoding-lines="0"] [data-wd-encoding="line"]::before {
+			left: -1em !important;
+			width: 1em !important;
 		}
-		[data-wd-encoding="text"]         {background-color: transparent !important;}
-		[data-wd-encoding="mask"]         {background-color: GhostWhite !important;}
-		[data-wd-encoding="line"]         {color: black !important;}
-		[data-wd-encoding="line"]::before {color: red !important;}
-		[data-wd-encoding="comment"]      {color: gray !important; font-style: italic !important;}
-		[data-wd-encoding="doc"]          {color: purple !important; font-weight: bold !important;}
-		[data-wd-encoding="tag"]          {color: royalblue !important;}
-		[data-wd-encoding="attr"]         {color: green !important;}
+		[data-wd-encoding-lines="0"] [data-wd-encoding="mask"],
+		[data-wd-encoding-lines="0"] [data-wd-encoding="text"] {
+			padding-left: 1em !important;
+		}
+		[data-wd-encoding-lines="1"] [data-wd-encoding="line"]::before {
+			left: -2em !important;
+			width: 2em !important;
+		}
+		[data-wd-encoding-lines="1"] [data-wd-encoding="mask"],
+		[data-wd-encoding-lines="1"] [data-wd-encoding="text"] {
+			padding-left: 2em !important;
+		}
+		[data-wd-encoding-lines="2"] [data-wd-encoding="line"]::before {
+			left: -3em !important;
+			width: 3em !important;
+		}
+		[data-wd-encoding-lines="2"] [data-wd-encoding="mask"],
+		[data-wd-encoding-lines="2"] [data-wd-encoding="text"] {
+			padding-left: 3em !important;
+		}
+		[data-wd-encoding-lines="3"] [data-wd-encoding="line"]::before {
+			left: -4em !important;
+			width: 4em !important;
+		}
+		[data-wd-encoding-lines="3"] [data-wd-encoding="mask"],
+		[data-wd-encoding-lines="3"] [data-wd-encoding="text"] {
+			padding-left: 4em !important;
+		}
+		[data-wd-encoding-lines="4"] [data-wd-encoding="line"]::before {
+			left: -5em !important;
+			width: 5em !important;
+		}
+		[data-wd-encoding-lines="4"] [data-wd-encoding="mask"],
+		[data-wd-encoding-lines="4"] [data-wd-encoding="text"] {
+			padding-left: 5em !important;
+		}
+		/*-- cores --*/
+		[data-wd-encoding="text"]         {color: white !important; background-color: transparent !important;}
+		[data-wd-encoding="mask"]         {color: snow  !important; background-color: black !important;}
+		[data-wd-encoding="line"]         {color: inherit !important;}
+		[data-wd-encoding="line"]::before {color: WhiteSmoke !important;}
+		[data-wd-encoding="comment"]      {color: silver !important; font-style: italic !important;}
+		[data-wd-encoding="flag"]         {color: khaki !important; font-weight: bold !important;}
+		[data-wd-encoding="doc"]          {color: MediumPurple !important; font-weight: bold !important;}
+		[data-wd-encoding="tag"]          {color: DodgerBlue !important;}
+		[data-wd-encoding="attr"]         {color: teal !important;}
+		[data-wd-encoding="script"]       {color: aqua !important; font-style: italic !important;}
 		[data-wd-encoding="value"]        {color: violet !important;}
 		[data-wd-encoding="number"]       {color: violet !important;}
 		[data-wd-encoding="string"]       {color: violet !important;}
-		[data-wd-encoding="script"]       {color: orange !important; font-style: italic !important;}
-		[data-wd-encoding="word"]         {color: royalblue !important; font-weight: bold !important;}
-		[data-wd-encoding="scope"]        {color: #68cccc !important; font-weight: bold !important;}
-		[data-wd-encoding="flag"]         {color: brown !important; font-weight: bold !important;}
+		[data-wd-encoding="word"]         {color: DodgerBlue !important; font-weight: bold !important;}
+		[data-wd-encoding="scope"]        {color: orange !important; font-weight: bold !important;}
 		[data-wd-encoding="trash"]        {color: red !important; text-decoration: underline !important;}
 
 
@@ -9349,13 +9387,20 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	/**###### ``**function** ''void'' data_wd_code(''node''  target, ''object'' event, ''array'' wdArray)``
-	Função com o propósito de definir exibições por meio do atributo HTML ''data''.
+	Função com o propósito de definir exibições de codificação por meio do atributo HTML ''data''.
 	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
-	|data-wd-display|click|Múltiplas|Múltiplos|__Node.display|Elemento que possa receber clique|
+	|data-wd-code|load wdreload input|Múltiplas|Único|__Code|Elemento que possa receber texto de codificação.|
 	Possui as seguintes propriedades:
 	|Nome|Tipo|Descrição|
-	|$ ou $$|node|Seletor CSS que define os elementos alvos da ação (se não informado, será o próprio elemento)|
-	|action|integer|Mesmo propósito do argumento de __Node.display|
+	|word|string|Palavras reservadas da codificação|
+	|value|string|Valores específicos da codificação|
+	|string|string|Caracteres de abertura e fechamento de string|
+	|comment|string|Caracteres de abertura e fechamento de comentários|
+	|editable|boolean|Informa se o container poderá ser editado|
+	|lines|boolean|Informa se as linhas serão numeradas|
+
+
+
 	Função vinculada ao atributo HTML ``data-wd-display`` cujo objetivo é manipular a exibição de nós, seus irmãos e filhos utilizando a ferramenta ``WDnode.display``. Possui múltiplos atributos e grupos:
 	|Nome|Descrição|Obrigatório|
 
@@ -9365,36 +9410,42 @@ const wd = (function() {
 		const data = wdArray[0];
 		const node = new __Node(target);
 		const text = node.form ? target.value : target.innerText.replace(/\s$/, "");
+		const edit = data.editable !== true;
+		const line = data.lines !== false;
 		const code = new __Code(text);
 		const tags = {code: "DIV", mask: "DIV", text: "TEXTAREA"};
-		const conf = ["value", "comment", "word", "string"];
+		const name = ["value", "comment", "word", "string"];
 		/*-- configurando código --*/
-		for (let i = 0; i < conf.length; i++) {
-			if (conf[i] in data)
-				code.add(conf[i], String(data[conf[i]]));
+		for (let i = 0; i < name.length; i++) {
+			if (name[i] in data)
+				code.add(name[i], String(data[name[i]]));
 		}
-		/*-- construindo container --*/
+		/*-- construindo container e definindo propriedades --*/
 		for (let i in tags) {
 			tags[i] = document.createElement(tags[i]);
 			tags[i].dataset.wdEncoding = i;
 			tags[i].spellcheck = false;
 			tags[i].translate  = false;
+			if (i === "text") {
+				tags[i].value    = text;
+				tags[i].readOnly = edit;
+				tags[i].id       = target.id;
+			}
 		}
-		tags.code.appendChild(tags.mask);
-		tags.code.appendChild(tags.text);
-		/*-- definindo propriedades --*/
-
-		//TODO pegar conteúdo do pseudo elemento getComputedStyle($$("p")[0], "::after").content
-
-		tags.text.value    = text;
-		tags.text.readOnly = data.editable === true;
+		/*-- definindo disparador --*/
 		tags.text.oninput  = function(ev) {
 			code.input = tags.text.value;
+			if (line) {
+				const number = new __Number(code.input.split("\n").length);
+				tags.code.dataset.wdEncodingLines = number.exp;
+			}
 			tags.mask.innerHTML = code.valueOf();
 		};
+		/*-- montando blocos e executando --*/
+		tags.code.appendChild(tags.mask);
+		tags.code.appendChild(tags.text);
 		target.parentElement.replaceChild(tags.code, target);
 		tags.text.oninput();
-
 		return;
 	};
 
