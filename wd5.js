@@ -2471,6 +2471,244 @@ const wd = (function() {
 						let  count = 0;
 						let tag, val;
 						tree.xml = true;
+						//FIXME ---------------------------------------------------------------------------------------
+
+
+
+
+
+						const msg   = `The \"dataset\" attribute notation was rejected: ${this._data}`;
+						const error = function(x) {console.info(msg+` (${x})` ); return null;}
+
+
+						tree.open("group").open("struct");
+
+						for (let i = 0; i < code.length; i++) {
+							val = code[i];
+							tag = tree.level;
+
+							if (tag === "struct" || tag === "object") {
+								if (tag === "struct" && val === "&") {
+									tree.close().open("struct");
+								}
+								else if (tag === "object" && val === ">") {
+									tree.close();
+								}
+								else {
+									tree.open("data");
+									i--;
+								}
+							}
+							else if (tag === "data") {
+								const frame = {
+									close:    /^[)}>\}]/,
+									name:     /^[^({<\[]+/,
+									string:   /^\{\'/,
+									array:    /^\[/,
+									struct:   /^\<\</,
+									object:   /^\</,
+									function: /^\(([^)]+)\)/, /* o nome do método é obrigatório */
+									regexp:   /^\{\/.+\/([igm]+)?\}/i,
+									value:    /^\{([^}]+)?\}/,
+								};
+								let text, find, name, data;
+								/*-- fechar dados --*/
+								if (frame.close.test(val)) {
+									tree.close();
+								}
+								/*-- encontrar o nome e valor da propriedade --*/
+								else {
+
+									/*-- nome da propriedade --*/
+									text = this._data.slice(i);
+									find = text.match(frame.name);
+									name = find === null ? "" : find[0].trim();
+									i    = i + name.length;
+									if (name === "") return error("property name");
+									tree.open("name").add(name).close();
+
+									/*-- valor da propriedade --*/
+									text = this._data.slice(i);
+									if (frame.string.test(text)) {
+										tree.open("string");
+									}
+									else if (frame.array.test(text)) {
+										tree.open("array");
+									}
+									else if (frame.struct.test(text)) {
+										tree.open("struct");
+									}
+									else if (frame.object.test(text)) {
+										tree.open("object");
+									}
+									else if (frame.function.test(text)) {
+										find = text.match(frame.function)[0];
+										name = find.replace(/^\(/, "").replace(/\)$/, "");
+										data = new __Type(window[name]);
+										tree.open("function")
+										tree.add(data.function ? `"window["${name}"]"` : "null")
+										tree.close().close();
+										i = i + find.length - 1;
+									}
+									else if (frame.regexp.test(text)) {
+										find = text.match(frame.regexp)[0];
+										name = find.replace(/^\{/, "").replace(/\}$/, "");
+										tree.open("regexp").add(`"${name}"`).close().close();
+										i = i + find.length - 1;
+									}
+									else if (frame.value.test(text)) {
+										let base = /^(true|false|null|undefined)$/;
+										find = text.match(frame.value)[0];
+										name = find.replace(/^\{/, "").replace(/\}$/, "");
+										data = new __Type(name);
+										tree.open("value");
+										if (base.test(name.trim()) || data.finite)
+											tree.add(name.trim);
+										else
+											tree.add(`"${name}"`);
+										tree.close().close()
+										i = i + find.length - 1;
+									}
+								}
+							}
+							else if (tag === "string") {
+								if (val === "'") {
+									if (code[i+1] === "'"
+									tree.add("\"");
+									i++;
+								}
+								else if (val === "'") {
+									tree.close();
+								}
+								else {
+									tree.add(val);
+								}
+							}
+
+
+
+
+
+
+
+
+
+
+							/*if (tag === "object") {
+								if (val === "&")
+									tree.close().open("object");
+								else if (i < code.length)
+									tree.open("property").open("name").add(val);
+							}
+
+
+
+							else if (tag === "property") {
+								tree.open("name").add(val);
+							}
+							else if (tag === "name") {
+								if (val === "{") {
+									tree.close().open("type").add("value").close().open("value");
+									if (code[i+1] === "'") {
+										tree.open("quote");
+										i++;
+									}
+								}
+								else if (val === "(") {
+									tree.close().open("type").add("function").close().open("function");
+								}
+								else if (val === "[") {
+									tree.close().open("type").add("array").close().open("array").open("item");
+									if (code[i+1] === "'") {
+										tree.open("quote");
+										i++;
+									}
+								}
+								else if (val === "<" && code[i+1] === "<") {
+									tree.close().open("type").add("struct").close().open("struct");
+									i++;
+								}
+								else {
+									tree.add(val)
+								}
+							}
+							else if (tag === "item") {
+								if (val === ",") {
+									tree.close().open("item");
+									if (code[i+1] === "'") {
+										tree.open("quote");
+										i++;
+									}
+								}	else if (val === "]") {
+									tree.close().close().close();
+								} else {
+									tree.add(val);
+								}
+							}
+							else if (tag === "quote") {
+								if (val === "'") {
+									if (code[i+1] === "'") {
+										tree.add("'");
+										i++;
+									} else {
+										tree.close();
+									}
+								} else {
+									tree.add(val);
+								}
+							}
+							else if (tag === "value") {
+								if (val === "}" && count === 0) {
+									tree.close().close();
+								} else {
+									if (val === "{" || val === "}")
+										count += val === "{" ? 1 : -1;
+									tree.add(val);
+								}
+							}
+							else if (tag === "function") {
+								if (val === ")" && count === 0) {
+									tree.close().close();
+								} else {
+									if (val === "(" || val === ")")
+										count += val === "(" ? 1 : -1;
+									tree.add(val);
+								}
+							}
+							else if (tag === "array") {
+								if (val === "]" && count === 0) {
+									tree.close().close();
+								} else {
+									if (val === "[" || val === "]")
+										count += val === "[" ? 1 : -1;
+									tree.add(v);
+								}
+							}
+							else if (tag === "struct") {
+								if (val === ">" && code[i+1] === ">") {
+									i++;
+									tree.close().close();
+								} else {
+									tree.add(val);
+								}
+							}*/
+							console.log(tree.valueOf());
+						};
+						tree.finish();
+						return null;
+
+
+
+
+
+
+
+
+
+
+
+
+						return;
 						tree.open("wd").open("object");
 
 						for (let i = 0; i < code.length; i++) {
@@ -2483,6 +2721,9 @@ const wd = (function() {
 								else if (i < code.length)
 									tree.open("property").open("name").add(val);
 							}
+
+
+
 							else if (tag === "property") {
 								tree.open("name").add(val);
 							}
@@ -2574,6 +2815,8 @@ const wd = (function() {
 							}
 						};
 						tree.finish();
+						console.log(tree.valueOf());
+
 						const parser = new __Parser(tree.valueOf());
 						const html   = parser.stringHTML.get();
 						const object = html.querySelectorAll("object");
@@ -3335,8 +3578,6 @@ const wd = (function() {
 			_value:   {writable: true,  value: []},
 			_flags:   {writable: false, value: "/^(TODO|FIXME|OPTIMIZE|HACK|REVIEW)\ /"}
 		});
-		for (let i in this._number)
-			this._number[i].close = this._ends.value;
 		return;
 	}
 
@@ -3476,7 +3717,7 @@ const wd = (function() {
 		clear: {
 			value: function() {
 				const name = {_comment: [], _string: [], _word: [], _value: []};
-				for (let i in name) this[i] = data[i];
+				for (let i in name) this[i] = name[i];
 				this._frames.linear = null;
 				return;
 			}
