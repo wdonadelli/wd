@@ -2466,29 +2466,57 @@ const wd = (function() {
 				let data = null;
 				try {
 					if (this._check.chars) {
-						const attr     = this._data.trim().replace(/\&+$/, "")+"&";
-						const code     = attr.split("");
-						const last     = code.length;
-						const message  = `The \"dataset\" attribute notation was rejected: ${this._data}`;
-						const error    = function(x) {console.info(`${message} (${x})`); return null;}
-						const reObject = /^([^&(){}<>\[\]\ \t\n]+)(\{[/']|[({<\[])/;
+						/*-- valores --*/
+						const attr  = this._data.trim().replace(/\&+$/, "")+"&";
+						const code  = attr.split("");
+						const last  = code.length;
+						const msg   = `Rejected "data" attribute: ${this._data}`;
+						const reobj = /^([^&({<\[]+)([{(<\[])/;
+						/*-- funções --*/
+						const error    = function(x) {console.info(`${msg} (${x})`); return null;}
 						const getData  = function(str) {
-							const data = ["undefined", "null", "true", "false"];
+							const data = ["null", "true", "false"];
 							const val  = String(str).trim();
 							const lang = data.indexOf(val) >= 0;
 							const test = new __Type(str);
 							return lang || test.finite ? val : `"${str}"`;
 						};
-
+						const adjust  = function(item) {
+							const check = new __Type(item);
+							if (check.array) {
+								for (let i = 0; i < item.length; i++)
+									item[i] = adjust(item[i]);
+							}
+							else if (check.object) {
+								for (let i in item) {
+									if (i === "$" || i === "$$")
+										item[i] = new __Query(item[i])[i];
+									else
+										item[i] = adjust(item[i]);
+								}
+							}
+							else if (check.string) {
+								const reRE = /^\/(.+)\/([gim]+)?$/;
+								const fre  = /^window\[\"([^\]]+)\"\]$/;
+								if (reRE.test(item))
+									item =  new RegExp(item.replace(reRE, "$1"), item.replace(reRE, "$2"));
+								else if (fre.test(item))
+									item = window[item.replace(fre, "$1")];
+							}
+							return item;
+						};
 						/*-- construir atributo --*/
-						const tree = new __Tree();
-						tree.xml = true;
-						tree.open("wd").add("[").open("struct");
 						let tag, val, txt, index = 0;
 
-						//for (let i = 0; i < code.length; i++) {
-						while (index < last) {
+						const tree = new __Tree();
+						tree.xml = true;
+						/*-- Abrir agrupador de estruturas e seu primeiro item --*/
+						tree.add("[").open("wd");
 
+
+
+						while (index < last) {
+							/*-- valores gerais --*/
 							val = code[index];
 							tag = tree.level;
 							txt = attr.slice(index);
@@ -2496,61 +2524,96 @@ const wd = (function() {
 							console.log(tree.valueOf());
 							console.log({i: index, val: val, tag: tag, txt: txt.slice(index, index+10)});
 
-
-							if (tag === "struct") {
-								if (reObject.test(txt)) {
-									tree.open("object").add("{");
+							if (tag === "wd") {
+								if (reobj.test(txt)) {
+									tree.add("{").open("struct");
+								}
+								else if (index === (last - 1)) {
+									tree.close().add("]");
+									index++;
 								}
 								else if (val === "&") {
-									if (index === (last - 1))
-										tree.add("]").close();
-									else
-										tree.open("comma").add(", ").close().close().open("struct");
+									tree.open("comma").add(", ").close();
 									index++;
 								}
 								else {
-									return error("attribute structure");
+									return error("unstructured attribute");
 								}
 							}
-
-							else if (tag === "object") {
-								if (reObject.test(txt)) {
-									/*-- definir nome --*/
-									let find = txt.match(reObject)[0];
-									let name = find.replace(reObject, "$1").trim().replace(/\s+/g, "_");
-									let symb = find.replace(reObject, "$2");
-									if (name === "") return error("name property");
-									tree.open("data").open("name").add(`"${name}": `).close();
-									index += find.length;
-									/*-- definir tipo --*/
+							else if (tag === "struct" || tag === "object") {
+								if (reobj.test(txt)) {
+									/*-- extrair nome e tipo de propriedade e tamanho ocupado --*/
+									let find = txt.match(reobj)[0];
+									let name = find.replace(reobj, "$1").trim().replace(/\s+/g, "_");
+									let symb = find.replace(reobj, "$2");
+									index   += find.length;
+									/*-- definindo o tipo --*/
 									switch(symb) {
-										case "{":  {tree.open("value"); break;}
-										case "(":  {tree.open("function"); break;}
-										case "[":  {tree.open("array").add(symb); break;}
-										case "<":  {tree.open("object").add(symb); break;}
-										case "{'": {tree.open("string"); break;}
-										case "{/": {tree.open("regexp"); break;}
-										default:   return error("type property");
-									};
-									/*-- definir valor simplificado --*/
-									if (tree.level === "value") {
-										let find = attr.slice(index).split("}")[0];
-										tree.add(getData(find)).close();
-										index += find.length;
+										case "{": {tree.open("value");           break;}
+										case "(": {tree.open("function");        break;}
+										case "<": {tree.add("{").open("object"); break;}
+										case "[": {tree.add("[").open("array");  break;}
+										default:  {return error("property type not found");}
 									}
+									/*-- definindo o nome --*/
+									if (name === "")
+										return error("empty property name");
+									if ((name === "$" || name === "$$") && tree.level !== "value")
+										return error("name not allowed for type");
+									tree.open("comma").add(", ").close();
+									tree.open("name").add(`"${name}": `).close();
+								}
+								else if (tag === "object" && val === ">") {
+									tree.close().add("}");
+									index++;
+								}
+								else if (tag === "struct" && (val === "&" || index === last - 1)) {
+									tree.close().add("}");
 								}
 								else {
-									tree.add("}").close();
+									return error("unstructured property");
 								}
 							}
-
-							else if (tag === "data") {
-								let end = /[})>\]]/;
-								if (!end.test(val)) return error("property closing");
-								tree.open("comma").add(", ").close().close();
-								index++;
+							else if (tag === "value" || tag === "item") {
+								let reStr = /^(\s+)?\'/;
+								let reRE  = /^(\s+)?\//;
+								let lang = ["null", "true", "false"];
+								if (reStr.test(txt)) {
+									let find = txt.match(reStr)[0];
+									tree.open("string");
+									index += find.length;
+								}
+								else if (reRE.test(txt)) {
+									let find = txt.match(reRE)[0];
+									tree.open("regexp");
+									index += find.length;
+								}
+								else if (tag === "value" && val === "}") {
+									tree.close();
+									index++;
+								}
+								else if (tag === "item" && (val === "," || val === "]")) {
+									tree.close();
+								}
+								else if (tag === "value") {
+									let find = txt.split("}")[0];
+									let item = lang.indexOf(find.trim());
+									tree.add(item >= 0 ? lang[item] : `"${find}"`);
+									index += find.length;
+								}
+								else if (tag === "item") {
+									let end  = txt.split("]")[0];
+									let div  = txt.split(",")[0];
+									let cut  = end.length < div.length ? end : div;
+									let find = txt.split(div)[0];
+									let item = lang.indexOf(find.trim());
+									tree.add(item >= 0 ? lang[item] : `"${find}"`);
+									index += find.length;
+								}
+								else {
+									return error(`invalid ${tag}`);
+								}
 							}
-
 							else if (tag === "string") {
 								let str = [];
 								let end = false;
@@ -2576,7 +2639,7 @@ const wd = (function() {
 								let reRE = /^.+[^\\]\/([igm]+)?/;
 								let find = txt.match(reRE);
 								let data = find === null ? null : find[0].replace(/\\/g, "\\\\");
-								if (data === null) return error("type property");
+								if (data === null) return error("invalid regular expression;");
 								tree.add(`"/${data}"`).close();
 								index += find[0].length;
 							}
@@ -2585,43 +2648,23 @@ const wd = (function() {
 								let name = txt.split(")")[0];
 								let type = typeof window[name] === "function";
 								tree.add(type ? `"window[\\"${name}\\"]"` : "null").close();
-								index += name.length;
+								index += name.length+1;
 							}
 
 							else if (tag === "array") {
-								if (val === "]")
-									tree.add("]").close();
-								else
-									tree.open("item");
-							}
-
-							else if (tag === "item") {
 								let init = /^(\s+)?\S/;
 								let find = txt.match(init);
-								let char = find === null ? "" : find[0].trim();
-								if (char === "") return error("empty item");
+								let char = find === null ? null : find[0].trim();
+								if (char === null) return error("empty item");
 								switch(char) {
-									case ",": {tree.close().open("comma").add(", ").close().open("item"); break;}
-									case "]": {tree.close(); break;}
-									case "'": {tree.open("string"); break;}
-									case "/": {tree.open("regexp"); break;}
-									case "<": {tree.open("object").add("{"); break;}
+									case "]": {tree.close().add("]"); break;}
+									case ",": {tree.open("comma").add("]").close(); break;}
 									case "(": {tree.open("function"); break;}
-									case ">": {break;}
-									default:  {tree.open("value");}
+									case "<": {tree.add("{").open("object"); break;}
+									case "[": {tree.add("[").open("array"); break;}
+									default:  {tree.open("item");}
 								}
-								if (tree.level === "value") {
-									let item = txt.split(",")[0];
-									let end  = txt.split("]")[0];
-									let div  = end.length <= item.length ? "]" : ",";
-									let data = txt.split(div)[0];
-									let info = getData(data);
-									tree.add(info).close();
-									index += data.length;
-								}
-								else {
-									index += find[0].length + (char === "]" ? -1 : 0);
-								}
+								index += init;
 							}
 							else {
 								return error("incomplete process");
@@ -2632,8 +2675,9 @@ const wd = (function() {
 						console.log(tree.valueOf());
 						/*-- Ajustando dados --*/
 						const pre     = document.createElement("pre");
-						const css     = "object > data:last-child > comma, struct > data:last-child > comma";
+						const css     = "object > *:first-child > comma, struct *:first-child > comma"
 						pre.innerHTML = tree.valueOf();
+						document.body.innerHTML = pre.outerHTML;
 						const query   = pre.querySelectorAll(css);
 						for (let i = 0; i < query.length; i++)
 							query[i].remove();
@@ -2645,48 +2689,10 @@ const wd = (function() {
 							return error("unknown error");
 						}
 						console.log(json);
-						const adjust = function(item) {
-							const check = new __Type(item);
-							if (check.array) {
-								for (let i = 0; i < item.lenght; i++)
-									adjust(item[i]);
-							}
-							else if (check.object) {
-								for (let i in item) {
-									if (i === "$")
-										item[i] = document.querySelector(item[i]);
-									else if (i === "$$")
-										item[i] = document.querySelectorAll(item[i]);
-									else
-										item[i] = adjust(item[i]);
-								}
-							}
-							else if (check.string) {
 
 
 
-
-
-							}
-
-
-
-
-							}
-
-
-
-
-						}
-
-
-						for (let i = 0; i < json.length; i++) {
-
-
-
-
-
-						}
+						console.log(adjust(json))
 
 
 
