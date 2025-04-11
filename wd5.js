@@ -2444,219 +2444,8 @@ const wd = (function() {
 				return this.stringSVG;
 			}
 		},
-		/**. ``''object'' wdArray``: Transforma notação wd em array de objetos.
-		. Trata-se de uma notação específica para o atributo HTML dataset que subsidiará o comportamento das ferramentas da biblioteca.
-		. O valor do atributo corresponde a uma lista cujos itens são separados pelo caractere &amp;.
-		. Cada item da lista corresponde a um objeto organizado em propriedades contendo nome e valor.
-		. O nome da propriedade é definido por caracteres alfanuméricos, traços ou sublinhados.
-		. O tipo da propriedade é definido pelo caractere seguinte ao nome (início do escopo).
-		. O valor da propriedade fica delimitado pelo escopo dos caracteres que definem seu tipo:
-		|Escopo|Tipo|Descrição|
-		|{ }|Valor|String, números, nulo, boleano ou expressão regular.|
-		|[ ]|Lista|Lista de valores com itens separados por vírgulas.|
-		|( )|Função|Faz referência ao nome da função dentro do escopo de ``window``.|
-		|&lt; &gt;|Objeto|Define um objeto.|
-		. Por padrão, todo valor informado dentro dos escopos {} e [] são strings, exceto se definido como  ``null``, ``true``, ``false``, números ou expressão regular.
-		. Caso seja necessário informar o caractere de ecerramento de escopo como valor da propriedade, deve-se blindar o conteúdo com apóstrofos (&apos;) sem deixar espaços em branco antes ou depois das aspas. O mesmo procedimento deve ser feito caso queira tratar, por exemplo, o valor "true" como string no lugar de boleano. Um apóstrofo interno é definido escapando-o com barra invertida dupla (&bsol;&bsol;&apos;).
-		. Para ser uma expressão regular, o valor deve começar e terminar com caracteres de barra (&sol;), aceitando as bandeiras "gim" ao término da barra final.
-		. O valor de função deve corresponder ao nome de uma função presente dentro do escopo ''window'' (defindo pelas palavras-chave ''var'' ou ''function'') não sendo necessário aspas. Caso não encontrada uma função, o valor será definido como ``null``.
-		|Exemplos|Atributo|
-		|Lista contendo um item|nome1{valor1}|
-		|Lista contendo dois itens|nome1{valor1}&nome2{valor2}|
-		|Escopo de valor|padrao{padrao}string{'string'}valor{null}numero{123.2}re{/[a-z]+/i}|
-		|Escopo de lista|lista[padrao,'string',null,123.2,/[a-z]+/i]|
-		|Escopo de função|nome(function1)lista[(function2),(function3)]|
-		|Escopo de objeto|nome&lt;nome1{valor1}nome2{valor2}&gt;|
-		|Lista de objetos|nome[&lt;nome1{valor1}nome2{valor2}&gt;,&lt;nome3{valor3}&gt;]|
-		|Lista de listas|nome[1,[1,2,3],[a,b,c]]|
-		|Strings|boolean{true}string{'true'}char{'char }'}apos{'abc\\'def'}|
-		. Utilizando os caracteres "&dollar;" e "&dollar;&dollar;" como nome de propriedade do tipo valor ({}), é possível informar um nó ou um conjunto de nós HTML, respectivamente, pelo seletor CSS informado (''${div}$${input}''). Se ambos forem informado, a propriedade "&dollar;&dollar;" é prevalente.
-		. É possível referenciar uma lista de objetos por meio do nome de uma variável definida por ``var`` adicionando o caractere &num; ao início do nome (''&num;nome''), diminuindo o cadeia de caracteres a ser informada no atributo HTML data, permitindo que os limites da notação sejam ampliados para qualquer tipo de valor.**/
-		wdArray: {
-			get: function() {
-				if ("wdArray" in this._saved)
-					return new __Parser(this._saved.wdArray);
-				let data = null;
-				try {
-					if (this._check.chars) {
-						/*-- por referência --*/
-						if (this._data.trim()[0] === "#") {
-							const name  = this._data.trim().replace("#", "");
-							const test1 = new __Type(window[name]);
-							if (!test1.array) throw new Error("Incompatible value");
-							for (let i = 0; i < test1.value.length; i++) {
-								let test2 = new __Type(test1.value[i])
-								if (!test2.object) throw new Error("Incompatible value");
-							}
-							data = test1.value;
-						}
-						/*-- por atributo --*/
-						else {
-							const attr  = this._data.trim().replace(/\&+$/, "")+"&";
-							const code  = attr.split("");
-							const last  = code.length;
-							const reobj = /^([a-z0-9_\-]+[{(<\[]|\$\$?\{)/i;
-							const parse = function(item) {
-								const check = new __Type(item);
-								if (check.array) {
-									for (let i = 0; i < item.length; i++)
-										item[i] = parse(item[i]);
-								}
-								else if (check.object) {
-									for (let i in item) {
-										if (i === "$" || i === "$$")
-											item[i] = new __Query(item[i])[i];
-										else
-											item[i] = parse(item[i]);
-									}
-								}
-								else if (check.string) {
-									const reRE = /^\/(.+)\/([gim]+)?$/;
-									const fre  = /^window\[\"([^\]]+)\"\]$/;
-									if (reRE.test(item))
-										item =  new RegExp(item.replace(reRE, "$1"), item.replace(reRE, "$2"));
-									else if (fre.test(item))
-										item = window[item.replace(fre, "$1")];
-								}
-								return item;
-							};
-							/*-- construir atributo ------------------------------------------*/
-							let tag, val, txt, index = 0, count = 0;
-							const tree = new __Tree();
-							tree.xml = true;
-							tree.add("[").open("wd");
-							/*----------------------------------------------------------------*/
-							while (index < last && (++count < 2*last)) {
-								val = code[index];
-								tag = tree.level;
-								txt = attr.slice(index);
-								/*--------------------------------------------------------------*/
-								if (tag === "wd") {
-									if (reobj.test(txt)) {
-										tree.add("{").open("struct");
-									}
-									else if (index === (last - 1)) {
-										tree.close().add("]");
-										index++;
-									}
-									else if (val === "&") {
-										tree.add(", ");
-										index++;
-									}
-								}
-								/*--------------------------------------------------------------*/
-								else if (tag === "struct" || tag === "object") {
-									if (reobj.test(txt)) {
-										/*-- extrair nome e tipo de propriedade e tamanho ocupado --*/
-										let find = txt.match(reobj)[0];
-										let name = find.slice(0,find.length-1);
-										let symb = find.slice(-1);
-										/*-- definindo o nome e o tipo do valor --*/
-										tree.open("comma").add(", ").close();
-										tree.open("name").add(`"${name}": `).close();
-										switch(symb) {
-											case "(": {tree.open("function");        break;}
-											case "<": {tree.add("{").open("object"); break;}
-											case "[": {tree.add("[").open("array");  break;}
-											case "{": {tree.open("value");           break;}
-										}
-										index += find.length;
-									}
-									else if (tag === "object" && val === ">") {
-										tree.close().add("}");
-										index++;
-									}
-									else if (tag === "struct" && (val === "&" || index === last - 1)) {
-										tree.close().add("}");
-									}
-								}
-								/*--------------------------------------------------------------*/
-								else if (tag === "array") {
-									switch(val) {
-										case ",":  {tree.add(", ");        index++; break;}
-										case "]":  {tree.close().add("]"); index++; break;}
-										case "(":  {tree.open("function"); index++; break;}
-										case "<":  {tree.add("{").open("object"); index++; break;}
-										case "[":  {tree.add("[").open("array");  index++; break;}
-										default:   {tree.open("item");}
-									}
-								}
-								/*--------------------------------------------------------------*/
-								else if (tag === "value" || tag === "item") {
-									const isLang = {
-										item:  /^(null|true|false)(\,|\])/,
-										value: /^(null|true|false)(\})/,
-									};
-									const isRe = {
-										item:  /^(\/.*[^\\]\/[gim]*)(\,|\])/,
-										value: /^(\/.*[^\\]\/[gim]*)(\})/
-									};
-									const isStr = {
-										item:  /^\'(|.*[^\\])\'(\,|\])/,
-										value: /^\'(|.*[^\\])\'(\})/
-									};
-									const isAny = {
-										item:  /^([^,\]]+)?(\,|\])/,
-										value: /^([^}]+)?(\})/
-									};
-									const delta = tag === "item" ? -1 : 0;
-									if (isLang[tag].test(txt)) {
-										let find = txt.match(isLang[tag])[0];
-										let text = find.replace(isLang[tag], "$1");
-										tree.add(text).close();
-										index += find.length + delta;
-									}
-									else if (isRe[tag].test(txt)) {
-										let find = txt.match(isRe[tag])[0];
-										let text = find.replace(isRe[tag], "$1");
-										tree.add(`"${text}"`).close();
-										index += find.length + delta;
-									}
-									else if (isStr[tag].test(txt)) {
-										let find = txt.match(isStr[tag])[0];
-										let text = find.replace(isStr[tag], "$1").replace(/\"/g, "\\\"");
-										tree.add(`"${text}"`).close();
-										index += find.length + delta;
-									}
-									else if (isAny[tag].test(txt)) {
-										let find = txt.match(isAny[tag])[0];
-										let text = find.replace(isAny[tag], "$1").replace(/\"/g, "\\\"");
-										let test = new __Type(find.replace(isAny[tag], "$1"));
-										let done = test.finite ? test.toString() : `"${text}"`;
-										tree.add(done).close();
-										index += find.length + delta;
-									}
-								}
-								/*--------------------------------------------------------------*/
-								else if (tag === "function") {
-									let name = txt.split(")")[0];
-									let type = typeof window[name] === "function";
-									tree.add(type ? `"window[\\"${name}\\"]"` : "null").close();
-									index += name.length+1;
-								}
-							}
-							/*----------------------------------------------------------------*/
-							/*-- fechando a árvore --*/
-							tree.finish();
-							/*-- ajustando vírgulas --*/
-							const pre     = document.createElement("pre");
-							pre.innerHTML = tree.valueOf();
-							const css     = "struct > comma:first-child, object > comma:first-child";
-							const query   = pre.querySelectorAll(css);
-							for (let i = 0; i < query.length; i++) query[i].remove();
-							/*-- transformando em JSON e ajustando-o --*/
-							const json = JSON.parse(pre.innerText);
-							data = parse(json);
-						}
-					}
-				} catch(e) {
-					console.info(`Rejected dataset attribute: ${this._data}`);
-					data = null;
-				}
-				this._saved["wdArray"] = data;
-				return this.wdArray;
-			}
-		},
+
+
 
 
 
@@ -2724,47 +2513,59 @@ const wd = (function() {
 
 
 
-		/**. ``''object'' wdNotation``: Transforma dados em string URL.**/
-		wdNotation: {
+		/**. ``''object'' wdArray``: Transforma notação wd em um array de objetos.
+		. A notação é semelhante a JSON com as seguintes diferenças:
+		- o nome das propriedades do objeto não contem aspas;
+		- o nome das propriedades do objeto podem conter apenas caracteres alfanuméricos, traços e sublinhados;
+		- as propriedades do objeto são separadas por ponto e vírgula;
+		- strings são delimitadas por aspas simples;
+		- uma aspa simples dentro da string é representadas por duas aspas simples em sequência;
+		- expressão regulares são permitidas em objetos e arrays;
+		- a notação para expressão regular é semelhante à primitiva, os escapes devem ser duplos;
+		- um erro na expressão regular tornará seu valor nulo;
+		- funcões dentro do escopo de window, definidas com ''var'' e ''function'', são permitidas em objetos e arrays;
+		- para referenciar a função, seu nome deve estar entre parenteses;
+		- se a função não for encontrada, seu valor será nulo; e
+		- por padrão, todos os valores são strings, exceto números, null, true e false.
+		. Há dois nomes de propriedades especiais, &dollar; e &dollar;&dollar;. Seus valores representam um seletor CSS que recuperará o elemento ou a lista de elementos, respectivamente. Se não encontrado elementos, um NodeList vazio será definido.
+		. O valor sempre será um array de objetos. Se o array conter apenas um item, não é preciso adicionar os caracteres de abertura e fechamento do objeto.
+		. É possível fazer referência a um array de objetos definido no escopo de window informando o caractere &num; seguido do nome da variável.**/
+		wdArray: {
 			get: function() {
-				if ("wdNotation" in this._saved)
-					return new __Parser(this._saved.wdNotation);
+				if ("wdArray" in this._saved)
+					return new __Parser(this._saved.wdArray);
 				let data = null;
 				try {
-					//"{value:123;str:'loko'}{re:/[0-9]/i;list[{}]}"
-
 					if (this._check.string) {
+						const tags = /^\{.*\}$/;
 						const note = this._data.trim();
-						const code = (`[${note}]`).split("");
+						const code = ("[" + (tags.test(note) ? note : `{${note}}`) + "]").split("");
 						const last = code.length;
-						const font = {
-							note: /^\{.*\}$/,
-							name: /^\s*([a-z0-9_\-]+)\s*\:\s*(\S)/i,
-							list: /^\s*(\S)/,
-							endO: /^\s*\;?(\s*[;}])+\s*/,
-							endL: /^\s*\,?(\s*[,\]])+\s*/,
-							lang: /^(true|false|null)$/,
-							func: /^\(([^)]+)\)\s*/,
-							str:  /^\'.*/,
+						/*----------------------------------------------------------------*/
+						if ((/^\#.+$/).test(note)) {
+							let list  = window[note.replace("#", "")];
+							let check = new __Type(list);
+							if (!check.array) throw new Error("Array not found.");
+							for (let i = 0; i < list.length; i++) {
+								let test = new __Type(list[i])
+								if (!test.object) throw new Error("Invalid item.");
+							}
+							this._saved["wdArray"] = list;
+							return this.wdArray;
 						}
-						if (!font.note.test(note))
-							throw new Error("Value without opening or closing object character");
+						/*----------------------------------------------------------------*/
 						let tag, val, txt;
-						let find, data, walk, name, test;
+						let find, rate, walk, name, test;
 						let index = 0, count = 0;
 						const tree = new __Tree();
 						tree.xml = true;
 						tree.open("wd");
 						/*----------------------------------------------------------------*/
-						while (index < last && (++count < 2*last)) {
+						while (index < last && (++count < 2*last)) {console.log(tree.valueOf())
 							val = code[index];
 							tag = tree.level;
 							txt = code.slice(index).join("");
-
-							console.log({
-								i: index, val: val, tag: tag, txt: txt.slice(0, 5),
-							})
-
+							/*--------------------------------------------------------------*/
 							if (tag === "wd") {
 								if (index === 0)
 									tree.add("[").open("array");
@@ -2772,23 +2573,25 @@ const wd = (function() {
 									tree.close();
 								index += index === 0 ? 1 : last;
 							}
+							/*--------------------------------------------------------------*/
 							else if (tag === "array") {
-								data = null;
-								if (font.endL.test(txt)) {
-									find = txt.match(font.endL);
-									data = find[0].trim().slice(-1);
+								let reItem = /^\s*(\S)/;
+								let reNext = /^\s*(\,\s*\]|\,|\])/;
+								rate = null;
+								if (reNext.test(txt)) {
+									find = txt.match(reNext);
+									rate = find[0].trim().slice(-1);
 									walk = find[0].length;
 								}
-								else if (font.list.test(txt)) {
-									find = txt.match(font.list);
-									data = find[0].trim();
+								else if (reItem.test(txt)) {
+									find = txt.match(reItem);
+									rate = find[0].trim();
 									walk = find[0].length;
 								}
-								console.log("----", data)
-								switch(data) {
-									case null: {throw new Error("List with undefined item.");}
+								switch(rate) {
+									case null: {throw new Error("array: invalid notation.");}
 									case ",":  {tree.add(", "); break;}
-									case "]":  {tree.close("array").add("]"); break;}
+									case "]":  {tree.close().add("]"); break;}
 									case "[":  {tree.add("[").open("array");  break;}
 									case "{":  {tree.add("{").open("object"); break;}
 									case "/":  {tree.open("regexp");   walk--; break;}
@@ -2798,26 +2601,29 @@ const wd = (function() {
 								}
 								index += walk;
 							}
+							/*--------------------------------------------------------------*/
 							else if (tag === "object") {
-								data = null;
-								if (font.endO.test(txt)) {
-									find = txt.match(font.endO);
-									data = find[0].trim().slice(-1);
+								let reName = /^\s*([a-z0-9_\-]+|\$\$?)\s*\:\s*(\S)/i;
+								let reNext = /^\s*(\;\s*\}|\;|\})/;
+								rate = null;
+								if (reNext.test(txt)) {
+									find = txt.match(reNext);
+									rate = find[0].trim().slice(-1);
 									walk = find[0].length;
 								}
-								else if (font.name.test(txt)) {
-									find = txt.match(font.name);
-									name = find[0].replace(font.name, "$1");
-									data = find[0].replace(font.name, "$2");
+								else if (reName.test(txt)) {
+									find = txt.match(reName);
+									name = find[0].replace(reName, "$1");
+									rate = find[0].replace(reName, "$2");
 									walk = find[0].length;
 									tree.add(`"${name}": `);
 								}
-								switch(data) {
-									case null: {throw new Error("List with undefined data.");}
+								switch(rate) {
+									case null: {throw new Error("object: invalid notation.");}
 									case ";":  {tree.add(", "); break;}
-									case "}":  {tree.close("object").add("}"); break;}
-									case "{":  {tree.add("{").open("object");  break;}
-									case "[":  {tree.add("[").open("array"); break;}
+									case "}":  {tree.close().add("}"); break;}
+									case "{":  {tree.add("{").open("object"); break;}
+									case "[":  {tree.add("[").open("array");  break;}
 									case "/":  {tree.open("regexp");   walk--; break;}
 									case "'":  {tree.open("string");   walk--; break;}
 									case "(":  {tree.open("function"); walk--; break;}
@@ -2825,91 +2631,116 @@ const wd = (function() {
 								}
 								index += walk;
 							}
-							else if (tag === "value" || tag === "item") {
+							/*--------------------------------------------------------------*/
+							else if (tag === "item" || tag === "value") {
+								let lang = /^(true|false|null)$/;
 								let div  = tag === "item" ? /^[^,\]]+/ : /^[^;}]+/;
 								find = txt.match(div);
-								data = find === null ? null : find[0].trim();
-								test = new __Type(data);
+								rate = find === null ? null : find[0].trim();
+								test = new __Type(rate);
 								walk = find === null ? last : find[0].length;
-								test = new __Type(data);
-								if (data === null)
-									throw new Error(`The ${tag} was not identified.`);
+								test = new __Type(rate);
+								if (rate === null)
+									throw new Error(`${tag}: unidentified data.`);
 								else if (test.finite)
 									tree.add(test.toString()).close(tag);
-								else if (font.lang.test(data))
-									tree.add(data).close(tag);
+								else if (lang.test(rate))
+									tree.add(rate).close(tag);
 								else
-									tree.add(`"${data}"`).close(tag);
+									tree.add(`"${rate}"`).close(tag);
 								index += walk;
 							}
+							/*--------------------------------------------------------------*/
 							else if (tag === "function") {
-								find = txt.match(font.func);
-								data = find === null ? null : find[0].replace(font.func, "$1").trim();
+								let reName = /^\(([^)]+)\)/
+								find = txt.match(reName);
+								rate = find === null ? null : find[0].replace(reName, "$1").trim();
 								walk = find === null ? last : find[0].length;
-								test = new __Type(window[data]);
-								if (data === null)
-									throw new Error("Invalid function notation.");
+								test = new __Type(window[rate]);
+								if (rate === null)
+									throw new Error("function: invalid notation.");
 								else if (test.function)
-									tree.add(`"@function:${data}"`).close();
+									tree.add(`"@function:${rate}"`).close();
 								else
 									tree.add("null").close();
 								index += walk;
 							}
+							/*--------------------------------------------------------------*/
 							else if (tag === "string") {
-								test = "\r\r";
-								find = txt.slice(1).replace(/\'\'/g, test);
-								data = find.split("'")[0];
-								walk = data.length;
-								console.log(find, data)
-								while (data.indexOf(test) >= 0)
-									data = data.replace(test, "'");
-								tree.add(`"${data}"`).close();
-								index += walk+1;
-
-
-
-								/*find = txt.match(font.str);
-								data = find === null ? null : find[0].trim().replace(font.str, "$1");
-								walk = find === null ? last : find[0].length;
-								if (data === null)
-									throw new Error("Invalid string notation.");
-								else
-									tree.add(`"${data}"`).close();
-								index += walk;*/
+								rate = [];
+								find = false;
+								while(++index < last && !find) {
+									if (code[index] === "'") {
+										if (code[index+1] !== "'")
+											find = true;
+										else
+											rate.push(code[++index]);
+									}
+									else {
+										rate.push(code[index].replace(`"`, `\\"`));//FIXME quebra de página não dá certo
+									}
+								}
+								tree.add(`"${rate.join("")}"`).close();
 							}
-
-
-
-
-
-
+							/*--------------------------------------------------------------*/
+							else if (tag === "regexp") {
+								let reRegex = /^\/.*[^\\]\/[gim]*/;
+								find = txt.match(reRegex);
+								rate = find === null ? null : find[0];
+								walk = find === null ? last : find[0].length;
+								if (rate === null)
+									throw new Error("regexp: invalid notation.");
+								else
+									tree.add(`"@regexp:${rate}"`).close();
+								index += walk;
+							}
 						}
+						/*--------------------------------------------------------------*/
 						tree.finish();
-						console.log(tree.valueOf());
 						const pre = document.createElement("pre");
 						pre.innerHTML = tree.valueOf();
-						document.querySelector("main").appendChild(pre);
-
-
-
+						let json;
+						try {json = JSON.parse(pre.innerText);}
+						catch(e) {throw new Error(`JSON: conversion unsuccessful ${pre.innerText}`);}
+						/*--------------------------------------------------------------*/
+						const parse = function(item) {
+							const check = new __Type(item);
+							if (check.array) {
+								for (let i = 0; i < item.length; i++)
+									item[i] = parse(item[i]);
+							}
+							else if (check.object) {
+								for (let i in item) {
+									if (i === "$" || i === "$$")
+										item[i] = new __Query(item[i])[i];
+									else
+										item[i] = parse(item[i]);
+								}
+							}
+							else if (check.string) {
+								if ((/^\@function\:/).test(item)) {
+									let name = item.replace("@function:", "");
+									item = window[name];
+								}
+								else if ((/^\@regexp\:/).test(item)) {
+									let re  = /^\/(.*[^\\])\/([gim])*/;
+									let val = item.replace("@regexp:", "");
+									try {item = new RegExp(val.replace(re, "$1"), val.replace(re, "$2"));}
+									catch(e) {item = null;}
+								}
+							}
+							return item;
+						};
+						data = parse(json);
 					}
 				}
 				catch(e) {
-					console.info(`Notation rejected: ${this._data}\n${e}`)
-
+					console.info(`${this._data}\n${e.message}`)
 				}
-				this._saved["wdNotation"] = data;
-				return this.wdNotation;
+				this._saved["wdArray"] = data;
+				return this.wdArray;
 			}
 		},
-
-
-
-
-
-
-
-
 		/**. ``''object'' fileURL``: Transforma dados em string URL.**/
 		fileURL: {
 			get: function() {

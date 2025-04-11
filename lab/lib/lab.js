@@ -40,10 +40,10 @@ function loadTable(elem, target) {
 function openPage(x) {
 	localStorage.setItem("page", x);
 	wd.$$("#renderCode").set({
-		dataset: {wdLoad: "url{"+x+"}method{get}_script{true}"}
+		dataset: {wdLoad: `{url:${x};method:get;_script:true}`}
 	});
 	wd.$$("#sourceCode").set({
-		dataset: {wdLoad: "url{"+x+"}method{get}_text{true}"}
+		dataset: {wdLoad: `{url:${x};method:get;_text:true}`}
 	});
 	return;
 }

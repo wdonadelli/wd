@@ -1,12 +1,12 @@
 	<script>
-function c() {
-	return {
+var c = [
+	{
 		reserved: ("asm auto break case char const continue default do double else enum extern float for goto if int long register return short signed sizeof static struct switch typedef union unsigned void volatile while #define #include").split(" "),
 		value: [],
 		comment: ("// \n /* */").split(" "),
 		string: ("' ' \" \"").split(" ")
-	};
-}
+	}
+]
 
 function python() {
 	return {
@@ -20,7 +20,7 @@ function python() {
 
 	<h3>Linear</h3>
 
-	<pre data-wd-code="value{undefined null false true}word{let const value return function typeof if else}string{&quot; &quot; ` ` ' '}comment{// &NewLine; /* */}editable{true}">
+	<pre data-wd-code="{value: undefined null false true;word:let const value return function typeof if else;string:'&quot; &quot; ` ` '' ''';comment:'// &NewLine; /* */';editable:true}">
 /* comentário */
 // TODO FIXME comentário
 function find(x) {
@@ -31,7 +31,7 @@ function find(x) {
 
 	<h3>Markup</h3>
 
-	<textarea data-wd-code="lines{false}">
+	<textarea data-wd-code="{lines:false}">
 <!DOCTYPE html>
 <html>
  <head>
