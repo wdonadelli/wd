@@ -2192,9 +2192,15 @@ const wd = (function() {
 				return this;
 			}
 		},
-		/**. ``''string'' toString()``: Retorna o resultado da árvore.**/
-		toString: {value: function() {return this._data.join("");}},
-		/**. ``''string'' valueOf()``: Como o método toString.**/
+		/**. ``''string'' toString()``: Retorna o conteúdo textual da árvore.**/
+		toString: {
+			value: function() {
+				const pre = document.createElement("PRE");
+				pre.innerHTML = this._data.join("");
+				return pre.innerText;
+			}
+		},
+		/**. ``''string'' valueOf()``: Retorna a estrutura (HTML) da árvore.**/
 		valueOf: {value: function() {return this._data.join("");}}
 	});
 
@@ -2444,14 +2450,6 @@ const wd = (function() {
 				return this.stringSVG;
 			}
 		},
-
-
-
-
-
-
-
-
 		/**. ``''object'' arrayWD``: Transforma array de objetos em notação wd.**/
 		arrayWD: {
 			get: function() {
@@ -2460,59 +2458,78 @@ const wd = (function() {
 				let data = null;
 				try {
 					if (this._check.array) {
-						const wd = [];
-						for (let object of this._data) {
-							let obj = [];
-							let qre = /\"/g;
-							for (let name in object) {
-								let value = object[name];
-								let ref   = __Type(value);
-								if (ref.function && value.name in window) {
-									obj.push(name, "(", value.name, ")");
-								}
-								else if (ref.array) {
-									let list  = []
-									let struct, item, text, isobj = true;
-									for (let a = 0; a < value.length; a++) {
-										item  = value[a];
-										text  = String(item);
-										isobj = isobj ? __Type(item).object : false;
-										if ((/[,"]/).test(text))
-											text = "'"+text.replace(qre, "''")+"'";
-										list.push(text);
-									}
-									if (isobj) {
-										struct = new __Parser(value);
-										text   = struct.arrayWD.get()
-										obj.push(name, "<<", text, ">>");
-									} else {
-										obj.push(name, "[", list.join(","), "]");
-									}
-								}
-								else if (ref.object) {
-									let struct = new __Parser([value]);
-									let text   = struct.arrayWD.get()
-									obj.push(name, "<<", text, ">>");
-								}
-								else {
-									let text = String(value);
-									if ((/\"/).test(text))
-										text = "'"+text.replace(qre, "''")+"'";
-									obj.push(name, "{",text, "}");
-								}
+						function parse(value, save, root) {
+							const check = new __Type(value);
+							/*--------------------------------------------------------------*/
+							if (check.chars) {
+								let item = value.replace(/\'/g, "''");
+								save.push(`'${item}'`);
 							}
-							wd.push(obj.join(""));
-						}
-						data = wd.join("&");
+							/*--------------------------------------------------------------*/
+							else if (check.regexp) {
+								save.push(value.toString());
+							}
+							/*--------------------------------------------------------------*/
+							else if (check.function) {
+								save.push(`(${value.name})`);
+							}
+							/*--------------------------------------------------------------*/
+							else if (check.array) {
+								save.push(root === true ? "" : "[");
+								for (let i = 0; i < value.length; i++) {
+									let test = root === true ? new __Type(value[i]) : {object: false};
+									if (root === true && !test.object)
+										throw new Error("Item is not an object.");
+									save.push(i > 0 ? "," : "");
+									save = parse(value[i], save, false);
+								}
+								save.push(root === true ? "" : "]");
+							}
+							/*--------------------------------------------------------------*/
+							else if (check.object) {
+								const re = /^([a-z0-9_\-]+|\$\$?)$/i;
+								let    n = 0;
+								save.push("{");
+								for (let i in value) {
+									let name = i.trim();
+									if (!re.test(name)) throw new Error("Invalid property name.");
+									save.push((n++ === 0 ? "" : ";")+name+":");
+									if (name === "$" || name === "$$") {
+										let test = new __Type(value[i]);
+										let node = test.node ? test.value : null;
+										if (node === null) throw new Error("Invalid property value.");
+										save.push("'");
+										for (let j = 0; j < node.length; j++) {
+											let id  = "#"+node[j].id.trim();
+											let tag = node[j].tagName.toLowerCase();
+											let css = node[j].className.trim().replace(/\s+/g, ".");
+											save.push(j > 0 ? "," : "");
+											save.push(id !== "#" ? id : (tag + (css === "" ? "" : ".") + css));
+										}
+										save.push("'");
+									}
+									else {
+										save = parse(value[i], save, false);
+									}
+								}
+								save.push("}");
+							}
+							/*--------------------------------------------------------------*/
+							else {
+								save.push(String(value));
+							}
+							/*--------------------------------------------------------------*/
+							return save;
+						};
+						/*----------------------------------------------------------------*/
+						const note = parse(this._data, [], true);
+						data = note.join("");
 					}
-				} catch(e) {console.log(e);}
+				} catch(e) {console.log(e.message);}
 				this._saved["arrayWD"] = data;
 				return this.arrayWD;
 			}
 		},
-
-
-
 		/**. ``''object'' wdArray``: Transforma notação wd em um array de objetos.
 		. A notação é semelhante a JSON com as seguintes diferenças:
 		- o nome das propriedades do objeto não contem aspas;
@@ -2537,23 +2554,26 @@ const wd = (function() {
 				let data = null;
 				try {
 					if (this._check.string) {
-						const tags = /^\{.*\}$/;
 						const note = this._data.trim();
-						const code = ("[" + (tags.test(note) ? note : `{${note}}`) + "]").split("");
-						const last = code.length;
 						/*----------------------------------------------------------------*/
 						if ((/^\#.+$/).test(note)) {
 							let list  = window[note.replace("#", "")];
 							let check = new __Type(list);
 							if (!check.array) throw new Error("Array not found.");
 							for (let i = 0; i < list.length; i++) {
-								let test = new __Type(list[i])
+								let test = new __Type(list[i]);
 								if (!test.object) throw new Error("Invalid item.");
 							}
 							this._saved["wdArray"] = list;
 							return this.wdArray;
 						}
 						/*----------------------------------------------------------------*/
+						const code = [
+							"[", note[0] === "{" ? "" : "{",
+							note,
+							note.slice(-1) === "}" ? "" : "}", "]"
+						].join("").split("");
+						const last = code.length;
 						let tag, val, txt;
 						let find, rate, walk, name, test;
 						let index = 0, count = 0;
@@ -2561,7 +2581,8 @@ const wd = (function() {
 						tree.xml = true;
 						tree.open("wd");
 						/*----------------------------------------------------------------*/
-						while (index < last && (++count < 2*last)) {console.log(tree.valueOf())
+						while (index < last) {
+							if (++count > 2*last) throw new Error("Many recursions.");
 							val = code[index];
 							tag = tree.level;
 							txt = code.slice(index).join("");
@@ -2618,6 +2639,7 @@ const wd = (function() {
 									walk = find[0].length;
 									tree.add(`"${name}": `);
 								}
+
 								switch(rate) {
 									case null: {throw new Error("object: invalid notation.");}
 									case ";":  {tree.add(", "); break;}
@@ -2647,7 +2669,7 @@ const wd = (function() {
 								else if (lang.test(rate))
 									tree.add(rate).close(tag);
 								else
-									tree.add(`"${rate}"`).close(tag);
+									tree.add(JSON.stringify(`${rate}`)).close(tag);
 								index += walk;
 							}
 							/*--------------------------------------------------------------*/
@@ -2660,7 +2682,7 @@ const wd = (function() {
 								if (rate === null)
 									throw new Error("function: invalid notation.");
 								else if (test.function)
-									tree.add(`"@function:${rate}"`).close();
+									tree.add(JSON.stringify(`@function:${rate}`)).close();
 								else
 									tree.add("null").close();
 								index += walk;
@@ -2677,31 +2699,39 @@ const wd = (function() {
 											rate.push(code[++index]);
 									}
 									else {
-										rate.push(code[index].replace(`"`, `\\"`));//FIXME quebra de página não dá certo
+										rate.push(code[index]);
 									}
 								}
-								tree.add(`"${rate.join("")}"`).close();
+								tree.add(JSON.stringify(rate.join(""))).close();
 							}
 							/*--------------------------------------------------------------*/
 							else if (tag === "regexp") {
-								let reRegex = /^\/.*[^\\]\/[gim]*/;
-								find = txt.match(reRegex);
-								rate = find === null ? null : find[0];
-								walk = find === null ? last : find[0].length;
-								if (rate === null)
-									throw new Error("regexp: invalid notation.");
-								else
-									tree.add(`"@regexp:${rate}"`).close();
-								index += walk;
+								rate = [];
+								find = false;
+								let flag, char, scape, prop, text, open = 0;
+								while(++index < last && !find) {
+									char  = code[index];
+									scape = code[index-1] === "\\";
+									if (!scape && open < 1 && char === "[")
+										open++;
+									else if (!scape && open > 0 && char === "]")
+										open--;
+									else if (!scape && open < 1 && char === "/")
+										find = true;
+									if (!find) rate.push(char);
+								}
+								flag = code.slice(index).join("").match(/^[gim]*/);
+								prop = {re: rate.join(""), flag: flag === null ? "" : flag[0]};
+								text = `@regexp(${prop.flag}):${prop.re}`;
+								tree.add(JSON.stringify(text)).close();
+								index += prop.flag.length;
 							}
 						}
 						/*--------------------------------------------------------------*/
 						tree.finish();
-						const pre = document.createElement("pre");
-						pre.innerHTML = tree.valueOf();
 						let json;
-						try {json = JSON.parse(pre.innerText);}
-						catch(e) {throw new Error(`JSON: conversion unsuccessful ${pre.innerText}`);}
+						try {json = JSON.parse(tree.toString());}
+						catch(e) {throw new Error(`JSON: conversion unsuccessful ${tree.toString()}\n${e}`);}
 						/*--------------------------------------------------------------*/
 						const parse = function(item) {
 							const check = new __Type(item);
@@ -2722,10 +2752,11 @@ const wd = (function() {
 									let name = item.replace("@function:", "");
 									item = window[name];
 								}
-								else if ((/^\@regexp\:/).test(item)) {
-									let re  = /^\/(.*[^\\])\/([gim])*/;
-									let val = item.replace("@regexp:", "");
-									try {item = new RegExp(val.replace(re, "$1"), val.replace(re, "$2"));}
+								else if ((/^\@regexp\(([gim]*)\)\:(.*)$/).test(item)) {
+									let re   = /^\@regexp\(([gim]*)\)\:(.*)$/;
+									let main = item.replace(re, "$2");
+									let flag = item.replace(re, "$1");
+									try      {item = new RegExp(main, flag);}
 									catch(e) {item = null;}
 								}
 							}

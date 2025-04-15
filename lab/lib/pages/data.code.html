@@ -1,21 +1,23 @@
 	<script>
 var c = [
 	{
-		reserved: ("asm auto break case char const continue default do double else enum extern float for goto if int long register return short signed sizeof static struct switch typedef union unsigned void volatile while #define #include").split(" "),
-		value: [],
-		comment: ("// \n /* */").split(" "),
-		string: ("' ' \" \"").split(" ")
+		word: "asm auto break case char const continue default do double else enum extern float for goto if int long register return short signed sizeof static struct switch typedef union unsigned void volatile while #define #include",
+		value:   "NULL",
+		comment: "// \n /* */",
+		string:  "' ' \" \"",
+		editable: true
 	}
-]
+];
 
-function python() {
-	return {
-		reserved: ("and as assert break class continue def del elif else except finally for from global if import in is lambda nonlocal not or pass raise return try while with yield").split(" "),
-		value: ("False None True").split(" "),
-		comment: ("# \n").split(" "),
-		string: ("' ' \" \"").split(" ")
-	};
-}
+var python = [
+	{
+		word: "and as assert break class continue def del elif else except finally for from global if import in is lambda nonlocal not or pass raise return try while with yield",
+		value: "False None True",
+		comment: "# \n",
+		string: "' ' \" \"",
+		editable: true
+	}
+];
 	</script>
 
 	<h3>Linear</h3>
@@ -28,6 +30,17 @@ function find(x) {
 	return list.indexOf(x);
 }
 	</pre>
+
+	<pre data-wd-code="#c">
+/* comentário */
+// TODO FIXME comentário
+function find(x) {
+	const list = ['string', null, undefined, 123.1, false, true];
+	return list.indexOf(x);
+}
+	</pre>
+
+
 
 	<h3>Markup</h3>
 
