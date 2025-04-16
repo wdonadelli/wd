@@ -12,102 +12,28 @@
 		<!--<meta http-equiv="pragma" content="no-cache" />-->
 		<meta name="revisit-after" content="2 days" />
 		<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-		<script src="../wd5.js"></script>
-		<link  href="../wd5.css" rel="stylesheet" />
-		<script src="lib/lab.js"></script>
+		<link href="wd.css" rel="stylesheet" />
+		<script defer="true" src="wd.js"></script>
+		<script defer="true" src="lab.js"></script>
 	</head>
 
 <body>
+	<header class="wd-header-fixed">
+		<h2>WD Web Library Lab</h2>
+	</header>
 
-	<main class="wd-flyer">
+	<main></main>
 
-		<header class="wd-hidden-print">
-			<h2>WD Web Library Lab	</h2>
-		</header>
-
-		<!-- MENU SUPERIOR -->
-		<nav class="wd-bg-grey wd-header wd-hidden-print">
-			<span data-wd-set="{$:#menu;class:{toggle:wd-open}}" id="bmenu" class="wd-icon-menu"></span>
-			<span id="resetCode" class="wd-icon-reload"></span>
-			<span data-wd-set="{$:#editCode;class:{toggle:wd-open}}>" class="wd-icon-config">Code</span>
-			<a href="../../comentarioGuia/?file=../wd/wd5.js" target="_blank">JS Doc</a>
-			<a href="../../comentarioGuia/?file=../wd/wd5.js&code=true" target="_blank" >JS Code</a>
-			<a href="https://github.com/wdonadelli/wd/wiki" target="_blank">Wiki</a>
-		</nav>
-
-		<h3 id="title" class="wd-case-upper"></h3>
-
-		<!-- RENDERIZAÇÃO -->
-		<section id="renderCode"></section>
-
-	</main>
-
-  <!-- FERRAMENTA DE DESENVOLVIMENTO -->
-	<section id="editCode" class="wd-flyer wd-bg-white wd-window-bottom wd-hidden-print" style="height: 30%;">
-
-    <!-- MENU DESENVOLVIMENTO -->
-		<nav class="wd-size-smaller">
-      <span id="setCode"   class="wd-icon-ok" ></span>
-      <span id="getCode"   class="wd-icon-paste"></span>
-      <!--<span id="resetCode" class="wd-icon-reload"></span>-->
-      <span class="wd-icon-config" data-wd-set="{$:html;class:{toggle:wd}}" >CSS</span>
-			<span data-wd-set="{$:body;class:{toggle:wd-bg-black wd-bg-base}}" >Screen</span>
-      <span class="wd-icon-close" data-wd-set="{$:#editCode;class:{toggle:wd-open}}>"></span>
-    </nav>
-
- 		<!-- CÓDIGO FONTE -->
-		<div>
- 		  <textarea id="sourceCode" class="wd-block wd-code" style="height: 8em;" ></textarea>
- 		</div>
+	<footer class="wd-footer-fixed wd-bg-black">
 
 
-	</section>
 
-	<!-- MENU LATERAL -->
-	<div class="wd-modal wd-hidden-print" id="menu" data-wd-set="{class:{toggle:wd-open};$:#menu}">
-		<aside
-			data-wd-device="{desktop:wd-window-left;mobile:wd-window-full}"
-			data-wd-no-bubbles=""
-			style="min-width: 30%;"
-		>
 
-	  	<article class="wd-flyer wd-bg-base">
 
-				<header><h4>Menu</h4></header>
 
-				<!-- SUBMENU LATERAL -->
-				<nav class="wd-header wd-bg-white">
-					<span data-wd-click="{a:111}" data-wd-display="{action:ahead;$:#CSSMenu}">CSS</span>
-					<span data-wd-display="{action:ahead;$:#dataMenu}">Data</span>
-				</nav>
+	</footer>
 
-				<section>
 
-					<!-- MENU css -->
-					<div id="CSSMenu">
-						<nav data-wd-repeat="{url:lib/menu.css.json;type:json;method:GET}" class="wd-nav-block">
-					    <span
-					      data-wd-set="{class:{toggle:wd-open};$:#menu},{$:#title;textContent:'{CSS:{{target}}}'}"
-					      onclick="openPage('lib/pages/css.{{target}}.html');"
-							>{{target}}</span>
-			  		</nav>
-					</div>
-
-					<!-- MENU DATASET -->
-					<div id="dataMenu">
-						<nav data-wd-repeat="{url:lib/menu.data.json;type:json;method:GET}" class="wd-nav-block">
-							<span
-								data-wd-set="{class:{toggle:wd-open};$:#menu},{$:#title;textContent:'{data-wd-{{target}}}'}"
-			        	onclick="openPage('lib/pages/data.{{target}}.html');"
-							>{{target}}</span>
-						</nav>
-					</div>
-
-				</section>
-			</article>
-	 </aside>
-	</div>
 
 </body>
 </html>
-

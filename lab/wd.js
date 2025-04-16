@@ -53,7 +53,7 @@ const wd = (function() {
 		"application/octet-stream": "default",
 		"application/json": "json", "application/javascript": "json",
 		"application/xml":   "xml",
-		/**-- imagens --*/
+		/*-- imagens --*/
 		"image/svg+xml": "svg",
 	};
 
@@ -2554,7 +2554,7 @@ const wd = (function() {
 				let data = null;
 				try {
 					if (this._check.string) {
-						const note = this._data.trim();
+						const note = this._data.trim().normalize();
 						/*----------------------------------------------------------------*/
 						if ((/^\#.+$/).test(note)) {
 							let list  = window[note.replace("#", "")];
@@ -2820,7 +2820,242 @@ const wd = (function() {
 				}
 				return;
 			}
+		},
+
+
+
+
+		/**. ``''object'' wdArray``: Transforma notação wd em um array de objetos.**/
+		wdComment: {
+			value: function(open, close) {
+				if (!this._check.string) return null;
+				open  = open  === undefined ? "//" : String(open).normalize();
+				close = close === undefined ? "\n" : String(close).normalize();
+				const src  = [];
+				const doc  = [];
+				const data = this._data.trim().normalize();
+				const list = data.split("");
+				let txt, end, index = 0, type = "src";
+				/*-- separar código e comentários ------------------------------------*/
+				while (index < list.length) {
+					end = index + (type === "src" ? open.length : close.length);
+					txt = data.slice(index, end);
+					if (type === "src" && txt === open) {
+						src.push("\n");
+						type  = "doc";
+						index = end;
+					}
+					else if (type === "doc" && txt === close) {
+						doc.push("\n");
+						type = "src";
+						index = end;
+					}
+					else {
+						type === "doc" ? doc.push(data[index]) : src.push(data[index]);
+						index++;
+					}
+				}
+				const html = new __Parser(doc.join(""));
+				return {src: src.join(""), doc: html.get(), html: html.wdDoc.get()};
+			}
+		},
+
+
+
+
+		wdDoc: {
+			get: function() {
+				if ("wdDoc" in this._saved)
+					return new __Parser(this._saved.wdDoc);
+				let data = null;
+				try {
+					if (this._check.string) {
+						const note = this._data.trim().normalize();
+						const code = note.split("\n");
+						const tree = new __Tree();
+						const type = {
+							/*-- blocos múltiplas linhas --*/
+							quote: /^(\"\"\")(.+)/,
+							pre:   /^(\`\`\`)(.+)/,
+							/*-- blocos de consistência --*/
+							table: /^\|(.+)\|$/,
+							ul:    /^(\-)\s(.+)$/,
+							dl:    /^(\.)\s(.+)$/,
+							/*-- blocos de linha única --*/
+							head:  /^(\#{1,6})\s(.+)$/,
+						}
+						let tag, val, txt, index = 0;
+						/*----------------------------------------------------------------*/
+						tree.xml = true;
+						tree.open("main");
+
+						while (index < code.length) {
+							val = null;
+							txt = code[index].trim();
+							tag = tree.level;
+							for (let i in type)
+								if (val === null && type[i].test(txt)) val = i;
+							/*--------------------------------------------------------------*/
+							if (tag === "main") {
+								switch(val) {
+									/*-- blocos de consistência --*/
+									case "table": {tree.open("table");      break;}
+									case "ul":    {tree.open("ul");         break;}
+									case "dl":    {tree.open("dl");         break;}
+									/*-- blocos múltiplas linhas --*/
+									case "pre":   {tree.open("pre");        break;}
+									case "quote": {tree.open("blockquote"); break;}
+									/*-- blocos de linha única --*/
+									case "head":  {
+										let head = txt.replace(type.head, "$1").length;
+										let text = txt.replace(type.head, "$2");
+										tree.open(`h${head}`).add(text).close();
+										index++;
+										break;
+									}
+									default: {
+										if (txt !== "")
+											tree.open("p").add(txt).close();
+										index++;
+									}
+								}
+							}
+							/*--------------------------------------------------------------*/
+							else if (tag === "table") {
+								let th = txt.replace(type.table, "$1").split("|");
+								tree.open("thead").open("tr");
+								for (let i = 0; i < th.length; i++)
+									tree.open("th").add(th[i]).close();
+								tree.close().close().open("tbody");
+								index++;
+							}
+							/*--------------------------------------------------------------*/
+							else if (tag === "tbody") {
+								if (val !== "table") {
+									tree.close().close();
+								}
+								else {
+									let td = txt.replace(type.table, "$1").split("|");
+									tree.open("tr");
+									for (let i = 0; i < td.length; i++)
+										tree.open("td").add(td[i]).close();
+									tree.close();
+									index++;
+								}
+							}
+							/*--------------------------------------------------------------*/
+							else if (tag === "dl") {
+								if (val !== "dl") {
+									tree.close();
+								}
+								else {
+									let dd = txt.replace(type.dl, "$2");
+									let dl = /^([^:]+)\:(.+)$/;
+									let dt = /^([^:]+)\:$/;
+									if (dl.test(dd))
+										tree.open("dt").add(dd.replace(dl, "$1")).close().
+										open("dd").add(dd.replace(dl, "$2")).close();
+									else if (dt.test(dd))
+										tree.open("dt").add(dd.replace(dt, "$1")).close();
+									else
+										tree.open("dd").add(dd).close();
+									index++;
+								}
+							}
+							/*--------------------------------------------------------------*/
+							else if (tag === "ul") {
+								if (val !== "ul") {
+									tree.close();
+								} else {
+									let li = txt.replace(type.ul, "$2");
+									tree.open("li").add(li).close();
+									index++;
+								}
+							}
+							/*--------------------------------------------------------------*/
+							else if (tag === "pre") {
+								let re  = /^(\`\`\`)?(.+)(\`\`\`)?$/;
+								let pre = txt.replace(re, "$2");
+								let end = txt.replace(re, "$3") === "```";
+								tree.add(pre).add(end ? "" : "\n");
+								if (end) tree.close();
+								index++;
+							}
+							/*--------------------------------------------------------------*/
+							else if (tag === "blockquote") {
+								let re    = /^(\"\"\")?(.+)(\"\"\")?$/;
+								let quote = txt.replace(re, "$2");
+								let end   = txt.replace(re, "$3") === `"""`;
+								tree.open("p").add(quote).close();
+								if (end) tree.close();
+								index++;
+							}
+							else throw new Error("tag not found.")
+						}
+						tree.finish();
+						data = document.createElement("div");
+						data.innerHTML = tree.valueOf();
+						let query = data.querySelectorAll("p, dd, dt, th, td, li, h1, h2, h3, h4, h5, h6");
+						/*----------------------------------------------------------------*/
+						function inline(input) {
+							const tree = new __Tree();
+							const code = input.trim().normalize().split("");
+							let txt, val, tag, index = 0;
+							//tree.open("span");
+							while (index < code.length) {
+								tag = tree.level;
+								txt = code[index];
+								val = code.slice(index, index+2).join("");
+								index += 2;
+								switch(val) {
+									case "**": {
+										tag === "b" ? tree.close() : tree.open("b");
+										break;
+									}
+									case "''": {
+										tag === "i" ? tree.close() : tree.open("i");
+										break;
+									}
+									case "__": {
+										tag === "u" ? tree.close() : tree.open("u");
+										break;
+									}
+									case "``": {
+										tag === "code" ? tree.close() : tree.open("code");
+										break;
+									}
+									default: {
+										index--;
+										tree.add(txt);
+									}
+								}
+							}
+							tree.finish();
+							return tree.valueOf();
+						}
+
+						for (let i = 0; i < query.length; i++)
+							query[i].innerHTML = inline(query[i].innerText);
+					}
+				}
+				catch(e) {
+					console.info(`${e.message}`)
+				}
+				this._saved["wdDoc"] = data;
+				return this.wdDoc;
+			}
 		}
+
+
+
+
+
+
+
+
+
+
+
 	});
 
 /*============================================================================*/
@@ -8965,15 +9200,23 @@ const wd = (function() {
 /*============================================================================*/
 
 	/**###### ``**function** ''void'' data_wd_device(''node''  target, ''object'' event, ''array'' wdArray)``
-	Função com o propósito de manipular o atributo ``class`` conforme mudança no tamanho da tela por meio do atributo HTML ''data''.
-	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
-	|data-wd-device|load wdreload wddataset resize|Múltiplas|Único|__Node.style|Qualquer elemento|
-	Possui as seguintes propriedades opcionais:
+	Disparador:
+	|Dado|Descrição|
+	|Atributo|data-wd-size|
+	|Objetivo|Manipular atributo ``class`` conforme tamanho da tela (design responsivo via javascript)|
+	|Eventos|load wdreload wddataset resize|
+	|Alvos|Elemento|
+	|Grupos|Único|
+	|Referências|__DEVICE|
+	Propriedades:
 	|Nome|Tipo|Descrição|
-	|desktop|string|Estilos CSS separados por espaço a serem utilizados quando a tela corresponder a um desktop.|
-	|tablet|string|Estilos CSS separados por espaço a serem utilizados quando a tela corresponder a um tablet.|
-	|phone|string|Estilos CSS separados por espaço a serem utilizados quando a tela corresponder a um phone.|
-	|mobile|string|Estilos CSS separados por espaço a serem utilizados quando a tela corresponder a um tablet ou phone.|**/
+	|desktop|string|Estilos CSS aplicados à tela desktop.|
+	|tablet|string|Estilos aplicados à tela tablet.|
+	|phone|string|Estilos aplicados à tela phone.|
+	|mobile|string|Estilos aplicados à tela tablet ou phone.|
+	Observações:
+	- Todas as propriedades são opcionais; e
+	- O estilos CSS devem estar separados por espaços em branco.**/
 	function data_wd_device(target, event, wdArray) {
 		const query  = WD(target);
 		const data   = wdArray[0];
@@ -8997,9 +9240,15 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	/**###### ``**function** ''void'' data_wd_hash(''node''  target, ''object'' event, ''array'' wdArray)``
-	Disparador a ser invocado ao mudar a âncora da página () definindo as margens e o posicionamento da âncora em ''body'' se houver elementos filhos ''header'' ou ''footer'' fixos no topo ou na base.
-	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
-	|Não há|load wdreload hashchange resize|Não se aplica|Não se aplica|Não há|.**/
+	Disparador:
+	|Dado|Descrição|
+	|Atributo|Não se aplica|
+	|Objetivo|Adequar a âncora do documento em quando existir elementos fixos no topo ou na base da página.|
+	|Eventos|load wdreload hashchange resize|
+	|Alvos|Documento|
+	|Grupos|Não se aplica|
+	|Referências|Não há|
+	Propriedades: Não se aplica.**/
 	function data_wd_hash(target, event, wdArray) {
 		const nodes = WD.$$("body > header, body > footer");
 		const hash  = WD.$(window.location.hash);
@@ -9030,25 +9279,23 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	/**###### ``**function** ''void'' data_wd_send(''node''  target, ''object'' event, ''array'' wdArray)``
-	Função com o propósito de efetuar requisições por meio do atributo HTML ''data''.
-	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
-	|data-wd-send|click|Múltiplas|Múltiplos|__Request.send|Elementos que possam receber cliques|
+	Disparador:
+	|Dado|Descrição|
+	|Atributo|data-wd-send|
+	|Objetivo|Efetuar requisições|
+	|Eventos|click|
+	|Alvos|Conforme especificado|
+	|Grupos|Múltiplo|
+	|Referências|__Request.send|
 	Propriedades:
 	|Nome|Tipo|Descrição|
-	|url|string|Ver __Request|
-	|method|string|Ver __Request|
-	|type|string|Ver __Request|
-	|headers|object|Ver __Request|
-	|$ ou $$|string|CSS Selector dos campos de formulário a serem enviados em ''body'' de __Request|
-	|timeout|integer|Ver __Request|
-	|async|boolean|Ver __Request.send|
-	|user|string|Ver __Request.send|
-	|password|string|Ver __Request.send|
-	|withCredentials|boolean|Ver __Request.send|
-	|overrideMimeType|string|Ver __Request.send|
-	|noValidate|boolean|Se verdadeiro, a requisição não fará a validação primária dos campos deformulário|
-	|trigger|function|Nome do disparador a ser chamado durante a requisição|
-	O disparador deve ser definido no escopo de ''window'' com as palavras ''var'' ou ''function''**/
+	|$ ou $$|string|CSS Selector dos campos de formulário a serem enviados|
+	|noValidate|boolean|Se verdadeiro, a requisição não fará a validação primária dos campos de formulário.|
+	|trigger|function|Nome do disparador a ser chamado durante a requisição.|
+	Observações:
+	- O conteúdo dos campos definidos em $ ou $$ serão atribuídos à propriedade ''body'' de __Request;
+	- Demais propriedades seguem a mesma definição pertencente à __Request.send;
+	- O disparador deve estar contido no escopo de ``window`` (``var`` ou ``function``)**/
 	function data_wd_send(target, event, wdArray) {
 		let data, query, submit, trigger;
 		for (let i = 0; i < wdArray.length; i++) {
@@ -9472,15 +9719,7 @@ const wd = (function() {
 	|string|string|Caracteres de abertura e fechamento de string|
 	|comment|string|Caracteres de abertura e fechamento de comentários|
 	|editable|boolean|Informa se o container poderá ser editado|
-	|lines|boolean|Informa se as linhas serão numeradas|
-
-
-
-	Função vinculada ao atributo HTML ``data-wd-display`` cujo objetivo é manipular a exibição de nós, seus irmãos e filhos utilizando a ferramenta ``WDnode.display``. Possui múltiplos atributos e grupos:
-	|Nome|Descrição|Obrigatório|
-
-	|action|Ação a ser executada|Sim|
-	|$ ou $$|Seletor CSS para indicar o elemento os elementos a aplicar a ação (se ausente, será o próprio elemento)|Não|**/
+	|lines|boolean|Informa se as linhas serão numeradas|**/
 	function data_wd_code(target, event, wdArray) {
 		const data = wdArray[0];
 		const node = new __Node(target);
@@ -9691,17 +9930,6 @@ const wd = (function() {
 	Se o elemento arrastável tiver múltiplos efeitos, cada efeito deverá ser informado em um grupo diferente cuidando para que não haja concomitâncias de elementos receptores entre os grupos (o efeito do último grupo prevalecerá).
 	A função ``drop`` receberá como argumentos o elemento drop, o elemento drag e o efeito aplicado. Se nenhum função for especificada, um comportamento padrão será executado de acordo com o efeito definido.
 	O elemento receptor não pode ser o elemento pai e nem o elemento arrastável ou estar contido nele.**/
-
-
-
-
-
-
-
-
-
-
-
 	function data_wd_drag(target, event, wdArray) {
 		const data = wdArray;
 		function clearDrops() {
