@@ -26,24 +26,22 @@
 "use strict";
 
 const wd = (function() {
-	/**# Biblioteca JavaScript
-	## Documentação para Manutenção
+	/**#1 Biblioteca JavaScript
+	#2 Documentação para Manutenção
+	#0 Menu
+	#3 Mecanismos de Controle
 
-	@menu
-
-	### Mecanismos de Controle
-
-	###### ``**const** ''string'' __VERSION``
+	''const string __VERSION''
 	Registra a versão da biblioteca.**/
 	const __VERSION = "WD JS v5.0.0";
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**const** ''boolean'' __UNDERMAINTENANCE``
+	/**''const boolean __UNDERMAINTENANCE''
 	Se verdadeiro, libera métodos para teste em WD e imprime cascata de eventos.**/
 	const __UNDERMAINTENANCE = true;
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**const** ''object'' __MIME``
+	/**''const object __MIME''
 	Registra alguns [MIME types](https://developer.mozilla.org/en-US/docs/Web/HTTP/MIME_types/Common_types) úteis à biblioteca.**/
 	const __MIME = {
 		/*-- texto --*/
@@ -58,7 +56,7 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**const** ''string'' __STYLE``
+	/**''const string __STYLE''
 	Estilos da biblioteca.**/
 
 	//FIXME aprender sobre flex para deixar frame e modal nessa condição
@@ -589,32 +587,32 @@ const wd = (function() {
 			//TODO ver coloração https://developer.mozilla.org/pt-BR/docs/Web/CSS/background-color
 			//TODO interessante https://developer.mozilla.org/en-US/docs/Web/CSS/::file-selector-button
 			/*-- barra de progresso --*/
-		/**. ``''void'' builder()``: Cria o elemento ''style'' com o CSS da biblioteca e o adiciona à página.**/
+		/**. '{void builder()}: Cria o elemento i{style} com o CSS da biblioteca e o adiciona à página.**/
 
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**const** ''object'' __DEVICE``
+	/**''const object __DEVICE''
 	Checa alterações da tela atribuida a um tipo de dispositivo.**/
 	const __DEVICE = {
-		/**. ``''string'' _device``: Registra o tipo do dispositivo a partir do tamanho da tela atual.**/
+		/**. '{string _device}: Registra o tipo do dispositivo a partir do tamanho da tela atual.**/
 		_device: null,
-		/**. ``''array'' _devices``: Registra uma lista de dispositivos em ordem decrescente de tamanho.**/
+		/**. '{array _devices}: Registra uma lista de dispositivos em ordem decrescente de tamanho.**/
 		_devices: [
 				{name: "desktop", size: 768},
 				{name: "tablet",  size: 600},
 				{name: "phone",   size: 0}
 			],
-		/**. ``''integer'' width``: Retorna o tamanho da tela.**/
+		/**. '{integer width}: Retorna o tamanho da tela.**/
 		get width() {return window.innerWidth;},
-		/**. ``''string'' device``: Retorna o tipo de dispositivo**/
+		/**. '{string device}: Retorna o tipo de dispositivo**/
 		get device() {
 			const width  = this.width;
 			for (let i = 0; i < this._devices.length; i++)
 				if (width >= this._devices[i].size) return this._devices[i].name;
 		},
-		/**. ``''boolean'' mobile``: Informa se dispositivo não é do tamanho desktop.**/
+		/**. '{boolean mobile}: Informa se dispositivo não é do tamanho desktop.**/
 		get mobile() {return this.device !== "desktop";},
-		/**. ``''boolean'' change``: Informa se o dispositivo foi alterado desde a última consulta.**/
+		/**. '{boolean change}: Informa se o dispositivo foi alterado desde a última consulta.**/
 		get changeDevice() {
 			const device = this.device;
 			if (this._device !== device) {
@@ -626,7 +624,7 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**const** ''object'' __LANG``
+	/**''const object __LANG''
 	Controla a linguagem local da biblioteca.**/
 	const __LANG = {
 		_prev:   [],
@@ -635,9 +633,9 @@ const wd = (function() {
 		_week:   [],
 		_number: [],
 		_date:   [],
-		/**. ``''regexp'' re``: Retorna a expressão regular que verifica o formato de linguagem https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/lang).**/
+		/**. '{regexp re}: Retorna a expressão regular que verifica o formato de a{linguagem}[href="https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/lang)"].**/
 		re: /^[a-z]{2,3}(\-[A-Z][a-z]{3})?(\-([A-Z]{2}|[0-9]{3}))?$/,
-		/**. ``''array'' node(''node'' elem)``: Retorna a lista dos atributos ''lang'' do elemento HTML e seus ascendentes, se houver.**/
+		/**. '{array node(node elem)}: Retorna a lista dos atributos i{lang} do elemento HTML e seus ascendentes, se houver.**/
 		node: function(elem) {
 			let lang = [];
 			while (elem !== null) {
@@ -649,7 +647,7 @@ const wd = (function() {
 			}
 			return lang;
 		},
-		/**. ``''string'' value``: Define ou retorna a cadeia de linguagens estabelecidas pelo usuário, pelo HTML e pelo navegador.**/
+		/**. '{string value}: Define ou retorna a cadeia de linguagens estabelecidas pelo usuário, pelo HTML e pelo navegador.**/
 		get value() {
 			const nav  = navigator.languages;
 			const html = this.node(document.body);
@@ -663,7 +661,7 @@ const wd = (function() {
 			else
 				this._user = [];
 		},
-		/**. ``''void'' update()``: Atualiza os dados de acordo com a linguagem construindo as seguintes informações:
+		/**. '{void update()}: Atualiza os dados de acordo com a linguagem construindo as seguintes informações:
 		|Propriedade|Descrição|month|week|number|
 		|index|Índice numérico|1 a 12|1 a 7|-9 a 9|
 		|value|Retorna o índice com dois caracteres|01 a 12|01 a 07|Não se aplica|
@@ -725,22 +723,22 @@ const wd = (function() {
 			}
 			return;
 		},
-		/**. ``''array'' month``: Retorna uma lista de objetos contendo informações sobre os meses (ver método ``update``)**/
+		/**. '{array month}: Retorna uma lista de objetos contendo informações sobre os meses (ver método '{update})**/
 		get month() {
 			this.update();
 			return this._month;
 		},
-		/**. ``''array'' week``: Retorna uma lista de objetos contendo informações sobre os dias da semana (ver método ``update``)**/
+		/**. '{array week}: Retorna uma lista de objetos contendo informações sobre os dias da semana (ver método '{update})**/
 		get week() {
 			this.update();
 			return this._week;
 		},
-		/**. ``''array'' number``: Retorna uma lista de objetos contendo informações sobre os números (ver método ``update``)**/
+		/**. '{array number}: Retorna uma lista de objetos contendo informações sobre os números (ver método '{update})**/
 		get number() {
 			this.update();
 			return this._number;
 		},
-		/**. ``''object'' search(''string'' name, ''any'' value)``: Busca a informação (argumento ``value``) dentro das propriedades (argumento ``name``) ''month'', ''week'' e ''number'' e a retorna individualmente ou nulo se não encontrado.**/
+		/**. '{object search(string name, any value)}: Busca a informação (argumento '{value}) dentro das propriedades (argumento '{name}) i{month}, i{week} e number e a retorna individualmente ou nulo se não encontrado.**/
 		search: function(name, value) {
 			if (["month", "week", "number"].indexOf(name) < 0) return null;
 			const chars = isNaN(value);
@@ -756,7 +754,7 @@ const wd = (function() {
 				) return array[i];
 			return null;
 		},
-		/**. ``''object'' date``: Retorna um objeto com expressões regulares de datas por extenso (ver método ``update``)**/
+		/**. '{object date}: Retorna um objeto com expressões regulares de datas por extenso (ver método '{update})**/
 		get date() {
 			this.update();
 			return this._date;
@@ -764,18 +762,18 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**const** ''object'' __FLOAT``
+	/**''const object __FLOAT''
 	Administra containers para janelas modais (wall e glass) e de quadro (frame).**/
 	const __FLOAT = {
-		/**. ``''array'' heap``: Registra informações sobre os quadros.**/
+		/**. '{array heap}: Registra informações sobre os quadros.**/
 		heap: [],
-		/**. ``''node'' frame``: Quadro para agrupamento de alertas.**/
+		/**. '{node frame}: Quadro para agrupamento de alertas.**/
 		frame: document.createElement("ASIDE"),
-		/**. ``''node'' modal``: Quadro para agrupamento de diálogos.**/
+		/**. '{node modal}: Quadro para agrupamento de diálogos.**/
 		modal: document.createElement("ASIDE"),
-		/**. ``''node'' float``: Quadro para agrupamento de elementos flutuantes.**/
+		/**. '{node float}: Quadro para agrupamento de elementos flutuantes.**/
 		float: document.createElement("ASIDE"),
-		/**. ``''void'' append(''node'' node, ''object'' options)``: Agrega elementos aos quadros. O argumento ``node`` refere-se ao elemento a ser agregado e o argumento ``options`` define as características do elemento:
+		/**. '{void append(node node, object options)}: Agrega elementos aos quadros. O argumento '{node} refere-se ao elemento a ser agregado e o argumento '{options} define as características do elemento:
 		|Nome|Tipo|Valores|Descrição|
 		|type|string|float (padrão), modal ou frame|Define o tipo de quadro|
 		|place|string|ver adiante|Posicionamento do nó no quadro|
@@ -786,8 +784,8 @@ const wd = (function() {
 		|Fundo|Transparente-localizado|Opaco-Tela-Inerte|Ausente-Tela|
 		|Fechamento|Não|Esc|Esc, Tab e clique|
 		|Objetivo|Alerta|Diálogo|Menu|
-		Ao fechar o nó com o método ``remove``, ``close`` receberá como argumento ''verdadeiro'', caso contrário, ''falso''.
-		Para o tipo ``modal``, ``place`` pode ter posicionalmento nos lados (top, right, bottom, left, center, full) ou nos pontos cardeais (n, ne, e, se, s, sw, w, nw). Para o tipo ``float``, a posição (x,y) da tela. Não há posicionamento para o tipo ``frame``.**/
+		Ao fechar o nó com o método '{remove}, '{close} receberá como argumento i{verdadeiro}, caso contrário, i{falso}.
+		Para o tipo '{modal}, '{place} pode ter posicionalmento nos lados (top, right, bottom, left, center, full) ou nos pontos cardeais (n, ne, e, se, s, sw, w, nw). Para o tipo '{float}, a posição (x,y) da tela. Não há posicionamento para o tipo '{frame}.**/
 		append: function(node, options) {
 			if (node === document.body) return;
 			const data  = typeof options === "object" ? options : {};
@@ -807,7 +805,7 @@ const wd = (function() {
 			this.heap.push(data);
 			return this.update();
 		},
-		/**. ``''void'' remove(''node'' node)``: Remove o nó do quadro que o armazena.**/
+		/**. '{void remove(node node)}: Remove o nó do quadro que o armazena.**/
 		remove: function(node) {
 			this.heap = this.heap.filter(function(v,i,a) {
 				if (v.node === node) {
@@ -819,7 +817,7 @@ const wd = (function() {
 			});
 			return this.update();
 		},
-		/**. ``''void'' update()``: Atualiza as informações dos quadros contra manipulações externas.**/
+		/**. '{void update()}: Atualiza as informações dos quadros contra manipulações externas.**/
 		update: function() {
 			const names = ["modal", "frame", "float"];
 			let back, child, node, type;
@@ -895,7 +893,7 @@ const wd = (function() {
 			}
 			return this.setBack();
 		},
-		/**. ``''void'' setBack()``: Estabelece a condição do plano de fundo.**/
+		/**. '{void setBack()}: Estabelece a condição do plano de fundo.**/
 		setBack: function() {
 			const child  = document.body.children;
 			const inert  = this.modal.childElementCount > 0;
@@ -912,7 +910,7 @@ const wd = (function() {
 					this.inert(child[i], inert)
 			return;
 		},
-		/**. ``''void'' inert(''node'' node, ''boolean'' force)``: Define o elemento ''node'' e seus filhos como inertes conforme valor  do argumento ''force'' (padrão é verdadeiro).**/
+		/**. '{void inert(node node, boolean force)}: Define o elemento node e seus filhos como inertes conforme valor  do argumento i{force} (padrão é verdadeiro).**/
 		inert: function(node, force) {
 			force = force !== false;
 			/*-- padrão --*/
@@ -945,7 +943,7 @@ const wd = (function() {
 			}
 			return;
 		},
-		/**. ``''void'' escape()``: Disparador a ser chamado quando for utilizado método alternativo de fechamento da janela.**/
+		/**. '{void escape()}: Disparador a ser chamado quando for utilizado método alternativo de fechamento da janela.**/
 		escape: function(target, event, wdArray) {
 			const float  = __FLOAT.float;
 			const modal  = __FLOAT.modal;
@@ -970,12 +968,12 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**const** ''object'' __PROGRESS``
+	/**''const object __PROGRESS''
 	Registra a barra de progresso das requisições da biblioteca.**/
 	const __PROGRESS = {
-		/**. ``''integer'' count``: Contador de ações em progresso.**/
+		/**. '{integer count}: Contador de ações em progresso.**/
 		count: 0,
-		/**. ``''node'' bar``: Barra de progresso.**/
+		/**. '{node bar}: Barra de progresso.**/
 		bar: (function() {
 			const bar = document.createElement("PROGRESS");
 			/*-- Disparadores de abertura de processo --*/
@@ -1001,23 +999,23 @@ const wd = (function() {
 			/*-- retornando a barra de progresso --*/
 			return bar;
 		})(),
-		/**. ``''object'' openEvent``: Evento de abertura da barra de progresso.**/
+		/**. '{object openEvent}: Evento de abertura da barra de progresso.**/
 		openEvent:  new CustomEvent("wdprogressopen"),
-		/**. ``''object'' closeEvent``: Evento de fechamento da barra de progresso.**/
+		/**. '{object closeEvent}: Evento de fechamento da barra de progresso.**/
 		closeEvent: new CustomEvent("wdprogressclose"),
-		/**. ``''object'' setEvent``: Evento de definição da barra de progresso.**/
+		/**. '{object setEvent}: Evento de definição da barra de progresso.**/
 		setEvent:   new CustomEvent("wdprogressset"),
-		/**. ``''void'' open()``: Abre a barra de progresso.**/
+		/**. '{void open()}: Abre a barra de progresso.**/
 		open: function()  {
 			this.bar.dispatchEvent(this.openEvent);
 			return;
 		},
-		/**. ``''void'' close()``: Fecha a barra de progresso.**/
+		/**. '{void close()}: Fecha a barra de progresso.**/
 		close: function() {
 			this.bar.dispatchEvent(this.closeEvent);
 			return;
 		},
-		/**. ``''void'' set(''integer'' value)``: Define o valor da barra de progresso pelo seu argumento.**/
+		/**. '{void set(integer value)}: Define o valor da barra de progresso pelo seu argumento.**/
 		set: function(value) {
 			value = Number(value);
 			if (isNaN(value))
@@ -1030,10 +1028,10 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**const** ''object'' __SIGNAL``
+	/**''const object __SIGNAL''
 	Renderiza mensagens e notificações.**/
 	const __SIGNAL = {
-		/**. ``''node'' node``: Caixa de alerta/diálogo.**/
+		/**. '{node node}: Caixa de alerta/diálogo.**/
 		node: (function() {
 			const node = document.createElement("ARTICLE");
 			node.innerHTML = `
@@ -1045,9 +1043,9 @@ const wd = (function() {
 			node.className="js-wd-style";
 			return node;
 		})(),
-		/**. ``''integer'' id``: Controla o id da caixa de mensagem.**/
+		/**. '{integer id}: Controla o id da caixa de mensagem.**/
 		id: {info: 0, ok: 0, warn: 0, error: 0, dialog: 0},
-		/**. ``''void'' alert(''object'' options)``: Ver método ''signal''.**/
+		/**. '{void alert(object options)}: Ver método i{signal}.**/
 		alert: function(options) {
 			/*-- Obtendo dados iniciais --*/
 			options     = typeof options === "object" ? options : {};
@@ -1143,7 +1141,7 @@ const wd = (function() {
 			}
 			return;
 		},
-		/**. ``''void'' notify(''object'' options)``: Ver método ''signal''.**/
+		/**. '{void notify(object options)}: Ver método i{signal}.**/
 		notify: function (options) {
 			const title  = "title" in options ? options.title : "";
 			const config = {lang: __LANG.value};
@@ -1159,7 +1157,7 @@ const wd = (function() {
 				});
 			return;
 		},
-		/**. ``''void'' signal(''object'' options)``: Define mensagens de alerta ou caixas de diálogo simples. O argumento ``options`` possui as seguintes propriedades:
+		/**. '{void signal(object options)}: Define mensagens de alerta ou caixas de diálogo simples. O argumento '{options} possui as seguintes propriedades:
 		|Nome|Tipo|Descrição|
 		|type|string|Indica o tipo de interação, se notificação, alerta ou diálogo.|
 		|title|string|Define o título da interação.|
@@ -1168,7 +1166,7 @@ const wd = (function() {
 		|actions|object|Define os botões de resposta o diálogo.|
 		|trigger|function|Define a função a ser chamada após a decisão do diálogo.|
 		|time|integer|Duração da mensagem de alerta em milissegundos (o padrão é não fechar).|
-		. Os seguintes valores de ``type`` são possíveis:
+		. Os seguintes valores de '{type} são possíveis:
 		|Valor|Interação|
 		|notify|Exibe uma notificação.|
 		|alert|Exibe uma caixa de alerta.|
@@ -1177,8 +1175,8 @@ const wd = (function() {
 		|info|Exibe uma __caixa de alerta__ de informação.|
 		|ok|Exibe uma __caixa de alerta__ de sucesso.|
 		|dialog|Exibe uma caixa de diálogo.|
-		. O nome das propriedades de ``actions`` define o identificador da resposta enquanto que seu valor define o texto do botão. Adicione um asterisco ao fim do nome do botão para definir sua focalização ordinária.
-		. A função ``trigger`` receberá como argumento o identificador da interação e do botão acionado.**/
+		. O nome das propriedades de '{actions} define o identificador da resposta enquanto que seu valor define o texto do botão. Adicione um asterisco ao fim do nome do botão para definir sua focalização ordinária.
+		. A função '{trigger} receberá como argumento o identificador da interação e do botão acionado.**/
 		signal: function(options) {
 			if (typeof options === "object")
 				options.type === "notify" ? this.notify(options) : this.alert(options);
@@ -1186,7 +1184,7 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**const** ''object'' __TYPE``
+	/**''const object __TYPE''
 	Registra as expressões regulares para identificação de modelos genéricos de string.
 	|Grupo|Subgrupo|Exemplo|
 	|number|integer|10e12|
@@ -1209,8 +1207,8 @@ const wd = (function() {
 	|week|WWYYYY|01, 2010 (semana de 01-54)|
 	|email|email|Um endereço de e-mail|
 	O valores acima apresentam as seguintes características:
-	- **ATENÇÃO!** O nome do mês depende da linguagem, pode ser curto e ignora caixas;
-	- **ATENÇÃO!** O nome do mês deve ser igual ao retornado pelo objeto nativo ``Date``;
+	- b{ATENÇÃO!} O nome do mês depende da linguagem, pode ser curto e ignora caixas;
+	- b{ATENÇÃO!} O nome do mês deve ser igual ao retornado pelo objeto nativo '{Date};
 	- O ano pode ser negativo;
 	- Os segundos e milissegundos são opcionais;
 	- AM e PM têm caixa ignorada; e
@@ -1247,7 +1245,7 @@ const wd = (function() {
 		email: {
 			email: /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/,
 		},
-		/**. ``''object'' test(''any'' x)``: Testa se o valor passado em ``x`` encaixa em alguma expressão regular retornando um objeto contendo os atributos ``group``, ``subgroup`` e ``value`` e ``regexp.**/
+		/**. '{object test(any x)}: Testa se o valor passado em '{x} encaixa em alguma expressão regular retornando um objeto contendo os atributos '{group}, '{subgroup} e '{value} e '{regexp.**/
 		test: function(x) {
 			x = String(x).trim();
 			for (let i in this) {
@@ -1263,24 +1261,24 @@ const wd = (function() {
 	};
 
 /*============================================================================*/
-	/**### Eventos Customizados
-	###### ``**const** ''object'' wdDatasetEvent``
-	Evento a ser disparado ao definir o atributo HTML ''dataset'' pela ferramenta da biblioteca (ver __Node).**/
+	/**#3 Eventos Customizados
+	''{const object wdDatasetEvent''
+	Evento a ser disparado ao definir o atributo HTML i{dataset} pela ferramenta da biblioteca (ver __Node).**/
 	const wdDatasetEvent = new CustomEvent("wddataset", {detail: null, bubbles: true});
 /*----------------------------------------------------------------------------*/
-	/**###### ``**const** ''object'' wdReloadEvent``
+	/**''const object wdReloadEvent''
 	Evento a ser disparado ao carregar elementos pela biblioteca (ver __Node.load).**/
 	const wdReloadEvent = new CustomEvent("wdreload", {detail: null, bubbles: true});
 /*----------------------------------------------------------------------------*/
-	/**###### ``**const** ''object'' wdResizeEvent``
+	/**''const object wdResizeEvent''
 	Evento a ser disparado ao alterar as dimensões da tela.**/
 	const wdResizeEvent = new CustomEvent("wdresize", {detail: null, bubbles: true});
 
 /*============================================================================*/
-	/**### Administração de Dados
-	#### Tipologia
-	###### ``**constructor** ''object'' __Type(''any''  input)``
-	Construtor para identificação do tipo de dado informado em ``input``.**/
+	/**#3 Administração de Dados
+	#4 Tipologia
+	''constructor object __Type(any  input)''
+	Construtor para identificação do tipo de dado informado em '{input}.**/
 	function __Type(input) {
 		if (!(this instanceof __Type)) return new __Type(input);
 		Object.defineProperties(this, {
@@ -1317,31 +1315,31 @@ const wd = (function() {
 
 	Object.defineProperties(__Type.prototype, {
 		constructor: {value: __Type},
-		/**. ``''boolean'' chars``: Checa se o valor é uma string.**/
+		/**. '{boolean chars}: Checa se o valor é uma string.**/
 		chars: {
 			get: function() {
 				return (typeof this._input === "string" || this.instanceOf("String"));
 			}
 		},
-		/**. ``''boolean'' empty``: Checa se o valor é uma string de caracteres não visualizáveis.**/
+		/**. '{boolean empty}: Checa se o valor é uma string de caracteres não visualizáveis.**/
 		empty: {
 			get: function() {
 				return (this.chars && this._input.trim().length === 0);
 			}
 		},
-		/**. ``''boolean'' nonempty``: Checa se o valor é uma string de caracteres visualizáveis.**/
+		/**. '{boolean nonempty}: Checa se o valor é uma string de caracteres visualizáveis.**/
 		nonempty: {
 			get: function() {
 				return (this.chars && this._input.trim().length > 0);
 			}
 		},
-		/**. ``''boolean'' lang``: Checa se o valor é uma string no formato de linguagem.**/
+		/**. '{boolean lang}: Checa se o valor é uma string no formato de linguagem.**/
 		lang: {
 			get: function() {
 				return (this.chars && __LANG.re(this._input));
 			}
 		},
-		/**. ``''boolean'' string``: Checa se o valor é uma string diferente de número ou data/tempo.**/
+		/**. '{boolean string}: Checa se o valor é uma string diferente de número ou data/tempo.**/
 		string: {
 			get: function() {
 				if (this.type !== null) return this.type === "string";
@@ -1353,7 +1351,7 @@ const wd = (function() {
 				return true;
 			}
 		},
-		/**. ``''boolean'' number``: Checa se o valor é um número real, fatorial (string) ou percentual (string).**/
+		/**. '{boolean number}: Checa se o valor é um número real, fatorial (string) ou percentual (string).**/
 		number: {
 			get: function() {
 				if (this.type !== null) return this.type === "number";
@@ -1399,49 +1397,49 @@ const wd = (function() {
 				return false;
 			}
 		},
-		/**. ``''boolean'' finite``: Checa se o valor é um número finito.**/
+		/**. '{boolean finite}: Checa se o valor é um número finito.**/
 		finite: {
 			get: function() {
 				return this.number && isFinite(this.value);
 			}
 		},
-		/**. ``''boolean'' infinite``: Checa se o valor é um número infinito.**/
+		/**. '{boolean infinite}: Checa se o valor é um número infinito.**/
 		infinite: {
 			get: function() {
 				return this.number && !isFinite(this.value);
 			}
 		},
-		/**. ``''boolean'' integer``: Checa se o valor é um número real inteiro.**/
+		/**. '{boolean integer}: Checa se o valor é um número real inteiro.**/
 		integer: {
 			get: function() {
 				return this.finite && (this.value%1) === 0;
 			}
 		},
-		/**. ``''boolean'' real``: Checa se o valor é um número real não inteiro.**/
+		/**. '{boolean real}: Checa se o valor é um número real não inteiro.**/
 		decimal: {
 			get: function() {
 				return this.finite && (this.value%1) !== 0;
 			}
 		},
-		/**. ``''boolean'' positive``: Checa se o valor é um número positivo.**/
+		/**. '{boolean positive}: Checa se o valor é um número positivo.**/
 		positive: {
 			get: function() {
 				return this.number && this.value > 0;
 			}
 		},
-		/**. ``''boolean'' negative``: Checa se o valor é um número negativo.**/
+		/**. '{boolean negative}: Checa se o valor é um número negativo.**/
 		negative: {
 			get: function() {
 				return this.number && this.value < 0;
 			}
 		},
-		/**. ``''boolean'' zero``: Checa se o valor é zero.**/
+		/**. '{boolean zero}: Checa se o valor é zero.**/
 		zero: {
 			get: function() {
 				return this.value === 0;
 			}
 		},
-		/**. ``''boolean'' boolean``: Checa se o valor é um valor booleano.**/
+		/**. '{boolean boolean}: Checa se o valor é um valor booleano.**/
 		boolean: {
 			get: function() {
 				if (this.type !== null) return this.type === "boolean";
@@ -1455,7 +1453,7 @@ const wd = (function() {
 				return false;
 			}
 		},
-		/**. ``''boolean'' regexp``: Checa se o valor é uma expressão regular.**/
+		/**. '{boolean regexp}: Checa se o valor é uma expressão regular.**/
 		regexp: {
 			get: function() {
 				if (this.type !== null) return this.type === "regexp";
@@ -1469,7 +1467,7 @@ const wd = (function() {
 				return false;
 			}
 		},
-		/**. ``''boolean'' datetime``: Checa se o valor é um conjunto data/tempo. Enquadram-se nessa condição o construtor nativo ``Date`` e strings em formato de data e tempo, nos termos da biblioteca, separados por espaço, virgula e espaço ou a letra T.**/
+		/**. '{boolean datetime}: Checa se o valor é um conjunto data/tempo. Enquadram-se nessa condição o construtor nativo '{Date} e strings em formato de data e tempo, nos termos da biblioteca, separados por espaço, virgula e espaço ou a letra T.**/
 		datetime: {
 			get: function() {
 				if (this.type !== null) return this.type === "datetime";
@@ -1516,7 +1514,7 @@ const wd = (function() {
 				return true;
 			}
 		},
-		/**. ``''boolean'' date``: Checa se o valor é uma data em formato de string.**/
+		/**. '{boolean date}: Checa se o valor é uma data em formato de string.**/
 		date: {
 			get: function() {
 				if (this.type !== null) return this.type === "date";
@@ -1565,7 +1563,7 @@ const wd = (function() {
 				return true;
 			}
 		},
-		/**. ``''boolean'' function``: Checa se o valor é uma função.**/
+		/**. '{boolean function}: Checa se o valor é uma função.**/
 		function: {
 			get: function() {
 				if (this.type !== null) return this.type === "function";
@@ -1579,7 +1577,7 @@ const wd = (function() {
 				return false;
 			}
 		},
-		/**. ``''boolean'' array``: Checa se o valor é um array.**/
+		/**. '{boolean array}: Checa se o valor é um array.**/
 		array: {
 			get: function() {
 				if (this.type !== null) return this.type === "array";
@@ -1593,7 +1591,7 @@ const wd = (function() {
 				return false;
 			}
 		},
-		/**. ``''boolean'' null``: Checa se o valor é nulo.**/
+		/**. '{boolean null}: Checa se o valor é nulo.**/
 		null: {
 			get: function () {
 				if (this.type !== null) return this.type === "null";
@@ -1607,7 +1605,7 @@ const wd = (function() {
 				return false;
 			}
 		},
-		/**. ``''boolean'' undefined``: Checa se o valor é indefinido.**/
+		/**. '{boolean undefined}: Checa se o valor é indefinido.**/
 		undefined: {
 			get: function() {
 				if (this.type !== null) return this.type === "undefined";
@@ -1621,7 +1619,7 @@ const wd = (function() {
 				return false;
 			}
 		},
-		/**. ``''boolean'' time``: Checa se o argumento é uma string que representa uma unidade de tempo.**/
+		/**. '{boolean time}: Checa se o argumento é uma string que representa uma unidade de tempo.**/
 		time: {
 			get: function() {
 				if (this.type !== null) return this.type === "time";
@@ -1657,7 +1655,7 @@ const wd = (function() {
 				return true;
 			}
 		},
-		/**. ``''boolean'' node``: Checa se o argumento é um elemento HTML ou uma coleção desses.**/
+		/**. '{boolean node}: Checa se o argumento é um elemento HTML ou uma coleção desses.**/
 		node: {
 			get: function() {
 				if (this.type !== null) return this.type === "node";
@@ -1693,7 +1691,7 @@ const wd = (function() {
 				return true;
 			}
 		},
-		/**. ``''boolean'' object``: Checa se o argumento é um objeto que não se enquadra nas demais categorias.**/
+		/**. '{boolean object}: Checa se o argumento é um objeto que não se enquadra nas demais categorias.**/
 		object: {
 			get: function() {
 				if (this.type !== null) return this.type === "object";
@@ -1707,23 +1705,23 @@ const wd = (function() {
 				return false;
 			}
 		},
-		/**. ``''string'' type``: Retorna o tipo do argumento verificado (number, date, time, datetime, string, null, undefined, boolean, array, node, regexp, function, object).**/
+		/**. '{string type}: Retorna o tipo do argumento verificado (number, date, time, datetime, string, null, undefined, boolean, array, node, regexp, function, object).**/
 		type: {
 			get: function() {return this._type;}
 		},
-		/**. ``''any''  value``: Retorna o valor do argumento de acordo com o atributo ``type``. Tipos de referência, primitivos e data/tempo retornam valores de referência, primitivos e strings, respectivamente.**/
+		/**. '{any  value}: Retorna o valor do argumento de acordo com o atributo '{type}. Tipos de referência, primitivos e data/tempo retornam valores de referência, primitivos e strings, respectivamente.**/
 		value: {
 			get: function() {return this._value;}
 		},
-		/**. ``''void''  valueOf()``: Método padrão.**/
+		/**. '{void  valueOf()}: Método padrão.**/
 		valueOf: {
 			value: function() {return this._valueOf;}
 		},
-		/**. ``''string'' toString()``: Método padrão.**/
+		/**. '{string toString()}: Método padrão.**/
 		toString: {
 			value: function() {return this._toString;}
 		},
-		/**. ``''boolean'' instanceOf(''string'' name)``: Retorna se o valor informado é instância do objeto cujo __nome__ é informado no argumento ``name``.**/
+		/**. '{boolean instanceOf(string name)}: Retorna se o valor informado é instância do objeto cujo __nome__ é informado no argumento '{name}.**/
 		instanceOf: {
 			value: function (name) {
 				name = String(name).trim();
@@ -1735,9 +1733,9 @@ const wd = (function() {
 	});
 
 /*----------------------------------------------------------------------------*/
-	/**#### Gestão de Dados
-	###### ``**constructor** ''object'' __DataSet(''any'' input)``
-	Construtor para gerir conjunto de dados. O argumento opcional ``input`` será importado conforme método ``import`` que será chamado durante a construção.**/
+	/**#4 Gestão de Dados
+	''constructor object __DataSet(any input)''
+	Construtor para gerir conjunto de dados. O argumento opcional '{input} será importado conforme método '{import} que será chamado durante a construção.**/
 	function __DataSet(input) {
 		if (!(this instanceof __DataSet))	return new __DataSet(input);
 		Object.defineProperties(this, {_data: {value: []}});
@@ -1746,7 +1744,7 @@ const wd = (function() {
 
 	Object.defineProperties(__DataSet.prototype, {
 		constructor: {value: __DataSet},
-		/**. ``''self'' import(''any'' input)``: Importa os dados de ``input`` que podendo ser uma string no formato "name: value\r\n", um objeto, um array ou instâncias de Headers, FormData, URLSearchParams ou __DataSet.**/
+		/**. '{self import(any input)}: Importa os dados de '{input} que podendo ser uma string no formato "name: value\r\n", um objeto, um array ou instâncias de Headers, FormData, URLSearchParams ou __DataSet.**/
 		import: {
 			value: function(input) {
 				const check  = __Type(input);
@@ -1809,7 +1807,7 @@ const wd = (function() {
 				return;
 			}
 		},
-		/**. ``''self'' append(''string'' name, ''any'' value)``: Acrescenta um valor (``value``) vinculado a um identificador (``name``).**/
+		/**. '{self append(string name, any value)}: Acrescenta um valor ('{value}) vinculado a um identificador ('{name}).**/
 		append: {
 			value: function(name, value) {
 				name = String(name).replace(/\[\]$/, "").trim();
@@ -1818,7 +1816,7 @@ const wd = (function() {
 				return this
 			}
 		},
-		/**. ``''self'' delete(''string'' name)``: Remove todos os valores associados ao indentificador ``name``.**/
+		/**. '{self delete(string name)}: Remove todos os valores associados ao indentificador '{name}.**/
 		delete: {
 			value: function(name) {
 				name = String(name).replace(/\[\]$/, "").trim();
@@ -1829,14 +1827,14 @@ const wd = (function() {
 				return this;
 			}
 		},
-		/**. ``''self'' set(''string'' name, ''any'' value)``: Define um valor (``value``) vinculado a um identificador (``name``), substuindo os existentes.**/
+		/**. '{self set(string name, any value)}: Define um valor ('{value}) vinculado a um identificador ('{name}), substuindo os existentes.**/
 		set: {
 			value: function(name, value) {
 				this.delete(name).append(name, value);
 				return this;
 			}
 		},
-		/**. ``''array'' getAll(''string'' name)``: Retorna uma lista de valores identificados por ``name``.**/
+		/**. '{array getAll(string name)}: Retorna uma lista de valores identificados por '{name}.**/
 		getAll: {
 			value: function(name) {
 				name = String(name).replace(/\[\]$/, "").trim();
@@ -1848,7 +1846,7 @@ const wd = (function() {
 				return list;
 			}
 		},
-		/**. ``''boolean'' has(''string'' name)``: Retorna verdadeiro se o identificador ``name`` existir.**/
+		/**. '{boolean has(string name)}: Retorna verdadeiro se o identificador '{name} existir.**/
 		has: {
 			value: function(name) {
 				name = String(name).replace(/\[\]$/, "").trim();
@@ -1859,7 +1857,7 @@ const wd = (function() {
 				return false;
 			}
 		},
-		/**. ``''object'' toObject``: Converte o conjunto de dados em um objeto com **sobreposição de identificadores**.**/
+		/**. '{object toObject}: Converte o conjunto de dados em um objeto com **sobreposição de identificadores**.**/
 		toObject: {
 			get: function() {
 				const data = {};
@@ -1867,7 +1865,7 @@ const wd = (function() {
 				return data;
 			}
 		},
-		/**. ``''object'' toMap``: Converte o conjunto de dados em um Mapa com **sobreposição de identificadores**.**/
+		/**. '{object toMap}: Converte o conjunto de dados em um Mapa com **sobreposição de identificadores**.**/
 		toMap: {
 			get: function() {
 				const data = new Map();
@@ -1875,7 +1873,7 @@ const wd = (function() {
 				return data;
 			}
 		},
-		/**. ``''object'' toListObject``: Converte o conjunto de dados em um objeto organizado em listas de valores.**/
+		/**. '{object toListObject}: Converte o conjunto de dados em um objeto organizado em listas de valores.**/
 		toListObject: {
 			get: function() {
 				const data = {};
@@ -1913,7 +1911,7 @@ const wd = (function() {
 				return data;
 			}
 		},
-		/**. ``''object'' toObjectHeaders``: Converte o conjunto de dados em um objeto organizado em strings com valores separador por ", ".**/
+		/**. '{object toObjectHeaders}: Converte o conjunto de dados em um objeto organizado em strings com valores separador por ", ".**/
 		toObjectHeaders: {
 			get: function() {
 				const data = {};
@@ -1928,7 +1926,7 @@ const wd = (function() {
 				return data;
 			}
 		},
-		/**. ``''object'' toHeaders``: Converte o conjunto de dados em um objeto Headers. Se a ferramenta não estiver definida, retornará o resultado da propriedade ``toObjectHeaders``.**/
+		/**. '{object toHeaders}: Converte o conjunto de dados em um objeto Headers. Se a ferramenta não estiver definida, retornará o resultado da propriedade '{toObjectHeaders}.**/
 		toHeaders: {
 			get: function() {
 				if (!("Headers" in window)) return this.toObjectHeaders;
@@ -1940,7 +1938,7 @@ const wd = (function() {
 				return data;
 			}
 		},
-		/**. ``''string'' toStringHeaders``: Converte o conjunto de dados em uma string com dados separados por "\r\n" e nome e valor separados por ": ".**/
+		/**. '{string toStringHeaders}: Converte o conjunto de dados em uma string com dados separados por "\r\n" e nome e valor separados por ": ".**/
 		toStringHeaders: {
 			get: function() {
 				const data = [];
@@ -1949,7 +1947,7 @@ const wd = (function() {
 				return data.join("");
 			}
 		},
-		/**. ``''object'' toFormData``: Converte o conjunto de dados em um objeto FormData. Se a ferramenta não estiver definida, retornará o resultado da propriedade ``toSearch``.**/
+		/**. '{object toFormData}: Converte o conjunto de dados em um objeto FormData. Se a ferramenta não estiver definida, retornará o resultado da propriedade '{toSearch}.**/
 		toFormData: {
 			get: function() {
 				if (!("FormData" in window)) return this.toSearch;
@@ -1961,7 +1959,7 @@ const wd = (function() {
 				return data;
 			}
 		},
-		/**. ``''object'' toURLSearchParams``: Converte o conjunto de dados em um objeto URLSearchParams. Se a ferramenta não estiver definida, retornará o resultado da propriedade ``toSearch``.**/
+		/**. '{object toURLSearchParams}: Converte o conjunto de dados em um objeto URLSearchParams. Se a ferramenta não estiver definida, retornará o resultado da propriedade '{toSearch}.**/
 		toURLSearchParams: {
 			get: function() {
 				if (!("URLSearchParams" in window)) return this.toSearch;
@@ -1978,7 +1976,7 @@ const wd = (function() {
 				return data;
 			}
 		},
-		/**. ``''string'' toSearch``: Converte o conjunto de dados em uma string com itens separados por &amp;.**/
+		/**. '{string toSearch}: Converte o conjunto de dados em uma string com itens separados por &amp;.**/
 		toSearch: {
 			get: function() {
 				const data = [];
@@ -1997,22 +1995,22 @@ const wd = (function() {
 		[Symbol.iterator]: {
 			value: function*() {for (let v of this.entries()) yield v;}
 		},
-		/**. ``''object'' entries()``: Retorna um objeto Generator para looping ''for of'' das entradas.**/
+		/**. '{object entries()}: Retorna um objeto Generator para looping i{for of} das entradas.**/
 		entries: {
 			value: function*() {
 				for (let v of this._data)
 					if (v !== null) yield [v.name, v.value];
 			}
 		},
-		/**. ``''object'' keys()``: Retorna um objeto Generator para looping ''for of'' das chaves.**/
+		/**. '{object keys()}: Retorna um objeto Generator para looping i{for of} das chaves.**/
 		keys: {
 			value: function*() {for (let v of this.entries()) yield v[0];}
 		},
-		/**. ``''object'' values()``: Retorna um objeto Generator para looping ''for of'' dos valores.**/
+		/**. '{object values()}: Retorna um objeto Generator para looping i{for of} dos valores.**/
 		values: {
 			value: function*() {for (let v of this.entries()) yield v[1];}
 		},
-		/**. ``''self'' forEach(''function'' caller)``: Chama ``caller`` para cada item, repassando o valor e nome, e um objeto com o par nome/valor, respectivamente, como argumentos.**/
+		/**. '{self forEach(function' caller)}: Chama '{caller} para cada item, repassando o valor e nome, e um objeto com o par nome/valor, respectivamente, como argumentos.**/
 		forEach: {
 			value: function(caller) {
 				if (__Type(caller).function) {
@@ -2023,7 +2021,7 @@ const wd = (function() {
 				return this;
 			}
 		},
-		/**. ``''integer'' size``: Retorna um objeto representativo e não utilizável dos dados.**/
+		/**. '{integer size}: Retorna um objeto representativo e não utilizável dos dados.**/
 		size: {
 			get: function() {
 				let size = 0;
@@ -2031,7 +2029,7 @@ const wd = (function() {
 				return size;
 			}
 		},
-		/**. ``''object'' valueOf()``: Retorna uma representação dos dados em forma de objeto.**/
+		/**. '{object valueOf()}: Retorna uma representação dos dados em forma de objeto.**/
 		valueOf: {
 			value: function() {
 				const counter = {};
@@ -2046,11 +2044,11 @@ const wd = (function() {
 				return dataset;
 			}
 		},
-		/**. ``''string'' toString()``: Retorna o mesmo produto da propriedade ``toStringHeaders``.**/
+		/**. '{string toString()}: Retorna o mesmo produto da propriedade '{toStringHeaders}.**/
 		toString: {
 			value: function() {return this.toStringHeaders;}
 		},
-		/**. ``''object'' toSubmit(''any'' action, ''string'' method)``: O argumento ``action`` é a URL (string ou objeto URL) e o argumento ``method`` é o método da requisição. O método retorna um objeto com as seguintes propriedades para fins de requisição XMLHttpRequest, devendo inicialmente povoar o objeto com os valores de formulário e depois chamar o método:
+		/**. '{object toSubmit(any action, string method)}: O argumento '{action} é a URL (string ou objeto URL) e o argumento '{method} é o método da requisição. O método retorna um objeto com as seguintes propriedades para fins de requisição XMLHttpRequest, devendo inicialmente povoar o objeto com os valores de formulário e depois chamar o método:
 		|Nome|Descrição|
 		|url|URL a ser utilizada na requisição|
 		|ctype|O content-type a ser informado no cabeçalho, dependendo do método|
@@ -2079,8 +2077,8 @@ const wd = (function() {
 	});
 
 /*----------------------------------------------------------------------------*/
-	/**#### Árvore de Dados
-	###### ``**constructor** ''object'' __Tree()``
+	/**#4 Árvore de Dados
+	''constructor object __Tree()''
 	Construtor para manipulação de regras com com aberturas e fechamentos de níveis para fins de construção guiada de código XML.**/
 	function __Tree() {
 		if (!(this instanceof __Tree)) return new __Tree();
@@ -2095,7 +2093,7 @@ const wd = (function() {
 
 	Object.defineProperties(__Tree.prototype, {
 		constructor: {value: __Tree},
-		/**. ``''string'' char(''string'' x)``: Retorna o argumento adaptado para exibição HTML.**/
+		/**. '{string char(string x)}: Retorna o argumento adaptado para exibição HTML.**/
 		char: {
 			value: function(x) {
 				if (x === undefined || x === null) return "";
@@ -2110,19 +2108,19 @@ const wd = (function() {
 				return chars.join("");
 			}
 		},
-		/**. ``''boolean'' xml``: Define se a estrutura da árvore se destina à marcação XML.**/
+		/**. '{boolean xml}: Define se a estrutura da árvore se destina à marcação XML.**/
 		xml: {
 			get: function()  {return this._xml === true;},
 			set: function(x) {this._xml = x === true;}
 		},
-		/**. ``''string'' level``: Retorna o nome do último nível informado ou nulo se vazio.**/
+		/**. '{string level}: Retorna o nome do último nível informado ou nulo se vazio.**/
 		level: {
 			get: function() {
 				if (this._tree.length === 0) return null;
 				return this._tree[this._tree.length - 1];
 			}
 		},
-		/**. ``''string'' pattern(''string'' model)``: Define e retorna um modelo padrão de ''tag'' a ser elaborada a partir do nome do nível. O nome do nível será inserido no modelo a partir da substituição do caracteres de interrogação. Por exemplo, se definido o modelo "span-?" e nível "line", a ''tag'' de abertura será ''<span-line>''. O valor padrão é "?", obtido quando se define o argumento como string vazia ou nulo. Se o argumento for indefinido, retorna o valor.**/
+		/**. '{string pattern(string model)}: Define e retorna um modelo padrão de i{tag} a ser elaborada a partir do nome do nível. O nome do nível será inserido no modelo a partir da substituição do caracteres de interrogação. Por exemplo, se definido o modelo "span-?" e nível "line", a i{tag} de abertura será i{<span-line>}. O valor padrão é "?", obtido quando se define o argumento como string vazia ou nulo. Se o argumento for indefinido, retorna o valor.**/
 		pattern: {
 			value: function(model) {
 				if (model === undefined) return this._pattern;
@@ -2131,24 +2129,26 @@ const wd = (function() {
 				return this._pattern;
 			}
 		},
-		/**. ``''self'' add(''string'' chars)``: Adiciona caracteres à arvore.**/
+		/**. '{self add(string chars)}: Adiciona caracteres à arvore.**/
 		add: {
 			value: function(chars) {
 				this._data.push(this.char(chars));
 				return this;
 			}
 		},
-		/**. ``''self'' open(''string'' name)``: Abre novo nível nomeado conforme argumento ``name``.**/
+		/**. '{self open(string name)}: Abre novo nível nomeado conforme argumento '{name}. O argumento é a tag do elemento seguido, se houver, dos atributos a serem aplicados.**/
 		open: {
 			value: function(name) {
-				const level = String(name).replace(/\s+/g, "").trim();
-				const elem  = this.pattern().replace(/\?+/g, level);
-				this._tree.push(level);
-				this._data.push("<"+elem+">");
+				const data = String(name).replace(/\s+/g, " ").trim().split(" ");
+				const tag  = data[0];
+				const attr = data.slice(1).join(" ");
+				const elem = this.pattern().replace(/\?+/g, tag);
+				this._tree.push(tag);
+				this._data.push(`<${elem} ${attr}>`);
 				return this;
 			}
 		},
-		/**. ``''self'' close()``: Fecha o último nível aberto.**/
+		/**. '{self close()}: Fecha o último nível aberto.**/
 		close: {
 			value: function() {
 				const elem = this.pattern().replace(/\?+/g, this.level);
@@ -2157,20 +2157,20 @@ const wd = (function() {
 				return this;
 			}
 		},
-		/**. ``''self'' append(''string'' name, string'' chars)``: Aplica o método ``open`` e ``close`` em sequência inserido o conteúdo de ``chars``.**/
+		/**. '{self append(string name, string chars)}: Aplica o método '{open} e '{close} em sequência inserido o conteúdo de '{chars}.**/
 		append: {
 			value: function(name, chars) {
 				return this.open(name).add(chars).close();
 			}
 		},
-		/**. ``''self'' finish()``: Fecha todos os níveis abertos.**/
+		/**. '{self finish()}: Fecha todos os níveis abertos.**/
 		finish: {
 			value: function() {
 				while (this.level !== null) this.close();
 				return this;
 			}
 		},
-		/**. ``''self'' walkTo(''integer'' level)``: Fechar todos os níveis até o nível informado em ''level'', salvando o caminho para restauração através do método ''backTo''.**/
+		/**. '{self walkTo(integer level)}: Fechar todos os níveis até o nível informado em i{level}, salvando o caminho para restauração através do método i{backTo}.**/
 		walkTo: {
 			value: function(level) {
 				const check = __Type(level);
@@ -2181,7 +2181,7 @@ const wd = (function() {
 				return this;
 			}
 		},
-		/**. ``''self'' backTo()``: Reabre os caminhos fechados em ''walkTo''.**/
+		/**. '{self backTo()}: Reabre os caminhos fechados em i{walkTo}.**/
 		backTo: {
 			value: function() {
 				if (this._tree.length < this._save.length) {
@@ -2192,7 +2192,7 @@ const wd = (function() {
 				return this;
 			}
 		},
-		/**. ``''string'' toString()``: Retorna o conteúdo textual da árvore.**/
+		/**. '{string toString()}: Retorna o conteúdo textual da árvore.**/
 		toString: {
 			value: function() {
 				const pre = document.createElement("PRE");
@@ -2200,14 +2200,14 @@ const wd = (function() {
 				return pre.innerText;
 			}
 		},
-		/**. ``''string'' valueOf()``: Retorna a estrutura (HTML) da árvore.**/
+		/**. '{string valueOf()}: Retorna a estrutura (HTML) da árvore.**/
 		valueOf: {value: function() {return this._data.join("");}}
 	});
 
 /*----------------------------------------------------------------------------*/
-	/**#### Transformação de Dados
-	###### ``**constructor** ''object'' __Parser(''any'' input)``
-	Construtor para transformação de dados. Os dados de entrada são informados no argumento ``input``. Se a transformação falhar, os atributos retornarão nulo. Todos as propriedades retornam uma nova instância do objeto ''__Parser'' com o resultado da transformação anterior com o objetivo de fazê-las em cadeia. Utilize o método ''get'' ao fim das trasformações para obter seu valor.**/
+	/**#4 Transformação de Dados
+	''constructor object __Parser(any input)''
+	Construtor para transformação de dados. Os dados de entrada são informados no argumento '{input}. Se a transformação falhar, os atributos retornarão nulo. Todos as propriedades retornam uma nova instância do objeto i{__Parser} com o resultado da transformação anterior com o objetivo de fazê-las em cadeia. Utilize o método i{get} ao fim das trasformações para obter seu valor.**/
 	function __Parser(input) {
 		if (!(this instanceof __Parser)) return new __Parser(input);
 		const check = new __Type(input);
@@ -2221,7 +2221,7 @@ const wd = (function() {
 
 	Object.defineProperties(__Parser.prototype, {
 		constructor: {value: __Parser},
-		/**. ``''object'' csvTable``: Transforma string [CSV]<https://www.rfc-editor.org/rfc/rfc4180> em tabela HTML.**/
+		/**. '{object csvTable}: Transforma string [CSV]<https://www.rfc-editor.org/rfc/rfc4180> em tabela HTML.**/
 		csvTable: {
 			get: function() {
 				if ("csvTable" in this._saved)
@@ -2293,7 +2293,7 @@ const wd = (function() {
 				return this.csvTable;
 			}
 		},
-		/**. ``''object'' tableMatrix``: Transforma tabela HTML em matriz 2x2.**/
+		/**. '{object tableMatrix}: Transforma tabela HTML em matriz 2x2.**/
 		tableMatrix: {
 			get: function() {
 				if ("tableMatrix" in this._saved)
@@ -2309,7 +2309,7 @@ const wd = (function() {
 				return this.tableMatrix;
 			}
 		},
-		/**. ``''object'' tableValues``: Igual à propriedade ``tableMatrix``, mas exibindo os valores das células.**/
+		/**. '{object tableValues}: Igual à propriedade '{tableMatrix}, mas exibindo os valores das células.**/
 		tableValues: {
 			get: function() {
 				if ("tableValues" in this._saved)
@@ -2324,7 +2324,7 @@ const wd = (function() {
 				return this.tableValues;
 			}
 		},
-		/**. ``''object'' matrixCSV``: Transforma uma matriz em string CSV.**/
+		/**. '{object matrixCSV}: Transforma uma matriz em string CSV.**/
 		matrixCSV: {
 			get: function() {
 				if ("matrixCSV" in this._saved)
@@ -2348,7 +2348,7 @@ const wd = (function() {
 				return this.matrixCSV;
 			}
 		},
-		/**. ``''object'' matrixList``: Transforma uma matriz em uma lista de objetos.**/
+		/**. '{object matrixList}: Transforma uma matriz em uma lista de objetos.**/
 		matrixList: {
 			get: function() {
 				if ("matrixList" in this._saved)
@@ -2378,7 +2378,7 @@ const wd = (function() {
 				return this.matrixList;
 			}
 		},
-		/**. ``''object'' stringJSON``: Transforma string JSON em objeto.**/
+		/**. '{object stringJSON}: Transforma string JSON em objeto.**/
 		stringJSON: {
 			get: function() {
 				if ("stringJSON" in this._saved)
@@ -2391,7 +2391,7 @@ const wd = (function() {
 				return this.stringJSON;
 			}
 		},
-		/**. ``''object'' jsonString``: Transforma objeto em string JSON.**/
+		/**. '{object jsonString}: Transforma objeto em string JSON.**/
 		jsonString: {
 			get: function() {
 				if ("jsonString" in this._saved)
@@ -2402,7 +2402,7 @@ const wd = (function() {
 				return this.jsonString;
 			}
 		},
-		/**. ``''object'' stringHTML``: Transforma string em documento HTML.**/
+		/**. '{object stringHTML}: Transforma string em documento HTML.**/
 		stringHTML: {
 			get: function() {
 				if ("stringHTML" in this._saved)
@@ -2418,7 +2418,7 @@ const wd = (function() {
 				return this.stringHTML;
 			}
 		},
-		/**. ``''object'' stringXML``: Transforma string em documento XML.**/
+		/**. '{object stringXML}: Transforma string em documento XML.**/
 		stringXML: {
 			get: function() {
 				if ("stringXML" in this._saved)
@@ -2434,7 +2434,7 @@ const wd = (function() {
 				return this.stringXML;
 			}
 		},
-		/**. ``''object'' stringSVG``: Transforma string em documento SVG.**/
+		/**. '{object stringSVG}: Transforma string em documento SVG.**/
 		stringSVG: {
 			get: function() {
 				if ("stringSVG" in this._saved)
@@ -2450,7 +2450,7 @@ const wd = (function() {
 				return this.stringSVG;
 			}
 		},
-		/**. ``''object'' arrayWD``: Transforma array de objetos em notação wd.**/
+		/**. '{object arrayWD}: Transforma array de objetos em notação wd.**/
 		arrayWD: {
 			get: function() {
 				if ("arrayWD" in this._saved)
@@ -2530,7 +2530,7 @@ const wd = (function() {
 				return this.arrayWD;
 			}
 		},
-		/**. ``''object'' wdArray``: Transforma notação wd em um array de objetos.
+		/**. '{object wdArray}: Transforma notação wd em um array de objetos.
 		. A notação é semelhante a JSON com as seguintes diferenças:
 		- o nome das propriedades do objeto não contem aspas;
 		- o nome das propriedades do objeto podem conter apenas caracteres alfanuméricos, traços e sublinhados;
@@ -2540,7 +2540,7 @@ const wd = (function() {
 		- expressão regulares são permitidas em objetos e arrays;
 		- a notação para expressão regular é semelhante à primitiva, os escapes devem ser duplos;
 		- um erro na expressão regular tornará seu valor nulo;
-		- funcões dentro do escopo de window, definidas com ''var'' e ''function'', são permitidas em objetos e arrays;
+		- funcões dentro do escopo de window, definidas com i{var} e function', são permitidas em objetos e arrays;
 		- para referenciar a função, seu nome deve estar entre parenteses;
 		- se a função não for encontrada, seu valor será nulo; e
 		- por padrão, todos os valores são strings, exceto números, null, true e false.
@@ -2772,7 +2772,7 @@ const wd = (function() {
 				return this.wdArray;
 			}
 		},
-		/**. ``''object'' fileURL``: Transforma dados em string URL.**/
+		/**. '{object fileURL}: Transforma dados em string URL.**/
 		fileURL: {
 			get: function() {
 				if ("fileURL" in this._saved)
@@ -2786,7 +2786,7 @@ const wd = (function() {
 				return this.fileURL;
 			}
 		},
-		/**. ``''object'' dataBlob``: Transforma dados em objeto Blob.**/
+		/**. '{object dataBlob}: Transforma dados em objeto Blob.**/
 		dataBlob: {
 			get: function() {
 				if ("dataBlob" in this._saved)
@@ -2800,12 +2800,12 @@ const wd = (function() {
 				return this.dataBlob;
 			}
 		},
-		/**. ``''any'' get()``: Obtem o valor da transformação ou de entrada.**/
+		/**. '{any get()}: Obtem o valor da transformação ou de entrada.**/
 		get: {
 			value: function() {return this._data;}
 		},
 		//FIXME não funciona, tem que estar fora de um objeto
-		/**. ``''void'' mixin(''object'' supplier, ''array'' exceptions)``: Cópia as propriedades do __objeto__ definido em ``supplier`` para o __objeto__ de entrada, exceto aquelas propriedades listadas em ``exceptions``.**/
+		/**. '{void mixin(object supplier, array exceptions)}: Cópia as propriedades do __objeto__ definido em '{supplier} para o __objeto__ de entrada, exceto aquelas propriedades listadas em '{exceptions}.**/
 		mixin: {
 			value: function(supplier, exceptions) {
 				if (!this.check.object) return;
@@ -2825,7 +2825,7 @@ const wd = (function() {
 
 
 
-		/**. ``''object'' wdArray``: Transforma notação wd em um array de objetos.**/
+		/**. c{object wdComment(str open, str close)}: Segrega o código fonte do conteúdo definido entre os caracteres c{open} e c{close}. Retorna um objeto com as propriedades i{src} (código fonte), i{doc} (conteúdo segregado) e i{html} (documento HTML montado a partir do conteúdo segregado).**/
 		wdComment: {
 			value: function(open, close) {
 				if (!this._check.string) return null;
@@ -2862,7 +2862,6 @@ const wd = (function() {
 
 
 
-
 		wdDoc: {
 			get: function() {
 				if ("wdDoc" in this._saved)
@@ -2875,47 +2874,87 @@ const wd = (function() {
 						const tree = new __Tree();
 						const type = {
 							/*-- blocos múltiplas linhas --*/
-							quote: /^(\"\"\")(.+)/,
-							pre:   /^(\`\`\`)(.+)/,
+							quote: /^(\"\")(.+)/,
+							pre:   /^(\'\')(.+)/,
 							/*-- blocos de consistência --*/
 							table: /^\|(.+)\|$/,
-							ul:    /^(\-)\s(.+)$/,
-							dl:    /^(\.)\s(.+)$/,
+							ul:    /^(\-)\s+(.+)$/,
+							dl:    /^(\.)\s+(.+)$/,
 							/*-- blocos de linha única --*/
-							head:  /^(\#{1,6})\s(.+)$/,
-						}
-						let tag, val, txt, index = 0;
+							head:  /^\#([0-6])\s+(.+)$/,
+							media: /^\@(image|audio|video)\s+\<([^>]+)\>(.*)$/,
+						};
+						/*-- função para elementos inline --*/
+						function inline(tree, input) {
+							const code = input.split("");
+							const find = /^([a-z\-0-9]+|\')\{([^}]+)\}(\[[^\]]+\])?/i;
+							let txt, val, tag, index = 0;
+							while (index < code.length) {
+								tag = tree.level;
+								txt = code.slice(index).join("");
+								val = code[index];
+								if (find.test(txt)) {
+									let base = txt.match(find)[0];
+									let elem = base.replace(find, "$1");
+									let text = base.replace(find, "$2");
+									let attr = base.replace(find, "$3").replace(/^\[/, "").replace(/\]$/, "");
+									if (elem === "'") elem = "code";
+									tree.open(`${elem} ${attr}`).add(text).close();
+									index += base.length;
+								} else {
+									tree.add(val);
+									index++
+								}
+							}
+							return;
+						};
 						/*----------------------------------------------------------------*/
+						let tag, txt, key, index = 0, title=0;
 						tree.xml = true;
 						tree.open("main");
-
 						while (index < code.length) {
-							val = null;
-							txt = code[index].trim();
 							tag = tree.level;
+							txt = code[index].trim();
+							key = null;
+
 							for (let i in type)
-								if (val === null && type[i].test(txt)) val = i;
+								if (key === null && type[i].test(txt)) key = i;
+							console.log({tag: tag, key: key, txt: txt})
 							/*--------------------------------------------------------------*/
 							if (tag === "main") {
-								switch(val) {
+								switch(key) {
 									/*-- blocos de consistência --*/
 									case "table": {tree.open("table");      break;}
 									case "ul":    {tree.open("ul");         break;}
 									case "dl":    {tree.open("dl");         break;}
 									/*-- blocos múltiplas linhas --*/
-									case "pre":   {tree.open("pre");        break;}
-									case "quote": {tree.open("blockquote"); break;}
+									case "pre":   {code[index] = txt.slice(2); tree.open("pre");        break;}
+									case "quote": {code[index] = txt.slice(2); tree.open("blockquote"); break;}
 									/*-- blocos de linha única --*/
 									case "head":  {
-										let head = txt.replace(type.head, "$1").length;
-										let text = txt.replace(type.head, "$2");
-										tree.open(`h${head}`).add(text).close();
+										let head = Number(txt.replace(type.head, "$1"));
+										let text = txt.replace(type.head, "$2").trim();
+										if (head === 0)
+											tree.open(`h3`).add(text).close().open("menu").close().open(`hr`).close();
+										else if (head < 3)
+											tree.open(`h${head}`).add(text).close();
+										else
+											tree.open(`h${head} id="title_${title++}"`).add(text).close();
+										index++;
+										break;
+									}
+									case "media":  {
+										/^\@(image|audio|video)\s+\<([^>]+)\>(.*)$/
+										let type = txt.replace(type.media, "$1");
+										let data = txt.replace(type.media, "$2");
+										let text = txt.replace(type.media, "$3");
+										tree.open(`object type="${type}" data="${data}"`).add(text).close();
 										index++;
 										break;
 									}
 									default: {
 										if (txt !== "")
-											tree.open("p").add(txt).close();
+											tree.open("p").add(inline(tree, txt)).close();
 										index++;
 									}
 								}
@@ -2925,27 +2964,27 @@ const wd = (function() {
 								let th = txt.replace(type.table, "$1").split("|");
 								tree.open("thead").open("tr");
 								for (let i = 0; i < th.length; i++)
-									tree.open("th").add(th[i]).close();
+									tree.open("th").add(inline(tree, th[i])).close();
 								tree.close().close().open("tbody");
 								index++;
 							}
 							/*--------------------------------------------------------------*/
 							else if (tag === "tbody") {
-								if (val !== "table") {
+								if (key !== "table") {
 									tree.close().close();
 								}
 								else {
 									let td = txt.replace(type.table, "$1").split("|");
 									tree.open("tr");
 									for (let i = 0; i < td.length; i++)
-										tree.open("td").add(td[i]).close();
+										tree.open("td").add(inline(tree, td[i])).close();
 									tree.close();
 									index++;
 								}
 							}
 							/*--------------------------------------------------------------*/
 							else if (tag === "dl") {
-								if (val !== "dl") {
+								if (key !== "dl") {
 									tree.close();
 								}
 								else {
@@ -2953,40 +2992,40 @@ const wd = (function() {
 									let dl = /^([^:]+)\:(.+)$/;
 									let dt = /^([^:]+)\:$/;
 									if (dl.test(dd))
-										tree.open("dt").add(dd.replace(dl, "$1")).close().
-										open("dd").add(dd.replace(dl, "$2")).close();
+										tree.open("dt").add(inline(tree, dd.replace(dl, "$1"))).close().
+										open("dd").add(inline(tree, dd.replace(dl, "$2"))).close();
 									else if (dt.test(dd))
-										tree.open("dt").add(dd.replace(dt, "$1")).close();
+										tree.open("dt").add(inline(tree, dd.replace(dt, "$1"))).close();
 									else
-										tree.open("dd").add(dd).close();
+										tree.open("dd").add(inline(tree, dd)).close();
 									index++;
 								}
 							}
 							/*--------------------------------------------------------------*/
 							else if (tag === "ul") {
-								if (val !== "ul") {
+								if (key !== "ul") {
 									tree.close();
 								} else {
 									let li = txt.replace(type.ul, "$2");
-									tree.open("li").add(li).close();
+									tree.open("li").add(inline(tree, li)).close();
 									index++;
 								}
 							}
 							/*--------------------------------------------------------------*/
 							else if (tag === "pre") {
-								let re  = /^(\`\`\`)?(.+)(\`\`\`)?$/;
-								let pre = txt.replace(re, "$2");
-								let end = txt.replace(re, "$3") === "```";
+								let re  = /(\'\')$/;
+								let end = re.test(txt);
+								let pre = end ? txt.replace(re, "") : txt;
 								tree.add(pre).add(end ? "" : "\n");
 								if (end) tree.close();
 								index++;
 							}
 							/*--------------------------------------------------------------*/
 							else if (tag === "blockquote") {
-								let re    = /^(\"\"\")?(.+)(\"\"\")?$/;
-								let quote = txt.replace(re, "$2");
-								let end   = txt.replace(re, "$3") === `"""`;
-								tree.open("p").add(quote).close();
+								let re    = /(\"\")$/;
+								let end   = re.test(txt);
+								let quote = end ? txt.replace(re, "") : txt;
+								tree.open("p").add(inline(tree, quote)).close();
 								if (end) tree.close();
 								index++;
 							}
@@ -2995,51 +3034,10 @@ const wd = (function() {
 						tree.finish();
 						data = document.createElement("div");
 						data.innerHTML = tree.valueOf();
-						let query = data.querySelectorAll("p, dd, dt, th, td, li, h1, h2, h3, h4, h5, h6");
-						/*----------------------------------------------------------------*/
-						function inline(input) {
-							const tree = new __Tree();
-							const code = input.trim().normalize().split("");
-							let txt, val, tag, index = 0;
-							//tree.open("span");
-							while (index < code.length) {
-								tag = tree.level;
-								txt = code[index];
-								val = code.slice(index, index+2).join("");
-								index += 2;
-								switch(val) {
-									case "**": {
-										tag === "b" ? tree.close() : tree.open("b");
-										break;
-									}
-									case "''": {
-										tag === "i" ? tree.close() : tree.open("i");
-										break;
-									}
-									case "__": {
-										tag === "u" ? tree.close() : tree.open("u");
-										break;
-									}
-									case "``": {
-										tag === "code" ? tree.close() : tree.open("code");
-										break;
-									}
-									default: {
-										index--;
-										tree.add(txt);
-									}
-								}
-							}
-							tree.finish();
-							return tree.valueOf();
-						}
-
-						for (let i = 0; i < query.length; i++)
-							query[i].innerHTML = inline(query[i].innerText);
 					}
 				}
 				catch(e) {
-					console.info(`${e.message}`)
+					console.info(e)
 				}
 				this._saved["wdDoc"] = data;
 				return this.wdDoc;
@@ -3059,9 +3057,9 @@ const wd = (function() {
 	});
 
 /*============================================================================*/
-	/**### Números
-	###### ``**constructor** ''object'' __Number(number input=0)``
-	Construtor para manipulação de números. O argumento ``input`` se refere ao número de entrada do construtor.**/
+	/**#3 Números
+	''constructor object __Number(number input=0)''
+	Construtor para manipulação de números. O argumento '{input} se refere ao número de entrada do construtor.**/
 	function __Number(input) {
 		if (!(this instanceof __Number)) return new __Number(input);
 		let check = __Type(input);
@@ -3074,7 +3072,7 @@ const wd = (function() {
 
 	Object.defineProperties(__Number.prototype, {
 		constructor: {value: __Number},
-		/**. ``''array'' _primes``: Lista de números primos até 1000.**/
+		/**. '{array _primes}: Lista de números primos até 1000.**/
 		_primes: {value: [
 			2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97,101,
 			103,107,109,113,127,131,137,139,149,151,157,163,167,173,179,181,191,193,197,
@@ -3086,17 +3084,17 @@ const wd = (function() {
 			811,821,823,827,829,839,853,857,859,863,877,881,883,887,907,911,919,929,937,
 			941,947,953,967,971,977,983,991,997
 		]},
-		/**. ``''boolean'' finite``: Checa se o número é finito.**/
+		/**. '{boolean finite}: Checa se o número é finito.**/
 		finite: {get: function() {return this._check.finite;}},
-		/**. ``''number'' valueOf()``: Retorna o valor numérico.**/
+		/**. '{number valueOf()}: Retorna o valor numérico.**/
 		valueOf: {value: function() {return this.value;}},
-		/**. ``''number'' toString()``: Retorna o valor em forma de string.**/
+		/**. '{number toString()}: Retorna o valor em forma de string.**/
 		toString: {value: function() {return this._check.toString()}},
-		/**. ``''number'' abs``: Retorna o valor absoluto do número.**/
+		/**. '{number abs}: Retorna o valor absoluto do número.**/
 		abs: {get: function() {return Math.abs(this.value);}},
-		/**. ``''integer'' int``: Retorna a parte inteira do número.**/
+		/**. '{integer int}: Retorna a parte inteira do número.**/
 		int: {get: function() {return Math.trunc(this.value);}},
-		/**. ``''string'' type``: Retorna o tipo do número (zero, infinite, integer, decimal).**/
+		/**. '{string type}: Retorna o tipo do número (zero, infinite, integer, decimal).**/
 		type: {
 			get: function() {
 				const types = ["infinite", "zero", "integer", "decimal"];
@@ -3105,7 +3103,7 @@ const wd = (function() {
 				return "unknow";
 			}
 		},
-		/**. ``''string'' random(''object'' options)``: Retorna conjuntos de números inteiros "aleatórios" conforme especificado no argumento ``options``:
+		/**. '{string random(object options)}: Retorna conjuntos de números inteiros "aleatórios" conforme especificado no argumento '{options}:
 		|Nome|Descrição|
 		|min|Número inteiro que indica o menor valor do conjunto|
 		|max|Número inteiro que indica o maior valor do conjunto|
@@ -3137,7 +3135,7 @@ const wd = (function() {
 				return bets.join("\n");
 			}
 		},
-		/**. ``''array'' crypto(''integer'' bit, ''integer'' len)``: Retorna uma lista de ``len`` itens contendo números inteiros de comprimento ``bit`` (8, 16 ou 32).**/
+		/**. '{array crypto(integer bit, integer len)}: Retorna uma lista de '{len} itens contendo números inteiros de comprimento '{bit} (8, 16 ou 32).**/
 		crypto: {
 			value: function(bit, len) {
 				bit = Number(bit);
@@ -3153,7 +3151,7 @@ const wd = (function() {
 				return array;
 			}
 		},
-		/**. ``''float'' dec``: Retorna a parte decimal do número (zero se infinito ou inteiro).**/
+		/**. '{float dec}: Retorna a parte decimal do número (zero se infinito ou inteiro).**/
 		dec: {
 			get: function() {
 				if (this.type !== "decimal") return 0;
@@ -3162,7 +3160,7 @@ const wd = (function() {
 				return Number(sign+String(this.value).split(".")[1]);
 			}
 		},
-		/**. ``''number'' fixed(''integer'' length, ''boolean'' round)``: Fixa a quantidade máxima de casas decimais definidas em ``length``. O argumento ``round``, se falso, não arredondará o valor.**/
+		/**. '{number fixed(integer length, boolean round)}: Fixa a quantidade máxima de casas decimais definidas em '{length}. O argumento '{round}, se falso, não arredondará o valor.**/
 		fixed: {
 			value: function(length, round) {
 				if (this.type !== "decimal") return this.value;
@@ -3174,7 +3172,7 @@ const wd = (function() {
 				return round ?  fixed : cut;
 			}
 		},
-		/**. ``''array'' primes``: Retorna uma lista com os números primos até o número informado.**/
+		/**. '{array primes}: Retorna uma lista com os números primos até o número informado.**/
 		primes: {
 			get: function() {
 				if (this.abs < 2) return [];
@@ -3198,7 +3196,7 @@ const wd = (function() {
 				return this._primes;
 			}
 		},
-		/**. ``''boolean'' prime``: Checa se número é primo.**/
+		/**. '{boolean prime}: Checa se número é primo.**/
 		prime: {
 			get: function() {
 				/*-- testar se é um inteiro maior que 1 --*/
@@ -3215,7 +3213,7 @@ const wd = (function() {
 				return this.prime;
 			}
 		},
-		/**. ``''array'' factorization``: Retorna a fatorização do inteiro em números primos.**/
+		/**. '{array factorization}: Retorna a fatorização do inteiro em números primos.**/
 		factorization: {
 			get: function() {
 				if (this.type !== "integer") return [];
@@ -3243,7 +3241,7 @@ const wd = (function() {
 				return list;
 			}
 		},
-		/**. ``''number'' gcd(...)``: Retorna o máximo divisor comum de números inteiros comparando o número informado com aqueles passados como argumento.**/
+		/**. '{number gcd(...)}: Retorna o máximo divisor comum de números inteiros comparando o número informado com aqueles passados como argumento.**/
 		gcd: {
 			value: function() {
 				const fact = this.factorization;
@@ -3278,7 +3276,7 @@ const wd = (function() {
 				return value;
 			}
 		},
-		/**. ``''string'' frac``: Retorna a notação numérica em forma de fração com máximo de 6 dígitos no numerador e aproximação de até 6 casas decimais.**/
+		/**. '{string frac}: Retorna a notação numérica em forma de fração com máximo de 6 dígitos no numerador e aproximação de até 6 casas decimais.**/
 		frac: {
 			get: function() {
 				if (this.type !== "decimal") return this.toString();
@@ -3306,7 +3304,7 @@ const wd = (function() {
 				return num+String(dnd)+"/"+String(div);
 			}
 		},
-		/**. ``''string'' bytes``: Retorna a notação em bytes (de ''B'' a ''YB'').**/
+		/**. '{string bytes}: Retorna a notação em bytes (de i{B} a i{YB}).**/
 		bytes: {
 			get: function() {
 				if (!this.finite) return this.toString()+" B";
@@ -3322,7 +3320,7 @@ const wd = (function() {
 				return int+" B";
 			}
 		},
-		/**. ``''number'' exp``: Retorna o expoente do número em base 10.**/
+		/**. '{number exp}: Retorna o expoente do número em base 10.**/
 		exp: {
 			get: function() {
 				if (!this.finite || this.value === 0) return !this.finite ? 0 : Infinity;
@@ -3335,7 +3333,7 @@ const wd = (function() {
 				return n;
 			}
 		},
-		/**. ``''string'' toLocaleString(''object'' options)``: Retorna o número no formato local de acordo com as [configurações]<https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/NumberFormat> definidas no argumento ``options``, que possui as seguintes propriedades:
+		/**. '{string toLocaleString(object options)}: Retorna o número no formato local de acordo com as [configurações]<https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/NumberFormat> definidas no argumento '{options}, que possui as seguintes propriedades:
 |Nome|Tipo|Descrição|Obrigatório|
 |type|string|Tipo de notação a ser exibida|Sim|
 |value|string|Informação complementar ao tipo de notação|Depende do tipo de notação|
@@ -3456,9 +3454,9 @@ const wd = (function() {
 		},
 	});
 /*===========================================================================*/
-	/**### Caracteres
-	###### ``**constructor** ''object'' __String(''string'' input)``
-	Construtor para manipulação de textos. O argumento ``input`` define o texto de entrada.**/
+	/**#3 Caracteres
+	''constructor object __String(string input)''
+	Construtor para manipulação de textos. O argumento '{input} define o texto de entrada.**/
 	function __String(input) {
 		if (!(this instanceof __String)) return new __String(input);
 		input = String(input).normalize();
@@ -3473,19 +3471,19 @@ const wd = (function() {
 
 	Object.defineProperties(__String.prototype, {
 		constructor: {value: __String},
-		/**. ``''string'' valueOf()``: Retorna o valor de entrada.**/
+		/**. '{string valueOf()}: Retorna o valor de entrada.**/
 		valueOf: {value: function() {return this._value;}},
-		/**. ``''string'' toString()``: Retorna o valor de entrada sem espaços extras.**/
+		/**. '{string toString()}: Retorna o valor de entrada sem espaços extras.**/
 		toString: {value: function() {return this.clear(true, false);}},
-		/**. ``''string'' length``: Retorna a quantidade de caracteres.**/
+		/**. '{string length}: Retorna a quantidade de caracteres.**/
 		length: {get: function() {return this._chars.length;}},
-		/**. ``''string'' chars``: Retorna uma cópia da lista de caracteres.**/
+		/**. '{string chars}: Retorna uma cópia da lista de caracteres.**/
 		chars: {get: function() {return this._chars.slice();}},
-		/**. ``''string'' upper``: Retorna caixa alta.**/
+		/**. '{string upper}: Retorna caixa alta.**/
 		upper: {get: function() {return this.valueOf().toUpperCase();}},
-		/**. ``''string'' lower``: Retorna caixa baixa.**/
+		/**. '{string lower}: Retorna caixa baixa.**/
 		lower: {get: function() {return this.valueOf().toLowerCase();}},
-		/**. ``''string'' toggle``: Inverte a caixa.**/
+		/**. '{string toggle}: Inverte a caixa.**/
 		toggle: {
 			get: function() {
 				const list = this.chars;
@@ -3499,7 +3497,7 @@ const wd = (function() {
 				return list.join("");
 			}
 		},
-		/**. ``''string'' captalize``: Caixa alta na primeira letra de cada palavra apenas.**/
+		/**. '{string captalize}: Caixa alta na primeira letra de cada palavra apenas.**/
 		capitalize: {
 			get: function() {
 				const list = this.chars;
@@ -3512,7 +3510,7 @@ const wd = (function() {
 				return list.join("");
 			}
 		},
-		/**. ``''string'' clear(''boolean'' white, ''boolean'' accent)``: Limpa espaços desnecessários ou acentos. O argumento ``white``, se diferente de falso, limpa os espaços extras e o argumento ``accent``, se diferente de falso, remove os acentos.**/
+		/**. '{string clear(boolean white, boolean accent)}: Limpa espaços desnecessários ou acentos. O argumento '{white}, se diferente de falso, limpa os espaços extras e o argumento '{accent}, se diferente de falso, remove os acentos.**/
 		clear: {
 			value: function(white, accent) {
 				let value = this.valueOf();
@@ -3523,14 +3521,14 @@ const wd = (function() {
 				return value.normalize();
 			}
 		},
-		/**. ``''string'' mask(''string'' model)``: Checa se a string casa com o formato de máscara definido no argumento ``model`` e a retorna. Se não casar, retorna uma string vazia. A máscara é definida com os seguintes manipuladores:
+		/**. '{string mask(string model)}: Checa se a string casa com o formato de máscara definido no argumento '{model} e a retorna. Se não casar, retorna uma string vazia. A máscara é definida com os seguintes manipuladores:
 		|Caractere|Descrição|
 		|#|Exige um dígito.|
 		|@|Exige um não dígito.|
 		|*|Exige um valor qualquer.|
 		|?|Separa modelos alternativos caso o anterior não case.|
 		|%|Cancela o efeito do manipulador que o precede.|
-		###### Exemplos
+		#6 Exemplos
 		|Modelo|Valor|Retorno|
 		|##/##/####|01234567|01/23/4567|
 		|(##) # ####-####?(##) ####-####|01234567890|(01) 2 3456-7890|
@@ -3597,7 +3595,7 @@ const wd = (function() {
 				return (ok && c === char.length) ? base.join("") : "";
 			}
 		},
-		/**. ``''string'' dash``: Retorna uma string identificadora no formato de traços (alfabetos latinos).**/
+		/**. '{string dash}: Retorna uma string identificadora no formato de traços (alfabetos latinos).**/
 		dash: {
 			get: function() {
 				let value = this.clear().replace(/\ +/g, "-").split("");
@@ -3611,7 +3609,7 @@ const wd = (function() {
 				return value.replace(/^\-+/, "").replace(/\-+$/, "");
 			}
 		},
-		/**. ``''string'' camel``: Retorna uma string identificadora no formato de camelCase (alfabetos latinos).**/
+		/**. '{string camel}: Retorna uma string identificadora no formato de camelCase (alfabetos latinos).**/
 		camel: {
 			get: function() {
 				const value = this.dash.split("-");
@@ -3625,16 +3623,16 @@ const wd = (function() {
 				return value.join("");
 			}
 		},
-		/**. ``''matrix'' csv``: Retorna uma matriz (array) a partir de uma string CSV.**/
+		/**. '{matrix csv}: Retorna uma matriz (array) a partir de uma string CSV.**/
 		csv: {get: function() {return this._parser.csvTable.tableValues.matrixCSV.get();}},
-		/**. ``''object'' json``: Retorna objeto JSON a partir de uma string nesse formato.**/
+		/**. '{object json}: Retorna objeto JSON a partir de uma string nesse formato.**/
 		json: {get: function() {return this._parser.stringJSON.get();}},
 	});
 
 /*----------------------------------------------------------------------------*/
-	/**### Code
-	###### ``**constructor** ''object'' __Code(''string'' input)``
-	Construtor para manipulação de textos com formatação de códigos. O argumento ``input`` define o código fonte.**/
+	/**#3 Code
+	''constructor object __Code(string input)''
+	Construtor para manipulação de textos com formatação de códigos. O argumento '{input} define o código fonte.**/
 	function __Code(input) {
 		if (!(this instanceof __Code)) return new __Code(input);
 		this.input = input;
@@ -3652,14 +3650,14 @@ const wd = (function() {
 
 	Object.defineProperties(__Code.prototype, {
 		constructor: {value: __Code},
-		/**. ``''array'' _ends``: Caracteres de controle fixo de encerramento.**/
+		/**. '{array _ends}: Caracteres de controle fixo de encerramento.**/
 		_ends: {
 			value: {
 				word:  "/^([()\\[\\]{},;]|\\s)/",
 				value: "/^([()\\[\\]{},;!=|&+\\-%/*^?:]|\\s|\\>|\\>)/"
 			}
 		},
-		/**. ``''string'' _translate(''string'' input)``: Altera codificação HTML adaptada para padrão.**/
+		/**. '{string _translate(string input)}: Altera codificação HTML adaptada para padrão.**/
 		_translate: {
 			value: function(input) {
 				const tags = [
@@ -3678,7 +3676,7 @@ const wd = (function() {
 				return input;
 			}
 		},
-		/**. ``''object'' frames``: Retorna os caracteres de controle.**/
+		/**. '{object frames}: Retorna os caracteres de controle.**/
 		frames: {
 			get: function() {
 				const type  = this.type;
@@ -3743,12 +3741,12 @@ const wd = (function() {
 				return this._frames[type];
 			}
 		},
-		/**. ``''string'' input``: Define ou retorna o código fonte.**/
+		/**. '{string input}: Define ou retorna o código fonte.**/
 		input: {
 			get: function()  {return this._input;},
 			set: function(x) {this._input = String(x);}
 		},
-		/**. ``''string'' type``: Retorna o tipo de código: xml, html ou linear.**/
+		/**. '{string type}: Retorna o tipo de código: xml, html ou linear.**/
 		type: {
 			get: function() {
 				const input = this.input.trim();
@@ -3759,7 +3757,7 @@ const wd = (function() {
 				return "linear";
 			}
 		},
-		/**. ``''void'' add(''string'' type, string'' value)``: Adiciona caracteres de controle da linguagem. O argumento ''type'' pode ser "string", "comment", "word" ou "value". O argumento ''value'' é uma lista de caracteres de controle separados por um espaço em branco. No caso de "string" e "comment", os caracteres de fechamento devem vir logo depois de seu caracteres de abertura (tanto a dupla quanto os conjunto são separados por um espaço).**/
+		/**. '{void add(string type, string value)}: Adiciona caracteres de controle da linguagem. O argumento i{type} pode ser "string", "comment", "word" ou "value". O argumento i{value} é uma lista de caracteres de controle separados por um espaço em branco. No caso de "string" e "comment", os caracteres de fechamento devem vir logo depois de seu caracteres de abertura (tanto a dupla quanto os conjunto são separados por um espaço).**/
 		add: {
 			value: function(type, value) {
 				type  = String(type).toLowerCase();
@@ -3782,7 +3780,7 @@ const wd = (function() {
 				return;
 			}
 		},
-		/**. ``''void'' clear()``: Apaga o conjunto de caracteres de controles definidos.**/
+		/**. '{void clear()}: Apaga o conjunto de caracteres de controles definidos.**/
 		clear: {
 			value: function() {
 				const name = {_comment: [], _string: [], _word: [], _value: []};
@@ -3791,7 +3789,7 @@ const wd = (function() {
 				return;
 			}
 		},
-		/**. ``''void'' JS()``: Define caracteres básicos de controle JavaScript.**/
+		/**. '{void JS()}: Define caracteres básicos de controle JavaScript.**/
 		JS: {
 			value: function() {
 				this.clear();
@@ -3802,7 +3800,7 @@ const wd = (function() {
 				return;
 			}
 		},
-		/**. ``''void'' CSS()``: Define caracteres básicos de controle CSS.**/
+		/**. '{void CSS()}: Define caracteres básicos de controle CSS.**/
 		CSS: {
 			value: function() {
 				this.clear();
@@ -3813,7 +3811,7 @@ const wd = (function() {
 				return;
 			}
 		},
-		/**. ``''object'' find(''integer'' index, ''string'' search))``: Verifica se o código a partir de ''index'' casa com ``search``. É retornado um objeto contendo as propriedades ''match'' (texto casado) e ''length'' (comprimento do texto casado). Se nada for encontrado, retonará nulo. Se ''search'' iniciar e terminar com barra, será considerado uma expressão regular, aceitando ignore case.**/
+		/**. '{object find(integer index, string search))}: Verifica se o código a partir de i{index} casa com '{search}. É retornado um objeto contendo as propriedades i{match} (texto casado) e i{length} (comprimento do texto casado). Se nada for encontrado, retonará nulo. Se i{search} iniciar e terminar com barra, será considerado uma expressão regular, aceitando ignore case.**/
 		find: {
 			value: function(index, search) {
 				const re   = /^\/(.+)\/i?$/;
@@ -3833,7 +3831,7 @@ const wd = (function() {
 				return data.match === null ? null : data;
 			}
 		},
-		/**. ``''object'' pack(''integer'' index, ''array'' list))``: Retorna um objeto contendo as informações de ''frames'' e ''find'' se a informação casar com os tipos de caracteres de controle listados em ''list''. Caso contrário, retorna nulo.**/
+		/**. '{object pack(integer index, array list))}: Retorna um objeto contendo as informações de i{frames} e i{find} se a informação casar com os tipos de caracteres de controle listados em i{list}. Caso contrário, retorna nulo.**/
 		pack: {
 			value: function(index, list) {
 				const frames = this.frames;
@@ -3858,7 +3856,7 @@ const wd = (function() {
 				return null;
 			}
 		},
-		/**. ``''string'' linear``: Retorna o código genérico renderizado.**/
+		/**. '{string linear}: Retorna o código genérico renderizado.**/
 		linear: {
 			get: function() {
 				const tree = __Tree();
@@ -3931,7 +3929,7 @@ const wd = (function() {
 				return this._translate(tree.valueOf());
 			}
 		},
-		/**. ``''string'' markup``: Retorna o código codificado em XML/HTML renderizado.**/
+		/**. '{string markup}: Retorna o código codificado em XML/HTML renderizado.**/
 		markup: {
 			get: function() {
 				const tree   = __Tree();
@@ -4026,34 +4024,34 @@ const wd = (function() {
 				return this._translate(tree.valueOf());
 			}
 		},
-		/**. ``''node'' valueOf()``: Retorna a codificação estruturada em HTML.**/
+		/**. '{node valueOf()}: Retorna a codificação estruturada em HTML.**/
 		valueOf: {
 			value: function() {	return this.type === "linear" ? this.linear : this.markup;}
 		},
-		/**. ``''string'' toString()``: Retorna a codificação.**/
+		/**. '{string toString()}: Retorna a codificação.**/
 		toString: {
 			value: function() {return this.input;}
 		},
 	});
 
 /*===========================================================================*/
-	/**### Data e Tempo
-	#### Ano
-	###### ``**constructor** ''object'' __Year(''integer'' year)``
-	Construtor para resgate de informações sobre o ano (``year``).**/
+	/**#3 Data e Tempo
+	#4 Ano
+	''constructor object __Year(integer year)''
+	Construtor para resgate de informações sobre o ano ('{year}).**/
 	function __Year(year) {
 		if (!(this instanceof __Year)) return new __Year(year);
 		const check = __Type(year);
 		if (!check.integer) throw new RangeError("Invalid year value.");
 		Object.defineProperties(this, {
-			/**. ``''integer'' year``: Retorna o ano.**/
+			/**. '{integer year}: Retorna o ano.**/
 			year: {value: check.value},
 		});
 	}
 
 	Object.defineProperties(__Year.prototype, {
 		constructor: {value: __Year},
-		/**. ``''string'' YYYY``: Retorna uma string no formato YYYY.**/
+		/**. '{string YYYY}: Retorna uma string no formato YYYY.**/
 		YYYY: {
 			get: function() {
  				const y   = Math.abs(this.year);
@@ -4061,13 +4059,13 @@ const wd = (function() {
 				return (this.year < 0 ? "-" : "") + ("0").repeat(len) + String(y);
 			}
 		},
-		/**. ``''string'' YY``: Retorna uma string no formato YY (dois últimos dígitos do ano).**/
+		/**. '{string YY}: Retorna uma string no formato YY (dois últimos dígitos do ano).**/
 		YY: {
 			get: function() {
 				return this.YYYY.replace(/(\-?)\d\d(\d\d)/, "$1$2");
 			}
 		},
-		/**. ``''integer'' daysElapsedYear``: Retorna os dias decorridos de 0000-01-01T00:00:00 (valor 0) até o primeiro dia do ano.**/
+		/**. '{integer daysElapsedYear}: Retorna os dias decorridos de 0000-01-01T00:00:00 (valor 0) até o primeiro dia do ano.**/
 		daysElapsedYear: {
 			get: function() {
 				let   days = this.year > 0 ? 365 : 0;
@@ -4080,7 +4078,7 @@ const wd = (function() {
 				return days - back;
 			}
 		},
-		/**. ``''boolean'' leap``: Informa se o ano é bissexto.**/
+		/**. '{boolean leap}: Informa se o ano é bissexto.**/
 		leap: {
 			get: function() {
 				const y = Math.abs(this.year);
@@ -4091,9 +4089,9 @@ const wd = (function() {
 	});
 
 /*----------------------------------------------------------------------------*/
-	/**#### Mês
-	###### ``**constructor** ''object'' __Month(''integer'' year, ''integer'' month)``
-	Construtor para resgate de informações sobre meses a partir da informação do ano (``year``) e do mês (1-12) (``month``). Herda propriedades do objeto __Year.**/
+	/**#4 Mês
+	''constructor object __Month(integer year, integer month)''
+	Construtor para resgate de informações sobre meses a partir da informação do ano ('{year}) e do mês (1-12) ('{month}). Herda propriedades do objeto __Year.**/
 	function __Month(year, month) {
 		if (!(this instanceof __Month)) return new __Month(year, month);
 		__Year.call(this, year);
@@ -4102,22 +4100,22 @@ const wd = (function() {
 			throw RangeError("Invalid month value.", {cause: "1 > month > 12"});
 		const data = __LANG.search("month", check.value);
 		Object.defineProperties(this, {
-			/**. ``''integer'' month``: Registra o mês (1-12).**/
+			/**. '{integer month}: Registra o mês (1-12).**/
 			month: {value: check.value},
-			/**. ``''string'' MMMM``: Retorna o nome do mês.**/
+			/**. '{string MMMM}: Retorna o nome do mês.**/
 			MMMM:  {value: data.long},
-			/**. ``''string'' MMM``: Retorna o nome do mês abreviado.**/
+			/**. '{string MMM}: Retorna o nome do mês abreviado.**/
 			MMM:   {value: data.short},
-			/**. ``''string'' MM``: Retorna o mês com dois dígitos.**/
+			/**. '{string MM}: Retorna o mês com dois dígitos.**/
 			MM:    {value: data.value},
 		});
 	}
 
 	__Month.prototype = Object.create(__Year.prototype, {
 		constructor: {value: __Month},
-		/**. ``''string'' YYYYMM``: Retorna uma string no formato YYYY-MM.**/
+		/**. '{string YYYYMM}: Retorna uma string no formato YYYY-MM.**/
 		YYYYMM: {get: function() {return [this.YYYY, this.MM].join("-");}},
-		/**. ``''integer'' daysElapsedMonth``: Retorna os dias decorridos de 0000-01-01T00:00:00 (valor 0) até o primeiro dia do mês.**/
+		/**. '{integer daysElapsedMonth}: Retorna os dias decorridos de 0000-01-01T00:00:00 (valor 0) até o primeiro dia do mês.**/
 		daysElapsedMonth: {
 			get: function() {
 				const year = this.daysElapsedYear;
@@ -4125,7 +4123,7 @@ const wd = (function() {
 				return year + days - 1;
 			}
 		},
-		/**. ``''integer'' width``: Retorna a quantidade de dias do mês.**/
+		/**. '{integer width}: Retorna a quantidade de dias do mês.**/
 		width: {
 			get: function() {
 				const feb  = this.leap ? 29 : 28;
@@ -4133,7 +4131,7 @@ const wd = (function() {
 				return days[this.month];
 			}
 		},
-		/**. ``''integer'' firstDayMonthYear``: Retorna o dia do ano em que o mês inicia.**/
+		/**. '{integer firstDayMonthYear}: Retorna o dia do ano em que o mês inicia.**/
 		firstDayMonthYear: {
 			get: function() {
 				const gap  = this.month > 2 && this.leap ? 1 : 0;
@@ -4144,9 +4142,9 @@ const wd = (function() {
 	});
 
 /*----------------------------------------------------------------------------*/
-	/**#### Dia
-	###### ``**constructor** ''object'' __Day(''integer'' year, ''integer'' month, ''integer'' day)``
-	Construtor para resgate de informações sobre dias a partir da informação do ano (``year``), mês (1-12) (``month``) e dia (1-31) (``day``). Herda propriedades do objeto __Month.**/
+	/**#4 Dia
+	''constructor object __Day(integer year, integer month, integer day)''
+	Construtor para resgate de informações sobre dias a partir da informação do ano ('{year}), mês (1-12) ('{month}) e dia (1-31) ('{day}). Herda propriedades do objeto __Month.**/
 	function __Day(year, month, day) {
 		if (!(this instanceof __Day)) return new __Day(year, month, day);
 		__Month.call(this, year, month);
@@ -4154,18 +4152,18 @@ const wd = (function() {
 		if (!check.integer || check < 1 || check > this.width)
 			throw RangeError("Invalid day value.", {cause: "1 > day > " + String(this.width)});
 		Object.defineProperties(this, {
-			/**. ``''integer'' day``: Registra o dia (1-31).**/
+			/**. '{integer day}: Registra o dia (1-31).**/
 			day: {value: check.value}
 		});
 	}
 
 	__Day.prototype = Object.create(__Month.prototype, {
 		constructor: {value: __Day},
-		/**. ``''string'' DD``: Retorna o dia com dois dígitos.**/
+		/**. '{string DD}: Retorna o dia com dois dígitos.**/
 		DD: {get: function() {return (this.day < 10 ? "0" : "") + String(this.day);}},
-		/**. ``''string'' YYYYMMDD``: Retorna a data no formato YYYY-MM-DD.**/
+		/**. '{string YYYYMMDD}: Retorna a data no formato YYYY-MM-DD.**/
 		YYYYMMDD: {get: function() {return [this.YYYYMM, this.DD].join("-");}},
-		/**. ``''integer'' daysElapsed``: Retorna os dias decorridos de 0000-01-01T00:00:00 (valor 0) até o dia.**/
+		/**. '{integer daysElapsed}: Retorna os dias decorridos de 0000-01-01T00:00:00 (valor 0) até o dia.**/
 		daysElapsed: {
 			get: function() {
 				const year = this.daysElapsedYear;
@@ -4173,7 +4171,7 @@ const wd = (function() {
 				return year + days - 1;
 			}
 		},
-		/**. ``''integer'' days``: Retorna o dia do ano.**/
+		/**. '{integer days}: Retorna o dia do ano.**/
 		days: {
 			get: function() {
 				return this.firstDayMonthYear + this.day - 1;
@@ -4182,9 +4180,9 @@ const wd = (function() {
 	});
 
 /*----------------------------------------------------------------------------*/
-	/**#### Dia da Semana
-	###### ``**constructor** ''object'' __WeekDay(''integer'' year, ''integer'' month, ''integer'' day)``
-	Construtor para resgate de informações sobre a semana a partir da informação do ano (``year``), mês (1-12) (``month``) e dia (1-31) (``day``).  Herda propriedades do objeto __Day.**/
+	/**#4 Dia da Semana
+	''constructor object __WeekDay(integer year, integer month, integer day)''
+	Construtor para resgate de informações sobre a semana a partir da informação do ano ('{year}), mês (1-12) ('{month}) e dia (1-31) ('{day}).  Herda propriedades do objeto __Day.**/
 	function __WeekDay(year, month, day) {
 		if (!(this instanceof __WeekDay)) return new __WeekDay(year, month, day);
 		__Day.call(this, year, month, day);
@@ -4194,11 +4192,11 @@ const wd = (function() {
 		const weekDay =  (today > sunday ? index : (7 - index)%7) + 1;
 		const data    = __LANG.search("week", weekDay);
 		Object.defineProperties(this, {
-			/**. ``''integer'' weekDay``: Registra o dia da semana, de domingo a sábado (1-7).**/
+			/**. '{integer weekDay}: Registra o dia da semana, de domingo a sábado (1-7).**/
 			weekDay: {value: weekDay},
-			/**. ``''string'' DDD``: Retorna o dia da semana abreviado.**/
+			/**. '{string DDD}: Retorna o dia da semana abreviado.**/
 			DDD:     {value: data.short},
-			/**. ``''string'' DDDD``: Retorna o dia da semana.**/
+			/**. '{string DDDD}: Retorna o dia da semana.**/
 			DDDD:    {value: data.long},
 		});
 	}
@@ -4208,9 +4206,9 @@ const wd = (function() {
 	});
 
 /*----------------------------------------------------------------------------*/
-	/**#### Semana do Ano
-	###### ``**constructor** ''object'' __Week(''integer'' year, ''integer'' month, ''integer'' day)``
-	Construtor para resgate de informações sobre a semana do ano a partir da informação do ano (``year``), mês (1-12) (``month``) e dia (1-31) (``day``).  Herda propriedades do objeto __WeekDay.**/
+	/**#4 Semana do Ano
+	''constructor object __Week(integer year, integer month, integer day)''
+	Construtor para resgate de informações sobre a semana do ano a partir da informação do ano ('{year}), mês (1-12) ('{month}) e dia (1-31) ('{day}).  Herda propriedades do objeto __WeekDay.**/
 	function __Week(year, month, day) {
 		if (!(this instanceof __Week)) return new __Week(year, month, day);
 		__WeekDay.call(this, year, month, day);
@@ -4220,20 +4218,20 @@ const wd = (function() {
 		const fwd  = 1 + ref + (ref < 0 ? 7 : 0);
 		const mfw  = this.leap && fwd === 4 || fwd === 5 ? 53 : 52;
 		Object.defineProperties(this, {
-			/**. ``''integer'' firstWeekDay``: Registra o primeiro dia da semana do ano (1-7).**/
+			/**. '{integer firstWeekDay}: Registra o primeiro dia da semana do ano (1-7).**/
 			firstWeekDay: {value: fwd},
-			/**. ``''integer'' maxFormWeek``: Registra o número máximo de semanas no ano para formulário HTML (1-53).**/
+			/**. '{integer maxFormWeek}: Registra o número máximo de semanas no ano para formulário HTML (1-53).**/
 			maxFormWeek:  {value: mfw}
 		});
 	}
 
 	__Week.prototype = Object.create(__WeekDay.prototype, {
 		constructor: {value: __Week},
-		/**. ``''string'' WW``: Retorna a semana com dois dígitos.**/
+		/**. '{string WW}: Retorna a semana com dois dígitos.**/
 		WW: {get: function() {return (this.week < 10 ? "0" : "") + String(this.week);}},
-		/**. ``''string'' YYYYWW``: Retorna a semana no formato YYYY-Www.**/
+		/**. '{string YYYYWW}: Retorna a semana no formato YYYY-Www.**/
 		YYYYWW: {get: function() {return [this.YYYY,this.WW].join("-W");}},
-		/**. ``''integer'' week``: Retorna a semana do ano (1-54) desde o primeiro dia do ano e início no domingo.**/
+		/**. '{integer week}: Retorna a semana do ano (1-54) desde o primeiro dia do ano e início no domingo.**/
 		week: {
 			get: function() {
 				const sun = ([null,1,0,-1,-2,-3,-4,-5])[this.firstWeekDay];
@@ -4241,7 +4239,7 @@ const wd = (function() {
 				return Math.trunc((end - sun)/7) + 1;
 			}
 		},
-		/**. ``''integer'' fweek``: Retorna a semana do ano (1-53) conforme formulário HTML. ()[https://developer.mozilla.org/en-US/docs/Web/HTML/Date_and_time_formats#week_strings]**/
+		/**. '{integer fweek}: Retorna a semana do ano (1-53) conforme formulário HTML. ()[https://developer.mozilla.org/en-US/docs/Web/HTML/Date_and_time_formats#week_strings]**/
 		fweek: {
 			get: function() {
 				const day  = this.firstWeekDay;
@@ -4253,7 +4251,7 @@ const wd = (function() {
 				return back ? -(new __Week(this.year-1, 12, 31).maxFormWeek) : len;
 			}
 		},
-		/**. ``''integer'' work``: Retorna a quantidade de dias úteis decorridos até o dia.**/
+		/**. '{integer work}: Retorna a quantidade de dias úteis decorridos até o dia.**/
 		work: {
 			get: function() {
 				const sun  = ([null,1,7,6,5,4,3,2])[this.firstWeekDay];
@@ -4267,9 +4265,9 @@ const wd = (function() {
 	});
 
 /*----------------------------------------------------------------------------*/
-	/**#### Tempo
-	###### ``**constructor** ''object'' __Time(''integer'' year, ''integer'' month, ''integer'' day, ''integer'' hour, ''integer'' minute, ''finite'' second)``
-	Construtor para resgate de informações sobre a hora a partir da informação do ano (``year``), mês (1-12) (``month``), dia (1-31) (``day``), hora (0-24) (``hour``), minuto (0-59) (``minute``) e segundo (0-59.999) (``second``).  Herda propriedades do objeto __Week.**/
+	/**#4 Tempo
+	''constructor object __Time(integer year, integer month, integer day, integer hour, integer minute, i{finite} second)''
+	Construtor para resgate de informações sobre a hora a partir da informação do ano ('{year}), mês (1-12) ('{month}), dia (1-31) ('{day}), hora (0-24) ('{hour}), minuto (0-59) ('{minute}) e segundo (0-59.999) ('{second}).  Herda propriedades do objeto __Week.**/
 
 	function __Time(year, month, day, hour, minute, second) {
 		if (!(this instanceof __Time)) return new __Time(year, month, day, hour, minute, second);
@@ -4284,11 +4282,11 @@ const wd = (function() {
 		if (!checkS.finite || checkS >= 60 || checkS < 0)
 			throw RangeError("Invalid second value.", {cause: "0 > minute >= 60"});
 		Object.defineProperties(this, {
-			/**. ``''integer'' hour``: Registra a hora (0-23).**/
+			/**. '{integer hour}: Registra a hora (0-23).**/
 			hour:   {value: checkH.value % 24},
-			/**. ``''integer'' minute``: Registra o minuot (0-59).**/
+			/**. '{integer minute}: Registra o minuot (0-59).**/
 			minute: {value: checkM.value},
-			/**. ``''number'' second``: Registra o segundo (0-59.999).**/
+			/**. '{number second}: Registra o segundo (0-59.999).**/
 			second: {value: checkS.value}
 		});
 	}
@@ -4297,27 +4295,27 @@ const wd = (function() {
 		constructor: {value: __Time},
 		toString: {value: function() {return [this.YYYYMMDD,this.hhmmss].join("T");}},
 		valueOf:  {value: function() {return this.timeElapsed;}},
-		/**. ``''string'' hh``: Retorna a hora com dois dígitos.**/
+		/**. '{string hh}: Retorna a hora com dois dígitos.**/
 		hh: {get: function() {return (this.hour < 10 ? "0" : "") + String(this.hour)}},
-		/**. ``''string'' mm``: Retorna o minuto com dois dígitos.**/
+		/**. '{string mm}: Retorna o minuto com dois dígitos.**/
 		mm: {get: function() {return (this.minute < 10 ? "0" : "") + String(this.minute)}},
-		/**. ``''string'' ss``: Retorna o segundo com dois dígitos e casa centesimais.**/
+		/**. '{string ss}: Retorna o segundo com dois dígitos e casa centesimais.**/
 		ss: {get: function() {return (this.second < 10 ? "0" : "") + (this.second).toFixed(3)}},
-		/**. ``''string'' hhmmss``: Retorna a hora no formato hh:mm:ss.**/
+		/**. '{string hhmmss}: Retorna a hora no formato hh:mm:ss.**/
 		hhmmss: {get: function() {return [this.hh,this.mm,this.ss].join(":")}},
-		/**. ``''number'' time``: Retorna a quantidade total de segundos.**/
+		/**. '{number time}: Retorna a quantidade total de segundos.**/
 		time: {get: function() {return 3600*this.hour + 60*this.minute + this.second;}},
-		/**. ``''integer'' timeElapsed``: Retorna os segundos decorridos de 0000-01-01T00:00:00 (valor 0) até a hora.**/
+		/**. '{integer timeElapsed}: Retorna os segundos decorridos de 0000-01-01T00:00:00 (valor 0) até a hora.**/
 		timeElapsed: {get: function() {return 24*3600*this.daysElapsed + this.time;}},
-		/**. ``''string'' meridiem``: Retorna AM ou PM de acordo com a hora.**/
+		/**. '{string meridiem}: Retorna AM ou PM de acordo com a hora.**/
 		meridiem: {get: function() {return this.hour < 12 ? "AM" : "PM";}},
-		/**. ``''integer'' h12``: Retorna a hora no formato de 12 horas (AM/PM).**/
+		/**. '{integer h12}: Retorna a hora no formato de 12 horas (AM/PM).**/
 		h12: {
 			get: function() {
 				return this.hour === 0 ? 12 : this.hour - (this.hour < 13 ? 0 : 12);
 			}
 		},
-		/**. ``''object'' next()``: Retorna uma instância do objeto para o dia seguinte.**/
+		/**. '{object next()}: Retorna uma instância do objeto para o dia seguinte.**/
 		next: {
 			value: function() {
 				const d = this.day === this.width ? 1 : (this.day + 1);
@@ -4326,7 +4324,7 @@ const wd = (function() {
 				return new __Time(y, (m > 12 ? 1 : m), d, this.hour, this.minute, this.second);
 			}
 		},
-		/**. ``''object'' walk(''integer'' value)``: Retorna uma instância do objeto caminhando o valor de segundos definidos no argumento.**/
+		/**. '{object walk(integer value)}: Retorna uma instância do objeto caminhando o valor de segundos definidos no argumento.**/
 		walk: {
 			value: function(value) {
 				const check = new __Type(value);
@@ -4335,7 +4333,7 @@ const wd = (function() {
 				return this.constructor.toTimeObject(time + value);
 			}
 		},
-		/** . ``''object'' codes``: Retorna um objeto contendo propriedades temporais abreviadas.**/
+		/** . '{object codes}: Retorna um objeto contendo propriedades temporais abreviadas.**/
 		codes: {
 			get: function() {
 				return {
@@ -4353,8 +4351,8 @@ const wd = (function() {
 	});
 
 	Object.defineProperties(__Time, {
-		/**##### Tempo:return [this.YYYYMMDD,this.hhmmss].join("T") Métodos e Propriedades Estáticos
-		. ``''array'' daysToYear(''integer'' value)``: Retorna o ano (item 0) a partir do número de dias (``value``).**/
+		/**#5 Tempo:return [this.YYYYMMDD,this.hhmmss].join("T") Métodos e Propriedades Estáticos
+		. '{array daysToYear(integer value)}: Retorna o ano (item 0) a partir do número de dias ('{value}).**/
 		daysToYear: {
 			value: function(value) {
 				const check = new __Type(value);
@@ -4385,7 +4383,7 @@ const wd = (function() {
 				return [year];
 			}
 		},
-		/**. ``''array'' daysToMonth(''integer'' value)``: Retorna o ano (item 0) e o mês (item 1) a partir do número de dias (``value``).**/
+		/**. '{array daysToMonth(integer value)}: Retorna o ano (item 0) e o mês (item 1) a partir do número de dias ('{value}).**/
 		daysToMonth: {
 			value: function(value) {
 				const year = this.daysToYear(value)[0];
@@ -4404,7 +4402,7 @@ const wd = (function() {
 				return [year, help.month]
 			}
 		},
-		/**. ``''array'' daysToDate(''integer'' value)``: Retorna o ano (item 0), o mês (item 1) e o dia (item 2) a partir do número de dias (``value``).**/
+		/**. '{array daysToDate(integer value)}: Retorna o ano (item 0), o mês (item 1) e o dia (item 2) a partir do número de dias ('{value}).**/
 		daysToDate: {
 			value: function(value) {
 				const data = this.daysToMonth(value);
@@ -4413,7 +4411,7 @@ const wd = (function() {
 				return [date.year, date.month, day];
 			}
 		},
-		/**. ``''array'' secondsToTime(''number'' value)``: Retorna a hora (item 0), o minuto (item 1) e o segundo (item 2) a partir do número de segundos (``value``).**/
+		/**. '{array secondsToTime(number value)}: Retorna a hora (item 0), o minuto (item 1) e o segundo (item 2) a partir do número de segundos ('{value}).**/
 		secondsToTime: {
 			value: function(value) {
 				const check = new __Type(value);
@@ -4428,7 +4426,7 @@ const wd = (function() {
 				return [hour, minute, Number(second.toFixed(3))];
 			}
 		},
-		/**. ``''array'' seconds(''integer'' value)``: Retorna o ano (item 0), o mês (item 1), o dia (item 2), a hora (item 3), o minuto (item 4) e o segundo (item 5) a partir do número de segundos (``value``).**/
+		/**. '{array seconds(integer value)}: Retorna o ano (item 0), o mês (item 1), o dia (item 2), a hora (item 3), o minuto (item 4) e o segundo (item 5) a partir do número de segundos ('{value}).**/
 		secondsToDate: {
 			value: function(value) {
 				const day  = 24*3600;
@@ -4439,14 +4437,14 @@ const wd = (function() {
 				return [date[0],date[1],date[2],time[0],time[1],time[2]];
 			}
 		},
-		/**. ``''object'' toTimeObject(''integer'' value)``: Retorna um objeto __Time a partir do número de segundos (``value``).**/
+		/**. '{object toTimeObject(integer value)}: Retorna um objeto __Time a partir do número de segundos ('{value}).**/
 		toTimeObject: {
 			value: function(value) {
 				const data = this.secondsToDate(value);
 				return new __Time(data[0],data[1],data[2],data[3],data[4],data[5]);
 			}
 		},
-		/**. ``''async'' sequentialityTest(''integer'' start, ''integer'' stop, ''integer'' sec)``: Testa a sequencialidade da data do ano ``start`` até o ano ``stop`` (opcional) no tempo fixo de segundos ``sec`` (opcional).**/
+		/**. '{async sequentialityTest(integer start, integer stop, integer sec)}: Testa a sequencialidade da data do ano '{start} até o ano '{stop} (opcional) no tempo fixo de segundos '{sec} (opcional).**/
 		sequentialityTest: {
 			value: async function(start, stop, sec) {
 				let clock = [0,0,0];
@@ -4490,11 +4488,11 @@ const wd = (function() {
 	});
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**constructor** ''object'' __DateTime(''any'' input)``
-	Construtor para manipulação de data/tempo. O atributo ``input`` aceita valores do tipo:
+	/**''constructor object __DateTime(any input)''
+	Construtor para manipulação de data/tempo. O atributo '{input} aceita valores do tipo:
 	- Data, tempo ou data/tempo nos parâmetros da biblioteca;
 	- Numérico correspondendo ao número de segundos desde 0000-01-01T00:00:00.0000 (segundo 0);
-	- Objeto contendo os valores das propriedades de data/tempo (``year``,``month``, ``day``, ``hour``, ``minute``, ``second``) que, se não informados, assumirão zeros; e
+	- Objeto contendo os valores das propriedades de data/tempo ('{year},'{month}, '{day}, '{hour}, '{minute}, '{second}) que, se não informados, assumirão zeros; e
 	- Caso contrário, assumirá o valor de data e tempo atuais.**/
 	function __DateTime(input) {
 		if (!(this instanceof __DateTime)) return new __DateTime(input);
@@ -4602,18 +4600,18 @@ const wd = (function() {
 		}
 		Object.defineProperties(this, {
 			_max:  {value: null, writable: true},
-			/**. ``''object'' main``: Registra o objeto __Time auxiliar.**/
+			/**. '{object main}: Registra o objeto __Time auxiliar.**/
 			main:  {value: main, writable: true},
-			/**. ``''string'' error``: Registra o tipo de erro encontrado ou vazio.**/
+			/**. '{string error}: Registra o tipo de erro encontrado ou vazio.**/
 			error: {value: error},
-			/**. ``''string'' type``: Registra o tipo de entrada.**/
+			/**. '{string type}: Registra o tipo de entrada.**/
 			type:  {value: data.type}
 		});
 	}
 
 	Object.defineProperties(__DateTime.prototype, {
 		constructor: {value: __DateTime},
-		/**. ``''object'' toDateObject``: Retorna um objeto nativo Date com o tempo fixado no ano 2000.**/
+		/**. '{object toDateObject}: Retorna um objeto nativo Date com o tempo fixado no ano 2000.**/
 		toDateObject: {
 			get: function() {
 				const sec  = Math.trunc(this.second);
@@ -4623,21 +4621,21 @@ const wd = (function() {
 				return date;
 			}
 		},
-		/**. ``''number'' valueOf()``: Retorna os segundos desde 0000-01-01T00:00:00.000.**/
+		/**. '{number valueOf()}: Retorna os segundos desde 0000-01-01T00:00:00.000.**/
 		valueOf: {value: function() {return this.main.timeElapsed;}},
-		/**. ``''integer'' valueOfDate()``: Retorna os dias desde 0000-01-01.**/
+		/**. '{integer valueOfDate()}: Retorna os dias desde 0000-01-01.**/
 		valueOfDate: {value: function() {return this.main.daysElapsed;}},
-		/**. ``''number'' valueOfTime()``: Retorna os segundos desde 00:00:00.000.**/
+		/**. '{number valueOfTime()}: Retorna os segundos desde 00:00:00.000.**/
 		valueOfTime: {value: function() {return this.main.time;}},
-		/**. ``''number'' valueOfDays()``: Retorna os dias desde 0000-01-01 com o tempo como elemento decimal.**/
+		/**. '{number valueOfDays()}: Retorna os dias desde 0000-01-01 com o tempo como elemento decimal.**/
 		valueOfDays: {value: function() {return this.valueOfDate()+this.valueOfTime()/(24*3600);}},
-		/**. ``''string'' toString()``: Retorna o tempo no formato YYYY-MM-DDThh:mm:ss.sss.**/
+		/**. '{string toString()}: Retorna o tempo no formato YYYY-MM-DDThh:mm:ss.sss.**/
 		toString: {value: function() {return this.main.toString();}},
-		/**. ``''string'' toDateString()``: Retorna o tempo no formato YYYY-MM-DD.**/
+		/**. '{string toDateString()}: Retorna o tempo no formato YYYY-MM-DD.**/
 		toDateString: {value: function() {return this.main.YYYYMMDD;}},
-		/**. ``''string'' toString()``: Retorna o tempo no formato hh:mm:ss.sss.**/
+		/**. '{string toString()}: Retorna o tempo no formato hh:mm:ss.sss.**/
 		toTimeString: {value: function() {return this.main.hhmmss;}},
-		/**. ``''string'' toLocaleString()``: Retorna o valor data/tempo no formato local.**/
+		/**. '{string toLocaleString()}: Retorna o valor data/tempo no formato local.**/
 		toLocaleString: {
 			value: function() {
 				const date = this.toDateObject;
@@ -4647,7 +4645,7 @@ const wd = (function() {
 				return iso.replace(from, to);
 			}
 		},
-		/**. ``''string'' toLocaleDateString()``: Retorna a data no formato local.**/
+		/**. '{string toLocaleDateString()}: Retorna a data no formato local.**/
 		toLocaleDateString: {
 			value: function() {
 				const date = this.toDateObject;
@@ -4667,13 +4665,13 @@ const wd = (function() {
 				}
 			}
 		},
-		/**. ``''string'' toLocaleTimeString()``: Retorna o tempo no formato local.**/
+		/**. '{string toLocaleTimeString()}: Retorna o tempo no formato local.**/
 		toLocaleTimeString: {
 			value: function() {
 				return this.toDateObject.toLocaleTimeString(__LANG.value, {timeZone: "UTC"});
 			}
 		},
-		/**. ``''string'' format(''string'' input, ''string'' type)``: Retorna notação de data/tempo pre-formatada a partir de codificação especificada no argumento ``input``. No argumento ``type`` é possível limitar os códigos permitidos para "date" ou "time".**/
+		/**. '{string format(string input, string type)}: Retorna notação de data/tempo pre-formatada a partir de codificação especificada no argumento '{input}. No argumento '{type} é possível limitar os códigos permitidos para "date" ou "time".**/
 		format: {
 			value: function(input, type) {
 				if (typeof input !== "string") return "";
@@ -4692,7 +4690,7 @@ const wd = (function() {
 				return input;
 			}
 		},
-		/**. ``''integer'' year``: Define ou retorna o ano.**/
+		/**. '{integer year}: Define ou retorna o ano.**/
 		year: {
 			get: function() {return this.main.year;},
 			set: function(x) {
@@ -4712,7 +4710,7 @@ const wd = (function() {
 					this.month = 12*dec;
 			}
 		},
-		/**. ``''integer'' month``: Define ou retorna o mês de 1 a 12 (janeiro a dezembro). O parâmetro será alterado para o valor definido, exceto quando extrapolar os limites. (**Observação**: ao alterar o mês de 2000-01-31 para fevereiro, a data definida será 2000-02-29 e não 2000-03-02)**/
+		/**. '{integer month}: Define ou retorna o mês de 1 a 12 (janeiro a dezembro). O parâmetro será alterado para o valor definido, exceto quando extrapolar os limites. (**Observação**: ao alterar o mês de 2000-01-31 para fevereiro, a data definida será 2000-02-29 e não 2000-03-02)**/
 		month: {
 			get: function() {return this.main.month;},
 			set: function(x) {
@@ -4734,7 +4732,7 @@ const wd = (function() {
 					this.day = this.main.width*dec;
 			}
 		},
-		/**. ``''integer'' day``: Define ou retorna o dia de 1 a 31. O parâmetro será alterado para o valor definido, exceto quando extrapolar os limites. (**Observação**: Quando o dia de um mês for maior que a quantidade de dias do mês alterado, o valor ficará limitado ao último dia e, ao acrescentar unidades de mês à data 2000-01-31, por exemplo, o resultado será 2000-02-29, 2000-03-31, 2000-04-30, 2000-05-31...**/
+		/**. '{integer day}: Define ou retorna o dia de 1 a 31. O parâmetro será alterado para o valor definido, exceto quando extrapolar os limites. (**Observação**: Quando o dia de um mês for maior que a quantidade de dias do mês alterado, o valor ficará limitado ao último dia e, ao acrescentar unidades de mês à data 2000-01-31, por exemplo, o resultado será 2000-02-29, 2000-03-31, 2000-04-30, 2000-05-31...**/
 		day: {
 			get: function() {return this.main.day;},
 			set: function(x) {
@@ -4750,7 +4748,7 @@ const wd = (function() {
 					this.hour = 24*dec;
 			}
 		},
-		/**. ``''integer'' hour``: Define ou retorna a hora (0 a 23). O parâmetro será alterado para o valor definido, exceto quando extrapolar os limites.**/
+		/**. '{integer hour}: Define ou retorna a hora (0 a 23). O parâmetro será alterado para o valor definido, exceto quando extrapolar os limites.**/
 		hour: {
 			get: function() {return this.main.hour;},
 			set: function(x) {
@@ -4765,7 +4763,7 @@ const wd = (function() {
 					this.minute = 60*dec;
 			}
 		},
-		/**. ``''integer'' minute``: Define ou retorna o minuto de 0 a 59. O parâmetro será alterado para o valor definido, exceto quando extrapolar os limites.**/
+		/**. '{integer minute}: Define ou retorna o minuto de 0 a 59. O parâmetro será alterado para o valor definido, exceto quando extrapolar os limites.**/
 		minute: {
 			get: function() {return this.main.minute;},
 			set: function(x) {
@@ -4780,7 +4778,7 @@ const wd = (function() {
 					this.second = 60*dec;
 			}
 		},
-		/**. ``''number'' second``: Define ou retorna o segundo de 0 a 59.999. O parâmetro será alterado para o valor definido, exceto quando extrapolar o limites.**/
+		/**. '{number second}: Define ou retorna o segundo de 0 a 59.999. O parâmetro será alterado para o valor definido, exceto quando extrapolar o limites.**/
 		second: {
 			get: function() {return this.main.second;},
 			set: function(x) {
@@ -4793,8 +4791,8 @@ const wd = (function() {
 	});
 
 /*===========================================================================*/
-	/**### Listas
-	###### ``**constructor** ''object'' __Array(array input|void  ...)``
+	/**#3 Listas
+	''constructor object __Array(array input|void  ...)''
 	Construtor para manipulação de listas (array).
 	Caso não seja informado argumento, seja atribuído uma lista vazia. Caso seja informado múltiplos argumentos, cada valor corresponderá a um item do array. Caso seja informado um array como argumento, esse será o valor considerado pelo objeto. Caso contrário, o valor informado será o item do array.**/
 	function __Array() {
@@ -4809,7 +4807,7 @@ const wd = (function() {
 		if (!(this instanceof __Array))	return new __Array(input);
 		Object.defineProperties(this, {
 			_value: {value: input},
-			/**. ``''integer'' index``: Retorna o valor do índice (ver ``next``e ``index``).**/
+			/**. '{integer index}: Retorna o valor do índice (ver '{next} e '{index}).**/
 			index:  {value: -1, writable: true},
 		});
 	}
@@ -4821,7 +4819,7 @@ const wd = (function() {
 				for (let i = 0; i < this._value.length; i++) yield this._value[i];
 			}
 		},
-		/**. ``''any''  valueOf(''integer'' n)``: Retorna o array definido ou um de seus itens se for especificado o índice como argumento, podendo se estender para além do cumprimento do array, repetindo-se a lista de forma constante.**/
+		/**. '{any  valueOf(integer n)}: Retorna o array definido ou um de seus itens se for especificado o índice como argumento, podendo se estender para além do cumprimento do array, repetindo-se a lista de forma constante.**/
 		valueOf: {
 			value: function(n) {
 				const array = this._value.slice();
@@ -4833,18 +4831,18 @@ const wd = (function() {
 				return array[index];
 			}
 		},
-		/**. ``''string'' toString()``: Retorna a representação em texto do array.**/
+		/**. '{string toString()}: Retorna a representação em texto do array.**/
 		toString: {
 			value: function() {
 				const parser = __Parser(this._value);
 				return parser.jsonString.get();
 			}
 		},
-		/**. ``''integer'' length``: Retorna a quantidade de itens da lista.**/
+		/**. '{integer length}: Retorna a quantidade de itens da lista.**/
 		length: {get: function() {return this._value.length;}},
-		/**. ``''any'' value``: Retorna o valor do item (ver ``next``e ``index``).**/
+		/**. '{any value}: Retorna o valor do item (ver '{next} e '{index}).**/
 		value:  {get: function() {return this._value[this.index];}},
-		/**. ``''boolean''  next(''boolean'' run)``: Método para utilizar em looping ''while''. Retornará verdadeiro enquanto os itens não forem percorridos ou enquando o argumento ``run`` for diferente de falso. A cada fim de ciclo, com retorno falso, o processo é reiniciado. Utilizar em conjunto com as propriedades ``value`` e ``index``.**/
+		/**. '{boolean  next(boolean run)}: Método para utilizar em looping i{while}. Retornará verdadeiro enquanto os itens não forem percorridos ou enquando o argumento '{run} for diferente de falso. A cada fim de ciclo, com retorno falso, o processo é reiniciado. Utilizar em conjunto com as propriedades '{value} e '{index}.**/
 		next: {
 			value: function(run) {
 				run = run !== false && this.index < this.length - 1;
@@ -4852,7 +4850,7 @@ const wd = (function() {
 				return run;
 			}
 		},
-		/**. ``''array'' only(''string'' type, ''boolean'' keep=false, ''boolean'' change=true)``: Retorna uma lista somente com os tipos de itens definidos. O argumento ``type`` define o tipo do item a ser mantido na lista (ver ``&lowbar;&lowbar;Type``); o argumento ``keep``, se verdadeiro, manterá na lista o item não enquadrado em ``type`` mas com o valor ``null``; e o argumento ``change``, se verdadeiro, alterará o item casado para o valor do objeto (``valueOf`` de ``&lowbar;&lowbar;Type``.**/
+		/**. '{array only(string type, boolean keep=false, boolean change=true)}: Retorna uma lista somente com os tipos de itens definidos. O argumento '{type} define o tipo do item a ser mantido na lista (ver '{&lowbar;&lowbar;Type}); o argumento '{keep}, se verdadeiro, manterá na lista o item não enquadrado em '{type} mas com o valor '{null}; e o argumento '{change}, se verdadeiro, alterará o item casado para o valor do objeto ('{valueOf} de '{&lowbar;&lowbar;Type}.**/
 		only: {
 			value: function(type, keep, change) {
 				const list = [];
@@ -4866,7 +4864,7 @@ const wd = (function() {
 				return list;
 			}
 		},
-		/**. ``''array'' convert(''Function'' f, ''string'' type)``: Retorna uma lista com o resultado de ``f(x)`` ou nulo se algo falhar. O argumento ``f`` corresponde à função a ser aplicada aos itens da lista. O item da lista será o argumento da função cujo retorno substituirá o valor do item. O argumento opcional ``type`` informa o tipo do resultado esperado de acordo com o método ``&lowbar;&lowbar;Type`` que, se diferente, devolverá um valor nulo.**/
+		/**. '{array convert(function' f, string type)}: Retorna uma lista com o resultado de '{f(x)} ou nulo se algo falhar. O argumento '{f} corresponde à função a ser aplicada aos itens da lista. O item da lista será o argumento da função cujo retorno substituirá o valor do item. O argumento opcional '{type} informa o tipo do resultado esperado de acordo com o método '{&lowbar;&lowbar;Type} que, se diferente, devolverá um valor nulo.**/
 		convert: {
 			value: function(f, type) {
 				if (!__Type(f).function) return null;
@@ -4887,21 +4885,21 @@ const wd = (function() {
 				return list;
 			}
 		},
-		/**. ``''number'' min``: Retorna o menor número finito do conjunto de items da lista ou nulo em caso de vazio.**/
+		/**. '{number min}: Retorna o menor número finito do conjunto de items da lista ou nulo em caso de vazio.**/
 		min: {
 			get: function() {
 				const list = this.only("finite");
 				return list.length === 0 ? null : Math.min.apply(null, list);
 			}
 		},
-		/**. ``''number'' max``:  Retorna o maior número finito do conjunto de items da lista ou nulo em caso de vazio.**/
+		/**. '{number max}:  Retorna o maior número finito do conjunto de items da lista ou nulo em caso de vazio.**/
 		max: {
 			get: function() {
 				const list = this.only("finite");
 				return list.length === 0 ? null : Math.max.apply(null, list);
 			}
 		},
-		/**. ``''number'' sum``: Retorna a soma dos números finitos da lista ou nulo em caso de vazio.**/
+		/**. '{number sum}: Retorna a soma dos números finitos da lista ou nulo em caso de vazio.**/
 		sum: {
 			get: function() {
 				const list = this.only("finite");
@@ -4910,7 +4908,7 @@ const wd = (function() {
 				return list.length === 0 ? null : sum;
 			}
 		},
-		/**. ``''number'' avg``: Retorna a média dos números finitos da lista ou nulo em caso de vazio.**/
+		/**. '{number avg}: Retorna a média dos números finitos da lista ou nulo em caso de vazio.**/
 		avg: {
 			get: function() {
 				const list = this.only("finite");
@@ -4919,7 +4917,7 @@ const wd = (function() {
 				return list.length === 0 ? null : sum/list.length;
 			}
 		},
-		/**. ``''number'' med``: Retorna a mediana dos números finitos da lista ou nulo em caso de vazio.**/
+		/**. '{number med}: Retorna a mediana dos números finitos da lista ou nulo em caso de vazio.**/
 		med: {
 			get: function() {
 				const list = this.only("finite");
@@ -4928,7 +4926,7 @@ const wd = (function() {
 				return l === 0 ? null : (l%2 === 0 ? (y[l/2]+y[(l/2)-1])/2 : y[(l-1)/2]);
 			}
 		},
-		/**. ``''number'' harm``: Retorna a média harmônica dos números finitos __diferentes de zero__ da lista ou nulo em caso de vazio.**/
+		/**. '{number harm}: Retorna a média harmônica dos números finitos __diferentes de zero__ da lista ou nulo em caso de vazio.**/
 		harm: {
 			get: function() {
 				const list = this.only("finite");
@@ -4940,7 +4938,7 @@ const wd = (function() {
 				return len === 0 || sum === 0 ? null : len/sum;
 			}
 		},
-		/**. ``''number'' geo``: Retorna a média geométrica dos números finitos __positivos__ da lista ou nulo em caso de vazio.**/
+		/**. '{number geo}: Retorna a média geométrica dos números finitos __positivos__ da lista ou nulo em caso de vazio.**/
 		geo: {
 			get: function() {
 				const list = this.only("finite");
@@ -4952,7 +4950,7 @@ const wd = (function() {
 				return len === 0 ? null : Math.pow(val, 1/len);
 			}
 		},
-		/**. ``''number'' gcd``: Retorna o máximo divisor comum dos números inteiros da lista ou nulo em caso de vazio.**/
+		/**. '{number gcd}: Retorna o máximo divisor comum dos números inteiros da lista ou nulo em caso de vazio.**/
 		gcd: {
 			get: function() {
 				const list = this.only("integer");
@@ -4961,13 +4959,13 @@ const wd = (function() {
 				return number.gcd.apply(number, list.slice(1));
 			}
 		},
-		/**. ``''array'' unique``: Retorna a lista sem valores repetidos.**/
+		/**. '{array unique}: Retorna a lista sem valores repetidos.**/
 		unique: {
 			get: function(){
 				return this._value.filter(function(v,i,a) {return a.indexOf(v) === i;});
 			}
 		},
-		/**. ``''array'' mode``: Retorna uma lista com os valores da moda (valores que mais se repetem).**/
+		/**. '{array mode}: Retorna uma lista com os valores da moda (valores que mais se repetem).**/
 		mode: {
 			get: function() {
 				const items = this.unique;
@@ -4979,7 +4977,7 @@ const wd = (function() {
 				return items.filter(function(v,i,a) {return count[i] === max;});
 			}
 		},
-		/**. ``''boolean'' check(''any''  ...)``: Checa se os valores informados como argumento estão presentes na lista.**/
+		/**. '{boolean check(any  ...)}: Checa se os valores informados como argumento estão presentes na lista.**/
 		check: {
 			value: function() {
 				if (arguments.length === 0) return false;
@@ -4989,7 +4987,7 @@ const wd = (function() {
 				return true;
 			}
 		},
-		/**. ``''array'' search(''any''  value)``: Retorna uma lista com os índices onde o valor informado no argumento ``value`` foi localizado.**/
+		/**. '{array search(any  value)}: Retorna uma lista com os índices onde o valor informado no argumento '{value} foi localizado.**/
 		search: {
 			value: function(value) {
 				const index = [];
@@ -4998,19 +4996,19 @@ const wd = (function() {
 				return index;
 			}
 		},
-		/**. ``''array'' hide(''any''  ...)``: Retorna uma lista ignorando os valores informados como argumento.**/
+		/**. '{array hide(any  ...)}: Retorna uma lista ignorando os valores informados como argumento.**/
 		hide: {
 			value: function() {
 				const hide = Array.prototype.slice.call(arguments);
 				return this._value.filter(function(v,i,a) {return hide.indexOf(v) < 0;});
 			}
 		},
-		/**. ``''number'' count(''any''  value)``: Retorna a quantidade de vezes que o valor informado no argumento ``value`` aparece na lista.**/
+		/**. '{number count(any  value)}: Retorna a quantidade de vezes que o valor informado no argumento '{value} aparece na lista.**/
 		count: {
 			value: function(value) {return this.search(value).length;}
 		},
-		/**. ``''array'' sort(''boolean'' asc)``: Retorna a lista ordenada e organizada por grupos na seguinte sequência: número, tempo, data, datatempo, string, booleano, nulo, nós, lista, objeto, função, expressão regular, indefinido e demais valores.
-		. O argumento opcional ``asc`` define a classificação da lista. Se verdadeiro, ascendente; se falso, descendente; e, se omitido, inverterá a ordenação atual com prevalência da ordem ascendente.**/
+		/**. '{array sort(boolean asc)}: Retorna a lista ordenada e organizada por grupos na seguinte sequência: número, tempo, data, datatempo, string, booleano, nulo, nós, lista, objeto, função, expressão regular, indefinido e demais valores.
+		. O argumento opcional '{asc} define a classificação da lista. Se verdadeiro, ascendente; se falso, descendente; e, se omitido, inverterá a ordenação atual com prevalência da ordem ascendente.**/
 		sort: {
 			value: function(asc) {
 				const data  = __Type(asc);
@@ -5064,25 +5062,25 @@ const wd = (function() {
 				return array.reverse();
 			}
 		},
-		/**. ``''array'' order``: Retorna uma lista ordenada de forma crescente sem valores repetidos.**/
+		/**. '{array order}: Retorna uma lista ordenada de forma crescente sem valores repetidos.**/
 		order: {
 			get: function() {return __Array(this.unique).sort(true);}
 		},
-		/**. ``''array'' add(''any''  ...)``: Adiciona itens (argumentos) ao fim da lista e a retorna.**/
+		/**. '{array add(any  ...)}: Adiciona itens (argumentos) ao fim da lista e a retorna.**/
 		add: {
 			value: function() {
 				this._value.push.apply(this._value, arguments);
 				return this.valueOf();
 			}
 		},
-		/**. ``''array'' jump(''any''  ...)``: Adiciona itens (argumentos) ao início da lista e a retorna.**/
+		/**. '{array jump(any  ...)}: Adiciona itens (argumentos) ao início da lista e a retorna.**/
 		jump: {
 			value: function() {
 				this._value.unshift.apply(this._value, arguments);
 				return this.valueOf();
 			}
 		},
-		/**. ``''array'' put(''any''  ...)``: Adiciona itens (argumentos) __não existentes__ ao fim da lista e a retorna.**/
+		/**. '{array put(any  ...)}: Adiciona itens (argumentos) __não existentes__ ao fim da lista e a retorna.**/
 		put: {
 			value: function() {
 				for (let i = 0; i < arguments.length; i++)
@@ -5091,7 +5089,7 @@ const wd = (function() {
 				return this.valueOf();
 			}
 		},
-		/**. ``''array'' concat(''any'' ...)``: Concatena listas ou adiciona itens (argumentos) à lista original.**/
+		/**. '{array concat(any ...)}: Concatena listas ou adiciona itens (argumentos) à lista original.**/
 		concat: {
 			value: function() {
 				for (let i = 0; i < arguments.length; i++) {
@@ -5101,7 +5099,7 @@ const wd = (function() {
 				return this.valueOf();
 			}
 		},
-		/**. ``''array'' replace(''any''  from, ''any''  to)``: Altera os valores da lista conforme especificado e a retorna. O argumento ``from`` definie o valor a ser encontrado e substituído na lista e o argumento ``to`` define seu novo valor.**/
+		/**. '{array replace(any  from, any  to)}: Altera os valores da lista conforme especificado e a retorna. O argumento '{from} definie o valor a ser encontrado e substituído na lista e o argumento '{to} define seu novo valor.**/
 		replace: {
 			value: function (from, to) {
 			  for (let i = 0; i < this._value.length; i++)
@@ -5109,7 +5107,7 @@ const wd = (function() {
 				return this.valueOf();
 			}
 		},
-		/**. ``''array'' remove(''any'' ...)``: Remove itens (argumentos) da lista e a retorna.**/
+		/**. '{array remove(any ...)}: Remove itens (argumentos) da lista e a retorna.**/
 		remove: {
 			value: function() {
 				const list = this.hide.apply(this, arguments);
@@ -5118,7 +5116,7 @@ const wd = (function() {
 				return this.valueOf();
 			}
 		},
-		/**. ``''array'' toggle(''any''  ...)``: Remove, se existente, ou insere ao fim, se ausente, itens (argumentos) da lista e a retorna.**/
+		/**. '{array toggle(any  ...)}: Remove, se existente, ou insere ao fim, se ausente, itens (argumentos) da lista e a retorna.**/
 		toggle: {
 			value: function() {
 				const tgl  = Array.prototype.slice.call(arguments);
@@ -5134,10 +5132,10 @@ const wd = (function() {
 	});
 
 /*============================================================================*/
-	/**### Nós HTML
-	#### Pesquisa por Elementos
-	###### ``**constructor** ''object'' __Query(''string'' css, ''node'' root=document)``
-	Construtor para obter elementos HTML. O argumento ``css`` é um seletor CSS válido e o argumento opcional ``root`` define o elemento raiz da busca.	**/
+	/**#3 Nós HTML
+	#4 Pesquisa por Elementos
+	''constructor object __Query(string css, node root=document)''
+	Construtor para obter elementos HTML. O argumento '{css} é um seletor CSS válido e o argumento opcional '{root} define o elemento raiz da busca.	**/
 	function __Query(css, root) {
 		if (!(this instanceof __Query))	return new __Query(css, root);
 		const check = __Type(root);
@@ -5149,7 +5147,7 @@ const wd = (function() {
 
 	Object.defineProperties(__Query.prototype, {
 		constructor: {value: __Query},
-		/**. ``''array'' $$``: retorna uma lista de nós (``NodeList``).**/
+		/**. '{array $$}: retorna uma lista de nós ('{NodeList}).**/
 		$$: {
 			get: function() {
 				let elem = null;
@@ -5157,7 +5155,7 @@ const wd = (function() {
 				return __Type(elem).node ? elem : document.querySelectorAll("#_._");
 			}
 		},
-		/**. ``''array'' $``: retorna um nó específico ou lista de nós (``NodeList``) vazia.**/
+		/**. '{array $}: retorna um nó específico ou lista de nós ('{NodeList}) vazia.**/
 		$: {
 			get: function() {
 				let elem = null;
@@ -5168,10 +5166,9 @@ const wd = (function() {
 	});
 
 /*----------------------------------------------------------------------------*/
-	/**#### Nós HTML
-	#### Formulários
-	###### ``**constructor** ''object'' __FNode(''node'' input)``
-	Construtor para checar características de campo de formulário HTML (argumento ``input``).**/
+	/**#4 Formulários
+	''constructor object __FNode(node input)''
+	Construtor para checar características de campo de formulário HTML (argumento '{input}).**/
 	function __FNode(input) {
 		if (!(this instanceof __FNode))	return new __FNode(input);
 		const check = __Type(input);
@@ -5208,30 +5205,30 @@ const wd = (function() {
 			data.mask = false;
 		}
 		Object.defineProperties(this, {
-			/**. ``''node'' node``: Retorna o nó.**/
+			/**. '{node node}: Retorna o nó.**/
 			node:   {value: data.node},
-			/**. ``''string'' tag``: Retorna a tag do nó.**/
+			/**. '{string tag}: Retorna a tag do nó.**/
 			tag:    {value: data.tag},
-			/**. ``''boolean'' form``: Informa se o nó é campo de formulário.**/
+			/**. '{boolean form}: Informa se o nó é campo de formulário.**/
 			form:   {value: data.form},
-			/**. ``''string'' ftype``: Retorna o tipo de formulário ou vazio.**/
+			/**. '{string ftype}: Retorna o tipo de formulário ou vazio.**/
 			ftype:  {value: data.type},
-			/**. ``''boolean'' fmask``: Informa se o formulário possui máscara nativa implementada.**/
+			/**. '{boolean fmask}: Informa se o formulário possui máscara nativa implementada.**/
 			fmask:  {value: data.mask},
-			/**. ``''boolean'' fsend``: Informa se o formulário pode ser enviado em requisições ou falso.**/
+			/**. '{boolean fsend}: Informa se o formulário pode ser enviado em requisições ou falso.**/
 			fsend:  {value: data.send},
-			/**. ``''boolean'' fwork``: Informa se o formulário está implementado.**/
+			/**. '{boolean fwork}: Informa se o formulário está implementado.**/
 			fwork:  {value: data.work},
-			/**. ``''string'' fcheck``: Informa o tipo de verificação do valor do formulário.**/
+			/**. '{string fcheck}: Informa o tipo de verificação do valor do formulário.**/
 			fcheck: {value: data.check},
-			/**. ``''boolean'' ftext``: Informa se o formulário aceita conteúdo de texto.**/
+			/**. '{boolean ftext}: Informa se o formulário aceita conteúdo de texto.**/
 			ftext:  {value: data.text},
 		});
 	}
 
 	Object.defineProperties(__FNode.prototype, {
 		constructor: {value: __FNode},
-		/**. ``''object'' _msg``: Registra algumas mensagens de validação de formulários.**/
+		/**. '{object _msg}: Registra algumas mensagens de validação de formulários.**/
 		_msg: {
 			value: (function(){
 				const msg     = {};
@@ -5247,7 +5244,7 @@ const wd = (function() {
 				return msg;
 			})()
 		},
-		/**. ``''object'' _config``: Contém as configurações sobre os campos de formulário.**/
+		/**. '{object _config}: Contém as configurações sobre os campos de formulário.**/
 		_config: {
 			value: (function() {
 				/*-- informações que definem o tipo do campo de formulário -------------
@@ -5317,14 +5314,14 @@ const wd = (function() {
 				return data;
 			})()
 		},
-		/**. ``''string'' fname``: Define ou retorna o valor do atributo ``name`` do formulário ou vazio.**/
+		/**. '{string fname}: Define ou retorna o valor do atributo '{name} do formulário ou vazio.**/
 		fname: {
 			get: function()  {return this.form ? this.node.name.trim() : "";},
 			set: function(x) {
 				if (this.form) this.node.name = x === null ? "" : String(x).trim();
 			}
 		},
-		/**. ``''any'' fvalue``: Define ou retorna o valor do formulário ou nulo.**/
+		/**. '{any fvalue}: Define ou retorna o valor do formulário ou nulo.**/
 		fvalue: {
 			get: function() {
 				if (!this.form) return null;
@@ -5477,7 +5474,7 @@ const wd = (function() {
 				return;
 			}
 		},
-		/**. ``''boolean'' ferror``: Retorna se o campo de formulário é inválido.**/
+		/**. '{boolean ferror}: Retorna se o campo de formulário é inválido.**/
 		ferror: {
 			get: function() {
 				if (this.form) {
@@ -5502,7 +5499,7 @@ const wd = (function() {
 				return false;
 			}
 		},
-		/**. ``''string'' fvalidity``: Define ou retorna mensagem de restrição do formulário.**/
+		/**. '{string fvalidity}: Define ou retorna mensagem de restrição do formulário.**/
 		fvalidity	: {
 			get: function() {
 				return this.ferror ? this.node.validationMessage.trim() : "";
@@ -5513,7 +5510,7 @@ const wd = (function() {
 				if (check) this.node.setCustomValidity(error);
 			}
 		},
-		/**. ``''object'' fsubmit``: Retorna um objeto contendo as propriedades ``name``, ``value``, ``error`` e ``message`` do formulário ou nulo se não for o caso para submeter.**/
+		/**. '{object fsubmit}: Retorna um objeto contendo as propriedades '{name}, '{value}, '{error} e '{message} do formulário ou nulo se não for o caso para submeter.**/
 		fsubmit: {
 			get: function() {
 				if (this.fsend) {
@@ -5526,7 +5523,7 @@ const wd = (function() {
 				return null;
 			}
 		},
-		/**. ``''void'' falert()``: Exibe a mensagem de erro na tela, se implementado pelo navegador.**/
+		/**. '{void falert()}: Exibe a mensagem de erro na tela, se implementado pelo navegador.**/
 		falert	: {
 			value: function() {
 				const validity = this.fvalidity;
@@ -5542,7 +5539,7 @@ const wd = (function() {
 	});
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**constructor** ''object'' __Node(node input)``
+	/**''constructor object __Node(node input)''
 	Construtor para manipulação de nós HTML.**/
 	function __Node(input) {
 		if (!(this instanceof __Node)) return new __Node(input);
@@ -5551,7 +5548,7 @@ const wd = (function() {
 
 	__Node.prototype = Object.create(__FNode.prototype, {
 		constructor: {value: __Node},
-		/**. ``''any'' attribute(''string'' name, ''any'' value)``: Define e retorna valores de atributos dos elementos HTML. Os argumentos ``name`` e ``value`` são, respectivamente, o nome e o valor do atributo. Se ``value`` for omitido, retornará o valor de ``name``. Se ``name`` for omitido, retornará um objeto com os nome e valores dos atributos HTML.**/
+		/**. '{any attribute(string name, any value)}: Define e retorna valores de atributos dos elementos HTML. Os argumentos '{name} e '{value} são, respectivamente, o nome e o valor do atributo. Se '{value} for omitido, retornará o valor de '{name}. Se '{name} for omitido, retornará um objeto com os nome e valores dos atributos HTML.**/
 		attribute: {
 			value: function (name, value) {
 				/*-- RETORNAR LISTA DE ATRIBUTOS -------------------------------------*/
@@ -5632,7 +5629,7 @@ const wd = (function() {
 				}
 			}
 		},
-		/**. ``''object'' style``: Define e retorna o valor do atributo ``style`` por meio de um objeto. Valor nulo excluí o atributo, valor textual define o atributo HTML e valor em objeto define o par nome-valor.**/
+		/**. '{object style}: Define e retorna o valor do atributo '{style} por meio de um objeto. Valor nulo excluí o atributo, valor textual define o atributo HTML e valor em objeto define o par nome-valor.**/
 		style: {
 			get: function() {
 				const data = {};
@@ -5659,7 +5656,7 @@ const wd = (function() {
 				}
 			}
 		},
-		/**. ``''array'' class``: Define e retorna o valor do atributo ``class`` por meio de um array. Valor nulo excluí o atributo, valor textual define o atributo HTML e valor em objeto define ações ''replace'', ''toggle'', ''add'' e  ''remove''.**/
+		/**. '{array class}: Define e retorna o valor do atributo '{class} por meio de um array. Valor nulo excluí o atributo, valor textual define o atributo HTML e valor em objeto define ações i{replace}, i{toggle}, i{add} e  i{remove}.**/
 		class: {
 			get: function() {
 				const css   = this.node.getAttribute("class");
@@ -5686,7 +5683,7 @@ const wd = (function() {
 				}
 			}
 		},
-		/**. ``''void''  handler(''object'' list)``: Define ou remove disparadores ao elemento. As propriedades do argumento ``list`` correspondem ao nome do evento e seus valores as funções disparadoras ou uma lista delas. Caso a função disparadora esteja no escopo de ``window``, poderá ser informada a string com seu nome. As propriedades booleanas especiais "#remove" e "#capture" definem se trata de remoção de evento e o valor do terceiro argumento (``useCapture``) dos métodos nativos "add/removeEventListener".**/
+		/**. '{void  handler(object list)}: Define ou remove disparadores ao elemento. As propriedades do argumento '{list} correspondem ao nome do evento e seus valores as funções disparadoras ou uma lista delas. Caso a função disparadora esteja no escopo de '{window}, poderá ser informada a string com seu nome. As propriedades booleanas especiais "#remove" e "#capture" definem se trata de remoção de evento e o valor do terceiro argumento ('{useCapture}) dos métodos nativos "add/removeEventListener".**/
 		handler: {
 			value: function(list) {
 				if (new __Type(list).object) {
@@ -5708,7 +5705,7 @@ const wd = (function() {
 				return;
 			}
 		},
-		/**. ``''void''  addHandler(''object|array'' list)``: Método auxiliar de ``handler`` para atrelar disparadores a eventos. Se ``list`` for um array, seus itens deverão ser o nome do evento, a função disparadora ou uma lista delas e o valor do terceiro argumento (``useCapture``) dos métodos nativos, respectivamente.**/
+		/**. '{void  addHandler(object|array list)}: Método auxiliar de '{handler} para atrelar disparadores a eventos. Se '{list} for um array, seus itens deverão ser o nome do evento, a função disparadora ou uma lista delas e o valor do terceiro argumento ('{useCapture}) dos métodos nativos, respectivamente.**/
 		addHandler: {
 			value: function(list) {
 				const check     = new __Type(list)
@@ -5721,7 +5718,7 @@ const wd = (function() {
 				return this.handler(data);
 			}
 		},
-		/**. ``''void''  removeHandler(''object|array'' list)``: Método auxiliar de ``handler`` para desatrelar disparadores a eventos. Se ``list`` for um array, seus itens deverão ser o nome do evento, a função disparadora ou uma lista delas e o valor do terceiro argumento (``useCapture``) dos métodos nativos, respectivamente.**/
+		/**. '{void  removeHandler(object|array list)}: Método auxiliar de '{handler} para desatrelar disparadores a eventos. Se '{list} for um array, seus itens deverão ser o nome do evento, a função disparadora ou uma lista delas e o valor do terceiro argumento ('{useCapture}) dos métodos nativos, respectivamente.**/
 		removeHandler: {
 			value: function(list) {
 				const check     = new __Type(list)
@@ -5734,7 +5731,7 @@ const wd = (function() {
 				return this.handler(data);
 			}
 		},
-		/**. ``''object'' dataset``: Define e retorna os valores do atributo ``dataset``. Valor nulo excluí o atributo e valor em objeto define seus pares nome-valor.**/
+		/**. '{object dataset}: Define e retorna os valores do atributo '{dataset}. Valor nulo excluí o atributo e valor em objeto define seus pares nome-valor.**/
 		dataset: {
 			get: function() {
 				const data = {};
@@ -5770,7 +5767,7 @@ const wd = (function() {
 				//this.node.dispatchEvent(wdDatasetEvent);
 			}
 		},
-		/**. ``''node'' clone(boolean childs=true)``: Retorna um clone do objeto. Se o argumento opcional ``childs`` for falso, os elementos filhos não serão clonados.**/
+		/**. '{node clone(boolean childs=true)}: Retorna um clone do objeto. Se o argumento opcional '{childs} for falso, os elementos filhos não serão clonados.**/
 		clone: {
 			value: function(childs) {
 				let special = ["script"];
@@ -5786,15 +5783,15 @@ const wd = (function() {
 				return clone;
 			}
 		},
-		/**. ``''void'' load(''string'' html="", options ''object'')``: Atribui ao nó ou o substitui pelo conteúdo definido em ``html`` renderizando-o como nós ou notação XML/HTML. O argumento ``options`` pode possuir as seguintes propriedades boleanas:
+		/**. '{void load(string html="", options object)}: Atribui ao nó ou o substitui pelo conteúdo definido em '{html} renderizando-o como nós ou notação XML/HTML. O argumento '{options} pode possuir as seguintes propriedades boleanas:
 		|Nome|Descrição|
 		|script|Se verdadeiro, forçará a execução de scripts (exceto para XML).|
 		|replace|Se verdadeiro, o nó será substituído pelo conteúdo (apenas nós do tipo elemento).|
 		|text|Se verdadeiro ou em caso de formulário, o conteúdo será lançado como texto e as demais propriedades não terão efeito.|
-		. Comportamento esperado conforme conteúdo de ``html``:
+		. Comportamento esperado conforme conteúdo de '{html}:
 		|html|Comportamento|
 		|String|Texto da string ou sua renderização como innerHTML.|
-		|HTMLDocument|Texto da estrutura HTML ou a renderização de ''body'' como innerHTML.|
+		|HTMLDocument|Texto da estrutura HTML ou a renderização de i{body} como innerHTML.|
 		|XMLDocument|Texto da estrutura XML ou a apensação de seus elementos raiz ao nó.|
 		|Lista HTML|Texto do outerHTML de cada nó agrupado ou a apensação de seus elementos ao nó.|**/
 		//FIXME quando for substituir elementos, tem que provocar o wdreload sobre o elemento pai
@@ -5881,7 +5878,7 @@ const wd = (function() {
 				}
 			}
 		},
-		/**. ``''void'' repeat(''array'' list)``: Clona os filhos do elemento repetindo-os de acordo com as informações repassadas pela lista de objetos (``list``). O elemento filho que contiver o nome do atributo do objeto entre duas chaves (''{{nome}}'') terá o fragmento substituídos pelo valor do atributo do objeto correspondente.**/
+		/**. '{void repeat(array list)}: Clona os filhos do elemento repetindo-os de acordo com as informações repassadas pela lista de objetos ('{list}). O elemento filho que contiver o nome do atributo do objeto entre duas chaves ({{nome}}) terá o fragmento substituídos pelo valor do atributo do objeto correspondente.**/
 		repeat: {
 			value: function(list) {
 				if (!__Type(list).array) list = [];
@@ -5922,7 +5919,7 @@ const wd = (function() {
 				return;
 			}
 		},
-		/**. ``''boolean'' show``: Retorna e define a visibilidade do elemento nos termos da biblioteca.**/
+		/**. '{boolean show}: Retorna e define a visibilidade do elemento nos termos da biblioteca.**/
 		show: {
 			get: function() {
 				return this.node.hasAttribute("data-js-wd-hide");
@@ -5934,7 +5931,7 @@ const wd = (function() {
 					this.node.removeAttribute("data-js-wd-hide");
 			}
 		},
-		/**. ``''void'' only(''boolean'' reverse)``: Exibe o nó e esconde os irmãos. Se ``reverse`` for verdadeiro, inverte-se o resultado.**/
+		/**. '{void only(boolean reverse)}: Exibe o nó e esconde os irmãos. Se '{reverse} for verdadeiro, inverte-se o resultado.**/
 		only: {
 			value: function(reverse) {
 				const nodes = __Type(this.node.parentElement.children).value;
@@ -5944,7 +5941,7 @@ const wd = (function() {
 				}
 			}
 		},
-		/**. ``''void'' childs(''integer'' init, ''integer'' last)``: Define o intervalo de nós filhos a ser exibido entre o índice inicial (``init``) e final (``last``). Utilize um número negativo para indicar o último elemento.**/
+		/**. '{void childs(integer init, integer last)}: Define o intervalo de nós filhos a ser exibido entre o índice inicial ('{init}) e final ('{last}). Utilize um número negativo para indicar o último elemento.**/
 		childs: {
 			value: function (init, last) {
 				const child = __Type(this.node.children).value;
@@ -5964,7 +5961,7 @@ const wd = (function() {
 				}
 			}
 		},
-		/**. ``''array'' groups(''boolean'' child)``: Retorna uma lista de objetos contendo os intervalos (propriedades ``init`` e ``last``) dos elementos visíveis. Se o argumento ``child`` for verdadeiro, a análise será dentre os filhos, caso contrário, entre elemento e seus irmãos.**/
+		/**. '{array groups(boolean child)}: Retorna uma lista de objetos contendo os intervalos (propriedades '{init} e '{last}) dos elementos visíveis. Se o argumento '{child} for verdadeiro, a análise será dentre os filhos, caso contrário, entre elemento e seus irmãos.**/
 		groups: {
 			value: function(child) {
 				const target = child === true ? this.node : this.node.parentElement;
@@ -5987,7 +5984,7 @@ const wd = (function() {
 				return groups;
 			}
 		},
-		/**. ``''void'' walk(''integer'' n=1)``: Exibe um determinado nó filho avançando ou retrocedendo entre os nós irmãos. O argumento ``n`` indica o intervalo a avançar (positivo) ou a retroceder (negativo).**/
+		/**. '{void walk(integer n=1)}: Exibe um determinado nó filho avançando ou retrocedendo entre os nós irmãos. O argumento '{n} indica o intervalo a avançar (positivo) ou a retroceder (negativo).**/
 		walk: {
 			value: function(n) {
 				if (this.node.childElementCount < 2) return this.childs(0, 0);
@@ -6003,7 +6000,7 @@ const wd = (function() {
 				this.childs(next, next);
 			}
 		},
-		/**. ``''void'' pages(''number'' index, ''number'' width)``: Agrupa os nós filhos em grupos de certo comprimento. O argumento ``index`` define o índice do grupo a ser exibido limitado ao primeiro (0) e ao último (-1). Se valores infinitos forem informados, os grupos avançarão (+) ou retrocederão (-) uma unidade. O argumento ``width`` é um número finito positivo que define o comprimento dos grupos, pode ser um número não inteiro.**/
+		/**. '{void pages(number index, number width)}: Agrupa os nós filhos em grupos de certo comprimento. O argumento '{index} define o índice do grupo a ser exibido limitado ao primeiro (0) e ao último (-1). Se valores infinitos forem informados, os grupos avançarão (+) ou retrocederão (-) uma unidade. O argumento '{width} é um número finito positivo que define o comprimento dos grupos, pode ser um número não inteiro.**/
 		pages: {
 			value: function(index, width) {
 				if (this.node.childElementCount < 2) return this.childs(0,0);
@@ -6045,7 +6042,7 @@ const wd = (function() {
 				return this.pages(page, width);
 			}
 		},
-		/**. ``''void'' insertTag(''string'' tag, ''integer'' start, ''integer'' end)``: Insere uma ``tag`` HTML entre os índices ``start`` e ``end`` do conteúdo textual. Método destrutivo, não utilizar se houver conteúdo editável no nó.**/
+		/**. '{void insertTag(string tag, integer start, integer end)}: Insere uma '{tag} HTML entre os índices '{start} e '{end} do conteúdo textual. Método destrutivo, não utilizar se houver conteúdo editável no nó.**/
 		insertTag: {
 			value: function(tag, start, end) {
 				let init = __Type(start);
@@ -6081,7 +6078,7 @@ const wd = (function() {
 				return this.node.innerHTML;
 			}
 		},
-		/**. ``''object'' textMatch(''regexp|string'' search)``: Localiza dentro do conteúdo textual do nó os índices de início e fim de ``search`` em um objeto contendo os atributos ``init`` e ``last``, retorna ou nulo caso não encontre.**/
+		/**. '{object textMatch(regexp|string search)}: Localiza dentro do conteúdo textual do nó os índices de início e fim de '{search} em um objeto contendo os atributos '{init} e '{last}, retorna ou nulo caso não encontre.**/
 		textMatch: {
 			value: function(search) {
 				const check = __Type(search);
@@ -6104,7 +6101,7 @@ const wd = (function() {
 				return null;
 			}
 		},
-		/**. ``''void'' filter(''string|regexp'' search, ''integer'' width)``: Exibe os nós filhos que casam com o valor definido em ``search``. O argumento ``width`` indica o número mínimo de caracteres a ser informado em ``search`` (string). Quando o comprimento de ``search`` for menor que o valor absoluto de ``width``, nenhum elemento será exibido, se negativo, ou todos, se positivo.**/
+		/**. '{void filter(string|regexp search, integer width)}: Exibe os nós filhos que casam com o valor definido em '{search}. O argumento '{width} indica o número mínimo de caracteres a ser informado em '{search} (string). Quando o comprimento de '{search} for menor que o valor absoluto de '{width}, nenhum elemento será exibido, se negativo, ou todos, se positivo.**/
 		filter: {
 			value: function(search, width) {
 				if (this.node.childElementCount === 0) return;
@@ -6156,7 +6153,7 @@ const wd = (function() {
 				return;
 			}
 		},
-		/**. ``''void'' sort(''boolean'' asc)``: Ordena os elementos filhos. O argumento opcional ``asc`` define a classificação. Se verdadeiro, será ascendente; se falso, descendente; e, se não boleano, será o inverso da classificação vigente.**/
+		/**. '{void sort(boolean asc)}: Ordena os elementos filhos. O argumento opcional '{asc} define a classificação. Se verdadeiro, será ascendente; se falso, descendente; e, se não boleano, será o inverso da classificação vigente.**/
 		sort: {
 			value: function(asc) {
 				if (this.node.childElementCount === 0) return;
@@ -6168,7 +6165,7 @@ const wd = (function() {
 				return;
 			}
 		},
-		/**. ``''void'' tsort(''integer'' order...)``: Ordena os nós filhos com referência aos nós netos, ordenando colunas de tabelas. Os argumentos ``order`` definem a sequência de prioridade na classificação, com a indicação do número da coluna (a partir de 1, da esquerda para a direita). Se indicador da coluna for positivo, sua ordem será ascendente, caso contrário, descendente.**/
+		/**. '{void tsort(integer order...)}: Ordena os nós filhos com referência aos nós netos, ordenando colunas de tabelas. Os argumentos '{order} definem a sequência de prioridade na classificação, com a indicação do número da coluna (a partir de 1, da esquerda para a direita). Se indicador da coluna for positivo, sua ordem será ascendente, caso contrário, descendente.**/
 		tsort: {
 			value: function() {
 				if (this.node.childElementCount === 0) return;
@@ -6214,7 +6211,7 @@ const wd = (function() {
 				child.forEach(function(v,i,a) {node.appendChild(v);});
 			}
 		},
-		/**. ``''void'' jump(''node'' list)``: O nó será adicionado aos elementos na ordem definida em ``list`` a cada chamada do método. O argumento ``list`` é uma lista de nós que acomodará o elemento.**/
+		/**. '{void jump(node list)}: O nó será adicionado aos elementos na ordem definida em '{list} a cada chamada do método. O argumento '{list} é uma lista de nós que acomodará o elemento.**/
 		jump: {
 			value: function(list) {
 				const check = __Type(list);
@@ -6232,7 +6229,7 @@ const wd = (function() {
 				return;
 			}
 		},
-		/**. ``''void'' full()``: Alterna a exibição do nó em tela cheia.**/
+		/**. '{void full()}: Alterna a exibição do nó em tela cheia.**/
 		//TODO interessante: https://developer.mozilla.org/en-US/docs/Web/CSS/::backdrop    https://developer.mozilla.org/en-US/docs/Web/CSS/:fullscreen
 		full: {
 			value: function() {
@@ -6250,7 +6247,7 @@ const wd = (function() {
 				return;
 			}
 		},
-		/**. ``''object'' styles``: Retorna um objeto contendo os estilos e seus valores computados ao elemento.**/
+		/**. '{object styles}: Retorna um objeto contendo os estilos e seus valores computados ao elemento.**/
 		styles: {
 			get: function() {
 				const object = {};
@@ -6261,7 +6258,7 @@ const wd = (function() {
 				return object;
 			}
 		},
-		/**. ``''object'' position``: Retorna ou define o dimensionamento do elemento por meio de um objeto com os seguintes atributos: width, height, top, right, bottom e left. Os valores dependem do posicionalmento do elemento e devem ser numéricos.**/
+		/**. '{object position}: Retorna ou define o dimensionamento do elemento por meio de um objeto com os seguintes atributos: width, height, top, right, bottom e left. Os valores dependem do posicionalmento do elemento e devem ser numéricos.**/
 		position: {
 			get: function() {
 				const re   = /[^0-9\.\-]/g;
@@ -6279,7 +6276,7 @@ const wd = (function() {
 				return;
 			}
 		},
-		/**. ``''boolean'' mask(''string'' model)``: Retorna falso se o conteúdo do elemento não corresponder ao modelo da máscara ``model`` (ver __String.mask). Caso contrário, definirá o valor do conteúdo conforme definido pela máscara.**/
+		/**. '{boolean mask(string model)}: Retorna falso se o conteúdo do elemento não corresponder ao modelo da máscara '{model} (ver __String.mask). Caso contrário, definirá o valor do conteúdo conforme definido pela máscara.**/
 		mask: {
 			value: function(model) {
 				/*-- se for um formulário com máscara primitiva, não avaliar --*/
@@ -6339,9 +6336,9 @@ const wd = (function() {
 	});
 
 /*----------------------------------------------------------------------------*/
-	/**#### Tabela
-	###### ``**constructor** ''object'' __Table(''any'' input)``
-	Construtor para obter dados de tabela e matrizes. O argumento ``input`` pode ser uma String CSV, uma matriz de array ou uma tabela HTML;**/
+	/**#4 Tabela
+	''constructor object __Table(any input)''
+	Construtor para obter dados de tabela e matrizes. O argumento '{input} pode ser uma String CSV, uma matriz de array ou uma tabela HTML;**/
 	function __Table(input) {
 		if (!(this instanceof __Table))	return new __Table(input);
 		const parser = new __Parser(input);
@@ -6355,20 +6352,20 @@ const wd = (function() {
 		else
 		  table = document.createElement("TABLE");
 		Object.defineProperties(this,
-		  /**. ``''node'' table``: Retorna a tabela.**/
+		  /**. '{node table}: Retorna a tabela.**/
 		  {table: {value: table}}
 		);
 	}
 
 	Object.defineProperties(__Table.prototype, {
 		constructor: {value: __Table},
-		/**. ``''object'' to``: Retorna um objeto para exportar os dados da tabela para:
+		/**. '{object to}: Retorna um objeto para exportar os dados da tabela para:
 		|Nome|Descrição|
-		|matrix|Retorna os nós ''td'' e ''th'' da tabela em forma de matriz 2X2|
-		|values|Semelhante à propriedade ``matrix`` mas exibe os valores das células|
+		|matrix|Retorna os nós i{td} e i{th} da tabela em forma de matriz 2X2|
+		|values|Semelhante à propriedade '{matrix} mas exibe os valores das células|
 		|struct|Retorna uma lista de objetos cujas propriedades correspondem ao título da coluna|
 		|csv|Retorna os dados da tabela em formato CSV|
-		|json|Retorna o resultado da propriedade ``values`` no formato JSON|**/
+		|json|Retorna o resultado da propriedade '{values} no formato JSON|**/
 		to: {
 			get: function() {
 				const parser = new __Parser(this.table);
@@ -6381,13 +6378,13 @@ const wd = (function() {
 				};
 			}
 		},
-		/**. ``''string'' toString()``: Retorna os valores da tabela em formato CSV.**/
+		/**. '{string toString()}: Retorna os valores da tabela em formato CSV.**/
 		toString: {value: function() {return this.to.csv;}},
-		/**. ``''string'' valueOf()``: Retorna os valores da tabela em forma de matriz.**/
+		/**. '{string valueOf()}: Retorna os valores da tabela em forma de matriz.**/
 		valueOf: {value: function() {return this.to.values;}},
-		/**. ``''integer'' rows``: Retorna a quantidade de linhas da tabela.**/
+		/**. '{integer rows}: Retorna a quantidade de linhas da tabela.**/
     rows: {get: function() {return this.valueOf().length;}},
-		/**. ``''integer'' cols``: Retorna a quantidade máxima de colunas da tabela.**/
+		/**. '{integer cols}: Retorna a quantidade máxima de colunas da tabela.**/
     cols: {
     	get: function() {
     		const matrix = this.valueOf();
@@ -6397,7 +6394,7 @@ const wd = (function() {
     		return cols;
     	}
     },
-    /**. ``''string'' caption``: Define ou retorna o valor do título da tabela.**/
+    /**. '{string caption}: Define ou retorna o valor do título da tabela.**/
 		caption: {
 		  get: function () {
 		    return this.table.caption === null ? "" : this.table.caption.textContent;
@@ -6410,9 +6407,9 @@ const wd = (function() {
 		    this.table.caption.textContent = String(x);
 		  }
 		},
-		/**. ``''array'' cells(''string'' target, ''function'' caller)``: Retorna uma lista de células da tabela conforme configuração definida no argumento ``target``.
-		. A célula é especificada pelos índices da linha e coluna separados por vírgula (''row,col''), onde zero é a origem e o caractere "asterísco" o último índice. Para especificar um intervalo de células, deve-se separar as células por um caractere de "dois pontos" (''row1,col1:row2,col2''), nesse caso, a linha e a coluna da célula inicial devem ser menores ou iguais a aqueles especificados na célula final. Para especificar várias células ou intervalos de forma independente, deve-se separá-los por um caractere de "ponto e vírgula" (''row1,col1;row2,col2:row3,col3'').
-		. A função opcional definida em ``caller`` permite alterar o conteúdo retornado. Por padrão, cada item da lista conterá o nó ``td`` ou ``th`` da tabela conforme definido em ``target``. A função receberá três argumentos, o nó HTML e os índices da linha e coluna, nessa ordem. O retorno da função, se definido, definirá o novo valor do item da lista.**/
+		/**. '{array cells(string target, function' caller)}: Retorna uma lista de células da tabela conforme configuração definida no argumento '{target}.
+		. A célula é especificada pelos índices da linha e coluna separados por vírgula (i{row,col}), onde zero é a origem e o caractere "asterísco" o último índice. Para especificar um intervalo de células, deve-se separar as células por um caractere de "dois pontos" (i{row1,col1:row2,col2}), nesse caso, a linha e a coluna da célula inicial devem ser menores ou iguais a aqueles especificados na célula final. Para especificar várias células ou intervalos de forma independente, deve-se separá-los por um caractere de "ponto e vírgula" (i{row1,col1;row2,col2:row3,col3}).
+		. A função opcional definida em '{caller} permite alterar o conteúdo retornado. Por padrão, cada item da lista conterá o nó '{td} ou '{th} da tabela conforme definido em '{target}. A função receberá três argumentos, o nó HTML e os índices da linha e coluna, nessa ordem. O retorno da função, se definido, definirá o novo valor do item da lista.**/
 		cells: {
 			value: function(target, caller) {
 				const groups = String(target).replace(/\s+/g, "").split(";");
@@ -6460,22 +6457,22 @@ const wd = (function() {
 				return list;
 			}
 		},
-		/**.  ``''node'' plot(''object'' options)``: Retorna um gráfico de acordo com os dados da tabela e conforme especificado em ``options`` (ver __Plot2D.add):
+		/**.  '{node plot(object options)}: Retorna um gráfico de acordo com os dados da tabela e conforme especificado em '{options} (ver __Plot2D.add):
 		|Nome|Tipo|Descrição|
-		|xLabel|string|Rótulo do eixo ''x''.|
-		|yLabel|string|Rótulo do eixo ''y''.|
+		|xLabel|string|Rótulo do eixo i{x}.|
+		|yLabel|string|Rótulo do eixo i{y}.|
 		|title|string|Título do gráfico.|
-		|xAxis|string|Define a formatação da escala do eixo ''x'', se ''number'', ''date'', ''time'', ''datetime'' ou ''percent''.|
-		|yAxis|string|Define a formatação da escala do eixo ''y'' (ver xAxis).|
-		|type|string|Tipo de gráfico, ''plan'', ''cols'' ou ''pie''.|
+		|xAxis|string|Define a formatação da escala do eixo i{x}, se number, i{date}, i{time}, i{datetime} ou i{percent}.|
+		|yAxis|string|Define a formatação da escala do eixo i{y} (ver xAxis).|
+		|type|string|Tipo de gráfico, i{plan}, i{cols} ou i{pie}.|
 		|data|array object|Um objeto ou uma lista de objetos com os dados de plotagem.|
-		. Os itens da propriedade ``data`` são objetos com os seguintes especificações:
+		. Os itens da propriedade '{data} são objetos com os seguintes especificações:
 		|Nome|Tipo|Descrição|
-		|x|any|Valores do eixo ''x'': um array, um objeto (cols ou pie) ou o número da coluna da tabela precedido de &num;.|
-		|y|any|Valores do eixo ''y'', pode ser um array, uma função, uma constante ou o número da coluna precedido de &num;.|
+		|x|any|Valores do eixo i{x}: um array, um objeto (cols ou pie) ou o número da coluna da tabela precedido de &num;.|
+		|y|any|Valores do eixo i{y}, pode ser um array, uma função, uma constante ou o número da coluna precedido de &num;.|
 		|label|string|Rótulo do gráfico.|
 		|fit|string|Especifica o tipo do gráfico cartesiano.|
-		. Os valores permitidos para o atributo ``fit`` são:
+		. Os valores permitidos para o atributo '{fit} são:
 		|Valor|Descrição|Valores de Y|
 		|sum|Exibe a soma aproximada da área dentro da curva.|function, constante, array, matrix|
 		|avg|Exibe a média aproximada da curva.|function, array, matrix|
@@ -6525,10 +6522,10 @@ const wd = (function() {
 	});
 
 /*============================================================================*/
-	/**### Requisições e Leituras
-	#### Resposta
-	``**constructor** ''object'' __Response(''function'' trigger)``
-	Construtor para [requisições Web](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest) ou leituras de [arquivos](https://developer.mozilla.org/en-US/docs/Web/API/FileReader). O argumento opcional ``trigger`` define o disparador a ser invocado a cada mudança ou encerramento da requisição. O disparador receberá a cada atualização um objeto com as seguintes propriedades:
+	/**#3 Requisições e Leituras
+	#4 Resposta
+	''constructor object __Response(function' trigger)''
+	Construtor para [requisições Web](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest) ou leituras de [arquivos](https://developer.mozilla.org/en-US/docs/Web/API/FileReader). O argumento opcional '{trigger} define o disparador a ser invocado a cada mudança ou encerramento da requisição. O disparador receberá a cada atualização um objeto com as seguintes propriedades:
 	|Nome|Descrição|
 	|done|Booleano que indica o fim do processo.|
 	|ok|Indica, ao fim do processo, se o procedimento foi concluído com sucesso.|
@@ -6563,7 +6560,7 @@ const wd = (function() {
 	}
 	Object.defineProperties(__Response.prototype, {
 		constructor: {value: __Response},
-		/**. ``''void'' _changes(''string'' type, ''string'' caller)``: Define o formato da resposta conforme tipo (``type``) e o método (``caller``).**/
+		/**. '{void _changes(string type, string caller)}: Define o formato da resposta conforme tipo ('{type}) e o método ('{caller}).**/
 		_changes: {
 			value: function(type, caller) {
 				if (this._response.response !== null) {
@@ -6596,7 +6593,7 @@ const wd = (function() {
 				return;
 			}
 		},
-		/**. ``''void'' send(''object'' ev, ''object'' config)``: Disparador para o método ``send`` de __Request. O argumento ``ev`` é o evento disparador e ``config``os dados de configuração da requisição.**/
+		/**. '{void send(object ev, object config)}: Disparador para o método '{send} de __Request. O argumento '{ev} é o evento disparador e '{config} os dados de configuração da requisição.**/
 		send: {
 			value: function(ev, config) {
 				if (this._response.done) return;
@@ -6630,7 +6627,7 @@ const wd = (function() {
 				return;
 			}
 		},
-		/**. ``''void'' read(''object'' ev, ''object'' config)``: Disparador para o método ``read`` de __Request. O argumento ``ev`` é o evento disparador e ``config``os dados de configuração da leitura.**/
+		/**. '{void read(object ev, object config)}: Disparador para o método '{read} de __Request. O argumento '{ev} é o evento disparador e '{config} os dados de configuração da leitura.**/
 		read: {
 			value: function(ev, config) {
 				if (this._response.done) return;
@@ -6666,7 +6663,7 @@ const wd = (function() {
 				return;
 			}
 		},
-		/**. ``''boolean'' fetch(''object'' ev, ''object'' config)``: Disparador para o método ``fetch`` de __Request. O argumento ``ev`` é o retorno do ação e ``config``os dados de configuração da requisição. Retorna falso se os eventos precários "timeout" e "aborted" ocorrerem.**/
+		/**. '{boolean fetch(object ev, object config)}: Disparador para o método '{fetch} de __Request. O argumento '{ev} é o retorno do ação e '{config} os dados de configuração da requisição. Retorna falso se os eventos precários "timeout" e "aborted" ocorrerem.**/
 		fetch: {
 			value: function(ev, config) {
 				if (this._response.done) return;
@@ -6706,7 +6703,7 @@ const wd = (function() {
 				return true;
 			}
 		},
-		/**. ``''void'' error(''string'' status)``: Disparador para casos de erro em __Request. O argumento ``status`` é a mensagem de erro.**/
+		/**. '{void error(string status)}: Disparador para casos de erro em __Request. O argumento '{status} é a mensagem de erro.**/
 		error: {
 			value: function(status) {
 				this._response.time     = (new Date().valueOf()) - this._start;
@@ -6722,9 +6719,9 @@ const wd = (function() {
 	});
 
 /*----------------------------------------------------------------------------*/
-	/**#### Requisição
-	``**constructor** ''object'' __Request(''object'' config)``
-	Construtor para [requisições Web](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest) ou leituras de [arquivos](https://developer.mozilla.org/en-US/docs/Web/API/FileReader). O argumento ``config`` aceita os mesmos valores do objeto ``__Dataset`` e contem as propriedades da requisição de acordo com o método escolhido, sendo os básicos:
+	/**#4 Requisição
+	''constructor object __Request(object config)''
+	Construtor para [requisições Web](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest) ou leituras de [arquivos](https://developer.mozilla.org/en-US/docs/Web/API/FileReader). O argumento '{config} aceita os mesmos valores do objeto '{__Dataset} e contem as propriedades da requisição de acordo com o método escolhido, sendo os básicos:
 	|Nome|Referência|Aplicação|
 	|url|Alvo da requisição ou da leitura, não necessariamento um URL|send, read e fetch|
 	|method|[https://developer.mozilla.org/pt-BR/docs/Web/HTTP/Methods](Método da Requisição) (padrão é post)|send e fetch|
@@ -6741,20 +6738,20 @@ const wd = (function() {
 	}
 	Object.defineProperties(__Request.prototype, {
 		constructor: {value: __Request},
-		/**. ``''array'' _events``: Array contendo os eventos de XMLHttpRequest e FileReader.**/
+		/**. '{array _events}: Array contendo os eventos de XMLHttpRequest e FileReader.**/
 		_events: {
 			value: ("onabort onerror onload onloadend onloadstart onprogress ontimeout").split(" ")
 		},
-		/**. ``''array'' _methods``: Array contendo os métodos para requisições web.**/
+		/**. '{array _methods}: Array contendo os métodos para requisições web.**/
 		_methods: {
 			value: ("post connect delete get head options patch put trace").split(" ")
 		},
-		/**. ``''object'' _types``: Objeto contendo a configuração de responseType conforme definido na propriedade ``type``:
+		/**. '{object _types}: Objeto contendo a configuração de responseType conforme definido na propriedade '{type}:
 		|Propriedade|Retorno|Exceção|
 		|text|Conteúdo em string.|Escolha padrão.|
-		|blob|Conteúdo em arquivo.|``read`` retorna como BinaryString.|
-		|html|Conteúdo em documento HTML.|``send`` e ``fetch`` retorna um Document.|
-		|xml|Conteúdo em documento XML.|``send`` e ``fetch`` retorna um Document.|
+		|blob|Conteúdo em arquivo.|'{read} retorna como BinaryString.|
+		|html|Conteúdo em documento HTML.|'{send} e '{fetch} retorna um Document.|
+		|xml|Conteúdo em documento XML.|'{send} e '{fetch} retorna um Document.|
 		|json|Conteúdo em JSON.|-|
 		|buffer|Conteúdo em ArrayBuffer.|-|
 		|url|Conteúdo em ObjectURL.|-|
@@ -6775,7 +6772,7 @@ const wd = (function() {
 				csvlist: {send: "text",        read: "readAsText",         fetch: "text"},
 			}
 		},
-		/**. ``''object'' _cfg(''string'' caller)``: Retorna a configuração adaptada ao tipo de chamada (``caller``).**/
+		/**. '{object _cfg(string caller)}: Retorna a configuração adaptada ao tipo de chamada ('{caller}).**/
 		_cfg: {
 			value: function(caller) {
 				/*-- clonando --*/
@@ -6817,7 +6814,7 @@ const wd = (function() {
 				return cfg;
 			}
 		},
-		/**. ``''void'' send(''function'' trigger)``: Envia uma requisição ao servidor via XMLHttpRequest e executa o argumento opcional ``trigger`` a cada atualização (ver __Response). As seguintes propriedades opcionais específicas estão disponíveis:
+		/**. '{void send(function' trigger)}: Envia uma requisição ao servidor via XMLHttpRequest e executa o argumento opcional '{trigger} a cada atualização (ver __Response). As seguintes propriedades opcionais específicas estão disponíveis:
 		|Nome|Descrição|
 		|async|Indica se a requisição é assíncrona (padrão verdadeiro)|
 		|user|Usuário (padrão nulo)|
@@ -6852,7 +6849,7 @@ const wd = (function() {
 				return;
 			},
 		},
-		/**. ``''void'' read(''function'' trigger)``: Lê um arquivo via FileReader e executa o argumento opcional ``trigger`` a cada atualização (ver __Response)**/
+		/**. '{void read(function' trigger)}: Lê um arquivo via FileReader e executa o argumento opcional '{trigger} a cada atualização (ver __Response)**/
 		read: {
 			value: function(trigger) {
 				if (__Type(this._config.url).instanceOf("FileList")) {
@@ -6880,7 +6877,7 @@ const wd = (function() {
 				return;
 			},
 		},
-		/**. ``''void'' fetch(''function'' trigger)``: Envia uma requisição ao servidor via fetch e executa o argumento opcional ``trigger`` a cada atualização (ver __Response). As propriedades são as mesmas utilizadas no método nativo, exceto ''url''.**/
+		/**. '{void fetch(function' trigger)}: Envia uma requisição ao servidor via fetch e executa o argumento opcional '{trigger} a cada atualização (ver __Response). As propriedades são as mesmas utilizadas no método nativo, exceto i{url}.**/
 		fetch: {
 			value: function(trigger) {
 				const request  = new FileReader();
@@ -6920,10 +6917,10 @@ const wd = (function() {
 	});
 
 /*============================================================================*/
-	/**### Figuras
-	###### ``**constructor** ''object'' __SVG(''number'' width=100, ''number'' height=100, ''number'' xmin=0, ''number'' ymin=0)``
+	/**#3 Figuras
+	''constructor object __SVG(number width=100, number height=100, number xmin=0, number ymin=0)''
 	Construtor de imagens SVG.
-	Os argumentos são opcionais e estão relacionados ao atributo [``viewBox``]<https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/viewBox> do elemento SVG.
+	Os argumentos são opcionais e estão relacionados ao atributo ['{viewBox}]<https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/viewBox> do elemento SVG.
 	**/
 	function __SVG(width, height, xmin, ymin) {
 		if (!(this instanceof __SVG)) return new __SVG(width, height, xmin, ymin);
@@ -6940,7 +6937,7 @@ const wd = (function() {
 	}
 	Object.defineProperties(__SVG.prototype, {
 		constructor: {value: __SVG},
-		/**. ``''node'' last``: Define (adiciona) ou retorna o último nó adicionado ao SVG.**/
+		/**. '{node last}: Define (adiciona) ou retorna o último nó adicionado ao SVG.**/
 		last: {
 			get: function()  {return this._last;},
 			set: function(svg) {
@@ -6948,46 +6945,46 @@ const wd = (function() {
 				this._last = svg;
 			}
 		},
-		/**. ``''node'' create(''string'' tag)``: Retorna um novo elemento SVG do tipo informado em ``tag``.**/
+		/**. '{node create(string tag)}: Retorna um novo elemento SVG do tipo informado em '{tag}.**/
 		create: {
 			value: function(tag) {
 				return document.createElementNS("http://www.w3.org/2000/svg", tag);
 			}
 		},
-		/**. ``''self'' close()``: Clona o último elemento adicionado e o define no lugar.**/
+		/**. '{self close()}: Clona o último elemento adicionado e o define no lugar.**/
 		clone: {
 			value: function() {
 				this.last = this.last.cloneNode(true);
 				return this;
 			}
 		},
-		/**. ``''number'' xmin``: Retorna e define o valor de ``xmin``.**/
+		/**. '{number xmin}: Retorna e define o valor de '{xmin}.**/
 		xmin: {
 			get: function()  {return this._svg.viewBox.baseVal.x;},
 			set: function(x) {
 				if (__Type(x).finite)	this._svg.viewBox.baseVal.x = Number(x);
 			}
 		},
-		/**. ``''number'' ymin``: Retorna e define o valor de ``ymin``.**/
+		/**. '{number ymin}: Retorna e define o valor de '{ymin}.**/
 		ymin: {
 			get: function()  {return this._svg.viewBox.baseVal.y;},
 			set: function(y) {
 				if (__Type(y).finite)	this._svg.viewBox.baseVal.y = Number(y);
 			}
 		},
-		/**. ``''number'' width``: Retorna e define o valor de ``width``.**/
+		/**. '{number width}: Retorna e define o valor de '{width}.**/
 		width: {
 			get: function()  {return this._svg.viewBox.baseVal.width;},
 			set: function(w) {
 				if (__Type(w).finite)	this._svg.viewBox.baseVal.width = Number(w);}
 		},
-		/**. ``''number'' height``: Retorna e define o valor de ``height``.**/
+		/**. '{number height}: Retorna e define o valor de '{height}.**/
 		height: {
 			get: function()  {return this._svg.viewBox.baseVal.height;},
 			set: function(h) {
 				if (__Type(h).finite)	this._svg.viewBox.baseVal.height = Number(h);}
 		},
-		/**. ``''self'' attribute(''object'' attr)``: Define os atributos do último elemento adicionado. O argumento ``attr`` é um objeto cujas chaves representam o valor do atributo e seu respectivo valores.**/
+		/**. '{self attribute(object attr)}: Define os atributos do último elemento adicionado. O argumento '{attr} é um objeto cujas chaves representam o valor do atributo e seu respectivo valores.**/
 		attribute: {
 			value: function(attr) {
 				if (__Type(attr).object)
@@ -6995,7 +6992,7 @@ const wd = (function() {
 				return this;
 			}
 		},
-		/**. ``''self'' title(''string'' value)``: Define um título (dica) ao último elemento adicionado. O argumento ``value`` é o texto da dica.**/
+		/**. '{self title(string value)}: Define um título (dica) ao último elemento adicionado. O argumento '{value} é o texto da dica.**/
 		title: {
 			value: function(value) {
 				const svg = this.create("title");
@@ -7004,14 +7001,14 @@ const wd = (function() {
 				return this;
 			}
 		},
-		/**. ``''self'' line(''array'' p1, ''array'' p2)``: Define uma linha ligando dois pontos das coordenadas. Os argumentos ``p1`` e ``p2`` são as coordenadas (x,y).**/
+		/**. '{self line(array p1, array p2)}: Define uma linha ligando dois pontos das coordenadas. Os argumentos '{p1} e '{p2} são as coordenadas (x,y).**/
 		line: {
 			value: function(p1, p2) {
 				this.last = this.create("line");
 				return this.attribute({x1: p1[0], y1: p1[1], x2: p2[0], y2: p2[1]});
 			}
 		},
-		/**. ``''self'' lines(''array'' x, ''array'' y, ''boolean'' close=false)``: Define diversos segmentos de reta a partir de um conjunto de coordenadas. Os argumentos ``x`` e ``y`` são as coordenadas (x,y) e o argumento ``close`` indica se o último ponto deve voltar à origem.**/
+		/**. '{self lines(array x, array y, boolean close=false)}: Define diversos segmentos de reta a partir de um conjunto de coordenadas. Os argumentos '{x} e '{y} são as coordenadas (x,y) e o argumento '{close} indica se o último ponto deve voltar à origem.**/
 		lines: {
 			value: function(x, y, close) {
 				this.last = this.create("path");
@@ -7023,14 +7020,14 @@ const wd = (function() {
 				return this.attribute({d: line.join(" ")});
 			}
 		},
-		/**. ``''self'' circle(''number'' cx, ''number'' cy, ''number'' r)``: Define um círculo. Os argumentos ``cx``, ``cy`` e ``r`` são o centro em x e y e o raio, respectivamente.**/
+		/**. '{self circle(number cx, number cy, number r)}: Define um círculo. Os argumentos '{cx}, '{cy} e '{r} são o centro em x e y e o raio, respectivamente.**/
 		circle: {
 			value: function(cx, cy, r) {
 				this.last = this.create("circle");
 				return this.attribute({cx: cx, cy: cy, r: r});
 			}
 		},
-		/**. ``''self'' semicircle(''number'' cx, ''number'' cy, ''number'' r, ''number'' start, ''number'' width)``: Define um semicírculo. Os argumentos ``cx``, ``cy`` e ``r`` são o centro em x e y e o raio, respectivamente. Os argumentos ``start`` e ``width`` indicam o ângulo inicial e seu tamanho em graus, respectivamente.**/
+		/**. '{self semicircle(number cx, number cy, number r, number start, number width)}: Define um semicírculo. Os argumentos '{cx}, '{cy} e '{r} são o centro em x e y e o raio, respectivamente. Os argumentos '{start} e '{width} indicam o ângulo inicial e seu tamanho em graus, respectivamente.**/
 		semicircle: {
 			value: function(cx, cy, r, start, width) {
 				this.last = this.create("path");
@@ -7050,21 +7047,21 @@ const wd = (function() {
 				return this.attribute({d: d.join(" ")});
 			}
 		},
-		/**. ``''self'' rect(''number'' x, ''number'' y, ''number'' width, ''number'' height)``: Define um retângulo. Os argumentos ``x`` e ``y`` definem o ponto de partida da figura e os argumentos ``width`` e ``height`` definem o comprimento e a altura do retângulo, respectivamente.**/
+		/**. '{self rect(number x, number y, number width, number height)}: Define um retângulo. Os argumentos '{x} e '{y} definem o ponto de partida da figura e os argumentos '{width} e '{height} definem o comprimento e a altura do retângulo, respectivamente.**/
 		rect: {
 			value: function(x, y, width, height) {
 				this.last = this.create("rect");
 				return this.attribute({x: x, y: y, width: width, height: height});
 			}
 		},
-		/**. ``''self'' path(''string'' path)``: Define um nó SVG a partir de uma sequência de comandos. O argumento ``path`` define os comandos.**/
+		/**. '{self path(string path)}: Define um nó SVG a partir de uma sequência de comandos. O argumento '{path} define os comandos.**/
 		path: {
 			value: function(path) {
 				this.last = this.create("path");
 				return this.attribute({d: path});
 			}
 		},
-		/**. ``''self'' text(''number'' x, ''number'' y, ''string|array'' text, ''string'' point)``: Define um SVG textual. Os argumentos ``x`` e ``y`` definem o posicionamento. O argumento ``text``, se lista, criará um elemento ''tspan'' para cada item empilhados e, se texto, criará um elemento ''text''. O argumento ``point`` define a posição (vertical/horizontal) e a âncora do texto. O primeiro caractere define a posição, ''v'' para vertical e ''h'' para horizontal, os demais definem a âncora conforme pontos cardeais: ''n, ne, e, se, s, sw, w, nw'' e ''c'' para o meio.**/
+		/**. '{self text(number x, number y, string|array text, string point)}: Define um SVG textual. Os argumentos '{x} e '{y} definem o posicionamento. O argumento '{text}, se lista, criará um elemento i{tspan} para cada item empilhados e, se texto, criará um elemento i{text}. O argumento '{point} define a posição (vertical/horizontal) e a âncora do texto. O primeiro caractere define a posição, i{v} para vertical e i{h} para horizontal, os demais definem a âncora conforme pontos cardeais: i{n, ne, e, se, s, sw, w, nw} e i{c} para o meio.**/
 		text: {
 			value: function(x, y, text, point) {
 				/*-- definindo atributos do texto --*/
@@ -7101,14 +7098,14 @@ const wd = (function() {
 				return this;
 			}
 		},
-		/**. ``''self'' ellipse(''number'' cx, ''number'' cy, ''number'' rx, ''number'' ry)``: Define uma elípse.Os argumentos ``cx``, ``cy``, ``rx`` e ``ry`` definem o centro de referência em x e y e os raios de x e y, respectivamente.**/
+		/**. '{self ellipse(number cx, number cy, number rx, number ry)}: Define uma elípse.Os argumentos '{cx}, '{cy}, '{rx} e '{ry} definem o centro de referência em x e y e os raios de x e y, respectivamente.**/
 		ellipse: {
 			value: function(cx, cy, rx, ry) {
 				this.last = this.create("ellipse");
 				return this.attribute({cx: cx, cy: cy, rx: rx, ry: ry});
 			}
 		},
-		/**. ``''node'' svg(''node'' append)``: Retorna o elemento SVG. O argumento opcional ``append`` irá receber o elemento SVG.**/
+		/**. '{node svg(node append)}: Retorna o elemento SVG. O argumento opcional '{append} irá receber o elemento SVG.**/
 		svg: {
 			value: function(append) {
 				if (__Type(append).node) append.appendChild(this._svg);
@@ -7118,14 +7115,13 @@ const wd = (function() {
 
 	});
 /*============================================================================*/
-	/**### Análise de Dados
-
-	#### Análise Quantitativa
-	###### ``**constructor** ''object'' __Data2D(''array'' x, ''any'' y)``
+	/**#3 Análise de Dados
+	#4 Análise Quantitativa
+	''constructor object __Data2D(array x, any y)''
 	Análise de dados em duas dimensões.
-	O argumento ``x`` corresponde a uma lista de valores (array) de referência que aceita valores finitos e de data/tempo, conforme regras da biblioteca.
-	O argumento ``y`` é a resposta em função de ``x``, podendo ser uma lista de valores do mesmo tipo que ``x``, uma constante ou uma função. No caso de função, ``y`` receberá o valor de ``y(x)``.
-	Valores não finitos serão eliminados do conjunto ``(x, y)``.**/
+	O argumento '{x} corresponde a uma lista de valores (array) de referência que aceita valores finitos e de data/tempo, conforme regras da biblioteca.
+	O argumento '{y} é a resposta em função de '{x}, podendo ser uma lista de valores do mesmo tipo que '{x}, uma constante ou uma função. No caso de função, '{y} receberá o valor de '{y(x)}.
+	Valores não finitos serão eliminados do conjunto '{(x, y)}.**/
 	function __Data2D(x, y) {
 		if (!(this instanceof __Data2D)) return new __Data2D(x, y);
 		const xtest = __Type(x);
@@ -7173,18 +7169,18 @@ const wd = (function() {
 			sorty.push(data[i].y);
 		}
 		Object.defineProperties(this, {
-			/**. ``''array'' x``: Registra os valores do argumento ``x`` ajustado.**/
+			/**. '{array x}: Registra os valores do argumento '{x} ajustado.**/
 			x: {value: sortx},
-			/**. ``''array'' y``: Retorna os valores do argumento ``y`` ajustado.**/
+			/**. '{array y}: Retorna os valores do argumento '{y} ajustado.**/
 			y: {value: sorty},
-			/**. ``''boolean'' error``: Se o conjunto tiver menos que um par de valores, retornará verdadeiro.**/
+			/**. '{boolean error}: Se o conjunto tiver menos que um par de valores, retornará verdadeiro.**/
 			error: {value: sortx.length < 2 || sorty.length < 2}
 		});
 	}
 
 	Object.defineProperties(__Data2D.prototype, {
 		constructor: {value: __Data2D},
-		/**. ``''object'' leastSquares``: Aplica o método dos mínimos quadrados ao conjunto de dados e retorna objeto contendo o coeficiente angular ``a`` e o linear ``b`` de ``y = ax + b``.**/
+		/**. '{object leastSquares}: Aplica o método dos mínimos quadrados ao conjunto de dados e retorna objeto contendo o coeficiente angular '{a} e o linear '{b} de '{y = ax + b}.**/
 		leastSquares: {
 			get: function () {
 				if (this.error) return {a: 0, b: 0};
@@ -7209,7 +7205,7 @@ const wd = (function() {
 				return this.leastSquares;
 			}
 		},
-		/**. ``''object'' standardDeviation``: Retorna o desvio padrão entre o conjunto de dados.**/
+		/**. '{object standardDeviation}: Retorna o desvio padrão entre o conjunto de dados.**/
 		standardDeviation: {
 			get: function() {
 				if (this.error) return Infinity;
@@ -7221,8 +7217,8 @@ const wd = (function() {
 				return this._standardDeviation;
 			}
 		},
-		/**. ``''object'' linearFit``: Retorna um objeto contendo os dados da regressão linear ou ``null`` em caso de erro.
-		. O objeto retornado possui as chaves ``t`` (tipo/nome da regressão); ``a`` e ``b`` (coeficientes da regressão); ``f`` (função da regressão); ``d``: (desvio padrão), ``m`` (representação visual da regressão); e ``s`` (igual a ``m`` mas exibindo os coeficientes).**/
+		/**. '{object linearFit}: Retorna um objeto contendo os dados da regressão linear ou '{null} em caso de erro.
+		. O objeto retornado possui as chaves '{t} (tipo/nome da regressão); '{a} e '{b} (coeficientes da regressão); '{f} (função da regressão); '{d}: (desvio padrão), '{m} (representação visual da regressão); e '{s} (igual a '{m} mas exibindo os coeficientes).**/
 		linearFit: {
 			get: function() {
 				if (this.error) return null;
@@ -7243,8 +7239,8 @@ const wd = (function() {
 				return fit;
 			}
 		},
-		/**. ``''object'' geometricFit``: Retorna um objeto contendo os dados da regressão geométrica ou ``null`` em caso de erro.
-		. O objeto retornado possui as mesmas caractrísticas de ``linearFit``. **/
+		/**. '{object geometricFit}: Retorna um objeto contendo os dados da regressão geométrica ou '{null} em caso de erro.
+		. O objeto retornado possui as mesmas caractrísticas de '{linearFit}. **/
 		geometricFit: {
 			get: function() {
 				if (this.error) return null;
@@ -7273,8 +7269,8 @@ const wd = (function() {
 				return fit;
 			}
 		},
-		/**. ``''object'' exponentialFit``: Retorna um objeto contendo os dados da regressão exponencial ou ``null`` em caso de erro.
-		. O objeto retornado possui as mesmas caractrísticas de ``linearFit``. **/
+		/**. '{object exponentialFit}: Retorna um objeto contendo os dados da regressão exponencial ou '{null} em caso de erro.
+		. O objeto retornado possui as mesmas caractrísticas de '{linearFit}. **/
 		exponentialFit: {
 			get: function() {
 				if (this.error) return null;
@@ -7300,8 +7296,8 @@ const wd = (function() {
 				return fit;
 			}
 		},
-		/**. ``''object'' logarithmicFit``: Retorna um objeto contendo os dados da regressão logarítmica ou ``null`` em caso de erro.
-		. O objeto retornado possui as mesmas caractrísticas de ``linearFit``.**/
+		/**. '{object logarithmicFit}: Retorna um objeto contendo os dados da regressão logarítmica ou '{null} em caso de erro.
+		. O objeto retornado possui as mesmas caractrísticas de '{linearFit}.**/
 		logarithmicFit: {
 			get: function() {
 				if (this.error) return null;
@@ -7328,7 +7324,7 @@ const wd = (function() {
 				return fit;
 			}
 		},
-		/**. ``''object'' minDeviation``: Retorna o objeto contendo os dados da regressão com o menor valor de desvio padrão.**/
+		/**. '{object minDeviation}: Retorna o objeto contendo os dados da regressão com o menor valor de desvio padrão.**/
 		minDeviation: {
 			get: function() {
 				if (this.error) return null;
@@ -7347,7 +7343,7 @@ const wd = (function() {
 				return this._minDeviation;
 			}
 		},
-		/**. ``''number'' area``: Retorna a soma da área entre a reta que liga as coordenadas e o eixo ``y`` em zero ou ``null`` em caso de falha.**/
+		/**. '{number area}: Retorna a soma da área entre a reta que liga as coordenadas e o eixo '{y} em zero ou '{null} em caso de falha.**/
 		area: {
     	get: function() {
 	    	if (this.error) return null;
@@ -7361,7 +7357,7 @@ const wd = (function() {
 				return this._area;
 		  }
     },
-    /**. ``''number'' average``: Retorna a média do valor obtido com o atributo ``area`` ou ``null`` em caso de falha.**/
+    /**. '{number average}: Retorna a média do valor obtido com o atributo '{area} ou '{null} em caso de falha.**/
     average: {
     	get: function() {
     		if (this.area === null) return null;
@@ -7374,10 +7370,10 @@ const wd = (function() {
     },
 	});
 /*============================================================================*/
-	/**#### Análise Gráfica
+	/**#4 Análise Gráfica
 
-	###### ``**constructor** ''object'' __Plot2D(''string'' type)``
-	Objeto para preparar dados para construção de gráfico 2D. O argumento ``type`` define o tipo do gráfico:
+	''constructor object __Plot2D(string type)''
+	Objeto para preparar dados para construção de gráfico 2D. O argumento '{type} define o tipo do gráfico:
 	|Valor|Descrição|
 	|plan|Gráfico cartesiano xy (padrão)|
 	|cols|Gráfico de colunas|
@@ -7403,7 +7399,7 @@ const wd = (function() {
 
 	Object.defineProperties(__Plot2D.prototype, {
 		constructor: {value: __Plot2D},
-		/**. ``''number'' _xMax``: Define ou retorna o maior valor da coordenada ``x``.**/
+		/**. '{number _xMax}: Define ou retorna o maior valor da coordenada '{x}.**/
 		_xMax: {
 			get: function()  {
 				let min = this._min.x;
@@ -7414,7 +7410,7 @@ const wd = (function() {
 				if (x > this._max.x) this._max.x = x;
 			}
 		},
-		/**. ``''number'' _yMax``: Define ou retorna o maior valor da coordenada ``y``.**/
+		/**. '{number _yMax}: Define ou retorna o maior valor da coordenada '{y}.**/
 		_yMax: {
 			get: function()  {
 				let min = this._min.y;
@@ -7425,7 +7421,7 @@ const wd = (function() {
 				if (y > this._max.y) this._max.y = y;
 			}
 		},
-		/**. ``''number'' _xMin``: Define ou retorna menor valor da coordenada ``x``.**/
+		/**. '{number _xMin}: Define ou retorna menor valor da coordenada '{x}.**/
 		_xMin: {
 			get: function()  {
 				let min = this._min.x;
@@ -7436,7 +7432,7 @@ const wd = (function() {
 				if (x < this._min.x) this._min.x = x;
 			}
 		},
-		/**. ``''number'' _yMin``: Define ou retorna menor valor da coordenada ``y``.**/
+		/**. '{number _yMin}: Define ou retorna menor valor da coordenada '{y}.**/
 		_yMin: {
 			get: function()  {
 				let min = this._min.y;
@@ -7447,7 +7443,7 @@ const wd = (function() {
 				if (y < this._min.y) this._min.y = y;
 			}
 		},
-		/**. ``''number'' _xScale(''number'' x)``: Transforma a coordenada horizontal real ''x'' para gráfica.**/
+		/**. '{number _xScale(number x)}: Transforma a coordenada horizontal real i{x} para gráfica.**/
 		_xScale: {
 			value: function(x) {
 				let dx = this._xMax - this._xMin;
@@ -7456,7 +7452,7 @@ const wd = (function() {
 				return X;
 			}
 		},
-		/**. ``''number'' _yScale(''number'' y)``: Transforma a coordenada vertical real (''y'') para gráfica.**/
+		/**. '{number _yScale(number y)}: Transforma a coordenada vertical real (i{y}) para gráfica.**/
 		_yScale: {
 			value: function(y) {
 				let dy = this._yMax - this._yMin;
@@ -7465,14 +7461,14 @@ const wd = (function() {
 				return Y;
 			}
 		},
-		/**. ``''number'' _dx``: Retorna o menor valor real de ``x``.**/
+		/**. '{number _dx}: Retorna o menor valor real de '{x}.**/
 		_dx: {
 			get: function() {
 				let width = this._cfg.width + (this._cfg.width%2 === 0 ? 1 : 0);
 				return Math.abs(this._xMax - this._xMin)/width;
 			}
 		},
-		/**. ``''array'' _xSpace``: Retorna uma lista contendo todos os valores possíveis de ``x``**/
+		/**. '{array _xSpace}: Retorna uma lista contendo todos os valores possíveis de '{x}**/
 		_xSpace: {
 			get: function() {
 				const x   = [this._xMin];
@@ -7489,26 +7485,26 @@ const wd = (function() {
 				return x;
 			}
 		},
-		/**. ``''object'' _cfg``: Registra as configurações do gráfico:
+		/**. '{object _cfg}: Registra as configurações do gráfico:
 		|Nome|Tipo|Descrição|
 		|vertical|number|registra o menor tamanho da tela do dispositivo.|
 		|horizontal|number|registra o maior tamanho da tela do dispositivo.|
-		|xInit|number|Registra o início do eixo horizontal ``x`` (porcentagem).|
-		|xEnd|number|Registra o fim do eixo horizontal ``x`` (porcentagem).|
-		|yInit|number|Registra o início do eixo vertical ``y`` (porcentagem).|
-		|yEnd|number|Registra o fim do eixo vertical ``y`` (porcentagem).|
+		|xInit|number|Registra o início do eixo horizontal '{x} (porcentagem).|
+		|xEnd|number|Registra o fim do eixo horizontal '{x} (porcentagem).|
+		|yInit|number|Registra o início do eixo vertical '{y} (porcentagem).|
+		|yEnd|number|Registra o fim do eixo vertical '{y} (porcentagem).|
 		|points|number|Número de divisões dos eixos no gráfico (impar).|
 		|padd|number|Define um valor para espaçamento relativo (porcentagem).|
 		|width|number|Define a dimensão horizontal do gráfico.|
-		|height|number|Retorna a dimensão vertical do gráfico proporcional à ``width``.|
+		|height|number|Retorna a dimensão vertical do gráfico proporcional à '{width}.|
 		|xStart|number|Coordenada horizontal da origem do gráfico.|
-		|xSize|number|Tamanho do eixo ``x``.|
-		|xMiddle|number|Metade do eixo ``x``.|
-		|xClose|number|Fim do eixo ``x``.|
+		|xSize|number|Tamanho do eixo '{x}.|
+		|xMiddle|number|Metade do eixo '{x}.|
+		|xClose|number|Fim do eixo '{x}.|
 		|yStart|number|Coordenada vertical da origem do gráfico.|
-		|ySize|number|Tamanho do eixo ``y``.|
-		|yMiddle|number|Metade do eixo ``y``.|
-		|yClose|number|Fim do eixo ``y``.|
+		|ySize|number|Tamanho do eixo '{y}.|
+		|yMiddle|number|Metade do eixo '{y}.|
+		|yClose|number|Fim do eixo '{y}.|
 		|top|number|A metade do espaço superior.|
 		|bottom|number|A metade do espaço inferior.|
 		|left|number|A metade do espaço esquerdo.|
@@ -7541,7 +7537,7 @@ const wd = (function() {
 				get padding() {return this.padd*this.width;}
 			}
 		},
-		/**. ``''void'' color(''integer'' id)``: Retorna a cor a partir do identificador (``id``) de ciclo  infinito.**/
+		/**. '{void color(integer id)}: Retorna a cor a partir do identificador ('{id}) de ciclo  infinito.**/
 		color: {
 			value: function(id) {
 				if (id === undefined) return "#000000";
@@ -7556,7 +7552,7 @@ const wd = (function() {
 				return color.valueOf(id);
 			}
 		},
-		/**. ``''void'' _struct(''node'' svg, ''string'' builder)``: Constrói a área do gráfico, devendo ser chamado após a análise dos dados. O argumento ``svg`` é o objeto de construçã da imagem do gráfico e ``builder`` é uma string podendo adicionar os seguintes valores separados por espaços:
+		/**. '{void _struct(node svg, string builder)}: Constrói a área do gráfico, devendo ser chamado após a análise dos dados. O argumento '{svg} é o objeto de construçã da imagem do gráfico e '{builder} é uma string podendo adicionar os seguintes valores separados por espaços:
 		|Nome|Descrição|
 		|title|Adiciona o título ao gráfico.|
 		|xlabel|Adiciona o rótulo do eixo x.|
@@ -7762,7 +7758,7 @@ const wd = (function() {
 				return;
 			}
 		},
-		/**. ``''string'' _values(''number'' value, ''string'' type)``: Formata e retorna o valor a ser exibido nos eixos. O argumento ``value`` corresponde ao valor numérico a ser formatado. O argumento opcional ``type`` diz respeito ao tipo de informação (''number'', ''time'', ''date'', ''datetime'' ou ''percent'').**/
+		/**. '{string _values(number value, string type)}: Formata e retorna o valor a ser exibido nos eixos. O argumento '{value} corresponde ao valor numérico a ser formatado. O argumento opcional '{type} diz respeito ao tipo de informação (number, i{time}, i{date}, i{datetime} ou i{percent}).**/
 		_values: {
 			value: function(value, axis) {
 				//minúsculo é para o eixo maiúsculo para para exibição
@@ -7829,7 +7825,7 @@ const wd = (function() {
 				return num.toLocaleString();
 			}
 		},
-		/**. ``''void'' _legend(''node'' svg, ''object'' data)``: Constrói a legenda do gráfico. O argumento ``svg`` é o elemento SVG onde o gŕafico está sendo construído. O argumento ``data`` contém as propriedades ``id`` (identificador da legenda), ``name`` (nome da curva), ``info`` (informação complementar) e ``color`` (cor a ser utilizada na legenda). Se ``name`` for nulo, a ação será ignorada.**/
+		/**. '{void _legend(node svg, object data)}: Constrói a legenda do gráfico. O argumento '{svg} é o elemento SVG onde o gŕafico está sendo construído. O argumento '{data} contém as propriedades '{id} (identificador da legenda), '{name} (nome da curva), '{info} (informação complementar) e '{color} (cor a ser utilizada na legenda). Se '{name} for nulo, a ação será ignorada.**/
 		_legend: {
 			value: function(svg, data) {
 				/*-- definindo itens da legenda --*/
@@ -7919,7 +7915,7 @@ const wd = (function() {
 				return;
 			}
 		},
-		/**. ``''node'' plot()``: Constrói o gráfico e o retorna (elemento SVG) ou nulo.**/
+		/**. '{node plot()}: Constrói o gráfico e o retorna (elemento SVG) ou nulo.**/
 		plot: {
 			value: function() {
 				if (this._data.length === 0) return null;
@@ -8202,22 +8198,22 @@ const wd = (function() {
 				return svg.svg();
 			}
 		},
-		/**. ``''string'' xLabel``: Define ou retorna o valor do rótulo do eixo x.**/
+		/**. '{string xLabel}: Define ou retorna o valor do rótulo do eixo x.**/
 		xLabel: {
 			get: function()  {return this._xLabel;},
 			set: function(x) {this._xLabel = x === null || x === undefined ? "X Label" : String(x);}
 		},
-		/**. ``''string'' yLabel``: Define ou retorna o valor do rótulo do eixo y.**/
+		/**. '{string yLabel}: Define ou retorna o valor do rótulo do eixo y.**/
 		yLabel: {
 			get: function()  {return this._yLabel;},
 			set: function(x) {this._yLabel = x === null || x === undefined ? "Y Label" : String(x);}
 		},
-		/**. ``''string'' title``: Define ou retorna o valor do título do gráfico.**/
+		/**. '{string title}: Define ou retorna o valor do título do gráfico.**/
 		title: {
 			get: function()  {return this._title;},
 			set: function(x) {this._title = x === null || x === undefined ? "Title" : String(x);}
 		},
-		/**. ``''string'' xAxis``: Define ou retorna o tipo de escala do eixo ``x``: number, date, time, datetime ou percent.**/
+		/**. '{string xAxis}: Define ou retorna o tipo de escala do eixo '{x}: number, date, time, datetime ou percent.**/
 		xAxis: {
 			get: function()  {return this._xAxis;},
 			set: function(x) {
@@ -8225,7 +8221,7 @@ const wd = (function() {
 				this._xAxis = values.indexOf(x) >= 0 ? x : "number";
 			}
 		},
-		/**. ``''string'' yAxis``: Define ou retorna o tipo de escala do eixo ``y``: number, date, time, datetime ou percent.**/
+		/**. '{string yAxis}: Define ou retorna o tipo de escala do eixo '{y}: number, date, time, datetime ou percent.**/
 		yAxis: {
 			get: function()  {return this._yAxis;},
 			set: function(x) {
@@ -8233,20 +8229,20 @@ const wd = (function() {
 				this._yAxis = values.indexOf(x) >= 0 ? x : "number";
 			}
 		},
-		/**. ``''boolean'' add(''array'' x, ''any'' y, ''string'' label, ''string'' option)``: Adiciona dados para plotagem e retorna falso se não for possível processar a solicitação. Os argumentos ``x`` e ``y`` representam a abscissa (eixo horizontal) e a ordenada (eixo vertical), respectivamente. Seus valores dependem do tipo de gráfico.
+		/**. '{boolean add(array x, any y, string label, string option)}: Adiciona dados para plotagem e retorna falso se não for possível processar a solicitação. Os argumentos '{x} e '{y} representam a abscissa (eixo horizontal) e a ordenada (eixo vertical), respectivamente. Seus valores dependem do tipo de gráfico.
 		|Propriedade|Plotagem|Tipo|Descrição|
 		|x|Plano cartesiano|array|Lista de valores finitos ou data/tempo|
 		|y|Plano cartesiano|array|Lista de valores finitos ou data/tempo|
-		|y|Plano cartesiano|função|Função ''f(x)'' que retorna um valor finito|
+		|y|Plano cartesiano|função|Função i{f(x)} que retorna um valor finito|
 		|y|Plano cartesiano|número|Uma constante finita|
 		|x|Circular/Colunas|array|Lista de identificadores|
-		|y|Circular/Colunas|array|Lista de valores finitos ou data/tempo relacionados a cada identificador (item) de ''x''|
-		|x|Circular/Colunas|objeto|Um objeto cujas propriedades e seus valores correspondem as listas de ''x'' e ''y''|
-		|y|Circular/Colunas|indefinido|Se ''x'' for um objeto|
+		|y|Circular/Colunas|array|Lista de valores finitos ou data/tempo relacionados a cada identificador (item) de i{x}|
+		|x|Circular/Colunas|objeto|Um objeto cujas propriedades e seus valores correspondem as listas de i{x} e i{y}|
+		|y|Circular/Colunas|indefinido|Se i{x} for um objeto|
 		|label|Plano cartesiano|string|utilizado para identificar o gráfico|
 		. No caso de gráfico circular, se existir valores positivos e negativos para os identificadores, um gráfico de barras será exibido no lugar.
 		. Quando utilizar valores de data/tempo, a referência obtida será a quantidade de segundos desde 0000-01-01.
-		. O argumento ``option`` é opcional e direcionado para o gráfico de plano cartesiano com valores de ``x`` e ``y`` como array. Seus valores podem ser (todos retornam valores aproximados):
+		. O argumento '{option} é opcional e direcionado para o gráfico de plano cartesiano com valores de '{x} e '{y} como array. Seus valores podem ser (todos retornam valores aproximados):
 		|Valor|Descrição|
 		|linear|Traça a regressão linear.|
 		|geometric|Traça a regressão geométrica.|
@@ -8497,13 +8493,13 @@ const wd = (function() {
 /* == BLOCO 2 ================================================================*/
 
 /*----------------------------------------------------------------------------*/
-	/**### Interface do Usuário
+	/**#3 Interface do Usuário
 	Trata-se de construtores e funções para interface com o usuário na manipulação de dados.
 
-	#### WDmain
-	###### ``**constructor** ''object'' WDmain(''any''  input, ''object'' data)``
+	#4 WDmain
+	''constructor object WDmain(any  input, object data)''
 	Construtor genérico para manipulação de dados cujos construtores específicos herdarão seu comportamento.
-	O argumento ``input`` se refere ao dado informado pelo usuário e o argumento ``data`` corresponde à instância de ``__Type``, cuja alimentação será realizada pela função ``WD``.**/
+	O argumento '{input} se refere ao dado informado pelo usuário e o argumento '{data} corresponde à instância de '{__Type}, cuja alimentação será realizada pela função '{WD}.**/
 	function WDmain(input, data) {
 		Object.defineProperties(this, {
 			_input: {value: input},
@@ -8513,13 +8509,13 @@ const wd = (function() {
 
 	Object.defineProperties(WDmain.prototype, {
 		constructor: {value: WDmain},
-		/**. ``''any'' valueOf()``: Retorna o valor do dado (ver ``__Type``).**/
+		/**. '{any valueOf()}: Retorna o valor do dado (ver '{__Type}).**/
 		valueOf: {value: function() {return this._data.valueOf();}},
-		/**. ``''string'' toString()``: Retorna o valor textual do dado (ver ``__Type``).**/
+		/**. '{string toString()}: Retorna o valor textual do dado (ver '{__Type}).**/
 		toString: {value: function() {return this._data.toString();}},
-		/**. ``''string'' type``: Retorna o tipo do dado.**/
+		/**. '{string type}: Retorna o tipo do dado.**/
 		type: {get: function() {return this._data.type;}},
-		/**. ``''boolean'' or(''string'' type...)``: Retorna verdadeiro algum tipo informado em ``type`` corresponder ao dado.**/
+		/**. '{boolean or(string type...)}: Retorna verdadeiro algum tipo informado em '{type} corresponder ao dado.**/
 		or: {
 			value: function(type) {
 				for (let i = 0; i < arguments.length; i++)
@@ -8527,7 +8523,7 @@ const wd = (function() {
 				return false;
 			}
 		},
-		/**. ``''boolean'' is(''string'' type...)``: Retorna verdadeiro todos os tipos informados em ``type`` corresponder ao dado.**/
+		/**. '{boolean is(string type...)}: Retorna verdadeiro todos os tipos informados em '{type} corresponder ao dado.**/
 		is: {
 			value: function(type) {
 				if (arguments.length < 2) return this.or(type);
@@ -8536,22 +8532,22 @@ const wd = (function() {
 				return true;
 			}
 		},
-		/**. ``''string'' mask(''string'' model)``: Retorna o valor formatado pela máscara definida no argumento ``model``. Se a máscara não casar, retornará uma string vazia.**/
+		/**. '{string mask(string model)}: Retorna o valor formatado pela máscara definida no argumento '{model}. Se a máscara não casar, retornará uma string vazia.**/
 		mask: {value: function(model) {return new __String(this._input).mask(model);}},
-		/**. ``''boolean'' instanceOf(''string'' name)``: Checa se o conteúdo é instância do objeto informado em ``name``.**/
+		/**. '{boolean instanceOf(string name)}: Checa se o conteúdo é instância do objeto informado em '{name}.**/
 		instanceOf: {value: function(name) {return this._data.instanceOf(name);}},
 
 
 		//FIXME colocar isso de forma genérica? to(type)
-		/**. ``''array'' csv``: Retorna string em CSV para array.**/
+		/**. '{array csv}: Retorna string em CSV para array.**/
 		csv: {get: function() {return this._main.csv;}},
-		/**. ``''any'' json``: Retorna notação em JSON para valor em Javascript ou nulo se inválido.**/
+		/**. '{any json}: Retorna notação em JSON para valor em Javascript ou nulo se inválido.**/
 		json: {get: function() {return this._main.json;}},
-		/**. ``''node'' html``: Retorna notação em HTML para documento correspondente ou nulo se inválido.**/
+		/**. '{node html}: Retorna notação em HTML para documento correspondente ou nulo se inválido.**/
 		html: {get: function() {return this._main.html;}},
-		/**. ``''node'' xml``: Retorna notação em XML para documento correspondente ou nulo se inválido.**/
+		/**. '{node xml}: Retorna notação em XML para documento correspondente ou nulo se inválido.**/
 		xml: {get: function() {return this._main.xml;}},
-		/**. ``''string'' csv``: Retorna o array, se organizado em forma de matriz, no formato CSV.**/
+		/**. '{string csv}: Retorna o array, se organizado em forma de matriz, no formato CSV.**/
 		mcsv: {
 			get: function() {
 				let table = __Table();
@@ -8565,9 +8561,9 @@ const wd = (function() {
 	});
 
 /*----------------------------------------------------------------------------*/
-	/**#### WDstring
-	###### ``**constructor** ''object'' WDstring(''any''  input, ''object'' data)``
-	Construtor genérico para manipulação de strings. Os argumentos ``input`` e ``data`` se referem aos argumento de ``WDmain``**/
+	/**#4 WDstring
+	''constructor object WDstring(any  input, object data)''
+	Construtor genérico para manipulação de strings. Os argumentos '{input} e '{data} se referem aos argumento de '{WDmain}**/
 	function WDstring(input, data) {
 		WDmain.call(this, input, data);
 		Object.defineProperties(this, {
@@ -8577,34 +8573,34 @@ const wd = (function() {
 
 	WDstring.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDstring},
-		/**. ``''integer'' length``: Retorna a quantidade de caracteres.**/
+		/**. '{integer length}: Retorna a quantidade de caracteres.**/
 		length: {get: function() {return this._main.length;}},
-		/**. ``''array'' chars``: Retorna um array de caracteres.**/
+		/**. '{array chars}: Retorna um array de caracteres.**/
 		chars: {get: function() {return this._main.chars;}},
-		/**. ``''string'' upper``: Retorna caixa alta.**/
+		/**. '{string upper}: Retorna caixa alta.**/
 		upper: {get: function() {return this._main.upper;}},
-		/**. ``''string'' lower``: Retorna caixa baixa.**/
+		/**. '{string lower}: Retorna caixa baixa.**/
 		lower: {get: function() {return this._main.lower;}},
-		/**. ``''string'' capitalize``: Retorna a primeira letra de cada palavra em caixa alta.**/
+		/**. '{string capitalize}: Retorna a primeira letra de cada palavra em caixa alta.**/
 		capitalize: {get: function() {return this._main.capitalize;}},
-		/**. ``''string'' toggle``: Inverte a caixa.**/
+		/**. '{string toggle}: Inverte a caixa.**/
 		toggle: {get: function() {return this._main.toggle;}},
-		/**. ``''string'' camel``: Transforma a string em camelCase.**/
+		/**. '{string camel}: Transforma a string em camelCase.**/
 		camel: {get: function() {return this._main.camel;}},
-		/**. ``''string'' dash``: Divide a string em traços.**/
+		/**. '{string dash}: Divide a string em traços.**/
 		dash: {get: function() {return this._main.dash;}},
-		/**. ``''string'' clear``: Remove acentos.**/
+		/**. '{string clear}: Remove acentos.**/
 		clear: {get: function() {return this._main.clear(false, true);}},
-		/**. ``''string'' trim``: Remove espaços excedentes.**/
+		/**. '{string trim}: Remove espaços excedentes.**/
 		trim: {get: function() {return this._main.clear(true, false);}},
-		/**. ``''string'' clean``: Remove acentos e espaços excedentes.**/
+		/**. '{string clean}: Remove acentos e espaços excedentes.**/
 		clean: {get: function() {return this._main.clear();}},
 	});
 
 /*----------------------------------------------------------------------------*/
-	/**#### WDnumber
-	###### ``**constructor** ''object'' WDnumber(''any''  input, ''object'' data)``
-	Construtor genérico para manipulação de números. Os argumentos ``input`` e ``data`` se referem aos argumento de ``WDmain``**/
+	/**#4 WDnumber
+	''constructor object WDnumber(any  input, object data)''
+	Construtor genérico para manipulação de números. Os argumentos '{input} e '{data} se referem aos argumento de '{WDmain}**/
 	function WDnumber(input, data) {
 		WDmain.call(this, input, data);
 		Object.defineProperties(this, {
@@ -8614,34 +8610,34 @@ const wd = (function() {
 
 	WDnumber.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDnumber},
-		/**. ``''integer'' int``: Retorna a parte inteira.**/
+		/**. '{integer int}: Retorna a parte inteira.**/
 		int: {get: function() {return this._main.int;}},
-		/**. ``''number'' dec``: Retorna a parte decimal.**/
+		/**. '{number dec}: Retorna a parte decimal.**/
 		dec: {get: function() {return this._main.dec;}},
-		/**. ``''number'' abs``: Retorna o valor absoluto.**/
+		/**. '{number abs}: Retorna o valor absoluto.**/
 		abs: {get: function() {return this._main.abs;}},
-		/**. ``''boolean'' prime``: Informa se o número é primo por meio de um Promise.**/
+		/**. '{boolean prime}: Informa se o número é primo por meio de um Promise.**/
 		prime: {get: async function() {return this._main.prime;}},
-		/**. ``''array'' primes``: Retorna uma lista de primos precedentes por meio de um Promise.**/
+		/**. '{array primes}: Retorna uma lista de primos precedentes por meio de um Promise.**/
 		primes: {get: async function() {return this._main.primes;}},
-		/**. ``''number'' factorization``: Retorna a fatorização do número por meio de um Promise.**/
+		/**. '{number factorization}: Retorna a fatorização do número por meio de um Promise.**/
 		factorization: {get: async function() {return this._main.factorization;}},
-		/**. ``''number'' fixed(''integer'' length, ''boolean'' round)``: Abrevia o número para as casas decimais (ver __Number).**/
+		/**. '{number fixed(integer length, boolean round)}: Abrevia o número para as casas decimais (ver __Number).**/
 		fixed: {value: function(lenght, round) {return this._main.fixed(lenght, round);}},
-		/**. ``''string'' fraction``: Retorna o número em forma de fração.**/
+		/**. '{string fraction}: Retorna o número em forma de fração.**/
 		fraction: {get: function() {return this._main.frac;}},
-		/**. ``''string'' bytes``: Retorna o número em quantidade de bytes.**/
+		/**. '{string bytes}: Retorna o número em quantidade de bytes.**/
 		bytes: {get: function() {return this._main.bytes;}},
-		/**. ``''string'' toString()``: Funciona como o método nativo.**/
+		/**. '{string toString()}: Funciona como o método nativo.**/
 		toString: {value: function(type) {return this._main.value.toString(type);}},
-		/**. ``''string'' toLocaleString(''object'' options)``: Ver __Number.**/
+		/**. '{string toLocaleString(object options)}: Ver __Number.**/
 		toLocaleString: {value: function(options) {return this._main.toLocaleString(options);}},
 	});
 
 /*----------------------------------------------------------------------------*/
-	/**#### WDtime**/
-	/**###### ``**constructor** ''object'' WDtime(''any''  input, ''object'' data)``
-	Construtor para manipulação de tempo. Os argumentos ``input`` e ``data`` se referem aos argumento de ``WDmain``**/
+	/**#4 WDtime**/
+	/**''constructor object WDtime(any  input, object data)''
+	Construtor para manipulação de tempo. Os argumentos '{input} e '{data} se referem aos argumento de '{WDmain}**/
 	function WDtime(input, data) {
 		WDmain.call(this, input, data);
 		Object.defineProperties(this, {
@@ -8651,39 +8647,39 @@ const wd = (function() {
 
 	WDtime.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDtime},
-		/**. ``''number'' hour``: Retorna ou define a hora.**/
+		/**. '{number hour}: Retorna ou define a hora.**/
 		hour: {
 			get: function()  {return this._main.hour;},
 			set: function(x) {return this._main.hour = x;}
 		},
-		/**. ``''number'' minute``: Retorna ou define o minuto.**/
+		/**. '{number minute}: Retorna ou define o minuto.**/
 		minute: {
 			get: function()  {return this._main.minute;},
 			set: function(x) {return this._main.minute = x;}
 		},
-		/**. ``''number'' second``: Retorna ou define o segundo.**/
+		/**. '{number second}: Retorna ou define o segundo.**/
 		second: {
 			get: function()  {return this._main.second;},
 			set: function(x) {return this._main.second = x;}
 		},
-		/**. ``''integer'' h12``: Retorna a hora no ciclo de 12h.**/
+		/**. '{integer h12}: Retorna a hora no ciclo de 12h.**/
 		h12: {get: function() {return this._main.main.h12;}},
-		/**. ``''string'' h12``: Retorna AM ou PM.**/
+		/**. '{string h12}: Retorna AM ou PM.**/
 		meridiem: {get: function() {return this._main.main.meridiem;}},
-		/**. ``''integer'' valueOf()``: Retorna os segundos desde 00:00:00.000.**/
+		/**. '{integer valueOf()}: Retorna os segundos desde 00:00:00.000.**/
 		valueOf: {value: function() {return this._main.valueOfTime();}},
-		/**. ``''string'' toString()``: Retorna o tempo no formado hh:mm:ss.sss.**/
+		/**. '{string toString()}: Retorna o tempo no formado hh:mm:ss.sss.**/
 		toString: {value: function() {return this._main.toTimeString();}},
-		/**. ``''string'' toLocaleString()``: Retorna o tempo no formato local.**/
+		/**. '{string toLocaleString()}: Retorna o tempo no formato local.**/
 		toLocaleString: {value: function() {return this._main.toLocaleTimeString();}},
-		/**. ``''string'' format(''string'' input)``: Retorna notação de hora pre-formatada em ``input``.**/
+		/**. '{string format(string input)}: Retorna notação de hora pre-formatada em '{input}.**/
 		format: {value: function(input) {return this._main.format(input, "time");}},
 	});
 
 /*----------------------------------------------------------------------------*/
-	/**#### WDdate**/
-	/**###### ``**constructor** ''object'' WDdate(''any''  input, ''object'' data)``
-	Construtor para manipulação de data. Os argumentos ``input`` e ``data`` se referem aos argumento de ``WDmain``**/
+	/**#4 WDdate**/
+	/**''constructor object WDdate(any  input, object data)''
+	Construtor para manipulação de data. Os argumentos '{input} e '{data} se referem aos argumento de '{WDmain}**/
 	function WDdate(input, data) {
 		WDmain.call(this, input, data);
 		Object.defineProperties(this, {
@@ -8693,47 +8689,47 @@ const wd = (function() {
 
 	WDdate.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDdate},
-		/**. ``''number'' year``: Retorna ou define o ano.**/
+		/**. '{number year}: Retorna ou define o ano.**/
 		year: {
 			get: function()  {return this._main.year;},
 			set: function(x) {return this._main.year = x;}
 		},
-		/**. ``''number'' month``: Retorna ou define o mês.**/
+		/**. '{number month}: Retorna ou define o mês.**/
 		month: {
 			get: function()  {return this._main.month;},
 			set: function(x) {return this._main.month = x;}
 		},
-		/**. ``''number'' day``: Retorna ou define o dia.**/
+		/**. '{number day}: Retorna ou define o dia.**/
 		day: {
 			get: function()  {return this._main.day;},
 			set: function(x) {return this._main.day = x;}
 		},
-		/**. ``''integer'' week``: Retorna o número da semana.**/
+		/**. '{integer week}: Retorna o número da semana.**/
 		week: {get: function()  {return this._main.main.week;}},
-		/**. ``''integer'' weekDay``: Retorna o número do dia da semana.**/
+		/**. '{integer weekDay}: Retorna o número do dia da semana.**/
 		weekDay: {get: function()  {return this._main.main.weekDay;}},
-		/**. ``''boolean'' leap``: Informa se o ano é bissexto.**/
+		/**. '{boolean leap}: Informa se o ano é bissexto.**/
 		leap: {get: function()  {return this._main.main.leap;}},
-		/**. ``''integer'' width``: Retorna a quantidade de dias do mês.**/
+		/**. '{integer width}: Retorna a quantidade de dias do mês.**/
 		width: {get: function()  {return this._main.main.width;}},
-		/**. ``''integer'' days``: Retorna o número do dia do ano.**/
+		/**. '{integer days}: Retorna o número do dia do ano.**/
 		days: {get: function()  {return this._main.main.days;}},
-		/**. ``''integer'' work``: Retorna o número de dias úteis até o momento.**/
+		/**. '{integer work}: Retorna o número de dias úteis até o momento.**/
 		work: {get: function()  {return this._main.main.work;}},
-		/**. ``''integer'' valueOf()``: Retorna o número de dias desde 0000-01-01.**/
+		/**. '{integer valueOf()}: Retorna o número de dias desde 0000-01-01.**/
 		valueOf: {value: function() {return this._main.valueOfDate();}},
-		/**. ``''string'' toString()``: Retorna a data no formato YYYY-MM-DD.**/
+		/**. '{string toString()}: Retorna a data no formato YYYY-MM-DD.**/
 		toString: {value: function() {return this._main.toDateString();}},
-		/**. ``''string'' toLocaleString()``: Retorna a data no formato local.**/
+		/**. '{string toLocaleString()}: Retorna a data no formato local.**/
 		toLocaleString: {value: function() {return this._main.toLocaleDateString();}},
-		/**. ``''string'' format(''string'' input)``: Retorna notação de data pre-formatada em ``input``.**/
+		/**. '{string format(string input)}: Retorna notação de data pre-formatada em '{input}.**/
 		format: {value: function(input) {return this._main.format(input, "date");}},
 	});
 
 /*----------------------------------------------------------------------------*/
-	/**#### WDdatetime**/
-	/**###### ``**constructor** ''object'' WDdatetime(''any''  input, ''object'' data)``
-	Construtor para manipulação de data/tempo. Os argumentos ``input`` e ``data`` se referem aos argumento de ``WDmain``**/
+	/**#4 WDdatetime**/
+	/**''constructor object WDdatetime(any  input, object data)''
+	Construtor para manipulação de data/tempo. Os argumentos '{input} e '{data} se referem aos argumento de '{WDmain}**/
 	function WDdatetime(input, data) {
 		WDmain.call(this, input, data);
 		Object.defineProperties(this, {
@@ -8743,27 +8739,27 @@ const wd = (function() {
 
 	WDdatetime.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDdatetime},
-		/**. ``''integer'' valueOf()``: Retorna o número de segundos desde 0000-01-01T00:00:00.000.**/
+		/**. '{integer valueOf()}: Retorna o número de segundos desde 0000-01-01T00:00:00.000.**/
 		valueOf:     {value: function() {return this._main.valueOf();}},
-		/**. ``''integer'' valueOfDate()``: Retorna o número de dias desde 0000-01-01.**/
+		/**. '{integer valueOfDate()}: Retorna o número de dias desde 0000-01-01.**/
 		valueOfDate: {value: function() {return this._main.valueOfDate();}},
-		/**. ``''number'' valueOfTime()``: Retorna os segundos desde 00:00:00.000.**/
+		/**. '{number valueOfTime()}: Retorna os segundos desde 00:00:00.000.**/
 		valueOfTime: {value: function() {return this._main.valueOfTime();}},
-		/**. ``''number'' valueOfDays()``: Retorna os dias desde 0000-01-01 com o tempo como elemento decimal.**/
+		/**. '{number valueOfDays()}: Retorna os dias desde 0000-01-01 com o tempo como elemento decimal.**/
 		valueOfDays: {value: function() {return this._main.valueOfDays();}},
-		/**. ``''string'' toDateString()``: Retorna a data no formato YYYY-MM-DD.**/
+		/**. '{string toDateString()}: Retorna a data no formato YYYY-MM-DD.**/
 		toDateString: {value: function() {return this._main.toDateString();}},
-		/**. ``''string'' toTimeString()``: Retorna o tempo no formato hh:mm:ss.sss.**/
+		/**. '{string toTimeString()}: Retorna o tempo no formato hh:mm:ss.sss.**/
 		toTimeString: {value: function() {return this._main.toTimeString();}},
-		/**. ``''string'' toString()``: Retorna o valor data/tempo no formato YYYY-MM-DDThh:mm:ss.sss.**/
+		/**. '{string toString()}: Retorna o valor data/tempo no formato YYYY-MM-DDThh:mm:ss.sss.**/
 		toString: {value: function() {return this._main.toString();}},
-		/**. ``''string'' toLocaleDateString()``: Retorna a data no formato local.**/
+		/**. '{string toLocaleDateString()}: Retorna a data no formato local.**/
 		toLocaleDateString: {value: function() {return this._main.toLocaleDateString();}},
-		/**. ``''string'' toLocaleTimeString()``: Retorna o tempo no formato local.**/
+		/**. '{string toLocaleTimeString()}: Retorna o tempo no formato local.**/
 		toLocaleTimeString: {value: function() {return this._main.toLocaleTimeString();}},
-		/**. ``''string'' toLocaleString()``: Retorna o valor data/tempo no formato local.**/
+		/**. '{string toLocaleString()}: Retorna o valor data/tempo no formato local.**/
 		toLocaleString: {value: function() {return this._main.toLocaleString();}},
-		/**. ``''string'' format(''string'' input)``: Retorna notação data/tempo pre-formatada em ``input``.**/
+		/**. '{string format(string input)}: Retorna notação data/tempo pre-formatada em '{input}.**/
 		format: {value: function(input) {return this._main.format(input);}},
 	});
 
@@ -8785,9 +8781,9 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	/**#### WDarray
-	###### ``**constructor** ''object'' WDarray(''any''  input, ''object'' data)``
-	Construtor genérico para manipulação de tempo. Os argumentos ``input`` e ``data`` se referem aos argumento de ``WDmain``**/
+	/**#4 WDarray
+	''constructor object WDarray(any  input, object data)''
+	Construtor genérico para manipulação de tempo. Os argumentos '{input} e '{data} se referem aos argumento de '{WDmain}**/
 	function WDarray(input, data) {
 		WDmain.call(this, input, data);
 		Object.defineProperties(this, {
@@ -8798,43 +8794,43 @@ const wd = (function() {
 	WDarray.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDarray},
 		[Symbol.iterator]: {value: function*() {for (let i of this._main) yield i;}},
-		/**. ``''integer'' length``: Retorna a quantidade de itens no array.**/
+		/**. '{integer length}: Retorna a quantidade de itens no array.**/
 		length: {get: function() {return this._main.length;}},
-		/**. ``''array'' unique``: Retorna a lista sem valores repetidos.**/
+		/**. '{array unique}: Retorna a lista sem valores repetidos.**/
 		unique: {get: function() {return this._main.unique;}},
-		/**. ``''array'' asc``: Retorna a lista ordenada de forma ascentende.**/
+		/**. '{array asc}: Retorna a lista ordenada de forma ascentende.**/
 		asc: {get: function() {return this._main.sort(true);}},
-		/**. ``''array'' desc``: Retorna a lista ordenada de forma descendente.**/
+		/**. '{array desc}: Retorna a lista ordenada de forma descendente.**/
 		desc: {get: function() {return this._main.sort(false);}},
-		/**. ``''array'' sort``: Retorna a lista com ordem inversa ou forma ascendente, se desordenada.**/
+		/**. '{array sort}: Retorna a lista com ordem inversa ou forma ascendente, se desordenada.**/
 		sort: {get: function() {return this._main.sort();}},
-		/**. ``''array'' order``: Retorna a lista ordenada de forma ascendente sem repetições.**/
+		/**. '{array order}: Retorna a lista ordenada de forma ascendente sem repetições.**/
 		order: {get: function() {return this._main.order;}},
-		/**. ``''array'' add(''any'' ...)``: Adicina itens ao fim da lista e a retorna.**/
+		/**. '{array add(any ...)}: Adicina itens ao fim da lista e a retorna.**/
 		add: {value: function() {return this._main.add.apply(this._main, arguments);}},
-		/**. ``''array'' jump(''any'' ...)``: Adicina itens ao início da lista e a retorna.**/
+		/**. '{array jump(any ...)}: Adicina itens ao início da lista e a retorna.**/
 		jump: {value: function() {return this._main.jump.apply(this._main, arguments);}},
-		/**. ``''array'' put(''any'' ...)``: Adicina itens, se inexistentes, ao fim da lista e a retorna.**/
+		/**. '{array put(any ...)}: Adicina itens, se inexistentes, ao fim da lista e a retorna.**/
 		put: {value: function() {return this._main.put.apply(this._main, arguments);}},
-		/**. ``''array'' concat(''any'' ...)``: Concatena itens ou arrays ao fim da lista e a retorna.**/
+		/**. '{array concat(any ...)}: Concatena itens ou arrays ao fim da lista e a retorna.**/
 		concat: {value: function() {return this._main.concat.apply(this._main, arguments);}},
-		/**. ``''array'' remove(''any'' ...)``: Remove da lista todas as ocorrências dos itens especificados e a retorna.**/
+		/**. '{array remove(any ...)}: Remove da lista todas as ocorrências dos itens especificados e a retorna.**/
 		remove: {value: function() {return this._main.remove.apply(this._main, arguments);}},
-		/**. ``''array'' toggle(''any'' ...)``: Alterna a existência dos itens especificados na lista e a retorna.**/
+		/**. '{array toggle(any ...)}: Alterna a existência dos itens especificados na lista e a retorna.**/
 		toggle: {value: function() {return this._main.toggle.apply(this._main, arguments);}},
-		/**. ``''array'' replace(''any'' from, ''any'' to)``: Altera todas as ocorrências (``from``) pelo novo valor (``to``) e retorna a lista modificada.**/
+		/**. '{array replace(any from, any to)}: Altera todas as ocorrências ('{from}) pelo novo valor ('{to}) e retorna a lista modificada.**/
 		replace: {value: function(from, to) {return this._main.replace(from, to);}},
-		/**. ``''array'' search(''any'' value)``: Retorna uma lista com os índices em que o argumento ``value`` aparece.**/
+		/**. '{array search(any value)}: Retorna uma lista com os índices em que o argumento '{value} aparece.**/
 		search: {value: function(value) {return this._main.search(value);}},
-		/**. ``''boolean'' check(''any'' ...)``: Retorna verdadeiro se todos os argumentos informados forem localizados.**/
+		/**. '{boolean check(any ...)}: Retorna verdadeiro se todos os argumentos informados forem localizados.**/
 		check: {value: function() {return this._main.check.apply(this._main, arguments);}},
-		/**. ``''array'' hide(''any'' ...)``: Retorna a lista ignorando os valores informados como argumento.**/
+		/**. '{array hide(any ...)}: Retorna a lista ignorando os valores informados como argumento.**/
 		hide: {value: function() {return this._main.hide.apply(this._main, arguments);}},
-		/**. ``''any'' item(''integer'' index)``: Retorna o item especificado no argumento ``index`` considerando uma lista circular.**/
+		/**. '{any item(integer index)}: Retorna o item especificado no argumento '{index} considerando uma lista circular.**/
 		item: {value: function(index) {return this._main.valueOf(__Type(index).number ? index : 0);}},
-		/**. ``''string'' toString()``: Retorna a lista em forma de JSON.**/
+		/**. '{string toString()}: Retorna a lista em forma de JSON.**/
 		toString: {value: function() {return JSON.stringify(this._data.value);}},
-		/**. ``''array|number'' valueOf(''string'' value)``: Retorna uma cópia da lista ou os seguintes valores de acordo com o valor do argumento opcional ``value`` que, caso não exista o valor possível, retornará nulo:
+		/**. '{array|number valueOf(string value)}: Retorna uma cópia da lista ou os seguintes valores de acordo com o valor do argumento opcional '{value} que, caso não exista o valor possível, retornará nulo:
 		|Value|Tipo|Descrição|
 		|min|number|Retorna o menor número finito da lista.|
 		|max|number|Retorna o maior número finito da lista.|
@@ -8864,7 +8860,7 @@ const wd = (function() {
 			}
 		},
 		//FIXME coloco onde isso aqui?
-		/**. ``''array'' cell(''string'' area)``: Retorna uma lista contendo os valores definidos no argumento ``area`` de um array organizado no formato de matriz (ver __Table).**/
+		/**. '{array cell(string area)}: Retorna uma lista contendo os valores definidos no argumento '{area} de um array organizado no formato de matriz (ver __Table).**/
 		cell: {
 			value: function(area) {
 				let table = __Table();
@@ -8875,9 +8871,9 @@ const wd = (function() {
 	});
 
 /*----------------------------------------------------------------------------*/
-	/**#### WDobject
-	###### ``**constructor** ''object'' WDobject(''any''  input, ''object'' data)``
-	Construtor genérico para manipulação de tempo. Os argumentos ``input`` e ``data`` se referem aos argumento de ``WDmain``**/
+	/**#4 WDobject
+	''constructor object WDobject(any  input, object data)''
+	Construtor genérico para manipulação de tempo. Os argumentos '{input} e '{data} se referem aos argumento de '{WDmain}**/
 	function WDobject(input, data) {
 		WDmain.call(this, input, data);
 		const request = new __Request(this._input);
@@ -8889,18 +8885,18 @@ const wd = (function() {
 
 	WDobject.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDobject},
-		/**. ``''self'' send(''function'' trigger)``: Efetua requisição XMLHttpRequest e dispara ``trigger``(ver __Request).**/
+		/**. '{self send(function' trigger)}: Efetua requisição XMLHttpRequest e dispara '{trigger}(ver __Request).**/
 		send: {value: function(trigger) {this._request.send(trigger); return this;}},
-		/**. ``''self'' fetch(''function'' trigger)``: Efetua requisição fetch e dispara ``trigger``(ver __Request).**/
+		/**. '{self fetch(function' trigger)}: Efetua requisição fetch e dispara '{trigger}(ver __Request).**/
 		fetch: {value: function(trigger) {this._request.fetch(trigger); return this;}},
-		/**. ``''self'' read(''function'' trigger)``: Efetua leitura de arquivos e dispara ``trigger``(ver __Request).**/
+		/**. '{self read(function' trigger)}: Efetua leitura de arquivos e dispara '{trigger}(ver __Request).**/
 		read: {	value: function(trigger) {this._request.read(trigger); return this;}},
 	});
 
 /*----------------------------------------------------------------------------*/
-	/**#### WDnode
-	###### ``**constructor** ''object'' WDnode(''any''  input, ''object'' data)``
-	Construtor genérico para manipulação de nós HTML. Os argumentos ``input`` e ``data`` se referem aos argumento de ``WDmain``**/
+	/**#4 WDnode
+	''constructor object WDnode(any  input, object data)''
+	Construtor genérico para manipulação de nós HTML. Os argumentos '{input} e '{data} se referem aos argumento de '{WDmain}**/
 	function WDnode(input, data) {
 		WDmain.call(this, input, data);
 		const node = this._data.value;
@@ -8915,11 +8911,11 @@ const wd = (function() {
 
 	WDnode.prototype = Object.create(WDmain.prototype, {
 		constructor: {value: WDnode},
-		/**. ``''integer'' length``: Retorna a quantidade de nós HTML.**/
+		/**. '{integer length}: Retorna a quantidade de nós HTML.**/
 		length: {get: function() {return this._data.value.length;}},
-		/**. ``''array'' valueOf()``: Retorna uma cópia da lista contendo os nós HTML.**/
+		/**. '{array valueOf()}: Retorna uma cópia da lista contendo os nós HTML.**/
 		valueOf: {value: function() {return this._data.value.slice();}},
-		/**. ``''self'' forEach(''function'' callback)``: Executa looping nos nós HTML. A função definida em ``callback`` receberá como argumentos um nó, o seu índice e uma **cópia** da lista de nós. Se a função retornar falso, o looping é interrompido.**/
+		/**. '{self forEach(function' callback)}: Executa looping nos nós HTML. A função definida em '{callback} receberá como argumentos um nó, o seu índice e uma b{cópia} da lista de nós. Se a função retornar falso, o looping é interrompido.**/
 		forEach: {
 			value: function(run) {
 				if (__Type(run).function) {
@@ -8931,7 +8927,7 @@ const wd = (function() {
 			}
 		},
 		//FIXME files para que serve isso mesmo?
-		/**. ``''array'' files``: Retorna uma lista com os arquivos selecionados nos campos de formulário.**/
+		/**. '{array files}: Retorna uma lista com os arquivos selecionados nos campos de formulário.**/
 		files: {
 			get: function() {
 				const pack = [];
@@ -8944,7 +8940,7 @@ const wd = (function() {
 				return pack;
 			}
 		},
-		/**. ``''object'' submit(''string'' method, ''boolean'' ignore)``: Retornará o mesmo resultado que o método __DataSet.toSubmit, exceto se o processo for interrompido por alguma restrição no campo de formulário, retornando nulo. Para não verificar restrições, o argumento ``ignore`` deverá ser verdadeiro.**/
+		/**. '{object submit(string method, boolean ignore)}: Retornará o mesmo resultado que o método __DataSet.toSubmit, exceto se o processo for interrompido por alguma restrição no campo de formulário, retornando nulo. Para não verificar restrições, o argumento '{ignore} deverá ser verdadeiro.**/
 		submit: {
 			value: function(url, method, ignore) {
 				ignore = ignore === true;
@@ -8965,7 +8961,7 @@ const wd = (function() {
 				return data.toSubmit(url, method);
 			}
 		},
-		/**. ``''self'' load(''string'' data, ''object'' options)``: Ajusta o código HTML contido em ``html`` no elemento (ver __Node.load).**/
+		/**. '{self load(string data, object options)}: Ajusta o código HTML contido em '{html} no elemento (ver __Node.load).**/
 		load: {
 			value: function(data, options) {
 				for (let i = 0; i < this._main.length; i++)
@@ -8973,7 +8969,7 @@ const wd = (function() {
 				return this;
 			}
 		},
-		/**. ``''self'' repeat(''array'' list)``: Repete elementos a partir de um modelo. ``list`` é uma lista de objetos cujo valor do atributo substituirá o respectivo valor entre do modelo que será informado em chaves duplas ({{atributo}}).**/
+		/**. '{self repeat(array list)}: Repete elementos a partir de um modelo. '{list} é uma lista de objetos cujo valor do atributo substituirá o respectivo valor entre do modelo que será informado em chaves duplas ({{atributo}}).**/
 		repeat: {
 			value: function(list) {
 				for (let i = 0; i < this._main.length; i++)
@@ -8981,7 +8977,7 @@ const wd = (function() {
 				return this;
 			}
 		},
-		/**. ``''self'' set(''object'' data)``: Atribui aos elementos o valor dos atributos especificados em ``data`` (ver __Node.atrribute).**/
+		/**. '{self set(object data)}: Atribui aos elementos o valor dos atributos especificados em '{data} (ver __Node.atrribute).**/
 		set: {
 			value: function(data) {
 				if (__Type(data).object)
@@ -8991,7 +8987,7 @@ const wd = (function() {
 				return this;
 			}
 		},
-		/**. ``''self'' display(''string'' action)``: Organiza a exibição dos elementos filhos conforme argumento ``action``. Quanto ao elemento:
+		/**. '{self display(string action)}: Organiza a exibição dos elementos filhos conforme argumento '{action}. Quanto ao elemento:
 		|Valor|Descrição|
 		|show|exibe o elemento|
 		|hide|oculta o elemento|
@@ -9069,7 +9065,7 @@ const wd = (function() {
 				return this;
 			}
 		},
-		/**. ``''self'' filter(''any'' search, ''integer'' width)``: Exibe somente os elementos filhos que contenham o conteúdo de ``search`` (ver __Node.filter)**/
+		/**. '{self filter(any search, integer width)}: Exibe somente os elementos filhos que contenham o conteúdo de '{search} (ver __Node.filter)**/
 		filter: {
 			value: function(search, width) {
 				for (let i = 0; i < this._main.length; i++)
@@ -9077,7 +9073,7 @@ const wd = (function() {
 				return this
 			}
 		},
-		/**. ``''self'' jump(''node'' spaces)``: Alterna a posição dos nós entre os elementos informados em ``spaces`` (ver __Node.jump)**/
+		/**. '{self jump(node spaces)}: Alterna a posição dos nós entre os elementos informados em '{spaces} (ver __Node.jump)**/
 		jump: {
 			value: function(spaces) {
 				if (__Type(spaces).node)
@@ -9089,16 +9085,16 @@ const wd = (function() {
 	});
 
 /*----------------------------------------------------------------------------*/
-	/**#### WDmatrix
-	###### ``**constructor** ''object'' WDmatrix(''any''  input)``
+	/**#4 WDmatrix
+	''constructor object WDmatrix(any  input)''
 	Cópia do construtor __Table**/
 	function WDmatrix(input) {__Table.call(this, input);}
 	WDmatrix.prototype = Object.create(__Table.prototype, {constructor: {value: WDmatrix}});
 
 /*----------------------------------------------------------------------------*/
-	/**#### Função Mestre
-	###### ``''object'' WD(''any'' input)``
-	Função principal, única de acesso ao usuário, com o objetivo de chamar os construtores correspondentes ao valor informado no argumento ``input``.**/
+	/**#4 Função Mestre
+	''{object WD(any input)''
+	Função principal, única de acesso ao usuário, com o objetivo de chamar os construtores correspondentes ao valor informado no argumento '{input}.**/
 	function WD(input) {
 		let data = __Type(input);
 		switch(data.type) {
@@ -9113,31 +9109,31 @@ const wd = (function() {
 		}
 		return new WDmain(input, data);
 	}
-	/**##### Métodos e Atributos Estáticos**/
+	/**#5 Métodos e Atributos Estáticos**/
 	WD.constructor = WD;
 	Object.defineProperties(WD, {
-		/**. ``''string'' version``: Retorna a versão da biblioteca.**/
+		/**. '{string version}: Retorna a versão da biblioteca.**/
 		version: {value: __VERSION},
-		/**. ``''string'' device``: Retorna o tipo de tela de acordo com a biblioteca.**/
+		/**. '{string device}: Retorna o tipo de tela de acordo com a biblioteca.**/
 		device:  {get: function() {return __DEVICE.device;}},
-		/**. ``''object'' now``: Retorna a instância do objeto do tipo tempo com o valor atual.**/
+		/**. '{object now}: Retorna a instância do objeto do tipo tempo com o valor atual.**/
 		now: {get: function() {return WD(new __DateTime().toTimeString());}},
-		/**. ``''object'' now``: Retorna a instância do objeto do tipo data com o valor atual.**/
+		/**. '{object now}: Retorna a instância do objeto do tipo data com o valor atual.**/
 		today: {get: function() {return WD(new __DateTime().toDateString());}},
-		/**. ``''object'' already``: Retorna a instância do objeto do tipo data/tempo com o valor atual.**/
+		/**. '{object already}: Retorna a instância do objeto do tipo data/tempo com o valor atual.**/
 		already: {get: function() {return WD(__DateTime().toString());}},
-		/**. ``''string'' lang``: Define ou retorna a lista de linguagem em ordem de preferência da biblioteca.**/
+		/**. '{string lang}: Define ou retorna a lista de linguagem em ordem de preferência da biblioteca.**/
 		lang: {
 			get: function()  {return __LANG.value;},
 			set: function(x) {__LANG.value = x;}
 		},
-		/**. ``''object'' $(''string'' css, ''node'' root)``: Retorna um objeto do tipo nó conforme seletor ''css'' individual. O argumento opcional ''root'' é o elemento pai a ser consultado cujo valor padrão é ''document''.**/
+		/**. '{object $(string css, node root)}: Retorna um objeto do tipo nó conforme seletor i{css} individual. O argumento opcional i{root} é o elemento pai a ser consultado cujo valor padrão é i{document}.**/
 		$: {value: function(css, root) {return WD(__Query(css, root).$);}},
-		/**. ``''object'' $$(''string'' css, ''node'' root)``: Retorna um objeto do tipo nó conforme seletor ''css'' múltiplo. O argumento opcional ''root'' é o elemento pai a ser consultado cujo valor padrão é ''document''.**/
+		/**. '{object $$(string css, node root)}: Retorna um objeto do tipo nó conforme seletor i{css} múltiplo. O argumento opcional i{root} é o elemento pai a ser consultado cujo valor padrão é i{document}.**/
 		$$: {value: function(css, root) {return WD(__Query(css, root).$$);}},
-		/**. ``''void'' signal(''object'' options)``: Produz uma interação (ver ''__SIGNAL.signal'').**/
+		/**. '{void signal(object options)}: Produz uma interação (ver i{__SIGNAL.signal}).**/
 		signal:  {value: function(options) {return __SIGNAL.signal(options);}},
-		/**. ``''object'' matrix(''any'' input)``: Retorna um objeto do tipo matriz conforme ``input`` (table, array, csv)**/
+		/**. '{object matrix(any input)}: Retorna um objeto do tipo matriz conforme '{input} (table, array, csv)**/
 		matrix:  {value: function(input) {return new WDmatrix(input);}},
 
 
@@ -9153,7 +9149,7 @@ const wd = (function() {
 
 
 
-		/**. ``''object'' datetime(''any'' input)``: Retorna um objeto WD de data/tempo a partir dos valores:
+		/**. '{object datetime(any input)}: Retorna um objeto WD de data/tempo a partir dos valores:
 		|input|Descrição|
 		|Padrão|O valor atual de data/tempo|
 		|Tempo|O tempo com data definida em 000-01-01|
@@ -9184,6 +9180,7 @@ const wd = (function() {
 			table:    {value: function(){return __Table.apply(null, Array.prototype.slice.call(arguments));}},
 			dataset:  {value: function(){return __DataSet.apply(null, Array.prototype.slice.call(arguments));}},
 			parser:   {value: function(){return __Parser.apply(null, Array.prototype.slice.call(arguments));}},
+			tree:     {value: function(){return __Tree.apply(null, Array.prototype.slice.call(arguments));}},
 			LANG:     {value: __LANG},
 			TYPE:     {value: __TYPE},
 			DEVICE:   {value: __DEVICE},
@@ -9196,14 +9193,14 @@ const wd = (function() {
 	}
 
 /*============================================================================*/
-/**### Atributos HTML dataset**/
+/**#3 Atributos HTML dataset**/
 /*============================================================================*/
 
-	/**###### ``**function** ''void'' data_wd_device(''node''  target, ''object'' event, ''array'' wdArray)``
+	/**''function void data_wd_device(node  target, object event, array wdArray)''
 	Disparador:
 	|Dado|Descrição|
 	|Atributo|data-wd-size|
-	|Objetivo|Manipular atributo ``class`` conforme tamanho da tela (design responsivo via javascript)|
+	|Objetivo|Manipular atributo '{class} conforme tamanho da tela (design responsivo via javascript)|
 	|Eventos|load wdreload wddataset resize|
 	|Alvos|Elemento|
 	|Grupos|Único|
@@ -9239,7 +9236,7 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wd_hash(''node''  target, ''object'' event, ''array'' wdArray)``
+	/**''function void data_wd_hash(node  target, object event, array wdArray)''
 	Disparador:
 	|Dado|Descrição|
 	|Atributo|Não se aplica|
@@ -9278,7 +9275,7 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wd_send(''node''  target, ''object'' event, ''array'' wdArray)``
+	/**''function void data_wd_send(node  target, object event, array wdArray)''
 	Disparador:
 	|Dado|Descrição|
 	|Atributo|data-wd-send|
@@ -9293,9 +9290,9 @@ const wd = (function() {
 	|noValidate|boolean|Se verdadeiro, a requisição não fará a validação primária dos campos de formulário.|
 	|trigger|function|Nome do disparador a ser chamado durante a requisição.|
 	Observações:
-	- O conteúdo dos campos definidos em $ ou $$ serão atribuídos à propriedade ''body'' de __Request;
+	- O conteúdo dos campos definidos em $ ou $$ serão atribuídos à propriedade i{body} de __Request;
 	- Demais propriedades seguem a mesma definição pertencente à __Request.send;
-	- O disparador deve estar contido no escopo de ``window`` (``var`` ou ``function``)**/
+	- O disparador deve estar contido no escopo de '{window} ('{var} ou '{function})**/
 	function data_wd_send(target, event, wdArray) {
 		let data, query, submit, trigger;
 		for (let i = 0; i < wdArray.length; i++) {
@@ -9316,11 +9313,11 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wd_submit(''node''  target, ''object'' event, ''array'' wdArray)``
-	Função semelhante à função ''data_wd_send'' para aplicação ao conteiner de formulário sendo executada ao submetê-lo.
+	/**''function void data_wd_submit(node  target, object event, array wdArray)''
+	Função semelhante à função i{data_wd_send} para aplicação ao conteiner de formulário sendo executada ao submetê-lo.
 	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
-	|data_wd_submit|submit|Múltiplas|Único|__Request.send|Elemento de formulário (''form'')|
-	As propriedades ''url'', ''method'', ''$'' ou ''$$'', ''content-type'' de ''headers'' e ''noValidate'' serão obtidas pelo formulário, se existentes.**/
+	|data_wd_submit|submit|Múltiplas|Único|__Request.send|Elemento de formulário (i{form})|
+	As propriedades i{url}, i{method}, i{$} ou i{$$}, i{content-type} de i{headers} e i{noValidate} serão obtidas pelo formulário, se existentes.**/
 	function data_wd_submit(target, event, wdArray) {
 		const data  = wdArray[0];
 		const form  = target;
@@ -9359,15 +9356,15 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wd_load(''node''  target, ''object'' event, ''array'' wdArray)``
-	Função com o propósito de efetuar carregamento de dados externos por meio do atributo HTML ''data''.
+	/**''function void data_wd_load(node  target, object event, array wdArray)''
+	Função com o propósito de efetuar carregamento de dados externos por meio do atributo HTML i{data}.
 	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
 	|data-wd-load|load wdreload wddataset|Múltiplas|Único|__Node.load|Elementos que possam conteúdo interno|
-	Possui as mesmas propriedades de ''data-wd-send'', exceto ''trigger'', acrescidas das seguintes:
+	Possui as mesmas propriedades de i{data-wd-send}, exceto i{trigger}, acrescidas das seguintes:
 	|Nome|Tipo|Descrição|
 	|replace|boolean|Ver __Node.load|
 	|script|boolean|Ver __Node.load|
-	|text|boolean|Ver __Node.load e, se verdadeiro, ''type'' assumirá "text", caso contrári, "html"|**/
+	|text|boolean|Ver __Node.load e, se verdadeiro, i{type} assumirá "text", caso contrári, "html"|**/
 	function data_wd_load(target, event, wdArray) {
 		const data     = wdArray[0];
 		const options  = {replace: null, script: null, text: null}
@@ -9385,11 +9382,11 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wd_repeat(''node''  target, ''object'' event, ''array'' wdArray)``
-	Função com o propósito de efetuar repetições de dados externos por meio do atributo HTML ''data''.
+	/**''function void data_wd_repeat(node  target, object event, array wdArray)''
+	Função com o propósito de efetuar repetições de dados externos por meio do atributo HTML i{data}.
 	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
 	|data-wd-repeat|load wdreload wddataset|Múltiplas|Único|__Node.repeat|Elementos que possam conteúdo interno|
-	Possui as mesmas propriedades de ''data-wd-send'', exceto ''trigger'' e ''type''. O arquivo definido em ''url'' deve conter o cabeçalho ''content-type'' como ''text/csv'' ou  ''application/json''!**/
+	Possui as mesmas propriedades de i{data-wd-send}, exceto i{trigger} e i{type}. O arquivo definido em i{url} deve conter o cabeçalho i{content-type} como i{text/csv} ou  i{application/json}!**/
 	function data_wd_repeat(target, event, wdArray) {
 		const data   = wdArray[0];
 		data.type    = "text";
@@ -9411,12 +9408,12 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wd_set(''node''  target, ''object'' event, ''array'' wdArray)``
-	Função com o propósito de definir propriedades dos elementos por meio do atributo HTML ''data''.
+	/**''function void data_wd_set(node  target, object event, array wdArray)''
+	Função com o propósito de definir propriedades dos elementos por meio do atributo HTML i{data}.
 	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
 	|data-wd-set|click|Múltiplas|Múltiplos|__Node.attribute|Elementos que possam receber cliques|
 	As propriedades e seus valores são definidos em cada grupo sendo que, no caso de valores em forma de objeto, deverá ser adotada a notação de estrutura. Os elementos alvos são definidos pelas propriedades "$" e "$$" que, se não informadas, assumirá como sendo o elemento disparador do evento.
-	As propriedades também podem estar definidas em um arquivo externo em notação JSON ou CSV (conforme cabeçalho). Nesse caso, a propriedade ''_file_'' (estrutura) deverá ser definida contendo os dados para requisição conforme ''data_wd_send'', exceto por ''type'' e ''trigger''.**/
+	As propriedades também podem estar definidas em um arquivo externo em notação JSON ou CSV (conforme cabeçalho). Nesse caso, a propriedade i{_file_} (estrutura) deverá ser definida contendo os dados para requisição conforme i{data_wd_send}, exceto por i{type} e i{trigger}.**/
 	function data_wd_set(target, event, wdArray) {
 		const data    = wdArray;
 		const handler = function(input) {
@@ -9459,14 +9456,14 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wd_chart(''node''  target, ''object'' event, ''array'' wdArray)``
-	Função com o propósito de plotar gráficos 2D por meio do atributo HTML ''data''.
+	/**''function void data_wd_chart(node  target, object event, array wdArray)''
+	Função com o propósito de plotar gráficos 2D por meio do atributo HTML i{data}.
 	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
 	|data-wd-chart|load wdreload wddataset|Múltiplas|Único|__Table.plot|Elemento que possa receber conteúdo|
 	As propriedades são as mesma do método __Table.plot, o gráfico substituirá o conteúdo do alvo.
 	Os dados da plotagem podem estar definidos na propriedade, em um arquivo externo JSON ou CSV, em uma tabela HTML ou no conteúdo textual de um elemento.
-	Para capturar dados de uma tabela ou elemento HTML, deve-se utilizar a propriedade ''$'' para referenciá-lo.
-	Para capturar dados de um arquivo externo em notação JSON ou CSV (conforme cabeçalho), deve-se definir a propriedade ''_file_'' (estrutura) contendo os dados para requisição conforme ''data_wd_send'', exceto por ''type'' e ''trigger''.**/
+	Para capturar dados de uma tabela ou elemento HTML, deve-se utilizar a propriedade i{$} para referenciá-lo.
+	Para capturar dados de um arquivo externo em notação JSON ou CSV (conforme cabeçalho), deve-se definir a propriedade i{_file_} (estrutura) contendo os dados para requisição conforme i{data_wd_send}, exceto por i{type} e i{trigger}.**/
 	function data_wd_chart(target, event, wdArray) {
 		const data    = wdArray[0];
 		const file    = "_file_" in data ? data["_file_"] : null;
@@ -9511,11 +9508,11 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wd_click(''node''  target, ''object'' event, ''array'' wdArray)``
-	Função com o propósito de definir cliques sobre o elemento por meio do atributo HTML ''data''.
+	/**''function void data_wd_click(node  target, object event, array wdArray)''
+	Função com o propósito de definir cliques sobre o elemento por meio do atributo HTML i{data}.
 	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
 	|data-wd-click|load wdreload wddataset|Múltiplas|Único|Não há|Elemento que possa receber um clique|
-	Ao definir o atributo, o elemento sofrerá um clique. Se a propriedade opcional ``repeat`` for definida, um clique a cada intervalo de tempo definido (em milisegundos, inteiro positivo) será executado enquanto o atributo não sofrer alterações.**/
+	Ao definir o atributo, o elemento sofrerá um clique. Se a propriedade opcional '{repeat} for definida, um clique a cada intervalo de tempo definido (em milisegundos, inteiro positivo) será executado enquanto o atributo não sofrer alterações.**/
 	function data_wd_click(target, event, wdArray) {
 		const data  = wdArray[0];
 		const check = new __Type(data.repeat);
@@ -9552,8 +9549,8 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wd_filter(''node''  target, ''object'' event, ''array'' wdArray)``
-	Função com o propósito de filtrar elementos de acordo com seu conteúdo textual por meio do atributo HTML ''data''.
+	/**''function void data_wd_filter(node  target, object event, array wdArray)''
+	Função com o propósito de filtrar elementos de acordo com seu conteúdo textual por meio do atributo HTML i{data}.
 	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
 	|data-wd-filter|load wdreload wddataset input|Múltiplas|Único|__Node.filter|Elemento que possa receber evento de digitação|
 	Possui as seguintes propriedades:
@@ -9580,8 +9577,8 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wd_display(''node''  target, ''object'' event, ''array'' wdArray)``
-	Função com o propósito de definir exibições por meio do atributo HTML ''data''.
+	/**''function void data_wd_display(node  target, object event, array wdArray)''
+	Função com o propósito de definir exibições por meio do atributo HTML i{data}.
 	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
 	|data-wd-display|click|Múltiplas|Múltiplos|__Node.display|Elemento que possa receber clique|
 	Possui as seguintes propriedades:
@@ -9597,8 +9594,8 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wd_mask(''node''  target, ''object'' event, ''array'' wdArray)``
-	Função com o propósito de definir máscaras por meio do atributo HTML ''data''.
+	/**''function void data_wd_mask(node  target, object event, array wdArray)''
+	Função com o propósito de definir máscaras por meio do atributo HTML i{data}.
 	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
 	|data-wd-mask|load wdreload wddataset focusout|Único|Múltiplos|__Node.display|Elemento que possa receber conteúdo|
 	Possui as seguintes propriedades opcionais:
@@ -9617,11 +9614,11 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wd_edit(''node''  target, ''object'' event, ''array'' wdArray)``
-	Função com o propósito de formatar textos em elementos editáveis por meio do atributo HTML ''data''.
+	/**''function void data_wd_edit(node  target, object event, array wdArray)''
+	Função com o propósito de formatar textos em elementos editáveis por meio do atributo HTML i{data}.
 	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
 	|data-wd-edit|click|Único|Múltiplos|-|Elementos que possa receber click|
-	As propriedades e seus valores são advindas da ferramenta nativa ''execCommand''. TODO melhorar isso**/
+	As propriedades e seus valores são advindas da ferramenta nativa i{execCommand}. TODO melhorar isso**/
 	function data_wd_edit(target, event, wdArray) {
 		const data = wdArray[0]
 		for (let cmd in data) {
@@ -9645,8 +9642,8 @@ const wd = (function() {
 
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wdValue(''node''  e, ''object'' event)``
-	Função vinculada ao atributo HTML ``data-wd-value`` cujos objetivos são:
+	/**''function void data_wdValue(node  e, object event)''
+	Função vinculada ao atributo HTML '{data-wd-value} cujos objetivos são:
 	- Aplicar e validar máscara;
 	- Validar dados;
 	- Renderizar dados; e
@@ -9655,12 +9652,12 @@ const wd = (function() {
 	|Nome|Descrição|
 	|mask|Define o modelo da máscara a ser aplicada ao conteúdo.|
 	|fail|Texto do erro da máscara.|
-	|$$ ou $|Seletores CSS dos elementos de entrada vinculados ao valor de saída (''output'').|
-	|valid|Nome da função, definida no escopo de ''windows'' com ''var'' ou ''function'', para validar o valor.|
-	|output|Nome da função, definida no escopo de ''windows'' com ''var'' ou ''function'', para definir o valor de saída.|
-	A função ''output'' será chamada quando os elementos de entrada dispararem um evento ''input''. Ela também será chamada ao carregar conteúdo ou definir o atributo. A função receberá o elemento e deverá retornar o seu valor.
-	A aplicação da máscara será avalida nos carregamento de conteúdo, definição de atributo e quando o elemento perder o foco. Será chamada também no evento ''input'' se ''output'' for chamada. Se o conteúdo não casar com a máscara, o nó assumirá como mensagem de erro o valor de ``fail`` ou o modelo da máscara.
-	A função ''valid'' será chamada nos carregamento de conteúdo e definição de atributo. A função receberá o elemento e deverá retornar o valor da mensagem de erro ou uma string em branco se não houver. No evento ''input'', ''valid'' só será executada se ''output'' tiver sido chamada.**/
+	|$$ ou $|Seletores CSS dos elementos de entrada vinculados ao valor de saída (i{output}).|
+	|valid|Nome da função, definida no escopo de i{windows} com i{var} ou i{function}, para validar o valor.|
+	|output|Nome da função, definida no escopo de i{windows} com i{var} ou i{function}, para definir o valor de saída.|
+	A função i{output} será chamada quando os elementos de entrada dispararem um evento i{input}. Ela também será chamada ao carregar conteúdo ou definir o atributo. A função receberá o elemento e deverá retornar o seu valor.
+	A aplicação da máscara será avalida nos carregamento de conteúdo, definição de atributo e quando o elemento perder o foco. Será chamada também no evento i{input} se i{output} for chamada. Se o conteúdo não casar com a máscara, o nó assumirá como mensagem de erro o valor de '{fail} ou o modelo da máscara.
+	A função i{valid} será chamada nos carregamento de conteúdo e definição de atributo. A função receberá o elemento e deverá retornar o valor da mensagem de erro ou uma string em branco se não houver. No evento i{input}, i{valid} só será executada se i{output} tiver sido chamada.**/
 	function data_wd_output(target, event, wdArray) {
 		const nodes = WD.$$("[data-wd-output]");
 		nodes.forEach(function(output,i) {
@@ -9708,8 +9705,8 @@ const wd = (function() {
 
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wd_code(''node''  target, ''object'' event, ''array'' wdArray)``
-	Função com o propósito de definir exibições de codificação por meio do atributo HTML ''data''.
+	/**''function void data_wd_code(node  target, object event, array wdArray)''
+	Função com o propósito de definir exibições de codificação por meio do atributo HTML i{data}.
 	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
 	|data-wd-code|load wdreload input|Múltiplas|Único|__Code|Elemento que possa receber texto de codificação.|
 	Possui as seguintes propriedades:
@@ -9770,8 +9767,8 @@ const wd = (function() {
 
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wd_jump(''node''  target, ''object'' event, ''array'' wdArray)``
-	Função com o propósito de transferir elementos entre containers ao receberem cliques por meio do atributo HTML ''data''.
+	/**''function void data_wd_jump(node  target, object event, array wdArray)''
+	Função com o propósito de transferir elementos entre containers ao receberem cliques por meio do atributo HTML i{data}.
 	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
 	|data-wd-move|click|Único|Única|__Node.jump|Elemento que possa receber click|
 	Possui as seguintes propriedades:
@@ -9785,14 +9782,14 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wd_move(''node''  target, ''object'' event, ''array'' wdArray)``
-	Função com o propósito de mover o elemento por meio do atributo HTML ''data''.
+	/**''function void data_wd_move(node  target, object event, array wdArray)''
+	Função com o propósito de mover o elemento por meio do atributo HTML i{data}.
 	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
 	|data-wd-move|mousedown mousemove e mouseup|Único|Único|-|Elementos que possam ser movidos|
 	Possui as seguintes propriedades:
 	|Nome|Tipo|Descrição|
 	|$|node|Seletor CSS que define a o elemento a ser movido|
-	O atributo ''data-wd-move'' deve ficar sobre o elemento âncora e a propriedade ''$'' especificará o elemento que será movido. Para um movimento padrão, a âncora deve ser um filho do elemento a se mover, se não definido, será o próprio elemento. Elementos com posicionamento ''static'' e ''sticky'' não serão movimentados.**/
+	O atributo i{data-wd-move} deve ficar sobre o elemento âncora e a propriedade i{$} especificará o elemento que será movido. Para um movimento padrão, a âncora deve ser um filho do elemento a se mover, se não definido, será o próprio elemento. Elementos com posicionamento i{static} e i{sticky} não serão movimentados.**/
 	function data_wd_move(target, event, wdArray) {
 		const data = wdArray[0];
 		/*-- iniciar movimento (data-wd-move) ------------------------------------*/
@@ -9841,13 +9838,13 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wd_size(''node''  target, ''object'' event, ''array'' wdArray)``
-	Função com o propósito de alterar as dimensões do elemento por meio do atributo HTML ''data''.
+	/**''function void data_wd_size(node  target, object event, array wdArray)''
+	Função com o propósito de alterar as dimensões do elemento por meio do atributo HTML i{data}.
 	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
 	|data-wd-size|mousedown mousemove, mouseup e mouseout|Único|Múltiplos|-|Elementos que possam ser redimensionados|
 	Possui as seguintes propriedades:
 	|Nome|Tipo|Descrição|
-	|type|string|Tipo do movimento, que deve ser ''size''|**/
+	|type|string|Tipo do movimento, que deve ser i{size}|**/
 	function data_wd_size(target, event, wdArray) {
 		const data = wdArray[0];
 		const node = new __Node(target);
@@ -9918,8 +9915,8 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wd_drag(''node''  target, ''object'' event, ''array'' wdArray)``
-	Função com o propósito de arrastar elementos por meio do atributo HTML ''data''.
+	/**''function void data_wd_drag(node  target, object event, array wdArray)''
+	Função com o propósito de arrastar elementos por meio do atributo HTML i{data}.
 	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
 	|data-wd-drag|mousemove, dragstart e dragend|Múltipla|Múltiplos|-|Nós de elementos que possam ser arrastados|
 	Possui as seguintes propriedades:
@@ -9928,7 +9925,7 @@ const wd = (function() {
 	|drop|function|Função a ser executada ao derrubar o elemento|
 	|$ ou $$|String|(obrigatório) Seletores CSS que identifica os elementos receptores do arrasto para o efeito especificado|
 	Se o elemento arrastável tiver múltiplos efeitos, cada efeito deverá ser informado em um grupo diferente cuidando para que não haja concomitâncias de elementos receptores entre os grupos (o efeito do último grupo prevalecerá).
-	A função ``drop`` receberá como argumentos o elemento drop, o elemento drag e o efeito aplicado. Se nenhum função for especificada, um comportamento padrão será executado de acordo com o efeito definido.
+	A função '{drop} receberá como argumentos o elemento drop, o elemento drag e o efeito aplicado. Se nenhum função for especificada, um comportamento padrão será executado de acordo com o efeito definido.
 	O elemento receptor não pode ser o elemento pai e nem o elemento arrastável ou estar contido nele.**/
 	function data_wd_drag(target, event, wdArray) {
 		const data = wdArray;
@@ -10034,14 +10031,14 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wd_drop(''node''  target, ''object'' event, ''array'' wdArray)``
-	Função com o propósito de definir o comportamento do elemento ao receber arquivos arrastáveis por meio do atributo HTML ''data''.
+	/**''function void data_wd_drop(node  target, object event, array wdArray)''
+	Função com o propósito de definir o comportamento do elemento ao receber arquivos arrastáveis por meio do atributo HTML i{data}.
 	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
 	|data-wd-drop|dragover, dragleave e drop|Único|Múltiplos|-|Nós que podem receber informações de arquivos.|
 	Possui as seguintes propriedades:
 	|Nome|Tipo|Descrição|
 	|drop|function|Função a ser chamada ao derrubar os arquivos|
-	A função ''drop'' receberá como argumentos o elemento drop e os arquivos arrastáveis (FileList) e, se não informada, uma ação padrão será realizada. Nessa ação padrão, tentar-se-á carregar o arquivo na página (o primeiro arquivo de tamanho até 1000000 Bytes apenas).**/
+	A função i{drop} receberá como argumentos o elemento drop e os arquivos arrastáveis (FileList) e, se não informada, uma ação padrão será realizada. Nessa ação padrão, tentar-se-á carregar o arquivo na página (o primeiro arquivo de tamanho até 1000000 Bytes apenas).**/
 	function data_wd_drop(target, event, wdArray) {
 		const data  = wdArray[0];
 		const file  = event.dataTransfer.types.indexOf("Files") >= 0;
@@ -10124,8 +10121,8 @@ const wd = (function() {
 
 
 /*----------------------------------------------------------------------------*/
-	/**###### ``**function** ''void'' data_wdTsort(''node''  e, ''object'' event)``
-	Função vinculada ao atributo HTML ``data-wd-tsort`` cujo objetivo é ordenar colunas específicas de tabelas. Não possui atributo.**/
+	/**''function void data_wdTsort(node  e, object event)''
+	Função vinculada ao atributo HTML '{data-wd-tsort} cujo objetivo é ordenar colunas específicas de tabelas. Não possui atributo.**/
 	function data_wdTsort(e, event) {
 		if (!("wdTsort" in e.dataset)) return;
 		try {
@@ -10178,16 +10175,16 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-/**###### ``**function** ''void'' data_wd_float(''node''  target, ''object'' event, ''array'' wdArray)``
-	Função com o propósito de exibir elementos no ponto de clicagem por meio do atributo HTML ''data''.
+/**''function void data_wd_float(node  target, object event, array wdArray)''
+	Função com o propósito de exibir elementos no ponto de clicagem por meio do atributo HTML i{data}.
 
 
 	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
 	|data-wd-move|dragstart e dragend|Único|Múltiplos|-|Nós de elementos que possam ser arrastados|
 	Possui as seguintes propriedades:
 	|Nome|Tipo|Descrição|
-	|type|string|Tipo do movimento, que deve ser ''drag''|
-	|effect|array|Efeitos do movimento: ''hide, move, copy e link''|**/
+	|type|string|Tipo do movimento, que deve ser i{drag}|
+	|effect|array|Efeitos do movimento: i{hide, move, copy e link}|**/
 	function data_wd_float(target, event, wdArray) {
 		console.log(wdArray[0])
 		const data  = wdArray[0];
@@ -10239,7 +10236,7 @@ const wd = (function() {
 /*============================================================================*/
 /* -- DISPARADORES -- */
 /*============================================================================*/
-	/**###### ``**const** ''object'' __EVENTS``
+	/**''const object __EVENTS''
 	Registra os eventos da biblioteca e seus disparadores.
 	O primeiro nível de dados diz respeito ao nome do evento cujo valor é um objeto.
 	O segundo nível de propriedades possui as seguintes características:
@@ -10248,7 +10245,7 @@ const wd = (function() {
 	|preventDefault|boolean|Define se evoca o método preventDefault dp evento|
 	|data|Array|Lista de objetos contendo a configuração de cada evento|
 	|extra|string|Define uma especifidade a ser verificada para o evento (opcional)|
-	Os itens da lista definida em ``data`` possui as seguintes propriedades:
+	Os itens da lista definida em '{data} possui as seguintes propriedades:
 	|Nome|Tipo|Descrição|
 	|name|string ou nulo|Define o seletor CSS, se existir, vinculado ao disparador|
 	|kill|boolean|Define se o atributo dataset será excluído após chamar o disparador|
@@ -10263,11 +10260,11 @@ const wd = (function() {
 	|Seletor CSS|*|Aplica-se aos elementos identificados pelo seletor definido|
 	|null|null|Aplica-se ao alvo específico|
 	Regras específicas:
-	- Se a propriedade ``target`` for definida como window, document será considerado como alvo;
+	- Se a propriedade '{target} for definida como window, document será considerado como alvo;
 	- Os eventos só ocorrem para elementos HTML (tipo 1) ou document (tipo 9);
 	- O valor dos tipos "atributo data" e "propriedade dataset" precisa estar no formato wdArray obrigatoriamente;
-	- As propriedades ``bind`` e ``kill`` se aplicam apenas aos tipos "atributo data" e "propriedade dataset";
-	- O disparador ``call`` receberá como argumentos o alvo, os dados do evento e uma lista wdArray; e
+	- As propriedades '{bind} e '{kill} se aplicam apenas aos tipos "atributo data" e "propriedade dataset";
+	- O disparador '{call} receberá como argumentos o alvo, os dados do evento e uma lista wdArray; e
 	- A lista wdArray será nula nos casos de tipos diferentes de "atributo data" e "propriedade dataset".**/
 	//FIXME quando o evento de clique receber um enter, forçar um click
 	//FIXME implantar extra para cada disparador
@@ -10460,7 +10457,7 @@ const wd = (function() {
 		},
 	};
 
-	/**###### ``**function** ''void'' eventManager(event)``
+	/**''function void eventManager(event)''
 	Disparador genérico da biblioteca, administra o conteúdo de __EVENTS.**/
 	function eventManager(event) {
 		/*-- Checar alvo do evento: elemento (1) ou documento (9) ----------------*/
