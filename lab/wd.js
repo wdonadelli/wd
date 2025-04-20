@@ -763,7 +763,7 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	/**''const object __FLOAT''
-	Administra containers para janelas modais (wall e glass) e de quadro (frame).**/
+	Administra containers para janelas modais, quadro ou flutuantes.**/
 	const __FLOAT = {
 		/**. '{array heap}: Registra informações sobre os quadros.**/
 		heap: [],
@@ -784,8 +784,8 @@ const wd = (function() {
 		|Fundo|Transparente-localizado|Opaco-Tela-Inerte|Ausente-Tela|
 		|Fechamento|Não|Esc|Esc, Tab e clique|
 		|Objetivo|Alerta|Diálogo|Menu|
-		Ao fechar o nó com o método '{remove}, '{close} receberá como argumento i{verdadeiro}, caso contrário, i{falso}.
-		Para o tipo '{modal}, '{place} pode ter posicionalmento nos lados (top, right, bottom, left, center, full) ou nos pontos cardeais (n, ne, e, se, s, sw, w, nw). Para o tipo '{float}, a posição (x,y) da tela. Não há posicionamento para o tipo '{frame}.**/
+		. Ao fechar o nó com o método '{remove}, '{close} receberá como argumento i{verdadeiro}, caso contrário, i{falso}.
+		. Para o tipo '{modal}, '{place} pode ter posicionalmento nos lados (top, right, bottom, left, center, full) ou nos pontos cardeais (n, ne, e, se, s, sw, w, nw). Para o tipo '{float}, a posição (x,y) da tela. Não há posicionamento para o tipo '{frame}.**/
 		append: function(node, options) {
 			if (node === document.body) return;
 			const data  = typeof options === "object" ? options : {};
@@ -1031,78 +1031,78 @@ const wd = (function() {
 	/**''const object __SIGNAL''
 	Renderiza mensagens e notificações.**/
 	const __SIGNAL = {
-		/**. '{node node}: Caixa de alerta/diálogo.**/
-		node: (function() {
-			const node = document.createElement("ARTICLE");
-			node.innerHTML = `
-				<button data-js-wd-signal-kill="" class="js-wd-style" ></button>
-				<h1     data-js-wd-signal-head="" class="js-wd-style" ></h1>
-				<p      data-js-wd-signal-body="" class="js-wd-style" ></p>
-				<footer data-js-wd-signal-foot="" class="js-wd-style" ></footer>
-				<time   data-js-wd-signal-time="" class="js-wd-style" ></time>`;
-			node.className="js-wd-style";
-			return node;
-		})(),
 		/**. '{integer id}: Controla o id da caixa de mensagem.**/
 		id: {info: 0, ok: 0, warn: 0, error: 0, dialog: 0},
-		/**. '{void alert(object options)}: Ver método i{signal}.**/
-		alert: function(options) {
-			/*-- Obtendo dados iniciais --*/
-			options     = typeof options === "object" ? options : {};
-			const call  = typeof options.trigger === "function" ? options.trigger : null;
-			const time  = new Date();
-			const type  = options.type in this.id ? options.type : "info";
-			const id    = `js_wd_signal_${type}_${this.id[type]++}`;
-			const node  = this.node.cloneNode(true);
-			const child = {head: null, body: null, foot: null, time: null, kill: null};
-			for (let i in child)
-				child[i] = node.querySelector(`[data-js-wd-signal-${i}]`);
-			/*-- node/time/kill --*/
-			node.dataset.jsWdSignal = type;
-			node.setAttribute("role", (type === "dialog" ? "alertdialog" : "alert"));
-			child.time.setAttribute("datetime", time.toISOString());
-			child.time.textContent  = time.toLocaleString(__LANG.value);
-			child.kill.innerHTML    = "&times";
-			/*-- title --*/
-			if ("title" in options) {
-				child.head.textContent = String(options.title);
-				child.head.id = `${id}_label`;
-				node.setAttribute("aria-labelledby", child.head.id);
-			} else {
-				child.head.remove();
+		/**. '{object builder(object data)}: Retorna os elementos participantes do sinal organizados em um objeto pelo apelido. O argumento i{data} deve conter as propriedades para executar o sinal.**/
+		buider: function(data) {
+			const type = data.type in this.id ? data.type : "info";
+			const css  = `js-wd-style`;
+			const role = type === "dialog" ? "alertdialog" : "alert";
+			const id   = `js_wd_signal_${type}_${this.id[type]++}`;
+			const time = new Date();
+			const iso  = time.toISOString();
+			const now  = time.toLocaleString(__LANG.value);
+			const head = data.title;
+			const body = data.body;
+			const node = document.createElement("div");
+			node.innerHTML = `
+				<article
+					id="${id}" data-js-wd-signal="${type}" class="${css}" role="${role}"
+					aria-labelledby="${id}_label" aria-describedby="${id}_body"
+				>
+					<button data-js-wd-signal-kill="" class="${css}"                   >&times;</button>
+					<h1     data-js-wd-signal-head="" class="${css}" id="${id}_label"  >${head}</h1>
+					<p      data-js-wd-signal-body="" class="${css}" id="${id}_body"   >${body}</p>
+					<footer data-js-wd-signal-foot="" class="${css}"                   ></footer>
+					<time   data-js-wd-signal-time="" class="${css}" datetime="${iso}" >${now}</time>
+				</article>
+			`;
+			return {
+				main: node.querySelector("[data-js-wd-signal]"),
+				kill: node.querySelector("[data-js-wd-signal-kill]"),
+				head: node.querySelector("[data-js-wd-signal-head]"),
+				body: node.querySelector("[data-js-wd-signal-body]"),
+				foot: node.querySelector("[data-js-wd-signal-foot]"),
+				time: node.querySelector("[data-js-wd-signal-time]")
 			}
-			/*-- body --*/
-			if ("body" in options) {
-				child.body.textContent = String(options.body);
-				child.body.id = `${id}_body`;
-				node.setAttribute("aria-describedby", child.body.id);
-			} else {
-				child.body.remove();
+		},
+		/**. '{void alert(object data)}: Ver método i{signal}.**/
+		alert: function(data) {
+			/*-- acertando dados obrigatórios --*/
+			data         = typeof data === "object" ? data : {};
+			data.type    = data.type in this.id ? data.type : "info";
+			data.trigger = typeof data.trigger === "function" ? data.trigger : null;
+			data.time    = typeof data.time    === "number"   ? Math.trunc(data.time) : 0;
+			data.actions = typeof data.actions === "object"   ? data.actions : {OK: "OK*"};
+			/*-- obtendo elementos e adequando mensagens --*/
+			const nodes = this.buider(data);
+			if (!("title" in data)) nodes.head.remove();
+			if (!("body"  in data)) nodes.body.remove();
+			/*----------------------------------------------------------------------*/
+			if (data.type !== "dialog") {
+				nodes.foot.remove();
+				nodes.kill.addEventListener("click", function(ev) {
+					return __FLOAT.remove(nodes.main);
+				}, false);
+				__FLOAT.append(nodes.main, {type: "frame", close: function() {
+					if (data.trigger !== null) data.trigger(data.id, null);
+				}});
+				if (data.time > 0)
+					window.setTimeout(function() {
+						nodes.kill.click();
+					}, data.time);
 			}
-			/*-- alertas --*/
-			if (type !== "dialog") {
-				child.foot.remove();
-				child.kill.addEventListener("click", function(ev) {return __FLOAT.remove(node);}, false);
-				__FLOAT.append(node, {
-					type: "frame",
-					close: function() {if (call !== null) call(options.id, null);}
-				});
-				const delta = typeof options.time === "number" ? Math.trunc(options.time) : 0;
-				if (delta > 0)
-					window.setTimeout(function() {child.kill.click();}, delta);
-			}
-			/*-- dialogo --*/
+			/*----------------------------------------------------------------------*/
 			else {
-				child.kill.remove();
-				const acts = typeof options.actions === "object" ? options.actions : {ok: "OK*"};
+				nodes.kill.remove();
 				const auto = /\*$/;
 				let  focus = null;
 				/*-- botões de ação --*/
-				for (let act in acts) {
+				for (let i in data.actions) {
 					let btn = document.createElement("BUTTON");
 					btn.type = "button";
 					btn.className = "js-wd-style js-wd-button";
-					btn.textContent = acts[act].replace(auto, "");
+					btn.textContent = data.actions[i].replace(auto, "");
 					btn.addEventListener("keydown", function(ev) {
 						const keys = {
 							next: /^(ArrowRight|ArrowDown)$/i,
@@ -1122,18 +1122,18 @@ const wd = (function() {
 						return;
 					}, false);
 					btn.addEventListener("click", function(ev) {
-						__FLOAT.remove(node);
-						if (call !== null) call(options.id, act);
+						__FLOAT.remove(nodes.main);
+						if (data.trigger !== null) data.trigger(data.id, i);
 						return;
 					}, false);
-					child.foot.appendChild(btn);
-					focus = focus === null && auto.test(acts[act]) ? btn : focus;
+					nodes.foot.appendChild(btn);
+					focus = focus === null && auto.test(data.actions[i]) ? btn : focus;
 				}
 				/*-- Renderizando diálogo --*/
-				__FLOAT.append(node, {
+				__FLOAT.append(nodes.main, {
 					type: "modal",
 					close: function(result) {
-						if (call !== null && !result) call(options.id, null);
+						if (data.trigger !== null && !result) data.trigger(data.id, null);
 						return;
 					}
 				});
@@ -1163,7 +1163,7 @@ const wd = (function() {
 		|title|string|Define o título da interação.|
 		|body|string|Define a mensagem da interação.|
 		|id|string|Identificador da interação.|
-		|actions|object|Define os botões de resposta o diálogo.|
+		|act|object|Define os botões de resposta o diálogo.|
 		|trigger|function|Define a função a ser chamada após a decisão do diálogo.|
 		|time|integer|Duração da mensagem de alerta em milissegundos (o padrão é não fechar).|
 		. Os seguintes valores de '{type} são possíveis:
@@ -2144,7 +2144,7 @@ const wd = (function() {
 				const attr = data.slice(1).join(" ");
 				const elem = this.pattern().replace(/\?+/g, tag);
 				this._tree.push(tag);
-				this._data.push(`<${elem} ${attr}>`);
+				this._data.push(attr === "" ? `<${elem}>` : `<${elem} ${attr}>`);
 				return this;
 			}
 		},
@@ -2821,11 +2821,7 @@ const wd = (function() {
 				return;
 			}
 		},
-
-
-
-
-		/**. c{object wdComment(str open, str close)}: Segrega o código fonte do conteúdo definido entre os caracteres c{open} e c{close}. Retorna um objeto com as propriedades i{src} (código fonte), i{doc} (conteúdo segregado) e i{html} (documento HTML montado a partir do conteúdo segregado).**/
+		/**. '{object wdComment(string open, string close)}: Segrega o código fonte do conteúdo definido entre os caracteres '{open} e '{close}. Retorna um objeto com as propriedades i{src} (código fonte), i{doc} (conteúdo segregado) e i{html} (documento HTML montado a partir do conteúdo segregado).**/
 		wdComment: {
 			value: function(open, close) {
 				if (!this._check.string) return null;
@@ -2855,13 +2851,30 @@ const wd = (function() {
 						index++;
 					}
 				}
-				const html = new __Parser(doc.join(""));
-				return {src: src.join(""), doc: html.get(), html: html.wdDoc.get()};
+				return {
+					src:  src.join("").replace(/\n+/g, "\n"),
+					doc:  doc.join(""),
+					get html() {return new __Parser(this.doc).wdDoc.get();}
+				};
 			}
 		},
-
-
-
+		/**. '{string wdDoc}: Transforma os dados segregados do método '{wdComment} em notação HTML (tag main) adotando as seguintes regras de notação:
+		|Element|Tipo|Ocorrência|Descrição|
+		|Citação|Bloco|Parágrafo|Inicia e termina com duas aspas duplas.|
+		|Código|Bloco|Parágrafo|Inicia e termina com duas aspas simples.|
+		|Tabela|Bloco|Linha|Inicia, termina e separa células com barra vertical, a primeira linha é o cabeçalho.|
+		|Lista|Bloco|Linha|Inicia com "- " seguido do conteúdo.|
+		|Descrição|Bloco|Linha|Inicia com ". " seguido do conteúdo.|
+		|Títulos|Bloco|Linha|Inicia com "#0-6 " seguido do conteúdo.|
+		|Mídia|Bloco|Linha|Inicia com "@MIMETYPE " seguido do link entre os caracteres "< >" e o texto em caso de falha.|
+		|Parágrafo|Bloco|Linha|Quando não seguir as regras anteriores.|
+		|Formatação|Em linha|Conteúdo|Nome da tag HTML seguindo do conteúdo limitado pelos caracteres "{ }".|
+		- Se a descrição conter um caractere ":" intermediário, a parte anterior será título (dt) e a posterior a descrição (dd);
+		- O número do título indica seu tipo, o valor zero cria um menu referenciando os títulos do tipo 3 a 5;
+		- O valor MIMETYPE deve ser alterado conforme o tipo de arquivo a ser carregado;
+		- A tag HTML i{code} pode ser abreviada por um caracteres de aspas simples;
+		- Atributos de elementos em linha são informados após o caracter "}" delimitado por colchetes "[attr]" (opcional); e
+		- Não é possível efetuar formatações dentro do conteúdo dos elementos em linha.**/
 		wdDoc: {
 			get: function() {
 				if ("wdDoc" in this._saved)
@@ -2869,6 +2882,7 @@ const wd = (function() {
 				let data = null;
 				try {
 					if (this._check.string) {
+						const menu = new __Tree();
 						const note = this._data.trim().normalize();
 						const code = note.split("\n");
 						const tree = new __Tree();
@@ -2882,7 +2896,7 @@ const wd = (function() {
 							dl:    /^(\.)\s+(.+)$/,
 							/*-- blocos de linha única --*/
 							head:  /^\#([0-6])\s+(.+)$/,
-							media: /^\@(image|audio|video)\s+\<([^>]+)\>(.*)$/,
+							media: /^\@([a-z/]+)\s+\<([^>]+)\>(.*)$/i,
 						};
 						/*-- função para elementos inline --*/
 						function inline(tree, input) {
@@ -2909,19 +2923,16 @@ const wd = (function() {
 							return;
 						};
 						/*----------------------------------------------------------------*/
-						let tag, txt, key, index = 0, title=0;
+						let tag, txt, key, index = 0, title = -1;
 						tree.xml = true;
-						tree.open("main");
 						while (index < code.length) {
 							tag = tree.level;
 							txt = code[index].trim();
 							key = null;
-
 							for (let i in type)
 								if (key === null && type[i].test(txt)) key = i;
-							console.log({tag: tag, key: key, txt: txt})
 							/*--------------------------------------------------------------*/
-							if (tag === "main") {
+							if (tag === null) {
 								switch(key) {
 									/*-- blocos de consistência --*/
 									case "table": {tree.open("table");      break;}
@@ -2934,21 +2945,24 @@ const wd = (function() {
 									case "head":  {
 										let head = Number(txt.replace(type.head, "$1"));
 										let text = txt.replace(type.head, "$2").trim();
+										let href = `head_${++title}`;
 										if (head === 0)
-											tree.open(`h3`).add(text).close().open("menu").close().open(`hr`).close();
-										else if (head < 3)
-											tree.open(`h${head}`).add(text).close();
+											tree.open(`h3`).add(text).close().
+											open("menu").add("%MENUITEM%").close();
 										else
-											tree.open(`h${head} id="title_${title++}"`).add(text).close();
+											tree.open(`h${head} id="${href}"`).add(text).close();
+										if (head > 2 && head < 6)
+											menu.open("li").add((". . . . ").repeat(head - 3))
+											.open(`a href="#${href}"`).add(text).close().close();
 										index++;
 										break;
 									}
 									case "media":  {
 										/^\@(image|audio|video)\s+\<([^>]+)\>(.*)$/
-										let type = txt.replace(type.media, "$1");
+										let mime = txt.replace(type.media, "$1");
 										let data = txt.replace(type.media, "$2");
 										let text = txt.replace(type.media, "$3");
-										tree.open(`object type="${type}" data="${data}"`).add(text).close();
+										tree.open(`object type="${mime}" data="${data}"`).add(text).close();
 										index++;
 										break;
 									}
@@ -2988,16 +3002,13 @@ const wd = (function() {
 									tree.close();
 								}
 								else {
-									let dd = txt.replace(type.dl, "$2");
-									let dl = /^([^:]+)\:(.+)$/;
-									let dt = /^([^:]+)\:$/;
-									if (dl.test(dd))
-										tree.open("dt").add(inline(tree, dd.replace(dl, "$1"))).close().
-										open("dd").add(inline(tree, dd.replace(dl, "$2"))).close();
-									else if (dt.test(dd))
-										tree.open("dt").add(inline(tree, dd.replace(dt, "$1"))).close();
-									else
-										tree.open("dd").add(inline(tree, dd)).close();
+									let re = /^([^:]+)\:(.+)$/;
+									let dl = txt.replace(type.dl, "$2").trim();
+									let dt = re.test(dl) ? dl.replace(re, "$1").trim() : null;
+									let dd = re.test(dl) ? dl.replace(re, "$2").trim() : dl;
+									if (dt !== null)
+										tree.open("dt").add(inline(tree, dt)).close();
+									tree.open("dd").add(inline(tree, dd)).close();
 									index++;
 								}
 							}
@@ -3032,8 +3043,8 @@ const wd = (function() {
 							else throw new Error("tag not found.")
 						}
 						tree.finish();
-						data = document.createElement("div");
-						data.innerHTML = tree.valueOf();
+						menu.finish();
+						data = tree.valueOf().replace("<menu>%MENUITEM%</menu>", menu.valueOf());
 					}
 				}
 				catch(e) {
@@ -3043,17 +3054,6 @@ const wd = (function() {
 				return this.wdDoc;
 			}
 		}
-
-
-
-
-
-
-
-
-
-
-
 	});
 
 /*============================================================================*/
@@ -3521,14 +3521,14 @@ const wd = (function() {
 				return value.normalize();
 			}
 		},
-		/**. '{string mask(string model)}: Checa se a string casa com o formato de máscara definido no argumento '{model} e a retorna. Se não casar, retorna uma string vazia. A máscara é definida com os seguintes manipuladores:
-		|Caractere|Descrição|
+		/**. '{string mask(string model)}: Checa se a string casa com o formato de máscara definido no argumento '{model} e retorna uma string vazia em caso de insucesso ou os caracteres formatados:
+		|Manipulador|Descrição|
 		|#|Exige um dígito.|
 		|@|Exige um não dígito.|
 		|*|Exige um valor qualquer.|
 		|?|Separa modelos alternativos caso o anterior não case.|
 		|%|Cancela o efeito do manipulador que o precede.|
-		#6 Exemplos
+		. Exemplos:
 		|Modelo|Valor|Retorno|
 		|##/##/####|01234567|01/23/4567|
 		|(##) # ####-####?(##) ####-####|01234567890|(01) 2 3456-7890|
@@ -4293,7 +4293,9 @@ const wd = (function() {
 
 	__Time.prototype = Object.create(__Week.prototype, {
 		constructor: {value: __Time},
+		/**. '{string toString()}: Retorna o tempo no formato "YYYY-MM-DDThh:mm:ss".**/
 		toString: {value: function() {return [this.YYYYMMDD,this.hhmmss].join("T");}},
+		/**. '{string valueOf()}: Retorna o mesmo que a propriedade '{timeElapsed}.**/
 		valueOf:  {value: function() {return this.timeElapsed;}},
 		/**. '{string hh}: Retorna a hora com dois dígitos.**/
 		hh: {get: function() {return (this.hour < 10 ? "0" : "") + String(this.hour)}},
@@ -4351,7 +4353,7 @@ const wd = (function() {
 	});
 
 	Object.defineProperties(__Time, {
-		/**#5 Tempo:return [this.YYYYMMDD,this.hhmmss].join("T") Métodos e Propriedades Estáticos
+		/**#5 Métodos e Propriedades Estáticos
 		. '{array daysToYear(integer value)}: Retorna o ano (item 0) a partir do número de dias ('{value}).**/
 		daysToYear: {
 			value: function(value) {
@@ -9093,7 +9095,7 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	/**#4 Função Mestre
-	''{object WD(any input)''
+	''	object WD(any input)''
 	Função principal, única de acesso ao usuário, com o objetivo de chamar os construtores correspondentes ao valor informado no argumento '{input}.**/
 	function WD(input) {
 		let data = __Type(input);
@@ -9118,7 +9120,7 @@ const wd = (function() {
 		device:  {get: function() {return __DEVICE.device;}},
 		/**. '{object now}: Retorna a instância do objeto do tipo tempo com o valor atual.**/
 		now: {get: function() {return WD(new __DateTime().toTimeString());}},
-		/**. '{object now}: Retorna a instância do objeto do tipo data com o valor atual.**/
+		/**. '{object today}: Retorna a instância do objeto do tipo data com o valor atual.**/
 		today: {get: function() {return WD(new __DateTime().toDateString());}},
 		/**. '{object already}: Retorna a instância do objeto do tipo data/tempo com o valor atual.**/
 		already: {get: function() {return WD(__DateTime().toString());}},
