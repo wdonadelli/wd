@@ -317,15 +317,14 @@ const wd = (function() {
 		[data-wd-move]   {cursor: grab    !important;}
 		[data-wd-moving] {cursor: move    !important;}
 		[data-wd-drag]   {cursor: grab    !important;}
-		[data-wd-size="cursor{n}"]  {cursor: n-resize  !important;}
-		[data-wd-size="cursor{ne}"] {cursor: ne-resize !important;}
-		[data-wd-size="cursor{e}"]  {cursor: e-resize  !important;}
-		[data-wd-size="cursor{se}"] {cursor: se-resize !important;}
-		[data-wd-size="cursor{s}"]  {cursor: s-resize  !important;}
-		[data-wd-size="cursor{sw}"] {cursor: sw-resize !important;}
-		[data-wd-size="cursor{w}"]  {cursor: w-resize  !important;}
-		[data-wd-size="cursor{nw}"] {cursor: nw-resize !important;}
-		[data-wd-size="cursor{n}"]  {cursor: n-resize  !important;}
+		[data-wd-size="{cursor:'n';}"]  {cursor: n-resize  !important;}
+		[data-wd-size="{cursor:'ne';}"] {cursor: ne-resize !important;}
+		[data-wd-size="{cursor:'e';}"]  {cursor: e-resize  !important;}
+		[data-wd-size="{cursor:'se';}"] {cursor: se-resize !important;}
+		[data-wd-size="{cursor:'s';}"]  {cursor: s-resize  !important;}
+		[data-wd-size="{cursor:'sw';}"] {cursor: sw-resize !important;}
+		[data-wd-size="{cursor:'w';}"]  {cursor: w-resize  !important;}
+		[data-wd-size="{cursor:'nw';}"] {cursor: nw-resize !important;}
 		[data-wd-dropping] {
 			min-height: 4em !important;
 			background-repeat: no-repeat !important;
@@ -1045,26 +1044,57 @@ const wd = (function() {
 			const head = data.title;
 			const body = data.body;
 			const node = document.createElement("div");
-			node.innerHTML = `
-				<article
+			node.innerHTML =
+				`<article
 					id="${id}" data-js-wd-signal="${type}" class="${css}" role="${role}"
 					aria-labelledby="${id}_label" aria-describedby="${id}_body"
+					data-wd-size=""
 				>
-					<button data-js-wd-signal-kill="" class="${css}"                   >&times;</button>
+					<button data-js-wd-signal-kill="" class="${css}" type="button"     >&times;</button>
 					<h1     data-js-wd-signal-head="" class="${css}" id="${id}_label"  >${head}</h1>
 					<p      data-js-wd-signal-body="" class="${css}" id="${id}_body"   >${body}</p>
+					<div    data-js-wd-signal-node="" class="${css}"                   ></div>
 					<footer data-js-wd-signal-foot="" class="${css}"                   ></footer>
 					<time   data-js-wd-signal-time="" class="${css}" datetime="${iso}" >${now}</time>
-				</article>
-			`;
-			return {
+				</article>`;
+			const list =  {
 				main: node.querySelector("[data-js-wd-signal]"),
 				kill: node.querySelector("[data-js-wd-signal-kill]"),
 				head: node.querySelector("[data-js-wd-signal-head]"),
 				body: node.querySelector("[data-js-wd-signal-body]"),
+				node: node.querySelector("[data-js-wd-signal-node]"),
 				foot: node.querySelector("[data-js-wd-signal-foot]"),
 				time: node.querySelector("[data-js-wd-signal-time]")
+			};
+			for (let i in data.actions) {
+				let btn = document.createElement("BUTTON");
+				btn.type = "button";
+				btn.className = "js-wd-style js-wd-button";
+				btn.textContent = data.actions[i].replace(/\*$/, "");
+				btn.dataset.jsWdSignalId = i;
+				btn.autofocus = (/\*$/).test(data.actions[i])
+				list.foot.appendChild(btn);
+				//FIXME isso será eliminado após a criação do atributo data-wd-key
+				btn.addEventListener("keydown", function(ev) {
+					const keys = {
+						next: /^(ArrowRight|ArrowDown)$/i,
+						previus: /^(ArrowLeft|ArrowUp)$/i,
+						first: /^(Home)$/i,
+						last: /^(End)$/i
+					};
+					const child = ev.target.parentElement.children;
+					if (keys.next.test(ev.key) && ev.target.nextElementSibling !== null)
+						ev.target.nextElementSibling.focus();
+					else if (keys.previus.test(ev.key) && ev.target.previousElementSibling !== null)
+						ev.target.previousElementSibling.focus();
+					else if (keys.first.test(ev.key))
+						child[0].focus();
+					else if (keys.last.test(ev.key))
+						child[child.length - 1].focus();
+					return;
+				}, false);
 			}
+			return list;
 		},
 		/**. '{void alert(object data)}: Ver método i{signal}.**/
 		alert: function(data) {
@@ -1074,10 +1104,12 @@ const wd = (function() {
 			data.trigger = typeof data.trigger === "function" ? data.trigger : null;
 			data.time    = typeof data.time    === "number"   ? Math.trunc(data.time) : 0;
 			data.actions = typeof data.actions === "object"   ? data.actions : {OK: "OK*"};
+			data.node    = typeof data.node    === "object"  && data.node instanceof HTMLElement ? data.node : null;
 			/*-- obtendo elementos e adequando mensagens --*/
 			const nodes = this.buider(data);
 			if (!("title" in data)) nodes.head.remove();
 			if (!("body"  in data)) nodes.body.remove();
+			(data.node === null ? nodes.node.remove() : nodes.node.appendChild(data.node));
 			/*----------------------------------------------------------------------*/
 			if (data.type !== "dialog") {
 				nodes.foot.remove();
@@ -1088,52 +1120,34 @@ const wd = (function() {
 					if (data.trigger !== null) data.trigger(data.id, null);
 				}});
 				if (data.time > 0)
-					window.setTimeout(function() {
-						nodes.kill.click();
-					}, data.time);
+					window.setTimeout(function() {nodes.kill.click();}, data.time);
 			}
 			/*----------------------------------------------------------------------*/
 			else {
 				nodes.kill.remove();
-				const auto = /\*$/;
-				let  focus = null;
-				/*-- botões de ação --*/
-				for (let i in data.actions) {
-					let btn = document.createElement("BUTTON");
-					btn.type = "button";
-					btn.className = "js-wd-style js-wd-button";
-					btn.textContent = data.actions[i].replace(auto, "");
-					btn.addEventListener("keydown", function(ev) {
-						const keys = {
-							next: /^(ArrowRight|ArrowDown)$/i,
-							previus: /^(ArrowLeft|ArrowUp)$/i,
-							first: /^(Home)$/i,
-							last: /^(End)$/i
-						};
-						const child = ev.target.parentElement.children;
-						if (keys.next.test(ev.key) && ev.target.nextElementSibling !== null)
-							ev.target.nextElementSibling.focus();
-						else if (keys.previus.test(ev.key) && ev.target.previousElementSibling !== null)
-							ev.target.previousElementSibling.focus();
-						else if (keys.first.test(ev.key))
-							child[0].focus();
-						else if (keys.last.test(ev.key))
-							child[child.length - 1].focus();
-						return;
-					}, false);
+				if ("title" in data)
+					nodes.head.dataset.wdMove = `{\$:'#${nodes.main.id}'}`;
+				const buttons = nodes.foot.children;
+				let   focus   = null;
+				for (let i = 0; i < buttons.length; i++) {
+					let btn   = buttons[i];
+					let info  = btn.dataset.jsWdSignalId;
+					delete btn.dataset.jsWdSignalId;
 					btn.addEventListener("click", function(ev) {
 						__FLOAT.remove(nodes.main);
-						if (data.trigger !== null) data.trigger(data.id, i);
+						if (data.trigger !== null)
+							data.trigger(data.id, info);
 						return;
 					}, false);
-					nodes.foot.appendChild(btn);
-					focus = focus === null && auto.test(data.actions[i]) ? btn : focus;
+					if (focus === null && btn.autofocus)
+						focus = btn;
 				}
 				/*-- Renderizando diálogo --*/
 				__FLOAT.append(nodes.main, {
 					type: "modal",
 					close: function(result) {
-						if (data.trigger !== null && !result) data.trigger(data.id, null);
+						if (data.trigger !== null && !result)
+							data.trigger(data.id, null);
 						return;
 					}
 				});
@@ -1167,6 +1181,7 @@ const wd = (function() {
 		|trigger|function|Define a função a ser chamada após a decisão do diálogo.|
 		|time|integer|Duração da mensagem de alerta em milissegundos (o padrão é não fechar).|
 		. Os seguintes valores de '{type} são possíveis:
+		//FIXME inserir node e local/place informar quando um será aplicado ou não
 		|Valor|Interação|
 		|notify|Exibe uma notificação.|
 		|alert|Exibe uma caixa de alerta.|
@@ -9812,8 +9827,8 @@ const wd = (function() {
 					box.pageX = event.pageX;
 					box.pageY = event.pageY;
 					node.position = box;
-					for (let j in box) source.push(`${j}{${box[j]}}`);
-					mover[i].setAttribute("data-wd-moving", source.join(""));
+					for (let j in box) source.push(`${j}:${box[j]};`);
+					mover[i].setAttribute("data-wd-moving", "{" + source.join("") + "}");
 				}
 			}
 		}
@@ -9852,8 +9867,8 @@ const wd = (function() {
 		const node = new __Node(target);
 		const non  = ["static", "relative", "sticky"];
 		const cut  = non.indexOf(node.styles.position) >= 0;
-		const init = target.hasAttribute("data-wd-resizing");
-		const scan = /^cursor\{([nesw]|[ns][ew])\}$/
+		const init = target.hasAttribute("data-wd-resizing");//FIXME consertar isso aqui
+		const scan = /^\{cursor\:\'([nesw]|[ns][ew])\'\;\}$/;
 		const side = scan.test(target.dataset.wdSize) ? target.dataset.wdSize.replace(scan, "$1") : null;
 		/*-- Redimencionar -------------------------------------------------------*/
 		if (event.type === "mousemove" && init) {
@@ -9892,11 +9907,11 @@ const wd = (function() {
 			const W   = cut ? false : (x >= box.left && x <= (box.left + d));
 			const E   = x <= box.right  && x >= (box.right  - d);
 			const p   = (N || S ? (N ? "n" : "s") : "") + (W || E ? (E ? "e" : "w") : "");
-			target.dataset.wdSize = `cursor{${p}}`;
+			target.dataset.wdSize = `{cursor:'${p}';}`;//FIXME
 		}
 		/*-- Desistir ------------------------------------------------------------*/
 		else if (event.type === "mouseout" && !init) {
-			target.dataset.wdSize = `cursor{}`;
+			target.dataset.wdSize = `{cursor:'';}`;//FIXME
 		}
 		/*-- Iniciar -------------------------------------------------------------*/
 		else if (event.type === "mousedown" && side !== null) {
@@ -9905,12 +9920,12 @@ const wd = (function() {
 			const box   = node.position;
 			box.pageX   = event.pageX;
 			box.pageY   = event.pageY;
-			for (let i in box) value.push(`${i}{${+box[i]}}`);
-			target.dataset.wdResizing = value.join("");
+			for (let i in box) value.push(`${i}:${+box[i]}`);
+			target.dataset.wdResizing = "{"+value.join(";")+"}";//FIXME
 		}
 		/*-- Encerrar ------------------------------------------------------------*/
 		else if (event.type === "mouseup") {
-			target.dataset.wdSize = "cursor{}";
+			target.dataset.wdSize = `{cursor:'';}`;//FIXME
 			node.highlight(false);
 		}
 		return;
