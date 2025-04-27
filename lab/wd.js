@@ -31,7 +31,27 @@ const wd = (function() {
 	#0 Menu
 	#3 Mecanismos de Controle
 
-	''const string __VERSION''
+	''node function __HTML(string tag, object attr)''
+	Função para criar e retornar um elemento HTML. O argumento '{tag} define o nome do elemento e o argumento '{attr} seus atributos**/
+	function __HTML(tag, attr) {
+		const node = document.createElement(tag);
+		for (let name in attr) {
+			let value = attr[name];
+			let isobj = typeof value === "object" && !Array.isArray(value) && !(value instanceof RegExp);
+			if (name in node) {
+				if (isobj)
+					for (let prop in value) node[name][prop] = value[prop];
+				else
+					node[name] = value;
+			} else {
+				node.setAttribute(name, value);
+			}
+		}
+		return node;
+	};
+
+/*----------------------------------------------------------------------------*/
+	/**''const string __VERSION''
 	Registra a versão da biblioteca.**/
 	const __VERSION = "WD JS v5.0.0";
 
@@ -145,20 +165,15 @@ const wd = (function() {
 
 		/*-- Frame --*/
 		[data-js-wd-float="frame"] {
-			top:   0 !important;
-			left:  0 !important;
-			right: 0 !important;
-			bottom: initial !important;
+			bottom: 0.5em !important;
+			left:   0.5em !important;
+			right:  0.5em !important;
 			flex-direction: column !important;
-			max-height: 100vh !important;
+			max-height: calc(100vh - 1em) !important;
 			z-index: var(--var-js-wd-z-index-2);
 		}
 		@media screen and (min-width: 768px) {
-			[data-js-wd-float="frame"] {
-				bottom: 0 !important;
-				top: initial !important;
-				left: 75vw !important;
-			}
+			[data-js-wd-float="frame"] {width: 25vw !important;}
 		}
 
 		/*-- Float --*/
@@ -232,15 +247,14 @@ const wd = (function() {
 			position: relative !important;
 			display: flex !important;
 			flex-direction: column !important;
-			margin: 0.5em !important;
-			padding: 0.5em !important;
+			padding: 0 !important;
+			margin: 0.25em 3px !important;
+			box-shadow: 2px 2px 2px rgba(0,0,0,0.5) !important;
 			animation: js-wd-animation-expand 0.5s ease !important;
 			font-size: 14px !important;
-			font-family: Verdana, sans-serif !important;
+			font-family: Tahoma, Verdana, sans-serif !important;
 			line-height: 1.2 !important;
-			border-width: thin !important;
-			border-style: solid !important;
-			border-radius: 0.5em !important;
+			border-radius: 0.3em !important;
 			background-repeat: no-repeat !important;
 			background-position: center !important;
 			background-size: cover !important;
@@ -248,75 +262,85 @@ const wd = (function() {
 		}
 
 		[data-js-wd-signal="info"] {
-			color: rgb(255, 255, 255) !important;
-			background-color: rgb(64, 110, 193) !important;
+			color: rgb(50, 50, 50) !important;
+			background-color: rgb(140, 180, 255) !important;
 			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' transform='rotate(-15)' opacity='0.1' height='1em' width='2em' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-height='1.2' font-size='1em'>\\24d8</text></svg>") !important;
 		}
 		[data-js-wd-signal="ok"] {
-			color: rgb(255, 255, 255) !important;
-			background-color: rgb(25, 105, 25) !important;
+			color: rgb(50, 50, 50) !important;
+			background-color: rgb(160, 250, 160) !important;
 			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' transform='rotate(0)' opacity='0.1' height='1em' width='2em' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-height='1.2' font-size='1em'>\\2714</text></svg>") !important;
 		}
 		[data-js-wd-signal="warn"] {
-			color: rgb(255, 255, 255) !important;
-			background-color: rgb(150, 90, 5) !important;
+			color: rgb(50, 50, 50) !important;
+			background-color: rgb(255, 255, 150) !important;
 			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' transform='rotate(-15)' opacity='0.1' height='1em' width='2em' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-height='1.2' font-size='1em'>\\26A0</text></svg>") !important;
 		}
 		[data-js-wd-signal="error"] {
-			color: rgb(181,135,135) !important;
-			background-color: rgb(85, 20, 20) !important;
+			color: rgb(50, 50, 50) !important;
+			background-color: rgb(255, 200, 200) !important;
 			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' transform='rotate(0)' opacity='0.1' height='1em' width='2em' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-height='1.2' font-size='1em'>\\1F6AB</text></svg>") !important;
 		}
 		[data-js-wd-signal="dialog"] {
-			max-width: 50vw !important;
-			color: rgb(255,255,255) !important;
-			background-color: rgb(135, 90, 180) !important;
+			margin: 0 !important;
+			max-width: 95vw !important;
+			min-width: 25vw !important;
+			color: rgb(50, 50, 50) !important;
+			background-color: rgb(200,220,220) !important;
 			background-image: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' transform='rotate(-15)' opacity='0.1' height='1em' width='2em' ><text x='50%' y='50%' text-anchor='middle' dominant-baseline='middle' font-height='1.2' font-size='1em'>\\2BD1</text></svg>") !important;
 		}
-		[data-js-wd-signal-head] {
-			padding-right: 2em !important;
-			margin-bottom: 0.5em !important;
+
+		@media screen and (min-width: 768px) {
+			[data-js-wd-signal="dialog"] {max-width: 75vw !important;}
 		}
-		[data-js-wd-signal-body] {
-			margin-bottom: 0.5em !important;
-			text-indent: 1.4em !important;
+
+		.js-wd-signal-head {
+			padding: 0.5em 2em 0.5em 0.5em !important;
+			border-bottom: thin solid !important;
+			font-weight: bold !important;
 		}
-		[data-js-wd-signal-foot] {
+		.js-wd-signal-body {
+			padding: 0.5em !important;
+			white-space: pre-wrap !important;
+		}
+		.js-wd-signal-node {
+			padding: 0 0.5em !important;
 			display: flex !important;
 			flex-direction: column !important;
-			margin: 0.5em 0 !important;
+		}
+		.js-wd-signal-fire {
+			display: flex !important;
+			flex-direction: column !important;
+			padding: 0.5em !important;
 		}
 		@media screen and (min-width: 768px) {
-			[data-js-wd-signal-foot] {
+			.js-wd-signal-fire {
 				flex-direction: row !important;
 				justify-content: space-evenly !important;
 				align-items: center !important;
 			}
 		}
-
-		[data-js-wd-signal-time] {
-			font-size: xx-small !important;
-			text-align: right !important;
-		}
-
-		[data-js-wd-signal-kill] {
+		.js-wd-signal-kill {
 			position: absolute !important;
 			top: 0 !important;
 			right: 0 !important;
-			margin:  0.25em 0.75em !important;
+			margin:  0.4em !important;
 			height: 1em !important;
 			width: 1em !important;
-			font-size: 1.5em !important !important;
+			border-radius: 0.5em !important;
+			line-height: calc(5 / 6) !important;
+			font-size: 1em !important;
 			text-align: center !important;
 			cursor: pointer !important;
+			z-index: 10 !important;
 		}
-    [data-js-wd-signal-kill]:focus {outline: 1px solid !important;}
+    .js-wd-signal-kill:focus, .js-wd-signal-kill:hover {outline: 1px solid !important;}
 
 		/*-- data-wd-jump|move|size|drop|drag ------------------------------------*/
-		[data-wd-jump]   {cursor: pointer !important;}
-		[data-wd-move]   {cursor: grab    !important;}
-		[data-wd-moving] {cursor: move    !important;}
-		[data-wd-drag]   {cursor: grab    !important;}
+		[data-wd-jump]   {cursor: pointer  !important;}
+		[data-wd-move]   {cursor: move     !important;}
+		[data-wd-moving], [data-wd-moving] [data-wd-move] {cursor: grabbing !important;}
+		[data-wd-drag]   {cursor: grab     !important;}
 		[data-wd-size="{cursor:'n';}"]  {cursor: n-resize  !important;}
 		[data-wd-size="{cursor:'ne';}"] {cursor: ne-resize !important;}
 		[data-wd-size="{cursor:'e';}"]  {cursor: e-resize  !important;}
@@ -1031,49 +1055,40 @@ const wd = (function() {
 	Renderiza mensagens e notificações.**/
 	const __SIGNAL = {
 		/**. '{integer id}: Controla o id da caixa de mensagem.**/
-		id: {info: 0, ok: 0, warn: 0, error: 0, dialog: 0},
-		/**. '{object builder(object data)}: Retorna os elementos participantes do sinal organizados em um objeto pelo apelido. O argumento i{data} deve conter as propriedades para executar o sinal.**/
+		id: {info: 0, ok: 0, warn: 0, error: 0, dialog: 0, notify: 0},
+		/**. '{node builder(object data)}: Retorna a caixa de alerta ou diálogo conforme especificado em i{data} (ver '{signal}).**/
 		buider: function(data) {
-			const type = data.type in this.id ? data.type : "info";
-			const css  = `js-wd-style`;
-			const role = type === "dialog" ? "alertdialog" : "alert";
-			const id   = `js_wd_signal_${type}_${this.id[type]++}`;
-			const time = new Date();
-			const iso  = time.toISOString();
-			const now  = time.toLocaleString(__LANG.value);
-			const head = data.title;
-			const body = data.body;
-			const node = document.createElement("div");
-			node.innerHTML =
-				`<article
-					id="${id}" data-js-wd-signal="${type}" class="${css}" role="${role}"
-					aria-labelledby="${id}_label" aria-describedby="${id}_body"
-					data-wd-size=""
-				>
-					<button data-js-wd-signal-kill="" class="${css}" type="button"     >&times;</button>
-					<h1     data-js-wd-signal-head="" class="${css}" id="${id}_label"  >${head}</h1>
-					<p      data-js-wd-signal-body="" class="${css}" id="${id}_body"   >${body}</p>
-					<div    data-js-wd-signal-node="" class="${css}"                   ></div>
-					<footer data-js-wd-signal-foot="" class="${css}"                   ></footer>
-					<time   data-js-wd-signal-time="" class="${css}" datetime="${iso}" >${now}</time>
-				</article>`;
-			const list =  {
-				main: node.querySelector("[data-js-wd-signal]"),
-				kill: node.querySelector("[data-js-wd-signal-kill]"),
-				head: node.querySelector("[data-js-wd-signal-head]"),
-				body: node.querySelector("[data-js-wd-signal-body]"),
-				node: node.querySelector("[data-js-wd-signal-node]"),
-				foot: node.querySelector("[data-js-wd-signal-foot]"),
-				time: node.querySelector("[data-js-wd-signal-time]")
-			};
+			const time = `<time datetime="${data.iso}">${data.date}</time>`;
+			const num  = this.id[data.type]++;
+			const id   = `js_wd_signal_${data.type}_${num}`;
+			const aria = {head: `${id}_head`, body: `${id}_body`, node: `${id}_node`};
+			const role = data.type === "dialog" ? "alertdialog" : "alert";
+			const move = role === "alert" ? "" : `data-wd-move="{$:'#${id}'}"`;
+			const main = __HTML("div", {
+				id: id, role: role, dataset: {jsWdSignal: data.type},
+				"aria-labelledby": aria.head, "aria-describedby": aria.body,
+				innerHTML: `<button class="js-wd-signal-kill js-wd-style" type="button" >&times;</button>
+				<div class="js-wd-signal-head" id="${aria.head}" ${move} >${data.head === null ? time : data.head}</div>
+				<div class="js-wd-signal-body" id="${aria.body}" >${data.body}</div>
+				<div class="js-wd-signal-node" id="${aria.node}"></div>
+				<div class="js-wd-signal-fire"></div>`
+			});
+			/*-- DEFINIÇÕES --------------------------------------------------------*/
+			main.setAttribute("aria-describedby", data.body === null ? aria.node : aria.body);
+			if (data.body === null)
+				main.querySelector(".js-wd-signal-body").remove();
+			if (data.node === null)
+				main.querySelector(".js-wd-signal-node").remove();
+			else
+				main.querySelector(".js-wd-signal-node").appendChild(data.node);
+			const fire = main.querySelector(".js-wd-signal-fire");
 			for (let i in data.actions) {
-				let btn = document.createElement("BUTTON");
-				btn.type = "button";
-				btn.className = "js-wd-style js-wd-button";
-				btn.textContent = data.actions[i].replace(/\*$/, "");
-				btn.dataset.jsWdSignalId = i;
-				btn.autofocus = (/\*$/).test(data.actions[i])
-				list.foot.appendChild(btn);
+				let btn = __HTML("button", {
+					textContent: data.actions[i].replace(/\*$/, ""), type: "button",
+					class: "js-wd-style js-wd-button", autofocus: (/\*$/).test(data.actions[i]),
+					dataset: {jsWdSignalId: i}
+				});
+				fire.appendChild(btn);
 				//FIXME isso será eliminado após a criação do atributo data-wd-key
 				btn.addEventListener("keydown", function(ev) {
 					const keys = {
@@ -1094,75 +1109,66 @@ const wd = (function() {
 					return;
 				}, false);
 			}
-			return list;
+			return main;
 		},
-		/**. '{void alert(object data)}: Ver método i{signal}.**/
-		alert: function(data) {
-			/*-- acertando dados obrigatórios --*/
-			data         = typeof data === "object" ? data : {};
-			data.type    = data.type in this.id ? data.type : "info";
-			data.trigger = typeof data.trigger === "function" ? data.trigger : null;
-			data.time    = typeof data.time    === "number"   ? Math.trunc(data.time) : 0;
-			data.actions = typeof data.actions === "object"   ? data.actions : {OK: "OK*"};
-			data.node    = typeof data.node    === "object"  && data.node instanceof HTMLElement ? data.node : null;
-			/*-- obtendo elementos e adequando mensagens --*/
-			const nodes = this.buider(data);
-			if (!("title" in data)) nodes.head.remove();
-			if (!("body"  in data)) nodes.body.remove();
-			(data.node === null ? nodes.node.remove() : nodes.node.appendChild(data.node));
+		/**. '{void alert(object info)}: Ver método i{signal}.**/
+		alert: function(info) {
+			const main = this.buider(info);
 			/*----------------------------------------------------------------------*/
-			if (data.type !== "dialog") {
-				nodes.foot.remove();
-				nodes.kill.addEventListener("click", function(ev) {
-					return __FLOAT.remove(nodes.main);
-				}, false);
-				__FLOAT.append(nodes.main, {type: "frame", close: function() {
-					if (data.trigger !== null) data.trigger(data.id, null);
-				}});
-				if (data.time > 0)
-					window.setTimeout(function() {nodes.kill.click();}, data.time);
-			}
-			/*----------------------------------------------------------------------*/
-			else {
-				nodes.kill.remove();
-				if ("title" in data)
-					nodes.head.dataset.wdMove = `{\$:'#${nodes.main.id}'}`;
-				const buttons = nodes.foot.children;
+			if (info.type === "dialog") {
+				main.querySelector(".js-wd-signal-kill").remove();
+				const buttons = main.querySelector(".js-wd-signal-fire").children;
 				let   focus   = null;
 				for (let i = 0; i < buttons.length; i++) {
-					let btn   = buttons[i];
-					let info  = btn.dataset.jsWdSignalId;
+					let btn = buttons[i];
+					let id  = btn.dataset.jsWdSignalId;
 					delete btn.dataset.jsWdSignalId;
 					btn.addEventListener("click", function(ev) {
-						__FLOAT.remove(nodes.main);
-						if (data.trigger !== null)
-							data.trigger(data.id, info);
+						__FLOAT.remove(main);
+						if (info.trigger !== null)
+							info.trigger(info.id, id);
 						return;
 					}, false);
 					if (focus === null && btn.autofocus)
 						focus = btn;
 				}
 				/*-- Renderizando diálogo --*/
-				__FLOAT.append(nodes.main, {
+				__FLOAT.append(main, {
 					type: "modal",
 					close: function(result) {
-						if (data.trigger !== null && !result)
-							data.trigger(data.id, null);
+						if (info.trigger !== null && !result)
+							info.trigger(info.id, null);
 						return;
 					}
 				});
 				if (focus !== null) focus.focus();
 			}
+			/*----------------------------------------------------------------------*/
+			else {
+				main.querySelector(".js-wd-signal-fire").remove();
+				const kill = main.querySelector(".js-wd-signal-kill");
+				kill.addEventListener("click", function(ev) {
+					return __FLOAT.remove(main);
+				}, false);
+				__FLOAT.append(main, {type: "frame", close: function() {
+					if (info.trigger !== null) info.trigger(info.id, null);
+				}});
+				if (info.time > 0)
+					window.setTimeout(function() {kill.click();}, info.time);
+			}
+			/*----------------------------------------------------------------------*/
 			return;
 		},
-		/**. '{void notify(object options)}: Ver método i{signal}.**/
-		notify: function (options) {
-			const title  = "title" in options ? options.title : "";
-			const config = {lang: __LANG.value};
-			if ("body" in options) config.body = options.body;
-			if ("id"   in options) config.tag  = options.id;
+		/**. '{void notify(object data)}: Ver método i{signal}.**/
+		notify: function (data) {
+			const title  = data.head === null ? data.date : data.head;
+			const config = {
+				lang: __LANG.value,
+				body: data.body === null ? data.node.innerText : data.body,
+				tag:  data.id   === null ? "" : data.id
+			};
 			if (Notification.permission === "denied")
-				return null;
+				return;
 			if (Notification.permission === "granted")
 				new Notification(title, config);
 			else
@@ -1171,30 +1177,43 @@ const wd = (function() {
 				});
 			return;
 		},
-		/**. '{void signal(object options)}: Define mensagens de alerta ou caixas de diálogo simples. O argumento '{options} possui as seguintes propriedades:
+		/**. '{void signal(object data)}: Define mensagens de alerta, caixas de diálogo ou notificações conforme definido em '{data}:
 		|Nome|Tipo|Descrição|
-		|type|string|Indica o tipo de interação, se notificação, alerta ou diálogo.|
-		|title|string|Define o título da interação.|
+		|type|string|Indica o tipo de interação (notificação, alerta ou diálogo).|
+		|head|string|Define o título da interação.|
 		|body|string|Define a mensagem da interação.|
+		|node|Node|Define um elemento HTML a ser exibido após a mensagem (notificação e diálogo).|
 		|id|string|Identificador da interação.|
-		|act|object|Define os botões de resposta o diálogo.|
-		|trigger|function|Define a função a ser chamada após a decisão do diálogo.|
-		|time|integer|Duração da mensagem de alerta em milissegundos (o padrão é não fechar).|
-		. Os seguintes valores de '{type} são possíveis:
-		//FIXME inserir node e local/place informar quando um será aplicado ou não
+		|trigger|function|Define a função a ser chamada após o fechamento (notificação e diálogo).|
+		|actions|object|Define os botões de resposta do u{diálogo}.|
+		|time|integer|Duração da mensagem de u{alerta} em milissegundos.|
+		. As propriedades '{body} ou '{node} precisam ser informadas. Os seguintes valores de '{type} são possíveis:
 		|Valor|Interação|
 		|notify|Exibe uma notificação.|
-		|alert|Exibe uma caixa de alerta.|
-		|warn|Exibe uma __caixa de alerta__ de advertência.|
-		|error|Exibe uma __caixa de alerta__ de erro.|
-		|info|Exibe uma __caixa de alerta__ de informação.|
-		|ok|Exibe uma __caixa de alerta__ de sucesso.|
-		|dialog|Exibe uma caixa de diálogo.|
-		. O nome das propriedades de '{actions} define o identificador da resposta enquanto que seu valor define o texto do botão. Adicione um asterisco ao fim do nome do botão para definir sua focalização ordinária.
-		. A função '{trigger} receberá como argumento o identificador da interação e do botão acionado.**/
-		signal: function(options) {
-			if (typeof options === "object")
-				options.type === "notify" ? this.notify(options) : this.alert(options);
+		|warn|Exibe uma caixa de u{alerta} de advertência.|
+		|error|Exibe uma caixa de u{alerta} de erro.|
+		|info|Exibe uma caixa de u{alerta} de informação.|
+		|ok|Exibe uma caixa de u{alerta} de sucesso.|
+		|dialog|Exibe uma caixa de u{diálogo}.|
+		. O nome das propriedades de '{actions} define o identificador da resposta enquanto que seu valor define o texto do botão. Adicione um asterisco ao fim do texto do botão para focá-lo ao abrir o diálogo.
+		. A função '{trigger} receberá como argumentos os identificadores da interação e do botão de ação definidos nas propriedades '{id} e '{actions}, respectivamente. Se a caixa for fechada sem definir uma ação, o respectivo argumento será nulo.**/
+		signal: function(data) {
+			data       = typeof data === "object" ? data : {};
+			const time = new Date();
+			const info = {
+				type:    data.type in this.id ? data.type : "info",
+				id:      "id"   in data ? data.id   : null,
+				head:    "head" in data ? data.head : null,
+				body:    "body" in data ? data.body : null,
+				node:    typeof data.node    === "object"  && data.node instanceof HTMLElement ? data.node : null,
+				actions: typeof data.actions === "object"   ? data.actions : {OK: "OK*"},
+				trigger: typeof data.trigger === "function" ? data.trigger : null,
+				time:    typeof data.time    === "number"   ? Math.trunc(data.time) : 0,
+				iso:     time.toISOString(),
+				date:    time.toLocaleString(__LANG.value)
+			};
+			if (info.body !== null || info.node !== null)
+				info.type === "notify" ? this.notify(info) : this.alert(info);
 		}
 	};
 
@@ -2210,9 +2229,7 @@ const wd = (function() {
 		/**. '{string toString()}: Retorna o conteúdo textual da árvore.**/
 		toString: {
 			value: function() {
-				const pre = document.createElement("PRE");
-				pre.innerHTML = this._data.join("");
-				return pre.innerText;
+				return __HTML("pre", {innerHTML: this._data.join("")}).innerText;
 			}
 		},
 		/**. '{string valueOf()}: Retorna a estrutura (HTML) da árvore.**/
@@ -2300,9 +2317,7 @@ const wd = (function() {
 						}
 					});
 					tree.finish();
-					const div = document.createElement("DIV");
-					div.innerHTML = tree.valueOf();
-					data = div.children[0];
+					data = __HTML("div", {innerHTML: tree.valueOf()}).children[0];
 				}
 				this._saved["csvTable"] = data;
 				return this.csvTable;
@@ -2569,7 +2584,7 @@ const wd = (function() {
 				let data = null;
 				try {
 					if (this._check.string) {
-						const note = this._data.trim().normalize();
+						const note = this._data.normalize().trim();
 						/*----------------------------------------------------------------*/
 						if ((/^\#.+$/).test(note)) {
 							let list  = window[note.replace("#", "")];
@@ -2584,9 +2599,7 @@ const wd = (function() {
 						}
 						/*----------------------------------------------------------------*/
 						const code = [
-							"[", note[0] === "{" ? "" : "{",
-							note,
-							note.slice(-1) === "}" ? "" : "}", "]"
+							note[0] === "{" ? "[" : "[{", note,	note.slice(-1) === "}" ? "]" : "}]"
 						].join("").split("");
 						const last = code.length;
 						let tag, val, txt;
@@ -2625,7 +2638,7 @@ const wd = (function() {
 									walk = find[0].length;
 								}
 								switch(rate) {
-									case null: {throw new Error("array: invalid notation.");}
+									case null: {throw new Error("wdArray - invalid array notation.");}
 									case ",":  {tree.add(", "); break;}
 									case "]":  {tree.close().add("]"); break;}
 									case "[":  {tree.add("[").open("array");  break;}
@@ -2656,7 +2669,7 @@ const wd = (function() {
 								}
 
 								switch(rate) {
-									case null: {throw new Error("object: invalid notation.");}
+									case null: {throw new Error("wdArray - invalid object notation.");}
 									case ";":  {tree.add(", "); break;}
 									case "}":  {tree.close().add("}"); break;}
 									case "{":  {tree.add("{").open("object"); break;}
@@ -2678,7 +2691,7 @@ const wd = (function() {
 								walk = find === null ? last : find[0].length;
 								test = new __Type(rate);
 								if (rate === null)
-									throw new Error(`${tag}: unidentified data.`);
+									throw new Error(`object: undefined ${tag} data.`);
 								else if (test.finite)
 									tree.add(test.toString()).close(tag);
 								else if (lang.test(rate))
@@ -2695,11 +2708,9 @@ const wd = (function() {
 								walk = find === null ? last : find[0].length;
 								test = new __Type(window[rate]);
 								if (rate === null)
-									throw new Error("function: invalid notation.");
-								else if (test.function)
-									tree.add(JSON.stringify(`@function:${rate}`)).close();
+									throw new Error("wdArray - invalid function notation.");
 								else
-									tree.add("null").close();
+									tree.add(JSON.stringify(`@function:${rate}`)).close();
 								index += walk;
 							}
 							/*--------------------------------------------------------------*/
@@ -2744,9 +2755,7 @@ const wd = (function() {
 						}
 						/*--------------------------------------------------------------*/
 						tree.finish();
-						let json;
-						try {json = JSON.parse(tree.toString());}
-						catch(e) {throw new Error(`JSON: conversion unsuccessful ${tree.toString()}\n${e}`);}
+						let json = JSON.parse(tree.toString());
 						/*--------------------------------------------------------------*/
 						const parse = function(item) {
 							const check = new __Type(item);
@@ -2763,9 +2772,10 @@ const wd = (function() {
 								}
 							}
 							else if (check.string) {
-								if ((/^\@function\:/).test(item)) {
-									let name = item.replace("@function:", "");
-									item = window[name];
+								if ((/^\@function\:(.*)$/).test(item)) {
+									let name   = item.replace(/^\@function\:(.*)$/, "$1");
+									let method = typeof window[name] === "function";
+									item = method ? window[name] : null;
 								}
 								else if ((/^\@regexp\(([gim]*)\)\:(.*)$/).test(item)) {
 									let re   = /^\@regexp\(([gim]*)\)\:(.*)$/;
@@ -2781,7 +2791,8 @@ const wd = (function() {
 					}
 				}
 				catch(e) {
-					console.info(`${this._data}\n${e.message}`)
+					const msg = `wdArrayError: ${this._data}`;
+					__UNDERMAINTENANCE ? console.error(e) : console.info(msg);
 				}
 				this._saved["wdArray"] = data;
 				return this.wdArray;
@@ -5248,15 +5259,12 @@ const wd = (function() {
 		/**. '{object _msg}: Registra algumas mensagens de validação de formulários.**/
 		_msg: {
 			value: (function(){
-				const msg     = {};
-				const re      = "[0-9]";
-				const elem    = document.createElement("INPUT");
-				elem.required = true;
-				msg.required  = elem.validationMessage;
-				elem.title    = re;
-				elem.pattern  = re;
-				elem.value    = "ABC";
-				msg.pattern   = elem.validationMessage.replace(re , "?");
+				const re   = "[0-9]";
+				const elem = __HTML("input", {required: true, title: re, pattern: re, value: "ABC"});
+				const msg  = {
+					pattern:  elem.validationMessage.replace(re , "?"),
+					required: elem.validationMessage
+				};
 				Object.freeze(msg);
 				return msg;
 			})()
@@ -5793,10 +5801,9 @@ const wd = (function() {
 					return this.node.cloneNode(childs !== false);
 				/* se for um script */
 				let attrs = this.attribute();
-				let clone = document.createElement(this.tag);
+				let clone = __HTML(this.tag, {innerHTML: this.node.innerHTML});
 				for (let i in attrs)
 					clone.setAttribute(i, attrs[i]);
-				clone.innerHTML = this.node.innerHTML
 				return clone;
 			}
 		},
@@ -9198,6 +9205,7 @@ const wd = (function() {
 			dataset:  {value: function(){return __DataSet.apply(null, Array.prototype.slice.call(arguments));}},
 			parser:   {value: function(){return __Parser.apply(null, Array.prototype.slice.call(arguments));}},
 			tree:     {value: function(){return __Tree.apply(null, Array.prototype.slice.call(arguments));}},
+			HTML:     {value: __HTML},
 			LANG:     {value: __LANG},
 			TYPE:     {value: __TYPE},
 			DEVICE:   {value: __DEVICE},
@@ -9826,9 +9834,11 @@ const wd = (function() {
 					box       = node.position;
 					box.pageX = event.pageX;
 					box.pageY = event.pageY;
+					delete box.height;
+					delete box.width;
 					node.position = box;
-					for (let j in box) source.push(`${j}:${box[j]};`);
-					mover[i].setAttribute("data-wd-moving", "{" + source.join("") + "}");
+					let parser = new __Parser([box]);
+					mover[i].setAttribute("data-wd-moving", parser.arrayWD.get());
 				}
 			}
 		}
@@ -9836,6 +9846,7 @@ const wd = (function() {
 		else if (event.type === "mouseup") {
 			const node = new __Node(target);
 			node.highlight(false);
+			window.getSelection().removeAllRanges();
 		}
 		/*-- movimentar (data-wd-moving) -----------------------------------------*/
 		else if (event.type === "mousemove") {
@@ -9849,7 +9860,6 @@ const wd = (function() {
 			box.bottom   -= dy;
 			node.position = box;
 			node.highlight(true);
-			window.getSelection().removeAllRanges();
 		}
 		return;
 	}
@@ -9867,7 +9877,7 @@ const wd = (function() {
 		const node = new __Node(target);
 		const non  = ["static", "relative", "sticky"];
 		const cut  = non.indexOf(node.styles.position) >= 0;
-		const init = target.hasAttribute("data-wd-resizing");//FIXME consertar isso aqui
+		const init = target.hasAttribute("data-wd-resizing");
 		const scan = /^\{cursor\:\'([nesw]|[ns][ew])\'\;\}$/;
 		const side = scan.test(target.dataset.wdSize) ? target.dataset.wdSize.replace(scan, "$1") : null;
 		/*-- Redimencionar -------------------------------------------------------*/
@@ -10579,7 +10589,7 @@ const wd = (function() {
 			if (wddataset.length > 0 && wddataset.indexOf(map.name) < 0)
 				return;
 			/*-- verificar se o valor do atributo pode ser obtido --*/
-			parser  = new __Parser(map.value);
+			parser  = new __Parser(map.value);console.log(map)
 			wdarray = parser.wdArray.get();
 			if (wdarray === null)
 				return;
