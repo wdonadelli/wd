@@ -31,20 +31,48 @@ const wd = (function() {
 	#0 Menu
 	#3 Mecanismos de Controle
 
-	''node function __HTML(string tag, object attr)''
-	Função para criar e retornar um elemento HTML. O argumento '{tag} define o nome do elemento e o argumento '{attr} seus atributos**/
-	function __HTML(tag, attr) {
-		const node = document.createElement(tag);
-		for (let name in attr) {
-			let value = attr[name];
-			let isobj = typeof value === "object" && !Array.isArray(value) && !(value instanceof RegExp);
+	''node function __HTML(string/node tag, object attr, string ns)''
+	Cria e/ou define os atributos/propriedades do elemento definindo em '{tag}, que pode ser uma string com o nome do elemento ou um elemento pripriamente dito. O argumento '{attr} conterá os atributos**/
+	function __HTML(tag, attr, ns) {
+		function type(input) {
+			const type = typeof input;
+			if (type !== "object")            return type;
+			if (input === null)               return "null";
+			if (Array.isArray(input))         return "array";
+			if (input instanceof RegExp)      return "regexp";
+			if (input instanceof HTMLElement) return "node";
+			return "object";
+		}
+		function create(tag, ns) {
+			ns = String(ns).toUpperCase();
+			switch(ns) {
+				case "SVG":   return document.createElementNS("https://www.w3.org/2000/svg", tag);
+				case "XHTML": return document.createElementNS("https://www.w3.org/1999/xhtml", tag);
+				default:      return document.createElement(tag);
+			}
+		}
+		/*-- analisando dados --*/
+		const tTag  = type(tag);
+		const valid = tTag === "string" || tTag === "node";
+		const prop  = valid && type(attr) === "object" ? attr : {};
+		const node  = valid ? (tTag === "node" ? tag : create(tag, ns)) : null;
+		/*-- definindo atributos --*/
+		for (let name in prop) {
+			let value  = prop[name];
+			let tValue = type(value);
+			let tProp  = type(node[name]);
+			/*-- propriedade --*/
 			if (name in node) {
-				if (isobj)
-					for (let prop in value) node[name][prop] = value[prop];
+				if (tValue === "array" && tProp === "function")
+					node[name].apply(node, value);
+				else if (tValue === "object")
+					for (let i in value) node[name][i] = value[i];
 				else
 					node[name] = value;
-			} else {
-				node.setAttribute(name, value);
+			}
+			/*-- atributo --*/
+			else {
+				(value === null ? node.removeAttribute(name) : node.setAttribute(name, value));
 			}
 		}
 		return node;
@@ -62,7 +90,7 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	/**''const object __MIME''
-	Registra alguns [MIME types](https://developer.mozilla.org/en-US/docs/Web/HTTP/MIME_types/Common_types) úteis à biblioteca.**/
+	Registra alguns a{MIME types}[href="https://developer.mozilla.org/en-US/docs/Web/HTTP/MIME_types/Common_types" target="_blank"] úteis à biblioteca.**/
 	const __MIME = {
 		/*-- texto --*/
 		"text/plain": "text", "text/csv":   "csv", "text/css": "css",
@@ -942,6 +970,7 @@ const wd = (function() {
 				return;
 			}
 			/*-- alternativo FIXME só fazer o looping para o tabindex >= 0 o CSS pode aplicar a todos internos --*/
+			//FIXME quando tem um texto muito grande a tela volta ao início ao congelar a barra de rolagem
 			const attr  = "data-js-wd-inert";
 			const query = node.querySelectorAll("*");
 			const list  = Array.prototype.slice.call(query);
@@ -3656,7 +3685,7 @@ const wd = (function() {
 	});
 
 /*----------------------------------------------------------------------------*/
-	/**#3 Code
+	/**#3 Código
 	''constructor object __Code(string input)''
 	Construtor para manipulação de textos com formatação de códigos. O argumento '{input} define o código fonte.**/
 	function __Code(input) {
@@ -4516,7 +4545,8 @@ const wd = (function() {
 	});
 
 /*----------------------------------------------------------------------------*/
-	/**''constructor object __DateTime(any input)''
+	/**#4 Data e Tempo
+	''constructor object __DateTime(any input)''
 	Construtor para manipulação de data/tempo. O atributo '{input} aceita valores do tipo:
 	- Data, tempo ou data/tempo nos parâmetros da biblioteca;
 	- Numérico correspondendo ao número de segundos desde 0000-01-01T00:00:00.0000 (segundo 0);
@@ -5564,7 +5594,9 @@ const wd = (function() {
 	});
 
 /*----------------------------------------------------------------------------*/
-	/**''constructor object __Node(node input)''
+	/**
+	#4 Nós
+	''constructor object __Node(node input)''
 	Construtor para manipulação de nós HTML.**/
 	function __Node(input) {
 		if (!(this instanceof __Node)) return new __Node(input);
@@ -5573,88 +5605,68 @@ const wd = (function() {
 
 	__Node.prototype = Object.create(__FNode.prototype, {
 		constructor: {value: __Node},
-		/**. '{any attribute(string name, any value)}: Define e retorna valores de atributos dos elementos HTML. Os argumentos '{name} e '{value} são, respectivamente, o nome e o valor do atributo. Se '{value} for omitido, retornará o valor de '{name}. Se '{name} for omitido, retornará um objeto com os nome e valores dos atributos HTML.**/
+		/**. '{any attribute(string name, any value)}: Define e retorna valores de atributos ou propriedades dos elementos HTML. O argumento '{name} (i{string}) corresponde ao nome do atributo ou da propriedade e '{value} o seu respectivo valor:
+		|name|value|Ação|
+		|Ausente|Ausente|Retorna um objeto com os u{atributos} do elemento.|
+		|Presente|Ausente|Retorna o valor do atributo ou propriedade.|
+		|Presente|Presente|Define o valor do atributo ou propriedade e o retorna.|
+		- Caso o atributo ou a propriedade seja método, a lista de argumentos é definida como um array no argumento '{value};
+		- Inicialmente, seja checada a existência da propriedade ou método e depois do atributo;
+		- O manipulação de i{class/Name/List, style, dataset e add/removeEventListener} foram readequados.**/
 		attribute: {
 			value: function (name, value) {
+				const tName   = new __Type(name);
+				const tValue  = new __Type(value);
+				const twoArg  = arguments.length > 1;
+				const work    = tName.nonempty ? (twoArg ? "set" : "get") : "all";
+				const natives = {
+					base: {
+						style: "style", dataset: "dataset",
+						class: "class", className: "className", classList: "classList",
+						innerHTML: "innerHTML", outerHTML: "outerHTML",
+						addEventListener: "addEventListener", removeEventListener: "removeEventListener",
+					},
+					form: {value: "fvalue", name: "fname"}
+				};
 				/*-- RETORNAR LISTA DE ATRIBUTOS -------------------------------------*/
-				if (!__Type(name).nonempty) {
+				if (work === "all") {
 					const data = {};
 					const attr = this.node.attributes;
 					for (let i = 0; i < attr.length; i++)
 						data[attr[i].name] = attr[i].value;
 					return data;
 				}
-				/*-- RETORNAR/DEFINIR ATRIBUTO ---------------------------------------*/
-				name = name.trim();
-				const prop = {
-					form:  {value: "fvalue", name: "fname"},
-					node:  {style: "style", class: "class", className: "class", dataset: "dataset"},
-					event: {addEventListener: "addHandler", removeEventListener: "removeHandler"}
-				};
-				/*-- RETORNAR ATRIBUTO -----------------------------------------------*/
-				if (arguments.length < 2) {
-					const attr = this.attribute();
-					/*-- atributos de formulário -- */
-					if (this.form && name in prop.form)
-						return this[prop.form[name]];
-					/*-- atributos com comportamento especial --*/
-					if (name in prop.node)
-						return this[prop.node[name]];
-					/*-- propriedades de objeto --*/
-					if (name in this.node)
-						return this.node[name];
-					/*-- propriedades do elemento --*/
-					if (name in attr)
-						return this.node.getAttribute(name);
-					return undefined;
-				}
-				/*-- DEFINIR ATRIBUTO ------------------------------------------------*/
+				/*-- RETORNAR/DEFINIR DADO -------------------------------------------*/
 				else {
-					/*-- atributo de formulário HTML -- */
-					if (this.form && name in prop.form) {
-						this[prop.form[name]] = value;
-						return this.attribute(name);
+					name = name.trim();
+					const native = this.form ? natives.form : natives.base;
+					/*-- DADOS DA BIBLIOTECA -------------------------------------------*/
+					if (name in native) {
+						if (work === "set") this[native[name]] = value;
+						return this[native[name]];
 					}
-					/*-- atributo HTML com comportamento especial --*/
-					if (name in prop.node) {
-						this[prop.node[name]] = value;
-						return this.attribute(name);
-					}
-					/*-- métodos com comportamento especial --*/
-					if (name in prop.event) {
-						return this[prop.event[name]](value);
-					}
-					/*-- propriedade do objeto --*/
-					if (name in this.node) {
-						const testAttr  = __Type(this.node[name]);
-						const testValue = __Type(value);
-						/*-- método: valor igual array --*/
-						if (testAttr.function && testValue.array) {
-							return this.node[name].apply(this.node, value);
-						}
-						/*-- propriedade booleana --*/
-						if (testAttr.boolean && (testValue.boolean || value === "!")) {
-							this.node[name] = testValue.boolean ? testValuevalue : !this.node[name];
-						}
-						/*-- demais propriedades --*/
-						else if (value === null) {
-							delete this.node[name];
-						} else {
-							this.node[name] = value;
-						}
-					}
-					/*-- attributos do elemento --*/
+					/*-- DADOS PADRÃO --------------------------------------------------*/
 					else {
-						if (value === null)
-							this.node.removeAttribute(name);
+						if (work === "set") {
+							const cfg = {};
+							cfg[name] = value;
+							__HTML(this.node, cfg);
+						}
+						if (name in this.node)
+							return this.node[name];
 						else
-							this.node.setAttribute(name, value);
+							return this.node.getAttribute(name);
 					}
-					return this.attribute(name);
 				}
+					/*
+					/*-- propriedade booleana --* /
+					if (testAttr.boolean && (testValue.boolean || value === "!")) {
+						this.node[name] = testValue.boolean ? testValuevalue : !this.node[name];
+					}
+					*/
 			}
 		},
-		/**. '{object style}: Define e retorna o valor do atributo '{style} por meio de um objeto. Valor nulo excluí o atributo, valor textual define o atributo HTML e valor em objeto define o par nome-valor.**/
+		/**. '{object style}: Define e retorna o valor do atributo '{style}. Se u{nulo}, o atributo é u{excluído}; se u{textual}, o é definido; e, se objeto, o atributo é definido conforme nome da propriedade e seu valor.**/
 		style: {
 			get: function() {
 				const data = {};
@@ -5681,82 +5693,88 @@ const wd = (function() {
 				}
 			}
 		},
-		/**. '{array class}: Define e retorna o valor do atributo '{class} por meio de um array. Valor nulo excluí o atributo, valor textual define o atributo HTML e valor em objeto define ações i{replace}, i{toggle}, i{add} e  i{remove}.**/
+		/**. '{string|object className}: Propriedade auxiliar para a propriedade '{class}.**/
+		className: {
+			set: function(x) {this.class = x;},
+			get: function()  {return this.class;}
+		},
+		/**. '{string|object classList}: Propriedade auxiliar para a propriedade '{class}.**/
+		classList: {
+			set: function(x) {this.class = x;},
+			get: function()  {return this.class;}
+		},
+		/**. '{string|object class}: Define e retorna o valor do atributo '{class}. Se u{nulo}, o atributo é u{excluído}; se u{textual}, o valor é definido; e, se objeto, as seguintes ações são possíveis:
+		|Nome|Tipo|Descrição|
+		|replace|string|Substitui a primeira propriedade pela segunda.|
+		|toggle|string|Alterna a existência das propriedades.|
+		|add|string|Adiciona as propriedades.|
+		|remove|string|Remove as propriedades.|
+		Os valores das propriedades acima consiste no nome da propriedade CSS separada por espaço em branco.**/
 		class: {
 			get: function() {
-				const css   = this.node.getAttribute("class");
-				const array = css === null ? [] : css.replace(/\s+/g, " ").trim().split(" ");
-				const value = new __Array(array).order;
-				this.node.setAttribute("class", value.join(" "));
-				return value;
+				const attr = this.node.getAttribute("class");
+				const list = attr === null ? [""] : attr.replace(/\s+/g, " ").trim().split(" ");
+				const only = list.filter(function(v,i,a) {return a.indexOf(v) === i;});
+				const sort = only.sort();
+				const data = sort.join(" ");
+				if (attr !== null)
+					this.node.setAttribute("class", data);
+				return data;
 			},
 			set: function(x) {
 				const data = new __Type(x);
 				if (data.chars) {
-					this.node.setAttribute("class", x);
+					this.node.setAttribute("class", x.trim());
 				}
 				else if (data.null) {
 					this.node.removeAttribute("class");
 				}
 				else if (data.object) {
-					const css = new __Array(this.class);
-					if ("replace" in x) css.replace.apply(css, x.replace.split(" "));
-					if ("toggle"  in x) css.toggle.apply(css, x.toggle.split(" "));
-					if ("add"     in x) css.put.apply(css, x.add.split(" "));
-					if ("remove"  in x) css.remove.apply(css, x.remove.split(" "));
-					this.node.setAttribute("class", css.order.join(" "));
+					const data = new __Array(this.class.split(" "));
+					const sort = ["replace", "toggle", "add", "remove"];
+					for (let i = 0; i < sort.length; i++) {
+						if (sort[i] in x) {
+							let list = String(x[sort[i]]).replace(/\s+/g, " ").trim().split(" ");
+							data[sort[i]].apply(data, list);
+						}
+					}
+					this.node.setAttribute("class", data.order.join(" "));
 				}
+				this.class;
 			}
 		},
-		/**. '{void  handler(object list)}: Define ou remove disparadores ao elemento. As propriedades do argumento '{list} correspondem ao nome do evento e seus valores as funções disparadoras ou uma lista delas. Caso a função disparadora esteja no escopo de '{window}, poderá ser informada a string com seu nome. As propriedades booleanas especiais "#remove" e "#capture" definem se trata de remoção de evento e o valor do terceiro argumento ('{useCapture}) dos métodos nativos "add/removeEventListener".**/
-		handler: {
-			value: function(list) {
-				if (new __Type(list).object) {
-					const capture = list["#capture"] === true;
-					const remove  = list["#remove"]  === true;
-					const method  = (remove ? "remove" : "add")+"EventListener";
-					if ("#remove"  in list) delete list["#remove"];
-					if ("#capture" in list) delete list["#capture"];
-					for (let i in list) {
-						let event = String(i).trim().replace(/^(on)?/i, "");
-						let fires = __Type(list[i]).array ? list[i] : [list[i]];
-						for (let j = 0; j < fires.length; j++) {
-							let fire = fires[j];
-							if (new __Type(fire).nonempty) fire = window[fire.trim()];
-							if (new __Type(fire).function) this.node[method](event, fire, capture);
-						}
+		/**. '{array|object  addEventLister}: Propriedade para adicionar disparadores a eventos, aceitando dois tipos de valores.
+		. Se o valor for um array, cada item do array corresponderá aos argumentos do método padrão, na mesma sequência (evento, disparador, captura).
+		. Se o valor for um objeto, o nome da propriedade corresponderá ao evento e seu valor ao disparador ou uma lista de disparadores (array). A captura será definida pelo valor padrão.**/
+		addEventListener: {
+			set: function(x) {return this.eventListener(x, false);}
+		},
+		/**. '{array|object  removeEventLister}: Propriedade semelhante à i{addEventListener}, mas para remover disparadores dos eventos.**/
+		removeEventListener: {
+			set: function(x) {return this.eventListener(x, true);}
+		},
+		/**. '{void  eventListener(object|array data, boolean remove)}: Função auxiliar para as propriedades '{addEventListener} e '{removeEventListener}. O argumento '{data} define o valor de entrada e o argumento '{remove} define a exclusão do disparador.**/
+		eventListener: {
+			value: function(data, remove) {
+				const check = new __Type(data);
+				if (check.array) {
+					const attr = remove === true ?  "removeEventListener" : "addEventListener";
+					try {this.node[attr].apply(this.node, data);}
+					catch(e) {if (__UNDERMAINTENANCE) console.info(e);}
+				}
+				else if (check.object) {
+					for (let ev in data) {
+						let event = String(ev).trim().replace(/^(on)?/i, "");
+						let test  = new __Type(data[ev]);
+						let list  = test.array ? data[ev] : [data[ev]];
+						for (let i = 0; i < list.length; i++)
+							this.eventListener([event, list[i]], remove);
 					}
 				}
 				return;
 			}
 		},
-		/**. '{void  addHandler(object|array list)}: Método auxiliar de '{handler} para atrelar disparadores a eventos. Se '{list} for um array, seus itens deverão ser o nome do evento, a função disparadora ou uma lista delas e o valor do terceiro argumento ('{useCapture}) dos métodos nativos, respectivamente.**/
-		addHandler: {
-			value: function(list) {
-				const check     = new __Type(list)
-				const data      = check.object ? list : {};
-				data["#remove"] = false;
-				if (check.array) {
-					data[list[0]]    = list[1];
-					data["#capture"] = list[2];
-				}
-				return this.handler(data);
-			}
-		},
-		/**. '{void  removeHandler(object|array list)}: Método auxiliar de '{handler} para desatrelar disparadores a eventos. Se '{list} for um array, seus itens deverão ser o nome do evento, a função disparadora ou uma lista delas e o valor do terceiro argumento ('{useCapture}) dos métodos nativos, respectivamente.**/
-		removeHandler: {
-			value: function(list) {
-				const check     = new __Type(list)
-				const data      = check.object ? list : {};
-				data["#remove"] = true;
-				if (check.array) {
-					data[list[0]]    = list[1];
-					data["#capture"] = list[2];
-				}
-				return this.handler(data);
-			}
-		},
-		/**. '{object dataset}: Define e retorna os valores do atributo '{dataset}. Valor nulo excluí o atributo e valor em objeto define seus pares nome-valor.**/
+		/**. '{object dataset}: Define e retorna o valor do atributo '{dataset}. Se u{nulo}, o atributo é u{excluído} e, se objeto, o atributo é definido conforme nome da propriedade e seu valor.**/
 		dataset: {
 			get: function() {
 				const data = {};
@@ -5777,14 +5795,15 @@ const wd = (function() {
 					const wddataset = [];
 					for (let i in x) {
 						let name = __String(i).camel;
-						if (x[i] !== null)
+						if (x[i] !== null) {
 							this.node.dataset[name] = x[i];
-						else if (name in this.node.dataset)
+							wddataset.push(name);
+						}
+						else if (name in this.node.dataset) {
 							delete this.node.dataset[name];
-
-						if (x[i] !== null) wddataset.push(name);
+						}
 					}
-					//FIXME consertar isso
+					//FIXME consertar isso (não lembro mais o porquê)
 					this.node.dataset.wddataset = wddataset.join(" ");
 					this.node.dispatchEvent(wdDatasetEvent);
 				}
@@ -5807,139 +5826,74 @@ const wd = (function() {
 				return clone;
 			}
 		},
-		/**. '{void load(string html="", options object)}: Atribui ao nó ou o substitui pelo conteúdo definido em '{html} renderizando-o como nós ou notação XML/HTML. O argumento '{options} pode possuir as seguintes propriedades boleanas:
-		|Nome|Descrição|
-		|script|Se verdadeiro, forçará a execução de scripts (exceto para XML).|
-		|replace|Se verdadeiro, o nó será substituído pelo conteúdo (apenas nós do tipo elemento).|
-		|text|Se verdadeiro ou em caso de formulário, o conteúdo será lançado como texto e as demais propriedades não terão efeito.|
-		. Comportamento esperado conforme conteúdo de '{html}:
-		|html|Comportamento|
-		|String|Texto da string ou sua renderização como innerHTML.|
-		|HTMLDocument|Texto da estrutura HTML ou a renderização de i{body} como innerHTML.|
-		|XMLDocument|Texto da estrutura XML ou a apensação de seus elementos raiz ao nó.|
-		|Lista HTML|Texto do outerHTML de cada nó agrupado ou a apensação de seus elementos ao nó.|**/
-		//FIXME quando for substituir elementos, tem que provocar o wdreload sobre o elemento pai
-		load: {
-			value: function(html, options) {
-				if (!__Type(options).object) options = {};
-				const check = new __Type(html);
-				const text  = this.form || options.text === true;
-				let replace = options.replace === true && !text;
-				let script  = options.script  === true && !text;
-				let attr    = this.form ? "value" : "innerText";
-				let data    = [];
-				let xml     = false;
-				this.node.innerHTML = "";
-				/*-- entrada de texto --*/
-				if (check.chars) {
-					if (text) {
-						this.attribute(attr, html);
-					} else {
-						this.node.innerHTML = html;
-						data = this.node.children;
-					}
+		/**. '{string innerHTML}: Define ou retorna o valor da propriedade HTML para fins da biblioteca.|**/
+		innerHTML: {
+			get: function() {return this.node.innerHTML;},
+			set: function(x) {
+				this.node.innerHTML = x;
+				this.node.dispatchEvent(wdReloadEvent);
+				return;
+			}
+		},
+		/**. '{string outerHTML}: Define ou retorna o valor da propriedade HTML para fins da biblioteca.|**/
+		outerHTML: {
+			get: function() {return this.node.outerHTML;},
+			set: function(x) {
+				const parent = this.node.parentElement;
+				this.node.outerHTML = x;
+				parent.dispatchEvent(wdReloadEvent);
+				return;
+			}
+		},
+		/**. '{void forcedHTML(string input, boolean outer)}: Define a propriedade i{inner/outerHTML} forçando a execução de scripts. O argumento '{input} (string) define o código HTML e o argumento '{outer} (boolean), se verdadeiro, definirá a propriedade "outer", caso contrário "inner".**/
+		forcedHTML: {
+			value: function(input, outer) {
+				const re   = /\<script([^>]*\>)/ig;
+				const to   = `<script data-wd-script="force" $1`;
+				const code = String(input).replace(re, to);
+				const elem = outer === true ? this.node.parentElement : this.node
+				/*-- definindo propriedade --*/
+				this.node[outer === true ? "outerHTML" : "innerHTML"] = code;
+				/*-- executando scripts --*/
+				const query = elem.querySelectorAll(`script[data-wd-script="force"]`);
+				for (let i = 0; i < query.length; i++) {
+					let node  = new __Node(query[i]);
+					let clone = node.clone(true);
+					clone.removeAttribute("data-wd-script");
+					query[i].parentElement.replaceChild(clone, query[i]);
 				}
-				/*-- documento HTML --*/
-				else if (check.instanceOf("HTMLDocument") || check.instanceOf("Document")) {
-					if (text) {
-						this.attribute(attr, html.children[0].outerHTML);
-					} else {
-						this.node.innerHTML = html.body.innerHTML;
-						data = this.node.children;
-					}
-				}
-				/*-- documento XML --*/
-				else if (check.instanceOf("XMLDocument")) {
-					script = false;
-					xml    = true;
-					if (text) {
-						this.attribute(attr, html.children[0].outerHTML);
-					} else {
-						data = html.children;
-						for (let i = 0; i < data.length; i++)
-							this.node.appendChild(data[i]);
-					}
-				}
-				/*-- nós HTML --*/
-				else if (check.node) {
-					if (text) {
-						const list = check.value;
-						for (let i = 0; i < list.length; i++)
-							list[i] = list[i].outerHTML;
-						this.attribute(attr, list.join("\n"));
-					} else {
-						data = check.value;
-						for (let i = 0; i < data.length; i++)
-							this.node.appendChild(data[i]);
-					}
-				}
-				/*-- substituindo elemento --*/
-				if (replace) {
-					for (let i = 0; i < data.length; i++)
-						this.node.parentElement.insertBefore(data[i], this.node);
-					this.node.remove();
-				}
-				/*-- rodando scripts --*/
-				if (script) {
-					for (let i = 0; i < data.length; i++) {
-						let script = data[i].tagName.toLowerCase() === "script";
-						let query  = script ? [data[i]] : data[i].querySelectorAll("script");
-						for (let q = 0; q < query.length; q++) {
-							let clone = __Node(query[q]).clone();
-							query[q].parentElement.insertBefore(clone, query[q]);
-							query[q].remove();
-							if (script) data[i] = clone;
-						}
-					}
-				}
-				/*-- invocar evento de carregamento de página --*/
-				if (!xml) {
-					if (replace)
-						for (let i = 0; i < data.length; i++)
-							data[i].dispatchEvent(wdReloadEvent);
-					else
-						this.node.dispatchEvent(wdReloadEvent);
-				}
+				elem.dispatchEvent(wdReloadEvent);
+				return;
 			}
 		},
 		/**. '{void repeat(array list)}: Clona os filhos do elemento repetindo-os de acordo com as informações repassadas pela lista de objetos ('{list}). O elemento filho que contiver o nome do atributo do objeto entre duas chaves ({{nome}}) terá o fragmento substituídos pelo valor do atributo do objeto correspondente.**/
 		repeat: {
 			value: function(list) {
 				if (!__Type(list).array) list = [];
-				/*----------------------------------------------------------------------
-					1) innerHTML do nó possui o formato {{propriedade}}?
-						sim: armazená-lo em data-wd-repeat-model e ir para 3
-						não: ir para 2
-					2) Há modelo em data-wd-repeat-model?
-						sim: ir para 3
-						não: retornar
-					3) Criar lista de filhos a carregar (load)
-					4) Alterar {{propriedade}} conforme list
-					5) Limpar propriedades não encontradas
-					6) Carregar filhos
-				----------------------------------------------------------------------*/
 				let   html = this.node.innerHTML;
-				const load = [];
 				const re   = /\{\{([^}]+)\}\}/;
+				/*-- definindo modelo oriundo de innerHTML {{name}} --*/
 				if (re.test(html))
 					this.node.dataset.wdRepeatModel = html;
+				/*-- capturando modelo em data-wd-repeat-model --*/
 				else if ("wdRepeatModel" in this.node.dataset)
 					html = this.node.dataset.wdRepeatModel;
+				/*-- modelo não encontrado --*/
 				else
 					return;
 
+				/*-- contruindo lista de conteúdo --*/
+				const load = [];
 				for (let i = 0; i < list.length; i++) {
-					let obj = list[i];
-					if (__Type(obj).object) {
-						let inner = html;
-						for (let j in obj)
-							inner = inner.split("{{"+j+"}}").join(obj[j]);
-						while (re.test(inner))
-							inner = inner.replace(re, "");
-						load.push(inner);
-					}
+					let inner = html;
+					let data  = new __Type(list[i]).object ? list[i] : {};
+					for (let j in data)
+						inner = inner.split(`{{${j}}}`).join(data[j]);
+					load.push(inner);
 				}
-				this.load(load.join(""));
+				/*-- limpando e renderizando --*/
+				const repeat   = load.join("").replace(/\{\{[^}]+\}\}/g, "");
+				this.innerHTML = repeat;
 				return;
 			}
 		},
@@ -7395,7 +7349,6 @@ const wd = (function() {
 	});
 /*============================================================================*/
 	/**#4 Análise Gráfica
-
 	''constructor object __Plot2D(string type)''
 	Objeto para preparar dados para construção de gráfico 2D. O argumento '{type} define o tipo do gráfico:
 	|Valor|Descrição|
@@ -8564,21 +8517,21 @@ const wd = (function() {
 
 		//FIXME colocar isso de forma genérica? to(type)
 		/**. '{array csv}: Retorna string em CSV para array.**/
-		csv: {get: function() {return this._main.csv;}},
+		//csv: {get: function() {return this._main.csv;}},
 		/**. '{any json}: Retorna notação em JSON para valor em Javascript ou nulo se inválido.**/
-		json: {get: function() {return this._main.json;}},
+		//json: {get: function() {return this._main.json;}},
 		/**. '{node html}: Retorna notação em HTML para documento correspondente ou nulo se inválido.**/
-		html: {get: function() {return this._main.html;}},
+		//html: {get: function() {return this._main.html;}},
 		/**. '{node xml}: Retorna notação em XML para documento correspondente ou nulo se inválido.**/
-		xml: {get: function() {return this._main.xml;}},
+		//xml: {get: function() {return this._main.xml;}},
 		/**. '{string csv}: Retorna o array, se organizado em forma de matriz, no formato CSV.**/
-		mcsv: {
+		/*mcsv: {
 			get: function() {
 				let table = __Table();
 				table.matrix(this.valueOf());
 				return table.csv();
 			;}
-		},
+		},*/
 
 
 
@@ -8985,14 +8938,6 @@ const wd = (function() {
 				return data.toSubmit(url, method);
 			}
 		},
-		/**. '{self load(string data, object options)}: Ajusta o código HTML contido em '{html} no elemento (ver __Node.load).**/
-		load: {
-			value: function(data, options) {
-				for (let i = 0; i < this._main.length; i++)
-					this._main[i].load(data, options);
-				return this;
-			}
-		},
 		/**. '{self repeat(array list)}: Repete elementos a partir de um modelo. '{list} é uma lista de objetos cujo valor do atributo substituirá o respectivo valor entre do modelo que será informado em chaves duplas ({{atributo}}).**/
 		repeat: {
 			value: function(list) {
@@ -9221,23 +9166,23 @@ const wd = (function() {
 /**#3 Atributos HTML dataset**/
 /*============================================================================*/
 
-	/**''function void data_wd_device(node  target, object event, array wdArray)''
-	Disparador:
-	|Dado|Descrição|
+	/**#4 Dispositivo: Design Responsivo
+	''function void data_wd_device(node target, object event, array wdArray)''
+	|Disparador|Descrição|
 	|Atributo|data-wd-size|
 	|Objetivo|Manipular atributo '{class} conforme tamanho da tela (design responsivo via javascript)|
 	|Eventos|load wdreload wddataset resize|
 	|Alvos|Elemento|
 	|Grupos|Único|
 	|Referências|__DEVICE|
-	Propriedades:
-	|Nome|Tipo|Descrição|
+	span{ }
+	|Propriedades|Tipo|Descrição|
 	|desktop|string|Estilos CSS aplicados à tela desktop.|
 	|tablet|string|Estilos aplicados à tela tablet.|
 	|phone|string|Estilos aplicados à tela phone.|
 	|mobile|string|Estilos aplicados à tela tablet ou phone.|
 	Observações:
-	- Todas as propriedades são opcionais; e
+	- Não há propriedade obrigatória; e
 	- O estilos CSS devem estar separados por espaços em branco.**/
 	function data_wd_device(target, event, wdArray) {
 		const query  = WD(target);
@@ -9261,16 +9206,16 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-	/**''function void data_wd_hash(node  target, object event, array wdArray)''
-	Disparador:
-	|Dado|Descrição|
+	/**#4 Âncora Hash //FIXME não está funcionando direito
+	''function void data_wd_hash(node target, object event, array wdArray)''
+	|Disparador|Descrição|
 	|Atributo|Não se aplica|
-	|Objetivo|Adequar a âncora do documento em quando existir elementos fixos no topo ou na base da página.|
+	|Objetivo|Adequar a âncora do documento em caso de elementos fixos nas extremidades da página.|
 	|Eventos|load wdreload hashchange resize|
 	|Alvos|Documento|
 	|Grupos|Não se aplica|
 	|Referências|Não há|
-	Propriedades: Não se aplica.**/
+	|Propriedades|Não se aplica|**/
 	function data_wd_hash(target, event, wdArray) {
 		const nodes = WD.$$("body > header, body > footer");
 		const hash  = WD.$(window.location.hash);
@@ -9300,24 +9245,24 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-	/**''function void data_wd_send(node  target, object event, array wdArray)''
-	Disparador:
-	|Dado|Descrição|
+	/**#4 Requisições
+	''function void data_wd_send(node target, object event, array wdArray)''
+	|Disparador|Descrição|
 	|Atributo|data-wd-send|
-	|Objetivo|Efetuar requisições|
+	|Objetivo|Efetuar requisições web|
 	|Eventos|click|
 	|Alvos|Conforme especificado|
 	|Grupos|Múltiplo|
-	|Referências|__Request.send|
-	Propriedades:
-	|Nome|Tipo|Descrição|
-	|$ ou $$|string|CSS Selector dos campos de formulário a serem enviados|
-	|noValidate|boolean|Se verdadeiro, a requisição não fará a validação primária dos campos de formulário.|
+	|Referências|__Request.send, __Node.submit|
+	span{ }
+	|Propriedades|Tipo|Descrição|
+	|$ ou $$|string|Seletor CSS dos campos de formulário a serem enviados|
+	|noValidate|boolean|Se verdadeiro, a requisição não fará a validação primária dos campos.|
 	|trigger|function|Nome do disparador a ser chamado durante a requisição.|
 	Observações:
-	- O conteúdo dos campos definidos em $ ou $$ serão atribuídos à propriedade i{body} de __Request;
-	- Demais propriedades seguem a mesma definição pertencente à __Request.send;
-	- O disparador deve estar contido no escopo de '{window} ('{var} ou '{function})**/
+	- Demais propriedades seguem a mesma definição de __Request.send;
+	- O valor da propriedade i{body} será definido pelo conteúdo dos campos de formulários (ver i{$}/i{$$}); e
+	- O disparador deve estar contido no escopo de '{window} utilizando-se de '{var} ou '{function}.**/
 	function data_wd_send(target, event, wdArray) {
 		let data, query, submit, trigger;
 		for (let i = 0; i < wdArray.length; i++) {
@@ -9338,11 +9283,23 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	/**''function void data_wd_submit(node  target, object event, array wdArray)''
-	Função semelhante à função i{data_wd_send} para aplicação ao conteiner de formulário sendo executada ao submetê-lo.
-	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
-	|data_wd_submit|submit|Múltiplas|Único|__Request.send|Elemento de formulário (i{form})|
-	As propriedades i{url}, i{method}, i{$} ou i{$$}, i{content-type} de i{headers} e i{noValidate} serão obtidas pelo formulário, se existentes.**/
+	/**#4 Requisições: formulários
+	''function void data_wd_submit(node target, object event, array wdArray)''
+	|Disparador|Descrição|
+	|Atributo|data-wd-submit|
+	|Objetivo|Efetuar requisições assícronas por submissão de formulário|
+	|Eventos|submit|
+	|Alvos|Campos do elemento formulário|
+	|Grupos|Único|
+	|Referências|__Request.send, __Node.submit|
+	span{ }
+	Observações:
+	- Mecanismo semelhante à função '{data_wd_send} com diferenças nas propriedades;
+	- A propriedade i{$/$$} não se aplica, o conteúdo de i{body} é definido pelos campo atrelados ao formulário;
+	- A propriedade i{url} é definida pelo atributo i{action} do formulário;
+	- A propriedade i{method} é definida pelo atributo i{method} do formulário;
+	- A propriedade i{noValidate} é definida pelo atributo i{noValidate} do formulário; e
+	- A propriedade i{content-type} em i{headers} é definida pelo atributo i{enctype} do formulário.**/
 	function data_wd_submit(target, event, wdArray) {
 		const data  = wdArray[0];
 		const form  = target;
@@ -9356,21 +9313,21 @@ const wd = (function() {
 		})();
 		/*-- Informações do formulário: button ou form --*/
 		for (let i in html) {
-			/*-- encontrar atributo no elemento acionador --*/
+			/*-- 1) procurar atributo no elemento acionador --*/
 			if (enter !== null) {
 				const camel = "form"+(i.replace(i[0], i[0].toUpperCase()));
 				const lower = camel.toLowerCase();
 				const value = enter.hasAttribute(lower) ? enter[camel].trim() : "";
 				html[i] = value !== "" ? value : null;
 			}
-			/*-- se não localizado, buscar no formulário --*/
+			/*-- 2) se não localizado, buscar no formulário --*/
 			if (html[i] === null) {
 				const valid = !__Type(form[i]).node;
 				const value = form.hasAttribute(i) ? form.getAttribute(i).trim() : "";
 				html[i] = valid ? form[i] : (value !== "" ? value : null);
 			}
 		}
-		/*-- Redefinindo atributos de configuração --*/
+		/*-- Redefinindo atributos de configuração para envio à data_wd_send --*/
 		if (html.method     !== null) data.method = html.method;
 		if (html.action     !== null) data.url = html.action;
 		if (html.enctype    !== null) data.headers["content-type"] = html.enctype;
@@ -9381,15 +9338,33 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	/**''function void data_wd_load(node  target, object event, array wdArray)''
-	Função com o propósito de efetuar carregamento de dados externos por meio do atributo HTML i{data}.
-	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
-	|data-wd-load|load wdreload wddataset|Múltiplas|Único|__Node.load|Elementos que possam conteúdo interno|
-	Possui as mesmas propriedades de i{data-wd-send}, exceto i{trigger}, acrescidas das seguintes:
-	|Nome|Tipo|Descrição|
+	/**''function void data_wd_load(node target, object event, array wdArray)''
+	#4 Carregamentos
+	''function void data_wd_load(node target, object event, array wdArray)''
+	|Disparador|Descrição|
+	|Atributo|data-wd-load|
+	|Objetivo|Carregar páginas externas ao documento|
+	|Eventos|load wdreload wddataset|
+	|Alvos|Elemento|
+	|Grupos|Único|
+	|Referências|__Node.load|
+	Possui as mesmas propriedades de i{data_wd_send}, exceto i{trigger}, acrescidas das seguintes:
+	|Propriedades|Tipo|Descrição|
 	|replace|boolean|Ver __Node.load|
 	|script|boolean|Ver __Node.load|
-	|text|boolean|Ver __Node.load e, se verdadeiro, i{type} assumirá "text", caso contrári, "html"|**/
+	|text|boolean|Ver __Node.load e, se verdadeiro, i{type} assumirá "text", caso contrári, "html"|
+
+
+
+	|$ ou $$|string|Seletor CSS dos campos de formulário a serem enviados|
+	|noValidate|boolean|Se verdadeiro, a requisição não fará a validação primária dos campos.|
+	|trigger|function|Nome do disparador a ser chamado durante a requisição.|
+	Observações:
+	- Demais propriedades seguem a mesma definição de __Request.send;
+	- O valor da propriedade i{body} será definido pelo conteúdo dos campos de formulários (ver i{$}/i{$$}); e
+	- O disparador deve estar contido no escopo de '{window} utilizando-se de '{var} ou '{function})
+
+	**/
 	function data_wd_load(target, event, wdArray) {
 		const data     = wdArray[0];
 		const options  = {replace: null, script: null, text: null}
@@ -9401,13 +9376,13 @@ const wd = (function() {
 		}
 		//data.type    = options.text === true ? "text" : "html";//FIXME isso não está muito certo
 		data.trigger = function(x) {
-			if (x.ok) WD(target).load(x.response, options);
+			//if (x.ok) WD(target).load(x.response, options);//FIXME load não existe mais
 		}
 		return data_wd_send(target, event, [data]);
 	}
 
 /*----------------------------------------------------------------------------*/
-	/**''function void data_wd_repeat(node  target, object event, array wdArray)''
+	/**''function void data_wd_repeat(node target, object event, array wdArray)''
 	Função com o propósito de efetuar repetições de dados externos por meio do atributo HTML i{data}.
 	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
 	|data-wd-repeat|load wdreload wddataset|Múltiplas|Único|__Node.repeat|Elementos que possam conteúdo interno|
@@ -9433,7 +9408,7 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	/**''function void data_wd_set(node  target, object event, array wdArray)''
+	/**''function void data_wd_set(node target, object event, array wdArray)''
 	Função com o propósito de definir propriedades dos elementos por meio do atributo HTML i{data}.
 	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
 	|data-wd-set|click|Múltiplas|Múltiplos|__Node.attribute|Elementos que possam receber cliques|
@@ -9481,7 +9456,7 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-	/**''function void data_wd_chart(node  target, object event, array wdArray)''
+	/**''function void data_wd_chart(node target, object event, array wdArray)''
 	Função com o propósito de plotar gráficos 2D por meio do atributo HTML i{data}.
 	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
 	|data-wd-chart|load wdreload wddataset|Múltiplas|Único|__Table.plot|Elemento que possa receber conteúdo|
@@ -9533,7 +9508,7 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	/**''function void data_wd_click(node  target, object event, array wdArray)''
+	/**''function void data_wd_click(node target, object event, array wdArray)''
 	Função com o propósito de definir cliques sobre o elemento por meio do atributo HTML i{data}.
 	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
 	|data-wd-click|load wdreload wddataset|Múltiplas|Único|Não há|Elemento que possa receber um clique|
@@ -9574,7 +9549,7 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-	/**''function void data_wd_filter(node  target, object event, array wdArray)''
+	/**''function void data_wd_filter(node target, object event, array wdArray)''
 	Função com o propósito de filtrar elementos de acordo com seu conteúdo textual por meio do atributo HTML i{data}.
 	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
 	|data-wd-filter|load wdreload wddataset input|Múltiplas|Único|__Node.filter|Elemento que possa receber evento de digitação|
@@ -9602,7 +9577,7 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-	/**''function void data_wd_display(node  target, object event, array wdArray)''
+	/**''function void data_wd_display(node target, object event, array wdArray)''
 	Função com o propósito de definir exibições por meio do atributo HTML i{data}.
 	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
 	|data-wd-display|click|Múltiplas|Múltiplos|__Node.display|Elemento que possa receber clique|
@@ -9619,7 +9594,7 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-	/**''function void data_wd_mask(node  target, object event, array wdArray)''
+	/**''function void data_wd_mask(node target, object event, array wdArray)''
 	Função com o propósito de definir máscaras por meio do atributo HTML i{data}.
 	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
 	|data-wd-mask|load wdreload wddataset focusout|Único|Múltiplos|__Node.display|Elemento que possa receber conteúdo|
@@ -9639,7 +9614,7 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-	/**''function void data_wd_edit(node  target, object event, array wdArray)''
+	/**''function void data_wd_edit(node target, object event, array wdArray)''
 	Função com o propósito de formatar textos em elementos editáveis por meio do atributo HTML i{data}.
 	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
 	|data-wd-edit|click|Único|Múltiplos|-|Elementos que possa receber click|
@@ -9730,7 +9705,7 @@ const wd = (function() {
 
 
 /*----------------------------------------------------------------------------*/
-	/**''function void data_wd_code(node  target, object event, array wdArray)''
+	/**''function void data_wd_code(node target, object event, array wdArray)''
 	Função com o propósito de definir exibições de codificação por meio do atributo HTML i{data}.
 	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
 	|data-wd-code|load wdreload input|Múltiplas|Único|__Code|Elemento que possa receber texto de codificação.|
@@ -9792,7 +9767,7 @@ const wd = (function() {
 
 
 /*----------------------------------------------------------------------------*/
-	/**''function void data_wd_jump(node  target, object event, array wdArray)''
+	/**''function void data_wd_jump(node target, object event, array wdArray)''
 	Função com o propósito de transferir elementos entre containers ao receberem cliques por meio do atributo HTML i{data}.
 	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
 	|data-wd-move|click|Único|Única|__Node.jump|Elemento que possa receber click|
@@ -9807,7 +9782,7 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	/**''function void data_wd_move(node  target, object event, array wdArray)''
+	/**''function void data_wd_move(node target, object event, array wdArray)''
 	Função com o propósito de mover o elemento por meio do atributo HTML i{data}.
 	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
 	|data-wd-move|mousedown mousemove e mouseup|Único|Único|-|Elementos que possam ser movidos|
@@ -9865,7 +9840,7 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	/**''function void data_wd_size(node  target, object event, array wdArray)''
+	/**''function void data_wd_size(node target, object event, array wdArray)''
 	Função com o propósito de alterar as dimensões do elemento por meio do atributo HTML i{data}.
 	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
 	|data-wd-size|mousedown mousemove, mouseup e mouseout|Único|Múltiplos|-|Elementos que possam ser redimensionados|
@@ -9942,7 +9917,7 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	/**''function void data_wd_drag(node  target, object event, array wdArray)''
+	/**''function void data_wd_drag(node target, object event, array wdArray)''
 	Função com o propósito de arrastar elementos por meio do atributo HTML i{data}.
 	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
 	|data-wd-drag|mousemove, dragstart e dragend|Múltipla|Múltiplos|-|Nós de elementos que possam ser arrastados|
@@ -10058,7 +10033,7 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	/**''function void data_wd_drop(node  target, object event, array wdArray)''
+	/**''function void data_wd_drop(node target, object event, array wdArray)''
 	Função com o propósito de definir o comportamento do elemento ao receber arquivos arrastáveis por meio do atributo HTML i{data}.
 	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
 	|data-wd-drop|dragover, dragleave e drop|Único|Múltiplos|-|Nós que podem receber informações de arquivos.|
@@ -10202,7 +10177,7 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-/**''function void data_wd_float(node  target, object event, array wdArray)''
+/**''function void data_wd_float(node target, object event, array wdArray)''
 	Função com o propósito de exibir elementos no ponto de clicagem por meio do atributo HTML i{data}.
 
 
