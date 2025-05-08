@@ -684,6 +684,11 @@ const wd = (function() {
 		_week:   [],
 		_number: [],
 		_date:   [],
+
+
+
+
+
 		/**. '{regexp re}: Retorna a expressão regular que verifica o formato de a{linguagem}[href="https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/lang)"].**/
 		re: /^[a-z]{2,3}(\-[A-Z][a-z]{3})?(\-([A-Z]{2}|[0-9]{3}))?$/,
 		/**. '{array node(node elem)}: Retorna a lista dos atributos i{lang} do elemento HTML e seus ascendentes, se houver.**/
@@ -698,7 +703,7 @@ const wd = (function() {
 			}
 			return lang;
 		},
-		/**. '{string value}: Define ou retorna a cadeia de linguagens estabelecidas pelo usuário, pelo HTML e pelo navegador.**/
+		/**. '{array value}: Define ou retorna a cadeia de linguagens estabelecidas pelo usuário, pelo HTML e pelo navegador.**/
 		get value() {
 			const nav  = navigator.languages;
 			const html = this.node(document.body);
@@ -712,6 +717,16 @@ const wd = (function() {
 			else
 				this._user = [];
 		},
+
+
+
+
+
+
+
+
+
+
 		/**. '{void update()}: Atualiza os dados de acordo com a linguagem construindo as seguintes informações:
 		|Propriedade|Descrição|month|week|number|
 		|index|Índice numérico|1 a 12|1 a 7|-9 a 9|
@@ -1323,6 +1338,171 @@ const wd = (function() {
 		}
 	};
 
+
+	const __DATE = {
+		/**. '{string lang}: Registra o identificador da linguagem local para fins de atualização.**/
+		lang: null,
+		/**. '{object en}: Registra os nomes dos meses e dias, curtos e longos, em língua inglesa.**/
+		en: null,
+		/**. '{object local}: Registra os nomes dos meses e dias, curtos e longos, em língua local.**/
+		local: null,
+		/**. '{object base}: Registra as expressões das unidades de data (dia, mês e ano) em string.**/
+		base: {
+			D:    "(0?[1-9]|[12][0-9]|3[01])",
+			DD:   "(0[1-9]|[12][0-9]|3[01])",
+			DDD:  null,
+			DDDD: null,
+			M:    "(0?[1-9]|1[12])",
+			MM:   "(0[1-9]|1[12])",
+			MMM:  null,
+			MMMM: null,
+			YYYY: "([0-9][0-9][0-9][0-9]+)",
+		},
+		/**. '{object regexp}: Registra as expressões regulares de data e tempo:
+		|Formato|Tipo|Modelo|**/
+		regexp: {
+			/**|YYYYMMDD|data|2010-01-15|**/
+			YYYYMMDD:   {re: null, Y: "$1", M: "$2", D: "$3", sep: "-", type: "date", name: false},
+			/**|YYYYMMMDD|data|2010-Jan-15|**/
+			YYYYMMMDD:  {re: null, Y: "$1", M: "$2", D: "$3", sep: "-", type: "date", name: true},
+			/**|YYYYMMMMDD|data|2010-January-15|**/
+			YYYYMMMMDD: {re: null, Y: "$1", M: "$2", D: "$3", sep: "-", type: "date", name: true},
+			/**|DDMMYYYY|data|15/01/2010|**/
+			DDMMYYYY:   {re: null, D: "$1", M: "$2", Y: "$3", sep: "/", type: "date", name: false},
+			/**|DDMMMYYYY|data|15/Jan/2010|**/
+			DDMMMYYYY:  {re: null, D: "$1", M: "$2", Y: "$3", sep: "/", type: "date", name: true},
+			/**|DDMMMMYYYY|data|15/January/2010|**/
+			DDMMMMYYYY: {re: null, D: "$1", M: "$2", Y: "$3", sep: "/", type: "date", name: true},
+			/**|DMMMYYYY|data|15 Jan 2010|**/
+			DMMMYYYY:   {re: null, D: "$1", M: "$2", Y: "$3", sep: " ", type: "date", name: true},
+			/**|DMMMYYYY|data|15 January 2010|**/
+			DMMMMYYYY:  {re: null, D: "$1", M: "$2", Y: "$3", sep: " ", type: "date", name: true},
+			/**|MMMDYYYY|data|Jan 15 2010|**/
+			MMMDYYYY:   {re: null, M: "$1", D: "$2", Y: "$3", sep: " ", type: "date", name: true},
+			/**|MMMMDYYYY|data|January 15 2010|**/
+			MMMMDYYYY:  {re: null, M: "$1", D: "$2", Y: "$3", sep: " ", type: "date", name: true},
+			/**|MMDDYYYY|data|01.15.2010|**/
+			MMDDYYYY:   {re: null, M: "$1", D: "$2", Y: "$3", sep: ".", type: "date", name: false},
+			/**. Os formatos que utilizam nomes de meses devem ser escritos (ignorando caixa) como definido pelo JavaScript.**/
+		},
+		/**. '{object names(array lang)}: Retorna os nomes dos meses e dias, curtos e longos, em língua definida no argumento.**/
+		names: function(lang) {
+			const data = {DDD: Array(7), DDDD: Array(7), MMM: Array(12), MMMM: Array(12)};
+			const date = new Date(1970, 0, 15, 12, 0, 0, 0);
+			for (let i = 0; i < 12; i++) {
+				data.MMMM[date.getMonth()] = date.toLocaleDateString(lang, {month: "long"}).trim();
+				data.MMM[date.getMonth()]  = date.toLocaleDateString(lang, {month: "short"}).trim();
+				date.setMonth(date.getMonth() + 1);
+			}
+			for (let i = 0; i < 7; i++) {
+				data.DDDD[date.getDay()] = date.toLocaleDateString(lang, {weekday: "long"}).trim();
+				data.DDD[date.getDay()]  = date.toLocaleDateString(lang, {weekday: "short"}).trim();
+				date.setDate(date.getDate() + 1);
+			}
+			return data;
+		},
+		/**. '{void upgrade()}: Redefine as expressões regulares de data e tempo (chamado pelo método i{update}).**/
+		upgrade: function() {
+			const find = ["YYYY", "MMMM", "MMM", "MM", "M", "DDDD", "DDD", "DD", "D"];
+			for (let id in this.regexp) {
+				let sep  = this.regexp[id].sep.replace(/(\W)/g, "\\$1");
+				let date = id.replace(/(Y+|D+|M+)/g, "$1 ").trim().split(" ");
+				for (let i = 0; i < date.length; i++)
+					date[i] = this.base[date[i]];
+				let data = `^[\\+\\-]?${date.join(sep)}$`
+				this.regexp[id].re = new RegExp(data, "i");
+			}
+			return;
+		},
+		/**. '{void update()}: Redefine os nomes dos meses e dias, curtos e longos, em língua inglesa e local, quando necessário.**/
+		update: function() {
+			const lang = __LANG.value.join(" ");
+			if (this.lang !== lang) {
+				/*-- acertando identificador da linguagem --*/
+				this.lang  = lang;
+				/*-- acertando lista de nomes --*/
+				this.local = this.names(lang.split(" "));
+				this.en    = this.en === null ?  this.names(["en"]) : this.en;
+				/*-- acertando unidades de data --*/
+				const base = {
+					MMM:  this.en.MMM.concat(this.local.MMM),
+					MMMM: this.en.MMMM.concat(this.local.MMMM),
+					DDD:  this.en.DDD.concat(this.local.DDD),
+					DDDD: this.en.DDDD.concat(this.local.DDDD)
+				}
+				for (let j in base) {
+					base[j].forEach(function(v,i,a) {a[i] = v.replace(/(\W)/g, "\\$1");});
+					base[j] = base[j].join("|");
+				}
+				this.base.MMM  = `(${base.MMM})`;
+				this.base.MMMM = `(${base.MMMM})`;
+				this.base.DDD  = `(${base.DDD})`;
+				this.base.DDDD = `(${base.DDDD})`;
+				/*-- atualizar expressões regulares --*/
+				this.upgrade();
+			}
+			return;
+		},
+		/**. '{boolean leap(integer year)}: Informar se o ano definido no argumento é bissexto.**/
+		leap: function(year) {
+			const y = Math.abs(year);
+			return (y%400 === 0 || (y%4 === 0 && y%100 !== 0));
+		},
+		/**. '{integer max(integer year, integer month)}: Informar o número máximo de dias no mês.**/
+		max: function(year, month) {
+			const max = [31,(this.leap(year) ? 29 : 28),31,30,31,30,31,31,30,31,30,31];
+			return max[month-1];
+		},
+		/**. '{integer index(string name, boolean day)}: Informa o valor numérico do mês ou dia ('{day} verdadeiro) a partir do nome.**/
+		index: function(name, day) {
+			this.update();
+			const UPPER = String(name).toUpperCase();
+			const LOWER = String(name).toUpperCase();
+			const month = this.en.MMMM.concat(this.local.MMMM, this.en.MMM, this.local.MMM);
+			const days  = this.en.DDDD.concat(this.local.DDDD, this.en.DDD, this.local.DDD);
+			const list  = day === true ? days : month;
+			let   data  = null;
+			for (let i = 0; i < list.length; i++) {
+				let upper = list[i].toUpperCase();
+				let lower = list[i].toLowerCase();
+				if (upper === UPPER || lower === LOWER) {
+					data = i;
+					break;
+				}
+			}
+			return data === null ? null : (day === true ? (data%7)+1 : (data%12)+1);
+		},
+
+
+
+
+		test: function(x) {
+
+
+
+
+
+		},
+
+
+
+	};
+
+	const __TIME = {
+
+		regexp: {
+			h12:  "(0?[1-9]|1[0-2])",
+			h:    "([01]?[0-9]|2[0-4])",
+			mm:   "([0-5][0-9])",
+			ss:   "([0-5][0-9]|[0-5][0-9]\\.[0-9][0-9]?[0-9]?)",
+			ampm: "(AM|PM)"
+		}
+
+	}
+
+
+
+
 /*============================================================================*/
 	/**#3 Eventos Customizados
 	''{const object wdDatasetEvent''
@@ -1344,6 +1524,29 @@ const wd = (function() {
 	Construtor para identificação do tipo de dado informado em '{input}.**/
 	function __Type(input) {
 		if (!(this instanceof __Type)) return new __Type(input);
+		const base = typeof input;
+		const list = {
+			String: "string", Number: "number", Boolean: "boolean",
+			RegExp: "regexp", Date: "datetime", Function: "function",
+			HTMLElement: "node", SVGElement: "node",      MathMLElement: "node",
+			NodeList: "nodes",   HTMLCollection: "nodes", HTMLAllCollection: "nodes",
+			HTMLOptionsCollection: "nodes", HTMLFormControlsCollection: "nodes"
+		};
+		let type = base !== "object" ? base : (function () {
+			if (input === null)       return "null";
+			if (Array.isArray(input)) return "array";
+			for (let name in list)
+				if (name in window && input instanceof window[name])
+					return list[name];
+			return base;
+		})();
+
+
+
+
+
+
+
 		Object.defineProperties(this, {
 			_input:    {value: input},                /* valor de referência */
 			_type:     {value: null, writable: true}, /* tipo do valor de entrada */
@@ -9159,6 +9362,7 @@ const wd = (function() {
 			SIGNAL:   {value: __SIGNAL},
 			MIME:     {value: __MIME},
 			STYLE:    {value: __STYLE},
+			DATE:     {value: __DATE},
 		});
 	}
 
