@@ -1338,7 +1338,9 @@ const wd = (function() {
 		}
 	};
 
-
+/*----------------------------------------------------------------------------*/
+	/**''const object __DATE''
+	Estabelece as regras para datas em formato de string.**/
 	const __DATE = {
 		/**. '{string lang}: Registra o identificador da linguagem local para fins de atualização.**/
 		lang: null,
@@ -1359,31 +1361,43 @@ const wd = (function() {
 			YYYY: "([0-9][0-9][0-9][0-9]+)",
 		},
 		/**. '{object regexp}: Registra as expressões regulares de data e tempo:
-		|Formato|Tipo|Modelo|**/
+		|Modelo|Tipo|Exemplo|**/
 		regexp: {
 			/**|YYYYMMDD|data|2010-01-15|**/
-			YYYYMMDD:   {re: null, Y: "$1", M: "$2", D: "$3", sep: "-", type: "date", name: false},
+			YYYYMMDD:   {re: null, y: "$1", m: "$2", d: "$3", sep: "-", type: "date", name: false},
 			/**|YYYYMMMDD|data|2010-Jan-15|**/
-			YYYYMMMDD:  {re: null, Y: "$1", M: "$2", D: "$3", sep: "-", type: "date", name: true},
+			YYYYMMMDD:  {re: null, y: "$1", m: "$2", d: "$3", sep: "-", type: "date", name: true},
 			/**|YYYYMMMMDD|data|2010-January-15|**/
-			YYYYMMMMDD: {re: null, Y: "$1", M: "$2", D: "$3", sep: "-", type: "date", name: true},
+			YYYYMMMMDD: {re: null, y: "$1", m: "$2", d: "$3", sep: "-", type: "date", name: true},
 			/**|DDMMYYYY|data|15/01/2010|**/
-			DDMMYYYY:   {re: null, D: "$1", M: "$2", Y: "$3", sep: "/", type: "date", name: false},
+			DDMMYYYY:   {re: null, d: "$1", m: "$2", y: "$3", sep: "/", type: "date", name: false},
 			/**|DDMMMYYYY|data|15/Jan/2010|**/
-			DDMMMYYYY:  {re: null, D: "$1", M: "$2", Y: "$3", sep: "/", type: "date", name: true},
+			DDMMMYYYY:  {re: null, d: "$1", m: "$2", y: "$3", sep: "/", type: "date", name: true},
 			/**|DDMMMMYYYY|data|15/January/2010|**/
-			DDMMMMYYYY: {re: null, D: "$1", M: "$2", Y: "$3", sep: "/", type: "date", name: true},
+			DDMMMMYYYY: {re: null, d: "$1", m: "$2", y: "$3", sep: "/", type: "date", name: true},
 			/**|DMMMYYYY|data|15 Jan 2010|**/
-			DMMMYYYY:   {re: null, D: "$1", M: "$2", Y: "$3", sep: " ", type: "date", name: true},
+			DMMMYYYY:   {re: null, d: "$1", m: "$2", y: "$3", sep: " ", type: "date", name: true},
 			/**|DMMMYYYY|data|15 January 2010|**/
-			DMMMMYYYY:  {re: null, D: "$1", M: "$2", Y: "$3", sep: " ", type: "date", name: true},
+			DMMMMYYYY:  {re: null, d: "$1", m: "$2", y: "$3", sep: " ", type: "date", name: true},
 			/**|MMMDYYYY|data|Jan 15 2010|**/
-			MMMDYYYY:   {re: null, M: "$1", D: "$2", Y: "$3", sep: " ", type: "date", name: true},
+			MMMDYYYY:   {re: null, m: "$1", d: "$2", y: "$3", sep: " ", type: "date", name: true},
 			/**|MMMMDYYYY|data|January 15 2010|**/
-			MMMMDYYYY:  {re: null, M: "$1", D: "$2", Y: "$3", sep: " ", type: "date", name: true},
+			MMMMDYYYY:  {re: null, m: "$1", d: "$2", y: "$3", sep: " ", type: "date", name: true},
 			/**|MMDDYYYY|data|01.15.2010|**/
-			MMDDYYYY:   {re: null, M: "$1", D: "$2", Y: "$3", sep: ".", type: "date", name: false},
-			/**. Os formatos que utilizam nomes de meses devem ser escritos (ignorando caixa) como definido pelo JavaScript.**/
+			MMDDYYYY:   {re: null, m: "$1", d: "$2", y: "$3", sep: ".", type: "date", name: false},
+			/**|MMYYYY|month|01/2010|**/
+			MMYYYY:     {re: null, m: "$1", y: "$2", sep: "/", type: "month", name: false},
+			/**|MMMYYYY|month|Jan 2010|**/
+			MMMYYYY:    {re: null, m: "$1", y: "$2", sep: " ", type: "month", name: true},
+			/**|MMMMYYYY|month|January 2010|**/
+			MMMMYYYY:   {re: null, m: "$1", y: "$2", sep: " ", type: "month", name: true},
+			/**|YYYYMM|month|2010-01|**/
+			YYYYMM:     {re: null, y: "$1", m: "$2", sep: "-", type: "month", name: false},
+			/**|YYYYMMM|month|2010-Jan|**/
+			YYYYMMM:    {re: null, y: "$1", m: "$2", sep: "-", type: "month", name: true},
+			/**|YYYYMMMM|month|2010-Jan|**/
+			YYYYMMMM:   {re: null, y: "$1", m: "$2", sep: "-", type: "month", name: true},
+			/**. Os formatos que utilizam nomes de meses são escritos ignorando caixa, em língua inglesa ou local, mas da mesma forma definida pelo JavaScript.**/
 		},
 		/**. '{object names(array lang)}: Retorna os nomes dos meses e dias, curtos e longos, em língua definida no argumento.**/
 		names: function(lang) {
@@ -1476,12 +1490,37 @@ const wd = (function() {
 
 
 
-		test: function(x) {
-
-
-
-
-
+		test: function(input) {
+			this.update();
+			input = String(input).trim();
+			const minus = (/^\-/).test(input);
+			/*-- checando as expressões regulares --*/
+			for (let i in this.regexp) {
+				let item = this.regexp[i];
+				/*-- expressão casou, obter dados --*/
+				if (item.re.test(input)) {
+					let data = {y: null, m: null, d: null, w: null};
+					/*-- obtendo dados --*/
+					for (let j in data) {
+						if (j in item) {
+							let info = input.replace(item.re, item[j]);
+							let name = j === "m" && item.name === true;
+							data[j] = name ? this.index(info) : Number(info);
+						}
+					}
+					/*-- reajuste de dados --*/
+					data.type  = item.type;
+					data.model = i;
+					data.sep   = item.sep;
+					data.y     = minus && data.y !== null ? -data.y : data.y;
+					/*-- testar parâmetros --*/
+					if (data.type === "date" && data.d <= this.max(data.y, data.m))
+						return data;
+					if (data.type === "month")
+						return data;
+				}
+			}
+			return null;
 		},
 
 
@@ -1489,6 +1528,20 @@ const wd = (function() {
 	};
 
 	const __TIME = {
+
+		/**. '{object base}: Registra as expressões das unidades de data (dia, mês e ano) em string.**/
+		base: {
+			D:    "(0?[1-9]|[12][0-9]|3[01])",
+			DD:   "(0[1-9]|[12][0-9]|3[01])",
+			DDD:  null,
+			DDDD: null,
+			M:    "(0?[1-9]|1[12])",
+			MM:   "(0[1-9]|1[12])",
+			MMM:  null,
+			MMMM: null,
+			YYYY: "([0-9][0-9][0-9][0-9]+)",
+		},
+
 
 		regexp: {
 			h12:  "(0?[1-9]|1[0-2])",
