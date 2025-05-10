@@ -1348,7 +1348,7 @@ const wd = (function() {
 		en: null,
 		/**. '{object local}: Registra os nomes dos meses e dias, curtos e longos, em língua local.**/
 		local: null,
-		/**. '{object base}: Registra as expressões das unidades de data (dia, mês e ano) em string.**/
+		/**. '{object base}: Registra as unidades de tempo para fins de montagem dos modelos.**/
 		base: {
 			D:    "(0?[1-9]|[12][0-9]|3[01])",
 			DD:   "(0[1-9]|[12][0-9]|3[01])",
@@ -1359,47 +1359,43 @@ const wd = (function() {
 			MMM:  null,
 			MMMM: null,
 			YYYY: "([0-9][0-9][0-9][0-9]+)",
+			h:     "(0?[1-9]|1[0-2])",
+			hh:    "([01]?[0-9]|2[0-4])",
+			mm:    "([0-5][0-9])",
+			ss:    "([0-5][0-9]|[0-5][0-9]\\.[0-9][0-9]?[0-9]?)",
+			p:     "([AP]M)",
+			ww:    "(0[1-9]|[1-4][0-9]|5[0-4])",
 		},
-		/**. '{object regexp}: Registra as expressões regulares de data e tempo:
-		|Modelo|Tipo|Exemplo|**/
-		regexp: {
-			/**|YYYYMMDD|data|2010-01-15|**/
-			YYYYMMDD:   {re: null, y: "$1", m: "$2", d: "$3", sep: "-", type: "date", name: false},
-			/**|YYYYMMMDD|data|2010-Jan-15|**/
-			YYYYMMMDD:  {re: null, y: "$1", m: "$2", d: "$3", sep: "-", type: "date", name: true},
-			/**|YYYYMMMMDD|data|2010-January-15|**/
-			YYYYMMMMDD: {re: null, y: "$1", m: "$2", d: "$3", sep: "-", type: "date", name: true},
-			/**|DDMMYYYY|data|15/01/2010|**/
-			DDMMYYYY:   {re: null, d: "$1", m: "$2", y: "$3", sep: "/", type: "date", name: false},
-			/**|DDMMMYYYY|data|15/Jan/2010|**/
-			DDMMMYYYY:  {re: null, d: "$1", m: "$2", y: "$3", sep: "/", type: "date", name: true},
-			/**|DDMMMMYYYY|data|15/January/2010|**/
-			DDMMMMYYYY: {re: null, d: "$1", m: "$2", y: "$3", sep: "/", type: "date", name: true},
-			/**|DMMMYYYY|data|15 Jan 2010|**/
-			DMMMYYYY:   {re: null, d: "$1", m: "$2", y: "$3", sep: " ", type: "date", name: true},
-			/**|DMMMYYYY|data|15 January 2010|**/
-			DMMMMYYYY:  {re: null, d: "$1", m: "$2", y: "$3", sep: " ", type: "date", name: true},
-			/**|MMMDYYYY|data|Jan 15 2010|**/
-			MMMDYYYY:   {re: null, m: "$1", d: "$2", y: "$3", sep: " ", type: "date", name: true},
-			/**|MMMMDYYYY|data|January 15 2010|**/
-			MMMMDYYYY:  {re: null, m: "$1", d: "$2", y: "$3", sep: " ", type: "date", name: true},
-			/**|MMDDYYYY|data|01.15.2010|**/
-			MMDDYYYY:   {re: null, m: "$1", d: "$2", y: "$3", sep: ".", type: "date", name: false},
-			/**|MMYYYY|month|01/2010|**/
-			MMYYYY:     {re: null, m: "$1", y: "$2", sep: "/", type: "month", name: false},
-			/**|MMMYYYY|month|Jan 2010|**/
-			MMMYYYY:    {re: null, m: "$1", y: "$2", sep: " ", type: "month", name: true},
-			/**|MMMMYYYY|month|January 2010|**/
-			MMMMYYYY:   {re: null, m: "$1", y: "$2", sep: " ", type: "month", name: true},
-			/**|YYYYMM|month|2010-01|**/
-			YYYYMM:     {re: null, y: "$1", m: "$2", sep: "-", type: "month", name: false},
-			/**|YYYYMMM|month|2010-Jan|**/
-			YYYYMMM:    {re: null, y: "$1", m: "$2", sep: "-", type: "month", name: true},
-			/**|YYYYMMMM|month|2010-Jan|**/
-			YYYYMMMM:   {re: null, y: "$1", m: "$2", sep: "-", type: "month", name: true},
-			/**. Os formatos que utilizam nomes de meses são escritos ignorando caixa, em língua inglesa ou local, mas da mesma forma definida pelo JavaScript.**/
-		},
-		/**. '{object names(array lang)}: Retorna os nomes dos meses e dias, curtos e longos, em língua definida no argumento.**/
+		/**. '{array templates}: Registra os modelos de tempo e suas configurações.**/
+		templates: [
+			{re: null, Y: "$1", M: "$2", D: "$3", type: "date", model: "YYYY-MM-DD"},
+			{re: null, Y: "$1", M: "$2", D: "$3", type: "date", model: "YYYY-MMM-DD"},
+			{re: null, Y: "$1", M: "$2", D: "$3", type: "date", model: "YYYY-MMMM-DD"},
+			{re: null, D: "$1", M: "$2", Y: "$3", type: "date", model: "DD/MM/YYYY"},
+			{re: null, D: "$1", M: "$2", Y: "$3", type: "date", model: "DD/MMM/YYYY"},
+			{re: null, D: "$1", M: "$2", Y: "$3", type: "date", model: "DD/MMM/YYYY"},
+			{re: null, D: "$1", M: "$2", Y: "$3", type: "date", model: "D MMM YYYY"},
+			{re: null, D: "$1", M: "$2", Y: "$3", type: "date", model: "D MMMM YYYY"},
+			{re: null, M: "$1", D: "$2", Y: "$3", type: "date", model: "MMM D YYYY"},
+			{re: null, M: "$1", D: "$2", Y: "$3", type: "date", model: "MMMM D YYYY"},
+			{re: null, M: "$1", D: "$2", Y: "$3", type: "date", model: "MM.DD.YYYY"},
+			{re: null, M: "$1", D: "$2", Y: "$3", type: "date", model: "MM-DD-YYYY"},
+			{re: null, M: "$1", Y: "$2", type: "month", model: "MM/YYYY"},
+			{re: null, M: "$1", Y: "$2", type: "month", model: "MMM YYYY"},
+			{re: null, M: "$1", Y: "$2", type: "month", model: "MMMM YYYY"},
+			{re: null, Y: "$1", M: "$2", type: "month", model: "YYYY-MM"},
+			{re: null, Y: "$1", M: "$2", type: "month", model: "YYYY-MMM"},
+			{re: null, Y: "$1", M: "$2", type: "month", model: "YYYY-MMMM"},
+			{re: null, h: "$1", m: "$2", s: "$3", type: "time", model: "hh:mm:ss"},
+			{re: null, h: "$1", m: "$2",          type: "time", model: "hh:mm"},
+			{re: null, h: "$1", m: "$2", s: "$3", p: "$4", type: "time", model: "h:mm:ss p"},
+			{re: null, h: "$1", m: "$2", p: "$3",          type: "time", model: "h:mm p"},
+			{re: null, Y: "$1", w: "$2", type: "week", model: "YYYYW-ww"},
+
+//week	YYYYWW	2010W-01 (semana de 01-54)
+//week	WWYYYY	01, 2010 (semana de 01-54)
+		],
+		/**. '{object names(array lang)}: Retorna os nomes dos meses e dias (DDD DDDD MMM MMMM) na língua definida no argumento.**/
 		names: function(lang) {
 			const data = {DDD: Array(7), DDDD: Array(7), MMM: Array(12), MMMM: Array(12)};
 			const date = new Date(1970, 0, 15, 12, 0, 0, 0);
@@ -1417,14 +1413,24 @@ const wd = (function() {
 		},
 		/**. '{void upgrade()}: Redefine as expressões regulares de data e tempo (chamado pelo método i{update}).**/
 		upgrade: function() {
-			const find = ["YYYY", "MMMM", "MMM", "MM", "M", "DDDD", "DDD", "DD", "D"];
-			for (let id in this.regexp) {
-				let sep  = this.regexp[id].sep.replace(/(\W)/g, "\\$1");
-				let date = id.replace(/(Y+|D+|M+)/g, "$1 ").trim().split(" ");
-				for (let i = 0; i < date.length; i++)
-					date[i] = this.base[date[i]];
-				let data = `^[\\+\\-]?${date.join(sep)}$`
-				this.regexp[id].re = new RegExp(data, "i");
+			const wall  = /(\W)/g;
+			const find  = /(Y+|D+|M+|w+|h+|m+|s+|p)/g;
+			const minus = {date: true, month: true};
+			for (let i in this.templates) {
+				/*-- obtendo valores dos dados --*/
+				let parts = {};
+				let model = this.templates[i].model.replace(wall, "\\$1");
+				let type  = this.templates[i].type;
+				let units = model.match(find);
+				for (let unit = 0; unit < units.length; unit++)
+					parts[units[unit]] = this.base[units[unit]];
+				/*-- executando a substituição de dados --*/
+				model = model.replace(find, "<<$1>>");
+				for (let part in parts)
+					model = model.replace(`<<${part}>>`, parts[part]);
+				/*-- construindo expressão regular --*/
+				let sign = minus[type] === true ? "\\-?" : "";
+				this.templates[i].re = new RegExp(`^${sign}${model}$`, "i");
 			}
 			return;
 		},
@@ -1447,11 +1453,8 @@ const wd = (function() {
 				for (let j in base) {
 					base[j].forEach(function(v,i,a) {a[i] = v.replace(/(\W)/g, "\\$1");});
 					base[j] = base[j].join("|");
+					this.base[j] = `(${base[j]})`;
 				}
-				this.base.MMM  = `(${base.MMM})`;
-				this.base.MMMM = `(${base.MMMM})`;
-				this.base.DDD  = `(${base.DDD})`;
-				this.base.DDDD = `(${base.DDDD})`;
 				/*-- atualizar expressões regulares --*/
 				this.upgrade();
 			}
@@ -1467,14 +1470,16 @@ const wd = (function() {
 			const max = [31,(this.leap(year) ? 29 : 28),31,30,31,30,31,31,30,31,30,31];
 			return max[month-1];
 		},
-		/**. '{integer index(string name, boolean day)}: Informa o valor numérico do mês ou dia ('{day} verdadeiro) a partir do nome.**/
-		index: function(name, day) {
+		/**. '{integer index(string name, string id)}: Retorna o valor numérico do mês ou dia a partir do nome. Se o argumento '{name} for a representação de um número inteiro, retornará seu valor. Para retornar o índice pelo nome, é preciso informar o argumento '{id} com o valor "M" para mês (padrão) e "D" para dia.**/
+		index: function(name, id) {
+			if ((/^\d+(\.\d+)?$/).test(name)) return Number(name);
+			if ((/^[AP]M$/i).test(name))      return name.toUpperCase();
 			this.update();
-			const UPPER = String(name).toUpperCase();
-			const LOWER = String(name).toUpperCase();
-			const month = this.en.MMMM.concat(this.local.MMMM, this.en.MMM, this.local.MMM);
-			const days  = this.en.DDDD.concat(this.local.DDDD, this.en.DDD, this.local.DDD);
-			const list  = day === true ? days : month;
+			const long  = id === "D" ? "DDDD" : "MMMM";
+			const short = id === "D" ?  "DDD" :  "MMM";
+			const UPPER = name.toUpperCase();
+			const LOWER = name.toLowerCase();
+			const list  = this.en[long].concat(this.local[long], this.en[short], this.local[short]);
 			let   data  = null;
 			for (let i = 0; i < list.length; i++) {
 				let upper = list[i].toUpperCase();
@@ -1484,77 +1489,86 @@ const wd = (function() {
 					break;
 				}
 			}
-			return data === null ? null : (day === true ? (data%7)+1 : (data%12)+1);
+			return data === null ? null : (id === "D" ? (data%7)+1 : (data%12)+1);
 		},
-
-
-
-
-		test: function(input) {
+		/**. '{object check(string input)}: Testa o valor de entrada ('{input}) como data, tempo ou mês. Retonará nulo, se incorreto, ou um objeto contendo os dados de tempo:
+		|Nome|Tipo|Descrição|
+		|type|string|Tipo da informação (date, time, month, week)|
+		|Y|integer|Valor numérico do ano ou nulo se não aplicável|
+		|M|integer|Valor numérico do mês ou nulo se não aplicável|
+		|D|integer|Valor numérico do dia ou nulo se não aplicável|
+		|W|integer|Valor numérico da semana do ano ou nulo se não aplicável|
+		|h|integer|Valor numérico do hora ou nulo se não aplicável|
+		|m|integer|Valor numérico do minuto ou nulo se não aplicável|
+		|s|integer|Valor numérico do segundo ou nulo se não aplicável|
+		|p|integer|AM ou PM de acordo com o tempo|**/
+		check: function(input) {
 			this.update();
 			input = String(input).trim();
 			const minus = (/^\-/).test(input);
 			/*-- checando as expressões regulares --*/
-			for (let i in this.regexp) {
-				let item = this.regexp[i];
-				/*-- expressão casou, obter dados --*/
+			for (let i in this.templates) {
+				let item = this.templates[i];
+				/*-- expressão casou --*/
 				if (item.re.test(input)) {
-					let data = {y: null, m: null, d: null, w: null};
-					/*-- obtendo dados --*/
+					let data = {Y: null, M: null, D: null, w: null, h: null, m: null, s: null, p: null};
+					/*-- obter dados --*/
 					for (let j in data) {
 						if (j in item) {
 							let info = input.replace(item.re, item[j]);
-							let name = j === "m" && item.name === true;
-							data[j] = name ? this.index(info) : Number(info);
+							data[j]  = this.index(info);
 						}
 					}
-					/*-- reajuste de dados --*/
+					/*-- dados complementares --*/
 					data.type  = item.type;
-					data.model = i;
-					data.sep   = item.sep;
-					data.y     = minus && data.y !== null ? -data.y : data.y;
-					/*-- testar parâmetros --*/
-					if (data.type === "date" && data.d <= this.max(data.y, data.m))
+					data.model = item.model;
+					/*-- checar parâmetros específicos --*/
+					if (data.type === "date") {
+						data.Y = (minus ? -1 : 1) * data.Y;
+						if (data.D <= this.max(data.Y, data.M))
+							return data;
+					}
+					else if (data.type === "month") {
+						data.Y = (minus ? -1 : 1) * data.Y;
 						return data;
-					if (data.type === "month")
+					}
+					else if (data.type === "month") {
+						if (data.p === "AM" || data.p === "PM")
+							data.h = data.h%12 + (data.p === "PM" ? 12 : 0);
+						data.p = data.h >= 12 ? "PM" : "AM"
+						data.s = data.s === null ? 0 : data.s;
+						data.h = data.h%24;
 						return data;
+					}
+					else {
+						return data;
+					}
 				}
 			}
 			return null;
 		},
-
-
-
-	};
-
-	const __TIME = {
-
-		/**. '{object base}: Registra as expressões das unidades de data (dia, mês e ano) em string.**/
-		base: {
-			D:    "(0?[1-9]|[12][0-9]|3[01])",
-			DD:   "(0[1-9]|[12][0-9]|3[01])",
-			DDD:  null,
-			DDDD: null,
-			M:    "(0?[1-9]|1[12])",
-			MM:   "(0[1-9]|1[12])",
-			MMM:  null,
-			MMMM: null,
-			YYYY: "([0-9][0-9][0-9][0-9]+)",
-		},
-
-
-		regexp: {
-			h12:  "(0?[1-9]|1[0-2])",
-			h:    "([01]?[0-9]|2[0-4])",
-			mm:   "([0-5][0-9])",
-			ss:   "([0-5][0-9]|[0-5][0-9]\\.[0-9][0-9]?[0-9]?)",
-			ampm: "(AM|PM)"
+		/**. '{object test(string input)}: Testa o valor de entrada é data, tempo ou data e tempo.**/
+		test: function(input) {
+			const find = /([0-9][0-9])(T|\,|\ |\,\ )(\d?\d\:[0-5][0-9])/;
+			/*-- testar tempo ou data --*/
+			if (!find.test(input)) return this.check(input);
+			/*-- testar tempo e data --*/
+			const list = input.replace(find, "$1\n$2\n$3").split("\n");
+			const date = this.check(list[0]);
+			const time = this.check(list[2]);
+			const join = list[1];
+			/*-- não é datetime --*/
+			if (date.type !== "date" || time.type !== "time") return null;
+			/*-- é datetime --*/
+			date.type  = "datetime";
+			date.h     = time.h;
+			date.m     = time.m;
+			date.s     = time.s;
+			date.p     = time.p;
+			date.model = `${date.model}${join}${time.model}`;
+			return date;
 		}
-
-	}
-
-
-
+	};
 
 /*============================================================================*/
 	/**#3 Eventos Customizados
