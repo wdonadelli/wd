@@ -1339,9 +1339,9 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-	/**''const object __DATE''
-	Estabelece as regras para datas em formato de string.**/
-	const __DATE = {
+	/**''const object __DATETIME''
+	Estabelece as regras para data e tempo em formato de string.**/
+	const __DATETIME = {
 		/**. '{string lang}: Registra o identificador da linguagem local para fins de atualização.**/
 		lang: null,
 		/**. '{object en}: Registra os nomes dos meses e dias, curtos e longos, em língua inglesa.**/
@@ -1391,8 +1391,6 @@ const wd = (function() {
 			{re: null, h: "$1", m: "$2", s: "$3", p: "$4", type: "time", model: "h:mm:ss p"},
 			{re: null, h: "$1", m: "$2", p: "$3",          type: "time", model: "h:mm p"},
 			{re: null, Y: "$1", w: "$2", type: "week", model: "YYYYW-ww"},
-
-//week	YYYYWW	2010W-01 (semana de 01-54)
 //week	WWYYYY	01, 2010 (semana de 01-54)
 		],
 		/**. '{object names(array lang)}: Retorna os nomes dos meses e dias (DDD DDDD MMM MMMM) na língua definida no argumento.**/
@@ -1491,13 +1489,54 @@ const wd = (function() {
 			}
 			return data === null ? null : (id === "D" ? (data%7)+1 : (data%12)+1);
 		},
-		/**. '{object check(string input)}: Testa o valor de entrada ('{input}) como data, tempo ou mês. Retonará nulo, se incorreto, ou um objeto contendo os dados de tempo:
+		/**. '{string name(integer index, string id)}: Retorna o nome do mês ou dia a partir do índice (infinito). O argumento '{name} funciona como o método '{index}.**/
+		name: function(index, id) {
+			this.update();
+			const data = /^(DDDD?|MMMM?)$/;
+			const name = data.test(id);
+			const div  = name ? (id[0] === "D" ? 7 : 12) : null;
+			const item = name ? (index - 1)%div + (index < 1 ? div : 0) : null;
+			return item !== null ? this.local[id][item] : String(index);
+		},
+		/**. '{string iso(object data)}: Recebe o resultado do método ´{check} e retorna um formato padrão de data, tempo, mês ou semana.**/
+		iso: function(data) {
+			if (typeof data !== "object") return null;
+			const str = {Y: "", M: "", D: "", w: "", h: "", m: "", s: ""};
+			for (let i in str) {
+				let aux, len, val = data[i];
+				if (val !== null) {
+					if (i === "Y") {
+						val = Math.abs(val);
+						len = (val < 10 ? 3 : (val < 100 ? 2 : (val < 1000 ? 1 : 0)));
+						str.Y = String("0").repeat(len)+String(val);
+					}
+					else if (i === "s") {
+						aux = String(val).split(".");
+						if (aux.length < 2) aux.push("000");
+						aux[0] = (val < 10 ? "0" : "") + aux[0];
+						aux[1] = aux[1] + (String("0").repeat(3 - aux[1].length));
+						str.s = aux.join(".");
+					}
+					else {
+						str[i] = (val < 10 ? "0" : "") + String(val);
+					}
+				}
+			}
+			const info = {
+				date: (data.Y < 1 ? "-" : "") + `${str.Y}-${str.M}-${str.D}`,
+				time: `${str.h}:${str.m}:${str.s}`,
+				month: (data.Y < 1 ? "-" : "") + `${str.Y}-${str.M}`,
+				week:  (data.Y < 1 ? "-" : "") + `${str.Y}W-${str.w}`,
+			};
+			return info[data.type];
+		},
+		/**. '{object check(string input)}: Testa o valor de entrada ('{input}) como data, tempo, mês ou semana. Retonará nulo, se incorreto, ou um objeto contendo os dados de data ou tempo:
 		|Nome|Tipo|Descrição|
 		|type|string|Tipo da informação (date, time, month, week)|
 		|Y|integer|Valor numérico do ano ou nulo se não aplicável|
 		|M|integer|Valor numérico do mês ou nulo se não aplicável|
 		|D|integer|Valor numérico do dia ou nulo se não aplicável|
-		|W|integer|Valor numérico da semana do ano ou nulo se não aplicável|
+		|w|integer|Valor numérico da semana do ano ou nulo se não aplicável|
 		|h|integer|Valor numérico do hora ou nulo se não aplicável|
 		|m|integer|Valor numérico do minuto ou nulo se não aplicável|
 		|s|integer|Valor numérico do segundo ou nulo se não aplicável|
@@ -1523,31 +1562,27 @@ const wd = (function() {
 					data.type  = item.type;
 					data.model = item.model;
 					/*-- checar parâmetros específicos --*/
-					if (data.type === "date") {
+					if (data.type === "date" && data.D > this.max(data.Y, data.M))
+							continue;
+					if (data.type === "date" || data.type === "month")
 						data.Y = (minus ? -1 : 1) * data.Y;
-						if (data.D <= this.max(data.Y, data.M))
-							return data;
-					}
-					else if (data.type === "month") {
-						data.Y = (minus ? -1 : 1) * data.Y;
-						return data;
-					}
-					else if (data.type === "month") {
+					if (data.type === "time") {
 						if (data.p === "AM" || data.p === "PM")
 							data.h = data.h%12 + (data.p === "PM" ? 12 : 0);
 						data.p = data.h >= 12 ? "PM" : "AM"
 						data.s = data.s === null ? 0 : data.s;
 						data.h = data.h%24;
-						return data;
 					}
-					else {
-						return data;
-					}
+					/*-- retornar --*/
+					data.iso = this.iso(data);
+					for (let j in data)
+						if (data[j] === null) delete data[j];
+					return data;
 				}
 			}
 			return null;
 		},
-		/**. '{object test(string input)}: Testa o valor de entrada é data, tempo ou data e tempo.**/
+		/**. '{object test(string input)}: Testa o valor de entrada como data e tempo ou o retorna o resultado do método '{check}.**/
 		test: function(input) {
 			const find = /([0-9][0-9])(T|\,|\ |\,\ )(\d?\d\:[0-5][0-9])/;
 			/*-- testar tempo ou data --*/
@@ -1558,7 +1593,8 @@ const wd = (function() {
 			const time = this.check(list[2]);
 			const join = list[1];
 			/*-- não é datetime --*/
-			if (date.type !== "date" || time.type !== "time") return null;
+			if (date === null || time === null || date.type !== "date" || time.type !== "time")
+				return null;
 			/*-- é datetime --*/
 			date.type  = "datetime";
 			date.h     = time.h;
@@ -1566,6 +1602,7 @@ const wd = (function() {
 			date.s     = time.s;
 			date.p     = time.p;
 			date.model = `${date.model}${join}${time.model}`;
+			date.iso   = `${date.iso}T${time.iso}`;
 			return date;
 		}
 	};
@@ -9429,7 +9466,7 @@ const wd = (function() {
 			SIGNAL:   {value: __SIGNAL},
 			MIME:     {value: __MIME},
 			STYLE:    {value: __STYLE},
-			DATE:     {value: __DATE},
+			DATETIME: {value: __DATETIME},
 		});
 	}
 
