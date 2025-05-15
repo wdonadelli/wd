@@ -1513,10 +1513,6 @@ const wd = (function() {
 				return String(abs);
 			return String(data).toUpperCase();
 		},
-
-
-
-
 		/**. '{string iso(object data)}: Retorna uma string padrão a partir do resultado do método '{check}.**/
 		iso: function(data) {
 			if (typeof data !== "object") return null;
