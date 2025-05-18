@@ -678,17 +678,6 @@ const wd = (function() {
 	/**''const object __LANG''
 	Controla a linguagem local da biblioteca.**/
 	const __LANG = {
-		_prev:   [],
-		_user:   [],
-		_month:  [],
-		_week:   [],
-		_number: [],
-		_date:   [],
-
-
-
-
-
 		/**. '{regexp re}: Retorna a expressão regular que verifica o formato de a{linguagem}[href="https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/lang)"].**/
 		re: /^[a-z]{2,3}(\-[A-Z][a-z]{3})?(\-([A-Z]{2}|[0-9]{3}))?$/,
 		/**. '{array node(node elem)}: Retorna a lista dos atributos i{lang} do elemento HTML e seus ascendentes, se houver.**/
@@ -703,127 +692,19 @@ const wd = (function() {
 			}
 			return lang;
 		},
-		/**. '{array value}: Define ou retorna a cadeia de linguagens estabelecidas pelo usuário, pelo HTML e pelo navegador.**/
+		/**. '{array user}: Define ou retorna a cadeia de linguagens definida no corpo do documento.**/
+		set user(x) {
+			if (typeof x !== "string")
+				document.body.removeAttribute("lang");
+			const lang = String(x).replace(/\s+/g, " ").trim();
+			document.body.setAttribute("lang", lang);
+		},
+		get user() {
+			return document.body.getAttribute("lang");
+		},
+		/**. '{array value}: Define ou retorna a cadeia de linguagens estabelecidas.**/
 		get value() {
-			const nav  = navigator.languages;
-			const html = this.node(document.body);
-			return this._user.concat(html, nav, ["en"]);
-		},
-		set value(x) {
-			if (typeof x === "string")
-				this._user = x.replace(/\s+/g, " ").trim().split(" ");
-			else if (Array.isArray(x))
-				this._user = x;
-			else
-				this._user = [];
-		},
-
-
-
-
-
-
-
-
-
-
-		/**. '{void update()}: Atualiza os dados de acordo com a linguagem construindo as seguintes informações:
-		|Propriedade|Descrição|month|week|number|
-		|index|Índice numérico|1 a 12|1 a 7|-9 a 9|
-		|value|Retorna o índice com dois caracteres|01 a 12|01 a 07|Não se aplica|
-		|long|Valor longo por extenso|MMMM|DDDD|Não se aplica|
-		|short|Valor curto por extenso|MMM|DDD|Não se aplica|
-		Quanto a data por extenso, criar expressões regulares para encontrar os formatos DMMMMYYYY, MMMMDYYYY e MMMMYYYY.**/
-		update: function() {
-			const lang = this.value;
-			const test = this._prev;
-			/*-- sem alteração da cadeia de linguagem: retornar --*/
-			if (lang.join(",") === test.join(",")) return;
-			/*-- com alteração da cadeia de linguagem: atualizar --*/
-			this._prev   = lang;
-			this._month  = [];
-			this._week   = [];
-			this._number = [];
-			this._date   = {};
-			/*-- variáveis auxiliares --*/
-			const month  = new Date(1970, 0, 1, 12, 0, 0, 0);
-			const week   = new Date(1970, 0, 1, 12, 0, 0, 0);
-			const date   = {day: "(0?[1-9]|[12]\\d|3[01])", month: [], year: "([-+]?\\d{3}\\d+)"};
-			let long, short, index, value;
-			for (let i = 0; i <= 11; i++) {
-				/*-- Atualizar mês --*/
-				month.setMonth(i);
-				long  = month.toLocaleDateString(lang, {month: "long"}).trim();
-				short = month.toLocaleDateString(lang, {month: "short"}).trim();
-				index = i + 1;
-				value = (index < 10 ? "0" : "") + String(index);
-				this._month.push({index: index, value: value, long: long, short: short});
-				/*-- Atualizar expressão regular para datas com nome de mês --*/
-				date.month.push( long.replace(/(\W)/g, "\\$1"));
-				date.month.push(short.replace(/(\W)/g, "\\$1"));
-				if (i === 11) {
-					date.month = "(" + date.month.join("|") + ")";
-					value = [date.day, date.month, date.year].join("\\ ");
-					this._date.DMMMMYYYY = new RegExp("^" + value + "$", "i");
-					value = [date.month, date.day, date.year].join("\\ ");
-					this._date.MMMMDYYYY = new RegExp("^" + value + "$", "i");
-					value = [date.month, date.year].join("[\\ /]");
-					this._date.MMMMYYYY  = new RegExp("^" + value + "$", "i");
-				}
-				/*-- Atualizar dia da semana --*/
-				if (i >= 1 && i <= 7) {
-					week.setDate(i);
-					long  = week.toLocaleDateString(lang, {weekday: "long"}).trim();
-					short = week.toLocaleDateString(lang, {weekday: "short"}).trim();
-					index = week.getDay() + 1;
-					value = "0" + String(index);
-					this._week.push({index: index, value: value, long: long, short: short});
-				}
-				/*-- Atualizar números --*/
-				if (i >= 0 && i <= 9) {
-					value = Number(i).toLocaleString(lang);
-					this._number.push({index: i, value: value});
-					value = Number(-i).toLocaleString(lang);
-					this._number.push({index: -i, value: value});
-				}
-			}
-			return;
-		},
-		/**. '{array month}: Retorna uma lista de objetos contendo informações sobre os meses (ver método '{update})**/
-		get month() {
-			this.update();
-			return this._month;
-		},
-		/**. '{array week}: Retorna uma lista de objetos contendo informações sobre os dias da semana (ver método '{update})**/
-		get week() {
-			this.update();
-			return this._week;
-		},
-		/**. '{array number}: Retorna uma lista de objetos contendo informações sobre os números (ver método '{update})**/
-		get number() {
-			this.update();
-			return this._number;
-		},
-		/**. '{object search(string name, any value)}: Busca a informação (argumento '{value}) dentro das propriedades (argumento '{name}) i{month}, i{week} e number e a retorna individualmente ou nulo se não encontrado.**/
-		search: function(name, value) {
-			if (["month", "week", "number"].indexOf(name) < 0) return null;
-			const chars = isNaN(value);
-			const upper = chars ? String(value).toUpperCase() : null;
-			const lower = chars ? String(value).toLowerCase() : null;
-			const index = chars ? null : Number(value);
-			const array = this[`_${name}`];
-			for (let i = 0; i < array.length; i++)
-				if (
-					index === array[i].index ||
-					upper === array[i].long  || upper === array[i].short ||
-					lower === array[i].long  || lower === array[i].short
-				) return array[i];
-			return null;
-		},
-		/**. '{object date}: Retorna um objeto com expressões regulares de datas por extenso (ver método '{update})**/
-		get date() {
-			this.update();
-			return this._date;
+			return this.node(document.body).concat(navigator.languages, ["en"]);
 		},
 	};
 
@@ -1341,16 +1222,17 @@ const wd = (function() {
 /*----------------------------------------------------------------------------*/
 	/**''const object __DATETIME''
 	Estabelece as regras para data e tempo em formato de string. Nomenclatura:
-	|Dado|Formato|Descrição|Formato|Descrição|Formato|Descrição|Formato|Descrição|
+	|Dado|Código|Valores|Código|Valores|Código|Valores|Código|Valores|
 	|Ano|Y|Número inteiro|YYYY|4 Dígitos ou mais|||||
 	|Mês|M|1-12 ou 01-12|MM|2 Dígitos 01-12|MMM|Nome curto|MMMM|Nome longo|
 	|Dia|D|1-31 ou 01-31|DD|2 Dígitos 01-31|||||
 	|Dia da semana|d|1-7 ou 01-07|dd|2 Dígitos 01-07|ddd|Nome curto|dddd|Nome longo|
-	|Semana do ano|w|1-54 ou 01-54|ww|2 Dígitos 01-54|||||
+	|Semana do ano|w|1-53 ou 01-53|ww|2 Dígitos 01-53|||||
 	|Horas|H|0-24 ou 00-24|HH|2 Dígitos 00-24|h|0-12 ou 00-12|hh|2 Dígitos 00-12|
 	|Minuto|m|0-59 ou 00-59|mm|2 Dígitos 00-59|||||
 	|Segundo|s|0-59.999 ou 00-59.999|ss|2 Dígitos 00-59.999|||||
-	|Período do dia|p|AM ou PM|||||||**/
+	|Período do dia|p|AM ou PM|||||||
+	|Antes do ano 0|P|"-" ou "+" (opcional)|||||||**/
 	const __DATETIME = {
 		/**. '{string lang}: Registra o identificador da linguagem local para fins de atualização.**/
 		lang: null,
@@ -1359,45 +1241,50 @@ const wd = (function() {
 		/**. '{object base}: Registra as unidades de tempo para fins de montagem dos modelos.**/
 		base: {
 			Y:   "([0-9]+)",                    YYYY: "([0-9][0-9][0-9][0-9]+)",
-			M:   "(0?[1-9]|1[12])",             MM:   "(0[1-9]|1[12])",
+			M:   "(0?[1-9]|1[0-2])",            MM:   "(0[1-9]|1[0-2])",
 			MMM: null,                          MMMM: null,
 			D:   "(0?[1-9]|[12][0-9]|3[01])",   DD:   "(0[1-9]|[12][0-9]|3[01])",
 			d:   "(0?[1-7])",                   dd:   "0[1-7]",
 			ddd: null,                          dddd: null,
-			w:   "(0?[1-9]|[1-4][0-9]|5[0-4])", ww:   "(0[1-9]|[1-4][0-9]|5[0-4])",
+			w:   "(0?[1-9]|[1-4][0-9]|5[0-3])", ww:   "(0[1-9]|[1-4][0-9]|5[0-3])",
 			H:   "([01]?[0-9]|2[0-4])",         HH:   "([01][0-9]|2[0-4])",
 			h:   "(0?[1-9]|1[0-2])",            hh:   "(0[1-9]|1[0-2])",
 			m:   "([0-5]?[0-9])",               mm:   "([0-5][0-9])",
 			s:   "([0-5]?[0-9]|[0-5]?[0-9]\\.[0-9][0-9]?[0-9]?)",
 			ss:  "([0-5][0-9]|[0-5][0-9]\\.[0-9][0-9]?[0-9]?)",
-			p:   "([AP]M)",
+			p:   "([AP]M)", P: "([\\+\\-]?)"
 
 		},
 		/**. '{array templates}: Registra os modelos de tempo e suas configurações.**/
 		templates: [
-			{re: null, Y: "$1", M: "$2", D: "$3", type: "date", model: "YYYY-MM-DD"},
-			{re: null, Y: "$1", M: "$2", D: "$3", type: "date", model: "YYYY-MMM-DD"},
-			{re: null, Y: "$1", M: "$2", D: "$3", type: "date", model: "YYYY-MMMM-DD"},
-			{re: null, D: "$1", M: "$2", Y: "$3", type: "date", model: "DD/MM/YYYY"},
-			{re: null, D: "$1", M: "$2", Y: "$3", type: "date", model: "DD/MMM/YYYY"},
-			{re: null, D: "$1", M: "$2", Y: "$3", type: "date", model: "DD/MMMM/YYYY"},
-			{re: null, D: "$1", M: "$2", Y: "$3", type: "date", model: "D MMM YYYY"},
-			{re: null, D: "$1", M: "$2", Y: "$3", type: "date", model: "D MMMM YYYY"},
-			{re: null, M: "$1", D: "$2", Y: "$3", type: "date", model: "MMM D YYYY"},
-			{re: null, M: "$1", D: "$2", Y: "$3", type: "date", model: "MMMM D YYYY"},
-			{re: null, M: "$1", D: "$2", Y: "$3", type: "date", model: "MM.DD.YYYY"},
-			{re: null, M: "$1", D: "$2", Y: "$3", type: "date", model: "MM-DD-YYYY"},
-			{re: null, M: "$1", Y: "$2", type: "month", model: "MM/YYYY"},
-			{re: null, M: "$1", Y: "$2", type: "month", model: "MMM YYYY"},
-			{re: null, M: "$1", Y: "$2", type: "month", model: "MMMM YYYY"},
-			{re: null, Y: "$1", M: "$2", type: "month", model: "YYYY-MM"},
-			{re: null, Y: "$1", M: "$2", type: "month", model: "YYYY-MMM"},
-			{re: null, Y: "$1", M: "$2", type: "month", model: "YYYY-MMMM"},
-			{re: null, H: "$1", m: "$2", s: "$3", type: "time", model: "H:mm:ss"},
-			{re: null, H: "$1", m: "$2",          type: "time", model: "H:mm"},
+			/*-- datas: meses numéricos --*/
+			{re: null, P: "$1", Y: "$2", M: "$3", D: "$4", type: "date", model: "PYYYY-MM-DD"},
+			{re: null, P: "$1", D: "$2", M: "$3", Y: "$4", type: "date", model: "PDD/MM/YYYY"},
+			{re: null, P: "$1", M: "$2", D: "$3", Y: "$4", type: "date", model: "PMM-DD-YYYY"},
+			/*-- datas: meses nominais --*/
+			{re: null, P: "$1", Y: "$2", M: "$3", D: "$4", type: "date", model: "PYYYY MMM D"},
+			{re: null, P: "$1", Y: "$2", M: "$3", D: "$4", type: "date", model: "PYYYY MMMM D"},
+			{re: null, P: "$1", D: "$2", M: "$3", Y: "$4", type: "date", model: "PD MMM YYYY"},
+			{re: null, P: "$1", D: "$2", M: "$3", Y: "$4", type: "date", model: "PD MMMM YYYY"},
+			{re: null, P: "$1", M: "$2", D: "$3", Y: "$4", type: "date", model: "PMMM D YYYY"},
+			{re: null, P: "$1", M: "$2", D: "$3", Y: "$4", type: "date", model: "PMMMM D YYYY"},
+			/*-- mêses numéricos --*/
+			{re: null, P: "$1", Y: "$2", M: "$3", type: "month", model: "PYYYY-MM"},
+			{re: null, P: "$1", M: "$2", Y: "$3", type: "month", model: "PMM/YYYY"},
+			{re: null, P: "$1", M: "$2", Y: "$3", type: "month", model: "PMM-YYYY"},
+			/*-- mêses nominais --*/
+			{re: null, P: "$1", M: "$2", Y: "$3", type: "month", model: "PMMM YYYY"},
+			{re: null, P: "$1", M: "$2", Y: "$3", type: "month", model: "PMMMM YYYY"},
+			{re: null, P: "$1", Y: "$2", M: "$3", type: "month", model: "PYYYY MMM D"},
+			{re: null, P: "$1", Y: "$2", M: "$3", type: "month", model: "PYYYY MMMM D"},
+			/*-- semanas --*/
+			{re: null, P: "$1", Y: "$2", w: "$3", type: "week", model: "PYYYY-Www"},
+			/*-- tempo --*/
+			{re: null, H: "$1", m: "$2", s: "$3",          type: "time", model: "H:mm:ss"},
+			{re: null, H: "$1", m: "$2",                   type: "time", model: "H:mm"},
 			{re: null, h: "$1", m: "$2", s: "$3", p: "$4", type: "time", model: "h:mm:ss p"},
 			{re: null, h: "$1", m: "$2", p: "$3",          type: "time", model: "h:mm p"},
-			{re: null, Y: "$1", w: "$2", type: "week", model: "YYYYW-ww"},
+
 //week	WWYYYY	01, 2010 (semana de 01-54)
 		],
 		/**. '{object names(array lang)}: Retorna os nomes dos meses e dias (ddd dddd MMM MMMM) na língua definida no argumento.**/
@@ -1418,13 +1305,13 @@ const wd = (function() {
 		},
 		/**. '{void update()}: Atualiza os modelos em caso de mundança de linguagem.**/
 		update: function() {
-			/*-- verificando se lang foi alterada desde a última vez --*/
+			/*-- verificando alteração de lang --*/
 			const lang = __LANG.value.join(" ");
 			if (lang === this.lang) return;
 			/*-- atualizar valores --*/
 			this.lang  = lang;
 			this.local = this.names(lang.split(" "));
-			/*-- atualizr unidades básicas ''--*/
+			/*-- atualizar unidades básicas ''--*/
 			for (let i in this.local) {
 				let list = this.local[i].slice();
 				list.forEach(function(v,i,a) {a[i] = v.replace(/(\W)/g, "\\$1");});
@@ -1433,8 +1320,7 @@ const wd = (function() {
 			}
 			/*-- atualizar expressões regulares dos modelos --*/
 			const wall  = /(\W)/g;
-			const find  = /(Y+|D+|M+|w+|d+|H+|h+|m+|s+|p)/g;
-			const minus = {date: true, month: true, week: true};
+			const find  = /(Y+|D+|M+|w+|d+|H+|h+|m+|s+|p|P)/g;
 			for (let i in this.templates) {
 				/*-- obtendo valores dos dados --*/
 				let parts = {};
@@ -1444,12 +1330,11 @@ const wd = (function() {
 				for (let unit = 0; unit < units.length; unit++)
 					parts[units[unit]] = this.base[units[unit]];
 				/*-- executando a substituição de dados --*/
-				model = model.replace(find, "<<$1>>");
+				model = model.replace(find, "<<<$1>>>");
 				for (let part in parts)
-					model = model.replace(`<<${part}>>`, parts[part]);
+					model = model.replace(`<<<${part}>>>`, parts[part]);
 				/*-- construindo expressão regular --*/
-				let sign = minus[type] === true ? "\\-?" : "";
-				this.templates[i].re = new RegExp(`^${sign}${model}$`, "i");
+				this.templates[i].re = new RegExp(`^${model}$`, "i");
 			}
 			return;
 		},
@@ -1464,16 +1349,19 @@ const wd = (function() {
 			return max[month-1];
 		},
 		/**. '{number|string value(string data, string unit)}: Retorna o valor numérico declarado em '{data}:
-		- '{unit} aceitas os valores Y, D, M, w, d, h, H, m, s, p;
+		- '{unit} aceitas os valores Y D M w d h H m s p P;
 		- em caso de número, retornará seu valor numérico;
 		- se '{unit} for "d" ou "M" e '{data} um nome, retornará seu índice a partir de 1;
-		- caso contrário, retornará o valor '{data} em caixa alta.**/
+		- se '{unit} for "P", retornará -1, caso negativo, ou 1; e
+		- se '{unit} for "p", retornará "AM" ou "PM".**/
 		value: function (data, unit) {
 			this.update();
 			const number = /^\d+(\.\d+)?$/;
 			if (number.test(data)) return Number(data);
 			const upper = String(data).toUpperCase();
 			const lower = String(data).toLowerCase();
+			if (unit === "P")
+				return data === "-" ? -1 : 1;
 			if (unit === "d" || unit === "M") {
 				const attr = unit === "d" ? ["dddd", "ddd"] : ["MMMM", "MMM"];
 				const div  = unit === "d" ? 7 : 12;
@@ -1488,9 +1376,9 @@ const wd = (function() {
 		/**. '{string string(number data, string unit)}: Retorna o valor textua conforme formato definido em '{unit}:**/
 		string: function(data, unit) {
 			const abs = Math.abs(data);
-			if (unit === "YYYY") {
+			if (unit === "YYYY" || unit === "Y") {
 				const len = abs < 10 ? 3 : (abs < 100 ? 2 : (abs < 1000 ? 1 : 0));
-				return (data < 0 ? "-" : "") + String("0").repeat(len)+String(abs);
+				return String("0").repeat(unit === "Y" ? 0 : len)+String(abs);
 			}
 			if (unit === "ss") {
 				const num = String(abs).split(".");
@@ -1507,6 +1395,8 @@ const wd = (function() {
 				const index = item%div + (item < 0 ? div : 0);
 				return this.local[unit][index];
 			}
+			if (unit === "P")
+				return Number(data) < 0 ? "-" : "";
 			if ((/^(MM|DD|dd|ww|HH|hh|mm)$/).test(unit))
 				return (abs < 10 ? "0" : "") + String(abs);
 			if ((/^[YMDdwHhms]$/).test(unit))
@@ -1517,23 +1407,23 @@ const wd = (function() {
 		iso: function(data) {
 			if (typeof data !== "object") return null;
 			if (data.type === "date") {
-				const sign = data.Y < 0 ? "-" : "";
-				const YYYY = this.string(data.Y, "YYYY").replace("-", "");
+				const P    = this.string(data.P, "P");
+				const YYYY = this.string(data.Y, "YYYY");
 				const MM   = this.string(data.M, "MM");
 				const DD   = this.string(data.D, "DD");
-				return `${sign}${YYYY}-${MM}-${DD}`;
+				return `${P}${YYYY}-${MM}-${DD}`;
 			}
 			if (data.type === "month") {
-				const sign = data.Y < 0 ? "-" : "";
-				const YYYY = this.string(data.Y, "YYYY").replace("-", "");
+				const P    = this.string(data.P, "P");
+				const YYYY = this.string(data.Y, "YYYY");
 				const MM   = this.string(data.M, "MM");
-				return `${sign}${YYYY}-${MM}`;
+				return `${P}${YYYY}-${MM}`;
 			}
 			if (data.type === "week") {
-				const sign = data.Y < 0 ? "-" : "";
-				const YYYY = this.string(data.Y, "YYYY").replace("-", "");
+				const P    = this.string(data.P, "P");
+				const YYYY = this.string(data.Y, "YYYY");
 				const ww   = this.string(data.w, "ww");
-				return `${sign}${YYYY}W-${ww}`;
+				return `${P}${YYYY}-W${ww}`;
 			}
 			if (data.type === "time") {
 				const HH = this.string(data.H, "HH");
@@ -1552,16 +1442,51 @@ const wd = (function() {
 			}
 			return null;
 		},
+		/**. '{string iso(object data)}: Retorna uma string para formulário a partir do resultado do método '{check}.**/
+		form: function(data) {
+			if (typeof data !== "object")  return "";
+			if ("P" in data && data.P < 0) return "";
+			if ("Y" in data && (data.Y < 1 || data.Y > 9999)) return "";
+			if (data.type === "date") {
+				const YYYY = this.string(data.Y, "YYYY");
+				const MM   = this.string(data.M, "MM");
+				const DD   = this.string(data.D, "DD");
+				return `${YYYY}-${MM}-${DD}`;
+			}
+			if (data.type === "month") {
+				const YYYY = this.string(data.Y, "YYYY");
+				const MM   = this.string(data.M, "MM");
+				return `${YYYY}-${MM}`;
+			}
+			if (data.type === "week") {
+				const YYYY = this.string(data.Y, "YYYY");
+				const ww   = this.string(data.w, "ww");
+				return `${YYYY}-W${ww}`;
+			}
+			if (data.type === "time") {
+				const HH = this.string(data.H, "HH");
+				const mm = this.string(data.m, "mm");
+				return `${HH}:${mm}`;
+			}
+			if (data.type === "datetime") {
+				const copy = {};
+				for (let i in data) copy[i] = data[i];
+				copy.type  = "date";
+				const date = this.form(copy);
+				copy.type  = "time";
+				const time = this.form(copy);
+				return [date,time].join("T");
+			}
+			return null;
+		},
 		/**. '{object check(string input)}: Testa o valor de entrada ('{input}) como data, tempo, mês ou semana. Retonará nulo, se incorreto, ou um objeto contendo as unidades de data ou tempo**/
 		check: function(input) {
 			this.update();
 			input = String(input).trim();
-			const minus = (/^\-/).test(input);
-			const find  = /^(Y+|D+|M+|w+|d+|H+|h+|m+|s+|p)$/g;
+			const find  = /^(Y+|D+|M+|w+|d+|H+|h+|m+|s+|p|P)$/g;
 			/*-- checando as expressões regulares --*/
-			for (let i in this.templates) {
+			for (let i = 0; i < this.templates.length; i++) {
 				let item = this.templates[i];
-				/*-- expressão casou --*/
 				if (item.re.test(input)) {
 					let data = {type: item.type, model: item.model, re: item.re};
 					for (let j in item) {
@@ -1570,12 +1495,10 @@ const wd = (function() {
 							data[j]  = this.value(info, j);
 						}
 					}
+
 					/*-- checando o valor do dia do mês --*/
 					if (data.type === "date" && data.D > this.max(data.Y, data.M))
 							continue;
-					/*-- checando possibilidade de valores negativos --*/
-					if (data.type === "date" || data.type === "month" || data.type === "week")
-						data.Y = minus ? -data.Y : data.Y;
 					/*-- checando tempo --*/
 					if (data.type === "time") {
 						/*-- 12 horas --*/
@@ -1593,6 +1516,7 @@ const wd = (function() {
 					}
 					/*-- retornar --*/
 					data.iso = this.iso(data);
+					data.form = this.form(data);
 					return data;
 				}
 			}
@@ -1618,9 +1542,23 @@ const wd = (function() {
 			dt.type  = "datetime";
 			dt.model = `${date.model}${join}${time.model}`;
 			dt.iso   = this.iso(dt);
+			dt.form  = this.form(dt);
 			dt.re    = null;
 			return dt;
-		}
+		},
+		/**. '{object toObject(string input)}: Testa o valor de entrada e retorna os atributos do tempo.**/
+		toObject: function(input) {
+			const data = {type: null};
+			const info = {M: "month", D: "day", d: "weekDay", w: "week", H: "hour", m: "minute", s: "second", iso: "iso", type: "type"};
+			const time = this.test(input);
+			if (time !== null) {
+				for (let i in info) {
+					if (i in time) data[info[i]] = time[i];
+				}
+				if ("Y" in time) data.year  = time.P * time.Y;
+			}
+			return data;
+		},
 	};
 
 /*----------------------------------------------------------------------------*/
@@ -1679,14 +1617,12 @@ const wd = (function() {
 		},
 		datetime: function(date) {
 			return __DATETIME.iso({
-				Y: date.getFullYear(), M: date.getMonth() + 1, D: date.getDate(),
-				H: date.getHours(), m: date.getMinutes(),
+				Y: Math.abs(date.getFullYear()), P: date.getFullYear() < 0 ? -1 : 1,
+				M: date.getMonth() + 1, D: date.getDate(),       d: date.getDay() + 1,
+				H: date.getHours(),     m: date.getMinutes(), type: "datetime",
 				s: date.getSeconds()+(date.getMilliseconds()/1000),
-				type: "datetime"
 			});
 		},
-
-
 		/**. '{object test(object input)}: Testa o objeto informado e retorna um objeto contendo seu tipo, valor e forma textual.**/
 		test: function(input) {
 			if (typeof input !== "object")
@@ -4229,65 +4165,50 @@ const wd = (function() {
 
 /*----------------------------------------------------------------------------*/
 	/**#4 Dia da Semana
-	''constructor object __WeekDay(integer year, integer month, integer day)''
-	Construtor para resgate de informações sobre a semana a partir da informação do ano ('{year}), mês (1-12) ('{month}) e dia (1-31) ('{day}).  Herda propriedades do objeto __Day.**/
-	function __WeekDay(year, month, day) {
-		if (!(this instanceof __WeekDay)) return new __WeekDay(year, month, day);
-		__Day.call(this, year, month, day);
-		const sunday  = new __Day(2023,1,1).daysElapsed;
-		const today   = this.daysElapsed;
-		const index   = Math.abs(today - sunday)%7;
-		const weekDay =  (today > sunday ? index : (7 - index)%7) + 1;
-		Object.defineProperties(this, {
-			/**. '{integer weekDay}: Registra o dia da semana, de domingo a sábado (1-7).**/
-			weekDay: {value: weekDay},
-		});
-	}
-
-	__WeekDay.prototype = Object.create(__Day.prototype, {
-		constructor: {value: __WeekDay},
-	});
-
-/*----------------------------------------------------------------------------*/
-	/**#4 Semana do Ano
 	''constructor object __Week(integer year, integer month, integer day)''
-	Construtor para resgate de informações sobre a semana do ano a partir da informação do ano ('{year}), mês (1-12) ('{month}) e dia (1-31) ('{day}).  Herda propriedades do objeto __WeekDay.**/
+	Construtor para resgate de informações sobre a semana a partir da informação do ano ('{year}), mês (1-12) ('{month}) e dia (1-31) ('{day}). Herda propriedades do objeto __Day.**/
 	function __Week(year, month, day) {
 		if (!(this instanceof __Week)) return new __Week(year, month, day);
-		__WeekDay.call(this, year, month, day);
-		const week = this.weekDay - 1;
-		const days = (this.days - 1)%7;
-		const ref  = week - days;
-		const fwd  = 1 + ref + (ref < 0 ? 7 : 0);
-		const mfw  = this.leap && fwd === 4 || fwd === 5 ? 53 : 52;
+		__Day.call(this, year, month, day);
+		/*-- referências (Domingo, 01/01/2023 = 0) --*/
+		const sun  = new __Year(2023).daysElapsedYear;
+		const days = {init: this.daysElapsedYear, today: this.daysElapsed};
+		/*-- localizar dia da semana --*/
+		const wday = {};
+		for (let i in days) {
+			let diff = (0 + (days[i] - sun))%7;
+			wday[i] = (diff + (diff < 0 ? 7 : 0));
+		}
+		/*-- localizar semana do ano a partir de 01 de janeiro --*/
+		const ref  = days.init - wday.init;
+		const week = Math.trunc((days.today - ref)/7);
 		Object.defineProperties(this, {
+			/**. '{integer weekDay}: Registra o dia da semana, de domingo a sábado (1-7).**/
+			weekDay: {value: wday.today + 1},
 			/**. '{integer firstWeekDay}: Registra o primeiro dia da semana do ano (1-7).**/
-			firstWeekDay: {value: fwd},
-			/**. '{integer maxFormWeek}: Registra o número máximo de semanas no ano para formulário HTML (1-53).**/
-			maxFormWeek:  {value: mfw}
+			firstWeekDay: {value: wday.init + 1},
+			/**. '{integer week}: Retorna a semana do ano (1-54) iniciando em domingo e desde o primeiro dia do ano.**/
+			week: {value: week + 1},
 		});
 	}
 
-	__Week.prototype = Object.create(__WeekDay.prototype, {
+	__Week.prototype = Object.create(__Day.prototype, {
 		constructor: {value: __Week},
-		/**. '{integer week}: Retorna a semana do ano (1-54) desde o primeiro dia do ano e início no domingo.**/
-		week: {
+		/**. '{string YYYYWww}: Retorna a semana conforme a{ISO 8601}[href="https://en.wikipedia.org/wiki/ISO_8601#Week_dates"], ou seja, a semana começa na segunda-feira do primeiro dia útil.**/
+		YYYYWww: {
 			get: function() {
-				const sun = ([null,1,0,-1,-2,-3,-4,-5])[this.firstWeekDay];
-				const end = this.days;
-				return Math.trunc((end - sun)/7) + 1;
-			}
-		},
-		/**. '{integer fweek}: Retorna a semana do ano (1-53) conforme a{formulário HTML}[href="https://developer.mozilla.org/en-US/docs/Web/HTML/Date_and_time_formats#week_strings"]**/
-		fweek: {
-			get: function() {
-				const day  = this.firstWeekDay;
-				const mon  = ([null,2,1,0,-1,-2,4,3])[day];
-				const end  = this.days;
-				const len  = Math.trunc((end - mon)/7) + 1;
-				const max  = [null,1,null,null,null,null,3,2];
-				const back = (day > 5 || day === 1) && end <= max[day];
-				return back ? -(new __Week(this.year-1, 12, 31).maxFormWeek) : len;
+				function week(year, days) {
+					const init = new __Week(year + 0, 1, 1);
+					const last = new __Week(year + 1, 1, 1);
+					const data = [+1,0,-1,-2,-3,+3,+2];
+					const min  = init.daysElapsed + data[init.weekDay - 1];
+					const max  = last.daysElapsed + data[last.weekDay - 1] - 1;
+					if (days >= min && days <= max)
+						return {Y: year, P: year, w: Math.trunc((days - min)/7) + 1, type: "week"};
+					return week(year + (days < min ? -1 : 1), days);
+				}
+				const iso = week(this.year, this.daysElapsed);
+				return __DATETIME.iso(iso);
 			}
 		},
 		/**. '{integer work}: Retorna a quantidade de dias úteis decorridos até o dia.**/
@@ -4366,24 +4287,51 @@ const wd = (function() {
 				return this.constructor.toTimeObject(time + value);
 			}
 		},
-		/** . '{string codes(format)}: Retorna um objeto contendo propriedades temporais abreviadas.**/
+		/**. '{string codes(string format)}: Retorna um objeto contendo propriedades temporais abreviadas ('{format}).**/
 		codes: {
 			value: function(format) {
 				const data = {
 		 			Y: this.year,    YYYY: this.year,
-		 			M: this.month,   MM: this.month,   MMM: this.month,   MMMM: this.month,
-					D: this.day,     DD: this.day,
-					d: this.weekDay, dd: this.weekDay, ddd: this.weekDay, dddd: this.weekDay,
-					w: this.week,    ww: this.week,
-		 			H: this.hour,    HH: this.hour,
-		 			h: this.h12,     hh: this.h12,
-		 			m: this.minute,  mm: this.minute,
-		 			s: this.second,  ss: this.second,
-		 			p: this.meridiem
+		 			M: this.month,     MM: this.month,   MMM: this.month,   MMMM: this.month,
+					D: this.day,       DD: this.day,
+					d: this.weekDay,   dd: this.weekDay, ddd: this.weekDay, dddd: this.weekDay,
+					w: this.week,      ww: this.week,
+		 			H: this.hour,      HH: this.hour,
+		 			h: this.h12,       hh: this.h12,
+		 			m: this.minute,    mm: this.minute,
+		 			s: this.second,    ss: this.second,
+		 			p: this.meridiem,   P: this.year < 0 ? -1 : 1,
 				};
 				return __DATETIME.string(data[format], format);
 			}
 		},
+		/**. '{string toString()}: Retorna uma stringo no formato "dddd, PD MMMM YYYY h:mm p".**/
+		toString: {
+			value: function() {
+				const data = {P: "", YYYY: "", MMMM: "", D: "", h: "", mm: "", dddd: "", p: ""};
+				for (let i in data) data[i] = this.codes(i);
+				return `${data.dddd}, ${data.P}${data.D} ${data.MMMM} ${data.YYYY} ${data.h}:${data.mm} ${data.p}`;
+			}
+		},
+		/**. '{number toString()}: Retorna o mesmo valor da propriedade '{timeElapsed}.**/
+		valueOf: {
+			value: function() {return this.timeElapsed;}
+		},
+		/**. '{string log}: Retorna uma stringo no formato "PYYYY-MM-DD-dd-Www HH:mm:ss ...".**/
+		log: {
+			get: function() {
+				const week = this.isoWeek;
+				const days = this.daysElapsed;
+				const time = this.timeElapsed;
+				const data = {P: "", YYYY: "", MM: "", DD: "", HH: "", mm: "", ss: "", ww: "", dd: ""};
+				for (let i in data) data[i] = this.codes(i);
+				return [
+					`${data.P}${data.YYYY}-${data.MM}-${data.DD}-${data.dd}-W${data.ww}`,
+					`${data.HH}:${data.mm}:${data.ss} day ${days} time ${time} (${week})`
+				].join(" ")
+			}
+		},
+
 	});
 
 	Object.defineProperties(__Time, {
@@ -4393,7 +4341,7 @@ const wd = (function() {
 			value: function(value) {
 				const check = new __Type(value);
 				if (!check.integer)
-					throw TypeError("Invalid date value", {cause: "Value must be an integer."});
+					throw TypeError("[daysToYear] Value must be an integer.");
 				value = check.value;
 				/*-- Ano zero --*/
 				if (value >= 0 && value <= 365) return [0];
@@ -4423,7 +4371,7 @@ const wd = (function() {
 		daysToMonth: {
 			value: function(value) {
 				const year = this.daysToYear(value)[0];
-				const leap = year%400 === 0 || (year%4 === 0 && year%100 !== 0);
+				const leap = __DATETIME.leap(year);
 				const d365 = [31,59,90,120,151,181,212,243,273,304,334,365];
 				const d366 = [31,60,91,121,152,182,213,244,274,305,335,366];
 				const days = leap ? d366 : d365;
@@ -4452,7 +4400,7 @@ const wd = (function() {
 			value: function(value) {
 				const check = new __Type(value);
 				if (!check.finite)
-					throw TypeError("Invalid time value", {cause: "Value must be a finite number."});
+					throw TypeError("[secondsToTime] Value must be a finite number.");
 				const day    = 24*3600;
 				const rest   = check.value%day;
 				const time   = rest + (rest < 0 ? day : 0);
@@ -4462,7 +4410,7 @@ const wd = (function() {
 				return [hour, minute, Number(second.toFixed(3))];
 			}
 		},
-		/**. '{array seconds(integer value)}: Retorna o ano (item 0), o mês (item 1), o dia (item 2), a hora (item 3), o minuto (item 4) e o segundo (item 5) a partir do número de segundos ('{value}).**/
+		/**. '{array secondsToDate(integer value)}: Retorna o ano (item 0), o mês (item 1), o dia (item 2), a hora (item 3), o minuto (item 4) e o segundo (item 5) a partir do número de segundos ('{value}).**/
 		secondsToDate: {
 			value: function(value) {
 				const day  = 24*3600;
@@ -4473,52 +4421,63 @@ const wd = (function() {
 				return [date[0],date[1],date[2],time[0],time[1],time[2]];
 			}
 		},
-		/**. '{object toTimeObject(integer value)}: Retorna um objeto __Time a partir do número de segundos ('{value}).**/
+		/**. '{array weekToDate(string value)}: Retorna o ano (item 0), o mês (item 1) e o dia (item 2) a partir da string no formato de semana ('{value}).**/
+		weekToDate: {
+			value: function(value) {
+				const info = __DATETIME.test(value);
+				if (info === null || info.type !== "week") return null;
+				const year = info.P * info.Y;
+				const init = new __Year(year);
+				const days = init.daysElapsedYear + 7*(info.w - 2);
+				const date = this.daysToDate(days);
+				let   time = new __Time(date[0], date[1], date[2], 0, 0, 0);
+				while (time.YYYYWww !== info.iso) {
+					time = time.next();
+					if (Math.abs(time.year - year) > 1) return null;
+				}
+				return [time.year, time.month, time.day];
+			}
+		},
+		/**. '{object toTimeObject(integer value)}: Retorna o objeto '{__Time} a partir do número de segundos ('{value}).**/
 		toTimeObject: {
 			value: function(value) {
 				const data = this.secondsToDate(value);
 				return new __Time(data[0],data[1],data[2],data[3],data[4],data[5]);
 			}
 		},
-		/**. '{async sequentialityTest(integer start, integer stop, integer sec)}: Testa a sequencialidade da data do ano '{start} até o ano '{stop} (opcional) no tempo fixo de segundos '{sec} (opcional).**/
+		/**. '{async sequentialityTest(integer start, integer stop)}: Testa a sequencialidade da data do ano '{start} até '{stop}.**/
 		sequentialityTest: {
-			value: async function(start, stop, sec) {
-				let clock = [0,0,0];
-				if (stop === undefined) stop  = start;
-				if (sec  !== undefined) clock = this.secondsToTime(sec);
-				let zero = new Date().valueOf();
-				let next = new __Time(start,1,1,clock[0],clock[1],clock[2]);
-				let days = next.daysElapsed;
-				let time = days;
-				let day  = next.weekDay;
-				let week = next.week;
-				let year = next.year;
-				let gap  = 0;
-				let input, output;
-				while (next.year <= stop) {
-					input  = next.toString();
-					output = __Time.toTimeObject(next.timeElapsed);
-					next   = next.next();
-					if (input !== output.toString())
-						throw ReferenceError("toDateTime", {cause: input + " != " + output});
-					if (next.daysElapsed !== (days + 1))
-						throw ReferenceError("daysElapsed", {cause: next.YYYYMMDD})
-					if (next.weekDay !== (day === 7 ? 1 : day+1))
-						throw ReferenceError("weekDay", {cause: next.YYYYMMDD})
-					if (next.year === year) {
-						if (next.weekDay === 1 && next.week !== (week + 1))
-							throw ReferenceError("week", {cause: next.YYYYMMDD})
+			value: async function(start, stop) {
+				if (stop === undefined || stop < start) stop = start;
+				const init = new Date().valueOf();
+				const data = new __Time(start,1,1,0,0,0);
+				const hist = {a: data, b: data.next()};
+				let  count = 1;
+				while (hist.b.year <= stop) {
+					let days = {a: hist.a.daysElapsed, b: hist.b.daysElapsed};
+					let wday = {a: (hist.a.weekDay - 1), b: (hist.b.weekDay - 1)};
+					let week = {a: hist.a.week, b: hist.b.week};
+					let err  = null;
+					if (days.b - days.a !== 1)
+						err = "daysElapsed";
+					else if ((wday.a + 1)%7 !== wday.b)
+						err = "weekDay";
+					if (hist.a.year === hist.b.year) {
+						if (wday.b > wday.a && week.b !== week.a)
+							err = "week"
+						else if (wday.b < wday.a && week.b - week.a !== 1)
+							err = "week"
 					}
-					days = next.daysElapsed;
-					day  = next.weekDay;
-					week = next.week;
-					year = next.year;
-					gap++;
+					if (err !== null)
+						throw ReferenceError(`${err}\nA) ${hist.a.log}\nB) ${hist.b.log}`);
+					hist.a = hist.b;
+					hist.b = hist.b.next();
+					count++;
 				}
-				if (gap !== (next.daysElapsed - time))
-					throw ReferenceError("timeElapsed", {cause: gap})
-
-				return {start: start, stop: stop, time: ((new Date()).valueOf() - zero)/1000, days: gap};
+				if (hist.b.daysElapsed !== data.daysElapsed+count)
+					throw ReferenceError(`count (${count})\nA) ${data.log}\nB) ${hist.b.log}`);
+				const time = ((new Date()).valueOf() - init)/1000;
+				console.info(`${time}s, ${count} days, ${count/time} days/s`);
 			}
 		}
 	});
@@ -4526,108 +4485,52 @@ const wd = (function() {
 /*----------------------------------------------------------------------------*/
 	/**#4 Data e Tempo
 	''constructor object __DateTime(any input)''
-	Construtor para manipulação de data/tempo. O atributo '{input} aceita valores do tipo:
-	- Data, tempo ou data/tempo nos parâmetros da biblioteca;
-	- Numérico correspondendo ao número de segundos desde 0000-01-01T00:00:00.0000 (segundo 0);
-	- Objeto contendo os valores das propriedades de data/tempo ('{year},'{month}, '{day}, '{hour}, '{minute}, '{second}) que, se não informados, assumirão zeros; e
-	- Caso contrário, assumirá o valor de data e tempo atuais.**/
+	Construtor para manipulação de data/tempo. O argumento '{input} aceita os seguintes valores:
+	- Data, tempo, data e tempo, mês e semana (se válida) nos parâmetros da biblioteca;
+	- Valor numérico que corresponde aos segundos desde 0000-01-01T00:00:00.0000 (segundo 0);
+	- Objeto contendo as propriedades year, month, day, hour, minute e second; e
+	- Se indefinido, assumirá o valor de data e tempo atuais.**/
 	function __DateTime(input) {
 		if (!(this instanceof __DateTime)) return new __DateTime(input);
 		const error = "The date value is unknown.";
 		const data  = {year: 0, month: 1, day: 1, hour: 0, minute: 0, second: 0};
-		const check = __DATETIME.test(input);
 		const value = new __Type(input);
-		//check funciona para date time datetime month ?week?
-		//value serve para object integer datetime
-
-
-
-
-
-
-		if (check !== null) {
-			const swap = {year: "Y", month: "M", day: "D", hour: "H", minute: "m", second: "s"};
-			for (let i in data)
-				data[i] = swap[i] in check ? check[swap[i]] : data[i];
-			data.type  = check.type;
-		}
-		else if (value.object) {
-			data.type = value.type;
+		/*-- objeto (padrão) --*/
+		if (value.object) {
 			for (let i in data)
 				data[i] = i in input ? input[i] : data[i];
 		}
+		/*-- segundos --*/
 		else if (value.integer) {
-			const base = __Time.toTimeObject(value.value);
-			for (let i in data) data[i] = base[i];
-			data.type  = "number";
+			const info = __Time.toTimeObject(value.value)
+			return new __DateTime(info);
 		}
-
-
-
+		/*-- data e tempo --*/
+		else if (value.nonempty || value.datetime) {
+			const info = __DATETIME.toObject(value.nonempty ? input : value.value);
+			if (info.type === null) throw new TypeError(error);
+			if (info.type === "week") {
+				const week = __Time.weekToDate(info.iso);
+				if (week === null) throw new TypeError(error);;
+				info.year  = week[0];
+				info.month = week[1];
+				info.day   = week[2];
+			}
+			return new __DateTime(info);
+		}
+		/*-- data e tempo atuais --*/
+		else if (input === undefined) {
+			return new __DateTime(new Date());
+		}
+		/*-- erro --*/
+		else throw new TypeError(error);
+		/*-- objeto principal --*/
 		const main = new __Time(data.year, data.month,  data.day, data.hour, data.minute, data.second);
 
-
-
-		/*
-		else if (check.finite) {
-			const base  = __Time.toTimeObject(check.value);
-			for (let i in data) data[i] = base[i];
-			data.type  = "number";
-		}
-
-		else if (test.group === "week") {
-			const config = {
-				WWYYYY:   {w: "$1", y: "$2"},
-				YYYYWW:   {w: "$2", y: "$1"},
-			};
-			const regexp = test.regexp;
-			const format = test.subgroup;
-			const   week = Number(test.value.replace(regexp, config[format].w));
-			const   year = Number(test.value.replace(regexp, config[format].y));
-			let     date = new __Time(year,12,31,0,0,0);
-			if (week <= date.week) {
-				if (date.weekDay !== 1)
-					date = date.walk(24*3600*(1 - date.weekDay));
-				while (week !== date.week && date.week > 1)
-					date = date.walk(-7*24*3600);
-				const form = week <= date.maxFormWeek;
-				const list = {
-					year:  year,
-					type:  form ? "fweek" : "week",
-					month: date.week === 1 ? 1 : date.month,
-					day:   date.week === 1 ? 1 : date.day
-				}
-				for (let i in data)
-					data[i] = i in list ? list[i] : 0;
-			}
-		}
-		else {
-			const now = new Date();
-			data.year   = now.getFullYear();
-			data.month  = now.getMonth() + 1;
-			data.day    = now.getDate();
-			data.hour   = now.getHours();
-			data.minute = now.getMinutes();
-			data.second = now.getSeconds() + now.getMilliseconds()/1000;
-			data.type   = "now";
-		}
-		let main, error;
-		try {
-			main  = new __Time(data.year, data.month,  data.day, data.hour, data.minute, data.second);
-			error = "";
-		} catch(e) {
-			main  = new __DateTime();
-			error = e.message;
-			data.type  = "error";
-		}*/
 		Object.defineProperties(this, {
 			_max:  {value: null, writable: true},
 			/**. '{object main}: Registra o objeto __Time auxiliar.**/
 			main:  {value: main, writable: true},
-			/**. '{string error}: Registra o tipo de erro encontrado ou vazio.**/
-			error: {value: error},
-			/**. '{string type}: Registra o tipo de entrada.**/
-			type:  {value: data.type}
 		});
 	}
 
@@ -4652,11 +4555,11 @@ const wd = (function() {
 		/**. '{number valueOfDays()}: Retorna os dias desde 0000-01-01 com o tempo como elemento decimal.**/
 		valueOfDays: {value: function() {return this.valueOfDate()+this.valueOfTime()/(24*3600);}},
 		/**. '{string toString()}: Retorna o tempo no formato YYYY-MM-DDThh:mm:ss.sss.**/
-		toString: {value: function() {return this.main.toString();}},
+		toString: {value: function() {return this.format("[P][YYYY]-[MM]-[DD]T[HH]:[mm]:[ss]");}},
 		/**. '{string toDateString()}: Retorna o tempo no formato YYYY-MM-DD.**/
-		toDateString: {value: function() {return this.main.YYYYMMDD;}},
+		toDateString: {value: function() {return this.format("[P][YYYY]-[MM]-[DD]");}},
 		/**. '{string toString()}: Retorna o tempo no formato hh:mm:ss.sss.**/
-		toTimeString: {value: function() {return this.main.hhmmss;}},
+		toTimeString: {value: function() {return this.format("[HH]:[mm]:[ss]");}},
 		/**. '{string toLocaleString()}: Retorna o valor data/tempo no formato local.**/
 		toLocaleString: {
 			value: function() {
@@ -4695,19 +4598,13 @@ const wd = (function() {
 		},
 		/**. '{string format(string input, string type)}: Retorna notação de data/tempo pre-formatada a partir de codificação especificada no argumento '{input}. No argumento '{type} é possível limitar os códigos permitidos para "date" ou "time".**/
 		format: {
-			value: function(input, type) {
-				if (typeof input !== "string") return "";
-				type = String(type).trim().toLowerCase();
-				const codes = this.main.codes;
-				const types = {
-					date: ["Y", "YY", "YYYY", "M", "MM", "MMM", "MMMM", "D", "DD", "DDD", "DDDD", "w", "ww"],
-					time: ["h", "hh", "h12", "m", "mm", "s", "ss", "ampm"],
-				}
-				const allow = type in types ? types[type] : types.date.slice().concat(types.time);
-				let re, code;
-				for (let i = 0; i < allow.length; i++) {
-					re   = new RegExp("\\{"+allow[i]+"\\}", "gm");
-					input = input.replace(re, codes[allow[i]]);
+			value: function(input) {
+				input = String(input);
+				const types = `Y YYYY M MM MMM MMMM D DD d dd ddd dddd w ww h hh H HH m mm s ss p P`.split(" ");
+				for (let i = 0; i < types.length; i++) {
+					let regexp = new RegExp("\\["+types[i]+"\\]", "gm");
+					let code   = this.main.codes(types[i]);
+					input = input.replace(regexp, code);
 				}
 				return input;
 			}
@@ -5353,19 +5250,15 @@ const wd = (function() {
 				}
 				/*-- data/tempo --*/
 				if (this.fcheck === "datetime") {
-					const data  = new __DateTime(value);
-					const type  = data.type;
-					const main  = data.main;
-					const types = ["date", "time", "month", "week", "datetime", "fweek", "number"];
-					const found = types.indexOf(type) >= 0;
-					switch(this.ftype) {
-						case "date":           return type === "date"     ? main.YYYYMMDD   : "";
-						case "time":           return type === "time"     ? main.hhmmss     : "";
-						case "month":          return type === "month"    ? main.YYYYMM     : "";
-						case "week":           return type === "fweek"    ? main.YYYYWW     : "";
-						case "datetime-local": return type === "datetime" ? main.toString() : "";
-						case "datetime":       return found               ? main.toString() : "";
-					}
+					const data  = __DATETIME.test(value);
+					if (data === null) return "";
+					if (data.type === "week" && __Time.weekToDate(data.iso) === null) return "";
+					if (this.ftype === "datetime")
+						return data.iso;
+					else if (data.type === "datetime" && this.ftype === "datetime-local")
+						return data.form;
+					else if (data.type === this.ftype)
+						return data.form;
 					return "";
 				}
 				/*-- lista de valores --*/
@@ -5424,24 +5317,15 @@ const wd = (function() {
 				}
 				/*-- definir data/tempo --*/
 				if (this.fcheck === "datetime") {
-					const data  = new __DateTime(value);
-					const type  = data.type;
-					const main  = data.main;
-					const names = {week: "fweek", "datetime-local": "datetime"};
-					const ftype = this.ftype in names ? names[this.ftype] : this.ftype;
-					const types = {
-						date:  main.YYYYMMDD,
-						time:  mask ? main.hhmmss.substring(0,5) : main.hhmmss,
-						month: main.YYYYMM,
-						week:  main.YYYYWW,
-						fweek: main.YYYYWW,
-						datetime: mask ? main.toString().substring(0,16) : main.toString(),
-						number:   mask ? main.toString().substring(0,16) : main.toString()
-					};
-					if (ftype === type || (this.ftype === "datetime" && type in types)) {
-						if (mask && type !== "time" && data.year < 1) return;
-						node.value = types[ftype];
-					}
+					const data  = __DATETIME.test(value);
+					if (data === null) return;
+					if (data.type === "week" && __Time.weekToDate(data.iso) === null) return;
+					if (this.ftype === "datetime")
+						node.value = data.iso;
+					else if (data.type === "datetime" && this.ftype === "datetime-local")
+						node.value = data.form;
+					else if (data.type === this.ftype)
+						node.value = data.form;
 					return;
 				}
 				/*-- definir lista de valores --*/
@@ -9057,8 +8941,8 @@ const wd = (function() {
 		already: {get: function() {return WD(__DateTime().toString());}},
 		/**. '{string lang}: Define ou retorna a lista de linguagem em ordem de preferência da biblioteca.**/
 		lang: {
-			get: function()  {return __LANG.value;},
-			set: function(x) {__LANG.value = x;}
+			get: function()  {return __LANG.user;},
+			set: function(x) {__LANG.user = x;}
 		},
 		/**. '{object $(string css, node root)}: Retorna um objeto do tipo nó conforme seletor i{css} individual. O argumento opcional i{root} é o elemento pai a ser consultado cujo valor padrão é i{document}.**/
 		$: {value: function(css, root) {return WD(__Query(css, root).$);}},
@@ -9101,6 +8985,7 @@ const wd = (function() {
 			type:     {value: function(){return __Type.apply(null, Array.prototype.slice.call(arguments));}},
 			array:    {value: function(){return __Array.apply(null, Array.prototype.slice.call(arguments));}},
 			time:     {value: function(){return __DateTime.apply(null, Array.prototype.slice.call(arguments));}},
+			time2:    {value: function(){return __Time.apply(null, Array.prototype.slice.call(arguments));}},
 			node:     {value: function(){return __Node.apply(null, Array.prototype.slice.call(arguments));}},
 			number:   {value: function(){return __Number.apply(null, Array.prototype.slice.call(arguments));}},
 			string:   {value: function(){return __String.apply(null, Array.prototype.slice.call(arguments));}},
