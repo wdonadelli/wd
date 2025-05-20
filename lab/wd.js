@@ -1143,83 +1143,6 @@ const wd = (function() {
 	};
 
 /*----------------------------------------------------------------------------*/
-	/**''const object __TYPE''
-	Registra as expressões regulares para identificação de modelos genéricos de string.
-	|Grupo|Subgrupo|Exemplo|
-	|number|integer|10e12|
-	|number|decimal|+.15e12|
-	|number|factorial|3! (apenas inteiro positivo)|
-	|number|percentage|10%|
-	|number|infinity|-∞|
-	|date|YYYYMMDD|2010-03-01|
-	|date|DDMMYYYY|01/03/2010|
-	|date|MMDDYYYY|03.01.2010|
-	|date|DMMMMYYYY|1 março 2010|
-	|date|MMMMDYYYY|março 1 2010|
-	|time|hmmss|6:05:05.0001 (modelo de 24h)|
-	|time|AMPM|1:05:05.0001 AM (modelo de 12h)|
-	|time|PM|1:05:05.0001 pm (modelo de 12h)|
-	|month|YYYYMM|2010-03|
-	|month|MMYYYY|03/2010|
-	|month|MMMMYYYY|março/2010 ou março 2010|
-	|week|YYYYWW|2010W-01 (semana de 01-54)|
-	|week|WWYYYY|01, 2010 (semana de 01-54)|
-	|email|email|Um endereço de e-mail|
-	O valores acima apresentam as seguintes características:
-	- b{ATENÇÃO!} O nome do mês depende da linguagem, pode ser curto e ignora caixas;
-	- b{ATENÇÃO!} O nome do mês deve ser igual ao retornado pelo objeto nativo '{Date};
-	- O ano pode ser negativo;
-	- Os segundos e milissegundos são opcionais;
-	- AM e PM têm caixa ignorada; e
-	- Os espaços em branco são espaços simples.**/
-
-	const __TYPE = {
-		number: {
-			finite:     /^[+-]?(\.?\d+|\d+\.\d+)(e[+-]?\d+)?$/i,
-			percentage: /^[+-]?(\.?\d+|\d+\.\d+)(e[+-]?\d+)?\%$/i,
-			factorial:  /^\+?\d+\!$/,
-			infinite:   /^[+-]?\∞$/,
-		},
-		date: {
-			YYYYMMDD:  /^([-+]?\d{3}\d+)\-(0[1-9]|1[0-2])\-(0[1-9]|[12]\d|3[01])$/,
-			DDMMYYYY:  /^(0[1-9]|[12]\d|3[01])\/(0[1-9]|1[0-2])\/([-+]?\d{3}\d+)$/,
-			MMDDYYYY:  /^(0[1-9]|1[0-2])\.(0[1-9]|[12]\d|3[01])\.([-+]?\d{3}\d+)$/,
-			get DMMMMYYYY() {return __LANG.date.DMMMMYYYY;},
-			get MMMMDYYYY() {return __LANG.date.MMMMDYYYY;},
-		},
-		time: {
-			hmmss: /^([01]?\d|2[0-4])\:([0-5]\d)(\:[0-5]\d(\.\d{1,3})?)?$/,
-			AM:    /^(0?[1-9]|1[0-2])\:([0-5]\d)(\:[0-5]\d(\.\d{1,3})?)?\ ?am$/i,
-			PM:    /^(0?[1-9]|1[0-2])\:([0-5]\d)(\:[0-5]\d(\.\d{1,3})?)?\ ?pm$/i,
-		},
-		month: {
-			YYYYMM:   /^([-+]?\d{3}\d+)\-(0[1-9]|1[0-2])$/,
-			MMYYYY:   /^(0[1-9]|1[0-2])\/([-+]?\d{3}\d+)$/,
-			get MMMMYYYY() {return __LANG.date.MMMMYYYY;},
-		},
-		week: {
-			YYYYWW: /^([-+]?\d{3}\d+)\-W(0[1-9]|[1-4]\d|5[0-4])$/i,
-			WWYYYY: /^(0[1-9]|[1-4]\d|5[0-4])\,\ ([-+]?\d{3}\d+)$/,
-		},
-		email: {
-			email: /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/,
-		},
-		/**. '{object test(any x)}: Testa se o valor passado em '{x} encaixa em alguma expressão regular retornando um objeto contendo os atributos '{group}, '{subgroup} e '{value} e '{regexp.**/
-		test: function(x) {
-			x = String(x).trim();
-			for (let i in this) {
-				if (i !== "test") {
-					for (let j in this[i]) {
-						if (this[i][j].test(x))
-							return {group: i, subgroup: j, value: x, regexp: this[i][j]};
-					}
-				}
-			}
-			return {group: null, subgroup: null, value: x};
-		}
-	};
-
-/*----------------------------------------------------------------------------*/
 	/**''const object __DATETIME''
 	Estabelece as regras para data e tempo em formato de string. Nomenclatura:
 	|Dado|Código|Valores|Código|Valores|Código|Valores|Código|Valores|
@@ -1623,26 +1546,26 @@ const wd = (function() {
 				s: date.getSeconds()+(date.getMilliseconds()/1000),
 			});
 		},
-		/**. '{object test(object input)}: Testa o objeto informado e retorna um objeto contendo seu tipo, valor e forma textual.**/
+		/**. '{object test(object input)}: Testa o objeto informado e retorna um objeto contendo seu tipo (type) valor (value).**/
 		test: function(input) {
-			if (typeof input !== "object")
-				return {type: typeof input, value: input};
+			const data = {type: typeof input, value: input};
+			if (data.type !== "object")
+				return data;
 			if (input === null)
 				return {type: "null",  value: null};
 			if (Array.isArray(input))
 				return {type: "array", value: input.slice()};
 			/*-- objetos comuns --*/
-			const data = {type: "object", value: input};
 			for (let name in this.instances) {
 				if (name in window && input instanceof window[name]) {
 					let item  = this.instances[name];
 					data.type = item.type;
 					if (item.value === "valueOf")
 						data.value = input.valueOf();
-					else if (item.value === "item")
-						data.value = [input];
 					else if (item.value === "datetime")
 						data.value = this.datetime(input);
+					else if (item.value === "item")
+						data.value = [input];
 					else if (item.value === "list") {
 						data.value = [];
 						for (let i = 0; i < input.length; i++)
@@ -1688,6 +1611,11 @@ const wd = (function() {
 			else if (number !== null)
 				data = {type: "number", value: number};
 		}
+		/*-- checando NaN --*/
+		if (data.type === "number" && isNaN(data.value)) {
+			data.type = "NaN";
+		}
+
 		Object.defineProperties(this, {
 			_input: {value: input},
 			_char:  {value: char},
@@ -1698,8 +1626,10 @@ const wd = (function() {
 
 	Object.defineProperties(__Type.prototype, {
 		constructor: {value: __Type},
-		/**. '{string type}: Retorna o tipo do argumento verificado.**/
-		type: {get: function() {return this._type;}},
+		_re_email: {value: /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/},
+		/*-- Strings -------------------------------------------------------------*/
+		/**. '{boolean string}: Checa se o valor é uma string diferente de número ou data/tempo.**/
+		string: {get: function() {return this.type === "string";}},
 		/**. '{boolean chars}: Checa se o valor é uma string.**/
 		chars: {get: function() {return this._char;}},
 		/**. '{boolean empty}: Checa se o valor é uma string de caracteres não visualizáveis.**/
@@ -1707,11 +1637,18 @@ const wd = (function() {
 		/**. '{boolean nonempty}: Checa se o valor é uma string de caracteres visualizáveis.**/
 		nonempty: {get: function() {return this.chars && !this.empty;}},
 		/**. '{boolean lang}: Checa se o valor é uma string no formato de linguagem.**/
-		lang: {get: function() {return this.chars && __LANG.re(this._input);}},
-		/**. '{boolean string}: Checa se o valor é uma string diferente de número ou data/tempo.**/
-		string: {get: function() {return this.type === "string";}},
+		lang: {get: function() {return this.chars && __LANG.re(this._input.trim());}},
+		/**. '{boolean email}: Checa se o valor é uma string no formato de email.**/
+		email: {get: function() {return this.chars && this._re_email.test(this._input.trim());}},
+		/*-- DateTime ------------------------------------------------------------*/
+		/**. '{boolean datetime}: Checa se o valor é um conjunto data e tempo.**/
+		datetime: {get: function() {return this.type === "datetime";}},
+		/**. '{boolean date}: Checa se o valor é uma data em formato de string.**/
+		date: {get: function() {return this.type === "date";}},
+		/**. '{boolean time}: Checa se o argumento é uma string que representa uma unidade de tempo.**/
+		time: {get: function() {return this.type === "time";}},
+		/*-- Number ---------------------------------------------------------------*/
 		/**. '{boolean number}: Checa se o valor é um número real, fatorial (string) ou percentual (string).**/
-		//FIXME NaN é um problema para os próximos atributos
 		number: {get: function() {return this.type === "number";}},
 		/**. '{boolean finite}: Checa se o valor é um número finito.**/
 		finite: {get: function() {return this.number && isFinite(this.value);}},
@@ -1727,35 +1664,33 @@ const wd = (function() {
 		negative: {get: function() {return this.number && this.value < 0;}},
 		/**. '{boolean zero}: Checa se o valor é zero.**/
 		zero: {get: function() {return this.value === 0;}},
+		/*-- Diversos ------------------------------------------------------------*/
 		/**. '{boolean boolean}: Checa se o valor é um valor booleano.**/
 		boolean: {get: function() {return this.type === "boolean";}},
 		/**. '{boolean regexp}: Checa se o valor é uma expressão regular.**/
 		regexp: {get: function() {return this.type === "regexp";}},
-		/**. '{boolean datetime}: Checa se o valor é um conjunto data e tempo.**/
-		datetime: {get: function() {return this.type === "datetime";}},
-		/**. '{boolean date}: Checa se o valor é uma data em formato de string.**/
-		date: {get: function() {return this.type === "date";}},
 		/**. '{boolean function}: Checa se o valor é uma função.**/
 		function: {get: function() {return this.type === "function";}},
 		/**. '{boolean array}: Checa se o valor é um array.**/
 		array: {get: function() {return this.type === "array";}},
-		/**. '{boolean null}: Checa se o valor é nulo.**/
-		null: {get: function () {return this.type === "null";}},
-		/**. '{boolean undefined}: Checa se o valor é indefinido.**/
-		undefined: {get: function() {return this.type === "undefined";}},
-		/**. '{boolean time}: Checa se o argumento é uma string que representa uma unidade de tempo.**/
-		time: {get: function() {return this.type === "time";}},
 		/**. '{boolean node}: Checa se o argumento é um elemento HTML ou uma coleção desses.**/
 		node: {get: function() {return this.type === "node";}},
 		/**. '{boolean object}: Checa se o argumento é um objeto que não se enquadra nas demais categorias.**/
 		object: {get: function() {return this.type === "object";}},
+		/*-- Sem valores ---------------------------------------------------------*/
+		/**. '{boolean null}: Checa se o valor é nulo.**/
+		null: {get: function () {return this.type === "null";}},
+		/**. '{boolean undefined}: Checa se o valor é indefinido.**/
+		undefined: {get: function() {return this.type === "undefined";}},
+		/*-- Checagens -----------------------------------------------------------*/
+		/**. '{string type}: Retorna o tipo do argumento verificado.**/
+		type: {get: function() {return this._type;}},
 		/**. '{any  value}: Retorna o valor do argumento de acordo com o atributo '{type}.**/
 		value: {get: function() {return this._value;}},
 		/**. '{void  valueOf()}: Método padrão.**/
 		valueOf: {value: function() {return this._value.valueOf();}},
 		/**. '{string toString()}: Método padrão.**/
-		toString: {value: function() {return this._value.toString();}
-		},
+		toString: {value: function() {return this._value.toString();}},
 		/**. '{boolean instanceOf(string name)}: Retorna se o valor informado é instância do objeto nomeado em '{name}.**/
 		instanceOf: {
 			value: function (name) {
@@ -4067,7 +4002,7 @@ const wd = (function() {
 	Construtor para resgate de informações sobre o ano ('{year}).**/
 	function __Year(year) {
 		if (!(this instanceof __Year)) return new __Year(year);
-		const error = "The year must be an integer."
+		const error = `The year must be an integer (${year}).`
 		const check = new __Type(year);
 		if (!check.integer) throw new RangeError(error);
 		Object.defineProperties(this, {
@@ -4102,7 +4037,7 @@ const wd = (function() {
 	function __Month(year, month) {
 		if (!(this instanceof __Month)) return new __Month(year, month);
 		__Year.call(this, year);
-		const error = "The month must be an integer from 1 to 12.";
+		const error = `The month must be an integer from 1 to 12 (${month}).`;
 		const check = new __Type(month);
 		if (!check.integer || check < 1 || check > 12) throw RangeError(error);
 		Object.defineProperties(this, {
@@ -4140,7 +4075,7 @@ const wd = (function() {
 	function __Day(year, month, day) {
 		if (!(this instanceof __Day)) return new __Day(year, month, day);
 		__Month.call(this, year, month);
-		const error = `The day must be an integer from 1 to ${this.width}.`;
+		const error = `The day must be an integer from 1 to ${this.width} (${day}).`;
 		const check = new __Type(day);
 		if (!check.integer || check < 1 || check > this.width) throw new RangeError(error);
 		Object.defineProperties(this, {
@@ -4236,11 +4171,11 @@ const wd = (function() {
 		const checkM = new __Type(minute);
 		const checkS = new __Type(second);
 		if (!checkH.integer || checkH > 24 || checkH < 0)
-			throw RangeError("The hour value must be an integer from 0 to 24.");
+			throw RangeError(`The hour value must be an integer from 0 to 24 (${hour}).`);
 		if (!checkM.integer || checkM > 59 || checkM < 0)
-			throw RangeError("The minute value must be an integer from 0 to 59.");
+			throw RangeError(`The minute value must be an integer from 0 to 59 (${minute}).`);
 		if (!checkS.finite || checkS >= 60 || checkS < 0)
-			throw RangeError("The value of the second must be an integer from 0 to 59.999.");
+			throw RangeError(`The value of the second must be an integer from 0 to 59.999 (${second}).`);
 		Object.defineProperties(this, {
 			/**. '{integer hour}: Registra a hora (0-23).**/
 			hour:   {value: checkH.value % 24},
@@ -4490,9 +4425,10 @@ const wd = (function() {
 	- Valor numérico que corresponde aos segundos desde 0000-01-01T00:00:00.0000 (segundo 0);
 	- Objeto contendo as propriedades year, month, day, hour, minute e second; e
 	- Se indefinido, assumirá o valor de data e tempo atuais.**/
+	//FIXME procurar pelo construtor e ver se a propriedade type, removeida, é usada.
 	function __DateTime(input) {
 		if (!(this instanceof __DateTime)) return new __DateTime(input);
-		const error = "The date value is unknown.";
+		const error = `The date value is unknown (${input})`;
 		const data  = {year: 0, month: 1, day: 1, hour: 0, minute: 0, second: 0};
 		const value = new __Type(input);
 		/*-- objeto (padrão) --*/
@@ -4540,7 +4476,7 @@ const wd = (function() {
 		toDateObject: {
 			get: function() {
 				const sec  = Math.trunc(this.second);
-				const mill = 1000*Number("0."+this.main.ss.split(".")[1]);
+				const mill = 1000*Number("0."+this.format("[ss]").split(".")[1]);
 				const utc  = Date.UTC(2000, this.month-1, this.day, this.hour, this.minute, sec, mill)
 				const date = new Date(utc);
 				return date;
@@ -4558,6 +4494,8 @@ const wd = (function() {
 		toString: {value: function() {return this.format("[P][YYYY]-[MM]-[DD]T[HH]:[mm]:[ss]");}},
 		/**. '{string toDateString()}: Retorna o tempo no formato YYYY-MM-DD.**/
 		toDateString: {value: function() {return this.format("[P][YYYY]-[MM]-[DD]");}},
+		/**. '{string toWeekString()}: Retorna a semana no formato YYYY-Www.**/
+		toWeekString: {value: function() {return this.main.YYYYWww;}},
 		/**. '{string toString()}: Retorna o tempo no formato hh:mm:ss.sss.**/
 		toTimeString: {value: function() {return this.format("[HH]:[mm]:[ss]");}},
 		/**. '{string toLocaleString()}: Retorna o valor data/tempo no formato local.**/
@@ -4596,14 +4534,18 @@ const wd = (function() {
 				return this.toDateObject.toLocaleTimeString(__LANG.value, {timeZone: "UTC"});
 			}
 		},
-		/**. '{string format(string input, string type)}: Retorna notação de data/tempo pre-formatada a partir de codificação especificada no argumento '{input}. No argumento '{type} é possível limitar os códigos permitidos para "date" ou "time".**/
+		/**. '{string format(string input, string only)}: Retorna notação de data/tempo pre-formatada a partir de codificação especificada no argumento '{input} (Ex. 5 jan. 2015 é "[D] [MMM] [YYYY]"). O valor da semana (w ou ww) diz respeito ao retorno da propriedade '{week} e não o do método '{toWeekString}. O argumento opcional '{only} limite caracteres de tempo ou data ("date", "time").**/
 		format: {
-			value: function(input) {
+			value: function(input, only) {
 				input = String(input);
-				const types = `Y YYYY M MM MMM MMMM D DD d dd ddd dddd w ww h hh H HH m mm s ss p P`.split(" ");
-				for (let i = 0; i < types.length; i++) {
-					let regexp = new RegExp("\\["+types[i]+"\\]", "gm");
-					let code   = this.main.codes(types[i]);
+				const chars = {
+					date: `Y YYYY M MM MMM MMMM D DD d dd ddd dddd w ww P`,
+					time: `h hh H HH m mm s ss p`
+				}
+				const type = (only in chars ? chars[only] : `${chars.date} ${chars.time}`).split(" ");
+				for (let i = 0; i < type.length; i++) {
+					let regexp = new RegExp("\\["+type[i]+"\\]", "gm");
+					let code   = this.main.codes(type[i]);
 					input = input.replace(regexp, code);
 				}
 				return input;
@@ -4948,15 +4890,10 @@ const wd = (function() {
 					}
 					/*-- comparação entre tipos iguais --*/
 					let avalue, bvalue;
-					/*-- números e boleanos --*/
-					if (A.number || A.boolean) {
-						avalue = A.valueOf();
-						bvalue = B.valueOf();
-					}
-					/*-- data/tempo --*/
-					else if (A.date || A.time || A.datetime) {
-						avalue = new __DateTime(A.value).valueOf();
-						bvalue = new __DateTime(B.value).valueOf();
+					/*-- números/boleanos/data/tempo --*/
+					if (A.number || A.boolean || A.date || A.time || A.datetime) {
+						avalue = A.value;
+						bvalue = B.value;
 					}
 					/*-- string/node --*/
 					else if (A.string || A.node) {
@@ -5090,7 +5027,7 @@ const wd = (function() {
 	Construtor para checar características de campo de formulário HTML (argumento '{input}).**/
 	function __FNode(input) {
 		if (!(this instanceof __FNode))	return new __FNode(input);
-		const check = __Type(input);
+		const check = new __Type(input);
 		if (!check.node || check.value.length < 1)
 			throw new TypeError("Input value is not an HTML node");
 		/*-- capturando informações --*/
@@ -5113,16 +5050,12 @@ const wd = (function() {
 		data.text  = data.form ? data.cfg.text  : false;
 		data.send  = data.form ? data.cfg.send  : false;
 		data.check = data.form ? data.cfg.check : "";
-		if (data.form && data.cfg.mask) {
+		data.mask  = !data.form || !data.cfg.mask ? false : (function () {
 			const error = "A1!@#$%¨&*()+";
 			const clone = data.node.cloneNode();
-			try { /*-- tipo file dá erro aqui --*/
-				clone.value = error;
-				data.mask = clone.value !== error;
-			} catch(e) {return true;}
-		} else {
-			data.mask = false;
-		}
+			try {clone.value = error;} catch(e) {}
+			return clone.value !== error;
+		})();
 		Object.defineProperties(this, {
 			/**. '{node node}: Retorna o nó.**/
 			node:   {value: data.node},
@@ -5250,14 +5183,16 @@ const wd = (function() {
 				}
 				/*-- data/tempo --*/
 				if (this.fcheck === "datetime") {
-					const data  = __DATETIME.test(value);
-					if (data === null) return "";
-					if (data.type === "week" && __Time.weekToDate(data.iso) === null) return "";
+					const data = __DATETIME.test(value);
+					if (data === null)
+						return "";
+					if (data.type === "week" && __Time.weekToDate(data.iso) === null)
+						return "";
 					if (this.ftype === "datetime")
 						return data.iso;
-					else if (data.type === "datetime" && this.ftype === "datetime-local")
+					if (data.type === "datetime" && this.ftype === "datetime-local")
 						return data.form;
-					else if (data.type === this.ftype)
+					if (data.type === this.ftype)
 						return data.form;
 					return "";
 				}
@@ -5269,10 +5204,12 @@ const wd = (function() {
 							return !node.multiple && list.length > 1 ? [] : list;
 						}
 						case "email": {
-							const email = __TYPE.email.email;
-							const list  = value.replace(/\s+/g, "").split(",");
-							for (let v of list)
-								if (!email.test(v.trim())) return [];
+							const list = value.split(",");
+							for (let i = 0; i < list.length; i++) {
+								let item = new __Type(list[i]);
+								if (!item.email) return [];
+								list[i] = list[i].trim();
+							}
 							return node.multiple === false && list.length > 1 ? [] : list;
 						}
 						case "select": {
@@ -5300,6 +5237,7 @@ const wd = (function() {
 				/*-- outros valores --*/
 				return null;
 			},
+			/*----------------------------------------------------------------------*/
 			set: function(value) {
 				if (!this.form) return;
 				const node  = this.node;
@@ -5318,8 +5256,10 @@ const wd = (function() {
 				/*-- definir data/tempo --*/
 				if (this.fcheck === "datetime") {
 					const data  = __DATETIME.test(value);
-					if (data === null) return;
-					if (data.type === "week" && __Time.weekToDate(data.iso) === null) return;
+					if (data === null)
+						return;
+					if (data.type === "week" && __Time.weekToDate(data.iso) === null)
+						return;
 					if (this.ftype === "datetime")
 						node.value = data.iso;
 					else if (data.type === "datetime" && this.ftype === "datetime-local")
@@ -5330,12 +5270,17 @@ const wd = (function() {
 				}
 				/*-- definir lista de valores --*/
 				if (this.fcheck === "combo") {
-					if (this.ftype === "file") return;
+					if (this.ftype === "file")
+						return;
 					if (this.ftype === "email") {
-						const email = __TYPE.email.email;
-						const list  = check.array ? value : String(value).split(",");
-						for (let v of list) if (!email.test(v.trim())) return;
-						node.value = list.join(",").replace(/\s+/g, "");
+						const list = check.array ? value : String(value).split(",");
+						if (node.multiple === false && list.length > 1) return;
+						for (let i = 0; i < list.length; i++) {
+							let item = new __Type(list[i]);
+							if (!item.email) return;
+							list[i] = list[i].trim();
+						}
+						node.value = list.join(",")
 						return;
 					}
 					if (this.ftype === "select") {
@@ -8545,6 +8490,8 @@ const wd = (function() {
 		valueOf: {value: function() {return this._main.valueOfDate();}},
 		/**. '{string toString()}: Retorna a data no formato YYYY-MM-DD.**/
 		toString: {value: function() {return this._main.toDateString();}},
+		/**. '{string toWeekString()}: Retorna a semana no formato YYYY-Www.**/
+		toWeekString: {value: function() {return this._main.toWeekString();}},
 		/**. '{string toLocaleString()}: Retorna a data no formato local.**/
 		toLocaleString: {value: function() {return this._main.toLocaleDateString();}},
 		/**. '{string format(string input)}: Retorna notação de data pre-formatada em '{input}.**/
@@ -8576,7 +8523,7 @@ const wd = (function() {
 		toDateString: {value: function() {return this._main.toDateString();}},
 		/**. '{string toTimeString()}: Retorna o tempo no formato hh:mm:ss.sss.**/
 		toTimeString: {value: function() {return this._main.toTimeString();}},
-		/**. '{string toString()}: Retorna o valor data/tempo no formato YYYY-MM-DDThh:mm:ss.sss.**/
+		/**. '{string toWeekString()}: Retorna a semana no formato YYYY-Www.**/
 		toString: {value: function() {return this._main.toString();}},
 		/**. '{string toLocaleDateString()}: Retorna a data no formato local.**/
 		toLocaleDateString: {value: function() {return this._main.toLocaleDateString();}},
@@ -8589,19 +8536,18 @@ const wd = (function() {
 	});
 
 	/*-- copiando propriedades de WDtime e WDdate para WDdatetime --------------*/
-	const forget   = ["toString", "valueOf", "constructor", "toLocaleString", "format"];
-	const timeProp = Object.getOwnPropertyNames(WDtime.prototype);
-	const dateProp = Object.getOwnPropertyNames(WDdate.prototype);
-	for (let prop of timeProp) {
-		if (forget.indexOf(prop) < 0) {
-			let desc = Object.getOwnPropertyDescriptor(WDtime.prototype, prop);
-			Object.defineProperty(WDdatetime.prototype, prop, desc);
+	const TIME_PROPERTIES = Object.getOwnPropertyNames(WDtime.prototype);
+	for (let i of TIME_PROPERTIES) {
+		if (!(i in WDdatetime.prototype)) {
+			let descriptor = Object.getOwnPropertyDescriptor(WDtime.prototype, i);
+			Object.defineProperty(WDdatetime.prototype, i, descriptor);
 		}
 	}
-	for (let prop of dateProp) {
-		if (forget.indexOf(prop) < 0) {
-			let desc = Object.getOwnPropertyDescriptor(WDdate.prototype, prop);
-			Object.defineProperty(WDdatetime.prototype, prop, desc);
+	const DATE_PROPERTIES = Object.getOwnPropertyNames(WDdate.prototype);
+	for (let i of DATE_PROPERTIES) {
+		if (!(i in WDdatetime.prototype)) {
+			let descriptor = Object.getOwnPropertyDescriptor(WDdate.prototype, i);
+			Object.defineProperty(WDdatetime.prototype, i, descriptor);
 		}
 	}
 
@@ -8716,6 +8662,8 @@ const wd = (function() {
 		fetch: {value: function(trigger) {this._request.fetch(trigger); return this;}},
 		/**. '{self read(function' trigger)}: Efetua leitura de arquivos e dispara '{trigger}(ver __Request).**/
 		read: {	value: function(trigger) {this._request.read(trigger); return this;}},
+		/**. '{string toString()}: Retorna o objeto em forma de JSON, se possível.**/
+		toString: {value: function() {return JSON.stringify(this._data.value);}},
 	});
 
 /*----------------------------------------------------------------------------*/
@@ -9001,7 +8949,6 @@ const wd = (function() {
 			tree:     {value: function(){return __Tree.apply(null, Array.prototype.slice.call(arguments));}},
 			HTML:     {value: __HTML},
 			LANG:     {value: __LANG},
-			TYPE:     {value: __TYPE},
 			DEVICE:   {value: __DEVICE},
 			PROGRESS: {value: __PROGRESS},
 			FLOAT:    {value: __FLOAT},
