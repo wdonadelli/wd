@@ -5138,7 +5138,7 @@ const wd = (function() {
 					"output:VALUE.text;VISUAL",
 					"progress:VALUE.finite",
 					"select:SUBMIT;VALUE.combo",
-					"textarea:SUBMIT;VALUE.text;VISUAL"
+					"textarea:SUBMIT;VALUE.text"
 				];
 				/*-- redesenhando config para objeto --*/
 				const data = {};
@@ -6333,11 +6333,12 @@ const wd = (function() {
 	}
 	Object.defineProperties(__Response.prototype, {
 		constructor: {value: __Response},
-		/**. '{string _contentType(object header)}: Retorna o "contentType" da origem ou nulo.**/
-		_contentType: {
-			value: function(header) {
-				const data = new __DataSet(header === null ? {"content-type": null} : header);
-				return data.getAll("content-type")[0];
+		/**. '{string _getHeaderValue(string name)}: Retorna o valor da propriedade (´{name}) de ´{headers} ou nulo.**/
+		_getHeaderValue: {
+			value: function(name) {
+				const data = new __DataSet(this._response.headers);
+				const list = data.getAll(name);
+				return list.length > 0 ? list[0] : null;
 			}
 		},
 		/**. '{void _changes(string type, string caller)}: Define o formato da resposta ('{_response.response}) conforme tipo ('{type}) e o método ('{caller}).**/
@@ -6345,20 +6346,19 @@ const wd = (function() {
 			value: function(type, caller) {
 				if (this._response.response !== null) {
 					const parser = new __Parser(this._response.response);
+					const mime   = __MIME[this._response.contentType];
+					function table() {
+						if (mime === "csv")  return parser.csvTable.get();
+						if (mime === "json") return parser.stringJSON.matrixCSV.csvTable.get();
+						return null;
+					};
 					const change = {
-						//FIXME escrever isso aqui como para aproveitar coisas repetidas
 						send: {
 							xml:    function() {return parser.stringXML.get();},
 							url:    function() {return parser.fileURL.get();},
 							matrix: function() {return parser.csvTable.tableValues.get();},
 							object: function() {return parser.csvTable.tableValues.matrixList.get();},
-							table:  function() {
-								switch(mime) {
-									case "csv":  return parser.csvTable.get();
-									case "json": return parser.stringJSON.matrixCSV.csvTable.get();
-									default:     return null;
-								}
-							},
+							table:  table,
 						},
 						read: {
 							html:   function() {return parser.stringHTML.get();},
@@ -6366,13 +6366,7 @@ const wd = (function() {
 							json:   function() {return parser.stringJSON.get();},
 							matrix: function() {return parser.csvTable.tableValues.get();},
 							object: function() {return parser.csvTable.tableValues.matrixList.get();},
-							table:  function() {
-								switch(mime) {
-									case "csv":  return parser.csvTable.get();
-									case "json": return parser.stringJSON.matrixCSV.csvTable.get();
-									default:     return null;
-								}
-							},
+							table:  table,
 						},
 						fetch: {
 							html:   function() {return parser.stringHTML.get();},
@@ -6380,13 +6374,7 @@ const wd = (function() {
 							url:    function() {return parser.fileURL.get();},
 							matrix: function() {return parser.csvTable.tableValues.get();},
 							object: function() {return parser.csvTable.tableValues.matrixList.get();},
-							table:  function() {
-								switch(mime) {
-									case "csv":  return parser.csvTable.get();
-									case "json": return parser.stringJSON.matrixCSV.csvTable.get();
-									default:     return null;
-								}
-							},
+							table:  table,
 						}
 					}
 					if (type in change[caller])
@@ -6426,12 +6414,11 @@ const wd = (function() {
 				/*-- se a requisição foi um sucesso, definir o resultado --*/
 				if (this._response.ok) {
 					const dataset = new __DataSet(target.getAllResponseHeaders());
-					this._response.headers  = dataset.toHeaders;
-					this._response.response = target.response;
+					this._response.headers     = dataset.toHeaders;
+					this._response.response    = target.response;
+					this._response.contentType = this._getHeaderValue("content-type");
 					this._changes(config.type, "send");
 				}
-				/*-- definindo o tipo de conteúdo --*/
-				this._response.contentType = this._contentType(this._response.headers);
 				/*-- chamar o disparador se existente --*/
 				if (this._trigger !== null) this._trigger(this._response);
 				/*-- encerrar o progresso se a requisição acabou --*/
@@ -6472,11 +6459,12 @@ const wd = (function() {
 				}
 				/*-- se a requisição foi um sucesso, definir o resultado --*/
 				if (this._response.ok) {
-					this._response.response = target.result;
+					const dataset = new __DataSet(config.fileHeaders);
+					this._response.headers     = dataset.toHeaders;
+					this._response.contentType = this._getHeaderValue("content-type");
+					this._response.response    = target.result;
 					this._changes(config.type, "read");
 				}
-				/*-- definindo o tipo de conteúdo --*/
-				this._response.contentType = this._contentType(this._response.headers);
 				/*-- chamar o disparador se existente --*/
 				if (this._trigger !== null) this._trigger(this._response);
 				/*-- encerrar o progresso se a requisição acabou --*/
@@ -6516,17 +6504,17 @@ const wd = (function() {
 				/*-- se a requisição foi um sucesso, definir o resultado --*/
 				else if (config._status === "DONE") {
 					const fetch = this._fetch;
-					this._response.done     = true;
-					this._response.ok       = fetch.ok;
-					this._response.status   = fetch.status + " - " + fetch.statusText;
-					this._response.headers  = fetch.headers;
-					this._response.response = ev;
+					this._response.done        = true;
+					this._response.ok          = fetch.ok;
+					this._response.status      = fetch.status + " - " + fetch.statusText;
+					this._response.headers     = fetch.headers;
+					this._response.contentType = this._getHeaderValue("content-type");
+					this._response.size        = Number(this._getHeaderValue("content-length"));
+					this._response.response    = ev;
 					this._changes(config.type, "fetch");
 				}
 				/*-- definir o progresso --*/
 				__PROGRESS.set(this._response.progress);
-				/*-- definindo o tipo de conteúdo --*/
-				this._response.contentType = this._contentType(this._response.headers);
 				/*-- chamar o disparador se existente --*/
 				if (this._trigger !== null) this._trigger(this._response);
 				/*-- encerrar o progresso se a requisição acabou --*/
@@ -6632,6 +6620,13 @@ const wd = (function() {
 					const data = {async: true, user: null, password: null};
 					for (let i in data)
 						cfg[i] = i in cfg ? cfg[i] : data[i];
+				}
+				/*-- específico para o método read --*/
+				if (caller === "read") {
+					cfg.fileHeaders = {
+						"content-length": cfg.url.size,
+						"content-type": cfg.url.type
+					};
 				}
 				/*-- timeout --*/
 				const time  = new __Type(cfg.timeout);
@@ -9217,53 +9212,46 @@ const wd = (function() {
 	|Alvos|Elemento|
 	|Grupos|Único|
 	|Referências|__Node.load|
-	Possui as mesmas propriedades de i{data_wd_send}, exceto i{trigger}, acrescida da seguinte propriedade:
+	Possui as mesmas propriedades de i{data_wd_send}, exceto i{trigger} e i{text}, acrescida da seguinte propriedade:
 	|Propriedades|Tipo|Descrição|
 	|serialization|string|Comportamento da serialização outer/innerHTML/Text (__Node.attribute)|
 	span{ }
 	Observações:
 	- Se o arquivo for CSV e a propriedade inner/outerHTML, uma tabela com dados será adicionada ao documento;
-	- O mesmo comportamento anterior ocorrerá caso o arquivo seja JSON com uma matriz de dados;**/
+	- O mesmo comportamento anterior ocorrerá caso o arquivo seja JSON com uma matriz de dados;
+	- Em caso de innerText em elemento de formulário sem conteúdo textual, a propriedade modificada será a ´{value}.**/
 	function data_wd_load(target, event, wdArray) {
-		const data = wdArray[0];
-		const node = new __Node(target);
+		const data   = wdArray[0];
+		const node   = new __Node(target);
+		data.type    = "text";
 		data.trigger = function(x) {
 			if (x.ok) {
 				const mime = __MIME[x.contentType];
 				const find = /^(inner|outer)(HTML|Text)$/;
 				const attr = find.test(data.serialization) ? data.serialization : "innerHTML";
 				const html = (/HTML$/).test(attr);
-				const type = new __Type(x.response);
 				let   text = x.response;
-				/*-- conteúdos não textuais: obter a serialização --*/
-				if (type.node)
-					text = text.outerHTML;
-				else if (type.instanceOf("HTMLDocument"))
-					text = html ? text.body.innerHTML : text.documentElement.outerHTML;
-				else if (type.instanceOf("XMLDocument"))
-					text = text.documentElement.outerHTML;
-				/*-- inner/outerHTML:  --*/
-				else if (html) {
-					let test;
+				if (html) {
 					const parser = new __Parser(text);
-					if (mime === "csv" && type.chars) {
+					let test;
+					if (mime === "html") {
+						test = parser.stringHTML.get();
+						text = test === null ? text : test.body.innerHTML;
+					}
+					else if (mime === "csv") {
 						test = parser.csvTable.get();
 						text = test === null ? text : test.outerHTML;
 					}
-					else if (mime === "json" && type.chars) {
+					else if (mime === "json") {
 						test = parser.stringJSON.matrixCSV.csvTable.get();
-						text = test === null ? text : test.outerHTML;
-					}
-					else if (type.array) {
-						test = parser.matrixCSV.csvTable.get();
 						text = test === null ? text : test.outerHTML;
 					}
 				}
 				/*-- definir --*/
-				if (attr === "innerText" && node.form)
-					node.attribute("value", String(text));
+				if (attr === "innerText" && node.form && !node.ftext)
+					node.attribute("value", text);
 				else
-					node.attribute(attr, html ? text : String(text));
+					node.attribute(attr, text);
 			}
 		}
 		return data_wd_send(target, event, [data]);
@@ -9281,14 +9269,13 @@ const wd = (function() {
 		data.trigger = function(x) {
 			if (x.ok)  {
 				const mime = __MIME[x.contentType];
+				let   list = null;
 				if (mime === "json" || mime === "csv") {
-					const parser  = new __Parser(x.response);
-					const content = mime === "json" ? parser.stringJSON : parser.csvTable.tableValues.matrixList;
-					const list    = content.get();
-					WD(target).repeat(list);
-				} else {
-					WD(target).repeat([]);
+					const parser = new __Parser(x.response);
+					const value  = mime === "json" ? parser.stringJSON : parser.csvTable.tableValues.matrixList;
+					list = value.get();
 				}
+				WD(target).repeat(list === null ? [] : list);
 			}
 		}
 		return data_wd_send(target, event, [data]);
