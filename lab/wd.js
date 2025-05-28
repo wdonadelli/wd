@@ -6228,15 +6228,15 @@ const wd = (function() {
 				return list;
 			}
 		},
-		/**.  '{node plot(object options)}: Retorna um gráfico de acordo com os dados da tabela e conforme especificado em '{options} (ver __Plot2D.add):
+		/**.  '{node plot(object options)}: Retorna um gráfico de acordo com os dados da tabela e conforme especificado em '{options} (ver __Plot2D.add) ou nulo:
 		|Nome|Tipo|Descrição|
 		|xLabel|string|Rótulo do eixo i{x}.|
 		|yLabel|string|Rótulo do eixo i{y}.|
 		|title|string|Título do gráfico.|
-		|xAxis|string|Define a formatação da escala do eixo i{x}, se number, i{date}, i{time}, i{datetime} ou i{percent}.|
+		|xAxis|string|Define a formatação da escala do eixo i{x}, se i{number}, i{date}, i{time}, i{datetime} ou i{percent}.|
 		|yAxis|string|Define a formatação da escala do eixo i{y} (ver xAxis).|
 		|type|string|Tipo de gráfico, i{plan}, i{cols} ou i{pie}.|
-		|data|array object|Um objeto ou uma lista de objetos com os dados de plotagem.|
+		|data|array|Uma lista de objetos com os parâmetros da plotagem.|
 		. Os itens da propriedade '{data} são objetos com os seguintes especificações:
 		|Nome|Tipo|Descrição|
 		|x|any|Valores do eixo i{x}: um array, um objeto (cols ou pie) ou o número da coluna da tabela precedido de &num;.|
@@ -6257,35 +6257,36 @@ const wd = (function() {
 		|minimum|Executa um ajuste com o menor desvio médio padrão.||**/
 		plot: {
 			value: function(options) {
-				if (!__Type(options).object)     return null;
-				const check = new __Type(options.data);
-				if (!check.array && !check.object) return null;
+				if (!__Type(options).object) return null;
 				const chart = new __Plot2D(options.type);
-				/*-- valores gerais --*/
+				const isCol = /^\#(\d+)$/;
+				const data  = __Type(options.data).array ? options.data : [];
+				/*-- propriedades principais --*/
 				const names = ["xLabel", "yLabel", "title", "xAxis", "yAxis"];
 				for (let i = 0; i < names.length; i++)
 					if (names[i] in options)
 						chart[names[i]] = options[names[i]];
-				/*-- adicionando dados --*/
-				const re = /^\#(\d+)$/;
-				if (check.object) options.data = [options.data];
-				for (let i = 0; i < options.data.length; i++) {
-					let item = options.data[i];
+				/*-- parâmetros de plotagem --*/
+				for (let i = 0; i < data.length; i++) {
+					if (!__Type(data[i]).object) continue;
+					let dataset = {x: data[i].x, y: data[i].y};
 					let col, arr, cell;
-					if (re.test(item.x)) {
-						col  = item.x.replace(re, "$1");
-						cell = "1,"+col+":*,"+col;
-						arr = this.cells(cell, function(v,r,c) {return v.innerText;});
-						item.x = arr;
+					/*-- para x foi informado o número da coluna --*/
+					if (isCol.test(dataset.x)) {
+						col  = dataset.x.replace(isCol, "$1");
+						cell = `1,${col}:*,${col}`;
+						arr  = this.cells(cell, function(v,r,c) {return v.innerText;});
+						dataset.x = arr;
 					}
-					if (re.test(item.y)) {
-						col = Number(item.y.replace(re, "$1"));
-						cell = "0,"+col+":*,"+col;
+					/*-- para y foi informado o número da coluna --*/
+					if (isCol.test(dataset.y)) {
+						col = Number(dataset.y.replace(isCol, "$1"));
+						cell = `0,${col}:*,${col}`;
 						arr = this.cells(cell, function(v,r,c) {return v.innerText;});
-						item.y     = arr.slice(1);
-						item.label = arr[0];
+						dataset.y     = arr.slice(1);
+						dataset.label = arr[0];
 					}
-					chart.add(item.x, item.y, item.label, item.fit);
+					chart.add(dataset.x, dataset.y, data[i].label, data[i].fit);
 				}
 				return chart.plot();
 			}
@@ -7944,7 +7945,7 @@ const wd = (function() {
 								"  {y ∈ ℝ | "+this._values(min)+" ≤ y ≤ "+this._values(max)+"}",
 								"  y     = "+this._values(value),
 								"  ∑yᵢ   = "+this._values(total),
-								"  ∑yᵢ/y = "+this._values(ratio, "y"),
+								"  y/∑yᵢ = "+this._values(ratio, "y"),
 								"  ∑yᵢ/n = "+this._values(total/count)
 							].join("\n");
 							width = 360*ratio;
@@ -9202,8 +9203,7 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	/**''function void data_wd_load(node target, object event, array wdArray)''
-	#4 Carregamentos
+	/**#4 Carregamentos
 	''function void data_wd_load(node target, object event, array wdArray)''
 	|Disparador|Descrição|
 	|Atributo|data-wd-load|
@@ -9211,14 +9211,14 @@ const wd = (function() {
 	|Eventos|load wdreload wddataset|
 	|Alvos|Elemento|
 	|Grupos|Único|
-	|Referências|__Node.load|
+	|Referências|__Node.innerHTML/outerHTML/attribute|
 	Possui as mesmas propriedades de i{data_wd_send}, exceto i{trigger} e i{text}, acrescida da seguinte propriedade:
 	|Propriedades|Tipo|Descrição|
 	|serialization|string|Comportamento da serialização outer/innerHTML/Text (__Node.attribute)|
 	span{ }
 	Observações:
 	- Se o arquivo for CSV e a propriedade inner/outerHTML, uma tabela com dados será adicionada ao documento;
-	- O mesmo comportamento anterior ocorrerá caso o arquivo seja JSON com uma matriz de dados;
+	- O mesmo comportamento anterior ocorrerá caso o arquivo seja JSON com uma matriz (array de duas dimensões) de dados;
 	- Em caso de innerText em elemento de formulário sem conteúdo textual, a propriedade modificada será a ´{value}.**/
 	function data_wd_load(target, event, wdArray) {
 		const data   = wdArray[0];
@@ -9258,11 +9258,19 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	/**''function void data_wd_repeat(node target, object event, array wdArray)''
-	Função com o propósito de efetuar repetições de dados externos por meio do atributo HTML i{data}.
-	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
-	|data-wd-repeat|load wdreload wddataset|Múltiplas|Único|__Node.repeat|Elementos que possam conteúdo interno|
-	Possui as mesmas propriedades de i{data-wd-send}, exceto i{trigger} e i{type}. O arquivo definido em i{url} deve conter o cabeçalho i{content-type} como i{text/csv} ou  i{application/json}!**/
+	/**#4 Repetições
+	''function void data_wd_repeat(node target, object event, array wdArray)''
+	|Disparador|Descrição|
+	|Atributo|data-wd-repeat|
+	|Objetivo|Replicar cópias de elementos os filhos com conteúdo configurável a partir de um arquivo externo.|
+	|Eventos|load wdreload wddataset|
+	|Alvos|Elemento|
+	|Grupos|Único|
+	|Referências|__Node.repeat|
+	Possui as mesmas propriedades de i{data_wd_send}, exceto i{trigger} e i{text}.
+	Observações:
+	- Os arquivos permitidos devem estar em formato CSV ou JSON;
+	- Para formato JSON, a serialização deve ser um array objetos contendo os parâmetros;**/
 	function data_wd_repeat(target, event, wdArray) {
 		const data   = wdArray[0];
 		data.type    = "text";
@@ -9282,59 +9290,54 @@ const wd = (function() {
 	}
 
 /*----------------------------------------------------------------------------*/
-	/**''function void data_wd_set(node target, object event, array wdArray)''
-	Função com o propósito de definir propriedades dos elementos por meio do atributo HTML i{data}.
-	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
-	|data-wd-set|click|Múltiplas|Múltiplos|__Node.attribute|Elementos que possam receber cliques|
-	As propriedades e seus valores são definidos em cada grupo sendo que, no caso de valores em forma de objeto, deverá ser adotada a notação de estrutura. Os elementos alvos são definidos pelas propriedades "$" e "$$" que, se não informadas, assumirá como sendo o elemento disparador do evento.
-	As propriedades também podem estar definidas em um arquivo externo em notação JSON ou CSV (conforme cabeçalho). Nesse caso, a propriedade i{_file_} (estrutura) deverá ser definida contendo os dados para requisição conforme i{data_wd_send}, exceto por i{type} e i{trigger}.**/
+	/**#4 Atribuição de Valores
+	''function void data_wd_set(node target, object event, array wdArray)''
+	|Disparador|Descrição|
+	|Atributo|data-wd-set|
+	|Objetivo|Define propriedades e atributos e executa métodos.|
+	|Eventos|click|
+	|Alvos|Elementos que possar receber cliques|
+	|Grupos|Múltiplos|
+	|Referências|__Node.attribute|
+	Observações:
+	- Os elementos que receberão a intervenção são definidos pelas propriedades '{$} ou '{$$};
+	- Para cada grupo informado, deverá ser definido os elementos a receber a intervenção;
+	- Se os elementos não forem definidos, a ação recairá sobre o próprio elemento;**/
 	function data_wd_set(target, event, wdArray) {
-		const data    = wdArray;
-		const handler = function(input) {
-			const query = input.$$ || input.$ || target;
+		wdArray.forEach(function(v,i,a) {
+			const query = v.$$ || v.$ || target;
 			const nodes = WD(query);
-			if ( "$" in input) delete input["$"];
-			if ("$$" in input) delete input["$$"];
-			nodes.set(input);
-			return;
-		}
-		/*-- passando por todas as configurações --*/
-		data.forEach(function(cfg,i,a) {
-			/*-- se as definições estiverem em um arquivo externo --*/
-			if ("_file_" in cfg) {
-				let file     = cfg["_file_"];
-				file.type    = "text";
-				file.headers = "headers" in file ? file.headers : {};
-				file.trigger = function(x) {
-					if (x.ok) {
-						const head = new __DataSet(x.headers);
-						const mime = __MIME[head.getAll("content-type")[0]];
-						if (mime === "json" || mime === "csv") {
-							const parser  = new __Parser(x.response);
-							const content = mime === "json" ? parser.stringJSON : parser.csvTable.tableValues.matrixList;
-							const list    = content.get();
-							/*-- executar configurações de cada lista --*/
-							for (let j = 0; j < list.length; j++)
-								handler(list[j]);
-						}
-					}
-				};
-				data_wd_send(target, event, [file]);
-			}
-			/*-- configurações no atributo --*/
-			else {
-				handler(cfg);
-			}
+			if ( "$" in v) delete v["$"];
+			if ("$$" in v) delete v["$$"];
+			nodes.set(v);
 		});
 		return;
 	};
 
 /*----------------------------------------------------------------------------*/
+	/**#4 Gráficos 2D
+	''function void data_wd_chart(node target, object event, array wdArray)''
+	|Disparador|Descrição|
+	|Atributo|data-wd-chart|
+	|Objetivo|Cria um gráfico 2D a partir de comandos e dados em arquivos ou elementos.|
+	|Eventos|load wdreload wddataset|
+	|Alvos|Elementos que possar receber filhos renderizáveis|
+	|Grupos|Único|
+	|Referências|__Table.plot|
+	Observações:
+	- As propriedades são as mesma do método __Table.plot, o gráfico substituirá o conteúdo do alvo.
+
+
+	- Os elementos que receberão a intervenção são definidos pelas propriedades '{$} ou '{$$};
+	- Para cada grupo informado, deverá ser definido os elementos a receber a intervenção;
+	- Se os elementos não forem definidos, a ação recairá sobre o próprio elemento;**/
+
+
 	/**''function void data_wd_chart(node target, object event, array wdArray)''
 	Função com o propósito de plotar gráficos 2D por meio do atributo HTML i{data}.
 	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
 	|data-wd-chart|load wdreload wddataset|Múltiplas|Único|__Table.plot|Elemento que possa receber conteúdo|
-	As propriedades são as mesma do método __Table.plot, o gráfico substituirá o conteúdo do alvo.
+
 	Os dados da plotagem podem estar definidos na propriedade, em um arquivo externo JSON ou CSV, em uma tabela HTML ou no conteúdo textual de um elemento.
 	Para capturar dados de uma tabela ou elemento HTML, deve-se utilizar a propriedade i{$} para referenciá-lo.
 	Para capturar dados de um arquivo externo em notação JSON ou CSV (conforme cabeçalho), deve-se definir a propriedade i{_file_} (estrutura) contendo os dados para requisição conforme i{data_wd_send}, exceto por i{type} e i{trigger}.**/
