@@ -6178,7 +6178,8 @@ const wd = (function() {
 		    this.table.caption.textContent = String(x);
 		  }
 		},
-		/**. '{array cells(string target, function' caller)}: Retorna uma lista de células da tabela conforme configuração definida no argumento '{target}.
+		/**. '{array cells(string target, function caller)}: Retorna uma lista de células da tabela conforme configuração definida no argumento '{target}.
+		//FIXME os dois ponto está quebrando a linha errada
 		. A célula é especificada pelos índices da linha e coluna separados por vírgula (i{row,col}), onde zero é a origem e o caractere "asterísco" o último índice. Para especificar um intervalo de células, deve-se separar as células por um caractere de "dois pontos" (i{row1,col1:row2,col2}), nesse caso, a linha e a coluna da célula inicial devem ser menores ou iguais a aqueles especificados na célula final. Para especificar várias células ou intervalos de forma independente, deve-se separá-los por um caractere de "ponto e vírgula" (i{row1,col1;row2,col2:row3,col3}).
 		. A função opcional definida em '{caller} permite alterar o conteúdo retornado. Por padrão, cada item da lista conterá o nó '{td} ou '{th} da tabela conforme definido em '{target}. A função receberá três argumentos, o nó HTML e os índices da linha e coluna, nessa ordem. O retorno da função, se definido, definirá o novo valor do item da lista.**/
 		cells: {
@@ -6235,7 +6236,7 @@ const wd = (function() {
 		|title|string|Título do gráfico.|
 		|xAxis|string|Define a formatação da escala do eixo i{x}, se i{number}, i{date}, i{time}, i{datetime} ou i{percent}.|
 		|yAxis|string|Define a formatação da escala do eixo i{y} (ver xAxis).|
-		|type|string|Tipo de gráfico, i{plan}, i{cols} ou i{pie}.|
+		|plot|string|Tipo de gráfico, i{plan}, i{cols} ou i{pie}.|
 		|data|array|Uma lista de objetos com os parâmetros da plotagem.|
 		. Os itens da propriedade '{data} são objetos com os seguintes especificações:
 		|Nome|Tipo|Descrição|
@@ -6258,7 +6259,7 @@ const wd = (function() {
 		plot: {
 			value: function(options) {
 				if (!__Type(options).object) return null;
-				const chart = new __Plot2D(options.type);
+				const chart = new __Plot2D(options.plot);
 				const isCol = /^\#(\d+)$/;
 				const data  = __Type(options.data).array ? options.data : [];
 				/*-- propriedades principais --*/
@@ -7936,17 +7937,26 @@ const wd = (function() {
 							let cx    = this._cfg.xMiddle;
 							let cy    = this._cfg.yMiddle;
 							let curve = {id: id, color: color, info: "", name: name};
+							//FIXME melhorar a notação matemática desse negócio
 							curve.info = [
-								" "+this.xLabel,
-								"  {i ∈ ℕ | 1 ≤ i ≤ n}",
-								"  n = "+this._values(count),
-								"  i = "+this._values(i+1),
-								" "+this.yLabel,
-								"  {y ∈ ℝ | "+this._values(min)+" ≤ y ≤ "+this._values(max)+"}",
-								"  y     = "+this._values(value),
-								"  ∑yᵢ   = "+this._values(total),
-								"  y/∑yᵢ = "+this._values(ratio, "y"),
-								"  ∑yᵢ/n = "+this._values(total/count)
+								`i) ${this.xLabel} --`,
+								`  i  = ${this._values(i+1)} / ${this._values(count)}`,
+								//"  {i ∈ ℕ | 1 ≤ i ≤ n}",
+								//"  n = "+this._values(count),
+								//"  i = "+this._values(i+1),
+								`y) ${this.yLabel} --`,
+								`  yᵢ = ${this._values(value)} (${this._values(ratio, "y")})`,
+
+								`  ∑y = ${this._values(total)}`,
+								`  ȳ  = ${this._values(total/count)}`,
+								`  ${this._values(min)} ≤ y ≤ ${this._values(max)}`,
+
+
+								//"  {y ∈ ℝ | "+this._values(min)+" ≤ y ≤ "+this._values(max)+"}",
+								//"  y     = "+this._values(value),
+								//"  ∑yᵢ   = "+this._values(total),
+								//"  y/∑yᵢ = "+this._values(ratio, "y"),
+								//"  ∑yᵢ/n = "+this._values(total/count)
 							].join("\n");
 							width = 360*ratio;
 							/*-- semi-círculos --*/
@@ -9212,7 +9222,7 @@ const wd = (function() {
 	|Alvos|Elemento|
 	|Grupos|Único|
 	|Referências|__Node.innerHTML/outerHTML/attribute|
-	Possui as mesmas propriedades de i{data_wd_send}, exceto i{trigger} e i{text}, acrescida da seguinte propriedade:
+	Possui as mesmas propriedades de i{data_wd_send}, exceto i{trigger} e i{type}, acrescida da seguinte propriedade:
 	|Propriedades|Tipo|Descrição|
 	|serialization|string|Comportamento da serialização outer/innerHTML/Text (__Node.attribute)|
 	span{ }
@@ -9267,10 +9277,10 @@ const wd = (function() {
 	|Alvos|Elemento|
 	|Grupos|Único|
 	|Referências|__Node.repeat|
-	Possui as mesmas propriedades de i{data_wd_send}, exceto i{trigger} e i{text}.
+	Possui as mesmas propriedades de i{data_wd_send}, exceto i{trigger} e i{type}.
 	Observações:
 	- Os arquivos permitidos devem estar em formato CSV ou JSON;
-	- Para formato JSON, a serialização deve ser um array objetos contendo os parâmetros;**/
+	- Para formato JSON, a serialização deve ser um array de objetos contendo os parâmetros;**/
 	function data_wd_repeat(target, event, wdArray) {
 		const data   = wdArray[0];
 		data.type    = "text";
@@ -9325,61 +9335,44 @@ const wd = (function() {
 	|Grupos|Único|
 	|Referências|__Table.plot|
 	Observações:
-	- As propriedades são as mesma do método __Table.plot, o gráfico substituirá o conteúdo do alvo.
-
-
-	- Os elementos que receberão a intervenção são definidos pelas propriedades '{$} ou '{$$};
-	- Para cada grupo informado, deverá ser definido os elementos a receber a intervenção;
-	- Se os elementos não forem definidos, a ação recairá sobre o próprio elemento;**/
-
-
-	/**''function void data_wd_chart(node target, object event, array wdArray)''
-	Função com o propósito de plotar gráficos 2D por meio do atributo HTML i{data}.
-	|Atributo HTML|Evento|Propriedades|Grupos|Métodos|Alvo|
-	|data-wd-chart|load wdreload wddataset|Múltiplas|Único|__Table.plot|Elemento que possa receber conteúdo|
-
-	Os dados da plotagem podem estar definidos na propriedade, em um arquivo externo JSON ou CSV, em uma tabela HTML ou no conteúdo textual de um elemento.
-	Para capturar dados de uma tabela ou elemento HTML, deve-se utilizar a propriedade i{$} para referenciá-lo.
-	Para capturar dados de um arquivo externo em notação JSON ou CSV (conforme cabeçalho), deve-se definir a propriedade i{_file_} (estrutura) contendo os dados para requisição conforme i{data_wd_send}, exceto por i{type} e i{trigger}.**/
+	- As propriedades do atributo têm a mesma estrutura do argumento do método __Table.plot;
+	- O gráfico gerado substituirá o conteúdo do alvo;
+	- A fonte de dados, opcional, é especificada por meio da propriedade '{source}, que aceita os valores "node" e "file";
+	- O valor "file" define a fonte de dados em um arquivo CSV ou JSON (array de duas dimensões);
+	- No caso de fonte externa, as propriedades de i{data_wd_send}, exceto i{trigger} e i{text}, são necessárias;
+	- O valor "node" define a fonte de dados num elemento HTML identificado pela propriedade '{$};
+	- O elemento poderá ser uma tabela, um campo de formulário ou elemento com conteúdo textual;
+	- No caso de formulário ou conteúdo textual, o formato do conteúdo deverá ser em CSV.**/
 	function data_wd_chart(target, event, wdArray) {
-		const data    = wdArray[0];
-		const file    = "_file_" in data ? data["_file_"] : null;
-		const html    = "$" in data ? __Type(data["$"]) : null;
-		const handler = function(content, config) {
-			const table = __Table(content);
-			const chart = table.plot(config);
-			target.innerHTML = "";
-			if (chart !== null) target.appendChild(chart);
-		}
-		if ( "$" in data) delete data["$"];
-		if ("$$" in data) delete data["$$"];
-		/*-- no caso de arquivo externo --*/
-		if (file !== null) {
-			file.type    = "text";
-			file.headers = "headers" in file ? file.headers : {};
-			file.trigger = function(x) {
-				if (x.ok) {
-					const head = new __DataSet(x.headers);
-					const mime = __MIME[head.getAll("content-type")[0]];
-					if (mime === "json" || mime === "csv") {
-						const parser  = new __Parser(x.response);
-						const content = mime === "json" ? parser.stringJSON.get() : x.response;
-						handler(content, data);
-					}
-				}
+		const data  = wdArray[0];
+		const query = data.$ || null;
+		const plot  = function (input) {
+			const table = new __Table(input);
+			const svg   = table.plot(data);
+			if (svg !== null) {
+				target.innerHTML = "";
+				target.appendChild(svg);
 			}
-			data_wd_send(target, event, [file]);
 		}
-		/*-- caso de um elemento HTML --*/
-		else if (html.node && html.value.length > 0) {
-			const elem    = html.value[0]
-			const node    = new __Node(elem);
-			const content = node.tag === "table" ? elem : elem[node.form ? "value" : "innerText"];
-			handler(content, data);
+		/*-- elemento HTML como fonte de dados --*/
+		if (data.source === "node" && query !== null) {
+			const node  = new __Node(query);
+			const form  = node.form && !node.ftext;
+			const input = form ? query.value : (node.tag === "table" ? query : query.innerText);
+			plot(input)
 		}
-		/*-- configuração apenas no atributo --*/
+		/*-- arquivo CSV/JSON como fonte de dados --*/
+		else if (data.source === "file" && typeof data.url === "string") {
+			data.type    = "table";
+			data.trigger = function(x) {
+				if (x.ok && x.response !== null)
+					plot(x.response);
+			};
+			data_wd_send(target, event, [data]);
+		}
+		/*-- sem fonte de dados --*/
 		else {
-			handler(null, data);
+			plot();
 		}
 		return;
 	}
