@@ -6264,30 +6264,31 @@ const wd = (function() {
 				const data  = __Type(options.data).array ? options.data : [];
 				/*-- propriedades principais --*/
 				const names = ["xLabel", "yLabel", "title", "xAxis", "yAxis"];
-				for (let i = 0; i < names.length; i++)
+				for (let i = 0; i < names.length; i++) {
 					if (names[i] in options)
 						chart[names[i]] = options[names[i]];
+				}
 				/*-- parâmetros de plotagem --*/
 				for (let i = 0; i < data.length; i++) {
 					if (!__Type(data[i]).object) continue;
-					let dataset = {x: data[i].x, y: data[i].y};
+					let struct = {x: data[i].x, y: data[i].y, label: data[i].label, fit: data[i].fit};
 					let col, arr, cell;
-					/*-- para x foi informado o número da coluna --*/
-					if (isCol.test(dataset.x)) {
-						col  = dataset.x.replace(isCol, "$1");
+					/*-- x faz referência à coluna --*/
+					if (isCol.test(struct.x)) {
+						col  = struct.x.replace(isCol, "$1");
 						cell = `1,${col}:*,${col}`;
 						arr  = this.cells(cell, function(v,r,c) {return v.innerText;});
-						dataset.x = arr;
+						struct.x = arr;
 					}
-					/*-- para y foi informado o número da coluna --*/
-					if (isCol.test(dataset.y)) {
-						col = Number(dataset.y.replace(isCol, "$1"));
+					/*-- y faz referência à coluna --*/
+					if (isCol.test(struct.y)) {
+						col = Number(struct.y.replace(isCol, "$1"));
 						cell = `0,${col}:*,${col}`;
 						arr = this.cells(cell, function(v,r,c) {return v.innerText;});
-						dataset.y     = arr.slice(1);
-						dataset.label = arr[0];
+						struct.y     = arr.slice(1);
+						struct.label = arr[0];
 					}
-					chart.add(dataset.x, dataset.y, data[i].label, data[i].fit);
+					chart.add(struct.x, struct.y, struct.label, struct.fit);
 				}
 				return chart.plot();
 			}
@@ -9139,18 +9140,20 @@ const wd = (function() {
 	- O valor da propriedade i{body} será definido pelo conteúdo dos campos de formulários (ver i{$}/i{$$}); e
 	- O disparador deve estar contido no escopo de '{window} utilizando-se de '{var} ou '{function}.**/
 	function data_wd_send(target, event, wdArray) {
-		let data, query, submit, trigger;
+		let data, query, submit, trigger, head;
 		for (let i = 0; i < wdArray.length; i++) {
 			data    = wdArray[i];
 			query   = data["$$"] || data["$"] || document.body;
 			trigger = data.trigger;
 			submit  = WD(query).submit(data.url, data.method, data.noValidate);
+			/*-- cabeçalho --*/
+			data.headers = new __DataSet(data.headers);
 			/*-- Efetuar requisição se não encontrados erros --*/
 			if (submit !== null) {
 				data.url  = submit.url;
 				data.body = submit.body;
-				if (!("content-type" in data.headers))
-					data.headers["content-type"] = submit.ctype;
+				if (!data.headers.has("content-type"))
+					data.headers.set("content-type", submit.ctype);
 				WD(data).send(trigger);
 			}
 		}
@@ -9186,6 +9189,8 @@ const wd = (function() {
 			const type = /^(image|submit)$/;
 			return elem.form !== form || !type.test(node.ftype) ? null : elem;
 		})();
+		/*-- cabeçalho --*/
+			data.headers = new __DataSet(data.headers);
 		/*-- Informações do formulário: button ou form --*/
 		for (let i in html) {
 			/*-- 1) procurar atributo no elemento acionador --*/
@@ -9205,7 +9210,7 @@ const wd = (function() {
 		/*-- Redefinindo atributos de configuração para envio à data_wd_send --*/
 		if (html.method     !== null) data.method = html.method;
 		if (html.action     !== null) data.url = html.action;
-		if (html.enctype    !== null) data.headers["content-type"] = html.enctype;
+		if (html.enctype    !== null) data.headers.set("content-type", html.enctype);
 		if (html.noValidate !== null) data.noValidate = html.noValidate;
 		data["$$"] = query;
 		if ("$" in data) delete data["$"];
